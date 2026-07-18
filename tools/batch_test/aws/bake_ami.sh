@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+command -v awsx >/dev/null && aws() { awsx "$@"; }
 # Bake the batch-runner AMI. Two phases:
 #   ./bake_ami.sh start   -> launch an on-demand instance, print SSH command
 #   (you SSH in, run setup_on_instance.sh, log into steamcmd once)
@@ -17,7 +18,7 @@ start)
         --query Parameter.Value --output text)
     ID=$(aws ec2 run-instances --region "$AWS_REGION" \
         --image-id "$BASE_AMI" --instance-type "$INSTANCE_TYPE" \
-        --key-name "$KEY_NAME" --security-group-ids "$SECURITY_GROUP" \
+        ${KEY_NAME:+--key-name "$KEY_NAME"} --security-group-ids "$SECURITY_GROUP" \
         --iam-instance-profile Name="$IAM_PROFILE" \
         --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":80,"VolumeType":"gp3"}}]' \
         --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=dota2bot-ami-bake}]' \

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+command -v awsx >/dev/null && aws() { awsx "$@"; }
 # Launch one unattended batch run on a self-terminating Spot instance.
 #
 #   ./aws_run.sh -n 100 --old main --new my-branch [--on-demand] [-t 4] [-j 8]
@@ -70,7 +71,7 @@ EOF
 
 ID=$(aws ec2 run-instances --region "$AWS_REGION" \
     --image-id "$AMI_ID" --instance-type "$INSTANCE_TYPE" \
-    --key-name "$KEY_NAME" --security-group-ids "$SECURITY_GROUP" \
+    ${KEY_NAME:+--key-name "$KEY_NAME"} --security-group-ids "$SECURITY_GROUP" \
     --iam-instance-profile Name="$IAM_PROFILE" \
     $MARKET \
     --instance-initiated-shutdown-behavior terminate \

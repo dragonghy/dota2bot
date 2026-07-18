@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+command -v awsx >/dev/null && aws() { awsx "$@"; }
 # One-time AWS account setup for batch testing. Creates: S3 results bucket,
 # IAM role (instance profile, write access to that bucket only), security
 # group (SSH in), and a $20/month budget alert. Writes IDs to aws.env.
@@ -41,8 +42,8 @@ aws ec2 authorize-security-group-ingress --region "$REGION" --group-id "$SG" \
 
 echo "== budget alert (\$${BUDGET_LIMIT}/month, email at 80%) =="
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-EMAIL=$(aws account get-contact-information --query 'ContactInformation.WebsiteUrl' --output text 2>/dev/null || echo "")
-read -r -p "Alert email address: " EMAIL
+EMAIL=${BUDGET_EMAIL:-}
+[ -n "$EMAIL" ] || read -r -p "Alert email address: " EMAIL
 cat > /tmp/budget.json <<EOF
 {"BudgetName":"dota2bot-batch","BudgetLimit":{"Amount":"${BUDGET_LIMIT}","Unit":"USD"},
  "TimeUnit":"MONTHLY","BudgetType":"COST"}
