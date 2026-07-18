@@ -66,3 +66,7 @@ dist
 
 # user's personal customized settings
 game/Customize
+.env
+*.env
+!aws.env
+tools/batch_test/aws/.bake_instance_id
