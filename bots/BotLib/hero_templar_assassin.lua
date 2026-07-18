@@ -790,11 +790,11 @@ function X.TAConsiderTarget()
 
 	local nInAttackRangeNearestEnemyHero = nEnemyHeroInRange[1]
 
-	if J.IsValidHero( nInAttackRangeWeakestEnemyHero )
-		and J.CanBeAttacked( nInAttackRangeWeakestEnemyHero )
+	if J.IsValidHero( nInAttackRangeNearestEnemyHero )
+		and J.CanBeAttacked( nInAttackRangeNearestEnemyHero )
 		and ( GetUnitToUnitDistance( npcTarget, bot ) > nAttackRange or J.HasForbiddenModifier( npcTarget ) )
 	then
-		bot:SetTarget( nInAttackRangeWeakestEnemyHero )
+		bot:SetTarget( nInAttackRangeNearestEnemyHero )
 		return
 	end
 

@@ -546,6 +546,7 @@ function X.ConsiderLiquidCourage()
     end
 
     local nCastRange = LiquidCourage:GetCastRange()
+    local nAllyHeroes = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
 
     for _, allyHero in pairs(nAllyHeroes) do
         if  J.IsValidHero(allyHero)

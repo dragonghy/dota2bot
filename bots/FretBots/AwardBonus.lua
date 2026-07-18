@@ -467,10 +467,11 @@ function AwardBonus:GetSpecificPerMinuteBonus(bot, pmBot, roleTable, settings)
 	local pmDifference = pmTarget - pmBot
 	-- clamp?
 	local pmClamped = 0
+	local adjustedClamp
 	if not settings.clampOverride then
 		-- Adjust clamp per mintue
 		local minutes =  Utilities:Round(Utilities:GetTime()/60)
-		local adjustedClamp = settings.clamp[2]
+		adjustedClamp = settings.clamp[2]
 		if settings.perMinuteScale ~= 0 then
 			adjustedClamp = adjustedClamp + settings.perMinuteScale * minutes
 		end

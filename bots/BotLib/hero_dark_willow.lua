@@ -426,7 +426,7 @@ function X.ConsiderBedlam()
         if J.IsInRange(bot, botTarget, nCastRange)
         and J.IsValidTarget(botTarget)
         then
-            return BOT_ACTION_DESIRE_HIGH, allyTarget
+            return BOT_ACTION_DESIRE_HIGH, botTarget
         end
 	end
 

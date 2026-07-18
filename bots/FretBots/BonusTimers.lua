@@ -87,15 +87,24 @@ end
 end
 
 function BonusTimers:GetBestItems(neediest, tier)
-    local sItemName = nil
-    local heroData = StaticNeutralsMatchup[neediest.stats.internalName]['neutral']
-    if heroData and heroData[nTier] then
-        sItemName = NeutralItems.SelectItem(heroData[nTier])
-    else
-        sItemName = hNeutralItemsList[nTier][RandomInt(1, #hNeutralItemsList[nTier])]
-    end
-	if sItemName then
-		return {sItemName}
+	local heroMatchup = StaticNeutralsMatchup[neediest.stats.internalName]
+	local heroData = heroMatchup and heroMatchup['neutral']
+	if heroData and heroData[tier] then
+		local totalWeight = 0
+		for _, weight in pairs(heroData[tier]) do
+			totalWeight = totalWeight + weight
+		end
+		local roll = math.random() * totalWeight
+		for name, weight in pairs(heroData[tier]) do
+			roll = roll - weight
+			if roll <= 0 then
+				local item = BonusTimers:GetItemFromName(name)
+				if item then
+					return {item}
+				end
+				break
+			end
+		end
 	end
 	return NeutralItems:GetTokenTableForTier(tier)
 end
@@ -329,10 +338,11 @@ end
 -- Manages giving items to bots from the stash
 function BonusTimers:NeutralItemDoleTimer()
 	pcall(function ()
+		local itemToDole
 		repeat
 			-- Do we have something to do?
 			for team = 2, 3 do
-			local itemToDole = BonusTimers:GetNextItemToDole(team)
+			itemToDole = BonusTimers:GetNextItemToDole(team)
 			if itemToDole ~= nil then
 				-- Items in stash only get one chance to be doled, so remove it whether
 				-- we actually assign it or not

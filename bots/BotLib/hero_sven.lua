@@ -634,12 +634,12 @@ function X.SvenConsiderTarget()
 
 	local nInAttackRangeNearestEnemyHero = nEnemyHeroInRange[1]
 
-	if J.IsValidHero( nInAttackRangeWeakestEnemyHero )
-		and J.CanBeAttacked( nInAttackRangeWeakestEnemyHero )
+	if J.IsValidHero( nInAttackRangeNearestEnemyHero )
+		and J.CanBeAttacked( nInAttackRangeNearestEnemyHero )
 		and ( GetUnitToUnitDistance( botTarget, bot ) >  350 or J.HasForbiddenModifier( botTarget ) )
 	then
 		--更改目标为
-		bot:SetTarget( nInAttackRangeWeakestEnemyHero )
+		bot:SetTarget( nInAttackRangeNearestEnemyHero )
 		return
 	end
 

@@ -889,7 +889,7 @@ function X.GetAbilityEMaxDamage( npcEnemy )
 
 	local abilityEDamge = abilityE:GetSpecialValueInt( 'damage' ) + talent4Damage
 
-	return allyUnitCount * nDamage
+	return allyUnitCount * abilityEDamge
 
 end
 

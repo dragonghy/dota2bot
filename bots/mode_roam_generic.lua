@@ -1036,6 +1036,7 @@ function CheckLaneToGank(botPosition)
 		end
 	end
 
+	local botLevel = bot:GetLevel()
 	local botLvlTooLow = (nPos == 1 and botLevel < 10) or
 		(nPos == 2 and botLevel < 8) or
 		(nPos == 3 and botLevel < 6) or
@@ -1065,35 +1066,29 @@ function CheckLaneToGank(botPosition)
 				local nInRangeAlly = J.GetAlliesNearLoc(laneFront, 1200)
 				local botDistToLane = GetUnitToLocationDistance(bot, laneFront)
 
-				-- Skip this lane if it's too far (> 4000 units — would take too long)
-				if botDistToLane > 4000 and not J.HasItem(bot, 'item_tpscroll') then
-					goto continue_lane
-				end
+				-- Skip lanes that are too far away (> 4000 units without a TP
+				-- scroll — would take too long) and our own assigned lane
+				local bTooFar = botDistToLane > 4000 and not J.HasItem(bot, 'item_tpscroll')
+				if not bTooFar and lane[1] ~= bot:GetAssignedLane() then
+					-- Better gank conditions: enemy is pushed forward (closer to our tower)
+					-- AND we have at least 1 ally there to help
+					local bEnemyOverextended = laneFrontToT1Dist < 2500
+					local bAllyPresent = #nInRangeAlly >= 1
 
-				-- Skip if this is our own assigned lane (don't "gank" our own lane)
-				if lane[1] == bot:GetAssignedLane() then
-					goto continue_lane
-				end
-
-				-- Better gank conditions: enemy is pushed forward (closer to our tower)
-				-- AND we have at least 1 ally there to help
-				local bEnemyOverextended = laneFrontToT1Dist < 2500
-				local bAllyPresent = #nInRangeAlly >= 1
-
-				if bEnemyOverextended and bAllyPresent then
-					local desire = RemapValClamped(botDistToLane, 4000, 600, BOT_ACTION_DESIRE_MODERATE, BOT_ACTION_DESIRE_HIGH)
-					-- Bonus desire if enemy is outnumbered
-					if enemyCountInLane <= #nInRangeAlly then
-						desire = desire + 0.1
-					end
-					if desire > bestDesire then
-						bestDesire = desire
-						bestLane = lane[1]
+					if bEnemyOverextended and bAllyPresent then
+						local desire = RemapValClamped(botDistToLane, 4000, 600, BOT_ACTION_DESIRE_MODERATE, BOT_ACTION_DESIRE_HIGH)
+						-- Bonus desire if enemy is outnumbered
+						if enemyCountInLane <= #nInRangeAlly then
+							desire = desire + 0.1
+						end
+						if desire > bestDesire then
+							bestDesire = desire
+							bestLane = lane[1]
+						end
 					end
 				end
 			end
 		end
-		::continue_lane::
 	end
 
 	if bestLane then

@@ -440,8 +440,8 @@ function X.ConsiderLunarOrbit()
 end
 
 function X.ConsiderMoonGlaives()
-	if not MoonGlaives:IsTrained()
-	or not MoonGlaives:IsFullyCastable()
+	if not LunarOrbit:IsTrained()
+	or not LunarOrbit:IsFullyCastable()
 	then
 		return BOT_ACTION_DESIRE_NONE
 	end
@@ -499,7 +499,7 @@ function X.ConsiderMoonGlaives()
 		and (#nCreeps >= 3 or (#nCreeps >= 2 and nCreeps[1]:IsAncientCreep()))
 		and J.CanBeAttacked(nCreeps[1])
 		and J.IsAttacking(bot)
-		and J.GetManaAfter(MoonGlaives:GetManaCost()) * bot:GetMana() > Eclipse:GetManaCost() * 2
+		and J.GetManaAfter(LunarOrbit:GetManaCost()) * bot:GetMana() > Eclipse:GetManaCost() * 2
 		then
 			return BOT_ACTION_DESIRE_HIGH
 		end

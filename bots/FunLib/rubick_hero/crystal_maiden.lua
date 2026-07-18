@@ -711,8 +711,8 @@ function X.ConsiderFreezingField()
 		local npcTarget = nEnemysHeroesNearby[1]
 		if J.IsValidHero( npcTarget )
 			and J.CanCastOnNonMagicImmune( npcTarget )
-			and not abilityQ:IsFullyCastable()
-			and not abilityW:IsFullyCastable()
+			and ( CrystalNova == nil or not CrystalNova:IsFullyCastable() )
+			and ( Frostbite == nil or not Frostbite:IsFullyCastable() )
 			and nHP > 0.38 * #nEnemysHeroesFurther
 		then
 			return BOT_ACTION_DESIRE_HIGH

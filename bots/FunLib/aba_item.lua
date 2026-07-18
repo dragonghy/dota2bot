@@ -1020,6 +1020,62 @@ function Item.IsSmallItem( sItemName )
 end
 
 
+local tNeutralItemLevelList = {
+	['item_ash_legion_shield'] = 1,
+	['item_chipped_vest'] = 1,
+	['item_dagger_of_ristul'] = 1,
+	['item_dormant_curio'] = 1,
+	['item_duelist_gloves'] = 1,
+	['item_foragers_kit'] = 1,
+	['item_kobold_cup'] = 1,
+	['item_occult_bracelet'] = 1,
+	['item_polliwog_charm'] = 1,
+	['item_possessed_mask'] = 1,
+	['item_stonefeather_satchel'] = 1,
+	['item_weighted_dice'] = 1,
+
+	['item_crippling_crossbow'] = 2,
+	['item_defiant_shell'] = 2,
+	['item_essence_ring'] = 2,
+	['item_mana_draught'] = 2,
+	['item_medallion_of_courage'] = 2,
+	['item_pogo_stick'] = 2,
+	['item_poor_mans_shield'] = 2,
+	['item_searing_signet'] = 2,
+	['item_seeds_of_serenity'] = 2,
+
+	['item_cloak_of_flames'] = 3,
+	['item_gunpowder_gauntlets'] = 3,
+	['item_jidi_pollen_bag'] = 3,
+	['item_partisans_brand'] = 3,
+	['item_psychic_headband'] = 3,
+	['item_serrated_shiv'] = 3,
+	['item_spellslinger'] = 3,
+	['item_stormcrafter'] = 3,
+	['item_unrelenting_eye'] = 3,
+
+	['item_conjurers_catalyst'] = 4,
+	['item_dandelion_amulet'] = 4,
+	['item_enchanters_bauble'] = 4,
+	['item_flayers_bota'] = 4,
+	['item_giant_maul'] = 4,
+	['item_idol_of_screeauk'] = 4,
+	['item_metamorphic_mandible'] = 4,
+	['item_prophets_pendulum'] = 4,
+	['item_rattlecage'] = 4,
+
+	['item_demonicon'] = 5,
+	['item_desolator_2'] = 5,
+	['item_dezun_bloodrite'] = 5,
+	['item_divine_regalia'] = 5,
+	['item_fallen_sky'] = 5,
+	['item_harmonizer'] = 5,
+	['item_heavy_blade'] = 5,
+	['item_minotaur_horn'] = 5,
+	['item_riftshadow_prism'] = 5,
+	['item_spider_legs'] = 5,
+}
+
 function Item.IsNeutralItem( sItemName )
 
 	return tNeutralItemLevelList[sItemName] ~= nil

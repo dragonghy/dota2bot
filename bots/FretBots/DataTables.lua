@@ -146,7 +146,7 @@ function DataTables:Initialize()
 	Debug:Print('DataTables initialized.')
 end
 
-function DataTables:FixBuggedHeroAbilities()
+function DataTables:FixBuggedHeroAbilities(unit)
 	-- To fix heroes that have bugs in v7.37
 	if unit:IsHero() then
 		if unit:GetUnitName() == "npc_dota_hero_faceless_void" then

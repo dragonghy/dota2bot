@@ -196,7 +196,7 @@ function X.ConsiderShurikenToss()
 			then
 				for _, nUnit in pairs( nEnemyUnitList )
 				do
-					if J.IsInRange( nUnit, npcEnemy, nRadius - 100 )
+					if J.IsInRange( nUnit, botTarget, nRadius - 100 )
 						and not nUnit:IsMagicImmune()
 						and J.CanCastOnTargetAdvanced( nUnit )
 						and not nUnit:HasModifier( "modifier_bounty_hunter_track" )

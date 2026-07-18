@@ -394,7 +394,7 @@ function X.ConsiderW()
 	if J.IsNotAttackProjectileIncoming( bot, 400 )
 		or ( J.IsWithoutTarget( bot ) and J.GetAttackProjectileDamageByRange( bot, 1600 ) >= bot:GetHealth() )
 	then
-		return BOT_ACTION_DESIRE_HIGH, vEscapeLoc, 'W-躲避'
+		return BOT_ACTION_DESIRE_HIGH, 'W-躲避'
 	end
 
 

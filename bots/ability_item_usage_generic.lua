@@ -6043,6 +6043,10 @@ end
 
 X.ConsiderItemDesire["item_flayers_bota"] = function( hItem )
 
+	local botAttackRange = bot:GetAttackRange()
+	local nEnemyHeroes = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
+	local bAttacking = J.IsAttacking(bot)
+
 	if J.IsGoingOnSomeone(bot) then
 		if  J.IsValidHero(botTarget)
 		and J.CanBeAttacked(botTarget)
@@ -6092,7 +6096,7 @@ X.ConsiderItemDesire["item_jidi_pollen_bag"] = function( hItem )
 
 	local nRadius = hItem:GetSpecialValueInt('debuff_radius')
 
-	local nInRangeEnemy = J.GetEnemiesNearLoc(botLocation, nRadius)
+	local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), nRadius)
 
 	if J.IsInTeamFight(bot, 1200) then
         if #nInRangeEnemy >= 2 then
@@ -6136,6 +6140,7 @@ end
 X.ConsiderItemDesire["item_metamorphic_mandible"] = function( hItem )
 
 	local nDuration = hItem:GetSpecialValueInt('duration')
+	local nEnemyHeroes = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
 
 	if J.IsGoingOnSomeone(bot) then
 		if bot:WasRecentlyDamagedByAnyHero(2.0) then
@@ -8234,6 +8239,7 @@ X.ConsiderItemDesire["item_minotaur_horn"] = function( hItem )
 		end
 
         nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1200)
+        local nAllyHeroes = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
 		if #nInRangeEnemy > #nAllyHeroes
         and J.GetHP(bot) < 0.6
         and J.IsValidHero(nInRangeEnemy[1])

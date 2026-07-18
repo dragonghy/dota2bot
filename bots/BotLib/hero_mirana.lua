@@ -359,7 +359,7 @@ function X.ConsiderQ()
 			and not laneCreepList[1]:HasModifier( "modifier_fountain_glyph" )
 			and ( #laneCreepList >= 5 or ( nMP > 0.88 and #laneCreepList >= 4 ) )
 		then
-			hCastTarget = creep
+			hCastTarget = laneCreepList[1]
 			sCastMotive = 'Q-带线'
 			return BOT_ACTION_DESIRE_HIGH, hCastTarget, sCastMotive
 		end

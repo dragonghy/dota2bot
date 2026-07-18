@@ -194,7 +194,7 @@ function X.SkillsComplement()
     or bot:IsUsingAbility()
     or bot:IsCastingAbility())
     then
-        local nEnemyHeroes = J.GetNearbyHeroes(bot,nRadius + 300, true, BOT_MODE_NONE)
+        local nEnemyHeroes = J.GetNearbyHeroes(bot,Telekinesis:GetCastRange() + 300, true, BOT_MODE_NONE)
         if nEnemyHeroes ~= nil and #nEnemyHeroes > 0 then
             return
         end

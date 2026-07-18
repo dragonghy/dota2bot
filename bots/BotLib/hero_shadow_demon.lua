@@ -654,7 +654,7 @@ function X.ConsiderDemonicCleanse()
             and not allyHero:HasModifier('modifier_faceless_void_chronosphere_freeze')
             and not allyHero:HasModifier('modifier_necrolyte_reapers_scythe')
             then
-                return BOT_ACTION_DESIRE_HIGH, enemyHero
+                return BOT_ACTION_DESIRE_HIGH, allyHero
             end
         end
     end

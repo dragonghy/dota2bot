@@ -735,7 +735,7 @@ function X.ConsiderSearingArrows()
         and J.IsInRange(bot, botTarget, nCastRange)
         then
             if fManaAfter > fManaThreshold1 + 0.15 then
-                if not bIsAutoCasted and bAttacking then
+                if not bIsAutoCasted and J.IsAttacking(bot) then
                     SearingArrows:ToggleAutoCast()
                 end
 
@@ -749,7 +749,7 @@ function X.ConsiderSearingArrows()
         and J.IsInRange(bot, botTarget, nCastRange)
         then
             if fManaAfter > fManaThreshold1 + 0.15 then
-                if not bIsAutoCasted and bAttacking then
+                if not bIsAutoCasted and J.IsAttacking(bot) then
                     SearingArrows:ToggleAutoCast()
                 end
 

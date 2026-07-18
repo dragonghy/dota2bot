@@ -145,6 +145,7 @@ export const HeroRolesMap: RolesMap = {
     [HeroName.WitchDoctor]: { carry: 0, disabler: 1, durable: 0, escape: 0, initiator: 0, jungler: 0, nuker: 2, support: 3, pusher: 0, ranged: 1, healer: 1 },
     [HeroName.Zeus]: { carry: 1, disabler: 0, durable: 0, escape: 0, initiator: 0, jungler: 0, nuker: 3, support: 1, pusher: 0, ranged: 1, healer: 0 },
     [HeroName.Kez]: { carry: 1, disabler: 0, durable: 0, escape: 0, initiator: 0, jungler: 0, nuker: 1, support: 1, pusher: 0, ranged: 0, healer: 0 },
+    [HeroName.Largo]: { carry: 0, disabler: 1, durable: 0, escape: 1, initiator: 0, jungler: 0, nuker: 2, support: 2, pusher: 0, ranged: 1, healer: 1 },
 };
 
 export const InvisHeroes: { [key: string]: number } = {

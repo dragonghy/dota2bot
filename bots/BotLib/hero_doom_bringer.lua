@@ -388,7 +388,7 @@ function X.ConsiderScorchedEarth()
     if J.IsFarming(bot)
 	then
 		local nCreeps = bot:GetNearbyCreeps(nRadius, true)
-        if nEnemyLaneCreeps ~= nil
+        if nCreeps ~= nil
         and (#nCreeps >= 3 or (#nCreeps >= 2 and nCreeps[1]:IsAncientCreep()))
         and J.CanBeAttacked(nCreeps[1])
         and J.IsAttacking(bot)

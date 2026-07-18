@@ -48,7 +48,7 @@ local itemCheckTimerName			= 'itemCheckTimerName'
 -- watches for items in LD's possession and moves them to the bear as appropriate.
 function HeroLoneDruid:ItemCheckTimer()
 	for i = 1,16 do
-		local currentItem = unit:GetItemInSlot(i)
+		local currentItem = HeroLoneDruid.Hero:GetItemInSlot(i)
 		-- anything?
 		if currentItem ~= nil then
 			replacedItem = currentItem:GetName()

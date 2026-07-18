@@ -51,6 +51,22 @@ When user says "update for patch X.XX" or provides patch notes:
 3. Each ability has a `ConsiderX()` function returning desire + target
 4. See "Skill / Ability System" in `docs/ARCHITECTURE.md`
 
+## Verification (run before every push)
+
+```bash
+luacheck bots game --formatter plain   # static analysis; must be 0 warnings
+lua5.1 tests/run_tests.lua             # unit tests under mock Bot API (tests/)
+```
+
+- `.luacheckrc` whitelists all legit Bot API / engine globals. A new "accessing
+  undefined variable" warning means a typo or a leaked local — fix the code;
+  only extend `read_globals` for a genuinely new engine API.
+- The Dota bot VM is Lua 5.1: **no `goto`**, no `table.unpack` (use `unpack`).
+  luacheck won't catch 5.2+ syntax, but the smoke test (`tests/test_smoke_load.lua`)
+  will — it loads every hero file under `lua5.1`.
+- Batch in-game A/B testing scaffolding lives in `tools/batch_test/` (requires a
+  machine with Dota 2 installed; not part of CI).
+
 ## Important Rules
 
 - **Use `GetItemComponents()` for item recipes** -- don't hardcode component arrays

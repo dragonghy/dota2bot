@@ -565,7 +565,7 @@ function X.ConsiderW()
 		then
 			if nEnemysWeakestHerosInAttackRange:GetHealth() <= X.sil_RealDamage( nAttackDamage, nAbilityDamage, nEnemysWeakestHerosInAttackRange )
 			then
-				return BOT_ACTION_DESIRE_HIGH, WeakestEnemy
+				return BOT_ACTION_DESIRE_HIGH, nEnemysWeakestHerosInAttackRange
 			end
 		end
 	end

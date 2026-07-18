@@ -1640,6 +1640,19 @@ ____exports.HeroRolesMap = {
         pusher = 0,
         ranged = 0,
         healer = 0
+    },
+    [HeroName.Largo] = {
+        carry = 0,
+        disabler = 1,
+        durable = 0,
+        escape = 1,
+        initiator = 0,
+        jungler = 0,
+        nuker = 2,
+        support = 2,
+        pusher = 0,
+        ranged = 1,
+        healer = 1
     }
 }
 ____exports.InvisHeroes = {
