@@ -41,6 +41,30 @@ lua5.1 tests/run_tests.lua             # unit tests under mock Bot API (tests/)
   machine with Dota 2 installed; not part of CI). Hero-logic changes need an
   A/B win-rate validation pass before merging.
 
+## AWS Access (for a new session/agent)
+
+Batch testing runs on the owner's AWS account. Credentials do NOT persist
+across sessions (each container is fresh and the repo carries no secrets), so
+any new agent that needs AWS must bootstrap first:
+
+```bash
+tools/batch_test/aws/bootstrap_creds.sh   # writes ~/.aws/credentials + the awsx wrapper
+```
+
+This reads `DOTA2BOT_AWS_KEY_ID` / `DOTA2BOT_AWS_SECRET` from the cloud
+environment (the owner sets these once in the environment config) and verifies
+the identity is the restricted `dota2bot-agent` IAM user. After bootstrapping,
+**always call AWS via the `awsx` wrapper**, not `aws` directly — the wrapper
+strips the proxy's placeholder `AWS_*` env vars (which otherwise shadow the real
+key) and points at the proxy CA bundle. Config lives in
+`tools/batch_test/aws/aws.env` (bucket, AMI id, security group, etc.).
+
+The `dota2bot-agent` user is permission-scoped to exactly what batch testing
+needs (EC2 batch lifecycle, the results S3 bucket, SSM, PassRole for the runner
+profile, read-only cost/budget). It cannot perform IAM admin or touch unrelated
+resources. A $50/month AWS Budget with a freeze action at 100% caps its EC2
+spend as a hard backstop.
+
 ## AWS Spending Policy
 
 Batch testing runs on the owner's AWS account (see `tools/batch_test/aws/`).

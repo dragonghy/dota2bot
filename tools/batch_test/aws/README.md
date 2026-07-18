@@ -1,5 +1,11 @@
 # AWS 按需批量测试 —— 资源管理方案
 
+> **新会话第一步**：凭据不跨会话保存。任何需要用 AWS 的新 agent 先跑
+> `tools/batch_test/aws/bootstrap_creds.sh`（从云环境变量
+> `DOTA2BOT_AWS_KEY_ID` / `DOTA2BOT_AWS_SECRET` 重建 `~/.aws/credentials`
+> 和 `awsx` 包装器），之后所有 AWS 调用走 `awsx` 而非 `aws`。
+
+
 核心原则：**没有常驻实例**。平时账户里只留一个 AMI 镜像（快照存储费约
 $2-3/月）和 S3 里的测试结果（几乎免费）。每次批跑用一条命令拉起一台
 Spot 实例，跑完自动把结果传到 S3 并**自我销毁**，双保险防止忘关机。
