@@ -41,6 +41,24 @@ lua5.1 tests/run_tests.lua             # unit tests under mock Bot API (tests/)
   machine with Dota 2 installed; not part of CI). Hero-logic changes need an
   A/B win-rate validation pass before merging.
 
+## AWS Spending Policy
+
+Batch testing runs on the owner's AWS account (see `tools/batch_test/aws/`).
+Rules for any agent operating this infrastructure:
+
+- **Every $50 of cumulative AWS spend requires the owner's explicit approval
+  before launching further paid work.** Track cumulative spend across sessions;
+  when a new $50 tier would be crossed, stop and ask first.
+- Check current spend and running resources with `tools/batch_test/aws/check_costs.sh`
+  before and after every batch run. Anything still running that shouldn't be —
+  terminate it and tell the owner.
+- Batch instances must always launch via `aws_run.sh` (self-terminating Spot +
+  12h watchdog). Never launch a long-lived instance without an explicit
+  self-destruction path.
+- An AWS Budget (`dota2bot-batch`, $50/month, alerts at 50/80/100% to the
+  owner's email) is the backstop, not the primary control — the primary control
+  is asking the owner at each $50 tier.
+
 ## Common Tasks
 
 ### Polish a Focus Hero (primary workflow)
