@@ -1,5 +1,7 @@
 ## Quick Install Scripts
 
+> **Note (upstream-inherited):** These scripts and instructions come from the upstream [OpenHyperAI](https://github.com/forest0xia/dota2bot-OpenHyperAI) project and reference *its* Steam Workshop item (`3246316298`). This fork is not on the Workshop yet — for a local checkout of this repo, just symlink or copy the repo's `bots/` folder to `<Steam>/steamapps/common/dota 2 beta/game/dota/scripts/vscripts/bots` (same target as below). Once this project publishes its own Workshop item, these scripts will be updated with the new ID.
+
 These scripts create a symbolic link from the Steam Workshop download folder to the Dota 2 vscripts/bots folder. This lets the bot scripts load correctly in Custom Lobbies with **Local Host** server.
 
 ### Available Scripts

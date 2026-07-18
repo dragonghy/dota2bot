@@ -2,6 +2,8 @@
 
 This is a step-by-step runbook for quickly updating the bot scripts when Valve releases a new Dota 2 patch. Designed to be followed by a developer or AI assistant without needing to re-read the entire codebase.
 
+This project maintains its codebase independently (it started from an OpenHyperAI snapshot at 7.41/7.41a; upstream merges are not planned), so this guide is **our primary process** for keeping up with future patches — we do not wait on any upstream project. After a patch update, focus heroes (see [PROJECT.md](PROJECT.md)) get first priority for re-verification and batch A/B revalidation.
+
 **Last updated for:** Patch 7.41a (March 2026)
 
 ---

@@ -1,6 +1,8 @@
 # Dota 2 Bot Architecture Guide
 
-This document is the single source of truth for understanding, maintaining, and updating the dota2bot-OpenHyperAI codebase. It is designed so that a developer (or AI assistant) can quickly make targeted updates without re-scanning the entire repository.
+This document describes the bot codebase this project inherited from [OpenHyperAI (OHA)](https://github.com/forest0xia/dota2bot-OpenHyperAI) and builds on. The architecture below is OHA's design; we maintain it independently since the fork (upstream merges are not planned) and use it as the foundation for our focus-hero polish work (see [PROJECT.md](PROJECT.md)). It is the single source of truth for understanding, maintaining, and updating the codebase, designed so that a developer (or AI assistant) can quickly make targeted updates without re-scanning the entire repository.
+
+Note: the directory layout and file naming under `bots/` (e.g. `BotLib/hero_<internal_name>.lua`, `mode_*_generic.lua`) are dictated by the Dota 2 bot scripting API — the game loads these files by fixed path and name. Never rename, move, or delete Lua files under `bots/` or `game/`.
 
 Last verified against: **Patch 7.41a** (March 2026)
 
@@ -28,7 +30,7 @@ Last verified against: **Patch 7.41a** (March 2026)
 
 ```
 vscripts/
-├── bots/                              # Main bot logic (Workshop folder 3246316298)
+├── bots/                              # Main bot logic (the Workshop deliverable)
 │   ├── bot_generic.lua                # Bot initialization entry point
 │   ├── hero_selection.lua             # Hero picking/banning logic
 │   ├── item_purchase_generic.lua      # Item purchasing state machine

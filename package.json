@@ -1,7 +1,7 @@
 {
-    "name": "open-hyper-ai",
+    "name": "dota2bot-focused",
     "version": "0.0.1",
-    "repository": "https://github.com/forest0xia/dota2bot-OpenHyperAI",
+    "repository": "https://github.com/dragonghy/dota2bot",
     "author": "",
     "license": "MIT",
     "devDependencies": {
