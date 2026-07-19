@@ -141,3 +141,10 @@ wakeup heartbeat).
 - **10:28 UTC — C10 wave 1** (run_1019): mean **+1,630** (10/12 positive) —
   right at the bias line (+1,504 refreshed / +2,146 W0). Swap wave running
   (run_1028) to decide: effect = (1,630 − m_swap)/2.
+- **10:37 UTC — C10 PAIRED VERDICT: WEAK POSITIVE, PROMOTED** — wave1
+  +1,630 / swap +968 → **effect +331 gold** (±~780). First candidate above
+  zero after six rejections; mechanism sound (soak uncollected lane gold).
+  **Promoted as baseline B1** (unconditional role-split caps: cores 0.65,
+  supports 0.45; farm tag base-b1). Rationale: cheap false-positive risk,
+  explore around a promising point.
+- **10:37 UTC — C11 launched** (run_1037): core cap sweep 0.65 → 0.80 vs B1.
