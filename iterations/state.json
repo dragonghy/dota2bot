@@ -1,5 +1,5 @@
 {
-  "iteration_count": 5,
+  "iteration_count": 6,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
     "run_prefixes": [
@@ -22,17 +22,13 @@
     "slow_close:no_game_time_cap",
     "mode_detect:courier_speed_heuristic",
     "sniper:shrapnel_charge_api",
-    "slow_close:push_never_outranked_farm_math"
+    "slow_close:push_never_outranked_farm_math",
+    "push_think:tower_yoyo"
   ],
   "open_issues": [
     {
       "key": "outcome_scoring:iter_0005",
       "note": "iter-0004 scored in 0005/analysis.md: T1/T2 criteria PASS, <40min criterion FAIL (44-56min, avg 49; winners 5R/6D = draft fix fully validated). Root cause found: push desire is nPushDesire*HP remapped onto [0,cap] \u2014 multiplicative; base 0.5-0.65 never beat farm 0.9 in even games. iter-0005 (push-first: base 1.0, farm capped 0.45 post-early, forfeit 35min, 12 slots) deployed to soak/run_20260719_0741. Score next: organic closes 25-35min, races <=42, avg low-30s; WATCH winrate stability + feeder anomalies (push-first throw risk \u2014 accepted trade, tune back via winrate).",
-      "first_seen_iter": 2
-    },
-    {
-      "key": "push_think:tower_yoyo",
-      "note": "PushThink retreats on a single tower hit whenever a creep wave is present (WasRecentlyDamagedByTower window 2-4s) -> bots yo-yo under towers, gutting building DPS. Micro change; verify in-game before touching. aba_push.lua PushThink, TS mirror.",
       "first_seen_iter": 2
     },
     {
@@ -92,6 +88,12 @@
       "deployed_utc": "2026-07-19T07:16:00Z",
       "run_prefix_started": "soak/run_20260719_0716",
       "note": "push caps 0.85/0.95 + closing urgency (turbo>25min). Farm fully restarted on iter-0004 per owner; in-flight iter-0002/0003 games sacrificed. 35-min wall backstop + 40-min overtime forfeit both active. Score from run_20260719_0716: first-rax <28min, most games 25-35min."
+    },
+    "iter-0006": {
+      "commit": "928f2c1",
+      "deployed_utc": "2026-07-19T08:06:00Z",
+      "run_prefix_started": null,
+      "note": "tower-aggro yo-yo fix + 5-min turbo early game (4c723d1). Same run prefix soak/run_20260719_0741; cohort split by script_version stamp (iter-0005 / iter-0005-2-g* / iter-0006)."
     }
   }
 }
