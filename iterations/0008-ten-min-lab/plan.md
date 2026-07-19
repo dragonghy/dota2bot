@@ -232,3 +232,14 @@ Owner's lane-play observations (from watching the replay) — future candidates:
 7. **Warlock (and similar) laning skill builds are wrong**: maxing the two
    push spells + channeling Upheaval under creep fire; should take Shadow
    Word for lane. Per-hero skill-build fixes.
+
+## ★ 15:29 UTC — TURBO BUG FIXED (was normal the whole time)
+Root cause: `+dota_start_ai_game 1` starts a NORMAL AI game and ignores turbo
+cvars. Fix: `+dota_bot_practice_start 1` + turbo cvars before `+map dota`.
+Verified: test E levels 8-11 @10min + team GPM 25.5k (turbo) vs test D 5-8 +
+20.4k (normal). ALL prior lab results (C1-C15, overnight) were NORMAL mode —
+their verdicts don't transfer to turbo and must be re-run. Farm restarted in
+TRUE turbo + role-balanced draft: run_20260719_1529, iter-0011-turbo.
+Two sub-agents launched: (1) replay behavioral-analysis pipeline to auto-detect
+the owner's bug classes (the real fix for "Claude can't see bugs"); (2) spot
+parallel farm for throughput. Both report back async.
