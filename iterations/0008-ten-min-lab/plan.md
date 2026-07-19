@@ -138,3 +138,6 @@ wakeup heartbeat).
   lanes. Biggest untapped econ pool.
 - **10:19 UTC — C10 launched** (run_1019): role-split caps — candidate
   cores (pos1-3) cap 0.65 to soak lanes, supports stay 0.45 on the push.
+- **10:28 UTC — C10 wave 1** (run_1019): mean **+1,630** (10/12 positive) —
+  right at the bias line (+1,504 refreshed / +2,146 W0). Swap wave running
+  (run_1028) to decide: effect = (1,630 − m_swap)/2.
