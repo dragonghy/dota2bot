@@ -556,7 +556,14 @@ function X.ConsiderW()
 				or GetUnitToUnitDistance( bot, npcTarget ) <= 400
 				or aliveEnemyCount <= 2
 			then
-				return BOT_ACTION_DESIRE_HIGH, npcTarget
+				-- [GH #4] Don't blink-strike INTO a pocket of 2+ enemies with no
+				-- kill and no numbers (e.g. charging Lina alone) -- suicide
+				-- initiation. Engage point = the blink target's location. Turbo +
+				-- soak-candidate ('nodive') gated; safe fights (lethal / numbers)
+				-- fall through via J.SafeToCommitFight.
+				if not J.ShouldSuppressDive( bot, npcTarget:GetLocation(), npcTarget ) then
+					return BOT_ACTION_DESIRE_HIGH, npcTarget
+				end
 			end
 		end
 	end
