@@ -18,6 +18,9 @@ sleep $((SLOT * 10))     # one-time desync so slots don't all load the map at on
 while true; do
     TS=$(date +%Y%m%d_%H%M%S)
     TAG="${TS}_slot${SLOT}"
+    # Stamp the exact code version this game runs (captured at launch, before
+    # any mid-game `git pull` from the iteration job can change HEAD).
+    VER=$(cd "$REPO" && git describe --tags --always --dirty 2>/dev/null || echo unknown)
 
     cd "$DOTA" && setsid bash -c "LD_LIBRARY_PATH=$DOTA/game/bin/linuxsteamrt64:$DOTA/game/dota/bin/linuxsteamrt64 \
         ./game/bin/linuxsteamrt64/dota2 \
@@ -50,7 +53,8 @@ while true; do
     LOG=/opt/soak/slot$SLOT/game_$TAG.log
     mv /opt/soak/slot$SLOT/stdout_$TAG.log "$LOG" 2>/dev/null
     if [ -s "$LOG" ]; then
-        SOAK_WALL_S=$WALL_S python3 "$REPO/tools/batch_test/soak/analyze_log.py" "$LOG" \
+        SOAK_WALL_S=$WALL_S SOAK_SCRIPT_VERSION="$VER" \
+            python3 "$REPO/tools/batch_test/soak/analyze_log.py" "$LOG" \
             > /opt/soak/slot$SLOT/analysis_$TAG.json 2>/dev/null
         gzip -f "$LOG"
         aws s3 cp "$LOG.gz" "$S3_PREFIX/$TAG.log.gz" --quiet

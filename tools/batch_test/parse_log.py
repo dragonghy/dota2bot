@@ -27,6 +27,8 @@ RE_DAMAGE = re.compile(r"Actual Player Damage: (\d+) Actual Building Damage: (\d
 # console timestamps for wall-clock (effective timescale): 07/19 04:22:47
 RE_TS = re.compile(r"^(\d\d)/(\d\d) (\d\d):(\d\d):(\d\d) ")
 RE_STATE = re.compile(r"entering state 'DOTA_GAMERULES_STATE_(\w+)'")
+# Building destruction timeline: "Building: npc_dota_badguys_tower1_top destroyed at 850.36"
+RE_BUILDING = re.compile(r"Building: (npc_dota_\w+) destroyed at (\d+(?:\.\d+)?)")
 # Lua errors / script perf warnings worth surfacing
 RE_SCRIPT_ERR = re.compile(r"(lua|script)[^\n]*error|attempt to (index|call|compare)", re.I)
 
@@ -49,6 +51,7 @@ def parse(path):
         "effective_timescale": None,
         "picks": {},              # playerid -> hero
         "players": [],            # per-player scoreboard
+        "towers": [],             # [{building, t}] destruction timeline (game seconds)
         "script_errors": [],
         "notes": [],
     }
@@ -80,11 +83,15 @@ def parse(path):
                 signout_wall = wall_seconds(line)
                 continue
 
-            m = RE_FORT.search(line)
-            if m and result["winner"] is None:
-                # goodguys fort destroyed => Dire won, and vice versa
-                result["winner"] = "dire" if m.group(1) == "goodguys" else "radiant"
-                result["duration_s"] = int(float(m.group(2)))
+            m = RE_BUILDING.search(line)
+            if m:
+                result["towers"].append({"building": m.group(1),
+                                         "t": int(float(m.group(2)))})
+                # fort destruction also decides the winner if no signout line
+                fm = RE_FORT.search(line)
+                if fm and result["winner"] is None:
+                    result["winner"] = "dire" if fm.group(1) == "goodguys" else "radiant"
+                    result["duration_s"] = int(float(fm.group(2)))
                 continue
 
             m = RE_PLAYER.search(line)

@@ -84,10 +84,19 @@ def analyze(path):
 
     return {
         "log": path,
+        # script_version: git describe of the code this game RAN, stamped at
+        # launch by soak_loop.sh (SOAK_SCRIPT_VERSION). The single most important
+        # field for later analysis — ties every game to an exact code version.
+        "script_version": os.environ.get("SOAK_SCRIPT_VERSION", "unknown"),
         "winner": base.get("winner"),
+        "duration_s": base.get("duration_s"),
         "duration_min": round(dur_min, 1),
+        "wall_s": base.get("wall_s"),
         "effective_timescale": base.get("effective_timescale"),
+        "mode": base.get("mode_guess"),
+        "avg_gpm": base.get("avg_gpm"),
         "players": base.get("players"),
+        "towers": base.get("towers"),
         "anomaly_count": len(anomalies),
         "anomalies": anomalies,
     }
