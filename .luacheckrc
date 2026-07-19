@@ -337,6 +337,7 @@ read_globals = {
     "RUNE_STATUS_UNKNOWN",
     "RUNE_WATER",
     "RandomInt",
+    "RealTime",
     "RandomVector",
     "RemapValClamped",
     "Rune",

@@ -2,7 +2,7 @@
 # Start the soak farm on this instance: N parallel slot loops, staggered.
 #   farm_start.sh [N_SLOTS] [RUN_ID]
 set -u
-N=${1:-8}
+N=${1:-16}
 RUN_ID=${2:-run_$(date +%Y%m%d_%H%M)}
 S3_PREFIX="s3://dota2bot-batch-results-4924/soak/$RUN_ID"
 REPO=/opt/dota2bot

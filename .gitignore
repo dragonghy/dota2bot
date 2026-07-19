@@ -72,3 +72,4 @@ game/Customize
 tools/batch_test/aws/.bake_instance_id
 __pycache__/
 *.pyc
+bots/Customize/soak_pool.lua
