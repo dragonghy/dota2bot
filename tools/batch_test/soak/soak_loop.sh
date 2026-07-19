@@ -37,10 +37,13 @@ while true; do
         -usercon +rcon_password $RCON_PW \
         +sv_lan 1 +sv_cheats 1 \
         +sv_hibernate_when_empty 0 \
-        +dota_force_gamemode 23 \
-        +dota_start_ai_game 1 \
         +dota_surrender_on_disconnect 0 \
         +dota_auto_surrender_all_disconnected_timeout 86400 \
+        +dota_bot_practice_difficulty 3 \
+        +dota_bot_practice_gamemode 23 \
+        +dota_force_gamemode 23 \
+        +dota_lobby_browser_selected_gamemode 23 \
+        +dota_bot_practice_start 1 \
         +host_timescale 4 \
         -fill_with_bots \
         +map dota \
