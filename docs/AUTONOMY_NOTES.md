@@ -37,6 +37,14 @@ owner returns.
 - 2026-07-19: Hot reload (`dota_bot_reload_scripts`) verified to NOT reload
   BotLib hero files — inner loop relies on unit tests instead.
 
+## Planned Work (not yet done)
+
+- **Spot migration** — `tools/batch_test/aws/SPOT_MIGRATION_PLAN.md`. Switch the
+  farm from on-demand ($497/mo) to a self-healing Spot ASG (~$187/mo, -62%), or
+  same budget for ~2x throughput on a spot c6i.8xlarge. Owner approved writing
+  the plan; implement after the current 48h on-demand run finishes. Bake stays
+  on-demand.
+
 ## Open Questions for the Owner
 
 1. send_later/Routine scheduling requires per-call approval in this
