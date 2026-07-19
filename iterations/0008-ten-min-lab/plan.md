@@ -183,3 +183,8 @@ wakeup heartbeat).
   +633 → **B1 true effect ≈ −170 ± ~780** — the C10 promotion (+331) was
   likely noise; B1 ≈ B0. Accumulating 2 more paired waves to reach ±~400
   and decide keep-vs-revert honestly.
+- **11:45 UTC — B1 REVERTED** (4 confirmation waves: effect −176±550, the
+  +331 promotion was noise). Baseline = uniform 0.45 cap (iter-0010).
+  Role-split kept as gate c10r for a future higher-n retest.
+- **11:45 UTC — Consolidation**: farm on clean baseline soak
+  (run_20260719_1136); morning report written (REPORT.md).
