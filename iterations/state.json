@@ -1,13 +1,17 @@
 {
-  "iteration_count": 3,
+  "iteration_count": 4,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
-    "run_prefixes": ["soak/run_20260719_0455", "soak/run_20260719_0630"],
+    "run_prefixes": [
+      "soak/run_20260719_0455",
+      "soak/run_20260719_0630",
+      "soak/run_20260719_0716"
+    ],
     "instance_tag": "dota2bot-soak"
   },
   "watermark": {
-    "last_processed_key": "20260719_063250_slot16.analysis.json",
-    "games_ingested_total": 40
+    "last_processed_key": "20260719_065127_slot4.analysis.json",
+    "games_ingested_total": 41
   },
   "fixed_issues": [
     "side_bias:soak_draft_frozen_radiant_lineup",
@@ -19,13 +23,41 @@
     "sniper:shrapnel_charge_api"
   ],
   "open_issues": [
-    {"key": "outcome_scoring:iter_0002_0003", "note": "iter-0001 scored in 0003/analysis.md (draft fix works: lineups vary, dire wins ~1/3; radiant winrate ~65% worth watching). Next: score iter-0002 closing fixes by TIME-TO-FIRST-RAX and building dmg/min (duration now clips at the 40-min cap), and iter-0003 by max duration <= ~43 min + no more 45-min wall kills. Owner suspects push desire is STILL too low post-iter-0002 (first cohort games ran 16+ wall min); if first-rax stays > ~30 min, raise advantage push cap further and attack push_think:tower_yoyo.", "first_seen_iter": 2},
-    {"key": "push_think:tower_yoyo", "note": "PushThink retreats on a single tower hit whenever a creep wave is present (WasRecentlyDamagedByTower window 2-4s) -> bots yo-yo under towers, gutting building DPS. Micro change; verify in-game before touching. aba_push.lua PushThink, TS mirror.", "first_seen_iter": 2},
-    {"key": "vscript_errors:masked", "note": "11-20/game 'error in error handling', no consistent context. Bot-VM print() does NOT reach dedicated-server console, so in-game markers are invisible — unmasking needs an error()-based emit or on-instance probe of a live game.", "first_seen_iter": 1},
-    {"key": "loser_building_damage:zero", "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.", "first_seen_iter": 2},
-    {"key": "script_perf:GetDesire", "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.", "first_seen_iter": 1},
-    {"key": "invalid_orders:dead_targets", "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.", "first_seen_iter": 2},
-    {"key": "feeder:pending_rebaseline", "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.", "first_seen_iter": 1}
+    {
+      "key": "outcome_scoring:iter_0004",
+      "note": "iter-0002 scored in 0004/analysis.md (partial: T1s fall by 10-15min now, but first-rax still 38min, 53min games). Next firing: score iter-0004 from soak/run_20260719_0716 \u2014 first-rax <~28min, durations 25-35min, none past ~42 (overtime forfeit) or 35 wall-min. Also verify winner still meaningful and cores don't feed while ahead (dive risk). If still slow, attack push_think:tower_yoyo next.",
+      "first_seen_iter": 2
+    },
+    {
+      "key": "push_think:tower_yoyo",
+      "note": "PushThink retreats on a single tower hit whenever a creep wave is present (WasRecentlyDamagedByTower window 2-4s) -> bots yo-yo under towers, gutting building DPS. Micro change; verify in-game before touching. aba_push.lua PushThink, TS mirror.",
+      "first_seen_iter": 2
+    },
+    {
+      "key": "vscript_errors:masked",
+      "note": "11-20/game 'error in error handling', no consistent context. Bot-VM print() does NOT reach dedicated-server console, so in-game markers are invisible \u2014 unmasking needs an error()-based emit or on-instance probe of a live game.",
+      "first_seen_iter": 1
+    },
+    {
+      "key": "loser_building_damage:zero",
+      "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.",
+      "first_seen_iter": 2
+    },
+    {
+      "key": "script_perf:GetDesire",
+      "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.",
+      "first_seen_iter": 1
+    },
+    {
+      "key": "invalid_orders:dead_targets",
+      "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.",
+      "first_seen_iter": 2
+    },
+    {
+      "key": "feeder:pending_rebaseline",
+      "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.",
+      "first_seen_iter": 1
+    }
   ],
   "last_release_tag": "v0.1-baseline",
   "next_ab_after_iteration": 5,
@@ -46,7 +78,13 @@
       "commit": "81c2eec",
       "deployed_utc": "2026-07-19T07:15:00Z",
       "run_prefix_started": null,
-      "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm — stamps before this read 'iter-0001-dirty' etc.; clean from here."
+      "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm \u2014 stamps before this read 'iter-0001-dirty' etc.; clean from here."
+    },
+    "iter-0004": {
+      "commit": "9260ccf",
+      "deployed_utc": "2026-07-19T07:16:00Z",
+      "run_prefix_started": "soak/run_20260719_0716",
+      "note": "push caps 0.85/0.95 + closing urgency (turbo>25min). Farm fully restarted on iter-0004 per owner; in-flight iter-0002/0003 games sacrificed. 35-min wall backstop + 40-min overtime forfeit both active. Score from run_20260719_0716: first-rax <28min, most games 25-35min."
     }
   }
 }
