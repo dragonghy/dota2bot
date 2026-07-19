@@ -246,6 +246,15 @@ should understand what happened and why without external context.
 
 ---
 
+## 4.5 Owner Communication — reply in Chinese
+
+**每次运行结束时,给 owner 的最终总结和 PushNotification 通知一律用中文写**
+(简体中文,技术名词/代码标识符可保留英文)。迭代记录文件
+(`iterations/**/*.md`、commit message)保持英文,便于 grep 和工具处理;
+但发给 owner 本人看的回复、通知、结论,必须是中文。
+
+---
+
 ## 5. What the Master Session Checks (keep these legible)
 
 The owner's master session supervises by reading, in order:
