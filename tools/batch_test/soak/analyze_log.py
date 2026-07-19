@@ -51,6 +51,18 @@ def analyze(path):
     if slow:
         anomalies.append({"type": "script_perf", "hotspots": slow})
 
+    # achieved timescale: stdout has no per-line clock, so the loop passes
+    # measured wall seconds via SOAK_WALL_S.
+    wall_s = os.environ.get("SOAK_WALL_S")
+    if wall_s and base.get("duration_s"):
+        try:
+            w = int(wall_s)
+            if w > 0:
+                base["effective_timescale"] = round(base["duration_s"] / w, 2)
+                base["wall_s"] = w
+        except ValueError:
+            pass
+
     dur_min = (base.get("duration_s") or 0) / 60
     if base.get("winner") is None:
         anomalies.append({"type": "no_winner", "note": "game did not finish"})

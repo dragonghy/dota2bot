@@ -36,17 +36,21 @@ while true; do
         echo \$! > /opt/soak/slot$SLOT/pid"
 
     PID=$(cat /opt/soak/slot$SLOT/pid 2>/dev/null || echo 0)
+    START_EPOCH=$(date +%s)
     WAITED=0
     while kill -0 "$PID" 2>/dev/null && [ $WAITED -lt $((GAME_CAP_MIN * 60)) ]; do
         sleep 30; WAITED=$((WAITED + 30))
     done
     kill -9 "$PID" 2>/dev/null
+    WALL_S=$(( $(date +%s) - START_EPOCH ))
 
-    # collect + analyze + ship (dedicated-server stdout carries the console stream)
+    # collect + analyze + ship (dedicated-server stdout carries the console stream).
+    # WALL_S lets analyze_log compute the achieved timescale (stdout has no
+    # per-line clock, so wall time is measured here instead).
     LOG=/opt/soak/slot$SLOT/game_$TAG.log
     mv /opt/soak/slot$SLOT/stdout_$TAG.log "$LOG" 2>/dev/null
     if [ -s "$LOG" ]; then
-        python3 "$REPO/tools/batch_test/soak/analyze_log.py" "$LOG" \
+        SOAK_WALL_S=$WALL_S python3 "$REPO/tools/batch_test/soak/analyze_log.py" "$LOG" \
             > /opt/soak/slot$SLOT/analysis_$TAG.json 2>/dev/null
         gzip -f "$LOG"
         aws s3 cp "$LOG.gz" "$S3_PREFIX/$TAG.log.gz" --quiet

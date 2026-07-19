@@ -62,3 +62,25 @@ owner returns.
 - (from first complete game, pre-farm) turbo game dragged to 56 min — bots
   can't close; slow_close is the #1 macro target. Perf hotspots: GetDesire
   2-3ms on several heroes.
+
+### Run run_20260719_0455 — first cohort (4 games, 16-slot farm)
+
+Every one of the first 4 games flagged the same cluster:
+- **slow_close (3/4, the 4th at 38min just under the 40min bar):** turbo games
+  run 38-47 game-minutes vs the ~25 expected. Tower progress is *steady*, not
+  stalled — bots win but close too slowly (grouping / pressing-advantage
+  macro, shared mode layer). #1 macro target confirmed.
+- **feeder every game:** a hero going >=8 deaths / <=2 kills. Per-hero behavior
+  bug, high-value + tractable. NEXT: aggregate which heroes feed most across
+  the run to rank fixes.
+- **low_gpm core every game:** a core under 300 GPM in turbo = broken farming
+  for that hero/position. Same aggregate-and-rank approach.
+- **script_perf every game:** GetDesire/ItemUsageThink hotspots >=8ms.
+
+Throughput: 16 slots saturate the 16 vCPUs (loadavg ~16), dragging achieved
+timescale to ~2.3x (measured from wall vs game clock). This does NOT hurt
+fidelity (lower timescale = more bot think-updates per game-second) — only
+throughput efficiency. Added SOAK_WALL_S telemetry so effective_timescale is
+recorded per game; let the loop pick the optimal slot count from ~20+ games of
+data rather than tuning on 4. Radiant won all 4 (noise at n=4; watch for a real
+side bias).
