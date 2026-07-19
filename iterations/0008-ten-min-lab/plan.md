@@ -92,3 +92,13 @@ wakeup heartbeat).
   quoting fumbles; file verified `return 'radiant'`): candidate=radiant
   plays with NO farm cap vs baseline dire. Verdict = mean(R−D gold) vs W0
   bias +2146, then swap wave.
+- **09:35 UTC — C1 VERDICT: REJECTED** (run_0927, 12 games, cand=radiant):
+  margins mean −979 raw / **≈−3,125 bias-corrected** (4/12 positive vs
+  W0's 9/12). Removing the farm cap HURTS 10-min econ — the post-laning
+  push doctrine (tower gold) out-earns free farming. Gate code left in
+  tree (inert), candidate abandoned.
+- **KEY INSIGHT**: turbo laning-phase hard floor is 8 min → bots lane for
+  ~80% of a 10-min game; desire-level knobs only touch minutes 8-11.
+  Real lever = laning window itself.
+- **09:35 UTC — C2 launched** (run_0935): candidate side laning floor
+  8→5 min (soft 10→7), converting minutes 5-10 into push/objective play.
