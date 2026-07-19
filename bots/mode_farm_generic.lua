@@ -74,15 +74,14 @@ function GetDesire()
 		-- [LAB C10] role-split caps: supports stay committed to the push
 		-- (0.45) while cores keep a looser cap (0.65) to soak the ~57% of
 		-- lane gold left uncollected when everyone groups on one lane.
-		-- BASELINE B1 (promoted lab C10, effect +331 weak-positive): cores
-		-- keep a looser cap to soak side-lane gold while supports commit to
-		-- the push. [LAB C11] sweeps the core cap further to 0.80.
-		-- [LAB b0] regression gate: candidate side reverts to the PRE-B1
-		-- uniform 0.45 cap — repeated paired waves measure B1's true effect
-		-- with tight confidence for the morning report.
-		local nCap = J.IsSoakCandidate('c13') and 0.35 or 0.45
-		if J.GetPosition(bot) <= 3 and not J.IsSoakCandidate('b0') then
-			nCap = J.IsSoakCandidate('c11') and 0.80 or 0.65
+		-- B1 (role-split caps) was reverted after 4 confirmation waves put
+		-- its true effect at -176±550 (the +331 promotion was noise); the
+		-- uniform 0.45 cap is the standing baseline. [LAB c10r] re-enables
+		-- the role split (cores 0.65) on the candidate side for future
+		-- re-tests with larger n.
+		local nCap = 0.45
+		if J.IsSoakCandidate('c10r') and J.GetPosition(bot) <= 3 then
+			nCap = 0.65
 		end
 		res = Min(res, nCap)
 	end
