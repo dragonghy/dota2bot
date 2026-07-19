@@ -134,7 +134,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     end
     local gameState = getGlobalGameState()
     local locationState = getGlobalLocationState()
-    local nMaxDesire = 0.85
+    local nMaxDesire = 0.92
     local nSearchRange = 2000
     local botActiveMode = bot:GetActiveMode()
     local nModeDesire = bot:GetActiveModeDesire()
@@ -161,7 +161,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     local nCloseByTime = jmz.IsModeTurbo() and 25 * 60 or 40 * 60
     local bPastCloseByTime = gameState.currentTime > nCloseByTime
     if bPastCloseByTime then
-        nMaxDesire = math.max(nMaxDesire, 0.92)
+        nMaxDesire = math.max(nMaxDesire, 0.95)
     end
     local enemiesAtAncient = jmz.Utils.CountEnemyHeroesNear(
         ourAncient:GetLocation(),
@@ -255,7 +255,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     local aAliveCoreCount = gameState.aliveAllyCoreCount
     local eAliveCoreCount = gameState.aliveEnemyCoreCount
     local hAncient = gameState.ourAncient
-    local nPushDesire = 0.5
+    local nPushDesire = 1.0
     local teamAncientLoc = hAncient:GetLocation()
     local nEffAlliesNearAncient = #jmz.GetAlliesNearLoc(teamAncientLoc, 4500) + #jmz.Utils.GetAllyIdsInTpToLocation(teamAncientLoc, 4500)
     local nEnemiesAroundAncient = jmz.GetEnemiesAroundLoc(teamAncientLoc, 4500)
@@ -336,7 +336,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
                 nPushDesire = nPushDesire + groupBonus
             end
             if bPastCloseByTime then
-                nPushDesire = nPushDesire + 0.25
+                nPushDesire = nPushDesire + 0.35
             end
             return RemapValClamped(
                 nPushDesire * jmz.GetHP(bot),

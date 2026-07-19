@@ -60,6 +60,13 @@ function GetDesire()
 	-- if DotaTime() > 30 and cachedVar ~= nil then return cachedVar end
 	local res = GetDesireHelper()
 	-- J.Utils.SetCachedVars(cacheKey, res)
+	-- Farming must not outcompete pushing: once the early game is over,
+	-- normal farm desire is capped hard below the push cap (0.92), so the
+	-- team's main intent stays on taking structures; rebalance via winrate
+	-- in later iterations. Escape returns (ShouldRun, > 1.0) stay untouched.
+	if res ~= nil and res <= 1.0 and not J.IsEarlyGame() then
+		res = Min(res, 0.45)
+	end
 	return res
 end
 

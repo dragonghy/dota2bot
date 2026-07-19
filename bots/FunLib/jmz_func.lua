@@ -4580,7 +4580,7 @@ end
 -- in soak_loop.sh, which loses the game's data). Inert off-farm: without the
 -- soak_pool file IsSoakOvertime() is always false, so shipped behavior is
 -- unchanged.
-local nSoakOvertimeCap = 40 * 60
+local nSoakOvertimeCap = 35 * 60
 function J.IsSoakOvertime()
 	return DotaTime() > nSoakOvertimeCap and J.IsSoakFarm()
 end

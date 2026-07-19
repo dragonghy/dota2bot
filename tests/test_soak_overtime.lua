@@ -27,10 +27,10 @@ tests['overtime: false before the cap, true after, on a farm instance'] = functi
     write_pool()
     local ok, err = pcall(function()
         local J = fresh_jmz()
-        DotaTime = function() return 39 * 60 end
-        assert(J.IsSoakOvertime() == false, 'before 40 game-min must not be overtime')
-        DotaTime = function() return 41 * 60 end
-        assert(J.IsSoakOvertime() == true, 'past 40 game-min on the farm must be overtime')
+        DotaTime = function() return 34 * 60 end
+        assert(J.IsSoakOvertime() == false, 'before 35 game-min must not be overtime')
+        DotaTime = function() return 36 * 60 end
+        assert(J.IsSoakOvertime() == true, 'past 35 game-min on the farm must be overtime')
     end)
     os.remove(POOL_PATH)
     if not ok then error(err, 0) end

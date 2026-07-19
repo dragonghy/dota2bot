@@ -272,7 +272,9 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     const locationState = getGlobalLocationState();
     // const unitState = updateUnitStateCache(); // Not used in this function
 
-    let nMaxDesire = 0.85;
+    // Owner directive (iter-0005): pushing outranks farming BY DEFAULT —
+    // fast games mean fast iteration; rebalance later against winrate.
+    let nMaxDesire = 0.92;
     const nSearchRange = 2000;
     const botActiveMode = bot.GetActiveMode();
     const nModeDesire = bot.GetActiveModeDesire();
@@ -308,7 +310,7 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     const nCloseByTime = jmz.IsModeTurbo() ? 25 * 60 : 40 * 60;
     const bPastCloseByTime = gameState.currentTime > nCloseByTime;
     if (bPastCloseByTime) {
-        nMaxDesire = math.max(nMaxDesire, 0.92);
+        nMaxDesire = math.max(nMaxDesire, 0.95);
     }
 
     const enemiesAtAncient = jmz.Utils.CountEnemyHeroesNear(ourAncient!.GetLocation(), BASE_ANC_RADIUS);
@@ -429,7 +431,13 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
 
     const hAncient = gameState.ourAncient;
     // Base push desire calculation - missing function implementation
-    let nPushDesire = 0.5; // Default base desire
+    // Base desire 1.0: the final value is nPushDesire * HP remapped onto
+    // [0, nMaxDesire], i.e. multiplicative — with the old 0.5-0.65 base an
+    // even-game core NEVER outranked farm's 0.9 no matter the cap. At 1.0 a
+    // healthy bot pushes at the full cap (0.92 even, 0.95 ahead/overtime);
+    // farm desire is additionally capped at 0.85 post-laning (owner
+    // directive: pushing beats farming by default, rebalance via winrate).
+    let nPushDesire = 1.0;
     //   const allyKills = jmz.GetNumOfTeamTotalKills(false) + 1;
     //   const enemyKills = jmz.GetNumOfTeamTotalKills(true) + 1;
     //   const teamKillsRatio = allyKills / enemyKills; // (not used later but retained)
@@ -528,7 +536,7 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
                 nPushDesire = nPushDesire + groupBonus;
             }
             if (bPastCloseByTime) {
-                nPushDesire = nPushDesire + 0.25;
+                nPushDesire = nPushDesire + 0.35;
             }
 
             return RemapValClamped(nPushDesire * jmz.GetHP(bot), 0, 1, 0, nMaxDesire) as BotModeDesire;
