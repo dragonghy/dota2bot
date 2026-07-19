@@ -148,3 +148,9 @@ wakeup heartbeat).
   supports 0.45; farm tag base-b1). Rationale: cheap false-positive risk,
   explore around a promising point.
 - **10:37 UTC — C11 launched** (run_1037): core cap sweep 0.65 → 0.80 vs B1.
+- **10:45 UTC — C11 VERDICT: REJECTED** (run_1037, 11 games): mean −497 /
+  ≈−2k corrected. Core-cap 0.80 overshoots. **Cap axis fully mapped**:
+  none −3.1k · 0.30 −1.2k · 0.45 base · **0.65-cores +0.3k (B1 = peak)** ·
+  0.80 −2k.
+- **10:45 UTC — C12 launched** (run_1045): death-avoidance axis — candidate
+  retreats at HP<0.45 with ≥1 damaging enemy (baseline 0.3 / ≥2).
