@@ -4567,14 +4567,35 @@ end
 -- side of the current mirror wave. Candidate code paths are gated on this;
 -- without the file (i.e. everywhere outside the farm) it is always false,
 -- so shipped behavior is the baseline.
-local sSoakSideCache = nil
-function J.IsSoakCandidateSide()
-	if sSoakSideCache == nil then
-		local bOk, side = pcall( dofile, GetScriptDirectory()..'/Customize/soak_side' )
-		sSoakSideCache = ( bOk and ( side == 'radiant' or side == 'dire' ) ) and side or false
+-- soak_side.lua may return 'radiant'/'dire' (candidate id defaults to c1)
+-- or a table { side = 'radiant'|'dire', cand = '<id>' }.
+local tSoakSideCache = nil
+local function GetSoakSideConf()
+	if tSoakSideCache == nil then
+		local bOk, v = pcall( dofile, GetScriptDirectory()..'/Customize/soak_side' )
+		if bOk and ( v == 'radiant' or v == 'dire' ) then
+			tSoakSideCache = { side = v, cand = 'c1' }
+		elseif bOk and type( v ) == 'table' and ( v.side == 'radiant' or v.side == 'dire' ) then
+			tSoakSideCache = { side = v.side, cand = v.cand or 'c1' }
+		else
+			tSoakSideCache = false
+		end
 	end
-	if sSoakSideCache == false then return false end
-	local nSideTeam = sSoakSideCache == 'radiant' and TEAM_RADIANT or TEAM_DIRE
+	return tSoakSideCache
+end
+function J.IsSoakCandidateSide()
+	local conf = GetSoakSideConf()
+	if not conf then return false end
+	local nSideTeam = conf.side == 'radiant' and TEAM_RADIANT or TEAM_DIRE
+	return GetTeam() == nSideTeam
+end
+-- true only when this bot is on the candidate side AND the active candidate
+-- id matches — lets several gated experiments coexist in the tree with
+-- exactly one active per wave.
+function J.IsSoakCandidate( sId )
+	local conf = GetSoakSideConf()
+	if not conf or conf.cand ~= sId then return false end
+	local nSideTeam = conf.side == 'radiant' and TEAM_RADIANT or TEAM_DIRE
 	return GetTeam() == nSideTeam
 end
 

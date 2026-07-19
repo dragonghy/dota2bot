@@ -69,7 +69,7 @@ function GetDesire()
 	-- outside the farm (J.IsSoakCandidateSide is false without the farm-only
 	-- side file).
 	if res ~= nil and res <= 1.0 and not J.IsEarlyGame()
-		and not J.IsSoakCandidateSide() then
+		and not J.IsSoakCandidate('c1') then
 		res = Min(res, 0.45)
 	end
 	return res
