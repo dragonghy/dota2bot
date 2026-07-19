@@ -800,11 +800,27 @@ function ____exports.PushThink(bot, lane)
     end
     if jmz.IsValidBuilding(nEnemyTowers[1]) and (nEnemyTowers[1]:GetAttackTarget() == bot or nEnemyTowers[1]:GetAttackTarget() ~= bot and bot:WasRecentlyDamagedByTower(#nAllyCreeps <= 2 and 4 or 2)) then
         local nDamage = nEnemyTowers[1]:GetAttackDamage() * nEnemyTowers[1]:GetAttackSpeed() * 5 - bot:GetHealthRegen() * 5
-        if bot:GetActualIncomingDamage(nDamage, DamageType.Physical) / bot:GetHealth() > 0.15 or #nAllyCreeps > 2 then
+        local bDangerous = bot:GetActualIncomingDamage(nDamage, DamageType.Physical) / bot:GetHealth() > 0.2
+        if bDangerous or #nAllyCreeps == 0 then
+            -- Real danger, or no creeps to soak aggro: step out of tower range.
             local retreat = math.min(fDeltaFromFront - 200, -300)
             local retreatLoc = GetLaneFrontLocation(gameState.team, lane, retreat)
             bot:Action_MoveToLocation(retreatLoc)
             return
+        end
+        -- A wave is tanking and the damage is affordable: do NOT yo-yo out
+        -- (the old '#nAllyCreeps > 2 -> retreat' made bots step back on every
+        -- tower hit exactly when it was safest to keep hitting). If the tower
+        -- is locked onto us, shed aggro like a human: attack-command a
+        -- deniable allied creep (deny orders are always legal); the tower
+        -- retargets and we keep sieging.
+        if nEnemyTowers[1]:GetAttackTarget() == bot then
+            for _, hCreep in pairs(nAllyCreeps) do
+                if hCreep ~= nil and hCreep:IsAlive() and hCreep:GetHealth() / hCreep:GetMaxHealth() < 0.5 then
+                    bot:Action_AttackUnit(hCreep, true)
+                    return
+                end
+            end
         end
     end
     hEnemyAncient = gameState.enemyAncient

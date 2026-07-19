@@ -853,11 +853,27 @@ export function PushThink(bot: Unit, lane: Lane): void {
         (nEnemyTowers[0].GetAttackTarget() === bot || (nEnemyTowers[0].GetAttackTarget() !== bot && bot.WasRecentlyDamagedByTower(nAllyCreeps.length <= 2 ? 4.0 : 2.0)))
     ) {
         const nDamage = nEnemyTowers[0].GetAttackDamage() * nEnemyTowers[0].GetAttackSpeed() * 5.0 - bot.GetHealthRegen() * 5.0;
-        if (bot.GetActualIncomingDamage(nDamage, DamageType.Physical) / bot.GetHealth() > 0.15 || nAllyCreeps.length > 2) {
+        const bDangerous = bot.GetActualIncomingDamage(nDamage, DamageType.Physical) / bot.GetHealth() > 0.2;
+        if (bDangerous || nAllyCreeps.length === 0) {
+            // Real danger, or no creeps to soak aggro: step out of tower range.
             const retreat = Math.min(fDeltaFromFront - 200, -300);
             const retreatLoc = GetLaneFrontLocation(gameState.team, lane, retreat);
             bot.Action_MoveToLocation(retreatLoc);
             return;
+        }
+        // A wave is tanking and the damage is affordable: do NOT yo-yo out
+        // (the old 'nAllyCreeps > 2 -> retreat' made bots step back on every
+        // tower hit exactly when it was safest to keep hitting). If the tower
+        // is locked onto us, shed aggro like a human: attack-command a
+        // deniable allied creep (deny orders are always legal); the tower
+        // retargets and we keep sieging.
+        if (nEnemyTowers[0].GetAttackTarget() === bot) {
+            for (const hCreep of nAllyCreeps) {
+                if (hCreep != null && hCreep.IsAlive() && hCreep.GetHealth() / hCreep.GetMaxHealth() < 0.5) {
+                    bot.Action_AttackUnit(hCreep, true);
+                    return;
+                }
+            }
         }
     }
 
