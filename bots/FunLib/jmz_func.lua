@@ -4562,7 +4562,19 @@ function J.GetClosestUnit(units)
 	return target;
 end
 
+local bModeTurboCache = nil
 function J.IsModeTurbo()
+	if bModeTurboCache ~= nil then return bModeTurboCache end
+
+	-- Authoritative: the engine tells us the game mode directly. The courier
+	-- speed heuristic below is only a fallback for engines without
+	-- GetGameMode — if a patch changes courier speed the heuristic silently
+	-- reports "normal mode" and every turbo pacing adaptation turns off.
+	if GetGameMode ~= nil and GAMEMODE_TURBO ~= nil then
+		bModeTurboCache = GetGameMode() == GAMEMODE_TURBO
+		return bModeTurboCache
+	end
+
 	for _, u in pairs(GetUnitList(UNIT_LIST_ALLIES))
 	do
 		if u ~= nil
@@ -4570,6 +4582,8 @@ function J.IsModeTurbo()
 		then
 			if u:GetCurrentMovementSpeed() == 1100
 			then
+				-- cache only the positive: pre-courier frames can't prove "not turbo"
+				bModeTurboCache = true
 				return true
 			end
 		end
