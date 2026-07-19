@@ -159,3 +159,23 @@ wakeup heartbeat).
 - **10:54 UTC — C13 launched** (run_1054): support cap 0.45→0.35 (harder
   push commitment for pos4/5, complement of B1's core-soak).
 - AWS check: $35.17 MTD, only the soak box running (unchanged).
+- **11:02 UTC — C13 VERDICT: REJECTED** (run_1054, 11 games): mean −339 /
+  ≈−1.8k corrected. Support cap 0.45 stands.
+- **11:02 UTC — MODE SHIFT**: quick-knob space exhausted (8 candidates
+  tested, 1 weak win promoted). Remaining night = repeated paired b0
+  regression waves (candidate side reverts to pre-B1 uniform caps) to pin
+  B1's true effect with tight CI for the morning report; plus offline
+  investigation of disaster heroes (DK 218 GPM / 12 LH).
+
+### Scoreboard @ 11:02 UTC (all effects bias-corrected)
+| cand | change | effect | verdict |
+|---|---|---|---|
+| C1 | no farm cap | −3,125 | reject |
+| C2 | lane exit 8→5min | −2,608 | reject |
+| C3 | OHA custom last-hit micro | −3,588 | reject (micro worse than engine CS) |
+| C4 | full-game laning | −108 (paired) | neutral reject |
+| C7 | cap 0.30 | ≈−1,200 | reject |
+| C10 | role-split caps (cores 0.65) | **+331 (paired)** | **promoted → B1** |
+| C11 | core cap 0.80 | ≈−2,000 | reject |
+| C12 | earlier retreat | ≈−833 | reject |
+| C13 | support cap 0.35 | ≈−1,843 | reject |
