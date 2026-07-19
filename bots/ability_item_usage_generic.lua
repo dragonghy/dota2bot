@@ -5308,6 +5308,15 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 		and not bot:HasModifier( "modifier_arc_warden_tempest_double" )
 	then
 
+		-- [GH #3] enemy on our face but we can still walk: step to safety /
+		-- break vision FIRST, then TP next frame. Don't channel a 3s TP in the
+		-- enemy's face. (turbo + soak candidate 'tpsafe' only; conservative —
+		-- rooted / can't outrun / would die before a walk step all fall through)
+		if J.ShouldWalkNotTp( bot )
+		then
+			return BOT_ACTION_DESIRE_NONE
+		end
+
 		--第一种情况:无敌人无大药回家恢复
 		if botHP < 0.19
 			and not J.ShouldStayAndRegen( bot )   -- [GH #2] turbo: heal in lane, don't TP home
