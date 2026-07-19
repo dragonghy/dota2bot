@@ -119,3 +119,7 @@ wakeup heartbeat).
 - **09:54 UTC — C4 launched** (run_0954): inverse of C2 — candidate side
   lanes the WHOLE capped game (floor 12 min). Rationale: pre-10min tower
   gold is scarce; C1/C2 both showed lane income dominates.
+- **10:02 UTC — C4 wave 1** (run_0954): mean **+1,396** (8/12 positive),
+  bias-corrected ≈ −750 — statistically NEUTRAL vs baseline, best candidate
+  so far. Running the swap wave (candidate on dire, run_1002) to sharpen:
+  effect = (m_normal − m_swap)/2.
