@@ -38,6 +38,10 @@ while true; do
         || (cd "$REPO" && git describe --tags --always --dirty 2>/dev/null) \
         || echo unknown)
 
+    # slot 1: purge any stale .dem BEFORE launch so the post-game upload can't
+    # grab a leftover replay from an earlier/killed game (attribution safety).
+    if [ "$SLOT" = "1" ]; then rm -f "$REPLAYDIR"/*.dem "$REPLAYDIR"/discarded/replays/*.dem 2>/dev/null; fi
+
     cd "$DOTA" && setsid bash -c "LD_LIBRARY_PATH=$DOTA/game/bin/linuxsteamrt64:$DOTA/game/dota/bin/linuxsteamrt64 \
         ./game/bin/linuxsteamrt64/dota2 \
         -dedicated -insecure -nogc -nowatchdog \
