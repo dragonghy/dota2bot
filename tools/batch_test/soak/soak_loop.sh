@@ -48,11 +48,15 @@ while true; do
     WAITED=0
     while kill -0 "$PID" 2>/dev/null && [ $WAITED -lt $((GAME_CAP_MIN * 60)) ]; do
         sleep 30; WAITED=$((WAITED + 30))
-        # 30-game-min referee: once the game clock passes the cap, force the
-        # economically leading team to win (instant, normal signout). Start
-        # polling after 6 wall-min — the cap can't be reached earlier.
-        if [ $WAITED -ge 360 ]; then
+        # 30-game-min referee: extrapolates the game clock from Building
+        # lines in the stdout log; past the cap it fires `dota_dev forcewin`
+        # (instant end, normal signout; analyze_log overrides the winner with
+        # the economic leader). Start polling after 5 wall-min — the cap
+        # cannot be reached earlier.
+        if [ $WAITED -ge 300 ]; then
             python3 "$REFEREE" "$PORT" "$RCON_PW" \
+                /opt/soak/slot$SLOT/stdout_$TAG.log \
+                /opt/soak/slot$SLOT/refstate_$TAG.json \
                 >> /opt/soak/slot$SLOT/referee_$TAG.log 2>&1 || true
         fi
     done

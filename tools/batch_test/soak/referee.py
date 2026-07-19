@@ -1,30 +1,41 @@
 #!/usr/bin/env python3
-"""30-minute referee for soak-farm games (owner rule: game is capped at 30
-game-minutes; the economically leading team at the cap wins).
+"""30-minute referee for soak-farm games (owner rule: the game is locked to
+30 game-minutes; the ECONOMIC leader at the cap is the winner).
 
-Talks to the dedicated server over Source RCON (server must be launched with
--usercon +rcon_password ...) and uses the server-side `script` console command
-(sv_cheats 1) to read game time + per-team networth and, once the cap is
-reached, force the winner via GameRules:SetGameWinner — the game ends
-IMMEDIATELY with a normal Match signout scoreboard.
+The dedicated server offers no query commands, bot print() never reaches any
+log, and Lua error payloads are masked — so the referee learns the game clock
+from the console stream itself: `Building: ... destroyed at <T>` lines carry
+exact game time. Each poll records (wall_now, max_building_T) into a sidecar
+state file, measures the achieved timescale live from consecutive
+observations, and extrapolates the current game time. Once the estimate
+passes the cap it fires `dota_dev forcewin` over RCON (verified: ends the
+game instantly with a normal Match signout scoreboard).
+
+Which team the engine credits is irrelevant: analyze_log.py overrides the
+winner for capped games with the economic leader computed from the signout
+scoreboard (sum of GPM x duration per team) — that is the owner's metric.
 
 Usage:
-    referee.py PORT PASSWORD [--cap-min 30] [--query-only]
+    referee.py PORT PASSWORD LOG_PATH STATE_PATH [--cap-min 30]
 
-Exit codes:
-    0  game was force-ended now (or a decision was executed)
-    1  game still below the cap (caller keeps polling)
-    2  rcon unreachable / query failed (game loading or already over)
+Exit codes: 0 = game over / just force-ended;  1 = keep polling;
+            2 = transient failure (no rcon / no data yet)
 """
 import argparse
+import json
+import os
+import re
 import socket
 import struct
 import sys
+import time
 
 SERVERDATA_AUTH = 3
 SERVERDATA_AUTH_RESPONSE = 2
 SERVERDATA_EXECCOMMAND = 2
-SERVERDATA_RESPONSE_VALUE = 0
+
+RE_BUILDING = re.compile(r"^Building: npc_dota_\w+ destroyed at ([0-9]+(?:\.[0-9]+)?)", re.M)
+DEFAULT_TIMESCALE = 2.4
 
 
 class Rcon:
@@ -33,7 +44,6 @@ class Rcon:
         self.sock.settimeout(timeout)
         self._id = 0
         self._send(SERVERDATA_AUTH, password)
-        # auth flow: optional empty RESPONSE_VALUE, then AUTH_RESPONSE
         while True:
             rid, rtype, _ = self._recv()
             if rtype == SERVERDATA_AUTH_RESPONSE:
@@ -69,73 +79,84 @@ class Rcon:
         return body
 
 
-# One server-side Lua snippet: prints "SOAKREF t=<sec> r=<networth> d=<networth>"
-QUERY_LUA = (
-    "local t=math.floor(GameRules:GetDOTATime(false,false));"
-    "local r,d=0,0;"
-    "for i=0,23 do if PlayerResource:IsValidPlayerID(i) then "
-    "local tm=PlayerResource:GetTeam(i);"
-    "if tm==2 then r=r+PlayerResource:GetNetWorth(i) "
-    "elseif tm==3 then d=d+PlayerResource:GetNetWorth(i) end end end;"
-    "print(string.format('SOAKREF t=%d r=%d d=%d',t,r,d))"
-)
-
-
-def parse_query(out):
-    for line in out.splitlines():
-        line = line.strip()
-        if line.startswith("SOAKREF "):
-            kv = dict(p.split("=") for p in line.split()[1:])
-            return int(kv["t"]), int(kv["r"]), int(kv["d"])
-    return None
+def detect_host():
+    # the dedicated server binds rcon to the primary interface, not 127.0.0.1
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("10.255.255.255", 1))
+        return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        s.close()
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("port", type=int)
     ap.add_argument("password")
-    ap.add_argument("--host", default=None,
-                    help="rcon host; the server binds its primary NIC IP, not 127.0.0.1")
+    ap.add_argument("log_path")
+    ap.add_argument("state_path")
+    ap.add_argument("--host", default=None)
     ap.add_argument("--cap-min", type=float, default=30.0)
-    ap.add_argument("--query-only", action="store_true")
     args = ap.parse_args()
 
-    host = args.host
-    if not host:
-        # the dedicated server binds rcon to the primary interface address
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            s.connect(("10.255.255.255", 1))
-            host = s.getsockname()[0]
-        except OSError:
-            host = "127.0.0.1"
-        finally:
-            s.close()
-
     try:
-        rc = Rcon(host, args.port, args.password)
-        out = rc.cmd("script " + QUERY_LUA)
-        parsed = parse_query(out)
-    except Exception as e:
-        print(f"referee: rcon/query failed: {e}", file=sys.stderr)
+        text = open(args.log_path, errors="replace").read()
+    except OSError as e:
+        print(f"referee: cannot read log: {e}", file=sys.stderr)
         sys.exit(2)
 
-    if parsed is None:
-        print(f"referee: no SOAKREF in response: {out!r}", file=sys.stderr)
-        sys.exit(2)
-
-    t, r, d = parsed
-    print(f"t={t}s radiant_nw={r} dire_nw={d}")
-    if args.query_only:
+    if "Match signout" in text:
+        print("game already over")
         sys.exit(0)
 
-    if t < args.cap_min * 60:
+    times = [float(t) for t in RE_BUILDING.findall(text)]
+    if not times:
+        # no towers down yet -> nowhere near the cap
+        sys.exit(1)
+    t_max = max(times)
+
+    try:
+        state = json.load(open(args.state_path))
+    except (OSError, ValueError):
+        state = {"obs": []}
+    if state.get("forced"):
+        sys.exit(0)
+
+    now = time.time()
+    obs = state["obs"]
+    if not obs or t_max > obs[-1]["t"] + 0.5:
+        obs.append({"w": now, "t": t_max})
+        obs[:] = obs[-30:]
+
+    # live timescale estimate across the observation window
+    ts = DEFAULT_TIMESCALE
+    if len(obs) >= 2 and obs[-1]["w"] - obs[0]["w"] > 60:
+        ts = max(1.0, (obs[-1]["t"] - obs[0]["t"]) / (obs[-1]["w"] - obs[0]["w"]))
+
+    est_t = obs[-1]["t"] + (now - obs[-1]["w"]) * ts
+    state["est_t"] = round(est_t, 1)
+    state["ts"] = round(ts, 2)
+
+    if est_t < args.cap_min * 60:
+        json.dump(state, open(args.state_path, "w"))
+        print(f"t~{est_t:.0f}s (ts~{ts:.2f}) below cap")
         sys.exit(1)
 
-    # Cap reached: richer team wins, ties break to radiant.
-    winner = 2 if r >= d else 3
-    rc.cmd(f"script GameRules:SetGameWinner({winner})")
-    print(f"FORCED winner=team{winner} at t={t}s (r={r} d={d})")
+    host = args.host or detect_host()
+    try:
+        rc = Rcon(host, args.port, args.password)
+        rc.cmd("dota_dev forcewin")
+    except Exception as e:
+        json.dump(state, open(args.state_path, "w"))
+        print(f"referee: forcewin failed: {e}", file=sys.stderr)
+        sys.exit(2)
+
+    state["forced"] = round(est_t, 1)
+    json.dump(state, open(args.state_path, "w"))
+    print(f"FORCED end at estimated t={est_t:.0f}s (ts~{ts:.2f}); "
+          "economic winner is decided by analyze_log from the signout")
     sys.exit(0)
 
 

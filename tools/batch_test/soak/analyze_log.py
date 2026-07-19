@@ -64,6 +64,25 @@ def analyze(path):
             pass
 
     dur_min = (base.get("duration_s") or 0) / 60
+
+    # Economic winner (owner rule): games are locked to ~30 game-minutes by
+    # the rcon referee; for those, the winner is the team that EARNED more
+    # gold (sum of GPM x duration), not whoever the engine credited for the
+    # forcewin. Natural sub-cap endings keep the engine winner.
+    team_gold = {"radiant": 0, "dire": 0}
+    for p in base.get("players", []):
+        team = p.get("team")
+        if team in team_gold and p.get("gpm"):
+            team_gold[team] += p["gpm"] * dur_min
+    team_gold = {k: int(v) for k, v in team_gold.items()}
+    econ_winner = None
+    if team_gold["radiant"] or team_gold["dire"]:
+        econ_winner = "radiant" if team_gold["radiant"] >= team_gold["dire"] else "dire"
+    winner_by = "engine"
+    if base.get("winner") is not None and econ_winner and dur_min >= 29.5:
+        base["winner"] = econ_winner
+        winner_by = "economy_30min_cap"
+
     if base.get("winner") is None:
         anomalies.append({"type": "no_winner", "note": "game did not finish"})
     elif dur_min > 40:
@@ -89,6 +108,9 @@ def analyze(path):
         # field for later analysis — ties every game to an exact code version.
         "script_version": os.environ.get("SOAK_SCRIPT_VERSION", "unknown"),
         "winner": base.get("winner"),
+        "winner_by": winner_by,
+        "team_gold": team_gold,
+        "econ_winner": econ_winner,
         "duration_s": base.get("duration_s"),
         "duration_min": round(dur_min, 1),
         "wall_s": base.get("wall_s"),

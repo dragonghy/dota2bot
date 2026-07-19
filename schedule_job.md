@@ -20,10 +20,15 @@ in git history. Read them first, every time.
 
 ## 0.1 Current Optimization Objective (owner, 2026-07-19)
 
-**Farm rule: games are capped at 30 game-minutes; the economically leading
-team at the cap wins** (enforced behaviorally — the trailing team stands
-down past the cap, see `J.IsSoakForfeitLoser`; the signout winner ≈ the
-economic leader).
+**Farm rule: games are locked to 30 game-minutes; the economically leading
+team at the cap wins.** Enforcement is infrastructure-level (bots play
+normally the whole game): servers launch with rcon enabled; the referee
+(`tools/batch_test/soak/referee.py`, driven by `soak_loop.sh`) extrapolates
+the game clock from Building-destruction timestamps and fires
+`dota_dev forcewin` at the cap — instant end with a normal signout.
+`analyze_log.py` then sets `winner` = the team with more earned gold
+(Σ GPM × duration) for any game ≥29.5 min (`winner_by: economy_30min_cap`),
+and records `team_gold` / `econ_winner` on every game.
 
 **The optimization target is therefore: maximize our economic lead at the
 30-minute mark.** Pushing and farming are both legitimate ways to build
