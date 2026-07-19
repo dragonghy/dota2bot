@@ -77,8 +77,11 @@ function GetDesire()
 		-- BASELINE B1 (promoted lab C10, effect +331 weak-positive): cores
 		-- keep a looser cap to soak side-lane gold while supports commit to
 		-- the push. [LAB C11] sweeps the core cap further to 0.80.
+		-- [LAB b0] regression gate: candidate side reverts to the PRE-B1
+		-- uniform 0.45 cap — repeated paired waves measure B1's true effect
+		-- with tight confidence for the morning report.
 		local nCap = J.IsSoakCandidate('c13') and 0.35 or 0.45
-		if J.GetPosition(bot) <= 3 then
+		if J.GetPosition(bot) <= 3 and not J.IsSoakCandidate('b0') then
 			nCap = J.IsSoakCandidate('c11') and 0.80 or 0.65
 		end
 		res = Min(res, nCap)
