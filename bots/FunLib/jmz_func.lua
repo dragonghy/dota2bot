@@ -4632,19 +4632,32 @@ function J.ShouldStayAndRegen( bot )
 end
 
 -- [GH #3] Turbo "walk, don't channel TP under threat" guard. When a low-HP
--- bot is about to retreat-TP home but an enemy hero is right on its face
--- (~700u), channeling a 3s Town Portal in place is a death sentence — the
--- channel gets interrupted or the bot dies mid-cast. If the bot can still
--- move (not rooted/stunned/hexed/nightmared) and would survive a walk step,
--- it should step out of the enemy's face / break line of sight FIRST, then TP
--- on a later frame once no enemy is within 700. Returns true to tell the
--- tpscroll consider to stand down for THIS frame so retreat-mode movement
--- takes over.
+-- bot is about to retreat-TP home but an enemy hero is right on its face,
+-- channeling a 3s Town Portal in place can be a death sentence — the channel
+-- gets interrupted or the bot dies mid-cast. In that case the bot should step
+-- out of the enemy's face / break line of sight FIRST, then TP on a later
+-- frame. Returns true to tell the tpscroll consider to stand down for THIS
+-- frame so retreat-mode movement takes over.
+--
+-- TIGHTENED after a mirrored-draft A/B (issue #3): the first cut fired whenever
+-- ANY enemy was within 700 and the bot could move — far too broad. It delayed
+-- TPs the bot could safely have channelled away from, costing ~15 GPM with no
+-- deaths saved. This version fires ONLY when walking GENUINELY escapes and the
+-- TP would otherwise be wasted/interrupted, i.e. ALL of:
+--   * an enemy hero is ON OUR FACE (~350, not merely "nearby"),
+--   * that enemy is actively CHASING (extrapolated 0.5s forward it lands closer
+--     to us — a stationary enemy we can channel away from doesn't qualify), AND
+--   * a genuinely closer refuge is within one short step: an ally hero or ally
+--     tower within ~600 to walk under, or a tree line within ~400 to duck into
+--     and break the chaser's vision. With no closer safe point, channeling the
+--     TP right here is the best option, so we let it TP.
+-- Net effect: fires in far fewer cases than the first cut — only the clear
+-- "walk two steps and you're safe, so don't read a 3s TP in their face" case.
+--
 -- Gated to soak candidate 'tpsafe' AND turbo only, so shipped behavior is
--- unchanged until an A/B win promotes it. Deliberately conservative: no enemy
--- within 700, disabled (can't walk), too slow to outrun, or an on-face burst
--- that would kill before the walk step all fall through to normal (TP now)
--- behavior.
+-- unchanged until an A/B win promotes it. Safety fall-throughs (rooted / too
+-- slow to outrun / on-face burst that would kill before the walk step) all
+-- return false = let it TP now.
 function J.ShouldWalkNotTp( bot )
 	if not J.IsModeTurbo() then return false end
 	if not J.IsSoakCandidate( 'tpsafe' ) then return false end
@@ -4655,19 +4668,47 @@ function J.ShouldWalkNotTp( bot )
 		return false
 	end
 
-	-- Only intervene when an enemy hero is on our face. If the nearest enemy is
-	-- beyond 700 a normal retreat TP is fine — nothing to walk away from.
-	local hCloseEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
-	if hCloseEnemies == nil or #hCloseEnemies == 0 then return false end
-
 	-- Need real mobility for the walk to be worthwhile. A heavily slowed /
 	-- near-immobile bot can't outrun the threat, so TP is the better bet.
 	if bot:GetCurrentMovementSpeed() < 285 then return false end
+
+	-- Only intervene when an enemy hero is genuinely ON OUR FACE (~350). A
+	-- stationary enemy a screen away can be channelled away from and needs no
+	-- walk — that broad ~700 case is what cost farm without saving deaths.
+	local hCloseEnemies = J.GetNearbyHeroes( bot, 350, true, BOT_MODE_NONE )
+	if hCloseEnemies == nil or #hCloseEnemies == 0 then return false end
 
 	-- If the on-face enemies can burst us down before we even get a walk step
 	-- in, don't gamble on the walk — the TP channel is at least a chance.
 	local nBurst = J.GetTotalEstimatedDamageToTarget( hCloseEnemies, bot )
 	if nBurst >= bot:GetHealth() then return false end
+
+	-- The enemy must be CHASING, not just standing near: extrapolate each
+	-- on-face enemy 0.5s forward; if it lands closer to us it is actively
+	-- closing the gap. A stationary / receding enemy doesn't justify delaying
+	-- the TP (the bot can channel while it walks off).
+	local vBotLoc = bot:GetLocation()
+	local bChasing = false
+	for _, hEnemy in pairs( hCloseEnemies )
+	do
+		local nNow = J.GetLocationToLocationDistance( vBotLoc, hEnemy:GetLocation() )
+		local nSoon = J.GetLocationToLocationDistance( vBotLoc, hEnemy:GetExtrapolatedLocation( 0.5 ) )
+		if nSoon < nNow - 10 then
+			bChasing = true
+			break
+		end
+	end
+	if not bChasing then return false end
+
+	-- A genuinely CLOSER safe point must exist within one short step, else
+	-- channeling the TP right here is the best move (nothing better to walk to).
+	-- Refuge = an ally hero or ally tower to walk under, or a tree line to duck
+	-- into and break the chaser's line of sight.
+	local bHasRefuge =
+		#J.GetNearbyHeroes( bot, 600, false, BOT_MODE_NONE ) > 0
+		or #bot:GetNearbyTowers( 600, false ) > 0
+		or #bot:GetNearbyTrees( 400 ) > 0
+	if not bHasRefuge then return false end
 
 	return true
 end
