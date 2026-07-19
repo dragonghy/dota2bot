@@ -194,6 +194,18 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_NONE
     end
 
+    -- [GH #4] Anti-suicide-dive ("sandwiched_walk"): the bot is walking into a
+    -- pocket of 2+ enemies (within ~700) with no kill and no numbers advantage.
+    -- Raise retreat desire so it backs off / stays at range instead of getting
+    -- focused. Engage point = the bot's own location (generic attack-move / walk
+    -- INTO the enemies). Turbo-only + soak-candidate ('nodive') gated
+    -- (J.ShouldSuppressDive) so it never ships untested; inert off the candidate
+    -- side and in normal mode. Safe fights (lethal or numbers parity) fall
+    -- through via J.SafeToCommitFight.
+    if J.ShouldSuppressDive(bot, botLocation, botTarget) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [LAB C12] candidate side retreats earlier: lower HP bar raised to
     -- 0.45 and a single nearby damaging enemy suffices (deaths are the
     -- biggest single econ swing pre-10min). Baseline: 0.3 / 2 enemies.

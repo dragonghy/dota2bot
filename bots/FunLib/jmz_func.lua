@@ -4627,6 +4627,74 @@ function J.ShouldStayAndRegen( bot )
 	return true
 end
 
+-- [GH #4] Lethality-or-numbers gate for committing a fight. Returns true when
+-- it is SAFE to dive toward `target` because EITHER
+--   (a) LETHAL: our combined estimated burst from allies (incl. self) near the
+--       engage point can bring `target` down within a short window, OR
+--   (b) NUMBERS: we have at least as many heroes near the engage point as the
+--       enemy does (parity or better).
+-- Returns false only when NEITHER holds -- i.e. no kill and outnumbered -- which
+-- is exactly the "walking into 2+ enemies to get focused" case the caller should
+-- suppress. A missing / invalid target is treated as safe (nothing to gate).
+function J.SafeToCommitFight( bot, target )
+	if not J.IsValidHero( target ) then return true end
+
+	local vLoc = target:GetLocation()
+
+	-- (a) lethal: allies (incl. self) near the engage point burst target down.
+	-- GetEstimatedDamageToTarget already accounts for resistances over the
+	-- window, so compare directly against health (+ regen it recovers).
+	local tAllies = J.GetAlliesNearLoc( vLoc, 1200 )
+	local nBurst = J.GetTotalEstimatedDamageToTarget( tAllies, target )
+	if nBurst >= target:GetHealth() + target:GetHealthRegen() * 5.0 then
+		return true
+	end
+
+	-- (b) numbers: our count near the engage point >= enemy count near it.
+	if #tAllies >= #J.GetEnemiesNearLoc( vLoc, 1200 ) then
+		return true
+	end
+
+	return false
+end
+
+-- [GH #4] Anti-suicide-dive guard ("sandwiched_walk" -- the highest-frequency
+-- behavioral bug). True when the bot is about to move/charge INTO a location
+-- flanked by >= 2 enemies (within ~700 of the engage point) and it is NOT safe
+-- to commit (J.SafeToCommitFight false -- no kill, outnumbered). Callers use
+-- this to suppress the dive (hold / stay at range / back off) instead of
+-- feeding. Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND
+-- only the active soak-candidate side carrying the 'nodive' experiment id.
+-- `vLoc` is the engage point (target's location for a charge/blink; the bot's
+-- own location for a generic attack-move / walk). Inert off the candidate side
+-- and in normal mode.
+function J.ShouldSuppressDive( bot, vLoc, target )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'nodive' ) then return false end
+	if vLoc == nil then return false end
+
+	local tEnemies = J.GetEnemiesNearLoc( vLoc, 700 )
+	if #tEnemies < 2 then return false end
+
+	-- representative lethal target: the caller's target if it is one of the
+	-- flanking enemies, else the lowest-HP enemy in the pocket (most killable).
+	local hTarget = J.IsValidHero( target ) and target or nil
+	if hTarget == nil then
+		local nLowHP = 1.1
+		for _, e in pairs( tEnemies ) do
+			local hp = J.GetHP( e )
+			if hp < nLowHP then
+				nLowHP = hp
+				hTarget = e
+			end
+		end
+	end
+
+	if J.SafeToCommitFight( bot, hTarget ) then return false end
+
+	return true
+end
+
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end
