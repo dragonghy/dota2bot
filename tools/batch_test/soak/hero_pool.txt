@@ -1,0 +1,34 @@
+# Soak-farm hero pool: internal_name,role_hint,tier
+# role_hint: core|support|either (soft constraint only — mismatched positions
+#            are playable and even useful for surfacing behavior bugs)
+# tier: focus (first-batch polish targets) | candidate | filler
+axe,core,focus
+zuus,core,focus
+skeleton_king,core,focus
+lion,support,focus
+crystal_maiden,support,focus
+luna,core,candidate
+sniper,core,candidate
+death_prophet,core,candidate
+tidehunter,either,candidate
+dragon_knight,core,candidate
+witch_doctor,support,candidate
+lich,support,candidate
+warlock,support,candidate
+sven,core,filler
+ogre_magi,support,filler
+chaos_knight,core,filler
+medusa,core,filler
+drow_ranger,core,filler
+viper,either,filler
+bristleback,core,filler
+centaur,either,filler
+spirit_breaker,either,filler
+slardar,core,filler
+skywrath_mage,support,filler
+jakiro,support,filler
+venomancer,either,filler
+phantom_assassin,core,filler
+juggernaut,core,filler
+lina,either,filler
+necrolyte,either,filler
