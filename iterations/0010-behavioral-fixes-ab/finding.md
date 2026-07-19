@@ -90,3 +90,27 @@ delays the TP for a walk that costs farm without saving deaths.
 **Next:** (1) confirm #4 across 2-3 more seeds → promote + close #4. (2) iterate
 #5: 'help' only on numbers AND resources, else flee, don't abandon farm.
 (3) #3: intervene only when a walk genuinely escapes, else fold into #4.
+
+---
+
+## UPDATE 2 — a single mirror seed is per-COMP, not the population mean
+
+Confirming #4 nodive across more seeds broke the earlier "WIN":
+
+| #4 nodive | GPM | deaths |
+|---|---|---|
+| seed 424242 | +19.6 | −0.39 |
+| seed 555555 | +42.0 | −0.21 |
+| seed 777777 | **−24.1** | **+0.19** |
+| **mean (3)** | **+12.5** | **−0.14** |
+
+The mirror A/B cancels draft variance *within one comp*, but the fix effect
+itself **varies by comp** (−24…+42 GPM here). So one seed is that comp's effect,
+NOT the population mean — a single seed can read as a clean win and be wrong.
+Per-comp SD ≈ 33 GPM, so distinguishing a ~12 GPM mean from 0 needs ~6–10 comps.
+
+**New standard: `tools/batch_test/soak/mirror_multi.sh` — run N seeds, report
+mean ± spread + how many comps improved.** Ship only if the mean is clearly
+positive AND most comps improve AND deaths don't get worse. #4 is currently
+mild-positive-but-inconsistent (2/3 comps better) — needs more seeds before a
+promote/hold call.
