@@ -4741,19 +4741,32 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 end
 
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
--- 300-1500u from an ally that is being focused/dying and neither helps nor
+-- ~300-1000u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle
 -- state to a concrete choice:
---   'help' -> the bot has the numbers or the HP/mana to contribute, so join
---             the fight (raise attack/assist desire; even auto-attacking or
---             landing one control peels the focus off the ally).
---   'flee' -> we're outnumbered and the bot can't meaningfully help, so leave
---             instead of feeding a second death (raise retreat desire).
+--   'help' -> helping GENUINELY changes the fight, so join it (raise
+--             attack/assist desire; landing one control or a kill peels the
+--             focus off the ally).
+--   'flee' -> we can't meaningfully swing the fight, so leave instead of
+--             feeding a second death or abandoning farm (raise retreat desire).
+--             This is the DEFAULT when in doubt — never stand idle.
 --   nil   -> the situation doesn't apply; shipped behavior is unchanged.
 -- This is the un-gated core; callers reach it through J.ResolveTeamfightIdle,
--- which adds the turbo + soak-candidate gate. Kept conservative: it only fires
--- when the bot is genuinely idle (not already attacking or retreating) AND an
--- ally within 1500u is under active enemy focus.
+-- which adds the turbo + soak-candidate gate.
+--
+-- STRICT "help" (rewritten after a mirrored-draft A/B on the first cut, which
+-- used `bHaveNumbers OR bCanContribute` — that let a lone 50%-HP bot "help"
+-- into a lost fight: a NET LOSS of -32 GPM / +0.28 deaths per hero). The
+-- behavior goal is right ("能帮则帮，不能帮则退" — help only if you genuinely
+-- can), so this biases HARD toward 'flee' and only returns 'help' on a real
+-- edge:
+--   * the fight must be genuinely CLOSE — a focused ally within ~1000u AND the
+--     nearest fight enemy within ~1200u of the bot, so we never walk a long
+--     way off our farm into a distant, unwinnable fight; and
+--   * EITHER we have parity-or-better numbers AND the HP/mana to act
+--     (bHaveNumbers AND bCanContribute), OR committing onto the enemy focusing
+--     our ally is lethal-or-numbers safe (J.SafeToCommitFight).
+-- Everything else -> 'flee'. Conservative suppression beats eager re-engagement.
 function J.EvalTeamfightIdle( bot )
 	if bot == nil or not bot:IsAlive() then return nil end
 
@@ -4762,11 +4775,12 @@ function J.EvalTeamfightIdle( bot )
 	if J.IsGoingOnSomeone( bot ) then return nil end
 	if J.IsRetreating( bot ) then return nil end
 
-	-- Find an ally within ~1500u that is being focused (recently hit by an
-	-- enemy hero) or is low HP with enemy heroes on it — i.e. a live fight it
-	-- is losing right next to us.
+	-- Find an ally within ~1000u (tightened from 1500 so we only react to a
+	-- fight genuinely next to us — don't abandon farm to chase a distant one)
+	-- that is being focused (recently hit by an enemy hero) or is low HP with
+	-- enemy heroes on it — i.e. a live fight it is losing right beside us.
 	local hFocusedAlly = nil
-	local hAllies = J.GetNearbyHeroes( bot, 1500, false, BOT_MODE_NONE )
+	local hAllies = J.GetNearbyHeroes( bot, 1000, false, BOT_MODE_NONE )
 	for _, ally in pairs( hAllies ) do
 		if J.IsValidHero( ally )
 		and ally ~= bot
@@ -4789,10 +4803,35 @@ function J.EvalTeamfightIdle( bot )
 	-- (it may die), keeping the numbers check pessimistic.
 	local nAllyNear  = J.GetNearbyHeroes( hFocusedAlly, 1200, false, BOT_MODE_NONE )
 	local nEnemyNear = J.GetNearbyHeroes( hFocusedAlly, 1200, true, BOT_MODE_NONE )
+
+	-- Don't abandon farm for a fight we'd have to walk a long way into: pick the
+	-- enemy focusing our ally (nearest fight enemy to the bot) and require it be
+	-- within ~1200u. If none is reachable, the fight is too far to swing — leave.
+	local vBotLoc = bot:GetLocation()
+	local hFocusEnemy = nil
+	local nNearestEnemyDist = 99999
+	for _, e in pairs( nEnemyNear ) do
+		if J.IsValidHero( e ) then
+			local d = J.GetLocationToLocationDistance( vBotLoc, e:GetLocation() )
+			if d < nNearestEnemyDist then
+				nNearestEnemyDist = d
+				hFocusEnemy = e
+			end
+		end
+	end
+	if hFocusEnemy == nil or nNearestEnemyDist > 1200 then
+		return 'flee'
+	end
+
+	-- STRICT help: only when helping actually changes the fight. Numbers parity
+	-- AND the HP/mana to act, OR a lethal-or-numbers safe commit onto the enemy
+	-- on our ally (J.SafeToCommitFight already encodes both). Otherwise flee.
 	local bHaveNumbers   = ( #nAllyNear + 1 ) >= #nEnemyNear
 	local bCanContribute = J.GetHP( bot ) >= 0.5 and J.GetMP( bot ) >= 0.2
 
-	if bHaveNumbers or bCanContribute then
+	if ( bHaveNumbers and bCanContribute )
+	or J.SafeToCommitFight( bot, hFocusEnemy )
+	then
 		return 'help'
 	end
 	return 'flee'
