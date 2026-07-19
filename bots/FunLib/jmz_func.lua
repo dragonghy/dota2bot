@@ -4627,6 +4627,47 @@ function J.ShouldStayAndRegen( bot )
 	return true
 end
 
+-- [GH #3] Turbo "walk, don't channel TP under threat" guard. When a low-HP
+-- bot is about to retreat-TP home but an enemy hero is right on its face
+-- (~700u), channeling a 3s Town Portal in place is a death sentence — the
+-- channel gets interrupted or the bot dies mid-cast. If the bot can still
+-- move (not rooted/stunned/hexed/nightmared) and would survive a walk step,
+-- it should step out of the enemy's face / break line of sight FIRST, then TP
+-- on a later frame once no enemy is within 700. Returns true to tell the
+-- tpscroll consider to stand down for THIS frame so retreat-mode movement
+-- takes over.
+-- Gated to soak candidate 'tpsafe' AND turbo only, so shipped behavior is
+-- unchanged until an A/B win promotes it. Deliberately conservative: no enemy
+-- within 700, disabled (can't walk), too slow to outrun, or an on-face burst
+-- that would kill before the walk step all fall through to normal (TP now)
+-- behavior.
+function J.ShouldWalkNotTp( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'tpsafe' ) then return false end
+
+	-- Can't walk out of it -> channeling TP is the only option; let it TP.
+	if bot:IsRooted() or bot:IsStunned() or bot:IsHexed() or bot:IsNightmared()
+	then
+		return false
+	end
+
+	-- Only intervene when an enemy hero is on our face. If the nearest enemy is
+	-- beyond 700 a normal retreat TP is fine — nothing to walk away from.
+	local hCloseEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
+	if hCloseEnemies == nil or #hCloseEnemies == 0 then return false end
+
+	-- Need real mobility for the walk to be worthwhile. A heavily slowed /
+	-- near-immobile bot can't outrun the threat, so TP is the better bet.
+	if bot:GetCurrentMovementSpeed() < 285 then return false end
+
+	-- If the on-face enemies can burst us down before we even get a walk step
+	-- in, don't gamble on the walk — the TP channel is at least a chance.
+	local nBurst = J.GetTotalEstimatedDamageToTarget( hCloseEnemies, bot )
+	if nBurst >= bot:GetHealth() then return false end
+
+	return true
+end
+
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end
