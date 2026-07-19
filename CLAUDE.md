@@ -53,7 +53,16 @@ tools/batch_test/aws/bootstrap_creds.sh   # writes ~/.aws/credentials + the awsx
 
 This reads `DOTA2BOT_AWS_KEY_ID` / `DOTA2BOT_AWS_SECRET` from the cloud
 environment (the owner sets these once in the environment config) and verifies
-the identity is the restricted `dota2bot-agent` IAM user. After bootstrapping,
+the identity is the restricted `dota2bot-agent` IAM user.
+
+If you want AWS ready automatically at session start, point the environment's
+setup script at the absolute path
+`bash /home/user/dota2bot/tools/batch_test/aws/session_setup.sh` — it is
+cwd-independent, no-ops when the creds env vars are absent, and always exits 0
+so it can never block a session. Do NOT put a bare relative path like
+`./tools/batch_test/aws/bootstrap_creds.sh` in the setup script: the setup
+hook's working directory isn't guaranteed to be the repo root, and a non-zero
+exit (e.g. creds not set) will fail session startup. After bootstrapping,
 **always call AWS via the `awsx` wrapper**, not `aws` directly — the wrapper
 strips the proxy's placeholder `AWS_*` env vars (which otherwise shadow the real
 key) and points at the proxy CA bundle. Config lives in
