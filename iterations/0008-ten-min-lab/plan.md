@@ -70,3 +70,16 @@ wakeup heartbeat).
 - Next: W0 verify durations ≈10-11 game-min → quick dispatch proof (mirror
   8c36da4-vs-main swap: frozen five on radiant = two trees really load) →
   C1 wave (farm-cap removal vs iter-0009).
+- **09:15 UTC — W0 COMPLETE** (run_0904, 12 games, iter-0009 both sides,
+  plain mode): durations 11.3-14.0 min (mean 12.7; referee ts estimate
+  bumped 3.0→3.6 to tighten). **Radiant-side econ bias +2,146 gold mean
+  (9R/3D, per-game σ≈3.8k)** → candidate verdicts use paired
+  normal+swap waves: effect = (mean_margin_normal − mean_margin_swap)/2.
+- **09:14 UTC — Dispatch proof PASSED** (mirror 8c36da4-vs-main, swap):
+  Radiant (OLD) drafted the pre-fix frozen-half signature
+  (viper/DP/sniper/PA/necro) while Dire (NEW) drafted via jitter seed with
+  collision fallback (pudge/SD from the 127 pool) — two trees demonstrably
+  live in one game. Note: cross-team pick collisions in mirror mode pull
+  occasional non-pool heroes via OHA fallback; symmetric noise.
+- **09:15 UTC — C1a launched** (run_0915): cand-c1 (no farm cap, 51d9114e)
+  on RADIANT vs iter-0009 on DIRE.
