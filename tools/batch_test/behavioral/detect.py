@@ -15,6 +15,7 @@ Detectors implemented (bug_queue letter in brackets):
   D3 skywrath_solo_silence [G] Ancient Seal cast with no follow-up burst
   D4 idle_while_ally_dies  [F] stood within range of a dying ally, did nothing
   D5 sandwiched_walk       [F] walked between 2+ enemies and got beaten
+  D6 unpunished_tower_dive [P] enemy dove our tower with the numbers on us, no kill
 """
 import argparse
 import bisect
@@ -32,6 +33,9 @@ FOLLOWUP_SEC = 4.0         # window for a silence follow-up
 PARTICIPATE_RADIUS = 1500.0
 SANDWICH_RADIUS = 750.0
 SANDWICH_WINDOW = 4.0
+TOWER_DIVE_RADIUS = 1400.0   # defenders "nearby" enough to collapse on a diver
+PUNISH_WINDOW = 6.0          # window after the dive to look for the kill
+TOWER_DIVE_DEDUP = 8.0       # one finding per diver per this many seconds
 
 
 def dist(a, b):
@@ -299,6 +303,104 @@ def d5_sandwiched_walk(tl):
     return out
 
 
+def _tower_team(actor):
+    """Side of a tower from its combat-log unit name: goodguys=Radiant(2),
+    badguys=Dire(3). Returns 0 if the actor is not a recognizable tower."""
+    if "_tower" not in actor:
+        return 0
+    if "goodguys" in actor:
+        return 2
+    if "badguys" in actor:
+        return 3
+    return 0
+
+
+def d6_unpunished_tower_dive(tl):
+    """[P / issue #7] An enemy hero dives under a team's tower (takes tower
+    aggro) while that team has >=2 defenders nearby AND the numbers to kill, yet
+    no kill/commit follows -- the over-extension goes unpunished.
+
+    APPROXIMATION (important): the timeline dump carries NO tower entities,
+    positions, or aggro table (see dumper/main.go -- only hero snapshots +
+    hero-touching combat-log events are recorded). So we approximate "deep under
+    our tower" with a tower-damage combat-log event: when a tower shoots an enemy
+    hero, that hero is by definition physically inside tower range = diving. The
+    tower's side comes from its unit name (goodguys=Radiant/2, badguys=Dire/3);
+    the diver is the opposing-team hero it hit. "Had the numbers to kill" =
+    >=2 defenders (tower's team) within TOWER_DIVE_RADIUS of the diver AND that
+    defender count strictly exceeds the diver's own side present (diver + its
+    allies). "Unpunished" = the diver does not die within PUNISH_WINDOW seconds.
+    """
+    out = []
+    hits = []
+    for e in tl.events:
+        if e["type"] != "DAMAGE" or not e.get("target_hero"):
+            continue
+        if e.get("actor_hero"):
+            continue  # hero damage, not a tower
+        tteam = _tower_team(e["actor"])
+        if tteam == 0:
+            continue
+        diver = e["target"]
+        if not diver.startswith("npc_dota_hero_"):
+            continue
+        if tl.team(diver) == tteam or tl.team(diver) == 0:
+            continue  # tower hitting its own side (or unknown team) -> ignore
+        hits.append((e["t"], diver, tteam))
+    hits.sort()
+
+    seen = []
+    for t, diver, tteam in hits:
+        if any(d == diver and abs(tt - t) < TOWER_DIVE_DEDUP for d, tt in seen):
+            continue
+        dp = tl.pos(diver, t)
+        if not dp:
+            continue
+        # defenders (tower's team) and the diver's own side, both near the diver
+        defenders = []
+        diver_side = 0
+        for h in tl.heroes:
+            if h == diver or not tl.alive_at(h, t):
+                continue
+            hp = tl.pos(h, t)
+            if not hp or dist(dp, hp) > TOWER_DIVE_RADIUS:
+                continue
+            th = tl.team(h)
+            if th == tteam:
+                defenders.append(h)
+            elif th != 0:
+                diver_side += 1  # another enemy hero backing the dive
+        # "had the numbers": >=2 defenders AND they outnumber the whole diving
+        # group (the diver plus its nearby allies == diver_side + 1).
+        if len(defenders) < 2 or len(defenders) < diver_side + 1:
+            continue
+        # did the diver die within the punish window? that IS a punish -> skip.
+        killed = False
+        for e in tl.events:
+            if e["t"] < t or e["t"] > t + PUNISH_WINDOW:
+                continue
+            if e["type"] == "DEATH" and e["target"] == diver:
+                killed = True
+                break
+        if killed:
+            continue
+        seen.append((diver, t))
+        s = tl.state_at(diver, t)
+        out.append({
+            "detector": "unpunished_tower_dive", "bug": "P", "hero": diver,
+            "t": round(t, 1), "defender_team": tteam,
+            "defenders": sorted(defenders),
+            "hp_pct": s["hp_pct"] if s else None,
+            "desc": f"{diver} dove team {tteam}'s tower at t={t:.0f}s ({fmt(t)}), "
+                    f"hp={pct(s['hp_pct'] if s else None)}, taking tower aggro with "
+                    f"{len(defenders)} defenders ({', '.join(sorted(defenders))}) in "
+                    f"range vs {diver_side} of its own side -> defenders had the "
+                    f"numbers but landed no kill within {PUNISH_WINDOW:.0f}s "
+                    f"(unpunished tower dive)",
+        })
+    return out
+
+
 def close_names(close):
     return [c[0] for c in close]
 
@@ -312,7 +414,7 @@ def pct(v):
 
 
 DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
-             d4_idle_while_ally_dies, d5_sandwiched_walk]
+             d4_idle_while_ally_dies, d5_sandwiched_walk, d6_unpunished_tower_dive]
 
 
 def run(path):

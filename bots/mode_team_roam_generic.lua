@@ -125,6 +125,18 @@ function GetDesireHelper()
         return RemapValClamped(J.GetHP(bot), 0, 0.6, BOT_MODE_DESIRE_NONE, 0.98)
     end
 
+    -- [GH #7] Punish a tower dive: if an enemy is over-extended under one of our
+    -- buildings AND it is safe to commit (lethal or numbers), collapse on it so
+    -- nearby controllers + a core TP guarantee the kill. Gated inside
+    -- J.ShouldPunishDive (turbo + 'punish' soak candidate), so this is inert in
+    -- shipped/normal play until an A/B win promotes it.
+    local punishTarget = J.ShouldPunishDive(bot)
+    if punishTarget ~= nil then
+        SetStickyTarget(punishTarget)
+        targetUnit = punishTarget
+        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
+    end
+
 	hTargetCreep = X.GetLastHitCreep()
 	if J.IsValid(hTargetCreep) and J.CanBeAttacked(hTargetCreep) then
 		return 1.5
