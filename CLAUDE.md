@@ -45,24 +45,30 @@ lua5.1 tests/run_tests.lua             # unit tests under mock Bot API (tests/)
 
 Batch testing runs on the owner's AWS account. Credentials do NOT persist
 across sessions (each container is fresh and the repo carries no secrets), so
-any new agent that needs AWS must bootstrap first:
+**any new agent that needs AWS must bootstrap in-session first.** AWS is not
+ready at session start — you have to run this yourself before any `awsx` call:
 
 ```bash
-tools/batch_test/aws/bootstrap_creds.sh   # writes ~/.aws/credentials + the awsx wrapper
+bash tools/batch_test/aws/session_setup.sh   # installs AWS CLI, writes ~/.aws/credentials + the awsx wrapper, verifies identity
 ```
 
-This reads `DOTA2BOT_AWS_KEY_ID` / `DOTA2BOT_AWS_SECRET` from the cloud
-environment (the owner sets these once in the environment config) and verifies
-the identity is the restricted `dota2bot-agent` IAM user.
+This is idempotent (safe to re-run), installs the AWS CLI if the fresh
+container lacks it, then reads `DOTA2BOT_AWS_KEY_ID` / `DOTA2BOT_AWS_SECRET`
+from the session environment and verifies the identity is the restricted
+`dota2bot-agent` IAM user. A successful run prints
+`AWS ready: arn:aws:iam::...:user/dota2bot-agent`. Do this once at the start of
+any session that needs AWS; most work (hero logic, tests, docs) does not need
+it, so skip it otherwise.
 
-If you want AWS ready automatically at session start, point the environment's
-setup script at the absolute path
-`bash /home/user/dota2bot/tools/batch_test/aws/session_setup.sh` — it is
-cwd-independent, no-ops when the creds env vars are absent, and always exits 0
-so it can never block a session. Do NOT put a bare relative path like
-`./tools/batch_test/aws/bootstrap_creds.sh` in the setup script: the setup
-hook's working directory isn't guaranteed to be the repo root, and a non-zero
-exit (e.g. creds not set) will fail session startup. After bootstrapping,
+Do NOT expect the environment's **setup script** to do this for you. The setup
+script runs *before Claude Code launches*, and in that phase the
+`DOTA2BOT_AWS_*` variables are NOT injected — they are only present in the
+Claude Code session environment (i.e. the environment your Bash tool calls
+inherit). So `session_setup.sh` wired as a setup script just hits its own
+no-op branch and skips AWS; it only works when *you* run it in-session. That is
+why bootstrapping is an in-session step, not a startup hook.
+
+After bootstrapping,
 **always call AWS via the `awsx` wrapper**, not `aws` directly — the wrapper
 strips the proxy's placeholder `AWS_*` env vars (which otherwise shadow the real
 key) and points at the proxy CA bundle. Config lives in
