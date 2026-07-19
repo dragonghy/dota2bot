@@ -23,6 +23,7 @@ for SEED in $SEEDS; do
   # Run one mirror pair; capture its verdict lines and re-parse the numbers.
   OUT=$(INST="$INST" RUN="$RUN" REGION="$REGION" BUCKET="$BUCKET" \
         bash "$HERE/mirror_ab.sh" "$CAND" "$SEED" "$TARGET" 2>>/dev/stderr)
+  echo "$OUT"   # preserve each seed's raw verdict in the log (recovery if agg fails)
   echo "$OUT" | python3 - "$SEED" >> "$RESULTS" <<'PY'
 import sys,re,json
 seed=sys.argv[1]; txt=sys.stdin.read()
@@ -41,9 +42,10 @@ import sys,json,statistics
 rows=[json.loads(l) for l in open(sys.argv[1]) if l.strip()]
 cand=sys.argv[2]
 if not rows: print("NO RESULTS"); sys.exit(0)
+def fx(v, w=7): return f"{v:+{w}.1f}" if v is not None else " "*(w-1)+"?"
 print(f"per-seed (fix_effect; GPM/XPM up=better, deaths down=better):")
 for r in rows:
-    print(f"  seed {r['seed']:>8}  GPM={r['gpm']:+7.1f}  XPM={r['xpm']:+7.1f}  DEATHS={r['deaths']:+.2f}  drafts={r.get('drafts')}")
+    print(f"  seed {r['seed']:>8}  GPM={fx(r.get('gpm'))}  XPM={fx(r.get('xpm'))}  DEATHS={fx(r.get('deaths'),5)}  drafts={r.get('drafts')}")
 def agg(k, better_is_neg=False):
     xs=[r[k] for r in rows if r.get(k) is not None]
     if not xs: return
