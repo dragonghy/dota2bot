@@ -72,6 +72,8 @@ declare function IsSuspiciousIllusion(unit: Unit): boolean;
 declare function IsEarlyGame(): boolean;
 declare function IsMidGame(): boolean;
 declare function IsLateGame(): boolean;
+declare function IsSoakFarm(): boolean;
+declare function IsSoakOvertime(): boolean;
 declare function GetEnemiesNearLoc(location: Vector, radius: number): Unit[];
 declare function GetAlliesNearLoc(location: Vector, radius: number): Unit[];
 declare function IsCore(bot: Unit): boolean;

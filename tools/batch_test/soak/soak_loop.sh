@@ -10,7 +10,9 @@ S3_PREFIX=${2:?s3 prefix}
 DOTA=/opt/dota2
 REPO=/opt/dota2bot
 PORT=$((27020 + SLOT))
-GAME_CAP_MIN=45          # wall-clock cap per game (4x turbo normally ~15 min)
+GAME_CAP_MIN=35          # wall-clock kill backstop; the in-game 40-game-min
+                         # overtime forfeit (jmz_func.IsSoakOvertime) should
+                         # always end the match first with a real scoreboard
 
 mkdir -p /opt/soak/slot$SLOT
 sleep $((SLOT * 10))     # one-time desync so slots don't all load the map at once

@@ -593,6 +593,12 @@ export function GetDefendDesire(bot: Unit, lane: Lane): BotModeDesire {
         return BotModeDesire.None;
     }
 
+    // Farm-only overtime (soak farm games past the length cap): stop
+    // defending so the match actually ends with a real scoreboard.
+    if (jmz.IsSoakOvertime()) {
+        return BotModeDesire.None;
+    }
+
     // (pre) compute dynamic TTL and include threatened lane in key when base/HG pressure is present
     // const baseThreatNow = IsBaseThreatActive();
     // const enemiesOnHGNow = jmz.Utils.CountEnemyHeroesOnHighGround(nTeam);
