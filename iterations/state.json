@@ -1,18 +1,19 @@
 {
-  "iteration_count": 6,
+  "iteration_count": 7,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
     "run_prefixes": [
       "soak/run_20260719_0455",
       "soak/run_20260719_0630",
       "soak/run_20260719_0716",
-      "soak/run_20260719_0741"
+      "soak/run_20260719_0741",
+      "soak/run_20260719_0841"
     ],
     "instance_tag": "dota2bot-soak"
   },
   "watermark": {
-    "last_processed_key": "20260719_071930_slot16.analysis.json",
-    "games_ingested_total": 52
+    "last_processed_key": "20260719_0841",
+    "games_ingested_total": 81
   },
   "fixed_issues": [
     "side_bias:soak_draft_frozen_radiant_lineup",
@@ -23,9 +24,15 @@
     "mode_detect:courier_speed_heuristic",
     "sniper:shrapnel_charge_api",
     "slow_close:push_never_outranked_farm_math",
-    "push_think:tower_yoyo"
+    "push_think:tower_yoyo",
+    "farm:30min_lock_rcon_referee"
   ],
   "open_issues": [
+    {
+      "key": "outcome_scoring:iter_0007",
+      "note": "Score the 30-min lock from soak/run_20260719_0841: durations must cluster 30-32min (check referee logs on farm if not), winner_by=economy_30min_cap on capped games. Then optimize the NEW objective: maximize team_gold margin at the cap (schedule_job.md 0.1). iter-0005/0006 scored in 0007/decision.md (close-speed chase hit diminishing returns; winner balance ~50/50 holds).",
+      "first_seen_iter": 7
+    },
     {
       "key": "outcome_scoring:iter_0005",
       "note": "iter-0004 scored in 0005/analysis.md: T1/T2 criteria PASS, <40min criterion FAIL (44-56min, avg 49; winners 5R/6D = draft fix fully validated). Root cause found: push desire is nPushDesire*HP remapped onto [0,cap] \u2014 multiplicative; base 0.5-0.65 never beat farm 0.9 in even games. iter-0005 (push-first: base 1.0, farm capped 0.45 post-early, forfeit 35min, 12 slots) deployed to soak/run_20260719_0741. Score next: organic closes 25-35min, races <=42, avg low-30s; WATCH winrate stability + feeder anomalies (push-first throw risk \u2014 accepted trade, tune back via winrate).",
@@ -35,11 +42,6 @@
       "key": "fight_desire:possibly_low",
       "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games \u2014 no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
       "first_seen_iter": 4
-    },
-    {
-      "key": "vscript_errors:masked",
-      "note": "11-20/game 'error in error handling', no consistent context. Bot-VM print() does NOT reach dedicated-server console, so in-game markers are invisible \u2014 unmasking needs an error()-based emit or on-instance probe of a live game.",
-      "first_seen_iter": 1
     },
     {
       "key": "loser_building_damage:zero",
@@ -59,6 +61,11 @@
     {
       "key": "feeder:pending_rebaseline",
       "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.",
+      "first_seen_iter": 1
+    },
+    {
+      "key": "vscript_errors:handler_broken",
+      "note": "CLOSED-as-explained: engine error handler is broken in this env \u2014 ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
       "first_seen_iter": 1
     }
   ],
@@ -94,6 +101,12 @@
       "deployed_utc": "2026-07-19T08:06:00Z",
       "run_prefix_started": null,
       "note": "tower-aggro yo-yo fix + 5-min turbo early game (4c723d1). Same run prefix soak/run_20260719_0741; cohort split by script_version stamp (iter-0005 / iter-0005-2-g* / iter-0006)."
+    },
+    "iter-0007": {
+      "commit": "a388b56",
+      "deployed_utc": "2026-07-19T08:41:00Z",
+      "run_prefix_started": "soak/run_20260719_0841",
+      "note": "30-min lock live: rcon referee + econ-winner analysis. 12 slots. Owner asleep; scheduled agents take over per schedule_job.md."
     }
   }
 }
