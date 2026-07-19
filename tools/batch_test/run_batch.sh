@@ -37,19 +37,34 @@ echo "batch: $N_GAMES games, $PARALLEL parallel, timescale $TIMESCALE -> $OUT_DI
 
 run_one() {
     local i=$1
+    local conlog="console_batch_${i}.log"     # per-instance, under game/dota/
     local log="$OUT_DIR/game_${i}.log"
     echo "[game $i] starting"
-    # -condebug writes console output; we redirect stdout too and keep both.
+    rm -f "$DOTA_DIR/game/dota/$conlog"
+    # Flag set validated on the diagnostic instance (2026-07-19):
+    #  -nogc                            -> don't block map load waiting for the Steam GC
+    #  +sv_hibernate_when_empty 0      -> no-humans server must not hibernate
+    #  +dota_start_ai_game 1           -> auto-start the bot match (BEFORE +map)
+    #  +dota_surrender_on_disconnect 0 + long all-disconnected timeout
+    #                                   -> bots-only game isn't insta-ended as "all disconnected"
+    #  +con_logfile per instance       -> parallel servers can't share -condebug's console.log
+    LD_LIBRARY_PATH="$DOTA_DIR/game/bin/linuxsteamrt64:$DOTA_DIR/game/dota/bin/linuxsteamrt64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
     timeout "${GAME_TIMEOUT_MIN}m" "$DOTA_BIN" \
-        -dedicated -insecure -nowatchdog \
+        -dedicated -insecure -nogc -nowatchdog \
+        -port $((27014 + i)) \
         +sv_lan 1 +sv_cheats 1 \
-        +map dota \
+        +sv_hibernate_when_empty 0 \
+        +dota_start_ai_game 1 \
+        +dota_surrender_on_disconnect 0 \
+        +dota_auto_surrender_all_disconnected_timeout 86400 \
         +host_timescale "$TIMESCALE" \
         -fill_with_bots \
-        +dota_auto_surrender_all_disconnected_timeout 0 \
-        +tv_enable 0 \
-        > "$log" 2>&1 || true
-    echo "[game $i] finished ($(wc -l < "$log") log lines)"
+        +con_logfile "$conlog" \
+        +map dota \
+        > "$log.stdout" 2>&1 || true
+    # the console log is the parseable record; stdout kept for crash forensics
+    cp "$DOTA_DIR/game/dota/$conlog" "$log" 2>/dev/null || true
+    echo "[game $i] finished ($(wc -l < "$log" 2>/dev/null || echo 0) log lines)"
     python3 "$(dirname "$0")/parse_log.py" "$log" > "$OUT_DIR/game_${i}.json" || \
         echo "[game $i] parse failed — inspect $log" >&2
 }
