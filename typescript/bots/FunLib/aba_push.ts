@@ -262,12 +262,6 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     // Update global caches
     autoCleanupCache();
 
-    // Farm-only overtime (soak farm games past the length cap): defence is
-    // released and push maxes for both teams so the game actually ends.
-    if (jmz.IsSoakOvertime()) {
-        return 0.95 as BotModeDesire;
-    }
-
     const gameState = getGlobalGameState();
     const locationState = getGlobalLocationState();
     // const unitState = updateUnitStateCache(); // Not used in this function

@@ -18,6 +18,25 @@ in git history. Read them first, every time.
 
 ---
 
+## 0.1 Current Optimization Objective (owner, 2026-07-19)
+
+**Farm rule: games are capped at 30 game-minutes; the economically leading
+team at the cap wins** (enforced behaviorally — the trailing team stands
+down past the cap, see `J.IsSoakForfeitLoser`; the signout winner ≈ the
+economic leader).
+
+**The optimization target is therefore: maximize our economic lead at the
+30-minute mark.** Pushing and farming are both legitimate ways to build
+that lead — do NOT fixate on how fast games can be fully closed out.
+Score iterations primarily by:
+1. **Networth lead at signout** (proxy for the 30-min lead) — bigger
+   sustained leads = better script;
+2. Winner-vs-economic-leader consistency (the forfeit rule working);
+3. Games/hour throughput (caps keep iteration fast);
+4. Per-hero contribution to the lead (GPM, K/D, building damage).
+
+---
+
 ## 0. Environment & Access
 
 - **Repo:** `dragonghy/dota2bot`, work on **`main`** directly.

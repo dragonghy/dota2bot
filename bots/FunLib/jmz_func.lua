@@ -4562,29 +4562,6 @@ function J.GetClosestUnit(units)
 	return target;
 end
 
--- Soak-farm detection: Customize/soak_pool.lua exists only on farm instances
--- (gitignored, never shipped). Cached after the first probe.
-local bSoakFarmCache = nil
-function J.IsSoakFarm()
-	if bSoakFarmCache == nil then
-		local bOk, tPool = pcall( dofile, GetScriptDirectory()..'/Customize/soak_pool' )
-		bSoakFarmCache = bOk and type( tPool ) == 'table'
-	end
-	return bSoakFarmCache
-end
-
--- Farm-only game-length cap: past this DotaTime the match must END — defend
--- desire collapses and push desire maxes for BOTH teams, so the side that is
--- stronger on the map finishes within a few game minutes and the game still
--- produces a real signout scoreboard (unlike the wall-clock kill -9 backstop
--- in soak_loop.sh, which loses the game's data). Inert off-farm: without the
--- soak_pool file IsSoakOvertime() is always false, so shipped behavior is
--- unchanged.
-local nSoakOvertimeCap = 35 * 60
-function J.IsSoakOvertime()
-	return DotaTime() > nSoakOvertimeCap and J.IsSoakFarm()
-end
-
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end

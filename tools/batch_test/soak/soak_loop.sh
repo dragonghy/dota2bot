@@ -10,9 +10,11 @@ S3_PREFIX=${2:?s3 prefix}
 DOTA=/opt/dota2
 REPO=/opt/dota2bot
 PORT=$((27020 + SLOT))
-GAME_CAP_MIN=35          # wall-clock kill backstop; the in-game 40-game-min
-                         # overtime forfeit (jmz_func.IsSoakOvertime) should
-                         # always end the match first with a real scoreboard
+GAME_CAP_MIN=35          # wall-clock kill backstop; the 30-game-min rcon
+                         # referee (referee.py) should always end the match
+                         # first with a real scoreboard
+RCON_PW=soakref          # LAN-only dedicated server, constant password is fine
+REFEREE="$REPO/tools/batch_test/soak/referee.py"
 
 mkdir -p /opt/soak/slot$SLOT
 sleep $((SLOT * 10))     # one-time desync so slots don't all load the map at once
@@ -28,6 +30,7 @@ while true; do
         ./game/bin/linuxsteamrt64/dota2 \
         -dedicated -insecure -nogc -nowatchdog \
         -port $PORT \
+        -usercon +rcon_password $RCON_PW \
         +sv_lan 1 +sv_cheats 1 \
         +sv_hibernate_when_empty 0 \
         +dota_force_gamemode 23 \
@@ -45,6 +48,13 @@ while true; do
     WAITED=0
     while kill -0 "$PID" 2>/dev/null && [ $WAITED -lt $((GAME_CAP_MIN * 60)) ]; do
         sleep 30; WAITED=$((WAITED + 30))
+        # 30-game-min referee: once the game clock passes the cap, force the
+        # economically leading team to win (instant, normal signout). Start
+        # polling after 6 wall-min — the cap can't be reached earlier.
+        if [ $WAITED -ge 360 ]; then
+            python3 "$REFEREE" "$PORT" "$RCON_PW" \
+                >> /opt/soak/slot$SLOT/referee_$TAG.log 2>&1 || true
+        fi
     done
     kill -9 "$PID" 2>/dev/null
     WALL_S=$(( $(date +%s) - START_EPOCH ))

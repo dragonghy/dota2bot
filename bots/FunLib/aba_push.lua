@@ -129,9 +129,6 @@ function ____exports.GetPushDesireHelper(bot, lane)
         bot.laneToPush = lane
     end
     autoCleanupCache()
-    if jmz.IsSoakOvertime() then
-        return 0.95
-    end
     local gameState = getGlobalGameState()
     local locationState = getGlobalLocationState()
     local nMaxDesire = 0.92

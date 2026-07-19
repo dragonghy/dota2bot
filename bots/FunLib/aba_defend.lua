@@ -1220,9 +1220,6 @@ function ____exports.GetDefendDesire(bot, lane)
     ) or bot:IsIllusion() then
         return BotModeDesire.None
     end
-    if jmz.IsSoakOvertime() then
-        return BotModeDesire.None
-    end
     local res = ____exports.GetDefendDesireHelper(bot, lane)
     bot.defendDesire = res
     return res
