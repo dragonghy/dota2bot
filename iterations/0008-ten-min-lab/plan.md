@@ -111,3 +111,11 @@ wakeup heartbeat).
   buggy-hero/human-partner setups. Lane EXECUTION is the biggest leak.
 - **09:44 UTC — C3 launched** (run_0944): candidate-side cores (pos 1-3)
   use the custom last-hit desire (0.9) + Think micro (attack/deny/approach).
+- **09:54 UTC — C3 VERDICT: REJECTED** (run_0944, 12 games): mean −1,442 raw
+  / ≈−3,588 corrected. Mechanism check (lh_check): candidate cores' LH
+  **dropped** to 27.6 vs baseline 35.5 — OHA's custom last-hit micro is
+  WORSE than the engine's built-in CS AI. FINDING: never enable that path;
+  engine CS stands. (Also explains why the human-partner gate existed.)
+- **09:54 UTC — C4 launched** (run_0954): inverse of C2 — candidate side
+  lanes the WHOLE capped game (floor 12 min). Rationale: pre-10min tower
+  gold is scarce; C1/C2 both showed lane income dominates.
