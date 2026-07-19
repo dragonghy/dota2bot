@@ -25,9 +25,23 @@ local function ApplySoakDraft( tCustomize )
 	local tG = type( _G ) == 'table' and _G or nil
 	local nSeed = tG and rawget( tG, '__SOAK_DRAFT_SEED' )
 	if not nSeed then
-		nSeed = ( math.floor( ( RealTime() % 1 ) * 1e6 ) * 31
-			+ math.floor( RealTime() ) * 7
-			+ RandomInt( 1, 1048576 ) ) % 2147483646 + 1
+		-- Mirrored-draft A/B: soak_side.lua may pin an explicit integer `seed`.
+		-- Both team VMs read the same file, so they derive the IDENTICAL draft.
+		-- Running one wave with the fix on radiant and a second wave with the
+		-- SAME seed but the fix on dire yields two games with an identical draft;
+		-- averaging the paired (fix-side − base-side) diff then cancels BOTH the
+		-- radiant side bias AND the draft difference, leaving only the fix effect
+		-- (the random-draft A/B can't do this — its ±600 GPM/game draft variance
+		-- swamps a behavior fix; see iterations/0010). Only active when a positive
+		-- seed is set; the normal farm (no seed) keeps the per-launch random draft.
+		local bOk, sv = pcall( dofile, GetScriptDirectory()..'/Customize/soak_side' )
+		if bOk and type( sv ) == 'table' and type( sv.seed ) == 'number' and sv.seed >= 1 then
+			nSeed = math.floor( sv.seed ) % 2147483646 + 1
+		else
+			nSeed = ( math.floor( ( RealTime() % 1 ) * 1e6 ) * 31
+				+ math.floor( RealTime() ) * 7
+				+ RandomInt( 1, 1048576 ) ) % 2147483646 + 1
+		end
 		if tG then rawset( tG, '__SOAK_DRAFT_SEED', nSeed ) end
 	end
 
