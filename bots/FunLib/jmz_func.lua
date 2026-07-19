@@ -5594,13 +5594,22 @@ function J.IsInLaningPhase()
 	local nTime = DotaTime()
 	local bTurbo = J.IsModeTurbo()
 
-	-- Hard time floor: always laning phase before 8min (turbo) / 10min (normal)
-	if bTurbo and nTime < 8 * 60 then return true end
-	if not bTurbo and nTime < 10 * 60 then return true end
+	-- [LAB C2] candidate side leaves lane 3 minutes earlier: in a 10-minute
+	-- game the default 8-min turbo floor keeps bots laning for 80% of it —
+	-- shortening the floor converts minutes 5-10 into the push/objective
+	-- regime (tower gold). Inert off-farm.
+	local nFloor = bTurbo and 8 * 60 or 10 * 60
+	local nSoftEnd = bTurbo and 10 * 60 or 14 * 60
+	if J.IsSoakCandidate('c2') then
+		nFloor = bTurbo and 5 * 60 or 8 * 60
+		nSoftEnd = bTurbo and 7 * 60 or 11 * 60
+	end
 
-	-- Soft extension: still laning up to 10min (turbo) / 14min (normal) if networth is low
-	if bTurbo and nTime < 10 * 60 and GetBot():GetNetWorth() < 8000 then return true end
-	if not bTurbo and nTime < 14 * 60 and GetBot():GetNetWorth() < 8000 then return true end
+	-- Hard time floor: always laning phase before the floor
+	if nTime < nFloor then return true end
+
+	-- Soft extension: still laning a bit longer if networth is low
+	if nTime < nSoftEnd and GetBot():GetNetWorth() < 8000 then return true end
 
 	return false
 end
