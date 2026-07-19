@@ -753,6 +753,16 @@ export function WhichLaneToPush(_bot: Unit, _lane: Lane): Lane {
     midLaneScore = presence_adjust(midLaneScore, vMid);
     botLaneScore = presence_adjust(botLaneScore, vBot);
 
+    // [LAB C15] refined split-soak: pos3 soaks only an enemy-free empty lane.
+    if (jmz.IsSoakCandidate("c15") && jmz.GetPosition(_bot) === 3 && !jmz.IsInLaningPhase()) {
+        let bestLane: Lane | null = null;
+        let bestScore = -1;
+        if (countTop === 0 && topLaneScore > bestScore) { bestLane = Lane.Top; bestScore = topLaneScore; }
+        if (countMid === 0 && midLaneScore > bestScore) { bestLane = Lane.Mid; bestScore = midLaneScore; }
+        if (countBot === 0 && botLaneScore > bestScore) { bestLane = Lane.Bot; bestScore = botLaneScore; }
+        if (bestLane !== null) return bestLane;
+    }
+
     // [LAB C14] split-soak: after laning, the candidate side's pos1 pushes
     // the EMPTIEST lane (max score) to soak uncollected lane gold.
     if (jmz.IsSoakCandidate("c14") && jmz.GetPosition(_bot) === 1 && !jmz.IsInLaningPhase()) {
