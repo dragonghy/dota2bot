@@ -436,6 +436,29 @@ function ____exports.WhichLaneToPush(_bot, _lane)
     topLaneScore = presence_adjust(topLaneScore, vTop)
     midLaneScore = presence_adjust(midLaneScore, vMid)
     botLaneScore = presence_adjust(botLaneScore, vBot)
+    -- [LAB C15] refined split-soak: pos3 (not the carry) soaks, and only a
+    -- lane with NO enemies recently seen near its front (countX==0). Falls
+    -- through to normal selection when no safe empty lane exists.
+    if jmz.IsSoakCandidate('c15') and jmz.GetPosition(_bot) == 3
+        and not jmz.IsInLaningPhase() then
+        local bestLane = nil
+        local bestScore = -1
+        if countTop == 0 and topLaneScore > bestScore then
+            bestLane = Lane.Top
+            bestScore = topLaneScore
+        end
+        if countMid == 0 and midLaneScore > bestScore then
+            bestLane = Lane.Mid
+            bestScore = midLaneScore
+        end
+        if countBot == 0 and botLaneScore > bestScore then
+            bestLane = Lane.Bot
+            bestScore = botLaneScore
+        end
+        if bestLane ~= nil then
+            return bestLane
+        end
+    end
     -- [LAB C14] split-soak: after laning, the candidate side's pos1 pushes
     -- the EMPTIEST lane (max score = farthest from allies) instead of the
     -- team lane — converts the ~57% uncollected lane gold into income

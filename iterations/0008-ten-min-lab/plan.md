@@ -200,3 +200,46 @@ wakeup heartbeat).
   exactly neutral**. Axis retired permanently.
 - **14:15 UTC — C14 split-soak wave 1 rolling** (cand=radiant): pos1 pushes
   the emptiest lane post-laning (targets the 43% uncollected lane gold).
+- **15:0x UTC — C15 pair1**: wave1 +867 / swap +350 → **effect +259** (weak
+  positive, C10-territory). Not promoting on one pair (C10 lesson); pair 2
+  rolling (stamp c15-safesoak2).
+
+## OWNER REPLAY REVIEW (~15:30 UTC) — directive queue (priority order)
+
+**CRITICAL BUG CONFIRMED FROM REPLAY + DATA: farm games are NORMAL MODE,
+not turbo!** Levels at ~11.5 game-min average 6.6 (turbo would be 10-14);
+`+dota_force_gamemode 23` never took effect on the dedicated server. This
+also reframes the original "slow_close 51min turbo" finding (partly just
+normal-mode pacing). Fix experiment running: `dota_bot_practice_gamemode 23`
+(cvar exists, accepted). After fix: re-calibrate bias in turbo, re-run key
+verdicts.
+
+Owner's lane-play observations (from watching the replay) — future candidates:
+1. **Creep-aggro pull (勾线)** for the losing laner: attack-command the enemy
+   hero near enemy creeps (no need to land the hit) → creeps aggro → walk
+   back → drags the wave toward safety so the loser can still CS.
+2. **Zoning when winning**: stand PAST the enemy wave to body-block/harass;
+   orb-walkers (viper etc.) free-harass; win→step up, lose→step back.
+3. **Support/carry CS division**: supports deny + harass ONLY; never contest
+   carry last hits (exception: carry can't reach).
+4. **Lane equilibrium control**: creep-block at spawn; do NOT hit creeps
+   with damage spells unless intentionally pushing (CM nova, warlock bonds
+   named); pull small camp ~:47 / big camp ~:55 depending on lane state.
+5. **Mid rotations post-6**: if enemy sidelaner dives/pushes to our tower,
+   defender holds them + mid TPs for the 3v2.
+6. **Fixed hero→position assignment** in the soak draft (use hero_pool.txt
+   role hints; avoid 5-support comps). Important for lane-focused testing.
+7. **Warlock (and similar) laning skill builds are wrong**: maxing the two
+   push spells + channeling Upheaval under creep fire; should take Shadow
+   Word for lane. Per-hero skill-build fixes.
+
+## ★ 15:29 UTC — TURBO BUG FIXED (was normal the whole time)
+Root cause: `+dota_start_ai_game 1` starts a NORMAL AI game and ignores turbo
+cvars. Fix: `+dota_bot_practice_start 1` + turbo cvars before `+map dota`.
+Verified: test E levels 8-11 @10min + team GPM 25.5k (turbo) vs test D 5-8 +
+20.4k (normal). ALL prior lab results (C1-C15, overnight) were NORMAL mode —
+their verdicts don't transfer to turbo and must be re-run. Farm restarted in
+TRUE turbo + role-balanced draft: run_20260719_1529, iter-0011-turbo.
+Two sub-agents launched: (1) replay behavioral-analysis pipeline to auto-detect
+the owner's bug classes (the real fix for "Claude can't see bugs"); (2) spot
+parallel farm for throughput. Both report back async.
