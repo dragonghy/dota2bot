@@ -4562,6 +4562,22 @@ function J.GetClosestUnit(units)
 	return target;
 end
 
+-- Ten-minute-lab side gate (farm-only): Customize/soak_side.lua (gitignored,
+-- written per wave by the lab) returns 'radiant' or 'dire' — the CANDIDATE
+-- side of the current mirror wave. Candidate code paths are gated on this;
+-- without the file (i.e. everywhere outside the farm) it is always false,
+-- so shipped behavior is the baseline.
+local sSoakSideCache = nil
+function J.IsSoakCandidateSide()
+	if sSoakSideCache == nil then
+		local bOk, side = pcall( dofile, GetScriptDirectory()..'/Customize/soak_side' )
+		sSoakSideCache = ( bOk and ( side == 'radiant' or side == 'dire' ) ) and side or false
+	end
+	if sSoakSideCache == false then return false end
+	local nSideTeam = sSoakSideCache == 'radiant' and TEAM_RADIANT or TEAM_DIRE
+	return GetTeam() == nSideTeam
+end
+
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end

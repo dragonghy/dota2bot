@@ -64,7 +64,12 @@ function GetDesire()
 	-- normal farm desire is capped hard below the push cap (0.92), so the
 	-- team's main intent stays on taking structures; rebalance via winrate
 	-- in later iterations. Escape returns (ShouldRun, > 1.0) stay untouched.
-	if res ~= nil and res <= 1.0 and not J.IsEarlyGame() then
+	-- [LAB C1] the candidate side of the ten-minute-economy lab plays with
+	-- NO farm cap (tests whether the cap hurts early-game economy); inert
+	-- outside the farm (J.IsSoakCandidateSide is false without the farm-only
+	-- side file).
+	if res ~= nil and res <= 1.0 and not J.IsEarlyGame()
+		and not J.IsSoakCandidateSide() then
 		res = Min(res, 0.45)
 	end
 	return res
