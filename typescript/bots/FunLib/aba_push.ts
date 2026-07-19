@@ -272,7 +272,7 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     const locationState = getGlobalLocationState();
     // const unitState = updateUnitStateCache(); // Not used in this function
 
-    let nMaxDesire = 0.82;
+    let nMaxDesire = 0.85;
     const nSearchRange = 2000;
     const botActiveMode = bot.GetActiveMode();
     const nModeDesire = bot.GetActiveModeDesire();
@@ -296,9 +296,19 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     const networthAdvantage = gameState.teamNetworth - gameState.enemyNetworth;
     const enemyAverageLevel = jmz.GetAverageLevel(true);
     const levelAdvantage = gameState.averageLevel - enemyAverageLevel;
-    const hasSignificantAdvantage = networthAdvantage > 15000 || levelAdvantage > 2;
+    const hasSignificantAdvantage = networthAdvantage > 10000 || levelAdvantage > 2;
     if (hasSignificantAdvantage) {
-        nMaxDesire = 0.92;
+        nMaxDesire = 0.95;
+    }
+
+    // Closing urgency: past the time a game of this mode SHOULD be over
+    // (turbo ~25 min, normal ~40), raise the ceiling and (below) the base
+    // desire so somebody actually forces the end. Safety min-gates further
+    // down still apply on top of this ceiling.
+    const nCloseByTime = jmz.IsModeTurbo() ? 25 * 60 : 40 * 60;
+    const bPastCloseByTime = gameState.currentTime > nCloseByTime;
+    if (bPastCloseByTime) {
+        nMaxDesire = math.max(nMaxDesire, 0.92);
     }
 
     const enemiesAtAncient = jmz.Utils.CountEnemyHeroesNear(ourAncient!.GetLocation(), BASE_ANC_RADIUS);
@@ -516,6 +526,9 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
             if (aAliveCount > eAliveCount) {
                 const groupBonus = RemapValClamped(aAliveCount - eAliveCount, 1, 3, 0.1, 0.4);
                 nPushDesire = nPushDesire + groupBonus;
+            }
+            if (bPastCloseByTime) {
+                nPushDesire = nPushDesire + 0.25;
             }
 
             return RemapValClamped(nPushDesire * jmz.GetHP(bot), 0, 1, 0, nMaxDesire) as BotModeDesire;

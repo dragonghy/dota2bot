@@ -134,7 +134,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     end
     local gameState = getGlobalGameState()
     local locationState = getGlobalLocationState()
-    local nMaxDesire = 0.82
+    local nMaxDesire = 0.85
     local nSearchRange = 2000
     local botActiveMode = bot:GetActiveMode()
     local nModeDesire = bot:GetActiveModeDesire()
@@ -154,9 +154,14 @@ function ____exports.GetPushDesireHelper(bot, lane)
     local networthAdvantage = gameState.teamNetworth - gameState.enemyNetworth
     local enemyAverageLevel = jmz.GetAverageLevel(true)
     local levelAdvantage = gameState.averageLevel - enemyAverageLevel
-    local hasSignificantAdvantage = networthAdvantage > 15000 or levelAdvantage > 2
+    local hasSignificantAdvantage = networthAdvantage > 10000 or levelAdvantage > 2
     if hasSignificantAdvantage then
-        nMaxDesire = 0.92
+        nMaxDesire = 0.95
+    end
+    local nCloseByTime = jmz.IsModeTurbo() and 25 * 60 or 40 * 60
+    local bPastCloseByTime = gameState.currentTime > nCloseByTime
+    if bPastCloseByTime then
+        nMaxDesire = math.max(nMaxDesire, 0.92)
     end
     local enemiesAtAncient = jmz.Utils.CountEnemyHeroesNear(
         ourAncient:GetLocation(),
@@ -329,6 +334,9 @@ function ____exports.GetPushDesireHelper(bot, lane)
                     0.4
                 )
                 nPushDesire = nPushDesire + groupBonus
+            end
+            if bPastCloseByTime then
+                nPushDesire = nPushDesire + 0.25
             end
             return RemapValClamped(
                 nPushDesire * jmz.GetHP(bot),
