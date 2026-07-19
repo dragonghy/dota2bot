@@ -90,6 +90,15 @@ function GetDesire()
 		if J.IsSoakCandidate('c10r') and J.GetPosition(bot) <= 3 then
 			nCap = 0.65
 		end
+		-- [GH #16 'corefarm'] A safe, idle CORE with no worthwhile fight to
+		-- answer keeps farming its wave/camp instead of drifting: lift the cap
+		-- toward (but still below) the 0.92 push cap so farm wins when there is
+		-- genuinely nothing better to do. Gated turbo + soak-candidate
+		-- 'corefarm' + core inside J.ShouldCoreKeepFarming, so it is inert in
+		-- normal mode and off the candidate side.
+		if J.ShouldCoreKeepFarming(bot) then
+			nCap = Max(nCap, 0.7)
+		end
 		res = Min(res, nCap)
 	end
 	return res

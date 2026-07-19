@@ -4995,6 +4995,52 @@ function J.ShouldRegroupNotSolo( bot )
 	return true
 end
 
+-- [GH #16] Turbo core farm-desire preservation. Aggregated over ~790 turbo
+-- games, our CORES under-farm at support level (~1.4 CS/min; a competent core
+-- does 5-8+). One driver: after the laning phase, farm desire is hard-capped
+-- (0.45 in mode_farm_generic) far below the push cap (0.92), so any grouping /
+-- objective pulls a core off its lane wave or jungle camp BEFORE it finishes --
+-- economy (our optimization target) bleeds out. This returns true only when a
+-- CORE (pos 1-3) is safe and has NO worthwhile fight to answer, i.e. it is
+-- genuinely idle and should just keep farming; the caller then lifts the farm
+-- cap so the wave/camp wins over drifting.
+--
+-- Deliberately CONSERVATIVE: it only RAISES a desire cap (never forces farming
+-- into danger, never suppresses a real fight), only for cores, and only when
+-- ALL of these hold:
+--   * turbo (item timings / pace are the turbo-tuned target),
+--   * the bot is a valid core (pos 1-3) -- supports farming less is fine,
+--   * not being hero-focused (no recent hero damage) and no enemy hero within
+--     1200 -- a threatened core should retreat/fight, not tunnel creeps,
+--   * no live team fight within ~2500 -- a real fight nearby is worth more than
+--     the wave, so let normal fight/push desire take it.
+-- Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND only the
+-- active soak-candidate side carrying the 'corefarm' id. Inert off the
+-- candidate side and in normal mode (same pattern as J.ShouldRegroupNotSolo /
+-- J.ShouldStayAndRegen).
+function J.ShouldCoreKeepFarming( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'corefarm' ) then return false end
+	if not J.IsValidHero( bot ) then return false end
+
+	-- Cores only (pos 1-3). Supports under-farming is expected and fine.
+	if J.GetPosition( bot ) > 3 then return false end
+
+	-- Safe: a core being focused by heroes or with an enemy on its doorstep
+	-- should answer that (retreat / fight), not keep tunnelling creeps.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then return false end
+	if #J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE ) > 0 then return false end
+
+	-- No worthwhile fight to join: a live team fight within reach is worth more
+	-- than a creep wave, so defer to normal fight/push desire in that case.
+	local vFight = J.GetTeamFightLocation( bot )
+	if vFight ~= nil and GetUnitToLocationDistance( bot, vFight ) < 2500 then
+		return false
+	end
+
+	return true
+end
+
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end
