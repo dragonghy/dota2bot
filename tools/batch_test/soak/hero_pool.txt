@@ -1,34 +1,47 @@
-# Soak-farm hero pool: internal_name,role_hint,tier
-# role_hint: core|support|either (soft constraint only — mismatched positions
-#            are playable and even useful for surfacing behavior bugs)
+# Soak-farm hero pool: internal_name,positions,tier
+# positions: slash-separated list of the roles this hero may be DRAFTED into
+#            (1=safelane carry 2=mid 3=offlane 4=soft-support 5=hard-support).
+#            The soak drafter fills each team's pos 1-5 only from heroes
+#            eligible for that position (owner's turbo-mode position map).
 # tier: focus (first-batch polish targets) | candidate | filler
-axe,core,focus
-zuus,core,focus
-skeleton_king,core,focus
-lion,support,focus
-crystal_maiden,support,focus
-luna,core,candidate
-sniper,core,candidate
-death_prophet,core,candidate
-tidehunter,either,candidate
-dragon_knight,core,candidate
-witch_doctor,support,candidate
-lich,support,candidate
-warlock,support,candidate
-sven,core,filler
-ogre_magi,support,filler
-chaos_knight,core,filler
-medusa,core,filler
-drow_ranger,core,filler
-viper,either,filler
-bristleback,core,filler
-centaur,either,filler
-spirit_breaker,either,filler
-slardar,core,filler
-skywrath_mage,support,filler
-jakiro,support,filler
-venomancer,either,filler
-phantom_assassin,core,filler
-juggernaut,core,filler
-lina,either,filler
-necrolyte,either,filler
+axe,3,focus
+zuus,2/4/5,focus
+skeleton_king,1/3,focus
+lion,4/5,focus
+crystal_maiden,4/5,focus
+luna,1,candidate
+sniper,1/2/4,candidate
+death_prophet,2/3,candidate
+tidehunter,3,candidate
+dragon_knight,1/2/3,candidate
+witch_doctor,4/5,candidate
+lich,4/5,candidate
+warlock,4,candidate
+sven,1/3,filler
+ogre_magi,4/5,filler
+chaos_knight,1/3,filler
+medusa,1,filler
+drow_ranger,1,filler
+viper,2/3,filler
+bristleback,1/3,filler
+centaur,3,filler
+spirit_breaker,4,filler
+slardar,1/3,filler
+skywrath_mage,4/5,filler
+jakiro,4/5,filler
+venomancer,4/5,filler
+phantom_assassin,1,filler
+juggernaut,1,filler
+lina,2/4,filler
+necrolyte,2/3,filler
+nevermore,2,filler
+queenofpain,2,filler
+storm_spirit,2,filler
+ember_spirit,2,filler
+obsidian_destroyer,2,filler
+earthshaker,4,filler
+shadow_shaman,4/5,filler
+pudge,5,filler
+silencer,5,filler
+oracle,5,filler
+vengefulspirit,1/5,filler

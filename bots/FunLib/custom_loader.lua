@@ -37,48 +37,61 @@ local function ApplySoakDraft( tCustomize )
 		return ( s % n ) + 1
 	end
 
-	-- Split the pool by role so each team gets a position-ordered comp:
-	-- slots 1-3 (RoleAssignment pos 1/2/3) = cores, slots 4-5 = supports.
-	-- 'either' heroes backfill whichever bucket runs short. Accepts both the
-	-- new {name, role} pool format and the legacy flat-string format.
-	local tCore, tSupport, tEither = {}, {}, {}
+	-- Per-position draft: each team's slots map to positions 1..5 (see
+	-- FunLib/aba_role RoleAssignment), and every position is filled only from
+	-- heroes ELIGIBLE for that position (pool entry .pos list). This puts each
+	-- hero on a lane it can actually play (axe->3, nevermore->2, ...) instead
+	-- of the old core/support split that let a pos-3 hero land in the pos-1
+	-- slot. Both team VMs share the seed, so they compute the identical 10-hero
+	-- assignment and never collide. Accepts the new {name, pos={...}} format;
+	-- legacy {name, role}/flat-string entries fall back to any-position.
+	local tByPos = { {}, {}, {}, {}, {} }
 	for i = 1, #tPool do
 		local e = tPool[i]
-		if type( e ) == 'table' and e.name then
-			local r = e.role
-			if r == 'core' then tCore[#tCore + 1] = e.name
-			elseif r == 'support' then tSupport[#tSupport + 1] = e.name
-			else tEither[#tEither + 1] = e.name end
-		else
-			tEither[#tEither + 1] = e
+		local name = type( e ) == 'table' and e.name or e
+		local pos = type( e ) == 'table' and type( e.pos ) == 'table' and e.pos or { 1, 2, 3, 4, 5 }
+		for _, p in ipairs( pos ) do
+			if p >= 1 and p <= 5 then tByPos[p][#tByPos[p] + 1] = name end
 		end
 	end
-	local function Shuffle( t )
-		for i = #t, 2, -1 do
-			local j = NextRand( i )
-			t[i], t[j] = t[j], t[i]
+
+	-- Fill the scarcest positions first (fewest eligible heroes) so greedy
+	-- assignment doesn't dead-end. Assign radiant then dire for each position.
+	local tPosOrder = { 1, 2, 3, 4, 5 }
+	table.sort( tPosOrder, function( a, b ) return #tByPos[a] < #tByPos[b] end )
+
+	local tUsed = {}
+	local tRad, tDire = {}, {}
+	local function PickFor( p )
+		local tCand = {}
+		for _, name in ipairs( tByPos[p] ) do
+			if not tUsed[name] then tCand[#tCand + 1] = name end
 		end
+		if #tCand == 0 then                    -- dead-end fallback: any unused hero
+			for i = 1, #tPool do
+				local e = tPool[i]
+				local name = type( e ) == 'table' and e.name or e
+				if not tUsed[name] then tCand[#tCand + 1] = name end
+			end
+		end
+		if #tCand == 0 then return nil end
+		local pick = tCand[NextRand( #tCand )]
+		tUsed[pick] = true
+		return pick
 	end
-	Shuffle( tCore ); Shuffle( tSupport ); Shuffle( tEither )
-
-	-- Deal in a fixed order so both team VMs (shared seed) agree and never
-	-- collide: radiant cores, dire cores, radiant sups, dire sups.
-	local function Take( t )
-		return table.remove( t ) or table.remove( tEither )
+	for _, p in ipairs( tPosOrder ) do
+		tRad[p] = PickFor( p )
+		tDire[p] = PickFor( p )
 	end
-	local tRadCore, tDireCore, tRadSup, tDireSup = {}, {}, {}, {}
-	for _ = 1, 3 do tRadCore[#tRadCore + 1] = Take( tCore ); tDireCore[#tDireCore + 1] = Take( tCore ) end
-	for _ = 1, 2 do tRadSup[#tRadSup + 1] = Take( tSupport ); tDireSup[#tDireSup + 1] = Take( tSupport ) end
 
-	local function Comp( tCores, tSups )
+	local function Comp( t )
 		local tOut = {}
-		for i = 1, #tCores do tOut[#tOut + 1] = 'npc_dota_hero_'..tCores[i] end
-		for i = 1, #tSups do tOut[#tOut + 1] = 'npc_dota_hero_'..tSups[i] end
+		for p = 1, 5 do tOut[p] = 'npc_dota_hero_'..( t[p] or 'axe' ) end
 		return tOut
 	end
-	tCustomize.Radiant_Heros = Comp( tRadCore, tRadSup )
-	tCustomize.Dire_Heros = Comp( tDireCore, tDireSup )
-	print( '[SOAK] role-balanced draft applied (seed='..nSeed..')' )
+	tCustomize.Radiant_Heros = Comp( tRad )
+	tCustomize.Dire_Heros = Comp( tDire )
+	print( '[SOAK] per-position draft applied (seed='..nSeed..')' )
 end
 
 function LoadCustomize()
