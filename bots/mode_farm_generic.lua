@@ -55,6 +55,13 @@ local runMode = false;
 if bot.farmLocation == nil then bot.farmLocation = bot:GetLocation() end
 
 function GetDesire()
+	-- [GH #6] Turbo regroup suppression: if the bot would be solo-farming deep
+	-- in enemy territory with no ally near and enemies present, kill the farm
+	-- desire so it pulls back / groups instead of feeding the lead or aegis.
+	-- Gated (turbo + soak-candidate 'regroup'); inert by default.
+	if J.ShouldRegroupNotSolo(bot) then
+		return BOT_MODE_DESIRE_NONE
+	end
 	-- local cacheKey = 'GetFarmDesire'..tostring(bot:GetPlayerID())
 	-- local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.4)
 	-- if DotaTime() > 30 and cachedVar ~= nil then return cachedVar end

@@ -48,6 +48,11 @@ declare function IsInLaningPhase(): boolean;
 declare function IsSoakCandidateSide(): boolean;
 declare function IsSoakCandidate(id: string): boolean;
 
+// [GH #6] Turbo + soak-candidate('regroup') gated: true when the bot is alone
+// deep in enemy territory with enemies near -> caller should suppress solo
+// farm/push desire and regroup toward allies.
+declare function ShouldRegroupNotSolo(bot: Unit): boolean;
+
 declare function IsDoingRoshan(bot: Unit): boolean;
 
 declare function IsDoingTormentor(bot: Unit): boolean;

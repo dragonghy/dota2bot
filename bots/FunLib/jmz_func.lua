@@ -4781,6 +4781,61 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 	return true
 end
 
+-- [GH #7] Turbo "punish the dive" collapse trigger. Owner replay review: an
+-- enemy over-extends / dives one of our towers and nobody collapses, even
+-- though a stun + a core TP would guarantee the kill. In turbo the TP cooldown
+-- is short, so collapsing on an over-extended enemy is cheap and should happen
+-- more. Returns the enemy hero to collapse on when BOTH hold:
+--   * an enemy hero is deep near one of OUR buildings -- within ~1200 of an
+--     allied tower/rax/ancient, i.e. diving / over-extended into our territory,
+--     AND
+--   * J.SafeToCommitFight(bot, thatEnemy) is true -- we can actually kill it
+--     (lethal combined burst) or we have the numbers there (parity or better).
+-- Otherwise nil. This is the DISCIPLINED punish: it reuses the SAME
+-- lethal-or-numbers gate as the anti-dive guard, so it NEVER commits into a
+-- lost fight -- it is "punish the over-extension when it's winning", not "fight
+-- more". Gated turbo-only (J.IsModeTurbo) AND to the active soak candidate
+-- carrying the 'punish' id, so shipped/normal behavior is unchanged until an
+-- A/B win promotes it.
+-- Approximation note: we don't have per-frame tower-aggro in the API here, so
+-- "diving" is approximated by proximity (<=1200) to any live allied building
+-- plus the enemy being within collapse range (1600) of this bot. Candidate
+-- enemies are restricted to nearby so raising desire pulls controllers onto a
+-- target they can actually reach.
+function J.ShouldPunishDive( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'punish' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
+	if tBuildings == nil or #tBuildings == 0 then return nil end
+
+	-- Only enemies within collapse range of us are worth raising desire toward;
+	-- a dive far across the map isn't ours to punish.
+	local tEnemies = J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE )
+	for _, enemy in pairs( tEnemies ) do
+		if J.IsValidHero( enemy )
+		and not J.IsSuspiciousIllusion( enemy )
+		and not J.IsMeepoClone( enemy )
+		then
+			for _, building in pairs( tBuildings ) do
+				if J.IsValidBuilding( building )
+				and GetUnitToUnitDistance( enemy, building ) <= 1200
+				then
+					-- Over-extended under our building -> only punish when the
+					-- collapse is genuinely winning (lethal or numbers).
+					if J.SafeToCommitFight( bot, enemy ) then
+						return enemy
+					end
+					break
+				end
+			end
+		end
+	end
+
+	return nil
+end
+
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
 -- 300-1500u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle
@@ -4847,6 +4902,58 @@ function J.ResolveTeamfightIdle( bot )
 	if not J.IsModeTurbo() then return nil end
 	if not J.IsSoakCandidate( 'fight' ) then return nil end
 	return J.EvalTeamfightIdle( bot )
+end
+
+-- [GH #6] Turbo "regroup, don't solo-walk into enemy territory" suppression.
+-- After taking aegis or gaining a clear lead, bots scatter-farm and, worst
+-- case, a single hero (e.g. an aegis-carrying Wraith King) walks ALONE deep
+-- into the enemy jungle/triangle, gets focused, and feeds — then repeats after
+-- respawn. This returns true when the bot is (or is about to be) alone AND deep
+-- in / heading into enemy territory AND enemies are near-ish, so callers can
+-- SUPPRESS the solo farm/push desire and let the bot pull back toward allies
+-- instead of feeding the lead.
+-- Conditions (all): turbo; past the map midline toward the enemy ancient
+-- (closer to their base than to ours); NO allied hero within 1500; at least one
+-- enemy hero within 1500. Deliberately conservative — grouped pushes and safe
+-- farming on our own half fall through to normal behavior.
+-- Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND only the
+-- active soak-candidate side carrying the 'regroup' experiment id. Inert off
+-- the candidate side and in normal mode (same pattern as J.ShouldSuppressDive
+-- / J.ShouldStayAndRegen).
+function J.ShouldRegroupNotSolo( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'regroup' ) then return false end
+	if not J.IsValidHero( bot ) then return false end
+
+	-- Deep in / heading into enemy territory: closer to the enemy ancient than
+	-- to our own (past the diagonal midline toward their base). Cheap + robust,
+	-- no lane-front bookkeeping needed.
+	local hEnemyAncient = GetAncient( GetOpposingTeam() )
+	local hOwnAncient   = GetAncient( GetTeam() )
+	if hEnemyAncient == nil or hOwnAncient == nil then return false end
+	if GetUnitToUnitDistance( bot, hEnemyAncient )
+		>= GetUnitToUnitDistance( bot, hOwnAncient ) then
+		return false
+	end
+
+	local vLoc = bot:GetLocation()
+
+	-- Alone: J.GetAlliesNearLoc includes the bot itself, so count only OTHER
+	-- valid allied heroes within the leash radius.
+	local nAlliesNear = 0
+	for _, ally in pairs( J.GetAlliesNearLoc( vLoc, 1500 ) ) do
+		if ally ~= bot and J.IsValidHero( ally )
+			and not J.IsSuspiciousIllusion( ally ) then
+			nAlliesNear = nAlliesNear + 1
+		end
+	end
+	if nAlliesNear >= 1 then return false end   -- grouped -> fall through
+
+	-- Enemies near-ish: at least one enemy hero within 1500 -> real risk of
+	-- being caught out solo. No enemies => just uncontested farming, leave it.
+	if #J.GetEnemiesNearLoc( vLoc, 1500 ) < 1 then return false end
+
+	return true
 end
 
 local bModeTurboCache = nil

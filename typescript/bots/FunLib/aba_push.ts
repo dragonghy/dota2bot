@@ -256,6 +256,13 @@ export function GetPushDesire(bot: Unit, lane: Lane): BotModeDesire {
  * Desire core
  * ---------------------------------------------------------------------------*/
 export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
+    // [GH #6] Turbo regroup suppression: when the bot would solo-push deep into
+    // enemy territory with no ally near and enemies present, kill the push
+    // desire so it pulls back / groups instead of feeding the lead or aegis.
+    // Gated (turbo + soak-candidate 'regroup'); inert by default.
+    if (jmz.ShouldRegroupNotSolo(bot)) {
+        return BotModeDesire.None;
+    }
     // Keep the intent: avoid pushing too early or when other team jobs override.
     if ((bot as any).laneToPush == null) (bot as any).laneToPush = lane;
 

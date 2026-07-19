@@ -15,6 +15,8 @@ Detectors implemented (bug_queue letter in brackets):
   D3 skywrath_solo_silence [G] Ancient Seal cast with no follow-up burst
   D4 idle_while_ally_dies  [F] stood within range of a dying ally, did nothing
   D5 sandwiched_walk       [F] walked between 2+ enemies and got beaten
+  D6 overextend_alone      [6] solo-walked deep into enemy territory, no ally
+                               near, enemies present (the aegis/lead feed loop)
 """
 import argparse
 import bisect
@@ -299,6 +301,98 @@ def d5_sandwiched_walk(tl):
     return out
 
 
+# --- overextend_alone tunables (Dota world units) ---
+# The diagonal river/midline is x+y == 0: Radiant (team 2) base sits at very
+# negative x+y (~-13700 at fountain), Dire (team 3) at very positive x+y, so a
+# hero is in ENEMY territory when x+y is pushed toward the enemy base. Require a
+# margin past the midline so we only flag heroes genuinely deep in, not those
+# skirmishing at the river.
+OVEREXTEND_MIDLINE_MARGIN = 3000.0   # x+y units past the midline into enemy half
+OVEREXTEND_ALONE_RADIUS = 1500.0     # no allied hero within this => "solo"
+OVEREXTEND_ENEMY_RADIUS = 1600.0     # an enemy hero within this => genuinely contested
+OVEREXTEND_DEDUP_SEC = 8.0           # one finding per hero per continuous stretch
+
+
+def _enemy_half_depth(team, x, y):
+    """How far (in x+y space) the point is INTO enemy territory; <=0 = own half.
+    Radiant (2) enemy territory is positive x+y; Dire (3) is mirrored."""
+    s = x + y
+    if team == 2:
+        return s
+    if team == 3:
+        return -s
+    return 0.0
+
+
+def d6_overextend_alone(tl):
+    """Flag a hero deep in enemy territory, alone, with enemies near — the
+    'solo-walk into their jungle/triangle' pattern that feeds a lead/aegis.
+
+    LIMITATION: aegis/rune state is NOT present in the replay dump
+    (dumper/main.go emits only position/hp/mp/level per hero + combat-log
+    events), so the aegis-specific 'solo_dive_with_aegis' variant cannot be
+    computed here — this implements the general overextension pattern only (an
+    aegis carrier that solo-walks in is still caught by it). If aegis modifier
+    state is later added to the dump, add a 'solo_dive_with_aegis' detector that
+    filters these findings down to aegis carriers."""
+    out = []
+    last_flag = {}
+    for hero, snaps in tl.snaps.items():
+        team = tl.team(hero)
+        if not team:
+            continue
+        for s in snaps:
+            if s["hp"] <= 0:
+                continue
+            t = s["t"]
+            depth = _enemy_half_depth(team, s["x"], s["y"])
+            if depth < OVEREXTEND_MIDLINE_MARGIN:
+                continue  # not deep in enemy territory
+            hp = (s["x"], s["y"])
+            # solo: no living allied hero within the leash radius
+            ally_near = False
+            for ally in tl.heroes:
+                if ally == hero or tl.team(ally) != team:
+                    continue
+                if not tl.alive_at(ally, t):
+                    continue
+                ap = tl.pos(ally, t)
+                if ap and dist(hp, ap) <= OVEREXTEND_ALONE_RADIUS:
+                    ally_near = True
+                    break
+            if ally_near:
+                continue  # grouped -> fine
+            # contested: at least one living enemy hero near-ish
+            enemies_near = []
+            for e in tl.enemies_of(hero):
+                if not tl.alive_at(e, t):
+                    continue
+                ep = tl.pos(e, t)
+                if ep and dist(hp, ep) <= OVEREXTEND_ENEMY_RADIUS:
+                    enemies_near.append(e)
+            if not enemies_near:
+                continue
+            # de-dup: one finding per hero per continuous overextension window
+            if hero in last_flag and t - last_flag[hero] < OVEREXTEND_DEDUP_SEC:
+                last_flag[hero] = t
+                continue
+            last_flag[hero] = t
+            out.append({
+                "detector": "overextend_alone", "bug": "6", "hero": hero,
+                "t": round(t, 1), "depth": round(depth),
+                "enemies_near": sorted(enemies_near),
+                "hp_pct": s["hp_pct"],
+                "desc": f"{hero} was deep in enemy territory (x+y past midline by "
+                        f"{depth:.0f}) ALONE (no ally within "
+                        f"{OVEREXTEND_ALONE_RADIUS:.0f}u) with {len(enemies_near)} "
+                        f"enemy hero(es) near ({', '.join(sorted(enemies_near))}) "
+                        f"at t={t:.0f}s ({fmt(t)}), hp={pct(s['hp_pct'])} "
+                        f"-> solo-walked into their jungle/triangle, risks feeding "
+                        f"the lead/aegis",
+            })
+    return out
+
+
 def close_names(close):
     return [c[0] for c in close]
 
@@ -312,7 +406,7 @@ def pct(v):
 
 
 DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
-             d4_idle_while_ally_dies, d5_sandwiched_walk]
+             d4_idle_while_ally_dies, d5_sandwiched_walk, d6_overextend_alone]
 
 
 def run(path):
