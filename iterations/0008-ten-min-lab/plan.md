@@ -83,3 +83,12 @@ wakeup heartbeat).
   occasional non-pool heroes via OHA fallback; symmetric noise.
 - **09:15 UTC — C1a launched** (run_0915): cand-c1 (no farm cap, 51d9114e)
   on RADIANT vs iter-0009 on DIRE.
+- **09:25 UTC — mirror trees ABANDONED**: C1a (run_0915) all 12 games dead —
+  drafts fine but every player level 1 / 0 GPM (gameplay VMs never ran;
+  likely engine refuses dofile outside bots/). Pivot: single-tree TEAM GATE
+  (J.IsSoakCandidateSide + farm-only Customize/soak_side.lua). Candidate
+  code branches on the gate; inert off-farm. ba6af42.
+- **09:27 UTC — C1 gated wave launched** (run_0927 after two soak_side
+  quoting fumbles; file verified `return 'radiant'`): candidate=radiant
+  plays with NO farm cap vs baseline dire. Verdict = mean(R−D gold) vs W0
+  bias +2146, then swap wave.
