@@ -48,6 +48,11 @@ exec aws "$@"
 WRAP
 chmod +x /usr/local/bin/awsx
 
+# Make sure the AWS CLI is installed before verifying (fresh containers lack it,
+# so a manual `bootstrap_creds.sh` run self-heals just like session_setup does).
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+[ -f "$HERE/ensure_aws_cli.sh" ] && bash "$HERE/ensure_aws_cli.sh" || true
+
 # verify
 ARN=$(awsx sts get-caller-identity --query Arn --output text 2>&1) || {
     echo "credentials written but verification failed: $ARN" >&2
