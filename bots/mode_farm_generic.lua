@@ -77,7 +77,7 @@ function GetDesire()
 		-- BASELINE B1 (promoted lab C10, effect +331 weak-positive): cores
 		-- keep a looser cap to soak side-lane gold while supports commit to
 		-- the push. [LAB C11] sweeps the core cap further to 0.80.
-		local nCap = 0.45
+		local nCap = J.IsSoakCandidate('c13') and 0.35 or 0.45
 		if J.GetPosition(bot) <= 3 then
 			nCap = J.IsSoakCandidate('c11') and 0.80 or 0.65
 		end
