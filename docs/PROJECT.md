@@ -8,6 +8,8 @@ This document is the canonical description of what this project is, what it is t
 
 Build a polished Dota 2 bot script that is **clearly stronger than the default bots for a small, curated hero pool (10-15 heroes)**, and publish it to the Steam Workshop for one-click subscribe.
 
+**The target game mode is Turbo** (`dota_force_gamemode 23`) — the mode the owner actually plays. All batch A/B validation runs in Turbo, and tuning decisions favor Turbo's pace: faster gold/XP (item timings arrive much earlier), weaker towers, ~20-minute games, and a stronger payoff for grouped pushing. Normal mode keeps working (it shares the same logic), but when a tuning trade-off differs between modes, Turbo wins.
+
 Breadth is explicitly not the goal. The inherited codebase supports 127 heroes and we keep that coverage working, but polish effort concentrates on the focus pool where we can make bots that lane, fight, and close out games noticeably better — and prove it with data.
 
 The project does not have a final name yet; Workshop title/branding is an open TODO.

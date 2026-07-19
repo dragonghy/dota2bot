@@ -4,6 +4,8 @@
 
 This repo is an **independent Dota 2 bot script project** focused on a small hero pool. It started from a snapshot of the community project [OpenHyperAI (OHA)](https://github.com/forest0xia/dota2bot-OpenHyperAI) at Patch 7.41/7.41a (127 heroes supported) and evolves on its own — upstream merges are not planned. The goal: make 10-15 focus heroes play clearly better than default bots, verified by batch A/B win-rate testing, and eventually publish to the Steam Workshop. The project has no final name yet.
 
+**The optimization target is TURBO mode (`dota_force_gamemode 23`), not normal mode.** All batch A/B validation runs in Turbo, and hero logic should be tuned for Turbo's pace: faster gold/XP (item timings arrive much earlier), weaker towers, shorter games (~20 min), grouped pushing pays off more. When a tuning decision differs between normal and Turbo, Turbo wins.
+
 **Current focus heroes (deep polish targets):** Axe, Zeus, Wraith King (`skeleton_king`), Lion, Crystal Maiden.
 **Candidate pool for later:** Luna, Sniper, Death Prophet, Tidehunter, Dragon Knight, Witch Doctor, Lich, Warlock.
 

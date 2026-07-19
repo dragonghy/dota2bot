@@ -54,6 +54,7 @@ run_one() {
         -port $((27014 + i)) \
         +sv_lan 1 +sv_cheats 1 \
         +sv_hibernate_when_empty 0 \
+        +dota_force_gamemode 23 \
         +dota_start_ai_game 1 \
         +dota_surrender_on_disconnect 0 \
         +dota_auto_surrender_all_disconnected_timeout 86400 \
