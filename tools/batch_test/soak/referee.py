@@ -111,12 +111,6 @@ def main():
         print("game already over")
         sys.exit(0)
 
-    times = [float(t) for t in RE_BUILDING.findall(text)]
-    if not times:
-        # no towers down yet -> nowhere near the cap
-        sys.exit(1)
-    t_max = max(times)
-
     try:
         state = json.load(open(args.state_path))
     except (OSError, ValueError):
@@ -125,14 +119,26 @@ def main():
         sys.exit(0)
 
     now = time.time()
+
+    # clock anchor: first sighting of the horn (t=0). Short caps (e.g. 10
+    # game-min) can pass before any tower falls, so Building timestamps alone
+    # are not enough. Anchor accuracy is +/- one poll interval.
+    if "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS" not in text:
+        json.dump(state, open(args.state_path, "w"))
+        sys.exit(1)
+    if "anchor_w" not in state:
+        state["anchor_w"] = now
+        state["obs"] = [{"w": now, "t": 0.0}]
+
     obs = state["obs"]
-    if not obs or t_max > obs[-1]["t"] + 0.5:
-        obs.append({"w": now, "t": t_max})
+    times = [float(t) for t in RE_BUILDING.findall(text)]
+    if times and max(times) > obs[-1]["t"] + 0.5:
+        obs.append({"w": now, "t": max(times)})
         obs[:] = obs[-30:]
 
     # live timescale estimate across the observation window
     ts = DEFAULT_TIMESCALE
-    if len(obs) >= 2 and obs[-1]["w"] - obs[0]["w"] > 60:
+    if len(obs) >= 2 and obs[-1]["w"] - obs[0]["w"] > 45:
         ts = max(1.0, (obs[-1]["t"] - obs[0]["t"]) / (obs[-1]["w"] - obs[0]["w"]))
 
     est_t = obs[-1]["t"] + (now - obs[-1]["w"]) * ts

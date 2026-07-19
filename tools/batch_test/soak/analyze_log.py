@@ -78,10 +78,11 @@ def analyze(path):
     econ_winner = None
     if team_gold["radiant"] or team_gold["dire"]:
         econ_winner = "radiant" if team_gold["radiant"] >= team_gold["dire"] else "dire"
+    cap_min = float(os.environ.get("SOAK_CAP_MIN", "30"))
     winner_by = "engine"
-    if base.get("winner") is not None and econ_winner and dur_min >= 29.5:
+    if base.get("winner") is not None and econ_winner and dur_min >= cap_min - 0.5:
         base["winner"] = econ_winner
-        winner_by = "economy_30min_cap"
+        winner_by = f"economy_{int(cap_min)}min_cap"
 
     if base.get("winner") is None:
         anomalies.append({"type": "no_winner", "note": "game did not finish"})

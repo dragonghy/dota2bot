@@ -10,9 +10,9 @@ S3_PREFIX=${2:?s3 prefix}
 DOTA=/opt/dota2
 REPO=/opt/dota2bot
 PORT=$((27020 + SLOT))
-GAME_CAP_MIN=35          # wall-clock kill backstop; the 30-game-min rcon
-                         # referee (referee.py) should always end the match
-                         # first with a real scoreboard
+SOAK_CAP_MIN=${SOAK_CAP_MIN:-10}   # game-minute lock enforced by the referee
+GAME_CAP_MIN=15          # wall-clock kill backstop; the rcon referee should
+                         # always end the match first with a real scoreboard
 RCON_PW=soakref          # LAN-only dedicated server, constant password is fine
 REFEREE="$REPO/tools/batch_test/soak/referee.py"
 
@@ -24,7 +24,11 @@ while true; do
     TAG="${TS}_slot${SLOT}"
     # Stamp the exact code version this game runs (captured at launch, before
     # any mid-game `git pull` from the iteration job can change HEAD).
-    VER=$(cd "$REPO" && git describe --tags --always --dirty 2>/dev/null || echo unknown)
+    # During a mirror run ab_deploy.sh leaves /opt/soak/ab_version describing
+    # both sides — that stamp wins.
+    VER=$(cat /opt/soak/ab_version 2>/dev/null \
+        || (cd "$REPO" && git describe --tags --always --dirty 2>/dev/null) \
+        || echo unknown)
 
     cd "$DOTA" && setsid bash -c "LD_LIBRARY_PATH=$DOTA/game/bin/linuxsteamrt64:$DOTA/game/dota/bin/linuxsteamrt64 \
         ./game/bin/linuxsteamrt64/dota2 \
@@ -47,16 +51,16 @@ while true; do
     START_EPOCH=$(date +%s)
     WAITED=0
     while kill -0 "$PID" 2>/dev/null && [ $WAITED -lt $((GAME_CAP_MIN * 60)) ]; do
-        sleep 30; WAITED=$((WAITED + 30))
-        # 30-game-min referee: extrapolates the game clock from Building
-        # lines in the stdout log; past the cap it fires `dota_dev forcewin`
-        # (instant end, normal signout; analyze_log overrides the winner with
-        # the economic leader). Start polling after 5 wall-min — the cap
-        # cannot be reached earlier.
-        if [ $WAITED -ge 300 ]; then
+        sleep 15; WAITED=$((WAITED + 15))
+        # game-clock referee: anchors on the horn, refines with Building
+        # timestamps, extrapolates, and past SOAK_CAP_MIN fires
+        # `dota_dev forcewin` (instant end, normal signout; analyze_log
+        # overrides the winner with the economic leader).
+        if [ $WAITED -ge 60 ]; then
             python3 "$REFEREE" "$PORT" "$RCON_PW" \
                 /opt/soak/slot$SLOT/stdout_$TAG.log \
                 /opt/soak/slot$SLOT/refstate_$TAG.json \
+                --cap-min "$SOAK_CAP_MIN" \
                 >> /opt/soak/slot$SLOT/referee_$TAG.log 2>&1 || true
         fi
     done
@@ -69,7 +73,7 @@ while true; do
     LOG=/opt/soak/slot$SLOT/game_$TAG.log
     mv /opt/soak/slot$SLOT/stdout_$TAG.log "$LOG" 2>/dev/null
     if [ -s "$LOG" ]; then
-        SOAK_WALL_S=$WALL_S SOAK_SCRIPT_VERSION="$VER" \
+        SOAK_WALL_S=$WALL_S SOAK_SCRIPT_VERSION="$VER" SOAK_CAP_MIN="$SOAK_CAP_MIN" \
             python3 "$REPO/tools/batch_test/soak/analyze_log.py" "$LOG" \
             > /opt/soak/slot$SLOT/analysis_$TAG.json 2>/dev/null
         gzip -f "$LOG"
