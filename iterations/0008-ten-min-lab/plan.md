@@ -102,3 +102,12 @@ wakeup heartbeat).
   Real lever = laning window itself.
 - **09:35 UTC — C2 launched** (run_0935): candidate side laning floor
   8→5 min (soft 10→7), converting minutes 5-10 into push/objective play.
+- **09:44 UTC — C2 VERDICT: REJECTED** (run_0935, 12 games): mean −462 raw /
+  ≈−2,608 corrected (5/12 positive). Early lane exit loses lane income
+  without gaining enough objective gold. Baseline lane window stands.
+- **DATA MINE (24 lab games)**: cores average only **12–47 last hits at
+  ~11 min** (DK 12, PA 29, sven 28; best = sniper 47) — Valve-default CS
+  runs for every farm bot because OHA's custom last-hit micro was gated to
+  buggy-hero/human-partner setups. Lane EXECUTION is the biggest leak.
+- **09:44 UTC — C3 launched** (run_0944): candidate-side cores (pos 1-3)
+  use the custom last-hit desire (0.9) + Think micro (attack/deny/approach).
