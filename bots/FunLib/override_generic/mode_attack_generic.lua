@@ -37,6 +37,15 @@ function Generic.GetDesire()
 
 	if bClearMode then bClearMode = false return 0 end
 
+	-- [GH #5] Team-fight anti-idle: when the bot is standing idle next to a
+	-- focused/dying ally and the numbers/HP favor engaging, raise attack desire
+	-- so it joins the fight instead of watching. Candidate-gated + turbo-only
+	-- (J.ResolveTeamfightIdle), inert otherwise; the 'flee' case is handled by
+	-- the retreat mode.
+	if J.ResolveTeamfightIdle(bot) == 'help' then
+		return GetActualDesire(BOT_MODE_DESIRE_VERYHIGH)
+	end
+
 	botAttackRange = bot:GetAttackRange() + bot:GetBoundingRadius()
 	botHP = J.GetHP(bot)
 	botMP = J.GetMP(bot)

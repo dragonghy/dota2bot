@@ -4627,6 +4627,74 @@ function J.ShouldStayAndRegen( bot )
 	return true
 end
 
+-- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
+-- 300-1500u from an ally that is being focused/dying and neither helps nor
+-- retreats — it just watches, then usually dies next. This resolves that idle
+-- state to a concrete choice:
+--   'help' -> the bot has the numbers or the HP/mana to contribute, so join
+--             the fight (raise attack/assist desire; even auto-attacking or
+--             landing one control peels the focus off the ally).
+--   'flee' -> we're outnumbered and the bot can't meaningfully help, so leave
+--             instead of feeding a second death (raise retreat desire).
+--   nil   -> the situation doesn't apply; shipped behavior is unchanged.
+-- This is the un-gated core; callers reach it through J.ResolveTeamfightIdle,
+-- which adds the turbo + soak-candidate gate. Kept conservative: it only fires
+-- when the bot is genuinely idle (not already attacking or retreating) AND an
+-- ally within 1500u is under active enemy focus.
+function J.EvalTeamfightIdle( bot )
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	-- Only the "stand and watch" case. If the bot is already committing to a
+	-- fight or already running, its normal logic owns the decision.
+	if J.IsGoingOnSomeone( bot ) then return nil end
+	if J.IsRetreating( bot ) then return nil end
+
+	-- Find an ally within ~1500u that is being focused (recently hit by an
+	-- enemy hero) or is low HP with enemy heroes on it — i.e. a live fight it
+	-- is losing right next to us.
+	local hFocusedAlly = nil
+	local hAllies = J.GetNearbyHeroes( bot, 1500, false, BOT_MODE_NONE )
+	for _, ally in pairs( hAllies ) do
+		if J.IsValidHero( ally )
+		and ally ~= bot
+		and not J.IsSuspiciousIllusion( ally )
+		then
+			local nEnemiesOnAlly = J.GetNearbyHeroes( ally, 900, true, BOT_MODE_NONE )
+			if #nEnemiesOnAlly > 0
+			and ( ally:WasRecentlyDamagedByAnyHero( 2.0 ) or J.GetHP( ally ) < 0.5 )
+			then
+				hFocusedAlly = ally
+				break
+			end
+		end
+	end
+
+	if hFocusedAlly == nil then return nil end
+
+	-- Decide around the ally's fight. Count our side as the allies near the
+	-- ally plus this bot; the focused ally itself is deliberately not counted
+	-- (it may die), keeping the numbers check pessimistic.
+	local nAllyNear  = J.GetNearbyHeroes( hFocusedAlly, 1200, false, BOT_MODE_NONE )
+	local nEnemyNear = J.GetNearbyHeroes( hFocusedAlly, 1200, true, BOT_MODE_NONE )
+	local bHaveNumbers   = ( #nAllyNear + 1 ) >= #nEnemyNear
+	local bCanContribute = J.GetHP( bot ) >= 0.5 and J.GetMP( bot ) >= 0.2
+
+	if bHaveNumbers or bCanContribute then
+		return 'help'
+	end
+	return 'flee'
+end
+
+-- [GH #5] Turbo + soak-candidate ('fight') gated wrapper around
+-- J.EvalTeamfightIdle. Inert off the farm and in normal mode, so shipped
+-- behavior is unchanged; the batch A/B run validates it before any promotion
+-- (same pattern as J.ShouldStayAndRegen).
+function J.ResolveTeamfightIdle( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'fight' ) then return nil end
+	return J.EvalTeamfightIdle( bot )
+end
+
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end
