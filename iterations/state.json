@@ -1,17 +1,18 @@
 {
-  "iteration_count": 4,
+  "iteration_count": 5,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
     "run_prefixes": [
       "soak/run_20260719_0455",
       "soak/run_20260719_0630",
-      "soak/run_20260719_0716"
+      "soak/run_20260719_0716",
+      "soak/run_20260719_0741"
     ],
     "instance_tag": "dota2bot-soak"
   },
   "watermark": {
-    "last_processed_key": "20260719_065127_slot4.analysis.json",
-    "games_ingested_total": 41
+    "last_processed_key": "20260719_071930_slot16.analysis.json",
+    "games_ingested_total": 52
   },
   "fixed_issues": [
     "side_bias:soak_draft_frozen_radiant_lineup",
@@ -20,12 +21,13 @@
     "slow_close:push_desire_gates",
     "slow_close:no_game_time_cap",
     "mode_detect:courier_speed_heuristic",
-    "sniper:shrapnel_charge_api"
+    "sniper:shrapnel_charge_api",
+    "slow_close:push_never_outranked_farm_math"
   ],
   "open_issues": [
     {
-      "key": "outcome_scoring:iter_0004",
-      "note": "OWNER ACCEPTANCE CRITERIA (2026-07-19, this stage passes if): (1) first T1 falls at 10-20 game-min (ideal 5-10, tolerated to 20); (2) T2s fall ~30 min; (3) all towers that should fall are down before 40 min. Do NOT hard-block on ideal timing \u2014 bot farm efficiency/micro polish comes later, per-hero. Score iter-0004 from soak/run_20260719_0716 against these. Live so far: T1s 10.7-22.6min (mostly in range), first T2s 24-26min (ahead of the 30min line). Also verify winner meaningful + no feeding-while-ahead.",
+      "key": "outcome_scoring:iter_0005",
+      "note": "iter-0004 scored in 0005/analysis.md: T1/T2 criteria PASS, <40min criterion FAIL (44-56min, avg 49; winners 5R/6D = draft fix fully validated). Root cause found: push desire is nPushDesire*HP remapped onto [0,cap] \u2014 multiplicative; base 0.5-0.65 never beat farm 0.9 in even games. iter-0005 (push-first: base 1.0, farm capped 0.45 post-early, forfeit 35min, 12 slots) deployed to soak/run_20260719_0741. Score next: organic closes 25-35min, races <=42, avg low-30s; WATCH winrate stability + feeder anomalies (push-first throw risk \u2014 accepted trade, tune back via winrate).",
       "first_seen_iter": 2
     },
     {
