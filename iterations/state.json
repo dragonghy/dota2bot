@@ -1,23 +1,25 @@
 {
-  "iteration_count": 2,
+  "iteration_count": 3,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
     "run_prefixes": ["soak/run_20260719_0455", "soak/run_20260719_0630"],
     "instance_tag": "dota2bot-soak"
   },
   "watermark": {
-    "last_processed_key": "20260719_060831_slot14.analysis.json",
-    "games_ingested_total": 26
+    "last_processed_key": "20260719_063250_slot16.analysis.json",
+    "games_ingested_total": 40
   },
   "fixed_issues": [
     "side_bias:soak_draft_frozen_radiant_lineup",
     "provenance:script_version_unknown",
+    "provenance:farm_dirty_general_lua",
     "slow_close:push_desire_gates",
+    "slow_close:no_game_time_cap",
     "mode_detect:courier_speed_heuristic",
     "sniper:shrapnel_charge_api"
   ],
   "open_issues": [
-    {"key": "outcome_scoring:iter_0001_0002", "note": "Next firing: score BOTH deploys from soak/run_20260719_0630 cohort. iter-0001 (draft): radiant winrate 100%->~50%, lineup diversity. iter-0002 (close): avg duration 51->low-30s min, rax->end gap ~5min, hero building dmg/min up severalfold (was radiant 424, dire 16).", "first_seen_iter": 2},
+    {"key": "outcome_scoring:iter_0002_0003", "note": "iter-0001 scored in 0003/analysis.md (draft fix works: lineups vary, dire wins ~1/3; radiant winrate ~65% worth watching). Next: score iter-0002 closing fixes by TIME-TO-FIRST-RAX and building dmg/min (duration now clips at the 40-min cap), and iter-0003 by max duration <= ~43 min + no more 45-min wall kills. Owner suspects push desire is STILL too low post-iter-0002 (first cohort games ran 16+ wall min); if first-rax stays > ~30 min, raise advantage push cap further and attack push_think:tower_yoyo.", "first_seen_iter": 2},
     {"key": "push_think:tower_yoyo", "note": "PushThink retreats on a single tower hit whenever a creep wave is present (WasRecentlyDamagedByTower window 2-4s) -> bots yo-yo under towers, gutting building DPS. Micro change; verify in-game before touching. aba_push.lua PushThink, TS mirror.", "first_seen_iter": 2},
     {"key": "vscript_errors:masked", "note": "11-20/game 'error in error handling', no consistent context. Bot-VM print() does NOT reach dedicated-server console, so in-game markers are invisible — unmasking needs an error()-based emit or on-instance probe of a live game.", "first_seen_iter": 1},
     {"key": "loser_building_damage:zero", "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.", "first_seen_iter": 2},
@@ -36,9 +38,15 @@
     },
     "iter-0002": {
       "commit": "bd62ec0",
-      "deployed_utc": "2026-07-19T07:05:00Z",
+      "deployed_utc": "2026-07-19T06:49:45Z",
       "run_prefix_started": null,
       "note": "same run prefix (soak/run_20260719_0630); no loop restart needed. Cohort split by script_version stamp: iter-0001* = draft fix only, iter-0002* = +push/turbo/sniper fixes."
+    },
+    "iter-0003": {
+      "commit": "81c2eec",
+      "deployed_utc": "2026-07-19T07:15:00Z",
+      "run_prefix_started": null,
+      "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm — stamps before this read 'iter-0001-dirty' etc.; clean from here."
     }
   }
 }
