@@ -35,7 +35,10 @@ SERVERDATA_AUTH_RESPONSE = 2
 SERVERDATA_EXECCOMMAND = 2
 
 RE_BUILDING = re.compile(r"^Building: npc_dota_\w+ destroyed at ([0-9]+(?:\.[0-9]+)?)", re.M)
-DEFAULT_TIMESCALE = 3.0   # measured 3.0-3.6 with 12 slots on short games
+DEFAULT_TIMESCALE = 3.6   # deliberately high-side: underestimating the
+                          # timescale delays the trigger (observed 11.3-13.5
+                          # min actual vs 10-min cap); firing slightly early
+                          # is fine — the margin metric is within-game
 
 
 class Rcon:
