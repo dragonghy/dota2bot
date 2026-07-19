@@ -52,3 +52,21 @@ wakeup heartbeat).
 ## Progress log (append per wave)
 
 (waves logged below as they complete)
+
+---
+### Progress log
+
+- **09:04 UTC** W0(first attempt, run_0848) invalidated: `dota_dev forcewin`
+  turned out to be a NO-OP — its earlier "success" was the engine's default
+  all-disconnected auto-surrender firing coincidentally on a test server
+  launched without the farm's `+dota_surrender_on_disconnect 0`. Lesson
+  recorded: verify causality, not coincidence (owner caught it live).
+  Games of run_0848 hit the 15-min wall kill; no data.
+- **09:04 UTC** Referee v3: at cap, set `dota_surrender_on_disconnect 1` +
+  `dota_auto_surrender_all_disconnected_timeout 1` via rcon → engine ends
+  the match in seconds WITH full signout (verified live on slot2: complete
+  scoreboard, team_gold parsed, econ winner applied). Default ts estimate
+  2.4→3.0. W0 redo launched: run_20260719_0904, iter-0009.
+- Next: W0 verify durations ≈10-11 game-min → quick dispatch proof (mirror
+  8c36da4-vs-main swap: frozen five on radiant = two trees really load) →
+  C1 wave (farm-cap removal vs iter-0009).
