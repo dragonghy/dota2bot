@@ -70,7 +70,9 @@ function GetDesire()
 	-- side file).
 	if res ~= nil and res <= 1.0 and not J.IsEarlyGame()
 		and not J.IsSoakCandidate('c1') then
-		res = Min(res, 0.45)
+		-- [LAB C7] cap-depth sweep: candidate side pushes the farm cap down
+		-- to 0.30 (C1 proved cap 0.45 >> no cap; is deeper better?)
+		res = Min(res, J.IsSoakCandidate('c7') and 0.30 or 0.45)
 	end
 	return res
 end
