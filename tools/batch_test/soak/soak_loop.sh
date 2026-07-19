@@ -12,7 +12,6 @@ DOTA=/opt/dota2
 REPO=/opt/dota2bot
 VS=$DOTA/game/dota/scripts/vscripts
 PORT=$((27020 + SLOT))
-CONLOG="console_soak_${SLOT}.log"
 GAME_CAP_MIN=45          # wall-clock cap per game (4x turbo normally ~15 min)
 LOCK=/tmp/soak_draft.lock
 
@@ -29,7 +28,10 @@ while true; do
         flock 9
         python3 "$REPO/tools/batch_test/soak/draft.py" \
             --customize "$REPO/bots/Customize/general.lua" > /opt/soak/slot$SLOT/draft_$TAG.json
-        rm -f "$DOTA/game/dota/$CONLOG"
+        # 9>&- : do NOT leak the flock fd into the long-lived game process,
+        # or the lock stays held for the whole game and slots serialize.
+        # Console output goes to the per-slot stdout log (con_logfile proved
+        # unreliable headless); parse_log handles the timestamp-less format.
         cd "$DOTA" && setsid bash -c "LD_LIBRARY_PATH=$DOTA/game/bin/linuxsteamrt64:$DOTA/game/dota/bin/linuxsteamrt64 \
             ./game/bin/linuxsteamrt64/dota2 \
             -dedicated -insecure -nogc -nowatchdog \
@@ -42,10 +44,9 @@ while true; do
             +dota_auto_surrender_all_disconnected_timeout 86400 \
             +host_timescale 4 \
             -fill_with_bots \
-            +con_logfile $CONLOG \
             +map dota \
             </dev/null > /opt/soak/slot$SLOT/stdout_$TAG.log 2>&1 &
-            echo \$! > /opt/soak/slot$SLOT/pid"
+            echo \$! > /opt/soak/slot$SLOT/pid" 9>&-
         # hold the lock through map load + hero pick (~3 min), so the next
         # slot's draft can't clobber Customize mid-pick
         sleep 200
@@ -59,9 +60,10 @@ while true; do
     done
     kill -9 "$PID" 2>/dev/null
 
-    # collect + analyze + ship
+    # collect + analyze + ship (stdout log IS the console log for a
+    # dedicated server; per-slot file, no cross-slot collision)
     LOG=/opt/soak/slot$SLOT/game_$TAG.log
-    cp "$DOTA/game/dota/$CONLOG" "$LOG" 2>/dev/null
+    mv /opt/soak/slot$SLOT/stdout_$TAG.log "$LOG" 2>/dev/null
     if [ -s "$LOG" ]; then
         python3 "$REPO/tools/batch_test/soak/analyze_log.py" "$LOG" \
             > /opt/soak/slot$SLOT/analysis_$TAG.json 2>/dev/null
@@ -69,7 +71,7 @@ while true; do
         aws s3 cp "$LOG.gz" "$S3_PREFIX/$TAG.log.gz" --quiet
         aws s3 cp /opt/soak/slot$SLOT/analysis_$TAG.json "$S3_PREFIX/$TAG.analysis.json" --quiet
         aws s3 cp /opt/soak/slot$SLOT/draft_$TAG.json "$S3_PREFIX/$TAG.draft.json" --quiet
-        rm -f "$LOG.gz" /opt/soak/slot$SLOT/stdout_$TAG.log
+        rm -f "$LOG.gz"
     fi
     sleep 5
 done
