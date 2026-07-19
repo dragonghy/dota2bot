@@ -36,27 +36,49 @@ local function ApplySoakDraft( tCustomize )
 		s = ( s * 16807 ) % 2147483647
 		return ( s % n ) + 1
 	end
-	local tShuffled = {}
-	for i = 1, #tPool do tShuffled[i] = tPool[i] end
-	for i = #tShuffled, 2, -1 do
-		local j = NextRand( i )
-		tShuffled[i], tShuffled[j] = tShuffled[j], tShuffled[i]
-	end
 
-	local nHalf = math.floor( #tShuffled / 2 )
-	local function SampleRange( nFrom, nTo, nCount )
-		local tIdx, tOut = {}, {}
-		for i = nFrom, nTo do tIdx[#tIdx + 1] = i end
-		for _ = 1, nCount do
-			local j = NextRand( #tIdx )
-			tOut[#tOut + 1] = 'npc_dota_hero_'..tShuffled[tIdx[j]]
-			table.remove( tIdx, j )
+	-- Split the pool by role so each team gets a position-ordered comp:
+	-- slots 1-3 (RoleAssignment pos 1/2/3) = cores, slots 4-5 = supports.
+	-- 'either' heroes backfill whichever bucket runs short. Accepts both the
+	-- new {name, role} pool format and the legacy flat-string format.
+	local tCore, tSupport, tEither = {}, {}, {}
+	for i = 1, #tPool do
+		local e = tPool[i]
+		if type( e ) == 'table' and e.name then
+			local r = e.role
+			if r == 'core' then tCore[#tCore + 1] = e.name
+			elseif r == 'support' then tSupport[#tSupport + 1] = e.name
+			else tEither[#tEither + 1] = e.name end
+		else
+			tEither[#tEither + 1] = e
 		end
+	end
+	local function Shuffle( t )
+		for i = #t, 2, -1 do
+			local j = NextRand( i )
+			t[i], t[j] = t[j], t[i]
+		end
+	end
+	Shuffle( tCore ); Shuffle( tSupport ); Shuffle( tEither )
+
+	-- Deal in a fixed order so both team VMs (shared seed) agree and never
+	-- collide: radiant cores, dire cores, radiant sups, dire sups.
+	local function Take( t )
+		return table.remove( t ) or table.remove( tEither )
+	end
+	local tRadCore, tDireCore, tRadSup, tDireSup = {}, {}, {}, {}
+	for _ = 1, 3 do tRadCore[#tRadCore + 1] = Take( tCore ); tDireCore[#tDireCore + 1] = Take( tCore ) end
+	for _ = 1, 2 do tRadSup[#tRadSup + 1] = Take( tSupport ); tDireSup[#tDireSup + 1] = Take( tSupport ) end
+
+	local function Comp( tCores, tSups )
+		local tOut = {}
+		for i = 1, #tCores do tOut[#tOut + 1] = 'npc_dota_hero_'..tCores[i] end
+		for i = 1, #tSups do tOut[#tOut + 1] = 'npc_dota_hero_'..tSups[i] end
 		return tOut
 	end
-	tCustomize.Radiant_Heros = SampleRange( 1, nHalf, 5 )
-	tCustomize.Dire_Heros = SampleRange( nHalf + 1, #tShuffled, 5 )
-	print( '[SOAK] draft applied (pool='..#tShuffled..', seed='..nSeed..')' )
+	tCustomize.Radiant_Heros = Comp( tRadCore, tRadSup )
+	tCustomize.Dire_Heros = Comp( tDireCore, tDireSup )
+	print( '[SOAK] role-balanced draft applied (seed='..nSeed..')' )
 end
 
 function LoadCustomize()
