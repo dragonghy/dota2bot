@@ -4654,13 +4654,14 @@ end
 -- Net effect: fires in far fewer cases than the first cut — only the clear
 -- "walk two steps and you're safe, so don't read a 3s TP in their face" case.
 --
--- Gated to soak candidate 'tpsafe' AND turbo only, so shipped behavior is
--- unchanged until an A/B win promotes it. Safety fall-throughs (rooted / too
--- slow to outrun / on-face burst that would kill before the walk step) all
--- return false = let it TP now.
+-- PROMOTED (was soak-candidate 'tpsafe'): multi-seed mirrored-draft A/B over 4
+-- comps showed +9.1 GPM / +11.4 XPM, better in 4/4 comps (sd 5.7), deaths flat
+-- -- a clean, consistent win, so it now applies to ALL turbo games. Still
+-- turbo-only (IsModeTurbo), so shipped normal-mode behavior is unchanged.
+-- Safety fall-throughs (rooted / too slow to outrun / on-face burst that would
+-- kill before the walk step) all return false = let it TP now.
 function J.ShouldWalkNotTp( bot )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'tpsafe' ) then return false end
 
 	-- Can't walk out of it -> channeling TP is the only option; let it TP.
 	if bot:IsRooted() or bot:IsStunned() or bot:IsHexed() or bot:IsNightmared()
