@@ -19,6 +19,14 @@ REFEREE="$REPO/tools/batch_test/soak/referee.py"
 mkdir -p /opt/soak/slot$SLOT
 sleep $((SLOT * 10))     # one-time desync so slots don't all load the map at once
 
+# Replay recording: only slot 1 records (keeps disk + attribution sane — one
+# recorder means the newest .dem is unambiguously this game's). Every slot-1
+# game's .dem is uploaded to S3 for owner review + the behavioral bug pipeline
+# (tools/batch_test/behavioral/batch_s3.sh), then deleted locally.
+REC=""
+REPLAYDIR="$DOTA/game/dota/replays"
+if [ "$SLOT" = "1" ]; then REC="+tv_enable 1 +tv_autorecord 1 +tv_delay 0"; fi
+
 while true; do
     TS=$(date +%Y%m%d_%H%M%S)
     TAG="${TS}_slot${SLOT}"
@@ -35,6 +43,7 @@ while true; do
         -dedicated -insecure -nogc -nowatchdog \
         -port $PORT \
         -usercon +rcon_password $RCON_PW \
+        $REC \
         +sv_lan 1 +sv_cheats 1 \
         +sv_hibernate_when_empty 0 \
         +dota_surrender_on_disconnect 0 \
@@ -83,6 +92,15 @@ while true; do
         aws s3 cp "$LOG.gz" "$S3_PREFIX/$TAG.log.gz" --quiet
         aws s3 cp /opt/soak/slot$SLOT/analysis_$TAG.json "$S3_PREFIX/$TAG.analysis.json" --quiet
         rm -f "$LOG.gz"
+    fi
+    # slot 1: ship the freshly recorded replay, then purge local .dem
+    if [ "$SLOT" = "1" ]; then
+        DEM=$(ls -t "$REPLAYDIR"/*.dem "$REPLAYDIR"/discarded/replays/*.dem 2>/dev/null | head -1)
+        if [ -n "$DEM" ] && [ -s "$DEM" ]; then
+            aws s3 cp "$DEM" "$S3_PREFIX/$TAG.dem" --quiet
+            aws s3 cp "$DEM" "s3://dota2bot-batch-results-4924/replays/$TAG.dem" --quiet
+        fi
+        rm -f "$REPLAYDIR"/*.dem "$REPLAYDIR"/discarded/replays/*.dem 2>/dev/null
     fi
     sleep 5
 done
