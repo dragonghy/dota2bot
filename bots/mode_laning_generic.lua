@@ -94,7 +94,12 @@ function GetDesire()
 	-- 	return 0.2
 	-- end
 
-	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5)) then
+	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
+	-- below; stock condition only enabled it for buggy heroes or a pos1 bot
+	-- paired with a human pos5, so farm bots ran Valve default CS (12-47 LH
+	-- at 11 min). Inert off-farm.
+	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
+		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3) then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -172,7 +177,8 @@ function GetBestDenyCreep(hCreepList)
 	return nil
 end
 
-if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5)) then
+if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
+	or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3) then
 	function Think()
 		local hitCreep, moveToCreep = GetBestLastHitCreep(nEnemyCreeps)
 		if J.IsValid(hitCreep) then
