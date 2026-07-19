@@ -203,3 +203,32 @@ wakeup heartbeat).
 - **15:0x UTC — C15 pair1**: wave1 +867 / swap +350 → **effect +259** (weak
   positive, C10-territory). Not promoting on one pair (C10 lesson); pair 2
   rolling (stamp c15-safesoak2).
+
+## OWNER REPLAY REVIEW (~15:30 UTC) — directive queue (priority order)
+
+**CRITICAL BUG CONFIRMED FROM REPLAY + DATA: farm games are NORMAL MODE,
+not turbo!** Levels at ~11.5 game-min average 6.6 (turbo would be 10-14);
+`+dota_force_gamemode 23` never took effect on the dedicated server. This
+also reframes the original "slow_close 51min turbo" finding (partly just
+normal-mode pacing). Fix experiment running: `dota_bot_practice_gamemode 23`
+(cvar exists, accepted). After fix: re-calibrate bias in turbo, re-run key
+verdicts.
+
+Owner's lane-play observations (from watching the replay) — future candidates:
+1. **Creep-aggro pull (勾线)** for the losing laner: attack-command the enemy
+   hero near enemy creeps (no need to land the hit) → creeps aggro → walk
+   back → drags the wave toward safety so the loser can still CS.
+2. **Zoning when winning**: stand PAST the enemy wave to body-block/harass;
+   orb-walkers (viper etc.) free-harass; win→step up, lose→step back.
+3. **Support/carry CS division**: supports deny + harass ONLY; never contest
+   carry last hits (exception: carry can't reach).
+4. **Lane equilibrium control**: creep-block at spawn; do NOT hit creeps
+   with damage spells unless intentionally pushing (CM nova, warlock bonds
+   named); pull small camp ~:47 / big camp ~:55 depending on lane state.
+5. **Mid rotations post-6**: if enemy sidelaner dives/pushes to our tower,
+   defender holds them + mid TPs for the 3v2.
+6. **Fixed hero→position assignment** in the soak draft (use hero_pool.txt
+   role hints; avoid 5-support comps). Important for lane-focused testing.
+7. **Warlock (and similar) laning skill builds are wrong**: maxing the two
+   push spells + channeling Upheaval under creep fire; should take Shadow
+   Word for lane. Per-hero skill-build fixes.
