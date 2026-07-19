@@ -131,3 +131,10 @@ wakeup heartbeat).
   proven axis (C1: farm-cap presence worth ~3k in a 3.5-min window).
 - **10:11 UTC — C7 launched** (run_1011): cap depth 0.45 → 0.30 on
   candidate side.
+- **10:19 UTC — C7 VERDICT: REJECTED** (run_1011, 11 games): mean +590 raw /
+  ≈−1.2k corrected. Cap 0.45 is the depth optimum (0.30 and none both lose).
+- **VOLUME FINDING**: teams collect only ~43% of spawned lane gold by 11.5
+  min (team LH ≈125 vs ≈290 lane creeps) — grouped pushing abandons two
+  lanes. Biggest untapped econ pool.
+- **10:19 UTC — C10 launched** (run_1019): role-split caps — candidate
+  cores (pos1-3) cap 0.65 to soak lanes, supports stay 0.45 on the push.
