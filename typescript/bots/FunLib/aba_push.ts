@@ -281,9 +281,25 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     // --- Strong base-defense gate for push ---
     const team = gameState.team;
     const ourAncient = gameState.ourAncient;
+
+    // Team advantage picture (computed early: several gates below scale with it).
+    // With a significant advantage the push cap must outrank farm desire (0.9),
+    // or fat cores farm forever instead of closing (observed: 35-40 min to
+    // first rax in turbo while 18/18 ahead).
+    const networthAdvantage = gameState.teamNetworth - gameState.enemyNetworth;
+    const enemyAverageLevel = jmz.GetAverageLevel(true);
+    const levelAdvantage = gameState.averageLevel - enemyAverageLevel;
+    const hasSignificantAdvantage = networthAdvantage > 15000 || levelAdvantage > 2;
+    if (hasSignificantAdvantage) {
+        nMaxDesire = 0.92;
+    }
+
     const enemiesAtAncient = jmz.Utils.CountEnemyHeroesNear(ourAncient!.GetLocation(), BASE_ANC_RADIUS);
-    // If Ancient under direct pressure → strongly deprioritize pushes
-    if (enemiesAtAncient >= 1) return BotModeDesire.ExtraLow;
+    // If Ancient under direct pressure → strongly deprioritize pushes.
+    // A single rat only pins the whole team when we are NOT clearly ahead
+    // (backdoor protection covers the base; 5 heroes abandoning a siege to
+    // chase one split-pusher was a major slow-close cause).
+    if (enemiesAtAncient >= 2 || (enemiesAtAncient >= 1 && !hasSignificantAdvantage)) return BotModeDesire.ExtraLow;
 
     // --- Push safety gates ---
     // Never push alone when 3+ enemies alive
@@ -298,8 +314,12 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     const enemyFountain = gameState.team === Team.Radiant ? DireFountainTpPoint : RadiantFountainTpPoint;
     const laneFront = GetLaneFrontLocation(gameState.team, lane, 0);
     if (GetLocationToLocationDistance(laneFront, enemyFountain) < 5000) {
-        if (alliesHere.length < 3 || gameState.aliveAllyCount < gameState.aliveEnemyCount) {
-            nMaxDesire = math.min(nMaxDesire, 0.08);
+        // 2 allies within 2500 is enough of a group to siege; the old rule
+        // (3 within 1600, else cap 0.08) effectively banned high-ground
+        // sieges because bots straggle, leaving rax kills to creep waves.
+        const alliesNearish = getCachedAlliesNearLoc(bot.GetLocation(), 2500);
+        if (alliesNearish.length < 2 || gameState.aliveAllyCount < gameState.aliveEnemyCount) {
+            nMaxDesire = math.min(nMaxDesire, 0.35);
         }
     }
     // Reduce desire when low HP
@@ -310,9 +330,11 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     if (gameState.aliveEnemyCount >= 5 && gameState.aliveAllyCount <= gameState.aliveEnemyCount) {
         nMaxDesire = math.min(nMaxDesire, 0.41);
     }
-    // Cap push desire when enemy heroes are very close — bot should fight, not push
+    // Cap push desire only when locally OUTNUMBERED (and not clearly ahead).
+    // The old condition capped exactly when we had parity/numbers — i.e. the
+    // moment defenders showed up, the whole team stopped sieging.
     const closeEnemies = getCachedEnemiesNearLoc(bot.GetLocation(), 900);
-    if (closeEnemies.length > 0 && alliesHere.length >= closeEnemies.length) {
+    if (closeEnemies.length > alliesHere.length && !hasSignificantAdvantage) {
         nMaxDesire = math.min(nMaxDesire, 0.3);
     }
 
@@ -345,10 +367,12 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
         return BOT_MODE_DESIRE_EXTRA_LOW as BotModeDesire;
     }
 
-    // If a team member is still very low level, hold pushes entirely
+    // If a team member is still very low level, hold pushes — but only during
+    // the early game: a permanently-behind teammate must not freeze the
+    // team's push desire for the whole match.
     for (let i = 1; i <= GetTeamPlayers(team).length; i++) {
         const member = GetTeamMember(i);
-        if (member !== null && member.GetLevel() < 6) {
+        if (member !== null && member.GetLevel() < 6 && gameState.isEarlyGame) {
             return BotModeDesire.None;
         }
     }
@@ -401,11 +425,8 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
         nMaxDesire = 0.65;
     }
 
-    // Enhanced local threat assessment - consider team advantages
-    const networthAdvantage = gameState.teamNetworth - gameState.enemyNetworth;
-    const enemyAverageLevel = jmz.GetAverageLevel(true);
-    const levelAdvantage = gameState.averageLevel - enemyAverageLevel;
-    const hasSignificantAdvantage = networthAdvantage > 15000 || levelAdvantage > 2;
+    // (networthAdvantage / levelAdvantage / hasSignificantAdvantage are
+    // computed near the top of this function now.)
 
     // If outnumbered in *local* area, desire is very low (avoid feed)
     // But be more lenient when team has significant advantages
