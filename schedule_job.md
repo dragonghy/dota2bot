@@ -127,6 +127,13 @@ pool when you do tackle it. Turbo is the optimization target (see `CLAUDE.md`).
 - Tag the deployed commit `iter-NNNN` (zero-padded, e.g. `iter-0007`) and push
   the tag. This is the marker the next iteration uses to date "games after this
   deploy".
+  - **Known limitation (found iter-0001):** the session git proxy rejects tag
+    pushes to origin (`remote end hung up`, then falsely reports up-to-date;
+    GitHub shows no tags). Don't stall retrying. Instead: create the tag **on
+    the farm checkout** over SSM (that's what `git describe` version-stamping
+    reads) and record `{commit, deployed_utc, run_prefix_started}` in
+    `state.json.deploys` — Step 2 dates "games after deploy" from that entry
+    (game_id timestamps are launch times), not from the tag.
 - Write the iteration folder (§3). Update `iterations/state.json`:
   advance `iteration_count`, set `watermark.last_processed_key` to the new max,
   add the fixed issue key to `fixed_issues`, re-rank `open_issues`. Commit the

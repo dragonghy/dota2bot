@@ -1,16 +1,33 @@
 {
-  "iteration_count": 0,
+  "iteration_count": 1,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
-    "run_prefixes": ["soak/run_20260719_0455"],
+    "run_prefixes": ["soak/run_20260719_0455", "soak/run_20260719_0630"],
     "instance_tag": "dota2bot-soak"
   },
   "watermark": {
-    "last_processed_key": "",
-    "games_ingested_total": 0
+    "last_processed_key": "20260719_054545_slot15.analysis.json",
+    "games_ingested_total": 18
   },
-  "fixed_issues": [],
-  "open_issues": [],
+  "fixed_issues": [
+    "side_bias:soak_draft_frozen_radiant_lineup",
+    "provenance:script_version_unknown"
+  ],
+  "open_issues": [
+    {"key": "slow_close:global", "note": "17/18 turbo games >38 min (avg 51, max 67.5) — even the stomping team closes slowly; shared mode/push layer. Highest-value target once draft-fixed data confirms it.", "first_seen_iter": 1},
+    {"key": "vscript_errors:masked", "note": "~20/game 'Script Runtime Error: error in error handling' masks real stacks; unwrap early so later error signals are legible. Note: bot-VM print() does not reach the dedicated-server console log at all — [SOAK] draft marker never visible; may need a different emit channel (e.g. error-based) for in-game diagnostics.", "first_seen_iter": 1},
+    {"key": "script_perf:GetDesire", "note": "18/18 games flag GetDesire hotspots, max ~7ms across many heroes (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after draft fix.", "first_seen_iter": 1},
+    {"key": "feeder:pending_rebaseline", "note": "31 feeder anomalies (lich 55K/207D in 15 games, venomancer, dragon_knight, crystal_maiden) — ALL confounded by rigged draft (always Dire vs stacked Radiant). Re-rank from post-iter-0001 games before targeting any hero.", "first_seen_iter": 1},
+    {"key": "low_gpm:pending_rebaseline", "note": "17 low_gpm anomalies, all Dire-side; same confound as feeders. Re-baseline after draft fix.", "first_seen_iter": 1}
+  ],
   "last_release_tag": "v0.1-baseline",
-  "next_ab_after_iteration": 5
+  "next_ab_after_iteration": 5,
+  "deploys": {
+    "iter-0001": {
+      "commit": "e18bd457ccd37eeecdd15616db50a44a5580478d",
+      "deployed_utc": "2026-07-19T06:30:00Z",
+      "run_prefix_started": "soak/run_20260719_0630",
+      "note": "remote tag push blocked by env git proxy; tag exists on farm checkout + locally. Farm loops restarted for version-stamp provenance."
+    }
+  }
 }

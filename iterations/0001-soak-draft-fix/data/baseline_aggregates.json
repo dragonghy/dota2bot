@@ -1,0 +1,543 @@
+{
+ "games": 18,
+ "winners": {
+  "radiant": 18
+ },
+ "duration_min": {
+  "min": 38.3,
+  "avg": 51.0,
+  "max": 67.5
+ },
+ "per_hero": {
+  "npc_dota_hero_axe": {
+   "games": 4,
+   "kills": 48,
+   "deaths": 53,
+   "avg_gpm": 611,
+   "teams": {
+    "dire": 4
+   }
+  },
+  "npc_dota_hero_chaos_knight": {
+   "games": 2,
+   "kills": 4,
+   "deaths": 11,
+   "avg_gpm": 469,
+   "teams": {
+    "dire": 2
+   }
+  },
+  "npc_dota_hero_crystal_maiden": {
+   "games": 8,
+   "kills": 23,
+   "deaths": 100,
+   "avg_gpm": 380,
+   "teams": {
+    "dire": 8
+   }
+  },
+  "npc_dota_hero_death_prophet": {
+   "games": 18,
+   "kills": 219,
+   "deaths": 41,
+   "avg_gpm": 715,
+   "teams": {
+    "radiant": 18
+   }
+  },
+  "npc_dota_hero_dragon_knight": {
+   "games": 9,
+   "kills": 17,
+   "deaths": 99,
+   "avg_gpm": 361,
+   "teams": {
+    "dire": 9
+   }
+  },
+  "npc_dota_hero_jakiro": {
+   "games": 4,
+   "kills": 9,
+   "deaths": 61,
+   "avg_gpm": 378,
+   "teams": {
+    "dire": 4
+   }
+  },
+  "npc_dota_hero_juggernaut": {
+   "games": 3,
+   "kills": 13,
+   "deaths": 31,
+   "avg_gpm": 540,
+   "teams": {
+    "dire": 3
+   }
+  },
+  "npc_dota_hero_lich": {
+   "games": 15,
+   "kills": 55,
+   "deaths": 207,
+   "avg_gpm": 404,
+   "teams": {
+    "dire": 15
+   }
+  },
+  "npc_dota_hero_lion": {
+   "games": 7,
+   "kills": 51,
+   "deaths": 103,
+   "avg_gpm": 415,
+   "teams": {
+    "dire": 7
+   }
+  },
+  "npc_dota_hero_medusa": {
+   "games": 10,
+   "kills": 23,
+   "deaths": 47,
+   "avg_gpm": 556,
+   "teams": {
+    "dire": 10
+   }
+  },
+  "npc_dota_hero_ogre_magi": {
+   "games": 18,
+   "kills": 126,
+   "deaths": 53,
+   "avg_gpm": 727,
+   "teams": {
+    "radiant": 18
+   }
+  },
+  "npc_dota_hero_phantom_assassin": {
+   "games": 18,
+   "kills": 128,
+   "deaths": 106,
+   "avg_gpm": 601,
+   "teams": {
+    "radiant": 18
+   }
+  },
+  "npc_dota_hero_slardar": {
+   "games": 7,
+   "kills": 40,
+   "deaths": 56,
+   "avg_gpm": 467,
+   "teams": {
+    "dire": 7
+   }
+  },
+  "npc_dota_hero_sniper": {
+   "games": 18,
+   "kills": 273,
+   "deaths": 68,
+   "avg_gpm": 836,
+   "teams": {
+    "radiant": 18
+   }
+  },
+  "npc_dota_hero_spirit_breaker": {
+   "games": 4,
+   "kills": 10,
+   "deaths": 48,
+   "avg_gpm": 419,
+   "teams": {
+    "dire": 4
+   }
+  },
+  "npc_dota_hero_sven": {
+   "games": 2,
+   "kills": 1,
+   "deaths": 22,
+   "avg_gpm": 285,
+   "teams": {
+    "dire": 2
+   }
+  },
+  "npc_dota_hero_tidehunter": {
+   "games": 4,
+   "kills": 6,
+   "deaths": 36,
+   "avg_gpm": 400,
+   "teams": {
+    "dire": 4
+   }
+  },
+  "npc_dota_hero_venomancer": {
+   "games": 8,
+   "kills": 18,
+   "deaths": 118,
+   "avg_gpm": 304,
+   "teams": {
+    "dire": 8
+   }
+  },
+  "npc_dota_hero_viper": {
+   "games": 18,
+   "kills": 278,
+   "deaths": 94,
+   "avg_gpm": 750,
+   "teams": {
+    "radiant": 18
+   }
+  },
+  "npc_dota_hero_zuus": {
+   "games": 3,
+   "kills": 17,
+   "deaths": 47,
+   "avg_gpm": 372,
+   "teams": {
+    "dire": 3
+   }
+  }
+ },
+ "lineups": [
+  {
+   "game_id": "20260719_052517_slot1",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_lich",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_lion",
+    "npc_dota_hero_crystal_maiden",
+    "npc_dota_hero_slardar"
+   ],
+   "winner": "radiant",
+   "duration_min": 55.3
+  },
+  {
+   "game_id": "20260719_052527_slot2",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_phantom_assassin",
+    "npc_dota_hero_death_prophet"
+   ],
+   "dire": [
+    "npc_dota_hero_sven",
+    "npc_dota_hero_dragon_knight",
+    "npc_dota_hero_lich",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_venomancer"
+   ],
+   "winner": "radiant",
+   "duration_min": 38.3
+  },
+  {
+   "game_id": "20260719_052537_slot3",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_spirit_breaker",
+    "npc_dota_hero_crystal_maiden",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_lion",
+    "npc_dota_hero_lich"
+   ],
+   "winner": "radiant",
+   "duration_min": 52.2
+  },
+  {
+   "game_id": "20260719_052547_slot4",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_lich",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_slardar",
+    "npc_dota_hero_lion",
+    "npc_dota_hero_crystal_maiden"
+   ],
+   "winner": "radiant",
+   "duration_min": 47.2
+  },
+  {
+   "game_id": "20260719_052557_slot5",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_lich",
+    "npc_dota_hero_slardar",
+    "npc_dota_hero_lion",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_crystal_maiden"
+   ],
+   "winner": "radiant",
+   "duration_min": 67.5
+  },
+  {
+   "game_id": "20260719_052607_slot6",
+   "radiant": [
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_phantom_assassin",
+    "npc_dota_hero_death_prophet"
+   ],
+   "dire": [
+    "npc_dota_hero_lich",
+    "npc_dota_hero_juggernaut",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_axe",
+    "npc_dota_hero_tidehunter"
+   ],
+   "winner": "radiant",
+   "duration_min": 60.9
+  },
+  {
+   "game_id": "20260719_052617_slot7",
+   "radiant": [
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_jakiro",
+    "npc_dota_hero_chaos_knight",
+    "npc_dota_hero_crystal_maiden",
+    "npc_dota_hero_tidehunter",
+    "npc_dota_hero_dragon_knight"
+   ],
+   "winner": "radiant",
+   "duration_min": 46.5
+  },
+  {
+   "game_id": "20260719_052627_slot8",
+   "radiant": [
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_axe",
+    "npc_dota_hero_lich",
+    "npc_dota_hero_jakiro",
+    "npc_dota_hero_spirit_breaker"
+   ],
+   "winner": "radiant",
+   "duration_min": 61.4
+  },
+  {
+   "game_id": "20260719_052637_slot9",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_slardar",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_lion",
+    "npc_dota_hero_lich",
+    "npc_dota_hero_crystal_maiden"
+   ],
+   "winner": "radiant",
+   "duration_min": 53.0
+  },
+  {
+   "game_id": "20260719_052647_slot10",
+   "radiant": [
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_lion",
+    "npc_dota_hero_juggernaut",
+    "npc_dota_hero_lich",
+    "npc_dota_hero_venomancer",
+    "npc_dota_hero_dragon_knight"
+   ],
+   "winner": "radiant",
+   "duration_min": 45.2
+  },
+  {
+   "game_id": "20260719_052657_slot11",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_lion",
+    "npc_dota_hero_juggernaut",
+    "npc_dota_hero_lich",
+    "npc_dota_hero_venomancer",
+    "npc_dota_hero_dragon_knight"
+   ],
+   "winner": "radiant",
+   "duration_min": 53.6
+  },
+  {
+   "game_id": "20260719_052707_slot12",
+   "radiant": [
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_jakiro",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_spirit_breaker",
+    "npc_dota_hero_axe",
+    "npc_dota_hero_lich"
+   ],
+   "winner": "radiant",
+   "duration_min": 63.5
+  },
+  {
+   "game_id": "20260719_052717_slot13",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_dragon_knight",
+    "npc_dota_hero_slardar",
+    "npc_dota_hero_zuus",
+    "npc_dota_hero_venomancer",
+    "npc_dota_hero_lich"
+   ],
+   "winner": "radiant",
+   "duration_min": 46.9
+  },
+  {
+   "game_id": "20260719_052727_slot14",
+   "radiant": [
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_sniper"
+   ],
+   "dire": [
+    "npc_dota_hero_sven",
+    "npc_dota_hero_medusa",
+    "npc_dota_hero_venomancer",
+    "npc_dota_hero_dragon_knight",
+    "npc_dota_hero_lich"
+   ],
+   "winner": "radiant",
+   "duration_min": 46.5
+  },
+  {
+   "game_id": "20260719_052737_slot15",
+   "radiant": [
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_viper",
+    "npc_dota_hero_phantom_assassin",
+    "npc_dota_hero_death_prophet"
+   ],
+   "dire": [
+    "npc_dota_hero_zuus",
+    "npc_dota_hero_dragon_knight",
+    "npc_dota_hero_slardar",
+    "npc_dota_hero_lich",
+    "npc_dota_hero_venomancer"
+   ],
+   "winner": "radiant",
+   "duration_min": 41.1
+  },
+  {
+   "game_id": "20260719_052747_slot16",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_zuus",
+    "npc_dota_hero_slardar",
+    "npc_dota_hero_dragon_knight",
+    "npc_dota_hero_venomancer",
+    "npc_dota_hero_lich"
+   ],
+   "winner": "radiant",
+   "duration_min": 47.4
+  },
+  {
+   "game_id": "20260719_054205_slot2",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_phantom_assassin",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_sniper"
+   ],
+   "dire": [
+    "npc_dota_hero_axe",
+    "npc_dota_hero_venomancer",
+    "npc_dota_hero_tidehunter",
+    "npc_dota_hero_spirit_breaker",
+    "npc_dota_hero_crystal_maiden"
+   ],
+   "winner": "radiant",
+   "duration_min": 49.1
+  },
+  {
+   "game_id": "20260719_054545_slot15",
+   "radiant": [
+    "npc_dota_hero_viper",
+    "npc_dota_hero_ogre_magi",
+    "npc_dota_hero_sniper",
+    "npc_dota_hero_death_prophet",
+    "npc_dota_hero_phantom_assassin"
+   ],
+   "dire": [
+    "npc_dota_hero_crystal_maiden",
+    "npc_dota_hero_jakiro",
+    "npc_dota_hero_chaos_knight",
+    "npc_dota_hero_dragon_knight",
+    "npc_dota_hero_tidehunter"
+   ],
+   "winner": "radiant",
+   "duration_min": 42.0
+  }
+ ],
+ "anomaly_counts": {
+  "script_perf": 18,
+  "slow_close": 17,
+  "feeder": 31,
+  "low_gpm": 17
+ }
+}
