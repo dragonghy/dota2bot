@@ -35,7 +35,7 @@ SERVERDATA_AUTH_RESPONSE = 2
 SERVERDATA_EXECCOMMAND = 2
 
 RE_BUILDING = re.compile(r"^Building: npc_dota_\w+ destroyed at ([0-9]+(?:\.[0-9]+)?)", re.M)
-DEFAULT_TIMESCALE = 2.4
+DEFAULT_TIMESCALE = 3.0   # measured 3.0-3.6 with 12 slots on short games
 
 
 class Rcon:
@@ -150,18 +150,25 @@ def main():
         print(f"t~{est_t:.0f}s (ts~{ts:.2f}) below cap")
         sys.exit(1)
 
+    # End mechanism: flip the all-bots-disconnected auto-surrender on with a
+    # 1-second timeout — the engine ends the match within seconds and writes
+    # a full, normal Match signout. (`dota_dev forcewin` is a no-op on this
+    # dedicated build — its one apparent success was actually this very
+    # auto-surrender firing with default settings on a test server launched
+    # without the farm's +dota_surrender_on_disconnect 0.)
     host = args.host or detect_host()
     try:
         rc = Rcon(host, args.port, args.password)
-        rc.cmd("dota_dev forcewin")
+        rc.cmd("dota_surrender_on_disconnect 1")
+        rc.cmd("dota_auto_surrender_all_disconnected_timeout 1")
     except Exception as e:
         json.dump(state, open(args.state_path, "w"))
-        print(f"referee: forcewin failed: {e}", file=sys.stderr)
+        print(f"referee: surrender trigger failed: {e}", file=sys.stderr)
         sys.exit(2)
 
     state["forced"] = round(est_t, 1)
     json.dump(state, open(args.state_path, "w"))
-    print(f"FORCED end at estimated t={est_t:.0f}s (ts~{ts:.2f}); "
+    print(f"SURRENDER triggered at estimated t={est_t:.0f}s (ts~{ts:.2f}); "
           "economic winner is decided by analyze_log from the signout")
     sys.exit(0)
 
