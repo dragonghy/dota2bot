@@ -74,9 +74,12 @@ function GetDesire()
 		-- [LAB C10] role-split caps: supports stay committed to the push
 		-- (0.45) while cores keep a looser cap (0.65) to soak the ~57% of
 		-- lane gold left uncollected when everyone groups on one lane.
-		local nCap = J.IsSoakCandidate('c7') and 0.30 or 0.45
-		if J.IsSoakCandidate('c10') and J.GetPosition(bot) <= 3 then
-			nCap = 0.65
+		-- BASELINE B1 (promoted lab C10, effect +331 weak-positive): cores
+		-- keep a looser cap to soak side-lane gold while supports commit to
+		-- the push. [LAB C11] sweeps the core cap further to 0.80.
+		local nCap = 0.45
+		if J.GetPosition(bot) <= 3 then
+			nCap = J.IsSoakCandidate('c11') and 0.80 or 0.65
 		end
 		res = Min(res, nCap)
 	end
