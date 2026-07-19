@@ -188,3 +188,10 @@ wakeup heartbeat).
   Role-split kept as gate c10r for a future higher-n retest.
 - **11:45 UTC — Consolidation**: farm on clean baseline soak
   (run_20260719_1136); morning report written (REPORT.md).
+- **~13:50 UTC — owner: keep running.** Resumed candidate loop (the 11:45→13:50
+  gap was my consolidation-mode decision — logged as a pacing mistake).
+  Switched to ROLLING waves: config flips without farm restart, waves
+  delimited by version stamp (~2.5 min/wave saved).
+- **14:03 UTC — c10r retest wave1** (role-split@radiant, run_1353): mean
+  **−205** (n=12) — третий negative signal for role-split. Swap wave rolling.
+  C14 (split-soak pos1) implemented+committed (4b5a93a), queued next.
