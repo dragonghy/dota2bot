@@ -70,9 +70,15 @@ function GetDesire()
 	-- side file).
 	if res ~= nil and res <= 1.0 and not J.IsEarlyGame()
 		and not J.IsSoakCandidate('c1') then
-		-- [LAB C7] cap-depth sweep: candidate side pushes the farm cap down
-		-- to 0.30 (C1 proved cap 0.45 >> no cap; is deeper better?)
-		res = Min(res, J.IsSoakCandidate('c7') and 0.30 or 0.45)
+		-- [LAB C7] cap-depth sweep (rejected: 0.30 loses to 0.45).
+		-- [LAB C10] role-split caps: supports stay committed to the push
+		-- (0.45) while cores keep a looser cap (0.65) to soak the ~57% of
+		-- lane gold left uncollected when everyone groups on one lane.
+		local nCap = J.IsSoakCandidate('c7') and 0.30 or 0.45
+		if J.IsSoakCandidate('c10') and J.GetPosition(bot) <= 3 then
+			nCap = 0.65
+		end
+		res = Min(res, nCap)
 	end
 	return res
 end
