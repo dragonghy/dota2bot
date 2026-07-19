@@ -186,7 +186,12 @@ function GetDesireHelper()
         end
     end
 
-    if botHP < 0.3 and #nEnemyHeroes >= 2 and bot:WasRecentlyDamagedByAnyHero(1) then
+    -- [LAB C12] candidate side retreats earlier: lower HP bar raised to
+    -- 0.45 and a single nearby damaging enemy suffices (deaths are the
+    -- biggest single econ swing pre-10min). Baseline: 0.3 / 2 enemies.
+    local nRetreatHP = J.IsSoakCandidate('c12') and 0.45 or 0.3
+    local nEnemyMin = J.IsSoakCandidate('c12') and 1 or 2
+    if botHP < nRetreatHP and #nEnemyHeroes >= nEnemyMin and bot:WasRecentlyDamagedByAnyHero(1) then
         return RemapValClamped(botHP, 0.5, 0, BOT_MODE_DESIRE_HIGH, BOT_MODE_DESIRE_ABSOLUTE)
     end
     if X.LowChanceToRun() then
