@@ -200,3 +200,6 @@ wakeup heartbeat).
   exactly neutral**. Axis retired permanently.
 - **14:15 UTC — C14 split-soak wave 1 rolling** (cand=radiant): pos1 pushes
   the emptiest lane post-laning (targets the 43% uncollected lane gold).
+- **15:0x UTC — C15 pair1**: wave1 +867 / swap +350 → **effect +259** (weak
+  positive, C10-territory). Not promoting on one pair (C10 lesson); pair 2
+  rolling (stamp c15-safesoak2).
