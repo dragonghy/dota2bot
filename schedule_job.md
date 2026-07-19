@@ -99,12 +99,18 @@ Across the newly ingested games (plus rolling context if useful), aggregate:
 Rank by (frequency × severity × tractability). **Skip anything already in the
 fixed-issues ledger** unless Step 2 showed it regressed.
 
-### Step 5 — Pick ONE focused target (or one small coherent set)
-Prefer a single, well-scoped change per iteration so blame attribution and A/B
-stay clean. Per-hero behavior bugs (a specific feeder, a specific low-GPM core)
-are usually more tractable than diffuse macro problems; the macro "slow close"
-lives in the shared `mode_*_generic.lua` layer and pays off across the whole
-pool when you do tackle it. Turbo is the optimization target (see `CLAUDE.md`).
+### Step 5 — Pick the highest-value targets
+Fix as much as is genuinely diagnosed and verifiable in one firing — there is
+no one-change-per-iteration cap (owner's directive, 2026-07-19). Keep commits
+separated by concern so the git trail stays legible, and record in
+`decision.md` which metric each change is expected to move. Per-hero behavior
+bugs (a specific feeder, a specific low-GPM core) are usually more tractable
+than diffuse macro problems; the macro "slow close" lives in the shared
+`mode_*_generic.lua` layer and pays off across the whole pool when you do
+tackle it. Turbo is the optimization target (see `CLAUDE.md`). Deep log
+forensics (reading actual console logs from both teams, not just the
+aggregated anomaly summaries) is part of every firing's analysis, not a
+backlog item.
 
 ### Step 6 — Implement, verify
 - Edit the relevant `bots/BotLib/hero_*.lua` (per-hero) or `mode_*_generic.lua`
@@ -216,8 +222,10 @@ should understand what happened and why without external context.
 
 ## 4. Fix Discipline & Guardrails
 
-- **One coherent change per iteration.** Resist bundling unrelated fixes; it
-  muddies attribution and A/B.
+- **Ship every fix you can verify; keep commits separated by concern.** The
+  old one-change-per-iteration cap was removed by the owner (2026-07-19) —
+  don't hold diagnosed fixes back for attribution's sake; the per-concern
+  commit trail plus `decision.md` metric expectations carry attribution.
 - **Verification gates are hard blocks.** Never push on a luacheck warning or a
   failing test.
 - **Ships-vs-dev boundary:** only `bots/` (pure Lua) ships. Never break it.

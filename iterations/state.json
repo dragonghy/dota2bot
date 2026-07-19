@@ -1,24 +1,29 @@
 {
-  "iteration_count": 1,
+  "iteration_count": 2,
   "farm": {
     "s3_bucket": "dota2bot-batch-results-4924",
     "run_prefixes": ["soak/run_20260719_0455", "soak/run_20260719_0630"],
     "instance_tag": "dota2bot-soak"
   },
   "watermark": {
-    "last_processed_key": "20260719_054545_slot15.analysis.json",
-    "games_ingested_total": 18
+    "last_processed_key": "20260719_060831_slot14.analysis.json",
+    "games_ingested_total": 26
   },
   "fixed_issues": [
     "side_bias:soak_draft_frozen_radiant_lineup",
-    "provenance:script_version_unknown"
+    "provenance:script_version_unknown",
+    "slow_close:push_desire_gates",
+    "mode_detect:courier_speed_heuristic",
+    "sniper:shrapnel_charge_api"
   ],
   "open_issues": [
-    {"key": "slow_close:global", "note": "17/18 turbo games >38 min (avg 51, max 67.5) — even the stomping team closes slowly; shared mode/push layer. Highest-value target once draft-fixed data confirms it.", "first_seen_iter": 1},
-    {"key": "vscript_errors:masked", "note": "~20/game 'Script Runtime Error: error in error handling' masks real stacks; unwrap early so later error signals are legible. Note: bot-VM print() does not reach the dedicated-server console log at all — [SOAK] draft marker never visible; may need a different emit channel (e.g. error-based) for in-game diagnostics.", "first_seen_iter": 1},
-    {"key": "script_perf:GetDesire", "note": "18/18 games flag GetDesire hotspots, max ~7ms across many heroes (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after draft fix.", "first_seen_iter": 1},
-    {"key": "feeder:pending_rebaseline", "note": "31 feeder anomalies (lich 55K/207D in 15 games, venomancer, dragon_knight, crystal_maiden) — ALL confounded by rigged draft (always Dire vs stacked Radiant). Re-rank from post-iter-0001 games before targeting any hero.", "first_seen_iter": 1},
-    {"key": "low_gpm:pending_rebaseline", "note": "17 low_gpm anomalies, all Dire-side; same confound as feeders. Re-baseline after draft fix.", "first_seen_iter": 1}
+    {"key": "outcome_scoring:iter_0001_0002", "note": "Next firing: score BOTH deploys from soak/run_20260719_0630 cohort. iter-0001 (draft): radiant winrate 100%->~50%, lineup diversity. iter-0002 (close): avg duration 51->low-30s min, rax->end gap ~5min, hero building dmg/min up severalfold (was radiant 424, dire 16).", "first_seen_iter": 2},
+    {"key": "push_think:tower_yoyo", "note": "PushThink retreats on a single tower hit whenever a creep wave is present (WasRecentlyDamagedByTower window 2-4s) -> bots yo-yo under towers, gutting building DPS. Micro change; verify in-game before touching. aba_push.lua PushThink, TS mirror.", "first_seen_iter": 2},
+    {"key": "vscript_errors:masked", "note": "11-20/game 'error in error handling', no consistent context. Bot-VM print() does NOT reach dedicated-server console, so in-game markers are invisible — unmasking needs an error()-based emit or on-instance probe of a live game.", "first_seen_iter": 1},
+    {"key": "loser_building_damage:zero", "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.", "first_seen_iter": 2},
+    {"key": "script_perf:GetDesire", "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.", "first_seen_iter": 1},
+    {"key": "invalid_orders:dead_targets", "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.", "first_seen_iter": 2},
+    {"key": "feeder:pending_rebaseline", "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.", "first_seen_iter": 1}
   ],
   "last_release_tag": "v0.1-baseline",
   "next_ab_after_iteration": 5,
@@ -28,6 +33,12 @@
       "deployed_utc": "2026-07-19T06:30:00Z",
       "run_prefix_started": "soak/run_20260719_0630",
       "note": "remote tag push blocked by env git proxy; tag exists on farm checkout + locally. Farm loops restarted for version-stamp provenance."
+    },
+    "iter-0002": {
+      "commit": "bd62ec0",
+      "deployed_utc": "2026-07-19T07:05:00Z",
+      "run_prefix_started": null,
+      "note": "same run prefix (soak/run_20260719_0630); no loop restart needed. Cohort split by script_version stamp: iter-0001* = draft fix only, iter-0002* = +push/turbo/sniper fixes."
     }
   }
 }
