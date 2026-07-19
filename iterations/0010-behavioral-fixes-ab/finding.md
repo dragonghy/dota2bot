@@ -66,3 +66,27 @@ behavior-fix-sized effect at 12 games/wave.**
    - #4: soften — `BOT_MODE_DESIRE_HIGH` retreat on any 2-enemy pocket is too
      blunt; scope to genuine no-escape / already-committed cases.
    - #3: rarely fires; fold into #4's positioning logic or drop.
+
+---
+
+## UPDATE — mirrored-draft A/B results (seed 424242, draft canceled)
+
+Built `tools/batch_test/soak/mirror_ab.sh` (owner's design): same pinned seed
+both waves, fix swapped side → cancels side bias AND draft. Ran all three
+(golden farm + 2 spot farms in parallel; spots self-terminated + were explicitly
+torn down). All `distinct drafts=1` (method verified).
+
+| fix | GPM | XPM | deaths | verdict |
+|---|---|---|---|---|
+| **#4 nodive** (suppress dive into 2+) | **+19.6** | **+19.4** | **−0.39** | **WIN** |
+| #3 tpsafe (walk before retreat-TP) | −14.9 | −1.9 | −0.02 | slightly negative |
+| #5 fight (help-or-flee near dying ally) | −32.5 | −37.5 | +0.28 | worse |
+
+**Takeaway:** conservative *suppression* (#4: just don't walk into 2+ enemies)
+wins on BOTH farm and deaths. *Active re-engagement* fixes lose: #5's 'help'
+branch joins unwinnable fights (`bCanContribute` OR-gate too eager) and #3
+delays the TP for a walk that costs farm without saving deaths.
+
+**Next:** (1) confirm #4 across 2-3 more seeds → promote + close #4. (2) iterate
+#5: 'help' only on numbers AND resources, else flee, don't abandon farm.
+(3) #3: intervene only when a walk genuinely escapes, else fold into #4.

@@ -66,7 +66,28 @@ lua5.1 tests/run_tests.lua smoke       # every hero file loads under mock API
 
 Commit to a branch referencing the issue; push.
 
-### VALIDATE — A/B on the farm
+### VALIDATE — mirrored-draft A/B (the standard gate)
+
+**Use `tools/batch_test/soak/mirror_ab.sh`.** The random-draft wave+swap below
+is noise-limited (draft variance ±600 GPM/game swamps a behavior fix — see the
+gotcha in §3). The mirror harness pins the draft seed so BOTH waves run the
+IDENTICAL 10-hero draft, swapping only which side carries the fix; averaging the
+paired diff cancels side bias AND draft, giving a clean `fix_effect`:
+```bash
+INST=i-08b59ef7130025860 RUN=run_20260719_1601 \
+  tools/batch_test/soak/mirror_ab.sh <cand-id> <seed> 12
+# prints ABdiff/BAdiff + fix_effect for GPM/XPM/deaths, and a
+# `distinct drafts=1` sanity line (must be 1). Confirm a win across 2-3 seeds
+# before promoting (one seed = one comp; may not generalize).
+```
+Parallelize across fixes with spot farms (§2/§4): golden farm runs one candidate,
+each spot (`spot_run.sh --count N`) runs another; drive each with its own
+`INST=<id> RUN=<run_id>`. **Lesson (iterations/0010): conservative *suppression*
+fixes (e.g. #4 "don't dive into 2+ enemies": +20 GPM / −0.39 deaths) win;
+*active re-engagement* fixes (#5 join-or-flee, #3 walk-then-TP) tested worse —
+they carry their own farm/positioning cost. Prefer suppression.**
+
+### VALIDATE (legacy random-draft) — A/B on the farm
 Deploy the candidate (rolling; no restart — the gate + code are read per game):
 ```bash
 # on the farm, via awsx ssm:
