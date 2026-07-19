@@ -5310,6 +5310,7 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 
 		--第一种情况:无敌人无大药回家恢复
 		if botHP < 0.19
+			and not J.ShouldStayAndRegen( bot )   -- [GH #2] turbo: heal in lane, don't TP home
 			and ( bot:WasRecentlyDamagedByAnyHero( 8.0 ) or botHP < 0.12 )
 			and botName ~= 'npc_dota_hero_huskar'
 			and ( botName ~= 'npc_dota_hero_slark' or bot:GetLevel() <= 5 )

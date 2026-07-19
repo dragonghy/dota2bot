@@ -186,6 +186,14 @@ function GetDesireHelper()
         end
     end
 
+    -- [GH #2] Turbo: hurt-but-safe and can regen → don't enter retreat mode
+    -- (which would walk/TP the bot home). Stay near lane and heal via bought
+    -- regen instead. Candidate-gated + turbo-only (J.ShouldStayAndRegen),
+    -- inert off-farm; genuine low-HP / under-threat retreats fall through.
+    if J.ShouldStayAndRegen(bot) then
+        return BOT_MODE_DESIRE_NONE
+    end
+
     -- [LAB C12] candidate side retreats earlier: lower HP bar raised to
     -- 0.45 and a single nearby damaging enemy suffices (deaths are the
     -- biggest single econ swing pre-10min). Baseline: 0.3 / 2 enemies.

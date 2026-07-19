@@ -4599,6 +4599,32 @@ function J.IsSoakCandidate( sId )
 	return GetTeam() == nSideTeam
 end
 
+-- [GH #2] Turbo TP-home suppression. True when the bot is hurt but should
+-- stay near the lane and heal via bought regen / courier instead of TP-ing
+-- (or walking) home — because in turbo lane XP/gold is precious and the
+-- courier round-trips fast. Gated on the soak-candidate 'tphome' experiment
+-- so it only affects the candidate team of an A/B and never ships untested.
+-- Conditions (all): candidate side + turbo; HP in a "hurt but not critical"
+-- band; not being hard-chased (no enemy within 1200, not recently damaged
+-- by a hero); and can afford a regen consumable (gold >= 90) or already
+-- carries/benefits from one. Deliberately conservative — genuine low-HP,
+-- under-threat retreats fall through to normal behavior.
+function J.ShouldStayAndRegen( bot )
+	if not J.IsSoakCandidate( 'tphome' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	local nHP = J.GetHP( bot )
+	-- "hurt but not critical": below this we allow the genuine escape/heal
+	-- retreat; above it the bot isn't hurt enough to consider going home.
+	if nHP < 0.18 or nHP > 0.75 then return false end
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then return false end
+	if #J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE ) > 0 then return false end
+	local bHasFlask = J.IsItemAvailable( 'item_flask' ) ~= nil
+		or bot:HasModifier( 'modifier_flask_healing' )
+		or bot:HasModifier( 'modifier_tango_heal' )
+	if not bHasFlask and bot:GetGold() < 90 then return false end
+	return true
+end
+
 local bModeTurboCache = nil
 function J.IsModeTurbo()
 	if bModeTurboCache ~= nil then return bModeTurboCache end
