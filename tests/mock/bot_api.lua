@@ -220,6 +220,10 @@ function M.install(opts)
     G.GetHeroAssists = function() return 0 end
     G.GetHeroLastHits = function() return 0 end
     G.GetHeroDenies = function() return 0 end
+    -- Per-playerID hero queries (used by illusion-detection heuristics). Default
+    -- to "alive, level 0" so a mock enemy isn't flagged as a suspicious illusion.
+    G.IsHeroAlive = function() return true end
+    G.GetHeroLevel = function() return 0 end
 
     G.print = function() end -- keep test output clean; tests use the runner's reporting
 
