@@ -241,6 +241,17 @@ function X.ConsiderTarget()
 
 end
 
+-- Shrapnel is a charge-based ABILITY: GetCurrentCharges() is item-only — the
+-- engine rejects it ("called on an ability that isn't an item!", ~2k console
+-- warnings/game) and the guarded branch never fired. Prefer the ability-charge
+-- API when the engine provides it; otherwise approximate "charges to spare"
+-- as no recharge ticking (all charges stocked).
+local function QHasChargesToSpare()
+	local bOk, nCharges = pcall( function() return abilityQ:GetCurrentAbilityCharges() end )
+	if bOk and type( nCharges ) == 'number' then return nCharges >= 2 end
+	return abilityQ:GetCooldownTimeRemaining() <= 0
+end
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable()
@@ -425,7 +436,7 @@ function X.ConsiderQ()
 	if J.IsFarming( bot )
 		and #hEnemyHeroList == 0
 		and J.GetManaAfter( abilityQ:GetManaCost() ) > 0.4
-		and abilityQ:GetCurrentCharges() >= 2
+		and QHasChargesToSpare()
 	then
 		local nNeutralCreeps = bot:GetNearbyNeutralCreeps( nCastRange )
 		if #nNeutralCreeps >= 3
