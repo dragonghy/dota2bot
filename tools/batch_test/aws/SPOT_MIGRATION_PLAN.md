@@ -1,9 +1,17 @@
 # Spot Instance Migration Plan
 
-Status: **planned, not yet implemented.** The current soak farm runs on a
-single on-demand `c6i.4xlarge`. This document is the runbook for switching the
-farm (and win-rate A/B batches) to Spot to cut cost ~60%. Bake stays
-on-demand. Implement this after the current 48h soak run finishes.
+Status: **first cut shipped.** `spot_run.sh` launches N parallel self-
+terminating spot soak farms today (see **[SPOT_USAGE.md](SPOT_USAGE.md)** for
+usage, live pricing, and the cost guardrails). This started as the runbook for
+switching the farm (and win-rate A/B batches) to Spot to cut cost ~60%; the ASG
+self-healing design below remains the longer-term target. Bake stays on-demand.
+
+> **One-time owner prerequisite for spot:** the account's EC2 Spot service-
+> linked role (`AWSServiceRoleForEC2Spot`) must exist. The restricted
+> `dota2bot-agent` user cannot create it — the owner runs, once, with admin
+> creds: `aws iam create-service-linked-role --aws-service-name spot.amazonaws.com`.
+> Until then spot launches fail with `ServiceLinkedRoleCreationNotPermitted`;
+> `spot_run.sh --on-demand` works without it.
 
 ## Why our workload fits Spot
 
