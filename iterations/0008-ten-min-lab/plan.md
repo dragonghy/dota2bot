@@ -123,3 +123,11 @@ wakeup heartbeat).
   bias-corrected ≈ −750 — statistically NEUTRAL vs baseline, best candidate
   so far. Running the swap wave (candidate on dire, run_1002) to sharpen:
   effect = (m_normal − m_swap)/2.
+- **10:11 UTC — C4 VERDICT: NEUTRAL/REJECTED** (paired waves 0954+1002):
+  effect = (1,396 − 1,611)/2 ≈ **−108 gold** — zero. The 8→12 min laning
+  window is irrelevant at the 10-min cap. Paired-wave side-bias refresh:
+  (1,396+1,611)/2 ≈ **+1,504** (was +2,146 in W0).
+- **STRATEGY PIVOT**: stop testing fresh hypotheses blind; sweep the one
+  proven axis (C1: farm-cap presence worth ~3k in a 3.5-min window).
+- **10:11 UTC — C7 launched** (run_1011): cap depth 0.45 → 0.30 on
+  candidate side.
