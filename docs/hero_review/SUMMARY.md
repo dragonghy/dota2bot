@@ -15,7 +15,7 @@ Per-hero backlogs: [axe.md](axe.md) · [zeus.md](zeus.md) · [wraith_king.md](wr
 
 ## Recurring cross-hero patterns
 
-1. **Buy-list / sell-list conflicts**: BKB is in the buy list AND the auto-sell list for both Zeus and WK (risk of selling a just-bought BKB). Same one-line fix pattern.
+1. ~~Buy-list / sell-list conflicts~~ **CORRECTED — false positive.** `sSellList` uses PAIRED semantics (`SetPairedItems`, item_purchase_generic.lua:1264): entries are `{newItem, oldItem}` pairs meaning "once you own newItem, sell oldItem". Zeus/WK's `{BKB, quelling_blade}` sells the quelling blade, not the BKB. No fix needed (though WK never buying BKB made its pair dead — fixed by adding BKB to WK's builds).
 2. **Aether Lens dead code**: Lion and Zeus both implement Aether cast-range handling but never buy the item.
 3. **Missing BKB**: Axe pos-3 (primary role) and WK pos-1/pos-3 builds ship no BKB at all.
 4. **Value-blind target selection**: Lion Hex ranks threats by *physical* damage only (fed magic nukers never hexed); Zeus Lightning Bolt has no kill-secure branch; Lion Finger takes list order. Same fix shape: rank candidates by value/lethality.

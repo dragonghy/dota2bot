@@ -37,6 +37,7 @@ sRoleItemsBuyList['pos_4'] = {
 	"item_blood_grenade",
 	"item_priest_outfit",
 	"item_mekansm",
+	"item_aether_lens",
 	"item_glimmer_cape",--
 	"item_blink",
 	"item_guardian_greaves",--
@@ -55,6 +56,7 @@ sRoleItemsBuyList['pos_5'] = {
     "item_blood_grenade",
 	"item_mage_outfit",
 	"item_ancient_janggo",
+	"item_aether_lens",
 	"item_glimmer_cape",
 	"item_boots_of_bearing",
 	"item_pipe",

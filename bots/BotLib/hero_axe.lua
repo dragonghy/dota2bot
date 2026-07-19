@@ -19,7 +19,7 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 local tTalentTreeList = {
 						['t25'] = {0, 10},
 						['t20'] = {0, 10},
-						['t15'] = {10, 0},
+						['t15'] = {0, 10}, -- +35 attack speed over +2 mana regen (Counter Helix DPS)
 						['t10'] = {0, 10},
 }
 
@@ -56,6 +56,7 @@ sRoleItemsBuyList['pos_3'] = {
 	"item_blade_mail",--
 	"item_blink",
 	"item_aghanims_shard",
+	"item_black_king_bar",--
 	"item_heavens_halberd",--
 	"item_travel_boots",
 	"item_assault",--
@@ -137,7 +138,7 @@ local abilityW = bot:GetAbilityByName( sAbilityList[2] )
 local abilityE = bot:GetAbilityByName( sAbilityList[3] )
 local abilityR = bot:GetAbilityByName( sAbilityList[6] )
 local talent7 = bot:GetAbilityByName( sTalentList[7] )
-local talent5 = bot:GetAbilityByName( sTalentList[5] )
+local talent8 = bot:GetAbilityByName( sTalentList[8] ) -- special_bonus_unique_axe: +Culling Blade kill threshold (t25)
 
 local castQDesire, castQTarget
 local castWDesire, castWTarget
@@ -515,7 +516,7 @@ function X.ConsiderR()
 	local nManaCost = abilityR:GetManaCost()
 	
 	local nKillDamage = 150 + 100 * nSkillLV
-	if talent5:IsTrained() then nKillDamage = nKillDamage + talent5:GetSpecialValueInt( 'value' ) end
+	if talent8 ~= nil and talent8:IsTrained() then nKillDamage = nKillDamage + talent8:GetSpecialValueInt( 'value' ) end
 	
 	local nDamageType = DAMAGE_TYPE_PURE
 	local nInRangeEnemyList = J.GetAroundEnemyHeroList( nCastRange )
