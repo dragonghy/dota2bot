@@ -179,3 +179,7 @@ wakeup heartbeat).
 | C11 | core cap 0.80 | ≈−2,000 | reject |
 | C12 | earlier retreat | ≈−833 | reject |
 | C13 | support cap 0.35 | ≈−1,843 | reject |
+- **11:20 UTC — B0 paired pair 1**: wave1 (b0@radiant) +973 / swap (b0@dire)
+  +633 → **B1 true effect ≈ −170 ± ~780** — the C10 promotion (+331) was
+  likely noise; B1 ≈ B0. Accumulating 2 more paired waves to reach ±~400
+  and decide keep-vs-revert honestly.
