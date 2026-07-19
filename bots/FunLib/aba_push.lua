@@ -436,6 +436,20 @@ function ____exports.WhichLaneToPush(_bot, _lane)
     topLaneScore = presence_adjust(topLaneScore, vTop)
     midLaneScore = presence_adjust(midLaneScore, vMid)
     botLaneScore = presence_adjust(botLaneScore, vBot)
+    -- [LAB C14] split-soak: after laning, the candidate side's pos1 pushes
+    -- the EMPTIEST lane (max score = farthest from allies) instead of the
+    -- team lane — converts the ~57% uncollected lane gold into income
+    -- while the rest of the team pushes together. Inert off-farm.
+    if jmz.IsSoakCandidate('c14') and jmz.GetPosition(_bot) == 1
+        and not jmz.IsInLaningPhase() then
+        if topLaneScore > midLaneScore and topLaneScore > botLaneScore then
+            return Lane.Top
+        end
+        if botLaneScore > midLaneScore and botLaneScore > topLaneScore then
+            return Lane.Bot
+        end
+        return Lane.Mid
+    end
     if topLaneScore < midLaneScore and topLaneScore < botLaneScore then
         return Lane.Top
     end

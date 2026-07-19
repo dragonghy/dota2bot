@@ -45,6 +45,8 @@ declare function GetNearbyLocationToTp(location: Vector): Vector;
 declare function GetPosition(bot: Unit | null): number;
 
 declare function IsInLaningPhase(): boolean;
+declare function IsSoakCandidateSide(): boolean;
+declare function IsSoakCandidate(id: string): boolean;
 
 declare function IsDoingRoshan(bot: Unit): boolean;
 

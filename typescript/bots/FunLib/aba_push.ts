@@ -753,6 +753,14 @@ export function WhichLaneToPush(_bot: Unit, _lane: Lane): Lane {
     midLaneScore = presence_adjust(midLaneScore, vMid);
     botLaneScore = presence_adjust(botLaneScore, vBot);
 
+    // [LAB C14] split-soak: after laning, the candidate side's pos1 pushes
+    // the EMPTIEST lane (max score) to soak uncollected lane gold.
+    if (jmz.IsSoakCandidate("c14") && jmz.GetPosition(_bot) === 1 && !jmz.IsInLaningPhase()) {
+        if (topLaneScore > midLaneScore && topLaneScore > botLaneScore) return Lane.Top;
+        if (botLaneScore > midLaneScore && botLaneScore > topLaneScore) return Lane.Bot;
+        return Lane.Mid;
+    }
+
     if (topLaneScore < midLaneScore && topLaneScore < botLaneScore) return Lane.Top;
     if (midLaneScore < topLaneScore && midLaneScore < botLaneScore) return Lane.Mid;
     if (botLaneScore < topLaneScore && botLaneScore < midLaneScore) return Lane.Bot;
