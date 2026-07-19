@@ -4591,10 +4591,14 @@ function J.IsSoakCandidateSide()
 end
 -- true only when this bot is on the candidate side AND the active candidate
 -- id matches — lets several gated experiments coexist in the tree with
--- exactly one active per wave.
+-- exactly one active per wave. The special id 'all' activates EVERY gated
+-- experiment on the candidate side at once, so one wave+swap validates the
+-- whole current bundle of fixes as a unit (useful for a fast "new bot beats
+-- old bot" read before per-fix promotion). Farm-only config, inert off-farm.
 function J.IsSoakCandidate( sId )
 	local conf = GetSoakSideConf()
-	if not conf or conf.cand ~= sId then return false end
+	if not conf then return false end
+	if conf.cand ~= sId and conf.cand ~= 'all' then return false end
 	local nSideTeam = conf.side == 'radiant' and TEAM_RADIANT or TEAM_DIRE
 	return GetTeam() == nSideTeam
 end
