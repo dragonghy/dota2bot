@@ -206,6 +206,19 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [GH #5] Team-fight anti-idle. When the bot is standing idle near a
+    -- focused/dying ally, never leave it watching: J.ResolveTeamfightIdle picks
+    -- 'flee' (raise retreat desire and leave — don't feed a second death) or
+    -- 'help' (suppress retreat so the bot's attack/assist logic engages).
+    -- Candidate-gated + turbo-only, inert otherwise; genuine retreats fall
+    -- through when it returns nil.
+    local sTeamfightIdle = J.ResolveTeamfightIdle(bot)
+    if sTeamfightIdle == 'flee' then
+        return BOT_MODE_DESIRE_HIGH
+    elseif sTeamfightIdle == 'help' then
+        return BOT_MODE_DESIRE_NONE
+    end
+
     -- [LAB C12] candidate side retreats earlier: lower HP bar raised to
     -- 0.45 and a single nearby damaging enemy suffices (deaths are the
     -- biggest single econ swing pre-10min). Baseline: 0.3 / 2 enemies.
