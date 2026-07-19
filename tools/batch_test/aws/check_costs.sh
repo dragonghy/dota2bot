@@ -4,6 +4,10 @@ set -euo pipefail
 cd "$(dirname "$0")"
 source aws.env
 
+# In agent sessions the raw `aws` CLI fails (proxy placeholder AWS_* env vars
+# shadow the real key) — route through the awsx wrapper when it exists.
+if command -v awsx >/dev/null 2>&1; then aws() { awsx "$@"; }; fi
+
 echo "== running/pending instances (should be empty unless a batch is live) =="
 aws ec2 describe-instances --region "$AWS_REGION" \
     --filters "Name=instance-state-name,Values=pending,running" \
