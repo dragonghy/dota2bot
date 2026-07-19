@@ -82,5 +82,35 @@ timescale to ~2.3x (measured from wall vs game clock). This does NOT hurt
 fidelity (lower timescale = more bot think-updates per game-second) — only
 throughput efficiency. Added SOAK_WALL_S telemetry so effective_timescale is
 recorded per game; let the loop pick the optimal slot count from ~20+ games of
-data rather than tuning on 4. Radiant won all 4 (noise at n=4; watch for a real
-side bias).
+data rather than tuning on 4.
+
+### 18-game aggregate (monitoring wakeup, ~06:20 UTC)
+
+Ranked backlog for the scheduled iteration job (schedule_job.md §6 first run
+should formalize these):
+
+1. **RADIANT WON 18/18 (100%).** No longer noise (p<0.001; far beyond Dota's
+   ~52% map edge). The bots play **dire** systematically worse — likely
+   radiant-tuned positioning / lane-assignment constants in the shared layer.
+   TOP finding. Also the reason same-match A/B *must* strictly side-swap:
+   individual games are decided by side, so win-rate A/B needs many games +
+   balanced sides. Investigate `mode_*_generic` / lane logic for hardcoded
+   radiant-side coordinates.
+2. **slow_close 17/18, median 49 min** (turbo target ~25; range 38–67). Bots
+   can't close. Shared mode layer (push / end-game). #1 macro.
+3. **Broken cores — feed AND farm badly:** dragon_knight (5 feed / 4 low-gpm),
+   venomancer (5 / 5). These two are the worst individual heroes.
+4. **Feeders:** lich(5), dragon_knight(5), venomancer(5), crystal_maiden(4),
+   jakiro(3). CM is a focus hero — prioritize.
+5. **low_gpm cores:** venomancer(5), dragon_knight(4), crystal_maiden(2),
+   lich(2).
+6. script_perf 18/18 (GetDesire/ItemUsageThink hotspots).
+
+**Version stamping activated** this wakeup: the running soak_loop processes had
+the old code cached (long-lived bash loop doesn't re-read the file on `git
+pull`), so games stamped "unknown"/"None". Restarted the farm loops (same
+run_id) — games from ~06:20 UTC onward stamp `fb0d418` (bare SHA; instance has
+no tags fetched, but SHA uniquely identifies the version, which satisfies the
+provenance requirement). LESSON: deploying farm-harness (bash) changes requires
+restarting the loops; deploying Lua hero changes does NOT (each game is a fresh
+process that reads bots/ anew).
