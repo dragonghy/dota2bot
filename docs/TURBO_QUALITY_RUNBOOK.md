@@ -103,6 +103,16 @@ Remove the `IsSoakCandidate` gate (keep `IsModeTurbo`), so it applies to all tur
 - **Bot `print()` never reaches the dedicated-server console**, and the engine's error handler is broken (`error in error handling` masks all Lua error text). You cannot debug via bot-side logging. Use the replay (behavioral pipeline) or in-game observation.
 - **Replay attribution**: only slot 1 records; purge stale `.dem` before each slot-1 launch (done) or the "newest .dem" upload mislabels a leftover game (this caused a phantom `arc_warden`/"Gordon" hero).
 - **Radiant side bias** ~+1.5k gold — always A/B with a swap wave and average.
+- **The econ/deaths A/B is NOISE-LIMITED (critical).** The soak draft gives each
+  side *different random heroes every game*, so radiant-vs-dire econ is confounded
+  by draft; the swap only cancels the ~+1.5k *side* bias, not draft variance.
+  Measured per-game candidate−baseline team-GPM diffs span **−1380…+973** (SD ≈
+  600 GPM); over 12 games the SE on the mean is ~170 GPM, so a ~40 GPM fix effect
+  is invisible. See `iterations/0010`. **Implications:** (a) for behavior fixes,
+  use the **behavioral detectors** as the primary metric (dense, direct), not
+  end-of-game econ; (b) to make econ usable, build a **mirrored-draft** harness
+  (same 10 heroes both sides, swap the fix) so draft cancels. Don't declare an
+  econ win/loss from a single 12-game wave+swap — it's within noise.
 - **Wave timing** ~12-15 min for 12 games (see §1 VALIDATE). Spot-parallel to halve wall time.
 - **Per-position draft**: `tools/batch_test/soak/hero_pool.txt` = `name,positions,tier` (positions like `1/3`); `gen_soak_pool.py` emits `{name, pos={...}}`; `custom_loader.ApplySoakDraft` assigns each drafted hero to a position it can play. Regenerate the pool on the farm after editing hero_pool.txt.
 
