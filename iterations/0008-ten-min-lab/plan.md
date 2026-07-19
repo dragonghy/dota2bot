@@ -154,3 +154,8 @@ wakeup heartbeat).
   0.80 −2k.
 - **10:45 UTC — C12 launched** (run_1045): death-avoidance axis — candidate
   retreats at HP<0.45 with ≥1 damaging enemy (baseline 0.3 / ≥2).
+- **10:54 UTC — C12 VERDICT: REJECTED** (run_1045, 12 games): mean +671 raw /
+  ≈−833 corrected — earlier retreats don't pay for the lost lane time.
+- **10:54 UTC — C13 launched** (run_1054): support cap 0.45→0.35 (harder
+  push commitment for pos4/5, complement of B1's core-soak).
+- AWS check: $35.17 MTD, only the soak box running (unchanged).
