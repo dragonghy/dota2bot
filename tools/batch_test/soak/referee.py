@@ -94,12 +94,26 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("port", type=int)
     ap.add_argument("password")
+    ap.add_argument("--host", default=None,
+                    help="rcon host; the server binds its primary NIC IP, not 127.0.0.1")
     ap.add_argument("--cap-min", type=float, default=30.0)
     ap.add_argument("--query-only", action="store_true")
     args = ap.parse_args()
 
+    host = args.host
+    if not host:
+        # the dedicated server binds rcon to the primary interface address
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("10.255.255.255", 1))
+            host = s.getsockname()[0]
+        except OSError:
+            host = "127.0.0.1"
+        finally:
+            s.close()
+
     try:
-        rc = Rcon("127.0.0.1", args.port, args.password)
+        rc = Rcon(host, args.port, args.password)
         out = rc.cmd("script " + QUERY_LUA)
         parsed = parse_query(out)
     except Exception as e:
