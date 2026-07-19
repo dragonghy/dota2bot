@@ -195,3 +195,8 @@ wakeup heartbeat).
 - **14:03 UTC — c10r retest wave1** (role-split@radiant, run_1353): mean
   **−205** (n=12) — третий negative signal for role-split. Swap wave rolling.
   C14 (split-soak pos1) implemented+committed (4b5a93a), queued next.
+- **14:15 UTC — ROLE-SPLIT CLOSED FOR GOOD**: c10r pair3 effect +140;
+  combined over 4 paired waves (+331, −170, −182, +140) → **≈+30 ± 390 =
+  exactly neutral**. Axis retired permanently.
+- **14:15 UTC — C14 split-soak wave 1 rolling** (cand=radiant): pos1 pushes
+  the emptiest lane post-laning (targets the 43% uncollected lane gold).
