@@ -5604,6 +5604,12 @@ function J.IsInLaningPhase()
 		nFloor = bTurbo and 5 * 60 or 8 * 60
 		nSoftEnd = bTurbo and 7 * 60 or 11 * 60
 	end
+	-- [LAB C4] inverse of C2: candidate side lanes the WHOLE 10-min game —
+	-- in capped games tower gold is scarce pre-10, lane income dominates.
+	if J.IsSoakCandidate('c4') then
+		nFloor = bTurbo and 12 * 60 or 16 * 60
+		nSoftEnd = nFloor
+	end
 
 	-- Hard time floor: always laning phase before the floor
 	if nTime < nFloor then return true end
