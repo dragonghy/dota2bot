@@ -25,13 +25,18 @@
   "open_issues": [
     {
       "key": "outcome_scoring:iter_0004",
-      "note": "iter-0002 scored in 0004/analysis.md (partial: T1s fall by 10-15min now, but first-rax still 38min, 53min games). Next firing: score iter-0004 from soak/run_20260719_0716 \u2014 first-rax <~28min, durations 25-35min, none past ~42 (overtime forfeit) or 35 wall-min. Also verify winner still meaningful and cores don't feed while ahead (dive risk). If still slow, attack push_think:tower_yoyo next.",
+      "note": "OWNER ACCEPTANCE CRITERIA (2026-07-19, this stage passes if): (1) first T1 falls at 10-20 game-min (ideal 5-10, tolerated to 20); (2) T2s fall ~30 min; (3) all towers that should fall are down before 40 min. Do NOT hard-block on ideal timing \u2014 bot farm efficiency/micro polish comes later, per-hero. Score iter-0004 from soak/run_20260719_0716 against these. Live so far: T1s 10.7-22.6min (mostly in range), first T2s 24-26min (ahead of the 30min line). Also verify winner meaningful + no feeding-while-ahead.",
       "first_seen_iter": 2
     },
     {
       "key": "push_think:tower_yoyo",
       "note": "PushThink retreats on a single tower hit whenever a creep wave is present (WasRecentlyDamagedByTower window 2-4s) -> bots yo-yo under towers, gutting building DPS. Micro change; verify in-game before touching. aba_push.lua PushThink, TS mirror.",
       "first_seen_iter": 2
+    },
+    {
+      "key": "fight_desire:possibly_low",
+      "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games \u2014 no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
+      "first_seen_iter": 4
     },
     {
       "key": "vscript_errors:masked",
