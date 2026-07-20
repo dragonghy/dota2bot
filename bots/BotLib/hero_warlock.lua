@@ -24,11 +24,30 @@ local tTalentTreeList = {
 }
 
 
+-- Ability index legend (see the comment block further below): 1 = warlock_fatal_bonds (Q),
+-- 2 = warlock_shadow_word (W), 3 = warlock_upheaval (E), 6 = warlock_rain_of_chaos (R).
 local tAllAbilityBuildList = {
 						{1,3,3,1,3,6,3,1,1,2,6,2,2,2,6},
 }
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+-- [GH #9] Laning-appropriate support build (pos 4/5). The default build above
+-- maxes Upheaval (E) and Fatal Bonds (Q) first -- both are push / wave-clear /
+-- teamfight spells that shove the lane and drain mana, giving Warlock a weak,
+-- self-defeating laning phase. This build instead maxes Shadow Word (W) first
+-- for lane sustain/harass, keeps value points in Fatal Bonds / Upheaval, and
+-- delays maxing Upheaval to the mid game where its teamfight value lands.
+-- Gated turbo + soak-candidate 'wlok' so it stays inert until behaviorally
+-- verified.
+local tLaningAbilityBuildList = {
+						{2,1,2,3,2,6,2,1,1,1,6,3,3,3,6},
+}
+
+local nAbilityBuildList
+if J.IsModeTurbo() and J.IsSoakCandidate( 'wlok' ) then
+	nAbilityBuildList = J.Skill.GetRandomBuild( tLaningAbilityBuildList )
+else
+	nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+end
 
 local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
 
@@ -419,6 +438,20 @@ end
 function X.ConsiderE()
 
 	if not abilityE:IsFullyCastable() then return BOT_ACTION_DESIRE_NONE, nil end
+
+	-- [GH #9] Laning channel guard (gated turbo + soak 'wlok'). Upheaval is a
+	-- long self-root channel. During the laning phase, channeling it toward a
+	-- lone harass target -- or worse, into the creep wave -- roots Warlock in
+	-- place, shoves the lane, and drains him to empty. Only allow it when a
+	-- genuine multi-hero fight is on (2+ enemy heroes nearby); otherwise fall
+	-- through so Warlock prefers Shadow Word for sustain/harass instead.
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'wlok' ) and J.IsInLaningPhase()
+	then
+		local hEnemiesNear = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
+		if #hEnemiesNear < 2 then
+			return BOT_ACTION_DESIRE_NONE, nil
+		end
+	end
 
 	if abilityR:IsFullyCastable()
 		or abilityQ:IsFullyCastable()
