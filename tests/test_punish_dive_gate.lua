@@ -24,13 +24,15 @@ tests['ShouldPunishDive is inert in normal (non-turbo) mode'] = function()
         'normal mode must never trigger a punish collapse')
 end
 
-tests['ShouldPunishDive is inert in turbo without an active punish candidate'] = function()
+tests['ShouldPunishDive in turbo is live but stays off with no dive present (PROMOTED)'] = function()
+    -- PROMOTED under the Class-B micro-behavior policy (runbook §1): turbo no
+    -- longer requires a soak candidate. The default mock has no allied buildings
+    -- and no nearby overextended enemy, so the trigger must still return nil —
+    -- proving promotion didn't make it collapse without an actual dive.
     local J, bot = fresh_jmz()
     GetGameMode = function() return GAMEMODE_TURBO end
-    -- No Customize/soak_side file in CI => IsSoakCandidate('punish') is false,
-    -- so the trigger stays off even in turbo (shipped baseline behavior).
     assert(J.ShouldPunishDive(bot) == nil,
-        'turbo but off-candidate must never trigger a punish collapse')
+        'turbo with no dive present must not trigger a punish collapse')
 end
 
 return tests

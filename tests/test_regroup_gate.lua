@@ -24,13 +24,16 @@ tests['ShouldRegroupNotSolo is inert in normal (non-turbo) mode'] = function()
         'normal mode must never suppress solo farm/push')
 end
 
-tests['ShouldRegroupNotSolo is inert in turbo without an active regroup candidate'] = function()
+tests['ShouldRegroupNotSolo in turbo is live but stays off on our own half (PROMOTED)'] = function()
+    -- PROMOTED under the Class-B micro-behavior policy (runbook §1): turbo no
+    -- longer requires a soak candidate. The default mock bot sits at the origin
+    -- (own half / not past the enemy ancient midline), so the guard must still
+    -- fall through — proving promotion didn't make it fire outside the narrow
+    -- "deep + alone + contested" case.
     local J, bot = fresh_jmz()
     GetGameMode = function() return GAMEMODE_TURBO end
-    -- No Customize/soak_side file in CI => IsSoakCandidate('regroup') is false,
-    -- so the gate stays off even in turbo (shipped baseline behavior).
     assert(J.ShouldRegroupNotSolo(bot) == false,
-        'turbo but off-candidate must never suppress solo farm/push')
+        'turbo bot on its own half must not be regroup-suppressed')
 end
 
 return tests

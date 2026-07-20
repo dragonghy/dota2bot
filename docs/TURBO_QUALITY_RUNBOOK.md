@@ -35,7 +35,30 @@ sub-agents, and the hard-won gotchas. Read this first, every time.
 
 ---
 
-## 1. The iteration loop (SCAN → PICK → FIX → VALIDATE → PROMOTE)
+## 1. VALIDATION POLICY — two classes of change, two yardsticks (owner, 2026-07-20)
+
+Econ A/B can only resolve BIG effects (~30+ GPM at 20 games/comp). Micro-behavior
+fixes worth ±5 GPM are invisible to it — that does NOT make them wrong. So:
+
+**Class A — macro/balance changes** (farm-vs-fight desire, team strategy, big
+numeric retunes — anything that could plausibly hurt globally): still require
+multi-seed mirrored A/B (`mirror_multi.sh`, positive mean over ≥4 comps). This is
+the regression gate that correctly killed c3 (−37 GPM) and corefarm (−17 GPM).
+
+**Class B — micro-behavior fixes** (locally-correct reactions with a clear goal
+and no plausible downside; e.g. "when an ally is attacked nearby, either attack
+or flee — never stand idle"): do NOT gate on econ A/B. Ship when:
+  1. verify gates pass (luacheck + unit tests + smoke);
+  2. **behavioral evidence**: the target bad-behavior detector count drops
+     clearly (e.g. idle_while_ally_dies 11→1/game) with no new bad behavior; and
+  3. the goal is defensible from pro/meta play.
+Quantity of small correct behaviors compounds into quality; each stays
+turbo-only and individually revertible.
+
+Replays are for FINDING problems (the owner's judgment → detectors → metric
+library), not for gating every fix. Keep a spot soak farm producing replays.
+
+## 1b. The iteration loop (SCAN → PICK → FIX → VALIDATE → PROMOTE)
 
 ### SCAN — find bugs
 Two complementary sources; use both:

@@ -211,21 +211,25 @@ tests['ResolveTeamfightIdle: gated off in normal mode'] = function()
         'non-turbo must stay inert regardless of the situation')
 end
 
-tests['ResolveTeamfightIdle: turbo but not a soak candidate -> nil'] = function()
-    -- Off the farm there is no Customize/soak_side.lua, so IsSoakCandidate is
-    -- always false and the wrapper stays inert even in turbo.
+tests['ResolveTeamfightIdle: turbo -> delegates to the eval (PROMOTED)'] = function()
+    -- PROMOTED under the Class-B micro-behavior policy (runbook §1): in turbo
+    -- the wrapper now always delegates — no soak-candidate gate any more.
     local enemy = MakeEnemy()
     local ally = MakeFocusedAlly(0.3, { enemy })
     local J = fresh_jmz({
         GetHealth = 600, GetMaxHealth = 600,
+        OriginalGetHealth = 600, OriginalGetMaxHealth = 600,
+        GetMana = 300, GetMaxMana = 300,
         GetNearbyHeroes = function(_, _radius, bEnemy)
             if bEnemy then return {} end
             return { ally }
         end,
     })
     GetGameMode = function() return GAMEMODE_TURBO end
-    assert(J.ResolveTeamfightIdle(GetBot()) == nil,
-        'turbo alone must not fire without the soak-candidate gate')
+    assert(J.ResolveTeamfightIdle(GetBot()) == J.EvalTeamfightIdle(GetBot()),
+        'in turbo the promoted wrapper must return exactly what the eval returns')
+    assert(J.ResolveTeamfightIdle(GetBot()) ~= nil,
+        'this scenario (focused ally, parity, full HP/mana) must resolve to a decision')
 end
 
 return tests

@@ -4802,9 +4802,13 @@ end
 -- "diving under our tower" is approximated by proximity (<=1200) to any live
 -- allied building, PLUS the enemy being within collapse range (1600) of this
 -- bot (so raising desire pulls controllers onto a target they can reach).
+-- PROMOTED (was soak-candidate 'punish') under the Class-B micro-behavior
+-- policy (runbook §1): collapsing on an overextended diver ONLY when
+-- SafeToCommitFight passes is disciplined by construction (never commits into
+-- a losing fight), and the multi-seed econ read was +8.8 GPM / 3-of-4 comps
+-- better on XPM+deaths. Turbo-only; normal mode ships unchanged.
 function J.ShouldPunishDive( bot )
 	if not J.IsModeTurbo() then return nil end
-	if not J.IsSoakCandidate( 'punish' ) then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
 
 	local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
@@ -4933,13 +4937,15 @@ function J.EvalTeamfightIdle( bot )
 	return 'flee'
 end
 
--- [GH #5] Turbo + soak-candidate ('fight') gated wrapper around
--- J.EvalTeamfightIdle. Inert off the farm and in normal mode, so shipped
--- behavior is unchanged; the batch A/B run validates it before any promotion
--- (same pattern as J.ShouldStayAndRegen).
+-- [GH #5] Turbo-only wrapper around J.EvalTeamfightIdle.
+-- PROMOTED (was soak-candidate 'fight') under the Class-B micro-behavior
+-- policy (see docs/TURBO_QUALITY_RUNBOOK.md §1): the goal is locally correct
+-- ("ally under attack nearby -> either help or flee, NEVER stand and watch"),
+-- behavioral evidence is strong (idle_while_ally_dies 11 -> 1 per game on the
+-- candidate side), and econ was neutral (-5.9 GPM, within noise) — this class
+-- of fix is not econ-A/B-gated. Turbo-only; normal mode ships unchanged.
 function J.ResolveTeamfightIdle( bot )
 	if not J.IsModeTurbo() then return nil end
-	if not J.IsSoakCandidate( 'fight' ) then return nil end
 	return J.EvalTeamfightIdle( bot )
 end
 
@@ -4955,13 +4961,13 @@ end
 -- (closer to their base than to ours); NO allied hero within 1500; at least one
 -- enemy hero within 1500. Deliberately conservative — grouped pushes and safe
 -- farming on our own half fall through to normal behavior.
--- Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND only the
--- active soak-candidate side carrying the 'regroup' experiment id. Inert off
--- the candidate side and in normal mode (same pattern as J.ShouldSuppressDive
--- / J.ShouldStayAndRegen).
+-- PROMOTED (was soak-candidate 'regroup') under the Class-B micro-behavior
+-- policy (runbook §1): "never solo-walk deep into enemy territory with enemies
+-- near and no ally in reach" is locally correct with no plausible downside
+-- (multi-seed econ read +2.2 GPM — neutral-to-mildly-positive). Turbo-only;
+-- normal mode ships unchanged.
 function J.ShouldRegroupNotSolo( bot )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'regroup' ) then return false end
 	if not J.IsValidHero( bot ) then return false end
 
 	-- Deep in / heading into enemy territory: closer to the enemy ancient than
