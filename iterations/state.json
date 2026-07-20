@@ -1,5 +1,5 @@
 {
- "iteration_count": 10,
+ "iteration_count": 11,
  "farm": {
   "s3_bucket": "dota2bot-batch-results-4924",
   "run_prefixes": [
@@ -120,7 +120,16 @@
    "note": "clean baseline after ten-min lab; B1 reverted; all lab gates inert. Lab summary in iterations/0008-ten-min-lab/REPORT.md"
   }
  },
- "pending_validations": [],
+ "pending_validations": [
+  {
+   "cand": "depthnum",
+   "instance_id": "i-075e0596ea4a4af6f",
+   "launched_utc": "2026-07-20T06:03Z",
+   "seeds": "131313 246802 555001 778899",
+   "issue": 18,
+   "class": "A"
+  }
+ ],
  "pending_behavioral_checks": [],
  "replay_spot": {
   "instance_id": "i-017ee6bcf607e5ba6",
