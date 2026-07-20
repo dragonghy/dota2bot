@@ -60,6 +60,27 @@ class Timeline:
         self._times = {h: [s["t"] for s in v] for h, v in self.snaps.items()}
         self.heroes = list(self.teams.keys())
 
+        # Combat-log events name some heroes differently from game.teams /
+        # snapshots (e.g. teams 'npc_dota_hero_queen_of_pain' vs event
+        # 'npc_dota_hero_queenofpain'; likewise vengeful_spirit/vengefulspirit).
+        # Left unfixed this mis-attributes ALL hero-vs-hero damage/deaths for
+        # those heroes to nobody (report_card showed QoP 0.00 dmg/min while it
+        # dealt 207 hero-damage events). Canonicalize by stripping the prefix +
+        # underscores and remap each event's hero actor/target back to the
+        # teams-form name so every downstream detector/metric matches.
+        def _canon(n):
+            return n.replace("npc_dota_hero_", "").replace("_", "").lower() if n else n
+        canon2hero = {_canon(h): h for h in self.heroes}
+        for e in self.events:
+            if e.get("actor_hero"):
+                c = canon2hero.get(_canon(e.get("actor")))
+                if c:
+                    e["actor"] = c
+            if e.get("target_hero"):
+                c = canon2hero.get(_canon(e.get("target")))
+                if c:
+                    e["target"] = c
+
     def team(self, hero):
         return self.teams.get(hero, 0)
 
