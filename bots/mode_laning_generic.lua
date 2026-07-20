@@ -29,6 +29,22 @@ local isChangePosMessageDone     = false
 
 if Utils.BuggyHeroesDueToValveTooLazy[botName] then local_mode_laning_generic = dofile( GetScriptDirectory().."/FunLib/override_generic/mode_laning_generic" ) end
 
+-- Custom active last-hit path (buggy heroes / a pos1 paired with a human pos5 /
+-- soak candidate 'c3'). See the [LAB C3] note in GetDesire below. Evaluated once
+-- at load, matching the historical Think guard; inert off these gates.
+local bCustomLastHit = local_mode_laning_generic
+	or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
+	or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
+
+-- [LAB suplh / GH #14] Support (pos 4-5) last-hit division. Turbo-only and
+-- gated behind soak candidate 'suplh', so it is inert in shipped games and only
+-- activates for A/B validation. When on, a support keeps laning mode selected so
+-- its Think can arbitrate creep CS: deny + harass, and last-hit ONLY creeps that
+-- no allied core (pos 1-3) is near enough to take -- leaving the contested farm
+-- for the core instead of both contending for the same creeps.
+local bSupLastHit = J.IsModeTurbo() and J.IsSoakCandidate('suplh')
+	and J.GetPosition(bot) >= 4
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -93,6 +109,19 @@ function GetDesire()
 	-- if J.ShouldGoFarmDuringLaning(bot) then
 	-- 	return 0.2
 	-- end
+
+	-- [LAB suplh / GH #14] Support-core last-hit division. Keep a turbo-lane
+	-- support in laning mode whenever there is CS to arbitrate (enemy creeps in
+	-- range, or an ally creep worth denying) so its Think owns the decision:
+	-- deny + harass, and last-hit only creeps no allied core can take. Reaching
+	-- here already means the support is not in an immediate-danger/retreat state
+	-- (handled above). Inert unless turbo + soak candidate 'suplh' (bSupLastHit).
+	if bSupLastHit and J.IsInLaningPhase() then
+		if (nEnemyCreeps ~= nil and #nEnemyCreeps > 0)
+		or J.IsValid(GetBestDenyCreep(nAllyCreeps)) then
+			return 0.9
+		end
+	end
 
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
 	-- below; stock condition only enabled it for buggy heroes or a pos1 bot
@@ -177,9 +206,116 @@ function GetBestDenyCreep(hCreepList)
 	return nil
 end
 
-if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
-	or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3) then
+-- [LAB suplh / GH #14] Is an allied core (pos 1-3) close enough to take the last
+-- hit on this creep itself? True when a living, non-self, non-illusion allied
+-- core is within ~800 of the creep (same-lane proximity) AND the creep is within
+-- that core's attack reach plus a short walk buffer (so it can actually secure
+-- it soon). Pure predicate over explicit args (no closed-over mutable state), so
+-- it is unit-testable. Conservative: when no core clearly contests, the support
+-- is free to take the creep and is not starved of gold.
+function _suplh_IsCoreContestingCreep(hSelf, hCreep)
+	if not J.IsValid(hCreep) then return false end
+	for _, ally in pairs(GetUnitList(UNIT_LIST_ALLIED_HEROES)) do
+		if ally ~= hSelf
+		and J.IsValidHero(ally)
+		and not ally:IsIllusion()
+		and J.IsCore(ally)
+		then
+			local nDist = GetUnitToUnitDistance(ally, hCreep)
+			if nDist <= 800 and nDist <= ally:GetAttackRange() + 250 then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- Same kill check as GetBestLastHitCreep, but skips any creep an allied core can
+-- take -- so a support only ever secures uncontested creeps.
+local function GetSupportUncontestedLastHitCreep(hCreepList)
+	local dmgDelta = attackDamage * 0.7
+	local moveToCreep = nil
+	for _, creep in pairs(hCreepList) do
+		if J.IsValid(creep) and J.CanBeAttacked(creep)
+		and not _suplh_IsCoreContestingCreep(bot, creep) then
+			local nDelay = J.GetAttackProDelayTime(bot, creep)
+			if J.WillKillTarget(creep, attackDamage, DAMAGE_TYPE_PHYSICAL, nDelay) then
+				return creep, false
+			end
+			if J.WillKillTarget(creep, attackDamage + dmgDelta, DAMAGE_TYPE_PHYSICAL, nDelay) then
+				moveToCreep = creep
+			end
+		end
+	end
+	if moveToCreep then
+		return moveToCreep, true
+	end
+	return nil
+end
+
+-- [LAB suplh / GH #14] Support laning behavior under the 'suplh' gate: deny own
+-- creeps, secure only uncontested last-hits (never steal a core's farm), harass
+-- an in-range enemy hero when it is safe, else hold the lane front. Suppressing
+-- the contested last-hit is the whole point: a creep a core is near falls
+-- through the last-hit branch and the support does not attack it.
+local function DoSupportLaningThink()
+	-- Deny own creeps first (time-sensitive; never the core's responsibility).
+	local denyCreep = GetBestDenyCreep(nAllyCreeps)
+	if J.IsValid(denyCreep) then
+		bot:SetTarget(denyCreep)
+		bot:Action_AttackUnit(denyCreep, true)
+		return
+	end
+
+	-- Secure a last-hit ONLY when no allied core can take it (a lone support
+	-- still needs gold); contested creeps are deliberately left for the core.
+	local hitCreep, moveToCreep = GetSupportUncontestedLastHitCreep(nEnemyCreeps)
+	if J.IsValid(hitCreep) then
+		if GetUnitToUnitDistance(bot, hitCreep) > botAttackRange
+		or (moveToCreep and GetUnitToUnitDistance(bot, hitCreep) > botAttackRange * 0.8) then
+			bot:Action_MoveToUnit(hitCreep)
+			return
+		else
+			bot:SetTarget(hitCreep)
+			bot:Action_AttackUnit(hitCreep, true)
+			return
+		end
+	end
+
+	-- Harass: auto-attack an enemy hero already in range when it is safe to
+	-- (healthy and locally stronger), so the support pressures the lane instead
+	-- of idling on contested creeps it is no longer contesting.
+	if J.GetHP(bot) >= 0.5 and J.WeAreStronger(bot, 1200) then
+		local enemies = bot:GetNearbyHeroes(botAttackRange, true, BOT_MODE_NONE)
+		for _, enemy in pairs(enemies) do
+			if J.IsValidHero(enemy)
+			and not J.IsSuspiciousIllusion(enemy)
+			and J.CanBeAttacked(enemy) then
+				bot:SetTarget(enemy)
+				bot:Action_AttackUnit(enemy, true)
+				return
+			end
+		end
+	end
+
+	-- Otherwise hold the lane front (mirrors the core path's positioning).
+	local fLaneFrontAmount = GetLaneFrontAmount(GetTeam(), botAssignedLane, false)
+	local fLaneFrontAmount_enemy = GetLaneFrontAmount(GetOpposingTeam(), botAssignedLane, false)
+	local nLongestAttackRange = math.max(botAttackRange, 250, nFurthestEnemyAttackRange)
+	local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -nLongestAttackRange)
+	if fLaneFrontAmount_enemy < fLaneFrontAmount then
+		target_loc = GetLaneFrontLocation(GetOpposingTeam(), botAssignedLane, -nLongestAttackRange)
+	end
+	bot:Action_MoveToLocation(target_loc + RandomVector(50))
+end
+
+if bCustomLastHit or bSupLastHit then
 	function Think()
+		if bSupLastHit then
+			DoSupportLaningThink()
+			return
+		end
+
 		local hitCreep, moveToCreep = GetBestLastHitCreep(nEnemyCreeps)
 		if J.IsValid(hitCreep) then
 			if J.GetPosition(bot) <= 2 or not J.IsThereNonSelfCoreNearby(700)

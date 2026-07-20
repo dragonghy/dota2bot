@@ -797,6 +797,7 @@ globals = {
     "WorkHorseDesire",
     "XP",
     "_",
+    "_suplh_IsCoreContestingCreep",
     "attacker",
     "buildings",
     "cache",
