@@ -568,7 +568,20 @@ function X.ConsiderE()
 			and not J.IsDisabled( botTarget )
 			and not botTarget:IsSilenced()
 		then
-			return BOT_ACTION_DESIRE_HIGH, botTarget, "E进攻"
+			-- [GH #9] skyburst: don't open a fight with a lone Ancient Seal.
+			-- The seal is silence + magic-amp with no damage, so casting it
+			-- alone as an opener wastes it. When gated on, only seal here if we
+			-- have the burst to follow up (Arcane Bolt or Mystic Flare
+			-- castable), so the amplification is actually used. The
+			-- channel/escape interrupt and self-preservation seals above are
+			-- untouched.
+			if J.IsModeTurbo() and J.IsSoakCandidate( 'skyburst' )
+				and not ( abilityQ:IsFullyCastable() or abilityR:IsFullyCastable() )
+			then
+				-- no follow-up burst available: suppress the isolated seal
+			else
+				return BOT_ACTION_DESIRE_HIGH, botTarget, "E进攻"
+			end
 		end
 	end
 
