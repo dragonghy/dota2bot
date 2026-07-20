@@ -18,6 +18,8 @@ Detectors implemented (bug_queue letter in brackets):
   D6 overextend_alone      [6] solo-walked deep into enemy territory, no ally
                                near, enemies present (the aegis/lead feed loop)
   D7 unpunished_tower_dive [P] enemy dove our tower with the numbers on us, no kill
+  D8 return_to_death_spot  [17] died in the enemy half, respawned, walked
+                                straight back to the death spot alone
 """
 import argparse
 import bisect
@@ -397,6 +399,80 @@ def d6_overextend_alone(tl):
     return out
 
 
+# --- return_to_death_spot tunables (Dota world units / seconds) ---
+RETURN_WINDOW = 90.0       # seconds after respawn the death spot stays "hot"
+RETURN_RADIUS = 1500.0     # back within this of the death spot => "returned"
+RETURN_ALLY_RADIUS = 1500.0  # <2 allies within this of the hero => solo return
+
+
+def d8_return_to_death_spot(tl):
+    """[17 / issue #17] The 'respawn -> walk straight back to the death spot ->
+    die again' loop (iterations/0011: WK died deep at 6:59, walked back to the
+    same corner, died again 7:27). Flag: a hero dies at spot P in the ENEMY
+    half (positive _enemy_half_depth); within RETURN_WINDOW seconds after its
+    respawn its position comes within RETURN_RADIUS of P while fewer than 2
+    living allies are within RETURN_ALLY_RADIUS of it -- a solo return into
+    the zone that just killed it. One finding per death (dedup per death)."""
+    out = []
+    deaths = [e for e in tl.events if e["type"] == "DEATH" and e.get("target_hero")
+              and e["target"].startswith("npc_dota_hero_")]
+    for dth in deaths:
+        hero, t = dth["target"], dth["t"]
+        team = tl.team(hero)
+        if not team:
+            continue
+        p = tl.pos(hero, t)
+        if not p:
+            continue
+        depth = _enemy_half_depth(team, p[0], p[1])
+        if depth <= 0:
+            continue  # died on own half -> going back there is normal play
+        snaps = tl.snaps.get(hero, [])
+        # respawn = first alive snapshot after the death
+        respawn_t = None
+        for s in snaps:
+            if s["t"] > t and s["hp"] > 0:
+                respawn_t = s["t"]
+                break
+        if respawn_t is None:
+            continue  # never respawned (game ended)
+        for s in snaps:
+            if s["t"] < respawn_t or s["t"] > respawn_t + RETURN_WINDOW:
+                continue
+            if s["hp"] <= 0:
+                break  # died again before returning -> that death gets its own pass
+            hp = (s["x"], s["y"])
+            dd = dist(hp, p)
+            if dd > RETURN_RADIUS:
+                continue
+            allies_near = []
+            for ally in tl.heroes:
+                if ally == hero or tl.team(ally) != team:
+                    continue
+                if not tl.alive_at(ally, s["t"]):
+                    continue
+                ap = tl.pos(ally, s["t"])
+                if ap and dist(hp, ap) <= RETURN_ALLY_RADIUS:
+                    allies_near.append(ally)
+            if len(allies_near) >= 2:
+                continue  # returning with numbers is a regroup, not a repeat feed
+            out.append({
+                "detector": "return_to_death_spot", "bug": "17", "hero": hero,
+                "t": round(s["t"], 1), "death_t": round(t, 1),
+                "respawn_t": round(respawn_t, 1), "return_dist": round(dd),
+                "depth": round(depth), "allies_near": sorted(allies_near),
+                "hp_pct": s["hp_pct"],
+                "desc": f"{hero} died at t={t:.0f}s ({fmt(t)}) in the enemy half "
+                        f"(depth {depth:.0f}) and walked back to within {dd:.0f}u "
+                        f"of the death spot at t={s['t']:.0f}s ({fmt(s['t'])}), "
+                        f"{s['t']-respawn_t:.0f}s after respawn, with only "
+                        f"{len(allies_near)} ally(ies) near -> respawn-return "
+                        f"feed loop",
+            })
+            break  # one finding per death
+    return out
+
+
 def _tower_team(actor):
     """Side of a tower from its combat-log unit name: goodguys=Radiant(2),
     badguys=Dire(3). Returns 0 if the actor is not a recognizable tower."""
@@ -509,7 +585,8 @@ def pct(v):
 
 DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
              d4_idle_while_ally_dies, d5_sandwiched_walk,
-             d6_overextend_alone, d6_unpunished_tower_dive]
+             d6_overextend_alone, d6_unpunished_tower_dive,
+             d8_return_to_death_spot]
 
 
 def run(path):

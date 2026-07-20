@@ -129,6 +129,14 @@ end
 function GetDesireHelper()
     botActiveMode = bot:GetActiveMode()
 
+    -- [GH #17] Death-spot capture for the death-zone guard: the helper records
+    -- the bot's location/time on dead frames (and returns false there), so it
+    -- must see dead frames BEFORE the not-IsAlive early-out below. The actual
+    -- desire-raising check sits further down with the other gated guards.
+    if not bot:IsAlive() then
+        J.ShouldAvoidDeathZone(bot)
+    end
+
     if not bot:IsAlive()
     or bot:HasModifier('modifier_dazzle_nothl_projection_soul_clone')
     or bot:HasModifier('modifier_skeleton_king_reincarnation_scepter_active')
@@ -203,6 +211,18 @@ function GetDesireHelper()
     -- side and in normal mode. Safe fights (lethal or numbers parity) fall
     -- through via J.SafeToCommitFight.
     if J.ShouldSuppressDive(bot, botLocation, botTarget) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
+    -- [GH #17] Death-zone avoidance ("respawn -> walk straight back to the
+    -- death spot -> die again" loop): after a recent death in the enemy half,
+    -- if the bot is back near (or closing on) its death spot with no allies
+    -- there, raise retreat desire so it backs off instead of re-entering the
+    -- zone. Turbo-only + soak-candidate ('deathzone') gated
+    -- (J.ShouldAvoidDeathZone) so it never ships untested; inert off the
+    -- candidate side and in normal mode. Death spots are recorded by the
+    -- record-only call above the not-IsAlive early-out.
+    if J.ShouldAvoidDeathZone(bot) then
         return BOT_MODE_DESIRE_HIGH
     end
 
