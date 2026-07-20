@@ -4747,14 +4747,38 @@ end
 
 -- [GH #4] Anti-suicide-dive guard ("sandwiched_walk" -- the highest-frequency
 -- behavioral bug). True when the bot is about to move/charge INTO a location
--- flanked by >= 2 enemies (within ~700 of the engage point) and it is NOT safe
--- to commit (J.SafeToCommitFight false -- no kill, outnumbered). Callers use
--- this to suppress the dive (hold / stay at range / back off) instead of
--- feeding. Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND
--- only the active soak-candidate side carrying the 'nodive' experiment id.
+-- flanked by >= 2 enemies and doing so is a near-certain feed. Callers use this
+-- to suppress the dive (hold / stay at range / back off) instead of dying.
 -- `vLoc` is the engage point (target's location for a charge/blink; the bot's
--- own location for a generic attack-move / walk). Inert off the candidate side
--- and in normal mode.
+-- own location for a generic attack-move / walk).
+--
+-- SHARPENED after a multi-seed mirrored-draft A/B (issue #4): the first cut
+-- raised a hard retreat whenever there were >= 2 enemies within ~700 and
+-- J.SafeToCommitFight was false. That fired in far too many MARGINAL spots --
+-- brief 2-enemy overlaps the bot could trade in, ordinary lane skirmishes it
+-- could just step out of -- so it only helped 2/4 comps (mean +2.5 GPM,
+-- inconsistent). Per the project's clear lesson (iterations/0010) only VERY
+-- narrow "don't do this specific dumb thing" fixes survive A/B. This version
+-- keeps the two coarse conditions but adds the key tightening: it fires ONLY
+-- when the dive is genuinely lethal / has no good trade, i.e. ALL of:
+--   * >= 2 enemy heroes within ~700 of the engage point (keep), AND
+--   * NOT safe to commit -- no kill and outnumbered (J.SafeToCommitFight, keep),
+--     AND
+--   * near-certain feed -- at least ONE of:
+--       (a) the bot is already LOW HP (< 0.5): walking into 2+ likely dies,
+--       (b) LETHAL incoming: the flankers' combined estimated burst is a large
+--           fraction (>= 60%) of the bot's CURRENT health -- they bring it
+--           low/dead before it can get out, or
+--       (c) NO ESCAPE: rooted / stunned / hexed / nightmared, or too slowed
+--           (move speed < 285) to outrun the pocket.
+-- In an even/winning-HP spot where the bot could just walk out, NONE of (a)-(c)
+-- hold, so this returns false and normal retreat/kite logic handles it -- no
+-- blunt hard-retreat. Fires far less often than the first cut, only when feeding
+-- is near-certain.
+--
+-- Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND only the
+-- active soak-candidate side carrying the 'nodive' experiment id. Inert off the
+-- candidate side and in normal mode.
 function J.ShouldSuppressDive( bot, vLoc, target )
 	if not J.IsModeTurbo() then return false end
 	if not J.IsSoakCandidate( 'nodive' ) then return false end
@@ -4779,7 +4803,25 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 
 	if J.SafeToCommitFight( bot, hTarget ) then return false end
 
-	return true
+	-- KEY TIGHTENING: even outnumbered with no kill, only hard-retreat when the
+	-- dive is a near-certain feed. If the bot is at even/winning HP and can just
+	-- walk out, let normal logic handle it (fall through to false).
+	-- (a) already low HP.
+	if J.GetHP( bot ) < 0.5 then return true end
+	-- (b) lethal incoming: flankers' combined burst is a large fraction of our
+	--     current health -- they bring us low/dead before we escape.
+	local nIncoming = J.GetTotalEstimatedDamageToTarget( tEnemies, bot )
+	if nIncoming >= bot:GetHealth() * 0.6 then return true end
+	-- (c) no escape: locked down, or too slowed to outrun the pocket.
+	if bot:IsRooted() or bot:IsStunned() or bot:IsHexed() or bot:IsNightmared()
+		or bot:GetCurrentMovementSpeed() < 285
+	then
+		return true
+	end
+
+	-- Even/winning HP and a clean walk-out available: not a feed, don't force
+	-- a hard retreat.
+	return false
 end
 
 -- [GH #7] Turbo "punish the dive" collapse trigger. Owner replay review: an
