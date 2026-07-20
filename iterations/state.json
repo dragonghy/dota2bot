@@ -130,7 +130,14 @@
    "class": "A"
   }
  ],
- "pending_behavioral_checks": [],
+ "pending_behavioral_checks": [
+  {
+   "cand": "wlok",
+   "issue": 9,
+   "class": "B-balance",
+   "note": "Warlock laning build (Shadow Word first) + no Upheaval self-channel into creeps; verify Warlock level/GPM at 10min + no lane-shove before ungating"
+  }
+ ],
  "replay_spot": {
   "instance_id": "i-017ee6bcf607e5ba6",
   "launched_utc": "2026-07-20T04:32Z",
