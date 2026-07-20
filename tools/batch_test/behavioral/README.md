@@ -87,6 +87,34 @@ Thresholds are constants at the top of `detect.py`. Detectors deliberately run
 generous and report exact distances/HP/timestamps so a human can confirm; tune
 radii to trade recall for precision.
 
+## Visual "eyes": storyboards + report cards
+
+Two additional tools consume the same `timeline.json` and give a
+non-video-capable analysis agent a visual + quantitative read on a game
+(the agent can view PNGs, not `.dem` replays):
+
+```bash
+# fight storyboards: auto-detects team-fight windows (>=3 hero-vs-hero DAMAGE
+# events clustered within 15s / 2500u) and renders each as 4-8 top-down map
+# frames (positions, HP%, movement trails, deaths as X, river + ancients)
+python3 storyboard.py timeline.json --out-dir sb/
+#   -> sb/fight_<N>_frame_<K>.png + sb/fights.json (participants, deaths,
+#      damage per side)
+
+# per-hero report card: fight participation %, "spectator" fights (present but
+# zero damage events), death contexts (solo_overextend / outnumbered_fight /
+# even_fight / unknown), positioning (distance to team centroid, % time in
+# enemy half), activity (damage events/min, longest idle-in-fight gap)
+python3 report_card.py timeline.json --out-dir rc/
+#   -> rc/report_<hero>.md + rc/report_all.json + rc/SUMMARY.md
+#      (heroes ranked by concern = spectator fights + solo-overextend deaths)
+```
+
+`storyboard.py` needs matplotlib; `report_card.py` is stdlib-only (it imports
+fight detection from `storyboard.py`, which loads matplotlib lazily). Smoke
+test: `python3 tests/test_storyboard_smoke.py` (runs both end-to-end on
+`tests/fixtures/timeline_synthetic.json`).
+
 ## Results on the reference game (`auto-20260719-1418`)
 
 This is the exact replay the owner reviewed by hand for `bug_queue.md`
