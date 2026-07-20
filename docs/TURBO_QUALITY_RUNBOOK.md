@@ -12,9 +12,22 @@ sub-agents, and the hard-won gotchas. Read this first, every time.
 
 ---
 
-## 0. Current state (2026-07-19)
+## 0. Current state (2026-07-20)
 
-- **Golden farm**: on-demand EC2 `i-08b59ef7130025860` (tag `dota2bot-soak`/`dota2bot-diag`), region us-west-2. Runs 12 parallel game slots in **true turbo**, **per-position draft**, and **auto-records slot-1 replays**. Keep it running — it's the stable base + hosts the behavioral pipeline at `/opt/behav`.
+- **ALL-SPOT model (no standing farm).** The old on-demand "golden farm" was
+  terminated (owner: use spot instances from now on). Launch farms on demand with
+  `tools/batch_test/aws/spot_run.sh --count N` (self-terminating spot from AMI
+  `ami-0a990a26d89c66547`); each boots true turbo + per-position draft + slot-1
+  recording and ships to its own S3 run prefix. **Fresh spots are FASTER than the
+  old golden farm was** — golden's run had thousands of backlog files that made
+  the S3 collect loop crawl; a fresh spot run has none. Approval tier is **$100**
+  cumulative (raised from $50); still terminate spots after each batch.
+- **Behavioral pipeline is NOT on spots by default.** `/opt/behav` lived only on
+  the (now gone) golden box. It's fully reproducible: run
+  `tools/batch_test/behavioral/setup_instance.sh` over SSM on a spot when you need
+  replay analysis (builds the Go/manta dumper from `dumper/main.go`). Validation
+  A/B does NOT need it — it reads GPM/XPM/deaths/last_hits straight from
+  `analysis.json`.
 - **S3** bucket `dota2bot-batch-results-4924`: `soak/<run_id>/` = per-game `*.analysis.json` + `*.log.gz` (+ `*.dem` for slot 1); `replays/` = slot-1 `.dem` replays; `behavioral/` = detector rollups.
 - **Bug queue = GitHub issues** (`dragonghy/dota2bot`, issues #2–#9, labels P0–P4). One coherent fixable unit per issue. Close with the A/B numbers when shipped.
 - **Behavioral pipeline**: `tools/batch_test/behavioral/` (built on the farm at `/opt/behav`, a Go/manta replay dumper + Python detectors).
@@ -142,15 +155,21 @@ Remove the `IsSoakCandidate` gate (keep `IsModeTurbo`), so it applies to all tur
 ## 4. AWS / farm ops
 
 ```bash
-bash tools/batch_test/aws/bootstrap_creds.sh   # once per session; then use `awsx` (never raw aws)
-# drive the farm over SSM, never SSH:
-awsx ssm send-command --region us-west-2 --instance-ids i-08b59ef7130025860 \
-  --document-name AWS-RunShellScript --parameters '{"commands":["..."]}'
-bash tools/batch_test/soak/farm_start.sh 12     # (re)start 12 slots on the instance
-bash tools/batch_test/aws/check_costs.sh        # spend + running instances
-# spot (parallel validators): tools/batch_test/aws/spot_run.sh — MUST self-terminate.
+bash tools/batch_test/aws/session_setup.sh      # once per session; then use `awsx` (never raw aws)
+# launch N self-terminating spot farms (each = its own S3 run prefix):
+bash tools/batch_test/aws/spot_run.sh --count N --ref main --slots 12 --hours 2
+# wait for a spot to be SSM-reachable + farm-producing, then drive it over SSM
+# (scratchpad has spot_wait.sh / spot_multi_driver.sh helpers from the last run):
+INST=<spot-id> RUN=<spot-run-id> tools/batch_test/soak/mirror_multi.sh <cand> "<seeds>" 12
+awsx ec2 terminate-instances --region us-west-2 --instance-ids <spot-ids>   # ALWAYS after a batch
+bash tools/batch_test/aws/check_costs.sh        # spend + running instances (want EMPTY between batches)
 ```
-**Spend policy**: owner approval at each $50 cumulative tier (currently ~$37 MTD). After any spot work, run `check_costs.sh` and terminate leftovers. A c6i.4xlarge is ~$0.68/hr on-demand, ~$0.26/hr spot.
+**Spend policy**: owner approval at each **$100** cumulative tier. After any spot
+work, run `check_costs.sh` and terminate leftovers (spots also self-terminate via
+2h watchdog + shutdown-behavior=terminate, but terminate explicitly too). A
+c6i.4xlarge is ~$0.68/hr on-demand, ~$0.26/hr spot. Recompute a run's verdict
+straight from S3 if the live aggregator hiccups (bulk `aws s3 cp --recursive
+--include '*.analysis.json'`, group by the `mirror:<cand>:s<seed>:<side>` stamp).
 
 ---
 
