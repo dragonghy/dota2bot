@@ -114,3 +114,29 @@ mean ± spread + how many comps improved.** Ship only if the mean is clearly
 positive AND most comps improve AND deaths don't get worse. #4 is currently
 mild-positive-but-inconsistent (2/3 comps better) — needs more seeds before a
 promote/hold call.
+
+---
+
+## UPDATE 3 — full multi-seed validation round (2026-07-20)
+
+Validated 7 candidates via `mirror_multi.sh` (4 comps each unless noted).
+**Only one clean win; almost everything else washed out or hurt.**
+
+| candidate | GPM | comps_better | verdict |
+|---|---|---|---|
+| **#3 tpsafe** (walk before retreat-TP, tightened) | **+9.1** | **4/4** | **SHIPPED** |
+| #7 punish (SafeToCommitFight-gated dive punish) | +8.8 | 2/4 | held (inconsistent) |
+| #4 nodive (suppress dive into 2+) | +2.5 | 2/4 | held (inconsistent) |
+| #6 regroup (suppress solo overextend) | +2.2 | 2/4 | held (inconsistent) |
+| #5 fight (strict help-or-flee rewrite) | −5.9 | 1/3 | rejected (was −32.5 unrewritten) |
+| #16 corefarm (raise core farm-desire cap) | −17.2 | 0/4 | rejected |
+| #16 c3 (enable lab active last-hit) | −37.4 | 0/4 | rejected (a regression; even LH −3.6) |
+
+### Meta-conclusions (the real value of this round)
+1. **The bots are finely balanced.** Of 7 rigorously-validated changes, exactly ONE (a tiny conservative TP nudge) was a clean multi-seed win. "Do X more/better" changes mostly wash out (±2–9 GPM, ~half the comps) or backfire.
+2. **Turbo economy is kill/objective-driven, not CS-driven.** Both "farm more" levers (c3, corefarm) hurt — trading fights/tempo for last-hits loses. The project's own lab active-last-hit code (c3) is a validated regression; do not re-enable it. #16's premise is falsified.
+3. **A single mirror seed misleads; require a clearly-positive MEAN over ≥4 comps AND most comps better.** (#4 read +19.6 on one seed, −24 on another.)
+4. The held candidates (#4/#6/#7) are mildly positive but inconsistent — not worth shipping as-is; would need either more seeds or a sharper trigger. They stay gated (inert), not promoted.
+
+### Net shipped this project so far (all turbo-only, multi-seed or A/B validated)
+turbo mode; per-position draft; replay recording; **#2 TP-home** (+51 GPM); **#3 tpsafe** (+9 GPM). Everything else remains gated/experimental or rejected.
