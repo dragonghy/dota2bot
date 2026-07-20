@@ -24,13 +24,15 @@ tests['ShouldSuppressDive is inert in normal (non-turbo) mode'] = function()
         'normal mode must never suppress a dive')
 end
 
-tests['ShouldSuppressDive is inert in turbo without an active nodive candidate'] = function()
+tests['ShouldSuppressDive in turbo is live but stays off with no enemy pocket (PROMOTED)'] = function()
+    -- PROMOTED under the Class-B micro-behavior policy (runbook §1): turbo no
+    -- longer requires a soak candidate. The default mock has no enemies near
+    -- the engage point, so the guard must still fall through — promotion must
+    -- not make it fire outside the narrow "2+ flankers, near-certain feed" case.
     local J, bot = fresh_jmz()
     GetGameMode = function() return GAMEMODE_TURBO end
-    -- No Customize/soak_side file in CI => IsSoakCandidate('nodive') is false,
-    -- so the guard stays off even in turbo (shipped baseline behavior).
     assert(J.ShouldSuppressDive(bot, bot:GetLocation(), nil) == false,
-        'turbo but off-candidate must never suppress a dive')
+        'turbo with no flanking enemies must never suppress a dive')
 end
 
 tests['SafeToCommitFight treats a missing target as safe'] = function()

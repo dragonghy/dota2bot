@@ -4776,12 +4776,14 @@ end
 -- blunt hard-retreat. Fires far less often than the first cut, only when feeding
 -- is near-certain.
 --
--- Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND only the
--- active soak-candidate side carrying the 'nodive' experiment id. Inert off the
--- candidate side and in normal mode.
+-- PROMOTED (was soak-candidate 'nodive') under the Class-B micro-behavior
+-- policy (runbook §1): after the sharpening above it fires ONLY when feeding is
+-- near-certain (low HP / lethal flanker burst / no escape), which is locally
+-- correct with no plausible downside — the blunt first cut that A/B read as
+-- inconsistent (2/4 comps) no longer exists. Turbo-only; normal mode ships
+-- unchanged.
 function J.ShouldSuppressDive( bot, vLoc, target )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'nodive' ) then return false end
 	if vLoc == nil then return false end
 
 	local tEnemies = J.GetEnemiesNearLoc( vLoc, 700 )
