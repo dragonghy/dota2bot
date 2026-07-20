@@ -120,17 +120,7 @@
    "note": "clean baseline after ten-min lab; B1 reverted; all lab gates inert. Lab summary in iterations/0008-ten-min-lab/REPORT.md"
   }
  },
- "pending_validations": [
-  {
-   "cand": "depthnum",
-   "instance_id": "i-0cfd404c05c3a32f9",
-   "launched_utc": "2026-07-20T06:41Z",
-   "seeds": "131313 246802 555001 778899",
-   "issue": 18,
-   "class": "A",
-   "note": "relaunched after validate_onspot S3 fix; verdict->s3 validation/ ~07:50; self-terminates"
-  }
- ],
+ "pending_validations": [],
  "pending_behavioral_checks": [
   {
    "cand": "wlok",
@@ -164,6 +154,7 @@
   "note": "replay producer; self-terminates ~08:32 UTC"
  },
  "open_questions": [
-  "#18 depth-discounted numbers: implement gated (Class A) and validate via --validate handoff"
+  "SPOT RECLAMATION at ~07:00: both validation/replay spots gone (0 instances, no leak). Re-run: depthnum (Class-A --validate), nodive2 (behavioral), nopush/suplh/warlock queued.",
+  "Lesson: spot reclamation interrupts time-sensitive validation; --validate self-terminate handles cost but not reclaim. Consider on-demand for short validations or retry-on-reclaim."
  ]
 }
