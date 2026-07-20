@@ -146,6 +146,14 @@
    "cutoff": "20260720_0626",
    "collector": "s3://dota2bot-batch-results-4924/tools/behav_ab_spot.sh",
    "note": "run collector ~07:05 UTC after ~10 slot1 replays; sandwiched_walk cand<base = win; watch kill participation"
+  },
+  {
+   "cand": "vsafe-SHIPPED",
+   "issue": 19,
+   "detector": "overextend_alone",
+   "hero": "vengeful_spirit",
+   "baseline": "10 in 8 games",
+   "note": "confirm Venge overextend drops in next batch; revert if it kills Venge fight participation"
   }
  ],
  "replay_spot": {
