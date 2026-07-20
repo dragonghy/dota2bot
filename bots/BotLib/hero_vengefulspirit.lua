@@ -160,6 +160,33 @@ function X.SkillsComplement()
     end
 end
 
+-- [#19] vsafe: Venge is the pool's worst solo-overextender. She does not
+-- overextend to farm/push (the shipped #6 J.ShouldRegroupNotSolo already
+-- suppresses that) but via her offensive KIT — Magic Missile initiation and
+-- Wave of Terror poke/scout pull her forward alone. This suppresses the
+-- OFFENSIVE forward (IsGoingOnSomeone) use of those two spells when the bot is
+-- SOLO (no allied hero within 1200) AND the engage is DEEP (the target sits
+-- closer to the enemy ancient than to our own, i.e. past the midline into
+-- enemy territory). Defensive / self-peel / retreat / with-allies casts fall
+-- through untouched. Gated turbo + soak-candidate 'vsafe', so shipped behavior
+-- is unchanged off the candidate side.
+function X._vsafe_ShouldSuppressSoloForward(vEngageLoc)
+    if not J.IsModeTurbo() or not J.IsSoakCandidate('vsafe') then return false end
+    if vEngageLoc == nil or vEngageLoc == 0 then return false end
+
+    -- allies near -> follow-up is possible, so a forward cast is fine
+    local tAllies = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE)
+    if tAllies ~= nil and #tAllies >= 1 then return false end
+
+    -- deep = engage location is closer to the enemy ancient than to our own
+    local hEnemyAncient = GetAncient(GetOpposingTeam())
+    local hOwnAncient   = GetAncient(GetTeam())
+    if hEnemyAncient == nil or hOwnAncient == nil then return false end
+
+    return GetUnitToLocationDistance(hEnemyAncient, vEngageLoc)
+         < GetUnitToLocationDistance(hOwnAncient, vEngageLoc)
+end
+
 function X.ConsiderMagicMissile()
     if not MagicMissile:IsFullyCastable()
     then
@@ -266,6 +293,7 @@ function X.ConsiderMagicMissile()
         end
 
         if target ~= nil
+        and not X._vsafe_ShouldSuppressSoloForward(target:GetLocation())
         then
             return BOT_ACTION_DESIRE_HIGH, target
         end
@@ -408,6 +436,7 @@ function X.ConsiderWaveOfTerror()
         end
 
         if target ~= nil
+        and not X._vsafe_ShouldSuppressSoloForward(target:GetLocation())
         then
             nInRangeEnemy = J.GetEnemiesNearLoc(target:GetLocation(), nRadius)
             if nInRangeEnemy ~= nil and #nInRangeEnemy >= 1
