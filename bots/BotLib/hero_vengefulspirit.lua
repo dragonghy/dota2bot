@@ -171,7 +171,11 @@ end
 -- through untouched. Gated turbo + soak-candidate 'vsafe', so shipped behavior
 -- is unchanged off the candidate side.
 function X._vsafe_ShouldSuppressSoloForward(vEngageLoc)
-    if not J.IsModeTurbo() or not J.IsSoakCandidate('vsafe') then return false end
+    -- PROMOTED (was soak-candidate 'vsafe') under the Class-B micro-behavior
+    -- policy: Venge is the pool's worst solo-overextender (overextend_alone 10
+    -- in 8 games, #19); suppressing only the SOLO+DEEP offensive forward cast is
+    -- locally correct with no plausible downside. Turbo-only; normal unchanged.
+    if not J.IsModeTurbo() then return false end
     if vEngageLoc == nil or vEngageLoc == 0 then return false end
 
     -- allies near -> follow-up is possible, so a forward cast is fine
