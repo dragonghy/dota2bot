@@ -277,7 +277,55 @@ function X.ConsiderCombo()
 	end
 end
 
+-- [GH #12] 'nopush' laning wave-shove guard. During the laning phase an AOE
+-- damage nuke aimed at (or splashing onto) the enemy creep wave shoves the
+-- lane, costing the bot lane control and last-hits. Returns true to suppress
+-- such a cast when it is a *pure wave-clear* -- >= 2 enemy lane creeps caught
+-- in the AOE and NO enemy hero inside it -- and the bot is not in an explicit
+-- push / defend / teamfight state. Harassing an actual enemy hero (a hero
+-- inside the AOE) always passes through. Gated: turbo + soak-candidate
+-- 'nopush', so shipped behavior is unchanged (inert off the candidate side).
+-- Extend to other AOE laning nukes by wrapping their Consider fn the same way
+-- (see hero_jakiro.lua Dual Breath for the second beachhead).
+function X._nopush_ShouldSuppressWaveShove( hBot, vLocation, nRadius )
+	if hBot == nil or vLocation == nil or vLocation == 0 then return false end
+	if type( nRadius ) ~= 'number' or nRadius <= 0 then return false end
+	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'nopush' ) then return false end
+	if not J.IsInLaningPhase() then return false end
+	-- Intended shove: pushing / defending a tower / in a teamfight -> allow.
+	if J.IsPushing( hBot ) or J.IsDefending( hBot ) or J.IsInTeamFight( hBot, 1600 )
+	then
+		return false
+	end
+	-- An enemy hero inside the AOE means this is harass, not a wave-clear.
+	local tEnemyHeroes = J.GetNearbyHeroes( hBot, 1600, true, BOT_MODE_NONE )
+	if tEnemyHeroes ~= nil
+	then
+		for _, e in pairs( tEnemyHeroes )
+		do
+			if J.IsValid( e ) and GetUnitToLocationDistance( e, vLocation ) <= nRadius
+			then
+				return false
+			end
+		end
+	end
+	-- Pure wave-clear: >= 2 of the enemy lane creeps sit in the AOE.
+	return J.GetInLocLaneCreepCount( hBot, 1600, nRadius, vLocation ) >= 2
+end
+
 function X.ConsiderQ()
+	local nDesire, vLoc = X.ConsiderQImpl()
+	if nDesire ~= nil
+		and nDesire ~= BOT_ACTION_DESIRE_NONE
+		and abilityQ ~= nil
+		and X._nopush_ShouldSuppressWaveShove( bot, vLoc, abilityQ:GetSpecialValueInt( 'radius' ) )
+	then
+		return BOT_ACTION_DESIRE_NONE, 0
+	end
+	return nDesire, vLoc
+end
+
+function X.ConsiderQImpl()
 
 
 	if not abilityQ:IsFullyCastable() then
