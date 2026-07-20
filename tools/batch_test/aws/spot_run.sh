@@ -130,7 +130,7 @@ EOF
 # ---- autonomous multi-seed validation, then self-terminate
 sleep 60   # let the first slots actually launch
 bash /opt/dota2bot/tools/batch_test/soak/validate_onspot.sh \
-    '$vcand' '$vseeds' '${vgames:-12}' '$S3_BUCKET' >> /var/log/validate.log 2>&1
+    '$vcand' '$vseeds' '${vgames:-12}' '$S3_BUCKET' "\$RUN_ID" >> /var/log/validate.log 2>&1
 aws s3 cp /var/log/validate.log "s3://$S3_BUCKET/validation/${vcand}_\$(date +%Y%m%d_%H%M)_run.log" --quiet || true
 shutdown -h now
 EOF
