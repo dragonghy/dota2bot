@@ -64,17 +64,15 @@ tests['ShouldAvoidDeathZone is inert in normal (non-turbo) mode'] = function()
         'normal mode must never raise retreat desire via the death-zone guard')
 end
 
-tests['ShouldAvoidDeathZone is inert in turbo without an active deathzone candidate'] = function()
+tests['ShouldAvoidDeathZone in turbo stays inert with no recorded death (PROMOTED)'] = function()
+    -- PROMOTED under the Class-B micro-behavior policy (runbook §1): turbo no
+    -- longer requires a soak candidate. With no recorded death, an alive bot in
+    -- turbo must still fall through -- promotion must not make it fire spuriously.
     local J, bot = fresh_jmz()
-    -- No soak_side file => IsSoakCandidate('deathzone') false => gate off,
-    -- shipped baseline retreat behavior untouched even in turbo -- even with
-    -- a recorded enemy-half death and the bot right back on the spot.
-    bot.__spec.IsAlive = false
-    bot.__spec.GetLocation = api.Vector(5000, 5000, 0)
-    assert(J.ShouldAvoidDeathZone(bot) == false)
     bot.__spec.IsAlive = true
+    bot.__spec.GetLocation = api.Vector(5000, 5000, 0)
     assert(J.ShouldAvoidDeathZone(bot) == false,
-        'turbo but off-candidate must never fire')
+        'turbo bot with no recent death must not raise a death-zone retreat')
 end
 
 tests['ShouldAvoidDeathZone fires on a solo return to a recent enemy-half death spot'] = function()

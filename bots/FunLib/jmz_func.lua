@@ -5088,11 +5088,15 @@ end
 -- converges on the moment of respawn, which is exactly the anchor the "~60s
 -- after respawn" window wants.
 --
+-- PROMOTED (was soak-candidate 'deathzone') under the Class-B micro-behavior
+-- policy (runbook §1): the detector return_to_death_spot fires ~4.8x/game with
+-- all fixes live (iterations/0012 batch), and "don't walk back alone into the
+-- enemy-half spot you just died at" is locally correct with no plausible
+-- downside. Turbo-only; normal mode ships unchanged.
+--
 -- Fires only when ALL of (deliberately conservative; everything else falls
 -- through to normal behavior):
---   * turbo AND the active soak candidate carries the 'deathzone' id -- inert
---     off the candidate side and in normal mode (same pattern as
---     J.ShouldRegroupNotSolo / J.ShouldStayAndRegen),
+--   * turbo (turbo-only; normal mode unchanged),
 --   * the bot died recently (within DEATHZONE_WINDOW of respawn),
 --   * the death spot is in the ENEMY half (closer to the enemy ancient than
 --     to ours -- same ancient-distance convention as ShouldRegroupNotSolo),
@@ -5109,7 +5113,6 @@ local DEATHZONE_ALLY_RADIUS = 1200   -- allies this close to the spot => regroup
 local tDeathZone = {}                -- [playerID] = { vLoc, fTime, nLastDist }
 function J.ShouldAvoidDeathZone( bot )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'deathzone' ) then return false end
 
 	local nPID = bot:GetPlayerID()
 
