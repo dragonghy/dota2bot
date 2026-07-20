@@ -4737,6 +4737,31 @@ function J.SafeToCommitFight( bot, target )
 		return true
 	end
 
+	-- [GH #18] Depth discount for the numbers branch -- Class-A, pending
+	-- multi-seed validation via the 'depthnum' soak candidate. Failure mode
+	-- (iterations/0011, storyboard fight 24): WK+Shaman engaged a VISIBLE 2v2
+	-- deep in the dire safe-lane corner; instantaneous visible parity read
+	-- "safe", two more enemies arrived from FOG within seconds -> 2v4, both
+	-- died. Deep in the enemy half, visible-only parity systematically
+	-- overestimates safety because fog reinforcements are close. So when the
+	-- engage point is meaningfully past the midline toward the enemy ancient
+	-- (closer to their ancient than to ours by >= 1600u -- same
+	-- ancient-distance convention as J.ShouldRegroupNotSolo), the NUMBERS
+	-- branch requires numbers ADVANTAGE (+1), not mere parity. The LETHAL
+	-- branch above is untouched -- a confirmed burst kill is still a go.
+	-- Outside the gate (normal mode / candidate off) or not deep, behavior is
+	-- unchanged.
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'depthnum' ) then
+		local hEnemyAncient = GetAncient( GetOpposingTeam() )
+		local hOwnAncient   = GetAncient( GetTeam() )
+		local bDeep = hEnemyAncient ~= nil and hOwnAncient ~= nil
+			and J.GetLocationToLocationDistance( vLoc, hEnemyAncient:GetLocation() )
+				< J.GetLocationToLocationDistance( vLoc, hOwnAncient:GetLocation() ) - 1600
+		if bDeep then
+			return #tAllies >= #J.GetEnemiesNearLoc( vLoc, 1200 ) + 1
+		end
+	end
+
 	-- (b) numbers: our count near the engage point >= enemy count near it.
 	if #tAllies >= #J.GetEnemiesNearLoc( vLoc, 1200 ) then
 		return true
