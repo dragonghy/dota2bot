@@ -1,123 +1,134 @@
 {
-  "iteration_count": 10,
-  "farm": {
-    "s3_bucket": "dota2bot-batch-results-4924",
-    "run_prefixes": [
-      "soak/run_20260719_0455",
-      "soak/run_20260719_0630",
-      "soak/run_20260719_0716",
-      "soak/ten-min-lab runs 0848..1136 (see 0008-ten-min-lab/plan.md)",
-      "soak/run_20260719_1136"
-    ],
-    "instance_tag": "dota2bot-soak"
-  },
-  "watermark": {
-    "last_processed_key": "20260719_0841",
-    "games_ingested_total": 81
-  },
-  "fixed_issues": [
-    "side_bias:soak_draft_frozen_radiant_lineup",
-    "provenance:script_version_unknown",
-    "provenance:farm_dirty_general_lua",
-    "slow_close:push_desire_gates",
-    "slow_close:no_game_time_cap",
-    "mode_detect:courier_speed_heuristic",
-    "sniper:shrapnel_charge_api",
-    "slow_close:push_never_outranked_farm_math",
-    "push_think:tower_yoyo",
-    "farm:30min_lock_rcon_referee"
+ "iteration_count": 10,
+ "farm": {
+  "s3_bucket": "dota2bot-batch-results-4924",
+  "run_prefixes": [
+   "soak/run_20260719_0455",
+   "soak/run_20260719_0630",
+   "soak/run_20260719_0716",
+   "soak/ten-min-lab runs 0848..1136 (see 0008-ten-min-lab/plan.md)",
+   "soak/run_20260719_1136"
   ],
-  "open_issues": [
-    {
-      "key": "lab:lasthit_execution",
-      "note": "Cores avg 12-47 LH @11min (humans 60-80). Engine CS is best available (OHA custom micro measured WORSE, C3 -3.6k). Real gains need proper attack-timing CS micro. Biggest econ lever.",
-      "first_seen_iter": 8
-    },
-    {
-      "key": "lab:lane_soak_assignment",
-      "note": "Teams collect only ~43% of spawned lane gold; crude role-split caps measured neutral (C10/B1 reverted). Needs real lane-assignment soak logic (who rotates to which empty lane).",
-      "first_seen_iter": 8
-    },
-    {
-      "key": "lab:disaster_heroes",
-      "note": "DK 218gpm/12LH, PA 228, SB 239, slardar 249 vs sniper 431 @10min \u2014 per-hero early-game rework is the big tail. Matches the project's focus-hero polish direction.",
-      "first_seen_iter": 8
-    },
-    {
-      "key": "fight_desire:possibly_low",
-      "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games \u2014 no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
-      "first_seen_iter": 4
-    },
-    {
-      "key": "loser_building_damage:zero",
-      "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.",
-      "first_seen_iter": 2
-    },
-    {
-      "key": "script_perf:GetDesire",
-      "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.",
-      "first_seen_iter": 1
-    },
-    {
-      "key": "invalid_orders:dead_targets",
-      "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.",
-      "first_seen_iter": 2
-    },
-    {
-      "key": "feeder:pending_rebaseline",
-      "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.",
-      "first_seen_iter": 1
-    },
-    {
-      "key": "vscript_errors:handler_broken",
-      "note": "CLOSED-as-explained: engine error handler is broken in this env \u2014 ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
-      "first_seen_iter": 1
-    }
-  ],
-  "last_release_tag": "v0.1-baseline",
-  "next_ab_after_iteration": 5,
-  "deploys": {
-    "iter-0001": {
-      "commit": "e18bd457ccd37eeecdd15616db50a44a5580478d",
-      "deployed_utc": "2026-07-19T06:30:00Z",
-      "run_prefix_started": "soak/run_20260719_0630",
-      "note": "remote tag push blocked by env git proxy; tag exists on farm checkout + locally. Farm loops restarted for version-stamp provenance."
-    },
-    "iter-0002": {
-      "commit": "bd62ec0",
-      "deployed_utc": "2026-07-19T06:49:45Z",
-      "run_prefix_started": null,
-      "note": "same run prefix (soak/run_20260719_0630); no loop restart needed. Cohort split by script_version stamp: iter-0001* = draft fix only, iter-0002* = +push/turbo/sniper fixes."
-    },
-    "iter-0003": {
-      "commit": "81c2eec",
-      "deployed_utc": "2026-07-19T07:15:00Z",
-      "run_prefix_started": null,
-      "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm \u2014 stamps before this read 'iter-0001-dirty' etc.; clean from here."
-    },
-    "iter-0004": {
-      "commit": "9260ccf",
-      "deployed_utc": "2026-07-19T07:16:00Z",
-      "run_prefix_started": "soak/run_20260719_0716",
-      "note": "push caps 0.85/0.95 + closing urgency (turbo>25min). Farm fully restarted on iter-0004 per owner; in-flight iter-0002/0003 games sacrificed. 35-min wall backstop + 40-min overtime forfeit both active. Score from run_20260719_0716: first-rax <28min, most games 25-35min."
-    },
-    "iter-0006": {
-      "commit": "928f2c1",
-      "deployed_utc": "2026-07-19T08:06:00Z",
-      "run_prefix_started": null,
-      "note": "tower-aggro yo-yo fix + 5-min turbo early game (4c723d1). Same run prefix soak/run_20260719_0741; cohort split by script_version stamp (iter-0005 / iter-0005-2-g* / iter-0006)."
-    },
-    "iter-0007": {
-      "commit": "a388b56",
-      "deployed_utc": "2026-07-19T08:41:00Z",
-      "run_prefix_started": "soak/run_20260719_0841",
-      "note": "30-min lock live: rcon referee + econ-winner analysis. 12 slots. Owner asleep; scheduled agents take over per schedule_job.md."
-    },
-    "iter-0010": {
-      "commit": "122a045",
-      "deployed_utc": "2026-07-19T11:45:00Z",
-      "run_prefix_started": "soak/run_20260719_1136",
-      "note": "clean baseline after ten-min lab; B1 reverted; all lab gates inert. Lab summary in iterations/0008-ten-min-lab/REPORT.md"
-    }
+  "instance_tag": "dota2bot-soak"
+ },
+ "watermark": {
+  "last_processed_key": "20260719_0841",
+  "games_ingested_total": 81
+ },
+ "fixed_issues": [
+  "side_bias:soak_draft_frozen_radiant_lineup",
+  "provenance:script_version_unknown",
+  "provenance:farm_dirty_general_lua",
+  "slow_close:push_desire_gates",
+  "slow_close:no_game_time_cap",
+  "mode_detect:courier_speed_heuristic",
+  "sniper:shrapnel_charge_api",
+  "slow_close:push_never_outranked_farm_math",
+  "push_think:tower_yoyo",
+  "farm:30min_lock_rcon_referee"
+ ],
+ "open_issues": [
+  {
+   "key": "lab:lasthit_execution",
+   "note": "Cores avg 12-47 LH @11min (humans 60-80). Engine CS is best available (OHA custom micro measured WORSE, C3 -3.6k). Real gains need proper attack-timing CS micro. Biggest econ lever.",
+   "first_seen_iter": 8
+  },
+  {
+   "key": "lab:lane_soak_assignment",
+   "note": "Teams collect only ~43% of spawned lane gold; crude role-split caps measured neutral (C10/B1 reverted). Needs real lane-assignment soak logic (who rotates to which empty lane).",
+   "first_seen_iter": 8
+  },
+  {
+   "key": "lab:disaster_heroes",
+   "note": "DK 218gpm/12LH, PA 228, SB 239, slardar 249 vs sniper 431 @10min \u2014 per-hero early-game rework is the big tail. Matches the project's focus-hero polish direction.",
+   "first_seen_iter": 8
+  },
+  {
+   "key": "fight_desire:possibly_low",
+   "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games \u2014 no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
+   "first_seen_iter": 4
+  },
+  {
+   "key": "loser_building_damage:zero",
+   "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.",
+   "first_seen_iter": 2
+  },
+  {
+   "key": "script_perf:GetDesire",
+   "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.",
+   "first_seen_iter": 1
+  },
+  {
+   "key": "invalid_orders:dead_targets",
+   "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.",
+   "first_seen_iter": 2
+  },
+  {
+   "key": "feeder:pending_rebaseline",
+   "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.",
+   "first_seen_iter": 1
+  },
+  {
+   "key": "vscript_errors:handler_broken",
+   "note": "CLOSED-as-explained: engine error handler is broken in this env \u2014 ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
+   "first_seen_iter": 1
   }
+ ],
+ "last_release_tag": "v0.1-baseline",
+ "next_ab_after_iteration": 5,
+ "deploys": {
+  "iter-0001": {
+   "commit": "e18bd457ccd37eeecdd15616db50a44a5580478d",
+   "deployed_utc": "2026-07-19T06:30:00Z",
+   "run_prefix_started": "soak/run_20260719_0630",
+   "note": "remote tag push blocked by env git proxy; tag exists on farm checkout + locally. Farm loops restarted for version-stamp provenance."
+  },
+  "iter-0002": {
+   "commit": "bd62ec0",
+   "deployed_utc": "2026-07-19T06:49:45Z",
+   "run_prefix_started": null,
+   "note": "same run prefix (soak/run_20260719_0630); no loop restart needed. Cohort split by script_version stamp: iter-0001* = draft fix only, iter-0002* = +push/turbo/sniper fixes."
+  },
+  "iter-0003": {
+   "commit": "81c2eec",
+   "deployed_utc": "2026-07-19T07:15:00Z",
+   "run_prefix_started": null,
+   "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm \u2014 stamps before this read 'iter-0001-dirty' etc.; clean from here."
+  },
+  "iter-0004": {
+   "commit": "9260ccf",
+   "deployed_utc": "2026-07-19T07:16:00Z",
+   "run_prefix_started": "soak/run_20260719_0716",
+   "note": "push caps 0.85/0.95 + closing urgency (turbo>25min). Farm fully restarted on iter-0004 per owner; in-flight iter-0002/0003 games sacrificed. 35-min wall backstop + 40-min overtime forfeit both active. Score from run_20260719_0716: first-rax <28min, most games 25-35min."
+  },
+  "iter-0006": {
+   "commit": "928f2c1",
+   "deployed_utc": "2026-07-19T08:06:00Z",
+   "run_prefix_started": null,
+   "note": "tower-aggro yo-yo fix + 5-min turbo early game (4c723d1). Same run prefix soak/run_20260719_0741; cohort split by script_version stamp (iter-0005 / iter-0005-2-g* / iter-0006)."
+  },
+  "iter-0007": {
+   "commit": "a388b56",
+   "deployed_utc": "2026-07-19T08:41:00Z",
+   "run_prefix_started": "soak/run_20260719_0841",
+   "note": "30-min lock live: rcon referee + econ-winner analysis. 12 slots. Owner asleep; scheduled agents take over per schedule_job.md."
+  },
+  "iter-0010": {
+   "commit": "122a045",
+   "deployed_utc": "2026-07-19T11:45:00Z",
+   "run_prefix_started": "soak/run_20260719_1136",
+   "note": "clean baseline after ten-min lab; B1 reverted; all lab gates inert. Lab summary in iterations/0008-ten-min-lab/REPORT.md"
+  }
+ },
+ "pending_validations": [],
+ "pending_behavioral_checks": [],
+ "replay_spot": {
+  "instance_id": "i-017ee6bcf607e5ba6",
+  "launched_utc": "2026-07-20T04:32Z",
+  "hours": 4,
+  "note": "replay producer; self-terminates ~08:32 UTC"
+ },
+ "open_questions": [
+  "#18 depth-discounted numbers: implement gated (Class A) and validate via --validate handoff"
+ ]
 }

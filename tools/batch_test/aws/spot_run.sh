@@ -28,6 +28,11 @@ COUNT=1
 REF=main
 SLOTS=14            # parallel games per instance (c6i.4xlarge = 16 vCPU)
 HOURS=3             # watchdog hard cap (self-terminate). Outer bound: use --hours 12.
+VALIDATE=""         # "--validate 'CAND SEED1 SEED2 ... [--games N]'": after farm_start,
+                    # run tools/batch_test/soak/validate_onspot.sh with these args,
+                    # upload the verdict to s3://$S3_BUCKET/validation/, then
+                    # shut down immediately (terminate) instead of waiting for the
+                    # watchdog. This is the scheduled job's cross-firing handoff.
 MARKET="--instance-market-options MarketType=spot,SpotOptions={SpotInstanceType=one-time,InstanceInterruptionBehavior=terminate}"
 SPOT=1
 DRYRUN=0
@@ -41,6 +46,7 @@ while [ $# -gt 0 ]; do
         --slots) SLOTS=$2; shift 2 ;;
         --hours) HOURS=$2; shift 2 ;;
         --type) INSTANCE_TYPE=$2; shift 2 ;;
+        --validate) VALIDATE=$2; shift 2 ;;
         --on-demand) MARKET=""; SPOT=0; TAG_PREFIX=dota2bot-soak-od; shift ;;
         --dry-run) DRYRUN=1; shift ;;
         *) echo "unknown arg $1" >&2; exit 1 ;;
@@ -111,6 +117,24 @@ bash tools/batch_test/soak/plain_deploy.sh || true
 bash tools/batch_test/soak/farm_start.sh $SLOTS "\$RUN_ID"
 echo "soak farm up: \$RUN_ID ($SLOTS slots) -> \$S3_RUN"
 EOF
+    # optional autonomous validation: run it after the farm is up, then power
+    # off (instance-initiated-shutdown-behavior=terminate makes this a real
+    # terminate). VALIDATE = "CAND SEED1 SEED2 ... [--games N]".
+    if [ -n "$VALIDATE" ]; then
+        local vcand vgames vseeds
+        vcand=$(echo "$VALIDATE" | awk '{print $1}')
+        vgames=$(echo "$VALIDATE" | grep -oE -- '--games [0-9]+' | awk '{print $2}')
+        vseeds=$(echo "$VALIDATE" | sed -e 's/--games [0-9]*//' | cut -d' ' -f2- | xargs)
+        cat <<EOF
+
+# ---- autonomous multi-seed validation, then self-terminate
+sleep 60   # let the first slots actually launch
+bash /opt/dota2bot/tools/batch_test/soak/validate_onspot.sh \
+    '$vcand' '$vseeds' '${vgames:-12}' '$S3_BUCKET' >> /var/log/validate.log 2>&1
+aws s3 cp /var/log/validate.log "s3://$S3_BUCKET/validation/${vcand}_\$(date +%Y%m%d_%H%M)_run.log" --quiet || true
+shutdown -h now
+EOF
+    fi
 }
 
 echo "plan: $COUNT x $( [ $SPOT -eq 1 ] && echo SPOT || echo on-demand ) $INSTANCE_TYPE"
