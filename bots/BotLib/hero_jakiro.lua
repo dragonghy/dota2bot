@@ -244,7 +244,49 @@ function X.SkillsComplement()
 
 end
 
+-- [GH #12] 'nopush' laning wave-shove guard -- second beachhead (Dual Breath).
+-- Mirrors the guard in hero_crystal_maiden.lua: during the laning phase,
+-- suppress an AOE damage nuke that is a pure wave-clear (>= 2 enemy lane creeps
+-- in the AOE, NO enemy hero inside it) unless the bot is explicitly pushing /
+-- defending / in a teamfight. Harassing an actual enemy hero always passes
+-- through. Gated turbo + soak-candidate 'nopush', so shipped behavior is
+-- unchanged off the candidate side.
+function X._nopush_ShouldSuppressWaveShove( hBot, vLocation, nRadius )
+	if hBot == nil or vLocation == nil or vLocation == 0 then return false end
+	if type( nRadius ) ~= 'number' or nRadius <= 0 then return false end
+	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'nopush' ) then return false end
+	if not J.IsInLaningPhase() then return false end
+	if J.IsPushing( hBot ) or J.IsDefending( hBot ) or J.IsInTeamFight( hBot, 1600 )
+	then
+		return false
+	end
+	local tEnemyHeroes = J.GetNearbyHeroes( hBot, 1600, true, BOT_MODE_NONE )
+	if tEnemyHeroes ~= nil
+	then
+		for _, e in pairs( tEnemyHeroes )
+		do
+			if J.IsValid( e ) and GetUnitToLocationDistance( e, vLocation ) <= nRadius
+			then
+				return false
+			end
+		end
+	end
+	return J.GetInLocLaneCreepCount( hBot, 1600, nRadius, vLocation ) >= 2
+end
+
 function X.ConsiderQ()
+	local nDesire, vLoc = X.ConsiderQImpl()
+	if nDesire ~= nil
+		and nDesire ~= BOT_ACTION_DESIRE_NONE
+		and abilityQ ~= nil
+		and X._nopush_ShouldSuppressWaveShove( bot, vLoc, abilityQ:GetSpecialValueInt( 'start_radius' ) )
+	then
+		return BOT_ACTION_DESIRE_NONE, 0
+	end
+	return nDesire, vLoc
+end
+
+function X.ConsiderQImpl()
 	if not J.CanCastAbility(abilityQ) then return 0 end
 
 	local nCastRange = J.GetProperCastRange(false, bot, abilityQ:GetCastRange())
