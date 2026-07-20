@@ -4807,6 +4807,16 @@ end
 -- correct with no plausible downside — the blunt first cut that A/B read as
 -- inconsistent (2/4 comps) no longer exists. Turbo-only; normal mode ships
 -- unchanged.
+--
+-- MIDDLE TIER (soak-candidate 'nodive2', inert until activated): iterations/0012
+-- found the sharpened version barely moves the sandwiched_walk detector (still
+-- ~11/game) because it demands lethality. The gated broader path (added at the
+-- end of this function) keeps the two coarse conditions AND still lets an even
+-- trade / easy walk-out fall through, but relaxes the near-certain-feed clause
+-- to ALSO fire on the clear-but-not-lethal case using DIRECTION/INTENT: the bot
+-- is walking / attack-moving INTO the enemy pocket (would deepen the sandwich).
+-- Its discriminator vs the sharp version is "heading in", not "about to die".
+-- To be behaviorally A/B'd (sandwiched_walk drop + kill participation) vs live.
 function J.ShouldSuppressDive( bot, vLoc, target )
 	if not J.IsModeTurbo() then return false end
 	if vLoc == nil then return false end
@@ -4844,6 +4854,55 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 		or bot:GetCurrentMovementSpeed() < 285
 	then
 		return true
+	end
+
+	-- [GH #4] BROADER gated path ('nodive2') -- a MIDDLE broadness tier between
+	-- the blunt first cut (any 2 enemies + not-safe => retreat, which A/B read as
+	-- inconsistent) and the sharp near-certain-feed version above (which barely
+	-- moves the sandwiched_walk detector). We only reach here having already
+	-- established: >= 2 enemies within ~700 AND NOT J.SafeToCommitFight (no kill,
+	-- outnumbered) AND none of the sharp near-certain-feed clauses held -- so the
+	-- bot is at even/winning-ish HP and is mobile (exactly the spot the sharp
+	-- version lets fall through). The extra DISCRIMINATOR here is DIRECTION /
+	-- INTENT rather than lethality: fire ONLY when the bot would DEEPEN the
+	-- sandwich by proceeding -- it is walking / attack-moving toward the enemy
+	-- pocket -- and NOT when it is already trading in place in an even fight it
+	-- could just step out of. That targets the "sandwiched_walk" pattern (walking
+	-- INTO a losing sandwich) while still letting an easy walk-out / even trade
+	-- fall through to false. Turbo (checked at entry) + candidate-gated
+	-- ('nodive2'); inert until activated, and it never touches the live default
+	-- path (gate off => we drop straight to the return false below, unchanged).
+	if J.IsSoakCandidate( 'nodive2' ) then
+		-- enemy pocket centroid.
+		local sumx, sumy, nCnt = 0, 0, 0
+		for _, e in pairs( tEnemies ) do
+			local el = J.IsValid( e ) and e:GetLocation() or nil
+			if type( el ) == 'table' then
+				sumx = sumx + el.x
+				sumy = sumy + el.y
+				nCnt = nCnt + 1
+			end
+		end
+		if nCnt > 0 then
+			local vPocket = Vector( sumx / nCnt, sumy / nCnt, 0 )
+			local vBotLoc = bot:GetLocation()
+			local nNow = J.GetLocationToLocationDistance( vBotLoc, vPocket )
+			-- (i) actively moving toward the pocket this frame: the bot's
+			--     short-horizon extrapolated position is meaningfully closer to
+			--     the pocket than it is now.
+			local vAhead = bot:GetExtrapolatedLocation( 0.5 )
+			local bMovingIn = type( vAhead ) == 'table'
+				and J.GetLocationToLocationDistance( vAhead, vPocket ) < nNow - 25
+			-- (ii) the engage point itself is deeper into the pocket than the bot
+			--      is now -- a charge / blink / attack-move onto vLoc would deepen
+			--      the sandwich (covers cases where velocity isn't a clean signal,
+			--      e.g. vLoc is the target's location for a commit).
+			local bEngageDeeper =
+				J.GetLocationToLocationDistance( vLoc, vPocket ) < nNow - 50
+			if bMovingIn or bEngageDeeper then
+				return true
+			end
+		end
 	end
 
 	-- Even/winning HP and a clean walk-out available: not a feed, don't force
