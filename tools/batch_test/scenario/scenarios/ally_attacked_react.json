@@ -1,0 +1,49 @@
+{
+  "name": "ally_attacked_react",
+  "description": "When an ally hero takes hero damage, do nearby bots react? v1: pinned focus-hero draft, ordinary Turbo game, score EVERY organic ally-attacked incident from the replay timeline (all-VERIFIED mechanisms; see docs/SCENARIO_TESTING.md sections 5.5 and 7). The disabled arena phase below is the v2 upgrade, pending the live-probe checklist (doc section 8).",
+
+  "draft": {
+    "radiant": ["axe", "zuus", "lion", "crystal_maiden", "skeleton_king"],
+    "dire": ["luna", "sniper", "tidehunter", "witch_doctor", "lich"]
+  },
+
+  "launch": {
+    "comment": "Expectations for the launcher (soak_loop.sh-style); the driver does not start the server itself.",
+    "timescale": 4,
+    "game_mode": 23,
+    "record_replay": true
+  },
+
+  "phases": [
+    {
+      "when": "in_progress",
+      "comment": "v2 arena shaping: empty mid + no fog. UNTESTED on our dedicated build (cvar class is LIKELY per docs/SCENARIO_TESTING.md section 3); enable after the live probe confirms both.",
+      "commands": ["dota_creeps_no_spawning 1", "dota_all_vision 1"],
+      "untested": true,
+      "enabled": false
+    }
+  ],
+
+  "observe": {
+    "game_minutes": 8,
+    "assumed_timescale": 3.6
+  },
+
+  "end": {
+    "method": "surrender_flip"
+  },
+
+  "assertions": [
+    {
+      "type": "ally_react",
+      "params": {
+        "notice_radius": 1200,
+        "react_window_s": 3.0,
+        "retreat_min_units": 300,
+        "incident_dedup_s": 6.0,
+        "min_react_rate": 0.6,
+        "comment": "Allies within 1200u of a hero taking hero damage must, within 3s, either act against the attacker's team (cast/deal hero damage) or reposition >=300u. min_react_rate is deliberately loose until the first baseline runs; ratchet upward afterwards."
+      }
+    }
+  ]
+}
