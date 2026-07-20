@@ -570,12 +570,15 @@ function X.ConsiderE()
 		then
 			-- [GH #9] skyburst: don't open a fight with a lone Ancient Seal.
 			-- The seal is silence + magic-amp with no damage, so casting it
-			-- alone as an opener wastes it. When gated on, only seal here if we
-			-- have the burst to follow up (Arcane Bolt or Mystic Flare
-			-- castable), so the amplification is actually used. The
-			-- channel/escape interrupt and self-preservation seals above are
-			-- untouched.
-			if J.IsModeTurbo() and J.IsSoakCandidate( 'skyburst' )
+			-- alone as an opener wastes it. Only seal here if we have the burst
+			-- to follow up (Arcane Bolt or Mystic Flare castable), so the
+			-- amplification is actually used. The channel/escape interrupt and
+			-- self-preservation seals above are untouched.
+			-- PROMOTED (was soak-candidate 'skyburst') under the Class-B
+			-- micro-behavior policy: suppressing a no-follow-up offensive seal
+			-- is locally correct (owner-flagged, detector skywrath_solo_silence)
+			-- with no plausible downside. Turbo-only; normal mode unchanged.
+			if J.IsModeTurbo()
 				and not ( abilityQ:IsFullyCastable() or abilityR:IsFullyCastable() )
 			then
 				-- no follow-up burst available: suppress the isolated seal
