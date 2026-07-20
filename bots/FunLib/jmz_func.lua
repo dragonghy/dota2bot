@@ -5070,6 +5070,102 @@ function J.ShouldRegroupNotSolo( bot )
 	return true
 end
 
+-- [GH #17] Turbo death-zone avoidance ("respawn -> walk straight back to the
+-- death spot -> die again" loop, iterations/0011 evidence: WK died solo deep
+-- in enemy territory at 6:59, respawned, walked back to the same corner and
+-- died again at 7:27 to the same collapse). After a death in the ENEMY half,
+-- returning to that exact spot alone within the next minute is usually a
+-- repeat feed: whatever collapsed on us is still in the area and we bring no
+-- numbers. This returns true when the bot should back off from its recent
+-- death spot; the retreat mode raises its desire so the bot disengages
+-- instead of re-entering the zone.
+--
+-- Death capture is done HERE, cheaply, with no event hooks: mode desire
+-- functions keep running while the bot is dead, so on dead frames we record
+-- the bot's location + GameTime() into a module-local table keyed by player
+-- id (each bot runs in its own VM, so the table only ever holds this bot's
+-- entry) and return false. Overwriting every dead frame means the stored time
+-- converges on the moment of respawn, which is exactly the anchor the "~60s
+-- after respawn" window wants.
+--
+-- Fires only when ALL of (deliberately conservative; everything else falls
+-- through to normal behavior):
+--   * turbo AND the active soak candidate carries the 'deathzone' id -- inert
+--     off the candidate side and in normal mode (same pattern as
+--     J.ShouldRegroupNotSolo / J.ShouldStayAndRegen),
+--   * the bot died recently (within DEATHZONE_WINDOW of respawn),
+--   * the death spot is in the ENEMY half (closer to the enemy ancient than
+--     to ours -- same ancient-distance convention as ShouldRegroupNotSolo),
+--   * the bot is within DEATHZONE_RADIUS of that spot OR is currently closing
+--     distance on it (walking straight back),
+--   * fewer than 2 allied heroes are within 1200 of the death spot -- with
+--     2+ allies there, returning is a regroup/push, not a repeat feed.
+local DEATHZONE_WINDOW = 60          -- seconds after respawn the zone stays hot
+local DEATHZONE_RADIUS = 2200        -- "back in the zone" distance to the spot
+local DEATHZONE_APPROACH_MAX = 4000  -- only treat "closing" as returning when
+                                     -- reasonably near; a cross-map move that
+                                     -- happens to close distance isn't a return
+local DEATHZONE_ALLY_RADIUS = 1200   -- allies this close to the spot => regroup
+local tDeathZone = {}                -- [playerID] = { vLoc, fTime, nLastDist }
+function J.ShouldAvoidDeathZone( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'deathzone' ) then return false end
+
+	local nPID = bot:GetPlayerID()
+
+	-- Dead frame: (re)record the death spot and time. Location while dead
+	-- stays at the death spot; time converges on the respawn moment.
+	if not bot:IsAlive() then
+		tDeathZone[nPID] = { vLoc = bot:GetLocation(), fTime = GameTime() }
+		return false
+	end
+
+	local rec = tDeathZone[nPID]
+	if rec == nil then return false end
+
+	-- Zone cools off DEATHZONE_WINDOW after respawn.
+	if GameTime() - rec.fTime > DEATHZONE_WINDOW then
+		tDeathZone[nPID] = nil
+		return false
+	end
+
+	-- Only avenge-loop deaths in the ENEMY half matter: a death on our own
+	-- half (defending, lane trades) shouldn't repel the bot from its own map.
+	-- Same ancient-distance convention as J.ShouldRegroupNotSolo.
+	local hEnemyAncient = GetAncient( GetOpposingTeam() )
+	local hOwnAncient   = GetAncient( GetTeam() )
+	if hEnemyAncient == nil or hOwnAncient == nil then return false end
+	if GetUnitToLocationDistance( hEnemyAncient, rec.vLoc )
+		>= GetUnitToLocationDistance( hOwnAncient, rec.vLoc ) then
+		return false
+	end
+
+	-- Near the spot, or actively walking back toward it (closing distance
+	-- since the previous frame, within a sane outer bound).
+	local nDist = GetUnitToLocationDistance( bot, rec.vLoc )
+	local nLastDist = rec.nLastDist
+	rec.nLastDist = nDist
+	if nDist > DEATHZONE_RADIUS then
+		local bClosing = nLastDist ~= nil and nDist < nLastDist - 10
+			and nDist <= DEATHZONE_APPROACH_MAX
+		if not bClosing then return false end
+	end
+
+	-- 2+ allied heroes at the spot => going back is a regroup, not a repeat
+	-- feed. Count only OTHER real allied heroes (GetAlliesNearLoc includes
+	-- the bot itself).
+	local nAlliesAtSpot = 0
+	for _, ally in pairs( J.GetAlliesNearLoc( rec.vLoc, DEATHZONE_ALLY_RADIUS ) ) do
+		if ally ~= bot and J.IsValidHero( ally )
+			and not J.IsSuspiciousIllusion( ally ) then
+			nAlliesAtSpot = nAlliesAtSpot + 1
+		end
+	end
+	if nAlliesAtSpot >= 2 then return false end
+
+	return true
+end
+
 -- [GH #16] Turbo core farm-desire preservation. Aggregated over ~790 turbo
 -- games, our CORES under-farm at support level (~1.4 CS/min; a competent core
 -- does 5-8+). One driver: after the laning phase, farm desire is hard-capped
