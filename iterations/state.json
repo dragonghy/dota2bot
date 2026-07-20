@@ -123,11 +123,12 @@
  "pending_validations": [
   {
    "cand": "depthnum",
-   "instance_id": "i-075e0596ea4a4af6f",
-   "launched_utc": "2026-07-20T06:03Z",
+   "instance_id": "i-0cfd404c05c3a32f9",
+   "launched_utc": "2026-07-20T06:41Z",
    "seeds": "131313 246802 555001 778899",
    "issue": 18,
-   "class": "A"
+   "class": "A",
+   "note": "relaunched after validate_onspot S3 fix; verdict->s3 validation/ ~07:50; self-terminates"
   }
  ],
  "pending_behavioral_checks": [
