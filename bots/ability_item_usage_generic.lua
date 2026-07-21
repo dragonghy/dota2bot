@@ -5069,6 +5069,18 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 
 	if bot:GetLevel() > 12 and bot:DistanceFromFountain() < 600 then nMinTPDistance = nMinTPDistance + 600 end
 
+	-- [GH #9] tpsafe2: an enemy is close enough to interrupt a TP channel, so
+	-- don't START a TRAVEL TP (laning "go develop", push, defend, support) that
+	-- will just be broken and wasted. RETREAT TPs are left to #3
+	-- (J.ShouldWalkNotTp), which reasons about last-resort escapes -- so this is
+	-- scoped to non-retreat modes and the two never fire on the same TP. Gated
+	-- (turbo + soak candidate 'tpsafe2'); inert in shipped code until an A/B.
+	if nMode ~= BOT_MODE_RETREAT
+		and J.ShouldNotStartInterruptibleTp( bot )
+	then
+		return BOT_ACTION_DESIRE_NONE
+	end
+
 	if nMode == BOT_MODE_LANING
 	then
 		hEffectTarget, shouldTp = X.GetLaningTPLocation(bot, nMinTPDistance, botLocation)

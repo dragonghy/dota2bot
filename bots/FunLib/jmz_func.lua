@@ -4714,6 +4714,63 @@ function J.ShouldWalkNotTp( bot )
 	return true
 end
 
+-- [GH #9] Turbo "don't START a travel TP a nearby enemy will interrupt" guard.
+-- Observed (issue #9, Slardar ~8:00): the bot begins a Town Portal channel
+-- (~3s) with an enemy hero close enough to hit it; the first tick of damage
+-- breaks the channel, so the scroll charge and the ~3s are wasted and the bot
+-- is left standing where it was. The correct behavior is to NOT initiate a TP
+-- that will predictably be interrupted -- only commit the channel when it can
+-- actually complete.
+--
+-- Relation to #3 (J.ShouldWalkNotTp) -- COMPLEMENT, not overlap:
+--   * #3 owns the RETREAT branch: a low-HP escape TP where an on-face chaser
+--     is right here AND a refuge is one step away, so walk/juke first. Its
+--     fall-throughs deliberately LET a cornered bot channel the retreat TP as
+--     a last resort (no refuge / can't outrun => TP anyway is the best chance).
+--   * This guard is for the TRAVEL TPs (laning "go develop", push a tower,
+--     defend a tower, support an ally) -- which today have NO interrupt check
+--     at all -- where a broken TP is pure waste with no last-resort value: just
+--     wait for the enemy to leave, then TP. The caller scopes this to
+--     non-retreat modes, so #3 and this never fire on the same TP.
+--
+-- Fires ONLY when an enemy can genuinely interrupt the channel: a valid,
+-- non-illusion enemy hero within ~700 that is EITHER already inside its own
+-- attack reach of us (can auto-attack now) OR actively closing the gap
+-- (extrapolated 0.5s forward it lands nearer). A stationary enemy sitting just
+-- out of attack range, or one walking away, falls through (false = let the TP
+-- go) because it won't break the channel.
+--
+-- GATED (soak candidate 'tpsafe2' + turbo-only), so shipped code is unchanged
+-- until an A/B wave activates it -- inert everywhere off-farm.
+function J.ShouldNotStartInterruptibleTp( bot )
+	if not J.IsSoakCandidate( 'tpsafe2' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+
+	local hEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
+	if hEnemies == nil or #hEnemies == 0 then return false end
+
+	local vBotLoc = bot:GetLocation()
+	for _, hEnemy in pairs( hEnemies )
+	do
+		if J.IsValidHero( hEnemy )
+			and not J.IsSuspiciousIllusion( hEnemy )
+		then
+			-- Enemy attack reach (+150 hull/step buffer) it can hit us from.
+			local nReach = hEnemy:GetAttackRange() + 150
+			local nNow = J.GetLocationToLocationDistance( vBotLoc, hEnemy:GetLocation() )
+			local nSoon = J.GetLocationToLocationDistance( vBotLoc, hEnemy:GetExtrapolatedLocation( 0.5 ) )
+			-- Can strike us now, or is closing the gap toward us -> it will
+			-- break the channel; don't start the TP this frame.
+			if nNow <= nReach or nSoon < nNow - 10 then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 -- [GH #4] Lethality-or-numbers gate for committing a fight. Returns true when
 -- it is SAFE to dive toward `target` because EITHER
 --   (a) LETHAL: our combined estimated burst from allies (incl. self) near the
