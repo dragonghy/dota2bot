@@ -561,7 +561,9 @@ function X.ConsiderW()
 				-- initiation. Engage point = the blink target's location. Turbo +
 				-- soak-candidate ('nodive') gated; safe fights (lethal / numbers)
 				-- fall through via J.SafeToCommitFight.
-				if not J.ShouldSuppressDive( bot, npcTarget:GetLocation(), npcTarget ) then
+				if not J.ShouldSuppressDive( bot, npcTarget:GetLocation(), npcTarget )
+					and not J.ShouldNotChaseWhenLow( bot, npcTarget )
+				then
 					return BOT_ACTION_DESIRE_HIGH, npcTarget
 				end
 			end

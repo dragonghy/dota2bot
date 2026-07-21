@@ -4770,6 +4770,33 @@ function J.SafeToCommitFight( bot, target )
 	return false
 end
 
+-- [replay-review 071423/071903] Anti-suicide-CHASE guard. Discovered by watching
+-- three Turbo games frame by frame: a low-HP core keeps chasing a fleeing low-HP
+-- enemy and dies to the enemy's escape plus a reinforcing teammate (Luna and
+-- Silencer both died in the river ~5:15 doing exactly this). SafeToCommitFight
+-- guards WALKING INTO a fight; this guards CONTINUING TO PURSUE while the bot
+-- itself is the one who is low. True => don't chase (hold / back off / kite).
+--
+-- Locally-correct, no plausible downside, so Class-B (runbook §1). Fires ONLY
+-- when ALL of:
+--   * the bot is LOW: HP fraction < 0.40 (I'm the one at risk), AND
+--   * NOT a clean commit -- not J.SafeToCommitFight (no lethal burst / not
+--     outnumbering), AND
+--   * PUNISHABLE: an enemy hero within ~1200 can bring the low bot's CURRENT
+--     health down by >= 45% (they can realistically finish me).
+-- A clean group kill (SafeToCommitFight true) or a chase nobody can punish falls
+-- through (returns false) so a genuinely safe finish still happens. Turbo-only;
+-- gated behind the 'nochaselow' soak candidate until benchmarked.
+function J.ShouldNotChaseWhenLow( bot, target )
+	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'nochaselow' ) then return false end
+	if not J.IsValidHero( target ) then return false end
+	if bot:GetHealth() / bot:GetMaxHealth() >= 0.40 then return false end
+	if J.SafeToCommitFight( bot, target ) then return false end
+	local tEnemies = J.GetEnemiesNearLoc( bot:GetLocation(), 1200 )
+	local nBurst = J.GetTotalEstimatedDamageToTarget( tEnemies, bot )
+	return nBurst >= bot:GetHealth() * 0.45
+end
+
 -- [GH #4] Anti-suicide-dive guard ("sandwiched_walk" -- the highest-frequency
 -- behavioral bug). True when the bot is about to move/charge INTO a location
 -- flanked by >= 2 enemies and doing so is a near-certain feed. Callers use this

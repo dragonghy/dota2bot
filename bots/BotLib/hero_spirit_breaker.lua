@@ -230,7 +230,9 @@ function X.ConsiderChargeOfDarkness()
             -- middle of the enemy team. Engage point = the charge target's
             -- location. Turbo + soak-candidate ('nodive') gated (inert
             -- otherwise); safe fights fall through via J.SafeToCommitFight.
-            if not J.ShouldSuppressDive(bot, target:GetLocation(), target) then
+            if not J.ShouldSuppressDive(bot, target:GetLocation(), target)
+                and not J.ShouldNotChaseWhenLow(bot, target)
+            then
                 return BOT_ACTION_DESIRE_HIGH, target
             end
         end
