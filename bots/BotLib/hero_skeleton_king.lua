@@ -24,11 +24,31 @@ local tTalentTreeList = {
 }
 
 
+-- 1 = skeleton_king_hellfire_blast (Q, the single-target stun), 2 =
+-- skeleton_king_vampiric_aura (W, lifesteal sustain), 3 = skeleton_king_mortal_strike
+-- (E, crit), 6 = skeleton_king_reincarnation (R).
 local tAllAbilityBuildList = {
 							{2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},--pos1,3
 }
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+-- [GH #17] Kill-participation laning build (gated). WK is a focus hero but bottom
+-- of the pool on kills (0.6/game): the default build above leaves Hellfire Blast
+-- (Q, the only lockdown) at a SINGLE point until level 12, so WK has no reliable
+-- stun through the entire laning + early-gank window. This build instead takes the
+-- 2nd stun point at level 5 (much longer lockdown when kills actually happen),
+-- still maxes Mortal Strike (E, crit) by level 8 for farm/fight damage, and keeps
+-- Vampiric Aura (W) points for lane sustain. Gated turbo + soak-candidate 'wkbuild'
+-- so it stays inert until an A/B win promotes it.
+local tKillBuildList = {
+							{2,1,3,3,1,6,3,3,2,2,6,2,1,1,6},--pos1,3, earlier 2nd stun
+}
+
+local nAbilityBuildList
+if J.IsModeTurbo() and J.IsSoakCandidate( 'wkbuild' ) then
+	nAbilityBuildList = J.Skill.GetRandomBuild( tKillBuildList )
+else
+	nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+end
 
 local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
 
