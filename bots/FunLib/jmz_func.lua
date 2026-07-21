@@ -4968,6 +4968,113 @@ function J.ShouldPunishDive( bot )
 	return nil
 end
 
+-- [GH #20] Turbo "punish the over-chase" collapse trigger. The INVERSE of the
+-- anti-suicide-chase guard (which stops US chasing) and the SISTER of
+-- J.ShouldPunishDive (which fires on an enemy diving our BUILDINGS). Owner
+-- replay review: an enemy over-chases one of our low-HP allies -- diving deep
+-- into our side / under our tower / into our hero cluster to secure a kill --
+-- and out-runs its own support. Instead of everyone continuing to flee, nearby
+-- allies should TURN AND COLLAPSE on the over-extended chaser and convert its
+-- greed into a counter-kill. Returns the enemy hero to collapse on when ALL of:
+--   (a) CHASING A LOW ALLY: a low-HP ally of ours (HP fraction < 0.5, and not
+--       this bot -- the chased hero itself keeps fleeing) is being pursued by
+--       the enemy (its attack target / actively chasing it / just damaged it),
+--       AND
+--   (b) DEEP: the chaser has crossed into OUR territory -- within ~1200 of one
+--       of our buildings, or meaningfully closer to our ancient than to its own
+--       (past the midline into our half), AND
+--   (c) ISOLATED: the chaser has out-run its own support -- no OTHER enemy hero
+--       near it (GetEnemiesNearLoc includes the chaser itself, so "alone" is a
+--       count of exactly 1), AND
+--   (d) J.SafeToCommitFight(bot, thatEnemy) is true -- the reverse-kill is
+--       actually winnable (lethal combined burst, or we have the numbers there).
+-- Otherwise nil (keep fleeing -- never hard-int into a chaser we can't punish).
+-- This reuses the SAME lethal-or-numbers gate as the anti-dive guard, so it is
+-- "punish the over-extension when it's winning", not "fight more".
+-- Approximation note (as in ShouldPunishDive): the API gives no per-frame
+-- tower-aggro signal, so "diving deep on our side" is approximated by building
+-- proximity plus the enemy being within collapse range (1600) of this bot.
+-- Gated turbo-only (J.IsModeTurbo) AND to the active soak candidate carrying the
+-- 'overchase' id, so shipped/normal behavior is unchanged until an A/B win
+-- promotes it. CONSERVATIVE by construction: only the clear reverse-kill case.
+-- Re-engagement fixes are riskier than suppression, so this gates STRICTLY on
+-- SafeToCommitFight and ships dark until validated.
+function J.ShouldPunishOverchase( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'overchase' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	-- Only enemies within collapse range of us are ours to turn on; a chase far
+	-- across the map isn't this bot's to punish.
+	local tEnemies = J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE )
+	if tEnemies == nil then return nil end
+
+	for _, enemy in pairs( tEnemies ) do
+		if J.IsValidHero( enemy )
+		and not J.IsSuspiciousIllusion( enemy )
+		and not J.IsMeepoClone( enemy )
+		then
+			local vEnemyLoc = enemy:GetLocation()
+
+			-- (c) ISOLATED: no OTHER enemy hero near the chaser -> it has
+			-- out-run its support. The list includes the chaser itself.
+			local bIsolated = #J.GetEnemiesNearLoc( vEnemyLoc, 1400 ) <= 1
+
+			-- (b) DEEP: near one of our buildings, or past the midline into our
+			-- half (closer to our ancient than to the enemy's by a margin).
+			local bDeep = false
+			local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
+			if tBuildings ~= nil then
+				for _, building in pairs( tBuildings ) do
+					if J.IsValidBuilding( building )
+					and GetUnitToUnitDistance( enemy, building ) <= 1200
+					then
+						bDeep = true
+						break
+					end
+				end
+			end
+			if not bDeep then
+				local hOwnAncient   = GetAncient( GetTeam() )
+				local hEnemyAncient = GetAncient( GetOpposingTeam() )
+				if hOwnAncient ~= nil and hEnemyAncient ~= nil then
+					bDeep = J.GetLocationToLocationDistance( vEnemyLoc, hOwnAncient:GetLocation() )
+						< J.GetLocationToLocationDistance( vEnemyLoc, hEnemyAncient:GetLocation() ) - 800
+				end
+			end
+
+			if bIsolated and bDeep then
+				-- (a) CHASING A LOW ALLY: a low-HP teammate (not this bot) near
+				-- the chaser that the chaser is on.
+				local bChasingLowAlly = false
+				for _, ally in pairs( J.GetAlliesNearLoc( vEnemyLoc, 900 ) ) do
+					if J.IsValidHero( ally )
+					and ally ~= bot
+					and not J.IsSuspiciousIllusion( ally )
+					and J.GetHP( ally ) < 0.5
+					then
+						if enemy:GetAttackTarget() == ally
+						or J.IsChasingTarget( enemy, ally )
+						or ally:WasRecentlyDamagedByHero( enemy, 2.0 )
+						then
+							bChasingLowAlly = true
+							break
+						end
+					end
+				end
+
+				-- (d) WINNABLE: only collapse when the reverse-kill is
+				-- lethal-or-numbers safe. Otherwise keep fleeing (return nil).
+				if bChasingLowAlly and J.SafeToCommitFight( bot, enemy ) then
+					return enemy
+				end
+			end
+		end
+	end
+
+	return nil
+end
+
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
 -- ~300-1000u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle
