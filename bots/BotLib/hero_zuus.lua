@@ -274,6 +274,9 @@ end
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable() then	return BOT_ACTION_DESIRE_NONE, nil	end
+	-- [lanefix] Conserve mana in lane: skip harass Arc Lightning when low on mana
+	-- and no kill is on the table (the helper exempts a killable enemy in range).
+	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, nil end
 
 	local nCastRange = abilityQ:GetCastRange()
 	local nCastPoint = abilityQ:GetCastPoint()
@@ -391,6 +394,9 @@ end
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then return BOT_ACTION_DESIRE_NONE, nil end
+	-- [lanefix] Conserve mana in lane: skip harass Lightning Bolt when low on mana
+	-- and no kill is available (helper exempts a killable enemy in range).
+	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, nil end
 
 	local nCastRange = abilityW:GetCastRange()
 	local nCastPoint = abilityW:GetCastPoint()

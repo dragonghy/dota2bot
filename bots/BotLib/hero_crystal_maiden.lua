@@ -314,6 +314,8 @@ function X._nopush_ShouldSuppressWaveShove( hBot, vLocation, nRadius )
 end
 
 function X.ConsiderQ()
+	-- [lanefix] Conserve mana in lane when no kill is on the table.
+	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, 0 end
 	local nDesire, vLoc = X.ConsiderQImpl()
 	if nDesire ~= nil
 		and nDesire ~= BOT_ACTION_DESIRE_NONE

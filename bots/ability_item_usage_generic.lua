@@ -984,6 +984,14 @@ local function ItemUsageComplement()
 		or X.WillBreakInvisible( bot )
 	then return	BOT_ACTION_DESIRE_NONE end
 
+	-- [lanefix] Recover in lane with a ready Salve/Clarity when hurt and safe,
+	-- instead of nursing tango or TPing home (loses tempo). Inert off lanefix.
+	local hRegen = J.LaneRegenItemToUse( bot )
+	if hRegen ~= nil then
+		X.SetUseItem( hRegen )
+		return BOT_ACTION_DESIRE_HIGH
+	end
+
 	hNearbyEnemyHeroList = J.GetNearbyHeroes(bot, 1000, true, BOT_MODE_NONE )
 	hNearbyEnemyTowerList = bot:GetNearbyTowers( 888, true )
 	botTarget = J.GetProperTarget( bot )

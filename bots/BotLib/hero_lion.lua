@@ -320,6 +320,8 @@ function X.ConsiderQ()
 
 
 	if not abilityQ:IsFullyCastable() then return 0 end
+	-- [lanefix] Conserve mana in lane when no kill is on the table.
+	if J.ShouldConserveManaInLane( bot ) then return 0 end
 
 	local nSkillLV = abilityQ:GetLevel()
 	local nCastRange = abilityQ:GetCastRange() + aetherRange + 20

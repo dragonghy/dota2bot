@@ -4787,8 +4787,59 @@ end
 -- A clean group kill (SafeToCommitFight true) or a chase nobody can punish falls
 -- through (returns false) so a genuinely safe finish still happens. Turbo-only;
 -- gated behind the 'nochaselow' soak candidate until benchmarked.
+-- Shared gate for the replay-review lane/fight fix batch (games 071423/071859/
+-- 071903, watched frame by frame). Every fix in this batch is inert unless the
+-- game is turbo AND the 'lanefix' soak candidate is active, so they ship and
+-- benchmark as one bundle. Off the candidate (shipped default) behavior is
+-- unchanged.
+function J.IsLaneFixActive()
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'lanefix' )
+end
+
+-- [replay-review 071903] Lane mana discipline. Watched: cores/nukers spam harass
+-- abilities in lane and run dry, so they can neither trade nor secure a kill
+-- ("技能乱甩蓝耗撑不住"). True => hold this harass cast to conserve mana. A hero's
+-- offensive ability Consider fn checks it before a harass cast. Fires ONLY in the
+-- laning phase, when mana is below a reserve, and there is NO kill on the table
+-- (a low-HP enemy in range lets the cast through). Lanefix-gated.
+function J.ShouldConserveManaInLane( bot, nReservePct )
+	if not J.IsLaneFixActive() then return false end
+	if DotaTime() > 10 * 60 then return false end
+	nReservePct = nReservePct or 0.35
+	if bot:GetMaxMana() <= 0 then return false end
+	if bot:GetMana() / bot:GetMaxMana() >= nReservePct then return false end
+	local tEnemies = J.GetEnemiesNearLoc( bot:GetLocation(), 900 )
+	for _, e in pairs( tEnemies ) do
+		if J.IsValidHero( e ) and J.GetHP( e ) < 0.5 then return false end
+	end
+	return true
+end
+
+-- [replay-review 071423/071903] Use a Healing Salve/Clarity to recover in lane
+-- instead of only nibbling tango or TPing home. Watched: cores sat at low HP/mana
+-- relying on tango, or TP'd home (losing tempo), while carrying an unused flask.
+-- Returns the item handle to use when the bot is hurt, safe, and holds a ready
+-- regen consumable; else nil. Lanefix-gated.
+function J.LaneRegenItemToUse( bot )
+	if not J.IsLaneFixActive() then return nil end
+	if DotaTime() > 12 * 60 then return nil end
+	-- Only when safe: no enemy hero close enough to punish standing still.
+	if #J.GetEnemiesNearLoc( bot:GetLocation(), 1000 ) > 0 then return nil end
+	if bot:HasModifier( 'modifier_flask_healing' )
+		or bot:HasModifier( 'modifier_clarity_potion' ) then return nil end
+	if J.GetHP( bot ) < 0.55 then
+		local flask = J.GetItem2( bot, 'item_flask' )
+		if flask ~= nil and flask:IsFullyCastable() then return flask end
+	end
+	if bot:GetMana() / math.max( bot:GetMaxMana(), 1 ) < 0.35 then
+		local clar = J.GetItem2( bot, 'item_clarity' )
+		if clar ~= nil and clar:IsFullyCastable() then return clar end
+	end
+	return nil
+end
+
 function J.ShouldNotChaseWhenLow( bot, target )
-	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'nochaselow' ) then return false end
+	if not J.IsLaneFixActive() then return false end
 	if not J.IsValidHero( target ) then return false end
 	if bot:GetHealth() / bot:GetMaxHealth() >= 0.40 then return false end
 	if J.SafeToCommitFight( bot, target ) then return false end
