@@ -90,7 +90,11 @@ without undertower — run only after the owner has seen the reject analysis.
    heartbeat, re-armed each wake; the farm runs on regardless.
 
 ## 7. Operational state
-- **Branch:** `claude/affectionate-dirac-qumja6` (dev branch, ahead of `main`).
+- **Branch: `main` only (owner directive 2026-07-21).** Commit and push all
+  changes directly to `main` — no dev/feature branches. On/off control for any
+  behavior change is a **gate** (`J.IsSoakCandidate('<id>')` + `J.IsModeTurbo()`),
+  not a branch. (History note: work through iter 17 lived on
+  `claude/affectionate-dirac-qumja6`, now fast-forwarded into `main`.)
 - **No standing farm.** All-spot; approval tier **$100** cumulative. Always
   launch via `spot_run.sh` (self-terminating spot); run `check_costs.sh` +
   terminate leftovers after every batch (last known: no leaked instances).
