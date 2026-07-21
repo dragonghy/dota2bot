@@ -232,7 +232,8 @@
   "midtp",
   "aegisgroup",
   "pullcamp",
-  "creeppull"
+  "creeppull",
+  "bodyblock"
  ],
- "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support), aegisgroup(#6 no solo-dive with aegis), pullcamp(#13 pull neutral camps for lane equilibrium), creeppull(#10 disadvantaged core draws enemy-creep aggro to reset lane)."
+ "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support), aegisgroup(#6 no solo-dive with aegis), pullcamp(#13 pull neutral camps for lane equilibrium), creeppull(#10 disadvantaged core draws enemy-creep aggro to reset lane), bodyblock(#11 advantaged laning core harasses enemy on a winnable trade)."
 }
