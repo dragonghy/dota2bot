@@ -56,6 +56,26 @@ not promote a cheaper stage's job to a more expensive stage.
    per-change or per-fix-isolation batch; that burns the expensive stage on the
    cheap stage's question.
 
+## Autonomous mode (owner-toggled)
+
+When the owner says to work autonomously ("继续干不要停 / 不要等我"), that is a
+**standing instruction until they revoke it**:
+
+- **Do not stop to ask for input or approval on anything inside the approved
+  loop** (observe → find → gated fix → fixture validation → commit+push).
+  Finish a work item and immediately start the next one from the backlog; if
+  the backlog is empty, generate more work (watch more replays frame-by-frame,
+  codify watched problems into detectors, extend fixtures/coverage).
+- Stopping to wait is the failure mode the owner has explicitly complained
+  about. End a turn only when genuinely blocked on something outside the loop
+  (AWS $-tier approval, a destructive/irreversible action, or a true design
+  fork with no conservative default) — and even then, pick the conservative
+  default where one exists, note the decision, and keep going.
+- The owner toggles back with words to the effect of "恢复等我模式" — then
+  return to confirming before each major step.
+- Exception that always holds regardless of mode: the AWS spending tiers and
+  the "simulator only as the rare final gate" rule.
+
 ## Agent session continuity (heartbeat)
 
 - In-memory schedules (CronCreate etc.) **do not survive session suspend** —
