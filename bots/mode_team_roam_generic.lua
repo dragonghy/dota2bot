@@ -61,12 +61,35 @@ local function SetStickyTarget(t)
     targetLockUntil = DotaTime() + TARGET_LOCK_SEC
 end
 
-local function CapForLanePush(desire)
-    -- keep "team roam" from overpowering laning/pushing micro
-    if J.IsInLaningPhase() or J.IsPushing(bot) then
+-- [GH #7/#20] Set when this frame's roam desire is a DEFENSIVE COLLAPSE (punish an
+-- enemy diving our tower / over-chasing a low ally right next to us), as opposed
+-- to an ordinary roam/gank. A collapse is a local, numbers-gated emergency; the
+-- lane-push cap below must NOT throttle it. Reset each frame in GetDesireHelper.
+local bDefensiveCollapse = false
+
+-- Pure, testable predicate (global, mirrors _suplh_* in mode_laning_generic):
+-- given a raw roam desire, whether it is a defensive collapse, and the puller
+-- bot, return the lane-capped desire. Exposed as a global so a unit test can
+-- drive it directly with controlled J stubs rather than steering all of GetDesire.
+-- [GH #7] EXEMPT a defensive collapse (tower-dive / over-chase punish): those
+-- return 0.98 deliberately and were being soft-ceiled to 0.72 during laning --
+-- exactly when tower dives happen -- so the punish lost to the bot's own laning
+-- desire and the dive went unpunished (observed 4.6 unpunished dives/game with #7
+-- nominally shipped). Uncapping a collapse during laning COULD cause
+-- over-commitment, so the exemption is gated (turbo + 'divecap') until A/B.
+function _divecap_CapForLanePush(desire, bCollapse, hBot)
+    if bCollapse and J.IsModeTurbo() and J.IsSoakCandidate('divecap') then
+        return desire
+    end
+    if J.IsInLaningPhase() or J.IsPushing(hBot) then
         if desire > 0.9 then return 0.72 end  -- soft ceiling
     end
     return desire
+end
+
+local function CapForLanePush(desire)
+    -- keep "team roam" from overpowering laning/pushing micro
+    return _divecap_CapForLanePush(desire, bDefensiveCollapse, bot)
 end
 
 function GetDesire()
@@ -81,6 +104,7 @@ function GetDesire()
     return res
 end
 function GetDesireHelper()
+    bDefensiveCollapse = false
     if bot:IsInvulnerable() or not bot:IsHero() or not bot:IsAlive() or not string.find(botName, "hero") or bot:IsIllusion() then
         return BOT_MODE_DESIRE_NONE
     end
@@ -134,6 +158,7 @@ function GetDesireHelper()
     if punishTarget ~= nil then
         SetStickyTarget(punishTarget)
         targetUnit = punishTarget
+        bDefensiveCollapse = true
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
     end
 
@@ -147,6 +172,7 @@ function GetDesireHelper()
     if overchaseTarget ~= nil then
         SetStickyTarget(overchaseTarget)
         targetUnit = overchaseTarget
+        bDefensiveCollapse = true
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
     end
 

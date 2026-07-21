@@ -798,6 +798,7 @@ globals = {
     "XP",
     "_",
     "_suplh_IsCoreContestingCreep",
+    "_divecap_CapForLanePush",
     "attacker",
     "buildings",
     "cache",
