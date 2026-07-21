@@ -48,6 +48,30 @@ firings — everything lives on disk, in git, in GitHub issues, and in S3.
 - **Shipped & live (turbo-only)**: #2 tp-home, #3 tpsafe, #4 nodive
   (sharpened), #5 help-or-flee, #6 regroup-not-solo, #7 punish-dive.
 
+## 0.4 TESTING MODEL (owner, 2026-07-21) — analysis-first, three tiers
+
+Per-change simulator A/B is too slow and noisy to gate individual changes
+(iterations/0010). New model:
+
+1. **Analysis is the primary activity.** Watch replays point-by-point via the
+   vision-aware panel (map panel with per-team FOG toggle: global / radiant /
+   dire — the bot only sees its own team, so judge decisions in ITS vision +
+   a per-timepoint data table: level, items [vision-differentiated], ability
+   cooldowns). Get the analysis method solid BEFORE mass-optimizing. Every real
+   observation → issue + (where automatable) a detector.
+2. **Each small change: test WITHOUT the simulator.** Before writing a fix,
+   state its no-sim test: a unit test (`tests/`), a scenario assertion
+   (`tools/batch_test/scenario/`, scores organic in-game incidents), or a clear
+   logic argument. Ship clearly-correct, unit-tested micro-behaviors; do NOT
+   spin a spot per change.
+3. **Staged test every ~10 accumulated changes:** run 50–100 games of current
+   `main` vs the previous staged tag (mirror-paired drafts), compare win-rate /
+   econ / detector counts. If better → new staged tag; if worse → bisect.
+4. **Final big batch** once the fix backlog is done.
+
+Reserve the simulator for tiers 3–4. Individual `--validate` runs are only for a
+genuinely risky Class-A change you cannot reason about statically.
+
 ## 0.5 Class-A vs Class-B (from runbook §1 — the core discipline)
 
 - **Class B (micro-behavior, locally correct, no plausible downside):** ship on
