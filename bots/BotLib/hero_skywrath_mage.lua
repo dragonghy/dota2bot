@@ -578,13 +578,22 @@ function X.ConsiderE()
 			-- micro-behavior policy: suppressing a no-follow-up offensive seal
 			-- is locally correct (owner-flagged, detector skywrath_solo_silence)
 			-- with no plausible downside. Turbo-only; normal mode unchanged.
-			if J.IsModeTurbo()
+			local bHoldSeal = J.IsModeTurbo()
 				and not ( abilityQ:IsFullyCastable() or abilityR:IsFullyCastable() )
-			then
-				-- no follow-up burst available: suppress the isolated seal
-			else
+			-- [GH #9] skysilence (gated, soak candidate 'skysilence'): the
+			-- promoted check above reads each follow-up's mana INDEPENDENTLY, so
+			-- it still lets the seal through when the bot can afford the seal OR
+			-- a follow-up but not BOTH. This helper additionally holds the seal
+			-- when no burst is affordable with the mana left AFTER the seal (and
+			-- there is no interrupt target). Inert until turbo + the candidate is
+			-- armed, so promoted live behavior is byte-for-byte unchanged.
+			if not bHoldSeal then
+				bHoldSeal = J.ShouldSkywrathHoldSeal( bot, abilityE, abilityQ, abilityR )
+			end
+			if not bHoldSeal then
 				return BOT_ACTION_DESIRE_HIGH, botTarget, "E进攻"
 			end
+			-- else: suppress the isolated, value-less seal opener
 		end
 	end
 
