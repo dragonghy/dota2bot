@@ -592,6 +592,118 @@ def d6_unpunished_tower_dive(tl):
     return out
 
 
+# --- enemy_overchase_unpunished tunables (Dota world units / seconds) ---
+OVERCHASE_DEPTH_MARGIN = 2000.0   # chaser this far into OUR half (x+y) => "deep"
+OVERCHASE_VICTIM_HP = 0.45        # the chased ally must be at/under this hp fraction
+OVERCHASE_CHASE_RADIUS = 900.0    # chaser within this of the fleeing low ally
+OVERCHASE_SOLO_RADIUS = 1400.0    # no living chaser-side ally within this => solo dive
+OVERCHASE_COLLAPSE_RADIUS = 1400.0  # our heroes within this could collapse on the chaser
+OVERCHASE_DEDUP = 8.0             # one finding per chaser per this many seconds
+
+
+def d20_enemy_overchase_unpunished(tl):
+    """[issue #20] An ENEMY hero over-chases one of our low-HP heroes deep into
+    OUR half, separated from its own team, while we have the numbers to turn and
+    kill it -- yet it survives (we never collapse). This is the missed
+    counter-punish the 'overchase' fix (J.ShouldPunishOverchase) is meant to
+    convert into a kill; a candidate side with the fix armed should produce FEWER
+    of these findings.
+
+    Sister of d6_unpunished_tower_dive: same 'enemy over-extends, we have the
+    numbers, no kill follows' shape, but the trigger is 'chasing our low ally into
+    our territory' instead of 'took tower aggro'. Uses only hero snapshots +
+    DEATH events (no tower/aggro data needed).
+
+    A finding requires ALL of:
+      - chaser is deep in our half (_enemy_half_depth from its own frame >
+        OVERCHASE_DEPTH_MARGIN -- i.e. it walked into our territory),
+      - a living hero of OURS at/under OVERCHASE_VICTIM_HP within
+        OVERCHASE_CHASE_RADIUS of the chaser (the ally being chased),
+      - the chaser is SOLO (no living chaser-side ally within OVERCHASE_SOLO_RADIUS
+        -- it dove without backup),
+      - we have the numbers: >=2 living defenders (our side, incl. the victim)
+        within OVERCHASE_COLLAPSE_RADIUS of the chaser,
+      - UNPUNISHED: the chaser does not die within PUNISH_WINDOW seconds.
+    Dedup per chaser per OVERCHASE_DEDUP seconds.
+    """
+    out = []
+    deaths = [(e["t"], e["target"]) for e in tl.events
+              if e["type"] == "DEATH" and e["target"].startswith("npc_dota_hero_")]
+    seen = []
+    for chaser, snaps in tl.snaps.items():
+        ct = tl.team(chaser)
+        if not ct:
+            continue
+        for s in snaps:
+            if s["hp"] <= 0:
+                continue
+            t = s["t"]
+            cp = (s["x"], s["y"])
+            # deep in our (the chaser's enemy's) half
+            if _enemy_half_depth(ct, s["x"], s["y"]) < OVERCHASE_DEPTH_MARGIN:
+                continue
+            # a low-HP ally of OURS being chased (an enemy hero of the chaser)
+            victim, victim_hp = None, None
+            for v in tl.heroes:
+                if tl.team(v) == ct or tl.team(v) == 0:
+                    continue
+                if not tl.alive_at(v, t):
+                    continue
+                vs = tl.state_at(v, t)
+                if not vs or vs["hp_pct"] is None or vs["hp_pct"] > OVERCHASE_VICTIM_HP:
+                    continue
+                vp = (vs["x"], vs["y"])
+                if dist(cp, vp) <= OVERCHASE_CHASE_RADIUS:
+                    if victim is None or vs["hp_pct"] < victim_hp:
+                        victim, victim_hp = v, vs["hp_pct"]
+            if victim is None:
+                continue
+            # chaser must be solo (no living chaser-side ally backing the dive)
+            backed = False
+            for a in tl.heroes:
+                if a == chaser or tl.team(a) != ct or not tl.alive_at(a, t):
+                    continue
+                ap = tl.pos(a, t)
+                if ap and dist(cp, ap) <= OVERCHASE_SOLO_RADIUS:
+                    backed = True
+                    break
+            if backed:
+                continue
+            # we have the numbers: >=2 of our living heroes OTHER THAN the fleeing
+            # victim near the chaser -- real collapse power, not the dying ally
+            # itself. The victim being chased cannot be counted on to turn and win.
+            defenders = []
+            for d in tl.heroes:
+                if d == victim or tl.team(d) == ct or tl.team(d) == 0 \
+                        or not tl.alive_at(d, t):
+                    continue
+                dp = tl.pos(d, t)
+                if dp and dist(cp, dp) <= OVERCHASE_COLLAPSE_RADIUS:
+                    defenders.append(d)
+            if len(defenders) < 2:
+                continue
+            # dedup per chaser
+            if any(c == chaser and abs(tt - t) < OVERCHASE_DEDUP for c, tt in seen):
+                continue
+            # unpunished? chaser must survive the punish window
+            if any(dt >= t and dt <= t + PUNISH_WINDOW and dh == chaser
+                   for dt, dh in deaths):
+                continue
+            seen.append((chaser, t))
+            out.append({
+                "detector": "enemy_overchase_unpunished", "bug": "20",
+                "hero": chaser, "t": round(t, 1), "victim": victim,
+                "defenders": sorted(defenders), "hp_pct": s["hp_pct"],
+                "desc": f"{chaser} over-chased our {victim} "
+                        f"(hp={pct(victim_hp)}) into our half at t={t:.0f}s "
+                        f"({fmt(t)}), SOLO, with {len(defenders)} of our heroes "
+                        f"({', '.join(sorted(defenders))}) in collapse range -> we "
+                        f"had the numbers but landed no kill within "
+                        f"{PUNISH_WINDOW:.0f}s (unpunished over-chase)",
+            })
+    return out
+
+
 def close_names(close):
     return [c[0] for c in close]
 
@@ -677,7 +789,8 @@ def _is_core(tl, hero):
 DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
              d4_idle_while_ally_dies, d5_sandwiched_walk,
              d6_overextend_alone, d6_unpunished_tower_dive,
-             d8_return_to_death_spot, d9_missed_cs_at_tower]
+             d8_return_to_death_spot, d9_missed_cs_at_tower,
+             d20_enemy_overchase_unpunished]
 
 
 def run(path):
