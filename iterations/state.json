@@ -149,6 +149,7 @@
    "note": "confirm Venge overextend drops in next batch; revert if it kills Venge fight participation"
   }
  ],
+ "even_fight_deaths_NOT_a_bug": "report_card death class 'even_fight' dominates (15/game), but per-game kill trades are LOPSIDED (16-8, 15-3, 9-14) = normal snowball, and both sides run identical mirror code so neither systematically loses even fights. Verified NOT a bug via trade-ratio check; do not re-chase. Reinforces why single-game econ is noise -> mirrored A/B (cancels snowball) is the right tool.",
  "replay_mining_20260721": {
   "source": "run spot_20260721_151005 (pre-session-fix baseline), 5 slot1 replays dumped+detected LOCALLY (built behav-dump via manta v1.5.0 in scratchpad)",
   "baseline_detector_rates_per_game": {
