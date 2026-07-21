@@ -36,6 +36,20 @@ local bCustomLastHit = local_mode_laning_generic
 	or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 	or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
 
+-- [lanefix/lf_undertower] Core active last-hit, re-armed under the lanefix
+-- bundle. Measured on game 071903 with the missed-CS capture: 198 of 211
+-- tower-killed lane creeps died with a hero of that team standing within 1400
+-- of a tower -- bots are PRESENT and simply do not contest CS under tower
+-- (Valve default logic), burning ~half the lane farm. A tower-proximity-only
+-- takeover is NOT implementable at mode level (defining Think replaces the
+-- Valve default wholesale; there is no fallback for the away-from-tower case),
+-- so the fix re-arms the existing full active last-hit path (the c3 Think) for
+-- cores -- the under-tower slice is where it matters most. Load-time flag like
+-- the others; gated, inert by default.
+local bLaneFixCoreLH = (J.IsModeTurbo()
+		and (J.IsSoakCandidate('lanefix') or J.IsSoakCandidate('lf_undertower')))
+	and J.GetPosition(bot) <= 3
+
 -- [LAB suplh / GH #14] Support (pos 4-5) last-hit division. Turbo-only and
 -- gated behind soak candidate 'suplh', so it is inert in shipped games and only
 -- activates for A/B validation. When on, a support keeps laning mode selected so
@@ -139,7 +153,8 @@ function GetDesire()
 	-- paired with a human pos5, so farm bots ran Valve default CS (12-47 LH
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
-		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3) then
+		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
+		or bLaneFixCoreLH then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -332,7 +347,7 @@ local function DoSupportLaningThink()
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH then
 	function Think()
 		if bSupLastHit or bLaneFixSupport then
 			DoSupportLaningThink()
