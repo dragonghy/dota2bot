@@ -5523,6 +5523,62 @@ function J.ShouldCreepPullLane( bot )
 	return { enemy = hTarget, retreat = vRetreat }
 end
 
+-- [GH #11] Advantaged-lane body-block / harass (卡身位). Mirror of the creep-pull
+-- sister above but for the WINNING side: when a laning core clearly out-trades the
+-- single enemy laner in front of it, it should step up and auto-attack (harass)
+-- that enemy -- pressing the advantage -- instead of passively last-hitting. This
+-- is the "打得赢就上" branch; the "打不赢就撤" side is left to the existing retreat
+-- guards. Deliberately CONSERVATIVE and strictly gated: turbo-only + the
+-- 'bodyblock' soak candidate, laning phase, core (pos 1-3), and it only fires when
+-- EVERY safety condition holds, so it is inert in shipped games and cannot grief a
+-- lane.
+--
+-- Returns the enemy hero to harass, or nil. NOTE: harassing targets the enemy
+-- HERO (not creeps), so it does not shove our wave -- lane equilibrium is
+-- preserved. Uses J.SafeToCommitFight as the hard gate (lethal burst OR numbers),
+-- exactly like #7/#15, so we only step up when we can actually win the trade.
+function J.ShouldBodyBlockHarass( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'bodyblock' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	-- Laning-phase core only: a laner pressing its lane opponent, not a roamer.
+	if not J.IsInLaningPhase() then return nil end
+	if not J.IsCore( bot ) then return nil end
+
+	-- SAFE-1: we are healthy. Stepping up while already low is how a "won" lane
+	-- flips into a death; the retreat guards own the low-HP case, not this.
+	if J.GetHP( bot ) < 0.6 then return nil end
+	if bot:WasRecentlyDamagedByAnyHero( 1.5 ) then return nil end
+
+	-- SAFE-2: not a gank. Exactly one enemy laner may be present; a second nearby
+	-- enemy means stepping up walks us into a 1v2 -- never harass then.
+	local tEnemyHeroes = J.GetNearbyHeroes( bot, 800, true, BOT_MODE_NONE )
+	if tEnemyHeroes == nil or #tEnemyHeroes ~= 1 then return nil end
+
+	local hTarget = tEnemyHeroes[1]
+	if not J.IsValidHero( hTarget )
+	or J.IsSuspiciousIllusion( hTarget )
+	or J.IsMeepoClone( hTarget )
+	or not J.CanBeAttacked( hTarget )
+	then
+		return nil
+	end
+
+	-- ADVANTAGED: we must be locally stronger AND the trade must be winnable. Both
+	-- checks, not either -- WeAreStronger reads the local power balance, while
+	-- SafeToCommitFight enforces the lethal-burst-or-numbers kill line (#7/#15
+	-- parity). If we are not clearly ahead here, fall through to plain last-hit.
+	if not J.WeAreStronger( bot, 1200 ) then return nil end
+	if not J.SafeToCommitFight( bot, hTarget ) then return nil end
+
+	-- Only step up when the enemy is actually within stepping distance -- a hero
+	-- far across the lane is not a body-block opportunity, just a walk into fog.
+	if GetUnitToUnitDistance( bot, hTarget ) > 700 then return nil end
+
+	return hTarget
+end
+
 -- [GH #15] Mid 6-level TP support. Observed gap: when a fight breaks out at one
 -- of OUR towers (an ally being dived, a lane under pressure) the MID hero --
 -- which in turbo has a short TP cooldown and is usually level 6+ -- stands idle

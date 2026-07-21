@@ -96,6 +96,16 @@ local bPullCamp = J.IsModeTurbo() and J.IsSoakCandidate('pullcamp')
 local bCreepPull = J.IsModeTurbo() and J.IsSoakCandidate('creeppull')
 	and J.GetPosition(bot) <= 3
 
+-- [GH #11] Turbo body-block / harass (卡身位). The advantaged-lane mirror of
+-- bCreepPull: a winning laning core steps up and harasses the single enemy laner
+-- when the trade is clearly winnable (see J.ShouldBodyBlockHarass). Load-time flag
+-- like the others; turbo-only + soak candidate 'bodyblock', pos 1-3 (cores), inert
+-- by default. Routes the bot through the custom laning Think so the harass action
+-- can run; non-harass frames fall through to the shared core last-hit body (same
+-- confound noted for bCreepPull -- defining Think replaces Valve's default laning).
+local bBodyBlock = J.IsModeTurbo() and J.IsSoakCandidate('bodyblock')
+	and J.GetPosition(bot) <= 3
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -184,13 +194,21 @@ function GetDesire()
 		return 0.9
 	end
 
+	-- [GH #11] Keep a body-block core in laning mode while a harass is warranted,
+	-- so its Think can step up on the enemy laner. Only fires in the narrow
+	-- winnable-advantage case (J.ShouldBodyBlockHarass returns a hero); otherwise
+	-- falls through. Inert unless turbo + soak candidate 'bodyblock'.
+	if bBodyBlock and J.ShouldBodyBlockHarass(bot) ~= nil then
+		return 0.9
+	end
+
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
 	-- below; stock condition only enabled it for buggy heroes or a pos1 bot
 	-- paired with a human pos5, so farm bots ran Valve default CS (12-47 LH
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
-		or bLaneFixCoreLH or bCreepPull then
+		or bLaneFixCoreLH or bCreepPull or bBodyBlock then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -411,7 +429,7 @@ local function DoCreepPullThink(pull)
 	end
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock then
 	function Think()
 		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
 		-- equilibrium, checked before any laning think. Gated + conservative
@@ -437,6 +455,19 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 			local pull = J.ShouldCreepPullLane(bot)
 			if pull ~= nil then
 				DoCreepPullThink(pull)
+				return
+			end
+		end
+
+		-- [GH #11] Body-block / harass: an advantaged core steps up and auto-attacks
+		-- the single enemy laner when the trade is clearly winnable. Targets the
+		-- enemy HERO (not creeps), so the wave is not shoved. Falls through to the
+		-- core last-hit path when no harass is warranted.
+		if bBodyBlock then
+			local hHarass = J.ShouldBodyBlockHarass(bot)
+			if hHarass ~= nil then
+				bot:SetTarget(hHarass)
+				bot:Action_AttackUnit(hHarass, true)
 				return
 			end
 		end
