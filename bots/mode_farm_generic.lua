@@ -62,6 +62,13 @@ function GetDesire()
 	if J.ShouldRegroupNotSolo(bot) then
 		return BOT_MODE_DESIRE_NONE
 	end
+	-- [GH #6] Turbo aegis-carrier grouping: if this bot holds the aegis and is
+	-- solo deep in enemy territory (even before contact), kill the farm desire
+	-- so it regroups and presses WITH the team instead of throwing the free
+	-- life away. Gated (turbo + soak-candidate 'aegisgroup'); inert by default.
+	if J.ShouldGroupWithAegis(bot) then
+		return BOT_MODE_DESIRE_NONE
+	end
 	-- local cacheKey = 'GetFarmDesire'..tostring(bot:GetPlayerID())
 	-- local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.4)
 	-- if DotaTime() > 30 and cachedVar ~= nil then return cachedVar end

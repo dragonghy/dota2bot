@@ -132,6 +132,12 @@ function ____exports.GetPushDesireHelper(bot, lane)
     if jmz.ShouldRegroupNotSolo(bot) then
         return BotModeDesire.None
     end
+    -- [GH #6] Turbo aegis-carrier grouping: an aegis-holder solo-pushing deep in
+    -- enemy territory (even before contact) should regroup and press WITH the
+    -- team, not throw the free life away. Gated (turbo + soak 'aegisgroup').
+    if jmz.ShouldGroupWithAegis(bot) then
+        return BotModeDesire.None
+    end
     if bot.laneToPush == nil then
         bot.laneToPush = lane
     end

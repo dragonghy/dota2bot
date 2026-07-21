@@ -5652,6 +5652,65 @@ function J.ShouldRegroupNotSolo( bot )
 	return true
 end
 
+-- [GH #6] Turbo aegis-carrier "group, don't solo-dive the advantage". After
+-- our team takes Roshan, the hero HOLDING THE AEGIS (modifier_item_aegis) is
+-- the worst hero to throw away solo: dying wastes the free life, and a lone
+-- aegis-carrier walking into the enemy jungle/triangle/backlines to farm or
+-- push hands the advantage back one pick at a time — it should regroup and
+-- press WITH the team. J.ShouldRegroupNotSolo (#6, promoted) already suppresses
+-- solo overextension, but ONLY when an enemy hero is already within 1500 of the
+-- bot; the classic aegis feed is the carrier walking in ALONE BEFORE contact
+-- (no enemy visible yet), gets collapsed on, and the aegis pops for nothing.
+-- That pre-contact solo walk-in falls THROUGH ShouldRegroupNotSolo, so this
+-- adds a narrow aegis-specific guard for exactly that gap: it does NOT require
+-- an enemy nearby — carrying the aegis alone deep in enemy territory is itself
+-- the mistake to stop. Returns true so callers SUPPRESS the solo farm/push
+-- desire and let the bot pull back toward its team.
+-- Fires only when ALL hold (deliberately conservative; everything else falls
+-- through to normal behavior):
+--   * turbo (turbo-tuned pace is the target),
+--   * the bot carries the aegis (modifier_item_aegis),
+--   * deep in / heading into enemy territory (closer to the enemy ancient than
+--     to our own -- same ancient-distance convention as ShouldRegroupNotSolo),
+--   * NO other valid allied hero within 1500 (grouped -> this is a real press,
+--     not a solo dive; leave it).
+-- Gated so it never ships untested: turbo-only (J.IsModeTurbo) AND only the
+-- active soak-candidate side carrying the 'aegisgroup' id. Inert off the
+-- candidate side and in normal mode (same pattern as J.ShouldRegroupNotSolo).
+function J.ShouldGroupWithAegis( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'aegisgroup' ) then return false end
+	if not J.IsValidHero( bot ) then return false end
+
+	-- Only the aegis-carrier: no aegis, no special caution beyond the shipped
+	-- guards. The Roshan-drop aegis grants modifier_item_aegis while held.
+	if not bot:HasModifier( 'modifier_item_aegis' ) then return false end
+
+	-- Deep in / heading into enemy territory: closer to the enemy ancient than
+	-- to our own (past the diagonal midline toward their base). Same cheap,
+	-- robust convention as J.ShouldRegroupNotSolo.
+	local hEnemyAncient = GetAncient( GetOpposingTeam() )
+	local hOwnAncient   = GetAncient( GetTeam() )
+	if hEnemyAncient == nil or hOwnAncient == nil then return false end
+	if GetUnitToUnitDistance( bot, hEnemyAncient )
+		>= GetUnitToUnitDistance( bot, hOwnAncient ) then
+		return false
+	end
+
+	-- Alone: J.GetAlliesNearLoc includes the bot itself, so count only OTHER
+	-- valid allied heroes within the leash radius. With even one ally near this
+	-- is a grouped press, not a solo aegis dive -> fall through.
+	local vLoc = bot:GetLocation()
+	for _, ally in pairs( J.GetAlliesNearLoc( vLoc, 1500 ) ) do
+		if ally ~= bot and J.IsValidHero( ally )
+			and not J.IsSuspiciousIllusion( ally ) then
+			return false
+		end
+	end
+
+	return true
+end
+
 -- [GH #17] Turbo death-zone avoidance ("respawn -> walk straight back to the
 -- death spot -> die again" loop, iterations/0011 evidence: WK died solo deep
 -- in enemy territory at 6:59, respawned, walked back to the same corner and
