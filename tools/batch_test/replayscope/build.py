@@ -392,6 +392,11 @@ def main():
     if "/*__REPLAYSCOPE_INJECT__*/" not in tpl:
         sys.exit("template.html is missing the /*__REPLAYSCOPE_INJECT__*/ marker")
     html = tpl.replace("/*__REPLAYSCOPE_INJECT__*/", inject)
+    # Give each page a distinct browser/tab title (the <title> wins over the
+    # publish-time title param), so multiple games are tellable apart.
+    short = gid.split()[0]
+    html = html.replace("<title>ReplayScope — bot vision review</title>",
+                        "<title>ReplayScope — %s</title>" % short, 1)
 
     out = args.out or (os.path.splitext(args.timeline)[0] + ".html")
     open(out, "w").write(html)
