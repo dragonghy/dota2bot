@@ -5655,31 +5655,51 @@ function J.ShouldTpSupportTowerFight( bot )
 	return nil
 end
 
--- [GH #13] Turbo laning creep-pull to reset lane equilibrium. A classic support
--- / off-laner technique: when our lane creep wave is pushing the WRONG way
--- (equilibrium shoved toward the enemy tower, so our creeps die far forward and
--- our laner gets zoned / denied), pull the nearby friendly neutral camp at the
--- ~:47/:55 pull window. The aggroed neutrals follow the puller back toward the
--- lane and meet our incoming creep wave, which then trades into the neutrals --
--- dragging the lane equilibrium back toward us and resetting a bad lane.
+-- [GH #13] Turbo laning creep-pull to reset lane equilibrium (拉野). A classic
+-- support technique grounded in the standard theory (dota2 wiki / liquidpedia
+-- pulling guides): the goal is to keep the lane equilibrium near OUR tower so our
+-- carry farms safely. When our own wave is WINNING and pushing out toward the
+-- enemy tower (our carry has to overextend to last-hit, exposed to ganks/harass),
+-- the support pulls the nearby friendly neutral camp: the aggroed neutrals walk
+-- into our NEXT incoming wave and trade into it, thinning our creeps so the enemy
+-- wave pushes back toward us -- dragging equilibrium home AND denying the enemy
+-- offlaner the gold/XP of the creeps that die to neutrals instead of to them.
+--
+-- WHY these exact conditions (the researched theory, mapped to what the API can
+-- see):
+--   * PULL only when our wave is pushing OUT (front past the lane midpoint toward
+--     the enemy). This is the safelane-reset case. We deliberately do NOT pull
+--     when the lane already sits near our tower (equilibrium is already good) or
+--     when the ENEMY wave is crashing our tower (pulling would remove our
+--     blockers and let the big enemy wave hit our tower/carry) -- both are the
+--     textbook "do NOT pull" cases, and both are excluded by the front-past-mid
+--     test (they have our front on our own half).
+--   * TIME the pull to the :12 / :42 windows so the neutrals meet the :00 / :30
+--     wave (see below).
+--   * NEVER pull under threat (enemy hero within 800): being caught mid-pull in
+--     the jungle just feeds.
 --
 -- Returns the pull camp's spawn LOCATION (the pull intent) or nil. The caller
 -- issues the actual pull (attack the camp's neutrals so they aggro and follow).
 -- Fires ONLY when ALL hold -- deliberately CONSERVATIVE so it never griefs a
 -- lane that is already fine:
 --   * turbo AND the 'pullcamp' soak candidate is armed (inert otherwise),
---   * laning window: neutral camps exist and it is still the early lane
---     (DotaTime in [60, 10*60]; turbo laning is short),
---   * the game clock is in a pull window (seconds-into-minute ~44..58 -> the
---     :47/:55 pulls; earlier the neutrals are not up / arrive too soon, later
---     the wave has already met past the camp),
+--   * laning window: DotaTime in [60, 10*60] (turbo laning is short),
+--   * the game clock is in a :12 or :42 pull window (see the window comment),
 --   * this bot is a support (pos 4-5) -- cores stay to farm/deny, not pull,
 --   * our lane equilibrium is UNFAVORABLE: our lane front is pushed PAST the
 --     lane midpoint toward the enemy (our creeps meeting on the enemy's half),
 --   * a FRIENDLY neutral camp is within reach (<= 1500) AND is actually up
 --     (neutral creeps present nearby), and
---   * no enemy hero is right on us (<= 800) -- pulling under threat feeds, it
---     does not reset.
+--   * no enemy hero is right on us (<= 800) -- pulling under threat feeds.
+--
+-- SCOPED NON-GOAL (honest): the owner's fuller taxonomy also names the
+-- DISADVANTAGED-lane pull of the ENEMY's big camp (wave stuck under the enemy
+-- tower -> pull their jungle to reset). That is deliberately NOT implemented: it
+-- requires walking a support INTO the enemy jungle, which a bot cannot time or
+-- escape safely, and the API exposes no aggro/leash oracle to do it without
+-- feeding. We ship the robust, safe OWN-camp reset (which covers the common
+-- 优势路兵线深了 case) and leave the enemy-camp pull as a documented future.
 --
 -- Gated turbo-only (J.IsModeTurbo) AND to the 'pullcamp' soak candidate, so
 -- shipped/normal behavior is byte-for-byte unchanged until an A/B win promotes
@@ -5704,11 +5724,17 @@ function J.ShouldPullNeutralCamp( bot )
 	local nNow = DotaTime()
 	if nNow < 60 or nNow > 10 * 60 then return nil end
 
-	-- Pull window: begin the pull so the neutrals connect around the :47/:55
-	-- marks. Outside it the pull arrives too early (creeps not there) or too late
-	-- (the wave has already met past the camp).
+	-- Pull windows: lane waves spawn at :00 and :30 (every 30s from 1:00), so a
+	-- pull must catch one of those two waves as it passes the camp junction. The
+	-- neutrals need a few seconds' lead to walk out of the box and meet the wave,
+	-- so aggro the camp around :12 (to catch the :00 wave) or :42 (to catch the
+	-- :30 wave) -- the classic pull marks. Two windows per minute; outside them
+	-- the pull whiffs (neutrals reach the lane before the wave) or arrives after
+	-- the wave has already passed the camp.
 	local nSec = nNow % 60
-	if nSec < 44 or nSec > 58 then return nil end
+	if not ((nSec >= 10 and nSec <= 20) or (nSec >= 40 and nSec <= 50)) then
+		return nil
+	end
 
 	-- Never pull under threat -- being caught mid-pull just feeds a death.
 	if #J.GetEnemiesNearLoc( bot:GetLocation(), 800 ) > 0 then return nil end

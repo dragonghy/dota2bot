@@ -1,6 +1,6 @@
 -- [GH #13] Gating + trigger contract for J.ShouldPullNeutralCamp -- the turbo
 -- laning creep-pull that resets a bad lane equilibrium. A support (pos 4-5)
--- pulls the nearby friendly neutral camp in the ~:47/:55 window WHEN our lane
+-- pulls the nearby friendly neutral camp in the :12/:42 windows WHEN our lane
 -- creep wave is pushed the wrong way (front past the lane midpoint toward the
 -- enemy), a friendly camp is up and within reach, and no enemy is on us.
 --
@@ -51,7 +51,7 @@ local function scenario(opts)
     J.IsCore = function() return opts.core == true end
 
     -- Clock: 1:45 by default -> laning window, seconds-into-minute 45 (in the
-    -- :47/:55 pull window). Overridable for the wrong-time cases.
+    -- :42 pull window [40,50]). Overridable for the wrong-time cases.
     DotaTime = function() return opts.now or 105 end -- luacheck: ignore
 
     -- Threat: nobody on us unless underThreat.
@@ -107,10 +107,17 @@ tests['NO-FIRE: camp not up (no neutral creeps nearby) -> nil'] = function()
         'an empty camp (no creeps present) cannot be pulled')
 end
 
-tests['NO-FIRE: outside the pull window (wrong seconds-into-minute) -> nil'] = function()
-    local J, bot = scenario({ now = 100 }) -- 1:40 -> 40s into the minute, before the window
+tests['FIRE: the :12 window also pulls (catch the :00 wave)'] = function()
+    local J, bot = scenario({ now = 73 }) -- 1:13 -> 13s into the minute, in [10,20]
+    local res = J.ShouldPullNeutralCamp(bot)
+    assert(res ~= nil and res.x == 500,
+        'the :12 window (to intercept the :00 wave) must pull just like the :42 window')
+end
+
+tests['NO-FIRE: outside both pull windows (mid-minute) -> nil'] = function()
+    local J, bot = scenario({ now = 90 }) -- 1:30 -> 30s into the minute, between the windows
     assert(J.ShouldPullNeutralCamp(bot) == nil,
-        'pulling only in the ~:47/:55 window; other times must fall through')
+        'pulling only in the :12 [10,20] / :42 [40,50] windows; :30 must fall through')
 end
 
 tests['NO-FIRE: before camps spawn / outside laning -> nil'] = function()
