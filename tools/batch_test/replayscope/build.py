@@ -153,53 +153,69 @@ VISION_R = 1600  # approx sight range used to decide if a TP cast was witnessed
 
 
 def attach_tp(ticks):
-    """Perspective-aware TP-scroll knowledge. hero['tpcd'] is the TRUE remaining
-    cooldown; hero['tpk'] lists the teams that actually KNOW it. Own team always
-    knows; an enemy team knows only if it witnessed the most recent cast (the
-    caster was within sight of one of its live heroes when tpcd jumped to full).
-    This mirrors the bot's real information: you only know an enemy TP'd if you
-    saw it. Vision is approximate (no fog data), matching the map's radiant/dire
-    toggle."""
-    names = {h["name"] for tk in ticks for h in tk["heroes"]}
-    # per-hero (t, tpcd) series and a quick tick lookup
-    casts = {n: [] for n in names}  # name -> [(cast_t, duration, {witness teams})]
-    prev = {}
+    """Perspective-aware TP-scroll knowledge, de-flickered.
+
+    The dumper intermittently reads a hero's TP cooldown as 0 for a single frame
+    (37 -> 0 -> 35), which looked like the TP going ready and back. We first fill
+    those short 0-dips by interpolating the neighbours (the cooldown only ever
+    counts DOWN), giving a smooth 37 -> 36 -> 35.
+
+    hero['tpcd'] is then the true remaining cooldown; hero['tpk'] lists the teams
+    that KNOW it. Own team always knows; an enemy knows only if it witnessed the
+    most recent cast (caster within sight of a live enemy when tpcd jumped to
+    full) -- exactly the bot's info model. Vision is approximate (no fog data)."""
+    order = {}                    # name -> [hero obj per tick, in order]
     for tk in ticks:
-        t = tk["t"]
-        by_team_alive = {2: [], 3: []}
+        for h in tk["heroes"]:
+            order.setdefault(h["name"], []).append(h)
+
+    # 1) de-flicker: replace a short run of 0s bracketed by decreasing nonzero
+    #    values with the interpolated countdown.
+    for hs in order.values():
+        v = [h.get("tpcd", 0) for h in hs]
+        m = len(v)
+        for i in range(m):
+            if v[i] != 0:
+                continue
+            p = i - 1
+            while p >= 0 and v[p] == 0:
+                p -= 1
+            q = i + 1
+            while q < m and v[q] == 0:
+                q += 1
+            if 0 <= p and q < m and v[p] > 3 and v[q] > 3 and q - p <= 3 and v[q] <= v[p]:
+                v[i] = round(v[p] + (v[q] - v[p]) * (i - p) / (q - p))
+        for h, val in zip(hs, v):
+            h["tpcd"] = val
+
+    # 2) detect casts (cleaned tpcd rises from ~0 to ~full) + who witnessed them
+    names = list(order)
+    casts = {n: [] for n in names}
+    for ti, tk in enumerate(ticks):
+        alive = {2: [], 3: []}
         for h in tk["heroes"]:
             if h["alive"]:
-                by_team_alive.setdefault(h["team"], []).append(h)
+                alive.setdefault(h["team"], []).append(h)
         for h in tk["heroes"]:
-            n, cd = h["name"], h.get("tpcd", 0)
-            p = prev.get(n, 0)
-            if cd >= 20 and p <= 5:  # tpcd jumped to ~full -> a fresh cast
-                witnessed = set()
-                for v in (2, 3):
-                    if v == h["team"]:
-                        continue
-                    if any(abs(e["x"] - h["x"]) < VISION_R and abs(e["y"] - h["y"]) < VISION_R
-                           and (e["x"] - h["x"]) ** 2 + (e["y"] - h["y"]) ** 2 < VISION_R ** 2
-                           for e in by_team_alive.get(v, [])):
-                        witnessed.add(v)
-                casts[n].append([t, cd, witnessed])
-            prev[n] = cd
-    # second pass: who knows the cd at each tick
+            n = h["name"]
+            prev = order[n][ti - 1]["tpcd"] if ti > 0 else 0
+            if h["tpcd"] >= 25 and prev <= 5:
+                witnessed = {v for v in (2, 3) if v != h["team"] and any(
+                    (e["x"] - h["x"]) ** 2 + (e["y"] - h["y"]) ** 2 < VISION_R ** 2
+                    for e in alive.get(v, []))}
+                casts[n].append((tk["t"], witnessed))
+
+    # 3) who knows the cd at each tick
     for tk in ticks:
         t = tk["t"]
         for h in tk["heroes"]:
-            cl = casts[h["name"]]
             last = None
-            for c in cl:
+            for c in casts[h["name"]]:
                 if c[0] <= t:
                     last = c
                 else:
                     break
-            know = {h["team"]}  # own team always knows
-            if last is None:
-                know |= {2, 3}   # no cast seen yet -> ready is common knowledge
-            else:
-                know |= last[2]  # teams that witnessed the last cast
+            know = {h["team"]} | ({2, 3} if last is None else last[1])
             h["tpk"] = sorted(know)
     return ticks
 
@@ -233,19 +249,25 @@ def build_ticks(tl, tick_s):
         per[h].sort(key=lambda s: s["t"])
     times = {h: [s["t"] for s in per[h]] for h in heroes}
 
-    # Creeps are dumped on a coarser interval than hero snapshots. Group them by
-    # their sample tick, then forward-fill so EVERY hero tick shows creeps (else
-    # only every Nth frame has them). Team 4 = neutral (rendered a distinct color).
-    creeps_by_tick = {}
+    # Creeps: snap to a coarse grid and de-duplicate per tick. Individual creep
+    # precision is meaningless for a lane-pressure dot map, and this cuts the
+    # inlined data ~5x. Team 4 = neutral (rendered a distinct color).
+    GRID = 128
+    creeps_seen = {}
     for c in tl.get("creeps", []):
+        if c["t"] < 0:
+            continue
         tk = round(c["t"] / tick_s) * tick_s
-        creeps_by_tick.setdefault(tk, []).append([round(c["x"]), round(c["y"]), c["team"]])
+        cell = (round(c["x"] / GRID) * GRID, round(c["y"] / GRID) * GRID, c["team"])
+        creeps_seen.setdefault(tk, set()).add(cell)
+    creeps_by_tick = {tk: [list(c) for c in cells] for tk, cells in creeps_seen.items()}
     creep_keys = sorted(creeps_by_tick)
 
-    # Start at the earliest snapshot (negative during the pre-game prep phase),
-    # floored to a tick boundary, so the pre-horn setup is scrubbable.
-    start = min((s["t"] for s in tl["snapshots"]), default=0.0)
-    start = (int(start // tick_s)) * tick_s
+    # Start at the horn (0:00). The replay's pre-game (t<0) is a data artifact:
+    # heroes and creeps are pre-created and frozen at their spawn/staging points
+    # (verified: lane creeps sit at the barracks until t=0, then march), which
+    # never matches how the game actually looks. So we drop it.
+    start = 0.0
 
     last_mhp, last_mmp = {}, {}
     ticks = []
@@ -321,6 +343,18 @@ def main():
     heroes, ticks, dur = build_ticks(tl, args.tick)
     attach_cc(ticks, tl, args.tick)
     attach_tp(ticks)
+
+    # Delta-encode item loadouts: a hero's items change a few dozen times all
+    # game, but the 9-slot array was repeating every tick (~1 MB). Drop it on
+    # ticks where it is unchanged; the renderer forward-fills per hero.
+    prev_items = {}
+    for tk in ticks:
+        for h in tk["heroes"]:
+            cur = h.get("items")
+            if cur is not None and prev_items.get(h["name"]) == cur:
+                del h["items"]
+            elif cur is not None:
+                prev_items[h["name"]] = cur
     towers = build_towers(tl)
     has_fog = any(h.get("vis") for tk in ticks for h in tk["heroes"])
 
