@@ -149,6 +149,23 @@
    "note": "confirm Venge overextend drops in next batch; revert if it kills Venge fight participation"
   }
  ],
+ "replay_mining_20260721": {
+  "source": "run spot_20260721_151005 (pre-session-fix baseline), 5 slot1 replays dumped+detected LOCALLY (built behav-dump via manta v1.5.0 in scratchpad)",
+  "baseline_detector_rates_per_game": {
+   "sandwiched_walk": 9.0,
+   "tp_under_threat": 7.2,
+   "overextend_alone": 7.0,
+   "unpunished_tower_dive": 4.6,
+   "missed_cs_at_tower": 4.2,
+   "return_to_death_spot": 3.4,
+   "idle_while_ally_dies": 2.4,
+   "tp_home_wasteful": 1.8,
+   "enemy_overchase_unpunished": 1.0
+  },
+  "conclusion": "NO new un-addressed bug surfaced. Every high-frequency behavior already has a gated/shipped fix: sandwiched_walk->nodive2(#4), tp_under_threat->tpsafe2(#9, general, confirmed catches the ranged/8%HP cases), overextend_alone->#6/#18/aegisgroup, unpunished_tower_dive->#7(shipped, still fires->punish gate may be too strict), return_to_death_spot->#17/lf_revive, idle_while_ally_dies->#5, overchase->#20. Focus-hero signal = CM 6 deaths/5gm (known cm_conclusion pattern, covered by lf_salve+retreat). d20 detector CONFIRMED firing on real replays (1.0/game).",
+  "use": "these are the BEFORE numbers; when the validation-run candidate-side replays land, compare detector rates to measure Class-B behavior deltas (not just econ verdict).",
+  "followup_note": "unpunished_tower_dive still 4.6/game despite #7 being shipped -> worth checking whether J.ShouldPunishDive's numbers gate is too conservative in turbo (candidate for a future narrow loosening)."
+ },
  "validation_run_20260721_2147": {
   "authorized_by": "owner 2026-07-21 (start validation; 2h random run + A/B)",
   "mtd_at_launch_usd": 59.52,
