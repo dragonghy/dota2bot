@@ -88,6 +88,8 @@ type snapshot struct {
 	Level     int32         `json:"level"`
 	Items     []string      `json:"items"`
 	Abilities []abilitySnap `json:"abilities"`
+	TpCd      float64       `json:"tp_cd"`     // TP scroll/travel cooldown remaining (0 = ready)
+	TpCdLen   float64       `json:"tp_cdlen"`  // its full cooldown length (for cast detection)
 }
 
 type building struct {
@@ -271,15 +273,17 @@ func main() {
 	// resolveItems reads the hero's inventory handles and returns item names.
 	// Slots 0-8 are the active inventory + backpack, 9-16 are stash/neutral/TP;
 	// we include every held (non-null) slot so the panel can show full loadout.
+	// Return exactly the 9 carried slots by position: 0-5 = active inventory
+	// (usable), 6-8 = backpack (not directly usable). Empty slots are "" so the
+	// panel can draw the 6|3 split. Stash/neutral/TP (slots 9+) are excluded.
 	resolveItems := func(idx int32) []string {
-		var out []string
+		out := make([]string, 9)
 		he := p.FindEntity(idx)
 		if he == nil {
 			return out
 		}
-		for i := 0; i < 19; i++ {
-			path := slotPath("m_hItems", i)
-			h, ok := getHandle(he, path)
+		for i := 0; i < 9; i++ {
+			h, ok := getHandle(he, slotPath("m_hItems", i))
 			if !ok || h == nullHandle {
 				continue
 			}
@@ -287,9 +291,37 @@ func main() {
 			if ie == nil {
 				continue
 			}
-			out = append(out, snakeFromClass(ie.GetClassName(), "CDOTA_Item_"))
+			out[i] = snakeFromClass(ie.GetClassName(), "CDOTA_Item_")
 		}
 		return out
+	}
+
+	// resolveTP returns the cooldown remaining + full length of the hero's Town
+	// Portal Scroll / Boots of Travel (0,_ = ready). Used to show TP status and to
+	// detect TP casts (remaining jumps from ~0 to full).
+	resolveTP := func(idx int32) (float64, float64) {
+		he := p.FindEntity(idx)
+		if he == nil {
+			return 0, 0
+		}
+		for i := 0; i < 19; i++ {
+			h, ok := getHandle(he, slotPath("m_hItems", i))
+			if !ok || h == nullHandle {
+				continue
+			}
+			ie := p.FindEntityByHandle(h)
+			if ie == nil {
+				continue
+			}
+			n := snakeFromClass(ie.GetClassName(), "CDOTA_Item_")
+			if strings.Contains(n, "teleport") || strings.Contains(n, "tpscroll") ||
+				strings.Contains(n, "tp_scroll") || strings.Contains(n, "travel") {
+				cd, _ := ie.GetFloat32("m_fCooldown")
+				cdlen, _ := ie.GetFloat32("m_flCooldownLength")
+				return float64(cd), float64(cdlen)
+			}
+		}
+		return 0, 0
 	}
 
 	// resolveAbilities reads the hero's ability handles and returns spell state.
@@ -340,6 +372,7 @@ func main() {
 			if h.maxmp > 0 {
 				mpPct = h.mp / h.maxmp
 			}
+			tpcd, tpcdlen := resolveTP(h.idx)
 			snaps = append(snaps, snapshot{
 				T: round1(t), Hero: h.name, Idx: h.idx, Team: h.team,
 				X: round1(h.x), Y: round1(h.y),
@@ -348,6 +381,8 @@ func main() {
 				Level:     h.level,
 				Items:     resolveItems(h.idx),
 				Abilities: resolveAbilities(h.idx),
+				TpCd:      round1(tpcd),
+				TpCdLen:   round1(tpcdlen),
 			})
 		}
 	}

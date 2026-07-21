@@ -149,6 +149,61 @@ def attach_cc(ticks, tl, tick_s):
     return ticks
 
 
+VISION_R = 1600  # approx sight range used to decide if a TP cast was witnessed
+
+
+def attach_tp(ticks):
+    """Perspective-aware TP-scroll knowledge. hero['tpcd'] is the TRUE remaining
+    cooldown; hero['tpk'] lists the teams that actually KNOW it. Own team always
+    knows; an enemy team knows only if it witnessed the most recent cast (the
+    caster was within sight of one of its live heroes when tpcd jumped to full).
+    This mirrors the bot's real information: you only know an enemy TP'd if you
+    saw it. Vision is approximate (no fog data), matching the map's radiant/dire
+    toggle."""
+    names = {h["name"] for tk in ticks for h in tk["heroes"]}
+    # per-hero (t, tpcd) series and a quick tick lookup
+    casts = {n: [] for n in names}  # name -> [(cast_t, duration, {witness teams})]
+    prev = {}
+    for tk in ticks:
+        t = tk["t"]
+        by_team_alive = {2: [], 3: []}
+        for h in tk["heroes"]:
+            if h["alive"]:
+                by_team_alive.setdefault(h["team"], []).append(h)
+        for h in tk["heroes"]:
+            n, cd = h["name"], h.get("tpcd", 0)
+            p = prev.get(n, 0)
+            if cd >= 20 and p <= 5:  # tpcd jumped to ~full -> a fresh cast
+                witnessed = set()
+                for v in (2, 3):
+                    if v == h["team"]:
+                        continue
+                    if any(abs(e["x"] - h["x"]) < VISION_R and abs(e["y"] - h["y"]) < VISION_R
+                           and (e["x"] - h["x"]) ** 2 + (e["y"] - h["y"]) ** 2 < VISION_R ** 2
+                           for e in by_team_alive.get(v, [])):
+                        witnessed.add(v)
+                casts[n].append([t, cd, witnessed])
+            prev[n] = cd
+    # second pass: who knows the cd at each tick
+    for tk in ticks:
+        t = tk["t"]
+        for h in tk["heroes"]:
+            cl = casts[h["name"]]
+            last = None
+            for c in cl:
+                if c[0] <= t:
+                    last = c
+                else:
+                    break
+            know = {h["team"]}  # own team always knows
+            if last is None:
+                know |= {2, 3}   # no cast seen yet -> ready is common knowledge
+            else:
+                know |= last[2]  # teams that witnessed the last cast
+            h["tpk"] = sorted(know)
+    return ticks
+
+
 def build_ticks(tl, tick_s):
     teams = {bare(k): v for k, v in tl["game"]["teams"].items()}
     heroes = sorted(teams)
@@ -219,7 +274,8 @@ def build_ticks(tl, tick_s):
                     "x": round(s["x"]), "y": round(s["y"]),
                     "hp": (s.get("hp", 0) if alive else 0), "mhp": mhp,
                     "mp": (s.get("mp", 0) if alive else 0), "mmp": mmp,
-                    "lvl": s.get("level", 1), "alive": alive}
+                    "lvl": s.get("level", 1), "alive": alive,
+                    "tpcd": round(s.get("tp_cd", 0) or 0)}
             if s.get("items"):
                 hero["items"] = [bare(x) for x in s["items"]]
             if s.get("vis"):
@@ -264,6 +320,7 @@ def main():
     tl = json.load(open(args.timeline))
     heroes, ticks, dur = build_ticks(tl, args.tick)
     attach_cc(ticks, tl, args.tick)
+    attach_tp(ticks)
     towers = build_towers(tl)
     has_fog = any(h.get("vis") for tk in ticks for h in tk["heroes"])
 
@@ -286,7 +343,7 @@ def main():
     item_names = set()
     for tk in ticks:
         for h in tk["heroes"]:
-            item_names.update(h.get("items", []))
+            item_names.update(x for x in h.get("items", []) if x)
     item_icons = {}
     for it in sorted(item_names):
         uri = load_item_icon(it)

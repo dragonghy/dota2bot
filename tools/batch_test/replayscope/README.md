@@ -22,7 +22,13 @@ replay.dem  --(behav-dump, Go/manta)-->  timeline.json  --(build.py)-->  page.ht
    dumper -in replay.dem -out game.timeline.json
    ```
 
-2. **Build** the page (data + hero icons are inlined; the page needs no network):
+   For ReplayScope, dump creeps every second so the map updates smoothly:
+
+   ```
+   dumper -creep-interval 1.0 -in replay.dem -out game.timeline.json
+   ```
+
+2. **Build** the page (data + hero/item icons inlined; the page needs no network):
 
    ```
    python3 tools/batch_test/replayscope/build.py game.timeline.json -o game.html
@@ -40,10 +46,22 @@ replay.dem  --(behav-dump, Go/manta)-->  timeline.json  --(build.py)-->  page.ht
 - **Vision toggle** — `global` (omniscient ground truth), `radiant`, `dire`.
   This is the point of the tool: the bot decides on its own team's vision, so to
   judge a decision you view the world from that team's fog.
-- **State table** — hero (portrait + name), level, **HP as `cur/max`**, **MP as
-  `%`**. No coordinates (they're on the map), no raw visibility column (the map
-  toggle shows it). Fogged enemies are dimmed and read from their last-seen
-  snapshot.
+- **State table** — hero (portrait + name), level, **HP/MP as `cur/max`**,
+  **TP** status, **items** (9 slots: 6 inventory | 3 backpack, split by a
+  divider), and **status** (crowd-control). No coordinates (they're on the map),
+  no raw visibility column (the map toggle shows it). Fogged enemies are dimmed
+  and read from their last-seen snapshot.
+- **Crowd-control** — stun/slow/root/silence/hex/etc. are reconstructed from
+  modifier events with a live countdown (e.g. `Stun 1.2s`), shown in the table
+  and as a colored ring on the map.
+- **TP cooldown, perspective-aware** — each hero's Town Portal cooldown, shown
+  on the map (green = ready, amber + seconds = on cooldown, grey `?` = unknown)
+  and in the table. Under a team perspective you only KNOW an enemy's TP is down
+  if you witnessed the cast (they were in your vision when it fired) — exactly
+  the bot's information model. Own team is always known.
+- **Pre-game** — the timeline starts at ~-90s. The replay doesn't record hero
+  movement before the horn (bots stand idle at their staging spots), so pre-0 is
+  static by nature and labeled `PRE-GAME`; the informative review starts at 0:00.
 - **Lua fixture export** — pick a hero, hit export: emits a `return { time=,
   perspective_team=, self=, units={...} }` table describing exactly the units
   that hero could see at this tick. Feed it to `tests/mock` to reproduce a real
