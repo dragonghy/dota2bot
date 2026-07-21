@@ -190,7 +190,8 @@
    "lf_recover": "ShouldLaneRecoverFarm unlocks laning-phase farm for zoned-off cores (root cause: blanket farm ban); fixture f_071903_sven_idle; mode_farm_generic",
    "lf_revive": "ShouldFleeAfterRevive: WK reincarnates in place 1v2 and re-feeds (080225 6:37->6:50, 11:00->11:12); numbers-based; fixture f_080225_wk_revive",
    "lf_threat": "NoteProvenKillerOnDeath + ShouldRespectProvenKiller: Zeus 100-0d by same Lina 4x (073148); memory-based distance-keeping; fixture f_073148_zuus_lina",
-   "promoted_parity": "ShouldSuppressDive: parity may not exempt a <35%-HP bot unless kill secured without it (f_080225_wk_lane, WK 13% read as full 2v2 fighter); UNGATED bugfix of documented intent"
+   "promoted_parity": "ShouldSuppressDive: parity may not exempt a <35%-HP bot unless kill secured without it (f_080225_wk_lane, WK 13% read as full 2v2 fighter); UNGATED bugfix of documented intent",
+   "lf_undertower": "core active last-hit (c3 Think) re-armed under lanefix; motivated by present-vs-absent split (198/211 tower-killed creeps had a hero within 1400). NOT in the currently running final-gate batch (committed after launch) -> rides the NEXT batch; yardstick = d9 missed_cs_at_tower."
   },
   "bundle_verdict": "lanefix 4-fix bundle REJECTED by mirrored A/B (gpm -74.5, xpm -84.7, deaths +1.0, 0/4 comps) BEFORE the fixture stage existed; fixes since rewritten/expanded under fixture validation; re-batch only after ~10 accumulated",
   "batch_budget_note": "MTD ~$59; owner approval line $100; next batch is ONE final-gate run"
@@ -212,5 +213,5 @@
   "cm_conclusion": "CM 2.8 deaths/gm; recurring pattern = hanging in lane at <=52% HP (covered by lf_salve + retreat guards). Creep-caused deaths are 2/25 games -> deliberately NOT fixed (too rare).",
   "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
  },
- "missed_cs": "dumper now keeps lane-creep deaths from any killer; d9_missed_cs_at_tower live. First measurement 071903: ~48% of lane farm uncollected; every core let 12-27 creeps die to own towers. FIX DESIGN PENDING (next iteration): in-lane cores near own tower not last-hitting."
+ "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH)."
 }
