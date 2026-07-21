@@ -158,7 +158,11 @@ function GetDesireHelper()
 
 	-- Early exits first (cheap checks before expensive queries)
     if not bAlive
-	or J.IsInLaningPhase()
+	-- [lanefix/lf_recover] The blanket laning-phase farm ban is what forced a
+	-- zoned-off core to idle-wander with zero income (Sven, 071903, 0 CS from
+	-- 2:30-5:00 while alive). A core genuinely off its lane during the laning
+	-- phase may farm (J.ShouldLaneRecoverFarm); everyone else keeps the ban.
+	or (J.IsInLaningPhase() and not J.ShouldLaneRecoverFarm(bot))
 	or (J.IsDoingRoshan(bot) and bNotClone)
 	or (J.IsDoingTormentor(bot) and bNotClone)
     or DotaTime() < 50

@@ -4861,6 +4861,22 @@ function J.LaneRegenItemToUse( bot )
 	return nil
 end
 
+-- [replay-review 071903] Lane-recovery farming. Watched: Sven was zoned out of
+-- his lane by Lich+Medusa and then WANDERED (rune spot, mid jungle) with ZERO
+-- CS from 2:30 to 5:00 while alive -- because mode_farm_generic hard-disables
+-- farm desire for the whole laning phase, a core pushed off its lane has no
+-- farm option at all: idle is architecturally forced. This helper unlocks farm
+-- ONLY for that case: a CORE, in the laning phase, that is genuinely OFF its
+-- lane (> 2500 from its lane front). A core still in/near its lane keeps the
+-- status quo (farm stays blocked; laning logic owns the decision).
+-- Gated (turbo + lanefix/lf_recover); inert by default.
+function J.ShouldLaneRecoverFarm( bot )
+	if not J.IsLaneFixOn( 'recover' ) then return false end
+	if DotaTime() < 120 then return false end
+	if not J.IsCore( bot ) then return false end
+	return J.GetDistanceFromLaneFront( bot ) > 2500
+end
+
 -- [replay-review 071423 t=3:55] Rescue / counter-gank TP. Watched: Luna was
 -- dived top by Jakiro+Slardar and chased to death while Skywrath sat at the
 -- fountain at 70% HP with TP READY -- the owner: "如果天怒能TP上路一塔,大概率能

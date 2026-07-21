@@ -19,6 +19,14 @@ local REPO_ROOT = arg and arg[0] and arg[0]:match('^(.*)/tests/') or '.'
 
 local vector_mt
 vector_mt = {
+    -- The game's Vector answers numeric indexing too (v[1]=x, v[2]=y, v[3]=z);
+    -- bot code (e.g. J.GetDistance) relies on it.
+    __index = function(v, k)
+        if k == 1 then return v.x end
+        if k == 2 then return v.y end
+        if k == 3 then return v.z end
+        return nil
+    end,
     __add = function(a, b) return M.Vector(a.x + b.x, a.y + b.y, a.z + b.z) end,
     __sub = function(a, b) return M.Vector(a.x - b.x, a.y - b.y, a.z - b.z) end,
     __mul = function(a, b)
