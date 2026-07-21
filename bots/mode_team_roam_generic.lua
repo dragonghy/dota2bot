@@ -137,6 +137,19 @@ function GetDesireHelper()
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
     end
 
+    -- [GH #20] Punish an over-chase: if an enemy has over-chased a low-HP ally
+    -- deep into our side, out-running its own support, AND collapsing is safe
+    -- (lethal or numbers), turn and counter-kill instead of fleeing. Same
+    -- collapse pathway as the tower-dive punish, different trigger source. Gated
+    -- inside J.ShouldPunishOverchase (turbo + 'overchase' soak candidate), so
+    -- this is inert in shipped/normal play until an A/B win promotes it.
+    local overchaseTarget = J.ShouldPunishOverchase(bot)
+    if overchaseTarget ~= nil then
+        SetStickyTarget(overchaseTarget)
+        targetUnit = overchaseTarget
+        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
+    end
+
 	hTargetCreep = X.GetLastHitCreep()
 	if J.IsValid(hTargetCreep) and J.CanBeAttacked(hTargetCreep) then
 		return 1.5
