@@ -226,6 +226,14 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [lanefix/lf_revive] Post-revive flee (fixture f_080225_wk_revive): WK
+    -- reincarnates in place still 1v2 and re-engages instead of leaving --
+    -- the ultimate buys nothing. Hard retreat when revived-in-place moments
+    -- ago and outnumbered by 2+. Gated; inert by default.
+    if J.ShouldFleeAfterRevive(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [GH #17] Death-zone avoidance ("respawn -> walk straight back to the
     -- death spot -> die again" loop): after a recent death in the enemy half,
     -- if the bot is back near (or closing on) its death spot with no allies

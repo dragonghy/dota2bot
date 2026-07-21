@@ -5423,6 +5423,41 @@ function J.ShouldAvoidDeathZone( bot )
 	return true
 end
 
+-- [replay-review 080225, fixture f_080225_wk_revive] Post-revive flee guard.
+-- Watched (FOCUS hero WK): dies at 6:37, Reincarnation revives him in place at
+-- ~79% HP -- STILL 1v2 against Shadow Shaman + Juggernaut, zero allies within
+-- 2000 -- and he re-engages and dies again 13s after the first death (same
+-- again at 11:00->11:12). The ultimate is spent for nothing. Note #17's
+-- death-zone guard deliberately covers only ENEMY-half deaths, so these
+-- own-half revive-in-place feeds fall through it.
+--
+-- True => hard retreat right after reviving IN PLACE (reincarnation / aegis)
+-- while OUTNUMBERED BY 2+. Numbers-based, not HP-based -- the real frame shows
+-- 79% HP still dies 1v2. Fires only when ALL hold:
+--   * revived < 8s ago and still within 1500 of the death spot (a fountain
+--     respawn is far away and unaffected),
+--   * enemies within 1200 outnumber other nearby allies by 2+ (solo vs 2, or
+--     1 ally vs 3). A 1v1 or supported fight after reviving is allowed.
+-- Reuses the dead-frame records tDeathZone (kept fresh by the retreat mode's
+-- record-only call). Gated (turbo + lanefix/lf_revive); inert by default.
+function J.ShouldFleeAfterRevive( bot )
+	if not J.IsLaneFixOn( 'revive' ) then return false end
+	if not bot:IsAlive() then return false end
+	local rec = tDeathZone[bot:GetPlayerID()]
+	if rec == nil then return false end
+	if GameTime() - rec.fTime > 8 then return false end
+	if GetUnitToLocationDistance( bot, rec.vLoc ) > 1500 then return false end
+	local tEnemies = J.GetEnemiesNearLoc( bot:GetLocation(), 1200 )
+	local nOthers = 0
+	for _, ally in pairs( J.GetAlliesNearLoc( bot:GetLocation(), 1200 ) ) do
+		if ally ~= bot and J.IsValidHero( ally )
+			and not J.IsSuspiciousIllusion( ally ) then
+			nOthers = nOthers + 1
+		end
+	end
+	return #tEnemies >= nOthers + 2
+end
+
 -- [GH #16] Turbo core farm-desire preservation. Aggregated over ~790 turbo
 -- games, our CORES under-farm at support level (~1.4 CS/min; a competent core
 -- does 5-8+). One driver: after the laning phase, farm desire is hard-capped
