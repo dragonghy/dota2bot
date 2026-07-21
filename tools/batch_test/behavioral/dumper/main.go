@@ -639,7 +639,16 @@ func main() {
 		if !m.GetIsAttackerHero() && !m.GetIsTargetHero() &&
 			!strings.HasPrefix(actor, "npc_dota_hero_") &&
 			!strings.HasPrefix(target, "npc_dota_hero_") {
-			return nil // drop pure creep/tower noise; keep anything touching a hero
+			// Exception to the noise filter: LANE-creep deaths are kept even when
+			// the killer is a tower/creep -- these are exactly the MISSED last
+			// hits (a wave crashing into a tower near an idle core) that
+			// frame-by-frame CS review needs. Neutral-camp deaths stay dropped.
+			isLaneCreepDeath := m.GetType() == dota.DOTA_COMBATLOG_TYPES_DOTA_COMBATLOG_DEATH &&
+				(strings.HasPrefix(target, "npc_dota_creep_goodguys_") ||
+					strings.HasPrefix(target, "npc_dota_creep_badguys_"))
+			if !isLaneCreepDeath {
+				return nil // drop pure creep/tower noise; keep anything touching a hero
+			}
 		}
 		events = append(events, event{
 			T:          round1(ts), // raw engine time; converted to game-clock below

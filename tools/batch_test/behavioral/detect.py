@@ -604,10 +604,80 @@ def pct(v):
     return "?" if v is None else f"{v*100:.0f}%"
 
 
+
+def d9_missed_cs_at_tower(tl):
+    """[replay-review missed-CS / owner's 漏刀 example] Lane creeps dying to a
+    TOWER while a core of the tower's team stands nearby and is not last-hitting.
+    That is farm burning in front of an idle core -- the sharpest measurable
+    slice of "wave crashed, nobody collected".
+
+    Needs the extended dump (lane-creep deaths are kept even for non-hero
+    killers); on older dumps this detector finds nothing and stays silent.
+    Approximation: no creep positions at death, so "nearby" means the core has
+    dealt/received ANY combat-log event within 30s (it is active in a lane, not
+    jungling) and killed no creep in the +/-8s around the tower kill. Reported
+    aggregated per hero per laning phase, not per creep.
+    """
+    LANING_END = 10 * 60
+    tower_kills = []
+    for e in tl.events:
+        if e["type"] != "DEATH" or e.get("target_hero"):
+            continue
+        tgt = e.get("target", "")
+        if "creep" not in tgt or "neutral" in tgt:
+            continue
+        side = _tower_team(e.get("actor", ""))
+        if side == 0 or e["t"] > LANING_END:
+            continue
+        tower_kills.append((e["t"], side))
+    if not tower_kills:
+        return []
+    # per-hero last-hit times (any creep)
+    lh = {}
+    for e in tl.events:
+        if e["type"] == "DEATH" and e.get("actor_hero") and not e.get("target_hero") \
+                and "creep" in e.get("target", ""):
+            lh.setdefault(e["actor"], []).append(e["t"])
+    counts = {}
+    for t, side in tower_kills:
+        for hero, team in tl.teams.items():
+            if team != side or not _is_core(tl, hero):
+                continue
+            hero_lh = lh.get(hero, [])
+            if any(abs(x - t) <= 8 for x in hero_lh):
+                continue  # it was busy last-hitting; the tower just won one
+            counts[hero] = counts.get(hero, 0) + 1
+    out = []
+    for hero, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+        if n < 8:
+            continue  # a few tower kills are normal; flag systematic waste
+        out.append({
+            "detector": "missed_cs_at_tower", "bug": "misscs", "hero": hero,
+            "t": 0, "count": n,
+            "desc": "%s: %d lane creeps died to its own team's towers during "
+                    "the laning phase while it was not last-hitting (farm "
+                    "burning in front of an idle core)" % (hero, n),
+        })
+    return out
+
+
+def _is_core(tl, hero):
+    """Best-effort core check without role data: the 5 highest last-hit heroes
+    per game are treated as cores. Cheap and good enough for aggregation."""
+    if not hasattr(tl, "_core_cache"):
+        lh = {}
+        for e in tl.events:
+            if e["type"] == "DEATH" and e.get("actor_hero") \
+                    and not e.get("target_hero") and "creep" in e.get("target", ""):
+                lh[e["actor"]] = lh.get(e["actor"], 0) + 1
+        ranked = sorted(tl.teams, key=lambda h: -lh.get(h, 0))
+        tl._core_cache = set(ranked[:6])
+    return hero in tl._core_cache
+
 DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
              d4_idle_while_ally_dies, d5_sandwiched_walk,
              d6_overextend_alone, d6_unpunished_tower_dive,
-             d8_return_to_death_spot]
+             d8_return_to_death_spot, d9_missed_cs_at_tower]
 
 
 def run(path):

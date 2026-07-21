@@ -116,6 +116,16 @@ sources (hero day/night ≈ 1800/800u, observer ward ≈ 1600u, tower ≈ 1900u)
 optionally subtracting high-ground/tree occlusion, to approximate that team's
 fog at any `t`.
 
+### Missed-CS capture (owner's 漏刀 example)
+
+Lane-creep DEATH events are kept even when the killer is a tower or another
+creep (the old noise filter dropped them), so missed last-hits are measurable.
+First measurement (game 071903): 260 hero last-hits vs 170 creep-killed + 73
+tower-killed lane creeps — ~48% of lane farm was never collected by any hero.
+`d9_missed_cs_at_tower` flags cores that let 8+ creeps die to their own towers
+during the laning phase while not last-hitting. Neutral-camp deaths stay
+dropped.
+
 ## Detectors (`detect.py`)
 
 Each is a pure function over the timeline; `[X]` is the `bug_queue.md` class.
