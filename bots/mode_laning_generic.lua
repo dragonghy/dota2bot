@@ -45,6 +45,14 @@ local bCustomLastHit = local_mode_laning_generic
 local bSupLastHit = J.IsModeTurbo() and J.IsSoakCandidate('suplh')
 	and J.GetPosition(bot) >= 4
 
+-- [replay-review 071423/071859] Under 'lanefix', a support (pos 4-5) uses the
+-- disciplined support laning think (deny / uncontested last-hit / harass) and,
+-- when idle, stays near its carry to screen it -- instead of drifting off across
+-- the map (Silencer and Oracle both wandered 7-13k away, leaving the carry
+-- alone). Load-time flag, mirrors bSupLastHit; inert off the lanefix candidate.
+local bLaneFixSupport = J.IsModeTurbo() and J.IsSoakCandidate('lanefix')
+	and J.GetPosition(bot) >= 4
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -116,7 +124,9 @@ function GetDesire()
 	-- deny + harass, and last-hit only creeps no allied core can take. Reaching
 	-- here already means the support is not in an immediate-danger/retreat state
 	-- (handled above). Inert unless turbo + soak candidate 'suplh' (bSupLastHit).
-	if bSupLastHit and J.IsInLaningPhase() then
+	-- [lanefix] keeps a support in lane (with its carry) during the laning phase
+	-- too, instead of drifting off; danger/retreat is handled above this point.
+	if (bSupLastHit or bLaneFixSupport) and J.IsInLaningPhase() then
 		if (nEnemyCreeps ~= nil and #nEnemyCreeps > 0)
 		or J.IsValid(GetBestDenyCreep(nAllyCreeps)) then
 			return 0.9
@@ -298,6 +308,18 @@ local function DoSupportLaningThink()
 		end
 	end
 
+	-- [lanefix] Stay with the carry: if an allied core is laning nearby, hold a
+	-- spot right next to it instead of the raw lane front, so the support screens
+	-- the core rather than drifting off. Only the idle fallthrough is affected --
+	-- deny / last-hit / harass above are unchanged.
+	if J.IsLaneFixActive() then
+		local hCore = J.GetLaneCoreToProtect( bot )
+		if hCore ~= nil then
+			bot:Action_MoveToLocation( hCore:GetLocation() + RandomVector( 200 ) )
+			return
+		end
+	end
+
 	-- Otherwise hold the lane front (mirrors the core path's positioning).
 	local fLaneFrontAmount = GetLaneFrontAmount(GetTeam(), botAssignedLane, false)
 	local fLaneFrontAmount_enemy = GetLaneFrontAmount(GetOpposingTeam(), botAssignedLane, false)
@@ -309,9 +331,9 @@ local function DoSupportLaningThink()
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
-if bCustomLastHit or bSupLastHit then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport then
 	function Think()
-		if bSupLastHit then
+		if bSupLastHit or bLaneFixSupport then
 			DoSupportLaningThink()
 			return
 		end

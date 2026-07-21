@@ -4802,6 +4802,21 @@ end
 -- offensive ability Consider fn checks it before a harass cast. Fires ONLY in the
 -- laning phase, when mana is below a reserve, and there is NO kill on the table
 -- (a low-HP enemy in range lets the cast through). Lanefix-gated.
+-- [replay-review 071423/071859] The nearest allied CORE (pos <= 3) laning within
+-- ~2600u, or nil. Used by the support-protect behavior so a support screens/stays
+-- with its carry instead of drifting off (Silencer/Oracle wandered 7-13k away).
+function J.GetLaneCoreToProtect( bot )
+	local best, bestDist = nil, 2600
+	local allies = J.GetAlliesNearLoc( bot:GetLocation(), 2600 )
+	for _, a in pairs( allies ) do
+		if a ~= bot and J.IsValidHero( a ) and not a:IsIllusion() and J.IsCore( a ) then
+			local d = GetUnitToUnitDistance( bot, a )
+			if d < bestDist then best, bestDist = a, d end
+		end
+	end
+	return best
+end
+
 function J.ShouldConserveManaInLane( bot, nReservePct )
 	if not J.IsLaneFixActive() then return false end
 	if DotaTime() > 10 * 60 then return false end
