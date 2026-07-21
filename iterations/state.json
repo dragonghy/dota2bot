@@ -233,7 +233,9 @@
   "aegisgroup",
   "pullcamp",
   "creeppull",
-  "bodyblock"
+  "bodyblock",
+  "wkbuild"
  ],
- "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support), aegisgroup(#6 no solo-dive with aegis), pullcamp(#13 pull neutral camps for lane equilibrium), creeppull(#10 disadvantaged core draws enemy-creep aggro to reset lane), bodyblock(#11 advantaged laning core harasses enemy on a winnable trade)."
+ "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support), aegisgroup(#6 no solo-dive with aegis), pullcamp(#13 pull neutral camps for lane equilibrium), creeppull(#10 disadvantaged core draws enemy-creep aggro to reset lane), bodyblock(#11 advantaged laning core harasses enemy on a winnable trade), wkbuild(#17 WK earlier-2nd-stun skill build for kill participation).",
+ "backlog_status_20260721": "ALL fixable open issues now carry a gated or shipped implementation. Lane-control cluster #8 (children #10 creeppull, #11 bodyblock, #12 nopush[gated], #13 pullcamp, #14 suplh[gated], #15 midtp) COMPLETE. #6 aegisgroup, #9 (skysilence/wlok/tpsafe2), #17 wkbuild, #19 vsafe[shipped], #20 overchase all done. Remaining work is PURE A/B VALIDATION (owner-deferred: '先不急着跑模拟器'): promote the ~11 gated candidates one lever at a time + the #21 lanefix re-narrowed rerun. Class-A-only items not doable under local-test-only: #16 corefarm[REJECTED], #18 depthnum[gated, needs multi-seed], #19 general attack/roam overextend expansion."
 }
