@@ -62,4 +62,23 @@ tests['gate off: shipped default is unchanged'] = function()
         'off the candidate the laning-phase farm ban stays absolute')
 end
 
+tests['narrowed: a core WALKING ITS LANE PATH is not diverted'] = function()
+    -- The final-gate reject traced -48% core CS to the first cut firing during
+    -- the ordinary base->lane walk ("far from the front POINT" is not "off the
+    -- lane"). A bot on the lane path must fall through to laning logic.
+    local J, bot, heroes = armed()
+    -- Put a sampled lane-path point right next to Sven: he is on the path.
+    GetLocationAlongLane = function() return bot:GetLocation() + Vector(200, 0, 0) end
+    assert(J.ShouldLaneRecoverFarm(bot) == false,
+        'on the lane path -> laning logic owns it, no jungle detour')
+end
+
+tests['narrowed: a low-HP core is not sent to jungle'] = function()
+    local J, bot = armed()
+    rawget(bot, '__spec').GetHealth = 200
+    rawget(bot, '__spec').OriginalGetHealth = 200
+    assert(J.ShouldLaneRecoverFarm(bot) == false,
+        'low HP -> regen first, not a jungle detour')
+end
+
 return tests

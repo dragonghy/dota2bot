@@ -4870,11 +4870,36 @@ end
 -- lane (> 2500 from its lane front). A core still in/near its lane keeps the
 -- status quo (farm stays blocked; laning logic owns the decision).
 -- Gated (turbo + lanefix/lf_recover); inert by default.
+-- NARROWED after the final-gate reject (batch 20260721_1511, behavioral diff):
+-- the first cut fired for any core > 2500 from its lane FRONT POINT -- which is
+-- also true for most of the walk from base to lane, so farm-mode kept pulling
+-- low-level cores into the jungle mid-walk: candidate cores spent 19% of the
+-- laning phase off-lane vs 10% baseline, CS@8 -48%, laning deaths +40%. "Far
+-- from the front point" is NOT "off the lane". Now requires ALL of:
+--   * off the LANE PATH too (min distance to sampled points of the assigned
+--     lane > 1500) -- a core walking its lane stays covered by laning logic,
+--   * healthy (>= 50% HP) -- no low-HP jungle detours,
+--   * plus the original: laning phase handled by caller, t > 120, core,
+--     > 2500 from the lane front.
 function J.ShouldLaneRecoverFarm( bot )
 	if not J.IsLaneFixOn( 'recover' ) then return false end
 	if DotaTime() < 120 then return false end
 	if not J.IsCore( bot ) then return false end
-	return J.GetDistanceFromLaneFront( bot ) > 2500
+	if J.GetHP( bot ) < 0.5 then return false end
+	if J.GetDistanceFromLaneFront( bot ) <= 2500 then return false end
+	local nLane = bot:GetAssignedLane()
+	if nLane ~= nil then
+		local nPathMin = 999999
+		for k = 1, 9 do
+			local v = GetLocationAlongLane( nLane, k / 10 )
+			if v ~= nil then
+				local d = GetUnitToLocationDistance( bot, v )
+				if d < nPathMin then nPathMin = d end
+			end
+		end
+		if nPathMin <= 1500 then return false end -- still on/near the lane path
+	end
+	return true
 end
 
 -- [replay-review 071423 t=3:55] Rescue / counter-gank TP. Watched: Luna was

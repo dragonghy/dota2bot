@@ -46,8 +46,10 @@ local bCustomLastHit = local_mode_laning_generic
 -- so the fix re-arms the existing full active last-hit path (the c3 Think) for
 -- cores -- the under-tower slice is where it matters most. Load-time flag like
 -- the others; gated, inert by default.
-local bLaneFixCoreLH = (J.IsModeTurbo()
-		and (J.IsSoakCandidate('lanefix') or J.IsSoakCandidate('lf_undertower')))
+-- PARKED outside the 'lanefix' bundle after the final-gate reject: this is a
+-- wholesale replacement of Valve's default CS think and must be evaluated on
+-- its own candidate ('lf_undertower'), never silently inside a bundle.
+local bLaneFixCoreLH = J.IsModeTurbo() and J.IsSoakCandidate('lf_undertower')
 	and J.GetPosition(bot) <= 3
 
 -- [LAB suplh / GH #14] Support (pos 4-5) last-hit division. Turbo-only and
@@ -328,10 +330,20 @@ local function DoSupportLaningThink()
 	-- spot right next to it instead of the raw lane front, so the support screens
 	-- the core rather than drifting off. Only the idle fallthrough is affected --
 	-- deny / last-hit / harass above are unchanged.
+	-- NARROWED after the final-gate reject: parking ON the carry clumped the
+	-- team 23% tighter in 17/17 games (2-man gank targets, contested XP).
+	-- Screen only when an enemy hero actually threatens the carry, and stand
+	-- OFF the carry (400u toward our fountain), not on top of it.
 	if J.IsLaneFixOn( 'support' ) then
 		local hCore = J.GetLaneCoreToProtect( bot )
-		if hCore ~= nil then
-			bot:Action_MoveToLocation( hCore:GetLocation() + RandomVector( 200 ) )
+		if hCore ~= nil
+			and #J.GetEnemiesNearLoc( hCore:GetLocation(), 1600 ) > 0 then
+			local vCore = hCore:GetLocation()
+			local vF = J.GetTeamFountain()
+			local dx, dy = vF.x - vCore.x, vF.y - vCore.y
+			local n = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
+			bot:Action_MoveToLocation(
+				Vector( vCore.x + dx / n * 400, vCore.y + dy / n * 400, 0 ) )
 			return
 		end
 	end
