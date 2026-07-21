@@ -258,6 +258,11 @@
   "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
  },
  "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH).",
+ "STRATEGIC_INSIGHT_20260721": {
+  "pattern": "Every LANE-MICRO fix measures neutral-to-negative: bodyblock REJECT(-50), lf_support REJECT(-22), lanefix REJECT(-88 x2), corefarm/c3 REJECT(#16). Every fix that WINS is DEATH-REDUCTION or DEFENSIVE-MACRO: #2 TP-home(+51), #7 punish-dive, #6 regroup, #5 idle, #19 venge. Matches doc learning 'Turbo econ is kill/death-driven, not lane-micro-driven'.",
+  "redirect": "STOP inventing lane-micro (pull/harass/screen/force-farm) -- the bots are finely balanced and these levers backfire. Focus fixing energy on: (1) death-reduction (overextend/return-to-death/dive-death), (2) making already-shipped defensive fixes actually FIRE (divecap-class: found #7 was neutralized by the lane-push cap). Rigorously checked #2/#6/#7 for neutralization -- only #7 was.",
+  "next_validation_priority": "death-reduction gated fixes targeting the biggest detector signals: depthnum(#18, overextend 7-10/gm, Class-A multi-seed), aegisgroup(#6 aegis solo-dive), lf_revive(#17 return-to-death 3-7/gm). These are the category most likely to actually help. pullcamp/creeppull (lane-micro) are lower priority (likely neutral)."
+ },
  "ab_verdicts_20260721_recovered": {
   "note": "Instances spot-RECLAIMED (Service initiated 22:16) before validate_onspot uploaded verdicts, but per-game analysis.json (mirror-stamped) were in S3 -> recovered LOCALLY via tools/batch_test/soak/recover_verdict.py. Econ A/B is noise-limited (1-2 seeds); treat as directional, esp. the strong 0/2 rejects.",
   "bodyblock": {"verdict": "REJECT", "gpm": -50.53, "xpm": -53.62, "deaths": 0.61, "last_hits": -3.24, "comps": "0/2", "read": "#11 harass pulls cores off farm + gets them killed. Echoes #16 (forcing cores off-farm in lane is wrong). Strong 2-seed reject. Keep gated/inert; do NOT promote. Abandon or radically narrow (kill-only, not general harass)."},
