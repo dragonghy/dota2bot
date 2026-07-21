@@ -149,6 +149,21 @@
    "note": "confirm Venge overextend drops in next batch; revert if it kills Venge fight participation"
   }
  ],
+ "validation_run_20260721_2147": {
+  "authorized_by": "owner 2026-07-21 (start validation; 2h random run + A/B)",
+  "mtd_at_launch_usd": 59.52,
+  "tier_cap_usd": 100,
+  "watchdog_hours": 2,
+  "instances": {
+   "i-0e555a739105d4f52": "PLAIN observation, 16 slots, run spot_20260721_214723_1_main (baseline gameplay + replays)",
+   "i-08a6c744eb172c1ef": "VALIDATE pullcamp (rewrote :12/:42 windows), seeds 101/102 x12, run spot_20260721_214731_1_main",
+   "i-04d2fafa97ca91561": "VALIDATE lf_support (support-wandering, narrowed), seeds 101/102 x12, run spot_20260721_214735_1_main",
+   "i-0a5fb49b960031018": "VALIDATE bodyblock (#11 advantaged harass), seeds 101/102 x12, run spot_20260721_214740_1_main"
+  },
+  "verdicts_s3": "s3://dota2bot-batch-results-4924/validation/",
+  "results_s3": "s3://dota2bot-batch-results-4924/soak/",
+  "note": "All self-terminate at 2h (or on validate completion, or spot reclaim). Check_costs after. Analyze verdicts + run behavioral detectors on candidate-side replays."
+ },
  "replay_spot": {
   "instance_id": "i-017ee6bcf607e5ba6",
   "launched_utc": "2026-07-20T04:32Z",
