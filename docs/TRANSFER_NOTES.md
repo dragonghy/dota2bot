@@ -6,9 +6,11 @@ and the learnings that cost real batch runs.** For loop mechanics see
 CLAUDE.md → "Iteration Workflow (REQUIRED)"; for project goals see
 `docs/PROJECT.md`. This file is the status board + orientation.
 
-_Refreshed 2026-07-21 (iteration 17). Target: **Turbo** early/mid-game quality
+_Refreshed 2026-07-21 (iteration 18). Target: **Turbo** early/mid-game quality
 for the 5 focus heroes — Axe, Zeus, Wraith King (`skeleton_king`), Lion,
-Crystal Maiden._
+Crystal Maiden. Iter 18: full lane-control cluster (#8) + #6/#9/#17/#20 landed
+as gated fixes; backlog of fixable items cleared — remaining work is A/B
+validation (owner-deferred)._
 
 ---
 
@@ -48,6 +50,17 @@ this sharply once; do not regress on it.
 - **`lanefix` bundle** (from the 071423/071859/etc. replay review; each fix has its own `lf_*` id): `lf_chase` (`ShouldNotChaseWhenLow`), `lf_mana` (`ShouldConserveManaInLane`), `lf_salve` (lane regen use), `lf_rescue` (`GetRescueTpTarget` — counter-gank TP to save a caught ally), `lf_revive` (`ShouldFleeAfterRevive`), `lf_recover` (`ShouldLaneRecoverFarm`), `lf_support` (support stays with/screens carry), `lf_threat` (`NoteProvenKillerOnDeath`/`ShouldRespectProvenKiller`), `lf_undertower` (parked). **All fixture-validated locally; REJECTED as a bundle at the final gate (see §4). Not live.**
 - **`depthnum`** (#18) — depth-discounted numbers in `SafeToCommitFight`.
 - **`nodive2`** (#4) — sharpened dive trigger. **`nopush`** (#12) — no accidental wave-shove. **`wlok`** (#9) — Warlock laning build.
+- **Lane-control cluster (iter 17–18, all gated, unit-tested, inert):**
+  `creeppull` (#10 `J.ShouldCreepPullLane` — disadvantaged core draws enemy-creep
+  aggro), `bodyblock` (#11 `J.ShouldBodyBlockHarass` — advantaged core harasses on
+  a winnable trade), `pullcamp` (#13 `J.ShouldPullNeutralCamp` — support pulls a
+  friendly camp), `midtp` (#15 `J.ShouldTpSupportTowerFight` — mid 6-level TP to a
+  tower fight), `aegisgroup` (#6 `J.ShouldGroupWithAegis` — no solo-dive with
+  aegis), `skysilence` (#9 Skywrath — no lone value-less silence), `tpsafe2`
+  (#9 Slardar — no interruptible TP), `overchase` (#20 `J.ShouldPunishOverchase` —
+  turn and punish an enemy over-chasing our low ally), `wkbuild` (#17 WK
+  earlier-2nd-stun skill build for kill participation).
+  **All await A/B; promote one lever at a time.**
 
 ### Rejected by A/B (recorded negatives — do NOT retry)
 - **`c3`** active last-hit micro **−37 GPM** (0/4); **`corefarm`** cap raise **−17 GPM** (0/4). → forcing cores to farm more is the wrong lever in Turbo (#16).
@@ -69,10 +82,10 @@ without undertower — run only after the owner has seen the reject analysis.
 
 | Behavior (owner's words) | Status | Where |
 |---|---|---|
-| **拉野 / 控兵线** (creep-pull, lane-equilibrium control) | **NOT done** | Actual pull/orb-walk lane control is unimplemented. Tracked: #8 (parent) → #10 (勾线 disadvantaged), #11 (body-block advantaged), #13 (pull camps :47/:55). `nopush` (#12, gated) and `suplh` (#14) are the only adjacent pieces. |
-| **支援其他路** (rotate to help other lanes) | **Partial / NOT general** | `GetRescueTpTarget` (`lf_rescue`, gated) does counter-gank TP to save a caught ally, and #7 punishes dives — but there is **no general lane-rotation / gank-other-lane** logic. Tracked #15 (mid 6-level TP support). |
+| **拉野 / 控兵线** (creep-pull, lane-equilibrium control) | **DONE (gated, awaiting A/B)** | Full lane-control cluster #8 implemented: `creeppull` (#10 勾线 disadvantaged), `bodyblock` (#11 body-block advantaged), `pullcamp` (#13 pull camps), plus `nopush` (#12) and `suplh` (#14). All gated + unit-tested; none promoted yet. |
+| **支援其他路** (rotate to help other lanes) | **Partial / NOT general** | `GetRescueTpTarget` (`lf_rescue`, gated) counter-gank TP to save a caught ally; `midtp` (#15 `J.ShouldTpSupportTowerFight`, gated) TPs mid to a friendly-tower fight. Still **no general lane-rotation / gank-other-lane** desire. |
 | **惩罚对面深入走位 / 冲塔** (punish enemy overextension / dive) | **DONE & live** | `J.ShouldPunishDive` (#7), backed by `ShouldRegroupNotSolo` (#6) / `ShouldSuppressDive` / `depthnum` (#18, gated) keeping *our* side from over-committing. |
-| **惩罚对面追击** (punish an enemy who over-chases us) | **NOT done** | `J.ShouldNotChaseWhenLow` is *us not over-chasing them* — the inverse. No logic turns and punishes an enemy diving our team while chasing a low ally. **Newly filed as an issue.** |
+| **惩罚对面追击** (punish an enemy who over-chases us) | **DONE (gated, awaiting A/B)** | `overchase` (#20 `J.ShouldPunishOverchase`) turns nearby allies to collapse on an enemy solo-chasing our low ally deep into our half (gated on `SafeToCommitFight`). Distinct from `J.ShouldNotChaseWhenLow` (us not over-chasing — the inverse). Diagnostic detector `d20_enemy_overchase_unpunished` added. |
 
 ## 6. Learnings that cost real runs
 1. **Locally-correct ≠ emergently-good (the crux).** Fixture-clean guards → net
