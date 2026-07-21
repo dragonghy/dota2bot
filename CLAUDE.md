@@ -86,6 +86,48 @@ When the owner says to work autonomously ("继续干不要停 / 不要等我"), 
 - Always leave the tree committed + pushed and `iterations/state.json` current,
   so ANY wake (heartbeat or owner message) can resume from the repo alone.
 
+## Gated fixes (soak candidates) — behavior changes ship dark first
+
+Every new behavior fix lands **gated**: it is a no-op unless (a) the game is
+Turbo and (b) its soak-candidate id is armed. The gate file is
+`bots/Customize/soak_side.lua` (gitignored; on the farm it returns
+`{side, cand, seed}`). Helpers read it via `J.IsSoakCandidate('<id>')`;
+convenience wrappers like `J.IsLaneFixActive()` / `J.IsLaneFixOn(sub)` gate a
+whole bundle while each fix keeps its own `lf_*` id for isolation. This lets a
+fix ride the branch (and A/B candidate waves) while staying **inert in real
+games** until it passes its gate and is promoted (gate removed / made
+default-on). **A gated fix on the branch is NOT live** — don't call it shipped
+until it's ungated. Currently gated & unpromoted: the `lanefix` bundle (chase /
+mana / salve / rescue-TP / revive-flee / lane-recover / support), `depthnum`,
+`nodive2`, `nopush`, `suplh`, `wlok`.
+
+## Hard-won learnings (don't relearn these — they cost real batch runs)
+
+- **Locally-correct ≠ emergently-good (the crux).** The bots are finely
+  balanced; a *bundle* of individually-defensible, fixture-validated guards had
+  a strongly NEGATIVE aggregate effect — the `lanefix` bundle was fixture-clean
+  yet the final-gate batch **REJECTED it twice** (gpm −74.5, then −88.7, 0/4
+  comps). Local validation answers "is this decision correct"; only the batch
+  answers "is the emergent aggregate good." Ship gated, one lever at a time; the
+  diagnosis path is a behavioral diff on the batch's own replays (here: primary
+  culprit `lf_recover`, secondary `lf_support`; the retreat guards were
+  exonerated), then re-narrow at the fixture level.
+- **Turbo economy is kill/push/passive-driven, not last-hit-driven.** Forcing
+  cores to farm more measured WORSE (`c3` active-last-hit −37 GPM; `corefarm`
+  cap-raise −17 GPM, both 0/4). Low core CS in Turbo is a *symptom*, not a lever
+  — pull on winning fights / objectives / fewer pointless deaths (issue #16).
+- **The econ/deaths A/B is noise-limited** (random-draft SD ≈ 600 GPM/game; a
+  ~40 GPM fix is invisible over 12 games). Use **mirrored-draft** (same 10 both
+  sides, swap the fix) + **behavioral detectors**, never a single-wave econ read.
+- **Radiant side bias ≈ +1.5k gold** — always swap-and-average.
+- **No bot-side debugging** — `print()` never reaches the server console and the
+  engine error handler is broken (`error in error handling` masks all Lua error
+  text). Debug via replays / in-game observation / bisection.
+- **Harness (bash) changes need a soak-loop restart** (a long-lived loop caches
+  the old file); **Lua hero changes do not** (each game re-reads `bots/`).
+- **In-memory wakeup chains die on session suspend** — see "Agent session
+  continuity" above; use a background `sleep` heartbeat and re-arm each wake.
+
 ## Verification (run before every push)
 
 ```bash
