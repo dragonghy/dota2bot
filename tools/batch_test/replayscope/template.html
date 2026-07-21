@@ -40,8 +40,16 @@
   tr.rad td.hero img{box-shadow:0 0 0 1.5px var(--radiant)} tr.dire td.hero img{box-shadow:0 0 0 1.5px var(--dire)}
   tr.fogged{opacity:.42} tr.fogged td.hero::after{content:"fog";color:var(--ink-faint);font-weight:400;font-size:10px;letter-spacing:.08em}
   tr.dead td{color:var(--ink-faint)} tr.dead td.hero::after{content:"dead";color:var(--dire);font-weight:400;font-size:10px;letter-spacing:.08em}
-  td.hp{color:var(--radiant)} td.mp{color:var(--amber)}
+  td.hp{color:var(--radiant)} td.mp{color:#5aa9e6}
   tr.fogged td.hp,tr.fogged td.mp,tr.dead td.hp,tr.dead td.mp{color:var(--ink-faint)}
+  td.items{white-space:nowrap;line-height:0}
+  td.items img{width:17px;height:17px;border-radius:3px;margin:0 1px;vertical-align:middle;background:#0c0f15}
+  td.status{white-space:nowrap;text-align:left}
+  .cc{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:4px;margin:1px 2px 1px 0;
+    letter-spacing:.02em;font-family:var(--sans)}
+  .cc-stun{background:#5a2d00;color:#ffcf8a} .cc-slow{background:#243a56;color:#8fc0ef}
+  .cc-root,.cc-hex,.cc-cyclone,.cc-silence{background:#3a2352;color:#cda8ec}
+  .cc-knock,.cc-tp{background:#2f3a44;color:#a7c4d6}
   footer{border-top:1px solid var(--line);background:var(--panel);padding:12px 18px;display:flex;flex-direction:column;gap:10px}
   .scrub{display:flex;align-items:center;gap:12px}
   button{font-family:var(--sans);font-size:12px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);
@@ -91,7 +99,7 @@
     <div class="hd"><span>State table</span><span class="spacer" style="flex:1"></span>
       <span class="hint" id="persphint">global — all units</span></div>
     <div class="tablewrap"><table id="tbl"><thead><tr>
-      <th>hero</th><th>lvl</th><th>hp</th><th>mp</th>
+      <th>hero</th><th>lvl</th><th>hp</th><th>mp</th><th>items</th><th>status</th>
     </tr></thead><tbody id="tbody"></tbody></table></div>
   </section>
 </main>
@@ -155,6 +163,9 @@ const RAD=2, DIRE=3;
 let i=0, persp="global", playing=false, raf=null, sc=1;
 const ticks=DATA.ticks; const lastSeen={}; // name -> last visible snapshot (for ghosts)
 const hasFog = ticks.some(tk=>tk.heroes.some(h=>h.vis));  // real fog data present?
+// Creeps are stored sparsely (coarser sample rate); forward-fill each tick to
+// the most recent creep sample so every frame shows creeps (references, no copy).
+(function(){let last=null;for(const tk of ticks){if(tk.creeps)last=tk.creeps;else if(last)tk.creeps=last;}})();
 
 const slider=document.getElementById('slider'); slider.max=ticks.length-1;
 const clock=document.getElementById('clock'), tbody=document.getElementById('tbody');
@@ -194,11 +205,12 @@ function drawMap(){
   // river midline x+y=0
   cx.strokeStyle="rgba(120,150,200,.16)";cx.lineWidth=1.5*sc;cx.setLineDash([7*sc,7*sc]);
   cx.beginPath();cx.moveTo(sx(B.min),sy(-B.min));cx.lineTo(sx(B.max),sy(-B.max));cx.stroke();cx.setLineDash([]);
-  // creeps -> small dots
+  // creeps -> small dots. team 2/3 = lane (green/red), team 4 = neutral (yellow)
   if(tk.creeps){for(const c of tk.creeps){
     if(persp!=="global"){const me=myTeam(); if(c[2]!==me && !nearMine(c[0],c[1],me)) continue;}
     cx.beginPath();cx.arc(sx(c[0]),sy(c[1]),2.2*sc,0,7);
-    cx.fillStyle=c[2]===RAD?getCss('--radiant'):getCss('--dire');cx.globalAlpha=.6;cx.fill();cx.globalAlpha=1;}}
+    cx.fillStyle=c[2]===RAD?getCss('--radiant'):c[2]===DIRE?getCss('--dire'):"#d9b64a";
+    cx.globalAlpha=c[2]===RAD||c[2]===DIRE?.6:.75;cx.fill();cx.globalAlpha=1;}}
   // towers (greyed when dead; no HP annotation)
   for(const tw of (DATA.towers||[])){const dead=tw.die_t!=null&&tk.t>=tw.die_t;
     cx.fillStyle=dead?getCss('--fog'):teamCol(tw.team); cx.globalAlpha=dead?.4:.9;
@@ -235,6 +247,11 @@ function drawHero(h){
     cx.strokeStyle=getCss('--dire');cx.lineWidth=2*sc;
     cx.beginPath();cx.moveTo(X-R*.7,Y-R*.7);cx.lineTo(X+R*.7,Y+R*.7);
     cx.moveTo(X+R*.7,Y-R*.7);cx.lineTo(X-R*.7,Y+R*.7);cx.stroke();
+  }
+  // crowd-control ring: a colored arc around a stunned/slowed/rooted hero
+  if(h.alive&&h.cc&&h.cc.length){
+    const k=h.cc[0].k, col=k==="Stun"?getCss('--amber'):k==="Slow"?"#5aa9e6":"#b98fe0";
+    cx.beginPath();cx.arc(X,Y,R+4*sc,0,7);cx.strokeStyle=col;cx.lineWidth=2*sc;cx.stroke();
   }
   // items alongside the hero (only when the dump carries them; inert on position-only dumps)
   if(h.items&&h.items.length) drawItems(h.items,X,Y,R);
@@ -275,11 +292,16 @@ function drawTable(){
     tr.className=(h.team===RAD?"rad":"dire")+(!h.alive?" dead":"")+(!vis?" fogged":"");
     const ic=window.__ICONS__&&window.__ICONS__[h.name]?`<img src="${window.__ICONS__[h.name]}" alt="">`:'';
     const hp = (!h.alive)?"0/"+(src.mhp||0):(src.hp!=null?src.hp+"/"+(src.mhp||src.hp):"—");
-    const mp = src.mp!=null?Math.round(src.mp*100)+"%":"—";
+    const mp = (!h.alive)?"0/"+(src.mmp||0):(src.mp!=null?src.mp+"/"+(src.mmp||src.mp):"—");
+    const IT=window.__ITEMS__||{};
+    const items=(src.items||[]).map(it=>IT[it]?`<img src="${IT[it]}" title="${it}" alt="${it}">`:'').join('');
+    const cc=(vis&&h.alive&&h.cc?h.cc:[]).map(c=>`<span class="cc cc-${c.k.toLowerCase()}">${c.k} ${c.r}s</span>`).join('');
     tr.innerHTML=`<td class="hero">${ic}<span>${pretty(h.name)}</span></td>
       <td>${src.lvl??'—'}</td>
       <td class="hp">${hp}</td>
-      <td class="mp">${mp}</td>`;
+      <td class="mp">${mp}</td>
+      <td class="items">${items}</td>
+      <td class="status">${cc}</td>`;
     tbody.appendChild(tr);
   }
 }

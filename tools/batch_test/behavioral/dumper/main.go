@@ -82,6 +82,8 @@ type snapshot struct {
 	Y         float64       `json:"y"`
 	HP        int32         `json:"hp"`
 	HPPct     float64       `json:"hp_pct"`
+	MP        int32         `json:"mp"`
+	MaxMP     int32         `json:"max_mp"`
 	MPPct     float64       `json:"mp_pct"`
 	Level     int32         `json:"level"`
 	Items     []string      `json:"items"`
@@ -258,12 +260,13 @@ func main() {
 	var creepSnaps []creepSnap
 	var events []event
 
-	serverNow := 0.0     // latest known raw server time (from combat log)
-	gameStart := 0.0     // horn, from gamerules GameStartTime (last nonzero)
-	armed := false       // sampling armed once the horn (gameStart) is known
-	nextSample := 0.0    // next hero-snapshot game-clock boundary
-	nextBuilding := 0.0  // next building-sample boundary
-	nextCreep := 0.0     // next creep-sample boundary
+	serverNow := 0.0        // latest known raw server time (from combat log)
+	gameStart := 0.0        // horn, from gamerules GameStartTime (last nonzero)
+	tickInterval := 1.0 / 30 // engine seconds per tick, from ServerInfo
+	armed := false          // sampling armed once the horn (gameStart) is known
+	nextSample := 0.0       // next hero-snapshot game-clock boundary
+	nextBuilding := 0.0     // next building-sample boundary
+	nextCreep := 0.0        // next creep-sample boundary
 
 	// resolveItems reads the hero's inventory handles and returns item names.
 	// Slots 0-8 are the active inventory + backpack, 9-16 are stash/neutral/TP;
@@ -340,7 +343,8 @@ func main() {
 			snaps = append(snaps, snapshot{
 				T: round1(t), Hero: h.name, Idx: h.idx, Team: h.team,
 				X: round1(h.x), Y: round1(h.y),
-				HP: h.hp, HPPct: round3(hpPct), MPPct: round3(mpPct),
+				HP: h.hp, HPPct: round3(hpPct),
+				MP: int32(h.mp + 0.5), MaxMP: int32(h.maxmp + 0.5), MPPct: round3(mpPct),
 				Level:     h.level,
 				Items:     resolveItems(h.idx),
 				Abilities: resolveAbilities(h.idx),
@@ -519,23 +523,7 @@ func main() {
 	p.Callbacks.OnCMsgDOTACombatLogEntry(func(m *dota.CMsgDOTACombatLogEntry) error {
 		ts := float64(m.GetTimestamp())
 		if ts > serverNow {
-			serverNow = ts
-			// Emit any samples whose game-clock boundary we've now passed.
-			if armed && gameStart > 0 {
-				clock := serverNow - gameStart
-				for clock >= nextSample {
-					dumpSnapshots(nextSample)
-					nextSample += *interval
-				}
-				for clock >= nextBuilding {
-					dumpBuildings(nextBuilding)
-					nextBuilding += *buildingInterval
-				}
-				for clock >= nextCreep {
-					dumpCreeps(nextCreep)
-					nextCreep += *creepInterval
-				}
-			}
+			serverNow = ts // still tracked for event timestamps below
 		}
 		actor := name(m.GetAttackerName())
 		target := name(m.GetTargetName())
@@ -555,6 +543,39 @@ func main() {
 			ActorHero:  m.GetIsAttackerHero(),
 			TargetHero: m.GetIsTargetHero(),
 		})
+		return nil
+	})
+
+	// Exact engine seconds per tick, so NetTick*tickInterval == game engine time.
+	p.Callbacks.OnCSVCMsg_ServerInfo(func(m *dota.CSVCMsg_ServerInfo) error {
+		if ti := float64(m.GetTickInterval()); ti > 0 {
+			tickInterval = ti
+		}
+		return nil
+	})
+
+	// Drive sampling off the per-tick clock (30 Hz) rather than the sparse combat
+	// log. NetTick*tickInterval is engine time (verified to match combat-log
+	// timestamps); game-clock = that - horn. This emits each boundary with the
+	// hero/building/creep positions in effect AT that instant -- essential for the
+	// pre-game, where combat-log entries are rare and used to smear early frames.
+	p.Callbacks.OnCNETMsg_Tick(func(m *dota.CNETMsg_Tick) error {
+		if !armed || gameStart <= 0 {
+			return nil
+		}
+		clock := float64(m.GetTick())*tickInterval - gameStart
+		for clock >= nextSample {
+			dumpSnapshots(nextSample)
+			nextSample += *interval
+		}
+		for clock >= nextBuilding {
+			dumpBuildings(nextBuilding)
+			nextBuilding += *buildingInterval
+		}
+		for clock >= nextCreep {
+			dumpCreeps(nextCreep)
+			nextCreep += *creepInterval
+		}
 		return nil
 	})
 

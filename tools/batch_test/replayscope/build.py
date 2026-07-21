@@ -67,6 +67,88 @@ def load_icon(hero):
     return "data:image/png;base64," + base64.b64encode(open(path, "rb").read()).decode()
 
 
+ITEM_URL = ("https://cdn.cloudflare.steamstatic.com/apps/dota2/images/"
+            "dota_react/items/{}.png")
+# dumper item names are class-derived; a few differ from the react icon filename.
+ITEM_ALIAS = {"teleport_scroll": "tpscroll", "tpscroll": "tpscroll",
+              "empty_bottle": "bottle", "boots_of_speed": "boots"}
+ITEM_DIR = os.path.join(HERE, "item_icons")
+
+
+def load_item_icon(item):
+    """data: URI for an item icon (cached in item_icons/, fetched on miss)."""
+    path = os.path.join(ITEM_DIR, item + ".png")
+    if not os.path.exists(path):
+        os.makedirs(ITEM_DIR, exist_ok=True)
+        cands = [ITEM_ALIAS.get(item, item), item, item.replace("recipe_", "")]
+        for fn in dict.fromkeys(cands):
+            try:
+                req = urllib.request.Request(ITEM_URL.format(fn),
+                                             headers={"User-Agent": "replayscope"})
+                data = urllib.request.urlopen(req, timeout=15).read()
+                if data[:8] == b"\x89PNG\r\n\x1a\n":
+                    open(path, "wb").write(data)
+                    break
+            except Exception:
+                continue
+    if not os.path.exists(path):
+        return None
+    return "data:image/png;base64," + base64.b64encode(open(path, "rb").read()).decode()
+
+
+# Status modifiers worth surfacing (crowd control + a few notable states), keyed
+# by substring -> display label. Auras/buffs/DoTs are intentionally excluded.
+CC_KINDS = [("stunned", "Stun"), ("stun", "Stun"), ("bash", "Stun"),
+            ("hex", "Hex"), ("root", "Root"), ("ensnare", "Root"),
+            ("silence", "Silence"), ("leash", "Root"), ("cyclone", "Cyclone"),
+            ("knockback", "Knock"), ("teleporting", "TP"),
+            ("slow", "Slow"), ("gale", "Slow"), ("ignite", "Slow")]
+
+
+def cc_label(modifier):
+    m = modifier.lower()
+    for key, lab in CC_KINDS:
+        if key in m:
+            return lab
+    return None
+
+
+def attach_cc(ticks, tl, tick_s):
+    """Reconstruct active crowd-control per hero per tick from MODIFIER_ADD/REMOVE
+    events. Because the whole replay is parsed, each ADD is matched to its REMOVE,
+    so a real countdown ('Stun 1.2s') can be shown at any scrubbed instant."""
+    open_iv = {}          # (hero, modifier) -> add_t
+    intervals = {}        # hero -> [(start, end, label)]
+    for e in tl.get("events", []):
+        if not e.get("target_hero"):
+            continue
+        typ, mod = e.get("type"), e.get("inflictor", "")
+        lab = cc_label(mod)
+        if lab is None:
+            continue
+        h = bare(e["target"])
+        key = (h, mod)
+        if typ == "MODIFIER_ADD":
+            open_iv[key] = e["t"]
+        elif typ == "MODIFIER_REMOVE" and key in open_iv:
+            intervals.setdefault(h, []).append((open_iv.pop(key), e["t"], lab))
+    for h, ivs in intervals.items():
+        ivs.sort()
+    for row in ticks:
+        t = row["t"]
+        for hero in row["heroes"]:
+            ivs = intervals.get(hero["name"])
+            if not ivs:
+                continue
+            active = [(lab, round(end - t, 1)) for (s, end, lab) in ivs if s <= t < end]
+            if active:
+                # strongest CC first (Stun > others), then most time remaining
+                order = {"Stun": 0, "Hex": 1, "Cyclone": 1, "Root": 2, "Silence": 3}
+                active.sort(key=lambda a: (order.get(a[0], 9), -a[1]))
+                hero["cc"] = [{"k": lab, "r": r} for lab, r in active[:3]]
+    return ticks
+
+
 def build_ticks(tl, tick_s):
     teams = {bare(k): v for k, v in tl["game"]["teams"].items()}
     heroes = sorted(teams)
@@ -96,18 +178,21 @@ def build_ticks(tl, tick_s):
         per[h].sort(key=lambda s: s["t"])
     times = {h: [s["t"] for s in per[h]] for h in heroes}
 
-    # optional creeps grouped to nearest tick
+    # Creeps are dumped on a coarser interval than hero snapshots. Group them by
+    # their sample tick, then forward-fill so EVERY hero tick shows creeps (else
+    # only every Nth frame has them). Team 4 = neutral (rendered a distinct color).
     creeps_by_tick = {}
     for c in tl.get("creeps", []):
-        tk = int(round(c["t"] / tick_s)) * tick_s
+        tk = round(c["t"] / tick_s) * tick_s
         creeps_by_tick.setdefault(tk, []).append([round(c["x"]), round(c["y"]), c["team"]])
+    creep_keys = sorted(creeps_by_tick)
 
     # Start at the earliest snapshot (negative during the pre-game prep phase),
     # floored to a tick boundary, so the pre-horn setup is scrubbable.
     start = min((s["t"] for s in tl["snapshots"]), default=0.0)
     start = (int(start // tick_s)) * tick_s
 
-    last_mhp = {}
+    last_mhp, last_mmp = {}, {}
     ticks = []
     t = start
     while t <= dur + 0.5:
@@ -126,18 +211,24 @@ def build_ticks(tl, tick_s):
             alive = hp_pct > 0 and (t - s["t"]) <= DEAD_GAP
             if hp_pct > 0 and s.get("hp"):
                 last_mhp[h] = int(round(s["hp"] / hp_pct))
+            if s.get("max_mp"):
+                last_mmp[h] = s["max_mp"]
             mhp = last_mhp.get(h, s.get("hp", 0))
+            mmp = last_mmp.get(h, s.get("max_mp", 0))
             hero = {"name": h, "team": teams[h],
                     "x": round(s["x"]), "y": round(s["y"]),
                     "hp": (s.get("hp", 0) if alive else 0), "mhp": mhp,
-                    "mp": round(s.get("mp_pct", 0), 2), "lvl": s.get("level", 1),
-                    "alive": alive}
+                    "mp": (s.get("mp", 0) if alive else 0), "mmp": mmp,
+                    "lvl": s.get("level", 1), "alive": alive}
             if s.get("items"):
                 hero["items"] = [bare(x) for x in s["items"]]
             if s.get("vis"):
                 hero["vis"] = s["vis"]
             row["heroes"].append(hero)
-        ck = int(round(t / tick_s)) * tick_s
+        # Attach creeps only on their (coarser) sample ticks; the renderer
+        # forward-fills to intermediate frames so every tick shows creeps without
+        # duplicating the (large) creep arrays into the file.
+        ck = round(t / tick_s) * tick_s
         if ck in creeps_by_tick:
             row["creeps"] = creeps_by_tick[ck]
         ticks.append(row)
@@ -172,6 +263,7 @@ def main():
 
     tl = json.load(open(args.timeline))
     heroes, ticks, dur = build_ticks(tl, args.tick)
+    attach_cc(ticks, tl, args.tick)
     towers = build_towers(tl)
     has_fog = any(h.get("vis") for tk in ticks for h in tk["heroes"])
 
@@ -189,17 +281,31 @@ def main():
         if uri:
             icons[h] = uri
 
+    # Item icons for every item that appears in the game (readable loadout in the
+    # state table). Cached in item_icons/; a miss just omits that icon.
+    item_names = set()
+    for tk in ticks:
+        for h in tk["heroes"]:
+            item_names.update(h.get("items", []))
+    item_icons = {}
+    for it in sorted(item_names):
+        uri = load_item_icon(it)
+        if uri:
+            item_icons[it] = uri
+
     tpl = open(os.path.join(HERE, "template.html")).read()
-    inject = ("window.__ICONS__=%s;\nwindow.__REPLAY__=%s;"
-              % (json.dumps(icons), json.dumps(data, separators=(",", ":"))))
+    inject = ("window.__ICONS__=%s;\nwindow.__ITEMS__=%s;\nwindow.__REPLAY__=%s;"
+              % (json.dumps(icons), json.dumps(item_icons),
+                 json.dumps(data, separators=(",", ":"))))
     if "/*__REPLAYSCOPE_INJECT__*/" not in tpl:
         sys.exit("template.html is missing the /*__REPLAYSCOPE_INJECT__*/ marker")
     html = tpl.replace("/*__REPLAYSCOPE_INJECT__*/", inject)
 
     out = args.out or (os.path.splitext(args.timeline)[0] + ".html")
     open(out, "w").write(html)
-    print("heroes: %d  ticks: %d  duration: %ds  towers: %d  fog: %s  icons: %d"
-          % (len(heroes), len(ticks), dur, len(towers), has_fog, len(icons)))
+    ccn = sum(1 for tk in ticks for h in tk["heroes"] if h.get("cc"))
+    print("heroes: %d  ticks: %d  duration: %ds  towers: %d  fog: %s  icons: %d  item-icons: %d  cc-frames: %d"
+          % (len(heroes), len(ticks), dur, len(towers), has_fog, len(icons), len(item_icons), ccn))
     print("wrote %s (%d KB)" % (out, os.path.getsize(out) // 1024))
 
 
