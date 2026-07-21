@@ -4796,6 +4796,14 @@ function J.IsLaneFixActive()
 	return J.IsModeTurbo() and J.IsSoakCandidate( 'lanefix' )
 end
 
+-- Per-fix gate for isolating which replay-review fix helps. The 'lanefix'
+-- candidate enables the whole bundle (as before); 'lf_<sub>' enables just one fix
+-- so each can be A/B'd separately (the bundle A/B was rejected, 0/4). Turbo-only.
+function J.IsLaneFixOn( sub )
+	if not J.IsModeTurbo() then return false end
+	return J.IsSoakCandidate( 'lanefix' ) or J.IsSoakCandidate( 'lf_' .. sub )
+end
+
 -- [replay-review 071903] Lane mana discipline. Watched: cores/nukers spam harass
 -- abilities in lane and run dry, so they can neither trade nor secure a kill
 -- ("技能乱甩蓝耗撑不住"). True => hold this harass cast to conserve mana. A hero's
@@ -4818,7 +4826,7 @@ function J.GetLaneCoreToProtect( bot )
 end
 
 function J.ShouldConserveManaInLane( bot, nReservePct )
-	if not J.IsLaneFixActive() then return false end
+	if not J.IsLaneFixOn( 'mana' ) then return false end
 	if DotaTime() > 10 * 60 then return false end
 	nReservePct = nReservePct or 0.35
 	if bot:GetMaxMana() <= 0 then return false end
@@ -4836,7 +4844,7 @@ end
 -- Returns the item handle to use when the bot is hurt, safe, and holds a ready
 -- regen consumable; else nil. Lanefix-gated.
 function J.LaneRegenItemToUse( bot )
-	if not J.IsLaneFixActive() then return nil end
+	if not J.IsLaneFixOn( 'salve' ) then return nil end
 	if DotaTime() > 12 * 60 then return nil end
 	-- Only when safe: no enemy hero close enough to punish standing still.
 	if #J.GetEnemiesNearLoc( bot:GetLocation(), 1000 ) > 0 then return nil end
@@ -4854,7 +4862,7 @@ function J.LaneRegenItemToUse( bot )
 end
 
 function J.ShouldNotChaseWhenLow( bot, target )
-	if not J.IsLaneFixActive() then return false end
+	if not J.IsLaneFixOn( 'chase' ) then return false end
 	if not J.IsValidHero( target ) then return false end
 	if bot:GetHealth() / bot:GetMaxHealth() >= 0.40 then return false end
 	if J.SafeToCommitFight( bot, target ) then return false end

@@ -50,7 +50,8 @@ local bSupLastHit = J.IsModeTurbo() and J.IsSoakCandidate('suplh')
 -- when idle, stays near its carry to screen it -- instead of drifting off across
 -- the map (Silencer and Oracle both wandered 7-13k away, leaving the carry
 -- alone). Load-time flag, mirrors bSupLastHit; inert off the lanefix candidate.
-local bLaneFixSupport = J.IsModeTurbo() and J.IsSoakCandidate('lanefix')
+local bLaneFixSupport = J.IsModeTurbo()
+	and (J.IsSoakCandidate('lanefix') or J.IsSoakCandidate('lf_support'))
 	and J.GetPosition(bot) >= 4
 
 function GetDesire()
@@ -312,7 +313,7 @@ local function DoSupportLaningThink()
 	-- spot right next to it instead of the raw lane front, so the support screens
 	-- the core rather than drifting off. Only the idle fallthrough is affected --
 	-- deny / last-hit / harass above are unchanged.
-	if J.IsLaneFixActive() then
+	if J.IsLaneFixOn( 'support' ) then
 		local hCore = J.GetLaneCoreToProtect( bot )
 		if hCore ~= nil then
 			bot:Action_MoveToLocation( hCore:GetLocation() + RandomVector( 200 ) )
