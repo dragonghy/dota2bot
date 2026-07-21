@@ -40,12 +40,12 @@
   },
   {
    "key": "lab:disaster_heroes",
-   "note": "DK 218gpm/12LH, PA 228, SB 239, slardar 249 vs sniper 431 @10min \u2014 per-hero early-game rework is the big tail. Matches the project's focus-hero polish direction.",
+   "note": "DK 218gpm/12LH, PA 228, SB 239, slardar 249 vs sniper 431 @10min — per-hero early-game rework is the big tail. Matches the project's focus-hero polish direction.",
    "first_seen_iter": 8
   },
   {
    "key": "fight_desire:possibly_low",
-   "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games \u2014 no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
+   "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games — no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
    "first_seen_iter": 4
   },
   {
@@ -70,7 +70,7 @@
   },
   {
    "key": "vscript_errors:handler_broken",
-   "note": "CLOSED-as-explained: engine error handler is broken in this env \u2014 ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
+   "note": "CLOSED-as-explained: engine error handler is broken in this env — ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
    "first_seen_iter": 1
   }
  ],
@@ -93,7 +93,7 @@
    "commit": "81c2eec",
    "deployed_utc": "2026-07-19T07:15:00Z",
    "run_prefix_started": null,
-   "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm \u2014 stamps before this read 'iter-0001-dirty' etc.; clean from here."
+   "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm — stamps before this read 'iter-0001-dirty' etc.; clean from here."
   },
   "iter-0004": {
    "commit": "9260ccf",
@@ -224,5 +224,12 @@
   "cm_conclusion": "CM 2.8 deaths/gm; recurring pattern = hanging in lane at <=52% HP (covered by lf_salve + retreat guards). Creep-caused deaths are 2/25 games -> deliberately NOT fixed (too rare).",
   "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
  },
- "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH)."
+ "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH).",
+ "new_gated_awaiting_ab": [
+  "skysilence",
+  "overchase",
+  "tpsafe2",
+  "midtp"
+ ],
+ "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support)."
 }
