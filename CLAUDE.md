@@ -9,7 +9,7 @@ This repo is an **independent Dota 2 bot script project** focused on a small her
 **Current focus heroes (deep polish targets):** Axe, Zeus, Wraith King (`skeleton_king`), Lion, Crystal Maiden.
 **Candidate pool for later:** Luna, Sniper, Death Prophet, Tidehunter, Dragon Knight, Witch Doctor, Lich, Warlock.
 
-**The iteration loop for hero polish is data-driven:** change hero logic → `luacheck` clean → unit tests pass → batch A/B run (`tools/batch_test/`) shows a win-rate/GPM/XPM improvement → merge. No hero-logic change ships on intuition alone.
+**The iteration loop for hero polish is data-driven** — see **"Iteration Workflow"** below. Short form: watch replays frame-by-frame → find a concrete bad decision → narrow gated fix → **local replay-fixture validation (cheap, mandatory)** → accumulate ~10 validated fixes → ONE batch A/B run as the final gate → merge only on measured improvement. The simulator is the rare final exam, never the per-change validator. No hero-logic change ships on intuition alone.
 
 **What ships vs what doesn't:** only `bots/` (pure Lua) is the Workshop deliverable. `tests/`, `tools/`, `typescript/`, `.github/` are dev-only.
 
@@ -25,6 +25,46 @@ See **[docs/PROJECT.md](docs/PROJECT.md)** for the full project statement, testi
 - **[docs/BOT_API_REFERENCE.md](docs/BOT_API_REFERENCE.md)** -- Valve bot scripting API reference
 
 **Read the relevant docs FIRST before making changes.** They contain everything needed to make targeted updates without scanning the entire repo.
+
+## Iteration Workflow (REQUIRED — agents follow this exactly)
+
+The owner-approved loop. Each stage has its own tool; do not skip stages and do
+not promote a cheaper stage's job to a more expensive stage.
+
+1. **Observe** — watch replays **frame by frame** like a human reviewer
+   (ReplayScope: `tools/batch_test/replayscope/`, dumper in
+   `tools/batch_test/behavioral/`). Aggregate stats alone are NOT observation;
+   they hide the story (a hero can farm zero for 3 minutes without ever dying).
+2. **Find** — a concrete bad decision at a concrete timestamp, with vision
+   context (what could the bot actually see?).
+3. **Fix** — a narrow, locally-correct change, gated behind a soak candidate
+   (`J.IsSoakCandidate`), so shipped defaults stay unchanged until validated.
+4. **Local validation (MANDATORY, cheap, frequent)** — reproduce the exact
+   decision instant and assert the fixed decision:
+   `tools/batch_test/replayscope/make_fixture.py <timeline> --t <sec> --hero <name>`
+   → fixture in `tests/fixtures/` → load via `tests/mock/replay_fixture.lua`
+   (real jmz_func helpers run on the real frame; no J.* stubs) → unit test.
+   Gate-plumbing tests are NOT local validation. **Do not touch the simulator
+   here.** Case study: the first low-HP-chase guard passed its gate tests but
+   did not fire on the very frame that motivated it (visible 2v2 parity counted
+   the dying bot as a full fighter) — the fixture caught it in seconds
+   (`tests/test_replay_071423_luna_chase.lua`); a rejected simulator bundle
+   could not say why.
+5. **Accumulate** ~10 locally-validated fixes.
+6. **Final gate (RARE)** — ONE batch A/B (`tools/batch_test/`, mirrored-draft,
+   self-terminating spot). Merge only on measured improvement. Never launch a
+   per-change or per-fix-isolation batch; that burns the expensive stage on the
+   cheap stage's question.
+
+## Agent session continuity (heartbeat)
+
+- In-memory schedules (CronCreate etc.) **do not survive session suspend** —
+  they silently vanish. Never promise or rely on cron-based self-wakeups.
+- To keep an autonomous session alive, arm a **background sleep** via the Bash
+  tool (`sleep <seconds>` with `run_in_background: true`): its exit re-invokes
+  the agent. Re-arm it on every wake. Keep the interval ~1h.
+- Always leave the tree committed + pushed and `iterations/state.json` current,
+  so ANY wake (heartbeat or owner message) can resume from the repo alone.
 
 ## Verification (run before every push)
 

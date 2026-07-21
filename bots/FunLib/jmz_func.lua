@@ -4861,14 +4861,35 @@ function J.LaneRegenItemToUse( bot )
 	return nil
 end
 
+-- REWRITTEN after fixture replay f_071423_luna_chase (the local-validation
+-- keystone caught the first cut not firing on the exact frame that motivated
+-- it): the old exception delegated to J.SafeToCommitFight, whose NUMBERS branch
+-- read the visible 2v2 (38%-HP Luna + lvl-4 Silencer vs Jakiro + FULL-HP
+-- Slardar) as parity = safe -- and both of ours died. Numbers parity is exactly
+-- the wrong exemption when the bot itself is the low one: it counts the dying
+-- bot as a full fighter. The exception is now LETHAL-ONLY and EXCLUDES SELF:
+-- yield only if allies other than me can already secure the kill (then my low
+-- HP doesn't have to tank the trade).
 function J.ShouldNotChaseWhenLow( bot, target )
 	if not J.IsLaneFixOn( 'chase' ) then return false end
 	if not J.IsValidHero( target ) then return false end
 	if bot:GetHealth() / bot:GetMaxHealth() >= 0.40 then return false end
-	if J.SafeToCommitFight( bot, target ) then return false end
+	-- Punishable: enemies near ME can burst a large fraction of my current HP.
 	local tEnemies = J.GetEnemiesNearLoc( bot:GetLocation(), 1200 )
 	local nBurst = J.GetTotalEstimatedDamageToTarget( tEnemies, bot )
-	return nBurst >= bot:GetHealth() * 0.45
+	if nBurst < bot:GetHealth() * 0.45 then return false end
+	-- Exception: the kill is secured WITHOUT me tanking -- allies excluding self
+	-- near the target can burst it down on their own.
+	local tAllies = J.GetAlliesNearLoc( target:GetLocation(), 1200 )
+	local tOthers = {}
+	for _, a in pairs( tAllies ) do
+		if a ~= bot then table.insert( tOthers, a ) end
+	end
+	local nKillBurst = J.GetTotalEstimatedDamageToTarget( tOthers, target )
+	if nKillBurst >= target:GetHealth() + target:GetHealthRegen() * 3 then
+		return false
+	end
+	return true
 end
 
 -- [GH #4] Anti-suicide-dive guard ("sandwiched_walk" -- the highest-frequency

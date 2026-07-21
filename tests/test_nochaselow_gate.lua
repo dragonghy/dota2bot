@@ -36,15 +36,16 @@ tests['ShouldNotChaseWhenLow is inert off the soak candidate'] = function()
         'off the candidate side the guard must not fire (baseline aggression)')
 end
 
--- Armed turbo scenario: gate forced on, SafeToCommitFight forced false (no clean
--- kill), and one enemy in range whose burst we control directly.
+-- Armed turbo scenario: gate forced on, one enemy in range whose burst we
+-- control, and no allies near the target (so the allies-excluding-self kill
+-- exception stays off unless a test enables it).
 local function armed(bot_spec)
     local J, bot = fresh_jmz()
     GetGameMode = function() return GAMEMODE_TURBO end
     J.IsSoakCandidate = function(id) return id == 'lanefix' end
-    J.SafeToCommitFight = function() return false end
     local e = make_target()
     J.GetEnemiesNearLoc = function() return { e } end
+    J.GetAlliesNearLoc = function() return { bot } end
     J.GetTotalEstimatedDamageToTarget = function() return 500 end
     for k, v in pairs(bot_spec or {}) do
         rawget(bot, '__spec')[k] = v
@@ -75,12 +76,30 @@ tests['does NOT fire when nobody can punish (low burst)'] = function()
         'no real threat -> a low bot may still finish a safe chase')
 end
 
-tests['does NOT fire on a clean group kill (SafeToCommitFight true)'] = function()
+tests['does NOT fire when allies EXCLUDING self secure the kill'] = function()
+    -- Rewritten with the guard (fixture f_071423_luna_chase): the exception is
+    -- lethal-only and excludes self -- an ally near the target whose burst
+    -- covers the target's health means the low bot need not tank the trade.
     local J, bot, e = armed({ OriginalGetHealth = 180, OriginalGetMaxHealth = 600,
         GetHealth = 180, GetMaxHealth = 600 })
-    J.SafeToCommitFight = function() return true end
+    local ally = api.MakeHero('npc_dota_hero_ally_a', { CanBeSeen = true })
+    J.GetAlliesNearLoc = function() return { bot, ally } end
+    -- Stubbed total-burst (500) >= target health (default 600)? No -- lower the
+    -- target so the ally's burst finishes it.
+    rawget(e, '__spec').GetHealth = 300
     assert(J.ShouldNotChaseWhenLow(bot, e) == false,
-        'a clean group kill is still allowed even at low HP')
+        'kill secured by allies without the low bot -> chase is allowed')
+end
+
+tests['fires when the only "numbers" are the low bot itself'] = function()
+    -- The Luna trap: visible parity counted the dying bot as a full fighter.
+    -- With no other ally near the target, the guard must fire regardless of
+    -- what SafeToCommitFight would say.
+    local J, bot, e = armed({ OriginalGetHealth = 180, OriginalGetMaxHealth = 600,
+        GetHealth = 180, GetMaxHealth = 600 })
+    J.SafeToCommitFight = function() return true end -- must be ignored now
+    assert(J.ShouldNotChaseWhenLow(bot, e) == true,
+        'numbers parity that includes the low bot must not exempt the chase')
 end
 
 return tests
