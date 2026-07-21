@@ -53,6 +53,11 @@ declare function IsSoakCandidate(id: string): boolean;
 // farm/push desire and regroup toward allies.
 declare function ShouldRegroupNotSolo(bot: Unit): boolean;
 
+// [GH #6] Turbo aegis-carrier grouping: true when the bot holds the aegis and
+// is solo deep in enemy territory (even before contact) -> caller should
+// suppress solo farm/push desire and regroup with the team.
+declare function ShouldGroupWithAegis(bot: Unit): boolean;
+
 declare function IsDoingRoshan(bot: Unit): boolean;
 
 declare function IsDoingTormentor(bot: Unit): boolean;
