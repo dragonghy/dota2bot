@@ -1,6 +1,6 @@
 -- [replay-review 071423/071903] Anti-suicide-CHASE guard gating contract.
 -- J.ShouldNotChaseWhenLow must be inert unless the game is turbo AND this side
--- is the active soak candidate carrying the 'nochaselow' id. When armed it fires
+-- is the active soak candidate carrying the 'lanefix' id. When armed it fires
 -- ONLY on the narrow "I'm low, not a safe commit, and an enemy can finish me"
 -- case; a healthy bot, an unpunishable chase, or a clean group kill all fall
 -- through so a genuinely safe finish still happens.
@@ -41,7 +41,7 @@ end
 local function armed(bot_spec)
     local J, bot = fresh_jmz()
     GetGameMode = function() return GAMEMODE_TURBO end
-    J.IsSoakCandidate = function(id) return id == 'nochaselow' end
+    J.IsSoakCandidate = function(id) return id == 'lanefix' end
     J.SafeToCommitFight = function() return false end
     local e = make_target()
     J.GetEnemiesNearLoc = function() return { e } end
