@@ -72,12 +72,26 @@ def build_ticks(tl, tick_s):
     heroes = sorted(teams)
     dur = int(round(max((s["t"] for s in tl["snapshots"]), default=0)))
 
+    # A hero and its illusions share a class name (e.g. Chaos Knight's Phantasm),
+    # so multiple entities can report as the same hero at one tick. The real hero
+    # is the entity index that persists across the whole game; illusions are
+    # short-lived. Keep only the longest-lived index per hero, when idx is present.
+    from collections import Counter
+    idx_life = {}
+    for s in tl["snapshots"]:
+        if "idx" in s:
+            idx_life.setdefault(bare(s["hero"]), Counter())[s["idx"]] += 1
+    canon_idx = {h: c.most_common(1)[0][0] for h, c in idx_life.items()}
+
     # per-hero sorted (t, record)
     per = {h: [] for h in heroes}
     for s in tl["snapshots"]:
         h = bare(s["hero"])
-        if h in per:
-            per[h].append(s)
+        if h not in per:
+            continue
+        if h in canon_idx and "idx" in s and s["idx"] != canon_idx[h]:
+            continue  # drop illusion entity
+        per[h].append(s)
     for h in per:
         per[h].sort(key=lambda s: s["t"])
     times = {h: [s["t"] for s in per[h]] for h in heroes}
@@ -88,9 +102,14 @@ def build_ticks(tl, tick_s):
         tk = int(round(c["t"] / tick_s)) * tick_s
         creeps_by_tick.setdefault(tk, []).append([round(c["x"]), round(c["y"]), c["team"]])
 
+    # Start at the earliest snapshot (negative during the pre-game prep phase),
+    # floored to a tick boundary, so the pre-horn setup is scrubbable.
+    start = min((s["t"] for s in tl["snapshots"]), default=0.0)
+    start = (int(start // tick_s)) * tick_s
+
     last_mhp = {}
     ticks = []
-    t = 0.0
+    t = start
     while t <= dur + 0.5:
         row = {"t": round(t, 1), "heroes": []}
         for h in heroes:
@@ -127,13 +146,17 @@ def build_ticks(tl, tick_s):
 
 
 def build_towers(tl):
-    """Collapse the buildings stream into {name,team,x,y,die_t}. die_t = first tick
-    a tower reports dead (None if it survives)."""
+    """Collapse the buildings stream into {name,team,x,y,die_t}. Keyed by
+    (name, position) because every tower shares the generic name "tower" — keying
+    by name alone would merge all 22 into one. die_t = first tick a structure
+    reports dead (None if it survives). Ancients are drawn separately (as stars)."""
     seen = {}
     for b in tl.get("buildings", []):
-        n = b["name"]
-        rec = seen.setdefault(n, {"name": n, "team": b["team"],
-                                  "x": round(b["x"]), "y": round(b["y"]), "die_t": None})
+        if b["name"] == "ancient":
+            continue
+        key = (b["name"], round(b["x"]), round(b["y"]))
+        rec = seen.setdefault(key, {"name": b["name"], "team": b["team"],
+                                    "x": round(b["x"]), "y": round(b["y"]), "die_t": None})
         if not b.get("alive", True) and rec["die_t"] is None:
             rec["die_t"] = round(b["t"], 1)
     return list(seen.values())

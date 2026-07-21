@@ -240,14 +240,18 @@ function drawHero(h){
   if(h.items&&h.items.length) drawItems(h.items,X,Y,R);
   cx.globalAlpha=1;
 }
+// Itemization footprint: one pip per major item under the hero (a filled pip =
+// a real item, hollow = an empty slot up to 6). Conveys farm/timing progress at
+// a glance without cluttering the minimap with unreadable tiny icons.
 function drawItems(items,X,Y,R){
-  const n=Math.min(items.length,6), s=5*sc, gap=1*sc, tot=n*(s+gap)-gap;
+  const major=items.filter(it=>it&&it!=="tpscroll"&&it!=="teleport_scroll"&&it!=="tango"&&it!=="clarity"&&it!=="branches");
+  const n=6, s=3*sc, gap=1.4*sc, tot=n*(s+gap)-gap;
   let ox=X-tot/2, oy=Y+R+3*sc;
-  cx.textAlign="center";cx.textBaseline="middle";cx.font=`${4*sc}px ${getCss('--mono')}`;
-  for(let k=0;k<n;k++){const it=items[k];
-    cx.fillStyle="rgba(20,26,36,.92)";cx.fillRect(ox,oy,s,s);
-    cx.strokeStyle="rgba(140,152,168,.5)";cx.lineWidth=.5*sc;cx.strokeRect(ox,oy,s,s);
-    cx.fillStyle=getCss('--ink-dim');cx.fillText((it[0]||'?').toUpperCase(),ox+s/2,oy+s/2);
+  for(let k=0;k<n;k++){
+    const filled=k<major.length;
+    cx.beginPath();cx.arc(ox+s/2,oy+s/2,s/2,0,7);
+    if(filled){cx.fillStyle=getCss('--amber');cx.globalAlpha=.9;cx.fill();cx.globalAlpha=1;}
+    else{cx.strokeStyle="rgba(140,152,168,.4)";cx.lineWidth=.6*sc;cx.stroke();}
     ox+=s+gap;}
 }
 function drawGhost(g){const X=sx(g.x),Y=sy(g.y),R=12*sc;
