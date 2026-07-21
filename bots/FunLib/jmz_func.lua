@@ -5415,6 +5415,82 @@ function J.ShouldPunishOverchase( bot )
 	return nil
 end
 
+-- [GH #15] Mid 6-level TP support. Observed gap: when a fight breaks out at one
+-- of OUR towers (an ally being dived, a lane under pressure) the MID hero --
+-- which in turbo has a short TP cooldown and is usually level 6+ -- stands idle
+-- mid instead of TP-ing in to help. This resolves that: a level-6+ hero that is
+-- NOT already in a fight, has a TP (or Boots of Travel) ready, and is far enough
+-- that only a TP arrives in time, collapses on a fight at a friendly tower with
+-- an ally present -- but ONLY when the collapse is winnable
+-- (J.SafeToCommitFight at the destination: lethal burst OR numbers). If it is
+-- not winnable we do NOT throw the TP away into a lost fight.
+--
+-- Returns the friendly tower (building) whose fight to TP-support, or nil; the
+-- item-usage wiring resolves the actual TP cast point via J.GetNearbyLocationToTp
+-- (mirrors J.GetRescueTpTarget, the sibling rescue-TP: target selection here, the
+-- cast point in the wiring). Deliberately CONSERVATIVE -- far / TP-ready /
+-- winnable-only, so a marginal or losing tower fight falls through untouched.
+-- Gated turbo-only (J.IsModeTurbo) AND to the 'midtp' soak candidate, so
+-- shipped/normal behavior is unchanged until an A/B win promotes it.
+-- Approximation note: the API gives no per-frame tower-aggro signal, so "a fight
+-- at our tower" is approximated by enemy heroes within 1200 of a live allied
+-- tower with an ally (not us) also within 1200 -- the "being dived / defending"
+-- signature -- plus the bot being > 3500 away so a TP (not a walk) is warranted.
+function J.ShouldTpSupportTowerFight( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'midtp' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	-- Short TP CD + level 6+ is the mid profile. Require the level, and that the
+	-- bot is NOT already committed to / retreating from a fight (its own logic
+	-- owns those) -- the target case is a hero standing idle away from the fight.
+	if bot:GetLevel() < 6 then return nil end
+	if J.IsInTeamFight( bot, 1600 ) then return nil end
+	if J.IsGoingOnSomeone( bot ) then return nil end
+	if J.IsRetreating( bot ) then return nil end
+
+	-- A TP must be READY -- a Town Portal scroll or Boots of Travel.
+	local tp = J.GetItem2( bot, 'item_tpscroll' )
+	if tp == nil or not tp:IsFullyCastable() then
+		local boots = J.GetItem2( bot, 'item_travel_boots' )
+		if boots == nil or not boots:IsFullyCastable() then return nil end
+	end
+
+	local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
+	if tBuildings == nil then return nil end
+
+	for _, building in pairs( tBuildings ) do
+		if J.IsValidBuilding( building )
+		and string.find( building:GetUnitName(), 'tower' ) ~= nil
+		-- Far enough that only a TP arrives in time; a close fight the bot can
+		-- just walk to is not this fix (avoids wasting a TP on a nearby scrap).
+		and GetUnitToUnitDistance( bot, building ) > 3500
+		then
+			local vTower   = building:GetLocation()
+			local tEnemies = J.GetEnemiesNearLoc( vTower, 1200 )
+			if #tEnemies > 0 then
+				-- An ally OTHER than me must be there (someone to help /
+				-- being dived); collapsing onto an empty structure is not this fix.
+				local tAllies = J.GetAlliesNearLoc( vTower, 1200 )
+				local bAllyThere = false
+				for _, ally in pairs( tAllies ) do
+					if ally ~= bot and J.IsValidHero( ally ) then
+						bAllyThere = true
+						break
+					end
+				end
+				-- Winnable-only: reuse the lethal-or-numbers commit gate against
+				-- the nearest tower enemy. If neither holds, do NOT waste the TP.
+				if bAllyThere and J.SafeToCommitFight( bot, tEnemies[1] ) then
+					return building
+				end
+			end
+		end
+	end
+
+	return nil
+end
+
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
 -- ~300-1000u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle

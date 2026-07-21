@@ -5072,6 +5072,20 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 		end
 	end
 
+	-- [GH #15/midtp] Mid 6-level TP support: a level-6+ hero standing idle away
+	-- from a WINNABLE fight at one of OUR towers TPs in to help (an ally being
+	-- dived / a tower under pressure), instead of standing mid. Fires only when
+	-- J.SafeToCommitFight says the collapse is winnable -- never throws the TP
+	-- into a lost fight. Gated inside the helper (turbo + 'midtp' soak candidate),
+	-- so this is inert in shipped/normal play until an A/B win promotes it.
+	local hTowerFight = J.ShouldTpSupportTowerFight( bot )
+	if hTowerFight ~= nil then
+		local vTpLoc = J.GetNearbyLocationToTp( hTowerFight:GetLocation() )
+		if vTpLoc ~= nil then
+			return BOT_ACTION_DESIRE_HIGH, vTpLoc, 'ground', 'mid支援塔战'
+		end
+	end
+
 	local tpLoc = nil
 	local sCastType = 'ground'
 	local hEffectTarget = nil
