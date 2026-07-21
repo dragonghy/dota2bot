@@ -1,5 +1,5 @@
 {
- "iteration_count": 14,
+ "iteration_count": 15,
  "farm": {
   "s3_bucket": "dota2bot-batch-results-4924",
   "run_prefixes": [
@@ -198,5 +198,19 @@
  "tooling": {
   "replayscope": "tools/batch_test/replayscope/ (build.py page per replay, make_fixture.py decision fixtures)",
   "known_gap": "dumper drops creep deaths not killed by heroes -> missed-CS/deny analysis inexact; planned: emit all creep deaths + d9_missed_cs detector"
- }
+ },
+ "full_keystone": "DONE: replay time-slice -> full hero script (SkillsComplement) with real ability levels/cds, roster-backed GetNearbyHeroes, action recorder; e2e regression test_replay_072738_zuus_script.lua",
+ "autopsies": {
+  "done": [
+   "071423 Luna/Silencer",
+   "071859 CK/Oracle",
+   "071903 Sven",
+   "080225 WK (7 deaths -> lf_revive + promoted-parity fix)",
+   "073148 Zeus (Lina x4 -> lf_threat)",
+   "073654 CM"
+  ],
+  "cm_conclusion": "CM 2.8 deaths/gm; recurring pattern = hanging in lane at <=52% HP (covered by lf_salve + retreat guards). Creep-caused deaths are 2/25 games -> deliberately NOT fixed (too rare).",
+  "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
+ },
+ "missed_cs": "dumper now keeps lane-creep deaths from any killer; d9_missed_cs_at_tower live. First measurement 071903: ~48% of lane farm uncollected; every core let 12-27 creeps die to own towers. FIX DESIGN PENDING (next iteration): in-lane cores near own tower not last-hitting."
 }
