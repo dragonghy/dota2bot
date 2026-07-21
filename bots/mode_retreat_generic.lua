@@ -214,6 +214,18 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [lanefix/lf_chase] Anti-suicide-CHASE (fixture f_071423_luna_chase): a
+    -- LOW-HP bot keeps pursuing a fleeing low-HP enemy while a healthy punisher
+    -- can finish it (Luna 38% chasing 26% Jakiro into a full-HP Slardar; both
+    -- she and the following Silencer died). Raise retreat desire so the chase
+    -- breaks off. Yields when allies can secure the kill without the low bot
+    -- tanking. Gated (turbo + lanefix/lf_chase), inert by default. This is the
+    -- generic seam -- heroes with dedicated engage considers (PA, SB) also
+    -- consult the guard directly.
+    if J.ShouldNotChaseWhenLow(bot, botTarget) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [GH #17] Death-zone avoidance ("respawn -> walk straight back to the
     -- death spot -> die again" loop): after a recent death in the enemy half,
     -- if the bot is back near (or closing on) its death spot with no allies
