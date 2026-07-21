@@ -5011,6 +5011,28 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 		end
 	end
 
+	-- [fixture f_080225_wk_lane] Parity must not exempt a CRITICALLY low bot:
+	-- SafeToCommitFight's numbers branch counted a 13%-HP WK (plus a lvl-1
+	-- support) as a full 2v2 against the dual lane that then killed him -- the
+	-- documented low-HP clause (a) below never got a chance. Same lesson as the
+	-- chase guard (f_071423_luna_chase): when I am the nearly-dead one, visible
+	-- parity is not safety. Below 35% HP the only exemption is a kill secured
+	-- WITHOUT me (allies excluding self can burst the target down).
+	local bSelfCritical = J.GetHP( bot ) < 0.35
+	if bSelfCritical then
+		local tNearTarget = J.GetAlliesNearLoc( hTarget:GetLocation(), 1200 )
+		local tOthers = {}
+		for _, a in pairs( tNearTarget ) do
+			if a ~= bot then table.insert( tOthers, a ) end
+		end
+		if J.GetTotalEstimatedDamageToTarget( tOthers, hTarget )
+			>= hTarget:GetHealth() + hTarget:GetHealthRegen() * 3
+		then
+			return false
+		end
+		return true -- critical + 2-man pocket + no secured kill = feed
+	end
+
 	if J.SafeToCommitFight( bot, hTarget ) then return false end
 
 	-- KEY TIGHTENING: even outnumbered with no kill, only hard-retreat when the
