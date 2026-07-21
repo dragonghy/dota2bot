@@ -78,6 +78,13 @@ def main():
             # dump carries them — lets fixtures exercise item decisions too.
             "items": [x for x in (s.get("items") or [])],
             "tp_cd": s.get("tp_cd", 0),
+            # real ability state (name/level/cd remaining) — lets fixtures feed
+            # FULL hero scripts (SkillsComplement), not just decision helpers.
+            "abilities": [
+                {"name": a.get("name", ""), "level": a.get("level", 0),
+                 "cd": a.get("cd", 0)}
+                for a in (s.get("abilities") or [])
+            ],
         })
     assert any(u["name"] == subj for u in units), "subject %s not in timeline" % subj
 
@@ -106,12 +113,14 @@ def main():
     L.append("  units = {")
     for u in units:
         items = ", ".join("'%s'" % i for i in u["items"])
+        abil = ", ".join("{ name = '%s', level = %d, cd = %s }"
+                         % (a["name"], a["level"], a["cd"]) for a in u["abilities"])
         L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
                  " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s,"
-                 " items = { %s } }," % (
+                 " items = { %s },\n      abilities = { %s } }," % (
                      u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
                      u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
-                     u["tp_cd"], items))
+                     u["tp_cd"], items, abil))
     L.append("  },")
     L.append("  observed = {")
     L.append("    burst = {")

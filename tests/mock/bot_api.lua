@@ -106,13 +106,23 @@ function M.MakeHero(unitName, spec)
     spec.GetMana = spec.GetMana or 300
     spec.GetMaxMana = spec.GetMaxMana or 300
     spec.GetAttackRange = spec.GetAttackRange or 150
+    spec.NumQueuedActions = spec.NumQueuedActions or 0
     spec.GetPlayerID = spec.GetPlayerID or 0
     spec.GetTeam = spec.GetTeam or 2 -- TEAM_RADIANT
     local abilities = {}
     spec.GetAbilityByName = spec.GetAbilityByName or function(_, name)
-        -- Callers may probe with names from data tables that only exist for
-        -- the real hero; treat unknown/nil lookups as "no such ability".
-        if name == nil then return nil end
+        -- Callers may probe with names from data tables (talent lists etc.)
+        -- that are only populated for the real hero. A nil name yields a
+        -- shared untrained stub so full-script runs (SkillsComplement) that
+        -- index talentN:IsTrained() keep working; in game these lists are
+        -- never nil, so no real lookup takes this path.
+        if name == nil then
+            if not abilities['__nil_stub'] then
+                abilities['__nil_stub'] = M.MakeAbility('mock_nil_ability',
+                    { IsTrained = false, GetLevel = 0 })
+            end
+            return abilities['__nil_stub']
+        end
         if not abilities[name] then abilities[name] = M.MakeAbility(name) end
         return abilities[name]
     end
@@ -126,6 +136,14 @@ function M.MakeHero(unitName, spec)
         return nil
     end
     spec.GetItemInSlot = spec.GetItemInSlot or function() return nil end
+    -- Game-faithful inventory scan: slot index of the named item, else -1.
+    spec.FindItemSlot = spec.FindItemSlot or function(self, name)
+        for i = 0, 16 do
+            local it = self:GetItemInSlot(i)
+            if it ~= nil and it:GetName() == name then return i end
+        end
+        return -1
+    end
     return M.MakeUnit(spec)
 end
 

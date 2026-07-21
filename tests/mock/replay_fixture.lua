@@ -63,6 +63,20 @@ function M.load(path)
             -- Ground truth: what this hero actually did to the subject next.
             GetEstimatedDamageToTarget = function() return burst end,
         })
+        -- Real ability state from the slice: pre-populate the (name-cached)
+        -- handles a hero script will fetch via GetAbilityByName, so a FULL
+        -- script run (SkillsComplement) sees real levels and cooldowns.
+        for _, a in ipairs(u.abilities or {}) do
+            if a.name ~= '' then
+                local h = heroes[u.name]:GetAbilityByName(a.name)
+                local sp = rawget(h, '__spec')
+                sp.GetLevel = a.level
+                sp.IsTrained = a.level > 0
+                sp.GetCooldownTimeRemaining = a.cd
+                sp.IsFullyCastable = a.level > 0 and a.cd <= 0
+                sp.IsCooldownReady = a.cd <= 0
+            end
+        end
         -- Bypass the illusion heuristic via its own cache property: fixture
         -- units are canonical real heroes (illusions dropped at generation).
         heroes[u.name].is_suspicious_illusion = false
@@ -94,8 +108,58 @@ function M.load(path)
     GetGameMode = function() return GAMEMODE_TURBO end
     DotaTime = function() return fx.time end
 
+    -- Roster-backed unit-local queries, so full hero scripts (which use
+    -- bot:GetNearbyHeroes rather than the J wrappers) also see the real world.
+    for _, u in ipairs(fx.units) do
+        local me = heroes[u.name]
+        rawget(me, '__spec').GetNearbyHeroes = function(self, radius, enemies, _)
+            local out = {}
+            for _, v in ipairs(fx.units) do
+                local other = heroes[v.name]
+                if other ~= self and v.alive
+                    and GetUnitToUnitDistance(self, other) <= (radius or 1600)
+                then
+                    local isEnemy = other:GetTeam() ~= self:GetTeam()
+                    if (enemies and isEnemy) or (not enemies and not isEnemy) then
+                        out[#out + 1] = other
+                    end
+                end
+            end
+            return out
+        end
+    end
+
     local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
     return J, bot, heroes, fx
+end
+
+--- Record every Action_* / ActionQueue_* the subject takes. Returns the log
+--- (list of {fn=..., args={...}}); call before running a hero script.
+function M.record_actions(bot)
+    local log = {}
+    local spec = rawget(bot, '__spec')
+    for _, fn in ipairs({
+        'Action_UseAbility', 'Action_UseAbilityOnEntity',
+        'Action_UseAbilityOnLocation', 'Action_UseAbilityOnTree',
+        'ActionQueue_UseAbility', 'ActionQueue_UseAbilityOnEntity',
+        'ActionQueue_UseAbilityOnLocation',
+        'ActionPush_UseAbility', 'ActionPush_UseAbilityOnEntity',
+        'ActionPush_UseAbilityOnLocation',
+        'Action_AttackUnit', 'Action_MoveToLocation', 'Action_MoveToUnit',
+        'Action_ClearActions',
+    }) do
+        spec[fn] = function(_, ...)
+            log[#log + 1] = { fn = fn, args = { ... } }
+        end
+        rawset(bot, fn, nil) -- drop any lazily-cached method so the spy is used
+    end
+    return log
+end
+
+--- Load a full hero script (bots/BotLib/hero_<part>.lua) into the installed
+--- fixture world and return its module table (X). Must be called after load().
+function M.load_hero(part)
+    return dofile(GetScriptDirectory() .. '/BotLib/hero_' .. part .. '.lua')
 end
 
 return M
