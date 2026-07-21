@@ -90,6 +90,7 @@ type snapshot struct {
 	Abilities []abilitySnap `json:"abilities"`
 	TpCd      float64       `json:"tp_cd"`     // TP scroll/travel cooldown remaining (0 = ready)
 	TpCdLen   float64       `json:"tp_cdlen"`  // its full cooldown length (for cast detection)
+	NetWorth  int32         `json:"net_worth"` // gold value of hero + items (economy)
 }
 
 type building struct {
@@ -267,6 +268,9 @@ func main() {
 	var creepSnaps []creepSnap
 	var events []event
 
+	var prEnt, specEnt *manta.Entity // PlayerResource + DataSpectator (economy)
+	nwSlot := map[string]int{}       // hero name -> net-worth index (0-4 rad, 5-9 dire)
+
 	serverNow := 0.0        // latest known raw server time (from combat log)
 	gameStart := 0.0        // horn, from gamerules GameStartTime (last nonzero)
 	tickInterval := 1.0 / 30 // engine seconds per tick, from ServerInfo
@@ -364,7 +368,40 @@ func main() {
 		return out
 	}
 
+	// buildNWMap resolves the 0-9 economy slot -> hero name via PlayerResource's
+	// m_hSelectedHero (valid mid-game). Idempotent; locks once all 10 resolve.
+	buildNWMap := func() {
+		if len(nwSlot) >= 10 || prEnt == nil {
+			return
+		}
+		m := map[string]int{}
+		for i := 0; i < 10; i++ {
+			hh, ok := getHandle(prEnt, slotPath("m_vecPlayerTeamData", i)+".m_hSelectedHero")
+			if !ok || hh == 0 || hh == nullHandle {
+				return // not all resolvable yet; try again next sample
+			}
+			he := p.FindEntityByHandle(hh)
+			if he == nil || !strings.HasPrefix(he.GetClassName(), "CDOTA_Unit_Hero_") {
+				return
+			}
+			m[classToNPC(he.GetClassName())] = i
+		}
+		nwSlot = m
+	}
+	netWorth := func(name string) int32 {
+		if specEnt == nil {
+			return 0
+		}
+		if i, ok := nwSlot[name]; ok {
+			if v, ok := specEnt.GetInt32(slotPath("m_iNetWorth", i)); ok {
+				return v
+			}
+		}
+		return 0
+	}
+
 	dumpSnapshots := func(t float64) {
+		buildNWMap()
 		for _, h := range heroes {
 			if !h.valid || h.name == "" || h.maxhp <= 0 {
 				continue
@@ -388,6 +425,7 @@ func main() {
 				Abilities: resolveAbilities(h.idx),
 				TpCd:      round1(tpcd),
 				TpCdLen:   round1(tpcdlen),
+				NetWorth:  netWorth(h.name),
 			})
 		}
 	}
@@ -450,6 +488,18 @@ func main() {
 			if v, ok := e.GetFloat32("m_pGameRules.m_flGameStartTime"); ok && v > 0 {
 				gameStart = float64(v)
 			}
+			return nil
+		}
+
+		// Economy: PlayerResource maps a slot -> selected hero; DataSpectator holds
+		// net worth per slot. Capture both; the slot<->hero map is built lazily in
+		// dumpSnapshots once the hero handles resolve mid-game.
+		if strings.Contains(cn, "PlayerResource") {
+			prEnt = e
+			return nil
+		}
+		if cn == "CDOTA_DataSpectator" {
+			specEnt = e
 			return nil
 		}
 

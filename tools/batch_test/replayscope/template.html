@@ -48,6 +48,8 @@
   td.items .islot{border:1px solid var(--line)}
   td.items .bp{opacity:.5}                       /* backpack slots 6-8: not directly usable */
   td.items .bpsep{display:inline-block;width:1px;height:16px;background:var(--ink-faint);margin:0 4px;vertical-align:middle;opacity:.6}
+  td.econ{font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
+  .econ-v{color:#e8c25a;font-weight:600}
   td.tp{font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
   .tp-rdy{color:var(--radiant);font-weight:600} .tp-cd{color:var(--amber);font-weight:600} .tp-unk{color:var(--ink-faint)}
   th.status-col,td.status{min-width:150px;width:150px}   /* stop the CC column from jittering */
@@ -108,7 +110,7 @@
     <div class="hd"><span>State table</span><span class="spacer" style="flex:1"></span>
       <span class="hint" id="persphint">global — all units</span></div>
     <div class="tablewrap"><table id="tbl"><thead><tr>
-      <th>hero</th><th>lvl</th><th>hp</th><th>mp</th><th>tp</th><th>items</th><th class="status-col">status</th>
+      <th>hero</th><th>lvl</th><th>hp</th><th>mp</th><th>econ</th><th>tp</th><th>items</th><th class="status-col">status</th>
     </tr></thead><tbody id="tbody"></tbody></table></div>
   </section>
 </main>
@@ -217,6 +219,13 @@ function tpCell(h){
   if(h.tpcd==null||!h.alive) return '<span class="tp-unk">—</span>';
   if(!tpKnown(h)) return '<span class="tp-unk" title="not seen TP">?</span>';
   return h.tpcd>0 ? `<span class="tp-cd">${h.tpcd}s</span>` : '<span class="tp-rdy">ready</span>';
+}
+// Economy (net worth) is view-scoped: visible for your own team, or in Global.
+function econCell(h){
+  if(h.nw==null) return '<span class="tp-unk">—</span>';
+  if(persp!=="global" && h.team!==myTeam()) return '<span class="tp-unk">·</span>';
+  const nw=h.nw;
+  return `<span class="econ-v">${nw>=1000?(nw/1000).toFixed(1)+'k':nw}</span>`;
 }
 
 function drawMap(){
@@ -338,6 +347,7 @@ function drawTable(){
       <td>${src.lvl??'—'}</td>
       <td class="hp">${hp}</td>
       <td class="mp">${mp}</td>
+      <td class="econ">${econCell(h)}</td>
       <td class="tp">${tpCell(h)}</td>
       <td class="items">${items}</td>
       <td class="status">${cc}</td>`;

@@ -297,7 +297,8 @@ def build_ticks(tl, tick_s):
                     "hp": (s.get("hp", 0) if alive else 0), "mhp": mhp,
                     "mp": (s.get("mp", 0) if alive else 0), "mmp": mmp,
                     "lvl": s.get("level", 1), "alive": alive,
-                    "tpcd": round(s.get("tp_cd", 0) or 0)}
+                    "tpcd": round(s.get("tp_cd", 0) or 0),
+                    "nw": s.get("net_worth", 0)}
             if s.get("items"):
                 hero["items"] = [bare(x) for x in s["items"]]
             if s.get("vis"):
