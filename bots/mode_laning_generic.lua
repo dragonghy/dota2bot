@@ -84,6 +84,18 @@ local bLaneFixSupport = J.IsModeTurbo()
 local bPullCamp = J.IsModeTurbo() and J.IsSoakCandidate('pullcamp')
 	and J.GetPosition(bot) >= 4
 
+-- [GH #10] Turbo creep-pull (勾线). A disadvantaged laning core draws the enemy
+-- creep wave's aggro by attack-ordering an enemy hero next to it, then walks back
+-- to drag the creeps onto our side and reset the lane equilibrium. Load-time flag
+-- like the others; turbo-only + soak candidate 'creeppull', pos 1-3 (cores).
+-- Inert by default. The TRIGGER (when to pull) lives in J.ShouldCreepPullLane;
+-- this flag routes such a bot through the custom laning Think so the best-effort
+-- pull action can run. NOTE: defining Think replaces Valve's default laning
+-- wholesale, so a creeppull bot uses the same core last-hit fallback as the
+-- c3/undertower path whenever it is NOT actively pulling.
+local bCreepPull = J.IsModeTurbo() and J.IsSoakCandidate('creeppull')
+	and J.GetPosition(bot) <= 3
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -164,13 +176,21 @@ function GetDesire()
 		end
 	end
 
+	-- [GH #10] Keep a creeppull core in laning mode while a pull is warranted, so
+	-- its Think can run the aggro-draw. Only fires in the narrow disadvantaged
+	-- case (J.ShouldCreepPullLane returns non-nil); otherwise falls through to the
+	-- normal laning desire below. Inert unless turbo + soak candidate 'creeppull'.
+	if bCreepPull and J.ShouldCreepPullLane(bot) ~= nil then
+		return 0.9
+	end
+
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
 	-- below; stock condition only enabled it for buggy heroes or a pos1 bot
 	-- paired with a human pos5, so farm bots ran Valve default CS (12-47 LH
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
-		or bLaneFixCoreLH then
+		or bLaneFixCoreLH or bCreepPull then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -373,7 +393,25 @@ local function DoSupportLaningThink()
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp then
+-- [GH #10] Best-effort creep-pull action. The API exposes no per-frame creep
+-- aggro signal, so we approximate the human 勾线 timing with a short cadence:
+-- attack-order the enemy hero for a beat (which redirects the adjacent enemy
+-- creeps' aggro onto us), then move to the retreat point to drag that wave back
+-- toward our side. Cannot GUARANTEE the aggro flips like a precise attack-cancel,
+-- but never griefs the lane: it only runs on the narrow disadvantaged trigger.
+local function DoCreepPullThink(pull)
+	local now = DotaTime()
+	if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > 1.2 then
+		-- Provoke the aggro-draw (no need to land the hit).
+		bot:Action_AttackUnit(pull.enemy, true)
+		bot.creepPullAttackTime = now
+	else
+		-- Aggro drawn: walk back to drag the wave onto our side.
+		bot:Action_MoveToLocation(pull.retreat)
+	end
+end
+
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull then
 	function Think()
 		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
 		-- equilibrium, checked before any laning think. Gated + conservative
@@ -389,6 +427,16 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 				else
 					bot:Action_MoveToLocation(vCamp)
 				end
+				return
+			end
+		end
+
+		-- [GH #10] Creep-pull takes priority when its narrow trigger fires; else a
+		-- creeppull core falls through to the standard core last-hit path below.
+		if bCreepPull then
+			local pull = J.ShouldCreepPullLane(bot)
+			if pull ~= nil then
+				DoCreepPullThink(pull)
 				return
 			end
 		end

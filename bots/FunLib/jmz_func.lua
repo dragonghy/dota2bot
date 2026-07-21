@@ -5415,6 +5415,114 @@ function J.ShouldPunishOverchase( bot )
 	return nil
 end
 
+-- [GH #10] Turbo creep-pull / 勾线 for a disadvantaged laner. A laning core that
+-- is being zoned or is losing the lane (wave shoved onto our side, can't secure
+-- CS) resets the lane equilibrium by DRAWING the enemy creep wave's aggro: it
+-- issues an ATTACK order on an enemy hero standing next to the enemy creeps (no
+-- need to actually land the hit), which redirects those creeps' aggro onto our
+-- hero, then walks back toward our side to drag the creeps with it. Returns a
+-- pull intent { enemy = <enemy hero to aggro-draw off>, retreat = <Vector to
+-- walk back to> } when a pull is warranted and safe, else nil.
+--
+-- CONSERVATIVE by construction -- fires ONLY in the clear disadvantaged case, so
+-- it never griefs a healthy/even lane. Requires ALL of:
+--   * turbo AND the 'creeppull' soak candidate is armed (inert otherwise),
+--   * laning phase, and the bot is a CORE (pos 1-3) -- the farm we protect,
+--   * SAFE: not hurt (>= 50% HP), not just damaged by a hero, and at most ONE
+--     enemy hero nearby (exactly the lane opponent -- never pull into a gank),
+--   * enemy lane creeps are present near us (the wave whose aggro we draw),
+--   * DISADVANTAGED: the wave is shoved onto our half (enemy lane-front advance
+--     exceeds ours) OR an enemy laner is zoning us (a nearby enemy hero we are
+--     not locally stronger than), and
+--   * a VALID aggro target exists: an enemy hero adjacent (<= 500, the creep
+--     aggro-redirect range) to an enemy lane creep that we can order-attack.
+--
+-- API-limitation note (honesty): the Bot API exposes NO signal for "did the
+-- creep aggro actually flip to me", and Action_AttackUnit on a hero is the
+-- closest expressible primitive for the aggro-draw. So the ACTION at the call
+-- site (mode_laning_generic) is best-effort: attack-order the enemy hero for a
+-- beat to provoke the aggro, then move to the retreat point to drag the wave --
+-- it cannot GUARANTEE the mechanic fires the way a human's precise attack-cancel
+-- does. The TRIGGER (this function, when to pull) is the unit-tested, load-bearing
+-- part; it ships dark behind the gate until an A/B validates the whole behavior.
+function J.ShouldCreepPullLane( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'creeppull' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	-- Laning-phase core only: this protects a laner's farm, not a roamer/support.
+	if not J.IsInLaningPhase() then return nil end
+	if not J.IsCore( bot ) then return nil end
+
+	-- SAFE-1: healthy. A pull walks toward the enemy hero for a beat; never do it
+	-- while already low or while actively being hit.
+	if J.GetHP( bot ) < 0.5 then return nil end
+	if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
+
+	-- SAFE-2: not a gank. At most the single lane opponent may be present; a
+	-- second enemy hero nearby means we could die walking in -- never pull.
+	local tEnemyHeroes = J.GetNearbyHeroes( bot, 1000, true, BOT_MODE_NONE )
+	if tEnemyHeroes == nil then return nil end
+	if #tEnemyHeroes > 1 then return nil end
+
+	-- Need enemy lane creeps near us -- the wave whose aggro we intend to draw.
+	local tEnemyCreeps = bot:GetNearbyLaneCreeps( 900, true )
+	if tEnemyCreeps == nil or #tEnemyCreeps == 0 then return nil end
+
+	-- DISADVANTAGED: (a) the wave is shoved onto our half (the enemy's lane-front
+	-- advance from its base exceeds ours), OR (b) an enemy laner is zoning us (a
+	-- nearby enemy we are not locally stronger than). On an even/favorable lane we
+	-- leave the equilibrium alone.
+	local bWavePushedToUs = false
+	local nLane = bot:GetAssignedLane()
+	if nLane ~= nil then
+		local nOurFront   = GetLaneFrontAmount( GetTeam(), nLane, false )
+		local nEnemyFront = GetLaneFrontAmount( GetOpposingTeam(), nLane, false )
+		if nOurFront ~= nil and nEnemyFront ~= nil then
+			bWavePushedToUs = nEnemyFront > nOurFront
+		end
+	end
+	local bZoned = ( #tEnemyHeroes >= 1 ) and not J.WeAreStronger( bot, 1200 )
+	if not ( bWavePushedToUs or bZoned ) then return nil end
+
+	-- VALID AGGRO TARGET: an enemy hero adjacent (<= 500, the creep aggro-redirect
+	-- range) to an enemy lane creep, which we can order-attack to pull that creep's
+	-- aggro. Must be a real, attackable hero (not an illusion / Meepo clone).
+	local hTarget = nil
+	for _, e in pairs( tEnemyHeroes ) do
+		if J.IsValidHero( e )
+		and not J.IsSuspiciousIllusion( e )
+		and not J.IsMeepoClone( e )
+		and J.CanBeAttacked( e )
+		then
+			for _, c in pairs( tEnemyCreeps ) do
+				if J.IsValid( c ) and GetUnitToUnitDistance( e, c ) <= 500 then
+					hTarget = e
+					break
+				end
+			end
+		end
+		if hTarget ~= nil then break end
+	end
+	if hTarget == nil then return nil end
+
+	-- Retreat point: a step from the enemy creep wave back toward our fountain.
+	-- Walking here after the aggro-draw drags the aggroed enemy creeps onto our
+	-- side, resetting the lane equilibrium so we can last-hit again.
+	local vWave = tEnemyCreeps[1]:GetLocation()
+	local vFountain = J.GetTeamFountain()
+	if vFountain == nil then
+		local hOwnAncient = GetAncient( GetTeam() )
+		vFountain = hOwnAncient ~= nil and hOwnAncient:GetLocation() or bot:GetLocation()
+	end
+	local dx, dy = vFountain.x - vWave.x, vFountain.y - vWave.y
+	local nMag = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
+	local vBot = bot:GetLocation()
+	local vRetreat = Vector( vBot.x + dx / nMag * 600, vBot.y + dy / nMag * 600, 0 )
+
+	return { enemy = hTarget, retreat = vRetreat }
+end
+
 -- [GH #15] Mid 6-level TP support. Observed gap: when a fight breaks out at one
 -- of OUR towers (an ally being dived, a lane under pressure) the MID hero --
 -- which in turbo has a short TP cooldown and is usually level 6+ -- stands idle
