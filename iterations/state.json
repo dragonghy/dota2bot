@@ -258,6 +258,13 @@
   "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
  },
  "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH).",
+ "ab_verdicts_20260721_recovered": {
+  "note": "Instances spot-RECLAIMED (Service initiated 22:16) before validate_onspot uploaded verdicts, but per-game analysis.json (mirror-stamped) were in S3 -> recovered LOCALLY via tools/batch_test/soak/recover_verdict.py. Econ A/B is noise-limited (1-2 seeds); treat as directional, esp. the strong 0/2 rejects.",
+  "bodyblock": {"verdict": "REJECT", "gpm": -50.53, "xpm": -53.62, "deaths": 0.61, "last_hits": -3.24, "comps": "0/2", "read": "#11 harass pulls cores off farm + gets them killed. Echoes #16 (forcing cores off-farm in lane is wrong). Strong 2-seed reject. Keep gated/inert; do NOT promote. Abandon or radically narrow (kill-only, not general harass)."},
+  "lf_support": {"verdict": "REJECT", "gpm": -22.75, "xpm": -45.22, "deaths": 0.53, "last_hits": -3.33, "comps": "0/1", "read": "support-screen-carry clumps team -> worse. CONFIRMS lanefix diagnosis (lf_support was a culprit). The owner's Q2 (support wanders) is NOT solved by lf_support; needs a different approach. 1 seed only but consistent with prior batch."},
+  "pullcamp": {"verdict": "INCONCLUSIVE", "gpm": 10.8, "xpm": -15.69, "deaths": 0.18, "last_hits": -1.47, "comps": "1/1 gpm but mixed", "read": "seed 101 only (102 incomplete at reclaim). +10.8 gpm but xpm/deaths/lh slightly negative -> noise-limited, not a clear win. Re-run full 2-3 seeds. Also Class-B: use behavioral detectors (pull count / lane-equilibrium) not just econ."},
+  "divecap": {"verdict": "RUNNING", "instance": "i-0d5b4a79d1da6b735 (spot, launched 22:28)", "read": "if reclaimed, recover via recover_verdict.py; primary metric is unpunished_tower_dive detector rate vs 4.6 baseline, not econ."}
+ },
  "new_gated_awaiting_ab": [
   "skysilence",
   "overchase",
