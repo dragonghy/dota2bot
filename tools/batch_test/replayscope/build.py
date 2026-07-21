@@ -45,6 +45,58 @@ def bare(name):
     return name.replace("npc_dota_hero_", "")
 
 
+def attach_stats(ticks, tl):
+    """Per-hero cumulative last-hits / denies / K / D / A at each tick, from the
+    combat log. Last-hit vs deny is decided by whether the killed creep belongs to
+    the enemy or own team; assists credit allies who damaged a victim in the 8s
+    before it died (excluding the killer). Shown scoreboard-style (both teams)."""
+    from collections import defaultdict
+    teams = {bare(k): v for k, v in tl["game"]["teams"].items()}
+    ev = tl.get("events", [])
+    lh, dn, kills, deaths, assists = (defaultdict(list) for _ in range(5))
+    for e in ev:
+        if e.get("type") == "DEATH" and e.get("actor_hero") and not e.get("target_hero") \
+                and "creep" in e.get("target", ""):
+            a = bare(e["actor"])
+            if a in teams:
+                own = "goodguys" if teams[a] == 2 else "badguys"
+                (dn if own in e["target"] else lh)[a].append(e["t"])
+        if e.get("type") == "DEATH" and e.get("target_hero"):
+            deaths[bare(e["target"])].append(e["t"])
+            k = bare(e.get("actor", ""))
+            if e.get("actor_hero") and k in teams:
+                kills[k].append(e["t"])
+    dmg = sorted((e for e in ev if e.get("type") == "DAMAGE" and e.get("target_hero")
+                  and e.get("actor_hero")), key=lambda e: e["t"])
+    dts = [e["t"] for e in dmg]
+    for e in ev:
+        if e.get("type") == "DEATH" and e.get("target_hero"):
+            v, vt = e["target"], e["t"]
+            killer = bare(e.get("actor", "")) if e.get("actor_hero") else None
+            vteam = teams.get(bare(v))
+            contrib = set()
+            for e2 in dmg[bisect.bisect_left(dts, vt - 8): bisect.bisect_right(dts, vt)]:
+                if e2["target"] == v:
+                    a = bare(e2["actor"])
+                    if a in teams and teams[a] != vteam and a != killer:
+                        contrib.add(a)
+            for a in contrib:
+                assists[a].append(vt)
+    for d in (lh, dn, kills, deaths, assists):
+        for h in d:
+            d[h].sort()
+    for tk in ticks:
+        t = tk["t"]
+        for h in tk["heroes"]:
+            n = h["name"]
+            h["cs"] = bisect.bisect_right(lh[n], t)
+            h["dn"] = bisect.bisect_right(dn[n], t)
+            h["k"] = bisect.bisect_right(kills[n], t)
+            h["d"] = bisect.bisect_right(deaths[n], t)
+            h["a"] = bisect.bisect_right(assists[n], t)
+    return ticks
+
+
 def load_icon(hero):
     """Return a data: URI for a hero minimap icon. Uses the committed cache first,
     fetches + caches on a miss (some heroes drop the underscores in the icon file)."""
@@ -344,6 +396,7 @@ def main():
     heroes, ticks, dur = build_ticks(tl, args.tick)
     attach_cc(ticks, tl, args.tick)
     attach_tp(ticks)
+    attach_stats(ticks, tl)
 
     # Delta-encode item loadouts: a hero's items change a few dozen times all
     # game, but the 9-slot array was repeating every tick (~1 MB). Drop it on

@@ -48,6 +48,8 @@
   td.items .islot{border:1px solid var(--line)}
   td.items .bp{opacity:.5}                       /* backpack slots 6-8: not directly usable */
   td.items .bpsep{display:inline-block;width:1px;height:16px;background:var(--ink-faint);margin:0 4px;vertical-align:middle;opacity:.6}
+  td.cs,td.kda{font-variant-numeric:tabular-nums;text-align:right;color:var(--ink-dim)}
+  td.cs .dn{color:var(--ink-faint);font-size:10px} td.kda{min-width:56px}
   td.econ{font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
   .econ-v{color:#e8c25a;font-weight:600}
   td.tp{font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
@@ -110,7 +112,7 @@
     <div class="hd"><span>State table</span><span class="spacer" style="flex:1"></span>
       <span class="hint" id="persphint">global — all units</span></div>
     <div class="tablewrap"><table id="tbl"><thead><tr>
-      <th>hero</th><th>lvl</th><th>hp</th><th>mp</th><th>econ</th><th>tp</th><th>items</th><th class="status-col">status</th>
+      <th>hero</th><th>lvl</th><th>cs</th><th>kda</th><th>hp</th><th>mp</th><th>econ</th><th>tp</th><th>items</th><th class="status-col">status</th>
     </tr></thead><tbody id="tbody"></tbody></table></div>
   </section>
 </main>
@@ -343,8 +345,12 @@ function drawTable(){
                           : `<span class="islot${bp}" title="${it||'empty'}"></span>`;
     }
     const cc=(vis&&h.alive&&h.cc?h.cc:[]).map(c=>`<span class="cc cc-${c.k.toLowerCase()}">${c.k} ${c.r}s</span>`).join('');
+    const cs = h.cs!=null ? `${h.cs}${h.dn?`<span class="dn">+${h.dn}</span>`:''}` : '—';
+    const kda = h.k!=null ? `${h.k}/${h.d}/${h.a}` : '—';
     tr.innerHTML=`<td class="hero">${ic}<span>${pretty(h.name)}</span></td>
       <td>${src.lvl??'—'}</td>
+      <td class="cs">${cs}</td>
+      <td class="kda">${kda}</td>
       <td class="hp">${hp}</td>
       <td class="mp">${mp}</td>
       <td class="econ">${econCell(h)}</td>
