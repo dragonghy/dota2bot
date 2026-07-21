@@ -263,11 +263,11 @@ def build_ticks(tl, tick_s):
     creeps_by_tick = {tk: [list(c) for c in cells] for tk, cells in creeps_seen.items()}
     creep_keys = sorted(creeps_by_tick)
 
-    # Start at the horn (0:00). The replay's pre-game (t<0) is a data artifact:
-    # heroes and creeps are pre-created and frozen at their spawn/staging points
-    # (verified: lane creeps sit at the barracks until t=0, then march), which
-    # never matches how the game actually looks. So we drop it.
-    start = 0.0
+    # Start at the earliest hero position (negative -> the pre-game). The dumper
+    # now samples the pre-game correctly, so this shows heroes walking out of the
+    # fountain to their lanes before the horn.
+    start = min((s["t"] for s in tl["snapshots"]), default=0.0)
+    start = int(start // tick_s) * tick_s
 
     last_mhp, last_mmp = {}, {}
     ticks = []

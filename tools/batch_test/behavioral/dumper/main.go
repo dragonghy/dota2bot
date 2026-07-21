@@ -153,8 +153,13 @@ type buildingState struct {
 }
 
 type creepState struct {
-	team int32
-	x, y float64
+	team    int32
+	x, y    float64
+	x0, y0  float64 // position when first seen (its spawn point)
+	haveX0  bool
+	active  bool // has moved from spawn -> a real marching creep (the engine
+	// pre-creates each wave and parks it at the barracks ~26s before the horn;
+	// those never move, so we don't emit them until they do)
 }
 
 type wardState struct {
@@ -407,6 +412,12 @@ func main() {
 
 	dumpCreeps := func(t float64) {
 		for _, c := range creeps {
+			// Lane/siege creeps march, so require them to have moved from spawn
+			// (skips the wave the engine pre-parks at the barracks). Neutrals
+			// (team 4) legitimately stand at their camp, so always emit them.
+			if !c.active && c.team != 4 {
+				continue
+			}
 			creepSnaps = append(creepSnaps, creepSnap{
 				T: round1(t), Team: c.team, X: round1(c.x), Y: round1(c.y),
 			})
@@ -431,15 +442,13 @@ func main() {
 		cn := e.GetClassName()
 
 		if strings.Contains(cn, "Gamerules") {
+			// m_flGameStartTime is 0 for the whole pre-game and only set (to the
+			// horn engine-time) AT the horn. So it cannot clock the pre-game live;
+			// we capture it here and convert engine-time samples to game-clock at
+			// the end (see the post-Start pass). Sampling is armed on the first
+			// hero position instead (below), so the pre-game walk-out is captured.
 			if v, ok := e.GetFloat32("m_pGameRules.m_flGameStartTime"); ok && v > 0 {
 				gameStart = float64(v)
-				if !armed {
-					armed = true
-					// Begin sampling before the horn so the pre-game prep phase
-					// (heroes leaving fountain, warding, pulls) is captured.
-					start := -*pregame
-					nextSample, nextBuilding, nextCreep = start, start, start
-				}
 			}
 			return nil
 		}
@@ -476,13 +485,13 @@ func main() {
 			idx := e.GetIndex()
 			w := wards[idx]
 			if op&manta.EntityOpDeleted != 0 {
-				if w != nil && w.tEnd < 0 {
-					w.tEnd = round1(serverNow - gameStart)
+				if w != nil && w.tEnd < -0.5 {
+					w.tEnd = round1(serverNow) // raw engine; converted below
 				}
 				return nil
 			}
 			if w == nil {
-				w = &wardState{kind: kind, tStart: round1(serverNow - gameStart), tEnd: -1}
+				w = &wardState{kind: kind, tStart: round1(serverNow), tEnd: -1e9}
 				wards[idx] = w
 			}
 			if t, ok := e.GetUint32("m_iTeamNum"); ok && t > 0 {
@@ -511,6 +520,11 @@ func main() {
 			}
 			if x, y, ok := worldXY(e); ok {
 				c.x, c.y = x, y
+				if !c.haveX0 {
+					c.x0, c.y0, c.haveX0 = x, y, true
+				} else if !c.active && (x-c.x0)*(x-c.x0)+(y-c.y0)*(y-c.y0) > 64*64 {
+					c.active = true // moved from spawn -> a real marching creep
+				}
 			}
 			return nil
 		}
@@ -536,6 +550,15 @@ func main() {
 		if x, y, ok := worldXY(e); ok {
 			h.x, h.y = x, y
 			h.valid = true
+			// Arm sampling on the first hero that has a real position (i.e. once
+			// heroes have spawned in the pre-game). Boundaries are in ENGINE time;
+			// they become game-clock after the horn is subtracted at the end.
+			if !armed {
+				armed = true
+				en := float64(p.NetTick) * tickInterval
+				b := float64(int(en/(*interval))) * (*interval)
+				nextSample, nextBuilding, nextCreep = b, b, b
+			}
 		}
 		if v, ok := e.GetInt32("m_iHealth"); ok {
 			h.hp = v
@@ -569,7 +592,7 @@ func main() {
 			return nil // drop pure creep/tower noise; keep anything touching a hero
 		}
 		events = append(events, event{
-			T:          round1(ts - gameStart),
+			T:          round1(ts), // raw engine time; converted to game-clock below
 			Type:       strings.TrimPrefix(m.GetType().String(), "DOTA_COMBATLOG_"),
 			Actor:      actor,
 			Target:     target,
@@ -589,25 +612,26 @@ func main() {
 		return nil
 	})
 
-	// Drive sampling off the per-tick clock (30 Hz) rather than the sparse combat
-	// log. NetTick*tickInterval is engine time (verified to match combat-log
-	// timestamps); game-clock = that - horn. This emits each boundary with the
-	// hero/building/creep positions in effect AT that instant -- essential for the
-	// pre-game, where combat-log entries are rare and used to smear early frames.
+	// Drive sampling off the per-tick clock (30 Hz). Boundaries are in ENGINE time
+	// (NetTick*tickInterval) so we can sample the pre-game live, before the horn is
+	// known; each snapshot's T is converted to game-clock (minus the horn) in the
+	// post-Start pass. Each boundary is emitted with the positions in effect AT
+	// that instant -- fixing the old bug where the whole pre-game backlog was
+	// flushed at the horn with one (frozen) position.
 	p.Callbacks.OnCNETMsg_Tick(func(m *dota.CNETMsg_Tick) error {
-		if !armed || gameStart <= 0 {
+		if !armed {
 			return nil
 		}
-		clock := float64(m.GetTick())*tickInterval - gameStart
-		for clock >= nextSample {
+		en := float64(m.GetTick()) * tickInterval
+		for en >= nextSample {
 			dumpSnapshots(nextSample)
 			nextSample += *interval
 		}
-		for clock >= nextBuilding {
+		for en >= nextBuilding {
 			dumpBuildings(nextBuilding)
 			nextBuilding += *buildingInterval
 		}
-		for clock >= nextCreep {
+		for en >= nextCreep {
 			dumpCreeps(nextCreep)
 			nextCreep += *creepInterval
 		}
@@ -618,15 +642,52 @@ func main() {
 		panic(err)
 	}
 
-	// Flatten wards into output records.
+	// Convert every engine-time T to game-clock (0 = horn) now that the horn time
+	// is known, and drop frames before the pre-game window. This is what lets the
+	// pre-game be sampled live yet labeled correctly.
+	horn := gameStart
+	lo := -*pregame - 0.5
+	ks := snaps[:0]
+	for _, s := range snaps {
+		s.T = round1(s.T - horn)
+		if s.T >= lo {
+			ks = append(ks, s)
+		}
+	}
+	snaps = ks
+	kb := buildingSnaps[:0]
+	for _, b := range buildingSnaps {
+		b.T = round1(b.T - horn)
+		if b.T >= lo {
+			kb = append(kb, b)
+		}
+	}
+	buildingSnaps = kb
+	kc := creepSnaps[:0]
+	for _, c := range creepSnaps {
+		c.T = round1(c.T - horn)
+		if c.T >= lo {
+			kc = append(kc, c)
+		}
+	}
+	creepSnaps = kc
+	for i := range events {
+		events[i].T = round1(events[i].T - horn)
+	}
+
+	// Flatten wards into output records (converting their engine times too).
 	var wardSnaps []wardSnap
 	for _, w := range wards {
 		if w.kind == "" {
 			continue
 		}
+		tEnd := -1.0 // still up at end of replay
+		if w.tEnd > -1e8 {
+			tEnd = round1(w.tEnd - horn)
+		}
 		wardSnaps = append(wardSnaps, wardSnap{
 			Type: w.kind, Team: w.team, X: round1(w.x), Y: round1(w.y),
-			TStart: w.tStart, TEnd: w.tEnd,
+			TStart: round1(w.tStart - horn), TEnd: tEnd,
 		})
 	}
 
