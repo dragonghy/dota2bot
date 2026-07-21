@@ -74,6 +74,10 @@ def main():
             "hp": s.get("hp", 0), "max_hp": max_hp,
             "mp": s.get("mp", 0), "max_mp": s.get("max_mp", 0),
             "level": s.get("level", 1), "alive": hp_pct > 0,
+            # real inventory (slot-ordered, '' = empty) and TP cooldown, when the
+            # dump carries them — lets fixtures exercise item decisions too.
+            "items": [x for x in (s.get("items") or [])],
+            "tp_cd": s.get("tp_cd", 0),
         })
     assert any(u["name"] == subj for u in units), "subject %s not in timeline" % subj
 
@@ -101,10 +105,13 @@ def main():
     L.append("  self = '%s'," % subj)
     L.append("  units = {")
     for u in units:
+        items = ", ".join("'%s'" % i for i in u["items"])
         L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
-                 " mp = %d, max_mp = %d, level = %d, alive = %s }," % (
+                 " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s,"
+                 " items = { %s } }," % (
                      u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
-                     u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false"))
+                     u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
+                     u["tp_cd"], items))
     L.append("  },")
     L.append("  observed = {")
     L.append("    burst = {")

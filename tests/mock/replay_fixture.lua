@@ -30,7 +30,25 @@ function M.load(path)
     for _, u in ipairs(fx.units) do
         local loc = api.Vector(u.x, u.y, 0)
         local burst = (fx.observed and fx.observed.burst and fx.observed.burst[u.name]) or 0
+        -- Real inventory: slot-ordered item handles ('' = empty slot). The TP
+        -- scroll's real cooldown state rides on tp_cd from the dump.
+        local slots = {}
+        for i, itname in ipairs(u.items or {}) do
+            if itname ~= '' then
+                local full = 'item_' .. itname
+                local ready = true
+                if itname == 'teleport_scroll' or itname == 'tpscroll' then
+                    full = 'item_tpscroll'
+                    ready = (u.tp_cd or 0) <= 0
+                end
+                slots[i - 1] = api.MakeAbility(full, {
+                    IsFullyCastable = ready,
+                    GetCooldownTimeRemaining = u.tp_cd or 0,
+                })
+            end
+        end
         heroes[u.name] = api.MakeHero(u.name, {
+            GetItemInSlot = function(_, i) return slots[i] end,
             GetTeam = u.team,
             GetLocation = loc,
             GetHealth = u.hp, GetMaxHealth = u.max_hp,
@@ -72,6 +90,7 @@ function M.load(path)
         return {}
     end
     GetGameMode = function() return GAMEMODE_TURBO end
+    DotaTime = function() return fx.time end
 
     local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
     return J, bot, heroes, fx
