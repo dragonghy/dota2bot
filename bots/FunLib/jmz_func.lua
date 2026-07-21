@@ -5491,6 +5491,101 @@ function J.ShouldTpSupportTowerFight( bot )
 	return nil
 end
 
+-- [GH #13] Turbo laning creep-pull to reset lane equilibrium. A classic support
+-- / off-laner technique: when our lane creep wave is pushing the WRONG way
+-- (equilibrium shoved toward the enemy tower, so our creeps die far forward and
+-- our laner gets zoned / denied), pull the nearby friendly neutral camp at the
+-- ~:47/:55 pull window. The aggroed neutrals follow the puller back toward the
+-- lane and meet our incoming creep wave, which then trades into the neutrals --
+-- dragging the lane equilibrium back toward us and resetting a bad lane.
+--
+-- Returns the pull camp's spawn LOCATION (the pull intent) or nil. The caller
+-- issues the actual pull (attack the camp's neutrals so they aggro and follow).
+-- Fires ONLY when ALL hold -- deliberately CONSERVATIVE so it never griefs a
+-- lane that is already fine:
+--   * turbo AND the 'pullcamp' soak candidate is armed (inert otherwise),
+--   * laning window: neutral camps exist and it is still the early lane
+--     (DotaTime in [60, 10*60]; turbo laning is short),
+--   * the game clock is in a pull window (seconds-into-minute ~44..58 -> the
+--     :47/:55 pulls; earlier the neutrals are not up / arrive too soon, later
+--     the wave has already met past the camp),
+--   * this bot is a support (pos 4-5) -- cores stay to farm/deny, not pull,
+--   * our lane equilibrium is UNFAVORABLE: our lane front is pushed PAST the
+--     lane midpoint toward the enemy (our creeps meeting on the enemy's half),
+--   * a FRIENDLY neutral camp is within reach (<= 1500) AND is actually up
+--     (neutral creeps present nearby), and
+--   * no enemy hero is right on us (<= 800) -- pulling under threat feeds, it
+--     does not reset.
+--
+-- Gated turbo-only (J.IsModeTurbo) AND to the 'pullcamp' soak candidate, so
+-- shipped/normal behavior is byte-for-byte unchanged until an A/B win promotes
+-- it.
+--
+-- Approximation note (honest -- the Bot API has no clean primitive for this):
+-- there is no "creeps are at the camp / the pull will connect" oracle and no
+-- camp-occupancy flag, so "camp is up" is approximated by nearby neutral creeps,
+-- and "unfavorable equilibrium" by the lane front vs the lane midpoint. The pull
+-- TIMING is a fixed seconds-into-minute window, not a wave-position solve. This
+-- is the best conservative TRIGGER the API allows; see the shipping report for
+-- the limitation on the action itself.
+function J.ShouldPullNeutralCamp( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'pullcamp' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+
+	-- Support-only: leaving the lane to pull is a pos 4/5 job; cores stay to farm.
+	if J.IsCore( bot ) then return nil end
+
+	-- Laning window: neutral camps spawn at 1:00, and pulling only matters early.
+	local nNow = DotaTime()
+	if nNow < 60 or nNow > 10 * 60 then return nil end
+
+	-- Pull window: begin the pull so the neutrals connect around the :47/:55
+	-- marks. Outside it the pull arrives too early (creeps not there) or too late
+	-- (the wave has already met past the camp).
+	local nSec = nNow % 60
+	if nSec < 44 or nSec > 58 then return nil end
+
+	-- Never pull under threat -- being caught mid-pull just feeds a death.
+	if #J.GetEnemiesNearLoc( bot:GetLocation(), 800 ) > 0 then return nil end
+
+	-- Unfavorable equilibrium: our lane front is pushed PAST the lane midpoint
+	-- toward the enemy (our creeps are dying forward). If the lane is even or in
+	-- our favor there is nothing to reset -- fall through and keep laning.
+	local nLane = bot:GetAssignedLane()
+	if nLane == nil then return nil end
+	local vFront = GetLaneFrontLocation( GetTeam(), nLane, 0 )
+	local vMid   = GetLocationAlongLane( nLane, 0.5 )
+	local hOwn   = GetAncient( GetTeam() )
+	if vFront == nil or vMid == nil or hOwn == nil then return nil end
+	local vOwn = hOwn:GetLocation()
+	-- Front further from our ancient than the midpoint (by a margin) == pushed
+	-- toward the enemy == bad equilibrium for us.
+	if J.GetLocationToLocationDistance( vFront, vOwn )
+		<= J.GetLocationToLocationDistance( vMid, vOwn ) + 400
+	then
+		return nil
+	end
+
+	-- A friendly neutral camp must be actually up (neutral creeps present nearby)
+	-- and within reach so the pull can connect to the lane in time.
+	local tNeut = bot:GetNearbyNeutralCreeps( 1400 )
+	if tNeut == nil or #tNeut == 0 then return nil end
+	local tCamps = GetNeutralSpawners()
+	if tCamps == nil then return nil end
+	local vBest, nBestDist = nil, 1500
+	for _, camp in pairs( tCamps ) do
+		if camp ~= nil and camp.location ~= nil and camp.team == GetTeam() then
+			local d = GetUnitToLocationDistance( bot, camp.location )
+			if d < nBestDist then
+				nBestDist = d
+				vBest = camp.location
+			end
+		end
+	end
+	return vBest
+end
+
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
 -- ~300-1000u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle

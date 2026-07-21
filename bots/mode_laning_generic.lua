@@ -70,6 +70,20 @@ local bLaneFixSupport = J.IsModeTurbo()
 	and (J.IsSoakCandidate('lanefix') or J.IsSoakCandidate('lf_support'))
 	and J.GetPosition(bot) >= 4
 
+-- [GH #13] Support creep-pull to reset a bad lane equilibrium. Turbo-only and
+-- gated behind soak candidate 'pullcamp'; inert in shipped games. When armed and
+-- the trigger fires (see J.ShouldPullNeutralCamp), the support walks to / attacks
+-- the nearby friendly neutral camp so the neutrals aggro and drag our lane wave
+-- back. The actual pull is checked FIRST in Think (below); when it does NOT fire,
+-- this bot falls through to the shared custom laning body (last-hit / deny /
+-- move-to-lane-front), NOT idle. Note (honest limitation): standing up a custom
+-- Think for the pullcamp candidate means its non-pull frames use that shared body
+-- rather than Valve's default laning -- a known confound the A/B must account for;
+-- a fully isolated pull hook is not expressible without reimplementing default
+-- laning wholesale (the same constraint documented on bLaneFixCoreLH).
+local bPullCamp = J.IsModeTurbo() and J.IsSoakCandidate('pullcamp')
+	and J.GetPosition(bot) >= 4
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -359,8 +373,26 @@ local function DoSupportLaningThink()
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp then
 	function Think()
+		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
+		-- equilibrium, checked before any laning think. Gated + conservative
+		-- inside J.ShouldPullNeutralCamp, so this is inert unless turbo, the
+		-- 'pullcamp' candidate is armed, and the exact pull case holds.
+		if bPullCamp then
+			local vCamp = J.ShouldPullNeutralCamp(bot)
+			if vCamp ~= nil then
+				local tNeut = bot:GetNearbyNeutralCreeps(1400)
+				if tNeut ~= nil and #tNeut > 0 and J.IsValid(tNeut[1]) then
+					-- Attack the camp so the neutrals aggro onto us and follow.
+					bot:Action_AttackUnit(tNeut[1], true)
+				else
+					bot:Action_MoveToLocation(vCamp)
+				end
+				return
+			end
+		end
+
 		if bSupLastHit or bLaneFixSupport then
 			DoSupportLaningThink()
 			return
