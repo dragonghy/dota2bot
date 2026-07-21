@@ -135,6 +135,9 @@ function GetDesireHelper()
     -- desire-raising check sits further down with the other gated guards.
     if not bot:IsAlive() then
         J.ShouldAvoidDeathZone(bot)
+        -- [lanefix/lf_threat] record-only: credit the nearest enemy with this
+        -- death so the proven-killer guard below has a memory to work from.
+        J.NoteProvenKillerOnDeath(bot)
     end
 
     if not bot:IsAlive()
@@ -231,6 +234,14 @@ function GetDesireHelper()
     -- the ultimate buys nothing. Hard retreat when revived-in-place moments
     -- ago and outnumbered by 2+. Gated; inert by default.
     if J.ShouldFleeAfterRevive(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
+    -- [lanefix/lf_threat] Proven-killer respect (fixture f_073148_zuus_lina):
+    -- Zeus was 100-0'd by the same solo Lina FOUR times in one game, each time
+    -- standing back in her range with no ally near. When an enemy credited 2+
+    -- kills on me is within 1000 and I'm solo, keep distance. Gated; inert.
+    if J.ShouldRespectProvenKiller(bot) then
         return BOT_MODE_DESIRE_HIGH
     end
 

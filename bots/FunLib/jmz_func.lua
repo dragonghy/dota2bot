@@ -5423,6 +5423,64 @@ function J.ShouldAvoidDeathZone( bot )
 	return true
 end
 
+-- [replay-review 073148, fixture f_073148_zuus_lina] Proven-killer respect.
+-- Watched (FOCUS hero Zeus): killed by the SAME solo Lina from full/near-full
+-- HP four times in one game (burst 474 -> 789 -> 904 -> 1063), each time
+-- standing back inside her kill range at mid with no ally near. No existing
+-- guard can catch this: he is not low, not outnumbered, not diving -- he just
+-- keeps taking a 1v1 trade an enemy has PROVEN she wins outright. Bots have no
+-- memory of "this enemy 100-0'd me"; this adds a narrow one.
+--
+-- Recording: on dead frames (record-only call in mode_retreat_generic, next to
+-- the death-zone one) the nearest alive enemy hero within 1600 of the death
+-- spot gets a kill credit, at most once per 15s (one credit per death).
+-- Guard: in the first 15 min, if an enemy CREDITED >= 2 KILLS on me is within
+-- 1000 and NO other ally is within 1000 (solo), hard-retreat -- keep distance
+-- from the proven killer; with backup or after laning it stays out of the way.
+-- Gated (turbo + lanefix/lf_threat); inert by default.
+local tProvenKiller = {}   -- [myPID] = { [enemyPID] = kills }
+local tThreatCredit = {}   -- [myPID] = last credit GameTime (idempotency per death)
+function J.NoteProvenKillerOnDeath( bot )
+	if bot:IsAlive() then return end
+	local nPID = bot:GetPlayerID()
+	if tThreatCredit[nPID] ~= nil and GameTime() - tThreatCredit[nPID] < 15 then
+		return
+	end
+	local vLoc = bot:GetLocation()
+	local hKiller, nBest = nil, 1600
+	for _, e in pairs( GetUnitList( UNIT_LIST_ENEMY_HEROES ) ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			local d = GetUnitToLocationDistance( e, vLoc )
+			if d < nBest then hKiller, nBest = e, d end
+		end
+	end
+	if hKiller == nil then return end
+	tProvenKiller[nPID] = tProvenKiller[nPID] or {}
+	local ePID = hKiller:GetPlayerID()
+	tProvenKiller[nPID][ePID] = ( tProvenKiller[nPID][ePID] or 0 ) + 1
+	tThreatCredit[nPID] = GameTime()
+end
+
+function J.ShouldRespectProvenKiller( bot )
+	if not J.IsLaneFixOn( 'threat' ) then return false end
+	if not bot:IsAlive() then return false end
+	if DotaTime() > 15 * 60 then return false end
+	local rec = tProvenKiller[bot:GetPlayerID()]
+	if rec == nil then return false end
+	local bThreatNear = false
+	for _, e in pairs( J.GetEnemiesNearLoc( bot:GetLocation(), 1000 ) ) do
+		if ( rec[e:GetPlayerID()] or 0 ) >= 2 then bThreatNear = true break end
+	end
+	if not bThreatNear then return false end
+	for _, ally in pairs( J.GetAlliesNearLoc( bot:GetLocation(), 1000 ) ) do
+		if ally ~= bot and J.IsValidHero( ally )
+			and not J.IsSuspiciousIllusion( ally ) then
+			return false -- backed up: the trade is no longer the proven 1v1
+		end
+	end
+	return true
+end
+
 -- [replay-review 080225, fixture f_080225_wk_revive] Post-revive flee guard.
 -- Watched (FOCUS hero WK): dies at 6:37, Reincarnation revives him in place at
 -- ~79% HP -- STILL 1v2 against Shadow Shaman + Juggernaut, zero allies within
