@@ -58,8 +58,28 @@ bound, so a modern replay decodes correctly. That is the only modification.
 - `game.start_time` — server time of the horn; every `t` below is game-clock
   seconds (0 = horn), matching the clock the owner reads off the replay.
 - `game.teams` — `{ npc_name: 2|3 }` (2 = Radiant, 3 = Dire).
+- `game.vision_note` — a reminder that per-team fog is reconstructed, not read
+  (see "Vision / fog of war" below).
 - `snapshots[]` — sampled every 1.0 game-second (tunable `-interval`):
-  `{t, hero, team, x, y, hp, hp_pct, mp_pct, level}`.
+  `{t, hero, team, x, y, hp, hp_pct, mp_pct, level, items, abilities}`.
+  - `items` — list of item names the hero holds (inventory + backpack + neutral
+    + TP), class-derived (`CDOTA_Item_Enchanted_Mango` → `enchanted_mango`; a few
+    read differently from the shop name, e.g. `teleport_scroll`, `empty_bottle`).
+  - `abilities` — `[{name, level, cd, cd_len}]` for each castable spell and each
+    leveled talent. `cd` is the last-networked cooldown **remaining** in seconds
+    (0 = ready); `cd_len` is the full length of the current cooldown. `cd` is only
+    as fresh as the last entity update, so treat it as ±1 snapshot.
+- `buildings[]` — sampled every 5.0 game-seconds (tunable `-building-interval`):
+  `{t, name, team, x, y, hp, hp_pct, alive}` for every tower / barracks / ancient
+  (`name`: `tower|barracks|ancient|watch_tower`). `alive` flips to `false` once
+  the structure entity is destroyed, so tower-fall timing is directly readable.
+- `creeps[]` — sampled every 3.0 game-seconds (tunable `-creep-interval`):
+  `{t, team, x, y}` for lane + neutral creeps (team 2/3 = lane, team 4 =
+  neutrals). Positions only — intended for density heatmaps. This is the bulk of
+  the file; subsample harder via the flag if size matters.
+- `wards[]` — one record per ward, event-shaped (not sampled):
+  `{type, team, x, y, t_start, t_end}` where `type` is `observer|sentry` and
+  `t_end < 0` means the ward was still standing at replay end.
 - `events[]` — every combat-log entry touching a hero:
   `{t, type, actor, target, inflictor, value, actor_hero, target_hero}`
   (types: ABILITY, ITEM, DAMAGE, HEAL, DEATH, MODIFIER_ADD/REMOVE, GOLD, XP,
@@ -67,9 +87,34 @@ bound, so a modern replay decodes correctly. That is the only modification.
   `modifier_teleporting` — matching an ADD to its REMOVE gives the channel
   duration, so an interrupted (wasted) TP is directly observable.
 
+The `snapshots` schema is a superset of the original — `detect.py`,
+`storyboard.py` and `report_card.py` read only the original keys and ignore the
+new ones, so this change is backward compatible.
+
 Hero identity: derived from the entity class name (`CDOTA_Unit_Hero_Skywrath_Mage`
 → `npc_dota_hero_skywrath_mage`) via camelCase/underscore → snake_case, which
 matches the names the combat log uses, so snapshots and events cross-reference.
+
+### Vision / fog of war (important for any vision-aware panel)
+
+The bots only see their own team's vision, so judging a decision means rendering
+what that team could actually see. **Source 2 replays do not carry a per-team
+visibility flag.** They record the global "god" entity stream; per-recipient fog
+is computed server-side and never networked into the demo. Verified directly by
+dumping the full flattened-serializer symbol pool (5371 symbols) of a real
+replay: there is **no `m_iTaggedAsVisibleByTeam`** (nor any `TaggedAsVisible*` /
+per-viewer visibility bitmask). The only fog-related fields are engine/HUD
+plumbing (`m_nFoWTeam`, always 0 on units; `m_iFoWFrameNumber`;
+`m_bIsPartOfFowSystem`; `m_nHUDVisibilityBits`; `m_bNPCVisibleState`) — none of
+which answer "which teams can see unit U at tick T".
+
+So a vision panel must **reconstruct** each team's vision from its vision
+**sources**, all of which this dump now provides: hero positions + team
+(`snapshots`), ward positions + team (`wards`), and standing tower/building
+positions + team (`buildings`). Union the standard radii around a team's live
+sources (hero day/night ≈ 1800/800u, observer ward ≈ 1600u, tower ≈ 1900u),
+optionally subtracting high-ground/tree occlusion, to approximate that team's
+fog at any `t`.
 
 ## Detectors (`detect.py`)
 
