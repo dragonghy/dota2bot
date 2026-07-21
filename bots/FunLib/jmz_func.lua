@@ -4861,6 +4861,41 @@ function J.LaneRegenItemToUse( bot )
 	return nil
 end
 
+-- [replay-review 071423 t=3:55] Rescue / counter-gank TP. Watched: Luna was
+-- dived top by Jakiro+Slardar and chased to death while Skywrath sat at the
+-- fountain at 70% HP with TP READY -- the owner: "如果天怒能TP上路一塔,大概率能
+-- 反抓,至少能保护露娜". No teammate ever TPs to save a caught carry.
+-- Returns the ally hero worth TPing to (or nil). Fires ONLY when ALL hold:
+--   * early/mid game (rescue-TP window), I'm healthy (>= 60% HP), TP ready,
+--   * an ally is LOW (< 60%) with >= 2 enemies within ~900 (being dived) --
+--     or < 35% with even one enemy on it,
+--   * the dive is answerable: at most 2 enemies on the ally (never TP into 3+),
+--   * the ally is genuinely far (> 3500): walking would arrive too late.
+-- Gated (turbo + lanefix/lf_rescue); inert by default. Target selection only --
+-- the TP cast point (nearest own tower) is resolved by the item-usage wiring.
+function J.GetRescueTpTarget( bot )
+	if not J.IsLaneFixOn( 'rescue' ) then return nil end
+	if DotaTime() > 15 * 60 then return nil end
+	if J.GetHP( bot ) < 0.60 then return nil end
+	local tp = J.GetItem2( bot, 'item_tpscroll' )
+	if tp == nil or not tp:IsFullyCastable() then return nil end
+	for _, ally in pairs( GetUnitList( UNIT_LIST_ALLIED_HEROES ) ) do
+		if ally ~= bot and J.IsValidHero( ally ) and not ally:IsIllusion()
+			and GetUnitToUnitDistance( bot, ally ) > 3500
+		then
+			local nAllyHP = J.GetHP( ally )
+			local tDivers = J.GetEnemiesNearLoc( ally:GetLocation(), 900 )
+			if #tDivers <= 2
+				and ( ( nAllyHP < 0.60 and #tDivers >= 2 )
+					or ( nAllyHP < 0.35 and #tDivers >= 1 ) )
+			then
+				return ally
+			end
+		end
+	end
+	return nil
+end
+
 -- REWRITTEN after fixture replay f_071423_luna_chase (the local-validation
 -- keystone caught the first cut not firing on the exact frame that motivated
 -- it): the old exception delegated to J.SafeToCommitFight, whose NUMBERS branch

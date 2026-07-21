@@ -35,17 +35,19 @@ function M.load(path)
         local slots = {}
         for i, itname in ipairs(u.items or {}) do
             if itname ~= '' then
-                local full = 'item_' .. itname
-                local ready = true
-                if itname == 'teleport_scroll' or itname == 'tpscroll' then
-                    full = 'item_tpscroll'
-                    ready = (u.tp_cd or 0) <= 0
-                end
-                slots[i - 1] = api.MakeAbility(full, {
-                    IsFullyCastable = ready,
-                    GetCooldownTimeRemaining = u.tp_cd or 0,
+                slots[i - 1] = api.MakeAbility('item_' .. itname, {
+                    IsFullyCastable = true,
                 })
             end
+        end
+        -- The TP scroll lives in the dedicated slot (15), outside the 9 carried
+        -- slots the dump lists; its real cooldown state rides on tp_cd. Every
+        -- hero owns one, so synthesize the handle from the captured cooldown.
+        if u.tp_cd ~= nil then
+            slots[15] = api.MakeAbility('item_tpscroll', {
+                IsFullyCastable = u.tp_cd <= 0,
+                GetCooldownTimeRemaining = u.tp_cd,
+            })
         end
         heroes[u.name] = api.MakeHero(u.name, {
             GetItemInSlot = function(_, i) return slots[i] end,

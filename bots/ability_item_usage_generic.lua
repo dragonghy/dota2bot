@@ -5060,6 +5060,18 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	local nNearbyEnemyTowers = bot:GetNearbyTowers( 888, true )
 	if #nNearbyEnemyTowers > 0 then return BOT_ACTION_DESIRE_NONE end
 
+	-- [lanefix/lf_rescue] Rescue TP: a far-away ally is being dived and I'm
+	-- healthy with TP ready -- TP to my tower nearest the ally to counter
+	-- (fixture f_071423_sky_rescue: Skywrath idle at fountain, TP ready, while
+	-- Luna was chased to death top). Gated; inert by default.
+	local hRescueAlly = J.GetRescueTpTarget( bot )
+	if hRescueAlly ~= nil then
+		local vRescueLoc = J.GetNearbyLocationToTp( hRescueAlly:GetLocation() )
+		if vRescueLoc ~= nil then
+			return BOT_ACTION_DESIRE_HIGH, vRescueLoc, 'ground', '救援TP'
+		end
+	end
+
 	local tpLoc = nil
 	local sCastType = 'ground'
 	local hEffectTarget = nil
