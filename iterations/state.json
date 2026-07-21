@@ -167,6 +167,12 @@
   "use": "these are the BEFORE numbers; when the validation-run candidate-side replays land, compare detector rates to measure Class-B behavior deltas (not just econ verdict).",
   "followup_note": "unpunished_tower_dive still 4.6/game despite #7 being shipped -> worth checking whether J.ShouldPunishDive's numbers gate is too conservative in turbo (candidate for a future narrow loosening)."
  },
+ "depthnum_validation": {
+  "instance": "i-0a3b4298ce841a85d (ON-DEMAND, run spot_20260721_233251_1_main, seeds 201/202)",
+  "why": "highest-yield remaining unvalidated fix -- DEATH-REDUCTION category (the one that wins). #18 requires +1 numbers when committing deep in enemy half; targets overextend_alone (7-10/game, biggest death signal).",
+  "metric": "primary = overextend_alone detector on depthnum-armed replays vs baseline (measure per-team via _enemy_half_depth); secondary = econ (deaths especially).",
+  "recover": "if it somehow reclaims (it's on-demand, shouldn't), use recover_verdict.py."
+ },
  "validation_run_20260721_2147": {
   "authorized_by": "owner 2026-07-21 (start validation; 2h random run + A/B)",
   "mtd_at_launch_usd": 59.52,
