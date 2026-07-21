@@ -4631,6 +4631,69 @@ function J.ShouldStayAndRegen( bot )
 	return true
 end
 
+-- [GH #9] skysilence: Skywrath Mage's Ancient Seal (E) is a silence + magic
+-- amplification with NO damage of its own. Casting it to OPEN a fight without
+-- the means to immediately follow up wastes it — the seal ticks down while the
+-- bot does nothing. Returns true only when the bot should HOLD an offensive
+-- seal because it would be a lone, value-less silence. Deliberately inverse of
+-- "allow": callers suppress the seal only when this returns true, so the guard
+-- is fail-open.
+--
+-- Complements the already-promoted turbo skyburst guard in hero_skywrath_mage
+-- (which suppresses only when NEITHER Arcane Bolt nor Mystic Flare is off
+-- cooldown). That check reads each ability's mana INDEPENDENTLY, so it still
+-- lets the seal through when the bot has mana for the seal OR a follow-up but
+-- not BOTH — exactly the wasted case. This helper closes that gap by checking
+-- mana left AFTER paying for the seal.
+--
+-- Gated: inert unless turbo AND this side carries the 'skysilence' soak
+-- candidate, so shipped behavior is byte-for-byte unchanged until validated.
+--
+-- Holds (returns true) only when ALL of:
+--   * turbo and the 'skysilence' candidate is armed,
+--   * NO nearby enemy is casting/channeling (an interrupt seal has value on its
+--     own and is always allowed — GOOD case (a)),
+--   * neither Arcane Bolt nor Mystic Flare is BOTH off cooldown AND affordable
+--     with the mana remaining after the seal is paid for (no burst to chain —
+--     GOOD case (b) is when one IS, and the seal is allowed).
+function J.ShouldSkywrathHoldSeal( bot, hSeal, hBolt, hFlare )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'skysilence' ) then return false end
+	if bot == nil or hSeal == nil then return false end
+
+	-- (a) Interrupt value: a nearby enemy is mid-cast/channel — sealing to
+	-- silence it is worthwhile alone. Never hold.
+	local tEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
+	for _, e in pairs( tEnemies )
+	do
+		if J.IsValidHero( e )
+			and ( e:IsCastingAbility() or e:IsChanneling() )
+			and J.CanCastOnNonMagicImmune( e )
+		then
+			return false
+		end
+	end
+
+	-- (b) Burst follow-up value: after paying the seal's mana, is a damage spell
+	-- still off cooldown AND affordable to chain immediately? If so the seal's
+	-- amplification is actually used. Never hold.
+	local nManaAfterSeal = bot:GetMana() - hSeal:GetManaCost()
+	if hBolt ~= nil and hBolt:GetLevel() > 0 and hBolt:IsFullyCastable()
+		and nManaAfterSeal >= hBolt:GetManaCost()
+	then
+		return false
+	end
+	if hFlare ~= nil and hFlare:GetLevel() > 0 and hFlare:IsFullyCastable()
+		and nManaAfterSeal >= hFlare:GetManaCost()
+	then
+		return false
+	end
+
+	-- Armed, no interrupt target, no affordable burst to chain: this seal would
+	-- be a lone value-less silence. Hold it.
+	return true
+end
+
 -- [GH #3] Turbo "walk, don't channel TP under threat" guard. When a low-HP
 -- bot is about to retreat-TP home but an enemy hero is right on its face,
 -- channeling a 3s Town Portal in place can be a death sentence — the channel
