@@ -76,6 +76,24 @@ When the owner says to work autonomously ("继续干不要停 / 不要等我"), 
 - Exception that always holds regardless of mode: the AWS spending tiers and
   the "simulator only as the rare final gate" rule.
 
+## Subagent profiles (owner-directed division of labor, 2026-07-22)
+
+Three specialist profiles live in `.claude/agents/`. **The main session DOES
+NOT do these jobs itself anymore — delegate via the Agent tool** (the owner
+explicitly directed this):
+
+| Profile | Job | Hand it |
+|---|---|---|
+| `batch-runner` | AWS 批测全流程:launch(镜像A/B, on-demand, bundle 支持)、监控、收 verdict、抢占恢复(recover_verdict.py)、成本/泄漏检查 | "跑一轮批测 / 收批测结果 / 查实例花费" |
+| `replay-analyst` | 录像诊断:逐帧还原(硬规则:先逐帧后聚合)+ 检测器/经济差分 + fixture 钉帧 | "看录像找问题 / 诊断批测行为差异" |
+| `replay-artifact` | ReplayScope 网页制作 + Artifact 发布 + 时刻导览 | "把录像做成页面给 owner 看" |
+
+Main session keeps: writing/fixing bot Lua + tests, promote/reject decisions,
+owner communication, and synthesizing the specialists' reports. Each profile
+embeds the operational hard-knowledge (awsx wrapper, $-tier policy, 4-seed
+promote bar, depth sign convention, dumper build recipe, artifact publishing
+rules) — keep the profiles updated when that knowledge changes.
+
 ## Agent session continuity (heartbeat)
 
 - In-memory schedules (CronCreate etc.) **do not survive session suspend** —
