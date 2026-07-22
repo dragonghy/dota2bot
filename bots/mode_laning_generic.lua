@@ -122,6 +122,13 @@ local bL1Trade = J.IsModeTurbo() and J.IsSoakCandidate('l1trade')
 local bXpSoak = J.IsModeTurbo() and J.IsSoakCandidate('l1xpsoak')
 	and J.GetPosition(bot) <= 3
 
+-- [L5-COMBO] Support kill-call (LANING_PLAYBOOK): the enemy 4 walked too deep
+-- (an allied core is on it) and our combined burst kills -> the support joins
+-- the 2-man focus, under STRICTER self-risk gates than the core version (the 5
+-- is the squishier one). Turbo-only + soak candidate 'l5combo', pos 4-5.
+local bL5Combo = J.IsModeTurbo() and J.IsSoakCandidate('l5combo')
+	and J.GetPosition(bot) >= 4
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -230,6 +237,11 @@ function GetDesire()
 	-- lethal contest. Inert unless turbo + soak candidate 'l1xpsoak'.
 	if bXpSoak and J.ShouldXpSoakLane(bot) ~= nil then
 		return 0.9
+	end
+
+	-- [L5-COMBO] Keep the support in laning mode while the kill-call is open.
+	if bL5Combo and J.ShouldSupportComboKill(bot) ~= nil then
+		return 0.92
 	end
 
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
@@ -478,7 +490,7 @@ local function DoCreepPullThink(pull)
 	end
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock or bL1Trade or bXpSoak then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock or bL1Trade or bXpSoak or bL5Combo then
 	function Think()
 		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
 		-- equilibrium, checked before any laning think. Gated + conservative
@@ -539,6 +551,17 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 			local vSoak = J.ShouldXpSoakLane(bot)
 			if vSoak ~= nil then
 				bot:Action_MoveToLocation(vSoak)
+				return
+			end
+		end
+
+		-- [L5-COMBO] Join the 2-man focus on the too-deep enemy: attack it; the
+		-- hero script lands the control/damage spells on the way.
+		if bL5Combo then
+			local hFocus = J.ShouldSupportComboKill(bot)
+			if hFocus ~= nil then
+				bot:SetTarget(hFocus)
+				bot:Action_AttackUnit(hFocus, true)
 				return
 			end
 		end

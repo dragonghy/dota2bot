@@ -5928,6 +5928,77 @@ end
 --     against ME must NOT be lethal-grade (< 75% of my current HP -- the same
 --     bar J.ShouldRetreatLaneBurst uses to flee). Never initiate into a trade
 --     where I am the one who dies first.
+-- [L5-COMBO / LANING_PLAYBOOK] Support kill-call on a too-deep enemy. Owner's
+-- rule: when the enemy pos-4 walks too deep (past/near our pos-1), the 5 calls
+-- the kill and focuses it WITH the core -- typical 4s are squishy and a 2-man
+-- focus kills. Inverse risk (owner): the 5 is squishier than its 1 -- never
+-- jump too deep ourselves; if their 3+4 both turn on me I die first. So the
+-- self-risk gates here are STRICTER than the core version (l1trade):
+--   * their castable burst vs me < 60%% of my hp (vs 75%% for the core), AND
+--   * no SECOND enemy hero within 700 of ME (both their laners on me = dead).
+--
+-- Returns the enemy hero to focus, or nil. Fires ONLY when ALL hold:
+--   * turbo + 'l5combo' (inert shipped), laning phase, NOT a core (pos 4-5),
+--   * the target is a visible real hero within 900 of me AND has walked deep:
+--     an allied CORE is within 900 of it (the 2-man focus is actually on),
+--   * LETHAL: our combined currently-castable burst (allies near the target,
+--     engine mana/cd-aware) >= its HP + 4s regen,
+--   * both self-risk gates above.
+function J.ShouldSupportComboKill( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'l5combo' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+	if not J.IsInLaningPhase() then return nil end
+	if J.IsCore( bot ) then return nil end
+
+	local tEnemies = J.GetNearbyHeroes( bot, 900, true, BOT_MODE_NONE )
+	if tEnemies == nil or #tEnemies == 0 then return nil end
+
+	-- Self-risk 1: their burst against ME (stricter 60%% bar -- I'm the squishy
+	-- one). Self-risk 2: a second enemy within 700 of me means their 3+4 can
+	-- both turn -> I die first, never jump.
+	local nIncoming, nCloseEnemies = 0, 0
+	for _, e in pairs( tEnemies ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			nIncoming = nIncoming
+				+ e:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+			if GetUnitToUnitDistance( bot, e ) <= 700 then
+				nCloseEnemies = nCloseEnemies + 1
+			end
+		end
+	end
+	if nIncoming >= bot:GetHealth() * 0.6 then return nil end
+	if nCloseEnemies >= 2 then return nil end
+
+	for _, hTarget in pairs( tEnemies ) do
+		if J.IsValidHero( hTarget )
+		and not J.IsSuspiciousIllusion( hTarget )
+		and not J.IsMeepoClone( hTarget )
+		and J.CanBeAttacked( hTarget )
+		then
+			-- "Walked too deep": one of OUR CORES is within 900 of it, so the
+			-- 2-man focus is genuinely available (not me solo-diving).
+			local bCoreOnIt = false
+			local tOurs = J.GetAlliesNearLoc( hTarget:GetLocation(), 900 )
+			for _, a in pairs( tOurs or {} ) do
+				if a ~= bot and J.IsValidHero( a ) and J.IsCore( a )
+				and J.GetHP( a ) >= 0.4 then
+					bCoreOnIt = true
+					break
+				end
+			end
+			if bCoreOnIt then
+				local nBurst = J.GetTotalEstimatedDamageToTarget( tOurs, hTarget )
+				if nBurst >= hTarget:GetHealth() + hTarget:GetHealthRegen() * 4.0 then
+					return hTarget
+				end
+			end
+		end
+	end
+
+	return nil
+end
+
 function J.ShouldInitiateLaneKill( bot )
 	if not J.IsModeTurbo() then return nil end
 	if not J.IsSoakCandidate( 'l1trade' ) then return nil end
