@@ -392,6 +392,18 @@
  "l1kite_validation": {
   "instance": "i-07f6d321e5dc295e4 (ON-DEMAND, run spot_20260722_030410_1_main, seeds 401/402 x15)",
   "metric": "econ verdict + LANING-phase deaths armed-vs-baseline split (same recipe as lanesurv: recover_verdict.py + laning-death count on slot1 replays). Note lanesurv is now PROMOTED = active on BOTH sides; l1kite measures its own increment on top.",
-  "next_after": "l1xpsoak (seeds 501/502), then l5trees; promote each only on its own measured improvement."
+  "next_after": "l1xpsoak (seeds 501/502), then l5trees; promote each only on its own measured improvement.",
+  "wave1_result": {
+   "econ": {
+    "gpm": 11.14,
+    "deaths": -0.11,
+    "comps": "deaths 2/2"
+   },
+   "laning_deaths": "-9% (8.86 vs 9.71, n=7)",
+   "decision": "PROMISING-HOLD, extension launched (403/404) -- same recipe as lanesurv; promote if combined n>=14 holds"
+  }
+ },
+ "l1xpsoak_validation": {
+  "note": "first wave launched (501/502 x15); measure = econ + laning-death split; also watch CS/xpm (soak stance must not tank farm)"
  }
 }
