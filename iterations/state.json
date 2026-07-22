@@ -287,8 +287,15 @@
   "bodyblock",
   "wkbuild",
   "divecap",
-  "lanesurv"
+  "lanesurv",
+  "l1trade"
  ],
+ "laning_program": {
+  "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
+  "done_this_iter": ["L1-BURST=lanesurv (validating)", "L1-TRADE initiate half=l1trade (gated, 8 tests)", "playbook doc"],
+  "next": ["L1-TRADE counter-trade half (give one spell + kite while support fights)", "L1-XPSOAK (corrected lf_recover: XP-range soak, not jungle)", "L5-TREES (support harass from off-wave angles, right role for harass)", "L1-SALVE re-purchase link", "L5-COMBO + suptp + L1-DRAG trigger widening"],
+  "observed_evidence": "find_kill_windows.py scan: dozens of missed kill windows per run (ogre 7% + 3 of ours nearby = survived). Owner can deploy bots/ locally (vscripts/bots + Local Dev Script) to play vs the AI; gated fixes armable via bots/Customize/soak_side.lua."
+ },
  "scoping_20260722": "OWNER: the death problem's TEAMFIGHT/COORDINATION dimension (focus-fire, follow-up, peel duty, WK ult-up initiation) is a SEPARATE optimization track -> filed as GH #23 (parent). Laning-phase trade-survival (lanesurv) proceeds independently. Do not mix the two.",
  "lanesurv_note": "THE observation-driven fix of iter 18 (owner-modeled): laning trade-survival / burst-anticipation. J.ShouldRetreatLaneBurst -- flee when visible enemies' currently-castable (mana/cd-aware) burst >= 0.75x current HP (>=1.0x with a peel-capable ally within 700). Born from frame-by-frame WK death review (obs_20260722_focus_deaths.md): WK dies 5x/game to 2-3s burst from HIGH hp on its OWN half; HP-threshold retreat too slow. Pinned by 3 ground-truth fixtures (f_230545_wk_sven_burst 999v868, f_232320_wk_od_burst 915v870, f_230545_wk_laning_safe 265v868 no-fire). Laning-only; post-laning WK ult/fight layer deliberately deferred (owner). NOTE: supersedes wkbuild as the #17 lever -- wkbuild targeted kill-participation which is the WRONG problem (WK's problem is dying).",
  "divecap_finding": "ROOT CAUSE of unpunished_tower_dive staying 4.6/game despite #7 shipped: mode_team_roam CapForLanePush soft-ceils any roam desire >0.9 to 0.72 during laning; the tower-dive(#7)/over-chase(#20) punish return 0.98, so in the laning phase (when most dives happen) the punish was capped below the bot's laning desire and never fired. Fix (gated 'divecap'): defensive-collapse desires bypass the lane cap. A/B QUEUED behind spot capacity (c6i+c6a both InsufficientInstanceCapacity at 4 running); retry when a validate instance frees. VERIFY = unpunished_tower_dive rate on divecap-armed replays vs 4.6 baseline. Help-ally branches deliberately NOT exempted (3500u search radius = legit roam, correctly capped).",
