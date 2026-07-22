@@ -4711,6 +4711,73 @@ function J.ShouldRetreatLaneBurst( bot )
 	return nIncoming >= bot:GetHealth() * nThreshold
 end
 
+-- [L1-TRADE counter-trade half / LANING_PLAYBOOK] Kite the committed trade
+-- through my support. Owner's rule: when the enemy STARTS on me and my support
+-- is beside me, I should not stand and face-tank the exchange -- give a spell,
+-- then fall BACK while the support keeps attacking; if they keep chasing me
+-- they eat the support's damage the whole way and we likely convert a
+-- counter-kill ("你给个技能后往后撤，让辅助一直攻击对面。如果对方强行追你，
+-- 很可能被反杀一个"). Watched counter-example (fixture f_225947_wk_trade_kite,
+-- 6:07): WK at 81% stood and traded face against Lich+SF with Ogre 225u away
+-- -- burst to 0% by 6:11 without ever stepping back through its support.
+--
+-- Returns true when the bot should KITE (raise retreat desire; spells still
+-- fire from the hero script's retreat considers, and the support's help-ally
+-- logic in team_roam engages the chaser -- that pairing IS the counter-trade).
+-- Fires ONLY when ALL hold:
+--   * turbo + 'l1kite' soak candidate (inert shipped), laning phase, core,
+--   * the trade is COMMITTED on me: an enemy hero within 700 AND I took hero
+--     damage within the last 2s (a poke from beyond 700 does not trigger),
+--   * BACKED: a healthy (>= 40%) ally hero within 900 with resources (mana
+--     >= 110 or a castable ability) -- no support, no counter-trade (that
+--     case is L1-SPLIT/XPSOAK territory),
+--   * NOT an open kill window for us (J.ShouldInitiateLaneKill wins first in
+--     wiring order -- if we can just kill one, we go forward, not back).
+function J.ShouldCounterTradeKite( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'l1kite' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+	if not J.IsInLaningPhase() then return false end
+	if not J.IsCore( bot ) then return false end
+
+	-- Committed on me: close enemy + fresh hero damage.
+	if not bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
+	local tEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
+	local bOnMe = false
+	for _, hEnemy in pairs( tEnemies or {} ) do
+		if J.IsValidHero( hEnemy ) and not J.IsSuspiciousIllusion( hEnemy ) then
+			bOnMe = true
+			break
+		end
+	end
+	if not bOnMe then return false end
+
+	-- Backed by a support with resources (same peel notion as
+	-- J.ShouldRetreatLaneBurst; kept in sync).
+	local bBacked = false
+	local tAllies = J.GetNearbyHeroes( bot, 900, false, BOT_MODE_NONE )
+	for _, hAlly in pairs( tAllies or {} ) do
+		if J.IsValidHero( hAlly ) and J.GetHP( hAlly ) >= 0.4 then
+			if hAlly:GetMana() >= 110 then
+				bBacked = true
+				break
+			end
+			for iSlot = 0, 5 do
+				local hAb = hAlly.GetAbilityInSlot ~= nil
+					and hAlly:GetAbilityInSlot( iSlot ) or nil
+				if hAb ~= nil and not hAb:IsPassive() and hAb:IsFullyCastable() then
+					bBacked = true
+					break
+				end
+			end
+			if bBacked then break end
+		end
+	end
+	if not bBacked then return false end
+
+	return true
+end
+
 -- [GH #9] skysilence: Skywrath Mage's Ancient Seal (E) is a silence + magic
 -- amplification with NO damage of its own. Casting it to OPEN a fight without
 -- the means to immediately follow up wastes it — the seal ticks down while the

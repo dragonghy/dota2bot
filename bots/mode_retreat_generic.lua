@@ -240,6 +240,16 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [L1-TRADE counter-trade] The enemy committed onto me in lane and my
+    -- support is beside me: kite BACK through the support instead of standing
+    -- and face-tanking the exchange -- the chaser eats the support's damage the
+    -- whole way (the support's help-ally logic engages it). Spells still fire
+    -- from retreat considers = "give a spell, then fall back". Gated turbo +
+    -- 'l1kite' (J.ShouldCounterTradeKite); inert in shipped games.
+    if J.ShouldCounterTradeKite(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [lanefix/lf_revive] Post-revive flee (fixture f_080225_wk_revive): WK
     -- reincarnates in place still 1v2 and re-engages instead of leaving --
     -- the ultimate buys nothing. Hard retreat when revived-in-place moments
