@@ -510,5 +510,17 @@
     "3_passive_stack_own_half": "armed side won't fight even at numbers advantage on OWN half (3 heroes escorted SF to their fountain; base dove 105x unpunished). Design work needed -- desire caps, not gates."
    }
   }
+ },
+ "CURATED_BUNDLE_20260723": {
+  "bundle": "23 features (full minus l1kite/l1trade/l5combo), incl. 5388e69 fixes",
+  "result": "REJECT 0/6: gpm -111.7, xpm -129.4, deaths +0.86, lh -10.9 -- statistically identical to the 26-feature bundle (-111)",
+  "key_inference": "the three prime suspects were NOT the main poison; removing them changed NOTHING. Poison is in the remaining 23 -- prime historical suspect: the lf_* six (lanefix family, twice-rejected at -74/-88, magnitude matches) and/or the passive stack (analyst pathology #3).",
+  "next": "halves bisect delegated to batch-runner: wave A = lf_six alone, wave B = 23-minus-lf_six (17). Spot-first per new policy. Analyst diff on curated replays in parallel.",
+  "runs": [
+   "spot_20260722_225252_1_main",
+   "spot_20260722_225302_1_main",
+   "spot_20260722_225310_1_main"
+  ],
+  "mtd_usd": 65.84
  }
 }
