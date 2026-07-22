@@ -353,7 +353,8 @@
   "lanesurv",
   "l1trade",
   "l1kite",
-  "l1xpsoak"
+  "l1xpsoak",
+  "l5trees"
  ],
  "laning_program": {
   "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
@@ -362,10 +363,11 @@
    "L1-TRADE initiate half=l1trade (gated, 8 tests)",
    "playbook doc",
    "L1-TRADE counter-trade half=l1kite (gated, fixture-pinned 6:07 frame, composition with lanesurv proven)",
-   "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)"
+   "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)",
+   "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)"
   ],
   "next": [
-   "L5-TREES (support harass from off-wave angles, right role for harass)",
+   "L5-TREES second cut: off-wave positioning (seek treeline angle) + real-frame fixture",
    "L1-SALVE re-purchase link",
    "L5-COMBO + suptp + L1-DRAG trigger widening"
   ],
