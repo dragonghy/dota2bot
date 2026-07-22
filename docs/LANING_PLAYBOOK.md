@@ -19,10 +19,13 @@ one batch A/B.
 — the enemy cannot follow. Unless the enemy can 100→0 you within one CC
 duration, a bad trade is fine: **walk back, drink a salve, return full.**
 **API:** `item_flask` purchase/hold/use; `J.LaneRegenItemToUse` (lf_salve).
-**Status:** PARTIAL — lf_salve (gated, fixture-validated) covers *using* a
-carried salve; `ShouldStayAndRegen` (#2, SHIPPED) stops wasteful TP-home.
-**Gap:** proactive salve *re-purchase* during laning when consumed + the
-"trade is acceptable IF salve-recoverable" link into trade logic.
+**Status:** COVERED (verified 2026-07-22, no new code needed) — three pieces:
+lf_salve (gated) covers *using* a carried salve; `ShouldStayAndRegen` (#2,
+SHIPPED) stops wasteful TP-home; and re-purchase ALREADY EXISTS shipped in
+`item_purchase_generic.lua` ("Init Healing Items in Lane": laning, level<6,
+no flask/tango carried, HP<50%, gold allows -> buys a flask). Remaining nice-
+to-have: the "trade is acceptable IF salve-recoverable" link into trade logic
+(low priority; lanesurv's peel threshold partially encodes it).
 
 ### L1-BURST — don't be 100→0'able (the only real danger)
 **Rule:** the only lethal lane threat is being bursted inside CC duration.
