@@ -493,6 +493,12 @@
    },
    "reading": "The DEFENSIVE features individually work on their target behaviors, but STACKED they produce team-level passivity: bots hang back, abandon allies mid-trade, cede farm and towers, and die MORE (+73% laning deaths). Force-passivity at the bundle level -- the same physics as lanefix(-88) but bigger. Suspect ranking: 1) l1kite (idle+300% fingerprint = kite-away-while-ally-fights), 2) retreat stack depth (lanesurv[shipped]+ccburst+midguard+depthnum+nodive2 compounding), 3) TP trio, 4) l5trees sidestep (CS loss).",
    "next_options_for_owner": "(a) curated SMALL bundle re-test (drop l1kite + TP trio + l5trees; keep the exonerated narrow guards), ~$4; (b) classic halves bisect (~5 waves, ~$15); (c) revert to per-lever for top suspects only. NOTHING promoted from this batch; lanesurv (solo-validated) stays live and is NOT implicated (it was on BOTH sides here)."
+  },
+  "WATCHED_PATHOLOGY": {
+   "method": "frame-by-frame tick traces of armed-side idle_while_ally_dies incidents (owner insisted; aggregates alone had missed the mechanisms)",
+   "case_A_sidestep": "game 175703 2:44-2:51: WD (91-94% hp, cask ready) sidestepped 158->828u in ~550u steps EXACTLY while Sven was bursted 78%->0 beside it, then walked back onto the corpse. Mechanism = l5trees cut-2 sidestep has no fight-awareness. FIXED: sidestep hard-suppressed when any ally within 1200 (or self) took hero damage within 2s (commit 0404cda, test pinned).",
+   "case_B_late_tp": "game 181046 1:40-1:51: Ogre TP'd across the map and LANDED THE SECOND Viper died (dist 14900->485 in one tick at death frame). Mechanism = rescue/def TPs (lf_rescue/suptp/midtp) have no arrival-time-vs-victim-survival check. FIX TODO (next): estimate victim time-to-live vs TP channel 3s; do not TP to corpses.",
+   "lesson": "aggregate detector diffs name the SYMPTOM (+300% idle); only tick-level watching separated TWO distinct mechanisms with two different fixes. The owner's watch-first rule is load-bearing at diagnosis time too."
   }
  }
 }
