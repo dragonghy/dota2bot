@@ -80,9 +80,15 @@ When the owner says to work autonomously ("继续干不要停 / 不要等我"), 
 
 - In-memory schedules (CronCreate etc.) **do not survive session suspend** —
   they silently vanish. Never promise or rely on cron-based self-wakeups.
-- To keep an autonomous session alive, arm a **background sleep** via the Bash
-  tool (`sleep <seconds>` with `run_in_background: true`): its exit re-invokes
-  the agent. Re-arm it on every wake. Keep the interval ~1h.
+- **Preferred: server-side wakeup** via the claude-code-remote MCP
+  `send_later` tool (a Routine stored server-side) — it survives container
+  restarts/suspends. It needs a one-time permission approval from the owner;
+  once granted, use it as the primary wakeup and re-arm on every wake.
+- Fallback: a **background sleep** via the Bash tool (`sleep <seconds>` with
+  `run_in_background: true`): its exit re-invokes the agent. CAVEAT (observed
+  2026-07-22): background tasks **die silently on container restart** — that
+  is why send_later is preferred. If using sleep, re-arm on every wake and
+  keep the interval ~1h.
 - Always leave the tree committed + pushed and `iterations/state.json` current,
   so ANY wake (heartbeat or owner message) can resume from the repo alone.
 
