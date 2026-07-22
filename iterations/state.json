@@ -322,7 +322,7 @@
    "read": "depth-discounted numbers did NOT reduce deaths (its whole point); slight xpm/death worsening. 6th non-win. Keep gated, no promote; revisit only with a redesign (e.g. fog-reinforcement model) after laning program lands."
   },
   "lanesurv": {
-   "verdict": "PROMISING-HOLD (first positive directional candidate this session)",
+   "verdict": "PROMOTED 2026-07-22",
    "econ": {
     "gpm": 0.2,
     "xpm": 5.51,
@@ -336,7 +336,14 @@
     "delta": "-16%",
     "sample": "6 mirror slot1 games"
    },
-   "decision": "KEEP GATED, extend validation: n=6 too thin to promote. Next window: rerun lanesurv 2 more seeds AND measure l1kite/l1xpsoak the same way. Validate levers SEPARATELY (lanefix bundle lesson). If -16% holds at n>=20, promote lanesurv."
+   "decision": "PROMOTED: gate removed, turbo default-on. First fix through the full observe->owner-model->fixture->A/B chain.",
+   "extension": {
+    "gpm": 13.69,
+    "xpm": 2.27,
+    "deaths": -0.15,
+    "comps": "gpm/xpm/deaths all 2/2",
+    "laning_deaths_combined": "-15% over 13 mirror games"
+   }
   }
  },
  "new_gated_awaiting_ab": [
@@ -350,7 +357,6 @@
   "bodyblock",
   "wkbuild",
   "divecap",
-  "lanesurv",
   "l1trade",
   "l1kite",
   "l1xpsoak",
@@ -364,7 +370,8 @@
    "playbook doc",
    "L1-TRADE counter-trade half=l1kite (gated, fixture-pinned 6:07 frame, composition with lanesurv proven)",
    "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)",
-   "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)"
+   "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)",
+   "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)"
   ],
   "next": [
    "L5-TREES second cut: off-wave positioning (seek treeline angle) + real-frame fixture",
