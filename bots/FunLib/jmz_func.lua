@@ -4711,6 +4711,69 @@ function J.ShouldRetreatLaneBurst( bot )
 	return nIncoming >= bot:GetHealth() * nThreshold
 end
 
+-- [L1-XPSOAK / LANING_PLAYBOOK] Extreme-disadvantage XP soak. Owner's rule:
+-- alone against two, can't drag the wave, and stepping up to CS means getting
+-- CC'd and killed -> "只能在旁边看着,保持在对方技能范围之外,吃一点经验,
+-- 保证自己不死" -- stand OUTSIDE their skill range but INSIDE XP range
+-- (~1500), take the XP, do not feed, wait for the support. This lane state is
+-- not winnable solo; survival + XP is the whole job.
+--
+-- This is the CORRECTED lf_recover (lanefix reject's primary culprit):
+-- lf_recover sent zoned cores to the JUNGLE (19% off-lane, CS@8 -48%); this
+-- keeps the bot AT the lane edge, stepping back toward our fountain -- never
+-- off-lane, never farm-mode.
+--
+-- Returns the position to hold (a step back toward our fountain) or nil.
+-- Fires ONLY when ALL hold:
+--   * turbo + 'l1xpsoak' soak candidate (inert shipped), laning phase, core,
+--   * ZONED: >= 2 visible enemy heroes within 1200 of me,
+--   * ALONE: no healthy (>= 40%) ally hero within 1400,
+--   * CONTEST IS LETHAL: their currently-castable burst (mana/cd-aware) >=
+--     75% of my current HP -- same bar as J.ShouldRetreatLaneBurst's no-peel
+--     branch. A healthy core facing two weak/spent enemies keeps laning.
+function J.ShouldXpSoakLane( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'l1xpsoak' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+	if not J.IsInLaningPhase() then return nil end
+	if not J.IsCore( bot ) then return nil end
+
+	-- Zoned by two.
+	local tEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
+	local nEnemies, nIncoming = 0, 0
+	for _, hEnemy in pairs( tEnemies or {} ) do
+		if J.IsValidHero( hEnemy ) and not J.IsSuspiciousIllusion( hEnemy ) then
+			nEnemies = nEnemies + 1
+			nIncoming = nIncoming
+				+ hEnemy:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+		end
+	end
+	if nEnemies < 2 then return nil end
+
+	-- Alone (a healthy ally nearby means trade/kite rules apply instead).
+	local tAllies = J.GetNearbyHeroes( bot, 1400, false, BOT_MODE_NONE )
+	for _, hAlly in pairs( tAllies or {} ) do
+		if J.IsValidHero( hAlly ) and J.GetHP( hAlly ) >= 0.4 then
+			return nil
+		end
+	end
+
+	-- Contesting must be provably lethal-grade; otherwise keep laning.
+	if nIncoming < bot:GetHealth() * 0.75 then return nil end
+
+	-- Hold point: a step back toward our fountain -- AT the lane edge (XP
+	-- range), never into the jungle (the lf_recover mistake).
+	local vBot = bot:GetLocation()
+	local vFountain = J.GetTeamFountain()
+	if vFountain == nil then
+		local hOwnAncient = GetAncient( GetTeam() )
+		vFountain = hOwnAncient ~= nil and hOwnAncient:GetLocation() or vBot
+	end
+	local dx, dy = vFountain.x - vBot.x, vFountain.y - vBot.y
+	local nMag = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
+	return Vector( vBot.x + dx / nMag * 420, vBot.y + dy / nMag * 420, 0 )
+end
+
 -- [L1-TRADE counter-trade half / LANING_PLAYBOOK] Kite the committed trade
 -- through my support. Owner's rule: when the enemy STARTS on me and my support
 -- is beside me, I should not stand and face-tank the exchange -- give a spell,
