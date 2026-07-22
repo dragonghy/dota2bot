@@ -395,7 +395,14 @@ local function DoSupportLaningThink()
 	-- Harass: auto-attack an enemy hero already in range when it is safe to
 	-- (healthy and locally stronger), so the support pressures the lane instead
 	-- of idling on contested creeps it is no longer contesting.
-	if J.GetHP(bot) >= 0.5 and J.WeAreStronger(bot, 1200) then
+	-- [L5-TREES] Under 'l5trees' the harass must also be CREEP-AGGRO-SAFE (no
+	-- enemy lane creep within 500 of me): attacking the enemy hero from on top
+	-- of the wave aggros its creeps onto me and wrecks the lane equilibrium --
+	-- harass only from off the wave (the treeline angle). Gated; shipped
+	-- behavior unchanged off the candidate.
+	if J.GetHP(bot) >= 0.5 and J.WeAreStronger(bot, 1200)
+		and (not (J.IsModeTurbo() and J.IsSoakCandidate('l5trees'))
+			or J.IsHarassCreepAggroSafe(bot)) then
 		local enemies = bot:GetNearbyHeroes(botAttackRange, true, BOT_MODE_NONE)
 		for _, enemy in pairs(enemies) do
 			if J.IsValidHero(enemy)

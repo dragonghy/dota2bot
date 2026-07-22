@@ -4711,6 +4711,20 @@ function J.ShouldRetreatLaneBurst( bot )
 	return nIncoming >= bot:GetHealth() * nThreshold
 end
 
+-- [L5-TREES / LANING_PLAYBOOK] Creep-aggro-safe harass check. Owner's rule: a
+-- support must NOT stand on the wave and attack the enemy hero -- that draws
+-- the enemy creeps' aggro and wrecks the lane equilibrium; harass from the
+-- treeline BESIDE the lane instead. The aggro mechanic: an attack order on an
+-- enemy HERO aggros enemy lane creeps within ~500 of ME. So "harass from off
+-- the wave" is exactly: no enemy lane creep within 500 of me when I attack.
+-- TRUE = harassing now draws no creep aggro (safe); FALSE = it would.
+-- Pure predicate (no gate inside): the caller gates on turbo + 'l5trees'.
+function J.IsHarassCreepAggroSafe( bot )
+	if bot == nil then return false end
+	local tCreeps = bot:GetNearbyLaneCreeps( 500, true )
+	return tCreeps == nil or #tCreeps == 0
+end
+
 -- [L1-XPSOAK / LANING_PLAYBOOK] Extreme-disadvantage XP soak. Owner's rule:
 -- alone against two, can't drag the wave, and stepping up to CS means getting
 -- CC'd and killed -> "只能在旁边看着,保持在对方技能范围之外,吃一点经验,
