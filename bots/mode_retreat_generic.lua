@@ -247,6 +247,9 @@ function GetDesireHelper()
     -- from retreat considers = "give a spell, then fall back". Gated turbo +
     -- 'l1kite' (J.ShouldCounterTradeKite); inert in shipped games.
     if J.ShouldCounterTradeKite(bot) then
+        -- Kite-lock: a fresh kite decision suppresses re-initiation briefly
+        -- (anti-oscillation, watched 181046 CK flapping).
+        bot.laneKiteUntil = DotaTime() + 2.0
         return BOT_MODE_DESIRE_HIGH
     end
 

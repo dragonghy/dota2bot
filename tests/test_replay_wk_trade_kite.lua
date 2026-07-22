@@ -82,4 +82,16 @@ tests['OFF: inert outside the laning phase'] = function()
         'counter-trade kiting is a LANING rule; fight logic is the separate #23 track')
 end
 
+tests['ANTI-OSC: no kite inside our own commit window (watched 182007 sven)'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_225947_wk_trade_kite.lua')
+    arm(J, bot)
+    DotaTime = function() return 100 end -- luacheck: ignore
+    bot.laneCommitUntil = 102  -- we initiated 2s ago; finish the trade
+    assert(J.ShouldCounterTradeKite(bot) == false,
+        'commit-lock: once we initiated, the kite must not abort the trade')
+    bot.laneCommitUntil = 99   -- window expired -> normal kite behavior returns
+    assert(J.ShouldCounterTradeKite(bot) == true,
+        'after the commit window the kite works as before')
+end
+
 return tests

@@ -5018,6 +5018,15 @@ function J.ShouldCounterTradeKite( bot )
 	if not J.IsInLaningPhase() then return false end
 	if not J.IsCore( bot ) then return false end
 
+	-- [ANTI-OSCILLATION, watched 182007 t=132-136] Sven committed a full
+	-- initiation (bolt+warcry at 96% hp) and this kite pulled him out 4s later
+	-- at 81% -- Lich stayed per the counter-trade pairing and died 1v2. Once WE
+	-- initiated, the trade gets FINISHED: no kite inside the commit window
+	-- (the lethal lanesurv flee still overrides via its own wiring).
+	if bot.laneCommitUntil ~= nil and DotaTime() < bot.laneCommitUntil then
+		return false
+	end
+
 	-- Committed on me: close enemy + fresh hero damage.
 	if not bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
 	local tEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
@@ -6152,6 +6161,13 @@ function J.ShouldInitiateLaneKill( bot )
 	if bot == nil or not bot:IsAlive() then return nil end
 	if not J.IsInLaningPhase() then return nil end
 	if not J.IsCore( bot ) then return nil end
+
+	-- [ANTI-OSCILLATION, watched 181046 t=195-207] CK aborted, then re-entered
+	-- to 77u of Axe with zero output -- commit/abort flapping. A fresh kite
+	-- decision suppresses re-initiation for its short window.
+	if bot.laneKiteUntil ~= nil and DotaTime() < bot.laneKiteUntil then
+		return nil
+	end
 
 	-- The backing ally ("support beside me").
 	local bBacked = false

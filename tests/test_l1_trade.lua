@@ -118,4 +118,15 @@ tests['OFF: inert off the soak candidate'] = function()
 		'off the l1trade candidate the trigger stays inert (shipped default)')
 end
 
+tests['ANTI-OSC: no re-initiation inside a fresh kite window (watched 181046 CK)'] = function()
+    local J, bot = scenario()
+    DotaTime = function() return 100 end -- luacheck: ignore
+    bot.laneKiteUntil = 101.5  -- we just decided to kite; no commit flapping
+    assert(J.ShouldInitiateLaneKill(bot) == nil,
+        'kite-lock: a fresh kite decision suppresses re-initiation')
+    bot.laneKiteUntil = 99
+    assert(J.ShouldInitiateLaneKill(bot) ~= nil,
+        'after the kite window the initiation works as before')
+end
+
 return tests

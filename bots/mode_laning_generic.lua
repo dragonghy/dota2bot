@@ -538,6 +538,9 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 		if bL1Trade then
 			local hKill = J.ShouldInitiateLaneKill(bot)
 			if hKill ~= nil then
+				-- Commit-lock: we initiated -> finish the trade, no kite-abort
+				-- for 4s (anti-oscillation, watched 182007).
+				bot.laneCommitUntil = DotaTime() + 4.0
 				bot:SetTarget(hKill)
 				bot:Action_AttackUnit(hKill, true)
 				return
@@ -560,6 +563,7 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 		if bL5Combo then
 			local hFocus = J.ShouldSupportComboKill(bot)
 			if hFocus ~= nil then
+				bot.laneCommitUntil = DotaTime() + 4.0
 				bot:SetTarget(hFocus)
 				bot:Action_AttackUnit(hFocus, true)
 				return
