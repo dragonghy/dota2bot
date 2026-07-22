@@ -460,5 +460,18 @@
   "action": "ccburst gated enhancement (5s window for enemies with ready hard-CC from curated table). STRONG prior (14 real death frames) -> qualifies for a solo validation wave when owner green-lights, or rides the big batch.",
   "note": "ALLY-LEFT still recurs (viper/centaur/phantom walk away mid-trade) -> that is the #23 teamfight/coordination track, not laning.",
   "second_pool_confirmation": "Pattern CONFIRMED in 2nd draft pool (l1kite-ext + more l5trees-ext replays): ~17/25 focus deaths past midline (WK/Axe/Zeus all affected; killers Axe call/Lich/Sniper/WD/Necro). Codified as d21_laning_past_midline_death detector. FIX deliberately deferred: midline-discipline suppression = force-passivity family (3x rejected); needs owner design input (e.g. tie to wave position: only back off when the WAVE isn't there) rather than another clamp."
+ },
+ "BIG_BATCH_20260722": {
+  "owner_directive": "all features ON together (not per-feature); $15-25 OK; several hours OK; ccburst rides this batch (no solo waves)",
+  "bundle": "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+  "excluded_rejected": "bodyblock,l1xpsoak,c3,corefarm,lf_recover,lf_support,lf_undertower,lanefix(bundle id)",
+  "instances": {
+   "i-0b317e1c0bc9767b3": "seeds 801/802, run spot_20260722_174758_1_main",
+   "i-0cd0a1f0208100739": "seeds 803/804, run spot_20260722_174801_1_main",
+   "i-00c57279ad213626e": "seeds 805/806, run spot_20260722_174804_1_main"
+  },
+  "mechanism": "IsSoakCandidate comma-bundle support (commit e3c4a1d); stamp = mirror:<bundle>:s<seed>:<side>",
+  "analysis_plan": "per-instance verdict (or recover_verdict.py with the full bundle string as cand) -> 6-seed aggregate econ; laning-death split; d21 past-midline rate armed-vs-baseline (midguard's metric); if bundle WINS -> promote wave-by-wave discussion with owner; if LOSES -> bisect halves (the lanefix diagnosis playbook).",
+  "note": "midguard implemented THIS commit and included in the bundle (owner: 接着修改)"
  }
 }
