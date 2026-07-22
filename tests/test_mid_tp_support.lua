@@ -187,4 +187,13 @@ tests['[suptp] NO-FIRE: a CORE with only suptp armed -> nil (pos 4-5 only)'] = f
         'suptp is the support id; cores ride midtp instead')
 end
 
+tests['NO-FIRE (watched 181046): the defended ally will die before the TP lands -> nil'] = function()
+    -- Big-batch pathology: Ogre TP'd across the map and landed the second
+    -- Viper died. The defended ally must survive the ~4s TP window.
+    local J, bot = fresh()
+    J.WillAllySurviveTpWindow = function() return false end
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'never TP to an ally that will be a corpse before we land')
+end
+
 return tests

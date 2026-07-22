@@ -5459,6 +5459,26 @@ end
 --   * the ally is genuinely far (> 3500): walking would arrive too late.
 -- Gated (turbo + lanefix/lf_rescue); inert by default. Target selection only --
 -- the TP cast point (nearest own tower) is resolved by the item-usage wiring.
+-- [watched 20260722, big-batch game 181046 1:51] Rescue/defend TPs were landing
+-- ON CORPSES: Ogre TP'd across the map and arrived the second Viper died -- the
+-- TP trio (lf_rescue / midtp / suptp) had no arrival-time-vs-survival check.
+-- TRUE when the ally can plausibly survive a TP arrival window (~4s = 3s
+-- channel + a step): the enemies around it cannot burst its current HP down
+-- within that window (engine mana/cd-aware estimate). FALSE = it will be a
+-- corpse before we land; keep the TP.
+function J.WillAllySurviveTpWindow( hAlly )
+	if hAlly == nil or not hAlly:IsAlive() then return false end
+	local tEnemies = J.GetEnemiesNearLoc( hAlly:GetLocation(), 900 )
+	local nIncoming = 0
+	for _, e in pairs( tEnemies or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			nIncoming = nIncoming
+				+ e:GetEstimatedDamageToTarget( true, hAlly, 4.0, DAMAGE_TYPE_ALL )
+		end
+	end
+	return nIncoming < hAlly:GetHealth()
+end
+
 function J.GetRescueTpTarget( bot )
 	if not J.IsLaneFixOn( 'rescue' ) then return nil end
 	if DotaTime() > 15 * 60 then return nil end
@@ -5474,6 +5494,8 @@ function J.GetRescueTpTarget( bot )
 			if #tDivers <= 2
 				and ( ( nAllyHP < 0.60 and #tDivers >= 2 )
 					or ( nAllyHP < 0.35 and #tDivers >= 1 ) )
+				-- Do not TP to an ally that will be dead before we land.
+				and J.WillAllySurviveTpWindow( ally )
 			then
 				return ally
 			end
@@ -6238,7 +6260,10 @@ function J.ShouldTpSupportTowerFight( bot )
 				local tAllies = J.GetAlliesNearLoc( vTower, 1200 )
 				local bAllyThere = false
 				for _, ally in pairs( tAllies ) do
-					if ally ~= bot and J.IsValidHero( ally ) then
+					if ally ~= bot and J.IsValidHero( ally )
+					-- [watched 181046] and it must SURVIVE the TP window --
+					-- landing next to a corpse wastes the TP and the walk.
+					and J.WillAllySurviveTpWindow( ally ) then
 						bAllyThere = true
 						break
 					end
