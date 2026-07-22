@@ -114,10 +114,10 @@ the `bodyblock` −50 reject: harass belongs to pos-5 off-wave, not cores.)
 with the pos-1; typical 4s are squishy, 2-man focus kills. Inverse risk: *we*
 are squishier than our 1 — never jump too deep ourselves; if their 3+4 turn,
 we die first.
-**Status:** PARTIAL — `J.ShouldPunishOverchase`/dive punish covers *reactive*
-collapse; the proactive "their 4 is standing too deep, kill window now" call
-does not exist. Reuse `SafeToCommitFight` + lanesurv-style burst math against
-US as the self-risk gate.
+**Status:** IMPLEMENTED 2026-07-22 as `l5combo` (gated):
+J.ShouldSupportComboKill — requires a healthy allied core within 900 of the
+target + lethal combined burst, with STRICTER self-gates than l1trade (60%
+incoming bar + no second enemy within 700). 8 tests. Awaiting batch.
 
 ### L5-PULL — pull camps to reset a bad lane
 **Rule:** if we can't win the lane or the wave is too far forward for our 1
