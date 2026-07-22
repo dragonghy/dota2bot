@@ -361,7 +361,8 @@
   "l1kite",
   "l5trees",
   "l5combo",
-  "suptp"
+  "suptp",
+  "ccburst"
  ],
  "laning_program": {
   "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
@@ -376,7 +377,8 @@
    "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)",
    "L5-TREES cut 2: off-wave sidestep positioning (GetOffWaveHarassSpot, 3 tests)",
    "L5-COMBO=l5combo (gated, 8 tests) -- LAST playbook rule implemented; playbook now FULLY implemented",
-   "L5-TPDEF=suptp generalization (2 tests) -- playbook now has NO partials left"
+   "L5-TPDEF=suptp generalization (2 tests) -- playbook now has NO partials left",
+   "ccburst (gated, 6 tests) from post-promote replay review: CC-aware burst window"
   ],
   "next": [
    "ACCUMULATE-BATCH: all gated laning levers (l1trade, l1kite, l5trees, l5combo, creeppull+widened, pullcamp, suplh, lf_mana) ride ONE big mirrored batch when owner green-lights; strong-prior levers only for solo waves",
@@ -451,5 +453,11 @@
    "decision": "HOLD, do NOT promote: wave2 exactly mirrored wave1's uniform positive -> 4-seed mean ~-5.8 gpm/+0.04 deaths, wave-level sign flip = inter-wave (draft/seed) variance dominates. The 4-seed bar just prevented promoting noise."
   }
  },
- "VALIDATION_NOISE_LESSON_20260722": "CRITICAL calibration: a SINGLE 2-seed wave can read uniformly positive (all metrics 2/2, both seeds same sign -- l5trees wave1) and fully FLIP the next wave. So: (1) 4-seed minimum stands for any promote; (2) small-magnitude levers (<~10 gpm true effect) are UNRESOLVABLE at $3-wave scale -- stop burning waves on weak-prior candidates; (3) lanesurv's promote remains sound (4 seeds + INDEPENDENT target-metric confirmation, -16%/-14% consistent across waves, magnitude above noise floor); (4) this retroactively validates the l1kite HOLD. Future: per-lever waves ONLY for strong-observational-prior levers; the rest accumulate for the owner-designed ONE final batch."
+ "VALIDATION_NOISE_LESSON_20260722": "CRITICAL calibration: a SINGLE 2-seed wave can read uniformly positive (all metrics 2/2, both seeds same sign -- l5trees wave1) and fully FLIP the next wave. So: (1) 4-seed minimum stands for any promote; (2) small-magnitude levers (<~10 gpm true effect) are UNRESOLVABLE at $3-wave scale -- stop burning waves on weak-prior candidates; (3) lanesurv's promote remains sound (4 seeds + INDEPENDENT target-metric confirmation, -16%/-14% consistent across waves, magnitude above noise floor); (4) this retroactively validates the l1kite HOLD. Future: per-lever waves ONLY for strong-observational-prior levers; the rest accumulate for the owner-designed ONE final batch.",
+ "postfix_observation_20260722": {
+  "source": "5 slot1 replays from l5trees-ext run (lanesurv PROMOTED live both sides)",
+  "finding": "Focus deaths 2.8/gm (all zuus in this pool). Pattern SHIFTED vs pre-fix: deaths moved from own-half standing-ground to PAST-MIDLINE (+1300..+5700), killers now hard-CC laners (shadow_shaman x4 shackles, DK stun, lich). Mechanism gap: flat 3s burst window underestimates damage during a 4-6s hard CC.",
+  "action": "ccburst gated enhancement (5s window for enemies with ready hard-CC from curated table). STRONG prior (14 real death frames) -> qualifies for a solo validation wave when owner green-lights, or rides the big batch.",
+  "note": "ALLY-LEFT still recurs (viper/centaur/phantom walk away mid-trade) -> that is the #23 teamfight/coordination track, not laning."
+ }
 }
