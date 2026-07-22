@@ -51,6 +51,22 @@ tests['STAY: same lane, calm minute (265 incoming vs 868 hp) -> no flee'] = func
         'a calm lane must not trigger the guard -- no over-fleeing, WK keeps farming')
 end
 
+tests['FLEE (cross-hero): Lion 48% hp, Lich+Axe lethal burst (520 vs 354) -> flee'] = function()
+    -- Same pattern on a DIFFERENT focus hero (f_222428_lion_lich_burst, 5:14):
+    -- Lion at 354 hp, visible Lich+Axe castable burst 520 (ground truth: dealt
+    -- it, Lion died 6.9s later). The guard is pool-wide, not WK-specific.
+    local J, bot = fixture.load('tests/fixtures/f_222428_lion_lich_burst.lua')
+    arm(J)
+    assert(J.ShouldRetreatLaneBurst(bot) == true,
+        'the 5:20 Lion death frame: 520 incoming >= 354 hp -> must flee')
+end
+
+-- Known limitation (kept honest, no fixture forced): CM's 2:58 death to
+-- Venomancer (f_221945, dropped) was mostly PLAGUE-WARD damage. Summons are
+-- not hero-attributed, so neither the ground truth nor the in-game estimate
+-- sees that burst -- the guard cannot catch summon-based kills. Tracked in
+-- iterations/obs_20260722_focus_deaths.md.
+
 tests['OFF: inert off the soak candidate (shipped default) on the death frame'] = function()
     local J, bot = fixture.load('tests/fixtures/f_230545_wk_sven_burst.lua')
     J.IsSoakCandidate = function() return false end
