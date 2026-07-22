@@ -5659,6 +5659,78 @@ function J.ShouldBodyBlockHarass( bot )
 	return hTarget
 end
 
+-- [L1-TRADE / LANING_PLAYBOOK] Lane-kill initiation (the OFFENSIVE half of the
+-- owner's trade model; the defensive half is J.ShouldRetreatLaneBurst). Owner's
+-- rule: "if the support has been poking them down and together our burst kills
+-- -- go first." Observed gap (find_kill_windows scan over 8 real games): dozens
+-- of frames with an enemy at 7-40% HP, two of ours beside it, and NO kill
+-- attempt -- the lane duo never converts its pressure.
+--
+-- Returns the enemy hero to initiate on, or nil. Fires ONLY when ALL hold
+-- (deliberately narrow -- this is a KILL conversion, not generic aggression;
+-- generic harass by cores was A/B-rejected as bodyblock -50 gpm):
+--   * turbo + 'l1trade' soak candidate armed (inert shipped),
+--   * laning phase, and I am a laning CORE (the support's version of this is
+--     L5-COMBO, separately gated later),
+--   * a backing ALLY hero is nearby (within 1000 of me, healthy >= 40% --
+--     the "support beside me" precondition; the trade math below includes it),
+--   * the target is visible, reachable (within 800 of me), a real hero,
+--   * LETHAL, not parity: our combined currently-castable burst (me + allies
+--     near the target, engine mana/cd-aware estimate) >= its HP + 4s regen --
+--     reusing the same estimate the SafeToCommitFight lethal branch trusts,
+--   * SELF-RISK gate (owner: "你比对面脆就别上"): the enemies' castable burst
+--     against ME must NOT be lethal-grade (< 75% of my current HP -- the same
+--     bar J.ShouldRetreatLaneBurst uses to flee). Never initiate into a trade
+--     where I am the one who dies first.
+function J.ShouldInitiateLaneKill( bot )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'l1trade' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+	if not J.IsInLaningPhase() then return nil end
+	if not J.IsCore( bot ) then return nil end
+
+	-- The backing ally ("support beside me").
+	local bBacked = false
+	local tAllies = J.GetNearbyHeroes( bot, 1000, false, BOT_MODE_NONE )
+	for _, hAlly in pairs( tAllies or {} ) do
+		if J.IsValidHero( hAlly ) and J.GetHP( hAlly ) >= 0.4 then
+			bBacked = true
+			break
+		end
+	end
+	if not bBacked then return nil end
+
+	local tEnemies = J.GetNearbyHeroes( bot, 800, true, BOT_MODE_NONE )
+	if tEnemies == nil or #tEnemies == 0 then return nil end
+
+	-- Self-risk first: if their castable burst threatens ME, no initiation.
+	local nIncoming = 0
+	for _, hEnemy in pairs( tEnemies ) do
+		if J.IsValidHero( hEnemy ) and not J.IsSuspiciousIllusion( hEnemy ) then
+			nIncoming = nIncoming
+				+ hEnemy:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+		end
+	end
+	if nIncoming >= bot:GetHealth() * 0.75 then return nil end
+
+	-- Lethal check per candidate target: our combined castable burst kills it.
+	for _, hTarget in pairs( tEnemies ) do
+		if J.IsValidHero( hTarget )
+		and not J.IsSuspiciousIllusion( hTarget )
+		and not J.IsMeepoClone( hTarget )
+		and J.CanBeAttacked( hTarget )
+		then
+			local tOurs = J.GetAlliesNearLoc( hTarget:GetLocation(), 1000 )
+			local nBurst = J.GetTotalEstimatedDamageToTarget( tOurs, hTarget )
+			if nBurst >= hTarget:GetHealth() + hTarget:GetHealthRegen() * 4.0 then
+				return hTarget
+			end
+		end
+	end
+
+	return nil
+end
+
 -- [GH #15] Mid 6-level TP support. Observed gap: when a fight breaks out at one
 -- of OUR towers (an ally being dived, a lane under pressure) the MID hero --
 -- which in turbo has a short TP cooldown and is usually level 6+ -- stands idle

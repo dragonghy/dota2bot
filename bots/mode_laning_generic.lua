@@ -106,6 +106,14 @@ local bCreepPull = J.IsModeTurbo() and J.IsSoakCandidate('creeppull')
 local bBodyBlock = J.IsModeTurbo() and J.IsSoakCandidate('bodyblock')
 	and J.GetPosition(bot) <= 3
 
+-- [L1-TRADE] Lane-kill initiation (LANING_PLAYBOOK): support has poked the
+-- lane enemy low; our combined castable burst kills it and their burst does
+-- not threaten me -> a laning core goes first and converts, instead of letting
+-- the kill window pass (find_kill_windows: dozens of 7-40%-HP survivors per
+-- run). Turbo-only + soak candidate 'l1trade', pos 1-3, inert by default.
+local bL1Trade = J.IsModeTurbo() and J.IsSoakCandidate('l1trade')
+	and J.GetPosition(bot) <= 3
+
 function GetDesire()
 	PickOneAnnouncer()
 	AnnounceMessages()
@@ -202,13 +210,20 @@ function GetDesire()
 		return 0.9
 	end
 
+	-- [L1-TRADE] Keep an initiating core in laning mode while a lethal kill
+	-- window is open (J.ShouldInitiateLaneKill returns the target); its Think
+	-- converts it. Inert unless turbo + soak candidate 'l1trade'.
+	if bL1Trade and J.ShouldInitiateLaneKill(bot) ~= nil then
+		return 0.92
+	end
+
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
 	-- below; stock condition only enabled it for buggy heroes or a pos1 bot
 	-- paired with a human pos5, so farm bots ran Valve default CS (12-47 LH
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
-		or bLaneFixCoreLH or bCreepPull or bBodyBlock then
+		or bLaneFixCoreLH or bCreepPull or bBodyBlock or bL1Trade then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -429,7 +444,7 @@ local function DoCreepPullThink(pull)
 	end
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock or bL1Trade then
 	function Think()
 		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
 		-- equilibrium, checked before any laning think. Gated + conservative
@@ -468,6 +483,17 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 			if hHarass ~= nil then
 				bot:SetTarget(hHarass)
 				bot:Action_AttackUnit(hHarass, true)
+				return
+			end
+		end
+
+		-- [L1-TRADE] Convert an open lethal kill window: attack the low target;
+		-- the hero script's SkillsComplement lands the spells on the way.
+		if bL1Trade then
+			local hKill = J.ShouldInitiateLaneKill(bot)
+			if hKill ~= nil then
+				bot:SetTarget(hKill)
+				bot:Action_AttackUnit(hKill, true)
 				return
 			end
 		end
