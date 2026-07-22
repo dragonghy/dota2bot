@@ -271,10 +271,56 @@
  },
  "ab_verdicts_20260721_recovered": {
   "note": "Instances spot-RECLAIMED (Service initiated 22:16) before validate_onspot uploaded verdicts, but per-game analysis.json (mirror-stamped) were in S3 -> recovered LOCALLY via tools/batch_test/soak/recover_verdict.py. Econ A/B is noise-limited (1-2 seeds); treat as directional, esp. the strong 0/2 rejects.",
-  "bodyblock": {"verdict": "REJECT", "gpm": -50.53, "xpm": -53.62, "deaths": 0.61, "last_hits": -3.24, "comps": "0/2", "read": "#11 harass pulls cores off farm + gets them killed. Echoes #16 (forcing cores off-farm in lane is wrong). Strong 2-seed reject. Keep gated/inert; do NOT promote. Abandon or radically narrow (kill-only, not general harass)."},
-  "lf_support": {"verdict": "REJECT", "gpm": -22.75, "xpm": -45.22, "deaths": 0.53, "last_hits": -3.33, "comps": "0/1", "read": "support-screen-carry clumps team -> worse. CONFIRMS lanefix diagnosis (lf_support was a culprit). The owner's Q2 (support wanders) is NOT solved by lf_support; needs a different approach. 1 seed only but consistent with prior batch."},
-  "pullcamp": {"verdict": "INCONCLUSIVE", "gpm": 10.8, "xpm": -15.69, "deaths": 0.18, "last_hits": -1.47, "comps": "1/1 gpm but mixed", "read": "seed 101 only (102 incomplete at reclaim). +10.8 gpm but xpm/deaths/lh slightly negative -> noise-limited, not a clear win. Re-run full 2-3 seeds. Also Class-B: use behavioral detectors (pull count / lane-equilibrium) not just econ."},
-  "divecap": {"verdict": "INCONCLUSIVE/NOT-DEMONSTRABLY-EFFECTIVE", "econ": {"gpm": 13.21, "deaths": -0.01, "note": "on-demand rerun i-03c42f5cb78533a4f; econ slightly positive, no regression, but noisy (seed102 dire wave partial)"}, "detector": {"armed_unpunished_dives": "2.17/game", "baseline_unpunished_dives": "1.67/game", "sample": "6 mirror games", "read": "NO reduction -- armed side slightly HIGHER (within noise). The 0.98->0.72 lane-cap neutralization was a REAL code fact, but un-capping does NOT measurably reduce unpunished dives. Bottleneck is NOT desire -- it's the rest of the punish chain: SafeToCommitFight must hold at the dive instant AND the bot must CATCH+KILL a fleeing diver within 6s. divecap alone is near-inert in outcomes."}, "decision": "Keep gated, do NOT promote. Tower-dive punishment needs an EXECUTION fix (target-lock/pathing to secure the kill), not a desire fix. Locally-correct-code != emergently-effective, AGAIN (3rd this session: bodyblock, lf_support, divecap)."}
+  "bodyblock": {
+   "verdict": "REJECT",
+   "gpm": -50.53,
+   "xpm": -53.62,
+   "deaths": 0.61,
+   "last_hits": -3.24,
+   "comps": "0/2",
+   "read": "#11 harass pulls cores off farm + gets them killed. Echoes #16 (forcing cores off-farm in lane is wrong). Strong 2-seed reject. Keep gated/inert; do NOT promote. Abandon or radically narrow (kill-only, not general harass)."
+  },
+  "lf_support": {
+   "verdict": "REJECT",
+   "gpm": -22.75,
+   "xpm": -45.22,
+   "deaths": 0.53,
+   "last_hits": -3.33,
+   "comps": "0/1",
+   "read": "support-screen-carry clumps team -> worse. CONFIRMS lanefix diagnosis (lf_support was a culprit). The owner's Q2 (support wanders) is NOT solved by lf_support; needs a different approach. 1 seed only but consistent with prior batch."
+  },
+  "pullcamp": {
+   "verdict": "INCONCLUSIVE",
+   "gpm": 10.8,
+   "xpm": -15.69,
+   "deaths": 0.18,
+   "last_hits": -1.47,
+   "comps": "1/1 gpm but mixed",
+   "read": "seed 101 only (102 incomplete at reclaim). +10.8 gpm but xpm/deaths/lh slightly negative -> noise-limited, not a clear win. Re-run full 2-3 seeds. Also Class-B: use behavioral detectors (pull count / lane-equilibrium) not just econ."
+  },
+  "divecap": {
+   "verdict": "INCONCLUSIVE/NOT-DEMONSTRABLY-EFFECTIVE",
+   "econ": {
+    "gpm": 13.21,
+    "deaths": -0.01,
+    "note": "on-demand rerun i-03c42f5cb78533a4f; econ slightly positive, no regression, but noisy (seed102 dire wave partial)"
+   },
+   "detector": {
+    "armed_unpunished_dives": "2.17/game",
+    "baseline_unpunished_dives": "1.67/game",
+    "sample": "6 mirror games",
+    "read": "NO reduction -- armed side slightly HIGHER (within noise). The 0.98->0.72 lane-cap neutralization was a REAL code fact, but un-capping does NOT measurably reduce unpunished dives. Bottleneck is NOT desire -- it's the rest of the punish chain: SafeToCommitFight must hold at the dive instant AND the bot must CATCH+KILL a fleeing diver within 6s. divecap alone is near-inert in outcomes."
+   },
+   "decision": "Keep gated, do NOT promote. Tower-dive punishment needs an EXECUTION fix (target-lock/pathing to secure the kill), not a desire fix. Locally-correct-code != emergently-effective, AGAIN (3rd this session: bodyblock, lf_support, divecap)."
+  },
+  "depthnum": {
+   "verdict": "HOLD (no benefit)",
+   "gpm": 2.99,
+   "xpm": -15.22,
+   "deaths": 0.17,
+   "comps": "gpm 1/2, deaths 0/2",
+   "read": "depth-discounted numbers did NOT reduce deaths (its whole point); slight xpm/death worsening. 6th non-win. Keep gated, no promote; revisit only with a redesign (e.g. fog-reinforcement model) after laning program lands."
+  }
  },
  "new_gated_awaiting_ab": [
   "skysilence",
@@ -288,12 +334,23 @@
   "wkbuild",
   "divecap",
   "lanesurv",
-  "l1trade"
+  "l1trade",
+  "l1kite"
  ],
  "laning_program": {
   "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
-  "done_this_iter": ["L1-BURST=lanesurv (validating)", "L1-TRADE initiate half=l1trade (gated, 8 tests)", "playbook doc"],
-  "next": ["L1-TRADE counter-trade half (give one spell + kite while support fights)", "L1-XPSOAK (corrected lf_recover: XP-range soak, not jungle)", "L5-TREES (support harass from off-wave angles, right role for harass)", "L1-SALVE re-purchase link", "L5-COMBO + suptp + L1-DRAG trigger widening"],
+  "done_this_iter": [
+   "L1-BURST=lanesurv (validating)",
+   "L1-TRADE initiate half=l1trade (gated, 8 tests)",
+   "playbook doc",
+   "L1-TRADE counter-trade half=l1kite (gated, fixture-pinned 6:07 frame, composition with lanesurv proven)"
+  ],
+  "next": [
+   "L1-XPSOAK (corrected lf_recover: XP-range soak, not jungle)",
+   "L5-TREES (support harass from off-wave angles, right role for harass)",
+   "L1-SALVE re-purchase link",
+   "L5-COMBO + suptp + L1-DRAG trigger widening"
+  ],
   "observed_evidence": "find_kill_windows.py scan: dozens of missed kill windows per run (ogre 7% + 3 of ours nearby = survived). Owner can deploy bots/ locally (vscripts/bots + Local Dev Script) to play vs the AI; gated fixes armable via bots/Customize/soak_side.lua."
  },
  "scoping_20260722": "OWNER: the death problem's TEAMFIGHT/COORDINATION dimension (focus-fire, follow-up, peel duty, WK ult-up initiation) is a SEPARATE optimization track -> filed as GH #23 (parent). Laning-phase trade-survival (lanesurv) proceeds independently. Do not mix the two.",
