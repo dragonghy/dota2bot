@@ -415,6 +415,18 @@ local function DoSupportLaningThink()
 		end
 	end
 
+	-- [L5-TREES cut 2] I'm ON the wave with a harass target but harassing here
+	-- would draw creep aggro: sidestep to the off-wave angle (the treeline side
+	-- away from the enemy laners) so the NEXT think can harass aggro-free.
+	if J.IsModeTurbo() and J.IsSoakCandidate('l5trees')
+		and J.GetHP(bot) >= 0.5 and J.WeAreStronger(bot, 1200) then
+		local vSide = J.GetOffWaveHarassSpot(bot)
+		if vSide ~= nil then
+			bot:Action_MoveToLocation(vSide)
+			return
+		end
+	end
+
 	-- [lanefix] Stay with the carry: if an allied core is laning nearby, hold a
 	-- spot right next to it instead of the raw lane front, so the support screens
 	-- the core rather than drifting off. Only the idle fallthrough is affected --

@@ -4728,6 +4728,79 @@ function J.IsHarassCreepAggroSafe( bot )
 	return tCreeps == nil or #tCreeps == 0
 end
 
+-- [L5-TREES cut 2 / LANING_PLAYBOOK] Off-wave harass spot. When the support is
+-- standing ON the wave (harass would draw creep aggro -- IsHarassCreepAggroSafe
+-- false) but there IS an enemy laner worth pressuring, don't just give up the
+-- harass: step to the SIDE of the lane (owner: stand in the treeline BESIDE the
+-- lane and harass from there). Returns the sidestep position, or nil when it
+-- does not apply (no wave on me / nobody to harass / I'm not healthy enough to
+-- be poking at all).
+--
+-- Geometry: lane axis is approximated by (enemy wave centroid -> my fountain);
+-- the spot is perpendicular to that axis, 550 out from MY position (so the step
+-- clears the 500 aggro radius), on the side AWAY from the average enemy-hero
+-- position (owner's target-selection rule reduced: harass from the side away
+-- from their other laner). Pure positional helper -- the caller gates it
+-- (turbo + 'l5trees') and issues the move.
+function J.GetOffWaveHarassSpot( bot )
+	if bot == nil or not bot:IsAlive() then return nil end
+	if J.GetHP( bot ) < 0.5 then return nil end
+
+	-- Only applies when I'm ON the wave (aggro-unsafe) with a harass target.
+	local tCreeps = bot:GetNearbyLaneCreeps( 500, true )
+	if tCreeps == nil or #tCreeps == 0 then return nil end
+	local tEnemies = J.GetNearbyHeroes( bot, 800, true, BOT_MODE_NONE )
+	local bTarget = false
+	for _, e in pairs( tEnemies or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			bTarget = true
+			break
+		end
+	end
+	if not bTarget then return nil end
+
+	-- Wave centroid + lane axis toward my fountain.
+	local nCx, nCy, nN = 0, 0, 0
+	for _, c in pairs( tCreeps ) do
+		if J.IsValid( c ) then
+			local v = c:GetLocation()
+			nCx, nCy, nN = nCx + v.x, nCy + v.y, nN + 1
+		end
+	end
+	if nN == 0 then return nil end
+	nCx, nCy = nCx / nN, nCy / nN
+	local vF = J.GetTeamFountain()
+	if vF == nil then
+		local hOwn = GetAncient( GetTeam() )
+		if hOwn == nil then return nil end
+		vF = hOwn:GetLocation()
+	end
+	local dx, dy = vF.x - nCx, vF.y - nCy
+	local nMag = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
+	dx, dy = dx / nMag, dy / nMag
+	-- Perpendicular candidates (left/right of the lane axis).
+	local px, py = -dy, dx
+
+	-- Pick the side AWAY from the enemy heroes' average position.
+	local nEx, nEy, nEn = 0, 0, 0
+	for _, e in pairs( tEnemies ) do
+		if J.IsValidHero( e ) then
+			local v = e:GetLocation()
+			nEx, nEy, nEn = nEx + v.x, nEy + v.y, nEn + 1
+		end
+	end
+	local vBot = bot:GetLocation()
+	if nEn > 0 then
+		nEx, nEy = nEx / nEn, nEy / nEn
+		-- If the perpendicular points toward the enemies, flip it.
+		if ( px * ( nEx - vBot.x ) + py * ( nEy - vBot.y ) ) > 0 then
+			px, py = -px, -py
+		end
+	end
+
+	return Vector( vBot.x + px * 550, vBot.y + py * 550, 0 )
+end
+
 -- [L1-XPSOAK / LANING_PLAYBOOK] Extreme-disadvantage XP soak. Owner's rule:
 -- alone against two, can't drag the wave, and stepping up to CS means getting
 -- CC'd and killed -> "只能在旁边看着,保持在对方技能范围之外,吃一点经验,
