@@ -4598,7 +4598,21 @@ end
 function J.IsSoakCandidate( sId )
 	local conf = GetSoakSideConf()
 	if not conf then return false end
-	if conf.cand ~= sId and conf.cand ~= 'all' then return false end
+	-- The cand field is a single id, 'all' (every gate -- careful: that also
+	-- arms REJECTED candidates), or a comma-separated BUNDLE of ids ('a,b,c')
+	-- so a batch can turn on an exact set of features at once (owner-directed
+	-- all-features-on big batch, 2026-07-22).
+	local bMatch = conf.cand == sId or conf.cand == 'all'
+	if not bMatch and type( conf.cand ) == 'string'
+	and string.find( conf.cand, ',', 1, true ) ~= nil then
+		for id in string.gmatch( conf.cand, '[^,]+' ) do
+			if id == sId then
+				bMatch = true
+				break
+			end
+		end
+	end
+	if not bMatch then return false end
 	local nSideTeam = conf.side == 'radiant' and TEAM_RADIANT or TEAM_DIRE
 	return GetTeam() == nSideTeam
 end
@@ -4909,6 +4923,55 @@ function J.ShouldXpSoakLane( bot )
 	local dx, dy = vFountain.x - vBot.x, vFountain.y - vBot.y
 	local nMag = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
 	return Vector( vBot.x + dx / nMag * 420, vBot.y + dy / nMag * 420, 0 )
+end
+
+-- [midguard / obs 20260722 d21] Laning past-midline discipline. Post-promote
+-- replay review (2 draft pools, ~17/25 focus deaths): with the burst guard
+-- live, cores now die PAST THE MIDLINE during laning -- wandering deep without
+-- their creep wave and getting collapsed on (Axe call, Lich, Sniper).
+--
+-- SMARTER TRIGGER than the rejected force-passivity family (lf_recover /
+-- l1xpsoak): following the wave deep to CS is NORMAL and stays untouched --
+-- the bug is being deep WITHOUT the wave. Fires ONLY when ALL hold:
+--   * turbo + 'midguard' (inert shipped), laning phase, core,
+--   * I am past the midline by > 800 (dist-to-own minus dist-to-enemy ancient),
+--   * my lane wave is NOT with me: no allied lane creeps within 900 (with the
+--     wave present this never fires -- CS freely),
+--   * a visible enemy hero within 1400 (someone can actually punish this),
+--   * I am not already committed to a fight and not already retreating (those
+--     modes own their own movement).
+-- TRUE -> raise retreat desire (walk back toward our half; normal laning
+-- resumes once shallow again). A step-back, not a parking brake.
+function J.ShouldRetreatPastMidline( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'midguard' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+	if not J.IsInLaningPhase() then return false end
+	if not J.IsCore( bot ) then return false end
+	if J.IsGoingOnSomeone( bot ) then return false end
+	if J.IsRetreating( bot ) then return false end
+
+	-- Depth past the midline (ancient-distance convention).
+	local hOwn = GetAncient( GetTeam() )
+	local hEnemy = GetAncient( GetOpposingTeam() )
+	if hOwn == nil or hEnemy == nil then return false end
+	local vBot = bot:GetLocation()
+	local nDepth = J.GetLocationToLocationDistance( vBot, hOwn:GetLocation() )
+		- J.GetLocationToLocationDistance( vBot, hEnemy:GetLocation() )
+	if nDepth <= 800 then return false end
+
+	-- With my wave present, deep is normal laning -- never fire.
+	local tAllyCreeps = bot:GetNearbyLaneCreeps( 900, false )
+	if tAllyCreeps ~= nil and #tAllyCreeps > 0 then return false end
+
+	-- Someone must be able to punish; an empty screen is just a walk.
+	local tEnemies = J.GetNearbyHeroes( bot, 1400, true, BOT_MODE_NONE )
+	for _, e in pairs( tEnemies or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			return true
+		end
+	end
+	return false
 end
 
 -- [L1-TRADE counter-trade half / LANING_PLAYBOOK] Kite the committed trade

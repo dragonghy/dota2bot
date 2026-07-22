@@ -250,6 +250,14 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [midguard] Deep past the midline during laning WITHOUT my creep wave and
+    -- with an enemy in sight: step back to our half before the collapse comes
+    -- (obs 20260722 d21: the dominant post-lanesurv death location). Wave
+    -- present = normal deep CS, never fires. Gated turbo + 'midguard'.
+    if J.ShouldRetreatPastMidline(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [lanefix/lf_revive] Post-revive flee (fixture f_080225_wk_revive): WK
     -- reincarnates in place still 1v2 and re-engages instead of leaving --
     -- the ultimate buys nothing. Hard retreat when revived-in-place moments
