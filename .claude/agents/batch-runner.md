@@ -21,13 +21,22 @@ awsx ec2 describe-instances --region us-west-2 --filters Name=tag:Name,Values=do
 ```
   有不该在的实例 → terminate 并向主会话报告。
 
-## 启动一轮镜像验证批测
+## 启动一轮镜像验证批测(owner 定价策略:SPOT 优先,失败才 on-demand)
 ```bash
 cd tools/batch_test/aws
-bash spot_run.sh --slots 16 --hours 4 --on-demand --validate "<CAND> <SEED1> <SEED2> --games 15"
+# 第一选择:spot(便宜 60-70%)
+bash spot_run.sh --slots 16 --hours 4 --validate "<CAND> <SEED1> <SEED2> --games 15"
+# spot 报 InsufficientInstanceCapacity 时,先试备选机型:
+bash spot_run.sh --type c6a.4xlarge ...(同参数)
+# 两种机型的 spot 都拿不到,才降级 on-demand:
+bash spot_run.sh --on-demand ...(同参数)
 ```
+- **SPOT 优先是 owner 明确的策略(2026-07-23)**。被抢占不可怕:每局游戏完成即上传 S3,
+  verdict 可用 recover_verdict.py 完整重算——抢占只损失在跑的那几局。
+- 抢占后的处理:发现实例 `Service initiated` 终止 → 不要傻等 verdict,直接从
+  `soak/<run_id>/` 恢复已有 seed 的数据;缺的 seed 补一台新实例(仍然 spot 优先)接着跑。
 - `<CAND>` 可以是单个候选 id,也可以是**逗号串 bundle**(如 `l1trade,ccburst,midguard`,无空格)——IsSoakCandidate 支持逗号解析。**绝不用 `all`**(会把已否决的候选也打开)。
-- **验证一律 --on-demand**(owner 授权;spot 反复被抢占毁过 4 个验证实例)。c6i.4xlarge on-demand ≈ $0.68/h,一轮 2 seeds ≈ 2h ≈ $1.5。
+- 参考价:c6i.4xlarge spot ≈ $0.25/h,on-demand ≈ $0.68/h;一轮 2 seeds ≈ 2h。
 - 多台并行提速:每台跑不同 seed 对(如 801 802 / 803 804 / 805 806)。
 - 实例自毁(validate 完成即 shutdown;watchdog 兜底)。启动后记下 instance id 和 run_id。
 
