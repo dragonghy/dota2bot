@@ -229,6 +229,17 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [obs 20260722] Laning burst-anticipation (trade-survival): the visible
+    -- lane enemies' currently-castable burst (mana/cd-aware) threatens my
+    -- CURRENT hp and no peel-capable ally is beside me -> back off BEFORE the
+    -- combo lands, not after. Watched failure: WK at 87-100% HP deleted in
+    -- 2-3s by Sven+Lich / OD while standing ground (fixtures
+    -- f_230545_wk_sven_burst / f_232320_wk_od_burst). Gated turbo + 'lanesurv'
+    -- (J.ShouldRetreatLaneBurst); inert in shipped games until validated.
+    if J.ShouldRetreatLaneBurst(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [lanefix/lf_revive] Post-revive flee (fixture f_080225_wk_revive): WK
     -- reincarnates in place still 1v2 and re-engages instead of leaving --
     -- the ultimate buys nothing. Hard retreat when revived-in-place moments

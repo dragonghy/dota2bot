@@ -4631,6 +4631,86 @@ function J.ShouldStayAndRegen( bot )
 	return true
 end
 
+-- [obs 20260722] Laning trade-survival: retreat BEFORE the burst lands, not
+-- after. Frame-by-frame review of ~19 Wraith King deaths (iterations/
+-- obs_20260722_focus_deaths.md) showed the dominant death is NOT overextension:
+-- the bot stands at high HP next to visible nukers (87% HP, OD 54u away, 4s;
+-- 100% HP walking at Sven+Lich) and gets burst 100%->dead in 2-3s -- faster
+-- than any current-HP-threshold retreat can react. Owner's model (2026-07-22):
+-- in lane the decision is a TRADE-SURVIVAL calc, per instant --
+--   * what the visible enemies can cast RIGHT NOW (their spells + MANA + cds),
+--   * my own HP,
+--   * my allies: an ally right here with spells + mana can control/peel for
+--     me mid-trade, so I can commit harder, walk out, drink a salve, return.
+-- This helper is the defensive half: TRUE when the visible enemies' currently-
+-- castable burst against ME threatens my current HP, scaled by whether a
+-- peel-capable ally is beside me. The engine's GetEstimatedDamageToTarget
+-- (bCurrentlyAvailable=true) already models each enemy's mana/cooldown state,
+-- which is exactly the "does Lich actually have the mana to nuke" read.
+--
+-- Ally peel (approximation, honest): a peel-capable ally = a living allied
+-- hero within 700, itself healthy enough to act (HP >= 40%), with resources --
+-- an ability it can cast right now, or at minimum ~110 mana (a typical lane
+-- spell). The API exposes no "is this ability a disable" flag, so v1 reads
+-- resources-present rather than CC-specifically; refine only after more frames.
+--
+-- Thresholds (pinned by replay fixtures with ground truth, not intuition):
+--   * no peel beside me  -> retreat when incoming >= 75% of my CURRENT hp
+--     (f_232320_wk_od_burst: 915 incoming vs 870 hp, WK died 5.8s later);
+--   * peel beside me     -> commit is allowed unless the burst is outright
+--     LETHAL: incoming >= my current hp
+--     (f_230545_wk_sven_burst: 999 vs 868 WITH Ogre 230u away -- still death);
+--   * calm lane stays calm (f_230545_wk_laning_safe: 265 vs 868 -> no flee).
+-- Laning phase only; the post-laning fight/ult layer is a separate, later fix
+-- (owner: "团战的细节我们以后再说"). Gated turbo + 'lanesurv', inert shipped.
+function J.ShouldRetreatLaneBurst( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'lanesurv' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+	if not J.IsInLaningPhase() then return false end
+
+	local tEnemies = J.GetNearbyHeroes( bot, 1100, true, BOT_MODE_NONE )
+	if tEnemies == nil or #tEnemies == 0 then return false end
+
+	-- What the visible enemies can cast at me RIGHT NOW (mana/cd-aware).
+	local nIncoming = 0
+	for _, hEnemy in pairs( tEnemies ) do
+		if J.IsValidHero( hEnemy )
+		and not J.IsSuspiciousIllusion( hEnemy )
+		then
+			nIncoming = nIncoming
+				+ hEnemy:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+		end
+	end
+	if nIncoming <= 0 then return false end
+
+	-- A peel-capable ally beside me lets me hold the trade unless it is lethal.
+	local bPeel = false
+	local tAllies = J.GetNearbyHeroes( bot, 700, false, BOT_MODE_NONE )
+	for _, hAlly in pairs( tAllies or {} ) do
+		if J.IsValidHero( hAlly )
+		and J.GetHP( hAlly ) >= 0.4
+		then
+			if hAlly:GetMana() >= 110 then
+				bPeel = true
+				break
+			end
+			for iSlot = 0, 5 do
+				local hAb = hAlly.GetAbilityInSlot ~= nil
+					and hAlly:GetAbilityInSlot( iSlot ) or nil
+				if hAb ~= nil and not hAb:IsPassive() and hAb:IsFullyCastable() then
+					bPeel = true
+					break
+				end
+			end
+			if bPeel then break end
+		end
+	end
+
+	local nThreshold = bPeel and 1.0 or 0.75
+	return nIncoming >= bot:GetHealth() * nThreshold
+end
+
 -- [GH #9] skysilence: Skywrath Mage's Ancient Seal (E) is a silence + magic
 -- amplification with NO damage of its own. Casting it to OPEN a fight without
 -- the means to immediately follow up wastes it — the seal ticks down while the

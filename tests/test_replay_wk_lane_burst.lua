@@ -1,0 +1,70 @@
+-- [obs 20260722] Laning trade-survival / burst-anticipation, pinned by REAL
+-- replay frames (run spot_20260721_225025). Frame-by-frame review showed WK's
+-- dominant death is being BURST from high HP by visible ranged nukers while
+-- standing ground on its own half -- current-HP-threshold retreat reacts too
+-- late. J.ShouldRetreatLaneBurst must fire on the two real death frames and
+-- stay quiet on the real calm-lane frame:
+--
+--   f_230545_wk_sven_burst   5:06  WK 868/868hp, Ogre 230u beside it; Sven+Lich
+--                            castable burst = 999 (ground truth: they dealt it,
+--                            WK died 9.9s later). LETHAL even through peel -> flee.
+--   f_232320_wk_od_burst     6:20  WK 870/1000hp, no ally within 700 (WD 786);
+--                            OD castable burst = 915 (WK died 5.8s later) -> flee.
+--   f_230545_wk_laning_safe  4:04  same lane, calm minute: total incoming 265
+--                            vs 868hp (WK lived 37s+) -> do NOT flee.
+--
+-- The mock feeds the helper each enemy's GROUND-TRUTH burst (what it actually
+-- dealt in the following window) through GetEstimatedDamageToTarget, so this
+-- tests the decision on the exact frames that motivated it. Real jmz_func, no
+-- J.* stubs.
+
+package.path = 'tests/?.lua;' .. package.path
+local fixture = require('mock.replay_fixture')
+
+local tests = {}
+
+local function arm(J)
+    -- The fixture loader pins GAMEMODE_TURBO; arm the lanesurv candidate and
+    -- pin the laning phase (fixture instants are all inside the laning window).
+    J.IsSoakCandidate = function(id) return id == 'lanesurv' end
+    J.IsInLaningPhase = function() return true end
+end
+
+tests['FLEE: WK 100% hp but Sven+Lich lethal burst (999 vs 868) even with Ogre peel'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_230545_wk_sven_burst.lua')
+    arm(J)
+    assert(J.ShouldRetreatLaneBurst(bot) == true,
+        'the 5:15 death frame: 999 incoming >= 868 hp is lethal through peel -> must flee')
+end
+
+tests['FLEE: WK 87% hp next to OD (915 vs 870), no peel ally in range'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_232320_wk_od_burst.lua')
+    arm(J)
+    assert(J.ShouldRetreatLaneBurst(bot) == true,
+        'the 6:25 death frame: 915 incoming >= 75% of 870 hp with no peel -> must flee')
+end
+
+tests['STAY: same lane, calm minute (265 incoming vs 868 hp) -> no flee'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_230545_wk_laning_safe.lua')
+    arm(J)
+    assert(J.ShouldRetreatLaneBurst(bot) == false,
+        'a calm lane must not trigger the guard -- no over-fleeing, WK keeps farming')
+end
+
+tests['OFF: inert off the soak candidate (shipped default) on the death frame'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_230545_wk_sven_burst.lua')
+    J.IsSoakCandidate = function() return false end
+    J.IsInLaningPhase = function() return true end
+    assert(J.ShouldRetreatLaneBurst(bot) == false,
+        'off the lanesurv candidate the helper must stay inert')
+end
+
+tests['OFF: inert outside the laning phase (post-laning layer is a later fix)'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_230545_wk_sven_burst.lua')
+    J.IsSoakCandidate = function(id) return id == 'lanesurv' end
+    J.IsInLaningPhase = function() return false end
+    assert(J.ShouldRetreatLaneBurst(bot) == false,
+        'the trade-survival guard is a LANING calc; fights/ult logic comes separately')
+end
+
+return tests
