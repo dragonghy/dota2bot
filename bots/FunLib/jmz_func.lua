@@ -6071,7 +6071,13 @@ end
 -- signature -- plus the bot being > 3500 away so a TP (not a walk) is warranted.
 function J.ShouldTpSupportTowerFight( bot )
 	if not J.IsModeTurbo() then return nil end
-	if not J.IsSoakCandidate( 'midtp' ) then return nil end
+	-- [L5-TPDEF] Two candidate ids share this helper: 'midtp' (#15, the mid
+	-- profile -- any position) and 'suptp' (LANING_PLAYBOOK L5-TPDEF: the pos-4/5
+	-- support watching the minimap and TP-ing to defend a sibling lane's tower --
+	-- usually a free counter-kill). Same winnable-only/TP-ready/far-enough logic.
+	local bSup = J.IsSoakCandidate( 'suptp' )
+		and bot ~= nil and J.GetPosition( bot ) >= 4
+	if not ( J.IsSoakCandidate( 'midtp' ) or bSup ) then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
 
 	-- Short TP CD + level 6+ is the mid profile. Require the level, and that the

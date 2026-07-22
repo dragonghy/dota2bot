@@ -101,7 +101,10 @@ local function fresh(opts)
 
     GetGameMode = function() return opts.turbo == false and 1 or GAMEMODE_TURBO end -- luacheck: ignore
     local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
-    J.IsSoakCandidate = function(id) return opts.armed ~= false and id == 'midtp' end
+    J.IsSoakCandidate = function(id)
+        return opts.armed ~= false and id == (opts.cand or 'midtp')
+    end
+    if opts.pos then J.GetPosition = function() return opts.pos end end
     return J, bot, tower
 end
 
@@ -168,6 +171,20 @@ tests['OFF: not armed (shipped default) -> inert'] = function()
     local J, bot = fresh({ armed = false })
     assert(J.ShouldTpSupportTowerFight(bot) == nil,
         'off the midtp soak candidate the helper must be a no-op')
+end
+
+tests['[suptp] FIRE: pos-5 support with suptp armed -> same TP-support logic'] = function()
+    -- L5-TPDEF (LANING_PLAYBOOK): the support watching the minimap TPs to
+    -- defend a sibling lane's tower; shares the midtp winnability/TP checks.
+    local J, bot, tower = fresh({ cand = 'suptp', pos = 5 })
+    assert(J.ShouldTpSupportTowerFight(bot) == tower,
+        'a pos-5 with suptp armed must fire exactly like the mid profile')
+end
+
+tests['[suptp] NO-FIRE: a CORE with only suptp armed -> nil (pos 4-5 only)'] = function()
+    local J, bot = fresh({ cand = 'suptp', pos = 2 })
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'suptp is the support id; cores ride midtp instead')
 end
 
 return tests
