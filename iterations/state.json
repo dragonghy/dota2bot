@@ -472,6 +472,27 @@
   },
   "mechanism": "IsSoakCandidate comma-bundle support (commit e3c4a1d); stamp = mirror:<bundle>:s<seed>:<side>",
   "analysis_plan": "per-instance verdict (or recover_verdict.py with the full bundle string as cand) -> 6-seed aggregate econ; laning-death split; d21 past-midline rate armed-vs-baseline (midguard's metric); if bundle WINS -> promote wave-by-wave discussion with owner; if LOSES -> bisect halves (the lanefix diagnosis playbook).",
-  "note": "midguard implemented THIS commit and included in the bundle (owner: 接着修改)"
+  "note": "midguard implemented THIS commit and included in the bundle (owner: 接着修改)",
+  "RESULT": {
+   "verdict": "CATASTROPHIC REJECT, 0/6 seeds, highly consistent (NOT noise)",
+   "econ": {
+    "gpm": "-74.5..-125.5 (mean -111)",
+    "xpm": "~-135",
+    "deaths": "+0.78",
+    "last_hits": "-13/hero"
+   },
+   "behavioral_diff_23_games": {
+    "laning_team_deaths": "ARMED 9.39/gm vs BASE 5.43 (+73%)",
+    "suppression_guards_WORK_on_target": "overextend_alone -85%, sandwiched_walk -50%, past_midline_death -30%",
+    "but_aggregate_pathology": {
+     "idle_while_ally_dies": "+300% (2.09 vs 0.52) -- kite/retreat guards make bots abandon committed allies; 2v2 becomes 1v2",
+     "unpunished_tower_dive_vs_armed": "+1212% (4.57 vs 0.35) -- enemies dive armed towers with impunity; armed side too passive/low to punish",
+     "missed_cs_at_tower": "+153%; LH -13/hero -- retreat stack + l5trees sidestep + suplh cede the farm",
+     "tp_under_threat": "+86% -- TP trio (midtp/suptp/lf_rescue) generates risky TPs"
+    }
+   },
+   "reading": "The DEFENSIVE features individually work on their target behaviors, but STACKED they produce team-level passivity: bots hang back, abandon allies mid-trade, cede farm and towers, and die MORE (+73% laning deaths). Force-passivity at the bundle level -- the same physics as lanefix(-88) but bigger. Suspect ranking: 1) l1kite (idle+300% fingerprint = kite-away-while-ally-fights), 2) retreat stack depth (lanesurv[shipped]+ccburst+midguard+depthnum+nodive2 compounding), 3) TP trio, 4) l5trees sidestep (CS loss).",
+   "next_options_for_owner": "(a) curated SMALL bundle re-test (drop l1kite + TP trio + l5trees; keep the exonerated narrow guards), ~$4; (b) classic halves bisect (~5 waves, ~$15); (c) revert to per-lever for top suspects only. NOTHING promoted from this batch; lanesurv (solo-validated) stays live and is NOT implicated (it was on BOTH sides here)."
+  }
  }
 }
