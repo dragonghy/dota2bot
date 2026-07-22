@@ -4807,6 +4807,21 @@ function J.GetOffWaveHarassSpot( bot )
 	if bot == nil or not bot:IsAlive() then return nil end
 	if J.GetHP( bot ) < 0.5 then return nil end
 
+	-- [watched 20260722, big-batch game 175703 2:44] A FIGHT IS NOT THE TIME TO
+	-- REPOSITION: WD sidestepped away (158->828u) exactly while Sven was being
+	-- killed beside it, turning a 2v2 into a 1v2 -- the idle_while_ally_dies
+	-- +300% fingerprint. If any nearby ally took hero damage just now, the
+	-- support's job is peel/fight/retreat logic -- never the harass sidestep.
+	local tAllies = J.GetNearbyHeroes( bot, 1200, false, BOT_MODE_NONE )
+	for _, hAlly in pairs( tAllies or {} ) do
+		if J.IsValidHero( hAlly )
+		and hAlly.WasRecentlyDamagedByAnyHero ~= nil
+		and hAlly:WasRecentlyDamagedByAnyHero( 2.0 ) then
+			return nil
+		end
+	end
+	if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
+
 	-- Only applies when I'm ON the wave (aggro-unsafe) with a harass target.
 	local tCreeps = bot:GetNearbyLaneCreeps( 500, true )
 	if tCreeps == nil or #tCreeps == 0 then return nil end

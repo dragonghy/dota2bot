@@ -62,6 +62,11 @@ local function mk2(opts)
 	local enemy = api.MakeHero('npc_dota_hero_viper', {
 		GetTeam = 3, CanBeSeen = true, GetLocation = api.Vector(600, 0, 0),
 	})
+	local ally = api.MakeHero('npc_dota_hero_sven', {
+		GetTeam = 2, CanBeSeen = true, GetLocation = api.Vector(-200, 0, 0),
+		GetHealth = 500, OriginalGetHealth = 500, OriginalGetMaxHealth = 900,
+		WasRecentlyDamagedByAnyHero = opts.allyUnderAttack == true,
+	})
 	local bot = api.MakeHero('npc_dota_hero_crystal_maiden', {
 		CanBeSeen = true, GetLocation = api.Vector(0, 0, 0),
 		GetHealth = 500, OriginalGetHealth = 500, OriginalGetMaxHealth = 600,
@@ -70,8 +75,11 @@ local function mk2(opts)
 			return creeps
 		end,
 		GetNearbyHeroes = function(_, _r, bEnemy)
-			if bEnemy and not opts.noEnemy then return { enemy } end
-			return {}
+			if bEnemy then
+				if opts.noEnemy then return {} end
+				return { enemy }
+			end
+			return { ally }
 		end,
 	})
 	api.install({ bot = bot })
@@ -99,6 +107,15 @@ tests['SPOT nil: nobody to harass -> no sidestep'] = function()
 	local J, bot = mk2({ noEnemy = true })
 	assert(J.GetOffWaveHarassSpot(bot) == nil,
 		'without a harass target the sidestep is pointless wandering')
+end
+
+tests['SPOT nil (watched 175703): an ally under attack -> NEVER sidestep, that is a fight'] = function()
+	-- The big-batch smoking gun: WD sidestepped 158->828u away exactly while
+	-- Sven was being killed beside it. Any nearby ally taking hero damage must
+	-- suppress the repositioning entirely.
+	local J, bot = mk2({ allyUnderAttack = true })
+	assert(J.GetOffWaveHarassSpot(bot) == nil,
+		'repositioning during a fight abandons the ally (idle_while_ally_dies +300%)')
 end
 
 return tests
