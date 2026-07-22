@@ -499,6 +499,16 @@
    "case_A_sidestep": "game 175703 2:44-2:51: WD (91-94% hp, cask ready) sidestepped 158->828u in ~550u steps EXACTLY while Sven was bursted 78%->0 beside it, then walked back onto the corpse. Mechanism = l5trees cut-2 sidestep has no fight-awareness. FIXED: sidestep hard-suppressed when any ally within 1200 (or self) took hero damage within 2s (commit 0404cda, test pinned).",
    "case_B_late_tp": "game 181046 1:40-1:51: Ogre TP'd across the map and LANDED THE SECOND Viper died (dist 14900->485 in one tick at death frame). Mechanism = rescue/def TPs (lf_rescue/suptp/midtp) have no arrival-time-vs-victim-survival check. FIX TODO (next): estimate victim time-to-live vs TP channel 3s; do not TP to corpses.",
    "lesson": "aggregate detector diffs name the SYMPTOM (+300% idle); only tick-level watching separated TWO distinct mechanisms with two different fixes. The owner's watch-first rule is load-bearing at diagnosis time too."
+  },
+  "ANALYST_VERDICTS": {
+   "l1kite": "GUILTY 0.8 (cores commit then abandon <4s, supports stay per pairing -> 1v2; sup-dead-with-idle-core 13 vs 4)",
+   "l1trade": "suspect 0.55 (commit-then-chase deep; accepts losing static trades; the l1trade->l1kite oscillation)",
+   "l5combo": "suspect 0.6 (full combo at d+3000 on phantasm-CK; no depth/escape gate -- TODO add depth gate)",
+   "new_pathologies": {
+    "1_desire_oscillation": "LIKELY BUNDLE MAIN KILLER: commit->abort->re-enter flapping, zero output while soaking aggro (0-for-7 exchanges). FIXED: commit-lock/kite-lock interlock (this commit).",
+    "2_tp_chaos": "mid-fight 0.5s aborted TPs; revive->TP-back-to-death-spot; two TPs burned on one corpse. Arrival-time fix landed earlier; mid-fight-TP-start + revive-cooldown fixes TODO.",
+    "3_passive_stack_own_half": "armed side won't fight even at numbers advantage on OWN half (3 heroes escorted SF to their fountain; base dove 105x unpunished). Design work needed -- desire caps, not gates."
+   }
   }
  }
 }
