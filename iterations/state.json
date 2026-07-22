@@ -359,7 +359,6 @@
   "divecap",
   "l1trade",
   "l1kite",
-  "l1xpsoak",
   "l5trees"
  ],
  "laning_program": {
@@ -401,9 +400,32 @@
    },
    "laning_deaths": "-9% (8.86 vs 9.71, n=7)",
    "decision": "PROMISING-HOLD, extension launched (403/404) -- same recipe as lanesurv; promote if combined n>=14 holds"
+  },
+  "wave2_result": {
+   "econ": {
+    "gpm": 15.64,
+    "deaths": -0.08,
+    "comps": "gpm 2/2",
+    "suggested": "promote"
+   },
+   "laning_deaths_ext": "+21% (n=8, FLIPPED)",
+   "laning_deaths_combined": "+6% over 15 games",
+   "decision": "HOLD-INCONCLUSIVE: econ (better-powered, ~460 games, 3/4 seeds deaths-negative) says good; the n=15 laning split flipped sign = too noisy to confirm the mechanism. Did NOT promote (bar was 'combined split holds' -- it did not). Keep gated; optionally one more extension later. Do not promote on contradictory target-metric reads."
   }
  },
  "l1xpsoak_validation": {
-  "note": "first wave launched (501/502 x15); measure = econ + laning-death split; also watch CS/xpm (soak stance must not tank farm)"
- }
+  "note": "first wave launched (501/502 x15); measure = econ + laning-death split; also watch CS/xpm (soak stance must not tank farm)",
+  "wave1_result": {
+   "econ": {
+    "gpm": -61.06,
+    "xpm": -68.58,
+    "deaths": 0.68,
+    "comps": "0/2 everything"
+   },
+   "decision": "REJECT (hard): the XP-soak stance backfires even in its corrected form -- parking a core at the lane edge costs all farm AND deaths got WORSE (likely over-triggering: 2-enemies+75% bar is common in lane). 3rd member of the force-passivity reject family (lf_recover, corefarm). Keep gated/inert; only revisit with a MUCH stricter trigger (e.g. require provably-lethal AND recent near-death), low priority."
+  }
+ },
+ "rejected_do_not_retry": [
+  "l1xpsoak (gpm -61, deaths +0.68, 0/2) -- force-passivity family"
+ ]
 }
