@@ -388,5 +388,10 @@
  "lanesurv_extension": {
   "instance": "i-0296b0db7a5f5157e (ON-DEMAND, run spot_20260722_021043_1_main, seeds 303/304 x15)",
   "purpose": "thicken lanesurv sample (was n=6 mirror games, laning deaths -16%). On completion: recover verdict + rerun the laning-death split (tools: recover_verdict.py + the armed-vs-baseline laning-death count in state ab_verdicts). Combined n>=20 and delta holds -> PROMOTE lanesurv (remove gate). Then validate l1kite / l1xpsoak separately the same way."
+ },
+ "l1kite_validation": {
+  "instance": "i-07f6d321e5dc295e4 (ON-DEMAND, run spot_20260722_030410_1_main, seeds 401/402 x15)",
+  "metric": "econ verdict + LANING-phase deaths armed-vs-baseline split (same recipe as lanesurv: recover_verdict.py + laning-death count on slot1 replays). Note lanesurv is now PROMOTED = active on BOTH sides; l1kite measures its own increment on top.",
+  "next_after": "l1xpsoak (seeds 501/502), then l5trees; promote each only on its own measured improvement."
  }
 }
