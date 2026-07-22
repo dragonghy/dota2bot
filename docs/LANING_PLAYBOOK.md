@@ -39,10 +39,10 @@ drag the lane: **fake an attack order on the enemy hero → enemy creeps aggro
 you → walk back** → wave resets toward our tower; CS under tower.
 **API:** attack-order on enemy hero within 500 of enemy creeps flips creep
 aggro; `Action_AttackUnit` + retreat point.
-**Status:** IMPLEMENTED as `creeppull` (#10, gated) — same mechanic. **Gap:**
-its trigger doesn't yet include the specific "I'm melee AND enemy lane is
-double-ranged AND they harass on cooldown" case; add as an OR-branch
-(`IsRangedAttacker` on the two lane enemies + recent harass damage taken).
+**Status:** IMPLEMENTED as `creeppull` (#10, gated), **including the
+melee-vs-double-ranged branch (2026-07-22)**: melee me + both laners ranged +
+pecking from >=600 + fresh harass damage -> the recent-damage/single-enemy
+safety clauses relax and the drag fires. Close enemy = dive = normal safety.
 
 ### L1-TRADE — trade decision WITH support present
 **Rule:** when the support is beside me:

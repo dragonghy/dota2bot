@@ -370,12 +370,11 @@
    "L1-TRADE counter-trade half=l1kite (gated, fixture-pinned 6:07 frame, composition with lanesurv proven)",
    "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)",
    "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)",
-   "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)"
+   "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)",
+   "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)"
   ],
   "next": [
-   "L5-TREES second cut: off-wave positioning (seek treeline angle) + real-frame fixture",
-   "L1-SALVE re-purchase link",
-   "L5-COMBO + suptp + L1-DRAG trigger widening"
+   "L5-TREES second cut: off-wave positioning (seek treeline angle) + real-frame fixture"
   ],
   "observed_evidence": "find_kill_windows.py scan: dozens of missed kill windows per run (ogre 7% + 3 of ours nearby = survived). Owner can deploy bots/ locally (vscripts/bots + Local Dev Script) to play vs the AI; gated fixes armable via bots/Customize/soak_side.lua."
  },
