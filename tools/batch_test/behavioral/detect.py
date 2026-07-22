@@ -704,6 +704,48 @@ def d20_enemy_overchase_unpunished(tl):
     return out
 
 
+# --- laning_past_midline_death tunables ---
+LPM_DEPTH = 800.0    # died this far past the midline (ancient-dist convention)
+LPM_T_MAX = 600.0    # laning window
+
+def d21_laning_past_midline_death(tl):
+    """[obs 20260722 post-promote] With the lanesurv burst guard live, focus
+    deaths MOVED past the midline: cores CS/trade beyond the river during
+    laning and get collapsed on (2nd draft pool confirmed: ~17/25 deaths past
+    midline; killers Axe call, Lich, Sniper, WD). This measures that pattern so
+    the batch can quantify any positional-discipline fix -- the fix itself is
+    NOT yet designed (force-passivity family risk; see l1xpsoak reject).
+    Flags: a hero DEATH before LPM_T_MAX at a spot deeper than LPM_DEPTH into
+    the enemy half (dist-to-own-ancient minus dist-to-enemy-ancient)."""
+    out = []
+    ANC = {2: (-7205, -6610), 3: (7137, 6474)}
+    for e in tl.events:
+        if e["type"] != "DEATH" or not e.get("target", "").startswith("npc_dota_hero_"):
+            continue
+        if e["t"] > LPM_T_MAX:
+            continue
+        hero, t = e["target"], e["t"]
+        team = tl.team(hero)
+        if not team:
+            continue
+        p = tl.pos(hero, t)
+        if not p:
+            continue
+        own = ANC[team]; enemy = ANC[5 - team]
+        depth = (math.hypot(p[0]-own[0], p[1]-own[1])
+                 - math.hypot(p[0]-enemy[0], p[1]-enemy[1]))
+        if depth < LPM_DEPTH:
+            continue
+        out.append({
+            "detector": "laning_past_midline_death", "bug": "L", "hero": hero,
+            "t": round(t, 1), "depth": round(depth),
+            "desc": f"{hero} died at t={t:.0f}s ({fmt(t)}) {depth:.0f}u past the "
+                    f"midline during laning -> positioned deep where a collapse "
+                    f"kills (laning positional-discipline gap)",
+        })
+    return out
+
+
 def close_names(close):
     return [c[0] for c in close]
 
@@ -790,7 +832,7 @@ DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
              d4_idle_while_ally_dies, d5_sandwiched_walk,
              d6_overextend_alone, d6_unpunished_tower_dive,
              d8_return_to_death_spot, d9_missed_cs_at_tower,
-             d20_enemy_overchase_unpunished]
+             d20_enemy_overchase_unpunished, d21_laning_past_midline_death]
 
 
 def run(path):
