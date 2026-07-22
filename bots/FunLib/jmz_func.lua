@@ -4662,10 +4662,13 @@ end
 --     (f_230545_wk_sven_burst: 999 vs 868 WITH Ogre 230u away -- still death);
 --   * calm lane stays calm (f_230545_wk_laning_safe: 265 vs 868 -> no flee).
 -- Laning phase only; the post-laning fight/ult layer is a separate, later fix
--- (owner: "团战的细节我们以后再说"). Gated turbo + 'lanesurv', inert shipped.
+-- (owner: "团战的细节我们以后再说").
+-- PROMOTED (was soak-candidate 'lanesurv') 2026-07-22: mirrored A/B over 4
+-- seeds / ~230 games -- gpm +13.7 & deaths -0.15 (both 2/2 on the extension
+-- wave), and LANING-phase deaths -15% on the armed side across 13 mirror
+-- replays (8.92 vs 10.46/game). Turbo-only; normal mode unchanged.
 function J.ShouldRetreatLaneBurst( bot )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'lanesurv' ) then return false end
 	if bot == nil or not bot:IsAlive() then return false end
 	if not J.IsInLaningPhase() then return false end
 

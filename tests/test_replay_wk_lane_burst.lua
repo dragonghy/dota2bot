@@ -67,12 +67,23 @@ end
 -- sees that burst -- the guard cannot catch summon-based kills. Tracked in
 -- iterations/obs_20260722_focus_deaths.md.
 
-tests['OFF: inert off the soak candidate (shipped default) on the death frame'] = function()
+tests['PROMOTED: fires with NO candidate armed (turbo default-on) on the death frame'] = function()
+    -- lanesurv was PROMOTED 2026-07-22 (4-seed A/B: gpm +13.7, deaths -0.15,
+    -- laning deaths -15%): the guard is now default-on in turbo.
     local J, bot = fixture.load('tests/fixtures/f_230545_wk_sven_burst.lua')
     J.IsSoakCandidate = function() return false end
     J.IsInLaningPhase = function() return true end
+    assert(J.ShouldRetreatLaneBurst(bot) == true,
+        'promoted: the burst guard fires in turbo without any soak candidate')
+end
+
+tests['OFF: still inert in normal (non-turbo) mode after promotion'] = function()
+    local J, bot = fixture.load('tests/fixtures/f_230545_wk_sven_burst.lua')
+    J.IsSoakCandidate = function() return false end
+    J.IsInLaningPhase = function() return true end
+    GetGameMode = function() return 1 end -- luacheck: ignore
     assert(J.ShouldRetreatLaneBurst(bot) == false,
-        'off the lanesurv candidate the helper must stay inert')
+        'normal-mode behavior stays byte-for-byte unchanged')
 end
 
 tests['OFF: inert outside the laning phase (post-laning layer is a later fix)'] = function()
