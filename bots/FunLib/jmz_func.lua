@@ -4667,6 +4667,43 @@ end
 -- seeds / ~230 games -- gpm +13.7 & deaths -0.15 (both 2/2 on the extension
 -- wave), and LANING-phase deaths -15% on the armed side across 13 mirror
 -- replays (8.92 vs 10.46/game). Turbo-only; normal mode unchanged.
+-- [ccburst] Curated hard-CC (stun/hex/shackle/long-root) lane abilities: the
+-- spells that hold a target in place long enough to take far more than 3s of
+-- damage. Deliberately a NAME TABLE (this codebase's style -- the API exposes
+-- no generic "is this a stun" query); extend as new offenders appear in
+-- replay review. Checked by J.HasReadyHardCc.
+J.tHardCcAbilities = {
+	shadow_shaman_shackles = true, shadow_shaman_voodoo = true,
+	dragon_knight_dragon_tail = true, sven_storm_bolt = true,
+	lion_impale = true, lion_voodoo = true,
+	skeleton_king_hellfire_blast = true, vengefulspirit_magic_missile = true,
+	crystal_maiden_frostbite = true, shadow_demon_disruption = true,
+	ogre_magi_fireblast = true, bane_nightmare = true, bane_fiends_grip = true,
+	tidehunter_ravage = true, slardar_slithereen_crush = true,
+	earthshaker_fissure = true, witch_doctor_paralyzing_cask = true,
+	storm_spirit_electric_vortex = true, jakiro_ice_path = true,
+	centaur_hoof_stomp = true, axe_berserkers_call = true,
+	primal_beast_pulverize = true, chaos_knight_chaos_bolt = true,
+}
+
+-- True when the enemy hero has one of the curated hard-CC abilities leveled,
+-- off cooldown, and affordable -- i.e. it can LOCK me right now, extending the
+-- effective burst window well past 3s.
+function J.HasReadyHardCc( hEnemy )
+	if hEnemy == nil then return false end
+	for iSlot = 0, 5 do
+		local hAb = hEnemy.GetAbilityInSlot ~= nil
+			and hEnemy:GetAbilityInSlot( iSlot ) or nil
+		if hAb ~= nil and J.tHardCcAbilities[ hAb:GetName() ]
+		and hAb:GetLevel() ~= nil and hAb:GetLevel() >= 1
+		and hAb:IsFullyCastable()
+		then
+			return true
+		end
+	end
+	return false
+end
+
 function J.ShouldRetreatLaneBurst( bot )
 	if not J.IsModeTurbo() then return false end
 	if bot == nil or not bot:IsAlive() then return false end
@@ -4676,13 +4713,23 @@ function J.ShouldRetreatLaneBurst( bot )
 	if tEnemies == nil or #tEnemies == 0 then return false end
 
 	-- What the visible enemies can cast at me RIGHT NOW (mana/cd-aware).
+	-- [ccburst enhancement, gated] Post-promote replay review (obs 20260722,
+	-- l5trees-ext run): with the base guard live, focus deaths MOVED past the
+	-- midline and the killers became hard-CC laners (Shadow Shaman x4 shackles,
+	-- DK stun, Lich) -- a CC'd target eats 4-6s of damage, so the flat 3s
+	-- window systematically underestimates burst from an enemy whose hard CC is
+	-- READY. Under 'ccburst' (turbo + candidate) such enemies are estimated
+	-- over 5s instead. Inert off the candidate: window stays 3.0 everywhere.
+	local bCcAware = J.IsSoakCandidate( 'ccburst' )
 	local nIncoming = 0
 	for _, hEnemy in pairs( tEnemies ) do
 		if J.IsValidHero( hEnemy )
 		and not J.IsSuspiciousIllusion( hEnemy )
 		then
+			local nWindow = 3.0
+			if bCcAware and J.HasReadyHardCc( hEnemy ) then nWindow = 5.0 end
 			nIncoming = nIncoming
-				+ hEnemy:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+				+ hEnemy:GetEstimatedDamageToTarget( true, bot, nWindow, DAMAGE_TYPE_ALL )
 		end
 	end
 	if nIncoming <= 0 then return false end
