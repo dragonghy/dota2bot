@@ -438,6 +438,13 @@
    "note": "uniformly positive, both seeds same sign; engine said hold only because gpm 4.89 < its 5.0 bar"
   },
   "extension": "seeds 603/604 launched (same 4-seed bar as lanesurv); PROMOTE if uniformity holds",
-  "instance": "i-...044826 done; ext running"
- }
+  "instance": "i-...044826 done; ext running",
+  "extension_result": {
+   "gpm": -16.41,
+   "deaths": 0.17,
+   "comps": "0/2 everything",
+   "decision": "HOLD, do NOT promote: wave2 exactly mirrored wave1's uniform positive -> 4-seed mean ~-5.8 gpm/+0.04 deaths, wave-level sign flip = inter-wave (draft/seed) variance dominates. The 4-seed bar just prevented promoting noise."
+  }
+ },
+ "VALIDATION_NOISE_LESSON_20260722": "CRITICAL calibration: a SINGLE 2-seed wave can read uniformly positive (all metrics 2/2, both seeds same sign -- l5trees wave1) and fully FLIP the next wave. So: (1) 4-seed minimum stands for any promote; (2) small-magnitude levers (<~10 gpm true effect) are UNRESOLVABLE at $3-wave scale -- stop burning waves on weak-prior candidates; (3) lanesurv's promote remains sound (4 seeds + INDEPENDENT target-metric confirmation, -16%/-14% consistent across waves, magnitude above noise floor); (4) this retroactively validates the l1kite HOLD. Future: per-lever waves ONLY for strong-observational-prior levers; the rest accumulate for the owner-designed ONE final batch."
 }
