@@ -320,6 +320,23 @@
    "deaths": 0.17,
    "comps": "gpm 1/2, deaths 0/2",
    "read": "depth-discounted numbers did NOT reduce deaths (its whole point); slight xpm/death worsening. 6th non-win. Keep gated, no promote; revisit only with a redesign (e.g. fog-reinforcement model) after laning program lands."
+  },
+  "lanesurv": {
+   "verdict": "PROMISING-HOLD (first positive directional candidate this session)",
+   "econ": {
+    "gpm": 0.2,
+    "xpm": 5.51,
+    "deaths": -0.07,
+    "comps": "deaths 1/2",
+    "note": "no harm, unlike lane-micro rejects"
+   },
+   "class_b": {
+    "laning_deaths_armed": "9.00/game",
+    "laning_deaths_baseline": "10.67/game",
+    "delta": "-16%",
+    "sample": "6 mirror slot1 games"
+   },
+   "decision": "KEEP GATED, extend validation: n=6 too thin to promote. Next window: rerun lanesurv 2 more seeds AND measure l1kite/l1xpsoak the same way. Validate levers SEPARATELY (lanefix bundle lesson). If -16% holds at n>=20, promote lanesurv."
   }
  },
  "new_gated_awaiting_ab": [
