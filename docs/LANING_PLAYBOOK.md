@@ -29,9 +29,9 @@ to-have: the "trade is acceptable IF salve-recoverable" link into trade logic
 
 ### L1-BURST — don't be 100→0'able (the only real danger)
 **Rule:** the only lethal lane threat is being bursted inside CC duration.
-**Status:** DONE (gated `lanesurv`): `J.ShouldRetreatLaneBurst` — enemy
-currently-castable (mana/cd-aware) burst vs my HP, peel-ally aware. Pinned by
-3 real death fixtures + Lion cross-hero. Awaiting A/B.
+**Status:** ✅ **PROMOTED 2026-07-22** (turbo default-on): 4-seed mirrored A/B,
+gpm +13.7, deaths −0.15 (2/2), laning-phase deaths −15% across 13 mirror
+replays. `J.ShouldRetreatLaneBurst`, pinned by 3 real death fixtures + Lion.
 
 ### L1-DRAG — melee vs double-ranged: drag the wave back (勾线)
 **Rule:** melee pos-1 being pecked by two ranged with no support help must
@@ -53,10 +53,10 @@ double-ranged AND they harass on cooldown" case; add as an OR-branch
     kills — go first.
 **API:** `GetEstimatedDamageToTarget` both directions (us→them vs them→us),
 `J.SafeToCommitFight` (lethal-or-numbers), ally mana/spell state.
-**Status:** GAP. Closest pieces: `lanesurv` (the defensive half), SafeToCommit
-(numbers). The "give one spell then kite back while support fights" behavior
-does not exist. **This is the offensive half of the owner's trade-survival
-model.**
+**Status:** IMPLEMENTED, both halves gated: initiate = `l1trade`
+(J.ShouldInitiateLaneKill, awaiting batch), counter-trade = `l1kite`
+(J.ShouldCounterTradeKite, A/B HOLD-INCONCLUSIVE: econ positive 4 seeds but
+laning-death split noisy; keep gated, revisit).
 
 ### L1-SPLIT — support absent / can't win: passive drag & split
 **Rule:** can't win the lane → drag the wave (they chase me = they lose CS =
@@ -72,9 +72,11 @@ wait for the support to come back.** This state is not winnable solo; the
 goal is purely "don't die, don't fall a level behind."
 **API:** XP radius 1500; stand point = wave position pulled back toward our
 tower, ≥ enemy-threat distance from every visible enemy.
-**Status:** GAP — and the *corrected* version of `lf_recover` (REJECTED
-culprit): lf_recover sent zoned cores to the JUNGLE (CS@8 −48%); the correct
-behavior keeps them AT the lane edge soaking XP.
+**Status:** ❌ IMPLEMENTED (`l1xpsoak`) then **A/B REJECTED** (gpm −61,
+deaths +0.68, 0/2): even the corrected at-lane-edge version over-triggers and
+starves the core — 3rd member of the force-passivity reject family
+(lf_recover, corefarm). Kept gated/inert; only revisit with a far stricter
+trigger.
 **Danger note:** this is the same family as the c3/corefarm/lf_recover
 rejects — must be extremely narrow (exact trigger: ≥2 visible lane enemies,
 no ally within ~1400, contest = provably lethal per lanesurv math).
@@ -97,9 +99,11 @@ from the side, never pulling creep aggro (creep aggro = attack order on an
 enemy hero within ~500 of their creeps).
 **Target selection:** vs standard melee-3 + ranged-4: harass the 3 from the
 side AWAY from their 4.
-**Status:** GAP (and the EXPLANATION of the `bodyblock` −50 gpm reject: I
-gave harass duty to pos-1-3 cores standing on the wave — exactly what this
-rule forbids. Harass belongs to the pos-5, from off-wave angles.)
+**Status:** first cut gated (`l5trees`: aggro-safe harass predicate,
+J.IsHarassCreepAggroSafe). A/B HOLD: wave1 uniformly positive, wave2 flipped —
+noise-dominated at this effect size; keep gated, ride the next big batch.
+Positioning cut (seek treeline angle) still to do. (This rule also EXPLAINS
+the `bodyblock` −50 reject: harass belongs to pos-5 off-wave, not cores.)
 **API:** position offset perpendicular to lane direction; harass only when
 >500 from enemy creeps or with spells; `IsRangedAttacker` check for the
 "long-hands support" precondition.
