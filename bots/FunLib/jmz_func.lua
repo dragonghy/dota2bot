@@ -5681,16 +5681,42 @@ function J.ShouldCreepPullLane( bot )
 	if not J.IsInLaningPhase() then return nil end
 	if not J.IsCore( bot ) then return nil end
 
-	-- SAFE-1: healthy. A pull walks toward the enemy hero for a beat; never do it
-	-- while already low or while actively being hit.
+	-- SAFE-1: healthy. A pull walks toward the enemy hero for a beat; never do
+	-- it while already low.
 	if J.GetHP( bot ) < 0.5 then return nil end
-	if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
 
-	-- SAFE-2: not a gank. At most the single lane opponent may be present; a
-	-- second enemy hero nearby means we could die walking in -- never pull.
 	local tEnemyHeroes = J.GetNearbyHeroes( bot, 1000, true, BOT_MODE_NONE )
 	if tEnemyHeroes == nil then return nil end
-	if #tEnemyHeroes > 1 then return nil end
+
+	-- [L1-DRAG widening / LANING_PLAYBOOK] The owner's melee-vs-double-ranged
+	-- case: a MELEE core being pecked on cooldown by TWO RANGED laners must drag
+	-- the wave back ("假装去 A 对面英雄...把兵线往后拉") -- here being harassed
+	-- is the TRIGGER, and two enemies are expected, so the standard recent-damage
+	-- and single-enemy safety clauses are relaxed for exactly this shape: I am
+	-- melee (range <= 200), BOTH enemies are ranged (> 300) and both are pecking
+	-- from distance (>= 600 -- not diving me), and I actually took hero damage
+	-- recently. Any enemy CLOSE means a dive, not a peck -> normal safety rules.
+	local bMeleeVs2Ranged = false
+	if bot:GetAttackRange() <= 200 and #tEnemyHeroes == 2
+	and bot:WasRecentlyDamagedByAnyHero( 3.0 )
+	then
+		bMeleeVs2Ranged = true
+		for _, e in pairs( tEnemyHeroes ) do
+			if not J.IsValidHero( e ) or e:GetAttackRange() <= 300
+			or GetUnitToUnitDistance( bot, e ) < 600
+			then
+				bMeleeVs2Ranged = false
+				break
+			end
+		end
+	end
+
+	-- SAFE-1b/2: outside the melee-vs-2-ranged shape, never pull while actively
+	-- being hit, and never with a second enemy nearby (gank risk walking in).
+	if not bMeleeVs2Ranged then
+		if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
+		if #tEnemyHeroes > 1 then return nil end
+	end
 
 	-- Need enemy lane creeps near us -- the wave whose aggro we intend to draw.
 	local tEnemyCreeps = bot:GetNearbyLaneCreeps( 900, true )
@@ -5710,7 +5736,7 @@ function J.ShouldCreepPullLane( bot )
 		end
 	end
 	local bZoned = ( #tEnemyHeroes >= 1 ) and not J.WeAreStronger( bot, 1200 )
-	if not ( bWavePushedToUs or bZoned ) then return nil end
+	if not ( bWavePushedToUs or bZoned or bMeleeVs2Ranged ) then return nil end
 
 	-- VALID AGGRO TARGET: an enemy hero adjacent (<= 500, the creep aggro-redirect
 	-- range) to an enemy lane creep, which we can order-attack to pull that creep's

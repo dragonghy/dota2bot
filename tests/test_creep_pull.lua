@@ -42,8 +42,22 @@ local function scenario(opts)
 		CanBeSeen = true, IsAlive = true, GetLocation = api.Vector(0, 0, 0),
 	})
 
+	-- [L1-DRAG] Optional melee-vs-2-ranged shape: both enemies RANGED (550),
+	-- pecking from >= 600 away, with the bot recently harassed.
+	if opts.melee2ranged then
+		rawget(enemy,  '__spec').GetAttackRange = 550
+		rawget(enemy2, '__spec').GetAttackRange = 550
+		rawget(enemy,  '__spec').GetLocation = api.Vector(opts.e1dist or 700, 0, 0)
+		rawget(enemy2, '__spec').GetLocation = api.Vector(opts.e2dist or 800, 100, 0)
+		-- the enemy wave sits between us: creep adjacent to enemy1 (<500) so the
+		-- aggro-draw target scan finds it, and within our 900 creep-scan radius
+		rawget(creep, '__spec').GetLocation = api.Vector(500, 0, 0)
+	end
+
+
 	-- Our disadvantaged core: healthy, laning, sees the lone enemy nearby.
-	local nearbyEnemies = opts.notIsolated and { enemy, enemy2 } or { enemy }
+	local nearbyEnemies = (opts.notIsolated or opts.melee2ranged)
+		and { enemy, enemy2 } or { enemy }
 	local bot = api.MakeHero('npc_dota_hero_lion', {
 		CanBeSeen = true,
 		OriginalGetHealth = opts.botHealth or 600,
@@ -58,7 +72,8 @@ local function scenario(opts)
 			return {}
 		end,
 		GetAssignedLane = function() return LANE_MID end,
-		GetLocation = api.Vector(-500, 0, 0),
+		GetLocation = opts.melee2ranged and api.Vector(0, 0, 0)
+			or api.Vector(-500, 0, 0),
 	})
 	api.install({ bot = bot })
 	local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
@@ -140,6 +155,28 @@ tests['OFF: inert off the soak candidate'] = function()
 	J.IsSoakCandidate = function() return false end
 	assert(J.ShouldCreepPullLane(bot) == nil,
 		'off the candidate side the trigger must stay inert (shipped default)')
+end
+
+tests['FIRE [L1-DRAG]: melee core pecked by 2 ranged from distance -> pull'] = function()
+	-- Owner's case: melee-vs-double-ranged, harassed on cooldown, both pecking
+	-- from >= 600 -- the recent-damage/single-enemy safety clauses are relaxed
+	-- for exactly this shape, and being harassed is the TRIGGER.
+	local J, bot, enemy = scenario({ melee2ranged = true, recentlyDamaged = true })
+	local pull = J.ShouldCreepPullLane(bot)
+	assert(type(pull) == 'table' and pull.enemy == enemy,
+		'melee core pecked by two distant ranged laners must drag the wave back')
+end
+
+tests['NO-FIRE [L1-DRAG]: one of the two ranged is CLOSE (diving, not pecking) -> nil'] = function()
+	local J, bot = scenario({ melee2ranged = true, recentlyDamaged = true, e1dist = 400 })
+	assert(J.ShouldCreepPullLane(bot) == nil,
+		'an enemy inside 600 is a dive -- normal safety rules, never pull into it')
+end
+
+tests['NO-FIRE [L1-DRAG]: 2 ranged but NOT being harassed -> nil (old gank rule holds)'] = function()
+	local J, bot = scenario({ melee2ranged = true, recentlyDamaged = false })
+	assert(J.ShouldCreepPullLane(bot) == nil,
+		'without the harass trigger, two nearby enemies still mean gank risk -> no pull')
 end
 
 return tests
