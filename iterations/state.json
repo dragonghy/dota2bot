@@ -458,6 +458,7 @@
   "source": "5 slot1 replays from l5trees-ext run (lanesurv PROMOTED live both sides)",
   "finding": "Focus deaths 2.8/gm (all zuus in this pool). Pattern SHIFTED vs pre-fix: deaths moved from own-half standing-ground to PAST-MIDLINE (+1300..+5700), killers now hard-CC laners (shadow_shaman x4 shackles, DK stun, lich). Mechanism gap: flat 3s burst window underestimates damage during a 4-6s hard CC.",
   "action": "ccburst gated enhancement (5s window for enemies with ready hard-CC from curated table). STRONG prior (14 real death frames) -> qualifies for a solo validation wave when owner green-lights, or rides the big batch.",
-  "note": "ALLY-LEFT still recurs (viper/centaur/phantom walk away mid-trade) -> that is the #23 teamfight/coordination track, not laning."
+  "note": "ALLY-LEFT still recurs (viper/centaur/phantom walk away mid-trade) -> that is the #23 teamfight/coordination track, not laning.",
+  "second_pool_confirmation": "Pattern CONFIRMED in 2nd draft pool (l1kite-ext + more l5trees-ext replays): ~17/25 focus deaths past midline (WK/Axe/Zeus all affected; killers Axe call/Lich/Sniper/WD/Necro). Codified as d21_laning_past_midline_death detector. FIX deliberately deferred: midline-discipline suppression = force-passivity family (3x rejected); needs owner design input (e.g. tie to wave position: only back off when the WAVE isn't there) rather than another clamp."
  }
 }
