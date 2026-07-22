@@ -360,7 +360,8 @@
   "l1trade",
   "l1kite",
   "l5trees",
-  "l5combo"
+  "l5combo",
+  "suptp"
  ],
  "laning_program": {
   "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
@@ -374,10 +375,10 @@
    "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)",
    "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)",
    "L5-TREES cut 2: off-wave sidestep positioning (GetOffWaveHarassSpot, 3 tests)",
-   "L5-COMBO=l5combo (gated, 8 tests) -- LAST playbook rule implemented; playbook now FULLY implemented"
+   "L5-COMBO=l5combo (gated, 8 tests) -- LAST playbook rule implemented; playbook now FULLY implemented",
+   "L5-TPDEF=suptp generalization (2 tests) -- playbook now has NO partials left"
   ],
   "next": [
-   "suptp generalization (midtp -> pos-5), low priority",
    "ACCUMULATE-BATCH: all gated laning levers (l1trade, l1kite, l5trees, l5combo, creeppull+widened, pullcamp, suplh, lf_mana) ride ONE big mirrored batch when owner green-lights; strong-prior levers only for solo waves",
    "L5-NOLH tightening under suplh validation"
   ],

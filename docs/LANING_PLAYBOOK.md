@@ -136,9 +136,9 @@ fixture-validated). Matches spec.
 ### L5-TPDEF — TP to defend sibling lanes
 **Rule:** watch the minimap; enemy dives our 3/4's tower → TP in, usually a
 free counter-kill.
-**Status:** PARTIAL — `midtp` (#15, gated) does this for MID only. Generalize
-the same helper to pos-5 (it already checks winnability + TP availability);
-new sub-id `suptp`.
+**Status:** IMPLEMENTED 2026-07-22: `suptp` (pos >= 4) shares
+ShouldTpSupportTowerFight with `midtp` (#15) -- same winnable-only/TP-ready
+logic. Gated, awaiting batch.
 
 ---
 
