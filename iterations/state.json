@@ -427,5 +427,17 @@
  },
  "rejected_do_not_retry": [
   "l1xpsoak (gpm -61, deaths +0.68, 0/2) -- force-passivity family"
- ]
+ ],
+ "l5trees_validation": {
+  "wave1": {
+   "gpm": 4.89,
+   "xpm": 6.9,
+   "deaths": -0.08,
+   "lh": 0.02,
+   "comps": "gpm/xpm/deaths ALL 2/2",
+   "note": "uniformly positive, both seeds same sign; engine said hold only because gpm 4.89 < its 5.0 bar"
+  },
+  "extension": "seeds 603/604 launched (same 4-seed bar as lanesurv); PROMOTE if uniformity holds",
+  "instance": "i-...044826 done; ext running"
+ }
 }
