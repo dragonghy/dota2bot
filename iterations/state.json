@@ -371,10 +371,11 @@
    "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)",
    "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)",
    "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)",
-   "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)"
+   "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)",
+   "L5-TREES cut 2: off-wave sidestep positioning (GetOffWaveHarassSpot, 3 tests)"
   ],
   "next": [
-   "L5-TREES second cut: off-wave positioning (seek treeline angle) + real-frame fixture"
+   "L5-COMBO (proactive kill-call on too-deep enemy 4) -- last unimplemented playbook rule; then suptp generalization; then accumulate-batch"
   ],
   "observed_evidence": "find_kill_windows.py scan: dozens of missed kill windows per run (ogre 7% + 3 of ours nearby = survived). Owner can deploy bots/ locally (vscripts/bots + Local Dev Script) to play vs the AI; gated fixes armable via bots/Customize/soak_side.lua."
  },

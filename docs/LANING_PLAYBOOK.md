@@ -102,7 +102,8 @@ side AWAY from their 4.
 **Status:** first cut gated (`l5trees`: aggro-safe harass predicate,
 J.IsHarassCreepAggroSafe). A/B HOLD: wave1 uniformly positive, wave2 flipped —
 noise-dominated at this effect size; keep gated, ride the next big batch.
-Positioning cut (seek treeline angle) still to do. (This rule also EXPLAINS
+Positioning cut 2 DONE 2026-07-22
+(J.GetOffWaveHarassSpot: perpendicular ~550u sidestep away from enemy laners). (This rule also EXPLAINS
 the `bodyblock` −50 reject: harass belongs to pos-5 off-wave, not cores.)
 **API:** position offset perpendicular to lane direction; harass only when
 >500 from enemy creeps or with spells; `IsRangedAttacker` check for the
