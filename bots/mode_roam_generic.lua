@@ -73,17 +73,24 @@ function GetDesireHelper()
 	-- those few seconds -- Valve's native laning runs the rest of the game.
 	-- Plans are re-evaluated every frame; a closed window clears them so a
 	-- stale plan can never hijack a roam entered for other reasons.
-	local pull = J.ShouldCreepPullLane(bot)
-	if pull ~= nil then
-		bot.roamCreepPull = pull
-		bot.roamCampPull = nil
-		return 0.9
-	end
-	local vCamp = J.ShouldPullNeutralCamp(bot)
-	if vCamp ~= nil then
-		bot.roamCampPull = vCamp
-		bot.roamCreepPull = nil
-		return 0.9
+	-- [wave13 fingerprint 20260723] Pulling is a PEACETIME action: the first
+	-- cut had no combat awareness and bots left lane / paced beside camps
+	-- while enemies watched from 1600-1800 (163732 SK died mid-pull-wait) or
+	-- tanked camps at half HP. J.IsLanePullSafe vetoes the bid entirely when
+	-- hurt, freshly damaged, or any enemy hero is visible within 1800.
+	if J.IsLanePullSafe(bot) then
+		local pull = J.ShouldCreepPullLane(bot)
+		if pull ~= nil then
+			bot.roamCreepPull = pull
+			bot.roamCampPull = nil
+			return 0.9
+		end
+		local vCamp = J.ShouldPullNeutralCamp(bot)
+		if vCamp ~= nil then
+			bot.roamCampPull = vCamp
+			bot.roamCreepPull = nil
+			return 0.9
+		end
 	end
 	bot.roamCreepPull, bot.roamCampPull = nil, nil
 	nInRangeAlly = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
@@ -180,10 +187,25 @@ function Think()
 		return
 	end
 	if bot.roamCampPull ~= nil then
+		-- [wave13] Aggro-then-DRAG cadence: the first cut attacked the camp
+		-- every frame, so a puller stood and TANKED the neutrals (one bot
+		-- died to a camp at 50% HP). Poke once every 3s, walk home-ward in
+		-- between so the camp follows into the lane path.
+		local now = DotaTime()
 		local tNeut = bot:GetNearbyNeutralCreeps(1400)
-		if tNeut ~= nil and #tNeut > 0 and J.IsValid(tNeut[1]) then
-			-- Attack the camp so the neutrals aggro onto us and follow.
+		local bCampHere = tNeut ~= nil and #tNeut > 0 and J.IsValid(tNeut[1])
+		if bCampHere
+		and (bot.campPullAttackTime == nil or now - bot.campPullAttackTime > 3.0) then
 			bot:Action_AttackUnit(tNeut[1], true)
+			bot.campPullAttackTime = now
+		elseif bCampHere then
+			local vB, vF = bot:GetLocation(), J.GetTeamFountain()
+			local dx, dy = vF.x - vB.x, vF.y - vB.y
+			local n = math.sqrt(dx * dx + dy * dy)
+			if n > 1 then
+				bot:Action_MoveToLocation(Vector(
+					vB.x + dx / n * 500, vB.y + dy / n * 500, vB.z))
+			end
 		else
 			bot:Action_MoveToLocation(bot.roamCampPull)
 		end

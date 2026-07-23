@@ -181,25 +181,35 @@ function GetDesireHelper()
     -- collapse pathway instead of the (condemned) laning-Think replacement.
     -- All gating/self-risk/depth-leash lives in J.ShouldInitiateLaneKill
     -- (turbo + 'l1trade'); inert by default.
+    -- [wave13 fingerprint 20260723] Both rehomed branches self-release when
+    -- the collapsing bot is the one dying (J.ShouldReleaseLaneCommit) -- the
+    -- old 0.95 bid outbid the PROMOTED lanesurv retreat (0.75) and pinned
+    -- bots into losing trades. And the commit-lock stamps ONCE per
+    -- engagement: a per-frame-renewed lock is an infinite lock (kite could
+    -- never fire).
     local laneKillTarget = J.ShouldInitiateLaneKill(bot)
-    if laneKillTarget ~= nil then
-        -- Commit-lock: we initiated -> finish the trade, no kite-abort for 4s
-        -- (anti-oscillation, watched 182007).
-        bot.laneCommitUntil = DotaTime() + 4.0
+    if laneKillTarget ~= nil and not J.ShouldReleaseLaneCommit(bot) then
+        if bot.laneCommitUntil == nil or DotaTime() > bot.laneCommitUntil then
+            -- Commit-lock: we initiated -> finish the trade, no kite-abort
+            -- for 4s (anti-oscillation, watched 182007).
+            bot.laneCommitUntil = DotaTime() + 4.0
+        end
         SetStickyTarget(laneKillTarget)
         targetUnit = laneKillTarget
-        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.95)
+        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.92)
     end
 
     -- [L5-COMBO, rehomed after the Group A REJECT 20260723] Support kill-call
     -- on the too-deep enemy 4: same pathway, stricter self-risk gates inside
     -- J.ShouldSupportComboKill (turbo + 'l5combo'); inert by default.
     local comboTarget = J.ShouldSupportComboKill(bot)
-    if comboTarget ~= nil then
-        bot.laneCommitUntil = DotaTime() + 4.0
+    if comboTarget ~= nil and not J.ShouldReleaseLaneCommit(bot) then
+        if bot.laneCommitUntil == nil or DotaTime() > bot.laneCommitUntil then
+            bot.laneCommitUntil = DotaTime() + 4.0
+        end
         SetStickyTarget(comboTarget)
         targetUnit = comboTarget
-        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.95)
+        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.92)
     end
 
 	hTargetCreep = X.GetLastHitCreep()

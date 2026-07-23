@@ -5709,6 +5709,42 @@ function J.ShouldAbortRoshanAttempt( bot, hRoshan )
 	return false
 end
 
+-- [wave13 fingerprint 20260723] Self-release for the rehomed collapse
+-- branches (l1trade/l5combo in team_roam). The 0.95 collapse bid was
+-- OUTBIDDING the promoted lanesurv retreat (0.75) and pinning bots into
+-- losing trades (163714: level-1 zuus stood 5s at 188u of Sven, 100->0,
+-- died 5.7s after the pinned frame). TRUE when the collapsing bot itself
+-- is the one dying: fresh hero damage + HP under 55%, or the promoted
+-- burst guard says flee. The caller then drops target AND desire, so
+-- retreat wins the auction naturally. Pure helper (candidates gate the
+-- callers).
+function J.ShouldReleaseLaneCommit( bot )
+	if bot == nil or not bot:IsAlive() then return true end
+	if bot:WasRecentlyDamagedByAnyHero( 1.5 ) and J.GetHP( bot ) < 0.55 then
+		return true
+	end
+	return J.ShouldRetreatLaneBurst( bot )
+end
+
+-- [wave13 fingerprint 20260723] Peacetime check for the roam pull bids
+-- (creeppull/pullcamp). The 0.9 bid had NO combat awareness: SK left lane
+-- and paced beside the camp for 12s while an Ogre watched from 1700 the
+-- whole time, then died 6s after the pinned frame (163732); another bot
+-- tanked a camp at 50% HP with zero mana. Pulling is a PEACETIME action:
+-- healthy (>=50%), untouched for 2s, and no visible enemy hero within
+-- 1800. Pure helper.
+function J.IsLanePullSafe( bot )
+	if bot == nil or not bot:IsAlive() then return false end
+	if J.GetHP( bot ) < 0.5 then return false end
+	if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
+	for _, e in pairs( J.GetNearbyHeroes( bot, 1800, true, BOT_MODE_NONE ) or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			return false
+		end
+	end
+	return true
+end
+
 -- [pushguard / freehunt#2 20260723] Deep SOLO push against converging
 -- defenders. 30 deaths / 50 games, winning side included: a lone pusher
 -- rides the wave far past the midline and stays while visible defenders
