@@ -5630,6 +5630,64 @@ function J.ShouldNotChaseWhenLow( bot, target )
 	return true
 end
 
+-- [homeroute / freehunt#3 20260723] Low-HP limbo router. 44 segments in 50
+-- games (avg 58s, max 106s): mid/late-game a bot under 40% HP with no healing
+-- consumable drifts in the jungle far from the fountain -- not healing, not
+-- TP-ing home, not farming (watched 181441 t=660: zuus at 16% wandered at
+-- ~6800 from the fountain for 80s while his team wiped 4v5 mid; his TP came
+-- off cooldown mid-limbo and was never used). The middle state is the bug:
+-- commit to the fountain instead. Kept NARROW (the rejected lf_recover was an
+-- aggressive recall of HEALTHY laners; this fires only when already wrecked,
+-- out of consumables, alone, and it has persisted 20s):
+--   * not the laning phase (lane salve/recover candidates own that),
+--   * HP < 40%, no flask/tango/faerie fire, no bottle charges,
+--   * > 2500 from the fountain, no visible enemy within 1400,
+--   * the state has persisted >= 20s (bot.homeRouteLowSince stamp).
+-- Once committed (bot.homeRouteCommitted) the route runs to completion --
+-- released only at HP >= 70% or the fountain itself, so the bot cannot stall
+-- at the 2500 ring still low. Gated turbo + 'homeroute'; inert by default.
+function J.ShouldCommitFountainHeal( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'homeroute' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+
+	if bot.homeRouteCommitted then
+		if J.GetHP( bot ) >= 0.70 or bot:DistanceFromFountain() <= 300 then
+			bot.homeRouteCommitted = nil
+			bot.homeRouteLowSince = nil
+			return false
+		end
+		return true
+	end
+
+	local bHasHeal = J.GetItem2( bot, 'item_flask' ) ~= nil
+		or J.GetItem2( bot, 'item_tango' ) ~= nil
+		or J.GetItem2( bot, 'item_faerie_fire' ) ~= nil
+	if not bHasHeal then
+		local hBottle = J.GetItem2( bot, 'item_bottle' )
+		bHasHeal = hBottle ~= nil and hBottle:GetCurrentCharges() > 0
+	end
+
+	local bEligible = not J.IsInLaningPhase()
+		and J.GetHP( bot ) < 0.40
+		and not bHasHeal
+		and bot:DistanceFromFountain() > 2500
+		and #J.GetNearbyHeroes( bot, 1400, true, BOT_MODE_NONE ) == 0
+	if not bEligible then
+		bot.homeRouteLowSince = nil
+		return false
+	end
+
+	if bot.homeRouteLowSince == nil then
+		bot.homeRouteLowSince = DotaTime()
+		return false
+	end
+	if DotaTime() - bot.homeRouteLowSince < 20.0 then return false end
+
+	bot.homeRouteCommitted = true
+	return true
+end
+
 -- [ultcash / freehunt#1 20260723] "About to die with the ult still in hand"
 -- predicate. 128/50-game pathology (focus heroes 22 incl. zuus 10, lion 5,
 -- axe 5): every ConsiderUlt is a teamfight/kill-secure rule, and the existing

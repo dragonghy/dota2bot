@@ -265,6 +265,15 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [homeroute / freehunt#3] Low-HP limbo router: mid/late game, wrecked,
+    -- no consumables, alone and far from home for 20s+ -> commit the retreat
+    -- all the way to the fountain instead of drifting in the jungle (watched
+    -- 181441 zuus 16% wandering 80s through his team's 4v5 wipe). Gated
+    -- turbo + 'homeroute' inside the helper; inert by default.
+    if J.ShouldCommitFountainHeal(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [lanefix/lf_revive] Post-revive flee (fixture f_080225_wk_revive): WK
     -- reincarnates in place still 1v2 and re-engages instead of leaving --
     -- the ultimate buys nothing. Hard retreat when revived-in-place moments
