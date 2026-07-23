@@ -151,6 +151,12 @@ mana / salve / rescue-TP / revive-flee / lane-recover / support), `depthnum`,
   the old file); **Lua hero changes do not** (each game re-reads `bots/`).
 - **In-memory wakeup chains die on session suspend** — see "Agent session
   continuity" above; use a background `sleep` heartbeat and re-arm each wake.
+- **Batch instances clone `origin/main` at launch — verify the remote tip
+  equals the tree you mean to test BEFORE launching.** Near-miss 2026-07-23: a
+  4-seed all-on rerun launched while 8 fix commits existed only locally (the
+  session had been "pushing" a stale side branch); the instances would have
+  measured the wrong tree with a bundle id that didn't exist in their clone.
+  Cost of the kill+relaunch: <$0.5. Check `git ls-remote origin main` first.
 
 ## Verification (run before every push)
 
