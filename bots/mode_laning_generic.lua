@@ -81,8 +81,9 @@ local bLaneFixSupport = J.IsModeTurbo()
 -- rather than Valve's default laning -- a known confound the A/B must account for;
 -- a fully isolated pull hook is not expressible without reimplementing default
 -- laning wholesale (the same constraint documented on bLaneFixCoreLH).
-local bPullCamp = J.IsModeTurbo() and J.IsSoakCandidate('pullcamp')
-	and J.GetPosition(bot) >= 4
+-- [pullcamp] REHOMED to mode_roam (owner directive 20260723: pulling stays,
+-- the laning-Think replacement goes) -- the pull window now bids for ROAM
+-- desire and roam's own Think executes it; native laning keeps running.
 
 -- [GH #10] Turbo creep-pull (勾线). A disadvantaged laning core draws the enemy
 -- creep wave's aggro by attack-ordering an enemy hero next to it, then walks back
@@ -93,8 +94,7 @@ local bPullCamp = J.IsModeTurbo() and J.IsSoakCandidate('pullcamp')
 -- pull action can run. NOTE: defining Think replaces Valve's default laning
 -- wholesale, so a creeppull bot uses the same core last-hit fallback as the
 -- c3/undertower path whenever it is NOT actively pulling.
-local bCreepPull = J.IsModeTurbo() and J.IsSoakCandidate('creeppull')
-	and J.GetPosition(bot) <= 3
+-- [creeppull] REHOMED to mode_roam (same directive/mechanism as pullcamp).
 
 -- [GH #11] Turbo body-block / harass (卡身位). The advantaged-lane mirror of
 -- bCreepPull: a winning laning core steps up and harasses the single enemy laner
@@ -202,13 +202,6 @@ function GetDesire()
 		end
 	end
 
-	-- [GH #10] Keep a creeppull core in laning mode while a pull is warranted, so
-	-- its Think can run the aggro-draw. Only fires in the narrow disadvantaged
-	-- case (J.ShouldCreepPullLane returns non-nil); otherwise falls through to the
-	-- normal laning desire below. Inert unless turbo + soak candidate 'creeppull'.
-	if bCreepPull and J.ShouldCreepPullLane(bot) ~= nil then
-		return 0.9
-	end
 
 	-- [GH #11] Keep a body-block core in laning mode while a harass is warranted,
 	-- so its Think can step up on the enemy laner. Only fires in the narrow
@@ -231,7 +224,7 @@ function GetDesire()
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
-		or bLaneFixCoreLH or bCreepPull or bBodyBlock or bXpSoak then
+		or bLaneFixCoreLH or bBodyBlock or bXpSoak then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -460,75 +453,8 @@ local function DoSupportLaningThink()
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
--- [GH #10] Best-effort creep-pull action. The API exposes no per-frame creep
--- aggro signal, so we approximate the human 勾线 timing with a short cadence:
--- attack-order the enemy hero for a beat (which redirects the adjacent enemy
--- creeps' aggro onto us), then move to the retreat point to drag that wave back
--- toward our side. Cannot GUARANTEE the aggro flips like a precise attack-cancel,
--- but never griefs the lane: it only runs on the narrow disadvantaged trigger.
-local function DoCreepPullThink(pull)
-	local now = DotaTime()
-	if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > 1.2 then
-		-- Provoke the aggro-draw (no need to land the hit).
-		bot:Action_AttackUnit(pull.enemy, true)
-		bot.creepPullAttackTime = now
-	else
-		-- Aggro drawn: walk back to drag the wave onto our side.
-		bot:Action_MoveToLocation(pull.retreat)
-	end
-end
-
--- [Group A REJECT 20260723] l1trade / l5combo NO LONGER route through this
--- Think replacement: two decisive batches (mega 0/4, five-id final gate 0/4
--- with deaths +1.28 and 0-4min CS at 51% of base DESPITE the combat floor)
--- condemned the takeover architecture itself -- any id in this condition
--- replaces Valve's native laning for the whole game. The kill-window triggers
--- moved to mode_team_roam (the battle-tested collapse pathway, no Think
--- replacement); creeppull/suplh/pullcamp stay Think-based but are PARKED
--- (gated, excluded from bundles) pending an incremental-hook redesign.
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock or bXpSoak then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bBodyBlock or bXpSoak then
 	function Think()
-		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
-		-- equilibrium, checked before any laning think. Gated + conservative
-		-- inside J.ShouldPullNeutralCamp, so this is inert unless turbo, the
-		-- 'pullcamp' candidate is armed, and the exact pull case holds.
-		if bPullCamp then
-			local vCamp = J.ShouldPullNeutralCamp(bot)
-			if vCamp ~= nil then
-				local tNeut = bot:GetNearbyNeutralCreeps(1400)
-				if tNeut ~= nil and #tNeut > 0 and J.IsValid(tNeut[1]) then
-					-- Attack the camp so the neutrals aggro onto us and follow.
-					bot:Action_AttackUnit(tNeut[1], true)
-				else
-					bot:Action_MoveToLocation(vCamp)
-				end
-				return
-			end
-		end
-
-		-- [GH #10] Creep-pull takes priority when its narrow trigger fires; else a
-		-- creeppull core falls through to the standard core last-hit path below.
-		if bCreepPull then
-			local pull = J.ShouldCreepPullLane(bot)
-			if pull ~= nil then
-				DoCreepPullThink(pull)
-				return
-			end
-		end
-
-		-- [GH #11] Body-block / harass: an advantaged core steps up and auto-attacks
-		-- the single enemy laner when the trade is clearly winnable. Targets the
-		-- enemy HERO (not creeps), so the wave is not shoved. Falls through to the
-		-- core last-hit path when no harass is warranted.
-		if bBodyBlock then
-			local hHarass = J.ShouldBodyBlockHarass(bot)
-			if hHarass ~= nil then
-				bot:SetTarget(hHarass)
-				bot:Action_AttackUnit(hHarass, true)
-				return
-			end
-		end
-
 		-- [L1-XPSOAK] Hold the XP-edge spot: step back toward our fountain,
 		-- take the XP, never walk into the lethal contest. No CS attempts and
 		-- NO jungle -- survival + XP is the whole job of this lane state.

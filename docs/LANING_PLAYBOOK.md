@@ -39,11 +39,10 @@ drag the lane: **fake an attack order on the enemy hero → enemy creeps aggro
 you → walk back** → wave resets toward our tower; CS under tower.
 **API:** attack-order on enemy hero within 500 of enemy creeps flips creep
 aggro; `Action_AttackUnit` + retreat point.
-**Status:** ⚠️ PARKED 2026-07-23 (kept gated, excluded from bundles): the
-Group A final gate (0/4, deaths +1.28, armed 0-4min CS 51% of base) condemned
-the laning-Think REPLACEMENT architecture every Think-based id rides — the
-trigger logic itself was never faulted. Awaits the incremental-hook redesign
-(decisions on top of native laning, not instead of it).
+**Status:** REHOMED 2026-07-23 to mode_roam (owner directive: pulling stays,
+the Think replacement goes) — the pull window bids ROAM desire and roam's own
+Think executes the drag; Valve's native laning runs the rest of the game.
+Trigger/timing/safety unchanged. Awaits batch.
 Original: IMPLEMENTED as `creeppull` (#10, gated), **including the
 melee-vs-double-ranged branch (2026-07-22)**: melee me + both laners ranged +
 pecking from >=600 + fresh harass damage -> the recent-damage/single-enemy
@@ -138,7 +137,8 @@ a tower chase, not a punish); targets past the midline by >400
 ### L5-PULL — pull camps to reset a bad lane
 **Rule:** if we can't win the lane or the wave is too far forward for our 1
 to CS safely → pull (:12/:42). Only a pulled-back wave gives the 1 room.
-**Status:** ⚠️ PARKED 2026-07-23 with the Think trio (see L1-DRAG note).
+**Status:** REHOMED 2026-07-23 to mode_roam (same mechanism as L1-DRAG's
+creeppull; owner directive that pulling must be done). Awaits batch.
 Original: IMPLEMENTED as `pullcamp` (#13, gated, econ-neutral in first A/B).
 **Note:** if the 5 leaves to pull, the 1 alone on the wave is at risk — the 1
 may pull himself when solo (owner). Cross-link to L1-XPSOAK while alone.

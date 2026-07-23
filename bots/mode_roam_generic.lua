@@ -65,6 +65,27 @@ function GetDesireHelper()
 	TPScroll = J.Utils.GetItemFromFullInventory(bot, 'item_tpscroll')
 	botTarget = J.GetProperTarget(bot)
 	nInRangeEnemy = bot:GetNearbyHeroes(1200, true, BOT_MODE_NONE)
+
+	-- [pull rehome, owner directive 20260723] Pulling STAYS; the laning-Think
+	-- replacement goes. During a pull window (both helpers are self-gated:
+	-- turbo + 'creeppull'/'pullcamp' + role + safety + :12/:42 timing) this
+	-- bot bids ROAM desire and roam's own Think executes the pull action for
+	-- those few seconds -- Valve's native laning runs the rest of the game.
+	-- Plans are re-evaluated every frame; a closed window clears them so a
+	-- stale plan can never hijack a roam entered for other reasons.
+	local pull = J.ShouldCreepPullLane(bot)
+	if pull ~= nil then
+		bot.roamCreepPull = pull
+		bot.roamCampPull = nil
+		return 0.9
+	end
+	local vCamp = J.ShouldPullNeutralCamp(bot)
+	if vCamp ~= nil then
+		bot.roamCampPull = vCamp
+		bot.roamCreepPull = nil
+		return 0.9
+	end
+	bot.roamCreepPull, bot.roamCampPull = nil, nil
 	nInRangeAlly = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
 	nInCloseRangeEnemy = bot:GetNearbyHeroes(1000, true, BOT_MODE_NONE)
 	nInCloseRangeAlly = bot:GetNearbyHeroes(1000, false, BOT_MODE_NONE)
@@ -141,6 +162,33 @@ end
 function Think()
     if J.CanNotUseAction(bot) then return end
 	if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "roam") then return end
+
+	-- [pull rehome 20260723] Execute the pull plan set by GetDesire this
+	-- frame (cleared there whenever the window is closed, so no staleness).
+	if bot.roamCreepPull ~= nil then
+		local pull = bot.roamCreepPull
+		local now = DotaTime()
+		-- Approximate the human 勾线 cadence: attack-order the enemy hero
+		-- for a beat (redirects the adjacent enemy creeps' aggro onto us),
+		-- then walk to the retreat point to drag the wave onto our side.
+		if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > 1.2 then
+			bot:Action_AttackUnit(pull.enemy, true)
+			bot.creepPullAttackTime = now
+		else
+			bot:Action_MoveToLocation(pull.retreat)
+		end
+		return
+	end
+	if bot.roamCampPull ~= nil then
+		local tNeut = bot:GetNearbyNeutralCreeps(1400)
+		if tNeut ~= nil and #tNeut > 0 and J.IsValid(tNeut[1]) then
+			-- Attack the camp so the neutrals aggro onto us and follow.
+			bot:Action_AttackUnit(tNeut[1], true)
+		else
+			bot:Action_MoveToLocation(bot.roamCampPull)
+		end
+		return
+	end
 
 	nInRangeEnemy = bot:GetNearbyHeroes(1200, true, BOT_MODE_NONE)
 
