@@ -600,6 +600,16 @@ function X.ConsiderR()
 		end
 	end
 
+	-- [ultcash / freehunt#1] The retreat branch above misses the dying bot that
+	-- never entered retreat mode (watched 230952 t=9:27: zuus walked forward
+	-- into Slardar and died 1.8s later with this ult ready and four enemies at
+	-- half HP). If death is imminent regardless of mode, the global nuke is
+	-- pure value -- cash it out. Gated (turbo + 'ultcash') inside the helper.
+	if J.IsDyingUnderAttack( bot )
+	then
+		return BOT_ACTION_DESIRE_HIGH
+	end
+
 	if J.IsInTeamFight( bot, 1400 )
 	then
 		local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1400, true, BOT_MODE_NONE )

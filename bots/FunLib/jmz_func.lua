@@ -5630,6 +5630,35 @@ function J.ShouldNotChaseWhenLow( bot, target )
 	return true
 end
 
+-- [ultcash / freehunt#1 20260723] "About to die with the ult still in hand"
+-- predicate. 128/50-game pathology (focus heroes 22 incl. zuus 10, lion 5,
+-- axe 5): every ConsiderUlt is a teamfight/kill-secure rule, and the existing
+-- dying branches are mode-gated (zuus: J.IsRetreating -- but the watched frame
+-- 230952 t=9:27 had zuus WALKING FORWARD into Slardar, never in retreat mode,
+-- died 1.8s later with Thundergod's ready and four enemies at half HP).
+-- TRUE when death is imminent regardless of mode: HP low-ish (<= 45%), took
+-- hero damage within 2s, and the visible enemies' castable 3s burst >= my
+-- CURRENT hp (the death predictor -- the real frame died from 42%). Callers
+-- (hero ConsiderR functions) cash the ult's value out before the death.
+-- Gated turbo + 'ultcash'; shipped ult logic unchanged off the candidate.
+function J.IsDyingUnderAttack( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'ultcash' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+	if J.GetHP( bot ) > 0.45 then return false end
+	if not bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
+	local tEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
+	if tEnemies == nil or #tEnemies == 0 then return false end
+	local nIncoming = 0
+	for _, e in pairs( tEnemies ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			nIncoming = nIncoming
+				+ e:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+		end
+	end
+	return nIncoming >= bot:GetHealth()
+end
+
 -- [GH #4] Anti-suicide-dive guard ("sandwiched_walk" -- the highest-frequency
 -- behavioral bug). True when the bot is about to move/charge INTO a location
 -- flanked by >= 2 enemies and doing so is a near-certain feed. Callers use this

@@ -858,8 +858,11 @@ function X.ConsiderR()
 	end
 
 	--团战对最弱的敌人
+	-- [ultcash / freehunt#1] a DYING lion cashes the finger out even at ult
+	-- level 1 (watched 231244 t=10:50: lion died holding a ready finger; the
+	-- nSkillLV >= 2 clause kept the low-HP branch shut). Gated in the helper.
 	if J.IsInTeamFight( bot, 600 )
-		or ( nHP < 0.4 and nSkillLV >= 2 )
+		or ( nHP < 0.4 and ( nSkillLV >= 2 or J.IsDyingUnderAttack( bot ) ) )
 	then
 		local npcWeakestEnemy = nil
 		local npcWeakestEnemyHealth = 10000
