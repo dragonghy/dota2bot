@@ -521,6 +521,16 @@
    "spot_20260722_225302_1_main",
    "spot_20260722_225310_1_main"
   ],
-  "mtd_usd": 65.84
+  "mtd_usd": 65.84,
+  "ANALYST_DIFF": {
+   "fingerprint_compare": "laning-deaths +90% RETAINED (main poison not the 3 ex-suspects); idle 300%->77% (l1kite WAS real, just secondary); tp_under_threat CLEARED (44v43); unpunished-dive/overextend/healthy-ground-down(+88%) all RETAINED -> passive-stack fingerprints persist",
+   "suspect_ranking": {
+    "1_passive_stack_cluster": "ccburst+midguard+depthnum+nodive2/nopush, 0.65 cluster; frames: full-HP victims flee without retaliating (sniper 550-range 0 output over 16s), 5v2 own-half zero engagement, 3 full-HP TP responders idling at 900-1300u; WK almost won a 1v2 while 90%-HP sniper watched 25s. SINGLE-ID PRIME = ccburst (CC-widened windows hit oracle-tangle/WK-hammer/jakiro-path cases; never solo-validated; irony: it came from my own post-promote fix)",
+    "2_lf_six": "0.5, specific forms: no-salve half-HP idling 60s, revive->instant TP back to death spot->re-death in 13s (viper triple-death case)",
+    "3_others": "wkbuild 0.3 (WK deaths from bystanders, not build); midtp/midguard-mid 0.35 (zuus +13 worst single hero); l5trees 0.4 (missed CS +61% persists)"
+   },
+   "falsifiable_prediction": "bisect: lf6-only moderately negative; other-17 MORE negative. If reversed -> lf_chase/lf_threat avoidance is the poison.",
+   "per_hero": "zuus +13, viper +10, lion +9, WK +9 laning deaths armed-vs-base; 5-7 death loops per hero per game"
+  }
  }
 }
