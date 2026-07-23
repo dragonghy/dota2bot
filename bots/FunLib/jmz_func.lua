@@ -5603,9 +5603,22 @@ function J.GetRescueTpTarget( bot )
 					break
 				end
 			end
+			-- [responder viability, B-group diagnosis 20260723] Responders
+			-- went 18 kills : 10 DEATHS -- nobody ever asked "can I survive
+			-- the divers myself?" (113638 Necro landed at 73% and was
+			-- 100->0'd by Lina in 5s). The divers' castable 3s burst against
+			-- ME must not threaten most of my current HP.
+			local nVsMe = 0
+			for _, d in pairs( tDivers ) do
+				if J.IsValidHero( d ) and not J.IsSuspiciousIllusion( d ) then
+					nVsMe = nVsMe
+						+ d:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
+				end
+			end
 			if #tDivers >= 1 and #tDivers <= 2
 				and nAllyHP < 0.35
 				and not bUnderOwnTower
+				and nVsMe < bot:GetHealth() * 0.70
 				-- No chained rescues into the same fight (113638 CM died
 				-- to the same Lina that just killed the previous responder).
 				and not J.IsChainedRescue( ally:GetLocation() )

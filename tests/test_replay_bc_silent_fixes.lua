@@ -97,6 +97,29 @@ tests['[chain guard] a spot answered 7s ago refuses a second responder'] = funct
         .. 'feeding a second body changes nothing')
 end
 
+tests['[responder viability] a killer that can burst ME down blocks my rescue'] = function()
+    -- 113638 ground truth: Lina 100->0'd the 73% Necro in 5s; the next
+    -- responder (CM, squishier) must read that burst and stay away.
+    local J, bot, heroes = cm()
+    local necro = heroes['npc_dota_hero_necrolyte']
+    local sp = rawget(necro, '__spec')
+    sp.GetHealth = math.floor(necro:GetMaxHealth() * 0.30)
+    sp.OriginalGetHealth = sp.GetHealth
+    -- Park Lina on necro as the diver, bursting most of CM's HP in 3s.
+    local lina = heroes['npc_dota_hero_lina']
+    local lsp = rawget(lina, '__spec')
+    lsp.GetLocation = necro:GetLocation()
+    rawset(lina, 'GetLocation', nil)
+    lsp.GetEstimatedDamageToTarget = function() return bot:GetHealth() * 0.9 end
+    assert(J.GetRescueTpTarget(bot) == nil,
+        'a diver whose burst covers 90% of MY hp makes me the next corpse, '
+        .. 'not a rescuer')
+    -- Same spot with the diver nearly spent: the rescue goes through.
+    lsp.GetEstimatedDamageToTarget = function() return 50 end
+    assert(J.GetRescueTpTarget(bot) == necro,
+        'a spent diver is exactly the counter-kill window -- rescue proceeds')
+end
+
 tests['[chain guard] the same rescue 20s later (memory expired) is allowed again'] = function()
     local J, bot, heroes, fx = cm()
     local necro = heroes['npc_dota_hero_necrolyte']
