@@ -121,9 +121,15 @@ whole bundle while each fix keeps its own `lf_*` id for isolation. This lets a
 fix ride the branch (and A/B candidate waves) while staying **inert in real
 games** until it passes its gate and is promoted (gate removed / made
 default-on). **A gated fix on the branch is NOT live** — don't call it shipped
-until it's ungated. Currently gated & unpromoted: the `lanefix` bundle (chase /
-mana / salve / rescue-TP / revive-flee / lane-recover / support), `depthnum`,
-`nodive2`, `nopush`, `suplh`, `wlok`.
+until it's ungated. The authoritative list of gated-and-unpromoted ids lives in
+`iterations/state.json` (it changes weekly; highlights as of 2026-07-23: the
+`lanefix` bundle, the laning five `creeppull/l1trade/suplh/pullcamp/l5combo`
+(+ Think combat-floor fixes, final-gate pending), the TP-discipline set
+`midtp/suptp/tpcommit/tpsafe2`, collapse pair `overchase/ownhalf`, stock-fix
+gates `ultcash/homeroute/pushguard/roshgate`, plus `depthnum/nodive2/nopush/
+wlok/wkbuild/midguard/ccburst/l1kite/l5trees/skysilence/aegisgroup`).
+Promoted turbo defaults so far: `lanesurv`, the sharpened anti-dive, and
+`ShouldPunishDive`'s building domain.
 
 ## Hard-won learnings (don't relearn these — they cost real batch runs)
 
