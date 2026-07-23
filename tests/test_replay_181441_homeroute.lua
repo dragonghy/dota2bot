@@ -89,12 +89,17 @@ tests['NO-FIRE: an enemy within 1400 -> normal retreat logic owns this'] = funct
         'with a live threat the danger-based retreat handles it, not the router')
 end
 
-tests['NO-FIRE: laning phase -> the lane candidates own low-HP handling'] = function()
-    local J, bot, _, fx = armed({ laning = true })
+tests['NO-FIRE: before the 7-min boundary -> the lane candidates own low-HP handling'] = function()
+    -- (Was a J.IsInLaningPhase stub; replaced by a HARD 7-min boundary after
+    -- the C-group SILENT diagnosis: turbo laning soft-extends to 10min while
+    -- net worth < 8000, which blocked the router for exactly the wrecked-and-
+    -- poor heroes it exists for -- watched 113203 pudge.)
+    local J, bot = armed()
+    DotaTime = function() return 300 end -- luacheck: ignore
     J.ShouldCommitFountainHeal(bot)
-    DotaTime = function() return fx.time + 21 end -- luacheck: ignore
+    DotaTime = function() return 321 end -- luacheck: ignore
     assert(J.ShouldCommitFountainHeal(bot) == false,
-        'laning low-HP is lf_salve/lane-recover territory, not this router')
+        'early-game low-HP is lf_salve/lane-recover territory, not this router')
 end
 
 tests['OFF: inert off the candidate / in normal mode'] = function()

@@ -269,8 +269,13 @@ function GetDesireHelper()
     -- the push wrappers cap their desire; this floor makes the exit happen
     -- (watched 181441 luna: 2 defenders on her at +6182 depth, no retreat
     -- action for 20s). Gated turbo + 'pushguard' inside the helper.
+    -- [SILENT root cause, C-group diagnosis 20260723] HIGH (0.75) LOST the
+    -- desire auction to the chase that was killing the bot (watched 114311:
+    -- drow's trigger held 4s+, she went 1100 DEEPER and died 3v1) -- the
+    -- floor must outbid an active kill-chase. The condition is narrow enough
+    -- (deep + solo + 2 converging) that 0.92 is not force-passivity.
     if J.ShouldAbortDeepSoloPush(bot) then
-        return BOT_MODE_DESIRE_HIGH
+        return 0.92
     end
 
     -- [homeroute / freehunt#3] Low-HP limbo router: mid/late game, wrecked,

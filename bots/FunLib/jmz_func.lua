@@ -5539,6 +5539,25 @@ function J.TryTakeTpResponseSlot()
 	return true
 end
 
+-- [chain-rescue guard, B-group diagnosis 20260723] Module-level memory of the
+-- last answered rescue spot. Watched 113638 t=250-268: Necro TP'd for a
+-- traded Sniper and died to Lina in 5s -- becoming the next "<35% ally with
+-- an enemy on it" -- so CM TP'd for NECRO 7s later (the 6s rolling quota
+-- cannot stop a chain that drips one TP per window) and died to the same
+-- Lina on landing. Never answer a rescue within 1200 of a spot answered in
+-- the last 15s: the previous response there is either working or just
+-- failed, and feeding a second body changes neither.
+local tRescueMemory = { t = -999, x = 0, y = 0 }
+function J.NoteRescueResponse( vLoc )
+	tRescueMemory.t = DotaTime()
+	tRescueMemory.x, tRescueMemory.y = vLoc.x, vLoc.y
+end
+function J.IsChainedRescue( vLoc )
+	return DotaTime() - tRescueMemory.t < 15.0
+		and J.GetLocationToLocationDistance( vLoc,
+			{ x = tRescueMemory.x, y = tRescueMemory.y, z = 0 } ) < 1200
+end
+
 function J.GetRescueTpTarget( bot )
 	if not J.IsLaneFixOn( 'rescue' ) then return nil end
 	-- [watched 230652] fresh-respawn cooldown: no rescue TP within 15s of my
@@ -5587,11 +5606,15 @@ function J.GetRescueTpTarget( bot )
 			if #tDivers >= 1 and #tDivers <= 2
 				and nAllyHP < 0.35
 				and not bUnderOwnTower
+				-- No chained rescues into the same fight (113638 CM died
+				-- to the same Lina that just killed the previous responder).
+				and not J.IsChainedRescue( ally:GetLocation() )
 				-- Do not TP to an ally that will be dead before we land.
 				and J.WillAllySurviveTpWindow( ally )
 				-- Team quota: one gated TP responder per window (fix B).
 				and J.TryTakeTpResponseSlot()
 			then
+				J.NoteRescueResponse( ally:GetLocation() )
 				return ally
 			end
 		end
@@ -5753,7 +5776,15 @@ function J.ShouldCommitFountainHeal( bot )
 		bHasHeal = hBottle ~= nil and hBottle:GetCurrentCharges() > 0
 	end
 
-	local bEligible = not J.IsInLaningPhase()
+	-- [SILENT root cause, C-group diagnosis 20260723] The first cut gated on
+	-- "not J.IsInLaningPhase()", but turbo's laning phase SOFT-EXTENDS to
+	-- 10min while net worth < 8000 -- so the poorer and more wrecked the
+	-- hero, the longer it counts as "laning" and the router never fires
+	-- (watched 113203 pudge: all conditions held 48s at 8:44, drifted from
+	-- 8700 to 11400 from the fountain, blocked by this exact clause). Use a
+	-- hard time boundary instead: the true early-laning window (lane
+	-- candidates' turf) ends well before 7 minutes.
+	local bEligible = DotaTime() >= 7 * 60
 		and J.GetHP( bot ) < 0.40
 		and not bHasHeal
 		and bot:DistanceFromFountain() > 2500
