@@ -5253,6 +5253,13 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			hEffectTarget = tpLoc
 			sCastMotive = '前往守塔:'..sLane
 
+			-- [tpcommit fix E] The shipped defend TP shares the landing
+			-- commitment: stamp the answered spot so the gated tpcommit floor
+			-- (J.GetTpCommitDefendDesire) holds this responder on the lane it
+			-- answered too. Stamps are inert state off the candidate.
+			bot.tpRespondLoc = tpLoc
+			bot.tpRespondUntil = DotaTime() + 12.0
+
 			if botName == 'npc_dota_hero_furion'
 			then
 				local Teleportation = bot:GetAbilityByName('furion_teleportation')
