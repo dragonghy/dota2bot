@@ -39,7 +39,12 @@ drag the lane: **fake an attack order on the enemy hero → enemy creeps aggro
 you → walk back** → wave resets toward our tower; CS under tower.
 **API:** attack-order on enemy hero within 500 of enemy creeps flips creep
 aggro; `Action_AttackUnit` + retreat point.
-**Status:** IMPLEMENTED as `creeppull` (#10, gated), **including the
+**Status:** ⚠️ PARKED 2026-07-23 (kept gated, excluded from bundles): the
+Group A final gate (0/4, deaths +1.28, armed 0-4min CS 51% of base) condemned
+the laning-Think REPLACEMENT architecture every Think-based id rides — the
+trigger logic itself was never faulted. Awaits the incremental-hook redesign
+(decisions on top of native laning, not instead of it).
+Original: IMPLEMENTED as `creeppull` (#10, gated), **including the
 melee-vs-double-ranged branch (2026-07-22)**: melee me + both laners ranged +
 pecking from >=600 + fresh harass damage -> the recent-damage/single-enemy
 safety clauses relax and the drag fires. Close enemy = dive = normal safety.
@@ -53,7 +58,11 @@ safety clauses relax and the drag fires. Close enemy = dive = normal safety.
     kills — go first.
 **API:** `GetEstimatedDamageToTarget` both directions (us→them vs them→us),
 `J.SafeToCommitFight` (lethal-or-numbers), ally mana/spell state.
-**Status:** IMPLEMENTED, both halves gated: initiate = `l1trade`
+**Status:** REHOMED 2026-07-23 after the Group A reject: the initiation no
+longer routes through the laning-Think replacement — `J.ShouldInitiateLaneKill`
+now raises a mode_team_roam collapse (native laning keeps running), with the
+depth leash (>800 past midline refused) added from the mega fingerprint.
+Original: IMPLEMENTED, both halves gated: initiate = `l1trade`
 (J.ShouldInitiateLaneKill, awaiting batch), counter-trade = `l1kite`
 (J.ShouldCounterTradeKite, A/B HOLD-INCONCLUSIVE: econ positive 4 seeds but
 laning-death split noisy; keep gated, revisit).
@@ -87,7 +96,9 @@ no ally within ~1400, contest = provably lethal per lanesurv math).
 
 ### L5-NOLH — never last-hit; deny only
 **Rule:** pos-5 NEVER takes a last hit; denies own creeps + harasses.
-**Status:** IMPLEMENTED as `suplh` (#14, gated): deny + uncontested-only LH.
+**Status:** ⚠️ PARKED 2026-07-23 with the Think trio (see L1-DRAG note): the
+replacement architecture, not the arbitration rule, failed the Group A gate.
+Original: IMPLEMENTED as `suplh` (#14, gated): deny + uncontested-only LH.
 **Gap vs spec:** owner says NEVER last-hit (current code still takes
 uncontested creeps when no core is near). Tighten under a sub-toggle when
 validating suplh.
@@ -114,7 +125,9 @@ the `bodyblock` −50 reject: harass belongs to pos-5 off-wave, not cores.)
 with the pos-1; typical 4s are squishy, 2-man focus kills. Inverse risk: *we*
 are squishier than our 1 — never jump too deep ourselves; if their 3+4 turn,
 we die first.
-**Status:** IMPLEMENTED 2026-07-22 as `l5combo` (gated):
+**Status:** REHOMED 2026-07-23 to a mode_team_roam collapse branch (same
+reason/wiring as L1-TRADE; helpers, gates and depth gate unchanged).
+Original: IMPLEMENTED 2026-07-22 as `l5combo` (gated):
 J.ShouldSupportComboKill — requires a healthy allied core within 900 of the
 target + lethal combined burst, with STRICTER self-gates than l1trade (60%
 incoming bar + no second enemy within 700). 2026-07-23: DEPTH GATE added
@@ -125,7 +138,8 @@ a tower chase, not a punish); targets past the midline by >400
 ### L5-PULL — pull camps to reset a bad lane
 **Rule:** if we can't win the lane or the wave is too far forward for our 1
 to CS safely → pull (:12/:42). Only a pulled-back wave gives the 1 room.
-**Status:** IMPLEMENTED as `pullcamp` (#13, gated, econ-neutral in first A/B).
+**Status:** ⚠️ PARKED 2026-07-23 with the Think trio (see L1-DRAG note).
+Original: IMPLEMENTED as `pullcamp` (#13, gated, econ-neutral in first A/B).
 **Note:** if the 5 leaves to pull, the 1 alone on the wave is at risk — the 1
 may pull himself when solo (owner). Cross-link to L1-XPSOAK while alone.
 
