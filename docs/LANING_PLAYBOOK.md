@@ -117,7 +117,10 @@ we die first.
 **Status:** IMPLEMENTED 2026-07-22 as `l5combo` (gated):
 J.ShouldSupportComboKill — requires a healthy allied core within 900 of the
 target + lethal combined burst, with STRICTER self-gates than l1trade (60%
-incoming bar + no second enemy within 700). 8 tests. Awaiting batch.
+incoming bar + no second enemy within 700). 2026-07-23: DEPTH GATE added
+(analyst found the combo firing 3000u past the midline in the 26f batch —
+a tower chase, not a punish); targets past the midline by >400
+(ancient-distance) are skipped. 9 tests. Awaiting batch.
 
 ### L5-PULL — pull camps to reset a bad lane
 **Rule:** if we can't win the lane or the wave is too far forward for our 1
@@ -138,7 +141,11 @@ fixture-validated). Matches spec.
 free counter-kill.
 **Status:** IMPLEMENTED 2026-07-22: `suptp` (pos >= 4) shares
 ShouldTpSupportTowerFight with `midtp` (#15) -- same winnable-only/TP-ready
-logic. Gated, awaiting batch.
+logic. Gated, awaiting batch. 2026-07-23 TP-discipline hardening
+(iterations/tp_audit_20260723.md, owner-watched): 15s fresh-respawn
+cooldown, team-wide response quota (one gated TP per 6s window),
+channel-interrupt self-check (fix D), and landing commitment (`tpcommit`:
+the responder stays on the answered lane while the trigger is hot).
 
 ---
 
