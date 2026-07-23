@@ -551,7 +551,8 @@
    "games": 95,
    "read": "lf6 near-NEUTRAL on gpm+deaths (noise zone, seeds split sign) but a small consistent xpm/lh drag (0/2 same-sign). hold, do not promote"
   },
-  "verdict": "catastrophe lives in the other-17 half: it alone carries -61 gpm and the FULL +0.86 death signature while lf6 is noise-zone on both. Matches analyst prediction (lf6 moderately negative < other-17 more negative) and keeps passive-stack cluster (single-id prime: ccburst) + lf_recover/lf_support as the standing suspects -- all inside other-17. Next lever: narrow ccburst at code/fixture level (no per-feature batch per owner policy); lf6 stays gated (xpm/lh drag)",
+  "verdict": "catastrophe lives in the other-17 half: it alone carries -61 gpm and the FULL +0.86 death signature while lf6 is noise-zone on both. Matches analyst prediction (lf6 moderately negative < other-17 more negative) and keeps passive-stack cluster (single-id prime: ccburst) + lf_recover/lf_support as the standing suspects -- all inside other-17. lf6 stays gated (xpm/lh drag)",
+  "ccburst_narrowed": "LANDED post-bisect: the first cut widened the burst window for ANY enemy within 1100 holding a ready CC (range-blind -> distant supports read as lethal -> full-HP flee). Now the 5s window applies only when the holder is inside its CC's cast range + 250 closing buffer (J.GetReadyHardCc returns the handle for the range check). Motivating frames (SS shackles killers ON TOP of victims) still fire; the over-trigger does not. Aggregate re-judged by the next big batch per owner policy (no per-feature waves)",
   "cost_note": "waveA harvested 2026-07-23 by batch-runner agent; instance self-terminated, no leaks, MTD $65.84"
  },
  "TP_DISCIPLINE_20260723": {

@@ -23,9 +23,12 @@ local function scenario(opts)
 		GetLevel = opts.abilityLevel or 1,
 		IsFullyCastable = opts.ccReady ~= false,
 		IsPassive = false,
+		GetCastRange = opts.ccRange or 400,  -- shackles' real cast range
 	})
 	local enemy = api.MakeHero('npc_dota_hero_shadow_shaman', {
-		GetTeam = 3, CanBeSeen = true, GetLocation = api.Vector(600, 0, 0),
+		GetTeam = 3, CanBeSeen = true,
+		-- default 600 out: inside shackles' 400+250 delivery reach
+		GetLocation = api.Vector(opts.enemyDist or 600, 0, 0),
 		GetAbilityInSlot = function(_, slot) if slot == 0 then return cc end return nil end,
 		-- duration-sensitive: 100 damage per second of window
 		GetEstimatedDamageToTarget = function(_, _cur, _t, dur) return dur * 100 end,
@@ -74,6 +77,16 @@ tests['NO-FIRE: armed but the ability is not in the hard-CC table -> 3s window']
 	local J, bot = scenario({ abilityName = 'lich_frost_nova' })
 	assert(J.ShouldRetreatLaneBurst(bot) == false,
 		'only curated hard-CC (stun/hex/shackle) extends the window; a slow does not')
+end
+
+tests['NARROWED (bisect 20260723): CC holder OUT of delivery reach -> 3s -> stay'] = function()
+	-- The range-blind first cut is the prime single-id suspect of the
+	-- passive-stack death signature (full-HP bots fleeing routine lanes).
+	-- Shackles reach = 400 cast + 250 buffer = 650; an SS at 1000 cannot
+	-- lock me before I step away, so the flat 3s window must apply.
+	local J, bot = scenario({ enemyDist = 1000 })
+	assert(J.ShouldRetreatLaneBurst(bot) == false,
+		'a ready CC the holder cannot deliver must not widen the burst window')
 end
 
 tests['predicate: HasReadyHardCc true/false tracks readiness'] = function()

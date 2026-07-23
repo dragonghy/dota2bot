@@ -4700,11 +4700,12 @@ J.tHardCcAbilities = {
 	primal_beast_pulverize = true, chaos_knight_chaos_bolt = true,
 }
 
--- True when the enemy hero has one of the curated hard-CC abilities leveled,
--- off cooldown, and affordable -- i.e. it can LOCK me right now, extending the
--- effective burst window well past 3s.
-function J.HasReadyHardCc( hEnemy )
-	if hEnemy == nil then return false end
+-- Returns the READY hard-CC ability handle (curated table, leveled, off
+-- cooldown, affordable) or nil. Returning the HANDLE (not just true) lets the
+-- caller range-check whether the CC can actually be DELIVERED right now --
+-- capability alone is not a threat from across the lane.
+function J.GetReadyHardCc( hEnemy )
+	if hEnemy == nil then return nil end
 	for iSlot = 0, 5 do
 		local hAb = hEnemy.GetAbilityInSlot ~= nil
 			and hEnemy:GetAbilityInSlot( iSlot ) or nil
@@ -4712,10 +4713,17 @@ function J.HasReadyHardCc( hEnemy )
 		and hAb:GetLevel() ~= nil and hAb:GetLevel() >= 1
 		and hAb:IsFullyCastable()
 		then
-			return true
+			return hAb
 		end
 	end
-	return false
+	return nil
+end
+
+-- True when the enemy hero has one of the curated hard-CC abilities leveled,
+-- off cooldown, and affordable -- i.e. it can LOCK me right now, extending the
+-- effective burst window well past 3s.
+function J.HasReadyHardCc( hEnemy )
+	return J.GetReadyHardCc( hEnemy ) ~= nil
 end
 
 function J.ShouldRetreatLaneBurst( bot )
@@ -4741,7 +4749,24 @@ function J.ShouldRetreatLaneBurst( bot )
 		and not J.IsSuspiciousIllusion( hEnemy )
 		then
 			local nWindow = 3.0
-			if bCcAware and J.HasReadyHardCc( hEnemy ) then nWindow = 5.0 end
+			-- [ccburst NARROWED, bisect 20260723] The first cut widened the
+			-- window for ANY enemy within 1100 holding a ready CC -- range-
+			-- blind, so a distant support with a stun up read as 5s of full
+			-- damage and full-HP bots fled routine lanes without retaliating
+			-- (analyst fingerprint: prime single-id suspect of the passive-
+			-- stack death signature). The CC only extends the window when the
+			-- holder can actually LAND it before I step away: within its cast
+			-- range + 250 closing buffer (no-target self-radius CCs report
+			-- cast range 0 -> the holder must be on top of me, which is right).
+			if bCcAware then
+				local hCc = J.GetReadyHardCc( hEnemy )
+				if hCc ~= nil
+				and GetUnitToUnitDistance( bot, hEnemy )
+					<= ( hCc:GetCastRange() or 0 ) + 250
+				then
+					nWindow = 5.0
+				end
+			end
 			nIncoming = nIncoming
 				+ hEnemy:GetEstimatedDamageToTarget( true, bot, nWindow, DAMAGE_TYPE_ALL )
 		end
