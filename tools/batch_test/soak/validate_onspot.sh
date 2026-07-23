@@ -16,7 +16,12 @@ CAND="${1:?cand id}"; SEEDS="${2:?seeds}"; TARGET="${3:-12}"
 BUCKET="${4:?s3 bucket}"; RUN_ID="${5:?s3 run id (soak/<run_id>)}"
 REPO=/opt/dota2bot
 S3RUN="s3://$BUCKET/soak/$RUN_ID"
-STAMP_TS=$(date +%Y%m%d_%H%M)
+# Second-resolution + host suffix: two same-minute runs of the same candidate
+# used to OVERWRITE each other's verdict (happened three times on 2026-07-23:
+# _0506, _1602 -- the losing run's numbers had to be dug out of run.log or
+# recomputed via recover_verdict.py). Per-game data was never at risk; this
+# just makes the verdict object name collision-free.
+STAMP_TS=$(date +%Y%m%d_%H%M%S)_$(hostname | tail -c 5)
 OUT=/opt/validation; mkdir -p "$OUT"; WORK="$OUT/games"; mkdir -p "$WORK"
 SEEN="$OUT/.seen"; : > "$SEEN"
 RESULTS="$OUT/rows.jsonl"; : > "$RESULTS"
