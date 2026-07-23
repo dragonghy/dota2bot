@@ -5488,6 +5488,23 @@ function J.WillAllySurviveTpWindow( hAlly )
 	return nIncoming < hAlly:GetHealth()
 end
 
+-- [TP audit 20260723, fix B] Team-wide gated-TP response quota. The audit found
+-- COLLECTIVE TPs (>=3 heroes same instant, 3 TPs + ~200s of walking for zero
+-- intervention). All bots share this module instance, so a module-level ledger
+-- works team-wide: at most ONE gated TP response per rolling window; later
+-- callers refuse and walk/stay instead.
+local tTpQuota = { t = -999, n = 0 }
+function J.TryTakeTpResponseSlot()
+	local nNow = DotaTime()
+	if nNow - tTpQuota.t > 6.0 then
+		tTpQuota.t, tTpQuota.n = nNow, 0
+	end
+	if tTpQuota.n >= 1 then return false end
+	tTpQuota.n = tTpQuota.n + 1
+	tTpQuota.t = nNow
+	return true
+end
+
 function J.GetRescueTpTarget( bot )
 	if not J.IsLaneFixOn( 'rescue' ) then return nil end
 	-- [watched 230652] fresh-respawn cooldown: no rescue TP within 15s of my
@@ -5510,6 +5527,8 @@ function J.GetRescueTpTarget( bot )
 					or ( nAllyHP < 0.35 and #tDivers >= 1 ) )
 				-- Do not TP to an ally that will be dead before we land.
 				and J.WillAllySurviveTpWindow( ally )
+				-- Team quota: one gated TP responder per window (fix B).
+				and J.TryTakeTpResponseSlot()
 			then
 				return ally
 			end
@@ -6294,7 +6313,9 @@ function J.ShouldTpSupportTowerFight( bot )
 				end
 				-- Winnable-only: reuse the lethal-or-numbers commit gate against
 				-- the nearest tower enemy. If neither holds, do NOT waste the TP.
-				if bAllyThere and J.SafeToCommitFight( bot, tEnemies[1] ) then
+				if bAllyThere and J.SafeToCommitFight( bot, tEnemies[1] )
+				-- Team quota: one gated TP responder per window (fix B).
+				and J.TryTakeTpResponseSlot() then
 					return building
 				end
 			end

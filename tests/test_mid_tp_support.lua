@@ -207,4 +207,16 @@ tests['NO-FIRE (watched 230652): within 15s of my own respawn -> nil (no revive-
         'after the cooldown the TP support works as before')
 end
 
+tests['QUOTA (audit fix B): second gated TP responder in the same window -> nil'] = function()
+    local J, bot, tower = fresh()
+    DotaTime = function() return 200 end -- luacheck: ignore
+    assert(J.ShouldTpSupportTowerFight(bot) == tower,
+        'first responder takes the team TP slot')
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'a second gated TP in the same 6s window must refuse (collective-TP dedup)')
+    DotaTime = function() return 210 end -- luacheck: ignore
+    assert(J.ShouldTpSupportTowerFight(bot) == tower,
+        'a new window frees the slot')
+end
+
 return tests
