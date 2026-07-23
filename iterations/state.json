@@ -542,8 +542,17 @@
    "comps": "0/2",
    "read": "17-pack alone = HALF the gpm damage (-61 vs -112) but FULL death signature (+0.86) -> passive-stack death hypothesis supported; poison is distributed"
   },
-  "waveA_lf6": "original spot reclaimed at 00:11 (16 games, no mirror pair); replacement i-03718fdfebeeee69a running (spot, run spot_20260723_010428_1_main) -- spot-first policy worked as designed",
-  "pending": "final verdict when wave A lands"
+  "waveA_lf6": {
+   "gpm": -4.85,
+   "xpm": -26.54,
+   "deaths": 0.15,
+   "lh": -4.61,
+   "comps": "gpm 1/2 (seeds split -16.3/+6.6), xpm 0/2, lh 0/2",
+   "games": 95,
+   "read": "lf6 near-NEUTRAL on gpm+deaths (noise zone, seeds split sign) but a small consistent xpm/lh drag (0/2 same-sign). hold, do not promote"
+  },
+  "verdict": "catastrophe lives in the other-17 half: it alone carries -61 gpm and the FULL +0.86 death signature while lf6 is noise-zone on both. Matches analyst prediction (lf6 moderately negative < other-17 more negative) and keeps passive-stack cluster (single-id prime: ccburst) + lf_recover/lf_support as the standing suspects -- all inside other-17. Next lever: narrow ccburst at code/fixture level (no per-feature batch per owner policy); lf6 stays gated (xpm/lh drag)",
+  "cost_note": "waveA harvested 2026-07-23 by batch-runner agent; instance self-terminated, no leaks, MTD $65.84"
  },
  "TP_DISCIPLINE_20260723": {
   "source": "OWNER watched both artifact replays personally -- found TP decisions systemically broken from minute one, bigger than all prior analysis",
@@ -553,7 +562,7 @@
    "3. WD zero-help from 0:47: Sven attacked by viper+support, WD cast nothing, pure spectating (earlier than the 2:44 sidestep case)"
   ],
   "interaction": "pathology 2 = TP system delivers, combat system (passive stack) refuses to engage -- the two failures compound",
-  "action": "replay-analyst dedicated TP audit running: every TP in first 10min of both games catalogued (who/when/where/trigger/post-landing behavior/useful-or-wasted; gated-TP-trio vs shipped defend/lane-assignment attribution)",
+  "action": "audit dossier committed (iterations/tp_audit_20260723.md). Fix A revive-cooldown LANDED; fix B team TP quota LANDED; fix D tpsafe2 blind spot LANDED (root cause: rescue/towerfight response branches in item-usage return BEFORE the tpsafe2 gate -> extracted ungated core J.CanEnemyInterruptTpChannel, both response helpers self-check before taking the quota slot). Remaining: C landing-commitment (linked to passive-stack fix), E shipped-defend variant (low pri, rides C)",
   "owner_directive": "TP 的问题非常大,一定要 fix"
  }
 }

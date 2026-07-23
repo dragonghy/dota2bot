@@ -207,6 +207,34 @@ tests['NO-FIRE (watched 230652): within 15s of my own respawn -> nil (no revive-
         'after the cooldown the TP support works as before')
 end
 
+tests['NO-FIRE (audit fix D): on-face enemy would break the 3s channel -> nil'] = function()
+    -- Game 175703 t=47.4: Sven starts a 3s response-TP channel while focused.
+    -- The response branch sits BEFORE the tpsafe2 gate in item-usage, so the
+    -- helper must carry its own interrupt test (ungated core).
+    local J, bot, tower = fresh()
+    local chaser = api.MakeHero('npc_dota_hero_chaser', {
+        GetTeam = 3, CanBeSeen = true,
+        GetLocation = api.Vector(100, 0, 0),
+        GetAttackRange = 600,
+        GetExtrapolatedLocation = api.Vector(100, 0, 0),
+    })
+    chaser.is_suspicious_illusion = false
+    rawget(bot, '__spec').GetNearbyHeroes = function(_, _r, bEnemy)
+        if bEnemy then return { chaser } end
+        return {}
+    end
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'an enemy inside attack reach breaks the channel -- do not start the TP')
+    -- Same enemy parked OUT of reach and not closing: the channel completes,
+    -- so the TP goes through (and the doomed-channel case above must not have
+    -- burned the team quota slot).
+    rawget(chaser, '__spec').GetLocation = api.Vector(680, 0, 0)
+    rawget(chaser, '__spec').GetExtrapolatedLocation = api.Vector(680, 0, 0)
+    rawget(chaser, '__spec').GetAttackRange = 150
+    assert(J.ShouldTpSupportTowerFight(bot) == tower,
+        'a stationary enemy out of attack reach cannot interrupt -- TP as normal')
+end
+
 tests['QUOTA (audit fix B): second gated TP responder in the same window -> nil'] = function()
     local J, bot, tower = fresh()
     DotaTime = function() return 200 end -- luacheck: ignore

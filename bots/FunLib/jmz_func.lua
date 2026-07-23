@@ -5243,7 +5243,16 @@ function J.ShouldNotStartInterruptibleTp( bot )
 	if not J.IsSoakCandidate( 'tpsafe2' ) then return false end
 	if not J.IsModeTurbo() then return false end
 	if bot == nil or not bot:IsAlive() then return false end
+	return J.CanEnemyInterruptTpChannel( bot )
+end
 
+-- Ungated CORE of the interrupt test above: "is an enemy positioned to break a
+-- TP channel started this frame?" -- shared by the tpsafe2 wrapper and by the
+-- gated response TPs (rescue / tower-fight), whose desire branch sits BEFORE
+-- the tpsafe2 gate in the item-usage flow and so used to bypass it entirely
+-- (TP audit fix D: game 175703 t=47.4, Sven channeling a 3s response TP while
+-- focused). Each caller carries its own soak gate; this predicate has none.
+function J.CanEnemyInterruptTpChannel( bot )
 	local hEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
 	if hEnemies == nil or #hEnemies == 0 then return false end
 
@@ -5516,6 +5525,11 @@ function J.GetRescueTpTarget( bot )
 	if J.GetHP( bot ) < 0.60 then return nil end
 	local tp = J.GetItem2( bot, 'item_tpscroll' )
 	if tp == nil or not tp:IsFullyCastable() then return nil end
+	-- [TP audit fix D] never START a rescue TP an on-face enemy will break --
+	-- checked before the quota below so a doomed channel doesn't burn the
+	-- team's response slot. This branch sits before the tpsafe2 gate in the
+	-- item-usage flow, so it needs its own interrupt test.
+	if J.CanEnemyInterruptTpChannel( bot ) then return nil end
 	for _, ally in pairs( GetUnitList( UNIT_LIST_ALLIED_HEROES ) ) do
 		if ally ~= bot and J.IsValidHero( ally ) and not ally:IsIllusion()
 			and GetUnitToUnitDistance( bot, ally ) > 3500
@@ -6284,6 +6298,11 @@ function J.ShouldTpSupportTowerFight( bot )
 		local boots = J.GetItem2( bot, 'item_travel_boots' )
 		if boots == nil or not boots:IsFullyCastable() then return nil end
 	end
+
+	-- [TP audit fix D] never START a response TP an on-face enemy will break
+	-- (game 175703 t=47.4: Sven channeling 3s while focused). Before the quota
+	-- take below so a doomed channel doesn't burn the team's response slot.
+	if J.CanEnemyInterruptTpChannel( bot ) then return nil end
 
 	local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
 	if tBuildings == nil then return nil end

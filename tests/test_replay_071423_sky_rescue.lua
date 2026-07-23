@@ -66,6 +66,19 @@ tests['counterfactual: healthy ally -> nothing to rescue'] = function()
     assert(J.GetRescueTpTarget(bot) == nil, 'no one in danger, keep the TP')
 end
 
+tests['counterfactual (audit fix D): a chaser on the rescuer -> no rescue TP'] = function()
+    -- Park Queen of Pain on top of Skywrath: an on-face enemy breaks the 3s
+    -- channel, so starting the rescue TP just wastes the scroll AND the
+    -- rescue window (game 175703 t=47.4 pattern, applied to the sibling helper).
+    local J, bot, heroes = armed()
+    local sp = rawget(heroes['npc_dota_hero_queen_of_pain'], '__spec')
+    sp.GetLocation = bot:GetLocation()
+    sp.GetExtrapolatedLocation = bot:GetLocation()
+    sp.GetAttackRange = 600
+    assert(J.GetRescueTpTarget(bot) == nil,
+        'channeling a rescue TP with an enemy inside attack reach is a wasted scroll')
+end
+
 tests['gate off: shipped default is unchanged'] = function()
     local J, bot = rf.load(FIXTURE)
     J.IsSoakCandidate = function() return false end
