@@ -154,12 +154,17 @@ def parse(path):
     if not result["players"]:
         result["notes"].append("no Match signout scoreboard — incomplete game or format change")
 
-    # crude mode heuristic until telemetry lands: turbo doubles passive gold
+    # Crude mode heuristic until telemetry lands: turbo roughly doubles gold.
+    # CALIBRATION (2026-07-23 false alarm): the old >800 bar mislabeled real
+    # turbo games as "normal" whenever the tested bundle depressed game-wide
+    # economy (observed turbo range at ~11min: 519-1111, median ~690, while a
+    # NORMAL game at 11min sits ~350-500). The launch scripts always force
+    # gamemode 23, so treat this as a sanity flag, not ground truth.
     gpms = [p.get("gpm", 0) for p in result["players"]]
     if gpms and result["duration_s"]:
         avg = sum(gpms) / len(gpms)
         result["avg_gpm"] = round(avg)
-        result["mode_guess"] = "turbo" if avg > 800 else "normal"
+        result["mode_guess"] = "turbo" if avg > 510 else "normal"
 
     return result
 
