@@ -5630,6 +5630,49 @@ function J.ShouldNotChaseWhenLow( bot, target )
 	return true
 end
 
+-- [roshgate / freehunt#4 20260723] Roshan attempt abort. 5 attempts in 50
+-- games, every one with <4 heroes failed; watched 230124: Viper tanked the
+-- pit ALONE for 24s (89%->0, nobody swapped, nobody called it off) while
+-- Zeus stood 400-1900 from the pit contributing zero damage; after the
+-- death DK+Lion re-opened the pit while the enemy took mid T1. TRUE when
+-- the attempt should be called off:
+--   (a) the pit tank is breaking -- an ally within 900 of Roshan under 40%
+--       HP while Roshan still holds > 60% (finishing a nearly-dead Roshan
+--       is always allowed), or
+--   (b) one of our towers is under visible pressure while the attempt is
+--       still early (Roshan unseen or > 60%) -- Roshan waits, towers don't.
+-- Gated turbo + 'roshgate'; inert by default.
+function J.ShouldAbortRoshanAttempt( bot, hRoshan )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'roshgate' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+
+	local bEarly = true
+	if hRoshan ~= nil and not hRoshan:IsNull() and hRoshan:IsAlive() then
+		bEarly = hRoshan:GetHealth() / hRoshan:GetMaxHealth() > 0.60
+		if bEarly then
+			local tPit = J.GetAlliesNearLoc( hRoshan:GetLocation(), 900 )
+			for _, a in pairs( tPit or {} ) do
+				if J.IsValidHero( a ) and J.GetHP( a ) < 0.40 then
+					return true
+				end
+			end
+		end
+	end
+
+	if bEarly then
+		for _, b in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} ) do
+			if J.IsValidBuilding( b )
+			and string.find( b:GetUnitName(), 'tower' ) ~= nil
+			and #J.GetEnemiesNearLoc( b:GetLocation(), 900 ) > 0 then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 -- [pushguard / freehunt#2 20260723] Deep SOLO push against converging
 -- defenders. 30 deaths / 50 games, winning side included: a lone pusher
 -- rides the wave far past the midline and stays while visible defenders

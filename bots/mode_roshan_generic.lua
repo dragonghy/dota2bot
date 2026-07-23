@@ -72,6 +72,15 @@ function GetDesireHelper()
         return BOT_ACTION_DESIRE_NONE
     end
 
+    -- [roshgate freehunt#4] Abort a failing / ill-timed attempt: the pit tank
+    -- is breaking while Roshan is still healthy, or one of our towers is
+    -- under pressure while the attempt is early (watched 230124: Viper tanked
+    -- alone 24s to death, then a re-attempt while mid T1 fell). Gated
+    -- (turbo + 'roshgate') inside the helper; inert by default.
+    if J.ShouldAbortRoshanAttempt(bot, Roshan) then
+        return BOT_ACTION_DESIRE_NONE
+    end
+
     -- if Roshan is about to get killed, kill it unless there are other absolute actions.
     if J.Utils.IsValidUnit(Roshan) then
         local roshHP = Roshan:GetHealth() / Roshan:GetMaxHealth()
@@ -142,8 +151,24 @@ function GetDesireHelper()
         return BOT_ACTION_DESIRE_NONE
     end
 
+    -- [roshgate freehunt#4] initDPSFlag is a LATCH (once true, true forever)
+    -- and HasEnoughDPSForRoshan counts every alive teammate -- 230124's Zeus
+    -- was counted while standing 1900 from the pit contributing nothing.
+    -- Under the gate, re-check LIVE every frame on the allies actually near
+    -- the pit (within 4000), and require at least 3 of them.
+    local bDpsOk = initDPSFlag
+    if J.IsModeTurbo() and J.IsSoakCandidate('roshgate') then
+        local tNearPit = {}
+        for _, h in pairs(aliveHeroesList) do
+            if GetUnitToLocationDistance(h, J.GetCurrentRoshanLocation()) < 4000 then
+                table.insert(tNearPit, h)
+            end
+        end
+        bDpsOk = #tNearPit >= 3 and J.HasEnoughDPSForRoshan(tNearPit)
+    end
+
     if shouldKillRoshan
-    and initDPSFlag
+    and bDpsOk
     then
         local human, humanPing = J.GetHumanPing()
         if human ~= nil and DotaTime() > 5.0 then
