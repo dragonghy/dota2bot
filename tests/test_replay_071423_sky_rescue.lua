@@ -13,6 +13,10 @@ local tests = {}
 local function armed()
     local J, bot, heroes, fx = rf.load(FIXTURE)
     J.IsSoakCandidate = function(id) return id == 'lf_rescue' end
+    -- Role is not captured by the dumper: Skywrath was the pos-5 in this
+    -- game. (The narrowed helper blocks laning-phase CORES from cross-map
+    -- rescues -- see test_replay_lf_rescue_narrow.lua for that contract.)
+    J.IsCore = function() return false end
     return J, bot, heroes, fx
 end
 

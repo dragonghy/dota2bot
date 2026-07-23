@@ -5547,6 +5547,13 @@ function J.GetRescueTpTarget( bot )
 	if bot.lastDeadFrameTime ~= nil
 	and DotaTime() - bot.lastDeadFrameTime < 15.0 then return nil end
 	if DotaTime() > 15 * 60 then return nil end
+	-- [lf_rescue NARROWED, analyst waveA diff 20260723] The old trigger
+	-- ("ally < 60% + 2 enemies within 900") is TRUE in every ordinary 2v2
+	-- lane trade, so one 60%-HP exchange vacuumed 2-3 healthy heroes
+	-- (carries included) off their lanes for 45-90s each -- the whole lf6
+	-- xpm(-26.5)/lh(-4.6) drag, 20/20 mirror cells negative. Laning-phase
+	-- cores never cross-map rescue: their lane IS their job.
+	if DotaTime() < 8 * 60 and J.IsCore( bot ) then return nil end
 	if J.GetHP( bot ) < 0.60 then return nil end
 	local tp = J.GetItem2( bot, 'item_tpscroll' )
 	if tp == nil or not tp:IsFullyCastable() then return nil end
@@ -5561,9 +5568,25 @@ function J.GetRescueTpTarget( bot )
 		then
 			local nAllyHP = J.GetHP( ally )
 			local tDivers = J.GetEnemiesNearLoc( ally:GetLocation(), 900 )
-			if #tDivers <= 2
-				and ( ( nAllyHP < 0.60 and #tDivers >= 2 )
-					or ( nAllyHP < 0.35 and #tDivers >= 1 ) )
+			-- [lf_rescue NARROWED] genuine-danger bar only: < 35% with a
+			-- diver on it. The old 60%/2-diver branch was the false trigger
+			-- (every lane trade matched it). And no rescuing an ally that is
+			-- standing under its own tower -- the tower is the peel there
+			-- (waveA frame 011405: Axe traded at 68% AT his own tower and
+			-- walked away fine while two bot-laners burned TPs for him).
+			local bUnderOwnTower = false
+			for _, b in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} ) do
+				if J.IsValidBuilding( b )
+				and string.find( b:GetUnitName(), 'tower' ) ~= nil
+				and GetUnitToLocationDistance( b, ally:GetLocation() ) <= 900
+				then
+					bUnderOwnTower = true
+					break
+				end
+			end
+			if #tDivers >= 1 and #tDivers <= 2
+				and nAllyHP < 0.35
+				and not bUnderOwnTower
 				-- Do not TP to an ally that will be dead before we land.
 				and J.WillAllySurviveTpWindow( ally )
 				-- Team quota: one gated TP responder per window (fix B).
