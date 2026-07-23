@@ -544,5 +544,16 @@
   },
   "waveA_lf6": "original spot reclaimed at 00:11 (16 games, no mirror pair); replacement i-03718fdfebeeee69a running (spot, run spot_20260723_010428_1_main) -- spot-first policy worked as designed",
   "pending": "final verdict when wave A lands"
+ },
+ "TP_DISCIPLINE_20260723": {
+  "source": "OWNER watched both artifact replays personally -- found TP decisions systemically broken from minute one, bigger than all prior analysis",
+  "pathology": [
+   "1. pointless early TPs: no enemy pressure yet Sven TP'd top, WD TP'd top, Sniper TP'd bot (game 175703 ~0:47), then everyone WALKED back to proper lanes; Sven re-TP'd top immediately after reviving",
+   "2. mass defend-TP arrives then does NOTHING: game 233217 ~1:00 all five dire TP'd bot (trigger was right -- enemy at tower), zero attacks on present enemies, walked back; 5 TPs wasted; Sven still died",
+   "3. WD zero-help from 0:47: Sven attacked by viper+support, WD cast nothing, pure spectating (earlier than the 2:44 sidestep case)"
+  ],
+  "interaction": "pathology 2 = TP system delivers, combat system (passive stack) refuses to engage -- the two failures compound",
+  "action": "replay-analyst dedicated TP audit running: every TP in first 10min of both games catalogued (who/when/where/trigger/post-landing behavior/useful-or-wasted; gated-TP-trio vs shipped defend/lane-assignment attribution)",
+  "owner_directive": "TP 的问题非常大,一定要 fix"
  }
 }
