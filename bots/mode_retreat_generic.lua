@@ -265,6 +265,14 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [pushguard / freehunt#2] Deep solo push against converging defenders:
+    -- the push wrappers cap their desire; this floor makes the exit happen
+    -- (watched 181441 luna: 2 defenders on her at +6182 depth, no retreat
+    -- action for 20s). Gated turbo + 'pushguard' inside the helper.
+    if J.ShouldAbortDeepSoloPush(bot) then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [homeroute / freehunt#3] Low-HP limbo router: mid/late game, wrecked,
     -- no consumables, alone and far from home for 20s+ -> commit the retreat
     -- all the way to the fountain instead of drifting in the jungle (watched

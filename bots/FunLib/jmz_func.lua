@@ -5630,6 +5630,48 @@ function J.ShouldNotChaseWhenLow( bot, target )
 	return true
 end
 
+-- [pushguard / freehunt#2 20260723] Deep SOLO push against converging
+-- defenders. 30 deaths / 50 games, winning side included: a lone pusher
+-- rides the wave far past the midline and stays while visible defenders
+-- close in (watched 181441 t=8:44: Luna with MoM at +6182..+7400 depth,
+-- Centaur 260u on her and Sniper 900u, nearest ally 4000+, TP ready the
+-- whole time -- no retreat action for 20 visible seconds, dead at 8:53).
+-- Complements nodive2 (no tower damage involved) and midguard (which is
+-- laning-phase cores only): this is the post-laning, any-role case.
+-- TRUE when ALL of: meaningfully deep past the midline (>2500
+-- ancient-distance), no allied hero within 2500, and >= 2 visible enemy
+-- heroes within 2000 -- 2000, not tighter, because the DECISION instant is
+-- while they converge (the watched frame had them at 1774/1978, on her face
+-- 260u three seconds later; turning at melee range is too late). Callers
+-- cap push desire / floor retreat desire.
+-- Gated turbo + 'pushguard'; inert by default.
+function J.ShouldAbortDeepSoloPush( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'pushguard' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+
+	local hOwn = GetAncient( GetTeam() )
+	local hEnemy = GetAncient( GetOpposingTeam() )
+	if hOwn == nil or hEnemy == nil then return false end
+	local vB = bot:GetLocation()
+	local nDepth = J.GetLocationToLocationDistance( vB, hOwn:GetLocation() )
+		- J.GetLocationToLocationDistance( vB, hEnemy:GetLocation() )
+	if nDepth <= 2500 then return false end
+
+	local tAllies = J.GetNearbyHeroes( bot, 2500, false, BOT_MODE_NONE )
+	for _, a in pairs( tAllies or {} ) do
+		if J.IsValidHero( a ) then return false end
+	end
+
+	local nDefenders = 0
+	for _, e in pairs( J.GetNearbyHeroes( bot, 2000, true, BOT_MODE_NONE ) or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			nDefenders = nDefenders + 1
+		end
+	end
+	return nDefenders >= 2
+end
+
 -- [homeroute / freehunt#3 20260723] Low-HP limbo router. 44 segments in 50
 -- games (avg 58s, max 106s): mid/late-game a bot under 40% HP with no healing
 -- consumable drifts in the jungle far from the fountain -- not healing, not
