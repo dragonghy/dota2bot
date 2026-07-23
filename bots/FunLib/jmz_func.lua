@@ -6189,11 +6189,26 @@ function J.ShouldSupportComboKill( bot )
 	if nIncoming >= bot:GetHealth() * 0.6 then return nil end
 	if nCloseEnemies >= 2 then return nil end
 
+	-- [depth gate, analyst 20260723] "杀过深的4号位" means an enemy deep in
+	-- OUR half -- yet the 26f batch showed this combo firing 3000u past the
+	-- midline (a tower chase, not a punish; the analyst flagged the missing
+	-- depth/escape gate). Same ancient-distance convention as
+	-- ShouldRetreatPastMidline: skip any target meaningfully on the ENEMY
+	-- side of the midline (depth > 400 at the TARGET's position).
+	local hOwnAncient = GetAncient( GetTeam() )
+	local hEnemyAncient = GetAncient( GetOpposingTeam() )
+
 	for _, hTarget in pairs( tEnemies ) do
 		if J.IsValidHero( hTarget )
 		and not J.IsSuspiciousIllusion( hTarget )
 		and not J.IsMeepoClone( hTarget )
 		and J.CanBeAttacked( hTarget )
+		and ( hOwnAncient == nil or hEnemyAncient == nil
+			or J.GetLocationToLocationDistance(
+					hTarget:GetLocation(), hOwnAncient:GetLocation() )
+				- J.GetLocationToLocationDistance(
+					hTarget:GetLocation(), hEnemyAncient:GetLocation() )
+				<= 400 )
 		then
 			-- "Walked too deep": one of OUR CORES is within 900 of it, so the
 			-- 2-man focus is genuinely available (not me solo-diving).

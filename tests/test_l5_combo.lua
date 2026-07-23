@@ -74,6 +74,30 @@ tests['FIRE: core on the deep enemy, lethal 150+250 vs 308, self-safe -> target'
 		'the 2-man kill window on a too-deep enemy 4 must be converted')
 end
 
+tests['NO-FIRE (depth gate, analyst 20260723): target deep past the midline -> nil'] = function()
+	-- The 26f batch showed the combo firing 3000u past the midline -- a tower
+	-- chase, not a "too deep on OUR half" punish. Team-dependent ancients put
+	-- the target 3000 CLOSER to the enemy ancient than to ours -> skip.
+	local J, bot, target = scenario()
+	GetAncient = function(team) -- luacheck: ignore
+		if team == GetTeam() then
+			return api.MakeUnit({ GetLocation = api.Vector(400 + 5000, 0, 0) })
+		end
+		return api.MakeUnit({ GetLocation = api.Vector(400 - 2000, 0, 0) })
+	end
+	assert(J.ShouldSupportComboKill(bot) == nil,
+		'a kill 3000u past the midline is a dive, not a too-deep punish')
+	-- Same target on OUR side of the midline: the combo fires as before.
+	GetAncient = function(team) -- luacheck: ignore
+		if team == GetTeam() then
+			return api.MakeUnit({ GetLocation = api.Vector(400 - 2000, 0, 0) })
+		end
+		return api.MakeUnit({ GetLocation = api.Vector(400 + 5000, 0, 0) })
+	end
+	assert(J.ShouldSupportComboKill(bot) == target,
+		'on our half the punish is exactly the rule -- must still fire')
+end
+
 tests['NO-FIRE: no allied core on the target -> nil (never a solo support dive)'] = function()
 	local J, bot = scenario({ noCoreOnTarget = true })
 	assert(J.ShouldSupportComboKill(bot) == nil,
