@@ -828,11 +828,176 @@ def _is_core(tl, hero):
         tl._core_cache = set(ranked[:6])
     return hero in tl._core_cache
 
+# --- freehunt 20260723 detectors (ported from scratchpad/freehunt/scan.py
+# after frame-level confirmation; iterations/freehunt_20260723.md) ---
+
+# Base anchors (fountain ≈ ancient corner) for the ANCIENT-DISTANCE depth
+# convention — NOT the x+y heuristic above, which once nearly reversed a
+# conclusion (see replay-analyst profile).
+_BASE_ANCHOR = {2: (-7205.0, -6610.0), 3: (7137.0, 6474.0)}
+
+
+def _depth_anc(team, x, y):
+    """dist(own base) - dist(enemy base): >0 = past the midline, toward them."""
+    own = _BASE_ANCHOR.get(team)
+    en = _BASE_ANCHOR.get(2 if team == 3 else 3)
+    if not own or not en:
+        return 0.0
+    return math.hypot(x - own[0], y - own[1]) - math.hypot(x - en[0], y - en[1])
+
+
+# Fight/save-relevant ultimates with rough mana costs (freehunt A judge).
+_CASHABLE_ULTS = {
+    'zuus_thundergods_wrath': 300, 'lion_finger_of_death': 425,
+    'crystal_maiden_freezing_field': 400, 'luna_eclipse': 300,
+    'nevermore_requiem': 300, 'jakiro_macropyre': 400,
+    'shadow_shaman_mass_serpent_ward': 550, 'centaur_stampede': 100,
+    'warlock_rain_of_chaos': 400, 'silencer_global_silence': 350,
+    'viper_viper_strike': 200, 'queenofpain_sonic_wave': 400,
+    'venomancer_poison_nova': 400, 'oracle_false_promise': 200,
+    'slardar_amplify_damage': 50, 'sven_gods_strength': 150,
+    'lich_chain_frost': 400, 'witch_doctor_death_ward': 300,
+    'tidehunter_ravage': 300, 'death_prophet_exorcism': 400,
+    'dragon_knight_elder_dragon_form': 50, 'chaos_knight_phantasm': 250,
+    'skywrath_mage_mystic_flare': 500, 'axe_culling_blade': 150,
+    'storm_spirit_ball_lightning': 50, 'obsidian_destroyer_sanity_eclipse': 400,
+    'warlock_upheaval': 100,
+}
+
+
+def _paused_spans(tl):
+    """Game-pause artifact spans: an event gap >=3s during which every hero's
+    snapshot position is frozen. Window-type detectors MUST skip these —
+    181525's 23s 'standoff' was a pause, not a behavior."""
+    if hasattr(tl, "_pause_cache"):
+        return tl._pause_cache
+    spans = []
+    ts = [e["t"] for e in tl.events]
+    for a, b in zip(ts, ts[1:]):
+        if b - a < 3.0:
+            continue
+        frozen, sampled = True, False
+        for snaps in tl.snaps.values():
+            xs = {(s["x"], s["y"]) for s in snaps if a < s["t"] < b}
+            if len(xs) >= 2:
+                frozen = False
+                break
+            if xs:
+                sampled = True
+        if frozen and sampled:
+            spans.append((a, b))
+    tl._pause_cache = spans
+    return spans
+
+
+def _overlaps_pause(tl, t0, t1):
+    return any(not (t1 < a or t0 > b) for a, b in _paused_spans(tl))
+
+
+def d22_died_with_ult_ready(tl):
+    """Hero dies holding a ready, affordable fight/save ultimate (freehunt #1:
+    128/50 games; warlock 10s 1v1 with rain+bonds up; zeus TG vs 4 half-HP)."""
+    out = []
+    for e in tl.events:
+        if e["type"] != "DEATH" or not e.get("target_hero"):
+            continue
+        hero = e["target"]
+        if hero not in tl.teams:
+            continue
+        s = tl.state_at(hero, e["t"], tol=3.0)
+        if not s:
+            continue
+        for a in (s.get("abilities") or []):
+            n = a["name"]
+            if n in _CASHABLE_ULTS and a["level"] > 0 and a["cd"] == 0 \
+                    and s["mp"] >= _CASHABLE_ULTS[n]:
+                out.append({
+                    "detector": "died_with_ult_ready", "bug": "FH1",
+                    "hero": hero, "t": round(e["t"], 1), "ult": n,
+                    "desc": f"{hero} died at {fmt(e['t'])} holding ready {n} "
+                            f"(mp {s['mp']:.0f}) — cash-out layer missing",
+                })
+    return out
+
+
+def d23_lowhp_limbo(tl):
+    """Low-HP limbo (freehunt #3): <40% HP continuously >=45s while >2500 from
+    the own base corner — not healing, not TP-ing, not farming. Pause-aware."""
+    out = []
+    for hero, snaps in tl.snaps.items():
+        team = tl.teams.get(hero)
+        if team is None:
+            continue
+        base = _BASE_ANCHOR.get(team)
+        run = None
+        for s in snaps:
+            low = s["t"] >= 60 and s["hp"] > 0 and s["hp_pct"] < 0.40 \
+                and math.hypot(s["x"] - base[0], s["y"] - base[1]) > 2500
+            if low:
+                run = [run[0], s["t"]] if run else [s["t"], s["t"]]
+            else:
+                if run and run[1] - run[0] >= 45 \
+                        and not _overlaps_pause(tl, run[0], run[1]):
+                    out.append({
+                        "detector": "lowhp_limbo", "bug": "FH3", "hero": hero,
+                        "t": round(run[0], 1), "dur": round(run[1] - run[0]),
+                        "desc": f"{hero} drifted at <40% HP for "
+                                f"{run[1] - run[0]:.0f}s from {fmt(run[0])} "
+                                f"far from base — no heal/TP/farm",
+                    })
+                run = None
+        if run and run[1] - run[0] >= 45 and not _overlaps_pause(tl, run[0], run[1]):
+            out.append({
+                "detector": "lowhp_limbo", "bug": "FH3", "hero": hero,
+                "t": round(run[0], 1), "dur": round(run[1] - run[0]),
+                "desc": f"{hero} drifted at <40% HP for {run[1] - run[0]:.0f}s "
+                        f"from {fmt(run[0])} far from base — no heal/TP/farm",
+            })
+    return out
+
+
+def d24_deep_solo_death(tl):
+    """Deep solo death (freehunt #2): dies >3500 past the midline with no
+    allied hero within 2500 (winning sides do this too — luna MoM case)."""
+    out = []
+    for e in tl.events:
+        if e["type"] != "DEATH" or not e.get("target_hero"):
+            continue
+        hero = e["target"]
+        team = tl.teams.get(hero)
+        if team is None:
+            continue
+        s = tl.state_at(hero, e["t"], tol=3.0)
+        if not s:
+            continue
+        dep = _depth_anc(team, s["x"], s["y"])
+        if dep <= 3500:
+            continue
+        alone = True
+        for h2, t2 in tl.teams.items():
+            if h2 == hero or t2 != team:
+                continue
+            s2 = tl.state_at(h2, e["t"], tol=3.0)
+            if s2 and s2["hp"] > 0 \
+                    and math.hypot(s2["x"] - s["x"], s2["y"] - s["y"]) < 2500:
+                alone = False
+                break
+        if alone:
+            out.append({
+                "detector": "deep_solo_death", "bug": "FH2", "hero": hero,
+                "t": round(e["t"], 1), "depth": round(dep),
+                "desc": f"{hero} died SOLO at depth +{dep:.0f} at {fmt(e['t'])} "
+                        f"(no ally within 2500) — pushguard case",
+            })
+    return out
+
+
 DETECTORS = [d1_tp_under_threat, d2_tp_home_wasteful, d3_skywrath_solo_silence,
              d4_idle_while_ally_dies, d5_sandwiched_walk,
              d6_overextend_alone, d6_unpunished_tower_dive,
              d8_return_to_death_spot, d9_missed_cs_at_tower,
-             d20_enemy_overchase_unpunished, d21_laning_past_midline_death]
+             d20_enemy_overchase_unpunished, d21_laning_past_midline_death,
+             d22_died_with_ult_ready, d23_lowhp_limbo, d24_deep_solo_death]
 
 
 def run(path):
