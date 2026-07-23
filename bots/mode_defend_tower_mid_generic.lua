@@ -7,5 +7,17 @@ if bot:IsInvulnerable() or not bot:IsHero() or not string.find(botName, "hero") 
 	return
 end
 
-function GetDesire() return Defend.GetDefendDesire(bot, LANE_MID) end
+-- [tpcommit fix C] A fresh TP responder stays committed to the lane it
+-- answered instead of being reclaimed by lane assignment mid-engagement;
+-- floor from J.GetTpCommitDefendDesire (gated turbo + 'tpcommit', nil off).
+local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
+
+function GetDesire()
+	local nDesire = Defend.GetDefendDesire(bot, LANE_MID)
+	local nCommit = J.GetTpCommitDefendDesire(bot, LANE_MID)
+	if nCommit ~= nil and (nDesire == nil or nCommit > nDesire) then
+		return nCommit
+	end
+	return nDesire
+end
 function Think() Defend.DefendThink(bot, LANE_MID) end

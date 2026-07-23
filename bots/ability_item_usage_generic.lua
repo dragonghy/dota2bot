@@ -5068,6 +5068,11 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	if hRescueAlly ~= nil then
 		local vRescueLoc = J.GetNearbyLocationToTp( hRescueAlly:GetLocation() )
 		if vRescueLoc ~= nil then
+			-- [tpcommit fix C] remember the answered trigger: after landing
+			-- the responder must stay committed to it (J.GetTpCommitDefendDesire)
+			-- instead of being reclaimed by lane assignment mid-engagement.
+			bot.tpRespondLoc = hRescueAlly:GetLocation()
+			bot.tpRespondUntil = DotaTime() + 12.0
 			return BOT_ACTION_DESIRE_HIGH, vRescueLoc, 'ground', '救援TP'
 		end
 	end
@@ -5082,6 +5087,9 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	if hTowerFight ~= nil then
 		local vTpLoc = J.GetNearbyLocationToTp( hTowerFight:GetLocation() )
 		if vTpLoc ~= nil then
+			-- [tpcommit fix C] same landing commitment as the rescue TP above.
+			bot.tpRespondLoc = hTowerFight:GetLocation()
+			bot.tpRespondUntil = DotaTime() + 12.0
 			return BOT_ACTION_DESIRE_HIGH, vTpLoc, 'ground', 'mid支援塔战'
 		end
 	end

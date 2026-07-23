@@ -563,7 +563,7 @@
    "3. WD zero-help from 0:47: Sven attacked by viper+support, WD cast nothing, pure spectating (earlier than the 2:44 sidestep case)"
   ],
   "interaction": "pathology 2 = TP system delivers, combat system (passive stack) refuses to engage -- the two failures compound",
-  "action": "audit dossier committed (iterations/tp_audit_20260723.md). Fix A revive-cooldown LANDED; fix B team TP quota LANDED; fix D tpsafe2 blind spot LANDED (root cause: rescue/towerfight response branches in item-usage return BEFORE the tpsafe2 gate -> extracted ungated core J.CanEnemyInterruptTpChannel, both response helpers self-check before taking the quota slot). Remaining: C landing-commitment (linked to passive-stack fix), E shipped-defend variant (low pri, rides C)",
+  "action": "audit dossier committed (iterations/tp_audit_20260723.md). Fix A revive-cooldown LANDED; fix B team TP quota LANDED; fix D tpsafe2 blind spot LANDED (root cause: rescue/towerfight response branches in item-usage return BEFORE the tpsafe2 gate -> extracted ungated core J.CanEnemyInterruptTpChannel, both response helpers self-check before taking the quota slot). Fix C landing-commitment LANDED (gate 'tpcommit': response branches stamp bot.tpRespondLoc/-Until 12s at cast; J.GetTpCommitDefendDesire floors the answered lane's defend desire at 0.85 in the three mode_defend_tower_* wrappers while an enemy is still visible at the trigger -- lane assignment cannot reclaim the responder mid-engagement). Remaining: E shipped-defend variant (low pri, rides C mechanism). ALL A-D landed; acceptance = the dossier's waste-type counts on the next big batch, not tp_under_threat alone",
   "owner_directive": "TP 的问题非常大,一定要 fix"
  }
 }

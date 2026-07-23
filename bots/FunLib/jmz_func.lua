@@ -6369,6 +6369,37 @@ function J.ShouldTpSupportTowerFight( bot )
 	return nil
 end
 
+-- [TP audit fix C / tpcommit] Landing commitment for the gated response TPs.
+-- Owner-watched pathology (tp_audit_20260723, games 175703/233217): responders
+-- TP in on a CORRECT trigger, then the lane-assignment layer immediately
+-- reclaims them -- they land, attack nothing, and walk home (one frame: 5 TPs
+-- answered, zero attacks thrown, Sven died anyway). The response branches in
+-- item-usage stamp bot.tpRespondLoc/-Until at cast time; this floor keeps the
+-- responder in the DEFEND mode of the lane it answered for the commitment
+-- window, so the fight logic there gets to run instead of the walk home.
+-- Returns a defend-desire floor (0.85) for the answered lane, or nil. The
+-- commitment releases early when nobody is visible at the trigger any more
+-- (no standing around a cold spot). Gated turbo + 'tpcommit'; the stamps are
+-- inert state, so shipped behavior is unchanged off the candidate.
+function J.GetTpCommitDefendDesire( bot, nLane )
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'tpcommit' ) then return nil end
+	if bot == nil or not bot:IsAlive() then return nil end
+	if bot.tpRespondLoc == nil or bot.tpRespondUntil == nil then return nil end
+	if DotaTime() > bot.tpRespondUntil then return nil end
+	-- The commitment binds to the lane it answered: each defend wrapper asks
+	-- for its own lane, and only the one whose front is near the trigger wins.
+	local vFront = GetLaneFrontLocation( GetTeam(), nLane, 0 )
+	if vFront == nil
+	or J.GetLocationToLocationDistance( bot.tpRespondLoc, vFront ) > 3500 then
+		return nil
+	end
+	-- Someone must still be visible at the trigger to engage; a fog frame just
+	-- skips the floor for that frame (stamp kept -- they may reappear).
+	if #J.GetEnemiesNearLoc( bot.tpRespondLoc, 1600 ) == 0 then return nil end
+	return 0.85
+end
+
 -- [GH #13] Turbo laning creep-pull to reset lane equilibrium (拉野). A classic
 -- support technique grounded in the standard theory (dota2 wiki / liquidpedia
 -- pulling guides): the goal is to keep the lane equilibrium near OUR tower so our
