@@ -138,6 +138,10 @@ function GetDesireHelper()
         -- [lanefix/lf_threat] record-only: credit the nearest enemy with this
         -- death so the proven-killer guard below has a memory to work from.
         J.NoteProvenKillerOnDeath(bot)
+        -- [watched 230652] revive-TP cooldown stamp: the TP helpers refuse
+        -- long-range TPs within 15s of a respawn (viper revived, TP'd straight
+        -- back to its death spot and re-died in 13s).
+        bot.lastDeadFrameTime = DotaTime()
     end
 
     if not bot:IsAlive()

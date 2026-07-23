@@ -5490,6 +5490,11 @@ end
 
 function J.GetRescueTpTarget( bot )
 	if not J.IsLaneFixOn( 'rescue' ) then return nil end
+	-- [watched 230652] fresh-respawn cooldown: no rescue TP within 15s of my
+	-- own death -- walking back and reassessing beats TP-ing into the same
+	-- fight that just killed me (revive->TP->re-death in 13s).
+	if bot.lastDeadFrameTime ~= nil
+	and DotaTime() - bot.lastDeadFrameTime < 15.0 then return nil end
 	if DotaTime() > 15 * 60 then return nil end
 	if J.GetHP( bot ) < 0.60 then return nil end
 	local tp = J.GetItem2( bot, 'item_tpscroll' )
@@ -6242,6 +6247,9 @@ function J.ShouldTpSupportTowerFight( bot )
 		and bot ~= nil and J.GetPosition( bot ) >= 4
 	if not ( J.IsSoakCandidate( 'midtp' ) or bSup ) then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
+	-- [watched 230652] fresh-respawn cooldown (see GetRescueTpTarget).
+	if bot.lastDeadFrameTime ~= nil
+	and DotaTime() - bot.lastDeadFrameTime < 15.0 then return nil end
 
 	-- Short TP CD + level 6+ is the mid profile. Require the level, and that the
 	-- bot is NOT already committed to / retreating from a fight (its own logic

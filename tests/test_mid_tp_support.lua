@@ -196,4 +196,15 @@ tests['NO-FIRE (watched 181046): the defended ally will die before the TP lands 
         'never TP to an ally that will be a corpse before we land')
 end
 
+tests['NO-FIRE (watched 230652): within 15s of my own respawn -> nil (no revive-TP)'] = function()
+    local J, bot = fresh()
+    DotaTime = function() return 100 end -- luacheck: ignore
+    bot.lastDeadFrameTime = 95  -- died 5s ago: walk back and reassess, no TP
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'fresh respawn must not TP straight back toward the fight that killed it')
+    bot.lastDeadFrameTime = 80  -- 20s ago: cooldown over
+    assert(J.ShouldTpSupportTowerFight(bot) ~= nil,
+        'after the cooldown the TP support works as before')
+end
+
 return tests
