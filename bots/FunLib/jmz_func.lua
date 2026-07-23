@@ -5821,8 +5821,27 @@ function J.ShouldPunishDive( bot )
 	if not J.IsModeTurbo() then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
 
+	-- [ownhalf, analyst 20260723] Gated WIDER trigger domain. The shipped
+	-- domain (enemy within 1200 of an allied building) leaves a PUNISH DEAD
+	-- ZONE between the river and T1-1200: invaders farming our lanes at
+	-- 2100-2400u from the nearest tower are never collapsed on by anyone --
+	-- a stock desire hole present on BOTH sides (frames 181544 drow ate a
+	-- full radiant wave for 26s beside two idle full-HP heroes; 232228 WK
+	-- with stun ready hovered 900u from a 66% Jugg for 17s; explains the
+	-- +1212% unpunished-dive fingerprint). Under 'ownhalf' an enemy CLEARLY
+	-- on our half (>=800 closer to OUR ancient than to its own) counts as
+	-- in-domain too; SafeToCommitFight keeps the same lethal-or-numbers
+	-- discipline, and the team_roam desire stays HP-remapped (cap, not gate).
+	local bOwnHalf = J.IsSoakCandidate( 'ownhalf' )
+
 	local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
-	if tBuildings == nil or #tBuildings == 0 then return nil end
+	if ( tBuildings == nil or #tBuildings == 0 ) and not bOwnHalf then return nil end
+
+	local hOwnAncient, hEnemyAncient
+	if bOwnHalf then
+		hOwnAncient = GetAncient( GetTeam() )
+		hEnemyAncient = GetAncient( GetOpposingTeam() )
+	end
 
 	-- Only enemies within collapse range of us are worth raising desire toward;
 	-- a dive far across the map isn't this bot's to punish.
@@ -5832,17 +5851,28 @@ function J.ShouldPunishDive( bot )
 		and not J.IsSuspiciousIllusion( enemy )
 		and not J.IsMeepoClone( enemy )
 		then
-			for _, building in pairs( tBuildings ) do
+			local bInDomain = false
+			for _, building in pairs( tBuildings or {} ) do
 				if J.IsValidBuilding( building )
 				and GetUnitToUnitDistance( enemy, building ) <= 1200
 				then
-					-- Over-extended under our building -> only punish when the
-					-- collapse is genuinely winning (lethal or numbers).
-					if J.SafeToCommitFight( bot, enemy ) then
-						return enemy
-					end
+					bInDomain = true
 					break
 				end
+			end
+			if not bInDomain and bOwnHalf
+			and hOwnAncient ~= nil and hEnemyAncient ~= nil
+			then
+				local vEnemyLoc = enemy:GetLocation()
+				local nInvadeDepth =
+					J.GetLocationToLocationDistance( vEnemyLoc, hEnemyAncient:GetLocation() )
+					- J.GetLocationToLocationDistance( vEnemyLoc, hOwnAncient:GetLocation() )
+				if nInvadeDepth >= 800 then bInDomain = true end
+			end
+			-- Over-extended on our ground -> only punish when the collapse is
+			-- genuinely winning (lethal or numbers).
+			if bInDomain and J.SafeToCommitFight( bot, enemy ) then
+				return enemy
 			end
 		end
 	end
