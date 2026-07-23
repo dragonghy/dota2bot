@@ -532,5 +532,17 @@
    "falsifiable_prediction": "bisect: lf6-only moderately negative; other-17 MORE negative. If reversed -> lf_chase/lf_threat avoidance is the poison.",
    "per_hero": "zuus +13, viper +10, lion +9, WK +9 laning deaths armed-vs-base; 5-7 death loops per hero per game"
   }
+ },
+ "BISECT_20260723": {
+  "waveB_other17": {
+   "gpm": -61.49,
+   "xpm": -109.05,
+   "deaths": 0.86,
+   "lh": -9.79,
+   "comps": "0/2",
+   "read": "17-pack alone = HALF the gpm damage (-61 vs -112) but FULL death signature (+0.86) -> passive-stack death hypothesis supported; poison is distributed"
+  },
+  "waveA_lf6": "original spot reclaimed at 00:11 (16 games, no mirror pair); replacement i-03718fdfebeeee69a running (spot, run spot_20260723_010428_1_main) -- spot-first policy worked as designed",
+  "pending": "final verdict when wave A lands"
  }
 }
