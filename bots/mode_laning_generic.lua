@@ -469,6 +469,13 @@ local function DoSupportLaningThink()
 	if fLaneFrontAmount_enemy < fLaneFrontAmount then
 		target_loc = GetLaneFrontLocation(GetOpposingTeam(), botAssignedLane, -nLongestAttackRange)
 	end
+	-- [mega-bundle fingerprint 20260723 mechanism 3] never hold a shoved-deep
+	-- front alone (051728 ogre died at +4217 doing exactly this): pull the
+	-- hold spot well back toward our side instead.
+	if J.IsLaneFrontTooDeepToHold(bot, target_loc) then
+		target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane,
+			-(nLongestAttackRange + 1500))
+	end
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
@@ -570,6 +577,23 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 			end
 		end
 
+		-- [mega-bundle fingerprint 20260723] Combat-response FLOOR before any
+		-- farming: this Think replaces Valve's native laning wholesale, and
+		-- its farm body has no answer to hero harassment -- armed bots died
+		-- 100->0 with zero retaliation while their base mirrors fought and
+		-- won the same spots (051728 slardar). Return fire when the numbers
+		-- are even, step toward home when outnumbered; active triggers above
+		-- (pull / initiate / combo) still take precedence.
+		local sHarassResp, xHarassResp = J.GetLaneHarassResponse(bot)
+		if sHarassResp == 'fire' then
+			bot:SetTarget(xHarassResp)
+			bot:Action_AttackUnit(xHarassResp, true)
+			return
+		elseif sHarassResp == 'back' then
+			bot:Action_MoveToLocation(xHarassResp)
+			return
+		end
+
 		if bSupLastHit or bLaneFixSupport then
 			DoSupportLaningThink()
 			return
@@ -610,6 +634,13 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 		local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -nLongestAttackRange)
 		if fLaneFrontAmount_enemy < fLaneFrontAmount then
 			target_loc = GetLaneFrontLocation(GetOpposingTeam(), botAssignedLane, -nLongestAttackRange)
+		end
+
+		-- [mega-bundle fingerprint 20260723 mechanism 3] same deep-front clamp
+		-- as the support path: never hold a shoved-deep front alone.
+		if J.IsLaneFrontTooDeepToHold(bot, target_loc) then
+			target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane,
+				-(nLongestAttackRange + 1500))
 		end
 
 		bot:Action_MoveToLocation(target_loc + RandomVector(50))

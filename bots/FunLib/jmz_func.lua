@@ -6411,12 +6411,27 @@ function J.ShouldInitiateLaneKill( bot )
 	end
 	if nIncoming >= bot:GetHealth() * 0.75 then return nil end
 
+	-- [depth leash, mega-bundle fingerprint 20260723 mechanism 2] The window
+	-- recomputes every frame and the commit-lock re-arms, so without a leash
+	-- an initiation turns into a cross-map chase (052241: sniper+lion chased
+	-- a 16% zuus from +1500 to +4400 for 20s, killed nothing, sniper died to
+	-- the arriving ogre at +3667). A lane kill happens near the lane: skip
+	-- any target meaningfully past the midline (>800 ancient-distance depth).
+	local hOwnAncient = GetAncient( GetTeam() )
+	local hEnemyAncient = GetAncient( GetOpposingTeam() )
+
 	-- Lethal check per candidate target: our combined castable burst kills it.
 	for _, hTarget in pairs( tEnemies ) do
 		if J.IsValidHero( hTarget )
 		and not J.IsSuspiciousIllusion( hTarget )
 		and not J.IsMeepoClone( hTarget )
 		and J.CanBeAttacked( hTarget )
+		and ( hOwnAncient == nil or hEnemyAncient == nil
+			or J.GetLocationToLocationDistance(
+					hTarget:GetLocation(), hOwnAncient:GetLocation() )
+				- J.GetLocationToLocationDistance(
+					hTarget:GetLocation(), hEnemyAncient:GetLocation() )
+				<= 800 )
 		then
 			local tOurs = J.GetAlliesNearLoc( hTarget:GetLocation(), 1000 )
 			local nBurst = J.GetTotalEstimatedDamageToTarget( tOurs, hTarget )
@@ -6427,6 +6442,89 @@ function J.ShouldInitiateLaneKill( bot )
 	end
 
 	return nil
+end
+
+-- [mega-bundle fingerprint 20260723, mechanism 1] Combat-response floor for
+-- the armed replacement laning Think. Defining Think() replaces Valve's
+-- native laning wholesale, and the replacement body only knows last-hit /
+-- deny / hold-the-front -- so an armed bot being harassed by a hero has NO
+-- code path that answers: 051728 slardar died 100->0 in 8s with zero
+-- attacks while its base mirror threw 31 damage events and won the same
+-- spot. This helper is the floor the Think calls BEFORE farming: when hero
+-- damage landed on me within 2s and a harasser is visible,
+--   * outnumbered at my position -> ('back', a 420u step toward home):
+--     make space instead of tanking the poke pocket,
+--   * else -> ('fire', the weakest harasser): return fire like native does.
+-- Pure helper (no gate inside): only reachable from the armed-only Think
+-- bodies, so shipped behavior is unchanged.
+function J.GetLaneHarassResponse( bot )
+	if bot == nil or not bot:IsAlive() then return nil end
+	if not bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
+
+	local tEnemies = J.GetNearbyHeroes( bot, 1100, true, BOT_MODE_NONE )
+	local tValid = {}
+	for _, e in pairs( tEnemies or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e )
+		and J.CanBeAttacked( e ) then
+			table.insert( tValid, e )
+		end
+	end
+	if #tValid == 0 then return nil end
+
+	local tAllies = J.GetNearbyHeroes( bot, 900, false, BOT_MODE_NONE )
+	local nOurs = 1 + ( tAllies ~= nil and #tAllies or 0 )
+	if #tValid > nOurs then
+		local vB = bot:GetLocation()
+		local vF = J.GetTeamFountain()
+		if vF == nil then return nil end
+		local dx, dy = vF.x - vB.x, vF.y - vB.y
+		local n = math.sqrt( dx * dx + dy * dy )
+		if n < 1 then return nil end
+		return 'back', Vector( vB.x + dx / n * 420, vB.y + dy / n * 420, vB.z )
+	end
+
+	local hWeakest, nWeakest = nil, math.huge
+	for _, e in pairs( tValid ) do
+		if e:GetHealth() < nWeakest then
+			nWeakest, hWeakest = e:GetHealth(), e
+		end
+	end
+	return 'fire', hWeakest
+end
+
+-- [mega-bundle fingerprint 20260723, mechanism 3] "Do not hold a shoved-deep
+-- lane front you cannot defend." The replacement Think's idle fallthrough
+-- walks to GetLaneFrontLocation unconditionally; when the wave is shoved deep
+-- the holder stands in enemy territory until the collapse arrives (051728:
+-- ogre+VS held +2800..+3300 at visible 2v2 parity, nevermore+CM closed in,
+-- centaur arrived from 2700 seconds later -- both died; the ogre was still
+-- walking FORWARD at 91% HP). Two tiers, same ancient-distance convention:
+--   * shallow-deep (400 < depth <= 1600): holdable with ANY allied hero
+--     within 1000 of me; alone it is a free pick -- pull back.
+--   * far past the midline (depth > 1600): visible PARITY is not safety
+--     (the depthnum lesson -- fog reinforcements are close); require numbers
+--     ADVANTAGE over the visible enemies within 1600 of the spot.
+-- Pure helper -- only reachable from the armed-only Think bodies.
+function J.IsLaneFrontTooDeepToHold( bot, vLoc )
+	if bot == nil or vLoc == nil then return false end
+	local hOwn = GetAncient( GetTeam() )
+	local hEnemy = GetAncient( GetOpposingTeam() )
+	if hOwn == nil or hEnemy == nil then return false end
+	local nDepth = J.GetLocationToLocationDistance( vLoc, hOwn:GetLocation() )
+		- J.GetLocationToLocationDistance( vLoc, hEnemy:GetLocation() )
+	if nDepth <= 400 then return false end
+
+	local nAllies = 0
+	local tAllies = J.GetNearbyHeroes( bot, 1000, false, BOT_MODE_NONE )
+	for _, a in pairs( tAllies or {} ) do
+		if J.IsValidHero( a ) then nAllies = nAllies + 1 end
+	end
+
+	if nDepth <= 1600 then
+		return nAllies == 0
+	end
+	local nEnemies = #J.GetEnemiesNearLoc( vLoc, 1600 )
+	return ( 1 + nAllies ) <= nEnemies
 end
 
 -- [GH #15] Mid 6-level TP support. Observed gap: when a fight breaks out at one
