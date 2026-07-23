@@ -37,3 +37,13 @@ awsx s3 cp s3://dota2bot-batch-results-4924/soak/<run_id>/<f>.dem . --quiet
 - 每个发现 = **具体时间戳 + 逐帧表格(贴出来)+ 机制判断 + 修复方向/fixture 候选**。
 - 结论前先自检:换个阵容池还成立吗?交换比查过吗(even_fight 死亡多≠bug,可能只是滚雪球)?
 - 已知结论/已否决方向查 `iterations/state.json` 和 `docs/LANING_PLAYBOOK.md`,别重复挖。
+
+## 已知工具坑(必读)
+
+- **dumper event 流的英雄名不统一**:部分英雄在 events 里不带下划线
+  (`npc_dota_hero_vengefulspirit`/`queenofpain`),而 `game.teams` 带
+  (`vengeful_spirit`)。直接字符串相等匹配会把这些英雄的输出/承伤全部漏掉,
+  曾把一次参战 TP 误判成浪费。**先 canon 化(去下划线小写比较)再匹配。**
+- **窗口类扫描必须加暂停过滤**:游戏暂停时快照坐标冻结、事件停摆,
+  会伪造出"长时间围观"窗口(181525 的 23s 假 standoff)。detect.py 的
+  `_paused_spans` 是现成实现。
