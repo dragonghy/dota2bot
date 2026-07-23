@@ -176,6 +176,32 @@ function GetDesireHelper()
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
     end
 
+    -- [L1-TRADE, rehomed after the Group A REJECT 20260723] Lane-kill window:
+    -- the backed core converts an open lethal kill via THIS battle-tested
+    -- collapse pathway instead of the (condemned) laning-Think replacement.
+    -- All gating/self-risk/depth-leash lives in J.ShouldInitiateLaneKill
+    -- (turbo + 'l1trade'); inert by default.
+    local laneKillTarget = J.ShouldInitiateLaneKill(bot)
+    if laneKillTarget ~= nil then
+        -- Commit-lock: we initiated -> finish the trade, no kite-abort for 4s
+        -- (anti-oscillation, watched 182007).
+        bot.laneCommitUntil = DotaTime() + 4.0
+        SetStickyTarget(laneKillTarget)
+        targetUnit = laneKillTarget
+        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.95)
+    end
+
+    -- [L5-COMBO, rehomed after the Group A REJECT 20260723] Support kill-call
+    -- on the too-deep enemy 4: same pathway, stricter self-risk gates inside
+    -- J.ShouldSupportComboKill (turbo + 'l5combo'); inert by default.
+    local comboTarget = J.ShouldSupportComboKill(bot)
+    if comboTarget ~= nil then
+        bot.laneCommitUntil = DotaTime() + 4.0
+        SetStickyTarget(comboTarget)
+        targetUnit = comboTarget
+        return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.95)
+    end
+
 	hTargetCreep = X.GetLastHitCreep()
 	if J.IsValid(hTargetCreep) and J.CanBeAttacked(hTargetCreep) then
 		return 1.5

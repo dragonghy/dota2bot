@@ -106,13 +106,9 @@ local bCreepPull = J.IsModeTurbo() and J.IsSoakCandidate('creeppull')
 local bBodyBlock = J.IsModeTurbo() and J.IsSoakCandidate('bodyblock')
 	and J.GetPosition(bot) <= 3
 
--- [L1-TRADE] Lane-kill initiation (LANING_PLAYBOOK): support has poked the
--- lane enemy low; our combined castable burst kills it and their burst does
--- not threaten me -> a laning core goes first and converts, instead of letting
--- the kill window pass (find_kill_windows: dozens of 7-40%-HP survivors per
--- run). Turbo-only + soak candidate 'l1trade', pos 1-3, inert by default.
-local bL1Trade = J.IsModeTurbo() and J.IsSoakCandidate('l1trade')
-	and J.GetPosition(bot) <= 3
+-- [L1-TRADE] moved to mode_team_roam (Group A REJECT 20260723): the trigger
+-- (J.ShouldInitiateLaneKill) now raises a team_roam collapse instead of
+-- routing the bot through this file's Think replacement.
 
 -- [L1-XPSOAK] Extreme-disadvantage XP soak (LANING_PLAYBOOK): a solo core
 -- zoned by 2+ enemies whose castable burst makes contesting lethal holds a
@@ -122,12 +118,9 @@ local bL1Trade = J.IsModeTurbo() and J.IsSoakCandidate('l1trade')
 local bXpSoak = J.IsModeTurbo() and J.IsSoakCandidate('l1xpsoak')
 	and J.GetPosition(bot) <= 3
 
--- [L5-COMBO] Support kill-call (LANING_PLAYBOOK): the enemy 4 walked too deep
--- (an allied core is on it) and our combined burst kills -> the support joins
--- the 2-man focus, under STRICTER self-risk gates than the core version (the 5
--- is the squishier one). Turbo-only + soak candidate 'l5combo', pos 4-5.
-local bL5Combo = J.IsModeTurbo() and J.IsSoakCandidate('l5combo')
-	and J.GetPosition(bot) >= 4
+-- [L5-COMBO] moved to mode_team_roam (Group A REJECT 20260723): the trigger
+-- (J.ShouldSupportComboKill) now raises a team_roam collapse instead of
+-- routing the bot through this file's Think replacement.
 
 function GetDesire()
 	PickOneAnnouncer()
@@ -225,23 +218,11 @@ function GetDesire()
 		return 0.9
 	end
 
-	-- [L1-TRADE] Keep an initiating core in laning mode while a lethal kill
-	-- window is open (J.ShouldInitiateLaneKill returns the target); its Think
-	-- converts it. Inert unless turbo + soak candidate 'l1trade'.
-	if bL1Trade and J.ShouldInitiateLaneKill(bot) ~= nil then
-		return 0.92
-	end
-
 	-- [L1-XPSOAK] Keep a zoned solo core in laning mode while the soak stance
 	-- applies, so its Think holds the XP-edge spot instead of walking into a
 	-- lethal contest. Inert unless turbo + soak candidate 'l1xpsoak'.
 	if bXpSoak and J.ShouldXpSoakLane(bot) ~= nil then
 		return 0.9
-	end
-
-	-- [L5-COMBO] Keep the support in laning mode while the kill-call is open.
-	if bL5Combo and J.ShouldSupportComboKill(bot) ~= nil then
-		return 0.92
 	end
 
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
@@ -250,7 +231,7 @@ function GetDesire()
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
-		or bLaneFixCoreLH or bCreepPull or bBodyBlock or bL1Trade or bXpSoak then
+		or bLaneFixCoreLH or bCreepPull or bBodyBlock or bXpSoak then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -497,7 +478,15 @@ local function DoCreepPullThink(pull)
 	end
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock or bL1Trade or bXpSoak or bL5Combo then
+-- [Group A REJECT 20260723] l1trade / l5combo NO LONGER route through this
+-- Think replacement: two decisive batches (mega 0/4, five-id final gate 0/4
+-- with deaths +1.28 and 0-4min CS at 51% of base DESPITE the combat floor)
+-- condemned the takeover architecture itself -- any id in this condition
+-- replaces Valve's native laning for the whole game. The kill-window triggers
+-- moved to mode_team_roam (the battle-tested collapse pathway, no Think
+-- replacement); creeppull/suplh/pullcamp stay Think-based but are PARKED
+-- (gated, excluded from bundles) pending an incremental-hook redesign.
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCamp or bCreepPull or bBodyBlock or bXpSoak then
 	function Think()
 		-- [GH #13] Pull the friendly neutral camp to reset a bad lane
 		-- equilibrium, checked before any laning think. Gated + conservative
@@ -540,20 +529,6 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 			end
 		end
 
-		-- [L1-TRADE] Convert an open lethal kill window: attack the low target;
-		-- the hero script's SkillsComplement lands the spells on the way.
-		if bL1Trade then
-			local hKill = J.ShouldInitiateLaneKill(bot)
-			if hKill ~= nil then
-				-- Commit-lock: we initiated -> finish the trade, no kite-abort
-				-- for 4s (anti-oscillation, watched 182007).
-				bot.laneCommitUntil = DotaTime() + 4.0
-				bot:SetTarget(hKill)
-				bot:Action_AttackUnit(hKill, true)
-				return
-			end
-		end
-
 		-- [L1-XPSOAK] Hold the XP-edge spot: step back toward our fountain,
 		-- take the XP, never walk into the lethal contest. No CS attempts and
 		-- NO jungle -- survival + XP is the whole job of this lane state.
@@ -561,18 +536,6 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bPullCa
 			local vSoak = J.ShouldXpSoakLane(bot)
 			if vSoak ~= nil then
 				bot:Action_MoveToLocation(vSoak)
-				return
-			end
-		end
-
-		-- [L5-COMBO] Join the 2-man focus on the too-deep enemy: attack it; the
-		-- hero script lands the control/damage spells on the way.
-		if bL5Combo then
-			local hFocus = J.ShouldSupportComboKill(bot)
-			if hFocus ~= nil then
-				bot.laneCommitUntil = DotaTime() + 4.0
-				bot:SetTarget(hFocus)
-				bot:Action_AttackUnit(hFocus, true)
 				return
 			end
 		end
