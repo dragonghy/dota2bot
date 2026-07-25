@@ -142,6 +142,9 @@ function GetDesireHelper()
         -- long-range TPs within 15s of a respawn (viper revived, TP'd straight
         -- back to its death spot and re-died in 13s).
         bot.lastDeadFrameTime = DotaTime()
+        -- [TeamBrain] defeat memory: record this death on the team blackboard
+        -- so nobody TPs into the same meat grinder for the next 25s.
+        J.NoteTeamDeath(bot)
     end
 
     if not bot:IsAlive()

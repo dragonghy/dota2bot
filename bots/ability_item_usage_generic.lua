@@ -5247,6 +5247,16 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			tpLoc = X.GetDefendTPLocation( nDefendLane )
 		end
 
+		-- [TeamBrain phase 1] The stock defend TP is DESIRE_ABSOLUTE with no
+		-- ally/winnable/revive checks and sits outside every quota -- the
+		-- wave12 dossier charged it with 10/24 landing deaths and 81% of the
+		-- +41% TP volume ("往着火的塔上添人"). Arbitrate it like everything
+		-- else: headcount at the destination, defeat memory, revive cooldown,
+		-- single responder. Permissive when 'teambrain' is off.
+		if tpLoc ~= nil and not J.ShouldAllowDefendTp( bot, tpLoc ) then
+			tpLoc = nil
+		end
+
 		if tpLoc ~= nil
 			and GetUnitToLocationDistance( bot, tpLoc ) > nMinTPDistance - 500
 		then

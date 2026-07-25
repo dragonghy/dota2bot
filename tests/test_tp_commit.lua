@@ -24,7 +24,12 @@ local function fresh(opts)
 		GetTeam = 3, CanBeSeen = true,
 		GetLocation = trigger,
 	})
-	local bot = api.MakeHero('npc_dota_hero_sven', { CanBeSeen = true })
+	local bot = api.MakeHero('npc_dota_hero_sven', {
+		CanBeSeen = true,
+		-- Healthy lander: the survival release (wave12 mechanism D) must not
+		-- trip in the base scenario.
+		GetHealth = 900, OriginalGetHealth = 900, OriginalGetMaxHealth = 900,
+	})
 	api.install({ bot = bot })
 
 	GetUnitList = function(kind) -- luacheck: ignore

@@ -5538,6 +5538,86 @@ function J.TryTakeTpResponseSlot()
 	return true
 end
 
+-- ============================================================================
+-- [TeamBrain phase 1 / wave12 dossier 20260725] Response arbitration for TP
+-- answers, per the owner's global-strategy directive. The 24:5 landing-death
+-- dossier split cleanly: 10/24 came through the STOCK defend TP (ABSOLUTE
+-- desire, no ally/winnable/revive checks, outside every quota), 14/24 died
+-- inside multi-TP clusters (same-frame triple TPs answering one Axe), 6/24
+-- were revive->TP->re-death chains, and the fix-E commit pin held landers at
+-- 0.85 over the promoted retreat 0.75. All five team bots share one Lua VM,
+-- so these module tables ARE the team blackboard.
+-- Gated turbo + 'teambrain': every entry point returns permissive when off.
+-- ============================================================================
+
+-- Team death memory (defeat memory): every bot records its own death here
+-- from the retreat-mode dead-frame hook. A spot where a teammate just died
+-- is a meat grinder, not a response target (045650: centaur died at the top
+-- tower, lion TP'd in 25s later, then lina TWICE -- four bodies, one DP).
+local tTeamDeaths = {}
+function J.NoteTeamDeath( bot )
+	if bot == nil then return end
+	local v = bot:GetLocation()
+	if v == nil then return end
+	table.insert( tTeamDeaths, { t = DotaTime(), x = v.x, y = v.y } )
+	if #tTeamDeaths > 12 then table.remove( tTeamDeaths, 1 ) end
+end
+
+-- Single-responder claim for defend-type events (one event = one answer).
+local tDefendClaim = { t = -999, x = 0, y = 0, id = -1 }
+
+-- Arbitration gate for the STOCK defend TP (and any future TP path).
+-- Returns TRUE when the TP may go. When 'teambrain' is off, always true --
+-- shipped behavior unchanged.
+function J.ShouldAllowDefendTp( bot, vLoc )
+	if not J.IsModeTurbo() then return true end
+	if not J.IsSoakCandidate( 'teambrain' ) then return true end
+	if bot == nil or vLoc == nil then return true end
+	local nNow = DotaTime()
+
+	-- (A) fresh-respawn cooldown, extended to ALL TP paths: 6/24 dossier
+	-- deaths were revive->TP-back-to-the-same-siege within 14-23s.
+	if bot.lastDeadFrameTime ~= nil and nNow - bot.lastDeadFrameTime < 15.0 then
+		return false
+	end
+
+	-- (A) defeat memory: a teammate died within 25s inside 1200 of the spot.
+	for _, d in pairs( tTeamDeaths ) do
+		if nNow - d.t < 25.0
+		and J.GetLocationToLocationDistance( vLoc, { x = d.x, y = d.y, z = 0 } ) < 1200
+		then
+			return false
+		end
+	end
+
+	-- (A) full-board headcount at the destination: answering needs friends.
+	-- Refuse when visible enemies outnumber allies there by 2+ (050713 ES:
+	-- cast into a 1v3, landed, dead in 5.8s with zero output).
+	local nAllies, nEnemies = 0, 0
+	for _, a in pairs( J.GetAlliesNearLoc( vLoc, 1400 ) or {} ) do
+		if a ~= bot and J.IsValidHero( a ) then nAllies = nAllies + 1 end
+	end
+	for _, e in pairs( J.GetEnemiesNearLoc( vLoc, 1400 ) or {} ) do
+		if J.IsValidHero( e ) then nEnemies = nEnemies + 1 end
+	end
+	if nEnemies - nAllies >= 2 then return false end
+
+	-- (C) single responder: a fresh claim (<12s) on this event by another bot
+	-- means the answer is already in the air (343.2s: THREE same-frame TPs
+	-- for one diving Axe). Claim is per-spot (1600 grouping radius).
+	local nMyId = bot.GetPlayerID ~= nil and bot:GetPlayerID() or -1
+	if nNow - tDefendClaim.t < 12.0
+	and tDefendClaim.id ~= nMyId
+	and J.GetLocationToLocationDistance( vLoc,
+		{ x = tDefendClaim.x, y = tDefendClaim.y, z = 0 } ) < 1600
+	then
+		return false
+	end
+	tDefendClaim.t, tDefendClaim.x, tDefendClaim.y, tDefendClaim.id
+		= nNow, vLoc.x, vLoc.y, nMyId
+	return true
+end
+
 -- [chain-rescue guard, B-group diagnosis 20260723] Module-level memory of the
 -- last answered rescue spot. Watched 113638 t=250-268: Necro TP'd for a
 -- traded Sniper and died to Lina in 5s -- becoming the next "<35% ally with
@@ -6745,6 +6825,16 @@ function J.GetTpCommitDefendDesire( bot, nLane )
 	if bot == nil or not bot:IsAlive() then return nil end
 	if bot.tpRespondLoc == nil or bot.tpRespondUntil == nil then return nil end
 	if DotaTime() > bot.tpRespondUntil then return nil end
+	-- [wave12 dossier, mechanism D] SURVIVAL RELEASE: the 0.85 floor was
+	-- outbidding the promoted retreat (0.75) and pinning landers to be
+	-- ground down in place (~6/24 landing deaths: static <500u for 5s+
+	-- under fire, literal zero output). The owner's contract is
+	-- purpose-driven -- "丢失了动手机会才会走" -- and a lander who is dying
+	-- has lost the chance: release the pin, let retreat win.
+	if J.GetHP( bot ) < 0.40 or J.ShouldRetreatLaneBurst( bot ) then
+		bot.tpRespondUntil = nil
+		return nil
+	end
 	-- The commitment binds to the lane it answered: each defend wrapper asks
 	-- for its own lane, and only the one whose front is near the trigger wins.
 	local vFront = GetLaneFrontLocation( GetTeam(), nLane, 0 )
