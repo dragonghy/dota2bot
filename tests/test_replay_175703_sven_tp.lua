@@ -48,18 +48,20 @@ tests['counterfactual: both enemies out of the 700 scan -> channel is safe'] = f
         'with the laners gone the same TP would complete -- no veto')
 end
 
-tests['tpsafe2 wrapper fires on this frame when armed (travel-TP guard)'] = function()
-    local J, bot = loaded()
-    J.IsSoakCandidate = function(id) return id == 'tpsafe2' end
-    assert(J.ShouldNotStartInterruptibleTp(bot) == true,
-        'armed tpsafe2 must refuse to start the 0:47 travel TP')
-end
-
-tests['tpsafe2 wrapper stays inert off the candidate (shipped default)'] = function()
+tests['tpsafe2 wrapper fires on this frame (PROMOTED: turbo default-on)'] = function()
+    -- PROMOTED 2026-07-23 by owner directive ("tpsafe2 可以直接 ship 了"):
+    -- no candidate needed in turbo any more.
     local J, bot = loaded()
     J.IsSoakCandidate = function() return false end
+    assert(J.ShouldNotStartInterruptibleTp(bot) == true,
+        'the 0:47 interruptible travel TP must be refused by default in turbo')
+end
+
+tests['tpsafe2 wrapper stays inert in normal (non-turbo) mode'] = function()
+    local J, bot = loaded()
+    GetGameMode = function() return 1 end -- luacheck: ignore
     assert(J.ShouldNotStartInterruptibleTp(bot) == false,
-        'off the candidate the gated wrapper must not change shipped behavior')
+        'normal mode ships unchanged')
 end
 
 return tests

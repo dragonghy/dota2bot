@@ -5262,10 +5262,9 @@ end
 -- out of attack range, or one walking away, falls through (false = let the TP
 -- go) because it won't break the channel.
 --
--- GATED (soak candidate 'tpsafe2' + turbo-only), so shipped code is unchanged
--- until an A/B wave activates it -- inert everywhere off-farm.
+-- PROMOTED 2026-07-23 by owner directive ("tpsafe2 可以直接 ship 了"):
+-- turbo default-on, no candidate gate; normal mode ships unchanged.
 function J.ShouldNotStartInterruptibleTp( bot )
-	if not J.IsSoakCandidate( 'tpsafe2' ) then return false end
 	if not J.IsModeTurbo() then return false end
 	if bot == nil or not bot:IsAlive() then return false end
 	return J.CanEnemyInterruptTpChannel( bot )
@@ -5759,10 +5758,10 @@ end
 -- while they converge (the watched frame had them at 1774/1978, on her face
 -- 260u three seconds later; turning at melee range is too late). Callers
 -- cap push desire / floor retreat desire.
--- Gated turbo + 'pushguard'; inert by default.
+-- PROMOTED 2026-07-23 by owner directive ("pushguard 很有道理,应该 ship 了"):
+-- turbo default-on, no candidate gate; normal mode ships unchanged.
 function J.ShouldAbortDeepSoloPush( bot )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'pushguard' ) then return false end
 	if bot == nil or not bot:IsAlive() then return false end
 
 	local hOwn = GetAncient( GetTeam() )
@@ -5787,71 +5786,12 @@ function J.ShouldAbortDeepSoloPush( bot )
 	return nDefenders >= 2
 end
 
--- [homeroute / freehunt#3 20260723] Low-HP limbo router. 44 segments in 50
--- games (avg 58s, max 106s): mid/late-game a bot under 40% HP with no healing
--- consumable drifts in the jungle far from the fountain -- not healing, not
--- TP-ing home, not farming (watched 181441 t=660: zuus at 16% wandered at
--- ~6800 from the fountain for 80s while his team wiped 4v5 mid; his TP came
--- off cooldown mid-limbo and was never used). The middle state is the bug:
--- commit to the fountain instead. Kept NARROW (the rejected lf_recover was an
--- aggressive recall of HEALTHY laners; this fires only when already wrecked,
--- out of consumables, alone, and it has persisted 20s):
---   * not the laning phase (lane salve/recover candidates own that),
---   * HP < 40%, no flask/tango/faerie fire, no bottle charges,
---   * > 2500 from the fountain, no visible enemy within 1400,
---   * the state has persisted >= 20s (bot.homeRouteLowSince stamp).
--- Once committed (bot.homeRouteCommitted) the route runs to completion --
--- released only at HP >= 70% or the fountain itself, so the bot cannot stall
--- at the 2500 ring still low. Gated turbo + 'homeroute'; inert by default.
-function J.ShouldCommitFountainHeal( bot )
-	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'homeroute' ) then return false end
-	if bot == nil or not bot:IsAlive() then return false end
-
-	if bot.homeRouteCommitted then
-		if J.GetHP( bot ) >= 0.70 or bot:DistanceFromFountain() <= 300 then
-			bot.homeRouteCommitted = nil
-			bot.homeRouteLowSince = nil
-			return false
-		end
-		return true
-	end
-
-	local bHasHeal = J.GetItem2( bot, 'item_flask' ) ~= nil
-		or J.GetItem2( bot, 'item_tango' ) ~= nil
-		or J.GetItem2( bot, 'item_faerie_fire' ) ~= nil
-	if not bHasHeal then
-		local hBottle = J.GetItem2( bot, 'item_bottle' )
-		bHasHeal = hBottle ~= nil and hBottle:GetCurrentCharges() > 0
-	end
-
-	-- [SILENT root cause, C-group diagnosis 20260723] The first cut gated on
-	-- "not J.IsInLaningPhase()", but turbo's laning phase SOFT-EXTENDS to
-	-- 10min while net worth < 8000 -- so the poorer and more wrecked the
-	-- hero, the longer it counts as "laning" and the router never fires
-	-- (watched 113203 pudge: all conditions held 48s at 8:44, drifted from
-	-- 8700 to 11400 from the fountain, blocked by this exact clause). Use a
-	-- hard time boundary instead: the true early-laning window (lane
-	-- candidates' turf) ends well before 7 minutes.
-	local bEligible = DotaTime() >= 7 * 60
-		and J.GetHP( bot ) < 0.40
-		and not bHasHeal
-		and bot:DistanceFromFountain() > 2500
-		and #J.GetNearbyHeroes( bot, 1400, true, BOT_MODE_NONE ) == 0
-	if not bEligible then
-		bot.homeRouteLowSince = nil
-		return false
-	end
-
-	if bot.homeRouteLowSince == nil then
-		bot.homeRouteLowSince = DotaTime()
-		return false
-	end
-	if DotaTime() - bot.homeRouteLowSince < 20.0 then return false end
-
-	bot.homeRouteCommitted = true
-	return true
-end
+-- [homeroute -> REMOVED 2026-07-23 by owner directive] "turbo 的原则就是
+-- 尽量少 TP/走路回家": the low-HP-limbo pathology (44 segments/50 games) is
+-- now answered by FIELD REGEN instead -- a mid-game salve re-purchase via
+-- courier (gated 'fieldregen' in item_purchase_generic) plus the shipped
+-- lf_salve use-when-safe logic. The d23 lowhp_limbo detector remains the
+-- acceptance metric.
 
 -- [ultcash / freehunt#1 20260723] "About to die with the ult still in hand"
 -- predicate. 128/50-game pathology (focus heroes 22 incl. zuus 10, lion 5,

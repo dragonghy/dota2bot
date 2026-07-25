@@ -73,9 +73,11 @@ tests['NO-FIRE: shallow position -> normal play'] = function()
         'the guard only bites meaningfully past the midline')
 end
 
-tests['OFF: inert off the candidate / in normal mode'] = function()
+tests['PROMOTED: live in turbo without a candidate; normal mode still inert'] = function()
+    -- PROMOTED 2026-07-23 by owner directive ("pushguard 应该 ship 了").
     local J, bot = armed({ off = true })
-    assert(J.ShouldAbortDeepSoloPush(bot) == false, 'candidate off -> inert')
+    assert(J.ShouldAbortDeepSoloPush(bot) == true,
+        'turbo default-on: the luna frame must trip with no candidate armed')
     local J2, bot2 = armed()
     GetGameMode = function() return 1 end -- luacheck: ignore
     assert(J2.ShouldAbortDeepSoloPush(bot2) == false, 'normal mode -> inert')

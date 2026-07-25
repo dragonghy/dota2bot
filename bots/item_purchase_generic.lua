@@ -767,6 +767,29 @@ function ItemPurchaseThink()
 		end
 	end
 
+	-- [fieldregen, owner directive 20260723] Mid-game salve re-purchase: the
+	-- turbo rule is "never walk/TP home to heal" (homeroute removed for this),
+	-- so a wrecked hero with no consumables BUYS a flask and lets the courier
+	-- deliver it -- the shipped use-when-safe logic drinks it in place.
+	-- Gated turbo + 'fieldregen'; the d23 lowhp_limbo detector (44 segments /
+	-- 50 games, avg 58s adrift) is the acceptance metric.
+	if J.IsModeTurbo() and J.IsSoakCandidate('fieldregen')
+	and not J.IsInLaningPhase()
+	and bot:IsAlive()
+	and J.GetHP(bot) < 0.45
+	and bot:FindItemSlot('item_flask') < 0
+	and bot:FindItemSlot('item_tango') < 0
+	and not IsThereHealingInStash(bot)
+	and Item.GetEmptyInventoryAmount(bot) >= 1
+	and botDistanceFromFountain > 2500
+	and botGold >= GetItemCost('item_flask')
+	and GetItemStockCount('item_flask') > 1
+	and not bot:HasModifier('modifier_flask_healing')
+	and not bot:HasModifier('modifier_fountain_aura_buff')
+	then
+		bot:ActionImmediate_PurchaseItem('item_flask')
+	end
+
 	-- Init Healing Items in Lane; works for now
 	if J.IsInLaningPhase()
 	then

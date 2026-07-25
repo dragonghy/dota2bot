@@ -20,36 +20,6 @@ local api = require('mock.bot_api')
 
 local tests = {}
 
--- ---- 1. homeroute on the pudge frame ----------------------------------------
-
-local function pudge(opts)
-    opts = opts or {}
-    local J, bot, heroes, fx = rf.load('tests/fixtures/f_113203_pudge_homeroute_silent.lua')
-    J.IsSoakCandidate = function(id)
-        return opts.off ~= true and id == 'homeroute'
-    end
-    rawget(bot, '__spec').DistanceFromFountain = 11307 -- ground truth at t=524
-    return J, bot, heroes, fx
-end
-
-tests['[homeroute] the pudge frame now initiates (soft-laning block removed)'] = function()
-    local J, bot, _, fx = pudge()
-    assert(J.ShouldCommitFountainHeal(bot) == false, 'first sighting stamps')
-    DotaTime = function() return fx.time + 21 end -- luacheck: ignore
-    assert(J.ShouldCommitFountainHeal(bot) == true,
-        'pudge at 28%, no consumables, 11307 from home, 48s of drifting -- '
-        .. 'the NW<8000 soft-laning clause must no longer block the router')
-end
-
-tests['[homeroute] true early game (t<7min) still belongs to the lane candidates'] = function()
-    local J, bot = pudge()
-    DotaTime = function() return 300 end -- luacheck: ignore
-    assert(J.ShouldCommitFountainHeal(bot) == false, 'stamp only at t=300')
-    DotaTime = function() return 321 end -- luacheck: ignore
-    assert(J.ShouldCommitFountainHeal(bot) == false,
-        'before 7min the lane-phase candidates own low-HP handling')
-end
-
 -- ---- 2. pushguard on the drow frame ------------------------------------------
 
 tests['[pushguard] the drow death frame trips the abort helper'] = function()

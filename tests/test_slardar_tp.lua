@@ -70,10 +70,12 @@ tests['ShouldNotStartInterruptibleTp is inert in normal (non-turbo) mode'] = fun
     assert(J.ShouldNotStartInterruptibleTp(bot) == false, 'normal mode must never fire')
 end
 
-tests['ShouldNotStartInterruptibleTp is inert in turbo without an active tpsafe2 candidate'] = function()
+tests['ShouldNotStartInterruptibleTp is LIVE in turbo without a candidate (PROMOTED)'] = function()
+    -- PROMOTED 2026-07-23 by owner directive; turbo default-on. With no
+    -- enemy nearby it still stays quiet -- promotion never fires on nothing.
     local J, bot = fresh_jmz()
-    -- No soak_side file => IsSoakCandidate('tpsafe2') false => guard off (TP allowed).
-    assert(J.ShouldNotStartInterruptibleTp(bot) == false, 'off-candidate must never fire')
+    assert(J.ShouldNotStartInterruptibleTp(bot) == false,
+        'no enemy in interrupt range -> TP allowed (quiet, not gated)')
 end
 
 -- BAD: the 8:00 scenario. A melee enemy is on Slardar and closing; starting a
