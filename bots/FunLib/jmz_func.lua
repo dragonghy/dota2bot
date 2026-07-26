@@ -5538,6 +5538,31 @@ function J.TryTakeTpResponseSlot()
 	return true
 end
 
+-- [tpwatch / wave12 dossier #24] Abandon a TP channel that is being eaten.
+-- tpsafe2 (promoted) checks the CAST instant only; dossier case #24: necro
+-- started a channel at 100% HP with no interruptor in range, viper then
+-- auto-attacked him for 74% of his HP across a 5.5s channel, and he died
+-- 1.3s after landing -- the channel spent both the scroll AND the health.
+-- TRUE while channeling a TP, under fresh hero damage, having lost >= 30%
+-- of max HP since the channel began (stamp bot.tpChannelStartHealth). The
+-- caller raises retreat desire so the move order cancels the channel.
+-- Gated turbo + 'tpwatch'; inert by default.
+function J.ShouldAbandonTpChannel( bot )
+	if bot == nil or not bot:IsAlive() then return false end
+	if not bot:HasModifier( 'modifier_teleporting' ) then
+		bot.tpChannelStartHealth = nil
+		return false
+	end
+	if bot.tpChannelStartHealth == nil then
+		bot.tpChannelStartHealth = bot:GetHealth()
+	end
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'tpwatch' ) then return false end
+	if not bot:WasRecentlyDamagedByAnyHero( 1.5 ) then return false end
+	return bot.tpChannelStartHealth - bot:GetHealth()
+		>= bot:GetMaxHealth() * 0.30
+end
+
 -- ============================================================================
 -- [TeamBrain phase 1 / wave12 dossier 20260725] Response arbitration for TP
 -- answers, per the owner's global-strategy directive. The 24:5 landing-death

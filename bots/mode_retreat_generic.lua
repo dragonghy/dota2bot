@@ -236,6 +236,14 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [tpwatch / dossier #24] A TP channel being eaten alive (>=30% max HP
+    -- lost since channel start under hero fire) is abandoned: the retreat
+    -- desire wins and the move order cancels the channel, saving the health
+    -- if not the scroll. Gated turbo + 'tpwatch' inside the helper.
+    if J.ShouldAbandonTpChannel(bot) then
+        return BOT_MODE_DESIRE_VERYHIGH
+    end
+
     -- [obs 20260722] Laning burst-anticipation (trade-survival): the visible
     -- lane enemies' currently-castable burst (mana/cd-aware) threatens my
     -- CURRENT hp and no peel-capable ally is beside me -> back off BEFORE the
