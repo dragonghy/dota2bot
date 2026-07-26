@@ -3302,6 +3302,22 @@ X.ConsiderItemDesire["item_magic_wand"] = function( hItem )
 		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
 	end
 
+	-- [wandbleed / freehunt2 finding 2] Chronic ranged bleed: every rule
+	-- above requires an enemy within 1000, but 45 deaths across 33 games sat
+	-- on 7+ charges while being shelled from BEYOND 1000 (084829 warlock:
+	-- 100->40% over 7s to a 1000+ Lina, ~20 charges held, died 28 HP short).
+	-- Under fresh hero damage the charge is worth more now than later:
+	-- drink at <45% HP regardless of attacker distance. Gated turbo +
+	-- 'wandbleed'; inert by default.
+	if J.IsModeTurbo() and J.IsSoakCandidate('wandbleed')
+	and nHPrate < 0.45 and nCharges >= 5
+	and bot:WasRecentlyDamagedByAnyHero(2.0)
+	then
+		hEffectTarget = bot
+		sCastMotive = '放血自救'
+		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
+	end
+
 	if ( nHPrate < 0.7 and nMPrate < 0.7 and nCharges >= 12 and nEnemyCount >= 1 ) 
 	then
 		hEffectTarget = bot

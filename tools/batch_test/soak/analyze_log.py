@@ -83,6 +83,15 @@ def analyze(path):
     if base.get("winner") is not None and econ_winner and dur_min >= cap_min - 0.5:
         base["winner"] = econ_winner
         winner_by = f"economy_{int(cap_min)}min_cap"
+    elif base.get("winner") is not None and econ_winner and dur_min < cap_min - 0.5:
+        # [freehunt2 finding 1] A sub-cap "engine" ending is the referee's
+        # premature forcewin signature (ancient 4500->0 between samples with
+        # every tower/rax alive; engine winner dire 50/50 times): the engine
+        # attribution is an artifact of the surrender mechanism, not a real
+        # win. Trust the economy instead so ~10% of verdicts stop flipping.
+        if base["winner"] != econ_winner:
+            base["winner"] = econ_winner
+            winner_by = "economy_forcewin_recovery"
 
     if base.get("winner") is None:
         anomalies.append({"type": "no_winner", "note": "game did not finish"})

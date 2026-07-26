@@ -141,12 +141,27 @@ def main():
 
     # live timescale estimate across the observation window
     ts = DEFAULT_TIMESCALE
+    ts_measured = False
     if len(obs) >= 2 and obs[-1]["w"] - obs[0]["w"] > 45:
         ts = max(1.0, (obs[-1]["t"] - obs[0]["t"]) / (obs[-1]["w"] - obs[0]["w"]))
+        ts_measured = True
 
     est_t = obs[-1]["t"] + (now - obs[-1]["w"]) * ts
     state["est_t"] = round(est_t, 1)
     state["ts"] = round(ts, 2)
+
+    # [freehunt2 finding 1, 2026-07-25] NEVER trigger off the DEFAULT
+    # timescale: on a ~1.34x farm the 3.6 guess overshot the clock and
+    # force-ended real 8-9.5min games at the "10min cap" — 50/263 games,
+    # engine winner dire every time, 26 verdicts opposite the econ winner
+    # (~10% winrate corruption). Until a timescale is MEASURED from real
+    # building kills, the only allowed trigger is the wall-clock backstop:
+    # ts >= 1.0 always, so wall time > cap guarantees game time > cap.
+    wall_s = now - state["anchor_w"]
+    if not ts_measured and wall_s < args.cap_min * 60:
+        json.dump(state, open(args.state_path, "w"))
+        print(f"t~{est_t:.0f}s (ts UNMEASURED, wall {wall_s:.0f}s) below cap")
+        sys.exit(1)
 
     if est_t < args.cap_min * 60:
         json.dump(state, open(args.state_path, "w"))
