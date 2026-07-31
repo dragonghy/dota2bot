@@ -115,8 +115,10 @@ local bBodyBlock = J.IsModeTurbo() and J.IsSoakCandidate('bodyblock')
 -- spot at the lane edge (toward our fountain), soaking XP without feeding --
 -- the corrected lf_recover (stays AT the lane, never jungles). Turbo-only +
 -- soak candidate 'l1xpsoak', pos 1-3, inert by default.
-local bXpSoak = J.IsModeTurbo() and J.IsSoakCandidate('l1xpsoak')
-	and J.GetPosition(bot) <= 3
+-- [l1xpsoak] REHOMED to mode_retreat (A1 mechanism analysis 20260731: the
+-- solo -50 gpm was mostly THIS wiring -- the last id still riding the
+-- laning-Think replacement; zero-trigger heroes were the biggest losers.
+-- The panic condition now raises RETREAT desire, which can TP/escape).
 
 -- [L5-COMBO] moved to mode_team_roam (Group A REJECT 20260723): the trigger
 -- (J.ShouldSupportComboKill) now raises a team_roam collapse instead of
@@ -211,20 +213,13 @@ function GetDesire()
 		return 0.9
 	end
 
-	-- [L1-XPSOAK] Keep a zoned solo core in laning mode while the soak stance
-	-- applies, so its Think holds the XP-edge spot instead of walking into a
-	-- lethal contest. Inert unless turbo + soak candidate 'l1xpsoak'.
-	if bXpSoak and J.ShouldXpSoakLane(bot) ~= nil then
-		return 0.9
-	end
-
 	-- [LAB C3] candidate-side cores (pos 1-3) use the custom last-hit logic
 	-- below; stock condition only enabled it for buggy heroes or a pos1 bot
 	-- paired with a human pos5, so farm bots ran Valve default CS (12-47 LH
 	-- at 11 min). Inert off-farm.
 	if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5))
 		or (J.IsSoakCandidate('c3') and J.GetPosition(bot) <= 3)
-		or bLaneFixCoreLH or bBodyBlock or bXpSoak then
+		or bLaneFixCoreLH or bBodyBlock then
 		-- last hit
 		if J.IsInLaningPhase() then
 			local hitCreep, _ = GetBestLastHitCreep(nEnemyCreeps)
@@ -453,19 +448,8 @@ local function DoSupportLaningThink()
 	bot:Action_MoveToLocation(target_loc + RandomVector(50))
 end
 
-if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bBodyBlock or bXpSoak then
+if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bBodyBlock then
 	function Think()
-		-- [L1-XPSOAK] Hold the XP-edge spot: step back toward our fountain,
-		-- take the XP, never walk into the lethal contest. No CS attempts and
-		-- NO jungle -- survival + XP is the whole job of this lane state.
-		if bXpSoak then
-			local vSoak = J.ShouldXpSoakLane(bot)
-			if vSoak ~= nil then
-				bot:Action_MoveToLocation(vSoak)
-				return
-			end
-		end
-
 		-- [mega-bundle fingerprint 20260723] Combat-response FLOOR before any
 		-- farming: this Think replaces Valve's native laning wholesale, and
 		-- its farm body has no answer to hero harassment -- armed bots died

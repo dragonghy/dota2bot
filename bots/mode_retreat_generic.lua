@@ -236,6 +236,17 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
+    -- [l1xpsoak REHOMED / A1 mechanism 20260731] The zoned-solo-core panic
+    -- condition now raises RETREAT desire instead of holding the bot in the
+    -- (condemned) laning-Think replacement: retreat can TP and use escapes,
+    -- which the "walk 420u toward the fountain" soak stance could not
+    -- (144711 medusa: chased 17s to death with tp_cd=0 the whole way).
+    -- The trigger stays in J.ShouldXpSoakLane (turbo + 'l1xpsoak', now with
+    -- an early/healthy exemption); inert by default.
+    if J.ShouldXpSoakLane(bot) ~= nil then
+        return BOT_MODE_DESIRE_HIGH
+    end
+
     -- [tpwatch / dossier #24] A TP channel being eaten alive (>=30% max HP
     -- lost since channel start under hero fire) is abandoned: the retreat
     -- desire wins and the move order cancels the channel, saving the health

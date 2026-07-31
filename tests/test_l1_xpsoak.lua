@@ -58,8 +58,27 @@ local function scenario(opts)
 	J.IsCore = function() return opts.notCore ~= true end
 	-- our fountain is at (-6000, 0): the soak step must go that way (negative x)
 	J.GetTeamFountain = function() return api.Vector(-6000, 0, 0) end
+	-- Past the early exemption window by default (A1 mechanism 20260731).
+	DotaTime = function() return opts.time or 180 end -- luacheck: ignore
 
 	return J, bot
+end
+
+tests['NO-FIRE (A1 exemption): the first 90s are normal lane spacing, never panic'] = function()
+	local J, bot = scenario({ time = 48 })
+	assert(J.ShouldXpSoakLane(bot) == nil,
+		'142838 sniper at 0:48: an ordinary 1v2 open is not the extreme-disadvantage state')
+end
+
+tests['NO-FIRE (A1 exemption): above 85% HP the panic rule stays quiet'] = function()
+	local J, bot = scenario()
+	-- J.GetHP for allies reads OriginalGetHealth/OriginalGetMaxHealth
+	-- (scenario max = 1000): set 950 = 95%.
+	local sp = rawget(bot, '__spec')
+	sp.GetHealth = 950
+	sp.OriginalGetHealth = 950
+	assert(J.ShouldXpSoakLane(bot) == nil,
+		'144711 medusa entered the soak at 100% HP and death-marched -- healthy heroes lane normally')
 end
 
 tests['FIRE: solo core, 2 zoners, lethal contest (600 vs 300hp) -> fountain-ward step'] = function()

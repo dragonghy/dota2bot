@@ -4929,6 +4929,15 @@ function J.ShouldXpSoakLane( bot )
 	if not J.IsInLaningPhase() then return nil end
 	if not J.IsCore( bot ) then return nil end
 
+	-- [A1 mechanism 20260731] Early/healthy exemption: at levels 1-3 ANY two
+	-- enemies' 3s estimate clears 75% of a squishy core's HP, so the panic
+	-- bar was hit during perfectly normal 1v2 lanes (142838 sniper at 86%
+	-- HP, own half, ordinary spacing) and even at 100% HP (144711 medusa).
+	-- A panic rule fires when something is actually wrong: not in the first
+	-- 90 seconds, and never above 85% HP.
+	if DotaTime() < 90 then return nil end
+	if J.GetHP( bot ) > 0.85 then return nil end
+
 	-- Zoned by two.
 	local tEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
 	local nEnemies, nIncoming = 0, 0
