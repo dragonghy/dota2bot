@@ -145,6 +145,14 @@ function GetDesireHelper()
         -- [TeamBrain] defeat memory: record this death on the team blackboard
         -- so nobody TPs into the same meat grinder for the next 25s.
         J.NoteTeamDeath(bot)
+    elseif bot.lastDeadFrameTime ~= nil
+    and (bot.lastRespawnTime == nil or bot.lastRespawnTime < bot.lastDeadFrameTime) then
+        -- [residual fingerprint 20260731] First alive frame after a death:
+        -- stamp the RESPAWN moment. The engine stops calling mode desires on
+        -- dead bots, so lastDeadFrameTime freezes at the death instant and a
+        -- long death timer let the 15s revive-TP cooldown expire while still
+        -- dead (lich revived 6:36, TP'd into three enemies 6:37).
+        bot.lastRespawnTime = DotaTime()
     end
 
     if not bot:IsAlive()

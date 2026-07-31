@@ -5611,7 +5611,14 @@ function J.ShouldAllowDefendTp( bot, vLoc )
 
 	-- (A) fresh-respawn cooldown, extended to ALL TP paths: 6/24 dossier
 	-- deaths were revive->TP-back-to-the-same-siege within 14-23s.
-	if bot.lastDeadFrameTime ~= nil and nNow - bot.lastDeadFrameTime < 15.0 then
+	-- [residual fingerprint 20260731] ANCHOR = RESPAWN, not death: the engine
+	-- stops calling mode desires on dead bots, so lastDeadFrameTime froze at
+	-- the death moment and a 19s death timer let lich revive at 6:36 and TP
+	-- into three enemies at 6:37 "outside" the window. lastRespawnTime is
+	-- stamped on the first alive frame after a death (mode_retreat).
+	local nReviveAnchor = math.max( bot.lastDeadFrameTime or -999,
+		bot.lastRespawnTime or -999 )
+	if nNow - nReviveAnchor < 15.0 then
 		return false
 	end
 
@@ -5676,8 +5683,8 @@ function J.GetRescueTpTarget( bot )
 	-- [watched 230652] fresh-respawn cooldown: no rescue TP within 15s of my
 	-- own death -- walking back and reassessing beats TP-ing into the same
 	-- fight that just killed me (revive->TP->re-death in 13s).
-	if bot.lastDeadFrameTime ~= nil
-	and DotaTime() - bot.lastDeadFrameTime < 15.0 then return nil end
+	if DotaTime() - math.max( bot.lastDeadFrameTime or -999,
+		bot.lastRespawnTime or -999 ) < 15.0 then return nil end
 	if DotaTime() > 15 * 60 then return nil end
 	-- [lf_rescue NARROWED, analyst waveA diff 20260723] The old trigger
 	-- ("ally < 60% + 2 enemies within 900") is TRUE in every ordinary 2v2
@@ -6331,6 +6338,9 @@ function J.ShouldCreepPullLane( bot )
 	-- Laning-phase core only: this protects a laner's farm, not a roamer/support.
 	if not J.IsInLaningPhase() then return nil end
 	if not J.IsCore( bot ) then return nil end
+	-- [residual fingerprint 20260731] late-game shutdown, same reason as
+	-- pullcamp: no wave-resetting during the 10-min economy stretch.
+	if DotaTime() > 6 * 60 then return nil end
 
 	-- SAFE-1: healthy. A pull walks toward the enemy hero for a beat; never do
 	-- it while already low.
@@ -6778,8 +6788,8 @@ function J.ShouldTpSupportTowerFight( bot )
 	if not ( J.IsSoakCandidate( 'midtp' ) or bSup ) then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
 	-- [watched 230652] fresh-respawn cooldown (see GetRescueTpTarget).
-	if bot.lastDeadFrameTime ~= nil
-	and DotaTime() - bot.lastDeadFrameTime < 15.0 then return nil end
+	if DotaTime() - math.max( bot.lastDeadFrameTime or -999,
+		bot.lastRespawnTime or -999 ) < 15.0 then return nil end
 
 	-- Short TP CD + level 6+ is the mid profile. Require the level, and that the
 	-- bot is NOT already committed to / retreating from a fight (its own logic
@@ -6813,7 +6823,16 @@ function J.ShouldTpSupportTowerFight( bot )
 		then
 			local vTower   = building:GetLocation()
 			local tEnemies = J.GetEnemiesNearLoc( vTower, 1200 )
-			if #tEnemies > 0 then
+			-- [residual fingerprint 20260731] REPEAT-ANSWER MEMORY: shaman
+			-- answered the same front at 8:20 / 9:00 / 10:04 with zero
+			-- contact each landing -- once I answered a front and it went
+			-- cold, I do not answer it again for 45s.
+			local bRepeatFront = bot.lastFrontAnswerT ~= nil
+				and DotaTime() - bot.lastFrontAnswerT < 45.0
+				and J.GetLocationToLocationDistance( vTower,
+					{ x = bot.lastFrontAnswerX or 0,
+					  y = bot.lastFrontAnswerY or 0, z = 0 } ) < 1600
+			if #tEnemies > 0 and not bRepeatFront then
 				-- An ally OTHER than me must be there (someone to help /
 				-- being dived); collapsing onto an empty structure is not this fix.
 				local tAllies = J.GetAlliesNearLoc( vTower, 1200 )
@@ -6822,7 +6841,15 @@ function J.ShouldTpSupportTowerFight( bot )
 					if ally ~= bot and J.IsValidHero( ally )
 					-- [watched 181046] and it must SURVIVE the TP window --
 					-- landing next to a corpse wastes the TP and the walk.
-					and J.WillAllySurviveTpWindow( ally ) then
+					and J.WillAllySurviveTpWindow( ally )
+					-- [residual fingerprint 20260731] HEAT GATE: "enemy near
+					-- tower + ally near tower" is almost always TRUE in turbo
+					-- mid-game and built a defend-TP treadmill (+2.4/game,
+					-- most landing to nothing; ~half the -25 gpm). A response
+					-- needs an actual FIGHT: the defended ally has taken hero
+					-- damage within 3s or sits below 75% HP.
+					and ( ally:WasRecentlyDamagedByAnyHero( 3.0 )
+						or J.GetHP( ally ) < 0.75 ) then
 						bAllyThere = true
 						break
 					end
@@ -6832,6 +6859,9 @@ function J.ShouldTpSupportTowerFight( bot )
 				if bAllyThere and J.SafeToCommitFight( bot, tEnemies[1] )
 				-- Team quota: one gated TP responder per window (fix B).
 				and J.TryTakeTpResponseSlot() then
+					bot.lastFrontAnswerT = DotaTime()
+					bot.lastFrontAnswerX, bot.lastFrontAnswerY
+						= vTower.x, vTower.y
 					return building
 				end
 			end
@@ -6948,8 +6978,12 @@ function J.ShouldPullNeutralCamp( bot )
 	if J.IsCore( bot ) then return nil end
 
 	-- Laning window: neutral camps spawn at 1:00, and pulling only matters early.
+	-- [residual fingerprint 20260731] LATE-GAME SHUTDOWN: with the 10-min
+	-- economy cap, pulling our own winning wave BACK during the final stretch
+	-- is anti-push (armed lane depth -573..-814u at 8-12min, building damage
+	-- negative in 8/8 cells). Pull windows close at 6:00 (was 10:00).
 	local nNow = DotaTime()
-	if nNow < 60 or nNow > 10 * 60 then return nil end
+	if nNow < 60 or nNow > 6 * 60 then return nil end
 
 	-- Pull windows: lane waves spawn at :00 and :30 (every 30s from 1:00), so a
 	-- pull must catch one of those two waves as it passes the camp junction. The

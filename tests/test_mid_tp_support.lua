@@ -35,10 +35,17 @@ local function MakeEnemyAtTower(spec)
 end
 
 -- An ally defending the tower (placed AT the tower).
-local function MakeDefenderAtTower()
-    return api.MakeHero('npc_dota_hero_ally', {
-        GetTeam = 2, CanBeSeen = true, GetLocation = TOWER_LOC,
-    })
+local function MakeDefenderAtTower(spec)
+    spec = spec or {}
+    spec.GetTeam = 2
+    spec.CanBeSeen = true
+    spec.GetLocation = TOWER_LOC
+    -- The defended ally is IN a fight by default (heat gate, residual
+    -- fingerprint 20260731): fresh hero damage on it.
+    if spec.WasRecentlyDamagedByAnyHero == nil then
+        spec.WasRecentlyDamagedByAnyHero = true
+    end
+    return api.MakeHero('npc_dota_hero_ally', spec)
 end
 
 -- A ready Town Portal scroll in slot 0 (J.GetItem2 scans GetItemInSlot 0..16).
@@ -242,9 +249,52 @@ tests['QUOTA (audit fix B): second gated TP responder in the same window -> nil'
         'first responder takes the team TP slot')
     assert(J.ShouldTpSupportTowerFight(bot) == nil,
         'a second gated TP in the same 6s window must refuse (collective-TP dedup)')
-    DotaTime = function() return 210 end -- luacheck: ignore
+    -- 46s later: BOTH the 6s quota window and the 45s repeat-front memory
+    -- (residual fingerprint 20260731) have expired.
+    DotaTime = function() return 246 end -- luacheck: ignore
     assert(J.ShouldTpSupportTowerFight(bot) == tower,
         'a new window frees the slot')
+end
+
+tests['NO-FIRE (heat gate): enemy loitering near a tower with an unhurt ally -> nil'] = function()
+    -- The turbo mid-game treadmill: "enemy near tower + ally near tower" is
+    -- almost always true; without an actual fight (fresh damage or <75% HP)
+    -- the response TP is a wasted scroll (+2.4/game, half the -25 gpm).
+    local J, bot = fresh({ defender = false })
+    local cold = MakeDefenderAtTower({
+        WasRecentlyDamagedByAnyHero = false,
+        GetHealth = 600, OriginalGetHealth = 600, OriginalGetMaxHealth = 600,
+    })
+    local realGTM = GetTeamMember
+    GetTeamMember = function(i) -- luacheck: ignore
+        if i == 2 then return cold end
+        return realGTM(i)
+    end
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'a cold front is not a fight -- no response TP')
+end
+
+tests['NO-FIRE (repeat-front memory): the same front within 45s of my last answer'] = function()
+    local J, bot, tower = fresh()
+    DotaTime = function() return 300 end -- luacheck: ignore
+    assert(J.ShouldTpSupportTowerFight(bot) == tower, 'first answer goes')
+    -- The answer went cold and I walked off; 40s later the same trigger is
+    -- back (shaman answered the same front at 8:20/9:00/10:04, zero contact).
+    DotaTime = function() return 340 end -- luacheck: ignore
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'no re-answering the same front inside 45s')
+    DotaTime = function() return 350 end -- luacheck: ignore
+    assert(J.ShouldTpSupportTowerFight(bot) == tower,
+        'after the memory expires the front can be answered again')
+end
+
+tests['NO-FIRE (respawn anchor): a long death timer no longer leaks the cooldown'] = function()
+    local J, bot = fresh()
+    DotaTime = function() return 400 end -- luacheck: ignore
+    bot.lastDeadFrameTime = 380  -- died 20s ago (death-frame stamp froze here)
+    bot.lastRespawnTime = 399    -- but only revived 1s ago
+    assert(J.ShouldTpSupportTowerFight(bot) == nil,
+        'the cooldown anchors on the RESPAWN, not the death (lich 6:36/6:37)')
 end
 
 return tests
