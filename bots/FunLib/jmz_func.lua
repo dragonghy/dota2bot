@@ -7449,6 +7449,29 @@ function J.ShouldFleeAfterRevive( bot )
 	return #tEnemies >= nOthers + 2
 end
 
+-- [backlog: hero.md #1, GH #17 kin] WK reincarnation-mana gate correctness.
+-- mode_retreat_generic suppresses WK's teamfight retreat desire (return NONE
+-- -- "stand and fight, the ult is my safety net") when Reincarnation looks
+-- armed. The shipped check used a HARDCODED 160-mana threshold, but
+-- Reincarnation's real trigger cost is level-dependent and decreasing
+-- (skill level 1/2/3 approx 220/110/0 per Liquipedia 2026-08) -- at skill
+-- level 1 (levels 6-11, most of WK's midgame) the real cost is 220, so 160
+-- mana READS as "armed" while the ult would NOT actually trigger: WK holds a
+-- losing fight believing it has a free life, dies for real, and feeds. This
+-- swaps the magic number for abilityR:GetManaCost() (the same call
+-- hero_skeleton_king.lua's X.ShouldSaveMana already uses correctly for the
+-- same ability) ONLY when armed, so the shipped default (160) is unchanged
+-- until validated. Gated turbo + soak-candidate 'wkreincarnmp'.
+function J.IsWkReincarnationArmed( bot )
+	local abilityR = bot:GetAbilityByName( 'skeleton_king_reincarnation' )
+	if abilityR == nil or abilityR:GetCooldownTimeRemaining() > 1.0 then return false end
+	local nReq = 160
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'wkreincarnmp' ) then
+		nReq = abilityR:GetManaCost()
+	end
+	return bot:GetMana() >= nReq
+end
+
 -- [GH #16] Turbo core farm-desire preservation. Aggregated over ~790 turbo
 -- games, our CORES under-farm at support level (~1.4 CS/min; a competent core
 -- does 5-8+). One driver: after the laning phase, farm desire is hard-capped

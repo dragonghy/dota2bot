@@ -197,11 +197,9 @@ function GetDesireHelper()
 
     if bTeamFight and botName == "npc_dota_hero_skeleton_king"
         and bot:GetLevel() >= 6
+        and J.IsWkReincarnationArmed(bot)
     then
-        local abilityR = bot:GetAbilityByName("skeleton_king_reincarnation")
-        if abilityR:GetCooldownTimeRemaining() <= 1.0 and bot:GetMana() >= 160 then
-            return BOT_MODE_DESIRE_NONE
-        end
+        return BOT_MODE_DESIRE_NONE
     end
 
     if DotaTime() < 0 and botHP < 1 then
