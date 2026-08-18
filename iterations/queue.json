@@ -1,0 +1,5 @@
+{
+  "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填)",
+  "requests": [],
+  "done": []
+}
