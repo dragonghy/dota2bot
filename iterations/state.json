@@ -913,5 +913,53 @@
     "validation": "tests/test_axe_blink_build.lua, 10 cases: gate-off pos_3 and pos_1 asserted byte-for-byte against transcribed copies of the shipped lists; armed-but-normal-mode unchanged (turbo-only); a DIFFERENT armed candidate ('wkbuild') unchanged; armed turbo puts blink at index 2 for pos_3 and pos_1 with a multiset-equality check (nothing added or dropped) and a subsequence check (every non-blink item keeps its relative order); the aliased positions pos_2/pos_4/pos_5 follow their base list armed and stay shipped unarmed; the reachability arithmetic evaluated against the list actually under test (it first asserts that ONLY the starting outfit precedes blink, so inserting anything there fails the test rather than silently invalidating the measurement); and a tripwire pinning the shipped pos_3 indices the measurement was taken against. FOUR mutation tests all caught: removing the gate (6 fails), dropping the turbo check (1), landing blink third instead of second (4), dropping blink instead of moving it (4). luacheck 0 warnings; full suite 499/499 green (baseline 489 + 10 new).",
     "known_gap": "(1) Blink's 2250 gold is the one number not read from the replays (shop price anchor; same class as the GetManaCost anchors on wkreincarnmp/axeblink/zusult). Everything else -- per-frame net worth, per-frame item lists, boots timing, game length -- is off the .dem. (2) Net worth is not spendable gold at an instant, so the projected landing frames are approximations of the purchase moment. (3) Four games, one spot archive, Axe on pos_3 in all of them; pos_1 Axe is unobserved and its reorder is by symmetry. (4) NOT answered by any of this: whether a blink Axe who skipped the Vanguard/Crimson stack survives long enough to use it. That is the emergent question and only a batch can answer it -- the lanefix lesson applies in full.",
     "next": "Not queued in iterations/queue.json. Needs director approval to enter iterations/streams/test_set.md -- the sixth hero-stream id at that gate (wkreincarnmp, wandlimbo, axeblink, zusult, this one; cmrguard already admitted). IMPORTANT SEQUENCING: 'axeblink' cannot be evaluated on its own, because its precondition (Axe holding a dagger) occurred in 0 of 4 measured games. Either arm 'axebuyblink' first and judge 'axeblink' in a later wave on top of it, or arm the pair together and accept that the wave measures the pair. Condition (b) for this id should be read with BEHAVIORAL DETECTORS -- blink acquisition rate and time, blink casts per game, enemies pinned per Call -- with gpm/xpm only as a do-no-harm check, since the change deliberately trades net worth composition rather than net worth."
+  },
+  "director_admissions_20260819T1900Z": {
+    "trigger": "director work unit #10, 2026-08-19T19:00Z. Priority (a) empty (no new [bug]/[harness]); priority (b) impossible (roamstale bisect arm A launched 18:08Z, arm B blocked on the 64-vCPU on-demand cap and deferred to >=20:07Z). Went to priority (c): test_set admissions.",
+    "hard_constraint_for_arm_B": "Arm B must use the 15-id string from test_set.md SS G VERBATIM. Neither id admitted this round may appear in EITHER arm. Arm A is already running without them; adding them to arm B destroys the single-variable isolation that is the entire point of the wave (SS G.1) and voids the pre-registered prediction table (SS G.3).",
+    "admitted": {
+      "tpdead": {
+        "issue": "GH #37 (strategy)",
+        "eligible_set": "16 -> 17",
+        "condition_a": "provable but VERY low frequency: ~7 releasable events per wave (~0.03/game), from #37's 11 tracked rescue TPs of which 7 never arrived within 45s. Detectable as a state transition (stamp present + ally DEATH event -> commitment gone that frame).",
+        "condition_b": "behavioural detector ONLY, gpm/xpm forbidden (SS A0 rule; 0.03 events/game against GH #30's sigma~30 / SE~15 is pure noise).",
+        "condition_c": "holds and is not a new claim: the commitment's own contract is purpose-driven; the rescued ally being dead is the definitional loss of purpose.",
+        "constraints": [
+          "absent from both arms of the running bisect",
+          "single-arming is a bit-identical no-op (sits under the tpcommit gate); rides as a two-arm CONSTANT to collect (a), never as its own arm"
+        ],
+        "honest_boundary": "tpdead only reclaims the already-wasted 12s commitment; it does NOT prevent the doomed TP itself (scroll + repositioning still spent), which is where #37's economic cost mostly sits. lf_rescue's own net value remains unestablished (1 of 11 worked). Patching it is NOT a condition (b) pass for lf_rescue."
+      },
+      "axebuyblink": {
+        "issue": "hero stream report 20260819T175518Z (no issue number)",
+        "eligible_set": "17 -> 18",
+        "condition_a": "best observability in the set: 'does Axe hold a dagger at frame t / when did he first hold one' reads straight off the .dem, no bid reconstruction, no episode rebuilding. Not the 'structurally unprovable' class of creeppull/pullcamp/l1xpsoak.",
+        "condition_b": "behavioural detector as primary (blink acquisition rate and timing, casts per game, heroes caught per Berserker's Call); gpm/xpm only as a 'did not get worse' backstop. The change swaps net-worth COMPOSITION, not amount, so economy totals as primary would misjudge it.",
+        "condition_c": "standard theory (blink is Axe's delivery system and first big item) AND measured: from Axe's own gold curves blink-after-boots lands at 558/479/584s, i.e. 3 of 4 games, versus the observed 0 of 4.",
+        "constraints": [
+          "absent from both arms of the running bisect",
+          "rare in this set: HIGH-FREQUENCY and TWO-DIRECTIONAL (skipping the tank stack may not survive to use the dagger -- pure emergent question, lanefix lesson applies). As a two-arm constant the paired difference cancels it, so it can collect (a) but can NEVER collect (b): it will eventually need its own tested-variable wave."
+        ],
+        "load_time_gate_checked": "not a new risk. hero_skeleton_king.lua:47 (wkbuild) and hero_warlock.lua:46 (wlok) already call J.IsModeTurbo() at file-load time, unconditionally (the `and` short-circuits after it), so the turbo cache is already primed at hero-file load in every game. Empirically correct: turbo-only gates (lanesurv, cmrguard, lf_rescue) have all been observed firing in replays."
+      }
+    },
+    "sequencing_ruling_axeblink": "axeblink NOT admitted -- ordering, not rejection. Its precondition is 'Axe holds a dagger', true in 0 of 4 observed games, so arming it alone tests nothing. Rejected the alternative of arming the pair as one variable: axebuyblink-armed-without-axeblink is a meaningful, runnable configuration (Axe buys the dagger and uses the SHIPPED generic blink logic), so the two are separable; bundling them means a bad reading cannot distinguish 'bought wrong' from 'blinked wrong', while separating costs nothing because axeblink currently cannot execute a single frame.",
+    "director_own_verification": [
+      "499/499 tests + luacheck 0 warnings reproduced in this container (toolchain absent at start, installed via apt + luarocks). Hero and strategy self-reported numbers check out.",
+      "tpdead mutation reproduced: deleting the release block in J.GetTpCommitDefendDesire fails EXACTLY 2 ([final bid] and [state]), error names the surviving 0.85 corpse pin; restoring goes green.",
+      "hRescueAlly provenance: UNIT_LIST_ALLIED_HEROES filtered by J.IsValidHero and `not ally:IsIllusion()` -- a real hero handle, stable for the game, so storing it across frames and calling :IsAlive() is safe (illusions, the class whose handles do go stale, are excluded).",
+      "cross-frame stamp reset completeness (the hTargetCreep/roamstale defect shape, checked deliberately): tpRespondUntil has exactly 3 commitment writers in bots/ (5107 / 5129 / 5311) and ALL THREE write tpRespondAlly in the same block (set or clear). 'stale Ally paired with fresh Until' is therefore structurally impossible."
+    ],
+    "SS0b_tenth_example": {
+      "subtype": "NEW: the code is correct, but the lines that KEEP it correct are unasserted (examples 1-9 were 'the author's reasoning is voided downstream').",
+      "director_third_mutation": "Deleting BOTH `bot.tpRespondAlly = nil` clears in ability_item_usage_generic.lua (the two place-answering response TPs) failed ZERO of 502 tests. Those two lines are the only thing stopping a corpse left over from an earlier rescue from releasing a TOWER-DEFEND commitment, and the failure mode is silent (no bot-side debugging). Strategy's stamp-vs-corpse control constructs the state directly and so never exercises the cast sites.",
+      "general_rule": "Any change that introduces cross-frame state must ship an invariant test asserting 'every site that writes the commitment also writes the stamp' -- behavioural frames alone are not enough, because this defect class shows up at the site somebody adds NEXT MONTH, which by definition has no fixture. Same reasoning as GH #29's chain-order test.",
+      "closed_by_director": "tests/test_tprespond_stamp_invariant.lua (3 cases, source-level, pairing required within a 10-line window, plus a >=3-writers non-vacuity assertion and a 'the stamp still has a reader' tripwire). Two mutations: dropping either clear fails EXACTLY 1 naming the line number and the fix; dropping the rescue-site stamp fails exactly 1 as well (proving strategy's behavioural tests genuinely cannot reach the stamping site). 502/502, luacheck 0."
+    },
+    "throughput_finding": {
+      "observation": "Admission rate now far exceeds wave throughput. Ids admitted or queued today: capmono, tpdying, cmrguard (readmission), roamstale, tpdead, axebuyblink, plus 4 more finished-and-queued from the hero stream (wkreincarnmp, wandlimbo, axeblink, zusult). Throughput is ~30 min per wave and ONE tested variable per wave, realistically one wave every 2-6 hours.",
+      "diagnosis": "The bottleneck is NOT director approval. It is that each admitted id's condition (a) still requires the replay desk to reconstruct frames by hand.",
+      "steering": "Told all three streams (test_set.md SS I.6) to shift effort from the N+1th new id toward (i) per-id trigger detectors for already-admitted ids (infra backlog #3), which is what makes 'collect (a) while riding along' scale, and (ii) isolation-wave designs for the ids that can only ever collect (a) as constants (capmono already owes one, axebuyblink will). Pending-admission queue is now maintained explicitly in test_set.md SS I.7 so streams stop re-requesting in reports."
+    }
   }
 }
