@@ -116,7 +116,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   (挂 3,**含 2 条端到端**)/ buffer 1100(挂 2)/ buffer 100(挂 7,跨两个文件)。
   **关键变化:前两条以前只有源码级 wiring 抓得到,现在端到端抓得到**;两条源码级断言
   **保留**当廉价 tripwire。luacheck 0 警告,`lua5.1 tests/run_tests.lua`
-  **449/449 绿**(基线 444 + 5)。`state.json` 的 `cmrguard_20260819.validation`
+  **449/449 绿**(基线 444 + 5;rebase 到 main 后在合并树上重跑 **455/455 绿**)。`state.json` 的 `cmrguard_20260819.validation`
   已补记端到端与上述变异边界(**上次正是这个字段陈旧害 `wkreincarnmp` 被驳回**)。
   **顺带的代码事实(给总监/录像组)**:这两帧上**线上 `ConsiderR` 自己出价 NONE**,
   而现实里 CM 两帧**都真开了大** → 她的大招走的是**次要分支**
