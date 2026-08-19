@@ -162,3 +162,32 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **`--games` 提到 20-25**(上一波 dire 仅 80 局 vs radiant 149,被截断),预估 $3-4。
   上一波最终局数:855-858 合计 **229** 有效局(+23 暖场),radiant 149 / dire 80。
   详见 `iterations/reports/batch-desk/20260819T100655Z.md`。
+- 2026-08-19T12:12:00Z:**启动轮**。MTD **$3.4651**(与 10:07Z 完全一致,中间两轮零
+  支出),无在跑实例,无泄漏,未触发任何预算刹车。收割:`validation/` 与 `soak/` 均
+  无 08:08Z 之后的新对象,**无新数据**;queue.json 仍为空。例行波次三条件**全部满足**
+  ((i) 距上一波 06:09Z 为 6h01min;(ii) test_set 成员变更 `cmrguard` 出 / `capmono` 入
+  + `[bug] #31` 修复入树;(iii) $3.47 + ~$3.4 ≈ $6.9 ≤ $45),故启动。
+  本波**完全按总监 11:10Z `test_set.md` §C 的两臂定义**执行(该节明写覆盖批测台
+  10:07Z 的建议):**`lf_rescue` 同树两臂 bisect**,
+  **臂 A** = 13 id(`l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,
+  overchase,fieldregen,wandbleed,tpwatch,capmono`),**臂 B** = A 去掉 `lf_rescue`,
+  **两臂共用同一组种子 859-862** 使 draft 逐局配对。拓扑 **8 台 × 1 种子**
+  (4 种子 × 2 臂),c6i.4xlarge spot ×8 全部一次拿到容量,16 槽,3h 看门狗,
+  **`--games` 15→22**(上一波 dire 仅 80 局 vs radiant 149,被 35min stall 截断),
+  树 `d6bfa08` = 远端 main tip 已核对。预估 $3-4,预计 13:40-14:40Z 落地,
+  预期 ≥350 局有效局(每臂 ≥175)。
+  **上机前静态核对**(防重演 `[bug] #31` 式"测了个不生效的东西"):13 个 id 逐个 grep
+  确认在 `bots/` 里真实存在;被 bisect 的 **`lf_rescue` 没有裸字面量**,它经
+  `J.IsLaneFixOn('rescue')`(`jmz_func.lua:5385-5388`)展开为
+  `J.IsSoakCandidate('lf_rescue')`,消费点 `jmz_func.lua:5691` —— 变量确实可被逗号串
+  表达;`J.IsSoakCandidate` 的 `gmatch('[^,]+')` bundle 解析路径亦复核。
+  **run_id 不编码臂/种子**,映射表(A: `_121038`/`_121044`/`_121050`/`_121056` =
+  859/860/861/862;B: `_121105`/`_121111`/`_121117`/`_121122` = 859/860/861/862)
+  只在报告与本节里 —— 下次收割**必须按表归臂**,verdict 对象名的 13-id/12-id 串
+  可交叉校验。**收割方式:两臂分别用 `recover_verdict.py` 全量重算,再取 A−B 配对差,
+  不许拿单臂读数与历史 -34.59 比较**;并且**必须先按 run 分目录下载再带前缀合并**
+  (08:08Z 踩过的跨 run 同名撞车,上次静默丢 15.9% 的局,本波 8 台风险更高)。
+  上一波最终局数:855-858 合计 **229** 有效局(+23 暖场),radiant 149 / dire 80。
+  启动前后 check_costs.sh / describe-instances 均确认无泄漏(结束时恰好 8 台,全是本轮
+  有意启动的自毁 spot)。
+  详见 `iterations/reports/batch-desk/20260819T121200Z.md`。
