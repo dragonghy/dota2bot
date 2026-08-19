@@ -102,6 +102,13 @@ local function default_for(key)
     -- HasModifierContainsName) crash on load.
     if key == 'NumModifiers' then return 0 end
     if key:find('^GetNearby') then return {} end
+    -- The engine answers a LIST here, not a number. `return 0` below made every
+    -- helper that iterates it (J.GetCreepAttackProjectileWillRealDamage,
+    -- J.GetAttackProjectileDamageByRange, ...) crash with "bad argument #1 to
+    -- 'pairs'" the moment a test drove a real last-hit / incoming-damage path.
+    -- Same class as the GetTower/UNIT_LIST_*_BUILDINGS gap: a mock default that
+    -- states a world assumption nobody declared.
+    if key == 'GetIncomingTrackingProjectiles' then return {} end
     if key == 'GetLocation' then return M.Vector(0, 0, 0) end
     if key:find('^Get') then return 0 end
     return nil

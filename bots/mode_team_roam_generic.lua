@@ -153,6 +153,26 @@ end
 function GetDesireHelper()
     bDefensiveCollapse = false
     bLaneKillCommit = false
+    -- [roamstale] `hTargetCreep` is written in exactly ONE place -- the last-hit
+    -- branch far below -- which sits UNDER every early-returning branch in this
+    -- helper (ConsiderHelpWhenCoreIsTargeted, ConsiderHelpAlly, punish-dive,
+    -- punish-over-chase, l1trade, l5combo). It is never reset, and Think() reads
+    -- it FIRST and `return`s on it. So on every frame one of those branches wins
+    -- the auction, this mode's Think attacks LAST FRAME'S creep and the collapse
+    -- target the desire was computed from is never touched -- the desire says
+    -- "collapse on the invader", the action says "keep last-hitting". That is
+    -- the watched 232228 shape (WK, stun ready, hovering ~1000u from a 69% solo
+    -- Juggernaut for 17s while the punish branch was bidding for him).
+    -- Armed, the variable means what its only writer and its only reader both
+    -- assume: THIS frame's last-hit creep. It is reassigned below on every frame
+    -- that reaches the branch, so the armed delta is confined to exactly the
+    -- frames an early branch returned; it can only ever REMOVE a stale creep
+    -- attack, never add one, and it changes no desire value anywhere (nothing
+    -- reads hTargetCreep before its assignment). Gated turbo + 'roamstale';
+    -- shipped defaults keep the stale handle byte-for-byte.
+    if J.IsModeTurbo() and J.IsSoakCandidate('roamstale') then
+        hTargetCreep = nil
+    end
     if bot:IsInvulnerable() or not bot:IsHero() or not bot:IsAlive() or not string.find(botName, "hero") or bot:IsIllusion() then
         return BOT_MODE_DESIRE_NONE
     end

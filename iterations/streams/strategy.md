@@ -63,7 +63,14 @@
    X」的分支,验收必须断言最终出价(过完所有下游变换),不是 helper 返回值**。
    本组名下还没按这条规矩查过的 id:~~`tpcommit`~~(**2026-08-19T11:35Z 已查,
    发现域缺口 → gated `tpdying`,见 issue #35 与当前状态节**)、
-   `midtp`/`suptp`/`lf_rescue`/`teambrain`/`ownhalf`/`tpwatch`。
+   ~~`ownhalf`~~(**2026-08-19T15:34Z 已查:出价这一层 PASS —— 0.72 过完 cap 仍赢下
+   竞价;但下游一层撞到动作缺陷 → gated `roamstale`,见 issue #39 与当前状态节**)、
+   `midtp`/`suptp`/`lf_rescue`/`teambrain`/`tpwatch`。
+   **加一条做法(2026-08-19T15:34Z 立):出价断言通过之后不要停,再往下走一层断言
+   动作** —— 总监 §0b 对动作类缺陷的推论(「断言动作真的达成了 helper 假设的那个状态」)
+   本来就适用于每一条,而 `ownhalf` 正是「出价干净、动作全丢」的第一例。驱动方式已经
+   现成:`tests/test_roamstale_collapse_action.lua` 用 `replay_fixture.record_actions`
+   在真实帧上连跑两帧 `GetDesire()`+`Think()`,可直接照抄。
    **查 `tpcommit` 时补好的工具链让这件事对后面几条便宜了很多**:mock 的
    `BOT_MODE_DESIRE_*`/`BOT_ACTION_DESIRE_*` 现在带真实 0..1 值(此前是自动常量
    元表发的任意 id,`Defend.GetDefendDesire` 实测返回 1008/1009,跨模式比出价
@@ -83,6 +90,38 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T15:34Z:**`lf_rescue` 冻结令仍有效**(臂 B 补跑 verdict 未落地,
+  `origin/main` 仍停在总监 15:00Z 的 `4993b4b`),本轮 `git diff` 里**没有 `lf_rescue` /
+  `jmz_func.lua` 的任何一个字节**。没有可认领的新 `[strategy]` issue,接 backlog 第 8 条
+  「最终出价可达性」普查,**一次一条,本轮 `ownhalf`**。
+  **出价这一层 `ownhalf` 干净**(负结果,如实记录):在它自己的立案帧
+  `f_232228_wk_ownhalf_standoff`(t=340=5:40)上,原始 0.98 被 `CapForLanePush` 砍到
+  **0.72**,但 0.72 仍**赢下模式竞价**(`mode_laning_generic` 同帧 **0.446**,其余 16 个
+  mode 文件全 **0**)—— 它**不是** #29/#31/#32/#35 那种出价域缺口。
+  **但补验收时在下游一层撞到新缺陷**(总监 §0b 第八例,**新亚型:出价完好且赢了竞价,
+  被本 mode 自己的 `Think()` 丢掉**):`mode_team_roam_generic.lua` 的 `hTargetCreep`
+  **只有一个写者**(last-hit 分支),**位于全部六条提前 return 的出价分支之下**
+  (`ConsiderHelpWhenCoreIsTargeted`/`ConsiderHelpAlly` **已发布** + `ownhalf`/`overchase`
+  (**armed**)/`l1trade`/`l5combo`),**从不复位**;而 `Think()` **第一件事**就是读它并
+  `return`。于是**每一帧只要那六条之一赢下竞价,这个模式就去打上一帧那只小兵,永远碰不到
+  自己算出来的集火目标** —— 这机械地解释了 `ownhalf` 的立案观察本身(232228:WK 满血、
+  晕就绪,在 69% 血落单 Jugg 旁 ~1000 码悬停 17 秒)。
+  改动:gated `roamstale`(turbo-only),在 `GetDesireHelper` 开头清 `hTargetCreep`;
+  可分离性同 `capmono` 的「纯 min」——last-hit 分支每帧到达时都会重新赋值,所以 armed
+  差集**恰好**是「某条提前分支返回了」的帧,**只可能移除一次残留小兵攻击、不可能新增**,
+  且**不改变任何一处出价**。验证 `tests/test_roamstale_collapse_action.lua` 7 例
+  (真实帧两帧端到端驱动真的 `GetDesire()`+`Think()`;帧事实全断言;**无小兵对照组**证明
+  小兵就是机制;普通补刀帧 armed/shipped 逐位相同;**反向断言**钉住写者数量,别人正经修掉
+  时自曝过期;**两次变异测试**:删修复恰好挂 2 条,gate 常开恰好挂 1 条)。
+  顺带补 mock 保真度缺口:`GetIncomingTrackingProjectiles` 默认从 `0` 改为 `{}`
+  (引擎返回列表;此前任何驱动真补刀/来袭伤害路径的测试都会 `pairs` 崩溃 —— 是崩溃不是
+  假绿,无历史结论需重看)。**462/462(基线 455)+ luacheck 0 警告**。
+  `state.json` 新增 `roamstale_20260819` 与 `ownhalf_BID_AUDIT_20260819`。
+  **`roamstale` gated 未 armed**,入 test_set.md 待总监批(已开 issue **#39**)。
+  **排期硬提示:它横跨六条分支(含两条已发布、一条此刻 armed 的 `overchase`),必须单独
+  测量,不可与 `ownhalf`/`overchase`/`l1trade`/`l5combo` 任何一条的 bisect 同波 armed。**
+  未花 AWS 钱(本轮零 AWS 调用、零 S3 读),未提批测请求。详见
+  `iterations/reports/strategy/20260819T153447Z.md`。
 - 2026-08-19T13:45Z:认领 **issue #37**(总监 13:12Z 归口本组)。总监冻结令:
   verdict 落地前**不许动 `lf_rescue` 代码** —— 本轮严格遵守,
   **`git status bots game` = 0 个文件**,无行为改动、无新 gate、`state.json` 未改。
