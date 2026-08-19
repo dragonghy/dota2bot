@@ -76,3 +76,33 @@
     (852/853/854,来自另一实例 `spot_20260819_001007_1_main`)及后续新局
     留给下一轮。
   - 完整报告:`iterations/reports/replay-check/20260819T004401Z.md`
+- **2026-08-19T02:36-03:30Z(第二次触发,宽扫+深查两层)**:batch-desk 02:09Z 报告
+  显示同一 14-id 全量测试集(vs 稳定版)三个种子(851/853/854)gpm/xpm 全部同向
+  负偏差(均值 gpm -27.08,854 最差 -63.8)。本轮委托两个 replay-analyst 子代理
+  并行补完 `spot_20260819_001001_1_main`(种子851剩余2局)+
+  `spot_20260819_001007_1_main`(种子853全4局+种子854全4局)——**10/10 局宽扫,
+  8/10 局逐帧深查**(超过章程 6 局下限)。两个 run_id 的全部 12 局 mirror 有效局
+  (14 dem 减 2 暖场局)现已 100% 检查完毕。
+  - `ownhalf`:**WORKING**,本轮 3 局独立帧证据(002443 zeus×2 越境死区、001937
+    SK、003005 CM),均在 1200-3000u 死区正确捕获入侵者。
+  - `overchase`:**WORKING(倾向,样本小)**,854 组唯一一次 `[20]` 检测器命中在
+    baseline 侧,未见 armed 侧反例。
+  - `fieldregen`:**WORKING**,002443 局 PA t≈608-618s 场外补给帧证据干净。
+  - `lf_rescue`:**混合 WORKING+SILENT**——002443 局 Oracle→Axe 触发正确;
+    001937 局 Crystal Maiden→Lina 前置条件全满足但落地在泉水非目标位置,SILENT。
+    已评论 issue #21(结构性提醒:与已拒绝的 lf_recover/lf_support 同属跨图 TP
+    机制,建议单独做 GPM 差分而非只看单帧正确性)。
+  - `creeppull`/`pullcamp`:**SILENT(10/10 局)**,两侧对称沉默(0-400s 窗口内
+    无经典拉野痕迹)。已评论 issue #13,怀疑触发窗口/阈值与 Turbo 兵线节奏不匹配
+    ——若属实,测试集 14 个 id 实际只有 12 个在起作用,是下次判读前应先修的前置
+    问题。
+  - `l1trade`/`l5combo`/`teambrain`/`wandbleed`:证据不足或无压力样本,不下结论。
+  - `midtp`/`suptp`/`tpcommit`/`tpwatch`:低优先级未深挖,沿用既有 WORKING 记录。
+  - 非-armed-id 新发现:854 组 `20260819_005355_slot1` 局 DIRE(armed 侧,输)
+    集火目标全打辅助、从不针对滚雪球的 Lina(0死/1574GPM 断层第一),已开新
+    issue #26([strategy])。
+  - -27gpm 负偏差**未找到直接 BUGGY 机制**,两条线索留给协同组/批测台下一步
+    (lf_rescue 结构性提醒 + creeppull/pullcamp 疑似全 SILENT)。
+  - 待补:`spot_20260819_020910_1_main`(种子852补跑,02:09Z 启动,本轮触发时
+    仍在跑)留给下一轮。
+  - 完整报告:`iterations/reports/replay-check/20260819T033000Z.md`
