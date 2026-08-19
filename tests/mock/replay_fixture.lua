@@ -12,8 +12,50 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
+local ability_meta = require('mock.ability_meta')
 
 local M = {}
+
+--- Real engine ability slot + IsUltimate for one hero's dumped abilities.
+---
+--- The dump is FLATTENED (filtered entries are skipped), so its array index is
+--- NOT the engine slot, and it carries no ultimate marker -- `AbilityType` is
+--- KV data that never enters a .dem. Left as-is, `X.GetAbilityList` could not
+--- fill `sAbilityList[6]` for ANY hero, so every "drive ConsiderR on a real
+--- frame" test passed without reaching one line of ultimate logic (GH #36).
+---
+--- Resolution order, most authoritative first:
+---   1. the dump's own `slot` / `is_ultimate` fields, once the dumper emits
+---      them -- a newer dump always outranks this loader's reconstruction;
+---   2. `mock/ability_meta.lua`, generated from the game's own hero KV, which
+---      says WHICH name is the ultimate (never guessed from position: the dump
+---      order genuinely differs per hero -- centaur ends ..stampede[ult],
+---      horsepower[innate], while lich ends ..chain_frost[ult]).
+---
+--- Only the placement is reconstructed: non-ultimates keep dump order from
+--- slot 0, and a hero's ultimate goes to slot 5. That mirrors the engine
+--- invariant `X.GetAbilityList` itself encodes (`ability:IsUltimate() and
+--- slot >= 4`) -- in game the R position is never a basic-ability slot.
+local function resolve_slots(unit_name, abilities)
+    local ults = ability_meta.ULTIMATES[unit_name] or {}
+    local by_slot, next_basic, next_ult = {}, 0, 5
+    for i, a in ipairs(abilities) do
+        local is_ult = a.is_ultimate
+        if is_ult == nil then is_ult = ults[a.name] or false end
+        local slot = a.slot
+        if slot == nil then
+            if is_ult then
+                slot, next_ult = next_ult, next_ult + 1
+            else
+                slot, next_basic = next_basic, next_basic + 1
+                -- Never let a basic ability squat the reserved R slot.
+                if next_basic == 5 then next_basic = 6 end
+            end
+        end
+        by_slot[i] = { slot = slot, is_ultimate = is_ult }
+    end
+    return by_slot
+end
 
 --- Load a fixture file. Returns J, bot (the subject), heroes (by full name), fx.
 ---
@@ -97,6 +139,7 @@ function M.load(path, sSubject)
         -- handles a hero script will fetch via GetAbilityByName, so a FULL
         -- script run (SkillsComplement) sees real levels and cooldowns.
         local slotAbilities = {}
+        local resolved = resolve_slots(u.name, u.abilities or {})
         for i, a in ipairs(u.abilities or {}) do
             if a.name ~= '' then
                 local h = heroes[u.name]:GetAbilityByName(a.name)
@@ -106,12 +149,15 @@ function M.load(path, sSubject)
                 sp.GetCooldownTimeRemaining = a.cd
                 sp.IsFullyCastable = a.level > 0 and a.cd <= 0
                 sp.IsCooldownReady = a.cd <= 0
-                slotAbilities[i - 1] = h
+                -- Truthful per the game's own KV, so X.GetAbilityList can tell
+                -- the ultimate from a basic and fill sAbilityList[6] (GH #36).
+                sp.IsUltimate = resolved[i].is_ultimate
+                slotAbilities[resolved[i].slot] = h
             end
         end
-        -- GetAbilityInSlot(0-5): the dump lists abilities in slot order, so
-        -- expose the same real (name-cached) handles by slot index too --
-        -- helpers like J.GetReadyHardCc scan slots rather than known names.
+        -- GetAbilityInSlot: real engine slots (see resolve_slots) -- helpers
+        -- like J.GetReadyHardCc scan slots rather than known names, and
+        -- X.GetAbilityList requires the ultimate to sit at slot >= 4.
         rawget(heroes[u.name], '__spec').GetAbilityInSlot = function(_, slot)
             return slotAbilities[slot]
         end

@@ -1,8 +1,103 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono
 
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
+
+## 总监提醒(2026-08-19T13:05Z 更新,**收 bisect verdict 前 + 下一波前必读**)
+
+### A'. `tpdying` **批准入集**(issue #35,协同组申请)。armed 集 13 → **14**
+
+三条件里可先验的两条都过,验收形状是本周最好的一次:
+
+- **(c) 逻辑依据**:不是新主张 —— 原释放的注释自己写的契约就是「丢失了动手
+  机会才会走」,而 `J.ShouldRetreatLaneBurst` 第三行 `if not J.IsInLaningPhase()
+  then return false end` 让预判那一半在这块地板**唯一真正运行的域**(响应 TP
+  落地,压倒性地在对线期之后)里结构性失效,只剩「已经掉到 40% 以下」。守不守
+  一个位置看 incoming damage 对有效血量、而不是一个固定血量百分比,正是已 promote
+  的 `lanesurv` 依据的同一条原则。
+- **(a) 可证性**:armed 后在「非对线期 + 血量 40–100% + 面前爆发已致死」的帧上
+  **翻转钉死 vs 放开**,逐帧可检出。锚在真实致死帧
+  (`f_182552_warlock_ult_hoard`,术士 53.4% 血、狙击手 1008 码外随后打 669、
+  `died_after=2.3s`),9 例**全部驱动真的 mode 文件 `GetDesire()`**(0.85 钉死
+  vs −0.05 撤退),两个前提是断言出来的不是假设的,含反向断言 + 两次变异测试。
+  这正是 §0b 那条规矩要求的形状。
+- armed 路径**只可能提前释放**(更早 return nil),结构上不可能抬高或制造钉死
+  —— 与 `capmono` 的「纯 min」同一类可分离性论证。
+
+**三条排期约束(总监加的,协同组的两条提示已并入)**:
+
+1. **不影响正在跑的 bisect**。12:10Z 那 8 台的 cand 串在启动时就固定了
+   (§C 的 13-id / 12-id),`tpdying` 不在其中;本次入集对那一波是零影响。
+2. **只能在读完 `lf_rescue` bisect verdict 之后启动的波次里 armed**。
+   `tpdying` 与 `lf_rescue` 同属跨图 TP 决策机制族;在 bisect 结论落地前把它
+   armed 就是又一次「一次变两个量」——那正是 14-id 那一波 `tpwatch` 踩过的坑
+   (见 §4)。bisect 之后 armed 集无论变成什么,`tpdying` 随那个集合走。
+3. **条件 (b) 必须用行为检测器判,不许用 gpm/xpm** —— 与 `cmrguard` 同一条前置
+   约定。理由同样是频次:它只在「响应 TP 落地 + 非对线期 + 面前爆发已致死」的
+   帧上动作(wave12 卷宗里约 6/24 例落地死亡),对照 GH #30 的经验零点
+   (per-seed gpm σ≈30、4-seed 均值 SE≈15),经济读数上的 null **既不构成
+   「无效」也不构成「无害」**。建议的检测器:响应 TP 落地后 10s 内死亡率、
+   落地后仍钉在 DEFEND 的帧数。
+4. `tpdying` **单独 armed 是 no-op**(必须与 `tpcommit` 同时 armed)——
+   批测台组 cand 串时不要把它单拎出来当一臂。
+
+### A''. 协同组本轮顺带交出的两条线索(**没动代码,记在这里以免丢**)
+
+- `midtp`/`suptp` 的出价数值在物品链里是**惰性的**:`ability_item_usage_generic.lua`
+  的物品循环只判 `nItemDesire > 0`,从不跨物品比大小;真正的优先级是槽位顺序
+  `{5,4,3,2,1,0,15,16}`,**TP 卷轴排最后**。判读这两个 id「为什么没触发」时必须
+  知道这一条。这是 shipped 行为,**不要顺手改** —— 它同时影响所有物品。
+- **响应 TP 的落点从来没和触发点做过距离校验**(给录像组):`J.GetNearbyLocationToTp`
+  取「离触发点最近的**还活着的**己方塔前 575 码」,没塔时**回落到泉水**,而
+  `J.WillAllySurviveTpWindow` 只预算 **4.0s**(3s 引导 + 一步),**不含落地后
+  走过去的时间**。这机械地解释了 `20260819T033000Z.md` 里那一帧(game
+  `20260819_001937_slot1`, t=343.5,CM→Lina「前置条件全满足但落地在泉水」),
+  不需要假设任何分支拦下了 `GetRescueTpTarget`。**它落在 `lf_rescue` 身上**,
+  bisect 跑完之前不许动。
+
+### A'''. `[harness] #36` 已修复并关闭:fixture 世界里**所有英雄的大招逻辑此前都不可达**
+
+英雄组做 #34 时撞上:`X.GetAbilityList` 只在 `ability:IsUltimate() and slot >= 4`
+时才填 `sAbilityList[6]`,而 dump 的 `abilities` 数组是**压平的**(索引不是引擎
+槽位)且**不带大招标记**。于是 **43 个 fixture 里 `sAbilityList[6]` 恒为 nil**,
+任何「钉真实帧驱动 `ConsiderR`/大招门」的测试在第一个 `IsFullyCastable()` 就返回
+NONE 并**通过** —— 假阳性绿灯,与 GH #27 同一家族。
+
+**没有按 issue 建议的路子修(dumper 加字段)**,理由是那条路走不通也不够:
+`AbilityType` 是 **KV 数据,根本不进 .dem**,dumper 再改也拿不到;而两个条件是
+**与**关系,只补 `slot` 不解决任何问题;何况即使补上,**现有 43 个 fixture 也要
+全部重新 dump 才生效**。改走的路是读**游戏自己的 KV**(d2vpkr,和
+`docs/PATCH_UPDATE_GUIDE.md` 已经在用的是同一个权威源):
+
+- `tools/agent/gen_ability_meta.py` → `tests/mock/ability_meta.lua`
+  (英雄 → 大招名,**126/127 英雄**;`lone_druid_bear` 上游无 KV 文件,
+  `invoker` 无「可学习的大招」,两条都是真实情况,已在生成物里注明)。
+  隐藏/不可学习的大招(`crystal_maiden_freezing_field_stop` 之类)**按引擎
+  自己的规则排除**,不是另立标准。
+- `tests/mock/replay_fixture.lua` 据此答真话的 `IsUltimate()`,并把大招放到
+  槽位 5(引擎不变量:R 位不是基础技能槽);**dump 自带 `slot`/`is_ultimate`
+  时以 dump 为准**,所以将来 dumper 真加了字段不用再改 loader。
+- **没有按位置猜**(dump 顺序真的因英雄而异:centaur 结尾是 stampede[大招]、
+  horsepower[innate];storm 结尾是 ball_lightning[大招]、galvanized[innate])。
+  验收 `tests/test_fixture_ability_slots.lua` 7 例里有两例**专门**用这两个英雄
+  钉死「不是取最后一条」,两次变异测试:退回旧 loader 挂 4 条、改成「猜最后一条」
+  同样挂 4 条且报错直指 centaur。**444/444,luacheck 0。**
+
+**残留缺口(已上棘轮,不是静默的)**:43 个 fixture 里有 **9 个是 v1 老件,
+整个 `abilities` 块都没有** —— 在它们上面驱动大招逻辑**仍然**是假绿。
+`test_fixture_ability_slots.lua` 里钉了这 9 个名字的白名单,**新 fixture 少了
+ability 数据会被点名失败**,老 fixture 重新 dump 后不从白名单里删也会失败。
+需要大招语义的核验,**请挑带 abilities 的那 34 个**,或重新 dump。
+
+### A''''. 顺带的判读影响(**给英雄组和录像组**)
+
+修复前 `sAbilityList[6]` 恒 nil,意味着大招名会**掉进基础技能那一段**
+(`table.insert`),比如 CM 的 `sAbilityList[4]` 当时就是 `freezing_field`。
+**凡是此前在 fixture 上读过 `sAbilityList[1..5]` 或断言过大招门返回 NONE 的
+结论,都要按新形状重看一遍。** 好消息:本次修复跑全套时**没有任何既有测试
+翻红**(443→444 全绿),说明没有既有测试真的依赖旧的压平形状;但「没测试依赖它」
+不等于「没结论依赖它」。
 
 ## 总监提醒(2026-08-19T11:10Z 更新,**下一波(≥12:09Z)前必读**)
 

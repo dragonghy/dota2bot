@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Generate tests/mock/ability_meta.lua -- which ability names are ultimates.
+
+Why this exists (GH #36)
+------------------------
+`bots/FunLib/aba_skill.lua:X.GetAbilityList` only fills `sAbilityList[6]`
+(the ultimate) when BOTH `ability:IsUltimate()` and `slot >= 4` hold. The
+behavioural dumper can supply neither:
+
+  * it emits abilities *flattened* (filtered entries are skipped), so a
+    dump index is not the engine slot; and
+  * "is this ability the ultimate" is **not networked at all** -- it lives in
+    the game's ability KV (`AbilityType`), not in the replay stream. No
+    amount of dumper work can recover it from a .dem.
+
+So the fixture world had `sAbilityList[6] == nil` for every hero, and every
+"pin a real frame and drive ConsiderR" test passed without reaching a single
+line of ultimate logic (a false green, same family as GH #27).
+
+Guessing from dump position is not an option -- the order genuinely differs
+per hero (centaur: ..., stampede[ult], horsepower[innate]; lich: ...,
+chain_frost[ult] last). Hence this generator: it reads the **game's own KV**,
+the same authoritative source `docs/PATCH_UPDATE_GUIDE.md` already uses for
+item/ability names, and writes a static table the fixture loader consults.
+
+Hidden / not-learnable ultimates (`crystal_maiden_freezing_field_stop`,
+`lone_druid_true_form_battle_cry`, ...) are excluded, mirroring the engine
+rule `X.GetAbilityList` itself applies before it accepts a name into slot 6.
+
+Regenerate after a patch that adds or reworks heroes:
+
+    python3 tools/agent/gen_ability_meta.py
+
+Network: one HTTPS GET per hero against the public d2vpkr mirror (no AWS,
+no cost). Hero list comes from `bots/BotLib/hero_*.lua`, so a hero we do not
+ship is not fetched.
+"""
+
+import glob
+import os
+import re
+import sys
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+BASE = ("https://raw.githubusercontent.com/dotabuff/d2vpkr/master/"
+        "dota/scripts/npc/heroes/npc_dota_hero_%s.txt")
+OUT = "tests/mock/ability_meta.lua"
+ABSENT = object()  # hero has no KV file upstream (e.g. a summoned unit)
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+NAME_RE = re.compile(r'^\s*"([A-Za-z0-9_]+)"\s*$')
+KV_RE = re.compile(r'^\s*"([A-Za-z0-9_]+)"\s+"([^"]*)"')
+
+# The engine refuses these into sAbilityList[6]; so do we (aba_skill.lua:99).
+EXCLUDE_BEHAVIOR = ("DOTA_ABILITY_BEHAVIOR_HIDDEN",
+                    "DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE")
+
+
+def hero_names():
+    names = []
+    for path in sorted(glob.glob(os.path.join(REPO, "bots/BotLib/hero_*.lua"))):
+        names.append(os.path.basename(path)[len("hero_"):-len(".lua")])
+    return names
+
+
+def fetch(hero):
+    """(hero, text) on success, (hero, ABSENT) when the hero has no KV file.
+
+    Some `bots/BotLib/hero_*.lua` entries are not heroes in the KV sense
+    (`lone_druid_bear` is a summoned unit), so a 404 is expected data, not a
+    transport failure -- only the latter should abort the whole generation.
+    """
+    req = urllib.request.Request(BASE % hero,
+                                 headers={"User-Agent": "dota2bot-agent"})
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            return hero, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return hero, ABSENT
+        return hero, None
+    except Exception:                                          # noqa: BLE001
+        return hero, None
+
+
+def parse_ultimates(text):
+    """Names of learnable ultimates in one hero's KV file.
+
+    Brace-depth aware: ability names are the lone quoted tokens at depth 1,
+    their fields sit at depth 2. Tracking depth is what keeps nested blocks
+    ("AbilityValues", "AbilitySpecial", ...) from being read as names.
+    """
+    out = []
+    depth, pending, current = 0, None, None
+    fields = {}
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//"):
+            continue
+        m = NAME_RE.match(line)
+        if m and depth == 1:
+            pending = m.group(1)
+            continue
+        if stripped.startswith("{"):
+            depth += 1
+            if depth == 2:
+                current, fields = pending, {}
+            pending = None
+            continue
+        if stripped.startswith("}"):
+            if depth == 2 and current:
+                if fields.get("AbilityType") == "ABILITY_TYPE_ULTIMATE":
+                    behavior = fields.get("AbilityBehavior", "")
+                    if not any(b in behavior for b in EXCLUDE_BEHAVIOR):
+                        out.append(current)
+                current = None
+            depth -= 1
+            continue
+        if depth == 2 and current:
+            kv = KV_RE.match(line)
+            if kv:
+                fields[kv.group(1)] = kv.group(2)
+    return out
+
+
+def render(by_hero, missing):
+    lines = [
+        "-- GENERATED by tools/agent/gen_ability_meta.py -- do not hand-edit.",
+        "--",
+        "-- Which ability names are ultimates, per the game's own hero KV",
+        "-- (AbilityType ABILITY_TYPE_ULTIMATE), hidden/not-learnable ones",
+        "-- excluded exactly as bots/FunLib/aba_skill.lua excludes them.",
+        "--",
+        "-- The behavioural dumper cannot know this: it is KV data, not",
+        "-- networked state, so it is absent from every .dem. The fixture",
+        "-- loader consults this table so IsUltimate() answers truthfully and",
+        "-- X.GetAbilityList can fill sAbilityList[6] (GH #36). A dump that",
+        "-- carries its own is_ultimate/slot fields wins over this table.",
+        "",
+        "local X = {}",
+        "",
+        "-- hero unit name -> set of that hero's ultimate ability names.",
+        "X.ULTIMATES = {",
+    ]
+    for hero in sorted(by_hero):
+        names = by_hero[hero]
+        if not names:
+            continue
+        inner = " ".join("['%s'] = true," % n for n in sorted(names))
+        lines.append("    ['npc_dota_hero_%s'] = { %s }," % (hero, inner))
+    lines += ["}", ""]
+    if missing:
+        lines.append("-- No learnable ultimate found in KV for: %s"
+                     % ", ".join(sorted(missing)))
+        lines.append("")
+    lines += ["return X", ""]
+    return "\n".join(lines)
+
+
+def main():
+    heroes = hero_names()
+    if not heroes:
+        sys.stderr.write("no bots/BotLib/hero_*.lua found\n")
+        return 1
+    by_hero, failed, missing, absent = {}, [], [], []
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for hero, text in pool.map(fetch, heroes):
+            if text is None:
+                failed.append(hero)
+                continue
+            if text is ABSENT:
+                absent.append(hero)
+                continue
+            names = parse_ultimates(text)
+            by_hero[hero] = names
+            if not names:
+                missing.append(hero)
+    if failed:
+        sys.stderr.write("fetch failed for %d hero(es): %s\n"
+                         % (len(failed), ", ".join(sorted(failed))))
+        return 1
+    resolved = sum(1 for h in by_hero if by_hero[h])
+    expected = len(heroes) - len(absent)
+    if resolved < 0.9 * expected:
+        sys.stderr.write(
+            "refusing to write: only %d/%d heroes resolved an ultimate; "
+            "the upstream format probably changed\n" % (resolved, expected))
+        return 1
+    with open(os.path.join(REPO, OUT), "w") as f:
+        f.write(render(by_hero, missing))
+    sys.stderr.write("wrote %s (%d/%d heroes)\n" % (OUT, resolved, expected))
+    if absent:
+        sys.stderr.write("no upstream KV file (not a hero): %s\n"
+                         % ", ".join(sorted(absent)))
+    if missing:
+        sys.stderr.write("no learnable ultimate in KV: %s\n"
+                         % ", ".join(sorted(missing)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

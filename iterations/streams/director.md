@@ -47,6 +47,10 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
    排期**。工单:`iterations/streams/patch_gap_7.41b-e.md`(5 片,每片一个
    工作单元;**P3 优先** —— 通用机制变化可能让现有 gated id 的判读前提失效)。
    所有分片的前置阻断:datafeed hero id ≠ 经典 `hero_id`,先建映射再动 Lua。
+0b. ~~**fixture 大招不可达**(GH #36)~~ **2026-08-19T13:04Z 完成**:
+   `tools/agent/gen_ability_meta.py` + `tests/mock/ability_meta.lua`(游戏自己的
+   KV,126/127 英雄)+ loader 真实槽位/`IsUltimate` + contract test。**残留**:
+   9 个 v1 老 fixture 无 ability 数据,已上棘轮白名单,重新 dump 才补得上。
 1. **帧语料检索工具**(owner 点名):跨多局录像批量找"某规则应触发的帧",
    批量生成 fixture(make_fixture.py 的批量前端),让一个算法改动能证明
    "在所有/大多数适用帧上生效"。这是执行核验规模化的地基。
@@ -255,3 +259,55 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **下次触发**:①收 `lf_rescue` bisect verdict(按 §C 两臂对照读,顺带核验
   `capmono` 的 (a));②若批测在跑就做 **patch 分片 P3**(现在它是一个切得动的
   工作单元,不再需要独占触发);③`[harness] #33` 第二级 / `#27` / backlog #1。
+
+- 2026-08-19T13:04Z:第七次 director 触发。计划中的 ①(收 bisect verdict)**本轮
+  不可能做** —— 批测台 12:12Z 才启动那 8 台(种子 859-862 × 两臂,树 `d6bfa08`),
+  verdict 预计 13:40-14:40Z 落地,不强等。于是走优先级 (a),把本轮新开的两条归
+  总监的 issue 都做完。报告:`iterations/reports/director/20260819T130400Z.md`。
+  **① `[harness] #36` 已修复并关闭** —— `X.GetAbilityList` 只在
+  `IsUltimate() **and** slot >= 4` 时填 `sAbilityList[6]`,而 dump 的 `abilities`
+  是**压平的**(下标≠引擎槽位)且**不带大招标记**,于是 **43 个 fixture 里
+  `sAbilityList[6]` 恒 nil**,任何「钉真实帧驱动 `ConsiderR`/大招门」的测试在第一个
+  `IsFullyCastable()` 就返回 NONE 并**通过**(假绿,与 #27 同族)。**没按 issue
+  建议的 dumper 路子修**:`AbilityType` 是 **KV 数据、根本不进 .dem**,dumper 拿
+  不到 `is_ultimate`;两个条件是**与**关系,只补 `slot` 无用;且即便补上,现有 43
+  个 fixture 也要**全部重新 dump** 才生效。改走**游戏自己的 KV**(d2vpkr,
+  `PATCH_UPDATE_GUIDE` 已在用的同一权威源):新 `tools/agent/gen_ability_meta.py`
+  → 生成 `tests/mock/ability_meta.lua`(**126/127 英雄**;`lone_druid_bear` 上游无
+  KV 文件、`invoker` 无可学习大招,均如实注明),隐藏/不可学习大招**按引擎自己
+  那条规则**排除;loader 据此答真话的 `IsUltimate()` 并把大招放槽位 5,
+  **dump 自带 `slot`/`is_ultimate` 时以 dump 为准**(将来 dumper 加了字段不用再改)。
+  **没有按位置猜** —— dump 顺序真的因英雄而异(centaur/storm 的大招都不是最后一条),
+  contract test 里两例**专门**钉这一点且会自曝过期。验收
+  `tests/test_fixture_ability_slots.lua`(7 例)+ **三次变异测试**(退回旧 loader
+  挂 4;改成「猜最后一条」挂 4 且直指 centaur;从棘轮白名单删一个老 fixture 挂 1
+  且点名)。**444/444,luacheck 0**(容器初始无 Lua 工具链,已自行装)。
+  **残留缺口已上棘轮**:9 个 v1 老 fixture 整个 `abilities` 块都没有,在它们上面
+  驱动大招逻辑**仍是假绿**,白名单钉死 —— 新 fixture 缺 ability 数据会被点名失败,
+  老件重新 dump 后不从白名单删也失败。**判读影响**:修复前大招名会掉进
+  `sAbilityList[1..5]`(CM 的 `[4]` 当时就是 `freezing_field`),此前在 fixture 上
+  读过 `[1..5]` 或断言过大招门返回 NONE 的**结论**都要重看(既有测试**无一翻红**,
+  但「没测试依赖它」≠「没结论依赖它」)。**给英雄组**:#34 里「只能退回源码级
+  wiring 断言」的限制**已解除**,`cmrguard` 重新入集可按 §0b 做**最终 desire 断言**。
+  **② `tpdying` 批准入集**(#35),armed 集 **13 → 14**:(c) 不是新主张——原释放
+  注释自己写的契约就是「丢失了动手机会才会走」,而对线期门让**预判那一半**在这块
+  0.85 地板唯一真正运行的域(响应 TP 落地,压倒性在对线期后)结构性失效;(a) 在
+  「非对线期+血 40-100%+爆发已致死」帧上**翻转钉死 vs 放开**,9 例**全驱动真 mode
+  文件 `GetDesire()`**、前提是断言出来的、含反向断言+两次变异测试;可分离性同
+  `capmono`(只可能提前释放)。**加了四条排期约束**(写进 `test_set.md` §A'):
+  对在跑的 bisect 零影响;**只能在读完 bisect verdict 之后的波次里 armed**
+  (与 `lf_rescue` 同属跨图 TP 族,否则又是「一次变两个量」= `tpwatch` 的坑);
+  **(b) 必须用行为检测器判、不许用 gpm/xpm**(同 `cmrguard` 的前置约定,低频事件
+  对照 GH #30 的 σ≈30/SE≈15);单独 armed 是 no-op,别单拎成一臂。协同组交出的
+  两条**线索**已记进 §A''(`midtp`/`suptp` 出价在物品链里**惰性**、真实优先级是
+  槽位顺序 TP 排最后;**响应 TP 落点从不与触发点做距离校验**、无塔时回落**泉水**
+  且 `WillAllySurviveTpWindow` 只预算 4.0s 不含落地后走路 —— 后者机械解释了录像组
+  033000Z 那一帧,**但它落在 `lf_rescue` 上,bisect 完成前不许动**)。
+  成本 MTD **$3.4651**(批测台自报)+ 本波预估 $3-4 ≈ $7,**总监本轮未做任何 AWS
+  调用、未启动计费资源**。五组均有产出无空转。今日周三,效率台账(仅周日)跳过;
+  patch 检查 11:10Z 刚做过分片+定级,本轮不重复。`DECISIONS_NEEDED.md` 仍未创建,
+  本周 owner 邮件仍为零。**下次触发**:①**收 `lf_rescue` bisect verdict**(按 §C
+  两臂 A−B 配对差读,不许比历史 -34.59;顺带核验 `capmono` 的 (a);收割注意 8 台
+  per-game 文件名跨 run 撞车、**必须按 run 分目录下载再合并**);②结论落地后排
+  `tpdying` + 剩余集合的波次(§A' 四条约束);③批测在跑就做 **patch 分片 P3** /
+  `[harness] #33` 第二级 / `#27` / backlog #1。
