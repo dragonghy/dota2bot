@@ -27,15 +27,13 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-1. ~~**l1xpsoak 重设计**~~ **代码已完成(2026-08-19),等总监重新入
-   test_set.md**:绝对锚(落脚点进入时算一次、缓存在 bot 上,不再逐帧按
-   当前坐标重算)+ 退出滞回(进入判据不变:≥2 敌方 within 1200 + 爆发
-   ≥75% 血量;退出判据更松:敌方清零/健康队友抵达/爆发跌破 40% 血量)
-   已落地(`bots/FunLib/jmz_func.lua` `J.ShouldXpSoakLane`),真实帧
-   fixture 4 新用例(`tests/test_l1_xpsoak.lua`,复用
-   `f_231411_ck_zoned.lua`)+ 全量 359 测试 + luacheck 0 警告全绿。
-   已开 issue #24 请总监审批重新入集 + 排期验证批测(不确定是否有效,
-   只是消掉了两个已知病灶,仍需批测验证是否真的解决 -49gpm 信号)。
+1. ~~**l1xpsoak 重设计**~~ ~~**等总监重新入 test_set.md**~~ **已结案
+   (2026-08-19T07:17Z):代码退役,滞回改挂新 gate `lanehyst`**。见 issue #28
+   与 `iterations/reports/strategy/20260819T071719Z.md`。**不要再复活
+   `l1xpsoak`**;若将来还想做"站住不动吃经验"的姿态,先读
+   `state.json:l1xpsoak_RETIREMENT_20260819` 里的接缝分析(撤退 mode 没有
+   `Think()`,移动权在引擎手里)。
+   待办:`lanehyst` 入 `test_set.md` 需总监批准(已在 #28 申请)。
 2. **−18 econ 残差归因**:两波 8/8 seed 稳定的 −18 gpm 残差,嫌疑:
    lf_rescue 位移税 / ownhalf+overchase 姿态成本 / tpcommit 残余 /
    全局"响应预算"缺失。用批测归档录像做行为差分,别再开专门批测。
@@ -76,6 +74,24 @@
   `−18 econ 残差归因` 同源)。全量 366/366 测试 + luacheck 0 警告。未花
   AWS 钱(replay-analyst 走它自己职责内的只读 S3),未提批测请求(无行为
   改动可测)。详见 `iterations/reports/strategy/20260819T032018Z.md`。
+- 2026-08-19T07:17Z:认领 issue #28(总监 06:55Z 把 `l1xpsoak` 退回本组,要求在
+  "让锚点真正驱动移动" / "取消独立 id、滞回收进 lanesurv" 两条路里二选一)。
+  **选路径 2,并做保守细化:滞回不改已 promote 的默认,而是挂新 gate
+  `lanehyst`**(未 armed 时 shipped 判定逐字节不变,armed 时可单独测量)。
+  放弃路径 1 的**新证据**:`mode_retreat_generic.lua` 只有 `GetDesire()`、
+  **没有 `Think()`**,撤退时的移动/TP/逃生全在引擎内置实现里——"站在锚点 hold"
+  等于给最安全攸关的 mode 重写整套 Think,而 mode-Think 替换正是 A1 分析判定
+  `l1xpsoak` −50 gpm 的主因。改动本体:`J.ShouldRetreatLaneBurst` 在 true 帧
+  盖时间戳,基础门槛没过时于 **2.0s 窗口**内继续 true(条件:无 peel 队友 +
+  incoming 仍 ≥40% 血量);**刻意有时间上限**,可抹平闪烁但永远变不成停车刹车。
+  依据 (c):对阈值附近闪烁的二值控制信号加 Schmitt trigger,本仓库 l1kite 的
+  kite-lock 是同一味药。同时**退役 `l1xpsoak` 全部代码**(helper + 消费块 +
+  旧测试),留墓碑注释。验证:新 `tests/test_lanehyst.lua` 7 例全跑真实帧
+  `f_231411_ck_zoned`,非空验证(关死 gate 恰好 2 条 hold 断言 FAIL),
+  **381/381 测试 + luacheck 0 警告**。`state.json` 新增 `lanehyst_20260819` 与
+  `l1xpsoak_RETIREMENT_20260819`。**`lanehyst` gated 未 armed**,入 test_set.md
+  待总监批(已在 #28 评论申请)。未花 AWS 钱,未提批测请求。详见
+  `iterations/reports/strategy/20260819T071719Z.md`。
 - 2026-08-19T05:16Z:认领 issue #13(总监 04:54 点名本组"直接看代码里的触发
   条件")。**找到 `creeppull` 13/13 局 SILENT 的根因:它是一个可证明的死分支**
   ——`mode_roam_generic` 用 `J.IsLanePullSafe`(1800 内有敌人就 false)闸住

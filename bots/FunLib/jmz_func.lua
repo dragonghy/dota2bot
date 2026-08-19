@@ -4726,6 +4726,27 @@ function J.HasReadyHardCc( hEnemy )
 	return J.GetReadyHardCc( hEnemy ) ~= nil
 end
 
+-- [lanehyst / GH #28] Exit hysteresis, gated (turbo + 'lanehyst'), inert by
+-- default. The base rule above is recomputed from scratch every frame off a
+-- quantity that BLINKS: GetEstimatedDamageToTarget is mana/cooldown-aware, so a
+-- nuke coming off cooldown, an enemy stepping 20u past 1100, or a mana tick
+-- flips the decision on and off between adjacent frames -- and a retreat mode
+-- that wins the auction for one frame and loses it the next issues a move order
+-- and cancels it, which is neither retreating nor laning (the same chattering
+-- the kite-lock `bot.laneKiteUntil` was added for on the l1kite path).
+-- Standard fix for a binary control signal near its threshold: a Schmitt
+-- trigger -- engage on the full bar, release on a lower one.
+--
+-- This carries over the ONE semantic 'l1xpsoak' owned that lanesurv did not
+-- (GH #28 retirement: 97.3% of its 335 entry episodes were judged identically
+-- by this already-promoted rule, and its anchor Vector was discarded by the
+-- only consumer). Deliberately NOT the l1xpsoak version of the hold: this one
+-- is TIME-BOUNDED (2s past the last true frame), so it can smooth a blink but
+-- can never become a parking brake -- the force-passivity failure mode that
+-- rejected lf_recover / corefarm / l1xpsoak wave 1.
+J.nLaneBurstHysteresisWindow = 2.0
+J.nLaneBurstHysteresisFloor  = 0.40
+
 function J.ShouldRetreatLaneBurst( bot )
 	if not J.IsModeTurbo() then return false end
 	if bot == nil or not bot:IsAlive() then return false end
@@ -4797,7 +4818,26 @@ function J.ShouldRetreatLaneBurst( bot )
 	end
 
 	local nThreshold = bPeel and 1.0 or 0.75
-	return nIncoming >= bot:GetHealth() * nThreshold
+	local nHp = bot:GetHealth()
+	if nIncoming >= nHp * nThreshold then
+		-- Stamp on every true frame (a plain field write; read only under the
+		-- 'lanehyst' gate below, so the shipped decision is unchanged).
+		bot.laneBurstLastFire = DotaTime()
+		return true
+	end
+
+	-- [lanehyst] Base rule says no. Hold the retreat for a short window past the
+	-- last true frame unless the threat has CLEARLY improved: a peel-capable
+	-- ally arrived, or the incoming estimate fell under the release floor.
+	-- (All enemies leaving 1100 releases earlier still -- that path returns
+	-- false above, before this point.)
+	if not J.IsSoakCandidate( 'lanehyst' ) then return false end
+	if bPeel then return false end
+	if bot.laneBurstLastFire == nil then return false end
+	if DotaTime() - bot.laneBurstLastFire > J.nLaneBurstHysteresisWindow then
+		return false
+	end
+	return nIncoming >= nHp * J.nLaneBurstHysteresisFloor
 end
 
 -- [L5-TREES / LANING_PLAYBOOK] Creep-aggro-safe harass check. Owner's rule: a
@@ -4902,116 +4942,24 @@ function J.GetOffWaveHarassSpot( bot )
 	return Vector( vBot.x + px * 550, vBot.y + py * 550, 0 )
 end
 
--- [L1-XPSOAK / LANING_PLAYBOOK] Extreme-disadvantage XP soak. Owner's rule:
--- alone against two, can't drag the wave, and stepping up to CS means getting
--- CC'd and killed -> "只能在旁边看着,保持在对方技能范围之外,吃一点经验,
--- 保证自己不死" -- stand OUTSIDE their skill range but INSIDE XP range
--- (~1500), take the XP, do not feed, wait for the support. This lane state is
--- not winnable solo; survival + XP is the whole job.
---
--- This is the CORRECTED lf_recover (lanefix reject's primary culprit):
--- lf_recover sent zoned cores to the JUNGLE (19% off-lane, CS@8 -48%); this
--- keeps the bot AT the lane edge, stepping back toward our fountain -- never
--- off-lane, never farm-mode.
---
--- Returns the position to hold (a step back toward our fountain) or nil.
--- Fires ONLY when ALL hold:
---   * turbo + 'l1xpsoak' soak candidate (inert shipped), laning phase, core,
---   * ZONED: >= 2 visible enemy heroes within 1200 of me,
---   * ALONE: no healthy (>= 40%) ally hero within 1400,
---   * CONTEST IS LETHAL: their currently-castable burst (mana/cd-aware) >=
---     75% of my current HP -- same bar as J.ShouldRetreatLaneBurst's no-peel
---     branch. A healthy core facing two weak/spent enemies keeps laning.
---
--- [redesign 20260819, A1 mechanism 20260731 deferred items] Two pieces the
--- rehoming to retreat desire did NOT fix on their own:
---   * ABSOLUTE ANCHOR: the old hold point was "current position + 420u
---     toward fountain", recomputed on every call -- a relative step that
---     death-marches as the bot closes on its own previous target (144711
---     medusa: chased 17s because the point kept sliding fountain-ward).
---     The point is now computed ONCE on entry and cached on the bot
---     (bot.l1xpsoakAnchor) until the zoned state clears, so it never drifts.
---   * EXIT HYSTERESIS: entry and exit now use different bars so a value
---     hovering near the entry line (a cooldown ticking down, one enemy
---     stepping half out of 1200) can't flip the stance on and off every
---     frame. Entry needs >=2 zoners and castable burst >=75% of my HP;
---     once anchored, only a healthy ally arriving, ALL enemies clearing
---     (0 within 1200), or the burst estimate dropping under 40% releases it.
-function J.ShouldXpSoakLane( bot )
-	if bot == nil then return nil end
-	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'l1xpsoak' )
-		or not bot:IsAlive() or not J.IsInLaningPhase() or not J.IsCore( bot )
-	then
-		bot.l1xpsoakAnchor = nil
-		return nil
-	end
-
-	-- [A1 mechanism 20260731] Early/healthy exemption: at levels 1-3 ANY two
-	-- enemies' 3s estimate clears 75% of a squishy core's HP, so the panic
-	-- bar was hit during perfectly normal 1v2 lanes (142838 sniper at 86%
-	-- HP, own half, ordinary spacing) and even at 100% HP (144711 medusa).
-	-- A panic rule fires when something is actually wrong: not in the first
-	-- 90 seconds, and never above 85% HP. Recovering past either bound also
-	-- releases a live anchor.
-	if DotaTime() < 90 or J.GetHP( bot ) > 0.85 then
-		bot.l1xpsoakAnchor = nil
-		return nil
-	end
-
-	-- Zoning count + incoming burst estimate.
-	local tEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
-	local nEnemies, nIncoming = 0, 0
-	for _, hEnemy in pairs( tEnemies or {} ) do
-		if J.IsValidHero( hEnemy ) and not J.IsSuspiciousIllusion( hEnemy ) then
-			nEnemies = nEnemies + 1
-			nIncoming = nIncoming
-				+ hEnemy:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
-		end
-	end
-
-	-- Healthy ally nearby: trade/kite rules apply instead, entry or exit.
-	local bHealthyAllyNear = false
-	local tAllies = J.GetNearbyHeroes( bot, 1400, false, BOT_MODE_NONE )
-	for _, hAlly in pairs( tAllies or {} ) do
-		if J.IsValidHero( hAlly ) and J.GetHP( hAlly ) >= 0.4 then
-			bHealthyAllyNear = true
-			break
-		end
-	end
-
-	local nHp = bot:GetHealth()
-
-	if bot.l1xpsoakAnchor ~= nil then
-		-- Already anchored: exit bar is wider than the entry bar on purpose
-		-- (hysteresis) -- hold through borderline frames, release only on a
-		-- clear improvement.
-		if bHealthyAllyNear or nEnemies < 1 or nIncoming < nHp * 0.40 then
-			bot.l1xpsoakAnchor = nil
-			return nil
-		end
-		return bot.l1xpsoakAnchor
-	end
-
-	-- Not yet anchored: full entry bar.
-	if nEnemies < 2 or bHealthyAllyNear or nIncoming < nHp * 0.75 then
-		return nil
-	end
-
-	-- Set the absolute anchor ONCE: a step back toward our fountain from the
-	-- entry position -- AT the lane edge (XP range), never into the jungle
-	-- (the lf_recover mistake). Held fixed until the exit bar above clears it.
-	local vBot = bot:GetLocation()
-	local vFountain = J.GetTeamFountain()
-	if vFountain == nil then
-		local hOwnAncient = GetAncient( GetTeam() )
-		vFountain = hOwnAncient ~= nil and hOwnAncient:GetLocation() or vBot
-	end
-	local dx, dy = vFountain.x - vBot.x, vFountain.y - vBot.y
-	local nMag = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
-	local vAnchor = Vector( vBot.x + dx / nMag * 420, vBot.y + dy / nMag * 420, 0 )
-	bot.l1xpsoakAnchor = vAnchor
-	return vAnchor
-end
+-- [L1-XPSOAK RETIRED 2026-08-19, GH #28] J.ShouldXpSoakLane is GONE. The
+-- zoned-solo-core panic stance was rehomed to retreat desire on 20260731 and
+-- redesigned (absolute anchor + exit hysteresis) on 20260819, but the frame
+-- review of its solo wave (seeds 855-858, 12 mirrored games, 335 entry
+-- episodes) showed the mechanism is not observably distinct from the already
+-- PROMOTED J.ShouldRetreatLaneBurst ('lanesurv'): its entry bar is a strict
+-- subset (1200/>=2 enemies vs 1100/>=1, same 3.0s window, same HP*0.75 bar),
+-- 97.3% of entry frames are judged identically, and its sole consumer
+-- (mode_retreat_generic) discarded the anchor Vector and returned the same
+-- BOT_MODE_DESIRE_HIGH. The readmission path "make the anchor actually drive
+-- movement" has no safe seam: mode_retreat_generic has no Think(), so holding
+-- a position there means authoring a full replacement for the ENGINE's retreat
+-- (fountain routing, TP home, shrine, escape items) on the most
+-- safety-critical mode -- and a laning-Think replacement is exactly the wiring
+-- the A1 mechanism analysis blamed for l1xpsoak's -50 gpm. So the id is
+-- retired and its one non-duplicate semantic -- the exit hysteresis -- now
+-- lives inside J.ShouldRetreatLaneBurst under the 'lanehyst' gate, bounded in
+-- time so it can never become a parking brake.
 
 -- [midguard / obs 20260722 d21] Laning past-midline discipline. Post-promote
 -- replay review (2 draft pools, ~17/25 focus deaths): with the burst guard

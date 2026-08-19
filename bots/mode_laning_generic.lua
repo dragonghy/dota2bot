@@ -112,13 +112,15 @@ local bBodyBlock = J.IsModeTurbo() and J.IsSoakCandidate('bodyblock')
 
 -- [L1-XPSOAK] Extreme-disadvantage XP soak (LANING_PLAYBOOK): a solo core
 -- zoned by 2+ enemies whose castable burst makes contesting lethal holds a
--- spot at the lane edge (toward our fountain), soaking XP without feeding --
--- the corrected lf_recover (stays AT the lane, never jungles). Turbo-only +
--- soak candidate 'l1xpsoak', pos 1-3, inert by default.
+-- spot at the lane edge (toward our fountain), soaking XP without feeding.
 -- [l1xpsoak] REHOMED to mode_retreat (A1 mechanism analysis 20260731: the
 -- solo -50 gpm was mostly THIS wiring -- the last id still riding the
 -- laning-Think replacement; zero-trigger heroes were the biggest losers.
--- The panic condition now raises RETREAT desire, which can TP/escape).
+-- The panic condition now raised RETREAT desire, which can TP/escape), then
+-- RETIRED 20260819 (GH #28): once rehomed it was indistinguishable from the
+-- promoted J.ShouldRetreatLaneBurst. Kept as history because the failure mode
+-- generalises -- a rule that needs to HOLD A POSITION has no seam in this
+-- codebase that is not a mode-Think replacement, and those cost -50 gpm.
 
 -- [L5-COMBO] moved to mode_team_roam (Group A REJECT 20260723): the trigger
 -- (J.ShouldSupportComboKill) now raises a team_roam collapse instead of

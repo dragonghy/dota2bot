@@ -286,24 +286,22 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
-    -- [l1xpsoak REHOMED / A1 mechanism 20260731] The zoned-solo-core panic
-    -- condition now raises RETREAT desire instead of holding the bot in the
-    -- (condemned) laning-Think replacement: retreat can TP and use escapes,
-    -- which the "walk 420u toward the fountain" soak stance could not
-    -- (144711 medusa: chased 17s to death with tp_cd=0 the whole way).
-    -- The trigger stays in J.ShouldXpSoakLane (turbo + 'l1xpsoak', now with
-    -- an early/healthy exemption); inert by default.
-    if J.ShouldXpSoakLane(bot) ~= nil then
-        return BOT_MODE_DESIRE_HIGH
-    end
+    -- [l1xpsoak RETIRED 20260819, GH #28] The zoned-solo-core panic condition
+    -- used to sit here, one line above the rule below, raising the same
+    -- BOT_MODE_DESIRE_HIGH off a strict subset of its entry condition (frame
+    -- review: 97.3% of 335 entry episodes judged identically) while discarding
+    -- the anchor Vector it returned. Two near-synonyms returning the same
+    -- desire only make bundle verdicts harder to attribute, so the id is gone;
+    -- its one non-duplicate semantic (exit hysteresis) now lives inside
+    -- J.ShouldRetreatLaneBurst under the 'lanehyst' gate.
 
     -- [obs 20260722] Laning burst-anticipation (trade-survival): the visible
     -- lane enemies' currently-castable burst (mana/cd-aware) threatens my
     -- CURRENT hp and no peel-capable ally is beside me -> back off BEFORE the
     -- combo lands, not after. Watched failure: WK at 87-100% HP deleted in
     -- 2-3s by Sven+Lich / OD while standing ground (fixtures
-    -- f_230545_wk_sven_burst / f_232320_wk_od_burst). Gated turbo + 'lanesurv'
-    -- (J.ShouldRetreatLaneBurst); inert in shipped games until validated.
+    -- f_230545_wk_sven_burst / f_232320_wk_od_burst). PROMOTED (was 'lanesurv')
+    -- 2026-07-22; turbo-only. Its exit hysteresis stays gated ('lanehyst').
     if J.ShouldRetreatLaneBurst(bot) then
         return BOT_MODE_DESIRE_HIGH
     end
