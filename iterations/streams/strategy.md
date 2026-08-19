@@ -85,7 +85,7 @@
   两次变异测试:删掉修复 → 恰好 3 条 armed 断言 FAIL(报错打印真实倒置
   `0.881 → 0.72 as HP rose to 0.5`);gate 强制常开 → 恰好 5 条已发布行为断言 FAIL。
   **408/408 + luacheck 0 警告**。`state.json` 新增 `capmono_20260819`。
-  **`capmono` gated 未 armed**,入 test_set.md 待总监批(已开 issue 申请)。
+  **`capmono` gated 未 armed**,入 test_set.md 待总监批(已开 issue **#32** 申请)。
   未花 AWS 钱,未提批测请求。详见
   `iterations/reports/strategy/20260819T091647Z.md`。
 - 2026-08-01 初始化。测试集里本组名下 id:creeppull/pullcamp/l1trade/
