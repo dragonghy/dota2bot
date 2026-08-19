@@ -132,6 +132,15 @@ function M.load(path, sSubject)
             IsAlive = u.alive,
             CanBeSeen = visible_to_subject(u),
             GetCurrentMovementSpeed = 300,
+            -- The engine's AoE search. The generic Get* default answers 0, and
+            -- every caller indexes `.count` / `.targetloc` on the result, so a
+            -- full hero script (SkillsComplement) crashed before reaching the
+            -- decision under test. Answer the CONSERVATIVE shape -- "no AoE
+            -- cluster found" -- which understates opportunities rather than
+            -- inventing them. A test that needs a cluster overrides the spec.
+            FindAoELocation = function(self)
+                return { count = 0, targetloc = self:GetLocation() }
+            end,
             -- Ground truth: what this hero actually did to the subject next.
             GetEstimatedDamageToTarget = function() return burst end,
         })
@@ -145,10 +154,24 @@ function M.load(path, sSubject)
                 local h = heroes[u.name]:GetAbilityByName(a.name)
                 local sp = rawget(h, '__spec')
                 sp.GetLevel = a.level
-                sp.IsTrained = a.level > 0
                 sp.GetCooldownTimeRemaining = a.cd
-                sp.IsFullyCastable = a.level > 0 and a.cd <= 0
-                sp.IsCooldownReady = a.cd <= 0
+                -- Derived, not snapshotted: a test that anchors GetManaCost or
+                -- moves GetLevel/GetCooldownTimeRemaining must see the derived
+                -- answers move with it. Frozen booleans made the fixture world
+                -- disagree with the engine in exactly the dimension under test
+                -- (test_set.md §F) -- e.g. a 246-mana ultimate reading
+                -- "fully castable" while the hero held 190 mana, which is the
+                -- real reason X.ConsiderR bails on its first line in game.
+                local owner = heroes[u.name]
+                sp.IsTrained = function(self) return self:GetLevel() > 0 end
+                sp.IsCooldownReady = function(self)
+                    return self:GetCooldownTimeRemaining() <= 0
+                end
+                sp.IsFullyCastable = function(self)
+                    return self:GetLevel() > 0
+                        and self:GetCooldownTimeRemaining() <= 0
+                        and owner:GetMana() >= (self:GetManaCost() or 0)
+                end
                 -- Truthful per the game's own KV, so X.GetAbilityList can tell
                 -- the ultimate from a basic and fill sAbilityList[6] (GH #36).
                 sp.IsUltimate = resolved[i].is_ultimate

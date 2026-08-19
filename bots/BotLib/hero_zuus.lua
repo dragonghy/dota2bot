@@ -178,6 +178,54 @@ local talentDamage = 0
 
 local abilityASBonus = 0
 
+-- [zusult] A healthy enemy is worth less than a ready global execute.
+--
+-- Thundergod's Wrath is a ~130s cooldown, map-wide finisher: it is the ONLY
+-- tool Zeus owns that reaches a target he cannot walk to. Watched
+-- 20260819_142047_slot1: Zeus dinged 6 at t=213.5 holding 55 mana, then spent
+-- 94 on Arc Lightning (t=225.5) and 49 on Heavenly Jump (t=241.5), both into a
+-- dragon_knight sitting at 971/1072 HP who regenerated all of it back inside
+-- 20s. At t=278.5 an enemy lich dropped to 149 HP and then 11 HP, 7678 away --
+-- a free kill for a global nuke -- and Zeus stood there with 190 mana against
+-- the ult's 246 cost. `abilityR:IsFullyCastable()` was false, so ConsiderR bailed
+-- on its first line. The lich died to somebody else 4.5s later; Zeus's first ult
+-- of the game came at t=296.2, once regen alone had carried him back over the
+-- cost.
+--
+-- So the reserve is only worth defending against CHIP: this refuses the spend
+-- when the ult is armed-but-unaffordable and the target is still healthy. A kill
+-- window (target under nUltSaveHealthFloor) and self-preservation while
+-- retreating both outrank the reserve and are let through untouched.
+X.nUltSaveHealthFloor = 0.6
+
+function X.zuus_ShouldSaveManaForUlt( hBot, hTarget )
+
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'zusult' ) then return false end
+
+	if hBot == nil or abilityR == nil then return false end
+	if not abilityR:IsTrained() then return false end
+	if abilityR:GetCooldownTimeRemaining() > 0 then return false end
+
+	local nCost = abilityR:GetManaCost()
+	if nCost == nil or nCost <= 0 then return false end
+
+	-- Already affordable: nothing is being denied, so nothing to save for.
+	if hBot:GetMana() >= nCost then return false end
+
+	-- Fleeing beats hoarding.
+	if J.IsRetreating( hBot ) then return false end
+
+	-- Creeps/other units keep the shipped rules -- farm is not this gate's business.
+	if not J.IsValidHero( hTarget ) then return false end
+
+	-- A kill in hand is worth more than a snipe later.
+	if J.GetHP( hTarget ) < X.nUltSaveHealthFloor then return false end
+
+	return true
+
+end
+
 
 function X.SkillsComplement()
 
@@ -212,6 +260,10 @@ function X.SkillsComplement()
 	end
 
 	castWDesire, castWTarget = X.ConsiderW()
+	if ( castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget ) )
+	then
+		castWDesire = 0
+	end
 	if ( castWDesire > 0 )
 	then
 
@@ -239,6 +291,10 @@ function X.SkillsComplement()
 	end
 
 	castQDesire, castQTarget = X.ConsiderQ()
+	if ( castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget ) )
+	then
+		castQDesire = 0
+	end
 	if ( castQDesire > 0 )
 	then
 
