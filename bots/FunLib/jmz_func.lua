@@ -7515,6 +7515,48 @@ function J.IsWkReincarnationArmed( bot )
 	return bot:GetMana() >= nReq
 end
 
+-- [wandlimbo] Magic wand/stick dead hand during a low-HP drift (detector d23
+-- lowhp_limbo: <40% HP for 45s+ far from base, not healing, not TP-ing, not
+-- farming). EVERY shipped magic-wand rule needs an enemy hero inside 1000
+-- (用途1/2/4), and the one gated exception ('wandbleed') needs fresh hero
+-- damage -- so a bot that is simply drifting at very low HP with nobody near
+-- it never drinks, however full the wand is.
+-- Real frame: 20260722_181441_slot1 t=660.0 (11:00), zuus 214/1354 HP (15.8%),
+-- nearest enemy (nevermore) ~2017 away, zero hero damage taken in the next 5s,
+-- ~4600 from its own fountain -- a charged wand sitting idle in slot 5.
+-- Why drinking is right there: below a quarter HP the bot is too fragile to
+-- fight or farm, which is exactly the state d23 measures, so the charges have
+-- no option value left to bank -- and the wand re-charges off nearby spell
+-- casts the moment a fight resumes. Deliberately narrow so it cannot overlap
+-- the shipped rules or waste the draught:
+--   * <=25% HP (the shipped 用途1 already owns <40% with an enemy inside 1000),
+--   * NO enemy hero within 1600 (the quiet drift only, never a live fight),
+--   * >=6 charges (a token 1-2 charge sip is not worth spending the item),
+--   * the whole draught lands (15 HP per charge, both stick and wand),
+--   * >2500 from our own fountain, mirroring d23 -- on the fountain doorstep
+--     the HP is free anyway.
+-- Gated turbo + soak-candidate 'wandlimbo'; inert by default.
+function J.ShouldDrinkWandInLimbo( bot, hItem )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'wandlimbo' ) then return false end
+	if bot == nil or hItem == nil then return false end
+
+	local nCharges = hItem:GetCurrentCharges()
+	if nCharges < 6 then return false end
+
+	if bot:GetHealth() > bot:GetMaxHealth() * 0.25 then return false end
+
+	-- No overheal: only drink when every charge lands (15 HP each).
+	if ( bot:GetMaxHealth() - bot:GetHealth() ) < nCharges * 15 then return false end
+
+	-- A drift, not a fight -- the shipped rules own anything closer.
+	if #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0 then return false end
+
+	if J.GetDistanceFromAllyFountain( bot ) <= 2500 then return false end
+
+	return true
+end
+
 -- [GH #16] Turbo core farm-desire preservation. Aggregated over ~790 turbo
 -- games, our CORES under-farm at support level (~1.4 CS/min; a competent core
 -- does 5-8+). One driver: after the laning phase, farm desire is hard-capped

@@ -3318,6 +3318,16 @@ X.ConsiderItemDesire["item_magic_wand"] = function( hItem )
 		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
 	end
 
+	-- [wandlimbo] Low-HP drift dead hand: below a quarter HP with no enemy
+	-- within 1600, every rule here otherwise waits for an enemy inside 1000.
+	-- See J.ShouldDrinkWandInLimbo for the real frame and the reasoning.
+	if J.ShouldDrinkWandInLimbo( bot, hItem )
+	then
+		hEffectTarget = bot
+		sCastMotive = '低血游荡'
+		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
+	end
+
 	if ( nHPrate < 0.7 and nMPrate < 0.7 and nCharges >= 12 and nEnemyCount >= 1 ) 
 	then
 		hEffectTarget = bot

@@ -31,6 +31,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    留作后续可选深挖项(不阻塞本条划掉)。
 3. **魔棒/芒果死手帧**:低血限进(d23 lowhp_limbo)时身上有魔棒充能/
    芒果却不用的案例(lich 帧已有);查焦点五的同类帧。
+   - ~~**魔棒那一半**~~ 2026-08-19 done,gate `wandlimbo`,真实帧
+     (Zeus 15.8% 血漂流)fixture 通过 —— 见"当前状态"。
+   - **芒果那一半仍待做**,卡在没有真实帧:本地 43 个 fixture 里只有 1 个
+     持芒果的主角(viper,非焦点英雄且蓝量高)。下次委托 replay-analyst
+     **小样本(1-2 局)**扫"焦点五 + 低蓝 + 背包有 enchanted_mango"的帧。
+     可疑点(未证实,不作改动依据):`item_enchanted_mango` 的全部逻辑就是
+     `if bot:GetMana() < 150 then HIGH end`,绝对阈值,既不看有没有一个
+     "差一点就能放"的技能,也不看是不是正在往泉水走(走到泉水前吃掉=浪费)。
+   - 顺带记录的工具缺口:**dumper 不记录物品充能层数**(`grep charge` 在
+     `behavioral/dumper/` 命中 0),所以任何"魔棒有几层"的判断在 fixture 里
+     只能从帧外供数。#27 是同一家族的缺口,暂未单独开 issue。
 4. **Zeus 大招击杀确认**:全图大招抢残血 vs 浪费在满血团上的帧差分。
    2026-08-19 起步,**部分阻塞**:
    - 已定位一个干净的候选修复面 —— `X.ConsiderV/ConsiderR` 的击杀确认分支
@@ -61,6 +72,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T07:44:04Z:完成 backlog #3 的**魔棒那一半**(芒果那一半没有可用
+  真实帧,如实留在 backlog)。无 open 的 `[hero]` issue(扫过 20 条)。
+  **问题(代码事实)**:`ability_item_usage_generic.lua` 的魔棒 consider
+  (`item_magic_stick`/`item_holy_locket` 也委托进来)4 条规则**每一条都要求
+  1000 内有敌方英雄**,唯一例外 `wandbleed` 要求
+  `WasRecentlyDamagedByAnyHero(2.0)` —— 于是处在 d23 `lowhp_limbo` 状态
+  (<40% 血、离家 >2500、45s+、不回血不 TP 不刷钱、**周围没人**)的 bot
+  满足不了任何一条,攥着瞬发治疗在 15% 血上晃到死。
+  **真实帧(归档里已有,没花 dumper)**:`f_181441_zuus_lowhp_limbo.lua`
+  = `20260722_181441_slot1` t=660.0(11:00),Zeus 214/1354(15.8%),最近敌人
+  ~2017 码(1000 内和 1600 内都是 0 人),离己方泉水 ~4599,之后 5 秒**无人
+  对他造成伤害**且没死,背包 slot5 魔棒、slot4 是**空瓶**。
+  **修复**:新增 `J.ShouldDrinkWandInLimbo(bot, hItem)`,gated turbo +
+  **`wandlimbo`**;条件:>=6 层、HP<=25%(比用途1 的 40% 更深)、
+  缺血 >= 15*层数(不溢出)、**1600 内无敌方英雄**(有敌人就是用途1 的活,
+  结构上不重叠)、离己方泉水 >2500(对齐 d23)。gate 关闭时函数第二行返回
+  false,线上行为字节级不变。
+  **局部验证**:`tests/test_replay_181441_wand_limbo.lua` 9 例跑在真实帧上
+  (无 J.* 桩):ground truth、gate OFF ×2、gate ON 在真实帧出手、3 层不出手、
+  **把敌人挪到 900 码就不出手**(证明认的是"安静漂流"不是"血低就喝")、
+  血抬到 36.9% 不出手、挪到泉水上不出手、不溢出不变量(这一条是合成的,
+  已在测试里注明)。luacheck 0 警告,`lua5.1 tests/run_tests.lua`
+  **390/390 绿**(基线 381 + 9)。
+  **caveat**:**dumper 不记录物品充能层数**,充能是这组测试里唯一来自帧外的
+  数字(同 `wkreincarnmp` 的 `GetManaCost`);位置/血量/阵容/生死/背包内容
+  全真。
+  **仍未 promote、未提批测请求**:`wandlimbo` 要总监批准进 `test_set.md`,
+  和 `cmrguard`、`wkreincarnmp` 卡在同一步 —— 现在是**三个**通过局部验证、
+  等同一道门的 gated id;三个都没进 test_set,提 queue 也无处可跑。
+  报告:`iterations/reports/hero/20260819T074404Z.md`。
+  下一次触发:若 test_set 三个 id 已获批则跟进批测请求;否则做 backlog #3 的
+  芒果那一半(委托 replay-analyst **小样本 1-2 局**扫芒果死手帧)或 #5
+  (Axe 跳吼目标质量)。#4(Zeus 大招)仍部分阻塞在 GH #27。
 - 2026-08-19T05:45:28Z:**本次没有产出新的 gated 英雄行为改动**,`bots/` 与
   `game/` 一行未动 —— 是一个诚实的阻塞,记录在案免得下一个人重走。
   **(1) 订正了卡住 `wkreincarnmp` 的记录错误**:总监 04:54Z 驳回它入
