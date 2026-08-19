@@ -165,7 +165,7 @@ local talent8 = bot:GetAbilityByName( sTalentList[8] )
 
 local castQDesire, castQTarget
 local castWDesire, castWTarget
-local castW2Desire, castWLocation
+local castW2Desire, castWLocation, castW2Target
 local castDDesire, castDLocation
 local castRDesire
 local castEDesire, castETarget
@@ -196,6 +196,13 @@ local abilityASBonus = 0
 -- when the ult is armed-but-unaffordable and the target is still healthy. A kill
 -- window (target under nUltSaveHealthFloor) and self-preservation while
 -- retreating both outrank the reserve and are let through untouched.
+--
+-- GH #47 (first execution audit of this gate, on the batch's own replays): the
+-- gate was wired to ConsiderQ and ConsiderW only. Q never leaked; W leaked three
+-- times, because W is the one ability handle with a SECOND consumer -- ConsiderW2
+-- -- and the held bid simply fell through to it and spent the identical mana on
+-- the identical target. All three consumption points now share this one gate and
+-- this one candidate id.
 X.nUltSaveHealthFloor = 0.6
 
 function X.zuus_ShouldSaveManaForUlt( hBot, hTarget )
@@ -280,7 +287,17 @@ function X.SkillsComplement()
 		return
 	end
 
-	castW2Desire, castWLocation = X.ConsiderW2()
+	castW2Desire, castWLocation, castW2Target = X.ConsiderW2()
+	-- GH #47: W is the one handle with two consumers. Holding ConsiderW's bid
+	-- alone just let the very same mana leave through ConsiderW2 at the very
+	-- same target on the very next line -- measured, not predicted (3 domain
+	-- casts on the armed side, 0 leaked Q casts). ConsiderW2 only reports a
+	-- target for its poke branches, so kill windows and channel interrupts
+	-- reach the gate as nil and are never held.
+	if ( castW2Desire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castW2Target ) )
+	then
+		castW2Desire = 0
+	end
 	if ( castW2Desire > 0 )
 	then
 
@@ -489,6 +506,11 @@ function X.ConsiderW()
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
+-- Returns desire, cast location and -- third, added for GH #47 -- the enemy hero
+-- the location was aimed at, but ONLY for the poke branches at the bottom. The
+-- kill-AoE, channel-interrupt and retreat branches deliberately report no target
+-- so that X.zuus_ShouldSaveManaForUlt (which is inert on a nil target) can never
+-- stand between Zeus and a kill, an interrupt, or his own escape.
 function X.ConsiderW2()
 
 	if not abilityW:IsFullyCastable() then
@@ -558,7 +580,7 @@ function X.ConsiderW2()
 				local nTargetLocation = J.GetCastLocation( bot, npcEnemy, nCastRange, nRadius )
 				if nTargetLocation ~= nil
 				then
-					return BOT_ACTION_DESIRE_HIGH, nTargetLocation
+					return BOT_ACTION_DESIRE_HIGH, nTargetLocation, npcEnemy
 				end
 			end
 
@@ -567,7 +589,7 @@ function X.ConsiderW2()
 				local nTargetLocation = J.GetCastLocation( bot, npcEnemy, nCastRange, nRadius )
 				if nTargetLocation ~= nil
 				then
-					return BOT_ACTION_DESIRE_HIGH, nTargetLocation
+					return BOT_ACTION_DESIRE_HIGH, nTargetLocation, npcEnemy
 				end
 			end
 
@@ -581,7 +603,7 @@ function X.ConsiderW2()
 			local nTargetLocation = J.GetCastLocation( bot, npcEnemy, nCastRange, nRadius )
 			if nTargetLocation ~= nil
 			then
-				return BOT_ACTION_DESIRE_HIGH, nTargetLocation
+				return BOT_ACTION_DESIRE_HIGH, nTargetLocation, npcEnemy
 			end
 		end
 	end
