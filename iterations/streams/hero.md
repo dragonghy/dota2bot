@@ -42,7 +42,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - **不阻塞的另一半**已委托 replay-analyst:大招施放分类
      (SNIPE/TEAMFIGHT_CHIP/WASTED)+ 机会成本统计,只看血量与击杀事件,
      用来判分支 3(`IsInTeamFight` + 1400 内敌人 >=5 的团战代理判据)
-     到底有没有在浪费大招。结果见 `iterations/reports/hero/zeus_ult_scan_*.md`。
+     到底有没有在浪费大招。**该委托在本次会话内没有返回**(跑满 51 分钟仍在
+     运行,中途要求它落盘阶段性结果也没赶上),`zeus_ult_scan_*.md`
+     **不存在,不要去找**。下一次触发**重新发起**这个委托,并注意:
+     单次会话内跑完(AWS 自举 + S3 拉取 + dumper 跑多局)时间不够,
+     建议先只扫 1-2 局拿到方法学和一个帧,再决定要不要扩样本。
    - 代码事实(接手须知):`X.SkillsComplement` 里 `ConsiderR()` **第一个**
      被调用,desire>0 就立刻 queue 大招并 return,W/E/Q 当帧全部不再考虑
      —— 大招误报的代价不只是浪费大招,还会吞掉当帧其它所有技能。
@@ -88,8 +92,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   新增 9,无既有 fixture 测试位移)。本次未提 `iterations/queue.json` 批测
   请求(没有新 gated 改动需要批测)。
   报告:`iterations/reports/hero/20260819T054528Z.md`。
-  下一次触发:先看 replay-analyst 的 Zeus 大招扫描结论
-  (`iterations/reports/hero/zeus_ult_scan_*.md`)接 backlog #4 的非视野
+  **(3) 委托 replay-analyst 扫 Zeus 大招施放的任务没能在本次会话内返回**
+  (51 分钟仍 running),`zeus_ult_scan_*.md` **不存在**。教训记录:
+  AWS 自举 + S3 拉取 + dumper 跑多局的组合**超出单次触发的时间预算**,
+  下次委托时把样本量先压到 1-2 局。
+  下一次触发:重新发起 Zeus 大招扫描(小样本起步)接 backlog #4 的非视野
   那一半;#27 若已解则补上雾里击杀确认的真实帧 fixture;否则认领 #3/#5。
 - 2026-08-19T03:55:34Z:完成 backlog #2(CM 大招时机,第一刀)。委托
   `replay-analyst` 在 soak S3 归档扫了 186 局含 CM 的对局、抽样 30 次 R
