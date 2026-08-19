@@ -18,7 +18,16 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
 4. 决定本轮要不要开新批测(优先级从高到低):
    a. `iterations/queue.json` 里 status=pending 的请求(先进先出,priority 高者先);
    b. 队列为空:跑一轮例行"测试版 vs 稳定版"(测试集见
-      `iterations/streams/test_set.md`,镜像草稿,armed=测试集全 id 逗号串);
+      `iterations/streams/test_set.md`,镜像草稿,armed=测试集全 id 逗号串)。
+      **例行波次节流(2026-08-19,防预算烧穿:每波实测 ~$0.5-1.5,若每
+      2h 一波则月成本 $180+,远超 $50/月预算)**:满足全部三条才启动——
+      (i) 距上一次例行波次启动 ≥ 6 小时;
+      (ii) 有新东西可测:bots/ 或 test_set.md 自上一波测过的 commit 之后
+           有变更,或当前 tree+测试集的累计种子数 < 8;
+      (iii) 当月已花 + 本波预估 ≤ $45(给 $50 的 AWS Budget 留余量;
+            owner 批准线另算,见铁律)。
+      不满足就跳过启动,报告里写明是哪条不满足。queue.json 的显式请求
+      不受 (i)(ii) 节流,只受成本约束;
    c. 稳定版 vs upstream 基线(74727e4a)目前缺 harness 支持 — 已知缺口,
       若还没有对应 [harness] issue 就开一个,不要自己改 harness。
 5. 启动纪律:**先 `git ls-remote origin main` 核对远端 tip 等于要测的树**
