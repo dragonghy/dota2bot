@@ -22,7 +22,11 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    c. 稳定版 vs upstream 基线(74727e4a)目前缺 harness 支持 — 已知缺口,
       若还没有对应 [harness] issue 就开一个,不要自己改 harness。
 5. 启动纪律:**先 `git ls-remote origin main` 核对远端 tip 等于要测的树**
-   (2026-07-23 险些测错树);只用 `aws_run.sh`(自毁 Spot + 12h 看门狗);
+   (2026-07-23 险些测错树);镜像草稿候选验证用 `spot_run.sh --validate
+   "<CAND> <SEEDS> --games N"`(2026-08-19 更正:此前这里误写成 `aws_run.sh`,
+   那是另一个更老的纯 old-ref-vs-new-ref 脚本,没有 `--validate`/`CAND` 概念;
+   `iterations/state.json` 里记录的历次真实启动全部用的是 `spot_run.sh
+   --validate`,详见 `.claude/agents/batch-runner.md`);自毁 Spot + 看门狗;
    Spot 等不到就 on-demand(小时级没多少钱);启动后把请求标记 status=running。
 6. 结束前再跑一次 check_costs.sh 确认无泄漏。
 
@@ -43,3 +47,16 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
 - 2026-08-01 初始化。付费波次此前处于暂停;owner 已批准继续测试预算,
   MTD ~$85(账单有滞后),刹车线 $90 — **本月剩余额度很小,优先收割和排队,
   启动新批测前先看成本**。queue.json 当前无 pending 请求。
+- 2026-08-19T00:11Z:本 stream 首次实际触发(此前只有章程文档,无执行记录)。
+  新计费月已重置,MTD=$3.45,远低于刹车线,未触发预算刹车。收割:S3 上
+  07-31 的历史数据早已被建组前的会话完整收割分析(数字与 state.json 一致,
+  抽查复核过),本轮无新数据。queue.json 为空 → 按章程 (b) 跑例行"测试版 vs
+  稳定版":test_set.md 现行 14-id 全集(12-id 复审组 + wandbleed + tpwatch,
+  这是该全集首次上过 S3)首次整体验证,mirrored-draft,2 台 spot 共 4 种子
+  (851-854),commit 96f49dc,预估花费 $1-1.5。跑中实例:
+  `spot_20260819_001001_1_main`(种子851/852)、`spot_20260819_001007_1_main`
+  (种子853/854),均自毁 spot + 看门狗,预计 verdict ~2-3h 后落地(约
+  2026-08-19 02:10-03:10 UTC),下次触发用 recover_verdict.py 收割。启动前
+  确认无泄漏,结束前复查仍无泄漏。顺带修正了本章程步骤5里的脚本名错误
+  (`aws_run.sh` → `spot_run.sh --validate`,历史启动实际一直用的是后者)。
+  详见 `iterations/reports/batch-desk/20260819T001111Z.md`。
