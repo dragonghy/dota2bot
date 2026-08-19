@@ -295,3 +295,27 @@
     (2) `teambrain` 落点问题(#23)与本轮 #37 **共用同一个 `GetNearbyLocationToTp` 落点选择器**,
     疑似同根因,值得合并查;(3) 波次后续新局补齐 arm B 样本。
   - 完整报告:`iterations/reports/replay-check/20260819T125022Z.md`
+- **2026-08-19T14:37Z(第八次触发)**:核验 `capmono`(本波首次 armed、零核验记录、
+  「下一轮优先」#1)。对象是 batch-desk 14:12Z 刚收割的 `lf_rescue` bisect **arm A**
+  (13-id 全 armed 含 capmono),`spot_20260819_121038/121044/121050/121056_1_main`。
+  **宽扫 16/16 arm-A mirror 有效局(8 radiant-armed + 8 dire-armed);三层机会扫描全覆盖;
+  逐帧还原 11 个峰值翻转 episode。**
+  - `capmono`:**WORKING(条件 (a) 成立,方向性 + 帧级确认,p≈0.08;未与 teambrain 隔离)。**
+    镜像两侧差分:普通/中带 retreat_frac 平(0.577 vs 0.574、0.652 vs 0.669,无信号,被
+    普通低血撤退淹没);**收窄到 capmono 真咬合的「拒扑」clean 域**(HP .42-.50、队友<1200u
+    挨打、敌 850-1500u 非贴脸→lanesurv 爆发撤退不独立触发、尸体帧过滤)信号浮出:
+    **候选拒扑 45.2% vs 基线 28.6%,+16.6pp,OR 2.06,χ²=3.02,n=62/63**,方向与设计一致。
+    5 个逐帧还原的候选拒扑**全是真 capmono 形状**(46% 血脱离够得着的架并存活/回血:sven
+    t442 0.43→0.46、lina t434 0.45→0.77、SF t446、sniper t72、DK t243),**非死亡逃窜**
+    (对照:贴脸 edist<50 的峰值帧全是暴毙/尸体帧,不归 capmono)。诚实反例:121901 jugg
+    t258(队友身边、45% 血)与 122420 PA t466 仍 commit → capmono 不是每帧都翻(设计如此,
+    只在 raw∈(0.72,0.9] 咬合)。
+  - **本波读数对 capmono 无用**:12s 死亡率候选 11.6% vs 基线 6.1%(n=5/43 vs 2/33,方向反、
+    噪声)——**不否定 (a)**,只证下游价值(b)在此频次不可测(总监预告);且候选侧 13-id 全 armed,
+    `teambrain` regroup 也造脱离,bisect 两臂都含 capmono+teambrain → 结构上无法单独归因。
+  - **评论 issue #32**:交付 (a) 帧证据 + 给 (b) 的现成行为检测器(clean 域拒扑率)+ 排期约束
+    (需 capmono-隔离波次控住 teambrain;不许用 gpm/死亡率判 b)。未开新 bug(无新缺陷)。
+  - 已检查:上述 4 个 arm-A run 各 4 局(共 16 局)capmono 维度首检完毕;暖场局
+    `_121128/121131/121137/121141_slot1` 已作废。arm B(`_1211xx`)+ 14:12Z 补跑 `_1411xx`
+    三 run 留给下一轮。
+  - 完整报告:`iterations/reports/replay-check/20260819T143700Z.md`
