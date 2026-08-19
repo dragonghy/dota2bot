@@ -50,9 +50,20 @@ class Timeline:
     def __init__(self, d):
         self.teams = d["game"]["teams"]
         self.events = sorted(d["events"], key=lambda e: e["t"])
+        # The dumper keeps emitting snapshots for ~25s AFTER the game ends, with
+        # every entity's x/y/hp frozen verbatim (all 16 games of the 1808xx wave
+        # carry one; the first 13 add up to 4303 rows). _paused_spans below is
+        # structurally blind to it: that definition needs an event PAIR
+        # bracketing the freeze, and the tail has no trailing event. Window
+        # detectors therefore read frozen post-game state as behavior -- a 24s
+        # "idle next to a dying ally" ghost in 20260819_183042_slot1, whose game
+        # actually ended at 611s ([harness] GH #43). Cut past the last event.
+        self.t_end = max((e["t"] for e in self.events), default=float("inf"))
         # per-hero sorted snapshots for nearest-time lookup
         self.snaps = defaultdict(list)
         for s in d["snapshots"]:
+            if s["t"] > self.t_end:
+                continue
             self.snaps[s["hero"]].append(s)
         for h in self.snaps:
             self.snaps[h].sort(key=lambda s: s["t"])
