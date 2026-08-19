@@ -1609,7 +1609,13 @@ X.ConsiderItemDesire["item_blink"] = function( hItem )
 			if (#nInRangeAlly >= nNearbyEnemyHeroCount and bWeAreStronger) then
 				local nDistance = Min(nCastRange, GetUnitToUnitDistance(bot, botTarget))
 				local vLocation = J.GetUnitTowardDistanceLocation(bot, botTarget, nDistance) + RandomVector(150)
-				if IsLocationPassable(vLocation) then
+				-- [axeblink] Axe's dagger is the Berserker's Call delivery
+				-- vehicle -- landing on a crowd without Call is a free kill for
+				-- them. Inert unless turbo + the 'axeblink' id is armed, so the
+				-- shipped decision here is unchanged.
+				if  IsLocationPassable(vLocation)
+				and not J.ShouldHoldAxeBlinkForCall(bot, vLocation)
+				then
 					return BOT_ACTION_DESIRE_HIGH, vLocation, 'ground', nil
 				end
 			end

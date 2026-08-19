@@ -61,8 +61,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - 代码事实(接手须知):`X.SkillsComplement` 里 `ConsiderR()` **第一个**
      被调用,desire>0 就立刻 queue 大招并 return,W/E/Q 当帧全部不再考虑
      —— 大招误报的代价不只是浪费大招,还会吞掉当帧其它所有技能。
-5. **Axe 跳吼目标质量**:跳进人堆 vs 跳单人的选择核查(配合 d24
-   deep_solo_death 找反例)。
+5. **Axe 跳吼目标质量**:2026-08-19 第一刀完成 —— 新 gate `axeblink`
+   (嘲讽不可用 + 落点 >=2 敌人时压住进攻性闪烁),真实帧
+   (`f_222428_lion_lich_burst` 以 Axe 为主角,嘲讽剩 6.7s 冷却)fixture +
+   3 次变异测试通过,见"当前状态"。**未完成的一半**:帧库里没有一个
+   "Axe 身上带匕首"的帧,所以"起跳"这个消费点前置条件仍未被真实帧覆盖;
+   下次委托 replay-analyst **小样本(1-2 局,取 12 分钟后的片段)** 扫
+   "Axe + 背包有 item_blink + IsGoingOnSomeone" 的帧。d24 deep_solo_death
+   的反例核查也仍未做。
 6. ~~**WK reincarnation 真实帧 fixture**~~ 2026-08-19 done —— 委托
    replay-analyst 找到真实帧(spot_20260725_102532_1_main slot1, t=373.5,
    mp=189/387 落在 160/220 gap 里),`tests/fixtures/
@@ -72,6 +78,53 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T09:45:13Z:完成 backlog #5(Axe 跳吼目标质量)第一刀。无 open 的
+  `[hero]` issue(扫过 22 条)。
+  **问题(代码事实)**:`ability_item_usage_generic.lua` 的
+  `X.ConsiderItemDesire["item_blink"]` 里 `J.IsGoingOnSomeone` 那条进攻性闪烁
+  分支**从不看嘲讽**:目标在 500..施法距离之间、人头数不吃亏就闪过去。而且
+  没人替 Axe 兜底 —— 同函数上方的 `bot.shouldBlink` 保留名单(batrider/
+  beastmaster/dark_seer/earthshaker/magnataur/rubick/tiny/treant)**没有 Axe**,
+  `hero_axe.lua` 也从不给 `shouldBlink` 赋值。于是嘲讽在冷却/蓝不够时 Axe 照样
+  往人堆里跳:落地是一具没有控制没有脱身手段的近战身体(Counter Helix 的触发
+  本来就靠嘲讽制造的"被攻击",Culling Blade 的重置假设目标走不掉)。
+  **修复**:新增 `J.ShouldHoldAxeBlinkForCall(bot, vLandLoc)`,gated turbo +
+  **`axeblink`**;同时满足才压住闪烁:是 Axe、嘲讽**已学**、嘲讽**当帧不可用**
+  (冷却或蓝 < 耗蓝)、落点嘲讽半径内**可见敌方英雄 >= 2**(人堆)。
+  **单人跳刻意不动**(嘲讽没好但对面只剩一个残血,跳过去收掉是正当用法),
+  所以判据是"人堆 + 没吼"而非"没吼"。gate 关闭时函数第一行返回 false,线上
+  行为字节级不变。理论依据:匕首是嘲讽的投送工具(blink→call 一气呵成),
+  等待的代价只有剩余冷却,不等的代价是匕首 CD + 一条命。
+  **局部验证**:真实帧 `20260721_222428_slot1` t=314.0(5:14)——Axe 7 级、
+  629/1719 血、151/459 蓝、嘲讽 1 级**剩 6.7s 冷却**、敌方 Lion(354/823)在
+  **741 码**(正落在该分支自己的 500..1200 窗口里)、Lion 身边**没有第二个敌人**。
+  `tests/test_replay_222428_axe_blink_call.lua` 10 例(无 J.* 桩):ground
+  truth、gate OFF ×2、**未经改动的真实帧不压**(单人)、人堆+嘲讽冷却压住、
+  人堆但嘲讽就绪不压、人堆+出CD但蓝不够压住、人堆但嘲讽没点不压、非 Axe 主角
+  不压、**源码级 wiring 断言**(对应总监 #0b:必须断言最终决策不只是 helper)。
+  **3 次变异测试全部被抓**(阈值 2→1 / 删嘲讽可用性检查 / 摘掉消费点接线)。
+  luacheck 0 警告,`lua5.1 tests/run_tests.lua` **418/418 绿**(基线 408 + 10)。
+  **顺带的共享管线改动(非行为改动)**:`tests/mock/replay_fixture.lua` 的
+  `M.load(path)` 新增可选 `sSubject` —— **用帧上任意英雄当主角**驱动同一帧
+  (帧里每个单位的位置/血蓝/等级/物品/技能冷却本来就都是真的),把 43 个既有
+  fixture 的可用面放大一圈;覆盖主角时把 `GetEstimatedDamageToTarget` 归零
+  (`observed` 是关于原主角的 ground truth,不能转移)。默认路径不变。
+  **caveat**:①这帧上 **Axe 没带匕首**,帧钉的是守卫的输入(嘲讽等级/冷却/蓝、
+  决定单人还是人堆的位置),不是"持有匕首"这个消费点前置条件;②人堆那几例是
+  对真实帧的**变异**(把同帧另一个真实敌人挪到目标身边),测试里逐条标注;
+  ③嘲讽 1 级耗蓝 70 帧外锚定(Liquipedia,同 `wkreincarnmp` 的 `GetManaCost`);
+  ④消费点未端到端驱动(`botTarget` 是文件局部、只在未导出的
+  `ItemUsageComplement` 里赋值),用源码级 wiring 断言代替。
+  **仍未 promote、未提批测请求**:`axeblink` 要总监批准进 `test_set.md`。现在
+  等同一道门的 hero 组 id 有**三个**:`wkreincarnmp`、`wandlimbo`、`axeblink`
+  (`cmrguard` 已获批入集)。
+  报告:`iterations/reports/hero/20260819T094513Z.md`。
+  下一次触发:若三个 id 有获批的则跟进批测请求;否则委托 replay-analyst
+  **小样本 1-2 局**同时扫两件事(都要 12 分钟后的片段)——"Axe + 背包有
+  item_blink"的起跳帧(#5 未完成的一半)和"焦点五 + 低蓝 + 背包有
+  enchanted_mango"的死手帧(#3 芒果那一半);注意历史教训:AWS 自举 + S3 +
+  dumper 跑多局会超出单次触发的时间预算,样本量务必压到 1-2 局。
+  #4(Zeus 大招)仍部分阻塞在 GH #27。
 - 2026-08-19T07:44:04Z:完成 backlog #3 的**魔棒那一半**(芒果那一半没有可用
   真实帧,如实留在 backlog)。无 open 的 `[hero]` issue(扫过 20 条)。
   **问题(代码事实)**:`ability_item_usage_generic.lua` 的魔棒 consider

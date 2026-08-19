@@ -16,15 +16,25 @@ local api = require('mock.bot_api')
 local M = {}
 
 --- Load a fixture file. Returns J, bot (the subject), heroes (by full name), fx.
-function M.load(path)
+---
+--- `sSubject` (optional) drives the frame from ANOTHER hero on it instead of
+--- fx.self -- every unit in the slice carries its real position/HP/mana/level/
+--- items/ability cooldowns, so any hero present is a legitimate subject for a
+--- decision that reads only frame state. One thing does NOT transfer: the
+--- `observed` block (burst damage, died_after) is ground truth about fx.self
+--- only, so under an override every unit's GetEstimatedDamageToTarget is 0
+--- rather than a number that would silently mean "damage dealt to someone else".
+function M.load(path, sSubject)
     api.reset_modules()
     local fx = dofile(path)
 
+    local subj_name = sSubject or fx.self
+    local subj_override = subj_name ~= fx.self
     local subj_team
     for _, u in ipairs(fx.units) do
-        if u.name == fx.self then subj_team = u.team end
+        if u.name == subj_name then subj_team = u.team end
     end
-    assert(subj_team, 'fixture subject not in units: ' .. tostring(fx.self))
+    assert(subj_team, 'fixture subject not in units: ' .. tostring(subj_name))
 
     -- Vision, when the dump carries it (v2 "vision+items" timelines write
     -- seen_by = the teams that could see the hero at that instant). The engine's
@@ -45,7 +55,10 @@ function M.load(path)
     local heroes = {}
     for _, u in ipairs(fx.units) do
         local loc = api.Vector(u.x, u.y, 0)
-        local burst = (fx.observed and fx.observed.burst and fx.observed.burst[u.name]) or 0
+        local burst = 0
+        if not subj_override then
+            burst = (fx.observed and fx.observed.burst and fx.observed.burst[u.name]) or 0
+        end
         -- Real inventory: slot-ordered item handles ('' = empty slot). The TP
         -- scroll's real cooldown state rides on tp_cd from the dump.
         local slots = {}
@@ -107,7 +120,7 @@ function M.load(path)
         heroes[u.name].is_suspicious_illusion = false
     end
 
-    local bot = heroes[fx.self]
+    local bot = heroes[subj_name]
     api.install({ bot = bot, team = subj_team })
 
     -- Engine plumbing over the fixture roster (alive units only, like in game).

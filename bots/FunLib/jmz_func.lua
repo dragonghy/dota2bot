@@ -7515,6 +7515,53 @@ function J.IsWkReincarnationArmed( bot )
 	return bot:GetMana() >= nReq
 end
 
+-- [axeblink] Axe blink-in target quality (hero backlog #5: 跳人堆 vs 跳单人).
+-- The offensive-blink branch in ability_item_usage_generic
+-- (X.ConsiderItemDesire['item_blink'], the J.IsGoingOnSomeone case) is fully
+-- generic: it blinks onto J.GetProperTarget whenever the target sits between
+-- 500 and cast range away and the head count around it is not losing. It never
+-- asks whether Axe still owns the ONE reason he carries a dagger at all --
+-- Berserker's Call. Axe's blink is not a chase tool and not an escape: it is
+-- the delivery vehicle for the Call, and the rest of his kit is priced off the
+-- enemies the Call pins (Counter Helix procs off being attacked by the units it
+-- forces to attack him; Culling Blade's reset assumes a target that cannot walk
+-- away). Landing on TWO OR MORE enemies with Call on cooldown or without the
+-- mana for it drops a melee body in the middle of them with no lockdown and no
+-- disengage -- the dagger goes on cooldown, gets damage-blocked, and Axe dies
+-- without trading. Waiting costs only the seconds left on the Call cooldown.
+-- Deliberately narrow -- the blink is held only when ALL of:
+--   * turbo AND the 'axeblink' soak candidate is armed (inert otherwise),
+--   * the bot is Axe and has actually LEARNED Call (an unlearned Call means
+--     there is no combo to wait for, so the generic rule keeps its blink),
+--   * Call is genuinely unavailable this instant -- cooldown, or not enough
+--     mana to pay for it on landing,
+--   * the landing point is a CROWD: >= 2 enemy heroes we can currently see
+--     inside the Call radius of it.
+-- The lone-target jump is deliberately left alone: blinking onto a single hero
+-- to finish it is a fine use of the dagger with or without Call, and holding it
+-- there would only drop kills. Real frame for that non-firing half:
+-- 20260721_222428_slot1 t=314.0 -- Axe (level 7, Call level 1 on 6.7s cooldown,
+-- 151/459 mana) 741 away from a 354/823 Lion with no second enemy in reach.
+function J.ShouldHoldAxeBlinkForCall( bot, vLandLoc )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'axeblink' ) then return false end
+	if bot == nil or vLandLoc == nil then return false end
+	if bot:GetUnitName() ~= 'npc_dota_hero_axe' then return false end
+
+	local hCall = bot:GetAbilityByName( 'axe_berserkers_call' )
+	if hCall == nil or hCall:GetLevel() < 1 then return false end
+
+	-- Call ready right now? Then the blink IS the combo -- never hold it.
+	if hCall:IsFullyCastable() and bot:GetMana() >= hCall:GetManaCost() then
+		return false
+	end
+
+	local nRadius = hCall:GetSpecialValueInt( 'radius' )
+	if nRadius == nil or nRadius <= 0 then nRadius = 315 end
+
+	return #J.GetEnemiesNearLoc( vLandLoc, nRadius ) >= 2
+end
+
 -- [wandlimbo] Magic wand/stick dead hand during a low-HP drift (detector d23
 -- lowhp_limbo: <40% HP for 45s+ far from base, not healing, not TP-ing, not
 -- farming). EVERY shipped magic-wand rule needs an enemy hero inside 1000
