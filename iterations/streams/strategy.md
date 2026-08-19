@@ -53,8 +53,20 @@
 8. **「最终出价可达性」全组普查**(2026-08-19T09:16Z 新增,由 #29/#31/`capmono`
    三连引出)。总监已把规矩立进 `test_set.md`:**凡是在注释里论证「这个值要压过
    X」的分支,验收必须断言最终出价(过完所有下游变换),不是 helper 返回值**。
-   本组名下还没按这条规矩查过的 id:`midtp`/`suptp`/`tpcommit`/`lf_rescue`/
-   `teambrain`/`ownhalf`/`tpwatch`。已知的两类下游变换:模式文件里
+   本组名下还没按这条规矩查过的 id:~~`tpcommit`~~(**2026-08-19T11:35Z 已查,
+   发现域缺口 → gated `tpdying`,见 issue #35 与当前状态节**)、
+   `midtp`/`suptp`/`lf_rescue`/`teambrain`/`ownhalf`/`tpwatch`。
+   **查 `tpcommit` 时补好的工具链让这件事对后面几条便宜了很多**:mock 的
+   `BOT_MODE_DESIRE_*`/`BOT_ACTION_DESIRE_*` 现在带真实 0..1 值(此前是自动常量
+   元表发的任意 id,`Defend.GetDefendDesire` 实测返回 1008/1009,跨模式比出价
+   是在比垃圾),`bots/mode_defend_tower_*_generic.lua` 与
+   `bots/mode_retreat_generic.lua` 现在可以直接 dofile 并在真实帧上驱动
+   `GetDesire()`。新写 bid 测试不必再在文件里各自重定义常量。
+   **`midtp`/`suptp` 的特殊情况(已查明,记在这里省得重查)**:它们的出价数值
+   在物品链里是**惰性的** —— `ability_item_usage_generic.lua` 的物品循环只判
+   `nItemDesire > 0`,从不跨物品比大小;真正的优先级是槽位顺序
+   `{5,4,3,2,1,0,15,16}`,**TP 卷轴排最后**,任何当帧想用的其他物品都抢在响应 TP
+   前面。所以这两条的「最终出价」问题不是数值问题,是**顺序/可达性**问题。已知的两类下游变换:模式文件里
    `GetDesire()` 对 `GetDesireHelper()` 的后处理(farm 的 0.45 cap、team_roam 的
    CapForLanePush、roshan 的 announce),以及「先命中先 return」的 guard 链
    (#29 已修 retreat 链,**TP 决策链 `ability_item_usage_generic.lua:5089+`
@@ -63,6 +75,35 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T11:35Z:没有可认领的新 `[strategy]` issue(#32 已被总监 11:10Z 批准
+  入集,本轮关闭;#28/#26 是本组遗留),接 backlog 第 8 条「最终出价可达性」普查,
+  **一次一条,本轮做 `tpcommit`**。发现 **#29/#31/#32 同族的第四例**:
+  `J.GetTpCommitDefendDesire` 的 0.85 落地地板,其释放条件
+  `GetHP < 0.40 or J.ShouldRetreatLaneBurst(bot)` 里**预判的那一半**
+  (`ShouldRetreatLaneBurst`,第三行 `if not J.IsInLaningPhase() then return false end`)
+  在**这块地板自己的生效域里结构性失效** —— 地板只能从两个响应 TP 分支到达,而它们
+  要求 6 级 + >3500 码跨图,所以钉住的帧压倒性在对线期之后,释放只剩「已经掉到 40%
+  以下」。这正是当初写这个释放要堵的「站在原地被磨死」形状,**减掉了让它奏效的那一半**。
+  改动:gated `tpdying`(turbo-only,且**只有在 `tpcommit` 也 armed 时才可达**),
+  新纯谓词 `J.IsIncomingBurstLethal`(与 `ShouldRetreatLaneBurst` 同一个 mana/cd-aware
+  估算器,去掉对线期门),armed 时**只可能提前释放**,结构上不可能抬高或制造钉死;
+  地板值 0.85 / 12s 窗口 / 原释放**一个字没动**。
+  验证 `tests/test_tpcommit_release_domain.lua` 9 例,锚在真实帧
+  `f_182552_warlock_ult_hoard`(t=626=10:26,术士 53.4% 血,狙击手 1008 码外,
+  ground truth:打出 **669** 进 546 的血池,**2.3s 后死**);两个前提
+  (`IsInLaningPhase()==false`、`GetHP>0.40`)都是**断言出来的**;**所有 desire
+  断言驱动真的 mode 文件 `GetDesire()`**(§0b 规矩):armed tpcommit → defend
+  **0.85** vs retreat **−0.05**(就在他被打死那一帧);shipped → 0.1;+tpdying → 0.1。
+  含反向断言(shipped 释放哪天被改成域正确的,测试自曝过期)+ 两次变异测试。
+  **427/427 + luacheck 0 警告**。顺带补了四处 mock 保真度缺口(见 backlog 第 8 条)。
+  `state.json` 新增 `tpdying_20260819`。**`tpdying` gated 未 armed**,入 test_set.md
+  待总监批(已开 issue **#35** 申请;排期提示:单独 armed 是 no-op)。
+  **另发现但未动**:响应 TP 的落点(`J.GetNearbyLocationToTp` → 最近**存活**己方塔前
+  575 码,无塔回落**泉水**)从来没有和触发点做过距离校验,而 `WillAllySurviveTpWindow`
+  只预算 4.0s、**不含落地后走过去的时间** —— 这能机械地解释录像组 `20260819T033000Z`
+  里那个「前置条件全满足但落地在泉水」的 `lf_rescue` 帧。**故意没动**:一次一个杠杆,
+  且 `lf_rescue` 是马上要跑的 bisect 的被测变量。未花 AWS 钱,未提批测请求。详见
+  `iterations/reports/strategy/20260819T113516Z.md`。
 - 2026-08-19T09:16Z:没有可认领的新 `[strategy]` issue(#28/#26 都是本组上一轮
   自己的遗留),于是接住总监 09:04Z 关闭的 **#31 没覆盖的另一半**。总监对
   `l1trade`/`l5combo` 的修法是**豁免**(它们硬性要求对线期,cap 域是其生效域的

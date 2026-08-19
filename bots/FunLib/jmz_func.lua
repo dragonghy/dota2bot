@@ -5517,6 +5517,28 @@ function J.WillAllySurviveTpWindow( hAlly )
 	return nIncoming < hAlly:GetHealth()
 end
 
+-- [tpdying] Is the burst the visible enemies can cast at me RIGHT NOW already
+-- lethal? Same mana/cd-aware estimator J.ShouldRetreatLaneBurst runs over its
+-- own attackers, minus that helper's laning-phase domain -- see
+-- J.GetTpCommitDefendDesire for why the missing domain is the whole point.
+-- Pure predicate: every soak gate lives at the call site, so adding it changes
+-- nothing until a caller arms one.
+function J.IsIncomingBurstLethal( bot, nWindow )
+	if bot == nil or not bot:IsAlive() then return false end
+	local tEnemies = J.GetNearbyHeroes( bot, 1100, true, BOT_MODE_NONE )
+	if tEnemies == nil or #tEnemies == 0 then return false end
+	local nIncoming = 0
+	for _, hEnemy in pairs( tEnemies ) do
+		if J.IsValidHero( hEnemy )
+		and not J.IsSuspiciousIllusion( hEnemy )
+		then
+			nIncoming = nIncoming + hEnemy:GetEstimatedDamageToTarget(
+				true, bot, nWindow or 3.0, DAMAGE_TYPE_ALL )
+		end
+	end
+	return nIncoming >= bot:GetHealth()
+end
+
 -- [TP audit 20260723, fix B] Team-wide gated-TP response quota. The audit found
 -- COLLECTIVE TPs (>=3 heroes same instant, 3 TPs + ~200s of walking for zero
 -- intervention). All bots share this module instance, so a module-level ledger
@@ -6939,6 +6961,29 @@ function J.GetTpCommitDefendDesire( bot, nLane )
 	-- purpose-driven -- "丢失了动手机会才会走" -- and a lander who is dying
 	-- has lost the chance: release the pin, let retreat win.
 	if J.GetHP( bot ) < 0.40 or J.ShouldRetreatLaneBurst( bot ) then
+		bot.tpRespondUntil = nil
+		return nil
+	end
+	-- [tpdying, GH #35] DOMAIN GAP in the release just above. Its anticipatory
+	-- half, J.ShouldRetreatLaneBurst, returns false outside the laning phase
+	-- (its own third line), while this floor is only ever reachable from the
+	-- two response-TP branches -- which require level 6+ and a >3500u trip. The
+	-- frames this floor actually pins are therefore overwhelmingly POST-laning,
+	-- where the anticipation is structurally dead and only "already under 40%"
+	-- survives: the pin holds until the lander is ALREADY losing, which is the
+	-- ground-down-in-place shape the release was written against, minus the
+	-- part that made it work. Real frame f_182552_warlock_ult_hoard: 10:26 (so
+	-- IsInLaningPhase is false whatever the net worth), 53.4% HP so the numeric
+	-- clause is silent too, sniper 1008u away who then dealt 669 into a 546 HP
+	-- pool -- the floor bid 0.85 against a retreat bid of -0.05, and the hero
+	-- died 2.3s later. Restore the anticipation in this floor's own domain:
+	-- release when the burst the visible enemies can cast right now already
+	-- covers my current health. Gated turbo + 'tpdying' and reachable only
+	-- inside the 'tpcommit' gate, so both shipped play and today's armed
+	-- tpcommit behavior are unchanged until this id is armed. Structurally it
+	-- can only RELEASE a pin (return nil sooner), never raise or create one.
+	if J.IsSoakCandidate( 'tpdying' )
+	and J.IsIncomingBurstLethal( bot, 3.0 ) then
 		bot.tpRespondUntil = nil
 		return nil
 	end

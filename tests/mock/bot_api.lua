@@ -21,10 +21,30 @@ local vector_mt
 vector_mt = {
     -- The game's Vector answers numeric indexing too (v[1]=x, v[2]=y, v[3]=z);
     -- bot code (e.g. J.GetDistance) relies on it.
+    -- The engine's Vector also answers a handful of METHODS; TS-generated
+    -- helpers call them (utils.lua GetOffsetLocationTowardsTargetLocation does
+    -- sub(a,b):Normalized()), so a mock Vector without them cannot load those
+    -- files at all.
     __index = function(v, k)
         if k == 1 then return v.x end
         if k == 2 then return v.y end
         if k == 3 then return v.z end
+        if k == 'Length' or k == 'Length2D' then
+            return function(self)
+                local z = (k == 'Length') and self.z or 0
+                return math.sqrt(self.x * self.x + self.y * self.y + z * z)
+            end
+        end
+        if k == 'Normalized' then
+            return function(self)
+                local n = math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+                if n == 0 then return M.Vector(0, 0, 0) end
+                return M.Vector(self.x / n, self.y / n, self.z / n)
+            end
+        end
+        if k == 'Dot' then
+            return function(self, o) return self.x * o.x + self.y * o.y + self.z * o.z end
+        end
         return nil
     end,
     __add = function(a, b) return M.Vector(a.x + b.x, a.y + b.y, a.z + b.z) end,
@@ -50,12 +70,28 @@ end
 -- Fake units (heroes, creeps, buildings) and abilities/items
 ----------------------------------------------------------------------
 
+-- Getters that hand back a UNIT HANDLE answer nil when there is nothing, not
+-- the numeric 0 the generic Get* default would give: scripts null-check them
+-- and then call methods on the result (J.GetProperTarget does
+-- target:GetTeam() straight after bot:GetAttackTarget()), so a 0 default
+-- crashes the very files a full-script test wants to drive.
+local handle_getters = {
+    GetAttackTarget = true,
+    GetTarget = true,
+    GetCurrentActionTarget = true,
+}
+
 -- Getter defaults by prefix when a spec doesn't provide an override.
 local function default_for(key)
     local first = key:sub(1, 2)
     if key:find('^Is') or key:find('^Has') or key:find('^Can') or key:find('^Was') then
         return false
     end
+    if handle_getters[key] then return nil end
+    -- Counting methods without a Get prefix: the engine answers 0, and the
+    -- generic nil default makes the loops that read them (utils
+    -- HasModifierContainsName) crash on load.
+    if key == 'NumModifiers' then return 0 end
     if key:find('^GetNearby') then return {} end
     if key == 'GetLocation' then return M.Vector(0, 0, 0) end
     if key:find('^Get') then return 0 end
@@ -209,6 +245,21 @@ function M.install(opts)
     G.GetUnitToLocationDistance = function(u, loc) return dist2d(u:GetLocation(), loc) end
     G.GetLocationToLocationDistance = function(a, b) return dist2d(a, b) end
 
+    -- Desire constants carry their REAL engine values. They are ALL_CAPS, so
+    -- the auto-const metatable below would otherwise hand out arbitrary ids
+    -- (1008, 1009, ...) -- and a bid built from those is not a bid, which is
+    -- exactly what an "assert the final bid, not the helper" test needs to be
+    -- able to trust. Every mode/action desire in the codebase is on this 0..1
+    -- scale, so define the scale once here.
+    for k, v in pairs({
+        NONE = 0.0, VERYLOW = 0.1, LOW = 0.25, MODERATE = 0.5,
+        HIGH = 0.75, VERYHIGH = 0.9, ABSOLUTE = 1.0,
+    }) do
+        G['BOT_MODE_DESIRE_' .. k] = v
+        G['BOT_ACTION_DESIRE_' .. k] = v
+    end
+
+    G.GetHeroLastSeenInfo = function() return {} end
     G.GetUnitList = function() return {} end
     G.GetTower = function() return nil end
     G.GetBarracks = function() return nil end

@@ -171,6 +171,20 @@ function M.load(path, sSubject)
     end
 
     local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
+
+    -- unit:DistanceFromFountain() is a real engine method with no Get prefix,
+    -- so the generic mock default leaves it nil and any file that compares it
+    -- (mode_retreat_generic X.ShouldRun) dies on load. The fountains are fixed
+    -- map constants the shipped code already carries, so wire the REAL distance
+    -- per team rather than a placeholder.
+    local vOurFountain, vEnemyFountain = J.GetTeamFountain(), J.GetEnemyFountain()
+    for _, u in ipairs(fx.units) do
+        local vFountain = (u.team == subj_team) and vOurFountain or vEnemyFountain
+        rawget(heroes[u.name], '__spec').DistanceFromFountain = function(self)
+            return GetUnitToLocationDistance(self, vFountain)
+        end
+    end
+
     return J, bot, heroes, fx
 end
 
