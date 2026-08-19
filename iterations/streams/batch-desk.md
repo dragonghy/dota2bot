@@ -29,6 +29,10 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    --validate`,详见 `.claude/agents/batch-runner.md`);自毁 Spot + 看门狗;
    Spot 等不到就 on-demand(小时级没多少钱);启动后把请求标记 status=running。
 6. 结束前再跑一次 check_costs.sh 确认无泄漏。
+7. **报告必须带局数**(owner 2026-08-19 要求):每份报告固定一节写明
+   (a) 上一波次的最终有效局数(per seed、per side,ab/ba 不对称要注明),
+   (b) 本轮在跑波次的实时进度(S3 `soak/<run_id>/` 里 analysis.json 计数,
+   注明暖场局不算有效局)。启动型报告写预期局数,收割型报告写实测局数。
 
 ## 与其他 agent 的接口
 - 输入:`iterations/queue.json`(请求队列;别的 agent 只能往这里提请求)。
