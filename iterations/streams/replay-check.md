@@ -172,3 +172,43 @@
     `_061017/_061020_slot1` 已确认作废。波次后续新局留给下一轮,但按本轮结论
     继续加局对 `l1xpsoak` 定性无帮助(瓶颈是机制不可区分,不是样本量)。
   - 完整报告:`iterations/reports/replay-check/20260819T064500Z.md`
+- **2026-08-19T08:50Z(第五次触发)**:batch-desk 08:08Z 是纯收割轮,**无新波次**,
+  06:09Z 那波的 16 个 `.dem` 与上一轮已检的完全重合(零新增)。按章程第 2 条转向
+  **核验记录最少的 id**:`l1trade`/`l5combo`(连续三轮"证据不足")。对象是它们唯一
+  armed 过的三个 run(14-id 全集波次 `_001001`/`_001007`/`_020910`)。
+  **宽扫 15/15 有效镜像局;深查 6 局;帧级机会扫描覆盖全部 15 局 333 个 episode。**
+  (更正上一轮记录:那三个 run 的 `.dem` 不是"各 1 局",实际有 5+9+4=18 个。)
+  - `l1trade`:**SILENT**。`l5combo`:**SILENT**。与 `l1xpsoak` 同类——不是
+    "门没开",而是**设计出价在生效域内结构上不可达 + 全部可观测门满足的窗口里
+    两侧无可归因差异**。
+    代码级:两分支出价 0.92,但 `GetDesire()` 的 `CapForLanePush`
+    (`mode_team_roam_generic.lua:78-90`)在 laning phase 把 >0.9 一律压到
+    **0.72 < BOT_MODE_DESIRE_HIGH(0.75)**;两个 helper 又都硬性只在 laning
+    phase 返回非 nil(`jmz_func.lua:6582`/`:6652`)→ **cap 条件是规则生效域的
+    超集**,0.92 永远不可达,且有效出价对血量非单调(满血 0.72,~48% 血 ~0.90)。
+    两分支都没设 `bDefensiveCollapse`(`punishDive`/`overchase` 设了),`divecap`
+    豁免也未 armed。
+    帧级差分(armed vs baseline):"4s 内本人对目标造成伤害"= l1trade 57.9% vs
+    65.8%、l5combo 62.7% vs 73.2%;击杀转化 38.3% vs 41.4%、44.1% vs 51.8%
+    —— **armed 侧全面更低**,无一项朝设计方向。
+    关键帧:`_004003` t=246.4 Ogre(p3)对 9% 血 DK 的 ignite 正在跳却**切走去
+    打 CM**(sticky+4s commit-lock 若生效不可能);`_002958` t=214.4 DK(p4)+
+    核心 SB 在 73u,对 13% 血 PA **11 秒零伤害**;`_002451` t=183.5 Lich 对 9% 血
+    Pudge 594u 一路走开。存疑不采信的两帧(`_002443` Axe / `_023010` DK 12% 血)
+    是 self-risk 门**正确抑制**,已如实标注。
+    边界:dumper 不落 `GetEstimatedDamageToTarget` → 致命性/self-risk 门离线
+    不可判定,333 episode 是真实触发集的**超集**。
+  - 已开 **issue #31 [bug]**(总监):含算术推导 + 差分表 + 6 局帧证据 +
+    两处建议钉帧 fixture,并指出**现有 `tests/test_l1_trade.lua`/`test_l5_combo.lua`
+    只测 helper,零测试覆盖 `CapForLanePush` 之后的最终出价**。建议按
+    `creeppull`/`pullcamp`/`l1xpsoak` 先例把两个 id 移出 armed 集(它们留在集里
+    会继续污染残差判读)。
+  - **工具缺口已解决(连续四轮记录的 lane-role)**:不需要 dumper 增强,
+    **位置 = `analysis.json:team_slot` % 5 + 1**(`aba_role.lua:13` 的
+    `RoleAssignment` 是固定 [1,2,3,4,5] 循环表)。15 局补刀梯度验证:
+    31.6/31.7/20.9/15.1/13.8,单调且量级正确。以后分位置的检测器直接用。
+  - 新踩的坑(记录):机会扫描必须排除 `hp_pct==0` 的**尸体帧**(首版 577 个
+    "机会"全是尸体);1Hz 滞后会让"死亡刚好在 t0 前 0.2s"的 episode 误标未击杀。
+  - 未定性但下一轮优先:宽扫 `idle_while_ally_dies` 候选侧 32:22 偏高且三个 run
+    方向一致;`overextend_alone` 分 run 反号(36:17 vs 2:16)判为噪声。
+  - 完整报告:`iterations/reports/replay-check/20260819T084950Z.md`
