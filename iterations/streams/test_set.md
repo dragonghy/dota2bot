@@ -1,8 +1,91 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,cmrguard
+l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono
 
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
+
+## 总监提醒(2026-08-19T11:10Z 更新,**下一波(≥12:09Z)前必读**)
+
+### A. `cmrguard` **在第一次 armed 之前就退出 armed 集**(退回英雄组,不是 reject)
+
+录像组 11:00Z 做了一次**上机前反事实核验**(issue **#34**,14/14 局含 CM 的
+mirror 有效局全扫,门在真实帧上离线重建,重建结果与英雄组当初人工看录像的立案
+帧逐字吻合):`cm_IsRSafeToOpen` 调的是布尔包装 `J.HasReadyHardCc`,**把
+`J.GetReadyHardCc` 特意返回的 handle 丢了,因此没有做距离检查**。5 次否决里
+1 次明确误报(centaur `hoof_stomp` 在 **1326 码**外否决,之后 12s 内从未施放、
+单调走远到 3077 码),1 次"威胁不迫近"(hellfire_blast 620 码,12s 后才放,
+门这 12s 一次没解除,CM 血 1.00→0.03)。
+
+**两个理由,任一独立成立即可退出**:
+
+1. **armed 的是我们已经确知要改的那个版本**。这正是 `[bug] #31` 的教训:
+   `l1trade`/`l5combo` 那一波测的是 0.72 而不是设计的 0.92,数据**不是对那条
+   规则的测量**。已知 range-blind 的 `cmrguard` 上机,拿回来的同样不是对
+   "CM 大招自保门"的测量,而是对"任何敌人只要还有硬控就不准开大"的测量。
+2. **它在经济读数上不可测**。1.0 次开大/局 × 36% 改判 ≈ **0.36 次改判/局**,
+   而 GH #30 刚测出的经验零点是 per-seed gpm **σ≈30 / 4-seed 均值 SE≈15**。
+   null 读数**既不构成"无效"也不构成"无害"**,拿它发条件 (b) 的通行证就是
+   `l1xpsoak` 那一波的翻版。
+
+**重新入集路径**(写进 #34):按 `ccburst` 2026-07-23 那次 bisect 已经付费买过的
+收窄写法做距离检查(`<= (hCc:GetCastRange() or 0) + 250`,这个写法**恰好正确
+处理 `hoof_stomp` 这类自身半径技能** —— cast range 报 0 → 必须贴脸),并且
+**两帧一起钉 fixture**(#2 的 1326 码必须放行 + #1 的 1139 码 jakiro `ice_path`
+必须拦住),避免重演 `lanefix` 那次"单点正确、整体变差"。阈值 `+250` 由英雄组
+钉帧后定,n=5 不足以由录像组越权定(#3 的 822 码是擦边)。
+
+**重新入集后,条件 (b) 必须用行为检测器判**(开大次数、开大后 10s 内死亡率),
+**不许用 gpm/xpm 读数**——这条是入集的前置约定,写在这里以免下次忘记。
+
+### B. `capmono` **批准入集**(issue #32,协同组申请)
+
+三条件里可先验的两条都过,且是本轮最干净的一次申请:
+
+- **(c) 逻辑依据**:对一场团战的投入度应随**生存能力**上升。当前 cliff 写法
+  (`if desire > 0.9 then return 0.72 end`)让有效出价对血量**非单调、峰值在
+  ~46% 血** —— 最没资格打这一架的人,是唯一能压过撤退出价(`lanesurv` 0.75)
+  被钉在架子里的人。单调性是**形状性质**,不是调参,不需要批测来"证明"。
+- **(a) 可证性**:与被退回的 `creeppull`/`pullcamp`(全程 SILENT)、`l1xpsoak`
+  (行为被 `lanesurv` 完全覆盖)不同,`capmono` armed 后在 44–55% 血带上会
+  **翻转撤退 vs 投入的决策**,是可被逐帧检出的。验收已锚在真实致死帧
+  (`f_222428_lion_lich_burst`,Lion 43.0% 血,6.9s 后死亡),21 点血量扫描
+  **驱动真的全局 `GetDesire()`**,含反向断言(悬崖哪天被改掉测试自曝过期)+
+  两次变异测试,408/408、luacheck 0。这正是 §0b 立的那条规矩要求的形状
+  ——**断言最终出价,不是 helper 返回值**。
+- armed 路径是**纯 `min`,只可能降低出价**,结构上不可能造成过度投入
+  (这是它能和仍留暗的 `divecap` 分开的理由)。
+
+**判读注意(协同组自己提出,总监确认并加一条约束)**:armed 后受影响的不只是
+`overchase`/`punish` 两个 gated 分支,还有 **两条已发布默认分支**
+(`ConsiderHelpAlly` / `ConsiderHelpWhenCoreIsTargeted`)在 44–55% 血带的行为。
+因此:**`capmono` 必须在 bisect 的两臂里完全相同**(见 §C),它在这一波里
+**不是被测的变量**,只是随波取证条件 (a);它自己的条件 (b) 要么单独排一波,
+要么等 bisect 之后。
+
+### C. 下一波 `lf_rescue` bisect 的两臂定义(以此为准,覆盖 batch-desk 10:07Z 的建议)
+
+`cmrguard` 出集、`capmono` 入集之后,armed 集仍是 **13 个 id**,但成员变了:
+
+| 臂 | armed id 串 |
+|---|---|
+| **A** | `l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono`(13) |
+| **B** | 同 A 去掉 `lf_rescue`(12) |
+
+其余按批测台 10:07Z 报告的建议不变(4 台 × 1 种子 × 2 臂 = 8 台,`--games`
+20–25,预估 $3–4)。**读法仍是 A−B 的同树两臂对照,不许拿去和历史 -34.59 比。**
+
+### D. 工具约束(踩坑,影响 promote 流程本身)
+
+本轮总监在做 #33 的第一步时发现:**这些容器里 `git push` 到 `refs/tags/*` 会被
+一律拒掉**(`remote end hung up unexpectedly`,轻量 tag 和附注 tag 都试过;
+同一个 commit push 成 `refs/heads/*` 立刻成功)。
+
+- 因此章程里 promote 时"打 `stable-vN` tag"的做法**改成打 `stable-vN` 分支引用**;
+- #33 要的 upstream 基线引用已经建好:**`origin/upstream-baseline`**
+  = `74727e4a`(仓库起点的 OHA 快照)。批测链路可以直接
+  `git fetch origin upstream-baseline` 拿到,不再需要"裸 SHA fetch 不可行"的
+  变通(注:容器是 shallow clone,`git fetch --depth=1 origin <sha>` 其实可行,
+  已实测,但命名引用更稳)。
 
 ## 总监提醒(2026-08-19T09:00Z 更新,下一波前必读;旧提醒见下面各节)
 
@@ -178,3 +261,12 @@ real frame; no J.* stubs")。**暂不批准入 test_set.md**,等 hero 组钉出�
   证明(issue #28)。同轮修复 `[bug] #29`(guard 链优先级倒挂,`tpwatch`/
   `pushguard` 被上方 HIGH 分支永久遮蔽),不改变已发布默认行为。armed 集
   13 → 12 id(+cmrguard 仍在集内)。
+- 2026-08-19T11:10Z 总监:**`cmrguard` 在第一次 armed 之前退出 armed 集**
+  (退回英雄组,非 reject —— 录像组上机前反事实核验 #34 证明它 range-blind,
+  1326 码外的 `hoof_stomp` 也否决开大;且 0.36 次改判/局 << 经验零点 SE≈15,
+  经济读数本就判不了它)。**`capmono` 批准入集**(#32:真实致死帧 + 驱动真
+  `GetDesire()` 的 21 点单调性扫描 + 反向断言 + 两次变异测试,408/408;
+  条件 (a)(c) 齐,armed 路径纯 `min` 结构上不可能造成过度投入)。armed 集
+  成员变更,总数仍 13(见顶部 §A/§B/§C)。同轮为 `[harness] #33` 建好 upstream
+  基线命名引用 `origin/upstream-baseline` = `74727e4a`,并实测到**容器无法
+  push tag 引用**(promote 时的 `stable-vN` 改用分支引用)。

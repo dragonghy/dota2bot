@@ -40,12 +40,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   (当前档已批到 $100)。
 
 ## 基建 backlog(owner 点名方向 + 自主发明;做完划掉,持续补充)
-0. **[新增 2026-08-19] patch 缺口补齐**:`docs/PATCH_UPDATE_GUIDE.md` 停在
-   7.41a,datafeed 最新是 7.41e——落后 7.41b/c/d/e 共 4 个小版本。按
-   `PATCH_UPDATE_GUIDE.md` 既定流程执行(分类 STRUCTURAL/NUMBER-ONLY/
-   TALENT SWAPS → d2vpkr 数据 → Liquipedia 核对 → 焦点五优先),不需要
-   owner 决策,只是需要有会话专门做(单个 patch 更新工作量较大,不适合
-   顺带做)。**当前最高优先级**(影响面广于其它基建项)。
+0. **patch 缺口补齐**(2026-08-19T11:10Z **已分片、已降级**):
+   `docs/PATCH_UPDATE_GUIDE.md` 停在 7.41a,datafeed 最新 7.41e。总监本轮
+   量了影响面:**对焦点五,7.41b–e 的全部改动都是纯数值,零结构性改动**,
+   游戏 API 直接供数,不阻塞任何在跑的工作。因此**从"最高优先级"降为按分片
+   排期**。工单:`iterations/streams/patch_gap_7.41b-e.md`(5 片,每片一个
+   工作单元;**P3 优先** —— 通用机制变化可能让现有 gated id 的判读前提失效)。
+   所有分片的前置阻断:datafeed hero id ≠ 经典 `hero_id`,先建映射再动 Lua。
 1. **帧语料检索工具**(owner 点名):跨多局录像批量找"某规则应触发的帧",
    批量生成 fixture(make_fixture.py 的批量前端),让一个算法改动能证明
    "在所有/大多数适用帧上生效"。这是执行核验规模化的地基。
@@ -214,3 +215,43 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `[bug]`/`[harness]` 就必须做 patch**;若又被挤,建议给 patch 单独排一次不处理
   issue 的触发。次优先:收 `lf_rescue` bisect verdict(按两臂对照读);再次:
   `[harness] #27`(dumper `vis`,英雄组已把 fixture 侧做完只等供数)或 backlog #1。
+
+- 2026-08-19T11:10Z:第六次 director 触发。未花 AWS 钱、未做 AWS 调用、未改任何
+  Lua(产出全是 markdown / state.json / 一个远端分支引用)。报告:
+  `iterations/reports/director/20260819T111000Z.md`。
+  **① `cmrguard` 在第一次 armed 之前退出 armed 集**(退回英雄组,非 reject)——
+  本轮唯一有时限的决定(下一波最早 12:09Z 会第一次 arm 它)。录像组上机前反事实
+  核验(#34,14/14 局)证明 `cm_IsRSafeToOpen` 调布尔包装 `J.HasReadyHardCc`、
+  **丢掉了 handle 因而没做距离检查**:5/14 次开大被否决,含 1 次明确误报
+  (1326 码外的 `hoof_stomp`,12s 内从未施放且单调走远到 3077 码)。退出的两个
+  独立理由:(i) armed 的会是我们已确知要改的版本 —— 就是 `[bug] #31` 的教训
+  逐字重演(那波测的是 0.72 不是设计的 0.92,数据不是对该规则的测量);
+  (ii) 0.36 次改判/局 << GH #30 刚测出的经验零点(σ≈30、SE≈15),**null 读数
+  既不是"无效"也不是"无害"**,拿它发条件 (b) 通行证就是 `l1xpsoak` 的翻版。
+  重新入集路径钉死在 #34:按 `ccburst` 2026-07-23 已付费买过的收窄写法
+  (`<= (hCc:GetCastRange() or 0) + 250`,恰好正确处理 `hoof_stomp` 这类自身半径
+  技能)+ **两帧一起钉 fixture**;重新入集后**条件 (b) 必须用行为检测器判,
+  不许用 gpm/xpm**(前置约定,已写进 test_set)。
+  **② `capmono` 批准入集**(#32):(c) 单调性是形状性质不是调参;(a) 与被退回的
+  三个 id 不同,它在 44–55% 血带**翻转撤退 vs 投入的决策**,逐帧可检出;验收锚在
+  真实致死帧 + 21 点扫描**驱动真 `GetDesire()`** + 反向断言 + 两次变异测试
+  (408/408)。加了一条约束:**必须在 bisect 两臂里完全相同**(它不是那波被测的
+  变量,只随波取证 (a)),因为它还会影响两条已发布默认分支。armed 集**成员变更、
+  总数仍 13**;两臂定义写在 `test_set.md` §C(A = 13-id,B = A 去掉 `lf_rescue`)。
+  **③ `[harness] #33` 第一级落地**:`origin/upstream-baseline` = `74727e4a`。
+  踩到一条影响流程本身的工具约束:**容器 push 不了 tag 引用**(轻量/附注都试过,
+  同一 commit push 成 `refs/heads/*` 立刻成功)→ **章程里 promote 时"打
+  `stable-vN` tag"改成打 `stable-vN` 分支引用**(已写进 `test_set.md` §D)。
+  **④ patch 缺口(backlog #0)连续第五轮没做成品,但本轮把它量了** —— 焦点五在
+  7.41b–e 全是纯数值改动,**不阻塞任何在跑的工作**;它之前被标"最高优先级"只是
+  因为没人量过影响面。已分片成 `iterations/streams/patch_gap_7.41b-e.md`(5 片,
+  P3 优先),并**降级**,不再挤占 `[bug]`/判定类工作。发现前置阻断:datafeed
+  hero id ≠ 经典 `hero_id`,先建映射再动 Lua;**没有**把 guide 的 "Last updated
+  for" 改成 7.41e(分片没做完就改等于伪造进度)。副产品给英雄组:7.41d 把 Axe
+  技能施法距离 1 级 700→600,收窄了新 gated `axeblink` 的有效窗口。
+  成本 MTD **$3.4651**(批测台自报,无泄漏)。五组本轮均有产出无空转,批测台的
+  零支出纯运维轮是正确节流不算空转。今日周三,效率台账(仅周日)跳过。
+  `DECISIONS_NEEDED.md` 仍未创建(四个决定全在自主授权内),本周尚无 owner 邮件。
+  **下次触发**:①收 `lf_rescue` bisect verdict(按 §C 两臂对照读,顺带核验
+  `capmono` 的 (a));②若批测在跑就做 **patch 分片 P3**(现在它是一个切得动的
+  工作单元,不再需要独占触发);③`[harness] #33` 第二级 / `#27` / backlog #1。
