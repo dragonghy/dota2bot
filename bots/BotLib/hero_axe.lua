@@ -68,6 +68,47 @@ sRoleItemsBuyList['pos_3'] = {
 
 }
 
+-- [TURBO BUILD, gated 'axebuyblink'] Blink Dagger is the delivery system for
+-- Axe's whole kit (blink -> Berserker's Call -> Counter Helix procs -> Culling
+-- Blade reset); without it a melee initiator with no gap-closer can only fight
+-- what walks into him. The shipped orders bury it behind the tank stack:
+-- pos_3 spends ~2.7k on the starting outfit, then Crimson Guard, then Blade
+-- Mail before blink's 2250 even starts (~8.5k in), and pos_1 puts Blade Mail
+-- ahead of it. That is a normal-mode order running in a game mode that ends at
+-- minute 11.
+--
+-- Measured (4 turbo soak games, 2026-08-19, spot_20260819_121044_1_main):
+-- Axe NEVER held a blink in any of them -- final net worth 4228 / 5556 / 7834
+-- / 8586, all short of the shipped prefix. From his own measured gold curve,
+-- blink bought straight after boots would have landed at 558s / 479s / 584s /
+-- never, i.e. in 3 of 4 games with 100-240s of a decisive turbo game left.
+-- Standard Axe theory agrees: blink is the first big item, Blade Mail and the
+-- Crimson/Vanguard stack come after it.
+--
+-- The reorder is a pure permutation built FROM the shipped list, so the two
+-- can never drift apart, and it is inert unless the gate is armed in turbo.
+local function BlinkFirstBuild( tList )
+	if tList == nil or tList[1] == 'item_blink' then return tList end
+	local bHasBlink = false
+	for _, sItem in ipairs( tList ) do
+		if sItem == 'item_blink' then bHasBlink = true end
+	end
+	if not bHasBlink then return tList end
+
+	-- index 1 is the starting-items bundle (it carries the boots), so blink
+	-- goes immediately after it; every other item keeps its relative order.
+	local tOut = { tList[1], 'item_blink' }
+	for i = 2, #tList do
+		if tList[i] ~= 'item_blink' then tOut[#tOut+1] = tList[i] end
+	end
+	return tOut
+end
+
+if J.IsModeTurbo() and J.IsSoakCandidate( 'axebuyblink' ) then
+	sRoleItemsBuyList['pos_1'] = BlinkFirstBuild( sRoleItemsBuyList['pos_1'] )
+	sRoleItemsBuyList['pos_3'] = BlinkFirstBuild( sRoleItemsBuyList['pos_3'] )
+end
+
 sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_1']
 
 sRoleItemsBuyList['pos_4'] = sRoleItemsBuyList['pos_3']

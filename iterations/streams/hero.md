@@ -39,12 +39,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    芒果却不用的案例(lich 帧已有);查焦点五的同类帧。
    - ~~**魔棒那一半**~~ 2026-08-19 done,gate `wandlimbo`,真实帧
      (Zeus 15.8% 血漂流)fixture 通过 —— 见"当前状态"。
-   - **芒果那一半仍待做**,卡在没有真实帧:本地 43 个 fixture 里只有 1 个
-     持芒果的主角(viper,非焦点英雄且蓝量高)。下次委托 replay-analyst
-     **小样本(1-2 局)**扫"焦点五 + 低蓝 + 背包有 enchanted_mango"的帧。
-     可疑点(未证实,不作改动依据):`item_enchanted_mango` 的全部逻辑就是
-     `if bot:GetMana() < 150 then HIGH end`,绝对阈值,既不看有没有一个
-     "差一点就能放"的技能,也不看是不是正在往泉水走(走到泉水前吃掉=浪费)。
+   - ~~**芒果那一半**~~ **2026-08-19T17:55Z 用数据关掉:焦点五根本不买芒果**。
+     51 个 fixture 里按**帧上任意单位**重扫,持芒果的没有一个焦点英雄;
+     5 局真实录像逐帧扫(含 CM/Zeus/WK/Axe),**焦点五持芒果帧数 = 0**
+     (那几局买芒果的是 silencer / nevermore)。代码事实:芒果只在
+     `advanced_item_strategy.lua` 的 `STARTING_ITEMS.pos_4/pos_5` 里,而焦点五
+     走各自 `hero_<name>.lua` 的 `sRoleItemsBuyList`,**五个文件都没有它**。
+     所以这是**空集**,不是没找到。可疑点仍然成立但受众不在本组:
+     `item_enchanted_mango` 的全部逻辑就是 `if bot:GetMana() < 150 then HIGH end`,
+     绝对阈值,既不看有没有"差一点就能放"的技能,也不看是不是正在往泉水走
+     —— **留给协同组/总监按全英雄池处置**,本组不为观测不到的行为动线上默认值。
    - 顺带记录的工具缺口:**dumper 不记录物品充能层数**(`grep charge` 在
      `behavioral/dumper/` 命中 0),所以任何"魔棒有几层"的判断在 fixture 里
      只能从帧外供数。#27 是同一家族的缺口,暂未单独开 issue。
@@ -81,11 +85,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 5. **Axe 跳吼目标质量**:2026-08-19 第一刀完成 —— 新 gate `axeblink`
    (嘲讽不可用 + 落点 >=2 敌人时压住进攻性闪烁),真实帧
    (`f_222428_lion_lich_burst` 以 Axe 为主角,嘲讽剩 6.7s 冷却)fixture +
-   3 次变异测试通过,见"当前状态"。**未完成的一半**:帧库里没有一个
-   "Axe 身上带匕首"的帧,所以"起跳"这个消费点前置条件仍未被真实帧覆盖;
-   下次委托 replay-analyst **小样本(1-2 局,取 12 分钟后的片段)** 扫
-   "Axe + 背包有 item_blink + IsGoingOnSomeone" 的帧。d24 deep_solo_death
-   的反例核查也仍未做。
+   3 次变异测试通过,见"当前状态"。**未完成的那一半 2026-08-19T17:55Z 有答案了,
+   而且答案是反的**:帧库里没有"Axe 带匕首"的帧,**不是采样不够,是这种帧不存在**
+   —— 4 局 turbo 逐帧扫,Axe **0 帧**持有跳刀(出装表把它排在约 8.5k 之后,
+   turbo 局 11 分钟就结束)。于是本组转而改出装:新 gate **`axebuyblink`**
+   (跳刀提到起始装之后第一位),10 例测试 + 4 次变异全抓,见"当前状态"。
+   **推论(必须传给总监)**:`axeblink` **单独测等于测空气**,它的消费点前置条件
+   在实测 0/4 局成立;要么先 arm `axebuyblink`,要么两个一起 arm。
+   d24 deep_solo_death 的反例核查仍未做。
 6. ~~**WK reincarnation 真实帧 fixture**~~ 2026-08-19 done —— 委托
    replay-analyst 找到真实帧(spot_20260725_102532_1_main slot1, t=373.5,
    mp=189/387 落在 160/220 gap 里),`tests/fixtures/
@@ -95,6 +102,50 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T17:55:18Z:**无 open 的 `[hero]` issue**(扫过 28 条)。取 backlog
+  **#3 芒果那一半 → 数据关掉**,转 **#5 未完成的那一半 → 发现问题在上游,改出装**。
+  **(1) 芒果:空集**。焦点五**根本不买芒果**(51 个 fixture 按帧上任意单位重扫 +
+  5 局录像逐帧,焦点五持芒果帧数 **0**;芒果只在 `advanced_item_strategy.lua` 的
+  pos_4/pos_5 起始装里,而焦点五走各自 hero 文件的 `sRoleItemsBuyList`,五个都没有)。
+  backlog #3 划掉,绝对阈值那条留给全英雄池的组处理。
+  **(2) Axe 带匕首的帧不存在,因为他买不到**:4 局 turbo(`spot_20260819_121044_1_main`,
+  `20260819_121916/_122445/_123032/_123546` slot1)逐帧扫,Axe **0 帧持有跳刀**;
+  终局身价 7834/8586/5556/4228,靴子(tank_outfit 最后一件)在 272/291/292/432 秒
+  完成、那时身价 2696/2672/2834/2650,局长 658/723/660/658 秒。
+  **代码事实**:pos_3 是 `tank_outfit → crimson_guard → blade_mail → blink`,
+  跳刀的 2250 要到约 **8.5k** 才开始买;pos_1 也把 Blade Mail 排在前面 ——
+  **普通模式的顺序跑在 11 分钟结束的模式里**。
+  **修复**:`BlinkFirstBuild(tList)` **从 shipped 表派生**(不是复制)一份把
+  `item_blink` 挪到 index 2 的表,只在 `J.IsModeTurbo() and
+  J.IsSoakCandidate('axebuyblink')` 时替换 pos_1/pos_3(别名赋值在 gate 之后,
+  pos_2/4/5 跟随);gate 关闭 shipped 表一字节未动。
+  **理论依据**:跳刀是 Berserker's Call 的投送工具,主流出装一律第一大件;
+  Vanguard/Crimson 买生存不买开团。**可达性是量出来的**:按他自己的金钱曲线,
+  靴子后直接买跳刀会在 **558.5/479.4/584.5/永不** 落地 → **3/4 局**拿到,
+  还剩 100-240 秒,对比现在 **0/4**。
+  **局部验证**:`tests/test_axe_blink_build.lua` **10 例** —— gate OFF 逐字对照
+  shipped 表、armed+普通模式不变、armed 别的 id 不变、armed+turbo 下 blink 在
+  index 2 且**多重集相等 + 非 blink 子序列顺序不变**、别名位 pos_2/4/5 两侧都钉、
+  **可达性算术跑在被测表上**(先断言"blink 前只有起始装",谁插东西谁自曝)、
+  shipped 下标 tripwire。**4 次变异全抓**(摘 gate 挂6 / 去 turbo 检查挂1 /
+  blink 落第3位挂4 / 只删不挪挂4)。luacheck 0 警告,`lua5.1 tests/run_tests.lua`
+  **499/499 绿**(基线 489 + 10)。
+  **诚实边界**:①唯一帧外锚是跳刀 2250 金(商店价);②身价≠当刻可花的钱,
+  落地帧是近似;③4 局、1 个归档、Axe 全是 pos_3,**pos_1 未观测**(对称推广);
+  ④"跳过防装的跳刀 Axe 活不活得到用出跳刀"只有批测能答(lanefix 教训)。
+  **给总监(重要)**:① **`axeblink` 单独测等于测空气** —— 前置条件实测 **0/4** 局
+  成立;先 arm `axebuyblink`,或两个一起 arm 并承认测的是这一对。② `axebuyblink`
+  的条件 (b) 请用**行为检测器**(跳刀获取率/获取时刻、每局跳刀施放次数、每次 Call
+  拉住的人数),gpm/xpm 只当"没变更差"的兜底 —— 这个改动**换的是身价构成不是身价**。
+  **顺带记下不开 issue**:这 5 局里**任何一方任何英雄都没买到过跳刀**;Axe 的靴子
+  272-432 秒才完成(turbo!)—— 都归 issue #16 那个经济/节奏家族,不是本组杠杆。
+  **仍未 promote、未提 queue.json**。等同一道门的 hero 组 id 现在是**五个**:
+  `wkreincarnmp`、`wandlimbo`、`axeblink`、`zusult`、`axebuyblink`(`cmrguard` 已入集)。
+  报告:`iterations/reports/hero/20260819T175518Z.md`。未花 AWS 的钱(只有 S3 GET)。
+  下一次触发:获批则跟进批测请求;否则做 backlog **#2 的残留**(GH #34 case #4,
+  要"同一威胁两帧"的输入才能设计时间上界)或 **#4 的雾里那一半**(仍卡 GH #27,低优)。
+  **方法学再确认**:全链路(AWS 自举 → 拉 5 个 `.dem` → 缓存 dumper → python 扫帧)
+  **自己做约 12 分钟**,包括"帧号未知的小样本扫描"。
 - 2026-08-19T16:02:33Z:做 backlog **#4 的非视野那一半**(GH #36 修好后解锁的那半)。
   **无 open 的 `[hero]` issue**(#34 已关闭)。上一轮留的"跟进 `cmrguard` 批测请求"
   **主动放弃**:总监 `4409ce5` 批准它入集时**已经把排期和四条约束自己写死在
