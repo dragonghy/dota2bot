@@ -116,3 +116,27 @@
   - 待补:`spot_20260819_020910_1_main`(种子852补跑,02:09Z 启动,本轮触发时
     仍在跑)留给下一轮。
   - 完整报告:`iterations/reports/replay-check/20260819T033000Z.md`
+- **2026-08-19T04:51Z(第三次触发)**:检查 batch-desk 04:08Z 报告
+  确认已收割的 `spot_20260819_020910_1_main`(种子 852 补跑,单独 gpm -57.13)。
+  委托 replay-analyst 子代理完成宽扫+深查。宽扫 63/63 局(analysis.json
+  级);现存 `.dem` 只有 4 波次里各 1 局(结构性上限,非偷懒,上一轮已记录同现象),
+  3/3 全部逐帧深查。三个 run_id(`spot_20260819_001001_1_main`/
+  `spot_20260819_001007_1_main`/`spot_20260819_020910_1_main`,即整个
+  14-id 全集 4-seed 波次)**现已 100% 检查完毕**。
+  - `creeppull`/`pullcamp`:**SILENT 累计 13/13 局**,证据已扎实,评论 issue #13
+    建议直接查代码触发阈值。
+  - `ownhalf`/`overchase`:**WORKING(重新确认)**,检测器计数继续偏向候选侧。
+  - `wandbleed`:**WORKING(circumstantial,上调)**,找到 4+ 处血量<45%+
+    敌距>1000u 用魔杖的用例,充能数不可见故非确证。
+  - `teambrain`:**首次拿到压力样本,MIXED**——一局干净 WORKING(4人 regroup
+    反打零损失),一局可疑(TP 落地点远离实际战场,孤立友军被点杀)。评论 issue
+    #23,建议钉 fixture 核对 `J.ShouldAllowDefendTp` 落地目标逻辑。
+  - `l1trade`/`l5combo`:**证据仍不足(连续三轮)**,dumper 缺 lane-role 字段,
+    録像推断到头,需要工具增强或直接代码级 fixture。
+  - 种子 852 单独 -57.13 gpm **未找到 armed-id BUGGY 机制**——归因为该种子固定
+    draft 的英雄池强度不对称(拆分 wave 后 armed=radiant 侧 +128.22,
+    armed=dire 侧 -242.48,方向相反且与 armed 方无关,纯 hero-matchup 效应)。
+    提醒批测台/协同组:4-seed 均值(-34.59)才是该信的数字,单种子读数会被
+    draft 偏置误导。
+  - 非-armed-id 新发现:Luna 独自越境送死(与 issue #26 镜像,已评论)。
+  - 完整报告:`iterations/reports/replay-check/20260819T045112Z.md`
