@@ -26,6 +26,22 @@ function M.load(path)
     end
     assert(subj_team, 'fixture subject not in units: ' .. tostring(fx.self))
 
+    -- Vision, when the dump carries it (v2 "vision+items" timelines write
+    -- seen_by = the teams that could see the hero at that instant). The engine's
+    -- info model is vision-limited and the shipped helpers gate on it --
+    -- J.IsValid and J.CanCastOnNonMagicImmune both require CanBeSeen() -- so a
+    -- fog-dependent decision only reproduces if the fixture keeps the fog.
+    -- v1 fixtures omit seen_by: those stay fully visible, exactly as before.
+    local function visible_to_team(u, team)
+        if u.seen_by == nil then return true end
+        if u.team == team then return true end -- you always see your own side
+        for _, t in ipairs(u.seen_by) do
+            if t == team then return true end
+        end
+        return false
+    end
+    local function visible_to_subject(u) return visible_to_team(u, subj_team) end
+
     local heroes = {}
     for _, u in ipairs(fx.units) do
         local loc = api.Vector(u.x, u.y, 0)
@@ -59,7 +75,7 @@ function M.load(path)
             GetLevel = u.level,
             GetNetWorth = u.net_worth or 0,
             IsAlive = u.alive,
-            CanBeSeen = true,
+            CanBeSeen = visible_to_subject(u),
             GetCurrentMovementSpeed = 300,
             -- Ground truth: what this hero actually did to the subject next.
             GetEstimatedDamageToTarget = function() return burst end,
@@ -125,7 +141,10 @@ function M.load(path)
             local out = {}
             for _, v in ipairs(fx.units) do
                 local other = heroes[v.name]
+                -- Vision-limited, like the engine: a hero your team cannot see
+                -- is not "nearby" as far as bot:GetNearbyHeroes is concerned.
                 if other ~= self and v.alive
+                    and visible_to_team(v, self:GetTeam())
                     and GetUnitToUnitDistance(self, other) <= (radius or 1600)
                 then
                     local isEnemy = other:GetTeam() ~= self:GetTeam()

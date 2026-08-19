@@ -32,6 +32,20 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 3. **魔棒/芒果死手帧**:低血限进(d23 lowhp_limbo)时身上有魔棒充能/
    芒果却不用的案例(lich 帧已有);查焦点五的同类帧。
 4. **Zeus 大招击杀确认**:全图大招抢残血 vs 浪费在满血团上的帧差分。
+   2026-08-19 起步,**部分阻塞**:
+   - 已定位一个干净的候选修复面 —— `X.ConsiderV/ConsiderR` 的击杀确认分支
+     遍历全图敌人后用 `J.CanCastOnNonMagicImmune` 过滤,而它第一项就是
+     `CanBeSeen()`,于是**雾里的残血敌人被全部排除**;但 Thundergod's Wrath
+     是全图技能,补掉刚逃进雾里的残血正是它最高价值的用法。
+   - **阻塞在 GH #27**:dumper 不产 `vis`,fixture 拿不到视野,这个假设
+     无法用真实帧证实/证伪。fixture 侧管线已打通(`seen_by`),等 dumper 供数。
+   - **不阻塞的另一半**已委托 replay-analyst:大招施放分类
+     (SNIPE/TEAMFIGHT_CHIP/WASTED)+ 机会成本统计,只看血量与击杀事件,
+     用来判分支 3(`IsInTeamFight` + 1400 内敌人 >=5 的团战代理判据)
+     到底有没有在浪费大招。结果见 `iterations/reports/hero/zeus_ult_scan_*.md`。
+   - 代码事实(接手须知):`X.SkillsComplement` 里 `ConsiderR()` **第一个**
+     被调用,desire>0 就立刻 queue 大招并 return,W/E/Q 当帧全部不再考虑
+     —— 大招误报的代价不只是浪费大招,还会吞掉当帧其它所有技能。
 5. **Axe 跳吼目标质量**:跳进人堆 vs 跳单人的选择核查(配合 d24
    deep_solo_death 找反例)。
 6. ~~**WK reincarnation 真实帧 fixture**~~ 2026-08-19 done —— 委托
@@ -43,6 +57,40 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T05:45:28Z:**本次没有产出新的 gated 英雄行为改动**,`bots/` 与
+  `game/` 一行未动 —— 是一个诚实的阻塞,记录在案免得下一个人重走。
+  **(1) 订正了卡住 `wkreincarnmp` 的记录错误**:总监 04:54Z 驳回它入
+  test_set 的唯一理由是"只有 mock 单测、没有真实帧 fixture(state.json 原文
+  承认)",但真实帧 fixture 早在 01:51Z 就已落地并 push
+  (`tests/fixtures/f_260725_105305_wk_reincarn_gap.lua` +
+  `tests/test_replay_260725_wk_reincarn_gap.lua`),**是 state.json 的
+  `validation` 字段没跟着更新**,总监读的是陈旧文字。已重写该字段(两层
+  验证、文件路径、真实帧数值、并显式标注它此前是陈旧的且正是它导致了驳回),
+  **重新申请入 test_set,需总监批准**。必须一并交代的 caveat:
+  `make_fixture.py` 不挖技能 spec,测试里显式把 `GetManaCost` 设成 220
+  (Liquipedia + 同局录像实测 ~219 耗蓝双重印证),即位置/血蓝/等级/冷却全
+  来自真实帧,**唯独耗蓝这一个数是外部锚定的**。
+  **(2) 打通了 fixture 的视野管线,但它现在还空转**:接 backlog #4 读
+  `hero_zuus.lua` 时发现击杀确认分支被 `CanBeSeen()` 挡住(见 backlog #4
+  条目),要做真实帧验证时撞墙 —— `replay_fixture.lua` 把每个单位硬编码成
+  `CanBeSeen = true`,`make_fixture.py` 不输出视野,再往上游 **dumper
+  (`behavioral/dumper/main.go`)从不写 `vis`**。影响面**远不止 Zeus**:
+  `J.CanCastOnNonMagicImmune`(:988)和 `J.IsValid`(:2984)都硬依赖
+  `CanBeSeen()`,**所有 fixture 都在"敌人全亮"的世界里判绿**,这是跨全组的
+  系统性假阳性来源(与 `creeppull`/`pullcamp` 批测全程 SILENT 同一成因家族)。
+  已做掉 fixture 侧一半:`make_fixture.py` 输出 `seen_by`(v1 dump 无该键时
+  **整个字段省略**,不是空表);`replay_fixture.lua` 按 `seen_by` 设
+  `CanBeSeen()` 且 `GetNearbyHeroes` 视野受限,`GetUnitList` 保持全图
+  (与 `docs/BOT_API_REFERENCE.md:624` 一致);老 fixture 一律全可见、
+  行为不变。契约由 `tests/test_replay_fixture_vision.lua`(9 例)钉住。
+  **dumper 侧已开 GH #27(`[harness]`,带复现步骤 + 三条验收标准)**。
+  luacheck 0 警告,`lua5.1 tests/run_tests.lua` **386/386 绿**(基线 377 +
+  新增 9,无既有 fixture 测试位移)。本次未提 `iterations/queue.json` 批测
+  请求(没有新 gated 改动需要批测)。
+  报告:`iterations/reports/hero/20260819T054528Z.md`。
+  下一次触发:先看 replay-analyst 的 Zeus 大招扫描结论
+  (`iterations/reports/hero/zeus_ult_scan_*.md`)接 backlog #4 的非视野
+  那一半;#27 若已解则补上雾里击杀确认的真实帧 fixture;否则认领 #3/#5。
 - 2026-08-19T03:55:34Z:完成 backlog #2(CM 大招时机,第一刀)。委托
   `replay-analyst` 在 soak S3 归档扫了 186 局含 CM 的对局、抽样 30 次 R
   (Freezing Field) 施放,系统性发现:30 次里 9 次(30%)频道被打断到

@@ -74,6 +74,12 @@ def main():
             "hp": s.get("hp", 0), "max_hp": max_hp,
             "mp": s.get("mp", 0), "max_mp": s.get("max_mp", 0),
             "level": s.get("level", 1), "alive": hp_pct > 0,
+            # which teams could SEE this hero at that instant (v2 "vision+items"
+            # dumps only; absent on v1 position-only dumps). The bot's info model
+            # is vision-limited -- J.CanCastOnNonMagicImmune/J.IsValid both gate
+            # on CanBeSeen() -- so a fixture that pretends everyone is visible
+            # cannot reproduce any fog-dependent decision.
+            "seen_by": sorted(s.get("vis") or []),
             # real net worth, when the dump carries it -- lets fixtures exercise
             # relative-economy scoring decisions (e.g. "who's snowballing").
             "net_worth": s.get("net_worth", 0),
@@ -118,12 +124,17 @@ def main():
         items = ", ".join("'%s'" % i for i in u["items"])
         abil = ", ".join("{ name = '%s', level = %d, cd = %s }"
                          % (a["name"], a["level"], a["cd"]) for a in u["abilities"])
+        # Omitted entirely on v1 dumps, so old fixtures/loaders keep the
+        # "everything visible" default instead of silently reading "nobody sees
+        # this hero" from an empty list.
+        seen = (" seen_by = { %s },"
+                % ", ".join(str(t) for t in u["seen_by"])) if u["seen_by"] else ""
         L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
                  " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s, net_worth = %d,"
-                 " items = { %s },\n      abilities = { %s } }," % (
+                 "%s items = { %s },\n      abilities = { %s } }," % (
                      u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
                      u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
-                     u["tp_cd"], u["net_worth"], items, abil))
+                     u["tp_cd"], u["net_worth"], seen, items, abil))
     L.append("  },")
     L.append("  observed = {")
     L.append("    burst = {")
