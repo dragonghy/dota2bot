@@ -50,8 +50,44 @@
    :12 窗口内支援位的真实坐标 vs 己方拉野点坐标(向录像组要)。
 7. **拉野节奏打磨**:当前 6:00 宵禁 + 和平期 veto;检索标准拉野时机
    (波次时间差、双拉条件)对齐实现。
+8. **「最终出价可达性」全组普查**(2026-08-19T09:16Z 新增,由 #29/#31/`capmono`
+   三连引出)。总监已把规矩立进 `test_set.md`:**凡是在注释里论证「这个值要压过
+   X」的分支,验收必须断言最终出价(过完所有下游变换),不是 helper 返回值**。
+   本组名下还没按这条规矩查过的 id:`midtp`/`suptp`/`tpcommit`/`lf_rescue`/
+   `teambrain`/`ownhalf`/`tpwatch`。已知的两类下游变换:模式文件里
+   `GetDesire()` 对 `GetDesireHelper()` 的后处理(farm 的 0.45 cap、team_roam 的
+   CapForLanePush、roshan 的 announce),以及「先命中先 return」的 guard 链
+   (#29 已修 retreat 链,**TP 决策链 `ability_item_usage_generic.lua:5089+`
+   还没查** —— `lf_rescue` 排在 `midtp` 前面,两者可同帧成立)。
+   建议做法:一条一条来,每条配一个像 `tests/test_lanekill_bid_reachable.lua` /
+   `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T09:16Z:没有可认领的新 `[strategy]` issue(#28/#26 都是本组上一轮
+  自己的遗留),于是接住总监 09:04Z 关闭的 **#31 没覆盖的另一半**。总监对
+  `l1trade`/`l5combo` 的修法是**豁免**(它们硬性要求对线期,cap 域是其生效域的
+  严格超集);**仍被 cap 的四条分支没人管**,其中 `overchase` 此刻就在 armed 集内。
+  缺陷:`_divecap_CapForLanePush` 注释写 `soft ceiling`、代码是**悬崖**
+  (只砍 `>0.9`,砍到 0.72,低于原样放行的整个 (0.72, 0.9] 带),而四条分支出价
+  都是 `RemapValClamped(HP, 0, 0.5|0.6, NONE, 0.98)` → **有效出价对血量非单调,
+  峰值 ~46% 血**:满血 0.72(输给已 promote 的 lanesurv 0.75),43% 血 0.843
+  (赢),36% 血 0.71(输)。**最没资格打的人是唯一被钉进架子里的人**,而这四条
+  都没有 lane-kill 那样的 `ShouldReleaseLaneCommit` 自释放 —— wave13 卷宗实锤过
+  的钉死送命形状。这是 #29/#31 同族缺陷的**第三例**。改动:gated `capmono`
+  (turbo-only),armed 时把悬崖换成真天花板 `min(desire, 0.72)`,**天花板的值不动**;
+  armed 路径是纯 min,**只可能降低出价**,所以结构上不可能造成那个让 `divecap`
+  至今留暗的「过度投入」风险。验证:`tests/test_capmono_ceiling.lua` 12 例,
+  锚在真实帧 `f_222428_lion_lich_burst`(Lion 354/823=43.0% 血 @ t=314,
+  Lich 660u + Axe 800u,2200 内无队友;录像 ground truth:Lich 打出 436,
+  **6.9s 后 Lion 死亡**);该帧的「cap 真的生效」+「lanesurv 真的出 0.75」都是
+  **断言出来的**;含 21 点血量扫描直接驱动真的全局 `GetDesire()`(只强制触发器),
+  以及一条**反向断言**(未 armed 时必须仍非单调,悬崖被改掉时测试自曝过期)。
+  两次变异测试:删掉修复 → 恰好 3 条 armed 断言 FAIL(报错打印真实倒置
+  `0.881 → 0.72 as HP rose to 0.5`);gate 强制常开 → 恰好 5 条已发布行为断言 FAIL。
+  **408/408 + luacheck 0 警告**。`state.json` 新增 `capmono_20260819`。
+  **`capmono` gated 未 armed**,入 test_set.md 待总监批(已开 issue 申请)。
+  未花 AWS 钱,未提批测请求。详见
+  `iterations/reports/strategy/20260819T091647Z.md`。
 - 2026-08-01 初始化。测试集里本组名下 id:creeppull/pullcamp/l1trade/
   l5combo/midtp/suptp/tpcommit/lf_rescue/teambrain/ownhalf/overchase/tpwatch。
   l1xpsoak 不在集内,等重设计。

@@ -107,6 +107,28 @@ function _divecap_CapForLanePush(desire, bCollapse, hBot, bLaneKill)
         return desire
     end
     if J.IsInLaningPhase() or J.IsPushing(hBot) then
+        -- [capmono, GH #31 follow-up] The line below calls itself a "soft
+        -- ceiling" but implements a CLIFF: only desires >0.9 are pulled down,
+        -- and they land at 0.72 -- BELOW everything in (0.72, 0.9] that passes
+        -- untouched. Every remaining capped branch bids
+        -- RemapValClamped(GetHP(bot), 0, 0.5|0.6, NONE, 0.98), so the effective
+        -- bid is non-monotonic in HP with its MAXIMUM at ~46% HP: a full-HP
+        -- hero collapses at 0.72 (loses to the promoted lanesurv retreat, 0.75)
+        -- while a 43%-HP one collapses at ~0.84 and WINS -- the hero least able
+        -- to survive the fight is the one pinned into it. That is the wave13
+        -- pin-into-death shape the lane-kill branches carry
+        -- J.ShouldReleaseLaneCommit to escape; ConsiderHelpAlly /
+        -- ConsiderHelpWhenCoreIsTargeted / punish-dive / punish-over-chase have
+        -- no such release. GH #31 fixed the same inversion for the lane-kill
+        -- pair by EXEMPTING them; this is the opposite, strictly conservative
+        -- half -- make the ceiling a real ceiling for everything still capped.
+        -- It only ever LOWERS a desire, so it cannot cause the over-commitment
+        -- that keeps the 'divecap' exemption gated. Gated turbo + 'capmono';
+        -- shipped defaults are byte-for-byte the cliff below.
+        if J.IsModeTurbo() and J.IsSoakCandidate('capmono') then
+            if desire > 0.72 then return 0.72 end
+            return desire
+        end
         if desire > 0.9 then return 0.72 end  -- soft ceiling
     end
     return desire
