@@ -1,5 +1,22 @@
 {
   "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填)",
-  "requests": [],
+  "requests": [
+    {
+      "id": "director-1",
+      "stream": "director",
+      "bundle": "roamstale",
+      "seeds": [
+        863,
+        864,
+        865,
+        866
+      ],
+      "priority": 1,
+      "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
+      "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
+      "status": "pending",
+      "result": null
+    }
+  ],
   "done": []
 }

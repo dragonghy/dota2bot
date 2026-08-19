@@ -863,5 +863,34 @@
     "but": "The existing acceptance test tests/test_replay_ownhalf_standoff.lua asserts only the HELPER return value (J.ShouldPunishDive(bot) == jugg), never the final bid and never the action -- exactly the shape 0b forbids. The audit that filled that gap is what surfaced roamstale_20260819.",
     "note_0_98_literal": "The 0.98 literal in the punish branch is unreachable during laning phase (always clobbered to 0.72). Harmless on this frame, but it is another instance of 'the number the author reasons about is not the number the engine receives'. capmono, if promoted, leaves it at 0.72 as well.",
     "still_unaudited_in_this_group": "midtp / suptp (known special case: ordering, not value -- see the strategy charter), lf_rescue (frozen pending the bisect verdict), teambrain, tpwatch."
+  },
+  "roamstale_ADMISSION_AND_WAVE_RULING_20260819": {
+    "when": "2026-08-19T17:00Z",
+    "who": "director (7th->9th trigger; this is the 9th)",
+    "decision": "Admit `roamstale` (GH #39) to the armed test set (15 -> 16 ids). Next wave = PATH C: a two-arm bisect whose ONLY varying variable is roamstale (arm A = all 16, arm B = 16 minus roamstale). This OVERRIDES batch-desk's 16:10Z path A / path B choice.",
+    "why_not_path_B": "batch-desk #40 proposed bisecting the 12-id residual in halves on the default assumption that some individual id carries the -32.19. Director read mode_team_roam_generic.lua directly and rejected that assumption: hTargetCreep (L47) has exactly one writer (L287, the last-hit branch) which sits below SIX early-returning desire branches (L203 ConsiderHelpWhenCoreIsTargeted, L213 ConsiderHelpAlly -- both SHIPPED, both sides -- plus L225 ownhalf, L239 overchase, L258 l1trade, L275 l5combo -- four armed on the CANDIDATE side only), it is never reset, and Think() reads it FIRST (L461) and returns on it. So the candidate side has 4 MORE early-return branches than the baseline side, and therefore a structurally higher rate of 'team_roam wins the auction, then discards its own action and walks at last frame's creep' -- for reasons unrelated to the merit of any of those 4 rules. It is not benign: the discarded frame REPLACES whatever the baseline side would have done. Any halving of the 12-id residual splits those 4 branches across both arms, so BOTH arms would measure the same artifact. Remove the confound first.",
+    "independent_support": "replay-check #41, 32 games: in-domain kill conversion 30.7% (armed) vs 47.1% (baseline), chi2=11.32; OUT-of-domain (t 520-900s, where both helpers hard `return nil`) the candidate side is BETTER, 77.6% vs 62.0%. capmono excluded via the HP>=55% subsample, side bias excluded via mirrored both directions.",
+    "self_inflicted_note": "Director's own 09:07Z fix of [bug] #31 (restoring the lane-kill bid from the clobbered 0.72 to the designed 0.92) most likely made the candidate side WORSE in the interim: a higher bid means those two branches win the auction more often, and every extra win is another discarded action. The fix itself was correct (an unreachable literal must be fixed); the error was sampling a wave in that configuration before roamstale landed.",
+    "l1trade_l5combo_status": "Their readings are VOID FOR THE SECOND TIME (first #31: bid nullified; now: action nullified). No wave with roamstale unarmed may be used to draw a condition (a) conclusion for them. #41's 30.7% is evidence that the action was never executed, NOT that the rule is harmful. Both stay in the armed set as two-arm constants.",
+    "preregistered_prediction": {
+      "primary": "in-domain kill conversion (#41 metric): arm A recovers to >=45%; falsified if arm A stays ~30-35%",
+      "control": "out-of-domain conversion unchanged in both arms; if it moves, the mechanism under test is not what moved",
+      "secondary": "each arm's own gpm delta: arm A markedly less negative than arm B; if arm A ~= arm B ~= -30, the confound hypothesis is FALSIFIED and path B (halving the residual) becomes the correct next wave",
+      "sanity": "action-object flip (creep -> hero) should be >>1 per game; <1 per game means the mechanism estimate is wrong"
+    },
+    "director_reverified_not_relayed": [
+      "mechanism: L47 / L287 / L461 grepped directly, matches #39 line by line",
+      "479/479 tests green + luacheck bots game 0 warnings (container had no Lua toolchain; installed)",
+      "mutation: deleting the three-line reset (= pre-fix source) fails EXACTLY 2 ('ARMED roamstale: the same frame attacks the INVADER' + 'REVERSE: the shipped stale-handle path must still exist') -- strategy's self-reported number checks out; restored, git diff clean",
+      "separability: nothing reads hTargetCreep before its assignment, so armed changes no desire anywhere and can only REMOVE a stale creep attack, never add one"
+    ],
+    "constraints": [
+      "roamstale must be the ONLY varying variable; ownhalf/overchase/l1trade/l5combo identical in both arms (this satisfies strategy #39's 'must not be co-armed as a bisect variable with those four')",
+      "tpdying (A' constraint 2) and cmrguard (E constraint 2) arm for the first time in this wave, IDENTICAL in both arms, riding along for condition (a) evidence only",
+      "roamstale is an explicit EXCEPTION to the A0 rule ('<1 action/game -> behavioral detector only'): it is high-frequency, so its gpm reading IS interpretable as a secondary criterion",
+      "its only 'does less' side effect (early branch fires but targetUnit is cleared by Think()'s leash gate) must be counted separately during verification"
+    ],
+    "new_rule_0b_ninth_case": "New subtype: a defect on a SHARED consumption path contaminates the measurement of every id routed through it, not just its own. General form: a bundle reading is no more valid than the shared path all its ids traverse. Scheduling corollary: defects on shared paths must be measured and fixed BEFORE any id that routes through them.",
+    "new_rule_preregistration": "Any wave run to test a CAUSAL HYPOTHESIS must have its predicted direction and its falsification number written down BEFORE launch (test_set.md section H). Post-hoc explanation always closes; only a pre-registered prediction can actually lose."
   }
 }
