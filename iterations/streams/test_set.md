@@ -1,12 +1,104 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale,tpdead,axebuyblink
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale,tpdead,axebuyblink,zusult,wandlimbo
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
-`tpdead` / `axebuyblink` 于 19:00Z 入集,**最早可 arm 的波次 = `roamstale` bisect
-收完之后的那一波**;在跑的 bisect **两臂都不许带它们**(见 §I.0,照抄 §G 的串)。
+`tpdead` / `axebuyblink` 于 19:00Z 入集,`zusult` / `wandlimbo` 于 21:00Z 入集,
+四个的**最早可 arm 波次都是 `roamstale` bisect 收完之后的那一波**;在跑的 bisect
+(20:09Z 启动的臂 B,15-id 串已钉死在实例上)**两臂都不带它们**,无需额外动作。
 
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
+
+## 总监提醒(2026-08-19T21:00Z 更新,**清 §I.7 待批队列;bisect 之后那一波必读**)
+
+### J.0 `zusult` **批准入集**(英雄组 16:02Z 报告,Zeus 大招留蓝)。eligible 集 18 → **19**
+
+三条件:
+
+- **(c) 成立且是标准打法**:~130s 冷却的全图终结技,耗蓝是**储备**不是零钱;
+  往满血目标身上打 chip 是这笔储备最差的用法。两个豁免口(斩杀窗口 <0.6 血、
+  撤退)保证它永远不会挡住比储备更值钱的东西。
+- **(a) 可证且高频**,是本集**取证成本最低**的一档:`.dem` 里 `ABILITY` 事件带
+  `inflictor`(`zuus_arc_lightning` / `zuus_lightning_bolt`)+ 1Hz 快照带 `mp` 和
+  每个技能的 `level`/`cd` → 「大招已学+冷却 0+蓝不够+目标满血」这个机会帧可以
+  **完全从 dump 重建**,不需要 dumper 增强。Zeus 一局放 21-26 次 Q,机会帧不稀缺。
+- **(b) 按 §A0 通例**:预计每局动作次数不到 1(只在「大招 armed-但-买不起」的窗口里
+  开火),**用行为检测器判,不许用 gpm/xpm**。
+
+**总监自己复核的(不是转述报告)**:
+
+1. 消费点在 `SkillsComplement` 里 `castWDesire` / `castQDesire` 变成**最终动作**
+   的那一行(L263/L294,`ActionQueue_UseAbility*` 之前),满足 §0b 的「断言最终出价」;
+   门关闭时函数前两行 return false,**已发布默认行为逐字不变**。
+2. 本容器 **518/518 + luacheck 0 警告**;**变异复现**:`X.nUltSaveHealthFloor`
+   0.6→0.0 **恰好挂 3 条**(与英雄组自报一致),报错直指血线,改回全绿、`git diff` 空。
+3. **一条英雄组没查、总监自己发现的泄漏(条件 (a) 的判读前提,必须写进检测器)**:
+   `ConsiderW2` 用的是**同一个 `abilityW`**(Lightning Bolt 的**地面版**),而它
+   **没有被 gate**。压住 W 的那一帧会**顺位落到 W2**,W2 的
+   `#nAllies >= 3` / 目标 <0.45 血 / `nManaPercentage > 0.65` 三个分支里,
+   **`#nAllies >= 3` 在团战帧上完全可能成立** → 同一发蓝被**原样花在同一个目标身上**,
+   门在那一帧上是**经济无效**的(不是有害,是没省下东西)。
+   ⇒ **(a) 的检测器必须把「压住后 1s 内又出现一次 `zuus_lightning_bolt` 施法」记为
+   失败,不是成功**;只有「压住 + 那笔蓝真的留到了下一次 `zuus_thundergods_wrath`」
+   才算这条规则买到了它声称要买的东西。(`nManaPercentage > 0.65` 那条分支在门的
+   触发域里通常不成立 —— 门要求蓝 < 大招耗蓝 —— 所以主要泄漏口就是 `#nAllies >= 3`。)
+4. 英雄组**有意不 gate** Heavenly Jump(那条链里第二发浪费的 49 蓝)是对的
+   ——「一次一个杠杆」——但要连着 §J.0.3 一起读:这次的杠杆比报告里描述的更窄。
+
+### J.1 `wandlimbo` **批准入集**(英雄组 07:44Z 报告,低血漂流喝魔棒)。eligible 集 19 → **20**
+
+三条件:
+
+- **(c) 成立**:低于四分之一血、周围无人、离家很远时,攒着的充能**没有期权价值**
+  (留着应付下一次爆发的前提是你还活着并且在场);「别带着满魔棒死」是通用原则,
+  本修复比它还保守(加了不溢出 + 无敌人 1600 + 泉水距离三层收窄)。
+- **(a) 可证**:`.dem` 的 `ITEM` 事件带 `inflictor`(`tp_attribution.py` 已经在用
+  `item_tpscroll` 这条路),**喝魔棒本身是可直接观测的事件**;机会帧
+  (血 ≤25% + 1600 内无敌方英雄 + 离泉水 >2500 + `items` 里有 wand/stick)全部来自
+  现成快照字段。
+- **(b) 同 §A0 通例:行为检测器,不许用 gpm/xpm。**
+
+**总监自己复核 + 三条给检测器的判读前提(英雄组没查的)**:
+
+1. **变异复现**:删掉「1600 内无敌方英雄」那一行 **恰好挂 1 条**且报错点名该守卫;
+   本容器 **518/518 + luacheck 0**,改回全绿、`git diff` 空。分支排在 `wandbleed`
+   之后、用途2/3 之前,四条分支**出价同为 HIGH**,所以顺序只改 motive 不改动作
+   ——**不是 #29 那类优先级倒挂**(那条链是不同 desire 的 guard 链)。
+2. **基线侧不是结构性零**:线上**用途3**(`charges>=19` 且背包 6 号槽非空且
+   `HP<=60%`)**不要求附近有敌人**,所以基线侧在同样的漂流帧上偶尔也会喝。
+   检测器要预期一个**小的非零基线**,判据是**两侧比例差**,不是「基线必须为 0」。
+3. **`wandbleed` 会遮蔽它**(而 `wandbleed` 已在集内 armed):`wandbleed` 排在前面,
+   条件是 2.0s 内有英雄伤害。⇒ **机会帧必须排除「最近 2s 内挨过英雄伤害」的帧**,
+   否则两个 id 的归因分不开(这正是 `tpwatch` 那一波「一次变两个量」的小号版本)。
+4. **诚实边界(英雄组已自报,总监确认为真实约束)**:dumper **不记录物品充能层数**,
+   而 `charges >= 6` 是门的一个硬条件 → **SILENT 读数在这个 id 上是歧义的**
+   (分不清「门没开火」和「那几帧充能不够」)。⇒ **arm 之前先做一次机会普查**:
+   在录像组手上现成的归档 timeline 上数「血 ≤25% + 1600 内无敌 + 离泉水 >2500 +
+   背包有 wand/stick」的帧频次(局/次)。**若普查结果 <0.2 次/局,这个 id 不值得占
+   一个波次的取证位**,退回英雄组等语料(不是 reject)。这是 `l1xpsoak`/`creeppull`
+   的教训在事前而不是事后花掉的版本。
+
+### J.2 `tparrive`(GH #44,协同组 19:32Z)进入 §I.7 待批队列,**本轮不裁定**
+
+本轮工作单元的定额已用在 `zusult`/`wandlimbo` 的自查上;`tparrive` 与 `midtp`/`suptp`
+同属跨图 TP 族(§A' ② 的排期约束适用),下轮审批时要一并回答「它和 `tpdead`/`tpdying`
+能不能同波 armed」。**登记在案,不丢。**
+
+### J.3 排期原则(部分回答 §I.6 的「入集速率 >> 波次吞吐」)
+
+上一轮我把瓶颈诊断成「每个 id 的 (a) 仍要手工逐帧」。本轮补一条**结构性的**、
+现在就能用的:
+
+> **条件 (a) 可以并行,条件 (b) 才是串行的。**
+> 一个 id 只要在**两臂里都 armed**(作两臂常量),它就**不占**那一波唯一的被测变量位,
+> 而 (a) 的取证(它有没有在真实帧上按设计开火)照样能做。真正稀缺的是 (b) 需要的
+> **隔离臂**。
+
+⇒ bisect 之后那一波的建议配置:`tpdead` / `axebuyblink` / `zusult` / `wandlimbo`
+**四个作两臂常量同时 armed 取 (a)**,被测变量位留给 `capmono`(§15:00Z 追加已欠一次
+隔离波次)。**唯一的并行限制:同一机制族的 id 不许同波首次 armed**(`tpwatch` 那一波
+的教训)—— 这四个分属 TP 族 / Axe 出装 / Zeus 技能蓝量 / 通用物品使用,**互不同族**,
+其中只有 `tpdead` 属 TP 族且它挂在已 armed 的 `tpcommit` 下,可接受。
 
 ## 总监提醒(2026-08-19T19:00Z 更新,**臂 B 上机前必读**)
 
@@ -147,8 +239,9 @@ armed 而 `axeblink` 不 armed 是一个**有意义且可执行**的配置(Axe �
 | id | 提出组 | 提出时间 | 验收状态(提出组自报) | 总监状态 |
 |---|---|---|---|---|
 | `wkreincarnmp` | hero | 08-18 | **只有 mock 验证,无真实帧 fixture** | 04:54Z **退回**,补 fixture 后重提 |
-| `wandlimbo` | hero | 08-19 | 自报已过门 | **待批**(下轮优先) |
-| `zusult` | hero | 08-19 | 自报已过门 | **待批**(下轮优先) |
+| `wandlimbo` | hero | 08-19 | 自报已过门 | 21:00Z **已批准入集**,见 §J.1(arm 前先做机会普查) |
+| `zusult` | hero | 08-19 | 自报已过门 | 21:00Z **已批准入集**,见 §J.0 |
+| `tparrive` | strategy | 08-19 19:32Z | GH #44,自报已过门 | **待批**(下轮优先),见 §J.2 |
 | `axeblink` | hero | 08-19 | 自报已过门 | 19:00Z **顺序阻塞**,见 §I.3 |
 | `axebuyblink` | hero | 08-19 | 10 例 + 4 次变异 | 19:00Z **已批准入集** |
 | `tpdead` | strategy | 08-19 | 9 例 + 2 次变异 | 19:00Z **已批准入集** |
