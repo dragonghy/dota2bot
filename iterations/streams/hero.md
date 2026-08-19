@@ -25,8 +25,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    mock-tested; ~~REAL-FRAME FIXTURE STILL PENDING~~ **2026-08-19 done**,
    见下面已划掉的 #6 和"当前状态"。(a)(c) 条件满足,(b) 批测待办,
    仍未 promote。
-2. **CM 大招时机**:Freezing Field 被打断/空放的帧核查,接近生效半径 +
-   有控制掩护才开。
+2. ~~**CM 大招时机**~~ 2026-08-19 first-cut done — 见"当前状态"。新 gate
+   `cmrguard`(自保检查,敌方近战硬控就绪时不开大),真实帧 fixture 通过。
+   **原假设(#nEnemysHeroesInRange>=3 无脑绕过 aoeCanHurtCount)未被证实**,
+   留作后续可选深挖项(不阻塞本条划掉)。
 3. **魔棒/芒果死手帧**:低血限进(d23 lowhp_limbo)时身上有魔棒充能/
    芒果却不用的案例(lich 帧已有);查焦点五的同类帧。
 4. **Zeus 大招击杀确认**:全图大招抢残血 vs 浪费在满血团上的帧差分。
@@ -41,6 +43,40 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T03:55:34Z:完成 backlog #2(CM 大招时机,第一刀)。委托
+  `replay-analyst` 在 soak S3 归档扫了 186 局含 CM 的对局、抽样 30 次 R
+  (Freezing Field) 施放,系统性发现:30 次里 9 次(30%)频道被打断到
+  <2秒(满时长10秒),多次紧接着 CM 阵亡。最干净的真实帧:
+  `spot_20260819_001007_1_main/20260819_003005_slot1` t=373.4(6:13)——CM
+  开大时 Jakiro(ice_path 未在冷却,`J.tHardCcAbilities` 收录的硬控技能)
+  正逼近至约1139码、无友军控制掩护;0.6秒后被冰封禁锢打断频道,5.9秒后
+  阵亡。**根因**:`hero_crystal_maiden.lua` 的 `X.ConsiderR` 完全没有"我
+  自己是否安全"的判断,只算敌人数量/逃逸,不管自己是否即将被控链锁死。
+  **修复**:新增 `X.cm_IsRSafeToOpen(hBot)`,复用既有 `J.HasReadyHardCc`/
+  `J.GetReadyHardCc`(`jmz_func.lua` 已有的硬控技能表,未新增表),1600码内
+  任一敌方英雄有就绪硬控则拒开大;gated turbo + `cmrguard`,gate 关闭时
+  行为与线上字节级不变。附带修了 `tests/mock/replay_fixture.lua` 的一个
+  通用缺口(之前只接了 `GetAbilityByName`,没接 `GetAbilityInSlot`——
+  `J.GetReadyHardCc` 按槽位扫描,这是引擎管线补丁不是 gated 行为改动)。
+  真实帧 fixture:`tests/fixtures/f_260819_003005_cm_selfpreserve.lua`
+  (AWS 自举 + behav-dump 在真实 .dem 上跑出 timeline + make_fixture.py 钉
+  t=373.4)+ `tests/test_replay_260819_cm_r_selfpreserve.lua`(5 例:
+  ground truth、gate OFF ×2 字节不变、gate ON 在真实帧正确拒开、gate ON
+  但把 Jakiro 硬控置于冷却后正确放行——证明 gate 认的是真实威胁不是敌人
+  存在性)。luacheck 0 警告,`lua5.1 tests/run_tests.lua` **371/371 绿**。
+  **验证哲学三条件**:(a) 真实帧确认逻辑正确 ✅;(c) 逻辑依据 ✅(频道
+  被硬控打断导致价值流失,直接对应观测到的系统性 30% 打断率);(b) 批测
+  无负面 —— **待办**,`cmrguard` 尚未入 test_set.md,本组无权自改,需
+  director 批准纳入(与 backlog #6 的 `wkreincarnmp` 一样卡在同一步)。
+  **原始假设未证实**:backlog #2 原文猜测"`#nEnemysHeroesInRange>=3` 无脑
+  绕过 `aoeCanHurtCount` 逃逸检查导致空放"——30 次采样没找到这个模式的
+  干净实例,发现的是更高信号、更可复现的"自保缺失"问题,已在报告里说明
+  是替代而非偷懒漏查;原假设的分支本身未动,留作可选后续项。
+  **仍未 promote**,等 director 批准 test_set 后再排批测。
+  报告:`iterations/reports/hero/20260819T035534Z.md`。
+  下一次触发:director 批准 `cmrguard`/`wkreincarnmp` 入 test_set 后跟进
+  批测请求;否则认领 backlog #3-5(魔棒/芒果死手帧、Zeus 大招击杀确认、
+  Axe 跳吼目标质量)之一。
 - 2026-08-19T01:51Z:完成 backlog #6(接 #1 的真实帧 fixture 缺口)。
   本组无本地录像归档/AWS 访问,委托 `replay-analyst` 子代理在既有批测
   归档里挖帧,拿到 `spot_20260725_102532_1_main/20260725_105305_slot1`

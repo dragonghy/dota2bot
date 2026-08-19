@@ -901,10 +901,35 @@ function X.ConsiderW()
 
 end
 
+-- [hero.md backlog #2] Self-preservation gate for Freezing Field: ConsiderR
+-- had no check on CM's own safety before committing to the 10s self-rooting
+-- channel. Real frame 20260819_003005_slot1 t=373.4 (6:13, replay-analyst
+-- dig): CM opened R while Jakiro -- ice_path off cooldown, a curated hard-CC
+-- ability -- was closing to ~1139 units with no ally CC covering him; he
+-- stunned her 0.6s into the channel (cutting it to 6% of its max duration)
+-- and she died 5.9s later, most of the ultimate's value lost. Withhold when
+-- an enemy hero within 1600 (this file's standard nearby-hero scan range)
+-- has a ready hard-CC ability -- she isn't covered against being chain-CC'd
+-- out of the channel. Gated turbo + 'cmrguard'; default path (candidate not
+-- armed) is unchanged.
+function X.cm_IsRSafeToOpen( hBot )
+	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'cmrguard' ) then return true end
+	local tEnemies = J.GetNearbyHeroes( hBot, 1600, true, BOT_MODE_NONE )
+	for _, e in pairs( tEnemies or {} )
+	do
+		if J.IsValid( e ) and J.HasReadyHardCc( e )
+		then
+			return false
+		end
+	end
+	return true
+end
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable()
 		or bot:DistanceFromFountain() < 300
+		or not X.cm_IsRSafeToOpen( bot )
 	then
 		return BOT_ACTION_DESIRE_NONE
 	end

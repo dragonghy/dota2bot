@@ -67,7 +67,8 @@ function M.load(path)
         -- Real ability state from the slice: pre-populate the (name-cached)
         -- handles a hero script will fetch via GetAbilityByName, so a FULL
         -- script run (SkillsComplement) sees real levels and cooldowns.
-        for _, a in ipairs(u.abilities or {}) do
+        local slotAbilities = {}
+        for i, a in ipairs(u.abilities or {}) do
             if a.name ~= '' then
                 local h = heroes[u.name]:GetAbilityByName(a.name)
                 local sp = rawget(h, '__spec')
@@ -76,7 +77,14 @@ function M.load(path)
                 sp.GetCooldownTimeRemaining = a.cd
                 sp.IsFullyCastable = a.level > 0 and a.cd <= 0
                 sp.IsCooldownReady = a.cd <= 0
+                slotAbilities[i - 1] = h
             end
+        end
+        -- GetAbilityInSlot(0-5): the dump lists abilities in slot order, so
+        -- expose the same real (name-cached) handles by slot index too --
+        -- helpers like J.GetReadyHardCc scan slots rather than known names.
+        rawget(heroes[u.name], '__spec').GetAbilityInSlot = function(_, slot)
+            return slotAbilities[slot]
         end
         -- Bypass the illusion heuristic via its own cache property: fixture
         -- units are canonical real heroes (illusions dropped at generation).
