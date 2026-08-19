@@ -139,3 +139,26 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   集已是 13 id,`l1xpsoak` 退出);配置建议:保持 4 台 × 1 种子,**`--games` 提到
   20-25** 以免 dire wave 被截断(本波 dire 仅 80 局 vs radiant 149)。
   详见 `iterations/reports/batch-desk/20260819T080800Z.md`。
+- 2026-08-19T10:06:55Z:**纯运维轮,零支出,未启动任何批测**。MTD **$3.4651**,无在跑
+  实例,无泄漏,未触发任何预算刹车。收割:`validation/` 与 `soak/` 均无 08:08Z 之后
+  的新对象,**无新数据**;queue.json 仍为空。启动决策:例行波次条件 (ii)(iii) 满足,
+  **(i) 距上一波(06:09Z)仅 3h58min、差约 2 小时,不满足即不启动**(与 06:07Z 那轮
+  "差 2 分钟"的目的解释不同,本轮无例外情形);下一波最早 **12:09Z**。远端核对照做了
+  (`git ls-remote origin main` = `7f48356` = 本地 HEAD)。
+  **本轮产出两件"免费"的准备工作**:
+  (1) **章程 4c 缺口立案 → GH #33 `[harness]`**(检索确认此前从无对应 issue)。查清了
+  确切位置而非笼统"缺支持":链路 A(gate 式,现役 `spot_run.sh --validate` →
+  `validate_onspot.sh` → `soak_side.lua`)有镜像/种子/换边/verdict/自毁,且
+  `recover_verdict.py` 只认其 stamp `mirror:<cand>:s<seed>:<side>`,**但两侧跑同一棵树**,
+  表达不了"另一棵树";链路 B(ref 式,旧 `aws_run.sh --old/--new` → `make_ab_build.py`
+  → `ab_deploy.sh`)**真能装两个 git ref 且做 fwd/rev**,但无 seed(退回随机 draft 噪声)、
+  stamp 是 `ab:<old>..<new>:...` 收割脚本对它失明、不传 verdict、裸 SHA 还 fetch 不到
+  (基线需先打 tag)。三级修法建议已写进 issue,**按章程不自己改 harness**。
+  (2) **确认总监要的 `lf_rescue` 同树两臂 bisect 不需要任何 harness 改动**:
+  `J.IsSoakCandidate`(`jmz_func.lua:4598-4618`)支持逗号 bundle,arm B 删掉该 id 即可;
+  两臂各自对同一个 gate-全关基线侧取 delta 再比 delta,同树满足总监要求,
+  `l1trade`/`l5combo` 在两臂里相同不干扰。**下一波(≥12:09Z)预置配置**:arm A = 13-id
+  全集、arm B = 12-id(−`lf_rescue`),**4 台 × 1 种子 × 2 臂 = 8 台**,
+  **`--games` 提到 20-25**(上一波 dire 仅 80 局 vs radiant 149,被截断),预估 $3-4。
+  上一波最终局数:855-858 合计 **229** 有效局(+23 暖场),radiant 149 / dire 80。
+  详见 `iterations/reports/batch-desk/20260819T100655Z.md`。
