@@ -961,5 +961,31 @@
       "diagnosis": "The bottleneck is NOT director approval. It is that each admitted id's condition (a) still requires the replay desk to reconstruct frames by hand.",
       "steering": "Told all three streams (test_set.md SS I.6) to shift effort from the N+1th new id toward (i) per-id trigger detectors for already-admitted ids (infra backlog #3), which is what makes 'collect (a) while riding along' scale, and (ii) isolation-wave designs for the ids that can only ever collect (a) as constants (capmono already owes one, axebuyblink will). Pending-admission queue is now maintained explicitly in test_set.md SS I.7 so streams stop re-requesting in reports."
     }
+  },
+  "G3_PREREGISTRATION_RULING_20260819T1900Z": {
+    "context": "Replay desk delivered roamstale's condition (a) first check on bisect arm A (16/16 mirror games swept, 6 reconstructed frame by frame) and raised three specification problems with the director's SS G.3 pre-registered prediction table BEFORE arm B landed (GH #39). Timing is correct: SS H exists to stop reinterpretation AFTER data, so specification defects must be settled now.",
+    "headline": "Rows 1, 2 and 4 are VOID, not PASSED. A void row scores for nobody. roamstale's condition (a) stands on row 3 -- the one row that was correctly specified and hit verbatim -- plus frame-level evidence, NOT on swapping a failing criterion for a passing one.",
+    "row1": {
+      "text": "arm A in-domain kill conversion returns to >=45%",
+      "literal_result": "arm A 33.0% -- FAILS as written",
+      "why_void": "specification defect provable independently of the hypothesis: this wave's BASELINE side scores 34.5% (last wave 47.1%). A criterion the control group (the shipped stable build) cannot pass measures the draft, not the rule. Absolute conversion swings with the draft and is not comparable across waves; only the same-game mirrored paired difference is.",
+      "what_the_director_refused": "amending it to 'paired difference >= -5pp' and declaring a pass. That amendment flips FAIL to PASS, which is exactly the move SS H forbids. The paired-difference form governs FUTURE A-B reads; it does not retroactively grant this wave a pass."
+    },
+    "row2": {
+      "text": "out-of-domain control: neither arm moves",
+      "verdict": "VOID -- and this one is the director's own specification error",
+      "director_verified_not_transcribed": "grepped mode_team_roam_generic.lua. roamstale resets hTargetCreep for ALL SIX early-return branches, two of which are SHIPPED: X.ConsiderHelpWhenCoreIsTargeted (L1406, bids at L203) and ConsiderHelpAlly (L410, bids at L213). Neither is laning-only: the J.IsInLaningPhase() at L1413 / L419 is a LOOSENING for cores ('a core counts if it is close during laning'), not a restriction, and supports are unrestricted. Both fire after laning.",
+      "consequence_if_applied_literally": "it would reject the rule on a mis-specified test, and out-of-domain (t 520-900s) is precisely where the effect is cleanest: hit-the-hero rate 96.2% vs 80.9% (Fisher p=0.0033), zero-damage rate 3.8% vs 15.7% (p=0.019).",
+      "root_cause": "the director copied the out-of-domain control #41 built for l1trade/l5combo (those two helpers DO hard return nil outside laning) without checking whether it applies to roamstale."
+    },
+    "row4": {
+      "text": "action-target flip rate >> 1 per game",
+      "verdict": "VOID -- not measurable, as opposed to not met",
+      "reason": "the dumper emits DAMAGE events, not attack orders; a flip is visible only when the released frame actually deals damage. Same failure as [harness] #36: a criterion registered against a pipeline whose data-supply capability was never checked.",
+      "replacement": "the two rates from the replay desk's SS 2.1 (hit-the-hero rate, zero-damage rate), which are measurable and were in fact measured."
+    },
+    "lesson_worth_more_than_the_ruling": "Pre-registration itself needs acceptance criteria. Before registering a criterion, ask (i) can the CONTROL group pass it? (if not, it measures something other than the intervention) and (ii) does the data source actually emit this quantity? This round's three rows failed in three different ways: incomparable threshold, inapplicable control domain, non-existent field.",
+    "roamstale_status": "Condition (a) HOLDS, at strength 'highly consistent with the mechanism + both of #41's in-domain symptoms gone', NOT at 'isolated'. Row 3 (in-domain episode-count ratio 1.31 -> 1.00) was correctly specified and hit verbatim, and it measures the artifact itself (extra opportunity frames created by the candidate side's extra early returns). In-domain conversion deficit -16.4pp -> -1.5pp; the >=5s-adjacent-zero-output asymmetry is gone (4:4). But 16 ids are armed simultaneously and arm B has not run, so SS G.1's confounder hypothesis is UNCONFIRMED pending A-B. Until then: do not declare roamstale isolated and do not relax SS G.5 for l1trade/l5combo.",
+    "harness_43_routing": "Post-game freeze tail (the game ends on economy_10min_cap, the dumper emits another 24-25s of byte-frozen all-entity snapshots; detect.py:868's _paused_spans structurally cannot see it because the tail has no right-hand boundary) contaminates every window detector and the shared sweep_summary.md -- this round's out-of-domain zero-damage rate went 10.7% -> 3.8% once truncated. Prefix routes [harness] to the director, but the director explicitly routes it BACK to the replay desk on efficiency grounds: they already have the fix in hand (applied in this round's analysis) and detect.py is their tool. HARD DEADLINE: it must land in detect.py BEFORE arm B's A-B difference is read; reading that wave on contaminated detectors spends the money on a knowingly biased readout. If it has not landed by the start of the next trigger, the director does it and logs it as rework in the efficiency ledger."
   }
 }
