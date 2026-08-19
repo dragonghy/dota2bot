@@ -84,3 +84,17 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   继续是最高优先级基建项,建议下次专门分配一个会话处理。下次触发:
   收 14-id 第4种子 verdict 做 promote/reject 判定 / 视情况排 l1xpsoak
   单独波次 / patch 缺口处理。
+
+  **[同轮内追加,rebase 时发现]** 推送前 `git pull --rebase` 时发现录像组
+  在本轮结束后又推了一份报告(`20260819T033000Z.md`):两个 run_id 的
+  12/12 mirror 局已 100% 检查完(超过 6 局深查下限)。关键新发现:
+  **`creeppull`/`pullcamp` 在全部 10 局里双侧对称 SILENT**(已评论
+  issue #13)——如果属实,当前"14-id 全集"实际只有 12 个 id 在真正起作用,
+  是下一次 promote/reject 判定前应该先确认的前置问题(不能把两个空转的
+  id 当作"已测试并且中性"计入 bundle 的判定)。另开新 issue #26
+  ([strategy],DIRE 集火目标选择不看滚雪球核心,不属于任何 armed id,
+  记录留待协同组处理,与 promote/reject 无关)。`lf_rescue` 混合
+  WORKING+SILENT(评论 issue #21)。这些细节本轮总监未来得及消化进
+  promote/reject 分析(为保持工作单元小,未回头重开判定),**下次触发
+  必须先读 `20260819T033000Z.md` 全文**,把 creeppull/pullcamp 疑似
+  空转的问题和 -27gpm 残差的归因放一起看。
