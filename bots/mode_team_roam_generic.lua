@@ -163,14 +163,42 @@ function GetDesireHelper()
     -- "collapse on the invader", the action says "keep last-hitting". That is
     -- the watched 232228 shape (WK, stun ready, hovering ~1000u from a 69% solo
     -- Juggernaut for 17s while the punish branch was bidding for him).
-    -- Armed, the variable means what its only writer and its only reader both
-    -- assume: THIS frame's last-hit creep. It is reassigned below on every frame
-    -- that reaches the branch, so the armed delta is confined to exactly the
+    -- Reset here, the variable means what its only writer and its only reader
+    -- both assume: THIS frame's last-hit creep. It is reassigned below on every
+    -- frame that reaches the branch, so the delta is confined to exactly the
     -- frames an early branch returned; it can only ever REMOVE a stale creep
     -- attack, never add one, and it changes no desire value anywhere (nothing
-    -- reads hTargetCreep before its assignment). Gated turbo + 'roamstale';
-    -- shipped defaults keep the stale handle byte-for-byte.
-    if J.IsModeTurbo() and J.IsSoakCandidate('roamstale') then
+    -- reads hTargetCreep before its assignment).
+    --
+    -- PROMOTED (was soak-candidate 'roamstale') 2026-08-19: the first id to
+    -- clear all three conditions of the 08-01 validation rule.
+    --   (a) EXECUTION -- two-arm bisect, roamstale the only variable, 4 seeds x
+    --       2 arms / 555 mirror games / 1855 episodes: out-of-domain "lands a
+    --       hit on a hero within 4s" paired delta arm A +15.3pp vs arm B -7.6pp
+    --       (DiD +22.9pp), zero-damage DiD -19.5pp, 4/4 seeds and 2/2 mirror
+    --       directions same-signed, the other 15 ids armed identically in both
+    --       arms. This is an isolated proof, not a within-arm correlation.
+    --   (b) NO VISIBLE HARM -- A-B paired economic delta null on all four
+    --       metrics: gpm +5.48 (z=+0.31), xpm +5.60, deaths -0.08,
+    --       last_hits -0.05. Note the bound is wide (4-seed MDE ~35.6 gpm).
+    --   (c) RATIONALE -- a plain unreset-handle defect: writer, reader and
+    --       variable name all mean "this frame's creep", only the missing reset
+    --       disagreed.
+    -- MECHANISM, corrected by that same data (issue #39's shape was wrong, its
+    -- direction right): the effect lives entirely at >=600u and the <=300u
+    -- subset is flat, so a stale handle does NOT send the bot off to hit a
+    -- creep -- Action_AttackUnit on a handle that has since died simply does
+    -- nothing, and the bot stands still. What this reset restores is DELIVERY
+    -- ONTO DISTANT TARGETS, not near-target selection.
+    -- Turbo-only, matching the domain every measurement above was taken in;
+    -- normal mode keeps the stale handle byte-for-byte. Extending it there is a
+    -- separate decision with no evidence behind it yet.
+    -- KNOWN RESIDUAL (issue #45, gated 'roamreach'): with delivery restored,
+    -- the candidate side loitered on the 600-900u ring dealing no damage more
+    -- often than baseline (12/409 vs 3/409, p=0.034) -- chases this reset now
+    -- actually issues can still stall out of ability range. That is the next
+    -- lever, not a reason to keep the handle stale.
+    if J.IsModeTurbo() then
         hTargetCreep = nil
     end
     if bot:IsInvulnerable() or not bot:IsHero() or not bot:IsAlive() or not string.find(botName, "hero") or bot:IsIllusion() then

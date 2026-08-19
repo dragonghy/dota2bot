@@ -1085,5 +1085,31 @@
     "prereg_for_batch_desk": "Pre-registered expectation on this 5-game census: the guard refuses 4 of 13 channels (~0.8 per game) -- 183409 t=424.8 / t=256.0, 180855 t=389.9, 182855 t=297.2 -- and leaves all 5 creep channels and the other 4 hero channels untouched. It catches 3 of 3 channel-adjacent deaths. Condition (b) MUST be judged with BEHAVIORAL DETECTORS (Mana Drain channels per game split by target type; channels started with an enemy hero inside 500 while taking hero damage; Lion deaths within 12s of a channel start), NOT gpm/xpm -- fewer than 1 action per game is structurally invisible in economy aggregates (GH #30 noise floor).",
     "status": "gated, NOT promoted, NOT in test_set.md. Needs director approval to enter test_set.md -- the hero stream cannot self-admit.",
     "next": "Director approval for test_set.md admission. Hero-stream ids now at that gate: wkreincarnmp, axeblink, and this one (zusult and wandlimbo were admitted 21:00Z; cmrguard and axebuyblink already admitted)."
+  },
+  "roamstale_PROMOTED_20260819T2300Z": {
+    "what": "本项目第一次 promote。`roamstale`(mode_team_roam_generic.lua 的 hTargetCreep 复位)从 gated soak candidate 变为 turbo 默认行为,退出 test_set(eligible 20 -> 19)。稳定版锚点 = 分支引用 stable-v1。",
+    "condition_a": "已隔离证明。863-866 两臂 bisect,roamstale 是唯一变量,其余 15 id 两臂逐种子逐英雄相同,555 局有效镜像局 / 1855 episode。域外「4s 内打到英雄」配对差 arm A +15.3pp vs arm B -7.6pp => DiD +22.9pp;零伤害 DiD -19.5pp;逐种子 4/4 同号、镜像方向 2/2 同号。",
+    "condition_b": "A-B 逐种子配对差四指标全 null 且方向为正:gpm +5.48 (sd 35.62, SE 17.81, z=+0.31, 同号 2/4)、xpm +5.60、deaths -0.08、last_hits -0.05。",
+    "condition_b_why_null_passes_here": "两条独立理由,缺一不可,不得单独引用去给别的 id 放行:(1) roamstale 每局动作次数 >>1(17:00Z 已批准的 §A0 明确例外),效应确实被表达进这批数据,null 是真的界;而 §A0 通例针对的是 <~1 次/局的 id,那里 null 是「数据装不下这个效应」。(2) 它是本集唯一有隔离 (a) 证明的 id —— 独立地知道它在开火、在改变行为,再看到经济无代价,与「不知道有没有开火、经济看不出东西」是不同的证据状态。",
+    "condition_c": "未复位的陈句柄:变量名、唯一写者(补刀分支)、唯一读者(Think 首行)三方都认为它是「本帧的补刀目标」,只有缺失的复位不同意。",
+    "honest_bounds": [
+      "(b) 的界很宽:4 种子 A-B 的 MDE ~= 35.6 gpm,任何 < ±35 gpm 的真实效应本波看不见。「无明显负面」是铁律 2 明文的粗粒度标准,不是「已证明无害」。",
+      "已知残留(GH #45, gated roamreach):投送恢复后候选侧在 600-900u 环上零伤害空转比基线更频繁(12/409 vs 3/409, p=0.034,臂 B 归零)。这是下一个杠杆,不是保留陈句柄的理由。",
+      "promote 范围 = turbo,与全部测量所在的域一致;normal 模式逐字不变,扩过去需另行取证。"
+    ],
+    "mechanism_corrected": "#39 原叙述形状错、方向对。效应完全住在 >=600u,<=300u 全平,CREEP-ONLY 四格三格为 0 => 陈句柄的后果不是「跑去打小兵」,是 Action_AttackUnit 打到无效句柄后原地不动。roamstale 改的是对远处目标的投送,不是近身目标选择。已按此重写代码注释。",
+    "verification": "545/545 + luacheck 0。两次变异:装回 gate 恰好挂 3(直指陈句柄);删掉 IsModeTurbo() 范围 -> 544/544 全绿 = 范围无人守护,已补源码级范围不变量测试,补后该变异恰好挂 1 且点名。",
+    "unblocks": [
+      "§G.5 对 l1trade/l5combo 条件 (a) 的锁(需 roamstale armed 的波次)解除 —— 今后每波都满足",
+      "§I.7 给 roamreach 的排期约束 ②(不要与测量 roamstale 的波次同 arm)自动消解"
+    ]
+  },
+  "MEASUREMENT_POWER_RULING_20260819T2300Z": {
+    "fact": "批测台实测:4 种子两臂 A-B 配对差 sd=35.62,比单臂(16.6-19.6)还大约 2 倍 —— 每臂本身已是镜像差,跨臂配对拿不到相关性红利。=> 4 种子 MDE ~= 35.6 gpm。",
+    "ruling_1_path_B_dead": "路 B(12-id 残组逐 id 经济二分)废止。底座负残差 ~-30 gpm 若由 12 个 id 均摊 => 单 id ~-2.5 gpm => z=2 需约 800 种子。结构上不可能,不是钱的问题。",
+    "ruling_2_A0_generalized": "条件 (b) 的默认判法从此是行为检测器;经济读数只对同时满足「高频 + 预期效应 >~35 gpm」的 id 可采信,且要像 §G.4 那样逐个明写批准。§A0 那条不再是例外条款,它是通例。",
+    "ruling_3_capmono_arm_cancelled": "capmono 隔离臂取消(纯 min 结构,预期效应远低于 MDE,经济臂按构造返回无信息 null,而无信息的 null 不构成 (b) 通过)。capmono 的 (b) 改判行为检测器 —— 录像组 14:37Z 的 clean 域拒扑率 45.2% vs 28.6%;它缺的是与 teambrain 的隔离,不是经济读数。",
+    "ruling_4_batch_wave_purpose": "批测波次的主要产出是语料不是 verdict:一波 ~270 局镜像局是 (a) 取证和检测器统计的原料。经济读数继续收作整集合是否跑偏的粗看板(-33/-38 那个量级读得出),但不再为「给某个 id 判 (b)」设计经济隔离臂。",
+    "residual_still_unattributed": "-33/-38 gpm 底座仍未归因,现已知不在 lf_rescue(16:10Z)、不在 roamstale(本轮,且 last_hits -2.x 的事前登记被证伪:臂 B -2.11)。下一步走行为检测器 + 机制 grep(§0b 第九例的路子),归协同组 + 录像组。"
   }
 }

@@ -196,27 +196,42 @@ end
 -- The defect: the winning collapse produces a creep attack.
 -- ---------------------------------------------------------------------------
 
-tests['SHIPPED: the collapse frame attacks LAST FRAME\'S creep, not the invader'] = function()
-    local log, desire, _, _, heroes, creep = two_frames()
-    assert(math.abs(desire - CEIL) < 1e-9,
-        'setup: frame N must still be the collapse bid; got ' .. tostring(desire))
-    assert(#log == 1, 'exactly one action on the collapse frame; got ' .. #log)
-    assert(log[1].fn == 'Action_AttackUnit', 'got ' .. log[1].fn)
-    assert(log[1].args[1] == creep,
-        'the shipped defect: the collapse frame attacks the stale creep')
-    assert(log[1].args[1] ~= heroes['npc_dota_hero_juggernaut'],
-        'and therefore never touches the invader the desire was computed from')
-end
+-- PROMOTED 2026-08-19: the reset is now the turbo default, so the defect no
+-- longer has an armed/unarmed contrast -- its surviving contrast is turbo vs
+-- normal mode (promotion was scoped to turbo, the domain it was measured in).
+-- The demonstration of the defect therefore moved into the normal-mode test
+-- below; these two now pin the promoted default and its scope.
 
-tests['ARMED roamstale: the same frame attacks the INVADER'] = function()
-    local log, desire, _, _, heroes, creep = two_frames({ armed = true })
+tests['PROMOTED: the collapse frame attacks the INVADER with NOTHING armed'] = function()
+    local log, desire, J, _, heroes, creep = two_frames()
+    assert(J.IsSoakCandidate('roamstale') == false,
+        'setup: this must come from the promoted default, not from a gate')
     assert(math.abs(desire - CEIL) < 1e-9,
-        'armed must not change the bid at all; got ' .. tostring(desire))
+        'the reset must not change the bid at all; got ' .. tostring(desire))
     assert(#log == 1, 'exactly one action on the collapse frame; got ' .. #log)
     assert(log[1].fn == 'Action_AttackUnit', 'got ' .. log[1].fn)
     assert(log[1].args[1] == heroes['npc_dota_hero_juggernaut'],
-        'armed, the action finally matches the desire')
+        'promoted, the action finally matches the desire')
     assert(log[1].args[1] ~= creep, 'and the stale creep is gone')
+end
+
+tests['SCOPE: arming the retired id changes nothing (the gate is gone)'] = function()
+    -- Guards the promotion itself: if someone re-introduces an IsSoakCandidate
+    -- check around the reset, these two runs stop agreeing. Handles come from
+    -- two separate worlds, so compare what was hit by NAME, not by identity.
+    local function run(opts)
+        local log, desire, _, _, heroes = two_frames(opts)
+        local hit = log[1] and log[1].args[1]
+        return {
+            n = #log,
+            desire = desire,
+            invader = hit == heroes['npc_dota_hero_juggernaut'],
+        }
+    end
+    local a, b = run(), run({ armed = true })
+    assert(a.n == b.n and a.desire == b.desire and a.invader == b.invader,
+        'the promoted reset must not consult the soak gate any more')
+    assert(a.invader, 'setup: both runs must be the collapse frame that now lands')
 end
 
 -- ---------------------------------------------------------------------------
@@ -236,14 +251,20 @@ tests['CONTROL: with no creep in the world, shipped already collapses correctly'
     assert(J.ShouldPunishDive(bot) ~= nil, 'and the collapse really is the source')
 end
 
-tests['CONTAINMENT: armed on an ORDINARY last-hit frame is byte-for-byte shipped'] = function()
+tests['CONTAINMENT: an ORDINARY last-hit frame is identical turbo and normal'] = function()
     -- No early branch fires -> the last-hit branch reassigns hTargetCreep on the
-    -- very same frame, so clearing it at the top can make no difference.
+    -- very same frame, so clearing it at the top can make no difference. Since
+    -- promotion the contrast that carries this is turbo (reset live) vs normal
+    -- (reset absent), not armed vs unarmed.
     local runs = {}
-    for _, armed in ipairs({ false, true }) do
-        local _, bot, heroes = world()
+    for _, turbo in ipairs({ true, false }) do
+        local J, bot, heroes = world()
         local creep = installCreep(bot)
         dofile('bots/mode_team_roam_generic.lua')
+        if not turbo then
+            GetGameMode = function() return 1 end -- luacheck: ignore
+        end
+        assert(J.IsModeTurbo() == turbo, 'setup: game mode is what this run wants')
         local jugg = heroes['npc_dota_hero_juggernaut']
         rawget(jugg, '__spec').GetLocation = api.Vector(3000, 3000, 0)
         rawset(jugg, 'GetLocation', nil)
@@ -251,14 +272,17 @@ tests['CONTAINMENT: armed on an ORDINARY last-hit frame is byte-for-byte shipped
         local d = GetDesire()
         Think()
         runs[#runs + 1] = { d = d, n = #log, hit = log[1] and log[1].args[1] == creep }
-        assert(armed ~= nil) -- keep the loop var used
     end
     assert(runs[1].d == runs[2].d and runs[1].n == runs[2].n and runs[1].hit == runs[2].hit,
-        'an ordinary last-hit frame must be identical armed and unarmed')
+        'an ordinary last-hit frame must be identical in turbo and in normal mode')
     assert(runs[1].hit, 'setup: that frame really is a last-hit')
 end
 
-tests['CONTAINMENT: inert in normal (non-turbo) mode even when armed'] = function()
+tests['SCOPE + DEFECT: normal mode still reproduces the original stale-handle bug'] = function()
+    -- Doubles as the surviving demonstration of the defect the promotion fixed:
+    -- promotion was scoped to turbo, so normal mode is where the shipped
+    -- behaviour (collapse bid wins, action attacks last frame's creep) still
+    -- lives. If someone drops the turbo scope, this test goes red.
     local J, bot, heroes = world({ armed = true })
     local creep = installCreep(bot)
     dofile('bots/mode_team_roam_generic.lua')
@@ -289,12 +313,43 @@ end
 -- whole file is obsolete. Fail loudly then rather than passing by absence.
 -- ---------------------------------------------------------------------------
 
+-- SOURCE-LEVEL INVARIANT, and why it has to be source-level.
+--
+-- Mutation-testing the promotion turned up a hole: deleting the `IsModeTurbo()`
+-- scope from the promoted reset leaves the whole suite green. The reason is
+-- structural, not an oversight in the normal-mode test above -- on this fixture
+-- the only early-returning branch that can fire is `ownhalf`, which is itself
+-- turbo-gated, so in normal mode NO early branch returns, the last-hit branch
+-- re-stamps hTargetCreep on the very same frame, and clearing it at the top is
+-- a no-op by construction. A frame that could tell the two apart needs a
+-- SHIPPED early branch (ConsiderHelpAlly / ConsiderHelpWhenCoreIsTargeted) to
+-- fire in a normal-mode game, and the behavioural corpus is turbo-only -- no
+-- such frame exists to pin. Same reasoning as the retreat-chain order test and
+-- the tpRespond stamp invariant: when the corpus cannot hold the guard, assert
+-- the guard in the source.
+--
+-- What this protects: promotion was scoped to the domain the A/B measured
+-- (turbo). Widening a shipped default into normal mode is a separate decision
+-- that needs its own evidence, and it must not happen by silent edit.
+
+tests['INVARIANT: the promoted reset stays scoped to turbo'] = function()
+    local src = io.open('bots/mode_team_roam_generic.lua'):read('*a')
+    local head = src:match('\n([^\n]*)\n%s*hTargetCreep = nil\n%s*end\n')
+    assert(head, 'the promoted reset is no longer an `if ... then hTargetCreep = nil end` '
+        .. 'block -- re-derive this test against whatever replaced it')
+    assert(head:find('J%.IsModeTurbo%(%)'),
+        'the promoted hTargetCreep reset must stay inside a J.IsModeTurbo() guard; '
+        .. 'got the guard line: ' .. head)
+    assert(not head:find('IsSoakCandidate'),
+        'the reset is PROMOTED -- it must not consult a soak gate again; got: ' .. head)
+end
+
 tests['REVERSE: the shipped stale-handle path must still exist'] = function()
     local src = io.open('bots/mode_team_roam_generic.lua'):read('*a')
     local writes = select(2, src:gsub('\n%s*hTargetCreep = ', ''))
     assert(writes == 2,
         'expected exactly two writes to hTargetCreep (the last-hit branch and the '
-        .. "gated reset); got " .. writes .. ' -- the ownership of this variable '
+        .. "promoted reset); got " .. writes .. ' -- the ownership of this variable '
         .. 'changed and this test file must be re-derived')
 end
 
