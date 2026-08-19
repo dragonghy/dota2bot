@@ -74,6 +74,9 @@ def main():
             "hp": s.get("hp", 0), "max_hp": max_hp,
             "mp": s.get("mp", 0), "max_mp": s.get("max_mp", 0),
             "level": s.get("level", 1), "alive": hp_pct > 0,
+            # real net worth, when the dump carries it -- lets fixtures exercise
+            # relative-economy scoring decisions (e.g. "who's snowballing").
+            "net_worth": s.get("net_worth", 0),
             # real inventory (slot-ordered, '' = empty) and TP cooldown, when the
             # dump carries them — lets fixtures exercise item decisions too.
             "items": [x for x in (s.get("items") or [])],
@@ -116,11 +119,11 @@ def main():
         abil = ", ".join("{ name = '%s', level = %d, cd = %s }"
                          % (a["name"], a["level"], a["cd"]) for a in u["abilities"])
         L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
-                 " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s,"
+                 " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s, net_worth = %d,"
                  " items = { %s },\n      abilities = { %s } }," % (
                      u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
                      u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
-                     u["tp_cd"], items, abil))
+                     u["tp_cd"], u["net_worth"], items, abil))
     L.append("  },")
     L.append("  observed = {")
     L.append("    burst = {")

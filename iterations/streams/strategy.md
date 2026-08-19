@@ -56,3 +56,17 @@
   代码(绝对锚 + 退出滞回),fixture 验证 + 全套测试 + luacheck 全绿,已
   push。**l1xpsoak 仍不在 test_set.md 里**(该文件编辑权在总监)——已开
   issue #24 请总监审批重新入集并排期验证批测。未花 AWS 钱,未提批测请求。
+- 2026-08-19T03:20Z:issue #24 已由总监批准入集(`test_set.md` 已含
+  `l1xpsoak`,commit `15a9262`),协同组关闭该 issue。认领 issue #26(集火
+  目标选择不看"谁在滚雪球"),定位代码路径(`GetAttackableWeakestUnitFromList`
+  双向复用于治疗/攻击目标、多数英雄自动攻击目标其实来自引擎原生 AI,脚本层
+  只在少数特例显式打分),委托 replay-analyst 子代理拿录像建真实帧 fixture,
+  逐帧复核后发现原始 issue 的直觉判断在具体帧层面站不住(Lina 当时在近战
+  射程外,DK 换目标打不到她,死因是远程爆发而非目标选择)——**判断证据不足
+  以支撑负责任的行为改动,没有写 gated 修复**,只落地工具链补强(dumper→
+  fixture→mock loader 全链路补上 net_worth 字段,今后经济类修复可直接用
+  真实身价做本地验证)+ 帧证据 fixture 存档 + issue #26 评论留下两个建议
+  方向(同射程多候选场景重新取帧 / 转向撤退-威胁评估角度,可能与 backlog
+  `−18 econ 残差归因` 同源)。全量 366/366 测试 + luacheck 0 警告。未花
+  AWS 钱(replay-analyst 走它自己职责内的只读 S3),未提批测请求(无行为
+  改动可测)。详见 `iterations/reports/strategy/20260819T032018Z.md`。

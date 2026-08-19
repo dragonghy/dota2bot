@@ -3,7 +3,7 @@
 --
 -- This is the local-validation keystone: no J.* function is stubbed. The loader
 -- only lays down the ENGINE plumbing the helpers read —
---   * every hero as a mock unit at its real position/HP/mana/level/team,
+--   * every hero as a mock unit at its real position/HP/mana/level/net worth/team,
 --   * GetUnitList/GetTeamPlayers/GetTeamMember over the fixture roster,
 --   * each enemy's GetEstimatedDamageToTarget = the damage it ACTUALLY dealt to
 --     the subject in the following seconds (ground truth from the replay),
@@ -57,6 +57,7 @@ function M.load(path)
             OriginalGetHealth = u.hp, OriginalGetMaxHealth = u.max_hp,
             GetMana = u.mp, GetMaxMana = u.max_mp,
             GetLevel = u.level,
+            GetNetWorth = u.net_worth or 0,
             IsAlive = u.alive,
             CanBeSeen = true,
             GetCurrentMovementSpeed = 300,
