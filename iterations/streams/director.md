@@ -20,6 +20,12 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
    d. 成本:看批测台报告里的 MTD;≥$90 确认刹车生效;需要 owner 决定的
       大问题 → 邮件(见下),小问题自己定;
    e. 巡检 Routine 体系健康:哪个组连续多轮没有产出/报告,记录并调整;
+   e2. **效率台账(owner 2026-08-19 认可,每周日的触发做一次)**:汇总本周
+      各组报告里的三类数字——AWS 花费(批测台)、有效局数(批测台)、
+      token 用量(各组 TOKENS 行)——写进
+      `iterations/reports/director/efficiency_<YYYYWW>.md`,至少算:
+      $/有效局、token/报告(分组)、本周完成执行核验的 id 数、
+      promote/reject 数。连续两周变差的指标要给出归因和调整动作;
    f. patch 检查(低频,约每周一次即可):datafeed patchnoteslist 对比
       docs/PATCH_UPDATE_GUIDE.md 的"Last updated for",有新 patch 按
       guide 走流程,焦点五优先。
