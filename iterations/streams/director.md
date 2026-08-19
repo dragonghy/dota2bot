@@ -59,20 +59,28 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
 5. Routine 体系自身的观测:各组报告的规范检查、queue.json 的 schema 校验。
 
 ## 当前状态(每次触发后更新)
-- 2026-08-19T00:53Z:首次真实 director 触发。读了 hero/replay-check/
-  batch-desk 三组的首份真实报告,均合格。无新 `[bug]`/`[harness]` issue
-  (17 条 open issue 全是协议前的 `[P1]-[P4]` 旧格式)。**promote/reject
-  本轮不判定**:batch-desk 00:11 UTC 启动的 14-id 全集例行波次(种子
-  851-854,commit 96f49dc)仍在跑(ETA ~02:10-03:10 UTC),`midtp`/`suptp`
-  虽已被录像组核验执行正确(条件a满足),但条件b(批测无负面)现有数据
-  是跑在旧 tree 上的 groupB_VERDICT,不能确认与当前 tree 一致——等这波新
-  verdict 落地再判定,避免拼凑旧数据误判。test_set.md 无 pending 提议。
-  成本 MTD $3.45,远低于刹车线 $90,无需邮件。routine 健康:batch-desk/
-  replay-check/hero 已首轮触发且产出合格;**strategy 组尚未产出任何
-  报告**(仍是 08-01 初始化文案)——暂判断是 cron 时间窗口还没到(奇数
-  小时:05,上次窗口在其它组刚起步时),下次总监触发(~02:50 UTC)如果
-  仍无报告则升级排查。**新发现:patch 缺口**——datafeed 最新 7.41e,
-  guide 停在 7.41a,落后 7.41b/c/d/e 四个小版本,已记入 backlog 第0条
-  (最高优先级)。DECISIONS_NEEDED.md 未创建(本轮无需 owner 决策的
-  待决问题)。下次触发:收 14-id verdict 做 promote 判定 / 复查 strategy
-  / 开始 patch 缺口处理。
+- 2026-08-19T03:00Z:第二次 director 触发。四组(batch-desk/replay-check/
+  strategy/hero)本轮均有产出,上轮标记的"strategy 无产出"观察项已解除。
+  处理了两条新 issue:**`[harness]` #25 已修复并关闭**——新增
+  `tools/batch_test/behavioral/get_dumper.sh`(dumper 二进制 S3 缓存,
+  命中≈2.6s/未命中本地建≈30s+回传,真实桶验证过)+ `sweep_run.sh`(一条
+  命令宽扫整个 soak run,自动跳暖场局,产出按 candidate/baseline 侧拆分
+  的检测器触发计数表,对 `spot_20260819_001001_1_main` 实测 25s/5 局,
+  与录像组本轮手工发现完全对上)。**`[strategy]` #24 批准**——
+  `l1xpsoak` 补完 mechanism note 留白的绝对锚+退出滞回,fixture 13/13
+  +全套 359/359,重新加入 `test_set.md`(现 15-id),留了排期建议(鉴于
+  该 id 历史三次被拒 + 当前 14-id 主集合本身可疑负面,建议下一波单独测,
+  不要直接并进大 bundle)。**promote/reject 仍 HOLD**:14-id 全集 3 个
+  种子(851/853/854)已收割,gpm 均值 -27.08、0/3 全指标同向(候选更差),
+  形状与 07-31 12-id bundle(-65)/早期 14-id(-33)历史负面残差同型;
+  第 4 个种子(852,commit ce5c3d2=当前 tree)02:09 UTC 启动,本轮触发时
+  (02:58 UTC)尚未完成,未强行等待——下次触发优先收这个 4-seed verdict,
+  如确认负面按章程走 reject 流程并做 behavioral diff 归因(不是单一经济
+  读数)。`wkreincarnmp`(hero 组请求入集)本轮未加——bundle 判定关口
+  暂不再扩张 test_set,等 14-id verdict 落地后再排期(可能和 l1xpsoak
+  单独测一起走)。成本 MTD $3.45(batch-desk 自报),远低于刹车线,总监
+  本轮只做只读 S3/EC2 查询,未启动计费资源。DECISIONS_NEEDED.md 仍未
+  创建。**patch 缺口(backlog #0)本轮仍未做**——工作量大不适合顺带,
+  继续是最高优先级基建项,建议下次专门分配一个会话处理。下次触发:
+  收 14-id 第4种子 verdict 做 promote/reject 判定 / 视情况排 l1xpsoak
+  单独波次 / patch 缺口处理。

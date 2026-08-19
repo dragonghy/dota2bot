@@ -74,3 +74,8 @@ __pycache__/
 *.pyc
 bots/Customize/soak_pool.lua
 bots/Customize/soak_side.lua
+
+# behavioral dumper cache + sweep_run.sh scratch output (local build cache /
+# per-run analysis artifacts; the S3-cached binary is the shared copy)
+tools/batch_test/behavioral/.dumper_cache/
+tools/batch_test/behavioral/.sweep_out/

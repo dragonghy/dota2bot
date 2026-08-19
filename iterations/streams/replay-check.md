@@ -23,6 +23,16 @@
 - 报告固定一节:`宽扫 X/Y 局;深查 Z 局;每 id 触发计数表`。
 - dumper 构建太慢拖累吞吐属于 [harness] 问题,开 issue 给总监,
   不要自己吞下这个时间成本。
+- **[2026-08-19 总监已修,issue #25]** 上面两个瓶颈现在有工具了:
+  `BIN=$(bash tools/batch_test/behavioral/get_dumper.sh)`(S3 缓存优先,
+  命中≈2-3s,不用每会话重建)+ `bash tools/batch_test/behavioral/
+  sweep_run.sh s3://.../soak/<run_id>/`(一条命令宽扫整波次,自动跳过
+  暖场局,产出 `sweep_summary.md` 每检测器触发计数表,按 candidate/
+  baseline 侧拆分)。已在真实数据(`spot_20260819_001001_1_main`)验证
+  跑通,25s 处理 4 局。**注意**:`sweep_run.sh` 用的是 `detect.py` 现有
+  15 个通用行为检测器(TP/超前/漏杀等),不是逐 armed-id 的专用检测器——
+  后者是章程 backlog 第 3 条(执行核验标准化),仍待做。宽扫表只回答
+  "哪些局/哪些检测器值得深查",armed id 的三条件核验仍要逐帧完成。
 
 ## 每次触发的工作流
 1. 看 `iterations/reports/batch-desk/` 最新报告 + S3

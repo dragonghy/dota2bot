@@ -14,23 +14,31 @@ awsx s3 ls s3://dota2bot-batch-results-4924/soak/<run_id>/          # *.dem = sl
 awsx s3 cp s3://dota2bot-batch-results-4924/soak/<run_id>/<f>.dem . --quiet
 # 同名 .analysis.json 一起拿(script_version 戳区分 armed/baseline 侧)
 ```
-2. **dem → timeline JSON**(dumper 二进制;若容器新开需重建,配方在下):
+2. **dem → timeline JSON**(dumper 二进制,S3 缓存优先,≤5s 拿到,不必每次重建):
 ```bash
-<scratchpad>/behav/behav-dump game.dem > timeline.json
+BIN=$(bash tools/batch_test/behavioral/get_dumper.sh)   # 缓存命中≈2-3s;
+                                                          # 未命中才本地重建(≈30s)+回传缓存
+"$BIN" game.dem > timeline.json
 ```
-   重建配方:`go mod init behav && go get github.com/dotabuff/manta@v1.5.0`,按
-   `tools/batch_test/behavioral/setup_instance.sh` 的 python 补丁改 manta class.go
-   的 GameBuild 检测(默认 9999),`go mod edit -replace` 后
-   `go build -o behav-dump ./dumper`(源码 `tools/batch_test/behavioral/dumper/main.go`)。
-3. **逐帧看死亡**:`python3 tools/batch_test/behavioral/watch_deaths.py timeline.json`
+   (2026-08-19 加,issue #25:dumper 源码不变就不用每个新会话重建。旧的手动重建配方仍在
+   `get_dumper.sh`/`setup_instance.sh` 里,不必再手敲。)
+3. **整波次一键宽扫**(100% 覆盖率要求的起点,issue #25):
+```bash
+bash tools/batch_test/behavioral/sweep_run.sh s3://dota2bot-batch-results-4924/soak/<run_id>/
+```
+   自动跳过暖场局(`script_version` 不带 `mirror:` 前缀)、逐局跑 dumper+detect.py,产出
+   `sweep_summary.md`(每个检测器的触发计数,按 candidate/baseline 侧拆分)。**这只是宽扫
+   起点,不能替代逐帧**——铁律仍是先逐帧看具体案发时刻,宽扫表只用来定位"哪些局/哪些
+   检测器值得深查"。
+4. **逐帧看死亡**:`python3 tools/batch_test/behavioral/watch_deaths.py timeline.json`
    (每秒 HP/位置深度/1700 内敌我距离 + 自动分类 BURST/ALLY-LEFT/深度)。
    自写追踪时**深度用泉水/远古距离差**(`dist(own_ancient)-dist(enemy_ancient)`,>0=越线)——
    千万别用 x+y 符号(有过一次符号 bug 差点得出完全相反的结论)。
-4. **宏观**:`python3 tools/batch_test/behavioral/detect.py timeline.json`(11 个检测器),
+5. **宏观**:`python3 tools/batch_test/behavioral/detect.py timeline.json`(15 个检测器),
    `report_card.py`(死亡分类/concern),armed-vs-baseline 差分按镜像戳分侧统计;
    经济看 `.analysis.json`(players 的 gpm/deaths/last_hits)。
-5. **漏杀窗口扫描**:`python3 tools/batch_test/behavioral/find_kill_windows.py timeline.json`。
-6. **给修复钉帧**:`python3 tools/batch_test/replayscope/make_fixture.py timeline.json --t <sec> --hero <name> -o tests/fixtures/f_<...>.lua`
+6. **漏杀窗口扫描**:`python3 tools/batch_test/behavioral/find_kill_windows.py timeline.json`。
+7. **给修复钉帧**:`python3 tools/batch_test/replayscope/make_fixture.py timeline.json --t <sec> --hero <name> -o tests/fixtures/f_<...>.lua`
    注意反事实局限:成功躲掉的帧观测伤害天然低;召唤物伤害不记在英雄头上。
 
 ## 报告要求

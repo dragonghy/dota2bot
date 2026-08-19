@@ -193,10 +193,50 @@ witch_doctor/zuus). The detectors independently reproduce his findings:
 21 findings total on this one game; a `rollup.json` aggregates by detector and
 by (detector, hero) — e.g. `tp_under_threat|npc_dota_hero_axe: 3`.
 
-## How to run
+## How to run in a fresh Claude Code container (replay-check / replay-analyst)
 
-Everything runs on the soak instance (`i-08b59ef7130025860`) over SSM; nothing
-new is launched (parsing is compute-cheap and shares the running box).
+Routine sessions are fresh-per-fire, so there's no persistent `/opt/behav`
+instance state to reuse. `get_dumper.sh` closes that gap by caching the built
+binary in S3, keyed by a hash of the dumper source + manta-patch recipe:
+
+```bash
+# AWS creds in this session (S3-only; no billable resource is touched)
+bash tools/batch_test/aws/session_setup.sh
+
+# resolves the behav-dump binary: pulls the cached build from S3 in ~2-3s if
+# the dumper source hasn't changed since it was last built anywhere, else
+# builds locally (~30s in a container with Go already installed) and
+# uploads the fresh binary back to S3 for the next session.
+BIN=$(bash tools/batch_test/behavioral/get_dumper.sh)
+"$BIN" game.dem > timeline.json
+python3 tools/batch_test/behavioral/detect.py timeline.json --json findings.json
+```
+
+For a whole soak run at once (the "100% breadth sweep" replay-check's
+throughput requirement calls for), `sweep_run.sh` lists every `.dem` under an
+S3 run prefix, skips warmup games automatically (`analysis.json`
+`script_version` without a `mirror:` prefix), and runs dumper + detect.py on
+every remaining game in one command:
+
+```bash
+bash tools/batch_test/behavioral/sweep_run.sh \
+  s3://dota2bot-batch-results-4924/soak/spot_20260819_001001_1_main/
+#   -> .sweep_out/<run>/sweep_summary.md   -- per-detector trigger counts,
+#      split into candidate-side vs baseline-side hits (via the mirror stamp
+#      + each finding's hero's team)
+#   -> .sweep_out/<run>/all_findings.jsonl, games_manifest.jsonl,
+#      timelines/, findings/ -- kept for follow-up frame-level digging
+```
+
+This gives a trigger-count table for the whole run as a starting point for
+the mandatory breadth sweep, before the mandatory frame-by-frame deep dive on
+individual games (aggregate counts alone are never observation — see
+`docs/PROJECT.md` iteration workflow).
+
+## How to run on the soak instance itself (legacy path, still valid)
+
+Everything below runs on the soak instance (`i-08b59ef7130025860`) over SSM;
+nothing new is launched (parsing is compute-cheap and shares the running box).
 
 ```bash
 # 0. AWS creds in this session
