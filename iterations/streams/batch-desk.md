@@ -191,3 +191,29 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   启动前后 check_costs.sh / describe-instances 均确认无泄漏(结束时恰好 8 台,全是本轮
   有意启动的自毁 spot)。
   详见 `iterations/reports/batch-desk/20260819T121200Z.md`。
+- 2026-08-19T14:12:00Z:**收割轮 + 补跑启动轮**。MTD **$4.0579**(12:12Z 那波 8 台
+  实测约 **$0.59**),未触发任何预算刹车。收割 12:12Z 的 `lf_rescue` 两臂 bisect,
+  用标准路径 `recover_verdict.py`(先分 run 下载再带前缀合并):
+  **臂 A(13 id,含 `lf_rescue`)4 种子全齐、266 局有效局** → gpm **-24.06**、
+  xpm -27.50、deaths +0.22、last_hits -1.67,`comps_better` 全 0/4,方向与 14-id
+  全集(-34.59)一致;**臂 B(12 id)只有种子 862 两 wave 齐全**(gpm -42.56)。
+  **原因查清**:`describe-spot-instance-requests` 显示臂 B 的 `_121105`/`_121111`/
+  `_121117`(种子 859/860/861)是 `instance-terminated-no-capacity`——**spot 无容量
+  回收**,只跑完 radiant wave;其余 5 台是跑完两 wave 正常自毁。
+  **A−B 本轮不下结论**:唯一双臂齐全的种子 862 给 A−B = **+16.45 gpm**,但按 GH #30
+  的经验零点(per-seed σ=30.24)属纯噪声,单种子不得据以定论;并须对齐总监
+  `test_set.md` §A0 裁定(录像组 #37 已判 `lf_rescue` WORKING but BUGGY,**A−B 为
+  null 也不构成"无害"**)。**两条新运维事实**:(1) **一波实际只要 ~30 分钟**
+  (16 槽下一局约 7min,`--games 22` 两 wave 半小时跑完),此前"2-3h 落地"全是高估,
+  排期与吞吐可按 30-40min 重算;(2) **短波次别用 spot**——半小时 spot 只省 ~$0.2/台,
+  丢一个种子却要整轮补跑。据此**补跑臂 B 的 859/860/861**(不是新例行波次;先例
+  = 02:09Z 补跑种子 852。例行 6h 节流距 12:12Z 仅 2h,故本轮不开例行波次):
+  `--on-demand` × 3 台 × 1 种子,16 槽,**看门狗 3h→2h**,`--games 22` 与臂 A 一致,
+  实例 `i-03cf4eb6a63c3af8d`/`i-097f1bc490f7e9f90`/`i-00518493ba858223b`,
+  预估 $1.0-1.3,预计 ~14:45-15:00Z 落地。**树一致性已核**:`d6bfa08..c2181e0`
+  在 `bots/`/`game/` 上无任何改动,补跑与臂 A 同树可配对。下次收割:三个新 run
+  分目录下载再带前缀合并 → `recover_verdict.py` 出臂 B 4 种子 → 与臂 A **逐种子
+  配对差 A−B**(不许拿单臂读数与历史 -34.59 直接比)。queue.json 仍为空。
+  启动前后 check_costs.sh 均确认无泄漏(结束时恰好 3 台,全是本轮有意启动的自毁机)。
+  跨组:`[batch]` issue **#38** 交付臂 A 读数 + bisect 待补 + 两条运维事实。
+  详见 `iterations/reports/batch-desk/20260819T141222Z.md`。
