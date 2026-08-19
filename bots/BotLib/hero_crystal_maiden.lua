@@ -912,14 +912,44 @@ end
 -- has a ready hard-CC ability -- she isn't covered against being chain-CC'd
 -- out of the channel. Gated turbo + 'cmrguard'; default path (candidate not
 -- armed) is unchanged.
+--
+-- [NARROWED, GH #34] The first cut asked J.HasReadyHardCc -- the boolean
+-- wrapper -- and so was RANGE-BLIND: any enemy inside the 1600 scan holding a
+-- ready CC vetoed the ultimate, no matter whether he could deliver it. That is
+-- the same defect ccburst already paid a bisect to narrow (jmz_func.lua), and
+-- the counterfactual replay of 14 mirror games (5 vetoes reconstructed on real
+-- frames) caught it: at 20260819_004858_slot1 t=423.4 a HALF-HP Centaur 1326
+-- units away and WALKING AWAY (1326 -> 3077 over the next 10s, hoof_stomp
+-- never cast) vetoed a Freezing Field that in reality cost CM nothing -- she
+-- lived another 44.1s. J.GetReadyHardCc deliberately returns the HANDLE so the
+-- caller can range-check; use it, with the same closing buffer form ccburst
+-- settled on (no-target self-radius CCs report cast range 0 -> the holder must
+-- be right on top of her, which is correct for hoof_stomp).
+--
+-- The buffer is WIDER than ccburst's 250 because the consumer is different:
+-- ccburst sizes a 3s lane-trade window ("can he land it before I step away"),
+-- while Freezing Field roots CM for a 10s channel -- a threat only has to close
+-- the gap ONCE during it. 400 units is ~1.3s of hero movement at ~300 ms, an
+-- order of magnitude short of the channel, so the gate stays narrow. The two
+-- real frames pinned in tests/test_replay_260819_cm_r_range.lua bound it to
+-- [139, 1011): >=139 so the Jakiro ice_path frame that motivated the gate is
+-- still caught, <1011 so the Centaur false positive is released.
+X.nRGuardCloseBuffer = 400
+
 function X.cm_IsRSafeToOpen( hBot )
 	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'cmrguard' ) then return true end
 	local tEnemies = J.GetNearbyHeroes( hBot, 1600, true, BOT_MODE_NONE )
 	for _, e in pairs( tEnemies or {} )
 	do
-		if J.IsValid( e ) and J.HasReadyHardCc( e )
+		if J.IsValid( e )
 		then
-			return false
+			local hCc = J.GetReadyHardCc( e )
+			if hCc ~= nil
+			and GetUnitToUnitDistance( hBot, e )
+				<= ( hCc:GetCastRange() or 0 ) + X.nRGuardCloseBuffer
+			then
+				return false
+			end
 		end
 	end
 	return true

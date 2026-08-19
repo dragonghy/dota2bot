@@ -48,8 +48,19 @@ tests['gate OFF (turbo but candidate not armed): still always allows'] = functio
 end
 
 tests['gate ON: real frame (Jakiro ice_path ready, 1139u away) correctly withholds R'] = function()
-    local J, bot = rf.load(FIXTURE)
+    local J, bot, heroes = rf.load(FIXTURE)
     J.IsSoakCandidate = function(id) return id == 'cmrguard' end
+    -- [GH #34] The gate now range-checks the CC handle, so the frame needs one
+    -- number the dump does not carry: ice_path's cast range (make_fixture.py
+    -- extracts no ability specs -- the same kind of externally anchored number
+    -- as wkreincarnmp's GetManaCost).
+    -- 1000 is a DELIBERATE UNDER-estimate -- Liquipedia puts Ice Path's path at
+    -- 1200 long, reaching ~1362 -- and the predicate is monotone in cast range,
+    -- so blocking at 1000 blocks at the real value too. hero_jakiro.lua:427
+    -- reads this ability's GetCastRange() for its own targeting, which is the
+    -- in-repo evidence that the engine reports a real (non-zero) range here.
+    local icePath = heroes['npc_dota_hero_jakiro']:GetAbilityByName('jakiro_ice_path')
+    rawget(icePath, '__spec').GetCastRange = 1000
     local X = rf.load_hero('crystal_maiden')
     assert(X.cm_IsRSafeToOpen(bot) == false,
         'the fix must catch the imminent hard-CC threat on the actual replay frame that got CM killed')

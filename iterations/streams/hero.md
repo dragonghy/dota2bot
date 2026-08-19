@@ -25,10 +25,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    mock-tested; ~~REAL-FRAME FIXTURE STILL PENDING~~ **2026-08-19 done**,
    见下面已划掉的 #6 和"当前状态"。(a)(c) 条件满足,(b) 批测待办,
    仍未 promote。
-2. ~~**CM 大招时机**~~ 2026-08-19 first-cut done — 见"当前状态"。新 gate
-   `cmrguard`(自保检查,敌方近战硬控就绪时不开大),真实帧 fixture 通过。
+2. ~~**CM 大招时机**~~ 2026-08-19 first-cut done;**2026-08-19 二刀(GH #34)
+   收窄完成** —— 原版 range-blind(丢了 `J.GetReadyHardCc` 的 handle),已改成
+   距离检查 `<= cast_range + 400`,两帧一起钉(1326 码 centaur 必须放行 /
+   1139 码 jakiro 必须拦住),4 次变异测试全抓,见"当前状态"。
    **原假设(#nEnemysHeroesInRange>=3 无脑绕过 aoeCanHurtCount)未被证实**,
    留作后续可选深挖项(不阻塞本条划掉)。
+   **本条未完成的残留(不阻塞划掉,但别丢)**:GH #34 的 case #4
+   (skeleton_king hellfire_blast 620 码否决、威胁 12 秒后才兑现、门整场没
+   解除、CM 被磨到 0.03)**没修**。单帧快照没有"是否在逼近"的信号;真修法要么
+   给否决加**时间上界**,要么需要接近速度输入。要帧证据才能设计。
 3. **魔棒/芒果死手帧**:低血限进(d23 lowhp_limbo)时身上有魔棒充能/
    芒果却不用的案例(lich 帧已有);查焦点五的同类帧。
    - ~~**魔棒那一半**~~ 2026-08-19 done,gate `wandlimbo`,真实帧
@@ -78,6 +84,60 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T11:53:45Z:认领并做完 **`[hero]` GH #34**(本轮唯一带 `[hero]`
+  前缀的 open issue;总监 11:10Z 把 `cmrguard` 在**第一次 armed 之前**退回本组,
+  并写死了重新入集路径)。backlog 未动。
+  **问题**:`X.cm_IsRSafeToOpen` 调布尔包装 `J.HasReadyHardCc`,丢掉
+  `J.GetReadyHardCc` 特意返回的 handle → **没有距离检查**,1600 内任何人"会"
+  硬控就否决大招。同一缺陷 `ccburst` 2026-07-23 的 bisect 已经付费修过一次。
+  **修复**:取 handle + `GetUnitToUnitDistance(hBot,e) <= (hCc:GetCastRange()
+  or 0) + X.nRGuardCloseBuffer`,形式照 `ccburst` 已验证的写法(自身半径类技能
+  cast range 报 0 → 必须贴脸,正好正确处理 `hoof_stomp`)。gate 关闭时第一行
+  仍 return true,线上字节级不变。
+  **阈值定 400,不是 ccburst 的 250**(issue 把这个数留给本组):**消费点不同**
+  —— 250 是给 3 秒对线换血窗口定的,这里守的是 **10 秒自缚频道**,威胁只要在
+  这 10 秒里够到一次就够;400 码 ≈ 300 移速下 1.3 秒位移,比频道时长小一个
+  量级。两帧把它夹在 **[139, 1001)**,**区间本身写成了断言**(以后谁调这个数
+  测试会自曝)。
+  **新真实帧(本轮自己挖的)**:`tests/fixtures/f_260819_004858_cm_centaur_far
+  .lua` = `20260819_004858_slot1` t=423.4(7:03)。CM 427/890;唯一持就绪
+  curated 硬控的近敌是 **31% 血 centaur 1326 码**,`hoof_stomp` 自身为心 325
+  半径、无施法距离,之后 10 秒单调走远(1326→3077)且从未施放;更近的 ogre
+  (346 码)fireblast **还有 4 秒冷却**,所以 centaur 确是唯一否决者。
+  **Ground truth:CM 真的开了大,之后活了 44.1 秒** —— 误报,不是侥幸。
+  **局部验证**:`tests/test_replay_260819_cm_r_range.lua`(10 例)+
+  `..._cm_r_selfpreserve.lua`(5 例,更新)。**两帧一起钉**(lanefix 教训);
+  含 gate OFF 字节不变、**hoof_stomp cast range 取 0 或 325 放行结论都成立**、
+  两条标注变异(走到 350 码重新否决 / 同一位置改成 1000 射程则否决 → 证明
+  放行是**投送距离**造成的)、原 jakiro 1139 码帧仍拦、buffer 区间断言、
+  两条 wiring 断言。**4 次变异测试全部被抓**(还原布尔包装 / buffer 1100 /
+  buffer 100 / 摘掉接线)。luacheck 0 警告,`lua5.1 tests/run_tests.lua`
+  **428/428 绿**(基线 418 + 10);rebase 到 main 后重跑 **437/437 绿**。
+  **诚实边界**:①GH #34 的 **case #4 没修好**(见 backlog #2 残留);②技能
+  施法距离是**帧外锚定**(ice_path 按 1000 测,是故意低估;谓词对 cast range
+  单调,拦得住 1000 就拦得住真值),位置/血蓝/等级/冷却/背包/生死全真;
+  ③端到端只做到源码级 wiring —— 原因是下面这个新缺口。
+  **顺带发现的系统性缺口 → 新开 GH #36(`[harness]`)**:`aba_skill.lua:82`
+  只在 `IsUltimate() and slot>=4` 时把名字放进 `sAbilityList[6]`,而 **dumper
+  压平了技能槽位且不记 `IsUltimate`** → **每个 fixture 里 `sAbilityList[6]`
+  恒为 nil**,`ConsiderR`/大招路径在碰到被测逻辑前就短路成 `DESIRE_NONE`。
+  **影响全体英雄的大招 fixture 测试(会绿但什么都没跑到)**,与 #27 同一个
+  假阳性家族。**没有**在加载器里硬猜兜底(会让 fixture 世界再偏离引擎一次)。
+  **仍未 promote**:已在 GH #34 留言申请重新入 test_set(本组无权自改)。
+  重新入集后条件 (b) **必须用行为检测器判**(开大次数、开大后 10s 内死亡率),
+  **不许用 gpm/xpm**。未提 queue.json 申请(排队跟在批准之后)。
+  等同一道门的 hero 组 id 现在有**四个**:`cmrguard`(收窄后重申)、
+  `wkreincarnmp`、`wandlimbo`、`axeblink`。
+  **经验(重要)**:**单局、已知帧号的取帧自己做,不要委托** —— 全链路
+  (AWS 自举 → `awsx s3 cp` 一个 `.dem` → `get_dumper.sh` 命中 S3 缓存 →
+  `behav-dump -interval 0.5 X.dem > out.json`(位置参数 + stdout,不是
+  `-in/-out`) → `make_fixture.py`)**约 6 分钟**;历史上两次委托
+  replay-analyst 分别跑满 51 分钟没返回。委托的价值在**帧号未知时扫全库**。
+  报告:`iterations/reports/hero/20260819T115345Z.md`。
+  下一次触发:若 `cmrguard` 获批入集则跟进批测请求(并提醒用行为检测器);
+  否则做 backlog #5 未完成的一半(Axe 带匕首的起跳帧)或 #3 的芒果那一半 ——
+  **两者都可以自己挖帧了**(方法见上),不必再委托。#4(Zeus 大招)仍部分
+  阻塞在 GH #27。
 - 2026-08-19T09:45:13Z:完成 backlog #5(Axe 跳吼目标质量)第一刀。无 open 的
   `[hero]` issue(扫过 22 条)。
   **问题(代码事实)**:`ability_item_usage_generic.lua` 的
