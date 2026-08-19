@@ -53,6 +53,15 @@ vector_mt = {
         if type(a) == 'number' then return M.Vector(a * b.x, a * b.y, a * b.z) end
         return M.Vector(a.x * b, a.y * b, a.z * b)
     end,
+    -- Scalar division: the shipped "step N units from A toward B" idiom
+    -- (J.GetLocationToward*DistanceLocation) normalizes by dividing the
+    -- difference vector by its length, so without this the TP landing point
+    -- and every offset-position helper die with "arithmetic on a table value"
+    -- the moment they reach a real tower (GH #37).
+    __div = function(a, b)
+        if type(b) == 'number' then return M.Vector(a.x / b, a.y / b, a.z / b) end
+        return M.Vector(a.x / b.x, a.y / b.y, a.z / b.z)
+    end,
     __eq = function(a, b) return a.x == b.x and a.y == b.y and a.z == b.z end,
     __tostring = function(v) return string.format('Vector(%g, %g, %g)', v.x, v.y, v.z) end,
 }

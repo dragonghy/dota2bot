@@ -192,6 +192,66 @@ function M.load(path, sSubject)
     GetGameMode = function() return GAMEMODE_TURBO end
     DotaTime = function() return fx.time end
 
+    -- Structures, when the fixture carries them. Without this every fixture ran
+    -- with the mock's `GetTower = nil` stub, which silently turned
+    -- J.GetNearbyLocationToTp -- the TP LANDING POINT for the whole rescue/
+    -- defend TP family -- into its no-tower-left fallback: the FOUNTAIN. Any
+    -- test that asked where a TP puts the responder was therefore testing a
+    -- degenerate path that never occurs in a real game with towers standing
+    -- (GH #37). J.GetRescueTpTarget's "ally is under its own tower" veto had
+    -- the same problem: it scans UNIT_LIST_ALLIED_BUILDINGS, which returned {}.
+    local buildings = {}
+    for _, b in ipairs(fx.buildings or {}) do
+        buildings[#buildings + 1] = api.MakeUnit({
+            GetUnitName = b.name,
+            GetTeam = b.team,
+            GetLocation = api.Vector(b.x, b.y, 0),
+            IsAlive = b.alive,
+            GetHealth = b.alive and 1 or 0, GetMaxHealth = 1,
+            CanBeSeen = true,
+        })
+    end
+    if fx.buildings ~= nil then
+        -- Destroyed structures are simply absent, exactly as the engine reports
+        -- them (GetTower returns nil for a fallen tower -- that nil is what
+        -- makes "nearest ALIVE friendly tower" the real semantics).
+        local towers_by_team = {}
+        local alive_buildings = {}
+        for _, h in ipairs(buildings) do
+            if h:IsAlive() then
+                local team = h:GetTeam()
+                alive_buildings[team] = alive_buildings[team] or {}
+                table.insert(alive_buildings[team], h)
+                if h:GetUnitName() == 'tower' then
+                    towers_by_team[team] = towers_by_team[team] or {}
+                    table.insert(towers_by_team[team], h)
+                end
+            end
+        end
+        -- The dump records a tower's class, position and team but not which
+        -- TOWER_* enum slot it is, so the index here is positional rather than
+        -- the engine's. Every shipped reader of GetTower(team, i) loops i=0..10
+        -- and reduces over the whole set (nearest / count / "is it still up"),
+        -- so the SET is what carries meaning and the ordering does not.
+        GetTower = function(team, i)
+            local t = towers_by_team[team]
+            return t and t[i + 1] or nil
+        end
+        local prev_unit_list = GetUnitList
+        GetUnitList = function(kind)
+            if kind == UNIT_LIST_ALLIED_BUILDINGS then
+                return alive_buildings[subj_team] or {}
+            end
+            if kind == UNIT_LIST_ENEMY_BUILDINGS then
+                for team, list in pairs(alive_buildings) do
+                    if team ~= subj_team then return list end
+                end
+                return {}
+            end
+            return prev_unit_list(kind)
+        end
+    end
+
     -- Roster-backed unit-local queries, so full hero scripts (which use
     -- bot:GetNearbyHeroes rather than the J wrappers) also see the real world.
     for _, u in ipairs(fx.units) do
