@@ -4922,23 +4922,43 @@ end
 --   * CONTEST IS LETHAL: their currently-castable burst (mana/cd-aware) >=
 --     75% of my current HP -- same bar as J.ShouldRetreatLaneBurst's no-peel
 --     branch. A healthy core facing two weak/spent enemies keeps laning.
+--
+-- [redesign 20260819, A1 mechanism 20260731 deferred items] Two pieces the
+-- rehoming to retreat desire did NOT fix on their own:
+--   * ABSOLUTE ANCHOR: the old hold point was "current position + 420u
+--     toward fountain", recomputed on every call -- a relative step that
+--     death-marches as the bot closes on its own previous target (144711
+--     medusa: chased 17s because the point kept sliding fountain-ward).
+--     The point is now computed ONCE on entry and cached on the bot
+--     (bot.l1xpsoakAnchor) until the zoned state clears, so it never drifts.
+--   * EXIT HYSTERESIS: entry and exit now use different bars so a value
+--     hovering near the entry line (a cooldown ticking down, one enemy
+--     stepping half out of 1200) can't flip the stance on and off every
+--     frame. Entry needs >=2 zoners and castable burst >=75% of my HP;
+--     once anchored, only a healthy ally arriving, ALL enemies clearing
+--     (0 within 1200), or the burst estimate dropping under 40% releases it.
 function J.ShouldXpSoakLane( bot )
-	if not J.IsModeTurbo() then return nil end
-	if not J.IsSoakCandidate( 'l1xpsoak' ) then return nil end
-	if bot == nil or not bot:IsAlive() then return nil end
-	if not J.IsInLaningPhase() then return nil end
-	if not J.IsCore( bot ) then return nil end
+	if bot == nil then return nil end
+	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'l1xpsoak' )
+		or not bot:IsAlive() or not J.IsInLaningPhase() or not J.IsCore( bot )
+	then
+		bot.l1xpsoakAnchor = nil
+		return nil
+	end
 
 	-- [A1 mechanism 20260731] Early/healthy exemption: at levels 1-3 ANY two
 	-- enemies' 3s estimate clears 75% of a squishy core's HP, so the panic
 	-- bar was hit during perfectly normal 1v2 lanes (142838 sniper at 86%
 	-- HP, own half, ordinary spacing) and even at 100% HP (144711 medusa).
 	-- A panic rule fires when something is actually wrong: not in the first
-	-- 90 seconds, and never above 85% HP.
-	if DotaTime() < 90 then return nil end
-	if J.GetHP( bot ) > 0.85 then return nil end
+	-- 90 seconds, and never above 85% HP. Recovering past either bound also
+	-- releases a live anchor.
+	if DotaTime() < 90 or J.GetHP( bot ) > 0.85 then
+		bot.l1xpsoakAnchor = nil
+		return nil
+	end
 
-	-- Zoned by two.
+	-- Zoning count + incoming burst estimate.
 	local tEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
 	local nEnemies, nIncoming = 0, 0
 	for _, hEnemy in pairs( tEnemies or {} ) do
@@ -4948,21 +4968,38 @@ function J.ShouldXpSoakLane( bot )
 				+ hEnemy:GetEstimatedDamageToTarget( true, bot, 3.0, DAMAGE_TYPE_ALL )
 		end
 	end
-	if nEnemies < 2 then return nil end
 
-	-- Alone (a healthy ally nearby means trade/kite rules apply instead).
+	-- Healthy ally nearby: trade/kite rules apply instead, entry or exit.
+	local bHealthyAllyNear = false
 	local tAllies = J.GetNearbyHeroes( bot, 1400, false, BOT_MODE_NONE )
 	for _, hAlly in pairs( tAllies or {} ) do
 		if J.IsValidHero( hAlly ) and J.GetHP( hAlly ) >= 0.4 then
-			return nil
+			bHealthyAllyNear = true
+			break
 		end
 	end
 
-	-- Contesting must be provably lethal-grade; otherwise keep laning.
-	if nIncoming < bot:GetHealth() * 0.75 then return nil end
+	local nHp = bot:GetHealth()
 
-	-- Hold point: a step back toward our fountain -- AT the lane edge (XP
-	-- range), never into the jungle (the lf_recover mistake).
+	if bot.l1xpsoakAnchor ~= nil then
+		-- Already anchored: exit bar is wider than the entry bar on purpose
+		-- (hysteresis) -- hold through borderline frames, release only on a
+		-- clear improvement.
+		if bHealthyAllyNear or nEnemies < 1 or nIncoming < nHp * 0.40 then
+			bot.l1xpsoakAnchor = nil
+			return nil
+		end
+		return bot.l1xpsoakAnchor
+	end
+
+	-- Not yet anchored: full entry bar.
+	if nEnemies < 2 or bHealthyAllyNear or nIncoming < nHp * 0.75 then
+		return nil
+	end
+
+	-- Set the absolute anchor ONCE: a step back toward our fountain from the
+	-- entry position -- AT the lane edge (XP range), never into the jungle
+	-- (the lf_recover mistake). Held fixed until the exit bar above clears it.
 	local vBot = bot:GetLocation()
 	local vFountain = J.GetTeamFountain()
 	if vFountain == nil then
@@ -4971,7 +5008,9 @@ function J.ShouldXpSoakLane( bot )
 	end
 	local dx, dy = vFountain.x - vBot.x, vFountain.y - vBot.y
 	local nMag = math.max( math.sqrt( dx * dx + dy * dy ), 1 )
-	return Vector( vBot.x + dx / nMag * 420, vBot.y + dy / nMag * 420, 0 )
+	local vAnchor = Vector( vBot.x + dx / nMag * 420, vBot.y + dy / nMag * 420, 0 )
+	bot.l1xpsoakAnchor = vAnchor
+	return vAnchor
 end
 
 -- [midguard / obs 20260722 d21] Laning past-midline discipline. Post-promote

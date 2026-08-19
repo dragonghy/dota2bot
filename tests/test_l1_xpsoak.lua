@@ -11,6 +11,16 @@
 --              not a core -> nil (keep laning normally).
 --   OFF      = not turbo / candidate off -> nil.
 --
+-- [redesign 20260819] Two A1-deferred pieces now covered below too:
+--   ABSOLUTE ANCHOR = the hold point is computed ONCE on entry and cached
+--              on the bot (bot.l1xpsoakAnchor); later calls while still
+--              zoned return the SAME point even if the bot has moved, never
+--              a fresh "current position + 420u" step (the old death-march).
+--   EXIT HYSTERESIS = once anchored, a borderline drop in burst (still
+--              >=40% hp) or the enemy count dipping to 1 does NOT release
+--              the stance; only a healthy ally, 0 enemies within 1200, or
+--              burst <40% hp clears it.
+--
 -- Unit scenarios drive the decision boundary; the REAL zoned frame
 -- (f_231411_ck_zoned: CK 126/1068 hp, Lina 1052 + Tide 584, no ally) pins the
 -- geometry both ways -- see the fixture cases at the bottom.
@@ -153,6 +163,69 @@ tests['REAL FRAME geometry: with engine-grade estimates the zoned stance fires']
 	rawget(heroes['npc_dota_hero_tidehunter'], '__spec').GetEstimatedDamageToTarget = 310
 	local v = J.ShouldXpSoakLane(bot)
 	assert(v ~= nil, 'the real zoned-alone geometry + lethal estimates must fire the stance')
+end
+
+-- ---- redesign 20260819: absolute anchor + exit hysteresis, real frame ----
+
+local function fire_real_frame()
+	local J, bot, heroes = fixture.load('tests/fixtures/f_231411_ck_zoned.lua')
+	arm_fx(J, bot)
+	rawget(heroes['npc_dota_hero_lina'], '__spec').GetEstimatedDamageToTarget = 310
+	rawget(heroes['npc_dota_hero_tidehunter'], '__spec').GetEstimatedDamageToTarget = 310
+	return J, bot, heroes
+end
+
+tests['ABSOLUTE ANCHOR: the cached hold point does not drift if the bot moves while still zoned'] = function()
+	local J, bot = fire_real_frame()
+	local v1 = J.ShouldXpSoakLane(bot)
+	assert(v1 ~= nil, 'setup: must fire and anchor on the real zoned frame')
+
+	-- The bot stepped a little since the last frame (still well within 1200
+	-- of both zoners, still outside 1400 of the nearest ally -- geometry
+	-- unaffected). The OLD code recomputed "current position + 420u toward
+	-- fountain" from this NEW location on every call, which death-marches
+	-- (144711 medusa).
+	rawget(bot, '__spec').GetLocation = api.Vector(v1.x - 100, v1.y - 50, 0)
+	local v2 = J.ShouldXpSoakLane(bot)
+	assert(v2 ~= nil, 'still zoned next frame -> the stance must still hold')
+	assert(v2.x == v1.x and v2.y == v1.y,
+		"the hold point must be the CACHED entry anchor, not recomputed from the bot's new position")
+end
+
+tests['EXIT HYSTERESIS: a borderline burst drop (still >=40% hp) does not release the anchor'] = function()
+	local J, bot, heroes = fire_real_frame()
+	local v1 = J.ShouldXpSoakLane(bot)
+	assert(v1 ~= nil, 'setup: must fire and anchor on the real zoned frame')
+
+	-- CK hp = 126: entry bar was 75% = 94.5, exit bar is 40% = 50.4 -- land
+	-- the combined incoming estimate in between (70).
+	rawget(heroes['npc_dota_hero_lina'], '__spec').GetEstimatedDamageToTarget = 40
+	rawget(heroes['npc_dota_hero_tidehunter'], '__spec').GetEstimatedDamageToTarget = 30
+	local v2 = J.ShouldXpSoakLane(bot)
+	assert(v2 ~= nil, 'a borderline cooldown must not flip the stance off mid-hold')
+	assert(v2.x == v1.x and v2.y == v1.y, 'the held anchor must be unchanged')
+end
+
+tests['EXIT: burst clearly below the hysteresis floor (<40% hp) releases the anchor'] = function()
+	local J, bot, heroes = fire_real_frame()
+	assert(J.ShouldXpSoakLane(bot) ~= nil, 'setup: must fire and anchor on the real zoned frame')
+
+	rawget(heroes['npc_dota_hero_lina'], '__spec').GetEstimatedDamageToTarget = 10
+	rawget(heroes['npc_dota_hero_tidehunter'], '__spec').GetEstimatedDamageToTarget = 10
+	assert(J.ShouldXpSoakLane(bot) == nil,
+		'threat clearly gone (<40% hp) -> the stance must release, not hold forever')
+end
+
+tests['EXIT: a healthy ally arriving releases an anchored stance immediately'] = function()
+	local J, bot, heroes = fire_real_frame()
+	assert(J.ShouldXpSoakLane(bot) ~= nil, 'setup: must fire and anchor on the real zoned frame')
+
+	-- Skywrath (same team, 92% hp) sits just outside 1400 in the real frame
+	-- (~1428, why the stance could fire alone); pull it into range.
+	rawget(heroes['npc_dota_hero_skywrath_mage'], '__spec').GetLocation =
+		api.Vector(4900, -4600, 0)
+	assert(J.ShouldXpSoakLane(bot) == nil,
+		'a healthy ally arriving must release the stance even though the burst is still lethal')
 end
 
 return tests

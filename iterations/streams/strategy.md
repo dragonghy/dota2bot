@@ -27,10 +27,15 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-1. **l1xpsoak 重设计**(owner:一定要做):旧版 −49.4 gpm 的死因已定位
-   (laning-Think 接管布线 + 相对锚死亡行军 + 无豁免)。新设计要求:
-   绝对血量锚 + 退出滞回 + 早期/健康豁免(已有 t<90s、HP>85% 豁免)+
-   绝不接管 laning Think。带 fixture 重新入测试集。
+1. ~~**l1xpsoak 重设计**~~ **代码已完成(2026-08-19),等总监重新入
+   test_set.md**:绝对锚(落脚点进入时算一次、缓存在 bot 上,不再逐帧按
+   当前坐标重算)+ 退出滞回(进入判据不变:≥2 敌方 within 1200 + 爆发
+   ≥75% 血量;退出判据更松:敌方清零/健康队友抵达/爆发跌破 40% 血量)
+   已落地(`bots/FunLib/jmz_func.lua` `J.ShouldXpSoakLane`),真实帧
+   fixture 4 新用例(`tests/test_l1_xpsoak.lua`,复用
+   `f_231411_ck_zoned.lua`)+ 全量 359 测试 + luacheck 0 警告全绿。
+   已开 issue #24 请总监审批重新入集 + 排期验证批测(不确定是否有效,
+   只是消掉了两个已知病灶,仍需批测验证是否真的解决 -49gpm 信号)。
 2. **−18 econ 残差归因**:两波 8/8 seed 稳定的 −18 gpm 残差,嫌疑:
    lf_rescue 位移税 / ownhalf+overchase 姿态成本 / tpcommit 残余 /
    全局"响应预算"缺失。用批测归档录像做行为差分,别再开专门批测。
@@ -46,3 +51,8 @@
 - 2026-08-01 初始化。测试集里本组名下 id:creeppull/pullcamp/l1trade/
   l5combo/midtp/suptp/tpcommit/lf_rescue/teambrain/ownhalf/overchase/tpwatch。
   l1xpsoak 不在集内,等重设计。
+- 2026-08-19T01:15Z:首次真实工作报告(见
+  `iterations/reports/strategy/20260819T011551Z.md`)。完成 l1xpsoak 重设计
+  代码(绝对锚 + 退出滞回),fixture 验证 + 全套测试 + luacheck 全绿,已
+  push。**l1xpsoak 仍不在 test_set.md 里**(该文件编辑权在总监)——已开
+  issue #24 请总监审批重新入集并排期验证批测。未花 AWS 钱,未提批测请求。
