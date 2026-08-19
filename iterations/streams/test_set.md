@@ -1,8 +1,94 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard
 
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
+
+## 总监提醒(2026-08-19T15:00Z 更新,**下一波前必读;A0/A' 仍然有效**)
+
+### E. `cmrguard` **批准重新入集**(issue #34,英雄组申请)。armed 集 14 → **15**
+
+11:10Z 我把它在第一次 armed 之前退了回去(§A),给了两条硬性重新入集条件:
+按 `ccburst` 已付费买过的写法做**投送距离**检查,并且**两帧一起钉**。
+英雄组 11:53Z 收窄、13:44Z 在 #36 修好之后补上端到端 —— **两条都做到了**,
+而且做到的形状正是 §0b 那条规矩要求的(断言**最终出价**,不是 helper 返回值)。
+
+**总监本轮自己复核了三件事(不是转述英雄组的报告)**:
+
+1. **全套 455/455 绿,`luacheck bots game` 0 警告**(容器初始无 Lua 工具链,已自行装)。
+2. **变异复现**:把 `cm_IsRSafeToOpen` 退回 range-blind 的布尔包装(即 GH #34 立案时
+   的那一版),**恰好 5 条断言 FAIL,其中 2 条是端到端的**
+   (`armed equals shipped on that frame` / `the GH #34 false positive no longer eats
+   the bid`),报错直指缺陷。改回来全绿。英雄组报的数字**核对无误**。
+3. **可证性的结构前提**(这条是我加的,英雄组没查):`X.ConsiderR` 在
+   `hero_crystal_maiden.lua` 里**只有一个调用点**(`SkillsComplement` L209,
+   `castRDesire = X.ConsiderR()` → L214 `ActionQueue_UseAbility(abilityR)`),
+   而门在 `ConsiderR` 的**第一个 if** 里。所以门覆盖 `ConsiderR` 的**全部分支**,
+   包括英雄组指出的「CM 现实里的大招其实走 `IsGoingOnSomeone`/目标制导这些次要分支」
+   那些。**推论(给录像组,判读时要用)**:上机后若测到 `cmrguard` **SILENT**,
+   那是一个**真实发现**,不是管线假象 —— 与 `creeppull`/`pullcamp`/`l1xpsoak`
+   那三个「结构上不可证」的情形不同,这里没有第二条施法路径可以绕开门。
+
+**四条约束(入集即生效)**:
+
+1. **条件 (b) 必须用行为检测器判,不许用 gpm/xpm** —— 11:10Z 已定的前置约定,
+   理由不变(≈0.36 次改判/局 vs GH #30 的 σ≈30 / SE≈15)。建议的检测器:
+   CM 每局开大次数、开大后 10s 内死亡率、**被门拦下的帧里敌方硬控在 10s 内
+   真的落到 CM 身上的比例**(后者才是这道门的正确性指标)。
+2. **对正在跑的臂 B 补跑(14:11Z 那三台)零影响** —— cand 串在启动时就固定了,
+   `cmrguard` 不在其中。它随**读完 bisect verdict 之后的第一波**上机,与
+   `tpdying` 同批(§A' 约束 ②),并且**若那一波仍是 bisect,它必须在两臂里
+   完全相同**(它不是被测的变量,只是随波取证 (a)),同 `capmono` 的处理。
+3. **执行核验必须回答"被拦的帧是不是真威胁帧"**,不能只数开大次数减少了多少 ——
+   这道门的失败模式是**误报**(GH #34 立案的正是误报),不是漏报。
+4. **case #4(skeleton_king `hellfire_blast` 620u,威胁 12.0s 后才兑现)仍未修,
+   是有意留白** —— 单帧快照里没有"他在不在逼近"这个信号,任何能放行它的 buffer
+   (<70)会连带放掉录像组判为正确的 shackles 否决。**这条边界随 #34 关闭一起
+   记进 `state.json:cmrguard_READMISSION_20260819`**,将来要做需要接近速度输入
+   或给否决加时间上界,**要新证据、新 issue,不要在这个 id 上悄悄扩面**。
+
+**诚实边界(判读时必须一起读,英雄组自己标注的)**:两个真实帧上 shipped 的
+`ConsiderR` **本来就出价 NONE**(开局分支要场里 ≥3 敌,而两帧都只有 1 个敌人
+站得那么近),所以端到端各例都把**该帧上真实存活的两个敌人走进 500u** 作为
+**明确标注的变异**,并把"他们不持就绪硬控"**写成断言**。也就是说:门的决策层
+效果是在**变异过的帧**上证明的,真实帧本身不可观测。这不影响批准(变异是标注
+过的、方向是保守的),但**上机核验时不能拿这两帧当"线上会发生什么"的证据**。
+
+### F. §0b 的**新亚型**:不是消费方作废 helper,而是**验收世界本身是退化的**
+
+协同组 13:45Z 在做 #37 的三帧验收时撞上一个比它本身更值钱的东西
+(`20260819T134500Z.md` 第 1 节):**`tests/mock/bot_api.lua` 把 `GetTower` 桩成
+`nil`、`UNIT_LIST_ALLIED_BUILDINGS` 返回 `{}`**,于是
+
+- `J.GetNearbyLocationToTp` 的塔循环**永远空转**,直接落到「一座塔都不剩」的
+  兜底分支 → **返回泉水**。此前本仓库任何关于 TP 落点的 fixture 断言,测的都是
+  一条真实对局里(塔还立着时)**不会发生**的路径;
+- `J.GetRescueTpTarget` 里那条「友军站在自家塔下就别救」的否决
+  (`jmz_func.lua:5722-5731`,扫 `UNIT_LIST_ALLIED_BUILDINGS`)**恒为 false**。
+
+**这是 §0b 的第七例,但类型不同**:前六例是**消费方把 helper 的推理作废**,
+这一例是**验收环境给了一个真实对局里不存在的世界**,于是测试测的是一条死路径。
+通用形式:**「测试通过」只在测试世界与真实世界在被测量的那个维度上等价时才有意义;
+mock 的每一个 `return nil` 都是一条未声明的世界假设。**
+
+**已经落地的修**(协同组,全在 dev-only 目录):`make_fixture.py` 输出 `buildings`
+(dumper 一直在落,只是 fixture 生成器丢掉了)、`replay_fixture.lua` 据此造真结构
+句柄并接上 `GetTower`/`UNIT_LIST_*_BUILDINGS`(**已阵亡的结构直接缺席**)、
+mock 的 `Vector` 补 `__div`(两处缺口此前互相掩盖:接上塔就会当场崩)。
+
+**残留缺口(总监本轮量的,写下来免得又被当成"已修完")**:
+**46 个 fixture 里只有 3 个带 `buildings`**(`f_260819_1229*/1230*/1235*`,协同组
+本轮新生成的那三个),**其余 43 个仍然活在退化世界里**。因此:
+
+- **规矩**:今后任何关于 **TP 落点** 或 **「友军在自家塔下」否决** 的 fixture 断言,
+  **必须用带 `buildings` 的 fixture**(用现在的 `make_fixture.py` 重新生成),
+  在老 fixture 上做这两类断言是**假绿**。协同组已经留了一条回归护栏,保证老
+  fixture 世界逐字节不变 —— 那条护栏是**存档**,不是**豁免**。
+- **需要重看的既有结论(一条)**:`tests/test_replay_071423_sky_rescue.lua` 里
+  「`J.GetRescueTpTarget(sky)` 必须选中 Luna」这类**肯定式**断言,是在
+  「塔下否决结构上不可能触发」的世界里做出的 —— 它们是**触发集的超集**,
+  没有被证伪,但**比字面读起来弱**。录像组 12:50Z 那 467 个机会 episode 是
+  **Python 侧独立重建的**,不受这条影响(#37 的结论不需要重看)。
 
 ## 总监提醒(2026-08-19T13:05Z 更新,**收 bisect verdict 前 + 下一波前必读**)
 
