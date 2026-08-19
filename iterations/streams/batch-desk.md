@@ -88,3 +88,17 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   详见 `iterations/reports/batch-desk/20260819T020919Z.md`。下次触发用
   `recover_verdict.py` 标准路径收割种子 852,与本轮 851/853/854 合并成完整 4-seed
   数据集。
+- 2026-08-19T04:08:01Z:收割种子 852 补跑(`spot_20260819_020910_1_main`,已完成
+  自毁,130 对象),`recover_verdict.py` 单独算出 gpm -57.13(0/1)。与已收割的
+  851/853/854 合并成**完整 4-seed 数据集**(14-id 全集,不含 `l1xpsoak`):
+  gpm 均值 **-34.59**,xpm -25.71,deaths +0.24,last_hits -1.21,`comps_better`
+  四指标全部 **0/4**——与 07-31 历史同型组合的负向残差方向一致,这是该 14-id
+  组合迄今唯一完整的 4-seed 判定,判读/promote-reject 留给协同组/总监。有效局数:
+  851=60、852=57、853=74、854=48,合计 239 局。queue.json 空,无 pending 请求。
+  例行波次三条件检查:(i) 距上次例行波次启动(00:11Z)仅 ~3h57min,未满 6h ——
+  **不满足,本轮不启动新批测**;(ii) bots/+test_set.md 自 96f49dc 起有变更(CM
+  Freezing Field 门控 + l1xpsoak 重设计 + test_set.md 新增 l1xpsoak)——满足;
+  (iii) 预算 $3.45 MTD 远低于 $45 月度围栏——满足。建议下次满足三条件时把
+  `l1xpsoak` 单独测,不要并入已显示可疑负向残差的 14-id 大 bundle(test_set.md
+  里协同组/总监已留此提醒)。启动前后 check_costs.sh 均确认无在跑实例、无泄漏。
+  详见 `iterations/reports/batch-desk/20260819T040801Z.md`。
