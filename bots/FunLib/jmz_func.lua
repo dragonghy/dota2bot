@@ -5885,13 +5885,16 @@ function J.ShouldReleaseLaneCommit( bot )
 	return J.ShouldRetreatLaneBurst( bot )
 end
 
--- [wave13 fingerprint 20260723] Peacetime check for the roam pull bids
--- (creeppull/pullcamp). The 0.9 bid had NO combat awareness: SK left lane
--- and paced beside the camp for 12s while an Ogre watched from 1700 the
--- whole time, then died 6s after the pinned frame (163732); another bot
--- tanked a camp at 50% HP with zero mana. Pulling is a PEACETIME action:
--- healthy (>=50%), untouched for 2s, and no visible enemy hero within
--- 1800. Pure helper.
+-- [wave13 fingerprint 20260723] Peacetime check for the CAMP pull bid
+-- (pullcamp). The 0.9 bid had NO combat awareness: SK left lane and paced
+-- beside the camp for 12s while an Ogre watched from 1700 the whole time,
+-- then died 6s after the pinned frame (163732); another bot tanked a camp
+-- at 50% HP with zero mana. Walking out of lane into the jungle IS a
+-- peacetime action: healthy (>=50%), untouched for 2s, and no visible enemy
+-- hero within 1800. Pure helper.
+-- [GH #13 20260819] SCOPE NOTE: this rule fits the camp pull only. It used
+-- to gate the creep pull too, which made that branch unreachable -- see
+-- J.IsCreepPullSafe below for why and what the lane case uses instead.
 function J.IsLanePullSafe( bot )
 	if bot == nil or not bot:IsAlive() then return false end
 	if J.GetHP( bot ) < 0.5 then return false end
@@ -5901,6 +5904,59 @@ function J.IsLanePullSafe( bot )
 			return false
 		end
 	end
+	return true
+end
+
+-- [GH #13 20260819] Lane-appropriate pull safety for the CREEP pull (勾线).
+--
+-- WHY THIS EXISTS -- a provable dead branch. mode_roam_generic gated BOTH pull
+-- bids on J.IsLanePullSafe, i.e. "no visible enemy hero within 1800". But
+-- J.ShouldCreepPullLane REQUIRES a valid enemy hero within 1000 (that is the
+-- hero we attack-order to redirect its creeps' aggro onto us -- the whole
+-- mechanic). The two conditions are mutually exclusive: an aggro-draw target
+-- inside 1000 is also inside 1800, so IsLanePullSafe was false on exactly the
+-- frames where the trigger could have fired. The creep pull could never run,
+-- which is what the replay desk measured -- 13/13 batch games with zero pull
+-- behavior on either side (GH #13), across three seeds.
+--
+-- The camp pull keeps IsLanePullSafe (leaving lane for the jungle really is a
+-- peacetime action). For the creep pull the safety question is not "is anyone
+-- visible" -- the lane opponent is SUPPOSED to be there -- but "is anyone
+-- EXTRA visible": a hero sitting at the edge of vision that is not part of
+-- this lane trade is a rotation closing in, which is the 163732 ambush shape
+-- the wave13 fix was written for, and the pull must still be vetoed.
+--
+-- TRUE when ALL of:
+--   * healthy (>= 50% HP) -- same bar as the camp pull, and
+--   * at least one visible enemy hero within 1000 (there IS a lane trade to
+--     draw the wave off; without one there is nothing to pull), and
+--   * NOBODY visible in the 1000-1800 ring beyond that lane trade -- an extra
+--     body out there is a rotation, not a laner, and
+--   * at most 2 of them (the melee-vs-2-ranged shape is the widest case
+--     ShouldCreepPullLane itself accepts).
+--
+-- Deliberately NOT here: the recent-damage veto. Being pecked is the TRIGGER of
+-- the melee-vs-2-ranged drag ("被两个远程消耗就该把兵线拉回来"), so that clause
+-- has to stay inside ShouldCreepPullLane where the shape is known. Pure helper;
+-- the caller's trigger is still turbo + 'creeppull'-gated, so shipped games are
+-- unchanged.
+function J.IsCreepPullSafe( bot )
+	if bot == nil or not bot:IsAlive() then return false end
+	if J.GetHP( bot ) < 0.5 then return false end
+
+	local nNear, nWide = 0, 0
+	for _, e in pairs( J.GetNearbyHeroes( bot, 1800, true, BOT_MODE_NONE ) or {} ) do
+		if J.IsValidHero( e ) and not J.IsSuspiciousIllusion( e ) then
+			nWide = nWide + 1
+			if GetUnitToUnitDistance( bot, e ) <= 1000 then
+				nNear = nNear + 1
+			end
+		end
+	end
+
+	if nNear == 0 then return false end
+	if nWide > nNear then return false end
+	if nNear > 2 then return false end
 	return true
 end
 

@@ -76,21 +76,31 @@ function GetDesireHelper()
 	-- [wave13 fingerprint 20260723] Pulling is a PEACETIME action: the first
 	-- cut had no combat awareness and bots left lane / paced beside camps
 	-- while enemies watched from 1600-1800 (163732 SK died mid-pull-wait) or
-	-- tanked camps at half HP. J.IsLanePullSafe vetoes the bid entirely when
-	-- hurt, freshly damaged, or any enemy hero is visible within 1800.
-	if J.IsLanePullSafe(bot) then
-		local pull = J.ShouldCreepPullLane(bot)
-		if pull ~= nil then
-			bot.roamCreepPull = pull
-			bot.roamCampPull = nil
-			return 0.9
-		end
-		local vCamp = J.ShouldPullNeutralCamp(bot)
-		if vCamp ~= nil then
-			bot.roamCampPull = vCamp
-			bot.roamCreepPull = nil
-			return 0.9
-		end
+	-- tanked camps at half HP.
+	-- [GH #13 20260819] ...but the two pulls need DIFFERENT safety rules, and
+	-- sharing one made the creep pull a DEAD BRANCH. A camp pull walks a
+	-- support out of lane into the jungle, so J.IsLanePullSafe (nothing
+	-- visible within 1800) is exactly right there. A creep pull is performed
+	-- AT the lane opponent -- J.ShouldCreepPullLane requires an enemy hero
+	-- within 1000 as the aggro-draw target -- so "no enemy within 1800" could
+	-- never hold on a frame where it wanted to fire, and the replay desk
+	-- measured zero pull behavior in 13/13 batch games. J.IsCreepPullSafe
+	-- keeps the anti-ambush intent for the lane case (the lane opponents may
+	-- be there; a third hero lurking in the 1000-1800 ring may not).
+	-- Both triggers are self-gated (turbo + 'creeppull'/'pullcamp' + role +
+	-- timing) and are asked FIRST, so an unarmed game early-outs before any
+	-- world scanning -- shipped behavior and cost are unchanged.
+	local pull = J.ShouldCreepPullLane(bot)
+	if pull ~= nil and J.IsCreepPullSafe(bot) then
+		bot.roamCreepPull = pull
+		bot.roamCampPull = nil
+		return 0.9
+	end
+	local vCamp = J.ShouldPullNeutralCamp(bot)
+	if vCamp ~= nil and J.IsLanePullSafe(bot) then
+		bot.roamCampPull = vCamp
+		bot.roamCreepPull = nil
+		return 0.9
 	end
 	bot.roamCreepPull, bot.roamCampPull = nil, nil
 	nInRangeAlly = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
