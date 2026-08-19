@@ -5105,6 +5105,11 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			-- instead of being reclaimed by lane assignment mid-engagement.
 			bot.tpRespondLoc = hRescueAlly:GetLocation()
 			bot.tpRespondUntil = DotaTime() + 12.0
+			-- [tpdead, GH #37] WHO this rescue is for. A location cannot say
+			-- whether the rescue is still a rescue; the ally handle can. Inert
+			-- state -- only J.GetTpCommitDefendDesire reads it, and only with
+			-- the 'tpdead' candidate armed.
+			bot.tpRespondAlly = hRescueAlly
 			return BOT_ACTION_DESIRE_HIGH, vRescueLoc, 'ground', '救援TP'
 		end
 	end
@@ -5122,6 +5127,9 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			-- [tpcommit fix C] same landing commitment as the rescue TP above.
 			bot.tpRespondLoc = hTowerFight:GetLocation()
 			bot.tpRespondUntil = DotaTime() + 12.0
+			-- Not a rescue of one named ally: clear the stamp so a stale corpse
+			-- from an earlier rescue cannot release THIS commitment (tpdead).
+			bot.tpRespondAlly = nil
 			return BOT_ACTION_DESIRE_HIGH, vTpLoc, 'ground', 'mid支援塔战'
 		end
 	end
@@ -5301,6 +5309,8 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			-- answered too. Stamps are inert state off the candidate.
 			bot.tpRespondLoc = tpLoc
 			bot.tpRespondUntil = DotaTime() + 12.0
+			-- Defending a tower, not rescuing a named ally (see tpdead above).
+			bot.tpRespondAlly = nil
 
 			if botName == 'npc_dota_hero_furion'
 			then

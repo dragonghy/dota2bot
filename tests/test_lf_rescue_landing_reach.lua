@@ -166,12 +166,16 @@ tests['[GH #37] a landing-distance threshold CANNOT work (candidate 1 falsified)
         'no single ceiling separates {reject} from {allow}')
 end
 
-tests['[GH #37] arrival-vs-survival DOES separate all three (candidate 2)'] = function()
+tests['[GH #37] arrival-vs-survival separates all three AS A CONCEPT (candidate 2)'] = function()
     -- The second candidate: stop hardcoding 4.0s and budget the walk from the
     -- landing point too, i.e. ask "will the ally still be there when I actually
     -- get there" instead of "will it still be there when I finish channelling".
     -- On these frames that is the discriminator, with room to spare in both
-    -- directions -- which is why this is the shape the fix should take.
+    -- directions -- IF the arrival window could be compared against the ally's
+    -- true remaining life. It cannot: the gate's only survival estimate is
+    -- GetEstimatedDamageToTarget vs current HP, and the test below shows what
+    -- that estimate does once the window is widened. Read this test as "the
+    -- QUANTITY separates", not "the implementable gate separates".
     for _, f in ipairs(FRAMES) do
         local J, ally, _, fx = rf.load(f.path)
         local nArrival = CHANNEL + landing_distance(J, ally) / NOMINAL_SPEED
@@ -188,6 +192,64 @@ tests['[GH #37] arrival-vs-survival DOES separate all three (candidate 2)'] = fu
                     :format(f.name, nSurvived, nArrival))
         end
     end
+end
+
+--- Ground-truth hero damage actually dealt to the fixture subject within
+--- `nSeconds` of the frame, from the observed.damage event timeline.
+local function damage_within(fx, nSeconds)
+    local nSum = 0
+    for _, d in ipairs(fx.observed.damage or {}) do
+        if d.t <= nSeconds then nSum = nSum + d.value end
+    end
+    return nSum
+end
+
+tests['[GH #37] widening the survival window VETOES the rescue that worked'] = function()
+    -- Candidate 2 implemented as written -- pass the arrival time to
+    -- GetEstimatedDamageToTarget instead of the hardcoded 4.0 -- is falsified by
+    -- the same triple that falsified candidate 1, now that the fixtures carry
+    -- the per-event damage timeline (observed.damage) rather than one window.
+    --
+    -- The gate asks `incoming(window) < ally HP`. At the ARRIVAL window:
+    --   A  548 vs 430 HP -> veto   (correct)
+    --   B   96 vs 225 HP -> allow  (wrong; must be rejected)
+    --   C  258 vs 246 HP -> VETO   (wrong; this is the one rescue that worked)
+    -- C survived on regeneration and a salve, which the gate does not model, so
+    -- stretching its window from 4s to 8.8s converts the only good rescue in the
+    -- wave into a refusal. Direction of the bound matters here: the dumper
+    -- UNDERCOUNTS damage, so 258 is a floor -- more data can only make the veto
+    -- of C more certain. The same undercount is why B's "allow" is the soft half
+    -- of this result (Lich took 117 logged from all sources yet died at 2.9s).
+    local WANT = {
+        ['A far']    = { window = 21.7, reject = true },
+        ['B doomed'] = { window = 8.3,  reject = true },
+        ['C works']  = { window = 8.8,  reject = false },
+    }
+    local nWrong = 0
+    for _, f in ipairs(FRAMES) do
+        local J, ally, _, fx = rf.load(f.path)
+        assert(fx.observed.damage ~= nil,
+            f.name .. ': fixture must carry the damage timeline; regenerate it '
+            .. 'with the current make_fixture.py')
+        local w = WANT[f.name]
+        -- The window really is the arrival time this frame computes.
+        assert(about(CHANNEL + landing_distance(J, ally) / NOMINAL_SPEED,
+            w.window, 0.1), f.name .. ': arrival window mismatch')
+        local bVeto = damage_within(fx, w.window) >= ally:GetHealth()
+        if bVeto ~= w.reject then nWrong = nWrong + 1 end
+    end
+    assert(nWrong == 2, 'expected the widened window to get 2 of the 3 frames '
+        .. 'wrong, got ' .. nWrong)
+    -- Stated on its own because it is the disqualifying half: whatever else a
+    -- fix does, it must not refuse frame C.
+    local J, ally, _, fx = rf.load(FRAMES[3].path)
+    local nArrival = CHANNEL + landing_distance(J, ally) / NOMINAL_SPEED
+    assert(damage_within(fx, nArrival) >= ally:GetHealth(),
+        'C: the widened window must be shown to veto the working rescue, or '
+        .. 'candidate 2 is back on the table and tpdead needs re-justifying')
+    assert(damage_within(fx, 4.0) < ally:GetHealth(),
+        'and the SHIPPED 4.0s window must still allow it -- otherwise the '
+        .. 'widening is not what flips this frame')
 end
 
 tests['[GH #37] pre-buildings fixtures keep the old structure-less world'] = function()

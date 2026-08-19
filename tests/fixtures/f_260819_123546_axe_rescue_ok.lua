@@ -72,5 +72,23 @@ return {
       ['npc_dota_hero_crystal_maiden'] = 188,
     },
     died_after = 151.2,
+    -- hero damage to the subject in (t, t+30.0], one entry per event, `t` relative.
+    damage_horizon = 30.0,
+    damage = {
+      { t = 0.40, actor = 'npc_dota_hero_crystal_maiden', value = 38 },
+      { t = 0.50, actor = 'npc_dota_hero_crystal_maiden', value = 19 },
+      { t = 0.70, actor = 'npc_dota_hero_crystal_maiden', value = 19 },
+      { t = 1.00, actor = 'npc_dota_hero_crystal_maiden', value = 19 },
+      { t = 1.20, actor = 'npc_dota_hero_crystal_maiden', value = 19 },
+      { t = 1.50, actor = 'npc_dota_hero_crystal_maiden', value = 19 },
+      { t = 1.70, actor = 'npc_dota_hero_crystal_maiden', value = 19 },
+      { t = 3.70, actor = 'npc_dota_hero_crystal_maiden', value = 36 },
+      { t = 5.00, actor = 'npc_dota_hero_crystal_maiden', value = 37 },
+      { t = 6.00, actor = 'npc_dota_hero_crystal_maiden', value = 11 },
+      { t = 7.00, actor = 'npc_dota_hero_crystal_maiden', value = 11 },
+      { t = 8.00, actor = 'npc_dota_hero_crystal_maiden', value = 11 },
+      { t = 9.00, actor = 'npc_dota_hero_crystal_maiden', value = 11 },
+      { t = 10.00, actor = 'npc_dota_hero_crystal_maiden', value = 11 },
+    },
   },
 }

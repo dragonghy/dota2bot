@@ -33,6 +33,8 @@ def main():
     ap.add_argument("--t", type=float, required=True, help="decision instant (game-clock s)")
     ap.add_argument("--hero", required=True, help="subject hero, bare name (e.g. luna)")
     ap.add_argument("--window", type=float, default=5.0, help="ground-truth window after t")
+    ap.add_argument("--damage-horizon", type=float, default=30.0,
+                    help="how far past t to record the per-event damage timeline")
     ap.add_argument("-o", "--out", required=True)
     args = ap.parse_args()
 
@@ -101,13 +103,25 @@ def main():
     # (t, t+window], and the subject's death time after t (if it died).
     burst = Counter()
     died_after = None
+    # ...plus the raw per-event damage timeline out to a longer horizon. `burst`
+    # answers exactly one window (the shipped J.WillAllySurviveTpWindow budget);
+    # a test that asks what a DIFFERENT arrival window would have seen -- the
+    # whole question GH #37 candidate 2 turns on -- needs the events themselves.
+    # Hero damage only, same filter as `burst`, because the gate this feeds sums
+    # over enemy HEROES near the ally and structurally cannot see anything else.
+    damage = []
     for e in tl.get("events", []):
         if e.get("type") == "DAMAGE" and e.get("target") == subj \
                 and e.get("actor_hero") and args.t < e["t"] <= args.t + args.window:
             burst[e["actor"]] += e["value"]
+        if e.get("type") == "DAMAGE" and e.get("target") == subj \
+                and e.get("actor_hero") \
+                and args.t < e["t"] <= args.t + args.damage_horizon:
+            damage.append((round(e["t"] - args.t, 2), e["actor"], e["value"]))
         if e.get("type") == "DEATH" and e.get("target") == subj and e["t"] >= args.t \
                 and died_after is None:
             died_after = round(e["t"] - args.t, 1)
+    damage.sort()
 
     # Buildings (towers/rax/ancient/watch-tower) at the instant. The dumper
     # samples these on their own (coarser) interval and carries no entity idx,
@@ -173,6 +187,16 @@ def main():
         L.append("      ['%s'] = %d," % (actor, v))
     L.append("    },")
     L.append("    died_after = %s," % (died_after if died_after is not None else "nil"))
+    # Omitted entirely when there is none, so a fixture with no hero damage in
+    # the horizon keeps the shape it had before this block existed.
+    if damage:
+        L.append("    -- hero damage to the subject in (t, t+%.1f], one entry per"
+                 " event, `t` relative." % args.damage_horizon)
+        L.append("    damage_horizon = %.1f," % args.damage_horizon)
+        L.append("    damage = {")
+        for dt, actor, v in damage:
+            L.append("      { t = %.2f, actor = '%s', value = %d }," % (dt, actor, v))
+        L.append("    },")
     L.append("  },")
     L.append("}")
     open(args.out, "w").write("\n".join(L) + "\n")

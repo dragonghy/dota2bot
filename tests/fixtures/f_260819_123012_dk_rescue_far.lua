@@ -73,5 +73,19 @@ return {
       ['npc_dota_hero_sven'] = 58,
     },
     died_after = 4.7,
+    -- hero damage to the subject in (t, t+30.0], one entry per event, `t` relative.
+    damage_horizon = 30.0,
+    damage = {
+      { t = 0.60, actor = 'npc_dota_hero_sniper', value = 52 },
+      { t = 0.70, actor = 'npc_dota_hero_sniper', value = 54 },
+      { t = 1.70, actor = 'npc_dota_hero_sniper', value = 54 },
+      { t = 2.70, actor = 'npc_dota_hero_sniper', value = 54 },
+      { t = 3.00, actor = 'npc_dota_hero_sniper', value = 78 },
+      { t = 3.70, actor = 'npc_dota_hero_sniper', value = 54 },
+      { t = 3.90, actor = 'npc_dota_hero_sniper', value = 59 },
+      { t = 4.00, actor = 'npc_dota_hero_sven', value = 58 },
+      { t = 4.70, actor = 'npc_dota_hero_sniper', value = 31 },
+      { t = 4.70, actor = 'npc_dota_hero_sniper', value = 54 },
+    },
   },
 }

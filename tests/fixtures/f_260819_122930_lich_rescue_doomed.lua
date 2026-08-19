@@ -72,5 +72,14 @@ return {
       ['npc_dota_hero_venomancer'] = 96,
     },
     died_after = 2.9,
+    -- hero damage to the subject in (t, t+30.0], one entry per event, `t` relative.
+    damage_horizon = 30.0,
+    damage = {
+      { t = 1.10, actor = 'npc_dota_hero_venomancer', value = 18 },
+      { t = 1.40, actor = 'npc_dota_hero_venomancer', value = 5 },
+      { t = 2.00, actor = 'npc_dota_hero_venomancer', value = 36 },
+      { t = 2.40, actor = 'npc_dota_hero_venomancer', value = 5 },
+      { t = 2.90, actor = 'npc_dota_hero_venomancer', value = 32 },
+    },
   },
 }

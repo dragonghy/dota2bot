@@ -6987,6 +6987,28 @@ function J.GetTpCommitDefendDesire( bot, nLane )
 		bot.tpRespondUntil = nil
 		return nil
 	end
+	-- [tpdead, GH #37] THE RESCUE IS OVER. A rescue TP stamps the ally it
+	-- answered for (tpRespondAlly, item-usage). The replay desk's 11 tracked
+	-- rescues arrived inside the modelled ~4s window ONCE: landing->ally ran to
+	-- a median 2289u, so the ally is routinely a corpse before the responder
+	-- can walk to it -- and this floor then holds the responder in DEFEND for
+	-- the rest of the 12s commitment, walking at a fight that no longer exists.
+	-- Pinned triple (real frames, exact DEATH-event ground truth): 123012 DK
+	-- dies 4.7s after the cast and 122930 Lich 2.9s after it, both while the
+	-- responder is still mid-trip; 123546 Axe lives, and that commitment must
+	-- survive untouched -- it is the one rescue in the wave that worked.
+	-- The stamp is the only thing that distinguishes them, which is why the
+	-- landing-distance ceiling (candidate 1) and the widened survival window
+	-- (candidate 2) were both falsified on these same frames.
+	-- Gated turbo + 'tpdead' and reachable only inside 'tpcommit'; like the
+	-- release above it can only ever drop a pin, never raise or create one.
+	if J.IsSoakCandidate( 'tpdead' )
+	and bot.tpRespondAlly ~= nil
+	and not bot.tpRespondAlly:IsAlive() then
+		bot.tpRespondUntil = nil
+		bot.tpRespondAlly = nil
+		return nil
+	end
 	-- The commitment binds to the lane it answered: each defend wrapper asks
 	-- for its own lane, and only the one whose front is near the trigger wins.
 	local vFront = GetLaneFrontLocation( GetTeam(), nLane, 0 )
