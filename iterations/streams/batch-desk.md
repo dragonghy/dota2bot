@@ -247,3 +247,35 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   规矩得到印证)、看门狗 2h、上机前 `git ls-remote origin main` 核对树。
   上一波最终局数:臂 A 859-862 = 74/63/65/64 = **266**;臂 B = 67/74/65/63 = **269**。
   详见 `iterations/reports/batch-desk/20260819T161000Z.md`。
+- 2026-08-19T18:08:00Z:**启动轮(队列请求 `director-1`),半程启动**。MTD **$4.0579**
+  (与 14:12Z/16:10Z 完全一致,计费滞后比预期更长),启动前 0 台在跑,无泄漏,未触发任何
+  预算刹车。收割:`validation/`/`soak/` 均无 16:10Z 之后的新对象,**无新数据**。
+  `queue.json` 有 pending 的 `director-1`(priority 1)→ 按章程 4a 优先执行,不受例行
+  6h 节流约束;成本 $4.06 + ~$1.4 ≈ $5.5 ≤ $45,满足。本波**完全按总监 `test_set.md`
+  §G 路 C**:唯一变量 `roamstale`,**臂 A = 16 id 全集**、**臂 B = A 去掉 `roamstale`**,
+  两臂共用种子 863-866;`tpdying`/`cmrguard` 首次 armed 但**两臂相同、不是被测变量**。
+  上机前 16 个 id 逐个 grep 静态核对(`lf_rescue` 命中 0 是已知正确的,它经
+  `J.IsLaneFixOn('rescue')` 展开;被 bisect 的 `roamstale` 有裸字面量,可被逗号串表达);
+  树 `b48d655` = 远端 main tip 已核对。
+  **臂 A 4/4 上机**:`spot_20260819_180801/180804/180807/180809_1_main` = 种子
+  863/864/865/866(即映射表,run_id 不编码臂/种子),c6i.4xlarge **on-demand** ×4,
+  16 槽,2h 看门狗,`--games 22`,预估 $0.6-0.8,预计 ~18:40-18:55Z 落地,预期 ≥240 局。
+  **臂 B 4/4 全部启动失败,顺延到下次触发** —— 两条新运维事实:(1) **on-demand Standard
+  系列账户 vCPU 配额 = 64**,c6i.4xlarge 16 vCPU/台 → **on-demand 同时最多 4 台**,臂 A
+  正好占满,臂 B 一台都放不下(`VcpuLimitExceeded`;`servicequotas` 本用户无权限,配额值引自
+  错误消息)。这解释了 12:12Z 那波 8 台**只能**走 spot 不是选择而是唯一可能;(2) c6i.4xlarge
+  在 us-west-2 **当前无 spot 容量**(4/4 `InsufficientInstanceCapacity`),是 12:12Z 臂 B
+  被 `instance-terminated-no-capacity` 回收那次容量紧张的延续,这次连拿都拿不到。
+  **否决了换机型上 spot**(总监 §G 明写两臂"其余一切完全相同",换 CPU 代次会污染这个
+  专为消除混杂而排的波次)和**阻塞等待**(违反"不空转";下次触发时臂 A 已自毁腾出配额,
+  等价效果零成本)。**又发现一条权限缺口**:本会话凭据**能推分支、不能推 tag**
+  (`git push origin <tag>` → HTTP 403),本地 tag `wave863-armB` 已建在 b48d655 但上不了远端
+  —— 这直接卡住 `[harness] #33` 里"基线要先打 tag 才 fetch 得到"的修法,已随 issue 上报。
+  **下次触发第一件事 = 启动臂 B**(详细照抄指令见报告 §4.3):先 `git log b48d655..origin/main
+  -- bots/ game/` 为空则 `--ref main`,非空则必须钉 `b48d655`;先确认臂 A 4 台已自毁腾出配额;
+  cand 串**不含** `roamstale`,种子仍 863-866,`--on-demand`/16 槽/2h/`--games 22` 与臂 A 一致;
+  配额不够就分 2+2 两批,**不要换机型**。收割两臂**分别** `recover_verdict.py`(先分 run
+  下载再带前缀合并)再取**逐种子配对差 A−B**,判读按 §G.3 事前登记表(**主判据是录像组域内
+  击杀转化,gpm 只是次判据**),§H 纪律:落地后不许改口。上一波最终局数:臂 A 266 + 臂 B 269
+  = **535**。启动前后 check_costs.sh 均确认无泄漏(结束时恰好 4 台,全是本轮有意启动的自毁机)。
+  详见 `iterations/reports/batch-desk/20260819T180800Z.md`。

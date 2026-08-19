@@ -14,8 +14,8 @@
       "priority": 1,
       "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
       "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
-      "status": "pending",
-      "result": null
+      "status": "running",
+      "result": "2026-08-19T18:08Z 启动,但**只有臂 A 上机**(4 台 on-demand c6i.4xlarge,种子 863/864/865/866,树 b48d655,--slots 16 --hours 2 --games 22;run_id spot_20260819_180801/180804/180807/180809_1_main)。臂 B 被 AWS 容量双重挡住:on-demand Standard vCPU 配额 64 已被臂 A 的 4×16 占满(VcpuLimitExceeded),同时 c6i.4xlarge 在 us-west-2 **无 spot 容量**(4/4 InsufficientInstanceCapacity)。臂 B 顺延到下一次触发(≥20:07Z,臂 A 届时已自毁腾出配额),必须用同一棵树 b48d655 + 同一组种子 863-866 + 同样 --on-demand/16 槽/22 局。"
     }
   ],
   "done": []
