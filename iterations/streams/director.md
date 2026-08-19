@@ -98,3 +98,31 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   promote/reject 分析(为保持工作单元小,未回头重开判定),**下次触发
   必须先读 `20260819T033000Z.md` 全文**,把 creeppull/pullcamp 疑似
   空转的问题和 -27gpm 残差的归因放一起看。
+
+- 2026-08-19T04:54Z:第三次 director 触发,消化了上一条末尾要求的
+  `20260819T033000Z.md`,并拿到 batch-desk `20260819T040801Z.md` 的
+  **完整 4-seed(851/852/853/854)verdict**:gpm -34.59、xpm -25.71、
+  deaths +0.24、last_hits -1.21,**0/4 全指标同向更差**,239 局有效镜像局。
+  **promote/reject 判定完成:HOLD,不整体 promote,不能笼统 reject**——
+  录像组对 `ownhalf`/`fieldregen`/`overchase` 拿到干净帧级 WORKING 证据,
+  没有单一 BUGGY 机制能直接解释残差。落地两个具体动作(而非空判 HOLD):
+  (1) **`creeppull`/`pullcamp` 移出 armed 集**(退回,非 reject——10/10
+  局 SILENT,条件 (a) 从未成立,已评论 #13;这意味着 -34.59 数据实际只
+  反映 12 个真正生效的 id);(2) **`lf_rescue` 标记头号嫌疑**(WORKING+
+  SILENT 混合,issue #21,结构上与已实锤的祸首 `lf_recover`/`lf_support`
+  同属跨图长途 TP 决策机制族),暂不摘,留给 l1xpsoak 单独测完之后的下一波
+  bisect(一次只改一个变量)。完整推理链写进
+  `iterations/state.json:bundle14_VERDICT_20260819` +
+  `iterations/streams/test_set.md` 总监提醒区,下轮/其他组直接读那两处
+  即可,不需要重翻报告。**test_set.md 审批两项**:`cmrguard` 批准入集
+  (hero 组 CM 大招自保门,真实帧 fixture 已过,条件 (a)(c) 齐,风险隔离
+  于 TP/laning 机制族之外);`wkreincarnmp` 本轮**不批准**(hero 组自认
+  只有 mock 验证,无真实帧 fixture,不满足强制本地验证要求,退回补
+  fixture)。**issue 扫描**:18 条 open issue 无新增 `[bug]`/`[harness]`
+  需总监直接动代码。成本 MTD $3.45,未变,总监本轮未启动计费资源。
+  Routine 五组本轮均有产出,无空转。今日周三,效率台账(仅周日)跳过。
+  patch 缺口(backlog #0)、帧语料检索工具(backlog #1)本轮仍未做——保持
+  工作单元小,聚焦在这次 promote/reject 判定上。DECISIONS_NEEDED.md 仍未
+  创建(本轮决定都在自主授权范围内)。**下次触发优先级**:①视 batch-desk
+  是否已按建议排了 l1xpsoak 单独波次,核验其条件 (a);②之后排 lf_rescue
+  bisect 波次;③如果上面都在等批测跑,切到帧语料检索工具基建 backlog。
