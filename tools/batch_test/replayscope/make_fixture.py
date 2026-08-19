@@ -38,8 +38,73 @@ def main():
     ap.add_argument("-o", "--out", required=True)
     args = ap.parse_args()
 
+    def active_modifiers(tl, t):
+        """Per-hero modifiers ACTIVE at t, rebuilt from the combat log.
+
+        The whole replay is parsed, so every MODIFIER_ADD can be matched to its
+        MODIFIER_REMOVE and a real remaining duration is known at any instant --
+        the same reconstruction replayscope/build.py uses to draw its CC
+        countdowns, here kept for EVERY modifier instead of the CC shortlist.
+
+        Why a decision fixture needs this: without it every fixture world has
+        `HasModifier == false` for everything (the mock's Is/Has/Can default),
+        which silently states a world assumption nobody declared -- nobody is
+        rooted, stunned, silenced, hexed, channelling a TP, or holding any buff.
+        Whole shipped branches are then structurally unreachable in EVERY
+        fixture (mode_roam_generic's continuous-attack branches are all
+        modifier-authorized; the tpscroll consider function opens with a
+        ten-modifier veto list), and worse, a test can assert "it should have
+        walked away here" on a frame where the hero was in fact rooted.
+
+        `stacks` is emitted ONLY when the log shows evidence of stacking
+        (concurrent instances of the same name, or MODIFIER_STACK_EVENT rows
+        since this instance began). The combat log's stack VALUE semantics are
+        not settled, so this counts EVENTS, not the engine's own counter --
+        absent the field the loader answers 0, which is engine-truthful for a
+        non-stacking modifier. Do not anchor a `J.GetModifierCount(...) >= N`
+        threshold on it until the dumper carries the entity's real stack count.
+        """
+        open_iv, closed = {}, defaultdict(list)   # (target, mod) -> [(s, e)]
+        stack_ev = defaultdict(list)              # (target, mod) -> [t, ...]
+        last_t = 0.0
+        for e in tl.get("events", []):
+            last_t = max(last_t, e.get("t", 0))
+            typ, mod, tgt = e.get("type"), e.get("inflictor", ""), e.get("target")
+            if not tgt or not mod:
+                continue
+            key = (tgt, mod)
+            if typ == "MODIFIER_ADD":
+                open_iv.setdefault(key, []).append(e["t"])
+            elif typ == "MODIFIER_REMOVE" and open_iv.get(key):
+                closed[key].append((open_iv[key].pop(0), e["t"]))
+            elif typ == "MODIFIER_STACK_EVENT":
+                stack_ev[key].append(e["t"])
+        # An ADD with no REMOVE lasted to the end of what we parsed.
+        for key, starts in open_iv.items():
+            for s in starts:
+                closed[key].append((s, last_t))
+
+        out = defaultdict(list)
+        for (tgt, mod), ivs in closed.items():
+            live = [(s, e) for (s, e) in ivs if s <= t < e]
+            if not live:
+                continue
+            s0, e0 = min(live)
+            n = len(live) + sum(1 for st in stack_ev.get((tgt, mod), []) if s0 <= st <= t)
+            out[tgt].append({
+                "name": mod,
+                "remaining": round(e0 - t, 2),
+                "elapsed": round(t - s0, 2),
+                # >1 only when the log actually showed stacking (see docstring).
+                "stacks": n if n > 1 else 0,
+            })
+        for tgt in out:
+            out[tgt].sort(key=lambda m: m["name"])
+        return out
+
     tl = json.load(open(args.timeline))
     subj = FULL + args.hero
+    mods_at_t = active_modifiers(tl, args.t)
 
     # Keep only each hero's longest-lived entity idx (drops illusions — same
     # canonicalization as replayscope/build.py).
@@ -96,6 +161,8 @@ def main():
                  "cd": a.get("cd", 0)}
                 for a in (s.get("abilities") or [])
             ],
+            # real buffs/debuffs active at the instant (see active_modifiers)
+            "modifiers": mods_at_t.get(h, []),
         })
     assert any(u["name"] == subj for u in units), "subject %s not in timeline" % subj
 
@@ -165,12 +232,19 @@ def main():
         # this hero" from an empty list.
         seen = (" seen_by = { %s },"
                 % ", ".join(str(t) for t in u["seen_by"])) if u["seen_by"] else ""
+        # Omitted entirely when the hero carries none at the instant, so a
+        # pre-modifiers fixture keeps the world it had before this block existed
+        # (the loader then leaves the mock's HasModifier = false default alone).
+        mods = ("\n      modifiers = { %s },"
+                % ", ".join("{ name = '%s', remaining = %s, elapsed = %s, stacks = %d }"
+                            % (m["name"], m["remaining"], m["elapsed"], m["stacks"])
+                            for m in u["modifiers"])) if u["modifiers"] else ""
         L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
                  " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s, net_worth = %d,"
-                 "%s items = { %s },\n      abilities = { %s } }," % (
+                 "%s items = { %s },\n      abilities = { %s },%s }," % (
                      u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
                      u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
-                     u["tp_cd"], u["net_worth"], seen, items, abil))
+                     u["tp_cd"], u["net_worth"], seen, items, abil, mods))
     L.append("  },")
     # Omitted entirely when the dump has none, so pre-buildings fixtures keep
     # the old "no structures exist" world byte for byte.
@@ -200,8 +274,9 @@ def main():
     L.append("  },")
     L.append("}")
     open(args.out, "w").write("\n".join(L) + "\n")
-    print("wrote %s  (units=%d, buildings=%d, burst=%s, died_after=%s)" % (
-        args.out, len(units), len(buildings), dict(burst), died_after))
+    print("wrote %s  (units=%d, buildings=%d, modifiers=%d, burst=%s, died_after=%s)" % (
+        args.out, len(units), len(buildings),
+        sum(len(u["modifiers"]) for u in units), dict(burst), died_after))
 
 
 if __name__ == "__main__":

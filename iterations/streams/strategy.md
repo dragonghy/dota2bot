@@ -27,7 +27,27 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0. **「命令的边界」普查(2026-08-19T21:30Z 新增,由 GH #45 / `roamreach` 引出)**。
+0. **「命令的边界」普查 —— 2026-08-19T23:25Z 已做完枚举,范围收窄**。
+   全仓库 `bOnce=false` / `Action_MoveToUnit` 站点已逐个 grep 过:
+   `mode_defend_tower_*` / `mode_attack` / `mode_push_tower_*` **根本不含**连续型
+   单位命令(原条目那一行作废);`mode_outpost_generic:117` 打的是静止建筑,无尾巴;
+   `mode_team_roam_generic:569` 是非英雄目标。**只剩 `mode_roam_generic` 的九处**
+   (642–871),而且它们形状完全一致:**授权是一个会到点消失的 modifier 计时器
+   (MoM berserk 6.0s / WK-helm 重生 / marci unleash / muerta / chronosphere /
+   static link / tether / pulse nova),命令却是连续的**,出价分支读的是同一个
+   modifier,释放同样只住在 `Think` 里 —— 与 `roamreach` 逐条同构、且更确定。
+   **但本轮取到的唯一一份 MoM 实证不支持改动**(见下面 23:25Z 状态:那 4 秒打死了 CM;
+   前 3 秒是被 Frostbite 缠住,不是陈旧命令)。**下一步:先要一帧「buff 到期 →
+   目标逃走 → 追出去且零收益」的实证再动**;工具链已经能取到了(fixture 现在带
+   真实 modifier)。**不要照着窗口 2 那种「泉水里开 MoM」去写** —— 那是物品使用
+   问题,归英雄/物品组。
+   **已知不通的路**:想在**命令已经在执行之后**回收它,唯一落点是每帧都跑的
+   `ability_item_usage_generic.lua`(mode 之外唯一的全局 Think)——那是**另一个杠杆**,
+   不要和「下达时带边界」合做。
+0b. **旧 fixture 逐个补 modifier(新,2026-08-19T23:25Z)**。生成器与 loader 已经支持,
+   但**有意没有批量重生成**:给一帧补上真实 buff/debuff 可能**翻掉**它钉住的那个决定,
+   那正是这件事的意义。**一次一个、每次重读结论**。优先级最高的是 `tpwatch` 相关的帧
+   (它的逻辑本体此前从未在任何真实帧上跑过一行)。
    新缺陷族,和「最终出价可达性」(第 8 条)平级但是**下一层**:
    **`Action_*` 里的连续型命令(`bOnce=false`、`Action_MoveToUnit` 等)在它的 mode
    不再赢下竞价之后没有任何人会再评估它** —— mode 的 `Think` 不被调用,写在 `Think`
@@ -117,6 +137,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T23:25Z:没有可认领的新 `[strategy]` issue(#45/#44/#35 在等总监批入集,
+  #37 剩下那一半明确要求先要帧证据),接 backlog **第 0 条**「命令的边界」普查。
+  **本轮零行为改动**(`git status bots game` 空,无新 gate,未提批测请求),
+  产出是**普查结论 + 让普查可执行的工具链 + 一条负结果 + 一条 bug 上报**。
+  **普查枚举做完了,范围收窄**:`mode_defend_tower_*`/`mode_attack`/`mode_push_tower_*`
+  根本不含连续型单位命令;outpost 打的是静止建筑;team_roam:569 是非英雄目标。
+  **只剩 `mode_roam_generic` 九处**(642–871),形状与 `roamreach` 逐条同构且**更确定**
+  ——授权是**会到点消失的 modifier 计时器**,命令却是连续的,释放只住在 `Think` 里。
+  **但这九处一条都没法在真实帧上验收**,原因就是本轮真正的发现:
+  **`tests/mock/bot_api.lua` 对未覆盖的 `Is*/Has*/Can*` 答 false ⇒ repo 里
+  每一个 fixture、每一个英雄、每一帧 `HasModifier(任何名字)==false`、`NumModifiers()==0`。**
+  这是一条没人声明过的世界断言(没人被缠绕/晕/沉默/变羊/在读 TP/带任何 buff),
+  与 §F 记的 `GetTower`、`GetIncomingTrackingProjectiles` **同一类**。两个静默后果:
+  (1) 整段已发布分支结构上不可达 —— 上述九处、`item_tpscroll` 开头那张十条否决表,
+  以及 **`J.ShouldAbandonTpChannel`(本组 gated id `tpwatch`,在 eligible 集内)第一行
+  就是 `HasModifier('modifier_teleporting')` ⇒ 它的逻辑本体从来没有在任何真实帧上
+  跑过一行**;(2) 测试可以断言错的东西还全绿(本轮那一帧的主角**其实被缠绕**,
+  旧世界把他呈现成可自由走动)。
+  修复:`make_fixture.py` 用 `MODIFIER_ADD/REMOVE` 配对重建 t 时刻仍生效的 modifier
+  (`name/remaining/elapsed/stacks`),`replay_fixture.lua` 接上五个引擎读法;
+  **没有该字段的老 fixture 逐字节不变**(有回归护栏)。`stacks` 数的是**日志事件条数**、
+  不是引擎计数器(combat log 的 stack 数值语义未定),**暂不可用来钉
+  `J.GetModifierCount(...) >= N`**(注释已写死)。
+  钉帧 `f_260819_223607_sniper_rooted`(`20260819_223607_slot1` @ t=563.5),同一帧
+  **同时真实带**控制(Frostbite 2.0s)、增益(MoM berserk 5.0s)、读条(drow
+  `modifier_teleporting` 1.8s,565.3 无干扰落地)。
+  **头号产出之二是负结果**:本局仅有的两次 MoM **都不支持** `roamreach` 那种伤害 ——
+  窗口 1 buff 到期后那 4 秒**打死了 CM**(+554 金 +922 经验),且开头 3 秒是被
+  Frostbite 缠住(「站着不动」不是陈旧命令的证据);窗口 2 是刚复活在泉水开 MoM、
+  6 秒内 1600 无敌人(**物品使用**问题,归英雄组)。**照这帧写修复就是照误读写修复**,
+  故本轮不写 gated 修复。
+  验收 `tests/test_fixture_modifiers.lua` **11 例**:前提全断言;**缺口断言用已发布未
+  gated 的消费方** `J.CanBeAttacked`(本帧 false,**只摘掉 Frostbite** 其余逐位不变则
+  翻 true);`tpwatch` 可达性用「只有越过第一行才会写的 `tpChannelStartHealth` 戳」证明,
+  且本帧正确答案 false **是因为对的理由**;单位隔离 / 多一格索引扫描 / 老 fixture 回归
+  护栏 / 两条反向断言。**两次变异:拆 loader 接线恰好 8 条 FAIL,让生成器不再输出恰好
+  9 条 FAIL。556/556(基线 545)+ luacheck 0 警告。** `state.json` 新增
+  `fixture_modifiers_20260819`。
+  **顺带发现一个未修的 bug(已开 `[bug]` issue)**:`J.CanBreakTeleport`
+  (`jmz_func.lua:4418`)调用**不存在的** `J.GetCastPoint`(邻居叫 `GetCastDelay`),
+  目标真带 `modifier_teleporting` 就崩;从没人发现是因为**没有 fixture 造得出这个
+  modifier**,且它目前**零调用者**。归总监,本轮不动。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 2 个 `.dem`,未启动任何计费资源),
+  未提批测请求。详见 `iterations/reports/strategy/20260819T232500Z.md`。
 - 2026-08-19T21:30Z:认领 **GH #45**(同时是总监 `test_set.md` §J.4 ⑥ 点名归口本组的
   钉帧任务)。钉了两帧(**同一局同一个响应者**,都从 `.dem` 独立重建过):
   `f_260819_181742_ss_chase_start`(t=312.5,**命令被下达**,gap 805)与

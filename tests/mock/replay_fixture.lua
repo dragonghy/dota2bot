@@ -120,8 +120,38 @@ function M.load(path, sSubject)
                 GetCooldownTimeRemaining = u.tp_cd,
             })
         end
+        -- Real buffs/debuffs active at the instant, when the fixture carries
+        -- them. Without this every fixture ran with the mock's blanket
+        -- `HasModifier == false` (the Is/Has/Can default), which states a world
+        -- assumption nobody declared: nobody rooted, stunned, silenced, hexed,
+        -- channelling a TP, or holding any buff. Two consequences, both silent:
+        -- shipped branches that are ENTERED through a modifier were structurally
+        -- unreachable in every fixture (all of mode_roam_generic's
+        -- continuous-attack branches; the tpscroll consider function's opening
+        -- veto list), and a test could assert "it should have walked away here"
+        -- on a frame where the hero could not move at all. Same class as the
+        -- GetTower / GetIncomingTrackingProjectiles gaps.
+        -- v1 fixtures (and any hero carrying none at the instant) omit the
+        -- field and keep the old always-false world byte for byte.
+        local mods = u.modifiers or {}
+        local by_name = {}
+        for _, m in ipairs(mods) do
+            if by_name[m.name] == nil then by_name[m.name] = m end
+        end
         heroes[u.name] = api.MakeHero(u.name, {
             GetItemInSlot = function(_, i) return slots[i] end,
+            HasModifier = function(_, sName) return by_name[sName] ~= nil end,
+            NumModifiers = #mods,
+            -- Engine indices are 0-based; jmz's own readers scan
+            -- `for i = 0, NumModifiers()` (one past the end), so the extra index
+            -- must answer harmlessly rather than crash.
+            GetModifierName = function(_, i) return (mods[i + 1] or {}).name or '' end,
+            GetModifierRemainingDuration = function(_, i)
+                return (mods[i + 1] or {}).remaining or 0
+            end,
+            GetModifierStackCount = function(_, i)
+                return (mods[i + 1] or {}).stacks or 0
+            end,
             GetTeam = u.team,
             GetLocation = loc,
             GetHealth = u.hp, GetMaxHealth = u.max_hp,
