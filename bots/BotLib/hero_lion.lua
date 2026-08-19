@@ -776,6 +776,16 @@ function X.ConsiderE()
 
 	if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1 then return 0 end
 
+	-- [liondrain] Both combat drain branches below sit AFTER the check above,
+	-- i.e. they only ever fire when Impale, Hex and Finger are all unavailable.
+	-- That is exactly the state in which a support being hit at close range
+	-- should be walking away: Mana Drain is a multi-second STATIONARY channel
+	-- with no defensive value, and while it runs J.CanNotUseAbility( bot ) is
+	-- true (IsChanneling) so X.SkillsComplement returns on its second line --
+	-- Lion cannot cast anything at all until the channel ends, and the only
+	-- release is X.ConsiderStopDrain, which fires only on J.IsRetreating.
+	if not X.lion_IsDrainSafeToStart( bot ) then return 0 end
+
 	--团战吸蓝
 	if J.IsInTeamFight( bot, 1000 )
 	then
@@ -1031,6 +1041,43 @@ function X.CanCastAbilityROnTarget( nTarget )
 	end
 
 	return false
+
+end
+
+
+-- An enemy hero closer than this is assumed to stay on top of Lion for the
+-- whole channel (Mana Drain roots him; he cannot walk out of it without
+-- breaking it, which the shipped X.ConsiderStopDrain only does when retreating).
+-- The two pinned frames bound this constant to [484, 781): 484 is the closest
+-- observed channel that must be refused, 781 the nearest one that must still be
+-- allowed. Written as an assertion in tests/test_replay_260819_lion_drain.lua,
+-- so moving this number self-reports.
+X.nEDrainDangerRadius = 500
+
+--- [liondrain] gated (turbo + soak candidate): is it safe to START a Mana Drain
+--- channel right now? False only when Lion is already being hit by an enemy
+--- hero AND one is inside X.nEDrainDangerRadius -- i.e. he would be rooting
+--- himself, mute, in front of someone who is currently killing him.
+--- Deliberately narrow: the mana-refill and illusion branches sit ABOVE the
+--- call site and are untouched, and being merely NEAR an enemy is not enough
+--- (taking hero damage is what separates the observed deaths from the observed
+--- safe channels at the same distance).
+function X.lion_IsDrainSafeToStart( hBot )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrain' ) ) then return true end
+
+	if not hBot:WasRecentlyDamagedByAnyHero( 2.0 ) then return true end
+
+	-- J.GetNearbyHeroes already drops corpses, Meepo clones and tempest doubles
+	-- (it filters every element through J.IsValidHero), so emptiness is the
+	-- whole question here -- re-checking validity would be dead code.
+	local nCloseEnemyList = J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true, BOT_MODE_NONE )
+	if nCloseEnemyList ~= nil and #nCloseEnemyList > 0
+	then
+		return false
+	end
+
+	return true
 
 end
 
