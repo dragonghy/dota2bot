@@ -212,3 +212,41 @@
   - 未定性但下一轮优先:宽扫 `idle_while_ally_dies` 候选侧 32:22 偏高且三个 run
     方向一致;`overextend_alone` 分 run 反号(36:17 vs 2:16)判为噪声。
   - 完整报告:`iterations/reports/replay-check/20260819T084950Z.md`
+- **2026-08-19T11:00Z(第六次触发)**:batch-desk 10:07Z 是**纯运维轮,零支出、
+  未启动波次**(节流条件 (i) 差约 2h,下一波最早 12:09Z);S3 `soak/` 零新增 `.dem`。
+  按章程第 2 条转向**核验记录最少的 id** —— 这次答案不含糊:**`cmrguard`**,
+  它今天才入集、**从未 armed 过、执行核验记录为 0**,而且**下一波会第一次 arm 它**。
+  本轮做**上机前反事实核验**(把门在真实帧上离线重放)。
+  **宽扫 14/14 局(现存录像里全部含 CM 的 mirror 有效局);深查 5 局。**
+  - `cmrguard`:**NOT-YET-EXECUTED**(反事实重建,非执行核验)。
+    14 局 CM 真实开大 14 次,门会否决其中 **5 次(36%)**;逐个跟踪否决者之后
+    12s 有没有真把硬控放出来:**1 次明确误报**(`_004858` t=423.4,centaur 在
+    1326u 持 `hoof_stomp`,12s 内从未施放且单调走远到 3077u;hoof_stomp 是
+    自身半径 315 的 AoE,根本够不着),**1 次威胁不迫近**(`_061821` t=521.5,
+    SK 的 blast **12.0s 后**才放,门这 12s 一次没解除,CM 血 1.00→0.03),
+    3 次大概率正确(含代码注释里的立案帧 `_003005` t=372.5 jakiro 1139u —— 我的
+    重建**逐字命中**该帧,保真度自检通过)。
+  - **根因(代码级 + in-repo 先例)**:`J.GetReadyHardCc` 的 docstring 明说返回
+    handle 就是让调用方 **range-check**,但 `cm_IsRSafeToOpen` 调布尔包装
+    `J.HasReadyHardCc` 把 handle 丢了(`grep`:全仓库唯一一处)。而
+    `jmz_func.lua:4773-4787` 的 `ccburst` 注释记录着**同一缺陷在 2026-07-23
+    的批测 bisect 里已经付费诊断并收窄过**("range-blind … prime single-id
+    suspect of the passive-stack death signature"),现成模板
+    `<= ( hCc:GetCastRange() or 0 ) + 250` 还恰好正确处理 hoof_stomp 这类技能。
+    → **"消费方丢掉 helper 特意返回的精度"的第三例**(#28 锚点 Vector、
+    #31 出价被下游 cap、本例 handle),建议总监并进 test_set.md §0b 复发类别。
+  - **已开 issue #34 [hero]**:5 帧证据表 + 关键帧轨迹 + 建议**两帧一起钉**
+    fixture(`_004858` t=423.4 必须放行 / `_003005` t=372.5 必须拦住),
+    避免重演 `lanefix` 的"单点正确、整体变差"。未越权调阈值(n=5 不足以定
+    `+250`,#3 的 822u 擦边)。
+  - **⚠️ 可测性警告(已写进 #34,下一波前必读)**:基频 **1.0 次开大/局 ×
+    36% 改判 ≈ 0.36 次/局**;`ConsiderR` 主分支(≥3 敌在 ~735u)14 局只成立
+    **2 个窗口且零开大**。对照 GH #30 的经验零点(σ≈30 gpm/seed,SE≈15),
+    **这个量级在 gpm 上不可能被看见** → 下一波 `cmrguard` 若读数为 null,
+    **既不构成"无效"也不构成"无害"**,条件 (b) 必须用行为检测器(开大次数、
+    开大后 10s 死亡率)判,否则是拿噪声发通行证(`l1xpsoak` 翻版)。
+  - **新工具坑**:dumper 会用同一 class name 吐出多个实体(`main.go:79` 的
+    `idx` 就是消歧用的)。跟踪单个敌人时间序列**必须先锁 `idx`** —— 没锁的
+    第一版把 shadow_shaman 的轨迹污染成两条交错假轨迹,会直接得出错误结论。
+    比"尸体帧 `hp_pct==0`"更隐蔽。
+  - 完整报告:`iterations/reports/replay-check/20260819T110000Z.md`
