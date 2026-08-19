@@ -232,6 +232,13 @@ function M.load(path, sSubject)
             IsAlive = b.alive,
             GetHealth = b.alive and 1 or 0, GetMaxHealth = 1,
             CanBeSeen = true,
+            -- Every shipped reader of UNIT_LIST_*_BUILDINGS filters through
+            -- J.IsValidBuilding -> J.Utils.IsValidBuilding -> unit:IsBuilding().
+            -- Without this the list was wired but the filter rejected all of
+            -- it, so the tower loop in J.ShouldTpSupportTowerFight and the
+            -- "ally is under its own tower" veto in J.GetRescueTpTarget stayed
+            -- unreachable even after the GH #37 round connected GetTower.
+            IsBuilding = true,
         })
     end
     if fx.buildings ~= nil then

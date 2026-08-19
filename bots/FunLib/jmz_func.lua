@@ -5353,6 +5353,71 @@ function J.SafeToCommitFight( bot, target )
 	return false
 end
 
+-- [GH #15 / tparrive] The same lethality-or-numbers question, asked as of
+-- ARRIVAL instead of as of now.
+--
+-- J.SafeToCommitFight scores only heroes within 1200 of the engage point, which
+-- is the right frame for a caller that is ABOUT TO WALK IN. The response-TP
+-- caller is not: J.ShouldTpSupportTowerFight requires the responder be > 3500
+-- from the threatened tower and picks its target within 1200 of that tower, so
+-- the responder is provably at least 2300 units outside its own winnability
+-- read. It therefore asks "is this fight already fine WITHOUT me" -- which
+-- refuses exactly the 1-ally-dived-by-2 collapse the fix exists to answer, and
+-- permits the parity fights that need nobody. Its heat gate makes that worse by
+-- construction: the ally it counts is REQUIRED to be hurt or under fire.
+--
+-- This counts the arriving responder in both branches. One more ally can only
+-- raise the burst sum and the head count, so this is a strict SUPERSET of
+-- J.SafeToCommitFight -- armed it can add a response, never remove one. The
+-- 'depthnum' margin is honoured unchanged: a collapse onto our own tower is
+-- never deep, so that branch is inert in the caller's domain, but the predicate
+-- is public and must not quietly undercut it.
+-- Pure predicate: the soak gate lives at the call site.
+function J.SafeToCommitFightOnArrival( bot, target )
+	if not J.IsValidHero( target ) then return true end
+	if bot == nil or not bot:IsAlive() then
+		return J.SafeToCommitFight( bot, target )
+	end
+
+	local vLoc = target:GetLocation()
+	local tAllies = J.GetAlliesNearLoc( vLoc, 1200 )
+	local bCounted = false
+	for _, hAlly in pairs( tAllies ) do
+		if hAlly == bot then
+			bCounted = true
+			break
+		end
+	end
+
+	-- (a) lethal, plus the burst the responder brings with it.
+	local nBurst = J.GetTotalEstimatedDamageToTarget( tAllies, target )
+	if not bCounted then
+		nBurst = nBurst
+			+ bot:GetEstimatedDamageToTarget( true, target, 5, DAMAGE_TYPE_ALL )
+	end
+	if nBurst >= target:GetHealth() + target:GetHealthRegen() * 5.0 then
+		return true
+	end
+
+	-- (b) numbers, counting the responder as one of ours.
+	local nMine = #tAllies
+	if not bCounted then nMine = nMine + 1 end
+	local nTheirs = #J.GetEnemiesNearLoc( vLoc, 1200 )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'depthnum' ) then
+		local hEnemyAncient = GetAncient( GetOpposingTeam() )
+		local hOwnAncient   = GetAncient( GetTeam() )
+		local bDeep = hEnemyAncient ~= nil and hOwnAncient ~= nil
+			and J.GetLocationToLocationDistance( vLoc, hEnemyAncient:GetLocation() )
+				< J.GetLocationToLocationDistance( vLoc, hOwnAncient:GetLocation() ) - 1600
+		if bDeep then
+			return nMine >= nTheirs + 1
+		end
+	end
+
+	return nMine >= nTheirs
+end
+
 -- [replay-review 071423/071903] Anti-suicide-CHASE guard. Discovered by watching
 -- three Turbo games frame by frame: a low-HP core keeps chasing a fleeing low-HP
 -- enemy and dies to the enemy's escape plus a reinforcing teammate (Luna and
@@ -6921,7 +6986,16 @@ function J.ShouldTpSupportTowerFight( bot )
 				end
 				-- Winnable-only: reuse the lethal-or-numbers commit gate against
 				-- the nearest tower enemy. If neither holds, do NOT waste the TP.
-				if bAllyThere and J.SafeToCommitFight( bot, tEnemies[1] )
+				-- [tparrive] ...except that gate is blind to the responder: the
+				-- > 3500 requirement above puts this bot outside the 1200 radius
+				-- it scores, so shipped asks whether the fight is already fine
+				-- without me. Armed, ask it as of arrival instead. Turbo-only is
+				-- inherited from this helper's first line; the arrival read is a
+				-- strict superset, so armed can only ADD a response.
+				if bAllyThere
+				and ( J.SafeToCommitFight( bot, tEnemies[1] )
+					or ( J.IsSoakCandidate( 'tparrive' )
+						and J.SafeToCommitFightOnArrival( bot, tEnemies[1] ) ) )
 				-- Team quota: one gated TP responder per window (fix B).
 				and J.TryTakeTpResponseSlot() then
 					bot.lastFrontAnswerT = DotaTime()
