@@ -218,6 +218,50 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_NONE
     end
 
+    -- === RETREAT GUARD CHAIN: BEGIN (priority-ordered) ===
+    -- [GH #29] This chain returns on the FIRST guard that fires, so SOURCE
+    -- ORDER IS PRIORITY ORDER: a guard placed above a stronger one silently
+    -- downgrades it. That was a real defect -- `tpwatch` (VERYHIGH: a TP
+    -- channel being eaten alive must outbid everything) and `pushguard`
+    -- (0.92, a value picked specifically to outbid an active kill-chase)
+    -- both sat BELOW several HIGH (0.75) guards and could never win a frame
+    -- where any of them also fired. Worse, it made the gated candidates
+    -- non-independent: arming two ids changed each other's effective
+    -- behavior, which breaks the "one variable at a time" premise the
+    -- soak-candidate A/B rests on (a structural suspect for the 14-id
+    -- bundle's negative residual).
+    --
+    -- INVARIANT: the guards below are ordered by DESCENDING returned desire.
+    -- Add a new guard at the position its desire dictates, never at the top
+    -- for convenience. tests/test_retreat_priority_order.lua enforces this.
+    -- (Vetoes returning NONE are not floors and are exempt.)
+    --
+    -- Shipped defaults are unaffected by the ordering: every guard in this
+    -- chain except `lanesurv` is soak-candidate gated and inert in real
+    -- games, and `lanesurv` keeps its position relative to every guard that
+    -- can fire alongside it.
+
+    -- [pushguard / freehunt#2] Deep solo push against converging defenders:
+    -- the push wrappers cap their desire; this floor makes the exit happen
+    -- (watched 181441 luna: 2 defenders on her at +6182 depth, no retreat
+    -- action for 20s). Gated turbo + 'pushguard' inside the helper.
+    -- [SILENT root cause, C-group diagnosis 20260723] HIGH (0.75) LOST the
+    -- desire auction to the chase that was killing the bot (watched 114311:
+    -- drow's trigger held 4s+, she went 1100 DEEPER and died 3v1) -- the
+    -- floor must outbid an active kill-chase. The condition is narrow enough
+    -- (deep + solo + 2 converging) that 0.92 is not force-passivity.
+    if J.ShouldAbortDeepSoloPush(bot) then
+        return 0.92
+    end
+
+    -- [tpwatch / dossier #24] A TP channel being eaten alive (>=30% max HP
+    -- lost since channel start under hero fire) is abandoned: the retreat
+    -- desire wins and the move order cancels the channel, saving the health
+    -- if not the scroll. Gated turbo + 'tpwatch' inside the helper.
+    if J.ShouldAbandonTpChannel(bot) then
+        return BOT_MODE_DESIRE_VERYHIGH
+    end
+
     -- [GH #4] Anti-suicide-dive ("sandwiched_walk"): the bot is walking into a
     -- pocket of 2+ enemies (within ~700) with no kill and no numbers advantage.
     -- Raise retreat desire so it backs off / stays at range instead of getting
@@ -253,14 +297,6 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_HIGH
     end
 
-    -- [tpwatch / dossier #24] A TP channel being eaten alive (>=30% max HP
-    -- lost since channel start under hero fire) is abandoned: the retreat
-    -- desire wins and the move order cancels the channel, saving the health
-    -- if not the scroll. Gated turbo + 'tpwatch' inside the helper.
-    if J.ShouldAbandonTpChannel(bot) then
-        return BOT_MODE_DESIRE_VERYHIGH
-    end
-
     -- [obs 20260722] Laning burst-anticipation (trade-survival): the visible
     -- lane enemies' currently-castable burst (mana/cd-aware) threatens my
     -- CURRENT hp and no peel-capable ally is beside me -> back off BEFORE the
@@ -291,19 +327,6 @@ function GetDesireHelper()
     -- present = normal deep CS, never fires. Gated turbo + 'midguard'.
     if J.ShouldRetreatPastMidline(bot) then
         return BOT_MODE_DESIRE_HIGH
-    end
-
-    -- [pushguard / freehunt#2] Deep solo push against converging defenders:
-    -- the push wrappers cap their desire; this floor makes the exit happen
-    -- (watched 181441 luna: 2 defenders on her at +6182 depth, no retreat
-    -- action for 20s). Gated turbo + 'pushguard' inside the helper.
-    -- [SILENT root cause, C-group diagnosis 20260723] HIGH (0.75) LOST the
-    -- desire auction to the chase that was killing the bot (watched 114311:
-    -- drow's trigger held 4s+, she went 1100 DEEPER and died 3v1) -- the
-    -- floor must outbid an active kill-chase. The condition is narrow enough
-    -- (deep + solo + 2 converging) that 0.92 is not force-passivity.
-    if J.ShouldAbortDeepSoloPush(bot) then
-        return 0.92
     end
 
     -- [lanefix/lf_revive] Post-revive flee (fixture f_080225_wk_revive): WK
@@ -346,6 +369,7 @@ function GetDesireHelper()
     elseif sTeamfightIdle == 'help' then
         return BOT_MODE_DESIRE_NONE
     end
+    -- === RETREAT GUARD CHAIN: END ===
 
     -- [LAB C12] candidate side retreats earlier: lower HP bar raised to
     -- 0.45 and a single nearby damaging enemy suffices (deaths are the

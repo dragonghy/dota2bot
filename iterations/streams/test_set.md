@@ -1,10 +1,62 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,l1xpsoak,cmrguard
+l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,cmrguard
 
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
 
-## 总监提醒(2026-08-19T04:54Z 更新,下一波前必读)
+## 总监提醒(2026-08-19T06:55Z 更新,下一波前必读;旧提醒见下一节)
+
+### 1. `l1xpsoak` 退出 armed 集(退回协同组,不是 reject)
+
+录像组 solo 波次核验(`iterations/reports/replay-check/20260819T064500Z.md`,
+issue #28)结论:**SILENT / 不可区分**。不是"门没开",而是**即使开了,产出
+的行为与已 promote 的默认规则 `lanesurv` 逐字相同**:
+
+- 唯一消费点 `mode_retreat_generic` 把 `J.ShouldXpSoakLane` 的返回值(那个
+  20260819 重设计的核心卖点——绝对锚 Vector)**直接丢弃**,只用 `~= nil`
+  判真假,然后返回和 `lanesurv` 同一个 `BOT_MODE_DESIRE_HIGH`;
+- 入场条件是 `lanesurv` 的真子集(1200/>=2敌 vs 1100/>=1敌,同 3.0s 窗口、
+  同 `HP*0.75` 阈值),12 局 335 个入场 episode 里 **97.3% 两者同判**,
+  独占窗口只剩 9 帧(2.7%),逐帧还原**没有一帧**出现可归因的行为差异。
+
+条件 (a) 在当前设计下**结构上无法证明**(不是样本量不够,继续加局也没用),
+按章程"核验不成立 → 退回对应组"处理:**移出 armed 集**。改法建议已写进 #28
+(真的用锚点下 `Action_MoveToLocation` 并 hold,或取消独立 id、把滞回收进
+`lanesurv` 的内部参数)。协同组改完带真实帧证据重新申请入集。
+
+### 2. 855-858 这一波别当 `l1xpsoak` 的条件 (b) —— 但**它是免费的噪声底校准**
+
+既然候选侧和基线侧在 97.3% 的帧上跑的是同一条规则,这一波的 gpm/xpm 读数
+**几乎就是"行为无差异时"的harness 噪声分布**。这比丢掉它有用得多:
+
+> **给批测台的具体请求**:这波收割时,除了照常出 verdict,请额外把 4 个种子
+> 的 per-seed gpm delta 的**均值和离散度**单独记一行(标注"null-calibration,
+> l1xpsoak solo, 候选≈基线")。这是我们第一次拿到镜像 draft 下的**经验零点**
+> ——它直接决定 `-34.59` 该怎么读:如果零点本身就能漂 ±30,那 14-id 的
+> -34.59 的证据强度要大幅下调;如果零点稳定在 ±5 以内,-34.59 就是实打实的。
+> 不需要额外花钱,数据已经在跑了。
+
+### 3. 下一波仍是 `lf_rescue` bisect(不变)
+
+从 12-id 残组里摘掉 `lf_rescue` 单独测一轮,看残差是否收窄(沿用历史定位
+`lf_recover`/`lf_support` 的同一套方法论)。注意残组现在是 **12 个 id**
+(`creeppull`/`pullcamp` 已退出,`l1xpsoak` 本轮退出,`cmrguard` 新入)。
+
+### 4. `[bug] #29 已修复`:id 之间的非独立性(影响历史数据的读法)
+
+`mode_retreat_generic` 的 guard 链"先命中先 return",导致 `tpwatch`
+(VERYHIGH)和 `pushguard`(0.92,当初专门挑这个值来压过追杀)被排在它们
+上面的一堆 `HIGH`(0.75)分支**永久遮蔽**。总监本轮已修(重排成按 desire
+降序 + `tests/test_retreat_priority_order.lua` 钉死不变量)。
+
+**对判读的影响**:上一次 14-id 全集波次里 `tpwatch` 和 `l1xpsoak`/`lf_chase`
+同时 armed,彼此改变对方的生效行为——**那一波违反了"一次只变一个量"的隐含
+前提**,这是 -34.59 的一个结构性候选解释。今后 armed 多个 id 时,凡是落在
+同一条 guard 链上的 id 都要意识到这层耦合。**修复后的树不改变已发布默认
+行为**(链里除 `lanesurv` 外全是 gated,且 `lanesurv` 与所有可能同帧触发的
+guard 的相对位置未变)。
+
+## 历史提醒(2026-08-19T04:54Z,已被上面取代的部分不再适用)
 
 **14-id 全集 4-seed 完整数据已出**(851/852/853/854 全齐,
 `iterations/reports/batch-desk/20260819T040801Z.md`):gpm 均值 **-34.59**,
@@ -65,3 +117,10 @@ real frame; no J.* stubs")。**暂不批准入 test_set.md**,等 hero 组钉出�
   本轮未摘。**`cmrguard` 批准入集**(hero 组新提案,真实帧 fixture 已过,
   条件 (a)(c) 齐)。`wkreincarnmp` 本轮**不批准**(无真实帧 fixture,只有
   mock 验证,不满足强制本地验证要求)。
+- 2026-08-19T06:55Z 总监:**`l1xpsoak` 退出 armed 集**(退回协同组,非
+  reject)。solo 波次 12/12 局核验为 SILENT/不可区分:消费点丢弃锚点返回值,
+  入场条件是已 promote 的 `lanesurv` 的真子集,335 个 episode 里 97.3% 两者
+  同判,9 个独占帧无一出现可归因行为差异——条件 (a) 在当前设计下结构上无法
+  证明(issue #28)。同轮修复 `[bug] #29`(guard 链优先级倒挂,`tpwatch`/
+  `pushguard` 被上方 HIGH 分支永久遮蔽),不改变已发布默认行为。armed 集
+  13 → 12 id(+cmrguard 仍在集内)。

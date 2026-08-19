@@ -1,656 +1,672 @@
 {
- "iteration_count": 17,
- "farm": {
-  "s3_bucket": "dota2bot-batch-results-4924",
-  "run_prefixes": [
-   "soak/run_20260719_0455",
-   "soak/run_20260719_0630",
-   "soak/run_20260719_0716",
-   "soak/ten-min-lab runs 0848..1136 (see 0008-ten-min-lab/plan.md)",
-   "soak/run_20260719_1136"
+  "iteration_count": 17,
+  "farm": {
+    "s3_bucket": "dota2bot-batch-results-4924",
+    "run_prefixes": [
+      "soak/run_20260719_0455",
+      "soak/run_20260719_0630",
+      "soak/run_20260719_0716",
+      "soak/ten-min-lab runs 0848..1136 (see 0008-ten-min-lab/plan.md)",
+      "soak/run_20260719_1136"
+    ],
+    "instance_tag": "dota2bot-soak"
+  },
+  "watermark": {
+    "last_processed_key": "20260719_0841",
+    "games_ingested_total": 81
+  },
+  "fixed_issues": [
+    "side_bias:soak_draft_frozen_radiant_lineup",
+    "provenance:script_version_unknown",
+    "provenance:farm_dirty_general_lua",
+    "slow_close:push_desire_gates",
+    "slow_close:no_game_time_cap",
+    "mode_detect:courier_speed_heuristic",
+    "sniper:shrapnel_charge_api",
+    "slow_close:push_never_outranked_farm_math",
+    "push_think:tower_yoyo",
+    "farm:30min_lock_rcon_referee"
   ],
-  "instance_tag": "dota2bot-soak"
- },
- "watermark": {
-  "last_processed_key": "20260719_0841",
-  "games_ingested_total": 81
- },
- "fixed_issues": [
-  "side_bias:soak_draft_frozen_radiant_lineup",
-  "provenance:script_version_unknown",
-  "provenance:farm_dirty_general_lua",
-  "slow_close:push_desire_gates",
-  "slow_close:no_game_time_cap",
-  "mode_detect:courier_speed_heuristic",
-  "sniper:shrapnel_charge_api",
-  "slow_close:push_never_outranked_farm_math",
-  "push_think:tower_yoyo",
-  "farm:30min_lock_rcon_referee"
- ],
- "open_issues": [
-  {
-   "key": "lab:lasthit_execution",
-   "note": "Cores avg 12-47 LH @11min (humans 60-80). Engine CS is best available (OHA custom micro measured WORSE, C3 -3.6k). Real gains need proper attack-timing CS micro. Biggest econ lever.",
-   "first_seen_iter": 8
-  },
-  {
-   "key": "lab:lane_soak_assignment",
-   "note": "Teams collect only ~43% of spawned lane gold; crude role-split caps measured neutral (C10/B1 reverted). Needs real lane-assignment soak logic (who rotates to which empty lane).",
-   "first_seen_iter": 8
-  },
-  {
-   "key": "lab:disaster_heroes",
-   "note": "DK 218gpm/12LH, PA 228, SB 239, slardar 249 vs sniper 431 @10min — per-hero early-game rework is the big tail. Matches the project's focus-hero polish direction.",
-   "first_seen_iter": 8
-  },
-  {
-   "key": "fight_desire:possibly_low",
-   "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games — no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
-   "first_seen_iter": 4
-  },
-  {
-   "key": "loser_building_damage:zero",
-   "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.",
-   "first_seen_iter": 2
-  },
-  {
-   "key": "script_perf:GetDesire",
-   "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.",
-   "first_seen_iter": 1
-  },
-  {
-   "key": "invalid_orders:dead_targets",
-   "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.",
-   "first_seen_iter": 2
-  },
-  {
-   "key": "feeder:pending_rebaseline",
-   "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.",
-   "first_seen_iter": 1
-  },
-  {
-   "key": "vscript_errors:handler_broken",
-   "note": "CLOSED-as-explained: engine error handler is broken in this env — ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
-   "first_seen_iter": 1
-  }
- ],
- "last_release_tag": "v0.1-baseline",
- "next_ab_after_iteration": 5,
- "deploys": {
-  "iter-0001": {
-   "commit": "e18bd457ccd37eeecdd15616db50a44a5580478d",
-   "deployed_utc": "2026-07-19T06:30:00Z",
-   "run_prefix_started": "soak/run_20260719_0630",
-   "note": "remote tag push blocked by env git proxy; tag exists on farm checkout + locally. Farm loops restarted for version-stamp provenance."
-  },
-  "iter-0002": {
-   "commit": "bd62ec0",
-   "deployed_utc": "2026-07-19T06:49:45Z",
-   "run_prefix_started": null,
-   "note": "same run prefix (soak/run_20260719_0630); no loop restart needed. Cohort split by script_version stamp: iter-0001* = draft fix only, iter-0002* = +push/turbo/sniper fixes."
-  },
-  "iter-0003": {
-   "commit": "81c2eec",
-   "deployed_utc": "2026-07-19T07:15:00Z",
-   "run_prefix_started": null,
-   "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm — stamps before this read 'iter-0001-dirty' etc.; clean from here."
-  },
-  "iter-0004": {
-   "commit": "9260ccf",
-   "deployed_utc": "2026-07-19T07:16:00Z",
-   "run_prefix_started": "soak/run_20260719_0716",
-   "note": "push caps 0.85/0.95 + closing urgency (turbo>25min). Farm fully restarted on iter-0004 per owner; in-flight iter-0002/0003 games sacrificed. 35-min wall backstop + 40-min overtime forfeit both active. Score from run_20260719_0716: first-rax <28min, most games 25-35min."
-  },
-  "iter-0006": {
-   "commit": "928f2c1",
-   "deployed_utc": "2026-07-19T08:06:00Z",
-   "run_prefix_started": null,
-   "note": "tower-aggro yo-yo fix + 5-min turbo early game (4c723d1). Same run prefix soak/run_20260719_0741; cohort split by script_version stamp (iter-0005 / iter-0005-2-g* / iter-0006)."
-  },
-  "iter-0007": {
-   "commit": "a388b56",
-   "deployed_utc": "2026-07-19T08:41:00Z",
-   "run_prefix_started": "soak/run_20260719_0841",
-   "note": "30-min lock live: rcon referee + econ-winner analysis. 12 slots. Owner asleep; scheduled agents take over per schedule_job.md."
-  },
-  "iter-0010": {
-   "commit": "122a045",
-   "deployed_utc": "2026-07-19T11:45:00Z",
-   "run_prefix_started": "soak/run_20260719_1136",
-   "note": "clean baseline after ten-min lab; B1 reverted; all lab gates inert. Lab summary in iterations/0008-ten-min-lab/REPORT.md"
-  }
- },
- "pending_validations": [
-  "NEXT final gate: re-narrowed lanefix bundle (retreat guards + mana/salve/rescue/revive/threat + narrowed recover/support, NO undertower). Run only after owner sees the reject analysis; ~$1."
- ],
- "pending_behavioral_checks": [
-  {
-   "cand": "wlok",
-   "issue": 9,
-   "class": "B-balance",
-   "note": "Warlock laning build (Shadow Word first) + no Upheaval self-channel into creeps; verify Warlock level/GPM at 10min + no lane-shove before ungating"
-  },
-  {
-   "cand": "nodive2",
-   "issue": 4,
-   "class": "B",
-   "spot": "i-017ee6bcf607e5ba6",
-   "deployed_side": "radiant",
-   "cutoff": "20260720_0626",
-   "collector": "s3://dota2bot-batch-results-4924/tools/behav_ab_spot.sh",
-   "note": "run collector ~07:05 UTC after ~10 slot1 replays; sandwiched_walk cand<base = win; watch kill participation"
-  },
-  {
-   "cand": "vsafe-SHIPPED",
-   "issue": 19,
-   "detector": "overextend_alone",
-   "hero": "vengeful_spirit",
-   "baseline": "10 in 8 games",
-   "note": "confirm Venge overextend drops in next batch; revert if it kills Venge fight participation"
-  }
- ],
- "even_fight_deaths_NOT_a_bug": "report_card death class 'even_fight' dominates (15/game), but per-game kill trades are LOPSIDED (16-8, 15-3, 9-14) = normal snowball, and both sides run identical mirror code so neither systematically loses even fights. Verified NOT a bug via trade-ratio check; do not re-chase. Reinforces why single-game econ is noise -> mirrored A/B (cancels snowball) is the right tool.",
- "replay_mining_20260721": {
-  "source": "run spot_20260721_151005 (pre-session-fix baseline), 5 slot1 replays dumped+detected LOCALLY (built behav-dump via manta v1.5.0 in scratchpad)",
-  "baseline_detector_rates_per_game": {
-   "sandwiched_walk": 9.0,
-   "tp_under_threat": 7.2,
-   "overextend_alone": 7.0,
-   "unpunished_tower_dive": 4.6,
-   "missed_cs_at_tower": 4.2,
-   "return_to_death_spot": 3.4,
-   "idle_while_ally_dies": 2.4,
-   "tp_home_wasteful": 1.8,
-   "enemy_overchase_unpunished": 1.0
-  },
-  "conclusion": "NO new un-addressed bug surfaced. Every high-frequency behavior already has a gated/shipped fix: sandwiched_walk->nodive2(#4), tp_under_threat->tpsafe2(#9, general, confirmed catches the ranged/8%HP cases), overextend_alone->#6/#18/aegisgroup, unpunished_tower_dive->#7(shipped, still fires->punish gate may be too strict), return_to_death_spot->#17/lf_revive, idle_while_ally_dies->#5, overchase->#20. Focus-hero signal = CM 6 deaths/5gm (known cm_conclusion pattern, covered by lf_salve+retreat). d20 detector CONFIRMED firing on real replays (1.0/game).",
-  "use": "these are the BEFORE numbers; when the validation-run candidate-side replays land, compare detector rates to measure Class-B behavior deltas (not just econ verdict).",
-  "followup_note": "unpunished_tower_dive still 4.6/game despite #7 being shipped -> worth checking whether J.ShouldPunishDive's numbers gate is too conservative in turbo (candidate for a future narrow loosening)."
- },
- "depthnum_validation": {
-  "instance": "i-0a3b4298ce841a85d (ON-DEMAND, run spot_20260721_233251_1_main, seeds 201/202)",
-  "why": "highest-yield remaining unvalidated fix -- DEATH-REDUCTION category (the one that wins). #18 requires +1 numbers when committing deep in enemy half; targets overextend_alone (7-10/game, biggest death signal).",
-  "metric": "primary = overextend_alone detector on depthnum-armed replays vs baseline (measure per-team via _enemy_half_depth); secondary = econ (deaths especially).",
-  "recover": "if it somehow reclaims (it's on-demand, shouldn't), use recover_verdict.py."
- },
- "validation_run_20260721_2147": {
-  "authorized_by": "owner 2026-07-21 (start validation; 2h random run + A/B)",
-  "mtd_at_launch_usd": 59.52,
-  "tier_cap_usd": 100,
-  "watchdog_hours": 2,
-  "instances": {
-   "i-0e555a739105d4f52": "PLAIN observation, 16 slots, run spot_20260721_214723_1_main (baseline gameplay + replays)",
-   "i-08a6c744eb172c1ef": "VALIDATE pullcamp (rewrote :12/:42 windows), seeds 101/102 x12, run spot_20260721_214731_1_main",
-   "i-04d2fafa97ca91561": "VALIDATE lf_support (support-wandering, narrowed), seeds 101/102 x12, run spot_20260721_214735_1_main",
-   "i-0a5fb49b960031018": "VALIDATE bodyblock (#11 advantaged harass), seeds 101/102 x12, run spot_20260721_214740_1_main"
-  },
-  "verdicts_s3": "s3://dota2bot-batch-results-4924/validation/",
-  "results_s3": "s3://dota2bot-batch-results-4924/soak/",
-  "note": "All self-terminate at 2h (or on validate completion, or spot reclaim). Check_costs after. Analyze verdicts + run behavioral detectors on candidate-side replays."
- },
- "replay_spot": {
-  "instance_id": "i-017ee6bcf607e5ba6",
-  "launched_utc": "2026-07-20T04:32Z",
-  "hours": 4,
-  "note": "replay producer; self-terminates ~08:32 UTC"
- },
- "open_questions": [
-  "SPOT RECLAMATION at ~07:00: both validation/replay spots gone (0 instances, no leak). Re-run: depthnum (Class-A --validate), nodive2 (behavioral), nopush/suplh/warlock queued.",
-  "Lesson: spot reclamation interrupts time-sensitive validation; --validate self-terminate handles cost but not reclaim. Consider on-demand for short validations or retry-on-reclaim."
- ],
- "workflow": {
-  "version": "v3-fixture-first",
-  "loop": "observe frame-by-frame -> find concrete bad decision -> narrow gated fix -> replay-fixture local validation (mandatory) -> accumulate ~10 -> ONE batch A/B final gate",
-  "rules": [
-   "simulator is NEVER the per-change validator (lanefix bundle straight-to-sim was rejected 0/4; per-fix isolation batches were killed as waste)",
-   "fixtures: make_fixture.py + tests/mock/replay_fixture.lua run REAL jmz helpers on REAL frames, no J.* stubs",
-   "autonomous mode is owner-toggled; heartbeat = background sleep (in-memory cron dies on suspend)"
-  ]
- },
- "lanefix": {
-  "status": "10 fixes (9 gated lf_* + 1 promoted-path parity bugfix), ALL fixture-validated; FINAL-GATE batch running",
-  "gates": {
-   "bundle": "lanefix",
-   "per_fix": [
-    "lf_chase",
-    "lf_mana",
-    "lf_salve",
-    "lf_support",
-    "lf_rescue",
-    "lf_recover"
-   ]
-  },
-  "fixes": {
-   "lf_chase": "ShouldNotChaseWhenLow REWRITTEN by fixture f_071423_luna_chase (numbers-parity exemption counted the dying bot as a fighter); generic seam wired in mode_retreat_generic + PA/SB considers",
-   "lf_mana": "ShouldConserveManaInLane; fixture f_072738_zuus_mana; wired Zeus Q/W, Lion Q, CM Q",
-   "lf_salve": "LaneRegenItemToUse; fixture f_071859_qop_salve; wired ItemUsageComplement",
-   "lf_support": "keep support in lane + screen carry (GetLaneCoreToProtect); fixtures f_071859_oracle_screen/wandered; mode_laning_generic",
-   "lf_rescue": "GetRescueTpTarget rescue/counter-gank TP; fixture f_071423_sky_rescue; wired tpscroll consider",
-   "lf_recover": "ShouldLaneRecoverFarm unlocks laning-phase farm for zoned-off cores (root cause: blanket farm ban); fixture f_071903_sven_idle; mode_farm_generic",
-   "lf_revive": "ShouldFleeAfterRevive: WK reincarnates in place 1v2 and re-feeds (080225 6:37->6:50, 11:00->11:12); numbers-based; fixture f_080225_wk_revive",
-   "lf_threat": "NoteProvenKillerOnDeath + ShouldRespectProvenKiller: Zeus 100-0d by same Lina 4x (073148); memory-based distance-keeping; fixture f_073148_zuus_lina",
-   "promoted_parity": "ShouldSuppressDive: parity may not exempt a <35%-HP bot unless kill secured without it (f_080225_wk_lane, WK 13% read as full 2v2 fighter); UNGATED bugfix of documented intent",
-   "lf_undertower": "core active last-hit (c3 Think) re-armed under lanefix; motivated by present-vs-absent split (198/211 tower-killed creeps had a hero within 1400). NOT in the currently running final-gate batch (committed after launch) -> rides the NEXT batch; yardstick = d9 missed_cs_at_tower."
-  },
-  "bundle_verdict": "lanefix 4-fix bundle REJECTED by mirrored A/B (gpm -74.5, xpm -84.7, deaths +1.0, 0/4 comps) BEFORE the fixture stage existed; fixes since rewritten/expanded under fixture validation; re-batch only after ~10 accumulated",
-  "batch_budget_note": "MTD ~$59; owner approval line $100; next batch is ONE final-gate run",
-  "final_gate_verdict": {
-   "verdict": "REJECT (2nd): gpm -88.7, xpm -89.3, deaths +0.67, last_hits -8.22, 0/4 comps on every metric (lanefix_20260721_1511.verdict.json, 228 games)",
-   "read": "CORRECTED by behavioral diff on the batch replays + deploy-timeline check: PRIMARY culprit = lf_recover (cand cores spent 19% of laning off-lane vs 10% base; \">2500 from front POINT\" also matched the ordinary base->lane walk, so farm-mode pulled low-level cores into jungle: CS@8 -48%, laning deaths +40%). SECONDARY = lf_support clumping (17/17 games, pairwise dist -23%; supports parked ON the carry). Retreat guards EXONERATED on econ (overextend -75%, sandwiched -26%, oscillation only +6%). NOTE: subagent initially blamed lf_undertower, but deploy_wave never re-pulls git and the undertower commit (15:40:56Z) postdates the boot pull (~15:11) -- it was NOT in the batch.",
-   "note": "promoted-parity change shipped BOTH sides (symmetric, not part of the diff). lf_undertower was NOT in this batch.",
-   "next": "NO isolation batches. Cheap path: behavioral diff on THIS batch's own replays (candidate side vs baseline side) with detectors/report cards to find which behaviors actually shifted; then narrow thresholds at the fixture level (e.g. chase guard only when target is FLEEING; threat guard radius down; support screen only when carry is contested). Re-batch only after a re-narrowed set."
-  },
-  "narrowing": {
-   "lf_recover": "now requires off the LANE PATH too (min dist to sampled GetLocationAlongLane points > 1500) + HP >= 50%; Sven motivating frame still fires; on-path-walk and low-HP counterfactuals pinned in test_replay_071903_sven_idle",
-   "lf_support": "screen only when an enemy hero is within 1600 of the carry, and stand 400u OFF the carry toward own fountain (no more parking on top)",
-   "lf_undertower": "PARKED outside the lanefix bundle -- wholesale Valve-CS-think replacement must be evaluated on its own candidate, never silently inside a bundle"
-  }
- },
- "tooling": {
-  "replayscope": "tools/batch_test/replayscope/ (build.py page per replay, make_fixture.py decision fixtures)",
-  "known_gap": "dumper drops creep deaths not killed by heroes -> missed-CS/deny analysis inexact; planned: emit all creep deaths + d9_missed_cs detector"
- },
- "full_keystone": "DONE: replay time-slice -> full hero script (SkillsComplement) with real ability levels/cds, roster-backed GetNearbyHeroes, action recorder; e2e regression test_replay_072738_zuus_script.lua",
- "autopsies": {
-  "done": [
-   "071423 Luna/Silencer",
-   "071859 CK/Oracle",
-   "071903 Sven",
-   "080225 WK (7 deaths -> lf_revive + promoted-parity fix)",
-   "073148 Zeus (Lina x4 -> lf_threat)",
-   "073654 CM"
-  ],
-  "cm_conclusion": "CM 2.8 deaths/gm; recurring pattern = hanging in lane at <=52% HP (covered by lf_salve + retreat guards). Creep-caused deaths are 2/25 games -> deliberately NOT fixed (too rare).",
-  "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
- },
- "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH).",
- "STRATEGIC_INSIGHT_20260721": {
-  "pattern": "Every LANE-MICRO fix measures neutral-to-negative: bodyblock REJECT(-50), lf_support REJECT(-22), lanefix REJECT(-88 x2), corefarm/c3 REJECT(#16). Every fix that WINS is DEATH-REDUCTION or DEFENSIVE-MACRO: #2 TP-home(+51), #7 punish-dive, #6 regroup, #5 idle, #19 venge. Matches doc learning 'Turbo econ is kill/death-driven, not lane-micro-driven'.",
-  "redirect": "STOP inventing lane-micro (pull/harass/screen/force-farm) -- the bots are finely balanced and these levers backfire. Focus fixing energy on: (1) death-reduction (overextend/return-to-death/dive-death), (2) making already-shipped defensive fixes actually FIRE (divecap-class: found #7 was neutralized by the lane-push cap). Rigorously checked #2/#6/#7 for neutralization -- only #7 was.",
-  "next_validation_priority": "death-reduction gated fixes targeting the biggest detector signals: depthnum(#18, overextend 7-10/gm, Class-A multi-seed), aegisgroup(#6 aegis solo-dive), lf_revive(#17 return-to-death 3-7/gm). These are the category most likely to actually help. pullcamp/creeppull (lane-micro) are lower priority (likely neutral)."
- },
- "ab_verdicts_20260721_recovered": {
-  "note": "Instances spot-RECLAIMED (Service initiated 22:16) before validate_onspot uploaded verdicts, but per-game analysis.json (mirror-stamped) were in S3 -> recovered LOCALLY via tools/batch_test/soak/recover_verdict.py. Econ A/B is noise-limited (1-2 seeds); treat as directional, esp. the strong 0/2 rejects.",
-  "bodyblock": {
-   "verdict": "REJECT",
-   "gpm": -50.53,
-   "xpm": -53.62,
-   "deaths": 0.61,
-   "last_hits": -3.24,
-   "comps": "0/2",
-   "read": "#11 harass pulls cores off farm + gets them killed. Echoes #16 (forcing cores off-farm in lane is wrong). Strong 2-seed reject. Keep gated/inert; do NOT promote. Abandon or radically narrow (kill-only, not general harass)."
-  },
-  "lf_support": {
-   "verdict": "REJECT",
-   "gpm": -22.75,
-   "xpm": -45.22,
-   "deaths": 0.53,
-   "last_hits": -3.33,
-   "comps": "0/1",
-   "read": "support-screen-carry clumps team -> worse. CONFIRMS lanefix diagnosis (lf_support was a culprit). The owner's Q2 (support wanders) is NOT solved by lf_support; needs a different approach. 1 seed only but consistent with prior batch."
-  },
-  "pullcamp": {
-   "verdict": "INCONCLUSIVE",
-   "gpm": 10.8,
-   "xpm": -15.69,
-   "deaths": 0.18,
-   "last_hits": -1.47,
-   "comps": "1/1 gpm but mixed",
-   "read": "seed 101 only (102 incomplete at reclaim). +10.8 gpm but xpm/deaths/lh slightly negative -> noise-limited, not a clear win. Re-run full 2-3 seeds. Also Class-B: use behavioral detectors (pull count / lane-equilibrium) not just econ."
-  },
-  "divecap": {
-   "verdict": "INCONCLUSIVE/NOT-DEMONSTRABLY-EFFECTIVE",
-   "econ": {
-    "gpm": 13.21,
-    "deaths": -0.01,
-    "note": "on-demand rerun i-03c42f5cb78533a4f; econ slightly positive, no regression, but noisy (seed102 dire wave partial)"
-   },
-   "detector": {
-    "armed_unpunished_dives": "2.17/game",
-    "baseline_unpunished_dives": "1.67/game",
-    "sample": "6 mirror games",
-    "read": "NO reduction -- armed side slightly HIGHER (within noise). The 0.98->0.72 lane-cap neutralization was a REAL code fact, but un-capping does NOT measurably reduce unpunished dives. Bottleneck is NOT desire -- it's the rest of the punish chain: SafeToCommitFight must hold at the dive instant AND the bot must CATCH+KILL a fleeing diver within 6s. divecap alone is near-inert in outcomes."
-   },
-   "decision": "Keep gated, do NOT promote. Tower-dive punishment needs an EXECUTION fix (target-lock/pathing to secure the kill), not a desire fix. Locally-correct-code != emergently-effective, AGAIN (3rd this session: bodyblock, lf_support, divecap)."
-  },
-  "depthnum": {
-   "verdict": "HOLD (no benefit)",
-   "gpm": 2.99,
-   "xpm": -15.22,
-   "deaths": 0.17,
-   "comps": "gpm 1/2, deaths 0/2",
-   "read": "depth-discounted numbers did NOT reduce deaths (its whole point); slight xpm/death worsening. 6th non-win. Keep gated, no promote; revisit only with a redesign (e.g. fog-reinforcement model) after laning program lands."
-  },
-  "lanesurv": {
-   "verdict": "PROMOTED 2026-07-22",
-   "econ": {
-    "gpm": 0.2,
-    "xpm": 5.51,
-    "deaths": -0.07,
-    "comps": "deaths 1/2",
-    "note": "no harm, unlike lane-micro rejects"
-   },
-   "class_b": {
-    "laning_deaths_armed": "9.00/game",
-    "laning_deaths_baseline": "10.67/game",
-    "delta": "-16%",
-    "sample": "6 mirror slot1 games"
-   },
-   "decision": "PROMOTED: gate removed, turbo default-on. First fix through the full observe->owner-model->fixture->A/B chain.",
-   "extension": {
-    "gpm": 13.69,
-    "xpm": 2.27,
-    "deaths": -0.15,
-    "comps": "gpm/xpm/deaths all 2/2",
-    "laning_deaths_combined": "-15% over 13 mirror games"
-   }
-  }
- },
- "new_gated_awaiting_ab": [
-  "skysilence",
-  "overchase",
-  "tpsafe2",
-  "midtp",
-  "aegisgroup",
-  "pullcamp",
-  "creeppull",
-  "bodyblock",
-  "wkbuild",
-  "divecap",
-  "l1trade",
-  "l1kite",
-  "l5trees",
-  "l5combo",
-  "suptp",
-  "ccburst"
- ],
- "laning_program": {
-  "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
-  "done_this_iter": [
-   "L1-BURST=lanesurv (validating)",
-   "L1-TRADE initiate half=l1trade (gated, 8 tests)",
-   "playbook doc",
-   "L1-TRADE counter-trade half=l1kite (gated, fixture-pinned 6:07 frame, composition with lanesurv proven)",
-   "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)",
-   "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)",
-   "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)",
-   "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)",
-   "L5-TREES cut 2: off-wave sidestep positioning (GetOffWaveHarassSpot, 3 tests)",
-   "L5-COMBO=l5combo (gated, 8 tests) -- LAST playbook rule implemented; playbook now FULLY implemented",
-   "L5-TPDEF=suptp generalization (2 tests) -- playbook now has NO partials left",
-   "ccburst (gated, 6 tests) from post-promote replay review: CC-aware burst window"
-  ],
-  "next": [
-   "ACCUMULATE-BATCH: all gated laning levers (l1trade, l1kite, l5trees, l5combo, creeppull+widened, pullcamp, suplh, lf_mana) ride ONE big mirrored batch when owner green-lights; strong-prior levers only for solo waves",
-   "L5-NOLH tightening under suplh validation"
-  ],
-  "observed_evidence": "find_kill_windows.py scan: dozens of missed kill windows per run (ogre 7% + 3 of ours nearby = survived). Owner can deploy bots/ locally (vscripts/bots + Local Dev Script) to play vs the AI; gated fixes armable via bots/Customize/soak_side.lua."
- },
- "scoping_20260722": "OWNER: the death problem's TEAMFIGHT/COORDINATION dimension (focus-fire, follow-up, peel duty, WK ult-up initiation) is a SEPARATE optimization track -> filed as GH #23 (parent). Laning-phase trade-survival (lanesurv) proceeds independently. Do not mix the two.",
- "lanesurv_note": "THE observation-driven fix of iter 18 (owner-modeled): laning trade-survival / burst-anticipation. J.ShouldRetreatLaneBurst -- flee when visible enemies' currently-castable (mana/cd-aware) burst >= 0.75x current HP (>=1.0x with a peel-capable ally within 700). Born from frame-by-frame WK death review (obs_20260722_focus_deaths.md): WK dies 5x/game to 2-3s burst from HIGH hp on its OWN half; HP-threshold retreat too slow. Pinned by 3 ground-truth fixtures (f_230545_wk_sven_burst 999v868, f_232320_wk_od_burst 915v870, f_230545_wk_laning_safe 265v868 no-fire). Laning-only; post-laning WK ult/fight layer deliberately deferred (owner). NOTE: supersedes wkbuild as the #17 lever -- wkbuild targeted kill-participation which is the WRONG problem (WK's problem is dying).",
- "divecap_finding": "ROOT CAUSE of unpunished_tower_dive staying 4.6/game despite #7 shipped: mode_team_roam CapForLanePush soft-ceils any roam desire >0.9 to 0.72 during laning; the tower-dive(#7)/over-chase(#20) punish return 0.98, so in the laning phase (when most dives happen) the punish was capped below the bot's laning desire and never fired. Fix (gated 'divecap'): defensive-collapse desires bypass the lane cap. A/B QUEUED behind spot capacity (c6i+c6a both InsufficientInstanceCapacity at 4 running); retry when a validate instance frees. VERIFY = unpunished_tower_dive rate on divecap-armed replays vs 4.6 baseline. Help-ally branches deliberately NOT exempted (3500u search radius = legit roam, correctly capped).",
- "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support), aegisgroup(#6 no solo-dive with aegis), pullcamp(#13 pull neutral camps for lane equilibrium), creeppull(#10 disadvantaged core draws enemy-creep aggro to reset lane), bodyblock(#11 advantaged laning core harasses enemy on a winnable trade), wkbuild(#17 WK earlier-2nd-stun skill build for kill participation).",
- "backlog_status_20260721": "ALL fixable open issues now carry a gated or shipped implementation. Lane-control cluster #8 (children #10 creeppull, #11 bodyblock, #12 nopush[gated], #13 pullcamp, #14 suplh[gated], #15 midtp) COMPLETE. #6 aegisgroup, #9 (skysilence/wlok/tpsafe2), #17 wkbuild, #19 vsafe[shipped], #20 overchase all done. Remaining work is PURE A/B VALIDATION (owner-deferred: '先不急着跑模拟器'): promote the ~11 gated candidates one lever at a time + the #21 lanefix re-narrowed rerun. Class-A-only items not doable under local-test-only: #16 corefarm[REJECTED], #18 depthnum[gated, needs multi-seed], #19 general attack/roam overextend expansion.",
- "lanesurv_extension": {
-  "instance": "i-0296b0db7a5f5157e (ON-DEMAND, run spot_20260722_021043_1_main, seeds 303/304 x15)",
-  "purpose": "thicken lanesurv sample (was n=6 mirror games, laning deaths -16%). On completion: recover verdict + rerun the laning-death split (tools: recover_verdict.py + the armed-vs-baseline laning-death count in state ab_verdicts). Combined n>=20 and delta holds -> PROMOTE lanesurv (remove gate). Then validate l1kite / l1xpsoak separately the same way."
- },
- "l1kite_validation": {
-  "instance": "i-07f6d321e5dc295e4 (ON-DEMAND, run spot_20260722_030410_1_main, seeds 401/402 x15)",
-  "metric": "econ verdict + LANING-phase deaths armed-vs-baseline split (same recipe as lanesurv: recover_verdict.py + laning-death count on slot1 replays). Note lanesurv is now PROMOTED = active on BOTH sides; l1kite measures its own increment on top.",
-  "next_after": "l1xpsoak (seeds 501/502), then l5trees; promote each only on its own measured improvement.",
-  "wave1_result": {
-   "econ": {
-    "gpm": 11.14,
-    "deaths": -0.11,
-    "comps": "deaths 2/2"
-   },
-   "laning_deaths": "-9% (8.86 vs 9.71, n=7)",
-   "decision": "PROMISING-HOLD, extension launched (403/404) -- same recipe as lanesurv; promote if combined n>=14 holds"
-  },
-  "wave2_result": {
-   "econ": {
-    "gpm": 15.64,
-    "deaths": -0.08,
-    "comps": "gpm 2/2",
-    "suggested": "promote"
-   },
-   "laning_deaths_ext": "+21% (n=8, FLIPPED)",
-   "laning_deaths_combined": "+6% over 15 games",
-   "decision": "HOLD-INCONCLUSIVE: econ (better-powered, ~460 games, 3/4 seeds deaths-negative) says good; the n=15 laning split flipped sign = too noisy to confirm the mechanism. Did NOT promote (bar was 'combined split holds' -- it did not). Keep gated; optionally one more extension later. Do not promote on contradictory target-metric reads."
-  }
- },
- "l1xpsoak_validation": {
-  "note": "first wave launched (501/502 x15); measure = econ + laning-death split; also watch CS/xpm (soak stance must not tank farm)",
-  "wave1_result": {
-   "econ": {
-    "gpm": -61.06,
-    "xpm": -68.58,
-    "deaths": 0.68,
-    "comps": "0/2 everything"
-   },
-   "decision": "REJECT (hard): the XP-soak stance backfires even in its corrected form -- parking a core at the lane edge costs all farm AND deaths got WORSE (likely over-triggering: 2-enemies+75% bar is common in lane). 3rd member of the force-passivity reject family (lf_recover, corefarm). Keep gated/inert; only revisit with a MUCH stricter trigger (e.g. require provably-lethal AND recent near-death), low priority."
-  }
- },
- "rejected_do_not_retry": [
-  "l1xpsoak (gpm -61, deaths +0.68, 0/2) -- force-passivity family"
- ],
- "l5trees_validation": {
-  "wave1": {
-   "gpm": 4.89,
-   "xpm": 6.9,
-   "deaths": -0.08,
-   "lh": 0.02,
-   "comps": "gpm/xpm/deaths ALL 2/2",
-   "note": "uniformly positive, both seeds same sign; engine said hold only because gpm 4.89 < its 5.0 bar"
-  },
-  "extension": "seeds 603/604 launched (same 4-seed bar as lanesurv); PROMOTE if uniformity holds",
-  "instance": "i-...044826 done; ext running",
-  "extension_result": {
-   "gpm": -16.41,
-   "deaths": 0.17,
-   "comps": "0/2 everything",
-   "decision": "HOLD, do NOT promote: wave2 exactly mirrored wave1's uniform positive -> 4-seed mean ~-5.8 gpm/+0.04 deaths, wave-level sign flip = inter-wave (draft/seed) variance dominates. The 4-seed bar just prevented promoting noise."
-  }
- },
- "VALIDATION_NOISE_LESSON_20260722": "CRITICAL calibration: a SINGLE 2-seed wave can read uniformly positive (all metrics 2/2, both seeds same sign -- l5trees wave1) and fully FLIP the next wave. So: (1) 4-seed minimum stands for any promote; (2) small-magnitude levers (<~10 gpm true effect) are UNRESOLVABLE at $3-wave scale -- stop burning waves on weak-prior candidates; (3) lanesurv's promote remains sound (4 seeds + INDEPENDENT target-metric confirmation, -16%/-14% consistent across waves, magnitude above noise floor); (4) this retroactively validates the l1kite HOLD. Future: per-lever waves ONLY for strong-observational-prior levers; the rest accumulate for the owner-designed ONE final batch.",
- "postfix_observation_20260722": {
-  "source": "5 slot1 replays from l5trees-ext run (lanesurv PROMOTED live both sides)",
-  "finding": "Focus deaths 2.8/gm (all zuus in this pool). Pattern SHIFTED vs pre-fix: deaths moved from own-half standing-ground to PAST-MIDLINE (+1300..+5700), killers now hard-CC laners (shadow_shaman x4 shackles, DK stun, lich). Mechanism gap: flat 3s burst window underestimates damage during a 4-6s hard CC.",
-  "action": "ccburst gated enhancement (5s window for enemies with ready hard-CC from curated table). STRONG prior (14 real death frames) -> qualifies for a solo validation wave when owner green-lights, or rides the big batch.",
-  "note": "ALLY-LEFT still recurs (viper/centaur/phantom walk away mid-trade) -> that is the #23 teamfight/coordination track, not laning.",
-  "second_pool_confirmation": "Pattern CONFIRMED in 2nd draft pool (l1kite-ext + more l5trees-ext replays): ~17/25 focus deaths past midline (WK/Axe/Zeus all affected; killers Axe call/Lich/Sniper/WD/Necro). Codified as d21_laning_past_midline_death detector. FIX deliberately deferred: midline-discipline suppression = force-passivity family (3x rejected); needs owner design input (e.g. tie to wave position: only back off when the WAVE isn't there) rather than another clamp."
- },
- "BIG_BATCH_20260722": {
-  "owner_directive": "all features ON together (not per-feature); $15-25 OK; several hours OK; ccburst rides this batch (no solo waves)",
-  "bundle": "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
-  "excluded_rejected": "bodyblock,l1xpsoak,c3,corefarm,lf_recover,lf_support,lf_undertower,lanefix(bundle id)",
-  "instances": {
-   "i-0b317e1c0bc9767b3": "seeds 801/802, run spot_20260722_174758_1_main",
-   "i-0cd0a1f0208100739": "seeds 803/804, run spot_20260722_174801_1_main",
-   "i-00c57279ad213626e": "seeds 805/806, run spot_20260722_174804_1_main"
-  },
-  "mechanism": "IsSoakCandidate comma-bundle support (commit e3c4a1d); stamp = mirror:<bundle>:s<seed>:<side>",
-  "analysis_plan": "per-instance verdict (or recover_verdict.py with the full bundle string as cand) -> 6-seed aggregate econ; laning-death split; d21 past-midline rate armed-vs-baseline (midguard's metric); if bundle WINS -> promote wave-by-wave discussion with owner; if LOSES -> bisect halves (the lanefix diagnosis playbook).",
-  "note": "midguard implemented THIS commit and included in the bundle (owner: 接着修改)",
-  "RESULT": {
-   "verdict": "CATASTROPHIC REJECT, 0/6 seeds, highly consistent (NOT noise)",
-   "econ": {
-    "gpm": "-74.5..-125.5 (mean -111)",
-    "xpm": "~-135",
-    "deaths": "+0.78",
-    "last_hits": "-13/hero"
-   },
-   "behavioral_diff_23_games": {
-    "laning_team_deaths": "ARMED 9.39/gm vs BASE 5.43 (+73%)",
-    "suppression_guards_WORK_on_target": "overextend_alone -85%, sandwiched_walk -50%, past_midline_death -30%",
-    "but_aggregate_pathology": {
-     "idle_while_ally_dies": "+300% (2.09 vs 0.52) -- kite/retreat guards make bots abandon committed allies; 2v2 becomes 1v2",
-     "unpunished_tower_dive_vs_armed": "+1212% (4.57 vs 0.35) -- enemies dive armed towers with impunity; armed side too passive/low to punish",
-     "missed_cs_at_tower": "+153%; LH -13/hero -- retreat stack + l5trees sidestep + suplh cede the farm",
-     "tp_under_threat": "+86% -- TP trio (midtp/suptp/lf_rescue) generates risky TPs"
+  "open_issues": [
+    {
+      "key": "lab:lasthit_execution",
+      "note": "Cores avg 12-47 LH @11min (humans 60-80). Engine CS is best available (OHA custom micro measured WORSE, C3 -3.6k). Real gains need proper attack-timing CS micro. Biggest econ lever.",
+      "first_seen_iter": 8
+    },
+    {
+      "key": "lab:lane_soak_assignment",
+      "note": "Teams collect only ~43% of spawned lane gold; crude role-split caps measured neutral (C10/B1 reverted). Needs real lane-assignment soak logic (who rotates to which empty lane).",
+      "first_seen_iter": 8
+    },
+    {
+      "key": "lab:disaster_heroes",
+      "note": "DK 218gpm/12LH, PA 228, SB 239, slardar 249 vs sniper 431 @10min — per-hero early-game rework is the big tail. Matches the project's focus-hero polish direction.",
+      "first_seen_iter": 8
+    },
+    {
+      "key": "fight_desire:possibly_low",
+      "note": "Owner observation (live watching iter-0004): bots' fight willingness seems weak and push tempo slower than human games — no proactive 'take tower after won fight' linkage, no dedicated push strategy. Long-term per-hero/macro polish item, not a blocker for this stage.",
+      "first_seen_iter": 4
+    },
+    {
+      "key": "loser_building_damage:zero",
+      "note": "Pre-fix losing side did ~0 building dmg. If this persists with fair drafts (post iter-0001 cohort), hunt a defend-lock in mode desires beyond the fixed gates.",
+      "first_seen_iter": 2
+    },
+    {
+      "key": "script_perf:GetDesire",
+      "note": "All games flag GetDesire hotspots, max ~7ms (sniper/CM/lion/PA/slardar...). Frame-budget risk; profile after macro fixes settle.",
+      "first_seen_iter": 1
+    },
+    {
+      "key": "invalid_orders:dead_targets",
+      "note": "~74/game engine rejections: orders on dead units (order 19/20). Sloppy target validation, low priority.",
+      "first_seen_iter": 2
+    },
+    {
+      "key": "feeder:pending_rebaseline",
+      "note": "Pre-fix feeder/low_gpm stats (lich 55K/207D etc.) all confounded by rigged draft. Re-rank from post-iter-0002 games.",
+      "first_seen_iter": 1
+    },
+    {
+      "key": "vscript_errors:handler_broken",
+      "note": "CLOSED-as-explained: engine error handler is broken in this env — ALL Lua error text is masked ('error in error handling'), print() never reaches logs, so log-based unmasking is impossible. Debugging real errors needs in-game observation or bisection. Was open_issues:vscript_errors:masked.",
+      "first_seen_iter": 1
     }
-   },
-   "reading": "The DEFENSIVE features individually work on their target behaviors, but STACKED they produce team-level passivity: bots hang back, abandon allies mid-trade, cede farm and towers, and die MORE (+73% laning deaths). Force-passivity at the bundle level -- the same physics as lanefix(-88) but bigger. Suspect ranking: 1) l1kite (idle+300% fingerprint = kite-away-while-ally-fights), 2) retreat stack depth (lanesurv[shipped]+ccburst+midguard+depthnum+nodive2 compounding), 3) TP trio, 4) l5trees sidestep (CS loss).",
-   "next_options_for_owner": "(a) curated SMALL bundle re-test (drop l1kite + TP trio + l5trees; keep the exonerated narrow guards), ~$4; (b) classic halves bisect (~5 waves, ~$15); (c) revert to per-lever for top suspects only. NOTHING promoted from this batch; lanesurv (solo-validated) stays live and is NOT implicated (it was on BOTH sides here)."
-  },
-  "WATCHED_PATHOLOGY": {
-   "method": "frame-by-frame tick traces of armed-side idle_while_ally_dies incidents (owner insisted; aggregates alone had missed the mechanisms)",
-   "case_A_sidestep": "game 175703 2:44-2:51: WD (91-94% hp, cask ready) sidestepped 158->828u in ~550u steps EXACTLY while Sven was bursted 78%->0 beside it, then walked back onto the corpse. Mechanism = l5trees cut-2 sidestep has no fight-awareness. FIXED: sidestep hard-suppressed when any ally within 1200 (or self) took hero damage within 2s (commit 0404cda, test pinned).",
-   "case_B_late_tp": "game 181046 1:40-1:51: Ogre TP'd across the map and LANDED THE SECOND Viper died (dist 14900->485 in one tick at death frame). Mechanism = rescue/def TPs (lf_rescue/suptp/midtp) have no arrival-time-vs-victim-survival check. FIX TODO (next): estimate victim time-to-live vs TP channel 3s; do not TP to corpses.",
-   "lesson": "aggregate detector diffs name the SYMPTOM (+300% idle); only tick-level watching separated TWO distinct mechanisms with two different fixes. The owner's watch-first rule is load-bearing at diagnosis time too."
-  },
-  "ANALYST_VERDICTS": {
-   "l1kite": "GUILTY 0.8 (cores commit then abandon <4s, supports stay per pairing -> 1v2; sup-dead-with-idle-core 13 vs 4)",
-   "l1trade": "suspect 0.55 (commit-then-chase deep; accepts losing static trades; the l1trade->l1kite oscillation)",
-   "l5combo": "suspect 0.6 (full combo at d+3000 on phantasm-CK; no depth/escape gate -- TODO add depth gate)",
-   "new_pathologies": {
-    "1_desire_oscillation": "LIKELY BUNDLE MAIN KILLER: commit->abort->re-enter flapping, zero output while soaking aggro (0-for-7 exchanges). FIXED: commit-lock/kite-lock interlock (this commit).",
-    "2_tp_chaos": "mid-fight 0.5s aborted TPs; revive->TP-back-to-death-spot; two TPs burned on one corpse. Arrival-time fix landed earlier; mid-fight-TP-start + revive-cooldown fixes TODO.",
-    "3_passive_stack_own_half": "armed side won't fight even at numbers advantage on OWN half (3 heroes escorted SF to their fountain; base dove 105x unpunished). Design work needed -- desire caps, not gates."
-   }
-  }
- },
- "CURATED_BUNDLE_20260723": {
-  "bundle": "23 features (full minus l1kite/l1trade/l5combo), incl. 5388e69 fixes",
-  "result": "REJECT 0/6: gpm -111.7, xpm -129.4, deaths +0.86, lh -10.9 -- statistically identical to the 26-feature bundle (-111)",
-  "key_inference": "the three prime suspects were NOT the main poison; removing them changed NOTHING. Poison is in the remaining 23 -- prime historical suspect: the lf_* six (lanefix family, twice-rejected at -74/-88, magnitude matches) and/or the passive stack (analyst pathology #3).",
-  "next": "halves bisect delegated to batch-runner: wave A = lf_six alone, wave B = 23-minus-lf_six (17). Spot-first per new policy. Analyst diff on curated replays in parallel.",
-  "runs": [
-   "spot_20260722_225252_1_main",
-   "spot_20260722_225302_1_main",
-   "spot_20260722_225310_1_main"
   ],
-  "mtd_usd": 65.84,
-  "ANALYST_DIFF": {
-   "fingerprint_compare": "laning-deaths +90% RETAINED (main poison not the 3 ex-suspects); idle 300%->77% (l1kite WAS real, just secondary); tp_under_threat CLEARED (44v43); unpunished-dive/overextend/healthy-ground-down(+88%) all RETAINED -> passive-stack fingerprints persist",
-   "suspect_ranking": {
-    "1_passive_stack_cluster": "ccburst+midguard+depthnum+nodive2/nopush, 0.65 cluster; frames: full-HP victims flee without retaliating (sniper 550-range 0 output over 16s), 5v2 own-half zero engagement, 3 full-HP TP responders idling at 900-1300u; WK almost won a 1v2 while 90%-HP sniper watched 25s. SINGLE-ID PRIME = ccburst (CC-widened windows hit oracle-tangle/WK-hammer/jakiro-path cases; never solo-validated; irony: it came from my own post-promote fix)",
-    "2_lf_six": "0.5, specific forms: no-salve half-HP idling 60s, revive->instant TP back to death spot->re-death in 13s (viper triple-death case)",
-    "3_others": "wkbuild 0.3 (WK deaths from bystanders, not build); midtp/midguard-mid 0.35 (zuus +13 worst single hero); l5trees 0.4 (missed CS +61% persists)"
-   },
-   "falsifiable_prediction": "bisect: lf6-only moderately negative; other-17 MORE negative. If reversed -> lf_chase/lf_threat avoidance is the poison.",
-   "per_hero": "zuus +13, viper +10, lion +9, WK +9 laning deaths armed-vs-base; 5-7 death loops per hero per game"
-  }
- },
- "BISECT_20260723": {
-  "waveB_other17": {
-   "gpm": -61.49,
-   "xpm": -109.05,
-   "deaths": 0.86,
-   "lh": -9.79,
-   "comps": "0/2",
-   "read": "17-pack alone = HALF the gpm damage (-61 vs -112) but FULL death signature (+0.86) -> passive-stack death hypothesis supported; poison is distributed"
+  "last_release_tag": "v0.1-baseline",
+  "next_ab_after_iteration": 5,
+  "deploys": {
+    "iter-0001": {
+      "commit": "e18bd457ccd37eeecdd15616db50a44a5580478d",
+      "deployed_utc": "2026-07-19T06:30:00Z",
+      "run_prefix_started": "soak/run_20260719_0630",
+      "note": "remote tag push blocked by env git proxy; tag exists on farm checkout + locally. Farm loops restarted for version-stamp provenance."
+    },
+    "iter-0002": {
+      "commit": "bd62ec0",
+      "deployed_utc": "2026-07-19T06:49:45Z",
+      "run_prefix_started": null,
+      "note": "same run prefix (soak/run_20260719_0630); no loop restart needed. Cohort split by script_version stamp: iter-0001* = draft fix only, iter-0002* = +push/turbo/sniper fixes."
+    },
+    "iter-0003": {
+      "commit": "81c2eec",
+      "deployed_utc": "2026-07-19T07:15:00Z",
+      "run_prefix_started": null,
+      "note": "overtime forfeit cap (40 game-min). Also restored stale general.lua on farm — stamps before this read 'iter-0001-dirty' etc.; clean from here."
+    },
+    "iter-0004": {
+      "commit": "9260ccf",
+      "deployed_utc": "2026-07-19T07:16:00Z",
+      "run_prefix_started": "soak/run_20260719_0716",
+      "note": "push caps 0.85/0.95 + closing urgency (turbo>25min). Farm fully restarted on iter-0004 per owner; in-flight iter-0002/0003 games sacrificed. 35-min wall backstop + 40-min overtime forfeit both active. Score from run_20260719_0716: first-rax <28min, most games 25-35min."
+    },
+    "iter-0006": {
+      "commit": "928f2c1",
+      "deployed_utc": "2026-07-19T08:06:00Z",
+      "run_prefix_started": null,
+      "note": "tower-aggro yo-yo fix + 5-min turbo early game (4c723d1). Same run prefix soak/run_20260719_0741; cohort split by script_version stamp (iter-0005 / iter-0005-2-g* / iter-0006)."
+    },
+    "iter-0007": {
+      "commit": "a388b56",
+      "deployed_utc": "2026-07-19T08:41:00Z",
+      "run_prefix_started": "soak/run_20260719_0841",
+      "note": "30-min lock live: rcon referee + econ-winner analysis. 12 slots. Owner asleep; scheduled agents take over per schedule_job.md."
+    },
+    "iter-0010": {
+      "commit": "122a045",
+      "deployed_utc": "2026-07-19T11:45:00Z",
+      "run_prefix_started": "soak/run_20260719_1136",
+      "note": "clean baseline after ten-min lab; B1 reverted; all lab gates inert. Lab summary in iterations/0008-ten-min-lab/REPORT.md"
+    }
   },
-  "waveA_lf6": {
-   "gpm": -4.85,
-   "xpm": -26.54,
-   "deaths": 0.15,
-   "lh": -4.61,
-   "comps": "gpm 1/2 (seeds split -16.3/+6.6), xpm 0/2, lh 0/2",
-   "games": 95,
-   "read": "lf6 near-NEUTRAL on gpm+deaths (noise zone, seeds split sign) but a small consistent xpm/lh drag (0/2 same-sign). hold, do not promote"
-  },
-  "verdict": "catastrophe lives in the other-17 half: it alone carries -61 gpm and the FULL +0.86 death signature while lf6 is noise-zone on both. Matches analyst prediction (lf6 moderately negative < other-17 more negative) and keeps passive-stack cluster (single-id prime: ccburst) + lf_recover/lf_support as the standing suspects -- all inside other-17. lf6 stays gated (xpm/lh drag)",
-  "ccburst_narrowed": "LANDED post-bisect: the first cut widened the burst window for ANY enemy within 1100 holding a ready CC (range-blind -> distant supports read as lethal -> full-HP flee). Now the 5s window applies only when the holder is inside its CC's cast range + 250 closing buffer (J.GetReadyHardCc returns the handle for the range check). Motivating frames (SS shackles killers ON TOP of victims) still fire; the over-trigger does not. Aggregate re-judged by the next big batch per owner policy (no per-feature waves)",
-  "cost_note": "waveA harvested 2026-07-23 by batch-runner agent; instance self-terminated, no leaks, MTD $65.84"
- },
- "PASSIVE_STACK_20260723": {
-  "verdict": "NOT a guard suppression -- a STOCK desire hole, symmetric on both sides (~1 window/game/side; armed excess in 26f traced to l1kite/l1trade oscillation, gone in 23f). All five passive-stack ids exonerated on these frames (conditions inapplicable). Engagement chain audit: laning harass never approaches (attack-range-only scan); team_roam kill branch is dead code in LANING mode (activeMode whitelist); ShouldPunishDive only covers enemies within 1200 of a building -> PUNISH DEAD ZONE at 2100-2400u from T1 (explains +1212% unpunished-dive fingerprint)",
-  "fix": "LANDED gated 'ownhalf': ShouldPunishDive gains a wider domain -- invader >=800 ancient-distance onto OUR half counts as in-domain; SafeToCommitFight discipline unchanged; desire stays HP-remapped cap via the existing team_roam punishTarget branch (works in LANING mode, sits before the whitelist). Frames pinned: f_232228 (WK+Sniper vs 69% Jugg 17s standoff), f_230510 (DP+Veno vs solo Luna 38s). 2 fixtures + 5 tests",
-  "note": "window-type detectors need a PAUSE filter (181525 23s 'standoff' was a game-pause artifact)"
- },
- "FREEHUNT_20260723": {
-  "doc": "iterations/freehunt_20260723.md -- 5 new uncodified stock pathologies from late-game/baseline blind spots (both sides): 1) ult-hoarding deaths 128/50games (focus heroes 22; warlock 10s 1v1 with rain+bonds ready; zeus TG ready vs 4x half-HP enemies); 2) solo deep-push deaths 30/50 (winning side too; luna MoM depth+7400); 3) low-HP limbo 44 segments/50 (avg 58s, max 106s; zeus 1%hp wandered jungle 80s during team wipe); 4) roshan attempts without DPS gate/abort 5/50 all failed <4 heroes; 5) escape-skill-vs-TP ordering (storm zips available, channels 3s TP, dies). Detector candidates A/B/C in scratchpad/freehunt/scan.py, need pause filter",
-  "status": "BACKLOG -- next work items after the big-batch verdict; #1 (dying ult cash-out layer) is highest value for focus heroes (zeus/lion/axe/cm all in the list)"
- },
- "BIGBATCH_VERDICT_20260723": {
-  "result": "REJECT #2 -- the all-on 27-id mega-bundle on ab99d99 (WITH ccburst narrowing, TP audit A-E, l5combo depth, lf_rescue narrowing): seeds 921/922 gpm -97.8/-101.7, seeds 923/924 -84.0/-89.1, deaths +0.9, xpm -126~-138, 0/4 comps. Barely better than the original -111.9. The ~10 post-26f fixes did NOT rescue the aggregate; the death signature (+0.9) SURVIVED the ccburst narrowing -> ccburst was not the (sole) driver",
-  "mode_false_alarm": "batch-runner flagged most games as mode:normal -- traced to parse_log.py's mode_guess heuristic (turbo iff avg_gpm>800): launch scripts always force gamemode 23, and median avg_gpm 690 @ 10.8min IS turbo economy (normal@11min would be ~350-500); the label flips exactly when the tested bundle depresses game-wide economy. Threshold recalibrated to 510. Prior waves' verdicts remain valid",
-  "verdict_files": "s3 validation/skysilence,...,tpcommit_20260723_0506.verdict.json (923/924) + validation/megabundle_20260723_0506_seeds921_922.recovered.verdict.json (921/922 recovered locally after same-name overwrite); harness quirks: two same-minute runs overwrite each other's verdict name; ab/ba imbalance (38/19)",
-  "read": "conclusion stands at full strength: locally-correct fixes do not compose at 27-id scale. Next lever is NOT more single-id narrowing inside the mega-bundle -- it is (a) residual death-signature fingerprint on THIS batch's own replays (analyst running), then (b) OWNER DECISION: recommend abandoning all-on mega-bundle waves in favor of small thematic groups (e.g. TP-discipline trio; laning pair) stacked on the promoted baseline -- grouped, not per-feature-solo",
-  "cost": "MTD $67.58, instances self-terminated, no leaks"
- },
- "MEGA_FINGERPRINT_20260723": {
-  "verdict": "the +0.9 deaths driver is NOT a combat guard -- it is the LANING-THINK TAKEOVER: arming any of creeppull/l1trade (pos1-3) or suplh/pullcamp/l5combo (pos4-5) load-time-replaces Valve's native laning Think for the whole team with a body that only knows last-hit/deny/hold-front -- no combat response at all. Armed bots died 100->0 with ZERO retaliation while base mirrors fought and won the same spots (051728 slardar: 0 attacks vs mirror's 31 damage events/1781dmg/14CS); armed 0-4min team CS 29.4 vs base 75.1; 23/24 heroes died more; effect follows the armed side across all 4 seeds. This is the rejected c3 body re-entered via new flags",
-  "mechanisms": "1) crippled-Think zero-retaliation (prime); 2) l1trade no-leash chase (052241 sniper died at +3667 chasing 20s); 3) support holds shoved-deep front (051728 ogre+VS died holding +3300 at 2v2 parity)",
-  "fixes_landed": "1) J.GetLaneHarassResponse combat-response FLOOR in the replacement Think (fire when even, step home when outnumbered; before farming, after action triggers); 2) l1trade depth leash (target >800 past midline refused); 3) J.IsLaneFrontTooDeepToHold two-tier clamp (shallow-deep needs company; >1600 depth needs numbers ADVANTAGE -- parity is not safety) wired into both hold-front paths. All pinned on the batch's own frames (test_replay_megabundle_laning.lua, 3 fixtures, 6 tests)",
-  "acceptance_notes": "ccburst narrowing VERIFIED effective (zero-output deaths armed 22% vs base 18%, category gone); lf_rescue narrowing VERIFIED (no same-frame multi-TP vacuum frames); anti-osc verified. TP audit metrics polluted by the death spiral (first-200s armed 51 vs base 12, ~27 of them post-death lane-return TPs) -- re-review after the laning fixes",
-  "next_wave_needs_owner": "recommendation recorded: stop all-on 27-id waves; next batch = small thematic groups on the promoted baseline. Group A candidates: laning five (creeppull,l1trade,suplh,pullcamp,l5combo) WITH the three Think fixes -- this directly tests whether the takeover poison is cured; Group B: TP discipline (midtp,suptp,lf_rescue,tpcommit,tpsafe2); Group C: collapse pair (overchase,ownhalf) + new stock fixes (ultcash,homeroute). Await owner's call before launching"
- },
- "promote_reaudit_VERDICT": "HOLD (246 games full-recompute; instance verdicts partial AGAIN -- recover_verdict is now the standing harvest path): gpm -18.07 (from -25.6), deaths +0.17, wr 46.9pct, comps 0/4. THE FOUR FIXES ALL HIT THEIR TARGETS: TP count diff +0.1 (was +2.6, treadmill GONE), landing deaths 8:14, 8-12min building damage FLIPPED (10/16 positive, +129 vs 8/8 negative), midline gap -1.7pt (was -5.7). But econ residual -15..-25 is stable across 8/8 seeds in two waves -- 1-2 negative levers remain in the 12-id pack. DECISION: paid waves PAUSED (on-demand billing lag; treat MTD as ~$85 vs $90 brake) -- residual-lever hunt continues on local replay data only. Sub-attribution so far: A2-four -4.7 neutral, teambrain/fieldregen twice exonerated -> suspects narrow to lf_rescue displacement, ownhalf/overchase posture cost, tpcommit residual",
- "promote_reaudit_launch": "LAUNCHED 19:27 UTC on 9d70dbc (SSM-verified both + gate files; on-demand x2, zero spot capacity in us-west-2): same 12-id bundle, only diff = the four defensive-gravity fixes. i-0698fc51ac0cff614 run spot_20260731_192742_1_main seeds 811/812; i-0ad16458589a3cc11 run spot_20260731_192832_1_main seeds 813/814. ETA ~22:00-23:00 UTC, watchdog 23:28. Promote bar: gpm>=-15 (was -25.6), deaths<=+0.1 (was +0.17), wr>=48pct (was 48.2), 4 seeds consistent (was 3neg/1green); behavioral: TP count back to +-1 (was +2.6), 8-12min building damage not 8/8 negative, cured items hold. Cost lands ~$80 MTD (brake $90)",
- "residual_fingerprint_20260731": "RESOLVED: the -25 is a compound DEFENSIVE-GRAVITY mechanism, not diffuse noise -- (1) midtp/suptp trigger ('enemy near tower + ally there') is near-ALWAYS-TRUE in turbo midgame -> defend-TP treadmill (+2.4 TPs/game, most landing to nothing, ~half the gpm gap; frames: skywrath 142s/2TPs/zero everything; shaman answered the same front 8:20/9:00/10:04); (2) tpcommit cold-release + lane assignment = cross-map oscillation; (3) whole team pulled behind midline at 8-12min (crossing rate -5.7pt, building damage negative 8/8 cells, lane depth -573..-814u) while pull tools stayed active to 10:00 in a 10-min-economy game; (4) lich +2.34 deaths: revive-TP cooldown anchored on DEATH frame but the engine stops calling mode desires while dead -> long death timers leaked the window. teambrain/fieldregen exonerated; response-TP conversion actually improved. FIXES LANDED: heat gate (defended ally must have fresh hero damage or <75pct HP), 45s repeat-front answer memory, respawn-anchored cooldown (bot.lastRespawnTime stamped on first alive frame), pull windows close at 6:00. 4 new tests (350 green)",
- "promotable_stack_VERDICT": "HOLD (harvested 18:20 UTC, 247 mirror games FULL-RECOMPUTE via recover_verdict -- instance verdicts were partial): gpm -25.61, deaths +0.17, econ-wr 48.2pct, seeds 3-negative/1-green (804 alone +1.3/-0.33/63pct). Promote bar: 3 of 4 criteria failed. BUT behavioral fronts all HELD or BEAT base: TP landing deaths 21:32 = 0.66x (from 4.8x -> 1.83x -> BETTER than base), d23 limbo 8:15 armed better, standstill 23:25 symmetric. The residual -25 is the diffuse remainder of the response family (A2-four measured -4.7 solo; B8 pair1 neutral pair2 -50 inconsistent). NEXT: zero-cost residual fingerprint on this wave replays before buying any further waves (MTD $75.57, brake $90)",
- "l1xpsoak_MECHANISM_20260731": "A1 mechanism analysis (123 mirror games + 6 frame-by-frame): the solo -50 is MOSTLY the last remaining laning-Think replacement wiring -- zero-trigger heroes (storm 0s soak time, 0/7 vs mirror 1/0) were the biggest losers via the condemned c3 CS body; the CS deficit (-3.8 lh, -30pct denies) alone explains the gpm gap. The rule itself also kills when it DOES fire: panic bar too late (75pct burst = death already adjacent), relative anchor 'walk 420u fountain-ward' = death march (medusa chased 17s, tp_cd=0 unused, 6 deaths in 8 zoned entries), boundary oscillation walks full-HP heroes BACK past the midline, lvl1-3 exemptionless bar fires on normal 1v2 opens. Owner's artifact intuition CONFIRMED in direction, wrong source: the artifact was OUR wiring, not soft opponents (opponents punished hard). FIXES LANDED: bXpSoak unwired from laning Think (last takeover id gone), panic rehomed to RETREAT desire (can TP/escape), early exemption (t<90s or HP>85pct never fires). Deferred to redesign: absolute anchor posture, exit hysteresis. Analyst predicts solo reading converges to +-10 after the unwiring (step-0 verification when next tested)",
- "Asplit_VERDICT": "CASE CLOSED (harvested 16:10 UTC): A1 l1xpsoak solo = -49.4 gpm / xpm -60.5 / deaths +0.63 / econ-wr 39.0pct over 123 mirror games -- matches its old solo reject (-61) and the FamilyA signature (-62.9): l1xpsoak IS the persistent poison. A2 (creeppull,pullcamp,l1trade,l5combo, the rehomed wiring) = -4.7 gpm / deaths +0.05 / wr 48.4pct -- EXONERATED at 2 seeds (4-seed confirmation still required for promote track). No additive branch. NEW REFEREE VERIFIED: fake sub-9.6min endings 0.8pct vs 19pct, all winners economy_10min_cap. DISPOSITION: l1xpsoak back OUT of all bundles (owner mandated the goal, so the rule needs a REDESIGN with a far stricter trigger, not silent burial -- mechanism analysis running to give the owner a concrete proposal); next wave = full stack minus l1xpsoak, 4 seeds, the 'is the program promotable' test",
- "Asplit_launch": "LAUNCHED 14:01 UTC on 1ce17c3 (SSM-verified, gate files checked; FIRST wave on the fixed referee -- duration/winrate reads trustworthy again): A1 l1xpsoak solo, i-05333dc1490707960, run spot_20260731_140127_1_main, seeds 995/996; A2 creeppull,pullcamp,l1trade,l5combo, i-0aff1b033e837645d, run spot_20260731_140139_1_main, seeds 997/998. ETA ~16:00-16:30 UTC. Ruling: A1<=-50 -> l1xpsoak prime; A1 neutral + A2<=-50 -> the four; both ~-30 -> additive. Also verify no more 8-9.5min fake endings. MTD $75.57 + ~$1",
- "family_bisect_VERDICT": "DECISIVE (harvested 13:55 UTC 20260725, scoreboard-only per the referee bug): FamilyA lane-window (creeppull,pullcamp,l1trade,l5combo,l1xpsoak) reproduces the FULL persistent signature 4/4 seeds -- gpm -48..-81 (mean -62.9), deaths +0.48..+0.66, laning deaths +18pct directionally up. FamilyB response+collapse+teambrain does NOT meet the 4-seed bar (pair1 +5.0/-24.8 near-neutral, pair2 -53/-45 -- inconsistent, weak-negative at worst; watch for a small drag inside B later). SMOKING NUMBER: FamilyA mean -62.9 ~= l1xpsoak's OLD solo reject (-61, 0/2) -- the owner-reopened id is the prime suspect. NEXT: terminal A-split -- l1xpsoak alone vs the other four (this is bisect completion, not a per-feature test). MTD $75.57",
- "FREEHUNT2_20260725": "Round-2 free hunt (33 timelines, blind-spot dimensions): FINDING 1 (harness, CRITICAL): referee extrapolated the game clock with DEFAULT_TIMESCALE=3.6 on a ~1.34x farm -> premature forcewin at real 8-9.5min, engine winner DIRE 50/50 times, 26/263 games (10pct) recorded winner OPPOSITE the econ winner -- win-rate reads from these pools are polluted (gpm/deaths scoreboard diffs unaffected). FIXED: referee never triggers on unmeasured timescale (wall-clock backstop only); analyze_log overrides sub-cap engine endings that contradict the econ winner (winner_by=economy_forcewin_recovery). FINDING 2 (bot): full-charge lifesaver items unpressed during chronic bleed, ~1.4 deaths/game (wand 45 cases -- every rule needs enemy<1000 but the bleed came from beyond; also glimmer 16/21 unpressed, famango 5 eats vs 22 holders). FIXED (first cut): 'wandbleed' gate -- <45pct HP + fresh hero damage + >=5 charges drinks regardless of attacker distance. DEFERRED: lich frame (conditions met 7s yet unpressed -- item-desire starvation, needs fixture debug), famango self-use, glimmer. HEALTHY dimensions verified (do not re-dig): runes 74pct+, combo follow-up 87pct, won-fight->tower 70pct, courier 0 deaths. Focus heroes: CM freezing-field zero-casts are situationally correct (low-confidence lever, hold); WK mana-for-reincarnation reserve is a potential small gate; fixtures pinned in hunt2_index",
- "AUTONOMOUS_LONGHAUL_20260725": "Owner away for an extended period ('你继续工作哈,我很长时间以后才能来看你了'). Operating discipline until return: (1) keep the loop running -- observe (frame-first) -> fix (gated) -> fixture -> accumulate -> ONE wave per accumulated batch; (2) BUDGET: hard self-imposed stop for paid launches at MTD $90 (owner line $100); prefer zero-cost analysis on local/S3 replay data; every launch logged here with run ids; (3) promote bar unchanged (4-seed consistent) -- no promotes without data, owner-directed promotes only on explicit instruction; (4) keep main pushed + state.json current so any wake resumes from repo alone; (5) work queue: family bisect harvest -> poison-family disposition -> TeamBrain phase 2 (release follow-up plan for the d23 regression, suptp x midtp arbitration, lane assignments) -> free-hunt round 2 findings -> focus-hero polish backlog; (6) daily-ish digest updates in iterations/ for the owner's return",
- "family_bisect_launch": "LAUNCHED 10:25 UTC 20260725 on e882b3d (SSM-verified x4): FamilyA lane-window 'creeppull,pullcamp,l1trade,l5combo,l1xpsoak' runs spot_20260725_102518 (seeds 991/992) + spot_20260725_102532 (993/994), instances i-0ff4238d8c39b37a1/i-026891c0589578778; FamilyB response+collapse 'midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen' runs spot_20260725_102545 (901/902) + spot_20260725_102558 (903/904), instances i-0161f467a23802d6c/i-0cac023cfe8607efa. ETA ~13:00-14:00 UTC. Question: which family reproduces the persistent signature (gpm<=-40, deaths>=+0.4, laning deaths +30pct, 4 seeds consistent); both neutral -> interaction poison; one carries it -> bisect within. Est MTD after ~$76-77",
- "wave_teambrain_VERDICT": "econ REJECT 0/4 (gpm -62.7, deaths +0.66) BUT the arbitration targets are all massively converged: TP landing deaths 4.8x -> 1.83x (11:6), TP volume +41pct -> +19pct, cluster deaths fully symmetric (5:5), same-frame triple TPs GONE. TeamBrain phase-1 mechanisms behaviorally VALIDATED. Two regressions to watch: d23 limbo flipped to 14:8 (hypothesis: the new tpcommit survival release converts pinned-lander DEATHS into low-HP wandering -- released bots need a follow-up plan; couple release->fieldregen/retreat routing) and standstill ratio 30:17. THE BIG PICTURE: four grouped waves (13id -33, 12id -65, this -63) all reject with laning deaths +32~39pct regardless of TP/coordination fixes converging to base -- the persistent bundle core carries an intrinsic negative. NEXT: subtractive family bisect -- familyA lane-window five (creeppull,pullcamp,l1trade,l5combo,l1xpsoak) vs familyB response+collapse (midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen)",
- "wave_teambrain_launch": "LAUNCHED 08:12 UTC 20260725 on 918ebc0 (SSM-verified both): 13-id = wave12 bundle + teambrain. i-0bc3126e4273946b2 run spot_20260725_081214_1_main seeds 981/982; i-0b58dbb945ccba0db run spot_20260725_081230_1_main seeds 983/984. ETA 10:15-12:15 UTC. Clean controlled comparison vs wave12 (only diff = teambrain): acceptance TP landing deaths <=1.5x base (was 4.8x), TP volume <=+15pct (was +41pct), no multi-TP-cluster deaths, three cured items no regression, gpm>=-15 deaths<=0 4-seed consistent, laning deaths vs +39pct. MTD $72.63",
- "TEAMBRAIN_PHASE1_20260725": {
-  "design_input": "wave12 dossier (24 landing deaths, all filed): 10/24 via STOCK defend TP (ABSOLUTE desire, zero checks, outside every quota; also 81% of the +41% TP volume -- adding bodies to burning towers); 14/24 inside multi-TP clusters (same-frame TRIPLE TP for one Axe); 6/24 revive->TP->re-death at 16-23s (just past the 15s cooldowns, and stock path had none); ~6/24 pinned by the fix-E commit stamp (floor 0.85 outbid promoted retreat 0.75, static <500u for 5s+ under fire, zero output). Per-TP contested-defend death rate armed 11.0 pct vs base 4.3 pct (2.6x; with-ally subset 6x) -- volume confound removed",
-  "implemented": "gated 'teambrain' (permissive when off): (A) J.ShouldAllowDefendTp arbitrates the STOCK defend TP -- destination headcount (refuse when enemies-allies>=2 within 1400), defeat memory (J.NoteTeamDeath blackboard from the retreat dead-frame hook: no response within 1200/25s of a teammate death), 15s revive cooldown extended to the stock path; (C) single-responder claim (one event=one answer, per-spot 1600/12s, per-player); (D) tpcommit survival release (HP<40 pct or lanesurv -> drop the pin, retreat wins). Estimated interception 16-19/24 per the dossier annotation. Flagship frames pinned: f_050713_es_defend_1v3 (cast into 1v3, dead 5.8s zero output), f_045650_lion_meatgrinder (four bodies one DP)",
-  "deferred": "(B) landing reverify beyond the survival release; tpsafe2 channel-watch (#24: 5.5s of channel auto-attacks not re-checked); full blackboard (lane assignments, focus targets, pull scheduling) = phase 2+",
-  "next": "next wave should test teambrain WITH the TP+collapse family (it exists to fix their interaction)"
- },
- "wave12_VERDICT": "REJECT 0/4 (216 games, gpm -30..-97, deaths +0.41..+1.00) BUT the behavioral acceptance is a split decision that localizes the remaining poison: FIXED+VERIFIED (a) standstill deaths 33:29 (was 25:15) -- commit self-release works; (b) core off-lane exits 73:70 (was 90:70) + camp deaths 0:0 (was 2:0) -- peacetime pull veto works; (d) d23 lowhp_limbo 4:6 -- fieldregen works. REMAINING POISON, 4/4 seeds: (c) TP landing deaths 24:5 = 4.8x (WORSE than 15:3) with TP volume +41%; (e) laning deaths 125:90 = +39% (was already +34% pre-l1xpsoak -> l1xpsoak not clearly the driver; standing property of the TP+collapse family). READ: the TP response family (midtp/suptp/lf_rescue x tpcommit) is safe alone (Group B neutral) but toxic when collapse triggers coexist -- responders TP into fights that have moved on by landing. Next: analyst on the 24 landing-death frames, then TeamBrain phase 1 (response arbitrator) as the structural fix per the owner global-strategy directive",
- "wave12_owner_approved": "LAUNCHED 20260725 04:32 UTC on ae90655 (SSM-verified both): bundle creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen. i-00139c271c606bbb0 run spot_20260725_043213_1_main seeds 971/972; i-029bed4cb1e547bf2 run spot_20260725_043231_1_main seeds 973/974. ETA ~06:30-07:00 UTC, watchdog 08:32. Acceptance: standstill deaths ~= base (was 25:15); core off-lane exits ~= base (was 90:70) + zero camp deaths; TP-landing deaths ~= base (was 15:3); l1xpsoak laning deaths flat; d23 armed < base (fieldregen); gpm >= -15, deaths <= 0, 4 seeds consistent. MTD $72.62, owner-approved budget",
- "OWNER_DISPOSITIONS_20260723": {
-  "budget": "continued testing APPROVED by owner",
-  "shipped": "tpsafe2 + pushguard PROMOTED to turbo default-on (owner: 直接 ship); gates removed, tests updated",
-  "removed": "homeroute REMOVED (owner: turbo 原则=尽量少回家) -> replaced by 'fieldregen' (gated): mid-game flask re-purchase via courier + shipped use-when-safe; d23 lowhp_limbo stays the metric. ultcash REJECTED by owner (没啥道理) -- code stays gated-dead, never arm. bodyblock reject confirmed (revisit later). c3/corefarm/lf_support rejects confirmed. lf_recover reject confirmed WITH clarification: low HP should not recall home at all -- buy supplies instead (= fieldregen)",
-  "reopened": "l1xpsoak MUST-DO per owner (-61 gpm read as opponents failing to punish the solo pos1, not the rule being wrong) -- back in the test rotation",
-  "keep_optimize": "midtp needed; suptp needed but must COORDINATE with midtp (response arbitration -- feeds the TeamBrain design); tpcommit keep, contract = purpose-driven (TP down -> must engage; leave only once the engage chance is lost); lf_rescue keep iterating rules carefully; overchase/ownhalf endorsed; roshgate parked (再说)",
-  "teambrain": "NEW WORK ITEM (owner question: global strategy distributed to bots instead of per-bot thinking): all 5 team bots share one Lua VM, module-level state already shared (tTpQuota/tRescueMemory are the seed). Plan: TeamBrain blackboard module, phase 1 = response arbitrator (one event -> one best responder, replaces per-bot quota race; solves midtp/suptp coordination), later lane assignments / focus targets / pull scheduling"
- },
- "INFLIGHT_20260723": {
-  "bigbatch_rerun": "ALL-ON 27-id bundle (26f set + tpcommit), mirrored draft, seeds 921-924, spot-first. Question: is the -111.9 gpm / +0.86 deaths catastrophe fixed by the ~10 post-26f fixes (ccburst cast-range narrowing, TP audit A-E, l5combo depth gate, anti-osc, sidestep guard)? Success bar: gpm within +/-15 or positive, deaths <= +0.2, armed-side first-200s TP count near base. FIRST LAUNCH (04:44 UTC, runs spot_20260723_0444*, i-045283eab9fc97144/i-0e8f2249214974184) INVALID -- instances cloned stale origin/main 32467a1 without the 8 fix commits (see CLAUDE.md learning); two stale launches killed (04:44 pair cloned 32467a1, waste <$0.05; 04:48 pair cloned f7613be without the lf_rescue narrowing while lf_rescue is armed in the bundle, waste <$0.15). FINAL FROZEN LAUNCH 05:04 UTC on ab99d99 (SSM-verified both instances; no further relaunches this cycle): i-07e98407b267b4c94 run spot_20260723_050440_1_main seeds 921/922; i-05619d4a62db3e81a run spot_20260723_050448_1_main seeds 923/924. ETA ~08:15-08:45 UTC, watchdog 09:05. Verdicts in s3://dota2bot-batch-results-4924/validation/, per-game under soak/<run>/; recover_verdict.py if reclaimed. Acceptance: gpm within +/-15 or positive vs the -111.9 baseline; deaths <= +0.2; first-200s armed TP count near base (audit baseline 15 vs 0); laning displacement TPs no longer +47% (waveA 88 vs 60). Est <$5 total on MTD $67.58 (under the $100 line)",
-  "groupBC_launch": "LAUNCHED 11:14-11:16 UTC on tree 7f3de08 (SSM-verified all four; docs-only ahead of 92cc36d, bot code identical). Group B TP-discipline 'midtp,suptp,tpcommit,tpsafe2,lf_rescue': i-04c0e8603973bcda2 run spot_20260723_111412_1_main seeds 941/942; i-0ff2daeade41c5b4e run spot_20260723_111600_1_main seeds 943/944. Group C collapse+stock-fix 'overchase,ownhalf,ultcash,homeroute,pushguard,roshgate': i-02a877995b6feb91e run spot_20260723_111423_1_main seeds 951/952; i-0a82ac8be54895637 run spot_20260723_111609_1_main seeds 953/954. ETA ~13:15-13:45 UTC, watchdog 15:15. Acceptance B: first-200s armed TP count near base (old 15:0), laning displacement TPs not +47%, deaths <= 0, gpm noise-or-positive. Acceptance C: deaths DOWN, gpm >= -15, d22/d23/d24 armed counts well below base. Each group needs 4-seed direction consistency. MTD $70.01 after prior settlements; this wave ~$2.5-4",
-  "wave13_VERDICT": "REJECT 0/4 (harvested ~17:10 UTC, 251 games): gpm -8.9/-67.0/-35.8/-19.9 (mean -32.9), deaths +0.36, lh -1.7. READ: the takeover poison IS cured (CS loss -1.7 vs -10, gpm -33 vs -100) but the 13-id mix carries a NEW negative -- prime suspects are the four REHOMED ids (creeppull/pullcamp via roam bidding, l1trade/l5combo via team_roam collapse; all new wiring, never individually batched). FINGERPRINT DONE: deaths driver = rehomed collapse branches (0.95 bid OUTBID the promoted lanesurv retreat 0.75; per-frame-renewed commit-lock = infinite lock -> level-1 bots pinned in losing trades, 163714 zuus); core-gpm driver = roam pull bids with zero combat awareness (cores off-lane 90 vs 70 exits, SK died pacing beside a camp with Ogre visible 1700 for 10s, 2 deaths TO CAMPS); TP 15:3 landing deaths judged an interaction (defer). overchase/ownhalf EXONERATED (deep deaths DOWN 19 vs 29). FIXES LANDED: J.ShouldReleaseLaneCommit (self-release when the collapser is dying; lock stamps once per engagement; bid 0.95->0.92), J.IsLanePullSafe (pull = peacetime: hp>=50%, untouched 2s, no enemy within 1800) + camp aggro-then-drag cadence (no more camp tanking). 2 fixtures + 5 tests. Harvest note: same-minute verdict overwrite AGAIN (_1602; 961/962 numbers recovered from _1646 run.log) -- spot_run.sh needs a run-id-suffixed verdict name, filed as harness debt. MTD $70.01, $30 headroom to the $100 line",
-  "wave13_relaunch": "LAUNCHED 16:00 UTC on e91da48 (SSM-verified): 13-id rehome+quality bundle creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,tpsafe2,lf_rescue,homeroute,pushguard,ownhalf,overchase. i-07a1b3ee63dda5027 run spot_20260723_160025_1_main seeds 961/962; i-005ab457290d16aa3 run spot_20260723_160040_1_main seeds 963/964. ETA 18:30-19:45 UTC. CAUTION: both launched same minute -> verdict filename (minute stamp) may collide/overwrite like the 0506 incident -- harvest via recover_verdict.py from each soak/<run>/ prefix regardless. Acceptance: armed 0-4min CS >= 90% of base (was 51% under takeover); TP landing exchange > 1.2:1 (was 32:30); no chain-rescue frames; d23/d24 armed < base; gpm >= -15, deaths <= 0, 4 seeds consistent",
-  "groupBC_diagnosis": "analyst two-question pass on the batches' own replays: B TPs are REAL responses (81% engage, misfire~0, tpcommit VERIFIED via 115115 sniper double-kill frame) but landing exchange 32:30 -- volume without profit; worst pattern = chained rescues (113638). C bundle largely IDLE: roshgate/ultcash NO-SCENE (no rosh attempts in 20min turbo; drafts lacked zeus/lion density), homeroute SILENT (turbo laning soft-extend to 10min while NW<8000 blocked exactly the wrecked-poor heroes; 113203 pudge), pushguard SILENT (retreat floor 0.75 lost the desire auction to the killing chase; 114311 drow), ownhalf/overchase no marginal effect vs a ~60-80pct stock baseline. FIXES LANDED a1d5efe: homeroute hard 7-min boundary, pushguard floor 0.92, chain-rescue guard (15s/1200 memory). Tooling caveat: dumper event streams use non-underscored hero names for some heroes -- canonicalize before matching (recorded in replay-analyst profile). Next-wave note: drop roshgate+ultcash from generic bundles (no statistical power without the right drafts/scenes)",
-  "groupB_VERDICT": "HOLD (harvested 20260723 ~12:45 UTC, 259 games): economy NEUTRAL (gpm -1.77, deaths -0.02, all noise-zone; comps ~2/4) -- the TP discipline set neither hurts nor measurably helps. Waste-pathology ACCEPTANCE SPLIT: early-TP flood FIXED (first-200s armed 48 : base 47 vs the old 15:0) but laning displacement TPs UNCHANGED at +47.9% (4/4 seeds; identical to waveA). Note: midtp/suptp GENERATE displacement TPs by design, so raw displacement count conflates feature volume with waste -- next audit needs a usefulness split (arrive-and-fight vs arrive-and-walk-back). Stays gated",
-  "groupC_VERDICT": "HOLD, inconclusive-to-negative (harvested same time, 236 games): deaths +0.07 with 3/4 seeds WORSE (the set promised deaths DOWN); gpm +7.33 but carried entirely by seed 954 (others -7..+5, l5trees-style single-seed noise); detector diffs flat or reversed (d22 ult-hoard 9:12 weak-right, d23 limbo 10:8 WRONG direction, d24 deep-solo 2:2 flat, all single-digit noise). Open question before any next wave: DID THE TRIGGERS EVER FIRE? (no bot-side logging; needs replay-level evidence of ultcash casts / homeroute walks / roshgate aborts). Stays gated",
-  "groupA_VERDICT": "REJECT 0/4 decisive (harvested 20260723 ~10:10 UTC): gpm -79~-126 (mean -100.3), deaths +1.28 (WORSE than mega's +0.9), xpm -140, lh -10.1, armed 0-4min team CS 21.6 vs 42.8 = 51% of base (bar was 85%); extreme game 082634: armed 6 CS vs base 66 in 4 min. The three Think fixes (combat floor / leash / clamp) did NOT cure the takeover -- the replacement architecture itself is condemned by two decisive batches. DECISION: five stay gated+parked; l1trade & l5combo REHOMED to mode_team_roam collapse branches (no Think replacement -- native laning runs; helpers/gates unchanged); creeppull+pullcamp REHOMED to mode_roam per OWNER DIRECTIVE (pulling stays; the pull window bids roam desire 0.9 and roam Think executes the pull for those seconds -- native laning untouched; helpers/gates/timing unchanged); suplh alone stays PARKED (inherently a laning-Think behavior). Instances self-terminated, no leaks, ~$1 spent",
-  "groupA_final_gate": "LAUNCHED 07:53/07:55 UTC on tree 4393578 (SSM-verified; pushguard d225349 landed after launch but is unarmed+gated -> no relaunch): bundle creeppull,l1trade,suplh,pullcamp,l5combo; i-0240df84579f76a87 run spot_20260723_075313_1_main seeds 931/932; i-07da790214bc4aabf run spot_20260723_075505_1_main seeds 933/934. ETA ~10:00 UTC, watchdog 11:53. Success: deaths <= +0.2 AND armed 0-4min team CS >= 85% of base AND gpm > -15; behavioral: zero-retaliation death frames must not recur. Promote bar: 4 seeds consistent",
-  "lf6_drag_diagnosis": "RESOLVED: culprit = lf_rescue. Old trigger (ally<60% + 2 enemies within 900) is true in every ordinary 2v2 trade -> one exchange vacuumed 2-3 healthy heroes (carries included) off-lane 45-90s each; laning displacement TPs armed 88 vs base 60 (+47%); 20/20 mirror hero-cells d_lh negative; deaths flat (pure econ/xp tax). Frames: 013254 t=37.4 (3 same-frame TPs for a 60% Viper trade), 011405 t=52 (both bot-laners TP for a 68% Axe trading AT his own tower). NARROWED in ab99d99: danger bar <35% with a diver, laning cores (pos1-3, <8min) never cross-map rescue, under-own-tower veto. 3 fixtures + 6 tests (test_replay_lf_rescue_narrow.lua); genuine 30%-Viper rescue still fires; other 5 lf ids exonerated (lf_mana zeus -2.6/lion +24.9 no signal; salve/chase/revive/threat too rare/stationary to explain an all-hero drag)"
- },
- "TP_DISCIPLINE_20260723": {
-  "source": "OWNER watched both artifact replays personally -- found TP decisions systemically broken from minute one, bigger than all prior analysis",
-  "pathology": [
-   "1. pointless early TPs: no enemy pressure yet Sven TP'd top, WD TP'd top, Sniper TP'd bot (game 175703 ~0:47), then everyone WALKED back to proper lanes; Sven re-TP'd top immediately after reviving",
-   "2. mass defend-TP arrives then does NOTHING: game 233217 ~1:00 all five dire TP'd bot (trigger was right -- enemy at tower), zero attacks on present enemies, walked back; 5 TPs wasted; Sven still died",
-   "3. WD zero-help from 0:47: Sven attacked by viper+support, WD cast nothing, pure spectating (earlier than the 2:44 sidestep case)"
+  "pending_validations": [
+    "NEXT final gate: re-narrowed lanefix bundle (retreat guards + mana/salve/rescue/revive/threat + narrowed recover/support, NO undertower). Run only after owner sees the reject analysis; ~$1."
   ],
-  "interaction": "pathology 2 = TP system delivers, combat system (passive stack) refuses to engage -- the two failures compound",
-  "action": "audit dossier committed (iterations/tp_audit_20260723.md). Fix A revive-cooldown LANDED; fix B team TP quota LANDED; fix D tpsafe2 blind spot LANDED (root cause: rescue/towerfight response branches in item-usage return BEFORE the tpsafe2 gate -> extracted ungated core J.CanEnemyInterruptTpChannel, both response helpers self-check before taking the quota slot). Fix C landing-commitment LANDED (gate 'tpcommit': response branches stamp bot.tpRespondLoc/-Until 12s at cast; J.GetTpCommitDefendDesire floors the answered lane's defend desire at 0.85 in the three mode_defend_tower_* wrappers while an enemy is still visible at the trigger -- lane assignment cannot reclaim the responder mid-engagement). Remaining: E shipped-defend variant (low pri, rides C mechanism). ALL A-D landed; acceptance = the dossier's waste-type counts on the next big batch, not tp_under_threat alone",
-  "owner_directive": "TP 的问题非常大,一定要 fix"
- },
- "wkreincarnmp_20260818": {
-  "source": "hero-stream backlog #1 (WK reincarnation mana reserve), traced to a concrete code bug rather than fresh replay observation",
-  "bug": "mode_retreat_generic.lua's WK teamfight-retreat suppression ('reincarnation is armed, don't flee') used a HARDCODED bot:GetMana() >= 160 check. Real Reincarnation trigger cost is level-dependent and decreasing (skill lvl 1/2/3 ~220/110/0 per Liquipedia, 2026-08 check) -- at skill level 1 (hero levels 6-11, most of the midgame) the real cost is 220, so 160 mana falsely read as armed: WK held a losing fight believing it had a free life, died for real, fed.",
-  "fix": "new J.IsWkReincarnationArmed(bot) in jmz_func.lua: default path unchanged (160, byte-identical to shipped), corrected path (bot:GetMana() >= abilityR:GetManaCost(), the same call hero_skeleton_king.lua's existing X.ShouldSaveMana already uses correctly for the same ability) only when turbo + soak-candidate 'wkreincarnmp' is armed. mode_retreat_generic.lua's inline check now calls this helper.",
-  "validation": "REAL-FRAME FIXTURE DONE 2026-08-19 (this field previously said mock-only and was STALE -- corrected 2026-08-19T06 by the hero stream; the 2026-08-19T04:54Z director ruling that denied test_set entry quoted the stale text). Two layers now: (1) tests/test_wk_reincarnation_mana_gate.lua, 6 mock cases (default-unchanged x2, corrected-not-armed, corrected-armed, level-3-free-armed, on-cooldown-never-armed); (2) tests/test_replay_260725_wk_reincarn_gap.lua on a make_fixture.py-mined REAL frame, tests/fixtures/f_260725_105305_wk_reincarn_gap.lua, from spot_20260725_102532_1_main/20260725_105305_slot1 t=373.5 (6:13): WK hero level 6, Reincarnation skill level 1, cd 0, mp 189/387 -- squarely inside the 160..219 gap where the shipped hardcoded threshold falsely reads ARMED. Loaded via tests/mock/replay_fixture.lua so the REAL J.IsWkReincarnationArmed runs on the real frame with no J.* stubs: gate OFF reads ARMED (byte-identical to shipped, i.e. the old wrong answer preserved), gate ON reads NOT armed. CAVEAT (state it when re-applying): make_fixture.py mines level/cooldown but not ability spec data, so the test sets GetManaCost explicitly to 220 (Liquipedia 2026-08), empirically corroborated by an observed ~219 mana spend at the reincarnation trigger tick later in the SAME replay. luacheck 0 warnings; full suite green (377/377 as of 2026-08-19T06).",
-  "next": "Local validation is COMPLETE per the mandatory-fixture rule. Re-apply for iterations/streams/test_set.md entry with the corrected record above -- the only stated reason for the 2026-08-19T04:54Z denial ('validation only mock, no real-frame fixture') no longer holds. Conditions (a) real-frame logic confirmed and (c) theory (level-dependent Reincarnation cost, Liquipedia + in-replay measured spend) are met; (b) a batch showing no negative win-rate effect is the only remaining gap, which needs test_set entry first. Risk-isolation note for the director: like cmrguard this is a single-hero predicate with no overlap with the TP/laning mechanism family that carries the current bundle's negative residual. Not queued in iterations/queue.json (queueing follows test_set approval)."
- },
- "cmrguard_20260819": {
-  "source": "hero-stream backlog #2 (CM ult timing), replay-analyst dig across 186 CM games / 30 R casts in the soak S3 archive",
-  "bug": "hero_crystal_maiden.lua's X.ConsiderR had zero self-preservation check before committing to Freezing Field's 10s self-rooting channel -- only counted enemies/escape math, never whether CM herself was about to be chain-CC'd. Systemic pattern across the 30-cast sample: 9/30 (30%) channels cut short (<2s of the 10s max), several immediately preceding a CM death. Cleanest frame: 20260819_003005_slot1 t=373.4 (6:13) -- CM opened R while Jakiro (ice_path off cooldown, curated hard-CC) was closing to ~1139 units with no ally CC covering him; he stunned her 0.6s into the channel and she died 5.9s later.",
-  "fix": "new X.cm_IsRSafeToOpen(hBot) in hero_crystal_maiden.lua: withholds R (returns BOT_ACTION_DESIRE_NONE from ConsiderR) when any enemy hero within 1600 has a ready hard-CC ability per the existing curated J.tHardCcAbilities table (reused J.HasReadyHardCc/J.GetReadyHardCc from jmz_func.lua, no new table). Default path (candidate not armed) always returns true -- unchanged shipped behavior. Also extended tests/mock/replay_fixture.lua to expose real per-slot ability handles via GetAbilityInSlot (previously only GetAbilityByName was wired), which J.GetReadyHardCc needs -- general engine-plumbing fix, not gated.",
-  "validation": "real-frame fixture tests/fixtures/f_260819_003005_cm_selfpreserve.lua (mined via AWS bootstrap + behav-dump on the actual .dem, make_fixture.py at t=373.4) + tests/test_replay_260819_cm_r_selfpreserve.lua, 5 cases: ground truth (Jakiro ice_path ready, CM died 5.9s later), gate OFF x2 (byte-identical always-allow), gate ON (correctly withholds on the real frame), gate ON with Jakiro's CC put on cooldown (correctly allows -- proves the gate tracks the actual threat, not just enemy presence). luacheck 0 warnings, full suite green (see report for exact count).",
-  "known_gap": "did not find a clean real-frame instance of the ORIGINAL backlog hypothesis (raw #nEnemysHeroesInRange>=3 bypass firing on enemies with zero threat to CM) -- replay-analyst sampled 30 casts and found the self-preservation gap instead, which is the higher-signal, more reproducible bug and is what this fix addresses. The raw->=3 branch itself is untouched. Also unverified: whether this gate is too conservative in legitimate teamfights where CM has ally CC/peel covering her (the fixture only proves the withhold is correct on THIS frame, not that the aggregate is good) -- that is exactly what the eventual final-gate batch must answer.",
-  "next": "not queued in iterations/queue.json yet -- rides the hero stream's next accumulation batch with other pending gated fixes (wkreincarnmp still needs its own promote path). Needs director approval to enter test_set.md before any batch exercises it."
- },
- "bundle14_VERDICT_20260819": {
-  "source": "director promote/reject judgment cycle, iterations/reports/batch-desk/20260819T040801Z.md (4-seed complete, seeds 851/852/853/854) + iterations/reports/replay-check/20260819T033000Z.md (frame-level diagnosis, 12/12 games scouted, 10/12 deep-checked)",
-  "bundle": "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch (the pre-l1xpsoak 14-id test_set.md set; l1xpsoak was added to test_set.md after this batch's tree was cloned, not included in this data)",
-  "verdict": "gpm -34.59, xpm -25.71, deaths +0.24, last_hits -1.21, comps_better 0/4 (all four seeds, all four metrics same direction), 239 valid mirrored games. Matches historical direction of the 07-31 lanefix-family bundles (-18~-88.7). suggested=hold_or_reject per recover_verdict.py.",
-  "director_decision": "HOLD on the bundle as a whole -- does not satisfy promote condition (b); cannot blanket-reject every id because replay-check's deep frame review found no direct BUGGY mechanism in the ids it could get clean evidence on (ownhalf/fieldregen/overchase all WORKING as designed). Two concrete actions taken instead of a blanket call: (1) creeppull/pullcamp pulled OUT of test_set.md's armed line -- replay-check confirmed 10/10 games SILENT (0 pull traces, symmetric both sides) across all 3 sampled seeds, so condition (a) never held for these two; they were never actually contributing to the bundle's measured effect, sent back to owning group via issue #13 comment, not a permanent reject (framework: BUGGY/SILENT-and-unfixed -> return to owning group, only demonstrably-harmful ids get a permanent reject). (2) lf_rescue flagged as prime suspect for a future bisect wave -- same cross-map long-TP mechanism family as lf_recover/lf_support, the two ids that WERE confirmed as the actual culprits in the twice-rejected lanefix bundle (see 'Hard-won learnings' in CLAUDE.md); replay-check found it WORKING+SILENT mixed (issue #21 comment). Recommended sequencing: l1xpsoak solo wave first (pre-existing plan, unchanged), THEN a wave with lf_rescue pulled out of the (now 12-id) remaining set to see if the negative residual narrows -- do not change two variables in the same wave.",
-  "not_yet_resolved": "no single id in the bundle has been cleanly proven to be THE culprit; the -34.59 residual could be lf_rescue alone, a genuine emergent interaction among several individually-correct fixes (the CLAUDE.md 'locally-correct != emergently-good' pattern), or some combination. Next diagnostic step is the lf_rescue-pulled bisect wave above, not another blanket full-bundle run.",
-  "next": "batch-desk: keep next routine wave scoped to l1xpsoak solo per existing test_set.md guidance; after that lands, queue an lf_rescue-pulled bisect wave against the remaining 11 ids (12 minus lf_rescue) + cmrguard once it has its own condition-(a) evidence."
- }
+  "pending_behavioral_checks": [
+    {
+      "cand": "wlok",
+      "issue": 9,
+      "class": "B-balance",
+      "note": "Warlock laning build (Shadow Word first) + no Upheaval self-channel into creeps; verify Warlock level/GPM at 10min + no lane-shove before ungating"
+    },
+    {
+      "cand": "nodive2",
+      "issue": 4,
+      "class": "B",
+      "spot": "i-017ee6bcf607e5ba6",
+      "deployed_side": "radiant",
+      "cutoff": "20260720_0626",
+      "collector": "s3://dota2bot-batch-results-4924/tools/behav_ab_spot.sh",
+      "note": "run collector ~07:05 UTC after ~10 slot1 replays; sandwiched_walk cand<base = win; watch kill participation"
+    },
+    {
+      "cand": "vsafe-SHIPPED",
+      "issue": 19,
+      "detector": "overextend_alone",
+      "hero": "vengeful_spirit",
+      "baseline": "10 in 8 games",
+      "note": "confirm Venge overextend drops in next batch; revert if it kills Venge fight participation"
+    }
+  ],
+  "even_fight_deaths_NOT_a_bug": "report_card death class 'even_fight' dominates (15/game), but per-game kill trades are LOPSIDED (16-8, 15-3, 9-14) = normal snowball, and both sides run identical mirror code so neither systematically loses even fights. Verified NOT a bug via trade-ratio check; do not re-chase. Reinforces why single-game econ is noise -> mirrored A/B (cancels snowball) is the right tool.",
+  "replay_mining_20260721": {
+    "source": "run spot_20260721_151005 (pre-session-fix baseline), 5 slot1 replays dumped+detected LOCALLY (built behav-dump via manta v1.5.0 in scratchpad)",
+    "baseline_detector_rates_per_game": {
+      "sandwiched_walk": 9.0,
+      "tp_under_threat": 7.2,
+      "overextend_alone": 7.0,
+      "unpunished_tower_dive": 4.6,
+      "missed_cs_at_tower": 4.2,
+      "return_to_death_spot": 3.4,
+      "idle_while_ally_dies": 2.4,
+      "tp_home_wasteful": 1.8,
+      "enemy_overchase_unpunished": 1.0
+    },
+    "conclusion": "NO new un-addressed bug surfaced. Every high-frequency behavior already has a gated/shipped fix: sandwiched_walk->nodive2(#4), tp_under_threat->tpsafe2(#9, general, confirmed catches the ranged/8%HP cases), overextend_alone->#6/#18/aegisgroup, unpunished_tower_dive->#7(shipped, still fires->punish gate may be too strict), return_to_death_spot->#17/lf_revive, idle_while_ally_dies->#5, overchase->#20. Focus-hero signal = CM 6 deaths/5gm (known cm_conclusion pattern, covered by lf_salve+retreat). d20 detector CONFIRMED firing on real replays (1.0/game).",
+    "use": "these are the BEFORE numbers; when the validation-run candidate-side replays land, compare detector rates to measure Class-B behavior deltas (not just econ verdict).",
+    "followup_note": "unpunished_tower_dive still 4.6/game despite #7 being shipped -> worth checking whether J.ShouldPunishDive's numbers gate is too conservative in turbo (candidate for a future narrow loosening)."
+  },
+  "depthnum_validation": {
+    "instance": "i-0a3b4298ce841a85d (ON-DEMAND, run spot_20260721_233251_1_main, seeds 201/202)",
+    "why": "highest-yield remaining unvalidated fix -- DEATH-REDUCTION category (the one that wins). #18 requires +1 numbers when committing deep in enemy half; targets overextend_alone (7-10/game, biggest death signal).",
+    "metric": "primary = overextend_alone detector on depthnum-armed replays vs baseline (measure per-team via _enemy_half_depth); secondary = econ (deaths especially).",
+    "recover": "if it somehow reclaims (it's on-demand, shouldn't), use recover_verdict.py."
+  },
+  "validation_run_20260721_2147": {
+    "authorized_by": "owner 2026-07-21 (start validation; 2h random run + A/B)",
+    "mtd_at_launch_usd": 59.52,
+    "tier_cap_usd": 100,
+    "watchdog_hours": 2,
+    "instances": {
+      "i-0e555a739105d4f52": "PLAIN observation, 16 slots, run spot_20260721_214723_1_main (baseline gameplay + replays)",
+      "i-08a6c744eb172c1ef": "VALIDATE pullcamp (rewrote :12/:42 windows), seeds 101/102 x12, run spot_20260721_214731_1_main",
+      "i-04d2fafa97ca91561": "VALIDATE lf_support (support-wandering, narrowed), seeds 101/102 x12, run spot_20260721_214735_1_main",
+      "i-0a5fb49b960031018": "VALIDATE bodyblock (#11 advantaged harass), seeds 101/102 x12, run spot_20260721_214740_1_main"
+    },
+    "verdicts_s3": "s3://dota2bot-batch-results-4924/validation/",
+    "results_s3": "s3://dota2bot-batch-results-4924/soak/",
+    "note": "All self-terminate at 2h (or on validate completion, or spot reclaim). Check_costs after. Analyze verdicts + run behavioral detectors on candidate-side replays."
+  },
+  "replay_spot": {
+    "instance_id": "i-017ee6bcf607e5ba6",
+    "launched_utc": "2026-07-20T04:32Z",
+    "hours": 4,
+    "note": "replay producer; self-terminates ~08:32 UTC"
+  },
+  "open_questions": [
+    "SPOT RECLAMATION at ~07:00: both validation/replay spots gone (0 instances, no leak). Re-run: depthnum (Class-A --validate), nodive2 (behavioral), nopush/suplh/warlock queued.",
+    "Lesson: spot reclamation interrupts time-sensitive validation; --validate self-terminate handles cost but not reclaim. Consider on-demand for short validations or retry-on-reclaim."
+  ],
+  "workflow": {
+    "version": "v3-fixture-first",
+    "loop": "observe frame-by-frame -> find concrete bad decision -> narrow gated fix -> replay-fixture local validation (mandatory) -> accumulate ~10 -> ONE batch A/B final gate",
+    "rules": [
+      "simulator is NEVER the per-change validator (lanefix bundle straight-to-sim was rejected 0/4; per-fix isolation batches were killed as waste)",
+      "fixtures: make_fixture.py + tests/mock/replay_fixture.lua run REAL jmz helpers on REAL frames, no J.* stubs",
+      "autonomous mode is owner-toggled; heartbeat = background sleep (in-memory cron dies on suspend)"
+    ]
+  },
+  "lanefix": {
+    "status": "10 fixes (9 gated lf_* + 1 promoted-path parity bugfix), ALL fixture-validated; FINAL-GATE batch running",
+    "gates": {
+      "bundle": "lanefix",
+      "per_fix": [
+        "lf_chase",
+        "lf_mana",
+        "lf_salve",
+        "lf_support",
+        "lf_rescue",
+        "lf_recover"
+      ]
+    },
+    "fixes": {
+      "lf_chase": "ShouldNotChaseWhenLow REWRITTEN by fixture f_071423_luna_chase (numbers-parity exemption counted the dying bot as a fighter); generic seam wired in mode_retreat_generic + PA/SB considers",
+      "lf_mana": "ShouldConserveManaInLane; fixture f_072738_zuus_mana; wired Zeus Q/W, Lion Q, CM Q",
+      "lf_salve": "LaneRegenItemToUse; fixture f_071859_qop_salve; wired ItemUsageComplement",
+      "lf_support": "keep support in lane + screen carry (GetLaneCoreToProtect); fixtures f_071859_oracle_screen/wandered; mode_laning_generic",
+      "lf_rescue": "GetRescueTpTarget rescue/counter-gank TP; fixture f_071423_sky_rescue; wired tpscroll consider",
+      "lf_recover": "ShouldLaneRecoverFarm unlocks laning-phase farm for zoned-off cores (root cause: blanket farm ban); fixture f_071903_sven_idle; mode_farm_generic",
+      "lf_revive": "ShouldFleeAfterRevive: WK reincarnates in place 1v2 and re-feeds (080225 6:37->6:50, 11:00->11:12); numbers-based; fixture f_080225_wk_revive",
+      "lf_threat": "NoteProvenKillerOnDeath + ShouldRespectProvenKiller: Zeus 100-0d by same Lina 4x (073148); memory-based distance-keeping; fixture f_073148_zuus_lina",
+      "promoted_parity": "ShouldSuppressDive: parity may not exempt a <35%-HP bot unless kill secured without it (f_080225_wk_lane, WK 13% read as full 2v2 fighter); UNGATED bugfix of documented intent",
+      "lf_undertower": "core active last-hit (c3 Think) re-armed under lanefix; motivated by present-vs-absent split (198/211 tower-killed creeps had a hero within 1400). NOT in the currently running final-gate batch (committed after launch) -> rides the NEXT batch; yardstick = d9 missed_cs_at_tower."
+    },
+    "bundle_verdict": "lanefix 4-fix bundle REJECTED by mirrored A/B (gpm -74.5, xpm -84.7, deaths +1.0, 0/4 comps) BEFORE the fixture stage existed; fixes since rewritten/expanded under fixture validation; re-batch only after ~10 accumulated",
+    "batch_budget_note": "MTD ~$59; owner approval line $100; next batch is ONE final-gate run",
+    "final_gate_verdict": {
+      "verdict": "REJECT (2nd): gpm -88.7, xpm -89.3, deaths +0.67, last_hits -8.22, 0/4 comps on every metric (lanefix_20260721_1511.verdict.json, 228 games)",
+      "read": "CORRECTED by behavioral diff on the batch replays + deploy-timeline check: PRIMARY culprit = lf_recover (cand cores spent 19% of laning off-lane vs 10% base; \">2500 from front POINT\" also matched the ordinary base->lane walk, so farm-mode pulled low-level cores into jungle: CS@8 -48%, laning deaths +40%). SECONDARY = lf_support clumping (17/17 games, pairwise dist -23%; supports parked ON the carry). Retreat guards EXONERATED on econ (overextend -75%, sandwiched -26%, oscillation only +6%). NOTE: subagent initially blamed lf_undertower, but deploy_wave never re-pulls git and the undertower commit (15:40:56Z) postdates the boot pull (~15:11) -- it was NOT in the batch.",
+      "note": "promoted-parity change shipped BOTH sides (symmetric, not part of the diff). lf_undertower was NOT in this batch.",
+      "next": "NO isolation batches. Cheap path: behavioral diff on THIS batch's own replays (candidate side vs baseline side) with detectors/report cards to find which behaviors actually shifted; then narrow thresholds at the fixture level (e.g. chase guard only when target is FLEEING; threat guard radius down; support screen only when carry is contested). Re-batch only after a re-narrowed set."
+    },
+    "narrowing": {
+      "lf_recover": "now requires off the LANE PATH too (min dist to sampled GetLocationAlongLane points > 1500) + HP >= 50%; Sven motivating frame still fires; on-path-walk and low-HP counterfactuals pinned in test_replay_071903_sven_idle",
+      "lf_support": "screen only when an enemy hero is within 1600 of the carry, and stand 400u OFF the carry toward own fountain (no more parking on top)",
+      "lf_undertower": "PARKED outside the lanefix bundle -- wholesale Valve-CS-think replacement must be evaluated on its own candidate, never silently inside a bundle"
+    }
+  },
+  "tooling": {
+    "replayscope": "tools/batch_test/replayscope/ (build.py page per replay, make_fixture.py decision fixtures)",
+    "known_gap": "dumper drops creep deaths not killed by heroes -> missed-CS/deny analysis inexact; planned: emit all creep deaths + d9_missed_cs detector"
+  },
+  "full_keystone": "DONE: replay time-slice -> full hero script (SkillsComplement) with real ability levels/cds, roster-backed GetNearbyHeroes, action recorder; e2e regression test_replay_072738_zuus_script.lua",
+  "autopsies": {
+    "done": [
+      "071423 Luna/Silencer",
+      "071859 CK/Oracle",
+      "071903 Sven",
+      "080225 WK (7 deaths -> lf_revive + promoted-parity fix)",
+      "073148 Zeus (Lina x4 -> lf_threat)",
+      "073654 CM"
+    ],
+    "cm_conclusion": "CM 2.8 deaths/gm; recurring pattern = hanging in lane at <=52% HP (covered by lf_salve + retreat guards). Creep-caused deaths are 2/25 games -> deliberately NOT fixed (too rare).",
+    "lion_conclusion": "Lion 2.3 deaths/gm, 0 solo deaths in 3 games -> no distinct pattern beyond existing guards; low priority."
+  },
+  "missed_cs": "dumper keeps lane-creep deaths from any killer; d9 live. 071903: ~48% lane farm uncollected; 94% of tower-kills happen with a hero present -> fix = lf_undertower (re-armed c3 core LH).",
+  "STRATEGIC_INSIGHT_20260721": {
+    "pattern": "Every LANE-MICRO fix measures neutral-to-negative: bodyblock REJECT(-50), lf_support REJECT(-22), lanefix REJECT(-88 x2), corefarm/c3 REJECT(#16). Every fix that WINS is DEATH-REDUCTION or DEFENSIVE-MACRO: #2 TP-home(+51), #7 punish-dive, #6 regroup, #5 idle, #19 venge. Matches doc learning 'Turbo econ is kill/death-driven, not lane-micro-driven'.",
+    "redirect": "STOP inventing lane-micro (pull/harass/screen/force-farm) -- the bots are finely balanced and these levers backfire. Focus fixing energy on: (1) death-reduction (overextend/return-to-death/dive-death), (2) making already-shipped defensive fixes actually FIRE (divecap-class: found #7 was neutralized by the lane-push cap). Rigorously checked #2/#6/#7 for neutralization -- only #7 was.",
+    "next_validation_priority": "death-reduction gated fixes targeting the biggest detector signals: depthnum(#18, overextend 7-10/gm, Class-A multi-seed), aegisgroup(#6 aegis solo-dive), lf_revive(#17 return-to-death 3-7/gm). These are the category most likely to actually help. pullcamp/creeppull (lane-micro) are lower priority (likely neutral)."
+  },
+  "ab_verdicts_20260721_recovered": {
+    "note": "Instances spot-RECLAIMED (Service initiated 22:16) before validate_onspot uploaded verdicts, but per-game analysis.json (mirror-stamped) were in S3 -> recovered LOCALLY via tools/batch_test/soak/recover_verdict.py. Econ A/B is noise-limited (1-2 seeds); treat as directional, esp. the strong 0/2 rejects.",
+    "bodyblock": {
+      "verdict": "REJECT",
+      "gpm": -50.53,
+      "xpm": -53.62,
+      "deaths": 0.61,
+      "last_hits": -3.24,
+      "comps": "0/2",
+      "read": "#11 harass pulls cores off farm + gets them killed. Echoes #16 (forcing cores off-farm in lane is wrong). Strong 2-seed reject. Keep gated/inert; do NOT promote. Abandon or radically narrow (kill-only, not general harass)."
+    },
+    "lf_support": {
+      "verdict": "REJECT",
+      "gpm": -22.75,
+      "xpm": -45.22,
+      "deaths": 0.53,
+      "last_hits": -3.33,
+      "comps": "0/1",
+      "read": "support-screen-carry clumps team -> worse. CONFIRMS lanefix diagnosis (lf_support was a culprit). The owner's Q2 (support wanders) is NOT solved by lf_support; needs a different approach. 1 seed only but consistent with prior batch."
+    },
+    "pullcamp": {
+      "verdict": "INCONCLUSIVE",
+      "gpm": 10.8,
+      "xpm": -15.69,
+      "deaths": 0.18,
+      "last_hits": -1.47,
+      "comps": "1/1 gpm but mixed",
+      "read": "seed 101 only (102 incomplete at reclaim). +10.8 gpm but xpm/deaths/lh slightly negative -> noise-limited, not a clear win. Re-run full 2-3 seeds. Also Class-B: use behavioral detectors (pull count / lane-equilibrium) not just econ."
+    },
+    "divecap": {
+      "verdict": "INCONCLUSIVE/NOT-DEMONSTRABLY-EFFECTIVE",
+      "econ": {
+        "gpm": 13.21,
+        "deaths": -0.01,
+        "note": "on-demand rerun i-03c42f5cb78533a4f; econ slightly positive, no regression, but noisy (seed102 dire wave partial)"
+      },
+      "detector": {
+        "armed_unpunished_dives": "2.17/game",
+        "baseline_unpunished_dives": "1.67/game",
+        "sample": "6 mirror games",
+        "read": "NO reduction -- armed side slightly HIGHER (within noise). The 0.98->0.72 lane-cap neutralization was a REAL code fact, but un-capping does NOT measurably reduce unpunished dives. Bottleneck is NOT desire -- it's the rest of the punish chain: SafeToCommitFight must hold at the dive instant AND the bot must CATCH+KILL a fleeing diver within 6s. divecap alone is near-inert in outcomes."
+      },
+      "decision": "Keep gated, do NOT promote. Tower-dive punishment needs an EXECUTION fix (target-lock/pathing to secure the kill), not a desire fix. Locally-correct-code != emergently-effective, AGAIN (3rd this session: bodyblock, lf_support, divecap)."
+    },
+    "depthnum": {
+      "verdict": "HOLD (no benefit)",
+      "gpm": 2.99,
+      "xpm": -15.22,
+      "deaths": 0.17,
+      "comps": "gpm 1/2, deaths 0/2",
+      "read": "depth-discounted numbers did NOT reduce deaths (its whole point); slight xpm/death worsening. 6th non-win. Keep gated, no promote; revisit only with a redesign (e.g. fog-reinforcement model) after laning program lands."
+    },
+    "lanesurv": {
+      "verdict": "PROMOTED 2026-07-22",
+      "econ": {
+        "gpm": 0.2,
+        "xpm": 5.51,
+        "deaths": -0.07,
+        "comps": "deaths 1/2",
+        "note": "no harm, unlike lane-micro rejects"
+      },
+      "class_b": {
+        "laning_deaths_armed": "9.00/game",
+        "laning_deaths_baseline": "10.67/game",
+        "delta": "-16%",
+        "sample": "6 mirror slot1 games"
+      },
+      "decision": "PROMOTED: gate removed, turbo default-on. First fix through the full observe->owner-model->fixture->A/B chain.",
+      "extension": {
+        "gpm": 13.69,
+        "xpm": 2.27,
+        "deaths": -0.15,
+        "comps": "gpm/xpm/deaths all 2/2",
+        "laning_deaths_combined": "-15% over 13 mirror games"
+      }
+    }
+  },
+  "new_gated_awaiting_ab": [
+    "skysilence",
+    "overchase",
+    "tpsafe2",
+    "midtp",
+    "aegisgroup",
+    "pullcamp",
+    "creeppull",
+    "bodyblock",
+    "wkbuild",
+    "divecap",
+    "l1trade",
+    "l1kite",
+    "l5trees",
+    "l5combo",
+    "suptp",
+    "ccburst"
+  ],
+  "laning_program": {
+    "track": "OWNER-DIRECTED dedicated 1+5 laning optimization track (2026-07-22): keep iterating pos-1 + pos-5 laning until our 1+5 duo beats the enemy 3+4 in lane. Spec = docs/LANING_PLAYBOOK.md (rule IDs L1-*/L5-*, API mapping, status per rule).",
+    "done_this_iter": [
+      "L1-BURST=lanesurv (validating)",
+      "L1-TRADE initiate half=l1trade (gated, 8 tests)",
+      "playbook doc",
+      "L1-TRADE counter-trade half=l1kite (gated, fixture-pinned 6:07 frame, composition with lanesurv proven)",
+      "L1-XPSOAK=l1xpsoak (gated, 9 tests, real-frame geometry pinned; corrected lf_recover)",
+      "L5-TREES first cut=l5trees (aggro-safe harass predicate + gated suppression; positioning cut + fixture TODO next)",
+      "lanesurv PROMOTED (4 seeds, gpm +13.7, laning deaths -15%)",
+      "L1-DRAG widening: creeppull melee-vs-2-ranged OR-branch (3 tests; rides creeppull candidate in the next big batch)",
+      "L5-TREES cut 2: off-wave sidestep positioning (GetOffWaveHarassSpot, 3 tests)",
+      "L5-COMBO=l5combo (gated, 8 tests) -- LAST playbook rule implemented; playbook now FULLY implemented",
+      "L5-TPDEF=suptp generalization (2 tests) -- playbook now has NO partials left",
+      "ccburst (gated, 6 tests) from post-promote replay review: CC-aware burst window"
+    ],
+    "next": [
+      "ACCUMULATE-BATCH: all gated laning levers (l1trade, l1kite, l5trees, l5combo, creeppull+widened, pullcamp, suplh, lf_mana) ride ONE big mirrored batch when owner green-lights; strong-prior levers only for solo waves",
+      "L5-NOLH tightening under suplh validation"
+    ],
+    "observed_evidence": "find_kill_windows.py scan: dozens of missed kill windows per run (ogre 7% + 3 of ours nearby = survived). Owner can deploy bots/ locally (vscripts/bots + Local Dev Script) to play vs the AI; gated fixes armable via bots/Customize/soak_side.lua."
+  },
+  "scoping_20260722": "OWNER: the death problem's TEAMFIGHT/COORDINATION dimension (focus-fire, follow-up, peel duty, WK ult-up initiation) is a SEPARATE optimization track -> filed as GH #23 (parent). Laning-phase trade-survival (lanesurv) proceeds independently. Do not mix the two.",
+  "lanesurv_note": "THE observation-driven fix of iter 18 (owner-modeled): laning trade-survival / burst-anticipation. J.ShouldRetreatLaneBurst -- flee when visible enemies' currently-castable (mana/cd-aware) burst >= 0.75x current HP (>=1.0x with a peel-capable ally within 700). Born from frame-by-frame WK death review (obs_20260722_focus_deaths.md): WK dies 5x/game to 2-3s burst from HIGH hp on its OWN half; HP-threshold retreat too slow. Pinned by 3 ground-truth fixtures (f_230545_wk_sven_burst 999v868, f_232320_wk_od_burst 915v870, f_230545_wk_laning_safe 265v868 no-fire). Laning-only; post-laning WK ult/fight layer deliberately deferred (owner). NOTE: supersedes wkbuild as the #17 lever -- wkbuild targeted kill-participation which is the WRONG problem (WK's problem is dying).",
+  "divecap_finding": "ROOT CAUSE of unpunished_tower_dive staying 4.6/game despite #7 shipped: mode_team_roam CapForLanePush soft-ceils any roam desire >0.9 to 0.72 during laning; the tower-dive(#7)/over-chase(#20) punish return 0.98, so in the laning phase (when most dives happen) the punish was capped below the bot's laning desire and never fired. Fix (gated 'divecap'): defensive-collapse desires bypass the lane cap. A/B QUEUED behind spot capacity (c6i+c6a both InsufficientInstanceCapacity at 4 running); retry when a validate instance frees. VERIFY = unpunished_tower_dive rate on divecap-armed replays vs 4.6 baseline. Help-ally branches deliberately NOT exempted (3500u search radius = legit roam, correctly capped).",
+  "new_gated_notes": "Implemented+unit-tested+on main, inert (gated). Need A/B/behavioral validation before promote: skysilence(#9 skywrath lone-silence), overchase(#20 punish enemy overchase), tpsafe2(#9 slardar interruptible-TP), midtp(#15 mid TP tower support), aegisgroup(#6 no solo-dive with aegis), pullcamp(#13 pull neutral camps for lane equilibrium), creeppull(#10 disadvantaged core draws enemy-creep aggro to reset lane), bodyblock(#11 advantaged laning core harasses enemy on a winnable trade), wkbuild(#17 WK earlier-2nd-stun skill build for kill participation).",
+  "backlog_status_20260721": "ALL fixable open issues now carry a gated or shipped implementation. Lane-control cluster #8 (children #10 creeppull, #11 bodyblock, #12 nopush[gated], #13 pullcamp, #14 suplh[gated], #15 midtp) COMPLETE. #6 aegisgroup, #9 (skysilence/wlok/tpsafe2), #17 wkbuild, #19 vsafe[shipped], #20 overchase all done. Remaining work is PURE A/B VALIDATION (owner-deferred: '先不急着跑模拟器'): promote the ~11 gated candidates one lever at a time + the #21 lanefix re-narrowed rerun. Class-A-only items not doable under local-test-only: #16 corefarm[REJECTED], #18 depthnum[gated, needs multi-seed], #19 general attack/roam overextend expansion.",
+  "lanesurv_extension": {
+    "instance": "i-0296b0db7a5f5157e (ON-DEMAND, run spot_20260722_021043_1_main, seeds 303/304 x15)",
+    "purpose": "thicken lanesurv sample (was n=6 mirror games, laning deaths -16%). On completion: recover verdict + rerun the laning-death split (tools: recover_verdict.py + the armed-vs-baseline laning-death count in state ab_verdicts). Combined n>=20 and delta holds -> PROMOTE lanesurv (remove gate). Then validate l1kite / l1xpsoak separately the same way."
+  },
+  "l1kite_validation": {
+    "instance": "i-07f6d321e5dc295e4 (ON-DEMAND, run spot_20260722_030410_1_main, seeds 401/402 x15)",
+    "metric": "econ verdict + LANING-phase deaths armed-vs-baseline split (same recipe as lanesurv: recover_verdict.py + laning-death count on slot1 replays). Note lanesurv is now PROMOTED = active on BOTH sides; l1kite measures its own increment on top.",
+    "next_after": "l1xpsoak (seeds 501/502), then l5trees; promote each only on its own measured improvement.",
+    "wave1_result": {
+      "econ": {
+        "gpm": 11.14,
+        "deaths": -0.11,
+        "comps": "deaths 2/2"
+      },
+      "laning_deaths": "-9% (8.86 vs 9.71, n=7)",
+      "decision": "PROMISING-HOLD, extension launched (403/404) -- same recipe as lanesurv; promote if combined n>=14 holds"
+    },
+    "wave2_result": {
+      "econ": {
+        "gpm": 15.64,
+        "deaths": -0.08,
+        "comps": "gpm 2/2",
+        "suggested": "promote"
+      },
+      "laning_deaths_ext": "+21% (n=8, FLIPPED)",
+      "laning_deaths_combined": "+6% over 15 games",
+      "decision": "HOLD-INCONCLUSIVE: econ (better-powered, ~460 games, 3/4 seeds deaths-negative) says good; the n=15 laning split flipped sign = too noisy to confirm the mechanism. Did NOT promote (bar was 'combined split holds' -- it did not). Keep gated; optionally one more extension later. Do not promote on contradictory target-metric reads."
+    }
+  },
+  "l1xpsoak_validation": {
+    "note": "first wave launched (501/502 x15); measure = econ + laning-death split; also watch CS/xpm (soak stance must not tank farm)",
+    "wave1_result": {
+      "econ": {
+        "gpm": -61.06,
+        "xpm": -68.58,
+        "deaths": 0.68,
+        "comps": "0/2 everything"
+      },
+      "decision": "REJECT (hard): the XP-soak stance backfires even in its corrected form -- parking a core at the lane edge costs all farm AND deaths got WORSE (likely over-triggering: 2-enemies+75% bar is common in lane). 3rd member of the force-passivity reject family (lf_recover, corefarm). Keep gated/inert; only revisit with a MUCH stricter trigger (e.g. require provably-lethal AND recent near-death), low priority."
+    }
+  },
+  "rejected_do_not_retry": [
+    "l1xpsoak (gpm -61, deaths +0.68, 0/2) -- force-passivity family"
+  ],
+  "l5trees_validation": {
+    "wave1": {
+      "gpm": 4.89,
+      "xpm": 6.9,
+      "deaths": -0.08,
+      "lh": 0.02,
+      "comps": "gpm/xpm/deaths ALL 2/2",
+      "note": "uniformly positive, both seeds same sign; engine said hold only because gpm 4.89 < its 5.0 bar"
+    },
+    "extension": "seeds 603/604 launched (same 4-seed bar as lanesurv); PROMOTE if uniformity holds",
+    "instance": "i-...044826 done; ext running",
+    "extension_result": {
+      "gpm": -16.41,
+      "deaths": 0.17,
+      "comps": "0/2 everything",
+      "decision": "HOLD, do NOT promote: wave2 exactly mirrored wave1's uniform positive -> 4-seed mean ~-5.8 gpm/+0.04 deaths, wave-level sign flip = inter-wave (draft/seed) variance dominates. The 4-seed bar just prevented promoting noise."
+    }
+  },
+  "VALIDATION_NOISE_LESSON_20260722": "CRITICAL calibration: a SINGLE 2-seed wave can read uniformly positive (all metrics 2/2, both seeds same sign -- l5trees wave1) and fully FLIP the next wave. So: (1) 4-seed minimum stands for any promote; (2) small-magnitude levers (<~10 gpm true effect) are UNRESOLVABLE at $3-wave scale -- stop burning waves on weak-prior candidates; (3) lanesurv's promote remains sound (4 seeds + INDEPENDENT target-metric confirmation, -16%/-14% consistent across waves, magnitude above noise floor); (4) this retroactively validates the l1kite HOLD. Future: per-lever waves ONLY for strong-observational-prior levers; the rest accumulate for the owner-designed ONE final batch.",
+  "postfix_observation_20260722": {
+    "source": "5 slot1 replays from l5trees-ext run (lanesurv PROMOTED live both sides)",
+    "finding": "Focus deaths 2.8/gm (all zuus in this pool). Pattern SHIFTED vs pre-fix: deaths moved from own-half standing-ground to PAST-MIDLINE (+1300..+5700), killers now hard-CC laners (shadow_shaman x4 shackles, DK stun, lich). Mechanism gap: flat 3s burst window underestimates damage during a 4-6s hard CC.",
+    "action": "ccburst gated enhancement (5s window for enemies with ready hard-CC from curated table). STRONG prior (14 real death frames) -> qualifies for a solo validation wave when owner green-lights, or rides the big batch.",
+    "note": "ALLY-LEFT still recurs (viper/centaur/phantom walk away mid-trade) -> that is the #23 teamfight/coordination track, not laning.",
+    "second_pool_confirmation": "Pattern CONFIRMED in 2nd draft pool (l1kite-ext + more l5trees-ext replays): ~17/25 focus deaths past midline (WK/Axe/Zeus all affected; killers Axe call/Lich/Sniper/WD/Necro). Codified as d21_laning_past_midline_death detector. FIX deliberately deferred: midline-discipline suppression = force-passivity family (3x rejected); needs owner design input (e.g. tie to wave position: only back off when the WAVE isn't there) rather than another clamp."
+  },
+  "BIG_BATCH_20260722": {
+    "owner_directive": "all features ON together (not per-feature); $15-25 OK; several hours OK; ccburst rides this batch (no solo waves)",
+    "bundle": "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "excluded_rejected": "bodyblock,l1xpsoak,c3,corefarm,lf_recover,lf_support,lf_undertower,lanefix(bundle id)",
+    "instances": {
+      "i-0b317e1c0bc9767b3": "seeds 801/802, run spot_20260722_174758_1_main",
+      "i-0cd0a1f0208100739": "seeds 803/804, run spot_20260722_174801_1_main",
+      "i-00c57279ad213626e": "seeds 805/806, run spot_20260722_174804_1_main"
+    },
+    "mechanism": "IsSoakCandidate comma-bundle support (commit e3c4a1d); stamp = mirror:<bundle>:s<seed>:<side>",
+    "analysis_plan": "per-instance verdict (or recover_verdict.py with the full bundle string as cand) -> 6-seed aggregate econ; laning-death split; d21 past-midline rate armed-vs-baseline (midguard's metric); if bundle WINS -> promote wave-by-wave discussion with owner; if LOSES -> bisect halves (the lanefix diagnosis playbook).",
+    "note": "midguard implemented THIS commit and included in the bundle (owner: 接着修改)",
+    "RESULT": {
+      "verdict": "CATASTROPHIC REJECT, 0/6 seeds, highly consistent (NOT noise)",
+      "econ": {
+        "gpm": "-74.5..-125.5 (mean -111)",
+        "xpm": "~-135",
+        "deaths": "+0.78",
+        "last_hits": "-13/hero"
+      },
+      "behavioral_diff_23_games": {
+        "laning_team_deaths": "ARMED 9.39/gm vs BASE 5.43 (+73%)",
+        "suppression_guards_WORK_on_target": "overextend_alone -85%, sandwiched_walk -50%, past_midline_death -30%",
+        "but_aggregate_pathology": {
+          "idle_while_ally_dies": "+300% (2.09 vs 0.52) -- kite/retreat guards make bots abandon committed allies; 2v2 becomes 1v2",
+          "unpunished_tower_dive_vs_armed": "+1212% (4.57 vs 0.35) -- enemies dive armed towers with impunity; armed side too passive/low to punish",
+          "missed_cs_at_tower": "+153%; LH -13/hero -- retreat stack + l5trees sidestep + suplh cede the farm",
+          "tp_under_threat": "+86% -- TP trio (midtp/suptp/lf_rescue) generates risky TPs"
+        }
+      },
+      "reading": "The DEFENSIVE features individually work on their target behaviors, but STACKED they produce team-level passivity: bots hang back, abandon allies mid-trade, cede farm and towers, and die MORE (+73% laning deaths). Force-passivity at the bundle level -- the same physics as lanefix(-88) but bigger. Suspect ranking: 1) l1kite (idle+300% fingerprint = kite-away-while-ally-fights), 2) retreat stack depth (lanesurv[shipped]+ccburst+midguard+depthnum+nodive2 compounding), 3) TP trio, 4) l5trees sidestep (CS loss).",
+      "next_options_for_owner": "(a) curated SMALL bundle re-test (drop l1kite + TP trio + l5trees; keep the exonerated narrow guards), ~$4; (b) classic halves bisect (~5 waves, ~$15); (c) revert to per-lever for top suspects only. NOTHING promoted from this batch; lanesurv (solo-validated) stays live and is NOT implicated (it was on BOTH sides here)."
+    },
+    "WATCHED_PATHOLOGY": {
+      "method": "frame-by-frame tick traces of armed-side idle_while_ally_dies incidents (owner insisted; aggregates alone had missed the mechanisms)",
+      "case_A_sidestep": "game 175703 2:44-2:51: WD (91-94% hp, cask ready) sidestepped 158->828u in ~550u steps EXACTLY while Sven was bursted 78%->0 beside it, then walked back onto the corpse. Mechanism = l5trees cut-2 sidestep has no fight-awareness. FIXED: sidestep hard-suppressed when any ally within 1200 (or self) took hero damage within 2s (commit 0404cda, test pinned).",
+      "case_B_late_tp": "game 181046 1:40-1:51: Ogre TP'd across the map and LANDED THE SECOND Viper died (dist 14900->485 in one tick at death frame). Mechanism = rescue/def TPs (lf_rescue/suptp/midtp) have no arrival-time-vs-victim-survival check. FIX TODO (next): estimate victim time-to-live vs TP channel 3s; do not TP to corpses.",
+      "lesson": "aggregate detector diffs name the SYMPTOM (+300% idle); only tick-level watching separated TWO distinct mechanisms with two different fixes. The owner's watch-first rule is load-bearing at diagnosis time too."
+    },
+    "ANALYST_VERDICTS": {
+      "l1kite": "GUILTY 0.8 (cores commit then abandon <4s, supports stay per pairing -> 1v2; sup-dead-with-idle-core 13 vs 4)",
+      "l1trade": "suspect 0.55 (commit-then-chase deep; accepts losing static trades; the l1trade->l1kite oscillation)",
+      "l5combo": "suspect 0.6 (full combo at d+3000 on phantasm-CK; no depth/escape gate -- TODO add depth gate)",
+      "new_pathologies": {
+        "1_desire_oscillation": "LIKELY BUNDLE MAIN KILLER: commit->abort->re-enter flapping, zero output while soaking aggro (0-for-7 exchanges). FIXED: commit-lock/kite-lock interlock (this commit).",
+        "2_tp_chaos": "mid-fight 0.5s aborted TPs; revive->TP-back-to-death-spot; two TPs burned on one corpse. Arrival-time fix landed earlier; mid-fight-TP-start + revive-cooldown fixes TODO.",
+        "3_passive_stack_own_half": "armed side won't fight even at numbers advantage on OWN half (3 heroes escorted SF to their fountain; base dove 105x unpunished). Design work needed -- desire caps, not gates."
+      }
+    }
+  },
+  "CURATED_BUNDLE_20260723": {
+    "bundle": "23 features (full minus l1kite/l1trade/l5combo), incl. 5388e69 fixes",
+    "result": "REJECT 0/6: gpm -111.7, xpm -129.4, deaths +0.86, lh -10.9 -- statistically identical to the 26-feature bundle (-111)",
+    "key_inference": "the three prime suspects were NOT the main poison; removing them changed NOTHING. Poison is in the remaining 23 -- prime historical suspect: the lf_* six (lanefix family, twice-rejected at -74/-88, magnitude matches) and/or the passive stack (analyst pathology #3).",
+    "next": "halves bisect delegated to batch-runner: wave A = lf_six alone, wave B = 23-minus-lf_six (17). Spot-first per new policy. Analyst diff on curated replays in parallel.",
+    "runs": [
+      "spot_20260722_225252_1_main",
+      "spot_20260722_225302_1_main",
+      "spot_20260722_225310_1_main"
+    ],
+    "mtd_usd": 65.84,
+    "ANALYST_DIFF": {
+      "fingerprint_compare": "laning-deaths +90% RETAINED (main poison not the 3 ex-suspects); idle 300%->77% (l1kite WAS real, just secondary); tp_under_threat CLEARED (44v43); unpunished-dive/overextend/healthy-ground-down(+88%) all RETAINED -> passive-stack fingerprints persist",
+      "suspect_ranking": {
+        "1_passive_stack_cluster": "ccburst+midguard+depthnum+nodive2/nopush, 0.65 cluster; frames: full-HP victims flee without retaliating (sniper 550-range 0 output over 16s), 5v2 own-half zero engagement, 3 full-HP TP responders idling at 900-1300u; WK almost won a 1v2 while 90%-HP sniper watched 25s. SINGLE-ID PRIME = ccburst (CC-widened windows hit oracle-tangle/WK-hammer/jakiro-path cases; never solo-validated; irony: it came from my own post-promote fix)",
+        "2_lf_six": "0.5, specific forms: no-salve half-HP idling 60s, revive->instant TP back to death spot->re-death in 13s (viper triple-death case)",
+        "3_others": "wkbuild 0.3 (WK deaths from bystanders, not build); midtp/midguard-mid 0.35 (zuus +13 worst single hero); l5trees 0.4 (missed CS +61% persists)"
+      },
+      "falsifiable_prediction": "bisect: lf6-only moderately negative; other-17 MORE negative. If reversed -> lf_chase/lf_threat avoidance is the poison.",
+      "per_hero": "zuus +13, viper +10, lion +9, WK +9 laning deaths armed-vs-base; 5-7 death loops per hero per game"
+    }
+  },
+  "BISECT_20260723": {
+    "waveB_other17": {
+      "gpm": -61.49,
+      "xpm": -109.05,
+      "deaths": 0.86,
+      "lh": -9.79,
+      "comps": "0/2",
+      "read": "17-pack alone = HALF the gpm damage (-61 vs -112) but FULL death signature (+0.86) -> passive-stack death hypothesis supported; poison is distributed"
+    },
+    "waveA_lf6": {
+      "gpm": -4.85,
+      "xpm": -26.54,
+      "deaths": 0.15,
+      "lh": -4.61,
+      "comps": "gpm 1/2 (seeds split -16.3/+6.6), xpm 0/2, lh 0/2",
+      "games": 95,
+      "read": "lf6 near-NEUTRAL on gpm+deaths (noise zone, seeds split sign) but a small consistent xpm/lh drag (0/2 same-sign). hold, do not promote"
+    },
+    "verdict": "catastrophe lives in the other-17 half: it alone carries -61 gpm and the FULL +0.86 death signature while lf6 is noise-zone on both. Matches analyst prediction (lf6 moderately negative < other-17 more negative) and keeps passive-stack cluster (single-id prime: ccburst) + lf_recover/lf_support as the standing suspects -- all inside other-17. lf6 stays gated (xpm/lh drag)",
+    "ccburst_narrowed": "LANDED post-bisect: the first cut widened the burst window for ANY enemy within 1100 holding a ready CC (range-blind -> distant supports read as lethal -> full-HP flee). Now the 5s window applies only when the holder is inside its CC's cast range + 250 closing buffer (J.GetReadyHardCc returns the handle for the range check). Motivating frames (SS shackles killers ON TOP of victims) still fire; the over-trigger does not. Aggregate re-judged by the next big batch per owner policy (no per-feature waves)",
+    "cost_note": "waveA harvested 2026-07-23 by batch-runner agent; instance self-terminated, no leaks, MTD $65.84"
+  },
+  "PASSIVE_STACK_20260723": {
+    "verdict": "NOT a guard suppression -- a STOCK desire hole, symmetric on both sides (~1 window/game/side; armed excess in 26f traced to l1kite/l1trade oscillation, gone in 23f). All five passive-stack ids exonerated on these frames (conditions inapplicable). Engagement chain audit: laning harass never approaches (attack-range-only scan); team_roam kill branch is dead code in LANING mode (activeMode whitelist); ShouldPunishDive only covers enemies within 1200 of a building -> PUNISH DEAD ZONE at 2100-2400u from T1 (explains +1212% unpunished-dive fingerprint)",
+    "fix": "LANDED gated 'ownhalf': ShouldPunishDive gains a wider domain -- invader >=800 ancient-distance onto OUR half counts as in-domain; SafeToCommitFight discipline unchanged; desire stays HP-remapped cap via the existing team_roam punishTarget branch (works in LANING mode, sits before the whitelist). Frames pinned: f_232228 (WK+Sniper vs 69% Jugg 17s standoff), f_230510 (DP+Veno vs solo Luna 38s). 2 fixtures + 5 tests",
+    "note": "window-type detectors need a PAUSE filter (181525 23s 'standoff' was a game-pause artifact)"
+  },
+  "FREEHUNT_20260723": {
+    "doc": "iterations/freehunt_20260723.md -- 5 new uncodified stock pathologies from late-game/baseline blind spots (both sides): 1) ult-hoarding deaths 128/50games (focus heroes 22; warlock 10s 1v1 with rain+bonds ready; zeus TG ready vs 4x half-HP enemies); 2) solo deep-push deaths 30/50 (winning side too; luna MoM depth+7400); 3) low-HP limbo 44 segments/50 (avg 58s, max 106s; zeus 1%hp wandered jungle 80s during team wipe); 4) roshan attempts without DPS gate/abort 5/50 all failed <4 heroes; 5) escape-skill-vs-TP ordering (storm zips available, channels 3s TP, dies). Detector candidates A/B/C in scratchpad/freehunt/scan.py, need pause filter",
+    "status": "BACKLOG -- next work items after the big-batch verdict; #1 (dying ult cash-out layer) is highest value for focus heroes (zeus/lion/axe/cm all in the list)"
+  },
+  "BIGBATCH_VERDICT_20260723": {
+    "result": "REJECT #2 -- the all-on 27-id mega-bundle on ab99d99 (WITH ccburst narrowing, TP audit A-E, l5combo depth, lf_rescue narrowing): seeds 921/922 gpm -97.8/-101.7, seeds 923/924 -84.0/-89.1, deaths +0.9, xpm -126~-138, 0/4 comps. Barely better than the original -111.9. The ~10 post-26f fixes did NOT rescue the aggregate; the death signature (+0.9) SURVIVED the ccburst narrowing -> ccburst was not the (sole) driver",
+    "mode_false_alarm": "batch-runner flagged most games as mode:normal -- traced to parse_log.py's mode_guess heuristic (turbo iff avg_gpm>800): launch scripts always force gamemode 23, and median avg_gpm 690 @ 10.8min IS turbo economy (normal@11min would be ~350-500); the label flips exactly when the tested bundle depresses game-wide economy. Threshold recalibrated to 510. Prior waves' verdicts remain valid",
+    "verdict_files": "s3 validation/skysilence,...,tpcommit_20260723_0506.verdict.json (923/924) + validation/megabundle_20260723_0506_seeds921_922.recovered.verdict.json (921/922 recovered locally after same-name overwrite); harness quirks: two same-minute runs overwrite each other's verdict name; ab/ba imbalance (38/19)",
+    "read": "conclusion stands at full strength: locally-correct fixes do not compose at 27-id scale. Next lever is NOT more single-id narrowing inside the mega-bundle -- it is (a) residual death-signature fingerprint on THIS batch's own replays (analyst running), then (b) OWNER DECISION: recommend abandoning all-on mega-bundle waves in favor of small thematic groups (e.g. TP-discipline trio; laning pair) stacked on the promoted baseline -- grouped, not per-feature-solo",
+    "cost": "MTD $67.58, instances self-terminated, no leaks"
+  },
+  "MEGA_FINGERPRINT_20260723": {
+    "verdict": "the +0.9 deaths driver is NOT a combat guard -- it is the LANING-THINK TAKEOVER: arming any of creeppull/l1trade (pos1-3) or suplh/pullcamp/l5combo (pos4-5) load-time-replaces Valve's native laning Think for the whole team with a body that only knows last-hit/deny/hold-front -- no combat response at all. Armed bots died 100->0 with ZERO retaliation while base mirrors fought and won the same spots (051728 slardar: 0 attacks vs mirror's 31 damage events/1781dmg/14CS); armed 0-4min team CS 29.4 vs base 75.1; 23/24 heroes died more; effect follows the armed side across all 4 seeds. This is the rejected c3 body re-entered via new flags",
+    "mechanisms": "1) crippled-Think zero-retaliation (prime); 2) l1trade no-leash chase (052241 sniper died at +3667 chasing 20s); 3) support holds shoved-deep front (051728 ogre+VS died holding +3300 at 2v2 parity)",
+    "fixes_landed": "1) J.GetLaneHarassResponse combat-response FLOOR in the replacement Think (fire when even, step home when outnumbered; before farming, after action triggers); 2) l1trade depth leash (target >800 past midline refused); 3) J.IsLaneFrontTooDeepToHold two-tier clamp (shallow-deep needs company; >1600 depth needs numbers ADVANTAGE -- parity is not safety) wired into both hold-front paths. All pinned on the batch's own frames (test_replay_megabundle_laning.lua, 3 fixtures, 6 tests)",
+    "acceptance_notes": "ccburst narrowing VERIFIED effective (zero-output deaths armed 22% vs base 18%, category gone); lf_rescue narrowing VERIFIED (no same-frame multi-TP vacuum frames); anti-osc verified. TP audit metrics polluted by the death spiral (first-200s armed 51 vs base 12, ~27 of them post-death lane-return TPs) -- re-review after the laning fixes",
+    "next_wave_needs_owner": "recommendation recorded: stop all-on 27-id waves; next batch = small thematic groups on the promoted baseline. Group A candidates: laning five (creeppull,l1trade,suplh,pullcamp,l5combo) WITH the three Think fixes -- this directly tests whether the takeover poison is cured; Group B: TP discipline (midtp,suptp,lf_rescue,tpcommit,tpsafe2); Group C: collapse pair (overchase,ownhalf) + new stock fixes (ultcash,homeroute). Await owner's call before launching"
+  },
+  "promote_reaudit_VERDICT": "HOLD (246 games full-recompute; instance verdicts partial AGAIN -- recover_verdict is now the standing harvest path): gpm -18.07 (from -25.6), deaths +0.17, wr 46.9pct, comps 0/4. THE FOUR FIXES ALL HIT THEIR TARGETS: TP count diff +0.1 (was +2.6, treadmill GONE), landing deaths 8:14, 8-12min building damage FLIPPED (10/16 positive, +129 vs 8/8 negative), midline gap -1.7pt (was -5.7). But econ residual -15..-25 is stable across 8/8 seeds in two waves -- 1-2 negative levers remain in the 12-id pack. DECISION: paid waves PAUSED (on-demand billing lag; treat MTD as ~$85 vs $90 brake) -- residual-lever hunt continues on local replay data only. Sub-attribution so far: A2-four -4.7 neutral, teambrain/fieldregen twice exonerated -> suspects narrow to lf_rescue displacement, ownhalf/overchase posture cost, tpcommit residual",
+  "promote_reaudit_launch": "LAUNCHED 19:27 UTC on 9d70dbc (SSM-verified both + gate files; on-demand x2, zero spot capacity in us-west-2): same 12-id bundle, only diff = the four defensive-gravity fixes. i-0698fc51ac0cff614 run spot_20260731_192742_1_main seeds 811/812; i-0ad16458589a3cc11 run spot_20260731_192832_1_main seeds 813/814. ETA ~22:00-23:00 UTC, watchdog 23:28. Promote bar: gpm>=-15 (was -25.6), deaths<=+0.1 (was +0.17), wr>=48pct (was 48.2), 4 seeds consistent (was 3neg/1green); behavioral: TP count back to +-1 (was +2.6), 8-12min building damage not 8/8 negative, cured items hold. Cost lands ~$80 MTD (brake $90)",
+  "residual_fingerprint_20260731": "RESOLVED: the -25 is a compound DEFENSIVE-GRAVITY mechanism, not diffuse noise -- (1) midtp/suptp trigger ('enemy near tower + ally there') is near-ALWAYS-TRUE in turbo midgame -> defend-TP treadmill (+2.4 TPs/game, most landing to nothing, ~half the gpm gap; frames: skywrath 142s/2TPs/zero everything; shaman answered the same front 8:20/9:00/10:04); (2) tpcommit cold-release + lane assignment = cross-map oscillation; (3) whole team pulled behind midline at 8-12min (crossing rate -5.7pt, building damage negative 8/8 cells, lane depth -573..-814u) while pull tools stayed active to 10:00 in a 10-min-economy game; (4) lich +2.34 deaths: revive-TP cooldown anchored on DEATH frame but the engine stops calling mode desires while dead -> long death timers leaked the window. teambrain/fieldregen exonerated; response-TP conversion actually improved. FIXES LANDED: heat gate (defended ally must have fresh hero damage or <75pct HP), 45s repeat-front answer memory, respawn-anchored cooldown (bot.lastRespawnTime stamped on first alive frame), pull windows close at 6:00. 4 new tests (350 green)",
+  "promotable_stack_VERDICT": "HOLD (harvested 18:20 UTC, 247 mirror games FULL-RECOMPUTE via recover_verdict -- instance verdicts were partial): gpm -25.61, deaths +0.17, econ-wr 48.2pct, seeds 3-negative/1-green (804 alone +1.3/-0.33/63pct). Promote bar: 3 of 4 criteria failed. BUT behavioral fronts all HELD or BEAT base: TP landing deaths 21:32 = 0.66x (from 4.8x -> 1.83x -> BETTER than base), d23 limbo 8:15 armed better, standstill 23:25 symmetric. The residual -25 is the diffuse remainder of the response family (A2-four measured -4.7 solo; B8 pair1 neutral pair2 -50 inconsistent). NEXT: zero-cost residual fingerprint on this wave replays before buying any further waves (MTD $75.57, brake $90)",
+  "l1xpsoak_MECHANISM_20260731": "A1 mechanism analysis (123 mirror games + 6 frame-by-frame): the solo -50 is MOSTLY the last remaining laning-Think replacement wiring -- zero-trigger heroes (storm 0s soak time, 0/7 vs mirror 1/0) were the biggest losers via the condemned c3 CS body; the CS deficit (-3.8 lh, -30pct denies) alone explains the gpm gap. The rule itself also kills when it DOES fire: panic bar too late (75pct burst = death already adjacent), relative anchor 'walk 420u fountain-ward' = death march (medusa chased 17s, tp_cd=0 unused, 6 deaths in 8 zoned entries), boundary oscillation walks full-HP heroes BACK past the midline, lvl1-3 exemptionless bar fires on normal 1v2 opens. Owner's artifact intuition CONFIRMED in direction, wrong source: the artifact was OUR wiring, not soft opponents (opponents punished hard). FIXES LANDED: bXpSoak unwired from laning Think (last takeover id gone), panic rehomed to RETREAT desire (can TP/escape), early exemption (t<90s or HP>85pct never fires). Deferred to redesign: absolute anchor posture, exit hysteresis. Analyst predicts solo reading converges to +-10 after the unwiring (step-0 verification when next tested)",
+  "Asplit_VERDICT": "CASE CLOSED (harvested 16:10 UTC): A1 l1xpsoak solo = -49.4 gpm / xpm -60.5 / deaths +0.63 / econ-wr 39.0pct over 123 mirror games -- matches its old solo reject (-61) and the FamilyA signature (-62.9): l1xpsoak IS the persistent poison. A2 (creeppull,pullcamp,l1trade,l5combo, the rehomed wiring) = -4.7 gpm / deaths +0.05 / wr 48.4pct -- EXONERATED at 2 seeds (4-seed confirmation still required for promote track). No additive branch. NEW REFEREE VERIFIED: fake sub-9.6min endings 0.8pct vs 19pct, all winners economy_10min_cap. DISPOSITION: l1xpsoak back OUT of all bundles (owner mandated the goal, so the rule needs a REDESIGN with a far stricter trigger, not silent burial -- mechanism analysis running to give the owner a concrete proposal); next wave = full stack minus l1xpsoak, 4 seeds, the 'is the program promotable' test",
+  "Asplit_launch": "LAUNCHED 14:01 UTC on 1ce17c3 (SSM-verified, gate files checked; FIRST wave on the fixed referee -- duration/winrate reads trustworthy again): A1 l1xpsoak solo, i-05333dc1490707960, run spot_20260731_140127_1_main, seeds 995/996; A2 creeppull,pullcamp,l1trade,l5combo, i-0aff1b033e837645d, run spot_20260731_140139_1_main, seeds 997/998. ETA ~16:00-16:30 UTC. Ruling: A1<=-50 -> l1xpsoak prime; A1 neutral + A2<=-50 -> the four; both ~-30 -> additive. Also verify no more 8-9.5min fake endings. MTD $75.57 + ~$1",
+  "family_bisect_VERDICT": "DECISIVE (harvested 13:55 UTC 20260725, scoreboard-only per the referee bug): FamilyA lane-window (creeppull,pullcamp,l1trade,l5combo,l1xpsoak) reproduces the FULL persistent signature 4/4 seeds -- gpm -48..-81 (mean -62.9), deaths +0.48..+0.66, laning deaths +18pct directionally up. FamilyB response+collapse+teambrain does NOT meet the 4-seed bar (pair1 +5.0/-24.8 near-neutral, pair2 -53/-45 -- inconsistent, weak-negative at worst; watch for a small drag inside B later). SMOKING NUMBER: FamilyA mean -62.9 ~= l1xpsoak's OLD solo reject (-61, 0/2) -- the owner-reopened id is the prime suspect. NEXT: terminal A-split -- l1xpsoak alone vs the other four (this is bisect completion, not a per-feature test). MTD $75.57",
+  "FREEHUNT2_20260725": "Round-2 free hunt (33 timelines, blind-spot dimensions): FINDING 1 (harness, CRITICAL): referee extrapolated the game clock with DEFAULT_TIMESCALE=3.6 on a ~1.34x farm -> premature forcewin at real 8-9.5min, engine winner DIRE 50/50 times, 26/263 games (10pct) recorded winner OPPOSITE the econ winner -- win-rate reads from these pools are polluted (gpm/deaths scoreboard diffs unaffected). FIXED: referee never triggers on unmeasured timescale (wall-clock backstop only); analyze_log overrides sub-cap engine endings that contradict the econ winner (winner_by=economy_forcewin_recovery). FINDING 2 (bot): full-charge lifesaver items unpressed during chronic bleed, ~1.4 deaths/game (wand 45 cases -- every rule needs enemy<1000 but the bleed came from beyond; also glimmer 16/21 unpressed, famango 5 eats vs 22 holders). FIXED (first cut): 'wandbleed' gate -- <45pct HP + fresh hero damage + >=5 charges drinks regardless of attacker distance. DEFERRED: lich frame (conditions met 7s yet unpressed -- item-desire starvation, needs fixture debug), famango self-use, glimmer. HEALTHY dimensions verified (do not re-dig): runes 74pct+, combo follow-up 87pct, won-fight->tower 70pct, courier 0 deaths. Focus heroes: CM freezing-field zero-casts are situationally correct (low-confidence lever, hold); WK mana-for-reincarnation reserve is a potential small gate; fixtures pinned in hunt2_index",
+  "AUTONOMOUS_LONGHAUL_20260725": "Owner away for an extended period ('你继续工作哈,我很长时间以后才能来看你了'). Operating discipline until return: (1) keep the loop running -- observe (frame-first) -> fix (gated) -> fixture -> accumulate -> ONE wave per accumulated batch; (2) BUDGET: hard self-imposed stop for paid launches at MTD $90 (owner line $100); prefer zero-cost analysis on local/S3 replay data; every launch logged here with run ids; (3) promote bar unchanged (4-seed consistent) -- no promotes without data, owner-directed promotes only on explicit instruction; (4) keep main pushed + state.json current so any wake resumes from repo alone; (5) work queue: family bisect harvest -> poison-family disposition -> TeamBrain phase 2 (release follow-up plan for the d23 regression, suptp x midtp arbitration, lane assignments) -> free-hunt round 2 findings -> focus-hero polish backlog; (6) daily-ish digest updates in iterations/ for the owner's return",
+  "family_bisect_launch": "LAUNCHED 10:25 UTC 20260725 on e882b3d (SSM-verified x4): FamilyA lane-window 'creeppull,pullcamp,l1trade,l5combo,l1xpsoak' runs spot_20260725_102518 (seeds 991/992) + spot_20260725_102532 (993/994), instances i-0ff4238d8c39b37a1/i-026891c0589578778; FamilyB response+collapse 'midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen' runs spot_20260725_102545 (901/902) + spot_20260725_102558 (903/904), instances i-0161f467a23802d6c/i-0cac023cfe8607efa. ETA ~13:00-14:00 UTC. Question: which family reproduces the persistent signature (gpm<=-40, deaths>=+0.4, laning deaths +30pct, 4 seeds consistent); both neutral -> interaction poison; one carries it -> bisect within. Est MTD after ~$76-77",
+  "wave_teambrain_VERDICT": "econ REJECT 0/4 (gpm -62.7, deaths +0.66) BUT the arbitration targets are all massively converged: TP landing deaths 4.8x -> 1.83x (11:6), TP volume +41pct -> +19pct, cluster deaths fully symmetric (5:5), same-frame triple TPs GONE. TeamBrain phase-1 mechanisms behaviorally VALIDATED. Two regressions to watch: d23 limbo flipped to 14:8 (hypothesis: the new tpcommit survival release converts pinned-lander DEATHS into low-HP wandering -- released bots need a follow-up plan; couple release->fieldregen/retreat routing) and standstill ratio 30:17. THE BIG PICTURE: four grouped waves (13id -33, 12id -65, this -63) all reject with laning deaths +32~39pct regardless of TP/coordination fixes converging to base -- the persistent bundle core carries an intrinsic negative. NEXT: subtractive family bisect -- familyA lane-window five (creeppull,pullcamp,l1trade,l5combo,l1xpsoak) vs familyB response+collapse (midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen)",
+  "wave_teambrain_launch": "LAUNCHED 08:12 UTC 20260725 on 918ebc0 (SSM-verified both): 13-id = wave12 bundle + teambrain. i-0bc3126e4273946b2 run spot_20260725_081214_1_main seeds 981/982; i-0b58dbb945ccba0db run spot_20260725_081230_1_main seeds 983/984. ETA 10:15-12:15 UTC. Clean controlled comparison vs wave12 (only diff = teambrain): acceptance TP landing deaths <=1.5x base (was 4.8x), TP volume <=+15pct (was +41pct), no multi-TP-cluster deaths, three cured items no regression, gpm>=-15 deaths<=0 4-seed consistent, laning deaths vs +39pct. MTD $72.63",
+  "TEAMBRAIN_PHASE1_20260725": {
+    "design_input": "wave12 dossier (24 landing deaths, all filed): 10/24 via STOCK defend TP (ABSOLUTE desire, zero checks, outside every quota; also 81% of the +41% TP volume -- adding bodies to burning towers); 14/24 inside multi-TP clusters (same-frame TRIPLE TP for one Axe); 6/24 revive->TP->re-death at 16-23s (just past the 15s cooldowns, and stock path had none); ~6/24 pinned by the fix-E commit stamp (floor 0.85 outbid promoted retreat 0.75, static <500u for 5s+ under fire, zero output). Per-TP contested-defend death rate armed 11.0 pct vs base 4.3 pct (2.6x; with-ally subset 6x) -- volume confound removed",
+    "implemented": "gated 'teambrain' (permissive when off): (A) J.ShouldAllowDefendTp arbitrates the STOCK defend TP -- destination headcount (refuse when enemies-allies>=2 within 1400), defeat memory (J.NoteTeamDeath blackboard from the retreat dead-frame hook: no response within 1200/25s of a teammate death), 15s revive cooldown extended to the stock path; (C) single-responder claim (one event=one answer, per-spot 1600/12s, per-player); (D) tpcommit survival release (HP<40 pct or lanesurv -> drop the pin, retreat wins). Estimated interception 16-19/24 per the dossier annotation. Flagship frames pinned: f_050713_es_defend_1v3 (cast into 1v3, dead 5.8s zero output), f_045650_lion_meatgrinder (four bodies one DP)",
+    "deferred": "(B) landing reverify beyond the survival release; tpsafe2 channel-watch (#24: 5.5s of channel auto-attacks not re-checked); full blackboard (lane assignments, focus targets, pull scheduling) = phase 2+",
+    "next": "next wave should test teambrain WITH the TP+collapse family (it exists to fix their interaction)"
+  },
+  "wave12_VERDICT": "REJECT 0/4 (216 games, gpm -30..-97, deaths +0.41..+1.00) BUT the behavioral acceptance is a split decision that localizes the remaining poison: FIXED+VERIFIED (a) standstill deaths 33:29 (was 25:15) -- commit self-release works; (b) core off-lane exits 73:70 (was 90:70) + camp deaths 0:0 (was 2:0) -- peacetime pull veto works; (d) d23 lowhp_limbo 4:6 -- fieldregen works. REMAINING POISON, 4/4 seeds: (c) TP landing deaths 24:5 = 4.8x (WORSE than 15:3) with TP volume +41%; (e) laning deaths 125:90 = +39% (was already +34% pre-l1xpsoak -> l1xpsoak not clearly the driver; standing property of the TP+collapse family). READ: the TP response family (midtp/suptp/lf_rescue x tpcommit) is safe alone (Group B neutral) but toxic when collapse triggers coexist -- responders TP into fights that have moved on by landing. Next: analyst on the 24 landing-death frames, then TeamBrain phase 1 (response arbitrator) as the structural fix per the owner global-strategy directive",
+  "wave12_owner_approved": "LAUNCHED 20260725 04:32 UTC on ae90655 (SSM-verified both): bundle creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen. i-00139c271c606bbb0 run spot_20260725_043213_1_main seeds 971/972; i-029bed4cb1e547bf2 run spot_20260725_043231_1_main seeds 973/974. ETA ~06:30-07:00 UTC, watchdog 08:32. Acceptance: standstill deaths ~= base (was 25:15); core off-lane exits ~= base (was 90:70) + zero camp deaths; TP-landing deaths ~= base (was 15:3); l1xpsoak laning deaths flat; d23 armed < base (fieldregen); gpm >= -15, deaths <= 0, 4 seeds consistent. MTD $72.62, owner-approved budget",
+  "OWNER_DISPOSITIONS_20260723": {
+    "budget": "continued testing APPROVED by owner",
+    "shipped": "tpsafe2 + pushguard PROMOTED to turbo default-on (owner: 直接 ship); gates removed, tests updated",
+    "removed": "homeroute REMOVED (owner: turbo 原则=尽量少回家) -> replaced by 'fieldregen' (gated): mid-game flask re-purchase via courier + shipped use-when-safe; d23 lowhp_limbo stays the metric. ultcash REJECTED by owner (没啥道理) -- code stays gated-dead, never arm. bodyblock reject confirmed (revisit later). c3/corefarm/lf_support rejects confirmed. lf_recover reject confirmed WITH clarification: low HP should not recall home at all -- buy supplies instead (= fieldregen)",
+    "reopened": "l1xpsoak MUST-DO per owner (-61 gpm read as opponents failing to punish the solo pos1, not the rule being wrong) -- back in the test rotation",
+    "keep_optimize": "midtp needed; suptp needed but must COORDINATE with midtp (response arbitration -- feeds the TeamBrain design); tpcommit keep, contract = purpose-driven (TP down -> must engage; leave only once the engage chance is lost); lf_rescue keep iterating rules carefully; overchase/ownhalf endorsed; roshgate parked (再说)",
+    "teambrain": "NEW WORK ITEM (owner question: global strategy distributed to bots instead of per-bot thinking): all 5 team bots share one Lua VM, module-level state already shared (tTpQuota/tRescueMemory are the seed). Plan: TeamBrain blackboard module, phase 1 = response arbitrator (one event -> one best responder, replaces per-bot quota race; solves midtp/suptp coordination), later lane assignments / focus targets / pull scheduling"
+  },
+  "INFLIGHT_20260723": {
+    "bigbatch_rerun": "ALL-ON 27-id bundle (26f set + tpcommit), mirrored draft, seeds 921-924, spot-first. Question: is the -111.9 gpm / +0.86 deaths catastrophe fixed by the ~10 post-26f fixes (ccburst cast-range narrowing, TP audit A-E, l5combo depth gate, anti-osc, sidestep guard)? Success bar: gpm within +/-15 or positive, deaths <= +0.2, armed-side first-200s TP count near base. FIRST LAUNCH (04:44 UTC, runs spot_20260723_0444*, i-045283eab9fc97144/i-0e8f2249214974184) INVALID -- instances cloned stale origin/main 32467a1 without the 8 fix commits (see CLAUDE.md learning); two stale launches killed (04:44 pair cloned 32467a1, waste <$0.05; 04:48 pair cloned f7613be without the lf_rescue narrowing while lf_rescue is armed in the bundle, waste <$0.15). FINAL FROZEN LAUNCH 05:04 UTC on ab99d99 (SSM-verified both instances; no further relaunches this cycle): i-07e98407b267b4c94 run spot_20260723_050440_1_main seeds 921/922; i-05619d4a62db3e81a run spot_20260723_050448_1_main seeds 923/924. ETA ~08:15-08:45 UTC, watchdog 09:05. Verdicts in s3://dota2bot-batch-results-4924/validation/, per-game under soak/<run>/; recover_verdict.py if reclaimed. Acceptance: gpm within +/-15 or positive vs the -111.9 baseline; deaths <= +0.2; first-200s armed TP count near base (audit baseline 15 vs 0); laning displacement TPs no longer +47% (waveA 88 vs 60). Est <$5 total on MTD $67.58 (under the $100 line)",
+    "groupBC_launch": "LAUNCHED 11:14-11:16 UTC on tree 7f3de08 (SSM-verified all four; docs-only ahead of 92cc36d, bot code identical). Group B TP-discipline 'midtp,suptp,tpcommit,tpsafe2,lf_rescue': i-04c0e8603973bcda2 run spot_20260723_111412_1_main seeds 941/942; i-0ff2daeade41c5b4e run spot_20260723_111600_1_main seeds 943/944. Group C collapse+stock-fix 'overchase,ownhalf,ultcash,homeroute,pushguard,roshgate': i-02a877995b6feb91e run spot_20260723_111423_1_main seeds 951/952; i-0a82ac8be54895637 run spot_20260723_111609_1_main seeds 953/954. ETA ~13:15-13:45 UTC, watchdog 15:15. Acceptance B: first-200s armed TP count near base (old 15:0), laning displacement TPs not +47%, deaths <= 0, gpm noise-or-positive. Acceptance C: deaths DOWN, gpm >= -15, d22/d23/d24 armed counts well below base. Each group needs 4-seed direction consistency. MTD $70.01 after prior settlements; this wave ~$2.5-4",
+    "wave13_VERDICT": "REJECT 0/4 (harvested ~17:10 UTC, 251 games): gpm -8.9/-67.0/-35.8/-19.9 (mean -32.9), deaths +0.36, lh -1.7. READ: the takeover poison IS cured (CS loss -1.7 vs -10, gpm -33 vs -100) but the 13-id mix carries a NEW negative -- prime suspects are the four REHOMED ids (creeppull/pullcamp via roam bidding, l1trade/l5combo via team_roam collapse; all new wiring, never individually batched). FINGERPRINT DONE: deaths driver = rehomed collapse branches (0.95 bid OUTBID the promoted lanesurv retreat 0.75; per-frame-renewed commit-lock = infinite lock -> level-1 bots pinned in losing trades, 163714 zuus); core-gpm driver = roam pull bids with zero combat awareness (cores off-lane 90 vs 70 exits, SK died pacing beside a camp with Ogre visible 1700 for 10s, 2 deaths TO CAMPS); TP 15:3 landing deaths judged an interaction (defer). overchase/ownhalf EXONERATED (deep deaths DOWN 19 vs 29). FIXES LANDED: J.ShouldReleaseLaneCommit (self-release when the collapser is dying; lock stamps once per engagement; bid 0.95->0.92), J.IsLanePullSafe (pull = peacetime: hp>=50%, untouched 2s, no enemy within 1800) + camp aggro-then-drag cadence (no more camp tanking). 2 fixtures + 5 tests. Harvest note: same-minute verdict overwrite AGAIN (_1602; 961/962 numbers recovered from _1646 run.log) -- spot_run.sh needs a run-id-suffixed verdict name, filed as harness debt. MTD $70.01, $30 headroom to the $100 line",
+    "wave13_relaunch": "LAUNCHED 16:00 UTC on e91da48 (SSM-verified): 13-id rehome+quality bundle creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,tpsafe2,lf_rescue,homeroute,pushguard,ownhalf,overchase. i-07a1b3ee63dda5027 run spot_20260723_160025_1_main seeds 961/962; i-005ab457290d16aa3 run spot_20260723_160040_1_main seeds 963/964. ETA 18:30-19:45 UTC. CAUTION: both launched same minute -> verdict filename (minute stamp) may collide/overwrite like the 0506 incident -- harvest via recover_verdict.py from each soak/<run>/ prefix regardless. Acceptance: armed 0-4min CS >= 90% of base (was 51% under takeover); TP landing exchange > 1.2:1 (was 32:30); no chain-rescue frames; d23/d24 armed < base; gpm >= -15, deaths <= 0, 4 seeds consistent",
+    "groupBC_diagnosis": "analyst two-question pass on the batches' own replays: B TPs are REAL responses (81% engage, misfire~0, tpcommit VERIFIED via 115115 sniper double-kill frame) but landing exchange 32:30 -- volume without profit; worst pattern = chained rescues (113638). C bundle largely IDLE: roshgate/ultcash NO-SCENE (no rosh attempts in 20min turbo; drafts lacked zeus/lion density), homeroute SILENT (turbo laning soft-extend to 10min while NW<8000 blocked exactly the wrecked-poor heroes; 113203 pudge), pushguard SILENT (retreat floor 0.75 lost the desire auction to the killing chase; 114311 drow), ownhalf/overchase no marginal effect vs a ~60-80pct stock baseline. FIXES LANDED a1d5efe: homeroute hard 7-min boundary, pushguard floor 0.92, chain-rescue guard (15s/1200 memory). Tooling caveat: dumper event streams use non-underscored hero names for some heroes -- canonicalize before matching (recorded in replay-analyst profile). Next-wave note: drop roshgate+ultcash from generic bundles (no statistical power without the right drafts/scenes)",
+    "groupB_VERDICT": "HOLD (harvested 20260723 ~12:45 UTC, 259 games): economy NEUTRAL (gpm -1.77, deaths -0.02, all noise-zone; comps ~2/4) -- the TP discipline set neither hurts nor measurably helps. Waste-pathology ACCEPTANCE SPLIT: early-TP flood FIXED (first-200s armed 48 : base 47 vs the old 15:0) but laning displacement TPs UNCHANGED at +47.9% (4/4 seeds; identical to waveA). Note: midtp/suptp GENERATE displacement TPs by design, so raw displacement count conflates feature volume with waste -- next audit needs a usefulness split (arrive-and-fight vs arrive-and-walk-back). Stays gated",
+    "groupC_VERDICT": "HOLD, inconclusive-to-negative (harvested same time, 236 games): deaths +0.07 with 3/4 seeds WORSE (the set promised deaths DOWN); gpm +7.33 but carried entirely by seed 954 (others -7..+5, l5trees-style single-seed noise); detector diffs flat or reversed (d22 ult-hoard 9:12 weak-right, d23 limbo 10:8 WRONG direction, d24 deep-solo 2:2 flat, all single-digit noise). Open question before any next wave: DID THE TRIGGERS EVER FIRE? (no bot-side logging; needs replay-level evidence of ultcash casts / homeroute walks / roshgate aborts). Stays gated",
+    "groupA_VERDICT": "REJECT 0/4 decisive (harvested 20260723 ~10:10 UTC): gpm -79~-126 (mean -100.3), deaths +1.28 (WORSE than mega's +0.9), xpm -140, lh -10.1, armed 0-4min team CS 21.6 vs 42.8 = 51% of base (bar was 85%); extreme game 082634: armed 6 CS vs base 66 in 4 min. The three Think fixes (combat floor / leash / clamp) did NOT cure the takeover -- the replacement architecture itself is condemned by two decisive batches. DECISION: five stay gated+parked; l1trade & l5combo REHOMED to mode_team_roam collapse branches (no Think replacement -- native laning runs; helpers/gates unchanged); creeppull+pullcamp REHOMED to mode_roam per OWNER DIRECTIVE (pulling stays; the pull window bids roam desire 0.9 and roam Think executes the pull for those seconds -- native laning untouched; helpers/gates/timing unchanged); suplh alone stays PARKED (inherently a laning-Think behavior). Instances self-terminated, no leaks, ~$1 spent",
+    "groupA_final_gate": "LAUNCHED 07:53/07:55 UTC on tree 4393578 (SSM-verified; pushguard d225349 landed after launch but is unarmed+gated -> no relaunch): bundle creeppull,l1trade,suplh,pullcamp,l5combo; i-0240df84579f76a87 run spot_20260723_075313_1_main seeds 931/932; i-07da790214bc4aabf run spot_20260723_075505_1_main seeds 933/934. ETA ~10:00 UTC, watchdog 11:53. Success: deaths <= +0.2 AND armed 0-4min team CS >= 85% of base AND gpm > -15; behavioral: zero-retaliation death frames must not recur. Promote bar: 4 seeds consistent",
+    "lf6_drag_diagnosis": "RESOLVED: culprit = lf_rescue. Old trigger (ally<60% + 2 enemies within 900) is true in every ordinary 2v2 trade -> one exchange vacuumed 2-3 healthy heroes (carries included) off-lane 45-90s each; laning displacement TPs armed 88 vs base 60 (+47%); 20/20 mirror hero-cells d_lh negative; deaths flat (pure econ/xp tax). Frames: 013254 t=37.4 (3 same-frame TPs for a 60% Viper trade), 011405 t=52 (both bot-laners TP for a 68% Axe trading AT his own tower). NARROWED in ab99d99: danger bar <35% with a diver, laning cores (pos1-3, <8min) never cross-map rescue, under-own-tower veto. 3 fixtures + 6 tests (test_replay_lf_rescue_narrow.lua); genuine 30%-Viper rescue still fires; other 5 lf ids exonerated (lf_mana zeus -2.6/lion +24.9 no signal; salve/chase/revive/threat too rare/stationary to explain an all-hero drag)"
+  },
+  "TP_DISCIPLINE_20260723": {
+    "source": "OWNER watched both artifact replays personally -- found TP decisions systemically broken from minute one, bigger than all prior analysis",
+    "pathology": [
+      "1. pointless early TPs: no enemy pressure yet Sven TP'd top, WD TP'd top, Sniper TP'd bot (game 175703 ~0:47), then everyone WALKED back to proper lanes; Sven re-TP'd top immediately after reviving",
+      "2. mass defend-TP arrives then does NOTHING: game 233217 ~1:00 all five dire TP'd bot (trigger was right -- enemy at tower), zero attacks on present enemies, walked back; 5 TPs wasted; Sven still died",
+      "3. WD zero-help from 0:47: Sven attacked by viper+support, WD cast nothing, pure spectating (earlier than the 2:44 sidestep case)"
+    ],
+    "interaction": "pathology 2 = TP system delivers, combat system (passive stack) refuses to engage -- the two failures compound",
+    "action": "audit dossier committed (iterations/tp_audit_20260723.md). Fix A revive-cooldown LANDED; fix B team TP quota LANDED; fix D tpsafe2 blind spot LANDED (root cause: rescue/towerfight response branches in item-usage return BEFORE the tpsafe2 gate -> extracted ungated core J.CanEnemyInterruptTpChannel, both response helpers self-check before taking the quota slot). Fix C landing-commitment LANDED (gate 'tpcommit': response branches stamp bot.tpRespondLoc/-Until 12s at cast; J.GetTpCommitDefendDesire floors the answered lane's defend desire at 0.85 in the three mode_defend_tower_* wrappers while an enemy is still visible at the trigger -- lane assignment cannot reclaim the responder mid-engagement). Remaining: E shipped-defend variant (low pri, rides C mechanism). ALL A-D landed; acceptance = the dossier's waste-type counts on the next big batch, not tp_under_threat alone",
+    "owner_directive": "TP 的问题非常大,一定要 fix"
+  },
+  "wkreincarnmp_20260818": {
+    "source": "hero-stream backlog #1 (WK reincarnation mana reserve), traced to a concrete code bug rather than fresh replay observation",
+    "bug": "mode_retreat_generic.lua's WK teamfight-retreat suppression ('reincarnation is armed, don't flee') used a HARDCODED bot:GetMana() >= 160 check. Real Reincarnation trigger cost is level-dependent and decreasing (skill lvl 1/2/3 ~220/110/0 per Liquipedia, 2026-08 check) -- at skill level 1 (hero levels 6-11, most of the midgame) the real cost is 220, so 160 mana falsely read as armed: WK held a losing fight believing it had a free life, died for real, fed.",
+    "fix": "new J.IsWkReincarnationArmed(bot) in jmz_func.lua: default path unchanged (160, byte-identical to shipped), corrected path (bot:GetMana() >= abilityR:GetManaCost(), the same call hero_skeleton_king.lua's existing X.ShouldSaveMana already uses correctly for the same ability) only when turbo + soak-candidate 'wkreincarnmp' is armed. mode_retreat_generic.lua's inline check now calls this helper.",
+    "validation": "REAL-FRAME FIXTURE DONE 2026-08-19 (this field previously said mock-only and was STALE -- corrected 2026-08-19T06 by the hero stream; the 2026-08-19T04:54Z director ruling that denied test_set entry quoted the stale text). Two layers now: (1) tests/test_wk_reincarnation_mana_gate.lua, 6 mock cases (default-unchanged x2, corrected-not-armed, corrected-armed, level-3-free-armed, on-cooldown-never-armed); (2) tests/test_replay_260725_wk_reincarn_gap.lua on a make_fixture.py-mined REAL frame, tests/fixtures/f_260725_105305_wk_reincarn_gap.lua, from spot_20260725_102532_1_main/20260725_105305_slot1 t=373.5 (6:13): WK hero level 6, Reincarnation skill level 1, cd 0, mp 189/387 -- squarely inside the 160..219 gap where the shipped hardcoded threshold falsely reads ARMED. Loaded via tests/mock/replay_fixture.lua so the REAL J.IsWkReincarnationArmed runs on the real frame with no J.* stubs: gate OFF reads ARMED (byte-identical to shipped, i.e. the old wrong answer preserved), gate ON reads NOT armed. CAVEAT (state it when re-applying): make_fixture.py mines level/cooldown but not ability spec data, so the test sets GetManaCost explicitly to 220 (Liquipedia 2026-08), empirically corroborated by an observed ~219 mana spend at the reincarnation trigger tick later in the SAME replay. luacheck 0 warnings; full suite green (377/377 as of 2026-08-19T06).",
+    "next": "Local validation is COMPLETE per the mandatory-fixture rule. Re-apply for iterations/streams/test_set.md entry with the corrected record above -- the only stated reason for the 2026-08-19T04:54Z denial ('validation only mock, no real-frame fixture') no longer holds. Conditions (a) real-frame logic confirmed and (c) theory (level-dependent Reincarnation cost, Liquipedia + in-replay measured spend) are met; (b) a batch showing no negative win-rate effect is the only remaining gap, which needs test_set entry first. Risk-isolation note for the director: like cmrguard this is a single-hero predicate with no overlap with the TP/laning mechanism family that carries the current bundle's negative residual. Not queued in iterations/queue.json (queueing follows test_set approval)."
+  },
+  "cmrguard_20260819": {
+    "source": "hero-stream backlog #2 (CM ult timing), replay-analyst dig across 186 CM games / 30 R casts in the soak S3 archive",
+    "bug": "hero_crystal_maiden.lua's X.ConsiderR had zero self-preservation check before committing to Freezing Field's 10s self-rooting channel -- only counted enemies/escape math, never whether CM herself was about to be chain-CC'd. Systemic pattern across the 30-cast sample: 9/30 (30%) channels cut short (<2s of the 10s max), several immediately preceding a CM death. Cleanest frame: 20260819_003005_slot1 t=373.4 (6:13) -- CM opened R while Jakiro (ice_path off cooldown, curated hard-CC) was closing to ~1139 units with no ally CC covering him; he stunned her 0.6s into the channel and she died 5.9s later.",
+    "fix": "new X.cm_IsRSafeToOpen(hBot) in hero_crystal_maiden.lua: withholds R (returns BOT_ACTION_DESIRE_NONE from ConsiderR) when any enemy hero within 1600 has a ready hard-CC ability per the existing curated J.tHardCcAbilities table (reused J.HasReadyHardCc/J.GetReadyHardCc from jmz_func.lua, no new table). Default path (candidate not armed) always returns true -- unchanged shipped behavior. Also extended tests/mock/replay_fixture.lua to expose real per-slot ability handles via GetAbilityInSlot (previously only GetAbilityByName was wired), which J.GetReadyHardCc needs -- general engine-plumbing fix, not gated.",
+    "validation": "real-frame fixture tests/fixtures/f_260819_003005_cm_selfpreserve.lua (mined via AWS bootstrap + behav-dump on the actual .dem, make_fixture.py at t=373.4) + tests/test_replay_260819_cm_r_selfpreserve.lua, 5 cases: ground truth (Jakiro ice_path ready, CM died 5.9s later), gate OFF x2 (byte-identical always-allow), gate ON (correctly withholds on the real frame), gate ON with Jakiro's CC put on cooldown (correctly allows -- proves the gate tracks the actual threat, not just enemy presence). luacheck 0 warnings, full suite green (see report for exact count).",
+    "known_gap": "did not find a clean real-frame instance of the ORIGINAL backlog hypothesis (raw #nEnemysHeroesInRange>=3 bypass firing on enemies with zero threat to CM) -- replay-analyst sampled 30 casts and found the self-preservation gap instead, which is the higher-signal, more reproducible bug and is what this fix addresses. The raw->=3 branch itself is untouched. Also unverified: whether this gate is too conservative in legitimate teamfights where CM has ally CC/peel covering her (the fixture only proves the withhold is correct on THIS frame, not that the aggregate is good) -- that is exactly what the eventual final-gate batch must answer.",
+    "next": "not queued in iterations/queue.json yet -- rides the hero stream's next accumulation batch with other pending gated fixes (wkreincarnmp still needs its own promote path). Needs director approval to enter test_set.md before any batch exercises it."
+  },
+  "bundle14_VERDICT_20260819": {
+    "source": "director promote/reject judgment cycle, iterations/reports/batch-desk/20260819T040801Z.md (4-seed complete, seeds 851/852/853/854) + iterations/reports/replay-check/20260819T033000Z.md (frame-level diagnosis, 12/12 games scouted, 10/12 deep-checked)",
+    "bundle": "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch (the pre-l1xpsoak 14-id test_set.md set; l1xpsoak was added to test_set.md after this batch's tree was cloned, not included in this data)",
+    "verdict": "gpm -34.59, xpm -25.71, deaths +0.24, last_hits -1.21, comps_better 0/4 (all four seeds, all four metrics same direction), 239 valid mirrored games. Matches historical direction of the 07-31 lanefix-family bundles (-18~-88.7). suggested=hold_or_reject per recover_verdict.py.",
+    "director_decision": "HOLD on the bundle as a whole -- does not satisfy promote condition (b); cannot blanket-reject every id because replay-check's deep frame review found no direct BUGGY mechanism in the ids it could get clean evidence on (ownhalf/fieldregen/overchase all WORKING as designed). Two concrete actions taken instead of a blanket call: (1) creeppull/pullcamp pulled OUT of test_set.md's armed line -- replay-check confirmed 10/10 games SILENT (0 pull traces, symmetric both sides) across all 3 sampled seeds, so condition (a) never held for these two; they were never actually contributing to the bundle's measured effect, sent back to owning group via issue #13 comment, not a permanent reject (framework: BUGGY/SILENT-and-unfixed -> return to owning group, only demonstrably-harmful ids get a permanent reject). (2) lf_rescue flagged as prime suspect for a future bisect wave -- same cross-map long-TP mechanism family as lf_recover/lf_support, the two ids that WERE confirmed as the actual culprits in the twice-rejected lanefix bundle (see 'Hard-won learnings' in CLAUDE.md); replay-check found it WORKING+SILENT mixed (issue #21 comment). Recommended sequencing: l1xpsoak solo wave first (pre-existing plan, unchanged), THEN a wave with lf_rescue pulled out of the (now 12-id) remaining set to see if the negative residual narrows -- do not change two variables in the same wave.",
+    "not_yet_resolved": "no single id in the bundle has been cleanly proven to be THE culprit; the -34.59 residual could be lf_rescue alone, a genuine emergent interaction among several individually-correct fixes (the CLAUDE.md 'locally-correct != emergently-good' pattern), or some combination. Next diagnostic step is the lf_rescue-pulled bisect wave above, not another blanket full-bundle run.",
+    "next": "batch-desk: keep next routine wave scoped to l1xpsoak solo per existing test_set.md guidance; after that lands, queue an lf_rescue-pulled bisect wave against the remaining 11 ids (12 minus lf_rescue) + cmrguard once it has its own condition-(a) evidence."
+  },
+  "retreat_chain_priority_fix_20260819": {
+    "source": "director work unit 2026-08-19T06:55Z; bug filed by replay-check as GH #29 (iterations/reports/replay-check/20260819T064500Z.md)",
+    "defect": "bots/mode_retreat_generic.lua GetDesireHelper() returns on the FIRST matching guard, but two deliberately stronger guards sat BELOW weaker ones: tpwatch (BOT_MODE_DESIRE_VERYHIGH, 0.9 -- abandon a TP channel being eaten alive) and pushguard (0.92 -- a value chosen specifically to outbid an active kill-chase, see the C-group 20260723 diagnosis) were both placed under ~8 HIGH (0.75) guards. On any frame where a HIGH guard also fired, neither could ever be evaluated.",
+    "fix": "Reordered the guard chain by DESCENDING returned desire (pushguard 0.92 -> tpwatch 0.9 -> the HIGH guards -> teamfight-idle) and fenced it with explicit '=== RETREAT GUARD CHAIN: BEGIN/END ===' markers plus an INVARIANT comment. Pure reordering; no helper logic touched.",
+    "shipped_default_impact": "NONE. Every guard in the chain except lanesurv is soak-candidate gated and inert in real games; lanesurv keeps its position relative to every guard that can fire alongside it. The two hoisted guards are both gated (pushguard/tpwatch), so with all gates off the chain behaves exactly as before.",
+    "validation": "tests/test_retreat_priority_order.lua (3 tests): parses the marked chain from source, asserts guard desires are non-increasing in source order (NONE vetoes exempt) and pins tpwatch/pushguard above every HIGH guard. MUTATION-CHECKED: moving the tpwatch block back to its old position makes 2 of the 3 tests fail with the exact defect message; restoring passes. Full suite 389/389, luacheck 0 warnings.",
+    "why_source_level_test": "A real-frame fixture (what GH #29 suggested for acceptance) can only prove the ordering for the one guard pair the frame happens to trigger, and replay-check confirmed the current corpus has no frame with tpwatch+l1xpsoak both armed. The invariant needed holds for every pair including future guards, so it is asserted structurally. A real-frame fixture remains welcome if such a frame turns up.",
+    "interpretation_impact": "The 14-id full-set wave (gpm -34.59, 0/4) had tpwatch armed simultaneously with l1xpsoak and lf_chase, which sit above it in the old chain. Those ids were therefore NOT independent -- arming one changed another's effective behavior, violating the implicit one-variable-at-a-time premise. This is a structural candidate explanation for that negative residual, alongside the lf_rescue suspicion. Not a claim that it IS the culprit."
+  },
+  "l1xpsoak_DISPOSITION_20260819": {
+    "source": "director promote/reject judgment 2026-08-19T06:55Z, on iterations/reports/replay-check/20260819T064500Z.md (l1xpsoak solo wave, seeds 855-858, 12/12 mirrored games swept, 6 deep-checked) + GH #28",
+    "decision": "REMOVED FROM ARMED SET -- returned to the strategy group, NOT rejected. test_set.md armed list 13 -> 12 ids.",
+    "reason": "Condition (a) is structurally unprovable in the current design, not merely unproven. The single consumption point (mode_retreat_generic) discards the Vector that ShouldXpSoakLane returns -- the absolute anchor that was the whole point of the 20260819 redesign -- and only tests it for nil, then returns the same BOT_MODE_DESIRE_HIGH as lanesurv. Its entry condition is a strict subset of lanesurv's (1200/>=2 enemies vs 1100/>=1, same 3.0s window, same HP*0.75 threshold), so of 335 entry episodes across 12 games, 97.3% are judged identically by the already-promoted lanesurv; the 9 exclusive frames (2.7%) showed no attributable behavioral difference under frame-by-frame review. More games cannot fix this -- the bottleneck is mechanism indistinguishability, not sample size.",
+    "readmission_path": "Strategy group makes the anchor actually drive behavior (Action_MoveToLocation + hold) so the mechanism is observably distinct from lanesurv, OR drops the separate id and folds the exit hysteresis into lanesurv's internal parameters. Re-apply with real-frame evidence (GH #28).",
+    "wave_855_858_reuse": "The wave is NOT condition (b) evidence for l1xpsoak, but it is a free empirical NULL CALIBRATION for the mirrored-draft harness: candidate and baseline ran the same rule on 97.3% of entry frames, so its per-seed gpm delta spread estimates the noise floor at zero true effect. Batch-desk asked (via test_set.md) to record mean + spread separately at harvest. This directly sets how much evidential weight the -34.59 of the 14-id bundle deserves; costs nothing extra, the games are already running."
+  }
 }

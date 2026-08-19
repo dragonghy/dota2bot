@@ -126,3 +126,40 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   创建(本轮决定都在自主授权范围内)。**下次触发优先级**:①视 batch-desk
   是否已按建议排了 l1xpsoak 单独波次,核验其条件 (a);②之后排 lf_rescue
   bisect 波次;③如果上面都在等批测跑,切到帧语料检索工具基建 backlog。
+
+- 2026-08-19T06:55Z:第四次 director 触发。输入是录像组 06:45Z 报告
+  (l1xpsoak solo 波次 12/12 局核验)带来的两条新 issue,本轮全部处理完。
+  **① `[bug]` #29 已修复并关闭** —— `mode_retreat_generic` 的 guard 链
+  「先命中先 return」造成优先级倒挂:`tpwatch`(VERYHIGH)和 `pushguard`
+  (0.92)被排在 8 条 `HIGH`(0.75)分支下面,永远不被求值。issue 只报了
+  `tpwatch`,修的时候发现 **`pushguard` 那处更严重**(0.92 这个值正是
+  20260723 C 组为「压过追杀 desire」专门挑的,结果自己被 HIGH 遮蔽),
+  所以整条链**按 desire 降序重排** + `=== RETREAT GUARD CHAIN: BEGIN/END ===`
+  标记 + 不变量注释,而不是只挪一行。没选 `math.max` 方案(会让每帧多求值
+  一批 helper,其中 `ShouldCounterTradeKite` 带副作用、`ShouldXpSoakLane`
+  带滞回状态,为修顺序问题引入新的求值时机变化不划算)。**已发布默认行为
+  逐字不变**(链里除 `lanesurv` 外全 gated;`lanesurv` 相对位置未变)。
+  验收改成源码级不变量测试 `tests/test_retreat_priority_order.lua`(3 测试,
+  断言 guard desire 按源码顺序非递增,NONE 豁免)并**做了变异测试**:挪回
+  原位 3 挂 2、报错直指缺陷,挪回来全绿;不用真实帧 fixture 的理由已写进
+  issue(当前语料没有那种帧,且 fixture 只能证明它恰好触发的那一对,不变量
+  要对每一对成立)。luacheck 0 警告,全套 **389/389**(容器初始无 Lua
+  工具链,已自行 apt 安装)。**判读影响**:14-id 那一波 `tpwatch` 与
+  `l1xpsoak`/`lf_chase` 同时 armed、在旧链上互相改变生效行为 —— 那一波
+  **违反了「一次只变一个量」**,是 -34.59 的结构性候选解释(非断言祸首)。
+  **② `l1xpsoak` 移出 armed 集**(退回协同组,非 reject):消费点丢弃锚点
+  返回值、入场条件是已 promote 的 `lanesurv` 的真子集,335 个 episode 里
+  97.3% 同判、9 个独占帧无一有可归因差异 —— 条件 (a) **结构上无法证明,
+  加局无用**。armed 集 13 → 12 id,重新入集路径写进 #28(倾向:取消独立 id
+  并入 `lanesurv` 参数,但设计决定留给协同组)。**③ 主动发明:把 855-858
+  这波变成噪声底校准** —— 既然两侧 97.3% 帧跑同一条规则,它的 per-seed
+  gpm delta 离散度就是**镜像 harness 在真实效应为零时的经验零点**,我们
+  从未测过(CLAUDE.md 里 SD≈600 那条是 random-draft 时代的数)。已请批测台
+  收割时单独记一行,**不额外花钱**;它直接决定 -34.59 该给多大证据权重。
+  成本 MTD $3.45(批测台自报),本轮总监未启动计费资源、未做 AWS 调用。
+  五组均有产出无空转;批测台如实上报的「例行间隔差 2 分钟」**裁定不追究**
+  (按条款立法目的执行,记录+继续即可)。今日周三,效率台账(仅周日)跳过。
+  DECISIONS_NEEDED.md 仍未创建(两个决定都在自主授权内),本周尚无 owner 邮件。
+  **patch 缺口(backlog #0)连续第三轮被新 issue 挤掉** —— 下次触发**就用
+  整个工作单元做 patch**(除非有新 `[bug]`/`[harness]` 抢占);其次是收
+  855-858 verdict 时确认 null-calibration 数字并据此重标 -34.59 的权重。
