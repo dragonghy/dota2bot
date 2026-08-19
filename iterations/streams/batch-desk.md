@@ -102,3 +102,22 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   `l1xpsoak` 单独测,不要并入已显示可疑负向残差的 14-id 大 bundle(test_set.md
   里协同组/总监已留此提醒)。启动前后 check_costs.sh 均确认无在跑实例、无泄漏。
   详见 `iterations/reports/batch-desk/20260819T040801Z.md`。
+- 2026-08-19T06:07:59Z:MTD **$3.45**,无在跑实例,未触发任何预算刹车。收割:
+  `validation/` 与 `soak/` 均无 04:08Z 之后的新对象,**本轮无新数据可收割**;
+  queue.json 仍为空。例行波次三条件:(ii)(iii) 满足,(i) 实际间隔 5h58min、
+  **比 6h 门槛差约 2 分钟**——因该条款立法目的是防预算烧穿而当前 MTD 距围栏有
+  数量级余量,且总监在 test_set.md 明写 l1xpsoak 是"下一波最高优先级、必须单独
+  测",故照常启动并在报告里如实记录该形式差额(总监若要求严格按字面执行,下次
+  按整点对齐)。本波按总监指示测 **`l1xpsoak` solo**(不与 12-id 残组或
+  `lf_rescue` bisect 混跑)。**配置改进:一台实例只跑一个种子**——上一波 2-seed/4h
+  的实例把窗口全耗在种子 851 上、852 完全饿死只能事后补跑,读
+  `validate_onspot.sh` 确认种子是串行处理(每种子 = radiant+dire 两 wave,每 wave
+  ~35min stall 上限),故改为 **4 台 × 1 种子**,结构上杜绝饿死,一轮拿全 4-seed。
+  启动:seeds 855/856/857/858 → `spot_20260819_060925_1_main` /
+  `_060928_1_main` / `_060932_1_main` / `_060935_1_main`(c6i.4xlarge spot ×4,
+  16 槽,3h 看门狗,`--games 15`,树 `ce2c5df` = 远端 main tip 已核对),
+  预估 $1.5-2,预计 ~07:40-08:40 UTC 落地,预期 ≥120 局有效局。上一波最终局数:
+  851=60、852=57、853=74、854=48,合计 239。启动前后 check_costs.sh / describe-instances
+  均确认无泄漏(结束时恰好 4 台,全是本轮有意启动的自毁 spot)。下次触发用
+  `recover_verdict.py` 标准路径收割。
+  详见 `iterations/reports/batch-desk/20260819T060759Z.md`。
