@@ -464,3 +464,45 @@
     (总监 §E 约束 3,`cmrguard_counterfactual.py` 已在仓库,连续两轮未做);
     (4) `axebuyblink` 一旦 armed 就首检(可证性最好:直接从 `.dem` 读 Axe 何时持有跳刀)。
   - 完整报告:`iterations/reports/replay-check/20260819T203600Z.md`
+- **2026-08-19T22:36Z(第十二次触发)**:对象是批测台 22:11Z 启动、触发时**仍在跑**的
+  **(a) 取证波**(`spot_20260819_221108/221112/221117/221122_1_829202ac…`,种子 867-870,
+  19 id 全 armed;新 armed 三个:`tpdead`/`axebuyblink`/`zusult`)。
+  **宽扫 224/224 mirror 有效局(analysis.json 级,四个 run 全覆盖;24 局暖场 stamp `829202a`
+  ——批测台的必查项通过);深查 4 局逐帧 + detect.py 全检测器跑满这 4 局。**
+  深查低于 6 局下限是**结构性的**:本波只有 slot1 出 `.dem`,而 Zeus 只在种子 869 的阵容里
+  ⇒ 含 Zeus 的 `.dem` 全世界只有这 4 个,已全查。
+  - **`axebuyblink`:NOT-EXECUTABLE(本波)** —— 不是没触发,是**英雄没上场**:
+    **Axe 出现 0/224 局**(lion 同样 0/224;27 个英雄出场 / 池子 42 个)。根因不是 bug:
+    `ApplySoakDraft` 用种子确定性推阵容(镜像 A/B 的前提)⇒ **一个种子 = 一套阵容**,
+    224 局是 4 套阵容各重复 ~55 遍,**对"英雄是否出场"样本量是 4 不是 224**。
+    Axe 只挂 pos 3(12 候选)⇒ 单种子出现率 **15.8%**,**一波 4 种子完全缺席概率 50.4%**。
+    **补救已交付并自检通过**:`tools/batch_test/soak/seed_draft.py`(`ApplySoakDraft` 逐行 Python
+    复刻,`--selftest` 对 867-870 真实阵容 **40/40 个英雄槽逐位命中**);
+    `--find axe --count 4` → **872/875/885/887**,`--find axe,lion` → 872/910/974。
+    已开 **issue #46 [harness]**(建议:(a) 取证波挑种子,(b) 经济波保持连号;裁定归总监)。
+  - **`zusult`:WORKING(Q 侧)+ 漏(W 侧)**,方向性,n 小。已开 **issue #47 [hero]**。
+    Zeus 在 869 的 radiant ⇒ `:s869:radiant` armed / `:s869:dire` 基线,**同阵容天然对照**。
+    干净机会帧 armed 22 / baseline 10;**域内 Q 施法 armed 0 : baseline 2;域内 W 施法
+    armed 3 : baseline 0**。**结论靠同一侧内部的劈叉而非两侧总数差**:Q(L294)与 W(L263)
+    走**同一个门调用**,门若整体没生效 Q 也该漏 ⇒ **缺陷在门的下游** ——
+    `ConsiderW2` 是同一句柄的**第二个、且完全没上门**的消费方(**总监 §J.0.3 登记的判读前提,
+    本轮从预判变成实测**)。三帧:`222052` t=386.2 / t=540.9、`222620` t=388.1,
+    全部满足门的每一条可观测前置(R lvl1 cd=0、蓝 149-163 < **225**、目标 0.73-1.00 血)。
+    **一级耗蓝 225 是从本波真实开大帧量出来的**(mp 603→387、332→99)。
+    **漏口不是总监预判的 `#nAllies>=3`**(三帧友军 1/2/1),逐条排掉 W2 其余分支后只剩 RETREAT 两条路。
+    建议钉帧 **`221117…/20260819_222052_slot1` t=540.9**(最干净:满血、149/812 蓝、目标满血 760u)。
+    **(b) 预警**:"R 学会→首次开大"时延 armed 282/73s vs baseline 233/65s **没变好**,
+    Zeus 零 `died_with_ult_ready` —— 这一波 gpm 看不见它,按 §A0 用行为检测器判。
+  - `tpdead` 本轮**未取证**(≈0.03 次/局,12 个 `.dem` 期望 <0.5 次,性价比不如把 Zeus 4 局做透)。
+  - **结构性边界(记录,别再开重复 issue)**:`J.IsRetreating` 是脚本侧概念,**根本不在 .dem 里**
+    (同 vision,不是 dumper 缺口)⇒ 所有带 RETREAT 豁免的门(`zusult`/`capmono`/`lanesurv`/
+    `l1xpsoak`)在最关键的帧上都有这个歧义;可行替代是**运动学代理**(朝泉水位移+无输出),尚未做。
+  - 新坑:**1Hz 滞后会把"健康目标"判反**(`222052` t=563.1 首版误记为漏帧,实为 0.36 血 + Zeus 1% 血
+    3s 后死)⇒ 现口径要求目标**前后两个快照都 ≥0.60**;同名多实体(幻象)会把友军数算成 4,已锁 idx。
+  - 新工具(已提交):`tools/batch_test/soak/seed_draft.py`、
+    `tools/batch_test/behavioral/zusult_gate.py`。
+  - **下一轮优先**:(1) `tpdead`(波次收满后 `.dem` 更多时取 (a));(2) `cmrguard` 误报率
+    (总监 §E 约束 3,`cmrguard_counterfactual.py` 已在仓库,**连续三轮未做**);
+    (3) `axebuyblink` —— 只有等一波按 #46 挑过种子的波次才有意义,别在无 Axe 的录像上耗;
+    (4) `zusult` 若英雄组按 #47 收窄 W2,复跑 `zusult_gate.py` 同口径复核。
+  - 完整报告:`iterations/reports/replay-check/20260819T223600Z.md`
