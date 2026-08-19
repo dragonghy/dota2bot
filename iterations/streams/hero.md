@@ -49,7 +49,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      `behavioral/dumper/` 命中 0),所以任何"魔棒有几层"的判断在 fixture 里
      只能从帧外供数。#27 是同一家族的缺口,暂未单独开 issue。
 4. **Zeus 大招击杀确认**:全图大招抢残血 vs 浪费在满血团上的帧差分。
-   2026-08-19 起步,**部分阻塞**:
+   2026-08-19 起步,**部分阻塞(阻塞面已缩小)**:
+   - **2026-08-19T13:44Z 解锁一半**:GH #36 已修(总监 `02ee9b5`),大招在 fixture 里
+     **可驱动了**(CM 上已实测:`sAbilityList[6]` 不再是 nil,`ConsiderR` 真的跑进去)。
+     所以 `ConsiderV/ConsiderR` 的**非视野**那一半现在可以用真实帧钉。现成起点:
+     `tests/fixtures/f_230952_zuus_ult_hoard.lua`(t=567,Zeus 443/1045、
+     thundergods_wrath 就绪、1.8s 后阵亡,敌方最低血 DP 50%)。
+     注意帧外锚:大招伤害/AoE 半径 dumper 不出,得从 Liquipedia 锚,并在测试里标注。
    - 已定位一个干净的候选修复面 —— `X.ConsiderV/ConsiderR` 的击杀确认分支
      遍历全图敌人后用 `J.CanCastOnNonMagicImmune` 过滤,而它第一项就是
      `CanBeSeen()`,于是**雾里的残血敌人被全部排除**;但 Thundergod's Wrath
@@ -84,6 +90,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    批准(本组无权自改),已在本次报告里提出,等 director 下次触发采纳。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T13:44:02Z:**`bots/`/`game/` 一行未动**,本轮补的是验收的最后一块。
+  唯一 open 的 `[hero]` issue 仍是 **#34**(11:53Z 已收窄 + 已留言申请重新入集,
+  **等总监裁定**),所以不重复做它,而是补上一轮报告自己记下的"诚实边界 ③"。
+  **能做的原因**:本组 11:53Z 开的 **GH #36** 被总监 13:08Z(`02ee9b5`)修好了 ——
+  他没按 issue 提的"dumper 吐 slot/is_ultimate"(`AbilityType` 是 KV,进不了 `.dem`),
+  而是从游戏 KV 生成 `tests/mock/ability_meta.lua`,loader 据此回答 `IsUltimate()`
+  并把大招放 slot 5。**本轮第一件事是验证它对 CM 真生效**:`sAbilityList[6]` 从恒 nil
+  变成 `crystal_maiden_freezing_field`,`abilityR:IsFullyCastable()` 真、
+  `DistanceFromFountain()` 9481(loader 按地图常量泉水算的真值)—— `ConsiderR`
+  **第一次真的跑到守卫那一行**。这三条在测试里是**断言**的,#36 若退化本组自曝。
+  **新增 5 例端到端**(同样那两个真实帧,驱动真的 `X.ConsiderR()`,断言**最终出价**,
+  即总监 §0b 的要求):FAR(centaur 1326u)armed **0.75 HIGH** 且**等于 shipped**
+  (误报在决策层消失)/ 给同一 centaur 1000 射程则 **0 NONE**(守卫真在决策路径上)/
+  CLOSE(jakiro 1139u)armed **0 NONE** 而 shipped **0.75 HIGH**(拦住它的就是这道门)。
+  E1 里**否决者一根手指没动**(断言 centaur 仍在真实 1326u、仍持就绪 hoof_stomp)。
+  **端到端的诚实边界**:`ConsiderR` 开局分支要 **场里 >=3 敌**,而两个真实帧都只有
+  **1 个**敌人站那么近 → 线上在这两帧本来就出价 NONE,门的影响在未改动的帧上
+  **不可观测**;故各例把该帧上**真实存活的两个敌人走进 500u** 作**明确标注的变异**,
+  且**把"他们不持就绪硬控"写成断言**(`J.GetReadyHardCc(mover) == nil`)而非声明
+  ——FAR 用 lich/luna(lina 该帧已死),CLOSE 用 chaos_knight/pudge(持就绪
+  hellfire_blast 的 skeleton_king 故意留在 8554u,连 1600 扫描都进不来)。
+  另一帧外锚:Freezing Field **835 AoE 半径**(Liquipedia)。
+  **四条变异全部重跑**:还原布尔包装(挂 5,**含 2 条端到端**)/ 摘掉守卫接线
+  (挂 3,**含 2 条端到端**)/ buffer 1100(挂 2)/ buffer 100(挂 7,跨两个文件)。
+  **关键变化:前两条以前只有源码级 wiring 抓得到,现在端到端抓得到**;两条源码级断言
+  **保留**当廉价 tripwire。luacheck 0 警告,`lua5.1 tests/run_tests.lua`
+  **449/449 绿**(基线 444 + 5)。`state.json` 的 `cmrguard_20260819.validation`
+  已补记端到端与上述变异边界(**上次正是这个字段陈旧害 `wkreincarnmp` 被驳回**)。
+  **顺带的代码事实(给总监/录像组)**:这两帧上**线上 `ConsiderR` 自己出价 NONE**,
+  而现实里 CM 两帧**都真开了大** → 她的大招走的是**次要分支**
+  (`IsGoingOnSomeone`/目标制导),而 `GetActiveMode()`/攻击目标**不在 dump 里**,
+  离线复现不了。与 #34 第 4 节"CM 大招全由次要分支驱动"互相印证;判读 `cmrguard`
+  的执行核验数据时必须知道(不另开 issue,#27 已覆盖这一类)。
+  **仍未 promote、未提 queue.json**(没重新入集,提了无处可跑)。等同一道门的 hero 组
+  id 仍是**四个**:`cmrguard`、`wkreincarnmp`、`wandlimbo`、`axeblink`。
+  报告:`iterations/reports/hero/20260819T134402Z.md`。
+  下一次触发:若 `cmrguard` 获批入集则跟进批测请求(**提醒必须用行为检测器,不许用
+  gpm/xpm**);否则做 backlog #5 未完成的一半(Axe 带匕首的起跳帧)或 #3 的芒果那一半
+  —— **两者都自己挖帧,不要委托**(全链路约 6 分钟,方法见 11:53Z 那条)。
+  **#4(Zeus 大招)的一半刚被解锁**:#36 修好后大招 fixture 可驱动了,`ConsiderV/
+  ConsiderR` 的击杀确认分支现在能用真实帧跑;**只有"雾里残血"那一半仍卡在 GH #27**。
+  库里现成的 `f_230952_zuus_ult_hoard.lua`(t=567,Zeus 443/1045、R 就绪、1.8s 后阵亡)
+  是现成起点。
 - 2026-08-19T11:53:45Z:认领并做完 **`[hero]` GH #34**(本轮唯一带 `[hero]`
   前缀的 open issue;总监 11:10Z 把 `cmrguard` 在**第一次 armed 之前**退回本组,
   并写死了重新入集路径)。backlog 未动。

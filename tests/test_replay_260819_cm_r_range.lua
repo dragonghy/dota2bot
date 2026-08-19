@@ -29,8 +29,9 @@
 --   * ice_path cast range: 1000, a deliberate UNDER-estimate (Liquipedia puts
 --     the path at 1200 long, reaching ~1362). The predicate is monotone in cast
 --     range, so blocking at 1000 blocks at the real value too.
---   * Freezing Field AoE radius: 835, and CM's distance-from-fountain, for the
---     end-to-end ConsiderR case only (the dump carries neither).
+--   * Freezing Field AoE radius: 835 (Liquipedia), used by the end-to-end cases.
+-- CM's distance from fountain is NOT an anchor -- the loader wires the real
+-- engine method off the map-constant fountains, and she is 9481 units out.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -48,6 +49,54 @@ local function move_to(bot, unit, dist)
     local dx, dy = u.x - b.x, u.y - b.y
     local d = math.sqrt(dx * dx + dy * dy)
     rawget(unit, '__spec').GetLocation = Vector(b.x + dx / d * dist, b.y + dy / d * dist, 0)
+end
+
+-- ConsiderR's opening bid needs three enemies inside the Freezing Field, and on
+-- both real frames only ONE enemy stands that close -- so the shipped bid is
+-- BOT_ACTION_DESIRE_NONE there whatever the guard says, and the guard's effect
+-- on the FINAL decision is invisible. The end-to-end cases therefore mutate the
+-- frame: two enemies who are alive on it are walked into the field. Which two is
+-- not a free choice -- they must not change what the guard sees, and the tests
+-- ASSERT that (`J.GetReadyHardCc(mover) == nil`) rather than assume it, so the
+-- mutation moves the branch precondition and nothing else.
+local FIELD_RADIUS = 835                    -- external anchor, see header
+local IN_FIELD     = 500                    -- inside 835 * 0.88 = 735
+local FAR_FILLERS   = { 'npc_dota_hero_lich', 'npc_dota_hero_luna' }
+local CLOSE_FILLERS = { 'npc_dota_hero_chaos_knight', 'npc_dota_hero_pudge' }
+
+--- Arm/disarm the candidate, anchor the ultimate's AoE radius, walk the fillers
+--- into the field, then drive the real X.ConsiderR(). Returns the desire it bids.
+local function bid_considerR(path, bArmed, tFillers, fTweak)
+    local J, bot, heroes = rf.load(path)
+    J.IsSoakCandidate = bArmed
+        and function(id) return id == 'cmrguard' end
+        or function() return false end
+
+    local sAbilityList = J.Skill.GetAbilityList(bot)
+    -- GH #36 (fixed 2026-08-19): before ability_meta.lua taught the loader which
+    -- name is the ultimate, this slot was nil in every fixture and ConsiderR
+    -- short-circuited at IsFullyCastable() without running a line of its logic.
+    assert(sAbilityList[6] == 'crystal_maiden_freezing_field',
+        'the ultimate must be reachable in the fixture world (GH #36)')
+    local abilityR = bot:GetAbilityByName(sAbilityList[6])
+    assert(abilityR:IsFullyCastable(), 'R is off cooldown and affordable on this real frame')
+    rawget(abilityR, '__spec').GetAOERadius = FIELD_RADIUS
+
+    for _, sName in ipairs(tFillers) do
+        assert(J.GetReadyHardCc(heroes[sName]) == nil,
+            sName .. ' must hold no ready hard CC, or moving him would change the guard input')
+        move_to(bot, heroes[sName], IN_FIELD)          -- MUTATION of the real frame
+    end
+    if fTweak then fTweak(J, bot, heroes) end
+
+    local X = rf.load_hero('crystal_maiden')
+    return X.ConsiderR(), J, bot, heroes
+end
+
+local function ranged_cc(sHero, sAbility, nRange)
+    return function(_, _, heroes)
+        rawget(heroes[sHero]:GetAbilityByName(sAbility), '__spec').GetCastRange = nRange
+    end
 end
 
 local tests = {}
@@ -137,20 +186,55 @@ tests['the closing buffer stays inside the window the two real frames bound'] = 
         'at or above 1001 the GH #34 false positive comes back')
 end
 
--- Wiring, per the director's rule 0b (test_set.md 2026-08-19): a helper that is
--- right but unreachable is worth nothing, so pin that the guard actually sits on
--- the decision ConsiderR returns.
---
--- KNOWN GAP (why this is source-level rather than a driven ConsiderR call):
--- ConsiderR's first term is `abilityR:IsFullyCastable()`, and abilityR is
--- `bot:GetAbilityByName(sAbilityList[6])`. J.Skill.GetAbilityList (aba_skill.lua
--- :82) only files a name under index 6 when `ability:IsUltimate()` and its slot
--- is >= 4 -- but the behavioral dump compacts ability slots (CM comes back with
--- exactly 4 entries, ultimate at index 3) and carries no IsUltimate/IsHidden
--- flag. So in EVERY fixture `sAbilityList[6]` is nil, abilityR is the loader's
--- untrained nil-stub, and ConsiderR short-circuits to NONE before reaching any
--- guard. That is a pipeline gap affecting every hero's ultimate logic, not
--- something to paper over in this test -- filed as its own harness issue.
+-- END-TO-END, per the director's rule 0b (test_set.md 2026-08-19): assert the
+-- decision the world actually gets, not a helper's return value. This was
+-- source-level-only when the gate was narrowed (2026-08-19T11:53Z) because
+-- sAbilityList[6] was nil in every fixture and ConsiderR short-circuited before
+-- reaching the guard -- GH #36, fixed by the director the same day. These four
+-- cases are the first time cmrguard's effect on CM's real bid is pinned.
+
+tests['end-to-end [MUTATED frame]: the GH #34 false positive no longer eats the bid'] = function()
+    local nBid, J, bot, heroes = bid_considerR(FAR, true, FAR_FILLERS)
+    -- The vetoer is untouched: still the real Centaur, at his real distance,
+    -- still holding a ready hoof_stomp. Only the enemy COUNT was mutated.
+    local centaur = heroes['npc_dota_hero_centaur']
+    assert(math.floor(GetUnitToUnitDistance(bot, centaur)) == 1326, 'centaur unmoved')
+    assert(J.GetReadyHardCc(centaur) ~= nil, 'and still a ready-hard-CC holder')
+    assert(nBid == BOT_ACTION_DESIRE_HIGH,
+        'armed, CM must still bid her ultimate -- ground truth is that she cast it and lived 44.1s')
+end
+
+tests['end-to-end [MUTATED frame]: armed equals shipped on that frame'] = function()
+    local nArmed = bid_considerR(FAR, true, FAR_FILLERS)
+    local nShipped = bid_considerR(FAR, false, FAR_FILLERS)
+    assert(nShipped == BOT_ACTION_DESIRE_HIGH, 'shipped bids the ultimate here')
+    assert(nArmed == nShipped,
+        'the narrowed gate must be a no-op on the frame it was narrowed for')
+end
+
+tests['end-to-end [MUTATED frame+ability]: a deliverable CC on that Centaur kills the bid'] = function()
+    local nBid = bid_considerR(FAR, true, FAR_FILLERS,
+        ranged_cc('npc_dota_hero_centaur', 'centaur_hoof_stomp', 1000))
+    assert(nBid == BOT_ACTION_DESIRE_NONE,
+        'the guard must reach the final decision -- if this still bids, cmrguard is decorative')
+end
+
+tests['end-to-end [MUTATED frame]: the motivating Jakiro frame loses the ultimate'] = function()
+    local nBid = bid_considerR(CLOSE, true, CLOSE_FILLERS,
+        ranged_cc('npc_dota_hero_jakiro', 'jakiro_ice_path', 1000)) -- under-estimate, see header
+    assert(nBid == BOT_ACTION_DESIRE_NONE,
+        'armed, the channel that got her stunned 0.6s in must not be bid')
+end
+
+tests['end-to-end [MUTATED frame]: and shipped bids it there -- the gate is what withholds'] = function()
+    local nBid = bid_considerR(CLOSE, false, CLOSE_FILLERS,
+        ranged_cc('npc_dota_hero_jakiro', 'jakiro_ice_path', 1000))
+    assert(nBid == BOT_ACTION_DESIRE_HIGH,
+        'without the candidate CM commits to the channel on the frame that killed her')
+end
+
+-- Source-level wiring, kept as the cheap tripwire: the end-to-end cases above
+-- would also fail if the guard were unhooked, but these say WHY in one line.
 tests['wiring: the guard gates the ConsiderR entry, ahead of every bid branch'] = function()
     local f = assert(io.open('bots/BotLib/hero_crystal_maiden.lua', 'r'))
     local src = f:read('*a')
