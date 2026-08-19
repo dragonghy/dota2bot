@@ -1,6 +1,7 @@
 {
   "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填)",
-  "requests": [
+  "requests": [],
+  "done": [
     {
       "id": "director-1",
       "stream": "director",
@@ -14,9 +15,8 @@
       "priority": 1,
       "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
       "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
-      "status": "running",
-      "result": "2026-08-19T20:11Z 更新:**两臂现已全部上机**。臂 A 已收割完(16 id,树 b48d655,287 局有效局,4 种子两 wave 全齐):gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,comps_better 四指标全 0/4,recover_verdict 判 hold_or_reject;逐种子 gpm 863=-12.90 / 864=-56.73 / 865=-41.10 / 866=-21.97(sd 19.62, SE 9.81, z=-3.38;按 GH #30 经验零点 z=-2.19)。**这是单臂读数,不构成 roamstale 的任何结论**,结论要等 A-B 逐种子配对差。臂 B 20:09Z 启动:15 id(逐字照抄 test_set.md §I.0,不含 roamstale,tpdead/axebuyblink 两臂均缺席),种子 863-866,4 台 on-demand c6i.4xlarge 一台一种子,--slots 16 --hours 2 --games 22,**树钉死 b48d655 全 40 位 SHA**(bots/ 自 b48d655 起有漂移 jmz_func.lua +75/-1,故按 18:08Z 预置规则不能用 --ref main;裸 SHA fetch 已本地实测 OK);run_id spot_20260819_200925/200927/200930/200933_1_b48d6556...(**run_id 自带 SHA 后缀,与臂 A 的 _main 后缀天然区分,收割不再依赖人工映射表**);实例 i-0588b30038f8af4ab/i-0e1aa8caf747f27a9/i-01c5f0f70e5fd14e2/i-0e2a05c9cb484df93,预计 ~20:45-21:00Z 落地。下次触发收割臂 B 并出 A-B 配对差,**必查臂 B 暖场局 stamp 是否为 b48d655**(否则裸 SHA checkout 静默失败、跑了陈树,数据作废)。原始记录:2026-08-19T18:08Z 启动,但**只有臂 A 上机**(4 台 on-demand c6i.4xlarge,种子 863/864/865/866,树 b48d655,--slots 16 --hours 2 --games 22;run_id spot_20260819_180801/180804/180807/180809_1_main)。臂 B 被 AWS 容量双重挡住:on-demand Standard vCPU 配额 64 已被臂 A 的 4×16 占满(VcpuLimitExceeded),同时 c6i.4xlarge 在 us-west-2 **无 spot 容量**(4/4 InsufficientInstanceCapacity)。臂 B 顺延到下一次触发(≥20:07Z,臂 A 届时已自毁腾出配额),必须用同一棵树 b48d655 + 同一组种子 863-866 + 同样 --on-demand/16 槽/22 局。"
+      "status": "done",
+      "result": "2026-08-19T22:12Z **完成**。两臂各 4 种子全齐,合计 555 局有效局。**臂 A(16 id,含 roamstale)** gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,四指标 0/4,287 局。**臂 B(15 id,无 roamstale,树 b48d655 暖场 stamp 已核对通过)** gpm -38.66 / xpm -40.50 / deaths +0.40 / last_hits -2.11,四指标 0/4,268 局;逐种子 gpm 863=-56.24 / 864=-16.13 / 865=-40.33 / 866=-41.93。**A-B 逐种子配对差(本请求的交付物):gpm +5.48(sd 35.62, SE 17.81, z=+0.31, 同号 2/4)= null**;xpm +5.60(z=0.35)、deaths -0.08(z=-0.44)、last_hits -0.05(z=-0.08),四个指标全 null。**事前登记裁定(§H,批测台只做字面比对,判定归总监)**:(1) §G.3 第 3 行**按证伪列命中** —— 证伪列写「arm A ≈ arm B ≈ -30 → 残差真在规则里,那时才轮到路 B」,实测 -33.17 vs -38.66,字面成立。另注:预测列措辞「arm A 明显不如 arm B 负」方向与混杂因子假说本身相反(疑笔误),但两种读法都不构成通过(+5.48 达不到「明显」)。(2) §J.4⑤ `last_hits` 预测**被证伪** —— 登记要求臂 B ≥ -1.0 才算 roamstale 背锅,实测 **-2.11**,正是登记里写的「同样是 -2.x」;DiD -0.05 远达不到 ≤ -1.0 ⇒ 对线期 last_hits 代价不出自 roamstale,另有出处。(3) roamstale 条件 (b):经济 A-B = null。roamstale 是 §A0 通例的已批准例外(gpm 可作次判据),但与 16:10Z 收 lf_rescue 时「null 不构成无害、只是上界」的先例有张力,**判定归总监**。**必读的功效限制**:本轮实测 A-B 配对差 sd=35.62 ⇒ 4 种子 MDE ≈ **35.6 gpm**,且配对差噪声是单臂(sd 16.6-19.6)的约 2 倍(每臂本身已是镜像差,跨臂配对拿不到相关性红利)。⇒ 这个 null 的上界很宽;且**路 B 逐 id 经济二分结构上不可行**(12 个 id 均摊 -30 gpm ⇒ 单 id -2.5 gpm ⇒ 需约 800 种子)。详见 iterations/reports/batch-desk/20260819T221200Z.md 第 5 节。"
     }
-  ],
-  "done": []
+  ]
 }
