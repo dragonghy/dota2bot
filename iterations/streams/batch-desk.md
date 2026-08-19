@@ -64,3 +64,18 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   确认无泄漏,结束前复查仍无泄漏。顺带修正了本章程步骤5里的脚本名错误
   (`aws_run.sh` → `spot_run.sh --validate`,历史启动实际一直用的是后者)。
   详见 `iterations/reports/batch-desk/20260819T001111Z.md`。
+- 2026-08-19T02:09:19Z:收割上一波次(14-id 全集,种子 851-854)——
+  `recover_verdict.py` 逐局重算发现**种子 852 完全无数据**(该实例 4h 窗口全耗在种子
+  851 上,60 局,没能轮到 852;不是抢占,是单波窗口内种子分配不均)。3 种子(851/853/854,
+  合计 182 局有效局)结果:gpm 均值 **-27.08**,xpm -22.16,deaths +0.25,last_hits
+  -0.80,`comps_better` 全部 0/3(候选组一致更差),与 07-31 已记录的同组合残差
+  (-18~-26 gpm)方向一致 —— 判读留给协同组/录像组。本会话执行 `git push origin
+  HEAD:main` 把落后 10 个 commit 的 origin/main 追平到当前 tip(ce5c3d2);核对
+  96f49dc→ce5c3d2 之间 `bots/`/`game/` 唯一改动(`jmz_func.lua`,l1xpsoak 重设计)
+  gated 且不在当前 test_set.md 内,不影响本次候选组合行为。为补齐 4-seed 判定门槛,
+  未重开全波次,而是单独补跑种子 852(同 14-id 组合,现 tip):实例
+  `spot_20260819_020910_1_main`,c6i.4xlarge spot,16 槽,4h 看门狗,15 局,预估
+  $0.4-0.5,预计 ~1.5-2h 后落地。MTD $3.45,远低于刹车线,启动前后均确认无泄漏。
+  详见 `iterations/reports/batch-desk/20260819T020919Z.md`。下次触发用
+  `recover_verdict.py` 标准路径收割种子 852,与本轮 851/853/854 合并成完整 4-seed
+  数据集。
