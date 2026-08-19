@@ -27,6 +27,22 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0. **「命令的边界」普查(2026-08-19T21:30Z 新增,由 GH #45 / `roamreach` 引出)**。
+   新缺陷族,和「最终出价可达性」(第 8 条)平级但是**下一层**:
+   **`Action_*` 里的连续型命令(`bOnce=false`、`Action_MoveToUnit` 等)在它的 mode
+   不再赢下竞价之后没有任何人会再评估它** —— mode 的 `Think` 不被调用,写在 `Think`
+   里的 leash/释放也就不可达。凡是「一帧成立的条件 → 下一条连续命令」的地方都要查:
+   命令的**持续时间**必须由它自己带边界,不能靠「下一帧再判一次」。
+   `roamreach` 只修了 `mode_team_roam_generic` 的两个英雄攻击点;**还没查的**:
+   其余 mode 文件里的 `Action_AttackUnit(x, false)` / `Action_MoveToUnit`
+   (`mode_defend_tower_*`、`mode_roam`、`mode_attack`、`mode_push_tower_*` 都有),
+   以及 `ability_item_usage_generic.lua` 里的追击类命令。
+   **做法**:两帧一组(下达帧 + 背书消失帧),在两帧上重建**整场 mode 竞价**证明
+   「发起的 mode 已经不赢了」,然后断言命令类型。工具链已经现成,照抄
+   `tests/test_roamreach_bounded_chase.lua`。
+   **已知不通的路**:想在**命令已经在执行之后**回收它,唯一落点是每帧都跑的
+   `ability_item_usage_generic.lua`(mode 之外唯一的全局 Think)——那是**另一个杠杆**,
+   不要和「下达时带边界」合做。
 1. ~~**l1xpsoak 重设计**~~ ~~**等总监重新入 test_set.md**~~ **已结案
    (2026-08-19T07:17Z):代码退役,滞回改挂新 gate `lanehyst`**。见 issue #28
    与 `iterations/reports/strategy/20260819T071719Z.md`。**不要再复活
@@ -101,6 +117,46 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-19T21:30Z:认领 **GH #45**(同时是总监 `test_set.md` §J.4 ⑥ 点名归口本组的
+  钉帧任务)。钉了两帧(**同一局同一个响应者**,都从 `.dem` 独立重建过):
+  `f_260819_181742_ss_chase_start`(t=312.5,**命令被下达**,gap 805)与
+  `f_260819_181742_ss_chase_stalled`(t=318.5,**6 秒后没有任何东西还在为它背书**,
+  gap 760)。事件层 ground truth 比 issue 更硬:**t=305–333 之间该英雄对英雄的伤害
+  事件与施法事件都是 0**,第一次施法是 t=333.3 打一只小兵(已放弃追击之后),DK 从
+  23% 回到 42%;Centaur 全程在旁(656u→218u),是 **2 打 1 追残血却零输出**。
+  **机制被证明,同时证伪了 #45 §3 的猜想。** 链条:(1) **`ownhalf` 且只有 `ownhalf`**
+  (逐个 id 单独 armed 试过)在 t=312.5 打开 `J.ShouldPunishDive`,team_roam 出价
+  **0.72** 并赢下竞价(laning 0.446,其余全 0);(2) 它的 `Think` 下的是
+  `Action_AttackUnit(target, false)` —— **连续型**命令,而当帧 gap 805 **超过该英雄
+  全部触及范围**(普攻 400 / Ether 500 / Shackles 400 / Hex 550);(3) t=318.5
+  **一条分支都不成立、出价 0**,另一个 mode 赢 ⇒ 引擎**不再调用 team_roam 的 `Think`**,
+  而这个 mode 唯一自带的释放(>1800 leash)就住在 `Think` 里 ⇒ 命令**既无背书也无可达
+  释放**却仍在执行。**一帧成立的 collapse 分支买到一次横穿地图的追击。**
+  §0b 家族的**动作类**变体,亚型新:**出价与动作在各自那一帧都对,缺的是动作在出价停止
+  之后的边界**。证伪的是 #45 §3 前半句(「分支持续出价 + 某个力往回拉」)——**分支 6 秒内
+  就停了,追击照旧**,不需要任何回拉力解释那个 644–870u 的环。
+  与 `roamstale` 的关系:这是它的**送达**那一半(shipped 侧陈句柄恰好吞掉这条命令,
+  总监 §J.4 ③),**不是 fixture 能证的**,如实标注为臂 A/B 差分推断。
+  改动:gated `roamreach`(turbo-only,**只改 `mode_team_roam_generic.lua`**):
+  新 `_roamreach_ThreatReach`(普攻距离或**已学会且当前可施放**技能的施法距离取大)+
+  `_roamreach_BoundedChase`,armed 时**英雄**目标超出触及范围就下
+  `Action_MoveToLocation(目标位置)`——**有限**命令,挂在 `Think` 的两个英雄攻击点。
+  **不改任何一处出价**(断言 armed 后仍 0.72);触及范围内的目标、**任何非英雄目标**
+  逐字节不变;**单独 armed 是逐位 no-op**(断言)⇒ **不可单拎成一臂**,同
+  `tpdying`/`tpdead` 的排期形状。**没有动 `ownhalf`/`roamstale`/`ShouldPunishDive`
+  一个字节。** 验收 `tests/test_roamreach_bounded_chase.lua` **11 例**,全部驱动真的
+  `GetDesire()`+`Think()`:前提全断言、机制断言(每个真实触及距离都短于 805)、
+  归因断言(逐 id 隔离)、缺陷断言(shipped `bOnce=false`;6 秒后出价 0 且另一 mode 赢)、
+  四个对照组(进入范围/非英雄/非 turbo/合成 900 施法距离让承诺重新合法)、反向断言;
+  **两次变异**:删修复恰好 2 条 FAIL,gate 常开恰好 2 条 FAIL。
+  **529/529(基线 518)+ luacheck 0 警告**。`state.json` 新增 `roamreach_20260819`。
+  **`roamreach` gated 未 armed**,入集申请见 GH #45 + `test_set.md` §I.7 追加行;
+  **两条排期硬约束**:①不可单拎成一臂;②它绑的是 `roamstale` 送达的同一条命令,
+  **不要与测量 `roamstale` 的波次同 arm**。顺带记下一条 harness 缺口(未开 issue,
+  已进 `state.json`):`.dem` **不带每帧 mode 也不带 unit order**,「哪个 mode 在跑」
+  只能靠在该帧重建整场竞价推断(同类 GH #27)。
+  未花 AWS 钱(只读 S3:1 个命中缓存的 dumper + 1 个 `.dem`,未启动任何计费资源),
+  未提批测请求。详见 `iterations/reports/strategy/20260819T213000Z.md`。
 - 2026-08-19T19:30Z:没有可认领的新 `[strategy]` issue(#37 由总监 19:00Z 裁定
   `tpdead` 入集、issue 保持 open,剩下那一半要先要帧证据;#41 已被 `roamstale` 解决,
   录像组 18:56Z 确认;#39 已获批)。接 backlog 第 8 条,**本轮 `midtp`/`suptp`**。

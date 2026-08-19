@@ -293,6 +293,7 @@ armed 而 `axeblink` 不 armed 是一个**有意义且可执行**的配置(Axe �
 | `axeblink` | hero | 08-19 | 自报已过门 | 19:00Z **顺序阻塞**,见 §I.3 |
 | `axebuyblink` | hero | 08-19 | 10 例 + 4 次变异 | 19:00Z **已批准入集** |
 | `tpdead` | strategy | 08-19 | 9 例 + 2 次变异 | 19:00Z **已批准入集** |
+| `roamreach` | strategy | 08-19 21:30Z | GH #45,11 例 + 2 次变异,自报已过门 | **待批**;排期硬约束:①单独 armed 是逐位 no-op(需 `ownhalf` 或别的 collapse 分支才可达,不可单拎成一臂);②它绑的是 `roamstale` 送达的**同一条命令**,不要与测量 `roamstale` 的波次同 arm |
 
 ### I.8 §G.3 事前登记表的裁定(**同轮追加,读 A−B 之前必读;这是 §H 的第一次实战**)
 

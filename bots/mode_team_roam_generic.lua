@@ -451,6 +451,60 @@ end
 -- ==============================
 -- Think
 -- ==============================
+
+--- [roamreach, GH #45] The longest range at which this bot can do ANYTHING to a
+--- target right now: its attack range, or the cast range of a levelled and
+--- currently castable ability if that reaches further.
+local function _roamreach_ThreatReach(hBot)
+    local nReach = hBot:GetAttackRange() or 0
+    for slot = 0, 5 do
+        local hAbility = hBot:GetAbilityInSlot(slot)
+        if hAbility ~= nil and hAbility:GetLevel() > 0 and hAbility:IsFullyCastable() then
+            local nCast = hAbility:GetCastRange()
+            if type(nCast) == 'number' and nCast > nReach then nReach = nCast end
+        end
+    end
+    return nReach
+end
+
+--- [roamreach, GH #45] Hand an out-of-reach HERO target a BOUNDED approach
+--- instead of an open-ended attack-follow. Returns true when it took the order.
+---
+--- `Action_AttackUnit(hTarget, false)` is a CONTINUOUS order (docs/
+--- BOT_API_REFERENCE.md): the engine pursues the target until it dies or a new
+--- order arrives. It therefore outlives the desire that justified it -- and it
+--- outlives it in the one place nothing can clean up, because the release this
+--- mode does own (the >1800 leash above) lives in THIS Think, which the engine
+--- stops calling the moment another mode wins the auction. So a collapse branch
+--- that is true for one frame can buy a cross-map chase.
+---
+--- REAL FRAME (20260819_181742_slot1, arm A of the roamstale bisect): at
+--- t=312.5 the punish-dive branch ('ownhalf') returns a 41%-HP Dragon Knight
+--- 805u away and team_roam wins the auction at 0.72, so Shadow Shaman -- attack
+--- range 400, Hex 550, Shackles 400, Ether Shock 500, i.e. NOTHING that reaches
+--- 805u -- is handed a continuous attack order. Six seconds later (t=318.5) not
+--- one branch in this helper is true any more and its bid is 0, yet the bot is
+--- still 760u behind the same target: it chased for 12s across ~3900u, stayed in
+--- the 644-870u band the whole way, cast nothing, dealt zero damage, and the
+--- target regenerated 23% -> 42% HP while its own lane creeps went unfarmed.
+---
+--- Armed, an unreachable hero target gets `Action_MoveToLocation(its position)`:
+--- a FINITE order. While this mode keeps winning it is re-issued every frame, so
+--- the approach is unchanged; when the mode loses the auction the leftover order
+--- expires ~one target-distance later instead of dragging the bot across the
+--- map. In-reach targets keep the shipped continuous attack byte-for-byte -- the
+--- commit only becomes a promise once we can actually keep it. Standard play:
+--- don't chase what you can't catch without a way to close (a lock, a slow, or
+--- an ally in front); the lane you left costs more than the kill you won't get.
+--- Gated turbo + 'roamreach'; inert by default.
+local function _roamreach_BoundedChase(hTarget)
+    if not (J.IsModeTurbo() and J.IsSoakCandidate('roamreach')) then return false end
+    if hTarget == nil or not hTarget:IsHero() then return false end
+    if GetUnitToUnitDistance(bot, hTarget) <= _roamreach_ThreatReach(bot) then return false end
+    bot:Action_MoveToLocation(hTarget:GetLocation())
+    return true
+end
+
 function Think()
     if J.CanNotUseAction(bot) then return end
 	-- diabled think less to avoid failing to last hit
@@ -493,12 +547,16 @@ function Think()
     end
 
     if ShouldHelpAlly and J.Utils.IsValidUnit(targetUnit) then
-        bot:Action_AttackUnit(targetUnit, false)
+        if not _roamreach_BoundedChase(targetUnit) then
+            bot:Action_AttackUnit(targetUnit, false)
+        end
         return
     end
 
     if (IsHeroCore or IsSupport) and J.Utils.IsValidUnit(targetUnit) then
-        bot:Action_AttackUnit(targetUnit, false)
+        if not _roamreach_BoundedChase(targetUnit) then
+            bot:Action_AttackUnit(targetUnit, false)
+        end
         return
     end
 end
