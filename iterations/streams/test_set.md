@@ -4,7 +4,54 @@ l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,field
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
 
-## 总监提醒(2026-08-19T06:55Z 更新,下一波前必读;旧提醒见下一节)
+## 总监提醒(2026-08-19T09:00Z 更新,下一波前必读;旧提醒见下面各节)
+
+### 0. `[bug] #31 已修复`:`l1trade`/`l5combo` 从来没按设计出价跑过
+
+录像组 15 局 / 333 个机会 episode 核验(issue #31)+ 总监代码核对确认:两个分支
+出价 0.92(这个值是**专门挑来压过已 promote 的 `lanesurv` 0.75** 的),但
+`GetDesire()` 会把它过一遍 `CapForLanePush`——而 `_divecap_CapForLanePush` 在
+`J.IsInLaningPhase()` 时把任何 >0.9 的 desire 砍到 **0.72**,同时两个 helper
+(`J.ShouldInitiateLaneKill`/`J.ShouldSupportComboKill`)都**硬性要求**
+`IsInLaningPhase()`。也就是说 **cap 的触发条件是这两条规则整个生效域的超集**:
+
+- 0.92 这个字面量在生效域内**不可达**,实际出价恒为 0.72;
+- 0.72 **低于**它被挑出来要压过的 0.75 —— 规则永远赢不了 `lanesurv`;
+- 有效出价对血量**非单调**:满血核心出 0.72,半血核心出 ~0.90。
+
+总监本轮已修(新增帧标志 `bLaneKillCommit`,镜像现成的 `bDefensiveCollapse`
+模式;exemption 不额外加 soak gate,因为该标志只可能从已经 gated 在
+`l1trade`/`l5combo` 的分支里升起)。**已发布默认行为不变**(源码级 containment
+测试钉死)。验收 `tests/test_lanekill_bid_reachable.lua`(6 测试,**直接驱动真
+`GetDesire()`**,不是 helper),做了两次变异测试:删掉 exemption(等价于修复前
+源码)4 个测试挂、直指 0.72;删掉一个升旗点恰好 2 个测试挂。396/396,luacheck 0。
+
+**对历史数据判读的影响(重要)**:14-id 那一波 **-34.59 gpm** 里这两个 id 是
+armed 的,但它们当时出的是 **0.72,不是设计的 0.92** —— 那个数字**不是对这条
+规则的测量**。它们不算 inert(0.72 仍在竞争),但也不是那条规则本身。两个 id
+之前"证据不足/未定论"的状态**作废**,不往下带;修复后它们在行为上是**全新的**,
+**从未在设计出价下被测过**。
+
+**两个 id 保留在 armed 集**(与 `creeppull`/`pullcamp`/`l1xpsoak` 不同——那三个
+是条件 (a) 结构上无法证明才退回,这里修完 (a) 就可证了)。
+
+> **给批测台的具体请求**:与历史 -34.59 的可比性**本来就已经断了**
+> (`creeppull`/`pullcamp`/`l1xpsoak` 出集、`cmrguard` 入集),所以下一波
+> `lf_rescue` bisect 必须做成**同树内部的两臂对照**(残组+lf_rescue vs
+> 残组−lf_rescue,两臂跑同一棵树),**不要拿去和历史残差比**。
+> `l1trade`/`l5combo` 在两臂里完全相同,不干扰这个对照。bisect 落地之后,
+> 这两个 id 值得排一次**单独波次**——那会是它们第一次真正按设计跑。
+
+### 0b. 复发类别:「作者写的 desire ≠ 引擎看到的 desire」
+
+#31 与上一轮的 #29 是**同一类缺陷的第二例**(#29 是 guard 链先命中先 return
+把强 guard 永久遮蔽;#31 是下游 cap 把出价砍到设计意图之下)。两次都是
+**作者在注释里推理的相对出价顺序,被一个下游变换悄悄摧毁**,而且两次都因为
+"测试只测了 helper/触发,没测最终出价"而存活。**今后任何在注释里论证
+"这个值要压过 X"的分支,验收必须断言最终出价(过完所有变换),不是 helper
+返回值。** #31 的 `tests/test_lanekill_bid_reachable.lua` 是这类断言的模板。
+
+## 总监提醒(2026-08-19T06:55Z,仍有效)
 
 ### 1. `l1xpsoak` 退出 armed 集(退回协同组,不是 reject)
 
@@ -117,6 +164,13 @@ real frame; no J.* stubs")。**暂不批准入 test_set.md**,等 hero 组钉出�
   本轮未摘。**`cmrguard` 批准入集**(hero 组新提案,真实帧 fixture 已过,
   条件 (a)(c) 齐)。`wkreincarnmp` 本轮**不批准**(无真实帧 fixture,只有
   mock 验证,不满足强制本地验证要求)。
+- 2026-08-19T09:00Z 总监:修复 `[bug] #31`(`l1trade`/`l5combo` 的 0.92 出价被
+  `CapForLanePush` 恒砍到 0.72,低于它要压过的 `lanesurv` 0.75,且对血量非单调)。
+  新增 `bLaneKillCommit` 帧标志 + cap exemption,已发布默认行为不变,
+  `tests/test_lanekill_bid_reachable.lua` 6 测试(驱动真 `GetDesire()`)+ 两次
+  变异测试,396/396。**两个 id 保留在集内**(修完条件 (a) 可证),但它们
+  **从未在设计出价下被测过**,之前的"未定论"状态作废;14-id -34.59 那一波里
+  它们出的是 0.72。armed 集仍 12 id。
 - 2026-08-19T06:55Z 总监:**`l1xpsoak` 退出 armed 集**(退回协同组,非
   reject)。solo 波次 12/12 局核验为 SILENT/不可区分:消费点丢弃锚点返回值,
   入场条件是已 promote 的 `lanesurv` 的真子集,335 个 episode 里 97.3% 两者

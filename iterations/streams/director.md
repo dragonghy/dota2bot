@@ -163,3 +163,54 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **patch 缺口(backlog #0)连续第三轮被新 issue 挤掉** —— 下次触发**就用
   整个工作单元做 patch**(除非有新 `[bug]`/`[harness]` 抢占);其次是收
   855-858 verdict 时确认 null-calibration 数字并据此重标 -34.59 的权重。
+
+- 2026-08-19T09:04Z:第五次 director 触发。上一条计划的 patch 缺口**又被抢占**
+  ——录像组 08:49Z 开了 `[bug] #31`,是 #29 的**同族缺陷第二例**,且直接影响
+  test_set 里两个 id 的判读有效性,按章程 2(a) 先修。
+  **① `[bug]` #31 已修复并关闭** —— `mode_team_roam_generic` 的 L1-TRADE /
+  L5-COMBO 两个分支出价 0.92(注释明确说这个值是为了压过已 promote 的
+  `lanesurv` 0.75),但 `GetDesire()` 过 `CapForLanePush` 时任何 >0.9 在
+  `IsInLaningPhase()` 下被砍到 **0.72**,而两个 helper 都**硬性要求**
+  `IsInLaningPhase()` —— **cap 的触发条件是两条规则整个生效域的严格超集**,
+  0.92 在它唯一可能触发的每一帧上都被砍。后果:有效出价 0.72 **低于**它要压过
+  的 0.75(规则永远赢不了),字面量不可达,且出价对血量**非单调**(满血 0.72,
+  半血 ~0.90)。修法:新增帧标志 `bLaneKillCommit`(镜像现成的
+  `bDefensiveCollapse` 模式)+ cap 第 4 参数豁免。**没选**设
+  `bDefensiveCollapse`(那条豁免自己 gated 在未 armed 的 `divecap` 上,设了仍被
+  砍,等于没修)**也没选**把字面量降到 <=0.9(等于故意卡在 cap 阈值下面,阈值
+  一动就无声复发 —— 正是本 bug 的成因)。豁免不额外加 turbo/candidate 条件:
+  标志只可能从已 gated 在 `l1trade`/`l5combo` 的分支里升起。**已发布默认行为
+  逐字不变**。验收 `tests/test_lanekill_bid_reachable.lua`(6 测试,**直接驱动
+  真 `GetDesire()`** —— 这正是 issue 第 4 节指出的存活原因:旧测试只测触发或只测
+  cap 谓词,**没有一条测复合**),含 21 点血量单调性扫描 + 源码级结构包含断言;
+  **两次变异测试**:删 exemption(等价修复前源码)4 挂、报错直指 0.72,删一个
+  升旗点恰好 2 挂。luacheck 0 警告,**396/396**(容器初始无 Lua 工具链,已自行
+  apt 装)。
+  **② 判读影响(重要,已写进 test_set.md + state.json)**:14-id 那一波
+  **-34.59 gpm 里这两个 id 出的是 0.72,不是设计的 0.92** —— 那个数字**不是对
+  这条规则的测量**;它们之前"未定论"的状态**作废**,修复后行为上是全新的,
+  **从未在设计出价下被测过**。**两个 id 保留在 armed 集**(仍 12 id):与
+  `creeppull`/`pullcamp`/`l1xpsoak` 不同,那三个是条件 (a) 结构上无法证明才退回,
+  这里修完 (a) 可证。给批测台的约束:与历史 -34.59 的可比性**本来就已断**
+  (三个出集、`cmrguard` 入集),下一波 `lf_rescue` bisect 必须做**同树内部两臂
+  对照**,不要比历史残差;bisect 后这两个 id 值得排**单独一波**。
+  **③ 立了一条规矩(比单次修复更值钱)**:#29 与 #31 同属
+  **「作者写的 desire ≠ 引擎看到的 desire」** 这一复发类别,两次都因为"测试只测
+  helper/触发"而存活 → **今后任何在注释里论证"这个值要压过 X"的分支,验收必须
+  断言最终出价(过完所有变换)**,以本次测试文件为模板。已写进 test_set.md。
+  **④ 顺带关闭一个连续四轮记录的工具缺口**:lane-role = `team_slot % 5 + 1`
+  (#31 第 5 节,15 局补刀梯度 31.6/31.7/20.9/15.1/13.8 验证),**不需要 dumper
+  增强、不需要开 [harness] 需求**。
+  成本 MTD **$3.47**(批测台自报),总监本轮未做 AWS 调用、未启动计费资源。
+  五组均有产出无空转。今日周三,效率台账(仅周日)跳过。`DECISIONS_NEEDED.md`
+  仍未创建(本轮决定全在自主授权内),本周尚无 owner 邮件。
+  **踩坑记录给各组**:`tests/mock/bot_api.lua` 把未定义的 ALL_CAPS 全局解析成
+  递增哨兵整数(1001...),`BOT_MODE_DESIRE_NONE` 一变成 1001,desire 的
+  `RemapValClamped` 算术就全错(我第一版拿到 `GetDesire() == 1008`);要走 desire
+  算术的测试必须像 `test_retreat_priority_order.lua` 那样自己钉真实数值。mock 还
+  把 `print` 打成 no-op,调试用 `io.write`。
+  **patch 缺口(backlog #0)连续第四轮被挤掉**。这个结构性冲突值得记一笔:它需要
+  独占一个工作单元,而 `[bug]` 章程优先级更高,于是永远排不上。**下次触发若无新
+  `[bug]`/`[harness]` 就必须做 patch**;若又被挤,建议给 patch 单独排一次不处理
+  issue 的触发。次优先:收 `lf_rescue` bisect verdict(按两臂对照读);再次:
+  `[harness] #27`(dumper `vis`,英雄组已把 fixture 侧做完只等供数)或 backlog #1。

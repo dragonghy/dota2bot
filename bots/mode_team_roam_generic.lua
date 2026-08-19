@@ -67,18 +67,43 @@ end
 -- lane-push cap below must NOT throttle it. Reset each frame in GetDesireHelper.
 local bDefensiveCollapse = false
 
+-- [GH #31] Set when this frame's roam desire is a LANE-KILL COMMIT (L1-TRADE /
+-- L5-COMBO below). Distinct from bDefensiveCollapse: those punish an enemy that
+-- came to us, these initiate on an enemy laner. Both share the property that the
+-- lane-push cap must not throttle them, for opposite-looking but identical
+-- reasons -- see the cap's own comment. Reset each frame in GetDesireHelper.
+local bLaneKillCommit = false
+
 -- Pure, testable predicate (global, mirrors _suplh_* in mode_laning_generic):
--- given a raw roam desire, whether it is a defensive collapse, and the puller
--- bot, return the lane-capped desire. Exposed as a global so a unit test can
--- drive it directly with controlled J stubs rather than steering all of GetDesire.
+-- given a raw roam desire, whether it is a defensive collapse, the puller bot,
+-- and whether it is a lane-kill commit, return the lane-capped desire. Exposed
+-- as a global so a unit test can drive it directly with controlled J stubs
+-- rather than steering all of GetDesire.
 -- [GH #7] EXEMPT a defensive collapse (tower-dive / over-chase punish): those
 -- return 0.98 deliberately and were being soft-ceiled to 0.72 during laning --
 -- exactly when tower dives happen -- so the punish lost to the bot's own laning
 -- desire and the dive went unpunished (observed 4.6 unpunished dives/game with #7
 -- nominally shipped). Uncapping a collapse during laning COULD cause
 -- over-commitment, so the exemption is gated (turbo + 'divecap') until A/B.
-function _divecap_CapForLanePush(desire, bCollapse, hBot)
+-- [GH #31] EXEMPT a lane-kill commit (L1-TRADE / L5-COMBO). Those two branches
+-- bid 0.92 to outbid the PROMOTED lanesurv retreat (0.75) -- that relative
+-- ordering is the whole point of the value, see their comments below. But both
+-- helpers HARD-REQUIRE J.IsInLaningPhase(), so the cap's own trigger condition is
+-- a SUPERSET of their entire domain: every frame they can fire on is a frame the
+-- cap fires on, so 0.92 was clobbered to 0.72 100% of the time. The literal was
+-- unreachable and the effective bid landed BELOW the 0.75 it was chosen to beat,
+-- with the perverse side effect of being non-monotonic in HP (a healthy core bid
+-- 0.72, a half-HP one ~0.90). The cap is aimed at ordinary roam/gank drifting
+-- into laning; a laning-phase-only lane kill IS laning micro, so it is not what
+-- the cap is defending against. No extra soak gate here: the flag can only ever
+-- be set from inside branches already gated on 'l1trade'/'l5combo', so shipped
+-- defaults are untouched. Verified 15 mirror games / 333 opportunity episodes
+-- showed no attributable effect from either id (replay-check, GH #31).
+function _divecap_CapForLanePush(desire, bCollapse, hBot, bLaneKill)
     if bCollapse and J.IsModeTurbo() and J.IsSoakCandidate('divecap') then
+        return desire
+    end
+    if bLaneKill then
         return desire
     end
     if J.IsInLaningPhase() or J.IsPushing(hBot) then
@@ -89,7 +114,7 @@ end
 
 local function CapForLanePush(desire)
     -- keep "team roam" from overpowering laning/pushing micro
-    return _divecap_CapForLanePush(desire, bDefensiveCollapse, bot)
+    return _divecap_CapForLanePush(desire, bDefensiveCollapse, bot, bLaneKillCommit)
 end
 
 function GetDesire()
@@ -105,6 +130,7 @@ function GetDesire()
 end
 function GetDesireHelper()
     bDefensiveCollapse = false
+    bLaneKillCommit = false
     if bot:IsInvulnerable() or not bot:IsHero() or not bot:IsAlive() or not string.find(botName, "hero") or bot:IsIllusion() then
         return BOT_MODE_DESIRE_NONE
     end
@@ -196,6 +222,8 @@ function GetDesireHelper()
         end
         SetStickyTarget(laneKillTarget)
         targetUnit = laneKillTarget
+        -- [GH #31] exempt from the lane-push cap; see _divecap_CapForLanePush.
+        bLaneKillCommit = true
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.92)
     end
 
@@ -209,6 +237,8 @@ function GetDesireHelper()
         end
         SetStickyTarget(comboTarget)
         targetUnit = comboTarget
+        -- [GH #31] exempt from the lane-push cap; see _divecap_CapForLanePush.
+        bLaneKillCommit = true
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.92)
     end
 
