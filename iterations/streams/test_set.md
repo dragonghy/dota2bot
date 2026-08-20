@@ -20,6 +20,54 @@ gate 代码保留在 `hero_axe.lua:107` 且**不再 arm**)——理由见 §O.1,
 证伪,不是「测不出来」)——gate 代码保留在 `jmz_func.lua:J.ShouldAbandonTpChannel` 且**永不 arm**,
 复活条件钉在 §Q.1 / GH #52。
 
+## 总监提醒(2026-08-20T14:50Z 更新,**测试集/下一波逐字不变,见 §R.0**;本节只裁 `[harness] #69` 的回读范围)
+
+### S. `[harness] #69`(illusion 污染 fixture 的 `burst`/`died_after`)—— 生成器已修并核验;总监裁**回读范围**
+
+**① 已核验(总监本容器复核,不是转述)**:协同组 13:30Z 修的生成器 + loader 闸门 +
+`tests/test_fixture_illusion_ground_truth.lua`(10 例)在本容器 **830/830、luacheck 0**。
+断言本体成立:`.dem` 战斗日志按**裸英雄名**记账,幻象用其复制品的名字 ⇒
+`observed.burst`/`recent_damage`/`died_after` 会混进打在幻象身上的伤害(实测 tide 帧 849 点,
+本体同期在回血)。**这是本项目第 11 条「未声明的世界断言」。**
+
+**② 关键事实(决定了这不是火警)**:现存 **86 个 fixture 只有 1 个**
+(`f_260820_102030_tide_illusion_burst`)带 `ambiguous` 标志,**其余 85 个仍是名字口径**。
+但——协同组 §4 已证**在观测到的那一帧上污染并未翻掉任何消费方**(5 个记账英雄里只有 lion
+在 1100 估计半径内)。⇒ **没有已下的 promote/reject 结论当前建立在被证伪的证据上**;
+这是**正确性卫生队列**,不是需要停工/发 owner 邮件的事故。
+
+**③ 回读范围裁定:不批量刷 85 个。** 污染只在「`burst`/`died_after` 真的承载某条结论」
+且「窗口内有相关英雄的幻象存活」两条同时成立时才咬人;后者不重生成不可知,但前者是
+**免费的分诊**。总监扫了消费方(`IsIncomingBurstLethal`/`WillAllySurviveTpWindow`/
+`ShouldRetreatLaneBurst` 三条 + `died_after` 判据),把承载结论的 fixture 圈成一张
+**~15 件的有序队列**(远小于 85),按 §0b/§0c **一次一件**回读:
+
+**Tier-1(承载「已发布未 gated」helper 的证据 —— 影响实际对局,最先回读)**:
+- `J.WillAllySurviveTpWindow`(shipped, ungated):`f_182552_warlock_ult_hoard`、
+  救援三帧 `f_260819_122930_lich_rescue_doomed` / `f_260819_123012_dk_rescue_far` /
+  `f_260819_123546_axe_rescue_ok`;
+- `J.ShouldRetreatLaneBurst`(shipped, ungated):`f_230545_wk_sven_burst`、
+  `f_232320_wk_od_burst`、`f_225947_wk_trade_kite`、`f_222428_lion_lich_burst`。
+
+**Tier-2(承载 armed id 的 (a)/(b) 证据 —— gated,实战惰性,但污染读数)**:
+- **`tpdying`(最优先):`f_182552_warlock_ult_hoard`**(它自己钉的帧)+ **#68 §1.3 已被
+  §1 证明把 tide 帧读错**(849 点是幻象吃的)⇒ **`tpdying` 的 (a)=WORKING 结论必须在
+  clean 帧上复核**,这是本队列里唯一可能翻动一条 armed-id 判读的项;
+  另 `f_260820_102645_cm_laning_release`、`f_260820_103644_necro_pinned_dying`;
+- `tpdead`(`died_after` 是判据):`f_260819_122930_lina_landed_dead` /
+  `f_260819_123012_dp_landed_dead` / `f_260819_123546_jakiro_landed_ok`;
+- `capmono`:`f_222428_lion_lich_burst`;`tpcommit`:`f_182552_warlock_ult_hoard`。
+
+**回读判据(每件)**:重跑 `make_fixture.py` → 若生成器吐 `ground_truth_ambiguous`,该件
+承载的结论**撤下重导**(或退役该帧);若仍 clean,结论成立,用重生成的(现在带检查的)件
+**替换**旧件。**不批量刷**(§0b/§0c)。
+
+**④ 路由**:回读要 S3 的 behav-dump timeline,**本容器没有 `.dem`/timeline**(只有
+`timeline_synthetic.json`)⇒ **执行归录像组**(有 S3/dumper);`[harness] #69` **保持
+open 作队列工单**,总监已把上面这张有序表评论进 issue。协同组 §6 点的三个名字口径检测器
+(`tpdying_landing.py`/`tp_attribution.py`/`watch_deaths.py`)有同一漏洞,一并归录像组。
+（记账:`state.json:fixture_illusion_reread_scope_20260820`。）
+
 ## 总监提醒(2026-08-20T13:00Z 更新,**测试集逐字未变;两个「就差 (b)」的 id 双双判 NOT-PROMOTE,理由不同**)
 
 ### R.0 ⛔ 下一波(最早 16:11:38Z)的两行:cand 串仍 = **§Q.0 的 16 id**,种子仍 **888/895/896/906**

@@ -1117,3 +1117,48 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `tpdying` 的可寻址域被自己的谓词压到 **≈0.06 帧/局** —— **又一个「事件率永远出不了 (b)」的
   抑制型 id**,与本轮 §R.3 同型,已在知会名单里。**下次触发的 ③ 相应改成:收 16:11Z 那波的
   `capmono` (b) 两臂差(按 §R.3 推论 ② 的口径:按种子配对 + 按局归一化,不许用 gpm/xpm)。**
+
+- 2026-08-20T14:50Z:第二十次 director 触发。优先级 2(a) **不空**——协同组 13:30Z 修完
+  `[harness] #69`(illusion 污染 fixture `burst`/`died_after`)后把**回读范围**留给总监定。
+  报告:`iterations/reports/director/20260820T145000Z.md`。**未花 AWS 钱、未做任何 AWS 调用、
+  本轮零 Lua 改动**(产出全是 `iterations/` + 一条 GitHub 评论)。
+  **① `[harness] #69` 处置(保持 open 作回读队列工单)。**
+  **1.1 修复核验(本容器复核,不是转述)**:协同组的生成器修复 + loader 闸门 +
+  `tests/test_fixture_illusion_ground_truth.lua`(10 例)在本容器 **830/830、luacheck 0**
+  (容器初始无 Lua 工具链,已自行装)。断言本体成立,记为本项目**第 11 条「未声明的世界断言」**:
+  `.dem` 战斗日志按裸英雄名记账,幻象用其复制品的名字 ⇒ `burst`/`recent_damage`/`died_after`
+  会混进打在幻象身上的伤害(实测 tide 帧 849 点,本体同期在回血)。
+  **1.2 关键事实(决定了这不是火警)**:86 个 fixture **只有 1 个**
+  (`f_260820_102030_tide_illusion_burst`)带 `ambiguous` 标志,其余 85 个仍名字口径;但
+  协同组 §4 已证污染**在观测帧上未翻掉任何消费方** ⇒ **没有已下的 promote/reject 结论
+  当前建立在被证伪的证据上**。定性为**正确性卫生队列**,不发 owner 邮件、不停工。
+  **1.3 回读范围裁定:不批量刷 85 个**。污染只在「`burst`/`died_after` 真承载结论」
+  × 「窗口内有相关英雄幻象存活」两条同时成立时咬人;后者不重生成不可知,但前者是
+  **免费的分诊**。总监扫消费方(`IsIncomingBurstLethal`/`WillAllySurviveTpWindow`/
+  `ShouldRetreatLaneBurst` + `died_after`),圈成 **~15 件有序队列**(远小于 85),按
+  §0b/§0c 一次一件回读:**Tier-1(已发布未 gated helper 的证据,最先)** 8 件、**Tier-2
+  (armed id 的 (a)/(b))** 里 **`tpdying` 最优先** —— **#68 §1.3 已被 #69 §1 证明把 tide
+  帧读成「一秒吃 1063」而那 849 点其实是幻象吃的 ⇒ `tpdying` (a)=WORKING 是本队列里
+  唯一可能翻动一条 armed-id 判读的项,必须在 clean 帧上复核**。完整清单钉在
+  `test_set.md §S` + `state.json:fixture_illusion_reread_scope_20260820`。
+  **1.4 路由**:回读需 S3 的 behav-dump timeline,本容器无 `.dem`/timeline(只有
+  `timeline_synthetic.json`)⇒ **执行归录像组**;§6 点名的三个名字口径 Python 检测器
+  (`tpdying_landing.py`/`tp_attribution.py`/`watch_deaths.py`)同一漏洞,一并归录像组。
+  裁定已评论进 #69。
+  **② `DECISIONS_NEEDED.md` 本轮首次创建**(章程 07:00Z 的口径终于有第一条),记入
+  `[batch] #70` 的 8 月围栏 ETA(无时限到 8-25):总监据 $1.56/波实测把排期口径改为
+  $1.6/波 / $3.2/两臂波,建议 owner 选**选项 A(不抬预算)** —— 目前没有把 8 月内做完当
+  硬时限的 armed id,`capmono` 隔离波次已排、`tpdying` (a) 因 #69 需 clean 帧回读后才有意义。
+  8-25 前 owner 若不回信,按 A 执行。**本周 owner 邮件仍为零**,攒到周日一起发或触及边界再发。
+  **③ 其他章程项**:promote/reject 无新判定(13:00Z 已把 `zusult`/`cmrguard` 都判 NOT-PROMOTE,
+  理由不同);测试集**逐字未变**(17 eligible / §R.0 的 16 id 下一波 cand,种子
+  888/895/896/906);open issue 49 条,新增归总监的只有 #69(已处置)+ #70(仅记账);
+  无新增 `[bug]`;成本 MTD **$11.696**(批测台自报,`08-19` 滞后计费追平,**不是泄漏**),
+  ≪ $90 刹车线;总监本轮 0 AWS 调用。**四组均有产出无空转**;批测台零支出运维轮是正确节流。
+  今日周四,效率台账(仅周日,08-23 那次做)跳过;patch 已分片不重复;`wandlimbo` 机会普查
+  连续第九轮无人做。
+  验证:**luacheck 0 警告 + 830/830**(本容器复核,自装工具链);本轮零 Lua 改动。
+  **下次触发**:①**收 16:11Z 那波的 `capmono` (b) 两臂差**(按 §R.3 推论 ② 的口径);
+  ②**`[harness] #61`**(卡着协同组 #62,已顺延三轮,(a) 若空则**没有借口**);③清待复核
+  队列(`#45` 第八次顺延);④`#66`/`#63` 修订版落地后按 §R.2 复判 `cmrguard`;⑤都在等就做
+  backlog #1 帧语料检索工具 / patch 分片 P3 / `[harness] #27`。
