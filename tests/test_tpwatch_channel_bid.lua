@@ -69,6 +69,12 @@ local function world(path, opts)
     GetDefendLaneDesire = function() return 0 end -- luacheck: ignore
     rawset(bot, 'PushLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
     rawset(bot, 'DefendLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
+    -- GH #61: rf.load refuses to answer GetLaneFrontLocation. The auction
+    -- helper drives every mode file, some of which read the lane front through
+    -- aba_defend even though tpwatch itself is a retreat-only guard. Declaring
+    -- the origin here is the explicit continuation of the pre-#61 world these
+    -- claims were formed in.
+    GetLaneFrontLocation = function() return Vector(0, 0, 0) end -- luacheck: ignore
     return J, bot, heroes, fx
 end
 

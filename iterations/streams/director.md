@@ -1118,6 +1118,47 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   抑制型 id**,与本轮 §R.3 同型,已在知会名单里。**下次触发的 ③ 相应改成:收 16:11Z 那波的
   `capmono` (b) 两臂差(按 §R.3 推论 ② 的口径:按种子配对 + 按局归一化,不许用 gpm/xpm)。**
 
+- 2026-08-20T17:00Z:第二十一次 director 触发。优先级 2(a) **空**(49 条 open issue,新增
+  归总监的 0 条 `[bug]`/`[harness]`)⇒ 顺延三轮的 `[harness] #61` **必须做,今天没有借口**。
+  报告:`iterations/reports/director/20260820T170000Z.md`。**未花 AWS 钱、未做任何 AWS 调用、
+  未启动计费资源。**
+  **① `[harness] #61` 已 landing 并关闭 issue** —— 按 issue 建议 **2**(refuse),不是建议 1
+  (reconstruct)。两条硬理由:(i) §0b 已经立过"dumper 每 3 s 采样、不带路别、不带存活位 ⇒
+  前线是 MODEL 不是 restoration"这道线;(ii) 本轮走建议 2 可以**零 conclusion 变化**兑现 —— 6 个
+  受影响测试的 assertion 要么机制上不读前线(defclose/defstale/tpwatch),要么已经带 mutation probe
+  证过 flip 不吃前线值(retnear/towerreach)。**loader 改**(`tests/mock/replay_fixture.lua` 在
+  `api.install()` 后装 raise-override,`_G.GetLaneFrontLocation` 不再默认返回 (0,0,0);bare-mock
+  用户不受影响)+ **6 个测试文件把隐式 (0,0,0) 改成 EXPLICIT 声明**(值仍 (0,0,0),只是"这是我选的"
+  取代"这是它默认的")。**`test_defnum_recent_hit_parity :: [limitation]` 扩写成双端护栏**:先在无声明
+  世界里 assert loader 真的抛错(拆 raise → 挂),再在声明世界里 assert shape 不变 —— **测试自己
+  成了 loader refusal 契约的守门人**。**变异复现**:把 raise 换回静默 `Vector(0,0,0)` **恰好挂**
+  这条 case,报错文本直指 "rf.load must REFUSE GetLaneFrontLocation by default (GH #61)",不是
+  模糊 assertion。**830 / 830 + luacheck 0**(容器初始无 Lua 工具链,已 apt 装)。
+  **② GH #62(defnum)前置阻断解除,已评论明路**:strategy 组下一轮可以按 §8 要求把 defnum 的机制
+  断言加上**最终 desire 断言 + mutation probe**(pattern 直接抄 retnear/towerreach 的 `opts.lane_front`
+  覆盖式),做完申请入集走 §O.3。**issue 保持 open,由 strategy 关闭** —— 它现在是 strategy 的活。
+  **③ §0b 第十八例(新亚型,通例)**:「**隐式默认让 stub 悄悄成为 assertion 的一部分**」——
+  前十七例是"作者/下游/消费方作废 helper 的推理"或"测量侧看不见抑制的效果";这一例是**世界给了一个
+  默认值,谁都没主动选它,但测试都在压它**。推论(已写进 `test_set.md §T`):**任何用 `rf.load` 的
+  测试触到 lane-front 读者,必须自己声明假设(三模式择一,含 MUTATION PROBE 作为 stub-independent
+  证据)**;不加声明 + 反落到 loader → 抛错 + 报错文本告诉你必须声明(教育性,不静默过)。
+  **④ 未来工作**(不阻塞):同族 `GetLaneFrontAmount` / `GetLocationAlongLane` 也是静默 stub —— 探过,
+  raise 只挂 1 个 pre-existing 测试(`test_replay_071903_sven_idle`),下轮无 `[bug]`/`[harness]`
+  抢占再一并做,本轮不做是为保持工作单元小 + 没有 armed id 判读依赖它俩。真要 reconstruct(建议 1
+  完整版)需要 dumper 补路别/存活 + loader 只答 `frontOffset==0`,归入 backlog #3 之后再讨论。
+  **其他章程项**:测试集**逐字未变**(17 eligible / §R.0 的 16 id 下一波 cand,种子 888/895/896/906);
+  promote/reject 无新判定(13:00Z 已 double-not-promote);成本 MTD **$11.6958**(批测台 16:08Z 自报,
+  与 14:07Z 逐位一致),在跑 4 台是有意的 §R.0 arm A on-demand(2h 看门狗,最迟 18:09Z 自毁),无泄漏;
+  五组均有产出无空转;今日周四,效率台账(仅周日,08-23 那次做)跳过;patch 已分片不重复;
+  `wandlimbo` 机会普查连续第九轮无人做;待复核队列 `#44`/`#45`/`#55`/`#58`/`#62`(**本轮解锁**)/
+  `#63`/`#65`/`#66`/`#67`,**`#45` 第八次顺延**(本轮工作单元用在有多轮欠账的 `[harness] #61` 上);
+  `DECISIONS_NEEDED.md` 今日不新增(本轮决定全在自主授权内 —— 建议 2 vs 1 是 §0b 已立线的直接推论),
+  本周 owner 邮件仍为零。
+  **下次触发**:①**收 16:11Z 那波的 `capmono` (b) 两臂差**(按 §R.3 推论 ② 的口径:按种子配对 +
+  按局归一化,不许用 gpm/xpm);②**清待复核队列**(`#45` 最老);③**`#66`/`#63` 修订版落地后按
+  §R.2 复判 `cmrguard`**(零支出);④都在等就做 **backlog #1 帧语料检索工具** / patch 分片 P3 /
+  `[harness] #27` / `#43` / 收拾 `GetLaneFrontAmount` / `GetLocationAlongLane` 同族 stub。
+
 - 2026-08-20T14:50Z:第二十次 director 触发。优先级 2(a) **不空**——协同组 13:30Z 修完
   `[harness] #69`(illusion 污染 fixture `burst`/`died_after`)后把**回读范围**留给总监定。
   报告:`iterations/reports/director/20260820T145000Z.md`。**未花 AWS 钱、未做任何 AWS 调用、

@@ -85,6 +85,16 @@ local function world(path, opts)
     rawset(bot, 'PushLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
     rawset(bot, 'DefendLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
 
+    -- GH #61: rf.load refuses to answer GetLaneFrontLocation. This file's
+    -- MECHANISM/FIX assertions read `ds.nInRangeEnemy` and `ds.defendLoc`
+    -- through aba_defend, which -- with lane fronts collapsed to the origin --
+    -- puts `ds.defendLoc` at the river and `ds.distanceToLane` identical
+    -- across lanes. That was the pre-#61 world these frames were selected in,
+    -- and this file's DEFECT is that `ds.enemyDamageOn` is stale w.r.t. its
+    -- OWN write, orthogonal to the lane front. Declaring the origin here is
+    -- the explicit continuation of that world.
+    GetLaneFrontLocation = function() return Vector(0, 0, 0) end -- luacheck: ignore
+
     local Defend = require(GetScriptDirectory() .. '/FunLib/aba_defend')
     return J, bot, heroes, fx, Defend
 end

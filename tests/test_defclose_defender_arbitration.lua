@@ -107,6 +107,15 @@ local function world(path, opts)
     rawset(bot, 'PushLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
     rawset(bot, 'DefendLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
 
+    -- GH #61: rf.load refuses to answer GetLaneFrontLocation. This file's
+    -- claims about the arbitration are about who defends WHICH tower, decided
+    -- by `#J.GetLastSeenEnemiesNearLoc(tower:GetLocation(), 1600)` -- lane
+    -- fronts do not enter the arbitration. Declaring the origin here is the
+    -- explicit continuation of the pre-#61 world: it lands at the middle of
+    -- the river and `ds.distanceToLane` is identical across lanes, which is
+    -- fine BECAUSE this file's assertions never read it.
+    GetLaneFrontLocation = function() return Vector(0, 0, 0) end -- luacheck: ignore
+
     local Defend = require(GetScriptDirectory() .. '/FunLib/aba_defend')
     return J, bot, heroes, fx, Defend
 end

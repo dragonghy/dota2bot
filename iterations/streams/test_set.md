@@ -20,7 +20,29 @@ gate 代码保留在 `hero_axe.lua:107` 且**不再 arm**)——理由见 §O.1,
 证伪,不是「测不出来」)——gate 代码保留在 `jmz_func.lua:J.ShouldAbandonTpChannel` 且**永不 arm**,
 复活条件钉在 §Q.1 / GH #52。
 
-## 总监提醒(2026-08-20T14:50Z 更新,**测试集/下一波逐字不变,见 §R.0**;本节只裁 `[harness] #69` 的回读范围)
+## 总监提醒(2026-08-20T17:00Z 更新,**测试集/下一波逐字不变,见 §R.0**;本节只 land 一个 `[harness]` 修复 + 立一条"新的测试规矩")
+
+### T. `[harness] #61` **CLOSED** —— loader 拒答 `GetLaneFrontLocation`,新规矩全组必读
+
+**① 已 landing**:`tests/mock/replay_fixture.lua` 在 `api.install()` 之后装了一个抛错 override,`_G.GetLaneFrontLocation` **不再默认返回 (0,0,0)**;bare-mock 用户(`test_data_consistency` / `test_punish_overchase` / `test_nochaselow_gate` 等)不受影响。**830 / 830 + luacheck 0**(总监本容器复核,自装工具链);**变异测试**把 raise 换回静默 `Vector(0,0,0)` **恰好挂**`test_defnum_recent_hit_parity :: [limitation]`(landing 时把 loader refusal 契约本身钉进这条 case,以后再有人拆掉当场就有测试挂)。
+
+**② 6 个原来隐式压在 (0,0,0) 上的测试文件已改成 EXPLICIT 声明**(值仍是 (0,0,0),只是把"这是默认的"改成"这是我选的"—— 因此**没有一条既有 conclusion 变化**):`test_defclose_defender_arbitration` / `test_defnum_recent_hit_parity` / `test_defstale_defend_bail` / `test_retnear_radius_parity` / `test_towerreach_out_of_range_veto` / `test_tpwatch_channel_bid`。选择"origin 声明"合法的判据是**机制上不读前线**(defclose 的 auction 走 tower loc 的 last-seen 数;tpwatch 走退却出价链)**或已有 mutation probe 证明 flip 与前线值无关**(retnear/towerreach 在 state.json 已记录 lane_front_check)。
+
+**③ 全组新规矩(§0b 第十八例,归到"世界断言"总账)** —— **任何用 `rf.load` 的测试,只要触到读 lane front 的代码路径,就必须自己声明假设**。三条声明模式,择一:
+
+- `GetLaneFrontLocation = function() return Vector(0, 0, 0) end`(取原点声明,= pre-#61 世界 —— 你必须证明结论不吃前线值);
+- `GetLaneFrontLocation = function(_, lane) return Vector(x, y, 0) end`(取真实数字声明);
+- **MUTATION PROBE**(retnear/towerreach 已示范):至少 3 个非原点值上跑一遍,断言结论一致 —— 这才叫 "stub-independent"。
+
+**不加声明 + 反落到 loader → 抛错 + 报错文本告诉你必须声明**(教育性,不静默过)。
+
+**④ 解锁 `[strategy] #62`(defnum 入集前置阻断解除)**:strategy 组下一轮可以按 §8 要求把 defnum 的机制断言加上**最终 desire 断言 + mutation probe**,做完申请入集,总监按 §O.3 走(该 issue 已评论明路)。
+
+**⑤ 未来工作,不阻塞**:同族的 `GetLaneFrontAmount` / `GetLocationAlongLane` 也是静默 stub,总监探过 —— 让它们抛错只会挂 1 个 pre-existing 测试(`test_replay_071903_sven_idle`)。**本轮不做**是为保持工作单元小 + 没有 armed id 的判读依赖它俩;下轮无 `[bug]`/`[harness]` 抢占再做。
+
+**⑥ 记完的落点**:`iterations/state.json:fixture_lanefront_gap_20260820` 从 OPEN 改成 LANDED(status 全文改写);GH #61 已 CLOSED,GH #62 已评论 unblock 通路。
+
+## 历史提醒(2026-08-20T14:50Z 更新,**测试集/下一波逐字不变,见 §R.0**;本节只裁 `[harness] #69` 的回读范围)
 
 ### S. `[harness] #69`(illusion 污染 fixture 的 `burst`/`died_after`)—— 生成器已修并核验;总监裁**回读范围**
 

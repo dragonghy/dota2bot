@@ -108,15 +108,15 @@ local function world(path, opts)
     GetDefendLaneDesire = function() return 0 end -- luacheck: ignore
     rawset(bot, 'PushLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
     rawset(bot, 'DefendLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
-    if opts.lane_front ~= nil then
-        -- GH #61: the loader never wired GetLaneFrontLocation, so every lane
-        -- front sits at the map origin for both teams. Any claim about the
-        -- final auction has to survive moving it, or it is a claim about the
-        -- stub. This is a MUTATION PROBE, not a reconstruction of the real
-        -- lane front (which the dump cannot supply).
-        GetLaneFrontLocation = function() -- luacheck: ignore
-            return Vector(opts.lane_front[1], opts.lane_front[2], 0)
-        end
+    -- GH #61: the loader now refuses to answer GetLaneFrontLocation. Any claim
+    -- about the final auction has to survive MOVING the lane front, or it is a
+    -- claim about the stub -- but the test still has to declare something so
+    -- the drivers below can run. Default to the map origin (the pre-#61
+    -- behaviour, now explicit), and let a specific test override with
+    -- opts.lane_front as a MUTATION PROBE.
+    local lf = opts.lane_front or { 0, 0 }
+    GetLaneFrontLocation = function() -- luacheck: ignore
+        return Vector(lf[1], lf[2], 0)
     end
     return J, bot, heroes, fx
 end

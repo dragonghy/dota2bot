@@ -134,6 +134,14 @@ local function world(path, opts)
     rawset(bot, 'PushLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
     rawset(bot, 'DefendLaneDesire', { [LANE_TOP] = 0, [LANE_MID] = 0, [LANE_BOT] = 0 })
 
+    -- GH #61: rf.load refuses to answer GetLaneFrontLocation. The pre-#61
+    -- world these frames were selected in had every lane front at the map
+    -- origin -- for both teams, all three lanes -- which put `ds.defendLoc`
+    -- at the river and `ds.distanceToLane` identical across lanes. The
+    -- [limitation] test below still asserts that shape, so declare the same
+    -- origin here EXPLICITLY (was implicit before).
+    GetLaneFrontLocation = function() return Vector(0, 0, 0) end -- luacheck: ignore
+
     local Defend = require(GetScriptDirectory() .. '/FunLib/aba_defend')
     return J, bot, heroes, fx, Defend
 end
@@ -355,19 +363,38 @@ tests['[reverse] the shipped guard and its early return are still where claimed'
 end
 
 -- ---------------------------------------------------------------------------
--- The limitation, asserted. When this test starts failing, the auction-level
--- question this candidate could not answer has become answerable.
+-- The limitation, asserted. GH #61 landed: rf.load now REFUSES to answer
+-- GetLaneFrontLocation, and this file has to declare its choice (origin, in
+-- world()) explicitly. This test pins the shape that declaration produces --
+-- ds.defendLoc at the middle of the river, ds.distanceToLane identical
+-- across lanes -- so that the day someone replaces the origin declaration
+-- with a real per-lane point, this test fails loudly and every footprint
+-- claim in this file gets re-read.
 -- ---------------------------------------------------------------------------
 
-tests['[limitation] the loader still answers every lane front with the map origin'] = function()
+tests['[limitation] this file declares lane fronts at the map origin -- the auction rides on that choice'] = function()
+    -- MUST be checked WITHOUT world() first: with no declaration in effect,
+    -- rf.load's refusal has to still be live -- if the loader lost its raise
+    -- and let a stub sneak back in, the [limitation] test in every other
+    -- lane-front-adjacent file would go silent too.
+    local rf = require('mock.replay_fixture')
+    rf.load(POKED)
+    local raised = false
+    local ok, err = pcall(function() GetLaneFrontLocation(2, LANE_MID, 0) end)
+    if not ok and tostring(err):find('LOADER REFUSES', 1, true) then raised = true end
+    assert(raised,
+        'rf.load must REFUSE GetLaneFrontLocation by default (GH #61). Got: '
+        .. tostring(ok) .. ' / ' .. tostring(err))
+
+    -- Now the declared world this file's assertions live in.
     local _, bot, _, _, Defend = world(POKED, { laneBid = 1.0 })
     for _, team in ipairs({ bot:GetTeam(), GetOpposingTeam() }) do
         for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do
             local f = GetLaneFrontLocation(team, lane, 0)
             assert(math.abs(f.x) < 1e-9 and math.abs(f.y) < 1e-9,
-                'lane fronts are still stubbed to (0,0). If this fails the stub has '
-                .. 'been fixed -- re-read the footprint claims in this file and in '
-                .. 'the report, because ds.distanceToLane now means something')
+                'this file DECLARES lane fronts at (0,0) in world(); if this fails, '
+                .. 'the declaration was changed and the footprint claims in this '
+                .. 'file and its report must be re-read')
         end
     end
     lane_bids(Defend, bot)

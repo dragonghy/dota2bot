@@ -298,6 +298,34 @@ function M.load(path, sSubject)
     local bot = heroes[subj_name]
     api.install({ bot = bot, team = subj_team })
 
+    -- GH #61: refuse to answer GetLaneFrontLocation from the loader.
+    -- The 125 shipped call sites read a per-team, per-lane point that the .dem
+    -- does not carry (dumper samples creeps at 3 s intervals, without lane
+    -- attribution or per-team side, and the engine's frontOffset argument needs
+    -- lane pathnodes -- reconstructing this would be modelling, not restoring
+    -- ground truth). The api.install() default answers (0,0,0) for every team
+    -- and lane, which silently made `ds.defendLoc` the middle of the river and
+    -- `ds.distanceToLane` identical across the three lanes -- a stub the
+    -- final-desire assertions in the defend/tpwatch family were unknowingly
+    -- pressing against.
+    --
+    -- The loader now raises. A test that needs a lane front must DECLARE its
+    -- assumption by overwriting the global itself:
+    --
+    --     GetLaneFrontLocation = function(_, lane) return Vector(x, y, 0) end
+    --
+    -- A test that overwrites it to `function() return Vector(0, 0, 0) end` is
+    -- taking the pre-#61 stub as an EXPLICIT choice, and any final-desire
+    -- claim it makes now says so on its face.
+    _G.GetLaneFrontLocation = function()
+        error(
+            'LOADER REFUSES: GetLaneFrontLocation is unresolved (GH #61). '
+            .. 'The dump does not carry lane fronts; do not compare against '
+            .. '(0,0,0). Declare your assumption in the test with '
+            .. '`GetLaneFrontLocation = function(_, lane) return Vector(...) end`.',
+            2)
+    end
+
     -- Engine plumbing over the fixture roster (alive units only, like in game).
     local allies, enemies = {}, {}
     for _, u in ipairs(fx.units) do
