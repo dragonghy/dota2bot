@@ -768,3 +768,34 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   对象。跨组:在既有 `[batch] #70` 下追评。启动前后 check_costs.sh / describe-instances 均确认
   **无泄漏**(结束时恰好 4 台,全是本轮有意启动的自毁 on-demand)。
   详见 `iterations/reports/batch-desk/20260820T160800Z.md`。
+- 2026-08-20T18:06:00Z:**收割轮(§R.0 arm A)+ arm B 上机**。MTD **$11.6958**(与 14:07Z/16:08Z
+  完全一致;16:08Z arm A 的 on-demand 费用尚未入账,计费滞后延续),启动前 0 台在跑,无泄漏,未触发
+  任何预算刹车。**(1) 收割 §R.0 arm A**(`capmono` ON,16 id,种子 888/895/896/906,树 `11a8de33`):
+  标准路径 `recover_verdict.py`,先分 run 下载再带前缀合并(74+80+80+70 = **304 文件,合并后仍 304,
+  一个不丢**)。**落地必查项通过**:24 暖场 stamp 全 `11a8de3`(裸 SHA checkout 成功),S3 真实 cand
+  串八 wave 一字不差 = 16 id 且 `capmono` 在串内 / `tpwatch`·`roamstale`·`wandlimbo`·`axebuyblink`·
+  `zusultx` 五缺席。**280 局有效局,4 种子两 wave 全齐无饿死** → gpm **−18.36** / xpm −21.35 /
+  deaths +0.17 / last_hits −1.31,`comps_better` 四指标全 **0/4**,`hold_or_reject`;逐种子 gpm
+  888 −6.51 / 895 −6.47 / 896 −22.16 / 906 −38.29(sd 14.55,SE 7.28)。**单臂读数,按 §R/§H 不给
+  任何单 id 判条件 (b)、不与历史 −24~−39 负残差带直接比较** —— 结论等 arm B 逐种子配对差 A−B,判读
+  口径按 §R **用行为检测器不用 gpm/xpm**。纯观察:16-id(capmono ON)仍落在同一负残差带内。
+  **(2) arm B 上机**(§R 串行两臂第二臂,队列/两臂延续不重置例行计时,先例 02:09Z/14:12Z/20:11Z):
+  cand = arm A 去 `capmono` 的 **15 id**(其余顺序一字不动),种子两臂共用 888/895/896/906。
+  **树必须钉 `11a8de33`,不能用 `main`** —— `git log 11a8de33..origin/main -- bots/ game/` **非空**
+  (`1bbfea1` strategy #71 item_blink,`jmz_func.lua` +40 / `ability_item_usage_generic.lua` +1);
+  空 clone 实测裸 SHA **`SHA_FETCH_OK`**(全 40 位)再上机。实例 `i-0b7a2c06dccce3279`=888 /
+  `i-0229c70cb0567086e`=895 / `i-0fb868d03af1f66e5`=896 / `i-02d04af5f91c4fe1e`=906,run_id
+  `spot_20260820_180802/180805/180808/180811_1_11a8de33…`(自带 SHA 后缀,与 arm A 同 SHA,靠
+  15-id vs 16-id cand 串区分两臂),c6i.4xlarge **on-demand** ×4,16 槽,2h 看门狗,`--games 22`,
+  预估 **$1.56**(MTD ≈ $13.3 ≤ $45),预计 ~**18:45-19:00Z** 落地,预期 ~280 局。
+  **下次触发必查项**:arm B 暖场 stamp 必须 = `11a8de3`(否则裸 SHA checkout 静默失败作废);S3 真实
+  cand 串八 wave = 15 id 且 `capmono` 连同五个已知缺席 id **共 6 个全缺席**。
+  **下次收割**:分四 run 下载再带前缀合并 → `recover_verdict.py "<15-id>"` → **逐种子配对差 A−B**
+  (arm A 本轮读数 − arm B),判读口径 §R 行为检测器(录像组 clean 域拒扑率 45.2% vs 28.6%,OR=2.06),
+  经济 A−B 只当上界(MDE ≈ 35.6 gpm 不给单 id 判 (b));§H 落地后不许改口;在 `[batch] #70` 下追评。
+  **arm A 最终局数**:888=68(41/27)、895=74(42/32)、896=74(42/32)、906=64(41/23),合计 **280**
+  (radiant-cand 166 / dire-cand 114)+ 24 暖场;dire 仍撞 35min stall,再提 `--games` 只会加大不对称。
+  `queue.json` 无 pending(`director-1` 已 done)。本会话未改 Lua 且容器无 `luacheck`/`lua5.1`,铁律 6
+  无适用对象。启动前后 check_costs.sh / describe-instances 均确认 **无泄漏**(结束时恰好 4 台,全是本轮
+  有意启动的 arm B 自毁 on-demand)。
+  详见 `iterations/reports/batch-desk/20260820T180600Z.md`。
