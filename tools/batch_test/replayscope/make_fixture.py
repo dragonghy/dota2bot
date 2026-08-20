@@ -201,6 +201,45 @@ def main():
     for h in per:
         per[h].sort(key=lambda s: s["t"])
 
+    # ---- illusion contamination of the ground truth -------------------------
+    #
+    # The snapshot stream identifies units by ENTITY INDEX, so the block above
+    # can drop a hero's illusions cleanly. The COMBAT LOG cannot: every DAMAGE
+    # row carries `actor`/`target` as a bare hero NAME, and an illusion is
+    # logged under the name of the hero it copies. So while an illusion of hero
+    # H is on the field, every damage row naming H is ambiguous between the
+    # hero and its copy -- and this generator writes those rows out as
+    # `observed.burst` ("damage each enemy hero ACTUALLY dealt to the subject"),
+    # which tests/mock/replay_fixture.lua installs as the subject's
+    # GetEstimatedDamageToTarget. That is the input of J.WillAllySurviveTpWindow
+    # (shipped), J.IsIncomingBurstLethal ('tpdying') and J.ShouldRetreatLaneBurst.
+    #
+    # Measured, not hypothesised: 20260820_102030_slot1 @ t=639.5, subject
+    # tidehunter -- the name-keyed sum says 849 damage from four enemy heroes in
+    # the next 3s, while the hero's own entity went 1419 -> 1452 -> 1435 -> 1423
+    # (it REGENERATED). All 849 landed on illusion entity 2537.
+    #
+    # There is nothing to reconstruct here -- the log simply does not say which
+    # copy was hit -- so the block is WITHHELD and the reason stated, the same
+    # rule the loader already applies to `sSubject` overrides ("rather than a
+    # number that would silently mean damage dealt to someone else").
+    shadow_alive = defaultdict(list)     # hero -> sample times a copy was alive
+    for s in tl["snapshots"]:
+        h = s["hero"]
+        if h not in canon or s.get("idx") == canon[h]:
+            continue
+        if (s.get("hp_pct") or 0) > 0:
+            shadow_alive[h].append(s["t"])
+    # The dump samples on a fixed interval, so a copy can be born and die
+    # between two samples; pad each side by one interval and over-report rather
+    # than let an unsampled copy through.
+    all_ts = sorted(set(s["t"] for s in tl["snapshots"]))
+    pad = min((b - a for a, b in zip(all_ts, all_ts[1:])), default=1.0)
+
+    def shadowed(hero, lo, hi):
+        """Did a non-canonical entity of `hero` exist anywhere in (lo, hi]?"""
+        return any(lo - pad < ts <= hi + pad for ts in shadow_alive.get(hero, ()))
+
     recent_at_t = recent_damage(
         tl, args.t, {bare(h).replace("_", "").lower(): h for h in per})
 
@@ -215,6 +254,17 @@ def main():
         s = at(h, args.t)
         if s is None:
             continue
+        # Same name-vs-entity ambiguity as `observed.burst`, looking backwards:
+        # a row is only usable if neither the hero that was hit nor the hero
+        # credited with hitting it had a copy on the field in the lookback.
+        rows = recent_at_t.get(h, [])
+        rd_ambiguous = bool(rows) and (
+            shadowed(h, args.t - args.recent_window, args.t)
+            or any(d["actor"] is not None
+                   and shadowed(d["actor"], args.t - args.recent_window, args.t)
+                   for d in rows))
+        if rd_ambiguous:
+            rows = []
         hp_pct = s.get("hp_pct") or 0
         max_hp = int(round(s["hp"] / hp_pct)) if hp_pct > 0 and s.get("hp") else s.get("hp", 0)
         units.append({
@@ -252,7 +302,8 @@ def main():
             # real buffs/debuffs active at the instant (see active_modifiers)
             "modifiers": mods_at_t.get(h, []),
             # what hit this hero just BEFORE the instant (see recent_damage)
-            "recent_damage": recent_at_t.get(h, []),
+            "recent_damage": rows,
+            "recent_damage_ambiguous": rd_ambiguous,
         })
     assert any(u["name"] == subj for u in units), "subject %s not in timeline" % subj
 
@@ -278,6 +329,21 @@ def main():
         if e.get("type") == "DEATH" and e.get("target") == subj and e["t"] >= args.t \
                 and died_after is None:
             died_after = round(e["t"] - args.t, 1)
+
+    # Withhold the forward ground truth when a copy of the subject, or of any
+    # hero credited with hitting it, was on the field (see `shadowed` above).
+    # `died_after` goes with them: it is only meaningful as "the subject died
+    # from what `burst`/`damage` describe", and the DEATH rows are name-keyed
+    # too. LIMITATION, asserted rather than assumed: no DEATH row for an
+    # illusion was observed in this corpus, so the death time is probably safe;
+    # this refuses anyway rather than ship a half-checked block.
+    gt_actors = set(a for _, a, _ in damage) | set(burst)
+    gt_ambiguous = shadowed(subj, args.t, args.t + args.damage_horizon) or any(
+        shadowed(a, args.t, args.t + args.damage_horizon) for a in gt_actors)
+    gt_shadowed = sorted(h for h in ({subj} | gt_actors)
+                         if shadowed(h, args.t, args.t + args.damage_horizon))
+    if gt_ambiguous:
+        burst, damage, died_after = Counter(), [], None
     damage.sort()
 
     # Buildings (towers/rax/ancient/watch-tower) at the instant. The dumper
@@ -314,6 +380,8 @@ def main():
         game, args.t, int(args.t // 60), int(args.t % 60), args.hero))
     L.append("-- observed.burst = damage each enemy hero ACTUALLY dealt to the subject in the")
     L.append("-- following %.0fs; observed.died_after = seconds until the subject died (ground truth)." % args.window)
+    if gt_ambiguous:
+        L.append("-- NOTE: that ground truth is WITHHELD on this frame -- see observed.ground_truth_ambiguous.")
     L.append("return {")
     L.append("  game = '%s', time = %.1f, window = %.1f," % (game, args.t, args.window))
     L.append("  self = '%s'," % subj)
@@ -344,6 +412,13 @@ def main():
                                ("'%s'" % d["actor"]) if d["actor"] else "nil",
                                d["value"])
                             for d in u["recent_damage"])) if u["recent_damage"] else ""
+        # An illusion of this hero (or of one that hit it) was on the field in
+        # the lookback, so the name-keyed rows cannot say which copy was hit.
+        # The block is withheld and the fact stated, so the loader leaves the
+        # mock's WasRecentlyDamagedBy* = false default alone and a test can
+        # assert the refusal instead of reading calm-frame silence.
+        if u["recent_damage_ambiguous"]:
+            rdmg = "\n      recent_damage_ambiguous = true,"
         # Omitted entirely when the dump predates the field, so fixtures made
         # before it keep the world they had (the loader then leaves the mock's
         # GetPlayerID alone) instead of being handed a fabricated slot.
@@ -400,6 +475,13 @@ def main():
             L.append("    ['%s'] = %d," % (h, roles[h]))
         L.append("  },")
     L.append("  observed = {")
+    if gt_ambiguous:
+        L.append("    -- WITHHELD: the combat log names units, not entities, and a copy")
+        L.append("    -- (illusion/clone) of %s was alive inside the horizon,"
+                 % ", ".join(bare(h) for h in gt_shadowed))
+        L.append("    -- so no damage row naming those heroes can be attributed. burst,")
+        L.append("    -- damage and died_after are all withheld rather than guessed.")
+        L.append("    ground_truth_ambiguous = true,")
     L.append("    burst = {")
     for actor, v in burst.most_common():
         L.append("      ['%s'] = %d," % (actor, v))

@@ -6,7 +6,9 @@
 --   * every hero as a mock unit at its real position/HP/mana/level/net worth/team,
 --   * GetUnitList/GetTeamPlayers/GetTeamMember over the fixture roster,
 --   * each enemy's GetEstimatedDamageToTarget = the damage it ACTUALLY dealt to
---     the subject in the following seconds (ground truth from the replay),
+--     the subject in the following seconds (ground truth from the replay), or
+--     0 when the fixture declares that ground truth unattributable
+--     (observed.ground_truth_ambiguous -- an illusion was on the field),
 -- then loads jmz_func fresh. A test calls the real helper and asserts the
 -- decision. Reproduce first, then fix, then this test pins it forever.
 
@@ -98,7 +100,16 @@ function M.load(path, sSubject)
     for _, u in ipairs(fx.units) do
         local loc = api.Vector(u.x, u.y, 0)
         local burst = 0
-        if not subj_override then
+        -- `ground_truth_ambiguous` is the generator refusing to attribute the
+        -- damage rows on this frame: the combat log names units, not entities,
+        -- so while an illusion/clone of the subject (or of one of its
+        -- attackers) is on the field, "damage dealt to the subject" is not a
+        -- knowable number. Same rule as the sSubject override above -- 0, not a
+        -- number that would silently mean damage dealt to someone else.
+        -- Measured case: 20260820_102030 t=639.5, where the name-keyed sum
+        -- claimed 849 damage in 3s while the tidehunter's own entity
+        -- REGENERATED (1419 -> 1423).
+        if not subj_override and not (fx.observed and fx.observed.ground_truth_ambiguous) then
             burst = (fx.observed and fx.observed.burst and fx.observed.burst[u.name]) or 0
         end
         -- Real inventory: slot-ordered item handles ('' = empty slot). The TP
@@ -156,7 +167,11 @@ function M.load(path, sSubject)
         -- v1 fixtures (and any hero nothing hit inside the lookback) omit the
         -- field, and the four readers below are then NOT installed at all --
         -- the mock default stands, which is the same answer for the right
-        -- reason.
+        -- reason. A hero the generator marked `recent_damage_ambiguous` (an
+        -- illusion of it, or of one of its attackers, was on the field during
+        -- the lookback) lands here too: those rows are name-keyed and cannot
+        -- say which copy was hit, and a declared refusal beats a fabricated
+        -- history.
         local rdmg = u.recent_damage
         local rwin = fx.recent_window
         local damage_readers = nil

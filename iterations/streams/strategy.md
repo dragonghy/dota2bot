@@ -79,6 +79,16 @@
    只有 ~40% 的把握描述了它来自的那一局** —— `J.IsCore`、`ShouldDefend`、`GetClosestAllyPos`、
    `lf_rescue` 的核心豁免、`suptp` 的辅助判定全在这条线上。做法同 0b:**一次一个、重生成、重读结论**,
    不要批量刷。**本组已经被这个坑咬过一次**(本轮第一版钉帧,见当前状态节)。
+0e. **仓库里现存每一个 fixture 的 `observed.burst` 都可能混着幻象伤害**(2026-08-20T13:30Z 记下)。
+   战斗日志只认名字不认实体,生成器现在会**检测并 withhold**(`ground_truth_ambiguous` /
+   `recent_damage_ambiguous`),但**只有本轮新生成的三个 fixture 带这个检查**。
+   `observed.burst` 是 **`J.WillAllySurviveTpWindow`(已发布未 gated)**、`J.IsIncomingBurstLethal`、
+   `J.ShouldRetreatLaneBurst` 的**唯一验收输入** ⇒ **凡是用 burst 钉住的 TP 生存/爆发结论,
+   若那一帧有幻象在场都要重读**(`lf_rescue` 的 #37 三帧、`tpdead`、`f_182552_warlock_ult_hoard`)。
+   做法同 0b/0c:**一次一个、重生成、重读结论**,不要批量刷。判据是现成的:重跑
+   `make_fixture.py`,看它是否吐出 `ground_truth_ambiguous`。
+   **顺带给录像组的**:任何按英雄名统计伤害的检测器(`tpdying_landing.py` 的 REALIZED-LETHAL 替身、
+   `tp_attribution.py`、`watch_deaths.py`)有同一个漏洞。
 0b. **旧 fixture 逐个补真实世界(modifier + 挨打史 + 结构)**。生成器与 loader 都已支持
    (modifier 2026-08-19T23:25Z;`recent_damage` 2026-08-20T01:45Z),但**有意没有批量
    重生成**:给一帧补上真实 buff/debuff 或真实的挨打史可能**翻掉**它钉住的那个决定,
@@ -222,6 +232,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T13:30Z:**第一次有可认领的新 `[strategy]` issue**,认领 **GH #68**
+  (录像检查组 12:48Z 交的 `tpdying` 首次条件 (a) 核验,§5.3 点名要钉两帧)。
+  **#61 仍未有着落**(第 0z 条继续卡着),但本轮结论**不骑它的桩**:所有判据都在不读 lane front 的路径上,
+  出价层两侧用同一个 `GetLaneFrontLocation` 覆盖(与 `test_tpcommit_release_domain.lua` 同一套)。
+  **头号产出是第十一条没人声明过的世界断言,并且已修**:**`.dem` 的战斗日志只认名字,不认实体**。
+  快照流带 `idx`,所以生成器一直能干净地剔掉幻象;**战斗日志不能** —— 每条 `DAMAGE`/`DEATH` 行的
+  `actor`/`target` 都是**裸英雄名**,幻象用它复制的那个英雄的名字 ⇒ `observed.burst`
+  (每个 fixture 头部写着「damage each enemy hero **ACTUALLY** dealt to the subject」)
+  **混着打在本体复制品身上的伤害**,`recent_damage` 反向同理。
+  **实测**:`20260820_102030` t=639.5 tidehunter,名字口径 3s 实伤 **849**(lion 64/slardar 229/
+  ogre 211/OD 329/necro 16),而本体实体 idx 1316 同这三秒 **1419 → 1452 → 1435 → 1423(它在回血)**
+  —— 849 点全打在幻象 idx 2537 上(存活 613.5–640.5,离本体 **4000u**)。**GH #68 §1.3 正是把这个数
+  读成「一秒吃 1063」**。影响面:loader 把它装成 `GetEstimatedDamageToTarget`,是
+  **`J.WillAllySurviveTpWindow`(已发布未 gated)**、`J.IsIncomingBurstLethal`、`J.ShouldRetreatLaneBurst`
+  的唯一输入;`recent_damage` 喂四个 `WasRecentlyDamagedBy*`(670 个调用点)。
+  **修复是拒绝不是修补**(拆「本体那一份」要靠血量轨迹 = 建模,与 #61 同一条线):subject 或任何
+  记账为打了它的英雄在窗口内有复制品存活 ⇒ withhold `burst`/`damage`/`died_after`,写
+  `observed.ground_truth_ambiguous`;反向同判据写 `recent_damage_ambiguous`。接线前后 **787 → 806,无历史结论翻面**。
+  **本轮缺陷本体:GH #68 的条件 (a) 站不住。** `tpdying` 的立论把 `J.IsInLaningPhase` 当时钟读,
+  **它不是时钟**:turbo 下是 `t < 8*60` **或** `t < 10*60 且自己净值 < 8000` ⇒ **8:00–10:00 之间
+  取决于响应者自己的钱包**,而九分钟时净值 < 8000 是常态。三帧实测:`103644` t=492.4 necro(3997)
+  **对线期 true、`ShouldRetreatLaneBurst` true ⇒ shipped 自己就放掉了 pin,armed `tpdying` 逐位相同**;
+  `102645` t=556.5 CM(3068)**对线期 true**;`102030` t=639.5 tide 才真的 false(前提在 10:00 后成立)。
+  ⇒ **#68 §1.1 排除预判半边的那一步(「t=556>480 ⇒ 结构性 false」)在那帧上不成立**;独立第二条:
+  实伤替身下该帧判据读 **false**(实伤 261 vs 血池 504),armed pin 仍是 0.85,出价逐位不变;
+  ground truth 记下不当论据(CM `died_after = 39.0`,活下来了)。**不要再为 `tpdying` 买 (a) 语料。**
+  **负结果:#68 §5.1 的阈值解耦本地验证不了** —— necro 帧严格比较本来就通过(1080 ≥ 965),
+  tide 帧根本没有可归属 burst;而替身**忽略 `bCurrentlyAvailable`**,恰恰是 #68 §2.3 指认的机制
+  ⇒ 与 `RetreatWhenTowerTargetedDesire` 同类「域有帧但断言不了」。**故本轮不交新 gate**,
+  只把立论改对(`jmz_func.lua` **仅注释** + `state.json`),行为一位没动;
+  也**没有把 `tpdying` 提出集**(它顺手去掉了「生存释放依赖响应者钱包」这件事,是同一缺陷更锋利的说法)。
+  验收 `tests/test_fixture_illusion_ground_truth.lua` **10 例** + `tests/test_tpdying_laning_domain.lua` **9 例**。
+  **五次变异:生成器发污染数据+摘 loader 闸门 2、生成器不标 `recent_damage_ambiguous` 2、
+  净值软延长 8000→0 5、turbo 软结束 10min→8min 4、`tpdying` 释放改无条件 1。806/806(基线 787)+ luacheck 0 警告。**
+  `state.json` 新增 `fixture_illusion_ground_truth_20260820`、`tpdying_DOMAIN_CORRECTION_20260820`。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 4 个 `.dem` + 4 个 `.analysis.json`,未启动任何计费资源),未提批测请求。
+  详见 `iterations/reports/strategy/20260820T133000Z.md`。
 - 2026-08-20T11:30Z:没有可认领的新 `[strategy]` issue(#65/#62/#58/#55/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
   #66/#63/#59/#56/#54 归英雄组,#64/#61/#60/#49/#46/#43/#42 归总监与批测台);**#61 总监 11:00Z 那轮仍未处理**
   (工作单元是 #64/#52),第 0z 条仍卡着,照章程接 **第 0b 条**,做它上一轮点名的

@@ -7143,7 +7143,19 @@ function J.GetTpCommitDefendDesire( bot, nLane )
 	-- IsInLaningPhase is false whatever the net worth), 53.4% HP so the numeric
 	-- clause is silent too, sniper 1008u away who then dealt 669 into a 546 HP
 	-- pool -- the floor bid 0.85 against a retreat bid of -0.05, and the hero
-	-- died 2.3s later. Restore the anticipation in this floor's own domain:
+	-- died 2.3s later.
+	-- [domain correction, GH #68, tests/test_tpdying_laning_domain.lua] "Post-
+	-- laning" here is NOT a clock. J.IsInLaningPhase in turbo is `t < 8*60`, OR
+	-- `t < 10*60 and GetBot():GetNetWorth() < 8000` -- so between 8:00 and
+	-- 10:00 the shipped anticipation stays alive for anyone who is not a fed
+	-- core, which is most responders. Measured on two real frames from the
+	-- 10:11Z wave: 20260820_103644 t=492.4 (necrolyte, 3997 net worth) and
+	-- 20260820_102645 t=556.5 (crystal_maiden, 3068) are both still laning, and
+	-- on the first the SHIPPED release already drops the pin on its own -- this
+	-- id is a bit-for-bit no-op there. The gap is real from 10:00 on (and
+	-- earlier for a rich lander); it is narrower than the paragraph above
+	-- claims, and the sharper defect is that a SURVIVAL release depends on the
+	-- responder's own wallet at all. Restore the anticipation in this floor's own domain:
 	-- release when the burst the visible enemies can cast right now already
 	-- covers my current health. Gated turbo + 'tpdying' and reachable only
 	-- inside the 'tpcommit' gate, so both shipped play and today's armed
