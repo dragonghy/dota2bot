@@ -737,3 +737,34 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   跨组:**新开 `[batch]` issue #70**(成本实测 + 围栏 ETA + 拓扑决定 + `capmono` 帧级口径)。
   启动前后 check_costs.sh / describe-instances 均确认 **0 台在跑,无泄漏**。
   详见 `iterations/reports/batch-desk/20260820T140740Z.md`。
+- 2026-08-20T16:08:00Z:**启动轮 — §R.0 `capmono` 隔离两臂波次,arm A 上机**。MTD **$11.6958**
+  (与 14:07Z 完全一致,三小时零支出符合预期),启动前 0 台在跑,无泄漏。收割:`soak/` 最新前缀
+  仍是 10:11Z 波次(12:08Z 已全量收割 282 局),`validation/` 无新对象 ⇒ 结构上无新数据。
+  例行三条件 (ii)(iii) 满足,**(i) 距上一波例行上机 10:11:38Z、门槛 16:11:38Z,现在 16:08-16:12Z**
+  形式上差约 3-4 分钟 —— **依 06:07Z 先例照常启动**(有明确目的:§R.0 首次上机测 `capmono` 的 (b);
+  $11.70 距 $45 围栏有数量级余量;当前 tree/queue 空转成本大于形式对齐收益)。总监若要求严格
+  按整点,下次按 18:11:38Z 对齐。**arm A 上机**(§R.0 16 id,种子 888/895/896/906,4 台
+  c6i.4xlarge **on-demand**,16 槽,2h 看门狗,`--games 22`,树 `11a8de336248927265d20af677f944085a02d248`
+  = 远端 main tip = 本地 HEAD): `i-0c7a8bf640f61262c`=888 / `i-0e9c0547551379779`=895 /
+  `i-004ca00f420d0e2b3`=896 / `i-00f507cf944eae840`=906(run_id **自带 SHA 后缀** `_11a8de33…`
+  不依赖人工映射表)。预估 **$1.56**(14:07Z 实测,MTD ≈ $13.3 ≤ $45),预计 ~**16:45-17:00Z**
+  落地(每波实测半小时),预期 ~280 局。**静态核对(带空格 pattern)通过**:16 个 armed id 里 15 个
+  各恰好 1 个读者,`lf_rescue` 裸字面量 0 是已知正确的(经 `J.IsLaneFixOn( 'rescue' )`);必须缺席
+  的 5 个 `tpwatch`/`roamstale`/`wandlimbo`/`axebuyblink`/`zusultx` 全部 in_cand_string=0
+  ⇒ **唯一闸门就是「不写进 cand 串」**。**被 bisect 的 `capmono` 非惰性核实**:唯一读者
+  `bots/mode_team_roam_generic.lua:128`,armed 时 `desire>0.72→0.72`(单调天花板),缺席时
+  `desire>0.9→0.72`(已发布默认的悬崖)⇒ **arm B 拿到的正是已发布默认**,删 id 真改行为。
+  **arm B(15 id,去 `capmono`)排在下次触发**(~18:0xZ,不重置例行计时,先例 02:09Z/14:12Z/20:11Z)——
+  报告 §4 已把 cand 串/种子/树核对/落地必查项写全,下次触发照抄即可,重点两条:
+  (1) 若届时 `git log 11a8de33..origin/main -- bots/ game/` 非空必须钉 arm A 的 SHA 并空 clone 实测
+  `SHA_FETCH_OK` 再上机(20:11Z 先例);(2) 落地必查项 6 个缺席 id 包括 `capmono` 自身,S3 真实
+  cand 串八 wave 一字不差 = 15 id 且六缺席(20:11Z「事后交叉验证比事前 grep 更硬」)。
+  **收割方案(A+B 齐全后)**:两臂分别 `recover_verdict.py` 先分 run 下载再带前缀合并;逐种子
+  配对差 A−B;判读按 §R 用**行为检测器**(录像组现成数字:clean 域拒扑率 45.2% vs 28.6%,
+  OR=2.06,χ²≈3.02,p≈0.08,n=62/63,隔离波拆掉 `teambrain` 应更干净),经济 MDE ≈ 35.6 gpm
+  **不给任何单 id 判条件 (b)**。上一波最终局数:888=63(41/22)、895=73(42/31)、896=75(43/32)、
+  906=71(41/30),合计 **282**(radiant-cand 167 / dire-cand 115)+ 23 暖场;dire 仍撞 stall
+  上限,再提 `--games` 只会加大不对称。本会话未改 Lua 且容器无 `luacheck`/`lua5.1`,铁律 6 无适用
+  对象。跨组:在既有 `[batch] #70` 下追评。启动前后 check_costs.sh / describe-instances 均确认
+  **无泄漏**(结束时恰好 4 台,全是本轮有意启动的自毁 on-demand)。
+  详见 `iterations/reports/batch-desk/20260820T160800Z.md`。
