@@ -201,6 +201,12 @@ def main():
         max_hp = int(round(s["hp"] / hp_pct)) if hp_pct > 0 and s.get("hp") else s.get("hp", 0)
         units.append({
             "name": h, "team": s["team"],
+            # the engine player slot (Radiant 0-4, Dire 5-9). aba_role's whole
+            # role chain hangs off it, so without it the fixture world answers
+            # "everyone is pos 1 / everyone is a core" -- a definite WRONG
+            # answer rather than a refusal (issue #53). -1 (or absent, on dumps
+            # older than this field) means the fixture must not claim to know.
+            "player_id": s.get("player_id", -1),
             "x": round(s["x"], 1), "y": round(s["y"], 1),
             "hp": s.get("hp", 0), "max_hp": max_hp,
             "mp": s.get("mp", 0), "max_mp": s.get("max_mp", 0),
@@ -315,10 +321,14 @@ def main():
                                ("'%s'" % d["actor"]) if d["actor"] else "nil",
                                d["value"])
                             for d in u["recent_damage"])) if u["recent_damage"] else ""
-        L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
+        # Omitted entirely when the dump predates the field, so fixtures made
+        # before it keep the world they had (the loader then leaves the mock's
+        # GetPlayerID alone) instead of being handed a fabricated slot.
+        pid = (" player_id = %d," % u["player_id"]) if u["player_id"] >= 0 else ""
+        L.append("    { name = '%s', team = %d,%s x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
                  " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s, net_worth = %d,"
                  "%s items = { %s },\n      abilities = { %s },%s }," % (
-                     u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
+                     u["name"], u["team"], pid, u["x"], u["y"], u["hp"], u["max_hp"],
                      u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
                      u["tp_cd"], u["net_worth"], seen, items, abil, mods + rdmg))
     L.append("  },")

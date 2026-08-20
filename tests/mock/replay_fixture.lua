@@ -204,6 +204,12 @@ function M.load(path, sSubject)
                 return (mods[i + 1] or {}).stacks or 0
             end,
             GetTeam = u.team,
+            -- The real engine player slot, when the fixture carries it. Every
+            -- role question routes through it (aba_role.GetPosition matches it
+            -- against GetTeamPlayers and reads RoleAssignment), and so does
+            -- every J.Utils per-hero cache key. nil here = the mock's own
+            -- default stands, which is the pre-#53 world.
+            GetPlayerID = u.player_id,
             GetLocation = loc,
             GetHealth = u.hp, GetMaxHealth = u.max_hp,
             OriginalGetHealth = u.hp, OriginalGetMaxHealth = u.max_hp,
@@ -286,12 +292,43 @@ function M.load(path, sSubject)
             else enemies[#enemies + 1] = h end
         end
     end
-    GetTeamPlayers = function()
-        local t = {}
-        for i = 1, #allies do t[i] = i end
-        return t
+    -- The team ROSTER (dead members included, ordered by player slot), which is
+    -- what the engine's GetTeamPlayers/GetTeamMember report -- as opposed to
+    -- GetUnitList(UNIT_LIST_ALLIED_HEROES), which is the live units in the
+    -- world. Both were the alive-only list before, and with no player ids to
+    -- report GetTeamPlayers answered bare indices 1..N; aba_role.GetPosition
+    -- matches `heroID[i] == bot:GetPlayerID()`, so nothing ever matched, every
+    -- ally fell through to the same fallback and the fixture world claimed all
+    -- five allies were pos 1 -- i.e. J.IsCore was true for everyone, in every
+    -- fixture. That is a definite wrong answer, not a refusal, so any assertion
+    -- that forked on core/support was decided by the harness (issue #53).
+    local roster = {}
+    for _, u in ipairs(fx.units) do
+        if u.team == subj_team and u.player_id ~= nil then
+            roster[#roster + 1] = { pid = u.player_id, hero = heroes[u.name] }
+        end
     end
-    GetTeamMember = function(i) return allies[i] end
+    if #roster > 0 then
+        table.sort(roster, function(a, b) return a.pid < b.pid end)
+        GetTeamPlayers = function()
+            local t = {}
+            for i, r in ipairs(roster) do t[i] = r.pid end
+            return t
+        end
+        GetTeamMember = function(i)
+            return roster[i] and roster[i].hero or nil
+        end
+    else
+        -- Fixtures generated before the dumper emitted player_id keep the world
+        -- they were validated in, byte for byte. tests/test_fixture_roles.lua
+        -- ratchets the list of those, so the degenerate world can only shrink.
+        GetTeamPlayers = function()
+            local t = {}
+            for i = 1, #allies do t[i] = i end
+            return t
+        end
+        GetTeamMember = function(i) return allies[i] end
+    end
     GetUnitList = function(kind)
         if kind == UNIT_LIST_ENEMY_HEROES then return enemies end
         if kind == UNIT_LIST_ALLIED_HEROES then return allies end

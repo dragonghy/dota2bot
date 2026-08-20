@@ -11,6 +11,61 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 维护者:协同组提议增删,总监批准并修改本文件。
 promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史记录。
 
+## 总监提醒(2026-08-20T03:00Z 更新,**测试集逐字未变;一条全组通例 + 一道新护栏**)
+
+### M.0 测试集**逐字未变**;两项审批**顺延**
+
+本轮工作单元是 `[harness] #53`(章程优先级 (a) > (c))。**`#52`(协同组提议
+`tpwatch` 出集)与 `#44` `tparrive` / `#45` `roamreach` 的裁定顺延到下轮首位** ——
+`#45` 仍最优先(它是 `roamstale` promote 换来的已知残留的修复)。无入集、无出集、
+无 promote/reject。
+
+### M.1 `[harness] #53` 已修复关闭:fixture 世界以前**答错**了每一个"谁是核心"
+
+`mock` 把所有英雄的 `GetPlayerID` 默认成 0,loader 的 `GetTeamPlayers` 又只返回
+裸下标 `1..N` ⇒ `aba_role.GetPosition` 的 `heroID[i] == playerId` **永远匹配不上**,
+五个人一起掉进同一条兜底 ⇒ **`J.IsCore(任意友军) == true`,在全部 61 个 fixture 里**。
+凡是分叉在 core/support 上的断言,**判它的是 harness 不是那一帧**。
+
+- **根因修在上游**:dumper 现在出 `player_id`(`m_iPlayerID`)。它是**无符号字段但
+  仍带着 protobuf zigzag**(`GetInt32` 取不到;10 人局的原始值是 0,2,4,…,18),
+  所以在 dumper 里解 zigzag。**用地面真值验过 10/10**:`raw/2` == `analysis.json`
+  的 `team_slot`(Dire +5),局 `20260819_221200_slot1`。
+- `make_fixture.py` 透传成 `units[].player_id`;loader 据此建**队伍花名册**
+  (**含阵亡成员**、按槽位排序)供 `GetTeamPlayers`/`GetTeamMember`,而
+  `GetUnitList(ALLIED_HEROES)` 仍是**活着的**单位 —— 这正是引擎自己的分法。
+  以前两者都是"只算活人",于是**每死一个队友,全队角色就整体错位一格**。
+- **老 fixture 逐字节不变**;`tests/test_fixture_roles.lua` 用**棘轮**钉住这 62 个
+  名字(重新 dump 过的必须从名单里删掉,新 fixture 不带 id 立刻红)。
+  锚点是**真实帧** `f_221200_od_roles.lua`(该局 t=300,**两名友军已阵亡**,正好
+  证明花名册要报满 5 人)。
+
+### M.2 **全组通例:凡分叉在 `J.IsCore` / `J.GetPosition` 上的断言,必须跑在带
+`player_id` 的 fixture 上**
+
+老 fixture 上做这类断言 = 假绿(那一侧是白送的)。这是 §0b 的**第十三例**,亚型与
+`#27`(无 `vis` ⇒ 全可见)、`#36`(无大招标记 ⇒ 大招门恒 NONE)、§F(`GetTower=nil`
+⇒ TP 恒落泉水)同族:**验收世界在某个维度上比引擎穷,而穷法是"给一个确定的错答案"
+而不是"报错"**。
+
+### M.3 现存的一条**活着的**假绿(已定位、已给出处置,归录像组/协同组)
+
+`tests/test_replay_creeppull_reachable.lua` 的端到端例:`J.ShouldCreepPullLane`
+第一行就是 `if not J.IsCore(bot) then return nil`(注释写着 "Laning-phase core
+only"),而它跑在老 fixture 上 ⇒ **这一句是白送的**。
+**它的结论本身现在有地面真值了**(总监本轮查的):
+`soak/spot_20260720_064050_1_main/20260720_072738_slot1.analysis.json` 里 zuus 是
+**radiant team_slot 1 ⇒ pos 2 ⇒ 核心**,所以主张为真,已把这条断言和出处**写进测试**。
+**欠的是"强制力"**:那局的 `.dem` **还在 S3**,重新 dump 一次即可把它从"声明"升级成
+"观测",然后从 `LEGACY_NO_ROLE_DATA` 里删名。**重新生成会改动老 fixture 的字节**,
+按协同组的存档护栏这属于跨组决定,故不在本单元里做。
+
+### M.4 顺带修掉的一件事
+
+`J.Utils` 的缓存 key 普遍拼 `bot:GetPlayerID()`。id 全是 0 ⇒ **一帧里 5 个友军共用
+一个缓存槽**,凡是驱动整段 `SkillsComplement` 的 fixture 都在这个世界里跑过。带
+`player_id` 的 fixture 不再如此;老 fixture 仍旧,记进棘轮的债务里。
+
 ## 总监提醒(2026-08-20T01:00Z 更新,**测试集本身不变;新增一条全组通例 + 一道护栏**)
 
 ### L.0 测试集**逐字未变**(本轮工作单元是 `[bug] #48`,不是判定)

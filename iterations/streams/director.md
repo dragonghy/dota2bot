@@ -749,3 +749,58 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②收下一波的 `tpdead`/`zusult` 条件 (a),`cmrguard` 等行为语料判 (b);③`wandlimbo` 的机会普查
   **仍无人做**(连续三轮记录,是它 armed 的硬前置);④都在等就做 **`#51`**(切得动的独立单元)/
   backlog #1 帧语料检索工具 / patch 分片 P3 / `[harness] #27`。
+
+- 2026-08-20T03:00Z:第十四次 director 触发。优先级 (a) 不空 —— 英雄组 02:00Z 开了
+  `[harness] #53`,按章程先修,`#52`/`#44`/`#45` 三项审批顺延。报告:
+  `iterations/reports/director/20260820T030000Z.md`。**未花 AWS 钱**(只读 S3:1 个
+  `.dem` + 2 个 `.analysis.json`,外加把重建好的 dumper 回传缓存),**`bots/`/`game/`
+  零改动**。
+  **① `[harness] #53` 已修复并关闭** —— fixture 世界以前**答错**(不是拒答)每一个
+  「谁是核心」:`mock` 把 `GetPlayerID` 默认成 0、loader 的 `GetTeamPlayers` 只返回裸
+  下标 `1..N` ⇒ `aba_role.GetPosition` 的匹配**永不成立**,五人同掉一条兜底 ⇒
+  **`J.IsCore(任意友军)==true`,在全部 61 个 fixture 里**。**自己多量出第二层**
+  (英雄组没提):`GetTeamPlayers`/`GetTeamMember` 以前都建在**只算活人**的列表上,而
+  引擎这两个读法是**花名册** ⇒ **每死一个队友全队角色整体错位一格**,只修 id 不够。
+  **根因修在上游**:dumper 出 `player_id`。踩到真编码坑 —— `m_iPlayerID` 以**无符号**
+  到达且**仍带 protobuf zigzag**(`GetInt32` 取不到,10 人局原始值 0,2,4,…,18);
+  第一版按 `GetInt32` 写,跑真录像 **8025 个快照全是 -1** 才暴露。解 zigzag 后
+  **地面真值 10/10**(`raw/2` == `analysis.json` 的 `team_slot`,Dire +5)。
+  `make_fixture.py` 透传(dump 无此字段则整段省略,老件不被塞进**捏造的**槽位);
+  loader 建按槽位排序、**含阵亡成员**的花名册,`GetUnitList(ALLIED_HEROES)` 仍只算活人
+  —— 引擎自己的分法。
+  **② 护栏 `tests/test_fixture_roles.lua`(5 例)**:锚点是本轮新生成的**真实帧**
+  `f_221200_od_roles.lua`(**两名友军已阵亡**,正好逼花名册报满 5);断言五个位置
+  **互不相同** + **两侧都可达**(pos1 是核心 / pos5 不是,防恒真)+ **62 名棘轮**
+  (重新 dump 过的必须删名,新件不带 id 立刻红)+ **特征化**老世界(全员 pos 1,写明
+  是**已知错答案**不是背书)。**610/610**(基线 605,`git stash` 实测)+ **luacheck 0**;
+  **三次变异各恰好挂 3 / 1 / 4 且报错直指缺陷**。二进制侧不是纸面改动:**真下 `.dem`、
+  真跑 dumper、真对 analysis.json**,并把重建好的二进制按 `get_dumper.sh` 的缓存 key
+  回传(`behav-dump-a2b8788c3e3f5285`),下个会话省一次全量构建。
+  **③ 一条活着的假绿:定位 + 只做一半,并说明为什么** —— `test_replay_creeppull_reachable`
+  的端到端例(GH #13 核心交付)跑在老 fixture 上,而 `J.ShouldCreepPullLane` 第一行就是
+  `if not J.IsCore(bot) then return nil` ⇒ **这句是白送的**。本轮把结论从「没有证据」
+  变成「**有地面真值**」:那局 `analysis.json` 仍在 S3,zuus 是 **radiant team_slot 1
+  ⇒ pos 2 ⇒ 核心**,断言+出处已写进测试。**欠的是强制力**:`.dem` 也还在
+  (`soak/spot_20260720_064050_1_main/`),重新 dump 即可升级成观测并从棘轮删名 ——
+  **没在本单元做**:重生成会动老 fixture 的字节(协同组的存档护栏是跨组决定),且 7 月
+  至今 dumper 新增 `vis`/`net_worth`/`abilities`/`modifiers`/`recent_damage`/`buildings`
+  一大批字段,很可能**移动别的测试的结论**,那是要看着数字做的活。已交录像组/协同组排期。
+  **④ §0b 第十三例 + 全组通例(`test_set.md` §M.2)**:**凡分叉在 `J.IsCore`/
+  `J.GetPosition` 上的断言,必须跑在带 `player_id` 的 fixture 上**;老件上做是假绿。
+  亚型同族于 `#27`/`#36`/§F/`#48`:**验收世界比引擎穷,且穷法是「给一个确定的错答案」
+  而不是「报错」**。多一条**给工具作者的教训**:我把「没网络到」显式定成 **-1** 而非 0,
+  编码错误因此在第一次跑真录像时就自曝;沿用 0 默认的话它会安静地给出「全员 slot 0」,
+  与被修的缺陷一模一样 —— **哨兵值要选一个不可能被误读成合法答案的值**。顺带修掉
+  `J.Utils` 缓存 key 拼 `GetPlayerID()` 导致的**五个友军共用一个缓存槽**。
+  **⑤ 其他章程项**:promote/reject **无新判定**(`cmrguard` 的 (a) 已齐、(b) 按 §K.4
+  不能用 gpm 判,**不提前发通行证**);测试集**逐字未变**;成本 MTD **$4.0579**
+  (批测台 02:06Z 自报),在跑 0 台无泄漏,滞后 15 台未入账(预计跳到 ~$9-10,不是失控);
+  五组均有产出无空转 —— 记两条:英雄组按 `#51` 的依赖关系**主动停手**不硬修 `#50` 第二处,
+  协同组补完 `WasRecentlyDamagedBy*` 后**立刻回头重读 `tpwatch`** 并交出**负结果**(`#52`),
+  正是 §L.2 要求的动作。今日周四,效率台账(仅周日)跳过;patch 11:10Z 刚分片不重复。
+  `DECISIONS_NEEDED.md` 仍未创建,本周 owner 邮件仍为零。
+  **下次触发**:①裁定 **`#45` `roamreach`**(已积压三轮,promote 换来的残留)与 `#44`;
+  ②裁定 **`#52`**(`tpwatch` 出集提议 —— 形状像 `l1xpsoak`/`creeppull` 的「结构上不可测」,
+  倾向**退回出集而非 reject**,但要自己复核「`mode_retreat_generic` 没有 `Think()`」这条);
+  ③`wandlimbo` 机会普查**仍无人做**(连续四轮);④都在等就做 `#51` / backlog #1 帧语料
+  检索工具 / patch 分片 P3 / `[harness] #27`。

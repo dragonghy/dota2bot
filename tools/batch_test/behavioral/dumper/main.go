@@ -78,6 +78,7 @@ type snapshot struct {
 	Hero      string        `json:"hero"`
 	Idx       int32         `json:"idx"` // entity index; disambiguates a hero from its illusions (same class name)
 	Team      int32         `json:"team"`
+	PlayerID  int32         `json:"player_id"` // engine player slot (Radiant 0-4, Dire 5-9); -1 = not networked
 	X         float64       `json:"x"`
 	Y         float64       `json:"y"`
 	HP        int32         `json:"hp"`
@@ -141,6 +142,7 @@ type heroState struct {
 	mp    float64
 	maxmp float64
 	level int32
+	pid   int32 // m_iPlayerID; -1 until the entity networks it
 	valid bool
 }
 
@@ -416,7 +418,7 @@ func main() {
 			}
 			tpcd, tpcdlen := resolveTP(h.idx)
 			snaps = append(snaps, snapshot{
-				T: round1(t), Hero: h.name, Idx: h.idx, Team: h.team,
+				T: round1(t), Hero: h.name, Idx: h.idx, Team: h.team, PlayerID: h.pid,
 				X: round1(h.x), Y: round1(h.y),
 				HP: h.hp, HPPct: round3(hpPct),
 				MP: int32(h.mp + 0.5), MaxMP: int32(h.maxmp + 0.5), MPPct: round3(mpPct),
@@ -589,8 +591,23 @@ func main() {
 		idx := e.GetIndex()
 		h := heroes[idx]
 		if h == nil {
-			h = &heroState{idx: idx, name: classToNPC(cn)}
+			h = &heroState{idx: idx, name: classToNPC(cn), pid: -1}
 			heroes[idx] = h
+		}
+		// The player slot this hero belongs to. It is what the bot API's
+		// GetPlayerID() answers, and the whole role chain hangs off it:
+		// aba_role.GetPosition matches the id against GetTeamPlayers(team)
+		// and reads RoleAssignment[slot] -- so without it a fixture cannot
+		// tell a core from a support (issue #53). -1 means "never networked",
+		// which the fixture generator must not silently turn into 0.
+		//
+		// m_iPlayerID arrives as an UNSIGNED field that still carries its
+		// protobuf zigzag encoding (GetInt32 fails on it; the raw values come
+		// out 0,2,4,...,18 for a 10-player game), so it has to be un-zigzagged
+		// here. Verified against ground truth on 20260819_221200_slot1:
+		// raw/2 == the analysis.json team_slot (+5 for Dire) for all 10 heroes.
+		if v, ok := e.GetUint32("m_iPlayerID"); ok {
+			h.pid = int32(v>>1) ^ -int32(v&1)
 		}
 		// m_iTeamNum is networked as an unsigned int (2 = Radiant, 3 = Dire).
 		if t, ok := e.GetUint32("m_iTeamNum"); ok && t > 0 {

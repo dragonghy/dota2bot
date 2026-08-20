@@ -77,6 +77,18 @@ tests['[GH #13] end-to-end: the pull bid is reachable on the real frame'] = func
     -- Arm the candidate side (turbo comes from the fixture loader).
     J.IsSoakCandidate = function(id) return id == 'creeppull' end
 
+    -- `J.ShouldCreepPullLane` opens with `if not J.IsCore(bot) then return nil`
+    -- ("laning-phase core only"), and this fixture predates player_id, so the
+    -- loader cannot answer roles and hands out pos 1 -- i.e. the clause is
+    -- passed for free here, not proven (GH #53, tests/test_fixture_roles.lua).
+    -- The CLAIM is nevertheless ground truth, from the game's own analysis.json
+    -- (soak/spot_20260720_064050_1_main/20260720_072738_slot1.analysis.json):
+    -- zuus is radiant team_slot 1 => pos 2 => core. What is still owed is the
+    -- ENFORCEMENT: regenerate this fixture from that run's .dem with a current
+    -- dumper, then drop it from LEGACY_NO_ROLE_DATA and this note with it.
+    assert(J.IsCore(bot) == true,
+        'the pull bid is core-only and zuus was the radiant pos 2 in this game')
+
     local pull = J.ShouldCreepPullLane(bot)
     assert(type(pull) == 'table',
         'with the lane trade allowed, the real zoned frame must yield a pull intent')
