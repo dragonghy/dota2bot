@@ -55,7 +55,16 @@
    **已知不通的路**:想在**命令已经在执行之后**回收它,唯一落点是每帧都跑的
    `ability_item_usage_generic.lua`(mode 之外唯一的全局 Think)——那是**另一个杠杆**,
    不要和「下达时带边界」合做。
-0a. **等一份带基地攻防的语料再做的两条**(2026-08-20T05:30Z 记下,机制已确认、证据取不到)。
+0a. **等一份带基地攻防的语料再做的三条**(2026-08-20T05:30Z 记下,11:30Z 扩了一条;机制已确认、证据取不到)。
+   **新增第三条(2026-08-20T11:30Z)**:`mode_retreat_generic.X.ShouldRun:774` 的
+   `#hEnemyHeroList >= #hAllyHeroList` —— **两边都是 0 时恒真**,即「周围一个人都没有」被读成
+   「我在这里被压制」,而它把出价推到 `BOT_MODE_DESIRE_ABSOLUTE * 1.1`(全系统最高、压过一切),
+   每 2 秒重评一次 ⇒ **一个人站在敌方兵营边上、周围没有任何敌人,只要对面还有 2 个人活着,就被永久赶回去**。
+   **取不到帧的原因**:5 局 63,350 帧里**没有任何一帧**把英雄放到敌方兵营 800 以内,五局全部以
+   `economy_10min_cap` 在 ~640s 自终止、只掉一塔。与下面两条同一个语料缺口。
+   **顺带在本轮出局的**:`ShouldRun:740`(6 级前深入不要追)在本语料里 **0 帧** ——
+   `enemyFountainDistance < 8111` 对 6 级以下英雄从未成立,整条是死的。
+   要做先向批测台/录像组要**打到基地**的局(与下面两条一起要,一次要够)。
    `aba_defend:939`(`enemiesOnHG >= 2 and not recentlyHit` 的高地分支)与 `enemiesAtAncient >= 1`
    那条支线,以及同一函数里的**顺序缺陷**:`panic.floor`(0.94/0.96)在 1155 行用 `math.max` 压上去,
    1170 行紧接着**无条件** `nDefendDesire = nDefendDesire * 0.4`(`recentlyHit`)再 `min(..., Low)`
@@ -91,8 +100,21 @@
    (两张英雄表都从它来)、**`J.WeAreStronger`(每个半径、每个 fixture 此前都是空队伍对空队伍)**、
    `mode_laning_generic`/`mode_roshan_generic`/`mode_outpost_generic`/`item_purchase_generic` 的世界扫描,
    以及若干英雄文件。本轮只动了其中一条(退却的人数对比 → `retnear`),**其余每一条都还没有人在真实帧上看过**。
-   点名下一批:`X.ShouldRun` 的强制退却链、`RetreatWhenTowerTargetedDesire`;
-   **`C.enemyNearbyExtra` 的塔威胁子句现在做不了**(要建筑的攻击力/攻速,dump 不带,见 §0d)。
+   ~~点名下一批:`X.ShouldRun` 的强制退却链、`RetreatWhenTowerTargetedDesire`~~
+   **两条 2026-08-20T11:30Z 已查**:`ShouldRun` 的 774/740 两条**在本语料里 0 帧**(774 移到第 0a 条,
+   740 是死的);`RetreatWhenTowerTargetedDesire` **域有 774 帧但断言不了** —— 它的两个触发条件读
+   `nEnemyTowers[1]:GetAttackTarget()` 与 `bot:GetEstimatedDamageToTarget(...)`,**都不在 dump 里**。
+   **它里面有一条记账、暂不动的**:`GetEstimatedDamageToTarget`(文档已是「对该目标」的估计)
+   再喂给 `botTarget:GetActualIncomingDamage(...)` ⇒ **减伤算了两次**;全仓库 91 个调用点里
+   **只有 2 处**这么写(本处与 `hero_dazzle:314`),是**离群写法不是惯例**。方向是「更敢越塔」
+   (与已知的死亡问题相反)且真实帧上验收不了 ⇒ 要动先要一份能答出这两个引擎量的语料。
+   **`C.enemyNearbyExtra` 的塔威胁子句仍然做不了**(要建筑的攻击力/攻速,dump 不带,见 §0d);
+   同理 `C.haveEnemyTowerThreat`(三写零读的标定标志,`towerreach` 的物证)也只能旁证、不能当闸门。
+   **新可达面(2026-08-20T11:30Z 接通,203 个调用点)**:`bot:GetNearbyTowers`(183)与
+   `bot:GetNearbyBarracks`(20)此前在每个 fixture 里恒为空(第十条世界断言,已修)。
+   第一次可达的:`mode_retreat_generic` 的 `C.allyTowers1200`/`C.enemyTowers1200`(本轮动了其中一条
+   → `towerreach`)、塔光环的友军加成、`ShouldRun` 的四条塔分支,以及 `aba_push`/`aba_defend`/
+   英雄文件里**每一处**「我旁边有没有塔」。**其余每一条都还没有人在真实帧上看过。**
 0d. **两个 mode 文件在任何 fixture 上都跑不起来,而所有竞价级测试都用 `pcall` 悄悄吞掉了它们**
    (2026-08-20T09:30Z 发现,归总监):`mode_rune_generic:487`(`GetRuneSpawnLocation` nil)、
    `mode_secret_shop_generic:63`(`GetCourierState` nil)。**推论:本仓库过去每一条「谁赢下这一帧」的结论
@@ -200,6 +222,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T11:30Z:没有可认领的新 `[strategy]` issue(#65/#62/#58/#55/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
+  #66/#63/#59/#56/#54 归英雄组,#64/#61/#60/#49/#46/#43/#42 归总监与批测台);**#61 总监 11:00Z 那轮仍未处理**
+  (工作单元是 #64/#52),第 0z 条仍卡着,照章程接 **第 0b 条**,做它上一轮点名的
+  「`X.ShouldRun` 的强制退却链 / `RetreatWhenTowerTargetedDesire`」。
+  **本轮先量域再选杠杆**(5 局 turbo 录像、0.5s 间隔、**63,350 个存活英雄-帧**),四条点名候选里
+  **三条当场出局**:`ShouldRun:774`(基地深处)**0 帧**、`ShouldRun:740`(6 级前深入)**0 帧**、
+  `RetreatWhenTowerTargetedDesire` 域有 774 帧但**两个触发条件都读 dump 没有的引擎状态**
+  (`GetAttackTarget` / `GetEstimatedDamageToTarget`)⇒ 真实帧上断言不了。
+  **头号顺带产出是第十条没人声明过的世界断言,并且已修**:`tests/mock/bot_api.lua` 对任何
+  `GetNearby*` 一律答 `{}`,而 loader **只覆盖过 `GetNearbyHeroes` 一个** ⇒
+  **`bot:GetNearbyTowers`(183 个调用点)与 `bot:GetNearbyBarracks`(20 个)在每个 fixture 里都是空的**
+  ——白话:**「这附近没有任何塔,也没有任何兵营,对任何人都是」**,而同一个 fixture 早就带着每座建筑的
+  真实队伍/坐标/存活/血量(GH #58 那轮接的,只是过去只能从 `GetTower`/`UNIT_LIST_*_BUILDINGS` 拿)。
+  光在 `mode_retreat_generic` 就掏空了 `C.allyTowers1200`/`C.enemyTowers1200`、**整个
+  `RetreatWhenTowerTargetedDesire`**、`ShouldRun` 的四条分支。修复是 restoration(只给存活的、
+  按距离升序、**不含前哨**,两条都写成断言),接线前后 **745/745,无历史结论翻面**。
+  **仍故意没伪造**:建筑的攻击力/攻速不在 dump ⇒ `C.haveEnemyTowerThreat` 在 fixture 里永远为假
+  (写成 `LIMITATION` 用例);`GetNearbyLaneCreeps`/`GetNearbyCreeps` 仍是 `{}`(注入小兵是建模)。
+  **本轮缺陷本体(GH #67)**:「四周什么都没有 ⇒ −0.25」折扣**左半边标定、右半边不标定** ——
+  `#nEnemyTowers` 是 `C.enemyTowers1200`,**1200 内有任何敌塔就一票否决**,而塔的攻击距离是 **700**。
+  **作者原意有物证**:同一函数 490 行前算好了 `C.haveEnemyTowerThreat`(1200 内某敌塔 5s 打掉我一半血),
+  **全仓库三写零读** ⇒ §0b 家族**新亚型:同一个问题在同一个函数里有两份实现,精确的那份没接线**。
+  **交付 gated `towerreach`(turbo-only)**:armed 时否决只数**够得着我**的塔(**800**,是本文件自己
+  表示「我正站在敌塔跟前」的那个数);armed 否决集是 shipped 的**子集** ⇒ 折扣只可能更常生效 ⇒
+  **出价只降不升**,不新增动作、不碰别的出价。**不用 `haveEnemyTowerThreat` 当闸门**是因为塔的
+  攻击力/攻速不在 dump,那样就没有真实帧能验收(局限已写成断言)。
+  **域实测**:15,563 帧满足左半边(离自家泉水 >4000 且 3200 内无敌人),其中 **695 帧被塔否决**,
+  **500 帧(71.9%)否决它的塔够不着**;抽 28 帧(每英雄间隔 ≥6s)成 25 个 fixture(3 个因无种子归属被拒,GH #57),
+  驱动**全部 mode**:出价变 **23/25**,**竞价当选者变 2/25(8%)**,**其余 mode 一条都没动**;
+  2 帧不变是结构性的(`X.ShouldRun` 先开火、在折扣行之上就 return 了 `ABSOLUTE*1.1`)。
+  钉帧 `f_260820_102030_wk_tower_out_of_reach`(t=436,**Wraith King 焦点英雄**、284/1154=24.6%、8 级、
+  离自家泉水 13,722、**3200 内 0 敌**、唯一敌塔在 **1090**):shipped **0.3836 赢**,armed **0.1336**
+  ⇒ `mode_laning_generic` 0.369 赢。**GROUND TRUTH 记下不当论据**:它原地吃药回血到 46% 没被碰,
+  之后北上被杀、复活、再死。对照帧 `f_260820_102030_wk_tower_in_reach`(同局同英雄 8.5s 后、塔在 **787**)
+  **armed 逐位相同**;第二帧 `f_260820_103630_lina_tower_ring` 是足迹诚实的那一半(降 0.25,决定不变)。
+  **不骑 #61 的桩**:先在已知敏感帧上证明探针是活的,再证明**本帧任何 mode 的出价都不读 lane front**。
+  验收 `tests/test_towerreach_out_of_range_veto.lua` **12 例** + `tests/test_fixture_nearby_structures.lua` **6 例**。
+  **五次变异:删修复 3、gate 常开 5、gate 忽略 turbo 1、reach 半径 800→1200 3、拆 loader 建筑查询 13
+  (全部落在两个新文件内)。763/763(基线 745)+ luacheck 0 警告。**
+  `state.json` 新增 `towerreach_20260820`、`fixture_nearby_structures_20260820`、`corpus_gap_no_base_assault_20260820`。
+  **`towerreach` gated 未 armed**,入集申请见 **GH #67**;**排期建议:混波带着走**(足迹 0.83%、单调向下、
+  与 `aba_defend` 族不重叠)。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 5 个 `.dem` + 5 个 `.analysis.json`,未启动任何计费资源),未提批测请求。
+  详见 `iterations/reports/strategy/20260820T113000Z.md`。
 - 2026-08-20T09:30Z:没有可认领的新 `[strategy]` issue(#62/#58/#55/#52/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
   #63/#59/#56/#54/#50 归英雄组,#61/#60/#49/#46/#43/#42 归总监与批测台);**#61 总监 09:00Z 明确说本轮没处理、仍归他们**,
   所以第 0z 条仍卡着,照章程接 **第 0b 条**,按它点名的「**挑一个已发布未 gated 的 last-seen 消费方先做**」,

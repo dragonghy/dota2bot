@@ -587,7 +587,38 @@ function GetDesireHelper()
     end
 
     if bot:DistanceFromFountain() > 4000 then
-        if (nEnemyNearbyCount == 0 and unseenCount == 0) and #nEnemyTowers == 0 then nDesire = nDesire - 0.25 end
+        -- [towerreach] The "nothing around at all" -0.25 discount. Its left
+        -- half asks a calibrated question (no enemy hero within 1600, none
+        -- last-seen within 3200); its right half vetoes on the BARE PRESENCE
+        -- of an enemy tower anywhere within 1200. A tower's attack range is
+        -- 700 -- one standing 1100 away cannot touch this bot, and with no
+        -- enemy hero within 3200 either there is nothing else for it to be
+        -- afraid of. buildContext already computes the calibrated version of
+        -- exactly this question one screen up (C.haveEnemyTowerThreat: an
+        -- enemy tower within 1200 whose 5s output is >= half this bot's
+        -- health) and then NOTHING in the file ever reads it -- the crude test
+        -- is the one that got wired to the consumer.
+        --
+        -- Armed, the veto counts only towers that can actually reach the bot,
+        -- at the same 800 this file already uses for "I am at an enemy tower"
+        -- (RetreatWhenTowerTargetedDesire / ShouldRun's 898). The armed veto is
+        -- a subset of the shipped one, so the discount can only be applied MORE
+        -- often: the bid goes down or stays, never up. Exactly one lever.
+        --
+        -- Not gated on C.haveEnemyTowerThreat itself, tempting as it is: a
+        -- tower's GetAttackDamage/GetAttackSpeed are not in the replay dump, so
+        -- no fixture can answer that flag truthfully and no real frame could
+        -- validate the change.
+        local nTowerVeto = #nEnemyTowers
+        if J.IsSoakCandidate('towerreach') and J.IsModeTurbo() then
+            nTowerVeto = 0
+            for _, hTower in pairs(nEnemyTowers) do
+                if J.IsValidBuilding(hTower) and GetUnitToUnitDistance(bot, hTower) <= 800 then
+                    nTowerVeto = nTowerVeto + 1
+                end
+            end
+        end
+        if (nEnemyNearbyCount == 0 and unseenCount == 0) and nTowerVeto == 0 then nDesire = nDesire - 0.25 end
     end
 
     if J.IsInLaningPhase() then

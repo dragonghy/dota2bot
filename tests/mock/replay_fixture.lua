@@ -660,6 +660,59 @@ function M.load(path, sSubject)
             end
             return prev_unit_list(kind)
         end
+
+        -- UNIT-LOCAL STRUCTURE QUERIES.
+        --
+        -- The bare mock answers every method whose name starts with GetNearby
+        -- with `{}` (bot_api default_for). The loader had wired GetNearbyHeroes
+        -- but nothing else, so in EVERY fixture
+        --     bot:GetNearbyTowers(r, bEnemies)   -- 183 call sites in bots/
+        --     bot:GetNearbyBarracks(r, bEnemies) --  20 call sites
+        -- both answered "there is no tower and no barracks anywhere near
+        -- anybody" -- even though the fixture already carries every structure
+        -- with its real team, position and alive flag (they were reachable
+        -- only through GetTower / GetAncient / UNIT_LIST_*_BUILDINGS). Same
+        -- family as the GetTower-slot, GetHeroLastSeenInfo and UNIT_LIST_ALL
+        -- gaps before it: an undeclared world assumption sitting under an
+        -- otherwise real frame.
+        --
+        -- This is a RESTORATION, not a model: team, position and alive state
+        -- are dump ground truth. Two things are stated rather than invented:
+        --   * ALIVE only -- a destroyed tower is absent, which is the semantics
+        --     every reader already assumes (`nEnemyTowers[1]` = "the nearest
+        --     tower still standing").
+        --   * SORTED BY DISTANCE ascending. The engine makes no documented
+        --     promise here, but every shipped consumer reads [1] as "the
+        --     closest one" (mode_retreat_generic's GetAttackTarget() == bot
+        --     check, aba_push's tier walk), so an unsorted list would make
+        --     those readers answer about an arbitrary tower.
+        -- Outposts (`watch_tower`) are deliberately NOT included: the engine
+        -- returns tower-class structures here, and the outpost has its own
+        -- reader.
+        local function nearby_structures(name)
+            return function(self, radius, bEnemies)
+                local out = {}
+                for _, h in ipairs(buildings) do
+                    if h:GetUnitName() == name and h:IsAlive() then
+                        local isEnemy = h:GetTeam() ~= self:GetTeam()
+                        if (bEnemies and isEnemy) or (not bEnemies and not isEnemy) then
+                            if GetUnitToUnitDistance(self, h) <= (radius or 1600) then
+                                out[#out + 1] = h
+                            end
+                        end
+                    end
+                end
+                table.sort(out, function(a, b)
+                    return GetUnitToUnitDistance(self, a) < GetUnitToUnitDistance(self, b)
+                end)
+                return out
+            end
+        end
+        for _, u in ipairs(fx.units) do
+            local spec = rawget(heroes[u.name], '__spec')
+            spec.GetNearbyTowers = nearby_structures('tower')
+            spec.GetNearbyBarracks = nearby_structures('barracks')
+        end
     end
 
     -- Roster-backed unit-local queries, so full hero scripts (which use
