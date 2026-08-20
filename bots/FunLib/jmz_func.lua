@@ -4415,11 +4415,20 @@ function J.GetCastDelay( bot, unit, nPointTime, nProjectSpeed )
 end
 
 
+-- NOTE (GH #48): the call below used to read `J.GetCastPoint`, a name that has
+-- never existed on J -- so every frame where `unit` really was channeling a TP
+-- raised `attempt to call field 'GetCastPoint' (a nil value)`. It survived
+-- because the function has no callers in bots/ and, until fixtures carried real
+-- modifiers, `HasModifier` was false everywhere, making the body unreachable in
+-- tests too. `J.GetCastDelay` (right above) has the identical signature and is
+-- the intended helper; hero_sniper's local X.GetCastPoint is the same pattern.
+-- Caveat for whoever wires this up: with nProjectSpeed == 0 GetCastDelay drops
+-- the distance term, so a ranged projectile's travel time is NOT counted.
 function J.CanBreakTeleport( bot, unit, nPointTime, nProjectSpeed )
 
 	if unit:HasModifier( "modifier_teleporting" )
 	then
-		return J.GetCastPoint( bot, unit, nPointTime, nProjectSpeed ) < J.GetModifierTime( unit, "modifier_teleporting" )
+		return J.GetCastDelay( bot, unit, nPointTime, nProjectSpeed ) < J.GetModifierTime( unit, "modifier_teleporting" )
 	end
 
 	return true
