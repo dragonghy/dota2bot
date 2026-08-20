@@ -1153,10 +1153,7 @@ end
 -- @returns The ally if found, null otherwise.
 function ____exports.FindAllyWithName(name)
     for ____, ally in ipairs(GetUnitList(UnitType.AlliedHeroes)) do
-        if ____exports.IsValidHero(ally) and ({string.find(
-            ally:GetUnitName(),
-            name
-        )}) then
+        if ____exports.IsValidHero(ally) and __TS__StringIncludes(ally:GetUnitName(), name) then
             return ally
         end
     end
@@ -1344,11 +1341,7 @@ function ____exports.RecentlyTookDamage(bot, delta)
     return bot:WasRecentlyDamagedByAnyHero(delta) or bot:WasRecentlyDamagedByTower(delta) or bot:WasRecentlyDamagedByCreep(delta)
 end
 function ____exports.IsUnitWithName(unit, name)
-    local result = {string.find(
-        unit:GetUnitName(),
-        name
-    )}
-    return result ~= nil
+    return __TS__StringIncludes(unit:GetUnitName(), name)
 end
 function ____exports.IsBear(unit)
     return ____exports.IsUnitWithName(unit, "lone_druid_bear")

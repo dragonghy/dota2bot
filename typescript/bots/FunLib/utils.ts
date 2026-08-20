@@ -584,7 +584,7 @@ export function HasItem(bot: Unit, itemName: string): boolean {
  */
 export function FindAllyWithName(name: string): Unit | null {
     for (const ally of GetUnitList(UnitType.AlliedHeroes)) {
-        if (IsValidHero(ally) && string.find(ally.GetUnitName(), name)) {
+        if (IsValidHero(ally) && ally.GetUnitName().includes(name)) {
             return ally;
         }
     }
@@ -816,8 +816,12 @@ export function RecentlyTookDamage(bot: Unit, delta: number): boolean {
 }
 
 export function IsUnitWithName(unit: Unit, name: string): boolean {
-    const result = string.find(unit.GetUnitName(), name);
-    return result !== null;
+    // NOTE: plain substring, NOT `string.find`. Assigning or comparing the
+    // multi-return of `string.find` makes tstl wrap it in a table constructor,
+    // and a table is never nil -- the predicate then answers true for every
+    // unit (GH #51). `.includes` compiles to __TS__StringIncludes, which does
+    // the nil check on a single value inside the helper.
+    return unit.GetUnitName().includes(name);
 }
 
 export function IsBear(unit: Unit) {

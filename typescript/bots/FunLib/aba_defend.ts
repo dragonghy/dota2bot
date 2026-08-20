@@ -247,13 +247,13 @@ function WeightedEnemiesAroundLocation(vLoc: Vector, nRadius: number): number {
             const name = unit.GetUnitName();
             if (jmz.IsValidHero(unit) && !jmz.IsSuspiciousIllusion(unit)) {
                 count += jmz.IsCore(unit) ? 1 : 0.5;
-            } else if (string.find(name, "upgraded_mega") !== null) {
+            } else if (name.includes("upgraded_mega")) {
                 count += 0.6;
-            } else if (string.find(name, "upgraded") !== null) {
+            } else if (name.includes("upgraded")) {
                 count += 0.4;
-            } else if (string.find(name, "siege") !== null && string.find(name, "upgraded") === null) {
+            } else if (name.includes("siege") && !name.includes("upgraded")) {
                 count += 0.5;
-            } else if (string.find(name, "warlock_golem") !== null || string.find(name, "lone_druid_bear") !== null) {
+            } else if (name.includes("warlock_golem") || name.includes("lone_druid_bear")) {
                 count += 1;
             } else if (
                 unit.IsCreep() ||
@@ -499,15 +499,15 @@ export function ShouldDefend(bot: Unit, hBuilding: Unit | null, nRadius: number)
     for (const unit of unitState.enemyCreeps) {
         if (jmz.IsValid(unit) && GetUnitToUnitDistance(hBuilding, unit) <= nRadius) {
             const name = unit.GetUnitName();
-            if (string.find(name, "siege") !== null && string.find(name, "upgraded") === null) {
+            if (name.includes("siege") && !name.includes("upgraded")) {
                 creepWeights += 0.5;
-            } else if (string.find(name, "upgraded_mega") !== null) {
+            } else if (name.includes("upgraded_mega")) {
                 creepWeights += 0.6;
-            } else if (string.find(name, "upgraded") !== null) {
+            } else if (name.includes("upgraded")) {
                 creepWeights += 0.4;
-            } else if (string.find(name, "warlock_golem") !== null || string.find(name, "shadow_shaman_ward") !== null) {
+            } else if (name.includes("warlock_golem") || name.includes("shadow_shaman_ward")) {
                 creepWeights += 1.0;
-            } else if (string.find(name, "lone_druid_bear") !== null) {
+            } else if (name.includes("lone_druid_bear")) {
                 enemyHeroNearby = enemyHeroNearby + 1;
             } else if (
                 unit.IsCreep() ||

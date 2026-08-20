@@ -369,13 +369,13 @@ function WeightedEnemiesAroundLocation(vLoc, nRadius)
             local name = unit:GetUnitName()
             if jmz.IsValidHero(unit) and not jmz.IsSuspiciousIllusion(unit) then
                 count = count + (jmz.IsCore(unit) and 1 or 0.5)
-            elseif ({string.find(name, "upgraded_mega")}) ~= nil then
+            elseif __TS__StringIncludes(name, "upgraded_mega") then
                 count = count + 0.6
-            elseif ({string.find(name, "upgraded")}) ~= nil then
+            elseif __TS__StringIncludes(name, "upgraded") then
                 count = count + 0.4
-            elseif ({string.find(name, "siege")}) ~= nil and ({string.find(name, "upgraded")}) == nil then
+            elseif __TS__StringIncludes(name, "siege") and not __TS__StringIncludes(name, "upgraded") then
                 count = count + 0.5
-            elseif ({string.find(name, "warlock_golem")}) ~= nil or ({string.find(name, "lone_druid_bear")}) ~= nil then
+            elseif __TS__StringIncludes(name, "warlock_golem") or __TS__StringIncludes(name, "lone_druid_bear") then
                 count = count + 1
             elseif unit:IsCreep() or unit:IsAncientCreep() or unit:IsDominated() or unit:HasModifier("modifier_chen_holy_persuasion") or unit:HasModifier("modifier_dominated") then
                 count = count + 0.2
@@ -789,15 +789,15 @@ function ____exports.ShouldDefend(bot, hBuilding, nRadius)
     for ____, unit in ipairs(unitState.enemyCreeps) do
         if jmz.IsValid(unit) and GetUnitToUnitDistance(hBuilding, unit) <= nRadius then
             local name = unit:GetUnitName()
-            if ({string.find(name, "siege")}) ~= nil and ({string.find(name, "upgraded")}) == nil then
+            if __TS__StringIncludes(name, "siege") and not __TS__StringIncludes(name, "upgraded") then
                 creepWeights = creepWeights + 0.5
-            elseif ({string.find(name, "upgraded_mega")}) ~= nil then
+            elseif __TS__StringIncludes(name, "upgraded_mega") then
                 creepWeights = creepWeights + 0.6
-            elseif ({string.find(name, "upgraded")}) ~= nil then
+            elseif __TS__StringIncludes(name, "upgraded") then
                 creepWeights = creepWeights + 0.4
-            elseif ({string.find(name, "warlock_golem")}) ~= nil or ({string.find(name, "shadow_shaman_ward")}) ~= nil then
+            elseif __TS__StringIncludes(name, "warlock_golem") or __TS__StringIncludes(name, "shadow_shaman_ward") then
                 creepWeights = creepWeights + 1
-            elseif ({string.find(name, "lone_druid_bear")}) ~= nil then
+            elseif __TS__StringIncludes(name, "lone_druid_bear") then
                 enemyHeroNearby = enemyHeroNearby + 1
             elseif unit:IsCreep() or unit:IsAncientCreep() or unit:IsDominated() or unit:HasModifier("modifier_chen_holy_persuasion") or unit:HasModifier("modifier_dominated") then
                 creepWeights = creepWeights + 0.2
