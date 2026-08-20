@@ -936,22 +936,82 @@ end
 -- still caught, <1011 so the Centaur false positive is released.
 X.nRGuardCloseBuffer = 400
 
+-- [hero.md backlog #13] The gate above asks only about THEM: who, right now,
+-- holds a ready hard CC and stands close enough to deliver it. It never asks
+-- anything about CM herself -- not her health, not whether she is already being
+-- shot at, not whether she is standing in a stun at this very instant. GH #66
+-- section 2 frame A is what that costs: at 20260820_103216_slot1 t=473.5 she was
+-- at 292/1110 (26%), carrying a modifier_stunned with 0.2s left from a hit 1.1s
+-- earlier, with 919 points of hero damage landed on her in the preceding 6s and
+-- two enemies inside 300 units. Every input the gate reads was about them, all
+-- of it passed, and she opened a ten-second self-rooting channel: stunned again
+-- at 474.4, dead at 474.5 (the fixture's own ground truth, died_after = 1.0).
+--
+-- The clause is deliberately a CONJUNCTION of two facts about her, because
+-- either alone is ordinary. Low health alone is CM's normal state as a support
+-- and vetoing on it would silence the ultimate for most of the game; being shot
+-- at alone is what a teamfight looks like, and a teamfight is exactly when
+-- Freezing Field is worth channelling. It is the pair -- below the health floor
+-- AND currently under hero fire -- that says the channel will not survive long
+-- enough to pay: the ability deals its damage in pulses over up to 10s, so a CM
+-- who dies in the first second converts a full ultimate into roughly one pulse.
+-- Standard play is the same: Freezing Field is opened from a protected position
+-- (or behind a Glimmer/BKB), never as a low-health hero's escape from a fight
+-- she is already losing -- at 38% under fire the correct spell is Frostbite or
+-- a walk, both of which this file already bids for.
+--
+-- The floor is 0.38 because that is the number ConsiderR ALREADY uses one branch
+-- below (`J.IsRetreating( bot ) and nHP > 0.38`): the file has long agreed that
+-- below 38% CM is too fragile to commit to the channel, and simply never applied
+-- that judgement outside the retreat branch. Reusing the constant makes the two
+-- consistent instead of introducing a second opinion. The two pinned frames
+-- bracket it far from either edge -- 26.3% must be caught, 51.5% must be
+-- released -- so any floor in (0.264, 0.514] reproduces both verdicts.
+--
+-- The 2.0s fire window matches the one this file already uses in ConsiderQ.
+--
+-- Deliberately NOT written (one lever at a time): an exemption for the
+-- desperation teamfight (low health, many allies alive around her, ultimate wins
+-- the fight anyway). It would need its own frame evidence, and its absence is
+-- the conservative direction -- a false veto costs one ultimate, a false release
+-- cost her the game's life in frame A.
+--
+-- Gated turbo + 'cmrself', and gated SEPARATELY from 'cmrguard' above: arming
+-- either id alone changes behaviour on its own, so neither one's batch reading
+-- is a measurement of the other (the `axeblink` trap, where a candidate's only
+-- consumer was unreachable unless a second id was armed too). Arming 'cmrguard'
+-- alone remains byte-for-byte what it was before this clause existed.
+X.nRSelfHpFloor = 0.38
+X.nRSelfFireWindow = 2.0
+
 function X.cm_IsRSafeToOpen( hBot )
-	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'cmrguard' ) then return true end
-	local tEnemies = J.GetNearbyHeroes( hBot, 1600, true, BOT_MODE_NONE )
-	for _, e in pairs( tEnemies or {} )
-	do
-		if J.IsValid( e )
-		then
-			local hCc = J.GetReadyHardCc( e )
-			if hCc ~= nil
-			and GetUnitToUnitDistance( hBot, e )
-				<= ( hCc:GetCastRange() or 0 ) + X.nRGuardCloseBuffer
+	if not J.IsModeTurbo() then return true end
+
+	if J.IsSoakCandidate( 'cmrguard' )
+	then
+		local tEnemies = J.GetNearbyHeroes( hBot, 1600, true, BOT_MODE_NONE )
+		for _, e in pairs( tEnemies or {} )
+		do
+			if J.IsValid( e )
 			then
-				return false
+				local hCc = J.GetReadyHardCc( e )
+				if hCc ~= nil
+				and GetUnitToUnitDistance( hBot, e )
+					<= ( hCc:GetCastRange() or 0 ) + X.nRGuardCloseBuffer
+				then
+					return false
+				end
 			end
 		end
 	end
+
+	if J.IsSoakCandidate( 'cmrself' )
+	and J.GetHP( hBot ) < X.nRSelfHpFloor
+	and hBot:WasRecentlyDamagedByAnyHero( X.nRSelfFireWindow )
+	then
+		return false
+	end
+
 	return true
 end
 
