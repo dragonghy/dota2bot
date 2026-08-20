@@ -1564,5 +1564,30 @@
       "Upstream exemptions count: a branch that early-returns before the transform is not in the active set no matter what it bids (here bLaneKillCommit removed l1trade/l5combo entirely)."
     ],
     "applies_to": "every arithmetic-transform id, present and future; capmono is the worked example. Flagged for the retreat/roam desire-shaping family generally."
+  },
+  "U0_PURPOSE_VOIDED_20260820": {
+    "date": "2026-08-20T21:15Z director (same-round addendum)",
+    "ruling": "The U.0 wave's declared purpose (buy condition (a) for blinkflee + liondrainstop) is VOIDED on replay-check's 20:49Z pre-flight. The 18-id string itself is unchanged and still correct; what was wrong was the purpose. Combined with capmono_NOT_PROMOTED_20260820 (capmono may not be a paid wave's purpose either), the routine wave's 'has a purpose' precondition does NOT hold => do not launch at the 22:09:02Z threshold.",
+    "blinkflee": "seeds 888/895 contain NO blink carrier at all (Axe absent this batch); 896=OD, 906=ES. Blink exists only in the last ~40-90s in Turbo (first-hold 554-640s vs ~670s game length). 5 real blinks / 32 games, only 2 are retreat-leg = 0.0625/game; ~16 replayable games per wave, halved again (carrier always dire, mirrored) => armed-side expectation ~0.5 events/wave. A '0 events' reading would be neither SILENT nor WORKING. (a) is hereby RECLASSIFIED as cross-wave cumulative.",
+    "liondrainstop": "Primary criterion (in-domain channel releases armed>base) already reads armed 4 : base 2 on a corpus where BOTH arms have the gate OFF => the direction itself is a null-channel reading. Worse: 5 of 6 in-domain channels span <=1.1s, so at 1Hz sampling gate-open and gate-closed produce identical observations; only 1/54 channels is resolvable. Detector MUST filter channel span >=2.0s before comparing arms and MUST report the 4:2 null alongside. The H registration in U.2.2 tightens to: readings of order 4:2 / 3:1 never establish (a).",
+    "zero_cost_work_ordered": [
+      "capmono within-arm HP-gradient re-read (V.2)",
+      "blinkflee fixture pair: MUST-HOLD spot_20260820_160911_1_11a8de33/20260820_162859_slot1 t=615.2 earthshaker; MUST-PASS .../20260820_163429_slot1 t=621.3 earthshaker (0 enemies within 1200)",
+      "liondrainstop detector: >=2.0s channel-span filter + null channel reported alongside"
+    ],
+    "resume_paths": "alpha (preferred): do not launch; land the three zero-cost items first, then launch with a readable criterion. beta: launch only with DIFFERENT seeds chosen by replay-check's acceptance metric (roster contains >=2 blink carriers, or a carrier first holds blink before 500s) -- which requires V.6 first."
+  },
+  "SEED_ROSTER_INDEX_20260820": {
+    "date": "2026-08-20T21:15Z director, test_set.md V.6",
+    "owner": "batch-desk",
+    "cost": "zero -- built from analysis.json already in S3 from past waves",
+    "problem": "Hero-specific ids (blinkflee -> blink carriers, liondrainstop -> Lion, cmrguard -> CM) can only produce (a) evidence in seeds whose draft contains the carrier hero, and SEED SELECTION HAS BEEN BLIND for the whole project -- the only known fact is '896 has lion', discovered incidentally at 06:13Z.",
+    "deliverable": "A seed -> {10 heroes, side} index, checked in, supporting reverse lookup by hero, so any hero-specific id can pick seeds BEFORE launching instead of discovering carrier absence afterwards."
+  },
+  "PREFLIGHT_MANDATORY_20260820": {
+    "date": "2026-08-20T21:15Z director, test_set.md V.7",
+    "rule": "Before an id is armed for the FIRST time, replay-check must produce three numbers from the EXISTING corpus (all zero cost): (1) event rate (matchable frames per game) plus the expected event count for one wave, including the mirror halving; (2) the NULL-CHANNEL reading -- what the same primary criterion reads on a corpus where the gate is OFF on both arms; (3) RESOLVABILITY -- whether at 1Hz sampling gate-open and gate-closed actually produce different observations. Until those three exist, no wave may declare that id's condition (a) as its purpose.",
+    "why": "Second time a testability accident was caught BEFORE launch (precedent: cmrguard counterfactual pre-flight 11:00Z); it has been caught AFTER the fact three times (l1xpsoak #28, cmrguard #34, tpdying #68), each costing a wave (~$1.56) plus at least one round of interpretation.",
+    "pairs_with": "DETECTOR_DOMAIN_WIDER_THAN_ACTIVE_SET_20260820 (V.4): V.4 says intersect the detector domain with the rule's analytic active set; V.7 says after intersecting, measure event rate / null channel / resolvability before deciding the wave is worth paying for."
   }
 }
