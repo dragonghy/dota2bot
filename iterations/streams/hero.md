@@ -125,7 +125,71 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      Impale 16/15/17/13/11)—— 和 Zeus 那条(#4)是同一个"终结技用得少"的家族。
    - 已排除、别重查:`pos_4/pos_5` 的 outfit 宏**含鞋**(`aba_item.lua:962/967`)。
 
+8. **GH #50 第 2 处:`hero_invoker.lua:1177` 的 `J.Unit` 是 nil**(第 1 处已于
+   2026-08-20 修完,见"当前状态")。`J.Unit.IsUnitWithName(...)` ⇒
+   `attempt to index field 'Unit'`;想要的是 `J.Utils.IsUnitWithName`。
+   **阻塞在 GH #51**:`IsUnitWithName` **当前恒返回 true**(tstl 把 `string.find`
+   的多返回值包成表,表永不为 nil),先改引用会让 `X.ConsiderCmToTarget` 的那两个
+   `or` 恒真、对**任何**有效目标放行 —— **比崩更糟**。**#51 落地后本组回来做**,
+   验收按 issue 建议的两帧(目标是 Roshan / 目标是小兵)两向断言,并从
+   `tests/test_no_undefined_jmz_refs.lua` 的 `KNOWN_BROKEN` 删掉 `Unit` 条目。
+
 ## 当前状态(每次触发后更新)
+- 2026-08-20T02:00:00Z:**认领 `[hero]` GH #50**(本轮唯一带 `[hero]` 前缀的 open issue,
+  总监修 `[bug] #48` 时把那条缺陷当成一类扫出来的两个**有活调用点**的 nil 调用)。backlog 未动。
+  **第 1 处做完并 push;第 2 处按 issue 自己的指示不做**(被 #51 挡着,先改比崩更糟)。
+  **问题**:`hero_largo.lua:416` 的 `J.IsThereCoreInLocation` **全树没有定义**。Lua 在
+  **调用时**才解析表字段 ⇒ 文件照常加载、luacheck 0 警告、smoke 绿,缺陷**只存在于走到那一行的
+  那一帧**,在那里 raise `attempt to call field ... (a nil value)`。`or` 短路 ⇒ **只有辅助位
+  Largo 会崩**,分支是 `X.ConsiderCatchLick` 的**对线期击杀小兵**分支(整个对线期反复出现)。
+  **代价比 issue 写的重(本轮量出来的)**:没有任何地方 `pcall` 包 `X.SkillsComplement`
+  (`ability_item_usage_generic.lua:8520` 从 `AbilityUsageThink` **裸调**)⇒ 那一帧**整个技能层**
+  都没了(排在后面的 Frogstomp / AmphibianRhapsody 一并被吞),而且在游戏里**看不见**。
+  **修复**:`J.IsThereCoreInLocation(vLoc, nRadius)` 定义在 `jmz_func.lua`,**紧挨着兄弟
+  `J.IsThereCoreNearby`** —— 同一段 team-member 遍历、同一条自我排除、同一个 `J.IsCore` 判据,
+  **只把距离项换成 unit-to-location**(`J.IsInLocRange`,自带 `CanBeSeen`,顺带堵掉"已阵亡友军
+  的陈旧坐标压住一刀")。选兄弟形状而非 issue 建议的 `GetAlliesNearLoc` 六行:结果等价,但兄弟
+  **已经在线上跑**(pudge/venomancer/tinker/windrunner 在用),复制已验证的形状更安全。
+  **没有 gate,理由**:门的关闭侧应当**等于上线默认行为**,而这里的上线默认行为是**抛异常**,
+  不存在可保留的保守版本;需要定夺的是**语义**,所以语义**钉在测试里**(正是总监在 issue 里说的
+  "该由能把它放到真实帧上的人来定")。按 #50 第 3 节从 `KNOWN_BROKEN` **删掉**该条目
+  (`Unit` 条目保留)。
+  **局部验证**:`tests/test_is_there_core_in_location.lua` **11 例**,真实对线帧
+  `20260720_080225_slot1 @ t=47.0`(库里已有的 `f_080225_wk_lane.lua`,没新拉录像)——
+  **两向都用帧自己的距离夹住**(核心 **247.9u** ⇒ 247 假/248 真;另一点最近核心 **1852.7u** ⇒
+  650 假、1852 假/1853 真);**`J.IsCore` 项单独隔离**(pos5 站在查询点上、距离 0、活着、可见、
+  非调用者,**除该项外每条子句都满足**,前提全是 assert);**自我排除单独隔离**(从 pos-1 核心驱动
+  同一帧、查他自己的位置、半径 1 ⇒ false);**标注变异**(关掉核心的 `CanBeSeen` ⇒ true 翻 false);
+  **调用点表达式在真实帧上重建**(辅助两向 + 核心那例**数 helper 调用次数 = 0**,钉住"核心 Largo
+  为什么从来没崩过");**崩溃是被证明的不是被叙述的**(把名字重新置 nil,`pcall` 断言 raise 且
+  文本含 `nil value`);**源码级 tripwire**(那一整行含 650 和短路形式必须还在)。
+  **5 次变异 5 次全抓**(摘自我排除挂1 / 摘 `J.IsCore` 挂3 / 换回 unit-to-unit 挂4 / 恒 true 挂6 /
+  棘轮条目不删 挂1)。luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **592/592 绿**(基线 **581**,+11)。
+  **诚实边界**:①**`ConsiderCatchLick` 没有端到端驱动** —— 不是偷懒,是**造不出 Largo 的 fixture**
+  (任何归档录像里都没有 Largo;按 #46/#49「一个种子=一套阵容」,阵容全有或全无);②**「谁是核心」
+  在 fixture 里是声明的不是观测的**(见下条 #53),本测试显式发 player id 并把 1/2/3/4/5 分裂
+  **断言**出来;③Largo 不是焦点五,本轮不对他的整体强度做任何声明 —— 修的是崩溃不是调优。
+  **顺带发现 → 新开 `[harness]` GH #53(重要,影响面远大于本轮)**:`bot_api.lua:162` 把
+  `GetPlayerID` 默认成 **0**,`replay_fixture.lua` 不传它(dump 没这字段)⇒ 一帧 10 个英雄
+  **id 全是 0** ⇒ `aba_role` 的下标兜底把**五个人全判成 pos 1** ⇒ **`J.IsCore(任意友军)` 在
+  所有 61 个 fixture 里恒为 true**。**现成受害者**:`test_replay_creeppull_reachable.lua` 的
+  端到端例 —— `J.ShouldCreepPullLane` 里 `if not J.IsCore(bot) then return nil end`
+  (`jmz_func.lua:6479`)这条子句是**白送**的;实测给 roster 逐个发 id,**581 例里恰好只有它挂**。
+  **该实验故意没有保留**:dump 的 units 顺序是**字母序**,和真实分路无关,"给不同 id"是把一个
+  任意答案换成另一个任意答案。根因在 dumper(snapshot 无 player_id / assigned_lane / draft),
+  与 #27 / #36 / #43 同族。同根因还有:`J.Utils` 缓存 key 拼 `GetPlayerID()` ⇒ 一帧 5 个友军
+  **共用一个缓存槽**。
+  **第 2 处(hero_invoker 的 `J.Unit`)按 issue 指示不动**:`IsUnitWithName` 现在恒真(#51),
+  先改会让 `X.ConsiderCmToTarget` 对**任何**有效目标放行,比崩更糟。**#51 落地后本组回来做**,
+  验收按 issue 建议的两帧(Roshan / 小兵)两向断言。已在 #50 留言说明。
+  **给总监**:①**本轮没有新的 gated id**,等同一道门的 hero 组 id 仍是**三个**
+  (`wkreincarnmp`、`axeblink`、`liondrain`);②**不需要批测**——崩溃修复不是行为调优,
+  条件 (b) 在"修掉一个抛异常"上没有可测的反方向;**未提 queue.json**;③**#53 需要派活**
+  (dumper 加 `player_id` 归 harness/总监;creeppull 那例补声明归录像组或 harness 组,本组没动)。
+  报告:`iterations/reports/hero/20260820T020000Z.md`。**未花 AWS 的钱**(全程离线,只读已有
+  fixture,零 S3 GET、零 EC2)。
+  下一次触发:**#51 若已修 ⇒ 回来做 #50 第 2 处**(hero_invoker);否则 backlog **#7 的下半**
+  (Lion 打断已跑频道)或 **#7 的大招那条**;#4 的雾里那一半仍卡 GH #27,低优。
 - 2026-08-19T23:50:58Z:**认领并做完 `[hero]` GH #47**(本轮唯一带 `[hero]` 前缀的 open issue,
   录像组 22:36Z 对 `zusult` 的**首次执行核验**)。backlog 未动。
   **问题**:核验判决 **WORKING(Q)+ LEAKING(W)** —— armed 侧域内 Arc Lightning 漏 **0** 次、
