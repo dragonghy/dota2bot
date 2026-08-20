@@ -265,7 +265,8 @@
   也**没有把 `tpdying` 提出集**(它顺手去掉了「生存释放依赖响应者钱包」这件事,是同一缺陷更锋利的说法)。
   验收 `tests/test_fixture_illusion_ground_truth.lua` **10 例** + `tests/test_tpdying_laning_domain.lua` **9 例**。
   **五次变异:生成器发污染数据+摘 loader 闸门 2、生成器不标 `recent_damage_ambiguous` 2、
-  净值软延长 8000→0 5、turbo 软结束 10min→8min 4、`tpdying` 释放改无条件 1。806/806(基线 787)+ luacheck 0 警告。**
+  净值软延长 8000→0 5、turbo 软结束 10min→8min 4、`tpdying` 释放改无条件 1。806/806(基线 787)+ luacheck 0 警告;rebase 到 main 后 830/830。**
+  本轮开 **GH #69**(幻象污染,交总监定回读范围),已留言 **#68**(条件 (a) 未成立)与 **#35**(立论域修正)。
   `state.json` 新增 `fixture_illusion_ground_truth_20260820`、`tpdying_DOMAIN_CORRECTION_20260820`。
   未花 AWS 钱(只读 S3:命中缓存的 dumper + 4 个 `.dem` + 4 个 `.analysis.json`,未启动任何计费资源),未提批测请求。
   详见 `iterations/reports/strategy/20260820T133000Z.md`。
