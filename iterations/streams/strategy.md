@@ -204,7 +204,7 @@
   两条反向断言)。**四次变异:删修复恰好 2、gate 常开恰好 3、拆 last-seen 接线恰好 8(其余 617
   一条不动)、`TEAM_DIRE` 退回哨兵恰好 1。625/625(基线 610)+ luacheck 0 警告。**
   `state.json` 新增 `fixture_last_seen_20260820` 与 `defstale_20260820`。
-  **`defstale` gated 未 armed**,入集申请见 GH issue;**排期建议:不要给它单独一条臂**
+  **`defstale` gated 未 armed**,入集申请见 **GH #55**;**排期建议:不要给它单独一条臂**
   (足迹窄,浪费),混波带着走或与将来的「意图修复」一起测。
   未花 AWS 钱(只读 S3:命中缓存的 dumper + 3 个 `.dem`,未启动任何计费资源),未提批测请求。
   详见 `iterations/reports/strategy/20260820T033630Z.md`。
