@@ -30,6 +30,19 @@
 --   4 obsidian_destroyer  (dire slots 0-4 = medusa/queen_of_pain/viper/lich/
 --   witch_doctor, player ids 5-9). Verified 10/10 against the .dem's raw
 --   m_iPlayerID when the dumper field was added.
+--
+-- READ THAT AS SLOTS, NOT ROLES (GH #57, stated here 2026-08-20T23:30Z). The
+-- anchor's EXPECT table below is `pos = team_slot + 1`, i.e. exactly what the
+-- loader's own fallback answers when a fixture carries no `roles`. It cannot be
+-- anything else: this game's `script_version` is the bare tree sha `829202a`,
+-- with no `:s<seed>:`, so seed_draft.positions_for_game REFUSES it and the
+-- drafted role is unrecoverable for this frame. What the anchor still proves is
+-- the roster/player_id chain -- five allies, five DISTINCT positions, dead ones
+-- included -- which is the pre-#53 collapse it was written to catch. What it
+-- does NOT prove is that any of those five numbers is the hero's drafted role.
+-- The separate contract for that is SLOT_DERIVED_ROLES below, and the worked
+-- example of the two coming apart is tests/test_defstale_defend_bail.lua
+-- (seed 868: a jakiro the slot called a pos 3 core is a drafted pos 5 support).
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -211,6 +224,84 @@ tests['fixtures without role data are a shrinking, declared list'] = function()
         .. 'the name here and say so in the test that uses it')
     assert(#healed == 0, 'these fixtures now carry player_id -- drop them from '
         .. 'LEGACY_NO_ROLE_DATA: ' .. table.concat(healed, ', '))
+end
+
+tests['the anchor pins the SLOT table, not the drafted role'] = function()
+    -- Says out loud what the case above is and is not. `pos = player_id + 1`
+    -- for every ally IS the loader's no-roles fallback, so the two role cases
+    -- above are pinning the harness's own answer -- deliberately, because this
+    -- game is unattributable (bare-sha script_version, no soak seed) and there
+    -- is no drafted role to compare against. Naming it stops the next reader
+    -- from citing the anchor as evidence that fixtures answer roles correctly.
+    local J, _, _, fx = rf.load(FIXTURE)
+    assert(fx.roles == nil, 'the anchor carries no drafted roles, and cannot: its '
+        .. 'game has no soak seed. If it ever gains a `roles` table, this whole '
+        .. 'file (and the EXPECT above) must be re-derived from the draft')
+    for i, pid in ipairs(GetTeamPlayers(GetTeam())) do
+        assert(J.GetPosition(GetTeamMember(i)) == pid + 1,
+            'the anchor answers the SLOT for every ally; slot ' .. pid .. ' gave '
+            .. tostring(J.GetPosition(GetTeamMember(i)))
+            .. ' -- if that stopped being true the fallback changed')
+    end
+end
+
+tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = function()
+    -- The second tier of the same debt, and until now it had no ratchet at all.
+    -- A fixture can carry `player_id` (so the roster is real, and the case above
+    -- passes) and STILL answer every jmz.GetPosition from the draft slot,
+    -- because the drafted role is a property of the soak seed and travels glued
+    -- to the hero -- hero_selection.X.ShufflePickOrder swaps sSelectList and
+    -- Role.RoleAssignment together, so the pair moves and the SLOT is free.
+    -- make_fixture.py --roles writes the real one; without it, GH #57 measured
+    -- the slot fallback at 47.3%.
+    --
+    -- Membership here is a claim that nobody has re-read that fixture's
+    -- conclusions under the real roles yet. Removing a name means someone did.
+    local SLOT_DERIVED_ROLES = {
+        -- unattributable: no soak seed in its script_version, so --roles
+        -- refuses. This one can never leave the list; see the header.
+        ['f_221200_od_roles.lua'] = true,
+        -- attributable, simply not re-read yet -- each needs its own round
+        -- (regenerate, re-run, re-read the conclusion), never a batch refresh:
+        -- healing a frame may FLIP what it pins, which is the point.
+        ['f_260819_182855_lion_drain_jungle.lua'] = true,
+        ['f_260819_182855_lion_drain_midchannel.lua'] = true,
+        ['f_260819_222559_od_eclipse_pair.lua'] = true,
+        ['f_260819_222559_od_eclipse_solo.lua'] = true,
+        ['f_260820_043124_axe_blink_kill.lua'] = true,
+        ['f_260820_102645_cm_es_reach.lua'] = true,
+        ['f_260820_103216_cm_es_aftershock.lua'] = true,
+    }
+
+    local p = io.popen('ls tests/fixtures')
+    local offenders, healed = {}, {}
+    for file in p:lines() do
+        if file:match('^f_.*%.lua$') then
+            local fx = dofile('tests/fixtures/' .. file)
+            local has_pid = false
+            for _, u in ipairs(fx.units or {}) do
+                if u.player_id ~= nil then has_pid = true end
+            end
+            -- Fixtures with no player_id are the OTHER list's problem; they read
+            -- pos 1 for everyone and are already declared above.
+            if has_pid then
+                if fx.roles == nil and not SLOT_DERIVED_ROLES[file] then
+                    offenders[#offenders + 1] = file
+                elseif fx.roles ~= nil and SLOT_DERIVED_ROLES[file] then
+                    healed[#healed + 1] = file
+                end
+            end
+        end
+    end
+    p:close()
+    assert(#offenders == 0, 'fixture(s) carry player_id but no drafted roles, so '
+        .. 'every jmz.GetPosition in them is the draft slot (47.3% per GH #57): '
+        .. table.concat(offenders, ', ') .. ' -- regenerate with '
+        .. 'make_fixture.py --roles <analysis.json>, re-read what the fixture '
+        .. 'pins, or name it above with a reason')
+    assert(#healed == 0, 'these fixtures now carry drafted roles -- drop them from '
+        .. 'SLOT_DERIVED_ROLES and say in their test what the re-read found: '
+        .. table.concat(healed, ', '))
 end
 
 tests['a legacy fixture still reads the pre-#53 world, and is known-wrong'] = function()

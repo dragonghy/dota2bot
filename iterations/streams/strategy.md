@@ -92,7 +92,19 @@
    那条 0.94 会撞上)。**取不到帧的原因**:批测局在基地攻防发生之前就自终止,2026-08-20 04:3x 波次
    六局里**离任一遗迹最近的敌人是 4925 码**(`BASE_THREAT_RADIUS` 是 2600、panic 那条要 2200)。
    要做先向批测台/录像组要**打到基地**的局。
-0c. **仓库里现存每一个 fixture 的角色都还是槽位派生的**(2026-08-20T05:30Z 记下)。loader 现在
+0c. **【2026-08-20T23:30Z 起有棘轮了,并且已经治了第一对】** 第二层债务
+   (**有 `player_id`、无 `roles`** ⇒ 每次 `jmz.GetPosition` 都是槽位)此前**一条棘轮都没有**;
+   现在是 `tests/test_fixture_roles.lua` 的 `SLOT_DERIVED_ROLES`,**双向棘轮**,治好 2 个后**剩 8 个**
+   (其中 `f_221200_od_roles.lua` **永远治不好** —— 裸树 sha `829202a` 无 seed,`positions_for_game` 拒绝;
+   它同时是角色契约的**锚点**,其 `EXPECT` 就是 loader 的无 roles 回退,已单独钉成用例说明这一点)。
+   **已做完的第一对**:`defstale` 的 BAIL/CONTROL 两帧(seed 868)—— **pin 成立**,但世界变了
+   (CONTROL 的 subject **核心→辅助翻面**),且**离失效只差一级等级**(`aba_defend:922` 的按位置取阈值
+   等级门:pos1@5 = 0.00 vs pos3@5 = 0.30)。详见当前状态节。
+   **下一批(一次一个,不要批量刷)**:性价比最高的是 `f_260820_043124_axe_blink_kill`
+   (**与 blinkflee 两帧同一局**,角色已知:axe 槽位 2 → 抽签 pos 3),然后两个 `cm_es_*`、
+   两个 `lion_drain_*`、两个 `od_eclipse_*`。**每治一个都要重读它钉住的结论并写下来**
+   —— 治一帧可能翻掉它钉的东西,那正是这件事的意义。
+   ~~**仓库里现存每一个 fixture 的角色都还是槽位派生的**(2026-08-20T05:30Z 记下)~~。loader 现在
    支持抽签角色(`make_fixture.py --roles <analysis.json>`),但**只有本轮新生成的两个 fixture 带**;
    其余全部落到 `RoleAssignment[team][i]` = 抽签槽位,本轮六局实测与抽签真值吻合 **23/60 = 38%**
    (总监 GH #57 全语料口径 47.3%)。**凡是在 fixture 里 fork 在 `jmz.GetPosition` 上的断言,
@@ -257,6 +269,45 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T23:30Z:没有可认领的新 `[strategy]` issue(open 集与 21:30Z 逐条相同;总监 23:00Z/23:20Z
+  两轮的产出是 §W 与 [harness] #75,没给本组新指令),照章程接 backlog **第 0c 条**,按它自己写的
+  「一次一个、重生成、重读结论」挑 **`defstale` 那一对帧**(本组自己的 gate;消费方 `aba_defend`
+  是全仓库角色分叉最密的文件;两局 `script_version = mirror:…:s868:*` **可归属**)。
+  **产出**:两枚 fixture 用 `make_fixture.py --roles` **重生成**(soak seed 868),
+  `tests/test_defstale_defend_bail.lua` **+4 例**(RE-READ 节)、`tests/test_fixture_roles.lua` **+2 例**。
+  **bot Lua 一位没动。**
+  **世界确实变了**:BAIL(drow)槽位 3 → **抽签 pos 1**(仍是核心,只有数字动);
+  CONTROL(jakiro)槽位 3 → **抽签 pos 5**,**核心→辅助翻面**,且该帧**五个队友全部**换读数。
+  顺带补上**真实建筑血量**(drow 自家上路一塔 **0.561**,此前每个 fixture 每座建筑都满血;
+  `aba_defend` 的紧迫度乘数与「这一塔已丢」早退都是这个数的 remap)。
+  **重读结论:pin 成立** —— 三个变体(只加 roles / 只加建筑血 / 两者)下 9 条原有用例全绿,
+  三车道出价与动作**逐位相同**(BAIL 0.30×3,CONTROL 0.10×3)。
+  **并且把「不是废话」写成了断言**:被驱动的帧**真的在读角色**(BAIL **15 次**、CONTROL **18 次**),
+  且每次都被答以抽签值 —— 免得这条结论日后退化成「其实从来没问过」。
+  **本轮真正值钱的:margin 只有一级。** `GetDefendDesireHelper` 的**第一个**角色分叉
+  (`aba_defend.lua:922`)是**按位置取阈值的等级门**(pos 1/2 要 6 级、pos 3 要 5 级、pos 4/5 要 4 级)。
+  drow 这帧 6 级:作为槽位 pos 3 超阈值一整级,作为抽签 pos 1 超阈值**零级**。**同帧反事实(测量,已入用例)**:
+  pos1@6=**0.30**、pos3@6=**0.30**、pos3@5=**0.30**、**pos1@5=0.00(整条 defend 出价没了)**。
+  ⇒ **「角色没改变结论」是关于 6 级这一帧的事实,不是关于这个门的事实。**
+  **顺带补上第二层棘轮(此前完全没有)**:`test_fixture_roles.lua` 只棘轮了第一层(无 `player_id` ⇒
+  全队 pos 1);**有 `player_id`、无 `roles`**(⇒ 每次 `GetPosition` 都是槽位,GH #57 47.3%)此前
+  **一条棘轮都没有**。现为 `SLOT_DERIVED_ROLES`,治好 2 个后**剩 8 个**,双向棘轮。
+  **并把锚点的说法改对**:`f_221200_od_roles.lua` 是角色契约的锚点,而它**自己就是槽位派生且永远治不好**
+  —— `script_version` 是裸树 sha `829202a`(无 `:s<seed>:`),`positions_for_game` **拒绝**它;
+  它的 `EXPECT`(`pos = team_slot + 1`)**正好是 loader 的无 roles 回退**。锚点仍证明名册/player_id 链
+  (五人五个互不相同的位置、含已死者),**不证明**那五个数字是抽签角色。已单独钉成用例。
+  **机制备忘**(省得重推):`X.ShufflePickOrder` 把 `sSelectList[i]` 与 `Role.RoleAssignment[team][i]`
+  **一起换** ⇒(英雄, 角色)整体移动、**只有槽位在动**;loader 没有 shuffle 可重放,无 `roles` 时读的是
+  **未打乱的恒等表**。
+  **不推 gate、不改 bot Lua、不申请入集、不批量刷剩下 7 个**(治一帧可能翻掉它钉的结论,批量会淹掉翻面)。
+  **验收**:`luacheck bots game --formatter plain` **0 warnings**(bots/ 零改动);
+  `lua5.1 tests/run_tests.lua` **868 → 874**。**六次变异全部按预期 FAIL**:
+  M1 BAIL 退回槽位世界 → defstale 4 条 + 棘轮点名;M2 CONTROL 退回 → 2 条;M3 只摘建筑血 → 结构血量那条;
+  **M4 `aba_defend:922` 阈值 6→7 → BAIL 出价 0.30 → 0**(独立佐证一级 margin);
+  M5 删 `pos==1` 合取 → 角色读取次数 15→12;M6 阈值 6→1 → 5 级反事实塌掉。
+  `state.json` 新增 `defstale_ROLE_REREAD_20260820`;GH #55 已留言。
+  未花 AWS 钱(只读 S3:缓存命中的 dumper + 4 个 `.analysis.json` + 2 个 `.dem`,未启动任何计费资源,
+  未提批测请求)。详见 `iterations/reports/strategy/20260820T233000Z.md`。
 - 2026-08-20T21:30Z:**第三次有可认领的新 `[strategy]` issue**,认领 **GH #74 §1.5(3)**
   (录像组 20:49Z 上机前语料核验;总监 21:15Z 追加裁定 §10.1 已把它升格为指令:
   「**立刻做零支出的 fixture 对**,把 #71 的证据从『一局一个 Axe』扩到『两波两个英雄』,

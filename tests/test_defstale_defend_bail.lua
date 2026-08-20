@@ -35,6 +35,11 @@
 -- matters: TWO enemies within 900 against one ally, so the helper does NOT take
 -- the early return, reaches the bottom, and writes a live nInRangeEnemy. There
 -- the guard is honestly false and armed must be a byte-for-byte no-op.
+--
+-- 2026-08-20T23:30Z: both fixtures were REGENERATED with the drafted roles of
+-- their soak seed (868) and with real structure health. Everything else in them
+-- is byte-identical. The re-read is the RE-READ section near the bottom of this
+-- file; short version, the pin holds and the world it holds in moved.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -283,6 +288,185 @@ tests['CONTROL: where the helper does reach the bottom, armed is a no-op'] = fun
     assert(#shipped >= 1 and shipped[1].fn ~= 'Action_MoveToLocation',
         'and the control frame must not be a step-back at all; got '
         .. (shipped[1] and shipped[1].fn or 'nothing'))
+end
+
+-- ---------------------------------------------------------------------------
+-- RE-READ under the real drafted roles (GH #57 / strategy backlog 0c).
+--
+-- Both frames were pinned while their fixtures carried NO `roles` table, so
+-- aba_role.GetPosition fell through to RoleAssignment[team][slot] -- the draft
+-- SLOT, which GH #57 measured against the real draft at 47.3%. Both games are
+-- soak seed 868 (`script_version = mirror:...:s868:<side>`), so the drafted
+-- role IS recoverable, and both fixtures have been regenerated with --roles.
+--
+-- What changed in the world (measured, not assumed):
+--   BAIL  drow_ranger  slot 3 -> drafted pos 1   (core either way)
+--   FRESH jakiro       slot 3 -> drafted pos 5   (CORE -> SUPPORT, a real flip)
+-- and on the FRESH frame all five allies read a different position than before.
+--
+-- What did NOT change: every defend bid and every action on both frames. That
+-- is a re-read result, not an absence of one -- the driven frame READS the role
+-- 15 times (BAIL) / 18 times (FRESH), it just reads it in one place whose
+-- outcome is the same on both sides of the change. The cases below assert both
+-- halves, because "the pin survived" is worthless without "the world moved".
+-- ---------------------------------------------------------------------------
+
+--- Drive the same three lane bids as frame(), counting what the code asks the
+--- role chain and what it is told. `jmz.GetPosition` is resolved on the table
+--- at every call site, so hooking the table after world() catches them all.
+local function bids_and_role_reads(path)
+    local J, bot, _, _, Defend = world(path)
+    local reads, answers = 0, {}
+    local real = J.GetPosition
+    J.GetPosition = function(u)
+        local p = real(u)
+        if u == bot then
+            reads = reads + 1
+            answers[tostring(p)] = (answers[tostring(p)] or 0) + 1
+        end
+        return p
+    end
+    local bids = {}
+    for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do
+        bids[#bids + 1] = Defend.GetDefendDesire(bot, lane)
+    end
+    J.GetPosition = real
+    return bids, reads, answers, J, bot
+end
+
+tests['RE-READ: both frames carry the drafted role, and it is not the slot'] = function()
+    local J, bot, heroes, fx = world(BAIL)
+    assert(fx.roles ~= nil, 'the BAIL fixture must carry the drafted roles now -- '
+        .. 'without them every position below is the draft slot (GH #57, 47.3%)')
+    -- The subject sits at roster slot 3; the draft made it the pos 1.
+    local ids = GetTeamPlayers(GetTeam())
+    assert(#ids == 5 and GetTeamMember(3) == bot,
+        'the subject must be the third roster slot on this frame, which is what '
+        .. 'the slot-derived world used to answer 3 from')
+    assert(J.GetPosition(bot) == 1, 'drafted role of the drow is pos 1; got '
+        .. tostring(J.GetPosition(bot)) .. ' -- 3 means the fixture lost its roles')
+    assert(J.IsCore(bot), 'pos 1 is a core, as slot 3 also was: on THIS frame the '
+        .. 'core/support fork does not move, only the number does')
+
+    -- The control frame is where the fork itself moves.
+    local J2, bot2, _, fx2 = world(FRESH)
+    assert(fx2.roles ~= nil, 'the CONTROL fixture must carry the drafted roles too')
+    assert(GetTeamMember(3) == bot2, 'the control subject is also roster slot 3')
+    assert(J2.GetPosition(bot2) == 5, 'drafted role of the jakiro is pos 5; got '
+        .. tostring(J2.GetPosition(bot2)))
+    assert(J2.IsCore(bot2) == false,
+        'and that is a CORE -> SUPPORT flip: the slot-derived world called this '
+        .. 'jakiro a pos 3 core. Every `jmz.IsCore(bot)` fork in aba_defend read '
+        .. 'the wrong side of itself on this frame before the fixture was healed')
+    -- Not one lucky hero: the whole roster moved on the control frame.
+    local moved = 0
+    for i = 1, 5 do
+        if J2.GetPosition(GetTeamMember(i)) ~= i then moved = moved + 1 end
+    end
+    assert(moved == 5, 'all five allies must read a position other than their slot '
+        .. 'on the control frame; got ' .. moved
+        .. ' -- if this drops, the fixture is answering slots again')
+    assert(heroes ~= nil)
+end
+
+tests['RE-READ: the bids are unchanged, and the frame really does read the role'] = function()
+    -- Pre-heal values, recorded before the fixtures were regenerated: BAIL bids
+    -- 0.30 on all three lanes (the `enemies within 900 and not outnumbered`
+    -- early return), CONTROL bids 0.10. If a future change moves either number,
+    -- the whole file has to be re-derived rather than re-baselined.
+    local bidsB, readsB, answersB = bids_and_role_reads(BAIL)
+    for i, d in ipairs(bidsB) do
+        assert(math.abs(d - 0.3) < 1e-9, 'BAIL lane ' .. i .. ' bid ' .. tostring(d)
+            .. ', want 0.30 -- the same value the slot-derived world produced')
+    end
+    assert(readsB == 15, 'the BAIL frame asks for the subject position 15 times '
+        .. 'while bidding; got ' .. readsB .. ' -- zero would make "the pin '
+        .. 'survived the real roles" a statement about nothing')
+    assert(answersB['1'] == 15 and answersB['3'] == nil,
+        'and every one of those reads must be answered 1 (the draft), never 3 '
+        .. '(the slot)')
+
+    local bidsF, readsF, answersF = bids_and_role_reads(FRESH)
+    for i, d in ipairs(bidsF) do
+        assert(math.abs(d - 0.1) < 1e-9, 'CONTROL lane ' .. i .. ' bid ' .. tostring(d)
+            .. ', want 0.10')
+    end
+    assert(readsF == 18, 'the CONTROL frame asks 18 times; got ' .. readsF)
+    assert(answersF['5'] == 18 and answersF['3'] == nil,
+        'answered 5 (the draft) every time, never 3 (the slot)')
+end
+
+tests['RE-READ: the margin is one level -- at level 5 the two worlds diverge'] = function()
+    -- GetDefendDesireHelper's FIRST role fork (aba_defend.lua:922) is a level
+    -- gate whose threshold is keyed on position: pos 1/2 need level 6, pos 3
+    -- needs 5, pos 4/5 need 4. Both worlds return false here, but not with the
+    -- same room: as a slot-3 the drow cleared its threshold by a level, as the
+    -- drafted pos 1 it clears it by ZERO. One level lower and the two worlds
+    -- would give this frame two different defend bids (None vs 0.30).
+    local J, bot = world(BAIL)
+    assert(bot:GetLevel() == 6, 'the subject is level 6 on this frame; got '
+        .. bot:GetLevel())
+    assert(J.GetPosition(bot) == 1, 'as the drafted pos 1 its threshold is 6')
+    assert(not (bot:GetLevel() < 6),
+        'level 6 is not below the pos-1 threshold, so the gate stays shut -- by '
+        .. 'exactly one level. This is why the fixture had to be healed rather '
+        .. 'than argued about')
+
+    local src = io.open('bots/FunLib/aba_defend.lua'):read('*a')
+    local line = src:match('\n([^\n]*GetPosition%(bot%) == 1 and botLevel[^\n]*)\n')
+    assert(line, 'the position-keyed level gate must still be one line in '
+        .. 'GetDefendDesireHelper -- if it was refactored, re-measure the margin')
+    assert(line:find('botLevel < 6', 1, true) and line:find('botLevel < 5', 1, true),
+        'the thresholds this margin is measured against (6 for pos 1/2, 5 for '
+        .. 'pos 3) must still be the ones in the source; got: ' .. line)
+
+    -- COUNTERFACTUAL, run rather than argued: same frame, same everything, one
+    -- level lower. The two worlds then answer this frame differently -- the
+    -- drafted pos 1 produces NO defend bid at all, the slot-derived pos 3
+    -- produces the 0.30 this whole file is built on. So "the roles did not
+    -- change the conclusion" is a fact about level 6, not about the guard.
+    local function helper_at(role, level)
+        local J2, b = world(BAIL)
+        rawset(b, 'assignedRole', role)
+        b.__spec.GetLevel = level -- the mock's own storage for a snapshot field
+        assert(J2.GetPosition(b) == role, 'the counterfactual must actually take')
+        local Defend = require(GetScriptDirectory() .. '/FunLib/aba_defend')
+        return Defend.GetDefendDesireHelper(b, LANE_MID)
+    end
+    assert(math.abs(helper_at(1, 6) - 0.3) < 1e-9, 'drafted pos 1 at level 6: 0.30')
+    assert(math.abs(helper_at(3, 6) - 0.3) < 1e-9, 'slot pos 3 at level 6: 0.30 too '
+        .. '-- this is the frame as it really is, and the two agree')
+    assert(math.abs(helper_at(3, 5) - 0.3) < 1e-9,
+        'slot pos 3 at level 5 still clears its threshold of 5: 0.30')
+    assert(math.abs(helper_at(1, 5)) < 1e-9,
+        'but the DRAFTED pos 1 at level 5 is below its threshold of 6 and bids '
+        .. 'nothing -- if this ever returns 0.30 the level gate lost its teeth '
+        .. 'and the margin has to be re-measured')
+end
+
+tests['RE-READ: the fixtures also gained real structure health'] = function()
+    -- Same regeneration brought `hp` on every building (the loader has answered
+    -- it since 2026-08-20; these two frames predate that and stood at FULL
+    -- health). aba_defend's urgency multiplier and its "this tier is already
+    -- lost" early return are both remaps of that number, so it is not a neutral
+    -- default. Asserted here because this file's own prose already quoted it.
+    local _, _, _, fx = world(BAIL)
+    local tower
+    for _, b in ipairs(fx.buildings) do
+        if b.name == 'tower' and b.team == 3 and b.x == -5275 and b.y == 6036 then
+            tower = b
+        end
+    end
+    assert(tower, 'the subject\'s own top tier-1 tower must be in the fixture')
+    assert(tower.hp and math.abs(tower.hp - 0.561) < 1e-6,
+        'it stands at 56.1% on this frame (the number this file has claimed in '
+        .. 'prose since it was written); got ' .. tostring(tower.hp))
+    local full = 0
+    for _, b in ipairs(fx.buildings) do
+        if b.hp == nil then full = full + 1 end
+    end
+    assert(full == 0, full .. ' building(s) still carry no hp and therefore read '
+        .. 'as untouched -- regenerate the fixture')
 end
 
 -- ---------------------------------------------------------------------------
