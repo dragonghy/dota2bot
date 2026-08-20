@@ -910,3 +910,41 @@
     (2) `tpdead` 的 (b) 用 moved_AWAY 率行为检测器;(3) `cmrguard` 若按 #63+#66 收窄,**必须用
     施法前帧口径**复跑四条验收 + #66 recall;(4) `l1trade`/`l5combo` 自身 (a)(§G.5,连续**七**轮欠)。
   - 完整报告:`iterations/reports/replay-check/20260820T143600Z.md`
+- **2026-08-20T16:46Z(第二十一次触发)**:执行总监 §③ Tier-2 队列的**唯一可能翻动 armed-id
+  判读的项** —— #69(fixture illusion 断言)对 12:48Z `tpdying` (a)=WORKING 结论所依赖的
+  三个 fixture 帧的再审。**宽扫 16/16 mirror 有效局(10:11Z 波次;`behav-dump` 直接产 timeline,
+  不重跑 detect.py 因 12:48Z 已给过 768 findings 表);定向深查 3 帧(委托指定的 fixture 数);
+  bonus 442 defend-TP 落地全量幻象普查。**
+  - **三帧全部 `gt_ambiguous=False`**(与 `make_fixture.py:341-343` 完全同谓词):
+    `f_182552_warlock_ult_hoard` (t=626.0)/`f_260820_102645_cm_laning_release` (t=556.5)/
+    `f_260820_103644_necro_pinned_dying` (t=492.4)。主体与所有被记账伤害的敌人在观测窗内
+    均无非规范实体存活。**主体规范实体 HP 轨迹与名字口径同分**:CM 帧 0.493→0.419→0.336→0.246
+    (跌破 0.40 精确在 558.5s);Necrophos 帧 0.816→0.487→0.400→0.272(1080 点 REALIZED-LETHAL
+    真打在本体上,497.5 死);Warlock 帧 0.534→0.513→0.153→0.078(669 点 sniper 独家记账,
+    628.3 死)—— **12:48Z tpdying (a)=WORKING 判读 + 12:48Z SUSPECTED-SILENT 立案帧,
+    均不被 #69 撼动**。
+  - **Bonus 波内普查**(定向复核的稳健性上界):442/443 defend-TP 落地里只 4 个(0.9%)
+    踩幻象窗(tide `_102030` t=634.5、viper `_103748` t=418.4 主体侧;bristleback `_103644`
+    t=393.4 记账 necro、zuus `_103748` t=420.4 记账 viper),**0/442 同时满足「post-laning
+    ≥480s 且是本次三个 tpdying fixture 之一」**。这波幻象出现在 5/16=31% 的局里、单局中位
+    存活 ~25s,不常见但不罕见,**从这波做 fixture 必须 grep `ambiguous`**。
+  - **未开新 issue**(修复正确、evidence 干净);评论 #69 交付 Tier-2 tpdying 分片结论 +
+    向总监建议「§③ 后续项按主体/记账者是否有窗内幻象分诊」(与 §③ 「不批量刷 85 个」立场一致)。
+  - **本轮踩坑(登记)**:(1) 同名跨 run `.dem` 撞车 —— 短名截取 `${r:5:13}` 让四个 run 落在
+    同一目录,17/20 局被静默覆盖,复现「章程按 run 分目录规矩兑现失败」。**修:下载脚本自带
+    `wc -l` 断言与 S3 dem 数对拍**,肉眼看不出丢局。(2) `behav-dump` CLI 语义:没有
+    `-dem/-out` flag,只有采样间隔类;正确姿势 `behav-dump <dem>` → stdout。(3) ITEM.ability
+    字段是空,tpscroll 识别得看 `e['inflictor']=='item_tpscroll'`;先按 `ability` 算出 0
+    landings 才发现。
+  - 工具(scratchpad only,未入库):`illusion_audit.py`(97 行,复用 `make_fixture.py` 的
+    canon/pad/shadowed 谓词做最小可复用切片)+ `wave_illusion_scan.py`(全波普查)。
+    若下次还要跑,提升到 `tools/batch_test/behavioral/` 再入库。
+  - 已检查:10:11Z 波次 **第五个维度**(`tpdying` 的 #69 幻象再审)首检完毕,前四个维度
+    (`cmrguard`/`zusult`/`tpdying` 12:48Z/宽扫)保留。
+  - **下一轮优先**:(1) `capmono` 隔离两臂 arm A 16:09Z 上机,~17:00Z 落地,arm B 排 ~18:0xZ
+    —— **两臂齐后按 12:48Z「下一轮优先」第 1 条上 `capmono` 隔离读数**(总监 §R.0 行为检测器,
+    非 gpm);(2) §③ Tier-1(shipped-helper 证据,影响实际对局)+ Tier-2 剩下 4 条
+    (`tpdead × 3` + `capmono` × 1 + `tpcommit` × 1)按 §③ 「一次一件」纪律排;
+    (3) 7 月旧 fixture 的名字口径回读需另拉 `.dem`,一次一件;
+    (4) `l1trade`/`l5combo` 自身 (a)(§G.5,连续**七**轮欠)—— 需要能分离出价来源的域定义。
+  - 完整报告:`iterations/reports/replay-check/20260820T164620Z.md`
