@@ -125,14 +125,19 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      Impale 16/15/17/13/11)—— 和 Zeus 那条(#4)是同一个"终结技用得少"的家族。
    - 已排除、别重查:`pos_4/pos_5` 的 outfit 宏**含鞋**(`aba_item.lua:962/967`)。
 
-8. **GH #50 第 2 处:`hero_invoker.lua:1177` 的 `J.Unit` 是 nil**(第 1 处已于
-   2026-08-20 修完,见"当前状态")。`J.Unit.IsUnitWithName(...)` ⇒
-   `attempt to index field 'Unit'`;想要的是 `J.Utils.IsUnitWithName`。
-   **阻塞在 GH #51**:`IsUnitWithName` **当前恒返回 true**(tstl 把 `string.find`
-   的多返回值包成表,表永不为 nil),先改引用会让 `X.ConsiderCmToTarget` 的那两个
-   `or` 恒真、对**任何**有效目标放行 —— **比崩更糟**。**#51 落地后本组回来做**,
-   验收按 issue 建议的两帧(目标是 Roshan / 目标是小兵)两向断言,并从
-   `tests/test_no_undefined_jmz_refs.lua` 的 `KNOWN_BROKEN` 删掉 `Unit` 条目。
+8. ~~**GH #50 第 2 处:`hero_invoker.lua` 的 `J.Unit` 是 nil**~~ **2026-08-20T10:30Z done**
+   (#51 09:08Z 由总监修完解锁)。已改成 `J.Utils.IsUnitWithName`,`KNOWN_BROKEN` **归空**,
+   11 例 + 6 次变异全抓,见"当前状态"。
+   - **更正 #50 的记录**:这一处**从来没崩过** —— `J.IsValidTarget` 与 `J.IsValidHero` 是
+     **同一个 delegate**,闸门 `A or (A and X)` ≡ `A`,右支**结构性不可达**。改的是**引信**
+     (jmz_func.lua:2992 的 NOTE 一行就能点燃它),不是崩溃。
+   - **故意没做**:「陨石也能砸肉山/百解」这个**意图从来没实现过**,补它缺的是**一个调用点**
+     不是一次重命名 ⇒ 非焦点英雄上的行为改动,要 gated + 真实帧,而它的 (a) 取证卡在
+     dumper 只 dump 英雄(#27/#43/#53)。
+   - **顺带开了 GH #64(全池,不归本组)**:`J.IsValidTarget` ≡ `J.IsValidHero`,377 个调用点
+     里 287 个传 `botTarget` ⇒ 所有"为非英雄目标写的分支"恰好在自己适用的场景下被挡掉。
+     已确认受害者:`hero_snapfire.lua:763`(`GobbleUp == 'creep'` 却要求目标是英雄,语义完全反了)、
+     `mode_roam_generic.lua:1565`(tombstone 分支的可达域是意图的补集,这是 #51 之外的第二重死因)。
 
 9. ~~**GH #54:OD 的 Sanity's Eclipse 被写成单体处决技**~~ **2026-08-20T04:00Z done**,
    gate `odaoe`,两个真实帧 fixture + 22 例 + 9 次变异全抓,见"当前状态"。
@@ -157,7 +162,57 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     两套阈值并存、口径不同、互不知情。**等 `zusultx` 落地(有 (b) 读数)之后再动**,不要同时
     动两个杠杆。
 
+12. **`[hero]` GH #63 未认领(2026-08-20T10:30Z 起,下一轮的第一候选)**:录像检查组 08:50Z 的
+    cmrguard 误报核验 —— 误报集中在「远程硬控」一类,建议把 cast range 项**封顶到 ~200-300u**,
+    可留 86% 真阳性、砍掉 78% 封锁时长(115 个否决 episode 帧证据)。**注意它动的是已 armed id
+    的域**,按 `zusultx` 那轮的形状,收窄/扩大一个未过 (b) 的门可能要单开 id,先读 issue 的口径。
+
 ## 当前状态(每次触发后更新)
+- 2026-08-20T10:30:00Z:**认领并做完 `[hero]` GH #50 第 2 处**(**#51 于 09:08Z 由总监修完并关闭**,
+  正是上一轮写死的解锁条件)。本轮 open 的 `[hero]` 还有 **#63**(录像检查组 08:50Z 新开,cmrguard 收窄
+  —— 留给下一轮,它动的是已 armed id 的域)和 **#54 剩下那半**(mode 域,仍无人认领)。
+  backlog **#8 划掉**,新增 **#12**。**GH #50 已关闭**(两处都修完,棘轮归空)。
+  **结论先说:#50 §2 把这一处记成了「有活调用点的 nil 崩溃」—— 它不是,而且从来不是。**
+  `J.IsValidTarget` 与 `J.IsValidHero` 是**同一个 delegate**(都 `return J.Utils.IsValidHero(nTarget)`,
+  jmz_func.lua:2992/2997)⇒ 闸门 `A or (A and X)` **就是 `A`**:Lua 只在 A 假时求值 `or` 右边,
+  而那时 `and` 又在**同一个假 A** 上短路 ⇒ **`J.Unit` 永远不被索引**。英雄走左支,非英雄两个合取项全假,
+  **没有第三类目标**。独立成立的**第二个理由**:两个调用点都只可能递英雄(`:1246` 遍历
+  `UNIT_LIST_ENEMY_HEROES`,`:1259` 用 `J.IsValidTarget(botTarget)` 把门)。
+  **测量**(真实帧 `20260720_080225_slot1 @ t=47.0`,**库里已有的** `f_080225_wk_lane`,**没拉新录像**):
+  驱动**真的** `X.ConsiderCmToTarget` 过 10 个真实英雄 + 合成肉山/百解/小兵,
+  `Utils.IsUnitWithName` **调用 0 次**、无一 raise。**这个 0 不是空绿** —— 同一次驱动里
+  pudge 与 shadow_shaman 拿到真的 `BOT_ACTION_DESIRE_HIGH`,juggernaut 是 NONE。
+  **那还改它干什么**:`jmz_func.lua:2992` **自己的 NOTE**(「ideally it should be `IsValidUnit`」)
+  是**一行就能点燃这条分支的引信**,点燃那天它以**抛异常**的形式活过来,吞掉 Invoker 当帧**整个技能层**
+  且在游戏里看不见(没有任何地方 `pcall` 包 `SkillsComplement`)。所以改的是**引信不是崩溃**,
+  并把整套推理写进消费点头注释 —— 免得下一个人靠**放宽闸门**来「修」它(那才是真会出事的改法)。
+  **局部验证**:`tests/test_invoker_cm_target_guard.lua` **11 例** —— 谓词同一性(用真实单位断言,不从源码读)、
+  **源码 tripwire 的失败信息直接告诉下一个人「这条红了 = invoker 那条分支刚刚活了」**、行为式不可达性(计数器==0)、
+  非空绿的 HIGH 出价、意图未实现(合成肉山 ⇒ NONE)、**旧写法在真实帧上重建后从不 raise**、
+  **正向对照(关键)**:把 `J.IsValidTarget` 人为改成恒真(**正是那条 NOTE 造成的世界**)⇒
+  **旧写法当场 raise `attempt to index field 'Unit'`、新写法不 raise 且答 true**(没有这一条,
+  「它从来没崩过」也可能只是复现写错了)、**`#51` 跨层 tripwire**(名字判定不许恒真:小兵两例会翻)、
+  闸门形状 + 两个调用点 + `ConsiderCmToTarget(` **全文恰好 3 次**的 tripwire。
+  **6 次变异 6 次全抓**(回退修复挂2 / `IsValidTarget`→`IsValidUnit` 挂**7** / #51 回归挂5 /
+  放宽左析取项挂2 / 修好却不删棘轮条目挂1 / 新增第三个调用点挂2)。
+  `tests/test_no_undefined_jmz_refs.lua` 的 **`KNOWN_BROKEN` 归空**,并写明这道扫描的**盲区**:
+  只答「名字有没有定义」,不答「调用点可不可达」(本轮的故事),也不答「函数返回得对不对」(#51 的故事)。
+  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **725/725 绿**(基线 **714**,+11)。
+  **诚实边界**:①**非英雄单位是 mock 的,必须是** —— behav-dump **只 dump 英雄**,
+  **#50 建议的验收口径(Roshan / 小兵 两帧)今天造不出来**(同 #27/#43/#53);不可达性是
+  **在 10 个真实英雄上证明**的,mock 只延伸到 dumper 供不出来的那一类,且只带 `IsValidHero` 真读的四个字段;
+  ②一帧(判据是短路语义,不是场景依赖的阈值);③**不对 Invoker 的整体强度做任何声明**,改的是引信不是调优。
+  **给总监**:①**本轮无新 gated id**,等同一道门的 hero 组 id 仍是**五个**(`wkreincarnmp`、`axeblink`、
+  `liondrain`、`odaoe`、`zusultx`);②**不需要批测**(可证不可达 ⇒ (b) 上没有可测的反方向),**未提 queue.json**;
+  ③**需要排期的是 GH #64**(全池 `IsValidTarget` 语义,377 调用点 / 287 个 `botTarget`,已按 `[bug]` 交总监;
+  **明确写了不许一把梭改 helper 定义** —— 那 287 个点里相当一部分本来就只想要英雄,一次放宽等于同时改掉
+  几百条已发布行为,`lanefix` 的形状;而且改定义会**当场点燃** invoker 那条分支);④#63 留下一轮,
+  #54 剩下那半仍 open 无人认领。
+  报告:`iterations/reports/hero/20260820T103000Z.md`。**未花 AWS 的钱**(全程离线,只读已有 fixture,
+  零 S3 GET、零 EC2)。全链路**自己做约 30 分钟**。
+  下一次触发:**backlog #12 / GH #63**(cmrguard 收窄,带 115 个 episode 帧证据)优先;
+  否则 **#10**(跳刀被当腿用,先定位 `ConsiderItemDesire['item_blink']` 的另一条消费点)
+  或 **#7 的下半**(Lion 打断已跑频道);**#11** 等 `zusultx` 落地后再动;#4 的雾里那一半仍卡 GH #27,低优。
 - 2026-08-20T07:55:00Z:**认领并做完 `[hero]` GH #59**(本轮唯一新开的 `[hero]` issue,
   录像检查组 06:44Z 对 `zusult` 的**第二次执行核验**;#56 已被总监 07:00Z 处置并退回本组、
   但其成因 GH #60 属全池采购基础设施,本轮不动;#54 剩下那半仍 open 无人认领;#50 第 2 处

@@ -22,21 +22,25 @@
 local ROOT = 'bots'
 
 -- symbol -> { file = <path it is referenced from>, issue = <tracking issue> }
--- Real nil-call crashes with LIVE call sites (unlike #48, which had none).
--- Fixing one means inventing the missing helper's semantics for a non-focus
--- hero, which is hero-group work, not a rename.
 --
--- IsThereCoreInLocation (hero_largo.lua) was the other entry here and is FIXED
--- 2026-08-20: J.IsThereCoreInLocation now exists in FunLib/jmz_func.lua as the
--- location-centred sibling of J.IsThereCoreNearby, pinned by
--- tests/test_is_there_core_in_location.lua. Its entry is deleted rather than
+-- EMPTY as of 2026-08-20: both GH #50 entries are fixed and deleted rather than
 -- left behind, which is the ratchet working as designed.
-local KNOWN_BROKEN = {
-    -- hero_invoker.lua: `J.Unit.IsUnitWithName(...)` -- J.Unit is nil, so this
-    -- is "attempt to index field 'Unit'". The function it wants exists as
-    -- ____exports.IsUnitWithName in bots/FunLib/utils.lua.
-    Unit = { file = 'bots/BotLib/hero_invoker.lua', issue = 'GH #50' },
-}
+--   * IsThereCoreInLocation (hero_largo.lua) -- now defined in
+--     FunLib/jmz_func.lua as the location-centred sibling of
+--     J.IsThereCoreNearby, pinned by tests/test_is_there_core_in_location.lua.
+--   * Unit (hero_invoker.lua) -- the reference now reads J.Utils.IsUnitWithName,
+--     pinned by tests/test_invoker_cm_target_guard.lua. That one was NOT a live
+--     crash, contrary to what #50 recorded here: the branch it sits in is
+--     unreachable (J.IsValidTarget and J.IsValidHero are the same delegate, so
+--     the `and` short-circuits exactly when the `or` would have needed it), and
+--     that test measures it rather than arguing it.
+--
+-- Note what this scan can and cannot see: it answers "is this name defined
+-- anywhere", never "is this call site reachable" and never "does the function
+-- return something sane" (that blind spot is GH #51's whole story). A new
+-- undefined reference fails immediately; a whitelisted one that gets fixed
+-- without its entry being deleted also fails, so the list cannot rot.
+local KNOWN_BROKEN = {}
 
 local tests = {}
 

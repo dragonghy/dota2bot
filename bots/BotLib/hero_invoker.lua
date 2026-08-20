@@ -1173,8 +1173,29 @@ function X.ConsiderAlacrity()
 end
 
 function X.ConsiderCmToTarget(target, nDelay, nTravelDistance, nRadius)
+    -- [GH #50] `J.Unit` is assigned nowhere in the tree, so this line read
+    -- "attempt to index field 'Unit' (a nil value)". The function it wants is
+    -- J.Utils.IsUnitWithName (jmz_func.lua:35 requires FunLib/utils onto J.Utils).
+    --
+    -- The rename is provably inert today, and that is the whole point: the
+    -- right-hand branch is UNREACHABLE, so this line never actually raised.
+    -- J.IsValidTarget and J.IsValidHero are the same delegate -- both return
+    -- J.Utils.IsValidHero(nTarget) -- so `A or (A and X)` is just `A`: the
+    -- `and` short-circuits on exactly the targets for which the `or` would
+    -- have needed its right side. Both call sites say the same thing from the
+    -- other end: one iterates UNIT_LIST_ENEMY_HEROES, the other guards on
+    -- J.IsValidTarget(botTarget). Roshan and the tormentor therefore never
+    -- reach the meteor at all -- the intent this line spells out has never
+    -- been implemented, and implementing it needs a call site, not a rename.
+    --
+    -- What the rename buys is disarming a landmine that jmz_func.lua:2992's own
+    -- NOTE ("ideally it should be IsValidUnit") arms with a one-line edit: the
+    -- day those two predicates stop agreeing this branch goes live, and it
+    -- would have gone live as a raised error that takes out Invoker's entire
+    -- ability layer for the frame, invisibly (nothing pcalls SkillsComplement).
+    -- Pinned by tests/test_invoker_cm_target_guard.lua.
     if (J.IsValidHero(target)
-        or (J.IsValidTarget(target) and (J.Unit.IsUnitWithName(target, "roshan") or J.Unit.IsUnitWithName(target, "boss")))) -- can be roshan or others
+        or (J.IsValidTarget(target) and (J.Utils.IsUnitWithName(target, "roshan") or J.Utils.IsUnitWithName(target, "boss")))) -- can be roshan or others
     and J.CanCastOnNonMagicImmune(target)
     and not J.IsSuspiciousIllusion(target)
     and (not isInLaningPhase or (isInLaningPhase and J.GetManaAfter(ChaosMeteor:GetManaCost()) > 0.5) or J.GetHP(target) < 0.5)
