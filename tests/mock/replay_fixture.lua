@@ -138,6 +138,57 @@ function M.load(path, sSubject)
         for _, m in ipairs(mods) do
             if by_name[m.name] == nil then by_name[m.name] = m end
         end
+        -- What hit this hero in the seconds BEFORE the instant. Without it the
+        -- mock's Is/Has/Can/Was default answered `false` at all 670
+        -- WasRecentlyDamagedBy* call sites under bots/ -- an undeclared world
+        -- assumption ("nobody here has been hit by anything recently") in the
+        -- same family as the pre-modifiers HasModifier default and the
+        -- GetTower / GetIncomingTrackingProjectiles gaps. It made whole shipped
+        -- branches structurally unreachable: J.ShouldAbandonTpChannel bails on
+        -- its `WasRecentlyDamagedByAnyHero(1.5)` line, so the gated `tpwatch`
+        -- body could never be reached on a real frame, and the "am I under
+        -- fire" guards in aba_defend/jmz_func read calm on every fixture.
+        --
+        -- `observed.damage` cannot substitute: it looks FORWARD from t (ground
+        -- truth about what followed) while these readers look BACKWARD (what
+        -- the bot already knows at t).
+        --
+        -- v1 fixtures (and any hero nothing hit inside the lookback) omit the
+        -- field, and the four readers below are then NOT installed at all --
+        -- the mock default stands, which is the same answer for the right
+        -- reason.
+        local rdmg = u.recent_damage
+        local rwin = fx.recent_window
+        local damage_readers = nil
+        if rdmg ~= nil then
+            -- The fixture only saw `recent_window` seconds of history, so a
+            -- query for a longer interval is answered from what exists and
+            -- flagged rather than silently under-reported.
+            local function hit(fInterval, pred)
+                local n = tonumber(fInterval) or 0
+                if rwin ~= nil and n > rwin then n = rwin end
+                for _, d in ipairs(rdmg) do
+                    if d.dt <= n and pred(d) then return true end
+                    if d.dt > n then break end -- generator sorts by dt ascending
+                end
+                return false
+            end
+            damage_readers = {
+                WasRecentlyDamagedByAnyHero = function(_, f)
+                    return hit(f, function(d) return d.kind == 'hero' end)
+                end,
+                WasRecentlyDamagedByHero = function(_, hUnit, f)
+                    local nm = hUnit ~= nil and hUnit:GetUnitName() or nil
+                    return hit(f, function(d) return d.kind == 'hero' and d.actor == nm end)
+                end,
+                WasRecentlyDamagedByTower = function(_, f)
+                    return hit(f, function(d) return d.kind == 'tower' end)
+                end,
+                WasRecentlyDamagedByCreep = function(_, f)
+                    return hit(f, function(d) return d.kind == 'creep' end)
+                end,
+            }
+        end
         heroes[u.name] = api.MakeHero(u.name, {
             GetItemInSlot = function(_, i) return slots[i] end,
             HasModifier = function(_, sName) return by_name[sName] ~= nil end,
@@ -174,6 +225,10 @@ function M.load(path, sSubject)
             -- Ground truth: what this hero actually did to the subject next.
             GetEstimatedDamageToTarget = function() return burst end,
         })
+        if damage_readers ~= nil then
+            local dsp = rawget(heroes[u.name], '__spec')
+            for k, v in pairs(damage_readers) do dsp[k] = v end
+        end
         -- Real ability state from the slice: pre-populate the (name-cached)
         -- handles a hero script will fetch via GetAbilityByName, so a FULL
         -- script run (SkillsComplement) sees real levels and cooldowns.

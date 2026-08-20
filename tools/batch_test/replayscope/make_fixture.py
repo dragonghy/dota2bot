@@ -35,6 +35,9 @@ def main():
     ap.add_argument("--window", type=float, default=5.0, help="ground-truth window after t")
     ap.add_argument("--damage-horizon", type=float, default=30.0,
                     help="how far past t to record the per-event damage timeline")
+    ap.add_argument("--recent-window", type=float, default=6.0,
+                    help="how far BEFORE t to record incoming damage, so the "
+                         "WasRecentlyDamagedBy* readers can be answered")
     ap.add_argument("-o", "--out", required=True)
     args = ap.parse_args()
 
@@ -102,6 +105,64 @@ def main():
             out[tgt].sort(key=lambda m: m["name"])
         return out
 
+    def recent_damage(tl, t, heroes_by_canon):
+        """Per-hero damage RECEIVED in (t - recent_window, t].
+
+        Why a decision fixture needs it: `WasRecentlyDamagedByAnyHero` and its
+        three siblings are read at 670 sites under `bots/`, and the mock's
+        Is/Has/Can/Was default answers `false` for all of them. So every fixture
+        world silently asserted "nobody here has been hit by anything recently"
+        -- the same undeclared world assumption as the pre-2026-08-19 blanket
+        `HasModifier == false`, and the GetTower / GetIncomingTrackingProjectiles
+        gaps before it. Whole shipped branches are unreachable underneath it
+        (J.ShouldAbandonTpChannel's third line, the retreat/defend "am I under
+        fire" guards, ...), and a test can assert a calm-frame decision on a
+        frame where the hero was being focused.
+
+        The fixture's `observed.damage` block cannot answer this: it looks
+        FORWARD from t (ground truth about what followed), while these readers
+        look BACKWARD (what the bot already knows at t).
+
+        Conventions, deliberate and asserted by tests/test_fixture_recent_damage:
+          * `dt` is seconds BEFORE t (positive), so the reader is `dt <= interval`;
+          * `kind` is 'hero' / 'tower' / 'creep' / 'other' -- one per engine
+            reader, classified from the actor entity name;
+          * SELF damage is dropped: these readers exist to answer "is someone
+            hitting me", and armlet/blade-mail style self-ticks would make every
+            such guard true for the wrong reason;
+          * hero actors are stored under their SNAPSHOT name, because the event
+            stream spells some heroes without underscores (`queenofpain` vs
+            `queen_of_pain`) and WasRecentlyDamagedByHero compares handles.
+        """
+        lo = t - args.recent_window
+        out = defaultdict(list)
+        for e in tl.get("events", []):
+            if e.get("type") != "DAMAGE" or not (lo < e.get("t", -1e9) <= t):
+                continue
+            tgt = heroes_by_canon.get(bare(e.get("target") or "").replace("_", "").lower())
+            if tgt is None:
+                continue
+            actor_raw = e.get("actor") or ""
+            if e.get("actor_hero"):
+                kind = "hero"
+                actor = heroes_by_canon.get(bare(actor_raw).replace("_", "").lower())
+                if actor is None or actor == tgt:
+                    continue        # unmapped illusion/clone, or self damage
+            else:
+                actor = None
+                low = actor_raw.lower()
+                if "tower" in low:
+                    kind = "tower"
+                elif "creep" in low or "neutral" in low:
+                    kind = "creep"
+                else:
+                    kind = "other"
+            out[tgt].append({"dt": round(t - e["t"], 2), "kind": kind,
+                             "actor": actor, "value": e.get("value", 0)})
+        for tgt in out:
+            out[tgt].sort(key=lambda d: (d["dt"], d["kind"]))
+        return out
+
     tl = json.load(open(args.timeline))
     subj = FULL + args.hero
     mods_at_t = active_modifiers(tl, args.t)
@@ -121,6 +182,9 @@ def main():
         per[s["hero"]].append(s)
     for h in per:
         per[h].sort(key=lambda s: s["t"])
+
+    recent_at_t = recent_damage(
+        tl, args.t, {bare(h).replace("_", "").lower(): h for h in per})
 
     def at(h, t):
         arr = per[h]
@@ -163,6 +227,8 @@ def main():
             ],
             # real buffs/debuffs active at the instant (see active_modifiers)
             "modifiers": mods_at_t.get(h, []),
+            # what hit this hero just BEFORE the instant (see recent_damage)
+            "recent_damage": recent_at_t.get(h, []),
         })
     assert any(u["name"] == subj for u in units), "subject %s not in timeline" % subj
 
@@ -239,13 +305,29 @@ def main():
                 % ", ".join("{ name = '%s', remaining = %s, elapsed = %s, stacks = %d }"
                             % (m["name"], m["remaining"], m["elapsed"], m["stacks"])
                             for m in u["modifiers"])) if u["modifiers"] else ""
+        # Omitted entirely when nothing hit this hero in the lookback (and on any
+        # fixture generated before this block existed), so the loader then leaves
+        # the mock's WasRecentlyDamagedBy* = false default alone -- which is the
+        # same answer, for the right reason.
+        rdmg = ("\n      recent_damage = { %s },"
+                % ", ".join("{ dt = %s, kind = '%s', actor = %s, value = %d }"
+                            % (d["dt"], d["kind"],
+                               ("'%s'" % d["actor"]) if d["actor"] else "nil",
+                               d["value"])
+                            for d in u["recent_damage"])) if u["recent_damage"] else ""
         L.append("    { name = '%s', team = %d, x = %.1f, y = %.1f, hp = %d, max_hp = %d,"
                  " mp = %d, max_mp = %d, level = %d, alive = %s, tp_cd = %s, net_worth = %d,"
                  "%s items = { %s },\n      abilities = { %s },%s }," % (
                      u["name"], u["team"], u["x"], u["y"], u["hp"], u["max_hp"],
                      u["mp"], u["max_mp"], u["level"], "true" if u["alive"] else "false",
-                     u["tp_cd"], u["net_worth"], seen, items, abil, mods))
+                     u["tp_cd"], u["net_worth"], seen, items, abil, mods + rdmg))
     L.append("  },")
+    # The lookback the recent_damage blocks were built with: a
+    # WasRecentlyDamagedBy* query for a LONGER interval than this cannot be
+    # answered truthfully from the fixture (it would under-report), and the
+    # loader says so rather than guessing.
+    if any(u["recent_damage"] for u in units):
+        L.append("  recent_window = %.1f," % args.recent_window)
     # Omitted entirely when the dump has none, so pre-buildings fixtures keep
     # the old "no structures exist" world byte for byte.
     if buildings:
@@ -274,9 +356,11 @@ def main():
     L.append("  },")
     L.append("}")
     open(args.out, "w").write("\n".join(L) + "\n")
-    print("wrote %s  (units=%d, buildings=%d, modifiers=%d, burst=%s, died_after=%s)" % (
-        args.out, len(units), len(buildings),
-        sum(len(u["modifiers"]) for u in units), dict(burst), died_after))
+    print("wrote %s  (units=%d, buildings=%d, modifiers=%d, recent_damage=%d, "
+          "burst=%s, died_after=%s)" % (
+              args.out, len(units), len(buildings),
+              sum(len(u["modifiers"]) for u in units),
+              sum(len(u["recent_damage"]) for u in units), dict(burst), died_after))
 
 
 if __name__ == "__main__":

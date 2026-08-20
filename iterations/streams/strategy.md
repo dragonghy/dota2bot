@@ -44,10 +44,16 @@
    **已知不通的路**:想在**命令已经在执行之后**回收它,唯一落点是每帧都跑的
    `ability_item_usage_generic.lua`(mode 之外唯一的全局 Think)——那是**另一个杠杆**,
    不要和「下达时带边界」合做。
-0b. **旧 fixture 逐个补 modifier(新,2026-08-19T23:25Z)**。生成器与 loader 已经支持,
-   但**有意没有批量重生成**:给一帧补上真实 buff/debuff 可能**翻掉**它钉住的那个决定,
-   那正是这件事的意义。**一次一个、每次重读结论**。优先级最高的是 `tpwatch` 相关的帧
-   (它的逻辑本体此前从未在任何真实帧上跑过一行)。
+0b. **旧 fixture 逐个补真实世界(modifier + 挨打史)**。生成器与 loader 都已支持
+   (modifier 2026-08-19T23:25Z;`recent_damage` 2026-08-20T01:45Z),但**有意没有批量
+   重生成**:给一帧补上真实 buff/debuff 或真实的挨打史可能**翻掉**它钉住的那个决定,
+   那正是这件事的意义。**一次一个、每次重读结论**。
+   ~~优先级最高的是 `tpwatch` 相关的帧~~ **`tpwatch` 已做完(2026-08-20T01:45Z,GH #52):
+   判据本体跑完了,结论是负的,建议出集,不要再花轮次在它身上。**
+   **下一批候选(新可达面很宽,670 个 `WasRecentlyDamagedBy*` 调用点)**:`aba_defend` 的
+   「我在不在挨打」guard 群(`aba_defend.lua:830/939/1137/1253`,区间 2–5s)、
+   `jmz_func.lua:1302/1498/3618/4648`。挑一个**已发布未 gated** 的消费方先做,
+   这样翻掉的结论直接就是线上行为。
    新缺陷族,和「最终出价可达性」(第 8 条)平级但是**下一层**:
    **`Action_*` 里的连续型命令(`bOnce=false`、`Action_MoveToUnit` 等)在它的 mode
    不再赢下竞价之后没有任何人会再评估它** —— mode 的 `Think` 不被调用,写在 `Think`
@@ -106,13 +112,17 @@
    发现域缺口 → gated `tpdying`,见 issue #35 与当前状态节**)、
    ~~`ownhalf`~~(**2026-08-19T15:34Z 已查:出价这一层 PASS —— 0.72 过完 cap 仍赢下
    竞价;但下游一层撞到动作缺陷 → gated `roamstale`,见 issue #39 与当前状态节**)、
+   ~~`tpwatch`~~(**2026-08-20T01:45Z 已查:出价这一层送到了、也赢了,但它抬的是**
+   **已经在跑的那个 mode(shipped retreat 已 0.75),而 retreat 没有 `Think()` ⇒ 结构上
+   没有落点;判据本身还是滞后指标。建议出集,见 GH #52 与当前状态节。这是本族的新亚型:
+   出价完好 + 赢下竞价 + 零效果**)、
    `midtp`/`suptp`(**2026-08-19T19:30Z 查了一半**:触发闸门的可达性缺陷已定位并修复
    → gated `tparrive`,见 issue #44。**仍未查的另一半**:(i) 物品循环的槽位顺序
    `{5,4,3,2,1,0,15,16}` 把 TP 卷轴排最后,任何当帧想用的其他物品都抢在响应 TP 前面;
    (ii) `ability_item_usage_generic.lua:5089+` 的「先命中先 return」guard 链 ——
    `lf_rescue` 排在 `midtp` 之前且两者可同帧成立,而两者共用
    `J.TryTakeTpResponseSlot()` 那个 6 秒一人的全队配额)、
-   `lf_rescue`/`teambrain`/`tpwatch`。
+   `lf_rescue`/`teambrain`。
    **加一条做法(2026-08-19T15:34Z 立):出价断言通过之后不要停,再往下走一层断言
    动作** —— 总监 §0b 对动作类缺陷的推论(「断言动作真的达成了 helper 假设的那个状态」)
    本来就适用于每一条,而 `ownhalf` 正是「出价干净、动作全丢」的第一例。驱动方式已经
@@ -137,6 +147,45 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T01:45Z:没有可认领的新 `[strategy]` issue(#45/#44/#41/#37/#35/#28/#26 全是本组
+  遗留,#50/#51 归英雄组与总监),接 backlog **第 0b 条**,按它点名的最高优先级做 **`tpwatch`**。
+  **本轮 `bots/`、`game/` 零改动**(`git status bots game` 空,无新 gate,未提批测请求),
+  产出是**一条 mock 保真度修复 + 一条负结果 + 一条出集建议(GH #52)**。
+  **又一条没人声明过的世界断言**:`tests/mock/bot_api.lua` 对未覆盖的 `Is*/Has*/Can*/`**`Was*`**
+  一律答 false ⇒ **每个 fixture 里每个单位 `WasRecentlyDamagedBy*` 恒 false**,而 `bots/` 下有
+  **670 个调用点**读这一族(AnyHero 527)。与 §F 的 `GetTower`/`GetIncomingTrackingProjectiles`、
+  上一轮的 `HasModifier` 同类。`observed.damage` **代替不了**:它向**后**看(ground truth),
+  这一族向**前**看(bot 在 t 已知的事)。修复:`make_fixture.py` 逐单位输出 `recent_damage`
+  (`dt`= t 之**前**的秒数、`kind`=hero/tower/creep/other、`actor` 用**快照名**避开
+  `queenofpain` canon 坑、丢自伤)+ 顶层 `recent_window`(默认 6.0s);`replay_fixture.lua`
+  **只在该块存在时**装那四个读法 ⇒ **老 fixture 逐字节不变**(有回归护栏)。顺带补两个 mock
+  全局(都是新可达之后才发作):`GetIncomingTeleports`(列表;`mode_laning_generic` 在任何
+  「最近挨过打」的帧上**硬崩**)、`GetShopLocation`(`mode_secret_shop_generic` 文件作用域就读,
+  不接则整个 mode 加载不了)。
+  **`tpwatch` 判据本体第一次跑完,结论是负的。** 钉两帧(同一局同一主角,**都取自候选侧**,
+  该局 stamp 含 `tpwatch` 且 juggernaut team 2 = radiant ⇒ **armed**):
+  `f_260819_222030_jugg_tp_start`(t=437.1,读条 0.1s,733/1154)与
+  `f_260819_222030_jugg_tp_eaten`(t=439.5,读条 2.5s,313/1155,**剩 0.5s**)。
+  **GROUND TRUTH:读条 t=440.0 完好落地,他又活了 103.5 秒** —— 扛完读条就是这帧的正确决定。
+  **缺陷是 §0b 出价类的新亚型:出价完好、赢下竞价、却什么都没改变,因为它抬的是已经在跑的那个
+  mode。** 重建当帧**全部 22 个 mode 文件**:shipped `mode_retreat_generic` **0.75**(已 promote
+  的反越塔 guard,同一条链里就在 `tpwatch` 下面六行)已经赢,次高 `mode_laning_generic` **0.446**;
+  armed 只把 0.75 抬到 **0.9**,重新选举当选者 ⇒ 没有 mode 变化 ⇒ 引擎不重新下令;而
+  `mode_retreat_generic` **只有 `GetDesire()`、没有 `Think()`**,那 +0.15 结构上没有落点。
+  **判据本身还是滞后指标**:11 局里 8 次满足其伤害阈值的读条,判据**最早只在落地前 1.2s** 成立
+  (jugg 1.2 / DK 1.0 / sniper 0.9 / centaur 0.5,另 3 次只在死或落地那一瞬),1 次从未成立;
+  **armed 侧有真实窗口的 2 次读条 100% 跑完**,没有一次被放弃 —— 与机制分析互相印证。
+  **本轮不写 gated 修复**:接缝错(抬出价 ≠ 下指令)+ 判据错(滞后),不是差一个闸门;且回收
+  已下达的命令按 backlog 第 0 条**只能落在 `ability_item_usage_generic`,是另一个杠杆**。
+  验收 `tests/test_fixture_recent_damage.lua` **6 例** + `tests/test_tpwatch_channel_bid.lua`
+  **7 例**(**所有 desire 驱动真的 mode 文件 `GetDesire()`**;前提全断言、guard 链走到 261 行
+  逐条断言、全 22 个 mode 竞价两个世界各跑一遍、`mode_retreat_generic` 仍无 `Think()` 的**源码级
+  反向断言**、回归护栏、两条反向断言)。**两次变异:拆 loader 接线恰好 6 条 FAIL(其余 588 条
+  一条不动)、让读法忽略 interval 恰好 3 条 FAIL。594/594(基线 581)+ luacheck 0 警告。**
+  `state.json` 新增 `fixture_recent_damage_20260820`。**建议见 GH #52:把 `tpwatch` 移出 armed
+  测试集**(真实帧上可证明 inert,留在集里只会稀释同波其它 id 的归因)。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 11 个 `.dem` + 6 个 `.analysis.json`,未启动任何
+  计费资源),未提批测请求。详见 `iterations/reports/strategy/20260820T014500Z.md`。
 - 2026-08-19T23:25Z:没有可认领的新 `[strategy]` issue(#45/#44/#35 在等总监批入集,
   #37 剩下那一半明确要求先要帧证据),接 backlog **第 0 条**「命令的边界」普查。
   **本轮零行为改动**(`git status bots game` 空,无新 gate,未提批测请求),

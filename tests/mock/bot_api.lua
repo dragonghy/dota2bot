@@ -295,6 +295,18 @@ function M.install(opts)
     G.IsItemPurchasedFromSideShop = function() return false end
     G.GetItemStockCount = function() return 1 end
     G.GetDroppedItemList = function() return {} end
+    -- The engine answers a LIST of in-flight teleports; every caller
+    -- `ipairs()`es it (Utils.GetEnemyIdsInTpToLocation / GetAllyIdsInTpToLocation,
+    -- reached from mode_laning_generic). Left undefined this was a hard crash
+    -- rather than a wrong answer, and it only surfaced once the recent-damage
+    -- wiring made the branch above it reachable on a real frame -- same class as
+    -- the GetIncomingTrackingProjectiles gap. Empty = "nobody is teleporting in",
+    -- the conservative reading; a test that needs one overrides the global.
+    G.GetIncomingTeleports = function() return {} end
+    -- Read at FILE SCOPE by mode_secret_shop_generic, so without it that mode
+    -- could not even be loaded -- and a test that reconstructs the whole mode
+    -- auction on a frame has to be able to load every mode file.
+    G.GetShopLocation = function() return M.Vector(0, 0, 0) end
     G.GetRuneSpawnTimeForRune = function() return 0 end
     G.GetRuneStatus = function() return 0 end
     G.GetRoshanKillTime = function() return 0 end
