@@ -23,8 +23,15 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 1. ~~**WK 重生蓝保留**~~ 2026-08-18 code done, gated `wkreincarnmp`,
    mock-tested; ~~REAL-FRAME FIXTURE STILL PENDING~~ **2026-08-19 done**,
-   见下面已划掉的 #6 和"当前状态"。(a)(c) 条件满足,(b) 批测待办,
-   仍未 promote。
+   见下面已划掉的 #6 和"当前状态"。~~(a)(c) 条件满足,(b) 批测待办,仍未 promote。~~
+   **2026-08-21T00:45Z 语料核验后撤回排队(GH #76):域 = 1 帧 / 2119,而那 1 帧是
+   1 血、大招仍在 0.4s 冷却的将死之人 ⇒ axeblink 陷阱,永不 arm。** 成因在代码里:
+   `hero_skeleton_king.lua:490` 的 `X.ShouldSaveMana` **已经用了正确的 `GetManaCost()`**
+   且看住了 WK 全部两个花蓝技能(:225 / :442),所以 WK 结构上花不进 [160,220) 带
+   (就绪帧 mana min 187 / p1 234 / 中位 363,对 cost 220)。gate 代码保留(它是对的)。
+   **复活条件**:`X.ShouldSaveMana` 被改/删或其 `<= 3.0` 窗口收窄,或对手池稳定出现掉蓝
+   —— 届时必须重量,不得引用 1/2119。**可复用先验**:一个门若只改「读」的那一侧,
+   先去看「写/花」的那一侧有没有已经写对的同款守卫;有的话域基本就是空的。
 2. ~~**CM 大招时机**~~ 2026-08-19 first-cut done;**2026-08-19 二刀(GH #34)
    收窄完成** —— 原版 range-blind(丢了 `J.GetReadyHardCc` 的 handle),已改成
    距离检查 `<= cast_range + 400`,两帧一起钉(1326 码 centaur 必须放行 /
@@ -225,6 +232,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T00:45:00Z:**本轮无新 `[hero]` issue**(#73/#66 已做完;#63 章程写死本组不认领;
+  #59 等 `zusultx` 读数;#56/#54 剩下的半条在别的组域里)⇒ 按**总监 #73 §4 的指示**
+  (「先把 §4.1 那八个等门的 id 里已经有语料的做 §V.7 pre-flight,把注定 null 的先筛掉」)
+  取**等门最久的** `wkreincarnmp`(2026-08-18 立)做语料核验。**结论:域是空的,建议永不 arm。**
+  开 **GH #76**。**零 EC2、零 S3 PUT、零新 gated id、零 `bots/` 改动**(14 个 `.dem` ≈125MB
+  S3 GET + dumper 缓存命中)。
+  **语料**:S3 `replays/` 的 18:08–18:34Z 波,14 局 turbo,`behav-dump -interval 0.5`,
+  **14 局里 9 局有 Wraith King**(Lion 那轮是 3/6)。
+  **读数**:`A: 2119 ready frames, 1 shipped_overclaims, 0 gated_extends` /
+  `B: 1 episode (0.11/局)` / `C: 35 deaths, 12 reincarnations fired, 1 in band` /
+  **`D: shipped 那条规则在 9 局压下 284 帧撤退出价,armed 会翻掉的是 1 帧(0.35%)`**;
+  就绪帧 mana **min 187 / p1 234 / p5 260 / 中位 363**,对 level-1 cost **220**。
+  **那唯一一帧是误报**(`20260820_181711_slot1` t=344.5):WK **1/363 血**、0.2 秒后死,
+  且大招**真实上还在 0.4s 冷却**(门自己的 `> 1.0` 容差把它读成 ready)⇒ 这次死亡
+  **根本不能归因于蓝量**,armed 也一样死。⇒ **域在语义上是空的。**
+  **成因是结构性的、且能在代码里指出来**:`hero_skeleton_king.lua:490` 的
+  `X.ShouldSaveMana` **用的就是正确的 `abilityR:GetManaCost()`**,并且看住了 WK 的
+  **全部两个**花蓝技能(`ConsiderQ` :225 / `ConsiderW` :442,两处 `or X.ShouldSaveMana(...)`
+  直接 return NONE)⇒ **WK 在大招就绪时结构上花不进 [160,220)**。反向侧
+  (`gated_extends`,大招 2/3 级带 [110,160))**0 帧**,而 9 局里 **5 局大招吃到 2 级**
+  —— 不是够不到,是蓝从不掉到 160 以下。
+  **一句话记法(可复用先验)**:**一个门若只改「读」的那一侧,先去看「写/花」的那一侧
+  有没有已经写对的同款守卫 —— 有的话域基本就是空的。**
+  **数值锚本轮实拉 datafeed(hero_id=42)**:`mana_costs [220,110,0]`、
+  `cooldowns [180,150,120]`、`notes_loc: "Wraith King won't revive if he doesn't have enough
+  mana."` —— 2026-08-18 的注释逐条正确,条件 (c) 的原始出处就是这条 notes。
+  **顺带更正一条已进裁定的事实**:#73 把 lever(a) 的复活条件写成「turbo 能稳定到 hero
+  level 12+」,依据是 Lion 的 9/11/11 —— **那是「辅助位」的事实不是「turbo」的事实**:
+  同批波次 WK 的 hero level 上限是 **10/11/11/12/12/12/12/13/14**。
+  **顺带一条量测事实(给全队,未单开 issue)**:第一版扫描报出 34 个分歧帧,**33 个是尸体**
+  —— dumper 对死亡英雄**继续输出快照且状态冻结在死亡瞬间**,任何按帧计数的检测器都会把
+  **一次死亡放大成几十帧的域**;工具里已加 `hp > 0` 过滤并注释钉住(与 #43 的**赛后**冻结同族,
+  但这一个发生在**局中**,过滤条件不同)。
+  **交付**:`tools/batch_test/behavioral/wk_reincarn_domain.py`(dev-only,四段式
+  A 分歧带 / B 消费域**+分母** / C 结果侧 / D 蓝量剖面;边界 #27/#43/#75/无 mode 数据全写进
+  docstring,每个计数都是上界)。**对「阈值型」门是通用模板**,与 Lion 的「终结技型」三段式互补:
+  **阈值型门第一件事永远是「先量分歧带,再量分母」。**
+  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **874/874 绿**(与 main 相同,无行为改动可钉
+  ⇒ 未加测试)。
+  **给总监**:①**无新 gated id**,并建议**下调**等门列表 —— `wkreincarnmp` 出队,剩
+  **七个**(`axeblink`、`liondrain`、`odaoe`、`zusultx`、`esaftershock`、`cmrself`、
+  `liondrainstop`);②**未提 queue.json**;③**未申请入 test_set**;④建议按上面第 7 条更正
+  #73 裁定里的复活条件措辞;⑤这是英雄组第二个 §V.7 样例,成本 ≈45 分钟 + 14 个 `.dem` 的 GET。
+  报告:`iterations/reports/hero/20260821T004500Z.md`。全链路**自己做约 45 分钟**。
+  下一次触发:**继续按先验强度扫剩下的等门 id** —— `axeblink`(章程已记 0/4 局持刀,
+  几乎肯定也空,但没有正式核验读数)→ `odaoe`(总监建议套 Lion 的终结技三段式)→
+  `cmrself` / `esaftershock`(需要 CM + ES 同局语料);或 **#13 的残留**(门读不到
+  「她正在被停」,需要高血 CM 身上有较长 stun 剩余的新 frame);**#11** 等 `zusultx` 落地后
+  再动;#4 的雾里那一半仍卡 GH #27,低优。
+
 - 2026-08-20T21:51:40Z:**本轮无新 `[hero]` issue**(#73 是我上一轮自己开的;#66 已做完;#63 章程写死
   本组不认领;#59 等 `zusultx` 读数;#56/#54 剩下的半条在别的组域里)⇒ 按上一轮写死的下一步取
   **GH #73 lever(a) `lionult`**,但先按总监 21:15Z 新规做**上机前语料核验** —— 核验结果是
