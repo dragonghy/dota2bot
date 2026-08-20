@@ -119,8 +119,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 7. **Lion 个体核查**(2026-08-19T21:49Z 起步,焦点五最后一个开张的)。
    - ~~**Mana Drain 把没技能的辅助钉在原地**~~ **2026-08-19T21:49Z done**,gate
      `liondrain`,两个真实帧 fixture + 15 例 + 7 次变异(6 抓 1 暴露死代码),见"当前状态"。
-   - **未做的下半**:`X.ConsiderStopDrain` **只认 `J.IsRetreating`**,已经在跑的频道
-     打不断。本轮**故意只挡起手**(一次一个杠杆),这是第二个杠杆。
+   - ~~**`X.ConsiderStopDrain` 只认 `J.IsRetreating`**~~ **2026-08-20T18:12Z done**,
+     新 gate **`liondrainstop`**,与 `liondrain` 共用 `X.nEDrainDangerRadius` 常量
+     (retune 双向自报);两个真实帧 fixture(**同一局 182855 的两个不同 channel**:
+     mid-channel 297.2 viper focused 必压 / mid-channel 244.3 troll jungle 必放)
+     + 19 例 + 8 次变异全抓,见"当前状态"。
    - **下一轮 Lion 从这里起**:大招施放 **0/1/2/0/0 次/局**(Hex 5/6/4/3/4,
      Impale 16/15/17/13/11)—— 和 Zeus 那条(#4)是同一个"终结技用得少"的家族。
    - 已排除、别重查:`pos_4/pos_5` 的 outfit 宏**含鞋**(`aba_item.lua:962/967`)。
@@ -194,6 +197,65 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T18:12:52Z:**本轮无新 `[hero]` issue**(#66 上一轮做完;#63 章程写死本组不认领;
+  #59 已入集等 `zusultx` 读数;#56 / #54 剩下的半条都在别的组域里)⇒ 按章程取 backlog **#7 的下半**
+  (Lion `X.ConsiderStopDrain` 只认 `J.IsRetreating`,已跑频道打不断),**做完并划掉**。
+  **新 gated id `liondrainstop`**。**零 AWS EC2、2 个 `.dem` ≈17MB 的 S3 GET + dumper 缓存命中**。
+  **问题**:一旦 Mana Drain 频道开始,`X.SkillsComplement` 第二行 `if J.CanNotUseAbility(bot) then return`
+  被 `IsChanneling` 吞掉 —— 打断这个频道的**唯一路径**是 `X.ConsiderStopDrain > 0`,而它只在
+  `X.IsAbilityEChanneling() and J.IsRetreating(bot)` 时触发。**扎根中的英雄按定义走不了退却模式**,
+  于是 `IsRetreating` 分支在这个场景里**结构性打不出**。第一杠杆 `liondrain` 只挡起手,救不了
+  **开始时干净、后来变糟**的频道(有人走进来 / 开始打你)。
+  **帧证据**(游戏 20260819_182855,`spot_20260819_180804_1_main`,同一 5 局语料库):
+  MODIFIER_ADD t=297.2 → MODIFIER_REMOVE t=302.2(5.0 秒频道,吸 viper)。整场 Lion 位置
+  `(-5084, 5284)` 一格不动;5 秒里挨 viper 打(10+12+7+59 / 20+13+11+50 / 20 / 20 / 20)+ t=302.2 ES
+  echo slam 71 因为他站着没走。**先前的 `liondrain` 起手门在 t=297.2 时是「clean」的**(viper 在 555 码,
+  刚过 500 门槛),门放行开火;t=299.2 时 viper 已进到 484 码。**Lion 站着 5 秒**,活下来但差 2 秒血。
+  **修法**:新 helper `X.lion_ShouldStopDrain(hBot)`,gated turbo + `liondrainstop`;谓词**与
+  `lion_IsDrainSafeToStart` 完全对称**(极性反转)—— 同一 `WasRecentlyDamagedByAnyHero(2.0)` + 同一
+  `X.nEDrainDangerRadius = 500` 内 `J.GetNearbyHeroes` 非空。**复用同一常量**是刻意的:
+  retune 一边另一边**自报**(测试里的 `[484, 781)` 区间断言两个 test 文件都在读)。
+  消费点在 `X.ConsiderStopDrain` 里,排在 shipped `IsRetreating` 分支**之后**,且**内嵌在自己的
+  `IsAbilityEChanneling()` 前提里**(无频道无释放,单独 arm 不影响 shipped 退却路径)。
+  **两帧一起钉**:`f_260819_182855_lion_drain_midchannel.lua`(t=299.2 focused 必压:mid-channel
+  第 2.0 秒、viper 484u、hero pressure)+ `f_260819_182855_lion_drain_jungle.lua`(t=247.0 jungle
+  必放:mid-channel 第 2.7 秒吸黑山贼、最近活着的敌方英雄 necrolyte 5995u、只挨野怪)。**同一局
+  两个不同的频道** ⇒ 任何 harness 缺口对两帧对称,不给对偶 lever 留掩护。
+  **局部验证** `tests/test_replay_260819_lion_drain_stop.lua` **19 例**:
+  2 ground-truth(A 必压 / B 必放,附 died_after 15.9 vs 68.1);2 gate-OFF(未 arm / 非 turbo);
+  5 armed 组(focused 释放 / jungle 保持 / 摘伤害子句 / jungle 加伤害仍不释放 / jungle 挪敌人+加伤害
+  必释放 / focused 把 viper 推出圈必不释放);**1 外前提测试**(IsChanneling=false ⇒ ConsiderStopDrain
+  仍 NONE,同时断言 helper 内部谓词**独立**成立 —— 证明 `IsAbilityEChanneling` 外闸不是冗余);
+  **1 双计防护**(强制 retreat 模式,shipped 分支单独还 HIGH,新 gate 关掉也还 HIGH,不双计);
+  **1 跨层 tripwire**(死尸不锁住释放,`J.GetNearbyHeroes` 上游过滤);**1 半径区间断言**
+  (`[484, 781)`,与起手 lever 共享);**4 例端到端**驱动真正的 `X.SkillsComplement()`,断言
+  `Action_ClearActions` 是否入队(shipped 必**不**入队 = 缺陷复现;armed 必入队;jungle 不入队;
+  只摘伤害子句翻掉 ClearActions ⇒ 端到端归因);**1 源码 wiring tripwire**(`liondrainstop` 恰好一次、
+  两句 AND、新分支在 shipped `IsRetreating` 之后、外嵌 `IsAbilityEChanneling`)。
+  **8 次变异 8 次全抓**(改 gate id 挂5 / 摘 turbo 挂1 / 反转伤害子句挂6 / 摘外前提挂2 /
+  HIGH→NONE 挂3 / 半径→1 挂12 / 半径→900 挂5 / 硬编码 100 替常量挂8)。**另有 1 例故意不算(记账)**:
+  `== nil or #list == 0` → `~= nil and #list == 0` 在 `GetNearbyHeroes` 总返回列表(从不 nil)的世界里
+  **可证行为等价**,是防御式 belt-and-suspenders,不是承载分支。luacheck **0 警告**,
+  `lua5.1 tests/run_tests.lua` **857/857 绿**(干净 stash 基线 **838**,+19)。
+  **给总监**:①**新 gated id `liondrainstop`** 已登记 `state.json`(`liondrainstop_20260820`),
+  **申请入 test_set.md**;等门的 hero 组 id 现在是**八个**(`wkreincarnmp`、`axeblink`、
+  `liondrain`、`odaoe`、`zusultx`、`esaftershock`、`cmrself`、`liondrainstop`)。
+  ②**排期约束**:**绝不许**与 `liondrain` 绑一个臂 —— 两 lever 共用 `X.nEDrainDangerRadius`
+  常量与 2 秒伤害窗口,同臂丢失归因(哪个 lever 抓了哪个频道);两 lever 触及**不相交的调用点**
+  (`ConsiderE` vs `ConsiderStopDrain`),单独 arm **各自都有行为**,不存在 axeblink 陷阱。
+  ③**(b) 用行为检测器**:域内频道释放次数(shipped 只在 IsRetreating 时释放,armed 加一类)、
+  频道内 Lion HP 曲线、每局 Mana Drain 频道数按目标类型拆(hero / creep)。**不许 gpm/xpm**
+  (GH #30 噪声底 30 gpm,<1 事件/局结构性看不见)。④**未提 queue.json**(不需新花费,
+  搭已排期 candidate wave)。⑤**预注册期望值**:第一杠杆 `liondrain` 已挡 4/13 频道;`liondrainstop`
+  的域是**另一类** —— 起手时安全、mid-channel 变糟的。语料实例:182855 t=297.2 起手时 viper 在 555 码
+  (>500),开火放行;t=299.2 viper 484 码 + 挨打 ⇒ armed 释放一次。
+  报告:`iterations/reports/hero/20260820T181252Z.md`。**未花 AWS 的钱**(2 个 `.dem` ≈17MB S3 GET + 
+  dumper 缓存命中,零 EC2)。全链路**自己做约 45 分钟**。
+  下一次触发:**#7 的第三层**(`liondrain` 起手门 + `liondrainstop` 释放门都到位后,回头看大招
+  0/1/2/0/0 次/局那条,Lion 的 Finger 用得少 —— 和 Zeus #4、Lion #7 是"终结技用得少"的家族)
+  或 **#13 的残留**(门读不到「她正在被停」);**#11** 等 `zusultx` 落地后再动;#4 的雾里那一半
+  仍卡 GH #27,低优。
+
 - 2026-08-20T15:20:00Z:**本轮无新 `[hero]` issue** —— open 里 `[hero]` 前缀的
   #66(上一轮自己做完的 esaftershock)、#63(本组不认领,等 `esaftershock` 读数)、
   #59(zusult 已入集,等 `zusultx` 读数)、#56 / #54(剩下的半条都在别的组域里)都无新可

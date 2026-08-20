@@ -283,6 +283,20 @@ function X.ConsiderStopDrain()
 		return BOT_ACTION_DESIRE_HIGH
 	end
 
+	-- [liondrainstop] the shipped release above only fires on J.IsRetreating,
+	-- but a rooted hero is by construction not walking home -- the retreat
+	-- mode fires when it looks safe to run, and Mana Drain's ~600u root during
+	-- a fight blocks that from ever kicking in. Mirror of lion_IsDrainSafeToStart
+	-- (same predicate, same danger radius, same 2s hero-damage window) applied
+	-- to a channel that has ALREADY started; the second lever for the same shape,
+	-- one at a time -- start-refusal cannot save a channel that started clean and
+	-- turned unsafe (an enemy walked in / began hitting Lion mid-channel).
+	if X.IsAbilityEChanneling()
+		and X.lion_ShouldStopDrain( bot )
+	then
+		return BOT_ACTION_DESIRE_HIGH
+	end
+
 	return BOT_ACTION_DESIRE_NONE
 
 end
@@ -1073,6 +1087,32 @@ function X.lion_IsDrainSafeToStart( hBot )
 	-- whole question here -- re-checking validity would be dead code.
 	local nCloseEnemyList = J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true, BOT_MODE_NONE )
 	if nCloseEnemyList ~= nil and #nCloseEnemyList > 0
+	then
+		return false
+	end
+
+	return true
+
+end
+
+
+--- [liondrainstop] gated (turbo + soak candidate): should Lion RELEASE an
+--- already-running Mana Drain channel right now? True only when the same
+--- pressure test that refuses to start one (a hero currently killing him AND
+--- inside X.nEDrainDangerRadius) is met -- the second lever, one at a time.
+--- Deliberately uses the SAME predicate as lion_IsDrainSafeToStart (with the
+--- polarity flipped): start-refusal cannot save a channel that starts clean
+--- and turns unsafe (an enemy walks in / begins hitting Lion during it), so
+--- this catches the residual class the start guard cannot see. Gate off (or
+--- non-turbo) => false, and X.ConsiderStopDrain keeps its shipped shape.
+function X.lion_ShouldStopDrain( hBot )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end
+
+	if not hBot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
+
+	local nCloseEnemyList = J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true, BOT_MODE_NONE )
+	if nCloseEnemyList == nil or #nCloseEnemyList == 0
 	then
 		return false
 	end
