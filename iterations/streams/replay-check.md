@@ -879,3 +879,34 @@
     (4) 16:11Z 之后的新波次若 `tpdying` 仍在集内,用 `tpdying_landing.py` 同口径复跑,
     看域内 realized-lethal 帧数是否仍是个位数(#68 可测性论断的可证伪点)。
   - 完整报告:`iterations/reports/replay-check/20260820T124854Z.md`
+- **2026-08-20T14:36Z(第二十次触发)**:执行「下一轮优先」第 1 条 —— **`tpdead` 首次条件 (a)
+  核验**(GH #37 rec 3,armed 已多波、核验记录一直为 0)。合并三个含 `tpdead` 的波次
+  (`_2211**` 867-870 / `_0411**` 872/875/885/887 / `_1011**` 888/895/896/906,17-id 全 armed)
+  + 一个不含它的对照臂(`_1211**` lf_rescue bisect,859-862)。**宽扫 64/64 局
+  (`_101143` 首扫掉 1 局因 dumper 二进制 Permission denied,单独重跑补齐);深查:20 次
+  归属救援全逐帧还原(横跨 ~15 局),其中 4 局手工精读。**
+  - `tpdead`:**WORKING(条件 (a) 成立,帧级正归属;强度:强,非镜像隔离)**。tpdead 只在
+    「被 stamp 的救援友军 `not IsAlive()`」时释放 tpcommit DEFEND 地板(`jmz_func.lua:7184`)。
+    用 `tp_attribution.py` 落点归属钉 50 次可归属救援(ON 34/OFF 16),收窄到 tpdead 唯一
+    触发条件(友军 12s 窗内死)= 20 次(ON 17/OFF 3),逐帧核验响应者是否被释放。
+    **关键正交控制**:只在「门本会继续 hold」的帧上判(respLoc 1600u 内仍有敌),否则地板
+    自带的「无敌→return nil」子句也会释放,不可归因。settled 位移:**ON 中位 +99u、7/17 在门
+    本会 hold 时脱离 respLoc(>400u);OFF 中位 −58u、0/3**。三正例(`_042009` t=508.3 pos3 满血
+    远离 4267→5589、`_103128` t=281.2 pos4 死后再开 TP 脱离、对照 `_123012` t=568.4 #37 立案帧
+    tpdead OFF 整窗站桩 5900u)。诚实反例 `_042607` t=222.7 释放后 normal-mode 继续交战
+    (**释放 ≠ 强制撤退**),如实标注不可归因。`resp_died_15s = 0/50`。
+  - **重新证实 #37 效果侧(11→50 次)**:归属救援里友军 15s 内死 **20/50 = 40%**,落点→友军
+    中位 **2006u**、max 5858u。tpdead 只清扫尸体之后的钉住,**不改「TP 本就不该发」**——#37
+    rec 1/2 仍是更高价值未落地修复。**未开新 issue**(tpdead 即 #37 rec 3,无新缺陷),
+    评论 #37 交付 (a) 证据 + (b) 行为检测器(友军死后 4s 脱离率,ON 41% vs OFF 0%)。
+  - **可测性**:tpdead ≈ 0.3-0.4 次/局,(b) 在 gpm/死亡率上不可测(#30 σ≈30,#34 §4 陷阱);
+    须用 moved_AWAY 行为检测器,且要等 tpdead 单臂 bisect 做镜像净差。
+  - **新工具(已提交)**:`tools/batch_test/behavioral/tpdead_release.py` —— tpdead (a) 验证器
+    (复用 `tp_attribution.scan` 落点归属 + 「友军窗内死」收窄 + settled 窗口 respLoc 位移 +
+    pin-hold 正交门 + 1Hz 落地跳变过滤;docstring 写死 release≠retreat 边界)。
+  - 已检查:上述 16 个 run 各 4 局共 64 局本维度首检完毕;暖场局按 script_version 无 `mirror:`
+    自动作废。
+  - **下一轮优先**:(1) `tpdead` 单臂 bisect 若上机 → `tpdead_release.py` 做镜像净差(隔离证明);
+    (2) `tpdead` 的 (b) 用 moved_AWAY 率行为检测器;(3) `cmrguard` 若按 #63+#66 收窄,**必须用
+    施法前帧口径**复跑四条验收 + #66 recall;(4) `l1trade`/`l5combo` 自身 (a)(§G.5,连续**七**轮欠)。
+  - 完整报告:`iterations/reports/replay-check/20260820T143600Z.md`
