@@ -329,6 +329,69 @@ function M.load(path, sSubject)
         end
         GetTeamMember = function(i) return allies[i] end
     end
+
+    -- Fog memory. GetHeroLastSeenInfo is the engine's "where do I remember this
+    -- hero being, and how stale is that" API; the mock answered `{}` for every
+    -- id, so J.GetLastSeenEnemiesNearLoc / J.GetLastSeenEnemies / every
+    -- last-seen head-count in aba_defend returned an EMPTY LIST on every
+    -- fixture, on every frame. That is one more undeclared world assertion of
+    -- the same family as GetTower, GetIncomingTrackingProjectiles, HasModifier
+    -- and WasRecentlyDamagedBy*: "nobody has ever seen an enemy anywhere".
+    --
+    -- Two halves are needed, because the readers all look like
+    --   for _, id in pairs(GetTeamPlayers(GetOpposingTeam())) do
+    --       local info = GetHeroLastSeenInfo(id) ... info[1].location
+    -- and GetTeamPlayers above answers for OUR team only. The opposing side
+    -- gets the enemies' real player_ids when the fixture carries them, and an
+    -- id space of its own otherwise -- disjoint from the ally ids either way.
+    -- Only ALIVE enemies get an id, matching the alive-only convention the
+    -- unit lists already use (every reader gates on IsHeroAlive, which the mock
+    -- cannot answer per id).
+    --
+    -- time_since_seen: the behavioural dump carries no per-hero vision
+    -- (GH #27), so today every fixture is fully visible and every sighting is
+    -- current (0). If a fixture ever does carry `seen_by`, a hero the subject's
+    -- team cannot see gets a deliberately unusable memory (999) rather than an
+    -- invented stale location -- every shipped reader gates on
+    -- `time_since_seen < N`, so that reads as "no useful memory", never as a
+    -- sighting we made up.
+    local ENEMY_ID_BASE = 100
+    local lastSeenById, enemyIds = {}, {}
+    local function stampLastSeen(u, id)
+        lastSeenById[id] = { {
+            location = api.Vector(u.x, u.y, 0),
+            time_since_seen = visible_to_subject(u) and 0 or 999,
+        } }
+    end
+    local nEnemy = 0
+    for _, u in ipairs(fx.units) do
+        if u.alive then
+            if u.team == subj_team then
+                -- Ally ids come from the roster above, so look the id up rather
+                -- than inventing one.
+                for i, id in ipairs(GetTeamPlayers(subj_team)) do
+                    if GetTeamMember(i) == heroes[u.name] then stampLastSeen(u, id) end
+                end
+            else
+                nEnemy = nEnemy + 1
+                local id = u.player_id
+                if id == nil then id = ENEMY_ID_BASE + nEnemy end
+                enemyIds[#enemyIds + 1] = id
+                stampLastSeen(u, id)
+            end
+        end
+    end
+
+    local ownTeamPlayers = GetTeamPlayers
+    GetTeamPlayers = function(team)
+        if team ~= nil and team ~= subj_team then
+            local t = {}
+            for i, id in ipairs(enemyIds) do t[i] = id end
+            return t
+        end
+        return ownTeamPlayers(team)
+    end
+    GetHeroLastSeenInfo = function(id) return lastSeenById[id] or {} end
     GetUnitList = function(kind)
         if kind == UNIT_LIST_ENEMY_HEROES then return enemies end
         if kind == UNIT_LIST_ALLIED_HEROES then return allies end

@@ -1250,7 +1250,21 @@ function ____exports.DefendThink(bot, lane)
         pathEnemies = bot[pathCacheKey]
     end
     local ds = getDefendState(bot)
-    if bot:WasRecentlyDamagedByAnyHero(5) and #pathEnemies > #ds.nInRangeEnemy then
+    -- [defstale] The guard below reads "more enemies on my PATH than IN RANGE",
+    -- but both sides are the SAME query -- GetLastSeenEnemiesNearLoc(botLocation,
+    -- 1600). `pathEnemies` is that query bucketed to 500ms; `ds.nInRangeEnemy` is
+    -- that query written at the BOTTOM of GetDefendDesireHelper, below seven
+    -- early returns -- one of which (`#closeEnemiesDefend > 0 and
+    -- #closeAlliesDefend >= #closeEnemiesDefend`) fires on exactly the frames
+    -- this Think runs on, i.e. whenever a fight is happening within 900. So
+    -- during a fight the right-hand side freezes at whatever it held before the
+    -- fight started, or -- if no helper call ever reached the bottom -- at the
+    -- initial empty table. The comparison can therefore only ever be bought by
+    -- that staleness, never by a real path/range difference, and it aborts every
+    -- other DefendThink branch for the frame.
+    -- Armed (turbo only), the bail-out does not fire; nothing else changes.
+    local bStaleBail = not (jmz.IsSoakCandidate("defstale") and jmz.IsModeTurbo())
+    if bStaleBail and bot:WasRecentlyDamagedByAnyHero(5) and #pathEnemies > #ds.nInRangeEnemy then
         local safe = jmz.AdjustLocationWithOffsetTowardsFountain(
             bot:GetLocation(),
             700

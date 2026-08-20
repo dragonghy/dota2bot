@@ -374,6 +374,17 @@ function M.install(opts)
         package.path,
     }, ';')
 
+    -- Team ids are NOT free to be sentinels: GetTeam()/GetOpposingTeam() hand
+    -- out the engine's real 2/3, and the shipped code compares those against
+    -- TEAM_RADIANT/TEAM_DIRE. Left to the sentinel table below, every such
+    -- comparison was false -- e.g. J.GetTeamFountain's `Team == TEAM_DIRE`, so
+    -- a Dire subject was handed the RADIANT fountain, and every
+    -- "retreat/step back toward my fountain" location pointed at the wrong
+    -- corner of the map.
+    G.TEAM_RADIANT = 2
+    G.TEAM_DIRE = 3
+    G.TEAM_NEUTRAL = 4
+
     -- Auto-define ALL_CAPS engine constants: each unknown ALL_CAPS global
     -- resolves to a distinct, stable number. Everything else stays nil.
     local const_ids = {}
