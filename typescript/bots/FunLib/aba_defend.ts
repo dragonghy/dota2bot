@@ -902,7 +902,21 @@ export function GetDefendDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     if (recentlyHit) {
         // Cut desire and favor regrouping when outnumbered
         nDefendDesire = nDefendDesire * 0.4;
-        if (ds.nInRangeEnemy.length >= ds.nInRangeAlly.length && !ds.weAreStronger) {
+        // [defnum] The cap below reads "as many enemies as allies in range of
+        // me, and we are not stronger" -- an outnumbering test. It cannot be
+        // one. ds.nInRangeEnemy is written near the top of this function and
+        // the very next statement returns VeryLow whenever it is non-empty, so
+        // every line from there down runs ONLY when that list is empty. The
+        // left-hand side is the constant 0 here, and `0 >= nInRangeAlly.length`
+        // is true exactly when the bot has no ally within 1600 -- the guard
+        // fires on "am I alone", never on "am I outnumbered". Rewriting it
+        // against the hub-centred counts this function already has
+        // (lEnemies / nEffAllies) was measured and rejected: it would fire on
+        // 541 of 549 in-domain frames against the shipped 308. The candidate
+        // REMOVES it and lets the *0.4 decay damp proportionally. Armed (turbo
+        // only) the desire can only move up; nothing else changes.
+        const bParityCap = !(jmz.IsSoakCandidate("defnum") && jmz.IsModeTurbo());
+        if (bParityCap && ds.nInRangeEnemy.length >= ds.nInRangeAlly.length && !ds.weAreStronger) {
             nDefendDesire = math.min(nDefendDesire, BotActionDesire.Low);
         }
     }

@@ -1193,7 +1193,30 @@ function ____exports.GetDefendDesireHelper(bot, lane)
     )
     if recentlyHit then
         nDefendDesire = nDefendDesire * 0.4
-        if #ds.nInRangeEnemy >= #ds.nInRangeAlly and not ds.weAreStronger then
+        -- [defnum] The cap below reads "as many enemies as allies in range of
+        -- me, and we are not stronger" -- an outnumbering test. It cannot be
+        -- one. `ds.nInRangeEnemy` is written near the top of this function and
+        -- the very next statement is `if #ds.nInRangeEnemy > 0 ... return
+        -- VeryLow`, so every line from there down runs ONLY when that list is
+        -- empty. The left-hand side is therefore the constant 0 here, and
+        -- `0 >= #ds.nInRangeAlly` is true exactly when the bot has no ally
+        -- within 1600 -- i.e. the guard fires on "am I alone", never on "am I
+        -- outnumbered", and no enemy is anywhere near the bot when it does.
+        -- The written semantics are unexpressible at this point in the
+        -- function, same family as the [defstale] guard in DefendThink below.
+        -- Rewriting it against the hub-centred counts this function already
+        -- has (#lEnemies / nEffAllies) was measured and rejected: over the six
+        -- turbo replays it would fire on 541 of 549 in-domain frames against
+        -- the shipped 308, i.e. it turns an accident into a systematically
+        -- more defeatist rule. So the candidate REMOVES it instead and lets
+        -- the *0.4 decay above damp proportionally. The cap only ever binds
+        -- when the pre-decay desire exceeds 0.625, which after the health
+        -- remap means a near-full-health bot on an urgent lane -- exactly the
+        -- defence worth making -- and 0.25 loses essentially every mode
+        -- auction. Armed (turbo only) nothing else changes: no new action, no
+        -- other bid touched, and the desire can only move up.
+        local bParityCap = not (jmz.IsSoakCandidate("defnum") and jmz.IsModeTurbo())
+        if bParityCap and #ds.nInRangeEnemy >= #ds.nInRangeAlly and not ds.weAreStronger then
             nDefendDesire = math.min(nDefendDesire, BotActionDesire.Low)
         end
     end
