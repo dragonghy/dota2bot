@@ -1,0 +1,9487 @@
+{
+ "hero_index": {
+  "axe": [
+   201,
+   302,
+   404,
+   803,
+   851,
+   860,
+   863,
+   872,
+   875,
+   885,
+   887,
+   911,
+   923,
+   961,
+   971,
+   974,
+   983,
+   995,
+   555555
+  ],
+  "bristleback": [
+   301,
+   302,
+   403,
+   804,
+   805,
+   806,
+   811,
+   813,
+   855,
+   856,
+   859,
+   866,
+   895,
+   906,
+   931,
+   932,
+   941,
+   943,
+   944,
+   962,
+   981,
+   982,
+   983,
+   991,
+   994,
+   995,
+   996,
+   333333
+  ],
+  "centaur": [
+   302,
+   502,
+   602,
+   603,
+   604,
+   806,
+   854,
+   866,
+   869,
+   902,
+   914,
+   921,
+   932,
+   933,
+   962,
+   974,
+   983,
+   996,
+   998
+  ],
+  "chaos_knight": [
+   101,
+   102,
+   401,
+   601,
+   604,
+   802,
+   803,
+   805,
+   814,
+   853,
+   854,
+   855,
+   857,
+   859,
+   860,
+   861,
+   865,
+   869,
+   902,
+   903,
+   905,
+   911,
+   912,
+   933,
+   941,
+   942,
+   943,
+   951,
+   953,
+   954,
+   971,
+   981,
+   992,
+   993,
+   111111,
+   131313,
+   222222,
+   333333,
+   777777
+  ],
+  "crystal_maiden": [
+   302,
+   304,
+   502,
+   601,
+   602,
+   802,
+   806,
+   853,
+   854,
+   856,
+   858,
+   860,
+   862,
+   867,
+   868,
+   875,
+   885,
+   888,
+   895,
+   896,
+   906,
+   921,
+   924,
+   941,
+   943,
+   953,
+   963,
+   964,
+   971,
+   981,
+   996,
+   997,
+   111111,
+   222222,
+   444444,
+   555555,
+   777777
+  ],
+  "death_prophet": [
+   301,
+   303,
+   601,
+   602,
+   805,
+   811,
+   812,
+   852,
+   853,
+   856,
+   858,
+   862,
+   864,
+   865,
+   866,
+   887,
+   901,
+   911,
+   913,
+   914,
+   921,
+   924,
+   932,
+   951,
+   961,
+   962,
+   963,
+   973,
+   974,
+   997,
+   333333
+  ],
+  "dragon_knight": [
+   202,
+   302,
+   303,
+   304,
+   403,
+   404,
+   602,
+   603,
+   801,
+   806,
+   811,
+   812,
+   813,
+   814,
+   851,
+   852,
+   854,
+   855,
+   857,
+   858,
+   859,
+   861,
+   862,
+   863,
+   864,
+   866,
+   867,
+   869,
+   870,
+   895,
+   901,
+   902,
+   903,
+   905,
+   922,
+   944,
+   951,
+   953,
+   962,
+   963,
+   964,
+   982,
+   984,
+   991,
+   992,
+   994,
+   111111,
+   131313,
+   222222,
+   246802,
+   424242,
+   444444,
+   777777,
+   778899
+  ],
+  "drow_ranger": [
+   202,
+   303,
+   402,
+   404,
+   501,
+   802,
+   804,
+   811,
+   812,
+   852,
+   864,
+   868,
+   872,
+   875,
+   888,
+   914,
+   943,
+   954,
+   963,
+   991,
+   131313,
+   444444
+  ],
+  "earthshaker": [
+   302,
+   304,
+   601,
+   602,
+   801,
+   802,
+   813,
+   863,
+   864,
+   865,
+   885,
+   906,
+   942,
+   954,
+   974,
+   991,
+   994,
+   995,
+   131313,
+   333333
+  ],
+  "ember_spirit": [
+   201,
+   301,
+   601,
+   803,
+   860,
+   866,
+   870,
+   872,
+   905,
+   912,
+   923,
+   934,
+   971,
+   993,
+   995
+  ],
+  "jakiro": [
+   101,
+   202,
+   403,
+   404,
+   804,
+   805,
+   806,
+   812,
+   852,
+   853,
+   855,
+   857,
+   860,
+   863,
+   868,
+   870,
+   888,
+   895,
+   902,
+   906,
+   911,
+   933,
+   934,
+   952,
+   953,
+   961,
+   963,
+   981,
+   983,
+   984,
+   246802,
+   444444,
+   778899
+  ],
+  "juggernaut": [
+   301,
+   304,
+   805,
+   853,
+   859,
+   867,
+   887,
+   904,
+   906,
+   924,
+   951,
+   961,
+   971,
+   982,
+   995,
+   998,
+   111111
+  ],
+  "lich": [
+   101,
+   302,
+   401,
+   402,
+   404,
+   502,
+   602,
+   603,
+   802,
+   811,
+   853,
+   854,
+   857,
+   859,
+   861,
+   864,
+   865,
+   867,
+   868,
+   875,
+   887,
+   902,
+   904,
+   912,
+   914,
+   932,
+   942,
+   952,
+   954,
+   971,
+   972,
+   973,
+   982,
+   983,
+   246802,
+   424242,
+   555001,
+   778899
+  ],
+  "lina": [
+   101,
+   102,
+   401,
+   501,
+   502,
+   601,
+   604,
+   813,
+   852,
+   853,
+   854,
+   859,
+   861,
+   862,
+   867,
+   870,
+   875,
+   887,
+   888,
+   895,
+   896,
+   903,
+   904,
+   911,
+   912,
+   941,
+   943,
+   951,
+   952,
+   961,
+   972,
+   974,
+   984,
+   992,
+   993,
+   998,
+   424242,
+   555001,
+   555555,
+   777777
+  ],
+  "lion": [
+   303,
+   501,
+   802,
+   812,
+   814,
+   864,
+   872,
+   896,
+   903,
+   905,
+   912,
+   913,
+   914,
+   921,
+   922,
+   932,
+   934,
+   942,
+   962,
+   974,
+   996,
+   131313,
+   333333,
+   778899
+  ],
+  "luna": [
+   101,
+   201,
+   603,
+   802,
+   806,
+   852,
+   854,
+   855,
+   857,
+   887,
+   896,
+   901,
+   905,
+   913,
+   923,
+   944,
+   963,
+   972,
+   973,
+   992,
+   246802,
+   555001,
+   778899
+  ],
+  "medusa": [
+   502,
+   801,
+   851,
+   862,
+   863,
+   867,
+   934,
+   942,
+   972,
+   984,
+   991,
+   993,
+   994,
+   996,
+   246802,
+   444444,
+   777777
+  ],
+  "necrolyte": [
+   201,
+   301,
+   304,
+   401,
+   403,
+   604,
+   805,
+   855,
+   856,
+   857,
+   858,
+   859,
+   864,
+   868,
+   895,
+   896,
+   904,
+   922,
+   923,
+   933,
+   934,
+   941,
+   952,
+   964,
+   972,
+   973,
+   994,
+   997,
+   998,
+   444444,
+   555555
+  ],
+  "nevermore": [
+   101,
+   402,
+   501,
+   603,
+   802,
+   803,
+   806,
+   851,
+   853,
+   856,
+   860,
+   865,
+   868,
+   901,
+   921,
+   924,
+   942,
+   952,
+   953,
+   964,
+   983,
+   996,
+   997,
+   777777
+  ],
+  "obsidian_destroyer": [
+   102,
+   303,
+   502,
+   814,
+   862,
+   865,
+   867,
+   868,
+   885,
+   896,
+   901,
+   903,
+   904,
+   913,
+   933,
+   961,
+   973,
+   974,
+   991,
+   111111,
+   222222,
+   424242
+  ],
+  "ogre_magi": [
+   101,
+   202,
+   403,
+   501,
+   801,
+   803,
+   804,
+   811,
+   854,
+   859,
+   868,
+   870,
+   896,
+   901,
+   903,
+   921,
+   922,
+   933,
+   944,
+   961,
+   962,
+   963,
+   971,
+   981,
+   994,
+   998,
+   222222,
+   555555,
+   777777
+  ],
+  "oracle": [
+   301,
+   812,
+   851,
+   856,
+   865,
+   901,
+   923,
+   933,
+   941,
+   951,
+   964,
+   972,
+   982,
+   994,
+   995,
+   131313
+  ],
+  "phantom_assassin": [
+   401,
+   603,
+   814,
+   851,
+   856,
+   861,
+   864,
+   865,
+   872,
+   903,
+   906,
+   954,
+   962,
+   974,
+   984,
+   992,
+   993,
+   995,
+   333333,
+   555555
+  ],
+  "pudge": [
+   301,
+   303,
+   404,
+   814,
+   853,
+   864,
+   911,
+   951,
+   992,
+   993,
+   444444
+  ],
+  "queenofpain": [
+   501,
+   602,
+   804,
+   805,
+   851,
+   867,
+   902,
+   922,
+   943,
+   963,
+   971,
+   998,
+   111111,
+   131313,
+   246802,
+   778899
+  ],
+  "shadow_shaman": [
+   201,
+   301,
+   603,
+   803,
+   805,
+   806,
+   814,
+   855,
+   856,
+   858,
+   860,
+   866,
+   869,
+   875,
+   885,
+   911,
+   914,
+   931,
+   953,
+   964,
+   971,
+   981,
+   982,
+   983,
+   991,
+   424242,
+   555001,
+   555555
+  ],
+  "silencer": [
+   201,
+   502,
+   804,
+   812,
+   858,
+   866,
+   872,
+   887,
+   922,
+   931,
+   972,
+   111111,
+   246802,
+   778899
+  ],
+  "skeleton_king": [
+   101,
+   102,
+   202,
+   303,
+   304,
+   402,
+   404,
+   501,
+   601,
+   602,
+   604,
+   853,
+   858,
+   861,
+   865,
+   869,
+   870,
+   885,
+   895,
+   904,
+   906,
+   912,
+   923,
+   924,
+   942,
+   952,
+   954,
+   962,
+   983,
+   994,
+   333333,
+   424242,
+   555001,
+   778899
+  ],
+  "skywrath_mage": [
+   102,
+   201,
+   202,
+   303,
+   401,
+   604,
+   801,
+   851,
+   855,
+   862,
+   869,
+   885,
+   903,
+   905,
+   913,
+   922,
+   924,
+   931,
+   933,
+   941,
+   943,
+   961,
+   984,
+   991,
+   997,
+   998,
+   246802,
+   424242,
+   444444,
+   555001,
+   555555
+  ],
+  "slardar": [
+   201,
+   202,
+   302,
+   303,
+   401,
+   402,
+   501,
+   801,
+   813,
+   857,
+   861,
+   863,
+   869,
+   870,
+   875,
+   885,
+   895,
+   896,
+   901,
+   905,
+   913,
+   921,
+   922,
+   923,
+   931,
+   933,
+   934,
+   942,
+   953,
+   971,
+   974,
+   981,
+   984,
+   993,
+   997,
+   222222,
+   246802,
+   424242,
+   444444,
+   555001,
+   555555,
+   778899
+  ],
+  "sniper": [
+   101,
+   102,
+   201,
+   301,
+   304,
+   402,
+   403,
+   404,
+   502,
+   601,
+   604,
+   802,
+   803,
+   804,
+   805,
+   806,
+   813,
+   814,
+   852,
+   856,
+   857,
+   861,
+   862,
+   863,
+   865,
+   866,
+   868,
+   870,
+   885,
+   902,
+   904,
+   906,
+   911,
+   921,
+   922,
+   923,
+   932,
+   933,
+   934,
+   941,
+   942,
+   944,
+   951,
+   952,
+   953,
+   954,
+   961,
+   963,
+   993,
+   995,
+   131313,
+   222222,
+   333333,
+   555555
+  ],
+  "spirit_breaker": [
+   402,
+   403,
+   811,
+   813,
+   851,
+   861,
+   872,
+   888,
+   912,
+   914,
+   931,
+   953,
+   982,
+   984,
+   992,
+   993,
+   997,
+   555001
+  ],
+  "storm_spirit": [
+   302,
+   304,
+   401,
+   403,
+   801,
+   804,
+   854,
+   862,
+   863,
+   931,
+   941,
+   964,
+   972,
+   973,
+   981,
+   982,
+   983,
+   991,
+   996
+  ],
+  "sven": [
+   101,
+   202,
+   402,
+   403,
+   502,
+   802,
+   803,
+   811,
+   814,
+   858,
+   860,
+   862,
+   866,
+   870,
+   888,
+   904,
+   914,
+   922,
+   931,
+   934,
+   941,
+   964,
+   973,
+   982,
+   994,
+   997,
+   998,
+   111111,
+   246802,
+   444444,
+   555001
+  ],
+  "tidehunter": [
+   102,
+   404,
+   812,
+   813,
+   860,
+   872,
+   875,
+   887,
+   888,
+   896,
+   913,
+   914,
+   932,
+   944,
+   952,
+   964,
+   992,
+   131313
+  ],
+  "vengefulspirit": [
+   102,
+   201,
+   401,
+   801,
+   812,
+   857,
+   861,
+   869,
+   887,
+   902,
+   903,
+   911,
+   912,
+   921,
+   923,
+   924,
+   932,
+   943,
+   944,
+   952,
+   954,
+   962,
+   973,
+   981,
+   982,
+   993,
+   997,
+   131313,
+   222222,
+   777777
+  ],
+  "venomancer": [
+   202,
+   304,
+   401,
+   403,
+   602,
+   604,
+   801,
+   811,
+   813,
+   856,
+   858,
+   859,
+   860,
+   870,
+   895,
+   901,
+   902,
+   904,
+   913,
+   924,
+   934,
+   942,
+   944,
+   951,
+   963,
+   974,
+   992,
+   996,
+   222222,
+   333333,
+   424242
+  ],
+  "viper": [
+   202,
+   501,
+   601,
+   602,
+   603,
+   803,
+   804,
+   811,
+   852,
+   855,
+   864,
+   867,
+   868,
+   869,
+   872,
+   875,
+   885,
+   888,
+   905,
+   906,
+   912,
+   913,
+   924,
+   931,
+   934,
+   953,
+   954,
+   972,
+   981,
+   984,
+   992,
+   995,
+   996,
+   424242
+  ],
+  "warlock": [
+   603,
+   804,
+   904,
+   905,
+   923,
+   943,
+   944,
+   962,
+   972,
+   973,
+   984,
+   994,
+   111111,
+   333333
+  ],
+  "witch_doctor": [
+   102,
+   302,
+   402,
+   404,
+   501,
+   502,
+   604,
+   803,
+   805,
+   813,
+   852,
+   854,
+   855,
+   857,
+   863,
+   867,
+   875,
+   887,
+   888,
+   912,
+   932,
+   951,
+   954,
+   973,
+   983,
+   991,
+   998,
+   111111,
+   777777
+  ],
+  "zuus": [
+   102,
+   301,
+   303,
+   304,
+   402,
+   601,
+   603,
+   604,
+   801,
+   806,
+   812,
+   814,
+   851,
+   852,
+   858,
+   859,
+   863,
+   866,
+   869,
+   872,
+   888,
+   895,
+   896,
+   901,
+   902,
+   903,
+   905,
+   906,
+   911,
+   913,
+   914,
+   921,
+   924,
+   931,
+   932,
+   943,
+   944,
+   952,
+   961,
+   964,
+   995,
+   996,
+   997,
+   998,
+   222222,
+   555001,
+   777777,
+   778899
+  ]
+ },
+ "off_roster_seeds": [
+  "101",
+  "201",
+  "501",
+  "603",
+  "805",
+  "853",
+  "901",
+  "903",
+  "905",
+  "911",
+  "953",
+  "991",
+  "111111",
+  "131313",
+  "246802",
+  "555001",
+  "777777"
+ ],
+ "off_roster_total": 24,
+ "runs_scanned": [
+  "run_20260719_0455",
+  "run_20260719_0630",
+  "run_20260719_0716",
+  "run_20260719_0741",
+  "run_20260719_0848",
+  "run_20260719_0904",
+  "run_20260719_0915",
+  "run_20260719_0927",
+  "run_20260719_0935",
+  "run_20260719_0944",
+  "run_20260719_0954",
+  "run_20260719_1002",
+  "run_20260719_1011",
+  "run_20260719_1019",
+  "run_20260719_1028",
+  "run_20260719_1037",
+  "run_20260719_1045",
+  "run_20260719_1054",
+  "run_20260719_1102",
+  "run_20260719_1111",
+  "run_20260719_1119",
+  "run_20260719_1127",
+  "run_20260719_1136",
+  "run_20260719_1353",
+  "run_20260719_1529",
+  "run_20260719_1554",
+  "run_20260719_1601",
+  "spot_20260719_201634_1_main",
+  "spot_20260719_201634_2_main",
+  "spot_20260719_204652_1_main",
+  "spot_20260719_214351_1_main",
+  "spot_20260719_214351_2_main",
+  "spot_20260719_214351_3_main",
+  "spot_20260719_214351_4_main",
+  "spot_20260719_232911_1_main",
+  "spot_20260719_232911_2_main",
+  "spot_20260720_043207_1_main",
+  "spot_20260720_060337_1_main",
+  "spot_20260720_064050_1_main",
+  "spot_20260721_003655_1_main",
+  "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+  "spot_20260721_151005_1_claude-affectionate-dirac-qumja6",
+  "spot_20260721_214723_1_main",
+  "spot_20260721_214731_1_main",
+  "spot_20260721_214735_1_main",
+  "spot_20260721_214740_1_main",
+  "spot_20260721_222800_1_main",
+  "spot_20260721_225025_1_main",
+  "spot_20260721_233251_1_main",
+  "spot_20260722_012310_1_main",
+  "spot_20260722_021043_1_main",
+  "spot_20260722_030410_1_main",
+  "spot_20260722_035559_1_main",
+  "spot_20260722_035602_1_main",
+  "spot_20260722_044826_1_main",
+  "spot_20260722_053931_1_main",
+  "spot_20260722_174758_1_main",
+  "spot_20260722_174801_1_main",
+  "spot_20260722_174804_1_main",
+  "spot_20260722_225252_1_main",
+  "spot_20260722_225302_1_main",
+  "spot_20260722_225310_1_main",
+  "spot_20260722_235857_1_main",
+  "spot_20260722_235907_1_main",
+  "spot_20260723_010428_1_main",
+  "spot_20260723_044826_1_main",
+  "spot_20260723_044833_1_main",
+  "spot_20260723_050440_1_main",
+  "spot_20260723_050448_1_main",
+  "spot_20260723_075313_1_main",
+  "spot_20260723_075505_1_main",
+  "spot_20260723_111412_1_main",
+  "spot_20260723_111423_1_main",
+  "spot_20260723_111600_1_main",
+  "spot_20260723_111609_1_main",
+  "spot_20260723_160025_1_main",
+  "spot_20260723_160040_1_main",
+  "spot_20260725_043213_1_main",
+  "spot_20260725_043231_1_main",
+  "spot_20260725_081214_1_main",
+  "spot_20260725_081230_1_main",
+  "spot_20260725_102518_1_main",
+  "spot_20260725_102532_1_main",
+  "spot_20260725_102545_1_main",
+  "spot_20260725_102558_1_main",
+  "spot_20260731_140127_1_main",
+  "spot_20260731_140139_1_main",
+  "spot_20260731_161147_1_main",
+  "spot_20260731_161232_1_main",
+  "spot_20260731_192742_1_main",
+  "spot_20260731_192832_1_main",
+  "spot_20260819_001001_1_main",
+  "spot_20260819_001007_1_main",
+  "spot_20260819_020910_1_main",
+  "spot_20260819_060925_1_main",
+  "spot_20260819_060928_1_main",
+  "spot_20260819_060932_1_main",
+  "spot_20260819_060935_1_main",
+  "spot_20260819_121038_1_main",
+  "spot_20260819_121044_1_main",
+  "spot_20260819_121050_1_main",
+  "spot_20260819_121056_1_main",
+  "spot_20260819_121105_1_main",
+  "spot_20260819_121111_1_main",
+  "spot_20260819_121117_1_main",
+  "spot_20260819_121122_1_main",
+  "spot_20260819_141128_1_main",
+  "spot_20260819_141131_1_main",
+  "spot_20260819_141134_1_main",
+  "spot_20260819_180801_1_main",
+  "spot_20260819_180804_1_main",
+  "spot_20260819_180807_1_main",
+  "spot_20260819_180809_1_main",
+  "spot_20260819_200925_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b",
+  "spot_20260819_200927_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b",
+  "spot_20260819_200930_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b",
+  "spot_20260819_200933_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b",
+  "spot_20260819_221108_1_829202ac3e08f6450b1a7f303e98be2a543e8619",
+  "spot_20260819_221112_1_829202ac3e08f6450b1a7f303e98be2a543e8619",
+  "spot_20260819_221117_1_829202ac3e08f6450b1a7f303e98be2a543e8619",
+  "spot_20260819_221122_1_829202ac3e08f6450b1a7f303e98be2a543e8619",
+  "spot_20260820_041132_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f",
+  "spot_20260820_041134_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f",
+  "spot_20260820_041137_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f",
+  "spot_20260820_041139_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f",
+  "spot_20260820_101138_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+  "spot_20260820_101140_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+  "spot_20260820_101143_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+  "spot_20260820_101145_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+  "spot_20260820_160902_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_160904_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_160908_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_160911_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_180759_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_180802_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_180805_1_11a8de336248927265d20af677f944085a02d248",
+  "spot_20260820_180808_1_11a8de336248927265d20af677f944085a02d248"
+ ],
+ "seeds": {
+  "101": {
+   "cands": [
+    "pullcamp",
+    "lf_support",
+    "bodyblock",
+    "divecap"
+   ],
+   "dire": [
+    "jakiro",
+    "lina",
+    "luna",
+    "ogre_magi",
+    "skeleton_king"
+   ],
+   "games": 261,
+   "games_by_cand_side": {
+    "dire": 120,
+    "radiant": 141
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "chaos_knight": 3,
+    "jakiro": 5,
+    "lich": 5,
+    "lina": 2,
+    "luna": 1,
+    "nevermore": 2,
+    "ogre_magi": 4,
+    "skeleton_king": 3,
+    "sniper": 4,
+    "sven": 1
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "lich",
+    "nevermore",
+    "sniper",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260721_214731_1_main",
+    "spot_20260721_214735_1_main",
+    "spot_20260721_214740_1_main",
+    "spot_20260721_222800_1_main",
+    "spot_20260721_225025_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "jakiro",
+      "lina",
+      "luna",
+      "ogre_magi",
+      "skeleton_king"
+     ],
+     "games": 261,
+     "games_by_cand_side": {
+      "dire": 120,
+      "radiant": 141
+     },
+     "radiant": [
+      "chaos_knight",
+      "lich",
+      "nevermore",
+      "sniper",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260721_214731_1_main",
+      "spot_20260721_214735_1_main",
+      "spot_20260721_214740_1_main",
+      "spot_20260721_222800_1_main",
+      "spot_20260721_225025_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "lina",
+      "obsidian_destroyer",
+      "sniper",
+      "tidehunter",
+      "vengefulspirit"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "chaos_knight",
+      "skeleton_king",
+      "skywrath_mage",
+      "witch_doctor",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260721_214731_1_main"
+     ]
+    }
+   ]
+  },
+  "102": {
+   "cands": [
+    "pullcamp",
+    "bodyblock",
+    "divecap"
+   ],
+   "dire": [
+    "lina",
+    "obsidian_destroyer",
+    "sniper",
+    "tidehunter",
+    "vengefulspirit"
+   ],
+   "games": 93,
+   "games_by_cand_side": {
+    "dire": 31,
+    "radiant": 62
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "lina": 4,
+    "obsidian_destroyer": 2,
+    "skeleton_king": 3,
+    "skywrath_mage": 5,
+    "sniper": 1,
+    "tidehunter": 3,
+    "vengefulspirit": 5,
+    "witch_doctor": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "skeleton_king",
+    "skywrath_mage",
+    "witch_doctor",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260721_214731_1_main",
+    "spot_20260721_214740_1_main",
+    "spot_20260721_225025_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lina",
+      "obsidian_destroyer",
+      "sniper",
+      "tidehunter",
+      "vengefulspirit"
+     ],
+     "games": 93,
+     "games_by_cand_side": {
+      "dire": 31,
+      "radiant": 62
+     },
+     "radiant": [
+      "chaos_knight",
+      "skeleton_king",
+      "skywrath_mage",
+      "witch_doctor",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260721_214731_1_main",
+      "spot_20260721_214740_1_main",
+      "spot_20260721_225025_1_main"
+     ]
+    }
+   ]
+  },
+  "111111": {
+   "cands": [
+    "lanefix"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "juggernaut",
+    "obsidian_destroyer",
+    "witch_doctor"
+   ],
+   "games": 123,
+   "games_by_cand_side": {
+    "dire": 60,
+    "radiant": 63
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 3,
+    "juggernaut": 1,
+    "obsidian_destroyer": 2,
+    "queenofpain": 2,
+    "silencer": 5,
+    "sven": 1,
+    "warlock": 4,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "queenofpain",
+    "silencer",
+    "sven",
+    "warlock"
+   ],
+   "runs": [
+    "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+    "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "juggernaut",
+      "obsidian_destroyer",
+      "witch_doctor"
+     ],
+     "games": 123,
+     "games_by_cand_side": {
+      "dire": 60,
+      "radiant": 63
+     },
+     "radiant": [
+      "dragon_knight",
+      "queenofpain",
+      "silencer",
+      "sven",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+      "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+     ]
+    },
+    {
+     "dire": [
+      "crystal_maiden",
+      "obsidian_destroyer",
+      "slardar",
+      "sniper",
+      "venomancer"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "chaos_knight",
+      "dragon_knight",
+      "ogre_magi",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260721_053222_1_claude-affectionate-dirac-qumja6"
+     ]
+    }
+   ]
+  },
+  "131313": {
+   "cands": [
+    "fight",
+    "nodive",
+    "tpsafe",
+    "regroup",
+    "punish",
+    "c3",
+    "corefarm",
+    "depthnum"
+   ],
+   "dire": [
+    "chaos_knight",
+    "drow_ranger",
+    "earthshaker",
+    "oracle",
+    "queenofpain"
+   ],
+   "games": 562,
+   "games_by_cand_side": {
+    "dire": 236,
+    "radiant": 326
+   },
+   "off_roster_games": 5,
+   "positions": {
+    "chaos_knight": 3,
+    "dragon_knight": 2,
+    "drow_ranger": 1,
+    "earthshaker": 4,
+    "lion": 4,
+    "oracle": 5,
+    "queenofpain": 2,
+    "sniper": 1,
+    "tidehunter": 3,
+    "vengefulspirit": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "lion",
+    "sniper",
+    "tidehunter",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "run_20260719_1601",
+    "spot_20260719_214351_1_main",
+    "spot_20260719_214351_2_main",
+    "spot_20260719_214351_3_main",
+    "spot_20260719_214351_4_main",
+    "spot_20260719_232911_1_main",
+    "spot_20260719_232911_2_main",
+    "spot_20260720_060337_1_main",
+    "spot_20260720_064050_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "drow_ranger",
+      "earthshaker",
+      "oracle",
+      "queenofpain"
+     ],
+     "games": 562,
+     "games_by_cand_side": {
+      "dire": 236,
+      "radiant": 326
+     },
+     "radiant": [
+      "dragon_knight",
+      "lion",
+      "sniper",
+      "tidehunter",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "run_20260719_1601",
+      "spot_20260719_214351_1_main",
+      "spot_20260719_214351_2_main",
+      "spot_20260719_214351_3_main",
+      "spot_20260719_214351_4_main",
+      "spot_20260719_232911_1_main",
+      "spot_20260719_232911_2_main",
+      "spot_20260720_060337_1_main",
+      "spot_20260720_064050_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "dragon_knight",
+      "luna",
+      "silencer",
+      "skywrath_mage",
+      "sven"
+     ],
+     "games": 5,
+     "games_by_cand_side": {
+      "dire": 5,
+      "radiant": 0
+     },
+     "radiant": [
+      "jakiro",
+      "lich",
+      "medusa",
+      "queenofpain",
+      "slardar"
+     ],
+     "runs": [
+      "run_20260719_1601",
+      "spot_20260719_214351_1_main",
+      "spot_20260719_214351_3_main"
+     ]
+    }
+   ]
+  },
+  "201": {
+   "cands": [
+    "depthnum"
+   ],
+   "dire": [
+    "axe",
+    "ember_spirit",
+    "luna",
+    "shadow_shaman",
+    "sniper"
+   ],
+   "games": 57,
+   "games_by_cand_side": {
+    "dire": 28,
+    "radiant": 29
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "axe": 3,
+    "ember_spirit": 2,
+    "luna": 1,
+    "necrolyte": 2,
+    "shadow_shaman": 5,
+    "silencer": 5,
+    "skywrath_mage": 4,
+    "slardar": 3,
+    "sniper": 4,
+    "vengefulspirit": 1
+   },
+   "positions_verified": true,
+   "radiant": [
+    "necrolyte",
+    "silencer",
+    "skywrath_mage",
+    "slardar",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260721_233251_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "ember_spirit",
+      "luna",
+      "shadow_shaman",
+      "sniper"
+     ],
+     "games": 57,
+     "games_by_cand_side": {
+      "dire": 28,
+      "radiant": 29
+     },
+     "radiant": [
+      "necrolyte",
+      "silencer",
+      "skywrath_mage",
+      "slardar",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260721_233251_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "dragon_knight",
+      "jakiro",
+      "skeleton_king",
+      "skywrath_mage",
+      "slardar"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "drow_ranger",
+      "ogre_magi",
+      "sven",
+      "venomancer",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260721_233251_1_main"
+     ]
+    }
+   ]
+  },
+  "202": {
+   "cands": [
+    "depthnum"
+   ],
+   "dire": [
+    "dragon_knight",
+    "jakiro",
+    "skeleton_king",
+    "skywrath_mage",
+    "slardar"
+   ],
+   "games": 46,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 31
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 2,
+    "drow_ranger": 1,
+    "jakiro": 5,
+    "ogre_magi": 5,
+    "skeleton_king": 3,
+    "skywrath_mage": 4,
+    "slardar": 1,
+    "sven": 3,
+    "venomancer": 4,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "drow_ranger",
+    "ogre_magi",
+    "sven",
+    "venomancer",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260721_233251_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "jakiro",
+      "skeleton_king",
+      "skywrath_mage",
+      "slardar"
+     ],
+     "games": 46,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 31
+     },
+     "radiant": [
+      "drow_ranger",
+      "ogre_magi",
+      "sven",
+      "venomancer",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260721_233251_1_main"
+     ]
+    }
+   ]
+  },
+  "222222": {
+   "cands": [
+    "lanefix"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "obsidian_destroyer",
+    "slardar",
+    "sniper",
+    "venomancer"
+   ],
+   "games": 118,
+   "games_by_cand_side": {
+    "dire": 60,
+    "radiant": 58
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 2,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 4,
+    "slardar": 3,
+    "sniper": 1,
+    "vengefulspirit": 1,
+    "venomancer": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "dragon_knight",
+    "ogre_magi",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+    "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "obsidian_destroyer",
+      "slardar",
+      "sniper",
+      "venomancer"
+     ],
+     "games": 118,
+     "games_by_cand_side": {
+      "dire": 60,
+      "radiant": 58
+     },
+     "radiant": [
+      "chaos_knight",
+      "dragon_knight",
+      "ogre_magi",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+      "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+     ]
+    }
+   ]
+  },
+  "246802": {
+   "cands": [
+    "fight",
+    "nodive",
+    "tpsafe",
+    "regroup",
+    "punish",
+    "c3",
+    "corefarm",
+    "depthnum"
+   ],
+   "dire": [
+    "dragon_knight",
+    "luna",
+    "silencer",
+    "skywrath_mage",
+    "sven"
+   ],
+   "games": 476,
+   "games_by_cand_side": {
+    "dire": 238,
+    "radiant": 238
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "dragon_knight": 2,
+    "jakiro": 4,
+    "lich": 5,
+    "luna": 1,
+    "medusa": 1,
+    "queenofpain": 2,
+    "silencer": 5,
+    "skywrath_mage": 4,
+    "slardar": 3,
+    "sven": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "jakiro",
+    "lich",
+    "medusa",
+    "queenofpain",
+    "slardar"
+   ],
+   "runs": [
+    "run_20260719_1601",
+    "spot_20260719_214351_1_main",
+    "spot_20260719_214351_2_main",
+    "spot_20260719_214351_3_main",
+    "spot_20260719_214351_4_main",
+    "spot_20260719_232911_1_main",
+    "spot_20260719_232911_2_main",
+    "spot_20260720_064050_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "luna",
+      "silencer",
+      "skywrath_mage",
+      "sven"
+     ],
+     "games": 476,
+     "games_by_cand_side": {
+      "dire": 238,
+      "radiant": 238
+     },
+     "radiant": [
+      "jakiro",
+      "lich",
+      "medusa",
+      "queenofpain",
+      "slardar"
+     ],
+     "runs": [
+      "run_20260719_1601",
+      "spot_20260719_214351_1_main",
+      "spot_20260719_214351_2_main",
+      "spot_20260719_214351_3_main",
+      "spot_20260719_214351_4_main",
+      "spot_20260719_232911_1_main",
+      "spot_20260719_232911_2_main",
+      "spot_20260720_064050_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "lich",
+      "lina",
+      "luna",
+      "skeleton_king",
+      "spirit_breaker"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "shadow_shaman",
+      "skywrath_mage",
+      "slardar",
+      "sven",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260719_214351_1_main"
+     ]
+    }
+   ]
+  },
+  "301": {
+   "cands": [
+    "lanesurv"
+   ],
+   "dire": [
+    "ember_spirit",
+    "juggernaut",
+    "necrolyte",
+    "pudge",
+    "sniper"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 29,
+    "radiant": 29
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "death_prophet": 3,
+    "ember_spirit": 2,
+    "juggernaut": 1,
+    "necrolyte": 3,
+    "oracle": 5,
+    "pudge": 5,
+    "shadow_shaman": 4,
+    "sniper": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "death_prophet",
+    "oracle",
+    "shadow_shaman",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260722_012310_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "ember_spirit",
+      "juggernaut",
+      "necrolyte",
+      "pudge",
+      "sniper"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 29,
+      "radiant": 29
+     },
+     "radiant": [
+      "bristleback",
+      "death_prophet",
+      "oracle",
+      "shadow_shaman",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_012310_1_main"
+     ]
+    }
+   ]
+  },
+  "302": {
+   "cands": [
+    "lanesurv"
+   ],
+   "dire": [
+    "axe",
+    "crystal_maiden",
+    "slardar",
+    "storm_spirit",
+    "witch_doctor"
+   ],
+   "games": 45,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 30
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "bristleback": 1,
+    "centaur": 3,
+    "crystal_maiden": 4,
+    "dragon_knight": 2,
+    "earthshaker": 4,
+    "lich": 5,
+    "slardar": 1,
+    "storm_spirit": 2,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "centaur",
+    "dragon_knight",
+    "earthshaker",
+    "lich"
+   ],
+   "runs": [
+    "spot_20260722_012310_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "crystal_maiden",
+      "slardar",
+      "storm_spirit",
+      "witch_doctor"
+     ],
+     "games": 45,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 30
+     },
+     "radiant": [
+      "bristleback",
+      "centaur",
+      "dragon_knight",
+      "earthshaker",
+      "lich"
+     ],
+     "runs": [
+      "spot_20260722_012310_1_main"
+     ]
+    }
+   ]
+  },
+  "303": {
+   "cands": [
+    "lanesurv"
+   ],
+   "dire": [
+    "lion",
+    "obsidian_destroyer",
+    "pudge",
+    "skeleton_king",
+    "slardar"
+   ],
+   "games": 64,
+   "games_by_cand_side": {
+    "dire": 31,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 2,
+    "dragon_knight": 3,
+    "drow_ranger": 1,
+    "lion": 4,
+    "obsidian_destroyer": 2,
+    "pudge": 5,
+    "skeleton_king": 3,
+    "skywrath_mage": 5,
+    "slardar": 1,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "dragon_knight",
+    "drow_ranger",
+    "skywrath_mage",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260722_021043_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lion",
+      "obsidian_destroyer",
+      "pudge",
+      "skeleton_king",
+      "slardar"
+     ],
+     "games": 64,
+     "games_by_cand_side": {
+      "dire": 31,
+      "radiant": 33
+     },
+     "radiant": [
+      "death_prophet",
+      "dragon_knight",
+      "drow_ranger",
+      "skywrath_mage",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_021043_1_main"
+     ]
+    }
+   ]
+  },
+  "304": {
+   "cands": [
+    "lanesurv"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "juggernaut",
+    "skeleton_king",
+    "storm_spirit",
+    "zuus"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 5,
+    "dragon_knight": 1,
+    "earthshaker": 4,
+    "juggernaut": 1,
+    "necrolyte": 3,
+    "skeleton_king": 3,
+    "sniper": 2,
+    "storm_spirit": 2,
+    "venomancer": 5,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "earthshaker",
+    "necrolyte",
+    "sniper",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260722_021043_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "juggernaut",
+      "skeleton_king",
+      "storm_spirit",
+      "zuus"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 32
+     },
+     "radiant": [
+      "dragon_knight",
+      "earthshaker",
+      "necrolyte",
+      "sniper",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260722_021043_1_main"
+     ]
+    }
+   ]
+  },
+  "333333": {
+   "cands": [
+    "lanefix"
+   ],
+   "dire": [
+    "chaos_knight",
+    "skeleton_king",
+    "sniper",
+    "venomancer",
+    "warlock"
+   ],
+   "games": 110,
+   "games_by_cand_side": {
+    "dire": 54,
+    "radiant": 56
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "chaos_knight": 1,
+    "death_prophet": 2,
+    "earthshaker": 4,
+    "lion": 5,
+    "phantom_assassin": 1,
+    "skeleton_king": 3,
+    "sniper": 2,
+    "venomancer": 5,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "death_prophet",
+    "earthshaker",
+    "lion",
+    "phantom_assassin"
+   ],
+   "runs": [
+    "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+    "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "skeleton_king",
+      "sniper",
+      "venomancer",
+      "warlock"
+     ],
+     "games": 110,
+     "games_by_cand_side": {
+      "dire": 54,
+      "radiant": 56
+     },
+     "radiant": [
+      "bristleback",
+      "death_prophet",
+      "earthshaker",
+      "lion",
+      "phantom_assassin"
+     ],
+     "runs": [
+      "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+      "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+     ]
+    }
+   ]
+  },
+  "401": {
+   "cands": [
+    "l1kite"
+   ],
+   "dire": [
+    "lich",
+    "lina",
+    "necrolyte",
+    "phantom_assassin",
+    "slardar"
+   ],
+   "games": 67,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 35
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "lich": 5,
+    "lina": 4,
+    "necrolyte": 2,
+    "phantom_assassin": 1,
+    "skywrath_mage": 4,
+    "slardar": 3,
+    "storm_spirit": 2,
+    "vengefulspirit": 1,
+    "venomancer": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "skywrath_mage",
+    "storm_spirit",
+    "vengefulspirit",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260722_030410_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "lina",
+      "necrolyte",
+      "phantom_assassin",
+      "slardar"
+     ],
+     "games": 67,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 35
+     },
+     "radiant": [
+      "chaos_knight",
+      "skywrath_mage",
+      "storm_spirit",
+      "vengefulspirit",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260722_030410_1_main"
+     ]
+    }
+   ]
+  },
+  "402": {
+   "cands": [
+    "l1kite"
+   ],
+   "dire": [
+    "drow_ranger",
+    "slardar",
+    "sniper",
+    "spirit_breaker",
+    "zuus"
+   ],
+   "games": 48,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "drow_ranger": 1,
+    "lich": 5,
+    "nevermore": 2,
+    "skeleton_king": 3,
+    "slardar": 3,
+    "sniper": 2,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "witch_doctor": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "nevermore",
+    "skeleton_king",
+    "sven",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260722_030410_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "drow_ranger",
+      "slardar",
+      "sniper",
+      "spirit_breaker",
+      "zuus"
+     ],
+     "games": 48,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 32
+     },
+     "radiant": [
+      "lich",
+      "nevermore",
+      "skeleton_king",
+      "sven",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260722_030410_1_main"
+     ]
+    }
+   ]
+  },
+  "403": {
+   "cands": [
+    "l1kite"
+   ],
+   "dire": [
+    "jakiro",
+    "necrolyte",
+    "sniper",
+    "storm_spirit",
+    "venomancer"
+   ],
+   "games": 72,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 37
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "dragon_knight": 2,
+    "jakiro": 5,
+    "necrolyte": 3,
+    "ogre_magi": 5,
+    "sniper": 1,
+    "spirit_breaker": 4,
+    "storm_spirit": 2,
+    "sven": 1,
+    "venomancer": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "dragon_knight",
+    "ogre_magi",
+    "spirit_breaker",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260722_035559_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "jakiro",
+      "necrolyte",
+      "sniper",
+      "storm_spirit",
+      "venomancer"
+     ],
+     "games": 72,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 37
+     },
+     "radiant": [
+      "bristleback",
+      "dragon_knight",
+      "ogre_magi",
+      "spirit_breaker",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260722_035559_1_main"
+     ]
+    }
+   ]
+  },
+  "404": {
+   "cands": [
+    "l1kite"
+   ],
+   "dire": [
+    "axe",
+    "drow_ranger",
+    "lich",
+    "pudge",
+    "sniper"
+   ],
+   "games": 51,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 35
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "dragon_knight": 2,
+    "drow_ranger": 1,
+    "jakiro": 5,
+    "lich": 4,
+    "pudge": 5,
+    "skeleton_king": 1,
+    "sniper": 2,
+    "tidehunter": 3,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "jakiro",
+    "skeleton_king",
+    "tidehunter",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260722_035559_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "drow_ranger",
+      "lich",
+      "pudge",
+      "sniper"
+     ],
+     "games": 51,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 35
+     },
+     "radiant": [
+      "dragon_knight",
+      "jakiro",
+      "skeleton_king",
+      "tidehunter",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260722_035559_1_main"
+     ]
+    }
+   ]
+  },
+  "424242": {
+   "cands": [
+    "fight",
+    "nodive",
+    "tpsafe"
+   ],
+   "dire": [
+    "lich",
+    "lina",
+    "skeleton_king",
+    "skywrath_mage",
+    "viper"
+   ],
+   "games": 199,
+   "games_by_cand_side": {
+    "dire": 92,
+    "radiant": 107
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 3,
+    "lich": 4,
+    "lina": 2,
+    "obsidian_destroyer": 2,
+    "shadow_shaman": 4,
+    "skeleton_king": 1,
+    "skywrath_mage": 5,
+    "slardar": 1,
+    "venomancer": 5,
+    "viper": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "obsidian_destroyer",
+    "shadow_shaman",
+    "slardar",
+    "venomancer"
+   ],
+   "runs": [
+    "run_20260719_1601",
+    "spot_20260719_201634_1_main",
+    "spot_20260719_201634_2_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "lina",
+      "skeleton_king",
+      "skywrath_mage",
+      "viper"
+     ],
+     "games": 199,
+     "games_by_cand_side": {
+      "dire": 92,
+      "radiant": 107
+     },
+     "radiant": [
+      "dragon_knight",
+      "obsidian_destroyer",
+      "shadow_shaman",
+      "slardar",
+      "venomancer"
+     ],
+     "runs": [
+      "run_20260719_1601",
+      "spot_20260719_201634_1_main",
+      "spot_20260719_201634_2_main"
+     ]
+    }
+   ]
+  },
+  "444444": {
+   "cands": [
+    "lanefix"
+   ],
+   "dire": [
+    "dragon_knight",
+    "jakiro",
+    "medusa",
+    "skywrath_mage",
+    "sven"
+   ],
+   "games": 83,
+   "games_by_cand_side": {
+    "dire": 28,
+    "radiant": 55
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "dragon_knight": 2,
+    "drow_ranger": 1,
+    "jakiro": 4,
+    "medusa": 1,
+    "necrolyte": 2,
+    "pudge": 5,
+    "skywrath_mage": 5,
+    "slardar": 3,
+    "sven": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "drow_ranger",
+    "necrolyte",
+    "pudge",
+    "slardar"
+   ],
+   "runs": [
+    "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+    "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "jakiro",
+      "medusa",
+      "skywrath_mage",
+      "sven"
+     ],
+     "games": 83,
+     "games_by_cand_side": {
+      "dire": 28,
+      "radiant": 55
+     },
+     "radiant": [
+      "crystal_maiden",
+      "drow_ranger",
+      "necrolyte",
+      "pudge",
+      "slardar"
+     ],
+     "runs": [
+      "spot_20260721_053222_1_claude-affectionate-dirac-qumja6",
+      "spot_20260721_151005_1_claude-affectionate-dirac-qumja6"
+     ]
+    }
+   ]
+  },
+  "501": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "ogre_magi",
+    "queenofpain",
+    "skeleton_king",
+    "viper",
+    "witch_doctor"
+   ],
+   "games": 69,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 35
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "drow_ranger": 1,
+    "lina": 4,
+    "lion": 5,
+    "nevermore": 2,
+    "ogre_magi": 5,
+    "queenofpain": 2,
+    "skeleton_king": 1,
+    "slardar": 3,
+    "viper": 3,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "drow_ranger",
+    "lina",
+    "lion",
+    "nevermore",
+    "slardar"
+   ],
+   "runs": [
+    "spot_20260722_035602_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "ogre_magi",
+      "queenofpain",
+      "skeleton_king",
+      "viper",
+      "witch_doctor"
+     ],
+     "games": 69,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 35
+     },
+     "radiant": [
+      "drow_ranger",
+      "lina",
+      "lion",
+      "nevermore",
+      "slardar"
+     ],
+     "runs": [
+      "spot_20260722_035602_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "centaur",
+      "lich",
+      "lina",
+      "silencer",
+      "sniper"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "crystal_maiden",
+      "medusa",
+      "obsidian_destroyer",
+      "sven",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260722_035602_1_main"
+     ]
+    }
+   ]
+  },
+  "502": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "centaur",
+    "lich",
+    "lina",
+    "silencer",
+    "sniper"
+   ],
+   "games": 53,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 36
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "crystal_maiden": 4,
+    "lich": 4,
+    "lina": 2,
+    "medusa": 1,
+    "obsidian_destroyer": 2,
+    "silencer": 5,
+    "sniper": 1,
+    "sven": 3,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "medusa",
+    "obsidian_destroyer",
+    "sven",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260722_035602_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "lich",
+      "lina",
+      "silencer",
+      "sniper"
+     ],
+     "games": 53,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 36
+     },
+     "radiant": [
+      "crystal_maiden",
+      "medusa",
+      "obsidian_destroyer",
+      "sven",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260722_035602_1_main"
+     ]
+    }
+   ]
+  },
+  "555001": {
+   "cands": [
+    "fight",
+    "nodive",
+    "tpsafe",
+    "regroup",
+    "punish",
+    "c3",
+    "corefarm",
+    "depthnum"
+   ],
+   "dire": [
+    "lich",
+    "lina",
+    "luna",
+    "skeleton_king",
+    "spirit_breaker"
+   ],
+   "games": 494,
+   "games_by_cand_side": {
+    "dire": 249,
+    "radiant": 245
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "lich": 5,
+    "lina": 2,
+    "luna": 1,
+    "shadow_shaman": 4,
+    "skeleton_king": 3,
+    "skywrath_mage": 5,
+    "slardar": 3,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "shadow_shaman",
+    "skywrath_mage",
+    "slardar",
+    "sven",
+    "zuus"
+   ],
+   "runs": [
+    "run_20260719_1601",
+    "spot_20260719_214351_1_main",
+    "spot_20260719_214351_2_main",
+    "spot_20260719_214351_3_main",
+    "spot_20260719_214351_4_main",
+    "spot_20260719_232911_1_main",
+    "spot_20260719_232911_2_main",
+    "spot_20260720_064050_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "lina",
+      "luna",
+      "skeleton_king",
+      "spirit_breaker"
+     ],
+     "games": 494,
+     "games_by_cand_side": {
+      "dire": 249,
+      "radiant": 245
+     },
+     "radiant": [
+      "shadow_shaman",
+      "skywrath_mage",
+      "slardar",
+      "sven",
+      "zuus"
+     ],
+     "runs": [
+      "run_20260719_1601",
+      "spot_20260719_214351_1_main",
+      "spot_20260719_214351_2_main",
+      "spot_20260719_214351_3_main",
+      "spot_20260719_214351_4_main",
+      "spot_20260719_232911_1_main",
+      "spot_20260719_232911_2_main",
+      "spot_20260720_064050_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "dragon_knight",
+      "lich",
+      "lion",
+      "skeleton_king",
+      "zuus"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "jakiro",
+      "luna",
+      "queenofpain",
+      "silencer",
+      "slardar"
+     ],
+     "runs": [
+      "spot_20260719_214351_3_main"
+     ]
+    }
+   ]
+  },
+  "555555": {
+   "cands": [
+    "nodive"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "necrolyte",
+    "phantom_assassin",
+    "skywrath_mage",
+    "slardar"
+   ],
+   "games": 45,
+   "games_by_cand_side": {
+    "dire": 12,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "crystal_maiden": 5,
+    "lina": 2,
+    "necrolyte": 2,
+    "ogre_magi": 5,
+    "phantom_assassin": 1,
+    "shadow_shaman": 4,
+    "skywrath_mage": 4,
+    "slardar": 3,
+    "sniper": 1
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "lina",
+    "ogre_magi",
+    "shadow_shaman",
+    "sniper"
+   ],
+   "runs": [
+    "spot_20260719_204652_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "necrolyte",
+      "phantom_assassin",
+      "skywrath_mage",
+      "slardar"
+     ],
+     "games": 45,
+     "games_by_cand_side": {
+      "dire": 12,
+      "radiant": 33
+     },
+     "radiant": [
+      "axe",
+      "lina",
+      "ogre_magi",
+      "shadow_shaman",
+      "sniper"
+     ],
+     "runs": [
+      "spot_20260719_204652_1_main"
+     ]
+    }
+   ]
+  },
+  "601": {
+   "cands": [
+    "l5trees"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "lina",
+    "sniper",
+    "viper"
+   ],
+   "games": 70,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 36
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "crystal_maiden": 5,
+    "death_prophet": 3,
+    "earthshaker": 4,
+    "ember_spirit": 2,
+    "lina": 4,
+    "skeleton_king": 1,
+    "sniper": 2,
+    "viper": 3,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "earthshaker",
+    "ember_spirit",
+    "skeleton_king",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260722_044826_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "lina",
+      "sniper",
+      "viper"
+     ],
+     "games": 70,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 36
+     },
+     "radiant": [
+      "death_prophet",
+      "earthshaker",
+      "ember_spirit",
+      "skeleton_king",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_044826_1_main"
+     ]
+    }
+   ]
+  },
+  "602": {
+   "cands": [
+    "l5trees"
+   ],
+   "dire": [
+    "death_prophet",
+    "earthshaker",
+    "skeleton_king",
+    "venomancer",
+    "viper"
+   ],
+   "games": 52,
+   "games_by_cand_side": {
+    "dire": 18,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "crystal_maiden": 5,
+    "death_prophet": 2,
+    "dragon_knight": 1,
+    "earthshaker": 4,
+    "lich": 4,
+    "queenofpain": 2,
+    "skeleton_king": 1,
+    "venomancer": 5,
+    "viper": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "crystal_maiden",
+    "dragon_knight",
+    "lich",
+    "queenofpain"
+   ],
+   "runs": [
+    "spot_20260722_044826_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "earthshaker",
+      "skeleton_king",
+      "venomancer",
+      "viper"
+     ],
+     "games": 52,
+     "games_by_cand_side": {
+      "dire": 18,
+      "radiant": 34
+     },
+     "radiant": [
+      "centaur",
+      "crystal_maiden",
+      "dragon_knight",
+      "lich",
+      "queenofpain"
+     ],
+     "runs": [
+      "spot_20260722_044826_1_main"
+     ]
+    }
+   ]
+  },
+  "603": {
+   "cands": [
+    "l5trees"
+   ],
+   "dire": [
+    "centaur",
+    "phantom_assassin",
+    "viper",
+    "warlock",
+    "zuus"
+   ],
+   "games": 63,
+   "games_by_cand_side": {
+    "dire": 30,
+    "radiant": 33
+   },
+   "off_roster_games": 2,
+   "positions": {
+    "centaur": 3,
+    "dragon_knight": 3,
+    "lich": 5,
+    "luna": 1,
+    "nevermore": 2,
+    "phantom_assassin": 1,
+    "shadow_shaman": 4,
+    "viper": 2,
+    "warlock": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "lich",
+    "luna",
+    "nevermore",
+    "shadow_shaman"
+   ],
+   "runs": [
+    "spot_20260722_053931_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "phantom_assassin",
+      "viper",
+      "warlock",
+      "zuus"
+     ],
+     "games": 63,
+     "games_by_cand_side": {
+      "dire": 30,
+      "radiant": 33
+     },
+     "radiant": [
+      "dragon_knight",
+      "lich",
+      "luna",
+      "nevermore",
+      "shadow_shaman"
+     ],
+     "runs": [
+      "spot_20260722_053931_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "centaur",
+      "skeleton_king",
+      "sniper",
+      "witch_doctor",
+      "zuus"
+     ],
+     "games": 2,
+     "games_by_cand_side": {
+      "dire": 2,
+      "radiant": 0
+     },
+     "radiant": [
+      "chaos_knight",
+      "lina",
+      "necrolyte",
+      "skywrath_mage",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260722_053931_1_main"
+     ]
+    }
+   ]
+  },
+  "604": {
+   "cands": [
+    "l5trees"
+   ],
+   "dire": [
+    "centaur",
+    "skeleton_king",
+    "sniper",
+    "witch_doctor",
+    "zuus"
+   ],
+   "games": 51,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "chaos_knight": 1,
+    "lina": 2,
+    "necrolyte": 3,
+    "skeleton_king": 1,
+    "skywrath_mage": 5,
+    "sniper": 2,
+    "venomancer": 4,
+    "witch_doctor": 5,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "lina",
+    "necrolyte",
+    "skywrath_mage",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260722_053931_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "skeleton_king",
+      "sniper",
+      "witch_doctor",
+      "zuus"
+     ],
+     "games": 51,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 34
+     },
+     "radiant": [
+      "chaos_knight",
+      "lina",
+      "necrolyte",
+      "skywrath_mage",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260722_053931_1_main"
+     ]
+    }
+   ]
+  },
+  "777777": {
+   "cands": [
+    "nodive"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "nevermore",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "games": 149,
+   "games_by_cand_side": {
+    "dire": 103,
+    "radiant": 46
+   },
+   "off_roster_games": 2,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 3,
+    "lina": 2,
+    "medusa": 1,
+    "nevermore": 2,
+    "ogre_magi": 5,
+    "vengefulspirit": 1,
+    "witch_doctor": 4,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "lina",
+    "medusa",
+    "ogre_magi",
+    "witch_doctor"
+   ],
+   "runs": [
+    "run_20260719_1601"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "nevermore",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "games": 149,
+     "games_by_cand_side": {
+      "dire": 103,
+      "radiant": 46
+     },
+     "radiant": [
+      "dragon_knight",
+      "lina",
+      "medusa",
+      "ogre_magi",
+      "witch_doctor"
+     ],
+     "runs": [
+      "run_20260719_1601"
+     ]
+    },
+    {
+     "dire": [
+      "chaos_knight",
+      "drow_ranger",
+      "earthshaker",
+      "oracle",
+      "queenofpain"
+     ],
+     "games": 2,
+     "games_by_cand_side": {
+      "dire": 2,
+      "radiant": 0
+     },
+     "radiant": [
+      "dragon_knight",
+      "lion",
+      "sniper",
+      "tidehunter",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "run_20260719_1601"
+     ]
+    }
+   ]
+  },
+  "778899": {
+   "cands": [
+    "fight",
+    "nodive",
+    "tpsafe",
+    "regroup",
+    "punish",
+    "c3",
+    "corefarm",
+    "depthnum"
+   ],
+   "dire": [
+    "dragon_knight",
+    "lich",
+    "lion",
+    "skeleton_king",
+    "zuus"
+   ],
+   "games": 437,
+   "games_by_cand_side": {
+    "dire": 188,
+    "radiant": 249
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 1,
+    "jakiro": 4,
+    "lich": 5,
+    "lion": 4,
+    "luna": 1,
+    "queenofpain": 2,
+    "silencer": 5,
+    "skeleton_king": 3,
+    "slardar": 3,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "jakiro",
+    "luna",
+    "queenofpain",
+    "silencer",
+    "slardar"
+   ],
+   "runs": [
+    "run_20260719_1601",
+    "spot_20260719_214351_1_main",
+    "spot_20260719_214351_2_main",
+    "spot_20260719_214351_3_main",
+    "spot_20260719_214351_4_main",
+    "spot_20260719_232911_1_main",
+    "spot_20260719_232911_2_main",
+    "spot_20260720_064050_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "lich",
+      "lion",
+      "skeleton_king",
+      "zuus"
+     ],
+     "games": 437,
+     "games_by_cand_side": {
+      "dire": 188,
+      "radiant": 249
+     },
+     "radiant": [
+      "jakiro",
+      "luna",
+      "queenofpain",
+      "silencer",
+      "slardar"
+     ],
+     "runs": [
+      "run_20260719_1601",
+      "spot_20260719_214351_1_main",
+      "spot_20260719_214351_2_main",
+      "spot_20260719_214351_3_main",
+      "spot_20260719_214351_4_main",
+      "spot_20260719_232911_1_main",
+      "spot_20260719_232911_2_main",
+      "spot_20260720_064050_1_main"
+     ]
+    }
+   ]
+  },
+  "801": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "dragon_knight",
+    "ogre_magi",
+    "storm_spirit",
+    "vengefulspirit",
+    "venomancer"
+   ],
+   "games": 148,
+   "games_by_cand_side": {
+    "dire": 65,
+    "radiant": 83
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 3,
+    "earthshaker": 4,
+    "medusa": 1,
+    "ogre_magi": 4,
+    "skywrath_mage": 5,
+    "slardar": 3,
+    "storm_spirit": 2,
+    "vengefulspirit": 1,
+    "venomancer": 5,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "earthshaker",
+    "medusa",
+    "skywrath_mage",
+    "slardar",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260722_174758_1_main",
+    "spot_20260731_161147_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "ogre_magi",
+      "storm_spirit",
+      "vengefulspirit",
+      "venomancer"
+     ],
+     "games": 148,
+     "games_by_cand_side": {
+      "dire": 65,
+      "radiant": 83
+     },
+     "radiant": [
+      "earthshaker",
+      "medusa",
+      "skywrath_mage",
+      "slardar",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_174758_1_main",
+      "spot_20260731_161147_1_main"
+     ]
+    }
+   ]
+  },
+  "802": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "drow_ranger",
+    "earthshaker",
+    "nevermore"
+   ],
+   "games": 98,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 66
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "drow_ranger": 1,
+    "earthshaker": 4,
+    "lich": 4,
+    "lion": 5,
+    "luna": 1,
+    "nevermore": 2,
+    "sniper": 2,
+    "sven": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "lion",
+    "luna",
+    "sniper",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260722_174758_1_main",
+    "spot_20260731_161147_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "drow_ranger",
+      "earthshaker",
+      "nevermore"
+     ],
+     "games": 98,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 66
+     },
+     "radiant": [
+      "lich",
+      "lion",
+      "luna",
+      "sniper",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260722_174758_1_main",
+      "spot_20260731_161147_1_main"
+     ]
+    }
+   ]
+  },
+  "803": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "chaos_knight",
+    "nevermore",
+    "ogre_magi",
+    "shadow_shaman",
+    "viper"
+   ],
+   "games": 148,
+   "games_by_cand_side": {
+    "dire": 69,
+    "radiant": 79
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "chaos_knight": 1,
+    "ember_spirit": 2,
+    "nevermore": 2,
+    "ogre_magi": 5,
+    "shadow_shaman": 4,
+    "sniper": 4,
+    "sven": 1,
+    "viper": 3,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "ember_spirit",
+    "sniper",
+    "sven",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260722_174801_1_main",
+    "spot_20260731_161232_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "nevermore",
+      "ogre_magi",
+      "shadow_shaman",
+      "viper"
+     ],
+     "games": 148,
+     "games_by_cand_side": {
+      "dire": 69,
+      "radiant": 79
+     },
+     "radiant": [
+      "axe",
+      "ember_spirit",
+      "sniper",
+      "sven",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260722_174801_1_main",
+      "spot_20260731_161232_1_main"
+     ]
+    }
+   ]
+  },
+  "804": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "bristleback",
+    "drow_ranger",
+    "queenofpain",
+    "silencer",
+    "warlock"
+   ],
+   "games": 98,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 63
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "drow_ranger": 1,
+    "jakiro": 4,
+    "ogre_magi": 5,
+    "queenofpain": 2,
+    "silencer": 5,
+    "sniper": 1,
+    "storm_spirit": 2,
+    "viper": 3,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "jakiro",
+    "ogre_magi",
+    "sniper",
+    "storm_spirit",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260722_174801_1_main",
+    "spot_20260731_161232_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "drow_ranger",
+      "queenofpain",
+      "silencer",
+      "warlock"
+     ],
+     "games": 98,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 63
+     },
+     "radiant": [
+      "jakiro",
+      "ogre_magi",
+      "sniper",
+      "storm_spirit",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260722_174801_1_main",
+      "spot_20260731_161232_1_main"
+     ]
+    }
+   ]
+  },
+  "805": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue"
+   ],
+   "dire": [
+    "bristleback",
+    "juggernaut",
+    "necrolyte",
+    "shadow_shaman",
+    "witch_doctor"
+   ],
+   "games": 66,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 31
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "bristleback": 3,
+    "chaos_knight": 1,
+    "death_prophet": 3,
+    "jakiro": 5,
+    "juggernaut": 1,
+    "necrolyte": 2,
+    "queenofpain": 2,
+    "shadow_shaman": 4,
+    "sniper": 4,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "death_prophet",
+    "jakiro",
+    "queenofpain",
+    "sniper"
+   ],
+   "runs": [
+    "spot_20260722_174804_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "juggernaut",
+      "necrolyte",
+      "shadow_shaman",
+      "witch_doctor"
+     ],
+     "games": 66,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 31
+     },
+     "radiant": [
+      "chaos_knight",
+      "death_prophet",
+      "jakiro",
+      "queenofpain",
+      "sniper"
+     ],
+     "runs": [
+      "spot_20260722_174804_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "bristleback",
+      "jakiro",
+      "luna",
+      "nevermore",
+      "shadow_shaman"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "centaur",
+      "crystal_maiden",
+      "dragon_knight",
+      "sniper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_174804_1_main"
+     ]
+    }
+   ]
+  },
+  "806": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue"
+   ],
+   "dire": [
+    "bristleback",
+    "jakiro",
+    "luna",
+    "nevermore",
+    "shadow_shaman"
+   ],
+   "games": 51,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "centaur": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 1,
+    "jakiro": 5,
+    "luna": 1,
+    "nevermore": 2,
+    "shadow_shaman": 4,
+    "sniper": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "crystal_maiden",
+    "dragon_knight",
+    "sniper",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260722_174804_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "jakiro",
+      "luna",
+      "nevermore",
+      "shadow_shaman"
+     ],
+     "games": 51,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 34
+     },
+     "radiant": [
+      "centaur",
+      "crystal_maiden",
+      "dragon_knight",
+      "sniper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_174804_1_main"
+     ]
+    }
+   ]
+  },
+  "811": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "death_prophet",
+    "dragon_knight",
+    "drow_ranger",
+    "spirit_breaker",
+    "venomancer"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 33,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "death_prophet": 3,
+    "dragon_knight": 2,
+    "drow_ranger": 1,
+    "lich": 5,
+    "ogre_magi": 4,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "venomancer": 5,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "lich",
+    "ogre_magi",
+    "sven",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260731_192742_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "dragon_knight",
+      "drow_ranger",
+      "spirit_breaker",
+      "venomancer"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 33,
+      "radiant": 40
+     },
+     "radiant": [
+      "bristleback",
+      "lich",
+      "ogre_magi",
+      "sven",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260731_192742_1_main"
+     ]
+    }
+   ]
+  },
+  "812": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "dragon_knight",
+    "drow_ranger",
+    "lion",
+    "oracle",
+    "zuus"
+   ],
+   "games": 50,
+   "games_by_cand_side": {
+    "dire": 18,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 2,
+    "dragon_knight": 3,
+    "drow_ranger": 1,
+    "jakiro": 4,
+    "lion": 4,
+    "oracle": 5,
+    "silencer": 5,
+    "tidehunter": 3,
+    "vengefulspirit": 1,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "jakiro",
+    "silencer",
+    "tidehunter",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260731_192742_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "drow_ranger",
+      "lion",
+      "oracle",
+      "zuus"
+     ],
+     "games": 50,
+     "games_by_cand_side": {
+      "dire": 18,
+      "radiant": 32
+     },
+     "radiant": [
+      "death_prophet",
+      "jakiro",
+      "silencer",
+      "tidehunter",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260731_192742_1_main"
+     ]
+    }
+   ]
+  },
+  "813": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "dragon_knight",
+    "sniper",
+    "spirit_breaker",
+    "tidehunter",
+    "witch_doctor"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 39
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "dragon_knight": 1,
+    "earthshaker": 4,
+    "lina": 2,
+    "slardar": 3,
+    "sniper": 2,
+    "spirit_breaker": 4,
+    "tidehunter": 3,
+    "venomancer": 5,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "earthshaker",
+    "lina",
+    "slardar",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260731_192832_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "sniper",
+      "spirit_breaker",
+      "tidehunter",
+      "witch_doctor"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 39
+     },
+     "radiant": [
+      "bristleback",
+      "earthshaker",
+      "lina",
+      "slardar",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260731_192832_1_main"
+     ]
+    }
+   ]
+  },
+  "814": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "dragon_knight",
+    "obsidian_destroyer",
+    "phantom_assassin",
+    "shadow_shaman",
+    "zuus"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "dragon_knight": 3,
+    "lion": 4,
+    "obsidian_destroyer": 2,
+    "phantom_assassin": 1,
+    "pudge": 5,
+    "shadow_shaman": 5,
+    "sniper": 2,
+    "sven": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "lion",
+    "pudge",
+    "sniper",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260731_192832_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "obsidian_destroyer",
+      "phantom_assassin",
+      "shadow_shaman",
+      "zuus"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 33
+     },
+     "radiant": [
+      "chaos_knight",
+      "lion",
+      "pudge",
+      "sniper",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260731_192832_1_main"
+     ]
+    }
+   ]
+  },
+  "851": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch"
+   ],
+   "dire": [
+    "dragon_knight",
+    "medusa",
+    "queenofpain",
+    "spirit_breaker",
+    "zuus"
+   ],
+   "games": 60,
+   "games_by_cand_side": {
+    "dire": 19,
+    "radiant": 41
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "dragon_knight": 3,
+    "medusa": 1,
+    "nevermore": 2,
+    "oracle": 5,
+    "phantom_assassin": 1,
+    "queenofpain": 2,
+    "skywrath_mage": 4,
+    "spirit_breaker": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "nevermore",
+    "oracle",
+    "phantom_assassin",
+    "skywrath_mage"
+   ],
+   "runs": [
+    "spot_20260819_001001_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "medusa",
+      "queenofpain",
+      "spirit_breaker",
+      "zuus"
+     ],
+     "games": 60,
+     "games_by_cand_side": {
+      "dire": 19,
+      "radiant": 41
+     },
+     "radiant": [
+      "axe",
+      "nevermore",
+      "oracle",
+      "phantom_assassin",
+      "skywrath_mage"
+     ],
+     "runs": [
+      "spot_20260819_001001_1_main"
+     ]
+    }
+   ]
+  },
+  "852": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch"
+   ],
+   "dire": [
+    "death_prophet",
+    "dragon_knight",
+    "drow_ranger",
+    "jakiro",
+    "lina"
+   ],
+   "games": 57,
+   "games_by_cand_side": {
+    "dire": 19,
+    "radiant": 38
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 2,
+    "dragon_knight": 3,
+    "drow_ranger": 1,
+    "jakiro": 5,
+    "lina": 4,
+    "luna": 1,
+    "sniper": 2,
+    "viper": 3,
+    "witch_doctor": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "luna",
+    "sniper",
+    "viper",
+    "witch_doctor",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260819_020910_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "dragon_knight",
+      "drow_ranger",
+      "jakiro",
+      "lina"
+     ],
+     "games": 57,
+     "games_by_cand_side": {
+      "dire": 19,
+      "radiant": 38
+     },
+     "radiant": [
+      "luna",
+      "sniper",
+      "viper",
+      "witch_doctor",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260819_020910_1_main"
+     ]
+    }
+   ]
+  },
+  "853": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch"
+   ],
+   "dire": [
+    "chaos_knight",
+    "jakiro",
+    "nevermore",
+    "pudge",
+    "skeleton_king"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 31,
+    "radiant": 42
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "death_prophet": 3,
+    "jakiro": 4,
+    "juggernaut": 1,
+    "lich": 4,
+    "lina": 2,
+    "nevermore": 2,
+    "pudge": 5,
+    "skeleton_king": 1
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "death_prophet",
+    "juggernaut",
+    "lich",
+    "lina"
+   ],
+   "runs": [
+    "spot_20260819_001007_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "jakiro",
+      "nevermore",
+      "pudge",
+      "skeleton_king"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 31,
+      "radiant": 42
+     },
+     "radiant": [
+      "crystal_maiden",
+      "death_prophet",
+      "juggernaut",
+      "lich",
+      "lina"
+     ],
+     "runs": [
+      "spot_20260819_001007_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "dragon_knight",
+      "storm_spirit",
+      "witch_doctor"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "centaur",
+      "lich",
+      "lina",
+      "luna",
+      "ogre_magi"
+     ],
+     "runs": [
+      "spot_20260819_001007_1_main"
+     ]
+    }
+   ]
+  },
+  "854": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "dragon_knight",
+    "storm_spirit",
+    "witch_doctor"
+   ],
+   "games": 48,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 1,
+    "lich": 5,
+    "lina": 2,
+    "luna": 1,
+    "ogre_magi": 4,
+    "storm_spirit": 2,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "lich",
+    "lina",
+    "luna",
+    "ogre_magi"
+   ],
+   "runs": [
+    "spot_20260819_001007_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "dragon_knight",
+      "storm_spirit",
+      "witch_doctor"
+     ],
+     "games": 48,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 32
+     },
+     "radiant": [
+      "centaur",
+      "lich",
+      "lina",
+      "luna",
+      "ogre_magi"
+     ],
+     "runs": [
+      "spot_20260819_001007_1_main"
+     ]
+    }
+   ]
+  },
+  "855": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "bristleback",
+    "chaos_knight",
+    "jakiro",
+    "necrolyte",
+    "shadow_shaman"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 23,
+    "radiant": 35
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "chaos_knight": 1,
+    "dragon_knight": 3,
+    "jakiro": 4,
+    "luna": 1,
+    "necrolyte": 2,
+    "shadow_shaman": 5,
+    "skywrath_mage": 5,
+    "viper": 2,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "luna",
+    "skywrath_mage",
+    "viper",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260819_060925_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "chaos_knight",
+      "jakiro",
+      "necrolyte",
+      "shadow_shaman"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 23,
+      "radiant": 35
+     },
+     "radiant": [
+      "dragon_knight",
+      "luna",
+      "skywrath_mage",
+      "viper",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260819_060925_1_main"
+     ]
+    }
+   ]
+  },
+  "856": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "bristleback",
+    "crystal_maiden",
+    "nevermore",
+    "oracle",
+    "phantom_assassin"
+   ],
+   "games": 59,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 43
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "crystal_maiden": 4,
+    "death_prophet": 2,
+    "necrolyte": 3,
+    "nevermore": 2,
+    "oracle": 5,
+    "phantom_assassin": 1,
+    "shadow_shaman": 4,
+    "sniper": 1,
+    "venomancer": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "necrolyte",
+    "shadow_shaman",
+    "sniper",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260819_060928_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "crystal_maiden",
+      "nevermore",
+      "oracle",
+      "phantom_assassin"
+     ],
+     "games": 59,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 43
+     },
+     "radiant": [
+      "death_prophet",
+      "necrolyte",
+      "shadow_shaman",
+      "sniper",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260819_060928_1_main"
+     ]
+    }
+   ]
+  },
+  "857": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "dragon_knight",
+    "jakiro",
+    "slardar",
+    "sniper",
+    "vengefulspirit"
+   ],
+   "games": 56,
+   "games_by_cand_side": {
+    "dire": 24,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "dragon_knight": 2,
+    "jakiro": 5,
+    "lich": 4,
+    "luna": 1,
+    "necrolyte": 2,
+    "slardar": 3,
+    "sniper": 4,
+    "vengefulspirit": 1,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "lich",
+    "luna",
+    "necrolyte",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260819_060932_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "jakiro",
+      "slardar",
+      "sniper",
+      "vengefulspirit"
+     ],
+     "games": 56,
+     "games_by_cand_side": {
+      "dire": 24,
+      "radiant": 32
+     },
+     "radiant": [
+      "chaos_knight",
+      "lich",
+      "luna",
+      "necrolyte",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260819_060932_1_main"
+     ]
+    }
+   ]
+  },
+  "858": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "death_prophet",
+    "dragon_knight",
+    "necrolyte",
+    "venomancer"
+   ],
+   "games": 56,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 39
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 5,
+    "death_prophet": 2,
+    "dragon_knight": 1,
+    "necrolyte": 3,
+    "shadow_shaman": 4,
+    "silencer": 5,
+    "skeleton_king": 3,
+    "sven": 1,
+    "venomancer": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "shadow_shaman",
+    "silencer",
+    "skeleton_king",
+    "sven",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260819_060935_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "death_prophet",
+      "dragon_knight",
+      "necrolyte",
+      "venomancer"
+     ],
+     "games": 56,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 39
+     },
+     "radiant": [
+      "shadow_shaman",
+      "silencer",
+      "skeleton_king",
+      "sven",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260819_060935_1_main"
+     ]
+    }
+   ]
+  },
+  "859": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono",
+    "l1trade,l5combo,midtp,suptp,tpcommit,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono"
+   ],
+   "dire": [
+    "chaos_knight",
+    "dragon_knight",
+    "lich",
+    "lina",
+    "necrolyte"
+   ],
+   "games": 167,
+   "games_by_cand_side": {
+    "dire": 58,
+    "radiant": 109
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "chaos_knight": 1,
+    "dragon_knight": 2,
+    "juggernaut": 1,
+    "lich": 5,
+    "lina": 4,
+    "necrolyte": 3,
+    "ogre_magi": 5,
+    "venomancer": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "juggernaut",
+    "ogre_magi",
+    "venomancer",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260819_121038_1_main",
+    "spot_20260819_121105_1_main",
+    "spot_20260819_141128_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "dragon_knight",
+      "lich",
+      "lina",
+      "necrolyte"
+     ],
+     "games": 167,
+     "games_by_cand_side": {
+      "dire": 58,
+      "radiant": 109
+     },
+     "radiant": [
+      "bristleback",
+      "juggernaut",
+      "ogre_magi",
+      "venomancer",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260819_121038_1_main",
+      "spot_20260819_121105_1_main",
+      "spot_20260819_141128_1_main"
+     ]
+    }
+   ]
+  },
+  "860": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono",
+    "l1trade,l5combo,midtp,suptp,tpcommit,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono"
+   ],
+   "dire": [
+    "axe",
+    "ember_spirit",
+    "jakiro",
+    "sven",
+    "venomancer"
+   ],
+   "games": 164,
+   "games_by_cand_side": {
+    "dire": 56,
+    "radiant": 108
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "chaos_knight": 1,
+    "crystal_maiden": 5,
+    "ember_spirit": 2,
+    "jakiro": 5,
+    "nevermore": 2,
+    "shadow_shaman": 4,
+    "sven": 1,
+    "tidehunter": 3,
+    "venomancer": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "crystal_maiden",
+    "nevermore",
+    "shadow_shaman",
+    "tidehunter"
+   ],
+   "runs": [
+    "spot_20260819_121044_1_main",
+    "spot_20260819_121111_1_main",
+    "spot_20260819_141131_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "ember_spirit",
+      "jakiro",
+      "sven",
+      "venomancer"
+     ],
+     "games": 164,
+     "games_by_cand_side": {
+      "dire": 56,
+      "radiant": 108
+     },
+     "radiant": [
+      "chaos_knight",
+      "crystal_maiden",
+      "nevermore",
+      "shadow_shaman",
+      "tidehunter"
+     ],
+     "runs": [
+      "spot_20260819_121044_1_main",
+      "spot_20260819_121111_1_main",
+      "spot_20260819_141131_1_main"
+     ]
+    }
+   ]
+  },
+  "861": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono",
+    "l1trade,l5combo,midtp,suptp,tpcommit,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono"
+   ],
+   "dire": [
+    "chaos_knight",
+    "dragon_knight",
+    "skeleton_king",
+    "sniper",
+    "vengefulspirit"
+   ],
+   "games": 156,
+   "games_by_cand_side": {
+    "dire": 47,
+    "radiant": 109
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "dragon_knight": 2,
+    "lich": 5,
+    "lina": 2,
+    "phantom_assassin": 1,
+    "skeleton_king": 3,
+    "slardar": 3,
+    "sniper": 4,
+    "spirit_breaker": 4,
+    "vengefulspirit": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "lina",
+    "phantom_assassin",
+    "slardar",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260819_121050_1_main",
+    "spot_20260819_121117_1_main",
+    "spot_20260819_141134_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "dragon_knight",
+      "skeleton_king",
+      "sniper",
+      "vengefulspirit"
+     ],
+     "games": 156,
+     "games_by_cand_side": {
+      "dire": 47,
+      "radiant": 109
+     },
+     "radiant": [
+      "lich",
+      "lina",
+      "phantom_assassin",
+      "slardar",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260819_121050_1_main",
+      "spot_20260819_121117_1_main",
+      "spot_20260819_141134_1_main"
+     ]
+    }
+   ]
+  },
+  "862": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono",
+    "l1trade,l5combo,midtp,suptp,tpcommit,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "death_prophet",
+    "dragon_knight",
+    "lina",
+    "obsidian_destroyer"
+   ],
+   "games": 127,
+   "games_by_cand_side": {
+    "dire": 45,
+    "radiant": 82
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 5,
+    "death_prophet": 3,
+    "dragon_knight": 1,
+    "lina": 4,
+    "medusa": 1,
+    "obsidian_destroyer": 2,
+    "skywrath_mage": 5,
+    "sniper": 4,
+    "storm_spirit": 2,
+    "sven": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "medusa",
+    "skywrath_mage",
+    "sniper",
+    "storm_spirit",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260819_121056_1_main",
+    "spot_20260819_121122_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "death_prophet",
+      "dragon_knight",
+      "lina",
+      "obsidian_destroyer"
+     ],
+     "games": 127,
+     "games_by_cand_side": {
+      "dire": 45,
+      "radiant": 82
+     },
+     "radiant": [
+      "medusa",
+      "skywrath_mage",
+      "sniper",
+      "storm_spirit",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260819_121056_1_main",
+      "spot_20260819_121122_1_main"
+     ]
+    }
+   ]
+  },
+  "863": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard"
+   ],
+   "dire": [
+    "dragon_knight",
+    "earthshaker",
+    "medusa",
+    "witch_doctor",
+    "zuus"
+   ],
+   "games": 136,
+   "games_by_cand_side": {
+    "dire": 52,
+    "radiant": 84
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "dragon_knight": 3,
+    "earthshaker": 4,
+    "jakiro": 5,
+    "medusa": 1,
+    "slardar": 1,
+    "sniper": 4,
+    "storm_spirit": 2,
+    "witch_doctor": 5,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "jakiro",
+    "slardar",
+    "sniper",
+    "storm_spirit"
+   ],
+   "runs": [
+    "spot_20260819_180801_1_main",
+    "spot_20260819_200925_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "earthshaker",
+      "medusa",
+      "witch_doctor",
+      "zuus"
+     ],
+     "games": 136,
+     "games_by_cand_side": {
+      "dire": 52,
+      "radiant": 84
+     },
+     "radiant": [
+      "axe",
+      "jakiro",
+      "slardar",
+      "sniper",
+      "storm_spirit"
+     ],
+     "runs": [
+      "spot_20260819_180801_1_main",
+      "spot_20260819_200925_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+     ]
+    }
+   ]
+  },
+  "864": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard"
+   ],
+   "dire": [
+    "death_prophet",
+    "dragon_knight",
+    "lich",
+    "lion",
+    "phantom_assassin"
+   ],
+   "games": 147,
+   "games_by_cand_side": {
+    "dire": 63,
+    "radiant": 84
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 2,
+    "dragon_knight": 3,
+    "drow_ranger": 1,
+    "earthshaker": 4,
+    "lich": 4,
+    "lion": 5,
+    "necrolyte": 2,
+    "phantom_assassin": 1,
+    "pudge": 5,
+    "viper": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "drow_ranger",
+    "earthshaker",
+    "necrolyte",
+    "pudge",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260819_180804_1_main",
+    "spot_20260819_200927_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "dragon_knight",
+      "lich",
+      "lion",
+      "phantom_assassin"
+     ],
+     "games": 147,
+     "games_by_cand_side": {
+      "dire": 63,
+      "radiant": 84
+     },
+     "radiant": [
+      "drow_ranger",
+      "earthshaker",
+      "necrolyte",
+      "pudge",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260819_180804_1_main",
+      "spot_20260819_200927_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+     ]
+    }
+   ]
+  },
+  "865": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard"
+   ],
+   "dire": [
+    "chaos_knight",
+    "lich",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "sniper"
+   ],
+   "games": 132,
+   "games_by_cand_side": {
+    "dire": 51,
+    "radiant": 81
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "death_prophet": 3,
+    "earthshaker": 4,
+    "lich": 5,
+    "nevermore": 2,
+    "obsidian_destroyer": 2,
+    "oracle": 5,
+    "phantom_assassin": 1,
+    "skeleton_king": 1,
+    "sniper": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "earthshaker",
+    "nevermore",
+    "oracle",
+    "phantom_assassin"
+   ],
+   "runs": [
+    "spot_20260819_180807_1_main",
+    "spot_20260819_200930_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "lich",
+      "obsidian_destroyer",
+      "skeleton_king",
+      "sniper"
+     ],
+     "games": 132,
+     "games_by_cand_side": {
+      "dire": 51,
+      "radiant": 81
+     },
+     "radiant": [
+      "death_prophet",
+      "earthshaker",
+      "nevermore",
+      "oracle",
+      "phantom_assassin"
+     ],
+     "runs": [
+      "spot_20260819_180807_1_main",
+      "spot_20260819_200930_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+     ]
+    }
+   ]
+  },
+  "866": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard"
+   ],
+   "dire": [
+    "dragon_knight",
+    "ember_spirit",
+    "silencer",
+    "sniper",
+    "sven"
+   ],
+   "games": 140,
+   "games_by_cand_side": {
+    "dire": 57,
+    "radiant": 83
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "centaur": 3,
+    "death_prophet": 2,
+    "dragon_knight": 1,
+    "ember_spirit": 2,
+    "shadow_shaman": 4,
+    "silencer": 5,
+    "sniper": 4,
+    "sven": 3,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "centaur",
+    "death_prophet",
+    "shadow_shaman",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260819_180809_1_main",
+    "spot_20260819_200933_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "ember_spirit",
+      "silencer",
+      "sniper",
+      "sven"
+     ],
+     "games": 140,
+     "games_by_cand_side": {
+      "dire": 57,
+      "radiant": 83
+     },
+     "radiant": [
+      "bristleback",
+      "centaur",
+      "death_prophet",
+      "shadow_shaman",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260819_180809_1_main",
+      "spot_20260819_200933_1_b48d6556485b89e8bfb477f961a0324ee1c81d8b"
+     ]
+    }
+   ]
+  },
+  "867": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "lich",
+    "medusa",
+    "queenofpain",
+    "viper",
+    "witch_doctor"
+   ],
+   "games": 72,
+   "games_by_cand_side": {
+    "dire": 30,
+    "radiant": 42
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 5,
+    "dragon_knight": 3,
+    "juggernaut": 1,
+    "lich": 5,
+    "lina": 4,
+    "medusa": 1,
+    "obsidian_destroyer": 2,
+    "queenofpain": 2,
+    "viper": 3,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "dragon_knight",
+    "juggernaut",
+    "lina",
+    "obsidian_destroyer"
+   ],
+   "runs": [
+    "spot_20260819_221108_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "medusa",
+      "queenofpain",
+      "viper",
+      "witch_doctor"
+     ],
+     "games": 72,
+     "games_by_cand_side": {
+      "dire": 30,
+      "radiant": 42
+     },
+     "radiant": [
+      "crystal_maiden",
+      "dragon_knight",
+      "juggernaut",
+      "lina",
+      "obsidian_destroyer"
+     ],
+     "runs": [
+      "spot_20260819_221108_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+     ]
+    }
+   ]
+  },
+  "868": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "drow_ranger",
+    "jakiro",
+    "obsidian_destroyer",
+    "viper"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 42
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "drow_ranger": 1,
+    "jakiro": 5,
+    "lich": 5,
+    "necrolyte": 3,
+    "nevermore": 2,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 4,
+    "sniper": 1,
+    "viper": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "necrolyte",
+    "nevermore",
+    "ogre_magi",
+    "sniper"
+   ],
+   "runs": [
+    "spot_20260819_221112_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "drow_ranger",
+      "jakiro",
+      "obsidian_destroyer",
+      "viper"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 42
+     },
+     "radiant": [
+      "lich",
+      "necrolyte",
+      "nevermore",
+      "ogre_magi",
+      "sniper"
+     ],
+     "runs": [
+      "spot_20260819_221112_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+     ]
+    }
+   ]
+  },
+  "869": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "centaur",
+    "shadow_shaman",
+    "skeleton_king",
+    "vengefulspirit",
+    "viper"
+   ],
+   "games": 70,
+   "games_by_cand_side": {
+    "dire": 28,
+    "radiant": 42
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "chaos_knight": 3,
+    "dragon_knight": 2,
+    "shadow_shaman": 4,
+    "skeleton_king": 1,
+    "skywrath_mage": 5,
+    "slardar": 1,
+    "vengefulspirit": 5,
+    "viper": 2,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "dragon_knight",
+    "skywrath_mage",
+    "slardar",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260819_221117_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "shadow_shaman",
+      "skeleton_king",
+      "vengefulspirit",
+      "viper"
+     ],
+     "games": 70,
+     "games_by_cand_side": {
+      "dire": 28,
+      "radiant": 42
+     },
+     "radiant": [
+      "chaos_knight",
+      "dragon_knight",
+      "skywrath_mage",
+      "slardar",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260819_221117_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+     ]
+    }
+   ]
+  },
+  "870": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,roamstale,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "dragon_knight",
+    "ember_spirit",
+    "lina",
+    "ogre_magi",
+    "slardar"
+   ],
+   "games": 60,
+   "games_by_cand_side": {
+    "dire": 22,
+    "radiant": 38
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 1,
+    "ember_spirit": 2,
+    "jakiro": 4,
+    "lina": 4,
+    "ogre_magi": 5,
+    "skeleton_king": 3,
+    "slardar": 3,
+    "sniper": 2,
+    "sven": 1,
+    "venomancer": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "jakiro",
+    "skeleton_king",
+    "sniper",
+    "sven",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260819_221122_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "ember_spirit",
+      "lina",
+      "ogre_magi",
+      "slardar"
+     ],
+     "games": 60,
+     "games_by_cand_side": {
+      "dire": 22,
+      "radiant": 38
+     },
+     "radiant": [
+      "jakiro",
+      "skeleton_king",
+      "sniper",
+      "sven",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260819_221122_1_829202ac3e08f6450b1a7f303e98be2a543e8619"
+     ]
+    }
+   ]
+  },
+  "872": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "axe",
+    "drow_ranger",
+    "ember_spirit",
+    "lion",
+    "spirit_breaker"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 33,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "drow_ranger": 1,
+    "ember_spirit": 2,
+    "lion": 5,
+    "phantom_assassin": 1,
+    "silencer": 5,
+    "spirit_breaker": 4,
+    "tidehunter": 3,
+    "viper": 2,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "phantom_assassin",
+    "silencer",
+    "tidehunter",
+    "viper",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260820_041132_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "drow_ranger",
+      "ember_spirit",
+      "lion",
+      "spirit_breaker"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 33,
+      "radiant": 40
+     },
+     "radiant": [
+      "phantom_assassin",
+      "silencer",
+      "tidehunter",
+      "viper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260820_041132_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+     ]
+    }
+   ]
+  },
+  "875": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "drow_ranger",
+    "lich",
+    "tidehunter",
+    "viper"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 33,
+    "radiant": 41
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "crystal_maiden": 4,
+    "drow_ranger": 1,
+    "lich": 5,
+    "lina": 2,
+    "shadow_shaman": 4,
+    "slardar": 1,
+    "tidehunter": 3,
+    "viper": 2,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "lina",
+    "shadow_shaman",
+    "slardar",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260820_041134_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "drow_ranger",
+      "lich",
+      "tidehunter",
+      "viper"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 33,
+      "radiant": 41
+     },
+     "radiant": [
+      "axe",
+      "lina",
+      "shadow_shaman",
+      "slardar",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260820_041134_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+     ]
+    }
+   ]
+  },
+  "885": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "axe",
+    "crystal_maiden",
+    "earthshaker",
+    "sniper",
+    "viper"
+   ],
+   "games": 70,
+   "games_by_cand_side": {
+    "dire": 30,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "crystal_maiden": 5,
+    "earthshaker": 4,
+    "obsidian_destroyer": 2,
+    "shadow_shaman": 5,
+    "skeleton_king": 1,
+    "skywrath_mage": 4,
+    "slardar": 3,
+    "sniper": 1,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "obsidian_destroyer",
+    "shadow_shaman",
+    "skeleton_king",
+    "skywrath_mage",
+    "slardar"
+   ],
+   "runs": [
+    "spot_20260820_041137_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "crystal_maiden",
+      "earthshaker",
+      "sniper",
+      "viper"
+     ],
+     "games": 70,
+     "games_by_cand_side": {
+      "dire": 30,
+      "radiant": 40
+     },
+     "radiant": [
+      "obsidian_destroyer",
+      "shadow_shaman",
+      "skeleton_king",
+      "skywrath_mage",
+      "slardar"
+     ],
+     "runs": [
+      "spot_20260820_041137_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+     ]
+    }
+   ]
+  },
+  "887": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,axebuyblink,zusult"
+   ],
+   "dire": [
+    "juggernaut",
+    "lina",
+    "silencer",
+    "tidehunter",
+    "witch_doctor"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 42
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "death_prophet": 2,
+    "juggernaut": 1,
+    "lich": 4,
+    "lina": 2,
+    "luna": 1,
+    "silencer": 5,
+    "tidehunter": 3,
+    "vengefulspirit": 5,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "death_prophet",
+    "lich",
+    "luna",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260820_041139_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "juggernaut",
+      "lina",
+      "silencer",
+      "tidehunter",
+      "witch_doctor"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 42
+     },
+     "radiant": [
+      "axe",
+      "death_prophet",
+      "lich",
+      "luna",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260820_041139_1_7c8b5167c9a98a7d6dc57b2eaff434d4f9a6a36f"
+     ]
+    }
+   ]
+  },
+  "888": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "drow_ranger",
+    "jakiro",
+    "lina",
+    "tidehunter"
+   ],
+   "games": 204,
+   "games_by_cand_side": {
+    "dire": 80,
+    "radiant": 124
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "drow_ranger": 1,
+    "jakiro": 5,
+    "lina": 2,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "tidehunter": 3,
+    "viper": 3,
+    "witch_doctor": 5,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "spirit_breaker",
+    "sven",
+    "viper",
+    "witch_doctor",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260820_101138_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+    "spot_20260820_160902_1_11a8de336248927265d20af677f944085a02d248",
+    "spot_20260820_180759_1_11a8de336248927265d20af677f944085a02d248"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "drow_ranger",
+      "jakiro",
+      "lina",
+      "tidehunter"
+     ],
+     "games": 204,
+     "games_by_cand_side": {
+      "dire": 80,
+      "radiant": 124
+     },
+     "radiant": [
+      "spirit_breaker",
+      "sven",
+      "viper",
+      "witch_doctor",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260820_101138_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+      "spot_20260820_160902_1_11a8de336248927265d20af677f944085a02d248",
+      "spot_20260820_180759_1_11a8de336248927265d20af677f944085a02d248"
+     ]
+    }
+   ]
+  },
+  "895": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "necrolyte",
+    "skeleton_king",
+    "slardar",
+    "venomancer"
+   ],
+   "games": 221,
+   "games_by_cand_side": {
+    "dire": 95,
+    "radiant": 126
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 1,
+    "jakiro": 4,
+    "lina": 2,
+    "necrolyte": 2,
+    "skeleton_king": 1,
+    "slardar": 3,
+    "venomancer": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "dragon_knight",
+    "jakiro",
+    "lina",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260820_101140_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+    "spot_20260820_160904_1_11a8de336248927265d20af677f944085a02d248",
+    "spot_20260820_180802_1_11a8de336248927265d20af677f944085a02d248"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "necrolyte",
+      "skeleton_king",
+      "slardar",
+      "venomancer"
+     ],
+     "games": 221,
+     "games_by_cand_side": {
+      "dire": 95,
+      "radiant": 126
+     },
+     "radiant": [
+      "bristleback",
+      "dragon_knight",
+      "jakiro",
+      "lina",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260820_101140_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+      "spot_20260820_160904_1_11a8de336248927265d20af677f944085a02d248",
+      "spot_20260820_180802_1_11a8de336248927265d20af677f944085a02d248"
+     ]
+    }
+   ]
+  },
+  "896": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult"
+   ],
+   "dire": [
+    "lion",
+    "necrolyte",
+    "obsidian_destroyer",
+    "ogre_magi",
+    "slardar"
+   ],
+   "games": 222,
+   "games_by_cand_side": {
+    "dire": 95,
+    "radiant": 127
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 5,
+    "lina": 2,
+    "lion": 4,
+    "luna": 1,
+    "necrolyte": 3,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 5,
+    "slardar": 1,
+    "tidehunter": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "lina",
+    "luna",
+    "tidehunter",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260820_101143_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+    "spot_20260820_160908_1_11a8de336248927265d20af677f944085a02d248",
+    "spot_20260820_180805_1_11a8de336248927265d20af677f944085a02d248"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lion",
+      "necrolyte",
+      "obsidian_destroyer",
+      "ogre_magi",
+      "slardar"
+     ],
+     "games": 222,
+     "games_by_cand_side": {
+      "dire": 95,
+      "radiant": 127
+     },
+     "radiant": [
+      "crystal_maiden",
+      "lina",
+      "luna",
+      "tidehunter",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260820_101143_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+      "spot_20260820_160908_1_11a8de336248927265d20af677f944085a02d248",
+      "spot_20260820_180805_1_11a8de336248927265d20af677f944085a02d248"
+     ]
+    }
+   ]
+  },
+  "901": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "dragon_knight",
+    "luna",
+    "nevermore",
+    "ogre_magi",
+    "zuus"
+   ],
+   "games": 130,
+   "games_by_cand_side": {
+    "dire": 65,
+    "radiant": 65
+   },
+   "off_roster_games": 2,
+   "positions": {
+    "death_prophet": 3,
+    "dragon_knight": 3,
+    "luna": 1,
+    "nevermore": 2,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 5,
+    "oracle": 5,
+    "slardar": 1,
+    "venomancer": 4,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "obsidian_destroyer",
+    "oracle",
+    "slardar",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260722_225252_1_main",
+    "spot_20260725_102545_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "luna",
+      "nevermore",
+      "ogre_magi",
+      "zuus"
+     ],
+     "games": 130,
+     "games_by_cand_side": {
+      "dire": 65,
+      "radiant": 65
+     },
+     "radiant": [
+      "death_prophet",
+      "obsidian_destroyer",
+      "oracle",
+      "slardar",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260722_225252_1_main",
+      "spot_20260725_102545_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "chaos_knight",
+      "dragon_knight",
+      "lich",
+      "queenofpain",
+      "venomancer"
+     ],
+     "games": 2,
+     "games_by_cand_side": {
+      "dire": 2,
+      "radiant": 0
+     },
+     "radiant": [
+      "centaur",
+      "jakiro",
+      "sniper",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_225252_1_main",
+      "spot_20260725_102545_1_main"
+     ]
+    }
+   ]
+  },
+  "902": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "chaos_knight",
+    "dragon_knight",
+    "lich",
+    "queenofpain",
+    "venomancer"
+   ],
+   "games": 106,
+   "games_by_cand_side": {
+    "dire": 38,
+    "radiant": 68
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "chaos_knight": 1,
+    "dragon_knight": 3,
+    "jakiro": 5,
+    "lich": 5,
+    "queenofpain": 2,
+    "sniper": 4,
+    "vengefulspirit": 1,
+    "venomancer": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "jakiro",
+    "sniper",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260722_225252_1_main",
+    "spot_20260725_102545_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "dragon_knight",
+      "lich",
+      "queenofpain",
+      "venomancer"
+     ],
+     "games": 106,
+     "games_by_cand_side": {
+      "dire": 38,
+      "radiant": 68
+     },
+     "radiant": [
+      "centaur",
+      "jakiro",
+      "sniper",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260722_225252_1_main",
+      "spot_20260725_102545_1_main"
+     ]
+    }
+   ]
+  },
+  "903": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "chaos_knight",
+    "lina",
+    "lion",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "games": 148,
+   "games_by_cand_side": {
+    "dire": 71,
+    "radiant": 77
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "chaos_knight": 3,
+    "dragon_knight": 3,
+    "lina": 2,
+    "lion": 5,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 4,
+    "phantom_assassin": 1,
+    "skywrath_mage": 5,
+    "vengefulspirit": 1,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "obsidian_destroyer",
+    "ogre_magi",
+    "phantom_assassin",
+    "skywrath_mage"
+   ],
+   "runs": [
+    "spot_20260722_225302_1_main",
+    "spot_20260725_102558_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "lina",
+      "lion",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "games": 148,
+     "games_by_cand_side": {
+      "dire": 71,
+      "radiant": 77
+     },
+     "radiant": [
+      "dragon_knight",
+      "obsidian_destroyer",
+      "ogre_magi",
+      "phantom_assassin",
+      "skywrath_mage"
+     ],
+     "runs": [
+      "spot_20260722_225302_1_main",
+      "spot_20260725_102558_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "juggernaut",
+      "lina",
+      "sniper",
+      "sven",
+      "venomancer"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "lich",
+      "necrolyte",
+      "obsidian_destroyer",
+      "skeleton_king",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260725_102558_1_main"
+     ]
+    }
+   ]
+  },
+  "904": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen"
+   ],
+   "dire": [
+    "juggernaut",
+    "lina",
+    "sniper",
+    "sven",
+    "venomancer"
+   ],
+   "games": 99,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 64
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "juggernaut": 1,
+    "lich": 5,
+    "lina": 2,
+    "necrolyte": 3,
+    "obsidian_destroyer": 2,
+    "skeleton_king": 1,
+    "sniper": 4,
+    "sven": 3,
+    "venomancer": 5,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "necrolyte",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "warlock"
+   ],
+   "runs": [
+    "spot_20260722_225302_1_main",
+    "spot_20260725_102558_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "juggernaut",
+      "lina",
+      "sniper",
+      "sven",
+      "venomancer"
+     ],
+     "games": 99,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 64
+     },
+     "radiant": [
+      "lich",
+      "necrolyte",
+      "obsidian_destroyer",
+      "skeleton_king",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260722_225302_1_main",
+      "spot_20260725_102558_1_main"
+     ]
+    }
+   ]
+  },
+  "905": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue"
+   ],
+   "dire": [
+    "dragon_knight",
+    "lion",
+    "slardar",
+    "viper",
+    "zuus"
+   ],
+   "games": 67,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 33
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "chaos_knight": 3,
+    "dragon_knight": 2,
+    "ember_spirit": 2,
+    "lion": 4,
+    "luna": 1,
+    "skywrath_mage": 5,
+    "slardar": 1,
+    "viper": 3,
+    "warlock": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "ember_spirit",
+    "luna",
+    "skywrath_mage",
+    "warlock"
+   ],
+   "runs": [
+    "spot_20260722_225310_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "lion",
+      "slardar",
+      "viper",
+      "zuus"
+     ],
+     "games": 67,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 33
+     },
+     "radiant": [
+      "chaos_knight",
+      "ember_spirit",
+      "luna",
+      "skywrath_mage",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260722_225310_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "bristleback",
+      "earthshaker",
+      "jakiro",
+      "juggernaut",
+      "zuus"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "crystal_maiden",
+      "phantom_assassin",
+      "skeleton_king",
+      "sniper",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260722_225310_1_main"
+     ]
+    }
+   ]
+  },
+  "906": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult",
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult"
+   ],
+   "dire": [
+    "bristleback",
+    "earthshaker",
+    "jakiro",
+    "juggernaut",
+    "zuus"
+   ],
+   "games": 260,
+   "games_by_cand_side": {
+    "dire": 101,
+    "radiant": 159
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "crystal_maiden": 5,
+    "earthshaker": 4,
+    "jakiro": 5,
+    "juggernaut": 1,
+    "phantom_assassin": 1,
+    "skeleton_king": 3,
+    "sniper": 4,
+    "viper": 2,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "phantom_assassin",
+    "skeleton_king",
+    "sniper",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260722_225310_1_main",
+    "spot_20260820_101145_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+    "spot_20260820_160911_1_11a8de336248927265d20af677f944085a02d248",
+    "spot_20260820_180808_1_11a8de336248927265d20af677f944085a02d248"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "earthshaker",
+      "jakiro",
+      "juggernaut",
+      "zuus"
+     ],
+     "games": 260,
+     "games_by_cand_side": {
+      "dire": 101,
+      "radiant": 159
+     },
+     "radiant": [
+      "crystal_maiden",
+      "phantom_assassin",
+      "skeleton_king",
+      "sniper",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260722_225310_1_main",
+      "spot_20260820_101145_1_75646608acc64bd5a25fe55a492d9969f6309ff9",
+      "spot_20260820_160911_1_11a8de336248927265d20af677f944085a02d248",
+      "spot_20260820_180808_1_11a8de336248927265d20af677f944085a02d248"
+     ]
+    }
+   ]
+  },
+  "911": {
+   "cands": [
+    "lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue"
+   ],
+   "dire": [
+    "death_prophet",
+    "pudge",
+    "sniper",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 30,
+    "radiant": 43
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "axe": 3,
+    "chaos_knight": 1,
+    "death_prophet": 3,
+    "jakiro": 5,
+    "lina": 2,
+    "pudge": 5,
+    "shadow_shaman": 4,
+    "sniper": 4,
+    "vengefulspirit": 1,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "chaos_knight",
+    "jakiro",
+    "lina",
+    "shadow_shaman"
+   ],
+   "runs": [
+    "spot_20260722_235857_1_main",
+    "spot_20260723_010428_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "pudge",
+      "sniper",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 30,
+      "radiant": 43
+     },
+     "radiant": [
+      "axe",
+      "chaos_knight",
+      "jakiro",
+      "lina",
+      "shadow_shaman"
+     ],
+     "runs": [
+      "spot_20260722_235857_1_main",
+      "spot_20260723_010428_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "ember_spirit",
+      "lion",
+      "skeleton_king",
+      "spirit_breaker",
+      "vengefulspirit"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "chaos_knight",
+      "lich",
+      "lina",
+      "viper",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260723_010428_1_main"
+     ]
+    }
+   ]
+  },
+  "912": {
+   "cands": [
+    "lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue"
+   ],
+   "dire": [
+    "ember_spirit",
+    "lion",
+    "skeleton_king",
+    "spirit_breaker",
+    "vengefulspirit"
+   ],
+   "games": 48,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "ember_spirit": 2,
+    "lich": 5,
+    "lina": 2,
+    "lion": 5,
+    "skeleton_king": 3,
+    "spirit_breaker": 4,
+    "vengefulspirit": 1,
+    "viper": 3,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "lich",
+    "lina",
+    "viper",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260723_010428_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "ember_spirit",
+      "lion",
+      "skeleton_king",
+      "spirit_breaker",
+      "vengefulspirit"
+     ],
+     "games": 48,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 33
+     },
+     "radiant": [
+      "chaos_knight",
+      "lich",
+      "lina",
+      "viper",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260723_010428_1_main"
+     ]
+    }
+   ]
+  },
+  "913": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard"
+   ],
+   "dire": [
+    "lion",
+    "obsidian_destroyer",
+    "slardar",
+    "tidehunter",
+    "zuus"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 38
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 3,
+    "lion": 4,
+    "luna": 1,
+    "obsidian_destroyer": 2,
+    "skywrath_mage": 4,
+    "slardar": 1,
+    "tidehunter": 3,
+    "venomancer": 5,
+    "viper": 2,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "luna",
+    "skywrath_mage",
+    "venomancer",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260722_235907_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lion",
+      "obsidian_destroyer",
+      "slardar",
+      "tidehunter",
+      "zuus"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 38
+     },
+     "radiant": [
+      "death_prophet",
+      "luna",
+      "skywrath_mage",
+      "venomancer",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260722_235907_1_main"
+     ]
+    }
+   ]
+  },
+  "914": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l5trees,suptp,ccburst,midguard"
+   ],
+   "dire": [
+    "lich",
+    "lion",
+    "sven",
+    "tidehunter",
+    "zuus"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "death_prophet": 2,
+    "drow_ranger": 1,
+    "lich": 5,
+    "lion": 4,
+    "shadow_shaman": 5,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "tidehunter": 3,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "death_prophet",
+    "drow_ranger",
+    "shadow_shaman",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260722_235907_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "lion",
+      "sven",
+      "tidehunter",
+      "zuus"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 33
+     },
+     "radiant": [
+      "centaur",
+      "death_prophet",
+      "drow_ranger",
+      "shadow_shaman",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260722_235907_1_main"
+     ]
+    }
+   ]
+  },
+  "921": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue,tpcommit"
+   ],
+   "dire": [
+    "centaur",
+    "crystal_maiden",
+    "lion",
+    "nevermore",
+    "sniper"
+   ],
+   "games": 93,
+   "games_by_cand_side": {
+    "dire": 31,
+    "radiant": 62
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "crystal_maiden": 4,
+    "death_prophet": 2,
+    "lion": 5,
+    "nevermore": 2,
+    "ogre_magi": 5,
+    "slardar": 3,
+    "sniper": 1,
+    "vengefulspirit": 1,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "ogre_magi",
+    "slardar",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260723_044826_1_main",
+    "spot_20260723_050440_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "crystal_maiden",
+      "lion",
+      "nevermore",
+      "sniper"
+     ],
+     "games": 93,
+     "games_by_cand_side": {
+      "dire": 31,
+      "radiant": 62
+     },
+     "radiant": [
+      "death_prophet",
+      "ogre_magi",
+      "slardar",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260723_044826_1_main",
+      "spot_20260723_050440_1_main"
+     ]
+    }
+   ]
+  },
+  "922": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue,tpcommit"
+   ],
+   "dire": [
+    "dragon_knight",
+    "lion",
+    "necrolyte",
+    "skywrath_mage",
+    "sniper"
+   ],
+   "games": 54,
+   "games_by_cand_side": {
+    "dire": 21,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 2,
+    "lion": 4,
+    "necrolyte": 3,
+    "ogre_magi": 4,
+    "queenofpain": 2,
+    "silencer": 5,
+    "skywrath_mage": 5,
+    "slardar": 1,
+    "sniper": 1,
+    "sven": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "ogre_magi",
+    "queenofpain",
+    "silencer",
+    "slardar",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260723_050440_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "lion",
+      "necrolyte",
+      "skywrath_mage",
+      "sniper"
+     ],
+     "games": 54,
+     "games_by_cand_side": {
+      "dire": 21,
+      "radiant": 33
+     },
+     "radiant": [
+      "ogre_magi",
+      "queenofpain",
+      "silencer",
+      "slardar",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260723_050440_1_main"
+     ]
+    }
+   ]
+  },
+  "923": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue,tpcommit"
+   ],
+   "dire": [
+    "necrolyte",
+    "oracle",
+    "skeleton_king",
+    "slardar",
+    "warlock"
+   ],
+   "games": 100,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 65
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "ember_spirit": 2,
+    "luna": 1,
+    "necrolyte": 2,
+    "oracle": 5,
+    "skeleton_king": 3,
+    "slardar": 1,
+    "sniper": 4,
+    "vengefulspirit": 5,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "ember_spirit",
+    "luna",
+    "sniper",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260723_044833_1_main",
+    "spot_20260723_050448_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "necrolyte",
+      "oracle",
+      "skeleton_king",
+      "slardar",
+      "warlock"
+     ],
+     "games": 100,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 65
+     },
+     "radiant": [
+      "axe",
+      "ember_spirit",
+      "luna",
+      "sniper",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260723_044833_1_main",
+      "spot_20260723_050448_1_main"
+     ]
+    }
+   ]
+  },
+  "924": {
+   "cands": [
+    "skysilence,overchase,tpsafe2,midtp,aegisgroup,wkbuild,nodive2,nopush,wlok,depthnum,creeppull,pullcamp,suplh,l1trade,l1kite,l5trees,l5combo,suptp,ccburst,midguard,lf_mana,lf_salve,lf_chase,lf_revive,lf_threat,lf_rescue,tpcommit"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "death_prophet",
+    "skeleton_king",
+    "skywrath_mage",
+    "vengefulspirit"
+   ],
+   "games": 47,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "death_prophet": 2,
+    "juggernaut": 1,
+    "nevermore": 2,
+    "skeleton_king": 3,
+    "skywrath_mage": 5,
+    "vengefulspirit": 1,
+    "venomancer": 4,
+    "viper": 3,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "juggernaut",
+    "nevermore",
+    "venomancer",
+    "viper",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260723_050448_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "death_prophet",
+      "skeleton_king",
+      "skywrath_mage",
+      "vengefulspirit"
+     ],
+     "games": 47,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 32
+     },
+     "radiant": [
+      "juggernaut",
+      "nevermore",
+      "venomancer",
+      "viper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260723_050448_1_main"
+     ]
+    }
+   ]
+  },
+  "931": {
+   "cands": [
+    "creeppull,l1trade,suplh,pullcamp,l5combo"
+   ],
+   "dire": [
+    "shadow_shaman",
+    "skywrath_mage",
+    "slardar",
+    "storm_spirit",
+    "viper"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "shadow_shaman": 5,
+    "silencer": 5,
+    "skywrath_mage": 4,
+    "slardar": 1,
+    "spirit_breaker": 4,
+    "storm_spirit": 2,
+    "sven": 1,
+    "viper": 3,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "silencer",
+    "spirit_breaker",
+    "sven",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260723_075313_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "shadow_shaman",
+      "skywrath_mage",
+      "slardar",
+      "storm_spirit",
+      "viper"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 40
+     },
+     "radiant": [
+      "bristleback",
+      "silencer",
+      "spirit_breaker",
+      "sven",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260723_075313_1_main"
+     ]
+    }
+   ]
+  },
+  "932": {
+   "cands": [
+    "creeppull,l1trade,suplh,pullcamp,l5combo"
+   ],
+   "dire": [
+    "centaur",
+    "death_prophet",
+    "lion",
+    "vengefulspirit",
+    "witch_doctor"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "centaur": 3,
+    "death_prophet": 2,
+    "lich": 5,
+    "lion": 4,
+    "sniper": 2,
+    "tidehunter": 3,
+    "vengefulspirit": 1,
+    "witch_doctor": 5,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "lich",
+    "sniper",
+    "tidehunter",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260723_075313_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "death_prophet",
+      "lion",
+      "vengefulspirit",
+      "witch_doctor"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 32
+     },
+     "radiant": [
+      "bristleback",
+      "lich",
+      "sniper",
+      "tidehunter",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260723_075313_1_main"
+     ]
+    }
+   ]
+  },
+  "933": {
+   "cands": [
+    "creeppull,l1trade,suplh,pullcamp,l5combo"
+   ],
+   "dire": [
+    "centaur",
+    "jakiro",
+    "necrolyte",
+    "oracle",
+    "sniper"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 35,
+    "radiant": 39
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "chaos_knight": 1,
+    "jakiro": 4,
+    "necrolyte": 2,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 5,
+    "oracle": 5,
+    "skywrath_mage": 4,
+    "slardar": 3,
+    "sniper": 1
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "obsidian_destroyer",
+    "ogre_magi",
+    "skywrath_mage",
+    "slardar"
+   ],
+   "runs": [
+    "spot_20260723_075505_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "jakiro",
+      "necrolyte",
+      "oracle",
+      "sniper"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 35,
+      "radiant": 39
+     },
+     "radiant": [
+      "chaos_knight",
+      "obsidian_destroyer",
+      "ogre_magi",
+      "skywrath_mage",
+      "slardar"
+     ],
+     "runs": [
+      "spot_20260723_075505_1_main"
+     ]
+    }
+   ]
+  },
+  "934": {
+   "cands": [
+    "creeppull,l1trade,suplh,pullcamp,l5combo"
+   ],
+   "dire": [
+    "lion",
+    "medusa",
+    "necrolyte",
+    "venomancer",
+    "viper"
+   ],
+   "games": 48,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "ember_spirit": 2,
+    "jakiro": 5,
+    "lion": 5,
+    "medusa": 1,
+    "necrolyte": 3,
+    "slardar": 1,
+    "sniper": 4,
+    "sven": 3,
+    "venomancer": 4,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "ember_spirit",
+    "jakiro",
+    "slardar",
+    "sniper",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260723_075505_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lion",
+      "medusa",
+      "necrolyte",
+      "venomancer",
+      "viper"
+     ],
+     "games": 48,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 32
+     },
+     "radiant": [
+      "ember_spirit",
+      "jakiro",
+      "slardar",
+      "sniper",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260723_075505_1_main"
+     ]
+    }
+   ]
+  },
+  "941": {
+   "cands": [
+    "midtp,suptp,tpcommit,tpsafe2,lf_rescue"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "necrolyte",
+    "oracle",
+    "sniper",
+    "sven"
+   ],
+   "games": 74,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "chaos_knight": 3,
+    "crystal_maiden": 4,
+    "lina": 4,
+    "necrolyte": 2,
+    "oracle": 5,
+    "skywrath_mage": 5,
+    "sniper": 1,
+    "storm_spirit": 2,
+    "sven": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "chaos_knight",
+    "lina",
+    "skywrath_mage",
+    "storm_spirit"
+   ],
+   "runs": [
+    "spot_20260723_111412_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "necrolyte",
+      "oracle",
+      "sniper",
+      "sven"
+     ],
+     "games": 74,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 40
+     },
+     "radiant": [
+      "bristleback",
+      "chaos_knight",
+      "lina",
+      "skywrath_mage",
+      "storm_spirit"
+     ],
+     "runs": [
+      "spot_20260723_111412_1_main"
+     ]
+    }
+   ]
+  },
+  "942": {
+   "cands": [
+    "midtp,suptp,tpcommit,tpsafe2,lf_rescue"
+   ],
+   "dire": [
+    "chaos_knight",
+    "earthshaker",
+    "lich",
+    "medusa",
+    "sniper"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "earthshaker": 4,
+    "lich": 5,
+    "lion": 4,
+    "medusa": 1,
+    "nevermore": 2,
+    "skeleton_king": 3,
+    "slardar": 1,
+    "sniper": 2,
+    "venomancer": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lion",
+    "nevermore",
+    "skeleton_king",
+    "slardar",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260723_111412_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "earthshaker",
+      "lich",
+      "medusa",
+      "sniper"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 32
+     },
+     "radiant": [
+      "lion",
+      "nevermore",
+      "skeleton_king",
+      "slardar",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260723_111412_1_main"
+     ]
+    }
+   ]
+  },
+  "943": {
+   "cands": [
+    "midtp,suptp,tpcommit,tpsafe2,lf_rescue"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "drow_ranger",
+    "queenofpain",
+    "zuus"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 33,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "chaos_knight": 3,
+    "crystal_maiden": 4,
+    "drow_ranger": 1,
+    "lina": 2,
+    "queenofpain": 2,
+    "skywrath_mage": 5,
+    "vengefulspirit": 1,
+    "warlock": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "lina",
+    "skywrath_mage",
+    "vengefulspirit",
+    "warlock"
+   ],
+   "runs": [
+    "spot_20260723_111600_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "drow_ranger",
+      "queenofpain",
+      "zuus"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 33,
+      "radiant": 40
+     },
+     "radiant": [
+      "bristleback",
+      "lina",
+      "skywrath_mage",
+      "vengefulspirit",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260723_111600_1_main"
+     ]
+    }
+   ]
+  },
+  "944": {
+   "cands": [
+    "midtp,suptp,tpcommit,tpsafe2,lf_rescue"
+   ],
+   "dire": [
+    "bristleback",
+    "luna",
+    "ogre_magi",
+    "sniper",
+    "venomancer"
+   ],
+   "games": 51,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "dragon_knight": 2,
+    "luna": 1,
+    "ogre_magi": 4,
+    "sniper": 2,
+    "tidehunter": 3,
+    "vengefulspirit": 1,
+    "venomancer": 5,
+    "warlock": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "tidehunter",
+    "vengefulspirit",
+    "warlock",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260723_111600_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "luna",
+      "ogre_magi",
+      "sniper",
+      "venomancer"
+     ],
+     "games": 51,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 34
+     },
+     "radiant": [
+      "dragon_knight",
+      "tidehunter",
+      "vengefulspirit",
+      "warlock",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260723_111600_1_main"
+     ]
+    }
+   ]
+  },
+  "951": {
+   "cands": [
+    "overchase,ownhalf,ultcash,homeroute,pushguard,roshgate"
+   ],
+   "dire": [
+    "death_prophet",
+    "juggernaut",
+    "pudge",
+    "sniper",
+    "venomancer"
+   ],
+   "games": 70,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 36
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "death_prophet": 3,
+    "dragon_knight": 3,
+    "juggernaut": 1,
+    "lina": 2,
+    "oracle": 5,
+    "pudge": 5,
+    "sniper": 2,
+    "venomancer": 4,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "dragon_knight",
+    "lina",
+    "oracle",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260723_111423_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "juggernaut",
+      "pudge",
+      "sniper",
+      "venomancer"
+     ],
+     "games": 70,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 36
+     },
+     "radiant": [
+      "chaos_knight",
+      "dragon_knight",
+      "lina",
+      "oracle",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260723_111423_1_main"
+     ]
+    }
+   ]
+  },
+  "952": {
+   "cands": [
+    "overchase,ownhalf,ultcash,homeroute,pushguard,roshgate"
+   ],
+   "dire": [
+    "jakiro",
+    "lina",
+    "skeleton_king",
+    "tidehunter",
+    "zuus"
+   ],
+   "games": 51,
+   "games_by_cand_side": {
+    "dire": 19,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "jakiro": 4,
+    "lich": 5,
+    "lina": 2,
+    "necrolyte": 3,
+    "nevermore": 2,
+    "skeleton_king": 1,
+    "sniper": 4,
+    "tidehunter": 3,
+    "vengefulspirit": 1,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "necrolyte",
+    "nevermore",
+    "sniper",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260723_111423_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "jakiro",
+      "lina",
+      "skeleton_king",
+      "tidehunter",
+      "zuus"
+     ],
+     "games": 51,
+     "games_by_cand_side": {
+      "dire": 19,
+      "radiant": 32
+     },
+     "radiant": [
+      "lich",
+      "necrolyte",
+      "nevermore",
+      "sniper",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260723_111423_1_main"
+     ]
+    }
+   ]
+  },
+  "953": {
+   "cands": [
+    "overchase,ownhalf,ultcash,homeroute,pushguard,roshgate"
+   ],
+   "dire": [
+    "dragon_knight",
+    "jakiro",
+    "shadow_shaman",
+    "sniper",
+    "viper"
+   ],
+   "games": 67,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 33
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 3,
+    "jakiro": 5,
+    "nevermore": 2,
+    "shadow_shaman": 4,
+    "slardar": 1,
+    "sniper": 1,
+    "spirit_breaker": 4,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "crystal_maiden",
+    "nevermore",
+    "slardar",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260723_111609_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "jakiro",
+      "shadow_shaman",
+      "sniper",
+      "viper"
+     ],
+     "games": 67,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 33
+     },
+     "radiant": [
+      "chaos_knight",
+      "crystal_maiden",
+      "nevermore",
+      "slardar",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260723_111609_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "chaos_knight",
+      "phantom_assassin",
+      "sniper",
+      "vengefulspirit",
+      "witch_doctor"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "drow_ranger",
+      "earthshaker",
+      "lich",
+      "skeleton_king",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260723_111609_1_main"
+     ]
+    }
+   ]
+  },
+  "954": {
+   "cands": [
+    "overchase,ownhalf,ultcash,homeroute,pushguard,roshgate"
+   ],
+   "dire": [
+    "chaos_knight",
+    "phantom_assassin",
+    "sniper",
+    "vengefulspirit",
+    "witch_doctor"
+   ],
+   "games": 48,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "drow_ranger": 1,
+    "earthshaker": 4,
+    "lich": 5,
+    "phantom_assassin": 1,
+    "skeleton_king": 3,
+    "sniper": 2,
+    "vengefulspirit": 5,
+    "viper": 2,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "drow_ranger",
+    "earthshaker",
+    "lich",
+    "skeleton_king",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260723_111609_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "phantom_assassin",
+      "sniper",
+      "vengefulspirit",
+      "witch_doctor"
+     ],
+     "games": 48,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 33
+     },
+     "radiant": [
+      "drow_ranger",
+      "earthshaker",
+      "lich",
+      "skeleton_king",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260723_111609_1_main"
+     ]
+    }
+   ]
+  },
+  "961": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,tpsafe2,lf_rescue,homeroute,pushguard,ownhalf,overchase"
+   ],
+   "dire": [
+    "axe",
+    "jakiro",
+    "juggernaut",
+    "obsidian_destroyer",
+    "ogre_magi"
+   ],
+   "games": 68,
+   "games_by_cand_side": {
+    "dire": 31,
+    "radiant": 37
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "death_prophet": 3,
+    "jakiro": 5,
+    "juggernaut": 1,
+    "lina": 4,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 4,
+    "skywrath_mage": 5,
+    "sniper": 1,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "lina",
+    "skywrath_mage",
+    "sniper",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260723_160025_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "jakiro",
+      "juggernaut",
+      "obsidian_destroyer",
+      "ogre_magi"
+     ],
+     "games": 68,
+     "games_by_cand_side": {
+      "dire": 31,
+      "radiant": 37
+     },
+     "radiant": [
+      "death_prophet",
+      "lina",
+      "skywrath_mage",
+      "sniper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260723_160025_1_main"
+     ]
+    }
+   ]
+  },
+  "962": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,tpsafe2,lf_rescue,homeroute,pushguard,ownhalf,overchase"
+   ],
+   "dire": [
+    "bristleback",
+    "dragon_knight",
+    "skeleton_king",
+    "vengefulspirit",
+    "warlock"
+   ],
+   "games": 48,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "centaur": 3,
+    "death_prophet": 2,
+    "dragon_knight": 2,
+    "lion": 4,
+    "ogre_magi": 5,
+    "phantom_assassin": 1,
+    "skeleton_king": 3,
+    "vengefulspirit": 5,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "death_prophet",
+    "lion",
+    "ogre_magi",
+    "phantom_assassin"
+   ],
+   "runs": [
+    "spot_20260723_160025_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "dragon_knight",
+      "skeleton_king",
+      "vengefulspirit",
+      "warlock"
+     ],
+     "games": 48,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 32
+     },
+     "radiant": [
+      "centaur",
+      "death_prophet",
+      "lion",
+      "ogre_magi",
+      "phantom_assassin"
+     ],
+     "runs": [
+      "spot_20260723_160025_1_main"
+     ]
+    }
+   ]
+  },
+  "963": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,tpsafe2,lf_rescue,homeroute,pushguard,ownhalf,overchase"
+   ],
+   "dire": [
+    "death_prophet",
+    "luna",
+    "ogre_magi",
+    "sniper",
+    "venomancer"
+   ],
+   "games": 75,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 43
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "death_prophet": 3,
+    "dragon_knight": 3,
+    "drow_ranger": 1,
+    "jakiro": 5,
+    "luna": 1,
+    "ogre_magi": 5,
+    "queenofpain": 2,
+    "sniper": 2,
+    "venomancer": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "dragon_knight",
+    "drow_ranger",
+    "jakiro",
+    "queenofpain"
+   ],
+   "runs": [
+    "spot_20260723_160040_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "luna",
+      "ogre_magi",
+      "sniper",
+      "venomancer"
+     ],
+     "games": 75,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 43
+     },
+     "radiant": [
+      "crystal_maiden",
+      "dragon_knight",
+      "drow_ranger",
+      "jakiro",
+      "queenofpain"
+     ],
+     "runs": [
+      "spot_20260723_160040_1_main"
+     ]
+    }
+   ]
+  },
+  "964": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,tpsafe2,lf_rescue,homeroute,pushguard,ownhalf,overchase"
+   ],
+   "dire": [
+    "dragon_knight",
+    "nevermore",
+    "oracle",
+    "tidehunter",
+    "zuus"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "dragon_knight": 1,
+    "necrolyte": 3,
+    "nevermore": 2,
+    "oracle": 5,
+    "shadow_shaman": 5,
+    "storm_spirit": 2,
+    "sven": 1,
+    "tidehunter": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "necrolyte",
+    "shadow_shaman",
+    "storm_spirit",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260723_160040_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "nevermore",
+      "oracle",
+      "tidehunter",
+      "zuus"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 32
+     },
+     "radiant": [
+      "crystal_maiden",
+      "necrolyte",
+      "shadow_shaman",
+      "storm_spirit",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260723_160040_1_main"
+     ]
+    }
+   ]
+  },
+  "971": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen"
+   ],
+   "dire": [
+    "juggernaut",
+    "lich",
+    "ogre_magi",
+    "queenofpain",
+    "slardar"
+   ],
+   "games": 72,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "chaos_knight": 1,
+    "crystal_maiden": 4,
+    "ember_spirit": 2,
+    "juggernaut": 1,
+    "lich": 4,
+    "ogre_magi": 5,
+    "queenofpain": 2,
+    "shadow_shaman": 5,
+    "slardar": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "chaos_knight",
+    "crystal_maiden",
+    "ember_spirit",
+    "shadow_shaman"
+   ],
+   "runs": [
+    "spot_20260725_043213_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "juggernaut",
+      "lich",
+      "ogre_magi",
+      "queenofpain",
+      "slardar"
+     ],
+     "games": 72,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 40
+     },
+     "radiant": [
+      "axe",
+      "chaos_knight",
+      "crystal_maiden",
+      "ember_spirit",
+      "shadow_shaman"
+     ],
+     "runs": [
+      "spot_20260725_043213_1_main"
+     ]
+    }
+   ]
+  },
+  "972": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen"
+   ],
+   "dire": [
+    "medusa",
+    "necrolyte",
+    "oracle",
+    "storm_spirit",
+    "warlock"
+   ],
+   "games": 52,
+   "games_by_cand_side": {
+    "dire": 19,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "lich": 4,
+    "lina": 2,
+    "luna": 1,
+    "medusa": 1,
+    "necrolyte": 3,
+    "oracle": 5,
+    "silencer": 5,
+    "storm_spirit": 2,
+    "viper": 3,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lich",
+    "lina",
+    "luna",
+    "silencer",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260725_043213_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "medusa",
+      "necrolyte",
+      "oracle",
+      "storm_spirit",
+      "warlock"
+     ],
+     "games": 52,
+     "games_by_cand_side": {
+      "dire": 19,
+      "radiant": 33
+     },
+     "radiant": [
+      "lich",
+      "lina",
+      "luna",
+      "silencer",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260725_043213_1_main"
+     ]
+    }
+   ]
+  },
+  "973": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen"
+   ],
+   "dire": [
+    "lich",
+    "luna",
+    "necrolyte",
+    "obsidian_destroyer",
+    "witch_doctor"
+   ],
+   "games": 65,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 31
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 3,
+    "lich": 5,
+    "luna": 1,
+    "necrolyte": 3,
+    "obsidian_destroyer": 2,
+    "storm_spirit": 2,
+    "sven": 1,
+    "vengefulspirit": 5,
+    "warlock": 4,
+    "witch_doctor": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "storm_spirit",
+    "sven",
+    "vengefulspirit",
+    "warlock"
+   ],
+   "runs": [
+    "spot_20260725_043231_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "luna",
+      "necrolyte",
+      "obsidian_destroyer",
+      "witch_doctor"
+     ],
+     "games": 65,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 31
+     },
+     "radiant": [
+      "death_prophet",
+      "storm_spirit",
+      "sven",
+      "vengefulspirit",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260725_043231_1_main"
+     ]
+    }
+   ]
+  },
+  "974": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen"
+   ],
+   "dire": [
+    "axe",
+    "death_prophet",
+    "earthshaker",
+    "slardar",
+    "venomancer"
+   ],
+   "games": 46,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 31
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "centaur": 3,
+    "death_prophet": 2,
+    "earthshaker": 4,
+    "lina": 4,
+    "lion": 5,
+    "obsidian_destroyer": 2,
+    "phantom_assassin": 1,
+    "slardar": 1,
+    "venomancer": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "lina",
+    "lion",
+    "obsidian_destroyer",
+    "phantom_assassin"
+   ],
+   "runs": [
+    "spot_20260725_043231_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "axe",
+      "death_prophet",
+      "earthshaker",
+      "slardar",
+      "venomancer"
+     ],
+     "games": 46,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 31
+     },
+     "radiant": [
+      "centaur",
+      "lina",
+      "lion",
+      "obsidian_destroyer",
+      "phantom_assassin"
+     ],
+     "runs": [
+      "spot_20260725_043231_1_main"
+     ]
+    }
+   ]
+  },
+  "981": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen,teambrain"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "shadow_shaman",
+    "storm_spirit",
+    "vengefulspirit"
+   ],
+   "games": 71,
+   "games_by_cand_side": {
+    "dire": 39,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "jakiro": 4,
+    "ogre_magi": 5,
+    "shadow_shaman": 4,
+    "slardar": 3,
+    "storm_spirit": 2,
+    "vengefulspirit": 1,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "jakiro",
+    "ogre_magi",
+    "slardar",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260725_081214_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "shadow_shaman",
+      "storm_spirit",
+      "vengefulspirit"
+     ],
+     "games": 71,
+     "games_by_cand_side": {
+      "dire": 39,
+      "radiant": 32
+     },
+     "radiant": [
+      "bristleback",
+      "jakiro",
+      "ogre_magi",
+      "slardar",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260725_081214_1_main"
+     ]
+    }
+   ]
+  },
+  "982": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen,teambrain"
+   ],
+   "dire": [
+    "bristleback",
+    "dragon_knight",
+    "juggernaut",
+    "lich",
+    "shadow_shaman"
+   ],
+   "games": 52,
+   "games_by_cand_side": {
+    "dire": 18,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "dragon_knight": 2,
+    "juggernaut": 1,
+    "lich": 4,
+    "oracle": 5,
+    "shadow_shaman": 5,
+    "spirit_breaker": 4,
+    "storm_spirit": 2,
+    "sven": 3,
+    "vengefulspirit": 1
+   },
+   "positions_verified": true,
+   "radiant": [
+    "oracle",
+    "spirit_breaker",
+    "storm_spirit",
+    "sven",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260725_081214_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "dragon_knight",
+      "juggernaut",
+      "lich",
+      "shadow_shaman"
+     ],
+     "games": 52,
+     "games_by_cand_side": {
+      "dire": 18,
+      "radiant": 34
+     },
+     "radiant": [
+      "oracle",
+      "spirit_breaker",
+      "storm_spirit",
+      "sven",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260725_081214_1_main"
+     ]
+    }
+   ]
+  },
+  "983": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen,teambrain"
+   ],
+   "dire": [
+    "bristleback",
+    "centaur",
+    "shadow_shaman",
+    "storm_spirit",
+    "witch_doctor"
+   ],
+   "games": 70,
+   "games_by_cand_side": {
+    "dire": 33,
+    "radiant": 37
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "bristleback": 1,
+    "centaur": 3,
+    "jakiro": 4,
+    "lich": 5,
+    "nevermore": 2,
+    "shadow_shaman": 4,
+    "skeleton_king": 1,
+    "storm_spirit": 2,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "jakiro",
+    "lich",
+    "nevermore",
+    "skeleton_king"
+   ],
+   "runs": [
+    "spot_20260725_081230_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "centaur",
+      "shadow_shaman",
+      "storm_spirit",
+      "witch_doctor"
+     ],
+     "games": 70,
+     "games_by_cand_side": {
+      "dire": 33,
+      "radiant": 37
+     },
+     "radiant": [
+      "axe",
+      "jakiro",
+      "lich",
+      "nevermore",
+      "skeleton_king"
+     ],
+     "runs": [
+      "spot_20260725_081230_1_main"
+     ]
+    }
+   ]
+  },
+  "984": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,ownhalf,overchase,l1xpsoak,fieldregen,teambrain"
+   ],
+   "dire": [
+    "dragon_knight",
+    "jakiro",
+    "medusa",
+    "slardar",
+    "warlock"
+   ],
+   "games": 53,
+   "games_by_cand_side": {
+    "dire": 19,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 2,
+    "jakiro": 5,
+    "lina": 2,
+    "medusa": 1,
+    "phantom_assassin": 1,
+    "skywrath_mage": 5,
+    "slardar": 3,
+    "spirit_breaker": 4,
+    "viper": 3,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lina",
+    "phantom_assassin",
+    "skywrath_mage",
+    "spirit_breaker",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260725_081230_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "jakiro",
+      "medusa",
+      "slardar",
+      "warlock"
+     ],
+     "games": 53,
+     "games_by_cand_side": {
+      "dire": 19,
+      "radiant": 34
+     },
+     "radiant": [
+      "lina",
+      "phantom_assassin",
+      "skywrath_mage",
+      "spirit_breaker",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260725_081230_1_main"
+     ]
+    }
+   ]
+  },
+  "991": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,l1xpsoak"
+   ],
+   "dire": [
+    "dragon_knight",
+    "drow_ranger",
+    "shadow_shaman",
+    "storm_spirit",
+    "witch_doctor"
+   ],
+   "games": 63,
+   "games_by_cand_side": {
+    "dire": 32,
+    "radiant": 31
+   },
+   "off_roster_games": 1,
+   "positions": {
+    "bristleback": 3,
+    "dragon_knight": 3,
+    "drow_ranger": 1,
+    "earthshaker": 4,
+    "medusa": 1,
+    "obsidian_destroyer": 2,
+    "shadow_shaman": 4,
+    "skywrath_mage": 5,
+    "storm_spirit": 2,
+    "witch_doctor": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "earthshaker",
+    "medusa",
+    "obsidian_destroyer",
+    "skywrath_mage"
+   ],
+   "runs": [
+    "spot_20260725_102518_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "dragon_knight",
+      "drow_ranger",
+      "shadow_shaman",
+      "storm_spirit",
+      "witch_doctor"
+     ],
+     "games": 63,
+     "games_by_cand_side": {
+      "dire": 32,
+      "radiant": 31
+     },
+     "radiant": [
+      "bristleback",
+      "earthshaker",
+      "medusa",
+      "obsidian_destroyer",
+      "skywrath_mage"
+     ],
+     "runs": [
+      "spot_20260725_102518_1_main"
+     ]
+    },
+    {
+     "dire": [
+      "chaos_knight",
+      "phantom_assassin",
+      "pudge",
+      "spirit_breaker",
+      "viper"
+     ],
+     "games": 1,
+     "games_by_cand_side": {
+      "dire": 1,
+      "radiant": 0
+     },
+     "radiant": [
+      "dragon_knight",
+      "lina",
+      "luna",
+      "tidehunter",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260725_102518_1_main"
+     ]
+    }
+   ]
+  },
+  "992": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,l1xpsoak"
+   ],
+   "dire": [
+    "chaos_knight",
+    "phantom_assassin",
+    "pudge",
+    "spirit_breaker",
+    "viper"
+   ],
+   "games": 50,
+   "games_by_cand_side": {
+    "dire": 19,
+    "radiant": 31
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "dragon_knight": 2,
+    "lina": 4,
+    "luna": 1,
+    "phantom_assassin": 1,
+    "pudge": 5,
+    "spirit_breaker": 4,
+    "tidehunter": 3,
+    "venomancer": 5,
+    "viper": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "lina",
+    "luna",
+    "tidehunter",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260725_102518_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "phantom_assassin",
+      "pudge",
+      "spirit_breaker",
+      "viper"
+     ],
+     "games": 50,
+     "games_by_cand_side": {
+      "dire": 19,
+      "radiant": 31
+     },
+     "radiant": [
+      "dragon_knight",
+      "lina",
+      "luna",
+      "tidehunter",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260725_102518_1_main"
+     ]
+    }
+   ]
+  },
+  "993": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,l1xpsoak"
+   ],
+   "dire": [
+    "chaos_knight",
+    "ember_spirit",
+    "medusa",
+    "spirit_breaker",
+    "vengefulspirit"
+   ],
+   "games": 70,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 36
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "ember_spirit": 2,
+    "lina": 4,
+    "medusa": 1,
+    "phantom_assassin": 1,
+    "pudge": 5,
+    "slardar": 3,
+    "sniper": 2,
+    "spirit_breaker": 4,
+    "vengefulspirit": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "lina",
+    "phantom_assassin",
+    "pudge",
+    "slardar",
+    "sniper"
+   ],
+   "runs": [
+    "spot_20260725_102532_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "ember_spirit",
+      "medusa",
+      "spirit_breaker",
+      "vengefulspirit"
+     ],
+     "games": 70,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 36
+     },
+     "radiant": [
+      "lina",
+      "phantom_assassin",
+      "pudge",
+      "slardar",
+      "sniper"
+     ],
+     "runs": [
+      "spot_20260725_102532_1_main"
+     ]
+    }
+   ]
+  },
+  "994": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo,l1xpsoak"
+   ],
+   "dire": [
+    "bristleback",
+    "dragon_knight",
+    "medusa",
+    "ogre_magi",
+    "warlock"
+   ],
+   "games": 52,
+   "games_by_cand_side": {
+    "dire": 18,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "dragon_knight": 2,
+    "earthshaker": 4,
+    "medusa": 1,
+    "necrolyte": 2,
+    "ogre_magi": 5,
+    "oracle": 5,
+    "skeleton_king": 1,
+    "sven": 3,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "earthshaker",
+    "necrolyte",
+    "oracle",
+    "skeleton_king",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260725_102532_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "dragon_knight",
+      "medusa",
+      "ogre_magi",
+      "warlock"
+     ],
+     "games": 52,
+     "games_by_cand_side": {
+      "dire": 18,
+      "radiant": 34
+     },
+     "radiant": [
+      "earthshaker",
+      "necrolyte",
+      "oracle",
+      "skeleton_king",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260725_102532_1_main"
+     ]
+    }
+   ]
+  },
+  "995": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "bristleback",
+    "ember_spirit",
+    "oracle",
+    "phantom_assassin",
+    "sniper"
+   ],
+   "games": 73,
+   "games_by_cand_side": {
+    "dire": 34,
+    "radiant": 39
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "axe": 3,
+    "bristleback": 3,
+    "earthshaker": 4,
+    "ember_spirit": 2,
+    "juggernaut": 1,
+    "oracle": 5,
+    "phantom_assassin": 1,
+    "sniper": 4,
+    "viper": 2,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "axe",
+    "earthshaker",
+    "juggernaut",
+    "viper",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260731_140127_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "ember_spirit",
+      "oracle",
+      "phantom_assassin",
+      "sniper"
+     ],
+     "games": 73,
+     "games_by_cand_side": {
+      "dire": 34,
+      "radiant": 39
+     },
+     "radiant": [
+      "axe",
+      "earthshaker",
+      "juggernaut",
+      "viper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260731_140127_1_main"
+     ]
+    }
+   ]
+  },
+  "996": {
+   "cands": [
+    "l1xpsoak"
+   ],
+   "dire": [
+    "centaur",
+    "lion",
+    "medusa",
+    "storm_spirit",
+    "zuus"
+   ],
+   "games": 50,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "centaur": 3,
+    "crystal_maiden": 5,
+    "lion": 5,
+    "medusa": 1,
+    "nevermore": 2,
+    "storm_spirit": 2,
+    "venomancer": 4,
+    "viper": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "crystal_maiden",
+    "nevermore",
+    "venomancer",
+    "viper"
+   ],
+   "runs": [
+    "spot_20260731_140127_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "lion",
+      "medusa",
+      "storm_spirit",
+      "zuus"
+     ],
+     "games": 50,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 33
+     },
+     "radiant": [
+      "bristleback",
+      "crystal_maiden",
+      "nevermore",
+      "venomancer",
+      "viper"
+     ],
+     "runs": [
+      "spot_20260731_140127_1_main"
+     ]
+    }
+   ]
+  },
+  "997": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo"
+   ],
+   "dire": [
+    "nevermore",
+    "skywrath_mage",
+    "slardar",
+    "spirit_breaker",
+    "sven"
+   ],
+   "games": 75,
+   "games_by_cand_side": {
+    "dire": 37,
+    "radiant": 38
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "death_prophet": 3,
+    "necrolyte": 2,
+    "nevermore": 2,
+    "skywrath_mage": 5,
+    "slardar": 3,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "vengefulspirit": 1,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "death_prophet",
+    "necrolyte",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260731_140139_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "nevermore",
+      "skywrath_mage",
+      "slardar",
+      "spirit_breaker",
+      "sven"
+     ],
+     "games": 75,
+     "games_by_cand_side": {
+      "dire": 37,
+      "radiant": 38
+     },
+     "radiant": [
+      "crystal_maiden",
+      "death_prophet",
+      "necrolyte",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260731_140139_1_main"
+     ]
+    }
+   ]
+  },
+  "998": {
+   "cands": [
+    "creeppull,pullcamp,l1trade,l5combo"
+   ],
+   "dire": [
+    "juggernaut",
+    "necrolyte",
+    "ogre_magi",
+    "queenofpain",
+    "zuus"
+   ],
+   "games": 49,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 33
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "centaur": 3,
+    "juggernaut": 1,
+    "lina": 2,
+    "necrolyte": 3,
+    "ogre_magi": 4,
+    "queenofpain": 2,
+    "skywrath_mage": 5,
+    "sven": 1,
+    "witch_doctor": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "centaur",
+    "lina",
+    "skywrath_mage",
+    "sven",
+    "witch_doctor"
+   ],
+   "runs": [
+    "spot_20260731_140139_1_main"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "juggernaut",
+      "necrolyte",
+      "ogre_magi",
+      "queenofpain",
+      "zuus"
+     ],
+     "games": 49,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 33
+     },
+     "radiant": [
+      "centaur",
+      "lina",
+      "skywrath_mage",
+      "sven",
+      "witch_doctor"
+     ],
+     "runs": [
+      "spot_20260731_140139_1_main"
+     ]
+    }
+   ]
+  }
+ },
+ "source": "s3://dota2bot-batch-results-4924/soak/"
+}
