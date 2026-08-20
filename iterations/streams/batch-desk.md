@@ -799,3 +799,43 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   无适用对象。启动前后 check_costs.sh / describe-instances 均确认 **无泄漏**(结束时恰好 4 台,全是本轮
   有意启动的 arm B 自毁 on-demand)。
   详见 `iterations/reports/batch-desk/20260820T180600Z.md`。
+- 2026-08-20T20:10:02Z:**收割轮(§R.0 arm B `capmono` OFF)+ A−B 交付,零支出,未启动任何批测**。
+  MTD **$11.695767137**(与 14:07Z/16:08Z/18:06Z **逐位一致**;16:08Z arm A + 18:08Z arm B 两波
+  on-demand 仍未入账,计费滞后延续 —— **不是泄漏**,开工与收尾 `describe-instances` 均 0 台在跑),
+  未触发任何预算刹车($11.70 ≪ $90 刹车线,≪ $45 围栏)。远端 `git ls-remote origin main`=`658f3b4`=本地 HEAD
+  (`git fetch` 又打 `(forced update)`,本地 remote-tracking ref 再次落后 —— 核树一律以 `ls-remote` 为准)。
+  **(1) 收割 arm B(15 id,`capmono` OFF,种子 888/895/896/906,树 `11a8de33`)**:标准路径
+  `recover_verdict.py`,先分 run 下载再带前缀合并(79+80+79+78 = **316 文件,合并后仍 316,一个不丢**)。
+  **落地必查项通过**:24 暖场 stamp 全 `11a8de3`(裸 SHA checkout 成功,**连续第五波**);S3 真实 cand 串
+  八 wave 一字不差 = 15 id 且 `capmono` 连同 `tpwatch`/`roamstale`/`wandlimbo`/`axebuyblink`/`zusultx`
+  **共 6 个全缺席**(与 arm A 唯一变量 = `capmono` 成立);4 种子两 wave 全齐无饿死。**292 局有效局** →
+  gpm **−12.38** / xpm −20.45 / deaths +0.20 / last_hits −1.10,`comps_better` 1/4·0/4·0/4·1/4,
+  `hold_or_reject`;逐种子 gpm 888 −20.67 / 895 −15.81 / 896 **+7.31** / 906 −20.33(sd 12.51,SE 6.26)。
+  **(2) A−B 逐种子配对差(交付物;arm A `capmono` ON 本轮从 S3 全量重算逐位复现 18:06Z 的 −18.36)**:
+  **gpm A−B = −5.98(sd 21.10,SE 10.55,z=−0.57,同号 2/4)、xpm −0.90、deaths −0.03、last_hits −0.21 ——
+  四个经济指标全 null**。|−5.98| ≪ 4 种子 MDE ≈ 35.6 gpm;配对差 sd 21.10 ≈ 单臂 sd 12.51 的 1.7 倍
+  (22:12Z「配对放大噪声约 2 倍」第三次印证)。**判读口径按 §R:主判据是行为检测器(录像组 clean 域拒扑率
+  45.2% vs 28.6%,OR=2.06),经济 A−B 只当上界;`capmono` 条件 (b) 的 null 不构成「无害」(先例 16:10Z
+  收 `lf_rescue`「null 只是上界」)—— 判定归总监/录像组,批测台只做字面比对(§H 落地后不许改口)。**
+  **(3) 启动决策:不启动。** queue.json 无 pending ⇒ 走 4b;例行三条件 (ii)(iii) 满足,**(i) 距上一波
+  例行上机 16:09:02Z(arm A 重置例行计时;arm B 18:08Z 两臂补跑不重置,先例 02:09Z/14:12Z/20:11Z)、
+  门槛 22:09:02Z,现在 20:10Z、差约 2 小时 —— 不满足即不启动**(小时级差额,无 06:07Z「差 2 分钟」例外;
+  先例 00:09Z/02:06Z/06:13Z/08:08Z/10:06Z/12:08Z/14:07Z)。**下一波例行最早 22:09:02Z。**
+  **(4) 免费交付 —— §U.0 上机前功课做完(≥22:09:02Z 可直接上机)**:cand = §U.0 的 **18 id**(§R.0 那 16 id
+  逐字不变 + 新入集 `blinkflee`/`liondrainstop`),种子仍 888/895/896/906,**单臂**,买两个新 id 的 (a)。
+  静态核对(带空格 pattern,树 `658f3b4`):18 个 armed id **17 个各恰好 1 个读者**,`lf_rescue` 裸字面量 0
+  已知正确(经 `J.IsLaneFixOn( 'rescue' )`,`jmz_func.lua:5459`→唯一消费点 `:5765`);**新 id `blinkflee`/
+  `liondrainstop` 各 1 读者**;必须缺席五个 `roamstale` **0**(promote 落地)/`wandlimbo` 1(不 arm)/
+  `axebuyblink` 1(出集代码保留)/`tpwatch` 1(reject 永不 arm)/`zusultx` 1(不在 eligible)⇒ **唯一闸门
+  就是「不写进 cand 串」**;`retnear`/`towerreach`/`defclose`/`defstale`/`defnum`/`esaftershock` 一个不加。
+  配置沿用 4 台 × 1 种子 c6i.4xlarge `--on-demand`、16 槽、2h 看门狗、`--games 22`、现取全 40 位 SHA 实测
+  `SHA_FETCH_OK`;成本按 14:07Z 实测 **$1.56/波**(不再用 $0.6-0.8)。**语料预判(§K.5 挑种子)**:选种含 Lion
+  只有 896 ⇒ `liondrainstop` 语料仅 1 套阵容,`blinkflee` 的 Axe 载体本批缺席(867-906 均无 Axe),买不买到
+  (a) 取决于 ES 是否持刀 blink;**按章程不自行改变被测集合,默认仍 888/895/896/906**。**U.1.1 是协同组域内**
+  (`blinkflee` (a) 检测器窗口改 2.0s/HP≥70%),批测台只跑 `.dem`,不动这条。
+  **局数**:arm B 888=73(42/31)/895=74(42/32)/896=73(42/31)/906=72(42/30)=**292**(radiant-cand 168/
+  dire-cand 124)+24 暖场;arm A(本轮复核)888=68/895=74/896=74/906=64=**280**(166/114)+24 暖场;两臂共
+  **572** 有效局。radiant 打满 `--games 22` 配额、dire 27-32 撞 35min stall,再提只会加大不对称。本会话未改
+  Lua 且容器无 `luacheck`/`lua5.1`,铁律 6 无适用对象。跨组:在既有 `[batch] #70` 下追评(不新开)。
+  启动前后 check_costs.sh / describe-instances 均确认 **0 台在跑,无泄漏**。
+  详见 `iterations/reports/batch-desk/20260820T201002Z.md`。
