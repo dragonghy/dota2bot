@@ -2989,6 +2989,33 @@ function J.IsValid( nTarget )
 			and not nTarget:IsBuilding()
 end
 
+-- [GH #64] FUSE RECORD -- read this before touching the delegate below.
+--
+-- J.IsValidTarget IS J.IsValidHero: same delegate, same answer on every frame
+-- for every argument. Only the name differs, and the name lies. The NOTE below
+-- has proposed switching it to IsValidUnit since the code was inherited, with
+-- no record of what that would set off -- this block is that record.
+--
+-- Flipping the delegate widens the predicate from "valid hero" to "valid unit"
+-- (IsValidHero == IsValidUnit and IsHero). It is behaviour-NEUTRAL at the ~90
+-- call sites whose argument is a hero by construction (`enemyHero` and friends,
+-- fed from J.GetNearbyHeroes / J.GetEnemiesNearLoc, both hero-only lists), and
+-- it CHANGES BEHAVIOUR at every site that can be handed a creep, a building or
+-- roshan -- 287 of the 376 sites pass `botTarget` (J.GetProperTarget ->
+-- bot:GetTarget() / GetAttackTarget(), routinely a creep or a tower while
+-- laning, pushing or roshing). Those 287 have never been read for intent.
+--
+-- Three sites are known to be INVERTED today: the branch asks for a non-hero
+-- target and this gate demands a hero, so the branch is dead exactly where it
+-- was meant to fire (line numbers indicative, files are what the test pins):
+--   * bots/BotLib/hero_snapfire.lua:763    -- guarded by GobbleUp == 'creep'
+--   * bots/mode_roam_generic.lua:1565      -- wants to switch onto a tombstone
+--   * bots/BotLib/hero_invoker.lua:1198    -- roshan/boss; `A or (A and X)` == A
+-- Each of those is a gated behaviour change with its own frame evidence, NOT a
+-- side effect of editing this function.
+--
+-- Pinned by tests/test_isvalidtarget_fuse.lua: it fails if the delegate changes,
+-- if this record disappears, or if the call-site count grows.
 function J.IsValidTarget(nTarget)
 	-- NOTE: return J.Utils.IsValidUnit(nTarget) -- ideally it should be IsValidUnit, but a lot of legacy usage causing some problems.
 	return J.Utils.IsValidHero(nTarget)

@@ -1,12 +1,13 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,tpwatch,capmono,cmrguard,tpdead,zusult,wandlimbo
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo
 
 **稳定版锚点:`stable-v1`(2026-08-19T23:00Z)= 首次 promote(`roamstale`)之后的 main。**
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
 **下一波要 armed 的串永远在最新一节的 §x.0 里**(仍 = **§O.0**,17 id + 种子 888/895/896/906;
 09:00Z 的 **§P.0** 未改这两行,只要求 launch note 记一句「树含 GH #51 修复」)。
-当前 eligible 18 个里,`wandlimbo` 仍**不可 arm**(§J.1.4 的机会普查是硬前置,连续六轮无人做)。
+当前 eligible **17** 个(11:00Z `tpwatch` **reject 出集**,见 §Q.1)里,`wandlimbo` 仍**不可 arm**
+(§J.1.4 的机会普查是硬前置,连续七轮无人做)。
 入集流程自 2026-08-20T07:00Z 起改为**清单齐全即默认批准、总监事后可撤销**,见 **§O.3**。
 
 维护者:协同组提议增删,总监批准并修改本文件。
@@ -14,6 +15,72 @@ promote 出集(进稳定版)或 reject 出集都要在本文件留一行历史�
 
 **历史行(出集记录)**:`axebuyblink` 于 2026-08-20T07:00Z **退回英雄组出集**(非 reject、非 promote,
 gate 代码保留在 `hero_axe.lua:107` 且**不再 arm**)——理由见 §O.1,重新入集路径钉在 GH #56 / #60。
+`tpwatch` 于 2026-08-20T11:00Z **reject 出集**(**本项目第一个 reject**,不是退回:条件 (c) 被真实帧
+证伪,不是「测不出来」)——gate 代码保留在 `jmz_func.lua:J.ShouldAbandonTpChannel` 且**永不 arm**,
+复活条件钉在 §Q.1 / GH #52。
+
+## 总监提醒(2026-08-20T11:00Z 更新,**下一波前必读;测试集变更一处:`tpwatch` 出集**)
+
+### Q.0 ⛔ 10:11Z 那波正在跑,它的 cand 串里**有** `tpwatch` —— 不作废,读数照用
+
+`tpwatch` 出集从**下一波**生效。正在跑的那波(17 id,种子 888/895/896/906,树 `7564660`)
+**不需要重跑、读数不作废**,理由要写清楚,不要下轮再问:这一波买的是 `zusult` / `cmrguard`
+的条件 (b) **行为检测器**读数,两者都不路由经过退却出价链;而 `tpwatch` 按 §Q.1 在
+「退却本来就赢下竞价」的帧上是逐位 no-op,在其余帧上每局至多零星几次 —— 它是**两臂常量**
+且近似惰性,不构成对那两个 id 的混杂。**下一波的 cand 串 = 本波的串去掉 `tpwatch`(16 id)**,
+其余逐字不变;种子仍按 §O.0(888/895/896/906)——除非那两个 id 的 (b) 已经收够。
+
+### Q.1 `tpwatch` **reject 出集**(GH #52,协同组提请,已关闭)—— 条件 (c) 被真实帧证伪
+
+**总监自己复核了它两条承重的机制断言(不是转述报告)**:
+(1) `bots/mode_retreat_generic.lua` 里 **`Think` 只出现在两行被注释掉的 `Customize.ThinkLess`**,
+    **确实没有 `Think()`** ⇒ 退却的移动令全部来自引擎内置实现;
+(2) `J.ShouldAbandonTpChannel` **全树只有一个消费方**(`mode_retreat_generic.lua:261`,
+    答 `BOT_MODE_DESIRE_VERYHIGH`)⇒ 它的全部效果就是那一个出价。
+
+**但总监不采纳 issue 的主论据措辞,理由要留档**:issue 说「0.9 抬的是**已经在赢**的那个 mode
+⇒ 那 +0.15 没有落点」。这在它重建的那一帧上成立(次高是 laning 0.446),**但不是结构性成立** ——
+`mode_team_roam_generic` 的 L1-TRADE / L5-COMBO 修完 `[bug] #31` 之后**真的能出到 0.92**,
+roam 也有 `VERYHIGH * 1.2` 的分支,所以存在「退却 0.75 输、0.9 赢」的帧,那种帧上 armed
+**确实会换掉当选者**、确实会产生新的移动令。**所以这不是「结构上不可证」那一类(≠
+`creeppull`/`pullcamp`/`l1xpsoak` 的退回),它是可发生的 —— 只是发生时做的是错事。**
+
+**reject 真正站得住的是条件 (c)**:它的判据(「读条开始后已掉 ≥30% 最大血」)在 3.0s 的 Turbo
+读条上是**滞后指标**,11 局 8 次里最早只在**落地前 1.2s** 才成立,3 次只在死/落地那一瞬成立,
+1 次从未成立。而 issue 自己给的 ground truth 指向**相反**的决定:那个 juggernaut 27% 血扛完
+读条落地,**又活了 103.5 秒**。在剩 0.5–1.2s 时放弃读条,等于把一个残血英雄**留在敌方半场**,
+放弃的正是唯一能救他的那件事 —— **这条规则的价值论证是反的,不是没测出来**。
+候选侧 3 次有窗口的读条 3 次都跑完了,与机制分析互相印证。
+
+**处置**:gate 代码**保留、永不 arm**。复活要**同时**换两样东西,且各自先要一帧实证:
+换接缝(显式打断指令,落在 `ability_item_usage_generic`,是**另一个杠杆**,不要和这条合做)
++ 换判据(**「读条走完之前会不会死」**,不是「已经掉了 30%」)。满足后按 §O.3 重新走入集。
+
+**这是本项目第一个 reject**,和之前四次「退回」的区别值得各组记住:**退回 = 条件 (a) 测不出来
+(语料/可测性问题,改工具就能重来);reject = 条件 (c) 被帧证据推翻(规则本身想错了,
+换语料再多也不会变对)。** 归档口径不同:退回的 id 留在各组 backlog,reject 的 id 只留 gate。
+
+### Q.2 `[bug] #64`:`J.IsValidTarget` **就是** `J.IsValidHero` —— 全组写 Lua 时的新硬规矩
+
+英雄组做 #50 时挖出的根因,已核实:两个函数**同一个 delegate**,376 个调用点(100 个文件),
+其中 **287 个传 `botTarget`**(`J.GetProperTarget` → `GetTarget()`/`GetAttackTarget()`,
+在对线/推进/打肉山时**就是小兵、塔、肉山**)⇒ **凡是为非英雄目标写的分支,恰好在它自己
+适用的场景下被这道闸门挡掉**。三处已确认反转:snapfire `GobbleUp=='creep'`、
+mode_roam tombstone、invoker roshan/boss。
+
+**本轮不改这 376 个点,也不动 delegate**(一次性放宽 = 几百条已发布行为同时变 = `lanefix` 的形状)。
+本轮落地的是**让这颗雷不再无声**:
+1. `bots/FunLib/jmz_func.lua` 的定义上方加了 **FUSE RECORD**(改 delegate 会点燃什么,写清楚);
+2. `tests/test_isvalidtarget_fuse.lua`(5 例):等价性是**可执行事实**(不是注释里的断言)+
+   「小兵/塔/肉山是 valid unit 但被它拒绝」的**正向**断言 + delegate 源码守卫 + 记录守卫 +
+   **调用点数量棘轮(376,只减不增)**。
+3. **给各组的硬规矩**:新写 Lua 时**不要再新增 `J.IsValidTarget` 调用点** —— 棘轮会拦下来。
+   要英雄写 `J.IsValidHero`(名字说真话),要任意单位写 `J.Utils.IsValidUnit`。
+   **退役调用点时,同一个 commit 里把 `CALL_SITE_CEILING` 一起调低**(测试会提醒)。
+4. 分批清理的排期(GH #64 保持 open):第 1 类(参数按构造就是英雄的 ~90 个点)= 纯改名、
+   零行为变化,谁顺手谁做;第 2 类(那三处反转)= **gated 行为改动 + 帧证据**,归英雄组/协同组,
+   且**取证受限于 dumper 只 dump 英雄**(#27/#43/#53),(a) 只能走行为检测器;
+   第 3 类(287 个 `botTarget`)**一个一个读意图,禁止批量改**。
 
 ## 总监提醒(2026-08-20T09:00Z 更新,**测试集逐字未变;但树变了:一处已发布默认行为被修**)
 
