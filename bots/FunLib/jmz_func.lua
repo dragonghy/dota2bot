@@ -7818,6 +7818,46 @@ function J.ShouldHoldAxeBlinkForCall( bot, vLandLoc )
 	return #J.GetEnemiesNearLoc( vLandLoc, nRadius ) >= 2
 end
 
+-- [blinkflee] Blink Dagger burned as a retreat "leg" (GH #71). The retreat
+-- branch in ability_item_usage_generic (X.ConsiderItemDesire['item_blink'],
+-- the J.IsRetreating case) fires HIGH on the sole signals of "IsRetreating +
+-- more than one enemy in 1200 within cast range of ancient", and never asks
+-- whether the bot is actually in danger. Observed on 20260820_043124_slot1
+-- (Axe, armed side): TWO of the five real blink casts in that game were the
+-- retreat branch firing at 84% HP (t=529.6, only tower + 3 stale 15-dmg SK
+-- ticks) and 81% HP (t=555.2, 4 damage from a lane creep). Both landed 1160+
+-- toward the Radiant ancient with no hero pressure worth spending a 15s CD
+-- on -- classic blink misuse (Liquipedia: blink is an initiation and a
+-- targeted-threat dodge, never a "leg"). The offensive branch and the
+-- 'axeblink' guard were both structurally blocked here (SK at 339 < 500),
+-- so no other cleanup covers this case.
+--
+-- The gate stays deliberately narrow so it can only DROP, never add, a
+-- blink cast, and only on frames where the retreat itself is not urgent:
+--   * turbo AND the 'blinkflee' soak candidate is armed (inert otherwise),
+--   * HP >= 70% (a genuinely wounded bot keeps the escape option),
+--   * AND no hero has damaged the bot in the last 2.0 seconds -- there is
+--     no active fire to disengage from. Stale ticks from 3+s ago (the
+--     t=529.6 frame) or lane-creep chip (t=555.2) do not count as pressure
+--     for a 15s CD item, and cover both real frames pinned in
+--     tests/test_replay_260820_axe_blink_flee.lua.
+-- Cost of holding a wasted blink here is zero: the retreat mode's own
+-- movement still walks the bot toward ancient at ~355 ms with no CD spent,
+-- and the dagger stays available for the next real initiation / dodge.
+function J.ShouldHoldBlinkFlee( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'blinkflee' ) then return false end
+	if bot == nil then return false end
+
+	local nMax = bot:GetMaxHealth()
+	if nMax == nil or nMax <= 0 then return false end
+	if bot:GetHealth() / nMax < 0.70 then return false end
+
+	if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
+
+	return true
+end
+
 -- [wandlimbo] Magic wand/stick dead hand during a low-HP drift (detector d23
 -- lowhp_limbo: <40% HP for 45s+ far from base, not healing, not TP-ing, not
 -- farming). EVERY shipped magic-wand rule needs an enemy hero inside 1000

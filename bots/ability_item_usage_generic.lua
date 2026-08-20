@@ -1512,6 +1512,7 @@ X.ConsiderItemDesire["item_blink"] = function( hItem )
 		and (#nInRangeAlly <= 1
 			or bot:GetActiveModeDesire() > BOT_MODE_DESIRE_VERYHIGH * 0.9)
 		and nInRangeEnemy ~= nil and #nInRangeEnemy >= 1
+		and not J.ShouldHoldBlinkFlee(bot)
 		then
 			return BOT_ACTION_DESIRE_HIGH, vLocation, 'ground', nil
 		end

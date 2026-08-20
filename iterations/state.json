@@ -1458,5 +1458,26 @@
     "not_shipped_gate": "consistent with strategy validation philosophy (a): a gated behavior change without any (a) frame is a defective test-set entry (the #28 mistake) and is NOT ARMED",
     "next_step_routing": "GH #37 comment: replay-check's next §5.3 pass adding rescue-DECISION-frame corpus (currently only lands `landed_dead` observations) should ALSO dump a subject=rescuer fixture at t=567 (one dumper-sample before the landing) for each core rescuer with nw<8000; once that arrives, pin lfcorelane in one shot and enter test_set",
     "note_on_hardcoded_line": "even if lfcorelane never arms, the hardcoded `DotaTime() < 8 * 60` silently diverges from J.IsInLaningPhase() if the canonical gate changes shape (which it did in the LAB C2/C4 test set already, and again for the turbo soft-extension nw<8000 rule); a follow-up REFACTOR-only PR that swaps the string without changing semantics (i.e. keep the current hardcoded window) would remove that drift risk without behavior effect -- out of scope for this session, noted here"
+  },
+  "blinkflee_20260820": {
+    "owner": "strategy",
+    "backlog_source": "GH #71 (hero-organization backlog #10 handed off to strategy: `ability_item_usage_generic.lua` is out of hero-group scope)",
+    "site": "bots/ability_item_usage_generic.lua:1503-1519 (X.ConsiderItemDesire['item_blink'] retreat branch)",
+    "defect_class": "single-signal branch fires HIGH on IsRetreating + >=1 enemy in 1200; never asks whether the bot is actually under pressure or wounded",
+    "evidence_frames": [
+      "20260820_043124_slot1 t=529.6: axe hp=1384/1644 (84.2%), SK@339 (offensive branch blocked, <500), ES ally@173, last hero damage 3.2s ago (SK 15) -- no hero pressure in WasRecentlyDamagedByAnyHero(2.0); axe blinks to (4675,-4828), cos(->ancient) = +0.997, distance 1326",
+      "20260820_043124_slot1 t=555.2: axe hp=1462/1798 (81.3%), SK@843, ZERO allies in 800, only recent damage a lane-creep tick 2.5s ago; axe blinks to (4829,-5005), cos(->ancient) = +0.998, distance 1162"
+    ],
+    "helper": "J.ShouldHoldBlinkFlee(bot) -- turbo AND soak-candidate 'blinkflee' armed AND HP >= 0.70 AND not WasRecentlyDamagedByAnyHero(2.0)",
+    "wiring": "added `and not J.ShouldHoldBlinkFlee(bot)` to the retreat branch inner if; can only DROP a HIGH return, never add one",
+    "direction_c": "Liquipedia and standard-play consensus: blink dagger is an initiation and a targeted-threat dodge, never a retreat leg (its 15s CD is bought at exactly this cost). A healthy bot walking home at ~355 ms retreat speed does not need to spend a 15s CD to reach the same tile 1200 sooner; the retreat mode's own movement handles it",
+    "test_file": "tests/test_replay_260820_axe_blink_flee.lua (8 tests: OFF/non-turbo inertness on both frames; ON=HOLD on both healthy frames; mutations exposing each clause; source-tripwire wiring assertion)",
+    "fixtures_added": [
+      "tests/fixtures/f_260820_043124_axe_blink_flee_529.lua",
+      "tests/fixtures/f_260820_043124_axe_blink_flee_555.lua"
+    ],
+    "gate_state": "GATED, NOT ARMED (turbo-only + 'blinkflee' soak-candidate); consistent with strategy validation philosophy: (a) condition met via fixtures pinned on the real frames; (b)/(c) still need a batch A/B; entering test_set requested via GH #71 comment",
+    "not_included": "the issue's suggestion #2 (enemy threat floor -- reads enemy HP/damage-to-me estimation) is left for a second lever, not folded in here. `一次动一个小杠杆` (charter): HP + no-hero-pressure covers both real frames; adding enemy-threat reasoning to the same gate would tangle the domain",
+    "world_assumption_check": "the retreat branch does NOT read GetLaneFrontLocation (GH #61); the guard reads only bot.GetHealth/GetMaxHealth (real dump values) and WasRecentlyDamagedByAnyHero (backed by fixture.recent_damage which is fed from the .dem's combat log, both frames have clean hero-damage domains -- no illusions of the subject on the field, no ambiguous ground truth) so #69 does not touch this decision"
   }
 }

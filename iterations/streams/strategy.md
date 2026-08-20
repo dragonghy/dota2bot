@@ -27,6 +27,11 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0y. ~~**item_blink 撤退分支被烧成 15s CD 的腿**(GH #71,英雄组交接)~~ **已做完
+   (2026-08-20T17:15Z):helper `J.ShouldHoldBlinkFlee` + gated `blinkflee`,两帧钉住
+   (f_260820_043124_axe_blink_flee_529/555),8 例 + 五次变异全绿。gated 未 armed,
+   入集申请见 GH #71 留言。issue #71 的建议 #2(敌方威胁地板)**留作第二个杠杆**,
+   不折进这条 gate**。
 0z. **【新的头号阻塞,2026-08-20T07:30Z】lane front 是地图原点(GH #61)—— 在它有着落之前,
    `GetDefendDesireHelper` 下半段的任何「最终出价层」结论都不成立。**
    loader 从不接 `GetLaneFrontLocation` ⇒ 两队三路的前线全是 (0,0),`ds.distanceToLane[lane]`
@@ -237,6 +242,31 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T17:15Z:**第二次有可认领的新 `[strategy]` issue**,认领 **GH #71**
+  (英雄组 15:20Z 定位交接:`item_blink` 的**撤退分支**在 `bots/ability_item_usage_generic.lua:1503-1518`,
+  两次把 15s CD 烧在 84%/81% HP 的空开跳,几何指纹 cos(→ancient)+0.997/+0.998,距离 1326/1162)。
+  **头号产出**:gated **`blinkflee`** —— 新增 helper `J.ShouldHoldBlinkFlee(bot)` 挂进撤退分支
+  内层 if 的**最后一条合取**;仅在 turbo + 'blinkflee' armed **且** HP ≥ 70% **且**
+  `WasRecentlyDamagedByAnyHero(2.0) == false` 时**否决**该次撤退闪现,不能新增任何闪现。
+  **两帧钉住(都从 20260820_043124_slot1,和 `f_260820_043124_axe_blink_kill.lua` 同一局)**:
+  `f_260820_043124_axe_blink_flee_529` (t=529.6, HP 84.2%, SK@339 但攻击分支被 <500 硬门挡住,
+  上次英雄伤害 3.2s 前, `WasRecentlyDamagedByAnyHero(2.0)=false`) —— armed 下 `ShouldHoldBlinkFlee=true`;
+  `f_260820_043124_axe_blink_flee_555` (t=555.2, HP 81.3%, 800 内 0 队友, 仅一次 2.5s 前的 4 点近战小兵) ——
+  armed 下 `ShouldHoldBlinkFlee=true`。
+  **验收**:`tests/test_replay_260820_axe_blink_flee.lua` **8 例**(两帧 × {gate OFF/gate ON/非 turbo};
+  HP 突变 <70% 释放;近 2s 有英雄伤害释放;源码探针断言 guard 在 IsRetreating 分支的 HIGH return 上)。
+  **五次变异**:删修复导致钉帧 HOLD 断言坏 2、gate 常开(非 turbo 也 HOLD)导致「turbo 惰性」断言坏 1、
+  HP 阈值改到 0.5 使 84%/81% 均放行 2 —— 全部按预期失败。**838/838(基线 830)+ luacheck 0 警告。**
+  **不做 (b)/(c) 决断**:入集申请见 GH #71 留言;`blinkflee` gated **未 armed**,排期建议**混波带着走**
+  (足迹极窄:两帧上都是 `IsRetreating + 单独 enemy in 1200` 的合取,与 `retnear`/`towerreach`/`defnum`
+  /`aba_defend` 族的分支域完全不重叠 —— 是**物品使用**这条线,不是**mode 出价**这条线;
+  A-B 归因不冲突)。
+  **世界断言检查**:该分支**不读 `GetLaneFrontLocation`**(#61 无关);guard 只读 `bot.GetHealth`
+  /`bot.GetMaxHealth`(dump 真值)与 `WasRecentlyDamagedByAnyHero`(fixture.recent_damage,#69 幻象
+  污染只波及 `burst` / `died_after`,不波及本地帧 subject 自身的 `recent_damage` **且**两帧战场都无本体幻象)。
+  `state.json` 新增 `blinkflee_20260820`;GH #71 已留言(条件 (a) 已 pin、入集申请)。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 1 个 `.dem` + 1 个 `.analysis.json`,未启动任何计费资源),
+  未提批测请求。详见 `iterations/reports/strategy/20260820T171500Z.md`。
 - 2026-08-20T15:30Z:没有可认领的新 `[strategy]` issue(open 集与 13:30Z 相同)。绕过所有基础设施墙
   (#61、缺基地攻防语料、幻象污染重读交 replay-check、AWS $-tier)⇒ 唯一可干的静态审计题目是 backlog
   **第 5 条**「`lf_rescue` 的 `DotaTime() < 8*60` 核心豁免按普通模式节奏写,独立排一轮」。
