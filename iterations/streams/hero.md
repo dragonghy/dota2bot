@@ -134,7 +134,69 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    验收按 issue 建议的两帧(目标是 Roshan / 目标是小兵)两向断言,并从
    `tests/test_no_undefined_jmz_refs.lua` 的 `KNOWN_BROKEN` 删掉 `Unit` 条目。
 
+9. ~~**GH #54:OD 的 Sanity's Eclipse 被写成单体处决技**~~ **2026-08-20T04:00Z done**,
+   gate `odaoe`,两个真实帧 fixture + 22 例 + 9 次变异全抓,见"当前状态"。
+   - **未做、且本组故意不碰的那一半(仍 open,无人认领)**:#54 §5.3 的
+     `J.IsGoingOnSomeone` —— 它把大招在 RETREAT/PUSH 里**整条关掉**而不是降优先级。
+     这是 mode 域的语义,影响面不止 OD;一次一个杠杆。
+   - **下一轮若回到 OD**:先看 `odaoe` 的执行核验,再谈 mode 域。
+   - **别重查**:`bot:FindAoELocation` 在 fixture 里恒 `{count=0}`(mock 的保守形状),
+     所以任何用它选落点的实现**离线不可验证** —— 本轮自己算覆盖就是为了绕开这一点。
+
 ## 当前状态(每次触发后更新)
+- 2026-08-20T04:00:00Z:**认领并做完 `[hero]` GH #54**(本轮新开的那条;另一条
+  `[hero]` 是 #50 第 2 处,仍被 **GH #51** 挡着,处置不变)。backlog 未动,新增 #9。
+  **问题**:`X.ConsiderSanitysEclipse` 只有**一个出口** —— 遍历敌人、对**每一个单独**问
+  `J.CanKillTarget`,成立就以**他脚下**为落点;**整个函数从来没问过这一发能命中几个人**。
+  而 KV 是 `POINT | AOE`、半径 `500/525/550`、伤害按**蓝量差**结算(**与血量无关**)⇒
+  判据恰好排除掉它最擅长的场景(几个满血低蓝的敌人站一起)。#54 量到 51 个机会帧 → 8 次施放,
+  17 次死亡里 10 次攥着就绪大招。
+  **修复**:`X.od_GetEclipseAoeLocation` + `X.od_IsEclipseWorthHitting`,gated turbo +
+  **`odaoe`**。候选中心 = 每个「值得打的敌人」位置 + 每一对的中点(**故意不用
+  `bot:FindAoELocation`** —— 引擎答得出 fixture 答不出,GH #27 家族);
+  「值得打」= 有效目标 + 可施法(**幻象过滤从这里继承**)+ **OD 蓝严格高于他**
+  + 估算伤害 **>= 当前血 25%**;阈值 `nRAoeMinTargets = 2`。
+  **消费点的位置本身就是安全性质**:接在 shipped 单体循环**下面**、留在 shipped 的
+  `if J.IsGoingOnSomeone(bot)` 块**之内** ⇒ armed **只能把 NONE 变成施放,永远不能改写
+  shipped 已做出的决定**,mode 域一字未动。**#54 §5.3 的第二个缺陷(mode 域把大招在
+  RETREAT/PUSH 里整条关掉)故意不碰**,一次一个杠杆,**仍 open 且无人认领**。
+  **局部验证**:同一局(`20260819_222559_slot1`,**OD 全场开大 0 次**)**两帧一起钉** ——
+  `f_260819_222559_od_eclipse_pair.lua`(t=631.5 **必须放**:1415 蓝、大招 cd 0,
+  lich 396.4u/708 血/456 蓝 与 medusa 496.4u/227 血/569 蓝 **相距 121.5u**,一个 500 的圈
+  装得下两个;之后 5 秒 medusa 对他打出 **364** 伤害 = 真打)+
+  `f_260819_222559_od_eclipse_solo.lua`(t=661.5 **必须不放**:场里**只有** lich 583.1u,
+  **单体价值比帧 A 任何一个都高** —— 709 伤害对 712 血 ⇒ 这一对才让「拒绝的是**数量**
+  不是**价值**」可判,测试里显式断言那个 lich `IsEclipseWorthHitting == true`)。
+  `tests/test_replay_260819_od_eclipse_aoe.lua` **22 例**,含两阈值双向 + 常量本身断言、
+  每条子句一个标注变异(含**只有中点才能覆盖的合成几何**)、**3 例端到端**;
+  **shipped 那例是被测量出来的不是空绿** —— 断言 `IsGoingOnSomeone` 真 +
+  `GetNearbyHeroes(700)` **真的是 2 个人** + `ConsiderSanitysEclipse()` 自己返回 **NONE**
+  (这一帧**整个技能层一个动作都没入队**,正是 #54 量到的,所以「什么都没入队」只能当
+  被断言的事实,不能当正向断言)。**9 次变异 9 次全抓**。luacheck **0 警告**,
+  `lua5.1 tests/run_tests.lua` **632/632 绿**(干净 stash 实测基线 **610**,+22;
+  rebase 到 main 后在合并树上重跑 **647/647 绿** —— 策略组同轮换掉了 fixture 世界的
+  `GetHeroLastSeenInfo` 与 `TEAM_*` 常量,本组三条关键变异在新世界里重测仍全抓)。
+  **两条如实记账**:①第一版在 helper 里重查 `J.IsSuspiciousIllusion` 是**死代码**
+  (`J.CanCastOnNonMagicImmune` 最后一项就是它)→ 删掉,测试**改名为跨层 tripwire**
+  并加断言(与 `liondrain` 那轮的 `J.IsValidHero` 同形状);②落点的 `<= nCastRange`
+  上界**可证不可达**(候选是引擎已报告在范围内的点的凸组合),**保留**但由源码
+  tripwire 守,代码注释写明为什么没有用例。
+  **踩坑警告(谁扫这批语料都会踩)**:这局里叫 `obsidian_destroyer` 的实体有**三个** ——
+  本体 `idx=1279` + **两个幻象** `idx=216/1896`(t=412 生成、此后一直是尸体)。按**英雄名**
+  取快照会取到幻象尸体,**每个距离都错几千码**。#54 §7 的「按 (类名, idx) 锁定」不是形式主义。
+  **给总监**:①**新 gated id `odaoe`**,已登记 `state.json`(`odaoe_20260820`),**申请入
+  test_set.md**;等同一道门的 hero 组 id 现在是**四个**:`wkreincarnmp`、`axeblink`、
+  `liondrain`、`odaoe`。②**预注册期望值**(整局扫出来的):127 个机会帧里几何前提成立
+  **16 个半秒帧 = 恰好 2 段 episode**(t=524.5–528.0 qop+wd;t=630.5–634.0 lich+medusa),
+  shipped 本局开大 **0** 次 ⇒ **armed 每局约多 2 次大招、每次覆盖 2 人**。条件 (b)
+  **必须用行为检测器**(每局施放次数、每次覆盖人数),**不许 gpm/xpm**(GH #30)。
+  ③**harness 小尖角只记不开 issue**:`tests/test_no_undefined_jmz_refs.lua:82` 的
+  `line:gmatch('J%.([%w_]+)')` **没有前置边界**,任何以 `J` 结尾的局部变量的 `vJ.x`
+  会被报成未定义 `J.x`;本轮改名绕过并在代码里写明原因。
+  报告:`iterations/reports/hero/20260820T040000Z.md`。**未花 AWS 的钱**(1 个 `.dem`
+  ≈8.8MB 的 S3 GET + 缓存命中的 dumper,未启动 EC2)。全链路**自己做约 40 分钟**。
+  下一次触发:**#51 若已修 ⇒ 回来做 #50 第 2 处**;否则 backlog **#7 的下半**(Lion 打断
+  已跑频道)或 **#7 的大招那条**;#4 的雾里那一半仍卡 GH #27,低优。
 - 2026-08-20T02:00:00Z:**认领 `[hero]` GH #50**(本轮唯一带 `[hero]` 前缀的 open issue,
   总监修 `[bug] #48` 时把那条缺陷当成一类扫出来的两个**有活调用点**的 nil 调用)。backlog 未动。
   **第 1 处做完并 push;第 2 处按 issue 自己的指示不做**(被 #51 挡着,先改比崩更糟)。

@@ -448,6 +448,7 @@ function X.ConsiderSanitysEclipse()
 	local nCastRange = SanitysEclipse:GetCastRange()
 	local nMultiplier = SanitysEclipse:GetSpecialValueFloat('damage_multiplier')
     local nBaseDamage = SanitysEclipse:GetSpecialValueFloat('base_damage')
+    local nRadius = SanitysEclipse:GetSpecialValueInt('radius')
 
     if J.IsGoingOnSomeone(bot)
 	then
@@ -479,9 +480,128 @@ function X.ConsiderSanitysEclipse()
                 end
             end
         end
+
+        -- GH #54: the loop above is the ONLY exit this ability has, and it asks
+        -- an area nuke a single-target question ("can this one enemy be killed
+        -- by it"). The gated branch below adds the missing area criterion. It
+        -- deliberately sits BELOW the loop, so every frame the shipped code
+        -- already acts on keeps its shipped decision byte for byte -- armed,
+        -- this can only turn a NONE into a cast, never redirect a cast.
+        local vAoeLoc = X.od_GetEclipseAoeLocation(bot, nCastRange, nRadius, nBaseDamage, nMultiplier)
+        if vAoeLoc ~= nil
+        then
+            return BOT_ACTION_DESIRE_HIGH, vAoeLoc
+        end
 	end
 
     return BOT_ACTION_DESIRE_NONE, 0
+end
+
+-- How many enemies one cast must cover before the area branch fires, and how
+-- much of an enemy's CURRENT health the cast must be worth for that enemy to
+-- count towards the total. Both are read by tests/test_replay_260819_od_eclipse_aoe.lua.
+X.nRAoeMinTargets   = 2
+X.nRAoeMinDamagePct = 0.25
+
+--- Is this enemy worth counting as one of the area cast's targets?
+--- Sanity's Eclipse damage is (caster mana - target mana) * multiplier + base,
+--- so an enemy whose mana is at or above OD's own takes nothing from it and
+--- must not inflate the coverage count.
+--- The shipped loop's modifier blacklist (borrowed time, shallow grave, duel,
+--- reaper's scythe, ...) is NOT reproduced here on purpose: those all answer
+--- "will this one enemy actually die", which is exactly the question this
+--- branch does not ask -- a chrono'd or grave'd enemy is still real damage
+--- taken by everyone else caught in the same circle.
+--- Nor is J.IsSuspiciousIllusion re-checked: J.CanCastOnNonMagicImmune already
+--- ends in that exact call (jmz_func.lua), so a second one would be dead code
+--- -- and illusion padding is a live risk in this very replay, so the test
+--- suite pins the cross-layer fact instead of a branch that cannot run.
+function X.od_IsEclipseWorthHitting(hBot, hEnemy, nBaseDamage, nMultiplier)
+    if not J.IsValidTarget(hEnemy)
+    or not J.CanCastOnNonMagicImmune(hEnemy)
+    then
+        return false
+    end
+
+    local nManaGap = hBot:GetMana() - hEnemy:GetMana()
+    if nManaGap <= 0 then return false end
+
+    local nDamage = nBaseDamage + nManaGap * nMultiplier
+
+    return nDamage >= hEnemy:GetHealth() * X.nRAoeMinDamagePct
+end
+
+--- Best point to drop Sanity's Eclipse on, or nil for "no area cast here".
+--- Gated: turbo-only, soak candidate 'odaoe'. Unarmed it returns nil on its
+--- first line, so the shipped decision is unchanged down to the byte.
+--- Candidate centres are every worthwhile enemy's own position plus every
+--- pairwise midpoint of them -- enough to cover any pair that a single circle
+--- can hold at all, without depending on bot:FindAoELocation (which the engine
+--- answers but a replay fixture cannot, GH #27 family).
+function X.od_GetEclipseAoeLocation(hBot, nCastRange, nRadius, nBaseDamage, nMultiplier)
+    if not (J.IsModeTurbo() and J.IsSoakCandidate('odaoe')) then return nil end
+
+    if nCastRange == nil or nCastRange <= 0 or nRadius == nil or nRadius <= 0 then
+        return nil
+    end
+
+    local tNearbyEnemy = J.GetNearbyHeroes(hBot, nCastRange, true, BOT_MODE_NONE)
+    if tNearbyEnemy == nil or #tNearbyEnemy < X.nRAoeMinTargets then return nil end
+
+    local tHittable = {}
+    for _, hEnemy in pairs(tNearbyEnemy)
+    do
+        if X.od_IsEclipseWorthHitting(hBot, hEnemy, nBaseDamage, nMultiplier)
+        then
+            table.insert(tHittable, hEnemy)
+        end
+    end
+    if #tHittable < X.nRAoeMinTargets then return nil end
+
+    local tCandidate = {}
+    for i = 1, #tHittable
+    do
+        local vFirst = tHittable[i]:GetLocation()
+        table.insert(tCandidate, vFirst)
+        for k = i + 1, #tHittable
+        do
+            -- NOTE: not named vJ -- tests/test_no_undefined_jmz_refs.lua scans
+            -- for the literal 'J.' and would read vJ.x as a J.x helper call.
+            local vSecond = tHittable[k]:GetLocation()
+            table.insert(tCandidate, Vector((vFirst.x + vSecond.x) / 2,
+                (vFirst.y + vSecond.y) / 2, (vFirst.z + vSecond.z) / 2))
+        end
+    end
+
+    local vBest, nBest = nil, 0
+    for _, vLoc in pairs(tCandidate)
+    do
+        -- Belt and braces: every candidate is either an enemy the engine
+        -- already reported inside nCastRange or the midpoint of two of them,
+        -- and a disk is convex, so this can only fail if the engine's own
+        -- radius disagrees with a straight-line distance (hull radii). No test
+        -- can reach the false side; it is pinned by a source-level tripwire.
+        if GetUnitToLocationDistance(hBot, vLoc) <= nCastRange
+        then
+            local nCovered = 0
+            for _, hEnemy in pairs(tHittable)
+            do
+                if GetUnitToLocationDistance(hEnemy, vLoc) <= nRadius
+                then
+                    nCovered = nCovered + 1
+                end
+            end
+
+            if nCovered > nBest
+            then
+                vBest, nBest = vLoc, nCovered
+            end
+        end
+    end
+
+    if nBest >= X.nRAoeMinTargets then return vBest, nBest end
+
+    return nil
 end
 
 function X.ConsiderObjurgation()
