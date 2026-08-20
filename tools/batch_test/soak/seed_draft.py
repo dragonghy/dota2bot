@@ -17,6 +17,16 @@ the Lua `table.sort` in that function; it is pinned here as POS_ORDER and VERIFI
 against real waves -- `--selftest` reproduces the four rosters of seeds 867-870
 (wave `spot_20260819_2211xx_1_829202ac`) hero-for-hero, 40/40.
 
+What a seed does and does NOT pin (GH #57, corrected 2026-08-20):
+  * PINNED: which 10 heroes play, which team each is on, and **which position each
+    plays** -- `ApplySoakDraft` drafts per position, and the (hero, role, lane)
+    triple stays glued together downstream.  `--find` therefore guarantees the
+    hero appears AND that it appears in the position printed below.
+  * NOT PINNED: the hero's pick slot.  `X.ShufflePickOrder` permutes slots with
+    the engine's unseeded RandomInt every game, so `analysis.json:team_slot`
+    varies game to game for the same (seed, hero).  Deriving a position from it
+    (`team_slot % 5 + 1`) is 47.3% accurate -- use `positions_for_game()` instead.
+
 Usage:
   seed_draft.py 867 868 869 870        # what do these seeds draft?
   seed_draft.py --find axe --count 4   # give me 4 seeds that contain Axe
@@ -26,6 +36,7 @@ Usage:
 """
 import argparse
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -92,6 +103,70 @@ def draft(seed, pool, pos_order=POS_ORDER):
 def heroes_of(seed, pool):
     r, d = draft(seed, pool)
     return set(list(r.values()) + list(d.values()))
+
+
+# --- position attribution -----------------------------------------------------
+# THE ROLE A HERO PLAYS IS A PROPERTY OF THE SEED; ITS PICK SLOT IS NOT.
+# `ApplySoakDraft` drafts per position (tRad[p]/tDire[p]) and `hero_selection.lua`
+# seeds slot i with the position-i hero -- but `X.ShufflePickOrder`
+# (hero_selection.lua:312, fired once per all-bot team from AllPickHeros) then
+# permutes the slots using the ENGINE's unseeded RandomInt, swapping
+# sSelectList[i] together with Role.RoleAssignment[team][i] and tLaneAssignList[i].
+# The (hero, role, lane) triple travels as a unit, so the hero keeps the role it
+# was drafted for while its slot moves. `team_slot` therefore carries per-game
+# engine entropy, not the role.
+#
+# Measured on wave spot_20260820_0411xx (291 mirror games, 2910 player rows):
+# labelling by the drafted position explains eta^2 = 0.482 of last-hit variance,
+# labelling by `team_slot % 5 + 1` only 0.174 (shuffled control 0.000); the two
+# labels agree on just 47.3% of rows.  See GH #57 and the director report
+# iterations/reports/director/20260820T050000Z.md.
+def position_map(seed, pool):
+    """{(team, hero): position} for one soak seed. team is 'radiant'/'dire'."""
+    rad, dire = draft(seed, pool)
+    out = {}
+    for p, h in rad.items():
+        out[("radiant", h)] = p
+    for p, h in dire.items():
+        out[("dire", h)] = p
+    return out
+
+
+def seed_from_stamp(script_version):
+    """Soak seed out of an analysis.json `script_version` stamp, else None.
+
+    Stamp shape: `mirror:<cand>:s<seed>:<side>`. Warm-up games carry a bare tree
+    SHA and have no seed -- those return None, and callers must treat that as
+    "position unknown" rather than falling back to a slot-derived guess.
+    """
+    if not isinstance(script_version, str):
+        return None
+    m = re.search(r":s(\d+):", script_version)
+    return int(m.group(1)) if m else None
+
+
+def positions_for_game(aj, pool=None):
+    """{hero: position} for one parsed analysis.json, or None if unattributable.
+
+    Keys come back exactly as analysis.json spells them (`npc_dota_hero_axe`), and
+    every one of the 10 rows must resolve against the seed's draft -- a partial
+    match means the game did not run this seed's roster and is not attributable.
+
+    Returning None (not a guess) is deliberate: the slot-derived fallback this
+    replaces was 47.3% accurate and silently mislabelled every consumer.
+    """
+    seed = seed_from_stamp((aj or {}).get("script_version"))
+    if seed is None:
+        return None
+    pmap = position_map(seed, pool if pool is not None else load_pool())
+    out = {}
+    for p in aj.get("players") or []:
+        short = p.get("hero", "").replace("npc_dota_hero_", "")
+        pos = pmap.get((p.get("team"), short))
+        if pos is None:
+            return None
+        out[p["hero"]] = pos
+    return out if len(out) == 10 else None
 
 
 def selftest(pool):

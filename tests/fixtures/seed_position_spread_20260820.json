@@ -1,0 +1,507 @@
+{
+ "source": "wave spot_20260820_0411xx (seeds 872/875/885/887), 291 mirror games",
+ "pairs": [
+  {
+   "seed": 872,
+   "team": "dire",
+   "hero": "axe",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 10,
+    "2": 14,
+    "3": 34,
+    "4": 7,
+    "5": 8
+   }
+  },
+  {
+   "seed": 872,
+   "team": "dire",
+   "hero": "drow_ranger",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 43,
+    "2": 11,
+    "3": 10,
+    "4": 9
+   }
+  },
+  {
+   "seed": 872,
+   "team": "dire",
+   "hero": "ember_spirit",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 16,
+    "2": 38,
+    "3": 4,
+    "4": 8,
+    "5": 7
+   }
+  },
+  {
+   "seed": 872,
+   "team": "dire",
+   "hero": "lion",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "2": 4,
+    "3": 10,
+    "4": 17,
+    "5": 42
+   }
+  },
+  {
+   "seed": 872,
+   "team": "dire",
+   "hero": "spirit_breaker",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 4,
+    "2": 6,
+    "3": 15,
+    "4": 32,
+    "5": 16
+   }
+  },
+  {
+   "seed": 872,
+   "team": "radiant",
+   "hero": "phantom_assassin",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 37,
+    "2": 14,
+    "3": 12,
+    "4": 10
+   }
+  },
+  {
+   "seed": 872,
+   "team": "radiant",
+   "hero": "silencer",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "2": 6,
+    "3": 8,
+    "4": 23,
+    "5": 36
+   }
+  },
+  {
+   "seed": 872,
+   "team": "radiant",
+   "hero": "tidehunter",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 10,
+    "2": 16,
+    "3": 30,
+    "4": 5,
+    "5": 12
+   }
+  },
+  {
+   "seed": 872,
+   "team": "radiant",
+   "hero": "viper",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 19,
+    "2": 33,
+    "3": 8,
+    "4": 4,
+    "5": 9
+   }
+  },
+  {
+   "seed": 872,
+   "team": "radiant",
+   "hero": "zuus",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 7,
+    "2": 4,
+    "3": 15,
+    "4": 31,
+    "5": 16
+   }
+  },
+  {
+   "seed": 875,
+   "team": "dire",
+   "hero": "crystal_maiden",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 2,
+    "2": 6,
+    "3": 20,
+    "4": 32,
+    "5": 14
+   }
+  },
+  {
+   "seed": 875,
+   "team": "dire",
+   "hero": "drow_ranger",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 48,
+    "2": 13,
+    "3": 9,
+    "4": 4
+   }
+  },
+  {
+   "seed": 875,
+   "team": "dire",
+   "hero": "lich",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "2": 4,
+    "3": 7,
+    "4": 18,
+    "5": 45
+   }
+  },
+  {
+   "seed": 875,
+   "team": "dire",
+   "hero": "tidehunter",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 7,
+    "2": 13,
+    "3": 31,
+    "4": 12,
+    "5": 11
+   }
+  },
+  {
+   "seed": 875,
+   "team": "dire",
+   "hero": "viper",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 17,
+    "2": 38,
+    "3": 7,
+    "4": 8,
+    "5": 4
+   }
+  },
+  {
+   "seed": 875,
+   "team": "radiant",
+   "hero": "axe",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 8,
+    "2": 13,
+    "3": 40,
+    "4": 2,
+    "5": 11
+   }
+  },
+  {
+   "seed": 875,
+   "team": "radiant",
+   "hero": "lina",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 26,
+    "2": 28,
+    "3": 9,
+    "4": 8,
+    "5": 3
+   }
+  },
+  {
+   "seed": 875,
+   "team": "radiant",
+   "hero": "shadow_shaman",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 5,
+    "2": 4,
+    "3": 9,
+    "4": 36,
+    "5": 20
+   }
+  },
+  {
+   "seed": 875,
+   "team": "radiant",
+   "hero": "slardar",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 35,
+    "2": 26,
+    "3": 9,
+    "4": 4
+   }
+  },
+  {
+   "seed": 875,
+   "team": "radiant",
+   "hero": "witch_doctor",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "2": 3,
+    "3": 7,
+    "4": 24,
+    "5": 40
+   }
+  },
+  {
+   "seed": 885,
+   "team": "dire",
+   "hero": "axe",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 7,
+    "2": 16,
+    "3": 26,
+    "4": 6,
+    "5": 15
+   }
+  },
+  {
+   "seed": 885,
+   "team": "dire",
+   "hero": "crystal_maiden",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "3": 12,
+    "4": 21,
+    "5": 37
+   }
+  },
+  {
+   "seed": 885,
+   "team": "dire",
+   "hero": "earthshaker",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 1,
+    "2": 9,
+    "3": 12,
+    "4": 31,
+    "5": 17
+   }
+  },
+  {
+   "seed": 885,
+   "team": "dire",
+   "hero": "sniper",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 35,
+    "2": 16,
+    "3": 12,
+    "4": 7
+   }
+  },
+  {
+   "seed": 885,
+   "team": "dire",
+   "hero": "viper",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 27,
+    "2": 29,
+    "3": 8,
+    "4": 5,
+    "5": 1
+   }
+  },
+  {
+   "seed": 885,
+   "team": "radiant",
+   "hero": "obsidian_destroyer",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 22,
+    "2": 32,
+    "3": 4,
+    "4": 3,
+    "5": 9
+   }
+  },
+  {
+   "seed": 885,
+   "team": "radiant",
+   "hero": "shadow_shaman",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "2": 4,
+    "3": 11,
+    "4": 21,
+    "5": 34
+   }
+  },
+  {
+   "seed": 885,
+   "team": "radiant",
+   "hero": "skeleton_king",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 28,
+    "2": 16,
+    "3": 17,
+    "4": 9
+   }
+  },
+  {
+   "seed": 885,
+   "team": "radiant",
+   "hero": "skywrath_mage",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 3,
+    "2": 9,
+    "3": 14,
+    "4": 30,
+    "5": 14
+   }
+  },
+  {
+   "seed": 885,
+   "team": "radiant",
+   "hero": "slardar",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 17,
+    "2": 9,
+    "3": 24,
+    "4": 7,
+    "5": 13
+   }
+  },
+  {
+   "seed": 887,
+   "team": "dire",
+   "hero": "juggernaut",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 37,
+    "2": 23,
+    "3": 7,
+    "4": 7
+   }
+  },
+  {
+   "seed": 887,
+   "team": "dire",
+   "hero": "lina",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 26,
+    "2": 36,
+    "3": 4,
+    "4": 5,
+    "5": 3
+   }
+  },
+  {
+   "seed": 887,
+   "team": "dire",
+   "hero": "silencer",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "2": 3,
+    "3": 13,
+    "4": 22,
+    "5": 36
+   }
+  },
+  {
+   "seed": 887,
+   "team": "dire",
+   "hero": "tidehunter",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 8,
+    "2": 9,
+    "3": 35,
+    "4": 6,
+    "5": 16
+   }
+  },
+  {
+   "seed": 887,
+   "team": "dire",
+   "hero": "witch_doctor",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 3,
+    "2": 3,
+    "3": 15,
+    "4": 34,
+    "5": 19
+   }
+  },
+  {
+   "seed": 887,
+   "team": "radiant",
+   "hero": "axe",
+   "drafted_pos": 3,
+   "slot_pos_counts": {
+    "1": 6,
+    "2": 14,
+    "3": 29,
+    "4": 10,
+    "5": 15
+   }
+  },
+  {
+   "seed": 887,
+   "team": "radiant",
+   "hero": "death_prophet",
+   "drafted_pos": 2,
+   "slot_pos_counts": {
+    "1": 24,
+    "2": 31,
+    "3": 6,
+    "4": 8,
+    "5": 5
+   }
+  },
+  {
+   "seed": 887,
+   "team": "radiant",
+   "hero": "lich",
+   "drafted_pos": 4,
+   "slot_pos_counts": {
+    "1": 3,
+    "2": 11,
+    "3": 15,
+    "4": 26,
+    "5": 19
+   }
+  },
+  {
+   "seed": 887,
+   "team": "radiant",
+   "hero": "luna",
+   "drafted_pos": 1,
+   "slot_pos_counts": {
+    "1": 41,
+    "2": 18,
+    "3": 12,
+    "4": 3
+   }
+  },
+  {
+   "seed": 887,
+   "team": "radiant",
+   "hero": "vengefulspirit",
+   "drafted_pos": 5,
+   "slot_pos_counts": {
+    "3": 12,
+    "4": 27,
+    "5": 35
+   }
+  }
+ ]
+}

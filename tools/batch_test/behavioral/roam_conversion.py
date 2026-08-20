@@ -30,6 +30,9 @@ import math
 import os
 import sys
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "soak"))
+import seed_draft  # noqa: E402  -- the only correct source of a hero's position
+
 LANING_END = 480.0        # turbo hard floor of J.IsInLaningPhase()
 OUT_START, OUT_END = 520.0, 900.0
 VICTIM_HP = 0.40
@@ -85,9 +88,16 @@ def load_game(tl_path, aj_path):
         return None
     armed_side = sv.rsplit(':', 1)[-1]           # radiant | dire
     armed_team = 2 if armed_side == 'radiant' else 3
-    # position = team_slot % 5 + 1 (aba_role.lua RoleAssignment is a fixed
-    # [1,2,3,4,5] cycle) -- established in report 20260819T084950Z.
-    pos = {p['hero']: p['team_slot'] % 5 + 1 for p in aj['players']}
+    # Position comes from the SEED's draft.  The old `team_slot % 5 + 1` here was
+    # wrong: `X.ShufflePickOrder` permutes pick slots every game with the engine's
+    # unseeded RandomInt while the (hero, role, lane) triple travels together, so
+    # the slot carries per-game entropy and the hero keeps its drafted role.  On
+    # 291 mirror games the slot label agreed with the drafted one on 47.3% of rows
+    # and explained eta^2 = 0.174 of last-hit variance against 0.482 (GH #57).
+    # A game we cannot attribute is dropped, not guessed.
+    pos = seed_draft.positions_for_game(aj)
+    if pos is None:
+        return None
 
     # Illusions are emitted as separate entities under the SAME class name
     # (a Chaos Knight Phantasm shows up as six npc_dota_hero_chaos_knight rows

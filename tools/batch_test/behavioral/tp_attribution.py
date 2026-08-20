@@ -29,8 +29,11 @@ Usage: tp_attribution.py <timeline.json> <analysis.json> <radiant|dire> [--json 
        where <side> is the mirror stamp's armed side for that game
        (see games_manifest.jsonl from sweep_run.sh).
 """
-import json, math, sys, argparse
+import json, math, os, sys, argparse
 from collections import defaultdict
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "soak"))
+import seed_draft  # noqa: E402  -- the only correct source of a hero's position
 
 RAD, DIRE = 2, 3
 
@@ -96,9 +99,17 @@ def alive(s):
 def scan(tlpath, ajpath, side):
     tl = TL(tlpath)
     aj = json.load(open(ajpath))
-    pos = {}
-    for p in aj["players"]:
-        pos[p["hero"]] = p["team_slot"] % 5 + 1
+    # Position comes from the SEED's draft, never from `team_slot` -- the pick
+    # slot is reshuffled per game by the engine's unseeded RandomInt and is only
+    # 47.3% accurate as a role label (GH #57).  Unattributable games (warm-ups
+    # carry no seed in the stamp) get an empty map, so `pos.get(...)` falls back
+    # to its declared default instead of to a coin flip.
+    pos = seed_draft.positions_for_game(aj)
+    if pos is None:
+        print("[warn] %s: no seed in the mirror stamp -- positions unknown, every "
+              "pos-conditioned branch falls back to its declared default"
+              % ajpath, file=sys.stderr)
+        pos = {}
     armed_team = RAD if side == "radiant" else DIRE
     heroes = list(tl.teams)
     mine = [h for h in heroes if tl.teams[h] == armed_team]
