@@ -1322,23 +1322,42 @@ real frame; no J.* stubs")。**暂不批准入 test_set.md**,等 hero 组钉出�
   的「挨打时只有最近的 2/3/4/5 还能守」直接把中单排除,加上本就不在列表里的 1 号 ——
   **挨打的 1 号和 2 号结构上被禁止防守任何建筑**。这个函数存在的意义(距离比较)对每张
   列表的第一个角色是**惰性的**,tie-break 退化成比角色编号。
-  **域实测**:六局 turbo 录像、2883 个「自家塔还在 + 1600 内有敌方英雄」的建筑-帧,
-  shipped 答案与真正最近者不同的比例 **{4,5} 35.5%(1023 帧)/ {2,3} 47.4% / {2,3,4,5} 20.3%**。
-  五个调用点全在 `aba_defend`。钉帧 `f_260820_043637_viper_defend_token`
-  (t=472.4:**满血 11 级 4 号 viper 站在自家 89% 血中路一塔 388 外**,塔 1600 内恰好
-  1 个敌人,viper 自己 1600 内 0 敌人所以 helper 真的走到 `ShouldDefend` 那一行;
-  shipped 把令牌发给 **7% 血、6621 外**的 5 号 CM)。**最终出价**(引擎 lane desire 0.30):
-  shipped 中路 = 恰好 VeryLow 0.100,`mode_laning_generic` 0.369 赢;armed 中路 **0.459**,
-  `mode_defend_tower_mid` 赢。**lane desire 0.50/0.70 时 shipped 赢的是 `defend_tower_TOP`
-  —— 一座 8099 外、1600 内零敌人的塔**,armed 选中路。对照帧
-  `f_260820_043637_viper_defend_pos5`(同局同主角,5 号 CM 真的最近,395 vs 1321)armed
-  逐位 no-op ⇒ 钉住的是「最近者赢」而不是「4 号总赢」。
+  **域实测(角色用总监 GH #57 的 seed 抽签真值,不是槽位)**:六局 turbo 录像、2883 个
+  「自家塔还在 + 1600 内有敌方英雄」的建筑-帧,shipped 答案与真正最近者不同的比例
+  **{4,5} 32.8% / {2,3} 59.8% / {2,3,4,5} 37.6%**。五个调用点全在 `aba_defend`。
+  钉帧 `f_260820_043140_wd_defend_token`(t=297.5:**满血 4 号 witch_doctor 站在自家 99% 血
+  中路一塔 915 外**,塔 1600 内恰好 1 敌,wd 自己 1600 内 0 敌所以 helper 真的走到
+  `ShouldDefend`;它是全队离那座塔最近的,**近四倍**。shipped 经 `{4,5}` 把令牌发给 **3981
+  外的 5 号**;而 3 号已阵亡 ⇒ `{2,3}` 扫描**一个候选都找不到** ⇒ 兜底点名 **6996 外的 2 号**,
+  全队离那座塔**最远**的人)。**最终出价**:lane desire 0 时中路 0.100(VeryLow)→ **0.250**
+  (shouldDef 地板);0.30 时 0.363 → **0.474**,竞价赢家从 `mode_laning_generic`(0.446)
+  翻成 **`mode_defend_tower_mid`**;**0.50/0.70 时 shipped 赢的是 `defend_tower_BOT`**,
+  armed 选的是**塔上有敌人、英雄就站在旁边**的中路。对照帧
+  `f_260820_043710_lich_defend_pos5`(4 号 lich 1118,5 号 **真的**更近 800)armed
+  **逐位 no-op** ⇒ 钉住的是「最近者赢」而不是「4 号总赢」。
   **必须挑明:这不是单调的**。它是纠错不是旋钮,相对 shipped **既可能增加也可能移除**
-  一个防守者,所以不能像 `capmono` 那样用「纯 min」论证安全。
-  **排期建议**:足迹宽(五个调用点、20–47% 的建筑-帧改判)且不可分离 ⇒ **建议单独占一条臂**;
+  一个防守者,不能像 `capmono` 那样用「纯 min」论证安全。
+  **排期建议**:足迹宽(五个调用点、33–60% 的建筑-帧改判)且不可分离 ⇒ **建议单独占一条臂**;
   它改的 `ShouldDefend` 同时是 `DefendThink` attack-move 的闸门,**不要与 `defstale` 同波**。
-  验收 `tests/test_defclose_defender_arbitration.lua` 11 例;两次变异:删修复恰好 4、
-  gate 常开恰好 5。**658/658(基线 647)+ luacheck 0 警告**。
+  验收 `tests/test_defclose_defender_arbitration.lua` 11 例;四次变异:删修复恰好 4、
+  gate 常开恰好 5、让 loader 忽略抽签角色恰好 7、拆塔槽位接线恰好 3。
+  **658/658(基线 647)+ luacheck 0 警告**。
+- 2026-08-20T05:30Z 协同组交出**第二条 mock 保真度修复:fixture 现在可以带抽签角色**
+  (被总监 GH #57 在本轮进行中落地这件事逼出来的,**本组自己先踩了这个坑**)。
+  loader 此前**根本没有抽签角色**,`aba_role.GetPosition` 于是落到
+  `RoleAssignment[team][i]` = 英雄的**抽签槽位**。游戏里 `X.ShufflePickOrder` 会把
+  `RoleAssignment` 和 `sSelectList` **一起**换,所以引擎看到的仍是抽签角色;loader 没有那次
+  洗牌可重放,**必须被告知**。本轮六局实测:槽位标签与抽签角色只吻合 **23/60 = 38%**
+  (总监全语料口径是 47.3%)。修复:`make_fixture.py --roles <analysis.json>`,经
+  `tools/batch_test/soak/seed_draft.py` 由种子推出每个英雄的抽签位置,英雄名 canon 化
+  (`vengefulspirit`/`vengeful_spirit`),**匹配不全就报错拒绝出半张表**;loader 写
+  `bot.assignedRole`(`GetPosition` 读的第一样东西)。没有该字段的 fixture 逐字节不变
+  ⇒ **没有历史结论因此翻面**,但**仓库里现存每一个 fixture 的角色都还是槽位派生的**,
+  凡是在 fixture 里 fork 在 `GetPosition` 上的断言,只有 ~40% 的把握描述了它来自的那局。
+  **本组自曝**:本轮第一次钉的帧(`f_260820_043637_viper_defend_token`,已删)就是被这个
+  坑骗了 —— 它按槽位说 viper 是 4 号,抽签真值是 **2 号**,而 2 号本来就能过 `ShouldDefend`
+  ⇒ **那一帧根本没有缺陷**。在提交进 main 之前发现并重做,域实测同时用真值重算(**数字更大**:
+  32.8/59.8/37.6,槽位标签算出来是 35.5/47.4/20.3)。
 - 2026-08-20T05:30Z 协同组**撤回 `defstale` 的可达性证据**(GH #55 补充,**不是撤回 gate**)。
   接上真实建筑槽位之后,`defstale` 那一帧(`f_260819_223607_drow_defend_bail`,t=330.4)
   的竞价翻面:此前「defend 0.30 赢」只是因为 fixture 世界没有可寻址建筑 ⇒

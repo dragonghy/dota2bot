@@ -10,13 +10,13 @@
 -- `bestPos or tPosList[1]` falls back to precisely the role that was never
 -- compared. Per call site:
 --
---   {4, 5}        only pos 5 can ever win, at ANY distance; when no pos-5 hero
---                 is alive the answer is 4, also at any distance
---   {2, 3}        only pos 3; fallback 2
---   {2, 3, 4, 5}  pos 2 can never be the answer -- so ShouldDefend's under-fire
---                 gate ("only the closest of 2/3/4/5 keeps defending")
---                 disqualifies the mid outright, on top of pos 1 which is not
---                 in the list at all
+--   {4, 5}        only role 5 can ever win, at ANY distance; when no role-5
+--                 hero is alive the answer is 4, also at any distance
+--   {2, 3}        only role 3; fallback 2
+--   {2, 3, 4, 5}  role 2 can never be the answer -- so ShouldDefend's
+--                 under-fire gate ("only the closest of 2/3/4/5 keeps
+--                 defending") disqualifies the mid outright, on top of role 1
+--                 which is not in the list at all
 --
 -- The distance comparison the function exists for is therefore inert for the
 -- first role of every list, and the tie-break degenerates to role number.
@@ -24,18 +24,28 @@
 -- DOMAIN (measured, not guessed): over 2883 threatened-tower frames from six
 -- turbo replays (an own tower still standing with at least one enemy hero
 -- inside 1600 of it) the shipped answer differs from the true closest in
--- 35.5% of {4,5} frames, 47.4% of {2,3} frames and 20.3% of {2,3,4,5} frames.
+-- 32.8% of {4,5} frames, 59.8% of {2,3} frames and 37.6% of {2,3,4,5} frames.
+-- Roles there are the DRAFTED roles from each game's soak seed
+-- (tools/batch_test/soak/seed_draft.py), not the draft slot -- see GH #57.
 --
--- REAL FRAME: f_260820_043637_viper_defend_token -- game 20260820_043637_slot1
--- at t=472.4 (7:52). Subject viper, Dire, role 4, level 11, FULL health,
--- standing 388u from its own 89%-hp mid tier-1 tower, which has exactly one
--- enemy (obsidian_destroyer) inside 1600. The teammate shipped hands the
--- defend token to is the role-5 crystal_maiden -- at 7% health, 6621u away on
--- the opposite side of the map. Nothing about that choice is a distance.
+-- REAL FRAME: f_260820_043140_wd_defend_token -- game 20260820_043140_slot1 at
+-- t=297.5 (4:57). Subject witch_doctor, Dire, drafted role 4, FULL health,
+-- standing 915u from its own 99%-hp mid tier-1 tower, which has exactly one
+-- enemy (death_prophet) inside 1600. It is the closest hero on its team to
+-- that tower by a factor of four. Shipped hands the token to role 5 at 3981u
+-- via {4,5}, and -- because the role-3 tidehunter is dead, so the {2,3} scan
+-- finds no candidate at all -- the fallback then names role 2, at 6996u.
 --
--- CONTROL FRAME: f_260820_043637_viper_defend_pos5 -- same game, same subject,
--- t=378.4, where the role-5 crystal_maiden really IS the closest (395u vs the
--- viper's 1321u). There armed must be a byte-for-byte no-op: the candidate
+-- The frame is pinned for the MECHANISM, not as proof the alternative was
+-- better. What followed, recorded here so nobody has to re-derive it: the
+-- witch_doctor walked away from that tower to the far bottom-right of the map
+-- (t=302.5 (1994,83) -> t=322.5 (6006,-2532)), traded there, killed the
+-- vengeful_spirit at t=334, and died at t=368 (70.5s after this frame). The
+-- tower it left fell at t=599.5.
+--
+-- CONTROL FRAME: f_260820_043710_lich_defend_pos5 -- a role-4 lich 1118u from
+-- its own threatened bot tier-1 tower where the role-5 vengeful_spirit really
+-- IS closer (800u). There armed must be a byte-for-byte no-op: the candidate
 -- makes the comparison honest, it does not hand the token to role 4.
 --
 -- LIMITATION, stated rather than hidden: GetDefendLaneDesire(lane) is engine
@@ -48,8 +58,8 @@ local rf = require('mock.replay_fixture')
 
 local tests = {}
 
-local TOKEN = 'tests/fixtures/f_260820_043637_viper_defend_token.lua'
-local POS5  = 'tests/fixtures/f_260820_043637_viper_defend_pos5.lua'
+local TOKEN = 'tests/fixtures/f_260820_043140_wd_defend_token.lua'
+local POS5  = 'tests/fixtures/f_260820_043710_lich_defend_pos5.lua'
 
 -- The mock resolves unknown ALL_CAPS globals to sentinel integers, which ruins
 -- arithmetic on the desire constants (same reason as
@@ -105,64 +115,78 @@ local function dist2d(a, b)
     return math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
 end
 
---- The own tower nearest the subject that still stands.
-local function nearest_own_tower(bot)
-    local best, bestd = nil, math.huge
+--- The one own tower that has an enemy hero inside 1600 of it.
+local function threatened_own_tower(J, bot)
+    local found = nil
     for i = 0, 10 do
         local t = GetTower(bot:GetTeam(), i)
-        if t ~= nil and t:IsAlive() then
-            local d = dist2d(bot:GetLocation(), t:GetLocation())
-            if d < bestd then best, bestd = t, d end
+        if t ~= nil and t:IsAlive()
+        and #J.GetLastSeenEnemiesNearLoc(t:GetLocation(), 1600) > 0 then
+            assert(found == nil, 'these frames were chosen to have exactly one')
+            found = t
         end
     end
-    return best, bestd
+    return found
+end
+
+--- Every living teammate's distance to a location, keyed by drafted role.
+local function role_distances(J, loc)
+    local out = {}
+    for i = 1, 5 do
+        local m = GetTeamMember(i)
+        if m ~= nil and J.IsValidHero(m) then
+            out[J.GetPosition(m)] = dist2d(m:GetLocation(), loc)
+        end
+    end
+    return out
 end
 
 --- Bid every script mode on this frame and report the winner.
 local function auction()
     local best, bestName = -1, 'none'
-    local byName = {}
     local p = io.popen('ls bots/mode_*.lua')
     for path in p:lines() do
         GetDesire = nil -- luacheck: ignore
         local ok = pcall(dofile, path)
         if ok and type(GetDesire) == 'function' then
             local ok2, d = pcall(GetDesire)
-            if ok2 and type(d) == 'number' then
-                byName[path:match('mode_(.-)_generic') or path] = d
-                if d > best then best, bestName = d, path:match('mode_(.-)_generic') or path end
+            if ok2 and type(d) == 'number' and d > best then
+                best, bestName = d, path:match('mode_(.-)_generic') or path
             end
         end
     end
     p:close()
-    return bestName, best, byName
+    return bestName, best
+end
+
+local function bid_all(Def, bot)
+    for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do Def.GetDefendDesire(bot, lane) end
 end
 
 -- ---------------------------------------------------------------------------
 -- The frame. Every premise the defect rests on is asserted, not assumed.
 -- ---------------------------------------------------------------------------
 
-tests['REAL FRAME: a full-hp role-4 standing on its own threatened tower'] = function()
-    local J, bot, heroes, fx = world(TOKEN)
+tests['REAL FRAME: a full-hp role-4 is the nearest hero to its threatened tower'] = function()
+    local J, bot, _, fx = world(TOKEN)
     assert(J.IsModeTurbo(), 'the dump is turbo')
-    assert(math.abs(fx.time - 472.4) < 1e-6, 'frame is t=472.4; got ' .. tostring(fx.time))
-    assert(bot:GetUnitName() == 'npc_dota_hero_viper', 'subject is the viper')
-    assert(J.GetPosition(bot) == 4, 'subject plays role 4; got ' .. J.GetPosition(bot))
+    assert(math.abs(fx.time - 297.5) < 1e-6, 'frame is t=297.5; got ' .. tostring(fx.time))
+    assert(bot:GetUnitName() == 'npc_dota_hero_witch_doctor', 'subject is the witch_doctor')
+    assert(fx.roles ~= nil,
+        'the fixture must carry DRAFTED roles -- without them GetPosition falls back '
+        .. 'to the draft slot, which GH #57 measured at 47.3% accurate')
+    assert(J.GetPosition(bot) == 4, 'subject was drafted role 4; got ' .. J.GetPosition(bot))
     assert(bot:GetHealth() == bot:GetMaxHealth(),
         'subject is at FULL health -- it is not declining to defend because it is hurt')
 
-    local tower, d = nearest_own_tower(bot)
+    local tower = threatened_own_tower(J, bot)
     assert(tower ~= nil, 'the frame must carry the subject\'s own towers')
-    assert(d > 380 and d < 400, 'subject is ~388u from it; got ' .. string.format('%.0f', d))
-    assert(math.abs(tower:GetHealth() / tower:GetMaxHealth() - 0.892) < 0.002,
-        'that tower is at 89% health, i.e. it is being chipped at right now')
-
-    local atTower = J.GetLastSeenEnemiesNearLoc(tower:GetLocation(), 1600)
-    assert(#atTower == 1, 'exactly one enemy inside 1600 of the tower; got ' .. #atTower)
-    -- the list carries player ids, not handles
-    local od = heroes['npc_dota_hero_obsidian_destroyer']
-    assert(atTower[1] == od:GetPlayerID(),
-        'and it is the obsidian_destroyer; got player id ' .. tostring(atTower[1]))
+    local d = dist2d(bot:GetLocation(), tower:GetLocation())
+    assert(d > 910 and d < 920, 'subject is ~915u from it; got ' .. string.format('%.0f', d))
+    assert(tower:GetHealth() / tower:GetMaxHealth() > 0.99,
+        'that tower is still at 99% health -- there is everything left to defend')
+    assert(#J.GetLastSeenEnemiesNearLoc(tower:GetLocation(), 1600) == 1,
+        'exactly one enemy inside 1600 of it')
 
     -- ...while no enemy is inside 1600 of the SUBJECT, which is what lets the
     -- helper reach the ShouldDefend line at all (the guard above it returns
@@ -171,16 +195,17 @@ tests['REAL FRAME: a full-hp role-4 standing on its own threatened tower'] = fun
         'no enemy within 1600 of the subject, so GetDefendDesireHelper runs past '
         .. 'its in-range guard and actually consults ShouldDefend')
 
-    local cm = heroes['npc_dota_hero_crystal_maiden']
-    assert(J.GetPosition(cm) == 5, 'the crystal_maiden plays role 5')
-    local dcm = dist2d(cm:GetLocation(), tower:GetLocation())
-    assert(dcm > 6600 and dcm < 6650,
-        'and it is 6621u from that tower; got ' .. string.format('%.0f', dcm))
-    assert(cm:GetHealth() / cm:GetMaxHealth() < 0.1,
-        'at 7% health -- the token holder cannot defend anything')
-    assert(dcm / d > 15,
-        'the role-5 is more than fifteen times further from the tower than the '
-        .. 'subject, so no reading of "closest" picks it')
+    local byRole = role_distances(J, tower:GetLocation())
+    assert(byRole[4] ~= nil and byRole[3] == nil,
+        'the role-3 teammate is dead on this frame, which is what empties the {2,3} scan')
+    for role, dd in pairs(byRole) do
+        if role ~= 4 then
+            assert(dd > byRole[4] * 4,
+                'role ' .. role .. ' is more than four times further from the tower than '
+                .. 'the subject (' .. string.format('%.0f vs %.0f', dd, byRole[4])
+                .. '), so no reading of "closest" picks it')
+        end
+    end
 end
 
 -- ---------------------------------------------------------------------------
@@ -188,62 +213,68 @@ end
 -- ---------------------------------------------------------------------------
 
 tests['MECHANISM: shipped refuses the nearest hero, armed authorises it'] = function()
-    local _, botS, _, _, DefS = world(TOKEN)
-    local towerS = nearest_own_tower(botS)
+    local JS, botS, _, _, DefS = world(TOKEN)
+    local towerS = threatened_own_tower(JS, botS)
     assert(DefS.ShouldDefend(botS, towerS, 1600) == false,
-        'shipped: the only healthy hero standing on the tower is not allowed to defend it')
+        'shipped: the nearest hero on the team is not allowed to defend its own tower')
 
-    local _, botA, _, _, DefA = world(TOKEN, { armed = true })
-    local towerA = nearest_own_tower(botA)
+    local JA, botA, _, _, DefA = world(TOKEN, { armed = true })
+    local towerA = threatened_own_tower(JA, botA)
     assert(DefA.ShouldDefend(botA, towerA, 1600) == true,
         'armed: once the scan covers the whole list, role 4 is the closest and is allowed')
 end
 
-tests['MECHANISM: the refusal is role arithmetic, not a distance'] = function()
-    -- Both of the lists that could have authorised this hero exclude it
-    -- structurally: {4,5} can only answer 5 (or 4 as a fallback when no role-5
-    -- hero is alive -- and here one is, at 6621u), and the {2,3} fallback can
-    -- never answer 4 at all.
-    local J, bot, heroes = world(TOKEN)
-    local cm = heroes['npc_dota_hero_crystal_maiden']
-    assert(cm:IsAlive() and J.IsValidHero(cm),
-        'a role-5 hero is alive, so the {4,5} fallback to role 4 cannot fire')
-    assert(J.GetPosition(bot) == 4 and J.GetPosition(cm) == 5,
-        'the two candidates are exactly roles 4 and 5')
-    local roles = {}
-    for i = 1, 5 do
-        local m = GetTeamMember(i)
-        if m ~= nil and J.IsValidHero(m) then roles[J.GetPosition(m)] = true end
-    end
-    assert(roles[3] == true,
-        'a role-3 hero is alive too, so the {2,3} fallback answers 3 -- also not 4')
+tests['MECHANISM: both lists that could authorise it name someone far away'] = function()
+    local J, bot = world(TOKEN)
+    local tower = threatened_own_tower(J, bot)
+    local byRole = role_distances(J, tower:GetLocation())
+    -- {4,5}: shipped can only ever answer 5 -- and a role-5 hero is alive here,
+    -- so the "no candidate" fallback to 4 cannot rescue the subject either.
+    assert(byRole[5] ~= nil, 'a role-5 hero is alive, so the {4,5} fallback cannot fire')
+    assert(byRole[5] > 3900 and byRole[5] < 4050,
+        'and it is 3981u from the tower; got ' .. string.format('%.0f', byRole[5]))
+    -- {2,3}: the only role shipped compares is 3, and role 3 is dead, so
+    -- bestPos stays nil and the fallback names tPosList[1] = 2.
+    assert(byRole[3] == nil, 'no living role-3, so the shipped {2,3} scan finds nothing')
+    assert(byRole[2] ~= nil and byRole[2] > 6900,
+        'and the fallback names role 2, ' .. string.format('%.0f', byRole[2] or -1)
+        .. 'u away -- the single furthest teammate from this tower')
 end
 
 -- ---------------------------------------------------------------------------
 -- The defect, at the final bid, driven through the real mode files.
 -- ---------------------------------------------------------------------------
 
-tests['DEFECT: the refusal pins the mid bid to VeryLow'] = function()
+tests['DEFECT: the refusal costs the mid lane its floor and its cap boost'] = function()
+    local _, bot0, _, _, Def0 = world(TOKEN, { laneBid = 0 })
+    local mid0 = Def0.GetDefendDesire(bot0, LANE_MID)
+    assert(math.abs(mid0 - BOT_MODE_DESIRE_VERYLOW) < 1e-9,
+        'with no engine lane urgency the shipped mid bid is exactly VeryLow; got '
+        .. string.format('%.4f', mid0))
+    local _, bot0a, _, _, Def0a = world(TOKEN, { armed = true, laneBid = 0 })
+    local mid0a = Def0a.GetDefendDesire(bot0a, LANE_MID)
+    assert(math.abs(mid0a - BOT_MODE_DESIRE_LOW) < 1e-9,
+        'armed it is exactly Low, the shouldDef floor; got ' .. string.format('%.4f', mid0a))
+
     local _, bot, _, _, Def = world(TOKEN, { laneBid = 0.30 })
     local mid = Def.GetDefendDesire(bot, LANE_MID)
-    assert(math.abs(mid - BOT_MODE_DESIRE_VERYLOW) < 1e-9,
-        'shipped mid bid is exactly VeryLow; got ' .. string.format('%.4f', mid))
-
+    assert(mid > 0.36 and mid < 0.37,
+        'at laneBid 0.30 shipped bids 0.363; got ' .. string.format('%.4f', mid))
     local _, botA, _, _, DefA = world(TOKEN, { armed = true, laneBid = 0.30 })
     local midA = DefA.GetDefendDesire(botA, LANE_MID)
-    assert(midA > 0.45 and midA < 0.47,
-        'armed the same frame bids 0.459; got ' .. string.format('%.4f', midA))
+    assert(midA > 0.47 and midA < 0.48,
+        'armed the same frame bids 0.474; got ' .. string.format('%.4f', midA))
 end
 
 tests['DEFECT: the mode auction changes hands'] = function()
     local _, bot, _, _, Def = world(TOKEN, { laneBid = 0.30 })
-    for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do Def.GetDefendDesire(bot, lane) end
+    bid_all(Def, bot)
     local nameS, bidS = auction()
     assert(nameS == 'laning',
         'shipped: the winner of the script auction is laning; got ' .. nameS)
 
     local _, botA, _, _, DefA = world(TOKEN, { armed = true, laneBid = 0.30 })
-    for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do DefA.GetDefendDesire(botA, lane) end
+    bid_all(DefA, botA)
     local nameA, bidA = auction()
     assert(nameA == 'defend_tower_mid',
         'armed: the winner is the defend mode for the lane the hero is standing in; got '
@@ -255,34 +286,21 @@ tests['DEFECT: the mode auction changes hands'] = function()
     -- necessary condition for the mode change, not a proof of it.
 end
 
-tests['DEFECT: at higher lane urgency shipped defends the WRONG tower'] = function()
+tests['DEFECT: at higher lane urgency shipped defends a different lane'] = function()
     for _, bid in ipairs({ 0.50, 0.70 }) do
         local _, bot, _, _, Def = world(TOKEN, { laneBid = bid })
-        for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do Def.GetDefendDesire(bot, lane) end
+        bid_all(Def, bot)
         local nameS = auction()
-        assert(nameS == 'defend_tower_top',
-            'shipped at laneBid=' .. bid .. ': the winner is the TOP defend mode; got ' .. nameS)
-
-        -- ...and the top tower is 8099u away with nothing near it.
-        local J2, bot2 = world(TOKEN)
-        local far, near2 = nil, math.huge
-        for i = 0, 10 do
-            local t = GetTower(bot2:GetTeam(), i)
-            if t ~= nil and t:IsAlive() then
-                local dd = dist2d(bot2:GetLocation(), t:GetLocation())
-                if dd > 7000 and #J2.GetLastSeenEnemiesNearLoc(t:GetLocation(), 1600) == 0 then
-                    far, near2 = t, dd
-                end
-            end
-        end
-        assert(far ~= nil and near2 > 7000,
-            'there is such a far, unthreatened own tower on this frame')
+        assert(nameS == 'defend_tower_bot',
+            'shipped at laneBid=' .. bid .. ': the winner is the BOT defend mode; got '
+            .. nameS)
 
         local _, botA, _, _, DefA = world(TOKEN, { armed = true, laneBid = bid })
-        for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do DefA.GetDefendDesire(botA, lane) end
+        bid_all(DefA, botA)
         local nameA = auction()
         assert(nameA == 'defend_tower_mid',
-            'armed at laneBid=' .. bid .. ': the winner is the MID defend mode; got ' .. nameA)
+            'armed at laneBid=' .. bid .. ': the winner is the MID defend mode -- the lane '
+            .. 'with the enemy on the tower and the hero standing next to it; got ' .. nameA)
     end
 end
 
@@ -291,28 +309,25 @@ end
 -- ---------------------------------------------------------------------------
 
 tests['CONTROL: when the role-5 really is closest, armed is a no-op'] = function()
-    local J, bot, heroes, _, Def = world(POS5)
-    local tower = nearest_own_tower(bot)
-    local cm = heroes['npc_dota_hero_crystal_maiden']
-    local dme = dist2d(bot:GetLocation(), tower:GetLocation())
-    local dcm = dist2d(cm:GetLocation(), tower:GetLocation())
-    assert(J.GetPosition(bot) == 4 and J.GetPosition(cm) == 5, 'same two roles as the token frame')
-    assert(dcm < dme,
-        'on this frame the role-5 is genuinely nearer (' .. string.format('%.0f', dcm)
-        .. ' vs ' .. string.format('%.0f', dme) .. ')')
+    local J, bot = world(POS5)
+    local tower = threatened_own_tower(J, bot)
+    local byRole = role_distances(J, tower:GetLocation())
+    assert(J.GetPosition(bot) == 4, 'same role as the token frame')
+    assert(byRole[5] < byRole[4],
+        'on this frame the role-5 is genuinely nearer (' .. string.format('%.0f', byRole[5])
+        .. ' vs ' .. string.format('%.0f', byRole[4]) .. ')')
 
-    for _, bid in ipairs({ 0, 0.30, 0.50 }) do
+    for _, bid in ipairs({ 0, 0.30, 0.50, 0.70 }) do
         local _, b1, _, _, D1 = world(POS5, { laneBid = bid })
         local _, b2, _, _, D2 = world(POS5, { armed = true, laneBid = bid })
         for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do
             local s = D1.GetDefendDesire(b1, lane)
             local a = D2.GetDefendDesire(b2, lane)
             assert(math.abs(s - a) < 1e-9,
-                'armed must be byte-identical here (laneBid=' .. bid .. ', lane ' .. tostring(lane)
-                .. '): ' .. string.format('%.4f vs %.4f', s, a))
+                'armed must be byte-identical here (laneBid=' .. bid .. ', lane '
+                .. tostring(lane) .. '): ' .. string.format('%.4f vs %.4f', s, a))
         end
     end
-    assert(Def ~= nil)
 end
 
 tests['CONTROL: outside turbo the candidate is inert'] = function()

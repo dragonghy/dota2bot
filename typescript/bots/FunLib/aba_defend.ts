@@ -325,8 +325,9 @@ function GetClosestAllyPos(tPosList: number[], vLocation: Vector): number {
     //                   pos 1 which is not in the list at all
     // The distance test is therefore inert for the first role in every list.
     // Measured over 2883 threatened-tower frames from six turbo replays the
-    // answer differs from the true closest in 35.5% of [4,5] frames, 47.4% of
-    // [2,3] and 20.3% of [2,3,4,5].
+    // answer differs from the true closest in 32.8% of [4,5] frames, 59.8% of
+    // [2,3] and 37.6% of [2,3,4,5] -- roles there being each game's DRAFTED
+    // roles from its soak seed, not the draft slot (GH #57).
     // Armed (turbo only), the scan covers the whole list. This is a
     // correctness repair, not a knob: it can both add and remove a defender
     // relative to shipped.

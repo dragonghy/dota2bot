@@ -330,6 +330,22 @@ function M.load(path, sSubject)
         GetTeamMember = function(i) return allies[i] end
     end
 
+    -- The DRAFTED role, when the fixture carries it. Without it aba_role.
+    -- GetPosition falls through to RoleAssignment[team][i], i.e. the hero's
+    -- draft SLOT -- and GH #57 measured that against the real draft at 47.3%
+    -- (23/60 on the six games behind this repo's 2026-08-20 fixtures). The role
+    -- is a property of the soak seed and travels glued to the hero;
+    -- X.ShufflePickOrder moves only the slot. In game the shuffle swaps
+    -- RoleAssignment alongside sSelectList so the engine sees the drafted role;
+    -- the loader has no shuffle to replay, so it must be told.
+    -- `bot.assignedRole` is the first thing aba_role.GetPosition reads.
+    if fx.roles ~= nil then
+        for name, pos in pairs(fx.roles) do
+            local h = heroes[name]
+            if h ~= nil then rawset(h, 'assignedRole', pos) end
+        end
+    end
+
     -- Fog memory. GetHeroLastSeenInfo is the engine's "where do I remember this
     -- hero being, and how stale is that" API; the mock answered `{}` for every
     -- id, so J.GetLastSeenEnemiesNearLoc / J.GetLastSeenEnemies / every

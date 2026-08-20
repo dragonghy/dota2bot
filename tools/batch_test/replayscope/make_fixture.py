@@ -38,8 +38,26 @@ def main():
     ap.add_argument("--recent-window", type=float, default=6.0,
                     help="how far BEFORE t to record incoming damage, so the "
                          "WasRecentlyDamagedBy* readers can be answered")
+    ap.add_argument("--roles", help="path to the game's analysis.json; the drafted "
+                    "position of each hero is derived from its soak seed and written "
+                    "into the fixture. Without it the fixture carries no roles and the "
+                    "loader falls back to draft-slot order, which GH #57 measured at "
+                    "47.3% accurate -- so any test that reads jmz.GetPosition needs this.")
     ap.add_argument("-o", "--out", required=True)
     args = ap.parse_args()
+
+    roles = None
+    if args.roles:
+        import sys as _sys
+        _here = os.path.dirname(os.path.abspath(__file__))
+        _sys.path.insert(0, os.path.join(_here, "..", "soak"))
+        import seed_draft
+        with open(args.roles) as fh:
+            roles = seed_draft.positions_for_game(json.load(fh))
+        if roles is None:
+            raise SystemExit("--roles: that analysis.json is not attributable to a soak "
+                             "seed (warm-up game, or the roster does not match the "
+                             "seed's draft). Refusing to guess -- see GH #57.")
 
     def active_modifiers(tl, t):
         """Per-hero modifiers ACTIVE at t, rebuilt from the combat log.
@@ -351,6 +369,35 @@ def main():
             L.append("    { name = '%s', team = %d, x = %d, y = %d, alive = %s, hp = %s },"
                      % (b["name"], b["team"], b["x"], b["y"],
                         "true" if b["alive"] else "false", b["hp"]))
+        L.append("  },")
+    if roles is not None:
+        # analysis.json and the dump disagree on underscores for a handful of
+        # heroes (vengefulspirit/vengeful_spirit, queenofpain/queen_of_pain), so
+        # match on the canonical form and emit the DUMP's spelling, which is what
+        # the fixture's unit names use.
+        def _canon(n):
+            return (n or "").replace(FULL, "").replace("_", "")
+        by_canon = {_canon(h): p for h, p in roles.items()}
+        matched = {}
+        for u in units:
+            p = by_canon.get(_canon(u["name"]))
+            if p is not None:
+                matched[u["name"]] = p
+        if len(matched) != len(by_canon):
+            raise SystemExit("--roles: %d of %d heroes did not match the dump's "
+                             "names; refusing to emit a partial role map"
+                             % (len(by_canon) - len(matched), len(by_canon)))
+        roles = matched
+
+    # The role a hero PLAYS is a property of the soak seed; its draft slot is not
+    # (X.ShufflePickOrder permutes slots with the engine's unseeded RandomInt while
+    # keeping the hero/role/lane triple glued together). Deriving the role from the
+    # slot is 47.3% accurate -- GH #57. Omitted when unknown, so fixtures generated
+    # before this keep their old world byte for byte.
+    if roles:
+        L.append("  roles = {")
+        for h in sorted(roles):
+            L.append("    ['%s'] = %d," % (h, roles[h]))
         L.append("  },")
     L.append("  observed = {")
     L.append("    burst = {")
