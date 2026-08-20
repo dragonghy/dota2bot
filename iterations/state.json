@@ -1437,5 +1437,26 @@
     },
     "reread_verdict_rule": "regenerate via make_fixture.py; if generator emits ground_truth_ambiguous -> withdraw+re-derive the conclusion (or retire frame); if still clean -> conclusion stands, replace old fixture with checked one",
     "routing": "execution -> replay-check (has S3 behav-dump corpus; container has no .dem); #69 stays OPEN as queue ticket; same-bug detectors tpdying_landing.py/tp_attribution.py/watch_deaths.py also -> replay-check (strategy §6)"
+  },
+  "lfcorerescue_lane_gate_audit_20260820": {
+    "owner": "strategy",
+    "backlog_item": 5,
+    "decided_by": "strategy 2026-08-20T15:30Z",
+    "site": "bots/FunLib/jmz_func.lua:5862",
+    "shipped_line": "if DotaTime() < 8 * 60 and J.IsCore(bot) then return nil end",
+    "canonical_equivalent": "J.IsInLaningPhase() -- uses turbo hard floor (t<8*60) OR soft extension (t<10*60 AND self.NetWorth<8000)",
+    "shipped_vs_canonical_diff_set": "t in [480, 600] AND rescuer.NetWorth < 8000 -- canonical keeps core exemption on; shipped already released it",
+    "direction_c": "canonical replaces one row-eliminating rescue window with a two-condition one; low-nw cores in the 8-10min slice stop rescuing; strictly a father-set of shipped's return-nil frames (only DENIES rescues, never enables new ones); direction monotone toward #37's over-rescue defect (20/50 attributed rescues had ally dead within 15s)",
+    "reachability_verdict": "NOT ADDRESSABLE by any current strategy-team fixture: candidate `lfcorelane` (armed replaces line 5862 with J.IsInLaningPhase()) needs a frame with rescuer=core + item_tpscroll in inventory + t in [480,600] + nw<8000. Exhaustive scan of fixtures that could contain such a rescuer:",
+    "fixture_scan": {
+      "f_260819_123012_dk_rescue_far": "t=568.4 subject=DK; DP is the only core with the right nw (3566) but its items list already omits item_tpscroll (dp_landed_dead is the next frame) -> J.GetItem2(DP,'item_tpscroll') is nil, GetRescueTpTarget early-returns at line 5865 tp-check, gate line is STRUCTURALLY UNREACHABLE from this subject",
+      "f_260819_123012_dp_landed_dead": "t=574.4 subject=DP; DP tp_cd=33.9 and no item_tpscroll -> same early return",
+      "f_260819_122930_lich_rescue_doomed": "t=201.3 subject=lich; supp not core, gate does not trigger AND t<480 anyway",
+      "f_260819_123546_axe_rescue_ok": "t=145.4 subject=axe (core), but t<480 -> exemption ACTIVE on both shipped and armed (both return nil, bit-identical)",
+      "f_113638_cm_chain_rescue": "t=256.0 subject=cm; supp and t<480"
+    },
+    "not_shipped_gate": "consistent with strategy validation philosophy (a): a gated behavior change without any (a) frame is a defective test-set entry (the #28 mistake) and is NOT ARMED",
+    "next_step_routing": "GH #37 comment: replay-check's next §5.3 pass adding rescue-DECISION-frame corpus (currently only lands `landed_dead` observations) should ALSO dump a subject=rescuer fixture at t=567 (one dumper-sample before the landing) for each core rescuer with nw<8000; once that arrives, pin lfcorelane in one shot and enter test_set",
+    "note_on_hardcoded_line": "even if lfcorelane never arms, the hardcoded `DotaTime() < 8 * 60` silently diverges from J.IsInLaningPhase() if the canonical gate changes shape (which it did in the LAB C2/C4 test set already, and again for the turbo soft-extension nw<8000 rule); a follow-up REFACTOR-only PR that swaps the string without changing semantics (i.e. keep the current hardcoded window) would remove that drift risk without behavior effect -- out of scope for this session, noted here"
   }
 }

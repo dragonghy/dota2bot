@@ -181,7 +181,12 @@
    原「规则细化」条目的其余部分(链式救援闸、响应者生存力检查)已由 #37 第 3 节
    核验为**有效**,不再是待办。
    另:`lf_rescue` 的 `DotaTime() < 8*60` 核心豁免按普通模式节奏写,Turbo 均局
-   670s,只覆盖前 8 分钟(#37 第 4 节)——未动,独立排一轮。
+   670s,只覆盖前 8 分钟(#37 第 4 节)。**静态审计完(2026-08-20T15:30Z)**:与 canonical
+   `J.IsInLaningPhase()` 差集 = **t ∈ [480,600] 且 rescuer nw<8000**(Turbo 该窗口低净值核心是常态);
+   替换会让一批低净值核心少发一批 rescue,方向单调向 #37 病灶靠近。候选 gate `lfcorelane`(armed 时把
+   该行改成 `J.IsInLaningPhase()`)方案定,但**当前 fixture 一帧不覆盖差集**(`123012` 局所有可寻址帧
+   rescuer 的 TP 都已消耗、gate 那一行结构不可达)⇒ **不 armed**;(a) 语料请求已路由 replay-check
+   (GH #37 留言;§5.3 补决定帧时顺手多存一帧 subject=rescuer 的 fixture 回来后一次性入 test_set)。
 6. **`pullcamp` 为什么也 13/13 SILENT**(接 issue #13,creeppull 死分支已解,
    见下面 2026-08-19T05:16Z 状态)。它**不是**死分支,静态查不出必然矛盾;
    最可疑的是**位置要求与均衡要求互相打架**:触发要求"我方兵线前沿越过中点
@@ -232,6 +237,29 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T15:30Z:没有可认领的新 `[strategy]` issue(open 集与 13:30Z 相同)。绕过所有基础设施墙
+  (#61、缺基地攻防语料、幻象污染重读交 replay-check、AWS $-tier)⇒ 唯一可干的静态审计题目是 backlog
+  **第 5 条**「`lf_rescue` 的 `DotaTime() < 8*60` 核心豁免按普通模式节奏写,独立排一轮」。
+  **静态审计结论**:`bots/FunLib/jmz_func.lua:5862` 那一行的 hardcoded `8*60` 与 canonical
+  `J.IsInLaningPhase()` 的 turbo hard floor **完全相同**,差别只在 **t ∈ [480, 600] 且 rescuer 净值 < 8000**
+  一段窗口 —— canonical 下核心豁免继续生效(不救),shipped 下已经放开(可救)。Turbo 均局 670s,九分钟核心
+  净值 < 8000 是常态(见 13:30Z §5 三帧 3068–3997)⇒ 替换会让一批低净值核心少发一批 rescue,**方向单调向
+  #37 病灶靠近**(#37 第 3 节:20/50 attributed rescues 15s 内死了,rescue 已过多)。
+  **不 push gate 的理由**:候选 `lfcorelane` 想 armed(turbo-only)把该行改成 `J.IsInLaningPhase()`,
+  armed 效果集是 shipped 的父集,不新增动作。但**当前 fixture 语料一帧都不覆盖差集**:
+  `f_260819_123012_dk_rescue_far` (t=568.4 subject=DK) DP 视角看,DP items 里已无 `item_tpscroll`
+  (下一帧就是 `dp_landed_dead`)⇒ `GetRescueTpTarget(DP)` 早退于 line 5865 tp-check、gate 那一行**结构不可达**;
+  `dp_landed_dead` (t=574.4) TP 已消耗;`lich_rescue_doomed` (t=201.3) lich 是辅助不触发核心豁免;
+  `axe_rescue_ok` (t=145.4) t<480 是豁免生效帧,armed 与 shipped 逐位相同;`cm_chain_rescue` (t=256.0) 辅助+t<480 同样。
+  ⇒ **无 (a) 帧就不 armed**(#28 类错误已被本组交过一次学费,不再重犯)。已把已知语料缺口
+  「rescuer=核心 + TP 在身 + t∈[480,600] + nw<8000 的**决定帧**」交给 replay-check(有 S3 corpus + 原始
+  timeline + subject 重投能力)。已在 **GH #37** 底下留言(§5.3 补 t=8–10min 决定帧时**顺手多存一帧
+  subject=rescuer 的 fixture**,回来一次性入 test_set)。
+  **不动代码,不改 test,不加 fixture**。luacheck bots game --formatter plain:0 警告(基线一致);
+  lua5.1 tests/run_tests.lua:830 tests, 0 failures(基线一致,本轮未添加任何测试)。
+  `state.json` 新增 `lfcorerescue_lane_gate_audit_20260820`(方向、可寻址帧域、语义 diff、不 armed 理由)。
+  backlog 第 5 条改成「静态审计完 + gate 方案定 + (a) 语料请求已路由 replay-check」。
+  未花 AWS 钱(未启动任何计费资源,未提批测请求)。详见 `iterations/reports/strategy/20260820T153000Z.md`。
 - 2026-08-20T13:30Z:**第一次有可认领的新 `[strategy]` issue**,认领 **GH #68**
   (录像检查组 12:48Z 交的 `tpdying` 首次条件 (a) 核验,§5.3 点名要钉两帧)。
   **#61 仍未有着落**(第 0z 条继续卡着),但本轮结论**不骑它的桩**:所有判据都在不读 lane front 的路径上,
