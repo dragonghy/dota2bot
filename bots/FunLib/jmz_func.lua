@@ -4736,6 +4736,37 @@ J.tHardCcAbilities = {
 	primal_beast_pulverize = true, chaos_knight_chaos_bolt = true,
 }
 
+-- [esaftershock / GH #66] Candidate-only EXTENSION of the curated table above,
+-- inert unless (turbo + 'esaftershock'). Kept in its own table rather than
+-- added to J.tHardCcAbilities because that table is shared: both consumers
+-- ('cmrguard' in hero_crystal_maiden, 'ccburst' below) would silently change
+-- domain at once, and this project pays for bundled levers (the lanefix
+-- lesson). Off the candidate J.GetReadyHardCc is byte-for-byte the shipped
+-- scan.
+--
+-- The gap it closes: Earthshaker with AFTERSHOCK leveled stuns everything in a
+-- 300 self-radius EVERY TIME HE CASTS ANY SPELL, so the cheapest spell he owns
+-- is a hard CC even when fissure is on cooldown. The curated table has
+-- earthshaker_fissure and nothing else, so an ES holding only enchant_totem
+-- reads as harmless. GH #66 measured the consequence on CM's Freezing Field:
+-- of the 4 channels cut short inside 3s across 12 mirror games, 2 were ended by
+-- this exact hole (both frames pinned in tests/test_replay_260820_cm_es_aftershock.lua).
+--
+-- The VALUE side of the map is the passive that makes the entry true: an ES who
+-- never leveled aftershock has no stun on enchant_totem at all, and the entry
+-- must not fire for him. Aftershock is a passive, so it can never be the handle
+-- returned here -- it fails IsFullyCastable -- which is why it is a
+-- precondition rather than a table entry of its own.
+--
+-- GEOMETRY (this is why the entry is safe to add): enchant_totem is no-target,
+-- so GetCastRange() is 0 and the callers' `range + buffer` veto ring stays at
+-- the self-radius end of the scale (the hoof_stomp / berserkers_call class). It
+-- cannot repeat the paralyzing_cask problem GH #63 measured, where a 900-range
+-- projectile inflates the same ring to 1300 units.
+J.tHardCcAbilitiesCandidate = {
+	earthshaker_enchant_totem = 'earthshaker_aftershock',
+}
+
 -- Returns the READY hard-CC ability handle (curated table, leveled, off
 -- cooldown, affordable) or nil. Returning the HANDLE (not just true) lets the
 -- caller range-check whether the CC can actually be DELIVERED right now --
@@ -4750,6 +4781,32 @@ function J.GetReadyHardCc( hEnemy )
 		and hAb:IsFullyCastable()
 		then
 			return hAb
+		end
+	end
+
+	-- Second pass, candidate only: the shipped set keeps priority, so arming
+	-- this can only ADD a handle where the shipped scan found none.
+	if not J.IsModeTurbo() or not J.IsSoakCandidate( 'esaftershock' ) then
+		return nil
+	end
+	for iSlot = 0, 5 do
+		local hAb = hEnemy.GetAbilityInSlot ~= nil
+			and hEnemy:GetAbilityInSlot( iSlot ) or nil
+		local sRequiredPassive = hAb ~= nil
+			and J.tHardCcAbilitiesCandidate[ hAb:GetName() ] or nil
+		if sRequiredPassive ~= nil
+		and hAb:GetLevel() ~= nil and hAb:GetLevel() >= 1
+		and hAb:IsFullyCastable()
+		then
+			for jSlot = 0, 5 do
+				local hPassive = hEnemy:GetAbilityInSlot( jSlot )
+				if hPassive ~= nil
+				and hPassive:GetName() == sRequiredPassive
+				and hPassive:GetLevel() ~= nil and hPassive:GetLevel() >= 1
+				then
+					return hAb
+				end
+			end
 		end
 	end
 	return nil

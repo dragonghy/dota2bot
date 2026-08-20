@@ -162,12 +162,80 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     两套阈值并存、口径不同、互不知情。**等 `zusultx` 落地(有 (b) 读数)之后再动**,不要同时
     动两个杠杆。
 
-12. **`[hero]` GH #63 未认领(2026-08-20T10:30Z 起,下一轮的第一候选)**:录像检查组 08:50Z 的
+12. ~~**`[hero]` GH #63 未认领(下一轮第一候选)**~~ **2026-08-20T12:08Z 改判:本组不认领,
+    等 `esaftershock` 的读数**。理由是本轮拿到的几何事实:#66 §3 三次漏报里的一次,
+    凶手环是 **400**(自身半径类),**cap 根本动不到它**;而同一条事实说明**统一 cap 会把
+    自身半径类和线/路径类一起削**。建议 #63 落地前先按 #66 §3 **几何分档**重写(自身半径类 0 /
+    线·路径类有效威胁半径 > cast range / 远程弹道类才是要削的那一类),并补上「recall 不许下降」
+    这条验收。它动的是**已 armed id 的环**,应当在 `esaftershock` 的行为读数出来之后再动。
+    原始记录:录像检查组 08:50Z 的
     cmrguard 误报核验 —— 误报集中在「远程硬控」一类,建议把 cast range 项**封顶到 ~200-300u**,
     可留 86% 真阳性、砍掉 78% 封锁时长(115 个否决 episode 帧证据)。**注意它动的是已 armed id
     的域**,按 `zusultx` 那轮的形状,收窄/扩大一个未过 (b) 的门可能要单开 id,先读 issue 的口径。
 
+13. **门不问 CM 自己的状态(2026-08-20T12:08Z 新开,下一轮第一候选)**:`X.cm_IsRSafeToOpen`
+    只问「谁现在放得出硬控、够不够近」,**从不看 CM 本人**。GH #66 §2 的帧 A 就是代价:
+    **26% 血、1.1 秒前刚被停过一次(决策帧上 `modifier_stunned` 还剩 0.2s)、两个敌人在 300 内**,
+    这些一条都不进谓词,门放行,她开了 10 秒读条、**0.2 秒后死**。帧已经在库里
+    (`f_260820_103216_cm_es_aftershock.lua`),不用再拉录像。注意:这是**新的一个杠杆**
+    (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
+
 ## 当前状态(每次触发后更新)
+- 2026-08-20T12:08:07Z:**认领并做完 `[hero]` GH #66**(录像检查组 10:48Z 新开,本轮唯一新出现的
+  `[hero]`;#63 仍 open **本组不认领**,理由见下 ⑤;#54 剩下那半仍 open 无人认领)。
+  backlog **新增 #13**(门不看 CM 自己的状态),**#12 改判**(#63 不是下一轮第一候选)。
+  **新 gated id `esaftershock`**。**结论先说:表里少的那个人补上了,但它只补得上 GH #66 的一半,
+  而另一半本轮被证明「不是表的事」。**
+  **问题**:`J.tHardCcAbilities` 给 Earthshaker 只收了 `earthshaker_fissure`。但**点了 aftershock 的 ES,
+  每放一个技能都在自身 300 半径炸一次硬控** ⇒ fissure 进冷却之后他手里的 `enchant_totem` 仍是硬控,
+  而表把他读成无害。#66 量到:12 局 11 次开大,4 次读条 3 秒内被打断,门只拦住 **1** 次。
+  **修法**:新表 `J.tHardCcAbilitiesCandidate = { earthshaker_enchant_totem = 'earthshaker_aftershock' }`
+  —— **值是「必需的被动」不是 `true`**(没点 aftershock 的 ES 定不住人;被动过不了 `IsFullyCastable`
+  所以只能当前置条件);`J.GetReadyHardCc` 里跑成**排在 shipped 扫描之后**的第二遍,
+  只在 turbo + `esaftershock` 下。**不往共享表里加行**:那张表两个消费者(`cmrguard` / `ccburst`),
+  加行等于同时挪两个域(`lanefix` 形状)。**各消费者仍各守各的门** ⇒ 只 arm `esaftershock` 而不 arm
+  `cmrguard`,游戏里**什么都不会变**(写成了测试)。
+  **两帧一起钉**:`f_260820_103216_cm_es_aftershock.lua`(t=473.5,**baseline** 侧,**必须拦**:
+  CM **292/1110(26%)**、身上 `modifier_stunned` 还剩 0.2s、ES **195.9 码** fissure **cd=14.7**、
+  `enchant_totem` cd=0、`aftershock` **lvl4**、Zeus 268 码但无策展技能 ⇒ 否决只可能归 ES;
+  ground truth **`died_after = 1.0`**)+ `f_260820_102645_cm_es_reach.lua`(t=391.5,**armed** 侧,
+  **必须仍放行**;`died_after = 106.9`,这次漏报**赔的是大招不是命**)。
+  **更正 #66 §2 的算术**:它把两次漏报记成「同一个根因」,**按真实几何只有一个是** ——
+  `enchant_totem` 无目标 ⇒ `GetCastRange() = 0` ⇒ 否决环 `0 + X.nRGuardCloseBuffer` = **400**,
+  而帧 B 的 ES 在 **536.1 码**,加表项**动不到它**。那一半属于**环的形状**(#63 的域),不属于表。
+  **取证陷阱(谁扫这批语料都会踩)**:帧 A 上 **jakiro 持就绪 `ice_path`但在 ~9200 码外** ⇒
+  「除 ES 外无人持就绪硬控」**必须在 1600 扫描环上说**,不能在阵容上说;第一版测试就这么写错、
+  被自己的断言当场抓住,已改成环上普查 + 把 jakiro 那条事实显式断言出来。
+  **局部验证** `tests/test_replay_260820_cm_es_aftershock.lua` **24 例**:**缺陷写成正向断言**
+  (只 arm `cmrguard` ⇒ `GetReadyHardCc == nil` 且门放行 = #66 那次漏报的复现)、修复、
+  只 arm `esaftershock` 决策不变、非 turbo 不变、每条子句一个标注变异(aftershock 未点 / totem 冷却 /
+  totem 蓝不够:耗蓝锚 600 对真实 534)、**shipped 优先级**(还给 fissure 冷却 ⇒ 句柄变回 fissure)、
+  **帧 B 的环 400/401 两向钉死**(放行归因于**距离**不是「表项没生效」)、**锚点敏感性显式化**
+  (cast range 若报 300 则帧 B 翻;另一例断言两局 ES **都没神杖**)、**4 例端到端**驱动真的
+  `X.ConsiderR`(**帧 A 不需要任何 mutation** —— 真实帧上 ES 195.9 + Zeus 268 就在圈里,
+  shipped 真的出价 **HIGH**;armed 变 NONE;非 turbo 维持 HIGH;帧 B 两侧逐技能相同**且把
+  「为什么都是 NONE」的真实理由断言出来**,不留空绿)、**3 处源码 tripwire**(表项不许进 shipped 表 /
+  候选表仍是「技能→被动」一条对 / `'esaftershock'` 恰好一次 / **`ccburst` 消费点仍在 `bCcAware` 门内**)。
+  **8 次变异 7 抓**;**唯一没抓到的如实记账**:删掉候选分支的 `GetLevel() >= 1` ——
+  `IsFullyCastable` 本就蕴含已学习,**可证冗余**,保留是为与上面一行 shipped 扫描对称,
+  并新加**跨层 tripwire** 断言让它冗余的那个性质。luacheck **0 警告**,
+  `lua5.1 tests/run_tests.lua` **769/769 绿**(干净 stash 实测基线 **745**,+24)。
+  **给总监**:①新 id `esaftershock` 已登记 `state.json`,**申请入 test_set.md**;等门的 hero 组 id
+  现在是**六个**(`wkreincarnmp`、`axeblink`、`liondrain`、`odaoe`、`zusultx`、`esaftershock`)。
+  ②**排期约束两条**:**必须与 `cmrguard` 同臂**(单独 arm 结构上测不到东西,`axeblink` 同款陷阱);
+  **绝不许**与任何动 `X.nRGuardCloseBuffer` / #63 cap 的改动绑成一个臂(同一道门的环,绑了不可归因)。
+  ③(b) 只用行为检测器(#66 §1 的读条时长/打断者/**施法前帧**距离 + #63 的
+  `cmrguard_precision.py --mana-floor`),**不许 gpm/xpm**(GH #30)。④**转出去一条**:#66 §2 的第二个
+  盲点(门从不问 CM 自己的状态),本轮故意没碰,进本组 backlog #13。⑤**#63 的处置建议**:本轮把
+  #66 §3 的一次漏报量成了几何事实(凶手环 = 400,cap 动不到),同一条事实也说明**统一 cap 会把
+  自身半径类和线/路径类一起削** ⇒ 建议 #63 落地前按 #66 §3 **几何分档**重写、并补上「recall 不许下降」
+  这条验收;**本组不认领 #63**,它动的是已 armed id 的环,应等 `esaftershock` 的读数出来之后再动。
+  ⑥**未提 queue.json**(不需要新花费,搭已排期的 candidate wave)。
+  报告:`iterations/reports/hero/20260820T120807Z.md`。**未花 AWS 的钱**(2 个 `.dem` ≈18MB 的 S3 GET +
+  dumper 缓存命中,零 EC2)。全链路**自己做约 45 分钟**。
+  下一次触发:**backlog #13**(门不看 CM 自己的状态,#66 §2 已有两帧证据)或 **#10**(跳刀被当腿用,
+  先定位 `ConsiderItemDesire['item_blink']` 的另一条消费点)或 **#7 的下半**(Lion 打断已跑频道);
+  **#11** 等 `zusultx` 落地后再动;#4 的雾里那一半仍卡 GH #27,低优。
 - 2026-08-20T10:30:00Z:**认领并做完 `[hero]` GH #50 第 2 处**(**#51 于 09:08Z 由总监修完并关闭**,
   正是上一轮写死的解锁条件)。本轮 open 的 `[hero]` 还有 **#63**(录像检查组 08:50Z 新开,cmrguard 收窄
   —— 留给下一轮,它动的是已 armed id 的域)和 **#54 剩下那半**(mode 域,仍无人认领)。
