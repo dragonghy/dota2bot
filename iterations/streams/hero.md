@@ -136,9 +136,24 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
        两个 lever 都**没上机 gate** —— 六个 Lion fixture **零一** 满足 gate 正样本条件
        (finger cd=0 且 mp ∈ [cost, cost+spend) 与 Impale 竞争),armed 与 shipped 端到端
        会相同(axeblink 陷阱)。**GH #73** 已把两个 lever 形状 / 与 zusult 同型证据 /
-       六帧不满足条件的表 / (b) 检测器建议全部写死;下一轮 Lion 触发**选一个** lever 做
-       (推荐 lever(a) `lionult`,mirror zusult 的 shipped 形状),先让 replay-analyst
-       顺手 dump 一场 Lion 到达 6 级、Impale 高频、Finger cd=0 的 turbo 局。
+       六帧不满足条件的表 / (b) 检测器建议全部写死。
+     - ~~**下一轮选一个 lever 做**~~ **2026-08-20T21:51Z 上机前语料核验:两个 lever 都不做**
+       (新工具 `tools/batch_test/behavioral/lion_finger_domain.py`,3 局有 Lion 的 turbo 语料)。
+       **lever(a) `lionult` 域 = 空集**:1216 个「大招已学+就绪+付得起」帧里 below-cost **0**、
+       post-spend 带 `[200,350)` **0**,大招就绪时最低蓝 **337/397/381** 对 cost **200**
+       —— 结构性的(零蓝 Mana Drain 把蓝池顶在 380 以上,单个 Impale/Hex 跨不过线),
+       armed 与 shipped 端到端逐帧相同 ⇒ **axeblink 陷阱**,建议在 #73 里关掉。
+       **lever(b) 域 = 6 帧 / 1 episode / 3 局**且反事实不干净(那 2 秒 Lion 确实在走近、
+       1343→968,窗口最终是被 CM **脱战回血**关上的,不是被距离)⇒ **park**。
+       **真正的成因是窗口供给**:5 个射程内击杀窗口帧 vs **4 次实际施法**(第 5 个 0.1 秒后被
+       队友 OD 大招抢掉),即 Lion 能打的基本都打了;窗口少是因为 ① Finger 整局停在 **level 1**
+       (hero level 上限 9/11/11,第二点要 12,turbo 够不到)⇒ 恒 600 raw ≈ **450 有效**、cd 恒 **110s**,
+       ② `X.ConsiderR` 每条开火分支都要 `J.WillMagicKillTarget`(不能一发打死就不放)。
+       **下一轮若回到 Lion 大招:唯一有量的杠杆是改策略本身**(level 1 时把 Finger 当团战爆发起手
+       而不是处决技),大改动,单独 id、单独一条臂,先想清代价侧。
+       **顺带算清、别再捡回去**:`ultcash`(owner 已判「没啥道理…never arm」)在 turbo level 1 上
+       净亏 ≈95 秒终结技可用时间(110s cd vs 13-16s turbo 复活),而击杀窗口约每 2 分钟才来一个;
+       C 域那 2/9 次「攥着大招死」的射程内目标**都是满血**(1135/1.00、1429/1.00)。
    - 已排除、别重查:`pos_4/pos_5` 的 outfit 宏**含鞋**(`aba_item.lua:962/967`)。
 
 8. ~~**GH #50 第 2 处:`hero_invoker.lua` 的 `J.Unit` 是 nil**~~ **2026-08-20T10:30Z done**
@@ -210,6 +225,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T21:51:40Z:**本轮无新 `[hero]` issue**(#73 是我上一轮自己开的;#66 已做完;#63 章程写死
+  本组不认领;#59 等 `zusultx` 读数;#56/#54 剩下的半条在别的组域里)⇒ 按上一轮写死的下一步取
+  **GH #73 lever(a) `lionult`**,但先按总监 21:15Z 新规做**上机前语料核验** —— 核验结果是
+  **两个 lever 都不该上机**,于是**本轮不写行为改动**,交付核验工具 + 数字 + issue 处置建议。
+  **零 EC2、零 S3 PUT、零新 gated id、零 bots/ 改动**(3 个 `.dem` ≈28MB S3 GET + dumper 缓存命中)。
+  **语料**:S3 `replays/` 最近 6 局 turbo,`behav-dump -interval 0.5`,**6 局里 3 局有 Lion**(#46)。
+  **A(蓄蓝域,lever(a))= 空集**:1216 个「大招已学+就绪+付得起」帧里 below-cost **0** 帧、
+  post-spend 带 `[cost, cost+spend)` **0** 帧;大招就绪时最低蓝 **337 / 397 / 381**,而 level-1 cost 是
+  **200**。**结构性**,不是采样不够 —— Zeus 那条成立是因为 Thundergod's Wrath(225-525)和蓝池同量级,
+  Lion 的 200 相对 700-800 蓝池太便宜,加上零蓝 6-15s cd 的 Mana Drain 整局顶着蓝量,**单个 Impale/Hex
+  物理上跨不过这条线**。armed 与 shipped 端到端逐帧相同 ⇒ **axeblink 陷阱**,建议 #73 关掉 lever(a)。
+  **B(射程域,lever(b))= 6 帧 / 1 episode / 3 局**,唯一那个 episode 恰好落在 Lion 刚学会大招那一秒
+  (t=347.5 CM 1212u 353hp;到 t=349.0 走到 968u 仍差 68 码;t=350.0 CM 回血到 438 窗口自己关上)
+  ⇒ 反事实不干净(关窗的是**脱战回血**不是距离),0.33 episode/局在实用地板附近 ⇒ **park**。
+  **C(攥着大招死)= 2/9 次死亡**,但两次射程内目标**都是满血**(lina 1135/1.00、tidehunter 1429/1.00)
+  ⇒ 顺带把 `ultcash` 的账算清:turbo level 1 兑现一次 = 450 chip 换 **110 秒** cd,而复活只要 **13-16 秒**,
+  净亏 ≈95 秒;而击杀窗口约每 2 分钟一个 ⇒ 兑现一次 chip ≈ 赔一个未来真击杀。**与 owner 旧裁定一致,
+  别再捡回去**;shipped 的 `nSkillLV >= 2` 子句因此是**有道理的**(cd 掉到 70/30 秒才允许兑现)。
+  **最重要的一条**:「0/1/2 次每局」不是漏放,是**窗口供给**——**5 个射程内击杀窗口帧 vs 4 次实际施法**
+  (未转化的那 1 个,队友 OD 在 **0.1 秒后**用 Sanity's Eclipse 抢走了 luna;另一个 448hp 贴着 450 阈值、
+  真实谓词还要扣魔抗物品,本来就不算窗口)。窗口少的两条上游原因:① Finger **整局停在 level 1**
+  (hero level 上限 **9/11/11**,第二点要 hero 12,本语料 turbo 局约 11 分钟够不到)⇒ 恒 600 raw ≈
+  **450 有效**、cd 恒 **110s**;② `X.ConsiderR` 每条开火分支都要 `J.WillMagicKillTarget`。
+  **数值锚**:datafeed hero_id=26 本次实拉 —— damage [600,725,850]、mana [200,400,600]、cd [110,70,30]、
+  cast range 900,与 `hero_lion.lua` 的 `475+125*nSkillLV` 按构造一致。
+  **交付**:`tools/batch_test/behavioral/lion_finger_domain.py`(dev-only,一次量 A/B/C 三域,
+  边界 #27 无视野/魔抗上界/0.5s 采样/#43 冻结全写在 docstring;`--json` 出全量)。
+  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **857/857 绿**(与 main 相同,无行为改动可钉 ⇒ 未加测试)。
+  **给总监**:①**无新 gated id**,等门的 hero 组 id 仍是**八个**;②**未提 queue.json**;③**未申请入 test_set**;
+  ④建议 **#73 关掉 lever(a)、park lever(b)**,issue 保持 open(主体换成「窗口供给」结论),已留言;
+  ⑤这是 hero 组第一个「首次 arming 前语料核验」样例:成本 3 个 `.dem` + 约 40 分钟,省掉一条注定全 null 的臂;
+  三段式(蓄蓝域/射程域/攥着死域)可直接套到别的「终结技用得少」英雄上。
+  报告:`iterations/reports/hero/20260820T215140Z.md`。全链路**自己做约 40 分钟**。
+  下一次触发:**#13 的残留**(门读不到「她正在被停」,需要新 frame:高血 CM 身上有较长 stun 剩余)
+  或 **Lion 大招的策略杠杆**(level 1 当爆发起手,大改动,单独一臂,先设计代价侧);
+  **#11** 等 `zusultx` 落地后再动;#4 的雾里那一半仍卡 GH #27,低优。
+
 - 2026-08-20T20:08:44Z:**本轮无新 `[hero]` issue**(#66 已做完,#63 本组不认领,#59 已入集等
   `zusultx` 读数,#56/#54 剩下的半条在别的组域里)⇒ 按章程取 **#7 第三层**(Lion Finger
   `0/1/2/0/0` 次/局),**代码走查 + 一处死代码清理 + 开 GH #73 铺路**,**未 push 行为改动**。
