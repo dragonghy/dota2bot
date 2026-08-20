@@ -189,7 +189,7 @@ local castWDesire, castWTarget
 local castEDesire, castETarget
 local castRDesire, castRTarget
 
-local nKeepMana, nMP, nHP, nLV, hEnemyList, hAllyList, botTarget, sMotive
+local nMP, nHP, nLV, hEnemyList, hAllyList, botTarget, sMotive
 local aetherRange = 0
 local lastCastQTime = -99
 
@@ -204,7 +204,20 @@ function X.SkillsComplement()
 
 	if J.CanNotUseAbility( bot ) or bot:IsInvisible() then return end
 
-	nKeepMana = 400
+	-- [hero.md backlog #7 third layer, investigation 2026-08-20T19:xxZ]
+	-- What USED to sit here: `nKeepMana = 400`, declared local at the top of
+	-- the file and set here on every SkillsComplement tick. It was NEVER read.
+	-- Grep across bots/ (both this file and jmz_func) confirms zero readers,
+	-- so removing it is a documented no-op. Left as a comment so the next
+	-- reader does not assume Lion reserves mana for Finger of Death: he does
+	-- not. Impale (90-150), Hex (110-200) and their fallback branches all
+	-- spend without consulting the ult's 200/400/600 cost. This is the same
+	-- shape the zusult / zusultx audit named on Zeus (hero.md backlog #4);
+	-- the actual fix belongs to a gated turbo lever mirroring
+	-- X.zuus_ShouldSaveManaForUlt, and needs a real Lion frame with Finger
+	-- off cooldown and mp in [cost, cost + spend) before it can ship. None
+	-- of the 6 Lion frames currently in tests/fixtures/ satisfies that
+	-- combination; opening a `[hero]` GH issue to seed the next trigger.
 	aetherRange = 0
 	nLV = bot:GetLevel()
 	nMP = bot:GetMana()/bot:GetMaxMana()

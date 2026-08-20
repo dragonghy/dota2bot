@@ -126,6 +126,19 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      + 19 例 + 8 次变异全抓,见"当前状态"。
    - **下一轮 Lion 从这里起**:大招施放 **0/1/2/0/0 次/局**(Hex 5/6/4/3/4,
      Impale 16/15/17/13/11)—— 和 Zeus 那条(#4)是同一个"终结技用得少"的家族。
+     - **2026-08-20T20:08Z 走查落地(GH #73)**:代码走查两条结构缺口:①`nKeepMana=400`
+       在 `hero_lion.lua` 是**纯死代码**(全仓 0 处读,和 Zeus `zusult` 那家同型 —— Lion
+       完全没有为 Finger 留蓝);②`X.ConsiderR` 的**击杀**与**团战最弱**分支跑
+       `nInBonusEnemyList = GetNearbyHeroes( bot, nCastRange+400, ...)`(1300/1550u)
+       但**没有 range 断言**(只过 CanCastOnTargetAdvanced + CanCastOnNonMagicImmune,
+       两者都不看距离),而同函数的 aghs-AoE(+150)与 IsGoingOnSomeone(+200)分支自己
+       IsInRange。**本轮只清了死代码 + 加了 17 行注释**(非行为等价,857/857 绿,luacheck 0),
+       两个 lever 都**没上机 gate** —— 六个 Lion fixture **零一** 满足 gate 正样本条件
+       (finger cd=0 且 mp ∈ [cost, cost+spend) 与 Impale 竞争),armed 与 shipped 端到端
+       会相同(axeblink 陷阱)。**GH #73** 已把两个 lever 形状 / 与 zusult 同型证据 /
+       六帧不满足条件的表 / (b) 检测器建议全部写死;下一轮 Lion 触发**选一个** lever 做
+       (推荐 lever(a) `lionult`,mirror zusult 的 shipped 形状),先让 replay-analyst
+       顺手 dump 一场 Lion 到达 6 级、Impale 高频、Finger cd=0 的 turbo 局。
    - 已排除、别重查:`pos_4/pos_5` 的 outfit 宏**含鞋**(`aba_item.lua:962/967`)。
 
 8. ~~**GH #50 第 2 处:`hero_invoker.lua` 的 `J.Unit` 是 nil**~~ **2026-08-20T10:30Z done**
@@ -197,6 +210,38 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T20:08:44Z:**本轮无新 `[hero]` issue**(#66 已做完,#63 本组不认领,#59 已入集等
+  `zusultx` 读数,#56/#54 剩下的半条在别的组域里)⇒ 按章程取 **#7 第三层**(Lion Finger
+  `0/1/2/0/0` 次/局),**代码走查 + 一处死代码清理 + 开 GH #73 铺路**,**未 push 行为改动**。
+  **零 AWS、零 S3、零 EC2、零新 gated id**。**问题**:定位 `X.SkillsComplement` 里
+  `nKeepMana = 400`(bots/BotLib/hero_lion.lua:207)**是纯死代码** —— 全仓 `grep nKeepMana`
+  只在 rubick_hero/crystal_maiden(自作用域)与 hero_zuus(有读者)命中,Lion **是全仓唯一
+  「写而不读」**;所以 Impale(90-150)/Hex(110-200)/其它消费点全部**不问 Finger 的 200/400/600
+  cost**,与 hero.md backlog #4(Zeus `nKeepMana=400` 只在 `ConsiderW2` 被读、`ConsiderQ`
+  完全不看)是同型。第二个结构缺口:`X.ConsiderR` 击杀/团战最弱两条分支跑 `nInBonusEnemyList =
+  GetNearbyHeroes( bot, nCastRange+400, ...)`(1300/1550u)但**没有 range 断言**(只过
+  `CanCastAbilityROnTarget = CanCastOnTargetAdvanced + CanCastOnNonMagicImmune`,两者都不看距离),
+  而同函数的 aghs-AoE 分支(nCastRange+150)与 IsGoingOnSomeone 分支(nCastRange+200)自己
+  IsInRange。**改动**:删掉 `nKeepMana=400` 与 `local` 声明里的 slot,17 行注释钉住发现并指向
+  GH #73。**非行为等价**——一个 local 变量任何读者都没有。luacheck **0 警告**,`lua5.1
+  tests/run_tests.lua` **857/857 绿**(数字不动,和 main 相同,未新增测试)。
+  **为什么不上机 gate**:两个杠杆都是行为改动,按章程 (a) 要求真实帧;六个 Lion fixture 逐一核对
+  **零一** 满足「finger cd=0 且 mp ∈ [cost, cost+spend) 与 Impale 竞争」的 gate 正样本条件
+  (`f_045650_lion_meatgrinder` finger cd=31.9、`f_050713_es_defend_1v3` finger cd=31.8、
+  `f_222428_lion_lich_burst`/`f_260819_182323_lion_drain_calm`/`f_260819_182855_lion_drain_midchannel`
+  finger 未学、`f_230124_viper_roshan_abort` 蓝满 908/908、`f_260820_042607_zuus_reserve_cross`
+  Lion 438/671 但同帧焦点是 Zeus)。同 axeblink 的教训——armed 与 shipped 端到端相同则测的是空气。
+  Fact 2 的正样本同理缺席。**给总监**:①本轮**无新 gated id**;等门的 hero 组 id **仍是八个**;
+  ②**未提 queue.json**;③**未申请入 test_set**;④GH **#73** 已开(标题:Lion Finger of Death
+  用得少 —— two structural gaps),两个 lever 的形状 / 与 zusult 的同型证据 / 六帧不满足条件的表 /
+  (b) 检测器建议全部写死,下一轮 Lion 触发按里面口径**选一个** lever 做;⑤下一轮需要 replay-analyst
+  顺手 dump 一场 Lion 到达 6 级、Impale 高频、Finger cd=0 的 turbo 局,给 `lionult` 拿正样本帧。
+  报告:`iterations/reports/hero/20260820T200844Z.md`。全链路**自己做约 40 分钟**。
+  下一次触发:**GH #73 lever(a) `lionult`** 首选(等 dump);或 **#7 的第四层**(Lion 大招施放
+  的 range 缺口,GH #73 lever(b));或 **#13 的残留**(门读不到「她正在被停」,还需要另一个
+  frame:高血 CM 身上有较长 stun 剩余,库里没有);**#11** 等 `zusultx` 落地后再动;#4 的雾里
+  那一半仍卡 GH #27,低优。
+
 - 2026-08-20T18:12:52Z:**本轮无新 `[hero]` issue**(#66 上一轮做完;#63 章程写死本组不认领;
   #59 已入集等 `zusultx` 读数;#56 / #54 剩下的半条都在别的组域里)⇒ 按章程取 backlog **#7 的下半**
   (Lion `X.ConsiderStopDrain` 只认 `J.IsRetreating`,已跑频道打不断),**做完并划掉**。
