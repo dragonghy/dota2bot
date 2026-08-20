@@ -8522,6 +8522,39 @@ function J.IsThereCoreNearby(nRadius)
     return false
 end
 
+-- Location-centred sibling of J.IsThereCoreNearby (GH #50): is one of our cores
+-- -- other than the caller -- standing within nRadius of vLoc?
+--
+-- hero_largo.lua's laning last-hit guard has called this since it shipped, but
+-- nobody ever defined it, so a SUPPORT Largo crashed on the frame that reached
+-- the line ("attempt to call field 'IsThereCoreInLocation' (a nil value)"); a
+-- core Largo never got there because the `J.IsCore(bot) or ...` in front of it
+-- short-circuits. Lua resolves the name at CALL time, which is why the file
+-- loaded, luacheck passed and the smoke test passed all the same.
+--
+-- Kept deliberately identical to J.IsThereCoreNearby -- same team-member walk,
+-- same self-exclusion, same J.IsCore test -- with only the distance term
+-- swapped for the unit-to-location one. So a support asking "is one of my cores
+-- close to that creep?" gets exactly the same answer shape as one asking "is
+-- one of my cores close to me?", and the caller's intent ("not mine to take")
+-- reads the same in both. J.IsInLocRange requires CanBeSeen(), which is also
+-- what keeps a dead ally's stale position from suppressing the caller.
+function J.IsThereCoreInLocation( vLoc, nRadius )
+	for i = 1, #GetTeamPlayers( GetTeam() )
+	do
+		local allyHero = GetTeamMember(i)
+		if allyHero ~= nil
+		and allyHero ~= GetBot()
+		and J.IsCore(allyHero)
+		and J.IsInLocRange(allyHero, vLoc, nRadius)
+		then
+			return true
+		end
+	end
+
+    return false
+end
+
 function J.GetClosestCore(bot, nRadius)
 	for i = 1, #GetTeamPlayers( GetTeam() )
 	do

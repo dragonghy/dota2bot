@@ -22,13 +22,16 @@
 local ROOT = 'bots'
 
 -- symbol -> { file = <path it is referenced from>, issue = <tracking issue> }
--- Both entries are real nil-call crashes with LIVE call sites (unlike #48,
--- which had none). Fixing them means inventing the missing helper's semantics
--- for a non-focus hero, which is hero-group work, not a rename.
+-- Real nil-call crashes with LIVE call sites (unlike #48, which had none).
+-- Fixing one means inventing the missing helper's semantics for a non-focus
+-- hero, which is hero-group work, not a rename.
+--
+-- IsThereCoreInLocation (hero_largo.lua) was the other entry here and is FIXED
+-- 2026-08-20: J.IsThereCoreInLocation now exists in FunLib/jmz_func.lua as the
+-- location-centred sibling of J.IsThereCoreNearby, pinned by
+-- tests/test_is_there_core_in_location.lua. Its entry is deleted rather than
+-- left behind, which is the ratchet working as designed.
 local KNOWN_BROKEN = {
-    -- hero_largo.lua: `J.IsCore(bot) or not J.IsThereCoreInLocation(loc, 650)`
-    -- -- short-circuits away for a core Largo, crashes for a support one.
-    IsThereCoreInLocation = { file = 'bots/BotLib/hero_largo.lua', issue = 'GH #50' },
     -- hero_invoker.lua: `J.Unit.IsUnitWithName(...)` -- J.Unit is nil, so this
     -- is "attempt to index field 'Unit'". The function it wants exists as
     -- ____exports.IsUnitWithName in bots/FunLib/utils.lua.
