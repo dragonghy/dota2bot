@@ -86,6 +86,19 @@
    三条同源 —— `ds.nInRangeEnemy` 被上游提前 return 钉成常数 0 ⇒ 1137 是死代码、1196 读的是
    「我是不是一个人」、1418 恒真。1196 产出 gated `defnum`;1137 与 1418 卡在 #61(见第 0z 条)。**
    **仍未做**:`jmz_func.lua:1302/1498/3618/4648`。
+   **新可达面(2026-08-20T09:30Z 接通,11 个调用点)**:`GetUnitList(UNIT_LIST_ALL)` 此前在每个 fixture 里
+   **恒为空**(第九条世界断言,已修,见当前状态节)。第一次可达的:`mode_retreat_generic` 的**整张出价表**
+   (两张英雄表都从它来)、**`J.WeAreStronger`(每个半径、每个 fixture 此前都是空队伍对空队伍)**、
+   `mode_laning_generic`/`mode_roshan_generic`/`mode_outpost_generic`/`item_purchase_generic` 的世界扫描,
+   以及若干英雄文件。本轮只动了其中一条(退却的人数对比 → `retnear`),**其余每一条都还没有人在真实帧上看过**。
+   点名下一批:`X.ShouldRun` 的强制退却链、`RetreatWhenTowerTargetedDesire`;
+   **`C.enemyNearbyExtra` 的塔威胁子句现在做不了**(要建筑的攻击力/攻速,dump 不带,见 §0d)。
+0d. **两个 mode 文件在任何 fixture 上都跑不起来,而所有竞价级测试都用 `pcall` 悄悄吞掉了它们**
+   (2026-08-20T09:30Z 发现,归总监):`mode_rune_generic:487`(`GetRuneSpawnLocation` nil)、
+   `mode_secret_shop_generic:63`(`GetCourierState` nil)。**推论:本仓库过去每一条「谁赢下这一帧」的结论
+   都默默排除了这两个 mode 而没有声明**(含本组 `test_tpwatch_channel_bid.lua`)。本组今后写竞价用例
+   一律照 `tests/test_retnear_radius_parity.lua` 的做法**把跑不起来的 mode 点名断言**,口径写成
+   「在跑得起来的 mode 里」。补不补桩(符文点是地图静态常量)是 #61 同类的口径问题,已在 #61 留言。
    **新可达面(2026-08-20T05:30Z 接通)**:`GetDefendDesireHelper` 的**整个下半段**第一次可以在
    真实帧上跑 —— `ShouldDefend`(5 个 `GetClosestAllyPos` 调用点)、`capBoost`/`baseFloor`、
    panic 地板、`recentlyHit` 衰减、`ConsiderPingedDefend`、tier/血量 remap。本轮只动了其中一条
@@ -187,6 +200,47 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T09:30Z:没有可认领的新 `[strategy]` issue(#62/#58/#55/#52/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
+  #63/#59/#56/#54/#50 归英雄组,#61/#60/#49/#46/#43/#42 归总监与批测台);**#61 总监 09:00Z 明确说本轮没处理、仍归他们**,
+  所以第 0z 条仍卡着,照章程接 **第 0b 条**,按它点名的「**挑一个已发布未 gated 的 last-seen 消费方先做**」,
+  选 `mode_retreat_generic.lua:493-508` 的「last-seen 补数」。
+  **头号发现是第九条没人声明过的世界断言,并且已修**:`tests/mock/replay_fixture.lua` 的 `GetUnitList`
+  只回答 `ENEMY_HEROES`/`ALLIED_HEROES`,其余落 `{}` ⇒ **`GetUnitList(UNIT_LIST_ALL)` 在每个 fixture 里都是空的**
+  —— 不是「没有小兵」,**连英雄都没有**。白话:**「这个世界里,任何地方都没有任何单位」**。
+  `bots/` 下精确 **11 个**调用点,两个分量极重:**`mode_retreat_generic.buildContext` 的两张英雄表都从它来**
+  (⇒ 每帧 `#nAllyHeroes`/`#nEnemyHeroes` 都是 0,退却出价整段「我是不是被人数压制」**拿 0 和 0 比**)、
+  **`J.WeAreStronger(bot, r)`**(⇒ 每个半径**空队伍对空队伍**)。修复是 restoration(英雄位置是 dump 真值),
+  **含自己**,接线前后 **714/714,无历史结论翻面**。**故意没伪造并写成断言**:小兵/召唤物/建筑仍不在这张表里
+  (建筑不注入是因为唯一消费方要 `GetAttackDamage()*GetAttackSpeed()`,dump 不带)。已在 **GH #61** 留言。
+  **顺带发现、没修**:`mode_rune_generic:487`(`GetRuneSpawnLocation` nil)与 `mode_secret_shop_generic:63`
+  (`GetCourierState` nil)**在任何 fixture 上都跑不起来**,而**仓库里每一个竞价级测试都用 `pcall` 悄悄吞掉了它们**
+  (含本组的 `test_tpwatch_channel_bid.lua`)⇒ 过去每条「谁赢下这一帧」都默认排除了这两个 mode 却没说;
+  本轮验收改成**点名断言**,口径写成「在跑得起来的 mode 里」。归总监(与 #61 同类口径问题)。
+  **本轮缺陷本体(GH #65)**:退却出价里**做比较的两边不是同一次测量** —— 两张英雄表与 `bWeAreStronger`
+  都在 **1600**,而 last-seen 补数按 **3200** 取并**覆盖**敌人计数(`if unseenCount > #nEnemyHeroes then ...`),
+  于是 `敌 - 友 > 0`(每多一个 +0.1875)与 `not stronger and 敌 >= 友`(+0.25)**左边 3200、右边 1600**。
+  **r=3200 是 r=1600 的四倍面积** ⇒ 偏向「被压制」是**几何造成的**:**站在我 1700 外的队友抵不掉 3100 外的敌人**;
+  3200 还超出自己白天视野 1800 ⇒ 宽计数在 1800 外加进来的每个人都是**队友**看见的(离队友近、不是离我近)。
+  **交付 gated `retnear`(turbo-only)**:armed 时**可能替换 nearby 计数的那个数按 1600 取**;宽计数照旧计算、
+  照旧喂下面那条「四周什么都没有就 −0.25」(那条本来就要宽地平线)⇒ **只动一个杠杆**,且**只可能压低或维持**出价。
+  **没走的路**:把队友那边放宽到 3200(`nAllyNearbyCount` 还管着 Oracle/Dazzle/Satanic/Slark 那块折扣,一动就是好几个杠杆)。
+  **域实测**:六局 43,256 英雄-帧(视野按各队自己的视野源**建模**,`.dem` 无逐队雾位图 GH #27,按模型报):
+  宽计数覆盖近计数 **7,908 帧(18.3%)**,退却出价变化 **6,556 帧(15.2%)**(0.25:4892 / 0.4375:748 / 0.1875:736 /
+  0.625:102 / ≥0.8125:29),抽 40 帧驱动**全部 22 个 mode**,**竞价当选者变 4 帧(10%)**。
+  钉帧 `f_260820_043637_axe_ring_alone`(t=641.4,axe **89% 血**、**1600 内既无队友也无敌人**、三敌在
+  **2974/3086/3172**):shipped **0.6904 赢**,armed **0.0654** ⇒ **`mode_laning_generic` 0.369 赢**,其余 mode 逐位不变;
+  **GROUND TRUTH 记下不当论据**:它往回走后 **t=655–675+ 站在原地不动、97% 血、零受伤**。
+  对照帧 `f_260820_043637_axe_ring_close`(同局同英雄同 89% 血、敌人在 188/741 即 1600 内)**armed 逐位相同**;
+  第二帧 `f_260820_043140_luna_ring_bid` 是**足迹诚实的那一半**:0.777 → 0.339 但**退却仍然赢**(出价低 ≠ 决定变)。
+  **本轮的正面结果:这条不骑在 #61 的桩上** —— 三个不同非原点 lane front 跑变异,结论与两个退却出价**逐位不变**
+  (退却 mode 不读 lane front),而变异**是活的**(把 `mode_defend_tower_top_generic` 从 0.1275 挪走)。**已写成断言。**
+  验收 `tests/test_retnear_radius_parity.lua` **11 例** + `tests/test_fixture_unit_list_all.lua` **4 例**。
+  **五次变异:删修复 3、gate 常开 5、gate 忽略 turbo 1、拆 `UNIT_LIST_ALL` 接线 9、窄计数不经 gate 5。
+  729/729(基线 714)+ luacheck 0 警告。** `state.json` 新增 `retnear_20260820` 与 `fixture_unitlist_all_20260820`。
+  **`retnear` gated 未 armed**,入集申请见 **GH #65**;**排期建议:混波带着走**(足迹窄、方向单调,
+  且与 `defclose`/`defstale` 的 `aba_defend` 族不重叠,同波不污染归因)。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 6 个 `.dem` + 6 个 `.analysis.json`,未启动任何计费资源),未提批测请求。
+  详见 `iterations/reports/strategy/20260820T093000Z.md`。
 - 2026-08-20T07:30Z:没有可认领的新 `[strategy]` issue(#58/#55/#52/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
   #59/#56/#54/#50 归英雄组,#60/#49/#43/#46/#42 归总监与批测台),接 backlog **第 0b 条**,
   做上一轮点名的「`GetDefendDesireHelper` 下半段没人在真实帧上看过的那几条」里的一条。

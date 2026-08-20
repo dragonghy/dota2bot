@@ -408,9 +408,37 @@ function M.load(path, sSubject)
         return ownTeamPlayers(team)
     end
     GetHeroLastSeenInfo = function(id) return lastSeenById[id] or {} end
+    -- UNIT_LIST_ALL: the world-sweep list. Until this line it fell through to
+    -- the `{}` below, so every reader that enumerates the world through it saw
+    -- an EMPTY WORLD -- not "no creeps", NO UNITS AT ALL, heroes included.
+    -- That is an undeclared world assumption in the same family as the
+    -- HasModifier / WasRecentlyDamagedBy* / GetHeroLastSeenInfo / structure
+    -- gaps before it, and it decides some heavily-read numbers:
+    --   * mode_retreat_generic.buildContext builds BOTH its hero lists from it,
+    --     so #nAllyHeroes and #nEnemyHeroes were 0 in every fixture and every
+    --     "am I outnumbered here" comparison in the retreat bid compared 0 to 0;
+    --   * J.WeAreStronger(bot, r) sums power over it, so it weighed an empty
+    --     team against an empty team in every fixture.
+    -- The heroes are ground truth in the dump, so they are restored here.
+    -- WHAT IS STILL MISSING, DECLARED RATHER THAN FAKED: the engine's
+    -- UNIT_LIST_ALL also carries creeps, buildings, couriers, wards and
+    -- summons. The fixture generator writes heroes (and, since the structures
+    -- round, buildings under their own key) but no creeps or summons -- a
+    -- SUPPLY gap of the GH #27 kind, not something to invent. Buildings are
+    -- deliberately NOT injected here either: the one shipped reader that would
+    -- pick them up (buildContext's tower-danger clause) multiplies
+    -- GetAttackDamage() * GetAttackSpeed(), neither of which the dump carries.
+    -- So: any assertion that needs a CREEP, a SUMMON or a TOWER to be seen
+    -- through UNIT_LIST_ALL is still reading an empty set and must say so.
+    -- Self is included, exactly as the engine reports it (the bot is a unit in
+    -- the world), which is why `#nAllyHeroes` is never 0 for a live bot.
+    local allUnits = {}
+    for _, h in ipairs(allies) do allUnits[#allUnits + 1] = h end
+    for _, h in ipairs(enemies) do allUnits[#allUnits + 1] = h end
     GetUnitList = function(kind)
         if kind == UNIT_LIST_ENEMY_HEROES then return enemies end
         if kind == UNIT_LIST_ALLIED_HEROES then return allies end
+        if kind == UNIT_LIST_ALL then return allUnits end
         return {}
     end
     GetGameMode = function() return GAMEMODE_TURBO end

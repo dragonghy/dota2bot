@@ -493,19 +493,39 @@ function GetDesireHelper()
     local nEnemyNearbyCount = #nEnemyHeroes
     local nAllyNearbyCount  = #nAllyHeroes
 
+    -- [retnear] The augmentation below overwrites a 1600-radius count (the two
+    -- hero lists are built at 1600) with a 3200-radius one, and everything that
+    -- reads the result compares it against numbers taken at 1600:
+    -- nAllyNearbyCount (1600) and bWeAreStronger (1600). An ally standing 1700
+    -- away is therefore invisible to the comparison while an enemy 3100 away
+    -- counts as being on top of us. Armed, the count that may REPLACE the
+    -- nearby count is taken at the same radius as the things it is weighed
+    -- against; the wide count is still computed because the "nothing around"
+    -- discount further down (nEnemyNearbyCount == 0 and unseenCount == 0)
+    -- legitimately wants the wide horizon, and is left reading it in both
+    -- worlds so this candidate moves exactly one lever.
+    local bNearRadius = J.IsSoakCandidate('retnear') and J.IsModeTurbo()
     local unseenCount = 0
+    local unseenNearCount = 0
     for _, id in pairs(GetTeamPlayers(GetOpposingTeam())) do
         if IsHeroAlive(id) then
             local info = GetHeroLastSeenInfo(id)
             if info ~= nil then
                 local dInfo = info[1]
-                if dInfo ~= nil and GetUnitToLocationDistance(bot, dInfo.location) <= 3200 and dInfo.time_since_seen <= 5.0 then
-                    unseenCount = unseenCount + 1
+                if dInfo ~= nil and dInfo.time_since_seen <= 5.0 then
+                    local nSeenDist = GetUnitToLocationDistance(bot, dInfo.location)
+                    if nSeenDist <= 3200 then
+                        unseenCount = unseenCount + 1
+                        if nSeenDist <= 1600 then
+                            unseenNearCount = unseenNearCount + 1
+                        end
+                    end
                 end
             end
         end
     end
-    if unseenCount > #nEnemyHeroes then nEnemyNearbyCount = unseenCount end
+    local nSeenAugment = bNearRadius and unseenNearCount or unseenCount
+    if nSeenAugment > #nEnemyHeroes then nEnemyNearbyCount = nSeenAugment end
 
     -- apply single-pass extras (golem/tombstone/sun/tower danger; ally sun)
     nEnemyNearbyCount = nEnemyNearbyCount + C.enemyNearbyExtra
