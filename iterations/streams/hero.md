@@ -148,13 +148,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - **别重查**:`bot:FindAoELocation` 在 fixture 里恒 `{count=0}`(mock 的保守形状),
      所以任何用它选落点的实现**离线不可验证** —— 本轮自己算覆盖就是为了绕开这一点。
 
-10. **跳刀被当腿用(2026-08-20T05:55Z 新开,下一轮从这里起)**:armed 侧 10 次
-    `item_blink` 施法里 **5 次落地时 315 内一个敌人都没有**,而起跳前最近的敌人只有
-    339-843 码。最干净两帧 `20260820_043124_slot1`:**t=529.6**(SK 在 **339 码,在 500
-    以内**,Axe 84% 血,却反方向跳 1326 码,落点离 SK **1705**)、**t=555.2**(SK 843 码
-    → 落点离 SK 1554)。**t=529.6 不可能来自 `axeblink` 守的那条分支**(该分支硬性要求
-    `not J.IsInRange(bot, botTarget, 500)`)⇒ 是 `ConsiderItemDesire['item_blink']` 的
-    **另一条消费点**,先定位是哪条;若语义属全英雄池则按章程转协同组。
+10. ~~**跳刀被当腿用**~~ **2026-08-20T15:20Z 定位完成、按章程转协同组(GH #71)**:
+    重跑 `20260820_043124_slot1` dumper 得到 5 次 `item_blink` 施放的几何指纹
+    (cos = 位移向量与「Axe → Dire ancient」单位向量的点积;+1 = 完全朝家门,-1 = 完全朝
+    敌方)。**t=529.6 cos=+0.997 跳 1326**、**t=555.2 cos=+0.998 跳 1162** ⇒ 两次都落
+    在 `bots/ability_item_usage_generic.lua:1503-1518` 的 **retreat 分支**(把
+    `nCastRange=1200` 交给 `J.GetLocationTowardDistanceLocation(bot, GetAncient(GetTeam()),
+    nCastRange)`)。**排除 `IsProjectileIncoming` 分支**(t=529.6 前 7s 没有可躲避的非
+    攻击弹道在飞;t=555.2 前 5s 里敌方零施法)。分支语义是**全英雄池**(mode 域 +
+    `ability_item_usage_generic.lua` 都不归英雄组),GH #71 已开给协同组,附完整帧读数
+    与两条建议(HP 地板 / 敌方威胁地板)+ 几何检测器验收口径(cos>0.9 且距离在
+    [1100,1400])。**本条到「定位」为止即完成,英雄组不再持有。**
 
 11. **Zeus 有两套互不知情的「留蓝」机制(2026-08-20T07:55Z 新开)**:`zusult`/`zusultx` 这一套
     问的是「花完还付不付得起大招」;而 `nKeepMana = 400` 这个常量只在 `ConsiderW2` 的两个带旁路
@@ -190,6 +194,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T15:20:00Z:**本轮无新 `[hero]` issue** —— open 里 `[hero]` 前缀的
+  #66(上一轮自己做完的 esaftershock)、#63(本组不认领,等 `esaftershock` 读数)、
+  #59(zusult 已入集,等 `zusultx` 读数)、#56 / #54(剩下的半条都在别的组域里)都无新可
+  推进的动作 ⇒ 按章程取 backlog **#10**(跳刀被当腿用),**做完并划掉,转协同组开 GH #71**。
+  **本轮无新 gated id、无 bots/ 代码改动、无入集申请**;测试计数不动(830/830 绿,同 main)。
+  **拉了 1 个 `.dem`(~8.5MB S3 GET)+ 缓存命中的 dumper,零 EC2**。
+  **问题**:backlog #10 的两帧证据(t=529.6 / t=555.2)在 `axeblink` 守的**进攻分支**外
+  ——前者硬门 `not J.IsInRange(bot, botTarget, 500)` 挡掉(SK 在 339),后者进攻分支
+  的其他子句挡掉。定位「另一条消费点是哪一条」是英雄组的义务,但**修哪一条门不归本组**。
+  **做法**:独立复跑 `20260820_043124_slot1` 的 dumper(`-interval 0.5`),对全部 5 次
+  `item_blink` 施放算几何指纹:cos(位移向量, 单位向量-到-Dire-ancient(5528,5000))与跳跃
+  距离。5 次结果排开:492.3(cos -0.411, 841u, 进攻/axeblink 域)、**529.6(cos +0.997,
+  1326u,retreat)**、**555.2(cos +0.998, 1162u,retreat)**、574.9(cos -0.996, 642u, 进攻)、
+  613.2(cos -0.183, 1174u,其它)。retreat 分支 `nCastRange=1200`,cos ≈ +1 与距离
+  ≈ 1200 的组合是它的唯一指纹(进攻分支反方向,`IsStuck` 要求 EAd/TAd > 2200 且卡位 >5s,
+  farm-creep-AoE 分支要求敌方零人在 1600 而 SK 在 339 / 843,tormentor 方向不对上 ancient)。
+  **排除 `IsProjectileIncoming`(第 3 候选)**:t=529.6 前 7s 唯一相关是 SK 的 hellfire_blast
+  @523.3(526.4 落地);t=555.2 前 5s 内**零敌方施法**。
+  **T=529.6 完整读数**:pos=(4684,-6154) hp% **0.84** mp=349/519 lvl=10,items
+  `blink_dagger, quelling_blade, magic_wand, bracer, power_treads`(无 aether/monocle/
+  keen_eyed/mystical/boundless ⇒ nCastRange 确认 1200),1200 内敌人 = SK@339 hp% 0.63,
+  800 内队友 = Earthshaker@173 hp% 0.97,5s 前挨的伤害 = SK 的 hellfire_blast 15+15 + Radiant
+  一塔 52。上下文:ES 前 2.7s 已 Echo Slam 打 SK 220+,Axe 正 battle_hunger 追击 —— 门
+  把这场胜利态硬拉回家。**T=555.2 更干净**:pos=(4671,-6156) hp% **0.81** mp=383/543,
+  1200 内敌人 = SK@843 hp% **0.41**,800 内队友 **零**,5s 内挨伤合计 4(近战小兵一下)。
+  **给协同组的建议(不写死数字,GH #71 §建议)**:①retreat 分支加对自己 HP 的下限断言,
+  按 `cmrself`(hero 组 2026-08-20T13:49Z)的合取形状:低血 **且** 挨过打;②敌方威胁地板
+  ——不仅"1200 内有敌人"就够,要看能不能真打到我;③验收 (a) 用几何检测器
+  (cos>0.9 且距离在 [1100,1400] 上归为 retreat 分支),(b) 不用 gpm/xpm(GH #30),
+  (c) 攻略口径一致(blink 是"进攻先手 / 保命有指向性威胁",不是 15s cd 的腿)。
+  **给总监**:①**本轮无新 gated id**;等门的 hero 组 id 仍是**七个**
+  (`wkreincarnmp`、`axeblink`、`liondrain`、`odaoe`、`zusultx`、`esaftershock`、`cmrself`)。
+  ②**未提 queue.json**(不需要新花费,协同组落地后可搭已排期 candidate wave)。
+  ③**GH #71 已开**,body 里带 `20260820_043124_slot1` 的完整 5 帧几何 + 两帧 (529.6/555.2)
+  完整读数 + 分支源码 + 检测器建议。④#63/#54/#56 剩下的半条本组仍不认领,理由前几轮已写。
+  报告:`iterations/reports/hero/20260820T152000Z.md`。全链路**自己做约 20 分钟**。
+  下一次触发:**#7 的下半**(Lion 打断已跑频道:`X.ConsiderStopDrain` 只认 `J.IsRetreating`,
+  已跑频道打不断)或 **#13 的残留**(门读不到「她正在被停」);**#11** 等 `zusultx` 落地后
+  再动;#4 的雾里那一半仍卡 GH #27,低优。
+
 - 2026-08-20T13:49:58Z:**本轮无新 `[hero]` issue**(#66 是我上一轮自己做的、#63 章程写死**本组不认领**、
   #54 剩下那半仍无人认领、#59 13:00Z 总监裁定要的是**检测器**不是本组的活)⇒ 按章程取 backlog
   **#13**,**做完并划掉**。**新 gated id `cmrself`**。**零 AWS、零 S3、零 dumper —— 帧上一轮就在库里。**
