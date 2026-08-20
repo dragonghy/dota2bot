@@ -11,7 +11,7 @@
 --
 --   line 1139  #ds.nInRangeEnemy >  #ds.nInRangeAlly   -- `0 > n`: dead code
 --   line 1196  #ds.nInRangeEnemy >= #ds.nInRangeAlly   -- `0 >= n`: "am I alone"
---   line 1418  #ds.nInRangeAlly  >= #ds.nInRangeEnemy  -- `n >= 0`: a tautology
+--   line 1441  #ds.nInRangeAlly  >= #ds.nInRangeEnemy  -- `n >= 0`: a tautology
 --              (in DefendThink, whose ds carries whatever the last helper call
 --              left; a bid that came from below the early return leaves it
 --              empty, so the veto there is near-dead too)
@@ -19,6 +19,21 @@
 -- and a fourth, the already-gated [defstale] guard in DefendThink, whose
 -- `#pathEnemies > #ds.nInRangeEnemy` therefore reduces to `#pathEnemies > 0`
 -- -- stronger than the staleness argument written on it (see GH #55).
+--
+-- POST-#61 (2026-08-20T17:00Z director) the third leg gets pinned here too, at
+-- the state layer this file already reaches: after a helper run that reaches
+-- past line 1069 (the only path where defend can plausibly win the auction),
+-- `#ds.nInRangeAlly >= #ds.nInRangeEnemy` is provably TRUE regardless of the
+-- ally count -- the SAME structural fact this file already exhibits for the
+-- 1219 sink, transported to the 1441 sink. What still isn't in this file's
+-- reach is the ACTION layer for that third leg: DefendThink only writes
+-- Action_AttackMove instead of Action_MoveToLocation when dist < 1600 on the
+-- same frame, and none of the fixtures loaded here happen to land there --
+-- the POKED/PAIRED/WD subjects sit ~8k from their nearest defendable tower,
+-- so ds.distanceToLane is far above SEARCH_RANGE_DEFAULT and DefendThink
+-- takes the `dist > SEARCH_RANGE_DEFAULT * 1.7` elif at line 1447 instead.
+-- Landing that action-layer claim needs a real frame where defend wins with
+-- dist < 1600 (routed to replay-check via #62 comment).
 --
 -- This candidate touches ONE of them: the `recentlyHit` cap at 1196. Written,
 -- it means "cut me to Low when as many enemies as allies are on me and we are
@@ -230,6 +245,16 @@ tests['MECHANISM: ds.nInRangeEnemy is empty on every lane below the early return
             path .. ': the list the guard compares against is empty -- the early '
             .. 'return above guarantees it, so `0 >= #nInRangeAlly` is what the '
             .. 'branch really asks; got ' .. #ds.nInRangeEnemy)
+        -- Third leg (DefendThink:1441). Same pinned RHS, opposite comparison
+        -- direction -- so on every one of these frames the parity check the
+        -- action layer would consult is a TAUTOLOGY: `n >= 0`. This is the
+        -- state-layer half of GH #62's third-leg claim; the action-layer half
+        -- (does the shipped code write Action_AttackMove here?) still can't
+        -- be honestly asserted from this fixture set -- see header note.
+        assert(#ds.nInRangeAlly >= #ds.nInRangeEnemy,
+            path .. ': `#ds.nInRangeAlly >= #ds.nInRangeEnemy` (DefendThink:1441) '
+            .. 'is TRUE by construction with `#ds.nInRangeEnemy == 0`; this is the '
+            .. 'third leg of the same family (GH #62)')
     end
 end
 
@@ -360,6 +385,28 @@ tests['[reverse] the shipped guard and its early return are still where claimed'
     assert(src:find('#lEnemies >= nEffAllies', 1, true) == nil,
         'the hub-centred rewrite was rejected (541/549 vs 308/549) -- it must not be '
         .. 'in the tree')
+    -- Third leg (DefendThink:1441). Same family, action layer. The parity check
+    -- the header lists as the third sink of the family must still be the exact
+    -- comparison this file describes -- if it grows a gate, a fresh query, or
+    -- flips direction, the third-leg claim above must be re-derived.
+    assert(src:find('#ds.nInRangeAlly >= #ds.nInRangeEnemy', 1, true) ~= nil,
+        'the DefendThink parity check that closes the family (GH #62) must still '
+        .. 'read `#ds.nInRangeAlly >= #ds.nInRangeEnemy` verbatim -- if the shape '
+        .. 'changed, the mechanism claim in the header no longer describes the tree')
+    -- And it must still be un-gated: this is the "shipped, ungated" half of the
+    -- third-leg claim, which is why the strategy backlog names it as the next
+    -- lever. A soak gate here would move it out of that category and this note
+    -- must be updated.
+    do
+        local guard = src:match(
+            '\n%s*if %(ds%.weAreStronger or #ds%.nInRangeAlly >= #ds%.nInRangeEnemy%) '
+            .. 'and dist < SEARCH_RANGE_DEFAULT then')
+        assert(guard ~= nil,
+            'the shipped DefendThink guard on line 1441 must still be un-gated '
+            .. '(GH #62): if you added `IsSoakCandidate("...")` in front of it, the '
+            .. 'strategy backlog entry naming it "shipped, ungated action defect" '
+            .. 'is out of date')
+    end
 end
 
 -- ---------------------------------------------------------------------------

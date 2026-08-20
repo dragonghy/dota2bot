@@ -32,16 +32,22 @@
    (f_260820_043124_axe_blink_flee_529/555),8 例 + 五次变异全绿。gated 未 armed,
    入集申请见 GH #71 留言。issue #71 的建议 #2(敌方威胁地板)**留作第二个杠杆**,
    不折进这条 gate**。
-0z. **【新的头号阻塞,2026-08-20T07:30Z】lane front 是地图原点(GH #61)—— 在它有着落之前,
-   `GetDefendDesireHelper` 下半段的任何「最终出价层」结论都不成立。**
-   loader 从不接 `GetLaneFrontLocation` ⇒ 两队三路的前线全是 (0,0),`ds.distanceToLane[lane]`
-   = 「我离河道多远」、三条路同一个数;`bots/` 下 **125 个调用点**。**本组不要自己去伪造它**
-   (从 3 秒采样、无路别、无存活位的 creep 流重建前线是**建模**,`frontOffset` 更无从还原)——
-   等总监在 #61 里定方案。**已知被它卡住的两条(都是本族、都想做)**:
-   `aba_defend:1139` 的死代码(`0 > n` 恒假)、**`DefendThink:1418` 的恒真否决
-   (`n >= 0`,已发布未 gated 的动作类缺陷,lane front 一能用就是最值钱的下一个)**;
-   以及 `defnum`(GH #62)的入集申请。
-   **顺带的纪律**:本组今后凡是要断言最终出价的用例,先跑一遍「把 lane front 挪离原点」这个变异;
+0z. **~~【新的头号阻塞,2026-08-20T07:30Z】lane front 是地图原点(GH #61)~~
+   #61 已落地(director 17:00Z, 71b510c)**:`rf.load` 显式 refuse `GetLaneFrontLocation`,
+   每个测试自己声明假设。**本组名下三条子任务的现状**:
+   - **`DefendThink:1441` 的恒真否决**(原文 `1418`,代码飘动到 `1441`;已发布未 gated 的动作类缺陷):
+     **状态层已钉住**(2026-08-20T19:25Z,本报告):`tests/test_defnum_recent_hit_parity.lua`
+     的 MECHANISM 循环补断言 `#ds.nInRangeAlly >= #ds.nInRangeEnemy` 在 POKED/PAIRED/WD 三帧
+     实证为 TRUE;两处 [reverse] 源码钉子(shape + ungated)。**动作层未钉**:三个 fixture
+     的 subject 都在 ~8k 外,`ds.distanceToLane >> 1600`,DefendThink 走 elif 分支
+     `Action_MoveToLocation` 而不是 `Action_AttackMove`,line 1441 的 AttackMove 分支
+     结构不可达;不伪造 lane front 到 subject 附近(那不是 declare an assumption,那是模拟游戏)。
+     **(a) 语料请求已路由 replay-check(GH #62 追评)**:要一份 `defend won + dist<1600 +
+     无更早 return` 的真实帧。
+   - **`aba_defend:1139` 的死代码**(`0 > n` 恒假):已在 GH #62 定为死代码,不产 gate,
+     由 `defnum` 的注释统一记账,无需新单独工作。
+   - **`defnum` 入集申请(GH #62)**:归总监决策。本组这轮不改立场。
+   **顺带的纪律**(继续有效):本组今后凡是要断言最终出价的用例,先跑一遍「把 lane front 挪离原点」这个变异;
    会 FAIL 的断言就是骑在桩上的断言,必须如实标注(`defclose` 已因此在 GH #58 标注)。
 0. **「命令的边界」普查 —— 2026-08-19T23:25Z 已做完枚举,范围收窄**。
    全仓库 `bOnce=false` / `Action_MoveToUnit` 站点已逐个 grep 过:
@@ -242,6 +248,51 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T19:25Z:没有可认领的新 `[strategy]` issue —— 唯一带新证据的 **GH #72**
+  是录像检查组的 `capmono` 隔离核验(SILENT,不 promote,不构成有害证据 + 登记
+  「行为通道检测器的经验零点 ≈ ±15pp/种子 SE 7.5」),决定权在总监(admit/reject/
+  test_set),不是本组要写的 Lua 或测试。**#61 已在 17:00Z 由总监落地**
+  (`git show 71b510c`:`rf.load` 显式 refuse `GetLaneFrontLocation`,6 个测试
+  同步声明假设),所以照章程接 backlog **第 0z 条**「`DefendThink:1418`
+  (代码飘动到 `1441`) 恒真否决,已发布未 gated 的动作类缺陷,lane front 一能用就是
+  最值钱的下一个」。
+  **产出**:**状态层钉子**——`tests/test_defnum_recent_hit_parity.lua` 的 MECHANISM
+  循环末尾追加 `#ds.nInRangeAlly >= #ds.nInRangeEnemy` 断言,POKED/PAIRED/WD 三帧
+  实证为 TRUE(第三条腿与 `defnum`(1219)/dead-code(1139)/`defstale`(1314)
+  同源);加两条 [reverse] 源码钉子——(i) `#ds.nInRangeAlly >= #ds.nInRangeEnemy`
+  子串必存;(ii) 用 `src:match` 捕获整行 if,断言 line 1441 **未 gated**
+  (若哪天有人加了 `IsSoakCandidate(...)`,backlog 「已发布未 gated 的动作类缺陷」
+  这条说法必须更新)。
+  **动作层未钉,已如实登记**:三个 fixture 的 subject 都在离最远建筑 ~8k 处,
+  `ds.distanceToLane[lane] >> 1600`,DefendThink 走 `dist > SEARCH_RANGE_DEFAULT * 1.7`
+  的 elif 分支(`Action_MoveToLocation`),line 1441 的 `Action_AttackMove` 分支
+  在这些 fixture 上结构不可达。**拒绝伪造 lane front 到 subject 附近来强开 dist<1600**
+  ——那不是「declare an assumption」(per #61 discipline),那是模拟游戏世界。
+  **(a) 语料请求已路由 replay-check(GH #62 追评)**:要一份 turbo 防守帧
+  `subject.dist_to_defendLoc < 1600` + defend 赢下竞价 + 无更早 action 分支抢先 return
+  (baseThreat/HG/enemies at hub/visible enemies/creeps/ShouldDefend+bld 全 miss),
+  下一轮语料回来后一次性入 test_set + 决定候选杠杆(delete 死码 / `#pathEnemies`
+  替换 / `#enemiesAtHub` 替换)。
+  **不推 gate**(动作层未验收,单动 gate 违反本组「一次一个小杠杆 + 局部正确 ≠
+  emergent 好」的教训);**不改 bot Lua**(行为一位没动);**不申请入 test_set**
+  (第三条腿无 armed 语义)。
+  **世界断言合规**:不新增读 `GetLaneFrontLocation` 的断言(继承 #61 landing 时既有
+  [limitation] 测试的 explicit declare origin 记账);状态层结论只读
+  `bot._defend.nInRangeEnemy`(helper 写入,不经 lane front);幻象污染(#69)不涉及
+  (读的是 hero 集合不是伤害账本);结构不可寻址(第 6 条,#58)不涉及
+  (不消费 `GetTower`)。
+  **验收**:`luacheck bots game --formatter plain` **0 warnings**(bot 侧未动);
+  `lua5.1 tests/run_tests.lua` **857/857 → 857/857**(不变;循环体追加 assert 不改
+  例数;两处 [reverse] 是既有测试内的断言追加)。**三次变异全部按预期 FAIL**:
+  (i) 强填 `ds.nInRangeEnemy` 为非空表 → MECHANISM 三帧同时 FAIL;
+  (ii) 把 line 1441 方向对调 `#ds.nInRangeEnemy >= #ds.nInRangeAlly` → [reverse]
+  shape pin FAIL;
+  (iii) line 1441 前加 `IsSoakCandidate("defwin") and` → [reverse] ungated pin FAIL。
+  `state.json` 新增 `defthink_third_leg_pin_20260820`;backlog 第 0z 条改写
+  (landing 后:状态层钉住,动作层等 (a) 语料);GH #62 已追评(第三条腿状态层钉住
+  + 动作层语料请求)。
+  未花 AWS 钱(未启动任何计费资源,未提批测请求,未读 S3——本轮完全是本地
+  Lua + 静态审计)。详见 `iterations/reports/strategy/20260820T192500Z.md`。
 - 2026-08-20T17:15Z:**第二次有可认领的新 `[strategy]` issue**,认领 **GH #71**
   (英雄组 15:20Z 定位交接:`item_blink` 的**撤退分支**在 `bots/ability_item_usage_generic.lua:1503-1518`,
   两次把 15s CD 烧在 84%/81% HP 的空开跳,几何指纹 cos(→ancient)+0.997/+0.998,距离 1326/1162)。
