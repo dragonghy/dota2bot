@@ -203,12 +203,51 @@ local abilityASBonus = 0
 -- -- and the held bid simply fell through to it and spent the identical mana on
 -- the identical target. All three consumption points now share this one gate and
 -- this one candidate id.
+--
+-- [zusultx] GH #59 -- the SECOND audit of this gate, on the 04:11Z evidence
+-- wave, found the W leak closed (0 domain casts, down from 3) and then found
+-- that the gate is structurally blind on the only frame that can change the
+-- outcome. The clause below reads the mana Zeus holds BEFORE the spend, so its
+-- effective domain is exactly "the reserve is ALREADY gone": at mana >= nCost
+-- -- the one moment there is still something left to protect -- it stands
+-- aside, and at mana < nCost -- after the reserve has been spent -- it starts
+-- holding. It was never guarding the ultimate; it was guarding the regen that
+-- follows losing it.
+--
+-- Measured, 20260820_042607_slot1 (Zeus armed, seed 872 radiant):
+--   t=462.3  item_arcane_boots (+175) carries him 104 -> 256 mana. The ult is
+--            level 1, cooldown 0, and now AFFORDABLE: castable this instant.
+--   t=462.5  <-- THE FRAME. lion stands 499.7 away at 1.00 HP. The gate is
+--            asked and answers "nothing is being denied" -- clause 7.
+--   t=462.9  Lightning Bolt (ground, the W2 path) into that full-HP lion,
+--            ~130 mana gone. The reserve is spent 0.4s after it arrived.
+--   463.5..491.5  the gate dutifully holds 57 straight frames of chip -- the
+--            reserve it is protecting no longer exists.
+--   t=492.2  Zeus dies holding 116 mana with Thundergod's Wrath still level 1
+--            and still cooldown 0: ready and unaffordable, 29.7s after the one
+--            spend that could have been refused.
+--
+-- So the fix is to ask the question at the instant it is actually about: not
+-- "can he pay for the ult right now" but "can he STILL pay for it after this
+-- spend". The gate takes the bid's own ability handle and subtracts its cost.
+-- This is deliberately a SEPARATE candidate id: it strictly widens an
+-- already-armed gate's domain (post-spend affordability implies pre-spend
+-- affordability, never the reverse), and widening the reach of a rule that has
+-- not yet cleared condition (b) is the `lanefix` failure mode. Arming `zusult`
+-- alone keeps the shipped narrow domain; arming `zusultx` runs the widened one,
+-- so the increment is one subtraction between two waves and never the sum of
+-- two rules. Neither id is inert on its own -- there is no arm-and-nothing-
+-- happens combination here.
+--
+-- The widening is bounded and small: post-spend only differs from pre-spend
+-- while mana sits in [nCost, nCost + spend), a ~130-wide band for a Bolt.
 X.nUltSaveHealthFloor = 0.6
 
-function X.zuus_ShouldSaveManaForUlt( hBot, hTarget )
+function X.zuus_ShouldSaveManaForUlt( hBot, hTarget, hSpell )
 
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'zusult' ) then return false end
+	local bPostSpend = J.IsSoakCandidate( 'zusultx' )
+	if not bPostSpend and not J.IsSoakCandidate( 'zusult' ) then return false end
 
 	if hBot == nil or abilityR == nil then return false end
 	if not abilityR:IsTrained() then return false end
@@ -217,8 +256,20 @@ function X.zuus_ShouldSaveManaForUlt( hBot, hTarget )
 	local nCost = abilityR:GetManaCost()
 	if nCost == nil or nCost <= 0 then return false end
 
-	-- Already affordable: nothing is being denied, so nothing to save for.
-	if hBot:GetMana() >= nCost then return false end
+	-- What this bid is about to cost. Only `zusultx` subtracts it; with only
+	-- `zusult` armed nSpend stays 0 and the clause below is byte-equivalent to
+	-- the shipped one.
+	local nSpend = 0
+	if bPostSpend and hSpell ~= nil
+	then
+		local nSpellCost = hSpell:GetManaCost()
+		if type( nSpellCost ) == 'number' and nSpellCost > 0 then nSpend = nSpellCost end
+	end
+
+	-- Still affordable AFTER this spend: nothing is being denied. (GH #59: with
+	-- nSpend = 0 this is the shipped "already affordable" test, which asked the
+	-- question one spend too early.)
+	if hBot:GetMana() - nSpend >= nCost then return false end
 
 	-- Fleeing beats hoarding.
 	if J.IsRetreating( hBot ) then return false end
@@ -267,7 +318,8 @@ function X.SkillsComplement()
 	end
 
 	castWDesire, castWTarget = X.ConsiderW()
-	if ( castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget ) )
+	-- GH #59: the bid's own handle rides along, so `zusultx` can price the spend.
+	if ( castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget, abilityW ) )
 	then
 		castWDesire = 0
 	end
@@ -294,7 +346,7 @@ function X.SkillsComplement()
 	-- casts on the armed side, 0 leaked Q casts). ConsiderW2 only reports a
 	-- target for its poke branches, so kill windows and channel interrupts
 	-- reach the gate as nil and are never held.
-	if ( castW2Desire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castW2Target ) )
+	if ( castW2Desire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castW2Target, abilityW ) )
 	then
 		castW2Desire = 0
 	end
@@ -308,7 +360,7 @@ function X.SkillsComplement()
 	end
 
 	castQDesire, castQTarget = X.ConsiderQ()
-	if ( castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget ) )
+	if ( castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget, abilityQ ) )
 	then
 		castQDesire = 0
 	end

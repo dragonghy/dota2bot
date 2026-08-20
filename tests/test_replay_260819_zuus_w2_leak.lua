@@ -311,16 +311,23 @@ tests['wiring: SkillsComplement gates all THREE bids through one gate, one id'] 
     local f = assert(io.open('bots/BotLib/hero_zuus.lua'))
     local src = f:read('*a')
     f:close()
-    assert(src:find('castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget )', 1, true),
+    -- GH #59 added a third argument (the bidding ability's own handle, so the
+    -- `zusultx` domain can price the spend). The literals below move with it;
+    -- what they pin -- that all THREE bids still route through the one gate --
+    -- does not.
+    assert(src:find('castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget, abilityQ )', 1, true),
         'the Arc Lightning bid must pass through the reserve gate')
-    assert(src:find('castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget )', 1, true),
+    assert(src:find('castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget, abilityW )', 1, true),
         'the targeted Lightning Bolt bid must pass through the reserve gate')
-    assert(src:find('castW2Desire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castW2Target )', 1, true),
+    assert(src:find('castW2Desire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castW2Target, abilityW )', 1, true),
         'GH #47: the GROUND Lightning Bolt bid must pass through it too')
     assert(src:find('castW2Desire, castWLocation, castW2Target = X.ConsiderW2()', 1, true),
         'and it must receive the target ConsiderW2 reports')
     local _, nIds = src:gsub("J%.IsSoakCandidate%( 'zusult' %)", '')
     assert(nIds == 1, 'still exactly ONE gate call behind ONE id, found ' .. nIds)
+    -- GH #59's widened domain is a SEPARATE id, so the count above stays 1.
+    local _, nX = src:gsub("J%.IsSoakCandidate%( 'zusultx' %)", '')
+    assert(nX == 1, '`zusultx` is read in exactly one place, found ' .. nX)
 end
 
 -- Counted by SHAPE (how many values the return carries), not by the name of the

@@ -294,9 +294,12 @@ tests['wiring: SkillsComplement gates both the Q and the W bid'] = function()
     local f = assert(io.open('bots/BotLib/hero_zuus.lua'))
     local src = f:read('*a')
     f:close()
-    assert(src:find('castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget )', 1, true),
+    -- GH #59 added a third argument (the bidding ability's own handle, so the
+    -- `zusultx` domain can price the spend). The literals below move with it;
+    -- what they pin -- that both bids still route through the one gate -- does not.
+    assert(src:find('castQDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castQTarget, abilityQ )', 1, true),
         'the Arc Lightning bid must pass through the reserve gate')
-    assert(src:find('castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget )', 1, true),
+    assert(src:find('castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget, abilityW )', 1, true),
         'the Lightning Bolt bid must pass through the reserve gate')
     assert(src:find("J.IsSoakCandidate( 'zusult' )", 1, true),
         'the helper must stay gated behind the zusult candidate id')
