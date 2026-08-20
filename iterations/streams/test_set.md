@@ -1,14 +1,14 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop
 
 **稳定版锚点:`stable-v1`(2026-08-19T23:00Z)= 首次 promote(`roamstale`)之后的 main。**
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
-**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§R.0**(**16 id**,§Q.0 那一串
-去掉 `tpwatch`;种子仍 888/895/896/906)。**§R.0 同时改了这一波的申报目的**:
-不再是买 `zusult`/`cmrguard` 的 (b)(本轮判为不可达,见 §R.1/§R.2),改为买 `tpdying` 的 (a)。
-当前 eligible **17** 个(11:00Z `tpwatch` **reject 出集**,见 §Q.1)里,`wandlimbo` 仍**不可 arm**
-(§J.1.4 的机会普查是硬前置,连续七轮无人做)。
+**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§U.0**(**18 id** = §R.0 那 16 id
+**逐字不变** + 本轮新入集的 `blinkflee` / `liondrainstop`;种子仍 888/895/896/906),
+申报目的 = **买这两个新 id 的条件 (a)**(§R.0 那波的 `capmono` (b) 两臂已由 arm B 收官)。
+当前 eligible **19** 个(11:00Z `tpwatch` **reject 出集**,见 §Q.1)里,`wandlimbo` 仍**不可 arm**
+(§J.1.4 的机会普查是硬前置,连续九轮无人做)。
 入集流程自 2026-08-20T07:00Z 起改为**清单齐全即默认批准、总监事后可撤销**,见 **§O.3**。
 
 维护者:协同组提议增删,总监批准并修改本文件。
@@ -19,6 +19,96 @@ gate 代码保留在 `hero_axe.lua:107` 且**不再 arm**)——理由见 §O.1,
 `tpwatch` 于 2026-08-20T11:00Z **reject 出集**(**本项目第一个 reject**,不是退回:条件 (c) 被真实帧
 证伪,不是「测不出来」)——gate 代码保留在 `jmz_func.lua:J.ShouldAbandonTpChannel` 且**永不 arm**,
 复活条件钉在 §Q.1 / GH #52。
+
+## 总监提醒(2026-08-20T19:00Z 更新,**测试集有变更:+2 入集(17 → 19);下一波串换成 §U.0 的 18 id**)
+
+### U.0 ⛔ 下一波(arm B 收割之后的第一波)的两行
+
+```
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,blinkflee,liondrainstop
+```
+种子仍 **888 / 895 / 896 / 906**。
+
+**= §R.0 那 16 id 逐字不变 + 追加两个本轮新入集的 id。** `capmono` **留在串里**(它的两臂
+对照已由 18:08Z 的 arm B 收官,下一波不再是它的测量波);其余申请中的
+`retnear`/`towerreach`/`defclose`/`defstale`/`defnum`/`esaftershock` **一个都不许加**
+(§O.3 进的是 eligible,armed 仍只由总监排期)。
+
+**本波申报目的:买 `blinkflee` + `liondrainstop` 的条件 (a)** —— 两个都是刚落地、**一次没
+armed 过**的 id,是 armed 集里唯一「有 fixture、有检测器口径、但一帧上机证据都没有」的两个。
+**可同波、可同臂**:`blinkflee` 只挂 `ability_item_usage_generic.lua` 的 `item_blink` 撤退分支
+(Axe/ES 等持刀英雄),`liondrainstop` 只挂 `hero_lion.lua:X.ConsiderStopDrain`,
+**调用点不相交、英雄不相交、检测器不相交**,同臂不丢归因。
+**不是**两臂波次(本波不测 (b),(b) 两个都要行为检测器,见 U.1.3 / U.2.3)。
+
+### U.1 `blinkflee` **批准入集**(GH #71,协同组 17:15Z)。eligible 17 → **18**
+
+§O.3 五项清单**逐项齐全**(真实帧 fixture 2 份 / 反向断言 例1、2、4、5、7 / 5 次标注变异 /
+可分离性一句话 / (a) 口径写在 #71 留言)⇒ 默认批准,总监复核**通过**。
+(c) 成立且不是新主张:blink 是 15s CD 的保命+起手道具,满血无压迫时把它烧成一段位移
+是标准的道具误用。
+
+**总监复核里自己查出来的三件事(不是转述报告,两件要求改口径):**
+
+**U.1.1 ⚠️ (a) 的检测器口径与规则口径不一致,而且这个不一致会把两帧证据里的一帧筛掉。**
+#71 留言写的桶是「施放前 **5s** 内无英雄伤害 且 施放者 HP **>** 70%」,而 gate 自己用的是
+**2.0s** 窗口 + HP **≥** 70%。查 fixture `f_260820_043124_axe_blink_flee_529.lua` 第 12 行:
+Axe 的 `recent_damage` 里有 SK 的三下英雄伤害,`dt = 3.2 / 4.2 / 5.2` ⇒ **t=529.6 那一帧
+在 5s 口径下有英雄伤害,会被检测器自己排除**,而 gate 在 2.0s 口径下**正是要 hold 它**。
+⇒ 照 #71 的口径去查,应命中桶只剩 1 帧(t=555.2),**动机帧不在里面**,armed 侧读数会
+天然偏向「没生效」。**要求:检测器窗口逐字改成 gate 的 2.0s、HP 边界改成 `>= 0.70`。**
+归到 §0b —— 这是第十七例(检测器计量的不是规则)的**同族第二型:检测器的谓词比规则严,
+于是把规则真正的作用域排除在观测之外**。全组通用:**(a) 检测器的每一个阈值必须与 gate 源码
+逐字相同,不同则必须在报告里写明为什么并给出两种口径的数**。
+
+**U.1.2 ⚠️ 「hold 了」≠「这一帧没闪」——绝对计数不能判 SILENT。**
+撤退分支被 hold 之后**继续往下走**,`ability_item_usage_generic.lua:1554` 的
+`J.IsProjectileIncoming(bot, 1200)` 分支**不要求任何模式**,且它的落点是
+`GetLocationTowardDistanceLocation(bot, ancient, 1199)` —— **与撤退腿几何上无法区分**
+(同样朝家门、1199 vs 1200 都落在 #71 桶的 [1100, 1400] 里)。⇒ 一次**正确 hold** 的帧上
+仍可能出现一次朝家门的闪现,落进同一个桶。dumper 看不见弹道 ⇒ **不可能事后区分**。
+**要求**:(a) 判读**只用两臂配对差**(armed 侧桶计数 vs 同种子 base 侧桶计数,按局归一化),
+**绝对计数为 0 或 2 都不构成 SILENT/WORKING 结论**;#71 留言里「从 2 降到 0 或 1」的
+单局绝对预测**作废**,改成配对差方向为负。
+
+**U.1.3 (b) 用行为检测器,不许 gpm/xpm。** `blinkflee` 是**抑制型**(只可能去掉一次 HIGH
+return,不可能新增),按 §R.3 推论 ② 它的 (b) **只能用对照臂反推**(同域「撤退桶闪现率」
+armed vs base),且按 §A0 通例(动作次数 ≪1 次/局)**不许**用经济读数。
+
+**U.1.4 诚实边界**:helper 挂在**全英雄池**的通用道具文件上,证据却只有**一局一个 Axe 的
+两帧**。(a) 的域必须按**全部持 blink 的英雄**统计,不许只看 Axe —— 若别的英雄上出现方向相反
+的读数,那是本 id 的真实发现,不是噪声。
+
+### U.2 `liondrainstop` **批准入集**(英雄组 18:12Z 报告)。eligible 18 → **19**
+
+§O.3 五项清单齐全(2 份真实帧 fixture、gate-OFF 反向断言、**8 次变异 8 次全抓**、
+可分离性、(a) 口径 = 域内频道释放次数按目标类型拆)⇒ 默认批准,复核**通过**。
+(c) 成立:Mana Drain 的频道把 Lion 钉在原地,而 `X.ConsiderStopDrain` 的**唯一** shipped
+释放路径是 `J.IsRetreating`,扎根中的英雄按定义进不了退却模式 ⇒ shipped 那条腿在这个场景里
+**结构性打不出**(帧证据:20260819_182855,t=297.2–302.2 站着挨 8 跳伤害 + ES echo)。
+
+**总监复核里自己查的两件事:**
+
+**U.2.1 ✅ 先证否一个会让本 id 结构性哑火的可能**(这类前置在本项目已栽过三次):
+外前提 `X.IsAbilityEChanneling()`(`hero_lion.lua:305-328`)**先扫小兵再扫英雄**,两个循环
+都查 `modifier_lion_mana_drain` ⇒ **吸英雄的频道同样被认出**。动机帧吸的正是 viper(英雄),
+若那里只有小兵循环,本 id 在自己的动机帧上就是死代码。**已查,不是。**
+
+**U.2.2 ⚠️ 两个杠杆的 gate 是不对称的,单独 armed 会出现「释放 → 重开」对。**
+起手门 `X.lion_IsDrainSafeToStart`(L1079-1081)在**自己的 gate 关着时返回 `true`**,
+而 `liondrain` **根本不在 eligible 集里**(它是英雄组八个"等门"id 之一)⇒ 本波
+`liondrainstop` **必然单独 armed**:释放之后**没有任何东西拒绝重开**,冷却一到 Lion 可以
+再吸进同一份压力。**这不是缺陷,是本波读数的前提**,事前登记(§H):
+- **主判据**:域内(mid-channel + 2s 内挨英雄打 + 500u 内有敌方英雄)的**频道释放次数**,
+  armed 侧 > base 侧(base 侧只有 `IsRetreating` 一条腿);
+- **必须一起报的次判据**:**释放 → 重开**对的次数与间隔(每局 Mana Drain 频道总数按目标
+  类型拆)。**每局频道总数上升不算证伪** —— 那正是单杠杆 armed 的预期形状;
+- **判 BUGGY 的形状**:释放后 **< 冷却**就重开(说明释放没落地)、或释放发生在域外。
+
+**U.2.3 (b) 同样用行为检测器**(§A0/§R.3):频道内 Lion 的 HP 曲线、域内频道存活率;
+**不许 gpm/xpm**。采纳英雄组的排期约束:**`liondrain` 与 `liondrainstop` 永不同臂**
+(共用 `X.nEDrainDangerRadius` 与 2s 窗口,同臂丢归因);本波 `liondrain` 连 eligible 都不是,
+自动满足。
 
 ## 总监提醒(2026-08-20T17:00Z 更新,**测试集/下一波逐字不变,见 §R.0**;本节只 land 一个 `[harness]` 修复 + 立一条"新的测试规矩")
 
