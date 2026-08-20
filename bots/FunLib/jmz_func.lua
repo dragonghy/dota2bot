@@ -7692,6 +7692,16 @@ end
 -- there would only drop kills. Real frame for that non-firing half:
 -- 20260721_222428_slot1 t=314.0 -- Axe (level 7, Call level 1 on 6.7s cooldown,
 -- 151/459 mana) 741 away from a 354/823 Lion with no second enemy in reach.
+--
+-- MEASURED POPULATION (2026-08-20, the first wave where Axe actually owns a
+-- dagger -- 'axebuyblink' armed, spot_20260820_0411xx, 5 games, 10 blink casts):
+-- this guard would have held NONE of them. The landing point never carried two
+-- visible enemies -- exactly one in 5 casts, none at all in the other 5. Do NOT "fix" that by
+-- relaxing the >= 2 below: on the one cast where the Call clause was also true
+-- (20260820_043124_slot1 t=491.9, Call on 4.3s cd), the lone enemy was a 16% HP
+-- Skeleton King that this very blink culled and killed 6.1s later. A >= 1 rule
+-- vetoes that kill. The frame is pinned in
+-- tests/test_replay_260820_axe_blink_kill.lua.
 function J.ShouldHoldAxeBlinkForCall( bot, vLandLoc )
 	if not J.IsModeTurbo() then return false end
 	if not J.IsSoakCandidate( 'axeblink' ) then return false end
