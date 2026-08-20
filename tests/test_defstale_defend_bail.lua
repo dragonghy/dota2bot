@@ -156,7 +156,23 @@ tests['MECHANISM: the helper early-returns, so nInRangeEnemy is never written'] 
         .. 'the two sides is time, not meaning')
 end
 
-tests['REACHABLE: defend wins the script mode auction on this frame'] = function()
+-- WITHDRAWN 2026-08-20: this case used to assert that a defend mode WINS the
+-- script auction on this frame, which is what made DefendThink -- and with it
+-- the defstale bail-out -- reachable here at all. It was true only because the
+-- fixture world had no addressable structures: GetTower(team, TOWER_*) answered
+-- nil for every slot, so aba_defend.GetFurthestBuildingOnLane returned nil, the
+-- push modes fell back to a flat 0.05 and mode_laning_generic bid 0. With the
+-- real building slots wired in (tests/mock/replay_fixture.lua) the same frame
+-- bids laning 0.446 against defend 0.30, and laning wins.
+--
+-- So this frame no longer shows a live defect: DefendThink most likely was not
+-- running here. That is consistent with the ground truth recorded above -- the
+-- drow stayed and LAST-HIT CREEPS, which is laning behaviour, not defending.
+-- The rest of this file still stands: it pins what the guard compares and that
+-- the comparison can only ever be bought by staleness. What it no longer
+-- carries is evidence that arming defstale would change anything on this frame.
+-- See GH #55.
+tests['WITHDRAWN: defend does NOT win the script auction on this frame'] = function()
     local _, bot = world(BAIL)
     local best, bestName, defend = -1, 'none', -1
     local p = io.popen('ls bots/mode_*.lua')
@@ -173,14 +189,17 @@ tests['REACHABLE: defend wins the script mode auction on this frame'] = function
     end
     p:close()
     assert(defend >= 0, 'the defend modes must produce a number here')
-    assert(defend >= best,
-        'DefendThink only runs if a defend mode wins; best was ' .. bestName
-        .. ' at ' .. string.format('%.2f', best) .. ' vs defend '
-        .. string.format('%.2f', defend))
+    assert(math.abs(defend - 0.30) < 0.005,
+        'the defend modes still bid 0.30 here; got ' .. string.format('%.3f', defend))
+    assert(bestName:find('laning'),
+        'and laning outbids them; got ' .. bestName
+        .. ' at ' .. string.format('%.3f', best))
+    assert(best > defend + 0.1,
+        'by a margin no rounding accounts for: ' .. string.format('%.3f vs %.3f', best, defend))
     -- LIMITATION, stated rather than hidden: the .dem carries no per-frame mode
     -- (GH #27) and the engine's own built-in modes have no script GetDesire, so
-    -- this auction covers the SCRIPT modes only. It is a necessary condition for
-    -- reachability, not a proof that the engine picked defend.
+    -- this auction covers the SCRIPT modes only. It is evidence against
+    -- reachability on this frame, not a proof that the engine never picks defend.
     assert(bot ~= nil)
 end
 

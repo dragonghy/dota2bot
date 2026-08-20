@@ -310,11 +310,34 @@ function GetThreatenedLane(): Lane {
 function GetClosestAllyPos(tPosList: number[], vLocation: Vector): number {
     let bestPos: number | null = null;
     let bestDist = math.huge;
+    // [defclose] The scan below is written as if tPosList were 1-based: it
+    // walks j = 1..length and so compares tPosList[1..length], skipping
+    // tPosList[0] and reading one past the end. Every caller passes an array
+    // literal, so the FIRST role in the list is never a candidate -- and
+    // `bestPos ?? tPosList[0]` then falls back to exactly that never-compared
+    // role. Concretely, shipped:
+    //   [4, 5]       -> only pos 5 can ever be "closest"; if no pos-5 hero is
+    //                   alive it answers 4 regardless of distance
+    //   [2, 3]       -> only pos 3; fallback 2
+    //   [2, 3, 4, 5] -> pos 2 can never be the answer, so the ShouldDefend
+    //                   under-fire gate ("only the closest of 2/3/4/5 keeps
+    //                   defending") disqualifies the mid outright, on top of
+    //                   pos 1 which is not in the list at all
+    // The distance test is therefore inert for the first role in every list.
+    // Measured over 2883 threatened-tower frames from six turbo replays the
+    // answer differs from the true closest in 35.5% of [4,5] frames, 47.4% of
+    // [2,3] and 20.3% of [2,3,4,5].
+    // Armed (turbo only), the scan covers the whole list. This is a
+    // correctness repair, not a knob: it can both add and remove a defender
+    // relative to shipped.
+    const bDefClose = jmz.IsSoakCandidate("defclose") && jmz.IsModeTurbo();
+    const jFirst = bDefClose ? 0 : 1;
+    const jLast = bDefClose ? tPosList.length - 1 : tPosList.length;
     for (let i = 1; i <= 5; i++) {
         const m = GetTeamMember(i);
         if (jmz.IsValidHero(m)) {
             const p = jmz.GetPosition(m);
-            for (let j = 1; j <= tPosList.length; j++) {
+            for (let j = jFirst; j <= jLast; j++) {
                 if (p === tPosList[j]) {
                     const d = GetUnitToLocationDistance(m, vLocation);
                     if (d < bestDist) {

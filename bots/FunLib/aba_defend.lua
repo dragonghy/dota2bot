@@ -419,6 +419,29 @@ end
 function GetClosestAllyPos(tPosList, vLocation)
     local bestPos = nil
     local bestDist = math.huge
+    -- [defclose] The scan below is written as if tPosList were 1-based (in the
+    -- TS source it walks j = 1..length and reads tPosList[j], which tstl
+    -- faithfully renders as tPosList[j + 1] here). So it compares indices
+    -- 2..#+1: the FIRST role in the list is never a candidate, and index #+1
+    -- is nil. `bestPos or tPosList[1]` then falls back to exactly that
+    -- never-compared role. Concretely, shipped:
+    --   {4, 5}       -> only pos 5 can ever be "closest"; if no pos-5 hero is
+    --                   alive it answers 4 regardless of distance
+    --   {2, 3}       -> only pos 3; fallback 2
+    --   {2, 3, 4, 5} -> pos 2 can never be the answer, so the ShouldDefend
+    --                   under-fire gate ("only the closest of 2/3/4/5 keeps
+    --                   defending") disqualifies the mid outright, on top of
+    --                   pos 1 which is not in the list at all
+    -- The distance test is therefore inert for the first role in every list.
+    -- Measured over 2883 threatened-tower frames from six turbo replays the
+    -- answer differs from the true closest in 35.5% of {4,5} frames, 47.4% of
+    -- {2,3} and 20.3% of {2,3,4,5}.
+    -- Armed (turbo only), the scan covers the whole list. This is a
+    -- correctness repair, not a knob: it can both add and remove a defender
+    -- relative to shipped.
+    local bDefClose = jmz.IsSoakCandidate("defclose") and jmz.IsModeTurbo()
+    local jFirst = bDefClose and 0 or 1
+    local jLast = bDefClose and #tPosList - 1 or #tPosList
     do
         local i = 1
         while i <= 5 do
@@ -426,8 +449,8 @@ function GetClosestAllyPos(tPosList, vLocation)
             if jmz.IsValidHero(m) then
                 local p = jmz.GetPosition(m)
                 do
-                    local j = 1
-                    while j <= #tPosList do
+                    local j = jFirst
+                    while j <= jLast do
                         if p == tPosList[j + 1] then
                             local d = GetUnitToLocationDistance(m, vLocation)
                             if d < bestDist then

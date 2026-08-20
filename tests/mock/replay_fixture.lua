@@ -414,8 +414,20 @@ function M.load(path, sSubject)
             GetUnitName = b.name,
             GetTeam = b.team,
             GetLocation = api.Vector(b.x, b.y, 0),
+            -- Structures carry a real health fraction when the fixture has one
+            -- (`hp`, 0..1 from the dump). Without it every building in every
+            -- fixture stood at FULL health, which is not a neutral default:
+            -- aba_defend's urgency multiplier is a remap of the building's hp
+            -- fraction, and its "this tier-1/2 is already lost, stop
+            -- defending" early return is a threshold on the same number.
             IsAlive = b.alive,
-            GetHealth = b.alive and 1 or 0, GetMaxHealth = 1,
+            GetHealth = b.alive and math.floor(1000 * (b.hp or 1)) or 0,
+            GetMaxHealth = 1000,
+            -- J.GetHP reads the UN-hooked engine getters for own-team units;
+            -- without these it compared nil to a number and crashed as soon as
+            -- a structure of the subject's own team reached it.
+            OriginalGetHealth = b.alive and math.floor(1000 * (b.hp or 1)) or 0,
+            OriginalGetMaxHealth = 1000,
             CanBeSeen = true,
             -- Every shipped reader of UNIT_LIST_*_BUILDINGS filters through
             -- J.IsValidBuilding -> J.Utils.IsValidBuilding -> unit:IsBuilding().
@@ -443,14 +455,153 @@ function M.load(path, sSubject)
                 end
             end
         end
+        -- SLOT-ADDRESSABLE STRUCTURES.
+        --
         -- The dump records a tower's class, position and team but not which
-        -- TOWER_* enum slot it is, so the index here is positional rather than
-        -- the engine's. Every shipped reader of GetTower(team, i) loops i=0..10
-        -- and reduces over the whole set (nearest / count / "is it still up"),
-        -- so the SET is what carries meaning and the ordering does not.
+        -- TOWER_* enum slot it is, so the previous wiring indexed the alive
+        -- towers POSITIONALLY. That is enough for the readers that loop
+        -- i = 0..10 and reduce over the whole set (nearest / count / "is it
+        -- still up"), which is what the GH #37 round needed -- but it is NOT
+        -- enough for a reader that asks for ONE named slot, and the mock
+        -- resolves unknown ALL_CAPS globals to sentinel integers, so
+        -- `GetTower(team, TOWER_MID_1)` asked for slot <sentinel> and got nil.
+        --
+        -- One such reader gates a large shipped surface:
+        -- aba_defend.GetFurthestBuildingOnLaneHelper walks
+        -- GetTower(team, Tower.Top1/2/3) -> GetBarracks(team, ...) -> ancient,
+        -- and GetDefendDesireHelper does
+        --     if not IsValidBuildingTarget(furthestBuilding) then return None end
+        -- So in every fixture that helper returned nil, every lane's defend
+        -- desire came out of the SEVEN early returns above that line, and the
+        -- ENTIRE bottom half of GetDefendDesireHelper -- ShouldDefend, the
+        -- capBoost/baseFloor pair, the panic floor, the recentlyHit
+        -- attenuator, ConsiderPingedDefend, the tier/HP remaps -- was
+        -- structurally unreachable. Same family as the HasModifier,
+        -- WasRecentlyDamagedBy* and GetHeroLastSeenInfo gaps before it: an
+        -- undeclared world assumption, here "this team has no buildings on
+        -- any lane".
+        --
+        -- Slots are DERIVED from geometry rather than hardcoded, and derived
+        -- over the FULL building set (destroyed ones included) so that losing
+        -- a tower does not silently renumber the survivors:
+        --   * the two structures nearest the team's own ancient are its base
+        --     towers (next-nearest is ~3x further away, so the split is not
+        --     close);
+        --   * s = y - x separates the three lane corridors, which are
+        --     symmetric about the mid diagonal: |s| < 1000 is mid, s > 0 is
+        --     top, s < 0 is bot. Measured over the real building tables in
+        --     this repo's fixtures the mid towers sit at |s| <= 513 and the
+        --     nearest lane tower at |s| = 2160, so the margin is 4x;
+        --   * within a lane, furthest-from-own-ancient is tier 1.
+        -- GetTower still returns nil for a destroyed slot -- that nil is the
+        -- engine's own "nearest ALIVE tower" semantics.
+        local ENUM = {
+            TOWER_TOP_1 = 0, TOWER_TOP_2 = 1, TOWER_TOP_3 = 2,
+            TOWER_MID_1 = 3, TOWER_MID_2 = 4, TOWER_MID_3 = 5,
+            TOWER_BOT_1 = 6, TOWER_BOT_2 = 7, TOWER_BOT_3 = 8,
+            TOWER_BASE_1 = 9, TOWER_BASE_2 = 10,
+            BARRACKS_TOP_MELEE = 0, BARRACKS_TOP_RANGED = 1,
+            BARRACKS_MID_MELEE = 2, BARRACKS_MID_RANGED = 3,
+            BARRACKS_BOT_MELEE = 4, BARRACKS_BOT_RANGED = 5,
+        }
+        for name, value in pairs(ENUM) do _G[name] = value end
+
+        local ancient_by_team = {}
+        for _, h in ipairs(buildings) do
+            if h:GetUnitName() == 'ancient' then ancient_by_team[h:GetTeam()] = h end
+        end
+
+        local function d2(a, b)
+            local dx, dy = a.x - b.x, a.y - b.y
+            return dx * dx + dy * dy
+        end
+        -- team -> { [slot] = handle } over the FULL set (alive or not).
+        local tower_slots, barracks_slots = {}, {}
+        local by_team = {}
+        for _, h in ipairs(buildings) do
+            local name = h:GetUnitName()
+            if name == 'tower' or name == 'barracks' then
+                by_team[h:GetTeam()] = by_team[h:GetTeam()] or { tower = {}, barracks = {} }
+                table.insert(by_team[h:GetTeam()][name], h)
+            end
+        end
+        local function lane_of(h)
+            local l = h:GetLocation()
+            local s = l.y - l.x
+            if s > 1000 then return 'top' elseif s < -1000 then return 'bot' end
+            return 'mid'
+        end
+        for team, sets in pairs(by_team) do
+            local anc = ancient_by_team[team]
+            tower_slots[team], barracks_slots[team] = {}, {}
+            if anc ~= nil then
+                local ancLoc = anc:GetLocation()
+                local towers = {}
+                for _, h in ipairs(sets.tower) do towers[#towers + 1] = h end
+                table.sort(towers, function(a, b)
+                    return d2(a:GetLocation(), ancLoc) < d2(b:GetLocation(), ancLoc)
+                end)
+                -- Base pair first (nearest two), then the lanes.
+                local lanes = { top = {}, mid = {}, bot = {} }
+                for i, h in ipairs(towers) do
+                    if i == 1 then
+                        tower_slots[team][ENUM.TOWER_BASE_1] = h
+                    elseif i == 2 then
+                        tower_slots[team][ENUM.TOWER_BASE_2] = h
+                    else
+                        table.insert(lanes[lane_of(h)], h)
+                    end
+                end
+                local base = { top = ENUM.TOWER_TOP_1, mid = ENUM.TOWER_MID_1, bot = ENUM.TOWER_BOT_1 }
+                for lane, list in pairs(lanes) do
+                    table.sort(list, function(a, b)
+                        return d2(a:GetLocation(), ancLoc) > d2(b:GetLocation(), ancLoc)
+                    end)
+                    for i, h in ipairs(list) do
+                        if i <= 3 then tower_slots[team][base[lane] + i - 1] = h end
+                    end
+                end
+                -- Barracks: melee is the one nearer the ancient of each lane pair.
+                local rax = { top = {}, mid = {}, bot = {} }
+                for _, h in ipairs(sets.barracks) do table.insert(rax[lane_of(h)], h) end
+                local rbase = {
+                    top = ENUM.BARRACKS_TOP_MELEE,
+                    mid = ENUM.BARRACKS_MID_MELEE,
+                    bot = ENUM.BARRACKS_BOT_MELEE,
+                }
+                for lane, list in pairs(rax) do
+                    table.sort(list, function(a, b)
+                        return d2(a:GetLocation(), ancLoc) < d2(b:GetLocation(), ancLoc)
+                    end)
+                    for i, h in ipairs(list) do
+                        if i <= 2 then barracks_slots[team][rbase[lane] + i - 1] = h end
+                    end
+                end
+            end
+        end
+
         GetTower = function(team, i)
+            local slots = tower_slots[team]
+            local h = slots and slots[i]
+            if h ~= nil and h:IsAlive() then return h end
+            -- Pre-slot fixtures and any team the fixture has no ancient for
+            -- keep the old positional answer, so nothing already pinned moves.
+            if slots ~= nil and next(slots) ~= nil then return nil end
             local t = towers_by_team[team]
             return t and t[i + 1] or nil
+        end
+        GetBarracks = function(team, i)
+            local slots = barracks_slots[team]
+            local h = slots and slots[i]
+            if h ~= nil and h:IsAlive() then return h end
+            return nil
+        end
+        if next(ancient_by_team) ~= nil then
+            -- The bare mock answers every team with one 4500-hp unit at the map
+            -- ORIGIN, i.e. "both ancients stand on top of each other in the
+            -- river" -- which decides every base-threat and fountain-direction
+            -- question in the wrong place.
+            GetAncient = function(team) return ancient_by_team[team] end
         end
         local prev_unit_list = GetUnitList
         GetUnitList = function(kind)

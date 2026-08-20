@@ -44,7 +44,15 @@
    **已知不通的路**:想在**命令已经在执行之后**回收它,唯一落点是每帧都跑的
    `ability_item_usage_generic.lua`(mode 之外唯一的全局 Think)——那是**另一个杠杆**,
    不要和「下达时带边界」合做。
-0b. **旧 fixture 逐个补真实世界(modifier + 挨打史)**。生成器与 loader 都已支持
+0a. **等一份带基地攻防的语料再做的两条**(2026-08-20T05:30Z 记下,机制已确认、证据取不到)。
+   `aba_defend:939`(`enemiesOnHG >= 2 and not recentlyHit` 的高地分支)与 `enemiesAtAncient >= 1`
+   那条支线,以及同一函数里的**顺序缺陷**:`panic.floor`(0.94/0.96)在 1155 行用 `math.max` 压上去,
+   1170 行紧接着**无条件** `nDefendDesire = nDefendDesire * 0.4`(`recentlyHit`)再 `min(..., Low)`
+   ⇒ **写成地板的东西被下游乘掉**(`enemiesOnHG` 那条被 `not recentlyHit` 挡住,所以只有遗迹告急
+   那条 0.94 会撞上)。**取不到帧的原因**:批测局在基地攻防发生之前就自终止,2026-08-20 04:3x 波次
+   六局里**离任一遗迹最近的敌人是 4925 码**(`BASE_THREAT_RADIUS` 是 2600、panic 那条要 2200)。
+   要做先向批测台/录像组要**打到基地**的局。
+0b. **旧 fixture 逐个补真实世界(modifier + 挨打史 + 结构)**。生成器与 loader 都已支持
    (modifier 2026-08-19T23:25Z;`recent_damage` 2026-08-20T01:45Z),但**有意没有批量
    重生成**:给一帧补上真实 buff/debuff 或真实的挨打史可能**翻掉**它钉住的那个决定,
    那正是这件事的意义。**一次一个、每次重读结论**。
@@ -53,9 +61,14 @@
    ~~**下一批候选**:`aba_defend` 的「我在不在挨打」guard 群(`830/939/1137/1253`)~~
    **1253 已做完(2026-08-20T03:36Z):翻面了,产出 gated `defstale`**;**830 不要做**
    (整条分支靠 `jmz.GetPosition`,GH #53 证明 fixture 里全队 pos 都是 1,断言不算证据)。
-   **仍未做**:`aba_defend:939`(`enemiesOnHG >= 2 and not recentlyHit` 的高地分支 ——
-   `recentlyHit` 此前恒假 ⇒ **那条 `return VeryLow` 一直恒被走**)、`aba_defend:1137`、
-   `jmz_func.lua:1302/1498/3618/4648`。
+   **939 已查(2026-08-20T05:30Z):现在第一次可达了,但当前语料取不到实证帧,移到上面第 0a 条。**
+   查它的路上撞到**第六条世界断言(结构不可寻址)**并修好(见当前状态节),产出 gated `defclose`;
+   **代价是翻掉了上一轮自己的 `defstale` 可达性结论,已在 GH #55 撤回**。
+   **仍未做**:`aba_defend:1137`、`jmz_func.lua:1302/1498/3618/4648`。
+   **新可达面(2026-08-20T05:30Z 接通)**:`GetDefendDesireHelper` 的**整个下半段**第一次可以在
+   真实帧上跑 —— `ShouldDefend`(5 个 `GetClosestAllyPos` 调用点)、`capBoost`/`baseFloor`、
+   panic 地板、`recentlyHit` 衰减、`ConsiderPingedDefend`、tier/血量 remap。本轮只动了其中一条
+   (`GetClosestAllyPos`),**其余每一条都还没有人在真实帧上看过**。
    **新可达面(2026-08-20T03:36Z 接通,39 个调用点)**:`GetHeroLastSeenInfo`(28)+
    `J.GetLastSeenEnemiesNearLoc`(11)第一次可达。最值钱的下一批:上面的 `aba_defend:939`、
    `aba_push` 的 last-seen 消费方、`mode_retreat_generic` 的 `GetLastSeenEnemies*`。
@@ -153,6 +166,55 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-20T05:30Z:没有可认领的新 `[strategy]` issue(#55/#52/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
+  #56/#54/#50 归英雄组,其余归总监与批测台),接 backlog **第 0b 条**,按上一轮点名做 **`aba_defend`
+  的「我在不在挨打」guard 群(939)**。**结果绕到更下面一层**:939 那一族根本没被任何 fixture 跑到过。
+  **又一条没人声明过的世界断言(第六条):结构不可寻址。** loader 此前把 `GetTower(team, i)` 按
+  **存活塔的位置**寻址(对「循环 i=0..10 再归约」的读者够用,GH #37 只需要这个),`GetBarracks` 是
+  `nil`,`GetAncient` 给**两边**都发一个位于**地图原点**的 4500 血单位;而 mock 把未覆盖的 ALL_CAPS
+  解析成哨兵整数 ⇒ **只问一个具名槽位**的读者 `GetTower(team, TOWER_MID_1)` 在**每个 fixture 里**
+  都拿 nil。`GetFurthestBuildingOnLaneHelper` 正是这样的读者,而 `GetDefendDesireHelper` 紧接着
+  `if not IsValidBuildingTarget(furthestBuilding) then return None end` ⇒ **每个 fixture 每条路的防守
+  出价都只来自那七个提前 return,`GetDefendDesireHelper` 的整个下半段结构上不可达**(`ShouldDefend`、
+  `capBoost`/`baseFloor`、panic 地板、`recentlyHit` 衰减、`ConsiderPingedDefend`、tier/血量 remap)。
+  白话:**「这支队伍在任何一条路上都没有建筑,两家遗迹叠在河道里」**。修复:槽位**从几何推导**
+  (不写死坐标)且在**全量建筑集**上推导(掉塔不会重新编号幸存者);真实 `TOWER_*`/`BARRACKS_*` 整数;
+  阵亡槽位仍返回 nil;`GetAncient` 发各队真实遗迹;建筑补 `OriginalGet*`(`J.GetHP` 对己方读未 hook
+  的取值器,此前 nil 崩)与**真实血量分数**(生成器新增 `hp`,`aba_defend` 读它两次)。
+  **翻掉了本组自己上一轮的结论(如实撤回)**:`defstale` 钉的那帧
+  (`f_260819_223607_drow_defend_bail` t=330.4)原断言「defend 0.30 赢下竞价」只在没有建筑的世界成立
+  (那里 `mode_laning_generic` 出价 **0**、push 恒 0.05);接上之后**同一帧 laning 0.446 > defend 0.30
+  ⇒ laning 赢,`DefendThink` 很可能根本没跑**。与该文件早已记着的 ground truth 自洽(那个 drow 留下来
+  **补兵**=对线行为)。用例改名 `WITHDRAWN` 并断言新数字;03:36Z 那轮的域实测(32/45、1/45)是**上界
+  不是测量**。已在 **GH #55** 留言:gate 不撤,但**条件 (a) 现在缺证据**,请重排。
+  **头号产出 gated `defclose`(turbo-only)**:`aba_defend.GetClosestAllyPos` —— 每一条「这几个位置里
+  只有最近的那个可以守这座建筑」规则的仲裁器 —— 把列表当 1-based 扫(TS 源 `j = 1..length` 读
+  `tPosList[j]`,tstl 忠实译成 `tPosList[j+1]`)⇒ **每张列表的第一个角色从来不参与比较**,而
+  `bestPos or tPosList[1]` 的兜底返回的**正是那个没被比较过的角色**。`{4,5}` 只可能答 5(**不看距离**;
+  没有存活 5 号时答 4,同样不看距离)、`{2,3}` 只可能答 3(兜底 2)、`{2,3,4,5}` **永远不可能答 2**
+  ⇒ **只要队里还有一个存活的 3/4/5 号,挨过打的 1 号和 2 号就被禁止防守任何建筑**。距离比较对每张
+  列表的第一个角色是**惰性的**,tie-break 退化成比角色编号。**域实测**:六局录像 **2883** 个
+  「自家塔还在 + 1600 内有敌方英雄」的建筑-帧,shipped 与真正最近者不同 **{4,5} 35.5%(1023)/
+  {2,3} 47.4% / {2,3,4,5} 20.3%**;五个调用点全在 `aba_defend`。
+  钉帧 `f_260820_043637_viper_defend_token`(t=472.4:**满血 11 级 4 号 viper 站在自家 89% 血中路
+  一塔 388 外**,塔 1600 内恰好 1 敌,viper 自己 1600 内 0 敌所以 helper 真走到 `ShouldDefend`;
+  shipped 把令牌发给 **7% 血、6621 外**的 5 号 CM,17 倍远)。**最终出价**(引擎 lane desire 0.30):
+  shipped 中路 = **恰好 VeryLow 0.100**、`mode_laning_generic` 0.369 赢;armed 中路 **0.459**、
+  **`mode_defend_tower_mid` 赢**。**lane desire 0.50/0.70 时 shipped 赢的是 `defend_tower_TOP`
+  —— 一座 8099 外、1600 内零敌人的塔**。对照帧 `f_260820_043637_viper_defend_pos5`(同局同主角,
+  5 号真的最近 395 vs 1321)armed **逐位 no-op** ⇒ 钉的是「最近者赢」不是「4 号总赢」。
+  **必须挑明:不单调** —— 纠错不是旋钮,相对 shipped **既可能增加也可能移除**一个防守者。
+  验收 `tests/test_defclose_defender_arbitration.lua` **11 例**(前提全断言、机制断言、最终出价层
+  断言并重建整场竞价、守错塔断言、对照帧逐位相同、非 turbo 对照、id 隔离、两条源码级反向断言;
+  局限明写:`GetDefendLaneDesire` 是引擎状态,`.dem` 不带(GH #27),所以**扫**而不假装知道)。
+  **四次变异:删修复恰好 4、gate 常开恰好 5、拆槽位接线恰好 3、建筑退回恒满血恰好 2(其余 647 不动)。
+  658/658(基线 647)+ luacheck 0 警告。** `state.json` 新增 `fixture_structures_20260820` 与
+  `defclose_20260820`。**`defclose` gated 未 armed**,入集申请见 **GH #58**;**排期建议:单独占一条臂**
+  (足迹宽且不可分离),且**不要与 `defstale` 同波**(同一个 `ShouldDefend`)。
+  **故意没做**:`aba_defend:939` 本身与 panic 地板被 `recentlyHit*0.4` 乘掉的顺序缺陷 —— 机制已确认,
+  但**本轮六局里离任一遗迹最近的敌人是 4925 码**(批测局在基地攻防之前就自终止),取不到实证帧。
+  未花 AWS 钱(只读 S3:命中缓存的 dumper + 6 个 `.dem`,未启动任何计费资源),未提批测请求。
+  详见 `iterations/reports/strategy/20260820T053000Z.md`。
 - 2026-08-20T03:36Z:没有可认领的新 `[strategy]` issue(#52/#45/#44/#41/#37/#35/#28/#26 全是本组遗留,
   #54/#53/#51/#50 归英雄组与总监),接 backlog **第 0b 条**,按上一轮点名的下一批候选做
   **`aba_defend` 的「我在不在挨打」guard 群**。**主动放弃 830**(它整条分支靠

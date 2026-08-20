@@ -1313,3 +1313,38 @@ real frame; no J.* stubs")。**暂不批准入 test_set.md**,等 hero 组钉出�
   `[harness] #46` 裁定:**(a) 取证波挑种子,(b) 经济波不挑**。
   §0b **第十一例**:promote 的**范围**(turbo-only)本身无人断言 —— 变异删掉 `IsModeTurbo()`
   全绿,已补源码级范围不变量测试;**今后每次 promote 必须带这条**。545/545,luacheck 0。
+- 2026-08-20T05:30Z 协同组申请入集:**`defclose`**(GH #58)。`aba_defend.GetClosestAllyPos`
+  ——「这几个位置里谁离这座建筑最近」的仲裁器——把角色列表当 1-based 扫(TS 源
+  `for j = 1..length` 读 `tPosList[j]`,tstl 忠实译成 Lua 的 `tPosList[j+1]`),于是**每张
+  列表的第一个角色从来不参与比较**,而 `bestPos or tPosList[1]` 的兜底返回的**正是那个
+  从没被比较过的角色**。后果:`{4,5}` 只可能答 5(**不看距离**;没有存活 5 号时答 4,同样
+  不看距离)、`{2,3}` 只可能答 3(兜底 2)、`{2,3,4,5}` **永远不可能答 2** ⇒ `ShouldDefend`
+  的「挨打时只有最近的 2/3/4/5 还能守」直接把中单排除,加上本就不在列表里的 1 号 ——
+  **挨打的 1 号和 2 号结构上被禁止防守任何建筑**。这个函数存在的意义(距离比较)对每张
+  列表的第一个角色是**惰性的**,tie-break 退化成比角色编号。
+  **域实测**:六局 turbo 录像、2883 个「自家塔还在 + 1600 内有敌方英雄」的建筑-帧,
+  shipped 答案与真正最近者不同的比例 **{4,5} 35.5%(1023 帧)/ {2,3} 47.4% / {2,3,4,5} 20.3%**。
+  五个调用点全在 `aba_defend`。钉帧 `f_260820_043637_viper_defend_token`
+  (t=472.4:**满血 11 级 4 号 viper 站在自家 89% 血中路一塔 388 外**,塔 1600 内恰好
+  1 个敌人,viper 自己 1600 内 0 敌人所以 helper 真的走到 `ShouldDefend` 那一行;
+  shipped 把令牌发给 **7% 血、6621 外**的 5 号 CM)。**最终出价**(引擎 lane desire 0.30):
+  shipped 中路 = 恰好 VeryLow 0.100,`mode_laning_generic` 0.369 赢;armed 中路 **0.459**,
+  `mode_defend_tower_mid` 赢。**lane desire 0.50/0.70 时 shipped 赢的是 `defend_tower_TOP`
+  —— 一座 8099 外、1600 内零敌人的塔**,armed 选中路。对照帧
+  `f_260820_043637_viper_defend_pos5`(同局同主角,5 号 CM 真的最近,395 vs 1321)armed
+  逐位 no-op ⇒ 钉住的是「最近者赢」而不是「4 号总赢」。
+  **必须挑明:这不是单调的**。它是纠错不是旋钮,相对 shipped **既可能增加也可能移除**
+  一个防守者,所以不能像 `capmono` 那样用「纯 min」论证安全。
+  **排期建议**:足迹宽(五个调用点、20–47% 的建筑-帧改判)且不可分离 ⇒ **建议单独占一条臂**;
+  它改的 `ShouldDefend` 同时是 `DefendThink` attack-move 的闸门,**不要与 `defstale` 同波**。
+  验收 `tests/test_defclose_defender_arbitration.lua` 11 例;两次变异:删修复恰好 4、
+  gate 常开恰好 5。**658/658(基线 647)+ luacheck 0 警告**。
+- 2026-08-20T05:30Z 协同组**撤回 `defstale` 的可达性证据**(GH #55 补充,**不是撤回 gate**)。
+  接上真实建筑槽位之后,`defstale` 那一帧(`f_260819_223607_drow_defend_bail`,t=330.4)
+  的竞价翻面:此前「defend 0.30 赢」只是因为 fixture 世界没有可寻址建筑 ⇒
+  `GetFurthestBuildingOnLane` 恒 nil ⇒ `mode_laning_generic` 出价 **0**、push 系恒 0.05;
+  接上之后同一帧 **laning 0.446 > defend 0.30,laning 赢** ⇒ `DefendThink` 很可能根本没在
+  那一帧跑。这与该文件里早就记着的 ground truth 自洽(那个 drow 留下来**补兵**,是对线行为)。
+  该用例改名 `WITHDRAWN` 并断言新数字。**连带**:03:36Z 那轮的 `defstale` 域实测
+  (「闸门真 32/45,但 defend 赢竞价只有 1/45」)是在没有建筑的世界里量的,真实世界里
+  defend 那一侧只会更差 ⇒ 那个足迹是**上界不是测量**。建议总监据此重排 `defstale`。

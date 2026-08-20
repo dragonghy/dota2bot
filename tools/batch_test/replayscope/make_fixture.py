@@ -279,8 +279,13 @@ def main():
     for b in tl.get("buildings", []):
         if b["t"] <= args.t:
             latest_b[(b["name"], b["team"], round(b["x"]), round(b["y"]))] = b
+    # `hp` is the health FRACTION at t. Without it every structure in every
+    # fixture stood at full health, and aba_defend reads that number twice:
+    # the lane urgency multiplier is a remap of it, and "this tier-1/2 is
+    # already lost" is a threshold on it.
     buildings = [
-        {"name": k[0], "team": k[1], "x": k[2], "y": k[3], "alive": bool(b.get("alive"))}
+        {"name": k[0], "team": k[1], "x": k[2], "y": k[3], "alive": bool(b.get("alive")),
+         "hp": round(float(b.get("hp_pct", 1.0)), 3)}
         for k, b in sorted(latest_b.items())
     ]
 
@@ -343,9 +348,9 @@ def main():
     if buildings:
         L.append("  buildings = {")
         for b in buildings:
-            L.append("    { name = '%s', team = %d, x = %d, y = %d, alive = %s },"
+            L.append("    { name = '%s', team = %d, x = %d, y = %d, alive = %s, hp = %s },"
                      % (b["name"], b["team"], b["x"], b["y"],
-                        "true" if b["alive"] else "false"))
+                        "true" if b["alive"] else "false", b["hp"]))
         L.append("  },")
     L.append("  observed = {")
     L.append("    burst = {")
