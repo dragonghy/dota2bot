@@ -62,9 +62,34 @@ INHERITED HYGIENE
 
     (A) ACTOR selection came out CLEAN ON THIS CORPUS: 0/806 actor frames sit
         inside a death span, and 0/806 actors die inside the forward window
-        [t, t+4.5].  The measured leak band is hp 0.005..0.29 (all <= 0.40,
-        GH #78 / 02:36Z, 735 death spans) and corpse frames otherwise read
-        exactly 0.0, so it does not reach the actor band [0.42,0.50].
+        [t, t+4.5].  That 0/806 is a direct measurement and still stands.
+
+        THE BAND ARGUMENT THAT USED TO EXPLAIN IT DOES NOT.  This note read
+        "the measured leak band is hp 0.005..0.29 (all <= 0.40) so it does not
+        reach the actor band [0.42,0.50]".  Re-measured 2026-08-21T06:3xZ on
+        the same 1609xx/1807xx corpus (940 death spans, 19207 corpse frames,
+        235 leaks -- the RATE reproduces: 0.250 leak frames/death vs 0.24
+        recorded, and max lag 0.30s vs 0.30 recorded), the VALUE range does
+        not.  Split by whether the leaked snapshot is strictly after DEATH:
+
+          * demonstrated leaks (lag > 0, n=135): p95 0.241, p99 0.370,
+            MAX 0.386 -- not 0.29.  9 leaks (6.7%) clear 0.20, 4 clear 0.30.
+          * frames at lag == 0.0 (n=100), i.e. snapshot timestamp == DEATH
+            timestamp, which `is_dead()`'s `a <= t < b` counts as DEAD:
+            p99 0.437, MAX 0.517.
+
+        So under this module's own liveness convention the leak band REACHES
+        INTO [0.42,0.50] on the corpus already in hand (0.437), and even under
+        the strict reading the margin to 0.42 is 0.034 -- one sample's width,
+        not the 0.13 the 0.29 figure implied.  The tail is not a lone outlier.
+
+        The two >0.42 frames are BOTH Lion's Finger of Death, exactly the
+        mechanism this docstring predicted below:
+          20260820_183451_slot1 zuus  hp 0.437, DEATH t=540.50, Finger 459
+          20260820_181738_slot1 c.maiden hp 0.517, DEATH t=276.40, Finger 334
+        In both the killing cast and the DEATH share the snapshot's 0.1s tick
+        and the next snapshot reads 0.000, so the sample is a real live read
+        erased inside one interval -- a burst property, as predicted.
 
         DIRECTOR RULING 2026-08-21T05:0xZ (test_set.md section Z.1): this is a
         MEASURED disjointness, NOT immunity by construction -- the first draft
@@ -82,11 +107,17 @@ INHERITED HYGIENE
         is 0 -> scored COMMIT -> refusal rate down; capmono working means fewer
         in-band deaths on the armed side, so the armed refusal rate is pushed
         UP -- the design signature itself (GH #78's asymmetry, un-cancellable
-        by DiD).  RE-AUDIT TRIGGER: any new corpus, or a wider sample interval.
-        THE ZERO-SPEND COLUMN THAT WOULD SETTLE IT (one line on a computation
-        already run): not the max of the 735 leak values but their TAIL --
-        p95/p99 and the count above 0.20.  A lone 0.29 over a p99 of ~0.05 is
-        a real margin; mass piled near 0.29 means 0.42 is one burst draft away.
+        by DiD).  RE-AUDIT TRIGGER: any new corpus, or a wider sample interval
+        -- BUT THE TRIGGER IS ALREADY MET, on this corpus, without either: the
+        tail column asked for above came back p99 0.370 (not ~0.05) with mass
+        spread up to 0.386, and 0.437/0.517 at the lag==0 boundary.  Read the
+        ruling's own disjunction: "a lone 0.29 over a p99 of ~0.05 is a real
+        margin; mass piled near 0.29 means 0.42 is one burst draft away" --
+        this corpus is the second branch, and the burst draft is already in it.
+        PRACTICAL CONSEQUENCE: keep `is_dead()`; do not restore an hp_pct
+        liveness test on ANY path of this detector, and do not re-derive
+        "the actor band is safe" from band geometry -- on a corpus with Lion,
+        Lina, Zeus or any other one-cast nuke it is not.
     (B) The ALLY gate is where #78 DOES bite: it admits an ally at hp <= 0.55,
         and that band CONTAINS the whole leak band.  Measured 4/806 frames
         whose "ally in need" was already dead at t (leaked hp 0.133/0.059/

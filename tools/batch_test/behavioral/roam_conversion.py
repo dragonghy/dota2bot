@@ -91,15 +91,26 @@ def death_spans(tl, real_idx):
       * 3880/4033 corpse frames DO read hp_pct == 0 exactly -- so on this
         corpus the proxy is right 96.2% of the time, not "systematically
         wrong";
-      * the leak is bounded and one-sided: 153 frames, 34/182 deaths, and in
-        every observed case it is the FIRST snapshot after the DEATH event
-        (<=0.3s later) still carrying the last LIVE sample -- the 1Hz lag
-        this module's LAG_S comment already described, seen from the other
-        side.  Leaked values observed: 0.005 .. 0.29, i.e. ALL of them land
-        inside a `hp_pct <= 0.40` victim band.
+      * the leak is bounded and one-sided in TIME: 153 frames, 34/182 deaths,
+        and in every observed case it is the FIRST snapshot at or after the
+        DEATH event (<=0.3s later) still carrying the last LIVE sample -- the
+        1Hz lag this module's LAG_S comment already described, seen from the
+        other side.
 
-    So the proxy does not fail "everywhere", but where it fails it fails
-    entirely inside the selection band of any lethality-proxy detector.  Hence
+      * ITS VALUE RANGE IS NOT BOUNDED BY 0.40.  This docstring used to read
+        "leaked values observed: 0.005 .. 0.29, i.e. ALL of them land inside a
+        `hp_pct <= 0.40` victim band".  Re-measured 2026-08-21T06:3xZ over the
+        whole 1609xx/1807xx corpus (940 spans, 19207 corpse frames, 235 leaks):
+        the RATE reproduces (0.250 leak frames/death; max lag 0.30s) but the
+        range does not.  Strictly after DEATH: p95 0.241, p99 0.370, max 0.386.
+        At lag == 0.0 (snapshot stamped at the DEATH tick, which `is_dead()`
+        counts as dead): max 0.517, with 0.437 landing inside capmono's actor
+        band [0.42,0.50].  Both >0.42 frames are Lion's Finger of Death kills.
+
+    So the proxy does not fail "everywhere", and where it fails it fails INSIDE
+    a low-HP band for most victims -- but "most" is not "all", and a one-cast
+    nuke puts the leak wherever the victim's HP was.  Do not re-derive a
+    detector's safety from that band.  Hence
     this helper: a hero is dead from its DEATH event until it respawns, and
     respawn is detected by the fountain teleport (hp back above 0.5 AND a
     >1500u jump), never by hp alone.
