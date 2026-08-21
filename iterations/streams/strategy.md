@@ -36,14 +36,40 @@
    —— 建议筛子改成「判读 = TEETH」;(iii) 被点名为「无害析取」的 392/506 的承重腿
    `J.IsLateGame()` 在 Turbo 是 `DotaTime() > 18*60`,**全档 94 帧无一成立**(真 helper 实跑)。
    **下一条(本组自己接)**:从 6 条 TEETH 里挑 **一条** 做完整形状 —— gated + 真实帧 +
-   **断言最终 desire**(不是断言分支可达)。建议 `mode_farm_generic:285`(#84 (乙) 点名、
-   核心侧、域最大)。**卡在**:需要一帧「`J.GetTeamFightLocation` 非 nil 且距 subject < 2500
-   且 subject 是核心」的实证帧;**没有这一帧就不要照静态形状动共享消费路径**(lanefix 入口)。
-   语料请求走录像组 / #84 留言。
+   **断言最终 desire**(不是断言分支可达)。~~建议 `mode_farm_generic:285`~~
+   **2026-08-21T13:48Z:`285` 结构上做不了,那一帧不存在也买不到 —— 见下面第 0j 条
+   (第十三条世界断言)。语料请求已撤回。**
+   **改取 `mode_farm_generic:535`**(runMode 应战块:敌人进攻击距离 + 2 队友;**不读 mode**,
+   域在语料里可寻址);备选 `item_purchase_generic:228`(自家 t3 掉血 ⇒ 留买活钱,同样不读 mode)。
+   规矩照旧:**断言最终 desire,不是断言分支可达**;掉 farm desire ≠ 去打架。
    **顺带记的第二个杠杆(不折进本条)**:自动买活三条路径在 Turbo 全关
    —— `aiug:568` 的 `ancient:GetHealth() < 0.8`(**单位错配**,该开 `[bug]`)、
    `:582` 的等级 >24、`:578` 的 `nFullRespawnTime < 60` 早退(**推论,harness 判不了**,
    `GetRespawnTime` 不在 dump 里)。已成 `[recorded]` 用例。
+0j. **【2026-08-21T13:48Z 新增,已钉住、不要改 bots/、不要改 loader】第十三条世界断言:
+   fixture 上没有人处在任何 mode**。`bot:GetActiveMode()` 是 **bot VM 自己的状态**,不是实体属性
+   ⇒ 不在 `.dem` 里 ⇒ 每个 fixture 都不带 ⇒ mock 落到 `default_for('Get*') = 0`,而每个
+   `BOT_MODE_*` 是 ≥1001 的 auto-id ⇒ **`GetActiveMode() == BOT_MODE_任何东西` 在
+   872 英雄帧 × 24 个 mode 名 × 210 个已发布比较行上恒 FALSE**(含 `BOT_MODE_NONE`)。
+   实测:八条 J 谓词(`IsRetreating`/`IsGoingOnSomeone`/`IsDefending`/`IsPushing`/`IsLaning`/
+   `IsDoingRoshan`/`IsShopping`/`IsFarming`)**各 0/872**;`GetSpecialModeAllies` **0 次非空**。
+   **比前十二条更坏:两个方向同时错且相反** —— 脚本侧比较恒 FALSE,**引擎侧过滤被 loader 丢掉**
+   (`function(self, radius, enemies, _)`,872/872 帧带 ATTACK 过滤与不过滤等长)⇒
+   `J.IsInTeamFight` 反而在 **71/872** 帧读 TRUE(过度宽松)。
+   **直接后果**:`J.GetTeamFightLocation` 末端是 `GetCenterOfUnits(GetSpecialModeAllies(...))`,
+   而 **`GetCenterOfUnits({})` 按已发布代码返回 `Vector(0,0)` = 地图原点、不是 nil** ⇒
+   全档 188 团队帧里 6 个非 nil、**6/6 在原点**,#84 §5 要的「非 nil ∧ <2500 ∧ 核心」
+   **7 个英雄帧全是幻影**(合格是因为站在河道附近)。**再买语料也没用**:dumper 字段表已钉,
+   不含任何 mode 形状字段;供上它就等于**建模**「当时 bot 在想什么」。
+   **凡是在 fixture 上 fork 在 mode / 上述八条谓词 / `GetTeamFightLocation` 上的断言,
+   读的都是常数,和它来自的那一局无关。**
+   **一条不是 harness 假象的读数(记账,不动手)**:35 个消费方全只测 `~= nil`,而游戏里
+   `IsInTeamFight(member,**1500**,不含自己)` 成立、`GetSpecialModeAllies(member,**1400**,含自己)`
+   可空 ⇒ 1400–1500 的壳里两个 ATTACK 队友就能让 35 个读者同时收到「团战在河道中心」。
+   **本 harness 判不了**,要动先要游戏内观察或 labelled synthetic。
+   已成 `tests/test_activemode_world_assertion.lua`(13 例,九次变异全绿),
+   `state.json:activemode_WORLD_ASSERTION_13_20260821`,`[harness]` issue 交总监决定 loader 口径
+   (本组建议**不要**让 loader 认 mode:那会一次性移动 30 + 71 个读数,而且只能靠建模)。
 0y. ~~**item_blink 撤退分支被烧成 15s CD 的腿**(GH #71,英雄组交接)~~ **已做完
    (2026-08-20T17:15Z):helper `J.ShouldHoldBlinkFlee` + gated `blinkflee`,两帧钉住
    (f_260820_043124_axe_blink_flee_529/555),8 例 + 五次变异全绿。gated 未 armed,
@@ -385,6 +411,29 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T13:48Z:**认领 GH #84 §5 的下一条**(总监 13:02Z 裁定批准的排序:从 6 条 TEETH
+  里挑一条做 (乙) 的完整形状,优先 `mode_farm_generic:285`,**但前置条件必须先满足** ——
+  先要一帧「团战点在 2500 内且 subject 是核心」的实证)。
+  **本轮把「等语料」变成「已测量」:那一帧不存在,而且买不到。**
+  **`bots/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
+  **产出** `tests/test_activemode_world_assertion.lua`(**13 例**,929 → 942)。
+  **第十三条世界断言**(细节见 backlog 第 0j 条):`GetActiveMode` 是 bot VM 状态、不是实体属性
+  ⇒ 不在 `.dem` ⇒ 不在任何 fixture ⇒ mock 答 0,而 `BOT_MODE_*` 全是 ≥1001 的 auto-id ⇒
+  **872 英雄帧 × 24 个 mode 名 × 210 个已发布比较行全 FALSE**;八条 J 谓词各 **0/872**。
+  **两个方向相反地错**:脚本侧比较恒假,引擎侧过滤被 loader 静默丢掉(872/872 帧等长)⇒
+  `J.IsInTeamFight` 在 **71/872** 帧读 TRUE。
+  **对 #84 的交付**:`GetTeamFightLocation` 的空答案是 `Vector(0,0)`(**地图原点,不是 nil**)⇒
+  6/188 团队帧非 nil、**6/6 在原点**,§5 要的 7 个「核心 + 2500 内」帧**全是幻影**,七行已逐条钉死。
+  **语料请求撤回**(dumper 字段表已钉,不含 mode;供上它=建模)。⇒ **`285` 结构上做不了**,
+  下一轮改取 `mode_farm_generic:535`(不读 mode、域可寻址),备选 `item_purchase_generic:228`。
+  **另记一条不是 harness 假象的**:35 个消费方只测 `~= nil`,而 1500(不含自己)/1400(含自己)
+  的半径错配在游戏里能把「团战在河道中心」发给所有读者 —— **本 harness 判不了**,
+  记成候选杠杆 + 前置条件,不是本轮的改动。
+  **验收**:luacheck **0 warnings**(bots/ 零改动);929 → 942;**九次变异全部按预期 FAIL**
+  (逐条跑、每条验回滚)。**方法学补一条**:M8 第一版是**假变异**(把 `x = 99999` 插在 Lua 表
+  真实 `x` 的**前面**,重复键后写的赢 ⇒ 什么都没动、测试全绿,差点记成 MISSED)⇒
+  **「变异跑绿」在确认变异本身生效之前不算数**(与 11:32Z 那条「回滚没生效不算数」配套)。
+  详见 `iterations/reports/strategy/20260821T134849Z.md`。
 - 2026-08-21T11:32Z:**认领 GH #84 (甲)**(09:30Z 之后唯一的新 `[strategy]` issue,总监第三十次触发
   10:58Z 开)。它 §5 的第一步正好是本组要的形状:**零成本、纯桌面、一次一个杠杆**。
   **`bots/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
