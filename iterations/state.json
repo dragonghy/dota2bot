@@ -2113,5 +2113,47 @@
     "next": "Ordering is the director's. (1) Teaching the loader modes would move 30 team readings and 71 IsInTeamFight readings at once -- same class of call as GH #81 and worse, because mode cannot be recovered from a dem, only modelled; strategy recommends NOT doing it, [harness] GH #89 opened. (2) Pick a different TEETH row: mode_farm_generic:535 (runMode response block) and item_purchase_generic:228 (own t3 damaged => reserve buyback gold) read no mode and have an addressable domain; strategy will take 535 next unless told otherwise.",
     "method_note": "A mutation that does not change the measured quantity is not a mutation. The first M8 inserted `x = 99999` BEFORE the fixture row's real `x`, and in a Lua table the later duplicate key wins -- nothing moved, the suite stayed green, and it was briefly recorded as a MISS. Companion to the 2026-08-21T11:32Z lesson (a mutation result does not count until the rollback is verified): a mutation result does not count until the MUTATION is verified either.",
     "gh": "GH #89 (harness decision), GH #84 §5 (the withdrawn corpus request)"
+  },
+  "detector_threshold_SOURCE_DERIVED_20260821T1500Z": {
+    "ruling": "director 2026-08-21T15:0xZ, GH #90",
+    "incident": "capmono_refusal.py's load-bearing clause cited 850u as lanesurv's reach; J.ShouldRetreatLaneBurst scans 1100 (jmz_func.lua:4892) and the literal 850 occurs nowhere in jmz_func.lua. 423/793 registered-domain frames (53.3%) sat inside the rule the clause promised to exclude. Pinned frame armA_160904/20260820_162351_slot1 t=124.5 jakiro, nearest enemy 852u, lanesurv saw 2 enemies that frame.",
+    "rule": "Any identifying clause of the form 'beyond X the shipped rule R cannot fire' must READ X out of R at run time via tools/batch_test/behavioral/source_constants.py and be registered in tests/test_detector_source_constants.py. Copying the constant verbatim is strictly weaker (correct until someone edits R, with nothing going red). Defaulting lookups are forbidden: zero or ambiguous matches must raise.",
+    "capmono_impact": "domain floor 850 -> derived 1100; --legacy-domain reproduces archived readings bit-for-bit. Attributable band [1100,1500] recompute: DiD -11.90pp SE 18.5 |t| 0.64 => GH #72 NOT-PROMOTE UNCHANGED. Citable range narrows: may be quoted for 'no refusal signature where lanesurv cannot reach', may NOT be quoted for 'capmono does not help survival' -- 153/166 independent deaths (92%) lie outside the domain at <850u.",
+    "registry": "capmono ENE_LO/LANESURV_REACH, lanekill_commit ENEMY_RANGE_CORE 800 / ENEMY_RANGE_SUP 900 / SUP_CLOSE_RANGE 700 / DEPTH_CORE 800 / DEPTH_SUP 400 (replay group's 14:36Z hand check, now machine-checked), filter_outcome_coupling LANESURV_R.",
+    "mutations": "5 run, each asserted to land and rolled back green. M5 (comment stripping) was MISSED on the first attempt -- real comments happen not to match today's regexes, so the claim was vacuous; re-pinned on a synthetic Lua body and it now fails naming 'found 2 (9999, 500)'.",
+    "class": "test_set.md 0b sixth example, first whose mechanism is 'an offline detector's assertion about shipped code that nothing checks'."
+  },
+  "activemode_LOADER_RULING_20260821T1500Z": {
+    "ruling": "director 2026-08-21T15:0xZ, GH #89: DO NOT teach the loader mode. Declined.",
+    "why": [
+      "mode is bot-VM state, absent from .dem: supplying it means MODELING what the bot was thinking, which fixture discipline forbids (worse than #81 -- that was a convention choice, this is inventing data)",
+      "it would move 30 team readings + 71 IsInTeamFight readings at once with no ground truth to say it moved them correctly",
+      "the world assertion test is already the asset: it makes the gap stop people, which beats a guessed answer"
+    ],
+    "corpus_request": "WITHDRAWN with approval -- the frame is not in any .dem, do not send the replay group hunting the archive for it.",
+    "asymmetry_pinned": "script-side comparisons are all FALSE (predicates never fire) while the loader ACCEPTS AND DROPS the mode argument of GetNearbyHeroes (that family fires too much: 71/872 frames read IsInTeamFight TRUE). One missing datum, two errors in opposite directions. Default behaviour NOT changed (returning an empty table would flip 71 frames whose consumers are uncensused). Strategy group's next-round prerequisite: census which existing assertions consume a mode-filtered return value. Until then, affirmative IsInTeamFight assertions on fixtures are UPPER BOUNDS.",
+    "backlog": "mode_farm_generic:285 (b)-form is structurally impossible under this harness -- struck from backlog 0i. Approved next TEETH: mode_farm_generic:535."
+  },
+  "CARRIER_UNAVAILABLE_disposition_20260821T1500Z": {
+    "ruling": "director 2026-08-21T15:0xZ, GH #88 closed: adopt CARRIER-UNAVAILABLE as the fourth disposition and put it FIRST in the funnel.",
+    "definition": "The hero carrying the code is not in tools/batch_test/soak/hero_pool.txt, so condition (a) cannot be bought at any price. Distinct from wkreincarnmp (domain empty), axeblink (DOMAIN-NOT-REACHED), cmrself/esaftershock (DOMAIN-REACHED-BUT-VANISHING) and bbancient (HARNESS-BLIND, instrument blind).",
+    "cost": "zero -- an in-repo table lookup, no corpus, no money, no queue. First gate for every gate proposal.",
+    "tiny": "hero_tiny.lua:522 `bot:GetHealth() > 0.15` was always-true (X.SkillsComplement returns early on corpses via J.CanNotUseAbility). Deleted as provable behavioural equivalence rather than 'fixed' -- the fix would be a NEW veto needing condition (a), which is unbuyable, i.e. armed == shipped, the axeblink trap known before starting.",
+    "grep_warning": "TS-generated Lua tables key on HeroName.Tiny (PascalCase); grepping them by lowercase internal name silently returns 0. Any 'hero X is absent from table Y' claim must use grep -i or the ts_libs/dota/heroes.lua constant."
+  },
+  "liondrainstop_REGISTRATION_RULING_20260821T1500Z": {
+    "ruling": "director 2026-08-21T15:0xZ, GH #86 APPROVED: liondrainstop_detector_20260820's criterion becomes post-domain residual; hero group executes.",
+    "basis": "replay group measured common cause between the filter variable and the outcome variable (Fisher p=0.0040); hero group concurs on the reading.",
+    "constraints": [
+      "the old registration line is KEPT as history, not deleted (same treatment as capmono's 850: registered numbers are demoted, never removed, or archived readings stop being reproducible)",
+      "pin GH #86 section 6's two frames in the same change (20260820_162821_slot1 t=307.4 must release / 20260820_182906_slot1 t=606.5 must not) and assert that the CURRENT predicate cannot separate them -- changing the criterion without pinning the frames just renames a known defect"
+    ],
+    "kinship": "#86 (filter/outcome common cause) and #90 (filter cites a threshold not in the code) are two faces of one thing: the domain definition itself was never checked by anything."
+  },
+  "noise_floor_RULING_20260821T1500Z": {
+    "ruling": "director 2026-08-21T15:0xZ on batch-desk's 14:15Z noise-floor decomposition (GH #70/#30).",
+    "measurement_accepted": "within-game cand-base gpm diff sd 156.1; game-level bootstrap predicts per-seed sd 15.63 vs 16.63/19.62 measured => mirrored draft has already removed seed/draft variance; what remains is pure per-game sampling at ~72 games/seed. Two of batch-desk's own standing worries were refuted by their own measurement (referee truncation jitter cancels within game, corr +0.042; the 42/30 radiant/dire asymmetry is worth 1.9% of noise) -- self-correction recorded as a health signal.",
+    "decision_1": "The PROMOTE/REJECT judgment line stays at +-30 gpm/seed (GH #30). Asymmetric costs: a false promote has a measured price here (the fixture-clean lanefix bundle failed batch twice, -74.5 and -88.7 gpm), a false hold costs delay. Also 15.63 is a within-run bootstrap over one seed's 72 games and, per batch-desk's own honesty section, is not a strictly same-distribution comparator; 30.24 was estimated from 4 points (95% CI ~0.57x-2.2x), so the two do not hard-conflict.",
+    "decision_2": "Power/scheduling arithmetic switches to 15.63 and the MDE table (4 seeds ~15.6 / 8 ~11.1 / 16 ~7.8 / 32 ~5.5 gpm). Any 'how many games until this is visible' question is answered from the table, never by spending a wave. Adopted corollaries: seeds and games are statistically interchangeable (total games sets the MDE; '4 seeds' is machine topology, not a statistical threshold); the only power levers are more games or a lower-variance metric, so tuning referee / side allocation / seed selection is DEMOTED from the backlog. Per-id economic bisection stays dead (second independent method: ~156 seed-equivalents ~ 11,000 games ~ the entire corpus bought to date)."
   }
 }

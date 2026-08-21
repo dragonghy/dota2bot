@@ -8,12 +8,38 @@ WHAT IT MEASURES
   loses to it.  Observable signature: at ~46% HP with a reachable fight in front
   of him, the hero turns for his own fountain instead of collapsing in.
 
-CLEAN DOMAIN (14:37Z spec, kept verbatim so readings stay comparable)
+CLEAN DOMAIN
   per frame, corpse frames (hp_pct<=0.01) excluded:
     HP in [0.42,0.50]; alive ally within 1200u low-HP or taking damage;
-    NEAREST ENEMY IN [850,1500] -- the load-bearing clause: >850u guarantees
-    `lanesurv`'s burst retreat does not fire on its own, so a retreat here is
-    attributable to team-roam being capped; t<=600s.
+    NEAREST ENEMY IN [lanesurv_reach, 1500] -- the load-bearing clause: beyond
+    `lanesurv`'s scan radius its burst retreat cannot fire on its own, so a
+    retreat here is attributable to team-roam being capped; t<=600s.
+
+  THE LOWER BOUND IS READ OUT OF `J.ShouldRetreatLaneBurst` AT RUN TIME
+  (source_constants.call_arg -> 1100.0 today).  It used to be a hand-written
+  `850`, and that number was WRONG: the shipped rule scans 1100u and the
+  literal 850 occurs nowhere in jmz_func.lua.  53.3% of the registered domain
+  (423/793 frames) sat inside the very rule the clause promised to exclude, so
+  the attribution sentence was false on half the evidence -- with a pinned
+  frame to prove it (armA_160904/20260820_162351_slot1 t=124.5 jakiro: nearest
+  enemy 852u, i.e. 2u inside the old floor, and lanesurv saw TWO enemies that
+  frame).  GH #90; director ruling 2026-08-21T15:0xZ.  Do not re-hardcode it,
+  not even as 1100: a copied constant is correct only until someone edits the
+  rule, and nothing goes red when they do.
+
+  COMPARABILITY: `--legacy-domain` restores the 850 floor and reproduces every
+  pre-#90 reading bit-for-bit (registered DiD -7.70pp).  The registered number
+  is not deleted, it is demoted -- see GH #72 and the recomputation below.
+
+WHAT CHANGED IN THE READING, AND WHAT DID NOT (GH #72 stands)
+  Recomputed on the attributable band [1100,1500] over the same 40 games:
+  seed-paired DiD -11.90pp, SD 37.0, SE 18.5, |t| 0.64 -- n halves, noise
+  doubles, still indistinguishable from zero.  `capmono` NOT-PROMOTE is
+  UNCHANGED.  What narrows is the CITABLE CLAIM: this detector may be quoted
+  for "in the band lanesurv structurally cannot reach, capmono's designed
+  refusal signature does not show up", and may NOT be quoted for "capmono does
+  not help survival" -- 92% of deaths in this corpus (153/166) fall OUTSIDE the
+  domain entirely, at nearest-enemy < 850u, where this detector never looked.
   Classify by displacement over the next ~3.5s: retreat iff the projection
   toward own ancient exceeds the projection toward the nearest enemy.
 
@@ -98,8 +124,10 @@ INHERITED HYGIENE
         RARE) one round later.  The leak value IS the last hp sampled before
         death, so leak > 0.42 needs only a hero going from >42% to dead inside
         one 0.5s interval -- available burst, i.e. a draft/patch property, not
-        a code property.  The >=850u nearest-enemy clause makes it rarer, not
-        impossible (Lion's Finger reaches 850 and Zeus's ult is global).
+        a code property.  The nearest-enemy floor makes it rarer, not
+        impossible (Lion's Finger reaches 850 and Zeus's ult is global) -- and
+        note the floor moved 850 -> 1100 under GH #90, which can only make this
+        rarer still, so the audit's conclusion is unaffected in direction.
         WHY IT MATTERS EVEN THOUGH THE FILTER IS ALWAYS ON BELOW: the risk is
         not this run, it is a future reader citing "by construction" to skip
         the audit or drop the is_dead() call on a new corpus.  And the bias, if
@@ -164,13 +192,22 @@ USAGE
 import collections, glob, json, math, os, sys
 sys.path.insert(0, '/home/user/dota2bot/tools/batch_test/behavioral')
 from roam_conversion import load_game, dist, is_dead
+from source_constants import call_arg
 
 RAW = False               # --raw: reproduce the pre-#78 reading bit-for-bit
 DISCARD = collections.Counter()   # (arm, side, reason) -> frames dropped
 
+# The radius `J.ShouldRetreatLaneBurst` actually scans for enemies.  Read, not
+# copied (GH #90): see the CLEAN DOMAIN note above for why a literal here is
+# the bug.  Raises loudly if the call shape moves -- that is the feature.
+LANESURV_REACH = call_arg('J.ShouldRetreatLaneBurst', 'J.GetNearbyHeroes',
+                          index=1, where={2: 'true'})
+LEGACY_ENE_LO = 850.0     # --legacy-domain: the wrong pre-#90 floor, kept only
+                          # so archived readings stay reproducible
+
 HP_LO, HP_HI = 0.42, 0.50
 ALLY_R = 1200.0
-ENE_LO, ENE_HI = 850.0, 1500.0
+ENE_LO, ENE_HI = LANESURV_REACH, 1500.0
 T_MAX = 600.0
 LAG = 1.0
 FWD_LO, FWD_HI, FWD_TGT = 2.5, 4.5, 3.5
@@ -336,9 +373,14 @@ def scan_game(g, name):
 
 
 def main():
-    global RAW
-    argv = [a for a in sys.argv[1:] if a != '--raw']
+    global RAW, ENE_LO
+    argv = [a for a in sys.argv[1:] if a not in ('--raw', '--legacy-domain')]
     RAW = '--raw' in sys.argv
+    if '--legacy-domain' in sys.argv:
+        ENE_LO = LEGACY_ENE_LO
+    print("=== DOMAIN FLOOR ===")
+    print(f"  nearest-enemy floor {ENE_LO:.0f}u "
+          f"({'LEGACY pre-#90 literal, NOT attributable' if ENE_LO != LANESURV_REACH else 'read from J.ShouldRetreatLaneBurst'})")
     root = argv[0]
     # cell -> list of eps
     allc = []

@@ -64,12 +64,20 @@ import collections, glob, json, math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from roam_conversion import load_game, dist, is_dead, canon_hero
 from capmono_refusal import (own_ancients, tp_channel_spans,
-                             HP_LO, HP_HI, ALLY_R, ENE_LO, ENE_HI, T_MAX, LAG,
-                             FWD_LO, FWD_HI, FWD_TGT)
+                             HP_LO, HP_HI, ALLY_R, LEGACY_ENE_LO, ENE_HI,
+                             T_MAX, LAG, FWD_LO, FWD_HI, FWD_TGT,
+                             LANESURV_REACH)
 
 GAP_S = 2.0            # episode continuity at the 1.0s dumper interval
-LANESURV_R = 1100.0    # J.GetNearbyHeroes radius in J.ShouldRetreatLaneBurst
-                       # (jmz_func.lua:4892) -- the real non-overlap threshold
+
+# This tool exists to AUDIT the pre-#90 registered domain against the rule it
+# claimed to exclude, so it deliberately keeps the wrong 850 floor: that is the
+# object under test, and --selfcheck's bit-for-bit cell counts (193/219/178/203)
+# only mean something against it.  capmono_refusal.py itself has since moved its
+# live floor to the derived 1100 (director ruling 2026-08-21T15:0xZ, GH #90).
+ENE_LO = LEGACY_ENE_LO
+LANESURV_R = LANESURV_REACH   # read out of J.ShouldRetreatLaneBurst, not copied
+                              # -- copying it here would repeat GH #90 verbatim
 DEATH_W = 12.0         # outcome window, same as the liondrainstop census
 BANDS = [(0.0, 400.0), (400.0, 850.0), (850.0, 1500.0), (1500.0, 2500.0)]
 
