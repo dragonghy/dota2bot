@@ -39,13 +39,44 @@
    **断言最终 desire**(不是断言分支可达)。~~建议 `mode_farm_generic:285`~~
    **2026-08-21T13:48Z:`285` 结构上做不了,那一帧不存在也买不到 —— 见下面第 0j 条
    (第十三条世界断言)。语料请求已撤回。**
-   **改取 `mode_farm_generic:535`**(runMode 应战块:敌人进攻击距离 + 2 队友;**不读 mode**,
-   域在语料里可寻址);备选 `item_purchase_generic:228`(自家 t3 掉血 ⇒ 留买活钱,同样不读 mode)。
+   ~~**改取 `mode_farm_generic:535`**~~ **2026-08-21T15:46Z:`535` 也做不了 (乙) 的形状,
+   但卡点可以买到 —— 见下面第 0k 条。两半分开量了:情境这一半**活的**(872 存活英雄帧里
+   **3 帧**满足内层 `if` 每一个子句,等级 4/11/11,敌人 55–167u,2–3 队友 ⇒ TEETH 得到实证),
+   外层的 `runMode` **从不同时成立**(`X.ShouldRun ~= 0` 只有 5/940 帧,交集空)。
+   **语料请求是活的**(不像 #84 那次是撤回):要一帧 farm `ShouldRun` 非 0 且同帧 900 内 ≥2 队友、
+   `attackRange+50` 内有非魔免敌人。**下一轮默认改取 `item_purchase_generic:228`**
+   (自家 t3 掉血 ⇒ 留买活钱,同样不读 mode、不读 runMode 这类文件局部状态)。
    规矩照旧:**断言最终 desire,不是断言分支可达**;掉 farm desire ≠ 去打架。
    **顺带记的第二个杠杆(不折进本条)**:自动买活三条路径在 Turbo 全关
    —— `aiug:568` 的 `ancient:GetHealth() < 0.8`(**单位错配**,该开 `[bug]`)、
    `:582` 的等级 >24、`:578` 的 `nFullRespawnTime < 60` 早退(**推论,harness 判不了**,
    `GetRespawnTime` 不在 dump 里)。已成 `[recorded]` 用例。
+0k. **【2026-08-21T15:46Z 新增,已钉住、不要改 bots/、不要改 loader、不要给 mock 打桩】
+   第十四条世界断言:惰性初始化的时钟戳,让「第一次调用」永远是自己的初始化调用**。
+   形状(`mode_farm_generic:123-126`):`GameStates.defendPings = ... or { pingedTime = GameTime() }`
+   紧接着 `if GameTime() - pingedTime <= 5.0 then return DESIRE_NONE end`。
+   游戏里没问题(表开局填一次);**fixture 里 VM 只活一次调用** ⇒ 两行读同一次时钟 ⇒
+   差值**恰好 0** ⇒ **守卫每帧触发**。**两个互相独立的原因,修掉显眼的那个什么都不会变**:
+   (1) mock 的 `GameTime()` 是常数 0 而 loader 把 `DotaTime()` 接到真实帧时间(**两个差整整一局的时钟**);
+   (2) 戳是**用它稍后要比的那个时钟**初始化的 —— **(2) 单独就够**,已写成变异探针断言。
+   **四个已发布站点共用这个键,三个挡在出价前面**:`mode_farm_generic:123`、
+   `mode_side_shop_generic:50`、`aba_push:222`(**三条推塔出价都从这里来**)、
+   `aba_defend:881`(只挡 ping,防守出价不受影响,但它是共享键的**写者**)。
+   **有多大(94 申报 subject)**:farm **94/94 地板** → 声明陈旧后 88 地板 / **1 真出价** / **5 崩溃**;
+   三条推塔 68/94 → **36/94**(**戳单独按住 32 条**);side_shop 94/94 → 94/94(**阴性对照**);
+   **21 个可驱动 mode 的竞价赢家 94 帧里变 1 帧**(`f_260820_043120_viper_defend_paired`,
+   `defend_tower_bot 0.100` → **`push_tower_bot 0.920`**)。**出价动得多、结果动得少,两半都在用例里。**
+   **它还替 farm 藏了一次崩溃**:`GetRoshanDesire`(`mode_farm_generic:370`)未打桩 ⇒
+   **`mode_farm_generic` 是第三个「跑不起来的 mode 文件」**(#62 §0d 只点了两个),
+   而且**此前不可能被发现**(守卫 124 行返回、崩溃 370 行)。它是真引擎 API(`.luacheckrc` 里有)
+   ⇒ **mock 缺口不是 `bots/` 笔误**。**回读 (甲) 分类表**:崩溃点上面一行就是 (甲) 判 REDUNDANT 的
+   `mode_farm_generic:369`(`GetLevel() >= 23`)—— 那条判读**从源码读的、不可能从帧读**,已成断言。
+   **归总监的两个口径决定**(`[harness]` **GH #91**):① loader 替所有测试声明「最近没人 ping 防守」
+   还是每个测试自己声明(**本组建议照 GH #61 定案:每个测试自己声明**,给 `rf` 加一个
+   **有名字的**助手,让假设是用例里看得见的一行);② 要不要给 `GetRoshanDesire` 打桩。
+   **本组今后写任何竞价级用例,必须先声明这条假设并说明口径**,否则读的是地板不是这一帧。
+   已成 `tests/test_pingstamp_world_assertion.lua`(18 例),
+   `state.json:pingstamp_WORLD_ASSERTION_14_20260821`。
 0j. **【2026-08-21T13:48Z 新增,已钉住、不要改 bots/、不要改 loader】第十三条世界断言:
    fixture 上没有人处在任何 mode**。`bot:GetActiveMode()` 是 **bot VM 自己的状态**,不是实体属性
    ⇒ 不在 `.dem` 里 ⇒ 每个 fixture 都不带 ⇒ mock 落到 `default_for('Get*') = 0`,而每个
@@ -411,6 +442,32 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T15:46Z:**接 GH #84 §5 的下一条**(上一轮定的默认取件 `mode_farm_generic:535`)。
+  **`bots/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
+  **产出** `tests/test_pingstamp_world_assertion.lua`(**18 例**;全套 **976 tests, 0 failures**)。
+  **两个交付。**
+  **(一) 对 §5**:`535` 也做不了 (乙) 的形状 —— **但这次卡点可以买到,语料请求是活的,不是撤回。**
+  两半分开量:**情境这一半活的**(**872 存活英雄帧里 3 帧**满足内层 `if` **每一个**子句 ——
+  `f_260819_142047` chaos_knight lvl4 / venomancer@158u / 2 队友;`f_260819_222559`
+  dragon_knight lvl11 / lich@167u / 3 队友;同帧 juggernaut lvl11 / lich@55u / 3 队友 ⇒
+  **这 3 帧上等级门是唯一挡在刷钱和 `Action_AttackUnit` 之间的东西**,(甲) 判的 TEETH 拿到实证);
+  **外层 `runMode` 从不同时成立**(`X.ShouldRun ~= 0` 只有 **5/940**,交集空,两个方向都验)。
+  **与 `285` 的区别要记住**:`285` 卡 **dumper 缺口**(再买也没有),`535` 卡**语料缺口**
+  (`ShouldRun` 是当帧纯函数)。顺带钉住两条:`ShouldRun` 的 `<1000` 腿与块的 `>2200`
+  **在触发帧上区间不交**;**fixture 只看得见 runMode 段的开口**(保持 `shouldRunTime` 秒不重问,
+  返回值当时长用)⇒ **第三种 harness 盲区**,「5/940」不能读成游戏内频率。
+  **(二) 第十四条世界断言**(细节见 backlog 第 0k 条):惰性时钟戳让第一次调用永远是自己的初始化调用 ⇒
+  **farm / side_shop / 三条推塔出价在每个 fixture 上都被按在地板上**;farm **94/94 地板**,
+  三条推塔 **68 → 36**(戳单独按住 32 条),**21 个 mode 的竞价赢家 94 帧里变 1 帧**
+  (`defend_tower_bot 0.100` → **`push_tower_bot 0.920`**)。**出价动得多、结果动得少,两半都断言了。**
+  **它还替 farm 藏了一次崩溃**(`GetRoshanDesire` 未打桩 ⇒ **第三个跑不起来的 mode 文件**),
+  而崩溃点上面一行正是 (甲) 判 REDUNDANT 的 `369` —— **那条判读不可能从帧读**,已成断言。
+  **两个口径决定交总监**(`[harness]` **GH #91**):loader 要不要替所有测试声明这条假设、要不要给
+  `GetRoshanDesire` 打桩。本组建议照 GH #61 定案:**每个测试自己声明**(给 `rf` 加有名字的助手)。
+  **验收**:luacheck **0 warnings**(bots/ 零改动);全套 **976 tests, 0 failures**;
+  **16 条变异,14 条一次就红,2 条(M4/M7)先漏后修再红** —— 逐条跑,**每条都验了
+  「变异真的生效」+「回滚真的生效」**(11:32Z 与 13:48Z 那两条方法学规则的合并用法)。
+  详见 `iterations/reports/strategy/20260821T154643Z.md`。
 - 2026-08-21T13:48Z:**认领 GH #84 §5 的下一条**(总监 13:02Z 裁定批准的排序:从 6 条 TEETH
   里挑一条做 (乙) 的完整形状,优先 `mode_farm_generic:285`,**但前置条件必须先满足** ——
   先要一帧「团战点在 2500 内且 subject 是核心」的实证)。
