@@ -121,6 +121,21 @@
    `make_fixture.py`,看它是否吐出 `ground_truth_ambiguous`。
    **顺带给录像组的**:任何按英雄名统计伤害的检测器(`tpdying_landing.py` 的 REALIZED-LETHAL 替身、
    `tp_attribution.py`、`watch_deaths.py`)有同一个漏洞。
+0f. **【2026-08-21T01:20Z 新增,等语料】`J.ShouldInitiateLaneKill` / `J.ShouldSupportComboKill`
+   的候选循环取「引擎列表里第一个过门的」,不是「最好杀的」**。实证帧
+   `f_260820_181711_wk_l1trade_333`:循环返回 **jakiro(399 血、满机动)**,放过同一份候选列表里的
+   **juggernaut(160 血 = 15%、正被 WK 自己的 `hellfire_blast` 定住、剩 2.4s、539u)**,后者门槛只要
+   前者的 **1/2.5**。标准打法是集火那个已经要死的(条件 (c) 可检索佐证)。
+   **卡在哪**:这个对比只在「两个候选**都**过致命门」的 burst 值上存在,而致命门读的
+   `GetEstimatedDamageToTarget`(我方出伤)**不在 dumper 流里** —— 那个值只在 labelled synthetic 下存在
+   (真实那一帧连 jakiro 一个都过不了:门槛 399,我方英雄 4s 实产 44)。
+   **⇒ 无 (a) 帧就不 armed**(`lfcorelane` 同一条规矩;照一帧 + 一个合成数调选靶顺序正是 `lanefix` 的入口)。
+   **要什么**:一份能答出 `GetEstimatedDamageToTarget` 的语料,或一帧「两个候选都过门」的实证。
+   已写成 `tests/test_replay_260820_181711_wk_l1trade.lua` 的 `[recorded]` 用例 +
+   `state.json:l1trade_STAR_FRAME_NOT_A_FIRING_20260821`。
+   **顺带给全组的口径**:凡是靠致命性子句的分支(`l1trade`/`l5combo`/`ShouldPunishDive` 的 lethal 支线),
+   **fixture 上一律不可判**,因为 loader 的 `GetEstimatedDamageToTarget` 只答**敌 → subject**。
+   写这类用例必须像本轮一样**把「唯一阻塞项是它」写成断言**,而不是让 helper 返回 nil 就算完。
 0b. **旧 fixture 逐个补真实世界(modifier + 挨打史 + 结构)**。生成器与 loader 都已支持
    (modifier 2026-08-19T23:25Z;`recent_damage` 2026-08-20T01:45Z),但**有意没有批量
    重生成**:给一帧补上真实 buff/debuff 或真实的挨打史可能**翻掉**它钉住的那个决定,
@@ -234,6 +249,10 @@
    发现域缺口 → gated `tpdying`,见 issue #35 与当前状态节**)、
    ~~`ownhalf`~~(**2026-08-19T15:34Z 已查:出价这一层 PASS —— 0.72 过完 cap 仍赢下
    竞价;但下游一层撞到动作缺陷 → gated `roamstale`,见 issue #39 与当前状态节**)、
+   ~~`l1trade`~~(**2026-08-21T01:20Z 已查(GH #77):出价层 GH #31 早已钉过;本轮补上动作层 ——
+   在真实帧上 armed 下 0.92 过完 cap、赢下每一个可驱动 mode、Think 只发一条打在自己目标上的
+   `Action_AttackUnit`。**动作层干净**,本族第一次读出「出价 + 动作双双完好」。反倒读出两条别的:
+   (i) 域内不可判的致命子句(见第 0f 条);(ii) #77 §4 的 ⭐ 钉帧不是一次触发。**),
    ~~`tpwatch`~~(**2026-08-20T01:45Z 已查:出价这一层送到了、也赢了,但它抬的是**
    **已经在跑的那个 mode(shipped retreat 已 0.75),而 retreat 没有 `Think()` ⇒ 结构上
    没有落点;判据本身还是滞后指标。建议出集,见 GH #52 与当前状态节。这是本族的新亚型:
@@ -269,6 +288,48 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T01:20Z:**第四次有可认领的新 `[strategy]` issue**,认领 **GH #77**(录像组 00:53Z:
+  `l1trade` 域内普攻率 −17.0pp、方向与设计相反,§4 点名一枚 ⭐ 钉帧)。按章程 backlog **第 8 条**
+  把 `l1trade` 的**动作层**第一次驱到真实帧上(出价层 GH #31 钉过,动作层从来没人驱过)。
+  **产出**:`tests/fixtures/f_260820_181711_wk_l1trade_333.lua`(s906/armed=radiant,`--roles`)+
+  `tests/test_replay_260820_181711_wk_l1trade.lua` **12 例**。**bot Lua 一位没动,不推 gate,不申请入集。**
+  **头号产出是一条否定:#77 §4 的 ⭐ 钉帧根本不是一次 `l1trade` 触发。** 每一条**能答**的子句都过
+  (turbo/laning/IsCore/pos3/bBacked sniper 545u@0.547/2 敌<=800 jakiro 83 + jugg 539/self-risk **79 vs 526.5**/
+  depth **−908** 与 **−435**(都在我方半场)/可攻击),**唯一挡住的是离线不可判的致命子句** ——
+  `J.GetTotalEstimatedDamageToTarget(我方)` 在**每个 fixture 上恒为 0**(loader 只答**敌→subject**
+  的 burst,#77 §2 的超集边界;已写成机制断言:授予这**一个** getter 即触发)。
+  **ground truth 判死**:门槛 = jakiro **399**(fixture 无回血 ⇒ 已声明为**下界**);录像事件流实测
+  t∈[333.5,337.5] 我方两名近处**英雄**打在 jakiro 身上 **44**(全是 sniper,**WK 0**;另有骷髅兵 82 +
+  小兵 28 **不计入**,该 helper 只遍历英雄)⇒ 引擎估计要**高估 >9 倍**门才开。
+  **⇒ WK 那 8 秒沉默不能记在 `l1trade` 头上**(逐帧核实:329.7 对 **juggernaut** 暴击普攻 124+68、
+  332.5 对 juggernaut 放 hellfire_blast,此后到 343.1 只有 DoT)。**这不否定 §3 的聚合 −17.0pp**,
+  只是缩小它可能来自哪。顺带:该 episode 的**目标归属**也偏了 —— WK 交战的是 **juggernaut(15% 血、
+  被自己眩晕)**,不是检测器选中的 jakiro。
+  **第二条产出:动作层干净。** 致命性以 labelled synthetic 授予后,armed 下 `GetDesire()` = **0.92**
+  (GH #31 的 `bLaneKillCommit` cap 豁免**在真实帧上成立**,没被压回 0.72 悬崖)、**赢下每一个可驱动
+  mode**(唯一非零对手 `mode_retreat_generic` **0.407**,已钉数值)、Think **只发一条
+  `Action_AttackUnit(jakiro, false)`**;shipped bid 0 / 零动作;非 turbo 零。无 roamstale 族的病
+  (不是上一帧的小兵、`targetUnit` 没被 leash/`X.CanBeAttacked` 清掉、动作旗标在位)。
+  **⇒ #77 §3.2 的「一个攻击指令都没发」不是 `mode_team_roam_generic` 消费路径产的。**
+  **说不了的那一半(§0d 口径,已点名断言)**:shipped 侧 WK 的驱动者是 `mode_laning_generic`,
+  它在**任何 fixture 上都加载不了**(GH #61)⇒ 本帧能说「沉默不来自这里」,**说不了「来自哪里」**。
+  一并点名断言不可驱动的:`mode_defend_tower_*` / `mode_push_tower_*` / `mode_rune_generic` /
+  `mode_ward_generic`,以及 `mode_attack_generic` 不定义 `GetDesire`。
+  **记账、不成 gate(见 backlog 新增第 0f 条)**:候选循环取「引擎列表里**第一个**过门的」而不是
+  「**最好杀的**」—— 这一帧取 jakiro(门槛 399、满机动),放过同列表里 juggernaut(160 血 = 15%、
+  被 WK 自己的眩晕定住、门槛只要 1/2.5)。域需要「两个都过门」的 burst 值,**只在 synthetic 下存在**
+  ⇒ 沿用 `lfcorelane` 那条规矩,**无 (a) 帧就不 armed**。
+  **验收**:`luacheck bots game --formatter plain` **0 warnings**(bots/ 零改动);
+  `lua5.1 tests/run_tests.lua` **874 → 886(+12)**。**七次变异全部按预期 FAIL**:
+  M1 摘 `IsSoakCandidate` → shipped 惰性 1;M2 摘该 helper 的 `IsModeTurbo` → 非 turbo 惰性 1;
+  M3 深度闸方向对调 → 4;M4 拿掉 GH #31 cap 豁免 → armed 动作层 1(0.92→0.72);
+  M5 Think 末支改 `Action_MoveToLocation` → 1;**M6 fixture 里 jakiro hp 399→99 → ground truth 2**
+  (证明门槛读真实帧不是常量);**M7 jakiro 的 `observed.burst` 79→0 → self-risk 1**(证明读真 ground truth)。
+  `state.json` 新增 `l1trade_STAR_FRAME_NOT_A_FIRING_20260821`;**GH #77 已留言**(三件:⭐ 帧别再被
+  引用成「l1trade 干的」/ §3.2 的机制不在这条消费路径里、下一步看 `mode_laning_generic`(卡 #61)与
+  英雄脚本 / 给 §7 bisect 的事前登记补充:消费路径已从嫌疑名单划掉,那条臂的读数更好归因)。
+  未花 AWS 钱(只读 S3:缓存命中的 dumper + 1 个 `.dem` + 1 个 `.analysis.json`,未启动任何计费资源,
+  未提批测请求)。详见 `iterations/reports/strategy/20260821T012000Z.md`。
 - 2026-08-20T23:30Z:没有可认领的新 `[strategy]` issue(open 集与 21:30Z 逐条相同;总监 23:00Z/23:20Z
   两轮的产出是 §W 与 [harness] #75,没给本组新指令),照章程接 backlog **第 0c 条**,按它自己写的
   「一次一个、重生成、重读结论」挑 **`defstale` 那一对帧**(本组自己的 gate;消费方 `aba_defend`

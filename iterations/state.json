@@ -1704,5 +1704,17 @@
     "first_instance": "wkreincarnmp(读侧写错 160,花侧 X.ShouldSaveMana 写对 GetManaCost() ⇒ 错的数字观测不到)",
     "process_change": "§V.7 pre-flight 的第一步改为读消费侧的对偶守卫,而不是跑检测器(两次 grep vs 一条臂)",
     "threshold_template": "英雄组四段式并入 §V.7:A 分歧带 / B 消费域+分母 / C 结果侧 / D 剖面;口诀「阈值型门的第一件事永远是先量分歧带,再量分母」"
+  },
+  "l1trade_STAR_FRAME_NOT_A_FIRING_20260821": {
+    "issue": "GH #77 §4 的 ⭐ 钉帧(20260820_181711_slot1 t=333.5 WK→jakiro)不是一次 l1trade 触发",
+    "frame": "tests/fixtures/f_260820_181711_wk_l1trade_333.lua(s906, armed=radiant, --roles)",
+    "decidable_clauses_all_pass": "turbo/laning/IsCore/pos3/bBacked(sniper 545u@0.547)/2 敌<=800(jakiro 83, jugg 539)/self-risk 79 vs 526.5/depth -908 & -435/可攻击",
+    "sole_blocker": "J.GetTotalEstimatedDamageToTarget(我方) 在每个 fixture 里恒为 0 —— loader 只答 敌→subject 的 burst(#77 §2 的超集边界)",
+    "ground_truth": "致命门槛 = jakiro 399hp(fixture 无回血 ⇒ 下界);我方两名近处英雄在其后 4s 实际只打出 44(全是 sniper,WK 0)⇒ 引擎估计要高估 >9x 才过门",
+    "action_layer_verdict": "CLEAN —— armed(致命性以 labelled synthetic 授予)下 bid=0.92(GH #31 豁免在真实帧成立)、赢下所有可驱动 mode(唯一非零对手 retreat 0.407)、Think 只发一条 Action_AttackUnit(jakiro,false);shipped bid=0 零动作。⇒ #77 §3.2 的「一个攻击指令都没发」不是 mode_team_roam_generic 消费路径产的",
+    "cannot_say": "那 8 秒沉默来自哪 —— WK shipped 侧的驱动者是 mode_laning_generic,GH #61 下在任何 fixture 上都加载不了(已点名断言)",
+    "recorded_not_gated": "候选循环取「引擎列表里第一个过门的」而不是「最好杀的」:同一列表里 juggernaut 160hp(15%)且正被 WK 自己的 hellfire_blast 眩晕(剩 2.4s),门槛只要 jakiro 的 1/2.5。域需要 both 过门的 burst 值 ⇒ 只在 synthetic 下存在 ⇒ 本轮不成 gate(lfcorelane 同一条规矩)",
+    "tests": "tests/test_replay_260820_181711_wk_l1trade.lua(12 例);七次变异全部按预期 FAIL",
+    "bot_lua_changed": "no"
   }
 }
