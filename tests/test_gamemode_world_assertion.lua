@@ -23,7 +23,7 @@
 -- The two therefore agree with each other and disagree with 23. Every shipped
 -- line that spells the constant by NAME reads "turbo"; every shipped line that
 -- spells it as the literal 23 reads "not turbo". Nine shipped comparison sites
--- across six files are on the wrong side of that split, and the split runs
+-- across SEVEN files are on the wrong side of that split, and the split runs
 -- through the middle of one expression (FunLib/aba_push.lua:171-172) and
 -- through the middle of one table literal (the same file's gameStateCache,
 -- whose currentTime field is built the number way while its four isEarlyGame /
@@ -259,8 +259,14 @@ tests['[premise] the shipped self-heal exists, and the mock is what disables it'
 end
 
 -- ---------------------------------------------------------------------------
--- The shipped sites, pinned. Nine comparisons against the literal, in six
+-- The shipped sites, pinned. Nine comparisons against the literal, in SEVEN
 -- files; the named spelling in the places that carry the helper family.
+--
+-- SEVEN, corrected 2026-08-21T20:2xZ. The first version of this file, and
+-- GH #93's body with it, said six in prose while the table below listed nine
+-- rows across seven distinct paths -- item_purchase_generic carries three of
+-- the nine on its own, which is what makes the list read shorter than it is.
+-- The count was never asserted, so nothing could catch it. It is asserted now.
 -- ---------------------------------------------------------------------------
 
 local LITERAL_SITES = {
@@ -288,6 +294,13 @@ tests['[reverse] nine shipped comparisons spell the mode as the literal 23'] = f
             'this literal-23 site moved in ' .. site[1] .. ': ' .. site[2])
     end
     assert(#LITERAL_SITES == 9, 'expected nine literal sites; got ' .. #LITERAL_SITES)
+    -- The file count, asserted rather than counted by eye in prose -- see the
+    -- correction note above the table.
+    local seen, nfiles = {}, 0
+    for _, site in ipairs(LITERAL_SITES) do
+        if not seen[site[1]] then seen[site[1]] = true nfiles = nfiles + 1 end
+    end
+    assert(nfiles == 7, 'the nine rows live in seven distinct files; got ' .. nfiles)
 end
 
 tests['[reverse] and the helper family spells it by name'] = function()
@@ -639,6 +652,45 @@ tests['[recorded] the corpus-wide auction figures, and how they were taken'] = f
         assert(fh, 'a frame this round re-measured for is gone: ' .. f)
         fh:close()
     end
+end
+
+tests['[recorded] the split changes WHICH MODE most often wins on this corpus'] = function()
+    -- Added 2026-08-21T20:2xZ, from an independent re-derivation of the whole
+    -- census (same chunked driver, same 4032 bids, every numerator above
+    -- reproduced row for row). This is the one reading the per-frame figures
+    -- above hide, and it is the sharpest way to state the cost:
+    --
+    --   as loaded   laning 35, retreat 28, defend_tower_bot 17, push 9,
+    --               assemble 6, farm 1
+    --   honest      retreat 31, laning 25, defend_tower_bot 24, push 9,
+    --               assemble 6, farm 1
+    --
+    -- The fixture world does not merely over-bid laning by a rung. It reports
+    -- LANING AS THE SINGLE MOST COMMON THING our bots are doing, and honestly
+    -- it is the second, behind retreat. Every bid-level conclusion this
+    -- repository has published is tilted toward "he is laning" by that much --
+    -- which is a different and larger claim than "18 winners are wrong",
+    -- because it applies to the shape of every aggregate, not to 18 frames.
+    --
+    -- Taken out of band for the same reason as the figures above (the full
+    -- auction is roughly three quarters of an hour). Six modes win at least
+    -- one frame under each reading; the three that move are exactly the three
+    -- the per-frame assertions drive. push/assemble/farm are unchanged, which
+    -- is the control: the shift is not a global re-scaling of every bid.
+    --
+    -- Pinned to the corpus it describes, so it cannot drift silently:
+    local n = 0
+    for _, _ in ipairs(fixture_files()) do n = n + 1 end
+    assert(n == 96, 'these distributions are for a 96-fixture corpus; got ' .. n)
+    -- Both readings must still account for every frame, whatever the split.
+    assert(35 + 28 + 17 + 9 + 6 + 1 == n, 'the as-loaded distribution sums to the corpus')
+    assert(31 + 25 + 24 + 9 + 6 + 1 == n, 'and so does the honest one')
+    -- And the transitions the distributions are made of are the ones the three
+    -- [AUCTION] tests above drive: laning loses 10, defend gains 7, retreat
+    -- gains 3, and nothing else moves.
+    assert(35 - 25 == 10, 'laning loses ten frames')
+    assert(24 - 17 == 7, 'defend_tower_bot gains seven')
+    assert(31 - 28 == 3, 'retreat gains three')
 end
 
 -- ---------------------------------------------------------------------------
