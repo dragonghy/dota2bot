@@ -31,7 +31,33 @@ set -u
 DEM_CLAIM_HDR_BYTES=${DEM_CLAIM_HDR_BYTES:-65536}
 DEM_CLAIM_LOCK=${DEM_CLAIM_LOCK:-/opt/soak/.replays.lock}
 DEM_AWS=${DEM_AWS:-aws}          # injection point for the offline tests
-DEM_RESCUE_BUCKET=${DEM_RESCUE_BUCKET:-dota2bot-batch-results-4924}
+
+# dem_bulk_prefix <s3_prefix> <rec_slots>  -- where this slot's .dem goes.
+#
+# Retention is carried by the KEY, not by an object tag. The runner instance
+# profile grants s3:PutObject/GetObject/ListBucket only (see the s3-results
+# policy in tools/batch_test/aws/setup_aws.sh) -- it has NO s3:PutObjectTagging,
+# so every tagging call made from an instance is denied, and a tag-filtered
+# lifecycle rule would match nothing at all. Bulk recordings therefore live
+# under the bucket-level `dem21/<run>/` prefix, covered by a plain prefix
+# lifecycle rule that needs no permission the uploader lacks and cannot fail
+# halfway. `soak/<run>/` keeps only the per-game archive (.analysis.json,
+# .log.gz, .demclaim.json) that the replay stream depends on and that must
+# never expire.
+#
+# REC_SLOTS=1 (the shipped default) returns the input untouched: its single
+# .dem still lands in soak/<run>/ and replays/ and still never expires.
+dem_bulk_prefix() {
+    local prefix="$1" rec_slots="${2:-1}" nos run
+    if [ "$rec_slots" = "1" ]; then
+        printf '%s' "$prefix"
+        return
+    fi
+    nos=${prefix#s3://}          # bucket/soak/<run>
+    run=${nos#*/}                # soak/<run>
+    run=${run#soak/}             # <run>
+    printf 's3://%s/dem21/%s' "${nos%%/*}" "$run"
+}
 
 # _dem_json_str <s>  -- minimal JSON string escaping (paths + method names only)
 _dem_json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
@@ -124,6 +150,9 @@ EOF
 # from "that seed's frame evidence is gone" to "that seed's frame evidence needs
 # one offline join".
 #
+# <s3_prefix> here is the BULK prefix (dem_bulk_prefix), not soak/<run>/, so a
+# rescued .dem expires with the rest of the wave's recordings.
+#
 # The key is the file's OWN basename under <s3_prefix>/unattributed/, which is
 # what makes 16 slots racing to rescue the same file idempotent: they all write
 # the same bytes to the same object, so no coordination is needed.
@@ -142,12 +171,9 @@ dem_reap() {
         if [ -n "$prefix" ] && [ -s "$f" ]; then
             key="$prefix/unattributed/$base"
             if $DEM_AWS s3 cp "$f" "$key" --quiet 2>/dev/null; then
-                # Same 21-day tag-filtered lifecycle rule the claimed .dem use;
-                # best effort, an untagged object just keeps default retention.
-                local nos=${key#s3://}
-                $DEM_AWS s3api put-object-tagging \
-                    --bucket "${nos%%/*}" --key "${nos#*/}" \
-                    --tagging 'TagSet=[{Key=lifecycle,Value=dem21}]' >/dev/null 2>&1
+                # No tagging call: the caller passes a prefix that is already
+                # under the expiring `dem21/` tree (dem_bulk_prefix), and the
+                # instance profile could not tag an object even if we asked.
                 rm -f "$f" 2>/dev/null && rescued=$((rescued + 1))
                 continue
             fi

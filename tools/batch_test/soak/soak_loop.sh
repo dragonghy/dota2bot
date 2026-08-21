@@ -42,6 +42,12 @@ if ! type dem_claim >/dev/null 2>&1; then
     echo "slot$SLOT: dem_claim.sh missing — replay recording DISABLED" >&2
     RECORDING=0
 fi
+# Where this slot's .dem goes. Identical to $S3_PREFIX at REC_SLOTS=1; under the
+# bucket's expiring `dem21/` tree above it. See dem_bulk_prefix for why the
+# retention guarantee has to live in the key rather than in an object tag.
+DEM_PREFIX="$S3_PREFIX"
+type dem_bulk_prefix >/dev/null 2>&1 && \
+    DEM_PREFIX=$(dem_bulk_prefix "$S3_PREFIX" "$REC_SLOTS")
 
 while true; do
     TS=$(date +%Y%m%d_%H%M%S)
@@ -65,7 +71,7 @@ while true; do
         if [ "$REC_SLOTS" = "1" ]; then
             rm -f "$REPLAYDIR"/*.dem "$REPLAYDIR"/discarded/replays/*.dem 2>/dev/null
         else
-            dem_reap "$REPLAYDIR" $((GAME_CAP_MIN + 5)) "$S3_PREFIX"
+            dem_reap "$REPLAYDIR" $((GAME_CAP_MIN + 5)) "$DEM_PREFIX"
         fi
     fi
 
@@ -147,18 +153,11 @@ while true; do
         dem_claim "$SLOT" "$TAG" "$REPLAYDIR" "$LOGDEM" "$REC_SLOTS" "$MINE" > "$CLAIM"
         aws s3 cp "$CLAIM" "$S3_PREFIX/$TAG.demclaim.json" --quiet
         if [ -s "$MINE" ]; then
-            aws s3 cp "$MINE" "$S3_PREFIX/$TAG.dem" --quiet
-            # Bulk recording only: tag for the bucket's 21-day `soak-dem-expire-21d`
-            # rule (tag-filtered, so it can never reach a .log.gz/.analysis.json —
-            # the per-game archive the replay stream depends on stays forever).
-            # Untagged means today's retention, so a REC_SLOTS=1 wave keeps every
-            # .dem exactly as long as it always has.
-            if [ "$REC_SLOTS" != "1" ]; then
-                S3_NOSCHEME=${S3_PREFIX#s3://}
-                aws s3api put-object-tagging \
-                    --bucket "${S3_NOSCHEME%%/*}" --key "${S3_NOSCHEME#*/}/$TAG.dem" \
-                    --tagging 'TagSet=[{Key=lifecycle,Value=dem21}]' >/dev/null 2>&1
-            fi
+            # $DEM_PREFIX == $S3_PREFIX at REC_SLOTS=1 (this line is then exactly
+            # the pre-#75 upload); at REC_SLOTS>1 it is dem21/<run>/, whose plain
+            # prefix lifecycle rule expires bulk recordings after 21 days without
+            # needing the s3:PutObjectTagging the instance profile does not have.
+            aws s3 cp "$MINE" "$DEM_PREFIX/$TAG.dem" --quiet
             # The flat replays/ mirror is the owner-review + behavioral-sweep
             # entry point. Keep it for slot 1 only: at 16 recorders a second
             # copy of every game is ~6 GB/wave of duplicate storage.

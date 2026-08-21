@@ -39,8 +39,19 @@ AWS_CMD=awsx; command -v awsx >/dev/null 2>&1 || AWS_CMD=aws
 echo "[sweep] resolving dumper binary..." >&2
 BIN=$(bash "$REPO/get_dumper.sh" "$REPO/.dumper_cache")
 
-echo "[sweep] listing $SRC" >&2
-mapfile -t DEMS < <($AWS_CMD s3 ls "$SRC" | awk '{print $4}' | grep '\.dem$')
+# A REC_SLOTS=1 wave keeps its single .dem beside the per-game archive; a bulk
+# (--rec-slots N) wave puts every recording under the bucket's expiring
+# dem21/<run>/ tree instead, because retention there is carried by the key (the
+# runner instance profile cannot tag objects -- see dem_claim.sh:dem_bulk_prefix).
+# The .analysis.json always stays under soak/<run>/, so only the .dem source moves.
+DEM_SRC="$SRC"
+echo "[sweep] listing $DEM_SRC" >&2
+mapfile -t DEMS < <($AWS_CMD s3 ls "$DEM_SRC" | awk '{print $4}' | grep '\.dem$' || true)
+if [ "${#DEMS[@]}" -eq 0 ] && [[ "$SRC" == */soak/* ]]; then
+    DEM_SRC="${SRC%%/soak/*}/dem21/$(basename "${SRC%/}")/"
+    echo "[sweep] no .dem beside the archive; trying bulk prefix $DEM_SRC" >&2
+    mapfile -t DEMS < <($AWS_CMD s3 ls "$DEM_SRC" | awk '{print $4}' | grep '\.dem$' || true)
+fi
 echo "[sweep] found ${#DEMS[@]} .dem files" >&2
 
 SWEPT=0
@@ -71,7 +82,7 @@ for dem in "${DEMS[@]}"; do
     seed=$(echo "$sv" | sed -E 's/^mirror:.*:s([0-9]+):[a-z]+$/\1/')
 
     demf="$OUT/dem/${name}.dem"
-    $AWS_CMD s3 cp "${SRC}${dem}" "$demf" --quiet
+    $AWS_CMD s3 cp "${DEM_SRC}${dem}" "$demf" --quiet
     tlf="$OUT/timelines/${name}.timeline.json"
     "$BIN" "$demf" > "$tlf"
     python3 "$REPO/detect.py" "$tlf" --json "$OUT/findings/${name}.findings.json" > /dev/null

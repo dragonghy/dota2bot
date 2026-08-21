@@ -109,8 +109,8 @@ ok "uploaded under unattributed/, keyed by the file's own basename" \
    "$(grep -c 's3 cp .*dead9.dem s3://bkt/soak/run7/unattributed/dead9.dem --quiet' "$FAKEAWS_LOG")" "1"
 ok "the discarded/ one too"  \
    "$(grep -c 's3 cp .*discarded/replays/dead9b.dem s3://bkt/soak/run7/unattributed/dead9b.dem' "$FAKEAWS_LOG")" "1"
-ok "tagged for the 21-day rule" \
-   "$(grep -c 'put-object-tagging --bucket bkt --key soak/run7/unattributed/dead9.dem' "$FAKEAWS_LOG")" "1"
+ok "no tagging call at all (the instance profile has no s3:PutObjectTagging)" \
+   "$(grep -c 'put-object-tagging' "$FAKEAWS_LOG")" "0"
 ok "rescued file then dropped" "$([ -e "$RD/dead9.dem" ] && echo yes || echo no)" "no"
 ok "live file never uploaded"  "$(grep -c live9 "$FAKEAWS_LOG")" "0"
 ok "live file spared"          "$([ -s "$RD/live9.dem" ] && echo yes)" "yes"
@@ -132,6 +132,28 @@ RD="$TMP/r8"; mkdir -p "$RD"
 J=$(dem_claim 2 t "$RD" "" 1 "$TMP/s2.dem")
 ok "method"     "$(jget "$J" method)"     "none"
 ok "candidates" "$(jget "$J" candidates)" "0"
+
+echo "== 11. bulk .dem prefix: retention lives in the key, not in a tag =="
+ok "REC_SLOTS=1 returns the prefix untouched (pre-#75 key, never expires)" \
+   "$(dem_bulk_prefix 's3://bkt/soak/spot_2026_1_abc' 1)" "s3://bkt/soak/spot_2026_1_abc"
+ok "default arg is 1 too" \
+   "$(dem_bulk_prefix 's3://bkt/soak/spot_2026_1_abc')" "s3://bkt/soak/spot_2026_1_abc"
+ok "REC_SLOTS>1 moves the run under the expiring dem21/ tree" \
+   "$(dem_bulk_prefix 's3://bkt/soak/spot_2026_1_abc' 16)" "s3://bkt/dem21/spot_2026_1_abc"
+ok "the bucket is carried over, not hardcoded" \
+   "$(dem_bulk_prefix 's3://other-bucket/soak/r1' 4)" "s3://other-bucket/dem21/r1"
+ok "a prefix that is not under soak/ is still moved whole, not mangled" \
+   "$(dem_bulk_prefix 's3://bkt/elsewhere/r1' 4)" "s3://bkt/dem21/elsewhere/r1"
+# The per-game archive the replay stream depends on must NEVER move: only the
+# .dem upload and the reaper take the bulk prefix.
+ok "soak_loop uploads the per-game archive to S3_PREFIX" \
+   "$(grep -c 'aws s3 cp .*analysis_\$TAG.json "\$S3_PREFIX/\$TAG.analysis.json"' soak_loop.sh)" "1"
+ok "soak_loop uploads the .dem to DEM_PREFIX" \
+   "$(grep -c 'aws s3 cp "\$MINE" "\$DEM_PREFIX/\$TAG.dem"' soak_loop.sh)" "1"
+ok "soak_loop reaps into DEM_PREFIX" \
+   "$(grep -c 'dem_reap "\$REPLAYDIR" \$((GAME_CAP_MIN + 5)) "\$DEM_PREFIX"' soak_loop.sh)" "1"
+ok "soak_loop no longer makes a call the instance profile cannot make" \
+   "$(grep -c 'put-object-tagging' soak_loop.sh)" "0"
 
 echo
 echo "dem_claim: $PASS passed, $FAIL failed"

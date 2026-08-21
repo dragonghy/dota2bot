@@ -976,3 +976,47 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **数一下 `soak/<run>/unattributed/` 的对象数(抢救了几个)**。
   跨组:在既有 `[harness] #75` 下追评(不新开);`[harness] #33` 仍开着,不重复开。
   详见 `iterations/reports/batch-desk/20260821T020600Z.md`。
+- 2026-08-21T04:13:55Z:**纯基建轮,零支出,未启动任何批测**。MTD **$14.9965386345**(与 22:18Z / 00:17Z /
+  02:06Z **连续四轮逐位一致**),开工与收尾 `describe-instances` 均 **0 台在跑,无泄漏**,未触发任何预算刹车
+  ($15.00 ≪ $90 刹车线,≪ $45 围栏,余 $30)。本轮唯一 AWS 写操作:一次 ~5 字节 put-object 探针(当场删)+
+  一次 `put-bucket-lifecycle-configuration`,**不可计费量级**。
+  **(1) 收割:无新数据**。`soak/` 最新前缀仍是 `spot_20260820_180808_1_11a8de33…`;`validation/` 无 20:10Z 之后
+  的新对象;`queue.json` 的 `requests` 为空 ⇒ 走 4b。`seed_roster_index.py --build` 增量:**137/137 已索引,
+  0 待扫**,档案累计未变。固定栏位:off-roster 新增 **0**;`unattributed/` 对象数 **0**;`.demclaim.json`
+  **仍无 sidecar**(`logname`/`hostname` 两条链仍未被真实数据验证,等下一波带录像的波次)。
+  **(2) 本轮最重要的一条:推翻我自己 00:17Z 写的「#75 存储前置已实际落地」**。读创建 runner 角色的源码
+  (`setup_aws.sh:26`)查到实例角色只有 `s3:PutObject/GetObject/ListBucket`,**没有 `s3:PutObjectTagging`**
+  ⇒ 00:17Z 落的两处 `put-object-tagging`(`soak_loop.sh`、`dem_claim.sh`)在实例上**必然 AccessDenied 且被
+  `2>/dev/null` 吃掉** ⇒ 桶上 `soak-dem-expire-21d`(`And(Prefix=soak/, Tag lifecycle=dem21)`)**永远匹配 0 个对象**。
+  总监 §Y.5(甲) 的担心方向对,但**量级不是边角:当前权限下每一个 bulk `.dem` 都是永不过期的对象**
+  (16 槽满跑 ≈2.8 GB/波)。`iam:GetInstanceProfile` 本用户无权限,这条是**读仓库源码**核出来的。
+  **(3) 修法:保留期改由 key 承担,不由 tag 承担**。新函数 `dem_bulk_prefix <prefix> <rec_slots>`
+  (`dem_claim.sh`):`REC_SLOTS=1` **原样返回**(`.dem` 仍写 `soak/<run>/` + `replays/`,**永不过期,与 #75 前
+  逐字节相同**);`REC_SLOTS>1` 返回 `s3://<bucket>/dem21/<run>`,claimed 与 `unattributed/` 抢救件都落该树。
+  桶上新加 **`dem21-expire-21d`:`Filter={Prefix:"dem21/"}`,21 天,不看 tag** —— **纯前缀规则,不需要上传方
+  任何额外权限,没有可失败的第二步**;`soak/<run>/` 只剩逐局档案,**结构上不可能被任何过期规则碰到**。
+  两处 `put-object-tagging` 已删(不再发必被拒的调用)。**总监 §Y.5(甲) 原文的
+  `soak/*/unattributed/` 规则不可实施:S3 生命周期 `Prefix` 是字面前缀、不支持通配符**(与「不支持后缀匹配」同族),
+  `<run>` 在中间表达不了 —— 挪 key 到 `dem21/` 是实现该意图的最省事写法。另一条**可**表达的写法
+  `And(Prefix=soak/, ObjectSizeGreaterThan=N)` **我没有采用**:它会连带扫掉 `soak/` 下 **1,015 个历史 `.dem`
+  (8.79 GB)= 录像组语料** ⇒ **要不要用它回收这 8.79 GB,归总监裁**。
+  `soak-dem-expire-21d` **保留但已知对实例写入恒不命中,不再是任何保证**;`dem21/` 现有对象数实测 **0**
+  ⇒ 上线即零回归。**§Y.5(乙) 死变量 `DEM_RESCUE_BUCKET` 已删。**
+  **(4) 顺带修掉一个会让第一波 16× 数据「传上去没人找得到」的断点**:`sweep_run.sh` 按 `soak/<run>/` 列 `.dem`,
+  已加 fallback —— 该前缀没有 `.dem` 时自动改列 `dem21/<run>/`,**`.analysis.json` 仍从 `soak/<run>/` 取**;
+  实测最近 run 的 `soak/` 下有 5 个 `.dem` ⇒ **历史 run 根本不进 fallback 分支,严格无影响**。
+  **(5) 验证**:四个脚本 `bash -n` 全过;离线测试 **39 assert 全过**(原 30 + 新 9,含四条对 `soak_loop.sh`
+  正文的断言:逐局档案仍写 `$S3_PREFIX`、`.dem` 写 `$DEM_PREFIX`、reaper 收 `$DEM_PREFIX`、全文件不再出现
+  `put-object-tagging`);生命周期三条规则 `get-` 读回确认;原子打 tag 的可行性是**对真桶实测**(我的用户能,
+  实例角色不能,故不采用)。本会话未改 Lua 且容器无 `luacheck`/`lua5.1`,铁律 6 无适用对象。
+  **(6) 启动决策:不启动**。例行三条件 (i)(iii) 形式上都满足((i) 距 08-20T16:09:02Z 已 12h05min),
+  **但 §X.0/§Y「无目的不启动」仍压着**:(甲) #75 吞吐只能搭车;(乙) `capmono` HP 轴作废且被 `[bug] #78` 暂缓采信;
+  (丙) 无 id 过 §V.7(`axeblink` 本轮被裁为「域未触达、不 arm」)。保守默认:不自行改被测集合、不自行换种子。
+  **排期含义比 02:06Z 更强:存储悬空也没有了 —— 一旦总监给出任何申报目的,那一波直接挂 `--rec-slots 16`
+  (两臂对称)即可,保留期由 `dem21/` 前缀规则自动兜住,无额外支出、无需任何 IAM 变更。**
+  **(7) 局数**:上一波 arm A **280**(166/114)+24 暖场、arm B **292**(168/124)+24 暖场,两臂 **572**;
+  本轮无在跑波次。档案累计 11,048 在册 + 3,367 暖场 / 137 run / 112 种子(增量索引确认未变)。
+  **(8) 下次触发新增必查项**:若跑过 16× 波次,列一次 `s3://…/dem21/` 确认录像确实落在那里
+  (落在 `soak/` 里 = `dem_bulk_prefix` 没生效,该波存储保证不成立)。
+  跨组:在既有 `[harness] #75` 下追评(不新开);`[harness] #33` 仍开着,不重复开。
+  详见 `iterations/reports/batch-desk/20260821T041355Z.md`。
