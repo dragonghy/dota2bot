@@ -217,8 +217,13 @@ key) and points at the proxy CA bundle. Config lives in
 The `dota2bot-agent` user is permission-scoped to exactly what batch testing
 needs (EC2 batch lifecycle, the results S3 bucket, SSM, PassRole for the runner
 profile, read-only cost/budget). It cannot perform IAM admin or touch unrelated
-resources. A $50/month AWS Budget with a freeze action at 100% caps its EC2
-spend as a hard backstop.
+resources. An AWS Budget named `dota2bot-batch` is the standing backstop —
+**verified 2026-08-21 via `budgets describe-budgets`: the limit is $100/month,
+not the $50 previously documented here**, with ACTUAL alerts at 50/80/100% of
+that limit (i.e. $50 / $80 / $100 of spend). Whether the claimed *freeze action*
+at 100% still exists **cannot be verified from this account**:
+`dota2bot-agent` lacks `budgets:DescribeBudgetActionsForBudget`. Treat the
+freeze as unconfirmed and rely on the human-facing brake lines below.
 
 ## AWS Spending Policy
 
@@ -234,9 +239,16 @@ Rules for any agent operating this infrastructure:
 - Batch instances must always launch via `aws_run.sh` (self-terminating Spot +
   12h watchdog). Never launch a long-lived instance without an explicit
   self-destruction path.
-- An AWS Budget (`dota2bot-batch`, $50/month, alerts at 50/80/100% to the
-  owner's email) is the backstop, not the primary control — the primary control
-  is asking the owner at each $50 tier.
+- An AWS Budget (`dota2bot-batch`, **$100/month as actually configured**, alerts
+  at 50/80/100% = $50/$80/$100 of spend to the owner's email) is the backstop,
+  not the primary control — the primary control is asking the owner at each $50
+  tier. The first owner-visible alert therefore fires at $50, *above* the batch
+  desk's own $45 launch fence and *below* its $90 brake line.
+- The MTD number comes from `budgets describe-budgets` (free), not from Cost
+  Explorer — `ce get-cost-and-usage` is billed **$0.01 per request**, and at two
+  calls per agent trigger that overhead measured $0.24/day on the real bill.
+  `check_costs.sh` pays for a CE read only to confirm a near-brake reading or
+  when a per-day/per-service breakdown is actually needed.
 
 ## Common Tasks
 
