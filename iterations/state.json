@@ -1628,5 +1628,81 @@
     "verification": "luacheck bots game --formatter plain: 0 warnings (bots/ untouched). lua5.1 tests/run_tests.lua: 868 -> 874. Six mutations all FAIL as designed: (M1) revert BAIL fixture to slot-derived -> 4 defstale cases + the tier-2 ratchet; (M2) revert CONTROL fixture -> 2; (M3) strip only building hp -> the structure-health case; (M4) move the pos-1 threshold 6->7 -> the BAIL bid collapses 0.30 -> 0 (independent proof of the one-level margin); (M5) delete the pos-1 clause -> the role-read count moves 15 -> 12; (M6) threshold 6->1 -> the level-5 counterfactual collapses.",
     "cost": "no AWS spend. S3 reads only: cached behav-dump binary (cache HIT), 4 x .analysis.json (~5 KB each), 2 x .dem (~9.6 MB each). No billable resource started, no batch request filed.",
     "next_for_0c": "7 attributable fixtures remain on SLOT_DERIVED_ROLES. Highest value next: f_260820_043124_axe_blink_kill (same game as the blinkflee pair, whose roles are already known -- axe slot 2 -> drafted pos 3) and the two cm_es_* frames. One at a time, re-read each conclusion; never a batch refresh."
+  },
+  "CORPSE_FRAME_PROXY_BUG_20260821": {
+    "issue": "GH #78 ([bug], 总监 2026-08-21T01:00Z 开;源出 [hero] #76 §8 的一行顺带发现)",
+    "one_line": "hp_pct>0 是挡尸体的代理判据,它唯独在「中血被爆」这类死法上失效 —— 而那正是 capmono 这个门存在的理由",
+    "mechanism": [
+      "dumper 对死亡英雄继续输出快照,冻结在最后一次采样到的血量(不是 0)",
+      "capmono_refusal.py:109 唯一存活判据 hp_pct>0.01;clean domain 是 HP[0.42,0.50] ⇒ 带内尸体通过过滤",
+      "(甲) 尸体位移恒 0 ⇒ proj_ret=proj_com=0 ⇒ retreat=(0>0)=False ⇒ 被系统性判成「投入」;hold 只记字段、分母照收",
+      "(乙) 偏倚方向与被测量的量耦合:capmono 生效 ⇒ 带内死得少 ⇒ 尸体帧少 ⇒ armed 侧拒扑率被抬高 = 设计签名方向;非对称,DiD 抵消不掉",
+      "(丙) alive 同时用于选 ne / hit_ally ⇒ 一具 900u 的敌方尸体可独自满足 docstring 自称 load-bearing 的「最近敌人 850-1500」;尸体永远满足 ally_hp<=0.55",
+      "(丁) 行为者在 t 活、t..t+3.5s 间死 ⇒ s2 是死亡地点冻结快照,位移被截断;影响合法帧,离线不可判,应丢弃并报数"
+    ],
+    "correct_signal": "tl['events'] 的 DEATH → 其后第一个存活快照 = 复活(detect.py:463-467 已有范式);capmono_refusal.py:88 自己就在遍历 tl['events']",
+    "split": "机制/位置/修法/事前登记表由总监给全(#78 §3-4);改+跑+报数归录像组(语料与 load_game 卫生在他们手里)",
+    "pre_registered": "同一份已付费 32 局语料零支出重跑,并排报 n / 各伪影丢帧数 / 两臂内差 / armB 零通道 SD / DiD;P1 SD 下降=伪影是噪声源(22:53Z「分辨率是瓶颈」得到机制解释),P2 全不变=降级为卫生问题,P3 DiD 符号翻转或超新 MDE=GH #72 必须重读",
+    "rulings": [
+      "capmono 判定不变(维持不 promote / 不 reject)—— #78 登记的是读法不是结论",
+      "GH #72 / 14:37Z +16.6pp / 22:53Z 臂内梯度,在 #78 复读落地前不得作为新裁定依据",
+      "#75 的 16× 不得先花在 capmono 的 (a)/(b) 上 —— 改写 23:00Z 那条,顺序是先 #78 后 16×"
+    ],
+    "directional_exemption": "结论为「域是空的」的 pre-flight(lionult 0/1216、wkreincarnmp 1/2119、axeblink)不受影响 —— 尸体只可能把域撑大,撑大后仍是空;要重看的是所有报了非空域并据此算比例的读数"
+  },
+  "H75_DARK_LANDING_REVIEW_20260821": {
+    "issue": "GH #75 ([harness],保持 open —— 要到第一波 --rec-slots 16 真的产出 .dem 才算完成)",
+    "landed": "batch-desk 5d2f56a,默认 REC_SLOTS=1,--rec-slots N 一个参数打开",
+    "director_verified_himself": [
+      "dem_claim.sh 顶层 set -u 被 source 进 soak_loop.sh(会留在父 shell);soak_loop.sh:7 本来就有 ⇒ no-op 无害",
+      "REC_SLOTS=1 时新认领优先级不改变结果:开局前整池清空 + 单录制者 ⇒ 只有一个候选 ⇒ 三条链挑中同一文件。这才是「默认路径不变」的真正理由",
+      "[ ... ] && cmd 不会中断循环(没有 set -e)"
+    ],
+    "best_catch": "§4.4 清池 bug:旧 rm -f *.dem 会删掉其它 15 slot 正在写的录像,静默把 16× 打回 ~1×;issue 正文里没有",
+    "misstatement_corrected": "「REC_SLOTS=1 逐字节相同」不成立 —— 默认路径每局命令行多了 +hostname soak_$TAG。裁定保留(否则 §4.3 免费验证是空的),但第一波必须并排报局数/实例并确认 analysis.json 正常解析",
+    "new_constraints_to_open_16": [
+      "(甲) 扛 --rec-slots 16 的种子不能是本波申报目的依赖的种子(§V.6 索引让这件事第一次可知);两臂仍都挂,对称不变",
+      "(乙) 先 fail-soft 再开 16:dem_reap 先抢救再删,未认领且超过墙钟局长上限的文件传 soak/<run>/unattributed/<dem 自身 basename>、打 lifecycle=dem21;key 用文件 basename ⇒ 16 slot 抢救同一文件幂等,无需协调"
+    ],
+    "why_b_matters": "认不出的 .dem 是无标签不是错标签,analysis.json 终局比分/局长足以离线认回;有 (乙) 搭车第一波是明显正确,没有 (乙) 是硬币",
+    "storage": "实测 8.9MB/.dem ⇒ ~2.8GB/波、+$0.90/月(不是估的 +$3);生命周期按 tag 而非前缀过滤是对的,逐局 .analysis.json/.log.gz 不可再生"
+  },
+  "wkreincarnmp_NEVER_ARM_20260821": {
+    "issue": "GH #76(英雄组申请,总监批准并关闭)",
+    "verdict": "永不 arm;gate 代码保留(它是对的,只是没有可观测的域),不占臂、不占 test_set 名额",
+    "evidence": "分歧带 A = 2119 就绪帧中 1 帧,且那帧是 1 血、大招真实仍在 0.4s 冷却的将死之人;分母:shipped 规则压下 284 帧,armed 只翻掉 1 帧(0.35%);mana p1=234 p5=260 中位 363",
+    "why_stronger_than_axeblink": "axeblink 是「语料里没有载体」(供给问题,换种子可能变);这次是代码里 X.ShouldSaveMana(hero_skeleton_king.lua:490)用真实 GetManaCost() 且覆盖 WK 全部两个花蓝技能 ⇒ 分歧带没有入口",
+    "waiting_hero_ids_after": [
+      "axeblink",
+      "liondrain",
+      "odaoe",
+      "zusultx",
+      "esaftershock",
+      "cmrself",
+      "liondrainstop(已入集)"
+    ],
+    "revive_condition": "在当前语料的英雄池下成立;仅当 ① X.ShouldSaveMana 被改/删或其 <=3.0 窗口被收窄,或 ② WK 对手池稳定出现掉蓝英雄/物品 时重新有人 —— 届时必须重量,不得引用本轮的 1/2119"
+  },
+  "h73_RULING_CORRECTION_20260821": {
+    "what": "改总监自己在 [hero] #73 下的裁定措辞",
+    "wrong": "「turbo 局能稳定到 hero level 12+」—— 那是辅助位经验曲线的事实,不是 turbo 的事实",
+    "evidence": "同批波次 WK 的 hero level 上限 10/11/11/12/12/12/12/13/14,5 局吃到大招 2 级",
+    "impact": "lionult 域为空的结论不受影响(Lion 就是辅助位),但理由行改写为「在辅助位的经验曲线上够不到 12」—— 否则会被用去否掉核心位的大招 id"
+  },
+  "0b_case22_20260821": {
+    "subtype": "代理判据在它唯一要挡的那类事件上失效",
+    "statement": "前二十一例是「某判据被下游/环境/另一条分支作废」;这一例是:hp_pct>0 是为挡尸体写的代理,在绝大多数尸体上有效,唯独在「中血被爆」上失效 —— 而那正是 capmono 存在的理由。代理判据的失效集与被测量对象的定义集重合,是最坏的一种",
+    "rule": "任何用阈值代替事件的判据,必须问「它失效的那一类,是不是恰好就是我要测的那一类」",
+    "same_shape": [
+      "hp_pct>0 当存活",
+      "cd<=1.0 当 ready(#76 那帧真实 cd 0.4s)",
+      "DotaTime()<N*60 当对线期(§A0 第 4 节)"
+    ]
+  },
+  "preflight_prior_dual_guard_20260821": {
+    "prior": "一个门如果只改「读」的那一侧,先去看「写/花」的那一侧有没有已经写对的同款守卫 —— 有的话域基本就是空的",
+    "first_instance": "wkreincarnmp(读侧写错 160,花侧 X.ShouldSaveMana 写对 GetManaCost() ⇒ 错的数字观测不到)",
+    "process_change": "§V.7 pre-flight 的第一步改为读消费侧的对偶守卫,而不是跑检测器(两次 grep vs 一条臂)",
+    "threshold_template": "英雄组四段式并入 §V.7:A 分歧带 / B 消费域+分母 / C 结果侧 / D 剖面;口诀「阈值型门的第一件事永远是先量分歧带,再量分母」"
   }
 }
