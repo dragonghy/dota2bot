@@ -221,18 +221,19 @@ local CLASS = {
     { file = 'bots/FunLib/jmz_func.lua',
       text = 'return hAncient:GetHealth() < 0.8',
       why = 'buyback path 1; the shipped default preserved verbatim behind `bbancient`.' },
-    -- Still open, and it fails the OTHER way: an alive unit always holds at
-    -- least 1 hit point, so `bot:GetHealth() > 0.15` is a guard that is true in
-    -- every frame it can be evaluated in -- a no-op where "don't grab a tree
-    -- below 15% health" was intended. Tiny is not a focus hero and turning a
-    -- no-op guard into a real restriction is its own behaviour change with its
-    -- own validation; recorded here, not fixed in this work unit.
-    { file = 'bots/BotLib/hero_tiny.lua',
-      text = 'and bot:GetHealth() > 0.15',
-      why = 'X.ConsiderTreeGrab; permissive direction -- the guard never denies anything.' },
+    -- The second member, hero_tiny.lua X.ConsiderTreeGrab's
+    -- `and bot:GetHealth() > 0.15`, is GONE as of GH #88 -- deleted, not
+    -- repaired. It failed the permissive way (true on every frame it could be
+    -- evaluated in), so deleting it is behaviour-equivalent, while repairing it
+    -- to `J.GetHP(bot) > 0.15` would be a new veto on a hero the soak farm
+    -- cannot draft and therefore cannot buy condition (a) evidence for. The
+    -- reasoning, the decision at 1 hp, and a tripwire on the draft pool live in
+    -- tests/test_tiny_treegrab_hp_noop.lua; that file also refuses a silent
+    -- re-tightening of the same function. The census below now expects ONE
+    -- site, which is the repaired one above.
 }
 
-tests['[class] both known units-mismatch sites are exactly where recorded'] = function()
+tests['[class] every known units-mismatch site is exactly where recorded'] = function()
     for _, m in ipairs(CLASS) do
         local src = read_file(m.file)
         assert(src:find(m.text, 1, true),

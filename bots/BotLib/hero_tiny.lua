@@ -518,8 +518,39 @@ function X.ConsiderTreeGrab()
 
 	local nEnemyHeroes = J.GetNearbyHeroes(bot,700, true, BOT_MODE_NONE)
 
+	-- [GH #88] An `and bot:GetHealth() > 0.15` clause used to sit between the
+	-- two below. GetHealth() returns HIT POINTS, so it was true on every frame
+	-- it could be evaluated in: X.SkillsComplement returns early on
+	-- J.CanNotUseAbility(bot), whose FIRST clause is `not bot:IsAlive()`, so
+	-- this line only ever ran with at least 1 hp. Deleting it is therefore
+	-- behaviour-equivalent, and it is deleted rather than repaired on purpose:
+	--
+	--   * Repairing it to `J.GetHP(bot) > 0.15` would be a NEW VETO -- a
+	--     behaviour change, which by team rule needs a gate plus condition (a)
+	--     evidence from a real game. For Tiny that evidence is structurally
+	--     unbuyable: the soak farm drafts only from the curated pool in
+	--     tools/batch_test/soak/hero_pool.txt (41 heroes, no Tiny), and the
+	--     archive agrees -- 0 appearances in 11048 banked validation games
+	--     across 112 seeds. A gate no corpus can execute is armed == shipped,
+	--     i.e. the axeblink trap by construction.
+	--   * Condition (c) is weak on its own terms anyway. The two surviving
+	--     clauses already require that Tiny is NOT retreating and that there is
+	--     no enemy hero within 700, and Tree Grab is an instant self-buff that
+	--     neither channels nor displaces him -- so the frames the repair would
+	--     have vetoed are frames where nothing was threatening him. "The author
+	--     meant 15%" is the target of a repair, not an argument for one.
+	--
+	-- Revive this only with a real reason, not with the typo as the reason.
+	-- tests/test_tiny_treegrab_hp_noop.lua pins both halves and goes red if
+	-- Tiny ever enters the draft pool (the one fact that would make (a) buyable).
+	--
+	-- Noted separately, deliberately NOT fixed here (one lever at a time): the
+	-- search radius below is 1200, which is not the ability's cast range, so the
+	-- queued Action_UseAbilityOnTree can walk Tiny some distance to reach the
+	-- tree. That is a movement cost -- and the one cost an hp floor here might
+	-- genuinely have addressed -- but it is a different defect with a different
+	-- fix, and it is present at every hp value, not just below 15%.
 	if not J.IsRetreating(bot)
-	and bot:GetHealth() > 0.15
 	and bot:DistanceFromFountain() > 800
 	and nEnemyHeroes ~= nil and #nEnemyHeroes == 0
 	then

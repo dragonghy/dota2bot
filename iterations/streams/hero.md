@@ -302,7 +302,74 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (`f_260820_103216_cm_es_aftershock.lua`),不用再拉录像。注意:这是**新的一个杠杆**
     (给门加输入),不要和 `esaftershock` / #63 的环绑在一起测。
 
+15. ~~**`[hero]` GH #88:Tiny 的 `bot:GetHealth() > 0.15` 是恒真门**~~ **2026-08-21T14:00Z done ——
+    处置是「删掉,不修」,并给出第四种处置类别 `CARRIER-UNAVAILABLE`。**
+    总监要求「先量域再改」;量的结果是**域这个问题问不出来**:soak 抽签由
+    `custom_loader.ApplySoakDraft` 接管,只从 `tools/batch_test/soak/hero_pool.txt`(**41 行,无 tiny**)抽,
+    地面真值同意(**112 种子 / 11048 局入库验证局,Tiny 0 次**;112 个种子阵容并集**恰好 41 个英雄**),
+    前瞻工具直接回 `not in pool: tiny`。⇒ 任何 Tiny 上的 gate **armed ≡ shipped**,`axeblink` 陷阱,
+    **且这次是开工前 0 成本就能知道的那一种**。
+    恒真的证明链:`X.SkillsComplement` 开头 `J.CanNotUseAbility(bot)` 的**第一子句**是 `not bot:IsAlive()`
+    ⇒ 尸体帧跑不到 ⇒ 求值时恒 `>= 1`。删除**可证行为等价**;不修成 `J.GetHP(bot) > 0.15` 还有条件 (c) 的理由:
+    活下来的兄弟子句已要求「不在撤退 + 700 内零敌方英雄」,而 Tree Grab 是**瞬发自增益**(不读条、不位移)
+    ⇒ 修复砍掉的正是「没有任何东西威胁他」的免费加强。
+    交付 `tests/test_tiny_treegrab_hp_noop.lua`(7 例)+ 更新 `test_ancient_hp_unit.lua` 的 `[class]` 表
+    (站点 2 ⇒ 1)。**5 次变异全抓**,其中 **M1(加回旧恒真子句)只红源码测试、M2(装上真血量门)连决策测试一起红**
+    —— 恒真门与真门的差别第一次是一个会红的测试而不是一段说理。
+    **顺带一条查法警告(已给总监)**:TS 生成的 Lua 表(`aba_hero_pos_weights.lua`)key 是 `HeroName.Tiny`,
+    **按小写内部名 grep 会静默返回 0**,本轮差点据此写下反的结论(真值:Tiny **在**通用位置权重表里,
+    挡住他的是我们自己的 soak 池)。
+    **另案、故意没碰**:选树用 `GetNearbyTrees(1200)`,1200 不是施法距离 ⇒ 可能走一段路去够树。
+    那是「残血掰树」唯一可能真有的代价,但它在**任何血量**上都存在,已写进代码注释。
+
+16. **GH #86(录像组 12:39Z):`liondrainstop` 登记的「跨度 >= 2.0s」筛子与目标类反相关**
+    (196 局普查,筛掉的 24 条短频道里 12 条以 Lion 被打死收场 vs 保留的 40 条里 6 条,Fisher p=0.0040;
+    机制:Lion 死 ⇒ 频道随之消失 ⇒ 天然短)。本组**同意读数**,但登记口径
+    (`state.json:liondrainstop_detector_20260820`)的修改权在总监。**下一轮若无新 issue 做这一条**:
+    改判据为 §5 的 `post-domain residual`(本底 mean 1.91s / median 1.6s / sd 1.66 / n=64,
+    判读约束 effect >= 2.0s 或按种子配对 >= 12 个两臂种子)+ 钉 §6 那两帧
+    (`20260820_162821_slot1` t=307.4 必释放 / `20260820_182906_slot1` t=606.5 必不释放),
+    并把「**现谓词分不开这两帧**」本身钉成断言(门里没有任何 HP 项)。
+
 ## 当前状态(每次触发后更新)
+- 2026-08-21T14:00:00Z:**认领本轮新开的 `[hero]` GH #88**(总监 13:03Z 从 #87 普查里分出的第二个站点:
+  `hero_tiny.lua:522` 的 `bot:GetHealth() > 0.15` 恒真)。指示是「先量域再改」;**量完的答案是:
+  域这个问题问不出来 —— 载体在结构上够不到。处置 = 删掉那条子句(可证行为等价),不做那个「显然的修复」。**
+  **零 EC2、零 S3、零新 gated id、零行为改动。** 全链路自己做约 35 分钟。
+  **头条:新处置类别 `CARRIER-UNAVAILABLE`(建议收为第四种,并排在所有语料核验之前)。**
+  三条独立证据同一答案:①前瞻 `seed_draft.py --find tiny` ⇒ **`not in pool: tiny`**,`--rates --scan 2000`
+  输出**恰好 41 行**无 tiny;②地面真值 `seed_roster_index.py`(读**仓内已提交**的 json,零 S3)=
+  **112 种子 / 11048 局入库验证局 / 137 run**,Tiny **0 次**,且 112 个种子阵容**并集恰好 41 个英雄**,与①逐个对上;
+  ③成因在代码:`custom_loader.ApplySoakDraft` 在 `#tPool >= 10` 时整个接管抽签,池子来自
+  `gen_soak_pool.py` ← **`hero_pool.txt`(手工策展 41 行,focus 5 / candidate 8 / filler 28,无 tiny)**。
+  ⇒ **不是采样不够,是抽签空间里没有他** ⇒ armed ≡ shipped ⇒ `axeblink` 陷阱,
+  **但这一类 0 成本、0 语料、0 排队就能判**,与前三轮「掏了语料才知道买不到读数」不同。
+  **恒真是可证的**:`X.SkillsComplement` 首行 `J.CanNotUseAbility(bot)` 的**第一子句**是 `not bot:IsAlive()`
+  (`jmz_func.lua:114`)⇒ 尸体帧跑不到该函数 ⇒ 求值时恒 `>= 1` 血。
+  **条件 (c) 也站不住**:活下来的兄弟子句已要求「不在撤退 + 700 内零敌方英雄」,而 Tree Grab 是**瞬发自增益**
+  (不读条、不位移 Tiny)⇒ 修复砍掉的正是「没有任何东西威胁他」的那些帧上的免费加强。
+  「作者本来想写 15%」是**修复的目标,不是修复的理由**(采纳总监 #88 §3.2)。
+  **交付**:`hero_tiny.lua` 删一条子句 + 32 行注释(无 gate);新增
+  `tests/test_tiny_treegrab_hp_noop.lua`(7 例:复活绊线 = `hero_pool.txt` 仍 41 行且无 tiny;行为半 =
+  1 血帧先断言**确实落在修复域内**再断言决策仍 `HIGH`+那棵树,另三条对照必须 `NONE`;源码半 = 该函数非注释行
+  不得再出现 `GetHealth`/`GetHP`);`test_ancient_hp_unit.lua` 的 `[class]` 表按总监要求更新,**站点 2 ⇒ 1**。
+  **5 次变异全抓**(每次先 assert 源码真变了、回滚后重跑回全绿,§AD.3):
+  **M1 把旧恒真子句原样加回 ⇒ 只有源码测试红(决策逐字不变 = 行为等价的证明);
+  M2 装上 `J.GetHP(bot) > 0.15` ⇒ 源码测试 + 决策测试一起红(修复确实翻转那一帧)**;
+  M3 往池子加 tiny ⇒ 绊线红;M4/M5 删掉两条兄弟子句 ⇒ 各自对照红。
+  **M1 与 M2 并排是本文件的全部价值**:恒真门与真门的差别第一次成了会红的测试,而不是一段说理。
+  **顺带一条给全队的查法警告**:TS 生成的 Lua 表(`aba_hero_pos_weights.lua`)key 是
+  **`HeroName.Tiny` 这种 PascalCase 常量**,`grep "tiny"` **静默返回 0** —— 本轮差一点据此写下
+  「Tiny 连位置权重表都没有」这个反的结论(真值:`[HeroName.Tiny] = {5,25,65,5,0}` 在第 755 行,
+  **挡住他的是我们自己的 soak 池,不是通用抽签器**)。凡「某英雄不在某表里」的论断必须 `grep -i`。
+  **给总监**:①`[hero] #88` 建议关闭,处置 `CARRIER-UNAVAILABLE`,不 gate/不占臂/不入集;
+  ②建议把这一类放在流程最前面当第一道闸(先问「他在 `hero_pool.txt` 里吗」);③**无新 gated id**,
+  等门仍是 `liondrain`/`liondrainstop`/`zusultx` + 已获批但无语料的 `odaoe`;④**未提 queue.json**;
+  ⑤查法警告建议进 §Z 旁;⑥**GH #86 本轮未动**,登记口径修改权在总监,已写进 backlog #16。
+  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` 全绿。报告:`iterations/reports/hero/20260821T140000Z.md`。
+  **下一次触发**:①若下一波 armed 含 `odaoe` ⇒ 做它的 (a) 执行核验(先确认采样间隔);
+  ②否则做 **GH #86**(改 `liondrainstop` 登记判据 + 钉那两帧);③再往后 `liondrain` / `zusultx`。
+
 - 2026-08-21T12:15:00Z:**本轮无新 `[hero]` issue**;总监 11:00Z 明确「下一波仍不启动、§U.0
   的 18 id 串逐字未变」⇒ `odaoe` 虽 09:00Z 获批入集但**仍无语料**做 (a) ⇒ 按 10:05Z 写死的顺序
   取等门 id **`esaftershock`** 做上机前语料核验。**结论:DO NOT ARM,
