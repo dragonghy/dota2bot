@@ -79,7 +79,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from roam_conversion import load_game, dist  # noqa: E402
+from roam_conversion import load_game, dist, is_dead  # noqa: E402
 
 LANING_END = 480.0          # turbo hard floor of J.IsInLaningPhase()
 OUT_START, OUT_END = 520.0, 900.0
@@ -120,9 +120,12 @@ def depth(victim, anc, own_team):
             - math.hypot(victim['x'] - ex, victim['y'] - ey))
 
 
-def scan(g):
+def scan(g, drops=None):
     tl = g['tl']
     anc = ancients(tl)
+    dead = g['dead']            # [bug] #78: event-based liveness
+    if drops is None:
+        drops = collections.Counter()
     deaths = collections.defaultdict(list)
     dmg = collections.defaultdict(list)
     for e in tl['events']:
@@ -144,7 +147,22 @@ def scan(g):
             continue
         if any(not (t + COMMIT_S < a or t - LAG_S > b) for a, b in pauses):
             continue
-        alive = [s for s in g['frames'][t] if s.get('hp_pct', 0) > 0]
+        # [bug] #78 fix (甲)/(丙): a corpse must not be able to BE the victim,
+        # nor to satisfy a load-bearing clause (nearest enemy / backing ally)
+        # on someone else's behalf.  The hp_pct>0 test is kept as the cheap
+        # first cut and the DEATH-event span as the authority; `drops` counts
+        # what the event test removes that the proxy let through, PER ARM --
+        # that count is itself the verdict (test_set.md section X.7).
+        alive = []
+        for s in g['frames'][t]:
+            if s.get('hp_pct', 0) <= 0:
+                continue
+            if is_dead(dead, s['hero'], t):
+                drops['corpse_leaked_by_hp_proxy'] += 1
+                drops['corpse_armed' if s['team'] == g['armed_team']
+                      else 'corpse_base'] += 1
+                continue
+            alive.append(s)
         for actor in alive:
             pos = g['pos'].get(actor['hero'], 0)
             if pos == 0:
@@ -177,6 +195,21 @@ def scan(g):
                 if key in last and t - last[key] < DEDUP_S:
                     continue
                 last[key] = t
+                # #78 (丁): if the ACTOR dies inside the outcome window, "what
+                # did it do in the next 4s" has no offline answer -- drop and
+                # count rather than score it as a non-commit.
+                if any(t < x <= t + COMMIT_S for x in deaths[actor['hero']]):
+                    drops['actor_died_in_window'] += 1
+                    drops['actordie_armed' if actor['team'] == g['armed_team']
+                          else 'actordie_base'] += 1
+                    continue
+                # How much of the 4s window the victim was actually alive for.
+                # A victim killed at t+0.6s leaves 0.6s of attackable window --
+                # scoring that as "did not auto-attack" is the SAME artifact
+                # #78 names, one layer down, and it is the layer where the
+                # sign is fixed negative for a gate that works.
+                vdt = min([x - t for x in deaths[victim['hero']] if x > t - LAG_S]
+                          or [float('inf')])
                 vic = canon(victim['hero'])
                 hits = [(ht, ish, tg, inf) for ht, ish, tg, inf in dmg[actor['hero']]
                         if t - LAG_S < ht <= t + COMMIT_S]
@@ -208,6 +241,8 @@ def scan(g):
                     'kill': any(t - LAG_S < x <= t + CONVERT_S
                                 for x in deaths[victim['hero']]),
                     'bid_wins': actor['hp_pct'] > BID_FLOOR_HIGH,
+                    'vic_dt': vdt,
+                    'full_window': vdt > COMMIT_S,
                 }
 
 
@@ -231,6 +266,7 @@ def table(rows, label, keys=('commit', 'commit_attack', 'kill', 'switch', 'creep
 def main():
     rows = []
     games = 0
+    drops = collections.Counter()
     for d in sys.argv[1:]:
         tld = os.path.join(d, 'timelines')
         for fn in sorted(os.listdir(tld)):
@@ -251,8 +287,19 @@ def main():
             g['game'] = stem
             g['seed'] = json.load(open(aj)).get('script_version', '').split(':')[-2]
             games += 1
-            rows.extend(scan(g))
+            rows.extend(scan(g, drops))
     print(f'games={games}  episodes={len(rows)}')
+    # [bug] #78 / test_set section X.7 pre-registered line: report what the
+    # event-based liveness test removed, SPLIT BY ARM.  A corpse artifact that
+    # is symmetric across arms cannot have produced the headline; one that
+    # leans to the arm that kills more can.
+    print('\n[#78] frames/episodes removed by the DEATH-event liveness test')
+    print(f"  corpse snapshots the hp_pct>0 proxy let through: "
+          f"{drops['corpse_leaked_by_hp_proxy']}  "
+          f"(armed {drops['corpse_armed']} / baseline {drops['corpse_base']})")
+    print(f"  episodes dropped, actor died inside the 4s window: "
+          f"{drops['actor_died_in_window']}  "
+          f"(armed {drops['actordie_armed']} / baseline {drops['actordie_base']})")
     for branch in ('l1trade', 'l5combo'):
         br = [r for r in rows if r['branch'] == branch]
         for band in ('ACTIVE', 'VETO', 'OUT'):
@@ -260,6 +307,16 @@ def main():
             if sub:
                 table(sub, f'[{branch}] {band}')
         act = [r for r in br if r['band'] == 'ACTIVE']
+        # #78's core objection, at the layer it actually bites: a victim killed
+        # 0.6s into the window cannot be auto-attacked for the other 3.4s, so
+        # "did not auto-attack" is scored against the arm that killed it.
+        # Restricting to victims that survived the WHOLE window removes that
+        # coupling by construction -- the surviving deficit, if any, is the
+        # behaviour.  Report both halves; the split itself is diagnostic.
+        table([r for r in act if r['full_window']],
+              f'[{branch}] ACTIVE, victim ALIVE through the full 4s window (#78-clean)')
+        table([r for r in act if not r['full_window']],
+              f'[{branch}] ACTIVE, victim died inside the window (window truncated)')
         table([r for r in act if r['bid_wins']], f'[{branch}] ACTIVE, HP>0.408 (armed bid wins)')
         table([r for r in act if not r['bid_wins']], f'[{branch}] ACTIVE, HP<=0.408 (armed bid LOSES to what it preempts)')
     # per-seed paired view of the headline metric

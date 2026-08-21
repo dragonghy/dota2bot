@@ -80,6 +80,74 @@ def paused_spans(tl, frames):
     return spans
 
 
+def death_spans(tl, real_idx):
+    """hero -> [(t_death, t_respawn)] built from DEATH EVENTS, not from hp_pct.
+
+    `[bug] #78`: every detector in this directory used `hp_pct > 0` as its
+    liveness test.  That is a PROXY, and the whole point of #78 is that a proxy
+    has to be checked on the class of events it exists to catch.  Measured here
+    on the 32-game 1609xx/1807xx corpus (182 deaths, 4033 corpse frames):
+
+      * 3880/4033 corpse frames DO read hp_pct == 0 exactly -- so on this
+        corpus the proxy is right 96.2% of the time, not "systematically
+        wrong";
+      * the leak is bounded and one-sided: 153 frames, 34/182 deaths, and in
+        every observed case it is the FIRST snapshot after the DEATH event
+        (<=0.3s later) still carrying the last LIVE sample -- the 1Hz lag
+        this module's LAG_S comment already described, seen from the other
+        side.  Leaked values observed: 0.005 .. 0.29, i.e. ALL of them land
+        inside a `hp_pct <= 0.40` victim band.
+
+    So the proxy does not fail "everywhere", but where it fails it fails
+    entirely inside the selection band of any lethality-proxy detector.  Hence
+    this helper: a hero is dead from its DEATH event until it respawns, and
+    respawn is detected by the fountain teleport (hp back above 0.5 AND a
+    >1500u jump), never by hp alone.
+    """
+    per = collections.defaultdict(list)
+    for s in tl['snapshots']:
+        if real_idx.get(s['hero']) == s['idx']:
+            per[s['hero']].append(s)
+    for h in per:
+        per[h].sort(key=lambda s: s['t'])
+
+    spans = collections.defaultdict(list)
+    for e in tl['events']:
+        if e['type'] != 'DEATH' or not e.get('target_hero'):
+            continue
+        h, td = e['target'], e['t']
+        if spans[h] and spans[h][-1][1] > td:
+            continue                      # already inside a known death span
+        snaps = per.get(h) or []
+        loc = next(((s['x'], s['y']) for s in reversed(snaps) if s['t'] <= td), None)
+        tr = float('inf')
+        for s in snaps:
+            if s['t'] <= td or s['hp_pct'] <= 0.5:
+                continue
+            jumped = loc is None or math.hypot(s['x'] - loc[0], s['y'] - loc[1]) > 1500.0
+            # Fountain respawn teleports; REINCARNATION DOES NOT.  Wraith King
+            # (skeleton_king -- a focus hero) revives on the spot after ~3s:
+            # measured 20260820_181721_slot1, DEATH t=380.9, hp 0.000 for
+            # 381.5-383.5, then hp=1.000 at t=384.5 forty-eight units away.
+            # A jump-only respawn test leaves him "dead" for the next 28s and
+            # silently deletes real frames (he fights at 0.3% HP through
+            # t=395).  So accept a no-jump revival too, but only after 1.5s --
+            # the hp_pct leak this helper exists to catch is ALWAYS the single
+            # snapshot within 0.3s of the DEATH event (measured max 0.30s over
+            # 700 spans), so the guard separates the two cases with margin.
+            if jumped or s['t'] - td >= 1.5:
+                tr = s['t']
+                break
+        spans[h].append((td, tr))
+    return spans
+
+
+def is_dead(spans, hero, t):
+    """True if `hero` is inside a death span at time t.  The window opens at the
+    DEATH event itself: the leaked frames are all AFTER it."""
+    return any(a <= t < b for a, b in spans.get(hero, ()))
+
+
 def load_game(tl_path, aj_path):
     tl = json.load(open(tl_path))
     aj = json.load(open(aj_path))
@@ -132,6 +200,10 @@ def load_game(tl_path, aj_path):
         'tl': tl, 'frames': frames, 'pos': pos, 'n_illusion': n_illusion,
         'armed_team': armed_team, 'armed_side': armed_side,
         'pauses': paused_spans(tl, frames),
+        # [bug] #78: event-based liveness, for callers that select on a low-HP
+        # band (where the hp_pct proxy's leak lives entirely).  Existing
+        # callers keep their own hp_pct test until each is re-read on corpus.
+        'dead': death_spans(tl, real_idx),
     }
 
 
