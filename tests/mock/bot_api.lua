@@ -279,7 +279,18 @@ function M.install(opts)
     G.GetUnitList = function() return {} end
     G.GetTower = function() return nil end
     G.GetBarracks = function() return nil end
-    G.GetAncient = function() return M.MakeUnit({ GetLocation = M.Vector(0, 0, 0), GetHealth = 4500 }) end
+    -- GetMaxHealth and the OriginalGet* pair are NOT decoration: J.GetHP reads
+    -- the un-hooked getters for own-team units, and the ancient is always own-
+    -- team for the reader that matters (mode_roshan_generic:46, and buyback
+    -- path 1 once `bbancient` is armed). With only GetHealth supplied, the
+    -- fractional read divided by nil -- one more of this mock's undeclared
+    -- world assumptions, this one shaped like "the ancient has no maximum".
+    G.GetAncient = function() return M.MakeUnit({
+        GetLocation = M.Vector(0, 0, 0), GetUnitName = 'npc_dota_badguys_fort',
+        GetHealth = 4500, GetMaxHealth = 4500,
+        OriginalGetHealth = 4500, OriginalGetMaxHealth = 4500,
+        IsAlive = true, IsBuilding = true,
+    }) end
     G.GetShrine = function() return nil end
     G.GetCourier = function() return nil end
     G.GetLaneFrontLocation = function() return M.Vector(0, 0, 0) end

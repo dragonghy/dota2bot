@@ -9295,6 +9295,37 @@ function J.GetEnemiesAroundAncient(bot, nRadius)
 	if bot == nil then bot = GetBot() end
 	return J.GetEnemiesAroundLoc(GetAncient(bot:GetTeam()):GetLocation(), nRadius)
 end
+-- "Is our ancient hurt enough that a dead hero should spend the buyback?"
+--
+-- The published form of this test (ability_item_usage_generic.lua, buyback
+-- path 1) is `ancient:GetHealth() < 0.8` -- ABSOLUTE hp compared against what
+-- is plainly meant as a FRACTION. GetHealth() returns hit points, so the test
+-- is false for every ancient that still stands (it needs hp <= 0, i.e. the
+-- game is already over): buyback path 1 is dead code, and it is the ONLY one
+-- of the three buyback paths not sitting under `nFullRespawnTime < 60`.
+--
+-- The intended form is not a guess. The same predicate about the same object
+-- with the same 0.8 literal is already written correctly elsewhere in the
+-- shipped tree: mode_roshan_generic.lua:46 does
+--     J.GetHP(GetAncient(bot:GetTeam())) < 0.8
+-- That call site also settles the only implementation worry -- J.GetHP reads
+-- the un-hooked OriginalGet* getters for own-team units, and it has been
+-- running against the ancient every frame of roshan mode all along.
+--
+-- Gated (`bbancient`), so the shipped default stays byte-identical until the
+-- fix is validated. Validating it is the hard part and it is NOT a property of
+-- this rule: our batch harness ends every game with a referee `forcewin` at
+-- SOAK_CAP_MIN (10 game-minutes), so no recorded game ever reaches a siege.
+-- Measured over the fixture archive: 58 ancient snapshots in the 29 fixtures
+-- whose building table actually carries one, over 5 timelines, ALL at
+-- hp = 1.0. Not rare -- untouched. See tests/test_ancient_hp_unit.lua.
+function J.IsAncientBadlyHurt( hAncient )
+	if hAncient == nil then return false end
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'bbancient' ) then
+		return J.GetHP( hAncient ) < 0.8
+	end
+	return hAncient:GetHealth() < 0.8
+end
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then

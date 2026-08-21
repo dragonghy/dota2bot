@@ -129,21 +129,21 @@ local GATES = {
       why = 'a bloodseeker-only opt-out at the level cap. The subject of the branch is a '
          .. 'level-30 hero; that hero does not exist in turbo, so nothing is lost.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 582, op = '>', n = 24, eff = 25,
+    { file = 'bots/ability_item_usage_generic.lua', line = 584, op = '>', n = 24, eff = 25,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 24',
       why = 'buyback path 2 of 3. Inert on its own terms (a level-25 hero). See the '
          .. '[recorded] buyback test below: this path is unreachable for a SECOND, '
          .. 'independent reason, which is the part worth following up.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5749, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5751, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5789, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5791, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
@@ -485,10 +485,13 @@ tests['[recorded] all three automatic buyback paths are shut in turbo'] = functi
     local n = 0
     for _ in src:gmatch('ActionImmediate_Buyback') do n = n + 1 end
     assert(n == 3, 'buyback call sites moved from 3 to ' .. n)
-    -- path 1: guarded by a units mismatch -- the ancient's HP is thousands, and
-    -- this compares it to 0.8 as if it were a fraction (J.GetHP would be the
-    -- fractional read). Recorded, not fixed: it is not this work unit's lever.
-    assert(src:find('if ancient ~= nil and ancient:GetHealth() < 0.8 then', 1, true),
+    -- path 1: the units mismatch this section recorded was taken up by the
+    -- director in the same round and repaired behind `bbancient`; the raw
+    -- comparison now lives in J.IsAncientBadlyHurt, where the unarmed branch
+    -- preserves it verbatim. This ratchet fired exactly as intended (the edit
+    -- turned this assertion red), so it is re-pinned on the new call site
+    -- rather than deleted. Full reasoning: tests/test_ancient_hp_unit.lua.
+    assert(src:find('if J.IsAncientBadlyHurt( ancient ) then', 1, true),
         'buyback path 1 changed -- re-read the units observation in GH #84 follow-up')
     -- paths 2 and 3 both sit below this early return.
     assert(src:find('if nFullRespawnTime < 60 then', 1, true),

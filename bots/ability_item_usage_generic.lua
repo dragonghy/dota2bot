@@ -565,7 +565,9 @@ local function BuybackUsageComplement()
 	local nFullRespawnTime = bot:GetRespawnTime()
 	local nRemainingRespawnTime = X.GetRemainingRespawnTime()
 
-	if ancient ~= nil and ancient:GetHealth() < 0.8 then
+	-- `ancient:GetHealth() < 0.8` (absolute hp vs a fraction) moved behind
+	-- J.IsAncientBadlyHurt; unarmed it evaluates to the identical expression.
+	if J.IsAncientBadlyHurt( ancient ) then
 		local nEnemyUnitsAroundAncient = J.GetEnemiesAroundLoc(ancient:GetLocation(), 1500)
 		local nAllyUnitsAroundAncient = J.GetAlliesNearLoc(ancient:GetLocation(), 1500)
 		if nEnemyUnitsAroundAncient > 1 and nAllyUnitsAroundAncient == 0 and nRemainingRespawnTime > 20 then
