@@ -60,14 +60,33 @@ INHERITED HYGIENE
   For THIS detector the answer differs per path, and the difference is
   structural -- do not carry the `lanekill_commit.py` conclusion across:
 
-    (A) ACTOR selection is IMMUNE BY CONSTRUCTION, not by luck.  The measured
-        leak band is hp 0.005..0.29 (all <= 0.40, GH #78 / 02:36Z, 735 death
-        spans) and corpse frames otherwise read exactly 0.0; the actor band is
-        [0.42,0.50].  The two are DISJOINT, so no corpse and no leaked frame
-        can ever be selected as the actor.  Measured: 0/806 actor frames inside
-        a death span.  Same for the forward window -- 0/806 actors die inside
-        [t, t+4.5], because the domain's own >=850u enemy clause keeps the
-        actor out of immediate lethal range.
+    (A) ACTOR selection came out CLEAN ON THIS CORPUS: 0/806 actor frames sit
+        inside a death span, and 0/806 actors die inside the forward window
+        [t, t+4.5].  The measured leak band is hp 0.005..0.29 (all <= 0.40,
+        GH #78 / 02:36Z, 735 death spans) and corpse frames otherwise read
+        exactly 0.0, so it does not reach the actor band [0.42,0.50].
+
+        DIRECTOR RULING 2026-08-21T05:0xZ (test_set.md section Z.1): this is a
+        MEASURED disjointness, NOT immunity by construction -- the first draft
+        of this note said "IMMUNE BY CONSTRUCTION, not by luck" and that is the
+        section Y.2 error (a desk argument can prove EMPTY, it cannot prove
+        RARE) one round later.  The leak value IS the last hp sampled before
+        death, so leak > 0.42 needs only a hero going from >42% to dead inside
+        one 0.5s interval -- available burst, i.e. a draft/patch property, not
+        a code property.  The >=850u nearest-enemy clause makes it rarer, not
+        impossible (Lion's Finger reaches 850 and Zeus's ult is global).
+        WHY IT MATTERS EVEN THOUGH THE FILTER IS ALWAYS ON BELOW: the risk is
+        not this run, it is a future reader citing "by construction" to skip
+        the audit or drop the is_dead() call on a new corpus.  And the bias, if
+        the bands ever do overlap, runs the WRONG WAY: a corpse's displacement
+        is 0 -> scored COMMIT -> refusal rate down; capmono working means fewer
+        in-band deaths on the armed side, so the armed refusal rate is pushed
+        UP -- the design signature itself (GH #78's asymmetry, un-cancellable
+        by DiD).  RE-AUDIT TRIGGER: any new corpus, or a wider sample interval.
+        THE ZERO-SPEND COLUMN THAT WOULD SETTLE IT (one line on a computation
+        already run): not the max of the 735 leak values but their TAIL --
+        p95/p99 and the count above 0.20.  A lone 0.29 over a p99 of ~0.05 is
+        a real margin; mass piled near 0.29 means 0.42 is one burst draft away.
     (B) The ALLY gate is where #78 DOES bite: it admits an ally at hp <= 0.55,
         and that band CONTAINS the whole leak band.  Measured 4/806 frames
         whose "ally in need" was already dead at t (leaked hp 0.133/0.059/
@@ -145,6 +164,16 @@ def tp_channel_spans(tl):
     the sampled frame and cannot act, so the frame is not a decision frame at
     all -- see the TELEPORT CHANNELING note in the module docstring for why a
     movelen cap is not an adequate substitute for this.
+
+    SECOND IMPLEMENTATION, ON PURPOSE-ish (director review 2026-08-21T05:0xZ):
+    detect.py:_tp_channels already does this and is NOT reused only because it
+    wants a tl wrapper with .events while we hold the raw dict.  The two differ
+    in one place: it keeps a FIFO of unmatched ADDs per hero, this keeps a
+    single slot, so an ADD/ADD/REMOVE sequence (a REMOVE dropped by the dumper)
+    yields the span from the SECOND add here and from the first there.  Ours is
+    the narrower span => fewer frames excluded => the correction is understated,
+    never overstated, which is the safe direction for a discard filter.  If a
+    third copy of this ever appears, hoist one shared implementation instead.
     """
     open_at, spans = {}, collections.defaultdict(list)
     for e in tl['events']:
