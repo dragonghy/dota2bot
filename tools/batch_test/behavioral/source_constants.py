@@ -127,6 +127,28 @@ def call_arg(func, callee, index, where=None, path=None):
     return _num(hits[0], what)
 
 
+def assignment(name, path=None):
+    """Numeric literal of the unique top-level `<name> = <number>` assignment.
+
+    Many gates park their threshold in a file-level constant rather than inline
+    (`X.nEDrainDangerRadius = 500` in hero_lion.lua), which `function_body`
+    cannot reach because it is not inside any function.  Fail-loud on the same
+    terms as the rest of this module: zero or several matches raise, so a
+    detector can never silently mirror the wrong site.
+    """
+    path = path or JMZ
+    with open(path, 'r', encoding='utf-8') as fh:
+        src = _strip_comments(fh.read())
+    hits = re.findall(r'^\s*' + re.escape(name) + r'\s*=\s*([-\d.]+)\s*$',
+                      src, re.M)
+    what = '%s = <number> in %s' % (name, os.path.basename(path))
+    if len(hits) != 1:
+        raise SourceConstantError(
+            '%s: expected exactly 1 assignment, found %d%s'
+            % (what, len(hits), '' if not hits else ' (%s)' % ', '.join(hits)))
+    return _num(hits[0], what)
+
+
 def literal(func, pattern, path=None):
     """The number in group `n` of `pattern`, which must match the body exactly once.
 

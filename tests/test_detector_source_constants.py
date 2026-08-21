@@ -37,7 +37,9 @@ BEHAV = os.path.join(ROOT, 'tools', 'batch_test', 'behavioral')
 sys.path.insert(0, BEHAV)
 
 from source_constants import (call_arg, literal, function_body,  # noqa: E402
-                              SourceConstantError)
+                              assignment, SourceConstantError)
+
+LION_LUA = os.path.join(ROOT, 'bots', 'BotLib', 'hero_lion.lua')
 
 FAIL = []
 
@@ -92,6 +94,19 @@ print('=== 2. registry: detector constants still mirror their source site ===')
 import capmono_refusal as capmono          # noqa: E402
 import lanekill_commit as lanekill         # noqa: E402
 import filter_outcome_coupling as foc      # noqa: E402
+import lion_drain_census as drain          # noqa: E402
+import lion_drain_start_domain as drstart  # noqa: E402
+
+# The Lion Mana Drain pair, both levers.  `X.nEDrainDangerRadius` is a
+# file-level constant rather than an inline literal, which is why the extractor
+# grew `assignment()`; the 2.0s damage window IS an inline call argument and is
+# read from each gate separately, because "both levers use the same predicate"
+# is a claim the pre-flight of 2026-08-21T22Z leans its whole conclusion on.
+LION_DRAIN_RADIUS = assignment('X.nEDrainDangerRadius', LION_LUA)
+LION_DRAIN_WINDOW_START = call_arg('X.lion_IsDrainSafeToStart',
+                                   'WasRecentlyDamagedByAnyHero', 0, path=LION_LUA)
+LION_DRAIN_WINDOW_STOP = call_arg('X.lion_ShouldStopDrain',
+                                  'WasRecentlyDamagedByAnyHero', 0, path=LION_LUA)
 
 REGISTRY = [
     # (label, detector value, shipped value)
@@ -103,6 +118,13 @@ REGISTRY = [
     ('lanekill_commit.DEPTH_CORE', lanekill.DEPTH_CORE, L1_DEPTH),
     ('lanekill_commit.DEPTH_SUP', lanekill.DEPTH_SUP, L5_DEPTH),
     ('filter_outcome_coupling.LANESURV_R', foc.LANESURV_R, LANESURV_REACH),
+    ('lion_drain_census.DANGER_RADIUS', drain.DANGER_RADIUS, LION_DRAIN_RADIUS),
+    ('lion_drain_census.DAMAGE_WINDOW', drain.DAMAGE_WINDOW,
+     LION_DRAIN_WINDOW_STOP),
+    ('lion_drain_start_domain.DANGER_RADIUS', drstart.DANGER_RADIUS,
+     LION_DRAIN_RADIUS),
+    ('lion_drain_start_domain.DAMAGE_WINDOW', drstart.DAMAGE_WINDOW,
+     LION_DRAIN_WINDOW_START),
 ]
 for label, got, want in REGISTRY:
     eq(label, float(got), float(want))
@@ -116,6 +138,19 @@ eq('capmono legacy floor preserved for reproducibility',
    capmono.LEGACY_ENE_LO, 850.0)
 check('filter_outcome_coupling still audits the 850 domain on purpose',
       foc.ENE_LO == 850.0, '(ENE_LO=%r)' % foc.ENE_LO)
+
+# The 2026-08-21T22Z pre-flight concluded that `liondrain` has no domain of its
+# own because `liondrainstop` runs THE SAME predicate one think tick later.
+# That conclusion is only as good as the sameness, so pin it: same window, and
+# both gates handing the same NAMED constant to the same scan.  (`call_arg`
+# cannot read the radius here -- it is a name, not a literal -- which is the
+# point: an inlined number in either gate makes these two checks go red.)
+eq('both drain levers share the 2s damage window',
+   LION_DRAIN_WINDOW_START, LION_DRAIN_WINDOW_STOP)
+for _gate in ('X.lion_IsDrainSafeToStart', 'X.lion_ShouldStopDrain'):
+    check('%s scans J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true )' % _gate,
+          'J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true'
+          in function_body(_gate, LION_LUA))
 
 # ---------------------------------------------------------------- section 3
 # The extractor must FAIL LOUDLY.  This is the layer that makes the registry
@@ -153,6 +188,10 @@ raises('non-numeric argument raises rather than coercing',
                         {2: 'true'}))
 raises('pattern matching nothing raises',
        lambda: literal('J.ShouldRetreatLaneBurst', r'zzz(?P<n>\d+)'))
+raises('missing module-level assignment raises',
+       lambda: assignment('X.nNoSuchConstant', LION_LUA))
+raises('assignment to a non-number raises rather than coercing',
+       lambda: assignment('local sAbilityList', LION_LUA))
 
 # Comments are stripped before matching: jmz_func.lua explains its own
 # thresholds in prose ("skip any target meaningfully past the midline

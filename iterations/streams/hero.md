@@ -156,6 +156,32 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 7. **Lion 个体核查**(2026-08-19T21:49Z 起步,焦点五最后一个开张的)。
    - ~~**Mana Drain 把没技能的辅助钉在原地**~~ **2026-08-19T21:49Z done**,gate
      `liondrain`,两个真实帧 fixture + 15 例 + 7 次变异(6 抓 1 暴露死代码),见"当前状态"。
+     **2026-08-21T22:00Z 上机前语料核验后撤回排队:DO NOT ARM,第六类处置
+     (建议名 `SIBLING-DOMINATED`)。** 前五类一条都不是:载体在(Lion 12/54 局)、
+     域**可达且是五个被否决候选里最大的**(4 起手 / **4 episode** / 12 局 Lion 局里的 4 局
+     = **0.33 ep/Lion 局**,对比 cmrself/esaftershock/zusultx 各 0.06、已获批的 odaoe 0.77)、
+     消费点对、谓词也对。**塌掉它的是 `liondrainstop`** —— 它**已经在 eligible 集里**、
+     跑**一字不差的同一个谓词**,而 `X.ConsiderStopDrain()` 是 `X.SkillsComplement` 的
+     **第一行**(`hero_lion.lua:199`,在 `J.CanNotUseAbility` 早退**之上**)⇒ 读条期间每个
+     think tick 都跑 ⇒ **「开读条那刻谓词就为真」的帧,释放侧下一个 tick 就切了**。
+     实测**4 个域内起手里 3 个被它覆盖**,第 4 个频道长 **0.0s**(ADD/REMOVE 同一个 0.1s 时刻,
+     已回原始事件流核对,不是配对错误)⇒ 否决它是空操作。**`liondrain` 独占域 = 空。**
+     反向不成立:`liondrainstop` 另有 **3 个**「干净开始、中途转危」的频道是 `liondrain`
+     结构上够不着的 ⇒ **两者不是并列,是包含:`liondrainstop` ⊃ `liondrain`**。
+     **排期升级**:登记的「两者永不同臂」**不够** —— 即使分两臂,两臂在那 3 个共享频道上
+     行为几乎相同(对比度≈0),只有 3 个 `stop_only` 频道能分开;建议 **`liondrain` 在
+     `liondrainstop` 拿到 (a) 读数之前不进任何波次**。**门代码保留(两个都是对的)。**
+     **顺带:门在自己域上也是 50%** —— #1 是 fixture A(真阳)、#3 是 fixture B(**干净假阳**:
+     5.0s 频道、环里 luna 只剩 32% 血、1200 内 2 队友、Lion 整局再没死)、#2 频道 0.3s 而死亡在
+     结束后 2.5 秒(因果链断)、#4 是 0.0s。这就是 16:00Z 在释放侧钉的 **HIGH/HIGH**,
+     必然如此,因为是同一个谓词。工具 `tools/batch_test/behavioral/lion_drain_start_domain.py`
+     (第八个域模板,`--verify` 39 例 / 7 次变异全抓);**GH #97**;登记
+     `state.json:liondrain_corpus_preflight_20260821T2200Z`。
+     **可复用先验(第三个方向,建议进 §Y.2 旁)**:**上机前问「测试集里有没有一个 id 跑同一个
+     谓词、只是接在决策链的另一端?」** —— `wkreincarnmp` 问「同分支上有没有更弱的否决已经拦了」,
+     `zusultx` 问「我拦的地方动作路不路过」,本条问「别的门是不是已经在下游做了同一件事」。
+     三条都是**桌面可查**的;本轮唯一需要语料的是**域的形状**(4 个全是「开读条即为真」而不是
+     「中途转危」)—— 桌面能证 EMPTY,不能证 RARE(§Y.2)。
    - ~~**`X.ConsiderStopDrain` 只认 `J.IsRetreating`**~~ **2026-08-20T18:12Z done**,
      新 gate **`liondrainstop`**,与 `liondrain` 共用 `X.nEDrainDangerRadius` 常量
      (retune 双向自报);两个真实帧 fixture(**同一局 182855 的两个不同 channel**:
@@ -389,6 +415,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     并把「**现谓词分不开这两帧**」本身钉成断言(门里没有任何 HP 项)。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T22:00:00Z:**`liondrain` 上机前语料核验 —— DO NOT ARM,第六类处置
+  `SIBLING-DOMINATED`(它被一个已入集的同族 id 包住了)。**
+  会话开头按规矩查了远端(`git ls-remote origin main` = `f81fc44`),`[hero]` open issue
+  里 #85/#73/#66/#63/#59/#56/#54 都不是本轮的活;上一轮指定的 ①`odaoe` (a) 核验**仍不满足**
+  (§AB.1 明写「§U.0 的 18 id 下一波串逐字不变」⇒ 本波未 armed,没有 (a) 可收)⇒ 按次序取 `liondrain`。
+  **零 EC2、零 S3 PUT、零行为改动、零新 gated id**(S3 GET 54 个 `.dem` ≈510MB + dumper 缓存命中)。
+  **头条**:域**是五个被否决候选里最大的一个** —— 4 起手 / **4 episode** / 12 局 Lion 局里的 4 局
+  = **0.33 ep/Lion 局**(cmrself/esaftershock/zusultx 各 0.06,已获批的 odaoe 0.77)⇒
+  **这一轮第一次不是「域太小」死的**。死因换了:**`liondrainstop` 跑一字不差的同一个谓词,
+  而且跑在 `X.SkillsComplement` 的第一行**(`hero_lion.lua:199`,在 `J.CanNotUseAbility` 早退之上)
+  ⇒ 读条期间每 tick 都跑 ⇒ 「开读条即为真」的帧它下一个 tick 就切。实测覆盖 **3/4**,
+  第 4 个频道 **0.0s**(空操作)⇒ **`liondrain` 独占域 = 空**;而 `liondrainstop` 另有 **3 个**
+  `liondrain` 够不着的频道 ⇒ **包含关系,不是并列**。详见 backlog §7 第一条与
+  `iterations/reports/hero/20260821T220000Z.md`。
+  **交付**:新工具 `lion_drain_start_domain.py`(第八个域模板,`--verify` **39 例**、
+  **7 次变异 7 抓**,内建「ABILITY 事件 vs MODIFIER 事件」宇宙交叉核对,实测 73=73 / 27=27);
+  `source_constants.assignment()`(读**文件级**常量的 fail-loud 抽取器,`function_body` 够不着
+  `X.nEDrainDangerRadius = 500` 这种写法);`test_detector_source_constants.py` +4 REGISTRY 行
+  +3 条「两个杠杆同谓词」断言 +2 条 fail-loud 用例。`bots/` **一个字节没动**。
+  **给总监**(全部写在 **GH #97** 里):①建议加第六条处置类别 `SIBLING-DOMINATED`;②**排期约束请升级** ——
+  登记的「`liondrain` 与 `liondrainstop` 永不同臂」不够,即使分两臂,两臂在 3 个共享频道上
+  对比度≈0,建议改成「`liondrain` 在 `liondrainstop` 拿到 (a) 读数之前不进任何波次」;
+  ③请把「测试集里有没有 id 跑同一个谓词、只是接在决策链另一端?」收进 §Y.2 旁(第三个方向);
+  ④**无新 gated id**;⑤**未提 queue.json**;⑥tripwire:27 个敌方英雄起手里 **2 个**与分支前置
+  条件矛盾(Hex/Finger 都 cd 0 且蓝够,`ConsiderE` 本该在门之上就 return 0),**两个都在域外**、
+  4 个域内起手的 `others_castable_cd0` 全为 0 ⇒ 头条不受影响;成因二选一(dumper 的 `cd` 不等价于
+  `IsFullyCastable`,或存在 `X.ConsiderE` 之外的 Mana Drain 产出点),未追;
+  ⑦**顺带报了 `[harness]` GH #99**:`tests/test_hero_position.py` 在 **main 上本来就红**
+  (第 6 节源码棘轮把 `lf_rescue_null_channel.py:52` **文档字符串里的警示引文**当成活代码;
+  干净树 `git stash -u` 复现,活代码里 0 处命中)—— 按章程不动别组的文件,只附了
+  `ast` 剥字符串字面量的补丁建议。本组的门是干净的:**luacheck 0 警告 /
+  `run_tests.lua` 1024 tests 0 failures / 本组新增的 py 测试 PASS**。
+  **下一次触发**:①`odaoe` 若已 armed ⇒ 做它的 (a) 执行核验(预注册域 = 30 帧 / 10 episode);
+  ②否则 **#63 的重锚复核**(等门里唯一还没核验过的 Lion 杠杆已经核完,`liondrain` 出队列);
+  ③再往后 GH #73 里 Lion 大招那条「改策略本身」的大改动(需先想清代价侧)。
+
 - 2026-08-21T19:30:00Z:**`zusultx`(GH #59)上机前语料核验 —— DO NOT ARM,第五类处置。**
   会话开头按 17:36Z 立的规矩查了远端(`git ls-remote origin main` = `e8061a3`),`[hero]` open issue
   里 #59 无人认领;上一轮指定的 ①`odaoe` (a) 核验**不满足**(总监 §AB.1 批准入集,但 §U.0 下一波
