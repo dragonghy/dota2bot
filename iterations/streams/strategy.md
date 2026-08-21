@@ -100,10 +100,23 @@
    **已做完的第一对**:`defstale` 的 BAIL/CONTROL 两帧(seed 868)—— **pin 成立**,但世界变了
    (CONTROL 的 subject **核心→辅助翻面**),且**离失效只差一级等级**(`aba_defend:922` 的按位置取阈值
    等级门:pos1@5 = 0.00 vs pos3@5 = 0.30)。详见当前状态节。
-   **下一批(一次一个,不要批量刷)**:性价比最高的是 `f_260820_043124_axe_blink_kill`
-   (**与 blinkflee 两帧同一局**,角色已知:axe 槽位 2 → 抽签 pos 3),然后两个 `cm_es_*`、
-   两个 `lion_drain_*`、两个 `od_eclipse_*`。**每治一个都要重读它钉住的结论并写下来**
-   —— 治一帧可能翻掉它钉的东西,那正是这件事的意义。
+   **~~下一批~~ `f_260820_043124_axe_blink_kill` 已做完(2026-08-21T05:30Z)**:pin 成立,
+   **13 条原用例逐条未改**,而且这次把「为什么成立」也钉住了 —— 那条 guard **一次角色都不读**
+   (零次读取已成断言)。**真正动的东西在外面一层**:`Item.GetRoleItemsBuyList` 用角色当 key,
+   这枚 **`axebuyblink` 的 (a) 证据帧**(全语料唯一一次 Axe 真拿着跳刀)此前**一直对着错的
+   出装表读** —— 真值 `pos_3`(blink 排第 **4**,前面多一件 Crimson Guard),不是槽位说的
+   `pos_2`(= `pos_1` 表,blink 排第 3)⇒ **加强** GH #56 的立论(已留言)。
+   顺带量出**第二条**:`J.GetPosition`(包装)与 `Role.GetPosition`(模块)**不是同一个函数**,
+   **nil 地板还不一样**(2 vs 3),且 `aba_role` 之外**只有两个**调用点 ——
+   `jmz_func:8070` 与 **`aba_item:1600`(出装表 key,唯一绕过包装的)**。不是缺陷(模块自带地板),
+   但**给全组一条做法更新:数「这一帧读了几次角色」必须同时 hook 两个入口**,只 hook
+   `J.GetPosition` 会漏掉出装那一路(上一轮 `defstale` 消费方是 `aba_defend`,走包装,结论不受影响)。
+   棘轮 **8 → 7**。详见 `iterations/reports/strategy/20260821T053000Z.md` 与
+   `state.json:axeblinkkill_ROLE_HEAL_20260821`。
+   **下一批(一次一个,不要批量刷)**:两个 `cm_es_*`、两个 `lion_drain_*`、两个 `od_eclipse_*`。
+   **每治一个都要重读它钉住的结论并写下来** —— 治一帧可能翻掉它钉的东西,那正是这件事的意义。
+   **并且不许拿「核心/辅助划分通常稳定」当跳过某一帧的理由**:本轮五个队友全部换读数而划分
+   一位没翻,上一轮 `defstale` 同样的治疗却翻掉了一个核心 —— 那是**每帧的测量**,不是规律。
    ~~**仓库里现存每一个 fixture 的角色都还是槽位派生的**(2026-08-20T05:30Z 记下)~~。loader 现在
    支持抽签角色(`make_fixture.py --roles <analysis.json>`),但**只有本轮新生成的两个 fixture 带**;
    其余全部落到 `RoleAssignment[team][i]` = 抽签槽位,本轮六局实测与抽签真值吻合 **23/60 = 38%**
@@ -316,6 +329,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T05:30Z:**没有可认领的新 `[strategy]` issue**(03:19Z 之后只有 `[bug] #78` 与
+  `[harness] #75` 有新动静,`[strategy]` open 集 13 条**一条新留言都没有**),照章程接 backlog
+  **第 0c 条**,治它自己点名的下一枚:**`f_260820_043124_axe_blink_kill`**(seed 885,可归属)。
+  **产出**:fixture 用 `make_fixture.py --roles` **重生成**,`tests/test_replay_260820_axe_blink_kill.lua`
+  **13 → 19 例**(+6 RE-READ),`tests/test_fixture_roles.lua` 棘轮 **8 → 7** + 头部补一条对照说明。
+  **bots/ 一位没动,不推 gate,不申请入集。**
+  **重读结论:pin 成立,而且这次说得出为什么** —— `J.ShouldHoldAxeBlinkForCall` 在这一帧上
+  **问了 0 次位置**(已成断言),所以 13 条原用例**结构上**不可能被角色治疗动到;
+  「它们全绿」第一次是一句有内容的话,而不是侥幸。
+  **世界确实动了**:我方**五个队友全部**换读数(viper 1→2、**axe 2→3**、sniper 3→1、CM 4→5、ES 5→4),
+  但**核心/辅助划分一位没翻**(`{viper,axe,sniper}` 两边都是核心)—— 这是**关于这一帧的测量**,
+  上一轮 `defstale`(seed 868)同样的治疗**翻掉了一个核心**,已把这条对照写进 `test_fixture_roles.lua` 头部。
+  **敌方抽签恰好是恒等置换**(已查,不是假设)。顺带补上**真实建筑血量**(38 座里 5 座不满血:
+  0.943/0.572/0.179/0.149/**0.0**),此前每个 fixture 每座建筑都满血。
+  **本轮真正值钱的:margin 在外面一层,而且正好是这一帧存在的理由。**
+  `Item.GetRoleItemsBuyList` = `'pos_'..Role.GetPosition(bot)` ⇒ **角色决定整张出装表**,
+  而这一帧是**全语料唯一一次 Axe 真的拿着跳刀**的帧(`axebuyblink` 的 (a) 证据帧)。
+  驱动**真实的 `hero_axe.lua`**测出:抽签 **pos_3** = tank_outfit → **crimson_guard** → blade_mail →
+  **blink(第 4)**;槽位 **pos_2**(= `pos_1` 表)= sven_outfit → blade_mail → **blink(第 3)**;
+  armed 之后两个世界的 blink 前缀**合流**(都第 2),但**起手包仍分叉**(tank vs sven)。
+  ⇒ **这枚 (a) 证据帧此前一直对着错的出装表读**,`axebuyblink` 在这个 Axe 身上要跨的沟
+  **比记录里深一整件装备** ⇒ **加强** GH #56 的立论(已留言)。**本组不改 `hero_axe.lua`**(英雄组地盘)。
+  **第二条产出**:`J.GetPosition`(包装)与 `Role.GetPosition`(模块)**不是同一个函数对象**,
+  **nil 地板还是不同的数**(包装 2 / 模块 3);`aba_role` 之外**只有两个**调用点 ——
+  `jmz_func:8070` 与 **`aba_item:1600`(出装表 key,唯一绕过包装的那个)**。**不是缺陷**
+  (模块自带地板;强喂 nil 才会得到 `'pos_nil'` ⇒ `X.sBuyList = nil`,那是变异下的假设,如实登记),
+  **危险在于两个地板都是天然的「顺手清理」目标,而其中一个决定每个英雄买什么**。
+  ⇒ **给全组的做法更新:数角色读取次数必须同时 hook 两个入口**,只 hook `J.GetPosition`
+  会漏掉出装那一路(`defstale` 那轮消费方是 `aba_defend`、走包装,**结论不受影响**)。
+  **验收**:`luacheck bots game --formatter plain` **0 warnings**(bots/ 零改动,收尾 git status 干净);
+  `lua5.1 tests/run_tests.lua` **896 → 902(+6)**。**十次变异全部按预期 FAIL**(新用例第一次跑就全绿,
+  按 0g 纪律变异是硬前置):M1 摘 `roles` / M2 角色 3→2 / M3 摘建筑血 / **M4 给 guard 塞一次
+  `J.GetPosition` → 「零次读取」那条** / M5 包装地板 2→1 / M6 删模块地板 3 / M7 出装 key 改写 /
+  M8 `pos_2` 改成 `pos_3` 别名 / M9 `axebuyblink` 只重排 `pos_1` / M10 加第三个 `Role.GetPosition` 调用点。
+  `state.json` 新增 `axeblinkkill_ROLE_HEAL_20260821`。
+  未花 AWS 计费资源(只读 S3:1 个 `.dem` 8.8 MiB + 1 个 `.analysis.json` + 缓存命中的 dumper;
+  未启动任何实例,未提批测请求)。详见 `iterations/reports/strategy/20260821T053000Z.md`。
 - 2026-08-21T03:19Z:**不认领 GH #77**(唯一有新动静的 `[strategy]` issue,录像组 02:36Z 的 `[bug] #78`
   零支出复读:头条 −17.0pp → **−17.5pp 判 P1 站住**,但**收回**「第一次越过噪声底」的强度措辞,
   承重指标从 DiD 换成 **ACTIVE 带 4/4 同号 SD 6.9 的 −15.7pp** + **内生 placebo 带**(修后反而更强

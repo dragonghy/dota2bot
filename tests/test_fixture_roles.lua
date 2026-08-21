@@ -43,6 +43,10 @@
 -- The separate contract for that is SLOT_DERIVED_ROLES below, and the worked
 -- example of the two coming apart is tests/test_defstale_defend_bail.lua
 -- (seed 868: a jakiro the slot called a pos 3 core is a drafted pos 5 support).
+-- The complementary case is tests/test_replay_260820_axe_blink_kill.lua (seed
+-- 885): all five allied positions move and NOT ONE core/support fork flips --
+-- so "the partition is stable under the heal" is a per-frame measurement, never
+-- a shortcut for skipping a frame.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -268,7 +272,13 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
         ['f_260819_182855_lion_drain_midchannel.lua'] = true,
         ['f_260819_222559_od_eclipse_pair.lua'] = true,
         ['f_260819_222559_od_eclipse_solo.lua'] = true,
-        ['f_260820_043124_axe_blink_kill.lua'] = true,
+        -- healed 2026-08-21 (seed 885): all five allies permuted (axe slot 2 ->
+        -- drafted pos 3) with the core/support partition intact; the guard it
+        -- pins reads no role at all, so all thirteen cases survived byte for
+        -- byte. The re-read's finding is one layer out and is written up in
+        -- tests/test_replay_260820_axe_blink_kill.lua: the build-list key
+        -- Item.GetRoleItemsBuyList put this Axe on pos_3, not the pos_2 list
+        -- the slot claimed.  ['f_260820_043124_axe_blink_kill.lua']
         ['f_260820_102645_cm_es_reach.lua'] = true,
         ['f_260820_103216_cm_es_aftershock.lua'] = true,
     }

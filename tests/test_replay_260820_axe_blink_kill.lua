@@ -57,6 +57,15 @@
 --   4. The consumer itself (X.ConsiderItemDesire['item_blink']) is not driven
 --      end to end here; its wiring is pinned by the source tripwire in
 --      tests/test_replay_222428_axe_blink_call.lua.
+--
+-- 2026-08-21 RE-READ (strategy backlog 0c, GH #57): this fixture was generated
+-- WITHOUT `--roles`, so every jmz/Role position reader answered the draft SLOT.
+-- It has been regenerated with the drafted roles (soak seed 885) and with real
+-- structure HP. All thirteen cases above passed unchanged; the re-read is the
+-- RE-READ section at the bottom of this file. Short version: the pin holds
+-- because the guard never asks for a role at all, and the thing that DID move
+-- is one layer out -- this Axe ran the `pos_3` item build, not the `pos_2` one
+-- the slot-derived world had him on.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -241,6 +250,239 @@ tests['ground truth: Axe survived the jump, paying 116 HP to SK for the kill'] =
         if e.actor == 'npc_dota_hero_skeleton_king' then total = total + e.value end
     end
     assert(total == 267, 'and 267 over the 30s horizon, got ' .. tostring(total))
+end
+
+-- ---------------------------------------------------------------------------
+-- RE-READ under the real drafted roles (strategy backlog 0c, GH #57).
+--
+-- Every case above was written while this fixture carried no `roles` table, so
+-- Role.GetPosition fell through to RoleAssignment[team][slot] -- the draft SLOT,
+-- measured against the real draft at 47.3% (GH #57). The game is attributable
+-- (`script_version = mirror:...:s885:dire`), so the drafted role is recoverable
+-- and the fixture has been regenerated with `--roles`.
+--
+-- What moved (measured below, not assumed): ALL FIVE allies read a different
+-- position -- viper 1->2, axe 2->3, sniper 3->1, CM 4->5, earthshaker 5->4 --
+-- while the core/support partition happens to be preserved, and the ENEMY
+-- team's draft happens to be the identity permutation. What did not move: any
+-- assertion above, for the plain reason that the guard reads no role at all.
+--
+-- The margin is one layer out, and it is the layer this frame exists to serve.
+-- `Item.GetRoleItemsBuyList` keys the whole item build on the position, so
+-- the single corpus frame where Axe ever held a Blink Dagger was being read
+-- against the WRONG build list: he really ran `pos_3` (blink is the 4th entry,
+-- behind tank outfit + Crimson Guard + Blade Mail), not the `pos_2`/`pos_1`
+-- list (blink 3rd, behind sven outfit + Blade Mail) the slot said. That makes
+-- the shipped-vs-`axebuyblink` gap on THIS Axe one item deeper than recorded.
+-- ---------------------------------------------------------------------------
+
+local ROLE_MODULE = 'bots/FunLib/aba_role.lua'
+local ITEM_MODULE = 'bots/FunLib/aba_item.lua'
+
+local function slurp(path)
+    local f = assert(io.open(path, 'r'))
+    local s = f:read('*a')
+    f:close()
+    return s
+end
+
+--- Load the frame and hand back the aba_role module bound to that world, so a
+--- test can force a counterfactual position on the subject only.
+local function with_role_module()
+    local J, bot, heroes, fx = rf.load(FIXTURE)
+    local Role = require(GetScriptDirectory() .. '/FunLib/aba_role')
+    return J, bot, heroes, fx, Role
+end
+
+--- The item build Axe actually ends up with on this frame, for a given
+--- position and gate state. Drives the REAL hero file, not a copy of its list.
+local function buy_list_for(nPos, bArmed)
+    local J, bot, _, _, Role = with_role_module()
+    local real = Role.GetPosition
+    Role.GetPosition = function(u)
+        if u == bot then return nPos end
+        return real(u)
+    end
+    J.IsSoakCandidate = function(id) return bArmed == true and id == 'axebuyblink' end
+    local ok, X = pcall(dofile, GetScriptDirectory() .. '/BotLib/hero_axe.lua')
+    Role.GetPosition = real
+    assert(ok, 'hero_axe.lua must load on this real frame: ' .. tostring(X))
+    assert(type(X) == 'table' and X.sBuyList ~= nil,
+        'hero_axe must publish an sBuyList for pos ' .. tostring(nPos))
+    return X.sBuyList
+end
+
+local function index_of(tList, sItem)
+    for i, v in ipairs(tList) do
+        if v == sItem then return i end
+    end
+    return nil
+end
+
+tests['RE-READ: the frame carries the drafted roles now, and all five allies moved'] = function()
+    local J, bot, _, fx = with_role_module()
+    assert(fx.roles ~= nil, 'the fixture must carry the drafted roles -- without '
+        .. 'them every position here is the draft slot (GH #57, 47.3% accurate)')
+
+    local ids = GetTeamPlayers(GetTeam())
+    assert(#ids == 5 and GetTeamMember(2) == bot,
+        'Axe is the SECOND roster slot on this frame, which is what the '
+        .. 'slot-derived world answered 2 from')
+    assert(J.GetPosition(bot) == 3, 'drafted role of this Axe is pos 3, got '
+        .. tostring(J.GetPosition(bot)) .. ' -- 2 means the fixture lost its roles')
+
+    -- Not one lucky hero: the whole allied roster permuted.
+    local moved = 0
+    for i = 1, 5 do
+        if J.GetPosition(GetTeamMember(i)) ~= i then moved = moved + 1 end
+    end
+    assert(moved == 5, 'all five allies must read a position other than their '
+        .. 'slot; got ' .. moved .. ' -- if this drops, the fixture is answering '
+        .. 'slots again')
+
+    -- ...but the core/support fork does NOT flip here: {1,2,3} is
+    -- {viper, axe, sniper} in both worlds. Stated as a measurement so nobody
+    -- generalises the defstale round's CORE->SUPPORT flip into a rule.
+    local cores = {}
+    for i = 1, 5 do
+        local m = GetTeamMember(i)
+        if J.IsCore(m) then cores[m:GetUnitName()] = true end
+    end
+    assert(cores['npc_dota_hero_viper'] and cores['npc_dota_hero_axe']
+        and cores['npc_dota_hero_sniper'], 'drafted cores are viper/axe/sniper')
+    assert(cores['npc_dota_hero_crystal_maiden'] == nil
+        and cores['npc_dota_hero_earthshaker'] == nil,
+        'CM and earthshaker are supports in both worlds -- on THIS frame only '
+        .. 'the numbers move, the partition does not')
+end
+
+tests['RE-READ: the enemy draft is the identity permutation on this frame'] = function()
+    -- The guard reads enemies by position nowhere, but plenty of shipped code
+    -- does; on this frame that half of the heal is a no-op and it is worth
+    -- knowing it was CHECKED rather than assumed.
+    local _, _, _, fx = with_role_module()
+    local EXPECT = {
+        ['npc_dota_hero_skeleton_king'] = 1,   -- player id 0 -> enemy slot 1
+        ['npc_dota_hero_obsidian_destroyer'] = 2,
+        ['npc_dota_hero_slardar'] = 3,
+        ['npc_dota_hero_skywrath_mage'] = 4,
+        ['npc_dota_hero_shadow_shaman'] = 5,
+    }
+    for name, pos in pairs(EXPECT) do
+        assert(fx.roles[name] == pos, name .. ' drafted pos ' ..
+            tostring(fx.roles[name]) .. ', want ' .. pos ..
+            ' -- the enemy draft is the identity here; if this ever changes, '
+            .. 'every enemy-position fork on this frame has to be re-read')
+    end
+end
+
+tests['RE-READ: the guard never asks for a role, which is WHY the pin survived'] = function()
+    -- "Thirteen cases passed unchanged" is worthless without this: the heal
+    -- could not have moved them because ShouldHoldAxeBlinkForCall reads no
+    -- position. Both entry points are counted -- J.GetPosition (the jmz
+    -- wrapper) and Role.GetPosition (the module the wrapper calls, which
+    -- aba_item reaches directly), because they are NOT the same function.
+    local J, bot, call, heroes = load_axe()
+    local Role = require(GetScriptDirectory() .. '/FunLib/aba_role')
+    assert(J.GetPosition ~= Role.GetPosition,
+        'the two role entry points are distinct functions -- hooking only one '
+        .. 'of them undercounts')
+
+    local reads = 0
+    local realJ, realR = J.GetPosition, Role.GetPosition
+    J.GetPosition = function(u) reads = reads + 1 return realJ(u) end
+    Role.GetPosition = function(u) reads = reads + 1 return realR(u) end
+    local held = J.ShouldHoldAxeBlinkForCall(bot, landing(J, bot, heroes['npc_dota_hero_skeleton_king']))
+    J.GetPosition, Role.GetPosition = realJ, realR
+
+    assert(held == false, 'the decision under test is still "allow"')
+    assert(reads == 0, 'the guard asked for a position ' .. reads .. ' times; it '
+        .. 'must ask ZERO -- if this ever becomes non-zero, the surviving cases '
+        .. 'above stop being independent of the role heal and must be re-derived')
+    assert(call ~= nil)
+end
+
+tests['RE-READ: the margin is the item build -- this Axe ran pos_3, not pos_2'] = function()
+    local J, bot = with_role_module()
+    assert(J.Item.GetRoleItemsBuyList(bot) == 'pos_3',
+        'the drafted role puts this Axe on the pos_3 build; got '
+        .. tostring(J.Item.GetRoleItemsBuyList(bot)))
+
+    -- SHIPPED (gate off): the two worlds are different builds, not different
+    -- labels for one build.
+    local drafted = buy_list_for(3, false)
+    local slot = buy_list_for(2, false)
+    assert(index_of(drafted, 'item_blink') == 4,
+        'shipped pos_3 buries blink at index 4 (tank outfit, Crimson Guard, '
+        .. 'Blade Mail first); got ' .. tostring(index_of(drafted, 'item_blink')))
+    assert(index_of(slot, 'item_blink') == 3,
+        'shipped pos_2 (= the pos_1 list) has it at index 3; got '
+        .. tostring(index_of(slot, 'item_blink')))
+    assert(drafted[1] == 'item_tank_outfit' and slot[1] == 'item_sven_outfit',
+        'even the starting bundle differs between the two worlds')
+    assert(drafted[2] == 'item_crimson_guard',
+        'and the extra item in front of blink is Crimson Guard')
+
+    -- ARMED: the axebuyblink reorder collapses the blink prefix in BOTH
+    -- worlds, so the gate neutralises this particular fork -- but not the
+    -- starting bundle, which still differs.
+    local draftedOn = buy_list_for(3, true)
+    local slotOn = buy_list_for(2, true)
+    assert(index_of(draftedOn, 'item_blink') == 2 and index_of(slotOn, 'item_blink') == 2,
+        'armed, blink sits immediately after the starting bundle either way')
+    assert(draftedOn[1] == 'item_tank_outfit' and slotOn[1] == 'item_sven_outfit',
+        'the gate does not touch the starting bundle, so the role still picks it')
+end
+
+tests['RE-READ: the item build is the ONE role reader that bypasses the wrapper'] = function()
+    -- Discovered while measuring the margin above, and worth a tripwire: of
+    -- every Role.GetPosition call site outside aba_role itself, exactly two
+    -- exist -- the jmz wrapper, and aba_item's build-list key. The build-list
+    -- one therefore does NOT get the wrapper's nil handling, and the two
+    -- floors are different numbers (wrapper 2, module 3). Nothing is broken --
+    -- the module's own floor makes the bypass safe -- but a future edit that
+    -- "cleans up" either floor changes which build every hero buys.
+    local nOutside = 0
+    local p = io.popen('grep -rn "Role\\.GetPosition" bots/ | grep -v "^' .. ROLE_MODULE .. '"')
+    for line in p:lines() do
+        if line:find('Role.GetPosition', 1, true) then nOutside = nOutside + 1 end
+    end
+    p:close()
+    assert(nOutside == 2, 'expected exactly 2 Role.GetPosition call sites outside '
+        .. ROLE_MODULE .. ' (the jmz wrapper and the item build-list key); got '
+        .. nOutside .. ' -- a new bypass needs its own nil analysis')
+
+    local item = slurp(ITEM_MODULE)
+    assert(item:find("'pos_'..tostring(Role.GetPosition(bot))", 1, true),
+        'the build-list key must still be the direct, unwrapped call -- this '
+        .. 'test exists to notice if it is rewired')
+
+    local jmz = slurp('bots/FunLib/jmz_func.lua')
+    local wrapper = jmz:match('function J%.GetPosition%(bot%).-\nend')
+    assert(wrapper and wrapper:find('role = 2', 1, true),
+        "the jmz wrapper's nil floor must still be 2")
+
+    local role = slurp(ROLE_MODULE)
+    assert(role:find('if role == nil then\n        role = 3\n    end', 1, true),
+        "aba_role's own nil floor must still be 3 -- it is what keeps the "
+        .. 'build-list bypass from producing a nil sBuyList')
+end
+
+tests['RE-READ: the regeneration also brought real structure HP to this frame'] = function()
+    -- Before the heal every building in every fixture stood at full health.
+    -- The guard does not read structures, but the same regenerated frame is
+    -- the input to anything that does, so the values are pinned here.
+    local _, _, _, fx = with_role_module()
+    local damaged, dead = 0, 0
+    for _, b in ipairs(fx.buildings) do
+        assert(b.hp ~= nil, b.name .. ' carries no hp -- the fixture went stale')
+        if b.hp < 1.0 then damaged = damaged + 1 end
+        if b.hp == 0 then dead = dead + 1 end
+    end
+    assert(damaged == 5, 'five structures are below full health on this frame, '
+        .. 'got ' .. damaged)
+    assert(dead == 1, 'exactly one of them is the already-dead Radiant top tier 2 '
+        .. '(alive=false, hp=0), got ' .. dead)
 end
 
 return tests

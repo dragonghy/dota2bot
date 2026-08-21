@@ -1758,5 +1758,36 @@
     "unverifiable_here": "Whether tTpQuota is ONE ledger shared by all five bots is an assumption of the shipped design (comment at jmz_func.lua:5700); the mock reloads jmz_func per test so a per-bot VM would look identical. Only in-game observation can settle it.",
     "tests": "tests/test_tpresponse_quota_chain.lua (10 cases); suite 886 -> 896; luacheck 0 warnings; 11 mutations all FAIL as designed (2 of them caught vacuous assertions written this round, both rewritten)",
     "aws_spend": "none (no S3 read, no billable resource, no batch request)"
+  },
+  "axeblinkkill_ROLE_HEAL_20260821": {
+    "owner": "strategy",
+    "date": "2026-08-21T05:30Z",
+    "gate": null,
+    "bots_lua_changed": false,
+    "backlog_item": "0c (fixture role debt -- one frame at a time)",
+    "headline": "f_260820_043124_axe_blink_kill regenerated with --roles (soak seed 885). The pin HOLDS, and the reason is now asserted rather than hoped: J.ShouldHoldAxeBlinkForCall reads ZERO positions, so no role change could have moved its 13 cases. What DID move is one layer out -- Item.GetRoleItemsBuyList keyed this Axe to the pos_3 build, not the pos_2/pos_1 list the draft slot claimed.",
+    "world_moved": {
+      "allies": "all five permuted: viper 1->2, axe 2->3, sniper 3->1, crystal_maiden 4->5, earthshaker 5->4",
+      "core_partition": "UNCHANGED -- {viper, axe, sniper} are cores in both worlds. Per-frame measurement, NOT a rule: the defstale round (seed 868) had a CORE->SUPPORT flip on the same kind of heal.",
+      "enemies": "identity permutation on this frame (sk 1, od 2, slardar 3, skywrath 4, shadow_shaman 5), so every enemy-position fork reads the same either way -- checked, not assumed",
+      "structures": "real building HP arrived too: 5 of 38 below full (0.943 / 0.572 / 0.179 / 0.149 / 0.0), where every fixture previously stood at full health"
+    },
+    "margin": {
+      "what": "Item.GetRoleItemsBuyList = 'pos_'..Role.GetPosition(bot), so the role picks the ENTIRE item build, and this frame is the single corpus frame where Axe ever held a Blink Dagger (the axebuyblink (a)-evidence frame).",
+      "shipped_drafted_pos3": "item_tank_outfit, item_crimson_guard, item_blade_mail, item_blink -- blink is 4th",
+      "shipped_slot_pos2": "item_sven_outfit, item_blade_mail, item_blink -- blink is 3rd (pos_2 aliases the pos_1 list)",
+      "armed_axebuyblink": "both collapse to {starting bundle, item_blink, ...}; the gate neutralises the blink prefix fork but NOT the starting bundle (tank vs sven outfit)",
+      "consequence": "the shipped-vs-armed gap on THIS Axe is one item deeper than the slot-derived world recorded -- it strengthens GH #56's axebuyblink case rather than weakening it"
+    },
+    "second_result_ROLE_ENTRY_POINTS": {
+      "what": "J.GetPosition and Role.GetPosition are DIFFERENT function objects with DIFFERENT nil floors (wrapper -> 2, module -> 3). Of all Role.GetPosition call sites outside aba_role.lua there are exactly TWO: the jmz wrapper (jmz_func.lua:8070) and the item build-list key (aba_item.lua:1600).",
+      "not_a_defect": "aba_role's own `role == nil -> 3` floor makes the bypass safe today; forcing nil past it yields build key 'pos_nil' and X.sBuyList = nil (measured under mutation, hypothetical in shipped code).",
+      "hazard": "either floor is a plausible 'cleanup' target, and one of them decides which build EVERY hero buys.",
+      "for_other_agents": "a test that counts role reads by hooking only J.GetPosition undercounts -- aba_item's reader is invisible to that hook. Hook both.",
+      "pinned_by": "tests/test_replay_260820_axe_blink_kill.lua :: 'RE-READ: the item build is the ONE role reader that bypasses the wrapper'"
+    },
+    "ratchet": "tests/test_fixture_roles.lua SLOT_DERIVED_ROLES: 8 -> 7 remaining (f_221200_od_roles.lua can never be healed; 6 attributable frames left: 2 lion_drain_*, 2 od_eclipse_*, 2 cm_es_*)",
+    "tests": "tests/test_replay_260820_axe_blink_kill.lua 13 -> 19 cases (+6 RE-READ); suite 896 -> 902; luacheck 0 warnings (bots/ untouched); 10 mutations all FAIL as designed",
+    "aws_spend": "none billable -- S3 reads only (1 .dem 8.8 MiB, 1 .analysis.json, cached dumper); no instance launched, no batch request filed"
   }
 }
