@@ -55,13 +55,68 @@ INHERITED HYGIENE
   load_game() (roam_conversion) supplies the illusion idx-lock, `_paused_spans`
   filtering and the #43 frozen post-game tail truncation.  Do not reimplement.
 
+`[bug] #78` LIVENESS AUDIT (2026-08-21, measured on this exact 32-game corpus)
+  #78 asks every detector here to re-check its `hp_pct > 0` liveness proxy.
+  For THIS detector the answer differs per path, and the difference is
+  structural -- do not carry the `lanekill_commit.py` conclusion across:
+
+    (A) ACTOR selection is IMMUNE BY CONSTRUCTION, not by luck.  The measured
+        leak band is hp 0.005..0.29 (all <= 0.40, GH #78 / 02:36Z, 735 death
+        spans) and corpse frames otherwise read exactly 0.0; the actor band is
+        [0.42,0.50].  The two are DISJOINT, so no corpse and no leaked frame
+        can ever be selected as the actor.  Measured: 0/806 actor frames inside
+        a death span.  Same for the forward window -- 0/806 actors die inside
+        [t, t+4.5], because the domain's own >=850u enemy clause keeps the
+        actor out of immediate lethal range.
+    (B) The ALLY gate is where #78 DOES bite: it admits an ally at hp <= 0.55,
+        and that band CONTAINS the whole leak band.  Measured 4/806 frames
+        whose "ally in need" was already dead at t (leaked hp 0.133/0.059/
+        0.014/0.037, each within 0.2s of its own DEATH event).  There was no
+        ally to collapse to on those frames.
+    (C) NEAREST-ENEMY selection: 0/806 picked a dead enemy.
+
+  So the load-bearing rule is the band relation, not the proxy: a lethality
+  proxy fails exactly where its selection band overlaps [0, 0.40].
+
+TELEPORT CHANNELING (a SEPARATE defect found while doing the above -- and the
+22:53Z "add a movelen cap" advice is INCOMPLETE, do not just apply it)
+  9/806 clean-domain frames have the actor holding `modifier_teleporting`: the
+  TP scroll was cast 0.5-2.2s BEFORE the sampled frame, so what the classifier
+  scores as a decision at t was taken earlier, by another mode, and is
+  irrevocable while channeling.  These split into two OPPOSITE-SIGN classes:
+    (i)  landing inside the fwd window -> movelen ~1e4 -> forced RETREAT (7/9)
+    (ii) landing after it, or the channel gets interrupted -> movelen ~0 ->
+         forced COMMIT (2/9).  Existence proof: armA_160911/20260820_163429
+         t=335.5 sniper, TP cast 332.5, zero displacement, channel broken at
+         336.9 by a jakiro ice_path stun -- scored COMMIT while the bot was
+         visibly trying to leave.
+  A movelen cap catches (i) and KEEPS (ii) mislabelled.  Exclude the channel
+  span instead: it is exactly observable from MODIFIER_ADD/REMOVE of
+  `modifier_teleporting`, so this is a precise filter, not a heuristic.
+
+AGGREGATE IMPACT OF BOTH CORRECTIONS (so nobody re-litigates it)
+  13 of 806 frames drop (9 channel + 4 dead-ally).  Seed-paired DiD
+  -7.89 -> -7.70pp; armB null-channel SD 15.0 -> 14.2pp/seed (MDE ~ +-20pp);
+  DiD per-seed signs 2/4 either way.  The reading stays deep inside its own
+  noise floor => the 21:00Z `capmono` NOT-PROMOTE verdict is UNCHANGED, and
+  that is now measured rather than assumed.
+  One honest wrinkle worth NOT over-reading: arm A's own internal diff goes
+  3/4 -> 4/4 negative (-0.6 -3.5 -21.2 -0.1).  The null channel is still
+  2/4 at |11-16|pp, so 4/4 on values this small is not a signal; it is quoted
+  here only so the next reader is not surprised by it.
+
 USAGE
   capmono_refusal.py <root>      # root/{armA,armB}_<run>/<game>.timeline.json
-                                 # writes /tmp/clean_eps.jsonl (all frames)
+                                 # writes /tmp/clean_eps.jsonl (kept frames)
+  --raw                          # disable the liveness/channel filters above
+                                 # (reproduces the pre-#78 numbers bit-for-bit)
 """
 import collections, glob, json, math, os, sys
 sys.path.insert(0, '/home/user/dota2bot/tools/batch_test/behavioral')
-from roam_conversion import load_game, dist
+from roam_conversion import load_game, dist, is_dead
+
+RAW = False               # --raw: reproduce the pre-#78 reading bit-for-bit
+DISCARD = collections.Counter()   # (arm, side, reason) -> frames dropped
 
 HP_LO, HP_HI = 0.42, 0.50
 ALLY_R = 1200.0
@@ -83,9 +138,32 @@ def own_ancients(tl):
     return a
 
 
+def tp_channel_spans(tl):
+    """hero -> [(t_add, t_remove)] for `modifier_teleporting`.
+
+    A hero inside one of these spans is committed to a teleport decided BEFORE
+    the sampled frame and cannot act, so the frame is not a decision frame at
+    all -- see the TELEPORT CHANNELING note in the module docstring for why a
+    movelen cap is not an adequate substitute for this.
+    """
+    open_at, spans = {}, collections.defaultdict(list)
+    for e in tl['events']:
+        if e.get('inflictor') != 'modifier_teleporting':
+            continue
+        h = e.get('target')
+        if e['type'] == 'MODIFIER_ADD':
+            open_at[h] = e['t']
+        elif e['type'] == 'MODIFIER_REMOVE' and h in open_at:
+            spans[h].append((open_at.pop(h), e['t']))
+    for h, t in open_at.items():          # channel still open at cut-off
+        spans[h].append((t, t + 4.0))
+    return spans
+
+
 def scan_game(g, name):
     tl, frames = g['tl'], g['frames']
     anc = own_ancients(tl)
+    dead, chan = g['dead'], tp_channel_spans(tl)
     # ally damage-taken times (as victim hero, hit by enemy)
     dmg_taken = collections.defaultdict(list)
     for e in tl['events']:
@@ -106,11 +184,16 @@ def scan_game(g, name):
         if any(not (t + FWD_HI < a or t - LAG > b) for a, b in pauses):
             continue
         snaps = frames[t]
-        alive = [s for s in snaps if s.get('hp_pct', 0) > 0.01]
+        # `hp_pct > 0.01` is the pre-#78 proxy; the death spans are the real
+        # test.  Path (A) of the audit shows they never disagree on the ACTOR
+        # (bands are disjoint) but they do on the ALLY, so apply both.
+        alive = [s for s in snaps if s.get('hp_pct', 0) > 0.01
+                 and (RAW or not is_dead(dead, s['hero'], t))]
         for actor in alive:
             hp = actor['hp_pct']
             if not (HP_LO <= hp <= HP_HI):
                 continue
+            side = 'armed' if actor['team'] == g['armed_team'] else 'base'
             # nearest enemy
             enemies = [s for s in alive if s['team'] != actor['team']]
             if not enemies:
@@ -130,6 +213,20 @@ def scan_game(g, name):
                     hit_ally = a
                     break
             if hit_ally is None:
+                # Audit path (B): did the pre-#78 proxy have an "ally in need"
+                # here that was in fact already dead?  Count it, so the report
+                # can state the false-admit rate instead of estimating it.
+                if not RAW:
+                    for a in snaps:
+                        if (a['team'] == actor['team'] and a is not actor
+                                and a.get('hp_pct', 0) > 0.01
+                                and dist(actor, a) <= ALLY_R
+                                and is_dead(dead, a['hero'], t)
+                                and (a['hp_pct'] <= 0.55
+                                     or any(t - 1.5 <= dt <= t + 1.0
+                                            for dt in dmg_taken[a['hero']]))):
+                            DISCARD[(name.split('/')[0][:4], side, 'dead_ally')] += 1
+                            break
                 continue
             # forward displacement
             fwd = None
@@ -139,6 +236,14 @@ def scan_game(g, name):
                     if s2 and (fwd is None or abs(tt - (t + FWD_TGT)) < abs(fwd[0] - (t + FWD_TGT))):
                         fwd = (tt, s2)
             if fwd is None:
+                continue
+            # Checked HERE, not at actor selection: the discard count must mean
+            # "clean-domain episodes dropped", and the domain is only fully
+            # qualified at this point.  The emitted set is the same either way
+            # (the channel test is independent of the enemy/ally gates) -- it
+            # is the reported number that would otherwise be ~17x too large.
+            if not RAW and any(a <= t < b for a, b in chan.get(actor['hero'], ())):
+                DISCARD[(name.split('/')[0][:4], side, 'tp_channel')] += 1
                 continue
             s2 = fwd[1]
             dx, dy = s2['x'] - actor['x'], s2['y'] - actor['y']
@@ -171,7 +276,10 @@ def scan_game(g, name):
 
 
 def main():
-    root = sys.argv[1]
+    global RAW
+    argv = [a for a in sys.argv[1:] if a != '--raw']
+    RAW = '--raw' in sys.argv
+    root = argv[0]
     # cell -> list of eps
     allc = []
     per_game = {}
@@ -201,6 +309,14 @@ def main():
         r = sum(e['retreat'] for e in eps)
         return r, n, (100.0 * r / n if n else float('nan'))
 
+    print("=== #78 LIVENESS / CHANNEL DISCARDS ===" if not RAW else
+          "=== RAW MODE: pre-#78 proxy, no discards ===")
+    if not RAW:
+        if not DISCARD:
+            print("  (none)")
+        for k in sorted(DISCARD):
+            print(f"  {k[0]} {k[1]:5} {k[2]:10}: {DISCARD[k]} frames dropped")
+    print()
     print("=== FRAME-LEVEL (all clean-domain frames) ===")
     cells = {}
     for arm in ('armA', 'armB'):
