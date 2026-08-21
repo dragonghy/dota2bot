@@ -27,6 +27,18 @@ shown only as context.  Per-game aggregates take the LATEST frame of that game
 (levels are monotone in time, so the latest frame is that game's high-water
 mark within the archive).
 
+SAMPLING INTERVAL (declared, per the rule added 2026-08-21T11:0xZ)
+------------------------------------------------------------------
+The fixture archive was generated from timelines dumped at MIXED intervals
+(the dumper's default is 1.0s; at least one group has dumped at 0.5s).  This
+census is nonetheless GRID-INVARIANT, and the reason has to be stated rather
+than assumed: it reports a hero's LEVEL AT A CHOSEN INSTANT, not a
+residency-weighted rate.  Level is a step function of time, so making the grid
+denser adds samples without changing what any of them says.  The frames here
+were also selected by a human for a subject's behaviour, not drawn off a grid
+at all.  Contrast the frame-level rates in `capmono_refusal.py`, which moved
+-7.70 -> -12.69pp on the same 40 games purely by halving the interval.
+
 KNOWN LIMITS (do not launder these away)
 ----------------------------------------
 * Selection bias in `t`: the archive is not a uniform sample of game time.  The
