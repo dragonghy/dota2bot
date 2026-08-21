@@ -7800,9 +7800,11 @@ end
 -- tests/test_replay_260820_axe_blink_kill.lua.
 --
 -- CORPUS PRE-FLIGHT, 2026-08-21 (GH #79; hero stream; tool
--- tools/batch_test/behavioral/axe_blink_domain.py). DO NOT ARM -- the domain is
--- EMPTY, and structurally so, which is a stronger statement than the 2026-08-20
--- note above. 18 Turbo games of the 04:11-04:37 wave (the one where
+-- tools/batch_test/behavioral/axe_blink_domain.py). DO NOT ARM -- the domain
+-- was not reached in the only corpus where Axe owns a dagger. (The first draft
+-- of this note said "empty, and structurally so"; the director's review below
+-- narrows that to a CONTINGENT emptiness -- read to the end before citing it.)
+-- 18 Turbo games of the 04:11-04:37 wave (the one where
 -- 'axebuyblink' was armed, so Axe actually owns a dagger in 8 of them):
 --   * 11 real item_blink casts, 6 offensive / 5 retreat. The guard would have
 --     held ZERO. Binding clause is this function's last line: 5 casts landed on
@@ -7814,21 +7816,48 @@ end
 --     of those frames Axe stood ALONE (allies within 1200 of the target,
 --     himself included: 1, every time; enemy heroes: 2 on four frames, 3 on
 --     seventeen).
--- So the enclosing branch's own head count, `#nInRangeAlly >=
--- nNearbyEnemyHeroCount` (ability_item_usage_generic.lua:1610), already refuses
--- every frame this guard was written to refuse -- and refuses on a strictly
--- weaker condition, since "two enemies within 315 of the landing point" implies
--- "two enemy heroes within 1200 of the target". Armed and shipped are therefore
--- end-to-end identical: the axeblink trap, in its own namesake.
+-- DIRECTOR REVIEW, 2026-08-21T03:00Z (test_set.md section Y). The funnel above
+-- stands; the word "structurally" does not, and the difference decides what may
+-- be cited later. Substituting this guard's own condition into the enclosing
+-- branch gives a COUPLING, not a subset relation:
+--   guard true => >= 2 visible enemies within 315 of vLandLoc; the branch has
+--   already established dist(bot, botTarget) <= nCastRange, so nDistance is
+--   that distance and vLandLoc is botTarget's location +/- RandomVector(150)
+--   => those enemies are <= 465 from botTarget, alive and seen this instant
+--   => nNearbyEnemyHeroCount >= 2
+--   => the branch's `#nInRangeAlly >= nNearbyEnemyHeroCount` demands
+--      #nInRangeAlly >= 2, and J.GetAlliesNearLoc (this file, :474) counts the
+--      bot himself, so that is ">= 1 living ally besides Axe within 1200 of the
+--      target".
+-- On such a frame the branch PASSES and armed and shipped DIFFER. So the branch
+-- does not already refuse what this guard refuses; it refuses those frames only
+-- while Axe is alone -- which he was on all 21 predicate-true frames, and that
+-- is a fact about how Axe currently positions, not about the code. 0/21 bounds
+-- the rate at <= 13.3% per predicate-true frame (95%, one-sided), 0/11 casts at
+-- <= 23.8%: not reached, not proven unreachable.
 -- The code stays because it is CORRECT, not because it is pending.
 -- REVIVAL CONDITIONS (re-measure the funnel; never cite the 0/11 or the 21 -> 0
--- once either holds): (1) that head-count clause is weakened, removed, or its
--- 1200 ring changed; (2) Axe reliably blinks with allies in the ring -- i.e. a
--- grouping change lands that puts a second hero within 1200 of his target.
--- GENERAL PRIOR (cf. the wkreincarnmp write-up, which is the same shape one
--- layer down): before arming a gate that ADDS a refusal, check whether the
--- branch it sits in already refuses on a weaker condition. If it does, the
--- new gate's domain is a subset of an existing veto and is empty.
+-- once any holds): (1) that head-count clause is weakened, removed, or its 1200
+-- ring changed; (2) Axe reliably blinks with allies in the ring; (3) -- the one
+-- the first draft missed -- ANY armed grouping change (teambrain, aegisgroup,
+-- ownhalf and their successors) that puts a second hero near his target, since
+-- that reopens this domain with no edit to either file and no one re-reading
+-- the funnel. The number that would convert (2)/(3) into a settled answer is
+-- one more column on a funnel already computed: the distribution of allies
+-- within 1200 of the target over the whole 223-frame ceiling, not just the 21.
+-- GENERAL PRIOR, in its valid form (the wkreincarnmp write-up is the same shape
+-- one layer down, but it lands in case (a) below and this one does not): before
+-- arming a gate that ADDS a refusal, substitute the gate's own condition into
+-- the enclosing branch's predicate and see where it forces that predicate.
+--   (a) predicate becomes UNSATISFIABLE -> domain structurally empty, and the
+--       desk check alone may kill the id;
+--   (b) predicate is forced into a NARROWER region -> the desk check yields the
+--       SHAPE of the domain, never its emptiness; a corpus reading is still
+--       required, and it expires when whatever causes that region changes;
+--   (c) no constraint -> the desk check bought nothing.
+-- A desk check can prove EMPTY; it cannot prove RARE. Reading (b) as (a) writes
+-- a corpus fact into the record as a structural one -- which is exactly what
+-- happened here.
 function J.ShouldHoldAxeBlinkForCall( bot, vLandLoc )
 	if not J.IsModeTurbo() then return false end
 	if not J.IsSoakCandidate( 'axeblink' ) then return false end
