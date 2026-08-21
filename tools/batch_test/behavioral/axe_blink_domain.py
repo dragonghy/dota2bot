@@ -72,6 +72,21 @@ Sections measured off behav-dump timelines:
                      the domain is structurally empty rather than undersampled;
                      if it is not, the emptiness of section A is a statement
                      about the branch, not about the guard.
+  B3. ally column -- the same `#nInRangeAlly` ring scored on EVERY candidate
+                     frame of section B, not only on the predicate-true slice.
+                     Added on the director's 2026-08-21T03:00Z ruling
+                     (test_set.md Y.1) because B2's "21/21 frames Axe stood
+                     alone" cannot distinguish two very different worlds: Axe
+                     never groups while holding a dagger with an enemy in range
+                     (in which case the >=2-enemy sub-slice inherits a property
+                     of the whole ceiling), or Axe groups routinely and the 21
+                     just happened to miss it (in which case the domain is live
+                     but rare and 0/21 is a coincidence of the sub-slice).
+                     Read the direction, not only the number: this is a fact
+                     about how Axe currently POSITIONS, so under the corrected
+                     desk-check rule it can show the domain RARE, never EMPTY,
+                     and it expires the moment a grouping-class id is armed
+                     (axeblink revival condition 3).
 
 Known boundaries (every count below is an UPPER bound on the true domain):
 
@@ -185,6 +200,7 @@ def analyse(path, blink_cd):
         'A_unresolved_casts': [],
         # B. loose ceiling
         'B_candidate_frames': 0,
+        'B_corpse_frames_dropped': 0,
         'B_predicate_true_frames': 0,
         'B_max_enemies_at_projected_landing': 0,
         'B_call_unavailable_frames': 0,
@@ -193,6 +209,12 @@ def analyse(path, blink_cd):
         'B2_allies_hist': {},
         'B2_foes_hist': {},
         'B2_episodes': [],
+        # B3. the ally column over the WHOLE ceiling (director ruling
+        # 2026-08-21T03:00Z, test_set.md Y.1) -- see the section note above.
+        'B3_allies_hist_all': {},
+        'B3_allies_hist_unavail': {},
+        'B3_axe_ring_hist': {},
+        'B3_rows': [],
     }
 
     ax, ay = ANCIENT[team]
@@ -252,6 +274,15 @@ def analyse(path, blink_cd):
     for s in holds:
         while cast_ts and cast_ts[0] <= s['t']:
             last_cast = cast_ts.pop(0)
+        # issue #78, found in THIS tool 2026-08-21T04Z while adding B3: a dead
+        # Axe keeps being snapshotted with frozen state, dagger included, so
+        # without this line the ceiling counts corpse frames as candidates --
+        # and a corpse does not count itself in its own ally ring, which is
+        # what produced the `allies == 0` bucket the first B3 run reported.
+        # The ITEM-event side (section A) is event-driven and unaffected.
+        if s['hp'] <= 0:
+            res['B_corpse_frames_dropped'] += 1
+            continue
         if s['t'] - last_cast < blink_cd:
             continue
         frames = by_t[round(s['t'], 1)]
@@ -265,6 +296,41 @@ def analyse(path, blink_cd):
         learned, avail = call_state(s)
         if learned and not avail:
             res['B_call_unavailable_frames'] += 1
+        # B3: the branch's ally ring, scored on EVERY candidate frame rather
+        # than only on the predicate-true ones.  Taken as the MAXIMUM over the
+        # valid targets, which is the generous direction: it is the largest
+        # ally count any target on this frame could have offered the branch, so
+        # a max that is still 1 means Axe was alone no matter which enemy the
+        # branch picked.
+        allies_max = 0
+        for tgt in targets:
+            allies_max = max(allies_max, sum(
+                1 for o in frames
+                if o['team'] == team and o['hp'] > 0
+                and dist(o['x'], o['y'], tgt['x'], tgt['y']) <= HEADCOUNT_RADIUS))
+        res['B3_allies_hist_all'][allies_max] = (
+            res['B3_allies_hist_all'].get(allies_max, 0) + 1)
+        if learned and not avail:
+            res['B3_allies_hist_unavail'][allies_max] = (
+                res['B3_allies_hist_unavail'].get(allies_max, 0) + 1)
+        # Target-independent cross-check: company around AXE HIMSELF.  The
+        # branch does not read this ring, but it separates "no ally near the
+        # target" from "no ally anywhere near Axe" without another corpus pull.
+        axe_ring = sum(1 for o in frames
+                       if o['team'] == team and o['hp'] > 0
+                       and dist(o['x'], o['y'], s['x'], s['y'])
+                       <= HEADCOUNT_RADIUS)
+        res['B3_axe_ring_hist'][axe_ring] = (
+            res['B3_axe_ring_hist'].get(axe_ring, 0) + 1)
+        # Per-frame row kept so main() can episode-ify.  0.5s samples inside one
+        # standoff are not independent observations: quoting a rate or a
+        # binomial bound per FRAME overstates the evidence by whatever the run
+        # length happens to be.  The n that belongs in any bound is the episode
+        # count (cf. the director's 2026-08-21T03:1xZ addendum: report the
+        # band's own n before citing anything computed from it).
+        row = {'t': round(s['t'], 1), 'allies': allies_max,
+               'unavail': bool(learned and not avail), 'pred': False}
+        res['B3_rows'].append(row)
         best, best_ok, best_min = 0, False, False
         best_heads = (0, 0)
         for tgt in targets:
@@ -299,6 +365,7 @@ def analyse(path, blink_cd):
             res['B_max_enemies_at_projected_landing'], best)
         if learned and not avail and best >= 2:
             res['B_predicate_true_frames'] += 1
+            row['pred'] = True
             # The punchline lives here: how many allies stood with Axe on the
             # frames where the guard's own predicate was true.
             a_, f_ = best_heads
@@ -380,6 +447,8 @@ def main():
     mx = max([r['B_max_enemies_at_projected_landing'] for r in with_axe] or [0])
     b2 = sum(r['B2_not_outnumbered_frames'] for r in with_axe)
     eps = [(r['timeline'], e) for r in with_axe for e in r['B2_episodes']]
+    print(f'  corpse frames dropped before the ceiling (#78)        '
+          f'{sum(r["B_corpse_frames_dropped"] for r in with_axe)}')
     print(f'  frames: dagger held + off cd + enemy in (500,1200]   {cand}')
     print(f'    of those, Call learned but unavailable              {unav}')
     print(f'    of those, ALSO >=2 enemies at projected landing     {true_}')
@@ -394,6 +463,71 @@ def main():
     print(f'  on the {true_} predicate-true frames, heads within 1200 of target:')
     print(f'    allies (Axe included) {dict(sorted(ah.items()))}')
     print(f'    enemy heroes          {dict(sorted(fh.items()))}')
+
+    print('\n== B3. the ally ring over the WHOLE ceiling (not just the '
+          'predicate-true slice) ==')
+    a_all, a_unav, a_axe = (collections.Counter(), collections.Counter(),
+                            collections.Counter())
+    for r in with_axe:
+        a_all.update({int(k): v for k, v in r['B3_allies_hist_all'].items()})
+        a_unav.update({int(k): v for k, v in r['B3_allies_hist_unavail'].items()})
+        a_axe.update({int(k): v for k, v in r['B3_axe_ring_hist'].items()})
+
+    def _grouped(counter):
+        tot = sum(counter.values())
+        n = sum(v for k, v in counter.items() if k >= 2)
+        return n, tot, (100.0 * n / tot if tot else 0.0)
+
+    for label, c in (('all candidate frames        ', a_all),
+                     ('  of those, Call unavailable', a_unav)):
+        n, tot, pct = _grouped(c)
+        print(f'  allies within 1200 of the best target, {label} '
+              f'{dict(sorted(c.items()))}')
+        print(f'    >=2 (i.e. Axe had company): {n}/{tot} = {pct:.1f}%')
+    n, tot, pct = _grouped(a_axe)
+    print(f'  cross-check, allies within 1200 of AXE      '
+          f'{dict(sorted(a_axe.items()))}')
+    print(f'    >=2: {n}/{tot} = {pct:.1f}%  '
+          f'(ring the branch does NOT read; separates "nobody near the target" '
+          f'from "nobody near Axe")')
+
+    print('\n  the same three stages counted in EPISODES, which is the n that '
+          'belongs in any bound:')
+
+    def _episodes(pick):
+        eps = []
+        for r in with_axe:
+            for row in r['B3_rows']:
+                if not pick(row):
+                    continue
+                if eps and eps[-1]['g'] == r['timeline'] \
+                        and row['t'] - eps[-1]['t_end'] <= 2.0:
+                    eps[-1]['t_end'] = row['t']
+                    eps[-1]['frames'] += 1
+                    eps[-1]['allies_max'] = max(eps[-1]['allies_max'],
+                                                row['allies'])
+                else:
+                    eps.append({'g': r['timeline'], 't_start': row['t'],
+                                't_end': row['t'], 'frames': 1,
+                                'allies_max': row['allies']})
+        return eps
+
+    stages = (('all candidate frames', lambda r: True),
+              ('Call unavailable', lambda r: r['unavail']),
+              ('predicate-true (the guard\'s own domain)', lambda r: r['pred']))
+    for si, (label, pick) in enumerate(stages):
+        stage_eps = _episodes(pick)
+        comp = sum(1 for e in stage_eps if e['allies_max'] >= 2)
+        frames = sum(e['frames'] for e in stage_eps)
+        longest = max([e['frames'] for e in stage_eps] or [0])
+        print(f'    {label:42s} {frames:4d} frames -> {len(stage_eps):3d} '
+              f'episodes, {comp} with company '
+              f'({100.0*comp/max(len(stage_eps),1):.1f}%), '
+              f'longest run {longest} frames')
+        if si == len(stages) - 1:
+            for e in stage_eps:
+                print(f'      {e["g"][:19]} t={e["t_start"]}-{e["t_end"]} '
+                      f'{e["frames"]} frames allies_max={e["allies_max"]}')
     print(f'  B2 episodes ({len(eps)}, {len(eps)/max(len(with_blink),1):.2f}/game '
           f'over the {len(with_blink)} dagger games):')
     for name, e in eps:
