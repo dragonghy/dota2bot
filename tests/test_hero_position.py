@@ -19,9 +19,12 @@ the distribution of slot-derived positions actually observed across 291 games.
 
 Usage:  python3 tests/test_hero_position.py
 """
+import io
 import json
 import os
+import re
 import sys
+import tokenize
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools", "batch_test", "soak"))
@@ -49,6 +52,69 @@ def aj_for(seed, pool, slot_of=None):
         players.append({"team": team, "hero": "npc_dota_hero_" + hero,
                         "team_slot": slot + (0 if team == "radiant" else 5)})
     return {"script_version": "mirror:cand:s%d:radiant" % seed, "players": players}
+
+
+# `team_slot` and the `% 5 + 1` are matched separately on purpose: they are
+# usually split by a subscript (`p["team_slot"] % 5 + 1`), and a regex demanding
+# them adjacent misses every real call site.
+_SLOT_POS = re.compile(r"%\s*5\s*\+\s*1")
+
+
+def _blank_noncode(src):
+    """`src` as a list of lines with string-literal and comment text blanked out.
+
+    Every character belonging to a string literal (docstrings included) or to a
+    comment is replaced by a space, so a formula QUOTED in prose stops reading as
+    a call site while live code sharing a line with a trailing comment still
+    does.  Blanking by column span rather than dropping whole lines is what buys
+    that second half: `p["team_slot"] % 5 + 1  # old` must stay a hit.
+
+    f-strings are the one deliberate exception.  On Python < 3.12 the whole
+    f-string arrives as a single STRING token, replacement fields included, so
+    blanking it would hide `f"{p['team_slot'] % 5 + 1}"` -- live code inside a
+    string token.  Those are left intact: prose that quotes the formula from
+    inside an f-string would false-RED, but a false RED is visible and cheap
+    whereas a false GREEN is the exact defect this ratchet exists to catch.
+
+    A file that will not tokenize raises, per this repo's fail-loud convention:
+    swallowing it would turn one broken file into one silent exemption.
+    """
+    lines = [list(ln) for ln in src.splitlines()]
+    for tok in tokenize.generate_tokens(io.StringIO(src).readline):
+        if tok.type == tokenize.COMMENT:
+            blank = True
+        elif tok.type == tokenize.STRING:
+            # tok.string starts with the prefix, e.g. rb'..' / f".." / '''..'''
+            prefix = tok.string[:tok.string.index(tok.string.lstrip("bBfFrRuU")[0])]
+            blank = "f" not in prefix.lower()
+        elif tok.type == getattr(tokenize, "FSTRING_MIDDLE", None):
+            blank = True                      # 3.12+: literal halves arrive alone
+        else:
+            continue
+        if not blank:
+            continue
+        (r0, c0), (r1, c1) = tok.start, tok.end
+        for r in range(r0, r1 + 1):
+            row = lines[r - 1]
+            lo = c0 if r == r0 else 0
+            hi = c1 if r == r1 else len(row)
+            for c in range(lo, min(hi, len(row))):
+                row[c] = " "
+    return ["".join(ln) for ln in lines]
+
+
+def slot_pos_hits(src):
+    """1-based line numbers where `src` derives a position from team_slot.
+
+    Only the ARITHMETIC is required to be live code.  The `team_slot` marker is
+    matched against the raw line on purpose: at a real call site it is a string
+    subscript (`p["team_slot"] % 5 + 1`), so demanding it outside string literals
+    too would blank the very token that identifies the call site -- the first cut
+    of this fix did exactly that and read the canonical form as clean.
+    """
+    blanked = _blank_noncode(src)
+    return [i for i, raw in enumerate(src.splitlines(), 1)
+            if "team_slot" in raw and _SLOT_POS.search(blanked[i - 1])]
 
 
 def main():
@@ -126,25 +192,54 @@ def main():
 
     # 6. source-level ratchet: nothing derives a position from the slot again.
     #    Sections 1-5 prove the helper is right; only this catches a consumer
-    #    quietly going back to the old one-liner.
+    #    quietly going back to the old one-liner.  NO file is exempt -- section 7
+    #    proves the prose stripping works, which is what an exemption used to buy;
+    #    an exemption by filename costs the whole file's LIVE code as well, and it
+    #    is whack-a-mole besides (GH #99: every new file that warns readers off
+    #    the old formula by quoting it had to be named again).
     print("\n[6] no consumer recomputes position from team_slot")
-    import re
     bad = []
-    for base, _dirs, files in os.walk(os.path.join(ROOT, "tools")):
-        for fn in files:
-            # seed_draft.py is exempt: it QUOTES the wrong formula in its docstring
-            # to warn callers off it.  Sections 2-3 cover regressions inside it.
-            if not fn.endswith(".py") or fn == "seed_draft.py":
+    for base, _dirs, files in sorted(os.walk(os.path.join(ROOT, "tools"))):
+        for fn in sorted(files):
+            if not fn.endswith(".py"):
                 continue
             path = os.path.join(base, fn)
-            for i, line in enumerate(open(path), 1):
-                # `team_slot` and the `% 5 + 1` are matched separately on purpose:
-                # they are usually split by a subscript (`p["team_slot"] % 5 + 1`),
-                # and a regex demanding them adjacent misses every real call site.
-                if ("team_slot" in line and re.search(r"%\s*5\s*\+\s*1", line)
-                        and not line.lstrip().startswith("#")):
-                    bad.append("%s:%d" % (os.path.relpath(path, ROOT), i))
+            with open(path) as fh:
+                src = fh.read()
+            bad += ["%s:%d" % (os.path.relpath(path, ROOT), i)
+                    for i in slot_pos_hits(src)]
     check(not bad, "no live `team_slot %% 5 + 1` under tools/ (found: %s)" % (bad or "none"))
+
+    # 7. the stripping section 6 leans on is REACHABLE and does not over-strip.
+    #    Without this, section 6 passing would be indistinguishable from section 6
+    #    matching nothing at all -- the same empty-assertion trap
+    #    test_detector_source_constants.py builds its synthetic file to avoid.
+    print("\n[7] the prose stripper is reachable, and blanks prose only")
+    probe = '\n'.join([
+        '"""Docstring: #37 used `team_slot % 5 + 1`, do not."""',           # 1
+        'x = 1  # comment: team_slot % 5 + 1 is wrong',                     # 2
+        's = "a quoted team_slot % 5 + 1 inside a str"',                    # 3
+        'live_a = p["team_slot"] % 5 + 1',                                  # 4
+        'live_b = p["team_slot"] % 5 + 1  # trailing comment',              # 5
+        'live_c = f"pos={p[\'team_slot\'] % 5 + 1}"',                       # 6
+        'd = """team_slot % 5 + 1',                                         # 7
+        'still inside the same triple-quoted string % 5 + 1 team_slot"""',  # 8
+    ])
+    hits = slot_pos_hits(probe)
+    check(hits == [4, 5, 6],
+          "reports exactly the three live lines, not the five prose ones "
+          "(got %s)" % hits)
+    check(slot_pos_hits('# team_slot % 5 + 1\n') == [],
+          "a whole-line comment alone is not a hit")
+    check(slot_pos_hits('y = p["team_slot"] % 5 + 1\n') == [1],
+          "and a bare live line alone still is")
+    try:
+        slot_pos_hits('def f(:\n')
+        tokenized_junk = True
+    except Exception:
+        tokenized_junk = False
+    check(not tokenized_junk,
+          "a file that will not tokenize raises rather than becoming a silent exemption")
 
     print("\n%s (%d failures)" % ("PASS" if not failures else "FAIL", len(failures)))
     return 1 if failures else 0
