@@ -58,12 +58,14 @@ while true; do
     # leftover replay from an earlier/killed game (attribution safety).
     # With one recorder the whole pool is ours to wipe, exactly as before #75.
     # With several, wiping it would destroy the other slots' recordings that are
-    # being written RIGHT NOW, so only genuinely dead files are reaped.
+    # being written RIGHT NOW, so only genuinely dead files are reaped -- and a
+    # dead file is shipped to <run>/unattributed/ before it is dropped, because
+    # an unclaimed .dem is unlabelled evidence, not wrong evidence (#75 §X.1 乙).
     if [ "$RECORDING" = "1" ]; then
         if [ "$REC_SLOTS" = "1" ]; then
             rm -f "$REPLAYDIR"/*.dem "$REPLAYDIR"/discarded/replays/*.dem 2>/dev/null
         else
-            dem_reap "$REPLAYDIR" $((GAME_CAP_MIN + 5))
+            dem_reap "$REPLAYDIR" $((GAME_CAP_MIN + 5)) "$S3_PREFIX"
         fi
     fi
 

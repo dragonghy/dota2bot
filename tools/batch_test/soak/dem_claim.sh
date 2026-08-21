@@ -30,6 +30,8 @@ set -u
 
 DEM_CLAIM_HDR_BYTES=${DEM_CLAIM_HDR_BYTES:-65536}
 DEM_CLAIM_LOCK=${DEM_CLAIM_LOCK:-/opt/soak/.replays.lock}
+DEM_AWS=${DEM_AWS:-aws}          # injection point for the offline tests
+DEM_RESCUE_BUCKET=${DEM_RESCUE_BUCKET:-dota2bot-batch-results-4924}
 
 # _dem_json_str <s>  -- minimal JSON string escaping (paths + method names only)
 _dem_json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
@@ -107,13 +109,58 @@ EOF
         "$host_hits" "$rec_slots"
 }
 
-# dem_reap <replaydir> <max_age_min>  -- drop unclaimed .dem left by dead games.
-# Only reached with more than one recorder: with a single recorder soak_loop
-# still purges the whole pool exactly as it did before #75. A file older than
-# the wall-clock game cap cannot belong to a live recording, so this cannot
-# delete a game in progress.
+# dem_reap <replaydir> <max_age_min> [s3_prefix] [hard_age_min]
+#   Rescue-then-drop the unclaimed .dem left behind by dead games. Only reached
+#   with more than one recorder: with a single recorder soak_loop still purges
+#   the whole pool exactly as it did before #75. A file older than the wall-clock
+#   game cap cannot belong to a live recording, so this never touches a game in
+#   progress.
+#
+# Why rescue rather than delete (#75 §X.1 乙): "no claim => no upload" is right
+# about ATTRIBUTION but makes the multi-recorder path all-or-nothing, and the
+# thing it throws away is an UNLABELLED .dem, not a MISLABELLED one. The game's
+# analysis.json (final score, duration, heroes) is enough to join it back
+# offline, so the downside of a wave where all three claim chains miss drops
+# from "that seed's frame evidence is gone" to "that seed's frame evidence needs
+# one offline join".
+#
+# The key is the file's OWN basename under <s3_prefix>/unattributed/, which is
+# what makes 16 slots racing to rescue the same file idempotent: they all write
+# the same bytes to the same object, so no coordination is needed.
+#
+# Upload failure does not strand disk: a file that is still here past hard_age
+# (default 3x) is dropped anyway, preserving the pre-#75 disk guarantee with a
+# bounded lag. Prints one summary line to stderr.
 dem_reap() {
-    local rd="$1" age="${2:-20}"
-    find "$rd" "$rd/discarded/replays" -maxdepth 1 -type f -name '*.dem' \
-        -mmin "+$age" -delete 2>/dev/null || true
+    local rd="$1" age="${2:-20}" prefix="${3:-}" hard="${4:-}"
+    [ -n "$hard" ] || hard=$((age * 3))
+    local rescued=0 failed=0 dropped=0 f base key
+
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        base=$(basename "$f")
+        if [ -n "$prefix" ] && [ -s "$f" ]; then
+            key="$prefix/unattributed/$base"
+            if $DEM_AWS s3 cp "$f" "$key" --quiet 2>/dev/null; then
+                # Same 21-day tag-filtered lifecycle rule the claimed .dem use;
+                # best effort, an untagged object just keeps default retention.
+                local nos=${key#s3://}
+                $DEM_AWS s3api put-object-tagging \
+                    --bucket "${nos%%/*}" --key "${nos#*/}" \
+                    --tagging 'TagSet=[{Key=lifecycle,Value=dem21}]' >/dev/null 2>&1
+                rm -f "$f" 2>/dev/null && rescued=$((rescued + 1))
+                continue
+            fi
+            failed=$((failed + 1))
+            # Keep it for the next pass unless it is so old that holding it is
+            # just a disk leak.
+            [ -n "$(find "$f" -maxdepth 0 -mmin "+$hard" 2>/dev/null)" ] || continue
+        fi
+        rm -f "$f" 2>/dev/null && dropped=$((dropped + 1))
+    done <<EOF
+$(find "$rd" "$rd/discarded/replays" -maxdepth 1 -type f -name '*.dem' \
+    -mmin "+$age" 2>/dev/null)
+EOF
+
+    echo "dem_reap: rescued=$rescued upload_failed=$failed dropped=$dropped" >&2
 }

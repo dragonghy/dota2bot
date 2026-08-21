@@ -84,11 +84,50 @@ echo "== 7. the reaper drops dead files and spares live ones =="
 RD="$TMP/r7"; mkdir -p "$RD"
 mkdem "$RD/live.dem" x
 mkdem "$RD/dead.dem" x; touch -d '90 minutes ago' "$RD/dead.dem"
-dem_reap "$RD" 20
+dem_reap "$RD" 20 2>/dev/null
 ok "dead reaped" "$([ -e "$RD/dead.dem" ] && echo yes || echo no)" "no"
 ok "live spared" "$([ -s "$RD/live.dem" ] && echo yes)" "yes"
 
-echo "== 8. an empty pool is not an error =="
+echo "== 8. the reaper RESCUES a dead file before dropping it (#75 X.1 乙) =="
+# a stub `aws` that records what it was asked to do instead of calling S3
+cat > "$TMP/fakeaws" <<'STUB'
+#!/usr/bin/env bash
+echo "$@" >> "$FAKEAWS_LOG"
+[ -n "${FAKEAWS_FAIL:-}" ] && exit 1
+exit 0
+STUB
+chmod +x "$TMP/fakeaws"
+export FAKEAWS_LOG="$TMP/aws.log"; : > "$FAKEAWS_LOG"
+DEM_AWS="$TMP/fakeaws"
+RD="$TMP/r9"; mkdir -p "$RD/discarded/replays"
+mkdem "$RD/live9.dem" x
+mkdem "$RD/dead9.dem" x;                       touch -d '90 minutes ago' "$RD/dead9.dem"
+mkdem "$RD/discarded/replays/dead9b.dem" x;    touch -d '90 minutes ago' "$RD/discarded/replays/dead9b.dem"
+SUM=$(dem_reap "$RD" 20 "s3://bkt/soak/run7" 2>&1 >/dev/null)
+ok "summary counts both"   "$SUM" "dem_reap: rescued=2 upload_failed=0 dropped=0"
+ok "uploaded under unattributed/, keyed by the file's own basename" \
+   "$(grep -c 's3 cp .*dead9.dem s3://bkt/soak/run7/unattributed/dead9.dem --quiet' "$FAKEAWS_LOG")" "1"
+ok "the discarded/ one too"  \
+   "$(grep -c 's3 cp .*discarded/replays/dead9b.dem s3://bkt/soak/run7/unattributed/dead9b.dem' "$FAKEAWS_LOG")" "1"
+ok "tagged for the 21-day rule" \
+   "$(grep -c 'put-object-tagging --bucket bkt --key soak/run7/unattributed/dead9.dem' "$FAKEAWS_LOG")" "1"
+ok "rescued file then dropped" "$([ -e "$RD/dead9.dem" ] && echo yes || echo no)" "no"
+ok "live file never uploaded"  "$(grep -c live9 "$FAKEAWS_LOG")" "0"
+ok "live file spared"          "$([ -s "$RD/live9.dem" ] && echo yes)" "yes"
+
+echo "== 9. a failed upload keeps the file for the next pass, but not forever =="
+export FAKEAWS_FAIL=1
+RD="$TMP/r10"; mkdir -p "$RD"
+mkdem "$RD/recent.dem" x; touch -d '30 minutes ago' "$RD/recent.dem"    # dead, < hard age
+mkdem "$RD/ancient.dem" x; touch -d '600 minutes ago' "$RD/ancient.dem" # past hard age
+SUM=$(dem_reap "$RD" 20 "s3://bkt/soak/run7" 2>&1 >/dev/null)
+ok "summary"              "$SUM" "dem_reap: rescued=0 upload_failed=2 dropped=1"
+ok "retried next pass"    "$([ -s "$RD/recent.dem" ] && echo yes)" "yes"
+ok "disk not leaked"      "$([ -e "$RD/ancient.dem" ] && echo yes || echo no)" "no"
+unset FAKEAWS_FAIL
+DEM_AWS=aws
+
+echo "== 10. an empty pool is not an error =="
 RD="$TMP/r8"; mkdir -p "$RD"
 J=$(dem_claim 2 t "$RD" "" 1 "$TMP/s2.dem")
 ok "method"     "$(jget "$J" method)"     "none"
