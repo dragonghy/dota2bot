@@ -2247,5 +2247,54 @@
     "mutation_note": "M8 was a FAKE mutation: both purchase functions contain the same aghanim's-shard block, so replace(...,1) landed it in GeneralPurchase instead of TurboModeGeneralPurchase and the suite stayed green. Redone as M8b against the Turbo-only `shardCDTime / 180`. Same class as last round's M8 -- 'a green mutation does not count until the mutation is confirmed to have applied' now has two independent instances.",
     "self_inflicted_leak": "M16, found by the FULL suite and not designed: this file leaked its own probe. GAMEMODE_TURBO is a plain global and tests/run_tests.lua is ONE process running every test_*.lua in alphabetical order, so the last honest world() left GAMEMODE_TURBO = 23 installed and every LATER test file ran in the honest world -- silently applying this file's own 21-fixture / 18-winner shift to somebody else's assertions, and turning one of them red. Fixed with unprobe() after every bid and after every probe block, and the state a successor inherits is now itself an assertion ('[premise] the probe does not follow this file into the next one'). TEAM RULE: any test that uses a rawset global as a probe must carry an assertion describing the world it leaves behind -- running the file alone can never surface this, and running the whole suite surfaces it only as an F on an unrelated filename.",
     "corpus_grew_mid_round": "The corpus grew from 94 to 96 fixtures DURING this round (two lion_drain fixtures landed from the hero stream on rebase) and this file's three denominator assertions turned red on the spot. The denominators were NOT simply moved: the full auction was re-run both ways on the two new frames -- f_260820_162821_lion_drain_lethal (retreat 0.750 either way) and f_260820_182906_lion_drain_survived (defend_tower_bot 0.300 either way), ZERO moved cells each -- so every NUMERATOR above is unchanged and only the denominator moved, 94 -> 96. Measured, not assumed; both new frames are pinned by name in the file. This is what the census-style assertions exist to force."
+  },
+  "roamstale_CONDITION_A_RETRACTED_20260821T1900Z": {
+    "issue": 94,
+    "ruling": "condition (a) RETRACTED; id RETAINED on (c)+(b); NOT re-gated",
+    "disposition": "(a)-RETRACTED / RETAINED-ON-(c)+(b)  -- 5th disposition, see test_set.md AG.3",
+    "why_retracted": "the registered +22.9pp was a DiD; seed-paired decomposition DiD +15.2 = ARMED(+5.7) - NULL(-9.5) puts ~63% of it between two baseline legs running identical shipped code",
+    "correct_estimator": "ARMED A-B (candidate side vs candidate side, seed-paired); DiD banned for mirrored two-arm bisects -- no arm-level nuisance exists by construction, and the two sides play each other so differencing the baseline leg can only add variance",
+    "readings_ARMED_A_minus_B": {
+      "out_of_domain_hit_hero_pp": 7.7,
+      "out_of_domain_p": 0.0997,
+      "out_n": "78/104",
+      "out_baseline_leg_pp": -12.8,
+      "out_baseline_leg_p": 0.0079,
+      "in_domain_hit_hero_pp": -7.2,
+      "in_domain_hit_hero_p": 0.0128,
+      "in_domain_no_dmg_pp": 7.1,
+      "in_domain_no_dmg_p": 0.0091,
+      "in_n": "409/417",
+      "in_baseline_leg_pp": 0.4,
+      "in_baseline_leg_p": 0.93,
+      "in_supply_ratio": 0.98
+    },
+    "baseline_leg_is_noise_not_interference": "two clean baseline reads (in-domain +0.4pp n=909; GH #45's independent >=600u leg -0.1pp) vs one significant read in the smallest cell (89/111) out of a 16-cell scan (multiplicity-adjusted p~0.13); either way the registered number is not the effect",
+    "episode_count_correction": "2117 for this corpus, NOT the registered 1855 (scanner changed after 08-19)",
+    "in_domain_cost_status": "PROVISIONAL -- scanned at VICTIM_HP=0.40 (roam_conversion.py:61), the same free parameter GH #92 walked to flip a neighbouring reading's sign; supply is balanced (0.98) where that artefact is zero, which is reassuring and is not a sweep",
+    "rollback_trigger_preregistered": "(1) sweep VICTIM_HP first; (2) if the cost survives, ship the roamreach lever; (3) if roamreach cannot remove it, roamstale goes back behind its gate. Order is binding.",
+    "AF3_resolved": "hijack effect size is exactly 0.0 (2.4% vs 2.4% in-domain p=1.0000, 0.0% vs 0.0% out) -- hTargetCreep is NOT the -28 saturating shared-consumer defect; the pre-registered-prediction wave is NOT scheduled (its prediction is already falsified for free). The saturating explanation survives, its only named mechanism does not.",
+    "mechanism_note_CONFIRMED": "the 08-19 mechanism correction ('a stale handle does not send the bot to hit a creep, the bot stands still') is the one registered claim independently confirmed rather than retracted"
+  },
+  "DiD_BANNED_mirrored_bisect_RULING_20260821T1900Z": {
+    "rule": "behavioural readings from a mirrored two-arm bisect are reported as ARMED A-B only; the baseline-leg contrast is a DIAGNOSTIC that should read zero, and a non-zero read disqualifies the DiD either way",
+    "derivation": "DiD removes arm-level nuisance; this rig has none by construction (same tree, same seeds, same drafts). The two sides play each other => Cov<0 => Var(DiD)=Var(ARMED)+Var(NULL)-2Cov > Var(ARMED). If interference is real it also adds bias.",
+    "recompute_owed": [
+      "roamstale (done, this ruling)",
+      "lf_rescue +8.57 (same 32-game corpus, free)",
+      "capmono GH #72 (DiD -7.9pp +- 9.3)"
+    ],
+    "enforcement": "roam_conversion.py now reads the cand id string out of each run's games_manifest.jsonl and exits 2 when the dirs disagree or a stamp is missing (--allow-unattributed stamps the output UNATTRIBUTED); standing banner says the table is one leg, not an estimator. tests/test_roam_conversion_arm_guard.py, 22 checks, 4 mutations 7/3/2/2 red."
+  },
+  "GH45_RERULED_20260821T1900Z": {
+    "ruling": "no longer a 'residual'; it IS the laning-phase cost in roamstale's replaced (a), and it blocks a shipped default",
+    "reestimated_by_director": "issue's own numbers under ARMED A-B: loiter 12/409 (2.93%) vs 2/322 (0.62%) = +2.31pp, z=2.26, p~0.024, baseline leg +0.47pp -- survives; it is the narrow form of the full-corpus no_dmg +7.1pp (p=0.0091, supply 0.98)",
+    "economic_account_FALSIFIED": "GH #45 s4 pre-registered the falsifier ('if both arms are equally bad, -2.16 is not roamstale'); the registered (b) already answers it: last_hits ARMED A-B = -0.05. Behavioural account only.",
+    "still_owed": [
+      "VICTIM_HP sweep (merged with GH #92, one work unit)",
+      "recompute arm B on the now-complete 32-game archive (its registered leg was 12 games)",
+      "pin t=312.5 and t=318.5 shadow_shaman frames with a buildings-bearing fixture"
+    ],
+    "postponement_count_at_ruling": 21
   }
 }

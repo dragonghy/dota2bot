@@ -170,14 +170,35 @@ function GetDesireHelper()
     -- attack, never add one, and it changes no desire value anywhere (nothing
     -- reads hTargetCreep before its assignment).
     --
-    -- PROMOTED (was soak-candidate 'roamstale') 2026-08-19: the first id to
-    -- clear all three conditions of the 08-01 validation rule.
-    --   (a) EXECUTION -- two-arm bisect, roamstale the only variable, 4 seeds x
-    --       2 arms / 555 mirror games / 1855 episodes: out-of-domain "lands a
-    --       hit on a hero within 4s" paired delta arm A +15.3pp vs arm B -7.6pp
-    --       (DiD +22.9pp), zero-damage DiD -19.5pp, 4/4 seeds and 2/2 mirror
-    --       directions same-signed, the other 15 ids armed identically in both
-    --       arms. This is an isolated proof, not a within-arm correlation.
+    -- PROMOTED (was soak-candidate 'roamstale') 2026-08-19; condition (a)
+    -- RETRACTED and replaced 2026-08-21 (GH #94, test_set.md AG). The id is
+    -- RETAINED on (c)+(b), not on (a) -- read the retraction before quoting
+    -- any number from here.
+    --   (a) RETRACTED -- the promoting number was a DiD, and the DiD's second
+    --       term is not a control. Same 32 replays, re-decomposed as
+    --       DiD = (Aarm-Barm) - (Abase-Bbase): out-of-domain "hit a hero within
+    --       4s" reads ARMED A-B +7.7pp (p=0.0997, n=78/104) with the
+    --       BASELINE-vs-BASELINE leg at -12.8pp (p=0.0079) -- ~63% of the
+    --       registered +22.9pp lived between two legs running identical shipped
+    --       code, so it cannot be this reset. Both arms ran the same 4 seeds and
+    --       the same tree, so there is no arm-level nuisance for a DiD to
+    --       remove; the isolated estimator is ARMED A-B alone (both candidate
+    --       sides face opponents whose CODE is identical), and differencing the
+    --       baseline leg in can only add variance. Under that estimator the
+    --       out-of-domain benefit is DIRECTIONAL BUT UNESTABLISHED, and the
+    --       better-powered in-domain window -- clean null leg (+0.4pp, p=0.93),
+    --       supply ratio 0.98, 5x the episodes -- reads AGAINST the reset:
+    --       delivery onto heroes -7.2pp (p=0.0128), zero-damage +7.1pp
+    --       (p=0.0091). Episode count for this corpus is 2117, not the 1855
+    --       first registered (the scanner changed under it after 08-19).
+    --       Verdict: EXECUTES, isolated and measurable; benefit UNESTABLISHED.
+    --       The retraction itself is threshold-free -- it is arithmetic on the
+    --       registered DiD, so it holds whatever domain you scan. The in-domain
+    --       COST is NOT threshold-free: it is scanned at VICTIM_HP = 0.40, the
+    --       same free parameter GH #92 just walked (0.40 -> 1.01) to flip a
+    --       neighbouring reading's sign monotonically. Its supply is balanced
+    --       (0.98) where #92's artefact is zero, which is reassuring and is not
+    --       a sweep. Quote the cost as PROVISIONAL until swept.
     --   (b) NO VISIBLE HARM -- A-B paired economic delta null on all four
     --       metrics: gpm +5.48 (z=+0.31), xpm +5.60, deaths -0.08,
     --       last_hits -0.05. Note the bound is wide (4-seed MDE ~35.6 gpm).
@@ -190,14 +211,36 @@ function GetDesireHelper()
     -- creep -- Action_AttackUnit on a handle that has since died simply does
     -- nothing, and the bot stands still. What this reset restores is DELIVERY
     -- ONTO DISTANT TARGETS, not near-target selection.
+    -- That mechanism correction is the one claim here that got INDEPENDENTLY
+    -- CONFIRMED on 2026-08-21 rather than retracted: the creep-instead-of-hero
+    -- signature reads 2.4% vs 2.4% in-domain (Fisher p=1.0000) and 0.0% vs 0.0%
+    -- out-of-domain across the two arms -- the hijack the original issue named
+    -- has an effect size of exactly zero, which is what "the bot stands still"
+    -- predicts. It also rules this branch out as the -28 gpm shared-consumer
+    -- defect (test_set.md AF.3): a behaviour both arms show 2.4% of the time
+    -- cannot carry -28.
+    -- Precision, because the distinction matters: what is confirmed is the
+    -- "stands still, does not go hit a creep" half. The >=600u / <=300u split
+    -- in the sentence above is itself a DiD-derived breakdown and inherits the
+    -- retraction in (a) -- do not quote those two distances as measured.
     -- Turbo-only, matching the domain every measurement above was taken in;
     -- normal mode keeps the stale handle byte-for-byte. Extending it there is a
     -- separate decision with no evidence behind it yet.
-    -- KNOWN RESIDUAL (issue #45, gated 'roamreach'): with delivery restored,
-    -- the candidate side loitered on the 600-900u ring dealing no damage more
-    -- often than baseline (12/409 vs 3/409, p=0.034) -- chases this reset now
-    -- actually issues can still stall out of ability range. That is the next
-    -- lever, not a reason to keep the handle stale.
+    -- NOT A RESIDUAL ANY MORE (issue #45, gated 'roamreach'): the loiter cell
+    -- was registered as a within-arm delta (12/409 vs 3/409). Re-estimated
+    -- 2026-08-21 as ARMED A-B it survives -- 12/409 vs 2/322 = +2.3pp, z=2.26,
+    -- with its own baseline leg near zero (+0.5pp) -- and it is the NARROW form
+    -- of the in-domain zero-damage cost in (a) above (+7.1pp, p=0.0091, full
+    -- corpus, clean supply). So the laning cost and this loiter are one thing,
+    -- and 'roamreach' is the lever that decides whether this reset is net
+    -- positive at all: if the cost survives the VICTIM_HP sweep and 'roamreach'
+    -- cannot remove it, roamstale is a behaviour change with a measured cost and
+    -- no measured benefit and goes back behind its gate (test_set.md AG.4 --
+    -- the sweep comes first, a re-gate on an unswept threshold would repeat the
+    -- mistake being corrected here). Its ECONOMIC account is
+    -- separately FALSIFIED: #45 predicted the loiter would eat last hits, and
+    -- the isolated read is last_hits A-B -0.05 (the -2.16 it pointed at is
+    -- equally present in both arms, so it is not this).
     if J.IsModeTurbo() then
         hTargetCreep = nil
     end

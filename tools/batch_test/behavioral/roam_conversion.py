@@ -19,9 +19,32 @@ attributable to these branches.
 
 Usage:
     roam_conversion.py <sweep_out_dir> [<sweep_out_dir> ...]
+    roam_conversion.py --allow-unattributed <dir> [...]
 
 Each sweep_out_dir is a directory produced by sweep_run.sh (it must contain
 timelines/ and analysis/).  Read-only; no AWS, no billable resource.
+
+WHAT THIS TABLE IS, AND WHAT IT IS NOT (director ruling 2026-08-21, test_set.md
+section AG, GH #94).  The armed-vs-baseline columns below are ONE LEG of a
+two-arm bisect, not an estimator.  In a mirrored wave the two sides play EACH
+OTHER, so a within-arm candidate-minus-baseline delta moves for two reasons at
+once and is negatively coupled with itself; the isolated estimator is the
+two-arm ARMED A-B (candidate side vs candidate side, seed-paired), because both
+candidate sides face opponents whose CODE is identical.  Differencing two of
+these tables into a DiD is banned: it subtracts a baseline leg that is not a
+control (there is no arm-level nuisance to remove -- same tree, same seeds,
+same drafts) and can only add variance, and it is how `roamstale`'s registered
++22.9pp came to be ~63% baseline-leg.  Use roamstale_null_channel.py, which
+prints ARMED A-B next to the baseline-leg contrast it would have subtracted.
+
+Because the table is a leg, it is meaningless until you know WHICH ARM it came
+from, and this script pools every directory it is given into one `armed` cell.
+Hand it both arms and it averages a treated and an untreated candidate side
+into a single number that looks exactly like a normal measurement.  So the
+candidate id string is read out of each run's games_manifest.jsonl and the run
+aborts (exit 2) if the directories disagree or if the manifest is missing.
+`--allow-unattributed` is the deliberate escape hatch; it stamps the output
+UNATTRIBUTED rather than quietly guessing an arm.
 """
 import collections
 import glob
@@ -307,11 +330,92 @@ def pct(n, d):
     return f'{100.0*n/d:5.1f}% ({n}/{d})' if d else '   n/a'
 
 
+ARM_BANNER = (
+    'NOTE: armed-vs-baseline below is ONE LEG of a bisect, not an estimator.\n'
+    '      The isolated contrast is two-arm ARMED A-B (roamstale_null_channel.py).\n'
+    '      Do not difference two of these tables into a DiD -- test_set.md AG.')
+
+
+def arm_identity(dirs):
+    """-> (id_set_per_dir, dirs_without_manifest).
+
+    The candidate id string is read out of each run's games_manifest.jsonl.  It
+    is READ, never inferred from the directory name: the name is a label a human
+    typed, the stamp is what the instance actually armed.
+    """
+    per_dir, missing = {}, []
+    for d in dirs:
+        path = os.path.join(d, 'games_manifest.jsonl')
+        if not os.path.exists(path):
+            missing.append(d)
+            continue
+        ids = set()
+        with open(path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                cand = json.loads(line).get('cand') or ''
+                ids |= {p for p in cand.split(',') if p}
+        per_dir[d] = ids
+    return per_dir, missing
+
+
+def check_single_arm(dirs, allow_unattributed=False):
+    """Abort unless every directory carries the same candidate id set.
+
+    Returns the shared id set (or None when running UNATTRIBUTED).
+    """
+    per_dir, missing = arm_identity(dirs)
+    if missing:
+        if not allow_unattributed:
+            print('!! no games_manifest.jsonl in: %s\n'
+                  '   This table is one leg of a bisect and cannot be attributed to\n'
+                  '   an arm without the stamp.  Re-run sweep_run.sh so the manifest\n'
+                  '   is written, or pass --allow-unattributed to say so out loud.'
+                  % ', '.join(sorted(missing)), file=sys.stderr)
+            sys.exit(2)
+        print('ARM: UNATTRIBUTED (no manifest for %d dir(s)) -- this table names no arm'
+              % len(missing))
+        return None
+    sets = list(per_dir.values())
+    if not sets:
+        if allow_unattributed:
+            print('ARM: UNATTRIBUTED (no directories carried a manifest)')
+            return None
+        print('!! no directories carried a games_manifest.jsonl', file=sys.stderr)
+        sys.exit(2)
+    first = sets[0]
+    for d, ids in per_dir.items():
+        if ids != first:
+            only_a, only_b = sorted(first - ids), sorted(ids - first)
+            print('!! the directories are not one arm: %s vs %s differ by\n'
+                  '   %s\n'
+                  '   Pooling them averages a treated and an untreated candidate side\n'
+                  '   into one cell that looks like a normal measurement.  Run each arm\n'
+                  '   separately, or use roamstale_null_channel.py --arm-a/--arm-b.'
+                  % (sorted(per_dir)[0], d,
+                     ' / '.join(filter(None, [
+                         ('only in the first: ' + ', '.join(only_a)) if only_a else '',
+                         ('only in %s: ' % d) + ', '.join(only_b) if only_b else ''])) or
+                     '(nothing -- sets differ but the diff is empty?)'),
+                  file=sys.stderr)
+            sys.exit(2)
+    print('ARM: %d ids armed in every stamp [%s]'
+          % (len(first), ','.join(sorted(first)) if first else '(none)'))
+    return first
+
+
 def main():
-    dirs = sys.argv[1:]
+    argv = sys.argv[1:]
+    allow_unattributed = '--allow-unattributed' in argv
+    dirs = [a for a in argv if not a.startswith('--')]
     if not dirs:
         print(__doc__)
         return 1
+    check_single_arm(dirs, allow_unattributed)
+    print(ARM_BANNER)
+    print()
     buckets = {'in': collections.defaultdict(list), 'out': collections.defaultdict(list)}
     games = 0
     for d in dirs:
