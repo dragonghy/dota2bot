@@ -823,6 +823,44 @@ function M.record_actions(bot)
     return log
 end
 
+--- How far in the past a "stale" defence ping sits. Any value larger than the
+--- widest shipped window (aba_defend's 6.0s) would do; a big round number is
+--- chosen so a test that prints the stamp cannot mistake it for a real time.
+local DEFEND_PING_STALE_AGE = 1e6
+
+--- Declare, for THIS fixture VM, how long ago somebody pinged for defence.
+---
+--- GH #91. `J.Utils.GameStates.defendPings` is lazily initialised BY the same
+--- clock reading it is later compared against (bots/mode_farm_generic.lua:123
+--- and three siblings), so in a one-call VM the first reader is its own
+--- initialiser and `GameTime() - pingedTime` is exactly 0. Three shipped bids
+--- (farm, side_shop, all three push_tower_* via aba_push) return their floor
+--- on every fixture frame as a result.
+---
+--- The loader deliberately does NOT pick a side for you. Whether anybody
+--- pinged in the last five seconds is NOT in the .dem -- the dumper captures
+--- no pings -- so a loader default would be modelling a value we have no
+--- ground truth for, silently, in every test at once (the same reason path 1
+--- of GH #89 was refused). Instead the assumption is one visible line in the
+--- test that depends on it.
+---
+--- There is no default argument on purpose: `state` must be 'stale' (nobody
+--- pinged recently -- the common case in a live game) or 'fresh' (somebody
+--- pinged just now -- the guard's intended domain). Anything else raises,
+--- rather than falling back to a value that could never go red.
+--- Returns the pingedTime written, for tests that want to assert on it.
+function M.declare_defend_ping(J, state)
+    if state ~= 'stale' and state ~= 'fresh' then
+        error("declare_defend_ping: state must be 'stale' or 'fresh', got "
+            .. tostring(state), 2)
+    end
+    local now = GameTime()
+    local stamped = (state == 'stale') and (now - DEFEND_PING_STALE_AGE) or now
+    J.Utils['GameStates'] = J.Utils['GameStates'] or {}
+    J.Utils['GameStates']['defendPings'] = { pingedTime = stamped }
+    return stamped
+end
+
 --- Load a full hero script (bots/BotLib/hero_<part>.lua) into the installed
 --- fixture world and return its module table (X). Must be called after load().
 function M.load_hero(part)
