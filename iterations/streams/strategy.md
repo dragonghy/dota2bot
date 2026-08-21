@@ -136,6 +136,22 @@
    **顺带给全组的口径**:凡是靠致命性子句的分支(`l1trade`/`l5combo`/`ShouldPunishDive` 的 lethal 支线),
    **fixture 上一律不可判**,因为 loader 的 `GetEstimatedDamageToTarget` 只答**敌 → subject**。
    写这类用例必须像本轮一样**把「唯一阻塞项是它」写成断言**,而不是让 helper 返回 nil 就算完。
+0g. **【2026-08-21T03:19Z 新增,已钉住、不要改代码】TP 全队配额台账的时间戳是双写,
+   单删任何一个都是无声的**。`J.TryTakeTpResponseSlot`(`jmz_func.lua:5706`)里 `tTpQuota.t`
+   在**重置分支**和**取票路径**各写一次,**每一个单独看都是 dead store**(实测:单删任一个,
+   10 条断言逐位全绿);**两个都删** ⇒ `nNow - tTpQuota.t` 永远 > 6 ⇒ 每次调用都重置 ⇒
+   **`TryTakeTpResponseSlot` 永远返回 true**,全队配额**静默变成无限**,fix B 要治的
+   COLLECTIVE TP(≥3 人同瞬 TP,3 张卷轴 + ~200s 步行换零干预)原样复发,**没有报错、
+   没有日志、没有别的测试会红**。危险正在于:删「那句冗余赋值」**第一次是对的,第二次是灾难**,
+   而第一次的安全恰好是第二次的理由。**已钉成断言**(`tests/test_tpresponse_quota_chain.lua`
+   的 `[reverse] the quota timestamp is written TWICE and neither write may go`)。
+   **本条不产 gate、不改 bots/** —— 现行行为是对的,要防的是未来的"清理"。
+   **发现方式值得记一笔:它是变异跑出来的,不是读出来的** —— 本轮 test 7 的第一版
+   (断言"窗口从最后一次成功取票起算")**是空的**,M6 全绿才把双写翻出来。
+   同一轮 M7 也抓出第二条空断言(只验了取票前有 `and`,没验它是**最后一个**)。
+   ⇒ **本组今后凡是"第一次跑就全绿"的用例,变异是硬前置,不是可选项。**
+   **未验证边界**:`tTpQuota` 是否真是全队一份,本 harness 判不了(mock 每测新载一次 jmz_func,
+   每 bot 一份 VM 看起来完全一样);shipped 注释断言它共享,只有游戏内观察能定。
 0b. **旧 fixture 逐个补真实世界(modifier + 挨打史 + 结构)**。生成器与 loader 都已支持
    (modifier 2026-08-19T23:25Z;`recent_damage` 2026-08-20T01:45Z),但**有意没有批量
    重生成**:给一帧补上真实 buff/debuff 或真实的挨打史可能**翻掉**它钉住的那个决定,
@@ -257,12 +273,24 @@
    **已经在跑的那个 mode(shipped retreat 已 0.75),而 retreat 没有 `Think()` ⇒ 结构上
    没有落点;判据本身还是滞后指标。建议出集,见 GH #52 与当前状态节。这是本族的新亚型:
    出价完好 + 赢下竞价 + 零效果**)、
-   `midtp`/`suptp`(**2026-08-19T19:30Z 查了一半**:触发闸门的可达性缺陷已定位并修复
-   → gated `tparrive`,见 issue #44。**仍未查的另一半**:(i) 物品循环的槽位顺序
-   `{5,4,3,2,1,0,15,16}` 把 TP 卷轴排最后,任何当帧想用的其他物品都抢在响应 TP 前面;
-   (ii) `ability_item_usage_generic.lua:5089+` 的「先命中先 return」guard 链 ——
-   `lf_rescue` 排在 `midtp` 之前且两者可同帧成立,而两者共用
-   `J.TryTakeTpResponseSlot()` 那个 6 秒一人的全队配额)、
+   ~~`midtp`/`suptp`~~(**2026-08-19T19:30Z 查了一半**:触发闸门的可达性缺陷已定位并修复
+   → gated `tparrive`,见 issue #44。**另一半 2026-08-21T03:19Z 查完**:
+   ~~(ii) `ability_item_usage_generic.lua:5089+` 的「先命中先 return」guard 链 ——
+   `lf_rescue` 排在 `midtp` 之前且两者可同帧成立,共用 `J.TryTakeTpResponseSlot()`
+   那个 6 秒一人的全队配额~~ **(ii) 已证伪,结构性地不存在**:
+   `J.GetNearbyLocationToTp` 是**全函数**(函数体零 `return nil`、零裸 `return`,
+   末尾无条件 `return nFountain`)⇒ 两个调用方的 `if vRescueLoc ~= nil then` /
+   `if vTpLoc ~= nil then`(5103/5127)**是死代码**,`lf_rescue` 取到票之后
+   **结构上掉不出来**,`midtp` 不可能被自己人堵。四个真实帧 + 源码穷举双取证;
+   顺带钉掉:两个 helper **各只有一个调用点**、取票在两处**都是 `and` 链最后一个合取**。
+   **(i) 仍然成立但卡在语料**:`nItemSlot` 第 7 位才是 TP 槽,循环首个 desire>0 即 return
+   ⇒ 当帧想用主物品栏任一件东西的 bot 根本不评估 `ConsiderItemDesire["item_tpscroll"]`。
+   **不动它的理由**:抢跑物品多为一帧性(用掉进 cd),是「一帧延迟」还是「持续饿死」
+   取决于 earlier slot **连续赢多少帧** —— 要数语料,照静态形状改共享消费路径正是 `lanefix` 入口。
+   零支出计数请求已路由录像组(GH #37 留言)。
+   **顺带澄清**:`J.LaneRegenItemToUse` 确实排在整个物品循环之前且 early-return,
+   但挂在 `J.IsLaneFixOn('salve')` 上而 `lanefix` 不在 armed 集 ⇒ 当前波次惰性,已写成断言。
+   见 `tests/test_tpresponse_quota_chain.lua` 与 `state.json:tpquota_NO_LEAK_20260821`)、
    `lf_rescue`/`teambrain`。
    **加一条做法(2026-08-19T15:34Z 立):出价断言通过之后不要停,再往下走一层断言
    动作** —— 总监 §0b 对动作类缺陷的推论(「断言动作真的达成了 helper 假设的那个状态」)
@@ -288,6 +316,47 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T03:19Z:**不认领 GH #77**(唯一有新动静的 `[strategy]` issue,录像组 02:36Z 的 `[bug] #78`
+  零支出复读:头条 −17.0pp → **−17.5pp 判 P1 站住**,但**收回**「第一次越过噪声底」的强度措辞,
+  承重指标从 DiD 换成 **ACTIVE 带 4/4 同号 SD 6.9 的 −15.7pp** + **内生 placebo 带**(修后反而更强
+  no-op +6.1pp / 生效带 −19.7pp ⇒ 总监的「掩护假说」被否证)。它给本组的唯一动作项是「换 §4 举例帧」,
+  那要扫语料,属录像组;排期决定权在总监)。照章程接 backlog **第 8 条**里 `midtp`/`suptp`
+  **唯一没查过的那一半**(挂了很多轮;两个 id **都在 armed 集**,不需要新语料)。
+  **产出**:`tests/test_tpresponse_quota_chain.lua` **10 例**。**bots/ 一位没动,不推 gate,不申请入集。**
+  **头条是一条否定:怀疑的配额泄漏结构性地不存在。** `J.GetNearbyLocationToTp` 是**全函数**
+  (函数体零 `return nil`、零裸 `return`,末尾无条件 `return nFountain`;`J.GetTeamFountain` 也不返 nil,
+  真为 nil 是**抛错**不是返回 nil)⇒ 两个调用方的 `if vRescueLoc ~= nil then`(5103)/
+  `if vTpLoc ~= nil then`(5127)**是死代码**,`lf_rescue` 取到全队票之后**结构上掉不出来**,
+  「同帧把自己的 `midtp` 堵死」**不可能发生**。⇒ **backlog 第 8 条的 (ii) 作废。**
+  两条独立取证都写成断言(单独一条都不够:读源码排除不了运行期抛错,四帧排除不了没走到的分支):
+  源码穷举 + **四个真实帧**(GH #37 验收三帧 + `f_071423_sky_rescue`)实测均返回真实坐标。
+  顺带钉掉:两个 helper **各只有一个调用点**(无「出价评估顺手吃票」)、取票在两处**都是 `and` 链
+  最后一个合取**(无「取完票后面还有条件否决」)。
+  **第二条产出(变异跑出来的,不是读出来的,已入 backlog 第 0g 条)**:配额台账 `tTpQuota.t`
+  **双写**,重置分支与取票路径各一次,**每个单独看都是 dead store**(单删任一个,10 条断言逐位全绿);
+  **两个都删** ⇒ 每次调用都重置 ⇒ **`TryTakeTpResponseSlot` 永远返回 true**,全队配额**静默变成无限**,
+  fix B 要治的 COLLECTIVE TP 原样复发,**零报错零日志**。危险在于删「那句冗余赋值」**第一次对、第二次是灾难**,
+  而第一次的安全恰是第二次的理由 ⇒ 钉成「两处都必须在」。**不改 bots/**:现行行为是对的,要防的是未来的"清理"。
+  **仍然成立的那一半 (i)**:`nItemSlot` **第 7 位**才是 TP 槽、循环首个 desire>0 即 return
+  ⇒ 当帧想用主物品栏任一件东西的 bot **根本不评估** `ConsiderItemDesire["item_tpscroll"]`
+  (`lf_rescue`/`midtp`/`suptp` 一并跳过)。**不动它**:抢跑物品多为一帧性,是「一帧延迟」还是
+  「持续饿死」取决于 earlier slot **连续赢多少帧** —— 要数语料,照静态形状改共享消费路径正是 `lanefix` 入口。
+  零支出计数已路由录像组(GH #37 留言)。**顺带澄清**本组自己写过的一条担心:`J.LaneRegenItemToUse`
+  确实排在整个物品循环之前且 early-return,但挂在 `J.IsLaneFixOn('salve')` 上、`lanefix` 不在 armed 集
+  ⇒ 当前波次惰性,已写成断言(免得哪天 arm 它时没人意识到那同时是一次 TP 响应链改动)。
+  **未验证边界(如实登记)**:`tTpQuota` 是否真是全队一份,本 harness 判不了(mock 每测新载一次
+  jmz_func,每 bot 一份 VM 看起来完全一样);只有游戏内观察能定。
+  **验收**:`luacheck bots game --formatter plain` **0 warnings**(bots/ 零改动);
+  `lua5.1 tests/run_tests.lua` **886 → 896(+10)**。**11 次变异全部按预期 FAIL,其中 2 次抓出本轮
+  自己写的空断言并当场重写** —— M6(删取票 stamp)全绿 ⇒ 翻出双写、重写 test 7;M7(取票后追加
+  `and true`)全绿 ⇒ 发现只验了「前面有 `and`」没验「是最后一个」、重写 test 8。
+  **⇒ 立一条本组纪律:凡「第一次跑就全绿」的用例,变异是硬前置,不是可选项。**
+  其余:M1 塞 `return nil`/M2 破坏无条件尾/M3 改落点 guard/M4 两触发器间插 `return`/M5 窗口 6→2/
+  M6b 单删重置 stamp/M6d 单删取票 stamp/M6c 两个都删(5、6、7 三条红)/M7b 加第三个消费方/
+  M8 TP 槽挪到首位/M9 拿掉 regen gate。
+  `state.json` 新增 `tpquota_NO_LEAK_20260821`。
+  未花 AWS 钱(**未读 S3**、未启动任何计费资源、未提批测请求)。
+  详见 `iterations/reports/strategy/20260821T031912Z.md`。
 - 2026-08-21T01:20Z:**第四次有可认领的新 `[strategy]` issue**,认领 **GH #77**(录像组 00:53Z:
   `l1trade` 域内普攻率 −17.0pp、方向与设计相反,§4 点名一枚 ⭐ 钉帧)。按章程 backlog **第 8 条**
   把 `l1trade` 的**动作层**第一次驱到真实帧上(出价层 GH #31 钉过,动作层从来没人驱过)。

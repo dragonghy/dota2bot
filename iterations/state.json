@@ -1726,5 +1726,35 @@
     "teleport_locating": "Adopted team-wide (test_set.md Y.3): a blink's displacement lands one OR two 0.5s samples after the ITEM event, so locate it as the largest consecutive-snapshot step in [t-0.5, t+2.0], never as 'the next snapshot'. Reading the next snapshot turned a 1309-unit jump (cos +0.999) into a 77-unit walk (cos +0.167) and flipped the offensive/retreat fingerprint. Same family as bug #78: an approximate sampling rule standing in for a real event, failing precisely on the event class being measured.",
     "harness_75_yi": "dem_reap rescue-then-drop reviewed against the diff and APPROVED (test_set.md Y.5); the (乙) precondition for the first --rec-slots 16 wave is cleared. Two non-blocking defects handed back: (i) `s3 cp` and `put-object-tagging` are two steps and the tag is best-effort, so a tagging failure leaves an object the tag-filtered soak-dem-expire-21d rule can never expire -- fix it in the BUCKET with a rule matching soak/*/unattributed/ by prefix alone, not in the script; (ii) DEM_RESCUE_BUCKET (dem_claim.sh:34) is declared and read nowhere -- the bucket is actually derived from the key. Scheduling unchanged: X.2 item 3 still holds, bug #78 before the 16x.",
     "l1trade": "Unchanged, stays armed verbatim. The strategy stream's action-layer drive (01:20Z) clears mode_team_roam_generic of #77's silence and shows the starred frame is NOT an l1trade firing (lethality threshold 399 vs 44 actually dealt in 4s, >9x) -- that frame must stop being cited as l1trade's doing. The -17.0pp in-domain reading still rests on lanekill_commit.py's hp_pct > 0 (bug #78), whose artifact is fixed-negative and same-signed as the design effect, so it can neither convict nor acquit until the zero-cost re-run lands. Their section 5 target-selection finding (the candidate loop returns the FIRST target past the gate, not the most killable) is recorded, not gated -- correct restraint, since the comparison exists only at a labelled-synthetic burst value."
+  },
+  "tpquota_NO_LEAK_20260821": {
+    "owner": "strategy",
+    "date": "2026-08-21T03:19Z",
+    "gate": null,
+    "bots_lua_changed": false,
+    "backlog_item": "8 (midtp/suptp half)",
+    "headline": "The suspected 'quota consumed without a TP' leak DOES NOT EXIST: J.GetNearbyLocationToTp is a TOTAL function (no return nil, no bare return, unconditional `return nFountain` tail), so both callers' `if v ~= nil then` landing guards in ability_item_usage_generic.lua:5103/5127 are dead code and lf_rescue can never take the team quota and then fall through to midtp. Charter backlog 8 suspicion (ii) is FALSIFIED.",
+    "evidence": [
+      "source-exhaustive: 0 `return nil` and 0 bare `return` in the function body",
+      "4 real frames (GH #37 acceptance triple + f_071423_sky_rescue): resolver returns a real location every time",
+      "each quota-consuming helper has exactly ONE caller",
+      "the quota take is the LAST `and` conjunct at both sites"
+    ],
+    "second_result_DOUBLE_WRITE": {
+      "what": "tTpQuota.t is written in BOTH the window-reset branch and the take path, and each write is individually a DEAD STORE (deleting either alone leaves behaviour bit-identical).",
+      "hazard": "Deleting BOTH makes nNow - tTpQuota.t permanently exceed the window, so every call resets and TryTakeTpResponseSlot returns true FOREVER -- the team-wide one-responder-per-6s quota silently becomes unlimited and the collective-TP pathology fix B was built to stop returns, with no error and no other failing test.",
+      "why_likely": "A reviewer removing 'the redundant assignment' is correct the first time and catastrophic the second; the first removal's safety is the second's justification.",
+      "pinned_by": "tests/test_tpresponse_quota_chain.lua :: '[reverse] the quota timestamp is written TWICE and neither write may go'",
+      "found_by": "mutation pass, NOT by reading -- the first version of that test was vacuous (M6 green)"
+    },
+    "surviving_suspicion_i": {
+      "what": "nItemSlot = {5,4,3,2,1,0,15,16} puts the TP scroll SEVENTH; the loop returns on the first item with desire>0, so any wanted main-inventory item skips ConsiderItemDesire['item_tpscroll'] entirely that frame (lf_rescue/midtp/suptp all).",
+      "not_acted_on": "Whether this is a ONE-FRAME delay or real starvation depends on how many CONSECUTIVE frames an earlier slot wins -- a corpus-counting question, not a source question. Changing a shared consumption path off a static shape is the lanefix entry path.",
+      "routed": "zero-spend count requested from replay-check on already-paid corpus (GH #37 comment)"
+    },
+    "also_clarified": "J.LaneRegenItemToUse early-returns BEFORE the whole item loop, but is gated behind J.IsLaneFixOn('salve') and `lanefix` is NOT armed -- inert this wave. Pinned so arming lanefix is not silently also a TP-response change.",
+    "unverifiable_here": "Whether tTpQuota is ONE ledger shared by all five bots is an assumption of the shipped design (comment at jmz_func.lua:5700); the mock reloads jmz_func per test so a per-bot VM would look identical. Only in-game observation can settle it.",
+    "tests": "tests/test_tpresponse_quota_chain.lua (10 cases); suite 886 -> 896; luacheck 0 warnings; 11 mutations all FAIL as designed (2 of them caught vacuous assertions written this round, both rewritten)",
+    "aws_spend": "none (no S3 read, no billable resource, no batch request)"
   }
 }
