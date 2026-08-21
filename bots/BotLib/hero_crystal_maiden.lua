@@ -981,6 +981,46 @@ X.nRGuardCloseBuffer = 400
 -- is a measurement of the other (the `axeblink` trap, where a candidate's only
 -- consumer was unreachable unless a second id was armed too). Arming 'cmrguard'
 -- alone remains byte-for-byte what it was before this clause existed.
+--
+-- PRE-FLIGHT CORPUS CHECK 2026-08-21T10:xxZ -- DO NOT SPEND AN ARM ON THIS ID.
+-- 17 turbo games (replays/20260820_10*, CM in 17/17; the wave GH #66 frame A
+-- itself came from), tool `tools/batch_test/behavioral/cm_r_selfstate_domain.py`.
+-- Verdict is neither of the two previous shapes: the domain is NOT empty (this
+-- is not the `axeblink` trap) and it is NOT reachable either --
+--
+--     armed != shipped on 1 FRAME / 1 EPISODE / 1 of 17 games (0.06/game),
+--
+-- versus 0.76 episodes/game for `odaoe`, the first candidate this stream
+-- cleared. And the cause is NOT that the gate rarely triggers: the predicate
+-- alone (below the floor, under hero fire, ult castable, out of base) holds on
+-- 31 frames = 13 EPISODES in 9 of 17 games. It is the branch BELOW that never
+-- co-occurs with it. On exactly those 31 frames the enemy count inside
+-- nRadius is {0: 16, 1: 7, 2: 8} -- it never reaches the 3 that branch 1's
+-- first clause wants -- and `aoeCanHurtCount >= 2` holds once. The two
+-- predicates are ANTI-CORRELATED rather than nested: a CM below 38% and taking
+-- hero damage is a support being chased, not one standing in a three-man
+-- teamfight, and the teamfight branch is the only health-blind path that ever
+-- fires (branch 3 already carries this file's own `nHP > 0.38`).
+--
+-- The one domain frame is 20260820_103216_slot1 t=473.5 -- GH #66 frame A, the
+-- frame that motivated the clause, already pinned in
+-- tests/fixtures/f_260820_103216_cm_es_aftershock.lua. So the case is real and
+-- correctly diagnosed; it is simply a once-per-17-games case. Outcome side
+-- agrees: of 17 real Freezing Field casts across the 17 games exactly 1 is
+-- inside the gate's domain, and CM died 0.2s into that channel.
+--
+-- The reading is robust where it can be checked and fragile where it cannot:
+-- swapping the audited `is_dead()` liveness for the GH #78 `hp > 0` proxy adds
+-- 4 predicate frames and 0 domain frames, but the single domain frame rests on
+-- `aoeCanHurtCount`, whose ring is `nRadius * 0.82 - GetCurrentMovementSpeed()`
+-- and movespeed is not in the .dem: at ms >= 330 the domain is 0.
+--
+-- CONSEQUENCE: leave armed-and-parked. A batch arm spent here cannot produce a
+-- condition (b) reading -- 0.06 episodes/game is below the noise of every
+-- detector we have -- so the id should not be scheduled against `odaoe` and the
+-- other waiting ids. Re-measure if any of these change: branch 1's
+-- `#nEnemysHeroesInRange >= 3` is lowered, the `aoeCanHurtCount` ring is
+-- widened, or a grouping change makes CM fight alongside her team while low.
 X.nRSelfHpFloor = 0.38
 X.nRSelfFireWindow = 2.0
 
