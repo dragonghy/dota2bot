@@ -72,6 +72,29 @@ HONEST BOUNDARIES -- every count below is an UPPER bound on the true domain:
     survives at most one frame and can only CREATE episodes of length exactly
     1; every episode of length >= 2 contains a real in-domain frame.  Report
     the episode-length histogram and the contamination is bounded on sight.
+      -- RE-MEASURED HERE on the 19-game 20260819_22xx corpus (425 spans, 208
+         leaks): max lag 0.40s, above the recorded 0.30s but still inside one
+         0.5s sample, so the "at most one frame" bound HOLDS with less margin
+         than the ruling assumed.  Max leaked hp_pct is 1.000 (medusa, lag
+         0.10s, span closed normally) -- an independent and stronger death of
+         the band-geometry argument section AA.1 retired.  Both facts routed
+         to replay-check via GH #82 section 6.
+
+    ANSWERED 2026-08-21T08:xxZ -- both of the director's columns:
+      column 1 (episode-length histogram): {1:2, 2:3, 3:2, 4:2, 8:1}, i.e.
+        8 of 10 episodes are >= 2 frames = phantom-proof by the bound above.
+        The contamination ceiling is the 2 singleton episodes.
+      column 2 (rerun on is_dead()): funnel 4092 -> 47 -> 41 -> 40 -> 30
+        (was 4096 -> 49 -> 42 -> 41 -> 31).  The proxy cost exactly ONE domain
+        frame and ZERO episodes, and that frame is textbook #78: OD's own
+        snapshot stamped at his DEATH tick, 20260819_223055 t=650.5, still
+        reading hp=29/1512 with the next sample at 0.  So the domain reading
+        survives its own audit; `--liveness hp` reproduces the old numbers.
+      A separate blindness found while auditing (GH #82): `death_spans()` keyed
+        events and snapshots by two different spellings of the same hero, so
+        queen_of_pain / vengeful_spirit were NEVER dead (5 games each here).
+        Fixed in roam_conversion.canon_hero(); every funnel number above is
+        bit-identical before and after that fix -- it did not touch OD's games.
   * Post-game frozen snapshots are cut at the last event (GH #43).
   * Illusions carry the same class name as their owner; the real entity is
     locked as the longest-lived (name, idx) and illusion entities are dropped
@@ -88,14 +111,28 @@ HONEST BOUNDARIES -- every count below is an UPPER bound on the true domain:
     EPISODE count with the longest run, per the director's ruling in
     test_set.md section Z.2 -- quote the episode number, not the frame number.
 
+LIVENESS (2026-08-21T08:xxZ, this is the director's column 2 of section AA.2):
+  every liveness test in this file now goes through `roam_conversion.is_dead()`
+  -- DEATH event to respawn -- which is the only audited criterion in this
+  directory (section AA.3 rule 1).  `--liveness hp` reproduces the condemned
+  `hp > 0` proxy so the two readings can be diffed on the SAME corpus; it
+  exists for that audit and for nothing else.  The five call sites it governs
+  are OD himself, the load-bearing in-range enemy count, the shipped loop's
+  ally ring, the shipped loop's target-adjacent enemy count, and `ready_t`.
+
 Usage:
     od_eclipse_aoe_domain.py tl/*.json [--json out.json] [--episode-gap 1.0]
+                                       [--liveness is_dead|hp]
 """
 import argparse
 import collections
 import json
 import math
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from roam_conversion import death_spans, is_dead  # noqa: E402
 
 OD = "npc_dota_hero_obsidian_destroyer"
 ULT = "obsidian_destroyer_sanity_eclipse"
@@ -114,7 +151,11 @@ ALLY_RING = 1200.0       # both ally counts in the shipped loop
 
 
 def load_frames(tl_path):
-    """-> (teams, events, snapshots-by-(hero,idx), snapshots-by-rounded-t)."""
+    """-> (raw, teams, events, snapshots-by-(hero,idx), snapshots-by-rounded-t).
+
+    The raw dict is returned as well because `roam_conversion.death_spans()`
+    needs the UNCUT snapshot list: a death near the end of the game respawns
+    (or does not) in the post-game tail this function drops."""
     d = json.load(open(tl_path))
     teams = d["game"]["teams"]
     events = sorted(d["events"], key=lambda e: e["t"])
@@ -128,7 +169,7 @@ def load_frames(tl_path):
         by_t[round(s["t"], 1)].append(s)
     for k in by_ent:
         by_ent[k].sort(key=lambda s: s["t"])
-    return teams, events, by_ent, by_t
+    return d, teams, events, by_ent, by_t
 
 
 def real_entities(by_ent):
@@ -176,10 +217,17 @@ def aoe_covers(od, hittable, radius):
     return best
 
 
-def episodes_of(times, gap):
-    """[t, ...] -> (n_episodes, longest_run_frames, longest_run_seconds)."""
+def episode_runs(times, gap):
+    """[t, ...] from ONE game -> [[t, ...], ...], one list per episode.
+
+    Must be called per game.  Pooling timestamps across games and splitting on
+    the gap merges two different games' standoffs whenever their clocks land
+    within `gap` of each other -- which UNDERCOUNTS episodes, in the direction
+    that makes a domain look more concentrated than it is.  (The 2026-08-21
+    05:52Z report's "10 episodes" was computed on a pooled list; see the
+    corrected reading in that round's follow-up.)"""
     if not times:
-        return 0, 0, 0.0
+        return []
     times = sorted(times)
     runs, cur = [], [times[0]]
     for t in times[1:]:
@@ -189,18 +237,51 @@ def episodes_of(times, gap):
             runs.append(cur)
             cur = [t]
     runs.append(cur)
+    return runs
+
+
+def episodes_of(runs):
+    """[[t, ...], ...] -> (n_episodes, longest_run_frames, longest_run_seconds)."""
+    if not runs:
+        return 0, 0, 0.0
     longest = max(runs, key=len)
     return len(runs), len(longest), round(longest[-1] - longest[0], 1)
 
 
-def scan_game(tl_path):
-    teams, events, by_ent, by_t = load_frames(tl_path)
+def scan_game(tl_path, liveness="is_dead"):
+    raw, teams, events, by_ent, by_t = load_frames(tl_path)
     if OD not in teams:
         return None
     my, foe = teams[OD], (3 if teams[OD] == 2 else 2)
     real = real_entities(by_ent)
     od_key = (OD, real[OD])
     real_idx = {(n, i) for n, i in real.items()}
+
+    # --- liveness (test_set.md section AA.2/AA.3) ---------------------------
+    # `is_dead()` reads DEATH events, so it also covers the ONE leaked snapshot
+    # after each death that still carries live HP -- the frame the `hp > 0`
+    # proxy cannot see, and the only frame #78 was ever about.
+    spans = death_spans(raw, real)
+    if liveness == "is_dead":
+        def alive(s):
+            return not is_dead(spans, s["hero"], s["t"])
+    else:                                   # audit-only: the condemned proxy
+        def alive(s):
+            return s["hp"] > 0
+    # Book-keeping for the audit column: how many frames do the two criteria
+    # disagree on, and on whom.  A phantom is a frame the proxy calls alive and
+    # is_dead() calls dead; the reverse (a hero inside a death span still
+    # reading hp > 0 late) would be a respawn-detection miss, counted apart.
+    ghosts = collections.Counter()
+    for s_list in by_ent.values():
+        for s in s_list:
+            if (s["hero"], s["idx"]) not in real_idx:
+                continue
+            dead_ev = is_dead(spans, s["hero"], s["t"])
+            if dead_ev and s["hp"] > 0:
+                ghosts["proxy_alive_event_dead"] += 1
+            elif not dead_ev and s["hp"] <= 0:
+                ghosts["proxy_dead_event_alive"] += 1
 
     casts = [e["t"] for e in events
              if e["type"] == "ABILITY" and e.get("actor") == OD
@@ -226,12 +307,15 @@ def scan_game(tl_path):
          "f_two_in_range": 0, "f_two_hittable": 0, "f_covered": 0,
          "shipped_self": 0, "shipped_noself": 0,
          "domain_self": [], "domain_noself": [],
-         "died_with_ready": 0, "samples": []}
+         "died_with_ready": 0, "samples": [],
+         "liveness": liveness, "ghost_frames": ghosts["proxy_alive_event_dead"],
+         "late_respawn_frames": ghosts["proxy_dead_event_alive"],
+         "ep_len_hist_self": {}, "ep_len_hist_noself": {}}
 
     for s in by_ent[od_key]:
-        # NOT the #78 fix -- same proxy, other units (header, section AA).
-        # Catches the frozen zero tail; misses the leaked first frame.
-        if s["hp"] <= 0:
+        # Call site 1/5: OD himself.  His own leaked frame carries a frozen
+        # LIVE ult cooldown and mana, i.e. it can fake a `ready` frame.
+        if not alive(s):
             continue
         g["frames_alive"] += 1
         ult = next((a for a in s["abilities"] if a["name"] == ULT), None)
@@ -247,14 +331,14 @@ def scan_game(tl_path):
 
         base, radius = BASE_DAMAGE[lvl], RADIUS[lvl]
         frame = by_t.get(round(s["t"], 1), [])
-        # LOAD-BEARING CLAUSE (4096 -> 49 on the 2026-08-19 22:xx corpus) and
-        # the one contaminated by #78: `z["hp"] > 0` is the condemned proxy, so
-        # a just-killed enemy can still be counted here for one frame.  With
-        # MIN_TARGETS == 2 a single phantom is enough to promote a frame.
-        # Replace with roam_conversion.is_dead() before this funnel is used to
-        # approve an id (test_set.md section AA).
+        # Call site 2/5 -- THE LOAD-BEARING CLAUSE (4096 -> 49 on the
+        # 2026-08-19 22:xx corpus).  This is the one the director flagged: with
+        # MIN_TARGETS == 2 a single phantom promotes a 1-real-enemy frame into
+        # the domain, and the contamination is one-sided UPWARD, i.e. towards
+        # this script's own conclusion.  Now on `is_dead()` (section AA.2
+        # column 2); `--liveness hp` reproduces the old, contaminated reading.
         enemies = [z for z in frame
-                   if teams.get(z["hero"]) == foe and z["hp"] > 0
+                   if teams.get(z["hero"]) == foe and alive(z)
                    and (z["hero"], z["idx"]) in real_idx
                    and dist(s, z) <= CAST_RANGE]
         if len(enemies) < MIN_TARGETS:
@@ -272,8 +356,11 @@ def scan_game(tl_path):
         g["f_covered"] += 1
 
         # --- would the SHIPPED loop already have fired on this frame? ---
+        # Call site 3/5: the shipped loop's ally ring.  A phantom ALLY makes
+        # shipped fire more often, i.e. it shrinks the domain -- the opposite
+        # sign to call site 2, so the two do not cancel, they blur.
         allies = [z for z in frame
-                  if teams.get(z["hero"]) == my and z["hp"] > 0
+                  if teams.get(z["hero"]) == my and alive(z)
                   and (z["hero"], z["idx"]) in real_idx
                   and dist(s, z) <= ALLY_RING]
         n_ally_self = len(allies)                       # includes OD himself
@@ -283,8 +370,9 @@ def scan_game(tl_path):
             est = MAGIC_RESIST * (base + abs(s["mp"] - e["mp"]) * MULT)
             if est < e["hp"]:
                 continue
+            # Call site 4/5: the victim's own ally count in the shipped loop.
             t_ally = sum(1 for z in frame
-                         if teams.get(z["hero"]) == foe and z["hp"] > 0
+                         if teams.get(z["hero"]) == foe and alive(z)
                          and (z["hero"], z["idx"]) in real_idx
                          and dist(e, z) <= ALLY_RING)
             if n_ally_self >= t_ally:
@@ -325,8 +413,9 @@ def scan_game(tl_path):
             g["domain_noself"].append(rec)
         g["samples"].append(rec)
 
+    # Call site 5/5: `died_with_ready`, the cost side.
     ready_t = {round(s["t"], 1) for s in by_ent[od_key]
-               if s["hp"] > 0
+               if alive(s)
                for a in [next((a for a in s["abilities"] if a["name"] == ULT), None)]
                if a and a["level"] >= 1 and a["cd"] == 0
                and s["mp"] >= MANA_COST[min(a["level"], 3)]}
@@ -340,10 +429,14 @@ def main():
     ap.add_argument("timelines", nargs="+")
     ap.add_argument("--episode-gap", type=float, default=1.0,
                     help="max seconds between frames of one episode (0.5s sampling)")
+    ap.add_argument("--liveness", choices=("is_dead", "hp"), default="is_dead",
+                    help="is_dead = DEATH event -> respawn (the only audited "
+                         "criterion, test_set.md AA.3); hp = the condemned "
+                         "`hp > 0` proxy, kept only to diff the two readings")
     ap.add_argument("--json", dest="json_out")
     a = ap.parse_args()
 
-    games = [g for g in (scan_game(p) for p in a.timelines) if g]
+    games = [g for g in (scan_game(p, a.liveness) for p in a.timelines) if g]
     if not games:
         print("no game in this corpus has Obsidian Destroyer -- nothing to measure")
         return
@@ -385,7 +478,10 @@ def main():
 
     for tag in ("self", "noself"):
         recs = [r for g in games for r in g[f"domain_{tag}"]]
-        n_ep, run_f, run_s = episodes_of([r["t"] for r in recs], a.episode_gap)
+        runs = [run for g in games                       # per game, never pooled
+                for run in episode_runs([r["t"] for r in g[f"domain_{tag}"]],
+                                        a.episode_gap)]
+        n_ep, run_f, run_s = episodes_of(runs)
         per = len(recs) / len(games)
         print(f"\n=== A EXACT DOMAIN (ally-parity {tag}) === "
               f"{len(recs)} frames / {n_ep} EPISODES over {len(games)} games "
@@ -393,10 +489,39 @@ def main():
         by_game = collections.Counter(g["key"] for g in games for r in g[f"domain_{tag}"])
         print("  per game:", dict(by_game) or "{}")
 
+        # DIRECTOR'S COLUMN 1 (test_set.md section AA.2): the measured DEATH
+        # lag is 0.30s < one 0.5s sample, so a phantom survives at most one
+        # frame and can only manufacture an episode of length EXACTLY 1.
+        # => #(length-1 episodes) is a hard upper bound on the contamination,
+        # and every length->=2 episode contains at least one real in-domain
+        # frame no matter which liveness criterion is used.
+        hist = collections.Counter(len(r) for r in runs)
+        ge2 = sum(n for L, n in hist.items() if L >= 2)
+        print("  episode-length histogram (frames -> episodes):",
+              {L: hist[L] for L in sorted(hist)} or "{}")
+        if n_ep:
+            print(f"  episodes of length >= 2 (phantom-proof): {ge2}/{n_ep} "
+                  f"= {ge2 / n_ep:.0%}; length-1 episodes bound the "
+                  f"contamination at {n_ep - ge2}")
+        for g in games:
+            g[f"ep_len_hist_{tag}"] = dict(collections.Counter(
+                len(r) for r in episode_runs([r["t"] for r in g[f"domain_{tag}"]],
+                                             a.episode_gap)))
+
+    print(f"\n=== LIVENESS === criterion: {a.liveness}"
+          f"  (is_dead = DEATH event -> respawn; hp = the condemned proxy)")
+    gh = sum(g["ghost_frames"] for g in games)
+    lr = sum(g["late_respawn_frames"] for g in games)
+    print(f"  frames the `hp > 0` proxy calls ALIVE but is_dead() calls dead "
+          f"(phantoms): {gh} over {len(games)} games = {gh / len(games):.1f}/game")
+    print(f"  frames the proxy calls DEAD but is_dead() calls alive "
+          f"(respawn-detection lag): {lr}")
+
     recs = [r for g in games for r in g["domain_self"]]
     if recs:
         eng = [r for r in recs if r["engaged"]]
-        n_ep_e, _, _ = episodes_of([r["t"] for r in eng], a.episode_gap)
+        n_ep_e, _, _ = episodes_of([run for g in games for run in episode_runs(
+            [r["t"] for r in g["domain_self"] if r["engaged"]], a.episode_gap)])
         print(f"\n  of the in-domain frames, OD was observably ENGAGED "
               f"(damaged a hero or cast something within 3s): {len(eng)}/{len(recs)} "
               f"frames = {n_ep_e} episodes -- a proxy for the unmeasurable "

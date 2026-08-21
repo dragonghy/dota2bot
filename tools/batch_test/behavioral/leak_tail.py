@@ -128,10 +128,14 @@ def collect(root):
             # #43: the dumper emits a frozen 24-25s tail past the last event.
             t_end = max(e['t'] for e in tl['events'])
 
+            # Keyed the same way `death_spans()` keys its output, i.e. through
+            # `canon_hero()` -- this loop is the only consumer that walks the
+            # span dict's KEYS rather than calling `is_dead()`, so it is the
+            # only one that has to know (GH #82).
             by_hero = collections.defaultdict(list)
             for s in tl['snapshots']:
                 if real_idx.get(s['hero']) == s['idx'] and s['t'] <= t_end:
-                    by_hero[s['hero']].append(s)
+                    by_hero[RC.canon_hero(s['hero'])].append(s)
             for h in by_hero:
                 by_hero[h].sort(key=lambda s: s['t'])
 

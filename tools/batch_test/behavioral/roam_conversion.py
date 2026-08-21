@@ -80,8 +80,38 @@ def paused_spans(tl, frames):
     return spans
 
 
+def canon_hero(name):
+    """Join key for the snapshot side and the event side of a timeline.
+
+    `[harness] GH #82`: the dumper derives a snapshot's hero name from the
+    ENTITY CLASS (`dumper/main.go:180 classToNPC`, which splits camelCase into
+    underscores), while events carry the COMBAT LOG name.  For most heroes the
+    two agree -- CDOTA_Unit_Hero_WitchDoctor -> witch_doctor is right -- but
+    where the engine's own npc name has NO underscore the derivation invents
+    one, and the join silently misses:
+
+        snapshots: npc_dota_hero_queen_of_pain    events: ...queenofpain
+        snapshots: npc_dota_hero_vengeful_spirit  events: ...vengefulspirit
+
+    (The event side is the correct one; `mode_farm_generic.lua:854` and
+    `ts_libs/dota/heroes.lua:87` both spell it `npc_dota_hero_queenofpain`.)
+    Measured on the 19-game 20260819_22xx corpus: both heroes appear in 5
+    games each, and in every one of them `death_spans()` produced NO span at
+    all -- i.e. the criterion this module exists to provide reported them
+    ALIVE THROUGH EVERY DEATH, 196 corpse frames' worth in the 9 OD games.
+    That is the #78 failure mode with the bound removed: not one leaked frame
+    per death but the whole span.
+
+    Collapsing underscores is the join, not a rename: callers keep passing
+    whatever name they hold and both spellings land on the same key."""
+    return name.replace("_", "") if name else name
+
+
 def death_spans(tl, real_idx):
     """hero -> [(t_death, t_respawn)] built from DEATH EVENTS, not from hp_pct.
+
+    Keyed by `canon_hero()`; `is_dead()` looks up the same way, so a caller
+    holding either spelling gets the right answer (GH #82).
 
     `[bug] #78`: every detector in this directory used `hp_pct > 0` as its
     liveness test.  That is a PROXY, and the whole point of #78 is that a proxy
@@ -118,7 +148,7 @@ def death_spans(tl, real_idx):
     per = collections.defaultdict(list)
     for s in tl['snapshots']:
         if real_idx.get(s['hero']) == s['idx']:
-            per[s['hero']].append(s)
+            per[canon_hero(s['hero'])].append(s)
     for h in per:
         per[h].sort(key=lambda s: s['t'])
 
@@ -126,7 +156,7 @@ def death_spans(tl, real_idx):
     for e in tl['events']:
         if e['type'] != 'DEATH' or not e.get('target_hero'):
             continue
-        h, td = e['target'], e['t']
+        h, td = canon_hero(e['target']), e['t']
         if spans[h] and spans[h][-1][1] > td:
             continue                      # already inside a known death span
         snaps = per.get(h) or []
@@ -155,8 +185,10 @@ def death_spans(tl, real_idx):
 
 def is_dead(spans, hero, t):
     """True if `hero` is inside a death span at time t.  The window opens at the
-    DEATH event itself: the leaked frames are all AFTER it."""
-    return any(a <= t < b for a, b in spans.get(hero, ()))
+    DEATH event itself: the leaked frames are all AFTER it.
+
+    `hero` may be spelled either way -- see `canon_hero()` / GH #82."""
+    return any(a <= t < b for a, b in spans.get(canon_hero(hero), ()))
 
 
 def load_game(tl_path, aj_path):

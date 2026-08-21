@@ -538,12 +538,20 @@ end
 --- CORPUS PRE-FLIGHT 2026-08-21 (hero stream, test_set.md section V.7):
 --- the domain is REACHABLE -- unlike `wkreincarnmp` and `axeblink`, which were
 --- both withdrawn as unreachable. Over the 19-game 2026-08-19 22:11Z turbo
---- wave (9 of them with OD), armed differs from shipped on 31 frames = 10
+--- wave (9 of them with OD), armed differs from shipped on 30 frames = 10
 --- EPISODES spread over 7 of the 9 games, ~1.1 episodes/game. Quote the
 --- episode number, not the frame number (director ruling, test_set.md Z.2).
---- Load-bearing clause is SUPPLY, not a competing guard: 4096 castable frames
---- -> 49 with >= 2 living enemies inside the 700 cast range (-98.8%); the two
---- tunables below then cost only -7 and -1, and the shipped loop pre-empts 10.
+--- Load-bearing clause is SUPPLY, not a competing guard: 4092 castable frames
+--- -> 47 with >= 2 living enemies inside the 700 cast range (-98.9%); the two
+--- tunables below then cost only -6 and -1, and the shipped loop pre-empts 10.
+--- AUDITED LIVENESS (director's two columns, test_set.md section AA.2): the
+--- numbers above are the re-read on `roam_conversion.is_dead()` (DEATH event
+--- -> respawn), not the condemned `hp > 0` proxy. The proxy cost exactly ONE
+--- frame and ZERO episodes (31/10 -> 30/10): OD's own snapshot stamped at his
+--- DEATH tick, still reading 29 HP (20260819_223055 t=650.5). And 8 of the 10
+--- episodes are >= 2 frames long, while the measured post-DEATH lag stays
+--- under one 0.5s sample, so a phantom can only forge a length-1 episode --
+--- the domain survives the audit on both columns.
 --- So retuning nRAoeMinTargets / nRAoeMinDamagePct buys almost nothing; the
 --- ceiling is set by how rarely two enemies stand within 700 of OD.
 --- The band this branch opens is coherent: median 620 effective damage split
