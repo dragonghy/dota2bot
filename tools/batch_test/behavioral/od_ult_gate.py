@@ -26,15 +26,16 @@ Honest boundaries, do not overstate results from this script:
     SUPERSET of the frames where the gate could really have opened.
   * `J.CanKillTarget` calls the engine's `GetActualIncomingDamage`. We
     approximate it as `0.75 * (base + |dMana| * mult)` (25% base magic
-    resistance) and the true `base_damage`/`damage_multiplier` special values
-    are not in the replay -- hence --base/--mult and the sensitivity sweep.
-    Never quote a single parameterization as if it were measured.
+    resistance). The special values are not in the .dem, but they ARE in the
+    datafeed and have been pulled -- see the constants block below. --base and
+    --mult remain as overrides and --sweep as a sensitivity check; the
+    defaults are now the measured values, not guesses.
   * Snapshots are 1 Hz: a cast within 4s of an opportunity frame counts as
     "fired for that opportunity", and corpse frames (hp_pct==0) are dropped.
   * Illusions share the hero class name; entities are locked by (name, idx).
 
 Usage:
-    od_ult_gate.py <manifest.json> [--base 350] [--mult 0.7] [--range 600]
+    od_ult_gate.py <manifest.json> [--base N] [--mult 0.4] [--range 700]
                    [--dedup 6] [--sweep] [--episodes]
 
 The manifest is a JSON list of {"key","seed","armed_side","tl"} records, where
@@ -48,7 +49,27 @@ import math
 
 OD = "npc_dota_hero_obsidian_destroyer"
 ULT = "obsidian_destroyer_sanity_eclipse"
-ULT_MANA = 400          # matches detect.py's _CASHABLE_ULTS entry
+
+# CORRECTED 2026-08-21 (hero stream) from the live datafeed, hero_id=76. The
+# four constants this file shipped with were all guesses and all wrong:
+#     base_damage        350 flat   ->  200/300/400 per ult level
+#     damage_multiplier  0.7        ->  0.4  (--sweep only spanned 0.6-0.8,
+#                                            so no run ever reached the truth)
+#     cast_range         600        ->  700
+#     ULT_MANA           400 flat   ->  200/300/400 per ult level
+# Net effect on every reading published before that date: the `lethal` clause
+# used ~0.75*(350 + d*0.7) where the truth at ult level 1 is 0.75*(200 + d*0.4)
+# -- inflated by roughly 75% at a typical mana gap -- while the opportunity
+# count was deflated from both sides (cast range too short, mana bar too high).
+# In this project's turbo corpus Sanity's Eclipse is level 1 in 9 games out of
+# 9, so the level-1 column is the one that matters. Between-side comparisons
+# (armed vs baseline) applied the same wrong constants to both arms and are
+# less affected than the absolute counts, but any absolute "N opportunity
+# frames" figure quoted from this script before 2026-08-21 should be re-run.
+# See tools/batch_test/behavioral/od_eclipse_aoe_domain.py for the full pull.
+ULT_MANA_BY_LEVEL = {1: 200, 2: 300, 3: 400}
+ULT_BASE_BY_LEVEL = {1: 200.0, 2: 300.0, 3: 400.0}
+ULT_MANA = ULT_MANA_BY_LEVEL[1]     # kept for callers that want a scalar floor
 MAGIC_RESIST = 0.75     # 25% base magic resistance, as GetActualIncomingDamage applies
 SIDE = {"radiant": 2, "dire": 3}
 
@@ -73,7 +94,7 @@ def load_frames(tl_path):
     return teams, events, by_ent, by_t
 
 
-def scan_game(tl_path, armed_side, base, mult, cast_range, dedup):
+def scan_game(tl_path, armed_side, base_override, mult, cast_range, dedup):
     teams, events, by_ent, by_t = load_frames(tl_path)
     if OD not in teams:
         return None
@@ -90,8 +111,13 @@ def scan_game(tl_path, armed_side, base, mult, cast_range, dedup):
         if s["hp_pct"] <= 0:                      # corpse frame
             continue
         ult = next((a for a in s["abilities"] if a["name"] == ULT), None)
-        if not ult or ult["level"] < 1 or ult["cd"] > 0 or s["mp"] < ULT_MANA:
+        if not ult or ult["level"] < 1 or ult["cd"] > 0:
             continue
+        lvl = min(ult["level"], 3)
+        if s["mp"] < ULT_MANA_BY_LEVEL[lvl]:
+            continue
+        # --base is an override; left at its default the per-level truth wins
+        base = ULT_BASE_BY_LEVEL[lvl] if base_override is None else base_override
         frame = by_t.get(round(s["t"], 1), [])
         near = sorted((math.hypot(z["x"] - s["x"], z["y"] - s["y"]), h, z)
                       for h, i, z in frame
@@ -130,9 +156,10 @@ def scan_game(tl_path, armed_side, base, mult, cast_range, dedup):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("manifest")
-    ap.add_argument("--base", type=float, default=350.0)
-    ap.add_argument("--mult", type=float, default=0.7)
-    ap.add_argument("--range", dest="cast_range", type=float, default=600.0)
+    ap.add_argument("--base", type=float, default=None,
+                    help="override base_damage; default = per-ult-level 200/300/400")
+    ap.add_argument("--mult", type=float, default=0.4)
+    ap.add_argument("--range", dest="cast_range", type=float, default=700.0)
     ap.add_argument("--dedup", type=float, default=6.0)
     ap.add_argument("--sweep", action="store_true",
                     help="report the gate over a range of (base, mult) guesses")
@@ -141,7 +168,9 @@ def main():
     a = ap.parse_args()
 
     games = json.load(open(a.manifest))
-    params = [(250.0, 0.6), (a.base, a.mult), (450.0, 0.8)] if a.sweep \
+    # the sweep brackets the datafeed truth (per-level base, mult 0.4) rather
+    # than the old 0.6-0.8 band, which never contained it
+    params = [(200.0, 0.3), (a.base, a.mult), (400.0, 0.5)] if a.sweep \
         else [(a.base, a.mult)]
 
     for base, mult in params:
@@ -163,7 +192,8 @@ def main():
                     c["both"] += 1
                     c["fired"] += ep["fired"]
                     shown.append((r["role"], g["key"], ep))
-        print(f"=== base={base:.0f} mult={mult} range={a.cast_range:.0f} "
+        shown_base = "per-level" if base is None else f"{base:.0f}"
+        print(f"=== base={shown_base} mult={mult} range={a.cast_range:.0f} "
               f"dedup={a.dedup:.0f}s (est *= {MAGIC_RESIST} magic resist) ===")
         for role in ("ARMED", "BASE"):
             c = agg[role]

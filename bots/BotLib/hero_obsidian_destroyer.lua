@@ -534,6 +534,32 @@ end
 --- Best point to drop Sanity's Eclipse on, or nil for "no area cast here".
 --- Gated: turbo-only, soak candidate 'odaoe'. Unarmed it returns nil on its
 --- first line, so the shipped decision is unchanged down to the byte.
+---
+--- CORPUS PRE-FLIGHT 2026-08-21 (hero stream, test_set.md section V.7):
+--- the domain is REACHABLE -- unlike `wkreincarnmp` and `axeblink`, which were
+--- both withdrawn as unreachable. Over the 19-game 2026-08-19 22:11Z turbo
+--- wave (9 of them with OD), armed differs from shipped on 31 frames = 10
+--- EPISODES spread over 7 of the 9 games, ~1.1 episodes/game. Quote the
+--- episode number, not the frame number (director ruling, test_set.md Z.2).
+--- Load-bearing clause is SUPPLY, not a competing guard: 4096 castable frames
+--- -> 49 with >= 2 living enemies inside the 700 cast range (-98.8%); the two
+--- tunables below then cost only -7 and -1, and the shipped loop pre-empts 10.
+--- So retuning nRAoeMinTargets / nRAoeMinDamagePct buys almost nothing; the
+--- ceiling is set by how rarely two enemies stand within 700 of OD.
+--- The band this branch opens is coherent: median 620 effective damage split
+--- over two heroes, typically ~85-96% of one target's current HP plus
+--- ~25-60% of a second -- i.e. exactly the near-double-kill the shipped
+--- single-target `CanKillTarget` question throws away.
+--- FACT THAT PINS THE CONSTANTS: Sanity's Eclipse is level 1 in 9 games of 9
+--- (turbo ends before the second point), so radius is always 500, base_damage
+--- always 200 and cooldown always 140s -- the same "ult stuck at level 1"
+--- family as Lion's Finger of Death (hero.md backlog #7). Datafeed hero_id=76,
+--- pulled 2026-08-21: cast_range 700, radius 500/525/550, base_damage
+--- 200/300/400, damage_multiplier 0.4, mana 200/300/400, cd 140/130/120.
+--- Measurement tool: tools/batch_test/behavioral/od_eclipse_aoe_domain.py.
+--- Every count there is an UPPER bound (J.IsGoingOnSomeone and fog are not in
+--- the .dem), and arming needs a wave whose seeds actually draft OD -- only
+--- 2 of the 4 lineups in that wave did (GH #46, one seed = one lineup).
 --- Candidate centres are every worthwhile enemy's own position plus every
 --- pairwise midpoint of them -- enough to cover any pair that a single circle
 --- can hold at all, without depending on bot:FindAoELocation (which the engine
