@@ -68,7 +68,7 @@
    可空 ⇒ 1400–1500 的壳里两个 ATTACK 队友就能让 35 个读者同时收到「团战在河道中心」。
    **本 harness 判不了**,要动先要游戏内观察或 labelled synthetic。
    已成 `tests/test_activemode_world_assertion.lua`(13 例,九次变异全绿),
-   `state.json:activemode_WORLD_ASSERTION_13_20260821`,`[harness]` issue 交总监决定 loader 口径
+   `state.json:activemode_WORLD_ASSERTION_13_20260821`,`[harness]` **GH #89** 交总监决定 loader 口径
    (本组建议**不要**让 loader 认 mode:那会一次性移动 30 + 71 个读数,而且只能靠建模)。
 0y. ~~**item_blink 撤退分支被烧成 15s CD 的腿**(GH #71,英雄组交接)~~ **已做完
    (2026-08-20T17:15Z):helper `J.ShouldHoldBlinkFlee` + gated `blinkflee`,两帧钉住
