@@ -46,11 +46,65 @@
    **语料请求是活的**(不像 #84 那次是撤回):要一帧 farm `ShouldRun` 非 0 且同帧 900 内 ≥2 队友、
    `attackRange+50` 内有非魔免敌人。**下一轮默认改取 `item_purchase_generic:228`**
    (自家 t3 掉血 ⇒ 留买活钱,同样不读 mode、不读 runMode 这类文件局部状态)。
+   **2026-08-21T17:58Z:`228` 也做不了 —— 而且理由和前两条都不一样:它在 Turbo 里根本不跑。**
+   那道门在 `GeneralPurchase()`(192-363)里,而这个函数只有一个调用点(1276):
+   `if GetGameMode() == 23 then TurboModeGeneralPurchase() else GeneralPurchase() end`。
+   真实 Turbo 走另一条腿 ⇒ 整个函数、连同 `t3AlreadyDamaged` 的四写两读和 `:272` 的
+   留买活钱一起不跑;`TurboModeGeneralPurchase`(366-437)**自己没有买活留钱**
+   ⇒ **Turbo 的采购里根本不存在买活留钱**,原因在等级常数**上面 1048 行**。
+   **(甲) 对 `228` 的 TEETH 判读据此更正。三条 TEETH 三个不同的卡点**:
+   `285` = dumper 缺口(买不到)/ `535` = 语料缺口(**能买,请求活的**)/ `228` = 不在 Turbo 里(没什么可买的)。
+   **下一轮默认改取 `ability_item_usage_generic:5749`**(守遗迹 TP,另外四项 AND 都是活的 Turbo 状态)。
    规矩照旧:**断言最终 desire,不是断言分支可达**;掉 farm desire ≠ 去打架。
    **顺带记的第二个杠杆(不折进本条)**:自动买活三条路径在 Turbo 全关
    —— `aiug:568` 的 `ancient:GetHealth() < 0.8`(**单位错配**,该开 `[bug]`)、
    `:582` 的等级 >24、`:578` 的 `nFullRespawnTime < 60` 早退(**推论,harness 判不了**,
    `GetRespawnTime` 不在 dump 里)。已成 `[recorded]` 用例。
+0l. **【2026-08-21T17:58Z 新增,已钉住、不要改 bots/、不要改 mock】第十五条世界断言:
+   fixture 世界同时是 Turbo 和不是 Turbo,分界线是拼写**。
+   `GetGameMode() == GAMEMODE_TURBO` → **TRUE 96/96**;`GetGameMode() == 23` → **FALSE 96/96**。
+   引擎里两者同数(`GAMEMODE_TURBO` 就是 23),`bots/` 还自带自愈行
+   (`if GAMEMODE_TURBO == nil then GAMEMODE_TURBO = 23 end`,`hero_selection:45` / `aiug:16`)
+   ⇒ **不是 `bots/` 的缺陷**。成因是 mock 的两条「帮忙」叠加:
+   (1) `bot_api.lua` 把未知 ALL_CAPS 自动解析成 1001 起的哨兵 ⇒ `GAMEMODE_TURBO` = 1149,
+   **并且因此永不为 nil ⇒ 那两条自愈行永远不执行**;
+   (2) `replay_fixture.lua:487` 用**名字**声明世界是 Turbo,继承同一个哨兵。
+   **九处字面量 `23` 的比较站在错的一边**(`item_purchase:1080/1082/1276`、`mode_laning:156`、
+   `mode_team_roam:1146`、`aba_defend:239`、`global_cache:207`、`override_generic/mode_laning:31`、
+   `aba_push:58`),名字拼法(`J.IsModeTurbo`,**94 个调用点**)全读 TRUE。
+   裂缝**穿过一个表达式**(`aba_push:171-172`:阈值按名字、操作数按数字)和**一个表构造式**
+   (同文件 `currentTime` 按数字、四个 `isXxxGame/isLaningPhase` 兄弟按名字)。
+   **有多大**:全竞价 96 帧 × 21 mode × 两读法 = 2016 格,**只动 21 格(全是对线出价)**,
+   但**竞价赢家动 18/96**,其中**赢家 mode 本身换了 10 条**(7 → `defend_tower_bot`、3 → `retreat`)
+   ⇒ **10/96 帧上 fixture 说「在对线」而诚实世界说「在防守/在跑」**(第十四条只动 1 个赢家)。
+   **方向是机制不是统计**:`mode_laning_generic:156` 的 `*1.65` 每帧都关,而 242-244 是
+   `currentTime <= X` 阶梯 ⇒ **每个 fixture 落在更早的台阶、出价更高** ⇒ **全仓库竞价级结论
+   在 22% 语料上系统偏向对线**。
+   **诚实边界**:裂缝穿过的那条推塔封顶 **0/96 两读法都不动**(诚实读法要 `DotaTime>750s`,
+   全档最晚 690.5s,批测 ~640s 自终止)—— 与 (甲) 给 `J.IsLateGame()` 记的是同一条边界。
+   **记账不动手的三条**:① 三条 turbo 时钟膨胀里 **两条写了没人读**(`aba_defend:239`、
+   `global_cache:207`;全仓库只有两个读者且都在 `aba_push`,`:240` 那条还要求敌方有真人)——
+   同 `towerreach` 三写零读;② 七处 `== GAMEMODE_ARDM` **靠运气站对边**,只修 TURBO 不修 ARDM
+   是半个修法;③ **更正本组上一轮自己的数**(第十四条自查里的 `retnear armed → laning 0.369`)。
+   **归总监**(`[harness]` **GH #93**):mock 该不该把 `GAMEMODE_*` 定成引擎真值。
+   **本组建议:该** —— 与 #61/#81/#89/#91 不同,这里**没有任何东西需要建模**,
+   `bots/` 自己已经写下正确值两次;代价已量:M12 一行让本文件 **8 条断言变红**。
+   已成 `tests/test_gamemode_world_assertion.lua`(24 例,14 条变异),
+   `state.json:gamemode_WORLD_ASSERTION_15_20260821`。
+   **给全组补的做法**:**「变异只让源码钉子变红、行为断言全不动」是信号不是通过** ——
+   多半意味着你钉的站点不是语料实际经过的那个。本轮 M4 就是这样翻出一个事实错误
+   (把 21 次对线出价变化记在 `override_generic` 那份上,而它只对
+   `Utils.BuggyHeroesDueToValveTooLazy` 的英雄 `dofile`;活的是 `mode_laning_generic:156`)。
+   与上一轮编目的两条**空断言**形状不同:那两条是测试自己的毛病,这条是**世界模型**的毛病。
+   另:上一轮 M7 的形状(测量重述常数却没钉常数)**本轮以 M9 复发** ⇒ 当检查项跑,别当经验记。
+   **给全组补的第二条做法(M16,是全套跑抓出来的、不是我设计的变异)**:
+   本文件的诚实探针**泄漏给了后面的测试文件** —— `GAMEMODE_TURBO` 是普通全局,
+   `run_tests.lua` 是**一个进程按字母序跑完所有 `test_*.lua`**,最后一次 `world(path,true)`
+   把 `23` 留在原地 ⇒ **本文件之后每一个测试文件都在诚实世界里跑**,等于把本文件量出来的
+   「21 帧出价 / 18 帧赢家」位移**静悄悄施加到别人的断言上**,全套跑出现 3 个 `F`。
+   **这正是本文件在讲的事,由本文件亲手犯了一次。** 已修(`unprobe()`)并**把「后继者继承到
+   什么」写成断言**。⇒ **凡是用 rawset 全局做探针的用例,必须有一条断言描述「本文件跑完之后
+   世界是什么样」** —— 单文件跑永远发现不了,全套跑也只给你一个不相干文件名上的 `F`。
 0k. **【2026-08-21T15:46Z 新增,已钉住、不要改 bots/、不要改 loader、不要给 mock 打桩】
    第十四条世界断言:惰性初始化的时钟戳,让「第一次调用」永远是自己的初始化调用**。
    形状(`mode_farm_generic:123-126`):`GameStates.defendPings = ... or { pingedTime = GameTime() }`
@@ -442,6 +496,39 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T17:58Z:**接 GH #84 §5 的下一条**(上一轮定的默认取件 `item_purchase_generic:228`)。
+  **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
+  **产出** `tests/test_gamemode_world_assertion.lua`(**24 例**,约 35 秒)。**两个交付。**
+  **(一) 对 §5**:`228` 也做不了,**理由与前两条都不同 —— 它在 Turbo 里根本不跑**。
+  门在 `GeneralPurchase()`(192-363),唯一调用点 1276 行是
+  `if GetGameMode() == 23 then TurboModeGeneralPurchase() else GeneralPurchase() end`;
+  真实 Turbo 走另一条腿 ⇒ 整函数 + `t3AlreadyDamaged` 四写两读(函数外 0 次,已断言)
+  + `:272` 的留买活钱一起不跑,而 `TurboModeGeneralPurchase` 自己没有买活留钱(逐行断言)
+  ⇒ **Turbo 的采购里根本不存在买活留钱**,原因在等级常数**上面 1048 行**。
+  **(甲) 的 TEETH 判读据此更正**;**三条 TEETH 三个卡点**(`285` dumper 缺口 / `535` 语料缺口(**活的**)/
+  `228` 不在 Turbo 里)。**下一轮默认取 `ability_item_usage_generic:5749`。**
+  **(二) 第十五条世界断言**(细节见 backlog 第 0l 条):**fixture 世界同时是 Turbo 和不是 Turbo,
+  分界线是拼写** —— 按名字 **96/96 TRUE**、按字面量 23 **0/96**,九处已发布比较站在错的一边。
+  成因是 mock 的自动常量表把 `GAMEMODE_TURBO` 造成 1149,**并因此让 `bots/` 自带的两条自愈行
+  永远不执行**。**这条是目前按结果算最大的一条**:全竞价 2016 格只动 21 格(全是对线出价),
+  却**改变 18/96 帧的竞价赢家**,其中 **10 条换了赢家 mode**(7 → `defend_tower_bot`、3 → `retreat`)
+  —— 第十四条只动 1 个。方向是机制:`mode_laning_generic:156` 的 `*1.65` 每帧都关,
+  阶梯在 242-244 ⇒ **每个 fixture 都落在更早的台阶上,出价更高** ⇒ 全仓库竞价结论
+  **在 22% 语料上系统偏向对线**。
+  **本轮更正了本组上一轮自己发表的一个数**(第十四条自查里的 `retnear armed → laning 0.369`),
+  已成双向断言;**另外 11 个做竞价级断言的文件本轮一个都没重跑**(0b/0c 一次一个)。
+  **口径决定交总监**(`[harness]` **GH #93**):mock 该不该把 `GAMEMODE_*` 定成引擎真值。
+  **本组建议:该** —— 与 #61/#81/#89/#91 不同,**这里没有任何东西需要建模**;代价已量:
+  M12 一行让本文件 **8 条断言变红**;且必须与 `GAMEMODE_ARDM` 一起做,否则是半个修法。
+  **验收**:luacheck **0 warnings**(`bots/` 零改动);全套 **1023 tests, 0 failures**(rebase 后最终门);新文件 **26 tests, 0 failures**;
+  **14 条变异,逐条验「变异真的生效」+「回滚真的生效」**,其中 M8 是**假变异**(落到了另一个函数,
+  两个采购函数含同一段魔晶代码)、M9 是上一轮 M7 形状的复发、**M4 翻出一个事实错误**
+  (见 0l 末尾那条新做法)。
+  **语料在本轮进行中长大了,棘轮当场响了**:rebase 时英雄组两枚 `lion_drain` fixture 落地(94 → 96),
+  本文件三条写死分母的断言当场变红。**没有直接改分母**,而是在那两枚新帧上把整场竞价两种读法各跑一遍
+  (`lion_drain_lethal` 两读法都 `retreat 0.750`;`lion_drain_survived` 两读法都 `defend_tower_bot 0.300`,
+  **各 0 个格子动**)⇒ **分子全部未变,只有分母 94 → 96**,两枚新帧已按名字钉进用例。
+  详见 `iterations/reports/strategy/20260821T175822Z.md`。
 - 2026-08-21T15:46Z:**接 GH #84 §5 的下一条**(上一轮定的默认取件 `mode_farm_generic:535`)。
   **`bots/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
   **产出** `tests/test_pingstamp_world_assertion.lua`(**18 例**;全套 **976 tests, 0 failures**)。
