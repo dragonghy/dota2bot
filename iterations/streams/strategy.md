@@ -113,10 +113,35 @@
    `J.GetPosition` 会漏掉出装那一路(上一轮 `defstale` 消费方是 `aba_defend`,走包装,结论不受影响)。
    棘轮 **8 → 7**。详见 `iterations/reports/strategy/20260821T053000Z.md` 与
    `state.json:axeblinkkill_ROLE_HEAL_20260821`。
-   **下一批(一次一个,不要批量刷)**:两个 `cm_es_*`、两个 `lion_drain_*`、两个 `od_eclipse_*`。
+   **`f_260820_102645_cm_es_reach` 已做完(2026-08-21T07:40Z)**:pin 成立,**48 条消费方用例
+   (两个 cmrguard 文件各 24)逐条未改**,原因已成断言 —— `X.cm_IsRSafeToOpen` 与 `X.ConsiderR()`
+   **各读 0 次位置**(两个入口都数)。**但这一帧的划分翻了两个**(sniper 核心→辅助、viper 辅助→核心),
+   subject CM 是置换的**不动点**(槽位 5 = 抽签 5)⇒ 唯一那次角色读取(出装表 key,`aba_item:1600`)
+   **恰好不动**,这枚 fixture 因此是上一轮 Axe 那条发现的 **CONTROL**。棘轮 **7 → 6**。
+   **本轮真正值钱的是第十二条世界断言,在地图另一边(见下面第 0h 条)。**
+   **下一批(一次一个,不要批量刷)**:`f_260820_103216_cm_es_aftershock`(同一对的另一半,
+   建议先取,好把这对的结论一起收口)、两个 `lion_drain_*`、两个 `od_eclipse_*`。
    **每治一个都要重读它钉住的结论并写下来** —— 治一帧可能翻掉它钉的东西,那正是这件事的意义。
-   **并且不许拿「核心/辅助划分通常稳定」当跳过某一帧的理由**:本轮五个队友全部换读数而划分
-   一位没翻,上一轮 `defstale` 同样的治疗却翻掉了一个核心 —— 那是**每帧的测量**,不是规律。
+   **并且不许拿「核心/辅助划分通常稳定」当跳过某一帧的理由**:三次治疗三种结果 ——
+   `defstale`(seed 868)翻了一个核心、`axe_blink_kill`(seed 885)五个全动零翻面、
+   `cm_es_reach`(seed 906)三个动、**翻了两个** —— 那是**每帧的测量**,不是规律。
+0h. **【2026-08-21T07:40Z 新增,已钉住、不要批量改】第十二条世界断言:`--roles` 结构上够不到敌人,
+   fixture 上每个敌人都是 pos 3 / `IsCore` = true**。全语料实测 **93 fixture / 465 个敌方英雄 /
+   读到非 3 的 0 个**。**不是生成器少写**(十个英雄的抽签位置全写了,loader 也全 `rawset` 成
+   `assignedRole`),是 `aba_role.GetPosition` 的敌方分支**把它扔掉**:
+   `role = GetEnemyPosition(pid); if role ~= nil then return role end; return 3`,
+   而 `GetEnemyPosition` 的缓存只有 `enemy_role_estimation.UpdateEnemyHeroPositions()` 会填、
+   **loader 一次都没调过**。⇒ **凡是在 fixture 上 fork 在敌人位置或 `J.IsCore(敌人)` 上的断言,
+   读的都是常数,和它来自的那一局无关。**
+   **估计器现在跑得起来了**(要 `GetUnitList(UNIT_LIST_ENEMY_HEROES)`,2026-08-20 才接通,
+   所以这个问题以前问不出来):手动 warm 一次,本帧答 bristleback 1 / zuus 3 / earthshaker 2 /
+   juggernaut 5 / jakiro 4 —— 1..5 的置换,**与抽签一致 0/5**。**这不是给估计器判死刑**
+   (它读的是观察到的表现,和抽签本就是两个问题);能报的是 **`J.GetPosition` 用同一个名字
+   对友军答抽签、对敌人答估计,消费方分不出来**。
+   **本条不产 gate、不改 bots/、不改 loader**:让 loader 调估计器会**一次性移动全部 93 个 fixture
+   的敌方位置**,而 `test_fixture_roles.lua` 存在的意义就是不许发生这种事。已钉成全语料棘轮 +
+   源码钉子(敌方分支必须仍覆盖 `role`、仍 `return 3`、**不得**读 `assignedRole`),
+   估计器的答案也先记进用例,让将来要动的人手上先有体量。**决定权交总监**(已开 `[harness]` **GH #81**)。
    ~~**仓库里现存每一个 fixture 的角色都还是槽位派生的**(2026-08-20T05:30Z 记下)~~。loader 现在
    支持抽签角色(`make_fixture.py --roles <analysis.json>`),但**只有本轮新生成的两个 fixture 带**;
    其余全部落到 `RoleAssignment[team][i]` = 抽签槽位,本轮六局实测与抽签真值吻合 **23/60 = 38%**
@@ -329,6 +354,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T07:40Z:**没有可认领的新 `[strategy]` issue**(05:30Z 之后只有 `[hero] #54/#56`、
+  `[bug] #78`、`[harness] #80/#75` 有新动静;`[strategy]` open 集最新留言仍是 03:23Z 的 #37,
+  上一轮已判定不认领),照章程接 backlog **第 0c 条**,治它点名的下一枚:
+  **`f_260820_102645_cm_es_reach`**(seed 906,armed=radiant,可归属)。
+  **产出**:fixture 用 `make_fixture.py --roles` **重生成**(**逐字节只多了 `roles` 表** ——
+  units / 38 座建筑 / 整个 `observed` 段 `burst={earthshaker:99}`、`died_after=106.9` 全部逐字相同,
+  且**没有** `ground_truth_ambiguous`);`tests/test_replay_260820_cm_es_aftershock.lua` **24 → 27 例**
+  (+3 RE-READ),`tests/test_fixture_roles.lua` **7 → 10 例**,棘轮 **7 → 6**。
+  **bots/ 一位没动,不推 gate,不申请入集。**
+  **重读结论:pin 成立,而且说得出为什么** —— `X.cm_IsRSafeToOpen` 与 `X.ConsiderR()`
+  **各读 0 次位置**(两个入口都 hook;各配一条非空性断言,免得「零读取」= 「什么都没跑」)⇒
+  两个消费方文件的 **48 条用例结构上**不可能被治疗动到(两文件通篇不出现 `IsCore`/`GetPosition`)。
+  **世界确实动了,而且这次翻了**:五个队友动了三个(sk 2→3、sniper 3→**4**、viper 4→**2**),
+  **核心/辅助划分翻了两个**(sniper 核心→辅助、viper 辅助→核心)。三次治疗三种结果
+  (868 翻一个 / 885 全动零翻 / 906 翻两个)⇒ 已把这条对照写进 `test_fixture_roles.lua` 头部与断言。
+  **唯一那次角色读取在英雄文件 dofile 的那一刻**:`Item.GetRoleItemsBuyList` → `aba_item:1600` →
+  `Role.GetPosition`(全仓库唯一绕过 J 包装的调用点,上一轮量的),而**这一帧恰好不动** ——
+  CM 是置换的**不动点**(槽位 5 = 抽签 5)⇒ **这枚 fixture 是上一轮 Axe 那条发现的 CONTROL**。
+  机制照样活着(驱动真实 `hero_crystal_maiden.lua`:pos_5 13 件 blood_grenade 起手 /
+  pos_1=2=3 13 件 mage_outfit→shadow_amulet→veil / **pos_4 只有 11 件** priest_outfit 起手)⇒
+  **位置错一格换的是整套装,不是换顺序**。
+  **本轮真正值钱的:第十二条世界断言,在地图另一边(详见 backlog 第 0h 条)** ——
+  **`--roles` 结构上够不到敌人**,全语料 **93 fixture / 465 个敌方英雄 / 读到非 3 的 0 个**,
+  `J.IsCore(敌人)` 恒 true。原因在 `aba_role.GetPosition` 的敌方分支覆盖掉 `assignedRole` 并
+  `return 3`,而填缓存的 `UpdateEnemyHeroPositions()` **loader 一次都没调过**。
+  估计器**现在跑得起来了**(2026-08-20 才接通 `GetUnitList(UNIT_LIST_ENEMY_HEROES)`),
+  warm 一次答 bb 1 / zuus 3 / es 2 / jugg 5 / jakiro 4 —— 置换,**与抽签一致 0/5**;
+  **不修**(会一次性移动全部 93 个 fixture),钉成全语料棘轮 + 源码钉子,决定权交总监(已开 `[harness]` **GH #81**)。
+  **验收**:`luacheck bots game --formatter plain` **0 warnings**(bots/ 零改动);
+  `lua5.1 tests/run_tests.lua` **902 → 908(+6)**。**九次变异全部按预期 FAIL**(按 0g 纪律,
+  新用例第一次跑就全绿 ⇒ 变异是硬前置):M1 摘 `roles` / M2 sniper 抽签 4→3 / M3 敌方分支改读
+  `assignedRole` / M4 往 guard 里塞一次 `J.GetPosition` / M6 让 loader warm 估计器(三条同时红)/
+  M7 扰动 `GetEnemyPosition` / M8 `pos_5` 别名到 `pos_3` / M9 出装 key 改走 J 包装 /
+  M10 合并两个角色入口 / M11 把治好的 fixture 塞回债务清单(棘轮反向)。
+  `state.json` 新增 `cmesreach_ROLE_HEAL_20260821`。
+  未花 AWS 计费资源(只读 S3:1 个 `.dem` 8.7 MiB + 1 个 `.analysis.json` + 缓存命中的 dumper;
+  未启动任何实例,未提批测请求)。详见 `iterations/reports/strategy/20260821T074000Z.md`。
 - 2026-08-21T05:30Z:**没有可认领的新 `[strategy]` issue**(03:19Z 之后只有 `[bug] #78` 与
   `[harness] #75` 有新动静,`[strategy]` open 集 13 条**一条新留言都没有**),照章程接 backlog
   **第 0c 条**,治它自己点名的下一枚:**`f_260820_043124_axe_blink_kill`**(seed 885,可归属)。

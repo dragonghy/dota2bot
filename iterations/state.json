@@ -1841,5 +1841,36 @@
     "case": "od_eclipse_aoe_domain.py annotated `hp <= 0` with `# GH #78 corpse frames`. It catches the frozen zero tail (never what #78 was about) and misses the leaked first frame (the whole of #78). Cases 1-24 were 'a claim invalidated by a consumer/environment'; this one is 'the code wears the issue number as a badge while fixing none of it'.",
     "harm": "not this one reading -- the next reader sees the issue number and skips the audit. Same failure as 'immune by construction' (section Z.1), carrier changed from docstring to issue number.",
     "rule": "a comment citing an issue number as fixed MUST name the clause it fixes and the clause it misses; the number alone is not documentation."
+  },
+  "cmesreach_ROLE_HEAL_20260821": {
+    "owner": "strategy",
+    "date": "2026-08-21T07:40Z",
+    "gate": null,
+    "bots_lua_changed": false,
+    "backlog_item": "0c (fixture role debt -- one frame at a time)",
+    "headline": "f_260820_102645_cm_es_reach regenerated with --roles (soak seed 906, armed=radiant). The pin HOLDS and the reason is asserted: neither cm_IsRSafeToOpen nor ConsiderR reads a position. But this frame's ALLIED core/support partition FLIPS TWICE, which is the counter-example to the axe round's 'partition stayed put'. The bigger result is a NEW world assertion on the other side of the map: --roles cannot reach ENEMIES at all, and every enemy on all 93 fixtures answers pos 3 / IsCore=true.",
+    "regeneration": "byte-for-byte identical apart from the added roles table -- positions, hp, mana, level, items, abilities, modifiers, recent_damage and the whole observed block (burst 99 from earthshaker, died_after 106.9) reproduce exactly; no ground_truth_ambiguous / recent_damage_ambiguous flag (GH #69 criterion clean).",
+    "world_moved": {
+      "allies": "three of five permuted: phantom_assassin 1->1, skeleton_king 2->3, sniper 3->4, viper 4->2, crystal_maiden 5->5",
+      "core_partition": "FLIPPED TWICE -- sniper core->support, viper support->core. It is the counter-case to axeblinkkill_ROLE_HEAL_20260821, where all five moved and NONE flipped: the partition's stability is a per-frame measurement, never a reason to skip a frame.",
+      "subject": "crystal_maiden is a FIXED POINT (slot 5 = drafted 5), which is exactly why the one role read on this path did not move"
+    },
+    "why_the_pin_held": "measured, not assumed: with BOTH entry points hooked (J.GetPosition wrapper and Role.GetPosition module -- distinct function objects), cm_IsRSafeToOpen makes 0 position reads and ConsiderR makes 0. The 24 pre-existing cases in test_replay_260820_cm_es_aftershock.lua and the 24 in test_replay_260820_cm_r_selfstate.lua are structurally immune to the heal; neither file mentions IsCore or GetPosition anywhere.",
+    "the_one_read": {
+      "where": "hero-file LOAD, not any decision: hero_crystal_maiden.lua asks Item.GetRoleItemsBuyList for its build the moment it is dofile'd -> aba_item.lua:1600 -> Role.GetPosition, the one call site in the repo that bypasses the J wrapper (the same site the axe round found).",
+      "moved": "NO -- pos_5 in both worlds. This frame is therefore the CONTROL for the axe finding: same mechanism, no movement, because the subject sits on a fixed point.",
+      "mechanism_still_live": "CM's build lists differ sharply by position (pos_5 opens blood_grenade/mage_outfit/ancient_janggo/glimmer_cape/boots_of_bearing, 13 items; pos_1 = pos_2 = pos_3 opens mage_outfit/shadow_amulet/veil_of_discord, 13 items; pos_4 is priest_outfit and only 11 items). A one-step slip in the position is a whole build, not a reordering -- asserted."
+    },
+    "NEW_WORLD_ASSERTION_enemy_roles": {
+      "claim": "Twelfth of the GH #27 / GH #36 / GH #53 family, and the first one on the ENEMY side: on every fixture in this repo every enemy hero answers position 3, hence J.IsCore(enemy) is TRUE for all five.",
+      "measured": "93 fixtures / 465 enemy heroes / 0 answering anything but 3 (whole-corpus scan, ~1.9s, now a ratchet case in tests/test_fixture_roles.lua).",
+      "structural_cause": "aba_role.GetPosition sets bot.assignedRole from the fixture and then, for an enemy, THROWS IT AWAY: role = GetEnemyPosition(bot:GetPlayerID()); if role ~= nil then return role end; return 3. GetEnemyPosition reads a cache filled only by enemy_role_estimation.UpdateEnemyHeroPositions, which nothing in the loader calls. So make_fixture.py --roles writes all TEN drafted roles, the loader rawsets all ten, and five of them are unreachable by construction.",
+      "estimator_is_reachable_now": "UpdateEnemyHeroPositions() runs fine on a fixture (it needs GetUnitList(UNIT_LIST_ENEMY_HEROES), which was empty on every fixture until 2026-08-20). Warmed on this frame it answers bristleback 1 / zuus 3 / earthshaker 2 / juggernaut 5 / jakiro 4 -- a permutation of 1..5 agreeing with the draft 0/5.",
+      "not_a_verdict_on_the_estimator": "it reads observed farm and lane, a different question from what the seed drafted. The reportable part is that consumers cannot tell them apart: J.GetPosition answers the DRAFT for an ally and an ESTIMATE for an enemy under one name -- and on a fixture, a constant.",
+      "deliberately_NOT_fixed_here": "making the loader call the estimator would move enemy positions on all 93 fixtures at once, which is the one thing test_fixture_roles.lua exists to prevent. Pinned as characterisation and routed to the harness owner, with the estimator's answers recorded so the size of the change is on the record before anyone makes it."
+    },
+    "ratchet": "SLOT_DERIVED_ROLES 7 -> 6 (f_221200_od_roles can never leave: unattributable script_version). Remaining: two lion_drain_*, two od_eclipse_*, f_260820_103216_cm_es_aftershock.",
+    "verification": "luacheck bots game 0 warnings (bots/ untouched); lua5.1 tests/run_tests.lua 902 -> 908 (+6). Nine mutations all FAILED as intended (rule 0g: everything here was green on the first run, so mutation was mandatory): M1 strip roles table / M2 sniper drafted 4->3 / M3 enemy branch falls back to assignedRole / M4 inject a J.GetPosition call into cm_IsRSafeToOpen / M6 loader warms the estimator / M7 perturb GetEnemyPosition / M8 alias pos_5 to pos_3 / M9 build key goes through the J wrapper / M10 collapse the two role entry points / M11 put the healed fixture back on the debt list.",
+    "cost": "no billable AWS resources -- read-only S3 (one 8.7 MiB .dem + one analysis.json) and a cache-hit dumper pull; no instances launched, no batch request filed."
   }
 }

@@ -279,7 +279,16 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
         -- tests/test_replay_260820_axe_blink_kill.lua: the build-list key
         -- Item.GetRoleItemsBuyList put this Axe on pos_3, not the pos_2 list
         -- the slot claimed.  ['f_260820_043124_axe_blink_kill.lua']
-        ['f_260820_102645_cm_es_reach.lua'] = true,
+        --
+        -- healed 2026-08-21 (seed 906, armed=radiant): three of five allies
+        -- permuted and the core/support partition FLIPPED TWICE -- sniper slot
+        -- 3 (core) -> drafted pos 4 (support), viper slot 4 (support) ->
+        -- drafted pos 2 (core). Every case on the frame survived because
+        -- neither cm_IsRSafeToOpen nor ConsiderR asks for a position; the one
+        -- role read on the whole path is the build-list key, and it happens not
+        -- to move here (CM is a fixed point: slot 5 = drafted 5). Written up in
+        -- tests/test_replay_260820_cm_es_aftershock.lua.
+        --   ['f_260820_102645_cm_es_reach.lua']
         ['f_260820_103216_cm_es_aftershock.lua'] = true,
     }
 
@@ -312,6 +321,161 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
     assert(#healed == 0, 'these fixtures now carry drafted roles -- drop them from '
         .. 'SLOT_DERIVED_ROLES and say in their test what the re-read found: '
         .. table.concat(healed, ', '))
+end
+
+-- ---------------------------------------------------------------------------
+-- The ENEMY half of the same contract, measured 2026-08-21 while healing
+-- f_260820_102645_cm_es_reach (strategy backlog 0c).
+--
+-- Everything above is about OUR five. The heal does nothing whatever for the
+-- other five, and not because make_fixture.py withholds them -- it writes the
+-- drafted position of all ten heroes and the loader rawsets `assignedRole` on
+-- all ten. Role.GetPosition simply throws the enemy's away:
+--
+--     bot.assignedRole = role                      -- <- the fixture's value
+--     if GetTeam() ~= bot:GetTeam() then
+--         role = GetEnemyPosition(bot:GetPlayerID())   -- <- overwritten
+--         if role ~= nil then return role end
+--         return 3                                     -- <- floor
+--     end
+--
+-- GetEnemyPosition reads a cache that only enemy_role_estimation.
+-- UpdateEnemyHeroPositions fills, and nothing in the loader calls it. So on
+-- every fixture in this repo every enemy answers pos 3, hence J.IsCore(enemy)
+-- is TRUE for all five -- the exact pre-#53 collapse the ally half was written
+-- to end, still live on the other side of the map. Measured below over the
+-- whole corpus, not argued.
+--
+-- This is characterisation, not a proposal: making the loader call the
+-- estimator would move the answer on every existing fixture at once, which is
+-- the one thing this file exists to prevent. Filed for the harness owner
+-- instead; the case below records what the estimator WOULD say, so the size of
+-- the change is on the record before anyone makes it.
+-- ---------------------------------------------------------------------------
+
+tests['every enemy on every fixture reads pos 3 -- the ally heal cannot reach them'] = function()
+    local p = io.popen('ls tests/fixtures')
+    local files = {}
+    for file in p:lines() do
+        if file:match('^f_.*%.lua$') then files[#files + 1] = file end
+    end
+    p:close()
+    assert(#files > 50, 'expected the whole fixture corpus, saw ' .. #files)
+
+    local nFixtures, nEnemies, tOffenders = 0, 0, {}
+    for _, file in ipairs(files) do
+        local J, bot, heroes = rf.load('tests/fixtures/' .. file)
+        nFixtures = nFixtures + 1
+        for _, h in pairs(heroes) do
+            if h:GetTeam() ~= bot:GetTeam() then
+                nEnemies = nEnemies + 1
+                local nPos = J.GetPosition(h)
+                if nPos ~= 3 or J.IsCore(h) ~= true then
+                    tOffenders[#tOffenders + 1] = file .. ':' .. h:GetUnitName()
+                        .. '=' .. tostring(nPos)
+                end
+            end
+        end
+    end
+
+    assert(nFixtures >= 93 and nEnemies >= 465, 'the scan must cover the corpus; '
+        .. 'saw ' .. nFixtures .. ' fixtures / ' .. nEnemies .. ' enemy heroes')
+    assert(#tOffenders == 0, 'an enemy answered something other than the pos-3 '
+        .. 'floor: ' .. table.concat(tOffenders, ', ') .. ' -- if that is a '
+        .. 'deliberate loader change, every conclusion that forked on an ENEMY '
+        .. 'position or J.IsCore(enemy) has to be re-read, and this case rewritten')
+end
+
+tests['the pos-3 enemy floor is structural: assignedRole is set and then discarded'] = function()
+    local J, bot, heroes, fx = rf.load('tests/fixtures/f_260820_102645_cm_es_reach.lua')
+    assert(fx.roles ~= nil, 'this frame carries the drafted roles')
+
+    -- The generator wrote all TEN, and the loader installed all ten.
+    local nEnemiesWithRole = 0
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() then
+            local nDrafted = rawget(h, 'assignedRole')
+            assert(nDrafted ~= nil and nDrafted == fx.roles[h:GetUnitName()],
+                h:GetUnitName() .. ' must carry its drafted role, got '
+                .. tostring(nDrafted))
+            nEnemiesWithRole = nEnemiesWithRole + 1
+            -- ...and it is discarded anyway.
+            assert(J.GetPosition(h) == 3, 'the drafted role is present ('
+                .. nDrafted .. ') and the reader still answers '
+                .. tostring(J.GetPosition(h)))
+        end
+    end
+    assert(nEnemiesWithRole == 5, 'all five enemies must carry a drafted role')
+
+    -- Source tripwire, so the measurement above cannot quietly become vacuous:
+    -- the enemy branch must still overwrite `role` rather than read it.
+    local f = assert(io.open('bots/FunLib/aba_role.lua', 'r'))
+    local src = f:read('*a')
+    f:close()
+    local body = src:match('____exports%.GetPosition = function%(bot%)(.-)\nend\n')
+    assert(body ~= nil, 'aba_role.GetPosition must still be a plain function')
+    local branch = body:match('if GetTeam%(%) ~= bot:GetTeam%(%) then(.-)\n    end')
+    assert(branch ~= nil, 'the enemy branch must still exist in GetPosition')
+    assert(branch:find('GetEnemyPosition(bot:GetPlayerID())', 1, true),
+        'the enemy branch must still read the estimator cache')
+    assert(branch:find('return 3', 1, true),
+        'the enemy branch must still floor at 3 -- if it now falls back to '
+        .. 'assignedRole, the corpus-wide case above is stale')
+    assert(branch:find('assignedRole', 1, true) == nil,
+        'the enemy branch must NOT consult assignedRole -- if it now does, '
+        .. '--roles reaches enemies and both cases here need re-deriving')
+end
+
+tests['the estimator IS reachable on a fixture, and disagrees with the draft 5/5'] = function()
+    -- What the loader would get if it called the estimator, recorded before
+    -- anyone decides whether it should. GetUnitList(UNIT_LIST_ENEMY_HEROES) was
+    -- empty on every fixture until 2026-08-20, so this could not be asked then.
+    local J, bot, heroes, fx = rf.load('tests/fixtures/f_260820_102645_cm_es_reach.lua')
+    local Estimate = require(GetScriptDirectory() .. '/FunLib/enemy_role_estimation')
+
+    assert(#GetUnitList(UNIT_LIST_ENEMY_HEROES) == 5,
+        'the estimator needs the enemy roster; the fixture must supply five')
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() then
+            assert(Estimate.GetEnemyPosition(h:GetPlayerID()) == nil,
+                'the cache must start EMPTY -- nothing in rf.load may fill it, '
+                .. 'or the pos-3 floor above is an accident of ordering')
+        end
+    end
+
+    Estimate.UpdateEnemyHeroPositions()
+
+    -- Measured on this frame (6:31, seed 906). Drafted -> estimated:
+    local ESTIMATED = {
+        npc_dota_hero_bristleback  = 1,  -- drafted 3
+        npc_dota_hero_zuus         = 3,  -- drafted 2
+        npc_dota_hero_earthshaker  = 2,  -- drafted 4
+        npc_dota_hero_juggernaut   = 5,  -- drafted 1
+        npc_dota_hero_jakiro       = 4,  -- drafted 5
+    }
+    local nAgree, tSeen = 0, {}
+    for sName, nWant in pairs(ESTIMATED) do
+        local h = heroes[sName]
+        local nGot = Estimate.GetEnemyPosition(h:GetPlayerID())
+        assert(nGot == nWant, sName .. ': the estimator answered ' .. tostring(nGot)
+            .. ', this frame was recorded at ' .. nWant)
+        assert(J.GetPosition(h) == nGot, 'once the cache is warm GetPosition '
+            .. 'returns the ESTIMATE, not the floor and not the draft')
+        if nGot == fx.roles[sName] then nAgree = nAgree + 1 end
+        tSeen[nGot] = (tSeen[nGot] or 0) + 1
+    end
+
+    assert(nAgree == 0, 'the estimate agreed with the draft for ' .. nAgree
+        .. ' of 5 enemies on this frame -- recorded as 0/5. This is a '
+        .. 'measurement of one frame, not a verdict on the estimator: it reads '
+        .. 'observed farm and lane, which is a different question from what the '
+        .. 'seed drafted. It is here because consumers cannot tell the two '
+        .. 'apart -- J.GetPosition answers the DRAFT for an ally and an '
+        .. 'ESTIMATE for an enemy, under one name')
+    for i = 1, 5 do
+        assert(tSeen[i] == 1, 'the estimate must still be a permutation of 1..5; '
+            .. 'position ' .. i .. ' was handed out ' .. tostring(tSeen[i] or 0) .. ' times')
+    end
 end
 
 tests['a legacy fixture still reads the pre-#53 world, and is known-wrong'] = function()
