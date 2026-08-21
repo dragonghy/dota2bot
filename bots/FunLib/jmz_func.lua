@@ -4745,7 +4745,7 @@ J.tHardCcAbilities = {
 -- scan.
 --
 -- The gap it closes: Earthshaker with AFTERSHOCK leveled stuns everything in a
--- 300 self-radius EVERY TIME HE CASTS ANY SPELL, so the cheapest spell he owns
+-- 350 self-radius EVERY TIME HE CASTS ANY SPELL, so the cheapest spell he owns
 -- is a hard CC even when fissure is on cooldown. The curated table has
 -- earthshaker_fissure and nothing else, so an ES holding only enchant_totem
 -- reads as harmless. GH #66 measured the consequence on CM's Freezing Field:
@@ -4761,8 +4761,52 @@ J.tHardCcAbilities = {
 -- GEOMETRY (this is why the entry is safe to add): enchant_totem is no-target,
 -- so GetCastRange() is 0 and the callers' `range + buffer` veto ring stays at
 -- the self-radius end of the scale (the hoof_stomp / berserkers_call class). It
--- cannot repeat the paralyzing_cask problem GH #63 measured, where a 900-range
--- projectile inflates the same ring to 1300 units.
+-- cannot repeat the paralyzing_cask problem GH #63 measured. (That comparison
+-- needs a correction of its own: cask's cast range is 600, not the 900 GH #63
+-- was written against, so the ring it inflates is 1000u rather than 1300u --
+-- the offline anchor table was wrong, never the Lua, which reads GetCastRange()
+-- from the engine. See tools/batch_test/behavioral/cmrguard_counterfactual.py
+-- ANCHOR_DELTA, re-anchored to the datafeed 2026-08-21.)
+--
+-- PRE-FLIGHT CORPUS CHECK 2026-08-21T12:xxZ -- DO NOT SPEND AN ARM ON THIS ID.
+-- 17 turbo games (replays/20260820_10*, the wave GH #66's own frames came
+-- from), tool tools/batch_test/behavioral/es_aftershock_domain.py. Same verdict
+-- shape as `cmrself`, DOMAIN-REACHED-BUT-VANISHING, but a DIFFERENT cause --
+--
+--     armed != shipped on 4 FRAMES / 1 EPISODE / 1 of 17 games,
+--     and on exactly 1 of the 17 real Freezing Field casts.
+--
+-- The gate is not inefficient; it is SUPPLY-STARVED, and the funnel says so at
+-- every step. Earthshaker is drafted by 1 of the 4 seeds (5/17 games). Given an
+-- enemy ES inside CM's 1600 scan (2165 frames), he is totem-ready with
+-- Aftershock leveled 55% of the time (1192) -- but inside the 400-unit delivery
+-- ring that a no-target cast range collapses to, only 65 frames, 5.5%. Of those
+-- 65, Fissure was on cooldown in 64: the shipped scan really is silent there,
+-- so the candidate pass adds a handle almost every time it gets the chance.
+-- What it never gets is the chance AND a castable ultimate AND a fire branch.
+--
+-- The one converted case is the case the issue was filed for:
+-- 20260820_103216_slot1 t=472.5-474.0 leading into the cast at t=474.3 -- CM at
+-- 10.3% opening a ten-second channel that lasted 0.1s before she died 0.2s
+-- later, i.e. GH #66 frame A, already pinned in
+-- tests/fixtures/f_260820_103216_cm_es_aftershock.lua. Diagnosis correct, case
+-- real, once per seventeen games.
+--
+-- Two readings that are NOT fragile, unlike the state scan (whose 4 frames rest
+-- on aoeCanHurtCount, whose ring is nRadius*0.82 - movespeed, and movespeed is
+-- not in the .dem -- at ms >= 330 the state-scan domain is 0):
+--   * the CAST-side count is branch-agnostic (the guard runs above all three
+--     branches) and stays 1 across the whole movespeed sweep;
+--   * the armed-side audit: `cmrguard` was live on one side of every mirrored
+--     game here, and of the 5 real casts on the armed side this reconstruction
+--     claims a shipped veto on 0 -- so its no-vision over-count did not bite.
+--
+-- CONSEQUENCE: leave gated and parked. Re-measure if the wave's seed pool
+-- changes so ES is drafted often, if X.nRGuardCloseBuffer widens (at 800 the
+-- withheld casts go 1 -> 3, and the two additions are one more cut-short
+-- channel and one CLEAN 10.0s channel at full HP -- i.e. widening buys a false
+-- positive, which is the GH #34/#63 direction), or if the candidate table grows
+-- a second entry whose carrier is common.
 J.tHardCcAbilitiesCandidate = {
 	earthshaker_enchant_totem = 'earthshaker_aftershock',
 }

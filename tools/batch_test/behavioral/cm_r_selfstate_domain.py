@@ -118,7 +118,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from roam_conversion import death_spans, is_dead  # noqa: E402
 from cmrguard_counterfactual import (  # noqa: E402
-    CAST_RANGE, SCAN_RANGE, curated_abilities, shipped_buffer,
+    cast_range, SCAN_RANGE, curated_abilities, shipped_buffer,
 )
 
 CM = "npc_dota_hero_crystal_maiden"
@@ -420,7 +420,7 @@ def scan_game(tl_path, hp_floor, fire_window, ms, gap, liveness="is_dead"):
                     continue
                 for ab in e.get("abilities") or []:
                     if (ab["name"] in curated and ab["level"] >= 1 and ab["cd"] == 0
-                            and d <= CAST_RANGE.get(ab["name"], 0) + buffer_units):
+                            and d <= cast_range(ab["name"], ab["level"]) + buffer_units):
                         guard_overlap_t.append(t)
                         break
                 else:

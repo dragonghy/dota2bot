@@ -27,7 +27,11 @@ Two questions it is built to answer:
      which the 2026-08-19T11:53Z narrowing replaced. Pass --range-blind to
      reproduce that older reading side by side.
 
-Usage (timelines come from `behav-dump -interval 0.5 GAME.dem > GAME.json`):
+Usage (timelines come from `behav-dump [-interval S] GAME.dem > GAME.json`;
+this line used to say `-interval 0.5` unconditionally, but `run_replay.sh` --
+the path every ARCHIVED timeline came through -- passes no flag and takes the
+dumper's 1.0s default, so a frame count from one recipe is not comparable with
+a frame count from the other. See `sample_interval()`; quote EPISODES):
 
     cmrguard_counterfactual.py TIMELINE.json [TIMELINE.json ...]
     cmrguard_counterfactual.py --range-blind TIMELINE.json ...
@@ -38,11 +42,22 @@ Honest boundaries (carry these into any readout):
 
   * CAST RANGES ARE OUT-OF-FRAME ANCHORS. behav-dump does not carry ability
     cast range (it is KV data, not replay data -- same family as GH #36), so
-    CAST_RANGE below is anchored to Liquipedia. Everything else -- positions,
-    HP, levels, cooldowns, alive/dead -- is real frame data. The self-radius
-    entries (hoof_stomp, berserkers_call, ravage, slithereen_crush) are 0 on
-    purpose: the engine reports 0 for no-target abilities and the gate's
-    "holder must be on top of her" reading of that is the intended behaviour.
+    CAST_RANGE below is an anchor. Everything else -- positions, HP, levels,
+    cooldowns, alive/dead -- is real frame data. The self-radius entries
+    (hoof_stomp, berserkers_call, ravage, slithereen_crush) are 0 on purpose:
+    the engine reports 0 for no-target abilities and the gate's "holder must be
+    on top of her" reading of that is the intended behaviour.
+
+    RE-ANCHORED 2026-08-21 (hero stream, `esaftershock` pre-flight) AGAINST THE
+    DATAFEED, which is the shipping KV -- the same source the Lua reads at
+    runtime through GetCastRange(). The previous table was hand-anchored to
+    Liquipedia and 16 of its 23 entries were wrong, two of them because the
+    ability is PER-LEVEL and the table held a scalar. The Lua is unaffected (it
+    never sees this table); only the offline reconstructions in this directory
+    were. Every entry is now the datafeed's `cast_ranges` LIST, indexed by the
+    ability's level on the frame -- use cast_range(name, level), never
+    CAST_RANGE[name] directly. The two that moved far enough to change a
+    published reading are called out in `ANCHOR_DELTA` below.
   * NO VISION. The engine gate also runs J.IsValid -> CanBeSeen(); the dumper
     does not emit per-hero vis (GH #27), so this reconstruction assumes every
     enemy is visible and therefore OVER-counts vetoes. Treat the veto rate as
@@ -58,6 +73,7 @@ Honest boundaries (carry these into any readout):
 """
 
 import argparse
+import collections
 import json
 import math
 import os
@@ -74,31 +90,58 @@ SCAN_RANGE = 1600.0  # J.GetNearbyHeroes(hBot, 1600, ...) in cm_IsRSafeToOpen
 CHANNEL = 10.0       # Freezing Field's max channel time; the horizon that matters
 
 # Out-of-frame anchors -- see the module docstring. 0 == no-target/self-radius.
+# Values are the datafeed's `cast_ranges` list (one entry = flat across levels).
+# Pulled 2026-08-21 from https://www.dota2.com/datafeed/herodata?hero_id=N.
 CAST_RANGE = {
-    "axe_berserkers_call": 0,
-    "bane_fiends_grip": 600,
-    "bane_nightmare": 575,
-    "centaur_hoof_stomp": 0,
-    "chaos_knight_chaos_bolt": 500,
-    "crystal_maiden_frostbite": 550,
-    "dragon_knight_dragon_tail": 150,
-    "earthshaker_fissure": 1200,
-    "jakiro_ice_path": 1000,
-    "lion_impale": 600,
-    "lion_voodoo": 550,
-    "ogre_magi_fireblast": 600,
-    "primal_beast_pulverize": 150,
-    "shadow_demon_disruption": 600,
-    "shadow_shaman_shackles": 200,
-    "shadow_shaman_voodoo": 500,
-    "skeleton_king_hellfire_blast": 600,
-    "slardar_slithereen_crush": 0,
-    "storm_spirit_electric_vortex": 300,
-    "sven_storm_bolt": 500,
-    "tidehunter_ravage": 0,
-    "vengefulspirit_magic_missile": 600,
-    "witch_doctor_paralyzing_cask": 900,
+    "axe_berserkers_call": [0],
+    "bane_fiends_grip": [625],
+    "bane_nightmare": [550, 600, 650, 700],
+    "centaur_hoof_stomp": [0],
+    "chaos_knight_chaos_bolt": [600],
+    "crystal_maiden_frostbite": [600],
+    "dragon_knight_dragon_tail": [150],
+    "earthshaker_fissure": [1600],
+    "jakiro_ice_path": [1100],
+    "lion_impale": [650],
+    "lion_voodoo": [575, 600, 625, 650],
+    "ogre_magi_fireblast": [525],
+    "primal_beast_pulverize": [200],
+    "shadow_demon_disruption": [675],
+    "shadow_shaman_shackles": [450],
+    "shadow_shaman_voodoo": [550],
+    "skeleton_king_hellfire_blast": [525],
+    "slardar_slithereen_crush": [0],
+    "storm_spirit_electric_vortex": [300],
+    "sven_storm_bolt": [600],
+    "tidehunter_ravage": [0],
+    "vengefulspirit_magic_missile": [650],
+    "witch_doctor_paralyzing_cask": [600],
 }
+
+# What the re-anchoring moved, for anyone re-reading a published number.
+# The two that matter are marked; the rest shift a ring by <= 150u.
+ANCHOR_DELTA = {
+    # was 900 -- GH #63's headline ("a 900-range projectile inflates cmrguard's
+    # ring to 1300u") rests on the OLD value; at the real 600 the ring is 1000u.
+    "witch_doctor_paralyzing_cask": (900, 600),
+    # was 200 -- more than doubles; shackles is the ability ccburst's own
+    # narrowing bisect was filed against.
+    "shadow_shaman_shackles": (200, 450),
+}
+
+
+def cast_range(name, level):
+    """GetCastRange() for a curated ability at the level it is on this frame.
+
+    Two of the curated abilities are per-level (bane_nightmare, lion_voodoo);
+    the rest are flat and the list has one entry. Levels are 1-based; a level
+    past the end clamps to the last entry (talent/shard levels are not modelled
+    -- neither are Aether Lens and the other cast-range items, so every value
+    here is a LOWER bound on the engine's answer)."""
+    vals = CAST_RANGE[name]
+    if not isinstance(vals, list):
+        return vals                       # tolerate a scalar override in tests
+    return vals[min(max(int(level), 1), len(vals)) - 1]
 
 
 def curated_abilities():
@@ -115,6 +158,31 @@ def shipped_buffer():
     src = open(HERO_LUA, encoding="utf-8").read()
     m = re.search(r"X\.nRGuardCloseBuffer\s*=\s*(\d+)", src)
     return float(m.group(1)) if m else 400.0
+
+
+def sample_interval(times):
+    """Modal spacing of a timeline's snapshot times, in seconds.
+
+    Measured 2026-08-21 (hero stream, `esaftershock` pre-flight) because two
+    recipes in this directory disagree and nothing printed which one produced a
+    given file: this module's own docstring says `behav-dump -interval 0.5`,
+    while `run_replay.sh` -- the path every archived timeline actually came
+    through -- passes no flag and takes the dumper's 1.0s default.
+
+    The consequence is that FRAME COUNTS ARE NOT COMPARABLE ACROSS TIMELINES OF
+    DIFFERENT INTERVALS, and this stream's headline numbers have been quoted in
+    frames.  Re-dumping one 17-game corpus both ways: `cmrself`'s predicate
+    reads 31 frames at 1.0s and 61 at 0.5s -- but 13 EPISODES either way, in the
+    same 9 games, and its domain is 1 episode either way.  So test_set.md
+    section Z.2's rule ("quote the episode number") is not only about
+    independence between adjacent samples; it is the only quantity here that
+    survives a change of sampling rate.  Every tool that prints a frame count
+    should print this alongside it."""
+    ts = sorted(set(round(t, 2) for t in times))
+    if len(ts) < 3:
+        return None
+    gaps = collections.Counter(round(b - a, 2) for a, b in zip(ts, ts[1:]))
+    return gaps.most_common(1)[0][0]
 
 
 def group_by_time(snapshots):
@@ -170,8 +238,8 @@ def evaluate(path, curated, buffer_units, range_blind=False):
                 if name not in CAST_RANGE:
                     raise SystemExit(
                         "no cast-range anchor for curated ability %r -- add it to "
-                        "CAST_RANGE (with a Liquipedia check) before trusting a run" % name)
-                if range_blind or dist <= CAST_RANGE[name] + buffer_units:
+                        "CAST_RANGE (with a datafeed check) before trusting a run" % name)
+                if range_blind or dist <= cast_range(name, ab["level"]) + buffer_units:
                     if closest is None or dist < closest[2]:
                         closest = (e["hero"].replace("npc_dota_hero_", ""), name, dist, e["idx"])
         veto[t] = closest

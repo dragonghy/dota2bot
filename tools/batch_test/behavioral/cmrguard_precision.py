@@ -74,7 +74,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cmrguard_counterfactual import (  # noqa: E402
-    CM, CHANNEL, SCAN_RANGE, CAST_RANGE, curated_abilities, shipped_buffer,
+    CM, CHANNEL, SCAN_RANGE, cast_range, curated_abilities, shipped_buffer,
     group_by_time,
 )
 import math  # noqa: E402
@@ -175,7 +175,7 @@ def score_game(path, curated, buffer_units, mana_floor=False):
                 name = ab["name"]
                 if name not in curated or ab["level"] < 1 or ab["cd"] != 0:
                     continue
-                if dist <= CAST_RANGE[name] + buffer_units:
+                if dist <= cast_range(name, ab["level"]) + buffer_units:
                     if vetoer is None or dist < vetoer[2]:
                         vetoer = (canon(e["hero"]), name, dist)
         hi = t + CHANNEL
