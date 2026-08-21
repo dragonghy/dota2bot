@@ -887,3 +887,54 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   本会话未改 Lua 且容器无 `luacheck`/`lua5.1`,铁律 6 无适用对象;新工具自带 `--verify` 自检(112/112 通过)。
   跨组:在既有 `[batch] #70` 下追评(不新开);章程 4c 缺口 `[harness] #33` 仍开着,不重复开。
   详见 `iterations/reports/batch-desk/20260820T221807Z.md`。
+- 2026-08-21T00:16:59Z:**纯基建轮,零支出,未启动任何批测**。MTD **$14.9965386345**(与 22:18Z **逐位一致**,
+  本轮零支出),开工与收尾 `describe-instances` 均 **0 台在跑,无泄漏**,未触发任何预算刹车
+  ($15.00 ≪ $90 刹车线,≪ $45 围栏,余 $30)。树 `3deec03`(`git ls-remote origin main` 现取 = 本地 HEAD)。
+  **(1) 收割:无新数据**。`soak/` 最新前缀仍是 `spot_20260820_180808_1_11a8de33…`(§R.0 arm B,20:10Z 已收 292 局),
+  `validation/` 无 20:10Z 之后的新对象;`queue.json` 的 `requests` 为空 ⇒ 走 4b。
+  **off-roster 固定栏位(§W.3 新增)**:本轮无新波次 ⇒ 无新增 off-roster 局,**非零告警未触发**。
+  **(2) 启动决策:不启动 —— 例行三条件 (i)(iii) 形式上都满足**((i) 距上次例行上机 08-20T16:09:02Z 已 8h08min > 6h;
+  (iii) $15.00+$1.56 ≪ $45),**但 §W.5「无目的不启动」仍压着**:解除条件三条本轮一条都没发生
+  (§W.7/§W.8 判 `capmono` 的 HP 轴作废、维持不 promote/不 reject;`[hero] #73` `wkreincarnmp` 域 = 2119 帧里 1 帧
+  且是尸体过程中)。且 §W.1 明写 #75 吞吐测量「本身是合格申报目的,**但不要为它单独开波**」⇒ 不能拿 #75 自己开波。
+  按章程保守默认:不自行改变被测集合、不自行换种子。
+  **(3) 本轮交付 = `[harness] #75` 的代码落地(总监 §W.0 明写「代码归批测台」),dark 落法**。
+  新增 `tools/batch_test/soak/dem_claim.sh` + `test_dem_claim.sh`,改 `soak_loop.sh`/`farm_start.sh`/`spot_run.sh`。
+  **默认 `REC_SLOTS=1`,行为与 #75 之前逐字节相同**;`spot_run.sh --rec-slots N` 打开(经 user-data
+  `export SOAK_REC_SLOTS` → `farm_start.sh` 写 `/opt/soak/rec_slots` → `soak_loop.sh` 读文件 ——
+  **必须走文件,因为 farm_start 用 `sudo -u ubuntu` 起 loop,env 会被丢掉**)。
+  **归属用三条独立认领链,认不出来就不认领**:`logname`(本 slot 自己的 console 日志里出现的 `.dem` 名 ——
+  一份日志一个 server,跨 slot 歧义结构上不存在)> `hostname`(demo 头 64KB 含本局 `+hostname soak_<TAG>` 戳)>
+  `mtime`(**只在 `REC_SLOTS=1` 时提供**,即 #75 前的启发式,永不用来在两个真实录制者之间裁决)。
+  **放弃了 #75 §4.1 的 rcon `tv_record` 主方案** —— 它依赖我无法验证的 cvar 语义,赌错=整台实例一个 `.dem` 都没有;
+  三链方案不依赖任何未验证 cvar。**认不出就不上传**:错配的 `.dem` 比没有更糟(经济通道照样好看,而基于它的
+  每条帧级结论说的是另一局)。
+  **(4) 顺手修掉一个 #75 正文没提到、会静默把 16× 打回 ~1× 的破坏性 bug**:旧代码 slot 1 每局开局前
+  `rm -f "$REPLAYDIR"/*.dem` —— 多 slot 录像时**会删掉其它 15 个 slot 正在写入的录像**。
+  现在 `REC_SLOTS=1` 保留整池清空(原行为),`REC_SLOTS>1` 换 `dem_reap` 只删 mtime 早于 `GAME_CAP_MIN+5`=20min
+  的文件(墙钟局长上限 15min ⇒ 结构上删不到在写的局)。
+  **(5) 最有用的一点设计:免费的前置验证**。每局录像上传 ~300 B 的 `<TAG>.demclaim.json`,记 `method` +
+  另外两条链各自会挑中谁 ⇒ **下一波普通 `REC_SLOTS=1` 波次(不管为什么而开)会自动验掉 `logname`/`hostname`
+  成不成立**,而它仍按 `mtime` 认领 ⇒ 零风险、零支出、不占排期。**#75 的两个未验证事实不需要专门开波去买。**
+  **(6) 存储前置(#75 §4.3,归批测台记账)已实际落地,不是建议**:S3 生命周期两条规则已建 ——
+  `soak-dem-expire-21d`(filter = `And(Prefix=soak/, Tag lifecycle=dem21)`,21 天过期)+
+  `abort-incomplete-mpu-7d`。**必须按 tag 过滤而不是后缀:S3 生命周期不支持后缀匹配**,按 `soak/` 前缀直接过期
+  会连 `.analysis.json`/`.log.gz` 一起删 —— 正是「千万别删逐局数据」那批东西(它们只有 **0.25 GB / 29,446 对象**)。
+  **打 tag 只发生在 `REC_SLOTS>1` 的局上 ⇒ 现存对象与普通波次 slot-1 录像的保留期一天没变(严格非回归)**。
+  另:双份上传(`soak/` + 扁平 `replays/`)**只保留 slot 1**,其余 slot 单份。
+  **实测修正总监 §W.1 的估算**:全桶 31,925 对象 / **17.71 GB ⇒ $0.41/月**(`soak/`.dem 8.79 GB/1,015 +
+  `replays/`.dem 8.59 GB/991 + 逐局档案 0.25 GB/29,446);**单个 `.dem` 实测 8.9 MB** ⇒ 一波 4 台全 16 slot
+  ≈316 局 ≈ **2.8 GB/波单份(不是估的 12.6 GB)**,21 天过期 + 20 波/月稳态 ≈ 39 GB ⇒ **+$0.90/月(不是 +$3/月)**。
+  **(7) 验证**:五个脚本 `bash -n` 全过;**新增离线测试 20 assert 全过**(logname 胜出且此时 mtime 会认错 /
+  hostname 兜底 / 多录制者认不出就不认领 / 单录制者退回 mtime = #75 前行为 / 两 slot 抢同一文件不可能都赢
+  (flock+原子 mv) / `discarded/replays/` 也搜 / reaper 删死留活 / 空池不报错);`--rec-slots` 直通链路**渲染验证**
+  (`build_user_data` 实吐 `export SOAK_REC_SLOTS=16` 字面量,`$RUN_ID` 正确延迟展开)。
+  **验不了并已写进代码抬头的两件事**:服务器是否在自己 console 里写出 `.dem` 名、是否把 `+hostname` 塞进 demo 头
+  —— 正是 (5) 的 sidecar 要免费买回来的。本会话未改 Lua 且容器无 `luacheck`/`lua5.1`,铁律 6 无适用对象。
+  **(8) 给总监的排期含义**:**§W.5 解除条件 (甲) 现在是零准备成本的** —— 一旦给出任何申报目的,那一波直接加
+  `--rec-slots 16`(**两臂都加保持对称**,另外三个种子不加作同波同硬件吞吐对照)即可,无需额外排期与支出。
+  **(9) 下次触发新增必查项**:若上一波有录像,**读 `<TAG>.demclaim.json`** 统计 `method` 分布与
+  `by_logname`/`by_hostname` 是否与实际认领一致 —— 这决定 #75 能不能开到 16。
+  上一波最终局数:arm A 280(166/114)+24 暖场、arm B 292(168/124)+24 暖场,两臂 **572**;本轮无在跑波次。
+  跨组:在既有 `[harness] #75` 下追评(不新开);`[harness] #33` 仍开着,不重复开。
+  详见 `iterations/reports/batch-desk/20260821T001659Z.md`。

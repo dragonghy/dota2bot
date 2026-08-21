@@ -10,6 +10,7 @@
 #   ./spot_run.sh --count 4               # 4 parallel spot farms, distinct tags+prefixes
 #   ./spot_run.sh --count 3 --ref my-exp  # each farm runs branch my-exp
 #   ./spot_run.sh --slots 12 --hours 2    # 12 slots, 2h hard watchdog
+#   ./spot_run.sh --rec-slots 16          # record a .dem on ALL 16 slots (#75)
 #   ./spot_run.sh --on-demand             # escape hatch: on-demand (no reclaim risk)
 #   ./spot_run.sh --dry-run               # print the plan, launch nothing
 #
@@ -27,6 +28,12 @@ command -v awsx >/dev/null 2>&1 && aws() { awsx "$@"; }
 COUNT=1
 REF=main
 SLOTS=14            # parallel games per instance (c6i.4xlarge = 16 vCPU)
+REC_SLOTS=1         # how many of those slots record a .dem ([harness] #75).
+                    # 1 = the long-standing default: the frame-level channel
+                    # gets 1/SLOTS of the games this wave pays for. Raise it
+                    # only on instances that are measuring the throughput cost
+                    # of SourceTV, and raise it IDENTICALLY on both arms of a
+                    # mirrored pair so the A/B comparison stays symmetric.
 HOURS=3             # watchdog hard cap (self-terminate). Outer bound: use --hours 12.
 VALIDATE=""         # "--validate 'CAND SEED1 SEED2 ... [--games N]'": after farm_start,
                     # run tools/batch_test/soak/validate_onspot.sh with these args,
@@ -44,6 +51,7 @@ while [ $# -gt 0 ]; do
         --count) COUNT=$2; shift 2 ;;
         --ref) REF=$2; shift 2 ;;
         --slots) SLOTS=$2; shift 2 ;;
+        --rec-slots) REC_SLOTS=$2; shift 2 ;;
         --hours) HOURS=$2; shift 2 ;;
         --type) INSTANCE_TYPE=$2; shift 2 ;;
         --validate) VALIDATE=$2; shift 2 ;;
@@ -114,6 +122,7 @@ sudo -u ubuntu python3 tools/batch_test/soak/gen_soak_pool.py \
 bash tools/batch_test/soak/plain_deploy.sh || true
 
 # ---- launch the soak farm -> ships each finished game to \$S3_RUN
+export SOAK_REC_SLOTS=$REC_SLOTS
 bash tools/batch_test/soak/farm_start.sh $SLOTS "\$RUN_ID"
 echo "soak farm up: \$RUN_ID ($SLOTS slots) -> \$S3_RUN"
 EOF
@@ -138,7 +147,7 @@ EOF
 }
 
 echo "plan: $COUNT x $( [ $SPOT -eq 1 ] && echo SPOT || echo on-demand ) $INSTANCE_TYPE"
-echo "  ref=$REF  slots=$SLOTS  watchdog=${HOURS}h  region=$AWS_REGION"
+echo "  ref=$REF  slots=$SLOTS  rec_slots=$REC_SLOTS  watchdog=${HOURS}h  region=$AWS_REGION"
 echo
 
 LAUNCHED=()
