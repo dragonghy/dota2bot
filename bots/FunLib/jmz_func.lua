@@ -7798,6 +7798,37 @@ end
 -- Skeleton King that this very blink culled and killed 6.1s later. A >= 1 rule
 -- vetoes that kill. The frame is pinned in
 -- tests/test_replay_260820_axe_blink_kill.lua.
+--
+-- CORPUS PRE-FLIGHT, 2026-08-21 (GH #79; hero stream; tool
+-- tools/batch_test/behavioral/axe_blink_domain.py). DO NOT ARM -- the domain is
+-- EMPTY, and structurally so, which is a stronger statement than the 2026-08-20
+-- note above. 18 Turbo games of the 04:11-04:37 wave (the one where
+-- 'axebuyblink' was armed, so Axe actually owns a dagger in 8 of them):
+--   * 11 real item_blink casts, 6 offensive / 5 retreat. The guard would have
+--     held ZERO. Binding clause is this function's last line: 5 casts landed on
+--     nobody, 6 on exactly one enemy, never two.
+--   * The loose ceiling -- drop the branch's clauses entirely and score every
+--     frame where the dagger is held and off cooldown with an enemy in
+--     (500, 1200] -- funnels 223 -> 72 (Call unavailable) -> 21 (>= 2 enemies
+--     at the projected landing) -> 0. The last step is the finding: on ALL 21
+--     of those frames Axe stood ALONE (allies within 1200 of the target,
+--     himself included: 1, every time; enemy heroes: 2 on four frames, 3 on
+--     seventeen).
+-- So the enclosing branch's own head count, `#nInRangeAlly >=
+-- nNearbyEnemyHeroCount` (ability_item_usage_generic.lua:1610), already refuses
+-- every frame this guard was written to refuse -- and refuses on a strictly
+-- weaker condition, since "two enemies within 315 of the landing point" implies
+-- "two enemy heroes within 1200 of the target". Armed and shipped are therefore
+-- end-to-end identical: the axeblink trap, in its own namesake.
+-- The code stays because it is CORRECT, not because it is pending.
+-- REVIVAL CONDITIONS (re-measure the funnel; never cite the 0/11 or the 21 -> 0
+-- once either holds): (1) that head-count clause is weakened, removed, or its
+-- 1200 ring changed; (2) Axe reliably blinks with allies in the ring -- i.e. a
+-- grouping change lands that puts a second hero within 1200 of his target.
+-- GENERAL PRIOR (cf. the wkreincarnmp write-up, which is the same shape one
+-- layer down): before arming a gate that ADDS a refusal, check whether the
+-- branch it sits in already refuses on a weaker condition. If it does, the
+-- new gate's domain is a subset of an existing veto and is empty.
 function J.ShouldHoldAxeBlinkForCall( bot, vLandLoc )
 	if not J.IsModeTurbo() then return false end
 	if not J.IsSoakCandidate( 'axeblink' ) then return false end
