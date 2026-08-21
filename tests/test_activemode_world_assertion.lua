@@ -232,9 +232,9 @@ local tests = {}
 
 tests['[world] every hero on every fixture frame answers GetActiveMode() = 0'] = function()
     local s = sweep()
-    assert(s.fixtures == 94, 'expected 94 fixtures, got ' .. s.fixtures)
-    assert(s.team_frames == 188, 'expected 188 team-frames, got ' .. s.team_frames)
-    assert(s.hero_frames == 872, 'expected 872 hero-frames, got ' .. s.hero_frames)
+    assert(s.fixtures == 96, 'expected 96 fixtures, got ' .. s.fixtures)
+    assert(s.team_frames == 192, 'expected 192 team-frames, got ' .. s.team_frames)
+    assert(s.hero_frames == 892, 'expected 892 hero-frames, got ' .. s.hero_frames)
     assert(s.mode_nonzero == 0,
         s.mode_nonzero .. ' hero-frames answered a non-zero active mode. If the loader '
         .. 'learned to carry modes this is GOOD NEWS -- but every conclusion pinned '
@@ -291,14 +291,19 @@ end
 
 tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = function()
     local s = sweep()
-    assert(s.mode_filter_ignored == 872 and s.mode_filter_honoured == 0, string.format(
+    assert(s.mode_filter_ignored == 892 and s.mode_filter_honoured == 0, string.format(
         'GetNearbyHeroes(1500,false,BOT_MODE_ATTACK) differed from the unfiltered call on '
         .. '%d hero-frames -- the filter is being honoured now', s.mode_filter_honoured))
     -- ... and that is why the one predicate on the engine-filtered path fires
     -- while all eight on the comparison path never do. One missing datum, two
     -- opposite errors.
-    assert(s.in_teamfight_1500 == 71, string.format(
-        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (71 when pinned)',
+    -- 71 -> 77 on 2026-08-21T15:xxZ: the hero stream added the two GH #86 Lion
+    -- frames (f_260820_162821_lion_drain_lethal / f_260820_182906_lion_drain_
+    -- survived), both of them mid-fight, contributing 6 TRUE readings. The
+    -- corpus grew; nothing about the world assertion moved (mode_nonzero is
+    -- still 0, the filter is still ignored on all 892 hero-frames).
+    assert(s.in_teamfight_1500 == 77, string.format(
+        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (77 when pinned)',
         s.in_teamfight_1500, s.hero_frames))
 end
 
@@ -314,9 +319,9 @@ end
 
 tests['[world] so GetTeamFightLocation only ever answers nil or the map origin'] = function()
     local s = sweep()
-    assert(s.tfl_teams_nonnil == 6, 'expected 6 non-nil team readings, got ' .. s.tfl_teams_nonnil)
-    assert(s.tfl_hero_nonnil == 30, 'expected 30 non-nil hero-frames, got ' .. s.tfl_hero_nonnil)
-    assert(s.tfl_at_origin == 30, 'expected all 30 at the origin, got ' .. s.tfl_at_origin)
+    assert(s.tfl_teams_nonnil == 8, 'expected 8 non-nil team readings, got ' .. s.tfl_teams_nonnil)
+    assert(s.tfl_hero_nonnil == 40, 'expected 40 non-nil hero-frames, got ' .. s.tfl_hero_nonnil)
+    assert(s.tfl_at_origin == 40, 'expected all 40 at the origin, got ' .. s.tfl_at_origin)
     assert(s.tfl_off_origin == 0, s.tfl_off_origin .. ' readings landed somewhere real -- '
         .. 'that would be the first true teamfight location in the archive; re-read this file')
 end

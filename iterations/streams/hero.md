@@ -322,7 +322,28 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **另案、故意没碰**:选树用 `GetNearbyTrees(1200)`,1200 不是施法距离 ⇒ 可能走一段路去够树。
     那是「残血掰树」唯一可能真有的代价,但它在**任何血量**上都存在,已写进代码注释。
 
-16. **GH #86(录像组 12:39Z):`liondrainstop` 登记的「跨度 >= 2.0s」筛子与目标类反相关**
+16. ~~**GH #86(录像组 12:39Z):`liondrainstop` 登记的「跨度 >= 2.0s」筛子与目标类反相关**~~
+    **2026-08-21T16:00Z done —— 总监 15:02Z 批准、由本组一次性执行,两条约束都落地,issue 已关。**
+    新登记 `state.json:liondrainstop_detector_20260821`(主判据 = **post-domain residual**,
+    判读约束 effect >= 2.0s 或 >= 12 个两臂种子配对,本底 mean 1.91 / median 1.6 / sd 1.66 / n=64 明确标注
+    「录像组量的、本组未重量」);旧登记行**降级不删**(`U0_PURPOSE_VOIDED_20260820.
+    liondrainstop_SUPERSEDED_20260821T1500Z`)。**口径不只是写在 json 里**:residual 已在
+    `lion_drain_census.py` 实现(`--verify` 18→**25**,新增的那条正是「span 1.2s、旧筛子丢掉、新判据保留」)。
+    钉帧交付 `tests/test_replay_260820_lion_drain_stop_pair.lua`(13 例)+ 两个真实帧 fixture:
+    **A `20260820_162821_slot1` t=307.4 必释放**(1.0s 频道,Lion 607/736 = 82.5%、luna 353u,1.5s 后被 luna 打死)/
+    **B `20260820_182906_slot1` t=606.5 必不释放**(5.0s 频道,Lion 603/977 = 61.7%、luna 178u 但只剩 32% 血、
+    两个队友在 128/263u,luna 3.1s 后被 OD 打死、Lion 整局再没死)。
+    **两帧的 drain modifier 都在目标身上、是真实帧数据**(唯一 mutation 是 `IsChanneling()`)⇒ 比旧那对干净。
+    **钉出来的东西**:谓词读的每一项在两帧上**逐项相同**(2s 伤害 true/true;500u 环内**都恰好 1 个、
+    都是 luna**;都在读条)⇒ HIGH/HIGH = 一真一假,**任何 retune 半径或窗口都改不了**;
+    而「显然的收窄」**方向是反的**(必释放的那帧 82.5% 血 > 必不释放的 61.7%,绝对血量 607 vs 603 差 4 点),
+    测试在整个阈值区间上机器验证「任何单调 HP 地板压住假阳性就先压住真阳性」。
+    **能分开两帧的两个轴只登记不实现**(环内敌人血 70% vs 32%;1200 内队友 1 vs 2),写成 tripwire。
+    **零行为改动**(`hero_lion.lua` diff 为空)、零新 gated id;`liondrainstop` 仍 gated / NOT-YET-EXECUTED。
+    **本轮最该被别的组拿走的一条**:**「一对结局相反的帧」只能钉住它们不同的那一维,而那一维通常正是
+    谓词读不到的那一维** —— 第一稿 13 例在「删掉整条伤害子句」下**全绿**(两帧在半径子句上一致),
+    补了两条**单帧子句隔离**用例才抓住。这类对照**必须配子句隔离用例**。已在报告 §8.3 请总监收进 §AD 旁。
+    原始记录:
     (196 局普查,筛掉的 24 条短频道里 12 条以 Lion 被打死收场 vs 保留的 40 条里 6 条,Fisher p=0.0040;
     机制:Lion 死 ⇒ 频道随之消失 ⇒ 天然短)。本组**同意读数**,但登记口径
     (`state.json:liondrainstop_detector_20260820`)的修改权在总监。**下一轮若无新 issue 做这一条**:
@@ -332,6 +353,60 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     并把「**现谓词分不开这两帧**」本身钉成断言(门里没有任何 HP 项)。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T16:00:00Z:**认领本轮唯一有明确指派的 `[hero]` 活:GH #86 上总监 15:02Z 的裁定
+  「批准,由英雄组一次性执行」。两条约束都落地,issue 已由本组关闭。**
+  **零 EC2、零 S3 PUT**(2 个 `.dem` ≈20MB + 2 个 analysis.json 的 GET,dumper 缓存命中)、
+  **零新 gated id、零行为改动**(`hero_lion.lua` 本轮 diff 为空)。全链路自己做约 40 分钟。
+  **约束一(换口径,旧行降级不删)**:新键 `liondrainstop_detector_20260821`,主判据 =
+  **post-domain residual**(频道自然结束 − 首个域内时刻,定义在**全部**域内频道上,**不带 span 筛子**
+  ⇒ 不带共因偏置;连续量 ⇒ 按种子配对有分辨率)。判读约束照抄 #86 §5:**effect >= 2.0s 或 >= 12 个
+  两臂种子配对**才算 (a),~1s 不算(门全关本底自己就读 **−0.98s**, t=−1.80)。本底
+  **mean 1.91 / median 1.6 / sd 1.66 / n=64** 明确标注「录像组 196 局量的、本组未重量」,
+  并带走语料警告(**172/196 局是 7 月的树**)。旧行原文一字未动,降级说明写在
+  `U0_PURPOSE_VOIDED_20260820.liondrainstop_SUPERSEDED_20260821T1500Z`。
+  **口径不只是登记,已实现**:`lion_drain_census.py` 新增 `ch["residual"]`(域外是 `None` 而**不是 0.0**
+  —— 0.0 会被读成「门没东西可切」)+ `residual_stats()`,输出行先打 RESIDUAL、把 `span>=2.0s`/`resolvable`
+  标成 `[superseded: …]` 并在表头表尾各打一行说明;`--verify` **18→25**,新增的最后一条正是这次改动的意义:
+  手工造一条 **span 1.2s、立刻入域**的频道,旧筛子丢掉它、新判据保留且 `residual == 1.2`。
+  **约束二(钉帧)**:`tests/test_replay_260820_lion_drain_stop_pair.lua`(**13 例**)+ 两个新 fixture(带 `--roles`):
+  **A `f_260820_162821_lion_drain_lethal`(t=307.4)必释放** —— 1.0s 频道(旧筛子丢掉的那一类),
+  Lion **607/736 = 82.5%** 生根不动,luna **353u**,2s 内挨 200 英雄伤害,**t=308.9 被 luna 打死**(1.5s 后);
+  **B `f_260820_182906_lion_drain_survived`(t=606.5)必不释放** —— 5.0s 频道(旧筛子保留的那一类),
+  Lion **603/977 = 61.7%**,luna **178u 但只剩 32% 血**、队友 OD 128u / necrolyte 263u,
+  **luna t=609.6 被 OD 打死**、Lion 血在 609.5 回升、频道跑满、**整局再没死过**。
+  两帧的 `modifier_lion_mana_drain` **都在真实目标身上**(A luna elapsed 0.2s / B CM elapsed 0.7s)⇒
+  `IsAbilityEChanneling` 跑在录像上,**唯一 mutation 是 `IsChanneling()`** —— 比旧那对(帧 B 目标是野怪、
+  `IsAbilityEChanneling` 直接为假)少一个混杂项。
+  **⭐ 钉出来的东西 = 门在这两帧上输入逐项相同**:`WasRecentlyDamagedByAnyHero(2.0)` true/true;
+  `J.GetNearbyHeroes(bot,500,…)` **都恰好 1 个,而且都是 luna**;`IsAbilityEChanneling` true/true
+  ⇒ **HIGH/HIGH**(一真阳一假阳),**任何对 `X.nEDrainDangerRadius` 或 2.0s 窗口的 retune 都改不了**。
+  **而且那个「显然的收窄」方向是反的**:必释放的那帧 **82.5%** 血 > 必不释放的 **61.7%**,
+  绝对血量 **607 vs 603(差 4 点)**;测试**在整个阈值区间上机器验证**「任何单调 HP 地板只要压住假阳性,
+  就一定先压住真阳性」。**能分开两帧的两个轴只登记不实现**(n=2 定不了阈值):环内敌人血 **70% vs 32%**、
+  1200 内队友 **1 vs 2**,两条都写成 tripwire。
+  **变异 6 次 6 抓,其中 M2 抓的是我自己第一稿的洞**:删掉整条伤害子句时 13 例**全绿** ——
+  因为两帧在**半径子句上一致**。⇒ **可复用教训:「一对结局相反的帧」只能钉住它们不同的那一维,
+  而那一维通常正是谓词读不到的那一维;这类对照必须额外配单帧的子句隔离用例。** 补了两条后 M2 变红。
+  **M4**(装上 `hp/maxhp > 0.70` 地板)**3 例红**:源码 tripwire + **帧 A 翻转** ⇒ 「HP 极性是反的」
+  从说理变成一次红测试(与上轮 #88 的 M1/M2 同族)。
+  **顺带撞动三条别组的普查绊线,全部重量、结论一条没变**(是语料变大,不是世界变了,已在改动点注明):
+  `test_activemode_world_assertion` 94→**96** fixtures / 188→192 team-frames / 872→**892** hero-frames /
+  `IsInTeamFight(1500)` 71→**77** / `GetTeamFightLocation` 非 nil 6→8 队、30→**40** 帧(**仍全在原点**,
+  `mode_nonzero` 仍 **0**);`test_level_gate_census` **94/67/940 → 96/69/960**,
+  `>=15/>=18/>=20` 与最高等级**一个都没动**(新帧最高 8 级)⇒ GH #84 §1 不受影响。
+  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **971/971 绿**(clean-stash 本底 **958**,+13),
+  `tests/run_py_tests.sh` **5/5**,`lion_drain_census.py --verify` **25 asserts OK**。
+  **给总监**:①GH #86 **已由本组关闭**(裁定原文如此);②**无新 gated id**,等门仍是
+  `liondrain`/`liondrainstop`/`zusultx` + 已获批但无语料的 `odaoe`;`liondrainstop` 状态不变
+  (gated / eligible / **NOT-YET-EXECUTED**);③**请裁定一条通用的**:上面那条「对照帧必须配子句隔离用例」
+  建议进 §AD 旁;④**未提 queue.json**,但登记里已写死买 (a) 的尺寸(0.327 域内频道/局 ⇒ 每臂 **~31 局**
+  Lion 局买 10 条;Lion 占 24/112 种子 × 每波 16 槽 ⇒ **单波买不到**,上机波必须选含 Lion 的种子,
+  且与 `liondrain` **不同臂**);⑤本组仍未动 #63(等重锚后的 `cmrguard_precision.py`)。
+  报告:`iterations/reports/hero/20260821T160000Z.md`。
+  **下一次触发**:①若下一波 armed 含 `odaoe` ⇒ 做它的 (a) 执行核验(先确认采样间隔);
+  ②否则 **`liondrain` 的上机前语料核验**(等门里唯一还没核验过的 Lion 杠杆,且与本轮 residual 判据共用同一套工具);
+  ③再往后 `zusultx`;④#63 等重锚读数。
+
 - 2026-08-21T14:00:00Z:**认领本轮新开的 `[hero]` GH #88**(总监 13:03Z 从 #87 普查里分出的第二个站点:
   `hero_tiny.lua:522` 的 `bot:GetHealth() > 0.15` 恒真)。指示是「先量域再改」;**量完的答案是:
   域这个问题问不出来 —— 载体在结构上够不到。处置 = 删掉那条子句(可证行为等价),不做那个「显然的修复」。**

@@ -389,14 +389,18 @@ end
 -- ---------------------------------------------------------------------------
 -- 3. The real-frame side.  These are the measurements the verdicts rest on.
 
-tests['[corpus] 94 fixtures / 67 games / 940 hero-slots: level >= 20 is 0'] = function()
+-- 94/67/940 -> 96/69/960 on 2026-08-21T15:xxZ: the hero stream added the two
+-- GH #86 Lion frames (two new games, 20 new hero-slots, max level 8). Every
+-- headline below is unchanged -- the corpus grew at the low end, so the
+-- level>=15/18/20 counts and the archive high-water mark do not move.
+tests['[corpus] 96 fixtures / 69 games / 960 hero-slots: level >= 20 is 0'] = function()
     local c = scan_corpus()
     local games = 0
     for _ in pairs(c.games) do games = games + 1 end
-    assert(c.fixtures == 94, 'fixture count moved to ' .. c.fixtures
+    assert(c.fixtures == 96, 'fixture count moved to ' .. c.fixtures
         .. ' -- re-run tools/agent/fixture_level_census.py and re-read GH #84 §1')
-    assert(games == 67, 'distinct games moved to ' .. games)
-    assert(c.slots == 940, 'hero-slots moved to ' .. c.slots)
+    assert(games == 69, 'distinct games moved to ' .. games)
+    assert(c.slots == 960, 'hero-slots moved to ' .. c.slots)
     assert(c.ge20 == 0, c.ge20 .. ' hero-slot(s) now reach level 20 -- the four INERT '
         .. 'verdicts above were argued from "that hero does not exist"; re-read them')
     assert(c.max_level == 19, 'archive high-water level moved to ' .. c.max_level)
