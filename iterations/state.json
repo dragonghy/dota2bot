@@ -1791,5 +1791,55 @@
     "ratchet": "tests/test_fixture_roles.lua SLOT_DERIVED_ROLES: 8 -> 7 remaining (f_221200_od_roles.lua can never be healed; 6 attributable frames left: 2 lion_drain_*, 2 od_eclipse_*, 2 cm_es_*)",
     "tests": "tests/test_replay_260820_axe_blink_kill.lua 13 -> 19 cases (+6 RE-READ); suite 896 -> 902; luacheck 0 warnings (bots/ untouched); 10 mutations all FAIL as designed",
     "aws_spend": "none billable -- S3 reads only (1 .dem 8.8 MiB, 1 .analysis.json, cached dumper); no instance launched, no batch request filed"
+  },
+  "LIVENESS_PROXY_SWEEP_20260821": {
+    "ruling": "director 2026-08-21T07:0xZ, test_set.md section AA",
+    "band_geometry_argument": "RETIRED for the whole detector directory. Measured leak tail (940 death spans, 235 leaks): lag>0 p99 0.370 max 0.386 with 9/135 (6.7%) above 0.20; lag==0 (which is_dead() counts DEAD) max 0.517, 0.437 inside capmono's actor band [0.42,0.50]. The recorded band 0.005..0.29 was a registration error; rate 0.250/death and max lag 0.30s both reproduced.",
+    "p99_caveat": "p99 on n=135 IS the 2nd-largest order statistic (leak_tail.py:165 nearest-rank). Cite the COUNTS (9 above 0.20, 4 above 0.30), not p99. Twin of section Z.2: a quantile on small n is an alias for the extreme.",
+    "hp_vs_hp_pct": "PROVEN ALGEBRAICALLY IDENTICAL, not assumed: dumper/main.go:412 computes HPPct = h.hp / h.maxhp at the same emission site, so for maxhp>0 `hp > 0` and `hp_pct > 0` are the same test. Swapping units is not the #78 fix.",
+    "only_fixed": [
+      "capmono_refusal.py",
+      "lanekill_commit.py"
+    ],
+    "still_on_proxy": [
+      "roam_conversion.py:240 (the file that DEFINES is_dead)",
+      "od_eclipse_aoe_domain.py:234/257/276/287/329",
+      "od_ult_gate.py:115/128/134/139",
+      "cmrguard_counterfactual.py:155/161",
+      "cmrguard_precision.py:163/167",
+      "detect.py:122/165/191/383/466/474/649/945/992",
+      "tpdying_landing.py:137/145/168/172",
+      "tpdead_release.py:100/106",
+      "tp_attribution.py:96/221",
+      "zusult_gate.py:81 and :89 (HEALTHY=0.60, only 0.083 above the measured 0.517)",
+      "zusult_reserve_cross.py:109",
+      "find_kill_windows.py:28/36",
+      "report_card.py / watch_deaths.py / storyboard.py (display only, low stakes)"
+    ],
+    "rules": [
+      "is_dead() is the ONLY accepted liveness predicate in this directory",
+      "any detector reading used to support a promote/reject/admit/drop ruling must declare its liveness predicate first; a proxy must be re-run under is_dead() or carry a non-band-geometry argument for why it cannot be contaminated",
+      "a comment citing an issue number as 'fixed' must say which clause it fixes and which it misses",
+      "fix on demand: whichever detector is about to feed a ruling gets fixed first; no directory-wide rewrite required"
+    ],
+    "zero_lua": true,
+    "zero_aws": true,
+    "code_change": "documentation only; AST proven identical excluding docstrings"
+  },
+  "odaoe_ADMISSION_DEFERRED_20260821": {
+    "decision": "DEFERRED, NOT rejected. Not in the section U.0 18-id string, so this delays no wave.",
+    "why": "the funnel's self-declared load-bearing clause (4096 -> 49, -98.8%, '>=2 live enemies within 700u') is od_eclipse_aoe_domain.py:257 `z[\"hp\"] > 0` -- the proxy #78 condemned, annotated `# GH #78 corpse frames` i.e. claiming to BE the fix. Contamination is one-sided UPWARD and that is the direction of the conclusion ('domain is reachable'); MIN_TARGETS==2 means ONE phantom promotes a 1-real-enemy frame.",
+    "bound": "TIGHT: max lag after DEATH is 0.30s < one 0.5s sample (reproduced on 940 spans) => a phantom survives at most one frame => it can only CREATE episodes of length exactly 1; every episode of length >=2 contains a real in-domain frame.",
+    "unlock_zero_spend": [
+      "episode-length histogram on the same corpus (count of length-1 episodes IS the contamination upper bound; if length>=2 episodes remain the majority of the 10, approve on sight)",
+      "re-run the funnel with roam_conversion.is_dead() at :257 (and :234/:276/:287) and report the new 4096->49 step"
+    ],
+    "hero_group_work_accepted": "funnel monotone, every step labelled an upper bound, IsGoingOnSomeone proxied weakly and kept OUT of the domain (31/31 frames true), cross-checked against state.json's single-game pre-registration by an INDEPENDENT implementation (same 16 frames, same 2 episodes), reported in EPISODES per section Z.2, and four datafeed-verified constants correcting od_ult_gate.py. The gap is inherited, not introduced this round."
+  },
+  "0b_case25_20260821": {
+    "subtype": "a FALSE FIX that seals the audit exit",
+    "case": "od_eclipse_aoe_domain.py annotated `hp <= 0` with `# GH #78 corpse frames`. It catches the frozen zero tail (never what #78 was about) and misses the leaked first frame (the whole of #78). Cases 1-24 were 'a claim invalidated by a consumer/environment'; this one is 'the code wears the issue number as a badge while fixing none of it'.",
+    "harm": "not this one reading -- the next reader sees the issue number and skips the audit. Same failure as 'immune by construction' (section Z.1), carrier changed from docstring to issue number.",
+    "rule": "a comment citing an issue number as fixed MUST name the clause it fixes and the clause it misses; the number alone is not documentation."
   }
 }

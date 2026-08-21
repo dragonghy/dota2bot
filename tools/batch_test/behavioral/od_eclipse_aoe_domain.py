@@ -49,6 +49,29 @@ HONEST BOUNDARIES -- every count below is an UPPER bound on the true domain:
     for dead heroes with state frozen at the instant of death, so an unfiltered
     frame counter turns one death into dozens of in-domain frames (GH #78; this
     stream hit the same thing in wk_reincarn_domain.py and axe_blink_domain.py).
+
+    DIRECTOR CORRECTION 2026-08-21T07:0xZ (test_set.md section AA): `hp <= 0`
+    IS NOT THE #78 FIX -- IT IS THE PROXY #78 CONDEMNED, IN OTHER UNITS.
+    #78 is not about the bulk of the corpse tail (that reads exactly 0); it is
+    about the FIRST snapshot at/after the DEATH event, which still carries the
+    last LIVE sample.  Swapping `hp_pct > 0` for `hp > 0` changes nothing:
+    dumper/main.go:412 computes `HPPct = h.hp / h.maxhp` from the same `h.hp`
+    at emission, so for maxhp > 0 the two tests are ALGEBRAICALLY IDENTICAL.
+    Every leak `leak_tail.py` measured (235 leaks / 940 death spans, values up
+    to hp_pct 0.517) is simultaneously a corpse frame reading `hp > 0` here.
+    The real fix is `roam_conversion.is_dead()` (DEATH event -> revival spans),
+    which only capmono_refusal.py and lanekill_commit.py currently call.
+    CONSEQUENCE FOR THIS SCRIPT'S NUMBERS, both one-sided upward:
+      (i)  a dead enemy can still satisfy the load-bearing `>= MIN_TARGETS
+           enemies inside CAST_RANGE` clause -- and because the threshold is 2,
+           ONE phantom promotes a 1-real-enemy frame into the domain;
+      (ii) OD's own leaked frame survives the skip above with ult/mana state
+           frozen live, adding spurious `frames_alive` / `ready` frames.
+    BOUND, from the measured lag: max lag after DEATH is 0.30s over 940 spans
+    (reproduced twice), i.e. STRICTLY LESS THAN ONE 0.5s SAMPLE.  So a phantom
+    survives at most one frame and can only CREATE episodes of length exactly
+    1; every episode of length >= 2 contains a real in-domain frame.  Report
+    the episode-length histogram and the contamination is bounded on sight.
   * Post-game frozen snapshots are cut at the last event (GH #43).
   * Illusions carry the same class name as their owner; the real entity is
     locked as the longest-lived (name, idx) and illusion entities are dropped
@@ -206,7 +229,9 @@ def scan_game(tl_path):
          "died_with_ready": 0, "samples": []}
 
     for s in by_ent[od_key]:
-        if s["hp"] <= 0:                          # GH #78 corpse frames
+        # NOT the #78 fix -- same proxy, other units (header, section AA).
+        # Catches the frozen zero tail; misses the leaked first frame.
+        if s["hp"] <= 0:
             continue
         g["frames_alive"] += 1
         ult = next((a for a in s["abilities"] if a["name"] == ULT), None)
@@ -222,6 +247,12 @@ def scan_game(tl_path):
 
         base, radius = BASE_DAMAGE[lvl], RADIUS[lvl]
         frame = by_t.get(round(s["t"], 1), [])
+        # LOAD-BEARING CLAUSE (4096 -> 49 on the 2026-08-19 22:xx corpus) and
+        # the one contaminated by #78: `z["hp"] > 0` is the condemned proxy, so
+        # a just-killed enemy can still be counted here for one frame.  With
+        # MIN_TARGETS == 2 a single phantom is enough to promote a frame.
+        # Replace with roam_conversion.is_dead() before this funnel is used to
+        # approve an id (test_set.md section AA).
         enemies = [z for z in frame
                    if teams.get(z["hero"]) == foe and z["hp"] > 0
                    and (z["hero"], z["idx"]) in real_idx

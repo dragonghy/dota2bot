@@ -108,7 +108,11 @@ def scan_game(tl_path, armed_side, base_override, mult, cast_range, dedup):
 
     episodes, last = [], -1e9
     for s in by_ent[od_key]:
-        if s["hp_pct"] <= 0:                      # corpse frame
+        # Frozen-zero tail only.  The #78 LEAK (first snapshot at/after DEATH,
+        # still carrying the last live sample) passes this test, here and at
+        # the three `z["hp_pct"] > 0` enemy/ally filters below.  This detector
+        # does not call roam_conversion.is_dead(); see test_set.md section AA.
+        if s["hp_pct"] <= 0:
             continue
         ult = next((a for a in s["abilities"] if a["name"] == ULT), None)
         if not ult or ult["level"] < 1 or ult["cd"] > 0:
