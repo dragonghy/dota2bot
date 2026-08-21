@@ -261,6 +261,38 @@ bash /opt/dota2bot/tools/batch_test/behavioral/batch_s3.sh
 Locally you can run just the detector against a downloaded timeline:
 `python3 detect.py timeline.json --json findings.json`.
 
+### Which prefix a corpus comes from ([harness] #95 — read before fetching by filename)
+
+**Never resolve a named game against the flat `replays/` prefix. Take it from
+`soak/<run>/`.** Every instance of a wave records its own slot 1, so two games
+that start in the same second used to mint the same `replays/<TAG>.dem` key and
+the second upload simply won. The loser is not missing in a way you would
+notice: the surviving file is a whole, dumpable, ordinary-looking replay **of
+another match**, so a lookup by filename is answered wrongly and silently.
+Measured 2026-08-21: **21 of 991** flat keys are such a pair, including the
+frame GH #59 was filed on.
+
+Two corollaries that cost a group a near-miss each:
+
+* **The flat prefix cannot detect its own collisions.** The loser is not there,
+  so the surviving names are always distinct — "I checked, the timestamps
+  differ" is uninformative. The check has to run against `soak/`, where both
+  games are kept: `python3 soak/dem_inventory.py --soak … --replays …` prints
+  the offending keys, which run each one really holds, and which runs a lookup
+  by that name can never return.
+* **Aggregate sweeps are fine; named lookups are not.** A corpus glob such as
+  `replays/20260820_10*` still yields that many real Turbo games, so a domain
+  scan over it stands. What does not stand is "this file is game X of run Y" —
+  its per-game metadata (seed, side, candidate string) may belong to the other
+  match. `sweep_run.sh` is unaffected: it reads `.dem` and `.analysis.json`
+  from the same `soak/<run>/` prefix.
+
+Keys minted after the fix carry the run id (`<TAG>__<run>.dem`, see
+`dem_claim.sh:dem_flat_key`), so they cannot collide and they finally say which
+run they came from. Historical keys are left as they are; each is repairable
+offline because its size matches exactly one of its `soak/` namesakes (21/21 at
+the time of measurement, and `dem_inventory.py` flags any that is not).
+
 ## Running it across ALL farm games (integration TODO)
 
 The pipeline is proven end-to-end on a real game. The one missing piece is that

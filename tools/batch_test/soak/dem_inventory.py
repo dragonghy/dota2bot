@@ -89,6 +89,80 @@ def invert_index(index):
     return by_run
 
 
+def flat_name_parts(key):
+    """`replays/<TAG>__<run>.dem` -> (TAG, run); `replays/<TAG>.dem` -> (TAG, None).
+
+    The run suffix is what dem_claim.sh:dem_flat_key started writing after
+    [harness] #95; keys minted before it have no suffix and are the ones that
+    can be ambiguous.
+    """
+    base = key.rsplit("/", 1)[-1]
+    if base.endswith(".dem"):
+        base = base[: -len(".dem")]
+    tag, sep, run = base.partition("__")
+    return (tag, run if sep else None)
+
+
+def flat_collisions(soak_rows, replay_rows):
+    """Which flat `replays/` keys cannot say which match they hold ([harness] #95).
+
+    Two instances of one wave both record their own slot 1, so two games that
+    start in the same second produce the same `replays/<TAG>.dem` key and the
+    second PUT wins -- silently, with a whole and dumpable replay of the other
+    match. The evidence of that is NOT visible in the flat prefix (the loser is
+    simply not there, and the survivors' names are all distinct, which is what
+    makes "I checked, the timestamps differ" uninformative). It is visible in
+    `soak/`, where both games are kept under their own run: a collision is a
+    basename held by more than one run.
+
+    Returns one record per colliding basename, with the flat copy joined by
+    SIZE so a historical key can still be repaired offline -- `winner` is the
+    run whose game the flat key actually holds, `losers` are the runs whose
+    games a lookup by that filename will never return.
+    """
+    by_base = defaultdict(list)
+    for _date, size, key in soak_rows:
+        if not key.endswith(".dem") or "/unattributed/" in key:
+            continue
+        run = run_of(key)
+        if run is None:
+            continue
+        by_base[key.rsplit("/", 1)[-1]].append({"run": run, "size": size, "key": key})
+
+    flat_by_tag = {}
+    suffixed = 0
+    for _date, size, key in replay_rows:
+        if not key.endswith(".dem"):
+            continue
+        tag, run = flat_name_parts(key)
+        if run is not None:
+            suffixed += 1
+            continue  # collision-proof by construction; nothing to disambiguate
+        flat_by_tag[tag + ".dem"] = size
+
+    out = []
+    for base, copies in sorted(by_base.items()):
+        if len(copies) < 2:
+            continue
+        flat_size = flat_by_tag.get(base)
+        matches = [c["run"] for c in copies if c["size"] == flat_size]
+        winner = matches[0] if len(matches) == 1 else None
+        out.append(
+            {
+                "basename": base,
+                "copies": len(copies),
+                "runs": sorted(c["run"] for c in copies),
+                "flat_size": flat_size,
+                "winner": winner,
+                "losers": sorted(c["run"] for c in copies if c["run"] != winner) if winner else [],
+                # No flat copy at all, or two same-size namesakes: the flat key
+                # cannot be repaired by size and needs a dump to identify.
+                "resolvable": winner is not None,
+            }
+        )
+    return {"collisions": out, "flat_suffixed": suffixed, "flat_legacy": len(flat_by_tag)}
+
+
 def build(soak_rows, replay_rows, dem21_rows, index):
     by_run = defaultdict(
         lambda: {
@@ -128,9 +202,16 @@ def build(soak_rows, replay_rows, dem21_rows, index):
     replay_count = sum(1 for _d, _s, k in replay_rows if k.endswith(".dem"))
 
     runs_with_dem = {r: v for r, v in by_run.items() if v["dem_count"]}
+    coll = flat_collisions(soak_rows, replay_rows)
     return {
         "runs": by_run,
+        "flat_collisions": coll,
         "totals": {
+            "flat_collision_count": len(coll["collisions"]),
+            "flat_collision_unresolvable": sum(
+                1 for c in coll["collisions"] if not c["resolvable"]
+            ),
+            "flat_suffixed_count": coll["flat_suffixed"],
             "runs_total": len(by_run),
             "runs_with_dem": len(runs_with_dem),
             "soak_dem_count": sum(v["dem_count"] for v in by_run.values()),
@@ -177,6 +258,36 @@ def render(inv, min_gb=0.0, top=None):
             t["soak_archive_bytes"] / GB * USD_PER_GB_MONTH,
         )
     )
+    out.append("")
+    # [harness] #95. Printed unconditionally, including the zero, because the
+    # number a reader needs is "how many of these keys lie", and a section that
+    # only appears when it is non-zero reads as absence of the check.
+    coll = inv.get("flat_collisions") or {"collisions": [], "flat_suffixed": 0}
+    rows_c = coll["collisions"]
+    out.append(
+        "flat replays/ keys that hold a DIFFERENT match than their name says: %d "
+        "(%d unrepairable) | %d keys already carry a run suffix"
+        % (
+            len(rows_c),
+            sum(1 for c in rows_c if not c["resolvable"]),
+            coll["flat_suffixed"],
+        )
+    )
+    if rows_c:
+        out.append(
+            "  a lookup by these filenames is answered with the WINNER's game; "
+            "take the corpus from soak/<run>/ instead:"
+        )
+        out.append("  %-30s %-52s %s" % ("basename", "flat copy actually is", "never returned"))
+        for c in rows_c:
+            out.append(
+                "  %-30s %-52s %s"
+                % (
+                    c["basename"],
+                    c["winner"] or "UNREPAIRABLE (size matches %d copies)" % c["copies"],
+                    ",".join(c["losers"]) or "-",
+                )
+            )
     out.append("")
     out.append(
         "retirable units (soak/<run>/**.dem), heaviest first; "
@@ -267,6 +378,51 @@ def _verify():
         inv["totals"]["soak_dem_count"],
         inv["runs"]["run_A"]["dem_count"] + inv["runs"]["run_B"]["dem_count"],
     )
+
+    # [harness] #95: the flat mirror's name collisions.
+    ok("flat_name_parts legacy key", flat_name_parts("replays/20260820_042607_slot1.dem"),
+       ("20260820_042607_slot1", None))
+    ok("flat_name_parts suffixed key",
+       flat_name_parts("replays/20260820_042607_slot1__spot_20260820_041132_1_abc.dem"),
+       ("20260820_042607_slot1", "spot_20260820_041132_1_abc"))
+
+    coll_soak = [
+        ("2026-08-20", 111, "soak/run_A/20260820_042607_slot1.dem"),
+        ("2026-08-20", 222, "soak/run_B/20260820_042607_slot1.dem"),
+        ("2026-08-20", 333, "soak/run_A/20260820_050000_slot1.dem"),
+        # equal sizes under two runs: no size join, so it stays UNREPAIRABLE
+        ("2026-08-20", 444, "soak/run_A/20260820_060000_slot1.dem"),
+        ("2026-08-20", 444, "soak/run_B/20260820_060000_slot1.dem"),
+        # an unattributed copy is not a second recording of the same game
+        ("2026-08-20", 999, "soak/run_B/unattributed/20260820_050000_slot1.dem"),
+    ]
+    coll_flat = [
+        ("2026-08-20", 222, "replays/20260820_042607_slot1.dem"),
+        ("2026-08-20", 333, "replays/20260820_050000_slot1.dem"),
+        ("2026-08-20", 444, "replays/20260820_060000_slot1.dem"),
+        ("2026-08-20", 555, "replays/20260820_070000_slot1__run_A.dem"),
+    ]
+    c = flat_collisions(coll_soak, coll_flat)
+    ok("only names held by >1 run are collisions", [x["basename"] for x in c["collisions"]],
+       ["20260820_042607_slot1.dem", "20260820_060000_slot1.dem"])
+    ok("winner is the run whose size the flat copy has", c["collisions"][0]["winner"], "run_B")
+    ok("loser is the run a filename lookup can never return", c["collisions"][0]["losers"], ["run_A"])
+    ok("same-size namesakes are not repairable by size", c["collisions"][1]["resolvable"], False)
+    ok("unrepairable rows name no winner", c["collisions"][1]["winner"], None)
+    ok("suffixed keys are counted, not disambiguated", c["flat_suffixed"], 1)
+    ok("suffixed keys stay out of the legacy pool", c["flat_legacy"], 3)
+    ok("unattributed copy did not invent a collision",
+       any(x["basename"] == "20260820_050000_slot1.dem" for x in c["collisions"]), False)
+
+    coll_inv = build(coll_soak, coll_flat, [], {})
+    ok("collision count reaches totals", coll_inv["totals"]["flat_collision_count"], 2)
+    ok("unrepairable count reaches totals", coll_inv["totals"]["flat_collision_unresolvable"], 1)
+    coll_text = render(coll_inv)
+    ok("render names the loser run", "run_A" in coll_text, True)
+    ok("render says a lookup is answered with the wrong match",
+       "DIFFERENT match" in coll_text, True)
+    ok("render prints the zero rather than hiding the check",
+       "DIFFERENT match than their name says: 0" in render(build(rows, [], [], index)), True)
 
     text = render(inv)
     ok("render mentions run_A", "run_A" in text, True)

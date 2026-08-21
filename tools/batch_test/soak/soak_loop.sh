@@ -161,8 +161,18 @@ while true; do
             # The flat replays/ mirror is the owner-review + behavioral-sweep
             # entry point. Keep it for slot 1 only: at 16 recorders a second
             # copy of every game is ~6 GB/wave of duplicate storage.
-            [ "$SLOT" = "1" ] && \
-                aws s3 cp "$MINE" "s3://dota2bot-batch-results-4924/replays/$TAG.dem" --quiet
+            # The key carries this run's id because $TAG alone collides across
+            # the concurrent instances of one wave, and the loser is not lost
+            # loudly -- it is answered with the winner's match ([harness] #95,
+            # dem_flat_key). No run id, no mirror: see dem_flat_key.
+            if [ "$SLOT" = "1" ]; then
+                FLAT=$(dem_flat_key "$TAG" "$S3_PREFIX")
+                if [ -n "$FLAT" ]; then
+                    aws s3 cp "$MINE" "s3://dota2bot-batch-results-4924/replays/$FLAT" --quiet
+                else
+                    echo "slot$SLOT: no run id in '$S3_PREFIX' — flat replays/ mirror skipped" >&2
+                fi
+            fi
         fi
         rm -f "$MINE" "$CLAIM"
         # Single recorder: the pool is ours, wipe it as before #75.

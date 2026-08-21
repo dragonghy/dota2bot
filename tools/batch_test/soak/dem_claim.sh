@@ -59,6 +59,41 @@ dem_bulk_prefix() {
     printf 's3://%s/dem21/%s' "${nos%%/*}" "$run"
 }
 
+# dem_flat_key <tag> <s3_prefix>  -- basename of the flat `replays/` mirror.
+#
+# Why the run id is in the name ([harness] #95). $TAG is `<HHMMSS stamp>_slot1`
+# and every instance of a wave records its own slot 1, so two instances that
+# start a game in the SAME SECOND write the same key -- and S3 has no collision:
+# the second PUT simply wins. 21 of the 991 flat keys are such a pair (measured
+# 2026-08-21 by grouping soak/**.dem by basename), including the frame GH #59
+# was filed on. The failure mode is the worst one this project has: the flat
+# copy is a whole, dumpable, normal-looking replay OF A DIFFERENT MATCH, so a
+# lookup by filename is answered wrongly and quietly. That is the same doctrine
+# this file already states for the claim itself -- a .dem attributed to the
+# wrong game is strictly worse than no .dem -- applied one level up, to the key.
+#
+# The run id is appended rather than prefixed so `replays/<date>_<time>*` globs
+# (how every existing corpus is selected) keep working unchanged, and so the
+# flat mirror finally says which run it came from. Historical keys are left
+# alone; they are repairable offline, since each flat copy's SIZE matches
+# exactly one of its soak/ namesakes (21/21 resolvable, same measurement).
+#
+# No run id => empty output => the caller writes NO mirror. Falling back to the
+# bare $TAG would silently re-create the collision this function exists to
+# remove, and an absent mirror is missing evidence while a colliding one is
+# wrong evidence (dem_claim's "no claim => no upload", same reason).
+dem_flat_key() {
+    local tag="$1" prefix="${2:-}" nos run
+    nos=${prefix#s3://}          # bucket/soak/<run>
+    nos=${nos%/}
+    run=${nos#*/}                # soak/<run>
+    run=${run#soak/}             # <run>
+    case "$run" in
+        ''|*/*|"$nos") return ;; # no recognisable single run id -- say nothing
+    esac
+    printf '%s__%s.dem' "$tag" "$run"
+}
+
 # _dem_json_str <s>  -- minimal JSON string escaping (paths + method names only)
 _dem_json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
 

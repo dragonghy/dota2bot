@@ -155,6 +155,40 @@ ok "soak_loop reaps into DEM_PREFIX" \
 ok "soak_loop no longer makes a call the instance profile cannot make" \
    "$(grep -c 'put-object-tagging' soak_loop.sh)" "0"
 
+echo "== 12. flat replays/ mirror key carries the run id ([harness] #95) =="
+# The defect: $TAG is <stamp>_slot1 and every instance of a wave records its own
+# slot 1, so two instances that start a game in the same second write the same
+# key and the second PUT wins -- a lookup by that filename is then answered,
+# quietly and with a perfectly good replay, by the OTHER match.
+ok "run id is appended to the tag" \
+   "$(dem_flat_key '20260820_042607_slot1' 's3://bkt/soak/spot_20260820_041132_1_abc')" \
+   "20260820_042607_slot1__spot_20260820_041132_1_abc.dem"
+ok "two instances of one wave, same second, now differ" \
+   "$([ "$(dem_flat_key t 's3://bkt/soak/run_a')" != "$(dem_flat_key t 's3://bkt/soak/run_b')" ] && echo differ)" \
+   "differ"
+ok "the timestamp still leads, so replays/<date>_<time>* globs keep working" \
+   "$(dem_flat_key '20260820_042607_slot1' 's3://bkt/soak/r1' | cut -c1-11)" \
+   "20260820_04"
+ok "a trailing slash on the prefix is not a different run" \
+   "$(dem_flat_key t 's3://bkt/soak/r1/')" "t__r1.dem"
+# No run id => no mirror. Falling back to the bare tag would silently re-create
+# the collision; an absent mirror is missing evidence, a colliding one is wrong
+# evidence (same doctrine as "no claim => no upload").
+ok "nested prefix yields no key rather than a guessed one" \
+   "$(dem_flat_key t 's3://bkt/elsewhere/deep/r1')" ""
+ok "empty prefix yields no key" "$(dem_flat_key t '')" ""
+ok "bucket-only prefix yields no key" "$(dem_flat_key t 's3://bkt')" ""
+# Source-level: the loop must actually mint the key through this function, and
+# must not still be able to write the bare-$TAG key.
+ok "soak_loop builds the flat key with dem_flat_key" \
+   "$(grep -c 'FLAT=\$(dem_flat_key "\$TAG" "\$S3_PREFIX")' soak_loop.sh)" "1"
+ok "soak_loop uploads the flat mirror under \$FLAT" \
+   "$(grep -c 'replays/\$FLAT" --quiet' soak_loop.sh)" "1"
+ok "soak_loop no longer writes the colliding bare-tag key" \
+   "$(grep -c 'replays/\$TAG.dem' soak_loop.sh)" "0"
+ok "soak_loop skips the mirror when there is no run id" \
+   "$(grep -c 'flat replays/ mirror skipped' soak_loop.sh)" "1"
+
 echo
 echo "dem_claim: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

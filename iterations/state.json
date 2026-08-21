@@ -2319,5 +2319,15 @@
     "why_it_matters": "One notch harder than the batch desk's 18:13Z note that the flat prefix cannot tell you WHOSE a replay is. Any workflow that takes a filename out of an issue and fetches it from replays/ can get a DIFFERENT game and never notice. This round nearly recorded 'the motivating frame has no Zeus in it' as a finding.",
     "owner": "not the hero stream -- filed as a GitHub issue for harness/batch desk",
     "issue": "GH #95"
+  },
+  "flat_replays_collision_RULING_20260821T2100Z": {
+    "date": "2026-08-21T21:0xZ (director trigger 35; GH #95 fixed and closed; test_set.md section AH)",
+    "measured": "21 of 991 flat replays/ keys hold a different match than their name says (2.1%), across 6 dates, including GH #59's motivating game. Method: group soak/**.dem by basename -- a collision is a basename held by more than one run. All 21 are repairable offline: each flat copy's byte size matches exactly one of its soak/ namesakes, so 'which game is this key really' is decidable without a dump.",
+    "fix": "dem_claim.sh:dem_flat_key mints replays/<TAG>__<run>.dem; soak_loop.sh consumes it and writes NO mirror when no run id can be derived (falling back to the bare $TAG would silently rebuild the defect; absent evidence beats wrong evidence, same doctrine as dem_claim's 'no claim => no upload'). Suffix, not prefix, so existing replays/<date>_<time>* corpus globs keep working. Historical keys left alone and now enumerated by dem_inventory.py.",
+    "ruling_scope": "AGGREGATE READINGS STAND, NAMED ATTRIBUTION DOES NOT. The hero stream's four preflight verdicts (cmrself / esaftershock / zusultx / #86) over replays/20260820_10* stand: those are still 17 real Turbo games from the same wave and tree. What does not stand is 'this file is game X of run Y' for the 21 keys -- any pairing of a flat .dem with an analysis.json fetched from elsewhere is mismatched there. sweep_run.sh is unaffected (it takes .dem and .analysis.json from the same soak/<run>/ prefix).",
+    "correction_to_the_issue": "GH #95 section 2 claimed replays/20260820_10* was unaffected because those timestamps are distinct. Two of those games (20260820_101230_slot1, 20260820_102030_slot1) ARE collision victims. The check was not sloppy, it was structurally impossible: the loser is the file that is NOT in the flat prefix, so survivors' names are always distinct. THE FLAT PREFIX CANNOT DETECT ITS OWN COLLISIONS.",
+    "general_rule": "An exclusion ('this corpus is not affected by X') must be made against a data source that CAN exhibit X. Third face of the same family as section AE (the acceptance world is degenerate) and section 0b (the consumer silently voids the helper's reasoning).",
+    "verification": "test_dem_claim.sh 50/50 (new section 12, incl. 4 source-level assertions that soak_loop.sh no longer contains the string replays/$TAG.dem); dem_inventory.py --verify all pass (+16 checks); 6 mutations, 6 red, each echoing the exact line changed. bots/ and game/ untouched.",
+    "issue": "GH #95 (closed)"
   }
 }
