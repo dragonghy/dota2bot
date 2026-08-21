@@ -32,6 +32,15 @@
 -- crash. The §0d rule ("name the modes you could not drive") was written
 -- against a list of two that was never complete.
 --
+-- CORPUS NOTE (2026-08-21T16:xxZ, hero stream): this file was written on a
+-- 94-fixture corpus; two GH #86 Lion fixtures landed the same hour and the
+-- counts below were re-measured on 96. What moved: 94 -> 96 fixtures,
+-- 872 -> 892 alive hero frames, push floor-as-loaded 68 -> 70 (so the
+-- stamp's own share 32 -> 34; floor-with-stale unchanged at 36), farm
+-- floor-with-stale 88 -> 90, and the section-5 situational domain 3 -> 4
+-- frames. Every qualitative claim is unchanged -- the guard is
+-- subject-independent, so growing the corpus can only grow the counts.
+--
 -- HOW BIG IS IT. Measured over the 94 declared subjects, both ways:
 --   * farm: 94/94 floor as loaded -> 88 floor, 1 bid, 5 crashes;
 --   * all three push-tower bids (one shared guard in aba_push): 68/94 floor
@@ -325,10 +334,10 @@ end
 
 tests['[WORLD ASSERTION] the stamp is unset, and the guard fires, on 94/94 fixtures'] = function()
     local s = corpus()
-    assert(s.fixtures == 94, 'expected 94 fixtures; got ' .. s.fixtures)
-    assert(s.unset == 94,
+    assert(s.fixtures == 96, 'expected 96 fixtures; got ' .. s.fixtures)
+    assert(s.unset == 96,
         'every fixture VM starts with the stamp unset; got ' .. s.unset)
-    assert(s.guard_fires == 94,
+    assert(s.guard_fires == 96,
         'and the guard fires on every one of them; got ' .. s.guard_fires)
     -- The guard reads VM-global state and a global clock -- nothing about the
     -- subject hero enters it. So "94/94 fixtures" is "940/940 hero frames"
@@ -337,9 +346,9 @@ end
 
 tests['[WORLD ASSERTION] mode_farm_generic bids the floor on every fixture as loaded'] = function()
     local s = corpus()
-    assert(s.farm_floor_plain == 94,
+    assert(s.farm_floor_plain == 96,
         'farm bids DESIRE_NONE on every fixture as loaded; got '
-        .. s.farm_floor_plain .. '/94')
+        .. s.farm_floor_plain .. '/96')
 end
 
 tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixtures'] = function()
@@ -349,7 +358,7 @@ tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixt
     -- like from the count alone. Of the 6, exactly ONE is a bid; the other five
     -- are the mode file CRASHING (next test).
     assert(#s.farm_moved == 6,
-        'expected 6 of 94 declared subjects to move off the floor; got '
+        'expected 6 of 96 declared subjects to move off the floor; got '
         .. #s.farm_moved)
     local bids, crashes = 0, 0
     for _, m in ipairs(s.farm_moved) do
@@ -358,7 +367,7 @@ tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixt
     end
     assert(bids == 1 and crashes == 5,
         'one real bid, five crashes; got ' .. bids .. ' and ' .. crashes)
-    assert(s.farm_floor_stale == 88, 'and 88 stay at the floor for other reasons; got '
+    assert(s.farm_floor_stale == 90, 'and 90 stay at the floor for other reasons; got '
         .. s.farm_floor_stale)
 end
 
@@ -407,10 +416,14 @@ tests['[WORLD ASSERTION] the stamp pins all three push bids on 32 of 94 fixtures
             floor_stale = floor_stale + 1
         end
     end
-    assert(floor_plain == 68, 'as loaded, 68 of 94 push bids are the floor; got ' .. floor_plain)
+    assert(floor_plain == 70, 'as loaded, 70 of 96 push bids are the floor; got ' .. floor_plain)
     assert(floor_stale == 36, 'with the ping declared stale, 36; got ' .. floor_stale)
-    assert(floor_plain - floor_stale == 32,
-        'the stamp alone accounts for 32 zeroed push bids')
+    -- 68/36 -> 70/36 on 2026-08-21T16:xxZ: the hero stream added the two GH #86
+    -- Lion frames and BOTH of them bid the floor as loaded and something real
+    -- with the ping declared stale, so the stamp's own share went 32 -> 34.
+    -- Corpus growth, not a behaviour change: floor_stale did not move.
+    assert(floor_plain - floor_stale == 34,
+        'the stamp alone accounts for 34 zeroed push bids')
     local push = read_file('bots/FunLib/aba_push.lua')
     local n = 0
     for _ in push:gmatch('defendPings') do n = n + 1 end
@@ -427,7 +440,7 @@ tests['[negative control] side_shop is pinned by the guard AND by something else
         if bid(path, nil, SHOP) == 0 then floor_plain = floor_plain + 1 end
         if bid(path, nil, SHOP, { stale = true }) == 0 then floor_stale = floor_stale + 1 end
     end
-    assert(floor_plain == 94 and floor_stale == 94,
+    assert(floor_plain == 96 and floor_stale == 96,
         'side_shop bids the floor either way; got ' .. floor_plain .. '/' .. floor_stale)
 end
 
@@ -566,12 +579,18 @@ local function block_domain()
     return s
 end
 
-tests['[#84 §5] the 535 block has teeth: 3 alive frames where only the level gate stands'] = function()
+tests['[#84 §5] the 535 block has teeth: 4 alive frames where only the level gate stands'] = function()
     local s = block_domain()
-    assert(s.hero_frames == 872,
-        'expected the 872 alive hero frames the corpus carries; got ' .. s.hero_frames)
-    assert(#s.satisfied == 3,
-        'three alive frames satisfy every clause but the level gate; got ' .. #s.satisfied)
+    assert(s.hero_frames == 892,
+        'expected the 892 alive hero frames the corpus carries; got ' .. s.hero_frames)
+    -- 3 -> 4 on 2026-08-21T16:xxZ: the hero stream's f_260820_182906_lion_drain_
+    -- survived (GH #86's "must not release" frame) is a FOURTH instance of this
+    -- situational domain -- a level 8 Lion with luna 177u away and two allies
+    -- inside 900. It arrived as a side effect of pinning a Mana Drain decision,
+    -- which is worth noting for GH #84 section 5: the shape is not as rare as
+    -- three-in-872 suggested, it is just never looked for.
+    assert(#s.satisfied == 4,
+        'four alive frames satisfy every clause but the level gate; got ' .. #s.satisfied)
     local by = {}
     for _, f in ipairs(s.satisfied) do by[f.name:gsub('npc_dota_hero_', '')] = f end
     assert(by.chaos_knight and by.chaos_knight.level == 4,
@@ -580,11 +599,13 @@ tests['[#84 §5] the 535 block has teeth: 3 alive frames where only the level ga
         'f_260819_222559: a level 11 dragon knight with three allies')
     assert(by.juggernaut and by.juggernaut.level == 11,
         'f_260819_222559: a level 11 juggernaut with three allies')
+    assert(by.lion and by.lion.level == 8,
+        'f_260820_182906: a level 8 Lion with luna 177u away and two allies')
     for _, f in ipairs(s.satisfied) do
         assert(f.level < 15,
             'the whole point: not one of them reaches the gate; ' .. f.name)
         assert(f.dist < 200,
-            'the enemy is inside melee range on all three; got ' .. math.floor(f.dist))
+            'the enemy is inside melee range on all four; got ' .. math.floor(f.dist))
     end
 end
 

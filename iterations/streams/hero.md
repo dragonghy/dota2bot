@@ -394,7 +394,12 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `IsInTeamFight(1500)` 71→**77** / `GetTeamFightLocation` 非 nil 6→8 队、30→**40** 帧(**仍全在原点**,
   `mode_nonzero` 仍 **0**);`test_level_gate_census` **94/67/940 → 96/69/960**,
   `>=15/>=18/>=20` 与最高等级**一个都没动**(新帧最高 8 级)⇒ GH #84 §1 不受影响。
-  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **971/971 绿**(clean-stash 本底 **958**,+13),
+  luacheck **0 警告**,`lua5.1 tests/run_tests.lua` **971/971 绿**(clean-stash 本底 **958**,+13);
+  **rebase 到 main 后 989/989 绿** —— 协同组 15:46Z 的 `test_pingstamp_world_assertion.lua` 也是 94 语料写的、
+  被本组两个 fixture 打红 6 例,已按同一纪律重量并加 CORPUS NOTE(94→96 / 872→892 / push 68→70 ⇒ stamp 份额 32→**34**、
+  `floor_stale` 仍 36 / farm `floor_stale` 88→90,**定性结论一条没变**);
+  **其中一条不是计数移动而是给协同组的真数据**:GH #84 §5 的 situational 域 **3→4 帧,第四帧就是本轮的帧 B**
+  (level 8 Lion、luna 177u、两队友在 900 内)⇒ 那个形状**不是罕见,是没人去找**。
   `tests/run_py_tests.sh` **5/5**,`lion_drain_census.py --verify` **25 asserts OK**。
   **给总监**:①GH #86 **已由本组关闭**(裁定原文如此);②**无新 gated id**,等门仍是
   `liondrain`/`liondrainstop`/`zusultx` + 已获批但无语料的 `odaoe`;`liondrainstop` 状态不变
