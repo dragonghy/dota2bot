@@ -65,6 +65,17 @@
    "acceptance": "(1) and (2) decide nothing on their own -- the flip is already shipped and is a pure talent-table change with no gate to arm. They decide whether the WRITTEN REASON survives: if Zeus casts Arc rarely, or the unaffordable rate collapses on unbiased frames, the hero desk reverts t15 and says so in the file (tests/test_focus_talent_anchor.lua enforces that the rationale travels with the row). (3) is a pre-flight for a CM ult-mana-reserve gate ('cmkeep') that is deliberately NOT written yet: the desk has six pre-flight rejections behind it and will not write a seventh gate against a 2-frame band. Report the CM band as a RATE per Freezing-Field-ready instant, not as a count.",
    "status": "pending",
    "result": ""
+  },
+  {
+   "id": "hero-4",
+   "stream": "hero",
+   "bundle": "",
+   "seeds": [],
+   "priority": 3,
+   "question": "NO NEW WAVE NEEDED -- a scan of the ARCHIVED corpus (filed here because the batch desk owns the archive). On 2026-08-22 the hero desk flipped Lion's t10 talent from +10pp Mana Drain slow (special_bonus_unique_lion_6) to +20 movement speed (special_bonus_movement_speed_20): ungated pure-numbers change, already on main; rationale in hero_lion.lua and tests/test_lion_t10_payoff.lua. The argument is REACHABILITY, not size: the slow is only collectible while X.ConsiderE channels Mana Drain ON AN ENEMY HERO, and both such branches sit below `if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1 then return 0 end`, i.e. they need Earth Spike, Hex and Finger all unavailable first. The fixture library (22 living-Lion frames) reaches that chain on 2 frames, and BOTH are fixtures this desk cut to study Lion's drain -- an existence read on a biased sample, not a density. Wanted off the archive, over turbo replays containing a Lion: (1) MANA DRAIN CHANNELS PER GAME SPLIT BY TARGET CLASS -- enemy hero / creep / illusion -- with channel duration, because only the enemy-hero channels can collect the abandoned talent; (2) HEX CASTS PER GAME plus, at every instant X.ConsiderW's firing conditions hold, whether Hex was on cooldown and with how much left -- specifically the count of moments blocked by <= 2s of cooldown, which is the domain of the t15 challenger (-2s Hex cooldown, special_bonus_unique_lion_5) that this pass declined to take. CAVEAT ON METHOD (learned 2026-08-22): do not read fixtures with a regex -- that round read 10 Axe frames where the loader reads 26. Use the same loader the tests use.",
+   "acceptance": "(1) decides whether the WRITTEN REASON for the t10 flip survives: if enemy-hero drain channels turn out to be common (say more than a couple per game with meaningful duration), the +10pp slow is collectible far more often than the fixture read suggests and the hero desk re-argues or reverts the row in hero_lion.lua -- tests/test_focus_talent_anchor.lua enforces that the reasoning travels with the row either way. It does NOT decide whether the change can ship: it already has, and there is no gate to arm. (2) is a pre-flight, not a verdict: a count of Hex firing moments blocked by <= 2s of cooldown is the ONLY thing that could turn the t15 row from 'no measurable asymmetry, default holds' into a decidable pair. Report it as a rate per game with the total number of firing moments as denominator; a zero here must be recorded as UNDERPOWERED, not EMPTY (narrow band on a continuous quantity -- the standing lesson from GH #115).",
+   "status": "pending",
+   "result": ""
   }
  ],
  "done": [

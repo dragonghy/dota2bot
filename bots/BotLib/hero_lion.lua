@@ -16,11 +16,66 @@ local sTalentList = J.Skill.GetTalentList( bot )
 local sAbilityList = J.Skill.GetAbilityList( bot )
 local sRole = J.Item.GetRoleItemsBuyList( bot )
 
+-- TALENT LADDER, re-anchored 2026-08-22 against
+-- https://www.dota2.com/datafeed/herodata?language=english&hero_id=26 (the same
+-- method as GH #104/#115/#122).  {0,10} takes the ODD index of a tier's pair,
+-- {10,0} the EVEN one; that wiring is arithmetic inside J.Skill.GetTalentBuild and
+-- is read out of the code in tests/test_focus_talent_anchor.lua, never assumed.
+--   t10 [1] +10% Mana Drain slow          [2] +20 movement speed   <- {10,0} takes [2]
+--       [1] = special_bonus_unique_lion_6, [2] = special_bonus_movement_speed_20
+--   t15 [3] -2s Hex cooldown              [4] +15% To Hell and Back amp
+--       [3] = special_bonus_unique_lion_5, [4] = special_bonus_unique_lion_11
+--   t20 [5] +20 Finger dmg per kill       [6] Earth Spike 30-degree cone
+--   t25 [7] +250 AoE Hex                  [8] +600 Earth Spike cast range
+-- t20/t25 are dead rows in turbo (GH #84: level >= 20 on 0 of 210 hero-slots).
+--
+-- t10 CHANGED 2026-08-22: [1] -> [2].  Not because +20 move speed is the bigger
+-- payout -- it is the smaller one -- but because of where each one can be COLLECTED:
+--   * [1] adds +10 percentage points to Mana Drain's slow (15/20/25/30 -> 25/30/
+--     35/40), and it is only collectible while this bot is channelling Mana Drain
+--     ON AN ENEMY HERO.  X.ConsiderE has four returns and only two of them hand
+--     back an enemy hero: the mana top-up branch takes a CREEP and requires
+--     #hEnemyList == 0 (no hero in range to slow), and the illusion branch takes an
+--     illusion.  Both of the enemy-hero branches sit
+--     BELOW `if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1 then return 0 end`,
+--     so they are a RESIDUAL action: they need Earth Spike, Hex and Finger of Death
+--     to be simultaneously unavailable, and then also an enemy hero within 850u with
+--     more than 200 mana, undisabled, and not killable.
+--   * [2] is collected on every frame the hero moves, with no predicate at all.
+--   * Measured on real frames (tests/test_lion_t10_payoff.lua, section 1): of the
+--     living-Lion frames in this repo's fixture library, the Q/W/R gate above those
+--     branches is open on a minority, and the full precondition chain is satisfied
+--     on a couple -- both of which are fixtures cut specifically to study Lion's
+--     drain.  [2] pays on every one of those frames.
+-- HONEST BOUNDS: the fixture library is curated for OTHER investigations, so those
+-- counts are existence reads, not densities (the stream's standing §Y.2 limit) --
+-- how many enemy-hero drain channels a real game contains is an open corpus
+-- question, filed as queue.json hero-4.  The shipped build puts Mana Drain at RANK
+-- 4 by level 10, i.e. the abandoned side is at its largest single payout (30 -> 40)
+-- exactly when the talent is picked; we are giving that up on frequency grounds,
+-- the same trade as the Zeus t15 row.  +20 is measured against a 290 base (datafeed)
+-- and this hero's pos_4/pos_5 outfit macro carries Arcane Boots, so the RELATIVE
+-- gain in practice is about +6%, not +7%.  The ally half of [1] (Mana Drain can feed
+-- an ally at 50% rate) is unreachable either way: X.ConsiderE has no ally branch.
+--
+-- t15 DELIBERATELY NOT CHANGED, so nobody re-litigates it on taste: neither side's
+-- domain can be measured offline.  [3] pays only on a cast that arrives inside the
+-- last 2s of a Hex cooldown, and the shipped build keeps Hex at rank 1 -- a 24
+-- second cooldown -- until hero level 12 (every frame in the fixture library that
+-- has Hex learned has it at rank 1).  That is a narrow band on a continuous
+-- quantity, where a corpus zero has to be recorded as UNDERPOWERED, not EMPTY
+-- (the lesson from Axe's Culling threshold, GH #115).  [4]
+-- pays inside two windows -- after a respawn until the next kill/assist, and after
+-- a kill/assist while that hero is dead -- which the dumper cannot see at all
+-- (it does not dump modifiers, GH #27).  Both talents ultimately buy the same
+-- thing (Hex disable: [3] more casts, [4] longer ones), so there is no reachability
+-- asymmetry to exploit.  What would settle it is an event-side count of Hex casts
+-- blocked by <= 2s of cooldown; that is the other half of queue.json hero-4.
 local tTalentTreeList = {
 						['t25'] = {10, 0},
 						['t20'] = {10, 0},
 						['t15'] = {10, 0},
-						['t10'] = {0, 10},
+						['t10'] = {10, 0},
 }
 
 local tAllAbilityBuildList = {

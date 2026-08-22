@@ -99,7 +99,14 @@ local FOCUS = {
             'special_bonus_unique_lion_5',
             'special_bonus_unique_lion_11',
         },
-        expect = { t10 = 1, t15 = 4 },
+        -- t10 CHANGED 2026-08-22, [1] -> [2]: the +10pp Mana Drain slow is only
+        -- collectible while channelling on an enemy hero, and X.ConsiderE reaches
+        -- those two branches only when Earth Spike, Hex and Finger are ALL
+        -- unavailable; +20 move speed has no predicate.  Full analysis and its
+        -- honest bounds: tests/test_lion_t10_payoff.lua and the rationale block in
+        -- hero_lion.lua.  t15 was examined in the same pass and deliberately left
+        -- alone -- see the same block.
+        expect = { t10 = 2, t15 = 4 },
     },
     skeleton_king = {
         id = 42,
