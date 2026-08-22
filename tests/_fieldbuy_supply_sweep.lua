@@ -12,6 +12,7 @@
 --   COUNT fixtures=<n> live=<n> band=<n> band_dry=<n> situation=<n>
 --         has=<n> dry=<n> unarmed=<n>
 --   HOLE laning=<n> level6plus=<n> both=<n> hpceil=<n>
+--   SPLIT dry_split=<n> rescuable=<n> stuck=<n>
 --   DRY <fixture> <hero> <hp> <level> <laning 0|1>
 --
 -- Every number here is read off the SHIPPED helpers running on real frames.
@@ -38,7 +39,24 @@ local n = {
     has = 0, dry = 0, unarmed = 0,
 }
 local hole = { laning = 0, level6plus = 0, both = 0, hpceil = 0 }
+-- GH #123 asked to narrow the purchase gate from 9 slots to the 6 usable ones.
+-- `split` counts the frames that change would silence: a dry domain frame whose
+-- six main slots are all full but whose backpack has room, i.e. exactly where
+-- the delivered salve lands in the backpack. `rescuable` then asks the shipped
+-- rescuer's own question -- does TrySwapInvItemForFlask have a main-slot item it
+-- is allowed to swap out (GetMainInvLessValItemSlot ~= -1)? -- so the size of
+-- the proposed fix's blast radius and the reach of the existing remedy are
+-- counted on the same frames. See tests/test_fieldbuy_backpack_rescuer.lua.
+local split = { dry_split = 0, rescuable = 0, stuck = 0 }
 local dry_rows = {}
+
+local function empty_slot_count(bot, lo, hi)
+    local c = 0
+    for i = lo, hi do
+        if bot:GetItemInSlot(i) == nil then c = c + 1 end
+    end
+    return c
+end
 
 local files = fixture_files()
 
@@ -90,6 +108,17 @@ for _, path in ipairs(files) do
                     if nLevel >= 6 then hole.level6plus = hole.level6plus + 1 end
                     if bLaning and nLevel >= 6 then hole.both = hole.both + 1 end
                     if nHP >= 0.45 then hole.hpceil = hole.hpceil + 1 end
+                    if empty_slot_count(bot, 0, 5) == 0
+                        and empty_slot_count(bot, 6, 8) >= 1
+                    then
+                        split.dry_split = split.dry_split + 1
+                        local nVictim = J.Item.GetMainInvLessValItemSlot(bot)
+                        if nVictim ~= nil and nVictim >= 0 then
+                            split.rescuable = split.rescuable + 1
+                        else
+                            split.stuck = split.stuck + 1
+                        end
+                    end
                     dry_rows[#dry_rows + 1] = string.format(
                         'DRY %s %s %.4f %d %d',
                         path, hero, nHP, nLevel, bLaning and 1 or 0)
@@ -107,4 +136,6 @@ io.write(string.format(
     #files, n.live, n.band, n.band_dry, n.situation, n.has, n.dry, n.unarmed))
 io.write(string.format('HOLE laning=%d level6plus=%d both=%d hpceil=%d\n',
     hole.laning, hole.level6plus, hole.both, hole.hpceil))
+io.write(string.format('SPLIT dry_split=%d rescuable=%d stuck=%d\n',
+    split.dry_split, split.rescuable, split.stuck))
 for _, l in ipairs(dry_rows) do io.write(l .. '\n') end

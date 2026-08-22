@@ -379,6 +379,33 @@ tests['[recorded] corpus: the situation partitions into 22 wet and 28 dry frames
     assert(tonumber(dry) == 28, 'dry (this id s domain): ' .. dry)
 end
 
+tests['[recorded] corpus: GH #123 would silence 13 of the 28, and rescue reaches 13'] = function()
+    -- GH #123 proposes narrowing this id's purchase gate from nine slots to the
+    -- six usable ones, because a delivered salve can land in the backpack where
+    -- it cannot be drunk. `dry_split` is what that change would cost: the dry
+    -- domain frames whose six main slots are full, i.e. every frame where the
+    -- two clauses disagree. `rescuable` is what the shipped remedy already
+    -- covers on those same frames -- TrySwapInvItemForFlask runs off GetDesire
+    -- on every frame for every bot and swaps a backpacked flask into a main
+    -- slot, and here it has a slot to swap into on every one of them.
+    -- The full argument, plus a driven final action on one of these frames,
+    -- lives in tests/test_fieldbuy_backpack_rescuer.lua.
+    local out = sweep()
+    local dry_split, rescuable, stuck = out:match(
+        'SPLIT dry_split=(%d+) rescuable=(%d+) stuck=(%d+)')
+    assert(dry_split, 'the sweep did not report a SPLIT line')
+    -- The partition is the invariant; the scale numbers are corpus ratchets.
+    assert(tonumber(dry_split) == tonumber(rescuable) + tonumber(stuck),
+        'the split no longer partitions: ' .. dry_split
+        .. ' ~= ' .. rescuable .. ' + ' .. stuck)
+    assert(tonumber(dry_split) == 13,
+        'dry frames the proposed fix would silence: ' .. dry_split)
+    assert(tonumber(rescuable) == 13,
+        'of those, frames the shipped rescuer can clear: ' .. rescuable)
+    assert(tonumber(stuck) == 0,
+        'frames with no swappable main item -- a real stuck salve: ' .. stuck)
+end
+
 tests['[recorded] corpus: the gate is shut on all 930 frames when unarmed'] = function()
     local out = sweep()
     local unarmed = out:match('COUNT .- unarmed=(%d+)')
