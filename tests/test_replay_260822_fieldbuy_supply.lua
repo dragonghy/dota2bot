@@ -432,13 +432,26 @@ tests['wiring: the id is gated, single-call-site, and the comment says so'] = fu
     assert(nCalls == 1, 'expected exactly one call site, found ' .. nCalls)
 end
 
-tests['wiring: the situation predicate is gate-free and has exactly two consumers'] = function()
-    -- It carries no gate, so any caller other than the two wrappers would ship
-    -- this behaviour into every turbo game.
+tests['wiring: the situation predicate ships nothing on its own, and has exactly two consumers'] = function()
+    -- It carries no gate that could TURN BEHAVIOUR ON, so any caller other
+    -- than the two wrappers would ship this behaviour into every turbo game.
+    --
+    -- This clause was "the situation must stay gate-free" until 2026-08-22
+    -- 19:xxZ, when GH #119's creep/neutral veto ('fieldcreep') landed inside
+    -- this predicate: it is shared by all three owner-P2 ids and the gap is
+    -- theirs jointly, so one gated clause here beats three copies. The
+    -- property that assertion existed to protect is unchanged and is now
+    -- stated directly -- a gate in here may only ever NARROW the domain, i.e.
+    -- the unarmed default this file measures cannot move. The full contract
+    -- (exactly one id, asked once, whose branch returns false and never true)
+    -- lives in tests/test_fieldcreep_veto.lua.
     local src = read_file(JMZ)
     local sit = src:match('function J%.IsFieldRegenSituation%(.-\nend')
     assert(sit, 'could not locate J.IsFieldRegenSituation')
-    assert(not sit:find('IsSoakCandidate', 1, true), 'the situation must stay gate-free')
+    for branch in sit:gmatch('J%.IsSoakCandidate%(.-then(.-)end') do
+        assert(not branch:find('return true', 1, true),
+            'a gate inside the situation may only narrow it, never widen it')
+    end
     local _, n = src:gsub('J%.IsFieldRegenSituation%(', '')
     assert(n == 3, 'definition + ShouldRegenNotGoHome + ShouldFieldBuyRegen = 3, found ' .. n)
     local elsewhere = read_file(PURCHASE)

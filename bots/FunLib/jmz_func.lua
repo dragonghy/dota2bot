@@ -4797,6 +4797,55 @@ function J.IsFieldRegenSituation( bot )
 	-- it is vacuously satisfied, not verified.
 	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
 
+	-- [soak candidate 'fieldcreep' / GH #119] Every danger clause above reads
+	-- HEROES and TOWERS. None of them reads a creep or a neutral, so the
+	-- comment at the top of this function -- "a hurt bot with nobody anywhere
+	-- near it" -- can be true on a frame where the bot is standing inside a
+	-- camp being chewed. The replay desk's three frames (283 games, GH #119)
+	-- are exactly that: an obsidian_destroyer with the nearest enemy hero
+	-- 6,721 units away and the nearest enemy tower 5,031 away -- both clauses
+	-- above satisfied by a factor of four -- taking twelve centaur hits with
+	-- his coordinates frozen.
+	--
+	-- The engine gives one cheap predicate for it, and it needs no proximity
+	-- test of its own: a creep's attack range is a few hundred units, so "a
+	-- creep damaged me in the last 3 seconds" already carries the attribution
+	-- the hero clause above has to reconstruct with a 3,000-unit sweep. The
+	-- lookback is the SAME 3.0 the hero clause uses, deliberately: this is the
+	-- missing half of that clause, not a new tuned constant, and
+	-- tests/test_fieldcreep_veto.lua fails if the two ever drift apart.
+	--
+	-- Condition (c), stated in the ONE unit that makes both sides comparable:
+	-- health per three seconds, because that is the window this clause reads.
+	-- What the four sources J.HasFieldRegenSource accepts deliver in 3s --
+	-- tango 21, faerie_fire 85 (once, then nothing), flask ~92, bottle ~135.
+	-- What the five corpus frames where this clause bites took in the SAME 3s
+	-- -- 14, 22, 109, 129, 132 (measured per frame in the sweep). So a tango
+	-- loses on all five, and faerie_fire and a flask both lose on the three
+	-- heavy ones. The split tracks WHAT is hitting: per-hit creep damage in
+	-- this corpus tops out at 45, with the mass at or below 24 (256 of the 282
+	-- rows on live frames) and a thin tail of 26 at 25-45 -- and the three
+	-- heavy frames are that
+	-- tail (36-37 a hit on the lion, 43-45 on the viper), i.e. camp contact,
+	-- while the two light ones are a lane creep or two at 9-14. Stated as
+	-- 'a heavy tail', NOT as 'bimodal': the histogram does not support that.
+	-- The corner where a blanket veto errs is therefore real and named: a
+	-- flask against one lane creep, where staying would still have won. Making
+	-- the clause read magnitude needs the neutral/creep unit list, which a
+	-- fixture does not carry -- so it is recorded as the NEXT lever, not tuned
+	-- here on a frame we cannot check.
+	-- Note it is NOT the salve-cancel rule doing the work: salve and tango
+	-- survive creep damage, which is precisely why nothing upstream notices.
+	--
+	-- Appended AFTER the tower clause on purpose: the split that created this
+	-- function argued behaviour preservation from "the clause order below is
+	-- unchanged", and an append is the only edit that keeps that argument true.
+	if J.IsSoakCandidate( 'fieldcreep' )
+	and bot:WasRecentlyDamagedByCreep( 3.0 )
+	then
+		return false
+	end
+
 	return true
 end
 
