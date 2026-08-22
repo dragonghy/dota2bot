@@ -375,20 +375,24 @@ end
 
 tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function()
     local c = pass(true)
-    -- 179/30 -> 178/32 on 2026-08-22T10:xxZ, and the two halves of that move
-    -- have DIFFERENT causes -- said out loud because one of them is not
-    -- corpus growth and is not this stream's:
-    --   * the strategy stream's two owner-P2 TP-home frames add +1 at 2597 and
-    --     +2 at 3325 (measured: 98 fixtures 177/30, 100 fixtures 178/32);
-    --   * but the pinned 179/30 does NOT reproduce on the 98-fixture corpus on
-    --     ANY tree checked today -- bots/ at cac2fa5, 41df6b4, 477d0d4 and
-    --     3dc30f2 all read 177/30/207. So this pin was already red before the
-    --     fixtures landed, by -2 at site 2597, from a change nobody attributed.
-    --     The strategy stream's own bots/ diff is NOT the cause (measured: the
-    --     100-fixture reading is 178/32/210 with and without it, the gate being
-    --     closed). Whoever owns this file: two frames stopped taking the
-    --     CanEnemyInterruptTpChannel road some time on 2026-08-22 and that is a
-    --     behaviour change on a PROMOTED ('tpsafe2') road, not a denominator.
+    -- 179/30 -> 178/32 on 2026-08-22T10:xxZ, and the move has TWO causes that
+    -- had to be separated before either number could be re-pinned:
+    --   * +1 at 2597 and +2 at 3325 is the two owner-P2 TP-home frames joining
+    --     the corpus (measured: 98 fixtures 177/30/207, 100 fixtures
+    --     178/32/210). Plain growth.
+    --   * -2 at 2597 happened BEFORE them and is the interesting half. It does
+    --     not reproduce on the 98-fixture corpus with bots/ at cac2fa5,
+    --     41df6b4, 477d0d4 or 3dc30f2 -- all four read 177 -- so it is not any
+    --     bots/ change, and specifically not the stayfield gate (the
+    --     100-fixture reading is byte-identical with and without that diff).
+    --     THE DIRECTOR BISECTED IT to the strategy stream's own 05:30Z commit
+    --     cf7bb4c: healing f_260819_182855_lion_drain_jungle re-sampled the
+    --     same --t about 0.33s earlier, so frames of an EXISTING fixture
+    --     changed state and corpus-wide absolute counts moved with them
+    --     (e8e9421 green, 41df6b4 red, same two failures). GH #107 / #106.
+    --     That is the second half of #106's rule: a shared corpus is broken not
+    --     only by ADDING a fixture but by HEALING one, and the heal gives no
+    --     mechanism warning to the file it breaks.
     assert(c.crash_2597 == 178,
         'jmz_func:2597 crash count moved: ' .. c.crash_2597)
     assert(c.crash_3325 == 32,
