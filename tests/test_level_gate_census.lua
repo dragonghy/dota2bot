@@ -393,14 +393,20 @@ end
 -- GH #86 Lion frames (two new games, 20 new hero-slots, max level 8). Every
 -- headline below is unchanged -- the corpus grew at the low end, so the
 -- level>=15/18/20 counts and the archive high-water mark do not move.
-tests['[corpus] 96 fixtures / 69 games / 960 hero-slots: level >= 20 is 0'] = function()
+-- 96/69/960 -> 98/71/980 on 2026-08-22T00:30Z: the hero stream added the two
+-- GH #63 cask frames (two more games, 20 more hero-slots, max level 11 on the
+-- far frame). Re-ran tools/agent/fixture_level_census.py as this ratchet asks:
+-- level >= 20 is still 0 in 0 of 71 games and the high-water mark is still 19,
+-- so GH #84 §1's reading ("no hero in this archive ever reaches the level the
+-- shipped gates test for") is unchanged; only the denominator moved.
+tests['[corpus] 98 fixtures / 71 games / 980 hero-slots: level >= 20 is 0'] = function()
     local c = scan_corpus()
     local games = 0
     for _ in pairs(c.games) do games = games + 1 end
-    assert(c.fixtures == 96, 'fixture count moved to ' .. c.fixtures
+    assert(c.fixtures == 98, 'fixture count moved to ' .. c.fixtures
         .. ' -- re-run tools/agent/fixture_level_census.py and re-read GH #84 §1')
-    assert(games == 69, 'distinct games moved to ' .. games)
-    assert(c.slots == 960, 'hero-slots moved to ' .. c.slots)
+    assert(games == 71, 'distinct games moved to ' .. games)
+    assert(c.slots == 980, 'hero-slots moved to ' .. c.slots)
     assert(c.ge20 == 0, c.ge20 .. ' hero-slot(s) now reach level 20 -- the four INERT '
         .. 'verdicts above were argued from "that hero does not exist"; re-read them')
     assert(c.max_level == 19, 'archive high-water level moved to ' .. c.max_level)

@@ -936,6 +936,38 @@ end
 -- still caught, <1011 so the Centaur false positive is released.
 X.nRGuardCloseBuffer = 400
 
+-- [GH #63, re-measured 2026-08-22] The `+ buffer` above is an argument about
+-- CLOSING: a threat only has to cover the gap once during a 10s channel, so
+-- give it 400 units of walking room. That argument is sound for a self-radius
+-- CC (hoof_stomp, berserkers_call, slithereen_crush all report cast range 0 --
+-- the holder must physically arrive), and empty for a ranged one: a Witch
+-- Doctor holding paralyzing_cask does not have to close anything, so on him the
+-- buffer is not modelling approach, it is handing out 400 free units of veto
+-- radius on top of a ring that already reaches. `cmrcap` (gated turbo, and only
+-- ever meaningful when `cmrguard` is armed too -- it narrows THAT branch) caps
+-- the GetCastRange() term so the buffer keeps its closing meaning everywhere.
+--
+-- 200 is measured, not chosen for roundness. Re-running GH #63's cap sweep on
+-- its own 8-game corpus (10948 CM-alive frames, 0.5s dump) against the
+-- RE-ANCHORED cast ranges -- the table that sweep ran on was wrong in 16 of 23
+-- entries, cask included (900 -> 600) -- gives, per cap: episode precision
+-- 48% (no cap) / 50% (500) / 52% (300) / 57% (250) / 62% (200) / 60% (0), and
+-- lockout 213.0s / 181.0 / 104.5 / 91.0 / 65.5 / 50.0. Only 200 clears all
+-- three clauses GH #63 section 6 pre-registered (precision >= 60%, lockout <=
+-- 35% of the status quo, true positives down <= 20%); 250 -- the value that
+-- issue recommends -- misses two of them once the anchors are right.
+--
+-- The two frames pinned in tests/test_replay_260820_cm_cask_cap.lua bound it to
+-- [146, 483): both are the SAME ability at different distances, so the bound is
+-- a pure statement about range. >= 146 so the 546u cask that really did stun
+-- her out of the channel (GH #63 section 3, she died 0.2s later) is still
+-- caught; < 483 so the 883u cask that never came is released (she lived 101.9s).
+-- Recall against the landing set -- hard CCs that really landed on her, ground
+-- truth from the event stream and therefore immune to how the veto runs are
+-- segmented -- goes 94% -> 86% at this cap, and falls off a cliff (73%) only if
+-- the range term is dropped entirely.
+X.nRGuardRangeCap = 200
+
 -- [hero.md backlog #13] The gate above asks only about THEM: who, right now,
 -- holds a ready hard CC and stands close enough to deliver it. It never asks
 -- anything about CM herself -- not her health, not whether she is already being
@@ -1036,10 +1068,17 @@ function X.cm_IsRSafeToOpen( hBot )
 			then
 				local hCc = J.GetReadyHardCc( e )
 				if hCc ~= nil
-				and GetUnitToUnitDistance( hBot, e )
-					<= ( hCc:GetCastRange() or 0 ) + X.nRGuardCloseBuffer
 				then
-					return false
+					local nCcRange = hCc:GetCastRange() or 0
+					if J.IsSoakCandidate( 'cmrcap' )
+					then
+						nCcRange = math.min( nCcRange, X.nRGuardRangeCap )
+					end
+
+					if GetUnitToUnitDistance( hBot, e ) <= nCcRange + X.nRGuardCloseBuffer
+					then
+						return false
+					end
 				end
 			end
 		end

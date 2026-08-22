@@ -370,17 +370,17 @@ local function corpus()
     return s
 end
 
-tests['[WORLD ASSERTION] 96/96 Turbo by name, 0/96 Turbo by number'] = function()
+tests['[WORLD ASSERTION] 98/98 Turbo by name, 0/98 Turbo by number'] = function()
     local s = corpus()
-    assert(s.fixtures == 96, 'expected 96 fixtures; got ' .. s.fixtures)
-    assert(s.by_name == 96,
+    assert(s.fixtures == 98, 'expected 98 fixtures; got ' .. s.fixtures)
+    assert(s.by_name == 98,
         'every fixture is Turbo when the constant is spelled by name; got ' .. s.by_name)
     assert(s.by_number == 0,
         'and none of them is Turbo when it is spelled 23; got ' .. s.by_number)
     -- Not "most" and not "usually": the split is total, and it is total
     -- because it has nothing to do with the frame -- it is a property of the
     -- mock's constant table, which is the same in every VM.
-    assert(s.helper == 96,
+    assert(s.helper == 98,
         'J.IsModeTurbo() -- the named helper, 94 call sites -- reads TRUE on all of them; got '
         .. s.helper)
 end
@@ -405,9 +405,9 @@ end
 
 tests['[premise] the honest probe repairs the split rather than swapping sides'] = function()
     local s = corpus()
-    assert(s.probe_both == 96,
-        'under the probe both spellings agree on all 96 fixtures; got ' .. s.probe_both)
-    assert(s.probe_helper == 96,
+    assert(s.probe_both == 98,
+        'under the probe both spellings agree on all 98 fixtures; got ' .. s.probe_both)
+    assert(s.probe_helper == 98,
         'and J.IsModeTurbo() still reads TRUE -- a probe that only moved GetGameMode() '
         .. 'would turn the named helper OFF and measure a different mistake; got '
         .. s.probe_helper)
@@ -439,14 +439,14 @@ tests['[premise] the declared ping-stamp assumption is inert for the laning bid'
         .. 'measuring anything; got ' .. farm_changed)
 end
 
-tests['[WORLD ASSERTION] the laning bid moves on 21 of 96 frames, and always downward'] = function()
+tests['[WORLD ASSERTION] the laning bid moves on 22 of 98 frames, and always downward'] = function()
     local s = corpus()
-    assert(#s.laning_moved == 21,
-        'expected the laning bid to move on 21 of 96 fixtures; got ' .. #s.laning_moved)
+    assert(#s.laning_moved == 22,
+        'expected the laning bid to move on 22 of 98 fixtures; got ' .. #s.laning_moved)
     assert(s.laning_up == 0,
         'no fixture bids laning HIGHER with an honest game mode; got ' .. s.laning_up)
-    assert(s.laning_down == 21,
-        'all 21 move down; got ' .. s.laning_down)
+    assert(s.laning_down == 22,
+        'all 22 move down; got ' .. s.laning_down)
     -- The direction is not a coincidence and it is worth stating as a
     -- mechanism, not a statistic: the ladder in
     -- FunLib/override_generic/mode_laning_generic.lua is a sequence of
@@ -608,9 +608,9 @@ tests['[recorded] the corpus-wide auction figures, and how they were taken'] = f
     -- from, recorded here so the report and the test agree and so a future
     -- reader knows the method rather than trusting the figure:
     --
-    --   moved bid cells        21 / 2016   (all of them the laning bid)
-    --   moved auction winners  18 / 96
-    --   of which the MODE changed  10      (7 -> defend_tower_bot, 3 -> retreat)
+    --   moved bid cells        22 / 2058   (all of them the laning bid)
+    --   moved auction winners  19 / 98
+    --   of which the MODE changed  11      (8 -> defend_tower_bot, 3 -> retreat)
     --   of which only the value moved 8    (laning 0.446 -> 0.369 or 0.369 -> 0.200)
     --
     -- THE CORPUS GREW WHILE THIS ROUND WAS RUNNING, and the ratchet caught it:
@@ -631,10 +631,21 @@ tests['[recorded] the corpus-wide auction figures, and how they were taken'] = f
     -- but the mode context they were described in moves, and whoever next
     -- touches them should re-read this.
     --
+    -- AND IT CAUGHT THE NEXT ONE, 2026-08-22T00:30Z, with a different answer:
+    -- the hero stream added the two GH #63 cask frames, and this time the
+    -- auction was NOT a no-op. Re-run both ways on each:
+    --   f_260820_043039_cm_cask_close  retreat 0.750 either way   -> 0 moved cells
+    --   f_260820_042009_cm_cask_far    laning 0.369 -> defend_tower_bot 0.300
+    -- So one numerator moves with the denominator: moved bid cells 21 -> 22,
+    -- moved winners 18 -> 19, MODE changed 10 -> 11 (defend_tower_bot 7 -> 8).
+    -- "Only the value moved" stays at 8. The lesson the previous entry drew --
+    -- re-run the auction rather than move the denominator and hope -- is the
+    -- reason this is a measurement and not a guess in the wrong direction.
+    --
     -- Pinned so the claim cannot drift away from the corpus it describes:
     local n = 0
     for _, _ in ipairs(fixture_files()) do n = n + 1 end
-    assert(n == 96, 'the figures above are for a 96-fixture corpus; got ' .. n)
+    assert(n == 98, 'the figures above are for a 98-fixture corpus; got ' .. n)
     assert(#mode_files() == 21, 'and 21 mode files; got ' .. #mode_files())
     for _, f in ipairs({ 'tests/fixtures/f_260820_042612_axe_blink_init_573.lua',
                          'tests/fixtures/f_260820_043124_axe_blink_flee_555.lua',
@@ -643,11 +654,13 @@ tests['[recorded] the corpus-wide auction figures, and how they were taken'] = f
         assert(fh, 'a fixture named in this record is gone: ' .. f)
         fh:close()
     end
-    -- The two frames that grew the denominator, pinned by name so that the
-    -- "only the denominator moved" claim above stays attached to the frames it
+    -- The four frames that grew the denominator, pinned by name so that the
+    -- "re-measured, not assumed" claim above stays attached to the frames it
     -- was checked on.
     for _, f in ipairs({ 'tests/fixtures/f_260820_162821_lion_drain_lethal.lua',
-                         'tests/fixtures/f_260820_182906_lion_drain_survived.lua' }) do
+                         'tests/fixtures/f_260820_182906_lion_drain_survived.lua',
+                         'tests/fixtures/f_260820_043039_cm_cask_close.lua',
+                         'tests/fixtures/f_260820_042009_cm_cask_far.lua' }) do
         local fh = io.open(f, 'r')
         assert(fh, 'a frame this round re-measured for is gone: ' .. f)
         fh:close()
@@ -660,10 +673,15 @@ tests['[recorded] the split changes WHICH MODE most often wins on this corpus'] 
     -- reproduced row for row). This is the one reading the per-frame figures
     -- above hide, and it is the sharpest way to state the cost:
     --
-    --   as loaded   laning 35, retreat 28, defend_tower_bot 17, push 9,
+    --   as loaded   laning 36, retreat 29, defend_tower_bot 17, push 9,
     --               assemble 6, farm 1
-    --   honest      retreat 31, laning 25, defend_tower_bot 24, push 9,
+    --   honest      retreat 32, laning 25, defend_tower_bot 25, push 9,
     --               assemble 6, farm 1
+    --
+    -- (35/28/17 and 31/25/24 over the 96-fixture corpus, until the two GH #63
+    -- cask frames landed on 2026-08-22: the close one wins retreat either way,
+    -- the far one is a laning->defend_tower_bot flip. Both cells re-run, see
+    -- the record above.)
     --
     -- The fixture world does not merely over-bid laning by a rung. It reports
     -- LANING AS THE SINGLE MOST COMMON THING our bots are doing, and honestly
@@ -681,16 +699,16 @@ tests['[recorded] the split changes WHICH MODE most often wins on this corpus'] 
     -- Pinned to the corpus it describes, so it cannot drift silently:
     local n = 0
     for _, _ in ipairs(fixture_files()) do n = n + 1 end
-    assert(n == 96, 'these distributions are for a 96-fixture corpus; got ' .. n)
+    assert(n == 98, 'these distributions are for a 98-fixture corpus; got ' .. n)
     -- Both readings must still account for every frame, whatever the split.
-    assert(35 + 28 + 17 + 9 + 6 + 1 == n, 'the as-loaded distribution sums to the corpus')
-    assert(31 + 25 + 24 + 9 + 6 + 1 == n, 'and so does the honest one')
+    assert(36 + 29 + 17 + 9 + 6 + 1 == n, 'the as-loaded distribution sums to the corpus')
+    assert(32 + 25 + 25 + 9 + 6 + 1 == n, 'and so does the honest one')
     -- And the transitions the distributions are made of are the ones the three
-    -- [AUCTION] tests above drive: laning loses 10, defend gains 7, retreat
+    -- [AUCTION] tests above drive: laning loses 11, defend gains 8, retreat
     -- gains 3, and nothing else moves.
-    assert(35 - 25 == 10, 'laning loses ten frames')
-    assert(24 - 17 == 7, 'defend_tower_bot gains seven')
-    assert(31 - 28 == 3, 'retreat gains three')
+    assert(36 - 25 == 11, 'laning loses eleven frames')
+    assert(25 - 17 == 8, 'defend_tower_bot gains eight')
+    assert(32 - 29 == 3, 'retreat gains three')
 end
 
 -- ---------------------------------------------------------------------------

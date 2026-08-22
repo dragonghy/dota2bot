@@ -118,6 +118,36 @@ CAST_RANGE = {
     "witch_doctor_paralyzing_cask": [600],
 }
 
+# The pre-2026-08-21 hand-anchored table, kept ONLY so a published number can be
+# re-read on the table it was produced with (GH #63's cap sweep is the case that
+# forced this). It is wrong in 16 of its 23 entries -- never use it for a new
+# claim; `cast_range(..., legacy=True)` exists to reproduce, not to measure.
+LEGACY_CAST_RANGE = {
+    "axe_berserkers_call": [0],
+    "bane_fiends_grip": [600],
+    "bane_nightmare": [575],
+    "centaur_hoof_stomp": [0],
+    "chaos_knight_chaos_bolt": [500],
+    "crystal_maiden_frostbite": [550],
+    "dragon_knight_dragon_tail": [150],
+    "earthshaker_fissure": [1200],
+    "jakiro_ice_path": [1000],
+    "lion_impale": [600],
+    "lion_voodoo": [550],
+    "ogre_magi_fireblast": [600],
+    "primal_beast_pulverize": [150],
+    "shadow_demon_disruption": [600],
+    "shadow_shaman_shackles": [200],
+    "shadow_shaman_voodoo": [500],
+    "skeleton_king_hellfire_blast": [600],
+    "slardar_slithereen_crush": [0],
+    "storm_spirit_electric_vortex": [300],
+    "sven_storm_bolt": [500],
+    "tidehunter_ravage": [0],
+    "vengefulspirit_magic_missile": [600],
+    "witch_doctor_paralyzing_cask": [900],
+}
+
 # What the re-anchoring moved, for anyone re-reading a published number.
 # The two that matter are marked; the rest shift a ring by <= 150u.
 ANCHOR_DELTA = {
@@ -130,18 +160,25 @@ ANCHOR_DELTA = {
 }
 
 
-def cast_range(name, level):
+def cast_range(name, level, cap=None, legacy=False):
     """GetCastRange() for a curated ability at the level it is on this frame.
 
     Two of the curated abilities are per-level (bane_nightmare, lion_voodoo);
     the rest are flat and the list has one entry. Levels are 1-based; a level
     past the end clamps to the last entry (talent/shard levels are not modelled
     -- neither are Aether Lens and the other cast-range items, so every value
-    here is a LOWER bound on the engine's answer)."""
-    vals = CAST_RANGE[name]
+    here is a LOWER bound on the engine's answer).
+
+    `cap` models GH #63's proposed narrowing (`math.min(GetCastRange(), CAP)`),
+    which is a change to the GATE, not to the anchor: it only ever lowers the
+    ring, and the self-radius entries are already 0 so a cap cannot touch them.
+    `legacy` re-reads a number published against the pre-re-anchoring table."""
+    vals = (LEGACY_CAST_RANGE if legacy else CAST_RANGE)[name]
     if not isinstance(vals, list):
-        return vals                       # tolerate a scalar override in tests
-    return vals[min(max(int(level), 1), len(vals)) - 1]
+        val = vals                        # tolerate a scalar override in tests
+    else:
+        val = vals[min(max(int(level), 1), len(vals)) - 1]
+    return val if cap is None else min(val, cap)
 
 
 def curated_abilities():
@@ -192,7 +229,7 @@ def group_by_time(snapshots):
     return frames
 
 
-def evaluate(path, curated, buffer_units, range_blind=False):
+def evaluate(path, curated, buffer_units, range_blind=False, cap=None, legacy=False):
     """Replay cm_IsRSafeToOpen over one timeline. Returns None if CM is absent."""
     data = json.load(open(path, encoding="utf-8"))
     snaps = data["snapshots"]
@@ -239,7 +276,7 @@ def evaluate(path, curated, buffer_units, range_blind=False):
                     raise SystemExit(
                         "no cast-range anchor for curated ability %r -- add it to "
                         "CAST_RANGE (with a datafeed check) before trusting a run" % name)
-                if range_blind or dist <= cast_range(name, ab["level"]) + buffer_units:
+                if range_blind or dist <= cast_range(name, ab["level"], cap, legacy) + buffer_units:
                     if closest is None or dist < closest[2]:
                         closest = (e["hero"].replace("npc_dota_hero_", ""), name, dist, e["idx"])
         veto[t] = closest
