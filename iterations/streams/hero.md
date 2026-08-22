@@ -564,8 +564,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `zusult`、Lion Finger 同家族第三例,但**是「新增否决」= `lanefix` 的失败形状**,代价侧先想清楚;
   ④给 harness(附 GH #27 家族,不新开 issue):全量测试套件单次 **约 55 分钟 / 1101 例**,本文件第一版
   线性扫描(~4000 次 26ms 的 `dofile`)单文件就 >300s,改二分后 **5.4s** —— 域读出工具应默认二分。
+  **门**:`luacheck bots game` 0 警告;`lua5.1 tests/run_tests.lua` **1101 例 0 失败**(提交时的树),
+  rebase 到 `99d73c3`(只带进 docs + 别组的新测试,`bots/`/`game/` 零改动)后重跑 **1125 例 0 失败**。
   详见 backlog §18 与 `iterations/reports/hero/20260822T060000Z.md`;
-  登记 `state.json:wk_considerq_downstream_dominance_20260822T0600Z`;GH **#104** 追评。
+  登记 `state.json:wk_considerq_downstream_dominance_20260822T0600Z`;GH **#104** 追评
+  (issuecomment-5378928560)。
 - 2026-08-22T04:00:00Z:**给 `wkbuild` 写回一个条件 (c) —— 而且是可驱动的那种;
   顺带更正上一轮自己读错的一个 datafeed heading。零行为改动、零新 gated id、零 EC2/S3。**
   会话开头查远端(`git ls-remote origin main` = `8c90769`,与本地 HEAD 同)。`[hero]` open issue
