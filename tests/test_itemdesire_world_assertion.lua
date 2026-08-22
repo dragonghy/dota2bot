@@ -499,19 +499,19 @@ end
 -- C. Delivery to GH #84 §5: ability_item_usage_generic.lua:5753.
 -- ---------------------------------------------------------------------------
 
-tests['[census] the level term is the sole blocker on 195 honest frames'] = function()
+tests['[census] the level term is the sole blocker on 197 honest frames'] = function()
     local c = pass(false)
     -- 508/193/190 -> 527/198/195 on 2026-08-22T10:xxZ: both owner-P2 TP-home
     -- frames carry a buildings block, so all 19 of their live hero-frames land
     -- in the HONEST half and 5 of them satisfy the other five operands. The
     -- finding is untouched: outer_and_H is still 3, i.e. the level term is
     -- still the only thing standing on every one of the rest.
-    assert(c.alive_H == 527, 'honest-building hero frames moved: ' .. c.alive_H)
+    assert(c.alive_H == 537, 'honest-building hero frames moved: ' .. c.alive_H)
     assert(c.alive_F == 403, 'fallback-ancient hero frames moved: ' .. c.alive_F)
     assert(c.alive_H + c.alive_F == c.alive, 'the split partitions the corpus')
-    assert(c.rest5_H == 198,
+    assert(c.rest5_H == 200,
         'honest frames where the other five operands hold: ' .. c.rest5_H)
-    assert(c.sole_blocker_H == 195,
+    assert(c.sole_blocker_H == 197,
         'honest frames where GetLevel() >= 15 is the ONLY closed operand: '
         .. c.sole_blocker_H)
     assert(c.outer_and_H == 3, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
@@ -601,7 +601,7 @@ tests['[world] ShouldTpToFarm is TRUE on every frame, and that is structural'] =
             n = n + 1
         end
     end
-    assert(n == 100, 'checked every fixture; got ' .. n)
+    assert(n == 101, 'checked every fixture; got ' .. n)
 end
 
 -- ---------------------------------------------------------------------------
@@ -629,7 +629,7 @@ tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = f
             if fx.buildings ~= nil then nb = nb + 1 else nnb = nnb + 1 end
         end
     end
-    assert(nb == 57 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
+    assert(nb == 58 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
 end
 
 tests['[MECHANISM] the fallback ancient is one unit, both teams, unstable'] = function()
