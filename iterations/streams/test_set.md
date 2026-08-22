@@ -22,8 +22,9 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
   `tests/test_pullcamp_trigger_census.lua`(20 例,7 条变异)+ 子进程语料普查。
   **未新增 soak id**(照 creeppull 先例在原 id 内修),shipped/normal 行为逐字节不变。
 **申报目的 = 买这两个 id 的条件 (a)**,波次请求已提 `iterations/queue.json:strategy-1`(seeds 888/895/896/906)。
-**语料频率(P1 DoD 要的数,全部真实帧)**:911 存活英雄帧里 33 帧是「辅助 + 对线窗口 + 800 内无敌人」,
-旧窗口收 7 / 新窗口收 12 ⇒ **场景频率,不是死条件**;`IsLanePullSafe` 本身 **334/911 成立**
+**语料频率(P1 DoD 要的数,全部真实帧,100 fixture / 930 帧)**:930 存活英雄帧里 **36** 帧是
+「辅助 + 对线窗口 + 800 内无敌人」,旧窗口收 **10** / 新窗口收 **15** ⇒ **场景频率,不是死条件**;
+`IsLanePullSafe` 本身 **339/930 成立**
 ⇒ **owner 怀疑的那条不是根因**。详见 `iterations/reports/strategy/20260822T073000Z.md`。
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**

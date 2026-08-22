@@ -39,15 +39,15 @@
 -- declare which branches are structurally unreachable on the frame it uses).
 -- The chain cannot be driven end-to-end on ANY fixture. Four independent
 -- stoppers, all measured below rather than argued:
---   (1) `bot:GetNearbyNeutralCreeps(1400)` is empty on 911/911 alive hero
+--   (1) `bot:GetNearbyNeutralCreeps(1400)` is empty on 930/930 alive hero
 --       frames -- the dumper carries no creeps at all, so the old clause was
 --       false on 100% of the corpus for a reason that has nothing to do with
 --       the game;
---   (2) `GetNeutralSpawners()` is `{}` on 911/911 -- the mock's stub; the
+--   (2) `GetNeutralSpawners()` is `{}` on 930/930 -- the mock's stub; the
 --       camp-reach loop therefore selects nothing;
 --   (3) `GetLaneFrontLocation` is REFUSED by the loader (GH #61), so the
 --       equilibrium clause raises unless a test declares it;
---   (4) `bot:GetAssignedLane()` is 0 on 911/911 -- lane assignment is bot-VM
+--   (4) `bot:GetAssignedLane()` is 0 on 930/930 -- lane assignment is bot-VM
 --       state, not entity state, so it is not in the .dem (the thirteenth
 --       world assertion's shape, GH #89). It is not nil, so the `nLane == nil`
 --       guard passes and a bogus lane id is handed to `GetLocationAlongLane`.
@@ -58,22 +58,31 @@
 -- declared.
 --
 -- WHAT THE CORPUS CAN SAY, and it is the number the owner's DoD asked for.
--- Of 911 alive hero frames, 33 are "a support, in the laning window
+-- Of 930 alive hero frames, 36 are "a support, in the laning window
 -- (60-360s), with no enemy inside 800" -- the peacetime lane-support state a
--- pull starts from. The old window admitted 7 of those 33; the widened one
--- admits 12. That is scenario frequency, not a dead condition: the timing
+-- pull starts from. The old window admitted 10 of those 36; the widened one
+-- admits 15. That is scenario frequency, not a dead condition: the timing
 -- filter costs what a 22-of-60 (now 32-of-60) seconds-per-minute filter
 -- should cost. And `J.IsLanePullSafe` -- the clause the owner suspected of
--- being a second dead condition -- passes on 334/911 frames, on a corpus
+-- being a second dead condition -- passes on 339/930 frames, on a corpus
 -- deliberately sampled at combat instants. IT IS NOT THE DEAD CONDITION;
 -- the vision clause was.
+--
+-- CORPUS NOTE (2026-08-22T10:xxZ): first measured on 98 fixtures / 911 frames
+-- and re-measured on 100 / 930 when the branch rebased onto main. What moved:
+-- 33 -> 36 peacetime frames, 7 -> 10 old-window, 12 -> 15 new-window, 334 ->
+-- 339 IsLanePullSafe. Every qualitative claim is unchanged. Two of the three
+-- new chain frames come from a fixture that is not a lane either
+-- (f_260822_063722_lina_tp_home, t=349.0, a TP-home episode), and the
+-- lion_drain_jungle heal (cf7bb4c) permuted which heroes on that frame read as
+-- supports -- the NEWONLY witness heroes changed name while the count did not.
 --
 -- ROLE-CENSUS HONESTY: "support" here is `not J.IsCore(bot)`, and by the
 -- twelfth world assertion (GH #81) every ENEMY of the driven subject reads
 -- pos 3 / IsCore, so the support count is an ally-side count. It biases the
 -- 33 DOWN, never up, so the frequency read above is a floor.
 --
--- The heavy sweep runs in a SUBPROCESS (tests/_pullcamp_sweep.lua) -- ~900
+-- The heavy sweep runs in a SUBPROCESS (tests/_pullcamp_sweep.lua) -- ~930
 -- fresh loads of jmz_func, ~25s -- per the backlog 0q rule.
 
 package.path = 'tests/?.lua;' .. package.path
@@ -129,8 +138,8 @@ end
 -- ------------------------------------------- 1. CENSUS on real frames only --
 
 tests['census: the corpus is what the counts are measured over'] = function()
-    assert(C('fixtures') == 98, 'fixture count moved: ' .. C('fixtures'))
-    assert(C('frames') == 911, 'alive hero frames moved: ' .. C('frames'))
+    assert(C('fixtures') == 100, 'fixture count moved: ' .. C('fixtures'))
+    assert(C('frames') == 930, 'alive hero frames moved: ' .. C('frames'))
 end
 
 tests['census: STOPPER 1 -- camp occupancy is false on every single frame'] = function()
@@ -154,7 +163,8 @@ tests['census: STOPPER 4 -- GetAssignedLane is 0, never nil, on every frame'] = 
     -- the helper tests for nil, which never happens; the value that does reach
     -- GetLocationAlongLane is a constant 0 with no relation to the game the
     -- frame came from.
-    assert(C('lane_zero') == 911, 'GetAssignedLane is no longer 0 everywhere')
+    assert(C('lane_zero') == C('frames'),
+        'GetAssignedLane is no longer 0 on every frame')
     assert(C('lane_nil') == 0, 'GetAssignedLane now answers nil somewhere')
 end
 
@@ -162,20 +172,20 @@ tests['census: IsLanePullSafe is NOT a dead condition (334/911)'] = function()
     -- The owner's standing suspicion, tested and rejected. A third of a
     -- combat-sampled corpus passes hp>=50% + untouched 2s + nobody inside
     -- 1800; on peacetime laning frames it can only be commoner.
-    assert(C('pullsafe') == 334, 'IsLanePullSafe pass count moved: ' .. C('pullsafe'))
+    assert(C('pullsafe') == 339, 'IsLanePullSafe pass count moved: ' .. C('pullsafe'))
     assert(C('pullsafe') > C('frames') * 0.3,
         'IsLanePullSafe now passes on less than 30% of frames -- if it has '
         .. 'become rare, the SILENT verdict needs a second look')
 end
 
-tests['census: the scenario frequency the DoD asked for (33 / 7 / 12)'] = function()
+tests['census: the scenario frequency the DoD asked for (36 / 10 / 15)'] = function()
     -- The peacetime lane-support state a pull starts from, and what each
     -- window admits out of it. This is the "scenario scarcity" half of the
     -- answer: a timing filter costs what a timing filter costs.
-    assert(C('peacetime_lane_support') == 33,
+    assert(C('peacetime_lane_support') == 36,
         'peacetime lane-support frames moved: ' .. C('peacetime_lane_support'))
-    assert(C('chain_old') == 7, 'old-window chain frames moved: ' .. C('chain_old'))
-    assert(C('chain_new') == 12, 'new-window chain frames moved: ' .. C('chain_new'))
+    assert(C('chain_old') == 10, 'old-window chain frames moved: ' .. C('chain_old'))
+    assert(C('chain_new') == 15, 'new-window chain frames moved: ' .. C('chain_new'))
     assert(C('chain_new') > C('chain_old'),
         'the travel lead admits no frame the aggro-mark window rejected -- '
         .. 'the second half of the repair would be untestable on this corpus')
@@ -193,17 +203,26 @@ tests['census: the travel lead is what admits the witness frame'] = function()
     assert(seen['npc_dota_hero_ogre_magi'], 'the witness frame is no longer NEWONLY')
 end
 
-tests['census: the old window`s 7 frames are all mid-chase, not laning'] = function()
-    -- Non-empty witness for chain_old, and the honest note about it: both
-    -- fixtures behind those 7 frames are chase instants at t~315, not a lane.
-    -- The corpus contains ZERO in-lane pull-window frames -- which is why
-    -- section 2 has to declare its lane geometry rather than read it.
+tests['census: the old window`s 10 frames are none of them a lane'] = function()
+    -- Non-empty witness for chain_old, and the honest note about it: 7 of those
+    -- frames are chase instants at t~315 (the ss_chase pair) and 3 are a
+    -- TP-home episode at t=349. The corpus contains ZERO in-lane pull-window
+    -- frames -- which is why section 2 has to declare its lane geometry rather
+    -- than read it.
     local m = manifest()
-    assert(#m.CHAIN == 7, '#CHAIN moved: ' .. #m.CHAIN)
+    assert(#m.CHAIN == 10, '#CHAIN moved: ' .. #m.CHAIN)
+    local by_kind = { ss_chase = 0, lina_tp_home = 0 }
     for _, r in ipairs(m.CHAIN) do
-        assert(r.fixture:find('ss_chase', 1, true),
-            'a chain frame now comes from outside the ss_chase pair: ' .. r.fixture)
+        local kind = r.fixture:find('ss_chase', 1, true) and 'ss_chase'
+            or (r.fixture:find('lina_tp_home', 1, true) and 'lina_tp_home' or nil)
+        assert(kind, 'a chain frame comes from a fixture this census has not '
+            .. 'classified as a non-lane episode: ' .. r.fixture
+            .. ' -- read it before assuming the corpus now has a laning frame')
+        by_kind[kind] = by_kind[kind] + 1
     end
+    assert(by_kind.ss_chase == 7 and by_kind.lina_tp_home == 3,
+        'the chain composition moved: ' .. by_kind.ss_chase .. ' / '
+        .. by_kind.lina_tp_home)
 end
 
 -- ------------------------- 2. DECLARED-WORLD behaviour on ONE real frame ----
