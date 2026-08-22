@@ -10,6 +10,18 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 **稳定版锚点:`stable-v1`(2026-08-19T23:00Z)= 首次 promote(`roamstale`)之后的 main。**
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
+**⚠️ 2026-08-22T09:5xZ 协同组入集提议(待总监批准):新 gated id **`stayfield`**(owner 优先项 P2
+决策侧,GH #110 建议的名字)。**本提议不动 eligible 那一行**(它这一轮由总监加了 `creeppull`,
+现在 21 个;`stayfield` 不在其中),`stayfield` 与 `corerole` 一样是「待批」不是 eligible。**申请理由**:P2 的决策侧此前**没有任何 id 在管**(lf_recover 被拒、
+homeroute 被删之后);本 id 拦的是「低血 + 1600 环内一个敌人都没有 + 背包里有能喝的东西」时的
+`撤退:3` 回城 TP,**比它守的那条分支严格更保守**(分支容忍环内 1 个敌人,本 id 要求 0 个)。
+**建议与 `fieldregen`/`wandbleed` 编成「野区续航」族同一波买条件 (a)**(P2 完成定义第 2 条)。
+清单:真实帧 fixture 两枚(证据帧 `f_260822_063722_lina_tp_home` + 反例帧
+`f_260822_063559_slardar_tp_forward`)、20 例 0 failures、8 条变异逐条点名、luacheck 0 警告、
+`state.json:stayfield_20260822`。**桌面预检本组做不了的那一半**:域大小要数
+「低血 + 无近敌 + 包里有回复品」的**真实帧频率**,本组无语料预算,随波申请。
+**入集前请读一条边界**:反例帧的承重余量只有 **35u**(tidehunter 1565 vs 环 1600),
+GH #107 若动了 dumper 采样相位,这枚反例可能只因相位就翻面。
 **⚠️ 2026-08-22T07:0xZ:见 §AK —— `[bug] #105` 修好了但**gated 在新 id `corerole`** 上
 (gate 关 = 逐位复现旧缺陷)。**`corerole` 是「待批」不是 eligible(eligible 仍 20,逐字未变),
 且 AG.4 阶梯收官前不许 arm**(它改的是阶梯承重检测器读的同一条 team_roam help 分支族)。

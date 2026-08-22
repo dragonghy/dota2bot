@@ -232,9 +232,9 @@ local tests = {}
 
 tests['[world] every hero on every fixture frame answers GetActiveMode() = 0'] = function()
     local s = sweep()
-    assert(s.fixtures == 98, 'expected 98 fixtures, got ' .. s.fixtures)
-    assert(s.team_frames == 196, 'expected 196 team-frames, got ' .. s.team_frames)
-    assert(s.hero_frames == 911, 'expected 911 hero-frames, got ' .. s.hero_frames)
+    assert(s.fixtures == 100, 'expected 100 fixtures, got ' .. s.fixtures)
+    assert(s.team_frames == 200, 'expected 200 team-frames, got ' .. s.team_frames)
+    assert(s.hero_frames == 930, 'expected 930 hero-frames, got ' .. s.hero_frames)
     assert(s.mode_nonzero == 0,
         s.mode_nonzero .. ' hero-frames answered a non-zero active mode. If the loader '
         .. 'learned to carry modes this is GOOD NEWS -- but every conclusion pinned '
@@ -291,7 +291,7 @@ end
 
 tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = function()
     local s = sweep()
-    assert(s.mode_filter_ignored == 911 and s.mode_filter_honoured == 0, string.format(
+    assert(s.mode_filter_ignored == 930 and s.mode_filter_honoured == 0, string.format(
         'GetNearbyHeroes(1500,false,BOT_MODE_ATTACK) differed from the unfiltered call on '
         .. '%d hero-frames -- the filter is being honoured now', s.mode_filter_honoured))
     -- ... and that is why the one predicate on the engine-filtered path fires
@@ -309,8 +309,15 @@ tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = fu
     -- not 912: one hero on the close frame is DEAD, and this sweep counts only
     -- `u.alive`. mode_nonzero is still 0 and the filter is still ignored on
     -- every one of the 911.
-    assert(s.in_teamfight_1500 == 81, string.format(
-        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (81 when pinned)',
+    -- 81 -> 86 on 2026-08-22T09:5xZ: the strategy stream added the two owner-P2
+    -- TP-home frames (f_260822_063722_lina_tp_home / f_260822_063559_slardar_
+    -- tp_forward), contributing 5 TRUE readings. Hero-frames 911 -> 930, not
+    -- 931: crystal_maiden is DEAD on the lina frame and this sweep counts only
+    -- `u.alive`. mode_nonzero is still 0 and the filter is still ignored on
+    -- every one of the 930 -- the world assertion itself did not move, only
+    -- its denominator (GH #106).
+    assert(s.in_teamfight_1500 == 86, string.format(
+        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (86 when pinned)',
         s.in_teamfight_1500, s.hero_frames))
 end
 

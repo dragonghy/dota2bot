@@ -136,14 +136,14 @@ local GATES = {
          .. '[recorded] buyback test below: this path is unreachable for a SECOND, '
          .. 'independent reason, which is the part worth following up.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5753, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5759, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5793, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5799, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
@@ -399,14 +399,24 @@ end
 -- level >= 20 is still 0 in 0 of 71 games and the high-water mark is still 19,
 -- so GH #84 §1's reading ("no hero in this archive ever reaches the level the
 -- shipped gates test for") is unchanged; only the denominator moved.
-tests['[corpus] 98 fixtures / 71 games / 980 hero-slots: level >= 20 is 0'] = function()
+-- 98/71/980 -> 100/73/1000 on 2026-08-22T09:5xZ: the strategy stream added the
+-- two owner-P2 TP-home frames (lina 063722 t=349.0, slardar 063559 t=635.9;
+-- two more games, 20 more hero-slots, max level 11 on the slardar frame).
+-- Re-ran the census: ge20 is still 0, ge18 still 1, ge15 still 8 and the
+-- high-water mark is still 19 -- so nothing about GH #84 §1 moved, only the
+-- denominator. NOTE for whoever adds the NEXT fixture: GH #106 §4 proposes
+-- turning these three corpus-size numbers into ">= registered value" so that
+-- growing the shared corpus stops being a cross-file breaking change. This
+-- file has not made that change yet -- the equalities above are still the
+-- ritual, and this is the second time in one day it had to be performed.
+tests['[corpus] 100 fixtures / 73 games / 1000 hero-slots: level >= 20 is 0'] = function()
     local c = scan_corpus()
     local games = 0
     for _ in pairs(c.games) do games = games + 1 end
-    assert(c.fixtures == 98, 'fixture count moved to ' .. c.fixtures
+    assert(c.fixtures == 100, 'fixture count moved to ' .. c.fixtures
         .. ' -- re-run tools/agent/fixture_level_census.py and re-read GH #84 §1')
-    assert(games == 71, 'distinct games moved to ' .. games)
-    assert(c.slots == 980, 'hero-slots moved to ' .. c.slots)
+    assert(games == 73, 'distinct games moved to ' .. games)
+    assert(c.slots == 1000, 'hero-slots moved to ' .. c.slots)
     assert(c.ge20 == 0, c.ge20 .. ' hero-slot(s) now reach level 20 -- the four INERT '
         .. 'verdicts above were argued from "that hero does not exist"; re-read them')
     assert(c.max_level == 19, 'archive high-water level moved to ' .. c.max_level)

@@ -212,8 +212,13 @@ function GetDesireHelper()
 
     -- [GH #2] Turbo: hurt-but-safe and can regen → don't enter retreat mode
     -- (which would walk/TP the bot home). Stay near lane and heal via bought
-    -- regen instead. Candidate-gated + turbo-only (J.ShouldStayAndRegen),
-    -- inert off-farm; genuine low-HP / under-threat retreats fall through.
+    -- regen instead. J.ShouldStayAndRegen is PROMOTED (was soak-candidate
+    -- 'tphome'): turbo-only, NO candidate gate — this line is LIVE in every
+    -- turbo game. (The comment claimed "candidate-gated + inert off-farm"
+    -- for a month after the promotion; corrected 2026-08-22. A shipped
+    -- behaviour described as inert misleads exactly as much as a gated one
+    -- described as shipped.) Genuine low-HP / under-threat retreats still
+    -- fall through: see the helper's own conditions.
     if J.ShouldStayAndRegen(bot) then
         return BOT_MODE_DESIRE_NONE
     end

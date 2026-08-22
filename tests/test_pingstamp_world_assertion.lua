@@ -332,12 +332,12 @@ local function corpus()
     return s
 end
 
-tests['[WORLD ASSERTION] the stamp is unset, and the guard fires, on 98/98 fixtures'] = function()
+tests['[WORLD ASSERTION] the stamp is unset, and the guard fires, on 100/100 fixtures'] = function()
     local s = corpus()
-    assert(s.fixtures == 98, 'expected 98 fixtures; got ' .. s.fixtures)
-    assert(s.unset == 98,
+    assert(s.fixtures == 100, 'expected 100 fixtures; got ' .. s.fixtures)
+    assert(s.unset == 100,
         'every fixture VM starts with the stamp unset; got ' .. s.unset)
-    assert(s.guard_fires == 98,
+    assert(s.guard_fires == 100,
         'and the guard fires on every one of them; got ' .. s.guard_fires)
     -- The guard reads VM-global state and a global clock -- nothing about the
     -- subject hero enters it. So "94/94 fixtures" is "940/940 hero frames"
@@ -346,9 +346,9 @@ end
 
 tests['[WORLD ASSERTION] mode_farm_generic bids the floor on every fixture as loaded'] = function()
     local s = corpus()
-    assert(s.farm_floor_plain == 98,
+    assert(s.farm_floor_plain == 100,
         'farm bids DESIRE_NONE on every fixture as loaded; got '
-        .. s.farm_floor_plain .. '/98')
+        .. s.farm_floor_plain .. '/100')
 end
 
 tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixtures'] = function()
@@ -367,7 +367,7 @@ tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixt
     end
     assert(bids == 1 and crashes == 5,
         'one real bid, five crashes; got ' .. bids .. ' and ' .. crashes)
-    assert(s.farm_floor_stale == 92, 'and 92 stay at the floor for other reasons; got '
+    assert(s.farm_floor_stale == 94, 'and 94 stay at the floor for other reasons; got '
         .. s.farm_floor_stale)
 end
 
@@ -416,8 +416,8 @@ tests['[WORLD ASSERTION] the stamp pins all three push bids on 35 of 98 fixtures
             floor_stale = floor_stale + 1
         end
     end
-    assert(floor_plain == 72, 'as loaded, 72 of 98 push bids are the floor; got ' .. floor_plain)
-    assert(floor_stale == 37, 'with the ping declared stale, 37; got ' .. floor_stale)
+    assert(floor_plain == 74, 'as loaded, 74 of 100 push bids are the floor; got ' .. floor_plain)
+    assert(floor_stale == 38, 'with the ping declared stale, 38; got ' .. floor_stale)
     -- 68/36 -> 70/36 on 2026-08-21T16:xxZ: the hero stream added the two GH #86
     -- Lion frames and BOTH of them bid the floor as loaded and something real
     -- with the ping declared stale, so the stamp's own share went 32 -> 34.
@@ -428,8 +428,14 @@ tests['[WORLD ASSERTION] the stamp pins all three push bids on 35 of 98 fixtures
     -- (f_260820_042009_cm_cask_far; the close frame is a five-hero scrum where
     -- push stays at the floor for its own reasons). So the stamp's own share
     -- goes 34 -> 35 and the other-reasons share grows by one as well.
-    assert(floor_plain - floor_stale == 35,
-        'the stamp alone accounts for 35 zeroed push bids')
+    -- 72/37 -> 74/38 on 2026-08-22T09:5xZ: the strategy stream's two owner-P2
+    -- TP-home frames. Asymmetric again, and the other way round from the cask
+    -- pair: BOTH bid the floor as loaded, and exactly one of them says
+    -- something real once the ping is declared stale
+    -- (f_260822_063559_slardar_tp_forward, 0 -> 0.1; the lina frame stays at 0
+    -- both ways). So the stamp's own share goes 35 -> 36.
+    assert(floor_plain - floor_stale == 36,
+        'the stamp alone accounts for 36 zeroed push bids')
     local push = read_file('bots/FunLib/aba_push.lua')
     local n = 0
     for _ in push:gmatch('defendPings') do n = n + 1 end
@@ -446,7 +452,7 @@ tests['[negative control] side_shop is pinned by the guard AND by something else
         if bid(path, nil, SHOP) == 0 then floor_plain = floor_plain + 1 end
         if bid(path, nil, SHOP, { stale = true }) == 0 then floor_stale = floor_stale + 1 end
     end
-    assert(floor_plain == 98 and floor_stale == 98,
+    assert(floor_plain == 100 and floor_stale == 100,
         'side_shop bids the floor either way; got ' .. floor_plain .. '/' .. floor_stale)
 end
 
@@ -587,8 +593,12 @@ end
 
 tests['[#84 §5] the 535 block has teeth: 4 alive frames where only the level gate stands'] = function()
     local s = block_domain()
-    assert(s.hero_frames == 911,
-        'expected the 911 alive hero frames the corpus carries; got ' .. s.hero_frames)
+    -- 911 -> 930 on 2026-08-22T09:5xZ (the two owner-P2 TP-home frames, 19 live
+    -- hero-frames between them -- crystal_maiden is dead on the lina one).
+    -- The DENOMINATOR moved and the finding did not: still exactly 4 satisfied
+    -- frames, the same four.
+    assert(s.hero_frames == 930,
+        'expected the 930 alive hero frames the corpus carries; got ' .. s.hero_frames)
     -- 3 -> 4 on 2026-08-21T16:xxZ: the hero stream's f_260820_182906_lion_drain_
     -- survived (GH #86's "must not release" frame) is a FOURTH instance of this
     -- situational domain -- a level 8 Lion with luna 177u away and two allies

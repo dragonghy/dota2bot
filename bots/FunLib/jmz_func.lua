@@ -4681,6 +4681,102 @@ function J.ShouldStayAndRegen( bot )
 	return true
 end
 
+-- [stayfield] What can this bot actually heal itself with RIGHT HERE, without
+-- walking anywhere? Only the six usable inventory slots count (a salve in the
+-- backpack cannot be drunk), and only consumables whose presence in the slot
+-- already proves they are usable:
+--   * flask / tango / tango_single / faerie_fire -- one slot, one heal;
+--   * bottle ONLY with charges left. An empty bottle is a different entity
+--     (the replay dumper reads the class name CDOTA_Item_EmptyBottle, i.e.
+--     'item_empty_bottle'), so the name test alone would already exclude it;
+--     the charge test is the belt to that suspenders, and is also why a
+--     fixture can never answer TRUE through the bottle leg -- the mock's
+--     GetCurrentCharges default is 0. Declared, not hidden.
+-- Deliberately NOT counted: magic_wand / magic_stick. 21 of the 22 real
+-- home-TPs the replay desk reconstructed on 2026-08-22 carried one, so it
+-- would answer TRUE almost everywhere, and its charge count -- the thing that
+-- decides whether it heals at all -- is not in the dump. The wand is its own
+-- lever ('wandbleed'); this helper does not borrow it.
+function J.HasFieldRegenSource( bot )
+	for i = 0, 5 do
+		local hItem = bot:GetItemInSlot( i )
+		if hItem ~= nil then
+			local sName = hItem:GetName()
+			if sName == 'item_flask' or sName == 'item_tango'
+				or sName == 'item_tango_single' or sName == 'item_faerie_fire'
+			then
+				return true
+			end
+			if sName == 'item_bottle'
+				and ( tonumber( hItem:GetCurrentCharges() ) or 0 ) > 0
+			then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- [stayfield / owner priority P2, 2026-08-22] Turbo: a hurt bot with nobody
+-- anywhere near it and a heal in its own bag should drink it, not spend ~20
+-- seconds of a ~20 minute game inside the fountain.
+--
+-- The frame this is pinned to (f_260822_063722_lina_tp_home, seed 888, dire):
+-- Lina at 31.8% HP, NEAREST enemy 6,596 units away, no ally within 6,400,
+-- faerie_fire in slot 0 -- TPs home, lands 33 units from the fountain and is
+-- out of the game for 20.3 seconds. The shipped regen veto J.ShouldStayAndRegen
+-- cannot speak on that frame for two independent reasons, and this helper is
+-- the answer to both:
+--   (1) it is only wired into the tpscroll branch for HP < 0.19, and this bot
+--       was at 0.318 (the branch that fires here is the level-9 '撤退:3' one,
+--       which carries no regen veto at all);
+--   (2) its danger read is bot:WasRecentlyDamagedByAnyHero(3.0), and 2.6s
+--       earlier a Zeus 7,533 units away landed Thundergod's Wrath for 204 --
+--       a GLOBAL ult. "A hero damaged me" is read as "a hero is on me".
+-- So the danger read here is ATTRIBUTED: recent hero damage only vetoes when
+-- the hero that dealt it is still within reach. Everything else stays strictly
+-- more conservative than the branch it guards -- the branch tolerates one
+-- enemy inside 1600, this helper requires zero.
+--
+-- Honest bound: an enemy who bursts from fog and withdraws past 3000 reads the
+-- same as a global ult here. Closing that needs last-seen memory, which is a
+-- separate lever; until then this helper deliberately errs by staying only
+-- when the whole 1600 ring is empty AND a heal is in the bag.
+--
+-- Gated on soak candidate 'stayfield' and turbo-only: inert in every shipped
+-- game until it is armed and promoted.
+function J.ShouldRegenNotTpHome( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'stayfield' ) then return false end
+
+	local nHP = J.GetHP( bot )
+	-- Hurt enough that the bot wants to leave, not so hurt that the next stray
+	-- creep wave kills it. Below the floor the genuine escape retreat stands.
+	if nHP < 0.18 or nHP > 0.55 then return false end
+
+	-- Nobody in the ring the guarded branch itself measures (1600).
+	if #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0 then return false end
+
+	-- Attributed danger: someone hit me recently AND is still near me.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then
+		local hEnemyList = J.GetNearbyHeroes( bot, 3000, true, BOT_MODE_NONE )
+		for _, hEnemy in pairs( hEnemyList ) do
+			if J.IsValidHero( hEnemy )
+				and bot:WasRecentlyDamagedByHero( hEnemy, 3.0 )
+			then
+				return false
+			end
+		end
+	end
+
+	-- Staying has to have a point: no heal in the bag means standing still is
+	-- just idling at low HP (replay desk 2026-08-22: 0 of 22 real home-TPs
+	-- carried a salve, so the supply side is the other half of this fix).
+	if not J.HasFieldRegenSource( bot ) then return false end
+
+	return true
+end
+
 -- [obs 20260722] Laning trade-survival: retreat BEFORE the burst lands, not
 -- after. Frame-by-frame review of ~19 Wraith King deaths (iterations/
 -- obs_20260722_focus_deaths.md) showed the dominant death is NOT overextension:

@@ -5505,7 +5505,13 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 
 
 		--第三种情况:只有一个敌人直接T回家
+		-- [stayfield / owner priority P2] This is the branch that sends a hurt
+		-- bot home when NOTHING is chasing it -- and unlike 撤退:1 above it
+		-- carries no regen veto at all. J.ShouldRegenNotTpHome is gated on the
+		-- 'stayfield' soak candidate + turbo, so this line is a no-op until the
+		-- gate is armed (fixture f_260822_063722_lina_tp_home).
 		if ( botHP < 0.34 or botHP + botMP < 0.43 )
+			and not J.ShouldRegenNotTpHome( bot )
 			and #nAttackAllyList == 0
 			and bot:GetLevel() >= 9
 			and X.CanJuke()
