@@ -8,10 +8,47 @@ local sTalentList = J.Skill.GetTalentList( bot )
 local sAbilityList = J.Skill.GetAbilityList( bot )
 local sRole = J.Item.GetRoleItemsBuyList( bot )
 
+-- TALENT LADDER, re-anchored 2026-08-22 against
+-- https://www.dota2.com/datafeed/herodata?language=english&hero_id=22 (the same
+-- method as GH #104/#115).  {0,10} takes the ODD index of a tier's pair, {10,0} the
+-- EVEN one; the wiring is arithmetic inside J.Skill.GetTalentBuild, read out of the
+-- code in tests/test_focus_t15_payoff.lua rather than assumed here.
+--   t10 [1] +1 Heavenly Jump target      [2] +200 health           <- {10,0} takes [2]
+--   t15 [3] +75 Thundergod's Wrath dmg   [4] -20% Arc Lightning mana cost/cooldown
+--       [3] = special_bonus_unique_zeus_4, [4] = special_bonus_unique_zeus_6
+--   t20 [5] +60 Arc Lightning damage     [6] +0.5s Lightning Bolt ministun
+--   t25 [7] AoE Lightning Bolt (+325)    [8] +3 Heavenly Jump charges
+-- t20/t25 are dead rows in turbo (GH #84: level >= 20 on 0 of 210 hero-slots).
+--
+-- t15 CHANGED 2026-08-22: [3] -> [4].  The two payouts are not comparable in size,
+-- they are comparable in REACHABILITY, and this hero's binding constraint is mana:
+--   * On the fixture corpus, Thundergod's Wrath is LEARNED AND OFF COOLDOWN on 16
+--     frames -- and on 7 of them (4 of 12 once the four fixtures cut specifically to
+--     study Zeus mana are removed) he cannot pay for it.  The shortfalls are small:
+--     26 / 60 / 98 / 106 / 123 / 151 / 239 mana, a median of about ONE Arc Lightning.
+--   * [4] takes 20% off the mana cost of the ability that empties that pool: Arc
+--     costs 85/90/95/100 and has a 1.6s cooldown, and BOTH builds above put four
+--     points in it (pos_2 by level 7, pos_4/5 by level 10).  The cooldown half of
+--     the talent is close to worthless -- at 1.6s the limit was never cooldown --
+--     so the whole claim rests on the 17-20 mana per cast.
+--   * [3] can only pay on a cast that happens.  Our own frame-by-frame read (GH #47,
+--     backlog #4) is 1-3 ult casts per game, 5 of 6 of which already killed their
+--     target; a damage bonus cannot buy back a cast that never happened for want of
+--     250 mana, and 44% / 33% of ready frames are exactly that.
+-- HONEST BOUNDS: the corpus is 100 frames cut for OTHER investigations, so the
+-- unaffordable-rate is an existence read, not a density (§Y.2).  Every ready frame
+-- in it is ult RANK 1, where the +75 given up is +27% of a 275-damage ult -- the
+-- larger single payout, and we are giving it up on frequency grounds.  Arc casts per
+-- game were NOT counted: 20% per cast pays back a 106-mana shortfall only after ~5
+-- casts between top-ups.  And note the file's ult kill-check reads `talent5` (line
+-- ~719) for "the ult damage talent" -- that handle is the t20 ARC damage talent
+-- today and its special value is not named 'value', so nothing in this file ever saw
+-- the +75 anyway; that is recorded, not relied on, because whether the engine folds
+-- talent bonuses into GetSpecialValueInt cannot be settled offline.
 local tTalentTreeList = {
 						['t25'] = {0, 10},
 						['t20'] = {0, 10},
-						['t15'] = {0, 10},
+						['t15'] = {10, 0},
 						['t10'] = {10, 0},
 }
 
@@ -161,7 +198,6 @@ local abilityR = bot:GetAbilityByName( sAbilityList[6] )
 
 local talent5 = bot:GetAbilityByName( sTalentList[5] )
 local talent7 = bot:GetAbilityByName( sTalentList[7] )
-local talent8 = bot:GetAbilityByName( sTalentList[8] )
 
 local castQDesire, castQTarget
 local castWDesire, castWTarget
@@ -173,7 +209,6 @@ local castEDesire, castETarget
 
 local nKeepMana, nMP, nHP, nLV, hEnemyHeroList
 local aetherRange = 0
-local talentDamage = 0
 
 
 local abilityASBonus = 0
@@ -292,7 +327,6 @@ function X.SkillsComplement()
 
 	nKeepMana = 400
 	aetherRange = 0
-	talentDamage = 0
 	abilityASBonus = 0
 	nLV = bot:GetLevel()
 	nMP = bot:GetMana()/bot:GetMaxMana()
@@ -304,7 +338,12 @@ function X.SkillsComplement()
 	local aether = J.IsItemAvailable( "item_aether_lens" )
 	if aether ~= nil then aetherRange = 250 end
 	if abilityAS:IsTrained() then abilityASBonus = 0.09 end
-	if talent8:IsTrained() then talentDamage = talentDamage + talent8:GetSpecialValueInt( "value" ) end
+	-- DELETED 2026-08-22: `talentDamage` was assigned here and at its declaration and
+	-- read NOWHERE in the repo (the same shape GH #104 removed from Wraith King and
+	-- GH #73 from Lion).  Its one input, talent8, is index 8 =
+	-- special_bonus_unique_zeus_jump_charges (+3 Heavenly Jump charges, a t25 row) and
+	-- exposes 'bonus_AbilityCharges', not 'value' -- so the term was zero even before
+	-- the variable went unread.  Removing a write-only local is behaviour-preserving.
 
 	castRDesire = X.ConsiderR()
 	if ( castRDesire > 0 )
@@ -716,6 +755,15 @@ function X.ConsiderR()
 	local manaCost = abilityR:GetManaCost()
 	local nDamage = abilityR:GetSpecialValueInt( 'damage' )
 	
+	-- FACT, 2026-08-22 (datafeed hero_id=22, GH #104's method): this line wants "the
+	-- Thundergod's Wrath damage talent", but index 5 is special_bonus_unique_zeus_2 =
+	-- +60 ARC LIGHTNING damage -- a t20 row, never trained in turbo (GH #84), and its
+	-- special value is named 'bonus_arc_damage', not 'value'.  So the term is two ways
+	-- wrong and contributes nothing.  The ult-damage talent is index 3 (t15), and as of
+	-- today this hero no longer takes it (see the tTalentTreeList block).  NOT changed
+	-- here: pointing the handle at talent3 would either double-count (if the engine
+	-- already folds talent bonuses into GetSpecialValueInt) or silently raise this
+	-- kill-check's estimate, and which one is true cannot be settled offline.
 	if talent5:IsTrained() then nDamage = nDamage + talent5:GetSpecialValueInt('value') end
 	
 	local nDamageType = DAMAGE_TYPE_MAGICAL

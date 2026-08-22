@@ -83,7 +83,13 @@ local FOCUS = {
             'special_bonus_unique_zeus_4',
             'special_bonus_unique_zeus_6',
         },
-        expect = { t10 = 2, t15 = 3 },
+        -- t15 CHANGED 2026-08-22, [3] -> [4]: the +75 Thundergod's Wrath damage row
+        -- can only pay on a cast that happens, and on this corpus the ult is
+        -- ready-and-unaffordable on 7 of 16 ready frames.  [4] takes 20% off the mana
+        -- cost of Arc Lightning, the ability that empties the pool.  Full analysis and
+        -- its honest bounds: tests/test_focus_t15_payoff.lua and the rationale block
+        -- in hero_zuus.lua.
+        expect = { t10 = 2, t15 = 4 },
     },
     lion = {
         id = 26,

@@ -1,77 +1,88 @@
 {
-  "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填)",
-  "requests": [
-    {
-      "id": "strategy-1",
-      "stream": "strategy",
-      "bundle": "creeppull,pullcamp",
-      "seeds": [
-        888,
-        895,
-        896,
-        906
-      ],
-      "priority": 1,
-      "question": "Owner P1 第 3 棒(接力链见 OWNER_PRIORITIES.md + GH #109):买拉野的条件 (a) —— 勾线(creeppull)与拉野(pullcamp)在真实对局里到底执不执行。两个 id 的死分支都已修好:creeppull 的 2026-08-19(IsCreepPullSafe),pullcamp 的本轮(触发器不再要求先看见小野 + 窗口开一个 5s 行程提前量,见 iterations/reports/strategy/20260822T073000Z.md)。修复前 10/10 局 SILENT 是【结构性】的,不是场景稀缺;本波是这两条行为【第一次有可能真的跑起来】。经济读数只作为条件 (b) 的粗粒度旁证,不是本波的申报目的。拉野窗口在前 6 分钟 ⇒ 与 #108 的局时上限 10→25 分钟改动无冲突,不需要为它调参。",
-      "acceptance": "主判据交录像组(P1 第 4 棒),按【离开兵线 → 走向己方野营 → 拉仇恨 → 回拖】四段判 WORKING/SILENT/BUGGY。本波特有的阴性判据:若仍 SILENT,先看 armed 侧的辅助有没有【离开兵线走向营地】—— 修复前连这一步都结构上不会发生,所以它是区分「触发器没开」与「动作没执行」的分界。次判据(条件 b,粗粒度):armed 侧 gpm/deaths 无明显负面即可,不做显著性检验(owner 2026-08-01 验证哲学)。附带请求:若 slot 1 录像仍是唯一帧级通道(#75),优先把录像配额给 armed 侧有辅助的那一局。",
-      "status": "done",
-      "result": "2026-08-22T14:12Z **收割完成**(owner P1 第 3 棒交付)。波次 spot_20260822_1212xx,树 177a2d176774d29affcc8b4765c59695cf0d5d3a,21 id 全集串,种子 888/895/896/906,**284 有效局(+24 暖场 = 308),四种子两 wave 全齐无饿死**。事先登记的七条必查项:① 暖场 stamp 24/24 全是 177a2d1 ✅;② 分 run 下载(75/76/80/77)+ 时分秒前缀合并 = 308,**与逐 run 之和对账一致,一个不丢** ✅;③ S3 真实 cand 串与 §AN.0 的 21 id **一字不差**,stayfield/pullcamp 均在串里(首次上机),wandlimbo/odaoe 0 次出现 ✅;④ `--rec-slots 16` 验收 **exit 2 = 拒答,不是通过** ⇒ 按事先登记**下一波退回 `--rec-slots 8`**(仍满足 §AM.3/§AN.0 的 `--rec-slots >= 8` 硬条件);⑤ 归属计数复核见报告 §4,**`logname==hostname` 从 147/147 掉到 306/308,不再是 100%**;⑥/⑦ 照做。**次判据(条件 b,粗粒度,不做显著性检验)**:gpm **-29.87**(候选腿 818.79 / 基线腿 848.65)、xpm -30.68(560.63 / 591.30)、deaths +0.25(2.31 / 2.05)、last_hits -2.19(21.96 / 24.15),comps_better 四指标全 0/4,suggested=hold_or_reject。逐种子 gpm:888 -43.15 / 895 -13.57 / 896 -45.84 / 906 -16.92(sd 16.98,SE 8.49)。**按必查项 ⑥,这是 21 个 id 的合成效应,不可归因到 creeppull 或 pullcamp 中的任何一个**;按 §AF.3,跨波比较残差已整门作废。**主判据(P1 第 4 棒)在录像组,现已完全解锁**:本波 `--rec-slots 16` ⇒ **dem21/ 下 307 个 .dem 覆盖几乎每一局**(帧通道从 1/16 → 16/16),请录像组按 §AN.4 读帧(pullcamp 与 creeppull 分开数;pullcamp 跟到落地,出发/抵达/抵达时营地空(空跑)/真拉成 四段分开)。详见 iterations/reports/batch-desk/20260822T141200Z.md"
-    },
-    {
-      "id": "hero-1",
-      "stream": "hero",
-      "bundle": "",
-      "seeds": [],
-      "priority": 2,
-      "question": "NO NEW WAVE NEEDED -- this is a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of a proposed WK aiming fix (candidate id `wkqaim`, not yet written): X.ConsiderQ's catch-all (hero level >= 7, enemy inside cast range + 43 = 568u) takes the NEAREST enemy, while the two branches above it each express a preference (killability, biggest threat). Count, over archived turbo replays with a Wraith King: frames where WK is level >= 7, Wraithfire Blast is off cooldown and affordable, and TWO OR MORE enemy heroes are inside 568u -- and of those, how many have `nearest != lowest health`. Episode count matters more than frame count (the stream's standing reading discipline).",
-      "acceptance": "A frame/episode/game count in the shape the hero stream's other pre-flights use (e.g. `N frames / M episodes / K games`), plus at least one concrete (game, t) pair where nearest != weakest so a real-frame fixture can be cut. If the domain comes back at or below the ~0.06 episodes/game level that killed cmrself / esaftershock / zusultx, `wkqaim` is not written. Bench note: the fixture loader's nearby-hero order was ALPHABETICAL until 2026-08-22 (tests/test_mock_nearby_heroes_order.lua) -- any detector that reads 'the first hero in the list' from an older tool run has the same defect and must be re-read.",
-      "status": "pending",
-      "result": "2026-08-22T14:12Z **批测台部分交付(分母侧),检测器侧转交**。本请求自称 NO NEW WAVE NEEDED,不花 AWS 钱;批测台在本请求上能做的是**档案侧的分母**,帧级扫描本身是录像组/英雄组的检测器手艺(参照 es_aftershock_domain.py / cm_r_selfstate_domain.py 的写法),批测台按章程「不做判断分析」不越界写它。**本轮免费量到的分母(只用刚收割的这一波,未扫全档案)**:308 局里 **153 局含 Wraith King(49.7%)**,radiant 77 / dire 76;**153/153 局终 level >= 7**(min 7 / median 11 / max 16)⇒ 请求里的「level >= 7」这一层几乎不构成过滤。**关键解锁**:本波 `--rec-slots 16` ⇒ 这 153 局**几乎每一局都有 .dem**(s3://dota2bot-batch-results-4924/dem21/spot_20260822_1212*/),即 `wkqaim` 的域普查**现在有 153 局单波语料可直接扫**,不必等新波次,也不必翻全档案。**下一棒 = 录像组/英雄组写 wk_q_aim_domain.py 扫这 153 局**(判据仍按请求原文:level>=7 + Wraithfire Blast 可用 + 568u 内 >=2 敌方英雄,数 nearest != lowest health 的帧/episode/局)。本条 status 保持 pending 直到检测器侧出数。\n\n2026-08-22T15:47Z **英雄组接棒,交付了容器内能交付的那一半:检测器口径被本轮改了,接手的人不要按本请求的原文写。** 交付 `tests/test_wk_q_aim_preflight.lua`(9 例,7 次变异 7 抓)+ `hero_skeleton_king.lua` 决策点注释;零 AWS。**裁定:`wkqaim` 不写**,两条独立理由:**(1) 供给饥饿** —— catch-all 是九条分支里的最后一条,九条共抢同一发 14 秒技能,而 `tAllAbilityBuildList` 让 Wraithfire Blast 从英雄 2 级到 11 级全程 rank 1(14s cd),GH #84 的等级普查说 turbo 高水位 19、到 20 级的 0/210 ⇒ rank 1 就是这局的常态;本仓 100 个 fixture 逐帧扫:**6 个「活 WK + 568u 内 >=2 活敌」的环帧里,6/6 的 Blast 没学(2)或在冷却(4),一帧都没到过这条分支**,而四个冷却里 13.1/13.3/13.4 三个是 14 秒里的 >13 秒 ⇒ 走进包围圈那一刻 Blast 是刚放掉的。**(2) 上游同胞** —— `X.ConsiderQ` 有**三条**分支取 `nEnemysHerosInRange[1]`(引擎按距离排序,`J.GetNearbyHeroes` 只过滤不重排),紧邻 catch-all **上方**的「受到伤害时保护自己」(lv>=6)在 `WasRecentlyDamagedByAnyHero(3.0)` 上开火 —— 正是本修复瞄准的那些战斗帧,且瞄得一样瞎、还没有 gate ⇒ 无条件先拿走。同 GH #97 的 liondrain/liondrainstop 形状,但同胞在**上游**。**前提本身成立**:6 个环帧里 3 个「最近 != 最残」—— 塌掉的是可达性,不是缺陷。\n**⇒ 新口径(若仍要扫那 153 局)**:(i) **两条 nearest-taking 分支分开数**,只数 catch-all 会数成上游同胞的补集,低估缺陷、高估补丁;(ii) 每帧必须记 **Blast 是否可用(等级/冷却/蓝/X.ShouldSaveMana)**,因为真实帧说卡点在可用性不在几何;(iii) 仍数 episode 不数帧。\n**边界**:fixture 库是为别的调查裁的 100 帧、有偏,本轮的零是**存在性阴性不是密度**(§Y.2:能证 EMPTY 不能证 RARE),**本请求因此不算 done**;环忽略视野 ⇒ 是上界,结论方向安全。报告 `iterations/reports/hero/20260822T154746Z.md`。"
-    },
-    {
-      "id": "hero-2",
-      "stream": "hero",
-      "bundle": "",
-      "seeds": [],
-      "priority": 3,
-      "question": "NO NEW WAVE NEEDED -- a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of the registered Axe finisher lever (hero_axe.lua X.ConsiderR, GH #115 section 5; no gate id written). The constant nKillDamage = 150 + 100*lv is 250/350/450 while Culling Blade's live damage is 275/375/475, so the bot declines a Culling that would kill whenever the target's effective health sits in the 25-point band [150+100*lv, damage[lv]). MEASURE IT ON THE EVENT SIDE, NOT THE FRAME SIDE -- this is the whole point of the request. Count Culling Blade CASTS, and separately the moments where Axe had Culling ready with an enemy hero inside 175u whose health was in the band and no cast followed. Record for each such moment: Culling rank, target health, target max health, distance, and whether the target died within the next 5s to anything.",
-      "acceptance": "An episode count in the shape the hero stream's other pre-flights use (N frames / M episodes / K games) PLUS at least one concrete (game, t) pair with a band-occupied target inside 175u, so a real-frame fixture can be cut with make_fixture.py. WHY THE FRAME CORPUS CANNOT ANSWER THIS (pre-registered, do not repeat the mistake): the repo's 100-frame fixture library gives 26 Axe frames, 20 Culling-ready, and only 3 with any enemy inside the branch's effective 375u ring -- against a 25-point band on a ~1000 health pool the expected hit count is ~0.08, so its zero is UNDERPOWERED and must NOT be reported as an empty domain. A frame-side scan of the archive has the same defect unless it yields hundreds of in-ring frames; the cast-side stream does not. TWO CORRECTIONS TO GH #115's PRE-REGISTERED TEXT: (1) it says 'target is inside 175', but the firing loop iterates J.GetAroundEnemyHeroList(nCastRange + 200), i.e. an EFFECTIVE 375u ring -- the bare cast-range list is computed and never read -- so report both rings; (2) count episodes, not frames. Bench note: derive corpus counts with the fixture loader (dofile), never by regex over the .lua files -- a regex reader under-counted this library's Axe frames 10 vs 26 in the round that filed this.",
-      "status": "pending",
-      "result": ""
-    },
-    {
-      "id": "strategy-2",
-      "stream": "strategy",
-      "bundle": "pullcamp",
-      "seeds": [
-        888,
-        895,
-        896,
-        906
-      ],
-      "priority": 1,
-      "question": "Owner P1 的回程波(接力链见 OWNER_PRIORITIES.md + GH #109 / #117)。12:12Z 那波买到的 (a) 是【版本专属】的:pullcamp 当时执行了(115 poke : 11 base,WORKING),但它拉的是【离 bot 最近】的野点 ⇒ 中位在离家 10,708u 开拉、连接率 <=20.3%。选点修法本轮已落地(候选营必须比车道中点更靠近我方远古;1500 reach / 窗口 / 0.5 血量门一位没动)。本波要买的是【修好之后】的同一组读数 —— 不是重复买执行证据,是买连接率。**本条挂在总监批准 pullcamp 重新入集上**(test_set.md 顶部 17:3xZ 提议行);未批准前不要启动。种子沿用 888/895/896/906 以便与 12:12Z 那波同种子对读,但按 §AF.3 跨波残差不可比,连接率与开拉点距离是波内自比的读数,不受此限。",
-      "acceptance": "三条,全部用 #117 §复现里那两个现成工具跑,不需要新口径:(1) **连接率**(drag -> 够到一波兵)必须明显高于 20.3%,两个估计量(episode 级 / 逐采样)继续都报 —— 这是这个 mechanic 存在的全部理由;(2) **开拉点离自家泉水的中位数必须落回我方半场**(现 10,708u / 全图 18,806u;判据 中位 < 9,403u);(3) **poke_episodes 不得塌到 0**(那就变回 SILENT)—— 事先登记的预期是【下降但非零】:批测自己的 115 个 episode 里有 48 个开拉点已在 9,000u 以内,所以塌到 0 应当读成【修法过头或选点写错】,不是【场景稀缺】。**免费的正控,不必等新语料**:armed 侧两个深野营 (3994,-5137) 与 (-4007,4947) 的 poke 帧占比(12:12Z 那波是 51%)必须塌下去;它可以在本波自己的帧上直接对读。次判据(条件 b,粗粒度,不做显著性检验):gpm/deaths 无明显负面即可。**注意 #75 / §AM.3**:--rec-slots >= 8,否则这个域的帧证据结构上买不到。",
-      "status": "approved-as-rider",
-      "result": "2026-08-22T18:5xZ **总监裁定(test_set.md §AP.1)**:`pullcamp` **重新入集批准**(22 → 23 eligible,串见 §AP.0),**但本条申请的专波驳回** —— 三条验收判据(连接率 / 开拉点离泉水中位 / 深野营 poke 帧占比)**全部是 armed 腿的臂内读数**,不需要隔离臂(12:12Z 那波买到的 115:11 同样是在 21-id 全集波上买的;§AF.3 裁死的是『拿波间残差判单 id』,不是『在 armed 腿上读一个 id 自己的域内行为率』)。⇒ **搭 §AP.0 那一波(23 id,种子 888/895/896/906,`--rec-slots >= 8`)顺路买**,省一波 ≈$1.2。总监加了第四条免费正控:两个深野营 (3994,-5137)/(-4007,4947) 的 poke 帧占比(12:12Z 那波 51%)必须塌下去,同波自读、不跨波比较。**批测台不需要为本条单独开波次。**修法已在 main(`01ab933`..`ac403c0`,协同组 19:0xZ 自推),批测实例 clone origin/main 拿得到。\n\n2026-08-22T20:09Z **批测台排期确认(状态不变,仍 approved-as-rider)**:本轮(20:09Z)是纯收割轮,例行波次条件 (i) 差 ~4h02min 未满足 ⇒ 未开波,本条的载体波次(§AP.0 的 23 id,`pullcamp` 回集)**最早 2026-08-23T00:11Z 启动**。配置已预置:种子仍 888/895/896/906、4 台 × 1 种子 on-demand、16 槽、2h 看门狗、`--games 22`、**`--rec-slots 16`**(18:11Z 那波 8 槽验收 `rec_slot_cost.py` **真 exit 0 = 通过**,按 §AL/§AN 事先登记升到 16 ⇒ 本条的三条臂内读数将拿到 **16/16 帧通道**,不再受 #75 的 8/16 限制)。**接力棒不掉**:本条不需要批测台之外的动作,载体波次落地后由本台收割并把 `.dem` 交录像组读连接率/开拉点/深营占比三条。"
-    }
-  ],
-  "done": [
-    {
-      "id": "director-1",
-      "stream": "director",
-      "bundle": "roamstale",
-      "seeds": [
-        863,
-        864,
-        865,
-        866
-      ],
-      "priority": 1,
-      "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
-      "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
-      "status": "done",
-      "result": "2026-08-19T22:12Z **完成**。两臂各 4 种子全齐,合计 555 局有效局。**臂 A(16 id,含 roamstale)** gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,四指标 0/4,287 局。**臂 B(15 id,无 roamstale,树 b48d655 暖场 stamp 已核对通过)** gpm -38.66 / xpm -40.50 / deaths +0.40 / last_hits -2.11,四指标 0/4,268 局;逐种子 gpm 863=-56.24 / 864=-16.13 / 865=-40.33 / 866=-41.93。**A-B 逐种子配对差(本请求的交付物):gpm +5.48(sd 35.62, SE 17.81, z=+0.31, 同号 2/4)= null**;xpm +5.60(z=0.35)、deaths -0.08(z=-0.44)、last_hits -0.05(z=-0.08),四个指标全 null。**事前登记裁定(§H,批测台只做字面比对,判定归总监)**:(1) §G.3 第 3 行**按证伪列命中** —— 证伪列写「arm A ≈ arm B ≈ -30 → 残差真在规则里,那时才轮到路 B」,实测 -33.17 vs -38.66,字面成立。另注:预测列措辞「arm A 明显不如 arm B 负」方向与混杂因子假说本身相反(疑笔误),但两种读法都不构成通过(+5.48 达不到「明显」)。(2) §J.4⑤ `last_hits` 预测**被证伪** —— 登记要求臂 B ≥ -1.0 才算 roamstale 背锅,实测 **-2.11**,正是登记里写的「同样是 -2.x」;DiD -0.05 远达不到 ≤ -1.0 ⇒ 对线期 last_hits 代价不出自 roamstale,另有出处。(3) roamstale 条件 (b):经济 A-B = null。roamstale 是 §A0 通例的已批准例外(gpm 可作次判据),但与 16:10Z 收 lf_rescue 时「null 不构成无害、只是上界」的先例有张力,**判定归总监**。**必读的功效限制**:本轮实测 A-B 配对差 sd=35.62 ⇒ 4 种子 MDE ≈ **35.6 gpm**,且配对差噪声是单臂(sd 16.6-19.6)的约 2 倍(每臂本身已是镜像差,跨臂配对拿不到相关性红利)。⇒ 这个 null 的上界很宽;且**路 B 逐 id 经济二分结构上不可行**(12 个 id 均摊 -30 gpm ⇒ 单 id -2.5 gpm ⇒ 需约 800 种子)。详见 iterations/reports/batch-desk/20260819T221200Z.md 第 5 节。"
-    }
-  ]
+ "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填)",
+ "requests": [
+  {
+   "id": "strategy-1",
+   "stream": "strategy",
+   "bundle": "creeppull,pullcamp",
+   "seeds": [
+    888,
+    895,
+    896,
+    906
+   ],
+   "priority": 1,
+   "question": "Owner P1 第 3 棒(接力链见 OWNER_PRIORITIES.md + GH #109):买拉野的条件 (a) —— 勾线(creeppull)与拉野(pullcamp)在真实对局里到底执不执行。两个 id 的死分支都已修好:creeppull 的 2026-08-19(IsCreepPullSafe),pullcamp 的本轮(触发器不再要求先看见小野 + 窗口开一个 5s 行程提前量,见 iterations/reports/strategy/20260822T073000Z.md)。修复前 10/10 局 SILENT 是【结构性】的,不是场景稀缺;本波是这两条行为【第一次有可能真的跑起来】。经济读数只作为条件 (b) 的粗粒度旁证,不是本波的申报目的。拉野窗口在前 6 分钟 ⇒ 与 #108 的局时上限 10→25 分钟改动无冲突,不需要为它调参。",
+   "acceptance": "主判据交录像组(P1 第 4 棒),按【离开兵线 → 走向己方野营 → 拉仇恨 → 回拖】四段判 WORKING/SILENT/BUGGY。本波特有的阴性判据:若仍 SILENT,先看 armed 侧的辅助有没有【离开兵线走向营地】—— 修复前连这一步都结构上不会发生,所以它是区分「触发器没开」与「动作没执行」的分界。次判据(条件 b,粗粒度):armed 侧 gpm/deaths 无明显负面即可,不做显著性检验(owner 2026-08-01 验证哲学)。附带请求:若 slot 1 录像仍是唯一帧级通道(#75),优先把录像配额给 armed 侧有辅助的那一局。",
+   "status": "done",
+   "result": "2026-08-22T14:12Z **收割完成**(owner P1 第 3 棒交付)。波次 spot_20260822_1212xx,树 177a2d176774d29affcc8b4765c59695cf0d5d3a,21 id 全集串,种子 888/895/896/906,**284 有效局(+24 暖场 = 308),四种子两 wave 全齐无饿死**。事先登记的七条必查项:① 暖场 stamp 24/24 全是 177a2d1 ✅;② 分 run 下载(75/76/80/77)+ 时分秒前缀合并 = 308,**与逐 run 之和对账一致,一个不丢** ✅;③ S3 真实 cand 串与 §AN.0 的 21 id **一字不差**,stayfield/pullcamp 均在串里(首次上机),wandlimbo/odaoe 0 次出现 ✅;④ `--rec-slots 16` 验收 **exit 2 = 拒答,不是通过** ⇒ 按事先登记**下一波退回 `--rec-slots 8`**(仍满足 §AM.3/§AN.0 的 `--rec-slots >= 8` 硬条件);⑤ 归属计数复核见报告 §4,**`logname==hostname` 从 147/147 掉到 306/308,不再是 100%**;⑥/⑦ 照做。**次判据(条件 b,粗粒度,不做显著性检验)**:gpm **-29.87**(候选腿 818.79 / 基线腿 848.65)、xpm -30.68(560.63 / 591.30)、deaths +0.25(2.31 / 2.05)、last_hits -2.19(21.96 / 24.15),comps_better 四指标全 0/4,suggested=hold_or_reject。逐种子 gpm:888 -43.15 / 895 -13.57 / 896 -45.84 / 906 -16.92(sd 16.98,SE 8.49)。**按必查项 ⑥,这是 21 个 id 的合成效应,不可归因到 creeppull 或 pullcamp 中的任何一个**;按 §AF.3,跨波比较残差已整门作废。**主判据(P1 第 4 棒)在录像组,现已完全解锁**:本波 `--rec-slots 16` ⇒ **dem21/ 下 307 个 .dem 覆盖几乎每一局**(帧通道从 1/16 → 16/16),请录像组按 §AN.4 读帧(pullcamp 与 creeppull 分开数;pullcamp 跟到落地,出发/抵达/抵达时营地空(空跑)/真拉成 四段分开)。详见 iterations/reports/batch-desk/20260822T141200Z.md"
+  },
+  {
+   "id": "hero-1",
+   "stream": "hero",
+   "bundle": "",
+   "seeds": [],
+   "priority": 2,
+   "question": "NO NEW WAVE NEEDED -- this is a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of a proposed WK aiming fix (candidate id `wkqaim`, not yet written): X.ConsiderQ's catch-all (hero level >= 7, enemy inside cast range + 43 = 568u) takes the NEAREST enemy, while the two branches above it each express a preference (killability, biggest threat). Count, over archived turbo replays with a Wraith King: frames where WK is level >= 7, Wraithfire Blast is off cooldown and affordable, and TWO OR MORE enemy heroes are inside 568u -- and of those, how many have `nearest != lowest health`. Episode count matters more than frame count (the stream's standing reading discipline).",
+   "acceptance": "A frame/episode/game count in the shape the hero stream's other pre-flights use (e.g. `N frames / M episodes / K games`), plus at least one concrete (game, t) pair where nearest != weakest so a real-frame fixture can be cut. If the domain comes back at or below the ~0.06 episodes/game level that killed cmrself / esaftershock / zusultx, `wkqaim` is not written. Bench note: the fixture loader's nearby-hero order was ALPHABETICAL until 2026-08-22 (tests/test_mock_nearby_heroes_order.lua) -- any detector that reads 'the first hero in the list' from an older tool run has the same defect and must be re-read.",
+   "status": "pending",
+   "result": "2026-08-22T14:12Z **批测台部分交付(分母侧),检测器侧转交**。本请求自称 NO NEW WAVE NEEDED,不花 AWS 钱;批测台在本请求上能做的是**档案侧的分母**,帧级扫描本身是录像组/英雄组的检测器手艺(参照 es_aftershock_domain.py / cm_r_selfstate_domain.py 的写法),批测台按章程「不做判断分析」不越界写它。**本轮免费量到的分母(只用刚收割的这一波,未扫全档案)**:308 局里 **153 局含 Wraith King(49.7%)**,radiant 77 / dire 76;**153/153 局终 level >= 7**(min 7 / median 11 / max 16)⇒ 请求里的「level >= 7」这一层几乎不构成过滤。**关键解锁**:本波 `--rec-slots 16` ⇒ 这 153 局**几乎每一局都有 .dem**(s3://dota2bot-batch-results-4924/dem21/spot_20260822_1212*/),即 `wkqaim` 的域普查**现在有 153 局单波语料可直接扫**,不必等新波次,也不必翻全档案。**下一棒 = 录像组/英雄组写 wk_q_aim_domain.py 扫这 153 局**(判据仍按请求原文:level>=7 + Wraithfire Blast 可用 + 568u 内 >=2 敌方英雄,数 nearest != lowest health 的帧/episode/局)。本条 status 保持 pending 直到检测器侧出数。\n\n2026-08-22T15:47Z **英雄组接棒,交付了容器内能交付的那一半:检测器口径被本轮改了,接手的人不要按本请求的原文写。** 交付 `tests/test_wk_q_aim_preflight.lua`(9 例,7 次变异 7 抓)+ `hero_skeleton_king.lua` 决策点注释;零 AWS。**裁定:`wkqaim` 不写**,两条独立理由:**(1) 供给饥饿** —— catch-all 是九条分支里的最后一条,九条共抢同一发 14 秒技能,而 `tAllAbilityBuildList` 让 Wraithfire Blast 从英雄 2 级到 11 级全程 rank 1(14s cd),GH #84 的等级普查说 turbo 高水位 19、到 20 级的 0/210 ⇒ rank 1 就是这局的常态;本仓 100 个 fixture 逐帧扫:**6 个「活 WK + 568u 内 >=2 活敌」的环帧里,6/6 的 Blast 没学(2)或在冷却(4),一帧都没到过这条分支**,而四个冷却里 13.1/13.3/13.4 三个是 14 秒里的 >13 秒 ⇒ 走进包围圈那一刻 Blast 是刚放掉的。**(2) 上游同胞** —— `X.ConsiderQ` 有**三条**分支取 `nEnemysHerosInRange[1]`(引擎按距离排序,`J.GetNearbyHeroes` 只过滤不重排),紧邻 catch-all **上方**的「受到伤害时保护自己」(lv>=6)在 `WasRecentlyDamagedByAnyHero(3.0)` 上开火 —— 正是本修复瞄准的那些战斗帧,且瞄得一样瞎、还没有 gate ⇒ 无条件先拿走。同 GH #97 的 liondrain/liondrainstop 形状,但同胞在**上游**。**前提本身成立**:6 个环帧里 3 个「最近 != 最残」—— 塌掉的是可达性,不是缺陷。\n**⇒ 新口径(若仍要扫那 153 局)**:(i) **两条 nearest-taking 分支分开数**,只数 catch-all 会数成上游同胞的补集,低估缺陷、高估补丁;(ii) 每帧必须记 **Blast 是否可用(等级/冷却/蓝/X.ShouldSaveMana)**,因为真实帧说卡点在可用性不在几何;(iii) 仍数 episode 不数帧。\n**边界**:fixture 库是为别的调查裁的 100 帧、有偏,本轮的零是**存在性阴性不是密度**(§Y.2:能证 EMPTY 不能证 RARE),**本请求因此不算 done**;环忽略视野 ⇒ 是上界,结论方向安全。报告 `iterations/reports/hero/20260822T154746Z.md`。"
+  },
+  {
+   "id": "hero-2",
+   "stream": "hero",
+   "bundle": "",
+   "seeds": [],
+   "priority": 3,
+   "question": "NO NEW WAVE NEEDED -- a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of the registered Axe finisher lever (hero_axe.lua X.ConsiderR, GH #115 section 5; no gate id written). The constant nKillDamage = 150 + 100*lv is 250/350/450 while Culling Blade's live damage is 275/375/475, so the bot declines a Culling that would kill whenever the target's effective health sits in the 25-point band [150+100*lv, damage[lv]). MEASURE IT ON THE EVENT SIDE, NOT THE FRAME SIDE -- this is the whole point of the request. Count Culling Blade CASTS, and separately the moments where Axe had Culling ready with an enemy hero inside 175u whose health was in the band and no cast followed. Record for each such moment: Culling rank, target health, target max health, distance, and whether the target died within the next 5s to anything.",
+   "acceptance": "An episode count in the shape the hero stream's other pre-flights use (N frames / M episodes / K games) PLUS at least one concrete (game, t) pair with a band-occupied target inside 175u, so a real-frame fixture can be cut with make_fixture.py. WHY THE FRAME CORPUS CANNOT ANSWER THIS (pre-registered, do not repeat the mistake): the repo's 100-frame fixture library gives 26 Axe frames, 20 Culling-ready, and only 3 with any enemy inside the branch's effective 375u ring -- against a 25-point band on a ~1000 health pool the expected hit count is ~0.08, so its zero is UNDERPOWERED and must NOT be reported as an empty domain. A frame-side scan of the archive has the same defect unless it yields hundreds of in-ring frames; the cast-side stream does not. TWO CORRECTIONS TO GH #115's PRE-REGISTERED TEXT: (1) it says 'target is inside 175', but the firing loop iterates J.GetAroundEnemyHeroList(nCastRange + 200), i.e. an EFFECTIVE 375u ring -- the bare cast-range list is computed and never read -- so report both rings; (2) count episodes, not frames. Bench note: derive corpus counts with the fixture loader (dofile), never by regex over the .lua files -- a regex reader under-counted this library's Axe frames 10 vs 26 in the round that filed this.",
+   "status": "pending",
+   "result": ""
+  },
+  {
+   "id": "strategy-2",
+   "stream": "strategy",
+   "bundle": "pullcamp",
+   "seeds": [
+    888,
+    895,
+    896,
+    906
+   ],
+   "priority": 1,
+   "question": "Owner P1 的回程波(接力链见 OWNER_PRIORITIES.md + GH #109 / #117)。12:12Z 那波买到的 (a) 是【版本专属】的:pullcamp 当时执行了(115 poke : 11 base,WORKING),但它拉的是【离 bot 最近】的野点 ⇒ 中位在离家 10,708u 开拉、连接率 <=20.3%。选点修法本轮已落地(候选营必须比车道中点更靠近我方远古;1500 reach / 窗口 / 0.5 血量门一位没动)。本波要买的是【修好之后】的同一组读数 —— 不是重复买执行证据,是买连接率。**本条挂在总监批准 pullcamp 重新入集上**(test_set.md 顶部 17:3xZ 提议行);未批准前不要启动。种子沿用 888/895/896/906 以便与 12:12Z 那波同种子对读,但按 §AF.3 跨波残差不可比,连接率与开拉点距离是波内自比的读数,不受此限。",
+   "acceptance": "三条,全部用 #117 §复现里那两个现成工具跑,不需要新口径:(1) **连接率**(drag -> 够到一波兵)必须明显高于 20.3%,两个估计量(episode 级 / 逐采样)继续都报 —— 这是这个 mechanic 存在的全部理由;(2) **开拉点离自家泉水的中位数必须落回我方半场**(现 10,708u / 全图 18,806u;判据 中位 < 9,403u);(3) **poke_episodes 不得塌到 0**(那就变回 SILENT)—— 事先登记的预期是【下降但非零】:批测自己的 115 个 episode 里有 48 个开拉点已在 9,000u 以内,所以塌到 0 应当读成【修法过头或选点写错】,不是【场景稀缺】。**免费的正控,不必等新语料**:armed 侧两个深野营 (3994,-5137) 与 (-4007,4947) 的 poke 帧占比(12:12Z 那波是 51%)必须塌下去;它可以在本波自己的帧上直接对读。次判据(条件 b,粗粒度,不做显著性检验):gpm/deaths 无明显负面即可。**注意 #75 / §AM.3**:--rec-slots >= 8,否则这个域的帧证据结构上买不到。",
+   "status": "approved-as-rider",
+   "result": "2026-08-22T18:5xZ **总监裁定(test_set.md §AP.1)**:`pullcamp` **重新入集批准**(22 → 23 eligible,串见 §AP.0),**但本条申请的专波驳回** —— 三条验收判据(连接率 / 开拉点离泉水中位 / 深野营 poke 帧占比)**全部是 armed 腿的臂内读数**,不需要隔离臂(12:12Z 那波买到的 115:11 同样是在 21-id 全集波上买的;§AF.3 裁死的是『拿波间残差判单 id』,不是『在 armed 腿上读一个 id 自己的域内行为率』)。⇒ **搭 §AP.0 那一波(23 id,种子 888/895/896/906,`--rec-slots >= 8`)顺路买**,省一波 ≈$1.2。总监加了第四条免费正控:两个深野营 (3994,-5137)/(-4007,4947) 的 poke 帧占比(12:12Z 那波 51%)必须塌下去,同波自读、不跨波比较。**批测台不需要为本条单独开波次。**修法已在 main(`01ab933`..`ac403c0`,协同组 19:0xZ 自推),批测实例 clone origin/main 拿得到。\n\n2026-08-22T20:09Z **批测台排期确认(状态不变,仍 approved-as-rider)**:本轮(20:09Z)是纯收割轮,例行波次条件 (i) 差 ~4h02min 未满足 ⇒ 未开波,本条的载体波次(§AP.0 的 23 id,`pullcamp` 回集)**最早 2026-08-23T00:11Z 启动**。配置已预置:种子仍 888/895/896/906、4 台 × 1 种子 on-demand、16 槽、2h 看门狗、`--games 22`、**`--rec-slots 16`**(18:11Z 那波 8 槽验收 `rec_slot_cost.py` **真 exit 0 = 通过**,按 §AL/§AN 事先登记升到 16 ⇒ 本条的三条臂内读数将拿到 **16/16 帧通道**,不再受 #75 的 8/16 限制)。**接力棒不掉**:本条不需要批测台之外的动作,载体波次落地后由本台收割并把 `.dem` 交录像组读连接率/开拉点/深营占比三条。"
+  },
+  {
+   "id": "hero-3",
+   "stream": "hero",
+   "bundle": "",
+   "seeds": [],
+   "priority": 3,
+   "question": "NO NEW WAVE NEEDED -- a scan of the ARCHIVED corpus, filed here because the batch desk owns the archive. On 2026-08-22 the hero desk flipped Zeus's t15 talent from +75 Thundergod's Wrath damage to -20% Arc Lightning mana cost / cooldown (ungated pure-numbers change, already on main; rationale in hero_zuus.lua and tests/test_focus_t15_payoff.lua). The argument rests on a 100-frame FIXTURE reading -- 7 of 16 ult-ready Zeus frames unaffordable, median shortfall about one Arc Lightning cast -- and that library was cut for OTHER investigations, four of its Zeus frames by this desk to study exactly this. Wanted off the archive, over turbo replays containing a Zeus: (1) ARC LIGHTNING CASTS PER GAME, and per minute of the laning phase separately -- the flip pays 17-20 mana per cast and repays a ~106 mana shortfall only after roughly five casts between top-ups, so a low cast count would weaken it; (2) at every instant Thundergod's Wrath is learned and off cooldown, Zeus's mana against the rank cost (250/375/500) -- the unaffordable RATE, not just its existence; (3) the same two numbers for Crystal Maiden's Freezing Field (200/400/600), whose fixture reading is 5 of 24 ready frames below cost and a 2-frame [cost, cost+nova) band. CAVEAT ON METHOD, learned the hard way on 2026-08-22: do not read the corpus with a regex -- that round read 10 Axe frames where the loader reads 26, which is how a reachable domain gets written up as an empty one.",
+   "acceptance": "(1) and (2) decide nothing on their own -- the flip is already shipped and is a pure talent-table change with no gate to arm. They decide whether the WRITTEN REASON survives: if Zeus casts Arc rarely, or the unaffordable rate collapses on unbiased frames, the hero desk reverts t15 and says so in the file (tests/test_focus_talent_anchor.lua enforces that the rationale travels with the row). (3) is a pre-flight for a CM ult-mana-reserve gate ('cmkeep') that is deliberately NOT written yet: the desk has six pre-flight rejections behind it and will not write a seventh gate against a 2-frame band. Report the CM band as a RATE per Freezing-Field-ready instant, not as a count.",
+   "status": "pending",
+   "result": ""
+  }
+ ],
+ "done": [
+  {
+   "id": "director-1",
+   "stream": "director",
+   "bundle": "roamstale",
+   "seeds": [
+    863,
+    864,
+    865,
+    866
+   ],
+   "priority": 1,
+   "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
+   "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
+   "status": "done",
+   "result": "2026-08-19T22:12Z **完成**。两臂各 4 种子全齐,合计 555 局有效局。**臂 A(16 id,含 roamstale)** gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,四指标 0/4,287 局。**臂 B(15 id,无 roamstale,树 b48d655 暖场 stamp 已核对通过)** gpm -38.66 / xpm -40.50 / deaths +0.40 / last_hits -2.11,四指标 0/4,268 局;逐种子 gpm 863=-56.24 / 864=-16.13 / 865=-40.33 / 866=-41.93。**A-B 逐种子配对差(本请求的交付物):gpm +5.48(sd 35.62, SE 17.81, z=+0.31, 同号 2/4)= null**;xpm +5.60(z=0.35)、deaths -0.08(z=-0.44)、last_hits -0.05(z=-0.08),四个指标全 null。**事前登记裁定(§H,批测台只做字面比对,判定归总监)**:(1) §G.3 第 3 行**按证伪列命中** —— 证伪列写「arm A ≈ arm B ≈ -30 → 残差真在规则里,那时才轮到路 B」,实测 -33.17 vs -38.66,字面成立。另注:预测列措辞「arm A 明显不如 arm B 负」方向与混杂因子假说本身相反(疑笔误),但两种读法都不构成通过(+5.48 达不到「明显」)。(2) §J.4⑤ `last_hits` 预测**被证伪** —— 登记要求臂 B ≥ -1.0 才算 roamstale 背锅,实测 **-2.11**,正是登记里写的「同样是 -2.x」;DiD -0.05 远达不到 ≤ -1.0 ⇒ 对线期 last_hits 代价不出自 roamstale,另有出处。(3) roamstale 条件 (b):经济 A-B = null。roamstale 是 §A0 通例的已批准例外(gpm 可作次判据),但与 16:10Z 收 lf_rescue 时「null 不构成无害、只是上界」的先例有张力,**判定归总监**。**必读的功效限制**:本轮实测 A-B 配对差 sd=35.62 ⇒ 4 种子 MDE ≈ **35.6 gpm**,且配对差噪声是单臂(sd 16.6-19.6)的约 2 倍(每臂本身已是镜像差,跨臂配对拿不到相关性红利)。⇒ 这个 null 的上界很宽;且**路 B 逐 id 经济二分结构上不可行**(12 个 id 均摊 -30 gpm ⇒ 单 id -2.5 gpm ⇒ 需约 800 种子)。详见 iterations/reports/batch-desk/20260819T221200Z.md 第 5 节。"
+  }
+ ]
 }
