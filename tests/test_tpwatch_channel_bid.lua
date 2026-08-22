@@ -6,7 +6,7 @@
 -- changes nothing, because the mode it raises was already winning.**
 --
 -- `J.ShouldAbandonTpChannel` (jmz_func.lua) is read at exactly one place:
--- `mode_retreat_generic.lua:261`, which answers `BOT_MODE_DESIRE_VERYHIGH`
+-- `mode_retreat_generic.lua:262`, which answers `BOT_MODE_DESIRE_VERYHIGH`
 -- (0.9). Its comment states the theory of change: "the retreat desire wins and
 -- the move order cancels the channel". Two things have to hold for that:
 --   (a) 0.9 has to beat what the retreat mode would otherwise bid, AND that bid

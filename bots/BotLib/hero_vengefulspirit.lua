@@ -168,8 +168,8 @@ end
 -- SOLO (no allied hero within 1200) AND the engage is DEEP (the target sits
 -- closer to the enemy ancient than to our own, i.e. past the midline into
 -- enemy territory). Defensive / self-peel / retreat / with-allies casts fall
--- through untouched. Gated turbo + soak-candidate 'vsafe', so shipped behavior
--- is unchanged off the candidate side.
+-- through untouched. PROMOTED (was soak-candidate 'vsafe') under the Class-B
+-- policy: turbo default-on, no candidate gate; normal mode unchanged.
 function X._vsafe_ShouldSuppressSoloForward(vEngageLoc)
     -- PROMOTED (was soak-candidate 'vsafe') under the Class-B micro-behavior
     -- policy: Venge is the pool's worst solo-overextender (overextend_alone 10

@@ -1,5 +1,5 @@
 -- [strategy] Closing the level-gate census (GH #84 §5): the sixth and last of
--- the six TEETH constants, ability_item_usage_generic.lua:5749 ("guard-relic
+-- the six TEETH constants, ability_item_usage_generic.lua:5751 ("guard-relic
 -- TP"), also cannot be made into a full-shape (gated + real-frame + assert the
 -- FINAL desire) fix -- and for a reason distinct from the other five.
 --
@@ -8,18 +8,18 @@
 -- already valid earlier; the constant is the thing that keeps it closed). The
 -- last three rounds each tried to build one into a shippable lever and each was
 -- un-doable for its OWN reason:
---   * mode_farm_generic:285  -- dumper gap (the star-frame world quantity, a
+--   * mode_farm_generic:286  -- dumper gap (the star-frame world quantity, a
 --     team-fight location <2500 with a core, is not in the dump; the honest
 --     answer is Vector(0,0), the map origin -- 13th world assertion)
---   * mode_farm_generic:535  -- corpus gap (the inner situation IS live on 3
+--   * mode_farm_generic:536  -- corpus gap (the inner situation IS live on 3
 --     frames, but the outer runMode never co-occurs in the sampled frames --
 --     14th assertion territory)
 --   * item_purchase_generic:228 -- not in Turbo at all (GeneralPurchase is
 --     dispatched past in Turbo; the buyback reserve it guards does not exist
 --     on the Turbo leg -- 15th assertion)
 --
--- THE SIXTH, aiug:5749, MEASURED ON A REAL FRAME. Unlike the three above, its
--- census level clause (`bot:GetLevel() >= 15`, aiug:5751) IS satisfiable in the
+-- THE SIXTH, aiug:5751, MEASURED ON A REAL FRAME. Unlike the three above, its
+-- census level clause (`bot:GetLevel() >= 15`, aiug:5753) IS satisfiable in the
 -- corpus: exactly one fixture carries a subject at level >= 15 --
 -- f_260820_043120_viper_defend_paired, viper at level 15 -- and on that frame
 -- the ENTIRE outer gate (5751-5756) opens: no enemy within 1400, ShouldTpToFarm
@@ -49,7 +49,7 @@
 --
 -- CONCLUSION FOR THE CENSUS. All six TEETH are now examined; none is buildable
 -- into a shippable gated fix with the current corpus, each blocked by a
--- distinct structural or corpus reason. aiug:5749's is: the level constant is
+-- distinct structural or corpus reason. aiug:5751's is: the level constant is
 -- fine, but the branch's PURPOSE (defend a besieged ancient) has no live domain
 -- in a self-terminating Turbo batch, and path 1 additionally rides the #61
 -- lane-front wall. The corpus request is not new -- it is the SAME
@@ -87,9 +87,9 @@ local tests = {}
 
 -- ------------------------------------------------------------------ census ---
 
--- The census constant is SATISFIABLE. This is what separates aiug:5749 from
+-- The census constant is SATISFIABLE. This is what separates aiug:5751 from
 -- 285/535/228, whose gates the corpus cannot reach at all. The subject here is
--- level 15, so `bot:GetLevel() >= 15` (aiug:5751 and again aiug:5791) is TRUE
+-- level 15, so `bot:GetLevel() >= 15` (aiug:5753 and again aiug:5793) is TRUE
 -- -- the level clause is not the blocker.
 tests['the level>=15 gate is satisfiable: subject is level 15'] = function()
     local _, bot = world(FRAME)
@@ -97,7 +97,7 @@ tests['the level>=15 gate is satisfiable: subject is level 15'] = function()
         'expected the one level>=15 subject fixture')
     assert(bot:GetLevel() == 15,
         'subject viper must be exactly level 15; got ' .. tostring(bot:GetLevel()))
-    assert(bot:GetLevel() >= 15, 'so aiug:5751 / aiug:5791 level clause is TRUE')
+    assert(bot:GetLevel() >= 15, 'so aiug:5753 / aiug:5793 level clause is TRUE')
     -- Mutation self-check: a claim of >= 16 would be false here, which is the
     -- whole point (level 15 is the real value, not an artifact).
     assert(not (bot:GetLevel() >= 16), 'and it is exactly 15, not higher')

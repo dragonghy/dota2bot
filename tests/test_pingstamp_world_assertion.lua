@@ -2,7 +2,7 @@
 -- FIRST call in a fresh VM its own initialiser, so the guard that reads it is
 -- true by construction -- and a fixture VM is never older than one call.
 --
--- The shape, verbatim from mode_farm_generic.lua:123-126:
+-- The shape, verbatim from mode_farm_generic.lua:124-126:
 --
 --     J.Utils['GameStates']['defendPings'] =
 --         J.Utils['GameStates']['defendPings'] or { pingedTime = GameTime() }
@@ -63,9 +63,9 @@
 -- asserted below as a mutation probe, not argued.
 --
 -- FOUR SHIPPED SITES SHARE THE STAMP, THREE OF THEM IN FRONT OF A BID:
---   bots/mode_farm_generic.lua:123      -> returns DESIRE_NONE
+--   bots/mode_farm_generic.lua:124      -> returns DESIRE_NONE
 --   bots/mode_side_shop_generic.lua:50  -> returns DESIRE_NONE
---   bots/FunLib/aba_push.lua:222        -> returns None  (all three
+--   bots/FunLib/aba_push.lua:223        -> returns None  (all three
 --                                          mode_push_tower_*_generic bids)
 --   bots/FunLib/aba_defend.lua:881      -> suppresses the "come defend" ping
 --                                          only; the defend BID is unaffected.
@@ -80,11 +80,11 @@
 -- harness call and belongs to the director.
 --
 -- ---------------------------------------------------------------------------
--- DELIVERY TO GH #84 §5: `mode_farm_generic:535` cannot be given the (b) shape
+-- DELIVERY TO GH #84 §5: `mode_farm_generic:536` cannot be given the (b) shape
 -- on this corpus either -- but for a reason that CAN be bought.
 --
 -- The census (tests/test_level_gate_census.lua) read `bot:GetLevel() >= 15` at
--- mode_farm_generic.lua:535 as TEETH: the farm-mode "turn and fight" block
+-- mode_farm_generic.lua:536 as TEETH: the farm-mode "turn and fight" block
 -- (an enemy hero inside my own attack range, two allies within 900) is a live
 -- turbo situation hung on a maturity proxy no turbo hero reaches. This round
 -- measured the two halves of that block separately:
@@ -376,7 +376,7 @@ tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undri
     -- (mode_rune_generic, mode_secret_shop_generic) and made it a rule to say
     -- so in any bid-level test. mode_farm_generic is a THIRD, and nobody could
     -- have known: the ping guard returns at line 124, and the unstubbed engine
-    -- global sits at line 370. Open the guard and the crash appears.
+    -- global sits at line 371. Open the guard and the crash appears.
     local path = 'tests/fixtures/f_260820_043637_axe_ring_alone.lua'
     assert(bid(path, nil, FARM) == 0, 'shut: the floor, no error')
     world(path, nil, { stale = true })
@@ -387,8 +387,8 @@ tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undri
     assert(not ok, 'open: it does not return the floor, it throws')
     assert(tostring(err):find('GetRoshanDesire', 1, true),
         'the missing engine global is GetRoshanDesire; got ' .. tostring(err))
-    assert(tostring(err):find(':370:', 1, true),
-        'at mode_farm_generic.lua:370; got ' .. tostring(err))
+    assert(tostring(err):find(':371:', 1, true),
+        'at mode_farm_generic.lua:371; got ' .. tostring(err))
     -- It is a real engine API (.luacheckrc read_globals lists it), so this is
     -- a mock gap, not a typo in bots/. Recorded here rather than patched: what
     -- the mock should answer for "how badly does the team want Roshan" is a
@@ -531,7 +531,7 @@ tests['[self-audit] it does not retract retnear -- all three published winners h
 end
 
 -- ---------------------------------------------------------------------------
--- GH #84 §5: mode_farm_generic:535.
+-- GH #84 §5: mode_farm_generic:536.
 -- ---------------------------------------------------------------------------
 
 local block_cache
@@ -633,7 +633,7 @@ tests['[#84 §5] but runMode never co-occurs, so the (b) shape has no frame'] = 
     -- satisfies the block above. The intersection is empty from both sides.
 end
 
-tests['[reverse] mode_farm_generic:535 and its block are pinned verbatim'] = function()
+tests['[reverse] mode_farm_generic:536 and its block are pinned verbatim'] = function()
     local src = read_file('bots/mode_farm_generic.lua')
     assert(src:find('if not bot:IsInvisible() and bot:GetLevel() >= 15', 1, true),
         'the level gate under #84 §5 moved -- re-read this file before editing')

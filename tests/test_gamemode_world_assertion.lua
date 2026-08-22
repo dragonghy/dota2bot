@@ -24,7 +24,7 @@
 -- line that spells the constant by NAME reads "turbo"; every shipped line that
 -- spells it as the literal 23 reads "not turbo". Nine shipped comparison sites
 -- across SEVEN files are on the wrong side of that split, and the split runs
--- through the middle of one expression (FunLib/aba_push.lua:171-172) and
+-- through the middle of one expression (FunLib/aba_push.lua:172-172) and
 -- through the middle of one table literal (the same file's gameStateCache,
 -- whose currentTime field is built the number way while its four isEarlyGame /
 -- isMidGame / isLateGame / isLaningPhase siblings are built the name way).
@@ -78,7 +78,7 @@
 --   285 -- dumper gap (mode is not in the .dem and cannot be bought);
 --   535 -- corpus gap (buyable; the request is live, GH #84 §4);
 --   228 -- not in Turbo at all (nothing to buy; the branch is the wrong one).
--- The remaining live candidate is `ability_item_usage_generic.lua:5749`.
+-- The remaining live candidate is `ability_item_usage_generic.lua:5751`.
 --
 -- AND IT IS ALSO A CORRECTION TO THIS GROUP'S OWN PUBLISHED READING. The
 -- previous round (the fourteenth world assertion) re-ran three retnear bids as
@@ -332,7 +332,7 @@ local function corpus()
         if GetGameMode() == 23 then s.by_number = s.by_number + 1 end
         if J.IsModeTurbo() then s.helper = s.helper + 1 end
         if DotaTime() > s.latest then s.latest = DotaTime() end
-        -- FunLib/aba_push.lua:171-172, reproduced rather than restated: the
+        -- FunLib/aba_push.lua:172-172, reproduced rather than restated: the
         -- threshold comes from the named spelling, the operand from the
         -- literal one. Both readings computed on the same frame.
         local t = DotaTime()
@@ -493,7 +493,7 @@ tests['[WORLD ASSERTION] every rung the corpus lands on is a rung of the shipped
 end
 
 tests['[WORLD ASSERTION] the split runs through the middle of one expression'] = function()
-    -- FunLib/aba_push.lua:171-172. The threshold is chosen by the NAMED
+    -- FunLib/aba_push.lua:172-172. The threshold is chosen by the NAMED
     -- spelling and the operand is built by the LITERAL one, eleven lines and
     -- one function apart in the same file. In the engine they agree; here they
     -- cannot.
@@ -844,7 +844,7 @@ tests['[recorded] what a census reading owes the call chain above it'] = functio
     -- at :272 really is dead while it stays shut. What it did not do was look
     -- one level UP the call chain, where the whole function is switched off in
     -- the mode we tune for. This is the same shape as the previous round's
-    -- re-read of the REDUNDANT call on mode_farm_generic:369 -- a source-only
+    -- re-read of the REDUNDANT call on mode_farm_generic:370 -- a source-only
     -- reading that was fine as far as it went.
     --
     -- THE RULE, so the next census does not repeat it: a claim that some

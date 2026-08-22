@@ -42,12 +42,12 @@
 --   1. "只有分类为合取且 N >= 20 的行才值得继续" selects exactly four rows
 --      (aiug:149, aiug:582, aba_site:760, aba_site:824) and ALL FOUR are INERT.
 --      Every row with teeth sits at N = 15 or N = 18 -- including the issue's
---      own headline candidate, mode_farm_generic:285 (N = 18).  The filter as
+--      own headline candidate, mode_farm_generic:286 (N = 18).  The filter as
 --      written would have discarded the thing it was written to find.
 --   2. The issue's sample labels invert on two of the five rows it spot-checked:
 --      aba_site:760 / :824 are named 合取(有牙齿) and read INERT here (their
 --      subject is a level-20 hero and that hero does not exist in turbo), while
---      mode_farm:392 / :506 are named 无害析取 and read TEETH here.  The load-
+--      mode_farm:393 / :507 are named 无害析取 and read TEETH here.  The load-
 --      bearing fact for 392/506 is one line: `J.IsLateGame()` (jmz_func:4337)
 --      is `DotaTime() > 18*60` in turbo, and the LATEST frame in the whole
 --      94-fixture archive is t = 690.5s.  The "harmless fallback" is itself
@@ -87,7 +87,7 @@ local GATES = {
          .. 'is dead code for the whole game, and reserving for buyback when your own t3s '
          .. 'are falling is live turbo behaviour at level 12.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 285, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 286, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 18 or not J.IsCore(bot) then',
       why = 'GH #84 (乙). Supports keep the exit through `not J.IsCore(bot)`; a core\'s '
@@ -95,13 +95,13 @@ local GATES = {
          .. 'Note the standing warning: dropping farm desire is not the same as fighting -- '
          .. 'this row is a candidate, and it needs a final-desire assertion, not a reachability one.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 369, op = '>=', n = 23, eff = 23,
+    { file = 'bots/mode_farm_generic.lua', line = 370, op = '>=', n = 23, eff = 23,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'or (bot:GetLevel() >= 23 and nAlliesCount >= 3)',
       why = 'rung 2 of 3. It only loosens the grouped-allies count from 4 to 3; rung 1 '
          .. '(nAlliesCount >= 4) and rung 3 (GetRoshanDesire()) carry the same purpose live.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 392, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 393, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if #nNeutrals == 0 and #nDefendAllies >= 2 and (not beVeryHighFarmer or bot:GetLevel() >= 15 or J.IsLateGame()) then',
       why = 'for a `beVeryHighFarmer` the first rung is false by construction, so the '
@@ -109,7 +109,7 @@ local GATES = {
          .. 'is DotaTime() > 18*60 in turbo, false in every frame of the archive. Both '
          .. 'fallbacks dead => the very-high farmer never joins a defence this way.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 506, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 507, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then',
       why = 'cores are covered by `bCore`; for a SUPPORT the remaining two rungs are the '
@@ -117,7 +117,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 535, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 536, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '
@@ -136,14 +136,14 @@ local GATES = {
          .. '[recorded] buyback test below: this path is unreachable for a SECOND, '
          .. 'independent reason, which is the part worth following up.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5751, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5753, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5791, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5793, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
@@ -419,7 +419,7 @@ tests['[corpus] the archive never reaches turbo late game (the 392/506 fallback)
     assert(c.max_t == 690.5, 'latest frame moved to t = ' .. c.max_t)
     assert(c.frames_past_18min == 0, c.frames_past_18min .. ' frame(s) are now past '
         .. '18:00 -- J.IsLateGame() is no longer vacuous, so the TEETH verdicts on '
-        .. 'mode_farm_generic:392 and :506 must be re-read')
+        .. 'mode_farm_generic:393 and :507 must be re-read')
     -- and the same thing said by running the real helper on the latest frame we own
     local J = rf.load('tests/fixtures/f_260820_043140_luna_ring_bid.lua')
     assert(J.IsModeTurbo() == true, 'fixture loader must report turbo')
@@ -436,7 +436,7 @@ tests['[reverse] J.IsLateGame is the 18-minute turbo constant'] = function()
     assert(src:find('function J.IsLateGame()', 1, true),
         'J.IsLateGame is gone -- 392/506 were classified through it')
     assert(src:find('DotaTime() > (J.IsModeTurbo() and 18 * 60 or 30 * 60)', 1, true),
-        'the turbo late-game constant moved; re-read mode_farm_generic:392 and :506')
+        'the turbo late-game constant moved; re-read mode_farm_generic:393 and :507')
 end
 
 tests['[reverse] 392 and 506 really do name IsLateGame as their fallback'] = function()
@@ -444,7 +444,7 @@ tests['[reverse] 392 and 506 really do name IsLateGame as their fallback'] = fun
     assert(src:find('not beVeryHighFarmer or bot:GetLevel() >= 15 or J.IsLateGame()', 1, true),
         ':392 no longer reads as classified')
     assert(src:find('if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then', 1, true),
-        ':506 no longer reads as classified')
+        ':507 no longer reads as classified')
 end
 
 tests['[reverse] aba_site 760 is dead code a FOCUS hero routes into'] = function()

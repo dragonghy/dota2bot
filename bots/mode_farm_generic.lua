@@ -58,7 +58,8 @@ function GetDesire()
 	-- [GH #6] Turbo regroup suppression: if the bot would be solo-farming deep
 	-- in enemy territory with no ally near and enemies present, kill the farm
 	-- desire so it pulls back / groups instead of feeding the lead or aegis.
-	-- Gated (turbo + soak-candidate 'regroup'); inert by default.
+	-- J.ShouldRegroupNotSolo is PROMOTED (was soak-candidate 'regroup') under
+	-- the Class-B policy: turbo default-on, no candidate gate.
 	if J.ShouldRegroupNotSolo(bot) then
 		return BOT_MODE_DESIRE_NONE
 	end

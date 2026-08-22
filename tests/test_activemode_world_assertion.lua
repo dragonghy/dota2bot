@@ -32,7 +32,7 @@
 --
 -- WHAT IT COSTS US TODAY (the reason this file exists now)
 -- -------------------------------------------------------
--- GH #84 §5 / charter backlog 0i named `mode_farm_generic:285` the headline
+-- GH #84 §5 / charter backlog 0i named `mode_farm_generic:286` the headline
 -- TEETH row and made one precondition explicit: before touching a shared
 -- consumption path we need a REAL frame where the teamfight location is inside
 -- 2500 and the subject is a core.  A corpus request for that frame was routed
@@ -359,7 +359,7 @@ tests['[blocked] the frame GH #84 §5 asks for does not exist in the archive'] =
             got.fixture, got.hero))
         assert(got.at_origin, string.format(
             '%s/%s now qualifies against a location that is NOT the map origin. That would '
-            .. 'be the mode_farm_generic:285 evidence frame backlog 0i is blocked on -- '
+            .. 'be the mode_farm_generic:286 evidence frame backlog 0i is blocked on -- '
             .. 'check WHY before using it.', got.fixture, got.hero))
     end
 end

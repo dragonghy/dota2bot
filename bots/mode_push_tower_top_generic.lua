@@ -6,7 +6,8 @@ if bot.PushLaneDesire == nil then bot.PushLaneDesire = {0, 0, 0} end
 
 -- [pushguard freehunt#2] deep solo push vs converging defenders is a feed,
 -- not a push (watched 181441 luna) -- cap the desire so retreat can win.
--- Gated (turbo + 'pushguard') inside the helper; inert by default.
+-- PROMOTED 2026-07-23 by owner directive (was soak candidate 'pushguard'):
+-- turbo default-on inside the helper, no candidate gate; normal unchanged.
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
 
 function GetDesire()

@@ -244,7 +244,8 @@ function GetDesireHelper()
     -- [pushguard / freehunt#2] Deep solo push against converging defenders:
     -- the push wrappers cap their desire; this floor makes the exit happen
     -- (watched 181441 luna: 2 defenders on her at +6182 depth, no retreat
-    -- action for 20s). Gated turbo + 'pushguard' inside the helper.
+    -- action for 20s). PROMOTED 2026-07-23 by owner directive (was soak
+    -- candidate 'pushguard'): turbo default-on in the helper, no gate.
     -- [SILENT root cause, C-group diagnosis 20260723] HIGH (0.75) LOST the
     -- desire auction to the chase that was killing the bot (watched 114311:
     -- drow's trigger held 4s+, she went 1100 DEEPER and died 3v1) -- the
@@ -266,10 +267,11 @@ function GetDesireHelper()
     -- pocket of 2+ enemies (within ~700) with no kill and no numbers advantage.
     -- Raise retreat desire so it backs off / stays at range instead of getting
     -- focused. Engage point = the bot's own location (generic attack-move / walk
-    -- INTO the enemies). Turbo-only + soak-candidate ('nodive') gated
-    -- (J.ShouldSuppressDive) so it never ships untested; inert off the candidate
-    -- side and in normal mode. Safe fights (lethal or numbers parity) fall
-    -- through via J.SafeToCommitFight.
+    -- INTO the enemies). J.ShouldSuppressDive is PROMOTED (was soak-candidate
+    -- 'nodive') under the Class-B micro-behavior policy: turbo default-on, no
+    -- candidate gate; normal mode unchanged. Its sharpened domain extension is
+    -- separately gated on 'nodive2'. Safe fights (lethal or numbers parity)
+    -- fall through via J.SafeToCommitFight.
     if J.ShouldSuppressDive(bot, botLocation, botTarget) then
         return BOT_MODE_DESIRE_HIGH
     end
@@ -347,9 +349,9 @@ function GetDesireHelper()
     -- death spot -> die again" loop): after a recent death in the enemy half,
     -- if the bot is back near (or closing on) its death spot with no allies
     -- there, raise retreat desire so it backs off instead of re-entering the
-    -- zone. Turbo-only + soak-candidate ('deathzone') gated
-    -- (J.ShouldAvoidDeathZone) so it never ships untested; inert off the
-    -- candidate side and in normal mode. Death spots are recorded by the
+    -- zone. J.ShouldAvoidDeathZone is PROMOTED (was soak-candidate
+    -- 'deathzone') under the Class-B micro-behavior policy: turbo default-on,
+    -- no candidate gate; normal mode unchanged. Death spots are recorded by the
     -- record-only call above the not-IsAlive early-out.
     if J.ShouldAvoidDeathZone(bot) then
         return BOT_MODE_DESIRE_HIGH

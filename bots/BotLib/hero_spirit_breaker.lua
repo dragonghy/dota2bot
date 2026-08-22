@@ -228,8 +228,9 @@ function X.ConsiderChargeOfDarkness()
             -- [GH #4] Don't charge INTO a pocket of 2+ enemies with no kill and
             -- no numbers -- the classic suicide charge that lands SB alone in the
             -- middle of the enemy team. Engage point = the charge target's
-            -- location. Turbo + soak-candidate ('nodive') gated (inert
-            -- otherwise); safe fights fall through via J.SafeToCommitFight.
+            -- location. J.ShouldSuppressDive is PROMOTED (was soak-candidate
+            -- 'nodive'): turbo default-on, no candidate gate; normal mode
+            -- unchanged. Safe fights fall through via J.SafeToCommitFight.
             if not J.ShouldSuppressDive(bot, target:GetLocation(), target)
                 and not J.ShouldNotChaseWhenLow(bot, target)
             then

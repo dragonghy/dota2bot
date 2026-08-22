@@ -44,7 +44,7 @@
 --     source read cannot rule out a runtime error, and four frames cannot rule
 --     out an unvisited branch.
 --   * `tTpQuota` being ONE ledger shared by all five bots is an assumption of
---     the shipped design (the comment at jmz_func.lua:5700 asserts it), not
+--     the shipped design (the comment at jmz_func.lua:5683 asserts it), not
 --     something this harness can check: the mock loads jmz_func once per test,
 --     so a per-bot VM would look identical here. Only an in-game observation
 --     can settle it. Tests 5-7 therefore pin the ledger's ARITHMETIC, which is

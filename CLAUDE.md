@@ -125,11 +125,18 @@ until it's ungated. The authoritative list of gated-and-unpromoted ids lives in
 `iterations/state.json` (it changes weekly; highlights as of 2026-07-23: the
 `lanefix` bundle, the laning five `creeppull/l1trade/suplh/pullcamp/l5combo`
 (+ Think combat-floor fixes, final-gate pending), the TP-discipline set
-`midtp/suptp/tpcommit/tpsafe2`, collapse pair `overchase/ownhalf`, stock-fix
-gates `ultcash/homeroute/pushguard/roshgate`, plus `depthnum/nodive2/nopush/
+`midtp/suptp/tpcommit`, collapse pair `overchase/ownhalf`, stock-fix
+gates `ultcash/homeroute/roshgate`, plus `depthnum/nodive2/nopush/
 wlok/wkbuild/midguard/ccburst/l1kite/l5trees/skysilence/aegisgroup`).
-Promoted turbo defaults so far: `lanesurv`, the sharpened anti-dive, and
-`ShouldPunishDive`'s building domain.
+
+**Promoted turbo defaults (no gate left — these are LIVE in every Turbo game):**
+`lanesurv`, `tphome`, `tpsafe`, `tpsafe2`, `pushguard`, `nodive`, `punish`,
+`regroup`, `deathzone`, `vsafe`, `skyburst`, `fight`, `roamstale`. Read this
+list off the source, not off prose: each promoted helper carries a `PROMOTED
+(was soak-candidate '<id>')` note above it, and `tests/test_gate_claim_consistency.lua`
+fails if any comment claims a gate that no longer exists (or never did). Note
+`nodive`/`punish` are promoted while their *extensions* `nodive2`/`ownhalf`
+stay gated — the helper ships, the sharpened domain does not.
 
 ## Hard-won learnings (don't relearn these — they cost real batch runs)
 

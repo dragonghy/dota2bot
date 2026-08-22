@@ -290,9 +290,10 @@ function GetDesireHelper()
 
     -- [GH #7] Punish a tower dive: if an enemy is over-extended under one of our
     -- buildings AND it is safe to commit (lethal or numbers), collapse on it so
-    -- nearby controllers + a core TP guarantee the kill. Gated inside
-    -- J.ShouldPunishDive (turbo + 'punish' soak candidate), so this is inert in
-    -- shipped/normal play until an A/B win promotes it.
+    -- nearby controllers + a core TP guarantee the kill. J.ShouldPunishDive is
+    -- PROMOTED (was soak-candidate 'punish') under the Class-B micro-behavior
+    -- policy: turbo default-on, no candidate gate; normal mode unchanged. Its
+    -- own-half domain extension is separately gated on 'ownhalf'.
     local punishTarget = J.ShouldPunishDive(bot)
     if punishTarget ~= nil then
         SetStickyTarget(punishTarget)

@@ -11,7 +11,7 @@
 --
 -- `J.Unit` is assigned nowhere in the tree, so reaching it is
 -- "attempt to index field 'Unit' (a nil value)" -- and nothing pcalls
--- X.SkillsComplement (ability_item_usage_generic.lua:8520 calls it bare from
+-- X.SkillsComplement (ability_item_usage_generic.lua:8522 calls it bare from
 -- AbilityUsageThink), so it would take out Invoker's whole ability layer for
 -- that frame, invisibly. The question is only whether anything reaches it.
 --

@@ -11,7 +11,7 @@
 -- short-circuits for a core Largo, so only a SUPPORT Largo ever gets there, and
 -- the branch it sits in is the laning-phase last-hit branch, i.e. a frame shape
 -- that recurs through the whole lane. Nothing wraps X.SkillsComplement in a
--- pcall (ability_item_usage_generic.lua:8520 calls it bare from
+-- pcall (ability_item_usage_generic.lua:8522 calls it bare from
 -- AbilityUsageThink), so the throw takes out that bot's entire ability layer for
 -- the frame -- and in game the error text is invisible (print never reaches the
 -- console; the engine's handler masks it as "error in error handling").

@@ -2366,3 +2366,62 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   仍照跑一遍见报告 §5;`state.json` 192 → **194** 键。
   **下次触发**:①`[harness] #100`;②`#92` + `VICTIM_HP` 扫描(连续第三轮排队);
   ③`#98`/`#101` 定级;④都在等就做 **backlog #1 帧语料检索工具**。
+
+- 2026-08-22T01:0xZ:第三十七次触发。优先级 2(a)。23:0xZ 之后**无新开的归总监 issue**
+  (最新 `#101` 是 22:47Z,上轮已定级)⇒ 上轮排的 ① `[harness] #100` 成立。做了两件:
+  给 `#100` 下裁定;把核验它的前提时撞出来的**一整类**缺陷修掉并配棘轮(**自开自修自关 `#103`**)。
+  报告 `iterations/reports/director/20260822T010000Z.md`。
+  **未花 AWS 钱、未做任何 AWS 调用、未启动计费资源;`bots/` 改动全部是注释,可执行行零改动。**
+  **① `[harness] #100` 两个口径问题都裁定了,但先报了一条前提问题** —— issue 声称「已钉成
+  `tests/test_itemdesire_world_assertion.lua`(24 例,16 变异)」并改了 `aiug:5162` 注释,
+  **两样都不在树上**(`git log --all -- <path>` 空;那处注释在我今天动它之前逐字未改),
+  而协同组同轮报告自己写的是「bots/ untouched」讲的是 GH #84 §5。最可能是 §AH 那条环境约束
+  (**容器 git 被网关挡住 ⇒ issue 走 API、commit 没推上来**)。**裁定刻意不依赖那些数字**,
+  只用我自己在树上核过的东西;issue 保持 open 等补推。**这是「issue 声称的验收物不存在」的
+  第一例** —— 不是空转,是推送链断了,记为体系问题。
+  **Q1 批准接 `IsTrained`/`IsActivated`(事实,无需建模;`J.CanCastAbility` 在 `jmz_func:861`,
+  不是 issue 写的 5145),但否掉打包里的打桩:`GetExtrapolatedLocation` 必须 refuse。**
+  我普查了 98 个 fixture,**没有速度/朝向**;而桩成「当前位置」**不是中性是定向的** ——
+  `J.CanEnemyInterruptTpChannel` 判 `nNow <= nReach or nSoon < nNow - 10`,零速度 ⇒ 第二个析取项
+  **恒假** ⇒ 「正在逼近」那一半被静默删掉,**而那正是这条规则存在的理由**。且我核过
+  `J.ShouldNotStartInterruptibleTp` **只有 `IsModeTurbo()` 没有 gate**(每局 Turbo 在跑)——
+  `#100` 的结论成立,**但它引的证据(`aiug:5162` 注释)当时说的是反话**。`GetFarmLaneDesire` 同理。
+  **Q2 同意不该伪造,但方案与排期都改**:答静态位置只解决位置,句柄还在答 hp/身份;
+  带 `buildings` 照数据答、不带就 refuse;**不在本工作单元落地** —— 403 帧 × 117 个已发布调用点
+  **必须先量消费面**,否则一次移动 43 个 fixture 后分不清修好的和弄坏的。
+  **② ⭐ `#103`:gate 状态只活在注释里,而 15 处注释在说谎。** UNDER-claim ×14:`tpsafe2`/
+  `pushguard`(2026-07-23 owner directive promote)+ `nodive`/`punish`/`regroup`/`deathzone`/
+  `vsafe`/`tpsafe`(Class-B promote)的助手**都只有 `IsModeTurbo()`**(逐个核函数体),但 14 处
+  **调用点**注释仍写「gated / inert by default」,**最老的自 2026-07-23 起就错**。
+  OVER-claim ×1:反自杀追击块写「gated behind **`nochaselow`**」——**该 id 全树不存在**,
+  真 gate 是 `J.IsLaneFixOn('chase')`;**按注释 arm 它 arm 的是空气,而那一波会读成「测过了,
+  中性」= `creeppull`/`pullcamp` 10/10 SILENT 的同一形状**。**根因是孤儿注释块**(那 17 行文档
+  的函数在 400 行之外,块本身紧贴**另一个**函数且中间无空行)⇒ **把块搬回它的函数上方**,
+  不是就地改一个词。棘轮 `tests/test_gate_claim_consistency.lua`(7 例):**wired 集从源码读,
+  绝不手工维护**(手工白名单自己会变成下一个过期登记处);claim 集查 quoted `'x'` 与 bracket
+  `[x]` 两种写法;不变式 = **被 claim 的 id 要么真被 wire,要么该行写着 `PROMOTED`**。
+  **七次变异七红**,其中 **M5 取消 PROMOTED 豁免只红 20/75 条**(证明豁免既承重又没在吞掉一切)、
+  **M7 往真实 `bots/` 塞新假 claim 被点名判红**(证明抓的是新回归,不是空匹配变绿)。
+  **顺带修上游**:`CLAUDE.md` 的 promoted 清单写 3 条而**树上实际 13 条**,gated 清单里还留着
+  `tpsafe2`/`pushguard` —— 已按源码 `PROMOTED` 注释重写并写明**清单要从源码读**(新会话读的
+  第一个文件,它错着整条链都错)。
+  **③ ⭐ 给全组两条操作事实(本轮踩到的)**:
+  **(甲)变异测试的还原绝不能走 `git checkout -- <file>`** —— 我 M1/M2 这么做,**把本会话自己
+  未提交的修复一起删了**,而**变异结果仍显示「红」、看起来完全正常**,是 M3/M4 的 checkout 报
+  pathspec 错才回头查 `git status` 发现的;M3/M4 因此**是在 M3 仍生效的情况下跑的、读数作废**,
+  已用文件级备份**全部重跑**。**「变异红了」≠「变异跑对了」**,是 17:00Z「变异没落地 = 结果不
+  算数」的第二形态。**(乙)纯注释改动会移动行号,而我们大量按行号钉**:`test_level_gate_census`
+  有 7 个 `line = N` 普查 pin 被我的注释改动全部打掉(整套里那 2 个 FF),已按每条 pin **自带的
+  `text` 字段重新定位**(不按偏移量猜,且与独立算出的 +1/+2 逐条吻合);另改正 `tests/` 里 **35 处**
+  被我移动的散文行号引用。**更大的问题(本轮不修,留给后续 `[harness]`)**:`tests/` 里还有一批
+  **在我动手前就已过期**的行号引用,其中 `test_relicguard_siege_gate.lua` 的 `aiug:5145` 声称是
+  `J.CanCastAbility`(**实际在 `jmz_func:861`**),**与 `#100` 正文同一个错号** ⇒ 这个错号在组间
+  被互相转录过。**按行号引用 = 一种没人核对的登记**,建议做成带锚文本、可校验的。
+  成本 MTD **$18.587**(批测台 00:06Z 自报,连续第七轮逐位一致),0 台在跑无泄漏,$45 围栏余 $26.41。
+  四组均有产出无空转。**铁律 8 的 token 口径仍存疑,周日效率台账前必须定掉**;今日周六,台账明天要做。
+  `DECISIONS_NEEDED.md` 不新增,**本周 owner 邮件仍为零**,周日一并发;patch 已分片不重复。
+  **`#92` + §AG.4(1) `VICTIM_HP` 扫描连续第四轮被挤掉 ⇒ 按上轮自己立的规矩,下一轮就给它单独排
+  一次不处理 issue 的触发。**
+  **下次触发**:①**`#92` + `VICTIM_HP` 扫描(单独一次触发,不处理 issue)**;②**周日效率台账**
+  (先定 `token_usage.py` 口径);③`#98`/`#101` 定级;④免费重算 `capmono`(#72)的 (a) 取
+  ARMED A−B(8 run / 16 vs 16);⑤都在等就做 **backlog #1 帧语料检索工具**。

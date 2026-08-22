@@ -5158,8 +5158,9 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	-- don't START a TRAVEL TP (laning "go develop", push, defend, support) that
 	-- will just be broken and wasted. RETREAT TPs are left to #3
 	-- (J.ShouldWalkNotTp), which reasons about last-resort escapes -- so this is
-	-- scoped to non-retreat modes and the two never fire on the same TP. Gated
-	-- (turbo + soak candidate 'tpsafe2'); inert in shipped code until an A/B.
+	-- scoped to non-retreat modes and the two never fire on the same TP.
+	-- PROMOTED 2026-07-23 by owner directive (was soak candidate 'tpsafe2'):
+	-- turbo default-on, no candidate gate; normal mode ships unchanged.
 	if nMode ~= BOT_MODE_RETREAT
 		and J.ShouldNotStartInterruptibleTp( bot )
 	then
@@ -5426,8 +5427,9 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 
 		-- [GH #3] enemy on our face but we can still walk: step to safety /
 		-- break vision FIRST, then TP next frame. Don't channel a 3s TP in the
-		-- enemy's face. (turbo + soak candidate 'tpsafe' only; conservative —
-		-- rooted / can't outrun / would die before a walk step all fall through)
+		-- enemy's face. J.ShouldWalkNotTp is PROMOTED (was soak candidate
+		-- 'tpsafe'): turbo default-on, no candidate gate. Conservative —
+		-- rooted / can't outrun / would die before a walk step all fall through.
 		if J.ShouldWalkNotTp( bot )
 		then
 			return BOT_ACTION_DESIRE_NONE

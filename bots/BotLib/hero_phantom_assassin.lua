@@ -558,9 +558,10 @@ function X.ConsiderW()
 			then
 				-- [GH #4] Don't blink-strike INTO a pocket of 2+ enemies with no
 				-- kill and no numbers (e.g. charging Lina alone) -- suicide
-				-- initiation. Engage point = the blink target's location. Turbo +
-				-- soak-candidate ('nodive') gated; safe fights (lethal / numbers)
-				-- fall through via J.SafeToCommitFight.
+				-- initiation. Engage point = the blink target's location.
+				-- J.ShouldSuppressDive is PROMOTED (was soak-candidate 'nodive'):
+				-- turbo default-on, no candidate gate. Safe fights (lethal /
+				-- numbers) fall through via J.SafeToCommitFight.
 				if not J.ShouldSuppressDive( bot, npcTarget:GetLocation(), npcTarget )
 					and not J.ShouldNotChaseWhenLow( bot, npcTarget )
 				then

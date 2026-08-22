@@ -128,7 +128,8 @@ function ____exports.GetPushDesireHelper(bot, lane)
     -- [GH #6] Turbo regroup suppression: when the bot would solo-push deep into
     -- enemy territory with no ally near and enemies present, kill the push
     -- desire so it pulls back / groups instead of feeding the lead or aegis.
-    -- Gated (turbo + soak-candidate 'regroup'); inert by default.
+    -- jmz.ShouldRegroupNotSolo is PROMOTED (was soak-candidate 'regroup')
+    -- under the Class-B policy: turbo default-on, no candidate gate.
     if jmz.ShouldRegroupNotSolo(bot) then
         return BotModeDesire.None
     end

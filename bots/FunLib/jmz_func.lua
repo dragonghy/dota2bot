@@ -5555,23 +5555,6 @@ function J.SafeToCommitFightOnArrival( bot, target )
 	return nMine >= nTheirs
 end
 
--- [replay-review 071423/071903] Anti-suicide-CHASE guard. Discovered by watching
--- three Turbo games frame by frame: a low-HP core keeps chasing a fleeing low-HP
--- enemy and dies to the enemy's escape plus a reinforcing teammate (Luna and
--- Silencer both died in the river ~5:15 doing exactly this). SafeToCommitFight
--- guards WALKING INTO a fight; this guards CONTINUING TO PURSUE while the bot
--- itself is the one who is low. True => don't chase (hold / back off / kite).
---
--- Locally-correct, no plausible downside, so Class-B (runbook §1). Fires ONLY
--- when ALL of:
---   * the bot is LOW: HP fraction < 0.40 (I'm the one at risk), AND
---   * NOT a clean commit -- not J.SafeToCommitFight (no lethal burst / not
---     outnumbering), AND
---   * PUNISHABLE: an enemy hero within ~1200 can bring the low bot's CURRENT
---     health down by >= 45% (they can realistically finish me).
--- A clean group kill (SafeToCommitFight true) or a chase nobody can punish falls
--- through (returns false) so a genuinely safe finish still happens. Turbo-only;
--- gated behind the 'nochaselow' soak candidate until benchmarked.
 -- Shared gate for the replay-review lane/fight fix batch (games 071423/071859/
 -- 071903, watched frame by frame). Every fix in this batch is inert unless the
 -- game is turbo AND the 'lanefix' soak candidate is active, so they ship and
@@ -5975,6 +5958,24 @@ end
 -- bot as a full fighter. The exception is now LETHAL-ONLY and EXCLUDES SELF:
 -- yield only if allies other than me can already secure the kill (then my low
 -- HP doesn't have to tank the trade).
+-- [replay-review 071423/071903] Anti-suicide-CHASE guard. Discovered by watching
+-- three Turbo games frame by frame: a low-HP core keeps chasing a fleeing low-HP
+-- enemy and dies to the enemy's escape plus a reinforcing teammate (Luna and
+-- Silencer both died in the river ~5:15 doing exactly this). SafeToCommitFight
+-- guards WALKING INTO a fight; this guards CONTINUING TO PURSUE while the bot
+-- itself is the one who is low. True => don't chase (hold / back off / kite).
+--
+-- Locally-correct, no plausible downside, so Class-B (runbook §1). Fires ONLY
+-- when ALL of:
+--   * the bot is LOW: HP fraction < 0.40 (I'm the one at risk), AND
+--   * NOT a clean commit -- not J.SafeToCommitFight (no lethal burst / not
+--     outnumbering), AND
+--   * PUNISHABLE: an enemy hero within ~1200 can bring the low bot's CURRENT
+--     health down by >= 45% (they can realistically finish me).
+-- A clean group kill (SafeToCommitFight true) or a chase nobody can punish falls
+-- through (returns false) so a genuinely safe finish still happens.
+-- Gated turbo + the 'lanefix' bundle id or the per-fix id 'lf_chase'
+-- (J.IsLaneFixOn('chase')); inert in shipped games until promoted.
 function J.ShouldNotChaseWhenLow( bot, target )
 	if not J.IsLaneFixOn( 'chase' ) then return false end
 	if not J.IsValidHero( target ) then return false end
