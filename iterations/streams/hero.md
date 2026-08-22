@@ -473,6 +473,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   (「不要移分母然后祈祷,把 auction 在新帧上重跑」)重跑,**far 帧真的翻了**
   (as-loaded `laning 0.369` → honest `defend_tower_bot 0.300`)⇒ 录着的分子也动
   (moved winners 18/96 → **19/98**,换 MODE 的 10 → **11**)。**那条纪律这一轮救了一次真错。**
+  **门**:`luacheck bots game` 0 警告 / `lua5.1 tests/run_tests.lua` **1039 tests, 0 failures**
+  (基线 1024 + 新增 15)/ `run_py_tests.sh` 6 passed / 工具 `--verify` 41 例。
   详见 backlog §12 与 `iterations/reports/hero/20260822T003000Z.md`;
   登记 `state.json:cmrcap_20260822`;GH #63 已评论。
 - 2026-08-21T22:00:00Z:**`liondrain` 上机前语料核验 —— DO NOT ARM,第六类处置
