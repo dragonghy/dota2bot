@@ -4,6 +4,11 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 **稳定版锚点:`stable-v1`(2026-08-19T23:00Z)= 首次 promote(`roamstale`)之后的 main。**
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
+**⚠️ 2026-08-22T07:0xZ:见 §AK —— `[bug] #105` 修好了但**gated 在新 id `corerole`** 上
+(gate 关 = 逐位复现旧缺陷)。**`corerole` 是「待批」不是 eligible(eligible 仍 20,逐字未变),
+且 AG.4 阶梯收官前不许 arm**(它改的是阶梯承重检测器读的同一条 team_roam help 分支族)。
+入集前必须先做**差分域**桌面预检(不是触发域)。**顺带**:`X.ConsiderHelpWhenCoreIsTargeted`
+这条**已发布、未 gated** 的分支,对**辅助英雄至今结构上从未可达**。**
 **⚠️ 2026-08-21T09:0xZ:见 §AB —— (1) `odaoe` **批准入集**(19 → **20 eligible**,两列都过;
 §U.0 的 18 id 下一波串**逐字不变**);(2) **`[harness] #82`**:被立为唯一合法存活判据的
 `is_dead()` 曾对**一整类**英雄恒答「活着」,**受影响的不止报告里那两个 —— `antimage` 是结构上的
@@ -4133,3 +4138,110 @@ TOKENS total_in=21,563,306 out=130,932 turns=156
    **`total_in / turns` = 平均上下文大小**(它衡量的是「每轮拖着多大的包袱」,
    与「读了多少不必要的大文件」直接相关,是可行动的);
 4. 各组报告里 grep 不到 `TOKENS` 行的,台账记为**缺报**,不用 0 代替(缺报 ≠ 零消耗)。
+
+## §AK 总监裁定 2026-08-22T07:0xZ(第三十九次触发):`[bug] #105` —— `J.GetClosestCore` 读的是调用者的角色,新 gate `corerole` 落地(dark)
+
+**一句话**:`jmz_func.lua` 那个循环跑在 `member` 上、角色子句写的却是 `J.IsCore(bot)`,
+于是这个函数的名字在**两个方向上都是假的**;修正**已落地但 gated 在新 id `corerole` 上**,
+gate 关时逐位复现旧缺陷。**`corerole` 目前是「待批」不是 eligible**,
+且**在 AG.4 阶梯收官前不许 arm**(理由见 AK.4)。
+
+### AK.1 缺陷本身(两个方向,都活在已发布的 turbo 默认行为里)
+
+唯一消费方是 `mode_team_roam_generic.lua:1539` 的 `X.ConsiderHelpWhenCoreIsTargeted()`
+(**未 gated、turbo 默认在跑**,且在 `Think` 里排在 `ConsiderHelpAlly` **之上**):
+
+- **辅助调用者**:角色子句每次迭代都为假 ⇒ **恒返回 nil** ⇒ 「我的核心被针对了,去帮他」
+  这条分支对**本职就是干这个的英雄结构性死亡**;
+- **核心调用者**:子句恒真 ⇒ 返回**槽位顺序里第一个活着的、不是我的队友**,可能是个 5 号位。
+
+**消费方自己的条件就是铁证**:它开头写着 `(not J.IsCore(bot) or bot.isBear or ...)` ——
+作者**明确写了一条辅助分支**,而 helper 让这条分支永远到不了。这是 §0b「消费方的机制
+悄悄作废 helper 的推理」的**反方向**第一例:这次是 **helper 悄悄作废了消费方写好的分支**。
+
+### AK.2 真实帧(f_260819_181742_ss_chase_start,seed 866 radiant,t=312.5)
+
+该帧 radiant 阵型(全部读自 fixture,无一项假设):
+
+| 槽位 | 英雄 | 角色 | 距 subject | 距 centaur |
+|---|---|---|---|---|
+| 1 | bristleback | 核心 | 8955u | 9594u |
+| 2 | death_prophet | 核心 | 6258u | 6731u |
+| 3 | **shadow_shaman(subject)** | **辅助(抽签 pos 4)** | 0u | 656u |
+| 4 | zuus | 辅助 | 11838u | 12398u |
+| 5 | centaur | 核心 | 656u | 0u |
+
+半径 3500 下这帧**恰好能把两种读法分开**(subject 够得着的核心只有 centaur;centaur 够得着的
+队友只有那个辅助):
+
+| | gate OFF(=已发布) | `corerole` ARMED |
+|---|---|---|
+| `GetClosestCore(shadow_shaman, 3500)` | **nil** | **centaur** |
+| `GetClosestCore(centaur, 3500)` | **shadow_shaman(辅助!)** | **nil**(另外两个核心都在 3500 外) |
+
+**core-caller 那一格是本轮特意加的鉴别器**:一个「顺手把角色子句删掉」的天真修法
+在这一格会答出那个辅助 ⇒ 变异 M3 正是这么改的,**恰好只挂这一条**。
+
+### AK.3 归因重推(旧 tripwire 要求的那件事,已做完)
+
+`tests/test_roamreach_bounded_chase.lua` 里那条 `[recorded]` 测试是**故意的绊线**:
+它断言缺陷仍在,好让修它的那一天 GH #45 的 flip-1 归因**被重推而不是被无声改道**。
+本轮它如期变红,已改写成重推结论,**用隔离法而不是推断**(把 mode 文件的全局
+`ConsiderHelpAlly` 打成 no-op,看哪一侧还能产出那条追击):
+
+- **gate OFF + HelpAlly 关掉** ⇒ desire **0.00,零指令**(核心分支对辅助调用者结构上够不着);
+- **ARMED + HelpAlly 关掉** ⇒ desire **0.72**,并发出**同一条** `Action_AttackUnit(DK,false)`。
+
+⇒ **armed 时开局的分支从 `ConsiderHelpAlly` 改道到 `ConsiderHelpWhenCoreIsTargeted`,
+而这一帧的出价/目标/指令三者全同。**
+
+**诚实边界(必须连着引用)**:两条分支**不共用出价公式** ——
+核心分支 `RemapValClamped(hp, 0, 0.5, NONE, 0.98)`,HelpAlly 是 `0, 0.6`;
+只有**双双饱和(hp ≥ 0.6)**时才相等,而本帧 subject **满血**。
+⇒ 「行为中性」是**这一帧的性质,不是这个修复的性质**;更麻烦的是 lane-push cap 让它**非单调**
+(hp=0.55 时核心分支 0.98→被砍到 0.72,HelpAlly 0.898 **不到阈值不砍**,反而更高)。
+**别把「中性」写进任何跨帧结论。**
+
+### AK.4 排期约束(硬)
+
+1. **`corerole` 是「待批」,不是 eligible**;顶部 eligible 行**逐字未变(仍 20)**。
+2. **AG.4 阶梯收官前不许 arm**:它改的正是阶梯承重检测器所读的那条链
+   (team_roam 的 help 分支族),同波 arm = 又一次「一次变两个量」。
+   06:10Z 在跑的 `roamreach` 单 id 波次**不受影响**(树钉死在 `03316d1`,早于本次改动)。
+3. **入集前必须先做桌面预检(§V.7 / §Y.2 口径的机会普查)**,而且要普查**差分域**而不是触发域:
+   「辅助 + 3500 内有己方核心 + 该核心正被针对 + **且 HelpAlly 不会触发**」的帧。
+   理由见 AK.3:很多帧上两条分支给出**同一条指令**,那些帧对条件 (a) **没有分辨力**。
+   `#85`/`#97` 两次 DO-NOT-ARM 都是这么省下来的。
+4. 条件 (b) 若差分域每局 < ~1 次,按 §A0 通例走行为检测器,**不许用 gpm/xpm**。
+
+### AK.5 未修的残留(登记,不是遗漏)
+
+**「Closest」也是假的**:循环命中即 `return`,按 `GetTeamMember()` 顺序走,
+**从不比较候选之间的距离**。它只改变**回来的是哪一个**、不改变**是否有人回来**,
+所以是第二根杠杆,按「一次一个」排队(已在 `#105` 登记 + 测试里钉成 `[recorded]`)。
+本帧上两种读法**恰好一致**(唯一在范围内的核心正好也是最近的)⇒ **这帧对残留没有分辨力**,
+测试里如实写了这一句。
+
+### AK.6 验收
+
+- 新 `tests/test_corerole_closest_core.lua`(**8 例**:前提帧性质 / gate OFF 两个方向 /
+  ARMED 两个方向 / 非 turbo 域 / gate wiring / 残留 `[recorded]`);
+- `tests/test_roamreach_bounded_chase.lua` 绊线改写成 **3 条重推测试**(17 → **19 例**);
+- **三次变异三红,每次红在该红的地方**:
+  **M1** 去掉 gate(修复默认生效)⇒ 新文件 4 红 + roamreach 3 红,**其中 `HEAL FLIP 1` 也红**
+  —— 正是绊线当初要防的那个「无声改道」;
+  **M2** gate 接上但不生效 ⇒ 只有 ARMED 那几条红;
+  **M3** 天真修法(armed 时直接放行,不看候选角色)⇒ **只挂 core-caller 那一条**。
+  还原一律走**文件级备份**(01:0xZ 的 (甲) 教训:绝不用 `git checkout -- <file>`),
+  还原后 `md5sum` 逐位相同。
+
+### AK.7 一条运维事实(全组,本轮踩到)
+
+**全套 `lua5.1 tests/run_tests.lua` 现在要跑 ~65 分钟**(**1122 例**;瓶颈是某个测试 fork 出来的
+`tests/_itemdesire_sweep.lua` 子进程)。两条:
+
+1. **别把 runner 的输出管进 `tail`** —— stdout 被缓冲,整整一小时**看不到任何进度**,
+   分不清「在跑」和「卡死」。写成 `> suite.log` 再读文件,进度点是实时的。
+2. **全套在跑的时候不要动 `tests/` 里的文件** —— runner 是**边跑边 `loadfile`**,
+   改动会被半途读进去,那一轮结果**口径不明**。本轮第一次全套跑了 37 分钟后因此作废重跑。
+   这是 01:0xZ 那条「变异红了 ≠ 变异跑对了」的**第三形态:绿了也 ≠ 测的是这棵树**。

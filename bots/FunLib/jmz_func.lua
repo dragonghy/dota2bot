@@ -8806,15 +8806,35 @@ function J.IsThereCoreInLocation( vLoc, nRadius )
     return false
 end
 
+-- [GH #105] The role clause in this loop reads the CALLER, never the candidate,
+-- so the name is a lie in both directions: a support caller always gets nil
+-- (however many cores stand next to it), and a core caller gets "the first
+-- living team member that is not me", which may well be a pos 5.
+--
+-- The correction is gated behind soak candidate 'corerole' and is a bit-for-bit
+-- no-op with the gate off, ON PURPOSE. This is not a dark corner: the only
+-- consumer, X.ConsiderHelpWhenCoreIsTargeted (mode_team_roam_generic.lua,
+-- ungated, turbo default-on), is exactly the chain the AG.4 ladder is measuring
+-- right now, and flipping the selection silently would re-route the GH #45
+-- flip-1 attribution mid-programme instead of re-deriving it.
+--
+-- NOT corrected on either path (residual, recorded on GH #105): "Closest" is
+-- still a lie too -- the loop returns the first match in GetTeamMember() order,
+-- not the nearest one. That clause changes WHICH ally comes back but never
+-- whether one comes back at all, so it is a second lever and waits its turn.
 function J.GetClosestCore(bot, nRadius)
+	-- gate off: the shipped defect, verbatim. armed: what the name promises.
+	local bCandidateRole = J.IsModeTurbo() and J.IsSoakCandidate('corerole')
+
 	for i = 1, #GetTeamPlayers( GetTeam() )
 	do
 		local member = GetTeamMember(i)
+		local hRoleSubject = bCandidateRole and member or bot
 
 		if  member ~= nil
 		and member:IsAlive()
 		and member ~= bot
-		and J.IsCore(bot)
+		and J.IsCore(hRoleSubject)
 		and GetUnitToUnitDistance(bot, member) <= nRadius
 		and not J.IsSuspiciousIllusion(member)
 		then

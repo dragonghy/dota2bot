@@ -440,32 +440,107 @@ tests['REVERSE: roamstale is no longer a live gate id at all'] = function()
         'the promoted (ungated, turbo-only) form of the reset must still be the shipped one')
 end
 
-tests['[recorded] J.GetClosestCore tests the CALLER\'s role, never the candidate\'s'] = function()
-    -- Found while attributing flip 1. jmz_func.lua:8817 reads `J.IsCore(bot)`
-    -- inside the loop over `member`, so the function answers "the first living
-    -- team member that is not me" for a core caller and nil for a support caller
-    -- -- the candidate's role is never consulted. On this frame the subject is a
-    -- drafted support, so it returns nil while a genuine drafted core (Centaur,
-    -- pos 3) stands 656u away.
-    -- NOT FIXED HERE: one small lever per unit, and this one is a jmz_func helper
-    -- with consumers outside team_roam. Reported as a [bug]; pinned so the day it
-    -- is fixed, this file's flip-1 attribution is re-derived rather than silently
-    -- re-routed to the core-targeted branch.
+-- ---------------------------------------------------------------------------
+-- GH #105 / soak candidate 'corerole'. This block used to be a tripwire: it
+-- asserted that jmz_func's `J.IsCore(bot)` defect (the loop runs over `member`
+-- but role-tests the CALLER) was still present, precisely so that the day
+-- somebody fixed it, flip 1's attribution would be re-derived instead of
+-- silently re-routing to the core-targeted branch. The director fixed it on
+-- 2026-08-22 behind the 'corerole' gate; this is the re-derivation the tripwire
+-- was demanding. The helper's own contract lives in
+-- tests/test_corerole_closest_core.lua -- what belongs HERE is only what the
+-- correction does to this file's eleven conclusions.
+--
+-- Answer: with the gate OFF, nothing (that is what "gated" buys). With the gate
+-- ARMED, the branch that opens the chase changes -- from ConsiderHelpAlly to
+-- X.ConsiderHelpWhenCoreIsTargeted, which sits ABOVE it in Think -- while the
+-- bid, the target and the order all stay identical ON THIS FRAME.
+-- ---------------------------------------------------------------------------
+
+tests['[GH #105] gate OFF: flip 1 is untouched, defect and all'] = function()
     local src = io.open('bots/FunLib/jmz_func.lua'):read('*a')
     local body = src:match('function J%.GetClosestCore%(bot, nRadius%)(.-)\nend')
     assert(body ~= nil, 'J.GetClosestCore must still exist in jmz_func')
-    assert(body:find('and J.IsCore(bot)', 1, true) ~= nil,
-        'the defect is the caller-role test inside the member loop; it is gone, so '
-        .. 'GetClosestCore now means something else and flip 1 must be re-measured')
-    assert(body:find('J.IsCore(member)', 1, true) == nil,
-        'the candidate is still never role-tested')
+    assert(body:find("IsSoakCandidate('corerole')", 1, true) ~= nil,
+        'the correction must still be GATED -- if it ships by default, flip 1 is '
+        .. 'attributed to the wrong branch in every turbo game and this whole '
+        .. 'file must be re-measured')
 
-    local J, bot, heroes = world(F_START, { castRanges = true })
+    local log, desire, J, bot, heroes = frame(F_START, { ids = {}, castRanges = true })
     assert(not J.IsCore(bot), 'subject is a drafted support')
-    assert(J.GetClosestCore(bot, 3500) == nil, 'so it gets nil...')
+    assert(J.GetClosestCore(bot, 3500) == nil,
+        'and with nothing armed it still gets nil, so the core-targeted branch '
+        .. 'is still unreachable for it -- flip 1 is still ConsiderHelpAlly')
     local cent = heroes['npc_dota_hero_centaur']
     assert(J.IsCore(cent) and dist(bot, cent) < 3500,
         '...while a drafted core (Centaur, pos 3) is 656u away and alive')
+    assert(math.abs(desire - CEIL) < 1e-9 and #log == 1
+        and log[1].fn == 'Action_AttackUnit'
+        and log[1].args[1] == heroes['npc_dota_hero_dragon_knight'],
+        'and the frame ends exactly where HEAL FLIP 1 left it')
+end
+
+tests['[GH #105] ARMED: the opener re-routes to the core branch, same order'] = function()
+    -- Isolation, not inference: disable ConsiderHelpAlly (a global in the mode
+    -- file) and see which side of the gate can still produce the chase. Every
+    -- world() re-dofiles the mode file, which re-installs the real one, but the
+    -- last stub would otherwise outlive this test -- the runner is ONE Lua
+    -- process for all 126 files -- so it is restored at the end.
+    local realHelpAlly = ConsiderHelpAlly
+    local J1, bot1 = world(F_START, { ids = {}, castRanges = true })
+    ConsiderHelpAlly = function() return nil, false end -- luacheck: ignore
+    local log1 = rf.record_actions(bot1)
+    local d1 = GetDesire()
+    Think()
+    assert(d1 == 0 and #log1 == 0,
+        'gate off, with HelpAlly disabled NOTHING is left: the core-targeted '
+        .. 'branch is structurally unreachable for a support caller. got desire '
+        .. tostring(d1) .. ' / ' .. #log1 .. ' orders')
+    assert(J1.GetClosestCore(bot1, 3500) == nil, 'because the helper answers nil')
+
+    local J2, bot2, heroes2 = world(F_START, { ids = { corerole = true }, castRanges = true })
+    ConsiderHelpAlly = function() return nil, false end -- luacheck: ignore
+    local log2 = rf.record_actions(bot2)
+    local d2 = GetDesire()
+    Think()
+    assert(J2.GetClosestCore(bot2, 3500) == heroes2['npc_dota_hero_centaur'],
+        'armed, the helper answers the Centaur')
+    assert(math.abs(d2 - CEIL) < 1e-9,
+        'and the core-targeted branch alone now carries the same ' .. CEIL
+        .. ' bid; got ' .. tostring(d2))
+    local ok = #log2 == 1 and log2[1].fn == 'Action_AttackUnit'
+        and log2[1].args[1] == heroes2['npc_dota_hero_dragon_knight']
+        and log2[1].args[2] == false
+    ConsiderHelpAlly = realHelpAlly -- luacheck: ignore
+    assert(ok, 'and issues the SAME continuous attack-follow on the DK')
+end
+
+tests['[GH #105] ARMED: this frame is observationally identical either way'] = function()
+    local logOff, dOff, _, _, hOff = frame(F_START, { ids = {}, castRanges = true })
+    local logOn, dOn, J, bot, hOn = frame(F_START, { ids = { corerole = true },
+                                                     castRanges = true })
+    assert(math.abs(dOff - dOn) < 1e-9, 'same bid: ' .. dOff .. ' vs ' .. dOn)
+    assert(#logOff == 1 and #logOn == 1 and logOff[1].fn == logOn[1].fn
+        and logOff[1].args[1] == hOff['npc_dota_hero_dragon_knight']
+        and logOn[1].args[1] == hOn['npc_dota_hero_dragon_knight']
+        and logOff[1].args[2] == logOn[1].args[2],
+        'same order, same target, same continuous flag')
+
+    -- HONEST BOUNDARY, and the reason the id is a candidate rather than a
+    -- silent fix: the two branches do NOT share a desire formula. The
+    -- core-targeted branch remaps HP over [0, 0.5] and HelpAlly over [0, 0.6]
+    -- (mode_team_roam_generic.lua), so they only agree where both saturate --
+    -- i.e. at HP >= 0.6. This subject is at full HP, which is why the frame
+    -- shows a neutral re-route; it is a fact about the frame, not about the fix.
+    assert(math.abs(J.GetHP(bot) - 1.0) < 1e-9,
+        'the equality above rests on the subject being at full HP; got '
+        .. J.GetHP(bot))
+    local src = io.open('bots/mode_team_roam_generic.lua'):read('*a')
+    assert(src:find('RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)', 1, true) ~= nil
+        and src:find('RemapValClamped(J.GetHP(bot), 0, 0.6, BOT_MODE_DESIRE_NONE, 0.98)', 1, true) ~= nil,
+        'the two ceilings (0.5 core-targeted, 0.6 help-ally) must still differ -- '
+        .. 'if they are unified, the re-route becomes neutral at every HP and '
+        .. 'this caveat can go')
 end
 
 tests['DOMAIN: normal mode (non-turbo) is untouched even with the id armed'] = function()
