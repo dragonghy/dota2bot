@@ -3078,7 +3078,7 @@
  },
  "fieldcreep_20260822": {
   "what": "GH #119: J.IsFieldRegenSituation's three danger clauses read heroes and towers only -- no creep, no neutral -- so its own 'nobody anywhere near it' can hold while a camp chews the bot. Gated soak candidate 'fieldcreep' appends one clause asking the engine's WasRecentlyDamagedByCreep with the SAME 3.0 lookback the hero clause uses.",
-  "status": "gated, NOT armed -- proposed for the next full-set wave (test_set.md 19:0xZ line, 23 -> 24 eligible). No dedicated wave requested.",
+  "status": "APPROVED into the armed set by the director 2026-08-22T23:0xZ (test_set.md SS-AR; next wave string = SS-AR.0, 24 id = SS-AP.0's 23 + fieldcreep). Same wave as stayfield/stayfield2/fieldbuy, not a dedicated one -- the version those three should buy (a) for is the NARROWED one (SS-AO: evidence is version-specific). Approval carries a MANDATORY attribution column, see fieldcreep_engine_semantics_20260822T2300Z.",
   "where": "bots/FunLib/jmz_func.lua, appended after the tower clause inside J.IsFieldRegenSituation (append-only, so the split-time \"clause order unchanged\" argument stays true)",
   "domain": "100-fixture corpus / 930 live hero frames: situation 50 -> armed 45, 5 vetoed (2 carrying a heal = the stayfield/stayfield2 domain, 3 dry = the fieldbuy domain). Both halves of owner P2 move together, which is why this is one clause in the shared predicate rather than three copies.",
   "bound": "34 of the 50 situation frames are v1 fixtures carrying no recent_damage at all -- the clause is UNASKABLE there, not false-for-a-good-reason. Of the 16 askable, 9 are genuinely quiet. So 5 of 16 is a FLOOR; the 5/50 form is not used.",
@@ -3177,5 +3177,21 @@
   "report": "iterations/reports/strategy/20260822T210634Z.md",
   "api_citation": "「引擎每帧轮询每个 mode 文件的 GetDesire,只有赢家跑 Think」不是本组对引擎的推断,是仓库自己的文档白纸黑字:docs/BOT_API_REFERENCE.md:49 —— \"GetDesire() is called every frame for ALL modes simultaneously. The mode returning the highest desire value wins and becomes the active mode. Only that mode's Think() is then called.\" => 「它写在 roam mode 文件里所以是 roam 专属」是错的:mode 文件的 GetDesire 那一半是共享的、每帧的、全体的代码,只有 Think 那一半归赢家。本轮整个结论压在这条上,所以引的是文档不是记忆。",
   "scope_caveat": "13 与 28 都量在域谓词上(J.ShouldFieldBuyRegen 的 situation ∧ dry 两条腿),不是完整采购合取(后者还带 stash/金钱/库存/modifier,本语料答不全)=> 13 是「丢掉的采购数」的上界;但 28 因同样理由也是同一个上界,论证压的是 46.4% 这个比值。"
+ },
+ "fieldcreep_engine_semantics_20260822T2300Z": {
+  "what": "Director's approval measurement for 'fieldcreep' (director trigger 48). Re-ran tests/_fieldcreep_sweep.lua and reproduced strategy's counts verbatim (situation 50 / armed 45 / vetoed 5, 2 with a heal + 3 dry; BAND mass-le24 256 / tail-ge25 26 / max-hit 45), then added the column the application did not carry: PER-HIT damage on each of the five vetoed frames.",
+  "measurement": {
+   "f_260819_182855_lion_drain_jungle/lion": "hp 0.25, heal=1, dmg3=109, hits 37,36,36        -> uniform heavy = camp",
+   "f_260819_222559_od_eclipse_pair/juggernaut": "hp 0.50, heal=1, dmg3=132, hits 37,30,38,27     -> uniform heavy = camp",
+   "f_260820_043637_axe_ring_alone/viper": "hp 0.55, heal=0, dmg3=129, hits 13,44,14,45,13  -> MIXED: 40 lane-sized + 89 camp-sized",
+   "f_260820_043140_wd_defend_token/luna": "hp 0.32, heal=0, dmg3=22,  hits 13,9            -> lane creeps",
+   "f_260820_043120_viper_defend_paired/zuus": "hp 0.50, heal=0, dmg3=14,  hits 14              -> lane creep"
+  },
+  "correction": "The application's prose reads as if the viper frame were purely heavy ('43-45 on the viper'). Measured it is a FIVE-HIT MIX (13,44,14,45,13): its lane-sized hits alone are enough to light the predicate. That is the hinge of the finding below, not a nitpick.",
+  "finding": "Whether the engine's WasRecentlyDamagedByCreep counts NEUTRALS is unanswerable from this repo (BOT_API_REFERENCE:1213 says only 'Damaged by a creep?'; the only other in-repo use, mode_farm_generic.lua:1067, is a laning-vs-lane-creep context; and the corpus structurally cannot answer -- see blindspot). Two worlds: (A) counts neutrals -> domain is 5 frames and condition (c)'s arithmetic holds on the three heavy ones. (B) does not -> the two PURE-CAMP frames go silent, and those are exactly the only two frames carrying a heal, so the entire stayfield/stayfield2 half of this veto's domain goes to zero; what survives is three dry frames whose lane-attributable 3s damage is 14 / 22 / 40 -- all below flask ~92 and faerie_fire 85. I.e. in world B 100% of the veto's remaining domain sits in the 'over-broad corner' strategy itself named, so the fix is not silent there, it is INVERTED. Same batch data, opposite readings.",
+  "honest_bound": "The source labels above are INFERRED FROM PER-HIT MAGNITUDE, not measured. The corpus separation is clean (256 hits <=24, only 26 >=25, max 45) but clean separation is not a true label.",
+  "blindspot_and_fix": "tools/batch_test/replayscope/make_fixture.py stored actor=None for every non-hero damage row and folded 'creep' and 'neutral' into one kind, so 'was it a centaur or a melee creep' was deleted at fixture-write time. Fixed this round: non-hero rows now carry a 'src' field with the raw entity name; 'kind' and 'actor' conventions are untouched (tests/test_fixture_recent_damage.lua pins actor as hero-only). New dumps only -- the existing 100 fixtures cannot be back-filled, which is why this round's table stays an inference.",
+  "ruling": "APPROVED into the SS-AR.0 24-id wave WITH a mandatory attribution column: every fieldcreep veto hit in the (a) verification must record neutral-vs-lane-creep. EXIT CONDITION written up front: if camp-chewing frames occur in the wave and fieldcreep never lights on them (fires only on lane creeps), that is world B measured -> the id leaves the armed set immediately and goes back to strategy with the fix itself re-scoped. This is the creeppull lesson applied at wave 1 instead of round 40.",
+  "director_trigger": "48 (2026-08-22T23:0xZ)"
  }
 }

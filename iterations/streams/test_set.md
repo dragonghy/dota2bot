@@ -1,7 +1,13 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep
 
-**⚠️ 2026-08-22T19:0xZ 协同组入集提议(待总监批准):新 gated id **`fieldcreep`** —— GH #119,
+**⚠️ 2026-08-22T23:0xZ 总监裁定:见 §AR —— `fieldcreep` **批准入集**(下一波串 = **§AR.0 的 24 id**),
+但**附一条强制归属栏位**:它的 (a) 不许只报「否决触发了」,必须逐帧报**打他的是野怪还是小兵**。
+理由是本轮量出来的一件事:**这个 id 全部五枚钉帧的价值判断,压在一个本仓库无法验证的引擎语义上** ——
+`WasRecentlyDamagedByCreep` 到底算不算野怪。**语料回答不了,因为 fixture 把非英雄伤害的 actor 存成 `nil`**
+(`make_fixture.py` 的 `kind` 分类把 `"creep" or "neutral"` 两类合并成一类)。见 §AR.1/§AR.2。**
+
+**✅ 2026-08-22T19:0xZ 协同组入集提议(**已于 23:0xZ 批准,见 §AR**;下面保留申请原文):新 gated id **`fieldcreep`** —— GH #119,
 owner 优先项 P2 那一族**共用的域缺口**,请**并进 §AP.0 的同一波**(23 → 24 eligible),
 **不申请专波**(与 §AP.1 摘掉 `strategy-2` 专波同理:它是 armed 腿的臂内读数)。
 **改的是一个变量**:`J.IsFieldRegenSituation` 的三条危险子句读的全是**英雄和塔**,
@@ -214,7 +220,10 @@ GH #107 若动了 dumper 采样相位,这枚反例可能只因相位就翻面。
 让 `capmono` 的检测器读数暂缓采信)。
 **⚠️ 2026-08-20T23:00Z:开波前先读 §W** —— 帧级证据的 n 是经济通道的 **1/16**(`soak_loop.sh` 只让
 slot 1 录像,[harness] #75);本周所有「事件率太低 / (a) 买不到」的判断都要按这个分母重读。
-**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AP.0**(**23 id** = §AO.0 那 22 id
+**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AR.0**(**24 id** = §AP.0 那 23 id
+**加 `fieldcreep`**,见 §AR;种子仍 888/895/896/906;**`--rec-slots ≥ 8`**)。
+**§AR.3 是这一波的硬交付**:`fieldcreep` 的 (a) 必须逐帧报「打他的是野怪还是小兵」。
+下面这段关于 §AP.0 的描述保留作历史:**§AP.0**(**23 id** = §AO.0 那 22 id
 **加回 `pullcamp`**,见 §AP.1;种子仍 888/895/896/906;**`--rec-slots ≥ 8`**)。
 **注意 18:06Z 已按 §AO.0 的 22 id 串开了一波,它在飞、不受本节影响**;§AP.0 是**那一波之后**的串。
 下面这段关于 §AO.0 的描述保留作历史:**§AO.0**(**22 id** = §AN.0 那 21 id
@@ -5026,3 +5035,91 @@ AJ.5 写「此处是 `jmz_func.lua:6932`」。实测:**6932 在 `J.ShouldBodyBlo
 (手打代替 import → `is` 那条红;未登记的第五处副本 → `UNREGISTERED` 红;删 (iv) 段 → 名称/单位/实现指针三红;
 Lua 盟友门 `0.4→0.5` → 镜像 + 两 helper 同值两红),**四次还原 `cmp` 逐字节相同**;
 `luacheck bots game` **0 警告 EXIT=0**;**`bots/`/`game/` 零改动**;**AWS 支出 $0**。
+
+---
+
+## §AR 总监裁定 2026-08-22T23:0xZ(第四十八次触发):`fieldcreep` **批准入集**,
+## 但它的价值判断压在一个**本仓库验证不了的引擎语义**上 —— 所以 (a) 多一条强制归属栏位
+
+### AR.0 下一波要 armed 的串:**24 id**(§AP.0 的 23 id **加 `fieldcreep`**)
+
+```
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,blinkflee,liondrainstop,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep
+```
+
+种子仍 888/895/896/906;**`--rec-slots ≥ 8` 仍是硬条件**(§AM.3)。eligible **24**
+(`wandlimbo` / `odaoe` 仍在 eligible 行但不可 arm,与 §AP.0 同)。
+**同波 arm 的那一格决定:采纳协同组的建议(同波,不专波)** —— 理由用我自己在 §AO 写的那条
+「证据是版本专属的」:`stayfield`/`stayfield2`/`fieldbuy` 三个 id 的域**本来就**含着这条谓词,
+收窄之后那个版本**才是我们打算 promote 的版本**,先买不带它的 (a) 等于买一份注定作废的证据。
+代价(三个 id 的域读数与不带 `fieldcreep` 的版本不可对读)**接受并记录在案**。
+
+### AR.1 ⭐ 批准的同时量出来的事:**五枚钉帧里,(c) 的算术站得住的那三枚,全部压在
+### 「引擎的 `WasRecentlyDamagedByCreep` 算不算野怪」这个本仓库答不出的问题上**
+
+我自己跑了 `tests/_fieldcreep_sweep.lua`(**复现协同组的读数,逐字一致**:situation **50**、
+armed **45**、vetoed **5**、其中带回复品 **2** / 空手 **3**;BAND mass-le24 **256** / tail-ge25 **26** /
+max-hit **45**),然后**加量了申请里没有的那一列** —— 五枚被否帧各自的**逐击伤害**:
+
+| 钉帧 | 英雄 | HP | 有回复品 | 3s 内创伤 | 逐击 | 读法 |
+|---|---|---|---|---|---|---|
+| `f_260819_182855_lion_drain_jungle` | lion | 0.25 | ✅ | 109 | 37,36,36 | 齐整重击 ⇒ 野怪营 |
+| `f_260819_222559_od_eclipse_pair` | juggernaut | 0.50 | ✅ | 132 | 37,30,38,27 | 齐整重击 ⇒ 野怪营 |
+| `f_260820_043637_axe_ring_alone` | viper | 0.55 | ❌ | 129 | 13,44,14,**45** | **混合**:小兵 40 + 野怪 89 |
+| `f_260820_043140_wd_defend_token` | luna | 0.32 | ❌ | 22 | 13,9 | 小兵 |
+| `f_260820_043120_viper_defend_paired` | zuus | 0.50 | ❌ | 14 | 14 | 小兵 |
+
+**先更正申请里的一句话**:§头注写「三枚重帧…43-45 on the viper」,读起来像 viper 那枚是纯重击。
+**实测它是五击混合**(13,44,14,45,13)—— 小兵量级的那三击**自己就够点亮这条谓词**。
+这不是挑字眼,它恰好是下面那半个论证的枢纽。
+
+**枢纽**:引擎的 `WasRecentlyDamagedByCreep` 算不算野怪,**本仓库没有任何东西能回答** ——
+`docs/BOT_API_REFERENCE.md:1213` 只写「Damaged by a creep?」;全仓库唯一另一处用它的
+`mode_farm_generic.lua:1067` 是**对线期顶小兵**的语境,给不出野怪侧的证据;而**语料结构上答不了**,
+见 §AR.2。于是有两个世界:
+
+- **世界甲(算野怪)**:域 = 5 枚。(c) 的算术在重的三枚上成立(109/129/132 对 tango 21 / 仙灵之火 85 /
+  药膏 ~92 / 瓶子 ~135),否决是对的。
+- **世界乙(不算野怪)**:**两枚纯野怪帧(lion、jugg)整条谓词点不亮 ⇒ 静默**,
+  而那两枚**恰好是全部两枚「手里有回复品」的帧** ⇒ **`stayfield`/`stayfield2` 这一侧的域整个归零**,
+  只剩 `fieldbuy` 侧的三枚空手帧;它们**归因到小兵的**三秒创伤是 **14 / 22 / 40**,
+  **全部低于药膏 ~92 与仙灵之火 85**,只有 tango(21)在其中两枚上输。
+  ⇒ **在世界乙里,这条否决的剩余域 100% 落在「按它自己的 (c) 算术,不该否决」的那一格上** ——
+  也就是协同组自己诚实标出来的那个「过宽角」,不是一个角,是全部。
+
+**所以这不是脚注,是判读前提**:同一份批测数据,在两个世界里要读成相反的结论。
+**它也不动我的批准** —— 世界甲里这是个好修法,世界乙里它**不是静默、而是反向**,
+两种都必须能被下一波认出来,认的办法就是 §AR.3 那条栏位。
+
+**诚实边界(写在正文不写在脚注)**:上表最后一列是**按逐击量级推断来源,不是测到来源**。
+支撑它的是本语料自己的分布(≤24 有 256 击、≥25 只有 26 击、最大 45)——早期线兵与野怪营的
+分离在这份语料上是干净的,但**分离干净 ≠ 标签为真**。要测到来源得有 §AR.2。
+
+### AR.2 [harness] 这一列本该量得到,是工具把它丢了 —— 已修
+
+`tools/batch_test/replayscope/make_fixture.py` 的伤害分类:非英雄来源一律 `actor = None`,
+且 `kind` 把 `"creep" in low or "neutral" in low` **两类合并成一类 `'creep'`**。
+合并本身是对的(引擎只给一个读数器,mock 必须照着答),**丢掉 `actor` 不是** ——
+于是「打他的是半人马还是近战兵」这个问题,**在 fixture 落地的那一刻就被删掉了**,
+往后谁也问不出来,包括本轮的我。
+
+**修法**:非英雄行新增 `src` 栏位,存**原始实体名**;`kind` 与 `actor` 的既有约定**逐字不动**
+(`actor` 仍只在英雄行有值 —— `tests/test_fixture_recent_damage.lua` 钉的就是这条,不许动它)。
+**只对新 dump 的 fixture 生效**,现有 100 枚补不上 ⇒ **本轮那张表仍然只能是推断**,
+这是修法的边界,不是它的失败。
+
+### AR.3 强制栏位 + 退出条件(这条比批准本身重要)
+
+**(甲)(a) 的报告格式**:录像组核验 `fieldcreep` 时,**每一次否决命中都要写清打他的是野怪还是小兵**
+(回放里直接看得见,不需要新工具)。**只报「否决触发了 N 次」不算买到 (a)** —— 按 §AR.1,
+那个数在两个世界里指向相反的结论。
+
+**(乙)退出条件,现在就写死,免得事后解释**:若这一波里**camp 啃人的帧确实出现、而 `fieldcreep`
+在其上一次都没点亮**(即只在小兵帧上触发),那就是世界乙的实测证据 ⇒
+**这个 id 立刻出 armed 集**,并且**按 §AR.1 它剩下的域是反向的,退回协同组时要连带重估修法**
+(候选方向:改读伤害量级/野怪单位表,即申请里自己标的「下一个杠杆」)。
+**这条是 `creeppull` 那个教训的直接应用**:一个 gated id 在它的招牌场景上结构性静默,
+要在**第一波**就认出来,不是第四十轮。
+
+**(丙)不设三轮期限** —— 与 `l5combo` 不同,这条的判据是**一次**波次就能给出的二值观察,
+给不出来说明录像组没按 (甲) 报,那是交付问题不是证据问题。
