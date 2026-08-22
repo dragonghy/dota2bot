@@ -14,7 +14,10 @@ is the other team of the SAME game running stock code -- the free control.
 
 DOMAIN -- every clause is transcribed literally from the Lua, with the
 observability of each one stated, because the two directions do NOT cancel:
-  observable   pos in {4,5}                    not J.IsCore(bot)
+  observable   pos in {4,5}                    not J.IsCore(bot) -- from
+                                               seed_draft.positions_for_game,
+                                               NEVER team_slot%5+1 (GH #57/#116:
+                                               that proxy is 47.3% accurate)
                60 <= t <= 360                  DotaTime() window
                t%60 in [5,20] or [35,50]       the pull-window marks
                hp_pct >= 0.50                  IsLanePullSafe
@@ -78,6 +81,10 @@ import math
 import os
 import sys
 from collections import defaultdict
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'soak'))
+import seed_draft  # noqa: E402  -- canonical hero->position (GH #57)
 
 CAND_ID = 'pullcamp'
 
@@ -201,10 +208,23 @@ class Game:
             if b['name'] == 'ancient':
                 self.ancient.setdefault(b['team'], (b['x'], b['y']))
 
+        # --- positions from the SOAK SEED's draft, never from the pick slot.
+        # GH #57 / GH #116: `X.ShufflePickOrder` permutes the slots after the
+        # draft, so `team_slot % 5 + 1` agreed with the drafted position on
+        # only 47.3% of rows across 291 real mirror games.  It is forbidden
+        # under tools/ and `tests/test_hero_position.py` check [6] fails the
+        # build on it.  This matters more here than almost anywhere else: the
+        # whole domain is gated on `pos in {4,5}` (`not J.IsCore(bot)`), so a
+        # wrong label does not blur the reading, it selects the wrong heroes.
+        # `positions_for_game` returns None (not a guess) for a game with no
+        # seed stamp (warm-ups), which propagates to `pos = None`; the scan
+        # reads `not pos or pos < 4` and DROPS such a hero rather than
+        # mislabelling it in -- the under-claim-never-over-claim direction this
+        # tool's DOMAIN section commits to.
         self.pos = {}
         if analysis_path and os.path.exists(analysis_path):
-            for p in json.load(open(analysis_path)).get('players', []):
-                self.pos[p['hero']] = p['team_slot'] % 5 + 1
+            self.pos = seed_draft.positions_for_game(
+                json.load(open(analysis_path))) or {}
 
     # ---- predicates -------------------------------------------------
     def recent_hero_dmg(self, hero, t, back):
