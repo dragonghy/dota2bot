@@ -2817,3 +2817,53 @@
     (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第八轮顺延**);
     (8) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260822T210357Z.md`
+- **2026-08-22T22:50Z(第四十八次触发)**:执行 21:03Z 登记的**下一轮优先 (1)** =
+  交 GH #120 的 fixture(已顺延一轮,本轮不再顺延)。批测台 22:06Z 是纯核对轮、无新波次
+  (下一波最早 08-23T00:11Z),故本轮不宣称宽扫局数,**深查 2 局逐帧 + run_121214 全量细粒度重扫
+  (70 局镜像有效局)**。零 EC2 支出,未改 bot Lua,未动 gate。
+  - ⭐ **交 fixture 的过程把 #120 的承重帧推翻了(人口没推翻)。** 把
+    `20260822_123136_slot3 t=434.6 lina` 按 **0.1s** 重放:**434.50 第 9 格空(8/9)→ 434.60
+    快递送到 claymore、tango 挤进第 9 格、九格满,而 `ITEM item_tpscroll` 就在 434.6 这同一 tick**
+    (`modifier_teleporting` 在 fixture 里 elapsed=0.0)。⇒ #120 用来排除 `shop`(撤退:1,
+    `X.IsInvFull`,`ability_item_usage_generic.lua:5193`)的那条读数是 **1Hz 盲窗下的陈旧读数**。
+    第二例 `121409_slot8` crystal_maiden **逐位同形**(526.10 八格 → 526.20 clarity 落袋满 + 同 tick 按 TP)。
+    两例都在**落地那一帧**合成(orchid / mekansm),#120 记的「438.5 合成」也是 1Hz 推后了一拍。
+  - ⭐ **量出了伪影的大小,并且没有夸大**:新工具 `hometp_invfull_lag.py`(`--selfcheck` 10/10)
+    在 run_121214 **70 局 / 862 次回家 TP / 138 次 hp≥0.55** 上,0.2s 抓到 **1** 个翻转、
+    「cast 帧只差一件」25 个;把这 25 行所在的 22 局按 **0.1s** 重扫,翻转变 **2**
+    (含新发现的 `122100_slot7 zuus t=510.4`)。⇒ 该 run **至少 3/138 ≈ 2.2%** 会被 1.0s 读数
+    误排除出 `shop`。**#120 的 76 行残差不是幻影,聚合结论站得住;但它挑的两个承重帧恰好都在这 2% 里**
+    —— **选择效应**:「满血+无危险+快递刚送到一件东西」既是人眼最容易挑成典型浪费的画面,
+    也正是 `IsInvFull` 翻转的画面。**⇒ 聚合与承重帧要分开验,互不代表。**
+  - **工具自证**:0.2s 那一遍把已知会翻的 lina 434.6 记成「只差一件」而非翻转 —— 本工具**自己的**
+    盲窗被当场抓住,换 0.1s 才对。写进工具 docstring,不藏。
+  - **新踩坑(全队级)**:**1Hz 盲窗打在布尔闸门上,代价不是精度是标签翻转。** #121 只登记了
+    hp(漂移标量);`IsInvFull` 是**阶跃**,而**阶跃源(快递送达)与被测决策同因** ⇒
+    「决策前最后一帧」与「决策帧」系统性落在阶跃两侧。**凡是拿「某分支必要条件不成立」当排除依据的
+    检测器,必须先问这条子句是不是阶跃、阶跃源是不是与决策同因。** 另:#120 自己的诚实边界写了盲窗
+    但**只查了 hp** ⇒ **盲窗要逐子句查,不是逐 issue 查**。
+  - **另一坑**:`tp_cd` 栏位比 `ITEM item_tpscroll` 事件**晚一拍**(434.6 事件 / 435.0 才 0→39.8)
+    ⇒ 定位施法帧用 events(原生分辨率),不要用 `tp_cd` 上升沿(与 08-20 那条同源)。
+  - **交付**:`tests/fixtures/f_260822_123136_lina_shoptp_434.lua`(钉真实那一帧:九格满、
+    claymore 在主槽、hp 1.000、最近敌人 4212u、离家 12,054u)。
+    **附带发现(harness)**:`tests/fixtures/` 里加一个 fixture 会移动
+    `tests/test_itemdesire_world_assertion.lua` 里**硬编码的语料普查常数**
+    (`fixtures==100`、`subjects==1000`、`alive==930`、`slot_occupied==5896`、`tp_cooldown_ready==674`、
+    `driven==901` …)⇒ **每交一个 fixture 都要重跑约 15 分钟的 `_itemdesire_sweep.lua` 重新基线**。
+    本轮已按新 manifest 重算并更新这些常数。
+  - 跨组:**GH #120 追评**(不新开;含两表 + fixture 路径 + 「先别按补 `mode_item_generic.lua` 动手」
+    + 建议改标题 + 建议把 `hometp_highhp.py:305` 的 `inv_full(pre)` 改读 cast tick)。
+  - **验证**:`bots/`/`game/` **0 改动**;本容器**本轮自行 `apt-get install lua5.1` 成功**
+    (新事实,不跨轮继承);`luacheck` 仍不可用(如实记录)。`tests/run_tests.lua` **整套跑不完**
+    ——900s 超时被杀(exit 124),瓶颈是 `_itemdesire_sweep.lua` 子进程;本轮改为**直接跑该 sweep**
+    取 manifest 并重新基线常数。新 Python 工具 `py_compile` 过、`--selfcheck` 10/10。
+    **AWS**:EC2 **$0**,S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ 把 `hometp_invfull_lag.py` 跑满 12:12Z 那波另外三个 run,并推动
+    `hometp_highhp.py:305` 改读 cast tick(在那之前 #120 的 76 行只能当上界用);
+    (2) **GH #123 的 fixture**(`182012_slot1 t=366.4 spirit_breaker`);
+    (3) `hero-1` 的 153 局 WK 语料(`wk_q_aim_domain.py`,棒子挂 **6 轮**);
+    (4) `pullcamp` 回集那一波(§AP.0 的 23 id,最早 08-23T00:11Z)的连接率/开拉点/深营占比;
+    (5) `creeppull` 的 FORCED 通道;(6) `l5combo` 的 (a)(**连续第二十二轮**);
+    (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第九轮顺延**);
+    (8) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260822T225033Z.md`

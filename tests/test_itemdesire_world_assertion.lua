@@ -226,10 +226,10 @@ end
 
 tests['[world] not one item on one frame is castable'] = function()
     local c = pass(false)
-    assert(c.fixtures == 100, 'corpus size moved: ' .. c.fixtures .. ' fixtures')
-    assert(c.subjects == 1000, 'subject count moved: ' .. c.subjects)
-    assert(c.alive == 930, 'alive hero frames moved: ' .. c.alive)
-    assert(c.slot_occupied == 5896,
+    assert(c.fixtures == 101, 'corpus size moved: ' .. c.fixtures .. ' fixtures')
+    assert(c.subjects == 1010, 'subject count moved: ' .. c.subjects)
+    assert(c.alive == 940, 'alive hero frames moved: ' .. c.alive)
+    assert(c.slot_occupied == 5957,
         'occupied item slots moved: ' .. c.slot_occupied)
     assert(c.slot_castable == 0,
         'SOMETHING IS NOW CASTABLE (' .. c.slot_castable .. ') -- the sixteenth '
@@ -239,10 +239,10 @@ tests['[world] not one item on one frame is castable'] = function()
         .. c.frames_zero_castable .. '/' .. c.alive)
 end
 
-tests['[world] the TP scroll: carried by all, ready on 674, castable by none'] = function()
+tests['[world] the TP scroll: carried by all, ready on 681, castable by none'] = function()
     local c = pass(false)
-    assert(c.has_tp == 930, 'every alive hero carries a TP scroll; got ' .. c.has_tp)
-    assert(c.tp_cooldown_ready == 674,
+    assert(c.has_tp == 940, 'every alive hero carries a TP scroll; got ' .. c.has_tp)
+    assert(c.tp_cooldown_ready == 681,
         'frames whose dumped tp_cd says READY moved: ' .. c.tp_cooldown_ready)
     assert(c.tp_castable == 0, 'the TP scroll is castable on ' .. c.tp_castable
         .. ' frames -- it must be 0 for the rest of this file to mean anything')
@@ -333,9 +333,9 @@ end
 
 tests['[world] so the shipped entry point does nothing, on every frame'] = function()
     local c = pass(false)
-    assert(c.driven == 901, 'drivable frames moved: ' .. c.driven)
-    assert(c.no_action == 901,
-        'ItemUsageThink took an action on ' .. (901 - c.no_action)
+    assert(c.driven == 911, 'drivable frames moved: ' .. c.driven)
+    assert(c.no_action == 911,
+        'ItemUsageThink took an action on ' .. (911 - c.no_action)
         .. ' frames -- today it must be none')
     assert(c.action_total == 0, 'zero actions')
     assert(c.crash_total == 0,
@@ -348,10 +348,10 @@ end
 
 tests['[measure] honest TP handle: 0 -> 1 action and 0 -> 210 crashes'] = function()
     local c = pass(true)
-    assert(c.driven == 901, 'same drivable set as the base sweep: ' .. c.driven)
+    assert(c.driven == 911, 'same drivable set as the base sweep: ' .. c.driven)
     assert(c.crash_total == 210,
         'crashes under the honest probe moved: ' .. c.crash_total)
-    assert(c.no_action == 690, 'silent frames moved: ' .. c.no_action)
+    assert(c.no_action == 700, 'silent frames moved: ' .. c.no_action)
     assert(c.action_total == 1,
         'the corpus produces exactly one item action; got ' .. c.action_total)
     assert(c.item_item_tpscroll == 1, 'and it is a TP scroll')
