@@ -7371,13 +7371,16 @@ end
 -- Fires ONLY when ALL hold -- deliberately CONSERVATIVE so it never griefs a
 -- lane that is already fine:
 --   * turbo AND the 'pullcamp' soak candidate is armed (inert otherwise),
---   * laning window: DotaTime in [60, 10*60] (turbo laning is short),
---   * the game clock is in a :12 or :42 pull window (see the window comment),
+--   * laning window: DotaTime in [60, 6*60] (turbo laning is short; the upper
+--     edge was 10*60 until the 20260731 residual fingerprint closed it -- the
+--     note further down explains why, this line used to contradict it),
+--   * the game clock is in a pull window that opens a travel lead before the
+--     :12 / :42 aggro marks (:05-:20 and :35-:50 -- see the window comment),
 --   * this bot is a support (pos 4-5) -- cores stay to farm/deny, not pull,
 --   * our lane equilibrium is UNFAVORABLE: our lane front is pushed PAST the
 --     lane midpoint toward the enemy (our creeps meeting on the enemy's half),
---   * a FRIENDLY neutral camp is within reach (<= 1500) AND is actually up
---     (neutral creeps present nearby), and
+--   * a FRIENDLY neutral camp is within reach (<= 1500) -- occupancy is asked
+--     on arrival by roam's Think, not here (GH #13 root cause, see below), and
 --   * no enemy hero is right on us (<= 800) -- pulling under threat feeds.
 --
 -- SCOPED NON-GOAL (honest): the owner's fuller taxonomy also names the
@@ -7394,7 +7397,8 @@ end
 --
 -- Approximation note (honest -- the Bot API has no clean primitive for this):
 -- there is no "creeps are at the camp / the pull will connect" oracle and no
--- camp-occupancy flag, so "camp is up" is approximated by nearby neutral creeps,
+-- camp-occupancy flag, so "camp is up" is answered on arrival by the neutrals
+-- the puller can then actually see (roam Think), not predicted from the lane,
 -- and "unfavorable equilibrium" by the lane front vs the lane midpoint. The pull
 -- TIMING is a fixed seconds-into-minute window, not a wave-position solve. This
 -- is the best conservative TRIGGER the API allows; see the shipping report for
@@ -7422,8 +7426,21 @@ function J.ShouldPullNeutralCamp( bot )
 	-- :30 wave) -- the classic pull marks. Two windows per minute; outside them
 	-- the pull whiffs (neutrals reach the lane before the wave) or arrives after
 	-- the wave has already passed the camp.
+	--
+	-- [GH #13 SILENT root cause, 20260822] The :12/:42 marks are when the
+	-- neutrals must be AGGROED -- i.e. when the puller must ALREADY BE
+	-- STANDING AT THE CAMP. The first cut opened the window AT the mark and
+	-- additionally required visible neutrals within 1400 (see below), so the
+	-- trigger demanded the very state the pull is supposed to produce: a
+	-- support standing in lane has no vision into a camp box behind trees,
+	-- and nothing in the chain ever walked it there (roam Think's approach
+	-- branch is only reached once the plan exists, and the plan needed the
+	-- neutrals already visible). The window therefore opens a TRAVEL LEAD
+	-- earlier: the camp reach test below is 1500u and a support moves ~300
+	-- u/s, so 5s covers the walk out of lane. Leaving at :05 to aggro at :12
+	-- is the human cadence, not a widened tolerance.
 	local nSec = nNow % 60
-	if not ((nSec >= 10 and nSec <= 20) or (nSec >= 40 and nSec <= 50)) then
+	if not ((nSec >= 5 and nSec <= 20) or (nSec >= 35 and nSec <= 50)) then
 		return nil
 	end
 
@@ -7448,10 +7465,17 @@ function J.ShouldPullNeutralCamp( bot )
 		return nil
 	end
 
-	-- A friendly neutral camp must be actually up (neutral creeps present nearby)
-	-- and within reach so the pull can connect to the lane in time.
-	local tNeut = bot:GetNearbyNeutralCreeps( 1400 )
-	if tNeut == nil or #tNeut == 0 then return nil end
+	-- A friendly neutral camp must be within reach so the pull can connect to
+	-- the lane in time. Camp OCCUPANCY is deliberately NOT asked here any more
+	-- (it was `bot:GetNearbyNeutralCreeps(1400) > 0`): from the lane the box is
+	-- behind trees and unlit, so that read is empty on exactly the frames the
+	-- pull wants to start -- measured 0 / 911 alive hero frames across the whole
+	-- fixture corpus, independent of every other clause. The question is not
+	-- deleted, it MOVED to where it can be answered: mode_roam_generic's Think
+	-- asks the same `GetNearbyNeutralCreeps(1400)` on ARRIVAL (bCampHere) and
+	-- pokes only when the neutrals are really there, otherwise it keeps walking.
+	-- Cost of an empty camp is bounded by the window: when it closes GetDesire
+	-- clears the plan and the bot returns to lane.
 	local tCamps = GetNeutralSpawners()
 	if tCamps == nil then return nil end
 	local vBest, nBestDist = nil, 1500

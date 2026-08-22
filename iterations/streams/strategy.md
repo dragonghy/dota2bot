@@ -27,6 +27,33 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0R. **【2026-08-22T10:xxZ 新增,下一条工作单元的默认选项】本组自己的普查文件在 main 上是红的,
+   而且**不是本轮改红的**。`tests/test_itemdesire_world_assertion.lua` 两例 FAIL:
+   `crash_total` **207**(钉的是 209)、`crash_2597` **177**(钉的是 179)。
+   **在 `origin/main` 的干净 worktree 上逐字复现同样两个数** ⇒ 与本轮的 pullcamp 改动无关
+   (本轮改的函数按第十六条世界断言根本不在物品链上,而且这两个数在 rebase 之前是 209/179 全绿)。
+   **少的正好是 2 帧**、且**全部落在 `jmz_func:2597`(`GetExtrapolatedLocation`,经
+   `J.CanEnemyInterruptTpChannel`)那一个站点**,`crash_3325` 一位没动 ⇒ **有两帧不再走到那条腿**。
+   起点:`477d0d4`(corerole,声称 1122/0)与 `41df6b4`(replay-check)之间二分;
+   注意 `477d0d4` 加在 8806 行、**不移动 2597 的行号**,所以这是**行为**变化不是行号漂移。
+   **这是本组的文件,本组认领**;已开 `[harness]` issue,别人别顺手改数把它变绿 ——
+   **改数会把一条真实的行为变化抹掉**。
+0P1. **【2026-08-22T07:30Z】Owner P1 第 1 棒(pullcamp SILENT 根因)已做完并交棒 —— 本条留着盯回程。**
+   根因:**触发器要求它自己要造出来的那个状态** —— `bot:GetNearbyNeutralCreeps(1400)` 非空
+   (「已经看得见营地」),而站在兵线上的辅助**看不见树后的野营盒子**;同时 roam Think 的
+   「走向营地」分支只有 plan 存在才可达 ⇒ **触发器等抵达、抵达等触发器**,与 2026-08-19 修掉的
+   勾线死分支**同形状**(GH #13 的另一半)。修法一个杠杆两处编辑:视野问题**搬到**抵达时问
+   (`bCampHere`),窗口开 **5s 行程提前量**(:05–:20 / :35–:50,**标记 :12/:42 未动**)。
+   **未新增 soak id**(照 creeppull 先例在 `pullcamp` 内修)。
+   **owner 怀疑的 `IsLanePullSafe` 不是根因**:334/911 帧成立。
+   **P1 DoD 的频率证据**:33/911 帧是「辅助 + 对线窗口 + 800 内无敌人」,旧窗口收 7 / 新窗口收 12。
+   `tests/test_pullcamp_trigger_census.lua`(20 例,7 变异)+ 子进程普查 `tests/_pullcamp_sweep.lua`;
+   另把 `tests/test_pull_camp.lua` 那条被本轮翻面的合同用例改掉(11 → 15 例)。
+   **交出去的三棒**:总监(test_set.md 顶部提议行,重新入集)/ 批测台(`queue.json:strategy-1`,
+   申报目的 = 买 (a),seeds 888/895/896/906)/ 录像组(阴性判据:仍 SILENT 就先看**有没有离开兵线走向营地**
+   —— 修复前那一步结构上不会发生)。**本条在 #109 关闭前不划掉;下一轮先看回程有没有卡住。**
+   **本轮明确不做、留给下一个杠杆的**:窗口关闭会清空 plan ⇒ **拉到一半会回线上**;
+   要不要给拉野一个「完成中」的粘性,**先要一份它真的跑起来的录像**,不许照着推测调。
 0P2. **【owner 优先项 P2,2026-08-22T09:33Z 第一棒已交】决策侧 `stayfield` 已落地(gated,
    两枚真实帧,20 例 8 变异)⇒ 球现在在**总监**(入集)。**本组名下还剩两条,一次一个**:
    (a) **步行回泉那一半**:`mode_retreat_generic:217` 已经接了**已 promote** 的
@@ -675,6 +702,45 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-22T07:30Z:**Owner P1 第 1 棒:pullcamp 的 SILENT 根因 = 触发器要求它自己要造出来的那个状态。**
+  **认领依据**:铁律 9(OWNER_PRIORITIES 凌驾 issue 流),P1 第 (1) 条球在本组,执行入口 GH **#109**。
+  开工按 0m 先 fetch(`origin/main` = 本地 HEAD `5194eb7`);收尾时 main 已前进,**两次 rebase**,
+  两次都按 0m 回读远端 tip 确认。
+  **`bots/` 动了一个函数**(`J.ShouldPullNeutralCamp`),**仍在既有 `pullcamp` + turbo gate 后面,
+  不产新 soak id**(照 creeppull 2026-08-19 的先例);`tests/mock/` 一位没动,零 EC2 支出。
+  **根因**:触发器先问 `bot:GetNearbyNeutralCreeps(1400)` 非空 = 「现在能**看见**营地」,
+  **而站在兵线上的辅助看不见**(盒子在树后、无视野);而 `mode_roam_generic` 的
+  `Action_MoveToLocation(bot.roamCampPull)` **只有 plan 已存在才可达** ⇒ **触发器等抵达、抵达等触发器**。
+  **与 2026-08-19 修掉的勾线死分支同形状** —— **GH #13 的另一半**,它不报错、只是安静返回 nil。
+  **修法(一个杠杆,两处编辑,同一个机制「授权走过去」)**:①视野问题**搬到**能回答它的地方
+  (Think 抵达时的 `bCampHere`);②窗口开 **5s 行程提前量**(1500u 够程 / ~300 u/s),
+  :05–:20 / :35–:50,**:12 / :42 标记一位没动**。**两半缺一不可**:实证帧在 **:07.4**。
+  **翻掉 owner 的一条怀疑**:`IsLanePullSafe` **不是**第二条死条件 —— **334/911 帧成立**。
+  **P1 DoD 要的频率证据(全真实帧)**:33/911 帧是「辅助 + 对线窗口(60–360s)+ 800 内无敌人」;
+  **旧窗口收 7 / 新窗口收 12** ⇒ **场景频率,不是死条件**。诚实边界:按 GH #81 敌人恒 pos 3
+  ⇒ 这是**友方一侧**计数,**33 是下界**。
+  **按 0p 先声明结构不可达(四个互相独立的拦点,全是量的不是论的)**:
+  ① `GetNearbyNeutralCreeps(1400)` **0/911**(dumper 不带兵)—— **本轮删掉的正是这条**,
+  ⇒ 修复前任何在这条行为上的隔离循环都会**诚实地读到全零**;② `GetNeutralSpawners()` **0/911** 非空;
+  ③ `GetLaneFrontLocation` loader **REFUSE**(#61);④ **`GetAssignedLane()` 911/911 读 0 而不是 nil**
+  —— bot VM 状态、不在 `.dem`,**第十三条世界断言的又一个面**(只记账,动 loader 会移动全部 98 个 fixture)。
+  **实证帧**:`f_260820_162821_lion_drain_lethal` 的 **ogre_magi**(dire pos 5、满血、1800 内无敌人、:07.4)。
+  声明的三样是兵线前沿/中点/营地清单 ——**营地出生点是地图常量**,**营地占用**才是游戏状态,**一次都没声明**。
+  **验收**:luacheck **0 warnings**;`test_pullcamp_trigger_census` **20/20**(计数核对 8+7+5=20);
+  **七条变异逐条 apply+rollback,每条只红它该红的**;**rebase 前全套 1149/0**。
+  **rebase 后全套 1163 例 2 红,两条都不是本轮的** —— `test_itemdesire_world_assertion` 的
+  `crash_total 207`(钉 209)与 `crash_2597 177`(钉 179),**在 `origin/main` 的干净 worktree 上
+  逐字复现同样两个数**(不是推的,是跑的)⇒ 见 backlog 新的 0R 条,本组认领,已开 issue。
+  **两条做法记进 backlog/报告**:① 三个声明营地第一版在**调用点**构造 ⇒ 传进去一桌 nil,
+  **三条控制用例全部因为「营地没坐标」而通过** ⇒ **一条控制用例通过之前,先证明它控制的那个量在场**;
+  ② 目标 helper **已经有一份合同用例**(`tests/test_pull_camp.lua`),其中一条钉的**正是本轮删掉的子句**,
+  而 `run_tests.lua pullcamp` 是**文件名**过滤、**匹配不到 `test_pull_camp`** ⇒ 本地全绿、
+  **只有 50 分钟的全套跑翻出来**。处置是**翻面并写清为什么**(11 → 15 例)。
+  ⇒ **改一个已发布 helper 之前先 grep 它的名字找现存合同用例,别指望全套跑兜。**
+  **三棒已交出**(铁律 9 连带规则):总监(test_set.md 提议行 + 历史行)/ 批测台(`queue.json:strategy-1`)/
+  录像组(阴性判据:仍 SILENT 先看**有没有离开兵线走向营地**)。已在 **#109** 留言,**不新开 issue**。
+  `state.json:pullcamp_SILENT_ROOTCAUSE_GH109_20260822`,
+  详见 `iterations/reports/strategy/20260822T073000Z.md`。
 - 2026-08-22T09:33Z:**owner 优先项 P2 的第一棒(决策侧第一个 gate)—— 而且是用录像组
   30 分钟前刚换掉的那一帧,不是照着已作废的原铁证帧钉。**
   **认领依据**:铁律 9,`OWNER_PRIORITIES.md` P2 明写「当前球在:**协同组**(决策侧 id + fixture)」

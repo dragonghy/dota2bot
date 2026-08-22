@@ -2703,5 +2703,35 @@
     "why_not_fixed_here": "Deliberately did NOT re-pin another group's evidence file: which `==` is a denominator and which is a finding is the author's call (their own criterion on GH #106), and an outsider re-pinning could paper over a real regression (the #103 'just change one word in place' trap). Bisect posted to GH #107 naming #106. Escalation: P0 for the next director trigger; if strategy's next trigger has not landed it, the director does it.",
     "live_recurrence_of": "GH #107 / #106: a fixture heal broke a census in ANOTHER group's file with no mechanism warning either side. Adds to #106's rule ('the corpus is a shared, growing resource; every == is a promise nobody adds a fixture') the second half: nor heals an existing one.",
     "owner_directive_interaction": "Owner 2026-08-22T07:23Z (823a48e): default waves arm the FULL test set, single-id isolation waves are the exception. 'corerole' is PENDING and NOT in the eligible line, so it is automatically out of default waves and the AK.4 constraint does not conflict. Hard rule recorded: do not add 'corerole' to eligible until the AG.4 ladder closes, or the default wave decides it for us."
+  },
+  "pullcamp_SILENT_ROOTCAUSE_GH109_20260822": {
+    "owner": "strategy",
+    "date": "2026-08-22T07:30Z",
+    "gate": "pullcamp (existing; NO new soak id -- the repair lives inside the id it repairs, per the creeppull precedent)",
+    "bots_lua_changed": true,
+    "backlog_item": "OWNER_PRIORITIES P1 step (1) / GH #109 -- pullcamp SILENT root cause",
+    "headline": "The camp-pull trigger demanded the state its own action exists to produce: it required bot:GetNearbyNeutralCreeps(1400) to be non-empty, i.e. the puller must ALREADY see the camp -- which a support standing in lane cannot (box behind trees, no vision) -- while mode_roam_generic's walk-to-the-camp branch is only reachable once the plan exists. Trigger waits for arrival, arrival waits for trigger. Same mutually-exclusive shape as the creep pull's dead branch fixed 2026-08-19; the second half of GH #13.",
+    "repair": "ONE lever, two edits, one mechanism (authorise the approach): (1) the vision precondition MOVED out of the trigger into roam Think's arrival check (bCampHere); (2) the window opens a 5s travel lead before each aggro mark (:05-:20 / :35-:50 -- 1500u reach at ~300 u/s), the :12 and :42 marks unchanged. Both halves are needed: the witness frame sits at :07.4.",
+    "owner_hypothesis_rejected": "IsLanePullSafe is NOT a second dead condition: it passes on 339/930 alive hero frames on a combat-sampled corpus.",
+    "corpus_frequency": "Re-measured after the closing rebases (98 fixtures / 911 frames -> 100 / 930): 36/930 frames are 'support + laning window (60-360s) + no enemy inside 800'; the old window admitted 10, the widened one 15. Every qualitative claim unchanged. Support = not J.IsCore, so by GH #81 this is an ally-side count and 36 is a FLOOR. The three new old-window frames come from f_260822_063722_lina_tp_home (t=349.0, a TP-home episode) -- still not a lane, so 'the corpus contains zero in-lane pull-window frames' holds and is now asserted as two classes of non-lane episode. The lion_drain_jungle role heal also permuted which heroes on that frame read as supports (dragon_knight/viper -> lich/pudge) without changing the count.",
+    "structural_unreachability_declared": "Four independent stoppers make the chain undrivable end-to-end on any fixture: (1) GetNearbyNeutralCreeps(1400) empty 930/930 (dumper carries no creeps) -- so any PRE-repair isolation loop read an honest zero for a reason unrelated to the game, the backlog 0p shape; (2) GetNeutralSpawners() {} 930/930; (3) GetLaneFrontLocation REFUSED (GH #61); (4) GetAssignedLane() reads 0 not nil 930/930 -- bot-VM state, not in the .dem.",
+    "tests": "tests/test_pullcamp_trigger_census.lua (20 cases) + subprocess sweep tests/_pullcamp_sweep.lua (backlog 0q). Seven mutations M1-M7 applied+rolled back, each reddening exactly its own cases.",
+    "contract_test_inverted": "tests/test_pull_camp.lua (the GH #13 contract, 11 cases) pinned the removed clause as a NO-FIRE. `run_tests.lua pullcamp` filters by FILE NAME and does not match `test_pull_camp`, so only the full suite caught it. Inverted deliberately and documented; four window cases added. 11 -> 15. LESSON: grep a shipped helper's name for existing contract tests BEFORE changing it.",
+    "self_correction_1": "First cut built the three declared camps at the CALL SITE, before the loader knew the subject's team -- the helper got a table of nils and all three controls passed for the wrong reason. A control case is not a control until you prove the quantity it controls for is present.",
+    "self_correction_2": "Filing GH #112 I called crash_2597 179 -> 177 a behaviour change ('two frames stopped reaching GetExtrapolatedLocation'). It does not hold: the number reads 179 pinned at 96 fixtures, 177 at 98, 178 at 100 -- it drifts WITH corpus size, and I had exactly one size point. One reading is not a measurement. Corrected on the issue; the director has since bisected main's red to the 05:30Z fixture heal, which agrees.",
+    "inherited_red_on_main": "NOT MINE, measured not inferred: tests/test_itemdesire_world_assertion.lua (this desk's own 8-21 census) is red on origin/main itself -- 2 red at 477d0d4 (98 fixtures), 8 red at 692b11c (100 / 930) -- reproduced verbatim in a clean worktree at origin/main. Six are pure corpus-size ratchets, i.e. GH #106's shape. Filed as [harness] GH #112 with the self-correction above; repair request is to re-measure every size constant per fixture AND write the per-fixture breakdown of crash_2597 into the case, NOT to change 179 to 178.",
+    "full_suite": "1149/0 on the pre-rebase tree. After rebasing onto main: 1183 tests / 8 failures, ALL inherited (one file, see inherited_red_on_main); zero failures in anything this work unit added or changed. luacheck 0 warnings throughout.",
+    "handoff": [
+      "director: approve creeppull + pullcamp re-entry (proposal + history line in iterations/streams/test_set.md)",
+      "batch desk: iterations/queue.json request 'strategy-1' -- declared-purpose wave to buy condition (a), seeds 888/895/896/906",
+      "replay desk: NEGATIVE criterion -- if still SILENT, check first whether the support LEFT LANE toward the camp at all, since before the repair that step was structurally impossible"
+    ],
+    "not_done": [
+      "enemy big-camp pull stays a documented non-goal",
+      "window close clears the plan mid-pull -- known boundary, deliberately NOT touched: one lever at a time, and stickiness should be designed against a replay of the behaviour actually running",
+      "stoppers 3/4 stay accounted, not repaired"
+    ],
+    "aws_spend": "none (no EC2, no S3, no dumper)",
+    "report": "iterations/reports/strategy/20260822T073000Z.md"
   }
 }

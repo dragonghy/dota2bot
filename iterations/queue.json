@@ -1,6 +1,23 @@
 {
   "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填)",
-  "requests": [],
+  "requests": [
+    {
+      "id": "strategy-1",
+      "stream": "strategy",
+      "bundle": "creeppull,pullcamp",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 1,
+      "question": "Owner P1 第 3 棒(接力链见 OWNER_PRIORITIES.md + GH #109):买拉野的条件 (a) —— 勾线(creeppull)与拉野(pullcamp)在真实对局里到底执不执行。两个 id 的死分支都已修好:creeppull 的 2026-08-19(IsCreepPullSafe),pullcamp 的本轮(触发器不再要求先看见小野 + 窗口开一个 5s 行程提前量,见 iterations/reports/strategy/20260822T073000Z.md)。修复前 10/10 局 SILENT 是【结构性】的,不是场景稀缺;本波是这两条行为【第一次有可能真的跑起来】。经济读数只作为条件 (b) 的粗粒度旁证,不是本波的申报目的。拉野窗口在前 6 分钟 ⇒ 与 #108 的局时上限 10→25 分钟改动无冲突,不需要为它调参。",
+      "acceptance": "主判据交录像组(P1 第 4 棒),按【离开兵线 → 走向己方野营 → 拉仇恨 → 回拖】四段判 WORKING/SILENT/BUGGY。本波特有的阴性判据:若仍 SILENT,先看 armed 侧的辅助有没有【离开兵线走向营地】—— 修复前连这一步都结构上不会发生,所以它是区分「触发器没开」与「动作没执行」的分界。次判据(条件 b,粗粒度):armed 侧 gpm/deaths 无明显负面即可,不做显著性检验(owner 2026-08-01 验证哲学)。附带请求:若 slot 1 录像仍是唯一帧级通道(#75),优先把录像配额给 armed 侧有辅助的那一局。",
+      "status": "pending",
+      "result": ""
+    }
+  ],
   "done": [
     {
       "id": "director-1",

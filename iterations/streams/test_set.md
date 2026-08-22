@@ -9,6 +9,23 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 **925 局免费语料实测证伪**(录制槽是 12/12 波里最快的一槽)。**
 **稳定版锚点:`stable-v1`(2026-08-19T23:00Z)= 首次 promote(`roamstale`)之后的 main。**
 
+**⚠️ 2026-08-22T07:30Z 协同组提议(等总监批准,Owner P1 第 2 棒 / GH #109):
+`creeppull` + `pullcamp` **重新入 armed 集**(20 → 22 eligible)。**
+两个 id 都是 2026-07-23 被总监**退回拥有组**(不是 reject:replay-check 实测 10/10 局 SILENT,
+条件 (a) 从未成立)。**两条 SILENT 现在都有根因、都已修、都带真实帧用例**:
+- `creeppull` 2026-08-19T05:16Z —— `IsLanePullSafe`(1800 内无敌人)与勾线触发器(1000 内要有一个敌人
+  当仇恨源)**互斥** ⇒ 新 `J.IsCreepPullSafe`,`tests/test_replay_creeppull_reachable.lua`;
+- `pullcamp` **2026-08-22T07:30Z(本行)** —— 触发器要求「已经看得见 1400 内的小野」,
+  **而站在兵线上的辅助看不见树后的野营盒子**,同时 roam Think 的「走向营地」分支只有 plan 存在才可达
+  ⇒ **触发器等抵达、抵达等触发器**。修法:视野问题**搬到**能回答它的地方(Think 抵达时的 `bCampHere`),
+  窗口开一个 **5s 行程提前量**(:05–:20 / :35–:50,**标记 :12/:42 一位没动**)。
+  `tests/test_pullcamp_trigger_census.lua`(20 例,7 条变异)+ 子进程语料普查。
+  **未新增 soak id**(照 creeppull 先例在原 id 内修),shipped/normal 行为逐字节不变。
+**申报目的 = 买这两个 id 的条件 (a)**,波次请求已提 `iterations/queue.json:strategy-1`(seeds 888/895/896/906)。
+**语料频率(P1 DoD 要的数,全部真实帧)**:911 存活英雄帧里 33 帧是「辅助 + 对线窗口 + 800 内无敌人」,
+旧窗口收 7 / 新窗口收 12 ⇒ **场景频率,不是死条件**;`IsLanePullSafe` 本身 **334/911 成立**
+⇒ **owner 怀疑的那条不是根因**。详见 `iterations/reports/strategy/20260822T073000Z.md`。
+
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
 **⚠️ 2026-08-22T09:5xZ 协同组入集提议(待总监批准):新 gated id **`stayfield`**(owner 优先项 P2
 决策侧,GH #110 建议的名字)。**本提议不动 eligible 那一行**(它这一轮由总监加了 `creeppull`,
@@ -64,6 +81,11 @@ gate 代码保留在 `hero_axe.lua:107` 且**不再 arm**)——理由见 §O.1,
 `tpwatch` 于 2026-08-20T11:00Z **reject 出集**(**本项目第一个 reject**,不是退回:条件 (c) 被真实帧
 证伪,不是「测不出来」)——gate 代码保留在 `jmz_func.lua:J.ShouldAbandonTpChannel` 且**永不 arm**,
 复活条件钉在 §Q.1 / GH #52。
+`creeppull` / `pullcamp` 于 2026-07-23 **退回协同组出集**(非 reject、非 promote:条件 (a) 从未成立,
+10/10 局 SILENT 且双侧对称)——gate 代码全程保留(`jmz_func.lua:J.ShouldCreepPullLane` /
+`J.ShouldPullNeutralCamp` + `mode_roam_generic` 的两条出价)。**重新入集申请见本文件顶部
+2026-08-22T07:30Z 那一节**;两条 SILENT 的根因分别钉在
+`iterations/reports/strategy/20260819T051642Z.md` 与 `iterations/reports/strategy/20260822T073000Z.md`。
 
 ## 总监提醒(2026-08-21T03:00Z 更新,**测试集逐字未变**(19 eligible / §U.0 的 18 id 仍是下一波串);
 本节裁 `axeblink` 的处置 + **改写全队桌面预检 §V.7 的写法** + 复核 `[harness] #75` 的 (乙) 落地)
