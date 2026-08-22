@@ -1,6 +1,12 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull
 
+**⚠️ 2026-08-22T09:0xZ:见 §AL —— (1) **`creeppull` 批准重新入集**(20 → **21 eligible**;
+下一波串换成 **§AL.0 的 19 id**),它的重新入集申请自 **2026-08-19T05:16Z 起挂了三天**没人接,
+正是 owner 优先项 P1 记录的那次掉棒;`pullcamp` **不入**(根因仍未查,球在协同组);
+(2) **`--rec-slots` 裁定为 8**(两臂同值,下一次全集波次起)—— 帧通道 1/16 那个分母
+(§W、`[harness] #75`)**不再是既定事实**,`spot_run.sh:31-37` 的「吞吐代价未测」已被
+**925 局免费语料实测证伪**(录制槽是 12/12 波里最快的一槽)。**
 **稳定版锚点:`stable-v1`(2026-08-19T23:00Z)= 首次 promote(`roamstale`)之后的 main。**
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
@@ -27,7 +33,9 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 让 `capmono` 的检测器读数暂缓采信)。
 **⚠️ 2026-08-20T23:00Z:开波前先读 §W** —— 帧级证据的 n 是经济通道的 **1/16**(`soak_loop.sh` 只让
 slot 1 录像,[harness] #75);本周所有「事件率太低 / (a) 买不到」的判断都要按这个分母重读。
-**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§U.0**(**18 id** = §R.0 那 16 id
+**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AL.0**(**19 id** = §U.0 那 18 id
+**逐字不变** + 重新入集的 `creeppull`;种子仍 888/895/896/906)。下面这段关于 §U.0 的描述
+保留作历史:**§U.0**(**18 id** = §R.0 那 16 id
 **逐字不变** + 本轮新入集的 `blinkflee` / `liondrainstop`;种子仍 888/895/896/906),
 申报目的 = **买这两个新 id 的条件 (a)**(§R.0 那波的 `capmono` (b) 两臂已由 arm B 收官)。
 **`capmono` 已于 21:00Z 判 NOT-PROMOTE(不 reject、留在串里逐字不变),下一步是零支出的臂内
@@ -4245,3 +4253,71 @@ gate 关时逐位复现旧缺陷。**`corerole` 目前是「待批」不是 elig
 2. **全套在跑的时候不要动 `tests/` 里的文件** —— runner 是**边跑边 `loadfile`**,
    改动会被半途读进去,那一轮结果**口径不明**。本轮第一次全套跑了 37 分钟后因此作废重跑。
    这是 01:0xZ 那条「变异红了 ≠ 变异跑对了」的**第三形态:绿了也 ≠ 测的是这棵树**。
+---
+
+## §AL 总监裁定 2026-08-22T09:0xZ(第四十次触发):`creeppull` 重新入集(挂了三天的申请)+ `--rec-slots` 定 8(帧通道 1/16 的分母被免费语料推翻)
+
+本轮两条裁定共用一个主题:**owner 优先项 P1/P2 都卡在条件 (a)「真实对局里核验到,带帧证据」,
+而这条路上有两个独立的塞子** —— 一个是「要买 (a) 的那个 id 根本不在串里」,
+一个是「帧通道只有付费局数的 1/16」。本轮各拔一个。**`bots/`/`game/` 零改动。**
+
+### AK.0 下一波要 armed 的串:**19 id**(§U.0 的 18 id 逐字不变 + `creeppull`)
+
+```
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,blinkflee,liondrainstop,creeppull
+```
+种子仍 888/895/896/906。`wandlimbo` 仍**不可 arm**(§J.1.4 的机会普查是硬前置,至今无人做);
+`odaoe` 按 §AB.1 仍不进串。**08:10Z 在飞的那波是 18 id 串,不受本节影响**;本节管的是下一波。
+
+### AK.1 `creeppull` **批准重新入集**(条件 (a)(c) 齐;条件 (b) 由下一波买)
+
+**申请人不是我在替谁想**:协同组 2026-08-19T05:16Z 的报告末尾**白纸黑字提了申请**
+(「申请 `creeppull` 重新入 `test_set.md`……`pullcamp` **不申请**」)。它挂了 **三天**,
+原因是 issue #13 被关掉之后这条申请从所有队列里消失 —— 这**正是** README 铁律 9 连带规则
+和 `OWNER_PRIORITIES.md` P1「40 轮零推进」记录的那次掉棒。**接棒是总监的活,不是协同组的。**
+
+**三条件逐条核**(不是转述报告,是我在今天这棵树上重新验的):
+- **(c) 逻辑依据 —— 成立,而且是可证明的那一档,不是「合理」那一档。** 04:54Z 退回它的
+  理由是 10/10 局 SILENT ⇒ 条件 (a) 从未成立。根因不是阈值紧,是**死分支**:
+  `J.ShouldCreepPullLane` 要求 1000 内有一个合法敌方英雄(那个英雄就是要下攻击指令勾仇恨的
+  对象,是机制本身),而调用侧闸门 `J.IsLanePullSafe` 是 **1800 内看得见任何敌方英雄就 false**。
+  1000 内必然也在 1800 内 ⇒ **触发器想开火的每一帧,闸门恰好是 false**。全仓唯一调用点
+  (`mode_roam_generic.lua:82`)⇒ 自 20260723 rehome 起从未执行过一次。修法是把两种拉线拆开:
+  拉野(`pullcamp`)继续用 `IsLanePullSafe`;勾线新用 `J.IsCreepPullSafe`
+  (`jmz_func.lua:6116`),把安全问题从「有没有人看得见」改成**「有没有多余的人看得见」**
+  (1000 内至少一个、1000–1800 环里不能有额外的人 —— 后者正是 wave13 那个 163732 埋伏形状)。
+- **(a) 可执行性 —— 真实帧上端到端出价,今天复验过。** `tests/run_tests.lua creep` 在今天
+  这棵树上 **18 tests / 0 failures**。**我自己做了独立的反空匹配变异**(不引用协同组的):
+  把 `J.IsCreepPullSafe` 首行改成 `do return J.IsLanePullSafe( bot ) end`,
+  **恰好 2 条可达性断言转红**(「a healthy core zoned by a lone laner」+「end-to-end: the pull
+  bid is reachable on the real frame」),还原后逐字节相同且全绿。**这个 fixture 不是空壳。**
+  **诚实边界**:这是**桌面可达性**,不是对局里的 (a)。真正的条件 (a) 仍要录像组在下一波的
+  真实对局里核到勾线**实际执行**(P1 完成定义第 3 条),本节只是把它送到能被买到的位置。
+- **(b) 胜负无明显负面 —— 未知,而这正是入集要买的东西。** 它历史上从未真正执行过,
+  所以历史读数里**没有一个 gpm 是它贡献的**(含 14-id 那次 −34.59)。风险隔离:改动整个活在
+  既有 `creeppull` 闸门内部,**未 armed 的对局逐字节不变**;机制族(对线期勾线)与已实锤的
+  祸首族(`lf_recover`/`lf_support` 跨图长途 TP)不相交。
+
+**`pullcamp` 不入集**,理由与 08-19 申请一致:它不是死分支,可疑点(兵线推出去时辅助在线上、
+己方野点在身后 ⇒ 「1400 内见中立小兵 + 1500 内有己方野点」可能在 Turbo 短对线期几乎不同时成立)
+**是静态读出来的假说,需要帧证据才能定性**。**球仍在协同组**(P1 完成定义第 1 条)。
+
+### AK.2 `--rec-slots` 裁定 **8**(详细论证与验收判据在批测台章程末节「录像采集配置」)
+
+一句话:**「SourceTV 吞吐代价未测」这句话本身是错的 —— 它一直可测,而且免费。**
+每一波都在写 `<TS>_slot<N>.analysis.json`(带 `wall_s`/`effective_timescale`),
+REC_SLOTS=1 的波次里 **slot 1 是唯一录制者、slot 2-16 是同机同时同池的对照腿**。
+**925 局 / 12 run 实测:录制槽是 12/12 波里最快的那一槽**,对**只用对照槽拟合**的槽序趋势
+残差 **+8.2%**(去掉每槽首局仍 +7.8%);第二通道同向(录制槽 60 局 vs 对照均值 57.67)。
+**槽序是真混杂**(对照槽 timescale 随槽号 +0.0081/槽),但混杂方向**对结论不利**
+(slot 1 起得最早、按趋势本该最慢),结论仍成立。归属侧:20/20 局 claim sidecar 全
+`method=logname`、三判据一致 —— **但那 20 局都是 `candidates:1`,多录制者歧义从未演练过**,
+所以**先 8 不直接 16**:8 让那一波**自带对照腿**(1-8 录 / 9-16 不录,同机同时)。
+工具 `tools/batch_test/soak/rec_slot_cost.py`(拒答语义:无对照腿 / 不知谁录 / 语料太薄
+一律 exit 2,**exit 2 是拒答不是通过**),基线剖面 `tools/batch_test/soak/rec_slot_baseline.json`。
+
+**这条推翻了一个被反复引用的前提**:§W(2026-08-20T23:00Z)写「帧级证据的 n 是经济通道的
+1/16 …… 本周所有『事件率太低 / (a) 买不到』的判断都要按这个分母重读」。那个分母**不是物理常数,
+是一个从未被测过就被接受的默认值**。凡以「(a) 买不到 / 事件率太低」park 掉的 id
+(§V.5 的 `blinkflee`/`liondrainstop`、`#54`、`#66` 等),在 rec-slots 8 的波次落地后
+**都值得按 8 倍的帧分母重读一次** —— 本轮不逐个翻案,登记为下一轮的候选工作单元。
