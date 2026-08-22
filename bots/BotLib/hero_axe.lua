@@ -16,11 +16,66 @@ local sTalentList = J.Skill.GetTalentList( bot )
 local sAbilityList = J.Skill.GetAbilityList( bot )
 local sRole = J.Item.GetRoleItemsBuyList( bot )
 
+-- TALENT LADDER -- re-anchored 2026-08-22 against the live Dota 2 datafeed
+-- (https://www.dota2.com/datafeed/herodata?language=english&hero_id=2), the same
+-- way GH #104 re-anchored Wraith King.  The npc dump further down still quotes the
+-- 7.2x ladder and every talent name in it (special_bonus_strength_8 /
+-- ..._movement_speed_20 / ..._mp_regen_2 / ..._attack_speed_35 / ..._hp_regen_20)
+-- is gone from the hero.  Today's eight, in the feed's order:
+--
+--   [1] ..._unique_axe_culling_blade_speed_duration  +3s Culling Blade KILL buff
+--                                                    duration (6 -> 9s)
+--   [2] special_bonus_unique_axe_8   +8% move speed per ACTIVE Battle Hunger
+--   [3] special_bonus_unique_axe     +8 Battle Hunger dps (12/16/20/24 -> 20/24/28/32)
+--   [4] special_bonus_unique_axe_7   +10 Berserker's Call armor (12/13/14/15 -> 22/23/24/25)
+--   [5] special_bonus_strength_15    +15 strength
+--   [6] special_bonus_unique_axe_4   +Counter Helix damage
+--   [7] special_bonus_unique_axe_2   +Berserker's Call AoE
+--   [8] special_bonus_unique_axe_5   +Culling Blade damage
+--
+-- J.Skill.GetTalentBuild drives {1,2} from t10, {3,4} from t15, {5,6} from t20 and
+-- {7,8} from t25; {0,10} takes the ODD index of a pair, {10,0} the EVEN one
+-- (aba_skill.lua:135 -- tests/test_focus_talent_anchor.lua reads that arithmetic
+-- out of the code instead of asserting it).  Only t10 and t15 can ever be taken in
+-- turbo: the level census behind GH #84 read level >= 20 on 0 of 210 hero-slots,
+-- high-water 19.  Two independent checks say the feed's order is the slot order
+-- here: talent7 below is used as a Berserker's Call radius bonus and [7] is the
+-- Call AoE talent; talent8 is used as Culling Blade kill damage and [8] is the
+-- Culling Blade damage talent.
+--
+-- t10 CHANGED 2026-08-22 from {0,10} ([1]) to {10,0} ([2]).  Pure talent-table
+-- change, no gate (stream charter: numbers and builds ship ungated, with the
+-- rationale written down).  CONDITION (c), argued from the two payout conditions:
+--   * [1] pays only AFTER Culling Blade lands a HERO KILL, and then only stretches
+--     a buff from 6s to 9s.  Culling is a 175-range, 70/75/80s-cd finisher, and the
+--     buff lands once the fight it would have helped win is already decided.
+--   * [2] pays whenever a Battle Hunger is ticking on anything, +8% each.  Battle
+--     Hunger is the FIRST point this file buys (build row {2,3,1,...}), is maxed by
+--     level 10, runs 12s on a 20/15/10/5s cooldown, and X.ConsiderW fires it from
+--     four separate branches (kill / initiation / teamfight / lane harass).  So it
+--     is up for most of most fights, and the talent pays on every one of them.
+--   * Move speed is the stat this Axe is short of: our own measurement (GH #56,
+--     backlog #5) is that he NEVER holds a Blink Dagger in a turbo game -- 0 of 4
+--     games, and 0 frames in 4 more -- so he closes every gap on foot.
+-- HONEST BOUND: [1] is a TEAM buff (+20/25/30 move speed, +10/15/20 armor, 900
+-- radius) and this gives up three seconds of it.  The claim is about how OFTEN each
+-- pays, not about which single payout is larger.  No replay corpus was read: what
+-- is counted above is cast conditions plus this file's own build order, not casts
+-- per game.  Pick-rate corroboration could not be fetched (dotabuff 403,
+-- liquipedia 429, fandom 402) -- the numbers are Valve's datafeed, not a guide.
+--
+-- t15 is deliberately LEFT ALONE, and its old comment ("+35 attack speed over +2
+-- mana regen") is deleted rather than updated: both of those talents are 7.2x names
+-- the hero no longer has, and the note was backwards even for them -- {0,10} takes
+-- the ODD index, which in that ladder was special_bonus_mp_regen_2, i.e. the row
+-- picked the talent its own comment says it rejected.  Today the pair is +8 Battle
+-- Hunger dps vs +10 Berserker's Call armor; choosing between those two needs its
+-- own round and its own evidence, not a comment fixed in passing.
 local tTalentTreeList = {
 						['t25'] = {0, 10},
 						['t20'] = {0, 10},
-						['t15'] = {0, 10}, -- +35 attack speed over +2 mana regen (Counter Helix DPS)
-						['t10'] = {0, 10},
+						['t15'] = {0, 10},
+						['t10'] = {10, 0},
 }
 
 local tAllAbilityBuildList = {
@@ -155,6 +210,10 @@ npc_dota_hero_axe
 "Ability4"		"generic_hidden"
 "Ability5"		"generic_hidden"
 "Ability6"		"axe_culling_blade"
+-- THE EIGHT LINES BELOW ARE THE 7.2x LADDER AND ARE KEPT ONLY AS THE RECORD OF
+-- WHAT THIS FILE USED TO BELIEVE.  Five of the names no longer exist on the hero
+-- and the three ..._unique_axe* ones moved.  Read the re-anchored ladder at the top
+-- of this file (dated 2026-08-22, from the datafeed) before trusting any index.
 "Ability10"		"special_bonus_strength_8"
 "Ability11"		"special_bonus_movement_speed_20"
 "Ability12"		"special_bonus_mp_regen_2"
@@ -178,8 +237,16 @@ local abilityQ = bot:GetAbilityByName( sAbilityList[1] )
 local abilityW = bot:GetAbilityByName( sAbilityList[2] )
 local abilityE = bot:GetAbilityByName( sAbilityList[3] )
 local abilityR = bot:GetAbilityByName( sAbilityList[6] )
-local talent7 = bot:GetAbilityByName( sTalentList[7] )
-local talent8 = bot:GetAbilityByName( sTalentList[8] ) -- special_bonus_unique_axe: +Culling Blade kill threshold (t25)
+local talent7 = bot:GetAbilityByName( sTalentList[7] ) -- t25 pair, odd index: today special_bonus_unique_axe_2, +Berserker's Call AoE
+-- t25 pair, even index.  The name in the comment that used to sit here was
+-- `special_bonus_unique_axe: +Culling Blade kill threshold`, which is stale twice
+-- over: special_bonus_unique_axe is index [3] today (+8 Battle Hunger dps), and
+-- index [8] is special_bonus_unique_axe_5, +Culling Blade DAMAGE.  Adding it to
+-- nKillDamage below still reads correctly under the new name -- Culling has had no
+-- separate kill threshold since the mechanic was folded into its pure damage -- but
+-- both talent handles here are t25, so GH #84's census (level >= 20 on 0 of 210
+-- hero-slots) makes them dead weight in turbo either way.
+local talent8 = bot:GetAbilityByName( sTalentList[8] )
 
 local castQDesire, castQTarget
 local castWDesire, castWTarget
@@ -556,6 +623,19 @@ function X.ConsiderR()
 	local nCastPoint = abilityR:GetCastPoint()
 	local nManaCost = abilityR:GetManaCost()
 	
+	-- REGISTERED LEVER, NOT TAKEN THIS ROUND (hero stream, 2026-08-22).  This
+	-- constant is stale: 150 + 100*lv is 250/350/450, and Culling Blade's damage on
+	-- the live datafeed (hero_id 2) is 275/375/475.  So the bot under-states its own
+	-- finisher by 25 pure damage at every level and declines a Culling that would in
+	-- fact kill whenever the target sits in the 25-point band above the estimate.
+	-- The honest fix is to read it off the ability (abilityR:GetSpecialValueInt(
+	-- 'damage' )) rather than to re-hardcode today's numbers.  It is NOT done here
+	-- because it ADDS a cast rather than removing one, and this stream ships an
+	-- action-adding change only with a real frame and a sized domain -- neither of
+	-- which this round bought.  PRE-REGISTERED DOMAIN for whoever picks it up:
+	-- frames where Culling is off cooldown, the target is inside 175, and its
+	-- current health falls in (150 + 100*lv, ability damage] -- count episodes, not
+	-- frames.
 	local nKillDamage = 150 + 100 * nSkillLV
 	if talent8 ~= nil and talent8:IsTrained() then nKillDamage = nKillDamage + talent8:GetSpecialValueInt( 'value' ) end
 	

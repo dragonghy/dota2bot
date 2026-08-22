@@ -2925,5 +2925,45 @@
       "cheaper_and_stronger_alternative_measured_this_round": "A per-file split compared against the parent commit: 127 files x 2 trees in about 10 minutes, and it answers the question that actually matters before a push ('what did MY change move?') rather than only 'is everything green now?'. Two caveats, both measured: (a) under high parallelism a few files go red from resource contention and pass on a serial re-run; (b) test_relicguard_siege_gate and test_wk_reincarnation_mana_gate always fail when run alone (they depend on globals -- package.path, GetScriptDirectory -- installed by earlier files in a full serial run) and fail IDENTICALLY on the parent commit, so they are not regressions.",
       "suggestion": "Fold that comparison script into the harness as the default pre-push gate for streams that only touch tests/."
     }
+  },
+  "focus_talent_reanchor_20260822T1400Z": {
+    "date": "2026-08-22T14:00Z",
+    "source": "hero-stream charter self-pick. No [hero] issue was actionable: `wkqaim` is blocked on `queue.json: hero-1` (still pending, and the 12:00Z round wrote 'not a line until the reading comes back'); #97/#85/#63/#73 are this stream's own closed-out records; OWNER_PRIORITIES P1/P2 both sit with the strategy stream. Extended GH #104's re-anchor method from Wraith King to the other four focus heroes.",
+    "what_this_is": "A talent-ladder re-anchor for all five focus heroes, plus ONE shipped pure-numbers change (hero_axe.lua t10). Ungated by charter rule for numbers/build changes -- so it IS in the stable version as of this commit. ZERO gated ids, ZERO EC2/S3, ZERO corpus. Anchor: https://www.dota2.com/datafeed/herodata?language=english&hero_id=<2|5|22|26|42>, read 2026-08-22.",
+    "change": {
+      "file": "bots/BotLib/hero_axe.lua",
+      "row": "tTalentTreeList['t10']: {0,10} -> {10,0}",
+      "from": "[1] special_bonus_unique_axe_culling_blade_speed_duration -- +3s on the Culling Blade KILL buff (6 -> 9s)",
+      "to": "[2] special_bonus_unique_axe_8 -- +8% move speed per ACTIVE Battle Hunger",
+      "condition_c": "Payout conditions, not taste. [1] pays only after a 175-range, 70/75/80s-cd finisher lands a HERO KILL, and only stretches a post-fight buff. [2] pays whenever a Battle Hunger ticks, +8% each: Battle Hunger is the FIRST point this file buys (row {2,3,1,3,3,6,3,2,2,2,6,1,1,1,6}), is maxed by level 10, runs 12s on a 20/15/10/5s cooldown, and X.ConsiderW fires it from four branches (kill / initiation / teamfight / lane harass). Move speed is the stat this Axe lacks: GH #56 / backlog #5 measured him holding a Blink Dagger in 0 of 4 turbo games and 0 frames of 4 more, so he walks to every fight.",
+      "honest_bounds": [
+        "[1] is a TEAM buff (+20/25/30 move speed, +10/15/20 armor, 900 radius) and this gives up 3s of it; the claim is about how OFTEN each pays, not which single payout is larger.",
+        "NO corpus was read. What is counted is cast conditions plus this file's own build order -- not casts per game.",
+        "Pick-rate corroboration unobtainable: dotabuff 403, liquipedia 429, fandom 402. Every number quoted is Valve's datafeed, not a guide.",
+        "UNGATED means live in normal mode too, though the argument is turbo-shaped (blink is unaffordable at turbo pace). DIRECTOR: log a stable-version drift."
+      ]
+    },
+    "stale_facts_found": {
+      "axe_t15_comment_was_inverted": "The t15 row read `{0,10} -- +35 attack speed over +2 mana regen`. In the same 7.2x ladder the npc block still quotes, {0,10} takes the ODD index = special_bonus_mp_regen_2 -- so the row picked the talent its own comment says it rejects. Comment DELETED (both names are gone from the hero); t15 itself LEFT ALONE, today's pair (+8 Battle Hunger dps vs +10 Berserker's Call armor) has no obvious winner.",
+      "axe_npc_block_is_7_2x": "special_bonus_strength_8 / _movement_speed_20 / _mp_regen_2 / _attack_speed_35 / _hp_regen_20 are gone; the three ..._unique_axe* names moved index. Block kept, with a header saying it is the record of what the file used to believe.",
+      "axe_talent8_comment_wrong_twice": "It said `special_bonus_unique_axe: +Culling Blade kill threshold`. Today special_bonus_unique_axe is index [3] (+8 Battle Hunger dps) and index [8] is special_bonus_unique_axe_5 (+Culling Blade DAMAGE). Adding it to nKillDamage still reads correctly under the new name. Both handles (talent7/talent8) are t25 => dead weight in turbo (GH #84)."
+    },
+    "correction_to_GH104": "GH #104 registered a cross-stream worry that WK's talent indices 2 and 6 are FACET-GATED (names ..._facet_1 / ..._facet_3) and that a non-talent slot would shift every later index. The naming is NOT evidence: in the feed those bonuses attach to ordinary ability special values with an empty `required_facet`. Lion's to_hell_and_back (the target of his t15 pick) is flagged INNATE, not a facet ability; Zeus's cloud / lightning_hands are scepter- and shard-granted and do not occupy a starting slot, so Zeus's sAbilityList 1/2/3/6 = arc / bolt / jump / ult does NOT drift. AND: the datafeed returns an EMPTY `facets` array for all five focus heroes => this endpoint cannot answer the facet question at all. The MECHANISM may still be real; the evidence cited for it is not.",
+    "registered_lever_not_taken": {
+      "site": "bots/BotLib/hero_axe.lua X.ConsiderR",
+      "defect": "nKillDamage = 150 + 100*nSkillLV = 250/350/450, but Culling Blade's damage on the live feed is 275/375/475 => the bot under-states its own finisher by 25 pure damage at every level and declines a Culling that would in fact kill whenever the target sits in that 25-point band.",
+      "fix_shape": "Read it off the ability (abilityR:GetSpecialValueInt('damage')) rather than re-hardcoding today's numbers.",
+      "why_not_now": "It ADDS a cast rather than removing one; this stream ships an action-adding change only with a real frame and a sized domain, and this round bought no corpus.",
+      "preregistered_domain": "Frames where Culling is off cooldown, the target is inside 175, and its current health falls in (150 + 100*lv, ability damage]. Count EPISODES, not frames."
+    },
+    "validation": "tests/test_focus_talent_anchor.lua -- 12 cases. The tier arithmetic and the {0,10}/{10,0} parity are READ OUT of J.Skill.GetTalentBuild (flip one row, see which indices move), never asserted; all five heroes' t10/t15 picks are resolved by driving the real function over their own parsed tTalentTreeList; source ratchets on the Axe change and on the rationale block that must travel with it; the 7.2x names may be quoted but never live; both Axe talent handles must stay t25, checked on BOTH halves (identifier AND the sTalentList[N] subscript -- the first draft read only the identifier and a re-point of [7] to [5] walked through it). 7 mutations, 7 caught (M1 revert axe t10 / M2 flip lion t15 / M3 drive pick[1] off the t20 row / M4 swap the parity / M5 stale name as live data / M6 re-point sTalentList[7] to [5] without renaming / M7 delete a rationale keyword). luacheck bots game: 0 warnings.",
+    "known_blind_spot": "Section 1 pins which index PAIR a tier row drives, not which pick SLOT receives it: mutation M3 leaves the moved set at {1,2} because pick[5] still moves with t10, and walks through section 1. Section 2 catches it on four of five heroes -- which is why the per-hero resolution drives the real function instead of listing expected indices. Recorded because a mutation found it, not because it was reasoned out.",
+    "handoff": [
+      "DIRECTOR: log the stable-version drift (ungated talent change, live in every game).",
+      "REPLAY STREAM: condition (a) -- confirm in ARCHIVED corpus that Axe takes special_bonus_unique_axe_8 at level 10. NO new wave needed.",
+      "NEXT HERO ROUND: `wkqaim` still waits on `queue.json: hero-1` (pending, untouched this round). Axe's next lever is the nKillDamage re-anchor above (needs a domain). Four coin-flip pairs are listed in the charter backlog item 18 -- do not flip them on taste."
+    ],
+    "github": "#115",
+    "report": "iterations/reports/hero/20260822T140000Z.md"
   }
 }
