@@ -1,6 +1,41 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy
 
+**⚠️ 2026-08-22T19:0xZ 协同组入集提议(待总监批准):新 gated id **`fieldcreep`** —— GH #119,
+owner 优先项 P2 那一族**共用的域缺口**,请**并进 §AP.0 的同一波**(23 → 24 eligible),
+**不申请专波**(与 §AP.1 摘掉 `strategy-2` 专波同理:它是 armed 腿的臂内读数)。
+**改的是一个变量**:`J.IsFieldRegenSituation` 的三条危险子句读的全是**英雄和塔**,
+一条也不读小兵/野怪,所以函数自己的注释「nobody anywhere near it」在真实帧上可以同时为真于
+「他正被半人马营按着啃」(录像组 283 局三个帧证据)。修法**追加**一条 gated 子句,
+问引擎自己的 `WasRecentlyDamagedByCreep`,**沿用英雄子句那条一模一样的 3.0 回看窗**
+(`[reverse]` 钉子:两个窗口一旦漂开就转红)——**这是那条子句缺的另一半,不是一个新调的常数**。
+**追加位置在塔子句之后**是刻意的:当初拆出这个函数的行为保持论证写的是「下面的子句顺序未变」,
+只有追加能让那句话继续为真。
+**本仓库语料的独立普查**(`tests/_fieldcreep_sweep.lua`,子进程,100 fixture / 930 存活英雄帧):
+situation **50** → armed **45**,**被否 5**(**2 枚有回复品** = 决策侧两个 id 的域、**3 枚没有** = `fieldbuy` 的域)
+⇒ **P2 的两半都被这一条同时影响,这正是它写在共用谓词里而不是抄三份的理由**。
+**先说边界**:50 枚里 **34 枚是 v1 fixture,根本不带 recent_damage** ⇒ 那条子句在它们上面
+**问不出来**(不是「因为好理由而为假」);可问的 16 枚里 9 枚是真安静。
+**所以 5/16 是下界,不是频率估计**;5/50 这个写法本组不用。
+**条件 (c) 用同一个单位说完**:三秒内四种回复品分别给 21(大药 tango)/ 85(仙灵之火,一次性)/
+~92(治疗药膏)/ ~135(瓶子);而被否那五帧在**同样三秒**里挨了 **14 / 22 / 109 / 129 / 132**。
+⇒ tango 五帧全输,仙灵之火与药膏在重的三帧上输。**不是「大药被打断」在起作用** ——
+药膏和 tango **扛得住小兵伤害**,这正是上游没人察觉的原因。
+**自带一条诚实的过宽角**:药膏 vs 单个线兵那一格,留下来其实是赢的;
+要让子句读伤害量级得有野怪/小兵单位表,**fixture 不带** ⇒ 记为**下一个杠杆,不在这里凭空调**。
+`tests/test_fieldcreep_veto.lua`(**16 例,5 次变异 5 抓**):两枚钉帧断言的是**最终 wrapper 决策**
+(lion 25% 血 / juggernaut,`stayfield`+`fieldcreep` 同 arm ⇒ STAY 翻面),
+**牙齿在两枚阴性对照**:一枚创伤在 **dt=4.3**(窗外)⇒ 不否决(**这枚钉住 3.0 这个常数**),
+一枚是 **owner P2 自己的铁证帧** `f_260822_063722_lina_tp_home`(只有英雄伤害)⇒ **断言原样不动**。
+**翻面了一条兄弟合同用例**(`test_replay_260822_fieldbuy_supply.lua` 原写「situation 必须无 gate」):
+它要保护的性质是「这个谓词不能自己发布行为」,现在改成直接断言**里面的 gate 只许收窄不许放宽**,
+牙齿更足(M2 变异被它和新文件同时抓到)。
+**给总监的那一格决定**:同波 arm 意味着 `stayfield`/`stayfield2`/`fieldbuy` 这一波买到的 (a)
+是**收窄之后那个版本**的 —— 按 §AO 你自己写的「证据是版本专属的」,本组认为**这才是该买的版本**,
+但代价是这三个 id 的域读数与不带 `fieldcreep` 的版本不可对读。**本组建议同波,决定权在你。**
+luacheck 0 警告,**无新 fixture、零 EC2**。报告 `iterations/reports/strategy/20260822T190000Z.md`;
+`state.json:fieldcreep_20260822`。
+
 **⚠️ 2026-08-22T18:5xZ:见 §AP —— 两条裁定。**
 (1) **`pullcamp` 批准重新入集**(22 → **23 eligible**;下一波串换成 **§AP.0 的 23 id**):
 16:5xZ 摘它写的回程条件是「#117 的修法必然改写选点代码」,那份修法已落地

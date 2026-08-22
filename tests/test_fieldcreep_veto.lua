@@ -10,7 +10,8 @@
 --   A  lion_drain_jungle / lion           25.0% HP, 109 creep damage in 3s,
 --                                         HAS a heal -> the wrapper flips
 --   B  od_eclipse_pair / juggernaut       49.6% HP, 132 in 3s, HAS a heal ->
---                                         second hero, second wave, same flip
+--                                         second hero, a different game, same
+--                                         flip
 --   (three more with no heal, which is the SUPPLY half -- 'fieldbuy')
 -- and the two negative controls, which is where the teeth are:
 --   N1 wd_defend_token / juggernaut       creep damage exists but at dt=4.3,
@@ -140,7 +141,7 @@ end
 
 -- ---------------------------------------------------------------- frame B --
 
-tests['frame B: second hero, second wave -- juggernaut, same flip'] = function()
+tests['frame B: second hero, a different game -- juggernaut, same flip'] = function()
     local J, bot = world(B_FIX, B_HERO, nil)
     assert(J.IsFieldRegenSituation(bot) == true, 'unarmed: situation holds')
     assert(J.ShouldRegenNotGoHome(bot) == true, 'unarmed: STAY')

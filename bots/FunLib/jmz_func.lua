@@ -4825,9 +4825,9 @@ function J.IsFieldRegenSituation( bot )
 	-- heavy ones. The split tracks WHAT is hitting: per-hit creep damage in
 	-- this corpus tops out at 45, with the mass at or below 24 (256 of the 282
 	-- rows on live frames) and a thin tail of 26 at 25-45 -- and the three
-	-- heavy frames are that
-	-- tail (36-37 a hit on the lion, 43-45 on the viper), i.e. camp contact,
-	-- while the two light ones are a lane creep or two at 9-14. Stated as
+	-- heavy frames are that tail (36-37 a hit on the lion, 43-45 on the
+	-- viper), i.e. camp contact, while the two light ones are a lane creep or
+	-- two at 9-14. Stated as
 	-- 'a heavy tail', NOT as 'bimodal': the histogram does not support that.
 	-- The corner where a blanket veto errs is therefore real and named: a
 	-- flask against one lane creep, where staying would still have won. Making

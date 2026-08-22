@@ -368,8 +368,18 @@ tests['wiring: the guard is gated on turbo + stayfield'] = function()
     assert(sit:find('1600', 1, true), 'the ring the guarded branch measures')
     assert(sit:find('3000', 1, true), 'the attribution ring')
     assert(sit:find('1200', 1, true), 'the enemy-tower ring')
-    assert(not sit:find('IsSoakCandidate', 1, true),
-        'the situation predicate must stay gate-free too')
+    -- 2026-08-22T19:xxZ: this was `not sit:find('IsSoakCandidate')` until GH
+    -- #119's creep/neutral veto ('fieldcreep') landed INSIDE the situation --
+    -- the gap is shared by all three owner-P2 ids, so one gated clause in the
+    -- shared predicate beats three copies. The property this clause protects
+    -- is unchanged and is now stated directly: a gate in there may only ever
+    -- NARROW the domain, so the unarmed default this file pins cannot move.
+    -- The full contract (exactly one id, asked once, whose branch returns
+    -- false and never true) lives in tests/test_fieldcreep_veto.lua.
+    for branch in sit:gmatch('J%.IsSoakCandidate%(.-then(.-)end') do
+        assert(not branch:find('return true', 1, true),
+            'a gate inside the situation may only narrow it, never widen it')
+    end
     local core = src:match('function J%.ShouldRegenNotGoHome%(.-\nend')
     assert(core, 'could not locate J.ShouldRegenNotGoHome')
     assert(core:find('J%.IsFieldRegenSituation%(', 1, false),
