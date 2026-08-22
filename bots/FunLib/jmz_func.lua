@@ -4741,13 +4741,17 @@ end
 -- Honest bound: an enemy who bursts from fog and withdraws past 3000 reads the
 -- same as a global ult here. Closing that needs last-seen memory, which is a
 -- separate lever; until then this helper deliberately errs by staying only
--- when the whole 1600 ring is empty AND a heal is in the bag.
+-- when the whole 1600 ring is empty, no enemy tower is inside 1200, AND a heal
+-- is in the bag.
 --
--- Gated on soak candidate 'stayfield' and turbo-only: inert in every shipped
--- game until it is armed and promoted.
-function J.ShouldRegenNotTpHome( bot )
+-- Turbo-only. This is the CORE predicate and carries NO candidate gate of its
+-- own: there are two ways home (the tpscroll branch and the retreat mode that
+-- walks), and each wrapper below carries its own soak id. They are meant to be
+-- ARMED TOGETHER -- owner priority P2 asks for both routes -- and kept apart
+-- only so a per-id A/B can still tell them apart afterwards. Nothing calls
+-- this function directly: an ungated caller would ship the behaviour.
+function J.ShouldRegenNotGoHome( bot )
 	if not J.IsModeTurbo() then return false end
-	if not J.IsSoakCandidate( 'stayfield' ) then return false end
 
 	local nHP = J.GetHP( bot )
 	-- Hurt enough that the bot wants to leave, not so hurt that the next stray
@@ -4769,12 +4773,60 @@ function J.ShouldRegenNotTpHome( bot )
 		end
 	end
 
+	-- No enemy tower in reach either. Measured, not assumed: driving
+	-- mode_retreat_generic over all 100 fixtures showed this predicate firing
+	-- on f_260819_142047_zuus_ult_denied, where the retreat bid it would have
+	-- cancelled is ABSOLUTE*1.1 -- and that bid is NOT a trip home. It comes
+	-- from ShouldRun's 前期谨慎冲塔 clause (line ~885: level <= 10, DotaTime
+	-- < 5:00, HP < 800, an enemy tower inside 898): a level-7 Zeus at 40% HP
+	-- standing 727 units from an enemy tower with no enemy hero within 7,000.
+	-- Backing off a tower is a LOCAL retreat, not the fountain trip this lever
+	-- is aimed at, and suppressing it would leave the bot parked in tower
+	-- range. 1200 is the widest radius those tower clauses themselves use, so
+	-- this stays strictly more conservative than every branch it guards.
+	-- Honest bound: 43 of the 100 fixtures carry no buildings at all (17th
+	-- world assertion, GH #100), so on those frames this clause cannot veto --
+	-- it is vacuously satisfied, not verified.
+	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
+
 	-- Staying has to have a point: no heal in the bag means standing still is
 	-- just idling at low HP (replay desk 2026-08-22: 0 of 22 real home-TPs
 	-- carried a salve, so the supply side is the other half of this fix).
 	if not J.HasFieldRegenSource( bot ) then return false end
 
 	return true
+end
+
+-- [stayfield] The TP half: wired into the tpscroll '撤退:3' home-TP branch in
+-- ability_item_usage_generic. Gated on soak candidate 'stayfield': inert in
+-- every shipped game until it is armed and promoted.
+function J.ShouldRegenNotTpHome( bot )
+	if not J.IsSoakCandidate( 'stayfield' ) then return false end
+	return J.ShouldRegenNotGoHome( bot )
+end
+
+-- [stayfield2 / owner priority P2, 2026-08-22] The WALK half of the same fix.
+-- Owner priority P2 asks for both home routes, and mode_retreat_generic is the
+-- other one: when it wins the bid the bot walks (or TPs) back to the fountain,
+-- and the promoted veto sitting on that leg -- J.ShouldStayAndRegen -- carries
+-- BOTH of the blind spots that let the pinned frame through:
+--   (1) its danger read is bot:WasRecentlyDamagedByAnyHero(3.0) with no
+--       attribution, so a global ult from 7.5k away reads as a hero on top of
+--       the bot (measured on f_260822_063722_lina_tp_home: TRUE with the
+--       nearest enemy 6,596 units off);
+--   (2) its regen read is flask/tango-or-90-gold, which does not see the
+--       faerie_fire that bot is actually carrying.
+-- So on the pinned frame the shipped veto is silent on this leg too, and the
+-- retreat mode bids 0.144 with nobody within 6,596 units.
+-- A SEPARATE soak id from 'stayfield' on purpose: same core predicate, two
+-- independent call sites. Arming one id must not silently move the other --
+-- that is the non-independence the retreat guard chain was reordered to fix
+-- (GH #29), and it is what makes a per-id A/B mean anything. The pair is meant
+-- to be armed together to satisfy P2's DoD; keeping the ids apart is what
+-- makes it possible to tell them apart afterwards.
+function J.ShouldRegenNotWalkHome( bot )
+	if not J.IsSoakCandidate( 'stayfield2' ) then return false end
+	return J.ShouldRegenNotGoHome( bot )
 end
 
 -- [obs 20260722] Laning trade-survival: retreat BEFORE the burst lands, not

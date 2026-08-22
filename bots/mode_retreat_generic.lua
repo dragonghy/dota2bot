@@ -223,6 +223,20 @@ function GetDesireHelper()
         return BOT_MODE_DESIRE_NONE
     end
 
+    -- [stayfield2 / owner priority P2] The walk-home half of the TP-home fix
+    -- above it. J.ShouldStayAndRegen already covers PART of this leg, but it
+    -- is blind on exactly the frame owner priority P2 pins: its danger read
+    -- attributes nothing (a global ult from 7,533 units away vetoes it) and
+    -- its regen read is flask/tango-or-90-gold (it does not see the
+    -- faerie_fire in the bag). J.ShouldRegenNotWalkHome fixes both and is
+    -- strictly more conservative everywhere else -- it requires the whole
+    -- 1600 ring empty, where the guards below tolerate company.
+    -- GATED on soak candidate 'stayfield2' (turbo-only): this line is INERT
+    -- in every shipped game until that id is armed and promoted.
+    if J.ShouldRegenNotWalkHome(bot) then
+        return BOT_MODE_DESIRE_NONE
+    end
+
     -- === RETREAT GUARD CHAIN: BEGIN (priority-ordered) ===
     -- [GH #29] This chain returns on the FIRST guard that fires, so SOURCE
     -- ORDER IS PRIORITY ORDER: a guard placed above a stronger one silently

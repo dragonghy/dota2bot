@@ -348,14 +348,31 @@ tests['wiring: the guard is gated on turbo + stayfield'] = function()
     local f = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
     local src = f:read('*a')
     f:close()
+    -- 2026-08-22T1x:xxZ: the predicate was split when the WALK half of owner
+    -- priority P2 landed (mode_retreat_generic, soak id 'stayfield2'). The
+    -- conditions now live in the ungated core J.ShouldRegenNotGoHome and each
+    -- call site has its own thin gated wrapper. Both halves are pinned here:
+    -- the core must stay turbo-only, and THIS half's wrapper must stay gated
+    -- on 'stayfield' -- an ungated wrapper would ship the behaviour.
+    local core = src:match('function J%.ShouldRegenNotGoHome%(.-\nend')
+    assert(core, 'could not locate J.ShouldRegenNotGoHome')
+    assert(core:find('J%.IsModeTurbo%(%)'), 'turbo-only')
+    -- The radii are read off the source so this test cannot drift into
+    -- restating numbers the helper no longer uses.
+    assert(core:find('1600', 1, true), 'the ring the guarded branch measures')
+    assert(core:find('3000', 1, true), 'the attribution ring')
+    assert(core:find('1200', 1, true), 'the enemy-tower ring')
     local body = src:match('function J%.ShouldRegenNotTpHome%(.-\nend')
     assert(body, 'could not locate J.ShouldRegenNotTpHome')
-    assert(body:find('J%.IsModeTurbo%(%)'), 'turbo-only')
     assert(body:find("J%.IsSoakCandidate%( 'stayfield' %)"), "gated on 'stayfield'")
-    -- The two radii are read off the source so this test cannot drift into
-    -- restating numbers the helper no longer uses.
-    assert(body:find('1600', 1, true), 'the ring the guarded branch measures')
-    assert(body:find('3000', 1, true), 'the attribution ring')
+    assert(body:find('J%.ShouldRegenNotGoHome%('), 'and it delegates to the core')
+    -- The core carries no gate of its own, so an ungated caller would ship it.
+    assert(not core:find('IsSoakCandidate', 1, true),
+        'the core must stay gate-free; the gates belong on the wrappers')
+    local _, nCallers = src:gsub('J%.ShouldRegenNotGoHome%(', '')
+    assert(nCallers == 3, -- the definition + the two gated wrappers
+        'J.ShouldRegenNotGoHome gained a caller outside the two wrappers; '
+        .. 'that caller would be UNGATED. found ' .. nCallers)
 end
 
 -- ---------------------------------------------------------------------------
