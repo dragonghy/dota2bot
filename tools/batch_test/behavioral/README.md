@@ -226,7 +226,32 @@ bash tools/batch_test/behavioral/sweep_run.sh \
 #      + each finding's hero's team)
 #   -> .sweep_out/<run>/all_findings.jsonl, games_manifest.jsonl,
 #      timelines/, findings/ -- kept for follow-up frame-level digging
+#   -> .sweep_out/<run>/sweep_complete.json -- completion sentinel (see below)
 ```
+
+### The completion sentinel is mandatory for consumers ([harness] #102)
+
+A sweep that dies mid-loop leaves a directory that is **indistinguishable from
+a good one**: every consumer reads only `games_manifest.jsonl`, which is
+appended per game, so a half-finished sweep just reads as a smaller corpus and
+nothing anywhere says so. That silently took `capmono`'s arm A from 16 games to
+13 (pooled domain frames 86 -> 72, seed906 Jaccard 0.43 -> 0.00) while the
+headline `r` moved +0.011 -> +0.018 — i.e. it looked perfectly normal, and only
+a `--selfcheck` against registered priors caught it. A driver's natural "skip
+if `games_manifest.jsonl` exists" would then pin that 13-game corpus forever.
+
+So `sweep_run.sh` writes `sweep_complete.json` **last and only on success**
+(`{dem_found, swept, skipped, exit_code, s3_prefix}`), and clears any stale one
+before it starts appending. **Every consumer must refuse a directory without
+it, and must cross-check `swept` against the manifest line count.**
+`sweep_summary.md` is *not* a valid sentinel: it is only incidentally last,
+undocumented as such, and carries no `dem_found`, so "swept all 4" and "found
+5 .dem, swept 4" are the same file.
+
+Running two sweeps concurrently is safe as of #102: `get_dumper.sh` installs
+the binary with an atomic rename (a sweep already exec'ing the old one is
+unaffected; nobody ever execs a half-written file) and holds a `flock` across
+the acquire so two cache misses can't corrupt each other's Go build tree.
 
 This gives a trigger-count table for the whole run as a starting point for
 the mandatory breadth sweep, before the mandatory frame-by-frame deep dive on

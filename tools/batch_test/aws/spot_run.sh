@@ -45,6 +45,29 @@ SPOT=1
 DRYRUN=0
 TAG_PREFIX=dota2bot-soak-spot
 STAMP=$(date +%Y%m%d_%H%M%S)
+# [harness] #98: run_id must not rest on STAMP's 1-second resolution. Within ONE
+# call `_${n}_` disambiguates structurally, but the batch desk's standing 4x1
+# topology (one seed per instance => four separate COUNT=1 calls) makes every
+# run_id n=1, so only the second separates them. Measured margin across 58
+# same-wave adjacent calls: min 2s, median 5s -- and that floor is just "one
+# ec2 run-instances round trip", which nothing guarantees. If two calls ever
+# share a second, both instances write to s3://.../soak/<run_id>/, same-second
+# game basenames collide (21 such pairs already exist bucket-wide, harmless only
+# because they sit under different prefixes), S3 last-write-wins silently drops
+# games, AND the two seeds merge -- so recover_verdict.py's per-seed pairing
+# starts answering with the other seed's games. Every documented workaround
+# ("re-download per run, then merge") is structurally void in that case, since
+# there is nothing left to separate. This token makes uniqueness independent of
+# wall-clock resolution. It is APPENDED so every historical prefix glob
+# (spot_<date>_<time>*) and every archived run_id in the reports stays literal;
+# consumers treat run_id as an opaque token (dem_claim.sh / dem_inventory.py
+# split on "__", never on run_id's internals).
+# 3 bytes = 16.7M values: with the four same-second calls of a 4x1 wave the
+# birthday odds are ~4e-7 per wave, i.e. the failure mode stops being a
+# scheduling question. Falls back to the PID (distinct across the four calls,
+# which is exactly the case that matters) if /dev/urandom is unreadable.
+RUN_TOKEN=$(od -An -N3 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')
+[ -n "$RUN_TOKEN" ] || RUN_TOKEN=$(printf '%06x' $$)
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -152,7 +175,7 @@ echo
 
 LAUNCHED=()
 for n in $(seq 1 "$COUNT"); do
-    RUN_ID="spot_${STAMP}_${n}_${REF//\//-}"
+    RUN_ID="spot_${STAMP}_${n}_${REF//\//-}_${RUN_TOKEN}"
     NAME="${TAG_PREFIX}-${n}"
     UD=$(build_user_data "$RUN_ID")
 

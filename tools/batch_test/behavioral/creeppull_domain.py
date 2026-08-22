@@ -23,7 +23,11 @@ observable offline, so this cannot over-claim SILENT, only under-claim it):
   NOT observable  IsInLaningPhase()  (a superset in t<=360 for turbo anyway)
                   WasRecentlyDamagedByAnyHero()      [harness] capture gap
                   lane-front advance / WeAreStronger  (the DISADVANTAGED clause)
-                  J.GetPosition() -- proxied by analysis.json team_slot%5+1
+  OBSERVABLE      J.GetPosition() -- from the soak seed's draft, via
+                  seed_draft.positions_for_game (NOT the pick slot: GH #57,
+                  team_slot%5+1 was 47.3% accurate). Unattributable games
+                  (warm-ups, no seed stamp) yield pos=None and drop out of the
+                  core reading rather than being mislabelled into it.
 
 SIGNATURE (the action, as it looks at 1 Hz):
   DRAG   -- from a domain frame t, displacement over [t, t+DRAG_S] projected on
@@ -58,6 +62,10 @@ import math
 import os
 import sys
 from collections import defaultdict
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'soak'))
+import seed_draft  # noqa: E402  -- canonical hero->position (GH #57)
 
 T_MAX = 360.0          # DotaTime() > 6*60 -> nil
 HP_MIN = 0.50          # J.GetHP(bot) < 0.5 -> nil
@@ -169,11 +177,22 @@ class Game:
             if b['name'] == 'ancient':
                 self.ancient.setdefault(b['team'], (b['x'], b['y']))
 
-        # --- positions from the analysis roster (team_slot % 5 + 1)
+        # --- positions from the SOAK SEED's draft, never from the pick slot.
+        # GH #57: `X.ShufflePickOrder` permutes the slots after the draft, so
+        # `team_slot % 5 + 1` agreed with the drafted position on only 47.3% of
+        # rows across 291 real mirror games -- it is forbidden under tools/ and
+        # `tests/test_hero_position.py` check [6] fails the build on it.
+        # `positions_for_game` returns None (not a guess) when the game is not
+        # attributable to a seed -- e.g. warm-up games, which carry a bare tree
+        # SHA instead of a `mirror:...:s<seed>:...` stamp. That propagates to
+        # `pos = None`, and every consumer here reads `pos and pos <= 3`, so an
+        # unattributable game drops OUT of the core reading instead of being
+        # mislabelled into it -- the same under-claim-never-over-claim direction
+        # this tool's DOMAIN section commits to.
         self.pos = {}
         if analysis_path and os.path.exists(analysis_path):
-            for p in json.load(open(analysis_path)).get('players', []):
-                self.pos[p['hero']] = p['team_slot'] % 5 + 1
+            self.pos = seed_draft.positions_for_game(
+                json.load(open(analysis_path))) or {}
 
     def recent_hero_dmg(self, hero, t, back):
         """`bot:WasRecentlyDamagedByAnyHero(back)` -- observable after all.

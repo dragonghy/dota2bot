@@ -32,6 +32,25 @@ MANTA_VER=v1.5.0
 
 mkdir -p "$OUT"
 
+# [harness] #102: two sweeps running at once share this one $OUT. Two distinct
+# races live here, and they need two distinct fixes -- a lock alone does NOT
+# close the observed one:
+#   (1) EXEC-vs-OVERWRITE (what actually bit): sweep A is inside its per-game
+#       loop exec'ing $BIN while sweep B re-downloads/chmods that same path.
+#       A gets "Permission denied" (or a half-written file) mid-sweep, dies
+#       under set -e, and leaves a partial corpus that looks complete (#102).
+#       A lock cannot help: A is not inside get_dumper.sh when it execs.
+#       Fixed by installing the binary with an ATOMIC rename below -- a running
+#       exec keeps the old inode, and any new exec sees a complete file.
+#   (2) BUILD-vs-BUILD: two cache misses would share $GOPATH/$GOCACHE and the
+#       patched manta_local tree (which is rm -rf'd and re-copied), corrupting
+#       each other. That one IS a lock's job, so take one for the whole
+#       acquire -- the loser waits for the winner's build (10-20 min) and then
+#       hits the cache, instead of racing it.
+if [ -z "${GET_DUMPER_LOCKED:-}" ] && command -v flock >/dev/null 2>&1; then
+    exec env GET_DUMPER_LOCKED=1 flock "$OUT/.lock" "$0" "$@"
+fi
+
 # Cache key = hash of the dumper source + the manta-patch recipe, so any
 # change to either automatically invalidates stale cached binaries.
 SRC_HASH=$(cat "$DUMPER_SRC" "$PATCH_RECIPE" | sha256sum | cut -c1-16)
@@ -44,8 +63,14 @@ if command -v awsx >/dev/null 2>&1; then AWS_CMD=awsx
 elif command -v aws >/dev/null 2>&1; then AWS_CMD=aws
 fi
 
-if [ -n "$AWS_CMD" ] && $AWS_CMD s3 cp "$S3_URI" "$BIN" --quiet 2>/dev/null && [ -s "$BIN" ]; then
-    chmod +x "$BIN"
+# Staging path for the atomic install (same filesystem as $BIN, so mv is a
+# rename(2) and never a copy). See the EXEC-vs-OVERWRITE note above.
+STAGE="$OUT/.behav-dump.$$"
+trap 'rm -f "$STAGE"' EXIT
+
+if [ -n "$AWS_CMD" ] && $AWS_CMD s3 cp "$S3_URI" "$STAGE" --quiet 2>/dev/null && [ -s "$STAGE" ]; then
+    chmod +x "$STAGE"
+    mv -f "$STAGE" "$BIN"          # atomic: no reader ever sees a partial $BIN
     echo "[get_dumper] cache HIT: pulled $S3_URI (skip build)" >&2
     echo "$BIN"
     exit 0
@@ -93,14 +118,15 @@ PY
 go mod edit -replace "github.com/dotabuff/manta=./manta_local"
 
 cp "$DUMPER_SRC" "$OUT/dumper/main.go"
-go build -o "$BIN" ./dumper
-echo "[get_dumper] built $BIN" >&2
+go build -o "$STAGE" ./dumper
 
-if [ ! -s "$BIN" ]; then
-    echo "[get_dumper] ERROR: build did not produce $BIN" >&2
+if [ ! -s "$STAGE" ]; then
+    echo "[get_dumper] ERROR: build did not produce a binary" >&2
     exit 1
 fi
-chmod +x "$BIN"
+chmod +x "$STAGE"
+mv -f "$STAGE" "$BIN"              # atomic install, same reason as the cache path
+echo "[get_dumper] built $BIN" >&2
 
 if [ -n "$AWS_CMD" ]; then
     if $AWS_CMD s3 cp "$BIN" "$S3_URI" --quiet; then

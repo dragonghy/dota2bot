@@ -58,6 +58,12 @@ SWEPT=0
 SKIPPED=0
 : > "$OUT/all_findings.jsonl"
 : > "$OUT/games_manifest.jsonl"
+# [harness] #102: clear any sentinel from an EARLIER complete sweep of this same
+# out_dir before touching the manifest. A re-run that dies halfway would
+# otherwise leave last time's sentinel sitting on top of this time's truncated
+# manifest -- the exact "looks finished, is not" shape this sentinel exists to
+# rule out. Removed here, written only after the summary below succeeds.
+rm -f "$OUT/sweep_complete.json"
 
 for dem in "${DEMS[@]}"; do
     name="${dem%.dem}"
@@ -150,4 +156,28 @@ open(os.path.join(out, "sweep_summary.md"), "w").write(md)
 print(md)
 PY
 
-echo "[sweep] wrote $OUT/sweep_summary.md + all_findings.jsonl + games_manifest.jsonl" >&2
+# [harness] #102: explicit completion sentinel, written LAST and only on the
+# success path (set -e means any earlier failure exits before this line).
+# A sweep that dies mid-loop leaves a directory that is byte-for-byte
+# indistinguishable from a good one to every consumer -- they all read only
+# games_manifest.jsonl, which is appended per game, so a partial sweep is just
+# "a corpus with fewer games" and nothing says so. That silently took capmono's
+# arm A from 16 games to 13 (pooled domain frames 86 -> 72, seed906 Jaccard
+# 0.43 -> 0.00) while r moved only +0.011 -> +0.018, i.e. it looked normal.
+# Consumers MUST require this file and cross-check `swept` against the manifest
+# line count; sweep_summary.md is NOT a valid sentinel (it is only incidentally
+# last, undocumented as such, and carries no dem_found, so "swept all 4" and
+# "found 5 .dem, swept 4" are indistinguishable inside it).
+python3 - "$OUT" "${#DEMS[@]}" "$SWEPT" "$SKIPPED" "$DEM_SRC" <<'PY'
+import json, os, sys
+out, dem_found, swept, skipped, src = sys.argv[1:6]
+json.dump({
+    "dem_found": int(dem_found),
+    "swept": int(swept),
+    "skipped": int(skipped),
+    "exit_code": 0,
+    "s3_prefix": src,
+}, open(os.path.join(out, "sweep_complete.json"), "w"), indent=2)
+PY
+
+echo "[sweep] wrote $OUT/sweep_summary.md + all_findings.jsonl + games_manifest.jsonl + sweep_complete.json" >&2
