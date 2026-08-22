@@ -25,6 +25,28 @@ Two gotchas paid for already: `buildings` contains watch_tower/barracks/ancient
 as well as tower (exclude the rest when picking "nearest tower"), and corpse
 frames carry hp_pct == 0.
 
+IDENTITY (2026-08-22, GH #69 section 6): snapshots are keyed by hero NAME, and a
+hero's illusions/copies carry the same name.  Merging them and taking "the last
+frame with t <= t" hands back a copy on 2.80% of calls (median position error
+3,087 u).  That is not a rounding error here -- measured on the `lf_rescue`
+bisect corpus it reaches three separate predicates in `gate()`:
+  * the diver count, where a copy standing in for the body HIDES the enemy who
+    is at that instant killing the ally (`20260819_143059_slot1` t=488.4:
+    chaos_knight's body 62 u from the dying Venomancer and alive, while the copy
+    the merged map returned sat 1,844 u away reading hp 0 -> divers 2, not 3);
+  * the responder's `dist > 3500` clause, where a copy parked next to the ally
+    makes a real cross-map rescuer look local and the cast is discarded
+    (`20260819_122930_slot1` t=456.5: Lich body 6,049 u from its own copy);
+  * the ally's `hp_pct < 0.35` clause, where a copy's HP is substituted for the
+    body's and invents a dying ally (`20260819_143611_slot1` t=476.0:
+    chaos_knight copy 0.289 vs body 0.648).
+So `TL` locks onto the body by entity id, keyed on EARLIEST first appearance (the
+body is present from the ~-75s pre-game frame, a copy is not).  `hp`, `hp_max`
+and `items` cannot separate them: the copies in this corpus are field-for-field
+identical to the body.  `IDX_LOCK = False` (or --legacy-merge-by-name) restores
+the old merged behaviour for reproducing a pre-2026-08-22 reading; the measured
+cell-by-cell delta is in tp_attribution_idxlock_audit.py.
+
 Usage: tp_attribution.py <timeline.json> <analysis.json> <radiant|dire> [--json out]
        where <side> is the mirror stamp's armed side for that game
        (see games_manifest.jsonl from sweep_run.sh).
@@ -37,9 +59,32 @@ import seed_draft  # noqa: E402  -- the only correct source of a hero's position
 
 RAD, DIRE = 2, 3
 
+# Lock every by-name snapshot lookup onto the body entity (see IDENTITY above).
+# Set False only to reproduce a reading published before 2026-08-22.
+IDX_LOCK = True
+
 
 def dist(ax, ay, bx, by):
     return math.hypot(ax - bx, ay - by)
+
+
+def primary_idx(snapshots):
+    """{hero: idx of the body}, keyed on EARLIEST first appearance.
+
+    Same rule as axe_blink_domain.primary_idx.  Frame count is the weaker
+    discriminator (a copy can outlive the body's visible frames); first
+    appearance is the one the charter mandates.
+    """
+    first = {}
+    for s in snapshots:
+        key = (s["hero"], s["idx"])
+        if key not in first or s["t"] < first[key]:
+            first[key] = s["t"]
+    out = {}
+    for (hero, idx), t0 in first.items():
+        if hero not in out or t0 < out[hero][1]:
+            out[hero] = (idx, t0)
+    return {h: v[0] for h, v in out.items()}
 
 
 class TL:
@@ -47,13 +92,28 @@ class TL:
         d = json.load(open(path))
         self.teams = d["game"]["teams"]
         self.events = sorted(d["events"], key=lambda e: e["t"])
+        snaps = d["snapshots"]
+        if IDX_LOCK and snaps and "idx" not in snaps[0]:
+            sys.exit("[fatal] %s: this timeline has no snapshots[].idx, so the "
+                     "body cannot be told from a copy; re-dump with the current "
+                     "dumper or set IDX_LOCK=False and accept the artifact"
+                     % path)
+        prim = primary_idx(snaps) if IDX_LOCK else {}
+        self.n_copy_entities = (len({(s["hero"], s["idx"]) for s in snaps}) - len(prim)
+                                if IDX_LOCK else None)
         self.snaps = defaultdict(list)
-        for s in d["snapshots"]:
+        for s in snaps:
+            if IDX_LOCK and prim.get(s["hero"]) != s["idx"]:
+                continue
             self.snaps[s["hero"]].append(s)
         for h in self.snaps:
             self.snaps[h].sort(key=lambda s: s["t"])
-        # frame times (union, rounded)
-        self.frames = sorted({round(s["t"], 1) for s in d["snapshots"]})
+        # frame times (union, rounded).  Built from the body frames under the
+        # lock: on the 32-game lf_rescue corpus the copies contributed 0 unique
+        # timestamps in 32/32 games, so pass B's loop domain is unchanged there
+        # -- that is a reading of that corpus, not a property of the dumper.
+        self.frames = sorted({round(s["t"], 1)
+                              for v in self.snaps.values() for s in v})
         # buildings: per timestamp list
         self.bld = defaultdict(list)
         for b in d["buildings"]:
@@ -240,7 +300,15 @@ if __name__ == "__main__":
     ap.add_argument("analysis")
     ap.add_argument("side")
     ap.add_argument("--json")
+    ap.add_argument("--legacy-merge-by-name", action="store_true",
+                    help="merge same-name entities as before 2026-08-22 "
+                         "(reproduces older readings; see IDENTITY in the "
+                         "module docstring for what it costs)")
     a = ap.parse_args()
+    if a.legacy_merge_by_name:
+        IDX_LOCK = False        # module scope: this block IS module level
+        print("[warn] --legacy-merge-by-name: same-name copies are merged; "
+              "2.80% of snapshot lookups return a copy", file=sys.stderr)
     ch, op = scan(a.timeline, a.analysis, a.side)
     out = dict(timeline=a.timeline, side=a.side, cast_hits=ch, opportunities=op)
     if a.json:
