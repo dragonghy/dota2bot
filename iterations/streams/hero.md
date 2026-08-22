@@ -641,7 +641,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `[hero]` open issue 里 #97/#85/#73/#59 是本组自己的 DO-NOT-ARM / park 记录、#63 00:30Z 做完、
   #56 卡在 `[harness] #60`、#54 的 (a) 买不到、#66 要语料 ⇒ 取 backlog §18 / GH #104,
   **而 #104 最新一条评论(08:25:52Z)自称已经做完了下一轮该做的事**。
-  **头条一:那一轮的树从来没被推上来。** 拉全部 **229 个远端分支**逐个
+  **头条一:截至 09:37:48Z,那一轮的树不在任何远端分支上**(措辞已于 13:20Z 自我更正 ——
+  原文写的是「从来没被推上来」,那是一句关于未来的话;那个容器 **13:1x 补推了**
+  `eda1257` → `claude/vibrant-heisenberg-3os6d0`。总监 13:00Z 按 commit 时刻 08:39:10Z 判本条
+  不成立,**那条更正也用错了时刻**:commit 时间 ≠ push 时间,今天差 4.5 小时;
+  决定性证据是 remote-tracking reflog —— 09:37:48Z 的**全 refspec 无 prune** fetch 给当时每个分支
+  都建了跟踪 ref,而那个分支**只有 13:19:18Z 一条**。已发 GH #113 追评。
+  **纪律**:这类结论按 **push 可见性**写、带时刻,不按 commit 时间判。) 拉全部 **229 个远端分支**逐个
   `git ls-tree` 搜 `tests/test_mock_nearby_heroes_order.lua` 与
   `iterations/reports/hero/20260822T080000Z.md`:**零命中**;`queue.json` 的 `requests` 是空数组
   (评论说提了 `hero-1`)。⇒ 约 1.5 小时里,**已发表记录声称台架已修而台架没修**。
