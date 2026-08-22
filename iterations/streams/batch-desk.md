@@ -1685,3 +1685,84 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   跨组:在既有 `[bug] #96` 下追评(**不新开** —— §AI.4 正是从 #96 长出来的);`[batch] #70`、
   `[harness] #98`/`#92`/`#75`/`#33` 仍开着,不重复开。
   详见 `iterations/reports/batch-desk/20260822T000600Z.md`。
+- 2026-08-22T02:06Z(第三十八次触发):**纯运维 + 归档取证轮,未启动任何批测,本会话真实 AWS 支出 ≈ $0.00**
+  (免费 Budgets 路径**连续第九轮**,CE 调用 **0** 次;本轮**未下载任何 `analysis.json`**,付费面只有若干次
+  `s3 ls`,Tier2 LIST ≈ $0.0001)。MTD **$18.587**,forecast $23.11 —— 与 22:06Z / 00:06Z **读的是同一次
+  budget refresh**(`2026-08-21T21:23:52Z`),**第三轮引用同一个数,不构成新信息**。$45 围栏余 **$26.41**,
+  $90 刹车线余 $71.41,**未触发任何预算刹车**。
+  **(1) 收割:无新数据(连续第十五轮)**。`soak/` 前缀总数 **140 逐字不变**,最新前缀仍
+  `spot_20260820_180808_1_11a8de33…`;`validation/` 最新对象仍是 07-23 的历史 verdict。
+  `queue.json` 为空 ⇒ 走 4b。
+  **(2) ⭐ 实质交付:基线腿**确实漂移了**,漂在 6 个点上,而 5 个是「修好了缺陷」** —— 这是 00:06Z 挂出的
+  候选免费工作单元(逐行审 `c2181e05afde…`→HEAD 的 gate 覆盖率)。**① 为什么归本台**:§AI.4 (ii) 写
+  本底率「在镜像装置里是免费的 —— 就是基线腿」,这句**在一波之内为真,跨树未必**:基线腿 = **那棵树**的
+  出厂代码,而批测台是归档持有方。区间 `c2181e0..450c490`,`bots/`+`game/` **13 文件 / +1354 −52**。
+  **② 方法两层,第二层不可省**:第一层机械(剥注释/字符串后走块结构栈,`IsSoakCandidate`/`IsLaneFixOn`/
+  `IsLaneFixActive` 入栈即 gated)得 注释/空行 991 / gated 72 / **live 291**;第二层逐点手核 →
+  **语义上真活的只有约 20 行 / 6 个点,词法过报约 48 倍**。三个过报来源记死:**(a) 新 helper 的函数体
+  词法必然 live、gate 在它自己第一行**(`od_GetEclipseAoeLocation`/`zuus_ShouldSaveManaForUlt`/
+  `_roamreach_BoundedChase`/`lion_IsDrainSafeToStart`/`lion_ShouldStopDrain`)或在调用点(`BlinkFirstBuild`);
+  **(b) 多行条件**(`jmz_func.lua:7135` 判 live,而 `IsSoakCandidate('tparrive')` 在 **7134**);
+  **(c) 早返回式 gate**(`J.GetReadyHardCc` 第二遍扫描前的 `esaftershock` 早返回)。⇒ **纪律:gate 覆盖率
+  不能只用词法工具报数**,工具把 1354 收敛到 291,结论必须逐点手核。与 §AH.2 同族,但这次失效方向是
+  **保守(过报)**,不像 `exit 128` 那次朝危险方向失效。
+  **③ live 的 6 个点**:**D1** `mode_team_roam_generic.lua:244-246` —— `roamstale` 已 promote 为默认
+  (去 gate,Turbo-only),roam 模式动作选择;**D2** `aba_defend.lua` **×9**
+  (`WeightedEnemiesAroundLocation`/`ShouldDefend`)`({string.find(…)}) ~= nil` → `__TS__StringIncludes`;
+  **D3** `utils.lua` `IsUnitWithName`/`FindAllyWithName` 同族;**D4** `jmz_func.lua:4458 J.CanBreakTeleport`
+  `GetCastPoint`→`GetCastDelay`;**D5** 新增 `J.IsThereCoreInLocation`,把 `hero_largo.lua:416` 的
+  **nil 调用**(运行时报错)变成可用谓词;**D6** `hero_invoker.lua:1198` `J.Unit.`→`J.Utils.`,
+  **名义漂移、行为不变**(该 `or` 右支不可达,`A or (A and X)` ≡ `A`,有测试钉住)。
+  **④ 锋利处在方向,不在计数**:`{string.find(name,"x")}` 是**表构造式、永远非 nil** ⇒ 语料树上
+  `WeightedEnemiesAroundLocation` 凡走到 elseif 链的单位**一律 +0.6(`upgraded_mega` 恒真)**、
+  `siege and not upgraded` 写成 `~= nil and == nil` **恒假**、golem/bear/小兵三支是**死代码**;
+  `ShouldDefend` 同型;`utils.IsUnitWithName` 旧实现 `return {string.find(...)} ~= nil` **恒返回 true**。
+  6 处里 **5 处是修复** ⇒ **语料树的基线腿比今天更坏,它不是稳定的「出厂参考」,是当天恰好还活着的
+  那批缺陷的快照。**
+  **⑤ 给 §AI.4 的口径(建议,裁定归总监)**:同波内「本底率免费」成立(00:06Z 已从源码复核基线腿每个
+  gate 都关);**跨树引用要加一条** —— 归档语料读出的本底率是**那棵树的**本底率,只有该签名装置避开
+  D1–D5 才等于今天的出厂率。**已核干净**:`lf_rescue` 救援-TP 装置(00:06Z md5 + 9 调用点逐字),
+  `#96` 的 `4/16` 今天仍可引用;**有风险的签名族(点名)**:读 defend desire/权重的(**D2**,改动量最大)、
+  roam 攻击动作的(**D1**)、TP 打断的(**D4**)、Largo(**D5**)、任何用 `IsUnitWithName` 的检测器(**D3**)。
+  **⑥ 已核实为 no-op 的删除(查过的,不是假设)**:lion `nKeepMana=400`(全 `bots/` 零读者)、
+  tiny `and bot:GetHealth() > 0.15`(`GetHealth()` 返回**绝对 HP**,活着即 ≥1 ⇒ 恒真)、
+  retreat 的 `towerreach` 改写(未 arm 时 `nTowerVeto == #nEnemyTowers`)与 `retnear`
+  (未 arm 时 `nSeenAugment == unseenCount`)、CM 删 `cmrguard` 整段(删的是 gated 代码)。
+  **⑦ 诚实边界**:只覆盖 `c2181e0..450c490`,**更早的语料树未审、与 HEAD 的距离只会更大**;
+  对 gated 点读的是「第一行/调用点确实有 gate」,**未逐个证明其未 arm 分支与旧代码逐位等价**
+  (⑥ 那五条是例外,真的核了)。
+  **(3) 启动决策:不启动**。例行三条件**形式上全部满足**((i) 距 08-20T16:09:02Z 已 **~34h**;
+  (ii) `11a8de33..` 之后 `bots/` 有变更;(iii) $18.59+$1.40 ≈ $20.0 ≪ $45),**但「无目的不启动」仍压着**。
+  `test_set.md` 尾部最新一节仍是 **§AI(23:0xZ)**,自 00:06Z 起**逐字未变**(最新提交 `db358e8`);
+  §AI.1–§AI.5 **全是判读、纪律与工具条款,无一条排波次**。下一波唯一已知的有目的候选仍是 §AG.4 (1)(2)
+  之后的 `roamreach`,而 (1) 的 `VICTIM_HP` 扫描是**免费离线**且已与 `[harness] #92` 并成同一工作单元。
+  跑道按 $1.40/波仍是 **~18 波 4 台单臂 或 ~9 波 8 台两臂**。**run_id 唯一性纪律本轮无适用对象**
+  (未做任何 `spot_run.sh` 调用)。
+  **(4) CE 必查项:改排到 08-23,不再逐轮顺延** —— 目标日 08-22 在 UTC 02:06Z 只覆盖 2 小时,
+  CE 本身还有滞后,现在查既花 $0.01 又读不到完整日;00:06Z 已因同样理由顺延过一次,**再逐轮顺延两小时
+  是空转**,改为在 08-23 的任一轮一次性查 08-22 完整日(期待 qty 0-2)。08-21 已判定被污染(~16 次),
+  **看到 16 不要误判成修法失败**。
+  **(5) 泄漏检查(四层,全免费只读,开工与收尾一致)**:实例 **0**、EBS 卷 **0**、自有快照 **1**
+  (`snap-0ad026b386c804288`,160 GB,即 AMI)、Elastic IP **0**、open/active spot 请求 **0**。**无泄漏。**
+  **(6) 验证**:本会话未改 Lua(改动仅 `iterations/` 下报告与章程),容器无 `luacheck`/`lua5.1`,
+  铁律 6 无适用对象;**未新增工具脚本**(块结构分析器是一次性 `python3`,落 scratchpad 不入库);
+  第 (2) 节每个数字均由实跑 `git fetch --depth 1 <全40位SHA>` + `git diff -U0` + `git show` + 逐点
+  `sed`/`grep` 得出,**无估算项**,唯一未做的事已在 ⑦ 明写。
+  **(7) 局数**:本轮无在跑波次;上一波 arm A **280**(166/114)+24 暖场、arm B **292**(168/124)+24 暖场,
+  两臂 **572**;**本轮下载 `analysis.json` 0 个**。档案累计未变(11,048 在册 + 3,367 暖场 / 137 run /
+  112 种子;整桶计费 13.7 GB,其中 `.dem` 8.79 GB ≈ $0.20/月)。**新增可引用:`c2181e0..HEAD` 的
+  `bots/`+`game/` = 13 文件 / +1354 −52;1354 行 = 注释/空行 991 + 词法 gated 72 + 词法 live 291;
+  291 行词法 live 收敛到 6 个语义 live 点(其中 1 个仅名义),过报约 48 倍。**
+  **(8) 下次触发**:固定栏位照旧;**CE 必查项 08-23 查 08-22 完整日**;核树走步骤 5 两步法 + 全 40 位 SHA
+  (**exit 128 = 不可比,不是无漂移**;**空 diff 要配正控才算数**);泄漏检查沿用四层版本;
+  **无申报目的则继续不启动**。**必须传下去的三条**:① **基线腿跨树不是常量** —— D1–D5 是真漂移,
+  方向是「旧树更坏」,§AI.4 (ii) 的本底率跨树引用要先核该签名的装置(风险签名族已点名);
+  ② **gate 覆盖率的词法工具过报约 48 倍**,三个过报来源(helper 内部 gate、多行条件、早返回 gate)
+  记在报告 3.2,结论必须逐点手核;③ 20:06Z / 22:06Z 两条仍有效 —— `lf_rescue` 语料是 **11 个 run 不是
+  8 个**,重算取 **8 run / 16 vs 16 / 8r-8d**;上机时四次 `COUNT=1` 调用之间**跨过整秒** + 启动后读
+  `soak-run` 标签核对四值互异。**候选的免费工作单元**:把本轮方法推到**更早的语料树**(07-19/07-2x 那批),
+  给出「每个归档波次的基线腿与今天差多少」的一张表 —— 那是 `[harness] #75` 语料**可得性**之外的另一半:
+  **语料的可比性**。
+  跨组:在既有 `[bug] #96` 下追评(**不新开** —— §AI.4 正是从 #96 长出来的);`[batch] #70`、
+  `[harness] #98`/`#92`/`#75`/`#33` 仍开着,不重复开。
+  详见 `iterations/reports/batch-desk/20260822T020600Z.md`。
