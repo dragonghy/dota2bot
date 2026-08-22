@@ -188,8 +188,17 @@ tests['fixtures without role data are a shrinking, declared list'] = function()
         ['f_260819_123546_jakiro_landed_ok.lua'] = true,
         ['f_260819_142047_zuus_ult_denied.lua'] = true,
         ['f_260819_142047_zuus_ult_manalock.lua'] = true,
-        ['f_260819_181742_ss_chase_stalled.lua'] = true,
-        ['f_260819_181742_ss_chase_start.lua'] = true,
+        -- healed 2026-08-22 (GH #45 director ruling §5, seed 866): both frames
+        -- regenerated with player_id AND drafted roles. They skipped the second
+        -- tier entirely, so they appear in neither list now. The re-read is in
+        -- tests/test_roamreach_bounded_chase.lua and it FLIPPED two conclusions:
+        -- the cross-map chase these frames pin turns out to need no armed
+        -- candidate at all (ConsiderHelpAlly, ungated and shipped, reached only
+        -- once the frames carried recent_damage). Slot-derivation would have put
+        -- this subject at pos 3 (core) -- a core/support flip, and a regression
+        -- against the alphabetical accident it replaced, which read 4.
+        --   ['f_260819_181742_ss_chase_stalled.lua']
+        --   ['f_260819_181742_ss_chase_start.lua']
         ['f_260819_182323_lion_drain_calm.lua'] = true,
         ['f_260819_183409_lion_drain_focused.lua'] = true,
         ['f_260819_183613_storm_collapse_lost.lua'] = true,

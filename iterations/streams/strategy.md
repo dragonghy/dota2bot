@@ -27,6 +27,22 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0p. **【2026-08-22T03:30Z 新增,流程条,不产 gate】一个 fixture 缺的字段,会把一条
+   **已发布默认行为**伪装成一个 gate 的功劳 —— 而且伪装得像一条干净的隔离证明**。
+   `f_260819_181742_ss_chase_*` 那两枚(GH #45 的钉帧)缺 `recent_damage`,于是
+   `WasRecentlyDamagedByHero` 对所有人恒 false,`ConsiderHelpAlly`(**无 gate、已发布、
+   turbo 默认在跑**)在任何 fixture 上都点不着 ⇒ 2026-08-19 那轮的六 id 隔离循环
+   **每一格都诚实地读 0**,于是得出「由 `ownhalf`、而且只有 `ownhalf` 打开」。
+   治疗后:**零 id armed 就出同一条 `Action_AttackUnit(dk,false)`**。
+   **形状比「断言骑在桩上」更坏**:那是断言依赖一个假值;这是**整条分支不可达**,
+   所以隔离循环**跑得又快又绿又全零**,看起来正是一次干净的归因。
+   **做法**:(1) **凡是做「只有 X 打开这一帧」这类归因的用例,必须先声明「这一帧上
+   哪些已发布分支是结构不可达的」** —— 不可达的分支不进隔离循环就等于把它归给了 X;
+   (2) 归因用例的**每一条外层子句都要有非空见证**(本轮 `ConsiderHelpAlly` 的四条里
+   两条是第十三条世界断言的常数,已按常数标注,不当测量);
+   (3) **隔离循环里的每个 id 要先验证它还活着** —— 本轮那格 `roamstale` 早在
+   2026-08-19 就 promote 了,**按构造是 no-op**,和 GH #103「gate 状态只活在注释里」同源。
+   **与 0m/0n 同一族:绿色本身从来不是证据,全零更不是。**
 0n. **【2026-08-22T01:30Z 新增,流程条,不产 gate】同名用例静默互相覆盖,**
    **唯一的破绽是计数**。本轮给 `test_replay_260820_cm_es_aftershock.lua` 加五条 re-read 用例,
    其中一条的名字**与上一轮给同一文件另一帧写的那条逐字相同**。`tests` 是普通 Lua 表 ⇒
@@ -308,6 +324,16 @@
    + pos_5 第 1 项 `blood_grenade`(pos_4 全表没有),**没有** `arcane_boots` / `urn_of_shadows`
    (`priest_outfit` = pos_4 独有)⇒ 槽位派生的世界把她挂在一份**她显然没在跑**的出装表上。
    给 GH #56 的立论补了第二个独立实例。棘轮 **6 → 5**。
+   **【2026-08-22T03:30Z】第五次治疗走的是另一层:`f_260819_181742_ss_chase_{start,stalled}`
+   属于**第一层**债务(连 `player_id` 都没有,`LEGACY_NO_ROLE_DATA` 那张表),
+   一步跨过第二层直接补齐 `player_id` + 抽签 roles,**两张表现在都不含它们**。
+   `test_fixture_roles.lua` 的**双向棘轮当场抓住了这一步**(「now carry player_id --
+   drop them from LEGACY_NO_ROLE_DATA」),按设计更新。
+   **五次治疗第五种结果**:subject 的划分**在两个错误世界之间自己翻了面** ——
+   字母序意外 = pos 4 support(蒙对)、槽位派生 = pos **3 core**(**翻面**)、抽签 = pos 4 support。
+   ⇒ **槽位派生不是「不够准」,在这一帧上它比它取代的那个意外更差**;
+   而三个世界追击都发生、走的腿不同 ⇒ **结果稳定、机制不稳定**。
+   **最值钱的产出不在角色上**(在 `recent_damage` 上,见上面第 0p 条与当前状态节)。
    **下一批(一次一个,不要批量刷)**:两个 `lion_drain_*`(建议先取一枚 —— GH #97 刚把
    `liondrain` 判成 SIBLING-DOMINATED,治完正好重读那两枚钉住的结论)、两个 `od_eclipse_*`。
    **每治一个都要重读它钉住的结论并写下来** —— 治一帧可能翻掉它钉的东西,那正是这件事的意义。
@@ -545,6 +571,72 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-22T03:30Z:**认领 GH #45 裁定 §5(总监 08-21T19:0xZ 把它从「次生残留」
+  升级为已 shipped 默认行为的**阻塞性**跟进)。治疗那两枚钉帧 ——
+  **本 issue 的两条归因结论翻掉了,而且都朝同一个方向:`roamreach` 更值钱、也更好排期。****
+  **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,
+  零 EC2 支出**(只有两次 S3 GET + dumper cache HIT)。
+  开工按 0m 先 fetch:`git ls-remote origin main` = `8c90769`,本地 `fb1113f` 是其祖先 ⇒ 先 rebase。
+  **治疗**:`20260819_181742_slot1`(`mirror:...:s866:radiant`,**subject 在 armed 侧**)。
+  坐标/血/蓝/等级/物品/CD 与仓库那份**逐字节一致**,ground truth 一致
+  (burst DK 57、`died_after` 181.6 / 175.6),**未**吐 `ground_truth_ambiguous`(0e 干净)。
+  **新增的是那两份一样都没有的五样**:`player_id`、`modifiers`(15/14)、
+  `recent_damage`(33/27)、抽签 `roles`、**外加每座建筑的 `hp`**。
+  (`buildings` 本身**本来就有** —— 裁定 §5 点的那一样不是缺口;缺的是它的 `hp`,
+  38 座建筑名字/阵营/坐标/`alive` 一字未改,**三座不满血**(dire 中二塔 **0.505** 等)⇒
+  **backlog 0a 的 tier/血量 remap 与 `t3AlreadyDamaged` 第一次有真实帧输入了**,记给下一个动 0a 的人。)
+  **逐字节核对是脚本做的**:剥掉这五样后英雄标量行逐条相同、`buildings` 除 `hp` 外逐条相同、
+  `observed` 整块逐字符相同。
+  **翻掉的第一条:「由 `ownhalf`、而且只有 `ownhalf` 打开」作废**。healed 帧上
+  **一个 soak id 都不 arm**,出价 **0.72**,`Think` 下的是**同一条**
+  `Action_AttackUnit(dragon_knight, false)`。打开它的是 **`ConsiderHelpAlly`** ——
+  **完全没有 gate、已发布、turbo 默认在跑**;承重子句
+  `nClosestAlly:WasRecentlyDamagedByHero(enemyHero, 2.5)`,队友 Centaur(656u、82%、抽签 pos 3)
+  **2.0s 前刚被同一个 DK 打了 44**(实测 2.5 真 / 2.0 真 / **1.9 假** ⇒ **余量正好 0.5s**)。
+  **旧结论是退化世界的产物**:没有 `recent_damage` 时 `WasRecentlyDamagedByHero` 对所有人恒 false
+  ⇒ 这条分支在**任何** fixture 上都点不着;**变异 N1(只删 Centaur 的 `recent_damage`)
+  把旧世界一字不差地复现出来**。⇒ **「一帧成立的分支买到一次横穿地图的追击」这个缺陷,
+  活在已发布 turbo 默认行为里,不在任何 gate 后面。**
+  **翻掉的第二条:`roamreach` 可以单拎成一臂**。既然没 arm 也有那条命令,**只 arm 它**
+  就把动作从 `Action_AttackUnit` 换成 `Action_MoveToLocation`(出价一位不动)⇒
+  **`test_set.md` §I.7 约束 ① 请撤销**;约束 ② 的前提也没了 ——
+  **`roamstale` 已 promote,`bots/` 里不存在这个 gate id**,原隔离循环里 arm 它的那格
+  **按构造就是 no-op**(已成反向断言)。
+  **对裁定 §3 回滚顺序的影响(最该看的一句)**:顺序不变(先扫 `VICTIM_HP`),
+  但**第 3 步的预期要改** —— 这一帧的命令不需要任何 armed id 就会发生 ⇒
+  **把 `roamstale` 退回 gate 后面够不到它**。诚实边界:这是**一帧**上的机制结论,
+  不是占比测量;要正式修正 §3 需要「域内 episode 里多少条由 `ConsiderHelpAlly` 开启」这个数,
+  已在 #45 建议总监路由录像组,**不建议为此单开批测**。
+  **没动的那一半**:t=318.5 那枚治疗前后**逐条相同**。
+  **角色读数(0c 要求每帧写下)**:治疗前(无 `player_id`)**未被 synthetic 覆盖时
+  全队五个都读 pos 1**(GH #53 退化态),subject 是 **core**;只加 `player_id` 的槽位派生
+  = pos **3 core**(**翻面**);healed = pos **4 support**。消费方 Centaur **反向翻**
+  (槽位 5 support ↔ 抽签 3 core)。三个世界都追,**但走的不是同一条腿**
+  (辅助走 `not J.IsCore(bot)`,核心走 `IsInRange(bot, ally, 1600)`,656u 同样过)
+  ⇒ **结果稳定、机制不稳定**。
+  原 **LABELLED SYNTHETIC 2**(`rawset(bot,'assignedRole',4)`)**已退休** —— 手设值是对的,改成断言。
+  **本轮的一次自我纠正(记下来,因为它就是本组反复在说的那件事)**:第一版把治疗前那格
+  写成「loader 按字母序排 roster ⇒ 蒙对成 4」——**那是推的不是量的**;
+  真去载入 git 里那份旧文件才看到是**全队 pos 1**。⇒ 那条 synthetic **是承重的不是装饰**,
+  没有它这个文件当年每一处 `J.IsCore(bot)` 读的都是相反的值。**「读起来像那么回事」不算测量。**
+  **顺带开 `[bug]` GH #105(本轮不修)**:`J.GetClosestCore`(`jmz_func:8817`)测的是
+  **调用者**的角色(`J.IsCore(bot)` 写在遍历 `member` 的循环里),**候选者的角色一次都没读**
+  ⇒ 辅助调用恒 nil、核心调用得到「槽位序第一个活着的队友」(还不是最近的)。本帧:
+  subject 抽签辅助 ⇒ nil,而真正的抽签核心 Centaur(pos 3)就在 656u 外。
+  **不修的理由**:一次一个杠杆 + 它有 team_roam 之外的消费方。已钉成 `[recorded]`
+  (源码钉子 + 帧钉子),**修好的那天本处归因会被迫重新推导**(变异 N5 实测:出价与动作都不变,
+  **换掉的是机制**)。
+  **诚实边界**:`ConsiderHelpAlly` 四条外层子句里**两条读 mode 谓词**
+  (`IsGoingOnSomeone`/`IsRetreating`),按**第十三条世界断言(GH #89)**在每个 fixture 上都是常数
+  ⇒ **不是本帧的测量**,已按常数写进断言;支持它们的是 ground truth 不是 harness。
+  **验收**:luacheck **0 warnings**;`test_roamreach_bounded_chase` **11 → 17 例,0 failures**
+  (**计数核对(0n)**:新增 6 + 改名 2,11+6=17,无同名覆盖);
+  **六条变异逐条 apply+rollback,每条点名红了它该红的用例**
+  (N1 删 `recent_damage` / N2 那一击挪到 dt 2.6 / N3 删 `roles` / N4 `_roamreach_BoundedChase` 恒 false /
+  N5 `IsCore(bot)`→`IsCore(member)` / N6 把 `roamstale` 放回 gate),rollback 后回 17/17、
+  `git status bots/` 干净。
+  `state.json:sschase_ROLE_HEAL_GH45_20260822`,
+  详见 `iterations/reports/strategy/20260822T033000Z.md`。
 - 2026-08-22T01:30Z:**角色债治疗第四帧,`f_260820_103216_cm_es_aftershock` ——
   这对镜像帧收口,并且拿到了上一轮那枚 CONTROL 缺的 EXPERIMENT。**
   **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,零 EC2 支出。**
