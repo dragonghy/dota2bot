@@ -2984,5 +2984,26 @@
     ],
     "github": "#110, #114",
     "report": "iterations/reports/strategy/20260822T152213Z.md"
+  },
+  "pullcamp_a_RULING_20260822T1650Z": {
+    "issue": "[director] owner 优先项 P1 完成定义第 3 条的裁定。pullcamp 的条件 (a) 只买到了一半:执行确认(WORKING),行为正确性不成立(GH #117 选点缺陷)。",
+    "ruling": "NOT-PROMOTE + 退回协同组、出 armed 集(非 reject,gate 保留)。test_set.md §AO。",
+    "evidence_a_execution": "replay-check 20260822T150532Z,283 有效局(spot_20260822_1212{09,14,19,24}, --rec-slots 16):poke episode armed 115 : baseline 11;drag 74 : 4;承重帧 run_121209/20260822_122054_slot11 witch_doctor t=313.5 在 :13.5 仇恨(设计标记 :12)后带 2 只小野往家走 1375u。",
+    "evidence_a_defect": "GH #117 + 总监源码复核 jmz_func.lua:7576-7586:选点 = 离 bot 最近的 own-team camp (<1500u),无任何『在我方兵线背后』子句;与承重触发条件(:7554-7563 兵线越过中点)结构性互相拆台。中位开拉点离自家泉水 10708u(全图 18806u = 57%),跟随小野只走出中位 742u 而离最近线兵还有 1068u ⇒ 连接率 <=20.3%;开拉后 15s 掉血中位 19pp / 7.8% 掉到 <35% / 1.7% 20s 内死亡。焦点五里 CM 40 + Zeus 25 + Lion 1 = 66/115 episode。",
+    "evidence_b": "21-id 全集波 284 局:gpm -29.87 / xpm -30.68 / deaths +0.25 / 0-of-4 全指标同向,suggested=hold_or_reject。UNREADABLE AT ID LEVEL:21 个杠杆的合读,且该形状的负残差(12-id -65 / 14-id -34.59)早于 pullcamp 被 arm ⇒ 既不能记在它头上也不能替它开脱。(b) 记『未取得』而非『失败』。",
+    "evidence_c": "设计意图成立(教科书拉野 = 把自己兵线背后那个营拉进兵线,把线拽回自家塔下 ⇒ 『兵线被压出去时才拉』这条触发是对的,不要动);实现不成立,错的只有选点那一格。",
+    "why_disarm_not_keep": "(a) 的证据是版本专属的:#117 的修法必然改写选点代码,283 局买到的 115:11 不转移到修好的版本上,而 promote 要的是『你要 promote 的那个版本』的 (a)。继续 armed 的两个代价:为即将作废的版本重复买同一个数;把已实锤有缺陷的杠杆留在 bundle 里污染其余 20 个 id 的 (b) 残差。",
+    "batons": [
+      "#117 -> 协同组(修选点,阻塞 P1 promote)",
+      "#116 -> 录像组(creeppull 的 (a) core_episodes 重跑,P1 第 3 棒另一半,连续第二轮点名)",
+      "§AO.0 的 22 id 串 -> 批测台"
+    ]
+  },
+  "test_set_admissions_20260822T1650Z": {
+    "ruling": "stayfield2 + fieldbuy 两条入集提议批准(挂了 5.5h / 1.5h);pullcamp 出集。eligible 23 -> 22。下一波串 = test_set.md §AO.0 的 22 id。",
+    "fieldbuy_existence_check": "提议自己要求的那条命令跑了:a64def0 在 origin/main;tests/test_replay_260822_fieldbuy_supply.lua + tests/_fieldbuy_supply_sweep.lua 在 git ls-tree origin/main;bots/FunLib/jmz_func.lua:4872 有 J.IsSoakCandidate('fieldbuy');state.json:fieldbuy_20260822 在。13:50Z 那次 NOWHERE 的情况这一次不成立。",
+    "cowave_is_hard_condition": "owner P2 的三个 id(stayfield / stayfield2 / fieldbuy)必须同波:同一情境的三格(IsFieldRegenSituation ∧ 有回复品 = 决策侧两个 id 的域;∧ 没有 = fieldbuy 的域),分波 arm 会互相遮蔽。--rec-slots >= 8 是硬条件。",
+    "prereg_stayfield2_readout": "stayfield2 的谓词在 100 fixture / 930 帧上只有 3 帧为真、1 帧真的动出价 ⇒ 下一波读零一律记『本语料无表面』,不许记 SILENT;要下 SILENT 先给出该域在对局语料里的频率下界。",
+    "eligible_line_correction": "两条提议都写『本提议不动 eligible 那一行』——不成立:eligible 行 = 允许出现在 armed 串里的 id 全集,而录像组的 armed 串守卫按 stamp 逐字比对并在目标 id 不在串里时 exit。独立 gate id 必须有自己的 eligible 条目,已补。"
   }
 }

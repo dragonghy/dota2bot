@@ -1,5 +1,15 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,stayfield,pullcamp
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,stayfield,stayfield2,fieldbuy
+
+**⚠️ 2026-08-22T16:5xZ:见 §AO —— 三条定级,两个 owner 优先项各动一格。**
+(1) **`pullcamp` 退回协同组、出 armed 集**(23 → 22 eligible;**不是 reject**):
+它的 (a) **执行**那一半买到了(录像组 283 局帧证据,WORKING),但**选点缺陷已实锤**
+(GH #117:拉的是「离 bot 最近」的野点 ⇒ 中位在离家 10,708u 开拉、连接率 ≤20.3%)。
+**摘它的理由不是它有害,是 (a) 的证据是版本专属的** —— #117 的修法必然要改选点代码,
+那份 283 局的证据**不转移到修好的版本上**,继续 armed 只是在为一个即将作废的版本买同一个数,
+同时把一个已知缺陷的杠杆留在每一波的 (b) 残差里污染**其它 20 个 id** 的读数。
+(2) **`stayfield2` 批准入集**(挂了 5.5 小时)、(3) **`fieldbuy` 批准入集**(挂了 1.5 小时)
+—— **owner P2 的三个 id 必须同波**(§AO.2),下一波串见 **§AO.0**(**22 id**)。
 
 **⚠️ 2026-08-22T15:2xZ 协同组入集提议(待总监批准):新 gated id **`fieldbuy`** —— owner 优先项 P2
 的**补给侧**(owner 原话「买大药」那一格)。**请与 `stayfield` / `stayfield2` 放进同一波**
@@ -131,9 +141,10 @@ GH #107 若动了 dumper 采样相位,这枚反例可能只因相位就翻面。
 让 `capmono` 的检测器读数暂缓采信)。
 **⚠️ 2026-08-20T23:00Z:开波前先读 §W** —— 帧级证据的 n 是经济通道的 **1/16**(`soak_loop.sh` 只让
 slot 1 录像,[harness] #75);本周所有「事件率太低 / (a) 买不到」的判断都要按这个分母重读。
-**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AN.0**(**21 id** = §AM.0 那 20 id
-**逐字不变** + 新入集的 `pullcamp`;种子仍 888/895/896/906;**`--rec-slots ≥ 8`**)。**10:09Z 在飞的那波是 §AL.0 的
-19 id 串,不受影响。** 下面这段关于 §AL.0 / §U.0 的描述
+**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AO.0**(**22 id** = §AN.0 那 21 id
+**减 `pullcamp`**(退回,见 §AO.1)**加 `stayfield2` / `fieldbuy`**(owner P2 三件套同波);
+种子仍 888/895/896/906;**`--rec-slots ≥ 8`**)。**§AN.0 的 21 id 串已于 12:12Z 跑完并收割
+(284 局),其读数不受本节影响。** 下面这段关于 §AL.0 / §U.0 的描述
 保留作历史:**§U.0**(**18 id** = §R.0 那 16 id
 **逐字不变** + 本轮新入集的 `blinkflee` / `liondrainstop`;种子仍 888/895/896/906),
 申报目的 = **买这两个新 id 的条件 (a)**(§R.0 那波的 `capmono` (b) 两臂已由 arm B 收官)。
@@ -4604,3 +4615,95 @@ P1 的 DoD 第 1 条要的是「死条件就修,场景稀缺就给出频率证�
    它的实际频率**只有对局语料答得了**,是本波要买的第二个数。
 3. 判读:**SILENT 不再是默认预期** —— 两个 id 的死条件都已修且桌面可达性有变异背书;
    若下一波仍 10/10 SILENT,那是**新问题**,要当新发现报,不要当旧结论复述。
+
+---
+
+## §AO 总监裁定 2026-08-22T16:5xZ(第四十五次触发):`pullcamp` 的 (a) 到货了一半 —— 摘它,因为 (a) 的证据是版本专属的;owner P2 的三个 id 同波入集
+
+### AO.0 下一波要 armed 的串:**22 id**(§AN.0 的 21 id **减 `pullcamp`**,**加 `stayfield2` + `fieldbuy`**)
+
+```
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,blinkflee,liondrainstop,creeppull,stayfield,stayfield2,fieldbuy
+```
+
+种子仍 888/895/896/906。**`--rec-slots ≥ 8` 是硬条件**(§AM.3;新入集的两个都要帧级 (a),
+`stayfield2` 尤其 —— 见 AO.2 的稀疏度警告)。eligible **22**
+(`stayfield2` + `fieldbuy` 各 +1,`pullcamp` −1)。
+
+**顺带纠一处口径**:`stayfield2` 的提议写「本提议不动 eligible 那一行」,`fieldbuy` 同理。
+**这不成立**:eligible 那一行就是「允许出现在 armed 串里的 id 全集」,而录像组的 armed 串
+守卫会拿 stamp 逐字比对(它在串不一致或目标 id 不在串里时直接 `exit`,§1 armed 串守卫)。
+一个**独立的 gate id** 必须有自己的 eligible 条目,否则下一波要么 arm 不了它、
+要么守卫当场拒判。**两个都已由本节补进 eligible 行。**
+
+### AO.1 `pullcamp`:三条件逐条,以及为什么「WORKING」不等于 promote
+
+**(a) 执行 —— 买到了,而且这是 owner 优先项 P1 自 2026-07-23 以来的第一次。**
+录像组 15:05Z(283 有效局 / 12:12Z 那波 / `--rec-slots 16`)：poke episode
+**armed 115 : baseline 11**、drag **74 : 4**,承重帧逐帧闭合(witch_doctor `:13.5` 仇恨
+→ 带两只青蛙往家走 1375u,设计的标记就是 `:12`,**时序子句正按设计工作**)。
+**P1 完成定义第 3 条的「录像组那一半」达成。**
+
+**(a) 行为正确 / 无副作用 —— 不成立。** 缺陷 GH #117,我在源码上自己核过
+(`jmz_func.lua:7576-7586`)：选点是「遍历 `GetNeutralSpawners()`,筛 `camp.team == GetTeam()`,
+取**离 bot 最近**且 < 1500 的那个」,**全函数没有任何一条子句问这个野点在不在我方兵线背后**。
+而同一函数的承重触发条件(`:7554-7563`)要求**我方兵线前沿越过中点**——
+兵线被压出去的时候辅助本人就站得靠前,于是「离他最近的己方野点」**恰恰是远野区的营地**。
+**两条子句互相拆台,这是结构性的,不是调参能修的。**
+实测代价:中位在离自家泉水 **10,708u**(全图 18,806u ⇒ **57%,已过中点**)开拉;
+跟随小野只走出中位 **742u**,而它们离最近线兵还有中位 **1,068u** ⇒ **连接率 ≤20.3%**;
+开拉后 15s 掉血中位 **19pp**、p90 40、**7.8% 掉到 35% 血以下**、**1.7% 20s 内死亡**。
+**焦点五里的三个(CM 40 / Zeus 25 / Lion 1,共 66/115 episode)是主要拉野者**,
+CM 那一例 54% 血入域被一个 kobold 营打到 30%。
+
+**(b) 胜负无明显负面 —— 未取得(不是失败,是读不出来)。**
+21-id 全集波 284 局:gpm **−29.87**、xpm −30.68、deaths **+0.25**、**0/4 全指标同向**,
+`suggested = hold_or_reject`。**但这是 21 个杠杆的合读**,而这个形状的负残差
+(12-id −65 / 14-id −34.59)**早于 `pullcamp` 被 arm** ⇒ 按铁律「一个读数不构成一次测量」,
+**这个数不能记在 `pullcamp` 头上,也不能替它开脱。**
+
+**(c) 逻辑依据 —— 设计意图成立,实现不成立。** 教科书拉野的定义就是
+**把自己兵线背后那个营的野怪拉进兵线**,让线兵去打野怪从而把线拽回自家塔下;
+所以「兵线被压出去时才拉」这条触发**是对的,不要动它**。
+错的只有选点那一格:**它必须按「相对我方兵线/我方半场的几何」选,不能按「离 bot 多近」选。**
+
+**⇒ 裁定:不 promote;`pullcamp` 退回协同组、出 armed 集(非 reject,gate 保留)。**
+**摘它的核心理由(请协同组和批测台都记这一条):(a) 的证据是版本专属的。**
+#117 的修法必然改写选点代码 ⇒ 这 283 局买到的 115:11 **不转移到修好的版本上**,
+promote 需要的是「**你要 promote 的那个版本**在真实对局里执行且正确」。
+继续 armed 的两个代价都是实的:①为一个即将作废的版本重复买同一个数;
+②把一个**已实锤有缺陷**的杠杆留在每一波的 bundle 里,污染其余 20 个 id 的 (b) 残差
+——而这个团队恰好已经追了三周这个残差。
+
+### AO.2 owner P2 的三个 id:`stayfield`(已在)+ `stayfield2` + `fieldbuy`,**必须同波**
+
+**两条入集提议都批准。** 批准依据(我自己核的,不是转述):
+
+- **`fieldbuy` 真的在树上** —— 提议自己要求先跑
+  `git log --all -- tests/test_replay_260822_fieldbuy_supply.lua`(因为 13:50Z 那一棒的
+  同名产物**在全 refs fetch 之后一件都不在**)。跑了:`a64def0` 已在 `origin/main`,
+  两个测试文件在 `git ls-tree origin/main` 里,`bots/FunLib/jmz_func.lua:4872` 有
+  `J.IsSoakCandidate('fieldbuy')`,`state.json:fieldbuy_20260822` 在。**这一次是真的。**
+- **`stayfield2` 的独立性理由成立**:同一个核心谓词两个独立调用点,合成一个 id 会让
+  per-id A/B 失去意义(GH #29 那类不独立性)。而 P2 完成定义第 1 条明写
+  「含 TP 和步行回泉**两种**回家路径」⇒ **只 arm 一半 = 只覆盖一半**。
+
+**同波是硬条件,不是建议**:三个 id 是同一情境的三格
+(`J.IsFieldRegenSituation` ∧ 有回复品 = 决策侧两个 id 的域;∧ **没有** = `fieldbuy` 的域),
+**分波 arm 会互相遮蔽**。
+
+⚠️ **预登记 `stayfield2` 的判读口径(录像组照做,现在就写下来免得事后争)**:
+它的谓词在 100 枚 fixture / 930 帧上**只有 3 帧为真、1 帧真的动出价**。
+**这是本测试集里最稀的域之一** ⇒ 若下一波读出零,一律记
+**「本语料无表面」,不许记 SILENT** —— SILENT 是「该触发而没触发」的判词,
+对一个每 930 帧出现 3 次的域,一波读零是**分母的正常结果**。
+要给它下 SILENT,先给出这个域在对局语料里的**频率下界**。
+
+### AO.3 交出去的棒子(铁律 9 连带规则:修好 ≠ 做完)
+
+1. **#117 → 协同组**(P1 的下一棒,阻塞 promote):修选点。验收方式已写进 issue。
+2. **#116 → 录像组**(P1 第 3 棒的实际状态):`creeppull` 的 (a) 用的
+   `core_episodes` 建在 47.3% 准确的位置代理上,工具我已修(`a03f17d` 之后),
+   **重跑没做**;录像组 15:05Z 那轮把时间全用在 `pullcamp` 上并如实登记了。
+   **本轮再点一次名,它是 P1 完成定义第 3 条的另一半。**
+3. **`--rec-slots ≥ 8` → 批测台**:下一波按 §AO.0 的 22 id 串排,P2 三件套是申报目的。
