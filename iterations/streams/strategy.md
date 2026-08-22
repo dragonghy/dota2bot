@@ -27,6 +27,19 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0n. **【2026-08-22T01:30Z 新增,流程条,不产 gate】同名用例静默互相覆盖,**
+   **唯一的破绽是计数**。本轮给 `test_replay_260820_cm_es_aftershock.lua` 加五条 re-read 用例,
+   其中一条的名字**与上一轮给同一文件另一帧写的那条逐字相同**。`tests` 是普通 Lua 表 ⇒
+   **新函数把旧的那条替换掉了**:不报错、不失败、diff 里两条都在,
+   **只有总数读 31 而不是 27+5=32**。当场改名后 32 全绿。
+   **做法**:(1) **加了 N 条用例必须核对总数涨了 N**;(2) 同一文件里钉多帧时,
+   用例名带上帧标识(本文件现在是 `frame A …` / 不带前缀的那条属于 frame B);
+   (3) 这与 0m 的「变异要真的落在被测量上」是同一类 —— **绿色本身从来不是证据**。
+   **本轮的 M3 第一版正是 0m 那第四种形状的复发**:`aba_role.lua` 里 `return 3` 不止一处,
+   `replace(...,1)` 落在 `GetPositionForCM`(307 行)而不是 `GetPosition` 的敌方分支(398 行)
+   ⇒ 变异跑了、生效了、全绿,看起来像「断言没牙」。改成从函数头 `index` 并断言
+   前 120 字符里有 `GetEnemyPosition` 之后才咬住 —— **顺带第一次由变异(而非读代码)证实
+   loader 确实给敌人 `rawset` 了抽签角色,是已发布的敌方分支主动扔掉活数据**(GH #81)。
 0m. **【2026-08-21T20:35Z 新增,流程条,不产 gate】一次 fetch 只说明那一刻的远端 ——
    不要把「仓库里没有 X」当成「X 丢了」**。本轮开工 fetch 过 `origin/main`(tip `936cb3e`),
    GH #93 正文点名的三样产物**当时确实一件都不在仓库里**,charter 头条也还停在 15:46Z
@@ -286,12 +299,23 @@
    subject CM 是置换的**不动点**(槽位 5 = 抽签 5)⇒ 唯一那次角色读取(出装表 key,`aba_item:1600`)
    **恰好不动**,这枚 fixture 因此是上一轮 Axe 那条发现的 **CONTROL**。棘轮 **7 → 6**。
    **本轮真正值钱的是第十二条世界断言,在地图另一边(见下面第 0h 条)。**
-   **下一批(一次一个,不要批量刷)**:`f_260820_103216_cm_es_aftershock`(同一对的另一半,
-   建议先取,好把这对的结论一起收口)、两个 `lion_drain_*`、两个 `od_eclipse_*`。
+   **`f_260820_103216_cm_es_aftershock` 已做完(2026-08-22T01:30Z)——这对镜像帧收口**:
+   pin 成立,**51 条消费方用例(27 + 24)逐条未改**,零读取照旧两个入口都数。
+   **它就是上一轮那枚 CONTROL 缺的 EXPERIMENT**:同 seed(906)、异侧(dire),
+   subject CM **不是**不动点(槽位 4 → 抽签 5)⇒ 唯一那次角色读取(出装表 key)
+   **真的从 `pos_4` 移到 `pos_5`**;而且**不用像 axe 那轮靠次序推**——
+   **这一帧自己的背包判了**:她带着 `mage_outfit`(pos_5)的全部四件基础件
+   + pos_5 第 1 项 `blood_grenade`(pos_4 全表没有),**没有** `arcane_boots` / `urn_of_shadows`
+   (`priest_outfit` = pos_4 独有)⇒ 槽位派生的世界把她挂在一份**她显然没在跑**的出装表上。
+   给 GH #56 的立论补了第二个独立实例。棘轮 **6 → 5**。
+   **下一批(一次一个,不要批量刷)**:两个 `lion_drain_*`(建议先取一枚 —— GH #97 刚把
+   `liondrain` 判成 SIBLING-DOMINATED,治完正好重读那两枚钉住的结论)、两个 `od_eclipse_*`。
    **每治一个都要重读它钉住的结论并写下来** —— 治一帧可能翻掉它钉的东西,那正是这件事的意义。
-   **并且不许拿「核心/辅助划分通常稳定」当跳过某一帧的理由**:三次治疗三种结果 ——
+   **并且不许拿「核心/辅助划分通常稳定」当跳过某一帧的理由**:四次治疗四种结果 ——
    `defstale`(seed 868)翻了一个核心、`axe_blink_kill`(seed 885)五个全动零翻面、
-   `cm_es_reach`(seed 906)三个动、**翻了两个** —— 那是**每帧的测量**,不是规律。
+   `cm_es_reach`(seed 906 radiant)三个动翻两个、`cm_es_aftershock`(**同一个 seed 906**、
+   dire)**五个全动、翻两个、而且翻的是另外两个英雄**(sniper + SK,不是 sniper + viper)
+   —— **同一份抽签、不同槽位分配 ⇒ 翻面集合本身是每帧的测量**,不是规律。
 0h. **【2026-08-21T07:40Z 新增,已钉住、不要批量改】第十二条世界断言:`--roles` 结构上够不到敌人,
    fixture 上每个敌人都是 pos 3 / `IsCore` = true**。全语料实测 **93 fixture / 465 个敌方英雄 /
    读到非 3 的 0 个**。**不是生成器少写**(十个英雄的抽签位置全写了,loader 也全 `rawset` 成
@@ -521,6 +545,42 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-22T01:30Z:**角色债治疗第四帧,`f_260820_103216_cm_es_aftershock` ——
+  这对镜像帧收口,并且拿到了上一轮那枚 CONTROL 缺的 EXPERIMENT。**
+  **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,零 EC2 支出。**
+  **认领依据**:`[strategy]` 最新的 open issue 是 #72(录像检查组 22:46Z 的 §AG.2 分解),
+  结论「NOT-PROMOTE 不变、可引用范围收窄」,四条处置全落在检测器与总监裁量上,
+  **没留下本组可动的杠杆**(§6.5 唯一没试过的路要 ≫4 seed 批测)⇒ 回 backlog;
+  0i 已于 22:00Z 关闭并写明「回到 0b/0c 或 0a」,0a 仍卡语料 ⇒ **取 0c 队列点名的下一帧**。
+  开工 `git ls-remote origin main` = `450c490` = 本地 HEAD(0m 的做法)。
+  **治疗**:`get_dumper.sh` cache HIT(无本地构建)→ 重跑 dumper →
+  **先不带 `--roles` 重生成一遍,与仓库那份逐字节相同**(这一步是「后面那份差异只来自
+  `--roles`」的唯一证明,也说明两天后链路仍可复现)→ 带 `--roles` 后**差异恰好是新增的
+  12 行 `roles` 表**,`observed`(burst zuus 152 / es 98,`died_after 1.0`)全部重现,
+  生成器**未**吐 `ground_truth_ambiguous`(0e 判据干净)。`script_version = mirror:…:s906:dire`。
+  **世界动了**:五个盟友**全动**(viper 1→2、pa 2→1、sniper 3→4、**CM 4→5**、SK 5→3),
+  **翻两面:sniper 核心→辅助、skeleton_king 辅助→核心**。
+  **与上一轮那帧同 seed 同抽签,翻的却是另外两个英雄**(那次是 sniper + viper)⇒
+  **翻面集合是每帧的测量**。敌方那一半**按构造惰性**(GH #81):fixture 带着真实 dire 置换
+  (jugg 1 / zuus 2 / bb 3 / es 4 / jakiro 5),角色链**五个一律答 3**;
+  已成用例并断言「五个里四个抽签值 ≠ 3」,免得将来变空断言。
+  **51 条消费方用例逐条未改,原因照旧是测出来的**:两个入口同时挂钩,
+  `cm_IsRSafeToOpen` 与 `ConsiderR` **各读 0 次**位置;两个零都配了非空见证。
+  **本轮的产出**:唯一那次角色读取(hero 文件 load 时,`aba_item:1600`,全仓库唯一绕过 J 包装的)
+  **真的移动了:`pos_4` → `pos_5`**,而且**这一帧自己的背包直接证伪了治疗前那个答案** ——
+  她带着 `mage_outfit`(pos_5)的四件基础件(tranquil_boots / null_talisman / magic_wand / flask)
+  + pos_5 第 1 项 `blood_grenade`(**pos_4 全表没有**),**没有** `arcane_boots` / `urn_of_shadows`
+  (`priest_outfit` = pos_4 独有)。**比 axe 那轮强**:那次靠 `item_blink` 的**次序**推,这次语料直说。
+  给 GH #56 的立论补第二个独立实例。棘轮 **6 → 5**。
+  **六条变异逐条 apply+rollback 全咬住**(M1 去 roles / M2 对调两个抽签值 / M3 敌方分支保留
+  `assignedRole` / M4 出装 key 钉死 pos_4 / M5 给 guard 加一次角色读取 / M6 给 pos_4 塞血雾)。
+  **两条做法记进 backlog 第 0n 条**:① **同名用例静默互相覆盖,唯一破绽是计数**
+  (本轮亲手犯了一次,27+5 读成 31);② **M3 第一版落在错的函数上**(`return 3` 不止一处),
+  是 0m 第四种形状的复发 —— 顺带**第一次由变异证实** loader 确实给敌人 `rawset` 了抽签角色。
+  **验收**:luacheck **0 warnings**;`cm_es_aftershock` **32/32**(治疗前 27)、
+  `cm_r_selfstate` **24/24**、`fixture_roles` **10/10**;全套见报告。
+  `state.json:cmesaftershock_ROLE_HEAL_20260822`,
+  详见 `iterations/reports/strategy/20260822T013000Z.md`。
 - 2026-08-21T22:00Z:**关掉了等级门普查(GH #84 §5)。第六条也是最后一条 TEETH
   `ability_item_usage_generic:5749`(守遗迹 TP)同样做不成完整形状,但理由与前五条都不同 ——
   它的等级门 satisfiable(唯一一枚 subject≥15 的 fixture `f_260820_043120_viper_defend_paired`

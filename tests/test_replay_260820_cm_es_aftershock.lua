@@ -556,4 +556,234 @@ tests['RE-READ: the one role read is the build-list key, and CM sits on a fixed 
         .. 'in the position is a whole build, not a reordering')
 end
 
+-- ---------------------------------------------------------------------------
+-- RE-READ of frame A under the real drafted roles (strategy backlog 0c, GH #57).
+--
+-- Frame B was healed on 2026-08-21T07:40Z; frame A -- the one this file exists
+-- for -- was still slot-derived until now, which is why the two halves of the
+-- same pair were deliberately done in separate rounds (one fixture per round,
+-- re-read each time; healing a frame may FLIP what it pins).
+--
+-- The regeneration is byte-for-byte identical apart from the added `roles`
+-- table: same positions, HP, mana, items, abilities, modifiers, recent_damage
+-- and the whole `observed` block (burst zuus 152 / earthshaker 98, died_after
+-- = 1.0), and the generator raised no ground_truth_ambiguous /
+-- recent_damage_ambiguous flag (GH #69). The game is attributable --
+-- script_version = mirror:...:s906:dire -- i.e. the SAME seed as frame B from
+-- the other side of the mirror, so the draft is the same ten heroes and only
+-- the slot assignment differs.
+--
+-- What moved: ALL FIVE allies read a different position (frame B moved three),
+-- and the core/support partition flips TWICE again -- but not for the same two
+-- heroes: here it is sniper core->support and skeleton_king support->core,
+-- where frame B flipped sniper and viper. Same seed, same draft, different
+-- slots, different flips: "the partition is usually stable" remains a
+-- per-frame measurement and never a reason to skip a frame.
+--
+-- What did NOT move: any of the 51 cases across this file and
+-- test_replay_260820_cm_r_selfstate.lua, because neither cm_IsRSafeToOpen nor
+-- ConsiderR asks for a position at all. That is measured below, not assumed.
+--
+-- The margin, and the point of this round: on frame B Crystal Maiden was a
+-- FIXED POINT of the permutation (slot 5 = drafted 5), so the one role read on
+-- the whole path -- Item.GetRoleItemsBuyList, at hero-file load -- happened not
+-- to move, and that frame was recorded as the CONTROL. Frame A is the
+-- EXPERIMENT: slot 4, drafted 5, so the pre-heal world keyed her onto the
+-- pos_4 build. The frame's own inventory falsifies that world outright (she is
+-- carrying every basic of the pos_5 opener and neither discriminator of the
+-- pos_4 one), which is the same finding the axe re-read reached by item
+-- ORDERING -- here the corpus states it directly.
+-- ---------------------------------------------------------------------------
+
+tests['RE-READ: frame A moves all five allies and flips a DIFFERENT two'] = function()
+    local J, bot, _, fx = load_armed(CLOSE, {})
+    assert(fx.roles ~= nil, 'the fixture must carry the drafted roles -- without '
+        .. 'them every position on this frame is the draft slot (GH #57)')
+
+    -- slot (what the fixture answered before the heal) -> drafted (now).
+    local WAS_AND_IS = {
+        [1] = { 'npc_dota_hero_viper',            2 },
+        [2] = { 'npc_dota_hero_phantom_assassin', 1 },
+        [3] = { 'npc_dota_hero_sniper',           4 },
+        [4] = { 'npc_dota_hero_crystal_maiden',   5 },
+        [5] = { 'npc_dota_hero_skeleton_king',    3 },
+    }
+    local nMoved, tFlipped = 0, {}
+    for nSlot, tWant in ipairs(WAS_AND_IS) do
+        local h = GetTeamMember(nSlot)
+        assert(h:GetUnitName() == tWant[1], 'roster slot ' .. nSlot .. ' is '
+            .. h:GetUnitName() .. ', this frame was recorded with ' .. tWant[1])
+        assert(J.GetPosition(h) == tWant[2], tWant[1] .. ' reads position '
+            .. tostring(J.GetPosition(h)) .. ', drafted ' .. tWant[2]
+            .. ' -- a slot-order answer here means the fixture lost its roles')
+        if tWant[2] ~= nSlot then nMoved = nMoved + 1 end
+        if (nSlot <= 3) ~= J.IsCore(h) then tFlipped[#tFlipped + 1] = tWant[1] end
+    end
+    assert(nMoved == 5, 'all five allies must move on this frame; got ' .. nMoved)
+    assert(#tFlipped == 2, 'exactly two core/support answers must flip; got '
+        .. #tFlipped .. ' { ' .. table.concat(tFlipped, ', ') .. ' }')
+    assert(tFlipped[1] == 'npc_dota_hero_sniper'
+        and tFlipped[2] == 'npc_dota_hero_skeleton_king',
+        'the flips are sniper core->support and skeleton_king support->core; '
+        .. 'got { ' .. table.concat(tFlipped, ', ') .. ' }. Frame B is the SAME '
+        .. 'seed and flipped sniper and VIPER -- if these two ever agree, one '
+        .. 'of the fixtures is answering slots again')
+
+    -- The subject is NOT a fixed point here, which is the whole difference
+    -- from frame B and is what the build-list case below turns on.
+    assert(J.GetPosition(bot) == 5 and GetTeamMember(4) == bot,
+        'CM is roster slot 4 and drafted pos 5 on frame A')
+    assert(J.IsCore(bot) == false, 'she is a support in both worlds -- only the '
+        .. 'number moves for her, and the number is enough')
+end
+
+tests['RE-READ: the enemy half of the heal is inert, by construction'] = function()
+    -- World assertion 12 (GH #81): --roles structurally cannot reach the enemy
+    -- team. aba_role.GetPosition's enemy branch throws the drafted value away
+    -- and returns 3 unless enemy_role_estimation has been warmed, which the
+    -- loader never does. Stated as a case so nobody reads the new `roles`
+    -- table and concludes that enemy-position forks became readable here.
+    local J, _, heroes, fx = load_armed(CLOSE, {})
+    local DRAFTED = {
+        ['npc_dota_hero_juggernaut']  = 1,
+        ['npc_dota_hero_zuus']        = 2,
+        ['npc_dota_hero_bristleback'] = 3,
+        ['npc_dota_hero_earthshaker'] = 4,
+        ['npc_dota_hero_jakiro']      = 5,
+    }
+    local nDisagree = 0
+    for sName, nPos in pairs(DRAFTED) do
+        assert(fx.roles[sName] == nPos, sName .. ' is drafted pos ' .. nPos
+            .. ' in the fixture, got ' .. tostring(fx.roles[sName]))
+        assert(J.GetPosition(heroes[sName]) == 3, sName .. ' must read 3 through '
+            .. 'the role chain (GH #81), got ' .. tostring(J.GetPosition(heroes[sName])))
+        assert(J.IsCore(heroes[sName]) == true, 'and therefore IsCore')
+        if nPos ~= 3 then nDisagree = nDisagree + 1 end
+    end
+    assert(nDisagree == 4, 'four of the five enemies are drafted to something '
+        .. 'other than 3, so the constant answer really is discarding data; got '
+        .. nDisagree .. ' -- if this reaches 0 the case has gone vacuous')
+end
+
+tests['RE-READ: frame A\'s guard and bid ask for no role either -- WHY the pins held'] = function()
+    -- Load the hero file BEFORE hooking, so this counts the decision only.
+    local J, bot, heroes = load_armed(CLOSE, { 'cmrguard', 'esaftershock' })
+    local X = rf.load_hero('crystal_maiden')
+
+    local tGuard = counting_roles(J, function()
+        assert(X.cm_IsRSafeToOpen(bot) == false,
+            'the decision under test is still "block" on frame A')
+    end)
+    assert(#tGuard == 0, 'cm_IsRSafeToOpen asked for a position '
+        .. table.concat(tGuard, ', ') .. ' -- it must ask ZERO times. If this '
+        .. 'ever becomes non-zero, every case on this frame has to be re-read, '
+        .. 'because two of the five allied core/support answers flipped')
+
+    local spec = rawget(bot:GetAbilityByName(J.Skill.GetAbilityList(bot)[6]), '__spec')
+    spec.GetAOERadius, spec.GetManaCost = FIELD_RADIUS, FIELD_MANA_COST
+    local tBid = counting_roles(J, function()
+        assert(X.ConsiderR() == BOT_ACTION_DESIRE_NONE, 'and the bid is unchanged')
+    end)
+    assert(#tBid == 0, 'ConsiderR asked for a position ' .. table.concat(tBid, ', ')
+        .. ' -- the end-to-end cases are only role-independent if this is zero')
+
+    assert(J.GetReadyHardCc(heroes[ES]) ~= nil,
+        'stated so the two zeroes above cannot be a vacuous "nothing ran": the '
+        .. 'extension really is seeing Earthshaker on this frame')
+end
+
+tests['RE-READ: the one role read is the build-list key, and on frame A it MOVES'] = function()
+    local J, bot, _, fx = load_armed(CLOSE, {})
+    local Role = require(GetScriptDirectory() .. '/FunLib/aba_role')
+
+    -- Same single call site the frame-B and axe re-reads found: the read
+    -- happens at hero-file LOAD, through the MODULE, bypassing the J wrapper.
+    local tLoad = counting_roles(J, function() rf.load_hero('crystal_maiden') end)
+    assert(#tLoad == 1 and tLoad[1] == 'R:npc_dota_hero_crystal_maiden',
+        'expected exactly one role read at hero load, on the subject, through '
+        .. 'the MODULE; got { ' .. table.concat(tLoad, ', ') .. ' }')
+
+    -- ...and unlike frame B, it lands somewhere else than it used to.
+    assert(Role.GetPosition(bot) == 5 and J.Item.GetRoleItemsBuyList(bot) == 'pos_5',
+        'the drafted role keys this CM onto pos_5; got '
+        .. tostring(J.Item.GetRoleItemsBuyList(bot)))
+
+    local function buy_list_at(nPos)
+        local _, bot2 = load_armed(CLOSE, {})
+        local Role2 = require(GetScriptDirectory() .. '/FunLib/aba_role')
+        local real = Role2.GetPosition
+        Role2.GetPosition = function(u) if u == bot2 then return nPos end return real(u) end
+        local ok, X = pcall(dofile, GetScriptDirectory() .. '/BotLib/hero_crystal_maiden.lua')
+        Role2.GetPosition = real
+        assert(ok and type(X) == 'table' and X.sBuyList ~= nil,
+            'hero_crystal_maiden must publish an sBuyList for pos ' .. nPos)
+        return X.sBuyList
+    end
+
+    local tDrafted, tSlot = buy_list_at(5), buy_list_at(4)
+    assert(#tDrafted == 13 and tDrafted[1] == 'item_blood_grenade',
+        'pos_5 is a 13-entry list opening on a blood grenade; got ' .. #tDrafted
+        .. ' / ' .. tostring(tDrafted[1]))
+    assert(#tSlot == 11 and tSlot[1] == 'item_priest_outfit',
+        'pos_4 is an 11-entry list opening on the priest outfit; got ' .. #tSlot
+        .. ' / ' .. tostring(tSlot[1]))
+    assert(tDrafted[2] == 'item_mage_outfit',
+        'and the two openers are different outfits, not the same one renamed')
+end
+
+tests['RE-READ: the frame\'s own inventory falsifies the pre-heal build key'] = function()
+    -- The strongest form of the axe finding. There the wrong build list was
+    -- inferred from where item_blink sat in each list; here the corpus states
+    -- it: the outfit bundles of pos_4 and pos_5 have no basic in common, and
+    -- the real Crystal Maiden of this frame is carrying one of them.
+    local _, bot, _, fx = load_armed(CLOSE, {})
+
+    local tHeld = {}
+    for _, u in ipairs(fx.units) do
+        if u.name == fx.self then
+            for _, s in ipairs(u.items or {}) do
+                if s ~= '' then tHeld['item_' .. s] = true end
+            end
+        end
+    end
+    assert(tHeld['item_tranquil_boots'], 'sanity: the frame\'s own item list is '
+        .. 'being read (she has tranquil boots at t=473.5)')
+
+    -- item_mage_outfit   (pos_5, entry 2) = ... tranquil_boots, null_talisman,
+    --                                       magic_wand, flask ...
+    -- item_priest_outfit (pos_4, entry 1) = ... arcane_boots, urn_of_shadows,
+    --                                       magic_wand, flask ...
+    -- The shared basics (magic_wand, flask) decide nothing; the boots and the
+    -- fourth slot decide everything.
+    for _, s in ipairs({ 'item_tranquil_boots', 'item_null_talisman',
+                         'item_magic_wand', 'item_flask' }) do
+        assert(tHeld[s], 'she must be holding ' .. s .. ', a basic of the '
+            .. 'pos_5 opener -- without it this case proves nothing')
+    end
+    for _, s in ipairs({ 'item_arcane_boots', 'item_urn_of_shadows' }) do
+        assert(tHeld[s] == nil, 'she must NOT be holding ' .. s .. ': it is a '
+            .. 'pos_4-only basic, and its absence is half the discriminator')
+    end
+    -- ...and the pos_5 list's very first entry, which pos_4 does not contain
+    -- at any index, is in her backpack.
+    assert(tHeld['item_blood_grenade'],
+        'the pos_5 opener itself is in her inventory')
+    local tSlotList = (function()
+        local _, bot2 = load_armed(CLOSE, {})
+        local Role2 = require(GetScriptDirectory() .. '/FunLib/aba_role')
+        local real = Role2.GetPosition
+        Role2.GetPosition = function(u) if u == bot2 then return 4 end return real(u) end
+        local ok, X = pcall(dofile, GetScriptDirectory() .. '/BotLib/hero_crystal_maiden.lua')
+        Role2.GetPosition = real
+        assert(ok)
+        return X.sBuyList
+    end)()
+    for _, s in ipairs(tSlotList) do
+        assert(s ~= 'item_blood_grenade', 'the pos_4 list must not contain a '
+            .. 'blood grenade anywhere, else the discriminator is not one')
+    end
+
+    assert(bot:GetHealth() == 292, 'and this is still the 26%-hp decision frame')
+end
+
 return tests

@@ -289,7 +289,21 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
         -- to move here (CM is a fixed point: slot 5 = drafted 5). Written up in
         -- tests/test_replay_260820_cm_es_aftershock.lua.
         --   ['f_260820_102645_cm_es_reach.lua']
-        ['f_260820_103216_cm_es_aftershock.lua'] = true,
+        --
+        -- healed 2026-08-22 (seed 906, armed=dire -- the OTHER side of the same
+        -- mirrored pair, so the same draft under a different slot assignment):
+        -- all five allies permuted and the core/support partition flipped twice
+        -- again, but for a DIFFERENT two heroes than its twin -- sniper slot 3
+        -- (core) -> drafted pos 4 (support), skeleton_king slot 5 (support) ->
+        -- drafted pos 3 (core), where the twin flipped sniper and viper. All 51
+        -- cases across the two consumer files survived, for the same reason as
+        -- the twin: neither cm_IsRSafeToOpen nor ConsiderR reads a position.
+        -- The margin is the one that WAS a fixed point on the twin: the subject
+        -- sits at slot 4 / drafted 5 here, so the build-list key really moves,
+        -- and the frame's own inventory falsifies the pre-heal answer (she
+        -- carries every basic of the pos_5 opener and neither pos_4-only one).
+        -- Written up in tests/test_replay_260820_cm_es_aftershock.lua.
+        --   ['f_260820_103216_cm_es_aftershock.lua']
     }
 
     local p = io.popen('ls tests/fixtures')

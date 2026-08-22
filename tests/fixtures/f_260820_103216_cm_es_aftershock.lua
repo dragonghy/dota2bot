@@ -83,6 +83,18 @@ return {
     { name = 'watch_tower', team = 2, x = -4096, y = -448, alive = true, hp = 1.0 },
     { name = 'watch_tower', team = 3, x = 3392, y = -448, alive = true, hp = 1.0 },
   },
+  roles = {
+    ['npc_dota_hero_bristleback'] = 3,
+    ['npc_dota_hero_crystal_maiden'] = 5,
+    ['npc_dota_hero_earthshaker'] = 4,
+    ['npc_dota_hero_jakiro'] = 5,
+    ['npc_dota_hero_juggernaut'] = 1,
+    ['npc_dota_hero_phantom_assassin'] = 1,
+    ['npc_dota_hero_skeleton_king'] = 3,
+    ['npc_dota_hero_sniper'] = 4,
+    ['npc_dota_hero_viper'] = 2,
+    ['npc_dota_hero_zuus'] = 2,
+  },
   observed = {
     burst = {
       ['npc_dota_hero_zuus'] = 152,

@@ -46,6 +46,16 @@
 --     Load bearing for the end-to-end cases only; at the mock default of 0 the
 --     radius makes J.GetNearbyHeroes return nobody and every bid is an empty
 --     green. The gate itself reads NEITHER of them.
+--
+-- ROLE HEAL (strategy backlog 0c, GH #57): BOTH fixtures now carry the drafted
+-- roles -- frame B since 2026-08-21, frame A since 2026-08-22 -- so the
+-- positions here are the draft, not the slot order the loader used to fall back
+-- to. Every case in this file survived both heals unchanged, and the reason is
+-- measured rather than assumed in test_replay_260820_cm_es_aftershock.lua: the
+-- clause under test asks nothing about anyone's position, so the sniper and
+-- skeleton_king core/support flips on frame A cannot reach it. Do not read that
+-- as "role heals are safe here" for any future clause: the moment this gate
+-- grows a J.IsCore fork, both frames have to be re-read.
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 
