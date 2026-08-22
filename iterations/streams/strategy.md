@@ -813,7 +813,13 @@
   (0p 的自查:一个只会答 nil 的帧,答 nil 不算证据。)
   往 `jmz_func` 插了 26 行,**按 0R 特意跑了两个按行号钉的文件**:`test_level_gate_census`
   15/15、`test_gate_claim_consistency` 7/7,都没被推走。luacheck 0 警告。
+  **全套 1259 tests / 0 failures**(1246 + 本轮 13,涨数与加数一致)。
   报告 `iterations/reports/strategy/20260822T173000Z.md`;`state.json:pullcamp_ownside_20260822`。
+  **⚠️ 本轮自踩的一条流程教训(见报告 §7)**:`pkill -f "run_tests.lua"` **会杀掉它自己所在的
+  那条 shell**(命令行里就含这个模式)⇒ 重启没执行、我以为在跑的全套死了八分钟;
+  随后 `pgrep -cf run_tests.lua` 读到的 "1" 是**我自己的等待 shell**。
+  **杀长任务用 PID;「还在跑吗」按 `kill -0 <pid>` 问** ——
+  **一个把观测者自己计进去的计数器永远不会读到 0**,这是 0m 那条的观测侧版本。
   **本轮明确不做**:#117 §3.3 的血量/营地强度门(总监明令另开 id)——
   **选点改了它的域也会变**,现在提 id 是在为一个即将作废的域写断言,
   与 16:5xZ 摘 `pullcamp` 是同一条道理。
