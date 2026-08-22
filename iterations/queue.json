@@ -16,6 +16,17 @@
       "acceptance": "主判据交录像组(P1 第 4 棒),按【离开兵线 → 走向己方野营 → 拉仇恨 → 回拖】四段判 WORKING/SILENT/BUGGY。本波特有的阴性判据:若仍 SILENT,先看 armed 侧的辅助有没有【离开兵线走向营地】—— 修复前连这一步都结构上不会发生,所以它是区分「触发器没开」与「动作没执行」的分界。次判据(条件 b,粗粒度):armed 侧 gpm/deaths 无明显负面即可,不做显著性检验(owner 2026-08-01 验证哲学)。附带请求:若 slot 1 录像仍是唯一帧级通道(#75),优先把录像配额给 armed 侧有辅助的那一局。",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "hero-1",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 2,
+      "question": "NO NEW WAVE NEEDED -- this is a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of a proposed WK aiming fix (candidate id `wkqaim`, not yet written): X.ConsiderQ's catch-all (hero level >= 7, enemy inside cast range + 43 = 568u) takes the NEAREST enemy, while the two branches above it each express a preference (killability, biggest threat). Count, over archived turbo replays with a Wraith King: frames where WK is level >= 7, Wraithfire Blast is off cooldown and affordable, and TWO OR MORE enemy heroes are inside 568u -- and of those, how many have `nearest != lowest health`. Episode count matters more than frame count (the stream's standing reading discipline).",
+      "acceptance": "A frame/episode/game count in the shape the hero stream's other pre-flights use (e.g. `N frames / M episodes / K games`), plus at least one concrete (game, t) pair where nearest != weakest so a real-frame fixture can be cut. If the domain comes back at or below the ~0.06 episodes/game level that killed cmrself / esaftershock / zusultx, `wkqaim` is not written. Bench note: the fixture loader's nearby-hero order was ALPHABETICAL until 2026-08-22 (tests/test_mock_nearby_heroes_order.lua) -- any detector that reads 'the first hero in the list' from an older tool run has the same defect and must be re-read.",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

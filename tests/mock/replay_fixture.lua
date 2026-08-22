@@ -760,6 +760,25 @@ function M.load(path, sSubject)
 
     -- Roster-backed unit-local queries, so full hero scripts (which use
     -- bot:GetNearbyHeroes rather than the J wrappers) also see the real world.
+    --
+    -- SORTED BY DISTANCE ascending, same as nearby_structures above and for a
+    -- stronger reason: here the engine DOES make the promise.
+    -- docs/BOT_API_REFERENCE.md:1229 -- "All return tables sorted by distance
+    -- (closest first)" -- covers the whole GetNearby* family. `fx.units` is
+    -- written by make_fixture.py in ALPHABETICAL hero-name order (`for h in
+    -- sorted(per)`), so handing it back untouched made every shipped branch
+    -- that reads list[1], or that stops at the first hit of a
+    -- `for _ in pairs(...)`, answer about the alphabetically-first hero in the
+    -- radius instead of the nearest one. 2277 GetNearbyHeroes call sites in
+    -- bots/ read this list, and J.GetNearbyHeroes (jmz_func.lua:2517) only
+    -- filters -- it never reorders -- so the loader is the only place the
+    -- order can be restored.
+    --
+    -- The ordering is STATED, not dumped: a .dem carries no list order. Ties
+    -- (two heroes at the same distance) break on unit name so the list is a
+    -- total order and a test that pins a target cannot flap between runs; the
+    -- engine makes no such promise, and no reading here may depend on which
+    -- of two equidistant heroes comes first.
     for _, u in ipairs(fx.units) do
         local me = heroes[u.name]
         rawget(me, '__spec').GetNearbyHeroes = function(self, radius, enemies, _)
@@ -778,6 +797,11 @@ function M.load(path, sSubject)
                     end
                 end
             end
+            table.sort(out, function(a, b)
+                local da, db = GetUnitToUnitDistance(self, a), GetUnitToUnitDistance(self, b)
+                if da == db then return a:GetUnitName() < b:GetUnitName() end
+                return da < db
+            end)
             return out
         end
     end

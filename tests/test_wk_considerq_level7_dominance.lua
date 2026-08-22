@@ -38,9 +38,11 @@
 --   4. the cost side, which is the part that decides lever A: the correction is
 --      not inert on AIM.  With two enemies in range, the kill check is what
 --      points the stun at the 25%-health one; without it the catch-all takes
---      whoever the engine listed first, and on the frame built here that is the
---      full-health hero.  So narrowing the kill check above level 6 does not
---      save the cooldown -- it spends the same cooldown on a worse target;
+--      the head of the nearby-hero list, which the engine sorts NEAREST FIRST
+--      (docs/BOT_API_REFERENCE.md:1229), and on the frame built here the
+--      nearest hero is the full-health one.  So narrowing the kill check above
+--      level 6 does not save the cooldown -- it spends the same cooldown on a
+--      worse target;
 --   5. the same level-7 cliff on a REAL frame (f_232320_wk_od_burst), where
 --      moving one integer and nothing else flips shipped ConsiderQ from silent
 --      to HIGH against an 86%-health Obsidian Destroyer.
@@ -64,7 +66,16 @@
 --     2026-08-22).  The dumper reports 0 for it, so section 5 supplies it too.
 --   * "Worse target" in section 4 is a claim about health only.  Which of two
 --     enemies is the better stun target in a real fight is not decidable here,
---     and the catch-all does not decide it either -- it takes list order.
+--     and the catch-all does not decide it either -- it takes the nearest.
+--   * CORRECTION (2026-08-22, after GH #104's section-4 comment was published):
+--     this file first described the catch-all as taking "whoever the engine
+--     listed first" and reasoned from list order being arbitrary.  It is not:
+--     the engine sorts GetNearby* results by distance, closest first, and the
+--     fixture loader now does the same (tests/test_mock_nearby_heroes_order.lua
+--     -- until then the bench handed back ALPHABETICAL order).  Section 4's
+--     RESULT is unaffected, because its frame puts the full-health sven at 300u
+--     and the dying lion at 400u, so sven heads the list under either reading;
+--     the reason is what changed, and the assertions below now say "nearest".
 --
 -- MUTATION RECORD (2026-08-22): nine mutations of hero_skeleton_king.lua, eight
 -- caught -- the 1.68 multiplier to 1.00, `nLV >= 7` to 6 and to 8, both reaches
@@ -323,17 +334,39 @@ end
 
 ----------------------------------------------------------------------
 -- 4. The cost side of lever A: above level 6 the correction re-aims rather than
--- withholds, and it re-aims by list order, not by health.
+-- withholds, and it re-aims by DISTANCE, not by health.
+--
+-- The two enemies are ordered nearest-first below, which is the engine's
+-- documented contract for GetNearby* (docs/BOT_API_REFERENCE.md:1229) and now
+-- also what the fixture loader guarantees.  The assertion right under this
+-- helper pins that ordering, so the conclusions below cannot silently become
+-- statements about an arbitrary order again.
 
 local function two_enemy_aim(lv, weakHp)
     local _, name = decide({
         lv = lv,
         enemies = {
-            { name = 'npc_dota_hero_sven', dist = 300, hp = 900 },   -- listed first
+            { name = 'npc_dota_hero_sven', dist = 300, hp = 900 },   -- NEAREST
             { name = 'npc_dota_hero_lion', dist = 400, hp = weakHp },
         },
     })
     return name
+end
+
+tests['[GH #104] the two-enemy frame is ordered nearest-first, like the engine'] = function()
+    local _, bot = make_frame({
+        lv = 7,
+        enemies = {
+            { name = 'npc_dota_hero_sven', dist = 300, hp = 900 },
+            { name = 'npc_dota_hero_lion', dist = 400, hp = 250 },
+        },
+    })
+    local list = bot:GetNearbyHeroes(568, true, BOT_MODE_NONE)
+    assert(#list == 2, 'both enemies are inside the catch-all reach')
+    assert(list[1]:GetUnitName() == 'npc_dota_hero_sven',
+        'the frame hands the branches its enemies nearest-first (sven 300u before '
+        .. 'lion 400u). Everything section 4 concludes about aim depends on this '
+        .. 'order being the engine order, not on it being arbitrary.')
 end
 
 tests['[GH #104] the kill check is what aims the stun at the dying enemy'] = function()
@@ -348,10 +381,11 @@ tests['[GH #104] without the claim the SAME frame still casts, at the healthy on
     -- corrected kill check would produce for a target in the overclaim band.
     assert(two_enemy_aim(7, 900) == 'npc_dota_hero_sven',
         'once no kill claim is available the catch-all answers instead and takes '
-        .. 'the FIRST enemy in the engine list -- here the full-health sven, not '
-        .. 'the further-away one. This is why narrowing the kill check above hero '
+        .. 'the head of the nearby-hero list, i.e. the NEAREST enemy -- here the '
+        .. 'full-health sven at 300u, not the dying one at 400u. This is why '
+        .. 'narrowing the kill check above hero '
         .. 'level 6 is not a saving: the cooldown and the mana leave anyway, at a '
-        .. 'target chosen by list order. Lever A has to be argued on levels 1-6 '
+        .. 'target chosen by proximity. Lever A has to be argued on levels 1-6 '
         .. 'and the 37-unit shell, or paired with a change to the catch-all.')
 end
 
@@ -418,7 +452,7 @@ tests['[real frame] one integer -- level 6 -> 7 -- and the same frame casts'] = 
         'nothing about the target changed: same 86% health, same 377u, same rank-1 '
         .. 'blast. Only the hero level moved, and that is the catch-all opening')
     assert(t == heroes['npc_dota_hero_obsidian_destroyer'],
-        'and it aims at the only enemy in range, chosen by list order rather than '
+        'and it aims at the only enemy in range, taken off the head of the list rather than chosen by '
         .. 'by anything the kill check computed')
 end
 

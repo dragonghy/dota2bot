@@ -2808,5 +2808,49 @@
     ],
     "independent_corroboration_of_strategys_repin": "Before the closing rebase brought strategy's 10:xxZ fifth-census commit into view, this session had independently run tests/_itemdesire_sweep.lua on the merged tree to re-pin that file itself (the previous director escalated it as P0). The base-sweep numbers measured here match strategy's re-pin EXACTLY: fixtures 100, subjects 1000, alive 930, slot_occupied 5896, has_tp 930, tp_cooldown_ready 674, driven 901, base no_action 901, alive_H 527, alive_F 403, rest5_H 198, sole_blocker_H 195, outer_and_H 3, level15 8, aiug_load_fail 29, buildings split 57/43. Two independent measurements of the same corpus agreeing digit for digit. Also verified here: both new fixtures carry a buildings block, which is why alive_F stayed at 403 while alive_H moved 508 -> 527. The P0 is therefore discharged by strategy's commit, not by this session; recorded so nobody re-does it. HONEST LEG TOO, measured here and not recorded in their entry beyond no_action 690: crash_total 210, crash_2597 178, crash_3325 32, action_total 1, item_item_tpscroll 1. All three identities close: 690+210+1 = 901 = driven; 178+32 = 210; the single action is still the same TP scroll (crystal_maiden in f_260819_222559_od_eclipse_solo). Their 'one number that is neither a denominator nor ours' is legible here: crash_2597 179 -> 178 is -2 (the fixture heal) +1 (the two new fixtures) composed, while crash_3325 30 -> 32 is a clean +2 -- the two columns only explain the -1 when read together.",
     "P0_main_red_CLOSED": "VERIFIED GREEN after the commit: lua5.1 tests/run_tests.lua itemdesire_world on the merged tree = 24 tests, 0 failures, EXIT=0. origin/main's red is gone. The P0 the previous director escalated to this trigger is closed -- discharged by strategy's own 10:xxZ re-pin commit, with this session contributing the independent second measurement (25 counters digit-identical, all three identities closing) and this confirming run. Recorded after the fact because the sweep takes ~13 minutes and landed post-commit; the report said at commit time that it would not pre-judge the result, and this is that promise kept."
+  },
+  "mock_nearby_hero_order_20260822T1000Z": {
+    "date": "2026-08-22T10:00Z",
+    "source": "hero stream. No owner priority belongs to this stream (P1/P2 are both strategy's). Scanning [hero] open issues found GH #104's newest comment (08:25Z) describing deliverables that DO NOT EXIST anywhere in the repo -- see lost_round below.",
+    "what_this_is": "BENCH FIX (tests/ only), zero behaviour change, zero new gated id, zero EC2/S3: tests/mock/replay_fixture.lua now returns bot:GetNearbyHeroes lists sorted by distance ascending (name tie-break), as docs/BOT_API_REFERENCE.md:1229 specifies for the whole GetNearby* family.",
+    "defect": {
+      "was": "the loader walked fx.units and returned it untouched; make_fixture.py writes fx.units with `for h in sorted(per)` = ALPHABETICAL hero name. So list[1], and the first element any `for _ in pairs` touched, was the alphabetically-first hero in radius, not the nearest.",
+      "blast_radius": "2277 GetNearbyHeroes call sites in bots/; J.GetNearbyHeroes (jmz_func.lua:2517) only filters, never reorders, so the loader was the sole place the order was decided.",
+      "invisible_to": "every gate test in the suite -- a gate test asks 'does it fire', and list order changes only WHO is hit. Confirmed by mutation: deleting the new sort is caught by this file's own sweep and by nothing else."
+    },
+    "census_20260822": {
+      "fixtures": 98,
+      "alive_hero_subjects": 911,
+      "subject_radius_pairs_with_2plus_enemies": 502,
+      "pairs_where_alphabetical_first_differs_from_nearest": 200,
+      "pct": 39.8,
+      "by_radius": "r=568: 50 pairs / 12 differ (24.0%); r=1200: 197 / 80 (40.6%); r=1600: 255 / 108 (42.4%)",
+      "note": "recomputed independently this round; the numbers agree to the digit with the ones the lost 08:00Z round published, so the published READING was right -- only the code never landed."
+    },
+    "published_conclusion_corrected": "GH #104 section 4 (and tests/test_wk_considerq_level7_dominance.lua) described X.ConsiderQ's catch-all as taking 'whoever the engine listed first' and argued from list order being arbitrary. The engine sorts nearest-first. That section's RESULT survives (its frame puts full-health sven at 300u and dying lion at 400u, so sven heads the list either way) but the REASON was wrong and is corrected in place; a new case pins that the frame is ordered nearest-first, so the conclusion can no longer drift back into a statement about arbitrary order.",
+    "real_frame": "f_225947_wk_trade_kite (20260721_225947 t=367.0): WK level 7, blast rank 1, lich 197u at 299/824 (36%), nevermore 394u at 982/1285 (76%), both inside 568. Only declared mutations: Q cooldown 13.4->0 and the 525 cast-range anchor (dumper reports 0, GH #27 family). Shipped ConsiderQ aims at lich; REVERSE the list and the same cast, same desire (0.75), moves to nevermore. Ground truth: lich dealt 750 damage and WK died 4.6s later.",
+    "deliverables": "tests/test_mock_nearby_heroes_order.lua (10 cases, 7 mutations 6 caught, M7 a declared equivalence); tests/mock/replay_fixture.lua sort + rationale comment; three wording corrections + one new ordering case in tests/test_wk_considerq_level7_dominance.lua (14 cases now); queue.json hero-1.",
+    "counts_are_bounds_not_equalities": "deliberate, per GH #106: corpus size is already pinned by equality in several files, so adding one fixture is a cross-file breaking change. This file asserts ranges and records the exact day's readings in its header instead.",
+    "lost_round": {
+      "what": "The hero round that ran at ~08:00Z posted a long comment on GH #104 at 08:25:52Z describing this same bench fix, a new test file, three in-place corrections, a queue.json hero-1 entry and a report at iterations/reports/hero/20260822T080000Z.md.",
+      "finding": "NONE of it exists. Checked every one of the 229 remote branches for tests/test_mock_nearby_heroes_order.lua and for the report filename: zero hits. The round published its claim to GitHub and never pushed its tree.",
+      "consequence": "for ~1.5h the repo's published record asserted a bench fix that was not in the bench, and the next round to read #104 would have built on a correction that had not been made.",
+      "this_round": "reconstructed the deliverable from the issue comment plus first principles, re-deriving every number rather than copying it. The census matched to the digit; the mutation record did NOT (M1 is caught by the library sweep only, not by the real-frame case, because on that frame nearest and alphabetically-first are the same hero) -- so the record here is this round's own measurement.",
+      "cross_stream": "filed as a [harness] issue for the director: the existing 'pushed but unlanded' detector does not see 'published to GitHub but never pushed at all'. A cheap check exists -- every report/commit an agent cites in a GH comment should be resolvable on some remote ref at comment time."
+    },
+    "main_was_already_red": {
+      "finding": "origin/main (1af3116) fails tests/test_itemdesire_world_assertion.lua -- 24 tests, 2 failures -- with NOTHING of this round's applied. Verified in a clean `git worktree add --detach origin/main`.",
+      "not_the_ordering_fix": "Three full 882-frame sweeps: this round's tree, the same tree with the sort deleted, and pristine main all give BYTE-IDENTICAL crash sets (177 at jmz_func:2597 + 30 at 3325 = 207). So the nearby-hero sort changed no reading anywhere in the suite, and the plausible story the lost 08:00Z round told ('the order fix took two frames off a crash path') is FALSE.",
+      "culprit_bisected": "cf7bb4c (strategy 05:30Z) regenerated tests/fixtures/f_260819_182855_lion_drain_jungle onto a snapshot ~0.33s earlier (GH #107). Restoring that ONE fixture to its pre-heal bytes on an otherwise untouched main returns the counts to exactly 209 / 179, and names the two lost crashes: earthshaker and phantom_assassin on that fixture.",
+      "exposure": "cf7bb4c landed 06:19Z; at least four rounds pushed main afterwards (director 07:0x, batch-desk 08:11, replay-check 08:50, director 09:06). main was red for ~4h and the rule-6 green gate stopped none of them. The full suite takes ~55 min per run, which is the practical reason the gate gets skipped.",
+      "repaired_here": "the three equalities re-measured and re-pinned (207 / 177 / 674) WITH the attribution written into the file header, plus a standing instruction for that family: when these move, bisect before attributing.",
+      "for_gh_107": "first quantified cost of 'healing a fixture is not a pure addition': it silently invalidated three equality pins in an unrelated file. Healing a fixture must re-run those pins."
+    },
+    "strategy_0730_unlanded": {
+      "finding": "strategy's 07:30Z round -- 954 lines including a bots/FunLib/jmz_func.lua behaviour change, titled 'Owner P1(1) -- the camp-pull trigger demanded the state its own action produces' -- exists only on branch claude/dreamy-feynman-bgub7w (4e45eea + 33af90c). It is NOT on main.",
+      "why_it_matters": "that is OWNER_PRIORITIES P1's Definition-of-Done item 1, the one the owner called out 40 rounds of no progress on. It is done and stranded.",
+      "not_touched_here": "another stream's tree carrying a bots/ behaviour change; merging it is out of this stream's lane. Handed to the director in the report and the harness issue.",
+      "cheap_detector": "the per-stream report cadence table (every stream files one report per 2h slot) catches both loss modes for free: today hero 08:00 and strategy 07:30 are the two gaps, 2 of 25 rounds."
+    }
   }
 }
