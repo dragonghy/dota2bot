@@ -2734,5 +2734,14 @@
     "aws_spend": "none (no EC2, no S3, no dumper)",
     "report": "iterations/reports/strategy/20260822T073000Z.md",
     "full_suite": "1149 tests, 0 failures (after the contract fix); luacheck 0 warnings."
+  },
+  "itemdesire_CRASH_PIN_STALE_20260822": {
+    "issue": "[harness] GH #100 family -- raised by the strategy stream while paying the GH #106 cross-file cost of two new fixtures. Owner of the file: whoever maintains test_itemdesire_world_assertion (director).",
+    "finding": "tests/test_itemdesire_world_assertion.lua pinned crash_2597 == 179 / crash_total == 209 (frames where J.CanEnemyInterruptTpChannel dies in GetExtrapolatedLocation). That pin does NOT reproduce on today's tree at the 98-fixture corpus: bots/ checked out at cac2fa5, 41df6b4, 477d0d4 and 3dc30f2 ALL read 177 / 30 / 207. So the pin was already red by -2 before this unit's fixtures landed, and nobody attributed it.",
+    "not_ours": "Measured, not argued: at the 100-fixture corpus the reading is 178 / 32 / 210 with this unit's bots/ diff AND with bots/ checked out at 3dc30f2 (its parent) -- byte-identical, because the stayfield gate is closed and the helper returns on its second line. The two new fixtures contribute exactly +1 at 2597 and +2 at 3325.",
+    "why_it_matters": "This is a BEHAVIOUR change on a PROMOTED road, not a denominator: two frames stopped taking the CanEnemyInterruptTpChannel path at some point on 2026-08-22. tpsafe2 was promoted 2026-07-23, so that road runs in every turbo game before any item-layer TP.",
+    "why_nobody_saw_it": "The file sorts late alphabetically and the full suite takes ~65 minutes in this container (director's independent observation, 09:06Z). Both full-suite runs that would have reached it were killed by a timeout first.",
+    "pins_updated": "Corpus-derived numbers moved to the 100-fixture corpus (fixtures 100, subjects 1000, alive 930, slot_occupied 5896, has_tp 930, tp_cooldown_ready 674, driven 901, base no_action 901, honest no_action 690, alive_H 527, rest5_H 198, sole_blocker_H 195, buildings split 57/43). Findings unchanged: slot_castable 0, frames_zero_castable == alive, outer_and_H 3, both_t4_absent_F == alive_F, 43 fixtures still without a buildings block. The -2 anomaly is written into the file's comments rather than silently absorbed.",
+    "process_lesson": "The strategy stream ran 'every file I touched' and MISSED this one -- it was found only by reading the failure enumeration of a full-suite run that had been started before the census fixes. 'The set of files I think I touched' is not a checklist; the suite's failure list is. 24 failures = 2 activemode + 5 gamemode + 8 itemdesire + 3 level_gate + 6 pingstamp, and only the enumeration gave the 8."
   }
 }

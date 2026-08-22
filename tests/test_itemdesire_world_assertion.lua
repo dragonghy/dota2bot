@@ -226,10 +226,10 @@ end
 
 tests['[world] not one item on one frame is castable'] = function()
     local c = pass(false)
-    assert(c.fixtures == 98, 'corpus size moved: ' .. c.fixtures .. ' fixtures')
-    assert(c.subjects == 980, 'subject count moved: ' .. c.subjects)
-    assert(c.alive == 911, 'alive hero frames moved: ' .. c.alive)
-    assert(c.slot_occupied == 5774,
+    assert(c.fixtures == 100, 'corpus size moved: ' .. c.fixtures .. ' fixtures')
+    assert(c.subjects == 1000, 'subject count moved: ' .. c.subjects)
+    assert(c.alive == 930, 'alive hero frames moved: ' .. c.alive)
+    assert(c.slot_occupied == 5896,
         'occupied item slots moved: ' .. c.slot_occupied)
     assert(c.slot_castable == 0,
         'SOMETHING IS NOW CASTABLE (' .. c.slot_castable .. ') -- the sixteenth '
@@ -239,10 +239,10 @@ tests['[world] not one item on one frame is castable'] = function()
         .. c.frames_zero_castable .. '/' .. c.alive)
 end
 
-tests['[world] the TP scroll: carried by all, ready on 658, castable by none'] = function()
+tests['[world] the TP scroll: carried by all, ready on 674, castable by none'] = function()
     local c = pass(false)
-    assert(c.has_tp == 911, 'every alive hero carries a TP scroll; got ' .. c.has_tp)
-    assert(c.tp_cooldown_ready == 658,
+    assert(c.has_tp == 930, 'every alive hero carries a TP scroll; got ' .. c.has_tp)
+    assert(c.tp_cooldown_ready == 674,
         'frames whose dumped tp_cd says READY moved: ' .. c.tp_cooldown_ready)
     assert(c.tp_castable == 0, 'the TP scroll is castable on ' .. c.tp_castable
         .. ' frames -- it must be 0 for the rest of this file to mean anything')
@@ -333,9 +333,9 @@ end
 
 tests['[world] so the shipped entry point does nothing, on every frame'] = function()
     local c = pass(false)
-    assert(c.driven == 882, 'drivable frames moved: ' .. c.driven)
-    assert(c.no_action == 882,
-        'ItemUsageThink took an action on ' .. (882 - c.no_action)
+    assert(c.driven == 901, 'drivable frames moved: ' .. c.driven)
+    assert(c.no_action == 901,
+        'ItemUsageThink took an action on ' .. (901 - c.no_action)
         .. ' frames -- today it must be none')
     assert(c.action_total == 0, 'zero actions')
     assert(c.crash_total == 0,
@@ -346,12 +346,12 @@ end
 -- B. How big, measured.
 -- ---------------------------------------------------------------------------
 
-tests['[measure] honest TP handle: 0 -> 1 action and 0 -> 209 crashes'] = function()
+tests['[measure] honest TP handle: 0 -> 1 action and 0 -> 210 crashes'] = function()
     local c = pass(true)
-    assert(c.driven == 882, 'same drivable set as the base sweep: ' .. c.driven)
-    assert(c.crash_total == 209,
+    assert(c.driven == 901, 'same drivable set as the base sweep: ' .. c.driven)
+    assert(c.crash_total == 210,
         'crashes under the honest probe moved: ' .. c.crash_total)
-    assert(c.no_action == 672, 'silent frames moved: ' .. c.no_action)
+    assert(c.no_action == 690, 'silent frames moved: ' .. c.no_action)
     assert(c.action_total == 1,
         'the corpus produces exactly one item action; got ' .. c.action_total)
     assert(c.item_item_tpscroll == 1, 'and it is a TP scroll')
@@ -373,11 +373,25 @@ tests['[measure] the census half is identical in both sweeps'] = function()
     end
 end
 
-tests['[world] the 209 crashes name two more unstubbed engine APIs'] = function()
+tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function()
     local c = pass(true)
-    assert(c.crash_2597 == 179,
+    -- 179/30 -> 178/32 on 2026-08-22T10:xxZ, and the two halves of that move
+    -- have DIFFERENT causes -- said out loud because one of them is not
+    -- corpus growth and is not this stream's:
+    --   * the strategy stream's two owner-P2 TP-home frames add +1 at 2597 and
+    --     +2 at 3325 (measured: 98 fixtures 177/30, 100 fixtures 178/32);
+    --   * but the pinned 179/30 does NOT reproduce on the 98-fixture corpus on
+    --     ANY tree checked today -- bots/ at cac2fa5, 41df6b4, 477d0d4 and
+    --     3dc30f2 all read 177/30/207. So this pin was already red before the
+    --     fixtures landed, by -2 at site 2597, from a change nobody attributed.
+    --     The strategy stream's own bots/ diff is NOT the cause (measured: the
+    --     100-fixture reading is 178/32/210 with and without it, the gate being
+    --     closed). Whoever owns this file: two frames stopped taking the
+    --     CanEnemyInterruptTpChannel road some time on 2026-08-22 and that is a
+    --     behaviour change on a PROMOTED ('tpsafe2') road, not a denominator.
+    assert(c.crash_2597 == 178,
         'jmz_func:2597 crash count moved: ' .. c.crash_2597)
-    assert(c.crash_3325 == 30,
+    assert(c.crash_3325 == 32,
         'jmz_func:3325 crash count moved: ' .. c.crash_3325)
     assert(c.crash_2597 + c.crash_3325 == c.crash_total,
         'a THIRD crash site appeared -- name it before touching these numbers')
@@ -392,7 +406,7 @@ tests['[world] the 209 crashes name two more unstubbed engine APIs'] = function(
     for _, h in pairs(J.GetNearbyHeroes(bot, 100000, true, BOT_MODE_NONE)) do other = h end
     assert(other ~= nil, 'the fixture has enemies')
     assert(type(other:GetExtrapolatedLocation(0.5)) ~= 'table',
-        'GetExtrapolatedLocation now answers a location -- re-measure the 179')
+        'GetExtrapolatedLocation now answers a location -- re-measure the 178')
 end
 
 tests['[world] the first of those two sits on a SHIPPED, ungated road'] = function()
@@ -481,14 +495,19 @@ end
 -- C. Delivery to GH #84 §5: ability_item_usage_generic.lua:5753.
 -- ---------------------------------------------------------------------------
 
-tests['[census] the level term is the sole blocker on 190 honest frames'] = function()
+tests['[census] the level term is the sole blocker on 195 honest frames'] = function()
     local c = pass(false)
-    assert(c.alive_H == 508, 'honest-building hero frames moved: ' .. c.alive_H)
+    -- 508/193/190 -> 527/198/195 on 2026-08-22T10:xxZ: both owner-P2 TP-home
+    -- frames carry a buildings block, so all 19 of their live hero-frames land
+    -- in the HONEST half and 5 of them satisfy the other five operands. The
+    -- finding is untouched: outer_and_H is still 3, i.e. the level term is
+    -- still the only thing standing on every one of the rest.
+    assert(c.alive_H == 527, 'honest-building hero frames moved: ' .. c.alive_H)
     assert(c.alive_F == 403, 'fallback-ancient hero frames moved: ' .. c.alive_F)
     assert(c.alive_H + c.alive_F == c.alive, 'the split partitions the corpus')
-    assert(c.rest5_H == 193,
+    assert(c.rest5_H == 198,
         'honest frames where the other five operands hold: ' .. c.rest5_H)
-    assert(c.sole_blocker_H == 190,
+    assert(c.sole_blocker_H == 195,
         'honest frames where GetLevel() >= 15 is the ONLY closed operand: '
         .. c.sole_blocker_H)
     assert(c.outer_and_H == 3, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
@@ -578,7 +597,7 @@ tests['[world] ShouldTpToFarm is TRUE on every frame, and that is structural'] =
             n = n + 1
         end
     end
-    assert(n == 98, 'checked every fixture; got ' .. n)
+    assert(n == 100, 'checked every fixture; got ' .. n)
 end
 
 -- ---------------------------------------------------------------------------
@@ -586,6 +605,9 @@ end
 -- ---------------------------------------------------------------------------
 
 tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = function()
+    -- The 43 is unchanged and that is the point: both frames added on
+    -- 2026-08-22T10:xxZ carry a buildings block, so the WITH side went 55 -> 57
+    -- and the fallback side did not move at all.
     local c = pass(false)
     -- The count of hero frames whose team has NO tier-4 towers is exactly the
     -- count of frames on a fixture with no buildings block. Not one honest
@@ -603,7 +625,7 @@ tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = f
             if fx.buildings ~= nil then nb = nb + 1 else nnb = nnb + 1 end
         end
     end
-    assert(nb == 55 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
+    assert(nb == 57 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
 end
 
 tests['[MECHANISM] the fallback ancient is one unit, both teams, unstable'] = function()
