@@ -1,5 +1,17 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,stayfield
+
+**⚠️ 2026-08-22T11:0xZ:见 §AM —— (1) **`stayfield` 批准入集**(21 → **22 eligible**;
+下一波串换成 **§AM.0 的 20 id**),它是 owner 优先项 P2 决策侧的**第一个** id
+(`lf_recover` 被拒、`homeroute` 被删之后那里一直是空的);清单我在今天这棵树上重验过,
+含**我自己的独立变异 M-D1**(拿掉 `faerie_fire` 腿 → 恰好 4 条断言转红,还原后 20/20 全绿)。
+(2) ⭐ **一条把它的域砍掉一半的调用点事实**:`HasFieldRegenSource` 的**大药腿在它唯一的
+调用点上结构不可达** —— `撤退:3` 分支自带 `itemFlask == nil`,与大药腿是**同一个谓词**
+⇒ 「22 次真回家 TP 里大药 **0/22**」**不是缺货的证据,是分支自己筛出来的**,
+协同组 §6.5 / 录像组 §2.5 据此得出的「决策侧单独上是干耗」推论**在这个调用点上作废**;
+承重的是 tango 5/22 与 faerie_fire 4/22。(3) **入集附硬条件**:`stayfield` 的 (a) 取证波
+**必须 `--rec-slots ≥ 8`**,`--rec-slots 1` 上这个域结构上买不到 (a),
+那种波次**不许**拿来给它下 SILENT。**
 
 **⚠️ 2026-08-22T09:0xZ:见 §AL —— (1) **`creeppull` 批准重新入集**(20 → **21 eligible**;
 下一波串换成 **§AL.0 的 19 id**),它的重新入集申请自 **2026-08-19T05:16Z 起挂了三天**没人接,
@@ -28,7 +40,8 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 ⇒ **owner 怀疑的那条不是根因**。详见 `iterations/reports/strategy/20260822T073000Z.md`。
 
 **⚠️ 上面这一行是「已入集(eligible)」,不是「下一波要 armed 的串」。**
-**⚠️ 2026-08-22T09:5xZ 协同组入集提议(待总监批准):新 gated id **`stayfield`**(owner 优先项 P2
+**✅ 2026-08-22T09:5xZ 协同组入集提议 —— **11:0xZ 已批准入集,见 §AM**;下面这段保留作申请原文。**
+**2026-08-22T09:5xZ 协同组入集提议(已批):新 gated id **`stayfield`**(owner 优先项 P2
 决策侧,GH #110 建议的名字)。**本提议不动 eligible 那一行**(它这一轮由总监加了 `creeppull`,
 现在 21 个;`stayfield` 不在其中),`stayfield` 与 `corerole` 一样是「待批」不是 eligible。**申请理由**:P2 的决策侧此前**没有任何 id 在管**(lf_recover 被拒、
 homeroute 被删之后);本 id 拦的是「低血 + 1600 环内一个敌人都没有 + 背包里有能喝的东西」时的
@@ -63,8 +76,9 @@ GH #107 若动了 dumper 采样相位,这枚反例可能只因相位就翻面。
 让 `capmono` 的检测器读数暂缓采信)。
 **⚠️ 2026-08-20T23:00Z:开波前先读 §W** —— 帧级证据的 n 是经济通道的 **1/16**(`soak_loop.sh` 只让
 slot 1 录像,[harness] #75);本周所有「事件率太低 / (a) 买不到」的判断都要按这个分母重读。
-**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AL.0**(**19 id** = §U.0 那 18 id
-**逐字不变** + 重新入集的 `creeppull`;种子仍 888/895/896/906)。下面这段关于 §U.0 的描述
+**下一波要 armed 的串永远在最新一节的 §x.0 里** —— 现在是 **§AM.0**(**20 id** = §AL.0 那 19 id
+**逐字不变** + 新入集的 `stayfield`;种子仍 888/895/896/906)。**10:09Z 在飞的那波是 §AL.0 的
+19 id 串,不受影响。** 下面这段关于 §AL.0 / §U.0 的描述
 保留作历史:**§U.0**(**18 id** = §R.0 那 16 id
 **逐字不变** + 本轮新入集的 `blinkflee` / `liondrainstop`;种子仍 888/895/896/906),
 申报目的 = **买这两个新 id 的条件 (a)**(§R.0 那波的 `capmono` (b) 两臂已由 arm B 收官)。
@@ -4356,3 +4370,97 @@ REC_SLOTS=1 的波次里 **slot 1 是唯一录制者、slot 2-16 是同机同时
 是一个从未被测过就被接受的默认值**。凡以「(a) 买不到 / 事件率太低」park 掉的 id
 (§V.5 的 `blinkflee`/`liondrainstop`、`#54`、`#66` 等),在 rec-slots 8 的波次落地后
 **都值得按 8 倍的帧分母重读一次** —— 本轮不逐个翻案,登记为下一轮的候选工作单元。
+
+---
+
+## §AM 总监裁定 2026-08-22T11:0xZ(第四十一次触发):`stayfield` **批准入集**(owner 优先项 P2 决策侧的第一个 id)+ 一条把它的域砍掉一半的调用点事实
+
+本轮只做一件事:**接协同组 09:33Z 交过来的那根棒**(`test_set.md` 顶部的入集提议)。
+上一轮(§AL.1)的教训是「一份申请挂了三天没人接,接棒是总监的活」——
+这一份**挂了 1.5 小时**,本轮就接掉。**`bots/`/`game/` 零改动;零 EC2 支出。**
+
+### AM.0 下一波要 armed 的串:**20 id**(§AL.0 的 19 id 逐字不变 + `stayfield`)
+
+```
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,blinkflee,liondrainstop,creeppull,stayfield
+```
+种子仍 888/895/896/906。`wandlimbo` 仍**不可 arm**(§J.1.4 机会普查是硬前置,连续第十一轮无人做);
+`odaoe` 按 §AB.1 仍不进串;`corerole` 按 §AK 仍**待批且 AG.4 收官前不许 arm**,**不在本串里**。
+**10:09Z 在飞的那波是 19 id 串,不受本节影响**;本节管的是它收割之后的下一波。
+
+### AM.1 `stayfield` **批准入集**(§O.3「清单齐全即默认批准」;清单我自己在今天这棵树上重验)
+
+按 §O.3 入集只需清单齐全,但**「齐全」是我查的,不是申请人自述的**:
+
+| 清单项 | 我实跑的核 |
+|---|---|
+| gate 在位、turbo 双闸 | `jmz_func.lua:4749-4750` 两行都在,`J.IsSoakCandidate('stayfield')` 是**第二行就返回** |
+| 调用点 gate 关 = 逐位旧行为 | `aiug:5514` 一句 `and not J.ShouldRegenNotTpHome( bot )`,helper 关闸时恒 `false` ⇒ 该 `and` 项恒真 |
+| 两枚真实帧 fixture | `tests/fixtures/f_260822_063722_lina_tp_home.lua` + `f_260822_063559_slardar_tp_forward.lua` 都在仓库里 |
+| 用例 | `lua5.1 tests/run_tests.lua lina_tp_home` → **20 tests, 0 failures** |
+| **我自己的独立变异**(不是复跑申请人那 8 条) | **M-D1**:`HasFieldRegenSource` 的 `item_faerie_fire` 改名成不存在的字面量 → **恰好 4 条断言转红**,且**红的是它该红的四条**(证据帧 STAY、无回复品否决、血量带两条边、以及那条「bottle 腿在这里不可达、TRUE 来自 faerie_fire」的登记用例)。还原后 `git status bots/` **干净**、20/20 全绿 ⇒ **fixture 不是空壳,而且它是从一条真正可达的腿上答的 TRUE** |
+| `state.json` | `stayfield_20260822` 在,含证据帧/反例帧/余量警告 |
+
+**(c) 逻辑依据成立**:owner 的 Turbo 原则本身就是依据(低血无危险不回家),
+且本 helper **比它守的那条分支严格更保守**(分支容忍 1600 内 1 个敌人,本 helper 要 0 个)。
+**(a)/(b) 未知,由下一波买** —— 这正是入集的目的。
+
+### AM.2 ⭐ 本轮新发现:**`HasFieldRegenSource` 的大药腿在它唯一的调用点上结构不可达**
+
+这条谁都没写下来,而它**同时改写两份报告的结论**。`撤退:3` 分支自己的条件里
+**本来就有 `itemFlask == nil`**(`aiug:5520`),而 `itemFlask = J.IsItemAvailable("item_flask")`
+(`jmz_func.lua:1752`)读的**恰好也是 0-5 号可用格** —— 与 `HasFieldRegenSource` 的大药腿
+**同一个谓词**。⇒ **凡是大药能让 helper 答 TRUE 的帧,分支早已因 `itemFlask ~= nil` 而是 false**。
+`and not J.ShouldRegenNotTpHome(bot)` 这一项**只可能经 tango / tango_single / faerie_fire /
+有充能的 bottle 改变结果**。(证据帧本身走的就是 faerie_fire 腿 —— M-D1 点名的正是它。)
+
+**两条连带更正:**
+
+1. **协同组 §6.5 与录像组 §2.5 的那条「免费事实」要重述。** 原话是
+   「22 次真·回家 TP 里带大药 **0/22** ⇒ 『买大药』在当前 buy list 下没有可买对象 ⇒
+   决策侧单独上很可能只是把 bot 钉在线上干耗」。**该推论在这个调用点上不成立**:
+   大药那一列**按构造就永远是 0**,它不是缺货的证据,是**分支自己筛出来的**。
+   这个调用点上承重的是 **tango 5/22 与 faerie_fire 4/22**。
+2. **「野区续航族同波」照办,但机制说法要改。** 「`fieldregen` 供货 → `stayfield` 才有域」
+   在这个调用点上**是假的**:`fieldregen` 让 bot 兜里有大药之后,这条回家 TP
+   **本来就已经被 `itemFlask == nil` 拦掉了,不需要 `stayfield`**。
+   两者仍应同波(同一个 owner 优先项、同一份语料、同一批 (a) 证据),
+   但**不得把它们写成互为前提**;它们是**同一病灶的两条独立通路**。
+   ⇒ 协同组 §6.4 点名的**下一个杠杆(步行回泉那一半,`mode_retreat_generic:217`)
+   因此更重要了**:那条路径上没有 `itemFlask == nil` 这道自带的筛子,大药腿在那里**是活的**。
+
+### AM.3 桌面预检:域上界(免费语料算得出来,协同组说「本组无语料预算」的那个数)
+
+用录像组 08:50Z §2.5 的普查(22 个真·回家 TP,语料 `spot_20260822_0610xx`,
+armed 串是 `roamreach` 单 id ⇒ **读的是稳定版出厂行为**):
+
+- 可达列:tango **5/22**、faerie_fire **4/22**(clarity 5/22 是蓝,helper 不数;
+  magic_wand 21/22 按设计不数;flask 0/22 按 §AM.2 不可达)
+  ⇒ **域上界 9/22 ≈ 41%**(两集合不相交时),**下界 5/22 ≈ 23%**(相互包含时)。
+- 再被两道**未测**的闸门往下切:①血量带 `(0.18, 0.55]` —— 该群体 **hp 均值 0.191、
+  0/22 ≥0.40** ⇒ **绑住的是下沿 0.18 而不是上沿**,而下沿恰好压在群体均值上,
+  预期还要砍掉接近一半;②1600 环**要空**(分支只要 ≤1)。
+- ⇒ **稳定版下每 16 局语料预期只有个位数 episode**。
+
+**⇒ 入集附一条硬条件:`stayfield` 的 (a) 取证波必须跑 `--rec-slots ≥ 8`。**
+在 `--rec-slots 1` 的帧通道(付费局数的 1/16)上,这个域**结构上买不到 (a)**,
+那种波次不许拿来给它下 SILENT。这条与 §AL.2 的 rec-slots 裁定是同一件事的两端。
+
+### AM.4 批测台 08:11Z 自立的「同波不改两样」不构成阻挡(免得下一波在这里空转)
+
+下一波会同时动 **id 集合(19→20)** 和可能的 **rec-slots(8→16,取决于本波验收 exit code)**。
+批测台 08:11Z 立过「不要在同一波里同时改被测 id 集合和采集配置」。**在这里无害,理由与 §AL 同**:
+(i) rec-slots 的验收判据是**波内自控**(录制腿 vs 同机同时的对照腿),不依赖跨波比较;
+(ii) 经济侧的跨波比较**按 §AF.3 已经整门作废**(十波多-id 读数彼此不可区分),
+所以「经济可比性」不是本项目当前承重的东西 —— 不能用一条已作废的顾虑挡住取证。
+
+### AM.5 预登记的核验口径(录像组照做,不许事后改判据)
+
+1. **触发计数按侧别分腿**:`stayfield` armed 腿 vs 基线腿,分母是「落进 `撤退:3` 域的帧」不是全局帧。
+2. ⭐ **不止数「有没有触发」,要数触发之后的后果**:**stay 之后 30 秒内的死亡率**(两腿对打)。
+   理由:helper **只检查「有没有回复品」,不检查「这口回复够不够」** —— faerie_fire 是
+   **85 点瞬回**,把 31.8% 血的莉娜抬到 ~39%,并不让她安全,只让她留下。
+   「留下之后死了」和「留下之后活着打完」是两个完全不同的裁定,**必须在读数里分得开**。
+3. 判读标准按 GH #111 已废止旧标准后的口径:**有危险撤退合法;无危险低血回家 = 病例。**
+4. 反例帧承重余量只有 **35u**(tidehunter 1565 vs 环 1600):GH #107 若动了 dumper 采样相位,
+   这枚反例可能只因相位翻面 —— 复核时先查 #107 状态。
