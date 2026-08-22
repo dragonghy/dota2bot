@@ -2463,6 +2463,6 @@
     "delivery": "bots/BotLib/hero_skeleton_king.lua (comments + 5 dead locals removed: bDebugMode, abilityE, talent5, castEDesire, nKeepMana -- the last assigned and never read anywhere in the repo, same shape as the one GH #73 cleared out of hero_lion.lua); tests/test_wk_fact_anchor.lua, 13 cases, 13 mutations 13 caught.",
     "mutation_that_escaped_the_first_draft": "M6 (re-point GetTalentBuild's third pick at a different tier key) walked past the first draft of the tier test, because that draft asserted MY ordering assumption ('the third pick is the t20 one') rather than reading the wiring. Rewritten to flip one tier row at a time and see which returned indices move; M6 and M12 both caught after.",
     "issue": "GH #104",
-    "gate": "luacheck bots game --formatter plain: 0 warnings. lua5.1 tests/run_tests.lua: see the report for the count."
+    "gate": "luacheck bots game --formatter plain: 0 warnings. lua5.1 tests/run_tests.lua on the REBASED tree (on top of strategy's 8407b61): 1065 tests, 0 failures, EXIT=0. 1065 = 1052 + 13 to the digit, which also turns strategy's own 1052 -- which that round honestly flagged as arithmetic (1047 + 5), not a measurement -- into a measured number. bash tests/run_py_tests.sh: 6 passed, 0 failed."
   }
 }

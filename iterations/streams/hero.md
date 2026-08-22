@@ -514,7 +514,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   一张**表**里的死重量,这里是 t20 handle 被读进**出货中的决策函数**)。
   **交付**:`hero_skeleton_king.lua` 重锚注释 + 删五个死局部(`bDebugMode`/`abilityE`/`talent5`/
   `castEDesire`/`nKeepMana`,最后一个**已赋值、全仓零读**,与 GH #73 从 Lion 清掉的同型);
-  `tests/test_wk_fact_anchor.lua` **13 例**、**13 次变异 13 抓**;全 BotLib 的 t20/t25 消费点普查
+  `tests/test_wk_fact_anchor.lua` **13 例**、**13 次变异 13 抓**(门:luacheck 0 警告 / **1065 tests, 0 failures**);全 BotLib 的 t20/t25 消费点普查
   **24 处 / 7 英雄**(机械判据 + 棘轮)。三根 lever(Q 击杀判据的 2 秒总伤 ×1.68 / t20 析取 /
   肉山分支的绝对 600 蓝)**只登记不上机**,预注册域写在 GH #104 §5 与代码注释里。
   **给总监**:①`wkbuild` 的 (c) 需重议(不是本组能自己改的判词);②普查里四个非焦点英雄
