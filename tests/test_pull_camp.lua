@@ -5,9 +5,25 @@
 -- enemy), a friendly camp is up and within reach, and no enemy is on us.
 --
 -- FIRE = every condition holds -> returns the camp's spawn location (pull intent).
--- NO-FIRE = favorable equilibrium / no camp up / wrong time / wrong role / under
---           threat -> nil (keep laning; never grief the lane).
+-- NO-FIRE = favorable equilibrium / no camp in reach / wrong time / wrong role /
+--           under threat -> nil (keep laning; never grief the lane).
 -- OFF = not turbo / not the 'pullcamp' candidate -> nil (shipped default inert).
+--
+-- [GH #13 SILENT root cause, 20260822] THIS CONTRACT CHANGED, and this file
+-- caught the change -- the `noCreeps` case below used to be a NO-FIRE and is now
+-- a FIRE. "Is the camp up" is no longer a trigger condition: a support standing
+-- in its lane has no vision into a camp box behind trees, so
+-- `GetNearbyNeutralCreeps(1400)` was empty on exactly the frames the pull wanted
+-- to start (measured 0 / 911 alive hero frames over the whole fixture corpus)
+-- while `mode_roam_generic`'s walk-to-the-camp branch was only reachable once
+-- the plan already existed. Trigger waited for arrival, arrival waited for
+-- trigger, and the replay desk measured 10/10 games SILENT. The question MOVED
+-- to roam's Think, which asks the same read on ARRIVAL (bCampHere) and pokes
+-- only when the neutrals are really there. The window also gained a 5s travel
+-- lead (:05-:20 / :35-:50) so the walk out of lane finishes by the :12 / :42
+-- aggro marks, which are themselves unchanged.
+-- See tests/test_pullcamp_trigger_census.lua and
+-- iterations/reports/strategy/20260822T073000Z.md.
 --
 -- The clock is mocked via DotaTime; the lane-front / midpoint / ancient and the
 -- neutral-camp spawner list are stubbed so the equilibrium and camp-reach reads
@@ -24,7 +40,8 @@ local tests = {}
 --   now         -> DotaTime override (wrong pull window / outside laning)
 --   favorable   -> lane front NOT past the midpoint (equilibrium is fine)
 --   noCamp      -> the neutral spawner list has no friendly camp in reach
---   noCreeps    -> the camp is not up (no neutral creeps nearby)
+--   noCreeps    -> the camp is not visibly up (no neutral creeps nearby). Since
+--                  the GH #13 repair this is NOT a veto -- see the header.
 --   underThreat -> an enemy hero is right on us
 local function scenario(opts)
     opts = opts or {}
@@ -101,10 +118,42 @@ tests['NO-FIRE: no friendly camp in the spawner list -> nil'] = function()
         'with no friendly camp in reach there is nothing to pull')
 end
 
-tests['NO-FIRE: camp not up (no neutral creeps nearby) -> nil'] = function()
+tests['FIRE: no VISIBLE neutrals is no longer a veto (the GH #13 repair)'] = function()
+    -- The case that used to read `NO-FIRE: camp not up -> nil`. It is inverted
+    -- deliberately: from the lane this read is empty whether or not the camp is
+    -- up, so vetoing on it vetoed every real pull. Occupancy is now decided on
+    -- arrival by roam's Think.
     local J, bot = scenario({ noCreeps = true })
+    local res = J.ShouldPullNeutralCamp(bot)
+    assert(res ~= nil and res.x == 500,
+        'the trigger vetoes on camp vision again -- that is the dead condition '
+        .. 'that made pullcamp SILENT in 10/10 batch games')
+end
+
+tests['FIRE: the travel lead opens the window at :05 (walk, then aggro at :12)'] = function()
+    local J, bot = scenario({ now = 65 }) -- 1:05 -> 5s into the minute
+    local res = J.ShouldPullNeutralCamp(bot)
+    assert(res ~= nil and res.x == 500,
+        'the window no longer opens early enough to walk to the camp -- a bot '
+        .. 'that leaves lane at :12 arrives after the wave has gone')
+end
+
+tests['FIRE: the travel lead opens the second window at :35'] = function()
+    local J, bot = scenario({ now = 95 }) -- 1:35 -> 35s into the minute
+    local res = J.ShouldPullNeutralCamp(bot)
+    assert(res ~= nil and res.x == 500, 'the :35 lead into the :42 mark is gone')
+end
+
+tests['NO-FIRE: the lead is a lead, not an open door (:25 is still nothing)'] = function()
+    local J, bot = scenario({ now = 85 }) -- 1:25 -> 25s into the minute
     assert(J.ShouldPullNeutralCamp(bot) == nil,
-        'an empty camp (no creeps present) cannot be pulled')
+        'the travel lead widened the window into an always-on pull')
+end
+
+tests['NO-FIRE: :04 is before the lead (nothing to walk toward yet)'] = function()
+    local J, bot = scenario({ now = 124 }) -- 2:04 -> 4s into the minute
+    assert(J.ShouldPullNeutralCamp(bot) == nil,
+        'the window lost its lower edge')
 end
 
 tests['FIRE: the :12 window also pulls (catch the :00 wave)'] = function()
@@ -117,7 +166,8 @@ end
 tests['NO-FIRE: outside both pull windows (mid-minute) -> nil'] = function()
     local J, bot = scenario({ now = 90 }) -- 1:30 -> 30s into the minute, between the windows
     assert(J.ShouldPullNeutralCamp(bot) == nil,
-        'pulling only in the :12 [10,20] / :42 [40,50] windows; :30 must fall through')
+        'pulling only in the :12 [5,20] / :42 [35,50] windows (each opens a 5s '
+        .. 'travel lead before its aggro mark); :30 must fall through')
 end
 
 tests['NO-FIRE: before camps spawn / outside laning -> nil'] = function()

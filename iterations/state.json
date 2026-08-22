@@ -2732,6 +2732,7 @@
       "stoppers 3/4 stay accounted, not repaired"
     ],
     "aws_spend": "none (no EC2, no S3, no dumper)",
-    "report": "iterations/reports/strategy/20260822T073000Z.md"
+    "report": "iterations/reports/strategy/20260822T073000Z.md",
+    "full_suite": "1149 tests, 0 failures (after the contract fix); luacheck 0 warnings."
   }
 }
