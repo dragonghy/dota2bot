@@ -3038,5 +3038,17 @@
     "reusable_prior_proposed": "For the stream's Y.2 list: a lever whose domain is a narrow BAND on a CONTINUOUS quantity (health, mana, distance) cannot be sized from a frame corpus at all -- and a zero from one must be recorded as UNDERPOWERED, never as EMPTY. The existing Y.2 rule says a desk or fixture read can show EMPTY but not RARE; the narrow-band case is the corner where it cannot honestly show EMPTY either.",
     "github": "#115 section 5",
     "report": "iterations/reports/hero/20260822T180000Z.md"
+  },
+  "pullcamp_ownside_20260822": {
+    "issue": "[strategy] GH #117 (owner P1 的唯一阻塞项,总监 16:5xZ 交协同组). pullcamp 的选点是「离 bot 最近的己方野点」,而它自己的均衡子句只在我方兵线被压出去时才开火 —— 那正是拉野者本人站得靠前的时刻 ⇒ 最近的己方营系统性地是深处的远野营。",
+    "unit": "jmz_func J.ShouldPullNeutralCamp: 选点循环加一条子句 —— 候选营必须比【车道中点】更靠近我方远古(`J.GetLocationToLocationDistance(camp.location, vOwn) < nMidToOwn`)。vMid/vOwn 是均衡子句上面已经解出来的同两个位置,零新引擎调用。仍在 'pullcamp' gate 内,turbo-only,未 armed ⇒ 出厂行为不变。",
+    "one_lever": "刻意未动:1500 reach、拉野窗口、J.IsLanePullSafe 的 `>= 0.5` 血量门(= #117 §3.3 的第二个杠杆,总监明令另开 id)。这三样各有一条 [reverse] 源码钉子,谁把它们和选点一起改就会转红 —— 否则下一波的连接率无法归因。",
+    "why_midpoint": "三条听起来都对的几何只有一条咬得住那个营(用真实远古坐标实算):#117 的热点营 (3994,-5137) 离 radiant 远古 9,916u / 离 dire 远古 10,252u ⇒ 「营在我方半场」放它过,修了等于没修;「营比 bot 更靠近远古」(#117 建议 3)最好也只到 ~9,200u,仍在中点之外;中点判据拒掉它(9,916 > 7,717),且与总监验收口径 2 的 9,403u 是同一条线。",
+    "domain": "本仓库语料的独立普查(tests/_pullcamp_sweep.lua 新增 depth_* 计数器):100 fixture / 930 存活英雄帧里,进入选点的窗口内辅助帧 15 枚,全部有诚实远古。12/15 站在车道中点【之外】(批测在另一份 283 局语料上读到的是「中位 57% 处」—— 两份互不相干的语料同向)。4/15 深到任何可达营都不可能在我方半场(修法 ⇒ nil);2/15 靠后到任何可达营都不可能是深营(修法 ⇒ 恒等);9/15 是这条子句真正做判别的带。口径:这 15 枚过的是 harness 能判的每一条子句,不含均衡子句(GetLaneFrontLocation 按 GH #61 拒答),而均衡子句进一步筛的正是站得更靠前的 bot ⇒ 这是下界。",
+    "not_silent": "批测侧的反证:115 个 poke episode 里 48 个开拉点在离家 9,000u 以内(= 我方半场)⇒ 这条子句砍掉的是深的那一半,不会把机制清零。这是入集后必须复核的第一个数(poke_episodes 不得塌到 0),已作为事先登记写进 queue.json:strategy-2。",
+    "tests": "tests/test_pullcamp_ownside_camp.lua(11 例,两枚真实帧 + 一枚结构性反证帧):frame A = f_260822_063722_lina_tp_home 的 witch_doctor(radiant pos5,离自家远古 10,527u),声明的营就是 #117 实测的热点 (3994,-5137)(283 局 267 个 poke 帧里的 95 帧),它在 1500 reach 之内 ⇒ 旧规则会选它,修法后返回 nil;frame B = f_260819_181742_ss_chase_start 的 silencer(离边界 51u,唯一能让深营与自家营同时进 reach 的真实几何)⇒ 【两侧都断言选中了哪一个营】(总监验收口径 1),外加边界内外 20u 翻面;frame C = 老 census 的 ogre 帧,断言修法在他身上算术上不可能生效。另加 test_pull_camp.lua 的合同用例 1 条(15->16)、census 的域普查 1 条(20->21)。全套 1259 tests / 0 failures(1246 + 13,涨数与加数一致)。",
+    "honesty": "frame A 的 nil 【不是】判别力的证据:那一帧 bot 比边界深 2,811u 而 reach 只有 1500,任何方向的营都会被拒 —— 已写成一条绕 bot 一圈 8 个方向的断言,并在用例名里说明牙齿在 frame B。",
+    "process_lesson": "`pkill -f \"run_tests.lua\"` 会杀掉它自己所在的 shell(命令行含同一模式)⇒ 重启没执行(退出码 144),而随后 `pgrep -cf run_tests.lua` 读到的 1 是自己的等待 shell ⇒ 一次全套死了八分钟没人知道。杀长任务用 PID;存活判据用 `kill -0 <pid>`。一个把观测者自己计进去的计数器永远不会读到 0。",
+    "next_baton": "(1) 总监:test_set.md 顶部 17:3xZ 提议行,pullcamp 重新入集(它 16:5xZ 刚被摘,理由正是本修法必然改写选点代码);(2) 批测台:queue.json strategy-2(取证波,判据 = 连接率 / 开拉点离家中位 / poke_episodes 不为 0),挂在 (1) 的批准上;(3) 录像组:按 #117 的正控读数,两个深野营 (3994,-5137) 与 (-4007,4947) 的 poke 帧占比(现 51%)必须塌下去,可在本波自己的帧上直接对读。"
   }
 }

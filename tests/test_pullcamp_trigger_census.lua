@@ -356,6 +356,40 @@ tests['frame A: control -- the enemy`s camp is rejected though it is nearest'] =
         .. 'non-goal in the helper header just became shipped behaviour')
 end
 
+tests['census: [GH #117] where a frame that reaches the selector STANDS'] = function()
+    -- The domain readout for the own-side camp clause (behaviour pinned in
+    -- tests/test_pullcamp_ownside_camp.lua). It lives here because this file
+    -- owns the corpus sweep. Measured 20260822 over 15 in-window support
+    -- frames, all with honest ancients:
+    --   12 past the lane midpoint / 3 in our own half
+    --    4 so deep that no reachable camp can be own-side (selector -> nil)
+    --    2 so far back that no reachable camp can be deep (clause inert)
+    --   => 9 frames where the clause actually discriminates.
+    -- This corpus never saw the armed pullcamp -- it is an INDEPENDENT
+    -- corroboration of the batch's "median pull start 57% across the map".
+    -- Asserted as relations, not as counts: the counts move whenever the
+    -- corpus grows (GH #106), the shape is the finding.
+    local honest = C('depth_honest')
+    assert(honest >= 10, 'too few honest-ancient in-window frames to say '
+        .. 'anything: ' .. honest)
+    assert(C('depth_past_mid') + C('depth_own_half') == honest,
+        'the depth buckets stopped partitioning the honest frames')
+    assert(C('depth_past_mid') > C('depth_own_half'),
+        'supports reaching the pull selector no longer stand forward of the '
+        .. 'lane midpoint (' .. C('depth_past_mid') .. ' past / '
+        .. C('depth_own_half') .. ' back) -- the premise of GH #117, that the '
+        .. 'equilibrium clause puts the puller deep, has stopped holding')
+    local decides = honest - C('depth_forced_nil') - C('depth_inert')
+    assert(decides > 0,
+        'there is no frame left where the own-side clause can discriminate: '
+        .. C('depth_forced_nil') .. ' forced nil, ' .. C('depth_inert')
+        .. ' inert, of ' .. honest)
+    assert(C('depth_forced_nil') > 0 and C('depth_forced_nil') < honest,
+        'the clause now refuses every in-window frame, or none of them ('
+        .. C('depth_forced_nil') .. '/' .. honest .. ') -- either way it is no '
+        .. 'longer the narrowing it was measured to be')
+end
+
 tests['frame A: control -- an even lane is still not worth a pull'] = function()
     local J, bot = load_witness({ 'near' })
     -- Front AT the midpoint: nothing to reset.

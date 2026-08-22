@@ -1,6 +1,29 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,stayfield,stayfield2,fieldbuy
 
+**⚠️ 2026-08-22T17:3xZ 协同组入集提议(待总监批准):`pullcamp` **重新入集**(22 → 23 eligible)**
+—— 它 16:5xZ 刚按 §AO(1) 被摘,**摘它的理由是「#117 的修法必然改写选点代码」,那份修法本轮已经落地**,
+所以这条提议是那条裁定自己写好的回程,不是复议。**改的是一个变量**:选点从「离 bot 最近的己方营」
+改成「离 bot 最近、**且比车道中点更靠近我方远古**的己方营」;`vMid`/`vOwn` 是均衡子句上面已经解出来的
+同两个位置,**零新引擎调用**。**1500 reach / 拉野窗口 / `IsLanePullSafe` 的 `>= 0.5` 血量门一位没动**
+(= #117 §3.3 那个第二杠杆,总监明令另开 id),三样各配一条 `[reverse]` 源码钉子,
+**谁把它们和选点一起改就会转红** —— 否则下一波的连接率无法归因。
+**验收口径 1(总监原话「两侧都断言选中的营是哪一个」)已做到**:`frame B`
+(`f_260819_181742_ss_chase_start` 的 silencer,**离边界 51u**,是本语料里唯一能让深营与自家营
+同时进 1500 reach 的真实几何)—— 深营放**更近**、自家营放更远,断言选中的是**自家营**,
+并单独断言「深营确实是更近的那个」(否则这枚对照什么都没控)。
+`frame A` 用 #117 自己的热点坐标 **(3994,-5137)**(283 局 267 个 poke 帧里的 95 帧)钉在一枚
+**真实的 radiant pos5 帧**上(离自家远古 10,527u,营在 1,028u 处 = 旧规则会选它)⇒ 修法后返回 nil。
+**⭐ 一条自带的诚实声明**:`frame A` 的 nil **不是判别力的证据** —— 那一帧 bot 比边界深 2,811u
+而 reach 只有 1500,**绕 bot 一圈八个方向的营全会被拒**(已写成断言),牙齿在 `frame B`。
+**本仓库语料的独立普查**(`_pullcamp_sweep.lua` 新增 `depth_*`):进入选点的窗口内辅助帧 15 枚,
+**12/15 站在车道中点之外** —— 与批测在另一份 283 局语料上读到的「中位 57% 处」**同向且互不相干**;
+4/15 深到任何可达营都不可能合规(⇒ nil)、2/15 靠后到算术上不可能被影响、**9/15 是真正判别的带**。
+**不会变回 SILENT 的反证**(批测侧):115 个 poke episode 里 **48 个开拉点在离家 9,000u 以内**,
+砍掉的是深的那一半。`tests/test_pullcamp_ownside_camp.lua`(11 例)+ 合同用例 1 条 + 普查 1 条,
+luacheck 0 警告,**无新 fixture、零 EC2**。报告 `iterations/reports/strategy/20260822T173000Z.md`;
+`state.json:pullcamp_ownside_20260822`;取证波申请 `queue.json:strategy-2`(**已提,挂在本条批准上**)。
+
 **⚠️ 2026-08-22T16:5xZ:见 §AO —— 三条定级,两个 owner 优先项各动一格。**
 (1) **`pullcamp` 退回协同组、出 armed 集**(23 → 22 eligible;**不是 reject**):
 它的 (a) **执行**那一半买到了(录像组 283 局帧证据,WORKING),但**选点缺陷已实锤**

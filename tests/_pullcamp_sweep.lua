@@ -95,6 +95,40 @@ for _, path in ipairs(fixture_files()) do
 
                 if tw and support and no800 then
                     bump('peacetime_lane_support')
+                    if sw_new then
+                        -- [GH #117] Where does a frame that reaches the camp
+                        -- selector actually STAND? The new own-side clause
+                        -- compares a camp against the lane midpoint, so what
+                        -- decides whether it can bite is the bot's own depth
+                        -- measured the same way. Honest ancients only (43 of
+                        -- the fixtures have no buildings and GetAncient then
+                        -- answers the map origin for both teams -- world
+                        -- assertion 17), and the midpoint is taken between the
+                        -- two real ancients, which is what the test declares.
+                        local own = GetAncient(bot:GetTeam())
+                        local enemy = GetAncient(
+                            bot:GetTeam() == TEAM_RADIANT and TEAM_DIRE or TEAM_RADIANT)
+                        local lo, le = own:GetLocation(), enemy:GetLocation()
+                        if not (lo.x == 0 and lo.y == 0 and le.x == 0 and le.y == 0) then
+                            bump('depth_honest')
+                            local half = J.GetLocationToLocationDistance(lo, le) / 2
+                            local d = J.GetLocationToLocationDistance(loc, lo)
+                            if d > half then
+                                bump('depth_past_mid')
+                                -- Past the midpoint by more than the untouched
+                                -- 1500 reach: no camp the bot can reach is on
+                                -- our side, so the repaired selector returns
+                                -- nil whatever the camp list.
+                                if d - 1500 > half then bump('depth_forced_nil') end
+                            else
+                                bump('depth_own_half')
+                                -- Inside by more than the reach: every camp the
+                                -- bot can reach is on our side, so the clause is
+                                -- arithmetically incapable of changing anything.
+                                if d + 1500 < half then bump('depth_inert') end
+                            end
+                        end
+                    end
                     if sw_old then
                         bump('chain_old')
                         out:write(string.format('CHAIN %s %s %.1f\n', path, u.name, sec))
@@ -120,6 +154,8 @@ for _, k in ipairs({
     'fixtures', 'frames', 'timewin', 'secwin_old', 'secwin_new', 'support',
     'no800', 'lane_nil', 'lane_zero', 'camp_up', 'spawners_nonempty',
     'pullsafe', 'peacetime_lane_support', 'chain_old', 'chain_new',
+    'depth_honest', 'depth_past_mid', 'depth_forced_nil', 'depth_own_half',
+    'depth_inert',
 }) do
     out:write(string.format('C %s %d\n', k, c[k]))
 end

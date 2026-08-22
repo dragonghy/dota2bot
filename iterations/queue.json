@@ -38,6 +38,22 @@
       "acceptance": "An episode count in the shape the hero stream's other pre-flights use (N frames / M episodes / K games) PLUS at least one concrete (game, t) pair with a band-occupied target inside 175u, so a real-frame fixture can be cut with make_fixture.py. WHY THE FRAME CORPUS CANNOT ANSWER THIS (pre-registered, do not repeat the mistake): the repo's 100-frame fixture library gives 26 Axe frames, 20 Culling-ready, and only 3 with any enemy inside the branch's effective 375u ring -- against a 25-point band on a ~1000 health pool the expected hit count is ~0.08, so its zero is UNDERPOWERED and must NOT be reported as an empty domain. A frame-side scan of the archive has the same defect unless it yields hundreds of in-ring frames; the cast-side stream does not. TWO CORRECTIONS TO GH #115's PRE-REGISTERED TEXT: (1) it says 'target is inside 175', but the firing loop iterates J.GetAroundEnemyHeroList(nCastRange + 200), i.e. an EFFECTIVE 375u ring -- the bare cast-range list is computed and never read -- so report both rings; (2) count episodes, not frames. Bench note: derive corpus counts with the fixture loader (dofile), never by regex over the .lua files -- a regex reader under-counted this library's Axe frames 10 vs 26 in the round that filed this.",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "strategy-2",
+      "stream": "strategy",
+      "bundle": "pullcamp",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 1,
+      "question": "Owner P1 的回程波(接力链见 OWNER_PRIORITIES.md + GH #109 / #117)。12:12Z 那波买到的 (a) 是【版本专属】的:pullcamp 当时执行了(115 poke : 11 base,WORKING),但它拉的是【离 bot 最近】的野点 ⇒ 中位在离家 10,708u 开拉、连接率 <=20.3%。选点修法本轮已落地(候选营必须比车道中点更靠近我方远古;1500 reach / 窗口 / 0.5 血量门一位没动)。本波要买的是【修好之后】的同一组读数 —— 不是重复买执行证据,是买连接率。**本条挂在总监批准 pullcamp 重新入集上**(test_set.md 顶部 17:3xZ 提议行);未批准前不要启动。种子沿用 888/895/896/906 以便与 12:12Z 那波同种子对读,但按 §AF.3 跨波残差不可比,连接率与开拉点距离是波内自比的读数,不受此限。",
+      "acceptance": "三条,全部用 #117 §复现里那两个现成工具跑,不需要新口径:(1) **连接率**(drag -> 够到一波兵)必须明显高于 20.3%,两个估计量(episode 级 / 逐采样)继续都报 —— 这是这个 mechanic 存在的全部理由;(2) **开拉点离自家泉水的中位数必须落回我方半场**(现 10,708u / 全图 18,806u;判据 中位 < 9,403u);(3) **poke_episodes 不得塌到 0**(那就变回 SILENT)—— 事先登记的预期是【下降但非零】:批测自己的 115 个 episode 里有 48 个开拉点已在 9,000u 以内,所以塌到 0 应当读成【修法过头或选点写错】,不是【场景稀缺】。**免费的正控,不必等新语料**:armed 侧两个深野营 (3994,-5137) 与 (-4007,4947) 的 poke 帧占比(12:12Z 那波是 51%)必须塌下去;它可以在本波自己的帧上直接对读。次判据(条件 b,粗粒度,不做显著性检验):gpm/deaths 无明显负面即可。**注意 #75 / §AM.3**:--rec-slots >= 8,否则这个域的帧证据结构上买不到。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

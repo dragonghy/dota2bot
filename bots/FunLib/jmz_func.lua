@@ -7574,11 +7574,37 @@ function J.ShouldPullNeutralCamp( bot )
 	-- pokes only when the neutrals are really there, otherwise it keeps walking.
 	-- Cost of an empty camp is bounded by the window: when it closes GetDesire
 	-- clears the plan and the bot returns to lane.
+	--
+	-- [GH #117, 20260822] SELECTION, not just reach: the camp must also be on OUR
+	-- side of the lane midpoint. "Nearest to the bot" is not a pull-camp selector,
+	-- and it is at odds with the equilibrium clause above: that clause only fires
+	-- when our wave is pushed OUT, which is precisely when the puller himself is
+	-- standing forward -- so the nearest own-team camp is systematically a DEEP
+	-- one. Measured on the 283-game armed wave (115 poke episodes): median pull
+	-- start 10,708u from our own fountain on an 18,806u map (57% across, i.e.
+	-- already past the middle), 67/115 beyond 9,000u, and the two deep-jungle
+	-- camps alone took 51% of all poke frames. The pull then cannot connect: the
+	-- neutrals that followed walked a median of 742u (max 1,170u) and stopped a
+	-- median 1,068u short of the nearest lane creep -- connect rate <= 20.3%.
+	-- A pull that never reaches the wave is pure loss (median 19pp of HP in the
+	-- 15s after aggro), so a deep camp is not a worse pull, it is a non-pull.
+	-- The textbook pull is the camp BEHIND our own wave, so the metric is the
+	-- camp's distance to OUR ANCIENT, not its distance to the bot. vMid and vOwn
+	-- are the two locations the equilibrium clause above already resolved, so
+	-- this costs no new engine call and adds no new failure mode.
+	-- Deliberately UNCHANGED here (one lever at a time, GH #117 director ruling):
+	-- the 1500 reach, the pull window, and the `>= 0.5` HP gate in
+	-- J.IsLanePullSafe. This narrows the domain -- the deep half of the episodes
+	-- is exactly what it is meant to drop -- but it cannot empty it: 48/115 of
+	-- the measured episodes started within 9,000u of home, i.e. on our own side.
 	local tCamps = GetNeutralSpawners()
 	if tCamps == nil then return nil end
+	local nMidToOwn = J.GetLocationToLocationDistance( vMid, vOwn )
 	local vBest, nBestDist = nil, 1500
 	for _, camp in pairs( tCamps ) do
-		if camp ~= nil and camp.location ~= nil and camp.team == GetTeam() then
+		if camp ~= nil and camp.location ~= nil and camp.team == GetTeam()
+			and J.GetLocationToLocationDistance( camp.location, vOwn ) < nMidToOwn
+		then
 			local d = GetUnitToLocationDistance( bot, camp.location )
 			if d < nBestDist then
 				nBestDist = d

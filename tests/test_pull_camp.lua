@@ -43,6 +43,8 @@ local tests = {}
 --   noCreeps    -> the camp is not visibly up (no neutral creeps nearby). Since
 --                  the GH #13 repair this is NOT a veto -- see the header.
 --   underThreat -> an enemy hero is right on us
+--   botX/campX  -> move the bot / the friendly camp along the lane axis, to
+--                  place the camp on either side of the midpoint (GH #117)
 local function scenario(opts)
     opts = opts or {}
     api.reset_modules()
@@ -50,7 +52,7 @@ local function scenario(opts)
     local neutral = api.MakeUnit({ IsAlive = true, GetTeam = 4 }) -- TEAM_NEUTRAL-ish
 
     local bot = api.MakeHero('npc_dota_hero_lion', {
-        GetLocation = api.Vector(0, 0, 0),
+        GetLocation = api.Vector(opts.botX or 0, 0, 0),
         GetAssignedLane = 1, -- non-nil lane id
         GetNearbyNeutralCreeps = function()
             if opts.noCreeps then return {} end
@@ -93,7 +95,8 @@ local function scenario(opts)
     -- 'noCamp' (empty list -> no camp to pull).
     GetNeutralSpawners = function() -- luacheck: ignore
         if opts.noCamp then return {} end
-        return { { team = GetTeam(), type = 'small', location = api.Vector(500, 0, 0) } }
+        return { { team = GetTeam(), type = 'small',
+                   location = api.Vector(opts.campX or 500, 0, 0) } }
     end
 
     return J, bot
@@ -110,6 +113,18 @@ tests['NO-FIRE: favorable equilibrium (lane not pushed) -> nil'] = function()
     local J, bot = scenario({ favorable = true })
     assert(J.ShouldPullNeutralCamp(bot) == nil,
         'a lane that is even/in our favor has nothing to reset -- never pull')
+end
+
+tests['NO-FIRE: a friendly camp PAST the lane midpoint -> nil (GH #117)'] = function()
+    -- Same scenario, camp moved from 500u out to 3500u out: still ours, still
+    -- inside the 1500 reach of a bot standing at 3000, but now deeper than the
+    -- midpoint (3000) and therefore not a pull camp -- neutrals dragged from
+    -- there cannot meet our wave. Real-frame coverage of this clause lives in
+    -- tests/test_pullcamp_ownside_camp.lua; this is the contract statement.
+    local J, bot = scenario({ campX = 3500, botX = 3000 })
+    assert(J.ShouldPullNeutralCamp(bot) == nil,
+        'a camp past the lane midpoint is pullable again -- that is the GH #117 '
+        .. 'defect, and it connects <= 20.3% of the time')
 end
 
 tests['NO-FIRE: no friendly camp in the spawner list -> nil'] = function()
