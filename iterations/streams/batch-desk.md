@@ -2256,6 +2256,57 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   跨组:在既有 **GH #45** 下追评(**不新开**)。`[batch] #70`、`[harness] #98`/`#75`/`#33`、
   `[bug] #96` 仍开着,不重复开。
   详见 `iterations/reports/batch-desk/20260822T141200Z.md`。
+- 2026-08-22T16:06Z:**纯运维轮,零支出,未启动任何批测**。MTD **$18.741**(免费
+  `budgets describe-budgets`,forecast $23.139,limit $100;读数 ≪ `COST_CONFIRM_AT=$35`
+  ⇒ **未花 $0.01 调 CE**),$45 围栏 / $90 刹车 / $100 owner 线全部未触及。开工 0 台在跑。
+  开工自检 `routine_selfcheck.sh` worst exit 3:UNLANDED 2 条(`c6590e8` hero / `4e8972f`
+  strategy)+ cadence GAP 1 条(strategy 11:26Z→15:22Z 3.9h),**均不属批测台**,只转述不接管;
+  诚实读法:`4e8972f` 与已落地的 `a64def0`(同为 owner-P2 `fieldbuy`)高度同型,很可能就是
+  工具 LIMITS 里说的「已改头换面落地的同一份工作」,判决归总监。
+  **收割:无新数据** —— `validation/` 无 14:12Z 之后的新对象,`soak/` 前缀 **156** 与上轮
+  逐位一致;`queue.json` 的 `strategy-1`=done,`hero-1` 自述 NO NEW WAVE NEEDED(下一棒在
+  录像组/英雄组写 `wk_q_aim_domain.py`),**无需开波**。
+  **⭐ 本轮唯一实质产出:把 14:12Z 自己记下的「307 `.dem` vs 308 `analysis.json`」追到底**
+  (全免费只读)。缺口唯一 = `_121219` 的 `20260822_123837_slot3`。**它不是归属失败**:
+  `.demclaim.json` 在 S3 上且成功(`method=logname`,`by_logname==by_hostname`,
+  `hostname_hits=1`,13 个候选选对),不是 `#75` 多录制者歧义,全桶 grep 该 tag 只有这个 run
+  的三个 soak 对象、无跨 run 撞名。**真因 = 该 run 最后一局的 `.dem` 上传被 run 结束截断**,
+  两条独立证据:① 它按 game tag 和按上传时间**都是该 run 末位**(`.log.gz` 12:44:12 /
+  `.analysis.json` 12:44:13 / `.demclaim.json` 12:44:14,而 `dem21/` 末次上传停在 12:44:09 的
+  上一局),此后该 run 再无对象;② **`soak_loop.sh:154` 先传 438B 的 claim、`:160` 才传 ~10MB
+  的 `.dem`**,重的排最后,run 一结束被切的必然是它。范围 308 局丢 1(0.32%),另外三个 run
+  的末局 `.dem` 都完整 ⇒ **竞态不是结构性缺陷,但每个 run 有一次机会(上限 ~4 局/波 ≈1.3%)**;
+  **不影响 14:12Z 任何读数**(经济读数走 `analysis.json`,308 全在)。
+  **⭐ 由此立一条免费纪律:`.demclaim.json` 才是 `.dem` 的正确分母**。三元组
+  `analysis(打了多少局) / demclaim(认领成功多少局) / .dem(真传上来多少局)`:
+  `demclaim < analysis` = **归属侧问题**(`#75` 域,要查、影响帧证据可信度);
+  `.dem < demclaim` = **上传侧截断**(只少几局帧,读数不受影响)。以前只拿 `.dem` 对
+  `analysis` 作差**分不出这两者**,而处置完全不同。本波实测 **308 / 308 / 307**
+  ⇒ **归属侧 100% 干净,损失全在上传侧** —— 录像组读那 307 个 `.dem` 可以放心,
+  **没有一局是「认错了人」**。**今后每轮收割的固定栏位按这个三元组写。**
+  **启动决策:不启动。** 4a 无需要开波的 pending 请求;4b 三条件 **(i) 不满足** ——
+  上一次例行波次 12:12Z,现 16:06Z,间隔 **3h56min**,差 6h 门槛 **2h04min**,**小时级差额**,
+  按 16:10Z / 08:08Z 先例即不启动(**不是 06:07Z 那种「差 2 分钟按立法目的照常启动」**);
+  (ii)(iii) 满足。**owner 优先项核对**:P1 第 3 棒 14:12Z 已交付、球在录像组;P2 球在
+  协同组/总监 —— `stayfield2`(11:26Z)与 `fieldbuy`(15:22Z)**均尚未获总监批准入集**
+  (`test_set.md` 首行 eligible 仍 23 id,`fieldbuy` 标为「待总监批准」),**本轮开波也 arm
+  不了它们**,故不启动对 P2 无代价。**下一波例行最早 18:12Z**,预置:§AN.0 的 **21 id**
+  (总监若批了 `fieldbuy`/`stayfield2` 则按新串走,**不自行改被测集合**)、**`--rec-slots 8`**
+  (§AL 裁定;12:12Z 那波 16 槽验收 `rec_slot_cost.py` **exit 2 = 拒答不是通过**;
+  **别把「退回 8」读成「16 被证明贵」**)、4 台 × 1 种子 on-demand、16 槽、2h 看门狗、
+  `--games 22`;核树先 `git fetch --depth 1 origin <全40位SHA>` 再 `git log <SHA>..HEAD --
+  bots/ game/`(**exit 128 = 不可比,不是无漂移**),四次调用跨整秒 + `soak-run` 标签核对
+  两两不同。**局数**:上一波(12:12Z)**284 有效 + 24 暖场 = 308**,逐 run analysis
+  75/76/80/77,**新增精确化 `.demclaim` 308 / `.dem` 307**;本轮无在跑波次。
+  **泄漏检查(四层 + spot 请求,全免费只读)**:开工 实例 **0** / 游离卷 0 / 快照 1
+  (`snap-0ad026b386c804288`,唯一常设成本)/ EIP 0 / open-active spot 0;收尾逐层复核
+  **全部同上,无泄漏**,收尾走 `--leak-only`。**固定栏位**:`soak/` 156、`dem21/` 462、
+  `unattributed/` **0**、off-roster **0**、远端 main tip `9506b29`(以上三个计数与 14:12Z
+  逐位一致,本轮无新 run)。**验证**:本会话未改 Lua(改动仅 `iterations/` 下报告/章程),
+  容器无 `luacheck`/`lua5.1`,铁律 6 无适用对象;**本轮无估算项**(未启动、无费用预估)。
+  跨组:在既有 **GH #45** 下追评(**不新开**)。`[batch] #70`、`[harness] #98`/`#95`/`#75`/`#33`、
+  `[bug] #96` 仍开着,不重复开。
+  详见 `iterations/reports/batch-desk/20260822T160600Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
