@@ -2437,6 +2437,67 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   跨组:在既有 **GH #45** 下追评(**不新开**)。`[batch] #70`、`[harness] #98`/`#95`/`#75`/`#33`、
   `[bug] #96` 仍开着,不重复开。
   详见 `iterations/reports/batch-desk/20260822T200913Z.md`。
+- 2026-08-22T22:06Z:**纯核对轮,零支出,未启动任何批测,也无新数据可收。**
+  MTD **$23.578**(免费 `budgets`,forecast 23.139,limit $100;比 20:09Z 的 $18.741
+  **+$4.837 = 18:11Z 那四台 on-demand 的入账** —— 20:09Z 预判的「计费滞后不是泄漏」本轮兑现;
+  ≪ `COST_CONFIRM_AT=$35` ⇒ **未花 $0.01 调 CE**),$45 围栏 / $90 刹车 / $100 owner 线全未触及。
+  开工自检 worst exit 3:UNLANDED **2 条**(`483b818` hero Lion t10/t15、`4e8972f` 那条
+  自带 `discarded/` 的 fieldbuy 老熟人),**都不属批测台,只转述不接管**;cadence clean,
+  trunk python 11/0。**收割:无在跑波次,`soak/` 仍 160 个 run(与 20:09Z 逐位一致)、
+  `dem21/` 12、`unattributed/` 0** ⇒ 18:11Z 那波 20:09Z 已全量收完,本轮没有可收的东西,不是漏收。
+  **启动决策:不启动。** 4a 队列 5 条**没有一条需要为它开波**(`strategy-2` 仍是
+  `approved-as-rider`,总监 §AP.1 驳回其专波;三条 hero 自述 NO NEW WAVE NEEDED);
+  4b **只卡 (i)** —— 上一波 18:11:22Z,现 22:06:32Z,间隔 **3h55min**,差 6h 门槛 **~2h05min**,
+  **小时级差额**,按 20:09Z/16:10Z/08:08Z/16:06Z 先例不启动;**(ii) 满足且这次是真读数** ——
+  两步法核树(`git fetch --depth 1 origin 05b5e424…` **exit 0** → `git log 05b5e42..origin/main
+  -- bots/ game/` **exit 0**)读出 **5 个漂移 commit**(`270bbea`/`01ab933` pullcamp 选点修法/
+  `0c95526`/`b50529d` fieldcreep/`a1dedc0`),**不是那个会被误读成「无漂移」的 exit 128 空输出**;
+  (iii) 满足。**owner 优先项**:P1/P2 球都在协同组,本轮不开波对两项零代价(P2 的 (a) 语料
+  = 18:11Z 那波 156 个 `.dem`,球在录像组;P1 的连接率语料由 00:11Z 那一波买)。
+  **00:11Z 启动前置条件已逐条核干净**:远端 main tip `4767f69`;§AP.0 的 **23 id 串**与
+  `test_set.md:4826` **逐字一致**;`pullcamp` 修法 `01ab933` 在 main。
+  **其中一格值得单记**:`b50529d` 的 `fieldcreep` 改的是 **`J.IsFieldRegenSituation`,一个被
+  `stayfield`/`stayfield2`/`fieldbuy` 共用的谓词** —— 若无条件生效,这三个 id 的域读数就与
+  18:11Z 那波不可对读;实核 `jmz_func.lua:4843` 的 `if J.IsSoakCandidate('fieldcreep')`
+  ⇒ **全程 gated,不 arm 就逐字相同**,干扰排除。(协同组提的 23→24 入集待总监批,
+  批了按新 §AQ.0 串走,**不自行改被测集合**。)
+  **⭐ 本轮的真发现:预置的 `--rec-slots 16` 升级在验收侧结构性不可能 —— 这推翻本台自己
+  20:09Z 写下的预置。** 三条独立证据(源码行号级):① `rec_slot_cost.py:218-220`
+  `if not ctrl_slots: die('every slot recorded: no control leg exists in this corpus')`,
+  16-of-16 下 `ctrl_slots == []` **按构造成立 ⇒ exit 2**,且工具 header 把它列为五条
+  **永久 REFUSALS** 之一;② **这条 die 在 `--baseline` 那一段之前** ⇒ 20:09Z 写的
+  「把上一波并进 `--baseline`」**根本到不了比较那一步**(拒答针对的是新语料没有对照腿,
+  换任何 baseline 都救不了);③ 就算绕过 ①,`box = [… if s not in rec_set]` 在 16 槽下必空
+  ⇒ `die('no control slot overlaps the baseline')`,**两条独立拒答**。
+  **⇒ 12:12Z 那次 16 槽的 exit 2 现在有解释了,而且会原样复发** —— 当时读成「语料答不了」,
+  实际是**这个配置永远答不了**(「16 槽全录」与「验收需要同波对照腿」互斥);照原计划上 16
+  = **再花一波钱再拿一次拒答**。**顺带一处口径更正**:「工具收多个 run 目录」对 `--baseline`
+  **不成立**(它收一个 JSON profile 路径;收 run 目录的是位置参数 `runs` 和 `--emit-baseline`),
+  且 `--emit-baseline` 从 8 槽波产出的 JSON 里 **slot 1-8 本身就是录制槽**,不是干净的
+  REC_SLOTS=1 剖面。**决定归总监**(阶梯是他的裁定):(A) **停在 8 = 本台保守默认,
+  00:11Z 就按这个走,除非另有裁定**(波内自证,帧通道 8/16,代价是比 16 少一半 `.dem`);
+  (B) 上 16 放弃验收(护栏关掉,而它防的正是「整台机器变慢被误算成录像的代价」);
+  (C) 走 **12**(slot 13-16 留对照腿 ⇒ **验收仍成立**,帧通道 12/16 比 8 多 50%,零额外 EC2 支出;
+  `--min-games` 默认 20/侧,上一波 294/16 ≈ 18.4 局/槽 ⇒ 4 个对照槽约 74 局够用)——
+  **诚实边界**:对照槽只剩 13-16,趋势线拟合跨度从 8 格压到 4 格,recorder 1-12 全在区间**外**
+  (外推非内插);这个弱点 8/8 那次已存在并通过,12 只是加重,**加重多少本台没量,不替总监拍板**。
+  **局数**:上一波(18:11Z)**270 有效 + 24 暖场 = 294**,逐 run 73/79/72/70,
+  三元组 `analysis 294 / 录制局 157 / demclaim 157 / .dem 156`;本轮无在跑波次。
+  **泄漏检查(四层 + spot 请求,全免费只读)**:开工 实例 **0** / 游离卷 0 / 快照 1
+  (`snap-0ad026b386c804288`,唯一常设成本)/ EIP 0 / open-active spot 0;收尾 `--leak-only`
+  逐层复核**全部同上,无泄漏**。**固定栏位**:`soak/` **160**(与 20:09Z 持平,本轮无新 run)、
+  `dem21/` **12**、`unattributed/` **0**、`validation/` 最新条目仍是 2026-07-23(标准路径走
+  `recover_verdict.py`,陈旧是**预期**)、远端 main tip 开工 `4767f69`。
+  **验证**:本会话未改 Lua(改动仅 `iterations/` 下报告/章程),容器无 `luacheck`/`lua5.1`,
+  铁律 6 无适用对象;**本轮无估算项**,§6 三条全是源码行号级读数。
+  跨组:在 **GH #75**(拥有 rec-slots / 帧通道话题的 issue)下追评一条,**不新开**;
+  `[batch] #70`、`[harness] #98`/`#95`/`#33`、`[bug] #96`、`[strategy] #117`/`#116`/`#119` 仍开着。
+  **下一波最早 2026-08-23T00:11:22Z**,预置:§AP.0 的 **23 id**、种子 888/895/896/906、
+  4 台 × 1 种子 on-demand、16 槽、2h 看门狗、`--games 22` 不再上调、**`--rec-slots 8`**
+  (§6 的保守默认,除非总监改阶梯)。**必查项 8 条**详见报告 §11,其中方向有变的两条重申:
+  ③ **`pullcamp` 这次必须出现 ≥1 次**(上一波是必须 0 次);⑤ `--rec-slots < 16` 时
+  **三元组第一栏分母是「录制局数」不是 `analysis`**。
+  详见 `iterations/reports/batch-desk/20260822T220632Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
@@ -2480,6 +2541,20 @@ python3 tools/batch_test/soak/rec_slot_cost.py <本波 4 个 run 目录> \
 ```
 exit 0 = 通过(录制槽相对基线的净损失 —— **已扣除对照槽自身的 box factor** ——
 都在 5% 以内)⇒ 下一波上 `--rec-slots 16`;exit 1 = 有录制槽超差 ⇒ **退回 1**
+
+> **⚠️ 2026-08-22T22:06Z 批测台更正:上面那句「⇒ 下一波上 `--rec-slots 16`」这一格
+> 走不通,顶格没有验收者,而且是设计不是语料问题。** `rec_slot_cost.py:218-220`
+> 的 `if not ctrl_slots: die('every slot recorded: no control leg exists in this
+> corpus')` 在 16-of-16 下**按构造触发 ⇒ exit 2**(工具 header 把它列为五条**永久
+> REFUSALS** 之一);这条 die **在 `--baseline` 那一段之前**,所以「把上一波并进
+> `--baseline`」到不了比较那一步;即便绕过,`box = [… if s not in rec_set]` 在 16 槽下
+> 必空,又是一条独立拒答。**12:12Z 那次 16 槽的 exit 2 由此得解,且会原样复发。**
+> 另:`--baseline` 收的是**一个 JSON profile 路径**,不是多个 run 目录(收 run 目录的是
+> 位置参数 `runs` 和 `--emit-baseline`)。**决定归总监**,三条路 (A) 停在 8 /
+> (B) 上 16 弃验收 / (C) 走 12(留 slot 13-16 作对照腿,验收仍成立)见
+> `iterations/reports/batch-desk/20260822T220632Z.md` §6.1 与 **GH #75** 追评。
+> **在总监改阶梯之前,本台的保守默认是 (A) 停在 `--rec-slots 8`。**
+
 并把逐槽表贴进报告,由总监重裁。exit 2 = 语料答不了这个问题(工具拒答,
 不是通过)。基线剖面取自 06:10Z `roamreach` 波(305 局、16 槽、同机型、同种子);
 08:10Z 全集波收割后**应把它并进基线**(工具收多个 run 目录),那一波与
