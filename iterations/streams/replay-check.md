@@ -377,6 +377,26 @@
   (armed 一条没加,baseline 加 7 条);分层更极端:dire-armed 旧 5 局 **10:3**、
   新 3 局 **0:7**。`≥9s` 能读是因为它数的是**分布尾部的存在性**(armed 上界 8.0s 是硬截断),
   不是一个比例。**报阈值扫描时要写明哪一列承重、哪几列不可判。**
+- **[2026-08-22T10:55Z 新踩,两条]** **(甲) 「缺少某道具」这类*不存在*谓词,尸体帧会让它平凡为真。**
+  章程早已登记「死亡帧的 `items` 是空列表」,但那条是写给**集合差 = 新买**的;
+  **不存在**谓词(`FindItemSlot('item_flask') < 0`、「包里没有回复品」)方向相反:
+  空列表让**每一个尸体帧都进域**。`fieldregen` 域第一版就这样吞进 77 个尸体帧。
+  修法要**两道**:域要求库存非空 **且** 排除 DEATH 后 1.0s(#78 泄漏带 ≤0.30s,3 倍余量)——
+  只加后者不够,`hp_pct>0` 的泄漏帧 `items` 已经是空的了。
+  **凡把源码里的 `< 0` / `not Has...` 子句搬到离线,先问「尸体帧读出来是真还是假」。**
+  **(乙) `PURCHASE` 事件的 `value` 不是可解码的道具 id,别拿它做归因。**
+  实测同一波里 **26 与 23 都后接过 flask 到货**(`082001` WK v=26、`083526` WK v=23),
+  全波 top values 是 22/27/20/24/26 —— 看不出稳定映射。
+  **承重的归因是「买单时刻与域进入时刻锁死(≤1.5s)」,不是 value。**
+  免费副产品:`ITEM` 事件的 `inflictor` **是**全名(`item_flask`/`item_magic_wand`),
+  可直接当**道具使用**的判据;`MODIFIER_ADD modifier_flask_healing` 是它的正交佐证。
+- **[2026-08-22T10:55Z] 归因干净不干净,要去源码里数「还有几条路径能造出这个签名」。**
+  `fieldregen` 的基线腿 **0/10** 之所以是**指纹**而不是小样本,是因为
+  `grep item_flask bots/` 逐个读过:其余全部买点都在 `if J.IsInLaningPhase() then`
+  块内(`item_purchase_generic.lua:794-880`),两个 post-300s 块只买真假眼,
+  `mode_secret_shop_generic.lua:122` 那个在**卖出**清单里 ⇒ 对线期后整棵出厂树**零**第二条路径。
+  反例在同一份报告里:`wandbleed` 的基线本底 **3.2% 不为零**(`用途3` 无敌人距离要求),
+  同样的统计强度只能定到 **WORKING(倾向)**。**先数路径,再定级。**
 - 窗口统计必须过滤暂停段(detect.py 的 _paused_spans)。
 - dumper 是 1Hz 快照,施法瞬间的位置会滞后一拍;深度符号约定见
   `.claude/agents/replay-analyst.md`(完整操作手册,先读它)。
@@ -2283,3 +2303,74 @@
     (4) 另三个消费方的 idx 锁 delta(**连续第三轮顺延**);
     (5) `axe_blink_domain.py` 等 `axebuyblink` armed 的波次(0810xx **也没有它**)。
   - 完整报告:`iterations/reports/replay-check/20260822T085035Z.md`
+- **2026-08-22T10:55Z(第四十二次触发)**:执行上一轮登记的**下一轮优先 (1)** =
+  批测台 08:10Z 启动、10:10Z 收割的 **18-id 全集波次**(`spot_20260822_0810xx_1_12ef3deb…`,
+  295 有效局,`--rec-slots 1` ⇒ 帧通道 20 `.dem`)。**宽扫 16/16 局;深查 6 局**。
+  `sweep_run.sh` 严格串行(#102),按 run 分目录,`-interval` 默认 **1.0s**;
+  #102 哨兵 4/4;16/16 局 stamp 逐字 = 那 18 id 串;侧别配平完美
+  (每种子 2 局 radiant-armed + 2 局 dire-armed)。零 EC2 支出,未改 bot Lua,未动 gate。
+  **命中 owner 优先项 P2**(完成定义第 2 条:fieldregen/wandbleed 同一波买 (a) 证据)——
+  这两个 id 此前**从未有过任何 (a) 读数**(`detect.py` 15 个检测器里没有任何一个带
+  道具购买/道具使用谓词),本轮补上。
+  - ⭐ **`fieldregen`: WORKING(帧证据闭合,归因干净)**。逐帧:`20260822_082001_slot1`
+    skeleton_king,t=598.5 被 `zuus_thundergods_wrath`(217)从 0.403 打到 0.220、
+    离家 7414u、包里零回复品 → **t=600.0/601.0 两次 PURCHASE**(对线期恰在 t=600 结束,
+    `nw 4658<8000` 走软延长)→ t=600.5-608.5 **持续远离泉水**(7825u→**10042u**)→
+    **t=609.2 `ITEM item_flask` + `modifier_flask_healing` + HEAL 92**(t=609.5 快照里
+    flask 现身,距买单 ~9s 信使)→ t=610.5-613.5 站在离家 **10551u** 处边回血边打小兵。
+    **owner P2 要的整条链路一帧不缺,全程没回家。**
+    聚合(16 局):**armed 7 域内 episode / 5 次到货 vs baseline 10 / **0**;
+    **供给比 0.70**(armed 域内**更少**,不是被供给放大);全部 acquisitions **5:0 p=0.0034**;
+    收紧到「域成立后 ≤1.5s 内有本人 PURCHASE」的**可归因**口径 **4:0 p=0.0147**
+    (第 5 例 `082001` PA 窗口内无 PURCHASE,**如实剔除**)。
+  - ⭐ **基线腿的 0/10 是结构性的,不是样本**:`grep item_flask bots/` 逐个读过 ——
+    `item_purchase_generic.lua` 其余全部 flask 买点都在 `if J.IsInLaningPhase() then`
+    块内(794-880),883/897 两个 post-300s 块**只买真假眼**,
+    `mode_secret_shop_generic.lua:122` 的 `item_flask` 在 **`HaveItemToSell()` 卖出清单**里。
+    ⇒ **对线期之后,整棵出厂树没有第二条买大药的路径**(#37丙 要求的出厂本底 = **0.00**)。
+  - ⭐ **对照帧同时否掉「没钱」和「没信使」**:`20260822_082024_slot1` ogre_magi(baseline 腿)
+    连续 **23 秒** hp 0.313→0.504、离家 7494-9076u、敌人 3400-7400u(安全),
+    而 **t=615.4 一次到货 4 件**(shadow_amulet/shawl/smoke_of_deceit/**clarity**)
+    ⇒ 有钱、信使在跑、买单机构正常 —— **就是没有一件治疗品**。基线腿的 0/10 因此是
+    **决策缺口不是资源缺口**。
+  - **`wandbleed`: WORKING(倾向),证据未闭合**。自有领地 = 敌人 >1000u(出厂 `用途1`
+    已覆盖 1000u 内)。>1000u 列 armed 19/130 (14.6%) vs base 6/156 (3.8%),p=0.00123 ——
+    **但这列不可判**:1Hz × 300-400 u/s ⇒ 单帧 ±400u,`enemy_min` 读 1008u 的 episode
+    在真正的施法帧上可能在 1000u 内由出厂规则开火。**承重列是加 ±400u 余量的 >1400u**:
+    armed **8/85 (9.4%)** vs base **3/94 (3.2%)**,**p=0.0774 不显著**,供给比 0.90。
+    干净帧证据:`083727` slardar t=460.4-462.4 hp 0.320、最近敌人 **9434u**、
+    t=462.2 `ITEM item_magic_wand` —— 出厂三条 wand 规则(`用途1` 要 1000u 内、
+    `用途2` 要 `nEnemyCount>=1`、`用途3` 要 `charges>=19`+6 号槽)都解释不了这一帧。
+    **基线本底 3.2% 不为零 ⇒ 形状不是指纹**(与 fieldregen 相反)。
+  - **交付** `tools/batch_test/behavioral/fieldregen_supply.py`(只读离线):两个域逐字从源码
+    转写并**标出哪几个子句离线不可观测**(`IsThereHealingInStash`/`botGold>=110`/
+    `GetItemStockCount>1`/`nCharges>=5` ⇒ 我的域比引擎宽,效应**被稀释**,armed 数是**下界**);
+    **`J.IsInLaningPhase()` 精确重建**(`laning ⇔ t<480 或 (t<600 且 net_worth<8000)`,
+    `net_worth` 是真实快照字段 ⇒ 软延长**逐帧求值**,不拍平截断);idx 锁(最早出现时刻,
+    本波锁掉 **3092** 个副本快照);#78 守卫(尸体帧 `items` 为空会让「没有 flask/tango」
+    **平凡为真**,故要求库存非空 **且** 排除 DEATH 后 1.0s,剔除 77 帧);泉水质心正控
+    (16 局 `|radiant| 9410-9420`/`|dire| 9460-9466`/两心相距 **18873-18883u**);
+    #102 哨兵(「冒号后第一个整数」);`--wand-band` 参数化且**两列都打印**;
+    `--selfcheck` **PASS**;armed 串守卫(串不一致 / 目标 id 不在串里即 `exit`,
+    **拒绝给一个从没开过的 gate 打分**)。
+  - **未解释的一例(如实登记,不声称 censoring)**:armed 腿 `083022` drow_ranger
+    t=641.5-650.5 域内、t=645/650 两次 PURCHASE(v=160)但 flask 未到,t=651.5 起坐标冻结、
+    `items` 变空到局末,而**该英雄该区间无 DEATH 事件**。机制未确立。
+    另:`PURCHASE` 事件的 `value` **不是可解码的道具 id**(26 与 23 都后接过 flask 到货),
+    **承重的是买单与域进入的时间锁,不是 value**。
+  - 跨组:**GH #110 追评**(不新开)。同时**收窄上一轮登记的「`flask` 0/22 ⇒ owner 说的
+    买大药当前 buy list 下没有可用对象」** —— 那量的是**回家 TP 的 22 个 episode 的出厂行为**;
+    本轮显示 armed 的 `fieldregen` **确实把 flask 买进来并喝掉了**,
+    **补给侧不是空的,它只是被 gate 关着**。
+  - **接力棒(铁律 9 连带规则)**:协同组 09:33Z 落地的决策侧 `stayfield` 本波**未 armed**,
+    (a) 取证要等它进串 —— 已请总监把 `stayfield` 与 `fieldregen`/`wandbleed` **排同一波**,
+    本组下轮按同一工具核验。
+  - 已检查:该波 **16/16 有效局**(4 暖场已排除),`.dem` 侧**现已 100% 检查完毕**。
+  - **下一轮优先**:(1) **10:09Z 那波(19 id,`--rec-slots 8`)** —— 帧通道第一次从 1/16
+    提到 8/16,`.dem` 预期翻 8 倍,是补 `l5combo` 等长期缺 (a) 的 id 的最好机会
+    (注意它的 `.dem` 走 **`dem21/<run>/` 批量前缀**,`sweep_run.sh` 已自动回退);
+    (2) `stayfield` 的 (a);(3) `make_fixture.py` 钉 `062551 t=205.5 jakiro` 离线重放
+    `Think()`(#45,**连续第三轮顺延**);(4) `l5combo` 的 (a)(**连续第十七轮**,
+    请总监直接裁定降级);(5) 另三个消费方的 idx 锁 delta(**连续第四轮顺延**);
+    (6) `axe_blink_domain.py` 等 `axebuyblink` armed 的波次(0810xx/1009xx **都没有它**)。
+  - 完整报告:`iterations/reports/replay-check/20260822T105500Z.md`
