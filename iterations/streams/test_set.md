@@ -1,6 +1,25 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,stayfield,pullcamp
 
+**⚠️ 2026-08-22T15:2xZ 协同组入集提议(待总监批准):新 gated id **`fieldbuy`** —— owner 优先项 P2
+的**补给侧**(owner 原话「买大药」那一格)。**请与 `stayfield` / `stayfield2` 放进同一波**
+(「野区续航」族);分波 arm 会互相遮蔽,因为**它们是同一情境的两半**:
+`J.IsFieldRegenSituation`(无 gate)∧ 有回复品 = 决策侧两个 id 的域;∧ **没有** = `fieldbuy` 的域,
+`situation == has + dry` 已成断言。**没人管的是大的那一半**:100 fixture / **930 存活英雄帧**上
+situation **50** = 有 **22** + 没有 **28**;不 armed 时全语料触发 **0/930**。
+出厂采购树够不到那 28 帧且是结构性的:`fieldregen` 的 `not J.IsInLaningPhase()` 命中 **24**、
+出厂在线块的 `botLevel < 6` 命中 **22**、**两个洞同时命中 18**、`fieldregen` 的 0.45 上限之上 **13**。
+**本仓库第一次在真实帧上断言一次采购**:两枚钉帧驱动 `ItemPurchaseThink`,
+armed 有 `ActionImmediate_PurchaseItem('item_flask')`、不 armed 没有,**且不 armed 那次仍买了别的东西**
+(阴性对照有牙),并断言「gate 只改这一件事」(删掉 flask 后两条采购清单逐项相同)。
+`tests/test_replay_260822_fieldbuy_supply.lua`(21 例)+ `tests/_fieldbuy_supply_sweep.lua`,
+9 条变异(含一条声明为 null 的探针),luacheck 0 警告,无新 fixture、零 EC2。
+报告 `iterations/reports/strategy/20260822T152213Z.md`;`state.json:fieldbuy_20260822`。
+**⭐ 入集前请先跑一条命令**:`git log --all -- tests/test_replay_260822_fieldbuy_supply.lua`。
+理由见报告 §1:**13:50Z 那一棒(GH #110 / #114 正文点名的同名产物)在全 refs `--prune` fetch
+之后仍然一件都不在仓库里**,本轮是从零重做的。批测实例 clone `origin/main`,
+arm 一个 clone 里不存在的 id = 花一波钱买回一个必然的 SILENT 再记在这个 id 头上。**
+
 **⚠️ 2026-08-22T11:5xZ:见 §AN —— **`pullcamp` 批准重新入集**(22 → **23 eligible**;
 下一波串换成 **§AN.0 的 21 id**)。协同组 **07:30Z** 的申请(GH #109,**owner P1 第 2 棒**)
 **挂了四小时** —— 本日第三次同一形状的掉棒(三天 / 1.5 小时 / 4 小时)⇒

@@ -4750,7 +4750,15 @@ end
 -- ARMED TOGETHER -- owner priority P2 asks for both routes -- and kept apart
 -- only so a per-id A/B can still tell them apart afterwards. Nothing calls
 -- this function directly: an ungated caller would ship the behaviour.
-function J.ShouldRegenNotGoHome( bot )
+--
+-- Split in two on 2026-08-22 for the supply side ('fieldbuy'): this half is the
+-- SITUATION -- hurt, alone, unhit, off tower -- and says nothing about what the
+-- bot is carrying. J.ShouldRegenNotGoHome is this plus "and there is something
+-- to drink"; J.ShouldFieldBuyRegen is this plus "and there is NOT", i.e. the
+-- two consumers partition the same situation and cannot both fire on one frame.
+-- The split is behaviour-preserving for both existing wrappers by construction:
+-- the clause order below is unchanged and the heal test simply moved out.
+function J.IsFieldRegenSituation( bot )
 	if not J.IsModeTurbo() then return false end
 
 	local nHP = J.GetHP( bot )
@@ -4789,9 +4797,16 @@ function J.ShouldRegenNotGoHome( bot )
 	-- it is vacuously satisfied, not verified.
 	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
 
-	-- Staying has to have a point: no heal in the bag means standing still is
-	-- just idling at low HP (replay desk 2026-08-22: 0 of 22 real home-TPs
-	-- carried a salve, so the supply side is the other half of this fix).
+	return true
+end
+
+-- Staying has to have a point: no heal in the bag means standing still is just
+-- idling at low HP, so the two 'stayfield' wrappers below only ever hold a bot
+-- that can actually do something about its health. The frames where the
+-- situation holds and the bag is empty are the supply side's domain
+-- ('fieldbuy', J.ShouldFieldBuyRegen) -- the same situation, the other half.
+function J.ShouldRegenNotGoHome( bot )
+	if not J.IsFieldRegenSituation( bot ) then return false end
 	if not J.HasFieldRegenSource( bot ) then return false end
 
 	return true
@@ -4827,6 +4842,37 @@ end
 function J.ShouldRegenNotWalkHome( bot )
 	if not J.IsSoakCandidate( 'stayfield2' ) then return false end
 	return J.ShouldRegenNotGoHome( bot )
+end
+
+-- [fieldbuy / owner priority P2, 2026-08-22] The SUPPLY side of the same fix.
+--
+-- Owner's turbo rule is "don't go home to heal -- buy a salve and heal in the
+-- field". The two decision-side ids above can only act on a bot that already
+-- has something to drink: their last clause is J.HasFieldRegenSource. The
+-- frames where the situation holds and that clause is FALSE are the ones no id
+-- owns -- the bot is hurt, safe and empty-handed, and the shipped purchase tree
+-- does not reach it either:
+--   * the mid-game re-purchase (gated 'fieldregen', item_purchase_generic ~776)
+--     carries `not J.IsInLaningPhase()`, and turbo's laning floor is 8:00 of a
+--     ~20 minute game, plus an HP ceiling of 0.45 -- which is BELOW the band
+--     this family works in, so its top slice is unreachable there by design;
+--   * the shipped "Init Healing Items in Lane" block covers the other side of
+--     that floor but stops at `botLevel < 6`.
+-- So a level-7+ hero inside the laning phase, and a hero between 0.45 and 0.55
+-- outside it, fall through both.
+--
+-- Gated on soak candidate 'fieldbuy': inert in every shipped game until armed.
+-- Condition (c): a salve is 100 gold for 400 health over 13 seconds and the
+-- standard advice is explicit that unnecessary trips to the fountain are wasted
+-- time; the same advice notes it is CANCELLED by enemy hero damage, which is
+-- why the situation's empty-1600-ring and attributed-damage clauses are not
+-- merely conservative here -- they are the precondition for the salve working
+-- at all.
+function J.ShouldFieldBuyRegen( bot )
+	if not J.IsSoakCandidate( 'fieldbuy' ) then return false end
+	if not J.IsFieldRegenSituation( bot ) then return false end
+
+	return not J.HasFieldRegenSource( bot )
 end
 
 -- [obs 20260722] Laning trade-survival: retreat BEFORE the burst lands, not

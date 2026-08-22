@@ -354,14 +354,28 @@ tests['wiring: the guard is gated on turbo + stayfield'] = function()
     -- call site has its own thin gated wrapper. Both halves are pinned here:
     -- the core must stay turbo-only, and THIS half's wrapper must stay gated
     -- on 'stayfield' -- an ungated wrapper would ship the behaviour.
-    local core = src:match('function J%.ShouldRegenNotGoHome%(.-\nend')
-    assert(core, 'could not locate J.ShouldRegenNotGoHome')
-    assert(core:find('J%.IsModeTurbo%(%)'), 'turbo-only')
+    -- 2026-08-22T15:xxZ: split again when the SUPPLY half landed (soak id
+    -- 'fieldbuy'). The situation clauses -- turbo, the HP band, the three rings
+    -- -- moved into J.IsFieldRegenSituation, which the supply side shares;
+    -- J.ShouldRegenNotGoHome is now that plus "and there is a heal in the bag".
+    -- Both are pinned: the clauses where they now live, and the composition,
+    -- so neither half can lose a condition without this going red.
+    local sit = src:match('function J%.IsFieldRegenSituation%(.-\nend')
+    assert(sit, 'could not locate J.IsFieldRegenSituation')
+    assert(sit:find('J%.IsModeTurbo%(%)'), 'turbo-only')
     -- The radii are read off the source so this test cannot drift into
     -- restating numbers the helper no longer uses.
-    assert(core:find('1600', 1, true), 'the ring the guarded branch measures')
-    assert(core:find('3000', 1, true), 'the attribution ring')
-    assert(core:find('1200', 1, true), 'the enemy-tower ring')
+    assert(sit:find('1600', 1, true), 'the ring the guarded branch measures')
+    assert(sit:find('3000', 1, true), 'the attribution ring')
+    assert(sit:find('1200', 1, true), 'the enemy-tower ring')
+    assert(not sit:find('IsSoakCandidate', 1, true),
+        'the situation predicate must stay gate-free too')
+    local core = src:match('function J%.ShouldRegenNotGoHome%(.-\nend')
+    assert(core, 'could not locate J.ShouldRegenNotGoHome')
+    assert(core:find('J%.IsFieldRegenSituation%(', 1, false),
+        'the core must be the situation plus the heal test')
+    assert(core:find('J%.HasFieldRegenSource%(', 1, false),
+        'the heal test is what separates this half from the supply half')
     local body = src:match('function J%.ShouldRegenNotTpHome%(.-\nend')
     assert(body, 'could not locate J.ShouldRegenNotTpHome')
     assert(body:find("J%.IsSoakCandidate%( 'stayfield' %)"), "gated on 'stayfield'")

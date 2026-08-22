@@ -790,6 +790,30 @@ function ItemPurchaseThink()
 		bot:ActionImmediate_PurchaseItem('item_flask')
 	end
 
+	-- [fieldbuy, owner priority P2 supply side, 20260822] The block above only
+	-- reaches a hero who is already out of the laning phase and below 45% HP.
+	-- This one covers the hole its own clauses leave: hurt, SAFE (nobody inside
+	-- 1600, no attributed hero damage, no enemy tower inside 1200) and carrying
+	-- nothing drinkable -- which is exactly the situation the decision-side ids
+	-- 'stayfield'/'stayfield2' hold a bot in, minus the heal they require.
+	-- Gated turbo + 'fieldbuy' inside J.ShouldFieldBuyRegen; the shipped and
+	-- unarmed purchase order is byte-identical.
+	-- FindItemSlot, unlike the helper, also sees the backpack: a salve already
+	-- bought and stowed must not be bought again while the courier is in flight.
+	if J.ShouldFieldBuyRegen(bot)
+	and bot:IsAlive()
+	and bot:FindItemSlot('item_flask') < 0
+	and not IsThereHealingInStash(bot)
+	and Item.GetEmptyInventoryAmount(bot) >= 1
+	and botDistanceFromFountain > 2500
+	and botGold >= GetItemCost('item_flask')
+	and GetItemStockCount('item_flask') > 1
+	and not bot:HasModifier('modifier_flask_healing')
+	and not bot:HasModifier('modifier_fountain_aura_buff')
+	then
+		bot:ActionImmediate_PurchaseItem('item_flask')
+	end
+
 	-- Init Healing Items in Lane; works for now
 	if J.IsInLaningPhase()
 	then
