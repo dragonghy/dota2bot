@@ -309,10 +309,35 @@ tests['wiring: the guard is consumed in ConsiderE and stays gated'] = function()
         'ConsiderE must consume the guard')
     assert(src:find("J.IsSoakCandidate( 'liondrain' )", 1, true),
         'the helper must stay gated behind the liondrain candidate id')
-    local iEarlyOut = src:find('if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1', 1, true)
-    local iGuard    = src:find('if not X.lion_IsDrainSafeToStart( bot )', 1, true)
-    local iRefill   = src:find('--缺蓝的时候抽蓝', 1, true)
-    local iIllusion = src:find('--秒杀幻像', 1, true)
+    -- Landmarks are located by LINE, and the two code landmarks only count on a
+    -- line that is not itself a comment.  Found the hard way on 2026-08-22: the
+    -- t10 talent rationale block added at the top of hero_lion.lua quotes the
+    -- early-out verbatim, and a raw src:find() then reported the early-out as
+    -- sitting above the refill branch -- a red test with nothing wrong in the
+    -- shipped code.  Prose about a line must not be able to move that line.
+    local lineno, code_lineno = {}, {}
+    do
+        local n = 0
+        for line in (src .. '\n'):gmatch('([^\n]*)\n') do
+            n = n + 1
+            local is_comment = line:match('^%s*%-%-') ~= nil
+            local function note(where, needle)
+                if where[needle] == nil and line:find(needle, 1, true) then
+                    where[needle] = n
+                end
+            end
+            note(lineno, '--缺蓝的时候抽蓝')
+            note(lineno, '--秒杀幻像')
+            if not is_comment then
+                note(code_lineno, 'if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1')
+                note(code_lineno, 'if not X.lion_IsDrainSafeToStart( bot )')
+            end
+        end
+    end
+    local iEarlyOut = code_lineno['if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1']
+    local iGuard    = code_lineno['if not X.lion_IsDrainSafeToStart( bot )']
+    local iRefill   = lineno['--缺蓝的时候抽蓝']
+    local iIllusion = lineno['--秒杀幻像']
     assert(iEarlyOut and iGuard and iRefill and iIllusion, 'all four landmarks exist')
     assert(iRefill < iEarlyOut and iIllusion < iEarlyOut,
         'the refill and illusion branches sit above the shipped early-out')
