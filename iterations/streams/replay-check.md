@@ -2858,6 +2858,16 @@
     ——900s 超时被杀(exit 124),瓶颈是 `_itemdesire_sweep.lua` 子进程;本轮改为**直接跑该 sweep**
     取 manifest 并重新基线常数。新 Python 工具 `py_compile` 过、`--selfcheck` 10/10。
     **AWS**:EC2 **$0**,S3 只读,**未调用 Cost Explorer**。
+  - ⚠️ **本轮在验证上犯过一个错,写进章程别再犯**:第一次提交(`3143d5e`,**已推 main**)时
+    没亲眼看到那个测试变绿,理由是「10 个常数都来自同一份 exit 0 的 manifest,预期通过」——
+    **推断是错的**。改用仓库自己的运行器(`lua5.1 tests/run_tests.lua itemdesire_world`,24 tests)
+    跑出 **3 个真失败**:`c.alive_H 527→537`、遍历局部计数 `n 100→101`、
+    带 `buildings` 的 fixture 数 `nb 57→58`;连带同块 `rest5_H 198→200`、`sole_blocker_H 195→197`
+    ⇒ **一个 fixture 实际移动 9 个常数、跨 5 种断言写法**,而我只 grep 了 `c.<key> ==` 一种写法,
+    只找到 **6/9**。已修好并二次验证(`42ead03`)。
+    **两条纪律**:(1) **普查/基线类常数不能靠推断,必须跑运行器本身**;
+    (2) **临时 runner 的「exit 0 且无输出」不是通过**——那次正是它把 3 个红藏住了。
+    这也是 GH #124 的直接证据:值钱的不是「记得改常数」,是**把常数变成不变量或生成式基线**。
   - **下一轮优先**:(1) ⭐ 把 `hometp_invfull_lag.py` 跑满 12:12Z 那波另外三个 run,并推动
     `hometp_highhp.py:305` 改读 cast tick(在那之前 #120 的 76 行只能当上界用);
     (2) **GH #123 的 fixture**(`182012_slot1 t=366.4 spirit_breaker`);
