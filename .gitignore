@@ -79,3 +79,8 @@ bots/Customize/soak_side.lua
 # per-run analysis artifacts; the S3-cached binary is the shared copy)
 tools/batch_test/behavioral/.dumper_cache/
 tools/batch_test/behavioral/.sweep_out/
+# sweep_run.sh takes an out_dir argument, and rounds that sweep more than one
+# wave pass a per-wave dir instead of the default above -- typically at the repo
+# root (e.g. .sweep1811/, 1.3 GB of .dem + timelines for one wave). Those are
+# re-downloadable S3 artifacts, never repo content.
+/.sweep*/
