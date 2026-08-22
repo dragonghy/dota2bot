@@ -350,25 +350,37 @@ tests['wiring: the guard is gated on turbo + stayfield'] = function()
     f:close()
     -- 2026-08-22T1x:xxZ: the predicate was split when the WALK half of owner
     -- priority P2 landed (mode_retreat_generic, soak id 'stayfield2'). The
-    -- conditions now live in the ungated core J.ShouldRegenNotGoHome and each
-    -- call site has its own thin gated wrapper. Both halves are pinned here:
-    -- the core must stay turbo-only, and THIS half's wrapper must stay gated
-    -- on 'stayfield' -- an ungated wrapper would ship the behaviour.
-    local core = src:match('function J%.ShouldRegenNotGoHome%(.-\nend')
-    assert(core, 'could not locate J.ShouldRegenNotGoHome')
-    assert(core:find('J%.IsModeTurbo%(%)'), 'turbo-only')
+    -- conditions moved into the ungated core J.ShouldRegenNotGoHome and each
+    -- call site got its own thin gated wrapper.
+    -- 2026-08-22T14:0xZ: split once more when the SUPPLY half landed (soak id
+    -- 'fieldbuy'). The situation clauses now live one level further down, in
+    -- J.IsFieldRegenSituation, because the supply lever asks the same question
+    -- with the bag clause INVERTED. So the pin follows them: the situation
+    -- half must stay turbo-only and keep its three radii, and
+    -- ShouldRegenNotGoHome is now the situation plus the bag clause.
+    local sit = src:match('function J%.IsFieldRegenSituation%(.-\nend')
+    assert(sit, 'could not locate J.IsFieldRegenSituation')
+    assert(sit:find('J%.IsModeTurbo%(%)'), 'turbo-only')
     -- The radii are read off the source so this test cannot drift into
     -- restating numbers the helper no longer uses.
-    assert(core:find('1600', 1, true), 'the ring the guarded branch measures')
-    assert(core:find('3000', 1, true), 'the attribution ring')
-    assert(core:find('1200', 1, true), 'the enemy-tower ring')
+    assert(sit:find('1600', 1, true), 'the ring the guarded branch measures')
+    assert(sit:find('3000', 1, true), 'the attribution ring')
+    assert(sit:find('1200', 1, true), 'the enemy-tower ring')
+    local core = src:match('function J%.ShouldRegenNotGoHome%(.-\nend')
+    assert(core, 'could not locate J.ShouldRegenNotGoHome')
+    assert(core:find('J%.IsFieldRegenSituation%('), 'the core delegates the situation')
+    assert(core:find('J%.HasFieldRegenSource%('),
+        'and keeps the bag clause -- which is exactly what the supply lever inverts')
     local body = src:match('function J%.ShouldRegenNotTpHome%(.-\nend')
     assert(body, 'could not locate J.ShouldRegenNotTpHome')
     assert(body:find("J%.IsSoakCandidate%( 'stayfield' %)"), "gated on 'stayfield'")
     assert(body:find('J%.ShouldRegenNotGoHome%('), 'and it delegates to the core')
-    -- The core carries no gate of its own, so an ungated caller would ship it.
+    -- Neither of the two ungated layers may grow a gate of its own, and an
+    -- ungated CALLER of either would ship the behaviour.
     assert(not core:find('IsSoakCandidate', 1, true),
         'the core must stay gate-free; the gates belong on the wrappers')
+    assert(not sit:find('IsSoakCandidate', 1, true),
+        'the situation half must stay gate-free too')
     local _, nCallers = src:gsub('J%.ShouldRegenNotGoHome%(', '')
     assert(nCallers == 3, -- the definition + the two gated wrappers
         'J.ShouldRegenNotGoHome gained a caller outside the two wrappers; '

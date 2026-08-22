@@ -4750,7 +4750,29 @@ end
 -- ARMED TOGETHER -- owner priority P2 asks for both routes -- and kept apart
 -- only so a per-id A/B can still tell them apart afterwards. Nothing calls
 -- this function directly: an ungated caller would ship the behaviour.
+--
+-- Split in two on 2026-08-22: J.IsFieldRegenSituation below is everything
+-- except the bag clause, because the SUPPLY side ('fieldbuy') asks the same
+-- question with the bag answer inverted -- "safe to stand still and nothing to
+-- drink" is exactly when a salve should be bought. Keeping one predicate is
+-- what keeps the two bands from drifting apart: a supply rule written with its
+-- own thresholds would go stale the moment either of these lines moves.
 function J.ShouldRegenNotGoHome( bot )
+	if not J.IsFieldRegenSituation( bot ) then return false end
+
+	-- Staying has to have a point: no heal in the bag means standing still is
+	-- just idling at low HP. Measured on the 100-fixture corpus: of the 50
+	-- hero-frames that satisfy the situation above, only 22 carry something
+	-- drinkable -- the other 28 are the supply gap 'fieldbuy' addresses.
+	if not J.HasFieldRegenSource( bot ) then return false end
+
+	return true
+end
+
+-- [stayfield / fieldbuy] The situation half: hurt, alone, and not standing in
+-- tower range. Ungated on purpose (both wrappers below carry the gate); it
+-- decides nothing by itself.
+function J.IsFieldRegenSituation( bot )
 	if not J.IsModeTurbo() then return false end
 
 	local nHP = J.GetHP( bot )
@@ -4789,11 +4811,6 @@ function J.ShouldRegenNotGoHome( bot )
 	-- it is vacuously satisfied, not verified.
 	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
 
-	-- Staying has to have a point: no heal in the bag means standing still is
-	-- just idling at low HP (replay desk 2026-08-22: 0 of 22 real home-TPs
-	-- carried a salve, so the supply side is the other half of this fix).
-	if not J.HasFieldRegenSource( bot ) then return false end
-
 	return true
 end
 
@@ -4827,6 +4844,46 @@ end
 function J.ShouldRegenNotWalkHome( bot )
 	if not J.IsSoakCandidate( 'stayfield2' ) then return false end
 	return J.ShouldRegenNotGoHome( bot )
+end
+
+-- [fieldbuy / owner priority P2, 2026-08-22] The SUPPLY side of P2, and the
+-- half no id was managing. 'stayfield'/'stayfield2' can only keep a bot in the
+-- field when it already has something to drink; this one answers the frames
+-- where it does not.
+--
+-- Measured on the 100-fixture corpus (930 live hero-frames), not assumed:
+--   * 150 frames sit in the HP band the family reads;
+--   * 82 of those carry NOTHING drinkable in a usable slot;
+--   * 50 satisfy the whole situation predicate above -- 22 with a heal (the
+--     domain 'stayfield' can act on) and 28 WITHOUT (this lever's domain,
+--     larger than the one it complements);
+--   * 25 of those 28 are ones the purchase call site would actually act on:
+--     no flask/tango anywhere in the inventory, at least one free slot, and
+--     not already under a regen buff. (The domain is not the buyable set, and
+--     the difference is instructive: one of the three is mid-salve, which
+--     reads as "nothing in a usable slot" precisely because the salve has
+--     already been consumed.)
+-- The shipped supply paths do not reach them, for two structural reasons that
+-- are not thresholds to be nudged:
+--   * 'fieldregen' (item_purchase_generic, gated, already in the test set)
+--     carries `not J.IsInLaningPhase()`, and in Turbo that phase runs to at
+--     least 8:00 -- 18 of the 28 frames are inside the net-worth-independent
+--     floor, where it is silent by construction, not by threshold;
+--   * the shipped in-lane re-supply block stops at `botLevel < 6`, and 22 of
+--     the 28 are level 6 or higher. 12 frames are inside BOTH holes at once.
+--   * 'fieldregen' also stops at HP < 0.45, which excludes 13 of the 28. The
+--     owner's own pinned frame (Slardar, 46.0%) is on the wrong side of that
+--     ceiling by 1.0 percentage point.
+-- Deliberately NOT done here: widening 'fieldregen'. It is armed in the
+-- current test set, so moving it would silently change what a wave in flight
+-- is measuring. A new id is the only honest way to add a lever mid-flight.
+--
+-- Turbo-only, gated: inert in every shipped game until armed and promoted.
+function J.ShouldBuyFieldRegen( bot )
+	if not J.IsSoakCandidate( 'fieldbuy' ) then return false end
+	if not J.IsFieldRegenSituation( bot ) then return false end
+	-- Inverted on purpose: this is the frame the other two ids cannot use.
+	return not J.HasFieldRegenSource( bot )
 end
 
 -- [obs 20260722] Laning trade-survival: retreat BEFORE the burst lands, not

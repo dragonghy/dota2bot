@@ -1,6 +1,29 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,stayfield,pullcamp
 
+**⚠️ 2026-08-22T14:0xZ 协同组入集提议(待总监批准):新 gated id **`fieldbuy`** —— owner 优先项 P2
+的**补给侧**(owner 原话「买大药」)。**本提议不动 eligible 那一行**;请把它**和 `stayfield` /
+`stayfield2` 放进同一波**(「野区续航」族:`fieldregen` / `wandbleed` / `stayfield` /
+`stayfield2` / `fieldbuy`)。理由是这三个 id 在同一帧上互补,分波 arm 会互相遮蔽:
+决策侧那两个的最后一条子句就是「包里有回复品」,而本 id 的域**正是它为假的那些帧**。
+**域的大小是量出来的,不是推的**(100 fixture / 930 真实存活英雄帧,跑的是 shipped helper):
+150 帧在本族血量带内 → 其中 **82 帧包里没有任何能喝的东西**;整条 situation 谓词成立的 **50** 帧
+里,**22 帧有回复品(= `stayfield` 能动的域)、28 帧没有(= 本 id 的域)** ⇒
+**没人管的那一半反而是大的那一半**(`situation == 22 + 28` 已写成断言,两个 helper 从此不会悄悄漂开)。
+**现有采购路够不到它,而且是结构性的、不是阈值**:(1) `fieldregen` 带 `not J.IsInLaningPhase()`,
+Turbo 的对线期地板是 **8:00**(一局才 ~20 分钟)⇒ 28 帧里 **18** 帧在与净值无关的硬地板以下,
+它在那里**按构造静默**;(2) 出厂的对线补给块卡在 `botLevel < 6`,28 帧里 **22** 帧 ≥6 级;
+**12 帧同时落在两个洞里**。(3) 另有软的一条:`fieldregen` 还卡 HP<0.45,排掉 28 里的 **13** 帧 ——
+**owner 自己钉的 Slardar 帧(46.0%)就差这 1.0 个百分点**。
+**测的是最终动作**:`ItemPurchaseThink` 在真实帧上跑通,`ActionImmediate_PurchaseItem('item_flask')`
+**armed 有、不 armed 没有**,两枚钉帧各一次 —— 本仓库**第一次在真实帧上断言一次采购**
+(物品**使用**层是黑的,GH #100,但**采购**入口能跑)。
+**未动 `fieldregen` 一个字**(它已在集内,改它等于悄悄换掉在飞的波次在测的东西),
+并有一条 `[reverse]` 用例钉住它的两条子句还在。
+`tests/test_replay_260822_fieldbuy_supply.lua`(20 例,**9 条变异逐条点名**)+
+子进程普查 `tests/_fieldbuy_supply_sweep.lua`(四个常数全部从源码读,M13 规矩)。
+详见 `iterations/reports/strategy/20260822T140000Z.md`,`state.json:fieldbuy_20260822`。**
+
 **⚠️ 2026-08-22T11:5xZ:见 §AN —— **`pullcamp` 批准重新入集**(22 → **23 eligible**;
 下一波串换成 **§AN.0 的 21 id**)。协同组 **07:30Z** 的申请(GH #109,**owner P1 第 2 棒**)
 **挂了四小时** —— 本日第三次同一形状的掉棒(三天 / 1.5 小时 / 4 小时)⇒

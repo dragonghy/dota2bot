@@ -790,6 +790,34 @@ function ItemPurchaseThink()
 		bot:ActionImmediate_PurchaseItem('item_flask')
 	end
 
+	-- [fieldbuy, owner priority P2, 2026-08-22] The supply side of "do not walk
+	-- home to heal". The block above only fires AFTER the laning phase and only
+	-- below 45% HP; the in-lane block below it stops at level 6. Between them
+	-- sits a hero of level 6+ still inside Turbo's 8-minute laning floor, hurt,
+	-- alone, with nothing drinkable -- 12 such hero-frames in the 100-fixture
+	-- corpus, and no shipped or gated path buys anything for any of them.
+	-- The decision-side ids ('stayfield'/'stayfield2') cannot help there
+	-- either: their bag clause is exactly what is false on those frames.
+	--
+	-- Deliberately NOT carrying 'fieldregen''s botDistanceFromFountain > 2500:
+	-- that number is unobservable in every offline fixture (the mock's shop
+	-- location is the map origin, so it reads ~218 everywhere) and would be a
+	-- clause no test could ever exercise. modifier_fountain_aura_buff is the
+	-- honest reading of "already healing at the fountain" and is kept.
+	if J.ShouldBuyFieldRegen(bot)
+	and bot:IsAlive()
+	and bot:FindItemSlot('item_flask') < 0
+	and bot:FindItemSlot('item_tango') < 0
+	and not IsThereHealingInStash(bot)
+	and Item.GetEmptyInventoryAmount(bot) >= 1
+	and botGold >= GetItemCost('item_flask')
+	and GetItemStockCount('item_flask') > 1
+	and not bot:HasModifier('modifier_flask_healing')
+	and not bot:HasModifier('modifier_fountain_aura_buff')
+	then
+		bot:ActionImmediate_PurchaseItem('item_flask')
+	end
+
 	-- Init Healing Items in Lane; works for now
 	if J.IsInLaningPhase()
 	then
