@@ -156,6 +156,52 @@ eq('lanekill_commit.ALLY_HP_MIN mirrors ShouldSupportComboKill',
 eq('both lane-kill helpers use the SAME ally floor (the scanner assumes one)',
    L1_ALLY_HP, L5_ALLY_HP)
 
+# The field-regen family, pinned on the census's first real contact with
+# incoming code: `fieldbuy_domain` and `stayfield2_margin` both landed on main
+# today carrying a new module-level HP constant, and section 2b went red on
+# both.  Both cite a Lua site in a COMMENT and both citations are substantively
+# right -- and both line numbers are already off (781 vs the real 779, 4762 vs
+# the real 4767), the same drift that made test_set.md AJ.5's `jmz_func.lua:6932`
+# point into an unrelated helper.  Pinning them here is the fix: the extractor
+# finds the clause by shape, so the line number never has to be right again.
+GENERIC_LUA = os.path.join(ROOT, 'bots', 'item_purchase_generic.lua')
+NHP_LO_RE = r'nHP < (?P<n>[\d.]+)'
+NHP_HI_RE = r'nHP > (?P<n>[\d.]+)'
+
+# TWO DIFFERENT HELPERS WITH DIFFERENT UPPER BOUNDS -- checked, not assumed.
+# `stayfield2`'s whole point is a wider band than the shipped situation test, so
+# 0.55 and 0.75 disagreeing is the DESIGN, not staleness.  Pin both so that if
+# either moves, the one that moved is named.
+SITUATION_HP_LO = literal('J.IsFieldRegenSituation', NHP_LO_RE)
+SITUATION_HP_HI = literal('J.IsFieldRegenSituation', NHP_HI_RE)
+STAYREGEN_HP_HI = literal('J.ShouldStayAndRegen', NHP_HI_RE)
+# Disambiguated by the soak-candidate name, not by position: there are two
+# `J.GetHP(bot) <` comparisons in ItemPurchaseThink and picking "the first"
+# is the mistake `where=` exists to prevent.
+FIELDREGEN_BUY_HP = literal(
+    'ItemPurchaseThink',
+    r"IsSoakCandidate\('fieldregen'\)[\s\S]*?J\.GetHP\(bot\) < (?P<n>[\d.]+)",
+    path=GENERIC_LUA)
+
+import fieldbuy_domain as fbd                      # noqa: E402
+import stayfield2_margin as s2m                    # noqa: E402
+import stayfield_domain as sfd                     # noqa: E402
+
+eq('stayfield_domain.HP_LO mirrors J.IsFieldRegenSituation',
+   float(sfd.HP_LO), SITUATION_HP_LO)
+eq('stayfield_domain.HP_HI mirrors J.IsFieldRegenSituation',
+   float(sfd.HP_HI), SITUATION_HP_HI)
+eq('stayfield2_margin.SHIPPED_HP_HI mirrors J.ShouldStayAndRegen',
+   float(s2m.SHIPPED_HP_HI), STAYREGEN_HP_HI)
+eq('fieldbuy_domain.FIELDREGEN_HP mirrors the fieldregen purchase branch',
+   float(fbd.FIELDREGEN_HP), FIELDREGEN_BUY_HP)
+check('the two regen helpers really do carry different ceilings '
+      '(stayfield2 widens the band on purpose)',
+      SITUATION_HP_HI != STAYREGEN_HP_HI,
+      '(situation=%r stayregen=%r -- if these ever converge, one of the two '
+      'detectors is measuring the other helper)'
+      % (SITUATION_HP_HI, STAYREGEN_HP_HI))
+
 # ---------------------------------------------------------------- section 2b
 # THE HP-CONSTANT CENSUS (test_set.md AJ.5, director ruling 2026-08-22T21:0xZ).
 #
@@ -203,6 +249,8 @@ HP_CENSUS = {
     'stayfield_domain:BRANCH_HP':        ('MIRROR', 'ability_item_usage_generic.lua:5514'),
     'stayfield_domain:BRANCH_HPMP':      ('MIRROR', 'ability_item_usage_generic.lua:5514'),
     'fieldregen_supply:LOW_HP':          ('MIRROR', 'both ids share this literal'),
+    'fieldbuy_domain:FIELDREGEN_HP':     ('MIRROR', 'item_purchase_generic.lua fieldregen branch; pinned above'),
+    'stayfield2_margin:SHIPPED_HP_HI':   ('MIRROR', 'J.ShouldStayAndRegen; wider than the situation test BY DESIGN'),
     'hometp_highhp:HEAL_CORE_HP':        ('MIRROR', 'cores need HP < 0.75 (:1315)'),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
