@@ -447,9 +447,11 @@ def main():
     html = tpl.replace("/*__REPLAYSCOPE_INJECT__*/", inject)
     # Give each page a distinct browser/tab title (the <title> wins over the
     # publish-time title param), so multiple games are tellable apart.
-    short = gid.split()[0]
+    # Full game-id, not gid.split()[0]: a multi-word --game-id used to get cut
+    # at the first space ("s896 Lion/OD" -> "s896"), which defeats the purpose.
+    from html import escape as _esc
     html = html.replace("<title>ReplayScope — bot vision review</title>",
-                        "<title>ReplayScope — %s</title>" % short, 1)
+                        "<title>ReplayScope — %s</title>" % _esc(gid), 1)
 
     out = args.out or (os.path.splitext(args.timeline)[0] + ".html")
     open(out, "w").write(html)
