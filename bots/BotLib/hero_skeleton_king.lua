@@ -34,11 +34,18 @@ local tTalentTreeList = {
 --   1 = skeleton_king_hellfire_blast  Wraithfire Blast -- the only lockdown.
 --                                     525 cast range, 95/110/125/140 mana,
 --                                     14/12/10/8s cd, 80/100/120/140 impact
---                                     damage + 20/40/60/80 over a 2s dot,
---                                     1.0/1.2/1.4/1.6s stun.
+--                                     damage plus a 2s dot worth 20/40/60/80 PER
+--                                     SECOND (the feed's heading on
+--                                     blast_dot_damage is "DAMAGE PER SECOND", so
+--                                     the dot totals 40/80/120/160 and the whole
+--                                     cast is worth 120/180/240/300), -20% move
+--                                     slow for those 2s, 1.0/1.2/1.4/1.6s stun.
 --   2 = skeleton_king_bone_guard      Bone Guard -- an ACTIVE, no-target skeleton
 --                                     release: 70/80/90/100 mana, flat 42s cd,
---                                     2/4/6/8 max charges.  It is NOT lifesteal.
+--                                     2/4/6/8 max charges, 34/39/43/49 skeleton
+--                                     damage, skeletons last 40s and carry +25
+--                                     bonus damage to heroes.  It is NOT
+--                                     lifesteal.
 --   3 = skeleton_king_mortal_strike   Mortal Strike -- passive crit / skeletons.
 --   6 = skeleton_king_reincarnation   220/110/0 mana, 180/150/120s cd.
 --
@@ -65,7 +72,36 @@ local tAllAbilityBuildList = {
 -- skeleton release, and the lifesteal is innate and free.  So what this build
 -- actually trades away is Bone Guard uptime, not sustain -- both build rows spend
 -- 4 points there, this one just spends them later (1/9/10/12 vs 1/3/5/7).
--- The gate's condition (c) has to be re-argued on that basis before it is armed.
+--
+-- CONDITION (c), RE-ARGUED 2026-08-22 on that corrected basis (GH #17 / #104).
+-- A Bone Guard point buys two things: max_skeleton_charges 2/4/6/8 and skeleton
+-- damage 34/39/43/49.  The cap is the load-bearing half, and under THIS file's own
+-- release rule a higher cap is a COST, not a benefit.  X.ConsiderW fires on
+--
+--     branch 1   nStack / maxStack >= 0.6   ->  1.2 / 2.4 / 3.6 / 4.8 charges
+--     branch 2   nStack == maxStack         ->    2 /   4 /   6 /   8 charges
+--
+-- and the only term that can bypass either test is `talent6:IsTrained()`, which
+-- section 2 of tests/test_wk_fact_anchor.lua shows is a level-20 test and which
+-- the GH #84 census read on 0 of 210 turbo hero-slots.  So in turbo every early
+-- point in Bone Guard raises, monotonically and on both branches, the bank WK has
+-- to accumulate before he will release any skeletons at all.  The default row has
+-- all four points down by level 7: from level 7 on it asks an 8-charge bank of the
+-- hero the batch reads at 15 last hits and 0.6 kills a game.  This row leaves him
+-- at cap 2 for the whole laning phase, which is a bank he can actually reach, and
+-- spends the freed points on the only lockdown he has -- 2nd Wraithfire Blast
+-- point at level 5 instead of 12 (stun 1.0 -> 1.2s, cooldown 14 -> 12s) -- and on
+-- maxing Mortal Strike at 8 instead of 10.
+--
+-- Two bounds this argument does NOT clear, recorded so nobody quotes it as more:
+--   * it fixes the SIGN, not the size.  How large a bank WK actually holds between
+--     releases is a corpus question and it cannot be asked offline -- the dumper
+--     does not record modifier stack counts (same gap family as GH #27).
+--   * a higher cap also raises the PAYLOAD per release (8 skeletons at 49 damage
+--     against 2 at 34).  The claim here is only that the frequency loss is
+--     automatic under the shipped rule while the payload gain is conditional on a
+--     charge supply nobody has measured.
+-- tests/test_wk_bone_guard_thresholds.lua drives the sign half on shipped code.
 local tKillBuildList = {
 							{2,1,3,3,1,6,3,3,2,2,6,2,1,1,6},--pos1,3, earlier 2nd stun
 }
@@ -283,13 +319,22 @@ function X.ConsiderQ()
 	local nCastPoint = abilityQ:GetCastPoint()
 	local nManaCost = abilityQ:GetManaCost()
 	local nSkillLV = abilityQ:GetLevel()
-	-- 100/140/180/220.  Anchored 2026-08-22: that is Wraithfire Blast's impact
-	-- damage (80/100/120/140) PLUS the whole 2s damage-over-time (20/40/60/80), so
-	-- it is what the target loses if it stands in the dot to the end -- not what
-	-- lands on cast.  It feeds a kill check below at nDamage * 1.68, i.e. up to 370
-	-- claimed magical damage against 140 of impact.  Registered as a lever, NOT
-	-- changed here: narrowing it is a behaviour change and needs its own gate and
-	-- its own real frame.
+	-- 100/140/180/220.  Re-anchored 2026-08-22 (SECOND pass -- the first pass got
+	-- this wrong and the correction matters to the lever below).  blast_dot_damage
+	-- is 20/40/60/80 but the datafeed heading on that field is "DAMAGE PER SECOND"
+	-- and blast_dot_duration is 2, so the dot is worth 40/80/120/160, not
+	-- 20/40/60/80.  That leaves nDamage as NEITHER honest number: the impact alone
+	-- is 80/100/120/140 and the impact-plus-whole-dot is 120/180/240/300, and
+	-- 100/140/180/220 sits between them.
+	--
+	-- It feeds a kill check below at nDamage * 1.68 = 168/235/302/370 CLAIMED
+	-- magical damage.  At rank 4 that is 2.64x what lands on cast (140) and still
+	-- 1.23x what the target loses if it stands in the dot to the very end (300).
+	-- Registered as a lever, NOT changed here: narrowing it is a behaviour change
+	-- and needs its own gate and its own real frame.  Whoever takes it has to pick
+	-- the honest number first, and that is not free either -- the cast also brings
+	-- a 1.0-1.6s stun and a -20% slow, which is exactly what decides whether the
+	-- target is still standing in the dot when it expires.
 	local nDamage = 40 * ( nSkillLV - 1 ) + 100
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 
