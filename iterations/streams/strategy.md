@@ -110,10 +110,74 @@
    228 不在 Turbo / 5749 基地被围+#61)。已成 `tests/test_relicguard_siege_gate.lua`(8 例),
    `state.json:relicguard_LEVEL_GATE_CENSUS_CLOSE_20260821`。**GH #84 §5 的 (乙) 形状到此为止,
    下一条工作单元不再走等级门这条线** —— 回到 0b/0c 的逐帧治疗队列或 0a(等基地攻防语料)。
+   ~~**下一轮默认改取 `ability_item_usage_generic:5749`**(守遗迹 TP,另外四项 AND 都是活的 Turbo 状态)。~~
+   **2026-08-21T22:33Z:`5749/5751` 也做不了 (乙),第五种卡点 —— 但 (甲) 的 TEETH 判读
+   第一次拿到了数,而且是六条里第一条。** 在 **489 个带真实建筑的存活英雄帧**上另外五个操作数
+   全成立的有 **190 帧**,其中 **187 帧**等级门是**唯一**挡着的(全语料 911 帧只有 **8 帧**到 15 级)。
+   **卡在后件**:3 个满足整个外层 AND 的帧(全是同一个 viper,`od_eclipse_pair`/`od_eclipse_solo`/
+   `viper_defend_paired` —— **是帧数不是情境数**)上,子分支 1 要 `GetLaneFrontLocation`
+   (GH #61 拒答,3/3 实测)、子分支 2 要两座 tier-4 都没了(诚实 508 帧 **0 帧**);
+   **而这两条之上还压着第十六条:那个函数根本没被调用过**(见下面第 0q 条)。
+   **四条 TEETH 四个卡点**:`285` dumper 缺口 / `535` 语料缺口(**请求仍活**)/ `228` 不在 Turbo 里 /
+   `5751` 后件+函数都不可达。
+   **下一轮默认改取 `mode_farm_generic:392`** —— 剩下两条 TEETH(`392`/`506`)都在 mode 文件里,
+   走**通着的竞价路**,而 `392` 的承重腿 `J.IsLateGame()` 已被 (甲) 钉过,起手最省。
+   规矩照旧:**断言最终 desire,不是断言分支可达**;掉 farm desire ≠ 去打架;
+   **并且先声明第十四条那个 ping 假设**,否则读的是地板不是这一帧。
    **顺带记的第二个杠杆(不折进本条)**:自动买活三条路径在 Turbo 全关
    —— `aiug:568` 的 `ancient:GetHealth() < 0.8`(**单位错配**,该开 `[bug]`)、
    `:582` 的等级 >24、`:578` 的 `nFullRespawnTime < 60` 早退(**推论,harness 判不了**,
    `GetRespawnTime` 不在 dump 里)。已成 `[recorded]` 用例。
+0q. **【2026-08-21T22:33Z 新增,已钉住、不要改 mock、不要改 loader】第十六条世界断言:
+   全语料没有任何一帧调用过任何物品的 Consider —— `J.CanCastAbility` 恒 false,卡在 `IsTrained`**。
+   `J.CanCastAbility(<任意物品句柄>)` 在 **5774 个占用槽 / 911 存活英雄帧 / 98 fixture** 上
+   **可施放 0 个**;出货的物品循环(`aiug:1007-1035`)只在 `if J.CanCastAbility(hItem)` 里面调
+   `X.ConsiderItemDesire[name]` ⇒ **整个物品决策层是黑的**。把出货入口 `ItemUsageThink()` 在
+   **882 个可驱动帧**上跑一遍:**0 动作、0 报错** —— **看起来干净的一遍绿,其实是空的一遍**。
+   **成因是一条 `and` 链里的遮蔽,不是缺字段**:六个子句里 loader 只接了 `IsFullyCastable`,
+   而且对 TP 是**从 dump 的真实冷却接的**(`u.tp_cd <= 0`);其余落到 mock 的 `Is*` 默认 false
+   ⇒ `IsTrained()` 答 false,**在 loader 精心处理的那一条前面两句就短路**
+   ⇒ **658/911 帧的真实 TP 冷却一个读者都没有**。已配**阴性对照**(补上两条后,真在冷却里的卷轴仍被拒)。
+   **有多大**:诚实 TP 句柄同样 882 帧 → **672 no_action / 1 动作 / 209 崩溃**(今天 882/0/0)。
+   **崩溃是更大的那半**:24% 的帧在 tpscroll consider 里抛异常,点名**第四、第五个跑不起来的面** ——
+   `GetExtrapolatedLocation`(**179 帧**,经 `J.CanEnemyInterruptTpChannel`)与
+   `GetFarmLaneDesire`(**30 帧**,经 `J.GetMostFarmLaneDesire`)。
+   **第一个不在 gated 路上**:`tpsafe2` 2026-07-23 已 promote ⇒ 它在**每一局 Turbo、每一次物品层要发 TP
+   之前都跑,而从来没有测试在真实帧上执行过它**。
+   **那唯一 1 个动作是幻影**(`od_eclipse_solo` 的 CM,motive `支援团战`,触发量是
+   `J.GetTeamFightLocation = Vector(0,0)` —— 第十三条的原点;CM 12 级 ⇒ **不是守遗迹那条**)
+   ⇒ **打开这个口子,本语料上一个真实物品决策都没有。**
+   **记账不动手的两条**:① 物品循环扫 `{5,4,3,2,1,0,15,16}` 且在第一个出价 >0 处 `return nSlot+1`
+   ⇒ TP 是倒数第二个;全物品诚实化后 **253 个动作里 244 个是鞋子**(power_treads 214 +
+   arcane_boots 30 = **96.4%**,逐项直方图不是抽样)—— **已发布的排序事实**,要动先要游戏内证据;② 29 个 subject 连 aiug 都载不进(`queen_of_pain` 12/`vengeful_spirit` 17,
+   快照名的锅,同 GH #82)。
+   **第十七条一起钉了(同一条路上撞到的)**:43/98 个 fixture 不带 `buildings`,那 **403 帧**上
+   `GetAncient(team)` 落到 `bot_api:288` —— **地图原点、名叫 `npc_dota_badguys_fort`、对两队答同一个、
+   每次调用新建**(⇒ `creep:GetAttackTarget() == nAncient` 永假),**117 个已发布调用点读它**;
+   **不是塔被推了**(无 tier-4 的帧数 403 = 无 buildings 帧数,诚实 508 帧里 0 帧丢过 tier-4)。
+   **`bots/` 只改了一行注释**:`aiug:5161-5162` 一个月来把已 promote 的 `tpsafe2` 写成
+   "gated ... inert until an A/B",已改成事实。**charter 说「gated 的不算 shipped」;这是它的反面 ——
+   一条已上线的行为被注释说成 inert,骗人程度一样、代价更大。**
+   **归总监**(`[harness]` **GH #100**)两个口径:① loader 该不该接 `IsTrained`/`IsActivated`
+   —— **本组建议该,但必须打包**(单接会让全套从 0 崩溃变成 200 帧崩溃;须同时给那两个引擎 API
+   打桩或按 #61 显式 refuse)。**这里没有任何东西需要建模**(物品栏里的物品本就 trained/activated,
+   会变的那个 loader 已经量出来了),同 #93 而不同于 #61/#81/#89/#91;
+   ② `GetAncient` 的回退该不该继续对没问它的队伍答话 —— **本组建议不该**(遗迹是地图静态常量),
+   但**本组不动它**,那会一次性移动 43 个 fixture。
+   已成 `tests/test_itemdesire_world_assertion.lua`(24 例,**16 条变异**)+
+   子进程助手 `tests/_itemdesire_sweep.lua`,`state.json:itemdesire_WORLD_ASSERTION_16_20260821`。
+   **另有一条机制修法给全组**:两遍全语料驱动(~1700 次执行 8500 行 aiug)第一版跑在
+   run_tests 同一进程里,**在被前面上千测试撑大的堆上狂搅 GC,把全套拖到 54 分钟没完**
+   (加 `collectgarbage('collect')` 更慢)。已把 sweep 移进**子进程**(前导下划线避开 `^test_` glob),
+   测试 `io.popen` 一次读清单 ⇒ 子进程堆小、几分钟跑完、**时间不再随本文件在字母序里的位置变化**。
+   ⇒ **凡是要在一次 test 里全语料驱动大 shipped 文件成百上千次的用例,一律分进程跑**
+   (20:35Z 那条经验的机制版)。
+   **给全组补的做法(第三次说了,当检查项跑,别当经验记)**:**M13 第一次跑活下来了** ——
+   普查在测试里**重述**了那个已发布等级常数而不是从源码读它,于是把 15 改成 10,普查一动不动、
+   面不改色地报旧世界。**这是第十四条 M7 / 第十五条 M9 同形状的第三次复发。**
+   ⇒ **凡是普查一个已发布常数的用例,常数必须从源码读进来,不许在测试里抄一份。**
+   本文件的五个兄弟操作数只能重述(那个 `if` 没法单独跑),已配 `[reverse]` 源码钉子
+   **并在文件里写明这是较弱的安排**。
 0l. **【2026-08-21T17:58Z 新增,已钉住、不要改 bots/、不要改 mock】第十五条世界断言:
    fixture 世界同时是 Turbo 和不是 Turbo,分界线是拼写**。
    `GetGameMode() == GAMEMODE_TURBO` → **TRUE 96/96**;`GetGameMode() == 23` → **FALSE 96/96**。
@@ -701,6 +765,49 @@
   + 2 条 in-test 变异自检。全套见提交时记录。
   `state.json:relicguard_LEVEL_GATE_CENSUS_CLOSE_20260821`。
   详见 `iterations/reports/strategy/20260821T220000Z.md`。
+- 2026-08-21T22:33Z:**接 GH #84 §5 的下一条**(上一轮定的默认取件
+  `ability_item_usage_generic:5749/5753`,守遗迹 TP)。
+  **⚠ 收尾 rebase 撞并发工作(与 20:35Z 同形状,残留是新的、值钱的)**:§5 等级门普查已被另一路
+  strategy 抢先关(`29966e2`,`test_relicguard_siege_gate`)—— 本文件**不重复而是更深一层**:
+  它按「门会被问到」分析,本文件证明**整个物品层没被调用**、那道门上游就不可达,互补。
+  总监已裁 **GH #100**(`cac2fa5`,开工时本文件没推上去 ⇒ 记「不在树上」、**保持 OPEN 等本轮重推**):
+  **Q1 接 `IsTrained`/`IsActivated` 但 refuse(非打桩)`GetExtrapolatedLocation`**(fixture 无速度,
+  桩成当前位置会让「正在逼近」恒假,而它是 turbo 默认在跑的);**Q2 先量 403×117 消费面**。**本轮据此把
+  自己的提案从「打桩」改成「refuse」。** 那行 tpsafe2 注释总监已在 #103 改好 ⇒ **本 commit 对 `bots/` 零改动**。
+  **语料在并发中长到 98,本轮所有计数已在 98 上重量。**
+  **`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
+  **产出** `tests/test_itemdesire_world_assertion.lua`(**24 例**)+ 子进程助手
+  `tests/_itemdesire_sweep.lua`。**三个交付。**
+  **(一) 对 §5**:`5751` 也做不了 (乙),**第五种卡点** —— 但 **(甲) 的 TEETH 判读第一次拿到了数,
+  而且是六条里第一条**:诚实 **508 帧**里另外五个操作数全成立 **193 帧**,其中 **190 帧**
+  等级门是**唯一**挡着的(全语料 911 帧只有 **8 帧**到 15 级)。
+  **卡在后件**:3 个满足外层 AND 的帧上,子分支 1 撞 GH #61 拒答(3/3 实测)、
+  子分支 2 要两座 tier-4 都没(诚实 508 帧 **0 帧**);**这两条之上还压着第十六条**。
+  **下一轮默认取 `mode_farm_generic:392`**(剩下两条 TEETH 都在 mode 文件里,走通着的竞价路)。
+  **(二) 第十六条世界断言**(细节见 backlog 第 0q 条):**全语料没有任何一帧调用过任何物品的
+  Consider** —— `J.CanCastAbility` 在 **5774 个占用槽 / 911 帧**上可施放 **0** 个,卡在 `IsTrained`;
+  驱动出货入口 `ItemUsageThink()` 的 **882 帧全部 0 动作 0 报错**,**干净的一遍绿其实是空的一遍**。
+  成因是**一条 `and` 链里的遮蔽**:loader 把 TP 的**真实冷却**从录像里量出来接在 `IsFullyCastable`
+  上,而 `not IsTrained()` 在它**前面两句**就短路 ⇒ **658/911 帧的真实冷却一个读者都没有**。
+  **有多大**:诚实 TP 句柄 → **672/1/209**(今天 882/0/0),**崩溃是更大的那半**,点名
+  **第四、第五个跑不起来的面**(`GetExtrapolatedLocation` 179 帧、`GetFarmLaneDesire` 30 帧),
+  而**第一个不在 gated 路上**(`tpsafe2` 已 promote,每局 Turbo 每次发 TP 前都跑,从没在真实帧上跑过)。
+  那**唯一 1 个动作是第十三条的原点幻影** ⇒ **打开口子,本语料上一个真实物品决策都没有。**
+  **(三) 第十七条**:43/98 个 fixture 的 `GetAncient` 是**地图原点上的 `npc_dota_badguys_fort`,
+  对两队答同一个、每次调用新建**;**403 帧「无 tier-4」是 fixture 缺口不是塔被推了**
+  (= 无 buildings 帧数,诚实 508 帧 0 帧丢过)。
+  **GH #100 总监已裁**(见上);**实现那次 loader 改动(接 IsTrained/IsActivated + refuse 两个引擎 API)
+  是最值钱的下游** —— 落地后 `blinkflee`/`tpdead`/`tpcommit`/`lf_rescue`/`midtp` 这些住在
+  `ConsiderItemDesire` 里的 gate 第一次能在出货调用路径上验收(今天只在 helper 层测过),
+  而本文件 M5/M12 会如期变红宣告「该改动落地了」。
+  **验收(最终门,rebase 到 `ad10ef6`)**:luacheck **0 warnings**(`bots/` 与 main 逐字节相同);
+  全套 **1112 tests, 0 failures**(38.5 分钟,本文件占其中一次 ~5.5 分钟子进程);新文件 **24 tests, 0 failures**;
+  **本轮 rebase 三次(`db358e8`→`1d082bb`→`ad10ef6`),每次都重量全部计数;最后一次 main 重生成了
+  两枚 fixture(`2aa4dd1` 抽签角色治疗),重量结果逐位未变**;
+  **16 条变异逐条验「变异真的红 + 回滚真的绿」,其中 M13 第一次跑活下来了** ——
+  普查**重述**了已发布常数而不是从源码读它(第十四条 M7 / 第十五条 M9 的**第三次复发**),
+  已改成从源码 match 出来喂给普查,M13 随即被杀。**这条请当检查项跑。**
+  详见 `iterations/reports/strategy/20260821T223310Z.md`。
 - 2026-08-21T20:35Z:**一轮重复劳动,弃掉;残渣是真的两条。**
   **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
   **先说错的那一句,因为它是本轮的形状**:开工(~19:05Z)扫 issue 并**先 fetch 过** `origin/main`,
