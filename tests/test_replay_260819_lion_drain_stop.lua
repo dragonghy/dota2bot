@@ -40,9 +40,9 @@
 -- THE CONTROL FRAME (B), JUNGLE mid-channel, t=247.0 (2.7s into the channel
 -- on a neutral dark_troll_warlord, which lasted t=244.3 -> t=248.6 per the
 -- MODIFIER_ADD/REMOVE pair):
---   Lion in the Radiant jungle at (3871, -3728), 188 HP / 284 mana. Nearest
---   ALIVE enemy hero is necrolyte at 5995u; every other alive enemy hero is
---   7626u+ across the map (drow_ranger is a corpse on this frame). Recent
+--   Lion in the Radiant jungle at (3871, -3728), 184 HP / 274 mana. Nearest
+--   ALIVE enemy hero is necrolyte at 6033u; every other alive enemy hero is
+--   7754u+ across the map (drow_ranger is a corpse on this frame). Recent
 --   damage in the previous
 --   2s is CREEP only (troll pack hitting him -- three troll_warlord hits +
 --   one troll hit inside the window), so WasRecentlyDamagedByAnyHero(2) is
@@ -50,6 +50,18 @@
 --   frame A but neither clause of the AND holds, so the release must NOT
 --   fire even when armed -- the discriminator is not "is he channeling" but
 --   "is a hero currently killing him inside the danger radius".
+--
+-- FRAME B WAS HEALED 2026-08-22 (strategy backlog 0c) AND THE HEAL MOVED THE
+-- INSTANT. The numbers above are the healed ones; the pre-heal file said 188 HP
+-- / 284 mana and necrolyte at 5995u. Regenerating this frame at the SAME
+-- `--t 247.0` did not just add the missing fields -- it landed on a DIFFERENT
+-- sample, ~0.33s earlier in state time. Everything derived from the event
+-- stream (recent_damage, observed.burst, observed.died_after = 68.1) came back
+-- byte-identical, so it is the hero-snapshot stream alone that moved. The
+-- measurement, the four heroes that agree on it, and what it costs are in the
+-- RE-READ section at the bottom of this file; the discriminator survives it
+-- (a 38u move against a 5500u margin), but two assertions in the ground-truth
+-- case were written to 10u / 4hp bands and had to be rewritten.
 --
 -- EXTERNAL ANCHORS -- what is NOT read off the frame (declared, not hidden):
 --   1. Mana Drain cast range = 600 (Liquipedia, 2026-08). Same as the start-
@@ -158,8 +170,10 @@ end
 tests['ground truth B: mid-channel on a jungle creep, no hero in radius, no hero damage'] = function()
     local X, _, bot, heroes, fx = load_lion(JUNGLE, true, true, false)
     assert(fx.time == 247.0, 'fixture B is the mid-channel jungle frame, got ' .. tostring(fx.time))
-    assert(bot:GetHealth() == 188, 'real HP on the frame, got ' .. bot:GetHealth())
-    assert(bot:GetMana() == 284, 'real mana on the frame, got ' .. bot:GetMana())
+    -- Healed values (see the header): the pre-heal file said 188 / 284, which
+    -- is the same nominal instant sampled ~0.33s later in state time.
+    assert(bot:GetHealth() == 184, 'real HP on the frame, got ' .. bot:GetHealth())
+    assert(bot:GetMana() == 274, 'real mana on the frame, got ' .. bot:GetMana())
 
     -- IsChanneling is declared, but the drain target is a NEUTRAL CREEP the
     -- fixture does not carry; X.IsAbilityEChanneling's inner loop finds
@@ -174,7 +188,11 @@ tests['ground truth B: mid-channel on a jungle creep, no hero in radius, no hero
     -- enemy hero) is at ~1795u, and no hero damage exists inside the 2s window
     -- (the four DAMAGE rows in the fixture are all `kind = 'creep'`).
     local d = GetUnitToUnitDistance(bot, heroes['npc_dota_hero_necrolyte'])
-    assert(d > 5990 and d < 6000, 'nearest ALIVE enemy hero (necrolyte) is ~5995 away, got ' .. math.floor(d))
+    -- Band widened on purpose after the heal moved the instant: necrolyte moved
+    -- 38u (5995 -> 6033) while the clause this case exists for has 5500u of
+    -- margin. The old 10u band would have failed on a frame whose conclusion
+    -- never budged -- see the RE-READ section.
+    assert(d > 5900 and d < 6100, 'nearest ALIVE enemy hero (necrolyte) is ~6033 away, got ' .. math.floor(d))
     assert(d > X.nEDrainDangerRadius,
         'and far outside the danger radius -- distance alone rules this out')
     assert(bot:WasRecentlyDamagedByAnyHero(2.0) == false,
@@ -425,6 +443,211 @@ tests['wiring: the STOP helper is gated, consumed in ConsiderStopDrain, and ride
         'helper must retain the 2s recent-hero-damage clause')
     assert(src:find('J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true, BOT_MODE_NONE )',
         1, true), 'helper must retain the danger-radius nearby-heroes clause')
+end
+
+-- ---------------------------------------------------------------------------
+-- RE-READ of frame B under the real drafted roles (strategy backlog 0c, GH #57)
+-- -- and the first heal in that queue where the regeneration was NOT a pure
+-- addition.
+--
+-- Every case above was written while the JUNGLE fixture carried no `roles`
+-- table, so Role.GetPosition fell through to RoleAssignment[team][slot] -- the
+-- draft SLOT, which GH #57 measured against the real draft at 47.3%. The game
+-- is attributable (soak seed in the run's analysis.json), so the fixture was
+-- regenerated with `--roles`.
+--
+-- WHAT THE HEAL FOUND, in the order it matters:
+--
+-- 1. THE INSTANT MOVED. The four previous heals in this queue all reported the
+--    regeneration as byte-identical apart from the added table, and used that
+--    as the provenance proof. Here it is not: at the same `--t 247.0` the
+--    generator picked a sample ~0.33s EARLIER in state time than the file it
+--    replaced. Measured, not assumed -- projecting each pre-heal hero position
+--    onto the segment between today's two neighbouring samples (246.4 and
+--    247.4) puts the old file at t = 246.733 / 246.737 / 246.741 / 246.733 for
+--    the four heroes moving fast enough to resolve it (dragon_knight,
+--    earthshaker, lich, pudge; 387-427u of travel, <23u off-path). The slow
+--    movers land anywhere, which is exactly why only the fast ones were used.
+--
+-- 2. IT IS THE SNAPSHOT STREAM ALONE. Everything the generator derives from the
+--    event stream came back byte-identical: all twelve recent_damage rows, the
+--    empty observed.burst, observed.died_after = 68.1, and all 38 buildings.
+--    Those are computed off the nominal --t, so a moved game clock would have
+--    moved them too. The hero-snapshot sampling phase moved; the event clock
+--    did not.
+--
+-- 3. NO DUMPER WE STILL HAVE REPRODUCES THE OLD FILE. All three binaries cached
+--    in S3 (the 2026-08-19 one that was current when this fixture was pinned,
+--    and both 2026-08-20 ones) put this game's snapshot grid on the same
+--    ...246.4, 247.4... phase and report the same horn (start_time 138.6). The
+--    binary that produced the pre-heal file is not among them.
+--
+-- 4. AND THE CURRENT LABELS ARE THE LATE ONES. Independent of provenance: on
+--    this dump a snapshot labelled t carries state from ~0.2-0.33s BEFORE t.
+--    Estimated two ways -- (a) 1884 (cast event, later snapshot) pairs where the
+--    ability's own cd_len and remaining cd date the state: weighted mean 0.22s,
+--    biased low by the 0.1s quantisation of both inputs; (b) reconstructing
+--    Lion's HP series across 240-250s against the real damage rows, which only
+--    balances if the labels run ~0.33s ahead (the 244.2 creep hit shows up in
+--    the sample labelled 245.4, not 244.4). ~0.33s is 10 engine ticks at 1/30s.
+--    That the sampling loop drives off m.GetTick() while another site in the
+--    same dumper reads p.NetTick is the SHAPE that would produce it -- stated
+--    as the hypothesis it is, not as a finding. Reported to the director as a
+--    harness issue; nothing in bots/ is involved.
+--
+-- WHAT IT COST HERE: two assertions in the ground-truth case, both written to
+-- bands far tighter than the move (HP to the unit, necrolyte to 10u) on a frame
+-- whose conclusion has 5500u of margin. Nothing about the discriminator moved.
+--
+-- WHAT MOVED ON THE ROLES: four of the five allies read a different position and
+-- the core/support partition FLIPS TWICE -- lich core->support, dragon_knight
+-- support->core. The subject is a fixed point (slot 5 = drafted 5), so this
+-- frame is another CONTROL for the build-list finding of the axe and CM
+-- re-reads. No case above forks on any of it, and the cases below measure that
+-- rather than assume it.
+-- ---------------------------------------------------------------------------
+
+--- Count every position read through BOTH entry points: J.GetPosition (the jmz
+--- wrapper) and Role.GetPosition (the module, which aba_item reaches directly).
+--- They are not the same function object, so hooking one undercounts.
+local function counting_roles(J, fBody)
+    local Role = require(GetScriptDirectory() .. '/FunLib/aba_role')
+    assert(J.GetPosition ~= Role.GetPosition,
+        'the two role entry points must be distinct functions -- hooking only '
+        .. 'one of them undercounts, which is how the aba_item call site hides')
+    local tLog = {}
+    local realJ, realR = J.GetPosition, Role.GetPosition
+    J.GetPosition = function(u) tLog[#tLog + 1] = 'J:' .. u:GetUnitName() return realJ(u) end
+    Role.GetPosition = function(u) tLog[#tLog + 1] = 'R:' .. u:GetUnitName() return realR(u) end
+    local ok, err = pcall(fBody)
+    J.GetPosition, Role.GetPosition = realJ, realR
+    assert(ok, err)
+    return tLog
+end
+
+tests['RE-READ: frame B carries the drafted roles, and the partition FLIPS TWICE'] = function()
+    local _, J, bot, _, fx = load_lion(JUNGLE, true, true, false)
+    assert(fx.roles ~= nil, 'the fixture must carry the drafted roles -- without '
+        .. 'them every position on this frame is the draft slot (GH #57)')
+
+    -- slot (what the fixture answered before the heal) -> drafted (now).
+    local WAS_AND_IS = {
+        [1] = { 'npc_dota_hero_death_prophet',    2 },
+        [2] = { 'npc_dota_hero_phantom_assassin', 1 },
+        [3] = { 'npc_dota_hero_lich',             4 },
+        [4] = { 'npc_dota_hero_dragon_knight',    3 },
+        [5] = { 'npc_dota_hero_lion',             5 },
+    }
+    local nMoved, nFlipped = 0, 0
+    for nSlot, tWant in ipairs(WAS_AND_IS) do
+        local h = GetTeamMember(nSlot)
+        assert(h:GetUnitName() == tWant[1], 'roster slot ' .. nSlot .. ' is '
+            .. h:GetUnitName() .. ', this frame was recorded with ' .. tWant[1])
+        assert(J.GetPosition(h) == tWant[2], tWant[1] .. ' reads position '
+            .. tostring(J.GetPosition(h)) .. ', drafted ' .. tWant[2]
+            .. ' -- a slot-order answer here means the fixture lost its roles')
+        if tWant[2] ~= nSlot then nMoved = nMoved + 1 end
+        if (nSlot <= 3) ~= J.IsCore(h) then nFlipped = nFlipped + 1 end
+    end
+    assert(nMoved == 4, 'four of five allies must move; got ' .. nMoved)
+    assert(nFlipped == 2, 'the core/support partition must flip for exactly two '
+        .. 'allies (lich core->support, dragon_knight support->core); got '
+        .. nFlipped .. ' -- the axe frame (seed 885) flipped NONE with all five '
+        .. 'moving, so "the partition is usually stable" is never a reason to '
+        .. 'skip a frame')
+
+    assert(J.GetPosition(bot) == 5 and J.IsCore(bot) == false,
+        'the subject is a fixed point of the permutation: slot 5, drafted 5')
+end
+
+tests['RE-READ: the STOP guard asks for ZERO roles -- WHY every case above held'] = function()
+    -- Load the hero file BEFORE hooking, so this counts the decision only.
+    local X, J, bot = load_lion(JUNGLE, true, true, false)
+
+    local tGuard = counting_roles(J, function()
+        assert(X.lion_ShouldStopDrain(bot) == false,
+            'the decision under test is still "hold the channel"')
+    end)
+    assert(#tGuard == 0, 'lion_ShouldStopDrain asked for a position '
+        .. table.concat(tGuard, ', ') .. ' -- it must ask ZERO times. If this '
+        .. 'ever becomes non-zero, every case on this frame has to be re-read, '
+        .. 'because two of the five allied core/support answers flipped')
+
+    local tBid = counting_roles(J, function()
+        assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE,
+            'the bid under test is still NONE')
+    end)
+    assert(#tBid == 0, 'ConsiderStopDrain asked for a position '
+        .. table.concat(tBid, ', ') .. ' -- it must ask ZERO times')
+
+    -- Both zeroes above are worthless without a witness that something ran:
+    -- the guard really did evaluate its proximity clause on this frame.
+    assert(#J.GetNearbyHeroes(bot, X.nEDrainDangerRadius, true, BOT_MODE_NONE) == 0,
+        'stated so the two zeroes cannot be a vacuous "nothing ran": the '
+        .. 'danger-radius scan really is running and really is empty here')
+end
+
+tests['RE-READ: the one role read is the build-list key, and on this frame it does NOT move'] = function()
+    local _, J, bot = load_lion(JUNGLE, true, true, false)
+    local Role = require(GetScriptDirectory() .. '/FunLib/aba_role')
+
+    -- Same single call site the axe and CM re-reads found: the read happens at
+    -- hero-file LOAD, through the MODULE, bypassing the J wrapper.
+    local tLoad = counting_roles(J, function() rf.load_hero('lion') end)
+    assert(#tLoad == 1 and tLoad[1] == 'R:npc_dota_hero_lion',
+        'expected exactly one role read at hero load, on the subject, through '
+        .. 'the MODULE; got { ' .. table.concat(tLoad, ', ') .. ' }')
+
+    -- ...and here it lands where it already did: Lion is the fixed point.
+    assert(Role.GetPosition(bot) == 5 and J.Item.GetRoleItemsBuyList(bot) == 'pos_5',
+        'drafted pos 5 keys this Lion onto pos_5, the same list the slot claimed; '
+        .. 'got ' .. tostring(J.Item.GetRoleItemsBuyList(bot)))
+
+    -- "It does not move" is only worth stating if the mechanism could have
+    -- moved it, so drive the key somewhere else and show a different list.
+    local function buy_list_at(nPos)
+        local _, _, bot2 = load_lion(JUNGLE, true, true, false)
+        local Role2 = require(GetScriptDirectory() .. '/FunLib/aba_role')
+        local real = Role2.GetPosition
+        Role2.GetPosition = function(u) if u == bot2 then return nPos end return real(u) end
+        local ok, X = pcall(dofile, GetScriptDirectory() .. '/BotLib/hero_lion.lua')
+        Role2.GetPosition = real
+        assert(ok and type(X) == 'table' and X.sBuyList ~= nil,
+            'hero_lion must publish an sBuyList for pos ' .. nPos)
+        return X.sBuyList
+    end
+    local tFive, tFour = buy_list_at(5), buy_list_at(4)
+    assert(#tFive > 0 and #tFour > 0, 'both lists must be non-empty')
+    local bDiffer = #tFive ~= #tFour
+    for i = 1, math.min(#tFive, #tFour) do
+        if tFive[i] ~= tFour[i] then bDiffer = true end
+    end
+    assert(bDiffer, 'pos_5 and pos_4 must be different build lists, otherwise '
+        .. '"the key did not move" says nothing at all')
+end
+
+tests['RE-READ: [recorded] healing frame A will move its instant too -- what it does and does not cost'] = function()
+    -- Frame A (FOCUSED) is still slot-derived and still on the pre-heal
+    -- sampling phase. Measured on the same regenerated timeline, healing it
+    -- lands on the sample labelled 298.4, where Lion is at 601 HP (not 510 --
+    -- the 298.6/298.7 viper chain has not landed yet at that state) and viper
+    -- sits 484.5u away rather than 484. So the RELEASE pin survives on its
+    -- load-bearing clause -- viper stays inside the 500u danger radius, and
+    -- WasRecentlyDamagedByAnyHero reads the event stream, which does not move
+    -- -- while the HP/mana ground-truth numbers below have to be rewritten.
+    -- This case asserts the CURRENT (pre-heal) numbers, so whoever heals frame
+    -- A is sent here instead of discovering it in a band that happens to be
+    -- wide enough to hide it.
+    local _, _, bot, heroes, fx = load_lion(FOCUSED, true, true, true)
+    assert(fx.roles == nil, 'frame A is still the slot-derived file; if it now '
+        .. 'carries roles it has been healed -- re-read this case and the two '
+        .. 'ground-truth numbers it protects')
+    assert(bot:GetHealth() == 510 and bot:GetMana() == 171,
+        'pre-heal frame A is 510 HP / 171 mana; healing it moves these to '
+        .. '601 / (re-measure), got ' .. bot:GetHealth() .. ' / ' .. bot:GetMana())
+    local d = GetUnitToUnitDistance(bot, heroes['npc_dota_hero_viper'])
+    assert(d > 483 and d < 486, 'viper is 484u pre-heal and 484.5u after; the '
+        .. 'clause survives either way, got ' .. math.floor(d))
 end
 
 return tests

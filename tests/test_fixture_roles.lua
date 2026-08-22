@@ -277,7 +277,6 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
         -- attributable, simply not re-read yet -- each needs its own round
         -- (regenerate, re-run, re-read the conclusion), never a batch refresh:
         -- healing a frame may FLIP what it pins, which is the point.
-        ['f_260819_182855_lion_drain_jungle.lua'] = true,
         ['f_260819_182855_lion_drain_midchannel.lua'] = true,
         ['f_260819_222559_od_eclipse_pair.lua'] = true,
         ['f_260819_222559_od_eclipse_solo.lua'] = true,
@@ -313,6 +312,21 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
         -- carries every basic of the pos_5 opener and neither pos_4-only one).
         -- Written up in tests/test_replay_260820_cm_es_aftershock.lua.
         --   ['f_260820_103216_cm_es_aftershock.lua']
+        --
+        -- healed 2026-08-22: four of five allies permuted, partition flipped
+        -- twice (lich core->support, dragon_knight support->core), subject a
+        -- fixed point (slot 5 = drafted 5) so the build-list key does not move
+        -- -- another control for the axe finding. THE FIRST HEAL IN THIS QUEUE
+        -- THAT WAS NOT A PURE ADDITION: regenerating at the same --t landed on
+        -- a sample ~0.33s earlier in state time than the file it replaced, so
+        -- two assertions written to 10u / 4hp bands had to be rewritten while
+        -- the pinned conclusion never moved. Everything derived from the event
+        -- stream came back byte-identical, which is how the split was located.
+        -- Whoever heals the midchannel twin above should expect the same move
+        -- (measured there too: Lion 510 -> 601 HP, viper 484 -> 484.5u, so the
+        -- RELEASE pin survives). Written up in
+        -- tests/test_replay_260819_lion_drain_stop.lua.
+        --   ['f_260819_182855_lion_drain_jungle.lua']
     }
 
     local p = io.popen('ls tests/fixtures')
