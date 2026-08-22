@@ -27,7 +27,12 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0R. **【2026-08-22T10:xxZ 新增,下一条工作单元的默认选项】本组自己的普查文件在 main 上是红的,
+0R. **【状态更新 2026-08-22T15:5xZ:本条描述的红色在今天这棵树上已经不存在了 ——
+   全套 `run_tests.lua` 跑完 **1246 tests / 0 failures / EXIT=0**,`test_itemdesire_world_assertion`
+   在内全绿。**本条不删**:它的方法学(「一个读数不构成一次测量」、per-fixture 分解、
+   不许把 179 直接改成 178)仍然有效,而且它自己就是被规模棘轮咬过的样本;
+   但「下一条工作单元的默认选项」这个身份**作废**,GH #112 请按此结案或重述。】**
+   ~~【2026-08-22T10:xxZ 新增,下一条工作单元的默认选项】本组自己的普查文件在 main 上是红的,
    而且**不是本轮改红的**。`tests/test_itemdesire_world_assertion.lua` 两例 FAIL:
    `crash_total` **207**(钉的是 209)、`crash_2597` **177**(钉的是 179)。
    **在 `origin/main` 的干净 worktree 上逐字复现同样两个数** ⇒ 与本轮的 pullcamp 改动无关
@@ -48,7 +53,7 @@
    **失败清单和消息逐字相同** ⇒ **11:26Z 那个工作单元使失败数 8 → 8**(它没加 fixture,
    只动了 `jmz_func` 与 `mode_retreat_generic`);同轮另跑 `test_level_gate_census` 15/15、
    `test_gate_claim_consistency` 7/7 绿 ⇒ **行号脆弱性是按文件算的,不是按仓库算的**。
-   GH #106 已留言(#112 是本条的主线)。
+   GH #106 已留言(#112 是本条的主线)。~~
 0P1. **【2026-08-22T07:30Z】Owner P1 第 1 棒(pullcamp SILENT 根因)已做完并交棒 —— 本条留着盯回程。**
    根因:**触发器要求它自己要造出来的那个状态** —— `bot:GetNearbyNeutralCreeps(1400)` 非空
    (「已经看得见营地」),而站在兵线上的辅助**看不见树后的野营盒子**;同时 roam Think 的
