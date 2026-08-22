@@ -5,9 +5,27 @@
 # Prints candidate decision instants for make_fixture.py.
 import json, math, sys, os
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# This file does not produce a READING -- it decides WHICH FRAMES BECOME
+# FIXTURES, so the lethality proxy here sets the sampling surface of every
+# execution verification downstream.  test_set.md AJ.5: that is why it may not
+# carry its own copy of the number.
+from roam_conversion import VICTIM_HP_PROXY  # noqa: E402
+
+VICTIM_HP = VICTIM_HP_PROXY
+
 def dist(a,b): return math.hypot(a["x"]-b["x"], a["y"]-b["y"])
 
-for path in sys.argv[1:]:
+# This module now EXPORTS a constant (the census in
+# tests/test_detector_source_constants.py imports it to prove the proxy is the
+# same object here as at its definition site), so importing it must not run the
+# driver.  Minimal form on purpose: as a script `_ARGV` is `sys.argv[1:]` and
+# the loop below is byte-for-byte the same loop it always was; on import it is
+# empty and the loop is inert.  A `main()` refactor would have reindented 40
+# lines of working code to buy nothing extra.
+_ARGV = sys.argv[1:] if __name__ == "__main__" else []
+
+for path in _ARGV:
     d = json.load(open(path))
     teams = d["game"]["teams"]
     snaps = {}
@@ -25,7 +43,7 @@ for path in sys.argv[1:]:
         for s in ss:
             t = s["t"]
             if t < 90 or t > 600: continue
-            if s["hp"] <= 0 or s["hp_pct"] > 0.40: continue
+            if s["hp"] <= 0 or s["hp_pct"] > VICTIM_HP: continue
             if t < seen_until.get(hero, 0): continue
             # two opposing heroes near this low hero
             near = []

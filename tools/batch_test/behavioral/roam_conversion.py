@@ -58,7 +58,43 @@ import seed_draft  # noqa: E402  -- the only correct source of a hero's position
 
 LANING_END = 480.0        # turbo hard floor of J.IsInLaningPhase()
 OUT_START, OUT_END = 520.0, 900.0
-VICTIM_HP = 0.40
+
+# THE LETHALITY PROXY -- defined HERE, once, and imported by every consumer.
+#
+# test_set.md AJ.5 found this number written out four separate times across
+# behavioral/, each site unaware of the others, after `#92` had already flipped
+# the SIGN of one of the readings that leaned on it.  The most consequential
+# copy was in `find_kill_windows.py`, which does not produce a reading at all --
+# it SELECTS WHICH FRAMES BECOME FIXTURES, so the whole execution-verification
+# sampling surface grows on it.
+#
+# HONEST PROVENANCE (the `#90` registry's whole point is that this line cannot
+# be reconstructed by a reader, so it is stated rather than implied):
+#
+#   THIS CONSTANT MIRRORS NO SHIPPED LITERAL.  There is no `0.4` in the lane-kill
+#   helpers that means "the victim is killable".  The shipped gate asks
+#   `GetEstimatedDamageToTarget(...) >= victim HP + 4s regen`, an ABSOLUTE-health
+#   comparison against our castable burst, and that call is not in the dumper
+#   stream.  0.40 is a stand-in for an unobservable predicate, so every episode
+#   any consumer yields is a SUPERSET of the frames the gate really fired on.
+#
+#   The nearest thing to a source is arithmetic, not a literal: the armed bid
+#   RemapValClamped(HP, 0, 0.5, NONE, 0.92) = min(0.92, 1.84*HP) only beats the
+#   0.75 fallback it preempts above HP > 0.75/1.84 = 0.4076.  That is about the
+#   ACTOR's HP, not the victim's -- it is `lanekill_commit.BID_FLOOR_HIGH`, a
+#   different quantity that merely lands near the same number.  Do not fuse them.
+#
+#   test_set.md AJ.5 recorded the site as `jmz_func.lua:6932`.  Re-checked
+#   2026-08-22T21:0xZ while converging the copies: line 6932 is inside
+#   `J.ShouldBodyBlockHarass`, an 800u enemy scan in an unrelated helper.  The
+#   pointer was wrong when it was written, which is the exact rot the registry
+#   exists to catch -- and why a prose pointer is not a registration.
+#
+# DO NOT redefine 0.40 in a consumer.  `tests/test_detector_source_constants.py`
+# section 2b censuses every module-level HP constant in this directory and goes
+# red on an unregistered one.
+VICTIM_HP_PROXY = 0.40
+VICTIM_HP = VICTIM_HP_PROXY   # legacy name; archived readings cite it verbatim
 VICTIM_RANGE = 800.0
 ALLY_RANGE = 1200.0
 DEDUP_S = 6.0

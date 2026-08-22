@@ -139,6 +139,151 @@ eq('capmono legacy floor preserved for reproducibility',
 check('filter_outcome_coupling still audits the 850 domain on purpose',
       foc.ENE_LO == 850.0, '(ENE_LO=%r)' % foc.ENE_LO)
 
+# The ally-health floor is the ONE member of the 0.40 family that is a real
+# mirror: `J.GetHP( hAlly ) >= 0.4` is shipped, in BOTH lane-kill helpers.  It
+# was never registered, which is the dangerous half of test_set.md AJ.5: a
+# reader scanning behavioral/ sees four identical 0.40s and the tidy-looking
+# move is to fuse them.  Fusing this one with the proxy would make a Lua edit
+# to the ally floor silently drag the lethality proxy -- and with it the frame
+# selection in find_kill_windows.py -- which is GH #90 with extra steps.
+ALLY_HP_RE = r'J\.GetHP\(\s*\w+\s*\)\s*>=\s*(?P<n>[\d.]+)'
+L1_ALLY_HP = literal('J.ShouldInitiateLaneKill', ALLY_HP_RE)
+L5_ALLY_HP = literal('J.ShouldSupportComboKill', ALLY_HP_RE)
+eq('lanekill_commit.ALLY_HP_MIN mirrors ShouldInitiateLaneKill',
+   float(lanekill.ALLY_HP_MIN), L1_ALLY_HP)
+eq('lanekill_commit.ALLY_HP_MIN mirrors ShouldSupportComboKill',
+   float(lanekill.ALLY_HP_MIN), L5_ALLY_HP)
+eq('both lane-kill helpers use the SAME ally floor (the scanner assumes one)',
+   L1_ALLY_HP, L5_ALLY_HP)
+
+# ---------------------------------------------------------------- section 2b
+# THE HP-CONSTANT CENSUS (test_set.md AJ.5, director ruling 2026-08-22T21:0xZ).
+#
+# Section 2 answers "does this constant still equal its source".  It cannot ask
+# the question AJ.5 actually raised, which is one level up: HOW MANY COPIES OF
+# THIS NUMBER ARE THERE, and does each one know what it is?  `#92` did a
+# sensitivity analysis on `lanekill_commit.VICTIM_HP` and flipped a reading's
+# sign; for three days nobody asked who else wrote the same number down.  The
+# answer was four sites, one of which (`find_kill_windows.py`) does not produce
+# a reading at all -- it selects which frames become fixtures.
+#
+# So this section censuses every MODULE-LEVEL NAMED HP FRACTION in behavioral/
+# and requires each to be classified.  Three classes, and the classification is
+# the deliverable -- "converge the duplicates" would have been WRONG here:
+#
+#   MIRROR       equals a literal in shipped Lua; section 2 pins it to the site.
+#   PROXY        stands in for a predicate the dumper cannot observe.  Defined
+#                once, in roam_conversion, and IMPORTED -- never re-typed.
+#   INDEPENDENT  the detector's own tunable.  May share a number with another
+#                row by coincidence; converging it would be a defect.
+#
+# BOUNDARY, stated rather than implied: this censuses module-level ASSIGNMENTS.
+# Inline HP literals inside function bodies (tp_attribution's 0.35, capmono's
+# 0.55, ...) are a larger population and are NOT covered -- an unregistered
+# inline literal still passes here.  Backlog item, not a claim.
+print('=== 2b. HP-constant census: every copy classified, no unregistered copy ===')
+
+import re                                          # noqa: E402
+import detect as det                               # noqa: E402
+import roam_conversion as rc                       # noqa: E402
+
+HP_CENSUS = {
+    # 'module:NAME': (class, note)
+    'roam_conversion:VICTIM_HP_PROXY':   ('PROXY', 'the definition site'),
+    'roam_conversion:VICTIM_HP':         ('PROXY', 'legacy alias of the above'),
+    'lanekill_commit:VICTIM_HP':         ('PROXY', 'imported'),
+    'find_kill_windows:VICTIM_HP':       ('PROXY', 'imported; selects fixture frames'),
+    'lanekill_commit:ALLY_HP_MIN':       ('MIRROR', 'jmz_func.lua:7085 / :7050'),
+    'capmono_refusal:HP_LO':             ('MIRROR', 'registered via section 2 domain'),
+    'capmono_refusal:HP_HI':             ('MIRROR', 'registered via section 2 domain'),
+    'creeppull_domain:HP_MIN':           ('MIRROR', 'J.IsCreepPullSafe >= 0.5'),
+    'pullcamp_domain:HP_MIN':            ('MIRROR', 'J.IsLanePullSafe >= 0.5'),
+    'stayfield_domain:HP_LO':            ('MIRROR', 'jmz_func.lua:4762'),
+    'stayfield_domain:HP_HI':            ('MIRROR', 'jmz_func.lua:4762'),
+    'stayfield_domain:BRANCH_HP':        ('MIRROR', 'ability_item_usage_generic.lua:5514'),
+    'stayfield_domain:BRANCH_HPMP':      ('MIRROR', 'ability_item_usage_generic.lua:5514'),
+    'fieldregen_supply:LOW_HP':          ('MIRROR', 'both ids share this literal'),
+    'hometp_highhp:HEAL_CORE_HP':        ('MIRROR', 'cores need HP < 0.75 (:1315)'),
+    'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
+    'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
+    'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
+}
+
+# A module-level assignment of an HP-looking name to a fraction in [0, 1].
+CENSUS_RE = re.compile(
+    r'^(?P<names>(?:HP_|LOW_HP|LIMBO_HP)\w*|\w*_HP(?:_\w+)?|\w*HP_PCT'
+    r'|VICTIM_HP\w*|BRANCH_HP\w*)'
+    # The trailing `(?:#.*)?` is not decoration.  Without it the `$` anchor
+    # refused every line that carried an explanatory comment -- which is most
+    # of the interesting ones -- and the census swept 7 sites instead of 17
+    # while every classification assertion below still printed ok.  The
+    # anti-vacuity guard is what turned that red; it was added before the first
+    # run, not after this was found.
+    r'(?P<more>(?:\s*,\s*\w+)*)\s*=\s*(?P<rhs>[^=#\n]+?)\s*(?:#.*)?$')
+
+found = {}
+for fn in sorted(os.listdir(BEHAV)):
+    if not fn.endswith('.py'):
+        continue
+    mod = fn[:-3]
+    with open(os.path.join(BEHAV, fn)) as fh:
+        for line in fh:
+            m = CENSUS_RE.match(line.rstrip('\n'))
+            if not m:
+                continue
+            names = [m.group('names')] + [x.strip() for x in
+                                          m.group('more').split(',') if x.strip()]
+            rhs = [v.strip() for v in m.group('rhs').split(',')]
+            if len(rhs) != len(names):
+                rhs = [m.group('rhs').strip()] * len(names)
+            for nm, val in zip(names, rhs):
+                # keep fractions and imported aliases; drop unrelated numbers
+                try:
+                    if not (0.0 < float(val) < 1.0):
+                        continue
+                except ValueError:
+                    if not re.match(r'^[A-Z][A-Z0-9_]*$', val):
+                        continue
+                found['%s:%s' % (mod, nm)] = val
+
+# THE ANTI-VACUITY GUARD.  A census that silently matches nothing would pass
+# every assertion below while measuring nothing -- the failure this repo has
+# now hit six times.  The four sites AJ.5 named must all be in the sweep.
+for must in ('roam_conversion:VICTIM_HP_PROXY', 'lanekill_commit:VICTIM_HP',
+             'find_kill_windows:VICTIM_HP', 'detect:LIMBO_HP',
+             'lanekill_commit:ALLY_HP_MIN'):
+    check('census reaches %s' % must, must in found,
+          '(swept %d sites: %s)' % (len(found), sorted(found)))
+
+for key in sorted(found):
+    check('%s is classified (%s)' % (key, HP_CENSUS.get(key, ('UNREGISTERED',))[0]),
+          key in HP_CENSUS,
+          '-- a new module-level HP constant appeared and no one said what it '
+          'is.  Add a row to HP_CENSUS: MIRROR (and pin it in section 2), '
+          'PROXY (import it, do not retype it), or INDEPENDENT (say why it may '
+          'share a number).')
+
+# PROXY means IMPORTED, and `is` proves it: an equal-valued retyped literal
+# would be a different object and go red here, which is exactly the state
+# AJ.5 found the tree in.
+import find_kill_windows as fkw                    # noqa: E402
+check('lanekill_commit.VICTIM_HP IS the proxy object (imported, not retyped)',
+      lanekill.VICTIM_HP is rc.VICTIM_HP_PROXY)
+check('find_kill_windows.VICTIM_HP IS the proxy object (imported, not retyped)',
+      fkw.VICTIM_HP is rc.VICTIM_HP_PROXY)
+check('roam_conversion.VICTIM_HP is the alias, not a second literal',
+      rc.VICTIM_HP is rc.VICTIM_HP_PROXY)
+
+# ANTI-FUSION.  The proxy and the ally mirror share a number and nothing else.
+# If someone "converges the duplicates", the mirror stops tracking the Lua --
+# so assert they are independently reachable, not that they are equal.
+check('the ally MIRROR is not the same object as the PROXY',
+      lanekill.ALLY_HP_MIN is not rc.VICTIM_HP_PROXY,
+      '-- fusing these makes a Lua edit to the ally floor move the frame '
+      'selection in find_kill_windows.py')
+check('detect.LIMBO_HP is not the same object as the PROXY',
+      det.LIMBO_HP is not rc.VICTIM_HP_PROXY)
+
 # The 2026-08-21T22Z pre-flight concluded that `liondrain` has no domain of its
 # own because `liondrainstop` runs THE SAME predicate one think tick later.
 # That conclusion is only as good as the sameness, so pin it: same window, and

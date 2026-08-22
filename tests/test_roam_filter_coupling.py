@@ -135,5 +135,43 @@ check('REGISTERED_T matches the scanner default', rfc.REGISTERED_T == 0.40,
 check('REGISTERED_T is in the default sweep', rfc.REGISTERED_T in rfc.DEFAULT_T,
       f'got {rfc.DEFAULT_T}')
 
+print('\n== 5. the pre-registered READING RULE still carries all four columns ==')
+# #101's (iv) was ADOPTED on 2026-08-22T14:5xZ and then sat in prose for four
+# rounds.  A column that lives only in a report nobody re-reads is not a column.
+# The rule text is printed by main() before any number is shown, so pin it in
+# the SOURCE -- deleting the (iv) block goes red here, and section 2b of
+# test_detector_source_constants.py covers the constant it is read at.
+#
+# WHY THE SOURCE AND NOT THE OUTPUT: main() needs a corpus on disk, and a test
+# that needs a corpus is a test that gets skipped.  The tradeoff is honest and
+# bounded -- this asserts the rule is PRINTED, not that a reader obeyed it.
+with open(os.path.join(BEHAV, 'roam_filter_coupling.py')) as fh:
+    rule_src = fh.read()
+
+for col, needle in (
+        ('(i) supply ratio', 'the supply ratio'),
+        ('(ii) episodes/game', 'episodes/game'),
+        ('(iii) threshold', 'the threshold it was read at'),
+        ('(iv) composition-attributable NULL', 'COMPOSITION-ATTRIBUTABLE NULL'),
+):
+    check(f'READING RULE names {col}', needle in rule_src)
+
+check('(iv) states its unit (pp), so it can be read against the effect size',
+      "in pp -- the same unit as the effect" in rule_src)
+check('(iv) points at a real implementation, not at a memory',
+      'null_leg_occupancy.py:report_composition_null' in rule_src)
+
+# ... and that implementation must exist and be reachable, or the citation
+# above is the same kind of dead pointer as test_set.md AJ.5's
+# `jmz_func.lua:6932`.
+import null_leg_occupancy as nlo                   # noqa: E402
+check('report_composition_null exists and is callable',
+      callable(getattr(nlo, 'report_composition_null', None)))
+with open(os.path.join(BEHAV, 'null_leg_occupancy.py')) as fh:
+    nlo_src = fh.read()
+check('report_composition_null is actually CALLED, not just defined',
+      nlo_src.count('report_composition_null(') >= 2,
+      '(defined once and never invoked is the #67 three-writes-no-reads shape)')
+
 print(f'\n{len(fails)} failed' if fails else '\nall passed')
 sys.exit(1 if fails else 0)

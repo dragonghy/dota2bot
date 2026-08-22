@@ -605,6 +605,12 @@ def d6_unpunished_tower_dive(tl):
 
 # --- enemy_overchase_unpunished tunables (Dota world units / seconds) ---
 OVERCHASE_DEPTH_MARGIN = 2000.0   # chaser this far into OUR half (x+y) => "deep"
+# DISTINCT PREDICATE, and the 0.45-vs-0.40 divergence test_set.md AJ.5 asked to
+# "explain or unify" is explained here, not unified: this is the ENEMY's victim
+# selection as read from OUR side (how hurt an ally has to look before an enemy
+# chasing it counts as an overchase), a detector tunable with no shipped
+# counterpart at all.  `VICTIM_HP_PROXY` stands in for a specific Lua predicate.
+# Two different questions; the numbers are free to differ and must move apart.
 OVERCHASE_VICTIM_HP = 0.45        # the chased ally must be at/under this hp fraction
 OVERCHASE_CHASE_RADIUS = 900.0    # chaser within this of the fleeing low ally
 OVERCHASE_SOLO_RADIUS = 1400.0    # no living chaser-side ally within this => solo dive
@@ -931,6 +937,17 @@ def d22_died_with_ult_ready(tl):
     return out
 
 
+# --- lowhp_limbo tunable ---
+# A DISTINCT PREDICATE that happens to share the number 0.40 with
+# `roam_conversion.VICTIM_HP_PROXY`.  That one is a stand-in for "our burst can
+# kill this victim"; this one is "this hero has been too hurt to do anything
+# useful for 45 continuous seconds".  Different subject, different question,
+# different reason to move.  Named so the census in
+# tests/test_detector_source_constants.py can register it as INDEPENDENT --
+# a shared number that must NEVER be converged (test_set.md AJ.5).
+LIMBO_HP = 0.40
+
+
 def d23_lowhp_limbo(tl):
     """Low-HP limbo (freehunt #3): <40% HP continuously >=45s while >2500 from
     the own base corner — not healing, not TP-ing, not farming. Pause-aware."""
@@ -942,7 +959,7 @@ def d23_lowhp_limbo(tl):
         base = _BASE_ANCHOR.get(team)
         run = None
         for s in snaps:
-            low = s["t"] >= 60 and s["hp"] > 0 and s["hp_pct"] < 0.40 \
+            low = s["t"] >= 60 and s["hp"] > 0 and s["hp_pct"] < LIMBO_HP \
                 and math.hypot(s["x"] - base[0], s["y"] - base[1]) > 2500
             if low:
                 run = [run[0], s["t"]] if run else [s["t"], s["t"]]

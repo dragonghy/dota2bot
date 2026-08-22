@@ -251,7 +251,19 @@ def main():
     print('    own resolution and is not evidence either way;')
     print('  * per #92 section 7, any downstream citation of a number from this')
     print('    table must carry (i) the supply ratio, (ii) episodes/game and')
-    print('    (iii) the threshold it was read at.')
+    print('    (iii) the threshold it was read at;')
+    print('  * (iv) NEW, #101 section 4.1 promoted to a hard column by the')
+    print('    director ruling of 2026-08-22T14:5xZ: also carry the')
+    print('    COMPOSITION-ATTRIBUTABLE NULL, SUM_h (s_A(h) - s_B(h)) * rbar(h),')
+    print('    in pp -- the same unit as the effect being reported, so the two')
+    print('    can be read against each other. Computed by')
+    print('    null_leg_occupancy.py:report_composition_null. It is NOT the')
+    print('    occupancy correlation r: r is a per-corpus property, while the')
+    print('    quantity that can fake an effect is the PRODUCT of the mix')
+    print('    difference and the per-hero rate spread. On `capmono` that')
+    print('    product explained only -27% of the NULL and came out with the')
+    print('    WRONG SIGN, which is the reason the column is mandatory rather')
+    print('    than a screening step: a small r does not license skipping it.')
 
     if args.json_out:
         with open(args.json_out, 'w') as fh:

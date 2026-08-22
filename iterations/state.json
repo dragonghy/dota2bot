@@ -3089,5 +3089,77 @@
   "gate_result": "luacheck bots game: 0 warnings. lua5.1 tests/run_tests.lua: 1292 tests / 0 failures / EXIT=0.",
   "near_miss": "The registration was momentarily LOST during the closeout rebase: `git checkout --ours iterations/state.json` on a conflict took a version that predated it, and the re-apply script then asserted on the key and was believed rather than the file re-read. Recorded because the failure mode is silent -- the rebase reported success and the tree stayed green. Second lesson from the same minute: a full json round-trip at the wrong indent rewrites all 3,000 lines; this file is indent=1 with no trailing newline.",
   "date": "2026-08-22T19:00Z"
+ },
+ "hp_constant_census_20260822T2100Z": {
+  "ruling_by": "director",
+  "utc": "2026-08-22T21:00Z",
+  "closes": "test_set.md AJ.5 handoff ('converge the 0.40 copies into one sourced constant') + GH #101 column (iv)",
+  "verdict": "CLASSIFY, DO NOT CONVERGE",
+  "why": "AJ.5 named four copies of 0.40 and asked for one constant. Read site by site they are THREE different things, and one of them (lanekill_commit.ALLY_HP_MIN) is the only real mirror in the family and had never been registered. Fusing it with the proxy would make a Lua edit to the ally health floor silently move the lethality proxy -- and with it the frame selection in find_kill_windows.py, which decides what becomes a fixture. That is GH #90 with extra steps.",
+  "classes": {
+   "PROXY": {
+    "definition_site": "tools/batch_test/behavioral/roam_conversion.py:VICTIM_HP_PROXY",
+    "consumers_now_import": [
+     "lanekill_commit.VICTIM_HP",
+     "find_kill_windows.VICTIM_HP"
+    ],
+    "legacy_alias": "roam_conversion.VICTIM_HP (archived readings cite it verbatim)",
+    "mirrors": null,
+    "honest_provenance": "no shipped literal. The gate asks GetEstimatedDamageToTarget(...) >= victim HP + 4s regen, an ABSOLUTE-health comparison not in the dumper stream. The nearest arithmetic is 1.84*HP > 0.75 <=> HP > 0.4076, but that is the ACTOR's HP (BID_FLOOR_HIGH), a different quantity that lands near the same number."
+   },
+   "MIRROR": {
+    "site": "tools/batch_test/behavioral/lanekill_commit.py:ALLY_HP_MIN",
+    "lua": [
+     "bots/FunLib/jmz_func.lua:7085 J.ShouldInitiateLaneKill",
+     "bots/FunLib/jmz_func.lua:7050 J.ShouldSupportComboKill"
+    ],
+    "value": 0.4,
+    "newly_registered": true
+   },
+   "INDEPENDENT": {
+    "sites": [
+     "detect.py:LIMBO_HP (0.40, shares the number by coincidence)",
+     "detect.py:OVERCHASE_VICTIM_HP (0.45)",
+     "detect.py:WASTE_HP_PCT (0.55)"
+    ],
+    "aj5_asked": "explain or unify the 0.45 vs 0.40 divergence",
+    "ruling": "EXPLAINED, NOT UNIFIED -- different subjects, the numbers must be free to move apart"
+   }
+  },
+  "aj5_pointer_falsified": "AJ.5 recorded the source site as jmz_func.lua:6932. Line 6932 is inside J.ShouldBodyBlockHarass, an 800u enemy scan in an unrelated helper. The pointer was wrong the day it was written -- a prose pointer is not a registration.",
+  "census": {
+   "where": "tests/test_detector_source_constants.py section 2b",
+   "scope": "module-level NAMED HP fractions in tools/batch_test/behavioral/",
+   "sites_swept": 17,
+   "all_classified": true,
+   "red_on": "any new module-level HP constant with no class",
+   "proxy_asserted_with": "is (identity), not == -- a retyped equal literal is a different object",
+   "honest_boundary": "inline HP literals inside function bodies are NOT covered (tp_attribution 0.35, capmono 0.55, ...). Backlog item 7, not a claim."
+  },
+  "column_iv": {
+   "gh": 101,
+   "adopted": "2026-08-22T14:5xZ, then sat in prose for four rounds",
+   "now_enforced_in": [
+    "tools/batch_test/behavioral/roam_filter_coupling.py READING RULE",
+    "tests/test_roam_filter_coupling.py section 5"
+   ],
+   "quantity": "SUM_h (s_A(h) - s_B(h)) * rbar(h), in pp -- same unit as the reported effect",
+   "impl": "tools/batch_test/behavioral/null_leg_occupancy.py:report_composition_null",
+   "mandatory_not_screening": "on capmono the product explained only -27% of the NULL and came out with the WRONG SIGN, so a small occupancy r does not license skipping it"
+  },
+  "verification": {
+   "py_suite": "11 passed / 0 failed",
+   "luacheck": "0 warnings, EXIT=0",
+   "lua_files_changed": 0,
+   "mutations": {
+    "M1 retype proxy instead of importing": "RED: VICTIM_HP IS the proxy object",
+    "M2 unregistered fifth copy (detect:SNEAKY_HP)": "RED: classified (UNREGISTERED), error names the three classes",
+    "M3 delete the (iv) block": "RED x3: name, unit, implementation pointer",
+    "M4 Lua ally floor 0.4 -> 0.5": "RED x2: ALLY_HP_MIN mirror + both-helpers-same-floor"
+   },
+   "restore": "cmp byte-identical on all four; git status bots/ game/ empty",
+   "self_inflicted": "the census regex v1 anchored $ after the rhs, so every assignment line carrying an explanatory comment failed to match: 7 sites swept instead of 17 while every classification assertion still printed ok. Caught by the ANTI-VACUITY GUARD, which was written before the first run. Seventh empty-match incident in this repo."
+  },
+  "cost_usd": 0.0
  }
 }

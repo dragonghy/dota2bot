@@ -79,12 +79,18 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from roam_conversion import load_game, dist, is_dead  # noqa: E402
+from roam_conversion import (load_game, dist, is_dead,  # noqa: E402
+                             VICTIM_HP_PROXY)
 
 LANING_END = 480.0          # turbo hard floor of J.IsInLaningPhase()
 OUT_START, OUT_END = 520.0, 900.0
-VICTIM_HP = 0.40
+VICTIM_HP = VICTIM_HP_PROXY   # PROXY, mirrors nothing -- see roam_conversion.py
 ALLY_RANGE_CORE = 1000.0    # J.GetNearbyHeroes(bot, 1000) in ShouldInitiateLaneKill
+# MIRROR, not a proxy: `J.GetHP( hAlly ) >= 0.4` is a real shipped clause, in
+# BOTH helpers (jmz_func.lua:7085 ShouldInitiateLaneKill, :7050
+# ShouldSupportComboKill).  It is registered against those sites in
+# tests/test_detector_source_constants.py and moves if and only if the Lua does.
+# It shares a NUMBER with VICTIM_HP_PROXY and nothing else -- never fuse them.
 ALLY_HP_MIN = 0.40
 ENEMY_RANGE_CORE = 800.0
 ENEMY_RANGE_SUP = 900.0
