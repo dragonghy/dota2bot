@@ -446,7 +446,86 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (`20260820_162821_slot1` t=307.4 必释放 / `20260820_182906_slot1` t=606.5 必不释放),
     并把「**现谓词分不开这两帧**」本身钉成断言(门里没有任何 HP 项)。
 
+18. **WK(GH #17)事实重锚 —— 2026-08-22T02:00Z 第一刀做完(GH #104),本条继续开着。**
+    动 WK 之前先核事实,结果**文件里的英雄不是游戏里的英雄**:①索引 2 是
+    `skeleton_king_bone_guard`(**主动**、无目标、恒 42s cd、2/4/6/8 层),不是注释写的
+    「吸血光环 / lane sustain」——吸血是 `skeleton_king_vampiric_spirit` 且 datafeed 标
+    **innate**,**一个技能点都不要**;②`abilityW` 的种子名 `skeleton_king_spectral_blade`
+    **不在他的技能集里、全仓库只出现在那一行**,整条 W 路径一直靠 `X.SkillsComplement`
+    里那行兜底重取(**没崩、没有行为差异**,正因如此改成真名是**可证空操作**);
+    ③npc/天赋块整块是 7.2x 的。锚 = datafeed `herodata?hero_id=42`,2026-08-22 读。
+    **本轮零行为改动、零新 gated id、零 EC2/S3**;交付重锚注释 + 删五个死局部
+    (`bDebugMode`/`abilityE`/`talent5`/`castEDesire`/`nKeepMana`,最后一个**已赋值全仓零读**,
+    与 GH #73 从 Lion 清掉的同型)+ `tests/test_wk_fact_anchor.lua` **13 例 / 13 次变异 13 抓**。
+    - **对 `wkbuild` 的直接后果**:它登记的条件 (c) 依据(「keeps Vampiric Aura (W) points
+      for lane sustain」)**在事实上是错的**。两行 build 各花 **4 点**在 Bone Guard 上,
+      `wkbuild` 只是把后三点从 **3/5/7 推到 9/10/12** ⇒ 它换的是**前期 Bone Guard uptime**
+      → 更早的第二点眩晕。**(c) 必须按这个基础重新论证**,点位已上棘轮。
+    - **`talent6:IsTrained()` 是 20 级测试**(`X.ConsiderW` 两条释放分支的析取旁路)。
+      证明链在仓库自己的代码里:`aba_skill.lua:135` 的 `GetTalentBuild` 驱动 t20→索引 {5,6}
+      ⇒ 配 GH #84 的 `level>=20` **0/210**、高水位 19 ⇒ turbo 内分支 2 严格 = 满层、
+      分支 1 严格 = >=60% 层。**这是 §4.2 的下一层**:§4.2 说的是一张**表**里的死重量,
+      这里是一个 t20 handle 被读进**出货中的决策函数**。
+    - **顺带交付一张全 BotLib 普查**:t20/t25 handle 的 **STRUCTURAL** 读共 **24 处 / 7 英雄**
+      (lion 14、skeleton_king 2、lich 2、legion_commander 2、warlock 2、chaos_knight 1、zuus 1),
+      机械判据(同一行含 `GetSpecialValue` ⇒ ADDITIVE,否则 STRUCTURAL)已写进测试并上棘轮。
+      **形状不决定结论**:lc/lion/zuus 那三家只是「地面施法 vs 单位施法」二选一,else 就是
+      正确默认 ⇒ 无可观测代价;真正减行为的是 chaos_knight / lich / skeleton_king。
+      四个非焦点英雄按章程交总监/协同组。
+    - **下一轮从这里起(三根 lever 都已预注册域,见 GH #104 §5)**:
+      优先 **Lever A** —— `X.ConsiderQ` 的 `nDamage = 40*(lv-1)+100` 是**落地 + 整个 2 秒 dot**
+      (80+20/100+40/120+60/140+80),再 `* 1.68` 喂 `J.CanKillTarget` ⇒ 4 级**声称 370 魔法伤害**
+      而落地只有 140,而这是「打得死就上」那条分支的判据(WK 0.6 杀 / 3.2 死)。
+      **桌面两问都已过**(谓词全是帧内量;`ConsiderQ` 是 `SkillsComplement` 第一个消费者、
+      desire>0 立刻 queue 并 return)⇒ **缺的只是域的形状,要语料**(§Y.2:桌面能证 EMPTY 不能证 RARE)。
+      Lever C(`bot:GetMana() >= 600` 打肉山分支;datafeed 1 级 max_mana **267** = 75+16×12、
+      +1.4 int/级 ⇒ 19 级 569 / 20 级 586,**21 级才越过 600**,而它要的是**当前**蓝 ⇒
+      turbo 结构性不可达)**先量域再改** —— 域可能干脆是空的(`axeblink` 陷阱)。
+    - **跨组、只登记不动**:天赋是**按索引**选的,而 WK 的索引 2 / 6 是 **facet 门控**天赋
+      (`..._facet_1` / `..._facet_3`);`GetTalentList` 只收 `IsTalent()` 为真的槽 ⇒
+      某个 facet 没被选中导致该槽不是天赋时,**其后所有索引整体前移**,全英雄池的
+      `tTalentTreeList` 都会选错人。离线不可证伪(mock 天赋槽是空的)。
+    - **方法上的一条(已进报告)**:第一稿的档位测试断言的是**我自己的排序假设**
+      (「第三个 pick 就是 t20 那个」),一个把 `[3]` 重指到别的档位键的变异**从它旁边走过去**。
+      改成**每次只翻一档、看返回的哪几个索引变了**,把接线从代码里读出来,M6/M12 才都抓住。
+      **「断言一个映射」和「把映射从代码里读出来」是两件事。**
+
 ## 当前状态(每次触发后更新)
+- 2026-08-22T02:00:00Z:**WK 事实重锚(GH #104)—— 动他之前先核事实,结果三处事实是陈旧的,
+  其中一处已经被本组自己当成一个门的条件 (c) 依据写进代码注释了。零行为改动、零新 gated id、
+  零 EC2/S3。**
+  会话开头查远端(`git ls-remote origin main` = `450c490`,与本地 HEAD 同)。`[hero]` open issue
+  里 **#97/#85/#59 是本组自己的 DO-NOT-ARM 记录**、**#63 00:30Z 刚做完**、**#56 卡在 `[harness] #60`**、
+  **#54 的 (a) 买不到**(`odaoe` 已入 eligible 但 §U.0 的 18-id 下一波串逐字不变 ⇒ 本波不 armed)、
+  **#73 剩下的 Lion 杠杆是「改策略本身」的大改动** ⇒ 没有可认领且买得起的 issue,
+  按章程转**焦点五里读数最差的那个**:GH #17 的 WK(15 补 / 661 gpm / **0.6 杀** / 3.2 死)。
+  **头条**:①索引 2 是 `skeleton_king_bone_guard`(**主动**、无目标、恒 42s cd、2/4/6/8 层),
+  注释写的「吸血光环 / lane sustain」是 7.2x 的名字 —— 吸血 `skeleton_king_vampiric_spirit`
+  被 datafeed 标 **innate**,**一个技能点都不要**;②`abilityW` 的种子名
+  `skeleton_king_spectral_blade` **不在他的技能集里**(全仓库只出现在那一行),整条 W 路径一直
+  靠 `X.SkillsComplement` 的兜底重取 —— **没崩也没有行为差异**,而正因为兜底在,改成真名是
+  **可证的空操作**;③npc/天赋块整块是 7.2x 的。锚 = datafeed `herodata?hero_id=42`。
+  **直接后果**:`wkbuild` 登记的 (c) 依据(「keeps Vampiric Aura (W) points for lane sustain」)
+  **在事实上是错的** —— 两行 build 各花 4 点在 Bone Guard 上,`wkbuild` 只是把后三点
+  **3/5/7 推到 9/10/12**,它换的是**前期 Bone Guard uptime**,不是续航。(c) 要重新论证。
+  **第二条**:`X.ConsiderW` 的两条释放分支把 `talent6:IsTrained()` 当析取旁路,而
+  `aba_skill.lua:135` 自己的算术把 t20 驱动到索引 {5,6} ⇒ 它是个 **20 级测试** ⇒ 配 GH #84 的
+  `level>=20` **0/210** ⇒ turbo 里分支 2 严格 = 满层。**这是 §4.2 的下一层**(§4.2 讲的是
+  一张**表**里的死重量,这里是 t20 handle 被读进**出货中的决策函数**)。
+  **交付**:`hero_skeleton_king.lua` 重锚注释 + 删五个死局部(`bDebugMode`/`abilityE`/`talent5`/
+  `castEDesire`/`nKeepMana`,最后一个**已赋值、全仓零读**,与 GH #73 从 Lion 清掉的同型);
+  `tests/test_wk_fact_anchor.lua` **13 例**、**13 次变异 13 抓**;全 BotLib 的 t20/t25 消费点普查
+  **24 处 / 7 英雄**(机械判据 + 棘轮)。三根 lever(Q 击杀判据的 2 秒总伤 ×1.68 / t20 析取 /
+  肉山分支的绝对 600 蓝)**只登记不上机**,预注册域写在 GH #104 §5 与代码注释里。
+  **给总监**:①`wkbuild` 的 (c) 需重议(不是本组能自己改的判词);②普查里四个非焦点英雄
+  (chaos_knight / lich / warlock / legion_commander)转协同组;③**facet 门控天赋会整体移位
+  索引**这条建议单开 issue(影响全英雄池的 `tTalentTreeList`,离线不可证伪);④**无新 gated id、
+  未提 queue.json**。
+  **方法上的一条**:第一稿的档位测试断言的是**我自己的排序假设**,一个把 `[3]` 重指到别的档位键
+  的变异从它旁边走过去了;改成「每次只翻一档,看返回的哪几个索引变了」才抓住 ——
+  **「断言一个映射」和「把映射从代码里读出来」是两件事。**
+  详见 backlog §18 与 `iterations/reports/hero/20260822T020000Z.md`;
+  登记 `state.json:wk_fact_reanchor_20260822T0200Z`;GH **#104**。
 - 2026-08-22T00:30:00Z:**GH #63 认领并做完 —— 它的头条数字全部要改,推荐值 250 也要改成 200;
   新 gate `cmrcap` 上机(gated,未 armed),等总监入集。**
   会话开头查远端(`git ls-remote origin main` = `b7a040f`);`[hero]` open issue 里 #97/#85/#59

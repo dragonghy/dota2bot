@@ -7,7 +7,6 @@
 --- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1627071163
 ----------------------------------------------------------------------------------------------------
 local X = {}
-local bDebugMode = ( 1 == 10 )
 local bot = GetBot()
 
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func' )
@@ -24,21 +23,49 @@ local tTalentTreeList = {
 }
 
 
--- 1 = skeleton_king_hellfire_blast (Q, the single-target stun), 2 =
--- skeleton_king_vampiric_aura (W, lifesteal sustain), 3 = skeleton_king_mortal_strike
--- (E, crit), 6 = skeleton_king_reincarnation (R).
+-- ABILITY INDEX MAP -- re-anchored 2026-08-22 against the live Dota 2 datafeed
+-- (https://www.dota2.com/datafeed/herodata?language=english&hero_id=42), because
+-- the map that used to sit here named an ability the game no longer has.
+--
+-- These numbers index sAbilityList, which J.Skill.GetAbilityList builds by walking
+-- the ability slots and SKIPPING innates; the ultimate is forced to index 6.  For
+-- Wraith King that yields:
+--
+--   1 = skeleton_king_hellfire_blast  Wraithfire Blast -- the only lockdown.
+--                                     525 cast range, 95/110/125/140 mana,
+--                                     14/12/10/8s cd, 80/100/120/140 impact
+--                                     damage + 20/40/60/80 over a 2s dot,
+--                                     1.0/1.2/1.4/1.6s stun.
+--   2 = skeleton_king_bone_guard      Bone Guard -- an ACTIVE, no-target skeleton
+--                                     release: 70/80/90/100 mana, flat 42s cd,
+--                                     2/4/6/8 max charges.  It is NOT lifesteal.
+--   3 = skeleton_king_mortal_strike   Mortal Strike -- passive crit / skeletons.
+--   6 = skeleton_king_reincarnation   220/110/0 mana, 180/150/120s cd.
+--
+-- skeleton_king_vampiric_spirit (the lifesteal) is flagged INNATE by the datafeed,
+-- so GetAbilityList drops it and it costs no skill point at all.  The name that
+-- used to be written here, skeleton_king_vampiric_aura, is not in the game's
+-- ability set any more; neither is skeleton_king_spectral_blade (see abilityW).
 local tAllAbilityBuildList = {
 							{2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},--pos1,3
 }
 
 -- [GH #17] Kill-participation laning build (gated). WK is a focus hero but bottom
--- of the pool on kills (0.6/game): the default build above leaves Hellfire Blast
--- (Q, the only lockdown) at a SINGLE point until level 12, so WK has no reliable
--- stun through the entire laning + early-gank window. This build instead takes the
--- 2nd stun point at level 5 (much longer lockdown when kills actually happen),
--- still maxes Mortal Strike (E, crit) by level 8 for farm/fight damage, and keeps
--- Vampiric Aura (W) points for lane sustain. Gated turbo + soak-candidate 'wkbuild'
--- so it stays inert until an A/B win promotes it.
+-- of the pool on kills (0.6/game): the default build above leaves Wraithfire Blast
+-- (index 1, the only lockdown) at a SINGLE point until level 12, so WK has no
+-- reliable stun through the entire laning + early-gank window. This build instead
+-- takes the 2nd stun point at level 5 (much longer lockdown when kills actually
+-- happen) and still maxes Mortal Strike (index 3) by level 8 for farm/fight damage.
+-- Gated turbo + soak-candidate 'wkbuild' so it stays inert until an A/B win
+-- promotes it.
+--
+-- NOTE (2026-08-22, re-anchor): the rationale recorded here when the gate was
+-- written said the remaining points were kept in "Vampiric Aura (W) for lane
+-- sustain".  That was wrong on the facts: index 2 is Bone Guard, an active
+-- skeleton release, and the lifesteal is innate and free.  So what this build
+-- actually trades away is Bone Guard uptime, not sustain -- both build rows spend
+-- 4 points there, this one just spends them later (1/9/10/12 vs 1/3/5/7).
+-- The gate's condition (c) has to be re-argued on that basis before it is armed.
 local tKillBuildList = {
 							{2,1,3,3,1,6,3,3,2,2,6,2,1,1,6},--pos1,3, earlier 2nd stun
 }
@@ -140,29 +167,47 @@ end
 
 --[[
 
-npc_dota_hero_skeleton_king
+npc_dota_hero_skeleton_king -- re-anchored 2026-08-22 from the live datafeed
+(hero_id 42).  The block that used to sit here still named the 7.2x ability and
+talent set; every line below was read off the feed, not carried forward.
 
-"Ability1"		"skeleton_king_hellfire_blast"
-"Ability2"		"skeleton_king_vampiric_aura"
-"Ability3"		"skeleton_king_mortal_strike"
-"Ability4"		"generic_hidden"
-"Ability5"		"generic_hidden"
-"Ability6"		"skeleton_king_reincarnation"
-"Ability10"		"special_bonus_unique_wraith_king_7"
-"Ability11"		"special_bonus_attack_speed_20"
-"Ability12"		"special_bonus_strength_15"
-"Ability13"		"special_bonus_unique_wraith_king_6"
-"Ability14"		"special_bonus_unique_wraith_king_1"
-"Ability15"		"special_bonus_unique_wraith_king_8"
-"Ability16"		"special_bonus_unique_wraith_king_2"
-"Ability17"		"special_bonus_unique_wraith_king_4"
+abilities, in the order the feed lists them (the feed gives no "AbilityN" slot
+numbers, so the old block's numbering is dropped rather than guessed at):
 
+  skeleton_king_hellfire_blast
+  skeleton_king_bone_guard
+  skeleton_king_mortal_strike
+  skeleton_king_vampiric_spirit     -- ability_is_innate: true, not learnable
+  skeleton_king_reincarnation       -- the ultimate
+
+talents, in the feed's order, ASSUMED to be ability-slot order -- which is the
+order J.Skill.GetTalentList returns.  Two things corroborate it: the old block's
+Ability17 was ..._unique_wraith_king_4 and that is still the last name here, and
+index [6] below is the Bone Guard talent, which is exactly the handle X.ConsiderW
+reads as `talent6`.  J.Skill.GetTalentBuild drives indices 1,2 from t10 / 3,4 from
+t15 / 5,6 from t20 / 7,8 from t25, so an index alone tells you the tier, and THAT
+part needs no assumption at all (tests/test_wk_fact_anchor.lua reads it out of
+aba_skill.lua rather than asserting it):
+
+  [1] special_bonus_unique_wraith_king_2          +% Vampiric Spirit lifesteal
+  [2] special_bonus_unique_wraith_king_facet_1    +s Wraithfire Blast slow dur.
+  [3] special_bonus_unique_wraith_king_11         +s Wraithfire Blast stun dur.
+  [4] special_bonus_hp_300                        +300 health
+  [5] special_bonus_attack_speed_50               +50 attack speed
+  [6] special_bonus_unique_wraith_king_facet_3    + Bone Guard skeletons spawned
+  [7] special_bonus_unique_wraith_king_10         -s Mortal Strike cooldown
+  [8] special_bonus_unique_wraith_king_4          Reincarnation casts Wraithfire
+
+tTalentTreeList above therefore resolves to [2] at t10, [4] at t15, [6] at t20 and
+[7] at t25 ({10,0} takes the even/right index, {0,10} the odd/left one -- see
+aba_skill.lua:135).  Only the t10 and t15 picks can ever be taken in turbo: the
+level census behind GH #84 read level >= 20 on 0 of 210 hero-slots, high-water 19.
+
+modifier_skeleton_king_bone_guard                 -- stack count = charges held
 modifier_skeleton_king_hellfire_blast
-modifier_skeleton_king_vampiric_aura
-modifier_skeleton_king_vampiric_aura_buff
-modifier_skeleton_king_mortal_strike_summon_thinker
 modifier_skeleton_king_mortal_strike
 modifier_skeleton_king_mortal_strike_summon
+modifier_skeleton_king_mortal_strike_summon_thinker
 modifier_skeleton_king_reincarnation
 modifier_skeleton_king_reincarnate_slow
 modifier_skeleton_king_reincarnation_scepter
@@ -171,17 +216,22 @@ modifier_skeleton_king_reincarnation_scepter_active
 --]]
 
 local abilityQ = bot:GetAbilityByName('skeleton_king_hellfire_blast')
-local abilityW = bot:GetAbilityByName('skeleton_king_spectral_blade')
-local abilityE = bot:GetAbilityByName('skeleton_king_mortal_strike')
+-- Was seeded with 'skeleton_king_spectral_blade', a name that exists nowhere in
+-- the game's ability set nor anywhere else in this repo, so it resolved to nil on
+-- every load and the whole W path rode on the SkillsComplement fallback below.
+-- Seeding it with the real name leaves that fallback in place and is a no-op for
+-- every read of abilityW (the fallback re-fetches the same handle).
+local abilityW = bot:GetAbilityByName('skeleton_king_bone_guard')
 local abilityR = bot:GetAbilityByName('skeleton_king_reincarnation')
-local talent5 = bot:GetAbilityByName( sTalentList[5] )
+-- talent6 is sTalentList[6] = the t20 slot (aba_skill.lua:140).  Both places it is
+-- read below are OR-bypasses, so in turbo -- where level 20 does not happen -- they
+-- contribute nothing and the sibling stack test is the whole condition.
 local talent6 = bot:GetAbilityByName( sTalentList[6] )
 
 local castQDesire, castQTarget
 local castWDesire
-local castEDesire
 
-local nKeepMana, nMP, nHP, nLV, hEnemyHeroList
+local nMP, nHP, nLV, hEnemyHeroList
 
 function X.SkillsComplement()
 
@@ -189,7 +239,9 @@ function X.SkillsComplement()
 	if J.CanNotUseAbility( bot ) or bot:IsInvisible() then return end
     if not abilityW or abilityW:IsHidden() then abilityW = bot:GetAbilityByName('skeleton_king_bone_guard') end
 
-	nKeepMana = 160
+	-- (a `nKeepMana = 160` used to be assigned here; nothing in this file, or any
+	-- other, ever read it -- same dead reserve as the one cleared out of
+	-- hero_lion.lua under GH #73.  WK's real mana reserve is X.ShouldSaveMana.)
 	nLV = bot:GetLevel()
 	nMP = bot:GetMana()/bot:GetMaxMana()
 	nHP = bot:GetHealth()/bot:GetMaxHealth()
@@ -231,6 +283,13 @@ function X.ConsiderQ()
 	local nCastPoint = abilityQ:GetCastPoint()
 	local nManaCost = abilityQ:GetManaCost()
 	local nSkillLV = abilityQ:GetLevel()
+	-- 100/140/180/220.  Anchored 2026-08-22: that is Wraithfire Blast's impact
+	-- damage (80/100/120/140) PLUS the whole 2s damage-over-time (20/40/60/80), so
+	-- it is what the target loses if it stands in the dot to the end -- not what
+	-- lands on cast.  It feeds a kill check below at nDamage * 1.68, i.e. up to 370
+	-- claimed magical damage against 140 of impact.  Registered as a lever, NOT
+	-- changed here: narrowing it is a behaviour change and needs its own gate and
+	-- its own real frame.
 	local nDamage = 40 * ( nSkillLV - 1 ) + 100
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 
@@ -378,6 +437,17 @@ function X.ConsiderQ()
 	end
 
 	--打肉的时候输出
+	-- 600 is an ABSOLUTE mana figure on a hero that cannot hold it in turbo.  The
+	-- datafeed gives WK 267 max mana at level 1 on 16 int, i.e. the standard 75
+	-- base + 12/point, and 1.4 int per level: the pool is 435 at level 11, 502 at
+	-- 15, 569 at 19 and still 586 at 20.  It first crosses 600 at level 21, and
+	-- this branch wants CURRENT mana, so it wants a near-full level-21 pool -- while
+	-- the GH #84 level census read level >= 20 on 0 of 210 hero-slots, high-water
+	-- 19.  No item ahead of item_ultimate_scepter in either buy list above grants
+	-- intelligence.  So this branch is unreachable in turbo whatever Roshan is
+	-- doing.  Registered as a lever, NOT changed here: a fractional floor is a
+	-- behaviour change, and its domain (WK in BOT_MODE_ROSHAN at all) has to be
+	-- measured first -- it may well be empty, which is the axeblink trap again.
 	if bot:GetActiveMode() == BOT_MODE_ROSHAN
 		and bot:GetMana() >= 600
 	then
@@ -489,8 +559,10 @@ end
 
 function X.ShouldSaveMana( nAbility )
 
---	if talent5:IsTrained() then return false end
-
+	-- (a commented-out `if talent5:IsTrained() then return false end` used to open
+	-- this function.  talent5 is sTalentList[5] = the other t20 slot, today
+	-- special_bonus_attack_speed_50 -- nothing to do with mana, and unreachable in
+	-- turbo regardless.  The handle it needed is gone with it.)
 	if nLV >= 6
 	and nAbility ~= nil
 	and abilityR ~= nil
