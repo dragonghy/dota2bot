@@ -367,6 +367,12 @@ tests['census: [GH #117] where a frame that reaches the selector STANDS'] = func
     --   => 9 frames where the clause actually discriminates.
     -- This corpus never saw the armed pullcamp -- it is an INDEPENDENT
     -- corroboration of the batch's "median pull start 57% across the map".
+    -- Scope, stated so nobody reads it as more: these frames pass every clause
+    -- the harness CAN evaluate (turbo window, support, nobody within 800), not
+    -- the equilibrium clause -- GetLaneFrontLocation is refused (GH #61), so a
+    -- sweep cannot ask it. That clause only fires when our wave is pushed OUT,
+    -- i.e. it selects for a bot standing further forward still, so the real
+    -- selector domain is at least as deep as this. The bound is the safe way.
     -- Asserted as relations, not as counts: the counts move whenever the
     -- corpus grows (GH #106), the shape is the finding.
     local honest = C('depth_honest')
