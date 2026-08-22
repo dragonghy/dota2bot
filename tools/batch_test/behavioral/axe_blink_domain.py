@@ -146,6 +146,37 @@ def dist(ax, ay, bx, by):
     return math.hypot(ax - bx, ay - by)
 
 
+def primary_idx(snapshots):
+    """{hero: idx of the REAL entity}, keyed on EARLIEST first appearance.
+
+    Same-name multiple entities are the norm, not the exception: measured on
+    the 16 Axe-bearing mirror games of the `lf_rescue` + `roamstale` bisect
+    corpora, 10/16 games (62%) carry at least one duplicate, 74 extra entities
+    in all, 16,126 extra frames of which 1,239 read `hp > 0` and so survive
+    every value-based filter in this directory.  In that corpus the duplicates
+    are byte-identical copies of the body -- same item list, same `hp`, same
+    `hp_pct`, born in pairs/triples at one instant (Chaos Knight's Phantasm
+    triples read n = 413/413/413) -- so NO threshold on hp, hp_max or items can
+    separate them.  Identity has to come from the entity id.
+
+    Earliest appearance is the discriminator the charter mandates (2026-08-21T09Z
+    item 1): the body is present from the ~-75s pre-game frame, a copy is not.
+    Frame count is the weaker rule -- on this corpus the two agree on 160/160
+    (hero, game) pairs, so `roam_conversion.py`'s frame-count lock happens to be
+    safe here, but that is a reading of this corpus, not a property of the rule.
+    """
+    first = {}
+    for s in snapshots:
+        key = (s['hero'], s['idx'])
+        if key not in first or s['t'] < first[key]:
+            first[key] = s['t']
+    out = {}
+    for (hero, idx), t0 in first.items():
+        if hero not in out or t0 < out[hero][1]:
+            out[hero] = (idx, t0)
+    return {h: v[0] for h, v in out.items()}
+
+
 def call_state(snap):
     """(learned, available_now) for Berserker's Call on this frame."""
     for a in snap['abilities']:
@@ -173,12 +204,20 @@ def analyse(path, blink_cd):
     d = load(path)
     if d is None:
         return None
-    axe = sorted([s for s in d['snapshots'] if s['hero'] == AXE], key=lambda s: s['t'])
+    # Lock every hero to its real entity BEFORE anything is measured (GH #69).
+    # This has to cover `by_t` too, not just the Axe track: `by_t` is what feeds
+    # the enemy ring at the landing point and the ally ring in B2/B3, so a copy
+    # of ANY hero inflates those counts.
+    prim = primary_idx(d['snapshots'])
+    kept = [s for s in d['snapshots'] if prim.get(s['hero']) == s['idx']]
+    n_dropped = len(d['snapshots']) - len(kept)
+
+    axe = sorted([s for s in kept if s['hero'] == AXE], key=lambda s: s['t'])
     if not axe:
         return {'timeline': os.path.basename(path), 'has_axe': False}
     team = axe[0]['team']
     by_t = collections.defaultdict(list)
-    for s in d['snapshots']:
+    for s in kept:
         by_t[round(s['t'], 1)].append(s)
 
     holds = [s for s in axe if any(i == BLINK for i in s['items'])]
@@ -190,6 +229,13 @@ def analyse(path, blink_cd):
         'timeline': os.path.basename(path),
         'has_axe': True,
         'axe_frames': len(axe),
+        # Pre-filter census, NOT a domain number: these frames are removed
+        # before any clause is evaluated, so this counts snapshots, not
+        # decisions (charter 2026-08-21: where you instrument a drop count
+        # decides what it means).
+        'idxlock_frames_dropped': n_dropped,
+        'idxlock_axe_copies': len({s['idx'] for s in d['snapshots']
+                                   if s['hero'] == AXE}) - 1,
         # D. supply
         'D_holds_blink': bool(holds),
         'D_first_hold_t': round(holds[0]['t'], 1) if holds else None,
@@ -410,6 +456,10 @@ def main():
     print(f'  timelines            {len(rows)}')
     print(f'  games with Axe       {len(with_axe)}')
     print(f'  games where Axe owns a dagger  {len(with_blink)}  (section D)')
+    _drop = sum(r.get('idxlock_frames_dropped', 0) for r in with_axe)
+    _cg = sum(1 for r in with_axe if r.get('idxlock_axe_copies', 0) > 0)
+    print(f'  idx lock (GH #69): dropped {_drop} copy-entity snapshots before '
+          f'any clause; {_cg}/{len(with_axe)} games carried an Axe copy')
     for r in with_blink:
         print(f'    {r["timeline"]:34s} first hold t={r["D_first_hold_t"]}  '
               f'{r["D_hold_frames"]} frames')
