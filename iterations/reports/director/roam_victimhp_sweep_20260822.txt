@@ -1,0 +1,29 @@
+arm A: 16 games   arm B: 16 games
+A-only ids: ['roamstale']    B-only ids: (none)
+
+== IN-DOMAIN (laning, t<480s) ==   estimator: seed-paired ARMED A-B; NULL = baseline leg (same shipped code both arms)
+      T    nA    nB  supply  ep/game                  killed                hit_hero          hit_creep_only                  no_dmg
+   0.25   207   227    0.91    13.56    -2.1/t0.39[N -12.5]    -7.4/t2.62[N  +2.2]    +0.7/t0.84[N  -2.4]    +6.6/t2.09[N  +0.2]
+   0.40   409   417    0.98    25.81    -1.7/t0.51[N -11.8]    -7.3/t2.70[N  +0.0]    -0.0/t0.00[N  -0.8]    +7.3/t2.70[N  +0.7] <-- REGISTERED
+   0.55   708   706    1.00    44.19    -1.1/t0.42[N  -9.3]    -3.3/t1.27[N  -3.8]    -0.2/t0.25[N  +1.1]    +3.5/t1.62[N  +2.7]
+   0.70  1112  1124    0.99    69.88    -0.5/t0.23[N  -7.1]    -0.8/t0.32[N  -2.0]    -0.2/t0.23[N  +0.8]    +0.9/t0.42[N  +1.2]
+   0.85  1490  1537    0.97    94.59    -0.0/t0.01[N  -5.8]    -1.5/t1.01[N  -2.2]    +0.2/t0.52[N  +0.6]    +1.3/t0.84[N  +1.6]
+   1.01  2098  2156    0.97   132.94    -0.2/t0.14[N  -3.4]    +0.2/t0.08[N  -0.6]    +0.8/t0.78[N  +0.5]    -1.0/t0.60[N  +0.1]
+
+== OUT-DOMAIN (t 520-900s) ==   estimator: seed-paired ARMED A-B; NULL = baseline leg (same shipped code both arms)
+      T    nA    nB  supply  ep/game                  killed                hit_hero          hit_creep_only                  no_dmg
+   0.25    52    71    0.73     3.84   -11.7/t1.29[N  +0.1]    -1.9/t0.31[N  -9.8]    +2.8/t0.58[N  +1.0]    -0.9/t0.28[N  +8.7]
+   0.40    78   104    0.75     5.69   -11.2/t0.85[N  +0.8]    +5.7/t2.02[N  -9.5]    +0.0[N  +3.6]    -5.7/t2.02[N  +5.9] <-- REGISTERED
+   0.55   126   145    0.87     8.47   -13.1/t1.24[N  +1.1]    +1.3/t0.28[N  -5.3]    -0.2/t0.41[N  +3.8]    -1.0/t0.21[N  +1.5]
+   0.70   143   182    0.79    10.16    -2.3/t0.17[N +11.2]    +4.7/t1.12[N  +0.5]    -3.5/t3.36[N  +3.9]    -1.2/t0.37[N  -4.4]
+   0.85   161   220    0.73    11.91    -2.7/t0.24[N  +7.6]    +0.6/t0.11[N  -5.0]    -2.3/t1.88[N  +4.3]    +1.7/t0.34[N  +0.7]
+   1.01   209   299    0.70    15.88    -0.4/t0.04[N  +2.7]    -4.9/t0.77[N  -6.0]    +0.8/t0.38[N  +3.1]    +4.0/t0.91[N  +2.8]
+
+READING RULE (pre-registered, test_set.md AG.4 / AJ):
+  * a delta that tracks the supply ratio monotonically along T is a
+    supply artifact, not an effect -- that is how #92 died;
+  * a delta smaller than |NULL| at the same T is below the metric's
+    own resolution and is not evidence either way;
+  * per #92 section 7, any downstream citation of a number from this
+    table must carry (i) the supply ratio, (ii) episodes/game and
+    (iii) the threshold it was read at.
