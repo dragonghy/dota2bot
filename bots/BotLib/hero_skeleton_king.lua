@@ -528,6 +528,32 @@ function X.ConsiderQ()
 	end
 
 	--通用消耗敌人或受到伤害时保护自己
+	-- PRE-FLIGHT DONE, CANDIDATE NOT WRITTEN (hero stream, 2026-08-22, queue.json
+	-- hero-1).  The proposal was `wkqaim`: this branch takes nEnemysHerosInRange[1]
+	-- and that list is distance-sorted, so it casts on the NEAREST enemy while the
+	-- branches above it each express a preference (killability, biggest threat).
+	-- Give it one too -- prefer the lowest-health enemy in the ring.  Two reasons it
+	-- was not written; tests/test_wk_q_aim_preflight.lua machine-checks both.
+	--
+	--   SUPPLY.  This is the last of TEN firing points in this function bidding
+	--   for one 14-second ability.  tAllAbilityBuildList leaves Wraithfire Blast
+	--   at rank 1 -- 14s cd -- from hero level 2 to 11, which is where GH #84's
+	--   turbo level census actually lives (0 of 210 hero-slots reached 20;
+	--   high-water 19).  Measured
+	--   over the fixture library: every frame carrying a living WK with two or more
+	--   living enemies inside 568u has the Blast unlearned or on cooldown.  The
+	--   branch is not reached on a single one.
+	--
+	--   SIBLING, UPSTREAM.  The recently-damaged branch just above takes the
+	--   nearest entry of the same list, and it fires on exactly the frames this fix
+	--   was for -- the ones where WK is being hit.  Aiming here alone changes no
+	--   fight.  Same shape as liondrain/liondrainstop (GH #97), except the sibling
+	--   is upstream and unarmed, so it takes those frames unconditionally.
+	--
+	-- If `wkqaim` is ever revived it has to cover the recently-damaged branch too,
+	-- and the deciding read is still the corpus scan hero-1 asked for (153 games
+	-- with .dem from the 2026-08-22 wave) -- a fixture-library zero shows EMPTY,
+	-- never RARE.
 	if ( #nEnemysHerosInView > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )
 		and ( bot:GetActiveMode() ~= BOT_MODE_RETREAT or #allyList >= 2 )
 		and #nEnemysHerosInRange >= 1
