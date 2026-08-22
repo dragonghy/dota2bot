@@ -150,7 +150,22 @@ def main():
             such guard true for the wrong reason;
           * hero actors are stored under their SNAPSHOT name, because the event
             stream spells some heroes without underscores (`queenofpain` vs
-            `queen_of_pain`) and WasRecentlyDamagedByHero compares handles.
+            `queen_of_pain`) and WasRecentlyDamagedByHero compares handles;
+          * `src` carries the RAW actor entity name on non-hero rows (and is
+            absent on hero rows, where `actor` already names it).
+
+        Why `src` exists (director 2026-08-22T23:0xZ, test_set.md SS-AR.2):
+        `kind` MUST fold neutrals into 'creep', because the engine hands the
+        script exactly one reader for both (`WasRecentlyDamagedByCreep`) and the
+        mock has to answer the same question the engine answers. But collapsing
+        `kind` while also dropping `actor` deleted "was it a centaur or a melee
+        creep" at fixture-write time, unrecoverably. That question turned out to
+        be load-bearing: ruling on the gated 'fieldcreep' veto needed to know
+        which of its five vetoed frames were camp contact, and the corpus could
+        not say -- the source had to be INFERRED from per-hit magnitude. `src` is
+        an extra field, not a reclassification, so every existing reader (and
+        `WasRecentlyDamagedByCreep` itself) is untouched; it only makes newly
+        dumped fixtures able to answer what the old ones cannot.
         """
         lo = t - args.recent_window
         out = defaultdict(list)
@@ -161,6 +176,7 @@ def main():
             if tgt is None:
                 continue
             actor_raw = e.get("actor") or ""
+            src = None
             if e.get("actor_hero"):
                 kind = "hero"
                 actor = heroes_by_canon.get(bare(actor_raw).replace("_", "").lower())
@@ -168,6 +184,7 @@ def main():
                     continue        # unmapped illusion/clone, or self damage
             else:
                 actor = None
+                src = actor_raw or None
                 low = actor_raw.lower()
                 if "tower" in low:
                     kind = "tower"
@@ -175,8 +192,11 @@ def main():
                     kind = "creep"
                 else:
                     kind = "other"
-            out[tgt].append({"dt": round(t - e["t"], 2), "kind": kind,
-                             "actor": actor, "value": e.get("value", 0)})
+            row = {"dt": round(t - e["t"], 2), "kind": kind,
+                   "actor": actor, "value": e.get("value", 0)}
+            if src is not None:
+                row["src"] = src
+            out[tgt].append(row)
         for tgt in out:
             out[tgt].sort(key=lambda d: (d["dt"], d["kind"]))
         return out
@@ -406,11 +426,20 @@ def main():
         # fixture generated before this block existed), so the loader then leaves
         # the mock's WasRecentlyDamagedBy* = false default alone -- which is the
         # same answer, for the right reason.
+        # `src` is emitted only on the rows that carry it (non-hero actors, see
+        # recent_damage's docstring). It is APPENDED after the four original
+        # keys so the row's existing shape is byte-identical up to that point --
+        # and it has to be emitted here explicitly, because this writer names
+        # its keys one by one: adding a field upstream without adding it here
+        # drops it silently, which is how the neutral-vs-lane-creep question got
+        # lost in the first place.
         rdmg = ("\n      recent_damage = { %s },"
-                % ", ".join("{ dt = %s, kind = '%s', actor = %s, value = %d }"
+                % ", ".join("{ dt = %s, kind = '%s', actor = %s, value = %d%s }"
                             % (d["dt"], d["kind"],
                                ("'%s'" % d["actor"]) if d["actor"] else "nil",
-                               d["value"])
+                               d["value"],
+                               (", src = '%s'" % d["src"].replace("\\", "\\\\").replace("'", "\\'"))
+                               if d.get("src") else "")
                             for d in u["recent_damage"])) if u["recent_damage"] else ""
         # An illusion of this hero (or of one that hit it) was on the field in
         # the lookback, so the name-keyed rows cannot say which copy was hit.
