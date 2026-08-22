@@ -72,6 +72,15 @@
    `285` = dumper 缺口(买不到)/ `535` = 语料缺口(**能买,请求活的**)/ `228` = 不在 Turbo 里(没什么可买的)。
    **下一轮默认改取 `ability_item_usage_generic:5749`**(守遗迹 TP,另外四项 AND 都是活的 Turbo 状态)。
    规矩照旧:**断言最终 desire,不是断言分支可达**;掉 farm desire ≠ 去打架。
+   **2026-08-21T22:00Z:`5749` 也做不成 —— 但这次等级门 satisfiable(唯一 subject≥15 帧
+   `f_260820_043120_viper_defend_paired` viper@15,外层门 5751-5756 整个开)⇒ 等级不是卡点,
+   基地被围才是。两条内层腿(path 1 守护遗迹读 #61-refused 的 `GetNearestLaneFrontLocation`
+   且几何子句要敌兵线进遗迹 1600 内;path 2 保护遗迹要两 T4 塔拆掉 + 敌兵进 800 内)都只在
+   基地被围时触发,自终止 turbo 语料到不了(= 0a 那条「打到基地的局」,不新开请求)。
+   ⇒ **六条 TEETH 全查完,普查产出零个 shippable 杠杆**(285 dumper / 535 语料 / 392-506 死析取 /
+   228 不在 Turbo / 5749 基地被围+#61)。已成 `tests/test_relicguard_siege_gate.lua`(8 例),
+   `state.json:relicguard_LEVEL_GATE_CENSUS_CLOSE_20260821`。**GH #84 §5 的 (乙) 形状到此为止,
+   下一条工作单元不再走等级门这条线** —— 回到 0b/0c 的逐帧治疗队列或 0a(等基地攻防语料)。
    **顺带记的第二个杠杆(不折进本条)**:自动买活三条路径在 Turbo 全关
    —— `aiug:568` 的 `ancient:GetHealth() < 0.8`(**单位错配**,该开 `[bug]`)、
    `:582` 的等级 >24、`:578` 的 `nFullRespawnTime < 60` 早退(**推论,harness 判不了**,
@@ -512,6 +521,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-21T22:00Z:**关掉了等级门普查(GH #84 §5)。第六条也是最后一条 TEETH
+  `ability_item_usage_generic:5749`(守遗迹 TP)同样做不成完整形状,但理由与前五条都不同 ——
+  它的等级门 satisfiable(唯一一枚 subject≥15 的 fixture `f_260820_043120_viper_defend_paired`
+  viper@15 上,外层门 5751-5756 整个打开)⇒ 等级常数不是卡点,基地被围才是。**
+  **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提新语料请求,零 AWS 支出。**
+  **产出** `tests/test_relicguard_siege_gate.lua`(**8 例**)。
+  **两条内层腿都只在自家遗迹被直接围攻时才触发**(自终止 turbo 语料到不了,backlog 0a):
+  Path 1(守护遗迹 5758-5778)读 `J.GetNearestLaneFrontLocation` → 调 GH#61-refused
+  `GetLaneFrontLocation` ×3(jmz_func:3476-3478)⇒ 最终 desire(5778)**没有 lane-front 声明就断不了**
+  (与 defnum/defclose 骑同一个 #61 桩),几何子句 `dist(nAncient, enemyLaneFront) <= 1600` = 敌方兵线
+  压到我遗迹 1600 内 = 基地被围;Path 2(保护遗迹 5781-5810)要两座 T4 塔都拆掉 + 敌兵进遗迹 800 内,
+  viper 帧上两座 T4 塔都活着(dump 真值,handle 非 nil)且 `UNIT_LIST_ENEMY_CREEPS` 空(dumper 不带兵)
+  ⇒ **双重关死**;它还带**第二份**等级常数(`GetLevel() >= 15` at 5791)。
+  **六条 TEETH 全查完,一条都做不成 shippable gated fix,各卡一个不同的点**:
+  285 = dumper 缺口 / 535 = 语料缺口(runMode 不同时) / 392/506 = 死析取腿(`J.IsLateGame()` 0/94) /
+  228 = 不在 Turbo / **5749 = 基地被围语料缺口(0a)+ path 1 的 #61 lane-front 墙**。
+  **等级门普查产出零个 shippable 杠杆。**
+  **语料请求不新开**:5749 要的基地被围帧就是 0a 已经在追的「打到基地的局」,一局打到基地同时解锁
+  0a 的退却/防守子句和这条守遗迹 TEETH。
+  **记账一条 harness**:`GetAncient` 在没有遗迹建筑数据的 fixture 上回退到地图原点(0,0)
+  (`replay_fixture.lua:687-690`、`bot_api.lua:288-293`)⇒ 全语料「敌人→自家遗迹最近距离」扫描被污染
+  (`f_073148_zuus_lina` 报敌方 lina 距原点幻影遗迹 65.3u)⇒ 结论只钉在带真实遗迹的 viper 帧上,
+  0a 的 4925u 是**引用不是重算**。
+  **验收**:luacheck **0 warnings**(bots/game + 新测试文件);新文件 **7 tests, 0 failures**;
+  **2 条外部变异逐条验 apply+rollback**(M-A 拆 #61 refusal → path-1 红;M-B `GetTower 9/10`→nil → path-2 红)
+  + 2 条 in-test 变异自检。全套见提交时记录。
+  `state.json:relicguard_LEVEL_GATE_CENSUS_CLOSE_20260821`。
+  详见 `iterations/reports/strategy/20260821T220000Z.md`。
 - 2026-08-21T20:35Z:**一轮重复劳动,弃掉;残渣是真的两条。**
   **`bots/` 一位没动,`tests/mock/` 一位没动,不产 gate,不申请入集,不提批测请求,零 AWS 支出。**
   **先说错的那一句,因为它是本轮的形状**:开工(~19:05Z)扫 issue 并**先 fetch 过** `origin/main`,
