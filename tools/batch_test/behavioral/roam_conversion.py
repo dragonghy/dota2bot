@@ -152,7 +152,7 @@ def canon_hero(name):
         snapshots: npc_dota_hero_queen_of_pain    events: ...queenofpain
         snapshots: npc_dota_hero_vengeful_spirit  events: ...vengefulspirit
 
-    (The event side is the correct one; `mode_farm_generic.lua:854` and
+    (The event side is the correct one; `mode_farm_generic.lua:872` and
     `ts_libs/dota/heroes.lua:87` both spell it `npc_dota_hero_queenofpain`.)
     Measured on the 19-game 20260819_22xx corpus: both heroes appear in 5
     games each, and in every one of them `death_spans()` produced NO span at

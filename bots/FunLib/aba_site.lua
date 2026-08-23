@@ -472,15 +472,51 @@ end
 ____exports.HasArmorReduction = function(nUnit)
     return nUnit:HasModifier("modifier_templar_assassin_meld_armor") or nUnit:HasModifier("modifier_item_medallion_of_courage_armor_reduction") or nUnit:HasModifier("modifier_item_solar_crest_armor_reduction") or nUnit:HasModifier("modifier_slardar_amplify_damage")
 end
-____exports.GetClosestNeutralSpwan = function(bot, availableCampList)
+-- [GH #137 follow-up] Soak candidate 'campsel' (turbo-only); the gate is
+-- resolved once at the single wrapper (ClosestCamp) in
+-- bots/mode_farm_generic.lua and passed in as bReadCampRecord.
+--
+-- Both of this function's own filters read fields that are not on the value
+-- they are handed. RefreshCamp emits wrappers -- `{idx = camp.idx, cattr =
+-- camp}` -- and everything else in this file that wants a camp attribute goes
+-- through `.cattr` (GetCampStackTime reads camp.cattr.speed; the two location
+-- reads below read camp.cattr.location). These two calls do not: they pass the
+-- WRAPPER to IsEnemyCamp (reads `.team`) and IsAncientCamp (reads `.type`),
+-- and the wrapper has neither field. Consequences, both shipped today:
+--
+--   * IsEnemyCamp(wrapper) is `nil ~= GetTeam()` => TRUE for every camp, so
+--     EVERY camp is multiplied by 1.5, not just the enemy-side ones. A uniform
+--     factor cannot change an argmin, so the enemy-jungle penalty this line
+--     exists to apply does not exist. What survives is the side effect: the
+--     15000 cut-off below is scaled to an effective 10000 for all camps.
+--   * IsAncientCamp(wrapper) is `nil == "ancient"` => FALSE for every camp, so
+--     `bot:GetLevel() >= 10 or not IsAncientCamp(camp)` is TRUE regardless of
+--     level. The level-10 ancient gate is dead code. That is the second half
+--     of GH #137's "6 of 40 ancient engagements happen at level <= 9 -- not
+--     even GetClosestNeutralSpwan's own >= 10 stopped it"; the issue put it
+--     all on RefreshCamp's fall-through, which is real but is not the reason
+--     THIS clause let them through. This clause cannot fire at any level.
+--
+-- Armed, the two predicates read the record (`camp.cattr`) and mean what they
+-- say. DECLARED CONSEQUENCE, not a side effect worth hiding: own-side camps
+-- regain the full 15000 reach they were written to have (they were capped at
+-- an effective 10000 by the uniform multiplier), while enemy-side camps keep
+-- the 10000 the 1.5x implies. Reach for own camps therefore WIDENS. See
+-- tests/test_campsel_wrapper_fields.lua, which pins both directions.
+____exports.GetClosestNeutralSpwan = function(bot, availableCampList, bReadCampRecord)
     local minDist = 15000
     local closestCamp = nil
     for ____, camp in ipairs(availableCampList) do
+        -- Unarmed this is the wrapper, byte-for-byte the shipped behaviour.
+        local rec = camp
+        if bReadCampRecord and camp.cattr ~= nil then
+            rec = camp.cattr
+        end
         local dist = GetUnitToLocationDistance(bot, camp.cattr.location)
-        if ____exports.IsEnemyCamp(camp) then
+        if ____exports.IsEnemyCamp(rec) then
             dist = dist * 1.5
         end
-        if ____exports.IsTheClosestOne(bot, camp.cattr.location) and dist < minDist and (bot:GetLevel() >= 10 or not ____exports.IsAncientCamp(camp)) then
+        if ____exports.IsTheClosestOne(bot, camp.cattr.location) and dist < minDist and (bot:GetLevel() >= 10 or not ____exports.IsAncientCamp(rec)) then
             minDist = dist
             closestCamp = camp
         end

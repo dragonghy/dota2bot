@@ -51,6 +51,17 @@ local runTime = 0;
 local shouldRunTime = 0
 local runMode = false;
 
+-- [GH #137 follow-up] The ONE call site of J.Site.GetClosestNeutralSpwan in
+-- all of bots/. Everything that wants the closest camp goes through here, so
+-- the soak candidate 'campsel' is resolved in exactly one place and there is
+-- no call site that can silently miss the gate. tests/test_campsel_wrapper_fields.lua
+-- asserts that count (`J.Site.GetClosestNeutralSpwan` appears once outside
+-- aba_site.lua) rather than trusting that all ten call sites were updated.
+local function ClosestCamp(hBot, tCamps)
+	return J.Site.GetClosestNeutralSpwan(hBot, tCamps,
+		J.IsModeTurbo() and J.IsSoakCandidate('campsel'))
+end
+
 
 if bot.farmLocation == nil then bot.farmLocation = bot:GetLocation() end
 
@@ -306,7 +317,7 @@ function GetDesireHelper()
                     if (J.IsRoshan(hTarget) and J.GetHP(hTarget) < 0.4)
                     or (botActiveMode == BOT_MODE_ITEM)
                     then
-						if preferedCamp == nil then preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp) end
+						if preferedCamp == nil then preferedCamp = ClosestCamp(bot, availableCamp) end
                         return RemapValClamped(J.GetHP(bot), 0.2, 0.7, BOT_MODE_DESIRE_MODERATE, BOT_MODE_DESIRE_VERYHIGH)
 					end
                 end
@@ -327,7 +338,7 @@ function GetDesireHelper()
                     if (J.IsRoshan(hTarget) and J.GetHP(hTarget) < 0.25)
                     or (botActiveMode == BOT_MODE_ITEM)
                     then
-						if preferedCamp == nil then preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp) end
+						if preferedCamp == nil then preferedCamp = ClosestCamp(bot, availableCamp) end
                         return RemapValClamped(J.GetHP(bot), 0.2, 0.7, BOT_MODE_DESIRE_MODERATE, BOT_MODE_DESIRE_VERYHIGH)
                     end
                 end
@@ -385,7 +396,7 @@ function GetDesireHelper()
 
     local hItem = J.IsItemAvailable('item_hand_of_midas')
     if J.IsInAllyArea(bot) and J.CanCastAbility(hItem) then
-        if preferedCamp == nil then preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp) end;
+        if preferedCamp == nil then preferedCamp = ClosestCamp(bot, availableCamp) end;
         return RemapValClamped(J.GetHP(bot), 0.2, 0.7, BOT_MODE_DESIRE_MODERATE, BOT_MODE_DESIRE_VERYHIGH)
     end
 
@@ -479,7 +490,7 @@ function GetDesireHelper()
 			end
 
 			-- Late game or dangerous lanes: farm jungle camps
-			if preferedCamp == nil then preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp);end
+			if preferedCamp == nil then preferedCamp = ClosestCamp(bot, availableCamp);end
 
 			if preferedCamp ~= nil then
 				-- Don't farm a camp where an ally is already farming
@@ -512,7 +523,7 @@ function GetDesireHelper()
 
 	if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then
 		hLaneCreepList = bot:GetNearbyLaneCreeps(1600, true)
-		if preferedCamp == nil then preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp) end
+		if preferedCamp == nil then preferedCamp = ClosestCamp(bot, availableCamp) end
 		return Min(BOT_MODE_DESIRE_LOW, nFarmCap)
 	end
 
@@ -645,7 +656,7 @@ function Think()
 			local oldDist = old and GetUnitToLocationDistance(bot, old.cattr.location) or 9e9
 	
 			local avail = J.Role['availableCampTable']
-			local nearest = J.Site.GetClosestNeutralSpwan(bot, avail)
+			local nearest = ClosestCamp(bot, avail)
 	
 			if nearest then
 				local newDist = GetUnitToLocationDistance(bot, nearest.cattr.location)
@@ -655,12 +666,12 @@ function Think()
 				end
 			end
 		else
-			preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp);
+			preferedCamp = ClosestCamp(bot, availableCamp);
 		end
 	end
 	
 	
-	if preferedCamp == nil then preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp);end
+	if preferedCamp == nil then preferedCamp = ClosestCamp(bot, availableCamp);end
 	if preferedCamp ~= nil then
 		local targetFarmLoc = preferedCamp.cattr.location;
 		local cDist = GetUnitToLocationDistance(bot, targetFarmLoc);
@@ -680,7 +691,7 @@ function Think()
 			-- Pick a different camp instead
 			J.Role['availableCampTable'], preferedCamp = J.Site.UpdateAvailableCamp(bot, preferedCamp, J.Role['availableCampTable']);
 			availableCamp = J.Role['availableCampTable']
-			preferedCamp = J.Site.GetClosestNeutralSpwan(bot, availableCamp)
+			preferedCamp = ClosestCamp(bot, availableCamp)
 			if preferedCamp == nil then return end
 			targetFarmLoc = preferedCamp.cattr.location
 			cDist = GetUnitToLocationDistance(bot, targetFarmLoc)
@@ -755,7 +766,7 @@ function Think()
 					farmState = FARM_STATE_NONE;
 					J.Role['availableCampTable'], preferedCamp = J.Site.UpdateAvailableCamp(bot, preferedCamp, J.Role['availableCampTable']);
 					availableCamp = J.Role['availableCampTable'];	
-					preferedCamp  = J.Site.GetClosestNeutralSpwan(bot, availableCamp);
+					preferedCamp  = ClosestCamp(bot, availableCamp);
 
 
 					local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)

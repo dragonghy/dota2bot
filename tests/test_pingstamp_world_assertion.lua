@@ -2,7 +2,8 @@
 -- FIRST call in a fresh VM its own initialiser, so the guard that reads it is
 -- true by construction -- and a fixture VM is never older than one call.
 --
--- The shape, verbatim from mode_farm_generic.lua:124-126:
+-- The shape, verbatim from mode_farm_generic.lua:135-137 (was :124-126 before
+-- the 'campsel' wrapper was inserted above it, 2026-08-24):
 --
 --     J.Utils['GameStates']['defendPings'] =
 --         J.Utils['GameStates']['defendPings'] or { pingedTime = GameTime() }
@@ -26,9 +27,10 @@
 --
 -- AND IT IS HIDING ONE OF THOSE CRASHES BEHIND ITSELF. Open the guard and
 -- mode_farm_generic stops returning the floor and starts THROWING, on 5 of 94
--- declared subjects: `GetRoshanDesire` (line 370) is a real engine global that
+-- declared subjects: `GetRoshanDesire` (line 388, and read from source in the
+-- test itself) is a real engine global that
 -- the mock does not stub. So mode_farm_generic is a THIRD undrivable mode
--- file, invisible until now because the guard returns 246 lines above the
+-- file, invisible until now because the guard returns ~253 lines above the
 -- crash. The §0d rule ("name the modes you could not drive") was written
 -- against a list of two that was never complete.
 --
@@ -63,7 +65,7 @@
 -- asserted below as a mutation probe, not argued.
 --
 -- FOUR SHIPPED SITES SHARE THE STAMP, THREE OF THEM IN FRONT OF A BID:
---   bots/mode_farm_generic.lua:124      -> returns DESIRE_NONE
+--   bots/mode_farm_generic.lua:135      -> returns DESIRE_NONE
 --   bots/mode_side_shop_generic.lua:50  -> returns DESIRE_NONE
 --   bots/FunLib/aba_push.lua:223        -> returns None  (all three
 --                                          mode_push_tower_*_generic bids)
@@ -80,11 +82,11 @@
 -- harness call and belongs to the director.
 --
 -- ---------------------------------------------------------------------------
--- DELIVERY TO GH #84 §5: `mode_farm_generic:536` cannot be given the (b) shape
+-- DELIVERY TO GH #84 §5: `mode_farm_generic:553` cannot be given the (b) shape
 -- on this corpus either -- but for a reason that CAN be bought.
 --
 -- The census (tests/test_level_gate_census.lua) read `bot:GetLevel() >= 15` at
--- mode_farm_generic.lua:536 as TEETH: the farm-mode "turn and fight" block
+-- mode_farm_generic.lua:553 as TEETH: the farm-mode "turn and fight" block
 -- (an enemy hero inside my own attack range, two allies within 900) is a live
 -- turbo situation hung on a maturity proxy no turbo hero reaches. This round
 -- measured the two halves of that block separately:
@@ -385,8 +387,13 @@ tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undri
     -- GH #62 §0d named two mode files that cannot be driven on a fixture
     -- (mode_rune_generic, mode_secret_shop_generic) and made it a rule to say
     -- so in any bid-level test. mode_farm_generic is a THIRD, and nobody could
-    -- have known: the ping guard returns at line 124, and the unstubbed engine
-    -- global sits at line 377. Open the guard and the crash appears.
+    -- have known: the ping guard returns near the top of GetDesireHelper, and
+    -- the unstubbed engine global sits ~250 lines below it. Open the guard and
+    -- the crash appears. The line number is READ FROM SOURCE below rather than
+    -- written down (charter 0CST/0LN2): it moved 377 -> 388 the first time
+    -- anything was inserted above it (the 'campsel' wrapper, 2026-08-24), and
+    -- a literal here fails in the confusing direction -- it reads as "your
+    -- change broke the farm mode" when all that happened is that lines shifted.
     local path = 'tests/fixtures/f_260820_043637_axe_ring_alone.lua'
     assert(bid(path, nil, FARM) == 0, 'shut: the floor, no error')
     world(path, nil, { stale = true })
@@ -397,8 +404,21 @@ tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undri
     assert(not ok, 'open: it does not return the floor, it throws')
     assert(tostring(err):find('GetRoshanDesire', 1, true),
         'the missing engine global is GetRoshanDesire; got ' .. tostring(err))
-    assert(tostring(err):find(':377:', 1, true),
-        'at mode_farm_generic.lua:377; got ' .. tostring(err))
+    local nRoshanLine
+    do
+        local n = 0
+        for line in io.lines('bots/mode_farm_generic.lua') do
+            n = n + 1
+            if line:find('GetRoshanDesire%s*%(') then
+                nRoshanLine = n
+                break
+            end
+        end
+        assert(nRoshanLine, 'GetRoshanDesire is no longer called in the farm mode file')
+    end
+    assert(tostring(err):find(':' .. nRoshanLine .. ':', 1, true),
+        'the crash must be AT the GetRoshanDesire call (mode_farm_generic.lua:' ..
+        nRoshanLine .. '); got ' .. tostring(err))
     -- It is a real engine API (.luacheckrc read_globals lists it), so this is
     -- a mock gap, not a typo in bots/. Recorded here rather than patched: what
     -- the mock should answer for "how badly does the team want Roshan" is a
@@ -561,7 +581,7 @@ tests['[self-audit] it does not retract retnear -- all three published winners h
 end
 
 -- ---------------------------------------------------------------------------
--- GH #84 §5: mode_farm_generic:536.
+-- GH #84 §5: mode_farm_generic:553.
 -- ---------------------------------------------------------------------------
 
 local block_cache
@@ -669,7 +689,7 @@ tests['[#84 §5] but runMode never co-occurs, so the (b) shape has no frame'] = 
     -- satisfies the block above. The intersection is empty from both sides.
 end
 
-tests['[reverse] mode_farm_generic:536 and its block are pinned verbatim'] = function()
+tests['[reverse] mode_farm_generic:553 and its block are pinned verbatim'] = function()
     local src = read_file('bots/mode_farm_generic.lua')
     assert(src:find('if not bot:IsInvisible() and bot:GetLevel() >= 15', 1, true),
         'the level gate under #84 §5 moved -- re-read this file before editing')

@@ -855,7 +855,8 @@ local DEFEND_PING_STALE_AGE = 1e6
 --- Declare, for THIS fixture VM, how long ago somebody pinged for defence.
 ---
 --- GH #91. `J.Utils.GameStates.defendPings` is lazily initialised BY the same
---- clock reading it is later compared against (bots/mode_farm_generic.lua:124
+--- clock reading it is later compared against (bots/mode_farm_generic.lua:135,
+--- was :124 before the 2026-08-24 'campsel' wrapper shifted the file by +11,
 --- and three siblings), so in a one-call VM the first reader is its own
 --- initialiser and `GameTime() - pingedTime` is exactly 0. Three shipped bids
 --- (farm, side_shop, all three push_tower_* via aba_push) return their floor

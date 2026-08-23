@@ -394,15 +394,44 @@ export const HasArmorReduction = function (nUnit: Unit): boolean {
         nUnit.HasModifier("modifier_slardar_amplify_damage")
     );
 };
-export const GetClosestNeutralSpwan = function (bot: Unit, availableCampList: any[]): any | null {
+// [GH #137 follow-up] Soak candidate 'campsel' (turbo-only); the gate is
+// resolved once at the single wrapper in bots/mode_farm_generic.lua and passed
+// in as bReadCampRecord.
+//
+// Both of this function's own filters read fields that are not on the value
+// they are handed. RefreshCamp emits wrappers -- `{ idx: camp.idx, cattr: camp }`
+// -- and everything else in this file that wants a camp attribute goes through
+// `.cattr` (GetCampStackTime reads camp.cattr.speed; the two location reads
+// below read camp.cattr.location). These two calls do not: they pass the
+// WRAPPER to IsEnemyCamp (reads `.team`) and IsAncientCamp (reads `.type`), and
+// the wrapper has neither field. Consequences, both shipped today:
+//
+//   * IsEnemyCamp(wrapper) is `undefined !== GetTeam()` => TRUE for every camp,
+//     so EVERY camp is multiplied by 1.5, not just the enemy-side ones. A
+//     uniform factor cannot change an argmin, so the enemy-jungle penalty this
+//     line exists to apply does not exist. What survives is the side effect:
+//     the 15000 cut-off is scaled to an effective 10000 for all camps.
+//   * IsAncientCamp(wrapper) is `undefined === "ancient"` => FALSE for every
+//     camp, so `bot.GetLevel() >= 10 || !IsAncientCamp(camp)` is TRUE
+//     regardless of level. The level-10 ancient gate is dead code.
+//
+// Armed, the two predicates read the record (`camp.cattr`). DECLARED
+// CONSEQUENCE: own-side camps regain the full 15000 reach they were written to
+// have, while enemy-side camps keep the 10000 the 1.5x implies -- reach for own
+// camps WIDENS. See tests/test_campsel_wrapper_fields.lua.
+export const GetClosestNeutralSpwan = function (bot: Unit, availableCampList: any[], bReadCampRecord?: boolean): any | null {
     let minDist = 15000;
     let closestCamp: any | null = null;
 
     for (const camp of availableCampList) {
-        let dist = GetUnitToLocationDistance(bot, camp.cattr.location);
-        if (IsEnemyCamp(camp)) dist *= 1.5;
+        // Unarmed this is the wrapper, byte-for-byte the shipped behaviour.
+        let rec = camp;
+        if (bReadCampRecord && camp.cattr !== undefined) rec = camp.cattr;
 
-        if (IsTheClosestOne(bot, camp.cattr.location) && dist < minDist && (bot.GetLevel() >= 10 || !IsAncientCamp(camp))) {
+        let dist = GetUnitToLocationDistance(bot, camp.cattr.location);
+        if (IsEnemyCamp(rec)) dist *= 1.5;
+
+        if (IsTheClosestOne(bot, camp.cattr.location) && dist < minDist && (bot.GetLevel() >= 10 || !IsAncientCamp(rec))) {
             minDist = dist;
             closestCamp = camp;
         }
