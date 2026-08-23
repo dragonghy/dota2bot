@@ -3044,6 +3044,18 @@
     `tp_cooldown_ready`≥691、`driven`≥928、base `no_action == c.driven`、
     honest `no_action`≥716)⇒ **下次加 fixture 这几条不会再红**;承重数字仍精确
     (`crash_total == 210`、`outer_and_H == 3`、`slot_castable == 0`、`action_total == 2`)。
+  - ⭐ **加一个 fixture 的真实半径是 4 个测试文件,不是 1 个** —— 本轮把**全套 1390 个
+    用例真的跑完了(约 50 分钟)**:`1390 tests / 4 failures`,**四条全是普查常数**
+    (`test_fieldcreep_veto` 7→9 行、`test_gamemode_world_assertion` 23→24、
+    `test_replay_260822_fieldbuy_supply` 两条),**零行为回归**。22:50Z 只登记了
+    `itemdesire` 一家,是因为**上一轮全套 900s 超时,那三条红从来没人看见过** ⇒
+    纪律:**「只跑被动过的那个文件」会漏掉同一份 fixture 在别处引爆的红。**
+    三处都「先测量再改」,其中两处的测量**对 #123 本身有意义**:
+    `SPLIT dry_split=15 rescuable=15 stuck=0`(原 13/13/0,两个新 dry 帧**都 rescuable**、
+    `stuck` 仍 **0**)⇒ 协同组「§4 修法会打掉 P2 行为的 46.4%」变成 **48.4%(15/31)**,
+    **更强不是更弱**;`fieldcreep` 新增两行 askable **都是 spared**,vetoed 仍 5。
+    改法一律是不变量或 `cs.ratchet`,承重数字保持精确(`stuck == 0`、`#vetoed == 5`、
+    `laning_up == 0`、`crash_total == 210`)。
   - **新工具坑(harness 级,未开 issue)**:`sweep_run.sh` 被打断后重跑**往
     `games_manifest.jsonl` 追加而不是重写**(59 行 / 34 局),**#102 哨兵当场拦下** ——
     按设计生效;本轮按 game 名去重后继续。断点重跑应先截断 manifest。
