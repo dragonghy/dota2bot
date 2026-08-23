@@ -44,7 +44,12 @@
 --    maiden.lua puts four of its eight mana thresholds inside mode-EQUALITY
 --    blocks (the two laning ones at :746, the two Roshan ones at :567/:887), so
 --    exactly the branches where the mana talent would pay cannot fire offline.
---    Pinned below as a world assertion, and reported to the harness desk.
+--    That blindness is NOT new: it is the repo's THIRTEENTH world assertion,
+--    already carried by tests/test_activemode_world_assertion.lua (which also
+--    measures the loader half this file does not: GetNearbyHeroes' replacement
+--    ignores its mode argument, so mode-FILTERED calls are over-permissive).
+--    Re-pinned below only at CM's own site, because it is what makes this
+--    pair's decision-channel zero unreadable rather than informative.
 --
 -- WHAT WOULD REOPEN IT (each is an assertion in this file, not a promise):
 --   * the +200 HP world crossing ANY of the file's own nHP thresholds on a real
