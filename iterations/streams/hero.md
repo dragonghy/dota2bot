@@ -652,7 +652,21 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
         **全部域**是 `[cost, cost+nova)` 带 = **2 帧**,身后已有六次上机前否决,
         先按 `hero-3` 第三问去档案语料量。
 
-19. **CM 的蓝不够,首先是采购问题不是天赋问题(GH #126,2026-08-23 立)** ——
+19. ~~**CM 的蓝不够,首先是采购问题不是天赋问题(GH #126,2026-08-23 立)**~~
+    **2026-08-23T02:00Z 做完并已落地(无 gate ⇒ 在稳定版里,本轮稳定版漂移了)**:
+    pos_5 `item_mage_outfit` → `item_crystal_maiden_outfit`(宁静→秘法),**并同时删掉
+    `item_boots_of_bearing`** —— 它的配方 = tranquil_boots + ancient_janggo +
+    ring_of_tarrasque,**吃的正是宁静鞋**,不删就会再买一双鞋(移速不叠加),
+    而采购层不会拦(主流程跳过表只认原始 `item_boots`)。
+    量测:宁静臂 45 个就绪槽 **12 个付不起蓝**;秘法臂(pos_4,平均等级 8.14 vs 8.13)
+    **14 个槽 0 个付不起**(p≈0.013,混杂 + n=7 ⇒ 提示性不是定论);+125 解锁 9、+275 解锁 12。
+    **本案不靠裸蓝**:+125 比前一天判「单独不够」的 +144 还小,靠的是 Replenish
+    (150 蓝 / 55s / 1200 内全队),而出厂代码已经会放,零行新代码。
+    代价照记:宁静的 14 血/秒**没有任何通道能定价**(UNDERPOWERED,且与 owner P2 同向相反);
+    Bearing 在语料里 0 个持有者但那是 **OUT-OF-WINDOW**(窗口止于 11:30)。
+    **下一棒 = queue `hero-5`**(条件 a:真买到没有 / 有没有两双鞋)。
+    详见「当前状态」头条、`tests/test_cm_pos5_boots.lua`、
+    `state.json:cm_pos5_boots_20260823T0200Z`。**原始条目留档如下:**
     做 t10 核验时顺手量到:域内 13 行 CM **11 行走 pos_5**,而 pos_5 的
     `item_mage_outfit`(null_talisman + **tranquil_boots** + magic_wand,再 ancient_janggo)
     **前段一件以蓝为主的装备都没有**;另 2 行 pos_4 走 `item_priest_outfit` 带
@@ -666,6 +680,36 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T02:00Z(登记 `state.json:cm_pos5_boots_20260823T0200Z`;报告
+  `iterations/reports/hero/20260823T020000Z.md`;GH **#126** 已留言不关闭;
+  queue **`hero-5`** pending;backlog §19 划掉):
+  **CM 的 pos_5 换鞋落地 —— 秘法进,Boots of Bearing 跟着出去。纯构筑、无 gate
+  ⇒ 本轮稳定版发生漂移。** 零 AWS、零新 gated id;外部读 = 2 次 datafeed GET
+  + 1 次 opendota constants。
+  - **开工自检又捞回两个 commit**:23:54Z 的 `915afd7`/`18fddd9` 躺在
+    `origin/claude/vibrant-heisenberg-c2bxdy` 上从没进过 main,cherry-pick 干净落地。
+    **这是连续第三轮由自检抓到的同一件事** —— 工具有效,前提是有人跑。
+  - **改动**:`hero_crystal_maiden.lua` pos_5 `item_mage_outfit` →
+    `item_crystal_maiden_outfit`,并删 `item_boots_of_bearing`(13→12 条);
+    `aba_item.lua` 给 `item_crystal_maiden_outfit` 补回第二个 tango
+    (**让它与 mage_outfit 只差鞋这一项**,杠杆才干净)+ 哨兵
+    `tDefineItemRealName` 从 `item_magic_wand` 改成 `item_arcane_boots`(与两个同胞一致)。
+  - **为什么同一把尺子在 t10 说不翻、在这里说换**:(a) t10 上测量与条件 (c) **相反**
+    (最脆的英雄要 +200 血),这里**同向**(CM 是教科书秘法鞋辅助,而这棵树自己的
+    pos_4 CM 已经在买秘法,`item_crystal_maiden_outfit` 从 fork 前就躺着没人用);
+    (b) **t10 没有观察臂,这里有一个**,就在同一份语料里(秘法臂 0/14 vs 宁静臂 12/45)。
+  - **必须记住的配方事实**:`boots_of_bearing` = tranquil_boots + ancient_janggo +
+    ring_of_tarrasque。**改一双鞋之前先查它是不是某件成品的组件** —— #126 的处方
+    单独执行会留下一双 1500g 的死鞋。
+  - **本轮自己踩的坑(方法级)**:变异测试用 `git checkout <file>` 还原,
+    把**同文件里未提交的真改动一起还原了**;而未追踪的 sweep 文件 checkout 报错,
+    三个变异反而叠着留在文件里。**变异前先 commit,或用备份还原,不要对着有未提交
+    改动的树 checkout。** 结论已作废重跑(7 变异 7 抓)。
+  - **改出装会让历史帧的库存变成过期证据**:
+    `tests/test_replay_260820_cm_es_aftershock.lua` 的角色判别本来靠
+    「pos_5 穿宁静 / pos_4 穿秘法」,换鞋后两边都穿秘法,那一帧手里的宁静
+    **不再属于任何一张单子**(它是 08-20 录的)。判别器靠没动过的
+    `null_talisman` / `urn_of_shadows` / `blood_grenade` 活下来,已如实改写。
 - 2026-08-22T23:54Z(登记 `state.json:cm_t10_no_flip_20260822T2354Z`;报告
   `iterations/reports/hero/20260822T235428Z.md`;GH **#126**(本组,裁定 + 出装杠杆);
   GH #125 是本组开错的重复件,**已自行关闭**,见下);backlog 新增 §19):

@@ -547,7 +547,10 @@ tests['RE-READ: the one role read is the build-list key, and CM sits on a fixed 
     local _, tPos5 = buy_list_at(5)
     local _, tPos1 = buy_list_at(1)
     local _, tPos4 = buy_list_at(4)
-    assert(tPos5[1] == 'item_blood_grenade' and tPos5[5] == 'item_boots_of_bearing',
+    -- Entry 5 used to be item_boots_of_bearing; the 2026-08-23 boots swap
+    -- (GH #126, tests/test_cm_pos5_boots.lua) removed it, so the pin moved to
+    -- the opener pair, which is what this case actually needs.
+    assert(tPos5[1] == 'item_blood_grenade' and tPos5[2] == 'item_crystal_maiden_outfit',
         'the pos_5 list this frame really runs')
     assert(tPos1[1] == 'item_mage_outfit' and tPos1[3] == 'item_veil_of_discord',
         'a pos_1 CM buys a different opener entirely')
@@ -721,21 +724,33 @@ tests['RE-READ: the one role read is the build-list key, and on frame A it MOVES
     end
 
     local tDrafted, tSlot = buy_list_at(5), buy_list_at(4)
-    assert(#tDrafted == 13 and tDrafted[1] == 'item_blood_grenade',
-        'pos_5 is a 13-entry list opening on a blood grenade; got ' .. #tDrafted
+    -- 12, not the 13 this case was written against: item_boots_of_bearing left
+    -- the list with the 2026-08-23 boots swap (GH #126).
+    assert(#tDrafted == 12 and tDrafted[1] == 'item_blood_grenade',
+        'pos_5 is a 12-entry list opening on a blood grenade; got ' .. #tDrafted
         .. ' / ' .. tostring(tDrafted[1]))
     assert(#tSlot == 11 and tSlot[1] == 'item_priest_outfit',
         'pos_4 is an 11-entry list opening on the priest outfit; got ' .. #tSlot
         .. ' / ' .. tostring(tSlot[1]))
-    assert(tDrafted[2] == 'item_mage_outfit',
+    assert(tDrafted[2] == 'item_crystal_maiden_outfit',
         'and the two openers are different outfits, not the same one renamed')
 end
 
 tests['RE-READ: the frame\'s own inventory falsifies the pre-heal build key'] = function()
     -- The strongest form of the axe finding. There the wrong build list was
     -- inferred from where item_blink sat in each list; here the corpus states
-    -- it: the outfit bundles of pos_4 and pos_5 have no basic in common, and
-    -- the real Crystal Maiden of this frame is carrying one of them.
+    -- it: the pos_4 and pos_5 openers each carry a basic the other never buys,
+    -- and the real Crystal Maiden of this frame is carrying one side's.
+    --
+    -- The 2026-08-23 boots swap (GH #126) cost this case half its discriminator
+    -- and is left recorded rather than papered over: pos_5 used to be the
+    -- tranquil-boots build and pos_4 the arcane one, so the boots alone decided
+    -- it. Both openers carry arcane boots now, and the boots this frame is
+    -- holding -- tranquil -- belong to NEITHER list, because the frame was
+    -- recorded on 2026-08-20 under the build that shipped then. What still
+    -- decides is the pair that never moved: null_talisman on pos_5, urn on
+    -- pos_4, plus the blood grenade that opens pos_5 and appears nowhere in
+    -- pos_4.
     local _, bot, _, fx = load_armed(CLOSE, {})
 
     local tHeld = {}
@@ -749,18 +764,17 @@ tests['RE-READ: the frame\'s own inventory falsifies the pre-heal build key'] = 
     assert(tHeld['item_tranquil_boots'], 'sanity: the frame\'s own item list is '
         .. 'being read (she has tranquil boots at t=473.5)')
 
-    -- item_mage_outfit   (pos_5, entry 2) = ... tranquil_boots, null_talisman,
-    --                                       magic_wand, flask ...
-    -- item_priest_outfit (pos_4, entry 1) = ... arcane_boots, urn_of_shadows,
-    --                                       magic_wand, flask ...
-    -- The shared basics (magic_wand, flask) decide nothing; the boots and the
-    -- fourth slot decide everything.
-    for _, s in ipairs({ 'item_tranquil_boots', 'item_null_talisman',
-                         'item_magic_wand', 'item_flask' }) do
+    -- item_crystal_maiden_outfit (pos_5, entry 2) = ... arcane_boots,
+    --                                       null_talisman, magic_wand, flask ...
+    -- item_priest_outfit         (pos_4, entry 1) = ... arcane_boots,
+    --                                       urn_of_shadows, magic_wand, flask ...
+    -- The shared basics (arcane_boots, magic_wand, flask) decide nothing since
+    -- the swap; null_talisman and the urn decide everything.
+    for _, s in ipairs({ 'item_null_talisman', 'item_magic_wand', 'item_flask' }) do
         assert(tHeld[s], 'she must be holding ' .. s .. ', a basic of the '
             .. 'pos_5 opener -- without it this case proves nothing')
     end
-    for _, s in ipairs({ 'item_arcane_boots', 'item_urn_of_shadows' }) do
+    for _, s in ipairs({ 'item_urn_of_shadows' }) do
         assert(tHeld[s] == nil, 'she must NOT be holding ' .. s .. ': it is a '
             .. 'pos_4-only basic, and its absence is half the discriminator')
     end

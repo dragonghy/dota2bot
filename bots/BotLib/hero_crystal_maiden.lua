@@ -40,13 +40,27 @@ sRoleItemsBuyList['pos_4'] = {
 	"item_ultimate_scepter_2",
 }
 
+-- BOOTS LINE, 2026-08-23 (GH #126, pure build change -- no gate, so this is
+-- LIVE in every game). pos_5 used to open on item_mage_outfit (tranquil boots)
+-- and terminate on item_boots_of_bearing, whose recipe CONSUMES a pair of
+-- tranquil boots -- a coherent utility-support line, but one that leaves the
+-- highest mana costs among supports (Nova 175 / Frostbite 155 / Freezing Field
+-- 600 at max rank) with no mana item at all.  Measured on this repo's corpus
+-- (tests/test_cm_pos5_boots.lua): 12 of 45 ready ability slots on tranquil-
+-- carrying CM frames cannot pay their own mana cost, against 0 of 14 on the
+-- arcane-carrying (pos_4) frames at the same mean hero level.
+-- Bearing goes with it: with arcane boots in the opener its recipe would buy a
+-- SECOND pair of boots (movement speed does not stack), so keeping it would
+-- strand 1500 gold.  It was never reached in the corpus either -- but that zero
+-- is out-of-window, not empty: the corpus ends at 11:30 and Bearing is a 4225g
+-- fifth item.  If the 25-minute batch cap (GH #108) puts CM frames past it, the
+-- terminus is worth re-pricing.
 sRoleItemsBuyList['pos_5'] = {
 	"item_blood_grenade",
 
-	'item_mage_outfit',
+	'item_crystal_maiden_outfit',
 	'item_ancient_janggo',
 	'item_glimmer_cape',
-	'item_boots_of_bearing',
 	'item_pipe',
 	"item_shivas_guard",
 	'item_cyclone',

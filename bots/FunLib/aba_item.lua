@@ -873,7 +873,10 @@ local tDefineItemRealName = {
 
 
 ['item_mage_outfit'] = "item_tranquil_boots",
-['item_crystal_maiden_outfit'] = "item_magic_wand",
+-- The boots are the sentinel for every outfit that carries a pair (mage ->
+-- tranquil, priest -> arcane); this one used to point at the magic wand while
+-- nothing referenced the outfit at all. 2026-08-23, GH #126.
+['item_crystal_maiden_outfit'] = "item_arcane_boots",
 ['item_priest_outfit'] = "item_arcane_boots",
 
 
@@ -966,7 +969,10 @@ Item['item_priest_outfit']				= { 'item_tango', 'item_tango', 'item_branches', '
 
 Item['item_mage_outfit']				= { 'item_tango', 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman', 'item_tranquil_boots', 'item_recipe_magic_wand', 'item_flask' }
 
-Item['item_crystal_maiden_outfit']		= { 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman',  'item_arcane_boots', 'item_recipe_magic_wand', 'item_flask' }
+-- Wired to Crystal Maiden's pos_5 on 2026-08-23 (GH #126). Deliberately equal to
+-- item_mage_outfit in EVERY entry except the boots -- the second tango was added
+-- back here so the only lever the swap pulls is tranquil_boots -> arcane_boots.
+Item['item_crystal_maiden_outfit']		= { 'item_tango', 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman',  'item_arcane_boots', 'item_recipe_magic_wand', 'item_flask' }
 
 
 -----------------------------------------------------------------------------

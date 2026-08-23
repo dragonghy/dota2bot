@@ -92,6 +92,17 @@
    "acceptance": "Primary (replay desk, condition a): on the armed leg, re-run tools/batch_test/behavioral/hometp_highhp.py and split the high-HP home trips by #120's own labels. TWO outcomes, both useful and both pre-registered: (1) the residual 'no branch explains it' bucket drops while escape2/shop/defend/healmana stay put -> the nil-fallthrough contract HOLDS and itemtrip works as designed; (2) high-HP home trips collapse to ~0 across ALL labels that route through item mode -> the contract is FALSE (nil reads as 0), armed means item mode is off for the whole game, and that fact is now discharged for every future author. Do NOT read outcome (2) as 'the fix is broken' without saying which of the two it is -- the distinction is the point. NEGATIVE control that must NOT move: the 136 'shop' trips (retreat mode's shop motive, X.IsInvFull) do not route through BOT_MODE_ITEM and must be unchanged in both outcomes; if they move, something other than this file did it. Secondary (condition b, coarse, no significance test per owner 2026-08-01): no obvious negative on gpm/deaths for the armed leg. Frame evidence requested for at least one hero that was going to make the trip and did not.",
    "status": "pending",
    "result": ""
+  },
+  {
+   "id": "hero-5",
+   "stream": "hero",
+   "bundle": "",
+   "seeds": [],
+   "priority": 2,
+   "question": "NO NEW WAVE NEEDED -- rides whatever wave runs next, because the change is UNGATED and therefore on BOTH legs. On 2026-08-23 the hero desk swapped Crystal Maiden's pos_5 boots: item_mage_outfit (tranquil boots) -> item_crystal_maiden_outfit (arcane boots), and removed item_boots_of_bearing from the pos_5 list because its recipe consumes a pair of tranquil boots and would otherwise buy a SECOND pair (movement speed does not stack). Pure build change, no gate; rationale in hero_crystal_maiden.lua and tests/test_cm_pos5_boots.lua; GH #126. Wanted, off any turbo replay containing a pos_5 Crystal Maiden: (1) DOES SHE ACTUALLY BUY ARCANE BOOTS, and at what game time -- the purchase layer resolves outfit macros at runtime and item_crystal_maiden_outfit had never been referenced by any hero file before today, so 'the list says arcane' is not evidence that 'the bot bought arcane'; (2) DOES ANY CM END UP HOLDING TWO PAIRS OF BOOTS, or stall on a purchase target she cannot complete -- the failure mode the Bearing removal is meant to prevent, and the one that would show the removal was necessary or that it was not enough; (3) her mana over the game (fraction of the game below the 220 nKeepMana floor, and Replenish casts per game if the dumper can see item actions at all -- GH #100 says the fixture world cannot, a live replay may).",
+   "acceptance": "(1) is condition (a) for this change and the only blocking one: WORKING = at least one frame shows arcane boots in a pos_5 CM inventory, with the game time; SILENT = the outfit macro never resolves and she buys nothing or falls back, which would mean the swap is inert and the hero desk reverts or fixes the wiring (tDefineItemRealName sentinel moved to item_arcane_boots this round -- that is the most likely thing to have gone wrong). (2) is a defect check, not a verdict: any CM holding two pairs of boots reopens the Bearing removal from the other side. (3) is condition (b) evidence, coarse only -- no significance test (owner 2026-08-01 philosophy); a zero on Replenish casts must be recorded as UNDERPOWERED unless the dumper is shown to emit item actions at all.",
+   "status": "pending",
+   "result": ""
   }
  ],
  "done": [
