@@ -2499,6 +2499,53 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **三元组第一栏分母是「录制局数」不是 `analysis`**。
   详见 `iterations/reports/batch-desk/20260822T220632Z.md`。
 
+- 2026-08-23T00:06Z:**启动轮 —— §AR.0 的 24 id 全集波已上机(`fieldcreep` 首次),
+  4 台 × 1 种子 on-demand、16 槽、`--rec-slots 8`、2h 看门狗、`--games 22`。**
+  树 `cde1d6c4f3b83b0b75904575eae1f4a599ac65be`(= 远端 main tip,`ls-remote` 已核);
+  run_id `spot_20260823_0011{27,31,36,40}_1_cde1d6c4…_{3fb2ec,590502,febb54,c3ba4a}`
+  (seed 888/895/896/906,实例 `i-0461d2bb48ea04581`/`i-0ab483718b10c41de`/
+  `i-06e62c475dc92f900`/`i-042a5926b10004335`),全部 `running`。**收割最早 02:1xZ。**
+  MTD **$23.578**(免费 `budgets`,forecast 23.139,limit $100;与 22:06Z 持平;
+  ≪ `COST_CONFIRM_AT=$35` ⇒ 未花 $0.01 调 CE);$23.578 + 本波 ~$1.5 ≈ **$25.1 ≤ $45 围栏**。
+  开工自检 worst exit 3:UNLANDED **2 条**(`5b155ff`/`093840c`,hero Lion t10/t15 的新 SHA,
+  换分支重推仍未落地)+ hero cadence 4.3h 洞,**都不属批测台,只转述不接管**;trunk python 12/0。
+  **收割:无可收** —— `soak/` 仍 **160**(与 20:09Z/22:06Z 逐位一致),18:11Z 那波 20:09Z 已收完。
+  **启动决策的四条门槛**:4a 队列 5 条无一需要专波(`strategy-1`=done,三条 hero 自述
+  NO NEW WAVE NEEDED,`strategy-2`=`approved-as-rider` ⇒ **搭本波**,已置 `running`);
+  4b (i) **等到 00:11:22Z 门槛才发**(00:11:27 起第一台,**不援引 06:07Z 那条「差 2 分钟照发」**——
+  能等就等);(ii) 被测集合 23→**24 id**(总监 §AR 批 `fieldcreep`)+ 两步法核树读出 5 个
+  `bots/` 漂移 commit(exit 0,不是那个会被误读成「无漂移」的 exit 128);(iii) 满足。
+  **⭐ 本轮的真发现:给启动前置加了一条免费自查(逐个把 armed id 核到活的 gate 调用点),
+  第一次跑就差点误报一个死 id。** 24/24 全部落到活调用点,但 **`lf_rescue` 的字面量 grep 是
+  0 命中** —— 它不是死 id,而是 `jmz_func.lua:5813-5816` 的 `J.IsLaneFixOn( sub )` 做
+  `J.IsSoakCandidate( 'lf_' .. sub )` **拼接**,字面量永远搜不到;真调用点是 `jmz_func.lua:6119`
+  (`J.GetRescueTpTarget` 首行),消费者 `ability_item_usage_generic.lua:5098`;全仓库 8 个这种
+  sub(`chase/mana/recover/rescue/revive/salve/support/threat`)。**⇒ 判据是「字面量命中 **或**
+  落在这 8 个 sub 里」;单看字面量的假阳性长得跟 `creeppull` 那类真死分支一模一样。**
+  立这条的理由是 `creeppull` 教训的**上游版本**:id 打错字/改名没同步 ⇒ 整波静默,后果同级,
+  但**启动前一秒就查得出来**。顺带行号级复核两条:`dem_claim.sh:144` 的 `rec_slots=1` mtime
+  护栏逐字仍在(20:09Z 实测 `by_mtime` 8 槽下 0/157 全错 ⇒ 实测必需);`J.IsSoakCandidate`
+  (`jmz_func.lua:4634-4654`)逗号串走干净的 `gmatch('[^,]+')`,**无个数上限**。
+  **一处纪律更正**:两步法核树第一步 `git fetch --depth 1 origin <SHA>` **必须用全 40 位** ——
+  本轮用短 SHA `05b5e424` 打印 `couldn't find remote ref`,只是因为 22:06Z 已把对象拉进本地库
+  才让 `git log` exit 0,换个会话就不成立。
+  **局数**:上一波(18:11Z)270 有效 + 24 暖场 = 294,逐 run 73/79/72/70,三元组
+  `analysis 294 / 录制局 157 / demclaim 157 / .dem 156`;**本波在跑,尚无局数**。
+  **泄漏检查(四层 + spot 请求,全免费只读)**:开工 实例 **0**/游离卷 0/快照 1
+  (`snap-0ad026b386c804288`)/EIP 0/open-active spot 0;收尾 实例 **4**(= 本波,自毁齐备)、
+  其余**逐层同上,无泄漏**。**固定栏位**:`soak/` **160**、`dem21/` **12**、`unattributed/` **0**、
+  `validation/` 最新条目仍 2026-07-23(标准路径走 `recover_verdict.py`,陈旧是预期)、
+  远端 main tip 开工/收尾均 `cde1d6c`。
+  **验证**:本会话未改 Lua(改动仅 `iterations/` 下报告/章程/queue.json),容器无
+  `luacheck`/`lua5.1`,铁律 6 无适用对象;**本轮无估算项**。
+  跨组:在 **GH #45** 下追评 §6 那条自查判据,**不新开**;`[batch] #70`、
+  `[harness] #98`/`#95`/`#75`/`#33`、`[bug] #96`、`[strategy] #117`/`#116`/`#119` 仍开着。
+  **下一轮的活是收割(最早 02:1xZ),必查项 9 条**详见报告 §9,其中新增两条:
+  ③ **`fieldcreep` 首次上机必须出现 ≥1 次**;⑨ **§AR.3 甲**:`fieldcreep` 的每次否决命中
+  必须写清打他的是**野怪还是小兵**,只报次数**不算买到 (a)**(§AR.3 乙的退出条件同时生效)。
+  另注 ④:8 槽验收即便 exit 0 也**不再自动上 16**(16-of-16 结构上无对照腿),阶梯待总监裁。
+  详见 `iterations/reports/batch-desk/20260823T000600Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
