@@ -39,7 +39,19 @@ sRoleItemsBuyList['pos_3'] = {
 	"item_tango",
 	"item_double_branches",
 	"item_quelling_blade",
-	"item_gauntlets",
+	-- GH #139 census: this line used to be a SINGLE "item_gauntlets" and the
+	-- Soul Ring below takes TWO.  Same trap as GH #136's iron branches, one
+	-- component further down the list.  Holding exactly one of a doubled
+	-- component, Item.GetBasicItems keeps one copy alive through the
+	-- sLastRepeatItem dance, _buildRequiredCounts then reads the requirement
+	-- off that ALREADY-FILTERED list (gauntlets: required 1, owned 1) and
+	-- _stillNeeds pops it as satisfied -- so only ring_of_protection and the
+	-- recipe are ever bought and the Soul Ring never completes.  Zero is safe
+	-- (nothing owned, the expansion buys both) and two or more is safe; ONE is
+	-- the broken quantity.  Nothing in this list consumes the gauntlet before
+	-- item_soul_ring comes up -- Tidehunter buys no Bracer in any of his three
+	-- core roles -- so the lone one would still be sitting in a slot.
+	"item_double_gauntlets",
 
 	"item_magic_wand",
 	"item_boots",
@@ -63,7 +75,9 @@ sRoleItemsBuyList['pos_1'] = {
 	"item_tango",
 	"item_double_branches",
 	"item_quelling_blade",
-	"item_gauntlets",
+	-- GH #139 census, same single gauntlet as pos_3 above: one is the broken
+	-- quantity for the Soul Ring three lines down.  Full mechanism at pos_3.
+	"item_double_gauntlets",
 
 	"item_magic_wand",
 	"item_boots",
@@ -87,7 +101,9 @@ sRoleItemsBuyList['pos_2'] = {
 	"item_tango",
 	"item_double_branches",
 	"item_quelling_blade",
-	"item_gauntlets",
+	-- GH #139 census, same single gauntlet as pos_3 above: one is the broken
+	-- quantity for the Soul Ring three lines down.  Full mechanism at pos_3.
+	"item_double_gauntlets",
 
 	"item_magic_wand",
 	"item_boots",

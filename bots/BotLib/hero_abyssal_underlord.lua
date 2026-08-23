@@ -67,6 +67,15 @@ sRoleItemsBuyList['pos_4'] = {
 
     "item_bracer",
     "item_helm_of_iron_will",
+    -- GH #139 census: the item_double_gauntlets in the starting block above is
+    -- not still two gauntlets by the time item_soul_ring comes up -- the Bracer
+    -- two lines up eats one, leaving exactly ONE, and one is the quantity the
+    -- purchase layer misreads as already satisfied (full mechanism in
+    -- hero_tidehunter.lua pos_3).  So this list is not saved by starting with
+    -- a pair: it needs a third gauntlet, and buying it HERE -- after the Bracer
+    -- has taken its cut and before the Soul Ring becomes the target -- leaves
+    -- the starting gold split exactly as it was.
+    "item_gauntlets",
     "item_soul_ring",
     "item_arcane_boots",
     "item_magic_wand",
