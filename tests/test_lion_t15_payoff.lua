@@ -423,11 +423,22 @@ tests['[hero] lion t15: Hex is ready and affordable on nearly half the frames'] 
     assert(CORPUS.hex_learned >= 20,
         'only ' .. CORPUS.hex_learned .. ' Lion frames have Hex learned, down from '
         .. '20 on 2026-08-23.')
+    assert(CORPUS.hex_ready + CORPUS.hex_on_cooldown == CORPUS.hex_learned,
+        'the ready/on-cooldown split (' .. CORPUS.hex_ready .. ' + '
+        .. CORPUS.hex_on_cooldown .. ') does not account for all '
+        .. CORPUS.hex_learned .. ' Hex-learned frames.')
     assert(CORPUS.hex_ready >= 9,
         'Hex is off cooldown on only ' .. CORPUS.hex_ready .. ' of '
         .. CORPUS.hex_learned .. ' frames, down from 9 of 20.  This count IS the '
         .. 'verdict: a cooldown reduction cannot pay on a frame where the cooldown '
         .. 'is already zero.')
+    -- Pinned from BOTH ends, so swapping the two branches of the cd test cannot
+    -- leave the reading looking healthy: the corpus is 9 ready / 11 on cooldown,
+    -- and an inverted split reads 11 / 9.
+    assert(CORPUS.hex_on_cooldown >= 11,
+        'only ' .. CORPUS.hex_on_cooldown .. ' frames have Hex on cooldown, down '
+        .. 'from 11 of 20.  The band reading below is taken over exactly these '
+        .. 'frames, so its denominator moves with this.')
     assert(CORPUS.hex_ready_affordable == CORPUS.hex_ready,
         'only ' .. CORPUS.hex_ready_affordable .. ' of ' .. CORPUS.hex_ready
         .. ' ready-Hex frames can pay Hex\'s own mana cost.  On 2026-08-23 all of '
