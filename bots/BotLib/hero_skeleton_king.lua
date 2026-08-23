@@ -49,10 +49,29 @@ local tTalentTreeList = {
 --   3 = skeleton_king_mortal_strike   Mortal Strike -- passive crit / skeletons.
 --   6 = skeleton_king_reincarnation   220/110/0 mana, 180/150/120s cd.
 --
--- skeleton_king_vampiric_spirit (the lifesteal) is flagged INNATE by the datafeed,
--- so GetAbilityList drops it and it costs no skill point at all.  The name that
--- used to be written here, skeleton_king_vampiric_aura, is not in the game's
--- ability set any more; neither is skeleton_king_spectral_blade (see abilityW).
+-- The lifesteal costs no skill point.  CORRECTED 2026-08-23 -- the sentence that
+-- used to stand here ("skeleton_king_vampiric_spirit is flagged INNATE by the
+-- datafeed, so GetAbilityList drops it") was wrong in both halves, and the same
+-- shape of sentence is load-bearing in four other focus files:
+--   * THE NAME.  The engine does not use the feed's name.  Every WK frame in
+--     tests/fixtures/ that dumps an ability array carries
+--     skeleton_king_INNATE_vampiric_spirit -- 31 of 31 -- and the feed's
+--     skeleton_king_vampiric_spirit appears on 0.  Lion is identical
+--     (lion_innate_to_hell_and_back 22/22 vs the feed's lion_to_hell_and_back 0).
+--     A name read off the datafeed is not a name you may match an engine ability
+--     against; the feed is still authoritative for VALUES.
+--   * THE MECHANISM.  J.Skill.GetAbilityList reads no innate flag -- the bot API
+--     has none.  It drops an ability only when NOT_LEARNABLE **and**
+--     ability:IsHidden() are both true, and nothing offline here can evaluate
+--     IsHidden.  The word "innate" in that function lives in a commented-out
+--     warning ("e.g. innate like"), which is where the story came from.
+-- What survives: WK's build rows spend no point on it either way, because they
+-- only ever name indices 1,2,3,6 -- and this file binds by hardcoded name, not by
+-- index at all, so an innate landing at index 4 could not reach it.  Zeus and
+-- Crystal Maiden DO bind index 4/5; see tests/test_focus_innate_index_anchor.lua.
+-- Two other names that are not in the game's ability set any more:
+-- skeleton_king_vampiric_aura (what this block said before 2026-08-22) and
+-- skeleton_king_spectral_blade (see abilityW).
 local tAllAbilityBuildList = {
 							{2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},--pos1,3
 }
@@ -229,6 +248,9 @@ numbers, so the old block's numbering is dropped rather than guessed at):
   skeleton_king_bone_guard
   skeleton_king_mortal_strike
   skeleton_king_vampiric_spirit     -- ability_is_innate: true, not learnable
+                                    -- NB the ENGINE spells this
+                                    -- skeleton_king_innate_vampiric_spirit
+                                    -- (31/31 frames); the feed's spelling is on 0
   skeleton_king_reincarnation       -- the ultimate
 
 talents, in the feed's order, ASSUMED to be ability-slot order -- which is the

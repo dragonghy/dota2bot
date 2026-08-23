@@ -725,9 +725,23 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
         **所以 Lion t15 的这一半是可以重开的**,它现在缺的是**量**不是**可观测性**
         (n=3,先量域再谈翻不翻)。GH #27 家族里**物品充能层数**那个缺口不受影响
         —— 那是 item charges,不是 modifier stacks,§3 那条仍然成立。
-        **两边最终买的是同一样东西**
-        (Hex 控制量:[3] 买次数、[4] 买时长)⇒ **没有可花的可达性不对称,默认不翻**。
-        能了结它的唯一读数 = `queue.json hero-4` 第 (2) 问(事件侧数「开火条件成立但 Hex 还剩 ≤2s」)。
+        ~~**两边最终买的是同一样东西**(Hex 控制量:[3] 买次数、[4] 买时长)⇒
+        **没有可花的可达性不对称,默认不翻**。~~
+        **⚠️ 2026-08-23T22:20Z 更正:上面这一整段是过期散文,别再照它派活。**
+        这一条**当天 04:00Z 就已经重开并结案了**,落地在
+        `bots/BotLib/hero_lion.lua` 的 t15 论证块 + `tests/test_lion_t15_payoff.lua`
+        (「t15 RE-EXAMINED 2026-08-23 and still NOT changed -- but on measurements
+        this time」)。结论仍是**不翻**,但**理由换了、而且否掉了本段的两句话**:
+        ①「两边买同一样东西」**是错的** —— [4] 的 spell-amp 那一半同时抬 Earth Spike
+        与 Finger 的伤害,**[4] 是更宽的那个**;②[3] 被本段**低估**了 —— 24s 是 rank 1
+        (语料 Lion 只到 11 级),而天赋 15 级才存在,那时出货加点已经三点进 Hex ⇒ **16s**,
+        −2.0s 买的是 **+14.3%** 次数不是 +9.1%。真正定案的读数是「Hex 学了的帧上
+        **9/20 就绪且付得起**」(冷却不是稀缺项)与「≤2s 带命中 **0/20**,期望 ~0.9 ⇒
+        UNDERPOWERED 不是 EMPTY」。`queue.json hero-4` 第 (2) 问仍然挂着,但它现在是
+        **锦上添花不是唯一出路**。
+        **教训(第二次踩,和 §24 的死胡同同族)**:19:50Z 那条「下一轮建议」是**照 backlog
+        散文写的**,而 backlog 散文比代码晚了 15 小时 —— 认领任何 backlog 残留项之前,
+        先 `ls tests/ | grep <关键词>` 并读一眼目标文件里的论证块,**代码是账本,散文不是**。
       - **Lion 那三条顺带事实(记录,本轮不动)**:①文件绑 talent 句柄 **{4,5,8} 但只消费 5/8**
         (都是 t20/t25,turbo 够不到),`talent4` 唯一用处是**注释掉的**那一行 ⇒ 本文件
         **没有分支读 turbo 可达天赋**,所以 t10 改动是纯引擎效果;②那行注释是 **Zeus `talent5`
@@ -889,8 +903,99 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       ⇒ 除非有帧证据说明走这 200u 有代价,否则不动。**死局部 `nInRangeEnemyList` 也不要删**:
       `test_axe_culling_threshold_preflight.lua` §3 断言它在 `X.ConsiderR` 里**恰好出现 1 次**。
 
+26. **Zeus / CM 的 `sAbilityList[4]`/`[5]` 绑定没有 nil 守卫**(2026-08-23T22:20Z 立,GH #151)。
+    焦点五里只有这两个文件按下标 ≥4 绑技能(CM 的 `CrystalClone`、Zeus 的 `abilityD`/`abilityAS`),
+    而 index 4 正是「innate 没被 `GetAbilityList` 丢掉」时它会落到的位置;丢不丢取决于
+    `ability:IsHidden()`,**离线不可求值**。两处拿到句柄后**第一件事就是无守卫的方法调用**
+    (`CrystalClone:IsTrained()` / `abilityAS:IsTrained()`),对照组是 WK 自己的 `abilityW`
+    —— 它有 `if not abilityW or abilityW:IsHidden()` **加**一条 `GetName() ~=` 名字校验。
+    **本轮只登记不改**:加守卫是行为改动(崩溃→不崩溃),而且 `print()` 到不了控制台、
+    引擎错误处理坏掉 ⇒ 真发生了也是静默的,**先要域**。
+    **下一棒 = queue `hero-12`**(归档扫描,零 EC2;口径已事先登记:>0 ⇒ 立刻写守卫,
+    0 ⇒ DOMAIN-NOT-REACHED 而非不可能,且必须带 `zuus_lightning_hands` 那个对照分母)。
+    - **⭐ 而在 fixture 世界里这条已经不是假设了(量出来的,见「当前状态」头条 §3.5)**:
+      index 4 上真的坐着东西 —— WK/Lion 是各自的 innate,**CM/Zeus 是一行天赋**
+      (`special_bonus_h_p200`;mock 的 `IsTalent()` 恒 false + dumper 把天赋行放进技能数组)。
+      ⇒ **任何驱动 `X.ConsiderCrystalClone` 的 fixture 测试碰的都不是出货那个句柄。**
+      归 harness(GH #151 §3),本组不改 mock。**顺带一条**:mock 的 `GetAbilityByName(nil)`
+      **返回 table 不返回 nil** ⇒「nil 句柄会崩」在 fixture 里构造性不可复现,
+      **绿色的 fixture 跑不能读成「守卫不必要」的证据**。
+    - **顺带定死的一条 LIMIT,别再重推**:**不许从 fixture 语料推 index map**。
+      `GetAbilityList` 只在 `IsUltimate() and slot >= 4` 时才给 index 6,而 Axe/CM 的语料数组
+      恰好 4 条、大招在末位 ⇒ 若数组顺序 = slot 顺序,他俩的 `sAbilityList[6]` 就是 nil、
+      `abilityR` 整条死。语料直接证伪:两人都有**大招正在冷却**的帧(Axe **1/26**、CM **10/50**)。
+      ⇒ dump 顺序 ≠ slot 顺序。(Axe 那条腿 n=1,引用必须带;Lion/WK 是 5 条、大招在末位
+      ⇒ 与 slot 顺序**自洽**,别拿他俩去「确认」slot 顺序。)
+    - **⚠️ 归属**:那条 LIMIT **不是本组本轮发现的** —— `tools/agent/gen_ability_meta.py` 的 docstring
+      (GH #36)早就写了「dump index 不是引擎 slot」。本轮加的只是**证明方式**(从语料内部量,
+      而不是从「知道 dumper 怎么写」断言)。**下次宣布「我发现了一个 LIMIT」之前先 `grep -rn` 一遍
+      `tools/` 的 docstring。**
+    - **方法上的一条(比上面低一层、桌面可查)**:**从 datafeed 抄来的技能名不能拿去匹配引擎技能**。
+      引擎给 innate 加了一个 datafeed 不携带的 `_innate_` 中缀(WK 31/31、Lion 22/22,feed 拼法 0/N),
+      而另外三个焦点英雄的 innate **压根不在引擎数组里**。GH #104 立的「拿 datafeed 重锚」**对数值仍然有效,
+      对名字无效**。
+    - **⚠️ 一次自己的量测事故,如实记**:第一版普查用 `abilities = \{(.*?)\} \}` 惰性捕获,
+      它**吞掉最后一条技能的右花括号**,而最后一条恰好是大招 ⇒ 读出来是「Axe 从来没有大招在冷却」
+      (真值 1/26),只有尾部恰好挂了天赋行的帧才看得见大招。**按条目逐个匹配,别整块惰性捕获**;
+      凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T22:20Z(报告 `iterations/reports/hero/20260823T222000Z.md`;**认领的是 19:50Z 点名的
+  Lion t15,当场发现那条已经在 15 小时前结案了 —— 于是转做一件新的**;本组开 GH **#151**;
+  queue **`hero-12`** 新增 pending;backlog 新增 §26 并把 §18 二段那段过期散文划掉;
+  **无新 gated id、`bots/` 只动注释、稳定版未漂移**):
+  **「datafeed 说 innate ⇒ `GetAbilityList` 丢掉它 ⇒ 我的 index map 成立」这句话两半都是假的,
+  而它在五个焦点英雄文件里承重。名字对不上(引擎有 `_innate_` 中缀,feed 没有),
+  机制也不是那样(丢弃条件是 `NOT_LEARNABLE` **and** `IsHidden()`,而 bot API 里根本没有 innate 标志)。**
+  零 AWS,外部读 4 次(datafeed herodata hero_id 2/5/22/42,加本轮开头 26)。开工自检 worst exit **0**
+  (UNLANDED 无、cadence/citation clean、trunk python 18/18)。Owner P1/P2 的球都在协同组。
+  - **⭐ 本轮最该被记住的不是发现,是没白干第二遍**:19:50Z 那条「下一轮建议」写的是
+    「§18 二段唯一没闭合的是 Lion t15」,而 **04:00Z 本组自己就已经重开、量完、结案**并落地了
+    `hero_lion.lua` 的论证块 + `tests/test_lion_t15_payoff.lua`。**建议是照 backlog 散文写的,
+    散文比代码晚 15 小时。** 这是 §24 那个死胡同的第二次同型(那次是重做了一份已落地的普查)。
+    ⇒ **认领任何 backlog 残留项之前,先 `ls tests/ | grep <关键词>` + 读一眼目标文件里的论证块。
+    代码是账本,散文不是。** 已就地把那段散文划掉并写明结论换了理由(它原来那两句
+    「两边买同一样东西」「[3] 只值 +9.1%」**都被 04:00Z 的读数否掉了**)。
+  - **§1 的读数(分母是「dump 了技能数组的条目数」,不是全部条目 —— WK 34 里 31,Zeus 50 里 47)**:
+    五个焦点英雄的 innate,**三个**(axe/cm/zuus)**压根不在引擎技能数组里**;**两个**在,
+    带 feed 不携带的 `_innate_` 中缀 —— `skeleton_king_innate_vampiric_spirit` **31/31**、
+    `lion_innate_to_hell_and_back` **22/22**,而 feed 拼法 **0/31**、**0/22**。
+    **零是真零不是管线事实**:`zuus_lightning_hands`(魔晶授予)**1/47** 就是那个对照分母,已写成断言。
+  - **§2 的机制**:`aba_skill.lua` 里唯一出现「innate」的地方是一句**被注释掉的** warning
+    `(e.g. innate like)` —— **五个文件那套说辞的出处就是这句旁白**。断言写在**剥掉行注释之后**的代码上。
+  - **⭐ 爆炸半径是有界的,而且量出来了**:按下标 ≥4 绑技能的只有 **Zeus**(`abilityD`[4]/`abilityAS`[5])
+    与 **CM**(`CrystalClone`[4]),两处**都没有 nil 守卫**(拿到句柄第一件事就是 `:IsTrained()`),
+    对照组是 WK 自己的 `abilityW`(两道守卫)。axe/lion 只读 `{1,2,3,6}`,WK **全部按硬编码名绑**
+    ⇒ 这三个够不着。**只登记不改**(加守卫是行为改动,且没有域),下一棒 = queue `hero-12`。
+  - **⭐ 一条 LIMIT 定死了**:**不许从 fixture 语料推 index map** —— 证伪来自语料内部,
+    Axe/CM 大招在末位且都有**正在冷却**的帧(1/26、10/50)⇒ dump 顺序 ≠ slot 顺序。详见 backlog §26。
+  - **⚠️ 一次自己的量测事故,如实记**:第一版普查的惰性正则**吞掉每个数组最后一条技能的右花括号**,
+    而最后一条恰好是大招 ⇒ 一度读成「Axe 从来没有大招在冷却」(真值 1/26)。已在测试文件里写成注释钉住。
+  - **⭐ §3.5 不再是纸上推理 —— 把 `GetAbilityList` 在真实帧上驱动了一遍,index 4 上真的坐着东西**:
+    WK 的 `sAbilityList[4]` = **`skeleton_king_innate_vampiric_spirit`**、Lion 的 = **`lion_innate_to_hell_and_back`**
+    (mock 的 `IsHidden()` 是 false ⇒ 没被丢掉,预测兑现);**而且多出一个没预测到的占位者** ——
+    mock 的 `ability:IsTalent()` **对一切恒 false**,dumper 又把 `special_bonus_*` 行放进技能数组
+    (CM 14/50、Zeus 9/47)⇒ 那些帧上 **CM 的 `CrystalClone` 和 Zeus 的 `abilityAS` 绑的是一个天赋句柄**。
+    第三条:不带天赋行的 CM 帧上 `[4]` 是 nil,但 mock 的 `GetAbilityByName(nil)` **仍返回 table**
+    ⇒「nil 句柄会崩」在 fixture 里**构造性不可复现**,**绿色的 fixture 跑不能读成「守卫不必要」**。
+    三条全是**关于工具的事实**(GH #36/#27/#133/#145 那一族),归 harness,已写进 GH #151 §3。
+  - **核验**:luacheck **0 警告**;新测试 **13 例 / 13 次变异 13 抓 + 2 个 no-op 对照如期逃逸**
+    (变异表见报告 §6:含「合取改析取」「`slot >= 4`→`3`」「删掉那句 innate 旁白」「往函数里塞真 innate 代码」
+    「CM 下标 4→3」「Zeus 下标 5→4」「拆掉 WK 的 abilityW 守卫」「把 fixture 里的 `lion_innate_*` 改成 feed 拼法」
+    「删掉那唯一一帧 `zuus_lightning_hands`」「把 CM 大招挪离末位」「让 `GetAbilityList` 过滤 `^special_bonus`」
+    「loader 把大招放到 slot 4」等,**九条跨文件**;另有一条 M12 被我写坏成了第二个 no-op,如实记)。
+    整套 **逐文件驱动 162/162 文件 / 1590 例 / 0 失败**(GH #124 未变:第 163 个
+    `test_itemdesire_world_assertion.lua` 单文件 >580s 连续 CPU,单列;逐文件跑不暴露跨文件全局态泄漏)。
+  - **⚠️ 本轮第二个流程失误,如实记**:§4 那条「不许从语料推 index map」的 LIMIT **写完才查到
+    `tools/agent/gen_ability_meta.py` 的 docstring(GH #36)早就写了同一句**。本轮加的是**证明方式**
+    (从语料内部量,而不是从「知道 dumper 怎么写」断言)—— 结论没变,但**不是新发现**。
+    下次「我发现了一个 LIMIT」之前,先 `grep -rn` 一遍 `tools/` 的 docstring。
+  - **留给后来人**:① 「某某在语料里 0 次」先去找**同一族里有分母的那个** —— 这里是
+    `zuus_lightning_hands` 的 1/47,它一没,五个 0 全部改判 UNMEASURABLE。
+    ② 从 datafeed 抄的技能**名**不能拿去匹配引擎;**数值**那一侧 feed 仍然权威。GH #104 的方法只废了一半。
+  - **下一轮建议**:等 `hero-10`/`hero-11`/`hero-12` 读数。不等的话,§25 第一根杠杆(Axe `nKillDamage`
+    陈旧常数,`NARROW-BAND-UNMEASURABLE`)仍在等事件侧读数,**别重推**;可做的是把 §26 的
+    index-4/5 普查推到**非焦点英雄池**(按章程那是总监/协同组的活,本组只能提 issue)。
 - 2026-08-23T19:50Z(报告 `iterations/reports/hero/20260823T195000Z.md`;认领 backlog **§18 Lever B**
   —— 上一轮点名、唯一还挂着的自选项;本组开 GH **#150**;queue **`hero-11`** 新增 pending;
   **无新 gated id、`bots/` 只动注释、稳定版未漂移**):

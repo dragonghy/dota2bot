@@ -12,9 +12,12 @@
 --
 --   * ability index 2 is skeleton_king_bone_guard (Bone Guard -- an ACTIVE,
 --     no-target skeleton release, 42s cd), NOT "vampiric aura, lifesteal
---     sustain".  The lifesteal is skeleton_king_vampiric_spirit and the feed
---     flags it INNATE, so J.Skill.GetAbilityList drops it and it costs no skill
---     point at all.  Both of WK's build rows spend four points on Bone Guard;
+--     sustain".  The lifesteal costs no skill point.  (The clause that used to
+--     stand here -- "the feed flags it INNATE, so J.Skill.GetAbilityList drops
+--     it" -- was withdrawn 2026-08-23: GetAbilityList reads no innate flag, and
+--     the engine spells the ability skeleton_king_INNATE_vampiric_spirit, a name
+--     the feed does not carry.  See tests/test_focus_innate_index_anchor.lua.)
+--     Both of WK's build rows spend four points on Bone Guard;
 --     'wkbuild' does not "keep points in sustain", it delays Bone Guard.
 --   * abilityW was seeded from 'skeleton_king_spectral_blade', a name that is in
 --     neither the game's ability set nor anywhere else in this repo.  It resolved

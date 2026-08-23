@@ -104,6 +104,17 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- it -- that event-side count is still queue.json hero-4.  Talent magnitudes come
 -- from odota dotaconstants; the datafeed carries the names but leaves special_values
 -- empty for both.  Pinned in tests/test_lion_t15_payoff.lua.
+--
+-- ABILITY-NAME FOOTNOTE (2026-08-23).  Lion's innate is the ONE ability on this
+-- hero where the datafeed and the engine disagree on the name: the feed calls it
+-- lion_to_hell_and_back, the engine calls it lion_innate_to_hell_and_back on
+-- 22 of 22 Lion frames in tests/fixtures/ (the feed's spelling: 0).  Nothing in
+-- this file matches on it -- the bindings below take sAbilityList indices
+-- 1,2,3,6 and the build row names the same four -- so an innate landing at
+-- index 4 (which it does whenever ability:IsHidden() is false; GetAbilityList
+-- has no innate flag to consult) cannot reach anything here.  Zeus and Crystal
+-- Maiden bind index 4/5 and are the two that would care.  Measured and pinned in
+-- tests/test_focus_innate_index_anchor.lua.
 local tTalentTreeList = {
 						['t25'] = {10, 0},
 						['t20'] = {10, 0},

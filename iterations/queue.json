@@ -365,6 +365,17 @@
       "acceptance": "主判据交录像组,用他们 21:00Z 已经建好的量,不新造:(1) **FLIP 拼法**(带回看守卫的那一版,creeppull_specificity.py)每局计数,armed vs baseline,**必须分 ab/ba 两层报并取两层平均**(#148 §3 修正后的纪律);(2) 每 episode 的**兵线位移**(axis 2 的 net/follow),同样两层平均 —— 这是本 id 直接声称要移动的量;(3) 每 episode 的**右键次数**必须**下降**(节拍从 1.2s 到 3.0s 就是少下 2/3 的单),若不降 ⇒ 第一嫌疑是 arm 串漏了 `pullbeat`(门是合取,漏一个就是 no-op 且**没有任何计数会报警**)。**反向判据不许省**:对线期 last_hits/xpm 不许低于 baseline 腿;episode 数不许塌向 0(那是关闭不是收窄)。次判据(条件 b,粗粒度、不做显著性检验):armed 侧 gpm/deaths 无明显负面即可。",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "hero-12",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "question": "归档扫描,零 EC2、零新波次(挂在任何一次已有归档的复用上)。问题:焦点五里 Zeus 与 Crystal Maiden 是仅有的两个按 `sAbilityList[4]`/`[5]` 绑技能的文件(CM 的 `CrystalClone`、Zeus 的 `abilityD`/`abilityAS`),而 index 4 正是「innate 没被 GetAbilityList 丢掉」时它会落到的位置。丢不丢取决于 `ability:IsHidden()`,**离线不可求值**(GH #151 §2)。要的读数:归档语料里,Zeus / CM 的技能数组**有没有任何一帧**出现过 `zuus_static_field` / `crystal_maiden_glacial_guard`(或带 `_innate_` 中缀的同名变体)。⚠ 事先登记口径,免得事后解读:读到 **>0** ⇒ 这两个文件的 index-4/5 绑定可能拿到错技能,本组立刻写 nil + 名字守卫(对照现成:`hero_skeleton_king.lua` 的 `abilityW` 两道守卫);读到 **0** ⇒ 与本仓 106 个 fixture 的读数一致(0/47、0/50),**判为 DOMAIN-NOT-REACHED 而不是不可能**,因为 `IsHidden` 这一侧仍然没被观测到,只是没有证据要求动手。",
+      "acceptance": "一行计数即可,不需要 episode 化:每个英雄给 (a) 扫过的帧数(分母,只数**dump 了技能数组**的条目 —— 本仓 Zeus 50 条里 47 条有数组,别拿总条目当分母);(b) `zuus_static_field` / `crystal_maiden_glacial_guard` / 任意 `*_innate_*` 名字的命中数;(c) 命中时那一帧技能数组的**完整有序名单**(判断它落在第几位要靠这个)。对照量必须一起给:`zuus_lightning_hands` 的命中数 —— 它是「可选/授予技能到底能不能被 dump 出来」的分母,本仓是 1/47;这个对照读到 0 ⇒ 整份读数改判 UNMEASURABLE,(b) 的 0 不作数。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [
