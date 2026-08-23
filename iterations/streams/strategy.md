@@ -1036,7 +1036,13 @@
   **本文件跑 ~43s**:第一版 ~118s,把「出厂 IsCore」那一问也放在全部 940 个 subject 上了;
   **修法用单调性** —— override 只会**放松** helper ⇒ 出厂世界的命中是 override 世界的**子集**
   ⇒ 只在已命中的 39 帧上再问一次,**同样的数、一半的墙钟**(GH #124 在抱怨整套跑不完)。
-  **门**:`luacheck bots game` **exit 0 / 0 警告**;新文件 12/12。
+  **门**:`luacheck bots game` **exit 0 / 0 警告**;新文件 **12/12,rebase 前后各跑一次**
+  (收尾时 main 前进到 `ef454a2`,语料 101 → 103,**下界写法一动不动 —— GH #106 §4 的正面数据点**);
+  语料敏感面 + 两个枚举 `tests/` 的 ratchet 定向复跑,**1 红且不是本轮造成的**
+  (`test_gamemode_world_assertion.lua:447` 「expected 23 of 100 fixtures; got 24」,
+  是同一次 rebase 带进来的字面量等式陈旧;本轮 commit 只动了新用例 + `iterations/*`
+  ⇒ **已作为 GH #106 的新一次实证留言,不代改别人的 ratchet**)。
+  **全量没跑完(GH #124),本轮不把它写成「又绿了一次」。**
   报告 `iterations/reports/strategy/20260823T053042Z.md`;
   `state.json:lf_rescue_FINAL_ACTION_AUDIT_20260823`。
   **交棒**:① 录像组 —— 抢跑的**真实发生率**(本地只买到区间,且 8/10 是伪影)+
