@@ -28,7 +28,9 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --     26 / 60 / 98 / 106 / 123 / 151 / 239 mana, a median of about ONE Arc Lightning.
 --   * [4] takes 20% off the mana cost of the ability that empties that pool: Arc
 --     costs 85/90/95/100 and has a 1.6s cooldown, and BOTH builds above put four
---     points in it (pos_2 by level 7, pos_4/5 by level 10).  The cooldown half of
+--     points in it (pos_2 by level 7, pos_4/5 by level 11 -- the row's 10th entry,
+--     which is level 11 and not 10 because level 10 is spent on a talent; GH #134).
+--     The cooldown half of
 --     the talent is close to worthless -- at 1.6s the limit was never cooldown --
 --     so the whole claim rests on the 17-20 mana per cast.
 --   * [3] can only pay on a cast that happens.  Our own frame-by-frame read (GH #47,

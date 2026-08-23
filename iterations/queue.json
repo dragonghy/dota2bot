@@ -130,6 +130,17 @@
    "acceptance": "(1) is condition (a) and the only blocking one: WORKING = at least one WK frame in any game shows two ironwood_branch at once, with the game time; SILENT = still {1: N} across the sampled games, which would mean the shopping list is not what actually drives his purchases and the hero desk re-opens the diagnosis rather than the fix. (2) and (3) are condition (b), coarse-grained, no significance testing (owner 2026-08-01): a wand appearing in ANY game is a pass; unspent gold is expected to fall toward the other heroes' order of magnitude but is not required to, and a RISE would be the interesting negative result. (4) is a side observation, not a verdict. Cheapest possible check -- one replay with a WK in it answers (1) and (2); do not schedule a wave for this.",
    "status": "pending",
    "result": null
+  },
+  {
+   "id": "hero-7",
+   "stream": "hero",
+   "bundle": "",
+   "seeds": [],
+   "priority": 3,
+   "question": "NO WAVE. Opportunistic observation only, and the honest headline is that its carrier may never show up. On 2026-08-23 the hero desk generalised the GH #136 branch census to every recipe that takes two of one component (seven of them, read out of dotaconstants 10.8.0 and cross-checked twice against this repo's own data) and swept all 128 hero buy lists. Two more lists were reaching a doubled target holding exactly one copy -- the quantity the purchase layer misreads as satisfied: hero_tidehunter.lua pos_1/2/3 (one item_gauntlets, no Bracer anywhere, Soul Ring later) and hero_abyssal_underlord.lua pos_4 (started with item_double_gauntlets, but its Bracer eats one before the Soul Ring comes up). Both fixed UNGATED, so they are on both legs of any wave. WANTED IF EVER OBSERVABLE: in any turbo replay containing tidehunter or abyssal_underlord, does the hero ever complete item_soul_ring, and does he ever hold two gauntlets at once. CARRIER PROBLEM, stated up front: neither hero is in the run_001140 mirrored draft (skeleton_king / zuus / bristleback / jakiro / sniper / viper / phantom_assassin / crystal_maiden / juggernaut / earthshaker), so unless a draft changes there is no corpus in which this is answerable at all. Do not schedule anything for it; if a draft ever contains either hero, this is the read to take.",
+   "acceptance": "Condition (a), non-blocking: WORKING = at least one frame showing item_soul_ring in the inventory, or two gauntlets at once, with the game time. SILENT with no carrier present is NOT a negative result and must not be recorded as one -- report 'carrier absent' instead, the way GH #79/#97 distinguish an empty domain from an unreached one. There is no condition (b) ask here: the change is two quantities in two non-focus heroes' shopping lists and cannot plausibly move a win rate.",
+   "status": "pending",
+   "result": null
   }
  ],
  "done": [

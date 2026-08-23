@@ -262,7 +262,8 @@ tests['[hero] axe t10 takes the Battle Hunger move speed talent, not the Culling
         .. 'only exists AFTER a Culling Blade hero kill). It was changed on '
         .. '2026-08-22 to special_bonus_unique_axe_8 (+8% move speed per ACTIVE '
         .. 'Battle Hunger) because Battle Hunger is the first point the build buys, '
-        .. 'is maxed by level 10, and is fired from four branches of X.ConsiderW, '
+        .. 'is maxed by level 11 (the row\'s 10th entry -- level 10 goes on a '
+        .. 'talent, GH #134), and is fired from four branches of X.ConsiderW, '
         .. 'while this Axe never holds a Blink Dagger in turbo (GH #56) and so walks '
         .. 'to every fight. Reverting is allowed -- but say why in the file.')
     with_skill_lib('axe', function(J)

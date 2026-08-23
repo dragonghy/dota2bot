@@ -223,6 +223,34 @@ local function free_at_target(tList, law, bEatToo)
     return nAt
 end
 
+--- The verdict itself, factored out of the census so that it has somewhere to
+--- be tested.  Once the tree is clean the census walks a world with no partial
+--- holdings left in it, so nothing there would notice this boundary being
+--- widened -- a mutation that redefined "safe" as "holds at least one" escaped
+--- the first version of this file for exactly that reason.
+local function is_partial(nHeld, law)
+    return nHeld >= 1 and nHeld < law.n
+end
+
+--- Score one buy list against every law and return the offences it commits, as
+--- readable strings.  Extracted for the same reason is_partial is: on a clean
+--- tree the census never walks this branch, so without a synthetic caller a
+--- mutation that quietly stopped reporting would be invisible.  (What remains
+--- invisible, honestly: a mutation at the census's own CALL SITE, e.g. dropping
+--- the results on the floor.  That is unfalsifiable from a world with nothing
+--- to report, and no amount of extraction fixes it.)
+local function offences_in(sHero, sRole, tList)
+    local tOut = {}
+    for _, law in ipairs(LAWS) do
+        local nAt = free_at_target(tList, law)
+        if nAt ~= nil and is_partial(nAt, law) then
+            tOut[#tOut + 1] = sHero .. ' ' .. sRole .. ' holds ' .. nAt .. ' '
+                .. law.b .. ' at ' .. law.t .. ' (needs ' .. law.n .. ')'
+        end
+    end
+    return tOut
+end
+
 local function hero_files()
     local p = assert(io.popen('ls ' .. BOTLIB .. 'hero_*.lua'))
     local t = {}
@@ -243,16 +271,16 @@ tests['[hero] no buy list holds a partial count of a doubled component'] = funct
     for _, sPath in ipairs(hero_files()) do
         local sHero = sPath:match('hero_(.+)%.lua')
         for sRole, tList in pairs(buy_lists(sPath)) do
+            for _, sOffence in ipairs(offences_in(sHero, sRole, tList)) do
+                tOffenders[#tOffenders + 1] = sOffence
+            end
             for _, law in ipairs(LAWS) do
                 local nAt = free_at_target(tList, law)
                 if nAt ~= nil then
                     nWant = nWant + 1
                     if nAt == 0 then nSafeZero = nSafeZero + 1
-                    elseif nAt >= law.n then nSafePair = nSafePair + 1
-                    else
-                        tOffenders[#tOffenders + 1] = sHero .. ' ' .. sRole
-                            .. ' holds ' .. nAt .. ' ' .. law.b .. ' at '
-                            .. law.t .. ' (needs ' .. law.n .. ')'
+                    elseif not is_partial(nAt, law) then
+                        nSafePair = nSafePair + 1
                     end
                 end
             end
@@ -271,6 +299,41 @@ tests['[hero] no buy list holds a partial count of a doubled component'] = funct
     -- passing on a world where nothing reaches a doubled target at all.
     assert(nSafeZero > 0 and nSafePair > 0, 'census degenerate: zero-held='
         .. nSafeZero .. ' pair-held=' .. nSafePair)
+end
+
+tests['[hero] exactly one is the broken quantity; zero and two are not'] = function()
+    -- The census above can only ever exercise the verdicts the tree actually
+    -- produces, and a clean tree produces none of the interesting one.  This is
+    -- where the boundary lives, so that widening it is a failing edit.
+    local law = { t = 'item_soul_ring', b = 'item_gauntlets', n = 2, eat = {} }
+    assert(is_partial(1, law), 'holding exactly one of a doubled component is '
+        .. 'the broken case -- GetBasicItems keeps one copy alive, '
+        .. '_buildRequiredCounts reads the requirement off that filtered list '
+        .. 'and _stillNeeds pops it as satisfied. GH #139.')
+    assert(not is_partial(0, law), 'holding none is safe: nothing is filtered '
+        .. 'out, so the expansion asks for both copies')
+    assert(not is_partial(2, law), 'holding the pair is safe: GetItemCount > 1 '
+        .. 'never arms sLastRepeatItem, so both copies drop out correctly')
+    assert(not is_partial(4, law), 'holding more than the pair is safe too')
+end
+
+tests['[hero] the census can actually name an offender when there is one'] = function()
+    -- The tree is clean, so the census's reporting branch is never walked by
+    -- real data.  This is the synthetic offender that keeps that branch honest:
+    -- it is the pre-fix tidehunter shape, one gauntlet and a Soul Ring.
+    local tHit = offences_in('synthetic', 'pos_9',
+        { 'item_tango', 'item_gauntlets', 'item_magic_wand', 'item_soul_ring' })
+    assert(#tHit == 1, 'the census found ' .. #tHit .. ' offence(s) in a list '
+        .. 'that holds exactly one gauntlet when its Soul Ring comes up; it '
+        .. 'must find exactly one, or it is reporting nothing on the real tree '
+        .. 'for reasons that have nothing to do with the real tree')
+    assert(tHit[1]:find('item_gauntlets', 1, true)
+        and tHit[1]:find('item_soul_ring', 1, true),
+        'the offence names the wrong things: ' .. tHit[1])
+    -- ...and the same list with the pair is silent.
+    assert(#offences_in('synthetic', 'pos_9',
+        { 'item_tango', 'item_double_gauntlets', 'item_magic_wand', 'item_soul_ring' }) == 0,
+        'the fixed shape is still being reported as an offence')
 end
 
 -- ---------------------------------------------------------------------------

@@ -749,10 +749,12 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     详见「当前状态」头条、`state.json: lion_t15_no_flip_20260823T0600Z`、
     `tests/test_lion_t15_payoff.lua`。
 
-21. **`hero_zuus.lua:31` 与 `test_focus_talent_anchor.lua:265` 的两处 off-by-one 散文
-    (GH #134,2026-08-23 立)** —— 都写「... by level 10」,实际都是 **11 级**(第 4 点落在
-    行[10],而行[10] 落在 11 级)。**非承重**(t10 那一刻技能已学、论证不塌),所以没在本轮扫,
-    但**读者会照抄**。谁先碰那两个文件谁顺手改;改完在 GH #134 上销账。
+21. ~~**`hero_zuus.lua:31` 与 `test_focus_talent_anchor.lua:265` 的两处 off-by-one 散文
+    (GH #134,2026-08-23 立)**~~ **2026-08-23T09:50Z done**,两处都改成 **11 级**并就地写明
+    「行的第 10 项,10 级花在天赋上」。**没有照抄 §21,两条加点行各自独立复核过**:
+    Zeus pos_4/5 `{2,1,2,3,2,6,2,1,1,1,6,...}` 的 Arc 落在第 2/8/9/**10** 项、
+    Axe `{2,3,1,3,3,6,3,2,2,2,6,...}` 的 Battle Hunger 落在第 1/8/9/**10** 项,
+    两者第 4 点都在行[10] = 11 级。`hero_zuus.lua` 本轮**只有注释改动**。GH #134 已销账。
 
 22. ~~**WK 造不出魔棒(GH #136,2026-08-23 owner 开)**~~ **2026-08-23T08:00Z done
     并已落地(纯构筑、无 gate ⇒ 稳定版漂移)**:`skeleton_king` pos_3 的
@@ -766,7 +768,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **下一棒已交**:queue `hero-6`(条件 a:WK 是否曾同时持有两根树枝,0/40 → ~40/40)、
     GH #139(通用侧根因给总监)、GH #136 **留言不关闭**。
 
-23. **GH #139 的非树枝普查**(2026-08-23 立,从 §22 分出)—— #139 的触发条件是
+23. ~~**GH #139 的非树枝普查**~~ **2026-08-23T09:50Z done 并已落地(纯构筑、无 gate ⇒
+    稳定版漂移)**:七族全扫,又抓到**魂之戒(2× `item_gauntlets`)**两处 ——
+    `hero_tidehunter.lua` pos_1/2/3(`item_gauntlets` → `item_double_gauntlets`)与
+    `hero_abyssal_underlord.lua` pos_4(**Bracer 之后、魂之戒之前**插第三个 gauntlets)。
+    详见「当前状态」头条。**别重查的四件事**:
+    (a) §23 原文的「前置」是**假的** —— 配方不必等 mock 供数,odota `dotaconstants`
+    (build/items.json,package **10.8.0**)122 个带 components 的物品里**恰好七个**要两件同款,
+    且在仓库里对上了两次(魔棒 15/15 老锚;**魂之戒有更锋利的仓内证人**:
+    `item_broken_soul_ring` 故意不带护腕,而它唯一的消费者 `item_dragon_knight_outfit`
+    在它旁边摆了两个独立 `item_gauntlets`);
+    (b) 其余五族(bfury/desolator/moon_shard/skadi/necronomicon)**分母上就没人散买组件**
+    —— 全是整件买或无人买,零 offender 是**结构性的**,不是没找到;
+    (c) **整单求和的普查两个方向都错**,见「当前状态」;
+    (d) 条件 (a) 对这两个英雄**可能永远买不到**(都不在 `run_001140` 镜像阵容),
+    已提 queue **`hero-7`** 并预登记「载体不在场的 SILENT 不是阴性结果」。
+
+24. **把「判据/报告双合成自测」推给其它扫描类测试**(2026-08-23 立,从 §23 分出)——
+    一个「扫全仓 + 断言为空」的测试,**修完之后它自己的阳性路径就死了**:树上再没有
+    offender,判据分支和报告分支在真实数据上永远走不到,于是放宽判据/停止报告的变异**全绿逃逸**
+    (本轮前两版各逃一个:M13 放宽 `is_partial`、M14 只对「恰好 1」停报)。
+    修法是**把判据和报告各抽一个函数、各喂一个合成输入**
+    (见 `tests/test_dup_component_buylist_census.lua` 的
+    `is_partial` / `offences_in` 两个自测)。**仍然测不到的那一块也要照写**:普查
+    **调用点**上的变异(把结果丢掉)在一个没有东西可报的世界里不可证伪,抽函数救不回来。
+    **候选受众**:`test_wk_magic_wand_branches.lua` 的普查(同族、同缺口)、
+    `test_gate_claim_consistency.lua`、以及总监那边所有「世界断言」型的扫描。
+    (原 §23 正文保留在下面,供接手的人对照方法。)
+
+    (原 §23)—— #139 的触发条件是
     「配方要 2 件同款、买单先给了 1 件」,本轮只普查了**树枝**这一种(367 条买单,
     br==1 从 2 → 0)。**gauntlets / circlet / slippers / null_talisman 等同款重复组件
     一件都没扫过。** 做法可直接复用 `tests/test_wk_magic_wand_branches.lua` 里的
@@ -777,6 +807,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T09:50Z(报告 `iterations/reports/hero/20260823T095041Z.md`;queue **`hero-7`**
+  pending;GH **#139** / **#134** 各留言销账;backlog §21 与 §23 划掉、新增 §24):
+  **GH #139 的非树枝普查做完:七族全扫,又抓到魂之戒(2× `item_gauntlets`)两处。
+  `hero_tidehunter.lua` pos_1/2/3 `item_gauntlets` → `item_double_gauntlets`;
+  `hero_abyssal_underlord.lua` pos_4 在 Bracer 之后、魂之戒之前插第三个 gauntlets。
+  纯构筑、无 gate ⇒ 本轮稳定版漂移。** 零 AWS、零新 gated id;外部读 = 1 次 GitHub raw
+  (odota `dotaconstants` build/items.json,package **10.8.0**)。开工自检 **worst exit 0**。
+  Owner 优先项 P1/P2 的球都在协同组 ⇒ 按章程取 backlog 最上面的未完成条目(§23)。
+  - **§23 写的「前置」是假的:配方不必等 mock 供数。** 外部读一次就够,122 个带 components
+    的物品里**恰好七个**要两件同款(magic_wand/soul_ring/bfury/desolator/moon_shard/
+    skadi/necronomicon)。**外部源不是白拿的,在仓库里对了两次、两次都对上**:魔棒是
+    15/15 合成宏老锚;**魂之戒有更锋利的仓内证人** —— `Item['item_broken_soul_ring']` =
+    `{ring_of_protection, recipe_soul_ring}` **故意不带护腕**,而它唯一的消费者
+    `item_dragon_knight_outfit` 在它旁边**摆了两个独立 `item_gauntlets`**。一个以为
+    魂之戒只要一个护腕的作者写不出这一对。其余五族**分母上没人散买组件**(整件买/无人买)⇒
+    零 offender 是结构性的,不是没找到。
+  - **⭐ 本轮最该被别的组拿走的一条:这类普查必须在「目标那一刻」按购买顺序计数,
+    整单求和会同时给出假阳和假阴** —— **假阳 `omniknight` pos_3**(一个护腕 + 魂之戒,
+    但 Bracer 排在前面把它吃了 ⇒ 到目标时是安全的 0;照整单求和「修」成 double
+    会**亲手造出这个 bug**:2−1=1);**假阴 `abyssal_underlord` pos_4**(起手就是
+    `item_double_gauntlets`,整单求和 = 2 干干净净,但 Bracer 同样排在前面 ⇒ 到目标时是 1,
+    **整单求和根本看不见他**)。于是普查改成走购买顺序:买到加、被更早的合成件吃掉减、
+    **在目标第一次成为队头那一刻读数**;`eat` 表是同一份 dotaconstants 的传递展开
+    (七个组件、约 30 行,每个消费者恰好吃 1 件)。
+  - **⭐ 第二条(方法学,已立成 backlog §24):一个「扫全仓 + 断言为空」的测试,
+    修完之后它自己的阳性路径就死了。** 前两版各逃逸一个变异,同因不同层:**M13** 把判据
+    放宽成「拿着 >=1 就算安全」全绿、**M14** 只对「恰好 1」停止报告仍全绿 —— 因为树上
+    再没有 partial,那两条分支在真实数据上永远走不到。修法:**把判据和报告各抽一个函数、
+    各喂一个合成输入**(`is_partial` 四点自测;`offences_in` 由一个合成 offender 驱动,
+    必须报出恰好一条并点名 `item_gauntlets`/`item_soul_ring`)。**仍然测不到的那一块也写进
+    文件了**:普查**调用点**上的变异(把结果丢掉)在一个没东西可报的世界里不可证伪。
+    最终 **15 次变异 15 抓**;变异前先 commit,每个变异先断言 needle 在文件里才写。
+  - **顺手销掉 backlog §21 / GH #134 的两处 off-by-one 散文**,但**没有照抄 §21**:
+    两条加点行各自独立复核(Zeus 的 Arc 落在第 2/8/9/**10** 项、Axe 的 Battle Hunger 落在
+    第 1/8/9/**10** 项,第 4 点都在行[10] = **11 级**)。`hero_zuus.lua` 本轮只有注释改动。
+  - **诚实边界(最重的三条)**:(a) **不是被测量的收益**,而且比 GH #136 那次**更弱** ——
+    WK 那次背后有 40/40 局背包读数,**这两个英雄一局语料都没有**(不在焦点五、不在
+    `run_001140` 阵容),依据是机制同一性 + 那个机制被观测到过 40 次;(b) **条件 (a) 对
+    他们可能永远买不到**(镜像阵容固定十人,两人都不在),queue `hero-7` 已预登记
+    「**载体不在场的 SILENT 不是阴性结果**,记 carrier absent,不许当成域为空」;
+    (c) **七条 law 不保证是当前 patch 的** —— dotaconstants 是镜像、可能滞后,仓库能对的
+    两处都对上了;mock 哪天长出真配方,边界断言会**故意红**,届时换成引擎的。
+    另:`item_necronomicon` 那条 law 全仓**分母为 0**,现在纯粹是个哨兵。
+  - **核验**:luacheck **0 警告**;新测试 `tests/test_dup_component_buylist_census.lua`
+    **14/14**;逐文件复跑 `focus_talent_anchor` 12/12、`zuus` 71/71、`magic_wand` 10/10、
+    `smoke` 2/2。整套 `run_tests.lua` 仍受 GH #124 制约,结果见报告文末。
 - 2026-08-23T08:00Z(报告 `iterations/reports/hero/20260823T080000Z.md`;GH **#139**
   本组开(通用采购层根因);queue **`hero-6`** pending;GH **#136** 已留言**不关闭**;
   backlog §22 划掉、新增 §23):
