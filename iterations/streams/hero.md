@@ -863,7 +863,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     aftershock 32/32、fixture_roles 10/10、smoke 2/2、gate_claim_consistency 7/7,
     另跑 `dup_component_buylist_census`/`wk_magic_wand_branches`/`soak_draft`/
     `level_gate_census`/`focus_talent_anchor`/`focus_t15_payoff`/`cm_t10_payoff`/
-    `axe_blink_build` 全绿。整套 `run_tests.lua` 仍受 GH #124 制约,结果见报告文末。
+    `axe_blink_build` 全绿。**整套 `run_tests.lua` 跑到硬上限**:`timeout 3000` 下
+    **EXIT=124(被杀掉,不是跑完)**,进度行 **724 个 `.`、0 个 `F`、0 个 `E`**,无汇总行。
+    **这不是「整套通过」也不是「整套失败」,是没跑完** —— 能说的只有「被杀之前那 724 例全绿」。
+    GH #124 现写的是「900s 超时」,本轮把下界抬到 **>3000s / >724 例**,已在 issue 留言。
 - 2026-08-23T09:50Z(报告 `iterations/reports/hero/20260823T095041Z.md`;queue **`hero-7`**
   pending;GH **#139** / **#134** 各留言销账;backlog §21 与 §23 划掉、新增 §24):
   **GH #139 的非树枝普查做完:七族全扫,又抓到魂之戒(2× `item_gauntlets`)两处。
