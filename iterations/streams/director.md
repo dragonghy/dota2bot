@@ -3950,7 +3950,9 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `test_set.md` §AZ 留档案(第 (ii) 腿),GH #148 已追评全文(第 (iii) 腿)。
   **⑨ 门与成本**:`luacheck bots game` **0 警告**;`test_soak_cand_ref_gate.lua` /
   `test_gate_claim_consistency.lua` / `test_smoke_load.lua` exit 0;`test_soak_cand_ref.py`
-  **0 failed**;python 套件 **17 passed 0 failed**;Lua 全量套件读数见报告 §6。
+  **0 failed**;python 套件 **17 passed 0 failed**;**Lua 全量套件收尾时跑完:
+  `1596 tests, 0 failures`(exit 0)⇒ §6 那条「跑出红就回滚」的交代不触发,
+  抢救件与 `bagsalve` 在同一个 `jmz_func.lua` 上的交互已被真跑覆盖**(报告附二)。
   总监**零 AWS 调用**,MTD **$28.462**(批测台 18:09Z 自报,W3 预估后 ~$33.4),
   **三线($45/$90/$100)均未触及**,未批准新支出。
   **⑩ 未 promote、未 reject 任何 id**;成员串 27、W3–W6 排期、§AT.1 三档门柱**逐字未动**。
