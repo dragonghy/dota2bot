@@ -1,274 +1,288 @@
 {
- "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填) || 2026-08-23T15:xxZ 总监补字段 `director`(机器可读的裁定轴,起因见 test_set.md §AW.1):总监的排期/批准裁定**只写进 `director` 字段**,不再追加进申请方的 `question` 散文 —— 14:10Z 批测台按章程 4a 只看 `status=pending`,而 13:05Z 的 W3 裁定当时只存在于 `question` 散文与 test_set.md §AV 里,于是同一份裁定既已作出又『未送达』,批测台的保守默认与裁定相反。 `director` = {ruling: APPROVED|APPROVED_CONDITIONAL|RECEIVED|REJECTED, wave: W3|W4|W5|unscheduled, at, ref(test_set.md 节号), note}。**批测台选波先读 `director.wave`,再读 status/priority**;无 `director` 字段 = 总监还没裁,按原规则走。",
- "requests": [
-  {
-   "id": "strategy-1",
-   "stream": "strategy",
-   "bundle": "creeppull,pullcamp",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 1,
-   "question": "Owner P1 第 3 棒(接力链见 OWNER_PRIORITIES.md + GH #109):买拉野的条件 (a) —— 勾线(creeppull)与拉野(pullcamp)在真实对局里到底执不执行。两个 id 的死分支都已修好:creeppull 的 2026-08-19(IsCreepPullSafe),pullcamp 的本轮(触发器不再要求先看见小野 + 窗口开一个 5s 行程提前量,见 iterations/reports/strategy/20260822T073000Z.md)。修复前 10/10 局 SILENT 是【结构性】的,不是场景稀缺;本波是这两条行为【第一次有可能真的跑起来】。经济读数只作为条件 (b) 的粗粒度旁证,不是本波的申报目的。拉野窗口在前 6 分钟 ⇒ 与 #108 的局时上限 10→25 分钟改动无冲突,不需要为它调参。",
-   "acceptance": "主判据交录像组(P1 第 4 棒),按【离开兵线 → 走向己方野营 → 拉仇恨 → 回拖】四段判 WORKING/SILENT/BUGGY。本波特有的阴性判据:若仍 SILENT,先看 armed 侧的辅助有没有【离开兵线走向营地】—— 修复前连这一步都结构上不会发生,所以它是区分「触发器没开」与「动作没执行」的分界。次判据(条件 b,粗粒度):armed 侧 gpm/deaths 无明显负面即可,不做显著性检验(owner 2026-08-01 验证哲学)。附带请求:若 slot 1 录像仍是唯一帧级通道(#75),优先把录像配额给 armed 侧有辅助的那一局。",
-   "status": "done",
-   "result": "2026-08-22T14:12Z **收割完成**(owner P1 第 3 棒交付)。波次 spot_20260822_1212xx,树 177a2d176774d29affcc8b4765c59695cf0d5d3a,21 id 全集串,种子 888/895/896/906,**284 有效局(+24 暖场 = 308),四种子两 wave 全齐无饿死**。事先登记的七条必查项:① 暖场 stamp 24/24 全是 177a2d1 ✅;② 分 run 下载(75/76/80/77)+ 时分秒前缀合并 = 308,**与逐 run 之和对账一致,一个不丢** ✅;③ S3 真实 cand 串与 §AN.0 的 21 id **一字不差**,stayfield/pullcamp 均在串里(首次上机),wandlimbo/odaoe 0 次出现 ✅;④ `--rec-slots 16` 验收 **exit 2 = 拒答,不是通过** ⇒ 按事先登记**下一波退回 `--rec-slots 8`**(仍满足 §AM.3/§AN.0 的 `--rec-slots >= 8` 硬条件);⑤ 归属计数复核见报告 §4,**`logname==hostname` 从 147/147 掉到 306/308,不再是 100%**;⑥/⑦ 照做。**次判据(条件 b,粗粒度,不做显著性检验)**:gpm **-29.87**(候选腿 818.79 / 基线腿 848.65)、xpm -30.68(560.63 / 591.30)、deaths +0.25(2.31 / 2.05)、last_hits -2.19(21.96 / 24.15),comps_better 四指标全 0/4,suggested=hold_or_reject。逐种子 gpm:888 -43.15 / 895 -13.57 / 896 -45.84 / 906 -16.92(sd 16.98,SE 8.49)。**按必查项 ⑥,这是 21 个 id 的合成效应,不可归因到 creeppull 或 pullcamp 中的任何一个**;按 §AF.3,跨波比较残差已整门作废。**主判据(P1 第 4 棒)在录像组,现已完全解锁**:本波 `--rec-slots 16` ⇒ **dem21/ 下 307 个 .dem 覆盖几乎每一局**(帧通道从 1/16 → 16/16),请录像组按 §AN.4 读帧(pullcamp 与 creeppull 分开数;pullcamp 跟到落地,出发/抵达/抵达时营地空(空跑)/真拉成 四段分开)。详见 iterations/reports/batch-desk/20260822T141200Z.md"
-  },
-  {
-   "id": "hero-1",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 2,
-   "question": "NO NEW WAVE NEEDED -- this is a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of a proposed WK aiming fix (candidate id `wkqaim`, not yet written): X.ConsiderQ's catch-all (hero level >= 7, enemy inside cast range + 43 = 568u) takes the NEAREST enemy, while the two branches above it each express a preference (killability, biggest threat). Count, over archived turbo replays with a Wraith King: frames where WK is level >= 7, Wraithfire Blast is off cooldown and affordable, and TWO OR MORE enemy heroes are inside 568u -- and of those, how many have `nearest != lowest health`. Episode count matters more than frame count (the stream's standing reading discipline).",
-   "acceptance": "A frame/episode/game count in the shape the hero stream's other pre-flights use (e.g. `N frames / M episodes / K games`), plus at least one concrete (game, t) pair where nearest != weakest so a real-frame fixture can be cut. If the domain comes back at or below the ~0.06 episodes/game level that killed cmrself / esaftershock / zusultx, `wkqaim` is not written. Bench note: the fixture loader's nearby-hero order was ALPHABETICAL until 2026-08-22 (tests/test_mock_nearby_heroes_order.lua) -- any detector that reads 'the first hero in the list' from an older tool run has the same defect and must be re-read.",
-   "status": "pending",
-   "result": "2026-08-22T14:12Z **批测台部分交付(分母侧),检测器侧转交**。本请求自称 NO NEW WAVE NEEDED,不花 AWS 钱;批测台在本请求上能做的是**档案侧的分母**,帧级扫描本身是录像组/英雄组的检测器手艺(参照 es_aftershock_domain.py / cm_r_selfstate_domain.py 的写法),批测台按章程「不做判断分析」不越界写它。**本轮免费量到的分母(只用刚收割的这一波,未扫全档案)**:308 局里 **153 局含 Wraith King(49.7%)**,radiant 77 / dire 76;**153/153 局终 level >= 7**(min 7 / median 11 / max 16)⇒ 请求里的「level >= 7」这一层几乎不构成过滤。**关键解锁**:本波 `--rec-slots 16` ⇒ 这 153 局**几乎每一局都有 .dem**(s3://dota2bot-batch-results-4924/dem21/spot_20260822_1212*/),即 `wkqaim` 的域普查**现在有 153 局单波语料可直接扫**,不必等新波次,也不必翻全档案。**下一棒 = 录像组/英雄组写 wk_q_aim_domain.py 扫这 153 局**(判据仍按请求原文:level>=7 + Wraithfire Blast 可用 + 568u 内 >=2 敌方英雄,数 nearest != lowest health 的帧/episode/局)。本条 status 保持 pending 直到检测器侧出数。\n\n2026-08-22T15:47Z **英雄组接棒,交付了容器内能交付的那一半:检测器口径被本轮改了,接手的人不要按本请求的原文写。** 交付 `tests/test_wk_q_aim_preflight.lua`(9 例,7 次变异 7 抓)+ `hero_skeleton_king.lua` 决策点注释;零 AWS。**裁定:`wkqaim` 不写**,两条独立理由:**(1) 供给饥饿** —— catch-all 是九条分支里的最后一条,九条共抢同一发 14 秒技能,而 `tAllAbilityBuildList` 让 Wraithfire Blast 从英雄 2 级到 11 级全程 rank 1(14s cd),GH #84 的等级普查说 turbo 高水位 19、到 20 级的 0/210 ⇒ rank 1 就是这局的常态;本仓 100 个 fixture 逐帧扫:**6 个「活 WK + 568u 内 >=2 活敌」的环帧里,6/6 的 Blast 没学(2)或在冷却(4),一帧都没到过这条分支**,而四个冷却里 13.1/13.3/13.4 三个是 14 秒里的 >13 秒 ⇒ 走进包围圈那一刻 Blast 是刚放掉的。**(2) 上游同胞** —— `X.ConsiderQ` 有**三条**分支取 `nEnemysHerosInRange[1]`(引擎按距离排序,`J.GetNearbyHeroes` 只过滤不重排),紧邻 catch-all **上方**的「受到伤害时保护自己」(lv>=6)在 `WasRecentlyDamagedByAnyHero(3.0)` 上开火 —— 正是本修复瞄准的那些战斗帧,且瞄得一样瞎、还没有 gate ⇒ 无条件先拿走。同 GH #97 的 liondrain/liondrainstop 形状,但同胞在**上游**。**前提本身成立**:6 个环帧里 3 个「最近 != 最残」—— 塌掉的是可达性,不是缺陷。\n**⇒ 新口径(若仍要扫那 153 局)**:(i) **两条 nearest-taking 分支分开数**,只数 catch-all 会数成上游同胞的补集,低估缺陷、高估补丁;(ii) 每帧必须记 **Blast 是否可用(等级/冷却/蓝/X.ShouldSaveMana)**,因为真实帧说卡点在可用性不在几何;(iii) 仍数 episode 不数帧。\n**边界**:fixture 库是为别的调查裁的 100 帧、有偏,本轮的零是**存在性阴性不是密度**(§Y.2:能证 EMPTY 不能证 RARE),**本请求因此不算 done**;环忽略视野 ⇒ 是上界,结论方向安全。报告 `iterations/reports/hero/20260822T154746Z.md`。"
-  },
-  {
-   "id": "hero-2",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 3,
-   "question": "NO NEW WAVE NEEDED -- a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of the registered Axe finisher lever (hero_axe.lua X.ConsiderR, GH #115 section 5; no gate id written). The constant nKillDamage = 150 + 100*lv is 250/350/450 while Culling Blade's live damage is 275/375/475, so the bot declines a Culling that would kill whenever the target's effective health sits in the 25-point band [150+100*lv, damage[lv]). MEASURE IT ON THE EVENT SIDE, NOT THE FRAME SIDE -- this is the whole point of the request. Count Culling Blade CASTS, and separately the moments where Axe had Culling ready with an enemy hero inside 175u whose health was in the band and no cast followed. Record for each such moment: Culling rank, target health, target max health, distance, and whether the target died within the next 5s to anything.",
-   "acceptance": "An episode count in the shape the hero stream's other pre-flights use (N frames / M episodes / K games) PLUS at least one concrete (game, t) pair with a band-occupied target inside 175u, so a real-frame fixture can be cut with make_fixture.py. WHY THE FRAME CORPUS CANNOT ANSWER THIS (pre-registered, do not repeat the mistake): the repo's 100-frame fixture library gives 26 Axe frames, 20 Culling-ready, and only 3 with any enemy inside the branch's effective 375u ring -- against a 25-point band on a ~1000 health pool the expected hit count is ~0.08, so its zero is UNDERPOWERED and must NOT be reported as an empty domain. A frame-side scan of the archive has the same defect unless it yields hundreds of in-ring frames; the cast-side stream does not. TWO CORRECTIONS TO GH #115's PRE-REGISTERED TEXT: (1) it says 'target is inside 175', but the firing loop iterates J.GetAroundEnemyHeroList(nCastRange + 200), i.e. an EFFECTIVE 375u ring -- the bare cast-range list is computed and never read -- so report both rings; (2) count episodes, not frames. Bench note: derive corpus counts with the fixture loader (dofile), never by regex over the .lua files -- a regex reader under-counted this library's Axe frames 10 vs 26 in the round that filed this.",
-   "status": "pending",
-   "result": "\n\n2026-08-23T08:15Z **批测台:分母为 0,本请求在现行波次配置下结构上买不到。** 06:11Z 波 306 局英雄普查:**npc_dota_hero_axe 出现 0 / 306 局**(death_prophet 同)。不是稀有是不存在 —— 四个种子 888/895/896/906 的固定阵容里没有 Axe(seed_draft.py 离线预测与实测逐个对上)。**⇒ 本请求等的不是「批测台去扫档案」,是一个含 Axe 的种子**,那是波次配置问题,已追评 GH #46(现成答案:--find axe → 899/910/911)。在那之前本条无法推进,status 保持 pending。"
-  },
-  {
-   "id": "strategy-2",
-   "stream": "strategy",
-   "bundle": "pullcamp",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 1,
-   "question": "Owner P1 的回程波(接力链见 OWNER_PRIORITIES.md + GH #109 / #117)。12:12Z 那波买到的 (a) 是【版本专属】的:pullcamp 当时执行了(115 poke : 11 base,WORKING),但它拉的是【离 bot 最近】的野点 ⇒ 中位在离家 10,708u 开拉、连接率 <=20.3%。选点修法本轮已落地(候选营必须比车道中点更靠近我方远古;1500 reach / 窗口 / 0.5 血量门一位没动)。本波要买的是【修好之后】的同一组读数 —— 不是重复买执行证据,是买连接率。**本条挂在总监批准 pullcamp 重新入集上**(test_set.md 顶部 17:3xZ 提议行);未批准前不要启动。种子沿用 888/895/896/906 以便与 12:12Z 那波同种子对读,但按 §AF.3 跨波残差不可比,连接率与开拉点距离是波内自比的读数,不受此限。",
-   "acceptance": "三条,全部用 #117 §复现里那两个现成工具跑,不需要新口径:(1) **连接率**(drag -> 够到一波兵)必须明显高于 20.3%,两个估计量(episode 级 / 逐采样)继续都报 —— 这是这个 mechanic 存在的全部理由;(2) **开拉点离自家泉水的中位数必须落回我方半场**(现 10,708u / 全图 18,806u;判据 中位 < 9,403u);(3) **poke_episodes 不得塌到 0**(那就变回 SILENT)—— 事先登记的预期是【下降但非零】:批测自己的 115 个 episode 里有 48 个开拉点已在 9,000u 以内,所以塌到 0 应当读成【修法过头或选点写错】,不是【场景稀缺】。**免费的正控,不必等新语料**:armed 侧两个深野营 (3994,-5137) 与 (-4007,4947) 的 poke 帧占比(12:12Z 那波是 51%)必须塌下去;它可以在本波自己的帧上直接对读。次判据(条件 b,粗粒度,不做显著性检验):gpm/deaths 无明显负面即可。**注意 #75 / §AM.3**:--rec-slots >= 8,否则这个域的帧证据结构上买不到。",
-   "status": "done",
-   "result": "2026-08-23T02:06Z **收割完成**(owner P1 回程波,搭 §AR.0 全集波)。**278 有效局 + 23 暖场 = 301**,四种子两 wave 全齐无饿死(radiant 167 : dire 111,dire 侧仍撞 35min stall 上限)。事先登记的必查项:① 暖场 stamp 23/23 全是 `cde1d6c` ✅;② 分 run 下载 + **带时分秒前缀**合并 = 301,与逐 run 之和对账一致 ✅ —— **裸合并(不带前缀)静默丢了 22 局并改变了 895/896 两个种子的读数,这条必查项当场兑现,见报告 §2.1**;③ S3 真实 cand 串与 §AR.0 的 24 id **逐字节相同**,`pullcamp` 1 次(重新入集后首波)、`fieldcreep` 1 次(首次上机)、`wandlimbo`/`odaoe` 各 0 次 ✅;④ `--rec-slots 8` 验收 **真 exit 0 = 通过**(第二次),0 recording slot beyond tolerance,录制槽残差 +6.5%~+8.2%(= 比趋势更快),局数 +1.25~+2.25 ⇒ 吞吐代价仍测不出来;⑤ 三元组 `analysis 301 / 录制局数 159 / demclaim 159 / .dem 158`(第一栏分母是录制局数不是 analysis;`.dem` 在 `dem21/<run>/` **不在** `soak/` 下,见报告 §5 的口径更正),归属侧 159/159 = 100%,上传侧丢 1 局(run `…_590502`);⑦ **8 槽下的多录制者歧义这次真的被演练了** —— 159 局 `candidates` 全部 ≥3(众数 7-8,没有一局是 1),而 `by_logname == by_hostname` **159/159**、`hostname_hits` 恒 1 ⇒ 总监裁 8 槽时写下的唯一未测风险**通过**;同时 `by_mtime` **0/159 全错**,`dem_claim.sh:144` 的 mtime 护栏第二次被实测证明必需。**次判据(条件 b,粗粒度,不做显著性检验)**:gpm **−42.49** / xpm −41.74 / deaths +0.38 / last_hits −2.35,**四指标全 0/4**,逐种子 gpm 888 −55.24 / 895 −31.38 / 896 −38.32 / 906 −45.03(sd 10.35,SE 5.17,四种子同号),`suggested = hold_or_reject`。**按必查项 ⑥,这是 24 个 id 的合成效应,不可归因到 `pullcamp`;按 §AF.3 跨波残差比较已整门作废。** **主判据(申请书的三条臂内读数:连接率 / 开拉点离泉水中位 <9,403u / 深野营 poke 帧占比 + 免费正控)在录像组** —— 语料已备齐:`s3://dota2bot-batch-results-4924/dem21/spot_20260823_0011*/` 下 **158 个 `.dem`,帧通道 8/16,归属 100% 可信**,选点修法 `01ab933` 在被测树 `cde1d6c4…` 内。详见 `iterations/reports/batch-desk/20260823T020613Z.md`。\n\n(启动记录留档)2026-08-23T00:11:27Z **已搭车启动**(总监 §AP.1:不给专波,搭全集波顺路买)。波次:树 cde1d6c4f3b83b0b75904575eae1f4a599ac65be(= 远端 main tip,ls-remote 已核),**§AR.0 的 24 id 全集串**(`pullcamp` 在串内,选点修法 `01ab933` 已在 main),种子 888/895/896/906,4 台 × 1 种子 on-demand,16 槽,**`--rec-slots 8`**,2h 看门狗,`--games 22`。run_id:spot_20260823_001127_1_cde1d6c4…_3fb2ec (seed 888, i-0461d2bb48ea04581); spot_20260823_001131_1_cde1d6c4…_590502 (seed 895, i-0ab483718b10c41de); spot_20260823_001136_1_cde1d6c4…_febb54 (seed 896, i-06e62c475dc92f900); spot_20260823_001140_1_cde1d6c4…_c3ba4a (seed 906, i-042a5926b10004335)。收割最早 2026-08-23T02:1xZ(看门狗上限),走 `recover_verdict.py` 全量重算。三条臂内读数(连接率 / 开拉点离泉水中位 <9,403u / 深野营 poke 帧占比)按申请书判据交录像组。"
-  },
-  {
-   "id": "hero-3",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 3,
-   "question": "NO NEW WAVE NEEDED -- a scan of the ARCHIVED corpus, filed here because the batch desk owns the archive. On 2026-08-22 the hero desk flipped Zeus's t15 talent from +75 Thundergod's Wrath damage to -20% Arc Lightning mana cost / cooldown (ungated pure-numbers change, already on main; rationale in hero_zuus.lua and tests/test_focus_t15_payoff.lua). The argument rests on a 100-frame FIXTURE reading -- 7 of 16 ult-ready Zeus frames unaffordable, median shortfall about one Arc Lightning cast -- and that library was cut for OTHER investigations, four of its Zeus frames by this desk to study exactly this. Wanted off the archive, over turbo replays containing a Zeus: (1) ARC LIGHTNING CASTS PER GAME, and per minute of the laning phase separately -- the flip pays 17-20 mana per cast and repays a ~106 mana shortfall only after roughly five casts between top-ups, so a low cast count would weaken it; (2) at every instant Thundergod's Wrath is learned and off cooldown, Zeus's mana against the rank cost (250/375/500) -- the unaffordable RATE, not just its existence; (3) the same two numbers for Crystal Maiden's Freezing Field (200/400/600), whose fixture reading is 5 of 24 ready frames below cost and a 2-frame [cost, cost+nova) band. CAVEAT ON METHOD, learned the hard way on 2026-08-22: do not read the corpus with a regex -- that round read 10 Axe frames where the loader reads 26, which is how a reachable domain gets written up as an empty one.",
-   "acceptance": "(1) and (2) decide nothing on their own -- the flip is already shipped and is a pure talent-table change with no gate to arm. They decide whether the WRITTEN REASON survives: if Zeus casts Arc rarely, or the unaffordable rate collapses on unbiased frames, the hero desk reverts t15 and says so in the file (tests/test_focus_talent_anchor.lua enforces that the rationale travels with the row). (3) is a pre-flight for a CM ult-mana-reserve gate ('cmkeep') that is deliberately NOT written yet: the desk has six pre-flight rejections behind it and will not write a seventh gate against a 2-frame band. Report the CM band as a RATE per Freezing-Field-ready instant, not as a count.",
-   "status": "pending",
-   "result": "\n\n2026-08-23T08:15Z **批测台补交档案侧分母(欠 37 轮,零 AWS 成本)。** 06:11Z 波 306 局:**zuus 306/306 局(100%)、crystal_maiden 306/306(100%)**,其中 **237 局有 .dem**(--rec-slots 12,归属 237/237 可信,s3://…/dem21/spot_20260823_0611*/)。**⇒ 本请求的分母是四条里最大的,而且现在就可做,不必等新波。** **但一个等级栏位必须带上**:Thundergod / Freezing Field 的 rank 3(250/375/500 与 200/400/600 的顶档)只在 lv>=15 出现,而本波 **zuus lv>=15 只有 37/306、crystal_maiden 只有 12/306**(局终等级 med 均为 11)。报「按 rank 分档的 unaffordable RATE」时必须把这个分母写在旁边,否则又是一次拿窄样本当密度。帧级扫描仍是录像组/英雄组的检测器手艺,批测台不越界写它。"
-  },
-  {
-   "id": "hero-4",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 3,
-   "question": "NO NEW WAVE NEEDED -- a scan of the ARCHIVED corpus (filed here because the batch desk owns the archive). On 2026-08-22 the hero desk flipped Lion's t10 talent from +10pp Mana Drain slow (special_bonus_unique_lion_6) to +20 movement speed (special_bonus_movement_speed_20): ungated pure-numbers change, already on main; rationale in hero_lion.lua and tests/test_lion_t10_payoff.lua. The argument is REACHABILITY, not size: the slow is only collectible while X.ConsiderE channels Mana Drain ON AN ENEMY HERO, and both such branches sit below `if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1 then return 0 end`, i.e. they need Earth Spike, Hex and Finger all unavailable first. The fixture library (22 living-Lion frames) reaches that chain on 2 frames, and BOTH are fixtures this desk cut to study Lion's drain -- an existence read on a biased sample, not a density. Wanted off the archive, over turbo replays containing a Lion: (1) MANA DRAIN CHANNELS PER GAME SPLIT BY TARGET CLASS -- enemy hero / creep / illusion -- with channel duration, because only the enemy-hero channels can collect the abandoned talent; (2) HEX CASTS PER GAME plus, at every instant X.ConsiderW's firing conditions hold, whether Hex was on cooldown and with how much left -- specifically the count of moments blocked by <= 2s of cooldown, which is the domain of the t15 challenger (-2s Hex cooldown, special_bonus_unique_lion_5) that this pass declined to take. CAVEAT ON METHOD (learned 2026-08-22): do not read fixtures with a regex -- that round read 10 Axe frames where the loader reads 26. Use the same loader the tests use. UPDATED 2026-08-23T06:00Z (hero desk, GH #134): part (2)'s DOMAIN RANK was wrong in the text above. -2s was priced against Hex rank 1 (24s cooldown), which is what the fixture corpus holds because its Lions top out at level 11 -- but the talent only exists from level 15, and at level 15 the shipped build has Hex at RANK 3 = 16s (rank 4 = 12s from level 16). Root cause: the build row's index is not the hero level -- J.Skill.GetSkillList spends levels 10/15/20 on talents, so a 15-entry row has only 13 ability points down at level 15. So when scanning, bucket the 'blocked by <= 2s' moments BY THE HEX RANK HELD ON THAT FRAME, and report the rank distribution alongside: a moment at rank 1 is 2s out of 24, at rank 3 it is 2s out of 16, and only frames at level >= 15 are in domain at all. Also note part (1)'s own denominator moved: Mana Drain is rank 3 when the t10 pick happens, not rank 4.",
-   "acceptance": "(1) decides whether the WRITTEN REASON for the t10 flip survives: if enemy-hero drain channels turn out to be common (say more than a couple per game with meaningful duration), the +10pp slow is collectible far more often than the fixture read suggests and the hero desk re-argues or reverts the row in hero_lion.lua -- tests/test_focus_talent_anchor.lua enforces that the reasoning travels with the row either way. It does NOT decide whether the change can ship: it already has, and there is no gate to arm. (2) is a pre-flight, not a verdict: a count of Hex firing moments blocked by <= 2s of cooldown is the ONLY thing that could turn the t15 row from 'no measurable asymmetry, default holds' into a decidable pair. Report it as a rate per game with the total number of firing moments as denominator; a zero here must be recorded as UNDERPOWERED, not EMPTY (narrow band on a continuous quantity -- the standing lesson from GH #115). UPDATED 2026-08-23T06:00Z: (2) is NO LONGER the only channel that can decide the t15 pair -- the 2026-08-23 pass measured both sides offline and kept [4] (see state.json lion_t15_no_flip_20260823T0600Z and tests/test_lion_t15_payoff.lua): the incumbent's two To Hell and Back windows are live on 3 of the 10 modifier-bearing Lion frames, and the challenger loses because Hex is READY and mana-affordable on 9 of the 20 Hex-learned frames, i.e. the scarce thing is targets, not Hex charges. (2) is now the channel that could OVERTURN that verdict rather than the channel that has to create one, so it no longer blocks anything -- but a high rate of cooldown-blocked firing moments (especially at rank 3+) would reopen the pair.",
-   "status": "pending",
-   "result": "\n\n2026-08-23T08:15Z **批测台补交档案侧分母,并且 part (2) 的域是结构性空集。** 06:11Z 波 306 局:**lion 出现 77 局(25.2%,只在种子 896)**,其中 60 局有 .dem。**part (1)(Mana Drain 按目标分类的 channel 数)可做,语料 60 局。** **part (2) 不可做**:本请求 06:00Z 自己更新的口径写明「only frames at level >= 15 are in domain at all」,而这 77 局 Lion 的**局终等级上限是 14,0/77 到 15**。**这不是 UNDERPOWERED,是准入条件从未满足** —— 与 GH #115「窄带上的零要记 UNDERPOWERED」不冲突(那讲连续量上的窄带)。根因是 Turbo + SOAK_CAP_MIN=10 的裁判上限(本波局时 min 9.1 / med 11.0 / max 15.2)。**选种解决不了这一条**,要买它得抬 SOAK_CAP_MIN(波次配置变更,连带改局时/局数/经济读数)或承认 t15 只能靠 fixture 验 —— 已随 #46 追评交总监。同尺度旁证:zuus lv>=15 37/306、crystal_maiden 12/306、skeleton_king 4/152。"
-  },
-  {
-   "id": "strategy-3",
-   "stream": "strategy",
-   "bundle": "itemtrip",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 2,
-   "question": "NO DEDICATED WAVE REQUESTED -- please fold 'itemtrip' into the next multi-id wave (same reasoning as fieldcreep: this is an in-arm reading of the armed leg, not a paired econ question). GH #120 / owner priority P2's family, above the health band: 76 of 643 high-HP home TPs across 283 games (0.27/game, median round trip 40.1s) have no branch in bots/ that explains them, because BOT_MODE_ITEM is the ENGINE's mode here. The new bots/mode_item_generic.lua installs a GetDesire ONLY when 'itemtrip' is armed; unarmed it defines nothing and the engine keeps its built-in bid byte for byte. This wave buys condition (a). It ALSO discharges an engine semantics question this repo has never been able to answer: docs/BOT_API_REFERENCE.md:52 claims GetDesire() returning nil falls through to the built-in bid, and until this file there were ZERO users of that contract in bots/. The armed bid returns NONE on wasteful frames and nil otherwise, so the replay read separates the two worlds with no extra instrumentation. Registered BEFORE the wave, on purpose.",
-   "acceptance": "Primary (replay desk, condition a): on the armed leg, re-run tools/batch_test/behavioral/hometp_highhp.py and split the high-HP home trips by #120's own labels. TWO outcomes, both useful and both pre-registered: (1) the residual 'no branch explains it' bucket drops while escape2/shop/defend/healmana stay put -> the nil-fallthrough contract HOLDS and itemtrip works as designed; (2) high-HP home trips collapse to ~0 across ALL labels that route through item mode -> the contract is FALSE (nil reads as 0), armed means item mode is off for the whole game, and that fact is now discharged for every future author. Do NOT read outcome (2) as 'the fix is broken' without saying which of the two it is -- the distinction is the point. NEGATIVE control that must NOT move: the 136 'shop' trips (retreat mode's shop motive, X.IsInvFull) do not route through BOT_MODE_ITEM and must be unchanged in both outcomes; if they move, something other than this file did it. Secondary (condition b, coarse, no significance test per owner 2026-08-01): no obvious negative on gpm/deaths for the armed leg. Frame evidence requested for at least one hero that was going to make the trip and did not.",
-   "status": "done",
-   "result": "RUNNING (batch desk 2026-08-23T06:11Z). itemtrip is armed for the first time: the director's AS.0 section landed the 25-id string (the 02:51Z approval had only reached the header, which test_set.md:271 says is not the machine-read line), so the baton did not drop. Wave: 4 x on-demand c6i.4xlarge, one seed each (888/895/896/906), tree pinned to full SHA 7159ff3ef3da17b5716ad491e80c23a6c3818c8e (NOT --ref main, so a later push cannot move the tree under the instances), 16 slots, --rec-slots 12 (director AS.2 ruling (C)), 2h watchdog, --games 22. Runs: spot_20260823_061111_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_89ea04 (s888), spot_20260823_061113_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_c05658 (s895), spot_20260823_061115_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_902447 (s896), spot_20260823_061118_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_05202d (s906). Pre-launch gate check redone on this tip: 25/25 ids present in bots/ (24 as IsSoakCandidate literals; lf_rescue via IsLaneFixOn('rescue') -> jmz_func.lua:5907 concatenation, jmz_func.lua:6245). itemtrip's live call site is bots/mode_item_generic.lua:65. Condition (a) evidence goes to the replay desk from the dem21/ corpus this wave produces -- at 12 rec slots that is ~50% more frames per game than the 8-slot wave.\n\n2026-08-23T08:15Z **收割完成**。波次 spot_20260823_0611{11,13,15,18},树 7159ff3(钉全 40 位 SHA),§AS.0 的 25 id 全集串(itemtrip 首次上机),种子 888/895/896/906,**282 有效局 + 24 暖场 = 306**,四种子两 wave 全齐 unfinished 0。**gpm −93.30 / xpm −96.97 / deaths +0.71 / last_hits −6.16 / winrate 0.243,五指标全 0/4**,suggested=hold_or_reject;逐种子 gpm 888 −122.10 / 895 −119.94 / 896 −105.72 / 906 −25.46(sd 45.81,SE 22.90)。**上一波(24 id、树 cde1d6c)是 −42.49 / 0.394 ⇒ 赤字翻倍,而两波之间 armed 串只差 itemtrip 一个** —— 三条路连代价已交总监(GH #140),本台建议 (B) 退回 24 id 一次波次收敛变量;12:11:11Z 前给结论,未裁默认 (A)。8 条必查项全兑现(暖场 stamp 24/24=7159ff3;带前缀合并逐位一致;串与 §AS.0 IDENTICAL count 25;demclaim 237 一起下;.dem dem21=237 / soak/=0;rec_slot_cost.py exit 0 ⇒ --rec-slots 留 12;归属 237/237、candidates 众数 11、by_mtime 0/237 全错;winner_by engine 0 = 可证伪预测兑现,GH #135 构造性论证成立)。语料:s3://dota2bot-batch-results-4924/dem21/spot_20260823_0611*/ 下 237 个 .dem,帧通道 12/16,归属 100% 可信。详见 iterations/reports/batch-desk/20260823T081500Z.md\n\n2026-08-23T14:10Z **归因结论到货(§AT.1 第一档触发)**。同树 `7159ff3` / 同种子 888,895,896,906 / 只差 armed 串一个变量的配对波(24-id,去掉 `itemtrip`)读数:**gpm −26.44 / xpm −32.83 / deaths +0.33 / last_hits −1.85 / winrate 0.441**,275 有效局 + 24 暖场 = 299,unfinished 0。与含 `itemtrip` 的 25-id 波(−93.30)**逐种子配对**:888 +83.20 / 895 +93.47 / 896 +91.01 / **906 +0.23**,均值 **+66.98**(sd 44.71,SE 22.36,3.0×SE)。⇒ §AT.1 预登记的第一档触发,**`itemtrip` 退回协同组**(退回≠reject:它的条件 (a) 从来没买到过);§AT.2 的「开脱 ⇒ 查 `9fa4898` CM arcane boots」分支**未触发**。**形状比均值重要**:三个种子一致 −83~−93,**种子 906 逐字没动**(它在两波里都是 −25.x)⇒ `itemtrip` 的域与种子阵容相关,不是均匀的 −67。按 §AT.1 原话,这一波**不能开脱另外 24 个 id** —— 残组仍是 −26.44、四指标 0/4、winrate 0.441 < 0.5。旁证(只跨树不跨集合,不在 §AF.3 射程内):同 24-id 串在树 `cde1d6c` 上是 −42.49 / 0.394,两次独立落在 −26…−42 带内,而含 `itemtrip` 的那次在带外一倍以上。条件 (a) 的帧证据仍在 `s3://dota2bot-batch-results-4924/dem21/spot_20260823_0611*/` 的 237 个 `.dem` 里,归录像组。详见 iterations/reports/batch-desk/20260823T141000Z.md  || 2026-08-23T15:xxZ 总监处置:归因波(24-id @ 7159ff3 @ 888/895/896/906,275 有效局)X = gpm −26.44,§AT.1 第一档触发 ⇒ **itemtrip 退回协同组、出集**,详见 test_set.md §AW.2 与 GH #120。**读数的形状不是「平均 −67」**:三个种子 +83/+93/+91,906 = +0.23(零)—— 域与阵容相关,这是给协同组的线索。",
-   "director": {
-    "ruling": "RETURNED_TO_STRATEGY",
-    "wave": "(归因波已收割)",
-    "at": "2026-08-23T15:xxZ",
-    "ref": "test_set.md §AW.2",
-    "note": "§AT.1 预登记第一档触发(X = gpm −26.44,离 −40 门柱 13.6、离 −90 门柱 63.6):`itemtrip` 逐种子配对吃下 +66.98 ± 22.36 SE(888 +83.20 / 895 +93.47 / 896 +91.01 / 906 +0.23)⇒ **退回协同组,出集**(成员串 28→27)。退回≠reject:它的 (a) 是 WORKING(录像组 13:01Z:域内 armed 9 : base 17 = 0.53,域外 18 : 19 = 0.95,`shop` 取货 73 : 70 没被压),被否的是**这个杠杆值不值得拉**,不是它有没有拉动。"
-   }
-  },
-  {
-   "id": "hero-5",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 2,
-   "question": "SUPERSEDED IN ITS PREMISE 2026-08-23T12:00Z, STILL THE SAME QUESTION. This entry was written while the CM pos_5 boots swap was UNGATED and therefore on BOTH legs of every mirror; the director's GH #144 ruling reversed that and the hero desk has now moved the swap behind the turbo-only soak gate 'cmboots' (gate-off is byte-identical to the pre-9fa4898 list, asserted). CONSEQUENCE FOR THIS REQUEST: it no longer rides whatever wave runs next -- it can only be read off a wave where 'cmboots' is ARMED, i.e. the exclusive first wave requested as hero-8. Until then this is NOT a negative result and must not be recorded as one. On 2026-08-23 the hero desk swapped Crystal Maiden's pos_5 boots: item_mage_outfit (tranquil boots) -> item_mage_arcane_outfit (arcane boots; the shared item_crystal_maiden_outfit that 9fa4898 used was reverted -- 16 other heroes buy it), and removed item_boots_of_bearing from the pos_5 list because its recipe consumes a pair of tranquil boots and would otherwise buy a SECOND pair (movement speed does not stack). Now gated 'cmboots', turbo-only; rationale in hero_crystal_maiden.lua and tests/test_cm_pos5_boots.lua; GH #126 -> GH #144. Wanted, off any turbo replay containing a pos_5 Crystal Maiden: (1) DOES SHE ACTUALLY BUY ARCANE BOOTS, and at what game time -- the purchase layer resolves outfit macros at runtime and item_mage_arcane_outfit is a brand-new macro referenced by nothing but the gated branch, so 'the list says arcane' is not evidence that 'the bot bought arcane'; (2) DOES ANY CM END UP HOLDING TWO PAIRS OF BOOTS, or stall on a purchase target she cannot complete -- the failure mode the Bearing removal is meant to prevent, and the one that would show the removal was necessary or that it was not enough; (3) her mana over the game (fraction of the game below the 220 nKeepMana floor, and Replenish casts per game if the dumper can see item actions at all -- GH #100 says the fixture world cannot, a live replay may).",
-   "acceptance": "PREREQUISITE: 'cmboots' armed (hero-8). Read only the ARMED leg for (1) and (2); the baseline leg is the tranquil build by construction and says nothing about them. If the wave that carries this has no armed-leg pos_5 Crystal Maiden at all, record CARRIER ABSENT, not SILENT (the hero-7 rule). (1) is condition (a) for this change and the only blocking one: WORKING = at least one frame shows arcane boots in a pos_5 CM inventory, with the game time; SILENT = the outfit macro never resolves and she buys nothing or falls back, which would mean the swap is inert and the hero desk reverts or fixes the wiring (the new macro's tDefineItemRealName sentinel is item_arcane_boots -- an unresolved macro is the most likely thing to have gone wrong). (2) is a defect check, not a verdict: any CM holding two pairs of boots reopens the Bearing removal from the other side. (3) is condition (b) evidence, coarse only -- no significance test (owner 2026-08-01 philosophy); a zero on Replenish casts must be recorded as UNDERPOWERED unless the dumper is shown to emit item actions at all.",
-   "status": "pending",
-   "result": "2026-08-23T06:11Z wave: read as ungated-and-therefore-on-both-legs, which is no longer true. That wave carries the swap on both legs because 9fa4898 is an ancestor of its pinned SHA 7159ff3, so any (a) reading taken off it describes the SHIPPED build, not the candidate. Re-pointed at hero-8's wave. Left pending: the request asks for a reading, not a launch."
-  },
-  {
-   "id": "strategy-4",
-   "stream": "strategy",
-   "bundle": "campgrade",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 2,
-   "question": "GH #137 的条件 (a):`campgrade` 在真实对局里到底有没有把低等级英雄挡在远古营外面。**不申请专波** —— 这个 id 未 armed 时是逐字节等价的(off-candidate equivalence 已在本地按 camp-for-camp 断言),请并进下一波已经在跑的串里,当一个额外 id 就行。缺陷本身是纯结构的、不需要批测来确认(四支 if/elseif 的最后一支无条件放行,任何等级拿得到任何营地);要买的只有『修好之后真的少去了』这一件事。 【2026-08-23T11:xxZ 总监更新:改为独占波,见 notes 末段。】 【2026-08-23T13:xxZ 总监裁定:条件性批准**不变**,排期 W3 → **W4**(test_set.md §AV.1/§AV.2)。让路的理由是 owner P1 与名额算术,**不是这一包的质量**——它仍是三条里唯一有明文批准的。W4 的名额来自 W3 对 `creeppull` 的 resolve;若核验结论迟到而 W4 时刻已到,**照发**(名额是集合增长的闸门,不是发波的闸门)。载体门对它是 no-op:`campgrade` 按等级不按英雄,任何种子集都带得动。】",
-   "acceptance": "**判据是录像组已经有的那把尺子,不要另造**:重跑 `tools/batch_test/behavioral/ancient_camp_domain.py`(GH #137 §2 那份,--selfcheck 27/27),分 armed / base 两侧各出一份。① 主判据:armed 侧『等级 ≤11 的远古交火次数』相对 base 侧显著下降(base 侧基线 12/40 = 30.0%);② **同等重要的反向判据(不许省)**:armed 侧的**全体**远古交火次数**不许塌成 0** —— 等级 ≥12 的那 28 次是本来就该打的,把它们一起误伤掉是回归、不是通过;③ 条件 (b) 粗粒度:armed 侧 gpm/deaths 无明显负面即可,不做显著性检验。**预登记的未知量**:RefreshCamp 每局只在营地被打完、列表缩短之后才重刷(mode_farm_generic 的 `GetAvailableCampCount() < GetCampCount()` 条件),所以营地名单相对等级是**滞后的** —— 如果 armed 侧 ≤11 的命中没有降到接近 0,先查这条刷新节奏,再怀疑门本身。",
-   "status": "pending",
-   "notes": "本地已买到的:14 例真实帧用例(等级 10/11/12/14/19 五个真实等级钉两条边界)、3 变异 3 抓、语料域 92.5%(1030 个真实英雄槽里 953 个 ≤11)。买不到的两件已在 state.json:campgrade_20260823 的 honest_boundary 里写死:语料不带野点表(GetNeutralSpawners 恒 {}),也不带攻击力(恒 0)。\n\n2026-08-23T10:15Z **批测台预检发现结构冲突,本条卡在总监的一个裁定上,不在等波次**:`campgrade` 的唯一调用点 `bots/FunLib/aba_site.lua` 的 `J.Site.RefreshCamp(bot, J.IsModeTurbo() and J.IsSoakCandidate('campgrade'))` 由 `498bad4`(strategy 07:55Z)引入,**晚于 §AT.0 钉死的树 `7159ff3`**。实测:`IsSoakCandidate` 的 id 全集在 `7159ff3`→`0ca2a58` 之间只增了 `campgrade` 一个。⇒ 若「归因波之后那一波」继续钉 `7159ff3`,本 id armed 了也是**逐字节 no-op**,读数会呈现为「campgrade 无影响」= **假阴性,且无任何计数报警**(gate 覆盖表会给它打 0,正好被读成 lf_rescue 那种「预期的 0」)。两条路的代价已在 GH #140 追评里摆出:(甲) 改钉 ≥`498bad4` 的新 SHA(campgrade 真上机,但与 −93.30/X 的同树配对脱钩,§AT.3 的 (乙) 下次要用得重买前半);(乙) 仍钉 `7159ff3`、campgrade 顺延一波(配对链完整,本条再等 ≥6h)。**归总监,本台不自裁。** 另:12:11Z 那一波按 §AT.0 钉 `7159ff3` 不受影响,本轮预检不动它。\n\n2026-08-23T11:xxZ **总监裁定,本条解卡 —— 甲/乙 都不选,改走独占首波**(全文 test_set.md §AU,摘要在 GH #140 追评):\n甲/乙 共享一个错误前提,以为换树会污染读数;不会。`validate_onspot.sh:76-89` 报的是差之差,一笔 ungated 改动\n两波两侧都在,`(ab+ba)/2 = e` 里逐项湮灭(§AU.1 的恒等式)。逐文件核过 `7159ff3 -> 0ca2a58` 的 9 文件漂移:\n三个纯注释(零非注释行)、`aba_site`+`mode_farm_generic` 是 gated 未 arm(`bAdmit = true` 后接逐字未动的原链)、\n其余四个是 GH #136/#139 的组件数修复(ungated 但两臂对称)。⇒ (甲) 的代价被记错,(乙) 近乎自败。\n**裁定**:归因波之后那一波 = **`campgrade` 独占波**,armed 串就它一个 id,钉**发波时刻的 origin/main tip**。\n理由是证据强度:搭 24-id 顺风车只能读成 `Delta(25-id) - Delta(24-id)` 的差之差,而波间 sd 45.81 比单 id 的\n典型效应大一个量级;独占波是波内读数,一阶无混杂,正好是 owner 铁律 2(b) 点名的那句话。成本同为 ~$1.5。\n本条 question 里「不申请专波」的自我克制**本轮被总监推翻**,不是协同组的失误 —— 那时还不知道 §AU.1。\n**种子**:独占波无跨波配对义务 ⇒ **允许**顺带首次登记并使用 axe+lion 新种子集(发波前在报告里写死种子号);\n来不及就退回 888/895/896/906,不影响判读。\n**发波前硬门(新)**:`python3 tools/batch_test/check_armed_wiring.py --ref <要钉的SHA> --cand \"campgrade\"`,\n非 0 不许发 —— 这正是本条撞出来的坑,现在是一个 exit code。\n**下一棒(收割后)**:条件 (a) 归录像组,按本条 acceptance 那三条判据(含不许省的反向判据 ②)出 WORKING/BUGGY/SILENT。\n\n2026-08-23T12:09Z 批测台:**W3 只有一个入集名额,而你们三条(strategy-4 campgrade / strategy-5 creeppull+pullbeat / hero-8 cmboots)都要独占首波** —— §AT.3 的算术是「一次归因波 resolve 一个 id = 一个名额」,本波(24-id,12:09Z 启动)resolve 的是 itemtrip,名额=1。本台今天在 origin/main 上逐条实测过 check_armed_wiring.py:三条**全部 exit 0、全部就绪**(campgrade 1/1、cmboots 1/1、creeppull+pullbeat 2/2)⇒ **瓶颈是排期裁定不是就绪度**。已在 GH #140 把三条连同各自的理由摆给总监,本台不自裁;未裁的保守默认走 strategy-4(三条里唯一有 §AT.3 明文条件性批准的)。W3 最早 2026-08-23T18:09:32Z。",
-   "director": {
-    "ruling": "APPROVED_CONDITIONAL",
-    "wave": "W4",
-    "at": "2026-08-23T13:05Z",
-    "ref": "test_set.md §AV.1/§AV.2/§AV.7",
-    "note": "条件性批准不变,排期 W3 → W4;让路的理由是 owner P1 与名额算术,不是这一包的质量。W4 的名额来自 W3 对 `creeppull` 的 resolve;核验迟到而 W4 时刻已到则照发(名额是集合增长的闸门,不是发波的闸门)。独占波,载体门对它是 no-op(按等级不按英雄)。"
-   }
-  },
-  {
-   "id": "hero-6",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 1,
-   "question": "NO NEW WAVE NEEDED -- rides whatever wave runs next, because the change is UNGATED and therefore on BOTH legs. On 2026-08-23 the hero desk fixed GH #136: skeleton_king's pos_3 buy list (aliased by pos_2/4/5) asked for a SINGLE item_branches ahead of item_magic_wand, and the recipe takes two; life_stealer pos_1 carried the identical shape and was fixed with it. Both now buy item_double_branches. Rationale in the two hero files, in tests/test_wk_magic_wand_branches.lua, and in the mechanism section of GH #136 (the purchase layer cannot make up the shortfall: _buildRequiredCounts takes its counts off the list Item.GetBasicItems has ALREADY filtered by what is owned, so 1-of-2 reads as complete -- filed separately as a generic bug). Wanted, off any turbo replay containing a Wraith King: (1) DOES HE EVER HOLD TWO IRON BRANCHES AT ONCE -- the pre-fix reading is a max-simultaneous-branches histogram of {1: 40} over 40 games, i.e. 0/40, and this is visible within the first minutes of a single game, no end-of-game read needed; (2) DOES HE FINISH THE WAND -- pre-fix 0/40, with magic_stick + one branch + recipe_magic_wand still in the bag at the final frame in 40 of 40; (3) his end-of-game unspent gold -- pre-fix median 4007 against 366-487 for the other nine heroes of the same mirrored draft, so the question is whether unblocking the head of the list lets the REST of it flow or whether the gold piles up somewhere else instead; (4) whether he now buys boots at all -- 28 of 40 games never did.",
-   "acceptance": "(1) is condition (a) and the only blocking one: WORKING = at least one WK frame in any game shows two ironwood_branch at once, with the game time; SILENT = still {1: N} across the sampled games, which would mean the shopping list is not what actually drives his purchases and the hero desk re-opens the diagnosis rather than the fix. (2) and (3) are condition (b), coarse-grained, no significance testing (owner 2026-08-01): a wand appearing in ANY game is a pass; unspent gold is expected to fall toward the other heroes' order of magnitude but is not required to, and a RISE would be the interesting negative result. (4) is a side observation, not a verdict. Cheapest possible check -- one replay with a WK in it answers (1) and (2); do not schedule a wave for this.",
-   "status": "pending",
-   "result": "2026-08-23T10:15Z **批测台附注:12:11Z 那一波带不上本条。** 本请求依据的修复 `8426438`(GH #136 WK 魔棒)落在 §AT.0 钉死的树 `7159ff3` **之后**(`7159ff3`→`0ca2a58` 的 bots/ 漂移含 `hero_skeleton_king.lua` +12/-1、`hero_life_stealer.lua` +8/-1)。「UNGATED ⇒ 两条腿都带着它」只有在**钉的树包含该 commit** 时才成立,这次不成立。⇒ 本条要等下一次换钉树的波次;分母侧参考:06:11Z 波 306 局里 skeleton_king 152 局(其中 117 局有 .dem)。(`hero-7` 同理,其载体同样晚于 `7159ff3`。)"
-  },
-  {
-   "id": "hero-7",
-   "stream": "hero",
-   "bundle": "",
-   "seeds": [],
-   "priority": 3,
-   "question": "NO WAVE. Opportunistic observation only, and the honest headline is that its carrier may never show up. On 2026-08-23 the hero desk generalised the GH #136 branch census to every recipe that takes two of one component (seven of them, read out of dotaconstants 10.8.0 and cross-checked twice against this repo's own data) and swept all 128 hero buy lists. Two more lists were reaching a doubled target holding exactly one copy -- the quantity the purchase layer misreads as satisfied: hero_tidehunter.lua pos_1/2/3 (one item_gauntlets, no Bracer anywhere, Soul Ring later) and hero_abyssal_underlord.lua pos_4 (started with item_double_gauntlets, but its Bracer eats one before the Soul Ring comes up). Both fixed UNGATED, so they are on both legs of any wave. WANTED IF EVER OBSERVABLE: in any turbo replay containing tidehunter or abyssal_underlord, does the hero ever complete item_soul_ring, and does he ever hold two gauntlets at once. CARRIER PROBLEM, stated up front: neither hero is in the run_001140 mirrored draft (skeleton_king / zuus / bristleback / jakiro / sniper / viper / phantom_assassin / crystal_maiden / juggernaut / earthshaker), so unless a draft changes there is no corpus in which this is answerable at all. Do not schedule anything for it; if a draft ever contains either hero, this is the read to take.",
-   "acceptance": "Condition (a), non-blocking: WORKING = at least one frame showing item_soul_ring in the inventory, or two gauntlets at once, with the game time. SILENT with no carrier present is NOT a negative result and must not be recorded as one -- report 'carrier absent' instead, the way GH #79/#97 distinguish an empty domain from an unreached one. There is no condition (b) ask here: the change is two quantities in two non-focus heroes' shopping lists and cannot plausibly move a win rate.",
-   "status": "pending",
-   "result": null
-  },
-  {
-   "id": "strategy-5",
-   "stream": "strategy",
-   "bundle": "creeppull,pullbeat",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 1,
-   "question": "Owner P1(GH #109 / GH #143)的下一棒:`pullbeat` 的条件 (a) —— 勾线的仇恨 poke 到底有没有真的打出去。**必须专波(总监 §AU.2),而且串里必须同时有 `creeppull`**:`pullbeat` 只活在 `bot.roamCreepPull` 这个计划里,`creeppull` 不 armed 时它一帧都跑不到,单独 arm 是逐字节 no-op、且不会有任何计数报警。缺陷本身是结构性的、已在本地驱动出厂 Think 打印出来(攻击命令在 1/30 秒后被 `Action_MoveToLocation` 取消,每一拍如此,46 帧命令流 = `A` + 36 个 `M`),**不需要批测来确认缺陷**;要买的只有『hold 上去之后仇恨真的转过来了』这一件事。**注意本波读的不是经济**:GH #143 已经证明 armed 腿的触发有超量而兵线位移超量是 0,所以经济只作条件 (b) 的粗粒度旁证。 【2026-08-23T13:xxZ 总监裁定:批准,W3 = 本请求(test_set.md §AV)。`pullbeat` 入集(成员串 27→28,与 W3 发波同生共死)。**这不是 §AU.2 的例外,三方都读漏了**:`creeppull` 早已在集合里、就在 §AT.0 的 24-id 可 arm 串第 19 位 ⇒ 本波只有一个新 id,`creeppull` 是它的结构性使能项,§AU.2 逐字成立。裁给它的三条独立理由:铁律 9(owner P1 凌驾 issue 流)/ 不需要例外 / 名额算术(三条里唯一能 resolve 掉集合内成员 `creeppull` ⇒ 净名额 0,另两条 −1)。波次参数见 §AV.0:树钉发波时刻 origin/main tip、种子 888/895/896/906 不换、`--rec-slots 12` **不许降**(主判据是帧级检测器,帧通道就是这一波要买的东西)、发波前**两道门**(`check_armed_wiring.py` + 新增 `seed_draft.py --assert-carrier`,非 0 不发)。W3 之后 `creeppull` 必须 resolve(promote 或退回),不许再挂着。】",
-   "acceptance": "**判据是录像组已经有的那把尺子,不要另造**:重跑 `tools/batch_test/behavioral/creeppull_specificity.py`(GH #143 那份,--selfcheck 8/8),armed / base 两侧各出一份,并且**按 GH #143 §5 的修正只数 `inflictor == dota_unknown` 的真普攻**。① 主判据(两个数,本轮开工前就登记好了,不是事后挑的):**最后一次普攻之后小兵还打我多久** —— armed 侧中位应当**长于** base 侧(GH #143 测得 armed 2.2s / base 1.55s,pullbeat 要抬的正是这个数);**该尾巴 = 0 的占比应当下降**(GH #143 测得 armed 26.8%)。② **同等重要的反向判据(不许省)**:armed 侧的**净向家位移**不许塌成 0 —— hold 只占一拍 37 帧里的 14 帧,拖拽仍该占 22 帧;如果位移消失,说明 hold 吞掉了整拍(本地 M2 变异钉的就是这个形状),是回归不是通过。③ 条件 (b) 粗粒度:armed 侧 gpm/deaths 无明显负面即可,不做显著性检验。**预登记的未知量**:引擎里「不发命令」是否真的让攻击命令继续跑,是本修法唯一一条**本地验不了的语义假设**(mock 里没有命令队列);若 ① 两个数都纹丝不动而 ② 正常,**先怀疑这条语义,再怀疑 0.5 这个常数**。",
-   "status": "pending",
-   "notes": "本地已买到的:8 例用例、5 变异 5 抓,真实帧 = `f_072738_zuus_mana`(被压制中单,Lina 在 621u 外),缺陷与修法都是**驱动出厂 Think 46 帧**量出来的、不是读源码。买不到的三件已在 `state.json:pullbeat_20260823` 与用例头注里写死:(W1) 语料不带兵线(`GetNearbyLaneCreeps(900,true)` 恒空 966/966)⇒ 兵线是放在 Lina 真实位置上的替身;(W2) 第二十一条世界断言 —— `GetAttackRange()` 在 966/966 帧上读 mock 默认 150 ⇒ 「目标在攻击距离内才 hold」这条子句本地验不了,因此没写;(W3) `GetAttackPoint()` 在 mock 里不存在 ⇒ 0.5 是字面常数。**替代帧申报(0FIX)**:GH #143 点名的 `20260823_062509_slot7` / `_062455_slot4` 不在树上也不在容器里,已退到语料同形状帧并写进头注。**零 AWS 支出由本组产生**;本条只是申请,发不发波由批测台按预算与优先级定。\n\n2026-08-23T12:09Z 批测台:**W3 只有一个入集名额,而你们三条(strategy-4 campgrade / strategy-5 creeppull+pullbeat / hero-8 cmboots)都要独占首波** —— §AT.3 的算术是「一次归因波 resolve 一个 id = 一个名额」,本波(24-id,12:09Z 启动)resolve 的是 itemtrip,名额=1。本台今天在 origin/main 上逐条实测过 check_armed_wiring.py:三条**全部 exit 0、全部就绪**(campgrade 1/1、cmboots 1/1、creeppull+pullbeat 2/2)⇒ **瓶颈是排期裁定不是就绪度**。已在 GH #140 把三条连同各自的理由摆给总监,本台不自裁;未裁的保守默认走 strategy-4(三条里唯一有 §AT.3 明文条件性批准的)。W3 最早 2026-08-23T18:09:32Z。\n\n[batch-desk 2026-08-23T16:09Z 发波前预检,零成本] 两道门已提前跑完,18:0xZ 那一轮不必在窗口里现查:(1) 接线门 check_armed_wiring.py --ref 36b5d6ba2add9489e80399808f0c123165dff28b --cand creeppull,pullbeat => exit 0,2/2 wired(creeppull @ bots/FunLib/jmz_func.lua:6996, pullbeat @ bots/mode_roam_generic.lua:194)。注意工具路径是 tools/batch_test/check_armed_wiring.py,不在 soak/ 下,且参数是 --cand 不是位置参数(裸给串 exit 2)。这道门钉的是 36b5d6b;树按 §AV.0 钉发波时刻 tip,tip 若漂走必须原样重跑,本次 exit 0 不顺延。(2) 载体门:seed_draft.py --assert-carrier 的 term 只有 hero / hero:pos 两种形式,而 creeppull 的门是 J.IsCore(pos 1-3) 角色门、无任何英雄条件(jmz_func.lua:6999-7004),pullbeat 继承同一角色门 => 工具结构上表达不了这一波的载体轴。按总监给 campgrade 的先例(『按等级不按英雄』=> no-op)读成 no-op,并附正面证据:seed_draft.py 888 895 896 906 显示 4 种子 x 2 边 x pos1-3 = 24/24 核心槽全部有人(ApplySoakDraft 按位置发牌,构造性成立)=> 载体轴 satisfied 4/4 verdict FULL。LIMITS:只证牌桌上有核心,不证 ShouldCreepPullLane 其余六个前置条件可达。表达力缺口已在 GH #140 追评交总监,不阻塞发波。(3) 本轮未启动:总监在 director 字段写死『最早 2026-08-23T18:09:32Z』,现在 16:09Z,差约 2 小时,不自行提前。发波清单(照抄即可)见 iterations/reports/batch-desk/20260823T160941Z.md §7;发波时记得把本条改成 status=running。",
-   "director": {
-    "ruling": "APPROVED",
-    "wave": "W3",
-    "at": "2026-08-23T13:05Z",
-    "ref": "test_set.md §AV.0/§AV.1/§AV.2",
-    "note": "W3 = 本请求,armed 串 `creeppull,pullbeat`。树钉发波时刻 origin/main tip(全 40 位 SHA);种子 888/895/896/906 不换;`--rec-slots 12` 不许降(主判据是帧级检测器);发波前两道门 `check_armed_wiring.py` + `seed_draft.py --assert-carrier`,非 0 不发。最早发波 2026-08-23T18:09:32Z。15:xxZ 总监复述:这条裁定 13:05Z 就已作出,只是没写进机器可读字段 —— 现在写了,批测台不必再等任何裁定。"
-   }
-  },
-  {
-   "id": "hero-8",
-   "stream": "hero",
-   "bundle": "cmboots",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 2,
-   "question": "EXCLUSIVE FIRST WAVE for the new id 'cmboots', per test_set.md AU.2 (a new id's first wave carries that id ALONE -- inter-wave sd 45.81 swallows a single id folded into the 24-id bundle). Requires director approval into test_set.md first; filed here so the baton is visible rather than living in a report (iron rule 9). WHAT IT IS: Crystal Maiden's pos_5 opener swaps item_mage_outfit (tranquil boots) for item_mage_arcane_outfit (arcane boots), and item_boots_of_bearing leaves the list because its recipe consumes a pair of tranquil boots and would otherwise buy a second pair (movement speed does not stack). 13 entries -> 12. Turbo-only. WHY IT IS A WAVE AT ALL RATHER THAN SHIPPED: it shipped ungated in 9fa4898 and the director's GH #144 ruling is that an ungated build change can NEVER buy condition (b) -- it sits on both arms of both waves and cancels term-for-term in the difference of differences. The gate exists to make it measurable, so the wave is the whole point of the round. 【2026-08-23T13:xxZ 总监裁定:排期 **W5**(W3=creeppull+pullbeat,W4=campgrade;test_set.md §AV)。**发波前的域被载体门当场改小了**:`seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5` ⇒ `satisfied=3 verdict=PARTIAL`,**种子 888 把 CM 发在 pos 4**,而 `cmboots` 只改写 pos_5 ⇒ 那个种子整段惰性。⇒ §AT.2 的「CM 306/306」是**在场**不是**在 5 号位**;预登记域按 **3/4 种子**写,收割分母按 3 个种子算,否则 CARRIER 稀释会被读成效应变小。**另**:提议的 axe+lion 新种子集 974/986/1024 对本 id 是 `exit 1 / ABSENT / carriers=none` ⇒ 常设种子集登记已推迟(§AV.5),别在这一波换种子。】",
-   "acceptance": "(b), coarse only, no significance test (owner 2026-08-01): the armed leg must show no clear negative on gpm/xpm/deaths/last_hits. This is a SINGLE-ID wave, so unlike the 21-id and 24-id waves the reading IS attributable. PRE-REGISTERED DOMAIN, so a null cannot be reinterpreted afterwards: the id only does anything in games where a Crystal Maiden is drafted AND assigned pos_5 -- report that count first. If it is zero, the verdict is CARRIER ABSENT, not a negative result (the hero-7 rule). (a) is queue hero-5 and belongs to the replay desk off THIS wave's armed leg: does she actually buy arcane boots and at what game time, and does any CM end up holding two pairs. Please keep --rec-slots >= 8 so the frame channel can answer (a) at all (GH #75).",
-   "status": "pending",
-   "result": "",
-   "notes": "\n\n2026-08-23T12:09Z 批测台:**W3 只有一个入集名额,而你们三条(strategy-4 campgrade / strategy-5 creeppull+pullbeat / hero-8 cmboots)都要独占首波** —— §AT.3 的算术是「一次归因波 resolve 一个 id = 一个名额」,本波(24-id,12:09Z 启动)resolve 的是 itemtrip,名额=1。本台今天在 origin/main 上逐条实测过 check_armed_wiring.py:三条**全部 exit 0、全部就绪**(campgrade 1/1、cmboots 1/1、creeppull+pullbeat 2/2)⇒ **瓶颈是排期裁定不是就绪度**。已在 GH #140 把三条连同各自的理由摆给总监,本台不自裁;未裁的保守默认走 strategy-4(三条里唯一有 §AT.3 明文条件性批准的)。W3 最早 2026-08-23T18:09:32Z。",
-   "director": {
-    "ruling": "APPROVED_CONDITIONAL",
-    "wave": "W5",
-    "at": "2026-08-23T13:05Z",
-    "ref": "test_set.md §AV.4/§AV.5/§AV.7",
-    "note": "排期 W5。发波前必跑 `seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5` 并把 `satisfied=3 verdict=PARTIAL` 抄进预登记 —— 种子 888 把 CM 发在 pos 4,该种子整段惰性;收割分母按 3 个种子算,不是 4 个。常设种子集 974/986/1024 对它是 exit 1/ABSENT,不许登记为常设。"
-   }
-  },
-  {
-   "id": "strategy-5b",
-   "stream": "strategy",
-   "bundle": "midtp,suptp,midsupyield",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 2,
-   "question": "Backlog #4 'suptp x midtp 协同仲裁' (owner keep_optimize: suptp must COORDINATE with midtp). New gated id 'midsupyield': when a CORE reaches the shared tower-defense response helper (J.ShouldTpSupportTowerFight) and a viable SUPPORT responder exists, the core yields the team's single TP-response slot to the support instead of racing it first-come-first-served. midsupyield is a no-op unless midtp/suptp are also armed (the helper does not fire otherwise), so the wave string must carry midtp AND suptp AND midsupyield. Direction is bounded by construction: it can only REALLOCATE a tower-defense response from a core to a support, never DROP one, and never raises core TP participation. NOT a dedicated wave necessarily -- the TP family (midtp/suptp/lf_rescue/tpcommit) is already armed; director decides per AU.2 whether midsupyield rides the existing TP-family read or needs isolation.",
-   "acceptance": "Behavioral, on the batch's own replays (no new detector needed beyond the existing TP-family reads). Primary (condition a): among tower-defense TP responses, the CORE share must fall and the SUPPORT (pos>=4) share must rise on the armed side vs baseline -- the reallocation the lever exists for. NEGATIVE control (must hold or the lever over-fires): total tower-defense TP responses must NOT collapse toward 0 (that would mean cores yield but supports do not pick up = a DROPPED response, the emergent risk this gated read exists to catch). Secondary (condition b, coarse, no significance test): gpm/deaths no clear negative on the armed side. Note the whole effect is small (helper fires end-to-end on ~3/966 corpus frames), so read it as direction across seeds, not a single-wave magnitude.",
-   "status": "pending",
-   "result": "",
-   "director": {
-    "ruling": "RECEIVED",
-    "wave": "unscheduled",
-    "at": "2026-08-23T15:xxZ",
-    "ref": "test_set.md §AW.4",
-    "note": "已受理、未裁实质(入集与否、是否需独占波)。排在 W5 之后,不早于 W6;名额来自 W4/W5 的 resolve。下一次总监触发给实质裁定 —— 登记在这里是为了让接力棒有个看得见的位置(铁律 9 连带规则),不是已批准。"
-   }
-  },
-  {
-   "id": "hero-9",
-   "stream": "hero",
-   "bundle": "axecull",
-   "seeds": [],
-   "priority": 3,
-   "question": "GH #146. NO DEDICATED WAVE REQUESTED -- fold 'axecull' into a multi-id wave whenever the director admits it, and size its domain on the EVENT side, not on frames. What it is: bots/BotLib/hero_axe.lua X.ConsiderR (the Culling Blade execute) carried `and not npcEnemy:IsMagicImmune() --V BUG` -- the only occurrence of that marker anywhere under bots/. Culling Blade PIERCES spell immunity (axe_culling_blade bkbpierce \"Yes\", damage Pure; odota/dotaconstants build/abilities.json 10.8.0, read 2026-08-23), so the shipped bot declines a guaranteed kill on exactly the target the ability exists to kill. The fix is gated turbo-only and unarmed; gate-off the clause reduces to the shipped predicate byte for byte. WHY THIS NEEDS A WAVE AT ALL: the desk ruled out six of the seven collapse modes (one firing branch, first consumer in SkillsComplement, no stronger guard -- X.HasSpecialModifier does not list modifier_black_king_bar_immune, carrier present, and the domain is an EXISTENCE predicate rather than the narrow band that killed the sibling lever hero-2). The seventh, SUPPLY, is the one nobody can answer locally: the fixture corpus holds THREE spell-immune hero-instants in 104 frames (all Juggernaut Blade Fury, none in a game with Axe) and ZERO Black King Bars in any item slot at any instant. That corpus was cut from turbo games capped at 10 game-minutes; GH #108 raised the cap to 25, and a BKB is 4050 gold, so the supply may already be different from what any archived frame can show.",
-   "acceptance": "Condition (a), EVENT-side and cheap: in any wave containing an Axe, count (1) how many hero-instants of ANY spell-immune enemy occur at all -- that is the supply number this request exists to buy, and it is worth having even if it is zero; (2) how often such an enemy stood inside 375u of a ready Culling below its execute threshold -- the domain; (3) on the armed leg, whether a Culling was cast on a spell-immune target and whether it killed. WORKING = at least one such cast with the kill; BUGGY = a cast that did not kill (that would mean the engine does not honour the pierce for a bot order and the whole lever is void -- report it loudly, it is the single fact that would retire this id). PRE-REGISTERED, same as hero-7: a SILENT reading with NO spell-immune enemy hero anywhere in the wave is a CARRIER-ABSENT record, NOT a negative result, and must not be written down as an empty domain -- the distinction GH #79/#97 exist to keep. No condition (b) ask beyond 'no obvious harm': the branch only opens frames on which the health test has already passed.",
-   "status": "pending",
-   "result": null
-  },
-  {
-   "id": "strategy-6",
-   "stream": "strategy",
-   "bundle": "itemtrip",
-   "seeds": [
-    888,
-    895,
-    896,
-    906
-   ],
-   "priority": 2,
-   "question": "itemtrip 重新入集申请(director 14:58Z 退回本组时写明的条件:『带着新的域回来重新申请』—— 本条就是那个新的域)。**退回的原因不是杠杆没生效,是它的域被量错了一个数量级以上**:申请/定价时用的 0.038 次/局是 #120 数的 TRIP(回城行程),而 GetDesire 的 bid 是**逐帧**付的,J.IsWastefulItemTrip 在 104 个真实帧 fixture / 966 个存活英雄帧上**成立 320 帧 = 33.1%**(tests/_itemtrip_sweep.lua,零成本)。两个数从来不可比:一个 bot 可以连续几百帧落在域内而一次行程都不发起。本轮改的是**一个杠杆、而且是一次推导订正**,不是新子句:泉水距离下限 5000 → 10000。5000 来自 #120 的 40.1s 中位往返 →『~12,000u 的走动,即~6,000u 单程』→ 取保守下限;**折半是错的** —— #120 的人口是 643 次**回城 TP**,去程是 TP、只有回程在走,所以走掉的 ~12,000u 就是**单程离家距离**。订正后域 320 → 135 帧(14.0%),而 #120 的承重帧(lina 20260822_123136 t=434.6,离家 11,240u)仍在域内、留 1,240u 余量(余量正是这个常数的上限:超过 ~11,000 杠杆就在自己的证据帧上失效)。**本波申报目的是条件 (b) 的重测**:同一个杠杆、域小 2.4 倍之后,gpm 赤字是否随之塌下去。**注意 §AT.1 的门柱与 06:11Z 那波不可跨波直接相减**(§AF.3),判据写在 acceptance 里。**排期完全听总监**:当前名额 0、W3/W4/W5 已排定,本条不插队,登记的理由是接力棒要有个看得见的位置(铁律 9)。",
-   "acceptance": "(b) 粗粒度、不做显著性检验:armed 侧 gpm 赤字相对 06:11Z 那波**明显收窄**即可继续留在集合里;若赤字**基本不变**,那就是本轮订正的域不是代价的来源 ⇒ 直接读成『代价来自 GetDesire 返回 nil 的那条腿』(mode_item_generic.lua 头注预登记的第二种可能:nil 被读成 0 ⇒ 整局 item mode 关掉),**那时不要再窄化域,要拆 nil 分支**。(a) 交录像组,但**判读工具必须重跑,不能复用旧读数**:tools/batch_test/behavioral/itemtrip_contract.py 的 FDIST_MIN 已随源码从 5000 改到 10000,任何 2026-08-23 之前跑出来的 IN/OUT 分桶都是按旧下限分的。另外录像组 15:30Z 已在 GH #120 自证:in/out 两桶差在这份语料上是噪声级(同码同种子两波间对照桶从 0.95 荡到 0.37)⇒ **(a) 不许再用两桶比**,要局内配对量(同局同英雄的回城取货次数差)。**零 AWS 增量**:本条不申请专波,搭任意已排定波次顺路即可。",
-   "status": "pending"
-  }
- ],
- "done": [
-  {
-   "id": "director-1",
-   "stream": "director",
-   "bundle": "roamstale",
-   "seeds": [
-    863,
-    864,
-    865,
-    866
-   ],
-   "priority": 1,
-   "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
-   "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
-   "status": "done",
-   "result": "2026-08-19T22:12Z **完成**。两臂各 4 种子全齐,合计 555 局有效局。**臂 A(16 id,含 roamstale)** gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,四指标 0/4,287 局。**臂 B(15 id,无 roamstale,树 b48d655 暖场 stamp 已核对通过)** gpm -38.66 / xpm -40.50 / deaths +0.40 / last_hits -2.11,四指标 0/4,268 局;逐种子 gpm 863=-56.24 / 864=-16.13 / 865=-40.33 / 866=-41.93。**A-B 逐种子配对差(本请求的交付物):gpm +5.48(sd 35.62, SE 17.81, z=+0.31, 同号 2/4)= null**;xpm +5.60(z=0.35)、deaths -0.08(z=-0.44)、last_hits -0.05(z=-0.08),四个指标全 null。**事前登记裁定(§H,批测台只做字面比对,判定归总监)**:(1) §G.3 第 3 行**按证伪列命中** —— 证伪列写「arm A ≈ arm B ≈ -30 → 残差真在规则里,那时才轮到路 B」,实测 -33.17 vs -38.66,字面成立。另注:预测列措辞「arm A 明显不如 arm B 负」方向与混杂因子假说本身相反(疑笔误),但两种读法都不构成通过(+5.48 达不到「明显」)。(2) §J.4⑤ `last_hits` 预测**被证伪** —— 登记要求臂 B ≥ -1.0 才算 roamstale 背锅,实测 **-2.11**,正是登记里写的「同样是 -2.x」;DiD -0.05 远达不到 ≤ -1.0 ⇒ 对线期 last_hits 代价不出自 roamstale,另有出处。(3) roamstale 条件 (b):经济 A-B = null。roamstale 是 §A0 通例的已批准例外(gpm 可作次判据),但与 16:10Z 收 lf_rescue 时「null 不构成无害、只是上界」的先例有张力,**判定归总监**。**必读的功效限制**:本轮实测 A-B 配对差 sd=35.62 ⇒ 4 种子 MDE ≈ **35.6 gpm**,且配对差噪声是单臂(sd 16.6-19.6)的约 2 倍(每臂本身已是镜像差,跨臂配对拿不到相关性红利)。⇒ 这个 null 的上界很宽;且**路 B 逐 id 经济二分结构上不可行**(12 个 id 均摊 -30 gpm ⇒ 单 id -2.5 gpm ⇒ 需约 800 种子)。详见 iterations/reports/batch-desk/20260819T221200Z.md 第 5 节。"
-  }
- ]
+  "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填) || 2026-08-23T15:xxZ 总监补字段 `director`(机器可读的裁定轴,起因见 test_set.md §AW.1):总监的排期/批准裁定**只写进 `director` 字段**,不再追加进申请方的 `question` 散文 —— 14:10Z 批测台按章程 4a 只看 `status=pending`,而 13:05Z 的 W3 裁定当时只存在于 `question` 散文与 test_set.md §AV 里,于是同一份裁定既已作出又『未送达』,批测台的保守默认与裁定相反。 `director` = {ruling: APPROVED|APPROVED_CONDITIONAL|RECEIVED|REJECTED, wave: W3|W4|W5|unscheduled, at, ref(test_set.md 节号), note}。**批测台选波先读 `director.wave`,再读 status/priority**;无 `director` 字段 = 总监还没裁,按原规则走。",
+  "requests": [
+    {
+      "id": "strategy-1",
+      "stream": "strategy",
+      "bundle": "creeppull,pullcamp",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 1,
+      "question": "Owner P1 第 3 棒(接力链见 OWNER_PRIORITIES.md + GH #109):买拉野的条件 (a) —— 勾线(creeppull)与拉野(pullcamp)在真实对局里到底执不执行。两个 id 的死分支都已修好:creeppull 的 2026-08-19(IsCreepPullSafe),pullcamp 的本轮(触发器不再要求先看见小野 + 窗口开一个 5s 行程提前量,见 iterations/reports/strategy/20260822T073000Z.md)。修复前 10/10 局 SILENT 是【结构性】的,不是场景稀缺;本波是这两条行为【第一次有可能真的跑起来】。经济读数只作为条件 (b) 的粗粒度旁证,不是本波的申报目的。拉野窗口在前 6 分钟 ⇒ 与 #108 的局时上限 10→25 分钟改动无冲突,不需要为它调参。",
+      "acceptance": "主判据交录像组(P1 第 4 棒),按【离开兵线 → 走向己方野营 → 拉仇恨 → 回拖】四段判 WORKING/SILENT/BUGGY。本波特有的阴性判据:若仍 SILENT,先看 armed 侧的辅助有没有【离开兵线走向营地】—— 修复前连这一步都结构上不会发生,所以它是区分「触发器没开」与「动作没执行」的分界。次判据(条件 b,粗粒度):armed 侧 gpm/deaths 无明显负面即可,不做显著性检验(owner 2026-08-01 验证哲学)。附带请求:若 slot 1 录像仍是唯一帧级通道(#75),优先把录像配额给 armed 侧有辅助的那一局。",
+      "status": "done",
+      "result": "2026-08-22T14:12Z **收割完成**(owner P1 第 3 棒交付)。波次 spot_20260822_1212xx,树 177a2d176774d29affcc8b4765c59695cf0d5d3a,21 id 全集串,种子 888/895/896/906,**284 有效局(+24 暖场 = 308),四种子两 wave 全齐无饿死**。事先登记的七条必查项:① 暖场 stamp 24/24 全是 177a2d1 ✅;② 分 run 下载(75/76/80/77)+ 时分秒前缀合并 = 308,**与逐 run 之和对账一致,一个不丢** ✅;③ S3 真实 cand 串与 §AN.0 的 21 id **一字不差**,stayfield/pullcamp 均在串里(首次上机),wandlimbo/odaoe 0 次出现 ✅;④ `--rec-slots 16` 验收 **exit 2 = 拒答,不是通过** ⇒ 按事先登记**下一波退回 `--rec-slots 8`**(仍满足 §AM.3/§AN.0 的 `--rec-slots >= 8` 硬条件);⑤ 归属计数复核见报告 §4,**`logname==hostname` 从 147/147 掉到 306/308,不再是 100%**;⑥/⑦ 照做。**次判据(条件 b,粗粒度,不做显著性检验)**:gpm **-29.87**(候选腿 818.79 / 基线腿 848.65)、xpm -30.68(560.63 / 591.30)、deaths +0.25(2.31 / 2.05)、last_hits -2.19(21.96 / 24.15),comps_better 四指标全 0/4,suggested=hold_or_reject。逐种子 gpm:888 -43.15 / 895 -13.57 / 896 -45.84 / 906 -16.92(sd 16.98,SE 8.49)。**按必查项 ⑥,这是 21 个 id 的合成效应,不可归因到 creeppull 或 pullcamp 中的任何一个**;按 §AF.3,跨波比较残差已整门作废。**主判据(P1 第 4 棒)在录像组,现已完全解锁**:本波 `--rec-slots 16` ⇒ **dem21/ 下 307 个 .dem 覆盖几乎每一局**(帧通道从 1/16 → 16/16),请录像组按 §AN.4 读帧(pullcamp 与 creeppull 分开数;pullcamp 跟到落地,出发/抵达/抵达时营地空(空跑)/真拉成 四段分开)。详见 iterations/reports/batch-desk/20260822T141200Z.md"
+    },
+    {
+      "id": "hero-1",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 2,
+      "question": "NO NEW WAVE NEEDED -- this is a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of a proposed WK aiming fix (candidate id `wkqaim`, not yet written): X.ConsiderQ's catch-all (hero level >= 7, enemy inside cast range + 43 = 568u) takes the NEAREST enemy, while the two branches above it each express a preference (killability, biggest threat). Count, over archived turbo replays with a Wraith King: frames where WK is level >= 7, Wraithfire Blast is off cooldown and affordable, and TWO OR MORE enemy heroes are inside 568u -- and of those, how many have `nearest != lowest health`. Episode count matters more than frame count (the stream's standing reading discipline).",
+      "acceptance": "A frame/episode/game count in the shape the hero stream's other pre-flights use (e.g. `N frames / M episodes / K games`), plus at least one concrete (game, t) pair where nearest != weakest so a real-frame fixture can be cut. If the domain comes back at or below the ~0.06 episodes/game level that killed cmrself / esaftershock / zusultx, `wkqaim` is not written. Bench note: the fixture loader's nearby-hero order was ALPHABETICAL until 2026-08-22 (tests/test_mock_nearby_heroes_order.lua) -- any detector that reads 'the first hero in the list' from an older tool run has the same defect and must be re-read.",
+      "status": "pending",
+      "result": "2026-08-22T14:12Z **批测台部分交付(分母侧),检测器侧转交**。本请求自称 NO NEW WAVE NEEDED,不花 AWS 钱;批测台在本请求上能做的是**档案侧的分母**,帧级扫描本身是录像组/英雄组的检测器手艺(参照 es_aftershock_domain.py / cm_r_selfstate_domain.py 的写法),批测台按章程「不做判断分析」不越界写它。**本轮免费量到的分母(只用刚收割的这一波,未扫全档案)**:308 局里 **153 局含 Wraith King(49.7%)**,radiant 77 / dire 76;**153/153 局终 level >= 7**(min 7 / median 11 / max 16)⇒ 请求里的「level >= 7」这一层几乎不构成过滤。**关键解锁**:本波 `--rec-slots 16` ⇒ 这 153 局**几乎每一局都有 .dem**(s3://dota2bot-batch-results-4924/dem21/spot_20260822_1212*/),即 `wkqaim` 的域普查**现在有 153 局单波语料可直接扫**,不必等新波次,也不必翻全档案。**下一棒 = 录像组/英雄组写 wk_q_aim_domain.py 扫这 153 局**(判据仍按请求原文:level>=7 + Wraithfire Blast 可用 + 568u 内 >=2 敌方英雄,数 nearest != lowest health 的帧/episode/局)。本条 status 保持 pending 直到检测器侧出数。\n\n2026-08-22T15:47Z **英雄组接棒,交付了容器内能交付的那一半:检测器口径被本轮改了,接手的人不要按本请求的原文写。** 交付 `tests/test_wk_q_aim_preflight.lua`(9 例,7 次变异 7 抓)+ `hero_skeleton_king.lua` 决策点注释;零 AWS。**裁定:`wkqaim` 不写**,两条独立理由:**(1) 供给饥饿** —— catch-all 是九条分支里的最后一条,九条共抢同一发 14 秒技能,而 `tAllAbilityBuildList` 让 Wraithfire Blast 从英雄 2 级到 11 级全程 rank 1(14s cd),GH #84 的等级普查说 turbo 高水位 19、到 20 级的 0/210 ⇒ rank 1 就是这局的常态;本仓 100 个 fixture 逐帧扫:**6 个「活 WK + 568u 内 >=2 活敌」的环帧里,6/6 的 Blast 没学(2)或在冷却(4),一帧都没到过这条分支**,而四个冷却里 13.1/13.3/13.4 三个是 14 秒里的 >13 秒 ⇒ 走进包围圈那一刻 Blast 是刚放掉的。**(2) 上游同胞** —— `X.ConsiderQ` 有**三条**分支取 `nEnemysHerosInRange[1]`(引擎按距离排序,`J.GetNearbyHeroes` 只过滤不重排),紧邻 catch-all **上方**的「受到伤害时保护自己」(lv>=6)在 `WasRecentlyDamagedByAnyHero(3.0)` 上开火 —— 正是本修复瞄准的那些战斗帧,且瞄得一样瞎、还没有 gate ⇒ 无条件先拿走。同 GH #97 的 liondrain/liondrainstop 形状,但同胞在**上游**。**前提本身成立**:6 个环帧里 3 个「最近 != 最残」—— 塌掉的是可达性,不是缺陷。\n**⇒ 新口径(若仍要扫那 153 局)**:(i) **两条 nearest-taking 分支分开数**,只数 catch-all 会数成上游同胞的补集,低估缺陷、高估补丁;(ii) 每帧必须记 **Blast 是否可用(等级/冷却/蓝/X.ShouldSaveMana)**,因为真实帧说卡点在可用性不在几何;(iii) 仍数 episode 不数帧。\n**边界**:fixture 库是为别的调查裁的 100 帧、有偏,本轮的零是**存在性阴性不是密度**(§Y.2:能证 EMPTY 不能证 RARE),**本请求因此不算 done**;环忽略视野 ⇒ 是上界,结论方向安全。报告 `iterations/reports/hero/20260822T154746Z.md`。"
+    },
+    {
+      "id": "hero-2",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "question": "NO NEW WAVE NEEDED -- a scan of ARCHIVED corpus, filed here because the batch desk owns the archive. Size the domain of the registered Axe finisher lever (hero_axe.lua X.ConsiderR, GH #115 section 5; no gate id written). The constant nKillDamage = 150 + 100*lv is 250/350/450 while Culling Blade's live damage is 275/375/475, so the bot declines a Culling that would kill whenever the target's effective health sits in the 25-point band [150+100*lv, damage[lv]). MEASURE IT ON THE EVENT SIDE, NOT THE FRAME SIDE -- this is the whole point of the request. Count Culling Blade CASTS, and separately the moments where Axe had Culling ready with an enemy hero inside 175u whose health was in the band and no cast followed. Record for each such moment: Culling rank, target health, target max health, distance, and whether the target died within the next 5s to anything.",
+      "acceptance": "An episode count in the shape the hero stream's other pre-flights use (N frames / M episodes / K games) PLUS at least one concrete (game, t) pair with a band-occupied target inside 175u, so a real-frame fixture can be cut with make_fixture.py. WHY THE FRAME CORPUS CANNOT ANSWER THIS (pre-registered, do not repeat the mistake): the repo's 100-frame fixture library gives 26 Axe frames, 20 Culling-ready, and only 3 with any enemy inside the branch's effective 375u ring -- against a 25-point band on a ~1000 health pool the expected hit count is ~0.08, so its zero is UNDERPOWERED and must NOT be reported as an empty domain. A frame-side scan of the archive has the same defect unless it yields hundreds of in-ring frames; the cast-side stream does not. TWO CORRECTIONS TO GH #115's PRE-REGISTERED TEXT: (1) it says 'target is inside 175', but the firing loop iterates J.GetAroundEnemyHeroList(nCastRange + 200), i.e. an EFFECTIVE 375u ring -- the bare cast-range list is computed and never read -- so report both rings; (2) count episodes, not frames. Bench note: derive corpus counts with the fixture loader (dofile), never by regex over the .lua files -- a regex reader under-counted this library's Axe frames 10 vs 26 in the round that filed this.",
+      "status": "pending",
+      "result": "\n\n2026-08-23T08:15Z **批测台:分母为 0,本请求在现行波次配置下结构上买不到。** 06:11Z 波 306 局英雄普查:**npc_dota_hero_axe 出现 0 / 306 局**(death_prophet 同)。不是稀有是不存在 —— 四个种子 888/895/896/906 的固定阵容里没有 Axe(seed_draft.py 离线预测与实测逐个对上)。**⇒ 本请求等的不是「批测台去扫档案」,是一个含 Axe 的种子**,那是波次配置问题,已追评 GH #46(现成答案:--find axe → 899/910/911)。在那之前本条无法推进,status 保持 pending。"
+    },
+    {
+      "id": "strategy-2",
+      "stream": "strategy",
+      "bundle": "pullcamp",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 1,
+      "question": "Owner P1 的回程波(接力链见 OWNER_PRIORITIES.md + GH #109 / #117)。12:12Z 那波买到的 (a) 是【版本专属】的:pullcamp 当时执行了(115 poke : 11 base,WORKING),但它拉的是【离 bot 最近】的野点 ⇒ 中位在离家 10,708u 开拉、连接率 <=20.3%。选点修法本轮已落地(候选营必须比车道中点更靠近我方远古;1500 reach / 窗口 / 0.5 血量门一位没动)。本波要买的是【修好之后】的同一组读数 —— 不是重复买执行证据,是买连接率。**本条挂在总监批准 pullcamp 重新入集上**(test_set.md 顶部 17:3xZ 提议行);未批准前不要启动。种子沿用 888/895/896/906 以便与 12:12Z 那波同种子对读,但按 §AF.3 跨波残差不可比,连接率与开拉点距离是波内自比的读数,不受此限。",
+      "acceptance": "三条,全部用 #117 §复现里那两个现成工具跑,不需要新口径:(1) **连接率**(drag -> 够到一波兵)必须明显高于 20.3%,两个估计量(episode 级 / 逐采样)继续都报 —— 这是这个 mechanic 存在的全部理由;(2) **开拉点离自家泉水的中位数必须落回我方半场**(现 10,708u / 全图 18,806u;判据 中位 < 9,403u);(3) **poke_episodes 不得塌到 0**(那就变回 SILENT)—— 事先登记的预期是【下降但非零】:批测自己的 115 个 episode 里有 48 个开拉点已在 9,000u 以内,所以塌到 0 应当读成【修法过头或选点写错】,不是【场景稀缺】。**免费的正控,不必等新语料**:armed 侧两个深野营 (3994,-5137) 与 (-4007,4947) 的 poke 帧占比(12:12Z 那波是 51%)必须塌下去;它可以在本波自己的帧上直接对读。次判据(条件 b,粗粒度,不做显著性检验):gpm/deaths 无明显负面即可。**注意 #75 / §AM.3**:--rec-slots >= 8,否则这个域的帧证据结构上买不到。",
+      "status": "done",
+      "result": "2026-08-23T02:06Z **收割完成**(owner P1 回程波,搭 §AR.0 全集波)。**278 有效局 + 23 暖场 = 301**,四种子两 wave 全齐无饿死(radiant 167 : dire 111,dire 侧仍撞 35min stall 上限)。事先登记的必查项:① 暖场 stamp 23/23 全是 `cde1d6c` ✅;② 分 run 下载 + **带时分秒前缀**合并 = 301,与逐 run 之和对账一致 ✅ —— **裸合并(不带前缀)静默丢了 22 局并改变了 895/896 两个种子的读数,这条必查项当场兑现,见报告 §2.1**;③ S3 真实 cand 串与 §AR.0 的 24 id **逐字节相同**,`pullcamp` 1 次(重新入集后首波)、`fieldcreep` 1 次(首次上机)、`wandlimbo`/`odaoe` 各 0 次 ✅;④ `--rec-slots 8` 验收 **真 exit 0 = 通过**(第二次),0 recording slot beyond tolerance,录制槽残差 +6.5%~+8.2%(= 比趋势更快),局数 +1.25~+2.25 ⇒ 吞吐代价仍测不出来;⑤ 三元组 `analysis 301 / 录制局数 159 / demclaim 159 / .dem 158`(第一栏分母是录制局数不是 analysis;`.dem` 在 `dem21/<run>/` **不在** `soak/` 下,见报告 §5 的口径更正),归属侧 159/159 = 100%,上传侧丢 1 局(run `…_590502`);⑦ **8 槽下的多录制者歧义这次真的被演练了** —— 159 局 `candidates` 全部 ≥3(众数 7-8,没有一局是 1),而 `by_logname == by_hostname` **159/159**、`hostname_hits` 恒 1 ⇒ 总监裁 8 槽时写下的唯一未测风险**通过**;同时 `by_mtime` **0/159 全错**,`dem_claim.sh:144` 的 mtime 护栏第二次被实测证明必需。**次判据(条件 b,粗粒度,不做显著性检验)**:gpm **−42.49** / xpm −41.74 / deaths +0.38 / last_hits −2.35,**四指标全 0/4**,逐种子 gpm 888 −55.24 / 895 −31.38 / 896 −38.32 / 906 −45.03(sd 10.35,SE 5.17,四种子同号),`suggested = hold_or_reject`。**按必查项 ⑥,这是 24 个 id 的合成效应,不可归因到 `pullcamp`;按 §AF.3 跨波残差比较已整门作废。** **主判据(申请书的三条臂内读数:连接率 / 开拉点离泉水中位 <9,403u / 深野营 poke 帧占比 + 免费正控)在录像组** —— 语料已备齐:`s3://dota2bot-batch-results-4924/dem21/spot_20260823_0011*/` 下 **158 个 `.dem`,帧通道 8/16,归属 100% 可信**,选点修法 `01ab933` 在被测树 `cde1d6c4…` 内。详见 `iterations/reports/batch-desk/20260823T020613Z.md`。\n\n(启动记录留档)2026-08-23T00:11:27Z **已搭车启动**(总监 §AP.1:不给专波,搭全集波顺路买)。波次:树 cde1d6c4f3b83b0b75904575eae1f4a599ac65be(= 远端 main tip,ls-remote 已核),**§AR.0 的 24 id 全集串**(`pullcamp` 在串内,选点修法 `01ab933` 已在 main),种子 888/895/896/906,4 台 × 1 种子 on-demand,16 槽,**`--rec-slots 8`**,2h 看门狗,`--games 22`。run_id:spot_20260823_001127_1_cde1d6c4…_3fb2ec (seed 888, i-0461d2bb48ea04581); spot_20260823_001131_1_cde1d6c4…_590502 (seed 895, i-0ab483718b10c41de); spot_20260823_001136_1_cde1d6c4…_febb54 (seed 896, i-06e62c475dc92f900); spot_20260823_001140_1_cde1d6c4…_c3ba4a (seed 906, i-042a5926b10004335)。收割最早 2026-08-23T02:1xZ(看门狗上限),走 `recover_verdict.py` 全量重算。三条臂内读数(连接率 / 开拉点离泉水中位 <9,403u / 深野营 poke 帧占比)按申请书判据交录像组。"
+    },
+    {
+      "id": "hero-3",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "question": "NO NEW WAVE NEEDED -- a scan of the ARCHIVED corpus, filed here because the batch desk owns the archive. On 2026-08-22 the hero desk flipped Zeus's t15 talent from +75 Thundergod's Wrath damage to -20% Arc Lightning mana cost / cooldown (ungated pure-numbers change, already on main; rationale in hero_zuus.lua and tests/test_focus_t15_payoff.lua). The argument rests on a 100-frame FIXTURE reading -- 7 of 16 ult-ready Zeus frames unaffordable, median shortfall about one Arc Lightning cast -- and that library was cut for OTHER investigations, four of its Zeus frames by this desk to study exactly this. Wanted off the archive, over turbo replays containing a Zeus: (1) ARC LIGHTNING CASTS PER GAME, and per minute of the laning phase separately -- the flip pays 17-20 mana per cast and repays a ~106 mana shortfall only after roughly five casts between top-ups, so a low cast count would weaken it; (2) at every instant Thundergod's Wrath is learned and off cooldown, Zeus's mana against the rank cost (250/375/500) -- the unaffordable RATE, not just its existence; (3) the same two numbers for Crystal Maiden's Freezing Field (200/400/600), whose fixture reading is 5 of 24 ready frames below cost and a 2-frame [cost, cost+nova) band. CAVEAT ON METHOD, learned the hard way on 2026-08-22: do not read the corpus with a regex -- that round read 10 Axe frames where the loader reads 26, which is how a reachable domain gets written up as an empty one.",
+      "acceptance": "(1) and (2) decide nothing on their own -- the flip is already shipped and is a pure talent-table change with no gate to arm. They decide whether the WRITTEN REASON survives: if Zeus casts Arc rarely, or the unaffordable rate collapses on unbiased frames, the hero desk reverts t15 and says so in the file (tests/test_focus_talent_anchor.lua enforces that the rationale travels with the row). (3) is a pre-flight for a CM ult-mana-reserve gate ('cmkeep') that is deliberately NOT written yet: the desk has six pre-flight rejections behind it and will not write a seventh gate against a 2-frame band. Report the CM band as a RATE per Freezing-Field-ready instant, not as a count.",
+      "status": "pending",
+      "result": "\n\n2026-08-23T08:15Z **批测台补交档案侧分母(欠 37 轮,零 AWS 成本)。** 06:11Z 波 306 局:**zuus 306/306 局(100%)、crystal_maiden 306/306(100%)**,其中 **237 局有 .dem**(--rec-slots 12,归属 237/237 可信,s3://…/dem21/spot_20260823_0611*/)。**⇒ 本请求的分母是四条里最大的,而且现在就可做,不必等新波。** **但一个等级栏位必须带上**:Thundergod / Freezing Field 的 rank 3(250/375/500 与 200/400/600 的顶档)只在 lv>=15 出现,而本波 **zuus lv>=15 只有 37/306、crystal_maiden 只有 12/306**(局终等级 med 均为 11)。报「按 rank 分档的 unaffordable RATE」时必须把这个分母写在旁边,否则又是一次拿窄样本当密度。帧级扫描仍是录像组/英雄组的检测器手艺,批测台不越界写它。"
+    },
+    {
+      "id": "hero-4",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "question": "NO NEW WAVE NEEDED -- a scan of the ARCHIVED corpus (filed here because the batch desk owns the archive). On 2026-08-22 the hero desk flipped Lion's t10 talent from +10pp Mana Drain slow (special_bonus_unique_lion_6) to +20 movement speed (special_bonus_movement_speed_20): ungated pure-numbers change, already on main; rationale in hero_lion.lua and tests/test_lion_t10_payoff.lua. The argument is REACHABILITY, not size: the slow is only collectible while X.ConsiderE channels Mana Drain ON AN ENEMY HERO, and both such branches sit below `if X.IsOtherAbilityFullyCastable() or nSkillLV <= 1 then return 0 end`, i.e. they need Earth Spike, Hex and Finger all unavailable first. The fixture library (22 living-Lion frames) reaches that chain on 2 frames, and BOTH are fixtures this desk cut to study Lion's drain -- an existence read on a biased sample, not a density. Wanted off the archive, over turbo replays containing a Lion: (1) MANA DRAIN CHANNELS PER GAME SPLIT BY TARGET CLASS -- enemy hero / creep / illusion -- with channel duration, because only the enemy-hero channels can collect the abandoned talent; (2) HEX CASTS PER GAME plus, at every instant X.ConsiderW's firing conditions hold, whether Hex was on cooldown and with how much left -- specifically the count of moments blocked by <= 2s of cooldown, which is the domain of the t15 challenger (-2s Hex cooldown, special_bonus_unique_lion_5) that this pass declined to take. CAVEAT ON METHOD (learned 2026-08-22): do not read fixtures with a regex -- that round read 10 Axe frames where the loader reads 26. Use the same loader the tests use. UPDATED 2026-08-23T06:00Z (hero desk, GH #134): part (2)'s DOMAIN RANK was wrong in the text above. -2s was priced against Hex rank 1 (24s cooldown), which is what the fixture corpus holds because its Lions top out at level 11 -- but the talent only exists from level 15, and at level 15 the shipped build has Hex at RANK 3 = 16s (rank 4 = 12s from level 16). Root cause: the build row's index is not the hero level -- J.Skill.GetSkillList spends levels 10/15/20 on talents, so a 15-entry row has only 13 ability points down at level 15. So when scanning, bucket the 'blocked by <= 2s' moments BY THE HEX RANK HELD ON THAT FRAME, and report the rank distribution alongside: a moment at rank 1 is 2s out of 24, at rank 3 it is 2s out of 16, and only frames at level >= 15 are in domain at all. Also note part (1)'s own denominator moved: Mana Drain is rank 3 when the t10 pick happens, not rank 4.",
+      "acceptance": "(1) decides whether the WRITTEN REASON for the t10 flip survives: if enemy-hero drain channels turn out to be common (say more than a couple per game with meaningful duration), the +10pp slow is collectible far more often than the fixture read suggests and the hero desk re-argues or reverts the row in hero_lion.lua -- tests/test_focus_talent_anchor.lua enforces that the reasoning travels with the row either way. It does NOT decide whether the change can ship: it already has, and there is no gate to arm. (2) is a pre-flight, not a verdict: a count of Hex firing moments blocked by <= 2s of cooldown is the ONLY thing that could turn the t15 row from 'no measurable asymmetry, default holds' into a decidable pair. Report it as a rate per game with the total number of firing moments as denominator; a zero here must be recorded as UNDERPOWERED, not EMPTY (narrow band on a continuous quantity -- the standing lesson from GH #115). UPDATED 2026-08-23T06:00Z: (2) is NO LONGER the only channel that can decide the t15 pair -- the 2026-08-23 pass measured both sides offline and kept [4] (see state.json lion_t15_no_flip_20260823T0600Z and tests/test_lion_t15_payoff.lua): the incumbent's two To Hell and Back windows are live on 3 of the 10 modifier-bearing Lion frames, and the challenger loses because Hex is READY and mana-affordable on 9 of the 20 Hex-learned frames, i.e. the scarce thing is targets, not Hex charges. (2) is now the channel that could OVERTURN that verdict rather than the channel that has to create one, so it no longer blocks anything -- but a high rate of cooldown-blocked firing moments (especially at rank 3+) would reopen the pair.",
+      "status": "pending",
+      "result": "\n\n2026-08-23T08:15Z **批测台补交档案侧分母,并且 part (2) 的域是结构性空集。** 06:11Z 波 306 局:**lion 出现 77 局(25.2%,只在种子 896)**,其中 60 局有 .dem。**part (1)(Mana Drain 按目标分类的 channel 数)可做,语料 60 局。** **part (2) 不可做**:本请求 06:00Z 自己更新的口径写明「only frames at level >= 15 are in domain at all」,而这 77 局 Lion 的**局终等级上限是 14,0/77 到 15**。**这不是 UNDERPOWERED,是准入条件从未满足** —— 与 GH #115「窄带上的零要记 UNDERPOWERED」不冲突(那讲连续量上的窄带)。根因是 Turbo + SOAK_CAP_MIN=10 的裁判上限(本波局时 min 9.1 / med 11.0 / max 15.2)。**选种解决不了这一条**,要买它得抬 SOAK_CAP_MIN(波次配置变更,连带改局时/局数/经济读数)或承认 t15 只能靠 fixture 验 —— 已随 #46 追评交总监。同尺度旁证:zuus lv>=15 37/306、crystal_maiden 12/306、skeleton_king 4/152。"
+    },
+    {
+      "id": "strategy-3",
+      "stream": "strategy",
+      "bundle": "itemtrip",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "NO DEDICATED WAVE REQUESTED -- please fold 'itemtrip' into the next multi-id wave (same reasoning as fieldcreep: this is an in-arm reading of the armed leg, not a paired econ question). GH #120 / owner priority P2's family, above the health band: 76 of 643 high-HP home TPs across 283 games (0.27/game, median round trip 40.1s) have no branch in bots/ that explains them, because BOT_MODE_ITEM is the ENGINE's mode here. The new bots/mode_item_generic.lua installs a GetDesire ONLY when 'itemtrip' is armed; unarmed it defines nothing and the engine keeps its built-in bid byte for byte. This wave buys condition (a). It ALSO discharges an engine semantics question this repo has never been able to answer: docs/BOT_API_REFERENCE.md:52 claims GetDesire() returning nil falls through to the built-in bid, and until this file there were ZERO users of that contract in bots/. The armed bid returns NONE on wasteful frames and nil otherwise, so the replay read separates the two worlds with no extra instrumentation. Registered BEFORE the wave, on purpose.",
+      "acceptance": "Primary (replay desk, condition a): on the armed leg, re-run tools/batch_test/behavioral/hometp_highhp.py and split the high-HP home trips by #120's own labels. TWO outcomes, both useful and both pre-registered: (1) the residual 'no branch explains it' bucket drops while escape2/shop/defend/healmana stay put -> the nil-fallthrough contract HOLDS and itemtrip works as designed; (2) high-HP home trips collapse to ~0 across ALL labels that route through item mode -> the contract is FALSE (nil reads as 0), armed means item mode is off for the whole game, and that fact is now discharged for every future author. Do NOT read outcome (2) as 'the fix is broken' without saying which of the two it is -- the distinction is the point. NEGATIVE control that must NOT move: the 136 'shop' trips (retreat mode's shop motive, X.IsInvFull) do not route through BOT_MODE_ITEM and must be unchanged in both outcomes; if they move, something other than this file did it. Secondary (condition b, coarse, no significance test per owner 2026-08-01): no obvious negative on gpm/deaths for the armed leg. Frame evidence requested for at least one hero that was going to make the trip and did not.",
+      "status": "done",
+      "result": "RUNNING (batch desk 2026-08-23T06:11Z). itemtrip is armed for the first time: the director's AS.0 section landed the 25-id string (the 02:51Z approval had only reached the header, which test_set.md:271 says is not the machine-read line), so the baton did not drop. Wave: 4 x on-demand c6i.4xlarge, one seed each (888/895/896/906), tree pinned to full SHA 7159ff3ef3da17b5716ad491e80c23a6c3818c8e (NOT --ref main, so a later push cannot move the tree under the instances), 16 slots, --rec-slots 12 (director AS.2 ruling (C)), 2h watchdog, --games 22. Runs: spot_20260823_061111_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_89ea04 (s888), spot_20260823_061113_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_c05658 (s895), spot_20260823_061115_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_902447 (s896), spot_20260823_061118_1_7159ff3ef3da17b5716ad491e80c23a6c3818c8e_05202d (s906). Pre-launch gate check redone on this tip: 25/25 ids present in bots/ (24 as IsSoakCandidate literals; lf_rescue via IsLaneFixOn('rescue') -> jmz_func.lua:5907 concatenation, jmz_func.lua:6245). itemtrip's live call site is bots/mode_item_generic.lua:65. Condition (a) evidence goes to the replay desk from the dem21/ corpus this wave produces -- at 12 rec slots that is ~50% more frames per game than the 8-slot wave.\n\n2026-08-23T08:15Z **收割完成**。波次 spot_20260823_0611{11,13,15,18},树 7159ff3(钉全 40 位 SHA),§AS.0 的 25 id 全集串(itemtrip 首次上机),种子 888/895/896/906,**282 有效局 + 24 暖场 = 306**,四种子两 wave 全齐 unfinished 0。**gpm −93.30 / xpm −96.97 / deaths +0.71 / last_hits −6.16 / winrate 0.243,五指标全 0/4**,suggested=hold_or_reject;逐种子 gpm 888 −122.10 / 895 −119.94 / 896 −105.72 / 906 −25.46(sd 45.81,SE 22.90)。**上一波(24 id、树 cde1d6c)是 −42.49 / 0.394 ⇒ 赤字翻倍,而两波之间 armed 串只差 itemtrip 一个** —— 三条路连代价已交总监(GH #140),本台建议 (B) 退回 24 id 一次波次收敛变量;12:11:11Z 前给结论,未裁默认 (A)。8 条必查项全兑现(暖场 stamp 24/24=7159ff3;带前缀合并逐位一致;串与 §AS.0 IDENTICAL count 25;demclaim 237 一起下;.dem dem21=237 / soak/=0;rec_slot_cost.py exit 0 ⇒ --rec-slots 留 12;归属 237/237、candidates 众数 11、by_mtime 0/237 全错;winner_by engine 0 = 可证伪预测兑现,GH #135 构造性论证成立)。语料:s3://dota2bot-batch-results-4924/dem21/spot_20260823_0611*/ 下 237 个 .dem,帧通道 12/16,归属 100% 可信。详见 iterations/reports/batch-desk/20260823T081500Z.md\n\n2026-08-23T14:10Z **归因结论到货(§AT.1 第一档触发)**。同树 `7159ff3` / 同种子 888,895,896,906 / 只差 armed 串一个变量的配对波(24-id,去掉 `itemtrip`)读数:**gpm −26.44 / xpm −32.83 / deaths +0.33 / last_hits −1.85 / winrate 0.441**,275 有效局 + 24 暖场 = 299,unfinished 0。与含 `itemtrip` 的 25-id 波(−93.30)**逐种子配对**:888 +83.20 / 895 +93.47 / 896 +91.01 / **906 +0.23**,均值 **+66.98**(sd 44.71,SE 22.36,3.0×SE)。⇒ §AT.1 预登记的第一档触发,**`itemtrip` 退回协同组**(退回≠reject:它的条件 (a) 从来没买到过);§AT.2 的「开脱 ⇒ 查 `9fa4898` CM arcane boots」分支**未触发**。**形状比均值重要**:三个种子一致 −83~−93,**种子 906 逐字没动**(它在两波里都是 −25.x)⇒ `itemtrip` 的域与种子阵容相关,不是均匀的 −67。按 §AT.1 原话,这一波**不能开脱另外 24 个 id** —— 残组仍是 −26.44、四指标 0/4、winrate 0.441 < 0.5。旁证(只跨树不跨集合,不在 §AF.3 射程内):同 24-id 串在树 `cde1d6c` 上是 −42.49 / 0.394,两次独立落在 −26…−42 带内,而含 `itemtrip` 的那次在带外一倍以上。条件 (a) 的帧证据仍在 `s3://dota2bot-batch-results-4924/dem21/spot_20260823_0611*/` 的 237 个 `.dem` 里,归录像组。详见 iterations/reports/batch-desk/20260823T141000Z.md  || 2026-08-23T15:xxZ 总监处置:归因波(24-id @ 7159ff3 @ 888/895/896/906,275 有效局)X = gpm −26.44,§AT.1 第一档触发 ⇒ **itemtrip 退回协同组、出集**,详见 test_set.md §AW.2 与 GH #120。**读数的形状不是「平均 −67」**:三个种子 +83/+93/+91,906 = +0.23(零)—— 域与阵容相关,这是给协同组的线索。",
+      "director": {
+        "ruling": "RETURNED_TO_STRATEGY",
+        "wave": "(归因波已收割)",
+        "at": "2026-08-23T15:xxZ",
+        "ref": "test_set.md §AW.2",
+        "note": "§AT.1 预登记第一档触发(X = gpm −26.44,离 −40 门柱 13.6、离 −90 门柱 63.6):`itemtrip` 逐种子配对吃下 +66.98 ± 22.36 SE(888 +83.20 / 895 +93.47 / 896 +91.01 / 906 +0.23)⇒ **退回协同组,出集**(成员串 28→27)。退回≠reject:它的 (a) 是 WORKING(录像组 13:01Z:域内 armed 9 : base 17 = 0.53,域外 18 : 19 = 0.95,`shop` 取货 73 : 70 没被压),被否的是**这个杠杆值不值得拉**,不是它有没有拉动。"
+      }
+    },
+    {
+      "id": "hero-5",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 2,
+      "question": "SUPERSEDED IN ITS PREMISE 2026-08-23T12:00Z, STILL THE SAME QUESTION. This entry was written while the CM pos_5 boots swap was UNGATED and therefore on BOTH legs of every mirror; the director's GH #144 ruling reversed that and the hero desk has now moved the swap behind the turbo-only soak gate 'cmboots' (gate-off is byte-identical to the pre-9fa4898 list, asserted). CONSEQUENCE FOR THIS REQUEST: it no longer rides whatever wave runs next -- it can only be read off a wave where 'cmboots' is ARMED, i.e. the exclusive first wave requested as hero-8. Until then this is NOT a negative result and must not be recorded as one. On 2026-08-23 the hero desk swapped Crystal Maiden's pos_5 boots: item_mage_outfit (tranquil boots) -> item_mage_arcane_outfit (arcane boots; the shared item_crystal_maiden_outfit that 9fa4898 used was reverted -- 16 other heroes buy it), and removed item_boots_of_bearing from the pos_5 list because its recipe consumes a pair of tranquil boots and would otherwise buy a SECOND pair (movement speed does not stack). Now gated 'cmboots', turbo-only; rationale in hero_crystal_maiden.lua and tests/test_cm_pos5_boots.lua; GH #126 -> GH #144. Wanted, off any turbo replay containing a pos_5 Crystal Maiden: (1) DOES SHE ACTUALLY BUY ARCANE BOOTS, and at what game time -- the purchase layer resolves outfit macros at runtime and item_mage_arcane_outfit is a brand-new macro referenced by nothing but the gated branch, so 'the list says arcane' is not evidence that 'the bot bought arcane'; (2) DOES ANY CM END UP HOLDING TWO PAIRS OF BOOTS, or stall on a purchase target she cannot complete -- the failure mode the Bearing removal is meant to prevent, and the one that would show the removal was necessary or that it was not enough; (3) her mana over the game (fraction of the game below the 220 nKeepMana floor, and Replenish casts per game if the dumper can see item actions at all -- GH #100 says the fixture world cannot, a live replay may).",
+      "acceptance": "PREREQUISITE: 'cmboots' armed (hero-8). Read only the ARMED leg for (1) and (2); the baseline leg is the tranquil build by construction and says nothing about them. If the wave that carries this has no armed-leg pos_5 Crystal Maiden at all, record CARRIER ABSENT, not SILENT (the hero-7 rule). (1) is condition (a) for this change and the only blocking one: WORKING = at least one frame shows arcane boots in a pos_5 CM inventory, with the game time; SILENT = the outfit macro never resolves and she buys nothing or falls back, which would mean the swap is inert and the hero desk reverts or fixes the wiring (the new macro's tDefineItemRealName sentinel is item_arcane_boots -- an unresolved macro is the most likely thing to have gone wrong). (2) is a defect check, not a verdict: any CM holding two pairs of boots reopens the Bearing removal from the other side. (3) is condition (b) evidence, coarse only -- no significance test (owner 2026-08-01 philosophy); a zero on Replenish casts must be recorded as UNDERPOWERED unless the dumper is shown to emit item actions at all.",
+      "status": "pending",
+      "result": "2026-08-23T06:11Z wave: read as ungated-and-therefore-on-both-legs, which is no longer true. That wave carries the swap on both legs because 9fa4898 is an ancestor of its pinned SHA 7159ff3, so any (a) reading taken off it describes the SHIPPED build, not the candidate. Re-pointed at hero-8's wave. Left pending: the request asks for a reading, not a launch."
+    },
+    {
+      "id": "strategy-4",
+      "stream": "strategy",
+      "bundle": "campgrade",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "GH #137 的条件 (a):`campgrade` 在真实对局里到底有没有把低等级英雄挡在远古营外面。**不申请专波** —— 这个 id 未 armed 时是逐字节等价的(off-candidate equivalence 已在本地按 camp-for-camp 断言),请并进下一波已经在跑的串里,当一个额外 id 就行。缺陷本身是纯结构的、不需要批测来确认(四支 if/elseif 的最后一支无条件放行,任何等级拿得到任何营地);要买的只有『修好之后真的少去了』这一件事。 【2026-08-23T11:xxZ 总监更新:改为独占波,见 notes 末段。】 【2026-08-23T13:xxZ 总监裁定:条件性批准**不变**,排期 W3 → **W4**(test_set.md §AV.1/§AV.2)。让路的理由是 owner P1 与名额算术,**不是这一包的质量**——它仍是三条里唯一有明文批准的。W4 的名额来自 W3 对 `creeppull` 的 resolve;若核验结论迟到而 W4 时刻已到,**照发**(名额是集合增长的闸门,不是发波的闸门)。载体门对它是 no-op:`campgrade` 按等级不按英雄,任何种子集都带得动。】",
+      "acceptance": "**判据是录像组已经有的那把尺子,不要另造**:重跑 `tools/batch_test/behavioral/ancient_camp_domain.py`(GH #137 §2 那份,--selfcheck 27/27),分 armed / base 两侧各出一份。① 主判据:armed 侧『等级 ≤11 的远古交火次数』相对 base 侧显著下降(base 侧基线 12/40 = 30.0%);② **同等重要的反向判据(不许省)**:armed 侧的**全体**远古交火次数**不许塌成 0** —— 等级 ≥12 的那 28 次是本来就该打的,把它们一起误伤掉是回归、不是通过;③ 条件 (b) 粗粒度:armed 侧 gpm/deaths 无明显负面即可,不做显著性检验。**预登记的未知量**:RefreshCamp 每局只在营地被打完、列表缩短之后才重刷(mode_farm_generic 的 `GetAvailableCampCount() < GetCampCount()` 条件),所以营地名单相对等级是**滞后的** —— 如果 armed 侧 ≤11 的命中没有降到接近 0,先查这条刷新节奏,再怀疑门本身。",
+      "status": "pending",
+      "notes": "本地已买到的:14 例真实帧用例(等级 10/11/12/14/19 五个真实等级钉两条边界)、3 变异 3 抓、语料域 92.5%(1030 个真实英雄槽里 953 个 ≤11)。买不到的两件已在 state.json:campgrade_20260823 的 honest_boundary 里写死:语料不带野点表(GetNeutralSpawners 恒 {}),也不带攻击力(恒 0)。\n\n2026-08-23T10:15Z **批测台预检发现结构冲突,本条卡在总监的一个裁定上,不在等波次**:`campgrade` 的唯一调用点 `bots/FunLib/aba_site.lua` 的 `J.Site.RefreshCamp(bot, J.IsModeTurbo() and J.IsSoakCandidate('campgrade'))` 由 `498bad4`(strategy 07:55Z)引入,**晚于 §AT.0 钉死的树 `7159ff3`**。实测:`IsSoakCandidate` 的 id 全集在 `7159ff3`→`0ca2a58` 之间只增了 `campgrade` 一个。⇒ 若「归因波之后那一波」继续钉 `7159ff3`,本 id armed 了也是**逐字节 no-op**,读数会呈现为「campgrade 无影响」= **假阴性,且无任何计数报警**(gate 覆盖表会给它打 0,正好被读成 lf_rescue 那种「预期的 0」)。两条路的代价已在 GH #140 追评里摆出:(甲) 改钉 ≥`498bad4` 的新 SHA(campgrade 真上机,但与 −93.30/X 的同树配对脱钩,§AT.3 的 (乙) 下次要用得重买前半);(乙) 仍钉 `7159ff3`、campgrade 顺延一波(配对链完整,本条再等 ≥6h)。**归总监,本台不自裁。** 另:12:11Z 那一波按 §AT.0 钉 `7159ff3` 不受影响,本轮预检不动它。\n\n2026-08-23T11:xxZ **总监裁定,本条解卡 —— 甲/乙 都不选,改走独占首波**(全文 test_set.md §AU,摘要在 GH #140 追评):\n甲/乙 共享一个错误前提,以为换树会污染读数;不会。`validate_onspot.sh:76-89` 报的是差之差,一笔 ungated 改动\n两波两侧都在,`(ab+ba)/2 = e` 里逐项湮灭(§AU.1 的恒等式)。逐文件核过 `7159ff3 -> 0ca2a58` 的 9 文件漂移:\n三个纯注释(零非注释行)、`aba_site`+`mode_farm_generic` 是 gated 未 arm(`bAdmit = true` 后接逐字未动的原链)、\n其余四个是 GH #136/#139 的组件数修复(ungated 但两臂对称)。⇒ (甲) 的代价被记错,(乙) 近乎自败。\n**裁定**:归因波之后那一波 = **`campgrade` 独占波**,armed 串就它一个 id,钉**发波时刻的 origin/main tip**。\n理由是证据强度:搭 24-id 顺风车只能读成 `Delta(25-id) - Delta(24-id)` 的差之差,而波间 sd 45.81 比单 id 的\n典型效应大一个量级;独占波是波内读数,一阶无混杂,正好是 owner 铁律 2(b) 点名的那句话。成本同为 ~$1.5。\n本条 question 里「不申请专波」的自我克制**本轮被总监推翻**,不是协同组的失误 —— 那时还不知道 §AU.1。\n**种子**:独占波无跨波配对义务 ⇒ **允许**顺带首次登记并使用 axe+lion 新种子集(发波前在报告里写死种子号);\n来不及就退回 888/895/896/906,不影响判读。\n**发波前硬门(新)**:`python3 tools/batch_test/check_armed_wiring.py --ref <要钉的SHA> --cand \"campgrade\"`,\n非 0 不许发 —— 这正是本条撞出来的坑,现在是一个 exit code。\n**下一棒(收割后)**:条件 (a) 归录像组,按本条 acceptance 那三条判据(含不许省的反向判据 ②)出 WORKING/BUGGY/SILENT。\n\n2026-08-23T12:09Z 批测台:**W3 只有一个入集名额,而你们三条(strategy-4 campgrade / strategy-5 creeppull+pullbeat / hero-8 cmboots)都要独占首波** —— §AT.3 的算术是「一次归因波 resolve 一个 id = 一个名额」,本波(24-id,12:09Z 启动)resolve 的是 itemtrip,名额=1。本台今天在 origin/main 上逐条实测过 check_armed_wiring.py:三条**全部 exit 0、全部就绪**(campgrade 1/1、cmboots 1/1、creeppull+pullbeat 2/2)⇒ **瓶颈是排期裁定不是就绪度**。已在 GH #140 把三条连同各自的理由摆给总监,本台不自裁;未裁的保守默认走 strategy-4(三条里唯一有 §AT.3 明文条件性批准的)。W3 最早 2026-08-23T18:09:32Z。",
+      "director": {
+        "ruling": "APPROVED_CONDITIONAL",
+        "wave": "W4",
+        "at": "2026-08-23T13:05Z",
+        "ref": "test_set.md §AV.1/§AV.2/§AV.7",
+        "note": "条件性批准不变,排期 W3 → W4;让路的理由是 owner P1 与名额算术,不是这一包的质量。W4 的名额来自 W3 对 `creeppull` 的 resolve;核验迟到而 W4 时刻已到则照发(名额是集合增长的闸门,不是发波的闸门)。独占波,载体门对它是 no-op(按等级不按英雄)。"
+      }
+    },
+    {
+      "id": "hero-6",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 1,
+      "question": "NO NEW WAVE NEEDED -- rides whatever wave runs next, because the change is UNGATED and therefore on BOTH legs. On 2026-08-23 the hero desk fixed GH #136: skeleton_king's pos_3 buy list (aliased by pos_2/4/5) asked for a SINGLE item_branches ahead of item_magic_wand, and the recipe takes two; life_stealer pos_1 carried the identical shape and was fixed with it. Both now buy item_double_branches. Rationale in the two hero files, in tests/test_wk_magic_wand_branches.lua, and in the mechanism section of GH #136 (the purchase layer cannot make up the shortfall: _buildRequiredCounts takes its counts off the list Item.GetBasicItems has ALREADY filtered by what is owned, so 1-of-2 reads as complete -- filed separately as a generic bug). Wanted, off any turbo replay containing a Wraith King: (1) DOES HE EVER HOLD TWO IRON BRANCHES AT ONCE -- the pre-fix reading is a max-simultaneous-branches histogram of {1: 40} over 40 games, i.e. 0/40, and this is visible within the first minutes of a single game, no end-of-game read needed; (2) DOES HE FINISH THE WAND -- pre-fix 0/40, with magic_stick + one branch + recipe_magic_wand still in the bag at the final frame in 40 of 40; (3) his end-of-game unspent gold -- pre-fix median 4007 against 366-487 for the other nine heroes of the same mirrored draft, so the question is whether unblocking the head of the list lets the REST of it flow or whether the gold piles up somewhere else instead; (4) whether he now buys boots at all -- 28 of 40 games never did.",
+      "acceptance": "(1) is condition (a) and the only blocking one: WORKING = at least one WK frame in any game shows two ironwood_branch at once, with the game time; SILENT = still {1: N} across the sampled games, which would mean the shopping list is not what actually drives his purchases and the hero desk re-opens the diagnosis rather than the fix. (2) and (3) are condition (b), coarse-grained, no significance testing (owner 2026-08-01): a wand appearing in ANY game is a pass; unspent gold is expected to fall toward the other heroes' order of magnitude but is not required to, and a RISE would be the interesting negative result. (4) is a side observation, not a verdict. Cheapest possible check -- one replay with a WK in it answers (1) and (2); do not schedule a wave for this.",
+      "status": "pending",
+      "result": "2026-08-23T10:15Z **批测台附注:12:11Z 那一波带不上本条。** 本请求依据的修复 `8426438`(GH #136 WK 魔棒)落在 §AT.0 钉死的树 `7159ff3` **之后**(`7159ff3`→`0ca2a58` 的 bots/ 漂移含 `hero_skeleton_king.lua` +12/-1、`hero_life_stealer.lua` +8/-1)。「UNGATED ⇒ 两条腿都带着它」只有在**钉的树包含该 commit** 时才成立,这次不成立。⇒ 本条要等下一次换钉树的波次;分母侧参考:06:11Z 波 306 局里 skeleton_king 152 局(其中 117 局有 .dem)。(`hero-7` 同理,其载体同样晚于 `7159ff3`。)"
+    },
+    {
+      "id": "hero-7",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "question": "NO WAVE. Opportunistic observation only, and the honest headline is that its carrier may never show up. On 2026-08-23 the hero desk generalised the GH #136 branch census to every recipe that takes two of one component (seven of them, read out of dotaconstants 10.8.0 and cross-checked twice against this repo's own data) and swept all 128 hero buy lists. Two more lists were reaching a doubled target holding exactly one copy -- the quantity the purchase layer misreads as satisfied: hero_tidehunter.lua pos_1/2/3 (one item_gauntlets, no Bracer anywhere, Soul Ring later) and hero_abyssal_underlord.lua pos_4 (started with item_double_gauntlets, but its Bracer eats one before the Soul Ring comes up). Both fixed UNGATED, so they are on both legs of any wave. WANTED IF EVER OBSERVABLE: in any turbo replay containing tidehunter or abyssal_underlord, does the hero ever complete item_soul_ring, and does he ever hold two gauntlets at once. CARRIER PROBLEM, stated up front: neither hero is in the run_001140 mirrored draft (skeleton_king / zuus / bristleback / jakiro / sniper / viper / phantom_assassin / crystal_maiden / juggernaut / earthshaker), so unless a draft changes there is no corpus in which this is answerable at all. Do not schedule anything for it; if a draft ever contains either hero, this is the read to take.",
+      "acceptance": "Condition (a), non-blocking: WORKING = at least one frame showing item_soul_ring in the inventory, or two gauntlets at once, with the game time. SILENT with no carrier present is NOT a negative result and must not be recorded as one -- report 'carrier absent' instead, the way GH #79/#97 distinguish an empty domain from an unreached one. There is no condition (b) ask here: the change is two quantities in two non-focus heroes' shopping lists and cannot plausibly move a win rate.",
+      "status": "pending",
+      "result": null
+    },
+    {
+      "id": "strategy-5",
+      "stream": "strategy",
+      "bundle": "creeppull,pullbeat",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 1,
+      "question": "Owner P1(GH #109 / GH #143)的下一棒:`pullbeat` 的条件 (a) —— 勾线的仇恨 poke 到底有没有真的打出去。**必须专波(总监 §AU.2),而且串里必须同时有 `creeppull`**:`pullbeat` 只活在 `bot.roamCreepPull` 这个计划里,`creeppull` 不 armed 时它一帧都跑不到,单独 arm 是逐字节 no-op、且不会有任何计数报警。缺陷本身是结构性的、已在本地驱动出厂 Think 打印出来(攻击命令在 1/30 秒后被 `Action_MoveToLocation` 取消,每一拍如此,46 帧命令流 = `A` + 36 个 `M`),**不需要批测来确认缺陷**;要买的只有『hold 上去之后仇恨真的转过来了』这一件事。**注意本波读的不是经济**:GH #143 已经证明 armed 腿的触发有超量而兵线位移超量是 0,所以经济只作条件 (b) 的粗粒度旁证。 【2026-08-23T13:xxZ 总监裁定:批准,W3 = 本请求(test_set.md §AV)。`pullbeat` 入集(成员串 27→28,与 W3 发波同生共死)。**这不是 §AU.2 的例外,三方都读漏了**:`creeppull` 早已在集合里、就在 §AT.0 的 24-id 可 arm 串第 19 位 ⇒ 本波只有一个新 id,`creeppull` 是它的结构性使能项,§AU.2 逐字成立。裁给它的三条独立理由:铁律 9(owner P1 凌驾 issue 流)/ 不需要例外 / 名额算术(三条里唯一能 resolve 掉集合内成员 `creeppull` ⇒ 净名额 0,另两条 −1)。波次参数见 §AV.0:树钉发波时刻 origin/main tip、种子 888/895/896/906 不换、`--rec-slots 12` **不许降**(主判据是帧级检测器,帧通道就是这一波要买的东西)、发波前**两道门**(`check_armed_wiring.py` + 新增 `seed_draft.py --assert-carrier`,非 0 不发)。W3 之后 `creeppull` 必须 resolve(promote 或退回),不许再挂着。】",
+      "acceptance": "**判据是录像组已经有的那把尺子,不要另造**:重跑 `tools/batch_test/behavioral/creeppull_specificity.py`(GH #143 那份,--selfcheck 8/8),armed / base 两侧各出一份,并且**按 GH #143 §5 的修正只数 `inflictor == dota_unknown` 的真普攻**。① 主判据(两个数,本轮开工前就登记好了,不是事后挑的):**最后一次普攻之后小兵还打我多久** —— armed 侧中位应当**长于** base 侧(GH #143 测得 armed 2.2s / base 1.55s,pullbeat 要抬的正是这个数);**该尾巴 = 0 的占比应当下降**(GH #143 测得 armed 26.8%)。② **同等重要的反向判据(不许省)**:armed 侧的**净向家位移**不许塌成 0 —— hold 只占一拍 37 帧里的 14 帧,拖拽仍该占 22 帧;如果位移消失,说明 hold 吞掉了整拍(本地 M2 变异钉的就是这个形状),是回归不是通过。③ 条件 (b) 粗粒度:armed 侧 gpm/deaths 无明显负面即可,不做显著性检验。**预登记的未知量**:引擎里「不发命令」是否真的让攻击命令继续跑,是本修法唯一一条**本地验不了的语义假设**(mock 里没有命令队列);若 ① 两个数都纹丝不动而 ② 正常,**先怀疑这条语义,再怀疑 0.5 这个常数**。",
+      "status": "pending",
+      "notes": "本地已买到的:8 例用例、5 变异 5 抓,真实帧 = `f_072738_zuus_mana`(被压制中单,Lina 在 621u 外),缺陷与修法都是**驱动出厂 Think 46 帧**量出来的、不是读源码。买不到的三件已在 `state.json:pullbeat_20260823` 与用例头注里写死:(W1) 语料不带兵线(`GetNearbyLaneCreeps(900,true)` 恒空 966/966)⇒ 兵线是放在 Lina 真实位置上的替身;(W2) 第二十一条世界断言 —— `GetAttackRange()` 在 966/966 帧上读 mock 默认 150 ⇒ 「目标在攻击距离内才 hold」这条子句本地验不了,因此没写;(W3) `GetAttackPoint()` 在 mock 里不存在 ⇒ 0.5 是字面常数。**替代帧申报(0FIX)**:GH #143 点名的 `20260823_062509_slot7` / `_062455_slot4` 不在树上也不在容器里,已退到语料同形状帧并写进头注。**零 AWS 支出由本组产生**;本条只是申请,发不发波由批测台按预算与优先级定。\n\n2026-08-23T12:09Z 批测台:**W3 只有一个入集名额,而你们三条(strategy-4 campgrade / strategy-5 creeppull+pullbeat / hero-8 cmboots)都要独占首波** —— §AT.3 的算术是「一次归因波 resolve 一个 id = 一个名额」,本波(24-id,12:09Z 启动)resolve 的是 itemtrip,名额=1。本台今天在 origin/main 上逐条实测过 check_armed_wiring.py:三条**全部 exit 0、全部就绪**(campgrade 1/1、cmboots 1/1、creeppull+pullbeat 2/2)⇒ **瓶颈是排期裁定不是就绪度**。已在 GH #140 把三条连同各自的理由摆给总监,本台不自裁;未裁的保守默认走 strategy-4(三条里唯一有 §AT.3 明文条件性批准的)。W3 最早 2026-08-23T18:09:32Z。\n\n[batch-desk 2026-08-23T16:09Z 发波前预检,零成本] 两道门已提前跑完,18:0xZ 那一轮不必在窗口里现查:(1) 接线门 check_armed_wiring.py --ref 36b5d6ba2add9489e80399808f0c123165dff28b --cand creeppull,pullbeat => exit 0,2/2 wired(creeppull @ bots/FunLib/jmz_func.lua:6996, pullbeat @ bots/mode_roam_generic.lua:194)。注意工具路径是 tools/batch_test/check_armed_wiring.py,不在 soak/ 下,且参数是 --cand 不是位置参数(裸给串 exit 2)。这道门钉的是 36b5d6b;树按 §AV.0 钉发波时刻 tip,tip 若漂走必须原样重跑,本次 exit 0 不顺延。(2) 载体门:seed_draft.py --assert-carrier 的 term 只有 hero / hero:pos 两种形式,而 creeppull 的门是 J.IsCore(pos 1-3) 角色门、无任何英雄条件(jmz_func.lua:6999-7004),pullbeat 继承同一角色门 => 工具结构上表达不了这一波的载体轴。按总监给 campgrade 的先例(『按等级不按英雄』=> no-op)读成 no-op,并附正面证据:seed_draft.py 888 895 896 906 显示 4 种子 x 2 边 x pos1-3 = 24/24 核心槽全部有人(ApplySoakDraft 按位置发牌,构造性成立)=> 载体轴 satisfied 4/4 verdict FULL。LIMITS:只证牌桌上有核心,不证 ShouldCreepPullLane 其余六个前置条件可达。表达力缺口已在 GH #140 追评交总监,不阻塞发波。(3) 本轮未启动:总监在 director 字段写死『最早 2026-08-23T18:09:32Z』,现在 16:09Z,差约 2 小时,不自行提前。发波清单(照抄即可)见 iterations/reports/batch-desk/20260823T160941Z.md §7;发波时记得把本条改成 status=running。",
+      "director": {
+        "ruling": "APPROVED",
+        "wave": "W3",
+        "at": "2026-08-23T13:05Z",
+        "ref": "test_set.md §AV.0/§AV.1/§AV.2",
+        "note": "W3 = 本请求,armed 串 `creeppull,pullbeat`。树钉发波时刻 origin/main tip(全 40 位 SHA);种子 888/895/896/906 不换;`--rec-slots 12` 不许降(主判据是帧级检测器);发波前两道门 `check_armed_wiring.py` + `seed_draft.py --assert-carrier`,非 0 不发。最早发波 2026-08-23T18:09:32Z。15:xxZ 总监复述:这条裁定 13:05Z 就已作出,只是没写进机器可读字段 —— 现在写了,批测台不必再等任何裁定。"
+      }
+    },
+    {
+      "id": "hero-8",
+      "stream": "hero",
+      "bundle": "cmboots",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "EXCLUSIVE FIRST WAVE for the new id 'cmboots', per test_set.md AU.2 (a new id's first wave carries that id ALONE -- inter-wave sd 45.81 swallows a single id folded into the 24-id bundle). Requires director approval into test_set.md first; filed here so the baton is visible rather than living in a report (iron rule 9). WHAT IT IS: Crystal Maiden's pos_5 opener swaps item_mage_outfit (tranquil boots) for item_mage_arcane_outfit (arcane boots), and item_boots_of_bearing leaves the list because its recipe consumes a pair of tranquil boots and would otherwise buy a second pair (movement speed does not stack). 13 entries -> 12. Turbo-only. WHY IT IS A WAVE AT ALL RATHER THAN SHIPPED: it shipped ungated in 9fa4898 and the director's GH #144 ruling is that an ungated build change can NEVER buy condition (b) -- it sits on both arms of both waves and cancels term-for-term in the difference of differences. The gate exists to make it measurable, so the wave is the whole point of the round. 【2026-08-23T13:xxZ 总监裁定:排期 **W5**(W3=creeppull+pullbeat,W4=campgrade;test_set.md §AV)。**发波前的域被载体门当场改小了**:`seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5` ⇒ `satisfied=3 verdict=PARTIAL`,**种子 888 把 CM 发在 pos 4**,而 `cmboots` 只改写 pos_5 ⇒ 那个种子整段惰性。⇒ §AT.2 的「CM 306/306」是**在场**不是**在 5 号位**;预登记域按 **3/4 种子**写,收割分母按 3 个种子算,否则 CARRIER 稀释会被读成效应变小。**另**:提议的 axe+lion 新种子集 974/986/1024 对本 id 是 `exit 1 / ABSENT / carriers=none` ⇒ 常设种子集登记已推迟(§AV.5),别在这一波换种子。】",
+      "acceptance": "(b), coarse only, no significance test (owner 2026-08-01): the armed leg must show no clear negative on gpm/xpm/deaths/last_hits. This is a SINGLE-ID wave, so unlike the 21-id and 24-id waves the reading IS attributable. PRE-REGISTERED DOMAIN, so a null cannot be reinterpreted afterwards: the id only does anything in games where a Crystal Maiden is drafted AND assigned pos_5 -- report that count first. If it is zero, the verdict is CARRIER ABSENT, not a negative result (the hero-7 rule). (a) is queue hero-5 and belongs to the replay desk off THIS wave's armed leg: does she actually buy arcane boots and at what game time, and does any CM end up holding two pairs. Please keep --rec-slots >= 8 so the frame channel can answer (a) at all (GH #75).",
+      "status": "pending",
+      "result": "",
+      "notes": "\n\n2026-08-23T12:09Z 批测台:**W3 只有一个入集名额,而你们三条(strategy-4 campgrade / strategy-5 creeppull+pullbeat / hero-8 cmboots)都要独占首波** —— §AT.3 的算术是「一次归因波 resolve 一个 id = 一个名额」,本波(24-id,12:09Z 启动)resolve 的是 itemtrip,名额=1。本台今天在 origin/main 上逐条实测过 check_armed_wiring.py:三条**全部 exit 0、全部就绪**(campgrade 1/1、cmboots 1/1、creeppull+pullbeat 2/2)⇒ **瓶颈是排期裁定不是就绪度**。已在 GH #140 把三条连同各自的理由摆给总监,本台不自裁;未裁的保守默认走 strategy-4(三条里唯一有 §AT.3 明文条件性批准的)。W3 最早 2026-08-23T18:09:32Z。",
+      "director": {
+        "ruling": "APPROVED_CONDITIONAL",
+        "wave": "W5",
+        "at": "2026-08-23T13:05Z",
+        "ref": "test_set.md §AV.4/§AV.5/§AV.7",
+        "note": "排期 W5。发波前必跑 `seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5` 并把 `satisfied=3 verdict=PARTIAL` 抄进预登记 —— 种子 888 把 CM 发在 pos 4,该种子整段惰性;收割分母按 3 个种子算,不是 4 个。常设种子集 974/986/1024 对它是 exit 1/ABSENT,不许登记为常设。"
+      }
+    },
+    {
+      "id": "strategy-5b",
+      "stream": "strategy",
+      "bundle": "midtp,suptp,midsupyield",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "Backlog #4 'suptp x midtp 协同仲裁' (owner keep_optimize: suptp must COORDINATE with midtp). New gated id 'midsupyield': when a CORE reaches the shared tower-defense response helper (J.ShouldTpSupportTowerFight) and a viable SUPPORT responder exists, the core yields the team's single TP-response slot to the support instead of racing it first-come-first-served. midsupyield is a no-op unless midtp/suptp are also armed (the helper does not fire otherwise), so the wave string must carry midtp AND suptp AND midsupyield. Direction is bounded by construction: it can only REALLOCATE a tower-defense response from a core to a support, never DROP one, and never raises core TP participation. NOT a dedicated wave necessarily -- the TP family (midtp/suptp/lf_rescue/tpcommit) is already armed; director decides per AU.2 whether midsupyield rides the existing TP-family read or needs isolation.",
+      "acceptance": "Behavioral, on the batch's own replays (no new detector needed beyond the existing TP-family reads). Primary (condition a): among tower-defense TP responses, the CORE share must fall and the SUPPORT (pos>=4) share must rise on the armed side vs baseline -- the reallocation the lever exists for. NEGATIVE control (must hold or the lever over-fires): total tower-defense TP responses must NOT collapse toward 0 (that would mean cores yield but supports do not pick up = a DROPPED response, the emergent risk this gated read exists to catch). Secondary (condition b, coarse, no significance test): gpm/deaths no clear negative on the armed side. Note the whole effect is small (helper fires end-to-end on ~3/966 corpus frames), so read it as direction across seeds, not a single-wave magnitude.",
+      "status": "pending",
+      "result": "",
+      "director": {
+        "ruling": "APPROVED_CONDITIONAL",
+        "wave": "W6",
+        "at": "2026-08-23T17:xxZ",
+        "ref": "test_set.md §AX.5",
+        "note": "实质裁定(§AW.4 欠的):入集条件性批准,排 W6。① 不需要 §AU.2 例外,与 W3 同型:midtp/suptp 早在集合里,midsupyield 在它们不 armed 时 helper 不开火 ⇒ 单独 arm 是逐字节 no-op ⇒ 它们是结构性使能项,本波只有一个新 id。② 方向由构造有界(只能把塔防响应从核心重分配给辅助,不能丢响应、不抬核心 TP 参与度),且申请书自带负控(响应总数不许塌向 0)⇒ 照批。③ 条件 = §AX.2:域 ~3/966 是帧轴,而 ShouldTpSupportTowerFight 的产出是离散事件、付款在事件轴 ⇒ 发波前必须给出事件轴量级(每局塔防 TP 响应次数 / 其中核心占几次),该数在 237 个 .dem 里免费(capmono_refusal.py 已有现成的 modifier_teleporting 通道)。拿到之前不排发波时刻,拿到之后 W6。④ 名额来自 W4/W5 的 resolve,当前可用名额仍为 0 ⇒ 入集生效时刻 = W6 发波时刻(与 pullbeat 同型,§AV.7)。"
+      }
+    },
+    {
+      "id": "hero-9",
+      "stream": "hero",
+      "bundle": "axecull",
+      "seeds": [],
+      "priority": 3,
+      "question": "GH #146. NO DEDICATED WAVE REQUESTED -- fold 'axecull' into a multi-id wave whenever the director admits it, and size its domain on the EVENT side, not on frames. What it is: bots/BotLib/hero_axe.lua X.ConsiderR (the Culling Blade execute) carried `and not npcEnemy:IsMagicImmune() --V BUG` -- the only occurrence of that marker anywhere under bots/. Culling Blade PIERCES spell immunity (axe_culling_blade bkbpierce \"Yes\", damage Pure; odota/dotaconstants build/abilities.json 10.8.0, read 2026-08-23), so the shipped bot declines a guaranteed kill on exactly the target the ability exists to kill. The fix is gated turbo-only and unarmed; gate-off the clause reduces to the shipped predicate byte for byte. WHY THIS NEEDS A WAVE AT ALL: the desk ruled out six of the seven collapse modes (one firing branch, first consumer in SkillsComplement, no stronger guard -- X.HasSpecialModifier does not list modifier_black_king_bar_immune, carrier present, and the domain is an EXISTENCE predicate rather than the narrow band that killed the sibling lever hero-2). The seventh, SUPPLY, is the one nobody can answer locally: the fixture corpus holds THREE spell-immune hero-instants in 104 frames (all Juggernaut Blade Fury, none in a game with Axe) and ZERO Black King Bars in any item slot at any instant. That corpus was cut from turbo games capped at 10 game-minutes; GH #108 raised the cap to 25, and a BKB is 4050 gold, so the supply may already be different from what any archived frame can show.",
+      "acceptance": "Condition (a), EVENT-side and cheap: in any wave containing an Axe, count (1) how many hero-instants of ANY spell-immune enemy occur at all -- that is the supply number this request exists to buy, and it is worth having even if it is zero; (2) how often such an enemy stood inside 375u of a ready Culling below its execute threshold -- the domain; (3) on the armed leg, whether a Culling was cast on a spell-immune target and whether it killed. WORKING = at least one such cast with the kill; BUGGY = a cast that did not kill (that would mean the engine does not honour the pierce for a bot order and the whole lever is void -- report it loudly, it is the single fact that would retire this id). PRE-REGISTERED, same as hero-7: a SILENT reading with NO spell-immune enemy hero anywhere in the wave is a CARRIER-ABSENT record, NOT a negative result, and must not be written down as an empty domain -- the distinction GH #79/#97 exist to keep. No condition (b) ask beyond 'no obvious harm': the branch only opens frames on which the health test has already passed.",
+      "status": "pending",
+      "result": null,
+      "director": {
+        "ruling": "RECEIVED_NOT_SCHEDULED",
+        "wave": "unscheduled",
+        "at": "2026-08-23T17:xxZ",
+        "ref": "test_set.md §AX.4",
+        "note": "受理,未排波 —— 它等的是一个免费的供给数,不是一个波次。(c) 当场成立(bkbpierce=Yes + Pure ⇒ 出货 bot 对必杀目标收手)。卡住的是 (a) 的两层:① 载体 —— 本轮发牌表实测 888/895/896/906 四种子零 Axe(与 hero-2 的 0/306 一致),任何用当前种子集的波对它是 exit 1/ABSENT;需含 Axe 的种子集(--find axe ⇒ 899/910/911;974/986/1024 对 cmboots 是 ABSENT,§AV.5 已禁其登记为常设),发波前 --assert-carrier axe 非 0 不发。② 供给(§AX.2)—— 申请书自列 SUPPLY 为唯一本地答不了的塌缩模式,而这个数在事件轴上、在已买的 237 个 .dem 里:MODIFIER_ADD 事件流按魔免 inflictor 表计数即可,零 AWS。诚实边界:本轮未核实 dumper 是否对所有 modifier 都发 MODIFIER_ADD(已知在被消费的只有 modifier_teleporting 与一张硬控表)⇒ 第一步先拿一个 .dem 验证;若只发白名单,那是一条 [harness] 缺口,开 issue 交总监,不是买波次的理由。下一棒 = 录像组量供给数:=0 ⇒ CARRIER-ABSENT(申请书已预登记,不许读成负面结果);>0 ⇒ 连同含 Axe 种子集申请独占波,名额与 §AU.2 照常适用。"
+      }
+    },
+    {
+      "id": "strategy-6",
+      "stream": "strategy",
+      "bundle": "itemtrip",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "itemtrip 重新入集申请(director 14:58Z 退回本组时写明的条件:『带着新的域回来重新申请』—— 本条就是那个新的域)。**退回的原因不是杠杆没生效,是它的域被量错了一个数量级以上**:申请/定价时用的 0.038 次/局是 #120 数的 TRIP(回城行程),而 GetDesire 的 bid 是**逐帧**付的,J.IsWastefulItemTrip 在 104 个真实帧 fixture / 966 个存活英雄帧上**成立 320 帧 = 33.1%**(tests/_itemtrip_sweep.lua,零成本)。两个数从来不可比:一个 bot 可以连续几百帧落在域内而一次行程都不发起。本轮改的是**一个杠杆、而且是一次推导订正**,不是新子句:泉水距离下限 5000 → 10000。5000 来自 #120 的 40.1s 中位往返 →『~12,000u 的走动,即~6,000u 单程』→ 取保守下限;**折半是错的** —— #120 的人口是 643 次**回城 TP**,去程是 TP、只有回程在走,所以走掉的 ~12,000u 就是**单程离家距离**。订正后域 320 → 135 帧(14.0%),而 #120 的承重帧(lina 20260822_123136 t=434.6,离家 11,240u)仍在域内、留 1,240u 余量(余量正是这个常数的上限:超过 ~11,000 杠杆就在自己的证据帧上失效)。**本波申报目的是条件 (b) 的重测**:同一个杠杆、域小 2.4 倍之后,gpm 赤字是否随之塌下去。**注意 §AT.1 的门柱与 06:11Z 那波不可跨波直接相减**(§AF.3),判据写在 acceptance 里。**排期完全听总监**:当前名额 0、W3/W4/W5 已排定,本条不插队,登记的理由是接力棒要有个看得见的位置(铁律 9)。",
+      "acceptance": "(b) 粗粒度、不做显著性检验:armed 侧 gpm 赤字相对 06:11Z 那波**明显收窄**即可继续留在集合里;若赤字**基本不变**,那就是本轮订正的域不是代价的来源 ⇒ 直接读成『代价来自 GetDesire 返回 nil 的那条腿』(mode_item_generic.lua 头注预登记的第二种可能:nil 被读成 0 ⇒ 整局 item mode 关掉),**那时不要再窄化域,要拆 nil 分支**。(a) 交录像组,但**判读工具必须重跑,不能复用旧读数**:tools/batch_test/behavioral/itemtrip_contract.py 的 FDIST_MIN 已随源码从 5000 改到 10000,任何 2026-08-23 之前跑出来的 IN/OUT 分桶都是按旧下限分的。另外录像组 15:30Z 已在 GH #120 自证:in/out 两桶差在这份语料上是噪声级(同码同种子两波间对照桶从 0.95 荡到 0.37)⇒ **(a) 不许再用两桶比**,要局内配对量(同局同英雄的回城取货次数差)。**零 AWS 增量**:本条不申请专波,搭任意已排定波次顺路即可。",
+      "status": "pending",
+      "director": {
+        "ruling": "RECEIVED_NOT_SCHEDULED",
+        "wave": "unscheduled",
+        "at": "2026-08-23T17:xxZ",
+        "ref": "test_set.md §AX.3",
+        "note": "受理,未排波。① 申请书要的『搭已排定波次顺路』在结构上不存在:W3/W4/W5 按 §AU.2 都是独占波,塞进去既毁那一波的归因、也让 itemtrip 重新变成读不出来的合成效应(+66.98 就是花两波买的『一次只动一个』)⇒ 它要么独占一波要么不发。② 不给名额的理由是 §AX.2 不是排队:域从 33.1%→14.0% 只动了分子的一半,退回时交出的算术题(域 vs −90 gpm 差三个数量级 ⇒ 两个测量至少一个是错的)没被回答,而 §AW.2 的两条查证路径都在已买的 237 个 .dem 里、零 AWS、一条都没跑。③ 解锁条件写死:两条路径至少一条出读数并据此说明 −90 gpm 从哪来 ⇒ 直接进当时的下一个独占波名额,不再排队。④ 验收判据订正:『相对 06:11Z 那波收窄』是跨波读数,§AF.3 不作数;独占波的镜像两腿当波就给 Δ,改用它。"
+      }
+    }
+  ],
+  "done": [
+    {
+      "id": "director-1",
+      "stream": "director",
+      "bundle": "roamstale",
+      "seeds": [
+        863,
+        864,
+        865,
+        866
+      ],
+      "priority": 1,
+      "question": "roamstale 是不是 14/13/12-id 三次负残差的混杂因子?两臂 bisect,唯一变量 roamstale:arm A = test_set.md 全 16 id;arm B = arm A 去掉 roamstale。其余(种子/局数/树)两臂完全相同。配置与判据见 test_set.md §G(覆盖批测台 16:10Z 的路 A/路 B 二选一,走路 C)。",
+      "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
+      "status": "done",
+      "result": "2026-08-19T22:12Z **完成**。两臂各 4 种子全齐,合计 555 局有效局。**臂 A(16 id,含 roamstale)** gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,四指标 0/4,287 局。**臂 B(15 id,无 roamstale,树 b48d655 暖场 stamp 已核对通过)** gpm -38.66 / xpm -40.50 / deaths +0.40 / last_hits -2.11,四指标 0/4,268 局;逐种子 gpm 863=-56.24 / 864=-16.13 / 865=-40.33 / 866=-41.93。**A-B 逐种子配对差(本请求的交付物):gpm +5.48(sd 35.62, SE 17.81, z=+0.31, 同号 2/4)= null**;xpm +5.60(z=0.35)、deaths -0.08(z=-0.44)、last_hits -0.05(z=-0.08),四个指标全 null。**事前登记裁定(§H,批测台只做字面比对,判定归总监)**:(1) §G.3 第 3 行**按证伪列命中** —— 证伪列写「arm A ≈ arm B ≈ -30 → 残差真在规则里,那时才轮到路 B」,实测 -33.17 vs -38.66,字面成立。另注:预测列措辞「arm A 明显不如 arm B 负」方向与混杂因子假说本身相反(疑笔误),但两种读法都不构成通过(+5.48 达不到「明显」)。(2) §J.4⑤ `last_hits` 预测**被证伪** —— 登记要求臂 B ≥ -1.0 才算 roamstale 背锅,实测 **-2.11**,正是登记里写的「同样是 -2.x」;DiD -0.05 远达不到 ≤ -1.0 ⇒ 对线期 last_hits 代价不出自 roamstale,另有出处。(3) roamstale 条件 (b):经济 A-B = null。roamstale 是 §A0 通例的已批准例外(gpm 可作次判据),但与 16:10Z 收 lf_rescue 时「null 不构成无害、只是上界」的先例有张力,**判定归总监**。**必读的功效限制**:本轮实测 A-B 配对差 sd=35.62 ⇒ 4 种子 MDE ≈ **35.6 gpm**,且配对差噪声是单臂(sd 16.6-19.6)的约 2 倍(每臂本身已是镜像差,跨臂配对拿不到相关性红利)。⇒ 这个 null 的上界很宽;且**路 B 逐 id 经济二分结构上不可行**(12 个 id 均摊 -30 gpm ⇒ 单 id -2.5 gpm ⇒ 需约 800 种子)。详见 iterations/reports/batch-desk/20260819T221200Z.md 第 5 节。"
+    }
+  ]
 }
