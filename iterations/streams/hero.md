@@ -587,9 +587,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       但**本轮拿到的证据不支持它在焦点五身上发生**;而且 datafeed 对这五个英雄
       **`facets` 数组一律为空** ⇒ 这个端点根本回答不了 facet 问题,别再拿它当证据。
     - **四个没有明显赢家的对子,别凭口味翻**(要翻就带各自的兑付条件分析):
-      Axe t15(+8 Battle Hunger dps vs +10 Call 护甲)、~~CM t15~~、
-      ~~Lion t10~~ / ~~Lion t15~~、~~Zeus t15~~。**2026-08-22T19:50Z 处理掉两个,
-      21:48Z 又处理掉两个 —— 只剩 Axe t15**,见下:
+      ~~Axe t15~~、~~CM t15~~、~~Lion t10~~ / ~~Lion t15~~、~~Zeus t15~~。
+      **2026-08-22T19:50Z 处理掉两个,21:48Z 又处理掉两个,2026-08-23T04:00Z
+      处理掉最后一个 —— §18 全部对子闭合**,见下:
+      - ~~**Axe t15**~~ **2026-08-23T04:00Z 没翻,理由钉死了别再重推**:
+        `{0,10}` = [3] `special_bonus_unique_axe`(+8 Battle Hunger dps)保留,
+        拒掉 [4] `special_bonus_unique_axe_7`(+10 Berserker's Call 护甲)。
+        同一把「兑付可达性」的尺子,而且这次**两个通道同向**:
+        ①**结构上限**(datafeed hero_id=2 + 本文件自己的加点行,15 级两个技能都是 rank 4):
+        Battle Hunger 12s 持续 / 5s 冷却 ⇒ 可**长期常驻**,上限 1.00;
+        Berserker's Call 3.0s / 12s ⇒ 上限 **0.25**。**四倍的兑付机会,还没测就有了**。
+        ②**语料**:26 个存活 Axe 帧,其中 **16 帧带 modifier**;敌方英雄身上挂着
+        `modifier_axe_battle_hunger` 的 **5 帧**,Axe 身上挂着
+        `modifier_axe_berserkers_call_armor` 的 **1 帧**;按这些帧**实际持有的等级**
+        求和,两边的结构上限是 **14.00 帧 / 1.94 帧** ⇒ Call 那边已经到自己天花板的
+        **约一半**(SATURATED,不是被冷落),BH 那边只到 **约三分之一**。
+        **差距是天花板本身,不是 bot 可以补上的余量。**
+        **被拒那边的最强论证照记**(它输在频率不是质量):[4] 是**相对更大**的加成
+        (15→25 护甲 +67% vs 24→32 dps +33%);嘲讽**自带保证**——它挡的那些攻击
+        一定会来;innate **One Man Army** 把 50% 护甲转成力量(条件:700 内无友军),
+        而 `X.ConsiderQ` 的**打野嘲讽分支**(要求 1600 内无敌方英雄)正好把他放进那个状态。
+        **诚实边界(四条,都往削弱本读数的方向)**:(1) **整个语料没有一帧在域内** ——
+        Axe 最高 14 级,天赋 15 级才存在,**全部是低一级的代理读数**;(2) Call 那边
+        **n=1**,对 ~1.9 帧的上限只能佐证算术,单独什么都不成立;(3) 量级对比
+        (满程 BH ≈ +96 裸魔法 vs +10 护甲在 3 秒里挡下的物理)是 datafeed 上的**算术**
+        不是量测 —— fixture 不 dump 护甲,`recent_damage` 不带伤害类型;
+        (4) BH「目标击杀单位即结束」⇒ 12s 是上界,dps 天赋的**实际**兑付比 12×8 小,
+        小多少本语料量不出来。**保留 [3] 的代价也记下**:`damage_per_second`
+        在本文件**恰好一条活行**上被读 —— `X.ConsiderW` 把它乘满 12s 塞进交给
+        `J.WillMagicKillTarget` 的伤害声明,**所以 [3] 不是纯引擎效果**,它加宽了一个
+        本来就把整段 dot 当即时伤害算的击杀判据(与 WK `ConsiderQ` 同族);
+        [4] 在本文件**零消费点**。两半都写成断言,任一边出现新消费方就重开这个对子。
+        交付 `tests/test_axe_t15_payoff.lua`(13 例,**12 次变异 12 抓**,60ms、
+        **不用子进程 sweep**,不吃 GH #124 的成本);登记
+        `state.json:axe_t15_no_flip_20260823T0400Z`;pick-rate 佐证仍抓不到
+        (dotabuff 403)⇒ 条件 (c) 靠机制不靠攻略。
       - ~~**Zeus t15**~~ **翻了**:`{0,10}`(+75 大招伤害)→ `{10,0}`
         (`special_bonus_unique_zeus_6`,Arc Lightning 蓝耗/冷却 −20%)。**纯数值、不 gate
         ⇒ 已在稳定版里。** 论证形状 = **兑付的可达性**:语料里大招**学了且不在冷却的 16 帧,
@@ -626,7 +658,15 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
         **24 秒冷却里的最后 2 秒**这条窄带(出货加点 **12 级才 rank 2** ⇒ turbo 全程 24s;
         语料 20/20 帧都是 rank 1),按 18:00Z 立的规矩**窄带上的零记 UNDERPOWERED 不记 EMPTY**;
         [4] To Hell and Back 增幅 +15pp 的两个窗口(复活后到下个人头/助攻;拿到人头后那人躺着期间)
-        **dumper 根本看不见**(不 dump modifier,GH #27)。**两边最终买的是同一样东西**
+        ~~**dumper 根本看不见**(不 dump modifier,GH #27)~~ —— **2026-08-23T04:00Z 更正:
+        这条依据是错的,fixture 是带 modifier 的**(45/101,2026-08-19 之后裁的全都带,
+        字段 name/remaining/elapsed/stacks;载体 `tests/test_fixture_modifiers.lua`
+        **本仓早就有**,不在 issue 里)。而且这两个窗口**当下就在语料里**:
+        `modifier_lion_to_hell_and_back_buff` 2 例 + `..._respawn_buff` 1 例。
+        **所以 Lion t15 的这一半是可以重开的**,它现在缺的是**量**不是**可观测性**
+        (n=3,先量域再谈翻不翻)。GH #27 家族里**物品充能层数**那个缺口不受影响
+        —— 那是 item charges,不是 modifier stacks,§3 那条仍然成立。
+        **两边最终买的是同一样东西**
         (Hex 控制量:[3] 买次数、[4] 买时长)⇒ **没有可花的可达性不对称,默认不翻**。
         能了结它的唯一读数 = `queue.json hero-4` 第 (2) 问(事件侧数「开火条件成立但 Hex 还剩 ≤2s」)。
       - **Lion 那三条顺带事实(记录,本轮不动)**:①文件绑 talent 句柄 **{4,5,8} 但只消费 5/8**
@@ -678,8 +718,70 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     自己的表,不存在偏离;(b) 26 个就绪槽里 11 个付不起蓝这个读数**本身**不必重测,
     要测的是换鞋之后那 11 个变几个、以及丢掉的回复/移速值多少。
 
+20. **Lion t15 可以重开了 —— 当初封存它的理由(「dumper 看不见 modifier」)是错的
+    (2026-08-23T04:00Z 立,来自 Axe t15 那一轮的顺带发现)**。
+    §18 里 Lion t15 判「不翻」靠两条腿:[3] Hex 冷却 −2s 的域是窄带(**这条仍然成立**,
+    出货加点 12 级才 rank 2、语料 20/20 帧都是 rank 1);[4] To Hell and Back +15pp
+    的两个窗口「dumper 根本看不见」——**这条作废**。fixture 45/101 带 modifier
+    (2026-08-19 之后裁的全带),而且这两个窗口现在就在语料里:
+    `modifier_lion_to_hell_and_back_buff` 2 例、`..._respawn_buff` 1 例。
+    **下一步(小工作单元,不需要 AWS)**:按 Axe t15 的四通道口径量 [4] 的域 ——
+    (a) 有多少 Lion 帧处在这两个窗口内(n 现在只有 3,先看它是 SATURATED 还是
+    UNDERPOWERED:两个窗口各自的结构上限是多少);(b) 窗口内 Hex/Finger 的实际施放;
+    (c) [3] 的窄带零维持 UNDERPOWERED 判读不动。**结论可能仍是不翻** —— 重开的是
+    *依据*不是*结论*,不要预设方向。
+    **顺带的通用纪律(已进 `tests/test_axe_t15_payoff.lua`)**:modifier 的
+    **`elapsed` 不是「已经跑了多久」** —— lich 身上 `modifier_axe_battle_hunger`
+    是 elapsed 13.1 / remaining 9.6,加起来 22.7 秒而 BH 只有 12 秒;BH 不叠加
+    (`should_stack` 0)⇒ 重新施放是**刷新**,remaining 重来而 elapsed 从**第一次**
+    施放继续数。**只有 `remaining` 能用**;任何拿 elapsed 或 elapsed+remaining 当
+    时长的读数,对每一个可刷新的 modifier 都是错的。
+    **别再拿 GH #27 当 modifier 不可观测的依据**:那个家族里还成立的是**物品充能层数**
+    (item charges,§3),不是 modifier stacks(`stacks` 字段一直在)。
+    还有:**本仓的世界断言知识主要在 `tests/` 里** —— 这条本可以早就知道,载体
+    `tests/test_fixture_modifiers.lua` 早就在树上(第二次栽在同一件事上,见 08-22T23:54Z)。
+
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T04:00Z(登记 `state.json:axe_t15_no_flip_20260823T0400Z`;报告
+  `iterations/reports/hero/20260823T040000Z.md`;backlog §18 **全部对子闭合**、
+  新增 §20):
+  **Axe t15 裁定:不翻,[3] +8 Battle Hunger dps 留着 —— 焦点五天赋梯子重锚的最后一个
+  对子闭合。`bots/` 本轮的唯一改动是必须随行的理由块(纯注释),稳定版未漂移。**
+  零 AWS、零新 gated id、零入集申请;外部读 = 1 次 datafeed GET(`hero_id=2`)+ 2 次探测
+  (dotabuff 403 仍抓不到 pick-rate)。开工自检 **clean**(无未落地 commit、cadence 无洞、
+  trunk python 13/13)。
+  - **这次是这把尺子第一次两个通道同向**:结构上限 4:1(BH 12s/5s ⇒ 1.00 对
+    Call 3.0s/12s ⇒ 0.25,15 级两边都 rank 4,等级从**本文件自己的加点行**解析)、
+    语料 5:1(16 个带 modifier 的 Axe 帧上 BH 活 5、Call 护甲活 1)。
+  - **让这个 5:1 能被读懂的是第三个数**:按帧上实际等级求和的结构上限是 **14.00 / 1.94**
+    ⇒ Call 已在自己天花板的**约一半**(SATURATED),BH 只到**三分之一**。
+    **差距是天花板,不是可补的余量** —— 没有这一步,「1 帧」会被读成「bot 不爱放 Call」。
+  - **最重的诚实边界:整个语料一帧都不在域内**(Axe 最高 14 级,天赋 15 级才存在)。
+    全部是**低一级的代理读数**,已写成断言(`in_domain == 0`),等语料越过 15 级要重取。
+  - **保留 [3] 的代价照记**:`damage_per_second` 恰好被读一次,就在 `X.ConsiderW`
+    乘满 12s 塞给 `J.WillMagicKillTarget` 的那个声明里 ⇒ [3] **不是纯引擎效果**;
+    [4] 零消费点。两半都是断言。
+  - **12 次变异 12 抓,但第一版 10 抓 2 逃,两条逃逸都值得别的组拿走**:
+    ① **M8**「把 `abilityW` 改指 `sAbilityList[3]`」全绿逃逸 —— 因为 Counter Helix
+    **也**在 15 级满 4 级,**等级相同所以断言没动**。教训:**从代码里读出来的映射,
+    如果它的下游取值在两种接线下碰巧相等,那它就没被钉住**;修法是直接钉槽位号,
+    并用语料 dump 出来的技能顺序(`axe_berserkers_call` / `axe_battle_hunger`)佐证
+    —— **mock 给的是合成槽名,离线只有语料能回答这个**。
+    ② **M11**「整块删掉理由块」全绿逃逸 —— 因为我写的守卫断言的是一个**从来没在文件里
+    出现过**的短语(`needs its own work unit`,原文是 `needs its own round`)。
+    **一个「某某不在」的断言,如果那个某某本来就不在,它就是恒真的装饰**;改成按
+    t10 守卫的形状列**六条各自独立的正面 needle**。顺带:needle 是逐字匹配,
+    注释**换行会把短语劈开**(`One Man / Army`),这让守卫在基线上就红了一次。
+  - **顺带发现,并且它比本轮的裁定更值钱**:**fixture 是带 modifier 的**(45/101,
+    2026-08-19 之后裁的全带,name/remaining/elapsed/stacks)。§18 的 Lion t15 用
+    「dumper 看不见 modifier」封存了 [4] 那一半 —— **那条依据作废**,而且那两个窗口
+    现在就在语料里(3 例)⇒ **Lion t15 可以重开**(见 backlog §20;重开的是依据不是结论)。
+    **又是同一个坑第二次**:载体 `tests/test_fixture_modifiers.lua` **早就在树上**,
+    本仓的世界断言知识主要在 `tests/` 里,不在 issue 里。
+  - **一条通用纪律**:`elapsed` **不是**「已经跑了多久」——lich 的 BH 是
+    elapsed 13.1 / remaining 9.6 = 22.7 秒,而 BH 只有 12 秒;不叠加的技能重放是**刷新**,
+    remaining 重来、elapsed 从第一次继续数。**只有 remaining 能用**,已写成断言。
 - 2026-08-23T02:00Z(登记 `state.json:cm_pos5_boots_20260823T0200Z`;报告
   `iterations/reports/hero/20260823T020000Z.md`;GH **#126** 已留言不关闭;
   queue **`hero-5`** pending;backlog §19 划掉):

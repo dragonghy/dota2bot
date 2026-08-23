@@ -71,8 +71,8 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- for, not which single payout is larger:
 --   * By this file's own build row both abilities are rank 4 at level 15.  Battle
 --     Hunger then runs 12s on a 5s cooldown -- it can be live CONTINUOUSLY.
---     Berserker's Call runs 3.0s on a 12s cooldown: a ceiling of 25%.  Four times
---     the chances to pay, before anything is measured.
+--     Berserker's Call runs 3.0s on a 12s cooldown: an uptime ceiling of 25%.
+--     Four times the chances to pay, before anything is measured.
 --   * Measured, on the 16 Axe fixture frames that carry modifier state: an enemy
 --     is carrying modifier_axe_battle_hunger on 5 of them, Axe is carrying
 --     modifier_axe_berserkers_call_armor on 1.  Summed over the ranks those frames
@@ -82,10 +82,10 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --     take up by pressing Call more often.
 -- THE REJECTED SIDE'S CASE, recorded because it is real: [4] is the bigger
 -- RELATIVE buff (15 -> 25 armor, +67%, against 24 -> 32 dps, +33%); a taunt
--- guarantees the attacks its armor blunts actually arrive; and the innate One Man
--- Army turns 50% of Axe's armor into Strength while no ally is within 700, which
--- is exactly the state X.ConsiderQ's neutral-taunt branch puts him in.  It loses
--- on frequency, not on quality.
+-- guarantees the attacks its armor blunts actually arrive; and the innate
+-- One Man Army turns 50% of Axe's armor into Strength while no ally is within
+-- 700, which is exactly the state X.ConsiderQ's neutral-taunt branch puts him
+-- in.  It loses on frequency, not on quality.
 -- COSTS AND BOUNDS: the corpus tops out at level 14, so every frame above was read
 -- one level BELOW the tier -- a proxy, not an in-domain reading; n = 1 on the Call
 -- side corroborates the arithmetic and establishes nothing alone; and keeping [3]

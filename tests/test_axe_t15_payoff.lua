@@ -125,7 +125,7 @@ local function ranks_at(level)
 
     local count = {}
     for i = 1, level do count[order[i]] = (count[order[i]] or 0) + 1 end
-    return count[slot.abilityQ] or 0, count[slot.abilityW] or 0
+    return count[slot.abilityQ] or 0, count[slot.abilityW] or 0, slot
 end
 
 --- Fraction of wall-clock an ability can be live at a given rank, if it were
@@ -172,6 +172,8 @@ local function scan()
         hunger_live = 0, call_live = 0,
         hunger_ceiling = 0, call_ceiling = 0,
         overrun = {},
+        slot_names = {},
+        allies_scanned = 0, hunger_on_ally = 0,
     }
     for _, path in ipairs(fixture_paths()) do
         local fx = dofile(path)
@@ -187,10 +189,23 @@ local function scan()
                 r.axe_frames = r.axe_frames + 1
                 if (axe.level or 0) > r.max_level then r.max_level = axe.level end
                 if (axe.level or 0) >= TALENT_LEVEL then r.in_domain = r.in_domain + 1 end
+                for i, a in ipairs(axe.abilities or {}) do
+                    r.slot_names[i] = r.slot_names[i] or a.name
+                end
                 if bMods then
                     r.axe_frames_with_modifiers = r.axe_frames_with_modifiers + 1
                     for _, u in ipairs(fx.units) do
-                        if u.team ~= axe.team then enemies[#enemies + 1] = u end
+                        if u.team ~= axe.team then
+                            enemies[#enemies + 1] = u
+                        elseif u.name ~= axe.name then
+                            -- Counted so the team filter's INERTNESS is visible:
+                            -- it is exercised on real units and finds nothing,
+                            -- rather than never running.  See the test below.
+                            r.allies_scanned = r.allies_scanned + 1
+                            if has_modifier(u, 'modifier_axe_battle_hunger') ~= nil then
+                                r.hunger_on_ally = r.hunger_on_ally + 1
+                            end
+                        end
                     end
 
                     local nCall = ability_rank(axe, 'axe_berserkers_call')
@@ -252,15 +267,45 @@ tests['[hero] axe t15 still selects [3] +8 Battle Hunger dps'] = function()
 end
 
 tests['[hero] the axe t15 verdict is written into the hero file, not only here'] = function()
+    -- Each needle is a DISTINCT load-bearing claim of the block, the way the t10
+    -- guard in test_focus_talent_anchor.lua is built.  A first draft asserted
+    -- instead that a stale phrase was ABSENT -- and the phrase it named had never
+    -- been in the file, so deleting the entire rationale block walked past it.
     local src = read_file(HERO_SRC)
-    assert(src:find('t15', 1, true), HERO_SRC .. ' no longer mentions t15 at all')
-    assert(src:find('special_bonus_unique_axe_7', 1, true),
-        HERO_SRC .. ' no longer names the talent it rejected at t15.  A talent row '
-        .. 'is an ungated, shipped change; the stream charter requires the reasoning '
-        .. 'to live next to it, so the next reader does not re-derive it.')
-    assert(not src:find('needs its own work unit', 1, true),
-        HERO_SRC .. ' still says the t15 pair needs its own work unit.  That work '
-        .. 'unit ran on 2026-08-23 -- replace the note with the verdict.')
+    for _, needle in ipairs({
+        't15 EXAMINED 2026-08-23',        -- the verdict, and when it was taken
+        'special_bonus_unique_axe_7',     -- what it rejected, by name
+        'uptime',                         -- the ruler it was decided on
+        'One Man Army',                   -- the rejected side's best case
+        'level 14',                       -- the proxy caveat
+        'tests/test_axe_t15_payoff.lua',  -- where to re-take the reading
+    }) do
+        assert(src:find(needle, 1, true),
+            'the t15 rationale block in ' .. HERO_SRC .. ' no longer mentions "'
+            .. needle .. '".  A talent row that ships without a gate IS its '
+            .. 'rationale -- the file is the only place the reasoning lives, and '
+            .. 'each of these needles is a separate claim that block has to carry.')
+    end
+end
+
+tests['[hero] axe t15: the anchors are keyed to the slots hero_axe.lua actually binds'] = function()
+    local _, _, slot = ranks_at(TALENT_LEVEL)
+    -- CALL and HUNGER above are datafeed specs for two NAMED abilities.  They are
+    -- attached to ranks via sAbilityList slots, so the binding is part of the
+    -- measurement.  Re-pointing abilityW at slot 3 happens to leave the rank at 4
+    -- (Counter Helix is also maxed by 15), which is exactly why the slot numbers
+    -- have to be pinned directly instead of being trusted to fall out of the rank.
+    assert(slot.abilityQ == 1 and slot.abilityW == 2,
+        'hero_axe.lua now binds abilityQ = sAbilityList[' .. tostring(slot.abilityQ)
+        .. '] and abilityW = sAbilityList[' .. tostring(slot.abilityW) .. '].  The '
+        .. 'CALL / HUNGER datafeed specs in this file assume slots 1 and 2.')
+    assert(CORPUS.slot_names[1] == 'axe_berserkers_call'
+        and CORPUS.slot_names[2] == 'axe_battle_hunger',
+        'the corpus now dumps Axe ability slots as ' .. tostring(CORPUS.slot_names[1])
+        .. ' / ' .. tostring(CORPUS.slot_names[2]) .. ', not axe_berserkers_call / '
+        .. 'axe_battle_hunger.  That dumped order is the only evidence available '
+        .. 'offline for what sAbilityList[1] and [2] actually name -- the mock '
+        .. 'answers synthetic slot names, so it cannot corroborate this.')
 end
 
 -- ---------------------------------------------------------------------------
@@ -347,6 +392,24 @@ tests['[hero] axe t15 corpus health: Call is near its ceiling, Battle Hunger is 
         .. 'LARGER share of its (tiny) ceiling than Battle Hunger does of its '
         .. '(large) one -- so the gap between them is not slack the bot could '
         .. 'take up by casting Call more, it is the ceiling itself.')
+end
+
+tests['[hero] axe t15 corpus: the enemy-team filter is exercised, and INERT'] = function()
+    -- Stated rather than hidden: deleting the `u.team ~= axe.team` filter from the
+    -- scan above changes none of the counts, because no ally ever carries Battle
+    -- Hunger in this corpus.  So that filter is correct but currently unproven by
+    -- measurement, and a mutation removing it escapes.  What CAN be shown is that
+    -- it runs against real units and finds nothing -- which is a different
+    -- statement from "it never ran", and the one the counts depend on.
+    assert(CORPUS.allies_scanned > 0,
+        'the corpus scan never looked at a single ally unit, so the enemy-team '
+        .. 'filter is not merely inert, it is unreachable -- and "Battle Hunger is '
+        .. 'live on 5 frames" is then a count over an unknown set.')
+    assert(CORPUS.hunger_on_ally == 0,
+        CORPUS.hunger_on_ally .. ' ALLY units are carrying '
+        .. 'modifier_axe_battle_hunger.  Axe cannot debuff his own team, so either '
+        .. 'the dumper mislabels teams or the modifier name is being matched on '
+        .. 'something else -- either way the 5-frame count is no longer trustworthy.')
 end
 
 tests['[hero] axe t15 is measured OUT OF DOMAIN: no fixture Axe ever reaches level 15'] = function()
