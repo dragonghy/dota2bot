@@ -1081,7 +1081,13 @@
   (**全队无就绪 TP 辅助**)⇒ armed **仍开火**(响应不丢)。辅助枚举双向可读(138 在 / 666 不在,
   逐队友 TP 410/234);61/804 核心帧崩在 `CanEnemyInterruptTpChannel`(既有语料上限,两承重帧不在其中)。
   **本地**:`tests/test_midsupyield_core_yields.lua` **12 例全绿,5 变异 5 抓**(3 用例内 monkeypatch
-  + 2 开工源码变异:删辅助子句→2 红 / 门无视 soak id→2 红,还原复绿)。**门**:luacheck **0 警告**。
+  + 2 开工源码变异:删辅助子句→2 红 / 门无视 soak id→2 红,还原复绿)。**门**:luacheck **0 警告**;
+  推送用定向子集(mid_tp_support/tparrive/tp_commit/tpclaim/tpdying/gate_claim_consistency/smoke_load 全绿),
+  **全套后台跑完事后兑付:`1501 tests, 0 failures`**。
+  **⭐ 给 GH #124 的硬数(额外产出)**:全套墙钟 **96m35s**(user 67m41 / sys 28m53)——
+  #124 立案写的是「~18 分钟 sweep + 900s 超时里跑不完」,**实测是那个 18 分钟的 5.4 倍、
+  超时线的 6.4 倍**,量级已不是同一个问题 ⇒ 例行容器里各组**结构上只能用子集作门**,
+  而「用哪个子集」目前无共同口径。已追评 #124。
   **定位**:state.json `teambrain` 计划 phase-1 响应仲裁器(「一事件→一最优响应者」)的**第一根具体杠杆**;
   全局响应预算/跨事件仲裁仍是 backlog #3。
   **交棒**:总监(`test_set.md` 13:3xZ 提议;`midsupyield` 单 arm 是 no-op,串**必须带 midtp+suptp**,
