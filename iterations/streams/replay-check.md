@@ -3442,3 +3442,55 @@
     (5) `hero-1` 的 153 局 WK 语料(棒子挂 **14 轮**);(6) `l5combo` 的 (a)(**连续第三十轮**);
     (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第十七轮顺延**);(8) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260823T165653Z.md`
+- **2026-08-23T18:53Z(第五十七次触发)**:接批测台 18:09Z §9 交来的 **owner P1 第 4 棒**
+  (W3 = `creeppull,pullbeat` 专波的 (a) 核验)。**宽扫 212/212 非暖场局**(W3 四个 run,
+  `.dem` 一落 `dem21/` 就开工、不等收割;ab/ba 都到齐:radiant-armed 104 局、dire-armed 90 局)
+  **+ 深查 6 局逐帧**。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐ **本组一直在用的池化 armed/baseline 读数被「物理侧别 + 整数中位数刀口」双重污染(已开 GH #148)**:
+    同一份 212 局数据,`med n_rc` 池化读作 **armed 1.0 vs baseline 2.0**(看着像 2 倍),
+    而**均值 2.01 vs 2.02 逐位相同** —— 「2 倍」100% 来自 `n_rc==1` 占比 **51.4% 与 47.9%
+    骑在 50% 刀口两侧**(整数取值、质量堆在 1 和 2)。分层后**中位数跟着物理侧走**
+    (radiant 2.0 / dire 1.0,**ab 与 ba 两层各自复现**);`n_rc==1` 上**侧别差 6.1pp > 腿差 3.5pp**。
+    **纪律(建议全队):(1) armed/baseline 对比必须同时给 ab/ba 两层,两层反号=噪声;
+    (2) 整数小值域的计数类量不报中位数,报均值+分布或阈值占比。**
+    **连带后果:GH #143 的整张表是池化读数**,其 `26.8% vs 34.0%` 被后续轮次当 pre/post 锚点的用法不安全(已追评)。
+  - ⭐ **`pullbeat` = INDETERMINATE(波次设计上不可分离,已开 GH #149)**:W3 两个 id 一起 armed,
+    而 `pullbeat` 又**嵌在 `creeppull` 的执行体里**(`mode_roam_generic.lua:194` 的 `elseif`)
+    ⇒ 「关 creeppull 单开 pullbeat」结构上不存在,波内无对照。唯一不依赖跨波比较的量
+    ——core_pull episode 带真右键的比例——**armed 43.8% vs baseline 42.8%,没有抬起来**;
+    预登记的四条后果侧预测分层后**一条未兑现**,`n_rc==1` 与 `med tail` 在 ab/ba **反号**。
+    已请求 **`creeppull` 单开 vs 双开的差分波**。
+  - ⭐ **`creeppull` 的 (a) 用现有指标买不到(不是行为没发生,是指标不特异)**:触发确实在跑
+    (pull episode armed 1861 vs base 1603),但**六局深查里四局不是拉线** ——
+    `182327_slot6` zuus 排名靠前的"成功 pull"(net=1117)逐帧是**血 0.76→0.09 逃命**;
+    `183445_slot4` necrolyte(net=1709)是被 CM+luna+一整波兵追打 0.96→0.53;
+    `182326_slot10` lina 33 秒"pull"(net=**−628**、follow=**−1253**)其实在**推线**,
+    `d_fount` 8533→9165 **离家更远**;`182839_slot4` 是 **baseline 腿**刷出的 n_rc=5/follow=1329 纯对线互 A。
+    唯一真成的 `182912_slot8` necrolyte 拖了 ~1300u,**代价血 0.94→0.44**(与 #143 正例同形状)。
+  - ⭐ **两个位移类结果量各被一个变量带着走**:`follow` 被 **episode 时长**带
+    (baseline 腿 med follow 随时长桶 **62→71.5→137.5→226** 单调上升 = 兵线自己 30 秒的自然行军;
+    存在性证明 `182341_slot9` slardar 28 秒 episode `net=1847/follow=1435`,人 16 秒净位移 ~200u);
+    `net` 对"打输了跑路"和"拉线"是**同一个读数**。同时控住时长+物理侧后 armed 在 **≤4s 短窗口赢、
+    长窗口明显输**(两侧同向),但逐帧证明那张表是**混合人口**,不能当"拖过头"的效应量。
+    **⇒ 交出的特异验收量(事件计数,不受时长/侧别影响):「最后一次真右键之后 2.5s 内,
+    敌方小兵朝本 bot 的伤害行是否存在」**——同时是 #143 修法 2 和 #149 差分波的唯一验收量。
+  - **踩到章程登记的「`.dem` 同名跨 run 撞车」**:212 行 manifest 只有 **194 个不同局名**,
+    **12 个局名在 2–3 个 run 里各有一份**。本轮按 run 分目录、工具逐 sweep 目录取 timeline
+    (`creeppull_specificity.py:329-330`)⇒ **没丢局**;但**任何以局名为键的后处理字典会 last-wins
+    覆盖 18 行**。已显式复核:**12 组撞名里 0 组的 armed 侧别不一致** ⇒ 本轮分层不受影响(核对出来的,不是假定的)。
+  - **交棒**:P1 第 4 棒交回**明确否定结论 + 下一棒**(不让棒掉):`creeppull` 的 (a) 需要特异量
+    → **协同组/本组**;`pullbeat` 差分波 → **批测台/总监**(#149)。**本轮欠账**:W3 ~20:10Z 才自毁,
+    只扫到 18:39Z 前上传的 212 局,**剩余局归下一轮**。
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**);`creeppull_specificity.py --selfcheck` **8/8 PASS**(本容器实跑);
+    该工具的完整性哨兵**实际生效过一次**(对半成品 sweep 目录 `[fatal] PARTIAL sweep (9 games)` 退出,
+    没让我用残缺语料出数);开工自检 trunk python **17 passed / 0 failed**。**本轮未新增工具**。
+    **AWS**:EC2 **$0**,S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **W3 收割后的剩余局宽扫**(本轮欠账)+ 用 §7 那个**特异事件计数量**
+    重做 `creeppull` 的 (a);(2) ⭐ **把 #148 的分层纪律回灌到本组既有工具**
+    (至少 `creeppull_specificity.py` / `fieldbuy_silence.py` 加 ab/ba 分层输出);
+    (3) `stayfield`/`stayfield2`/`fieldcreep` 在 205 局语料上的 (a) 补课(三个仍 INDETERMINATE);
+    (4) 打野反证 fixture 钉 `002103_slot5 t=634.2 skeleton_king`(**已顺延七轮**);
+    (5) `hero-1` 的 153 局 WK 语料(棒子挂 **15 轮**);(6) `l5combo` 的 (a)(**连续第三十一轮**);
+    (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第十八轮顺延**);(8) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260823T185313Z.md`
