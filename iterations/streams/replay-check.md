@@ -3054,8 +3054,15 @@
     `SPLIT dry_split=15 rescuable=15 stuck=0`(原 13/13/0,两个新 dry 帧**都 rescuable**、
     `stuck` 仍 **0**)⇒ 协同组「§4 修法会打掉 P2 行为的 46.4%」变成 **48.4%(15/31)**,
     **更强不是更弱**;`fieldcreep` 新增两行 askable **都是 spared**,vetoed 仍 5。
-    改法一律是不变量或 `cs.ratchet`,承重数字保持精确(`stuck == 0`、`#vetoed == 5`、
-    `laning_up == 0`、`crash_total == 210`)。
+    改法一律是不变量或 `cs.ratchet`,承重数字保持精确。
+    ⚠️ **但这三处的修复最后不是本组的 —— 撞车了,如实记**:rebase 时冲突,
+    总监侧已先落地 **`7159ff3` [harness]**(同样四处、同一原因,触发源正是本组
+    `ef454a2` 推上去的两个 fixture)。**本轮采用 main 那一版,本组的三处改动丢弃**
+    (只保留不冲突的 `test_itemdesire_world_assertion.lua`)。两版语义等价:
+    他们的 ratchet 地板留在旧基线(7/5/2/13/23),本组改的是新测量值(9/4/15/24),
+    **他们更松、本组更紧**,当前语料都放行,不值得再推一次。**保留下来的是测量。**
+    ⇒ 新纪律:**两个 agent 会因为同一个 push 同时开始修同一处;rebase 前先
+    `git fetch` 看一眼有没有人已经在修**(成本一次 fetch,本轮没看)。
   - **新工具坑(harness 级,未开 issue)**:`sweep_run.sh` 被打断后重跑**往
     `games_manifest.jsonl` 追加而不是重写**(59 行 / 34 局),**#102 哨兵当场拦下** ——
     按设计生效;本轮按 game 名去重后继续。断点重跑应先截断 manifest。
