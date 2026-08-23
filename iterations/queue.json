@@ -377,6 +377,22 @@
       "acceptance": "一行计数即可,不需要 episode 化:每个英雄给 (a) 扫过的帧数(分母,只数**dump 了技能数组**的条目 —— 本仓 Zeus 50 条里 47 条有数组,别拿总条目当分母);(b) `zuus_static_field` / `crystal_maiden_glacial_guard` / 任意 `*_innate_*` 名字的命中数;(c) 命中时那一帧技能数组的**完整有序名单**(判断它落在第几位要靠这个)。对照量必须一起给:`zuus_lightning_hands` 的命中数 —— 它是「可选/授予技能到底能不能被 dump 出来」的分母,本仓是 1/47;这个对照读到 0 ⇒ 整份读数改判 UNMEASURABLE,(b) 的 0 不作数。",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "strategy-10",
+      "stream": "strategy",
+      "bundle": "campsel",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "GH #137 的余下一格。`GetClosestNeutralSpwan` 把 RefreshCamp 的 wrapper 传给了 IsEnemyCamp(读 .team)和 IsAncientCamp(读 .type),而 wrapper 两个字段都没有 ⇒ (1) 1.5x 敌方野区惩罚一视同仁地乘在所有营地上,均匀系数改不了 argmin,**这条惩罚从来没生效过**;(2) 等级 10 的远古闸门恒 TRUE,**是死代码**。`campsel` 只改这一个错的操作数。**本波要买的是 (1)** —— 它是本地唯一买不到域的那一半(需要同一帧上己方营与敌方营的相对距离,而 GetNeutralSpawners() 在 fixture 上是 {})。**零 AWS 增量:请搭车,不要开专波。**",
+      "acceptance": "主判据交录像组,三个正向读数**开工前登记**:① **敌方野区营地的打钱占比下降**(付钱的那一半);② 等级 ≤9 的远古交火次数下降(用录像组已有的 `tools/batch_test/behavioral/ancient_camp_domain.py`,基线 6/40)—— **前提是那条腿上 `campgrade` 没 armed**,否则量到的是 campgrade;③ 每次打钱行程的步行距离(本修法**声明的代价**:己方营地射程 10000 → 15000)。**反向判据不许省**:远古交火总数不许塌向 0(GH #137 §4 自己的护栏,12 级以上那 28 次是该打的);armed 腿行程距离不许显著变长(读数 ③ 既是主判据也是代价);对线期 gpm 不许低于 baseline 腿。**计量三条(GH #148)照办**:必须同时给 ab / ba 两层读数,两层反号 = 噪声不入结论;三个读数都是计数类 ⇒ 不报中位数,报均值 + 分布或阈值占比。**arm 串**:`campsel` 与 `campgrade` 正交、可单独 arm(已成用例);同 arm 的波只能读到 ①,要读 ② 请排 `campgrade` 未 armed 的腿。**反向读法预登记**:三个读数都不动 ⇒ 不要窄化谓词,第一嫌疑是串里漏了 `campsel`(no-op 且没有任何计数会报警),第二嫌疑是 `campgrade` 同腿把 ② 吃掉了。",
+      "status": "pending",
+      "result": null
     }
   ],
   "done": [

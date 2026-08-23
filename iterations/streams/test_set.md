@@ -10,6 +10,59 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 (28 − `itemtrip` = **27**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
 
+**🆕 2026-08-23T23:3xZ 协同组**入集提议**:`campsel`(GH #137 的余下一格;**搭车,不申请专波**)**
+
+**一个错的操作数,两道独立的闸同时死掉。** `bots/FunLib/aba_site.lua` 的 `RefreshCamp`
+产出的是包装对象 `{idx, cattr}`;同文件里**其它每一处**读营地属性都走 `.cattr`
+(`GetCampStackTime` 读 `camp.cattr.speed`,连 `GetClosestNeutralSpwan` **自己那两处距离**
+也是 `camp.cattr.location`)。**只有同样那两行上的两个谓词调用直接传了 wrapper**:
+
+| 谓词 | wrapper 上取值 | 后果 |
+|---|---|---|
+| `IsEnemyCamp`(读 `.team`) | `nil ~= GetTeam()` ⇒ **TRUE,每一个营地** | 1.5× **一视同仁**乘在所有营地上。均匀系数改不了 argmin ⇒ **敌方野区惩罚从来没生效过**。活下来的是副作用:15000 截断变成对所有营地的**实际 10000**。 |
+| `IsAncientCamp`(读 `.type`) | `nil == "ancient"` ⇒ **FALSE,每一个营地** | `GetLevel() >= 10 or not IsAncientCamp(camp)` **任何等级恒 TRUE** ⇒ **等级 10 的远古闸门是死代码**。 |
+
+**⭐ 第二条正是 GH #137 §2 那句「6/40 在等级 ≤9,连它自己那条 `>=10` 都没拦住」的另一半**,
+而 issue 把它整个归给了 `RefreshCamp` 的掉落。名单那一半是真的(= `campgrade`),
+**但这条子句在任何名单上、任何等级上都不会触发**——两道闸,两个无关的死因。
+
+**修法**:那两个调用读 `camp.cattr`,gated `campsel`,turbo-only。
+门**只解一次**,在 `bots/mode_farm_generic.lua` 新增的文件级 `ClosestCamp` 里;
+原来的 **10 个调用点**全部改走它,并用**计数用例**(去注释后全 `bots/` 恰好 1 处直连调用)
+保证将来没有调用点能静默漏掉门。
+
+**⚠️ 与 `campgrade` 的关系是本条最要紧的一句(排波要用)**:两者**正交、可单独 arm**
+(已成用例:`campsel` 不出现在 `RefreshCamp` 里,`campgrade` 不出现在选择器里)。
+**但同 arm 时 `campgrade` 支配远古那一半**(它的名单里已经没有 <12 级够不着的远古营)
+⇒ **同 arm 的波只能读到敌方惩罚那一半**;要读远古闸门那一半,请排
+**`campgrade` 未 armed** 的那条腿。
+
+**⚠️ 声明的代价(不是藏起来的副作用)**:还原操作数**同时**还原了 15000 那个字面量本来的
+射程 —— 己方营地从实际 10000 拿回 **15000**,敌方营地保持 1.5× 隐含的 10000。
+**己方射程因此变宽**,与修法不可分割(乘数与截断是同一个表达式)。已钉三条:
+己方 12000 出厂 nil / armed 选中;己方 15500 armed 仍 nil;敌方 12000 两边都 nil。
+
+**清单**:`tests/test_campsel_wrapper_fields.lua` **21 例全绿,11 变异 11 抓**
+(含 M2「只修 IsEnemyCamp」/ M3「只修 IsAncientCamp」⇒ **两半都被钉住**);
+真实帧三枚跨过 `>= 10`(**1 级** axe / **9 级** earthshaker / **10 级** skeleton_king,
+1 级那枚对应 issue 自己那个「1 级 jakiro t=77.7 打远古营」的最坏案例);
+未 armed 逐字节等价由 **192 例**与逐字转写的修改前函数体对照;
+三条世界断言(W1 语料无营地表 / **W2 根因:真实 `RefreshCamp` 输出的每个条目
+`.team == nil and .type == nil`** / W3 `IsTheClosestOne` 本地恒 TRUE,0/5 队友读到 `BOT_MODE_FARM`);
+帧域 **818/1040 = 78.7%** 在 10 级以下(地板不是等式),**与 GH #137 的事件率永不相减**;
+luacheck 0 警告;可见面 13 文件 + 宽切片全绿;**零新 fixture**;AWS **$0**。
+`state.json:campsel_20260824`,报告 `iterations/reports/strategy/20260823T233555Z.md`。
+
+**⚠️ 行号面(0LN2)**:插入使 `mode_farm_generic.lua` **+11**、`aba_site.lua` **+36**,
+**`test_level_gate_census` 的 `GATES` 表当场变红两条**(棘轮工作正常),七行已重锚;
+`test_pingstamp` 那处把行号断言进错误消息的用例(`:377:`)**改成从源码读行号**,
+以后不会再因行移动而红。顺手重锚了两条会误导下一个读者的散文指针
+(`replay_fixture.lua` / `roam_conversion.py`,后者在本轮之前就已经不准)。
+
+**批测台**:`queue.json:strategy-10`。
+
+---
+
 **🆕 2026-08-23T21:5xZ 协同组**入集提议**:`pullcad`(owner P1 条件 (c) 的落地物;**搭车,不申请专波**)**
 
 **这一条的来路和别的入集提议不一样:它不是从一份录像里挑出来的,是 owner P1 完成定义
