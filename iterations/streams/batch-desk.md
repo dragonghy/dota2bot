@@ -3098,6 +3098,47 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **铁律 9 的交棒**:W3 发波棒交下一轮批测台,**已不再等任何裁定**(`director.ruling=APPROVED` 在机器字段里),
   两道门的结果**写进 `queue.json` 的 `strategy-5.notes`**(不落在报告里);载体门表达力棒**显式交总监**(GH #140)。
   详见 `iterations/reports/batch-desk/20260823T160941Z.md`。
+- 2026-08-23T18:09:43Z:**W3 发波轮 —— `strategy-5`(`creeppull,pullbeat`)已发出**,owner P1 第 3 棒落地。
+  `director.ruling=APPROVED / wave=W3`,机器字段写死的最早发波时刻 **18:09:32Z**,**实际首台 18:09:34Z(过线 2 秒)**,
+  **不提前、也不援引任何「差几秒照发」的先例**。三条例行节流亦全满足((i) 距上一波 12:09:32Z 整 6h00m02s;
+  (ii) 该组合首次上机;(iii) $28.462 + ~$4.9 ≈ **$33.4 ≤ $45**)。
+  **⭐ 本轮的关键动作是「门不顺延」**:16:09Z 预跑的两道门钉的是 `36b5d6b`,而发波时刻 `git ls-remote origin main`
+  已漂到 **`4b5e139dd13e2175fb52b2c0c7934b33ca489083`** ⇒ **按章程在真 tip 上原样重跑**。漂移用两步走核实
+  (先 `git fetch --depth 1 origin <全40位SHA>` 再比,**认 exit code 不认空输出**):exit 0、1 个 commit
+  (strategy 17:45Z `bagsalve`)、`git diff --stat` = `jmz_func.lua` **纯 +59 行单文件**、
+  `grep -cE 'creeppull|pullbeat|ShouldCreepPullLane'` = **0** ⇒ 两个被测 id 逐字节未变,`bagsalve` gated 且不在 armed 串 ⇒ 惰性。
+  门 ① `check_armed_wiring.py --cand creeppull,pullbeat --ref 4b5e139dd…` ⇒ **exit 0,2/2 wired**
+  (`jmz_func.lua:7055` / `mode_roam_generic.lua:194`;`creeppull` 行号 6996→7055 **正好 +59,是位移不是改址**,
+  与 grep=0 互为独立佐证)。门 ② 载体门对角色轴仍**结构上表达不了** ⇒ 按 `campgrade` 先例读 no-op,
+  附正面证据发牌表 **24/24 核心槽全满 ⇒ 载体轴 FULL**(LIMITS:只证牌桌有核心,不证其余六个前置条件可达);
+  缺口仍在 GH #140,不重复交。**新坑记一条**:对刚 `--depth 1` 取回的 SHA 跑 `git show --stat` 会把
+  **每个英雄文件都列成新增**(浅化边界伪影),差点被读成「这次改了 127 个文件」—— 要与其**父 commit 显式对比**。
+  **参数**:4 台 × 1 种子 **on-demand** `c6i.4xlarge`(`InstanceLifecycle=None` 实测确认;spot 在本账户 08-20 18:08Z
+  是 **4/4 `InsufficientInstanceCapacity`**,64 vCPU 配额正好容 4 台 = 不能再多开的硬顶)、`--slots 16`、
+  **`--rec-slots 12`**(director 明写不许降 —— **裁定压过本台自己「停在 8」的保守默认**)、`--hours 2` 看门狗
+  + `shutdown-behavior=terminate`、`--games 22`。实例:888 `i-0ac0d1b457b3ec8fc` / 895 `i-0f9063db3030be717` /
+  896 `i-0117700b42b20a56a` / 906 `i-0ef0367f94c6fbc73`,run_id 尾 token `7442b4`/`376749`/`c2016c`/`998b48`。
+  **#98 唯一性第三次生效**:四次调用各跨整秒(34/37/40/43),且用独立证据源 `soak-run` 标签核对 **4 值两两不同**。
+  **成本**:MTD **$28.462**(免费 `budgets` 通道,`refreshed 2026-08-23T15:30:33Z`,与上轮**逐位一致 = 预期**,
+  因 12:09Z 后至发波前零支出),forecast 46.307 / limit 100.0,**未花 $0.01 调 CE**,三线全未触及。
+  **预登记两个成本区间**(到货时按实测落在哪个判哪个粗估对,**不事后挑**):上轮按 ~$1.5/波推的 **$29.9–$30.4**,
+  与按 18:11Z 同型波实测入账 +$4.837 推的 **$33.0–$33.8**。
+  **收割**:本轮无新数据(**预期** —— 12:09Z 那波 14:10Z 已全量收割,此后未启动过波次,`recover_verdict.py` 未调用)。
+  **固定栏位**:`soak/` **172**(+0)、`dem21/` **24**(+0)、`unattributed/` **0**、`validation/` 最新仍 2026-07-23、
+  远端 main tip **4b5e139**(已漂,见上)。**局数**:上一波 **275 有效 + 24 暖场 = 299**(per-seed ab/ba
+  888 42/26、895 42/23、896 41/31、906 40/30,dire wave 被 2h 看门狗截断,`unfinished` 0);
+  本波发波后 2 分钟**实测 0 局(预期,仍在 boot)**,**预期 ~275 ± 25**,预计 ~20:10Z 自毁。
+  **泄漏**:四层 + spot 请求,开工 实例 0 / 卷 0 / 快照 1 / EIP 0 / spot 0;收尾 **实例 4 = 本波四台逐个对上、无第五台**,
+  其余四层全 0/1,**无泄漏**;收尾走 `--leak-only`(零成本)。**注意收尾判据**:有活波次时要的**不是「0 台在跑」**,
+  而是「在跑的恰好是本波这四台」。**开工自检 worst exit 0**:UNLANDED 0、cadence clean、trunk python 17/0。
+  **验证**:本会话 `bots/`/`game/` 逐字未动(改动仅 `iterations/`)⇒ 铁律 6 无适用对象,容器无 `luacheck`/`lua5.1`,
+  **不声称跑绿过 Lua 全量**;JSON 侧实测 `json.load` ok 且按原 `indent=2` 回写 ⇒ `git diff -w` 仅 2 行,无重排噪声。
+  **铁律 9 的交棒**:① **收割棒交下一轮批测台**(~20:10Z 后 `recover_verdict.py`,十条必查项照抄,
+  尤其 ⑩ `demclaim` vs `dem21/` 逐 run 对账;同步兑现两个预登记成本区间);② **主判据棒交录像组(P1 第 4 棒)**
+  —— `--rec-slots 12` ⇒ 帧通道 **12/16**,按四段判 WORKING/SILENT/BUGGY,阴性判据「armed 侧辅助有没有离开兵线走向营地」
+  仍是「触发器没开 vs 动作没执行」的分界,**这一棒不必等收割,`.dem` 一落 `dem21/` 即可开工**;
+  ③ 发波细节写进 `queue.json` 的 `strategy-5.notes`(status 已置 `running`)。
+  详见 `iterations/reports/batch-desk/20260823T180943Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
