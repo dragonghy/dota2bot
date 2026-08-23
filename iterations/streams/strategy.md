@@ -950,6 +950,11 @@
   **那条本来是被上一行失败挡住的隐藏红**)。**另外五个文件是 #127 指派给总监的,没碰。**
   报告 `iterations/reports/strategy/20260823T012700Z.md`;`state.json:itemtrip_20260823`;
   `test_set.md` 顶部 01:2xZ 入集提议(**并进现有波,不申请专波**);`queue.json:strategy-3`。
+  **全量 1348 / 19,修掉本轮自己那 1 条后 delta = 0**(失败集合逐文件等于 #127 记的 18)。
+  那 1 条值得记:`test_activemode_world_assertion` 的「调用点 255 → 256」**是被我写在
+  `jmz_func` 注释里的一句 `bot:GetActiveMode()` 点红的** —— **本轮第三次撞上同一族
+  纯文本判据失灵,而这次是我去踩别人的**。修法照旧:不加假声明、不改别人的 ratchet,
+  把那句注释改成「the bot's active mode」——**我那句话本来就不是一个调用点。**
 - 2026-08-22T23:19Z:**认领 GH #120,给 `itemtrip` 做上机前可达性审计 —— 判决是「可以写、
   但判据不许读那三样」,`bots/` 零改动。** 产出 `tests/test_itemtrip_supply_gap.lua`(10 例)。
   **0RES 第一次产出「找了、确认没有」而不是「没找」**:`BOT_MODE_ITEM` 分支普查 8 个站点,

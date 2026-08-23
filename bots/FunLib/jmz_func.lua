@@ -4948,7 +4948,7 @@ end
 -- and it must acquire no other caller, or the behaviour ships ungated.
 --
 -- The clause budget is fixed by the audit and is not a style choice: on a
--- fixture, stash contents, courier state and bot:GetActiveMode() are
+-- fixture, stash contents, courier state and the bot's active mode are
 -- respectively a crash, a crash, and a constant 0 (the eighteenth and
 -- thirteenth world assertions), so any clause resting on one of them runs
 -- fast, green and all-zero without ever being checked. What a real frame does
