@@ -3351,3 +3351,36 @@
     (7) `l5combo` 的 (a)(**连续第二十八轮**);(8) `make_fixture.py` 钉 `062551 t=205.5 jakiro`
     (#45,**连续第十五轮顺延**);(9) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260823T130104Z.md`
+- **2026-08-23T15:03Z(第五十五次触发)**:执行上轮亲自登记的「下一轮优先 (1)」=
+  **`itemtrip` 的自证波**(12:09Z,24-id 串、`itemtrip` **已出串**)。**主结论:撤回 13:01Z 的
+  「`itemtrip` (a) = WORKING」—— 那是方法伪影。** 宽扫 **205/205 非暖场局**(4 run 全量重下重扫,
+  串行,dumper 1.0s)+ 逐帧 2 帧。零 EC2 支出,`bots/`/`game/` **0 改动**,未改任何工具。
+  - ⭐ **自证预测被自己证伪**:上轮原话「去掉 `itemtrip`,域内 armed 应回到 baseline 水平」。
+    两波对拍(同码同种子 888/895/896/906,只差 ± `itemtrip`):unexplained 域内 06:11 `9:17(0.53)`
+    → 12:09 `7:11(0.64)`(**没回平**);unexplained **域外** `18:19(0.95)`→`11:30(0.37)`
+    (**上轮当"干净对照"的桶自己塌了** —— 而域外正是 `itemtrip` GetDesire 可证明返回 nil、
+    **不可能动作**的区域;它在一条**没有** `itemtrip` 的串上只剩 baseline 37%);合计 `29:36(0.81)`
+    →`18:43(0.42)`。
+  - ⭐ **机制**:整条 armed 腿 home-TP **均匀少 0.81×**(escape2 0.84 / shop 0.85 / unexplained 0.42),
+    这是**不含 `itemtrip`** 的波 ⇒ 全局下移不可能是它的杠杆;`unexplained` 桶每桶 7–43 行被抽样方差
+    主导。两桶判别式骑在全局偏移上却从没控它 —— **#117「离家中位数」那族病的新一例**(同码同种子
+    波间自噪声吃掉效应)。上轮我批评别人「用一个数没量波间方差」,这轮发现自己上轮踩了同一坑(换成「一个桶比」)。
+  - **帧核验(两腿都产真样本,baseline 只是更多)**:域内 armed 真身 `f0efcc/121832_slot8`
+    crystal_maiden t=432.4 hp0.95/离家12926u/无敌人 → `item_tpscroll` 原地读条;baseline unexplained
+    真身 `feab35/122421_slot4` crystal_maiden t=357.5 hp0.80/离家12966u/无敌人 → `item_tpscroll`。
+    18:43 是**真样本数量差**,发生在不含 `itemtrip` 的波上。
+  - **判读**:**`itemtrip` (a) = UNVERIFIED**(撤回「WORKING」);与批测 §AT.1 退回协同组(X −26.44)同向。
+    给协同组:重做 `itemtrip` 的验收**不能再靠 in/out 两桶差**,要局内配对量或 GetDesire fixture。
+  - **工具坑**:`sweep_run.sh` bulk 波要给 **`soak/<run>/`** 前缀(analysis 在 soak,.dem 在 dem21;
+    回退单向)—— 给 dem21 会全部 `SKIP (no analysis.json)`。首跑给错,56 局全 SKIP,改正后 205 局全过。
+  - 跨组:**GH #120 追评**(撤回 + 两波对拍表 + 两帧 + 验收改法)。**不提波次请求。不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**,gate 未动,未改工具;`bash tests/run_py_tests.sh`
+    **17 passed / 0 failed**(观测);无 lua5.1/luacheck 且未改 Lua ⇒ 铁律 6 Lua 两条无适用对象。
+    位置走 `seed_draft.positions_for_game`。**AWS**:EC2 **$0**,S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ 12:09Z 波其余 armed id 的 (a) 在更大人口上核(本地 `.sweep_out/` 已在,
+    零成本;`defend` 7:2 是哪个 id);(2) ⭐ 给 `itemtrip` 造抗噪验收量(局内配对 / GetDesire fixture
+    钉 `123136_slot3 t=434.6 lina`,#120 本组欠帧);(3) `creeppull` FORCED 通道 / 兵线跟随(#143 已交协同组);
+    (4) 打野反证 fixture 钉 `002103_slot5 t=634.2 skeleton_king`(**已顺延五轮**);(5) `hero-1`
+    的 153 局 WK 语料(棒子挂 **13 轮**);(6) `l5combo` 的 (a)(**连续第二十九轮**);(7) `make_fixture.py`
+    钉 `062551 t=205.5 jakiro`(#45,**连续第十六轮顺延**);(8) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260823T150350Z.md`
