@@ -66,7 +66,7 @@
    它根本不会 TP,却把四个真能应答的队友挡了 12 秒。仲裁翻转。**
    修法一个变量:armed 时 query 不戳记,改由调用方在**走向 ABSOLUTE 的那一行**戳
    (`J.NoteDefendTpClaim`)。12 例全绿 / 3 变异 3 抓;`state.json:tpclaim_20260823`;
-   `test_set.md` 顶部 04:xxZ 入集提议(**并进 `teambrain` 那一波,不申请专波、不提 queue 单**)。
+   `test_set.md` 顶部 04:xxZ 入集提议(**并进 `teambrain` 那一波,不申请专波、不提 queue 单**);**GH #132**。
    **本条留给下一条杠杆的两件事**:(1) **第 8 条名下只剩 `lf_rescue`**;
    (2) **不要把 `tpclaim` 折进 `teambrain`** —— 两者可分,而 teambrain 自己的 (a) 从没买到过,
    折进去就再也分不开谁在起作用(`lanefix` 的形状)。
@@ -984,7 +984,7 @@
   **其中 2 条是本轮自己撞的(上面那条 +9 错位),修掉后 18** —— 与 GH #127 记的 18 条
   纯语料规模等式红**逐文件相同**,**delta = 0**。(全量单次约 100 分钟,修完那一个文件后
   只定向复跑了它,没有再烧第二个 100 分钟;这一点写在报告 §8 里,不当成「全套又绿了一次」。)
-  报告 `iterations/reports/strategy/20260823T041500Z.md`;`state.json:tpclaim_20260823`;
+  **GH #132**(本轮结论与交棒的公开落点);报告 `iterations/reports/strategy/20260823T041500Z.md`;`state.json:tpclaim_20260823`;
   `test_set.md` 顶部 04:xxZ 入集提议(**并进 `teambrain` 那一波,不申请专波、不提 queue 单**)。
   **交棒**:① 总监 —— `tpclaim` 入集 + `teambrain` 的 (a) 判读带上那条负结果;
   ② 主会话 —— `OWNER_PRIORITIES.md` 的 P1/P2 球权已滞后,请核对。
