@@ -43,6 +43,18 @@ Honest boundaries, stated up front:
     re-evaluated on real frames.
   * a courier can deliver an item at any moment, so `items_gain` across a home
     trip is EVIDENCE OF, not PROOF OF, a shopping trip.
+  * `IsInvFull` is a STEP GATE, and its step source (a courier delivery) is the
+    very thing that makes the `shop` branch fire, so the "last frame before the
+    channel" and the cast tick land on OPPOSITE SIDES of the step more often
+    than a drifting scalar like `hp_pct` would (#121 measured the blind window
+    for hp; `hometp_invfull_lag.py` measured it for this clause).  A row whose
+    bag is ONE SLOT SHORT on the pre frame therefore cannot be excluded from
+    `shop` at this sampling interval -- the summary prints that band as
+    UNRESOLVED instead of silently counting it as unexplained.  Measured on the
+    12:12Z wave (283 mirror games, 4 runs, `--interval 0.2`): the band is
+    15.1% of the hp>=0.55 population and the realised flip rate inside it is
+    ~1.8% at 0.2s / ~2-6% at 0.1s.  The band is an UPPER bound, the flip count
+    a LOWER one; the truth is between them and only a finer re-dump moves it.
 
 Usage:
   hometp_highhp.py <sweep_dir>... [--interval 1.0] [--cases N] [--selfcheck]
@@ -100,6 +112,19 @@ def inv_full(s):
     """X.IsInvFull: slots 0-8 all occupied.  The dump gives exactly 9 slots."""
     it = s.get("items") or []
     return len(it) >= 9 and all(bool(x) for x in it[:9])
+
+
+def n_slots(s):
+    """How many of the 9 positional slots are occupied on this frame.
+
+    Only used to size the blind-window band around `inv_full`: 8 means one
+    courier delivery away from full, i.e. `shop` is UNRESOLVED at this
+    sampling interval rather than excluded.  Dead frames dump an empty
+    `items` vector (charter tool-pit), which reads as 0 and is correctly
+    outside the band.
+    """
+    it = s.get("items") or []
+    return sum(1 for x in it[:9] if x)
 
 
 def positions_for_sweep(row):
@@ -349,6 +374,7 @@ def high_hp_home_tps(g, buildings, side, pos=None):
                 "enemy_min": (min([x[1] for x in g.enemies_within(hero, pre, 1e9)])
                               if g.enemies_within(hero, pre, 1e9) else None),
                 "hit6": hit6, "inv_full": inv_full(pre),
+                "slots": n_slots(pre),
                 "labels": lab or ["unexplained"], "defend_why": dwhy,
                 "chan_loss": chan_loss,
                 "trip": t,
@@ -392,6 +418,15 @@ def selfcheck(games, interval):
     chk("generous count dominates the plain ring",
         all(r["n_enemy_stale"] >= r["n_enemy_1600"] for r in rows),
         "stale >= instantaneous on every row")
+
+    # `slots` must agree with `inv_full` in both directions, or the UNRESOLVED
+    # band is measuring something other than "one courier delivery short".
+    chk("slots == 9 exactly when inv_full",
+        all((r["slots"] == 9) == r["inv_full"] for r in rows),
+        "n=%d" % len(rows))
+    chk("slots in 0..9", all(0 <= r["slots"] <= 9 for r in rows))
+    chk("the one-short band excludes full bags",
+        not any(r["slots"] == 8 and r["inv_full"] for r in rows))
 
     # items are exactly 9 positional slots (the IsInvFull premise)
     lens = set()
@@ -562,6 +597,17 @@ def main():
     print("  of the unexplained: %d had an enemy inside 1600 on my god's-eye ring "
           "(%d of those were also damaged within 6s)"
           % (len(ux_seen), sum(1 for r in ux_seen if r["hit6"])))
+
+    # The step-gate blind window (see the docstring).  `shop` is excluded on a
+    # boolean whose step source is the branch's own trigger, so the rows that
+    # sit one delivery short on the pre frame are UNRESOLVED, not explained.
+    ux_one_short = [r for r in unex if not r["inv_full"] and r.get("slots") == 8]
+    all_one_short = [r for r in rows if not r["inv_full"] and r.get("slots") == 8]
+    print("  of the unexplained: %d are ONE SLOT SHORT on the pre frame -> "
+          "`shop` is UNRESOLVED for them at --interval %.2f, not excluded "
+          "(%d of all %d rows are in this band; re-dump these games finer to "
+          "settle them -- hometp_invfull_lag.py)"
+          % (len(ux_one_short), a.interval, len(all_one_short), len(rows)))
 
     tight = [r for r in unex if r["hp_lo"] > HP_HI]
     print("  of the unexplained: %d still read above %.2f HP on the LOWER of the "
