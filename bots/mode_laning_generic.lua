@@ -88,8 +88,8 @@ local bLaneFixSupport = J.IsModeTurbo()
 -- [GH #10] Turbo creep-pull (勾线). A disadvantaged laning core draws the enemy
 -- creep wave's aggro by attack-ordering an enemy hero next to it, then walks back
 -- to drag the creeps onto our side and reset the lane equilibrium. Load-time flag
--- like the others; turbo-only + soak candidate 'creeppull', pos 1-3 (cores).
--- Inert by default. The TRIGGER (when to pull) lives in J.ShouldCreepPullLane;
+-- like the others; turbo-only, pos 1-3 (cores). The TRIGGER (when to pull) lives
+-- in J.ShouldCreepPullLane (PROMOTED 2026-08-23; see that header);
 -- this flag routes such a bot through the custom laning Think so the best-effort
 -- pull action can run. NOTE: defining Think replaces Valve's default laning
 -- wholesale, so a creeppull bot uses the same core last-hit fallback as the

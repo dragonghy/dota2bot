@@ -150,7 +150,11 @@ until it's ungated. The authoritative list of gated-and-unpromoted ids lives in
 
 **Promoted turbo defaults (no gate left — these are LIVE in every Turbo game):**
 `lanesurv`, `tphome`, `tpsafe`, `tpsafe2`, `pushguard`, `nodive`, `punish`,
-`regroup`, `deathzone`, `vsafe`, `skyburst`, `fight`, `roamstale`. Read this
+`regroup`, `deathzone`, `vsafe`, `skyburst`, `fight`, `roamstale`, and
+`creeppull`+`pullbeat` (2026-08-23, `stable-v2` — the first pair to clear all
+three of the owner's rule-2 conditions; promoted as ONE atom because `pullbeat`
+sits inside `creeppull`'s execution body and `creeppull` alone is the broken
+configuration GH #143 measured). Read this
 list off the source, not off prose: each promoted helper carries a `PROMOTED
 (was soak-candidate '<id>')` note above it, and `tests/test_gate_claim_consistency.lua`
 fails if any comment claims a gate that no longer exists (or never did). Note
@@ -181,6 +185,15 @@ stay gated — the helper ships, the sharpened domain does not.
   text). Debug via replays / in-game observation / bisection.
 - **Harness (bash) changes need a soak-loop restart** (a long-lived loop caches
   the old file); **Lua hero changes do not** (each game re-reads `bots/`).
+- **Promoting an id silently kills any gate that names it.** A gate written as
+  `IsSoakCandidate('X') and IsSoakCandidate('Y')` — the good way to make a
+  dependency code instead of prose — is frozen FALSE the day `Y` is promoted,
+  because a promoted id is in no armed string. The lever then no-ops in every
+  wave, `check_armed_wiring.py` still calls it WIRED (it checks that a call site
+  exists, not that the predicate can be true), and the verdict reads back
+  "tested, no effect" with nothing raising a hand. Before promoting anything,
+  grep the id for appearances in OTHER gates' conditions and fix them in the
+  same change. Caught on `pullcad` during the `creeppull`/`pullbeat` promote.
 - **Batch instances clone `origin/main` at launch — verify the remote tip
   equals the tree you mean to test BEFORE launching.** Near-miss 2026-07-23: a
   4-seed all-on rerun launched while 8 fix commits existed only locally (the
