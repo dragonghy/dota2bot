@@ -154,6 +154,32 @@ local function wand_profile(tList)
     return nBranches, bWantsWand
 end
 
+--- The verdict, factored out of the census below so that it has somewhere to
+--- be tested.  Once the two lists were fixed the tree stopped containing a
+--- single partial holding, so the census walks a world in which this boundary
+--- can be widened without anything noticing -- the failure mode written up as
+--- backlog 24 (and caught twice in test_dup_component_buylist_census.lua, whose
+--- is_partial / offences_in pair this mirrors).
+local function is_partial(nBranches)
+    return nBranches == 1
+end
+
+--- Score one buy list and return the offence it commits, if any, as a readable
+--- string.  Extracted for the same reason is_partial is: the reporting branch
+--- is unreachable from real data on a clean tree, so a mutation that stopped
+--- reporting would be invisible without a synthetic caller.  (Still invisible,
+--- honestly: a mutation at the census's own CALL SITE -- dropping the results
+--- on the floor -- which no amount of extraction can falsify from a world with
+--- nothing to report.)
+local function offences_in(sHero, sRole, tList)
+    local nBranches, bWantsWand = wand_profile(tList)
+    if bWantsWand and is_partial(nBranches) then
+        return { sHero .. ' ' .. sRole .. ' supplies ' .. nBranches
+            .. ' iron branch for a wand that needs two' }
+    end
+    return {}
+end
+
 local function hero_files()
     local p = assert(io.popen('ls ' .. BOTLIB .. 'hero_*.lua'))
     local t = {}
@@ -290,14 +316,16 @@ end
 tests['[hero] no hero buy list anywhere supplies exactly one branch'] = function()
     local nWand, nZero, nMany, tOne = 0, 0, 0, {}
     for _, sPath in ipairs(hero_files()) do
+        local sHero = sPath:match('hero_(.+)%.lua')
         for sRole, tList in pairs(buy_lists(sPath)) do
             local nBranches, bWantsWand = wand_profile(tList)
             if bWantsWand then
                 nWand = nWand + 1
-                if nBranches == 1 then
-                    tOne[#tOne + 1] = sPath:match('hero_(.+)%.lua') .. ' ' .. sRole
-                elseif nBranches == 0 then nZero = nZero + 1
-                else nMany = nMany + 1 end
+                for _, sOffence in ipairs(offences_in(sHero, sRole, tList)) do
+                    tOne[#tOne + 1] = sOffence
+                end
+                if nBranches == 0 then nZero = nZero + 1
+                elseif not is_partial(nBranches) then nMany = nMany + 1 end
             end
         end
     end
@@ -312,6 +340,47 @@ tests['[hero] no hero buy list anywhere supplies exactly one branch'] = function
     -- above is passing on an empty world.
     assert(nZero > 0 and nMany > 0,
         'census degenerate: zero-branch lists=' .. nZero .. ' two-plus=' .. nMany)
+end
+
+tests['[hero] one is the broken quantity; zero and two are not'] = function()
+    -- The census above can only exercise the verdicts a clean tree produces,
+    -- and a clean tree produces none of the interesting one. The boundary lives
+    -- here instead, so widening it is a failing edit rather than a silent one.
+    assert(is_partial(1), 'supplying exactly one branch is the broken case: '
+        .. 'GetBasicItems keeps one copy alive, _buildRequiredCounts reads the '
+        .. 'requirement off that filtered list, and _stillNeeds pops it as '
+        .. 'satisfied. GH #136.')
+    assert(not is_partial(0), 'supplying none is safe -- nothing is filtered '
+        .. 'out, so the expansion asks for both copies')
+    assert(not is_partial(2), 'supplying the pair is safe')
+    assert(not is_partial(3), 'supplying more than the pair is safe too')
+end
+
+tests['[hero] the census can still name an offender when there is one'] = function()
+    -- The pre-fix Wraith King pos_3 shape, which is the one thing the census
+    -- can no longer meet on the real tree. Without this caller, a mutation that
+    -- stopped appending to the offence list passes on every hero file.
+    local tHit = offences_in('synthetic', 'pos_9', {
+        'item_tango', 'item_quelling_blade', 'item_gauntlets',
+        'item_branches', 'item_magic_stick', 'item_magic_wand',
+    })
+    assert(#tHit == 1, 'the census found ' .. #tHit .. ' offence(s) in the '
+        .. 'exact list that was stuck in 40 games of 40; it must find one, or '
+        .. 'it is reporting nothing on the real tree for reasons that have '
+        .. 'nothing to do with the real tree')
+    assert(tHit[1]:find('synthetic pos_9', 1, true),
+        'the offence does not name the list it came from: ' .. tHit[1])
+
+    -- Two near misses, one on each side of the boundary, through the same
+    -- entry point: the fixed shape, and a list with a lone branch and no wand.
+    assert(#offences_in('synthetic', 'pos_9', {
+        'item_tango', 'item_double_branches', 'item_magic_stick',
+        'item_magic_wand',
+    }) == 0, 'the fixed shape is still reported as an offence')
+    assert(#offences_in('synthetic', 'pos_9', {
+        'item_tango', 'item_branches', 'item_quelling_blade',
+    }) == 0, 'a lone branch with no wand anywhere is not an offence -- nothing '
+        .. 'ever puts a doubled recipe at the head of that queue')
 end
 
 -- ---------------------------------------------------------------------------

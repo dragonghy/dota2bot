@@ -807,8 +807,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (见 `tests/test_dup_component_buylist_census.lua` 的
     `is_partial` / `offences_in` 两个自测)。**仍然测不到的那一块也要照写**:普查
     **调用点**上的变异(把结果丢掉)在一个没有东西可报的世界里不可证伪,抽函数救不回来。
-    **候选受众**:`test_wk_magic_wand_branches.lua` 的普查(同族、同缺口)、
-    `test_gate_claim_consistency.lua`、以及总监那边所有「世界断言」型的扫描。
+    **候选受众**:~~`test_wk_magic_wand_branches.lua` 的普查(同族、同缺口)、
+    `test_gate_claim_consistency.lua`~~ **两个都在 2026-08-23T16:00Z 做完**(各抽
+    判据/报告一对函数 + 合成 offender + 近失;**先在 `git show HEAD:` 的旧版上把洞演示出来**:
+    「判据和报告一起死」的变异**两个文件改动前都逃逸**,改动后 6 变异 6 抓 + 1 个 no-op 对照
+    如期逃逸)、**以及总监那边所有「世界断言」型的扫描(仍未做,不归本组)**。
+    - **⭐ 对本条措辞的更正**:§24 记的两个逃逸(放宽 `is_partial` / 停报)读起来像两个方向都盲,
+      **在这两个受众上只有「沉默」方向盲**。放宽方向自带反例:树上留着**合法但相邻**的形状
+      (6 条供 0 根树枝的合法买单、一批带 PROMOTED 的注释行),判据一放宽它们立刻变 offender。
+      ⇒ **抽函数之前先问「树上有没有合法但相邻的形状会被放宽的判据吃进来」** —— 有,
+      则合成输入的价值全在沉默方向;没有(`test_dup_component_buylist_census.lua` 就是),
+      两个方向都得喂。**同一族测试,两种盲区剖面。**
     (原 §23 正文保留在下面,供接手的人对照方法。)
 
     (原 §23)—— #139 的触发条件是
@@ -838,6 +847,34 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T16:00Z(报告 `iterations/reports/hero/20260823T160032Z.md`;认领 backlog **§24**;
+  无 issue、无 queue、无新 gated id):
+  **§24 的「判据/报告双合成自测」装进它自己点名的两个受众
+  (`test_wk_magic_wand_branches.lua` / `test_gate_claim_consistency.lua`),
+  并先在改动前的版本上把洞演示出来。`bots/` 零改动、稳定版未漂移、零 AWS。**
+  开工自检 worst exit 0。Owner P1/P2 的球都在协同组。
+  - **改动**:各抽一对函数(`is_partial`/`offences_in`,`is_violation`/`offences_in`),
+    普查**经由它们**走;合成输入 = 修复前的 WK pos_3 逐条形状 + 两个近失 /
+    三条合成 claim(`ghostid`/`realid`/PROMOTED `goneid`)+ 一条**豁免泄漏**近失。
+    `gate_claim` 原本已有三个合成控制,但**全部只测抽取器**,没测判据那一半。
+  - **变异实测**:改动前 **B1/B3(判据+报告一起死)两个文件都 ESCAPED**(10 例 / 7 例全绿);
+    改动后 **M1/M2/M4/M5/M6/M7 全抓**,M3(只插一句注释的 no-op 对照)如期逃逸
+    —— 器械没有在无差别地报红。
+  - **⭐ 对 §24 措辞的更正**:这两个受众上**只有「沉默」方向盲**,放宽方向自带反例
+    (合法的 0 树枝买单 / PROMOTED 行)。判读法则见 backlog §24。
+  - **⚠️ 一个死胡同,如实记、别重走**:本轮**先动手做的不是 §24**,是 GH #139 那句
+    「非树枝的同款重复组件一件都没扫过」。按 odota `dotaconstants` 枚举出 7 条同款重复配方、
+    写完带序模型的普查(读数 0),**才发现 `tests/test_dup_component_buylist_census.lua`
+    今天 09:50Z 本组自己已经做完并落地**(`5229c7d`),而且比我的完整
+    (它抓到我漏掉的 `abyssal_underlord pos_4`,已修 ⇒ 我的普查才读 0)。新文件已删,零残留。
+    **教训**:`routine_selfcheck.sh` 查「推了没落地」和「报告节奏」,**查不到「今天早些时候
+    已做完且已落地」的同一件事**。认领任何 issue 的残留项之前,先
+    `ls tests/ | grep <关键词>` + `git log --oneline --since=1.day -- tests/` 各看一眼。
+  - **核验**:luacheck **0 警告**;**逐文件驱动 156/156 文件 / 1523 例 / 0 失败**
+    (两次前台调用、可续跑;**不是单进程**,GH #124 未变);改动两文件 10→**12** / 7→**9** 例。
+  - **下一轮建议**:§18 WK 的 Lever C(`bot:GetMana() >= 600` 打肉山分支)。
+    **注意**:它读的是**当前**蓝而物品会加智力 ⇒「turbo 结构性不可达」这句在把物品那一侧
+    算进来之前**不成立**,别照抄 §18 的旧措辞。
 - 2026-08-23T13:50Z(报告 `iterations/reports/hero/20260823T135000Z.md`;本组开 GH **#146**;
   queue **`hero-9`** 新增 pending;backlog §24 追记、新增 §25 并划掉其中一根):
   **`axecull` 落地:Axe 的斩杀分支不再(在 armed 时)对魔免目标收手 —— 因为斩杀穿魔免。

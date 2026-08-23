@@ -99,6 +99,36 @@ local function claims_in(src, path)
     return found
 end
 
+--- The verdict itself, factored out of the invariant below so that it has
+--- somewhere to be tested. The extractors already had synthetic controls; this
+--- half did not, and it is the half that decides what counts as drift. The tree
+--- has been clean since the 2026-08-22 sweep, so the census never walks the
+--- violating branch on real data -- widen this boundary (exempt one more shape,
+--- treat every claim as promoted) and every assertion in this file still
+--- passes. Backlog 24, same shape as test_dup_component_buylist_census.lua's
+--- is_partial / offences_in pair.
+local function is_violation(claim, wired)
+    return not claim.promoted and not wired[claim.id]
+end
+
+--- Render the claims that violate the invariant, as readable strings.
+--- Extracted for the same reason is_violation is: on a clean tree the reporting
+--- branch is unreachable from real data, so a mutation that stopped reporting
+--- would be invisible without a synthetic caller. (Still invisible, honestly: a
+--- mutation at the call site that drops the result on the floor -- nothing an
+--- extraction can falsify from a world with nothing to report.)
+local function offences_in(claims, wired)
+    local bad = {}
+    for _, c in ipairs(claims) do
+        if is_violation(c, wired) then
+            bad[#bad + 1] = string.format(
+                "%s:%d names gate '%s', which nothing in bots/ wires\n      %s",
+                c.path, c.line, c.id, c.text)
+        end
+    end
+    return bad
+end
+
 local function census()
     local wired, claims = {}, {}
     for _, path in ipairs(list_lua_files()) do
@@ -120,14 +150,7 @@ local tests = {}
 -- THE invariant.
 tests['every gate id named in a "gated" comment is actually wired'] = function()
     local wired, claims = census()
-    local bad = {}
-    for _, c in ipairs(claims) do
-        if not c.promoted and not wired[c.id] then
-            bad[#bad + 1] = string.format(
-                "%s:%d names gate '%s', which nothing in bots/ wires\n      %s",
-                c.path, c.line, c.id, c.text)
-        end
-    end
+    local bad = offences_in(claims, wired)
     assert(#bad == 0, string.format(
         '%d comment(s) claim a gate that does not exist. Either wire the id, '
         .. 'correct it to the real one, or -- if the behavior was promoted -- '
@@ -186,6 +209,47 @@ tests['a PROMOTED line is exempt even with no gate left'] = function()
         'synthetic')
     assert(#claims == 1 and claims[1].promoted,
         'PROMOTED is the documented exit and must exempt the line')
+end
+
+-- The three controls above prove the EXTRACTORS see what they should. These
+-- two prove the VERDICT and the REPORT do -- the half that has had nothing real
+-- to chew on since the tree went clean, and the half a widening edit lives in.
+tests['a claim naming an unwired id is a violation; the two clean shapes are not'] = function()
+    local wired = { realid = true }
+    assert(is_violation({ id = 'ghostid', promoted = false }, wired),
+        'a comment naming an id nothing wires is exactly the over-claim this '
+        .. "file exists for -- arming it arms nothing and the wave reads as "
+        .. '"tested, neutral"')
+    assert(not is_violation({ id = 'realid', promoted = false }, wired),
+        'a genuinely wired id is not drift')
+    assert(not is_violation({ id = 'goneid', promoted = true }, wired),
+        'PROMOTED is the documented exit from the gated state; a line that says '
+        .. 'so is the register working, not drifting')
+    -- The near miss that a loosened boundary would swallow: PROMOTED is a
+    -- property of the LINE, not of the id, so an unwired id on a line that does
+    -- not say it must still be caught.
+    assert(is_violation({ id = 'ghostid', promoted = false }, { goneid = true }),
+        'exemption is leaking from one claim to another')
+end
+
+tests['the report names the offender, and stays silent on the clean ones'] = function()
+    local wired = { realid = true }
+    local tClaims = {
+        { path = 'synthetic.lua', line = 7,  id = 'ghostid', promoted = false,
+          text = "-- Gated (turbo + 'ghostid'); inert by default." },
+        { path = 'synthetic.lua', line = 11, id = 'realid',  promoted = false,
+          text = "-- Gated turbo + soak-candidate 'realid'; inert." },
+        { path = 'synthetic.lua', line = 19, id = 'goneid',  promoted = true,
+          text = "-- PROMOTED (was soak-candidate 'goneid'); turbo default-on." },
+    }
+    local bad = offences_in(tClaims, wired)
+    assert(#bad == 1, 'the report produced ' .. #bad .. ' line(s) for one '
+        .. 'over-claim among two clean claims; it must produce exactly one, or '
+        .. 'its silence on the real tree says nothing about the real tree')
+    assert(bad[1]:find('ghostid', 1, true) and bad[1]:find('synthetic.lua:7', 1, true),
+        'the report does not point at the offending line: ' .. bad[1])
+    assert(not bad[1]:find('realid', 1, true), 'the report names a wired id too')
+    assert(#offences_in({}, wired) == 0, 'an empty claim set reports something')
 end
 
 -- The over-claim direction has a second, sharper failure mode than a stale
