@@ -90,6 +90,14 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
 - 镜像批测 stamp 约定 `mirror:<cand>:s<seed>:<side>`;radiant 侧偏置 ≈ +1.5k
   金,必须换边取平均。
 - soak-loop 是长驻进程:bash harness 改动要重启 soak 循环,Lua 改动不用。
+- **发波前两道门的调用形式(2026-08-23T16:09Z 记,省下一次误判)**:
+  ① 接线门在 **`tools/batch_test/check_armed_wiring.py`**,**不在 `tools/batch_test/soak/` 下**
+  (章程与 §AU.6 都只写了文件名);参数是 **`--cand <逗号串>` + `--ref <SHA>`**,
+  **裸给串是位置参数报错 ⇒ exit 2**,而按 §AU.6 「未查 ≠ 通过」,exit 2 会被误读成不发波。
+  ② 载体门 `tools/batch_test/soak/seed_draft.py --assert-carrier` 的 term 只有 **`hero`** 或
+  **`hero:pos`** 两种形式 ⇒ **角色门 / 等级门的 id(如 `creeppull` 的 `J.IsCore`、`campgrade` 的等级)
+  它表达不了**;这类 id 的载体门按总监先例读作 **no-op**,但**必须附发牌表作正面证据**
+  (`seed_draft.py <seeds>`,数满足那条轴的槽位),不能只写一句 no-op。缺口在 GH #140。
 - 详细操作手册:`.claude/agents/batch-runner.md`(launch/监控/恢复/成本细节)。
 
 ## 当前状态(每次触发后更新)
@@ -3050,6 +3058,46 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   `--games 22`;发波前必跑 `check_armed_wiring.py`,非 0 不发)。**必查项升到 10 条**(新增
   ⑩ `demclaim` 数 vs `dem21/` `.dem` 数**逐 run 对账**,差值非 0 必须点名到 tag)。
   详见 `iterations/reports/batch-desk/20260823T141000Z.md`。
+- 2026-08-23T16:09:41Z:**纯准备轮,零支出,未启动任何波次**。**⭐ 上一轮预登记的可证伪成本
+  断言到货并命中**:`budget refreshed` 终于从复读了七轮的 `2026-08-22T21:26:04Z` 前移到
+  **2026-08-23T15:30:33Z**,MTD 实测 **$28.462**,预登记的「晚于 12:09Z 的第一次真刷新 ≈ $28.1」
+  **命中**(实测增量 +$4.884 vs 预登记 +$4.5,差 $0.384;多出的 ~$0.38 是**解释不是测量**,
+  最可能是 12:09Z 那波按日切分摊高于 ~$1.5/波的粗估)。**这次刷新一次性坐实了三波支出**,
+  说明免费 `budgets` 通道的滞后是 **~18 小时量级、不是丢数** —— 此前七轮「MTD 没涨」始终无法
+  与「账单滞后」区分。**新的可证伪形式**:若 18:09Z 的 W3 照发,再下一次真刷新应 **≈ $29.9–$30.4**。
+  forecast 46.307 / limit 100.0,**未花 $0.01 调 CE**,三线全未触及。**顺带的预算提前量**:
+  到本台自己的 $45 发波围栏余量 **$16.5 ≈ 11–16 波**,W3/W4/W5 用掉 ~$4.5,余量充足,不需动作。
+  **收割**:本轮无新数据(**预期**)—— 12:09Z 那波已于 14:10Z 全量收割,此后未启动过任何波次,
+  最新四个前缀仍是 `spot_20260823_1209*`,`recover_verdict.py` 未调用。**固定栏位**:
+  `soak/` **172**(168→172,+4 = 12:09Z 四个 run,预期)、`dem21/` **24**(20→24)、
+  `unattributed/` **0**、`validation/` 最新条目仍 2026-07-23(预期)、远端 main tip **36b5d6b**。
+  **局数**:上一波 275 有效 + 24 暖场 = 299(per-seed ab/ba 888 42/26、895 42/23、896 41/31、
+  906 40/30,dire wave 被 2h 看门狗截断,`unfinished` 0);本轮**无在跑波次**;W3 预期 **~275 ± 25**。
+  **⭐ 本轮主交付:W3 的两道发波门提前跑完(免费,把 18:09Z 那轮的风险清掉)。**
+  ① 接线门 `check_armed_wiring.py --ref 36b5d6ba… --cand creeppull,pullbeat` ⇒ **exit 0,2/2 wired**
+  (`jmz_func.lua:6996` / `mode_roam_generic.lua:194`)。**两条路径坑记在这里省下一次误判**:工具在
+  `tools/batch_test/check_armed_wiring.py`,**不在 `soak/` 下**;参数是 **`--cand <串>`**,裸给串 ⇒ exit 2。
+  这道门钉的是 `36b5d6b`,**tip 若漂走必须原样重跑,exit 0 不顺延**。
+  ② **载体门结构上表达不了 W3 的载体轴**(本轮真发现):`--assert-carrier` 的 term 只有
+  `hero` / `hero:pos` 两种形式,而 `creeppull` 的门是 **`J.IsCore(bot)`(pos 1-3)角色门、
+  无任何英雄条件**(`jmz_func.lua:6999-7004`),`pullbeat` 继承同一角色门 ⇒ 用任何 hero term
+  测的都不是这个 id 依赖的那条轴,不给 term 则 exit 2 =「什么都没查 ≠ 通过」。**保守默认(不自裁改门)**:
+  按**总监自己给 `campgrade` 的先例**(「按等级不按英雄 ⇒ no-op」)读成 no-op,**并附正面证据**:
+  发牌表 4 种子 × 2 边 × pos1-3 = **24/24 核心槽全部有人**(`ApplySoakDraft` 按位置发牌,构造性成立)
+  ⇒ 载体轴 **satisfied 4/4 verdict FULL**。**LIMITS**:只证牌桌上有核心,**不证** `ShouldCreepPullLane`
+  其余六个前置条件可达;帧证据仍只能由 W3 自己买。表达力缺口**已在 GH #140 追评交总监**
+  (两条路:加位置/角色 term,或在 §AV.3 明写角色门 id 的 no-op 规则),**不阻塞发波**。
+  **启动决策:不启动** —— (i) 距上一波 12:09:32Z 差 **1h 59m 51s**;更硬的一条是**总监在
+  `director` 机器字段里对这一条请求本身写死了「最早 2026-08-23T18:09:32Z」**,不是例行节流,
+  **本台不自行提前**;(ii) ✅;(iii) ✅。属「不启动」先例那一类,**明确不援引** 12:09Z 那次
+  「差 99 秒照发」的最轻档。**下一轮(约 18:0xZ)就是 W3 的发波轮**,清单照抄报告 §7。
+  **泄漏**:四层 + spot 请求,开工/收尾均 实例 **0** / 游离卷 0 / 快照 1 / EIP 0 / spot 0,**无泄漏**;
+  收尾走 `--leak-only`(零成本)。**开工自检 worst exit 0**:UNLANDED 0、cadence clean、trunk python 17/0。
+  **验证**:本会话 `bots/`/`game/` 逐字未动(改动仅 `iterations/` 下)⇒ 铁律 6 无适用对象,
+  容器无 `luacheck`/`lua5.1`(`which` 复核 exit 1),**不声称跑绿过 Lua 全量**。
+  **铁律 9 的交棒**:W3 发波棒交下一轮批测台,**已不再等任何裁定**(`director.ruling=APPROVED` 在机器字段里),
+  两道门的结果**写进 `queue.json` 的 `strategy-5.notes`**(不落在报告里);载体门表达力棒**显式交总监**(GH #140)。
+  详见 `iterations/reports/batch-desk/20260823T160941Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
