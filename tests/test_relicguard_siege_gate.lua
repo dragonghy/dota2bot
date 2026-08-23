@@ -59,6 +59,14 @@
 -- bots/ is NOT touched. No gate. No test_set request. No corpus request beyond
 -- consolidating onto 0a. Zero AWS.
 
+-- Every other test file that requires from tests/ opens with this line.  This one
+-- did not, and passed anyway for as long as some earlier file in the same process
+-- had already set it -- so all seven cases here failed with "module
+-- 'mock.replay_fixture' not found" the moment the file was run on its own, or the
+-- file order moved.  Relying on another test file's side effect is not a shared
+-- setup, it is an ordering bug that only shows up per-file.
+package.path = 'tests/?.lua;' .. package.path
+
 local FRAME = 'tests/fixtures/f_260820_043120_viper_defend_paired.lua'
 
 --- Load the frame with a fresh module graph. Returns J, bot, and the team int.

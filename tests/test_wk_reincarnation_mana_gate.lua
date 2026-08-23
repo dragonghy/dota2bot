@@ -45,6 +45,16 @@ end
 
 local function fresh_jmz()
     api.reset_modules()
+    -- The engine globals (GetScriptDirectory among them) come from api.install,
+    -- and reset_modules clears them.  Every test here calls fresh_jmz BEFORE
+    -- make_bot, so without a placeholder install this line raises "attempt to
+    -- call global 'GetScriptDirectory' (a nil value)" -- which is what all six
+    -- cases had been doing.  It used to survive because a test file loaded
+    -- earlier in the same process left those globals lying around; running this
+    -- file on its own, or after the file order moved, it does not.  make_bot
+    -- installs the real bot immediately afterwards and that is the one the
+    -- assertions use.
+    api.install({ bot = api.MakeHero('npc_dota_hero_skeleton_king') })
     return require(GetScriptDirectory() .. '/FunLib/jmz_func')
 end
 
