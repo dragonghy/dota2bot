@@ -90,6 +90,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
+local cs = require('corpus_scale')
 local skillmap = require('skill_level_map')
 
 local HERO_SRC = 'bots/BotLib/hero_lion.lua'
@@ -374,30 +375,27 @@ tests['[hero] lion t15: To Hell and Back windows ARE in the corpus (GH #27 leg v
         .. 'true again, the 2026-08-23 correction has been undone and the old '
         .. '"unobservable" note becomes accurate again -- say so explicitly rather '
         .. 'than letting this file assert a measurement it cannot take.')
-    assert(CORPUS.window_frames >= 3,
-        'only ' .. CORPUS.window_frames .. ' Lion frame(s) sit inside a To Hell and '
-        .. 'Back window, down from the 3 measured on 2026-08-23.  Fixtures are only '
-        .. 'ever added, so a drop means frames were re-cut or the modifier names '
-        .. 'changed.')
-    assert(CORPUS.window_by_name['modifier_lion_to_hell_and_back_buff'] >= 2
-        and CORPUS.window_by_name['modifier_lion_to_hell_and_back_respawn_buff'] >= 1,
-        'the window split is now '
-        .. CORPUS.window_by_name['modifier_lion_to_hell_and_back_buff'] .. ' kill-side / '
-        .. CORPUS.window_by_name['modifier_lion_to_hell_and_back_respawn_buff']
-        .. ' respawn-side, not 2 / 1.  BOTH halves being present is what makes the '
-        .. 'incumbent measurable at all -- one alone would only prove half of it.')
+    -- Ratchets, not equalities (tests/corpus_scale.lua): these are sums over
+    -- fixtures, so the corpus may add windows but must never lose one.
+    cs.ratchet(CORPUS.window_frames, 3,
+        'Lion frames inside a To Hell and Back window (the whole basis for calling '
+        .. 'the incumbent measurable at all)')
+    cs.ratchet(CORPUS.window_by_name['modifier_lion_to_hell_and_back_buff'], 2,
+        'kill-side To Hell and Back windows')
+    -- BOTH halves have to be present: one alone only proves half the innate.
+    cs.ratchet(CORPUS.window_by_name['modifier_lion_to_hell_and_back_respawn_buff'], 1,
+        'respawn-side To Hell and Back windows')
 end
 
 tests['[hero] lion t15: window uptime is read against the frames that COULD show it'] = function()
     assert(CORPUS.window_frames <= CORPUS.with_modifiers,
         'more window frames (' .. CORPUS.window_frames .. ') than modifier-bearing '
         .. 'Lion frames (' .. CORPUS.with_modifiers .. '); the denominator is wrong.')
-    local share = CORPUS.window_frames / CORPUS.with_modifiers
-    assert(share >= 0.20,
-        'the incumbent is live on ' .. string.format('%.0f%%', share * 100)
-        .. ' of the Lion frames that carry modifier state, below the ~30% measured '
-        .. 'on 2026-08-23.  The verdict rests on this being a substantial share of '
-        .. 'the game, not on it being non-zero -- re-take it.')
+    -- A band, not a floor: the verdict rests on this being a SUBSTANTIAL share of
+    -- the game (~30% on 2026-08-23), and a share that ran away upward would mean
+    -- the corpus had become a set of post-death frames rather than a sample.
+    cs.share(CORPUS.window_frames, CORPUS.with_modifiers, 0.20, 0.60,
+        'share of modifier-bearing Lion frames inside a To Hell and Back window', 8)
     -- And the denominator that must NOT be used: total Lion frames, most of which
     -- predate modifier dumping and are structurally silent on this question.
     assert(CORPUS.with_modifiers < CORPUS.lion_frames,
@@ -420,25 +418,22 @@ end
 -- 5. Channel health, challenger: the measurement that decides the pair.
 
 tests['[hero] lion t15: Hex is ready and affordable on nearly half the frames'] = function()
-    assert(CORPUS.hex_learned >= 20,
-        'only ' .. CORPUS.hex_learned .. ' Lion frames have Hex learned, down from '
-        .. '20 on 2026-08-23.')
+    cs.ratchet(CORPUS.hex_learned, 20, 'Lion frames with Hex learned')
     assert(CORPUS.hex_ready + CORPUS.hex_on_cooldown == CORPUS.hex_learned,
         'the ready/on-cooldown split (' .. CORPUS.hex_ready .. ' + '
         .. CORPUS.hex_on_cooldown .. ') does not account for all '
         .. CORPUS.hex_learned .. ' Hex-learned frames.')
-    assert(CORPUS.hex_ready >= 9,
-        'Hex is off cooldown on only ' .. CORPUS.hex_ready .. ' of '
-        .. CORPUS.hex_learned .. ' frames, down from 9 of 20.  This count IS the '
-        .. 'verdict: a cooldown reduction cannot pay on a frame where the cooldown '
-        .. 'is already zero.')
+    -- This count IS the verdict: a cooldown reduction cannot pay on a frame where
+    -- the cooldown is already zero.
+    cs.ratchet(CORPUS.hex_ready, 9,
+        'Lion frames with Hex ALREADY off cooldown (where -2.0s buys nothing)')
     -- Pinned from BOTH ends, so swapping the two branches of the cd test cannot
     -- leave the reading looking healthy: the corpus is 9 ready / 11 on cooldown,
     -- and an inverted split reads 11 / 9.
-    assert(CORPUS.hex_on_cooldown >= 11,
-        'only ' .. CORPUS.hex_on_cooldown .. ' frames have Hex on cooldown, down '
-        .. 'from 11 of 20.  The band reading below is taken over exactly these '
-        .. 'frames, so its denominator moves with this.')
+    cs.ratchet(CORPUS.hex_on_cooldown, 11,
+        'Lion frames with Hex ON cooldown (the denominator of the <= 2s band below)')
+    cs.universal(CORPUS.hex_ready_affordable, CORPUS.hex_ready,
+        'ready-Hex frames that can pay Hex\'s own mana cost', 5)
     assert(CORPUS.hex_ready_affordable == CORPUS.hex_ready,
         'only ' .. CORPUS.hex_ready_affordable .. ' of ' .. CORPUS.hex_ready
         .. ' ready-Hex frames can pay Hex\'s own mana cost.  On 2026-08-23 all of '
@@ -476,9 +471,9 @@ tests['[hero] lion t15: nothing in this corpus is in domain'] = function()
         CORPUS.in_domain .. ' Lion frame(s) have reached level ' .. TALENT_LEVEL
         .. '.  Every reading in this file was taken BELOW the tier as a proxy; '
         .. 'in-domain frames exist now, so re-take them for real.')
-    assert(CORPUS.max_level <= 11,
-        'the corpus now reaches Lion level ' .. CORPUS.max_level .. ', above the 11 '
-        .. 'this reading was taken at.')
+    cs.ceiling(CORPUS.max_level, 11,
+        'highest Lion level in the corpus (every reading here is a proxy taken '
+        .. 'below the tier, and a higher level means it can be re-taken for real)')
     assert(CORPUS.hex_rank_above_1 == 0,
         CORPUS.hex_rank_above_1 .. ' corpus frame(s) hold Hex above rank 1.  Every '
         .. 'corpus cooldown number here assumes rank 1 (24s); the DOMAIN number '
