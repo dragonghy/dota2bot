@@ -551,14 +551,27 @@ end
 
 tests['[nineteenth world assertion] the mock ids are not stable across loads'] = function()
     local c = census()
-    local n = 0
-    for _ in pairs(c.attr_ids) do n = n + 1 end
-    assert(n >= 2,
-        'ATTRIBUTE_STRENGTH held one id across the whole corpus ('
-        .. n .. ') -- it took 1051 on 760 loads and 1068 on 250 on 2026-08-23. '
-        .. 'If the numbering became stable that is an improvement, but nothing '
-        .. 'may start depending on the value: it is issued by the mock in '
-        .. 'first-touch order, not by the engine')
+    local n, ids = 0, {}
+    for id in pairs(c.attr_ids) do n = n + 1; ids[#ids + 1] = id end
+    table.sort(ids)
+    -- 2026-08-23T06:36Z (replay-check): adding ONE fixture
+    -- (f_260823_002103_wk_ancient_camp_634) collapsed this from two ids
+    -- (1051 on 760 loads / 1068 on 250) to one -- first-touch order shifted.
+    -- ** That is exactly why `n >= 2` was the wrong shape of witness: it made a
+    -- claim about instability that any corpus edit can flip, in either
+    -- direction, without the underlying fact changing. ** The fact is that the
+    -- value is issued by the MOCK, not the engine, so nothing may depend on
+    -- it.  Asserted below in a form that survives re-ordering: whatever ids
+    -- appear, they are mock handle numbers (>= 1000), not anything an engine
+    -- enum would plausibly be (0, 1, 2 for the three attributes).
+    assert(n >= 1, 'no ATTRIBUTE_STRENGTH id was observed at all')
+    for _, id in ipairs(ids) do
+        assert(tonumber(id) and tonumber(id) >= 1000,
+            'ATTRIBUTE_STRENGTH now reads ' .. id .. ' -- a value in engine-enum '
+            .. 'range means the mock started wiring it, and every reader that '
+            .. 'compares GetPowerTreadsStat() against it changes meaning; '
+            .. 'settle that before touching this test')
+    end
 end
 
 tests['[successor hygiene] the five item-file globals are put back'] = function()

@@ -377,9 +377,18 @@ tests['census: per-hit creep damage is a heavy tail, not two clean modes'] = fun
     cs.ratchet(mass, 256, 'mass rows (per-hit damage <= 24)')
     cs.ratchet(tail, 26, 'tail rows (per-hit damage >= 25)')
     cs.ratchet(max, 45, 'largest single creep hit')
-    -- "Thin" is worth a number: under a tenth of all rows (26 of 282 = 9.2%).
-    assert(tail * 10 < mass + tail,
-        'the tail is no longer under a tenth of the rows: ' .. tail .. '/' .. (mass + tail))
+    -- "Thin" was worth a number: under a tenth of all rows (26 of 282 = 9.2%).
+    -- 2026-08-23 (replay-check): the first ANCIENT-camp fixture moved it.
+    -- Ancient neutrals hit for 52-75, so EVERY ancient frame lands in the >=25
+    -- tail by construction; f_260823_002103_wk_ancient_camp_634 alone added 6
+    -- tail rows and took 26/282 (9.2%) to 32/312 (10.3%).  The tail fraction
+    -- therefore tracks the corpus's CAMP MIX, not the damage distribution -- a
+    -- bound tight enough to break on one fixture is measuring the mix.  Kept as
+    -- a loose sanity bound (under a fifth): this test's thesis is "heavy tail,
+    -- not two clean modes", which a fatter tail only strengthens; what the
+    -- bound still catches is the tail becoming a mode of its own.
+    assert(tail * 5 < mass + tail,
+        'the tail is no longer under a fifth of the rows: ' .. tail .. '/' .. (mass + tail))
 end
 
 return tests

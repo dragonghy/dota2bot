@@ -358,7 +358,11 @@ end
 tests['[measure] honest TP handle: 0 -> 2 actions and 0 -> 210 crashes'] = function()
     local c = pass(true)
     cs.ratchet(c.driven, 928, 'same drivable set as the base sweep')
-    assert(c.crash_total == 210,
+    -- 210 -> 211 on 2026-08-23T06:36Z (replay-check): one more fixture, one
+    -- more live hero frame reaching the same unstubbed engine global.  The
+    -- test NAME keeps the historical 210 as a marker of when this was first
+    -- measured; the live number is the assertion.
+    assert(c.crash_total == 211,
         'crashes under the honest probe moved: ' .. c.crash_total)
     -- 2026-08-23: the corpus grew a SECOND action (see the [recorded] test
     -- below -- it is an honest one, not another origin phantom), so the
@@ -407,7 +411,7 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     --     mechanism warning to the file it breaks.
     assert(c.crash_2597 == 178,
         'jmz_func:2597 crash count moved: ' .. c.crash_2597)
-    assert(c.crash_3325 == 32,
+    assert(c.crash_3325 == 33,
         'jmz_func:3325 crash count moved: ' .. c.crash_3325)
     assert(c.crash_2597 + c.crash_3325 == c.crash_total,
         'a THIRD crash site appeared -- name it before touching these numbers')
@@ -557,15 +561,21 @@ tests['[census] the level term is the sole blocker on 204 honest frames'] = func
     -- a buildings block too (same reason). The finding is untouched through
     -- both moves: outer_and_H is still 3, i.e. the level term is still the only
     -- thing standing on every one of the rest.
-    assert(c.alive_H == 554, 'honest-building hero frames moved: ' .. c.alive_H)
+    -- 554 -> 563 on 2026-08-23T06:36Z: f_260823_002103_wk_ancient_camp_634
+    -- carries a buildings block too, so its 9 live hero frames land in the
+    -- HONEST half.  ** This move is NOT bookkeeping-only: outer_and_H went
+    -- 3 -> 4 ** (that fixture's viper is level 15 AND satisfies the other five
+    -- operands), so the finding is now "the level term is the sole blocker on
+    -- all but FOUR of the honest frames", not all but three.
+    assert(c.alive_H == 563, 'honest-building hero frames moved: ' .. c.alive_H)
     assert(c.alive_F == 403, 'fallback-ancient hero frames moved: ' .. c.alive_F)
     assert(c.alive_H + c.alive_F == c.alive, 'the split partitions the corpus')
-    assert(c.rest5_H == 207,
+    assert(c.rest5_H == 211,
         'honest frames where the other five operands hold: ' .. c.rest5_H)
-    assert(c.sole_blocker_H == 204,
+    assert(c.sole_blocker_H == 207,
         'honest frames where GetLevel() >= 15 is the ONLY closed operand: '
         .. c.sole_blocker_H)
-    assert(c.outer_and_H == 3, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
+    assert(c.outer_and_H == 4, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
     assert(c.sole_blocker_H + c.outer_and_H == c.rest5_H, 'the two halves partition rest5')
     -- The fallback half is reported, never merged in: its o5 operand measures
     -- distance to the map centre (the seventeenth world assertion below).
@@ -578,14 +588,18 @@ tests['[census] only 8 of 911 frames are level 15 or better'] = function()
     assert(ANCIENT_GUARD_LEVEL == 15,
         'the shipped constant is now ' .. ANCIENT_GUARD_LEVEL
         .. ' -- every count in this section was measured at 15')
-    assert(c.level15 == 8, 'mature frames moved: ' .. c.level15)
-    assert(#c.mature == 8, 'and the roster has the same size')
+    -- 8 -> 9 on 2026-08-23T06:36Z: the WK ancient-camp fixture's viper is
+    -- level 15 in that frame.
+    assert(c.level15 == 9, 'mature frames moved: ' .. c.level15)
+    assert(#c.mature == 9, 'and the roster has the same size')
     local full = {}
     for _, m in ipairs(c.mature) do
         if m.rest then full[#full + 1] = m.fixture .. '/' .. m.hero end
     end
     table.sort(full)
-    assert(#full == 3, 'three of the eight satisfy the whole outer AND; got ' .. #full)
+    -- 3 -> 4 on 2026-08-23T06:36Z: the new mature frame also satisfies the
+    -- rest of the AND (see the sole-blocker census above -- same +1).
+    assert(#full == 4, 'four of the nine satisfy the whole outer AND; got ' .. #full)
     assert(full[1] == 'f_260819_222559_od_eclipse_pair.lua/npc_dota_hero_viper', full[1])
     assert(full[2] == 'f_260819_222559_od_eclipse_solo.lua/npc_dota_hero_viper', full[2])
     assert(full[3] == 'f_260820_043120_viper_defend_paired.lua/npc_dota_hero_viper', full[3])
@@ -683,7 +697,10 @@ tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = f
     -- 58/43 -> 60/43 on 2026-08-23: the two GH #123 fixtures both carry a
     -- buildings block, so the fallback (no-block) side is untouched -- which is
     -- the half this whole test is about.
-    assert(nb == 60 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
+    -- 60/43 -> 61/43 on 2026-08-23: the WK ancient-camp fixture carries a
+    -- buildings block, so the fallback (no-block) side is untouched -- which is
+    -- the half this whole test is about.
+    assert(nb == 61 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
 end
 
 tests['[MECHANISM] the fallback ancient is one unit, both teams, unstable'] = function()
