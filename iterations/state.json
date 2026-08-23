@@ -3474,6 +3474,17 @@
     "status": "LOCALLY VALIDATED, not armed. 需要总监批 test_set.md 入集;arm 串必须同时含 creeppull(否则本 id 逐字节 no-op —— 唯一调用方在 creeppull 门后)。零 AWS 增量,搭车即可。",
     "where": "bots/FunLib/jmz_func.lua:+49 行(新 helper)+ 调用点一行改写;tests/_creeppull_zone_sweep.lua;tests/test_creeppull_zone_clause.lua"
   },
+  "pullcad_20260823": {
+    "owner": "strategy",
+    "issue": "[strategy] owner P1 条件 (c) —— GH #143 / GH #109。录像组 21:00Z 已买到 creeppull 的条件 (a) = WORKING;P1 完成定义第 4 条要的 (b)+(c) 里,(c)『检索标准拉野时机对齐实现』一直没人做。本轮做 (c),并把它读出来的一处不对齐落成杠杆。",
+    "unit": "mode_roam_generic 的 creep-pull cadence:poke 间隔 1.2s -> 3.0s,gated('pullcad'),且在源码里同时要求 'pullbeat' 已 armed(结构性前置,不是散文里的建议)。unarmed 与 pullcad 单独 armed 都逐字节等价于出厂 cadence。",
+    "why": "(c) 检索结果:一次拉到的小兵仇恨保持 2.3s,而『再拉一次』有 2-3s 冷却(Liquipedia Lane Creeps / Hotspawn 的 creep aggro 指南;player.one、sportskeeda 复述同一对数)。1.2s 的节拍因此把第 2、3 拍花在『仇恨仍然活着』和『仇恨仍在冷却』上 —— 结构上拉不到任何东西。而且不是免费的:Action_AttackUnit 打一个不在攻击距离内的英雄会让 bot 走向他,于是无效的补拍把已经被拉住的兵线往回拖。⭐ 同一个 2.3s 录像组已经从另一侧量到过,只是当成了缺陷本身:GH #143 的头条『一次普攻中位只换来 2.2s 小兵追击』就是它。3.0s 同时清掉 2.3s 仇恨与 3s 冷却上界,也正是同文件里 wave13 起姊妹拉野(pullcamp)用的节拍。",
+    "domain": "本 id 只在 armed 的 creeppull pull 窗口内有意义,窗口外零改动。真实帧 order log(f_072738_zuus_mana @ t=160.4,92 帧 = 3.07s):出厂 3 次 poke / 拖拽占 58%;pullcad+pullbeat = 1 次 poke + 76 帧拖拽 = 82.6%。pullcad 单独 armed 的 log 与出厂逐字节相同(已成用例)。端到端谓词在本语料结构性不可达(GetNearbyLaneCreeps 0/966,fixture 不带小兵)⇒ 与姊妹文件同法,兵线为合成、几何由真实的 621u 决定;没有假装端到端。",
+    "tests": "tests/test_replay_pullcad_beat.lua 9 例全绿,9 变异 9 抓(armed 3.0->1.2 / 去掉 pullbeat 合取 / 去掉整个 gate / id 打错 / 2.0 即落进冷却 / 2.2 即落进活仇恨 / 姊妹 camp 节拍漂到 4.0 / hold 0.5->3.5 吞掉整拍 / 比较号反转)。姊妹 tests/test_replay_pullbeat_attack_cancel.lua 的 cadence() 读常数改成兼容新旧两种写法,8 例仍全绿。",
+    "status": "LOCALLY VALIDATED, not armed. 需要总监批 test_set.md 入集;⚠ arm 串约束是硬的:pullcad 只在串里同时有 creeppull 与 pullbeat 时才有行为(源码里就是这么写的,单独 arm 逐字节 no-op)。三者都已在成员串里 ⇒ 零 AWS 增量、搭车、不申请专波。",
+    "where": "bots/mode_roam_generic.lua:+28 行(cadence 常数 + 头注);tests/test_replay_pullcad_beat.lua(新);tests/test_replay_pullbeat_attack_cancel.lua(cadence() 读法)",
+    "sources_c": "https://liquipedia.net/dota2/Lane_Creeps ; https://www.hotspawn.com/dota2/guide/how-does-creep-aggro-work-in-dota-2-creep-aggro-guide ; https://www.dotabuff.com/blog/2020-10-02-the-only-pulling-guide-youll-ever-need"
+  },
   "wk_bone_guard_talent_bypass_20260823T1950": {
     "ref": "iterations/reports/hero/20260823T195000Z.md; tests/test_wk_bone_guard_talent_bypass.lua; GH #150; queue.json hero-11",
     "ruling": "Backlog section 18 Lever B CLOSED as NOT-A-DEFECT. No behaviour change, no new gated id, bots/ comments only.",

@@ -85,10 +85,15 @@ local function pull_branch()
 end
 
 --- The two constants that shape the cadence, read from that branch.
+--- [20260823] The beat moved from a literal in the `if` line to `local nBeat`
+--- when soak candidate 'pullcad' gave it a second value; this reads the SHIPPED
+--- one, which is what every assertion in this file is about (`pullcad` is never
+--- armed here). Both spellings are accepted so the reader survives either shape.
 local function cadence()
     local body = pull_branch()
-    local beat = assert(body:match('bot%.creepPullAttackTime%) > ([%d%.]+) then'),
-        'the attack beat is no longer a literal in the creep-pull branch')
+    local beat = body:match('bot%.creepPullAttackTime%) > ([%d%.]+) then')
+        or assert(body:match('local nBeat = ([%d%.]+)'),
+            'the shipped attack beat is no longer a literal in the creep-pull branch')
     local hold = assert(body:match('bot%.creepPullAttackTime%) < ([%d%.]+) then'),
         'the pullbeat hold is no longer a literal in the creep-pull branch')
     return tonumber(beat), tonumber(hold)

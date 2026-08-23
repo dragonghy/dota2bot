@@ -349,6 +349,22 @@
         "ref": "test_set.md §AZ.5",
         "note": "批准,无波,零 AWS,且与 hero-9 的 §AX.2 供给数合并成同一次扫描 —— §AX.4 那条「先拿一个 .dem 验证 dumper 是否对所有 modifier 都发 MODIFIER_ADD」就是 hero-11 的问题 (1) 逐字 ⇒ 一次扫描回答两个请求,不排两次。问题 (1) 若读到平 0 ⇒ 结论是「fixture 永远带不了它、Bone Guard 的域问题永久只能靠批测」,这是一条 [harness] 缺口要开 issue 交总监,不是买波次的理由(§AX.4 已预登记,此处重申)。"
       }
+    },
+    {
+      "id": "strategy-9",
+      "stream": "strategy",
+      "bundle": "creeppull,pullbeat,pullcad",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 1,
+      "question": "owner P1 条件 (c) 的落地物 `pullcad`(搭车,不申请专波,挂在 test_set.md 21:5xZ 入集提议的批准上)。问题:把勾线的 poke 节拍从 1.2s 拉到 3.0s —— 即引擎 creep aggro 的 2.3s 持续 + 2-3s 再拉冷却之外 —— 之后,拖拽是否真的把兵线拖得更远。⚠ 硬约束:`pullcad` 只在串里同时有 `creeppull` 与 `pullbeat` 时才有行为(源码里的门就是 `pullcad and pullbeat`,单独 arm 逐字节 no-op,已成用例)。⚠ 与 GH #149 的 pullbeat 差分波有交互:若那一波要做「creeppull 单开 vs 双开」的差分,请把 `pullcad` 排在**它之后**的波次,不要在同一波里同时分叉两个节拍常数 —— 否则两个 id 的归因再次不可分离(#149 的教训重演)。",
+      "acceptance": "主判据交录像组,用他们 21:00Z 已经建好的量,不新造:(1) **FLIP 拼法**(带回看守卫的那一版,creeppull_specificity.py)每局计数,armed vs baseline,**必须分 ab/ba 两层报并取两层平均**(#148 §3 修正后的纪律);(2) 每 episode 的**兵线位移**(axis 2 的 net/follow),同样两层平均 —— 这是本 id 直接声称要移动的量;(3) 每 episode 的**右键次数**必须**下降**(节拍从 1.2s 到 3.0s 就是少下 2/3 的单),若不降 ⇒ 第一嫌疑是 arm 串漏了 `pullbeat`(门是合取,漏一个就是 no-op 且**没有任何计数会报警**)。**反向判据不许省**:对线期 last_hits/xpm 不许低于 baseline 腿;episode 数不许塌向 0(那是关闭不是收窄)。次判据(条件 b,粗粒度、不做显著性检验):armed 侧 gpm/deaths 无明显负面即可。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

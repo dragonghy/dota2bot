@@ -188,7 +188,33 @@ function Think()
 		-- Approximate the human 勾线 cadence: attack-order the enemy hero
 		-- for a beat (redirects the adjacent enemy creeps' aggro onto us),
 		-- then walk to the retreat point to drag the wave onto our side.
-		if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > 1.2 then
+		-- [owner P1 condition (c) 20260823] soak candidate 'pullcad' -- the
+		-- beat between aggro pokes. The shipped 1.2s predates any reading of
+		-- the engine mechanic: the published numbers put a drawn creep aggro at
+		-- 2.3s and put a COOLDOWN of 2-3s on drawing it again (Liquipedia Lane
+		-- Creeps / Hotspawn's aggro guide). The replay desk's own GH #143
+		-- measurement -- one right-click buys a median 2.2s of creep chase --
+		-- is that same 2.3s seen from the other side. So beats 2 and 3 of a
+		-- 1.2s cadence are structurally unable to draw anything: the first
+		-- lands inside the live aggro, the second inside its cooldown. They are
+		-- not free either -- Action_AttackUnit on a hero out of attack range
+		-- walks us TOWARD that hero, so an ineffective re-poke drags the
+		-- already-aggroed wave the wrong way. 3.0s clears both the 2.3s aggro
+		-- and the 3s upper reading of the cooldown, and it is the cadence the
+		-- sister camp pull below already uses for the same reason. Armed, the
+		-- drag owns 2.5s of every 3.0s (83%) against 0.7s of every 1.2s (58%),
+		-- and that drag window then matches the 2.3s the creeps actually follow.
+		-- 'pullbeat' IS A STRUCTURAL PRECONDITION, not a recommendation:
+		-- without it the poke is cancelled 33ms after it is ordered (see the
+		-- branch below), so aggro is drawn only by luck and a LONGER beat would
+		-- merely buy fewer lucky draws -- strictly worse than shipped. Asking
+		-- for both here makes 'pullcad' a byte-for-byte no-op when armed alone,
+		-- instead of a dependency kept in prose.
+		local nBeat = 1.2
+		if J.IsSoakCandidate('pullcad') and J.IsSoakCandidate('pullbeat') then
+			nBeat = 3.0
+		end
+		if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > nBeat then
 			bot:Action_AttackUnit(pull.enemy, true)
 			bot.creepPullAttackTime = now
 		elseif J.IsSoakCandidate('pullbeat')
