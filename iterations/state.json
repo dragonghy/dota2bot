@@ -3402,5 +3402,23 @@
   "honest_bounds": "(a) NOT a measured benefit -- no frame of an Axe beside a spell-immune enemy exists anywhere in the corpus, so condition (a) has never been bought and cannot be bought locally; (b) the immune leg of the fixture test is a counterfactual, not a replay instant; (c) the (c) argument is strong and external (the ability's own bkbpierce flag) but a (c) argument alone must not promote an action-adding change -- that is the lanefix lesson; (d) the cost side is argued, not measured: the frames this opens are ones where the health test has already passed, so the cast is a kill and a kill refunds Culling's cooldown, but no wave has shown that.",
   "next_baton": "iterations/queue.json request hero-9: size the domain on the EVENT side in a wave (casts declined against spell-immune targets), NOT on frames. Explicitly pre-registered there: a SILENT reading with no spell-immune enemy hero anywhere in the wave is a CARRIER-ABSENT record, not a negative result -- same pre-registration the 09:50Z round attached to hero-7.",
   "status": "gated, unarmed, NOT in the test set. Do not call this shipped."
+ },
+ "itemtrip_RETURNED_20260823T15": {
+  "ruling": "RETURNED_TO_STRATEGY (退回≠reject),出集,成员串 28→27",
+  "trigger": "§AT.1 预登记第一档:归因波 X = gpm −26.44(24-id @ 7159ff3 @ 888/895/896/906,275 有效局)",
+  "paired_delta": "逐种子 888 +83.20 / 895 +93.47 / 896 +91.01 / 906 +0.23,均值 +66.98(sd 44.71,SE 22.36)",
+  "three_conditions": "(a) WORKING(录像组 13:01Z 域内 9:17=0.53、域外 18:19=0.95、shop 负控 73:70)/ (c) 成立 / (b) 明显负面 ⇒ 不齐",
+  "gate": "bots/mode_item_generic.lua 与 gate 留在树上,永不 arm,直到协同组带新的域重新申请",
+  "homework": "域 0.038 次/局 vs 代价 −90 gpm,差三个数量级 ⇒ 两个测量至少有一个错;两条查证都在已买的 237 个 .dem 里,零 AWS 成本(GH #120)",
+  "caveat_must_cite": "跨波配对不消跨波项 Δ_s = W + E_s;种子 906 的 +0.23 是 W 的唯一约束(认 E_906≈0 ⇒ W≈0)",
+  "ref": "test_set.md §AW.2 / iterations/reports/director/20260823T145800Z.md"
+ },
+ "ruling_delivery_gap_20260823T15": {
+  "what": "13:05Z 的 W3 裁定写进了 queue.json 的 question 散文(申请方字段),status 仍 pending、result 仍空;批测台 4a 只看 status ⇒ 14:10Z 在已 clone 到裁定的树上写下「未裁,默认 campgrade」,与裁定相反",
+  "almost_bought": "18:09:32Z 按未裁默认发错波,owner P1 再顺延 6h(P1 上次掉棒 37 轮)",
+  "same_disease": "08-19「审批只到了 header,而 header 不是机器读的那一行」的第二发:上次落错行,这次落错字段",
+  "fix": "queue.json 新增机器可读 director 字段 {ruling,wave,at,ref,note}(5 条请求补齐)+ batch-desk.md 4a「选波先读 director.wave」+ director.md 步骤 2.5 投递纪律 + backlog §12 机械检查(只立规矩未立检测器)",
+  "quota": "itemtrip 出集 +1 / pullbeat 入集 −1 ⇒ 净 0,可用名额 0;排期 W3 creeppull,pullbeat → W4 campgrade → W5 cmboots 逐字不变",
+  "ref": "test_set.md §AW.1 / §AW.3"
  }
 }

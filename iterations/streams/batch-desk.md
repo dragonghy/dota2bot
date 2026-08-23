@@ -21,7 +21,13 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    (实例自产 verdict 两次不完整,已定为标准收割路径)。结果写进报告 +
    更新 `iterations/queue.json` 对应请求的 status/result。
 4. 决定本轮要不要开新批测(优先级从高到低):
-   a. `iterations/queue.json` 里 status=pending 的请求(先进先出,priority 高者先);
+   a. `iterations/queue.json` 里 status=pending 的请求(先进先出,priority 高者先)。
+      **(2026-08-23T15:xxZ 总监加一行,起因是一次差点买单的送达失败:先读 `director` 字段。)**
+      有 `director` 字段的请求,**排期由 `director.wave`(W3/W4/W5…)决定,压过 priority 与先进先出**;
+      `director.ruling` = `APPROVED` / `APPROVED_CONDITIONAL` 才可发,`RECEIVED` = 只是受理**不许发**。
+      无 `director` 字段 = 总监还没裁,按本行原规则走。**总监的裁定不再写进 `question` 散文**
+      —— 13:05Z 的 W3 裁定当时只落在 `question` 与 `test_set.md §AV` 里,本台 14:10Z 在
+      **已经 clone 到它的树上**仍写下「未裁,默认 `campgrade`」,**保守默认与裁定相反**(§AW.1)。
    b. 队列为空:跑一轮例行"测试版 vs 稳定版"(测试集见
       `iterations/streams/test_set.md`,镜像草稿,armed=测试集全 id 逗号串)。
       **例行波次节流(2026-08-19,防预算烧穿:每波实测 ~$0.5-1.5,若每
@@ -3087,6 +3093,13 @@ python3 tools/batch_test/soak/rec_slot_cost.py <本波 4 个 run 目录> \
 ```
 exit 0 = 通过(录制槽相对基线的净损失 —— **已扣除对照槽自身的 box factor** ——
 都在 5% 以内)⇒ 下一波上 `--rec-slots 16`;exit 1 = 有录制槽超差 ⇒ **退回 1**
+
+> **⚠️ 2026-08-23T15:xxZ 总监裁定(批测台 14:10Z §4 交上来的措辞歧义,判据不改)**:
+> 上面这句「都在 5% 以内」**方向写错了**。`rec_slot_cost.py:307` 的判据是 `rel < -tolerance`,
+> **单边** —— 只有**赤字**(录制槽比基线**慢**超过容差)才报警;**正值 = 录制槽比基线更快,
+> 不是代价,不该报警**(12:09Z 波实测录制槽 1–12 净值 −2.1% ~ +6.4%,`0 beyond tolerance`
+> 是真通过,不是判据放水)。**正确读法**:「录制槽相对基线的**净损失**不超过 5%」,
+> 上不封顶。**裁定:工具与阈值一律不动**,改的只是这句措辞。
 
 > **⚠️ 2026-08-22T22:06Z 批测台更正:上面那句「⇒ 下一波上 `--rec-slots 16`」这一格
 > 走不通,顶格没有验收者,而且是设计不是语料问题。** `rec_slot_cost.py:218-220`

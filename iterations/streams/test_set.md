@@ -1,9 +1,14 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,itemtrip,pullbeat
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullbeat
 
-**成员串 28**(上一行,`pullbeat` 于 2026-08-23T13:xxZ 入集 —— §AV.7;
-**它的入集与 W3 发波同生共死**:归因波若没能成功收割,§AS.3 的名额就没开,
-`pullbeat` 退回第 28 位之外,串改回 27。可 arm 串见各 §x.0,与成员串**不是一回事**)。
+**成员串 27**(上一行)。本行 2026-08-23T15:xxZ 的两处变动:
+- **`itemtrip` 出集 —— 退回协同组**(§AW.2:归因波 X = gpm −26.44 触发 §AT.1 预登记第一档)。
+  **退回≠reject**:它的条件 (a) 是 WORKING(录像组 13:01Z),被否的是这个杠杆值不值得拉。
+  gate 与代码留在树上、**永不 arm**,直到协同组带着新的域回来重新申请入集。
+- **`pullbeat` 留在集合里**:§AV.7 写的入集条件是「与 W3 发波同生共死 —— 归因波若没能成功
+  收割就退回」,**归因波已于 14:10Z 成功收割**(275 有效局,unfinished 0)⇒ 条件已满足。
+
+(28 − `itemtrip` = **27**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
 
 **🆕 2026-08-23T11:5xZ 协同组入集提议:新 gated id `pullbeat`(GH #143)**
 —— **【总监 13:xxZ 裁定:批准入集,W3 独占波,见 §AV】** ——
@@ -5952,3 +5957,92 @@ Axe 可测:`axe 0/306` 已是四天两次),届时**必须同时登记 `crystal_m
   P1 的球此刻在**批测台(W3 波次)**,记在这里和总监报告里;
 - **没有**跑 Lua 门:本轮 `bots/`/`game/` **逐字未动**(改的是 `tools/`+`tests/`+`iterations/`),
   容器也无 Lua 工具链 ⇒ **不声称跑绿过 Lua 全量**;python 套件 **17 passed / 0 failed**。
+
+---
+
+## §AW 总监裁定 2026-08-23T15:xxZ(第五十六次触发):`itemtrip` 按预登记退回出集 +
+## 一份**既已作出又「未送达」**的裁定(本轮真发现)+ `midsupyield` 受理不裁实质
+
+### AW.0 W3 逐字不变,**而且现在写在了会被读到的地方**
+
+W3 = `creeppull,pullbeat`,树钉发波时刻 `origin/main` tip,种子 888/895/896/906,
+`--rec-slots 12` 不许降,发波前两道门非 0 不发,最早 **18:09:32Z**。**§AV.0 一个字没改。**
+变的只是它躺在哪里:见 §AW.1。
+
+### AW.1 ⭐ 本轮真发现:**裁定写进了申请方的字段,于是它既已作出又未送达**
+
+- 13:05:54Z 的 `aae8edb` **确实**把 W3 裁定写进了 `queue.json` —— 但写进的是
+  `strategy-4/strategy-5/hero-8` 的 **`question`** 字段(申请方的散文),
+  三条的 **`status` 全部还是 `pending`、`result` 全部还是空串**。
+- 批测台章程步骤 4a 的选波轴是 **`status=pending` + `priority`**,不是散文。
+  于是 14:10Z 它在**已经 clone 到这份裁定的树上**写下「**串看总监对 W3 名额的裁定
+  (截止 18:09:32Z,未裁默认 `campgrade` 独占)**」——**保守默认与裁定相反**。
+- 若无本轮,18:09:32Z 会按未裁默认发 `campgrade`,owner P1 再顺延一波(6h)。
+  **P1 掉过一次棒(37 轮),铁律 9 连带规则就是为这件事立的;这次不是掉棒,是「送错窗口」。**
+
+**处置(即刻生效)**:`queue.json` 新增 **`director` 字段**(机器可读):
+`{ruling, wave, at, ref, note}`,`_protocol` 已改写;**总监的排期/批准裁定只写进 `director`,
+不再追加进 `question`**;批测台章程 4a 增加一行「**选波先读 `director.wave`**」。
+本轮已给 `strategy-3/4/5/5b`、`hero-8` 五条补齐 `director`。
+
+**规矩(写给以后每一次裁定)**:**裁定要落到被裁方读的那个字段上,而不是落到档案里。**
+`test_set.md` 是档案(权威但不是投递),报告是叙事,**`queue.json` 的机器字段才是投递**。
+与 08-19「审批只到了 header,而 header 不是机器读的那一行」是**同一个病的第二次发作**——
+上次是落错行,这次是落错字段;两次的现场都是「裁定明明写了,而下游按未裁走」。
+
+### AW.2 `itemtrip`:第一档触发 ⇒ **退回协同组、出集**(退回≠reject)
+
+预登记(§AT.1,数据到货前写死):X ≈ −40 量级 ⇒ 退回。**实测 X = gpm −26.44**,
+离两个门柱 13.6 / 63.6,归属无歧义;批测台已诚实记下它**掉出梯子好的那一头**且
+**未事后新增第四档** —— 本席**照第一档执行,同样不新增档位**。
+
+**三条件的裁读**:(a) **WORKING**(录像组 13:01Z:域内 armed 9 : base 17 = 0.53、
+域外 18 : 19 = 0.95、`shop` 负控 73 : 70 没被压);(c) 论证仍成立;
+**(b) 明显负面** ⇒ 三条件不齐 ⇒ 出集。**这正是 CLAUDE.md 那条「locally-correct ≠
+emergently-good」的第 N 次兑现:杠杆确实拉动了,而拉动本身是坏的。**
+
+**⭐ 交给协同组的不是「退回」两个字,是一道算术题**:
+- 域:**8 次 / 213 局 = 0.038 次/局**,每次往返中位 **40.1s**;
+- 代价:三个种子各 **−83 ~ −93 gpm**;
+- ⇒ **代价比域大约三个数量级。两个测量至少有一个是错的**,而先修哪一个决定下一步。
+  可查的两条(**都在已买到的 237 个 `.dem` 里,零 AWS 成本**):
+  ① 检测器只数「走完的回家行程」,armed 腿被压掉的物品模式帧可能以**别的形状**出现
+  (原地不动 / 该买的没买);② `GetDesire` 返回 nil 那条腿在**别的时刻**也生效了。
+- **一个不该被忽略的自洽性**:跨波配对**不消跨波项** —— Δ_s = W + E_s。
+  **种子 906 的 +0.23 是那个 W 的唯一约束**:若认 E_906 ≈ 0(该阵容上杠杆惰性,
+  与「域随阵容变」同源),则 **W ≈ 0**,+67 才读得成 `itemtrip` 的效应。
+  **这条自洽性要写进任何引用这个 +67 的地方**,否则它就是一个没标注前提的因果声明。
+
+**处置**:`itemtrip` **出集**(成员串 28→27),gate 与 `bots/mode_item_generic.lua`
+**留在树上、永不 arm**,直到协同组带着新的域回来重新申请。**GH #120 不关**
+(它是 owner P2 家族的问题,不是这个杠杆的),下一棒已在 #120 上交出。
+
+### AW.3 名额结算(§AT.3 / §AV.2 的算术兑现)
+
+归因波 resolve `itemtrip`(**退出集合**)⇒ 名额 **+1**;`pullbeat` 入集用掉 **−1**
+(§AV.7 的生死条件「归因波成功收割」**已满足**:275 有效局、unfinished 0)⇒ **净 0**。
+**冻结仍在,当前可用名额 = 0**;W4(`campgrade`)的名额来自 W3 对 `creeppull` 的 resolve,
+W5(`cmboots`)的来自 W4,**逐波顺延,一次一个**。
+
+### AW.4 `midsupyield`(协同组 13:3xZ 入集提议):**受理,不裁实质**
+
+排在 **W5 之后(不早于 W6)**,`queue.json` `strategy-5b` 已登记
+`director.ruling=RECEIVED / wave=unscheduled`。**这不是批准** —— 实质裁定
+(入集与否、要不要独占波、`midtp,suptp` 是不是它的结构性使能项)下一次触发给。
+登记的理由只有一条:**接力棒必须有个看得见的位置**(铁律 9 连带规则),
+而当前名额为 0,现在批准它只会让集合更难判读。
+
+### AW.5 批测台 12:09Z/14:10Z 交上来的措辞歧义:**判据不改,章程措辞改**
+
+`rec_slot_cost.py:307` 的判据是 `rel < -tolerance` ⇒ **只对赤字(录制槽比基线慢)报警**,
+而 `batch-desk.md` 那句「净损失**都在 5% 以内**」会让人以为 **+6.4%(更快)**该报警。
+**裁定:单边判据是对的**(录制槽跑得比基线快不是代价,没有任何东西需要为此退回),
+**改的是章程措辞**,已在 `batch-desk.md` 该段下追加更正行。**不改工具、不改门槛。**
+
+### AW.6 本节**没有**做的事
+
+- **没有** promote 任何 id(`creeppull` 的 resolve 要等 W3,`campgrade`/`cmboots` 还没发波);
+- **没有**动 §AT.1 的三档门柱、**没有**为 −26.44 新增第四档;
+- **没有**改 `rec_slot_cost.py` 的判据或阈值;
+- **没有**碰 `bots/` / `game/` ⇒ **稳定版零漂移**,两道 Lua 门无适用对象、**不声称跑绿过**;
+- **没有**动 `OWNER_PRIORITIES.md`(主会话维护)。P1 的球仍在**批测台(W3 波次)**。
