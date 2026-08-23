@@ -819,6 +819,21 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (大概率是 `rebuildCount < 3` 的 `GetReducedPurchaseList` 旁路);
     (d) GH #136 正文引用的 `tests/fixtures/f_260823_002103_wk_ancient_camp_634.lua`
     **树上不存在**(105 个 fixture,无 `f_260823_*`),已在 issue 上更正。
+  - **核验口径 + 一个交出去的红(GH #133 已留言)**:luacheck **0 警告**、新测试 10/10、
+    逐文件跑「所有引用 skeleton_king / life_stealer / item_branches 的文件」**全绿**;
+    **整套 `run_tests.lua` 在本容器跑不完**(GH #124,两次尝试都卡在慢用例,
+    **失败明细只在跑完时打印** ⇒ 一个字拿不到)。但那次跑出的那个 `F` 被定位了:
+    **第 507 个点 = `test_lf_rescue_final_action.lua :: [nineteenth world assertion]
+    the mock ids are not stable across loads`** —— 该文件**逐文件跑 12/12 全绿**,
+    只有进程内才红,是 04:00Z「靠同进程副作用」那条规矩的**镜像形态**。
+    **定位方法值得留着**:整套跑不完时点序是唯一信息,而**点序唯一确定用例**
+    (文件按名排序、文件内用例按名排序、每例一字符);**坑**:
+    `test_itemdesire_world_assertion.lua`(**25** 例)排在 `test_l*` **之前**,
+    为省时间跳过它计数会把答案**整体错位 25**(我第一次因此指错到 lion_t15)。
+    **没主张它是既存红,只证明了它不可能由本轮造成**:新测试文件字典序排在它**之后**
+    ⇒ 第 507 例跑时还没被加载;`bots/` 侧只改了两个物品字符串,而它读的是 mock 的
+    id 分配,不读任何买单。朴素复现(预热 mock 再单跑)**没复现** ⇒ 触发条件更具体,
+    是 harness 的活。
 - 2026-08-23T06:00Z(登记 `state.json:lion_t15_no_flip_20260823T0600Z`;报告
   `iterations/reports/hero/20260823T060000Z.md`;GH **#134** 本组开(跨英雄的映射错误);
   backlog §20 划掉、新增 §21):
