@@ -33,6 +33,23 @@ Usage:
   seed_draft.py --find axe,lion --from 900 --count 4
   seed_draft.py --rates --scan 2000    # per-hero appearance rate over N seeds
   seed_draft.py --selftest             # re-verify the port against known rosters
+  seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5   # PRE-LAUNCH GATE
+
+`--assert-carrier` is the launch gate, not a report (director ruling 2026-08-23
+16:xxZ, test_set.md AV.3).  `check_armed_wiring.py` proves the id's call site
+exists ON THE PINNED TREE; nothing proved the HERO exists in the wave's draft,
+and a hero-specific id armed over a draft that never carries it is a byte-level
+no-op that reads as "no effect" -- the same silent-failure shape, one axis over.
+The incident in this file's own header (224 mirror games, zero Axe) is that
+failure already paid for once.  So: exit 1 when a term is carried by NO seed,
+exit 2 when nothing was checked (an unchecked gate is not a passed gate), and
+print the satisfied/total fraction even when it passes, because PARTIAL coverage
+is the number the pre-registered domain has to be written against.
+
+A term is `hero` (drafted at all) or `hero:pos` (drafted INTO that position).
+The position half is load-bearing for build-list ids: `cmboots` rewrites
+`sRoleItemsBuyList['pos_5']` only, so a Crystal Maiden drafted pos 4 -- seed 888
+does exactly that -- carries the hero and not the id.
 """
 import argparse
 import os
@@ -169,6 +186,74 @@ def positions_for_game(aj, pool=None):
     return out if len(out) == 10 else None
 
 
+def parse_carrier_terms(spec, pool):
+    """`"crystal_maiden:5,axe"` -> [(hero, pos_or_None)], or raise ValueError.
+
+    Refusing an unknown hero (rather than reporting it absent) is the whole
+    point: a typo'd term would otherwise come back ABSENT and read as a real
+    carrier collapse -- loud in the wrong direction, and the launch would be
+    cancelled for nothing.
+    """
+    names = {n for n, _ in pool}
+    terms = []
+    for raw in (spec or "").split(","):
+        raw = raw.strip()
+        if not raw:
+            continue
+        hero, _, pos_s = raw.partition(":")
+        hero = hero.strip()
+        if hero not in names:
+            raise ValueError("not in pool: %s" % hero)
+        pos = None
+        if pos_s.strip():
+            if not pos_s.strip().isdigit() or not 1 <= int(pos_s) <= 5:
+                raise ValueError("bad position in term %r (want 1-5)" % raw)
+            pos = int(pos_s)
+        terms.append((hero, pos))
+    if not terms:
+        raise ValueError("no carrier terms given")
+    return terms
+
+
+def assert_carrier(seeds, terms, pool, out=sys.stdout):
+    """Pre-launch carrier gate.  Returns 0 (ok) / 1 (a term is carried by no
+    seed) / 2 (nothing was checked).  Prints one CARRIER line per seed+term, a
+    per-term summary, and one CARRIER_GATE line."""
+    if not seeds:
+        print("CARRIER_GATE terms=%d seeds=0 exit=2 (nothing checked)" % len(terms), file=out)
+        return 2
+
+    worst = 0
+    for hero, pos in terms:
+        label = hero if pos is None else "%s:%d" % (hero, pos)
+        satisfied = []
+        for seed in seeds:
+            pmap = position_map(seed, pool)
+            where = [(team, p) for (team, h), p in pmap.items() if h == hero]
+            if not where:
+                print("CARRIER seed=%d term=%s present=no satisfied=no" % (seed, label), file=out)
+                continue
+            team, drafted_pos = where[0]
+            ok = pos is None or drafted_pos == pos
+            if ok:
+                satisfied.append(seed)
+            print("CARRIER seed=%d term=%s present=yes side=%s pos=%d satisfied=%s"
+                  % (seed, label, team, drafted_pos, "yes" if ok else "no"), file=out)
+        if not satisfied:
+            verdict = "ABSENT"
+            worst = max(worst, 1)
+        elif len(satisfied) == len(seeds):
+            verdict = "FULL"
+        else:
+            verdict = "PARTIAL"
+        print("CARRIER term=%s seeds=%d satisfied=%d verdict=%s carriers=%s"
+              % (label, len(seeds), len(satisfied), verdict,
+                 ",".join(str(s) for s in satisfied) or "none"), file=out)
+
+    print("CARRIER_GATE terms=%d seeds=%d exit=%d" % (len(terms), len(seeds), worst), file=out)
+    return worst
+
+
 def selftest(pool):
     ok = True
     for seed, roster in KNOWN.items():
@@ -190,12 +275,23 @@ def main():
     ap.add_argument("--rates", action="store_true", help="print per-hero appearance rate")
     ap.add_argument("--scan", type=int, default=2000, help="seeds to scan for --rates/--find")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--assert-carrier", dest="assert_carrier",
+                    help="pre-launch gate: comma-separated `hero` / `hero:pos` terms that the "
+                         "given seeds must carry (exit 1 = a term has no carrier, 2 = nothing checked)")
     ap.add_argument("--pool", default=POOL_TXT)
     args = ap.parse_args()
     pool = load_pool(args.pool)
 
     if args.selftest:
         return selftest(pool)
+
+    if args.assert_carrier:
+        try:
+            terms = parse_carrier_terms(args.assert_carrier, pool)
+        except ValueError as exc:
+            print("CARRIER_GATE exit=2 (%s)" % exc, file=sys.stderr)
+            return 2
+        return assert_carrier(args.seeds, terms, pool)
 
     if args.find:
         want = {h.strip() for h in args.find.split(",") if h.strip()}

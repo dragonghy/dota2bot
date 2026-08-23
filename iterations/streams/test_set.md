@@ -1,7 +1,12 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,itemtrip
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,itemtrip,pullbeat
 
-**🆕 2026-08-23T11:5xZ 协同组入集提议:新 gated id `pullbeat`(GH #143)** ——
+**成员串 28**(上一行,`pullbeat` 于 2026-08-23T13:xxZ 入集 —— §AV.7;
+**它的入集与 W3 发波同生共死**:归因波若没能成功收割,§AS.3 的名额就没开,
+`pullbeat` 退回第 28 位之外,串改回 27。可 arm 串见各 §x.0,与成员串**不是一回事**)。
+
+**🆕 2026-08-23T11:5xZ 协同组入集提议:新 gated id `pullbeat`(GH #143)**
+—— **【总监 13:xxZ 裁定:批准入集,W3 独占波,见 §AV】** ——
 **按总监 §AU.2「新 id 首波不并进 bundle」申请专波,而且这一波的串里
 必须同时有 `creeppull`** —— `pullbeat` 只活在 `bot.roamCreepPull` 这个计划里,
 `creeppull` 不 armed 时它一帧都跑不到,**单独 arm 是逐字节 no-op**(这正是
@@ -50,7 +55,9 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 ---
 
-**🆕 2026-08-23T07:5xZ 协同组入集提议:新 gated id `campgrade`(GH #137)** ——
+**🆕 2026-08-23T07:5xZ 协同组入集提议:新 gated id `campgrade`(GH #137)**
+—— **【总监 13:xxZ 裁定:条件性批准**(§AT.3 起就有)**不变,排期由 W3 顺延到 W4;
+不是退回、不是降级 —— 让路的理由是 owner P1 与名额算术,不是这一包的质量。见 §AV.1/§AV.2】** ——
 **不申请专波,请当一个额外 id 并进下一波已经在跑的串。**
 
 **缺陷是纯结构的、不需要批测来确认**:`bots/FunLib/aba_site.lua` 的 `RefreshCamp` 那条
@@ -5750,3 +5757,156 @@ exit 0 全部接线 / **1 有未接线(不许发波)** / **2 ref 或参数不可
 
 **LIMITS(引用干净结果时照抄)**:WIRED = **那棵树上存在调用点**,不代表该点可达、
 其谓词能为真、或该 id 做了任何事。**「接了线」是条件 (a)/(b) 的地板,不是任何一个的替代品。**
+
+---
+
+## §AV 总监裁定 2026-08-23T13:xxZ(第五十五次触发):W3 的「三个 claimant 一个名额」——
+## 裁给 `creeppull,pullbeat`;`pullbeat` 条件性入集;外加把「载体不在」变成第二道 exit code 门
+
+批测台 12:09Z §8 把冲突交上来、明说不自裁,截止 **2026-08-23T18:09:32Z**(W3 最早发波时刻)。
+三条 claimant 今天**都已就绪**(接线各自 exit 0),所以这是一道纯排期裁定。
+
+### AV.0 W3 的 armed 串:**`creeppull,pullbeat`**
+
+| 参数 | 值 | 依据 |
+|---|---|---|
+| armed 串 | `creeppull,pullbeat` | §AV.1/§AV.2 |
+| 树 | **发波时刻的 `origin/main` tip**(全 40 位 SHA,不用 `--ref main`) | §AU.3:独占波波内自足,无跨波配对义务 |
+| 种子 | **888 / 895 / 896 / 906**(不换) | §AV.5 —— 换种子这一波**买不到任何东西**,而代价现在是一个数 |
+| 发波前的门 | `check_armed_wiring.py` 非 0 不发(§AU.6)**加** `seed_draft.py --assert-carrier`(§AV.3) | 两道门查两条轴 |
+| 其余 | 4 台 on-demand × 1 种子、`--slots 16`、`--rec-slots 12`、2h 看门狗、`--games 22` | 照 §AT.0 |
+
+**`--rec-slots` 这一波不许降**:W3 的主判据是帧级检测器(`creeppull_specificity.py`),
+不是经济读数 —— 帧通道就是这一波要买的东西本身。
+
+### AV.1 为什么不是 `campgrade`(它排第一,而且是**我**把它排第一的)
+
+三条独立的腿,任何一条单独都够:
+
+1. **铁律 9**:`strategy-5` 是 **owner P1**(「拉野是肯定要做的」;owner 2026-08-22 对 40 轮
+   无进展**明确表示失望**)的下一棒,而 owner 优先项**凌驾于 issue 流**。`campgrade`(GH #137)
+   与 `cmboots`(GH #144)都不在 `OWNER_PRIORITIES.md` 里。P1 的责任链此刻正卡在
+   **「一个带申报目的的批测波次」**这一格上 —— 那格就是 W3。
+2. **它根本不需要 §AU.2 的例外,而三方都以为它需要。** 批测台把 `strategy-5` 记成
+   「两个 id 同波 = §AU.2 的明写例外申请」,协同组自己也是这么提的。**两边都读漏了一件事**:
+   `creeppull` **早就在集合里**,而且**就在 §AT.0 那个 24-id 可 arm 串里**(第 19 位)。
+   ⇒ 这一波**只有一个新 id**(`pullbeat`),`creeppull` 是它的**结构性使能项**
+   (`pullbeat` 只活在 `bot.roamCreepPull` 里,单独 arm 是逐字节 no-op)。
+   **§AU.2 逐字成立,不需要动它,也不需要给它开例外。**
+3. **`campgrade` 的排期成本是可逆的,P1 的不是。** 它顺延一波(6 小时)什么都不损失;
+   P1 已经等了 40 轮,而它掉过一次棒(2026-08-19 修好后因 issue 关闭从队列消失 37 轮,
+   铁律 9 连带规则就是为这件事立的)。
+
+### AV.2 ⭐ 名额算术:W3 是三条里**唯一会把名额还回来**的一波
+
+§AS.3 的冻结按 §AT.3 每次「resolve 一个 id(**退出集合 或 被开脱**)」开**一个**名额,
+归因波 resolve 的是 `itemtrip` ⇒ 名额 **1**。三条 claimant 花的都是这一个,但**回收不一样**:
+
+| claimant | 花名额 | 这一波能 resolve 掉集合里的谁 | 净名额 |
+|---|---|---|---|
+| **`creeppull,pullbeat`** | 1(`pullbeat`) | **`creeppull`** —— 它在集合里、在串里,而**它的条件 (a) 从来没买到过**(P1 现状原文)。W3 的帧读数无论 WORKING 还是 SILENT/BUGGY,它**都会 resolve**(promote 出集 _或_ 退回出集,§AT.3 两者都算) | **0** |
+| `campgrade` | 1 | 无(集合里没有它要 resolve 的成员) | **−1** |
+| `cmboots` | 1 | 无(同上) | **−1** |
+
+**⇒ 按冻结自己的立法目的(集合的可判读性,不是省钱),W3 走 `creeppull,pullbeat`
+是三条里唯一不让集合更难判读的选择。** 这条腿与铁律 9 那条**互相独立**:
+即使 owner 从没点过拉野,名额算术单独也会给出同一个答案。
+
+**W4 的名额从哪来**:W3 收割 + 录像组核验 ⇒ `creeppull` resolve ⇒ 名额回到 1 ⇒ **`campgrade` 用它**。
+若 W3 的核验结论迟到而 W4 时刻已到,**`campgrade` 照发**(它的条件性批准自 §AT.3 起就有,
+名额是集合增长的闸门,不是发波的闸门 —— 这两件事本节之前一直混着说,现在分开)。
+
+### AV.3 [harness] 交付:**载体门** —— `seed_draft.py --assert-carrier`(第二道 exit code 门)
+
+`check_armed_wiring.py`(§AU.6)证的是「**这棵树上有调用点**」。**没有任何一样东西证过
+「这一波的牌里有那个英雄」** —— 而两者失败时的现场**一模一样**:armed 上去逐字节 no-op、
+读数呈现为「无影响」、**没有任何计数会报警**。这不是假想:`seed_draft.py` 自己的文件头记着
+一次 **224 局镜像局、零 Axe** 的波(为 `axebuyblink` 买 (a),买了个空)。
+
+实现:`tools/batch_test/soak/seed_draft.py --assert-carrier <term[,term...]>`,
+term = `hero` 或 `hero:pos`;测试 `tests/test_seed_draft_carrier.py`(**29 检查,变异 M1–M4 四红**:
+absent 返回 0 / 零种子当通过 / 位置那一半被忽略 / 拼错的英雄被静默丢弃)。
+
+- **exit 1** = 某个 term **零个种子**带得动 ⇒ 这一波结构上买不到任何东西,**不发**;
+- **exit 2** = **什么都没查**(没给种子 / 英雄名不在池子里 / term 为空)—— 沿用 §AU.6 的规矩,
+  **未查 ≠ 通过**;拼错的英雄**永远走 2 不走 1**(报 ABSENT 会为了一个打字错误取消一次发波);
+- **exit 0** 也**必须把 `satisfied/seeds` 打出来**:PARTIAL 不是失败,但它是**预登记的域**
+  必须照抄的那个分数(hero-8 的验收原文第一句就是「先报这个数」)。
+
+**LIMITS(引用干净结果时照抄)**:载体门证的是**这一波的牌桌上有这个英雄(且在那个位)**,
+**不代表**该英雄的那条分支可达、谓词能为真、或该 id 做了任何事。
+**接线门 + 载体门 = 条件 (a)/(b) 的两块地板,不是任何一个的替代品。**
+
+### AV.4 ⭐ 这道门当场改写了 `cmboots` 的域:不是 306/306,是 **4 个种子里的 3 个**
+
+```
+$ seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5
+CARRIER seed=888 term=crystal_maiden:5 present=yes side=dire pos=4 satisfied=no
+CARRIER seed=895 … pos=5 satisfied=yes   896 … yes   906 … yes
+CARRIER term=crystal_maiden:5 seeds=4 satisfied=3 verdict=PARTIAL carriers=895,896,906
+```
+
+`cmboots` 只改写 `sRoleItemsBuyList['pos_5']`(`hero_crystal_maiden.lua:121–123`)⇒
+**种子 888 把 CM 发在 pos 4,那一整个种子的局里这个 id 是惰性的**。
+⇒ **§AT.2 那个「CM 306/306」是「CM 在场」,不是「CM 在 5 号位」**;`cmboots` 的真实域
+≈ **四分之三的局**。(§AU.1 早已把 `9fa4898` 从 −50.81 的嫌疑里机制性地摘掉,
+**本条不复活那个嫌疑**,它只是把域写准 —— 而域正是 hero-8 验收里**必须先报**的那个数。)
+
+**给 hero-8 的强制栏位**:发波前跑这一行,把 `satisfied=3/4` 抄进预登记;
+**收割时的分母按 3 个种子算,不是 4 个** —— 否则 CARRIER 稀释会被读成效应变小。
+
+### AV.5 种子集的常设登记**推迟**,而理由现在是一个数而不是一个偏好
+
+§AU.3 允许独占波顺带首次登记 axe+lion 新种子集(`974/986/1024`)。**W3 不用它**:
+
+- **它对 W3 一无所买**:`creeppull` 的门是**角色**(`J.IsCore`,pos 1-3)不是英雄
+  (`jmz_func.lua:6977`)⇒ 任何一套种子都 100% 带载体,换种子只换掉一个已知的对照基础;
+- **它对 W5 是负的**:`974/986/1024 --assert-carrier crystal_maiden:5` ⇒ **exit 1、
+  ABSENT、carriers=none**。把这套登记成**常设**种子集(§AT.5:每纪元最多换一次),
+  `cmboots` 就**永远买不到 (b)** —— 而它整个存在的理由就是让 `9fa4898` 可测(§AU.4)。
+- 顺带:提议的这套只有 **3 个种子**,而一波是 4 台 × 1 种子。
+
+**⇒ 裁定**:常设种子集的登记推迟到**真正需要 Axe 的那一波**(§AT.5 的立法目的就是让
+Axe 可测:`axe 0/306` 已是四天两次),届时**必须同时登记 `crystal_maiden:5` 的载体读数**;
+在此之前 `888/895/896/906` 继续作常设集。**任何一套候选种子集在登记为常设之前,
+必须对每一个 hero/position 专用 id 各跑一次载体门** —— 常设集是**所有**未来独占波的地基,
+为一个 id 选的地基会静默地废掉另一个 id。
+
+### AV.6 `pullbeat` 入集的三条件核查(§AV.7 的依据)
+
+- **(a)-local ✅**:`tests/test_replay_pullbeat_attack_cancel.lua` 8 例全绿、**5 变异 5 抓**,
+  真实帧 `f_072738_zuus_mana`;未 armed 那一拍的命令流**逐条比对**(`A` + 36 个 `M`,
+  一个 hold 都不许有)⇒ 逐字节等价是**断言出来的**,不是声称的。
+  三条「本地买不到」(W1 语料无兵线 / W2 `GetAttackRange` 966/966 帧读 mock 默认 150 /
+  W3 `GetAttackPoint` 在 mock 里不存在)**已写死在头注里**,且 W2 直接解释了
+  「目标在攻击距离内才 hold」那条子句**为什么没有写** —— 这正是我要的形状:
+  **买不到就不写,而不是写了当买到**。
+- **(c) ✅**:人类勾线是**起手之后**再 attack-cancel;修复前的节奏在攻击起手**之前**
+  就发 `Action_MoveToLocation`,取消掉的是还没开始的攻击 —— 标准打法可检索佐证,
+  且 GH #143 的 26.8% 零尾巴 / 47.5% 单次普攻是它的指纹。
+- **(b)**:W3 就是买它的那一波(粗粒度,不做显著性检验)。
+- **供给侧**:它与 `creeppull` 同波 ⇒ verdict **分不开这两个 id**。这是**结构性的**
+  (单独 arm 不可达),不是取舍 —— 照 §AU.2 括号里那句记录下来即可。
+  **有一个跨波参照但它不是判据**:GH #143 的 armed 尾巴 2.2s / 零尾巴 26.8% 是
+  `creeppull` 单独的读数,可以并排看,**但那是跨波跨树,按 §AF.3 不作判据**;
+  W3 的判据永远是**波内** armed vs base。
+
+### AV.7 处置汇总
+
+| 对象 | 处置 |
+|---|---|
+| `pullbeat` | **批准入集**(成员串 27 → 28),与 W3 发波同生共死;归因波未成功收割则一并回退 |
+| `creeppull` | 留在集合里,**W3 之后必须 resolve**(promote 或退回,不许再挂着) |
+| `campgrade` | 条件性批准**不变**,排期 W3 → **W4**;名额来自 W3 对 `creeppull` 的 resolve |
+| `cmboots` | 批准**不在本节**(那是 §AU.4 交给英雄组的补 gate,已落地);排期 **W5**,发波前必过载体门,预登记按 **3/4 种子** |
+| `itemtrip` | 逐字未动(§AT.4:暂时出串、仍在集合内),等归因波读数 |
+| 其余 24 id | 逐字未动。**本节未 promote、未 reject 任何 id。** |
+
+### AV.8 本节**没有**做的事(免得被当成做了)
+
+- **没有**碰 §AT.1 的三档门柱(−40 / −90 / 之间),归因波数据还没到货;
+- **没有**改 §AU.2 —— 本节的结论恰恰是它**不需要例外**;
+- **没有**动 `OWNER_PRIORITIES.md`(该文件写明由主会话维护、各组不得增删)。
+  P1 的球此刻在**批测台(W3 波次)**,记在这里和总监报告里;
+- **没有**跑 Lua 门:本轮 `bots/`/`game/` **逐字未动**(改的是 `tools/`+`tests/`+`iterations/`),
+  容器也无 Lua 工具链 ⇒ **不声称跑绿过 Lua 全量**;python 套件 **17 passed / 0 failed**。
