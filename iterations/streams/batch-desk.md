@@ -98,6 +98,14 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **`hero:pos`** 两种形式 ⇒ **角色门 / 等级门的 id(如 `creeppull` 的 `J.IsCore`、`campgrade` 的等级)
   它表达不了**;这类 id 的载体门按总监先例读作 **no-op**,但**必须附发牌表作正面证据**
   (`seed_draft.py <seeds>`,数满足那条轴的槽位),不能只写一句 no-op。缺口在 GH #140。
+- **两臂(bisect)波:总监 2026-08-23T19:xxZ 落地 GH #141,现在发得出来了。**
+  `spot_run.sh --validate '<cand> <seeds> --games N --cand-ref <ref串>'` ⇒ 基线腿带
+  `<ref串>`,波内直接买 armA-vs-armB(跑间噪声整个消掉,成本减半)。
+  **收割时必须带同一个串**:`recover_verdict.py <dir> <cand> --cand-ref <ref串>`。
+  **不带 = 归档出一个标着 `contrast=vs_stable` 的两臂读数**,而两臂读的是 armA−armB、
+  单臂读的是 candidate−stable,**算术一样所以事后分不出来** —— 这是本条唯一的坑。
+  未设 `--cand-ref` 时一切逐字节照旧(有测试钉死),**普通波什么都不用改**。
+  诚实边界:**农场端还没实跑过一次两臂波**,第一次实跑请照常报可证伪的预登记。
 - 详细操作手册:`.claude/agents/batch-runner.md`(launch/监控/恢复/成本细节)。
 
 ## 当前状态(每次触发后更新)

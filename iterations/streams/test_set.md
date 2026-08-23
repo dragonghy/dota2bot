@@ -6332,3 +6332,95 @@ W3/W4/W5 按 §AU.2 **都是独占波**(新 id 首波只含新 id),把 `itemtrip
 - **没有**改 `seed_draft.py` / `check_armed_wiring.py` / `rec_slot_cost.py` 任何一行;
 - **没有**碰 `bots/` / `game/` ⇒ **稳定版零漂移**(本轮唯一的 Lua 改动是 `tests/test_smoke_load.lua`);
 - **没有**动 `OWNER_PRIORITIES.md`(主会话维护)。**P1 的球仍在批测台(W3 波次,18:09:32Z)。**
+
+---
+
+## §AY 总监裁定 2026-08-23T19:xxZ(第五十八次触发):GH #141 落地 —— §AS.3(乙) 从「结构上买不到」变成**一波买得到**
+
+### AY.0 一句话
+
+**AT.3 记下的那个「我写了一个没有实现的逃生口」,今天有实现了。**
+`soak_side.lua` 现在可以带一个**可选** `cand_ref`,基线腿因此第一次能带自己的 armed 串;
+`J.IsSoakCandidate` 按腿选串,渲染器收敛成**唯一一份**(`write_soak_side.sh`),
+verdict 两个写手都记 `cand_ref` + `contrast`,`spot_run.sh --validate ... --cand-ref STR`
+把这条路从头接到尾。**未设 `cand_ref` 时,行为逐字节等于今天** —— 这是前提不是附赠。
+
+### AY.1 为什么这条必须由总监做、且必须先写验收
+
+爆炸半径 = **树上每一个 gated fix**,而且是**两个方向**的失效:
+一个 fix 悄悄**停止** arm(那一波什么都没测,却照样报一个数),
+或者一个 fix 悄悄**开始** arm(已发布行为变了)。
+所以 §4.1 那条「未设时逐字节不变」被写成**第一组**测试,断言覆盖 `cand` 的**全部四种形态** ——
+单 id / `'all'` / 逗号 bundle / 关闭(`side = false`)/ **门文件根本不存在**(真实对局的那一种)。
+
+### AY.2 落地清单(五个文件 + 两个测试)
+
+| 文件 | 改动 |
+|---|---|
+| `bots/FunLib/jmz_func.lua` | `GetSoakSideConf` 读可选 `v.cand_ref`;新增**共用**匹配器 `SoakStrArms`(单 id / `'all'` / 逗号 bundle,**两条腿共用一份**,不抄第二份逗号解析 = GH #67 的形状);`J.IsSoakCandidate` 分两支:`cand_ref == nil` 走**原封不动的老路**(先匹配、匹配上才读 `GetTeam()`),否则按腿选串 |
+| `tools/batch_test/soak/write_soak_side.sh` | **新增**:渲染 `soak_side.lua` 的唯一一处 |
+| `tools/batch_test/soak/validate_onspot.sh` | `deploy_wave` 改调渲染器;读可选 `CAND_REF`;verdict 增 `cand_ref` + `contrast` |
+| `tools/batch_test/soak/mirror_ab.sh` | 先渲染后转义(`'` → `\047`)再塞进 SSM JSON;不再自己拿一份格式串 |
+| `tools/batch_test/soak/recover_verdict.py` | 可选 `--cand-ref`;verdict 增 `cand_ref` + `contrast`;裸 `--cand-ref` 直接报错退出 |
+| `tools/batch_test/aws/spot_run.sh` | `--validate 'CAND SEEDS... [--games N] [--cand-ref STR]'`,并把它**从种子串里剥掉**(否则被当成一个种子) |
+
+### AY.3 ⭐ 记账必须改,数学不改(§3.4 的要害)
+
+两臂波的每种子读数是 **armA − armB**,**不是** candidate − stable。
+**算术一模一样,这正是它危险的原因**:归档之后并排放在单臂读数旁边,
+比的是两个不同的量,而且**事后分不出来**。
+⇒ 两个 verdict 写手(离线的 `recover_verdict.py` **和**农场实际跑的、
+嵌在 `validate_onspot.sh` 里的那一份)都必须带 `cand_ref`,非空标 `contrast=two_arm`,
+缺省标 `contrast=vs_stable`。测试**分别驱动这两份**,因为「离线工具有、线上那份没有」
+正是本仓库反复犯的那类差一层。
+
+**`CAND_REF=''` 判为「未设」**:空串若算「已设」,每一个普通波都会变成一个
+「第二臂什么都没 arm」却顶着 `contrast=two_arm` 标签的读数 —— **贴错标签比读错数更坏**。
+
+### AY.4 验收与变异(全部实跑,不是清单)
+
+- `tests/test_soak_cand_ref_gate.lua`(**11 测试**):5 条单臂契约 + 1 条 fixture 反空跑哨兵 + 5 条两臂契约。
+  两臂那 5 条跑在**真实帧**上(`tests/fixtures/f_080225_wk_lane.lua`,zuus=team 2 / skeleton_king=team 3),
+  **不用 mock 队伍号** —— 门比的就是 `GetTeam()` 对 `side`,自己造一个队伍号等于断言自己的算术。
+- **Lua 变异三发**:
+  **M0** = `git show HEAD:` 的改动前版本 ⇒ **5 条单臂全绿、4 条两臂全红**
+  (这是最强的一条证据:单臂契约在新旧两棵树上读数相同 ⇒ 那 39 行没动到它;两臂测试确实需要新代码);
+  **M1**(缺省时基线腿落到 `cand` 上)⇒ **3 红**,含「off-candidate 必须什么都不 arm」;
+  **M2**(两腿读同一个串)⇒ **3 红**。
+- `tests/test_soak_cand_ref.py`(**44 checks**):渲染字节 / Lua 可加载性(用真 `lua5.1` 加载渲染出来的行)/
+  **唯一渲染器**的漂移检查(全 `tools/` 扫 `return { side = `,只允许 `write_soak_side.sh` + 那一处
+  **关闸**字面量)/ 把 `mirror_ab.sh` 的 `ssm_side_line()` **原样抠出来执行**、比对老字面量逐字节 /
+  两个 verdict 写手 / `spot_run.sh` 的三条接线。
+- **harness 变异五发**:M3a(离线 verdict 丢字段)**4 红**、M3b(**农场那份**丢字段)**3 红**、
+  M4(未设时也渲染 `cand_ref`)**5 红**、M5(`mirror_ab.sh` 退回自带格式串)**2 红**。
+- 门:`luacheck bots game --formatter plain` **0 警告**;python 套件 **18 passed / 0 failed**(17 → 18);
+  Lua 全量套件见本轮报告 §验证。
+
+### AY.5 交棒(README 铁律 9:「修好」不等于「做完」)
+
+**(乙) 现在买得到了,但本轮不排任何波次** —— 名额仍是 **0**,排期 W3→W4→W5→W6 **逐字不变**。
+交出去的是三件具体的事:
+
+1. **→ 批测台**:`spot_run.sh --validate '<cand> <seeds> --games N --cand-ref <ref串>'` 即可发两臂波。
+   收割时**必须**用 `recover_verdict.py <dir> <cand> --cand-ref <ref串>`,否则归档出来的
+   `contrast=vs_stable` 是**错的标签**。AT.3 的短期绕行(同树同种子的**配对波对**)从此是**备选**而非唯一路:
+   两臂波把跑间噪声整个消掉(06:11Z 波逐种子 gpm −122/−120/−106/−25,`sd 45.81`),且**成本减半**。
+2. **→ 协同组 / 下一个总监**:被 §AS.3 冻结卡着的 `campgrade`(GH #137)现在有了第二条出口。
+   **仍不自动解冻** —— 名额规则(一次 resolve 开一个名额)不变,变的只是 (乙) 从「买不到」变成「买得到」。
+3. **诚实边界**:本轮**没有真的跑过一次两臂波**。证据全部来自单元测试 + 变异,
+   农场端的第一次实跑仍待批测台;**在那之前,「(乙) 买得到」是一个有测试支撑的断言,不是一个观测**。
+4. ⭐ **第一个真实用例在本轮结束前一小时自己走上门来,而且不是我找的**:
+   录像组 18:53Z 报告 W3 的 (a) 核验结论第一条 —— **`pullbeat` 在这一波的设计下不可分离**:
+   armed 腿 `creeppull`+`pullbeat` **一起开**、baseline 腿两个都关,
+   **波内没有任何对照能把「不下令那 0.5s」单独拎出来**。
+   这正是两臂波的形状:`cand = 'creeppull,pullbeat'` / `cand_ref = 'creeppull'`
+   ⇒ 两腿的**唯一差**就是 `pullbeat`,一波之内可分离。
+   **本轮不排它**(名额 0,且 W3 尚未收割 —— 先看完整读数再决定要不要花这个名额);
+   登记在此,**下一个总监在处置 W3 时必须把这条选项摆在桌上**。
+
+### AY.6 本节**没有**做的事
+
+- **没有** promote / reject 任何 id;成员串 **27 不变**;
+- **没有**动 §AT.1 的三档门柱、**没有**动 W3/W4/W5/W6 的排期与参数;
+- **没有**排两臂波,**没有**解冻 §AS.3,**没有**动名额(仍为 0);
+- **没有**动 `OWNER_PRIORITIES.md`。**P1 的球仍在批测台/录像组(W3 波,18:09:34Z 已发,~20:10Z 自毁)。**

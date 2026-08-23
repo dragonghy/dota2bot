@@ -18,13 +18,28 @@ set -uo pipefail
 CAND="${1:?cand id, e.g. nodive}"; SEED="${2:?integer seed}"; TARGET="${3:-12}"
 INST="${INST:?set INST=<instance-id>}"; RUN="${RUN:?set RUN=<s3 run_id>}"
 REGION="${REGION:-us-west-2}"; BUCKET="${BUCKET:-s3://dota2bot-batch-results-4924}"
+# [GH #141] Optional two-arm wave; unset = today (reference leg arms nothing).
+CAND_REF="${CAND_REF:-}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
+# The gate line is rendered by the ONE renderer (write_soak_side.sh) and then
+# escaped for the SSM JSON: every ' becomes \047 inside the remote printf
+# FORMAT string, which is what the hand-written literal used to spell out.
+# Rendering-then-escaping keeps this caller from owning a second copy of the
+# format that could drift from validate_onspot.sh's.
+ssm_side_line() { # side -> printf-format text, ' already escaped as \047
+  local line
+  line=$(CAND_REF="$CAND_REF" bash "$HERE/write_soak_side.sh" "$1" "$CAND" "$SEED")
+  printf '%s' "${line//\'/\\\\047}"
+}
+
 deploy() { # side stamp
-  local side="$1" stamp="$2" cmd
+  local side="$1" stamp="$2" cmd fmt
+  fmt=$(ssm_side_line "$side")
   cmd=$(awsx ssm send-command --region "$REGION" --instance-ids "$INST" \
     --document-name AWS-RunShellScript \
-    --parameters "{\"commands\":[\"cd /opt/dota2bot\",\"sudo mkdir -p /opt/soak\",\"printf 'return { side = \\\\047$side\\\\047, cand = \\\\047$CAND\\\\047, seed = $SEED }\\\\n' | sudo -u ubuntu tee bots/Customize/soak_side.lua\",\"echo '$stamp' | sudo tee /opt/soak/ab_version\"]}" \
+    --parameters "{\"commands\":[\"cd /opt/dota2bot\",\"sudo mkdir -p /opt/soak\",\"printf '$fmt\\\\n' | sudo -u ubuntu tee bots/Customize/soak_side.lua\",\"echo '$stamp' | sudo tee /opt/soak/ab_version\"]}" \
     --query 'Command.CommandId' --output text)
   sleep 8
   awsx ssm get-command-invocation --region "$REGION" --command-id "$cmd" --instance-id "$INST" \

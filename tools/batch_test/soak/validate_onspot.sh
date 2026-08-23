@@ -14,6 +14,11 @@
 set -uo pipefail
 CAND="${1:?cand id}"; SEEDS="${2:?seeds}"; TARGET="${3:-12}"
 BUCKET="${4:?s3 bucket}"; RUN_ID="${5:?s3 run id (soak/<run_id>)}"
+# [GH #141] Optional two-arm wave: CAND_REF is the armed string the REFERENCE
+# leg carries. Unset (the default) = today: the reference leg arms nothing and
+# the wave reads candidate-vs-stable.
+CAND_REF="${CAND_REF:-}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO=/opt/dota2bot
 S3RUN="s3://$BUCKET/soak/$RUN_ID"
 # Second-resolution + host suffix: two same-minute runs of the same candidate
@@ -47,7 +52,7 @@ PY
 }
 
 deploy_wave() { # side seed stamp
-  printf "return { side = '%s', cand = '%s', seed = %s }\n" "$1" "$CAND" "$2" \
+  CAND_REF="$CAND_REF" bash "$HERE/write_soak_side.sh" "$1" "$CAND" "$2" \
     | sudo -u ubuntu tee "$REPO/bots/Customize/soak_side.lua" >/dev/null
   echo "$3" | sudo tee /opt/soak/ab_version >/dev/null
 }
@@ -94,11 +99,17 @@ print(json.dumps(row))
 PY
 done
 
-python3 - "$CAND" "$SEEDS" "$RESULTS" > "$OUT/verdict.json" <<'PY'
+python3 - "$CAND" "$SEEDS" "$RESULTS" "$CAND_REF" > "$OUT/verdict.json" <<'PY'
 import json,statistics,sys
-cand,seeds,path=sys.argv[1:4]
+cand,seeds,path,cand_ref=sys.argv[1:5]
 rows=[json.loads(l) for l in open(path) if l.strip()]
-v={"cand":cand,"seeds":seeds.split(),"per_seed":rows,"mean":{},"comps_better":{}}
+# [GH #141] A two-arm wave's per-seed number is armA-minus-armB, NOT
+# candidate-minus-stable. The math is the same; the ACCOUNTING must not be, or
+# the reading silently pollutes every later comparison and cannot be told apart
+# afterwards. cand_ref is always present; contrast says which kind this is.
+v={"cand":cand,"cand_ref":cand_ref or None,
+   "contrast":"two_arm" if cand_ref else "vs_stable",
+   "seeds":seeds.split(),"per_seed":rows,"mean":{},"comps_better":{}}
 for m in ("gpm","xpm","deaths","last_hits"):
     xs=[r[m] for r in rows if m in r]
     if not xs: continue

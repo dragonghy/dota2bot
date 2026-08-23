@@ -58,8 +58,20 @@ local function wired_ids_in(src, into)
         set['lf_' .. sub] = true
         set['lanefix'] = true
     end
-    -- The reader compares conf.cand to literals directly for the wildcard id.
+    -- The wildcard id 'all' is never CALLED, only COMPARED: the soak reader
+    -- decides it by a literal comparison against the armed string, so the two
+    -- call-form rules above cannot see it.
+    --   pre-GH #141: J.IsSoakCandidate compared `conf.cand` inline;
+    --   post-#141:   both legs share one matcher, SoakStrArms.
+    -- The second rule is scoped to that function's OWN BODY rather than
+    -- matching every `== 'literal'` in the file -- a rule wide enough to see
+    -- the wildcard everywhere would also mint gate ids out of unrelated string
+    -- comparisons, and a census that over-collects stops flagging over-claims.
     for id in src:gmatch("cand%s*==%s*'([%w_]+)'") do set[id] = true end
+    local sMatcher = src:match('local function SoakStrArms%b()(.-)\nend')
+    if sMatcher then
+        for id in sMatcher:gmatch("==%s*'([%w_]+)'") do set[id] = true end
+    end
     return set
 end
 
@@ -201,6 +213,29 @@ tests['a wired gate id in a synthetic source is not flagged'] = function()
     local claims = claims_in("-- Gated turbo + soak-candidate 'realid'; inert.", 'synthetic')
     assert(#claims == 1 and wired[claims[1].id],
         'a genuinely wired id must not be flagged')
+end
+
+-- The wildcard rule is the one that reads a FUNCTION BODY rather than a call
+-- site, so it has a failure mode the other rules do not: scoped too tight it
+-- silently loses 'all' (the census anchor above catches that), scoped too wide
+-- it mints gate ids out of every string comparison in the file -- and THAT is
+-- invisible, because an over-collecting census simply stops flagging
+-- over-claims. Both directions are pinned here, on synthetic source.
+tests['the wildcard rule reads the shared matcher, and only the shared matcher'] = function()
+    local src = [[
+local function SoakStrArms( sStr, sId )
+	if sStr == sId or sStr == 'all' then return true end
+	return false
+end
+function J.SomethingElse( s )
+	return s == 'notagateid'
+end
+]]
+    local wired = wired_ids_in(src)
+    assert(wired['all'], "the wildcard id 'all' must be collected from the matcher body")
+    assert(not wired['notagateid'],
+        "a comparison OUTSIDE the matcher must not become a gate id -- an "
+        .. 'over-collecting census stops flagging over-claims, silently')
 end
 
 tests['a PROMOTED line is exempt even with no gate left'] = function()

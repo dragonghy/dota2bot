@@ -6,7 +6,18 @@
 #
 #   aws s3 cp s3://<bucket>/soak/<run>/ ./g/ --recursive \
 #       --exclude "*" --include "*.analysis.json"
-#   python3 recover_verdict.py ./g <cand-id>
+#   python3 recover_verdict.py ./g <cand-id> [--cand-ref <ref-armed-string>]
+#
+# [GH #141] --cand-ref declares that the wave was a TWO-ARM bisect: the
+# reference leg carried its own armed string (soak_side.lua's `cand_ref`)
+# instead of running stable. The math below is unchanged -- it is still
+# candidate-leg minus reference-leg -- but the MEANING is armA-minus-armB, not
+# candidate-minus-stable, so the verdict is stamped contrast=two_arm. A two-arm
+# reading placed next to single-arm readings compares two different quantities
+# and, once archived, cannot be told apart after the fact; the stamp is what
+# keeps that from happening. The flag is declarative: the per-game files carry
+# no record of the reference leg's string, so the caller must pass what it
+# deployed.
 #
 # Replicates validate_onspot.sh's math exactly (mirror: candidate-side minus
 # baseline-side, averaged over the radiant-wave and dire-wave to cancel side
@@ -20,6 +31,13 @@
 import json, glob, statistics, sys, re, os
 
 run_dir, cand = sys.argv[1], sys.argv[2]
+argv = sys.argv[3:]
+cand_ref = ""
+if "--cand-ref" in argv:
+    i = argv.index("--cand-ref")
+    if i + 1 >= len(argv):
+        sys.exit("--cand-ref needs a value (the reference leg's armed string)")
+    cand_ref = argv[i + 1]
 
 games = []
 for f in glob.glob(os.path.join(run_dir, "*.analysis.json")):
@@ -96,7 +114,9 @@ for seed in seeds:
             row["winrate"] = round(((ab_w / ab_n) + (ba_w / ba_n)) / 2, 3)
     rows.append(row)
 
-v = {"cand": cand, "recovered_locally": True, "per_seed": rows, "mean": {}, "comps_better": {}}
+v = {"cand": cand, "cand_ref": cand_ref or None,
+     "contrast": "two_arm" if cand_ref else "vs_stable",
+     "recovered_locally": True, "per_seed": rows, "mean": {}, "comps_better": {}}
 complete = [r for r in rows if "gpm" in r]
 for m in ("gpm", "xpm", "deaths", "last_hits"):
     xs = [r[m] for r in complete if m in r]

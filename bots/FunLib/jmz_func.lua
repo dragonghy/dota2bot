@@ -4605,6 +4605,11 @@ end
 -- so shipped behavior is the baseline.
 -- soak_side.lua may return 'radiant'/'dire' (candidate id defaults to c1)
 -- or a table { side = 'radiant'|'dire', cand = '<id>' }.
+-- [GH #141] The table may ALSO carry an optional `cand_ref` — the armed string
+-- for the OTHER leg, which turns a wave into a two-arm bisect (armA vs armB in
+-- one wave, on one tree, at one instant) instead of candidate-vs-stable. It is
+-- absent by default, and absent means exactly today: the reference leg arms
+-- nothing at all.
 local tSoakSideCache = nil
 local function GetSoakSideConf()
 	if tSoakSideCache == nil then
@@ -4612,12 +4617,27 @@ local function GetSoakSideConf()
 		if bOk and ( v == 'radiant' or v == 'dire' ) then
 			tSoakSideCache = { side = v, cand = 'c1' }
 		elseif bOk and type( v ) == 'table' and ( v.side == 'radiant' or v.side == 'dire' ) then
-			tSoakSideCache = { side = v.side, cand = v.cand or 'c1' }
+			-- cand_ref stays nil when the file omits it: `conf.cand_ref == nil`
+			-- is the branch that keeps the single-arm path literally unchanged.
+			tSoakSideCache = { side = v.side, cand = v.cand or 'c1', cand_ref = v.cand_ref }
 		else
 			tSoakSideCache = false
 		end
 	end
 	return tSoakSideCache
+end
+-- Does an armed string name this id? A string is a single id, 'all', or a
+-- comma-separated BUNDLE ('a,b,c'). Both legs share this ONE matcher — a
+-- second copy of the comma parsing is the "three writers, zero readers" shape
+-- (GH #67) and would let the two legs drift apart in their bundle semantics.
+local function SoakStrArms( sStr, sId )
+	if sStr == sId or sStr == 'all' then return true end
+	if type( sStr ) == 'string' and string.find( sStr, ',', 1, true ) ~= nil then
+		for id in string.gmatch( sStr, '[^,]+' ) do
+			if id == sId then return true end
+		end
+	end
+	return false
 end
 function J.IsSoakCandidateSide()
 	local conf = GetSoakSideConf()
@@ -4638,19 +4658,25 @@ function J.IsSoakCandidate( sId )
 	-- arms REJECTED candidates), or a comma-separated BUNDLE of ids ('a,b,c')
 	-- so a batch can turn on an exact set of features at once (owner-directed
 	-- all-features-on big batch, 2026-07-22).
-	local bMatch = conf.cand == sId or conf.cand == 'all'
-	if not bMatch and type( conf.cand ) == 'string'
-	and string.find( conf.cand, ',', 1, true ) ~= nil then
-		for id in string.gmatch( conf.cand, '[^,]+' ) do
-			if id == sId then
-				bMatch = true
-				break
-			end
-		end
+	--
+	-- SINGLE-ARM (no cand_ref) is kept as its own branch on purpose: this is
+	-- the path every shipped wave and every gated fix in the tree runs on, and
+	-- it must stay the SAME sequence of operations, not merely the same return
+	-- value -- match first, read GetTeam() only if the id is armed at all.
+	if conf.cand_ref == nil then
+		if not SoakStrArms( conf.cand, sId ) then return false end
+		local nSideTeam = conf.side == 'radiant' and TEAM_RADIANT or TEAM_DIRE
+		return GetTeam() == nSideTeam
 	end
-	if not bMatch then return false end
+	-- TWO-ARM (GH #141): each leg carries its own armed string, so one wave
+	-- buys armA-vs-armB with the between-run noise removed. The candidate leg
+	-- reads `cand`, the other leg reads `cand_ref`; ids in BOTH strings are
+	-- live on both legs (that is the intended shared base of a bisect).
 	local nSideTeam = conf.side == 'radiant' and TEAM_RADIANT or TEAM_DIRE
-	return GetTeam() == nSideTeam
+	if GetTeam() == nSideTeam then
+		return SoakStrArms( conf.cand, sId )
+	end
+	return SoakStrArms( conf.cand_ref, sId )
 end
 
 -- [GH #2] Turbo TP-home suppression. True when the bot is hurt but should
