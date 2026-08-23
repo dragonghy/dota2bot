@@ -1,14 +1,99 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullbeat
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad
 
-**成员串 27**(上一行)。本行 2026-08-23T15:xxZ 的两处变动:
+**成员串 26**(上一行)。本行 2026-08-23T23:xxZ 的三处变动(全文档案 **§BA**):
+- **`creeppull` + `pullbeat` PROMOTED,出集** —— 不是退回也不是 reject,是**毕业**。
+  owner 铁律 2 的三条件在这一对上首次同时齐备,gate 已从源码移除,turbo 默认开。
+  **promote 的单位是这一对,不是 `creeppull` 单独**(理由见 §BA.1)。
+- **`pullcad` 入集**(协同组 21:5xZ 提议,零 AWS 搭车)。**⚠️ 它的 arm 串约束已作废**:
+  原门 `pullcad and pullbeat` 的第二个合取项本轮被 promote ⇒ 合取会被永久冻结为 FALSE,
+  已在同一次改动里拆掉(§BA.2)。**发波时 armed 串就是 `pullcad` 一个 id。**
+- 以下为 2026-08-23T15:xxZ 那一行的两处变动,留档:
 - **`itemtrip` 出集 —— 退回协同组**(§AW.2:归因波 X = gpm −26.44 触发 §AT.1 预登记第一档)。
   **退回≠reject**:它的条件 (a) 是 WORKING(录像组 13:01Z),被否的是这个杠杆值不值得拉。
   gate 与代码留在树上、**永不 arm**,直到协同组带着新的域回来重新申请入集。
 - **`pullbeat` 留在集合里**:§AV.7 写的入集条件是「与 W3 发波同生共死 —— 归因波若没能成功
   收割就退回」,**归因波已于 14:10Z 成功收割**(275 有效局,unfinished 0)⇒ 条件已满足。
 
-(28 − `itemtrip` = **27**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
+(27 − `creeppull` − `pullbeat` + `pullcad` = **26**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
+
+---
+
+## §BA 2026-08-23T23:xxZ 总监裁定:`creeppull` + `pullbeat` PROMOTE(第一个走完 owner 铁律 2 全程的行为)
+
+### §BA.1 裁定与它的单位:**promote 的是这一对,不是 `creeppull` 单独**
+
+三条件首次在同一个东西上同时齐备:
+
+| 条件 | 交付方 | 读数 |
+|---|---|---|
+| (a) 真的执行且行为正确 | 录像组 21:00Z | **WORKING**。特异事件量 `FLIP`(右键后 2.5s 内有敌方小兵伤害行,**且**锚点前 10s 内没有小兵在打我们)。两拼法 × 两物理层**四个 delta 全部同号为正**;balanced FLIP/局 **+0.308**,\|t\| **3.40**。三帧逐帧钉死(zuus 拖兵线 ~2.0k u;necrolyte ~830 u;外加一帧 baseline 的假阳性承重帧)。 |
+| (b) 对胜负无明显负面 | 批测台 22:07Z | **通过**。W3 独占波 **280 有效局** / 4 种子:winrate **0.500 逐位中性**、gpm **−6.15**(波间 sd 45.81)、deaths **+0.03**。 |
+| (c) 逻辑/理论依据 | 协同组 21:55Z | **成立(触发与几何)**。拉仇恨要求被打的敌方英雄在小兵 **500** 内,而实现里的常数逐字就是 `<= 500`;三处独立来源(Liquipedia Lane Creeps / Hotspawn / DOTABUFF)数字一致。 |
+
+**(b) 的读法按铁律 4(i) 分层,而分层这次改变了能说的话**:ab/ba 两层 gpm 为 **+50.25 / −62.55**
+⇒ 侧偏 **~±56 gpm** 比残差 **−6.15** 大**一个量级**;winrate 两层 0.696 / 0.304、平均 0.500,
+= 「只有侧偏、没有 candidate 信号」的精确期望值。⇒ **「creeppull 让经济变好或变坏」这一波买不到**,
+买得到的只有「**买不到明显负面**」—— 而那恰好就是 owner 2(b) 要的那句话,不多不少。
+
+**⭐ 单位是这一对,理由是构型而不是偏好。** `pullbeat` 嵌在 `creeppull` 的执行体里
+(`mode_roam_generic.lua` 那段 cadence 的 `elseif`),GH #149 已判**波内不可分离**。
+于是:
+- **(a) 和 (b) 覆盖的都是「两个都开」这一个构型,没有第二个构型被测过**;
+- **`creeppull` 单开 = GH #143 实测为坏掉的那个构型**(poke 在下单后 33ms 被自己的 move 取消,
+  仇恨只能靠运气拉到;26.8% 的 armed episode 里没有任何小兵掉头)。
+⇒ 只 promote `creeppull` 会**上线一个零证据、且有实测缺陷的构型**。要么两个一起出,要么都不出。
+源码里两处都写了「never promoted apart」,并有用例钉住两个 id 都不许再作为 gate 出现。
+
+**连带裁定:§AY.5 第 4 条(`--cand-ref creeppull` 两臂分离波)不再是 promote 的前置。**
+GH #141 刚让这一波变得买得到,但它**对本裁定零决策价值** —— 无论 `pullbeat` 单独是不是活性成分,
+要 ship 的都是这个原子(`creeppull` 单开我们不会 ship),两种结果都不改变「原子进/原子不进」。
+按章程不为**不改变决定**的信息买波次。要买它得给出别的理由(例如给 `pullcad` 的设计定价),
+那是另一个裁定。
+
+**KNOWN RESIDUAL,睁着眼睛 promote 的**:(c) 只买到了触发与几何,**节拍没买到** ——
+1.2s 的补拍第 2、3 拍落在仍然活着的 2.3s 仇恨与它的 2–3s 冷却里,结构上拉不到东西,
+**而且不是免费的**(`Action_AttackUnit` 打不在攻击距离内的英雄会让 bot 走向他 ⇒ 把已拉住的
+兵线往回拖)。这**封顶了这个行为的上限,但没有把它变成负的**;修法 `pullcad` 已经写好并 gated。
+**先 promote 已测过的版本,`pullcad` 才有一个稳定基线可比** —— 否则它只能跟另一个候选比。
+
+### §BA.2 ⚠️ 一条会重复发生的陷阱,本轮差点买单:**promote 一个 id 会悄悄冻死引用它的门**
+
+`pullcad` 落地时(协同组 21:5xZ)门写的是合取:
+
+```lua
+if J.IsSoakCandidate('pullcad') and J.IsSoakCandidate('pullbeat') then
+```
+
+**当时这是对的**,而且理由很好:把「`pullbeat` 是结构性前置」写成代码而不是散文,
+使 `pullcad` 单独 arm 逐字节 no-op ——「**用例而不是承诺**」。
+
+**promote `pullbeat` 会让这个合取永久为 FALSE。** 已 promote 的 id 不在任何 armed 串里,
+于是:`pullcad` 在**每一个能 arm 它的波里都是逐字节 no-op**;
+`check_armed_wiring.py` **仍报 WIRED**(它查的是调用点存在,不是谓词能为真 —— 这句话
+就写在 backlog §10 的 LIMITS 里);verdict 回来是「测过了,无影响」;
+**没有任何计数会报警**。这与 `campgrade` 那次擦身而过**逐字同形**。
+
+**已在同一次改动里拆掉合取**,前置条件改由**构造**满足(hold 现在无条件执行,严格强于门)。
+两条用例钉住新的不变量:(i) `pullcad` 单独 arm **必须**移动节拍;
+(ii) **`pullcad` 的门条件里不许出现任何已 promote 的 id**(白名单写死 `creeppull`/`pullbeat`)。
+
+**给以后每一次 promote 的规矩**:promote 一个 id 之前,先 `grep` 它是否出现在**别的门的条件里**。
+出现了就必须在**同一次改动里**处理,否则那个门从此是一盏永远不会亮的灯。
+可机械化(backlog 已登记为 §15)。
+
+### §BA.3 `pullcad` 入集,成员串 26
+
+批准协同组 21:5xZ 的入集提议(零 AWS 搭车)。**但申请书 §2.1 那条 arm 串约束
+(「串里必须同时有 `creeppull` + `pullbeat`」)已作废** —— 见 §BA.2。
+**发波时 armed 串就是 `pullcad` 一个 id**;带上 `creeppull`/`pullbeat` 等于用**不存在的 id**
+污染串(`check_armed_wiring.py` 对它们现在会报 ABSENT,这是正确的)。
+排期照常等名额,与 `strategy-7`/`strategy-8` 及 §AY.5 第 4 条一起排(§AZ.6 那根绳子不变)。
+
+### §BA.4 稳定版推进:`stable-v1`
+
+按章程(§D:容器 push 不了 tag,promote 时打**分支引用**),本次 promote 后的 main 记为
+**`stable-v1`**。这是「稳定版」这个概念立起来之后**第一次真的移动**。
 
 **🆕 2026-08-24T14:0xZ 协同组**入集提议**:`towerfear`(本组自查,非 issue 交回;**搭车,不申请专波**)**
 

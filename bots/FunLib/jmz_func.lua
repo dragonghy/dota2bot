@@ -6589,8 +6589,8 @@ end
 -- Deliberately NOT here: the recent-damage veto. Being pecked is the TRIGGER of
 -- the melee-vs-2-ranged drag ("被两个远程消耗就该把兵线拉回来"), so that clause
 -- has to stay inside ShouldCreepPullLane where the shape is known. Pure helper;
--- the caller's trigger is still turbo + 'creeppull'-gated, so shipped games are
--- unchanged.
+-- the caller's trigger is turbo-gated (PROMOTED 2026-08-23, see that function's
+-- header), so normal-mode games are unchanged.
 function J.IsCreepPullSafe( bot )
 	if bot == nil or not bot:IsAlive() then return false end
 	if J.GetHP( bot ) < 0.5 then return false end
@@ -7100,7 +7100,7 @@ end
 --
 -- CONSERVATIVE by construction -- fires ONLY in the clear disadvantaged case, so
 -- it never griefs a healthy/even lane. Requires ALL of:
---   * turbo AND the 'creeppull' soak candidate is armed (inert otherwise),
+--   * turbo (normal mode is untouched),
 --   * laning phase, and the bot is a CORE (pos 1-3) -- the farm we protect,
 --   * SAFE: not hurt (>= 50% HP), not just damaged by a hero, and at most ONE
 --     enemy hero nearby (exactly the lane opponent -- never pull into a gank),
@@ -7119,10 +7119,40 @@ end
 -- beat to provoke the aggro, then move to the retreat point to drag the wave --
 -- it cannot GUARANTEE the mechanic fires the way a human's precise attack-cancel
 -- does. The TRIGGER (this function, when to pull) is the unit-tested, load-bearing
--- part; it ships dark behind the gate until an A/B validates the whole behavior.
+-- part; the ACTION at the call site is what a wave has to validate.
+--
+-- PROMOTED (was soak-candidate 'creeppull') 2026-08-23, together with its
+-- sibling 'pullbeat' -- the two are ONE behavior, never promoted apart (see the
+-- call site in mode_roam_generic.lua Think for why 'creeppull' alone is the
+-- configuration GH #143 measured as broken). Owner rule 2, all three conditions
+-- on the PAIR, which is the only configuration anything measured:
+--   (a) WORKING -- replay desk 2026-08-23T21:00Z over the full 212 non-warmup
+--       W3 games, on a SPECIFIC event count (a right-click followed inside 2.5s
+--       by enemy-creep damage rows, guarded by "no creep was already hitting us
+--       in the prior 10s" so standing in the wave getting beaten does not count
+--       as a pull). All four deltas positive across both spellings x both
+--       physical sides; balanced FLIP/game +0.308, |t| 3.40. Frame-level truth
+--       pinned: 181204_slot11 zuus drags the wave ~2.0k units, 182841_slot3
+--       necrolyte ~830.
+--   (b) NO OBVIOUS NEGATIVE -- batch desk W3 (spot_20260823_1809*), 280
+--       effective mirrored games / 4 seeds: winrate 0.500 exactly, gpm -6.15
+--       against a between-wave sd of 45.81, deaths +0.03. Read swap-and-averaged:
+--       the ab/ba strata are +50.25 / -62.55 gpm, i.e. side bias ~+-56 gpm
+--       dwarfs the residual by an order of magnitude, so "creeppull moves the
+--       economy" is NOT purchasable from this wave -- "no obvious negative",
+--       which is what the rule asks for, is.
+--   (c) The trigger geometry is the published mechanic exactly: creep aggro
+--       redirects onto whoever attacks an enemy hero within 500 units of the
+--       creeps (Liquipedia Lane Creeps / Hotspawn aggro guide / DOTABUFF
+--       pulling guide, three sources agreeing), and 500 is the literal here.
+-- KNOWN RESIDUAL, promoted with eyes open: the re-poke CADENCE is not aligned
+-- with that same mechanic -- see the 'pullcad' block at the call site. The
+-- shipped 1.2s spends beats 2 and 3 inside the live aggro and its cooldown.
+-- That caps this behavior's upside; it does not make it negative, and its fix
+-- is written and gated. Promoting the measured version now is what lets that
+-- fix be measured against a stable baseline instead of against another candidate.
 function J.ShouldCreepPullLane( bot )
 	if not J.IsModeTurbo() then return nil end
-	if not J.IsSoakCandidate( 'creeppull' ) then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
 
 	-- Laning-phase core only: this protects a laner's farm, not a roamer/support.

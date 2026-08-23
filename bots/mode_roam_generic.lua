@@ -67,8 +67,9 @@ function GetDesireHelper()
 	nInRangeEnemy = bot:GetNearbyHeroes(1200, true, BOT_MODE_NONE)
 
 	-- [pull rehome, owner directive 20260723] Pulling STAYS; the laning-Think
-	-- replacement goes. During a pull window (both helpers are self-gated:
-	-- turbo + 'creeppull'/'pullcamp' + role + safety + :12/:42 timing) this
+	-- replacement goes. During a pull window (both helpers are self-guarded:
+	-- turbo + role + safety + :12/:42 timing, plus the 'pullcamp' candidate on
+	-- the camp side -- the creep side was PROMOTED 2026-08-23) this
 	-- bot bids ROAM desire and roam's own Think executes the pull action for
 	-- those few seconds -- Valve's native laning runs the rest of the game.
 	-- Plans are re-evaluated every frame; a closed window clears them so a
@@ -87,9 +88,11 @@ function GetDesireHelper()
 	-- measured zero pull behavior in 13/13 batch games. J.IsCreepPullSafe
 	-- keeps the anti-ambush intent for the lane case (the lane opponents may
 	-- be there; a third hero lurking in the 1000-1800 ring may not).
-	-- Both triggers are self-gated (turbo + 'creeppull'/'pullcamp' + role +
-	-- timing) and are asked FIRST, so an unarmed game early-outs before any
-	-- world scanning -- shipped behavior and cost are unchanged.
+	-- Both triggers are self-guarded (turbo + role + timing, plus the
+	-- 'pullcamp' candidate on the camp side) and are asked FIRST, so a
+	-- non-turbo game early-outs before any world scanning -- normal-mode
+	-- behavior and cost are unchanged. The creep side is PROMOTED as of
+	-- 2026-08-23, so in TURBO it now runs by default.
 	local pull = J.ShouldCreepPullLane(bot)
 	if pull ~= nil and J.IsCreepPullSafe(bot) then
 		bot.roamCreepPull = pull
@@ -204,22 +207,35 @@ function Think()
 		-- sister camp pull below already uses for the same reason. Armed, the
 		-- drag owns 2.5s of every 3.0s (83%) against 0.7s of every 1.2s (58%),
 		-- and that drag window then matches the 2.3s the creeps actually follow.
-		-- 'pullbeat' IS A STRUCTURAL PRECONDITION, not a recommendation:
-		-- without it the poke is cancelled 33ms after it is ordered (see the
-		-- branch below), so aggro is drawn only by luck and a LONGER beat would
-		-- merely buy fewer lucky draws -- strictly worse than shipped. Asking
-		-- for both here makes 'pullcad' a byte-for-byte no-op when armed alone,
-		-- instead of a dependency kept in prose.
+		-- The wind-up hold below IS A STRUCTURAL PRECONDITION of this lever, not
+		-- a recommendation: without it the poke is cancelled 33ms after it is
+		-- ordered, so aggro is drawn only by luck and a LONGER beat would merely
+		-- buy fewer lucky draws -- strictly worse than shipped.
+		-- [PROMOTE FOLLOW-UP 20260823] Until that hold was promoted, this gate
+		-- read `IsSoakCandidate('pullcad') and IsSoakCandidate('pullbeat')` --
+		-- the dependency expressed as a conjunction so nobody had to remember
+		-- it in prose. Promoting 'pullbeat' DELETES it from every armed string,
+		-- which would have made that conjunction permanently false: 'pullcad'
+		-- would be a byte-for-byte no-op in every wave, check_armed_wiring.py
+		-- would still report it WIRED (the call site exists), and the verdict
+		-- would come back "no effect" with nothing anywhere raising a hand --
+		-- exactly the campgrade near-miss shape. The conjunct is dropped
+		-- because the precondition is now satisfied BY CONSTRUCTION, which is
+		-- strictly stronger than a gate; the invariant that replaces it is the
+		-- source-level test asserting the hold is unconditional.
 		local nBeat = 1.2
-		if J.IsSoakCandidate('pullcad') and J.IsSoakCandidate('pullbeat') then
+		if J.IsSoakCandidate('pullcad') then
 			nBeat = 3.0
 		end
 		if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > nBeat then
 			bot:Action_AttackUnit(pull.enemy, true)
 			bot.creepPullAttackTime = now
-		elseif J.IsSoakCandidate('pullbeat')
-		and (now - bot.creepPullAttackTime) < 0.5 then
-			-- [GH #143 20260823] soak candidate 'pullbeat' -- ISSUE NO ORDER
+		elseif (now - bot.creepPullAttackTime) < 0.5 then
+			-- [GH #143 20260823] PROMOTED (was soak-candidate 'pullbeat')
+			-- 2026-08-23, as one atom with 'creeppull' -- see the owner-rule-2
+			-- evidence in J.ShouldCreepPullLane's header. Never promoted apart:
+			-- 'creeppull' without this hold is the configuration GH #143
+			-- measured as broken, and it is not what W3 measured. ISSUE NO ORDER
 			-- for one attack wind-up after the aggro poke. The cadence above
 			-- ordered the attack and then, on the VERY NEXT frame (1/30 s
 			-- later), issued a move order -- which cancels an attack that has
