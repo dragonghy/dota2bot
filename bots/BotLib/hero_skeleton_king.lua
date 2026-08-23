@@ -83,7 +83,12 @@ local tAllAbilityBuildList = {
 --
 -- and the only term that can bypass either test is `talent6:IsTrained()`, which
 -- section 2 of tests/test_wk_fact_anchor.lua shows is a level-20 test and which
--- the GH #84 census read on 0 of 210 turbo hero-slots.  So in turbo every early
+-- the GH #84 census read on 0 of 210 turbo hero-slots.  (That bypass is NOT a
+-- defect, checked 2026-08-23: the talent at that slot is "+5 Bone Guard
+-- Skeletons Spawned" over a base min_skeleton_spawn of 0, so with it trained a
+-- release from an empty bank still fields five skeletons and "release regardless
+-- of the bank" is the right rule.  tests/test_wk_bone_guard_talent_bypass.lua
+-- section 1.)  So in turbo every early
 -- point in Bone Guard raises, monotonically and on both branches, the bank WK has
 -- to accumulate before he will release any skeletons at all.  The default row has
 -- all four points down by level 7: from level 7 on it asks an 8-charge bank of the
@@ -271,7 +276,13 @@ local abilityW = bot:GetAbilityByName('skeleton_king_bone_guard')
 local abilityR = bot:GetAbilityByName('skeleton_king_reincarnation')
 -- talent6 is sTalentList[6] = the t20 slot (aba_skill.lua:140).  Both places it is
 -- read below are OR-bypasses, so in turbo -- where level 20 does not happen -- they
--- contribute nothing and the sibling stack test is the whole condition.
+-- contribute nothing and the sibling stack test is the whole condition.  What they
+-- mean when they DO become live: index 6 is "+5 Bone Guard Skeletons Spawned", a
+-- flat floor, so the bypass buys "release even on an empty bank" and that is
+-- coherent, not a bug.  One residual is registered rather than settled -- if the
+-- engine only carries modifier_skeleton_king_bone_guard while charges >= 1, the
+-- guard at the top of X.ConsiderW re-imposes the very ammunition test the bypass
+-- lifts.  tests/test_wk_bone_guard_talent_bypass.lua sections 1 and 5.
 local talent6 = bot:GetAbilityByName( sTalentList[6] )
 
 local castQDesire, castQTarget
@@ -619,6 +630,18 @@ function X.ConsiderQ()
 
 end
 
+-- NOT VALIDATABLE ON A FIXTURE (measured 2026-08-23).  The first guard below asks
+-- for modifier_skeleton_king_bone_guard, and that modifier is on 0 of the 34
+-- Wraith King frames in tests/fixtures -- including the 17 that carry a modifier
+-- list at all, 17 of which carry a sibling modifier_skeleton_king_* .  So this
+-- function returns 0 on 34 of 34 real frames whatever else is true of them, and a
+-- "domain = 0" reading taken from the corpus about Bone Guard measures the tool,
+-- not the game (the axeblink trap).  The name is right: this is the repo's only
+-- caster of the ability, and four corpus frames catch it mid-cooldown against its
+-- flat 42s, so the engine answered HasModifier true in those games; the gap is
+-- that make_fixture.py rebuilds modifiers from combat-log ADD/REMOVE pairs and
+-- there are none for this one.  Size a Bone Guard change with a batch request,
+-- never with a fixture scan.  tests/test_wk_bone_guard_talent_bypass.lua.
 function X.ConsiderW()
 	if not abilityW:IsFullyCastable()
 		or not bot:HasModifier( "modifier_skeleton_king_bone_guard" )

@@ -512,6 +512,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       ⇒ 配 GH #84 的 `level>=20` **0/210**、高水位 19 ⇒ turbo 内分支 2 严格 = 满层、
       分支 1 严格 = >=60% 层。**这是 §4.2 的下一层**:§4.2 说的是一张**表**里的死重量,
       这里是一个 t20 handle 被读进**出货中的决策函数**。
+      - ~~**Lever B(两条 t20 析取的记账)**~~ **2026-08-23T19:50Z 结案:NOT-A-DEFECT(GH #150)。**
+        原假设(「bypass 关掉了释放规则唯一的弹药检查」)**死于一行 dname**:索引 6 =
+        `special_bonus_unique_wraith_king_facet_3` = **"+5 Bone Guard Skeletons Spawned"**,
+        是**每次释放的骷髅数**(平量),配 `min_skeleton_spawn = **0**` ⇒ 学了它**空仓释放照样出
+        5 个骷髅**,「不管存了多少都放」**正是对的规则**。三条断言全部**从代码/feed 读出来**:
+        平量形状 + `min_spawn=0`、两处读**都是 `or` 的右操作数**(只能加开火)、**本文件在 t20
+        真的取索引 6**(把 `tTalentTreeList` 从代码里捕获出来喂给出货的 `GetTalentBuild`
+        —— `test_wk_fact_anchor.lua` §2 钉的是「t20 驱动 {5,6}」,**没钉取哪一边**)。
+        **⭐ 但在证伪它的路上量到更该记的一件事:`X.ConsiderW` 整条在 fixture 里验不了。**
+        第一道门要的 `modifier_skeleton_king_bone_guard` 在 **0 / 34** 个 WK 帧上存在,而
+        **17 帧带 modifier 列表、17/17 带兄弟 `modifier_skeleton_king_*`**(分母在)⇒ 出货
+        `X.ConsiderW()` 在真实帧上 **0/34**。**名字没写错**:全仓唯一施法者就是它
+        (`spell_list.lua` 那行只有 morphling require)、语料 **4 帧**抓到技能正在冷却
+        (40.2/32.5/27.1/3.5 对恒定 42s)、GH #77 的 ground truth 里有 WK 骷髅的伤害
+        ⇒ 引擎答过 true,缺的是**管线**(`make_fixture.py` 的 modifiers 从战斗日志
+        ADD/REMOVE **成对**重建,这一个没有对)。**一字段反事实**:只授予 `HasModifier`,
+        **20/34 帧**结果改变(越过门后撞上 GH #61 的 lane-front 拒答)⇒ **20 就是盲区大小**。
+        另两条让释放**算术**离线无意义:`GetSpecialValueInt` 读 0 ⇒ 比值 `0/0` false、等式
+        `0 == 0` **true**(branch 2 弹药检查白送);loader **没实现 `GetModifierByName`** ⇒
+        默认 0 ⇒ 层数读的是 modifier 列表**按名排序的第一行**(实测 reincarnation_scepter)。
+        **第二条不归本组**(改成 -1 会动所有读 stack 的分支),已写进 GH #150 §3 交 harness。
+        **残留(登记不 argue)**:若引擎只在 charges>=1 时挂那个 modifier,顶上那道门就把
+        bypass 想解除的弹药要求**又加了回去** ⇒ 「空仓 +5」永不发生;引擎内问题,**GH #108
+        的 10→25 分钟是让它付得起(20 级)的那个改动**,也是重开触发器。
+        交付 `tests/test_wk_bone_guard_talent_bypass.lua`(11 例 / **9 变异 9 抓 + 1 no-op
+        对照如期逃逸**),`bots/` **只动注释**(`X.ConsiderW` 上方写死「域只能用批测量,
+        不能用 fixture 扫」)。**下一棒 = queue `hero-11`**(归档事件流扫描,零 EC2:
+        ① 日志里有没有这个 inflictor 的 `MODIFIER_*` 行 —— 读 0 ⇒ 永久 batch-only;
+        ② 若有,两次释放之间存几层 = `wkbuild` (c) 的**大小**那一半)。
     - **顺带交付一张全 BotLib 普查**:t20/t25 handle 的 **STRUCTURAL** 读共 **24 处 / 7 英雄**
       (lion 14、skeleton_king 2、lich 2、legion_commander 2、warlock 2、chaos_knight 1、zuus 1),
       机械判据(同一行含 `GetSpecialValue` ⇒ ADDITIVE,否则 STRUCTURAL)已写进测试并上棘轮。
@@ -862,6 +891,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T19:50Z(报告 `iterations/reports/hero/20260823T195000Z.md`;认领 backlog **§18 Lever B**
+  —— 上一轮点名、唯一还挂着的自选项;本组开 GH **#150**;queue **`hero-11`** 新增 pending;
+  **无新 gated id、`bots/` 只动注释、稳定版未漂移**):
+  **Lever B 结案 NOT-A-DEFECT ——「bypass 关掉了唯一的弹药检查」这个原假设死于一行 dname;
+  而在证伪它的路上量到:WK 的整条 `X.ConsiderW` 在 fixture 里结构性验不了(门要的 charge
+  modifier 在 0/34 帧上存在,而引擎里它是真的)。** 零 AWS,外部读 1 次(odota
+  `dotaconstants` build/abilities.json)。开工自检 worst exit **3**,两条 UNLANDED 都是**总监**
+  本轮的树(`origin/claude/busy-bardeen-wz7g7q`),不是本组的;cadence/citation clean。
+  Owner P1/P2 的球都在协同组;`[hero]` open issue 里 #146 等波次、#136 等 `hero-6` 读数。
+  - **§1 结案的依据**:索引 6 = `special_bonus_unique_wraith_king_facet_3` =
+    **"+5 Bone Guard Skeletons Spawned"**(**平量**),配 `min_skeleton_spawn = 0`
+    ⇒ 空仓释放照样出 5 个骷髅 ⇒ 「不管存了多少都放」是**对的规则**,不是 bug。
+    三条断言都是**读出来的**不是断言的(平量形状 / 两处读都是 `or` 右操作数 /
+    **本文件在 t20 真的取索引 6** —— 这一条 `test_wk_fact_anchor.lua` §2 没钉)。
+  - **⭐ §2 的读数**:**34** 个 WK 帧,**17** 带 modifier 列表,**17/17** 带兄弟
+    `modifier_skeleton_king_*`,带 `modifier_skeleton_king_bone_guard` 的 **0**,
+    出货 `X.ConsiderW()` > 0 的 **0/34**。**名字没写错**(全仓唯一施法者 + 4 帧抓到技能在
+    42s 冷却中 + GH #77 ground truth 里 WK 骷髅的伤害)⇒ 是 `make_fixture.py` 的
+    ADD/REMOVE **成对**重建拿不到它。**一字段反事实:只授予 `HasModifier` ⇒ 20/34 帧结果
+    改变**(越过门后撞 GH #61 拒答)⇒ **盲区大小 = 20**。
+  - **§3 两条工具事实**:`GetSpecialValueInt` 离线 0 ⇒ 比值 `0/0`(false)、等式 `0 == 0`
+    (**true**,branch 2 弹药检查白送);loader **没实现 `GetModifierByName`** ⇒ 默认 0 ⇒
+    层数读**按名排序第一行**。第二条**不归本组**,已交 harness(GH #150 §3)。
+  - **⭐ 一般化(比 §Y.2 低一层、桌面可查)**:`HasModifier` 型门的**可测性**取决于那个 modifier
+    在战斗日志里**有没有 ADD/REMOVE 对**;没有对 ⇒ fixture 恒 false ⇒ **门下游一切不可达**。
+    判别式现成:**同一英雄身上别的 modifier 在语料里出现了多少次** —— 分母在(这里 17/17),
+    那个 0 才是关于这一个 modifier 的事实;分母不在,什么都不能说。
+  - **§24 的判读法则在本文件上是第三种剖面**:**两个方向都有活的反例** —— 放宽方向的反例
+    **在真实语料里**(17 帧兄弟 modifier,谓词一放宽立刻报 17),沉默方向仍要合成 offender。
+    (对比:`dup_component` 两个方向都得喂,`magic_wand`/`gate_claim` 只有沉默方向盲。)
+  - **核验**:luacheck **0 警告**;新测试 **11 例 / 9 次变异 9 抓 + 1 个 no-op 对照如期逃逸**
+    (变异表见报告 §6:含「`or` 改 `and`」「t20 翻边」「门改问 damage_tracker」「loader 实现
+    GetModifierByName」四条**跨文件**变异)。整套**逐文件驱动 160/160 文件 / 1584 例 / 0 失败**
+    (GH #124 未变;跑在 rebase 前的树上,与本轮改动无交集;逐文件跑不暴露跨文件全局态泄漏)。
+  - **留给后来人**:① 先问「这个门读的 modifier 在语料里**有没有分母**」——34 帧里 0 次听着像
+    空域,决定它是不是证据的是同一英雄身上**别的** modifier 出现了多少次。② 怀疑某个 bypass
+    是缺陷时,**先把它绕过的东西的 datafeed 数值读完** ——「它绕过了一个检查」不是缺陷证据,
+    要看绕过之后那个动作**还剩多少价值**(这里剩 5 个骷髅,于是荒谬变成正确)。
+  - **下一轮建议**:等 `hero-10` / `hero-11` 读数;不等的话,§18 二段里唯一没闭合的是
+    Lion t15 的 `to_hell_and_back` 那一半(缺**量**不缺可观测性,n=3,先量域再谈翻不翻)。
 - 2026-08-23T18:00Z(报告 `iterations/reports/hero/20260823T180000Z.md`;认领 backlog **§18 Lever C**
   (上一轮点名的下一件事);queue **`hero-10`** 新增 pending;GH **#104 §5** 已留言更正;
   登记 `state.json:wk_lever_c_mana_ceiling_20260823T18`;**无新 gated id、`bots/` 只动注释**):

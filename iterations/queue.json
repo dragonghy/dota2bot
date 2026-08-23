@@ -309,6 +309,18 @@
       "acceptance": "条件 (a) 交录像组,**判据用局内配对量**。**正向两个读数,开工前登记**:(1) armed 侧 `creeppull` 的 **episode 数量下降**(本地估计:SAFE-1b 之后的域里去掉 64.8%);(2) **每个 episode 的质量上升** —— 用 #149 提的那个事件计数(最后一次真右键之后 2.5s 内**敌方小兵朝本 bot** 的伤害行是否存在)的**比例**上升。**反向判据不许省**:episode 数**塌向 0** = 这不是收窄是关闭,按回归读不按通过读;且 armed 侧**对线期 last_hits / xpm 不许低于 baseline 腿**(勾线本来就是为了保农)。**⚠ 不许用 GH #143 §2 那张池化表当锚点**:录像组 #148 已证明它被物理侧别 + 整数中位数刀口双重污染。**预登记的反向读法**:两个读数都不动 ⇒ **不要再窄化谓词**,第一嫌疑是 **arm 串漏了 `creeppull`**(此时本 id 逐字节 no-op 且没有任何计数会报警),第二嫌疑是 6.0 这个常数在真实引擎里选中的人口与本语料不同(本语料只有 44 个 v2 fixture 能回答,138 个可问帧是**下界不是估计**)。",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "hero-11",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "question": "NO NEW WAVE NEEDED -- an ARCHIVE EVENT-STREAM scan, filed here because the batch desk owns the archive. tests/test_wk_bone_guard_talent_bypass.lua measured that `modifier_skeleton_king_bone_guard` (the charge bank Wraith King's X.ConsiderW gates its whole release rule on) appears on 0 of 34 WK frames in the fixture corpus, 17 of which carry a modifier list and 17/17 of which carry a sibling modifier_skeleton_king_*. The name is not wrong (X.ConsiderW is the repo's only caster and four corpus frames catch the ability mid-cooldown against its flat 42s), so the absence is a pipeline fact: make_fixture.py rebuilds `modifiers` from combat-log MODIFIER_ADD/REMOVE pairs. TWO QUESTIONS, in order. (1) Does the archived .dem combat log carry ANY event whose inflictor is modifier_skeleton_king_bone_guard (MODIFIER_ADD / MODIFIER_REMOVE / MODIFIER_STACK_EVENT), on any WK, in any archived turbo game? A flat 0 settles that fixtures can never carry it and every Bone Guard domain question is batch-only, permanently. (2) IF such events exist: how many charges does WK hold between releases -- per-game count of releases (the ability's own cast events, flat 42s cd) and the stack count standing at each release. That is the number backlog section 18 / tests/test_wk_bone_guard_thresholds.lua declared unmeasurable and it is the SIZE half of `wkbuild`'s condition (c); the sign half is already pinned on shipped code.",
+      "axis": "tooling/corpus scan -- zero EC2, zero new games; reads archived replays only",
+      "acceptance": "(1) a yes/no with the grep basis stated (which timelines/how many games scanned, and whether the dumper emits MODIFIER_* rows for inflictors it has no display name for). A 0 must be reported as 'no such event in N games', not as 'WK holds no charges' -- those are different claims and this whole request exists because the corpus cannot tell them apart. (2) if events exist: releases/game and the stack count at each release, in the stream's usual `N frames / M episodes / K games` shape, plus the per-game distribution of the bank at release. Pre-registered readings: (a) question 1 reads 0 => Bone Guard is permanently batch-only, close this and record it as a world assertion; (b) bank at release >= maxStack on nearly every release => the shipped rule is behaving as branch 2 predicts and `wkbuild`'s (c) gains its size half; (c) bank at release well BELOW maxStack => branch 1 is doing the work and section 18's monotonic-cost argument needs re-reading.",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [
