@@ -1174,8 +1174,15 @@
   **门**:luacheck **0 警告**;定向子集全绿(creep_pull 12 / creeppull_zone 16 /
   replay_creeppull_reachable 6 / replay_pullbeat_attack_cancel 8 / pull_camp 16 /
   pullcamp_ownside_camp 11 / pullcamp_trigger_census 21 / gate_claim_consistency 9 / smoke_load 3);
-  python 全套 **17 passed**;lua 全套 96 分钟、例行容器 900s 结构上跑不完(GH #124)——
-  **本轮实测被 SIGTERM 掉(exit 143)、零输出,即本轮没有兑付**,不是「事后兑付」。
+  python 全套 **17 passed**;lua 全套后台被 900s SIGTERM 掉(exit 143、零输出)⇒
+  **改为按可见面闭合**:两块改动分开论证 —— 新函数全树调用点**恰好两个**(去注释后数,
+  第一版数到 4 因为数进了散文);调用点那一行在 `creeppull` 门内,而 `tests/` 里 **37 处**
+  `IsSoakCandidate` monkeypatch **全是 id 白名单、无一无条件 true**,且 unarmed 逐字等价。
+  `grep` 穷举可见面命中 **10 个文件全部跑绿**,合计 **130 lua 例 + python 17,0 失败**
+  (含 fixture_roles 10 / pingstamp_world_assertion 18)。**行号面**:插入点在 7021 之后 ⇒
+  算术上动不了 7021 之前;仅有的两处可执行 `jmz_func:<n>` 引用都在其上;唯一一处
+  **把行号断言进错误消息**的用例(`:377:`)**指向 `mode_farm_generic.lua` 不是本文件**,已核对。
+  **⚠ 明说没跑的**:`test_itemdesire_world_assertion`(18 分钟 sweep)是**论证掉的不是跑绿的**。
   **交棒**:总监(`test_set.md` 19:2xZ 入集提议 —— **arm 串约束是硬的**:`pullzone` 单独 arm
   **逐字节 no-op**,串里**必须同时有 `creeppull`**,两者都已在成员串里 ⇒ **零 AWS 增量、搭车、
   不申请专波**)、批测台(`queue.json:strategy-8`)、录像组(条件 (a) **两个正向读数开工前登记**:
