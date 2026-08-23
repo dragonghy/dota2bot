@@ -386,7 +386,7 @@ tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undri
     -- (mode_rune_generic, mode_secret_shop_generic) and made it a rule to say
     -- so in any bid-level test. mode_farm_generic is a THIRD, and nobody could
     -- have known: the ping guard returns at line 124, and the unstubbed engine
-    -- global sits at line 371. Open the guard and the crash appears.
+    -- global sits at line 377. Open the guard and the crash appears.
     local path = 'tests/fixtures/f_260820_043637_axe_ring_alone.lua'
     assert(bid(path, nil, FARM) == 0, 'shut: the floor, no error')
     world(path, nil, { stale = true })
@@ -397,8 +397,8 @@ tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undri
     assert(not ok, 'open: it does not return the floor, it throws')
     assert(tostring(err):find('GetRoshanDesire', 1, true),
         'the missing engine global is GetRoshanDesire; got ' .. tostring(err))
-    assert(tostring(err):find(':371:', 1, true),
-        'at mode_farm_generic.lua:371; got ' .. tostring(err))
+    assert(tostring(err):find(':377:', 1, true),
+        'at mode_farm_generic.lua:377; got ' .. tostring(err))
     -- It is a real engine API (.luacheckrc read_globals lists it), so this is
     -- a mock gap, not a typo in bots/. Recorded here rather than patched: what
     -- the mock should answer for "how badly does the team want Roshan" is a

@@ -103,6 +103,22 @@
    "acceptance": "(1) is condition (a) for this change and the only blocking one: WORKING = at least one frame shows arcane boots in a pos_5 CM inventory, with the game time; SILENT = the outfit macro never resolves and she buys nothing or falls back, which would mean the swap is inert and the hero desk reverts or fixes the wiring (tDefineItemRealName sentinel moved to item_arcane_boots this round -- that is the most likely thing to have gone wrong). (2) is a defect check, not a verdict: any CM holding two pairs of boots reopens the Bearing removal from the other side. (3) is condition (b) evidence, coarse only -- no significance test (owner 2026-08-01 philosophy); a zero on Replenish casts must be recorded as UNDERPOWERED unless the dumper is shown to emit item actions at all.",
    "status": "pending",
    "result": "Rides the 2026-08-23T06:11Z wave automatically: the CM boots swap is UNGATED and 9fa4898 is an ancestor of the pinned SHA 7159ff3, so it is on BOTH legs of the mirror. It occupies no slot in the armed string. Left pending because the request asks for a reading, not a launch, and the reading comes at harvest."
+  },
+  {
+   "id": "strategy-4",
+   "stream": "strategy",
+   "bundle": "campgrade",
+   "seeds": [
+    888,
+    895,
+    896,
+    906
+   ],
+   "priority": 2,
+   "question": "GH #137 的条件 (a):`campgrade` 在真实对局里到底有没有把低等级英雄挡在远古营外面。**不申请专波** —— 这个 id 未 armed 时是逐字节等价的(off-candidate equivalence 已在本地按 camp-for-camp 断言),请并进下一波已经在跑的串里,当一个额外 id 就行。缺陷本身是纯结构的、不需要批测来确认(四支 if/elseif 的最后一支无条件放行,任何等级拿得到任何营地);要买的只有『修好之后真的少去了』这一件事。",
+   "acceptance": "**判据是录像组已经有的那把尺子,不要另造**:重跑 `tools/batch_test/behavioral/ancient_camp_domain.py`(GH #137 §2 那份,--selfcheck 27/27),分 armed / base 两侧各出一份。① 主判据:armed 侧『等级 ≤11 的远古交火次数』相对 base 侧显著下降(base 侧基线 12/40 = 30.0%);② **同等重要的反向判据(不许省)**:armed 侧的**全体**远古交火次数**不许塌成 0** —— 等级 ≥12 的那 28 次是本来就该打的,把它们一起误伤掉是回归、不是通过;③ 条件 (b) 粗粒度:armed 侧 gpm/deaths 无明显负面即可,不做显著性检验。**预登记的未知量**:RefreshCamp 每局只在营地被打完、列表缩短之后才重刷(mode_farm_generic 的 `GetAvailableCampCount() < GetCampCount()` 条件),所以营地名单相对等级是**滞后的** —— 如果 armed 侧 ≤11 的命中没有降到接近 0,先查这条刷新节奏,再怀疑门本身。",
+   "status": "pending",
+   "notes": "本地已买到的:14 例真实帧用例(等级 10/11/12/14/19 五个真实等级钉两条边界)、3 变异 3 抓、语料域 92.5%(1030 个真实英雄槽里 953 个 ≤11)。买不到的两件已在 state.json:campgrade_20260823 的 honest_boundary 里写死:语料不带野点表(GetNeutralSpawners 恒 {}),也不带攻击力(恒 0)。"
   }
  ],
  "done": [

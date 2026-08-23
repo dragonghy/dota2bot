@@ -403,20 +403,56 @@ end
 ____exports.IsLargeCamp = function(camp)
     return camp.type == "large"
 end
-____exports.RefreshCamp = function(bot)
+-- [GH #137] The camp-tier ladder, re-expressed as LOWER bounds. Soak candidate
+-- 'campgrade' (turbo-only); the gate lives at the single call site in
+-- bots/mode_farm_generic.lua, which passes the result in as bStrictLadder.
+--
+-- Each tier below states the level it NEEDS. The shipped chain in RefreshCamp
+-- states the level each tier TOLERATES, which is why it decides nothing: every
+-- branch bounds botLevel from above, so a camp a low-level bot is too weak for
+-- falls THROUGH into the next, more permissive branch instead of being stopped
+-- by it -- and the chain then ends in an unconditional `else` that adds it
+-- anyway. The attack-damage clause stays exactly where the original put it
+-- (the large/small tier); adding it to the ancient tier is GH #137's
+-- suggestion 3 and is deliberately NOT bundled here -- one lever at a time.
+-- The tiers COMPOSE: a camp must clear every tier that applies to it, so an
+-- enemy-side ancient camp needs both 15 (enemy) and 12 (ancient), not just the
+-- first one that matches. Testing them as an if/elseif over camp kind is the
+-- same fall-through mistake one level up.
+____exports.IsCampAllowedForLevel = function(camp, botLevel, attackDamage)
+    if ____exports.IsEnemyCamp(camp) and botLevel < 15 then
+        return false
+    end
+    if ____exports.IsAncientCamp(camp) and botLevel < 12 then
+        return false
+    end
+    if ____exports.IsLargeCamp(camp) and (botLevel <= 7 or attackDamage <= 80) then
+        return false
+    end
+    return true
+end
+____exports.RefreshCamp = function(bot, bStrictLadder)
     local camps = GetNeutralSpawners()
     local allCampList = {}
     local botLevel = bot:GetLevel()
     for ____, aCamp in ipairs(__TS__ObjectValues(camps)) do
         local camp = aCamp
-        if (botLevel <= 7 or bot:GetAttackDamage() <= 80) and not ____exports.IsEnemyCamp(camp) and not ____exports.IsLargeCamp(camp) and not ____exports.IsAncientCamp(camp) then
-            allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
-        elseif botLevel <= 11 and not ____exports.IsEnemyCamp(camp) and not ____exports.IsAncientCamp(camp) then
-            allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
-        elseif botLevel <= 14 and not ____exports.IsEnemyCamp(camp) then
-            allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
-        else
-            allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
+        -- Unarmed this is `true` and the chain below runs verbatim, i.e. every
+        -- camp is admitted, exactly as the shipped default always did.
+        local bAdmit = true
+        if bStrictLadder then
+            bAdmit = ____exports.IsCampAllowedForLevel(camp, botLevel, bot:GetAttackDamage())
+        end
+        if bAdmit then
+            if (botLevel <= 7 or bot:GetAttackDamage() <= 80) and not ____exports.IsEnemyCamp(camp) and not ____exports.IsLargeCamp(camp) and not ____exports.IsAncientCamp(camp) then
+                allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
+            elseif botLevel <= 11 and not ____exports.IsEnemyCamp(camp) and not ____exports.IsAncientCamp(camp) then
+                allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
+            elseif botLevel <= 14 and not ____exports.IsEnemyCamp(camp) then
+                allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
+            else
+                allCampList[#allCampList + 1] = {idx = camp.idx, cattr = camp}
+            end
         end
     end
     return allCampList, #allCampList

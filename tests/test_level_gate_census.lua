@@ -40,12 +40,12 @@
 -- Two consequences for the acceptance criterion in GH #84 §5:
 --
 --   1. "只有分类为合取且 N >= 20 的行才值得继续" selects exactly four rows
---      (aiug:149, aiug:582, aba_site:760, aba_site:824) and ALL FOUR are INERT.
+--      (aiug:149, aiug:582, aba_site:796, aba_site:860) and ALL FOUR are INERT.
 --      Every row with teeth sits at N = 15 or N = 18 -- including the issue's
---      own headline candidate, mode_farm_generic:286 (N = 18).  The filter as
+--      own headline candidate, mode_farm_generic:292 (N = 18).  The filter as
 --      written would have discarded the thing it was written to find.
 --   2. The issue's sample labels invert on two of the five rows it spot-checked:
---      aba_site:760 / :824 are named 合取(有牙齿) and read INERT here (their
+--      aba_site:796 / :860 are named 合取(有牙齿) and read INERT here (their
 --      subject is a level-20 hero and that hero does not exist in turbo), while
 --      mode_farm:393 / :507 are named 无害析取 and read TEETH here.  The load-
 --      bearing fact for 392/506 is one line: `J.IsLateGame()` (jmz_func:4337)
@@ -88,7 +88,7 @@ local GATES = {
          .. 'is dead code for the whole game, and reserving for buyback when your own t3s '
          .. 'are falling is live turbo behaviour at level 12.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 286, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 292, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 18 or not J.IsCore(bot) then',
       why = 'GH #84 (乙). Supports keep the exit through `not J.IsCore(bot)`; a core\'s '
@@ -96,13 +96,13 @@ local GATES = {
          .. 'Note the standing warning: dropping farm desire is not the same as fighting -- '
          .. 'this row is a candidate, and it needs a final-desire assertion, not a reachability one.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 370, op = '>=', n = 23, eff = 23,
+    { file = 'bots/mode_farm_generic.lua', line = 376, op = '>=', n = 23, eff = 23,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'or (bot:GetLevel() >= 23 and nAlliesCount >= 3)',
       why = 'rung 2 of 3. It only loosens the grouped-allies count from 4 to 3; rung 1 '
          .. '(nAlliesCount >= 4) and rung 3 (GetRoshanDesire()) carry the same purpose live.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 393, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 399, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if #nNeutrals == 0 and #nDefendAllies >= 2 and (not beVeryHighFarmer or bot:GetLevel() >= 15 or J.IsLateGame()) then',
       why = 'for a `beVeryHighFarmer` the first rung is false by construction, so the '
@@ -110,7 +110,7 @@ local GATES = {
          .. 'is DotaTime() > 18*60 in turbo, false in every frame of the archive. Both '
          .. 'fallbacks dead => the very-high farmer never joins a defence this way.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 507, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 513, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then',
       why = 'cores are covered by `bCore`; for a SUPPORT the remaining two rungs are the '
@@ -118,7 +118,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 536, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 542, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '
@@ -150,7 +150,7 @@ local GATES = {
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
          .. 'attacking the ancient); the level rung only widens it.' },
 
-    { file = 'bots/FunLib/aba_site.lua', line = 760, op = '>=', n = 20, eff = 20,
+    { file = 'bots/FunLib/aba_site.lua', line = 796, op = '>=', n = 20, eff = 20,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() >= 20 and allyCount <= 1 and botNetWorth < 21000 then',
       why = 'named 合取(有牙齿) in GH #84 §3(甲); reads INERT here. The row\'s subject is a '
@@ -160,7 +160,7 @@ local GATES = {
          .. 'It does reach a FOCUS hero -- skeleton_king delegates here (:1001) -- which is '
          .. 'why the row was worth reading rather than waving through.' },
 
-    { file = 'bots/FunLib/aba_site.lua', line = 824, op = '>', n = 20, eff = 21,
+    { file = 'bots/FunLib/aba_site.lua', line = 860, op = '>', n = 20, eff = 21,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 20 and botNetWorth < 23333 then',
       why = 'same shape, huskar\'s entry (luna delegates here at :853). Subject is a '
@@ -465,7 +465,7 @@ tests['[reverse] 392 and 506 really do name IsLateGame as their fallback'] = fun
         ':507 no longer reads as classified')
 end
 
-tests['[reverse] aba_site 760 is dead code a FOCUS hero routes into'] = function()
+tests['[reverse] aba_site 796 is dead code a FOCUS hero routes into'] = function()
     local src = read_file('bots/FunLib/aba_site.lua')
     -- Wraith King delegates into the bristleback body that owns the level-20 row.
     assert(src:find('____exports.ConsiderIsTimeToFarm.npc_dota_hero_skeleton_king = function()', 1, true),
@@ -473,16 +473,16 @@ tests['[reverse] aba_site 760 is dead code a FOCUS hero routes into'] = function
     local wk = src:match('ConsiderIsTimeToFarm%.npc_dota_hero_skeleton_king = function%(%)(.-)\nend')
     assert(wk ~= nil and wk:find('ConsiderIsTimeToFarm.npc_dota_hero_bristleback()', 1, true),
         'skeleton_king no longer delegates to bristleback -- the "generic file reaches the '
-        .. 'focus five" claim for aba_site:760 went through this one edge')
-    -- luna (candidate pool) reaches :824 the same way, through huskar.
+        .. 'focus five" claim for aba_site:796 went through this one edge')
+    -- luna (candidate pool) reaches :860 the same way, through huskar.
     local luna = src:match('ConsiderIsTimeToFarm%.npc_dota_hero_luna = function%(%)(.-)\nend')
     assert(luna ~= nil and luna:find('ConsiderIsTimeToFarm.npc_dota_hero_huskar()', 1, true),
         'luna no longer delegates to huskar')
     -- and the live sub-20 answer the INERT verdict leans on
     assert(src:find('if bot:GetLevel() >= 10 and allyCount <= 2 and botNetWorth < 15000 then', 1, true),
-        'the live level-10 row above :760 is gone; :760 may no longer be inert')
+        'the live level-10 row above :796 is gone; :796 may no longer be inert')
     assert(src:find('if botLvl < 20 and botNetWorth < 16000 then', 1, true),
-        'the caller\'s pos<=3 sub-20 fallback ladder moved; re-read :760 and :824')
+        'the caller\'s pos<=3 sub-20 fallback ladder moved; re-read :796 and :860')
 end
 
 tests['[reverse] item_purchase: the level-18 block is the only writer of t3AlreadyDamaged'] = function()

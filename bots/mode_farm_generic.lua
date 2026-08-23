@@ -222,7 +222,13 @@ function GetDesireHelper()
 	   and J.Role.GetAvailableCampCount() < J.Role.GetCampCount()
 	   and ( DotaTime() > 20 and  sec > 0 and sec < 2 )  
 	then
-		J.Role['availableCampTable'], J.Role['campCount'] = J.Site.RefreshCamp(bot);
+		-- [GH #137] soak candidate 'campgrade' (turbo-only): the camp-tier
+		-- ladder in RefreshCamp only filters when this is true. Off, the list
+		-- is every camp on the map at every level, which is what put an
+		-- 11-level Wraith King with starting items into an ancient camp for
+		-- 31.5s (100% -> 13.5% HP for 166 gold, nearest enemy 4573u away).
+		J.Role['availableCampTable'], J.Role['campCount'] =
+			J.Site.RefreshCamp(bot, J.IsModeTurbo() and J.IsSoakCandidate('campgrade'));
 		J.Role['hasRefreshDone'] = true;
 	end
 	

@@ -317,21 +317,58 @@ export const IsLargeCamp = function (camp: any): boolean {
     return camp.type === "large";
 };
 
-export const RefreshCamp = function (bot: Unit): LuaMultiReturn<[any[], number]> {
+// [GH #137] The camp-tier ladder, re-expressed as LOWER bounds. Soak candidate
+// 'campgrade' (turbo-only); the gate lives at the single call site in
+// bots/mode_farm_generic.lua, which passes the result in as bStrictLadder.
+//
+// Each tier below states the level it NEEDS. The shipped chain in RefreshCamp
+// states the level each tier TOLERATES, which is why it decides nothing: every
+// branch bounds botLevel from above, so a camp a low-level bot is too weak for
+// falls THROUGH into the next, more permissive branch instead of being stopped
+// by it -- and the chain then ends in an unconditional `else` that adds it
+// anyway. The attack-damage clause stays exactly where the original put it
+// (the large/small tier); adding it to the ancient tier is GH #137's
+// suggestion 3 and is deliberately NOT bundled here -- one lever at a time.
+// The tiers COMPOSE: a camp must clear every tier that applies to it, so an
+// enemy-side ancient camp needs both 15 (enemy) and 12 (ancient), not just the
+// first one that matches. Testing them as an if/else over camp kind is the
+// same fall-through mistake one level up.
+export const IsCampAllowedForLevel = function (camp: any, botLevel: number, attackDamage: number): boolean {
+    if (IsEnemyCamp(camp) && botLevel < 15) {
+        return false;
+    }
+    if (IsAncientCamp(camp) && botLevel < 12) {
+        return false;
+    }
+    if (IsLargeCamp(camp) && (botLevel <= 7 || attackDamage <= 80)) {
+        return false;
+    }
+    return true;
+};
+
+export const RefreshCamp = function (bot: Unit, bStrictLadder?: boolean): LuaMultiReturn<[any[], number]> {
     const camps = GetNeutralSpawners();
     const allCampList: any[] = [];
     const botLevel = bot.GetLevel();
 
     for (const aCamp of Object.values(camps)) {
         const camp = aCamp as any;
-        if ((botLevel <= 7 || bot.GetAttackDamage() <= 80) && !IsEnemyCamp(camp) && !IsLargeCamp(camp) && !IsAncientCamp(camp)) {
-            allCampList.push({ idx: camp.idx, cattr: camp });
-        } else if (botLevel <= 11 && !IsEnemyCamp(camp) && !IsAncientCamp(camp)) {
-            allCampList.push({ idx: camp.idx, cattr: camp });
-        } else if (botLevel <= 14 && !IsEnemyCamp(camp)) {
-            allCampList.push({ idx: camp.idx, cattr: camp });
-        } else {
-            allCampList.push({ idx: camp.idx, cattr: camp });
+        // Unarmed this is `true` and the chain below runs verbatim, i.e. every
+        // camp is admitted, exactly as the shipped default always did.
+        let bAdmit = true;
+        if (bStrictLadder) {
+            bAdmit = IsCampAllowedForLevel(camp, botLevel, bot.GetAttackDamage());
+        }
+        if (bAdmit) {
+            if ((botLevel <= 7 || bot.GetAttackDamage() <= 80) && !IsEnemyCamp(camp) && !IsLargeCamp(camp) && !IsAncientCamp(camp)) {
+                allCampList.push({ idx: camp.idx, cattr: camp });
+            } else if (botLevel <= 11 && !IsEnemyCamp(camp) && !IsAncientCamp(camp)) {
+                allCampList.push({ idx: camp.idx, cattr: camp });
+            } else if (botLevel <= 14 && !IsEnemyCamp(camp)) {
+                allCampList.push({ idx: camp.idx, cattr: camp });
+            } else {
+                allCampList.push({ idx: camp.idx, cattr: camp });
+            }
         }
     }
 
