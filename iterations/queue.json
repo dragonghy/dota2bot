@@ -236,6 +236,21 @@
    "acceptance": "Condition (a), EVENT-side and cheap: in any wave containing an Axe, count (1) how many hero-instants of ANY spell-immune enemy occur at all -- that is the supply number this request exists to buy, and it is worth having even if it is zero; (2) how often such an enemy stood inside 375u of a ready Culling below its execute threshold -- the domain; (3) on the armed leg, whether a Culling was cast on a spell-immune target and whether it killed. WORKING = at least one such cast with the kill; BUGGY = a cast that did not kill (that would mean the engine does not honour the pierce for a bot order and the whole lever is void -- report it loudly, it is the single fact that would retire this id). PRE-REGISTERED, same as hero-7: a SILENT reading with NO spell-immune enemy hero anywhere in the wave is a CARRIER-ABSENT record, NOT a negative result, and must not be written down as an empty domain -- the distinction GH #79/#97 exist to keep. No condition (b) ask beyond 'no obvious harm': the branch only opens frames on which the health test has already passed.",
    "status": "pending",
    "result": null
+  },
+  {
+   "id": "strategy-6",
+   "stream": "strategy",
+   "bundle": "itemtrip",
+   "seeds": [
+    888,
+    895,
+    896,
+    906
+   ],
+   "priority": 2,
+   "question": "itemtrip 重新入集申请(director 14:58Z 退回本组时写明的条件:『带着新的域回来重新申请』—— 本条就是那个新的域)。**退回的原因不是杠杆没生效,是它的域被量错了一个数量级以上**:申请/定价时用的 0.038 次/局是 #120 数的 TRIP(回城行程),而 GetDesire 的 bid 是**逐帧**付的,J.IsWastefulItemTrip 在 104 个真实帧 fixture / 966 个存活英雄帧上**成立 320 帧 = 33.1%**(tests/_itemtrip_sweep.lua,零成本)。两个数从来不可比:一个 bot 可以连续几百帧落在域内而一次行程都不发起。本轮改的是**一个杠杆、而且是一次推导订正**,不是新子句:泉水距离下限 5000 → 10000。5000 来自 #120 的 40.1s 中位往返 →『~12,000u 的走动,即~6,000u 单程』→ 取保守下限;**折半是错的** —— #120 的人口是 643 次**回城 TP**,去程是 TP、只有回程在走,所以走掉的 ~12,000u 就是**单程离家距离**。订正后域 320 → 135 帧(14.0%),而 #120 的承重帧(lina 20260822_123136 t=434.6,离家 11,240u)仍在域内、留 1,240u 余量(余量正是这个常数的上限:超过 ~11,000 杠杆就在自己的证据帧上失效)。**本波申报目的是条件 (b) 的重测**:同一个杠杆、域小 2.4 倍之后,gpm 赤字是否随之塌下去。**注意 §AT.1 的门柱与 06:11Z 那波不可跨波直接相减**(§AF.3),判据写在 acceptance 里。**排期完全听总监**:当前名额 0、W3/W4/W5 已排定,本条不插队,登记的理由是接力棒要有个看得见的位置(铁律 9)。",
+   "acceptance": "(b) 粗粒度、不做显著性检验:armed 侧 gpm 赤字相对 06:11Z 那波**明显收窄**即可继续留在集合里;若赤字**基本不变**,那就是本轮订正的域不是代价的来源 ⇒ 直接读成『代价来自 GetDesire 返回 nil 的那条腿』(mode_item_generic.lua 头注预登记的第二种可能:nil 被读成 0 ⇒ 整局 item mode 关掉),**那时不要再窄化域,要拆 nil 分支**。(a) 交录像组,但**判读工具必须重跑,不能复用旧读数**:tools/batch_test/behavioral/itemtrip_contract.py 的 FDIST_MIN 已随源码从 5000 改到 10000,任何 2026-08-23 之前跑出来的 IN/OUT 分桶都是按旧下限分的。另外录像组 15:30Z 已在 GH #120 自证:in/out 两桶差在这份语料上是噪声级(同码同种子两波间对照桶从 0.95 荡到 0.37)⇒ **(a) 不许再用两桶比**,要局内配对量(同局同英雄的回城取货次数差)。**零 AWS 增量**:本条不申请专波,搭任意已排定波次顺路即可。",
+   "status": "pending"
   }
  ],
  "done": [
