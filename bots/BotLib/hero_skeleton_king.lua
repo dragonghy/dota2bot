@@ -492,17 +492,49 @@ function X.ConsiderQ()
 	end
 
 	--打肉的时候输出
-	-- 600 is an ABSOLUTE mana figure on a hero that cannot hold it in turbo.  The
-	-- datafeed gives WK 267 max mana at level 1 on 16 int, i.e. the standard 75
-	-- base + 12/point, and 1.4 int per level: the pool is 435 at level 11, 502 at
-	-- 15, 569 at 19 and still 586 at 20.  It first crosses 600 at level 21, and
-	-- this branch wants CURRENT mana, so it wants a near-full level-21 pool -- while
-	-- the GH #84 level census read level >= 20 on 0 of 210 hero-slots, high-water
-	-- 19.  No item ahead of item_ultimate_scepter in either buy list above grants
-	-- intelligence.  So this branch is unreachable in turbo whatever Roshan is
-	-- doing.  Registered as a lever, NOT changed here: a fractional floor is a
-	-- behaviour change, and its domain (WK in BOT_MODE_ROSHAN at all) has to be
-	-- measured first -- it may well be empty, which is the axeblink trap again.
+	-- LEVER C, RE-MEASURED 2026-08-23 (hero stream).  The note that stood here
+	-- said this branch was "unreachable in turbo whatever Roshan is doing".  THAT
+	-- CONCLUSION IS WITHDRAWN; it rested on two errors, and both are corrected
+	-- here rather than quietly deleted, because the old numbers have been quoted.
+	--
+	--   * ITEMS.  It claimed "no item ahead of item_ultimate_scepter in either buy
+	--     list above grants intelligence".  Three do.  Iron Branch is +1 to all
+	--     attributes EACH; MAGIC WAND -- entry 6 of pos_3 and entry 6 of pos_1, the
+	--     first assembled item either list buys -- is +3 to ALL attributes; BRACER,
+	--     entry 7 of pos_3, is +2 intelligence.  Scepter is +10 all attributes AND
+	--     a flat +175 mana, which the old note also did not count.  (Values from
+	--     odota dotaconstants 10.8.0, read 2026-08-23.)
+	--   * ARITHMETIC.  Intelligence is FLOORED before it pays out at 12 mana a
+	--     point: pool = 75 + 12*floor(16 + 1.4*(level-1) + item_int).  The floor is
+	--     not cosmetic -- it is what makes the model reproduce 33 of the 34 real
+	--     Wraith King frames in tests/fixtures exactly, the 34th being a known bad
+	--     row named in tests/test_wk_roshan_mana_ceiling.lua.  Unfloored, the old
+	--     note overstated the pool by up to 7 (502 vs 495 at level 15, 569 vs 567
+	--     at 19, 586 vs 579 at 20).
+	--
+	-- First level whose FULL pool reaches 600, by what is in the bag:
+	--     bare hero                        21     (the number the old note gave)
+	--     magic wand (it eats the branches)19
+	--     wand + bracer                    18     <- both shipped pos_3 entries
+	--     + aghanim's scepter              every level from 1 (pool 622 at level 1)
+	--
+	-- GH #84's turbo level census reads level >= 20 on 0 of 210 hero-slots with a
+	-- HIGH-WATER OF 19, so the shipped build reaches its crossing level in the tail
+	-- of that distribution instead of never.  The branch is not arithmetically
+	-- dead.  What IS wrong with it is narrower and survives the correction: at
+	-- every pre-scepter milestone the crossing pool is exactly 603, so the 600
+	-- floor demands 99.5% OF THE POOL, and one Wraithfire Blast (95/110/125/140)
+	-- drops him under it for the rest of the Roshan fight.  An absolute floor 4.3x
+	-- the cost of the spell it gates is the defect; the level was never the point.
+	--
+	-- STILL NOT CHANGED HERE, for the reason the old note gave and one it did not:
+	-- a fractional floor is a behaviour change whose domain has never been
+	-- measured, and the domain CANNOT be measured offline.  The 13th world
+	-- assertion (tests/test_activemode_world_assertion.lua) is that no fixture
+	-- carries an active mode at all -- GetActiveMode is bot-VM state, not entity
+	-- state, so it is in no .dem -- which makes this comparison constant FALSE on
+	-- every frame in the archive, not rare.  Sizing it needs a positional proxy
+	-- from the batch corpus (queue hero-10), not another fixture.
 	if bot:GetActiveMode() == BOT_MODE_ROSHAN
 		and bot:GetMana() >= 600
 	then
