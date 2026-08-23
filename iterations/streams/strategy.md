@@ -27,6 +27,49 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0LN. **【2026-08-23T04:xxZ 新增,流程条,不产 gate】往 `bots/` 一个文件里加几行,
+   会让一个**按 `file:line` 钉行**的普查静默错位 —— 而它长得像「你改坏了一条 gate」。**
+   本轮给 `ability_item_usage_generic.lua` 加了 9 行注释+1 行调用,
+   `test_level_gate_census` 当场两红:「**missing source for :5759**」+
+   「**unpinned GetLevel gate at :5768**」。**两条都是同一件事**:GH #84 (甲) 的 22 行分类表
+   把 aiug 的两行钉在 `5759 / 5799`,我的 +9 把它们推到 `5768 / 5808`。
+   **做法**:(1) **收尾读失败枚举时,先按「我加了几行」对一遍位移量** ——
+   两条错位的差值都恰好等于 +9,这比逐条读断言快得多,也立刻把它和真缺陷分开;
+   (2) 修法是**把钉子挪到新行号**(那两行源码一个字没变,`text=` 断言仍逐字命中),
+   **不是**放宽判据;(3) **这是 GH #106「加一枚 fixture 是跨 5 个文件的破坏性改动」的孪生**:
+   那条说共享**语料**被加/治打破,这条说共享**源码坐标**被任何插入打破,
+   而两边都只有全套的失败枚举会说话(0S)。**今后凡在 `bots/` 里插行,收尾必查行钉普查。**
+0PID. **【2026-08-23T04:xxZ 新增,流程条,不产 gate】「两个 bot」在 60% 的 fixture 上是同一个 bot。**
+   `tests/mock/bot_api.lua:162` 是 `spec.GetPlayerID = spec.GetPlayerID or 0`,
+   而**101 枚 fixture 里只有 41 枚带真实 `player_id`** ⇒ 另外 60 枚上每个英雄都读 0。
+   本轮要钉的东西(单人应答 claim)**按玩家分**,第一版选的
+   `f_045650_lion_meatgrinder` 正是那 60 枚之一 ⇒ 「A 拿走 claim、B 被拒」会
+   **静默变成空断言**(A 和 B 是同一个 id,claim 检查里的 `tDefendClaim.id ~= nMyId` 恒假)。
+   **是 setup 里那句 `assert(a:GetPlayerID() ~= b:GetPlayerID())` 抓住的,8 个用例当场全红。**
+   **做法**:(1) **凡是断言「两个 bot 之间」的东西,setup 里先断言这两个 bot 在这枚 fixture 上
+   真的是两个 bot**;(2) 从 `heroes` 里挑人要 `table.sort` 定序,`pairs()` 的顺序不稳定
+   ⇒ 不定序的用例主体是随机的;(3) **与 0p 同族但方向相反**:0p 是缺字段让子句**恒假**,
+   这条是缺字段让两个主体**塌成一个**,于是断言**恒真**。
+0TB. ~~**【2026-08-23T04:xxZ】章程第 8 条(最终出价可达性普查)轮到 `teambrain`**~~
+   **【已做完:2026-08-23T04:xxZ,产出 gated `tpclaim` + 一条负结果判决】**
+   **判决(负结果,请当结论引用)**:`teambrain` 的**最终出价在本地结构上买不到** ——
+   唯一调用方压在 `J.IsDefending` → `bot:GetActiveMode()`(**第十三条**,恒 0)之下,
+   目的地 `X.GetDefendTPLocation` = `GetLaneFrontLocation`(**GH #61 拒答**)。
+   **两条都在 harness 轴上,不是语料缺口**,再买一波也买不到。
+   ⇒ **`teambrain` 一直在 armed 集里,却从来没有本地证据证明它动过一次出价**;
+   树上的 `test_replay_teambrain_tp.lua`(5 例)断言的**全部是 helper 返回值**。
+   **但审计在出价下面一层撞到一个真缺陷**:单人应答 claim 的戳记写在 **query 的末尾**
+   ⇒ **claim 是被「问」烧掉的,不是被「去」烧掉的**。调用方问完之后**下一行还能拒**,
+   而两行读的是**两个不同的量**(赋值看 `botAmount.distance` / `botAmount.amount`,
+   拒绝看**直线距离** `GetUnitToLocationDistance <= nMinTPDistance - 500`)⇒
+   **待在自家基地而中路被围的 bot、或站在另一条路上的 bot,过第一行、挂第二行:
+   它根本不会 TP,却把四个真能应答的队友挡了 12 秒。仲裁翻转。**
+   修法一个变量:armed 时 query 不戳记,改由调用方在**走向 ABSOLUTE 的那一行**戳
+   (`J.NoteDefendTpClaim`)。12 例全绿 / 3 变异 3 抓;`state.json:tpclaim_20260823`;
+   `test_set.md` 顶部 04:xxZ 入集提议(**并进 `teambrain` 那一波,不申请专波、不提 queue 单**)。
+   **本条留给下一条杠杆的两件事**:(1) **第 8 条名下只剩 `lf_rescue`**;
+   (2) **不要把 `tpclaim` 折进 `teambrain`** —— 两者可分,而 teambrain 自己的 (a) 从没买到过,
+   折进去就再也分不开谁在起作用(`lanefix` 的形状)。
 0IT. ~~**【2026-08-22T23:19Z 新增,本组下一条杠杆 + 一条流程条】**~~ **【已做完:2026-08-23T01:2xZ】**
    `itemtrip` 已上机(`bots/mode_item_generic.lua` + `J.IsWastefulItemTrip`,14 例真实帧用例,
    `test_set.md` 顶部入集提议 + `queue.json:strategy-3` 取证波)。**(1)(2)(3) 逐条照办**:
@@ -891,6 +934,61 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T04:15Z:**章程 backlog 第 8 条(「最终出价可达性」全组普查)轮到 `teambrain`;
+  普查本身交出一条**负结果判决**,并在**出价下面一层**撞到一个真缺陷 ⇒ gated `tpclaim`。**
+  **开工自检 worst exit 0**(UNLANDED 无 / cadence clean / trunk python 13/13),
+  本地 `HEAD == origin/main == 68d0ea2`。**认领依据**:`OWNER_PRIORITIES.md` 的 P1/P2
+  都写「球在协同组」,但**两项的本组交付都已落地**(P1 第 1 棒 07:30Z + 回程波 02:06Z 收割,
+  主判据在录像组;P2 决策侧 `stayfield`/`stayfield2` 已在树上且已入集)⇒ **该文件此刻滞后**,
+  本组不自行增删,已在报告 §6 请主会话核对。backlog 上面几条要么做完、要么是流程条、
+  要么自己写着「在拿到波次读数之前不要动」,于是取第 8 条。
+  **⭐ 判决(负结果,值钱的那一半)**:`teambrain` 的**最终出价在本地结构上买不到**,
+  而且**两条卡点都在 harness 轴上、不是语料缺口** —— 唯一调用方压在
+  `J.IsDefending` → `bot:GetActiveMode()`(**第十三条**,全语料恒 0)之下,目的地
+  `X.GetDefendTPLocation` = `GetLaneFrontLocation`(**GH #61 拒答**)。**再买一波也买不到。**
+  ⇒ **`teambrain` 在 armed 集里,却从来没有本地证据证明它动过一次出价**;
+  `test_replay_teambrain_tp.lua`(5 例)断言的**全是 helper 返回值**。它的 (a) 只能在波次录像里买,
+  请总监判读时带上这条。
+  **⭐ 缺陷(审计顺出来的那一半)**:单人应答 claim(12s/1600u)的戳记写在 **query 末尾**
+  ⇒ **claim 是被「问」烧掉的,不是被「去」烧掉的**。调用方(aiug 守塔分支)问完之后
+  **下一行还能拒**,而这两行读的是**两个不同的量**:赋值条件是
+  `botAmount.distance > 5500`(离那条路多远)或 `botAmount.amount < laneFront/5`(落后前沿多少),
+  拒绝条件是 `GetUnitToLocationDistance(bot, tpLoc) <= 5000`(**到目的地的直线距离**)。
+  **一个待在自家基地、而中路正被围的 bot(Turbo 后期最常见的守家场面),
+  或一个站在另一条路上的 bot,过得了第一行、挂在第二行:它根本不会 TP,
+  而它刚拿走的 claim 把四个真能应答的队友挡了 12 秒。仲裁因此翻转 ——
+  唯一的应答名额发给了那个不会去的 bot。**
+  **改的是一个变量**:armed 时 query 不再戳记,改由调用方在**已过完全部拒绝、
+  正走向 `BOT_ACTION_DESIRE_ABSOLUTE` 的那一行**戳(新 `J.NoteDefendTpClaim`)。**问不等于答。**
+  **未 armed 逐字节等价,而且是断言出来的**:`tpclaim` 关 ⇒ query 照旧原处戳记,
+  调用方新增那一次是**同一帧/同一 bot/同一点**的重写(`[off-candidate equivalence]`
+  对读两条路径的裁决);`teambrain` 关 ⇒ 整个仲裁在读 claim 之前就返回
+  (`[transparency]` 对 `{}` 与 `{tpclaim}` 两种组合各断言一次)。
+  `tests/test_tpclaim_stamp_on_commit.lua`(**12 例全绿,3 变异 3 抓**):
+  **今天的缺陷与修好之后在同一枚真实帧上正反各钉一次**
+  (`f_260819_222526_jakiro_defend_fresh`);`[the guard survives]` 保住 343.2s 三人同帧 TP 那个病例;
+  12s(11.9/12.1)与 1600u(1500/1700)各一对边界;`[untouched legs]` 用 wave12 卷宗的
+  1v3 帧(`f_050713_es_defend_1v3`)断言上面三条拒绝腿一条没动。
+  调用方那一半只能结构断言(§判决),**而且是在去掉注释之后的源码上做的** ——
+  这个文件自己的头注和修法的头注**逐字引用了它要找的每一个标识符**,
+  **本组第三次撞上「纯文本判据把注释读成代码」,这次在写下去之前就拆了**。
+  **⭐ 两条新流程条,都是被红点出来的、不是想出来的**(已进 backlog 0LN / 0PID):
+  (1) **加行会让按 `file:line` 钉行的普查静默错位** —— aiug 加 10 行,
+  `test_level_gate_census` 两红(`missing source for :5759` + `unpinned gate at :5768`),
+  **位移量恰好都是 +9**,把钉子挪到 `5768/5808` 即修(源码一个字没变,`text=` 仍逐字命中);
+  这是 GH #106 的孪生:那条讲共享**语料**,这条讲共享**源码坐标**。
+  (2) **「两个 bot」在 60% 的 fixture 上是同一个 bot** —— 101 枚里只有 **41 枚**带真实
+  `player_id`,其余读 mock 默认 0;第一版选的 `f_045650_lion_meatgrinder` 正是那 60 枚之一,
+  **是 setup 里 `assert(a:GetPlayerID() ~= b:GetPlayerID())` 抓住的,8 个用例当场全红**。
+  **门**:`luacheck bots game` **exit 0 / 0 警告**;全量 **1380 tests / 20 failures**,
+  **其中 2 条是本轮自己撞的(上面那条 +9 错位),修掉后 18** —— 与 GH #127 记的 18 条
+  纯语料规模等式红**逐文件相同**,**delta = 0**。(全量单次约 100 分钟,修完那一个文件后
+  只定向复跑了它,没有再烧第二个 100 分钟;这一点写在报告 §8 里,不当成「全套又绿了一次」。)
+  报告 `iterations/reports/strategy/20260823T041500Z.md`;`state.json:tpclaim_20260823`;
+  `test_set.md` 顶部 04:xxZ 入集提议(**并进 `teambrain` 那一波,不申请专波、不提 queue 单**)。
+  **交棒**:① 总监 —— `tpclaim` 入集 + `teambrain` 的 (a) 判读带上那条负结果;
+  ② 主会话 —— `OWNER_PRIORITIES.md` 的 P1/P2 球权已滞后,请核对。
+  **本组下一轮**:第 8 条名下只剩 `lf_rescue`。
 - 2026-08-23T01:27Z:**`itemtrip` 上机(GH #120,owner P2 那一族在健康侧的另一半),
   外加把本组自己**推了没落地**的上一棒捡回 trunk。**
   **⚠️ 开工自检报的三条 UNLANDED 里有一条是本组自己的**:23:19Z 的上机前审计

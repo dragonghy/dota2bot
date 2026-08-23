@@ -5316,6 +5316,15 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			-- Defending a tower, not rescuing a named ally (see tpdead above).
 			bot.tpRespondAlly = nil
 
+			-- [tpclaim] Take the team's single-responder claim HERE -- the
+			-- first line that is past every refusal and on its way to
+			-- BOT_ACTION_DESIRE_ABSOLUTE. The ask above no longer takes it
+			-- (see J.NoteDefendTpClaim): asking is not answering, and the
+			-- distance test between the two lines refuses plenty of askers.
+			-- Off the 'tpclaim' candidate this is a same-frame re-write of the
+			-- stamp the ask already made -- same bot, same spot, same value.
+			J.NoteDefendTpClaim( bot, tpLoc )
+
 			if botName == 'npc_dota_hero_furion'
 			then
 				local Teleportation = bot:GetAbilityByName('furion_teleportation')

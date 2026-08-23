@@ -6183,9 +6183,43 @@ function J.ShouldAllowDefendTp( bot, vLoc )
 	then
 		return false
 	end
-	tDefendClaim.t, tDefendClaim.x, tDefendClaim.y, tDefendClaim.id
-		= nNow, vLoc.x, vLoc.y, nMyId
+	-- [tpclaim] The stamp used to live RIGHT HERE, i.e. the claim was burned by
+	-- ASKING, not by going. Its one caller (ability_item_usage_generic, the
+	-- 守塔 branch) asks and can still refuse on the very next line:
+	--
+	--     if tpLoc ~= nil and not J.ShouldAllowDefendTp( bot, tpLoc ) then ... end
+	--     if tpLoc ~= nil and GetUnitToLocationDistance( bot, tpLoc )
+	--         > nMinTPDistance - 500 then  ... return ABSOLUTE  end
+	--
+	-- and those two lines read DIFFERENT quantities. tpLoc is assigned when
+	-- `botAmount.distance > nMinTPDistance` (how far the bot is OFF that lane)
+	-- or `botAmount.amount < laneFront / 5` (how far BEHIND the lane front it
+	-- is) -- neither is the straight-line distance the second line then
+	-- measures. A bot sitting in its own base while mid is under siege, or one
+	-- standing in another lane, clears the first line and fails the second:
+	-- it never TPs, and the 12s/1600u claim it just took refuses the four
+	-- teammates who could have answered. The arbitration inverts -- the single
+	-- answer goes to the one bot that will not go.
+	-- Gated on 'tpclaim' (and therefore only reachable with 'teambrain' armed,
+	-- which is where the stamp lives at all): OFF the candidate the stamp
+	-- happens here exactly as before, and the caller's commit-time stamp is a
+	-- same-frame re-write of the same bot / same spot -- byte-identical state.
+	if not J.IsSoakCandidate( 'tpclaim' ) then
+		J.NoteDefendTpClaim( bot, vLoc )
+	end
 	return true
+end
+
+-- [tpclaim] Take the single-responder claim. Called by the defend-TP caller
+-- only on the path that actually returns the TP action, so that a query which
+-- ends in no TP leaves the event unanswered and answerable. Deliberately
+-- separate from the query above: 'one event = one answer' only holds if the
+-- claim tracks the answer.
+function J.NoteDefendTpClaim( bot, vLoc )
+	if bot == nil or vLoc == nil then return end
+	tDefendClaim.t = DotaTime()
+	tDefendClaim.x, tDefendClaim.y = vLoc.x, vLoc.y
+	tDefendClaim.id = bot.GetPlayerID ~= nil and bot:GetPlayerID() or -1
 end
 
 -- [chain-rescue guard, B-group diagnosis 20260723] Module-level memory of the

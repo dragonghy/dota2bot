@@ -30,6 +30,41 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 头注与 `queue.json:strategy-3`,**提议方自己预登记了它** —— 这正是应该被奖励的做法,
 不是应该被拦下的风险:哪一种为真,这一波都会把这条引擎语义**替所有后来者兑付掉**。
 
+**🆕 2026-08-23T04:xxZ 协同组入集提议:新 gated id `tpclaim`** —— 章程 backlog 第 8 条
+(「最终出价可达性」全组普查)本轮轮到 **`teambrain`**,而普查在**出价下面一层**撞到一个缺陷。
+请**并进 `teambrain` 所在的那一波**(它只有在 `teambrain` armed 时才可达 —— 那个 claim
+本来就只在 teambrain armed 时存在),**不申请专波**。
+**缺陷**:TeamBrain phase 1 给出厂守塔 TP 装了单人应答 claim(12s / 1600u),
+但**戳记写在 query 的末尾** ⇒ **claim 是被「问」烧掉的,不是被「去」烧掉的**。
+它唯一的调用方(`ability_item_usage_generic` 守塔分支)问完之后**下一行还能拒**,
+而这两行读的是**两个不同的量**:`tpLoc` 的赋值条件是
+`botAmount.distance > nMinTPDistance`(离那条路多远)或 `botAmount.amount < laneFront/5`
+(落后兵线前沿多少),而随后拒绝的条件是
+`GetUnitToLocationDistance(bot, tpLoc) <= nMinTPDistance - 500`(**到目的地的直线距离**)。
+**一个待在自家基地、而中路正被围的 bot,或者一个站在另一条路上的 bot,过得了第一行、
+挂在第二行:它根本不会 TP,而它刚拿走的 claim 把四个真能应答的队友挡了 12 秒。**
+仲裁因此**翻转** —— 唯一的那个应答名额发给了那个不会去的 bot。
+**改的是一个变量**:armed 时 query 不再戳记,改由调用方在**已经过完全部拒绝、正走向
+`BOT_ACTION_DESIRE_ABSOLUTE` 的那一行**戳(`J.NoteDefendTpClaim`)。**问不等于答。**
+**未 armed 逐字节等价**:query 照旧在原处戳记,调用方新增的那一次是**同一帧、同一个 bot、
+同一个点**的重写 ⇒ claim 状态一模一样(`[off-candidate equivalence]` 直接断言);
+`teambrain` 关着时整个仲裁在读 claim 之前就返回了(`[transparency]` 两种 arm 组合都断言)。
+`tests/test_tpclaim_stamp_on_commit.lua`(**12 例全绿**,3 次变异 3 抓):
+今天的缺陷(`[the defect, pinned]`:A 只问,B 就被拒)与修好之后(`[the fix]`:B 仍可应答)
+**在同一枚真实帧上正反各钉一次**;`[the guard survives]` 保住 343.2s 那个三人同帧 TP 的病例
+(A **提交**之后 B 照样被拒);窗口 12s 与半径 1600u 各钉一对边界;
+`[untouched legs]` 用 wave12 卷宗自己的 1v3 帧断言上面三条拒绝腿没被动过。
+**⚠️ 请总监特别看这一条(它是本轮普查真正的产出)**:**`teambrain` 的「最终出价」
+今天买不到,而且原因是结构性的、不是语料缺口** —— 唯一的调用方压在
+`J.IsDefending` → `bot:GetActiveMode()`(**第十三条世界断言**,全语料恒 0)之下,
+目的地 `X.GetDefendTPLocation` 又是 `GetLaneFrontLocation`(**GH #61 拒答**)。
+⇒ **`teambrain` 一直在 armed 集里,却从来没有任何证据证明它动过一次出价**;
+真实帧上可证的是**仲裁本身**,这正是新用例钉的东西。调用方那一半用**去掉注释之后的源码**
+做结构断言(本组第三次撞上「文本判据把自己的头注读成代码」,这次提前拆了)。
+**⚠️ 顺带量到并写进用例的一条世界事实**:**101 枚 fixture 里只有 41 枚带真实 player id**,
+另外 60 枚每个英雄都读 mock 默认的 0 ⇒ **按玩家分的 claim 断言会静默变成空断言**。
+第一版选的 `f_045650_lion_meatgrinder` 正是那 60 枚之一,是 setup 里那句 assert 抓住的。
+
 **🆕 2026-08-23T01:2xZ 协同组入集提议:新 gated id `itemtrip`** —— GH #120,
 **owner 优先项 P2 那一族在健康侧的另一半**。请**并进现有那一波**(与 `fieldcreep`
 同理:这是 armed 腿的**臂内**读数,不是配对经济问题),**不申请专波**。
