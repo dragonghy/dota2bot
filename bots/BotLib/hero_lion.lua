@@ -51,26 +51,59 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- counts are existence reads, not densities (the stream's standing §Y.2 limit) --
 -- how many enemy-hero drain channels a real game contains is an open corpus
 -- question, filed as queue.json hero-4.  The shipped build puts Mana Drain at RANK
--- 4 by level 10, i.e. the abandoned side is at its largest single payout (30 -> 40)
--- exactly when the talent is picked; we are giving that up on frequency grounds,
+-- 3 when the t10 choice is made -- level 10 goes to a TALENT, so only nine ability
+-- points are down and the row's 10th entry lands at level 11 (corrected
+-- 2026-08-23; the first write-up said rank 4 by counting row indices as levels).
+-- So the abandoned side is giving up 25 -> 35, not its largest payout of 30 -> 40,
+-- which makes this change better supported than it was written up as; either way
+-- we are giving it up on frequency grounds,
 -- the same trade as the Zeus t15 row.  +20 is measured against a 290 base (datafeed)
 -- and this hero's pos_4/pos_5 outfit macro carries Arcane Boots, so the RELATIVE
 -- gain in practice is about +6%, not +7%.  The ally half of [1] (Mana Drain can feed
 -- an ally at 50% rate) is unreachable either way: X.ConsiderE has no ally branch.
 --
--- t15 DELIBERATELY NOT CHANGED, so nobody re-litigates it on taste: neither side's
--- domain can be measured offline.  [3] pays only on a cast that arrives inside the
--- last 2s of a Hex cooldown, and the shipped build keeps Hex at rank 1 -- a 24
--- second cooldown -- until hero level 12 (every frame in the fixture library that
--- has Hex learned has it at rank 1).  That is a narrow band on a continuous
--- quantity, where a corpus zero has to be recorded as UNDERPOWERED, not EMPTY
--- (the lesson from Axe's Culling threshold, GH #115).  [4]
--- pays inside two windows -- after a respawn until the next kill/assist, and after
--- a kill/assist while that hero is dead -- which the dumper cannot see at all
--- (it does not dump modifiers, GH #27).  Both talents ultimately buy the same
--- thing (Hex disable: [3] more casts, [4] longer ones), so there is no reachability
--- asymmetry to exploit.  What would settle it is an event-side count of Hex casts
--- blocked by <= 2s of cooldown; that is the other half of queue.json hero-4.
+-- t15 RE-EXAMINED 2026-08-23 and still NOT changed -- but on measurements this
+-- time, not on "neither side can be measured".  The pair is [3] -2.0s Hex cooldown
+-- (special_bonus_unique_lion_5) against [4] +15% To Hell and Back Debuff/Spell Amp
+-- (special_bonus_unique_lion_11), and the row keeps [4].  Both of the 2026-08-22
+-- note's legs turned out to be wrong, in OPPOSITE directions:
+--   * [4]'s two windows -- after a respawn until the next kill/assist, and after a
+--     kill/assist while that hero is dead -- are NOT invisible.  Fixtures cut after
+--     2026-08-19 carry modifiers, and both windows are in the corpus today:
+--     modifier_lion_to_hell_and_back_buff on 2 frames, ..._respawn_buff on 1, out
+--     of the 10 Lion frames that carry modifier state at all.  GH #27 survives for
+--     ITEM CHARGES only.
+--   * [3] is worth MORE than that note priced it.  24s is Hex at rank 1, which is
+--     what the corpus holds (its Lions top out at level 11) -- not what the domain
+--     holds.  The talent exists only from level 15, and by level 15 this build has
+--     put three points in Hex: rank 3, a 16 second cooldown.  So -2.0s buys +14.3%
+--     Hex casts at the moment of choice (16/14), and +20% from level 16 when Hex
+--     reaches rank 4 -- against the +9.1% a 24s cooldown would have given.
+--     (The old note also had rank 2 arriving at level 12; it arrives at 13.
+--     Cause: the build row's index is not the hero level -- J.Skill.GetSkillList
+--     spends levels 10 and 15 on talents and pushes every later ability entry back.
+--     Read out of that function in tests/skill_level_map.lua, never restated.)
+-- KEPT [4] ANYWAY, and the reason is a measurement of what is scarce: a cooldown
+-- reduction only pays when the cooldown is what stopped a cast, and on the corpus
+-- frames that have Hex learned it is READY and affordable on 9 of 20.  Lion stands
+-- around with his disable up nearly half the time -- targets are scarce, Hex charges
+-- are not.  The <= 2s band the talent converts is hit on 0 of those frames against
+-- an expectation of ~0.9, i.e. UNDERPOWERED, not EMPTY (GH #115).  The incumbent has
+-- the opposite shape: it multiplies the casts that DO happen, and its spell-amp half
+-- also raises Earth Spike and Finger of Death damage -- so the old "both sides buy
+-- the same thing (Hex disable)" was wrong too; [4] is the broader of the two.
+-- REJECTED SIDE'S BEST CASE: the respawn window is switched off by SUCCESS (it ends
+-- on the next kill or assist) and the kill window needs one already banked, so
+-- neither is available in an even fight -- which is where a shorter Hex cooldown
+-- would pay.  It loses to a resource that is idle half the time.
+-- HONEST BOUNDS: no frame in this corpus is in domain (Lion tops out at level 11 --
+-- every number above is a proxy read four levels below the tier); n = 3 windows is
+-- an existence read on fixtures curated for other investigations, not a density;
+-- "inside a window" is not "collected a payout"; and the ready-Hex count says the
+-- cooldown was not binding AT THOSE INSTANTS, not that no cast was ever delayed by
+-- it -- that event-side count is still queue.json hero-4.  Talent magnitudes come
+-- from odota dotaconstants; the datafeed carries the names but leaves special_values
+-- empty for both.  Pinned in tests/test_lion_t15_payoff.lua.
 local tTalentTreeList = {
 						['t25'] = {10, 0},
 						['t20'] = {10, 0},

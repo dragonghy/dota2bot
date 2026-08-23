@@ -17,8 +17,16 @@
 --       at level 15, where the rank comes from THIS FILE'S OWN build row, parsed
 --       out of hero_axe.lua rather than restated (the M13 lesson).  Battle
 --       Hunger runs 12s on a 5s cooldown at rank 4: ceiling 1.00, i.e. it can be
---       live continuously.  Berserker's Call runs 3.0s on a 12s cooldown at
---       rank 4: ceiling 0.25.
+--       live continuously.  Berserker's Call runs 2.7s on a 14s cooldown at
+--       rank 3: ceiling 0.19.
+--       CORRECTED 2026-08-23 (second pass): this file first read BOTH abilities
+--       as rank 4 at level 15, because it counted build-row entries as hero
+--       levels.  J.Skill.GetSkillList spends levels 10 and 15 on talents, so only
+--       13 ability points are down when the t15 choice is made and Call's last
+--       point lands at level 16.  The verdict is unchanged and the ratio it rests
+--       on grew (~5x, not ~4x), but the same bug would have flipped a closer
+--       pair; the mapping now comes from running that function, in
+--       tests/skill_level_map.lua, which tests/test_lion_t15_payoff.lua shares.
 --   (2) CORPUS -- the modifiers this repo's fixtures actually dumped.  On the 16
 --       Axe frames that carry modifier data, an enemy hero is carrying
 --       modifier_axe_battle_hunger on 5, and Axe is carrying
@@ -44,7 +52,7 @@
 --     arithmetic, it does not establish anything by itself.
 --   * The comparison of magnitudes (about +96 raw magic damage over a full
 --     Battle Hunger, versus the physical damage +10 armor turns away during a
---     3s taunt) is arithmetic on the datafeed, NOT measured here: fixtures do
+--     2.7s taunt) is arithmetic on the datafeed, NOT measured here: fixtures do
 --     not dump armor, and recent_damage does not carry a damage type.
 --   * Battle Hunger "deals damage over time until the target kills another
 --     unit" -- so its 12s is an upper bound and the dps talent's realised
@@ -55,8 +63,9 @@
 --     Condition (c) rests on the mechanism, not on a guide.
 --
 -- THE OTHER SIDE'S BEST CASE, stated so the next reader does not have to
--- reconstruct it: [4] is the bigger RELATIVE buff (15 -> 25 bonus armor, +67%,
--- against 24 -> 32 dps, +33%), a taunt guarantees that the attacks its armor
+-- reconstruct it: [4] is the bigger RELATIVE buff (14 -> 24 bonus armor at the
+-- rank held at level 15, +71%, against 24 -> 32 dps, +33%), a taunt guarantees
+-- that the attacks its armor
 -- reduces actually arrive, and Axe's innate One Man Army converts 50% of his
 -- armor into Strength while no ally is within 700 -- which the farming branch
 -- of X.ConsiderQ (taunt 3+ neutrals, requires no enemy hero within 1600) puts
@@ -68,6 +77,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
+local skillmap = require('skill_level_map')
 
 local HERO_SRC = 'bots/BotLib/hero_axe.lua'
 
@@ -103,29 +113,28 @@ local function live_lines(src)
     return out
 end
 
---- The rank each ability holds at `level`, computed from hero_axe.lua's own
---- build row.  The row lists sAbilityList indices in level order, and
---- hero_axe.lua binds abilityQ = sAbilityList[1] (Berserker's Call) and
---- abilityW = sAbilityList[2] (Battle Hunger) -- both of which are read out of
---- the source here too, so re-pointing a handle moves this number.
+--- The rank each ability holds at `level`, for the abilities hero_axe.lua binds
+--- as abilityQ (Berserker's Call) and abilityW (Battle Hunger) -- both slot
+--- numbers read out of the source here, so re-pointing a handle moves this.
+---
+--- CORRECTED 2026-08-23 (second pass): the first version of this counted the
+--- first `level` entries of tAllAbilityBuildList, i.e. it treated the row index
+--- AS the hero level.  It is not: J.Skill.GetSkillList spends levels 10 and 15
+--- on talents, so only THIRTEEN ability points are down when the t15 choice is
+--- made and the row's last two entries land at levels 16 and 17.  Under the bug
+--- this file reported Berserker's Call at rank 4 (0.25 uptime ceiling) at level
+--- 15; it is really rank 3 (0.19).  The verdict did not move -- the ratio it
+--- rests on got LARGER, ~5x instead of ~4x -- but the numbers did, and the same
+--- bug would have flipped a closer pair.  The mapping now comes from running the
+--- shipped J.Skill.GetSkillList; see tests/skill_level_map.lua.
 local function ranks_at(level)
     local src = read_file(HERO_SRC)
-    local row = src:match('local tAllAbilityBuildList = {%s*{(.-)}')
-    assert(row, HERO_SRC .. ' has no tAllAbilityBuildList literal')
-    local order = {}
-    for n in row:gmatch('%d+') do order[#order + 1] = tonumber(n) end
-    assert(#order >= level, 'the build row is only ' .. #order .. ' levels long')
-
-    local slot = {}
-    for name, idx in src:gmatch('local (ability[QWER])%s*=%s*bot:GetAbilityByName%(%s*sAbilityList%[(%d)%]') do
-        slot[name] = tonumber(idx)
-    end
+    local slot = skillmap.ability_slots(src)
     assert(slot.abilityQ and slot.abilityW,
         HERO_SRC .. ' no longer binds abilityQ/abilityW from sAbilityList')
-
-    local count = {}
-    for i = 1, level do count[order[i]] = (count[order[i]] or 0) + 1 end
-    return count[slot.abilityQ] or 0, count[slot.abilityW] or 0, slot
+    local ranks = skillmap.ranks_at('npc_dota_hero_axe',
+        skillmap.build_row(src), skillmap.talent_rows(src), level)
+    return ranks[slot.abilityQ] or 0, ranks[slot.abilityW] or 0, slot
 end
 
 --- Fraction of wall-clock an ability can be live at a given rank, if it were
@@ -311,29 +320,32 @@ end
 -- ---------------------------------------------------------------------------
 -- 2. Structural ceiling: the half of the argument that does not need a corpus.
 
-tests['[hero] axe t15: both abilities are rank 4 by level 15, read from the build row'] = function()
+tests['[hero] axe t15: at level 15 Battle Hunger is rank 4 and Berserker\'s Call rank 3'] = function()
     local nCall, nHunger = ranks_at(TALENT_LEVEL)
     assert(nHunger == 4, 'Battle Hunger is rank ' .. nHunger .. ' at level '
         .. TALENT_LEVEL .. ', not 4.  The talent adds a flat ' .. TALENT_DPS_BONUS
         .. ' dps, so the rank decides what fraction that is -- re-take the reading.')
-    assert(nCall == 4, 'Berserker\'s Call is rank ' .. nCall .. ' at level '
-        .. TALENT_LEVEL .. ', not 4.  Its rank sets both the duration and the '
-        .. 'cooldown that the uptime ceiling is computed from.')
+    assert(nCall == 3, 'Berserker\'s Call is rank ' .. nCall .. ' at level '
+        .. TALENT_LEVEL .. ', not 3.  Its rank sets both the duration and the '
+        .. 'cooldown the uptime ceiling is computed from.  Rank 4 here means the '
+        .. 'level map has regressed to counting build-row indices as hero levels: '
+        .. 'the row\'s 14th entry -- Call\'s last point -- lands at level 16, '
+        .. 'because levels 10 and 15 go to talents.')
 end
 
-tests['[hero] axe t15: Battle Hunger can be live 4x as much of the game as Berserker\'s Call'] = function()
+tests['[hero] axe t15: Battle Hunger can be live 5x as much of the game as Berserker\'s Call'] = function()
     local nCall, nHunger = ranks_at(TALENT_LEVEL)
     local cCall, cHunger = ceiling(CALL, nCall), ceiling(HUNGER, nHunger)
     assert(math.abs(cHunger - 1.00) < 0.01,
         'Battle Hunger uptime ceiling is now ' .. cHunger .. ', not 1.00 (12s '
         .. 'duration on a 5s cooldown).  Re-read the datafeed.')
-    assert(math.abs(cCall - 0.25) < 0.01,
-        'Berserker\'s Call uptime ceiling is now ' .. cCall .. ', not 0.25 (3.0s '
-        .. 'duration on a 12s cooldown).  Re-read the datafeed.')
+    assert(math.abs(cCall - 2.7 / 14) < 0.01,
+        'Berserker\'s Call uptime ceiling is now ' .. cCall .. ', not 0.19 (2.7s '
+        .. 'duration on a 14s cooldown at rank 3).  Re-read the datafeed.')
     assert(cHunger >= 4 * cCall,
         'the uptime ratio that carried the t15 verdict has collapsed: Battle '
         .. 'Hunger ' .. cHunger .. ' vs Berserker\'s Call ' .. cCall .. '.  The '
-        .. 'verdict was "the dps talent gets about four times as many chances to '
+        .. 'verdict was "the dps talent gets about five times as many chances to '
         .. 'pay"; if that is no longer true the pair is open again.')
 end
 
@@ -350,9 +362,13 @@ tests['[hero] axe t15: the relative size of each talent, which is the OTHER side
         .. string.format('%.0f%%', rDps * 100) .. ').  It used to be, and the '
         .. 't15 verdict rejected it anyway on frequency -- if it is now smaller '
         .. 'on both axes the verdict is only more settled, but say so.')
-    assert(math.abs(rDps - 1 / 3) < 0.01 and math.abs(rArmor - 2 / 3) < 0.01,
-        'expected +33% dps and +67% armor at rank 4; got '
-        .. string.format('%.2f / %.2f', rDps, rArmor))
+    -- At the level the choice is actually made: Battle Hunger rank 4 (24 dps) and
+    -- Berserker's Call rank 3 (14 armor).  The +67% published on 2026-08-23 was
+    -- Call at rank 4, which this build does not hold until level 16 -- correcting
+    -- the level map moved the rejected side's best case UP, to +71%.
+    assert(math.abs(rDps - 1 / 3) < 0.01 and math.abs(rArmor - 10 / 14) < 0.01,
+        'expected +33% dps (rank 4) and +71% armor (rank 3, the rank held at level '
+        .. TALENT_LEVEL .. '); got ' .. string.format('%.2f / %.2f', rDps, rArmor))
 end
 
 -- ---------------------------------------------------------------------------

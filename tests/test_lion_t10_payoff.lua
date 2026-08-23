@@ -61,6 +61,7 @@
 --   [3] side rests on; section 5 keeps the reasoning in the hero file.
 
 package.path = 'tests/?.lua;' .. package.path
+local skillmap = require('skill_level_map')
 
 local LION_SRC = 'bots/BotLib/hero_lion.lua'
 local LION = 'npc_dota_hero_lion'
@@ -276,24 +277,32 @@ local function shipped_build()
     return builds
 end
 
---- Rank of ability index `idx` once `level` points have been spent.
-local function rank_at(order, idx, level)
-    local n = 0
-    for i = 1, math.min(level, #order) do
-        if order[i] == idx then n = n + 1 end
-    end
-    return n
-end
-
-tests['[hero] every shipped build has Mana Drain at rank 4 by hero level 10'] = function()
+--- CORRECTED 2026-08-23: this section used to count the first `level` entries of
+--- the build row, i.e. it read the row index AS the hero level.  It is not --
+--- J.Skill.GetSkillList spends level 10 on a TALENT, so only NINE ability points
+--- are down when the t10 choice is made and the row's 10th entry lands at level
+--- 11.  Mana Drain is therefore rank 3 at the moment of the pick, not rank 4.
+--- That moves the honest bound in the direction the old assertion's own message
+--- predicted: the abandoned talent is NOT at its largest payout, so the t10 change
+--- is better supported than it was written up as.  The mapping now comes out of
+--- the shipped function; see tests/skill_level_map.lua.
+tests['[hero] every shipped build has Mana Drain at rank 3 when t10 is picked'] = function()
+    local rows = skillmap.talent_rows(read_file(LION_SRC))
     for i, order in ipairs(shipped_build()) do
-        local rank = rank_at(order, IDX_DRAIN, 10)
-        assert(rank == 4, 'build #' .. i .. ' has Mana Drain at rank ' .. rank
-            .. ' at hero level 10, not 4. The t10 honest bound says the abandoned '
-            .. 'talent is at its LARGEST payout when the pick happens (slow 30 -> 40); '
-            .. 'at a lower rank the give-up is smaller and the argument gets STRONGER, '
-            .. 'at a higher rank it does not exist. Either way, rewrite the bound in '
-            .. 'hero_lion.lua rather than deleting this test.')
+        local ranks, _, spent = skillmap.ranks_at(LION, order, rows, 10)
+        assert(spent == 9, 'build #' .. i .. ' has spent ' .. spent .. ' ability '
+            .. 'points at hero level 10, not 9. Level 10 goes to a TALENT, so a '
+            .. 'build row is one entry behind the hero level from there on; if this '
+            .. 'is 10 again, someone has gone back to counting row indices as levels.')
+        local rank = ranks[IDX_DRAIN] or 0
+        assert(rank == 3, 'build #' .. i .. ' has Mana Drain at rank ' .. rank
+            .. ' when the t10 talent is picked, not 3. The t10 honest bound prices '
+            .. 'the abandoned talent (Mana Drain slow +10pp) against the rank it is '
+            .. 'actually at: rank 3 means 25 -> 35, not the 30 -> 40 the first '
+            .. 'write-up claimed. At a lower rank the give-up is smaller and the '
+            .. 'argument gets STRONGER, at rank 4 it is the largest it can be. '
+            .. 'Either way, rewrite the bound in hero_lion.lua rather than deleting '
+            .. 'this test.')
     end
 end
 
@@ -341,7 +350,7 @@ tests['[hero] the lion t10/t15 rationale is still in the hero file'] = function(
         'RESIDUAL action',                   -- why it is rarely collected
         'HONEST BOUNDS',                     -- what the argument does not show
         'datafeed',                          -- where the numbers came from
-        't15 DELIBERATELY NOT CHANGED',      -- the half that did NOT move
+        't15 RE-EXAMINED 2026-08-23',        -- the half that did NOT move
     }) do
         assert(src:find(needle, 1, true),
             'the talent rationale block in hero_lion.lua no longer mentions "' .. needle

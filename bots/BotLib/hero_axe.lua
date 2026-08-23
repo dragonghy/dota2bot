@@ -69,10 +69,15 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- armor, and the row keeps [3].  Same ruler as the t10 change above -- payoff
 -- REACHABILITY, i.e. how much of the game each talent's payout condition is true
 -- for, not which single payout is larger:
---   * By this file's own build row both abilities are rank 4 at level 15.  Battle
---     Hunger then runs 12s on a 5s cooldown -- it can be live CONTINUOUSLY.
---     Berserker's Call runs 3.0s on a 12s cooldown: an uptime ceiling of 25%.
---     Four times the chances to pay, before anything is measured.
+--   * By this file's own build row, at level 15 Battle Hunger is rank 4 and
+--     Berserker's Call rank 3.  Battle Hunger then runs 12s on a 5s cooldown --
+--     it can be live CONTINUOUSLY.  Berserker's Call runs 2.7s on a 14s cooldown:
+--     an uptime ceiling of 19%.  Five times the chances to pay, before anything
+--     is measured.  (CORRECTED 2026-08-23, second pass: this said "both rank 4"
+--     and 25%, from counting build-row entries as hero levels.  Levels 10 and 15
+--     go to TALENTS, so Call's last point lands at level 16 -- one level after the
+--     choice.  The correction made the gap bigger, not smaller; the mapping now
+--     comes out of J.Skill.GetSkillList itself, in tests/skill_level_map.lua.)
 --   * Measured, on the 16 Axe fixture frames that carry modifier state: an enemy
 --     is carrying modifier_axe_battle_hunger on 5 of them, Axe is carrying
 --     modifier_axe_berserkers_call_armor on 1.  Summed over the ranks those frames
@@ -81,7 +86,8 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --     about a third of its own.  The gap is the ceiling, not slack the bot could
 --     take up by pressing Call more often.
 -- THE REJECTED SIDE'S CASE, recorded because it is real: [4] is the bigger
--- RELATIVE buff (15 -> 25 armor, +67%, against 24 -> 32 dps, +33%); a taunt
+-- RELATIVE buff (14 -> 24 armor at the rank held here, +71%, against 24 -> 32
+-- dps, +33%); a taunt
 -- guarantees the attacks its armor blunts actually arrive; and the innate
 -- One Man Army turns 50% of Axe's armor into Strength while no ally is within
 -- 700, which is exactly the state X.ConsiderQ's neutral-taunt branch puts him
