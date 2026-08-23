@@ -11,6 +11,10 @@
 # Replicates validate_onspot.sh's math exactly (mirror: candidate-side minus
 # baseline-side, averaged over the radiant-wave and dire-wave to cancel side
 # bias; positive gpm/xpm/last_hits = candidate better, negative deaths better).
+# `winrate` is added on top of that four-metric set (neutral 0.5, see wr()
+# below); `suggested` deliberately still reads gpm only -- changing the
+# automated promote hint is a policy change, not a side effect of adding a
+# metric (test_set.md AS.4).
 # Only seeds with BOTH waves present are scored; partial seeds are reported but
 # excluded from the mean.
 import json, glob, statistics, sys, re, os
@@ -32,6 +36,36 @@ def M(xss):
     xs = [x for s in xss for x in s]
     return statistics.mean(xs) if xs else 0
 
+# --- winrate: the quantity README rule 2(b) names, and that this tool did not
+# compute for the first fifty director rulings ------------------------------
+# Rule 2(b) reads "the batch shows no obvious negative effect on WINS/LOSSES",
+# but the four metrics above are all per-player ECONOMY means.  Every game's
+# analysis.json has carried `winner` since analyze_log.py:120 -- nothing was
+# ever missing from the corpus, this tool just never read it.
+#
+# HOW TO READ IT -- this is not a second, independent witness (test_set.md
+# AS.1b).  analyze_log.py:80-85 rewrites `winner` to `econ_winner` (= the team
+# with more total gold) for every game that hits the referee's ~30-game-minute
+# cap, so for most games winner == sign(team gold delta), and team gold is gpm
+# times duration.  The winrate is a SIGN-COARSENED read of the same signal.
+#
+# It is still worth having because it answers a different question: gpm is a
+# 5-player mean ("by how much"), winner is a per-game team-total binary ("how
+# often").  A -42 gpm mean can come from one hero collapsing while the team
+# still wins more games than it loses -- and 2(b) names the latter.
+#
+# Hence winner_by is printed alongside, always: only the `engine` bucket
+# (games that ended naturally, sub-cap, un-rewritten) carries information
+# independent of gold.  If that bucket is small, so is the independence.
+def wr(games, cand_team):
+    """Candidate-side win rate over games that actually finished.
+
+    Returns (wins, scored) -- games with winner None ("game did not finish")
+    are excluded from BOTH, so the denominator is reported, never assumed.
+    """
+    scored = [a for a in games if a.get("winner") in ("radiant", "dire")]
+    return sum(1 for a in scored if a["winner"] == cand_team), len(scored)
+
 # group by stamp
 by_stamp = {}
 for a in games:
@@ -52,6 +86,14 @@ for seed in seeds:
             ab = M([sv(a, "radiant", m) for a in AB]) - M([sv(a, "dire", m) for a in AB])
             ba = M([sv(a, "dire", m) for a in BA]) - M([sv(a, "radiant", m) for a in BA])
             row[m] = round((ab + ba) / 2, 2)
+        # same two-wave average as the economy metrics, for the same reason
+        # (it cancels the ~+1.5k Radiant side bias, CLAUDE.md).
+        ab_w, ab_n = wr(AB, "radiant")
+        ba_w, ba_n = wr(BA, "dire")
+        row["scored_games"] = ab_n + ba_n
+        row["unfinished"] = (len(AB) - ab_n) + (len(BA) - ba_n)
+        if ab_n and ba_n:
+            row["winrate"] = round(((ab_w / ab_n) + (ba_w / ba_n)) / 2, 3)
     rows.append(row)
 
 v = {"cand": cand, "recovered_locally": True, "per_seed": rows, "mean": {}, "comps_better": {}}
@@ -63,6 +105,25 @@ for m in ("gpm", "xpm", "deaths", "last_hits"):
     v["mean"][m] = round(statistics.mean(xs), 2)
     neg = m == "deaths"
     v["comps_better"][m] = "%d/%d" % (sum(1 for x in xs if (x < 0 if neg else x > 0)), len(xs))
+
+# winrate is a rate, not a delta: neutral is 0.5, not 0.  Kept out of the loop
+# above so the ">0 is better" convention there stays literally true.
+wrs = [r["winrate"] for r in rows if "winrate" in r]
+if wrs:
+    v["mean"]["winrate"] = round(statistics.mean(wrs), 3)
+    v["comps_better"]["winrate"] = "%d/%d" % (sum(1 for x in wrs if x > 0.5), len(wrs))
+    v["winrate_neutral"] = 0.5
+    v["scored_games"] = sum(r.get("scored_games", 0) for r in rows)
+    v["unfinished_games"] = sum(r.get("unfinished", 0) for r in rows)
+    # The independence disclosure (see the wr() header): only `engine` games
+    # were not rewritten to the economic winner.
+    by = {}
+    for a in games:
+        if a.get("winner") in ("radiant", "dire"):
+            by[a.get("winner_by") or "unknown"] = by.get(a.get("winner_by") or "unknown", 0) + 1
+    v["winner_by"] = by
+    v["winrate_independent_of_gold"] = "%d/%d games" % (by.get("engine", 0),
+                                                        sum(by.values()) or 0)
 
 g = v["mean"].get("gpm"); d = v["mean"].get("deaths")
 v["suggested"] = ("promote" if (g is not None and g > 5 and complete and
