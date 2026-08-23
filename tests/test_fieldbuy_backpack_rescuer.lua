@@ -59,11 +59,20 @@
 --
 -- Honest bounds, stated first:
 --   * the courier delivery is MODELLED, at the GetItemInSlot/FindItemSlot
---     surface. It has to be: no frame in the corpus carries a flask in a
---     backpack slot (the dump is a snapshot, and the rescuer clears the state
---     within 6.2s). Everything downstream of the injected handle -- which slot
---     it picks, whether it acts at all -- is shipped code reading the real
---     frame's real main-slot contents.
+--     surface. Everything downstream of the injected handle -- which slot it
+--     picks, whether it acts at all -- is shipped code reading the real frame's
+--     real main-slot contents.
+--     ⚠ CORRECTED 2026-08-23: this bound used to read "it has to be: no frame
+--     in the corpus carries a flask in a backpack slot". That is FALSE on
+--     today's 104-fixture corpus -- 13 live frames do, across all three
+--     backpack slots (6:2, 7:6, 8:5); see the BAG line of
+--     _fieldbuy_supply_sweep.lua and tests/test_bagsalve_backpack_source.lua,
+--     which pins two of them. What is still true, and is the only reason the
+--     delivery is modelled HERE, is narrower: no frame carries a backpacked
+--     flask while ALSO being inside J.IsFieldRegenSituation (BAG sit_flip=0),
+--     which is the frame this file's driven action needs. The wrong version of
+--     that sentence was load-bearing for the wrong claim -- it would have sent
+--     the next reader away from 13 real frames.
 --   * WHICH main item gets swapped out is not measurable here. GetItemCost
 --     answers 0 offline, so GetMainInvLessValItemSlot's price comparison is
 --     degenerate and it returns the first switchable slot. Only WHETHER a

@@ -4697,6 +4697,54 @@ end
 -- would answer TRUE almost everywhere, and its charge count -- the thing that
 -- decides whether it heals at all -- is not in the dump. The wand is its own
 -- lever ('wandbleed'); this helper does not borrow it.
+--
+-- [bagsalve / owner priority P2, GH #123, 2026-08-23] ONE exception to "only
+-- the six usable slots count", and it is exactly one item wide.
+--
+-- The asymmetry GH #123 is about: the purchase gate counts nine slots and this
+-- helper counts six, so the salve `fieldbuy` buys can be delivered into the
+-- backpack and this helper still answers FALSE. That answer is consumed twice
+-- on the same frame, and it is wrong in BOTH directions at once -- the hold
+-- ids (stayfield/stayfield2) see "nothing to drink" and let the bot go home,
+-- which is the exact behaviour owner priority P2 forbids, and `fieldbuy` sees
+-- the same and buys a SECOND salve on top of the one already in the bag.
+-- GH #123 proposed closing the asymmetry from the other end (narrow the
+-- purchase gate to six slots); that was measured and REJECTED on 2026-08-22
+-- (tests/test_fieldbuy_backpack_rescuer.lua) because it gives up 46.4% of the
+-- behaviour P2 asks for. This is the same asymmetry closed from the side that
+-- gives nothing up.
+--
+-- Why a backpacked SALVE is genuinely drinkable while a backpacked tango is
+-- not -- the whole reason this widening is one item wide:
+-- `TrySwapInvItemForFlask()` (mode_team_roam_generic.lua:1854) swaps a
+-- backpacked flask into a main slot, runs from ItemOpsDesire ->
+-- GetDesireHelper -> GetDesire, i.e. every frame for every live hero whichever
+-- mode wins, and carries NO candidate gate. Its own swap-victim condition
+-- (`Item.GetMainInvLessValItemSlot ~= -1`) holds on 966/966 live frames of the
+-- fixture corpus, so on everything measurable a backpacked salve is at most
+-- one 6.2s poll away from a main slot. There is NO shipped swapper for tango /
+-- tango_single / faerie_fire / bottle -- those four really are stuck where
+-- they land, and counting them here would hold a bot in the field with
+-- something it cannot drink. 55 live frames carry one of those in the backpack
+-- with no main-slot heal, and this widening must leave every one of them
+-- FALSE; tests/test_bagsalve_backpack_source.lua asserts that and mutates it.
+--
+-- Honest bound: the replay desk's residual STUCK rate (11.0% of 591 field
+-- purchases, 205 games, 2026-08-23) says the rescuer does not always win --
+-- something not readable here (its BOT_MODE_WARD clause is the standing
+-- suspect, and the desk's 2026-08-23 measurement could not test it) blocks it
+-- some of the time. So this can hold a bot next to a salve it will not drink
+-- for as long as that block lasts. Bounded on both sides: the situation
+-- predicate already requires an empty 1600 ring, no attributed hero damage and
+-- no enemy tower within 1200, and it releases below 18% HP, where the genuine
+-- escape retreat stands.
+--
+-- Turbo is STRUCTURAL, not re-checked here: nothing calls this helper except
+-- J.ShouldRegenNotGoHome and J.ShouldFieldBuyRegen, and both ask
+-- J.IsFieldRegenSituation -- whose first line is IsModeTurbo -- BEFORE they
+-- ask this one. Adding a redundant IsModeTurbo() would state that the call
+-- order is not load-bearing, and it is; the test file asserts the order off
+-- the source instead.
 function J.HasFieldRegenSource( bot )
 	for i = 0, 5 do
 		local hItem = bot:GetItemInSlot( i )
@@ -4714,6 +4762,17 @@ function J.HasFieldRegenSource( bot )
 			end
 		end
 	end
+
+	-- [bagsalve] Backpack, salve only. Inert in every shipped game until armed.
+	if J.IsSoakCandidate( 'bagsalve' ) then
+		for i = 6, 8 do
+			local hItem = bot:GetItemInSlot( i )
+			if hItem ~= nil and hItem:GetName() == 'item_flask' then
+				return true
+			end
+		end
+	end
+
 	return false
 end
 

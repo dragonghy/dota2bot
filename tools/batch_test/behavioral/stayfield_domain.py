@@ -15,15 +15,26 @@ landing point).  So `stayfield` has never had an (a) reading.
 --------------------------------------------------------------------------
 DOMAIN, transcribed from source (not invented)
 --------------------------------------------------------------------------
-J.IsFieldRegenSituation (jmz_func.lua:4756):
+J.IsFieldRegenSituation (jmz_func.lua:4820):
     IsModeTurbo()                                  <- whole corpus is turbo
     0.18 <= J.GetHP(bot) <= 0.55
     #J.GetNearbyHeroes(bot, 1600, true, ...) == 0
     not ( WasRecentlyDamagedByAnyHero(3.0)
           and some enemy inside 3000 with WasRecentlyDamagedByHero(e,3.0) )
     #bot:GetNearbyTowers(1200, true) == 0
-J.HasFieldRegenSource (jmz_func.lua:4700): one of the SIX usable slots holds
+J.HasFieldRegenSource (jmz_func.lua:4748): one of the SIX usable slots holds
     flask / tango / tango_single / faerie_fire, or a bottle WITH CHARGES.
+
+    ** ARM-DEPENDENT since 2026-08-23 (soak candidate 'bagsalve', GH #123). **
+    With `bagsalve` armed the source ALSO answers TRUE for an item_flask in a
+    BACKPACK slot (6..8) -- salve only, because TrySwapInvItemForFlask is the
+    only shipped un-gated swapper and there is none for tango / tango_single /
+    faerie_fire / bottle.  `usable_items()` below reads six slots, i.e. this
+    detector measures the UNARMED semantics.  On a wave whose candidate arm has
+    `bagsalve` in its id string, this detector UNDER-counts `has_regen` and
+    OVER-counts the `fieldbuy` dry half on that arm; correcting it needs the
+    arm's id string, which this file does not currently take.  Declared, not
+    silently wrong -- see iterations/reports/strategy/20260823T174500Z.md.
 
 That pair is J.ShouldRegenNotGoHome.  `stayfield` wires it into exactly ONE
 call site -- the tpscroll "撤退:3" home-TP branch, ability_item_usage_generic
@@ -109,11 +120,11 @@ SIDE_TEAM = {"radiant": RADIANT, "dire": DIRE}
 CAND_ID = "stayfield"
 WALK_ID = "stayfield2"
 
-HP_LO, HP_HI = 0.18, 0.55        # jmz_func.lua:4762
-RING_U = 1600.0                  # jmz_func.lua:4767
+HP_LO, HP_HI = 0.18, 0.55        # jmz_func.lua:4826
+RING_U = 1600.0                  # jmz_func.lua:4829
 DMG_WINDOW_S = 3.0               # WasRecentlyDamagedBy*(3.0)
-DMG_ATTRIB_U = 3000.0            # jmz_func.lua:4771
-TOWER_U = 1200.0                 # jmz_func.lua:4795
+DMG_ATTRIB_U = 3000.0            # jmz_func.lua:4833
+TOWER_U = 1200.0                 # jmz_func.lua:4857
 BRANCH_HP = 0.34                 # ability_item_usage_generic.lua:5514
 BRANCH_HPMP = 0.43
 BRANCH_LEVEL = 9
@@ -484,7 +495,7 @@ def home_tp_events(g, side):
                 continue
             # why-not decomposition: which clause kills this home-TP.  Ordered
             # so each row is attributed to its FIRST failing clause, and the
-            # order is the source's own (jmz_func.lua:4756 downwards, then the
+            # order is the source's own (jmz_func.lua:4820 downwards, then the
             # branch).  This is what turns "the domain is small" into "the
             # domain is small BECAUSE ...".
             why = None

@@ -13,6 +13,7 @@
 --         has=<n> dry=<n> unarmed=<n>
 --   HOLE laning=<n> level6plus=<n> both=<n> hpceil=<n>
 --   SPLIT dry_split=<n> rescuable=<n> stuck=<n>
+--   BAG flask=<n> flip=<n> other=<n> other_flip=<n> sit_flip=<n> victim_neg=<n>
 --   DRY <fixture> <hero> <hp> <level> <laning 0|1>
 --
 -- Every number here is read off the SHIPPED helpers running on real frames.
@@ -48,7 +49,29 @@ local hole = { laning = 0, level6plus = 0, both = 0, hpceil = 0 }
 -- the proposed fix's blast radius and the reach of the existing remedy are
 -- counted on the same frames. See tests/test_fieldbuy_backpack_rescuer.lua.
 local split = { dry_split = 0, rescuable = 0, stuck = 0 }
+-- [bagsalve, GH #123, 2026-08-23] The other end of the same asymmetry: instead
+-- of narrowing the nine-slot purchase gate to six, widen the six-slot holding
+-- predicate to see the ONE backpack item a shipped un-gated swapper can bring
+-- up (item_flask). `flask` counts live frames carrying one in slots 6..8;
+-- `flip` counts frames whose J.HasFieldRegenSource answer changes when
+-- 'bagsalve' is armed; `other` counts frames carrying a backpacked
+-- tango/tango_single/faerie_fire/bottle with no main-slot heal -- the
+-- population that must NOT flip, because nothing in bots/ swaps those in --
+-- and `other_flip` is how many of them did (an invariant zero, not a ratchet).
+-- `sit_flip` is the same flip restricted to the situation domain, i.e. how many
+-- frames actually move between the two decision-side halves. `victim_neg`
+-- counts frames where the shipped rescuer's own swap-victim read
+-- (GetMainInvLessValItemSlot) answers -1: that is the reachability leg of the
+-- argument, and it is a 0DIR-style one-directional read on this corpus --
+-- reported, not folded into a clause. See tests/test_bagsalve_backpack_source.lua.
+local bag = { flask = 0, flip = 0, other = 0, other_flip = 0, sit_flip = 0,
+              victim_neg = 0 }
 local dry_rows = {}
+
+local BAG_OTHER = {
+    item_tango = true, item_tango_single = true,
+    item_faerie_fire = true, item_bottle = true,
+}
 
 local function empty_slot_count(bot, lo, hi)
     local c = 0
@@ -90,6 +113,36 @@ for _, path in ipairs(files) do
             local nHP = J.GetHP(bot)
             local bHas = J.HasFieldRegenSource(bot) == true
             local bSit = J.IsFieldRegenSituation(bot) == true
+
+            -- [bagsalve] Same frame, same shipped helper, one id armed on top.
+            J.IsSoakCandidate = function(id)
+                return id == 'fieldbuy' or id == 'bagsalve'
+            end
+            local bHasBag = J.HasFieldRegenSource(bot) == true
+            J.IsSoakCandidate = function(id) return id == 'fieldbuy' end
+
+            local bBagFlask, bBagOther = false, false
+            for i = 6, 8 do
+                local hItem = bot:GetItemInSlot(i)
+                if hItem ~= nil then
+                    local sName = hItem:GetName()
+                    if sName == 'item_flask' then bBagFlask = true end
+                    if BAG_OTHER[sName] then bBagOther = true end
+                end
+            end
+            if bBagFlask then bag.flask = bag.flask + 1 end
+            if bHasBag and not bHas then bag.flip = bag.flip + 1 end
+            if bBagOther and not bHas then
+                bag.other = bag.other + 1
+                if bHasBag and not bBagFlask then
+                    bag.other_flip = bag.other_flip + 1
+                end
+            end
+            if bSit and bHasBag and not bHas then bag.sit_flip = bag.sit_flip + 1 end
+            local nVictimAll = J.Item.GetMainInvLessValItemSlot(bot)
+            if nVictimAll == nil or nVictimAll < 0 then
+                bag.victim_neg = bag.victim_neg + 1
+            end
 
             if nHP >= 0.18 and nHP <= 0.55 then
                 n.band = n.band + 1
@@ -138,4 +191,7 @@ io.write(string.format('HOLE laning=%d level6plus=%d both=%d hpceil=%d\n',
     hole.laning, hole.level6plus, hole.both, hole.hpceil))
 io.write(string.format('SPLIT dry_split=%d rescuable=%d stuck=%d\n',
     split.dry_split, split.rescuable, split.stuck))
+io.write(string.format(
+    'BAG flask=%d flip=%d other=%d other_flip=%d sit_flip=%d victim_neg=%d\n',
+    bag.flask, bag.flip, bag.other, bag.other_flip, bag.sit_flip, bag.victim_neg))
 for _, l in ipairs(dry_rows) do io.write(l .. '\n') end

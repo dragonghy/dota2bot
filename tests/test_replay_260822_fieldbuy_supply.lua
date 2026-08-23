@@ -412,6 +412,45 @@ tests['[recorded] corpus: GH #123 would silence 13 of the 28, and rescue reaches
         'frames with no swappable main item -- a real stuck salve: ' .. stuck)
 end
 
+tests['[recorded] corpus: bagsalve moves 13 predicate frames and 0 decisions'] = function()
+    -- [bagsalve, GH #123] Same sweep, same frames, one more id armed on top:
+    -- the OTHER end of the asymmetry this file's id sits on. Two domains, never
+    -- subtracted (charter 0DOM): `flip` is the PREDICATE frame domain (how many
+    -- live frames change J.HasFieldRegenSource) and `sit_flip` is the
+    -- BEHAVIOURAL one (how many of those are also inside the situation, i.e.
+    -- how many decisions actually move). sit_flip is zero here, and that is the
+    -- honest scale of what this corpus can say -- the population lives in the
+    -- batch dumps (166 backpack landings / 205 games, replay desk 2026-08-23).
+    -- The full argument and the modelled end-to-end are in
+    -- tests/test_bagsalve_backpack_source.lua.
+    local out = sweep()
+    local flask, flip, other, other_flip, sit_flip, victim_neg = out:match(
+        'BAG flask=(%d+) flip=(%d+) other=(%d+) other_flip=(%d+) '
+        .. 'sit_flip=(%d+) victim_neg=(%d+)')
+    assert(flask, 'the sweep did not report a BAG line')
+    -- Scale numbers ratchet with the corpus (GH #106/#107); the two zeros do not.
+    cs.ratchet(tonumber(flask), 13, 'live frames carrying a backpacked salve')
+    cs.ratchet(tonumber(flip), 13, 'frames whose regen-source answer flips')
+    cs.ratchet(tonumber(other), 55,
+        'frames with a backpacked tango/faerie_fire/bottle and no main heal')
+    -- NOT softened. Nothing in bots/ swaps those four into a main slot, so a
+    -- flip here would be holding a bot next to something it cannot drink.
+    assert(tonumber(other_flip) == 0,
+        'the widening took more than the salve on ' .. other_flip .. ' frames')
+    -- NOT softened in the other direction either: this is the number that says
+    -- the local corpus cannot answer the behavioural question. If it ever goes
+    -- positive a real domain frame arrived and this id owes a pinned decision.
+    assert(tonumber(sit_flip) == 0,
+        'a situation frame now carries a backpacked salve (' .. sit_flip
+        .. '); pin it in tests/test_bagsalve_backpack_source.lua and drop the '
+        .. 'modelled delivery for it')
+    -- The rescuer's reachability leg. One-directional on this corpus (charter
+    -- 0DIR) -- reported, and deliberately not a clause in bots/.
+    assert(tonumber(victim_neg) == 0,
+        'the shipped rescuer now has frames with no swappable main item ('
+        .. victim_neg .. '); the "one poll away" argument needs re-measuring')
+end
+
 tests['[recorded] corpus: the gate is shut on all 930 frames when unarmed'] = function()
     local out = sweep()
     local unarmed = out:match('COUNT .- unarmed=(%d+)')

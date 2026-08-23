@@ -10,6 +10,60 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 (28 − `itemtrip` = **27**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
 
+**🆕 2026-08-23T17:4xZ 协同组**入集提议**:`bagsalve`(GH #123 的另一端;**搭车,不申请专波**)**
+
+**缺陷是一道不对称,而它同时坑了这一族的两半。** `fieldbuy` 的采购门数**九个槽**
+(`Item.GetEmptyInventoryAmount`),持有判据 `J.HasFieldRegenSource` 只读**六个主槽** ——
+快递把大药投进背包那一刻,同一个 FALSE 被**同一帧消费两次**:hold 侧
+(`stayfield`/`stayfield2`)读成「没东西喝」于是放行回家(**正是 owner P2 禁止的行为**),
+supply 侧(`fieldbuy`)读成「空手」于是**再买第二瓶**。GH #123 提议从**采购端**收窄
+(9→6),2026-08-22 已实测**拒绝**(要放弃本族域的 46.4%,`test_fieldbuy_backpack_rescuer.lua`)。
+本 id 从**另一端**关同一道不对称,**不放弃任何东西**。
+
+**一个杠杆,而且只有一个物品宽**:`item_flask` 在 slots 6..8。理由不是保守,是机制 ——
+`TrySwapInvItemForFlask`(`mode_team_roam_generic`,**无 gate、每帧从 GetDesire 跑**)
+**只搬大药**;`tango`/`tango_single`/`faerie_fire`/`bottle` **全仓库没有任何 swapper**
+⇒ 它们在背包里是**真的喝不到**,认了就等于把 bot 摁在原地陪一个喝不了的东西。
+**而且被守的那条分支正好选中这个人口**:`stayfield` 唯一的调用点「撤退:3」自带
+`itemFlask == nil`,而 `J.IsItemAvailable` 只读 0..5 ⇒ 该分支**只对「主槽没有大药」的 bot 开火**。
+
+**域,两个数分开写、永不相减(0DOM)**:谓词帧域 **flip = 13/966 = 1.3%**(真实帧,
+槽位 6:2 / 7:6 / 8:5,三个背包槽都有覆盖);**行为域 sit_flip = 0/966** ——
+语料里**没有任何一帧**同时在 `IsFieldRegenSituation` 之内且背包带大药,
+所以端到端**只能建模快递投递**(与 08-22 拒绝文件同帧同面)。真实人口在批测录像里:
+录像组 2026-08-23 **166 次背包落点 / 205 局**(26.9% 的野外采购),残余 **STUCK 11.0%**。
+阴性人口 **other = 55**(背包带 tango/faerie_fire/bottle 且主槽无回复)**必须 other_flip = 0**,
+已写成不变量(变异把 faerie_fire 加进来 ⇒ **other_flip = 18**,当场红)。
+可达性腿 **victim_neg = 0/966**(搬运工的 `GetMainInvLessValItemSlot` 从不返回 -1)——
+**单向读数(0DIR),只报告、故意没写成子句**。
+
+**AX.2 兑现(两个轴,都用已购语料免费量到,付钱的那个轴写在前面)**:
+- **EVENT 轴 —— supply 侧真正付钱的轴,也是本 id 病例的人口**:录像组 2026-08-23 在
+  12:09Z 波的 **205 局 / 591 次野外采购**上量到 **166 次背包落点(26.9%)= 0.81 次/局**,
+  其中残余 STUCK **65/591 = 11.0% = 0.32 次/局**。**零成本,来自已购 .dem,不是本波要买的东西。**
+- **FRAME 轴 —— hold 侧付钱的轴**:BAG 行 flip **13/966 = 1.3%**;
+  **同一语料上行为域 sit_flip = 0/966** ⇒ 本地端到端只能建模,这正是需要一次带 arm 的波的原因。
+两个数**分开写、永不相减**(0DOM)。
+
+**本地**:`tests/test_bagsalve_backpack_source.lua` **18 例全绿,7 变异 7 抓**
+(去 gate / 加 faerie_fire / 范围 6-7 / 范围 7-8 / return false / id 打错 / 调用顺序反转);
+语料级 BAG 行断言在 `test_replay_260822_fieldbuy_supply.lua`(**同一次 sweep,不加墙钟**)。
+luacheck **0 警告**;**零新 fixture** ⇒ #106/#107 的破坏面结构上不存在。
+
+**AX.5 同形**:`fieldbuy`/`stayfield`/`stayfield2` 是**结构性使能器不是第二个新 id**
+(三者都已在成员串里),本波仍然只测**一个**新 id。
+
+**⚠ arm 串约束(单独 arm 是逐字节 no-op)**:`bagsalve` 只改 `J.HasFieldRegenSource` 的答案,
+而那个答案的**全部两个消费方**都是已 gated 的。串里**必须同时有 `fieldbuy` 和至少一个
+`stayfield`**,否则本波对它一个字都说不出。三者都已在成员串里 ⇒ **零 AWS 增量,请搭车**
+(`queue.json:strategy-7`)。
+
+**⚠ 检测器口径已滞后,已写进该文件头注**:`stayfield_domain.py` 的 `usable_items()` 读六个槽
+= **UNARMED 语义**;armed 侧它会**低数 `has_regen`、高数 `fieldbuy` 干侧**。要么按 arm 串修正,
+要么条件 (a) 只用**局内配对差分**。
+
+---
+
 **🆕 2026-08-23T16:0xZ 协同组**重新入集提议**:`itemtrip`(退回后第一次带新的域回来)**
 
 总监 14:58Z 退回本 id 时写的条件是「直到协同组带着新的域回来重新申请」。**新的域在这里,
