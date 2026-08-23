@@ -3000,3 +3000,64 @@
     (8) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第十一轮顺延**);
     (9) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260823T023637Z.md`
+- **2026-08-23T05:10Z(第五十一次触发)**:执行 02:36Z 登记的**下一轮优先 (1)** =
+  交 GH #123 的 fixture(已顺延两轮,本轮不再顺延)。批测台 04:06Z 无新波次
+  (S3 自 02:06Z 逐位未动,下一波最早 06:11Z),按章程第 2 条走补课:
+  **宽扫 34/34 非暖场局(`run_181122`,#102 哨兵放行)+ 深查 4 局 0.1s 逐帧 +
+  15 个 STUCK gain 的全量结构审计。** 零 EC2 支出,未改 bot Lua,未动 gate。
+  - ⭐ **#123 的承重帧被逐帧推翻(人口没有)。** `20260822_182012_slot1` spirit_breaker
+    按 **0.1s** 重放:**366.2 大药落进背包 6 号 → 372.2 换进主槽 5 号(Δ=6.0s,与
+    `TrySwapInvItemForFlask` 的 6.2s 节流同量级)→ 379.7 `ITEM item_flask` +
+    `modifier_flask_healing`,hp 0.329→0.696**。#123 §2 引的「367.4..371.4 一口没喝」
+    逐字属实,但那是一个**结束在搬运工动手前 0.8 秒的 5 秒窗口**。
+    ⇒ 被推翻的是**那段叙述**,不是 §3 的 12.9% 算法(该判据本来就不会把这帧记成 STUCK)。
+    **同一帧是协同组 22:51Z 搬运工论证的正面帧证据** ⇒
+    **`TrySwapInvItemForFlask` 首次记为 WORKING(帧证据 372.2)。**
+  - ⭐ **12.9% 这个人口是真的,而且沉默是整族的。** `run_181122` 34 局:工具口径
+    110 gain / 背包 30 / **STUCK 11(10.0%)**;全量口径 206 gain / 背包 41 /
+    **STUCK 15(7.3%)**。15 个里 4 个落在泉水环内(stash 取货,非野外浪费)、
+    3 个大半窗口是尸体(`IsAlive` 该拦)、**冻结尾巴(#130)污染 0**。
+    野外 11 个里挑 3 个逐帧复查 **3/3 成立**(`181950_slot2` ≥21s 到 TP 回家、
+    `183055_slot7` 24s 且**队友 CM 拿自己的药膏来喂他**、`183556_slot3` **卡 60.8s**
+    后换进主槽并喝掉)。**⭐ 9/11 的 30s 窗口里九格只有一个签名 —— `clarity`/`tango`/
+    `smoke`/`moonshard` 那一整族 `TrySwapInvItemFor*` 也一件没搬** ⇒ 嫌疑要往上游挪
+    一层(`GetDesireHelper` 早退 / `BOT_MODE_WARD` 那条连节流戳都不更新),
+    不在 flask 那两句子句里。诚实边界:「签名不变」是「没跑」的**代理**。
+  - **答协同组 §5**:(a) **在承重案例上被证伪** —— `181950_slot2` 那 30s 里 bot 自己在
+    441.0/449.1/459.0/467.1/475.3/483.4 反复 `ITEM item_phase_boots`、455.7 按 TP,
+    不是无敌空壳;(d) **测量侧站得住** —— `dumper/main.go:290-308` 按位置读
+    `m_hItems.0000..0008`、空槽 `''`,经验交叉验证 78,384 帧里**背包被占 21.0%,
+    其中主槽还有空位的仅 0.57%**;**#120 的「阶跃 + 1Hz ⇒ 翻转」在这里不适用**
+    (那读的是决策 tick 的瞬时闸门,这读的是持续 30s 的状态)。
+  - **交付 2 个真实帧 fixture**:`f_260822_182012_sb_fieldbuy_gate_307.lua`
+    (**t=307.4**,采购门那一帧:六主槽满/背包两空/九格无 flask)+
+    `f_260822_182012_sb_backpack_rescue_372.lua`(**t=372.1**,搬运工动手前最后一帧,
+    真值是下一帧换进主槽 ⇒ 协同组的 `test_fieldbuy_backpack_rescuer.lua` 可以离开
+    借来的 Frame B)。**#123 建议的 366.4 没有照抄**:那一帧 flask 已在九格里,
+    `FindItemSlot('item_flask') < 0` 为假 ⇒ 采购门本来就是关的,证不了 §1。
+  - ⭐ **一条掉出来的世界事实**:新 fixture 让 itemdesire 语料产生了**第二个物品动作,
+    而它不是幻影** —— `witch_doctor` hp **75/938(8.0%)**、离泉 **8232u**、TP 目标
+    **(-6619,-6336)= 泉水**、`GetTeamFightLocation` 为 nil。原断言「the ONE action …
+    is an origin phantom」**现在是假的**;已按「重新测量不是重新编号」加
+    `[recorded] the SECOND action is honest …` 并钉死三条。顺带按 GH #124 把四个
+    「每 fixture 求和」的硬编码常数改成不变量/`cs.ratchet`(`has_tp == c.alive`、
+    `tp_cooldown_ready`≥691、`driven`≥928、base `no_action == c.driven`、
+    honest `no_action`≥716)⇒ **下次加 fixture 这几条不会再红**;承重数字仍精确
+    (`crash_total == 210`、`outer_and_H == 3`、`slot_castable == 0`、`action_total == 2`)。
+  - **新工具坑(harness 级,未开 issue)**:`sweep_run.sh` 被打断后重跑**往
+    `games_manifest.jsonl` 追加而不是重写**(59 行 / 34 局),**#102 哨兵当场拦下** ——
+    按设计生效;本轮按 game 名去重后继续。断点重跑应先截断 manifest。
+  - 跨组:**GH #123 追评**(不新开)。**不提波次请求**(全部读数来自已有语料)。
+  - **验证**:`bots/`/`game/` **0 改动**;本容器本轮自行装上 `lua5.1` 与 `luacheck`
+    (新事实,不跨轮继承):`luacheck bots game` **0 警告 EXIT=0**(观测);
+    `lua5.1 tests/run_tests.lua itemdesire_world` **25 tests / 0 failures / EXIT=0**(观测)。
+    开工自检 trunk python 套件 **13 passed / 0 failed**。位置未用作分路代理。
+    **AWS**:EC2 **$0**,S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **06:11Z 那波落地后的宽扫** + §3.4 整族沉默在新语料上的复现率;
+    (2) **打野反证的 fixture**:钉 `002103_slot5 t=634.2 skeleton_king`(**已顺延一轮**);
+    (3) `pullcamp` 回集那一波的连接率/开拉点/深营占比(总监 §AP.1,owner P1 第 3 棒);
+    (4) 把 STUCK 审计跑满 18:11Z 那波另外三个 run;(5) `hero-1` 的 153 局 WK 语料
+    (棒子挂 **9 轮**);(6) `creeppull` 的 FORCED 通道;(7) `l5combo` 的 (a)
+    (**连续第二十五轮**);(8) `make_fixture.py` 钉 `062551 t=205.5 jakiro`
+    (#45,**连续第十二轮顺延**);(9) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260823T051000Z.md`

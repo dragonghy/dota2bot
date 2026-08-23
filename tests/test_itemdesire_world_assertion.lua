@@ -244,11 +244,15 @@ tests['[world] not one item on one frame is castable'] = function()
         .. c.frames_zero_castable .. '/' .. c.alive)
 end
 
-tests['[world] the TP scroll: carried by all, ready on 681, castable by none'] = function()
+tests['[world] the TP scroll: carried by all, ready on 691, castable by none'] = function()
     local c = pass(false)
-    assert(c.has_tp == 940, 'every alive hero carries a TP scroll; got ' .. c.has_tp)
-    assert(c.tp_cooldown_ready == 681,
-        'frames whose dumped tp_cd says READY moved: ' .. c.tp_cooldown_ready)
+    -- GH #124 / replay-check 2026-08-23T04:4xZ: these two were hard-coded
+    -- populations (940 / 681), so every appended fixture turned them red for a
+    -- reason that has nothing to do with the finding. The first is an
+    -- INVARIANT ("all of them"), the second a per-fixture sum, so it ratchets.
+    assert(c.has_tp == c.alive,
+        'every alive hero carries a TP scroll; got ' .. c.has_tp .. '/' .. c.alive)
+    cs.ratchet(c.tp_cooldown_ready, 691, 'frames whose dumped tp_cd says READY')
     assert(c.tp_castable == 0, 'the TP scroll is castable on ' .. c.tp_castable
         .. ' frames -- it must be 0 for the rest of this file to mean anything')
     -- The gap between those two numbers IS the finding: the loader measured a
@@ -338,9 +342,9 @@ end
 
 tests['[world] so the shipped entry point does nothing, on every frame'] = function()
     local c = pass(false)
-    assert(c.driven == 911, 'drivable frames moved: ' .. c.driven)
-    assert(c.no_action == 911,
-        'ItemUsageThink took an action on ' .. (911 - c.no_action)
+    cs.ratchet(c.driven, 928, 'drivable frames')
+    assert(c.no_action == c.driven,
+        'ItemUsageThink took an action on ' .. (c.driven - c.no_action)
         .. ' frames -- today it must be none')
     assert(c.action_total == 0, 'zero actions')
     assert(c.crash_total == 0,
@@ -351,16 +355,19 @@ end
 -- B. How big, measured.
 -- ---------------------------------------------------------------------------
 
-tests['[measure] honest TP handle: 0 -> 1 action and 0 -> 210 crashes'] = function()
+tests['[measure] honest TP handle: 0 -> 2 actions and 0 -> 210 crashes'] = function()
     local c = pass(true)
-    assert(c.driven == 911, 'same drivable set as the base sweep: ' .. c.driven)
+    cs.ratchet(c.driven, 928, 'same drivable set as the base sweep')
     assert(c.crash_total == 210,
         'crashes under the honest probe moved: ' .. c.crash_total)
-    assert(c.no_action == 700, 'silent frames moved: ' .. c.no_action)
-    assert(c.action_total == 1,
-        'the corpus produces exactly one item action; got ' .. c.action_total)
-    assert(c.item_item_tpscroll == 1, 'and it is a TP scroll')
-    assert(c.no_action + c.crash_total + 1 == c.driven,
+    -- 2026-08-23: the corpus grew a SECOND action (see the [recorded] test
+    -- below -- it is an honest one, not another origin phantom), so the
+    -- partition is stated against action_total instead of a literal 1.
+    assert(c.action_total == 2,
+        'the corpus produces exactly two item actions; got ' .. c.action_total)
+    assert(c.item_item_tpscroll == 2, 'and both are TP scrolls')
+    cs.ratchet(c.no_action, 716, 'silent frames')
+    assert(c.no_action + c.crash_total + c.action_total == c.driven,
         'the three buckets must partition the driven frames')
 end
 
@@ -436,11 +443,19 @@ tests['[world] the first of those two sits on a SHIPPED, ungated road'] = functi
         .. 'longer a turbo default, this road is not live and this test is wrong')
 end
 
-tests['[recorded] the one action the corpus can produce is an origin phantom'] = function()
+tests['[recorded] of the two actions the corpus can produce, the first is an origin phantom'] = function()
     local c = pass(true)
-    assert(#c.casts == 1, 'exactly one recorded action')
-    local e = c.casts[1]
-    assert(e.fixture == 'f_260819_222559_od_eclipse_solo.lua', 'fixture: ' .. e.fixture)
+    -- 2026-08-23 (replay-check): appending
+    -- f_260822_182012_sb_backpack_rescue_372 added the corpus's SECOND action
+    -- and it is NOT a phantom -- see the next test, which measures it. The
+    -- claim here was re-measured, not renumbered: "the ONE action is a
+    -- phantom" is simply no longer true of the corpus.
+    assert(#c.casts == 2, 'exactly two recorded actions; got ' .. #c.casts)
+    local e
+    for _, x in ipairs(c.casts) do
+        if x.fixture == 'f_260819_222559_od_eclipse_solo.lua' then e = x end
+    end
+    assert(e ~= nil, 'the od_eclipse_solo phantom is gone from the recorded set')
     assert(e.hero == 'npc_dota_hero_crystal_maiden', 'hero: ' .. e.hero)
     assert(e.fn == 'Action_UseAbilityOnLocation', 'cast type: ' .. e.fn)
 
@@ -455,6 +470,35 @@ tests['[recorded] the one action the corpus can produce is an origin phantom'] =
     assert(bot:GetLevel() == 12,
         'and the caster is level 12, so this is NOT the ancient-guard branch '
         .. '(which needs 15) -- got ' .. bot:GetLevel())
+end
+
+tests['[recorded] the SECOND action is honest: 8% HP, 8232u out, aimed at the fountain'] = function()
+    -- Registered 2026-08-23 by replay-check. Until this fixture landed, every
+    -- action the corpus could produce was an artefact of a stubbed world, and
+    -- the file said so. This one is not: the subject is a witch doctor on 75 of
+    -- 938 HP, 8,232u from his fountain, and the TP is aimed AT the fountain
+    -- (-6619,-6336), not at the map origin. So "the corpus can only produce
+    -- phantoms" is now false, and the honest-probe crash count (210) is the
+    -- only part of that section still carrying the original claim.
+    local c = pass(true)
+    local e
+    for _, x in ipairs(c.casts) do
+        if x.fixture == 'f_260822_182012_sb_backpack_rescue_372.lua' then e = x end
+    end
+    assert(e ~= nil, 'the honest action is gone from the recorded set')
+    assert(e.hero == 'npc_dota_hero_witch_doctor', 'hero: ' .. e.hero)
+    assert(e.fn == 'Action_UseAbilityOnLocation', 'cast type: ' .. e.fn)
+
+    local J, bot = rf.load('tests/fixtures/f_260822_182012_sb_backpack_rescue_372.lua',
+        'npc_dota_hero_witch_doctor')
+    local v = J.GetTeamFightLocation(bot)
+    assert(v == nil or v.x ~= 0 or v.y ~= 0,
+        'this one must NOT be the origin phantom -- if it is, the two casts have '
+        .. 'the same cause and this test is measuring nothing')
+    assert(bot:GetHealth() == 75 and bot:GetMaxHealth() == 938,
+        'the frame moved: ' .. bot:GetHealth() .. '/' .. bot:GetMaxHealth())
+    assert(bot:DistanceFromFountain() > 8000,
+        'the subject is no longer far from home: ' .. bot:DistanceFromFountain())
 end
 
 tests['[reverse] the loop returns after the FIRST item that wants the frame'] = function()
@@ -504,19 +548,21 @@ end
 -- C. Delivery to GH #84 §5: ability_item_usage_generic.lua:5753.
 -- ---------------------------------------------------------------------------
 
-tests['[census] the level term is the sole blocker on 197 honest frames'] = function()
+tests['[census] the level term is the sole blocker on 204 honest frames'] = function()
     local c = pass(false)
     -- 508/193/190 -> 527/198/195 on 2026-08-22T10:xxZ: both owner-P2 TP-home
     -- frames carry a buildings block, so all 19 of their live hero-frames land
-    -- in the HONEST half and 5 of them satisfy the other five operands. The
-    -- finding is untouched: outer_and_H is still 3, i.e. the level term is
-    -- still the only thing standing on every one of the rest.
-    assert(c.alive_H == 537, 'honest-building hero frames moved: ' .. c.alive_H)
+    -- in the HONEST half and 5 of them satisfy the other five operands.
+    -- 537/200/197 -> 554/207/204 on 2026-08-23: the two GH #123 fixtures carry
+    -- a buildings block too (same reason). The finding is untouched through
+    -- both moves: outer_and_H is still 3, i.e. the level term is still the only
+    -- thing standing on every one of the rest.
+    assert(c.alive_H == 554, 'honest-building hero frames moved: ' .. c.alive_H)
     assert(c.alive_F == 403, 'fallback-ancient hero frames moved: ' .. c.alive_F)
     assert(c.alive_H + c.alive_F == c.alive, 'the split partitions the corpus')
-    assert(c.rest5_H == 200,
+    assert(c.rest5_H == 207,
         'honest frames where the other five operands hold: ' .. c.rest5_H)
-    assert(c.sole_blocker_H == 197,
+    assert(c.sole_blocker_H == 204,
         'honest frames where GetLevel() >= 15 is the ONLY closed operand: '
         .. c.sole_blocker_H)
     assert(c.outer_and_H == 3, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
@@ -634,7 +680,10 @@ tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = f
             if fx.buildings ~= nil then nb = nb + 1 else nnb = nnb + 1 end
         end
     end
-    assert(nb == 58 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
+    -- 58/43 -> 60/43 on 2026-08-23: the two GH #123 fixtures both carry a
+    -- buildings block, so the fallback (no-block) side is untouched -- which is
+    -- the half this whole test is about.
+    assert(nb == 60 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
 end
 
 tests['[MECHANISM] the fallback ancient is one unit, both teams, unstable'] = function()
