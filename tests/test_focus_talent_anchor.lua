@@ -73,6 +73,16 @@ local FOCUS = {
             'special_bonus_unique_crystal_maiden_frostbite_castrange',
             'special_bonus_unique_crystal_maiden_5',
         },
+        -- t10 EXAMINED 2026-08-23 and deliberately NOT changed, so it is not
+        -- re-litigated on taste: the +12 INT side has a real, measurable payoff
+        -- (9 of 26 ready ability slots on in-domain frames are mana-blocked
+        -- inside the +144 it buys), but the +200 HP side's payoff channel --
+        -- surviving damage -- has ZERO in-domain samples in this corpus, so its
+        -- zero is UNDERPOWERED, not EMPTY (GH #115), and standard play prefers
+        -- the health on the squishiest hero on the map. Full analysis, the
+        -- evidence that would reopen it, and the honest bounds:
+        -- tests/test_cm_t10_payoff.lua. t15 was decided in the same series
+        -- (GH #122) and also holds.
         expect = { t10 = 1, t15 = 3 },
     },
     zuus = {
