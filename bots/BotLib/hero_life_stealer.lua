@@ -29,7 +29,13 @@ local sRoleItemsBuyList = {}
 
 sRoleItemsBuyList['pos_1'] = {
     "item_tango",
-    "item_branches",
+    -- GH #136, same shape as Wraith King's pos_3: one branch in a list whose
+    -- next composite is item_magic_wand, which takes two.  No corpus reading of
+    -- its own (life stealer is outside the focus five and was not in the
+    -- run_001140 draft) -- fixed on the structural identity plus the repo's own
+    -- law that all 15 outfit macros carrying item_recipe_magic_wand supply two
+    -- branches.
+    "item_double_branches",
     "item_faerie_fire",
     "item_quelling_blade",
     "item_double_gauntlets",

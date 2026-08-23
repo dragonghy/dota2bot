@@ -147,7 +147,17 @@ sRoleItemsBuyList['pos_3'] = {
 	"item_quelling_blade",
 	"item_gauntlets",
 	"item_magic_stick",
-	"item_branches",
+	-- GH #136: this line used to be a SINGLE "item_branches" and Magic Wand
+	-- takes TWO.  The purchase layer cannot recover the missing one: when the
+	-- target becomes item_magic_wand, Item.GetBasicItems drops every component
+	-- already owned, _buildRequiredCounts then counts requirements off that
+	-- ALREADY-FILTERED list (so branches: required 1, owned 1) and _stillNeeds
+	-- pops it as satisfied.  The recipe -- the one component not yet owned --
+	-- is the only thing bought, which is exactly the 40/40 end-game inventory
+	-- observed in run_001140: magic_stick + ONE branch + recipe_magic_wand and
+	-- no wand, ever, in any game.  Median unspent gold 4007 against 366-487
+	-- for the other nine heroes in the same mirrored games.
+	"item_double_branches",
 
 	"item_magic_wand",
 	"item_bracer",
