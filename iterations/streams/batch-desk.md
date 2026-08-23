@@ -2717,6 +2717,92 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   但它兑现了必查项 3 那半句:06:11Z 那轮不得直接引用 §3.3 的 27/27,必须在当时 tip 上重做。**
   详见 `iterations/reports/batch-desk/20260823T040600Z.md`。
 
+- 2026-08-23T06:11Z:**启动轮 —— 接了 §AS.4 的棒把铁律 2(b) 那个量第一次算了出来,同时按 §AS.0/§AS.2
+  发了 25-id、`--rec-slots 12` 的新波。本轮的真发现不是那个胜率,是它旁边那行 `0/301`。**
+  **收割(§AS.4 追溯,零 EC2 成本,纯 S3 GET)**:对 00:11Z 那四个 run 重跑带 `winrate` 的
+  `recover_verdict.py`。下载 77/71/77/76 = **301**,带前缀合并仍 301(必查项 ② 照做),
+  stamp 反查 **278 局** = §AR.0 的 24 id + **23 局**暖场 `cde1d6c`。四个经济指标与 02:06Z
+  **逐位相同**(交叉验证:新增指标没动到旧的四个),新增 **`winrate` 0.394 / 0/4**
+  (逐种子 0.369/0.455/0.413/0.339,中性 0.5,`scored 278 / unfinished 0`)⇒ **五指标全 0/4**。
+  **⭐ 真发现(GH #135,[harness]):那个 0.394 不是第五个证人,而且原因比 §AS.1b 写的更硬。**
+  §AS.1b 的边界是「只有 `engine` 档独立,**那档小则独立性小**」;实测那档不是小,是 **0** ——
+  `winner_by: economy_10min_cap 300 / economy_forcewin_recovery 1 / engine 0`,
+  `winrate_independent_of_gold: 0/301 games`。**而这个 0 是构造性的**,三行源码读死:
+  `soak_loop.sh:13` `SOAK_CAP_MIN=10`(裁判锁 10 游戏分钟)+ `analyze_log.py:81-85` 改写门
+  `dur_min >= cap_min - 0.5`(≥9.5 分钟)+ 实测局时 min 8.8 / median **10.9** / max 13.7、
+  **只有 1 局 <9.5 分钟** ⇒ **裁判上限与改写阈值是同一个数**,被裁判锁住的局必然被改写成
+  `econ_winner`。`engine` 只可能落在「自然提前结束 **且** 引擎赢家已等于经济赢家」的局上,
+  而那正是这标签什么都不多说的一类;本波唯一那局 8.8 分钟的还偏偏引擎判 dire、经济判 radiant,
+  进了 `economy_forcewin_recovery`。**⇒ 现行配置下 `winrate` 的非金钱信息恒为 0,它是 gpm 的
+  符号化粗读,不构成对 25-id 集合的第五份独立不利证据。处置归总监。**
+  **口径更正**:§AS.1b 写「锁 ~30 游戏分钟 / `economy_30min_cap`」——**30 是
+  `analyze_log.py:81` 的 env 默认值不是本装置的配置值**,`soak_loop.sh:13` 传的是 10,
+  真实档名 `economy_10min_cap`;照 30 找档名的人会找不到。**诚实边界**:`recover_verdict.py:120-125`
+  的 `winner_by` 统计在全部 301 局(含暖场)、五指标只用 278 stamped,分母不同 —— 逐层拆开
+  **两种分母下 `engine` 都是 0**,结论不受影响;本台**没有**改任何工具去「修好」它(抬
+  `SOAK_CAP_MIN` 会同时改局时/局数/经济读数,是波次配置变更不是收割动作)。
+  **启动决策:启动 —— 第一次三条节流全部满足。** 4a `strategy-3` 明确要求「fold into the next
+  multi-id wave」;4b(ii) **`itemtrip` 首次可 arm**(§AS.0 把串 24→25);(iii) $23.578 + ~$1.5
+  = ~$25.1 ≤ $45。**(i) 差 11 秒照发,留痕**:严格门槛 06:11:22Z,首台落 **06:11:11Z**
+  (四台 :11/:13/:15/:18),援引 **06:07Z 那条「差 2 分钟按立法目的照常启动」**(适用面分钟/秒级),
+  **明确不适用**于 22:06Z/20:09Z/16:10Z/08:08Z/16:06Z 那批差 2–4 小时的不启动先例 ——
+  节流的立法目的是防每 2h 一波烧穿预算,11 秒对该目的零影响。
+  **启动执行**:远端 tip = 本地 HEAD = `7159ff3`,工作树 clean。**⭐ 本波钉全 40 位 SHA
+  `7159ff3ef3da17b5716ad491e80c23a6c3818c8e`,不用 `--ref main`** —— 理由是本会话自己会在启动后
+  push(只动 `iterations/`,对 bot 行为零影响,但 `--ref main` 指向的是个会动的目标),钉 SHA
+  代价为零。**gate 核对 25/25,在本波要测的 tip 上重做**(04:06Z 说过树漂了就必须重做,树确实漂了):
+  24 个有 `IsSoakCandidate('<id>')` 字面量,**`lf_rescue` 字面量 0 是预期**(走 `jmz_func.lua:6245`
+  的 `IsLaneFixOn('rescue')` → `:5907` 的 `'lf_' .. sub` 拼接,GH #70 §5 早有记录,不是本轮发现);
+  `itemtrip` 活调用点 `bots/mode_item_generic.lua:65`。参数:4 台 × 1 种子 on-demand c6i.4xlarge、
+  `--slots 16`、**`--rec-slots 12`(总监 §AS.2 裁的 (C),不是本台自选)**、`--hours 2`、`--games 22`。
+  run_id `spot_20260823_0611{11,13,15,18}_1_7159ff3…_{89ea04,c05658,902447,05202d}`,
+  instance `i-00beb7525766caa7a`/`i-07968311e31d60227`/`i-0bf48981fbef5b083`/`i-053fb888a88dd501e`,
+  对应种子 888/895/896/906。**`[harness] #98` 已落地并首次生效**:`spot_run.sh:70-73` 的
+  `RUN_TOKEN`(3 字节 urandom)在源码里,四个后缀各不相同 ⇒ **run_id 唯一性不再押在那一秒上**
+  (本波时间戳本来也各差 2–3 秒,但那是运气,token 才是保证)。
+  **§AS.2 的回退触发器事先写死不许事后改判据**:`rec_slot_cost.py` 若不是 exit 0、或任何槽
+  `beyond tolerance`、或 `by_logname`/`by_hostname` 一致率跌破 100% ⇒ **下一波退回 8 且不再重试 12**。
+  **MTD $23.578**(免费 `budgets`,forecast 23.139,limit $100;≪ `COST_CONFIRM_AT=$35` ⇒ 未花
+  $0.01 调 CE),$45/$90/$100 三线全未触及。**读数仍是零信息,判据是 refresh 时刻不是轮次差**
+  (04:06Z 立的规矩本轮第一次复用):`budget refreshed` 与 02:06Z/04:06Z **逐秒相同**
+  (2026-08-22T21:26:04Z)⇒ 三轮同一份快照。**可证伪形式更新**:下次 refresh 晚于 00:11Z 时
+  MTD 应 ≈ $25.1;**本轮又叠一波 ⇒ 晚于 06:11Z 的第一次真刷新应 ≈ $26.6**。
+  开工自检 **worst exit 3**:UNLANDED **1 条**(`1e188aa` replay-check 05:10Z addendum,
+  在 `origin/claude/dreamy-carson-20dpsy` 上),**不属批测台,只转述不接管**;cadence clean;
+  trunk python **14/0**。
+  **局数**:上一波 278 有效 + 23 暖场 = 301(已收完);**本波在跑,尚无局数**。
+  **泄漏检查(四层 + spot 请求,全免费只读)**:开工 实例 **0** / 游离卷 0 / 快照 1
+  (`snap-0ad026b386c804288`,160GB,唯一常设成本)/ EIP 0 / open-active spot 0;
+  收尾 实例 **4**(全部是本波刚起的 `dota2bot-soak-od-1`,`InstanceLifecycle=None` = on-demand,
+  2h 看门狗 + `shutdown-behavior=terminate`),其余四层逐层同上,**无泄漏**;00:11Z 那四台已自毁完毕。
+  **固定栏位**:`soak/` **164**、`dem21/` **16**、`unattributed/` **0**、off-roster **0**、
+  `validation/` 最新条目仍 2026-07-23(标准路径走 `recover_verdict.py`,陈旧是**预期**)、
+  远端 main tip 开工 `7159ff3`。(本波四个 S3 前缀此刻还没建 ⇒ 164/16 未变,是预期不是异常。)
+  **验证**:本会话未改 Lua(改动仅 `iterations/` 下报告/章程/queue.json),容器无
+  `luacheck`/`lua5.1`(已复核),铁律 6 无适用对象;唯一推断项是「两波共 ~$3 尚未入账」,
+  已挂在 refresh 时刻上给出可证伪形式。
+  跨组:**新开 GH #135**([harness];`search_issues` 搜过无既有条目拥有这条线,且它不是
+  #124/#127/#106/#131,故新开),里面把三条可能的修法(抬 cap / 换建筑状态判据 / 承认它不独立)
+  连代价一起摆出来,**不自裁**。`queue.json`:`strategy-3` → **`running`**(附四个 run_id、钉的
+  SHA、25/25 核对、调用点);`hero-5` 附注「ungated 且 `9fa4898` 是 `7159ff3` 的祖先 ⇒ 两条腿
+  都带着它,不占 armed 串位置」,状态留 `pending`(它要的是收割读数不是启动)。
+  **给总监**:(a) 五指标 0/4 的处置 —— **但请先读 #135,第五个指标不是第五个证人**;
+  (b) rec-slots 阶梯已由 §AS.2 裁完(走 12)且本轮已执行,**此项结案**。
+  **⭐ 一条没人认领的活,而它是我的(读法性掉棒)**:`queue.json` 的 `hero-1..hero-4` 四条都自述
+  「NO NEW WAVE NEEDED — a scan of the ARCHIVED corpus, **filed here because the batch desk owns
+  the archive**」。**它们要的不是波次,是我去扫存档**,而至今没有任何一轮批测台报告交付过它们
+  —— 历轮都只记「四条 hero 自述 NO NEW WAVE NEEDED」就翻过去了:「不需要开波」被读成了
+  「不需要我做」。零 AWS 成本,**下一轮第一件事就做它们**(hero-1 WK `wkqaim` 域大小 /
+  hero-2 Axe `nKillDamage` 常数差 / hero-3 Zeus t15 / hero-4 Lion t10)。
+  **下一波最早 2026-08-23T12:11:11Z**,预置:串按届时最新的 §x.0(§AS.3 已冻结集合增长 ⇒
+  大概率仍是这 25 个)、种子 888/895/896/906、4 台 × 1 种子 on-demand、16 槽、
+  **`--rec-slots` 视本波验收(exit 0 且 100% 一致 ⇒ 留 12,否则退 8 且不再试 12)**、
+  2h 看门狗、`--games 22` 不再上调。
+  **本波收割必查项 8 条**详见报告 §9,其中第 8 条是本报告给出的**可证伪预测**:
+  **再次 `engine 0` 是预期兑现不是新信息;出现非 0 的 `engine` 说明 #135 的构造性论证错了
+  或 harness 变了,必须当场查。**
+  详见 `iterations/reports/batch-desk/20260823T061100Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
