@@ -442,9 +442,33 @@ def main():
                 continue
             games.append((Game(tl, an, m['side']), m['game'], m['seed']))
     print('corpus: %d games from %d sweep dir(s)' % (len(games), len(a.sweeps)))
-    if 'creeppull' not in json.loads(open(os.path.join(
-            a.sweeps[0], 'games_manifest.jsonl')).readline())['cand']:
-        print('[warn] `creeppull` is NOT in this wave\'s cand string')
+    # [PROMOTE 20260823] `creeppull` (with `pullbeat`) is a turbo DEFAULT now,
+    # so it is in no armed string any more and the old "warn when it is absent"
+    # check would fire on every future wave while saying the opposite of the
+    # truth. What a reader of this tool actually needs to know is which side of
+    # the promote the corpus sits on, because it decides whether an
+    # armed-vs-baseline contrast on this axis means anything at all:
+    #   * cand carries 'creeppull'  -> a PRE-promote corpus. Only the candidate
+    #     leg pulls; the armed/baseline contrast is the measurement.
+    #   * cand does not             -> either a pre-promote baseline-only
+    #     corpus, or ANY post-promote corpus -- and on a post-promote one BOTH
+    #     LEGS PULL, so a contrast on this axis is structurally zero and must
+    #     not be read as "the pull did nothing".
+    # This tool cannot tell those two apart from the manifest alone (it has no
+    # tree stamp to compare against the promote), so it reports what it sees and
+    # refuses to guess -- naming the ambiguity is the useful output here.
+    cand = json.loads(open(os.path.join(
+        a.sweeps[0], 'games_manifest.jsonl')).readline())['cand']
+    if 'creeppull' in cand:
+        print('[note] PRE-promote corpus: `creeppull` is in the cand string, '
+              'so only the candidate leg pulls and armed-vs-baseline on this '
+              'axis is the measurement')
+    else:
+        print('[note] `creeppull` is not in the cand string. If this corpus is '
+              'POST-promote (2026-08-23) then BOTH legs pull and any '
+              'armed-vs-baseline delta on this axis is structurally zero -- '
+              'not evidence that pulling does nothing. Check the wave\'s tree '
+              'stamp before reading a null here.')
 
     if a.selfcheck:
         print('--- selfcheck ---')
