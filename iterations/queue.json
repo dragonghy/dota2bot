@@ -141,6 +141,22 @@
    "acceptance": "Condition (a), non-blocking: WORKING = at least one frame showing item_soul_ring in the inventory, or two gauntlets at once, with the game time. SILENT with no carrier present is NOT a negative result and must not be recorded as one -- report 'carrier absent' instead, the way GH #79/#97 distinguish an empty domain from an unreached one. There is no condition (b) ask here: the change is two quantities in two non-focus heroes' shopping lists and cannot plausibly move a win rate.",
    "status": "pending",
    "result": null
+  },
+  {
+   "id": "strategy-5",
+   "stream": "strategy",
+   "bundle": "creeppull,pullbeat",
+   "seeds": [
+    888,
+    895,
+    896,
+    906
+   ],
+   "priority": 1,
+   "question": "Owner P1(GH #109 / GH #143)的下一棒:`pullbeat` 的条件 (a) —— 勾线的仇恨 poke 到底有没有真的打出去。**必须专波(总监 §AU.2),而且串里必须同时有 `creeppull`**:`pullbeat` 只活在 `bot.roamCreepPull` 这个计划里,`creeppull` 不 armed 时它一帧都跑不到,单独 arm 是逐字节 no-op、且不会有任何计数报警。缺陷本身是结构性的、已在本地驱动出厂 Think 打印出来(攻击命令在 1/30 秒后被 `Action_MoveToLocation` 取消,每一拍如此,46 帧命令流 = `A` + 36 个 `M`),**不需要批测来确认缺陷**;要买的只有『hold 上去之后仇恨真的转过来了』这一件事。**注意本波读的不是经济**:GH #143 已经证明 armed 腿的触发有超量而兵线位移超量是 0,所以经济只作条件 (b) 的粗粒度旁证。",
+   "acceptance": "**判据是录像组已经有的那把尺子,不要另造**:重跑 `tools/batch_test/behavioral/creeppull_specificity.py`(GH #143 那份,--selfcheck 8/8),armed / base 两侧各出一份,并且**按 GH #143 §5 的修正只数 `inflictor == dota_unknown` 的真普攻**。① 主判据(两个数,本轮开工前就登记好了,不是事后挑的):**最后一次普攻之后小兵还打我多久** —— armed 侧中位应当**长于** base 侧(GH #143 测得 armed 2.2s / base 1.55s,pullbeat 要抬的正是这个数);**该尾巴 = 0 的占比应当下降**(GH #143 测得 armed 26.8%)。② **同等重要的反向判据(不许省)**:armed 侧的**净向家位移**不许塌成 0 —— hold 只占一拍 37 帧里的 14 帧,拖拽仍该占 22 帧;如果位移消失,说明 hold 吞掉了整拍(本地 M2 变异钉的就是这个形状),是回归不是通过。③ 条件 (b) 粗粒度:armed 侧 gpm/deaths 无明显负面即可,不做显著性检验。**预登记的未知量**:引擎里「不发命令」是否真的让攻击命令继续跑,是本修法唯一一条**本地验不了的语义假设**(mock 里没有命令队列);若 ① 两个数都纹丝不动而 ② 正常,**先怀疑这条语义,再怀疑 0.5 这个常数**。",
+   "status": "pending",
+   "notes": "本地已买到的:8 例用例、5 变异 5 抓,真实帧 = `f_072738_zuus_mana`(被压制中单,Lina 在 621u 外),缺陷与修法都是**驱动出厂 Think 46 帧**量出来的、不是读源码。买不到的三件已在 `state.json:pullbeat_20260823` 与用例头注里写死:(W1) 语料不带兵线(`GetNearbyLaneCreeps(900,true)` 恒空 966/966)⇒ 兵线是放在 Lina 真实位置上的替身;(W2) 第二十一条世界断言 —— `GetAttackRange()` 在 966/966 帧上读 mock 默认 150 ⇒ 「目标在攻击距离内才 hold」这条子句本地验不了,因此没写;(W3) `GetAttackPoint()` 在 mock 里不存在 ⇒ 0.5 是字面常数。**替代帧申报(0FIX)**:GH #143 点名的 `20260823_062509_slot7` / `_062455_slot4` 不在树上也不在容器里,已退到语料同形状帧并写进头注。**零 AWS 支出由本组产生**;本条只是申请,发不发波由批测台按预算与优先级定。"
   }
  ],
  "done": [

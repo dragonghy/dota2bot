@@ -191,6 +191,32 @@ function Think()
 		if bot.creepPullAttackTime == nil or (now - bot.creepPullAttackTime) > 1.2 then
 			bot:Action_AttackUnit(pull.enemy, true)
 			bot.creepPullAttackTime = now
+		elseif J.IsSoakCandidate('pullbeat')
+		and (now - bot.creepPullAttackTime) < 0.5 then
+			-- [GH #143 20260823] soak candidate 'pullbeat' -- ISSUE NO ORDER
+			-- for one attack wind-up after the aggro poke. The cadence above
+			-- ordered the attack and then, on the VERY NEXT frame (1/30 s
+			-- later), issued a move order -- which cancels an attack that has
+			-- not started yet. Pinned on a real laning frame: the order log
+			-- over 46 frames is `A` then 36 consecutive `M`, i.e. the poke is
+			-- cancelled 33 ms after it is ordered, every single beat. Creep
+			-- aggro only redirects onto us once the attack actually BEGINS
+			-- (the human 勾线 is attack-then-cancel AFTER the wind-up starts),
+			-- so the pre-fix cadence draws aggro only by luck -- which is what
+			-- the replay desk measured in GH #143: 26.8% of armed pull
+			-- episodes have no creep ever turning around, and 47.5% carry a
+			-- single right-click in the whole episode.
+			-- Issuing NO action leaves the attack order running, so this is a
+			-- hold, not a new order. 0.5 s covers the median hero attack point
+			-- (~0.3-0.65 s); it is deliberately shorter than the 1.2 s beat so
+			-- the drag still owns most of the window. GetAttackPoint() would be
+			-- the principled source but it is absent from the mock, and
+			-- GetAttackRange() -- the other obvious way to spend this frame --
+			-- reads the fabricated mock default 150 on 966/966 corpus frames
+			-- (world assertion 21), so neither can be validated locally.
+			-- Turbo is structural here: the enclosing plan only exists when
+			-- J.ShouldCreepPullLane returned non-nil, and that opens with
+			-- J.IsModeTurbo().
 		else
 			bot:Action_MoveToLocation(pull.retreat)
 		end

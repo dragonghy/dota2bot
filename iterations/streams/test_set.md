@@ -1,6 +1,55 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,itemtrip
 
+**🆕 2026-08-23T11:5xZ 协同组入集提议:新 gated id `pullbeat`(GH #143)** ——
+**按总监 §AU.2「新 id 首波不并进 bundle」申请专波,而且这一波的串里
+必须同时有 `creeppull`** —— `pullbeat` 只活在 `bot.roamCreepPull` 这个计划里,
+`creeppull` 不 armed 时它一帧都跑不到,**单独 arm 是逐字节 no-op**(这正是
+§AU.2 那类「armed 上去没有任何计数报警」的形状,先说在前面)。
+
+**录像组给的修法我不写,理由是一次测量不是一次顾虑**。GH #143 §4 建议的是一个
+**结束条件**(「距最后一次普攻超过 ~2.5s 就停止拖拽」)。**这条修法要修的机制这份代码没有**:
+`bot.roamCreepPull` 由 `GetDesire` **每帧重新推导**,而 `J.ShouldCreepPullLane`
+在同一帧要求**仇恨目标 ≤1000 且敌方兵线 ≤900**,所以**兵线或目标一走开,拖拽自己就停了**。
+录像组自己的数就是证据:**5,105 个 episode 里连续 pull 帧的最长游程 = 2,两条腿都没有一个 3**
+—— 根本没有一段长拖可以「提前收手」。它量到的那些 1380u 回家长走**不是 pull 帧**。
+
+**真正错的在早一帧**:节奏下了攻击命令,**紧接着的下一个 Think(1/30 秒后)**就发
+`Action_MoveToLocation(pull.retreat)`,**把一个还没起手的攻击取消掉**。小兵仇恨只有在攻击
+**真的开始**之后才会转过来(人类勾线是**起手之后**再 attack-cancel),所以修复前那套节奏
+**全靠运气**吃仇恨 —— 这正是 GH #143 量到的 **26.8% 的 armed pull episode 一只小兵都没转过来**、
+**47.5% 整段只有一次普攻**。**这不是读源码读出来的,是驱动出厂 Think 跑 46 帧打印出来的**:
+`A` 之后是 **36 个连续的 `M`**,每一拍都如此。
+
+**修法是一个杠杆**:poke 之后 **0.5 秒内一个命令都不发**(不发命令 = 攻击命令继续跑,
+所以这是 hold 不是新命令)。0.5s 覆盖英雄起手动画的中位(~0.3–0.65s),又远短于 1.2s 的拍子
+⇒ **拖拽仍然占这一拍 37 帧里的 22 帧**。armed 的同一次驱动打印:`A` + 14 个 hold + 22 个 `M` + `A`。
+
+**本地买到的**:`tests/test_replay_pullbeat_attack_cancel.lua` **8 例全绿,5 变异 5 抓**
+(去掉 gate / hold 0.5→1.5 吞掉整拍 / 整条修法回退 / hold 0.2 短于任何起手 / hold 符号翻面变成拖到一半发呆)。
+真实帧 = 语料里那枚 canonical 被压制中单帧(`f_072738_zuus_mana`,Zeus 被 Lina 在 621u 外压)。
+
+**本地买不到的三件,已写死在头注里**:(W1) 语料**不带兵线**
+(`GetNearbyLaneCreeps(900,true)` 在 **966/966 帧上恒空**,make_fixture.py 只 dump 英雄)
+⇒ 兵线是**声明出来的替身**,放在 Lina 的真实位置上,让**真实的 621u 几何**去决定 ≤500 邻接;
+(W2) **第二十一条世界断言**:`GetAttackRange()` 在 **966/966 帧上读 mock 默认值 150**
+(`bot_api.lua:160`,没有任何 fixture 带这个字段)⇒ 远程的 Zeus/Lina/Luna 全读近战射程
+**⇒ 那条最顺手的「目标在攻击距离内才 hold」子句本地根本验不了,因此没有写**;
+(W3) `GetAttackPoint()` 在 mock 里**完全不存在**(调用即崩)⇒ 0.5 是字面常数,不是读出来的。
+
+**替代帧的申报(backlog 0FIX)**:GH #143 点名的两枚钉帧
+(`20260823_062509_slot7` / `_062455_slot4`)**不在树上也不在本容器里**,
+`make_fixture.py` 够不到 ⇒ 退到语料里同形状的那一帧,替换写在用例头注。
+
+**条件 (a) 的读数已预登记**(免得事后挑指标):录像组的 `creeppull_specificity.py`
+已经在量这两个数 —— **poke 之后的小兵尾巴(armed 中位 2.2s)应当变长**,
+**零尾巴占比(armed 26.8%)应当下降**。
+
+**未 armed 逐字节等价,而且是断言出来的**:用例把未 armed 那一拍的命令流整条比对
+(`A` + 36 个 `M`,**一个 hold 都不许有**),armed / 未 armed 两条腿在同一份用例里跑。
+
+---
+
 **🆕 2026-08-23T07:5xZ 协同组入集提议:新 gated id `campgrade`(GH #137)** ——
 **不申请专波,请当一个额外 id 并进下一波已经在跑的串。**
 
