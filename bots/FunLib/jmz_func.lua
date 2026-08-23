@@ -4965,10 +4965,32 @@ end
 -- function rather than re-tuned: a healthy bot walking away from a fight it is
 -- losing is a retreat, and this lever must not pin it in place.
 --
--- 5000 is the cost claim, converted. #120 measures a median round trip of 40.1
--- seconds; at a typical ~300 movement speed that is ~12,000 units of walking,
--- i.e. ~6,000 one way. 5000 is the conservative floor of that -- below it the
--- trip is not the thing #120 measured and this lever has no argument about it.
+-- 10000 is the cost claim, converted -- and the conversion was WRONG the first
+-- time, which is the whole reason this constant moved (2026-08-23, after the
+-- batch returned the lever: director 14:58Z, X = gpm -26.44). #120 measures a
+-- median round trip of 40.1 seconds; at a typical ~300 movement speed that is
+-- ~12,000 units of walking. The first derivation then HALVED it to "~6,000 one
+-- way" and floored that at 5000 -- but the population #120 measured is 643 HOME
+-- TPs. The outbound leg is the TP; only the return leg is walked. So the walked
+-- ~12,000 units IS the one-way distance from home, not twice it, and the floor
+-- was low by ~2.4x. 10000 keeps the same conservative discount the first
+-- derivation applied to its own number (6,000 -> 5,000, ~0.83) on the corrected
+-- one: 12,000 * 0.83.
+--
+-- WHAT THAT ERROR COST, MEASURED RATHER THAN ARGUED (tests/_itemtrip_sweep.lua,
+-- 104 real-frame fixtures / 966 live hero frames). At 5000 the predicate holds
+-- on 320 of 966 frames -- 33.1%, a THIRD of every frame the corpus has -- while
+-- the lever was requested, armed and priced against a domain of 0.038 trips per
+-- game. Those two numbers are not the same measurement and must never again be
+-- compared as if they were: this predicate selects FRAMES ("healthy, safe, far
+-- from home"), which is the description of an ordinary farming frame, and #120
+-- counted TRIPS. At 5000 the fountain clause refused only 71 of 966 frames, so
+-- it was carrying almost none of the narrowing its comment claimed. At 10000 it
+-- refuses enough to bring the domain to 135 of 966 (14.0%), and the bearing
+-- frame -- lina 20260822_123136 t=434.6, 11,240 units from her own fountain --
+-- survives with ~1,240 units of margin. Frame A is what caps this constant:
+-- anything above ~11,000 makes the lever inert on the frame that motivated it,
+-- which is the Luna-chase failure mode this desk has already paid for once.
 --
 -- ⚠ NO INVENTORY CLAUSE, and that is a finding rather than an omission. The
 -- obvious draft carried `Item.GetEmptyInventoryAmount( bot ) > 0` ("a full bag
@@ -5010,8 +5032,10 @@ function J.IsWastefulItemTrip( bot )
 		end
 	end
 
-	-- Far enough that the walk is the cost #120 measured.
-	if J.GetDistanceFromAllyFountain( bot ) < 5000 then return false end
+	-- Far enough that the walk home is the cost #120 measured. See the head
+	-- comment: the outbound leg is a TP, so the walked ~12,000 units is the
+	-- one-way distance, not twice it.
+	if J.GetDistanceFromAllyFountain( bot ) < 10000 then return false end
 
 	return true
 end

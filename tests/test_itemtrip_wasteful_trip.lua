@@ -25,23 +25,41 @@
 --                                            about its ATTRIBUTION.
 --   N1  ...same fixture / skeleton_king      an enemy inside 1600 -> no. Going
 --                                            home with company is a retreat.
+--                                            ⚠ OVER-DETERMINED since the floor
+--                                            moved: he is also 9,811 from the
+--                                            fountain, inside the new 10000, so
+--                                            he answers "no" for two reasons
+--                                            and isolates neither. The 1600 pin
+--                                            below (11,872 / 11,959, both past
+--                                            the floor) is what still isolates
+--                                            the ring; N1 is kept as a
+--                                            regression, not as evidence.
 --   N2  ...same fixture / zuus               3,422 from the fountain -> no.
 --   N3  063722_lina_tp_home / lina           31.8% HP -> no, and this is owner
 --                                            P2's OWN evidence frame: it
 --                                            belongs to J.IsFieldRegenSituation
 --                                            and must not belong to both.
---   N4  043524_wd_defend_alone/witch_doctor  hit by a hero who is STILL in
---                                            reach -> no. The only frame in the
---                                            corpus where this clause decides.
---   N5  063722_lina_tp_home / drow_ranger    hit by a hero 4,321 units away ->
---                                            YES. The other side of N4, and the
---                                            global-ult shape the stayfield
+--   N4  es_defend_1v3 / axe                  hit by a hero who is STILL in
+--                                            reach -> no. Real geometry, ONE
+--                                            synthesized quantity (the damage
+--                                            bookkeeping): at the 10000 floor
+--                                            NO corpus frame reaches this
+--                                            clause at all. See the ⚠ above the
+--                                            case.
+--   N5  lion_meatgrinder / lion              damaged with nobody within 3000 ->
+--                                            YES. The other side of N4, same
+--                                            real-geometry/synthetic split, and
+--                                            the global-ult shape the stayfield
 --                                            family was reshaped for.
 -- and three boundary pairs, which is where the constants are pinned:
 --   1600  wk_l1trade_333: earthshaker at 1,597 (no) vs bristleback at 1,621
 --         (yes) -- 24 units apart, same fixture.
---   5000  lion_meatgrinder/axe at 4,765 (no) vs warlock_ult_hoard/ogre_magi at
---         5,239 (yes).
+--   10000 lion_drain_lethal/obsidian_destroyer at 9,988 (no) vs
+--         od_eclipse_pair/viper at 10,023 (yes) -- 35 units apart. Replaces the
+--         4,765/5,239 pair: the floor was corrected 5000 -> 10000 on
+--         2026-08-23 because the first derivation halved a round trip whose
+--         outbound leg is a TP, not a walk. The domain that error bought --
+--         320 of 966 live frames, 33.1% -- is the census case's ratchet.
 --   0.55  lina_tp_home/witch_doctor at 0.492 (no) vs wd_defend_alone/viper at
 --         0.563 (yes).
 --
@@ -103,7 +121,15 @@ local HOME_FIX = 'tests/fixtures/f_260822_063722_lina_tp_home.lua'
 local WD_FIX = 'tests/fixtures/f_260820_043524_wd_defend_alone.lua'
 local RING_FIX = 'tests/fixtures/f_260820_181711_wk_l1trade_333.lua'
 local NEAR_FIX = 'tests/fixtures/f_045650_lion_meatgrinder.lua'
-local FAR_FIX = 'tests/fixtures/f_182552_warlock_ult_hoard.lua'
+-- The fountain-floor boundary pair, re-cut when the floor moved 5000 -> 10000
+-- (2026-08-23). 35 units apart across the new literal, which is tighter than
+-- the pair it replaces (4,765 / 5,239) and pins the constant harder.
+local UNDER_FIX = 'tests/fixtures/f_260820_162821_lion_drain_lethal.lua'
+local OVER_FIX = 'tests/fixtures/f_260819_222559_od_eclipse_pair.lua'
+-- The attributed-damage pair. At the 10000 floor NO frame in the corpus
+-- reaches that clause at all (see the ⚠ in the census case), so both sides are
+-- real geometry with ONE synthesized quantity -- the damage bookkeeping.
+local ATTR_FIX = 'tests/fixtures/f_050713_es_defend_1v3.lua'
 
 local tests = {}
 
@@ -252,24 +278,72 @@ tests['N3: owner P2\'s own frame belongs to the OTHER half of the family'] = fun
         .. 'halves must partition the health axis, not overlap on it')
 end
 
+-- ⚠ N4 AND N5 WERE RE-CUT WHEN THE FOUNTAIN FLOOR MOVED 5000 -> 10000, and the
+-- honest statement about what they now are comes first.
+--
+-- Their previous frames were 043524_wd_defend_alone/witch_doctor (6,094 from
+-- home) and 063722_lina_tp_home/drow_ranger (9,462). Both sit INSIDE the new
+-- floor, so the old N4 would still have passed -- for the distance reason, not
+-- the attribution one, i.e. a false green -- and the old N5, which asserts the
+-- predicate holds, would simply have gone red.
+--
+-- The replacement is not a better fixture, because there is no better fixture:
+-- a corpus sweep over all 104 fixtures / 966 live hero frames finds ZERO frames
+-- with hp >= 0.55, an empty 1600 ring, >= 10000 from the fountain AND recent
+-- hero damage. At this floor the attributed-damage clause is unreachable on the
+-- whole corpus (the census reads WHY dmg = 0), which is a coverage GAP, not a
+-- reason to move the floor to wherever a test frame happens to sit.
+--
+-- So both cases keep REAL geometry -- a real frame, real hero positions, the
+-- real 3000-ring occupancy that decides the clause -- and synthesize exactly
+-- one quantity: the damage bookkeeping the fixture does not record. That split
+-- is stated per case, and the geometry is asserted from the frame so a re-cut
+-- fixture fails loudly instead of quietly testing nothing.
+--
+-- Registered as a fixture request rather than left implicit: a frame that is
+-- healthy, ring-empty, >= 10000 from home and recently damaged (one with the
+-- damager inside 3000, one with them outside) would retire both synthetics.
+
+--- Real frame, synthetic damage bookkeeping. `by` is the enemy the damage is
+--- attributed to, or nil for damage nobody nearby dealt.
+local function with_damage(J, bot, by)
+    bot.WasRecentlyDamagedByAnyHero = function() return true end
+    bot.WasRecentlyDamagedByHero = function(_, hEnemy) return hEnemy == by end
+    return J, bot
+end
+
 tests['N4: recent hero damage from someone STILL in reach vetoes'] = function()
-    local J, bot = world(WD_FIX, 'npc_dota_hero_witch_doctor', nil)
+    local J, bot = world(ATTR_FIX, 'npc_dota_hero_axe', nil)
+    -- Real, and each one asserted: without these the case would pass on a
+    -- frame where some other clause is doing the work.
     assert(J.GetHP(bot) > 0.9, 'he is healthy')
     assert(#J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE) == 0,
         'and the 1600 ring is empty, so only the attribution can speak here')
-    assert(J.GetDistanceFromAllyFountain(bot) > 5000, 'and he is far from home')
-    assert(bot:WasRecentlyDamagedByAnyHero(3.0) == true, 'but a hero hit him')
+    assert(J.GetDistanceFromAllyFountain(bot) > 10000,
+        'and he is past the fountain floor, so that clause cannot answer either')
+    local ring3000 = J.GetNearbyHeroes(bot, 3000, true, BOT_MODE_NONE)
+    assert(#ring3000 == 1,
+        'the attribution ring no longer holds exactly one enemy -- this frame '
+        .. 'was chosen because it does')
+    assert(J.IsWastefulItemTrip(bot) == true,
+        'before the synthetic damage this frame must be IN the domain, or the '
+        .. 'veto below proves nothing')
+    -- Synthetic: the one quantity a fixture does not carry.
+    with_damage(J, bot, ring3000[1])
     assert(J.IsWastefulItemTrip(bot) == false,
         'the attributed-damage clause must veto: the hero who hit him is inside 3000')
 end
 
-tests['N5: hit from 4,321 units away is NOT someone chasing me'] = function()
+tests['N5: damage nobody nearby dealt is NOT someone chasing me'] = function()
     -- The other side of N4, and the shape the stayfield family was reshaped
     -- for: a global ult reads as "a hero damaged me" with nobody anywhere near.
-    local J, bot = world(HOME_FIX, 'npc_dota_hero_drow_ranger', nil)
-    assert(bot:WasRecentlyDamagedByAnyHero(3.0) == true, 'a hero did damage her')
+    local J, bot = world(NEAR_FIX, 'npc_dota_hero_lion', nil)
     assert(#J.GetNearbyHeroes(bot, 3000, true, BOT_MODE_NONE) == 0,
-        'but nobody is within the attribution radius')
+        'nobody is within the attribution radius -- that is why this frame')
+    assert(J.GetDistanceFromAllyFountain(bot) > 10000, 'and he is past the floor')
+    assert(J.IsWastefulItemTrip(bot) == true, 'undamaged, he is in the domain')
+    -- Synthetic: damaged, but by nobody the attribution loop can find.
+    with_damage(J, bot, nil)
     assert(J.IsWastefulItemTrip(bot) == true,
         'unattributed damage must not veto, or the lever dies to every global ult')
 end
@@ -302,18 +376,58 @@ tests['pin 1600: 1,597 vetoes and 1,621 does not, in one fixture'] = function()
     -- Both pass the other clauses, so the pair isolates the radius: move 1600
     -- past 1621 and the second fails; move it below 1597 and the first fails.
     assert(a.ring == 1, 'the earthshaker control no longer has company in the ring')
-    assert(a.hp > 0.55 and a.home > 5000,
+    assert(a.hp > 0.55 and a.home > 10000,
         'the earthshaker control stopped isolating the ring')
+    assert(b.home > 10000,
+        'the bristleback control fell inside the fountain floor -- it would '
+        .. 'then answer "yes" for a reason this pair does not control')
     assert(b.ring == 0, 'the bristleback control gained company in the ring')
 end
 
-tests['pin 5000: 4,765 vetoes and 5,239 does not'] = function()
-    local a = verdict(NEAR_FIX, 'npc_dota_hero_axe')
-    local b = verdict(FAR_FIX, 'npc_dota_hero_ogre_magi')
-    assert(a.home > 4600 and a.home < 5000, 'the near control moved: ' .. string.format('%.0f', a.home))
-    assert(b.home > 5000 and b.home < 5400, 'the far control moved: ' .. string.format('%.0f', b.home))
-    assert(a.wasteful == false, '4,765 from home: below the floor')
-    assert(b.wasteful == true, '5,239 from home: above it')
+tests['pin 10000: 9,988 vetoes and 10,023 does not -- 35 units apart'] = function()
+    local a = verdict(UNDER_FIX, 'npc_dota_hero_obsidian_destroyer')
+    local b = verdict(OVER_FIX, 'npc_dota_hero_viper')
+    assert(a.home > 9900 and a.home < 10000, 'the near control moved: ' .. string.format('%.0f', a.home))
+    assert(b.home > 10000 and b.home < 10100, 'the far control moved: ' .. string.format('%.0f', b.home))
+    assert(a.wasteful == false, '9,988 from home: 12 units below the floor')
+    assert(b.wasteful == true, '10,023 from home: 23 units above it')
+    -- Both pass every other clause, so the pair isolates the literal: this is
+    -- the case that goes red if somebody restores 5000 without re-deriving it.
+    assert(a.hp > 0.55 and a.ring == 0 and b.hp > 0.55 and b.ring == 0,
+        'a control picked up another reason to answer the way it does')
+end
+
+tests['the floor is 10000, and it is the CORRECTED conversion'] = function()
+    -- WHY THIS CASE EXISTS. The 5000 that shipped came from #120's median
+    -- round trip of 40.1s -> "~12,000 units of walking, i.e. ~6,000 one way"
+    -- -> floored to 5000. The halving is the error: #120's population is 643
+    -- home TPs, so the outbound leg is the TP and only the return leg is
+    -- walked. The walked ~12,000 IS the one-way distance from home. A comment
+    -- can drift from its literal, so the literal is read off source here and
+    -- the arithmetic is asserted rather than described.
+    local src = read_file(JMZ)
+    local body = src:match('\nfunction J%.IsWastefulItemTrip%( bot %)(.-)\nend\n')
+    assert(body, 'J.IsWastefulItemTrip is gone or is no longer a top-level function')
+    local floor = tonumber(body:match('J%.GetDistanceFromAllyFountain%( bot %) < ([%d%.]+)'))
+    assert(floor, 'the fountain clause no longer has a literal bound')
+    -- 40.1s at ~300 movement speed, one way, with the same ~0.83 conservative
+    -- discount the first derivation applied to its own (wrong) number.
+    local derived = 40.1 * 300 * 0.83
+    assert(floor > derived * 0.95 and floor < derived * 1.05,
+        'the fountain floor (' .. floor .. ') is no longer the corrected '
+        .. 'conversion of #120\'s 40.1s round trip (' .. string.format('%.0f', derived)
+        .. ') -- if the floor moved on purpose, move this derivation with it')
+    -- And the cap on the other side: above the bearing frame the lever is
+    -- inert on the frame that motivated it, which is the Luna-chase failure
+    -- mode. Read from the frame, not restated.
+    local a = verdict(A_FIX, 'npc_dota_hero_lina')
+    assert(floor < a.home,
+        'the floor (' .. floor .. ') is now past #120\'s bearing frame ('
+        .. string.format('%.0f', a.home) .. ') -- the lever cannot act on its '
+        .. 'own evidence any more')
+    assert(a.home - floor > 1000,
+        'less than 1,000 units of margin between the floor and the bearing '
+        .. 'frame -- one re-cut of that fixture and the lever goes inert')
 end
 
 tests['pin 0.55: 0.492 vetoes and 0.563 does not, and it is ONE number'] = function()
@@ -359,8 +473,27 @@ tests['[census] the domain, and the inventory clause that was not written'] = fu
     -- size was pinned as an equation).
     assert(num('C fixtures (%d+)') >= 101, 'the corpus shrank')
     assert(live >= 940, 'live hero frames dropped below the measured floor')
-    assert(wasteful >= 250 and wasteful <= live * 0.45,
-        'the domain moved out of its band: ' .. wasteful .. ' of ' .. live)
+    -- ⚠ THIS BAND IS A RATCHET NOW, AND THE OLD ONE IS THE FINDING.
+    -- It used to read `wasteful >= 250 and <= live * 0.45`, i.e. it certified
+    -- a domain of 320 of 966 live frames -- 33.1%, a third of every frame the
+    -- corpus has -- as normal. Meanwhile the lever was requested, armed and
+    -- priced against #120's 0.038 UNEXPLAINED TRIPS PER GAME. Those are not
+    -- the same measurement and were never comparable: this predicate selects
+    -- FRAMES, a bot sits in-domain for hundreds of consecutive frames without
+    -- making any trip, and the bid is paid per frame. The 33.1% is what the
+    -- batch actually bought at gpm -26.44 (director 14:58Z), which is why the
+    -- lever came back. Correcting the fountain floor 5000 -> 10000 took it to
+    -- 135 of 966 (14.0%). The upper bound is therefore the ratchet: it may
+    -- come down, never back up, and re-arming this id means re-reading this
+    -- number first.
+    assert(wasteful <= live * 0.16,
+        'the domain grew back past the ratchet: ' .. wasteful .. ' of ' .. live
+        .. ' (' .. string.format('%.1f', 100 * wasteful / live) .. '%) -- it was '
+        .. 'cut to 14.0% precisely because a 33.1% frame domain is what the '
+        .. 'batch priced at gpm -26.44')
+    assert(wasteful >= 60,
+        'the domain collapsed to ' .. wasteful .. ' of ' .. live .. ' -- a lever '
+        .. 'that cannot reach anything is not a narrower lever, it is a dead one')
     -- The why-decomposition has to add up to the population, or it is measuring
     -- a different function than the one that shipped.
     local sum = num('WHY yes (%d+)') + num('WHY hp (%d+)') + num('WHY ring (%d+)')
@@ -368,12 +501,20 @@ tests['[census] the domain, and the inventory clause that was not written'] = fu
     assert(sum == live, 'the clause decomposition covers ' .. sum .. ' of ' .. live
         .. ' live frames -- some frame refuses for a reason not in the list')
     assert(num('WHY yes (%d+)') == wasteful, 'the decomposition disagrees with the predicate')
-    -- The attributed-damage clause decides ONE frame in the whole corpus, which
-    -- is exactly why N4 is pinned: lose that fixture and the clause becomes
-    -- structurally untested rather than merely quiet.
-    assert(num('WHY dmg (%d+)') >= 1,
-        'no frame in the corpus is decided by the attribution clause any more -- '
-        .. 'N4 is now the only thing testing it, so check N4 still bites')
+    -- ⚠ THE COVERAGE THE FLOOR MOVE COST, asserted rather than mentioned.
+    -- At the 5000 floor the attributed-damage clause decided exactly ONE frame
+    -- in the corpus. At 10000 it decides NONE: that frame refuses at the
+    -- fountain clause first, and a sweep over all 966 live frames finds zero
+    -- with hp >= 0.55, an empty 1600 ring, >= 10000 from home AND recent hero
+    -- damage. So the clause is now reachable only through N4/N5, which are
+    -- real geometry plus one synthesized quantity. Asserted as an EQUALITY on
+    -- purpose: if a future fixture makes this 1 again, that is a real frame
+    -- for a clause that currently has none, and this case should go red so
+    -- somebody promotes it into N4/N5 and drops the synthetic.
+    assert(num('WHY dmg (%d+)') == 0,
+        'a corpus frame reaches the attribution clause again -- good news, but '
+        .. 'N4/N5 are still running on synthesized damage; re-cut them on the '
+        .. 'real frame and delete with_damage()')
     -- And the measured cost of the clause that was NOT written: a "bag not
     -- full" clause would remove this many wasteful frames -- 14 of 310 when
     -- measured -- one of which is the bearing frame itself.

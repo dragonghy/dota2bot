@@ -29,7 +29,7 @@ fired on that row's pre-cast frame:
                  satisfied  ->  the armed leg's GetDesire returned NONE here,
                  so an armed row in this bucket is the lever failing.
   OUT-OF-DOMAIN  at least one clause is DEFINITELY false (an enemy inside
-                 1600, or the fountain closer than 5000) -> the armed leg
+                 1600, or the fountain closer than FDIST_MIN) -> the armed leg
                  returned nil here.  This bucket is the control: it is where
                  the two contract branches disagree.
   UNRESOLVED     the attributed-damage clause cannot be scored offline on this
@@ -61,10 +61,16 @@ import json
 import os
 import sys
 
-HP_FLOOR = 0.55       # jmz_func.lua:4994  (J.GetHP < 0.55 -> not wasteful)
-RING_U = 1600.0       # :4998
-ATTR_U = 3000.0       # :5003  the ring the attributed-damage clause sweeps
-FDIST_MIN = 5000.0    # :5014  GetDistanceFromAllyFountain < 5000 -> not it
+HP_FLOOR = 0.55       # jmz_func.lua:5016  (J.GetHP < 0.55 -> not wasteful)
+RING_U = 1600.0       # :5019
+ATTR_U = 3000.0       # :5025  the ring the attributed-damage clause sweeps
+# Raised 5000 -> 10000 on 2026-08-23: the first derivation halved a round trip
+# whose outbound leg is a TP, not a walk.  Rationale and the measured domain it
+# cost (320/966 live frames -> 135/966) are in J.IsWastefulItemTrip's head
+# comment; tests/test_detector_source_constants.py keeps this row equal to the
+# Lua literal, so re-reading any pre-2026-08-23 run of this detector means
+# re-reading it against a floor the bots no longer use.
+FDIST_MIN = 10000.0   # :5038  GetDistanceFromAllyFountain < 10000 -> not it
 
 
 def classify(r):
@@ -83,7 +89,7 @@ def classify(r):
     if n1600 > 0:
         return "OUT", "enemy inside 1600 (%d)" % n1600
     if fdist < FDIST_MIN:
-        return "OUT", "fountain %.0fu < 5000" % fdist
+        return "OUT", "fountain %.0fu < %.0f" % (fdist, FDIST_MIN)
 
     # Only the attributed-damage clause is left, and it is the one the row
     # cannot score exactly (boundary 1 in the docstring).
@@ -165,7 +171,11 @@ def selfcheck():
         print("  %-46s %s" % (name, "PASS" if cond else "FAIL"))
         ok = ok and cond
 
-    base = {"hp": 0.9, "n_enemy_1600": 0, "fdist": 9000.0,
+    # Derived from FDIST_MIN rather than written out: this selfcheck used to
+    # carry a literal 9000 "far" row, which stopped being far the moment the
+    # floor moved 5000 -> 10000 (2026-08-23) and would have failed the very
+    # case that is supposed to be the clean control.
+    base = {"hp": 0.9, "n_enemy_1600": 0, "fdist": FDIST_MIN + 1000.0,
             "hit6": False, "enemy_min": 8000.0}
 
     def with_(**kw):
@@ -176,8 +186,10 @@ def selfcheck():
     chk("clean healthy far frame -> IN", classify(base)[0] == "IN")
     chk("enemy inside 1600 -> OUT",
         classify(with_(n_enemy_1600=1))[0] == "OUT")
-    chk("fountain 4999 -> OUT", classify(with_(fdist=4999.0))[0] == "OUT")
-    chk("fountain 5000 -> IN", classify(with_(fdist=5000.0))[0] == "IN")
+    chk("fountain just under the floor -> OUT",
+        classify(with_(fdist=FDIST_MIN - 1.0))[0] == "OUT")
+    chk("fountain exactly at the floor -> IN",
+        classify(with_(fdist=FDIST_MIN))[0] == "IN")
     chk("hit6 with enemy 2000 -> UNRESOLVED",
         classify(with_(hit6=True, enemy_min=2000.0))[0] == "UNRESOLVED")
     chk("hit6 with enemy 9000 -> IN",

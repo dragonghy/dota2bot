@@ -10,6 +10,20 @@
 -- J.IsWastefulItemTrip in FunLib/jmz_func.lua; the reachability audit that had
 -- to come first: tests/test_itemtrip_supply_gap.lua.
 --
+-- ⚠ RETURNED FROM THE ARMED SET, 2026-08-23 (director 14:58Z, X = gpm -26.44
+-- on the 06:11Z wave). Returned is not rejected -- what failed is condition
+-- (b) -- but this id must not be re-armed until a fresh domain is requested,
+-- and one arithmetic fact goes with it. Those 76 trips are 0.038 UNEXPLAINED
+-- TRIPS PER GAME, while J.IsWastefulItemTrip itself holds on 320 of 966 live
+-- hero frames (33.1%) at the floor it shipped with. Those are not the same
+-- measurement. This predicate selects FRAMES; #120 counted TRIPS, and a bot
+-- sits in-domain for hundreds of consecutive frames without making a trip at
+-- all. The frame domain is what the bid is paid on, so it is the number that
+-- has to be small: the fountain floor was corrected 5000 -> 10000 the same
+-- day, taking it to 135 of 966 (14.0%). Do not compare a per-game trip count
+-- against a per-frame domain again -- that comparison is what made a lever
+-- with a 33% frame domain look like a lever with a 0.038/game one.
+--
 -- THE GATE IS LOAD-TIME, ON PURPOSE, AND IT IS THE WHOLE SAFETY ARGUMENT.
 -- Unarmed, this file defines no GetDesire at all, so the engine has nothing to
 -- call and keeps its built-in bid -- an unarmed game is byte-for-byte the game
