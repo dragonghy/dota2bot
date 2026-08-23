@@ -22,6 +22,21 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-1. ~~**GH #144:给 `9fa4898`(CM pos_5 arcane boots)补 gate**~~ **2026-08-23T11:45Z done ——
+   gated `cmboots`(turbo-only,未 armed),gate-off 逐字节回到 `9fa4898^`
+   (`git diff 9fa4898d^` 里买表本体零 diff),14 例 / 12 次变异 12 抓。**
+   **顺带撤回了同一笔 commit 里波及 16 个英雄的另一半**:`item_crystal_maiden_outfit`
+   的第二个芒果 + 哨兵挪位,理由 "referenced by nothing" **是假的**(fork 前就有 16 个
+   英雄文件 / 19 条活买表条目引用它),arcane 变体搬进新宏 `item_mage_arcane_outfit`。
+   **下一棒已交**:总监入集 → 批测台 queue **`hero-8`**(§AU.2 独占首波)→ 录像组
+   `hero-5`(前提已就地改写,**只能读 armed 腿**)。详见「当前状态」头条。
+   - **留给后来人的两条**:① **共享 outfit 宏不归本组** —— 动 `aba_item.lua` 里任何
+     `item_*_outfit` 的内容或 `tDefineItemRealName` 哨兵之前,先 `grep -rl` 数一遍有多少
+     英雄文件在买它;哨兵决定「开局什么时候算买完」,挪一位就可能让别人的开局提前结束。
+     ② **build gate 的测试要跑,不要读源码** —— 一个 build gate `dofile` 一次只要 0.02s,
+     而读源码字符串的版本对「transform 漏到别的 role 上」「gate 根本没被调用」
+     「turbo 那一半不在」全都隐形(M7 就是这么逃的)。
+
 0. ~~**`wkqaim`(queue.json `hero-1`)上机前核验**~~ **GH #118**; **2026-08-22T15:47Z done —— DO NOT WRITE,
    两条独立理由(供给饥饿 + 上游同胞 `UPSTREAM-SIBLING`),`tests/test_wk_q_aim_preflight.lua`
    9 例 / 7 次变异 7 抓,详见「当前状态」头条。** 这次连 gate 都没写(从未 armed / 从未入集)。
@@ -807,6 +822,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T11:45Z(报告 `iterations/reports/hero/20260823T114555Z.md`;认领 GH **#144**;
+  queue **`hero-8`** 新增 pending、**`hero-5`** 前提就地改写;backlog 新增并划掉 §-1):
+  **`cmboots` 落地:CM pos_5 的 arcane boots 改动进 turbo-only soak gate,gate-off 逐字节
+  回到 `9fa4898` 之前。零 AWS、零外部读。开工自检 worst exit 0。**
+  - **总监的裁定是机制性的,不是对论据有疑问**:镜像 A/B 报差之差,ungated 改动
+    **两波两侧都在**、逐项消掉 ⇒ 对这台仪器**好坏两个方向都不可见**,条件 (b) 永远买不到。
+    落地照 `axebuyblink` 的写法:`ArcaneBootsBuild(tList)` **从出厂清单派生**候选清单
+    (`item_mage_outfit`→`item_mage_arcane_outfit`,丢 `item_boots_of_bearing`),
+    出厂与候选结构上不会漂开。#144 验收第一条因此是**编译器级**的:
+    `git diff 9fa4898d^ -- bots/BotLib/hero_crystal_maiden.lua` 里**买表本体零 diff**。
+  - **⭐ 本轮最该被别的组拿走的一条:`9fa4898` 的另一半改动波及 16 个英雄,而它给的理由是假的。**
+    那笔 commit 还改了 `aba_item.lua` 的**共享宏** `item_crystal_maiden_outfit`
+    (加第二个芒果 + `tDefineItemRealName` 哨兵 `item_magic_wand`→`item_arcane_boots`),
+    理由写的是它 "referenced by nothing since before the fork"。在 `9fa4898^` 上 grep:
+    **16 个英雄文件 / 19 条活的买表条目**(ancient_apparition/bane×2/dazzle/jakiro/largo×2/
+    lich×2/lina/oracle/ringmaster/shadow_demon/shadow_shaman/silencer/skywrath_mage/
+    storm_spirit×2/techies/venomancer),全部 fork 之前就在,逐个复核过是买表不是 `sSellList`。
+    **哨兵不是装饰**:`Item.IsItemInTargetHero` 用它判「这套开局买完了没有」,而 arcane boots
+    在组件序列里排在 `item_recipe_magic_wand`/`item_flask` **前面两位** ⇒ 哨兵一挪,
+    这 16 个英雄的开局**提前两条结束**。两处都**逐字节撤回**(`git diff 9fa4898d^ --
+    bots/FunLib/aba_item.lua` 对这两行不出任何行),arcane 变体搬进**新宏**
+    `Item['item_mage_arcane_outfit']`(哨兵 `item_arcane_boots`),**只被 gated 分支引用**。
+    **撤回依据是「前提为假 + 从未量过」,不是「量出来是坏的」** —— 共享宏不归本组,
+    谁要重提得带那 16 个英雄自己的帧。
+  - **测试口径改了**:§1 原来读源码字符串,现在在 mock 下 `dofile` 英雄文件、写/删
+    `soak_side.lua` **两种状态各跑一遍**,gate-off 的 pos_5 对一份逐字节抄的 13 条出厂清单。
+    **M7(transform 无条件泼到 pos_3)对读源码的版本是隐形的。** 新增 §1b **把那句假前提
+    本身钉住**:`item_crystal_maiden_outfit` 必须仍被 **>=16** 个 BotLib 文件购买、哨兵仍是
+    `item_magic_wand`、仍**恰好一个**芒果。顺带把 `9fa4898`/`47e02db` 改过的两处下游测试
+    (`test_replay_260820_cm_es_aftershock` 的 role 判别器、`test_fixture_roles` 的同款注释)
+    撤回到 `9fa4898^`,并在 aftershock 里留了一行「`cmboots` 若 promote,锚移到 `tPos5[2]`」。
+  - **诚实边界**:(a) 本轮**稳定版往回漂**,这是 #144 验收第一条要的,不是副作用;
+    (b) `9fa4898` 的论据**没被推翻**,§2-§4 六个语料测试原样全绿(tranquil 臂 12/45 付不起
+    自己的蓝,arcane 臂 0/14),它仍是**论证的**不是测量的(承重的 Replenish 在 fixture
+    世界看不见,GH #100)—— 这正是它需要一波的原因;(c) `item_mage_arcane_outfit` 是全新宏,
+    **离线证不了采购层解得开**(mock 的 `GetItemComponents` 恒 `{}`),这就是 `hero-5` 的
+    第 (1) 问,**且现在只能在 armed 腿上读**。
+  - **核验**:luacheck **0 警告**;`test_cm_pos5_boots` **14/14** / **12 次变异 12 抓**;
+    aftershock 32/32、fixture_roles 10/10、smoke 2/2、gate_claim_consistency 7/7,
+    另跑 `dup_component_buylist_census`/`wk_magic_wand_branches`/`soak_draft`/
+    `level_gate_census`/`focus_talent_anchor`/`focus_t15_payoff`/`cm_t10_payoff`/
+    `axe_blink_build` 全绿。整套 `run_tests.lua` 仍受 GH #124 制约,结果见报告文末。
 - 2026-08-23T09:50Z(报告 `iterations/reports/hero/20260823T095041Z.md`;queue **`hero-7`**
   pending;GH **#139** / **#134** 各留言销账;backlog §21 与 §23 划掉、新增 §24):
   **GH #139 的非树枝普查做完:七族全扫,又抓到魂之戒(2× `item_gauntlets`)两处。

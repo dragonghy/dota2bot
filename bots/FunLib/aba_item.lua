@@ -873,10 +873,20 @@ local tDefineItemRealName = {
 
 
 ['item_mage_outfit'] = "item_tranquil_boots",
--- The boots are the sentinel for every outfit that carries a pair (mage ->
--- tranquil, priest -> arcane); this one used to point at the magic wand while
--- nothing referenced the outfit at all. 2026-08-23, GH #126.
-['item_crystal_maiden_outfit'] = "item_arcane_boots",
+-- REVERTED 2026-08-23 (GH #144).  9fa4898 moved this sentinel to
+-- item_arcane_boots on the stated premise that "nothing referenced the outfit
+-- at all".  That premise is FALSE: sixteen other hero files carry
+-- item_crystal_maiden_outfit in a live buy list (19 entries; hero_bane,
+-- hero_lich, hero_lina, hero_silencer, hero_storm_spirit, ...), all of them
+-- from before this project forked.  The sentinel decides when an outfit counts
+-- as OWNED (Item.IsItemInTargetHero -> tDefineItemRealName), and arcane boots
+-- sit ahead of item_recipe_magic_wand and item_flask in the component list, so
+-- the move silently ended those sixteen heroes' openers two entries early.
+-- That is a live, ungated change to non-focus heroes and by GH #144's own
+-- identity it can never be measured; it goes back where it was.  Crystal
+-- Maiden's arcane variant now lives in item_mage_arcane_outfit below.
+['item_crystal_maiden_outfit'] = "item_magic_wand",
+['item_mage_arcane_outfit'] = "item_arcane_boots",
 ['item_priest_outfit'] = "item_arcane_boots",
 
 
@@ -969,10 +979,17 @@ Item['item_priest_outfit']				= { 'item_tango', 'item_tango', 'item_branches', '
 
 Item['item_mage_outfit']				= { 'item_tango', 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman', 'item_tranquil_boots', 'item_recipe_magic_wand', 'item_flask' }
 
--- Wired to Crystal Maiden's pos_5 on 2026-08-23 (GH #126). Deliberately equal to
--- item_mage_outfit in EVERY entry except the boots -- the second tango was added
--- back here so the only lever the swap pulls is tranquil_boots -> arcane_boots.
-Item['item_crystal_maiden_outfit']		= { 'item_tango', 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman',  'item_arcane_boots', 'item_recipe_magic_wand', 'item_flask' }
+-- REVERTED to its pre-9fa4898 contents 2026-08-23 (GH #144): sixteen other hero
+-- files buy this outfit, so the second tango 9fa4898 added was a live change to
+-- all of them, not to Crystal Maiden alone.  Leave it alone unless you have
+-- priced it on THEIR frames.
+Item['item_crystal_maiden_outfit']		= { 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman',  'item_arcane_boots', 'item_recipe_magic_wand', 'item_flask' }
+
+-- Crystal Maiden's gated 'cmboots' candidate (GH #126 -> GH #144).  Deliberately
+-- equal to item_mage_outfit in EVERY entry except the boots, so the only lever
+-- the swap pulls is tranquil_boots -> arcane_boots.  Referenced ONLY from the
+-- soak-gated branch in hero_crystal_maiden.lua, so it is inert until armed.
+Item['item_mage_arcane_outfit']			= { 'item_tango', 'item_tango', 'item_double_branches', 'item_circlet', 'item_mantle', 'item_magic_stick', 'item_recipe_null_talisman',  'item_arcane_boots', 'item_recipe_magic_wand', 'item_flask' }
 
 
 -----------------------------------------------------------------------------

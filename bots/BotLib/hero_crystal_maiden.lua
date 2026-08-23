@@ -40,27 +40,13 @@ sRoleItemsBuyList['pos_4'] = {
 	"item_ultimate_scepter_2",
 }
 
--- BOOTS LINE, 2026-08-23 (GH #126, pure build change -- no gate, so this is
--- LIVE in every game). pos_5 used to open on item_mage_outfit (tranquil boots)
--- and terminate on item_boots_of_bearing, whose recipe CONSUMES a pair of
--- tranquil boots -- a coherent utility-support line, but one that leaves the
--- highest mana costs among supports (Nova 175 / Frostbite 155 / Freezing Field
--- 600 at max rank) with no mana item at all.  Measured on this repo's corpus
--- (tests/test_cm_pos5_boots.lua): 12 of 45 ready ability slots on tranquil-
--- carrying CM frames cannot pay their own mana cost, against 0 of 14 on the
--- arcane-carrying (pos_4) frames at the same mean hero level.
--- Bearing goes with it: with arcane boots in the opener its recipe would buy a
--- SECOND pair of boots (movement speed does not stack), so keeping it would
--- strand 1500 gold.  It was never reached in the corpus either -- but that zero
--- is out-of-window, not empty: the corpus ends at 11:30 and Bearing is a 4225g
--- fifth item.  If the 25-minute batch cap (GH #108) puts CM frames past it, the
--- terminus is worth re-pricing.
 sRoleItemsBuyList['pos_5'] = {
 	"item_blood_grenade",
 
-	'item_crystal_maiden_outfit',
+	'item_mage_outfit',
 	'item_ancient_janggo',
 	'item_glimmer_cape',
+	'item_boots_of_bearing',
 	'item_pipe',
 	"item_shivas_guard",
 	'item_cyclone',
@@ -90,6 +76,51 @@ sRoleItemsBuyList['pos_3'] = {
 sRoleItemsBuyList['pos_1'] = sRoleItemsBuyList['pos_3']
 
 sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_3']
+
+-- [TURBO BUILD, gated 'cmboots'] pos_5 opens on item_mage_outfit (tranquil
+-- boots) and terminates on item_boots_of_bearing, whose recipe CONSUMES a pair
+-- of tranquil boots -- a coherent utility-support line, but one that leaves the
+-- highest mana costs among supports (Nova 175 / Frostbite 155 / Freezing Field
+-- 600 at max rank) with no mana item at all.  Measured on this repo's corpus
+-- (tests/test_cm_pos5_boots.lua): 12 of 45 ready ability slots on tranquil-
+-- carrying CM frames cannot pay their own mana cost, against 0 of 14 on the
+-- arcane-carrying (pos_4) frames at the same mean hero level.  The case does
+-- NOT rest on arcane's flat +125 mana (that is smaller than the +144 talent
+-- this desk declined at t10); it rests on Replenish, which the shipped tree
+-- already fires, and which the corpus cannot see at all (GH #100) -- argued,
+-- not measured.
+--
+-- Bearing has to go with the tranquils: with arcane in the opener its recipe
+-- would buy a SECOND pair of boots (movement speed does not stack) and strand
+-- 1500 gold.  No corpus unit owns one, but that zero is OUT-OF-WINDOW, not
+-- empty -- the corpus ends at 11:30 and Bearing is a 4225g fifth item.
+--
+-- WHY THIS IS GATED AND NO LONGER SHIPPED (GH #144, director 2026-08-23):
+-- 9fa4898 landed it UNGATED.  The mirrored A/B reports a difference of
+-- differences, and an ungated change is present on BOTH arms of BOTH waves, so
+-- it cancels term-for-term -- condition (b) can never be bought for it, in
+-- either direction, however many waves run.  Component-count repairs (GH #136,
+-- GH #139) stay gate-free because they restore an intended-but-unreachable
+-- state; a choice of WHAT to buy is a design decision and ships dark first.
+--
+-- The candidate list is derived FROM the shipped one rather than duplicated,
+-- so the two cannot drift apart, and gate-off is byte-identical.
+local function ArcaneBootsBuild( tList )
+	if tList == nil then return tList end
+	local tOut = {}
+	for _, sItem in ipairs( tList ) do
+		if sItem == 'item_mage_outfit' then
+			tOut[#tOut+1] = 'item_mage_arcane_outfit'
+		elseif sItem ~= 'item_boots_of_bearing' then
+			tOut[#tOut+1] = sItem
+		end
+	end
+	return tOut
+end
+
+if J.IsModeTurbo() and J.IsSoakCandidate( 'cmboots' ) then
+	sRoleItemsBuyList['pos_5'] = ArcaneBootsBuild( sRoleItemsBuyList['pos_5'] )
+end
 
 X['sBuyList'] = sRoleItemsBuyList[sRole]
 
