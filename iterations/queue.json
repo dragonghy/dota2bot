@@ -292,6 +292,23 @@
       "acceptance": "Three numbers off archived timelines, each with its denominator, and the proxy stated as a proxy: (1) LEVEL SUPPLY -- how many WK hero-frames sit at level >= 18 and >= 19 at all, out of all WK frames (this alone can retire the lever: if turbo never gets him there with a wand, the branch stays dead for a reason that is about levels, not arithmetic); (2) MANA -- the distribution of WK current mana on those frames, and how often it is >= 600 (and >= 90% of pool, which is what a fractional floor would ask for instead); (3) ROSHAN PROXY -- how many WK frames occur inside the Roshan pit while Roshan is alive, stated explicitly as a positional stand-in because the mode itself is unrecoverable from a .dem. PRE-REGISTERED so it cannot be read wrong later: a zero on (3) is NOT evidence the domain is empty -- it is evidence about how often bots go to Roshan in 10-to-25-minute turbo games, which is the actual question. A zero on (1) IS decisive and retires the lever. No new wave, no seeds, no cost beyond a scan the desk already runs.",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "strategy-8",
+      "stream": "strategy",
+      "bundle": "pullzone,creeppull",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "新 gated id `pullzone`(GH #143 §3 的触发器一侧)。**缺陷是一句自相矛盾的断言,就写在门上**:`J.ShouldCreepPullLane` 的 DISADVANTAGED 门里承重的那条析取项是 `bZoned = ( #tEnemyHeroes >= 1 ) and not J.WeAreStronger(bot,1200)`,而**它坐在 SAFE-1b(`WasRecentlyDamagedByAnyHero(2.0)` 就 return nil)之后** ⇒ 出厂代码**恰恰在『过去 2 秒没有任何英雄碰过我』的帧上断言『我正被 zoning』**,剩下的内容是一个普通对线帧的描述。这与录像组 18:53Z 在 GH #143 §3 看见的混合人口(长 pull episode 里有普通对线被误判成 pull;存在性证明 `20260823_182326_slot10` lina pos2 33 秒『pull』原地推线、`d_fount` 8533→9165)是同一根绳子的两端 —— episode 误标那一半是检测器侧(#149),本 id 修的是触发器侧。**修法**:抽成纯谓词 `J.IsLaneZonedByEnemy`(unarmed 逐字节等价)+ 一条 gated 子句『被 zoning 必须留下痕迹:6.0s 内有英雄伤害』。配上 SAFE-1b,armed 语义 = 『2–6 秒前有人在打我、此刻有窗口』,正是人类勾线的时机。**⚠ arm 串约束是硬的**:`pullzone` 单独 arm **逐字节 no-op**(唯一调用方在 `creeppull` 门之后)⇒ 串里的 `creeppull` 是**结构性使能器不是第二个新 id**,两者都已在成员串里 ⇒ **本波仍然只测一个新 id,零 AWS 增量,请搭车**。",
+      "axis": "0DOM 兑现,两个域分开写、永不相减,**而且付钱的那个写在前面**。(1) **端到端谓词在本仓库语料上结构性不可达**:`lanecreeps 0/966` —— `GetNearbyLaneCreeps(900,true)` 必须非空而 fixture 生成器不写任何小兵 ⇒ 本地只能断言纯谓词 + 结构接线,**这正是本 id 需要一次带 arm 的波的原因**,已写在用例头注第一段。(2) **FRAME 轴**(`tests/_creeppull_zone_sweep.lua`,104 fixture / 966 存活英雄帧,25 秒,零 AWS):谓词帧域 `zoned_off 378/966 = 39.1%`;可问帧(v2)138,armed 收窄 46 = **33.3%**;v1 的 240 帧收窄是『不可问』不是『平静』(loader 在 v1 上不装伤害读取器),**分开计从不合并**。(3) **真正付钱的域是 SAFE-1b 之后的 71 帧**(ring 25 + dry 46)⇒ 收窄 **64.8%** —— 引 39.1% 或 33.3% 会把这个杠杆**低估约一半**。附带两条新的世界断言(第 22 条 `GetLaneFrontAmount` 两队同一个 mock 常数 ⇒ 兄弟析取项在本地结构性 FALSE;第 23 条 `J.WeAreStronger` FALSE 966/966,其否定式 TRUE 966/966 = 0DIR 形状)。",
+      "acceptance": "条件 (a) 交录像组,**判据用局内配对量**。**正向两个读数,开工前登记**:(1) armed 侧 `creeppull` 的 **episode 数量下降**(本地估计:SAFE-1b 之后的域里去掉 64.8%);(2) **每个 episode 的质量上升** —— 用 #149 提的那个事件计数(最后一次真右键之后 2.5s 内**敌方小兵朝本 bot** 的伤害行是否存在)的**比例**上升。**反向判据不许省**:episode 数**塌向 0** = 这不是收窄是关闭,按回归读不按通过读;且 armed 侧**对线期 last_hits / xpm 不许低于 baseline 腿**(勾线本来就是为了保农)。**⚠ 不许用 GH #143 §2 那张池化表当锚点**:录像组 #148 已证明它被物理侧别 + 整数中位数刀口双重污染。**预登记的反向读法**:两个读数都不动 ⇒ **不要再窄化谓词**,第一嫌疑是 **arm 串漏了 `creeppull`**(此时本 id 逐字节 no-op 且没有任何计数会报警),第二嫌疑是 6.0 这个常数在真实引擎里选中的人口与本语料不同(本语料只有 44 个 v2 fixture 能回答,138 个可问帧是**下界不是估计**)。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

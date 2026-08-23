@@ -7020,6 +7020,49 @@ function J.ShouldPunishOverchase( bot )
 	return nil
 end
 
+-- [GH #143 20260823] The "an enemy laner is ZONING us" disjunct of the
+-- creep-pull DISADVANTAGED gate, lifted out of J.ShouldCreepPullLane into a pure
+-- predicate so it can be censused on real frames -- the enclosing function
+-- cannot be, because it needs `GetNearbyLaneCreeps` to answer non-empty and the
+-- fixture corpus carries no creeps at all.
+--
+-- WHY IT NEEDED A LEVER. As written the disjunct is "there is an enemy hero
+-- within the scan radius AND we are not locally stronger", which on an even 1v1
+-- lane is a description of an ORDINARY LANING FRAME, not of being zoned -- and
+-- it is the disjunct actually carrying the gate, because its sibling
+-- (`bWavePushedToUs`) needs GetLaneFrontAmount. Worse, it sits AFTER SAFE-1b,
+-- which bails whenever a hero has hit us in the last 2 s: the shipped code
+-- therefore asserts "I am being zoned" exactly on the frames where nobody has
+-- touched us. The replay desk's GH #143 read is the other end of the same rope:
+-- long "pull" episodes turn out to be a mixed population, with ordinary laning
+-- inside them (existence proof `20260823_182326_slot10` lina pos2 t=68.5-101.5,
+-- 33 s of "pull" spent standing and trading autos while her distance to her own
+-- fountain GREW 8533 -> 9165 -- the drag would have moved her the other way).
+--
+-- THE LEVER (soak candidate 'pullzone'): being zoned has to have left a mark.
+-- Require hero damage inside a 6.0 s lookback. Combined with the caller's
+-- SAFE-1b 2.0 s exclusion the armed semantics become "a laner was hitting me
+-- 2-6 s ago and right now I have a window", which is the human 勾线 timing (you
+-- pull in the gap between harass volleys, not while eating one). 6.0 s is ~3-4
+-- ranged attack cycles at laning attack speeds; it is also the widest lookback
+-- this corpus can answer -- tests/fixtures carry recent_window = 6.0 and the
+-- loader CLAMPS anything longer, so a bigger constant would be unmeasurable
+-- rather than merely bolder. The sweep asserts that bound rather than trusting it.
+--
+-- Pure, side-effect free, and NOT turbo-gated itself: its one caller opens with
+-- J.IsModeTurbo(), so turbo is inherited structurally (asserted at the call
+-- site rather than restated here as a redundant check).
+function J.IsLaneZonedByEnemy( bot, tEnemyHeroes )
+	if bot == nil or tEnemyHeroes == nil or #tEnemyHeroes < 1 then return false end
+	if J.WeAreStronger( bot, 1200 ) then return false end
+	if J.IsSoakCandidate( 'pullzone' )
+	and not bot:WasRecentlyDamagedByAnyHero( 6.0 )
+	then
+		return false
+	end
+	return true
+end
+
 -- [GH #10] Turbo creep-pull / 勾线 for a disadvantaged laner. A laning core that
 -- is being zoned or is losing the lane (wave shoved onto our side, can't secure
 -- CS) resets the lane equilibrium by DRAWING the enemy creep wave's aggro: it
@@ -7037,8 +7080,9 @@ end
 --     enemy hero nearby (exactly the lane opponent -- never pull into a gank),
 --   * enemy lane creeps are present near us (the wave whose aggro we draw),
 --   * DISADVANTAGED: the wave is shoved onto our half (enemy lane-front advance
---     exceeds ours) OR an enemy laner is zoning us (a nearby enemy hero we are
---     not locally stronger than), and
+--     exceeds ours) OR an enemy laner is zoning us (J.IsLaneZonedByEnemy -- and
+--     see its header: armed with 'pullzone' that second disjunct additionally
+--     demands the zoning have left a mark, hero damage inside 6 s), and
 --   * a VALID aggro target exists: an enemy hero adjacent (<= 500, the creep
 --     aggro-redirect range) to an enemy lane creep that we can order-attack.
 --
@@ -7116,7 +7160,9 @@ function J.ShouldCreepPullLane( bot )
 			bWavePushedToUs = nEnemyFront > nOurFront
 		end
 	end
-	local bZoned = ( #tEnemyHeroes >= 1 ) and not J.WeAreStronger( bot, 1200 )
+	-- [GH #143 20260823] extracted to J.IsLaneZonedByEnemy so it can be censused
+	-- on real frames; unarmed it is byte-for-byte the old expression.
+	local bZoned = J.IsLaneZonedByEnemy( bot, tEnemyHeroes )
 	if not ( bWavePushedToUs or bZoned or bMeleeVs2Ranged ) then return nil end
 
 	-- VALID AGGRO TARGET: an enemy hero adjacent (<= 500, the creep aggro-redirect

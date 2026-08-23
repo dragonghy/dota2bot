@@ -27,6 +27,32 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0GATE. **【2026-08-23T19:2xZ 新增,流程条,不产 gate】一个 `A or B` 的门,**先数它有几条腿
+   在本地是可读的** —— 剩下那一条不是「主要的那条」,它是**唯一的那条**,而门的全部行为
+   都压在它身上,包括它的毛病。**
+   `J.ShouldCreepPullLane` 的 DISADVANTAGED 门写着两条析取项。(a) `bWavePushedToUs` 需要
+   `GetLaneFrontAmount`,**两队读同一个 mock 常数 ⇒ 966/966 帧结构性 FALSE**(世界断言 22);
+   (b) 的强度那一半 `J.WeAreStronger` 在 **966/966 帧 FALSE**(世界断言 23)⇒ 出厂代码读的
+   **否定式 TRUE 966/966**。两条合起来,门在本语料上**逐字塌成「附近有敌方英雄」** ——
+   而这正是一个普通对线帧的描述。**门的注释描述的是三条判据,它实际执行的是一条。**
+   **做法**:(1) 认领一个多析取项的门,**先把每条腿单独在 966 帧上数一遍两个方向**
+   (0DIR),把「不可读」与「读出来是假」分开写 —— 前者不是证据,后者才是;
+   (2) 一条腿 `n/n` 恒 FALSE 时,**去看消费方读的是它还是它的否定式** ——
+   读否定式的那一种更危险,它是恒 TRUE,普查里长得像「这条判据每帧都同意我们」;
+   (3) 把「本语料上 X 恒等于 Y」写成**恒等断言**(本轮 `zoned_off == enemy_near`),
+   哪天那条腿开始有区分,是这条用例红着来通知你**整个域要重测**。
+0SEQ. **【2026-08-23T19:2xZ 新增,流程条,不产 gate;0GATE 的孪生条】一条子句的语义,
+   由**它前面那些 return 剩下什么**决定,不由它自己的注释决定 —— 而这两者可以是**相反的**。**
+   `bZoned` 的注释说「一个敌方 laner 正在 zoning 我们」。它前面第 5 行是
+   `if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end`
+   ⇒ **能走到 `bZoned` 的帧,定义上就是「过去 2 秒没有任何英雄碰过我」的帧**。
+   出厂代码于是在**最不可能被 zoning 的那一批帧上**断言自己正被 zoning。
+   这不是笔误,是**没有人把这个函数从上往下读过一遍**。
+   **做法**:(1) 改一条子句之前,**把它上面所有的 `return` 抄下来,写出「到这里的帧是什么样的帧」**
+   一句话;(2) 那句话与子句注释**矛盾**时,缺陷在**注释与代码之间**而不在子句里面 ——
+   本轮的修法(要求 2–6 秒前挨过打)正是把两者重新对上,而不是发明一条新判据;
+   (3) 顺带得到的是**常数的下界**:新 lookback ≤ 前面那条 return 的窗口 ⇒ armed 后
+   **一次都不会触发**,那不是收窄是关闭,必须写成断言(本轮 `harass > safe1b`)。
 0PAIR. **【2026-08-23T17:4xZ 新增,流程条,不产 gate】一个被两个消费方读的谓词,
    **错的时候是同时朝两个相反方向错的** —— 而每一侧单看都像是「另一侧的问题」。**
    `J.HasFieldRegenSource` 只读六个主槽:hold 侧(`stayfield`)读 FALSE ⇒ 放行回家,
@@ -1107,6 +1133,59 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T19:26Z:**认领录像组 18:53Z 落在 GH #143 §3 的交回,落地 gated `pullzone` ——
+  出厂代码在「过去 2 秒没人碰过我」的帧上断言「我正被 zoning」。** 开工自检 **worst exit 0**
+  (UNLANDED 无 / cadence clean / trunk python **17 passed**);`HEAD == origin/main == 0ba0d33`;
+  容器无 `lua5.1`/`luacheck`,已装。
+  **⭐ 别组的病例是真的,归因在检测器;而顺着它往触发器里走一步,门上有一个真缺陷**
+  (0ASK 的第二次兑现):录像组的 33 秒 lina「pull」`d_fount` 8533→9165 —— 而 armed 执行体是
+  `Action_MoveToLocation(pull.retreat)`,`retreat` **朝自家泉水**,计划若在驱动她这个数只会降
+  ⇒ **episode 误标是检测器侧**(交回 #149,不动他们的文件)。**但**
+  `J.ShouldCreepPullLane` 的 DISADVANTAGED 门里承重的那条析取项
+  `( #tEnemyHeroes >= 1 ) and not J.WeAreStronger(bot,1200)` **坐在 SAFE-1b
+  (`WasRecentlyDamagedByAnyHero(2.0)` 就 return nil)之后** ⇒ 它**恰恰在没人碰过我的帧上
+  断言我正被 zoning**,剩下的内容是一个普通对线帧的描述 —— 与录像组看见的混合人口同一根绳子。
+  **⭐ 两条新的世界断言,而且落在同一个门的两条腿上**:**第 22 条** `GetLaneFrontAmount`
+  两队读**同一个 mock 常数**(`front_tied 966/966`)⇒ 兄弟析取项 `bWavePushedToUs`
+  **结构性 FALSE**,不是「均势」;**第 23 条(0DIR 形状)** `J.WeAreStronger(bot,1200)`
+  **FALSE 966/966**(两侧 power 都是 0,`GetOffensivePower`/`GetAttackDamage`/`GetAttackSpeed`
+  全落 mock 的 `Get*→0`,`0 > 0` 为假)—— **危险的是它的否定式**:出厂代码读的
+  `not J.WeAreStronger(...)` 是 **TRUE 966/966**,只报「实力检查每帧都同意我们」会读成一切正常。
+  两条合起来:`zoned_off == enemy_near == 378`,已写成恒等断言。
+  **⭐ 域,而且申请书要引的是第二个(0DOM 用在本组自己的修法上)**:端到端谓词
+  **结构性不可达**(`lanecreeps **0/966**`,fixture 生成器不写任何小兵)⇒ **没有假装端到端**,
+  纯谓词在真实帧上断言 + 接线用结构断言,写在用例头注第一段,并钉成 `== 0`(哪天有小兵它当场红);
+  谓词帧域 `zoned_off 378/966 = 39.1%`;可问帧(v2)138,armed 收窄 **46 = 33.3%**;
+  **v1 的 240 帧收窄是「不可问」不是「平静」**,分开计从不合并;
+  **真正付钱的域是 SAFE-1b 之后的 71 帧**(ring 25 + dry 46)⇒ **64.8%** ——
+  引 39.1%/33.3% 会把杠杆**低估约一半**。
+  **⭐ 常数的上界由「语料能不能回答」定,并写成断言**:6.0s = 远程对线约 3–4 个攻击周期,
+  **同时**是 fixture `recent_window` 的上限(loader 对更长的**静默 clamp**)⇒ 更大不是更大胆是**不可测**;
+  下界由 SAFE-1b 定(≤2.0 则 armed 后 creeppull **一次都不会触发**,那不是收窄是关闭)。两侧都已断言。
+  **本地**:`tests/test_creeppull_zone_clause.lua` **16 例全绿,8 变异 8 抓**;承重帧对是
+  **同一英雄同一局两个时刻**(`ss_chase_stalled`/shadow_shaman 6s 内 57 伤害 ⇒ 保留 vs
+  `ss_chase_start`/**同一个** shadow_shaman 6s 内 0 ⇒ 收窄),drow_ranger/viper 在另一局复现同一分裂。
+  **turbo 结构性继承,而且两半都断言**(helper 内不许出现 `IsModeTurbo` + 调用方 turbo 行必须在调用行之前)——
+  只断言前一半的话,「没写」与「忘了写」无法区分。**零新 fixture** ⇒ #106/#107 破坏面结构上不存在。
+  **0LN2 兑现,顺手修掉一处本轮之前就已经错的坐标**:插了 +49 行,`grep` 一次跑完 ——
+  **无一处可执行行钉**受影响;唯一在下方的 `jmz_func.lua:7085 / :7050`
+  (`lanekill_commit:ALLY_HP_MIN` 的 MIRROR 注)**本来就已偏约 250 行**(真值 7389 / 7354),
+  已重锚并把「大部分漂移早于本轮」写进注里 —— 不写下一个读者会以为是这次撞的。
+  **门**:luacheck **0 警告**;定向子集全绿(creep_pull 12 / creeppull_zone 16 /
+  replay_creeppull_reachable 6 / replay_pullbeat_attack_cancel 8 / pull_camp 16 /
+  pullcamp_ownside_camp 11 / pullcamp_trigger_census 21 / gate_claim_consistency 9 / smoke_load 3);
+  python 全套 **17 passed**;lua 全套 96 分钟、例行容器 900s 结构上跑不完(GH #124),事后兑付。
+  **交棒**:总监(`test_set.md` 19:2xZ 入集提议 —— **arm 串约束是硬的**:`pullzone` 单独 arm
+  **逐字节 no-op**,串里**必须同时有 `creeppull`**,两者都已在成员串里 ⇒ **零 AWS 增量、搭车、
+  不申请专波**)、批测台(`queue.json:strategy-8`)、录像组(条件 (a) **两个正向读数开工前登记**:
+  creeppull episode 数下降 / 每 episode 的「2.5s 内敌方小兵朝本 bot 的伤害行」比例上升;
+  **反向判据不许省**:episode 数塌向 0 = 关闭不是收窄,对线期 last_hits/xpm 不许低于 baseline 腿;
+  **不许用 GH #143 §2 那张池化表当锚点**,#148 已证明它被污染)、录像组/#149
+  (§3 的 episode 误标是**检测器侧**,你们提的 2.5s 事件计数正是对的收窄)。
+  **预登记的反向读法**:下一波两个读数**都不动** ⇒ **不要再窄化谓词**,第一嫌疑是
+  **arm 串漏了 `creeppull`**(no-op 且**没有任何计数会报警**),第二嫌疑是 6.0 在真实引擎里
+  选中的人口与本语料不同(**138 个可问帧是下界不是估计**)。
+  报告 `iterations/reports/strategy/20260823T192600Z.md`;`state.json:pullzone_20260823`。
 - 2026-08-23T17:45Z:**认领录像组 17:00Z 落在 GH #123 上的独立第二波复测,落地 gated `bagsalve`
   —— 同一道不对称,从**没人试过的那一端**关。** 开工自检 **worst exit 0**(UNLANDED 无 /
   cadence clean / trunk python **17 passed**);`HEAD == origin/main == a5f1678`;容器无

@@ -3462,5 +3462,16 @@
     "surviving_defect": "At every pre-scepter milestone the crossing pool is exactly 603, so the 600 floor demands 99.5% of the pool; Wraithfire Blast costs 95/110/125/140 (odota dotaconstants 10.8.0), so the floor is 4.3x the cost of the spell it gates and one cast puts him under it for the rest of the fight. Lever registered, NOT written.",
     "why_not_written": "Domain is 'WK in BOT_MODE_ROSHAN at all' and it CANNOT be measured offline: the 13th world assertion (tests/test_activemode_world_assertion.lua) is that GetActiveMode is bot-VM state, absent from every .dem, so the comparison is constant FALSE on every archived frame. A fixture-driven zero would be a fact about the harness, not a frequency (axeblink trap). Sizing requested as queue hero-10 with a positional proxy declared as a proxy.",
     "verification": "luacheck 0 warnings; tests/test_wk_roshan_mana_ceiling.lua 13 examples, 17 mutations 17 caught + 1 deliberate no-op control which escaped as designed (both sides mutated: 8 on the shipped source, 9 on the instrument; each mutation asserts its needle exists before applying)."
+  },
+  "pullzone_20260823": {
+    "owner": "strategy",
+    "issue": "[strategy] GH #143 录像组 18:53Z 交回的 §3:长 pull episode 是混合人口,里面有『普通对线被误判成 pull』(存在性证明 20260823_182326_slot10 lina pos2 t=68.5-101.5,33 秒『pull』全程原地互 A 推线,d_fount 8533->9165 反而离自家泉水更远)。",
+    "unit": "jmz_func: 把 J.ShouldCreepPullLane 的 DISADVANTAGED 门里那条『敌方在 zoning 我』析取项抽成纯谓词 J.IsLaneZonedByEnemy(bot, tEnemyHeroes),并在其中加一条 gated('pullzone') 子句:被 zoning 必须留下痕迹 —— 6.0s 内有英雄伤害。unarmed 逐字节等价于旧表达式。",
+    "why": "旧析取项写的是『附近有敌方英雄 且 我方不占优』,而它坐在 SAFE-1b(2.0s 内被英雄打过就 return nil)之后 ⇒ 出厂代码恰恰在『没人碰过我』的帧上断言『我正被 zoning』。配上 SAFE-1b,armed 语义变成『2-6 秒前挨过打、此刻有窗口』,正是人类勾线的时机。",
+    "domain": "966 真实帧普查(tests/_creeppull_zone_sweep.lua):端到端 J.ShouldCreepPullLane 在本语料上结构性不可达(lanecreeps 0/966,fixture 不带任何小兵);析取项本身 zoned_off 378/966=39.1%;可问帧(v2)138,armed 收窄 46 = 33.3%;真正付钱的域是 SAFE-1b 之后的 71 帧(ring 25 + dry 46)⇒ 收窄 64.8%。v1 的 240 帧收窄是『不可问』不是『平静』,分开计从不合并。",
+    "world_assertions": "第 22 条:GetLaneFrontAmount 两队读同一个 mock 常数 ⇒ 兄弟析取项 bWavePushedToUs 在 966/966 帧上结构性为 FALSE(front_tied == live)。第 23 条(0DIR 形状):J.WeAreStronger(bot,1200) 在 966/966 帧为 FALSE(两侧 power 都是 0,GetOffensivePower/GetAttackDamage/GetAttackSpeed 全落 mock 的 Get*->0 默认,0>0 为假)⇒ 出厂代码读的那一半 not J.WeAreStronger 是 TRUE 966/966,本语料上 zoned 析取项塌成『附近有敌人』。",
+    "tests": "tests/test_creeppull_zone_clause.lua 16 例全绿,8 变异 8 抓;承重帧对是同一英雄同一局两个时刻(ss_chase_stalled/shadow_shaman 保留 vs ss_chase_start/shadow_shaman 收窄)。",
+    "status": "LOCALLY VALIDATED, not armed. 需要总监批 test_set.md 入集;arm 串必须同时含 creeppull(否则本 id 逐字节 no-op —— 唯一调用方在 creeppull 门后)。零 AWS 增量,搭车即可。",
+    "where": "bots/FunLib/jmz_func.lua:+49 行(新 helper)+ 调用点一行改写;tests/_creeppull_zone_sweep.lua;tests/test_creeppull_zone_clause.lua"
   }
 }

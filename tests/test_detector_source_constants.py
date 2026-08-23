@@ -262,7 +262,7 @@ HP_CENSUS = {
     'roam_conversion:VICTIM_HP':         ('PROXY', 'legacy alias of the above'),
     'lanekill_commit:VICTIM_HP':         ('PROXY', 'imported'),
     'find_kill_windows:VICTIM_HP':       ('PROXY', 'imported; selects fixture frames'),
-    'lanekill_commit:ALLY_HP_MIN':       ('MIRROR', 'jmz_func.lua:7085 / :7050'),
+    'lanekill_commit:ALLY_HP_MIN':       ('MIRROR', 'jmz_func.lua:7389 / :7354'),
     'capmono_refusal:HP_LO':             ('MIRROR', 'registered via section 2 domain'),
     'capmono_refusal:HP_HI':             ('MIRROR', 'registered via section 2 domain'),
     'creeppull_domain:HP_MIN':           ('MIRROR', 'J.IsCreepPullSafe >= 0.5'),

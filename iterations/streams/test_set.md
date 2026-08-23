@@ -10,6 +10,52 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 (28 − `itemtrip` = **27**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
 
+**🆕 2026-08-23T19:2xZ 协同组**入集提议**:`pullzone`(GH #143 §3 的触发器一侧;**搭车,不申请专波**)**
+
+**缺陷是一句自相矛盾的断言,而它就写在门上。** `J.ShouldCreepPullLane` 的 DISADVANTAGED 门
+有两条析取项,承重的那条是 `bZoned = ( #tEnemyHeroes >= 1 ) and not J.WeAreStronger(bot,1200)`
+——**而它坐在 SAFE-1b(`WasRecentlyDamagedByAnyHero(2.0)` 就 `return nil`)之后**
+⇒ 出厂代码**恰恰在「过去 2 秒没有任何英雄碰过我」的帧上断言「我正被 zoning」**,
+剩下的内容(附近有敌人、我方不占优)**是一个普通对线帧的描述**。这与录像组 18:53Z 在
+GH #143 §3 看见的混合人口是同一根绳子的两端(存在性证明 `20260823_182326_slot10`
+lina pos2 33 秒「pull」原地推线,`d_fount` 8533→9165)。
+
+**修法**:把该析取项抽成纯谓词 `J.IsLaneZonedByEnemy`(**unarmed 逐字节等价**),
+其中加一条 gated 子句:**被 zoning 必须留下痕迹 —— 6.0s 内有英雄伤害**。
+配上 SAFE-1b,armed 语义 = 「**2–6 秒前有人在打我、此刻有窗口**」,正是人类勾线的时机。
+**6.0 的两个来源都在源码头注**:远程对线攻速下约 3–4 个攻击周期;且它是**本语料能回答的
+最宽 lookback**(fixture `recent_window = 6.0`,loader 对更长的**静默 clamp**)——
+更大的常数不是更大胆而是**不可测**,该边界已写成断言。
+
+**⚠️ arm 串约束是硬的**:`pullzone` **单独 arm 逐字节 no-op**(唯一调用方在 `creeppull`
+门之后)。串里**必须同时有 `creeppull`**;两者都已在成员串里 ⇒ **零 AWS 增量、搭车**。
+
+**域,两个数分开写永不相减(0DOM),而且申请书要引的是第二个**
+(`tests/_creeppull_zone_sweep.lua`,104 fixture / **966 存活英雄帧**,25 秒,零 AWS):
+- **端到端谓词在本语料结构性不可达**:`lanecreeps 0/966`(fixture 生成器不写任何小兵)
+  ⇒ 本轮**没有假装端到端**,纯谓词在真实帧上断言 + 接线用结构断言,已写进用例头注第一段;
+- 谓词帧域 `zoned_off 378/966 = **39.1%**`;可问帧(v2)**138**,armed 收窄 **46 = 33.3%**;
+  v1 的 **240 帧收窄是「不可问」不是「平静」**,分开计从不合并;
+- **真正付钱的域是 SAFE-1b 之后的 71 帧**(ring 25 + dry 46)⇒ 收窄 **64.8%**。
+  引 39.1% 或 33.3% 会把这个杠杆**低估约一半**。
+
+**两条新的世界断言(第 22、23 条),落在同一个门的两条腿上**:
+- **22**:`GetLaneFrontAmount` 两队读**同一个 mock 常数**(`front_tied 966/966`)
+  ⇒ 兄弟析取项 `bWavePushedToUs` 在本地**结构性为 FALSE**,不是「均势」;
+- **23(0DIR 形状)**:`J.WeAreStronger(bot,1200)` **FALSE 966/966**(两侧 power 都是 0)
+  ⇒ 出厂代码读的 `not J.WeAreStronger(...)` 是 **TRUE 966/966**,
+  本语料上 (b) 逐字塌成「附近有敌人」(已写成 `zoned_off == enemy_near` 恒等断言)。
+
+**本地**:`tests/test_creeppull_zone_clause.lua` **16 例全绿,8 变异 8 抓**;
+承重帧对是**同一英雄同一局两个时刻**(`ss_chase_stalled`/shadow_shaman 6s 内 57 伤害 ⇒ **保留**
+vs `ss_chase_start`/同一个 shadow_shaman 6s 内 **0** ⇒ **收窄**),另一局(drow_ranger / viper)复现同一分裂。
+**门**:luacheck **0 警告**;定向子集全绿;python 全套 17 passed;全套 96 分钟事后兑付(GH #124)。
+**零新 fixture** ⇒ #106/#107 破坏面结构上不存在。
+报告 `iterations/reports/strategy/20260823T192600Z.md`;`state.json:pullzone_20260823`;
+取证波申请 `queue.json:strategy-8`(挂在本条批准上)。
+
+---
+
 **🆕 2026-08-23T17:4xZ 协同组**入集提议**:`bagsalve`(GH #123 的另一端;**搭车,不申请专波**)**
 
 **缺陷是一道不对称,而它同时坑了这一族的两半。** `fieldbuy` 的采购门数**九个槽**
