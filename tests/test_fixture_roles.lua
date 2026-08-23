@@ -310,6 +310,10 @@ tests['fixtures whose roles are slot-derived are a declared, shrinking list'] = 
         -- sits at slot 4 / drafted 5 here, so the build-list key really moves,
         -- and the frame's own inventory falsifies the pre-heal answer (she
         -- carries every basic of the pos_5 opener and neither pos_4-only one).
+        -- NOTE 2026-08-23: the boots half of that discriminator is gone -- the
+        -- pos_5 opener buys arcane boots now, same as pos_4 (GH #126). The
+        -- reading still holds on null_talisman / urn / blood_grenade; see the
+        -- write-up file below, which was updated with it.
         -- Written up in tests/test_replay_260820_cm_es_aftershock.lua.
         --   ['f_260820_103216_cm_es_aftershock.lua']
         --
