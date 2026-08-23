@@ -27,6 +27,30 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ARM. **【2026-08-23T05:3xZ 新增,流程条,不产 gate】一份普查读出的「这里什么都没发生」,
+   可能只是**它自己没 arm**。**
+   第十六条世界断言(`test_itemdesire_world_assertion`)记的是「把 TP 弄诚实、驱动全部 882 帧,
+   整个语料上没有任何真实 item 决策,只有崩溃和一个原点幻影」。**那个读数只对出厂默认成立** ——
+   `_itemdesire_sweep.lua` **一个 soak candidate 都没 arm**,而 TP consider 顶上那两条分支
+   (`lf_rescue`/`midtp`)全是 gated 的,在它眼里天然是死代码。
+   **arm 上 `lf_rescue`,同一份语料、同一个入口,立刻出现 37 个真实决策**,
+   而且落在那些跑不动的表面**之上**(救援分支 aiug:5117 就 return,在 209 次崩溃的通用块之前)。
+   **做法**:(1) **凡是引用一份「域是空的 / 什么都没发生」的普查,先看它的 arm 是什么**;
+   零 gate 的普查对 gated 世界一个字都没说;(2) **这不是那份普查的错误,是它的作用域** ——
+   订正写在两边(那个文件的头注 + 本条),不要把它整份作废;
+   (3) 与 0p / 0PID 同族但更上游:那两条是**字段**缺了让子句恒真/恒假,
+   这条是**开关**没拨,于是**整条分支从不被执行**,而普查照样输出一个漂亮的 0。
+0SS. **【2026-08-23T05:3xZ 新增,流程条,不产 gate】一个 helper 可能是**单发**的:
+   同一帧问两次,第二次答 nil —— 不是帧变了,是第一次把票花掉了。**
+   `J.GetRescueTpTarget` 的最后一个合取是 `J.TryTakeTpResponseSlot()`(全队一窗口一个应答名额),
+   成功还会戳 `J.NoteRescueResponse`。**对 `lf_rescue` 自己这是正确的、不是 `tpclaim` 那个缺陷**
+   ——配额是**最后**一个合取(其余条件全过才花),而调用方**在同一帧**把这个答案变成动作,
+   **问和去是一步**。后果全落在写用例的人身上:**用 helper 预筛、再在同一次 `rf.load` 里
+   驱动出厂链,量到的是一个空世界,而它长得就像「这条分支到不了」。**
+   **做法**:(1) 凡是普查里既要「问 helper」又要「驱动链」,**两者之间重新 load**;
+   (2) 判断一个 helper 是不是单发,看它的合取链里有没有 `Try*` / `Note*` / `Take*` 这类**动词**;
+   (3) 反过来,**配额取在 `and` 链最后一个合取**是本仓库里正确的那种写法,
+   `tpclaim`(GH #132)之所以是缺陷,正因为它戳在 query 的**末尾**而不是链的**最后一个合取**。
 0LN. **【2026-08-23T04:xxZ 新增,流程条,不产 gate】往 `bots/` 一个文件里加几行,
    会让一个**按 `file:line` 钉行**的普查静默错位 —— 而它长得像「你改坏了一条 gate」。**
    本轮给 `ability_item_usage_generic.lua` 加了 9 行注释+1 行调用,
@@ -909,7 +933,30 @@
    **顺带澄清**:`J.LaneRegenItemToUse` 确实排在整个物品循环之前且 early-return,
    但挂在 `J.IsLaneFixOn('salve')` 上而 `lanefix` 不在 armed 集 ⇒ 当前波次惰性,已写成断言。
    见 `tests/test_tpresponse_quota_chain.lua` 与 `state.json:tpquota_NO_LEAK_20260821`)、
-   `lf_rescue`/`teambrain`。
+   ~~`teambrain`~~(**2026-08-23T04:xxZ 已查:负结果,最终出价在本地结构上买不到,见 0TB**)、
+   ~~`lf_rescue`~~(**2026-08-23T05:3xZ 已查 —— 本条到此全部做完。⭐ 判决是正面的,
+   而且是本组从 item 层读出的第一个**:armed 时驱动出厂 `ItemUsageThink()`,
+   39 个救援帧里 **37 个各产出恰好一条** `Action_UseAbilityOnLocation(item_tpscroll, 落点)`,
+   落点与 `J.GetNearbyLocationToTp` **逐字相等** ⇒ consider 与 `Action_*` 之间**零下游变换**;
+   未 armed 同样这些帧**零动作**。两个例外逐个点名(vengeful_spirit 装不起来 GH #82;
+   一次出厂敌方塔守卫的正当拒绝 —— 而它恰是 **GH #37 的 frame B**,
+   ⇒ #37 给它的落点数 1579u 描述的是**出厂链在那张快照上不会发出的一次 TP**,已交回 #37)。
+   ⭐ **而且这一族根本没有出价** —— `ItemUsageThink` 把 `ItemUsageComplement()` 当**裸语句**调、
+   丢掉返回值,循环那句 `return nSlot + 1` 死在同一处,判据只有 `nItemDesire > 0`、
+   **从不跨物品比大小** ⇒ **第 8 条对这一族只能对着「动作」兑现;按字面找那个数会找不到。**
+   ⭐ **顺带订正第十六条世界断言**:它记的「整个语料零真实 item 决策」**只对出厂默认成立** ——
+   那次普查**一个 candidate 都没 arm**;arm 上 `lf_rescue`,同一份语料出现 **37 个真实决策**,
+   而且在那些跑不动的表面**之上**(救援分支 **aiug:5117 就 return**,在产出 209 次崩溃的通用块之前)。
+   **缺口不在它的算术,在它的 arm。**
+   ⭐ **顾虑 (i)「抢跑」从假设变成测量,并且大半被自己否掉**:把物品栏每一件都弄诚实后
+   **10/37** 被更靠前的槽抢跑,但其中 **8 个是第十九条世界断言**
+   (`GetPowerTreadsStat()` 在 **270/270** 个 handle 上读 **0**,不等于 mock 发的任何 `ATTRIBUTE_*`
+   ⇒ 鞋的整条分支选择由一个没接线的默认值决定)⇒ **诚实区间 2/37..10/37**,
+   真实率是**录像组**的问题;**`bots/` 零改动**(照静态形状改共享物品循环 = `lanefix` 入口)。
+   ⭐ **率本身也只夹住、没定位**:GH #81 让每个英雄都读核心 ⇒ 出厂 `J.IsCore` 下 **10** 帧、
+   override 成 false 下 **39** 帧,两端同一次运行里都量了。
+   见 `tests/test_lf_rescue_final_action.lua`(**12 例全绿 / 3 变异 3 抓**)与
+   `state.json:lf_rescue_FINAL_ACTION_AUDIT_20260823`)。
    **加一条做法(2026-08-19T15:34Z 立):出价断言通过之后不要停,再往下走一层断言
    动作** —— 总监 §0b 对动作类缺陷的推论(「断言动作真的达成了 helper 假设的那个状态」)
    本来就适用于每一条,而 `ownhalf` 正是「出价干净、动作全丢」的第一例。驱动方式已经
@@ -934,6 +981,69 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T05:30Z:**章程 backlog 第 8 条(「最终出价可达性」全组普查)最后一个 id
+  `lf_rescue` 查完 —— 本条到此全部做完,而且交出本组从 item 层读到的**第一个正面判决**。**
+  **开工自检 worst exit 0**(UNLANDED 无 / cadence clean / trunk python 14 passed),
+  本地 `HEAD == origin/main == 0753a84`;容器无 `lua5.1`/`luacheck`,已装。
+  **认领依据**:`OWNER_PRIORITIES.md` 的 P1/P2 仍写「球在协同组」,但两项的本组交付都已落地
+  ⇒ 与上一轮同一判断,已**连续第二轮**请主会话核对球权;`[strategy]` open issue 要么是本组
+  上一轮自己开的(#132,交棒中)、要么在等别组读数 ⇒ 取第 8 条名下仅剩的 `lf_rescue`。
+  **⭐ 判决(正面)**:`lf_rescue` 的最终量**在本地买得到**。armed 时驱动**出厂入口**
+  `ItemUsageThink()`,**39 个救援帧里 37 个各产出恰好一条**
+  `Action_UseAbilityOnLocation(item_tpscroll, 落点)`,落点与 `J.GetNearbyLocationToTp`
+  **逐点相等** ⇒ consider 与 `Action_*` 之间**零下游变换**;**未 armed 同样这些帧零动作**。
+  两个例外**逐个点名、不是容忍**:vengeful_spirit 那一帧 item 文件装不起来(GH #82),
+  以及**一次出厂敌方塔守卫的正当拒绝** —— 而它恰好是 **GH #37 的 frame B**:
+  #37 把 frame B 的落点(1579u)**直接从 helper 读出来**,端到端驱动的话 Lina 走不到那里
+  (她在敌方塔 888u 内,TP consider 在 **aiug:5095** 就拒了,**在救援分支上面两个分支**)⇒
+  **那个数描述的是出厂链在那张快照上不会发出的一次 TP**。诚实边界:fixture 是 1Hz 快照
+  (GH #107/#121),「在这张快照上」就是全部主张。**已交回 #37,本轮不动它。**
+  **⭐ 而且这一族根本没有出价**:`ItemUsageThink`(aiug:8531)把 `ItemUsageComplement()`
+  当**裸语句**调用、丢掉返回值;循环那句 `return nSlot + 1`(aiug:1031)死在同一个地方;
+  判据只有 `nItemDesire > 0`、**从不跨物品比大小**。⇒ **第 8 条的规矩对这一族只能对着「动作」
+  兑现** —— 按字面读会去找一个不存在的数。这一条是写给后面的 id 的。
+  **⭐ 对第十六条世界断言的订正(已进 backlog 0ARM)**:它记的「整个语料零真实 item 决策,
+  只有崩溃和一个原点幻影」**只对出厂默认成立** —— `_itemdesire_sweep.lua` **一个 candidate
+  都没 arm**,而 TP consider 顶上那两条分支全是 gated。arm 上 `lf_rescue`,同一份语料
+  **出现 37 个真实决策**,并且在那些跑不动的表面**之上**(救援分支 aiug:5117 就 return,
+  在产出 209 次崩溃的 `GetExtrapolatedLocation`/`GetFarmLaneDesire` 通用块之前)。
+  **缺口不在它的算术,在它的 arm。**
+  **⭐ 顾虑 (i)「抢跑」从假设变成测量,而测量把自己大半否掉了**:章程写「要数语料」,数了 ——
+  只把 TP 弄诚实 → 37/39 出 TP;**把物品栏每一件都弄诚实 → 10/37 被更靠前的槽抢跑**。
+  但那 10 个里 **8 个是伪影**,并作为**第十九条世界断言**钉住:抢跑者是 `item_power_treads`,
+  它整条分支选择压在 `GetPowerTreadsStat()` 上而 loader 从不接线 —— **270/270 个 handle 读 0**,
+  **0 不等于 mock 发的任何 `ATTRIBUTE_*`**。剩下 2 个是诚实读数(arcane_boots <58% 蓝、
+  clarity 给缺蓝队友)⇒ **诚实区间 2/37 .. 10/37**。**机制毫无疑问(就是出厂那句 `return`),
+  只有大小买不到** ⇒ 真实率交**录像组**;**`bots/` 零改动**(照静态形状改共享物品循环
+  正是 `lanefix` 入口)。**没有断言的那一半也写下来了**:引擎自己的 `ATTRIBUTE_*` 编号
+  在本仓库**不可知**(`BOT_API_REFERENCE.md:1931` 只列名字不给值),
+  所以「0 会不会**恰好就是** ATTRIBUTE_STRENGTH、让这个默认值悄悄表示『力量腿』」**是开着的**。
+  **⭐ 率本身也只夹住、没定位**:GH #81 让每个英雄都读核心,而收窄后的 helper 拒绝对线期核心
+  ⇒ 出厂 `J.IsCore` 下 **10** 帧、override 成 false 下 **39** 帧,**两端同一次运行里都量了**;
+  10 是「全是核心」的世界、39 是「全是辅助」的世界,**真值被夹住了,不是被定位了**
+  (用例里那条断言写明:若 GH #81 被修好、它转红,区间就塌成真实率,报告 §6 必须重写)。
+  **⭐ 一条踩到的新流程条(已进 backlog 0SS)**:`J.GetRescueTpTarget` 是**单发**的 ——
+  最后一个合取是 `J.TryTakeTpResponseSlot()`,**同一帧问两次第二次答 nil**。
+  对 `lf_rescue` 自己**这是正确的、不是 `tpclaim` 那个缺陷**(配额取在**最后一个合取**,
+  其余条件全过才花,调用方同一帧把答案变成动作,**问和去是一步**)。后果只落在写用例的人身上:
+  **先用 helper 预筛、再在同一次 load 里驱动,量到的是一个空世界**,而它长得像「这条分支到不了」。
+  本文件每一个计数在预筛与每条 arm 之间**都重新 load**。
+  **交付**:`tests/test_lf_rescue_final_action.lua`(**12 例全绿,3 变异 3 抓** ——
+  M1 槽序 `{...,15,16}`→`{...,16,15}` 点红 `[preemption]`;M2 救援分支返 `NONE` 点红 3 条;
+  M3 循环改返 desire 点红 `[no bid]`;每次都还原了树)。
+  **扫描槽位顺序是从出厂源码 parse 出来的、不是抄进用例的**(M13 教训);
+  **计数用 floors 不用等式**(GH #106 教训),armed/none/err 三路必须**闭合到 hits**。
+  **本文件跑 ~43s**:第一版 ~118s,把「出厂 IsCore」那一问也放在全部 940 个 subject 上了;
+  **修法用单调性** —— override 只会**放松** helper ⇒ 出厂世界的命中是 override 世界的**子集**
+  ⇒ 只在已命中的 39 帧上再问一次,**同样的数、一半的墙钟**(GH #124 在抱怨整套跑不完)。
+  **门**:`luacheck bots game` **exit 0 / 0 警告**;新文件 12/12。
+  报告 `iterations/reports/strategy/20260823T053042Z.md`;
+  `state.json:lf_rescue_FINAL_ACTION_AUDIT_20260823`。
+  **交棒**:① 录像组 —— 抢跑的**真实发生率**(本地只买到区间,且 8/10 是伪影)+
+  `item_power_treads` 在真实对局里走哪条臂;② 总监/GH #37 —— frame B 的落点数与出厂链的矛盾;
+  ③ 总监 —— **第 8 条到此全部做完**(7 个 id,产出 4 个 gated id、1 条出集建议、2 条负结果);
+  ④ 主会话 —— `OWNER_PRIORITIES.md` 的 P1/P2 球权,连续第二轮请求核对。
+  **本组下一轮**:第 8 条已清空,从 backlog 上面重新取一条。
 - 2026-08-23T04:15Z:**章程 backlog 第 8 条(「最终出价可达性」全组普查)轮到 `teambrain`;
   普查本身交出一条**负结果判决**,并在**出价下面一层**撞到一个真缺陷 ⇒ gated `tpclaim`。**
   **开工自检 worst exit 0**(UNLANDED 无 / cadence clean / trunk python 13/13),
