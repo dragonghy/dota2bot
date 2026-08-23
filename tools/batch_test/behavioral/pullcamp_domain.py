@@ -109,7 +109,29 @@ TP_TAIL = 1.5                # the landing lands one sample after the channel
 EPISODE_GAP = 4.0
 CAMP_CLUSTER = 900.0         # camp boxes are ~1200 u apart at the closest
 CAMP_T_LO, CAMP_T_HI = 60.0, 66.0   # first neutral spawn, pre-pull
-WALK_CAP = 550.0             # u/s, every haste in the game
+# u/s ceiling for PLAIN WALKING, used only by the physical-displacement guard.
+#
+# [2026-08-23, replay-check] This was 550.0 with the comment "every haste in the
+# game".  That number is a REMOVED GAME RULE (the old hard movespeed cap), and
+# the corpus says so: measured over 879,106 clean 1 s snapshot steps of the
+# 00:11Z wave (135 games; main-entity idx-locked, TP channels and death/respawn
+# windows excluded exactly as clean_window does), FIVE heroes with no movement
+# ability at all top out at exactly 660 u/s -- crystal_maiden, witch_doctor,
+# lina, lion, necrophos -- with skeleton_king 699, slardar 683, sven 672 and
+# luna 668 just above.  A support walking full speed toward a camp therefore
+# exceeded the "cap" and the guard is a bare sys.exit(2): before this fix the
+# tool could not produce ANY reading on a corpus containing such a frame
+# (existence proof: run_001127/20260823_003111_slot5 spirit_breaker t=98.4,
+# approach 1739 u over 3.0 s = 580 u/s average, under charge_of_darkness).
+#
+# RESIDUAL, deliberately left in so the guard keeps teeth: ability dashes and
+# Blink Dagger are NOT walking and are NOT excluded (same corpus, clean steps:
+# earthshaker 1597 u/s, phantom_assassin 1146 under phantom_strike,
+# spirit_breaker 1142 under nether_strike, juggernaut 983 under omnislash).
+# One of those inside a 3 s window can still trip the guard -- that is the
+# guard working, not a bug, and the trip report names the hero and frame so the
+# next reader can tell a dash from real displacement corruption.
+WALK_CAP = 660.0
 
 RADIANT, DIRE = 2, 3
 
