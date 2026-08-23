@@ -3300,3 +3300,54 @@
     (7) `l5combo` 的 (a)(**连续第二十七轮**);(8) `make_fixture.py` 钉 `062551 t=205.5 jakiro`
     (#45,**连续第十四轮顺延**);(9) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260823T105416Z.md`
+- **2026-08-23T13:01Z(第五十四次触发)**:执行章程「下一轮优先 (2)」= 06:11Z 波
+  (**首次 armed `itemtrip`**)的零成本补课。**宽扫 213/213 非暖场局**(4 个 run 全量重下重扫,
+  串行,dumper 默认 1.0s)+ **深查 26 行逐帧**(armed 域内 9 行 / baseline 域内 17 行,
+  跨 **21 个不同对局**,另有一局全帧展开)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐ **`itemtrip` 的 (a) = WORKING(有条件),而且它自己预登记的引擎契约被数据判了。**
+    `bots/mode_item_generic.lua` 头注写死了两个互斥后果(nil 落穿 ⇒ 只掉 wasteful 那些帧;
+    nil 被读成 0 ⇒ 整局 item mode 关掉),本轮跑的就是那个判别式。新工具
+    `itemtrip_contract.py`(`--selfcheck` **10/10 PASS**)把 `hometp_highhp.py` 的
+    `unexplained` 人口按**杠杆能不能动**切两半:**域内 armed 9 : baseline 17(0.53)**、
+    **域外 18 : 19(0.95)**。**掉在域内、域外不掉 = 第一支;「整局关掉」那支被证伪**
+    (真关了的话域外那 18 次也该一起消失,一次没少)。**这条 `docs/BOT_API_REFERENCE.md:52`
+    的零使用者契约,从今天起有了一个测量过的使用者。**
+  - ⭐ **#120 明写的另一条验收要求也过了**:`shop`(9 格满、真正要取货)**73 : 70 未被压**;
+    总人口 272:277 平;`unexplained` 整体 29:36。**逐 run 域内 1:2 / 5:5 / 3:6 / 0:4 ——
+    armed 四个 run 一次都没超过 baseline**(三降一平)。噪声尺子(非闸门):域内 p=0.169、
+    域外 p=1.000。
+  - **帧证据**:armed 域内那 9 行**逐帧确认窗口长开**(8 行 12/12、1 行 10/12,且这是**下界**),
+    ⇒ 它们是杠杆没兜住的那一半,不是没机会;**5/9 带回一件刚合成的装备**
+    (ancient_janggo ×2、veil_of_discord ×2、clarity)= 「回基地买/合成」形状,
+    **可能根本不在 item mode 的 bid 里** —— 这就是结论写成「有条件」的原因。
+    承重帧全帧展开:`20260823_063041_slot6` crystal_maiden **t=632.1**(pre 帧 631.4:
+    hp 0.891 / 最近敌人 spiritbreaker 3876u / 离泉 12740u,四子句全成立),往返 **46.3s**
+    ≈ Turbo 一局的 7-8%,换回**一瓶 clarity**。
+  - ⚠️ **本轮明确拒绝的一个读法**:逐帧脚本对归因伤害子句用的是**只看距离的替身**
+    (最近敌人 ≤3000 记 FAIL),而 Lua 只在「3s 内真被英雄打过」时才进那一段 ⇒
+    替身**只少记不多记**(对 armed 的 12/12 是下界,结论更强),但**每行咬合频率两腿不同**,
+    所以「armed 幸存行窗口更长」这种跨腿读法**不成立、不主张**。要主张得先用伤害事件重建
+    `WasRecentlyDamagedByAnyHero(3.0)`(已列下一轮)。
+  - **量纲提醒(免得下一个人用错检测器验收)**:`tp_home_wasteful` **328:324 = 1.01 纹丝不动**,
+    因为它 652 次命中绝大多数是**低血撤退回城**(owner P2 决策侧,至今无 id 在管),
+    而 `itemtrip` 的整个效应是 **8 次 / 213 局 = 该检测器的 1.2%**,**结构上不可见**。
+  - **顺带看见、不下结论**:`defend` 3:12、`healmana` 0:5 的两腿不对称**不属于 `itemtrip`**
+    (它只降 item mode 的 bid),更可能是串里另外 24 个 id 之一,已列下一轮。
+  - 跨组:**GH #120 追评**(不新开 —— 这正是 #120「建议的验收方式」第 3 条交回本组的活)。
+    **不提波次请求**(全部读数来自已有语料)。
+  - **验证**:`bots/`/`game/` **0 改动**,gate 未动;`tests/test_detector_source_constants.py`
+    把 `itemtrip_contract` 的**四个常数全部钉到源码站点**(两个环读是同一 callee 同一参数形状,
+    `where=` 分不开 ⇒ 各按「它喂给谁」钉);`bash tests/run_py_tests.sh` **16 passed / 0 failed**
+    (观测;新工具落地前 15/1,红的那条正是缺注册 —— 注册表按设计吼了)。容器无 lua5.1/luacheck
+    且未改 Lua ⇒ 铁律 6 的 Lua 两条无适用对象。位置一律走 `seed_draft.positions_for_game`。
+    **AWS**:EC2 **$0**,S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **12:09Z 那波(24-id,`itemtrip` 已退出串)落地后的宽扫** ——
+    它是本轮结论**最便宜的一次证伪机会**:同一份人口在没有 `itemtrip` 的串上跑,
+    域内 armed 应当回到 baseline 水平;(2) ⭐ 用 dumper 伤害事件重建
+    `WasRecentlyDamagedByAnyHero(3.0)`,替掉只看距离的替身(顺带修好 UNRESOLVED 桶);
+    (3) `defend` 3:12 / `healmana` 0:5 是哪个 id 干的;(4) `creeppull` 的 FORCED 通道 /
+    兵线跟随判据(#143 已交协同组);(5) 打野反证 fixture 钉 `002103_slot5 t=634.2
+    skeleton_king`(**已顺延四轮**);(6) `hero-1` 的 153 局 WK 语料(棒子挂 **12 轮**);
+    (7) `l5combo` 的 (a)(**连续第二十八轮**);(8) `make_fixture.py` 钉 `062551 t=205.5 jakiro`
+    (#45,**连续第十五轮顺延**);(9) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260823T130104Z.md`

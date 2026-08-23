@@ -92,6 +92,7 @@ eq('l1trade ally scan radius (the decoy)',
 print('=== 2. registry: detector constants still mirror their source site ===')
 
 import capmono_refusal as capmono          # noqa: E402
+import itemtrip_contract as itemtrip       # noqa: E402
 import lanekill_commit as lanekill         # noqa: E402
 import filter_outcome_coupling as foc      # noqa: E402
 import lion_drain_census as drain          # noqa: E402
@@ -108,8 +109,30 @@ LION_DRAIN_WINDOW_START = call_arg('X.lion_IsDrainSafeToStart',
 LION_DRAIN_WINDOW_STOP = call_arg('X.lion_ShouldStopDrain',
                                   'WasRecentlyDamagedByAnyHero', 0, path=LION_LUA)
 
+# `itemtrip`'s four visible clauses (J.IsWastefulItemTrip, jmz_func.lua).  The
+# two ring reads are the SAME callee with the same argument shape -- only the
+# radius differs -- so `where=` cannot separate them and each is pinned by the
+# expression it feeds instead: the 1600 one is tested inline (`#... > 0`), the
+# 3000 one is assigned to `hEnemyList`.  Getting these two backwards would swap
+# "nobody near" for "nobody who hit me near", which is exactly the confusion
+# the registry exists to make loud.
+ITEMTRIP_HP = literal('J.IsWastefulItemTrip',
+                      r'J\.GetHP\(\s*bot\s*\)\s*<\s*(?P<n>[\d.]+)')
+ITEMTRIP_RING = literal('J.IsWastefulItemTrip',
+                        r'#J\.GetNearbyHeroes\(\s*bot,\s*(?P<n>[\d.]+),\s*true')
+ITEMTRIP_ATTR = literal(
+    'J.IsWastefulItemTrip',
+    r'hEnemyList\s*=\s*J\.GetNearbyHeroes\(\s*bot,\s*(?P<n>[\d.]+),\s*true')
+ITEMTRIP_FDIST = literal(
+    'J.IsWastefulItemTrip',
+    r'GetDistanceFromAllyFountain\(\s*bot\s*\)\s*<\s*(?P<n>[\d.]+)')
+
 REGISTRY = [
     # (label, detector value, shipped value)
+    ('itemtrip_contract.HP_FLOOR', itemtrip.HP_FLOOR, ITEMTRIP_HP),
+    ('itemtrip_contract.RING_U', itemtrip.RING_U, ITEMTRIP_RING),
+    ('itemtrip_contract.ATTR_U', itemtrip.ATTR_U, ITEMTRIP_ATTR),
+    ('itemtrip_contract.FDIST_MIN', itemtrip.FDIST_MIN, ITEMTRIP_FDIST),
     ('capmono_refusal.ENE_LO ~ lanesurv scan', capmono.ENE_LO, LANESURV_REACH),
     ('capmono_refusal.LANESURV_REACH', capmono.LANESURV_REACH, LANESURV_REACH),
     ('lanekill_commit.ENEMY_RANGE_CORE', lanekill.ENEMY_RANGE_CORE, L1_ENEMY),
@@ -252,6 +275,7 @@ HP_CENSUS = {
     'fieldbuy_domain:FIELDREGEN_HP':     ('MIRROR', 'item_purchase_generic.lua fieldregen branch; pinned above'),
     'stayfield2_margin:SHIPPED_HP_HI':   ('MIRROR', 'J.ShouldStayAndRegen; wider than the situation test BY DESIGN'),
     'hometp_highhp:HEAL_CORE_HP':        ('MIRROR', 'cores need HP < 0.75 (:1315)'),
+    'itemtrip_contract:HP_FLOOR':        ('MIRROR', 'J.IsWastefulItemTrip; pinned above'),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
