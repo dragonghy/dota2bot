@@ -22,6 +22,20 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-2. ~~**GH #134:等级读数 off-by-one 的收尾清扫**~~ **2026-08-24T00:00Z done —— issue 点名的
+   两处待扫散文早就修好了(散文比代码晚,第三次同型),于是把问题换成「这一族还剩几处」:
+   全量清扫焦点五 + 相关测试,**活着的错五处全部改正**(Axe t10 论证、WK 四处、
+   `test_lion_t10_payoff.lua` 自己跟自己打架的 honest bound)。新
+   `tests/test_focus_level_claims.lua` 把每条等级读数钉在驱动出来的 ladder 上:
+   needle 模板的 `%d` 由 `J.Skill.GetSkillList` 填,改散文或改 build row 都会红。
+   17 例 / 16 次变异 16 抓;`bots/` 只动注释、零行为改动、稳定版未漂移。issue 已关。**
+   - **留给后来人的三条**:① **一个数字只能有一个来源** —— 「注释里写个等级」这种事修不完,
+     除非让注释里的数字由代码填(模板 + 恰好一次的出现计数);② `skill_level_map.build_row`
+     现在有第三参可读**非默认**的 build 表(WK 的 gated `tKillBuildList`)——
+     **gated 那一行的定价散文也在做等级声明**,以前没有任何读者够得到;
+     ③ **变异脚本的判定语句本身要先验一次**:本轮 `case *"0 failures"*` 把
+     「10 failures」误判成 ESCAPED(子串匹配用于计数是错的工具),详见报告 §5。
+
 -1. ~~**GH #144:给 `9fa4898`(CM pos_5 arcane boots)补 gate**~~ **2026-08-23T11:45Z done ——
    gated `cmboots`(turbo-only,未 armed),gate-off 逐字节回到 `9fa4898^`
    (`git diff 9fa4898d^` 里买表本体零 diff),14 例 / 12 次变异 12 抓。**
@@ -940,6 +954,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-24T00:00Z(报告 `iterations/reports/hero/20260824T000000Z.md`;认领 **GH #134**
+  (唯一一条把「下一个工作单元可做」写进正文的 open [hero] issue);**issue 已关**;
+  登记 `state.json:focus_level_claims_sweep_20260824T00`;backlog 新增 §-2;
+  **无新 gated id、无 queue 请求、`bots/` 只动注释、稳定版未漂移、零 AWS、零外部读**):
+  **issue 点名待扫的两处散文早已修好(散文比代码晚,第三次同型)——于是把问题换成
+  「这一族树上还剩几处」,清扫出**活着的错五处**并全部改正;新
+  `tests/test_focus_level_claims.lua` 让每个等级数字**由出货代码填**,而不是由人抄。**
+  开工自检 worst exit **3**:两条 UNLANDED 是**总监**本轮的树
+  (`origin/claude/busy-bardeen-uxvcdx`,提交信息自陈「main is deliberately not pushed
+  until the full suite closes」),cadence 的洞在 **batch-desk**,都不是本组;
+  citation clean、trunk python 18/18。Owner P1/P2 的球都在协同组。
+  - **⭐ 上一轮的教训第一次派上用场,而且救了整轮**:照「先 `ls tests/` + 读目标文件、
+    别信 backlog 散文」做,发现 `hero_zuus.lua:31` 和 `test_focus_talent_anchor.lua:265`
+    **两处都已经是 `by level 11`**。**若照 issue 正文办事,这一轮等于零**。
+  - **活着的五处(全部只在注释里改)**:`hero_axe.lua` Battle Hunger「maxed by level 10」
+    → rank 4 在 **11**(t10 那刻是 rank 3);`hero_skeleton_king.lua` 四处 —— 默认行 Blast
+    单点「until 12」→ **13**、Bone Guard 梯子「(1/9/**10/12**」→ 拉线行 **1/9/11/13**、
+    2nd stun「instead of 12」→ **13**、Mortal Strike「instead of 10」→ **11**、
+    wkqaim 预检「level 2 to 11」→ **到 12**;以及 `tests/test_lion_t10_payoff.lua`
+    的 honest bound **在自己文件里跟自己打架**(头写 rank 4、§3 写 rank 3)。
+  - **裁定一条没翻,两条更稳**:Axe t10 天赋按「每个活着的 Battle Hunger +8%」计价、
+    **不随 rank 缩放**;Lion t10 的更正**对本组有利**(放弃的一侧买 25→35,不是 30→40)。
+  - **⭐ 钉法(可复用):一个数字只能有一个来源**。每条 claim 带 needle **模板**,
+    `%d` 由 `skill_level_map.rank_ladder`(驱动出货的 `J.Skill.GetSkillList`)填,
+    再要求在文件里**逐字出现恰好一次** ⇒ 手改散文对不上,改 build row 也对不上、
+    逼人回去重读那段定价。形状同 `test_gate_claim_consistency.lua`。
+    工具侧顺带两样:`build_row` 第三参可读**非默认**表(WK 的 gated `tKillBuildList`
+    —— **gated 那行的定价散文同样在做等级声明,以前没有任何读者够得到**),
+    以及 `rank_ladder`(slot → 每一 rank 的英雄等级,驱动一次得全表)。
+  - **⭐ M8 证明这不是在钉字符串**:把 `aba_skill.lua` 的交错规则 `i % 5 == 0` 改成 `== 1`,
+    新文件 **17 例红 10 例** —— §1 的 `spent == 9 @L10 / 13 @L15` 守卫先红,引用它的 claim 跟着红。
+  - **两条 LIMIT 写在文件头**:只钉**等级**那一半;WK 全按硬编码名绑 ⇒ slot→name 离线零证据,
+    且**故意不从语料重建**(dump 顺序 ≠ slot 顺序,GH #151),WK 的 claim 钉成
+    **关于 build-row 下标**的 claim(正是那文件自己的措辞)。第三个用例把「WK 现在还是按名绑」
+    也断言了:哪天改成按下标绑,测试提示**补腿**而不是删用例。
+  - **⚠️ 本轮量测事故,如实记**:变异脚本判定写成 `case *"0 failures"*`,而
+    **「10 failures」含子串「0 failures」** ⇒ M8 一度被打成 ESCAPED(真值 CAUGHT(10));
+    两个 no-op 对照第一次也没跑成(`grep -qF "$from"` 的模式以 `--` 开头被当选项)。
+    **判定语句本身要先在已知红/已知绿上验一次;子串匹配用于计数是错的工具。**
+  - **核验**:luacheck **0 警告**;新测试 **17 例 / 16 次变异 16 抓 + 2 个 no-op 对照如期逃逸**
+    (六条跨文件:改 build row / 改 `aba_skill.lua` 交错 / 改 `rank_ladder` / 改 gated 拉线行 /
+    改 Axe 绑定 / 改 WK 绑定);三个老消费者原样绿(t15 36 例、t10 20 例、anchor 12 例、
+    innate 13 例)。整套**逐文件驱动跑了两遍**:rebase 前 163 文件 / 1610 例 / 0 失败,
+    rebase 到 `309cd7d`(协同组 `campsel`)后**重跑** 164 文件 / 1631 例 / **0 失败** + luacheck 复跑 0 警告
+    ⇒ 核验读数属于**上机那棵树**(GH #124 未变:`test_itemdesire_world_assertion.lua` 单文件 >580s 单列;
+    逐文件跑不暴露跨文件全局态泄漏)。
+  - **本条不需要交棒**(纯注释 + 测试、零行为改动 ⇒ 不进测试集、不需要波次/录像核验)。
+  - **下一轮建议**:等 `hero-10`/`hero-11`/`hero-12` 读数(§25 Axe `nKillDamage` 仍是
+    `NARROW-BAND-UNMEASURABLE`,**别重推**);不等的话做 GH **#126**(CM pos_5 整局无蓝装,
+    26 个就绪技能槽里 11 个付不起自己的蓝)—— **先读 `cmboots` 的域**再决定要不要第二根杠杆。
 - 2026-08-23T22:20Z(报告 `iterations/reports/hero/20260823T222000Z.md`;**认领的是 19:50Z 点名的
   Lion t15,当场发现那条已经在 15 小时前结案了 —— 于是转做一件新的**;本组开 GH **#151**;
   queue **`hero-12`** 新增 pending;backlog 新增 §26 并把 §18 二段那段过期散文划掉;

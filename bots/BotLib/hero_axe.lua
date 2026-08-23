@@ -50,8 +50,11 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --     a buff from 6s to 9s.  Culling is a 175-range, 70/75/80s-cd finisher, and the
 --     buff lands once the fight it would have helped win is already decided.
 --   * [2] pays whenever a Battle Hunger is ticking on anything, +8% each.  Battle
---     Hunger is the FIRST point this file buys (build row {2,3,1,...}), is maxed by
---     level 10, runs 12s on a 20/15/10/5s cooldown, and X.ConsiderW fires it from
+--     Hunger is the FIRST point this file buys (build row {2,3,1,...}), is
+--     rank 4 from level 11 (the row's 10th entry -- level 10 goes on a talent, so
+--     it is rank 3 at the moment this pick is made; GH #134.  The talent's payout
+--     does not scale with the rank, so the verdict is unaffected),
+--     runs 12s on a 20/15/10/5s cooldown, and X.ConsiderW fires it from
 --     four separate branches (kill / initiation / teamfight / lane harass).  So it
 --     is up for most of most fights, and the talent pays on every one of them.
 --   * Move speed is the stat this Axe is short of: our own measurement (GH #56,

@@ -36,10 +36,13 @@
 --     (the stream's standing §Y.2 limit: a desk or fixture read can show EMPTY, it
 --     cannot show RARE).  How many enemy-hero drain channels a real game contains
 --     is an open corpus question -- queue.json hero-4.
---   * The abandoned side is at its LARGEST single payout exactly when the talent is
---     picked: the shipped build has Mana Drain at rank 4 by hero level 10, where the
---     slow is 30% and [1] would make it 40%.  We give that up on frequency grounds.
---     Section 3 pins the build fact so the honest bound cannot quietly rot.
+--   * The abandoned side is NOT at its largest single payout when the talent is
+--     picked: the shipped build has Mana Drain at rank THREE at hero level 10 (the
+--     row's 10th entry lands at level 11, because level 10 goes on a talent --
+--     GH #134), so [1] buys 25 -> 35 and not its top-rank 30 -> 40.  We give that
+--     up on frequency grounds, and the correction cuts in our favour.  Section 3
+--     pins the build fact so the honest bound cannot quietly rot; this paragraph
+--     said "rank 4" until 2026-08-24 while section 3 already said rank 3.
 --   * +20 move speed is measured against a 290 base (datafeed hero_id 26, read
 --     2026-08-22) and this hero's pos_4/pos_5 outfit macro carries Arcane Boots
 --     (aba_item.lua, item_priest_outfit), so the RELATIVE gain in play is about

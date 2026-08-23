@@ -3514,5 +3514,27 @@
     "line_pins_reanchored": "+11 lines in mode_farm_generic.lua, +36 in aba_site.lua. EXECUTABLE pins found and fixed: (1) test_level_gate_census GATES table -- went red on two rows, which is the ratchet working; five mode_farm rows +11, two aba_site rows +36. (2) test_pingstamp_world_assertion asserted ':377:' inside an error message -- now READS the GetRoshanDesire line from source (0CST), so it cannot drift again. Prose pointers re-anchored: tests/mock/replay_fixture.lua :124 -> :135, tools/batch_test/behavioral/roam_conversion.py :854 -> :872 (that one was already stale before this round). GH #84-era labels (:392/:506/:796/:860/:286) left alone on purpose -- they are stable row labels, not current line numbers, and every assertion resting on them matches source TEXT.",
     "handoff": "director: test_set.md 23:3xZ admission proposal (zero AWS increment, ride along). batch desk: queue.json strategy-10. replay desk: three pre-registered positive readings + three reverse guards, see iterations/reports/strategy/20260823T233555Z.md section 6.3.",
     "report": "iterations/reports/strategy/20260823T233555Z.md"
+  },
+  "focus_level_claims_sweep_20260824T00": {
+    "ref": "iterations/reports/hero/20260824T000000Z.md; tests/test_focus_level_claims.lua; GH #134",
+    "ruling": "PROSE CORRECTED + PINNED. No behaviour change, no new gated id, stable version undrifted (comments only in bots/).",
+    "what_was_wrong": "GH #134's off-by-one (a build row's index is not the hero level: X.GetSkillList spends levels 10/15/20 on TALENTS) had been corrected one sighting at a time. A sweep of every level claim in the focus five plus their tests found FIVE survivors: hero_axe.lua 'Battle Hunger is maxed by level 10' (rank 4 lands at 11); hero_skeleton_king.lua x4 -- default row leaves Wraithfire Blast at one point 'until level 12' (13), Bone Guard ladder '(1/9/10/12 vs 1/3/5/7)' (kill row is 1/9/11/13), '2nd stun at level 5 instead of 12' (13), 'maxing Mortal Strike at 8 instead of 10' (11), and the wkqaim pre-flight's 'rank 1 from hero level 2 to 11' (to 12). Plus tests/test_lion_t10_payoff.lua's honest bound, which said 'Mana Drain at rank 4 by hero level 10' while its own section 3 said rank 3 -- a file contradicting itself.",
+    "mechanism": "One source for every number: each claim carries a needle TEMPLATE with the level left as %d, filled in from tests/skill_level_map.rank_ladder (which drives the shipped J.Skill.GetSkillList) and then required to be present in the file verbatim, exactly once. Hand-edit the prose and it stops matching; change a build row and it stops matching until the write-up that prices that row is re-read. Same shape as tests/test_gate_claim_consistency.lua.",
+    "driven_ladders": {
+      "axe tAllAbilityBuildList#1": "Call(1) 3/13/14/16, Battle Hunger(2) 1/8/9/11, Counter Helix(3) 2/4/5/7, ult(6) 6/12/17",
+      "lion#1": "Spike(1) 1/3/7/8, Hex(2) 4/13/14/16, Mana Drain(3) 2/5/9/11, ult(6) 6/12/17",
+      "skeleton_king tAllAbilityBuildList#1": "Blast(1) 2/13/14/16, Bone Guard(2) 1/3/5/7, Mortal Strike(3) 4/8/9/11, ult(6) 6/12/17",
+      "skeleton_king tKillBuildList#1 (gated wkbuild)": "Blast(1) 2/5/14/16, Bone Guard(2) 1/9/11/13, Mortal Strike(3) 3/4/7/8, ult(6) 6/12/17",
+      "zuus#1 (pos_2)": "Arc(1) 1/3/5/7, Bolt(2) 4/8/9/11, Jump(3) 2/13/14/16, ult(6) 6/12/17",
+      "zuus#2 (pos_4/5)": "Arc(1) 2/8/9/11, Bolt(2) 1/3/5/7, Jump(3) 4/13/14/16, ult(6) 6/12/17",
+      "crystal_maiden#1": "Nova(1) 1/8/9/11, Frostbite(2) 2/4/5/7, Aura(3) 3/13/14/16, ult(6) 6/12/17"
+    },
+    "verdicts_unaffected": "All four talent verdicts these claims sit under are unchanged: the Axe t10 talent pays +8% per ACTIVE Battle Hunger and does not scale with its rank; the Lion t10 correction cuts in our favour (the abandoned side buys 25->35, not its top-rank 30->40); the Zeus and Lion t15 rows were already written on driven levels. The WK wkbuild rationale keeps its direction -- the kill row still buys the 2nd stun eight levels earlier than the default.",
+    "limits": [
+      "Level half only. The slot -> ability NAME step is asserted only where the hero file binds abilityQ/W/E/R = sAbilityList[n] (axe/lion/zuus). hero_skeleton_king.lua binds every ability by hardcoded name, so WK's claims are pinned as claims about BUILD-ROW INDICES -- which is how that file words them.",
+      "The WK slot->name step is deliberately NOT reconstructed from the fixture corpus: dump order is not slot order (GH #151 / the standing LIMIT in tools/agent/gen_ability_meta.py).",
+      "Nothing here measures play. Every number is arithmetic on the shipped build rows."
+    ],
+    "verification": "luacheck 0 warnings; new file 17 cases; 16/16 mutations caught, 2 no-op controls escaped as expected."
   }
 }

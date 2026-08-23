@@ -78,7 +78,7 @@ local tAllAbilityBuildList = {
 
 -- [GH #17] Kill-participation laning build (gated). WK is a focus hero but bottom
 -- of the pool on kills (0.6/game): the default build above leaves Wraithfire Blast
--- (index 1, the only lockdown) at a SINGLE point until level 12, so WK has no
+-- (index 1, the only lockdown) at a SINGLE point until level 13, so WK has no
 -- reliable stun through the entire laning + early-gank window. This build instead
 -- takes the 2nd stun point at level 5 (much longer lockdown when kills actually
 -- happen) and still maxes Mortal Strike (index 3) by level 8 for farm/fight damage.
@@ -90,7 +90,8 @@ local tAllAbilityBuildList = {
 -- sustain".  That was wrong on the facts: index 2 is Bone Guard, an active
 -- skeleton release, and the lifesteal is innate and free.  So what this build
 -- actually trades away is Bone Guard uptime, not sustain -- both build rows spend
--- 4 points there, this one just spends them later (1/9/10/12 vs 1/3/5/7).
+-- 4 points there, this one just spends them later (1/9/11/13 vs 1/3/5/7, HERO
+-- LEVELS and not row indices: levels 10 and 15 go on talents, GH #134).
 --
 -- CONDITION (c), RE-ARGUED 2026-08-22 on that corrected basis (GH #17 / #104).
 -- A Bone Guard point buys two things: max_skeleton_charges 2/4/6/8 and skeleton
@@ -114,8 +115,10 @@ local tAllAbilityBuildList = {
 -- hero the batch reads at 15 last hits and 0.6 kills a game.  This row leaves him
 -- at cap 2 for the whole laning phase, which is a bank he can actually reach, and
 -- spends the freed points on the only lockdown he has -- 2nd Wraithfire Blast
--- point at level 5 instead of 12 (stun 1.0 -> 1.2s, cooldown 14 -> 12s) -- and on
--- maxing Mortal Strike at 8 instead of 10.
+-- point at level 5 instead of 13 (stun 1.0 -> 1.2s, cooldown 14 -> 12s) -- and on
+-- maxing Mortal Strike at 8 instead of 11.  (Every level in this paragraph is a
+-- HERO level read out of J.Skill.GetSkillList, not a build-row index; the two
+-- differ from level 10 on, GH #134.  tests/test_focus_level_claims.lua pins them.)
 --
 -- Two bounds this argument does NOT clear, recorded so nobody quotes it as more:
 --   * it fixes the SIGN, not the size.  How large a bank WK actually holds between
@@ -612,7 +615,9 @@ function X.ConsiderQ()
 	--
 	--   SUPPLY.  This is the last of TEN firing points in this function bidding
 	--   for one 14-second ability.  tAllAbilityBuildList leaves Wraithfire Blast
-	--   at rank 1 -- 14s cd -- from hero level 2 to 11, which is where GH #84's
+	--   at rank 1 -- 14s cd -- from hero level 2 to 12 (the 2nd point lands at 13,
+	--   corrected 2026-08-24 per GH #134; the old note said "to 11" by counting
+	--   row indices as levels), which is where GH #84's
 	--   turbo level census actually lives (0 of 210 hero-slots reached 20;
 	--   high-water 19).  Measured
 	--   over the fixture library: every frame carrying a living WK with two or more

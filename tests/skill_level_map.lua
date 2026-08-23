@@ -37,16 +37,20 @@ end
 
 --- The hero file's own ability build row, as a list of sAbilityList indices.
 --- `nWhich` selects among multiple rows (heroes with per-role builds); default 1.
-function M.build_row(sSrc, nWhich)
-    local body = sSrc:match('local tAllAbilityBuildList = {(.-)\n}')
-    assert(body, 'source has no tAllAbilityBuildList literal')
+--- `sTable` selects which build-row literal to read; default tAllAbilityBuildList.
+--- (hero_skeleton_king.lua keeps its gated 'wkbuild' row in tKillBuildList, and
+--- the prose that prices that row makes level claims too -- GH #134.)
+function M.build_row(sSrc, nWhich, sTable)
+    sTable = sTable or 'tAllAbilityBuildList'
+    local body = sSrc:match('local ' .. sTable .. ' = {(.-)\n}')
+    assert(body, 'source has no ' .. sTable .. ' literal')
     local rows = {}
     for sRow in body:gmatch('{(.-)}') do
         local row = {}
         for n in sRow:gmatch('%d+') do row[#row + 1] = tonumber(n) end
         if #row > 0 then rows[#rows + 1] = row end
     end
-    assert(#rows > 0, 'tAllAbilityBuildList has no rows')
+    assert(#rows > 0, sTable .. ' has no rows')
     return rows[nWhich or 1], rows
 end
 
@@ -79,7 +83,7 @@ end
 --- ran before it in the same process (the 2026-08-23 ordering-bug lesson -- a test
 --- that depends on another file's leftover globals only passes when the suite is
 --- run in one process).
-function M.ranks_at(sHero, tRow, tTalentRows, nLevel)
+local function drive(sHero, tRow, tTalentRows)
     local api = require('mock.bot_api')
     api.reset_modules()
     api.install({ bot = api.MakeHero(sHero) })
@@ -98,6 +102,11 @@ function M.ranks_at(sHero, tRow, tTalentRows, nLevel)
             .. '); slot identity is what this reader is built on')
         slot_of[sName] = i
     end
+    return sSkillList, slot_of
+end
+
+function M.ranks_at(sHero, tRow, tTalentRows, nLevel)
+    local sSkillList, slot_of = drive(sHero, tRow, tTalentRows)
 
     local tRanks, nSpent = {}, 0
     for i = 1, nLevel do
@@ -108,6 +117,26 @@ function M.ranks_at(sHero, tRow, tTalentRows, nLevel)
         end
     end
     return tRanks, sSkillList, nSpent
+end
+
+--- The hero level at which each sAbilityList slot reaches each rank, as
+--- tLadder[nSlot][nRank] = nLevel, read off the same driven list as ranks_at.
+--- This is the reader for prose of the form "X is maxed by level N": counting
+--- build-row entries answers a DIFFERENT question (the row's Nth entry), and the
+--- two differ by one per talent already taken (GH #134).
+function M.rank_ladder(sHero, tRow, tTalentRows)
+    local sSkillList, slot_of = drive(sHero, tRow, tTalentRows)
+
+    local tLadder, tSeen = {}, {}
+    for nLevel = 1, #sSkillList do
+        local nSlot = slot_of[sSkillList[nLevel]]
+        if nSlot ~= nil then
+            tSeen[nSlot] = (tSeen[nSlot] or 0) + 1
+            tLadder[nSlot] = tLadder[nSlot] or {}
+            tLadder[nSlot][tSeen[nSlot]] = nLevel
+        end
+    end
+    return tLadder
 end
 
 return M
