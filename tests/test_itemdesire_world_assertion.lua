@@ -90,6 +90,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local tests = {}
 
@@ -226,11 +227,15 @@ end
 
 tests['[world] not one item on one frame is castable'] = function()
     local c = pass(false)
-    assert(c.fixtures == 101, 'corpus size moved: ' .. c.fixtures .. ' fixtures')
-    assert(c.subjects == 1010, 'subject count moved: ' .. c.subjects)
-    assert(c.alive == 940, 'alive hero frames moved: ' .. c.alive)
-    assert(c.slot_occupied == 5957,
-        'occupied item slots moved: ' .. c.slot_occupied)
+    -- GH #127: four per-fixture sums, so they ratchet. `slot_castable == 0`
+    -- below stays an equality -- it IS the sixteenth world assertion, and one
+    -- castable slot has to turn it red.
+    cs.corpus(c.fixtures, 'itemdesire corpus')
+    assert(c.subjects == 10 * c.fixtures,
+        'expected ten subjects per fixture, got ' .. c.subjects
+        .. ' over ' .. c.fixtures .. ' fixtures')
+    cs.ratchet(c.alive, 940, 'alive hero frames')
+    cs.ratchet(c.slot_occupied, 5957, 'occupied item slots')
     assert(c.slot_castable == 0,
         'SOMETHING IS NOW CASTABLE (' .. c.slot_castable .. ') -- the sixteenth '
         .. 'world assertion has been repaired or eroded; re-read this whole file')
@@ -601,7 +606,7 @@ tests['[world] ShouldTpToFarm is TRUE on every frame, and that is structural'] =
             n = n + 1
         end
     end
-    assert(n == 101, 'checked every fixture; got ' .. n)
+    cs.corpus(n, 'fixtures the ShouldTpToFarm shutter was checked on')
 end
 
 -- ---------------------------------------------------------------------------

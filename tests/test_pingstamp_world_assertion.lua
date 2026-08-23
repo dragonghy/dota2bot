@@ -117,6 +117,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local tests = {}
 
@@ -332,13 +333,14 @@ local function corpus()
     return s
 end
 
-tests['[WORLD ASSERTION] the stamp is unset, and the guard fires, on 100/100 fixtures'] = function()
+tests['[WORLD ASSERTION] the stamp is unset, and the guard fires, on every fixture'] = function()
     local s = corpus()
-    assert(s.fixtures == 100, 'expected 100 fixtures; got ' .. s.fixtures)
-    assert(s.unset == 100,
-        'every fixture VM starts with the stamp unset; got ' .. s.unset)
-    assert(s.guard_fires == 100,
-        'and the guard fires on every one of them; got ' .. s.guard_fires)
+    -- Stated over the LIVE corpus (GH #127 / tests/corpus_scale.lua), not over a
+    -- remembered hundred: the claim is universality, and `== s.fixtures` keeps
+    -- making it about the fixtures nobody has written yet.
+    cs.corpus(s.fixtures, 'pingstamp corpus')
+    cs.universal(s.unset, s.fixtures, 'every fixture VM starts with the stamp unset')
+    cs.universal(s.guard_fires, s.fixtures, 'and the guard fires on every one of them')
     -- The guard reads VM-global state and a global clock -- nothing about the
     -- subject hero enters it. So "94/94 fixtures" is "940/940 hero frames"
     -- by construction, and that is an argument, not a sample.
@@ -346,9 +348,8 @@ end
 
 tests['[WORLD ASSERTION] mode_farm_generic bids the floor on every fixture as loaded'] = function()
     local s = corpus()
-    assert(s.farm_floor_plain == 100,
-        'farm bids DESIRE_NONE on every fixture as loaded; got '
-        .. s.farm_floor_plain .. '/100')
+    cs.universal(s.farm_floor_plain, s.fixtures,
+        'farm bids DESIRE_NONE on every fixture as loaded', cs.FLOOR)
 end
 
 tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixtures'] = function()
@@ -357,18 +358,27 @@ tests['[MEASURED] declaring "no recent defend ping" moves the farm bid on 6 fixt
     -- as a measurement of the frame -- and the shape of it is not what it looks
     -- like from the count alone. Of the 6, exactly ONE is a bid; the other five
     -- are the mode file CRASHING (next test).
-    assert(#s.farm_moved == 6,
-        'expected 6 of 96 declared subjects to move off the floor; got '
-        .. #s.farm_moved)
+    cs.ratchet(#s.farm_moved, 6, 'declared subjects that move off the farm floor')
     local bids, crashes = 0, 0
     for _, m in ipairs(s.farm_moved) do
         assert(m.plain == 0, 'every move starts at the floor: ' .. m.path)
         if m.stale == nil then crashes = crashes + 1 else bids = bids + 1 end
     end
-    assert(bids == 1 and crashes == 5,
-        'one real bid, five crashes; got ' .. bids .. ' and ' .. crashes)
-    assert(s.farm_floor_stale == 94, 'and 94 stay at the floor for other reasons; got '
-        .. s.farm_floor_stale)
+    -- The shape, not the scale: five of the six were the mode file CRASHING and
+    -- only one was a bid, and that ratio is the finding. Both halves ratchet
+    -- (a new fixture joins one or the other, never leaves), and the inequality
+    -- is what would have to break for "the guard hides a crash" to stop being
+    -- the right reading.
+    cs.ratchet(bids, 1, 'real bids among the moves')
+    cs.ratchet(crashes, 5, 'crashes among the moves')
+    assert(crashes > bids,
+        'most moves are still crashes rather than bids; got ' .. crashes .. ' vs ' .. bids)
+    -- An identity, kept as the arithmetic tie between the two counters: farm is
+    -- at the floor as loaded on every fixture, so "stays at the floor once the
+    -- ping is declared stale" is exactly "did not move".
+    assert(s.farm_floor_stale + #s.farm_moved == s.fixtures,
+        'floor-when-stale and moved no longer partition the corpus: '
+        .. s.farm_floor_stale .. ' + ' .. #s.farm_moved .. ' ~= ' .. s.fixtures)
 end
 
 tests['[WORLD ASSERTION] the guard is also HIDING a crash: farm is a third undrivable mode'] = function()
@@ -416,8 +426,17 @@ tests['[WORLD ASSERTION] the stamp pins all three push bids on 35 of 98 fixtures
             floor_stale = floor_stale + 1
         end
     end
-    assert(floor_plain == 74, 'as loaded, 74 of 100 push bids are the floor; got ' .. floor_plain)
-    assert(floor_stale == 38, 'with the ping declared stale, 38; got ' .. floor_stale)
+    -- 2026-08-23 (GH #127): the four hand re-baselines logged below are exactly
+    -- the cost this file was charging every fixture author, so the three figures
+    -- became ratchets. Both counts are per-fixture sums, so append can raise
+    -- them and cannot lower them; a FALL means a frame that used to bid the
+    -- floor stopped doing so, which is the behaviour change these were written
+    -- to catch. The share band keeps the "most push bids are pinned as loaded"
+    -- reading from drifting away while every individual count still ratchets.
+    cs.ratchet(floor_plain, 74, 'push bids at the floor as loaded')
+    cs.ratchet(floor_stale, 38, 'push bids at the floor with the ping declared stale')
+    cs.share(floor_plain, #fixture_files(), 0.60, 0.85,
+        'share of push bids pinned to the floor as loaded', cs.FLOOR)
     -- 68/36 -> 70/36 on 2026-08-21T16:xxZ: the hero stream added the two GH #86
     -- Lion frames and BOTH of them bid the floor as loaded and something real
     -- with the ping declared stale, so the stamp's own share went 32 -> 34.
@@ -434,8 +453,11 @@ tests['[WORLD ASSERTION] the stamp pins all three push bids on 35 of 98 fixtures
     -- something real once the ping is declared stale
     -- (f_260822_063559_slardar_tp_forward, 0 -> 0.1; the lina frame stays at 0
     -- both ways). So the stamp's own share goes 35 -> 36.
-    assert(floor_plain - floor_stale == 36,
-        'the stamp alone accounts for 36 zeroed push bids')
+    -- The one quantity here that append could in principle LOWER (a fixture that
+    -- bids the floor only once the ping is declared stale would do it). That is
+    -- why it stays a ratchet rather than an identity: if the stamp's own share
+    -- ever shrinks, that is a finding about the guard, not corpus growth.
+    cs.ratchet(floor_plain - floor_stale, 36, 'zeroed push bids the stamp alone accounts for')
     local push = read_file('bots/FunLib/aba_push.lua')
     local n = 0
     for _ in push:gmatch('defendPings') do n = n + 1 end
@@ -452,8 +474,10 @@ tests['[negative control] side_shop is pinned by the guard AND by something else
         if bid(path, nil, SHOP) == 0 then floor_plain = floor_plain + 1 end
         if bid(path, nil, SHOP, { stale = true }) == 0 then floor_stale = floor_stale + 1 end
     end
-    assert(floor_plain == 100 and floor_stale == 100,
-        'side_shop bids the floor either way; got ' .. floor_plain .. '/' .. floor_stale)
+    local n = #fixture_files()
+    cs.universal(floor_plain, n, 'side_shop bids the floor as loaded', cs.FLOOR)
+    cs.universal(floor_stale, n,
+        'side_shop bids the floor with the ping declared stale', cs.FLOOR)
 end
 
 tests['[MEASURED] and on one frame it decides the auction: defend 0.10 -> push 0.92'] = function()
@@ -597,16 +621,18 @@ tests['[#84 §5] the 535 block has teeth: 4 alive frames where only the level ga
     -- hero-frames between them -- crystal_maiden is dead on the lina one).
     -- The DENOMINATOR moved and the finding did not: still exactly 4 satisfied
     -- frames, the same four.
-    assert(s.hero_frames == 930,
-        'expected the 930 alive hero frames the corpus carries; got ' .. s.hero_frames)
+    -- The denominator ratchets (GH #127); the finding below is the numerator.
+    cs.ratchet(s.hero_frames, 930, 'alive hero frames the corpus carries')
     -- 3 -> 4 on 2026-08-21T16:xxZ: the hero stream's f_260820_182906_lion_drain_
     -- survived (GH #86's "must not release" frame) is a FOURTH instance of this
     -- situational domain -- a level 8 Lion with luna 177u away and two allies
     -- inside 900. It arrived as a side effect of pinning a Mana Drain decision,
     -- which is worth noting for GH #84 section 5: the shape is not as rare as
     -- three-in-872 suggested, it is just never looked for.
-    assert(#s.satisfied == 4,
-        'four alive frames satisfy every clause but the level gate; got ' .. #s.satisfied)
+    -- Ratchet, not equality (GH #127): the finding is "the block HAS teeth", so a
+    -- fifth instance strengthens it. Losing one of the four named below is what
+    -- would refute it, and the by-name assertions after this are what catch that.
+    cs.ratchet(#s.satisfied, 4, 'alive frames satisfying every clause but the level gate')
     local by = {}
     for _, f in ipairs(s.satisfied) do by[f.name:gsub('npc_dota_hero_', '')] = f end
     assert(by.chaos_knight and by.chaos_knight.level == 4,

@@ -87,6 +87,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local tests = {}
 
@@ -138,8 +139,12 @@ end
 -- ------------------------------------------- 1. CENSUS on real frames only --
 
 tests['census: the corpus is what the counts are measured over'] = function()
-    assert(C('fixtures') == 100, 'fixture count moved: ' .. C('fixtures'))
-    assert(C('frames') == 930, 'alive hero frames moved: ' .. C('frames'))
+    -- GH #127: the corpus and the frame count are per-fixture sums, so they
+    -- ratchet. The STOPPER counts below stay equalities on purpose -- each is a
+    -- zero that a SILENT verdict is argued from, and one counter-example is the
+    -- news, not noise.
+    cs.corpus(C('fixtures'), 'pullcamp corpus')
+    cs.ratchet(C('frames'), 930, 'alive hero frames')
 end
 
 tests['census: STOPPER 1 -- camp occupancy is false on every single frame'] = function()
@@ -172,7 +177,7 @@ tests['census: IsLanePullSafe is NOT a dead condition (334/911)'] = function()
     -- The owner's standing suspicion, tested and rejected. A third of a
     -- combat-sampled corpus passes hp>=50% + untouched 2s + nobody inside
     -- 1800; on peacetime laning frames it can only be commoner.
-    assert(C('pullsafe') == 339, 'IsLanePullSafe pass count moved: ' .. C('pullsafe'))
+    cs.ratchet(C('pullsafe'), 339, 'IsLanePullSafe pass count')
     assert(C('pullsafe') > C('frames') * 0.3,
         'IsLanePullSafe now passes on less than 30% of frames -- if it has '
         .. 'become rare, the SILENT verdict needs a second look')
@@ -182,10 +187,9 @@ tests['census: the scenario frequency the DoD asked for (36 / 10 / 15)'] = funct
     -- The peacetime lane-support state a pull starts from, and what each
     -- window admits out of it. This is the "scenario scarcity" half of the
     -- answer: a timing filter costs what a timing filter costs.
-    assert(C('peacetime_lane_support') == 36,
-        'peacetime lane-support frames moved: ' .. C('peacetime_lane_support'))
-    assert(C('chain_old') == 10, 'old-window chain frames moved: ' .. C('chain_old'))
-    assert(C('chain_new') == 15, 'new-window chain frames moved: ' .. C('chain_new'))
+    cs.ratchet(C('peacetime_lane_support'), 36, 'peacetime lane-support frames')
+    cs.ratchet(C('chain_old'), 10, 'old-window chain frames')
+    cs.ratchet(C('chain_new'), 15, 'new-window chain frames')
     assert(C('chain_new') > C('chain_old'),
         'the travel lead admits no frame the aggro-mark window rejected -- '
         .. 'the second half of the repair would be untestable on this corpus')
@@ -193,7 +197,7 @@ end
 
 tests['census: the travel lead is what admits the witness frame'] = function()
     local m = manifest()
-    assert(#m.NEWONLY == 5, '#NEWONLY moved: ' .. #m.NEWONLY)
+    cs.ratchet(#m.NEWONLY, 5, '#NEWONLY')
     local seen = {}
     for _, r in ipairs(m.NEWONLY) do
         seen[r.hero] = r
@@ -210,7 +214,7 @@ tests['census: the old window`s 10 frames are none of them a lane'] = function()
     -- frames -- which is why section 2 has to declare its lane geometry rather
     -- than read it.
     local m = manifest()
-    assert(#m.CHAIN == 10, '#CHAIN moved: ' .. #m.CHAIN)
+    cs.ratchet(#m.CHAIN, 10, '#CHAIN')
     local by_kind = { ss_chase = 0, lina_tp_home = 0 }
     for _, r in ipairs(m.CHAIN) do
         local kind = r.fixture:find('ss_chase', 1, true) and 'ss_chase'

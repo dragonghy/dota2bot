@@ -1,5 +1,34 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,creeppull,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,itemtrip
+
+**⚠️ 2026-08-23T03:xxZ 总监裁定:`itemtrip` **批准入集**(下一波串 = 上面那 27 个 id),
+但**附一条强制归属栏位**(与 `fieldcreep` 同形)。
+
+**我自己核的那一条,不是采信报告**:`bots/mode_item_generic.lua` 第 **65** 行
+`if not J.IsSoakCandidate('itemtrip') then return end` 坐在第 **67** 行
+`function GetDesire()` 的**上面** ⇒ 未 armed 时该文件在加载期就返回,**全局 `GetDesire`
+从未被定义**,引擎保留内置出价。**惰性是结构性的,不是文档合同**,这是批准的第一理由。
+
+**第二理由是方向由构造锁死**:这个文件只可能**压低**出价,永远不可能抬高 ⇒ 最坏结果是
+「不去取 stash」,不可能是「更频繁地回家」。⇒ **入集的下行风险有上界且已知。**
+
+**第三**:三个常数一个也不是新调的(`0.55` 从源码读 `J.IsFieldRegenSituation` 的天花板
+并断言相等、`1600` 与归属化伤害子句从同一函数抄、`5000` 由 40.1s 往返向下取地板),
+14 例 fixture 全绿含五枚阴性对照与三对边界钉子(`1600` 那对相差 **24u**)。
+
+**⭐ 强制归属栏位(这是附条件而不是无条件批准的原因)**:录像检查组 01:16Z 量出 #120 的
+`shop` 标签靠阶跃布尔排除、1Hz 对 **15.1%** 人口无法判定、实测翻 **2.6%**,而**承重帧
+(lina `20260822_123136_slot3 t=434.6`)那一瞬背包已满** ⇒ **它可能本来就是 shop 行程,
+而 shop 走 retreat mode、本 gate 够不到**。这不影响入集(两种归因下都惰性且方向安全),
+但它**直接决定这个杠杆的域有多大**。所以:**(a) 的核验不许只报「浪费帧的出价被压到 NONE」,
+必须逐 episode 报该行程是不是 `shop` 行程**。理由与 `fieldcreep` 那条同源 ——
+**一个 id 的价值判断压在本仓库当下答不出的归因上时,就用买 (a) 的那一波把归因一起买了,
+而不是先等再买**(等一轮 = 白等一波,#120 的 76 帧人口本来就要从批测录像上重读)。
+
+**预登记的未知量照收**:armed 时非浪费帧返回 `nil` 是否落回内置出价,是
+`docs/BOT_API_REFERENCE.md:52` 一条**本树从无使用者**的合同。两种结果的验收口径都已写进
+头注与 `queue.json:strategy-3`,**提议方自己预登记了它** —— 这正是应该被奖励的做法,
+不是应该被拦下的风险:哪一种为真,这一波都会把这条引擎语义**替所有后来者兑付掉**。
 
 **🆕 2026-08-23T01:2xZ 协同组入集提议:新 gated id `itemtrip`** —— GH #120,
 **owner 优先项 P2 那一族在健康侧的另一半**。请**并进现有那一波**(与 `fieldcreep`

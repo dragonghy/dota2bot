@@ -71,6 +71,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 -- ---------------------------------------------------------------------------
 -- The pinned census.  `op`/`n` are what the source literally says; `eff` is the
@@ -413,20 +414,27 @@ tests['[corpus] 100 fixtures / 73 games / 1000 hero-slots: level >= 20 is 0'] = 
     local c = scan_corpus()
     local games = 0
     for _ in pairs(c.games) do games = games + 1 end
-    assert(c.fixtures == 100, 'fixture count moved to ' .. c.fixtures
-        .. ' -- re-run tools/agent/fixture_level_census.py and re-read GH #84 §1')
-    assert(games == 73, 'distinct games moved to ' .. games)
-    assert(c.slots == 1000, 'hero-slots moved to ' .. c.slots)
+    -- GH #127, and the change the comment above has been asking for since GH
+    -- #106 §4: the three scale numbers ratchet instead of being re-baselined by
+    -- hand every time a fixture lands. `ge20 == 0` is deliberately NOT softened
+    -- -- it is the assertion the four INERT verdicts rest on, and a single
+    -- counter-example has to turn it red. `max_level`, `ge18` and `ge15` are a
+    -- maximum and two upward-closed counts, so append can only raise them.
+    cs.corpus(c.fixtures, 'level-gate corpus')
+    cs.ratchet(games, 73, 'distinct games')
+    cs.ratchet(c.slots, 1000, 'hero-slots')
     assert(c.ge20 == 0, c.ge20 .. ' hero-slot(s) now reach level 20 -- the four INERT '
         .. 'verdicts above were argued from "that hero does not exist"; re-read them')
-    assert(c.max_level == 19, 'archive high-water level moved to ' .. c.max_level)
-    assert(c.ge18 == 1, 'slots at level >= 18 moved to ' .. c.ge18)
-    assert(c.ge15 == 8, 'slots at level >= 15 moved to ' .. c.ge15)
+    cs.ratchet(c.max_level, 19, 'archive high-water level')
+    assert(c.max_level < 20, 'the high-water level reached 20; see ge20 above')
+    cs.ratchet(c.ge18, 1, 'slots at level >= 18')
+    cs.ratchet(c.ge15, 8, 'slots at level >= 15')
 end
 
 tests['[corpus] the archive never reaches turbo late game (the 392/506 fallback)'] = function()
     local c = scan_corpus()
-    assert(c.max_t == 690.5, 'latest frame moved to t = ' .. c.max_t)
+    -- A maximum over the corpus: append can only push it later.
+    cs.ratchet(c.max_t, 690.5, 'latest frame in the archive (t)')
     assert(c.frames_past_18min == 0, c.frames_past_18min .. ' frame(s) are now past '
         .. '18:00 -- J.IsLateGame() is no longer vacuous, so the TEETH verdicts on '
         .. 'mode_farm_generic:393 and :507 must be re-read')

@@ -65,6 +65,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 -- ---------------------------------------------------------------------------
 -- Corpus sweep, computed once.
@@ -232,9 +233,15 @@ local tests = {}
 
 tests['[world] every hero on every fixture frame answers GetActiveMode() = 0'] = function()
     local s = sweep()
-    assert(s.fixtures == 100, 'expected 100 fixtures, got ' .. s.fixtures)
-    assert(s.team_frames == 200, 'expected 200 team-frames, got ' .. s.team_frames)
-    assert(s.hero_frames == 930, 'expected 930 hero-frames, got ' .. s.hero_frames)
+    -- GH #127: the corpus ratchets, the team-frame count is an IDENTITY (two
+    -- teams per fixture) rather than a remembered number, and the hero-frame
+    -- count is a per-fixture sum so it can only grow. The zero below stays an
+    -- equality -- it is the assertion, and one counter-example is the news.
+    cs.corpus(s.fixtures, 'activemode corpus')
+    assert(s.team_frames == 2 * s.fixtures,
+        'expected two team-frames per fixture, got ' .. s.team_frames
+        .. ' over ' .. s.fixtures .. ' fixtures')
+    cs.ratchet(s.hero_frames, 930, 'hero-frames')
     assert(s.mode_nonzero == 0,
         s.mode_nonzero .. ' hero-frames answered a non-zero active mode. If the loader '
         .. 'learned to carry modes this is GOOD NEWS -- but every conclusion pinned '
@@ -291,7 +298,12 @@ end
 
 tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = function()
     local s = sweep()
-    assert(s.mode_filter_ignored == 930 and s.mode_filter_honoured == 0, string.format(
+    -- Stated over the live hero-frames rather than a remembered 930 (GH #127):
+    -- the claim is that the loader drops the mode argument on EVERY frame, and
+    -- `== s.hero_frames` keeps saying that as the corpus grows.
+    cs.universal(s.mode_filter_ignored, s.hero_frames,
+        'the mode argument is dropped on every hero-frame')
+    assert(s.mode_filter_honoured == 0, string.format(
         'GetNearbyHeroes(1500,false,BOT_MODE_ATTACK) differed from the unfiltered call on '
         .. '%d hero-frames -- the filter is being honoured now', s.mode_filter_honoured))
     -- ... and that is why the one predicate on the engine-filtered path fires

@@ -47,6 +47,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 -- Frame A: inside the laning phase, below fieldregen's HP ceiling -- so the
 -- ONLY shipped clause standing between this bot and a salve is the laning one.
@@ -371,12 +372,17 @@ tests['[recorded] corpus: the situation partitions into 22 wet and 28 dry frames
     assert(tonumber(sit) == tonumber(wet) + tonumber(dry),
         'the two halves no longer partition the situation: '
         .. sit .. ' ~= ' .. wet .. ' + ' .. dry)
-    assert(tonumber(live) == 930, 'live hero frames: ' .. live)
-    assert(tonumber(band) == 150, 'frames inside the HP band: ' .. band)
-    assert(tonumber(band_dry) == 82, 'of those, dry: ' .. band_dry)
-    assert(tonumber(sit) == 50, 'situation frames: ' .. sit)
-    assert(tonumber(wet) == 22, 'wet (the decision side s domain): ' .. wet)
-    assert(tonumber(dry) == 28, 'dry (this id s domain): ' .. dry)
+    -- GH #127: every one of these is a per-fixture sum, so they ratchet rather
+    -- than being re-baselined by hand each time a fixture lands. The comment
+    -- above already called them "corpus-scale ratchets"; this is that, spelled
+    -- as code. The partition asserted above is the invariant that carries the
+    -- finding, and it holds at any corpus size.
+    cs.ratchet(tonumber(live), 930, 'live hero frames')
+    cs.ratchet(tonumber(band), 150, 'frames inside the HP band')
+    cs.ratchet(tonumber(band_dry), 82, 'of those, dry')
+    cs.ratchet(tonumber(sit), 50, 'situation frames')
+    cs.ratchet(tonumber(wet), 22, 'wet (the decision side s domain)')
+    cs.ratchet(tonumber(dry), 28, 'dry (this id s domain)')
 end
 
 tests['[recorded] corpus: GH #123 would silence 13 of the 28, and rescue reaches 13'] = function()

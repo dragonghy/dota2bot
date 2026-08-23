@@ -100,6 +100,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local tests = {}
 
@@ -370,19 +371,22 @@ local function corpus()
     return s
 end
 
-tests['[WORLD ASSERTION] 100/100 Turbo by name, 0/100 Turbo by number'] = function()
+tests['[WORLD ASSERTION] Turbo by name on every fixture, Turbo by number on none'] = function()
     local s = corpus()
-    assert(s.fixtures == 100, 'expected 100 fixtures; got ' .. s.fixtures)
-    assert(s.by_name == 100,
-        'every fixture is Turbo when the constant is spelled by name; got ' .. s.by_name)
+    -- Over the LIVE corpus (GH #127): the split is total, so `== s.fixtures` is
+    -- the claim and `== 100` was only ever a restatement of the corpus size.
+    -- The zero side stays an equality on purpose -- a single counter-example is
+    -- the news, and it must go red the moment one arrives.
+    cs.corpus(s.fixtures, 'gamemode corpus')
+    cs.universal(s.by_name, s.fixtures,
+        'every fixture is Turbo when the constant is spelled by name')
     assert(s.by_number == 0,
         'and none of them is Turbo when it is spelled 23; got ' .. s.by_number)
     -- Not "most" and not "usually": the split is total, and it is total
     -- because it has nothing to do with the frame -- it is a property of the
     -- mock's constant table, which is the same in every VM.
-    assert(s.helper == 100,
-        'J.IsModeTurbo() -- the named helper, 94 call sites -- reads TRUE on all of them; got '
-        .. s.helper)
+    cs.universal(s.helper, s.fixtures,
+        'J.IsModeTurbo() -- the named helper, 94 call sites -- reads TRUE on all of them')
 end
 
 tests['[premise] the probe does not follow this file into the next one'] = function()
@@ -405,12 +409,11 @@ end
 
 tests['[premise] the honest probe repairs the split rather than swapping sides'] = function()
     local s = corpus()
-    assert(s.probe_both == 100,
-        'under the probe both spellings agree on all 100 fixtures; got ' .. s.probe_both)
-    assert(s.probe_helper == 100,
+    cs.universal(s.probe_both, s.fixtures,
+        'under the probe both spellings agree on every fixture', cs.FLOOR)
+    cs.universal(s.probe_helper, s.fixtures,
         'and J.IsModeTurbo() still reads TRUE -- a probe that only moved GetGameMode() '
-        .. 'would turn the named helper OFF and measure a different mistake; got '
-        .. s.probe_helper)
+        .. 'would turn the named helper OFF and measure a different mistake', cs.FLOOR)
 end
 
 tests['[premise] the declared ping-stamp assumption is inert for the laning bid'] = function()
@@ -658,7 +661,27 @@ tests['[recorded] the corpus-wide auction figures, and how they were taken'] = f
     -- Pinned so the claim cannot drift away from the corpus it describes:
     local n = 0
     for _, _ in ipairs(fixture_files()) do n = n + 1 end
-    assert(n == 100, 'the figures above are for a 100-fixture corpus; got ' .. n)
+    -- GH #127: the figures above are an OUT-OF-BAND measurement, so what has to
+    -- be pinned is the corpus they were taken over -- not the corpus the suite
+    -- happens to have today. Recording the denominator as its own constant says
+    -- that honestly and stops every later fixture from reding a figure it did
+    -- not change. The live corpus only has to ratchet past it.
+    -- The figures above, as data rather than as prose, so the coherence checks
+    -- below have something to fail on: edit one of the numbers in the comment
+    -- without editing its twin here and the two records disagree in the diff.
+    local REC = { taken_over = 100, cells = 23, cell_denom = 2100,
+                  winners = 19, mode_changed = 11, value_only = 8, modes = 21 }
+    cs.ratchet(n, REC.taken_over, 'corpus since the auction figures were taken')
+    -- What can still be checked on every run is that the record is internally
+    -- coherent: the moved winners are exactly the mode changes plus the
+    -- value-only moves, the cell denominator is frames x mode files, and every
+    -- numerator fits inside the corpus it was taken over.
+    assert(REC.mode_changed + REC.value_only == REC.winners,
+        'the recorded winner split no longer sums to the recorded winners')
+    assert(REC.taken_over * REC.modes == REC.cell_denom,
+        'the recorded cell denominator is no longer frames x mode files')
+    assert(REC.winners <= REC.taken_over and REC.cells <= REC.cell_denom,
+        'the recorded numerators do not fit the corpus they were taken over')
     -- 21 -> 22 on 2026-08-23: bots/mode_item_generic.lua landed (itemtrip, GH
     -- #120). The figures recorded above were taken with 21 and STILL STAND,
     -- which is a claim about that file rather than an assumption: unarmed it
@@ -724,10 +747,26 @@ tests['[recorded] the split changes WHICH MODE most often wins on this corpus'] 
     -- Pinned to the corpus it describes, so it cannot drift silently:
     local n = 0
     for _, _ in ipairs(fixture_files()) do n = n + 1 end
-    assert(n == 100, 'these distributions are for a 100-fixture corpus; got ' .. n)
-    -- Both readings must still account for every frame, whatever the split.
-    assert(37 + 30 + 17 + 9 + 6 + 1 == n, 'the as-loaded distribution sums to the corpus')
-    assert(33 + 26 + 25 + 9 + 6 + 1 == n, 'and so does the honest one')
+    -- GH #127: pinned to the corpus THE DISTRIBUTIONS WERE TAKEN OVER, which is
+    -- a fixed historical fact, rather than to the corpus the suite has today,
+    -- which is not. The live corpus only has to ratchet past it.
+    local TAKEN_OVER = 100
+    cs.ratchet(n, TAKEN_OVER, 'corpus since these distributions were taken')
+    -- Both readings must still account for every frame of the corpus they were
+    -- read off -- the check that catches a mistyped cell, which is what this
+    -- assertion was always really doing.
+    local AS_LOADED = { 37, 30, 17, 9, 6, 1 }
+    local HONEST    = { 33, 26, 25, 9, 6, 1 }
+    local function total(t)
+        local sum = 0
+        for _, v in ipairs(t) do sum = sum + v end
+        return sum
+    end
+    assert(total(AS_LOADED) == TAKEN_OVER,
+        'the as-loaded distribution sums to ' .. total(AS_LOADED)
+        .. ', not the ' .. TAKEN_OVER .. '-fixture corpus it was taken over')
+    assert(total(HONEST) == TAKEN_OVER,
+        'and the honest one sums to ' .. total(HONEST) .. ' rather than ' .. TAKEN_OVER)
     -- And the transitions the distributions are made of are the ones the three
     -- [AUCTION] tests above drive: laning loses 11, defend gains 8, retreat
     -- gains 3, and nothing else moves.

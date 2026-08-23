@@ -40,6 +40,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local JMZ = 'bots/FunLib/jmz_func.lua'
 local GATE = 'fieldcreep'
@@ -283,28 +284,37 @@ end
 local SWEEP_C, SWEEP_ROWS, SWEEP_BAND = sweep()
 
 tests['census: the corpus the numbers are quoted from'] = function()
-    assert(SWEEP_C.fixtures == 100, 'corpus size moved: ' .. tostring(SWEEP_C.fixtures))
-    assert(SWEEP_C.live == 930, 'live hero frames moved: ' .. tostring(SWEEP_C.live))
+    -- GH #127: both are per-fixture sums, so they ratchet. The lookback below
+    -- is read out of the shipped source and stays an equality -- it is a fact
+    -- about bots/, not about how many fixtures we happen to own.
+    cs.corpus(SWEEP_C.fixtures, 'fieldcreep corpus')
+    cs.ratchet(SWEEP_C.live, 930, 'live hero frames')
     assert(SWEEP_C.lookback_x10 == 30,
         'the sweep read a lookback other than 3.0 out of the source')
 end
 
 tests['census: the domain, split by what the corpus can and cannot answer'] = function()
-    assert(SWEEP_C.situation == 50, 'situation frames: ' .. tostring(SWEEP_C.situation))
-    -- The bound that matters: two thirds of the domain cannot be asked.
-    assert(SWEEP_C.sit_v1 == 34, 'v1 (unaskable) frames: ' .. tostring(SWEEP_C.sit_v1))
-    assert(SWEEP_C.sit_v2 == 16, 'v2 (askable) frames: ' .. tostring(SWEEP_C.sit_v2))
+    -- GH #127: the four counts ratchet; the two partition identities and the
+    -- share below are what actually carry the finding, and they hold at any
+    -- corpus size.
+    cs.ratchet(SWEEP_C.situation, 50, 'situation frames')
+    -- The bound that matters: two thirds of the domain cannot be asked. Stated
+    -- as a share so corpus growth cannot quietly retire it.
+    cs.ratchet(SWEEP_C.sit_v1, 34, 'v1 (unaskable) frames')
+    cs.ratchet(SWEEP_C.sit_v2, 16, 'v2 (askable) frames')
+    cs.share(SWEEP_C.sit_v1, SWEEP_C.situation, 0.50, 0.85,
+        'unaskable share of the situation domain')
     assert(SWEEP_C.sit_v1 + SWEEP_C.sit_v2 == SWEEP_C.situation, 'the split must partition')
     -- Of the askable ones, 7 carry a history and 9 are genuinely quiet.
-    assert(SWEEP_C.sit_askable == 7, 'frames with a history: ' .. tostring(SWEEP_C.sit_askable))
-    assert(SWEEP_C.sit_v2_silent == 9, 'quiet frames: ' .. tostring(SWEEP_C.sit_v2_silent))
+    cs.ratchet(SWEEP_C.sit_askable, 7, 'frames with a history')
+    cs.ratchet(SWEEP_C.sit_v2_silent, 9, 'quiet frames')
     assert(SWEEP_C.sit_askable + SWEEP_C.sit_v2_silent == SWEEP_C.sit_v2,
         'and those two must exhaust the askable half')
 end
 
 tests['census: 5 of the 50 are vetoed, and the veto never widens'] = function()
-    assert(SWEEP_C.vetoed == 5, 'vetoed frames: ' .. tostring(SWEEP_C.vetoed))
-    assert(SWEEP_C.situation_armed == 45, 'armed domain: ' .. tostring(SWEEP_C.situation_armed))
+    cs.ratchet(SWEEP_C.vetoed, 5, 'vetoed frames')
+    cs.ratchet(SWEEP_C.situation_armed, 45, 'armed domain')
     assert(SWEEP_C.situation - SWEEP_C.vetoed == SWEEP_C.situation_armed,
         'the armed domain must be the unarmed one minus exactly the vetoes')
     assert(SWEEP_C.IMPOSSIBLE_widened == nil,
@@ -336,8 +346,11 @@ tests['census: the seven askable rows, and the two that must NOT be vetoed'] = f
     for _, r in ipairs(spared) do
         assert(r.dmg == 0, r.hero .. ' spared while carrying creep damage in the window')
     end
-    assert(lo == 14 and hi == 132,
-        'the quoted 14..132 range moved: ' .. lo .. '..' .. hi)
+    -- A minimum can only fall and a maximum can only rise as rows are added, so
+    -- the quoted range ratchets OUTWARD (GH #127). What it may not do is
+    -- collapse inward, which would mean a row we already had stopped counting.
+    assert(lo <= 14, 'the smallest vetoed creep hit rose above the quoted 14: ' .. lo)
+    assert(hi >= 132, 'the largest vetoed creep hit fell below the quoted 132: ' .. hi)
     -- The two spared rows are the two negative controls above, by name.
     local names = {}
     for _, r in ipairs(spared) do names[r.hero] = r.fix end
@@ -351,9 +364,13 @@ tests['census: per-hit creep damage is a heavy tail, not two clean modes'] = fun
     -- bimodal -- the mode is 10-14 and the middle band is populated.
     local mass, tail, max = SWEEP_BAND['mass-le24'], SWEEP_BAND['tail-ge25'],
         SWEEP_BAND['max-hit']
-    assert(mass == 256, 'mass rows: ' .. tostring(mass))
-    assert(tail == 26, 'tail rows: ' .. tostring(tail))
-    assert(max == 45, 'largest single creep hit: ' .. tostring(max))
+    -- GH #127: row counts are per-fixture sums (ratchet) and the largest single
+    -- hit is a maximum over them, so it can only rise. The shape claim -- the
+    -- tail is under a tenth of the rows -- is the finding and is asserted on the
+    -- live numbers below, where it keeps its teeth as the corpus grows.
+    cs.ratchet(mass, 256, 'mass rows (per-hit damage <= 24)')
+    cs.ratchet(tail, 26, 'tail rows (per-hit damage >= 25)')
+    cs.ratchet(max, 45, 'largest single creep hit')
     -- "Thin" is worth a number: under a tenth of all rows (26 of 282 = 9.2%).
     assert(tail * 10 < mass + tail,
         'the tail is no longer under a tenth of the rows: ' .. tail .. '/' .. (mass + tail))
