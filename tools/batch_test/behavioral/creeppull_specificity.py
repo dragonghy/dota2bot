@@ -58,7 +58,40 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from creeppull_domain import (  # noqa: E402
-    DRAG_S, R_CREEP, Game, dist, episodes, load_sweep, scan_game)
+    DRAG_S, R_CREEP, RADIANT, Game, dist, episodes, load_sweep, scan_game)
+
+# The 18:53Z round's registered SPECIFIC acceptance quantity (GH #143 fix 2 /
+# GH #149's differential wave).  Every displacement-shaped read-out that round
+# produced was carried by a confound -- `follow` by episode DURATION (the wave
+# marches ~30 s on its own), `net` by "lost the trade and ran" being the same
+# reading as "dragged the wave" -- and every pooled armed/baseline count was
+# carried by the PHYSICAL side (#148).  An event count in a fixed window after
+# a fixed anchor has neither problem: it does not grow with episode length, and
+# it is reported per armed-side stratum below.
+#
+# 2.5 s is the anchor-to-deadline budget, not a guess about creep aggro decay:
+# it is two dumper samples at the 1.0 s default plus slack, so a wave that is
+# genuinely chasing has to show up in a sampled combat-log row, while a wave
+# that was merely standing next to us when we hit the hero does not get 6 s of
+# lane marching to blunder into us.
+AGGRO_W = 2.5
+
+# ...and the clause the registered spelling is MISSING.  A window after an
+# anchor reads "was the wave hitting us", which is not the same claim as "our
+# attack flipped the wave onto us": a bot standing inside the enemy wave while
+# it is already chewing on him satisfies the first for free.  Frame evidence
+# (2026-08-23T20Z, `20260823_182327_slot6` tidehunter, BASELINE leg): enemy
+# lane creeps hit him at 118.1 and 119.5, he right-clicks sven at 128.1/129.5,
+# creeps hit him again at 130.2 -- scored "chased" by the registered metric
+# while the frames show a 2v1 he is losing (hp 0.879 -> 0.502 under cask +
+# storm bolt + maledict), retreating 714 u.  Nothing was pulled.
+#
+# LOOKBACK_S is the "the wave was NOT already on us" guard.  10 s, not 3:
+# 3 s is the aggro-decay timescale, so a 3 s lookback would have called that
+# same tidehunter frame a flip (his lookback happens to be clean).  10 s is
+# long enough that the pre-existing aggro of a hero standing in the wave is
+# visible, and still short enough to sit inside a single lane engagement.
+LOOKBACK_S = 10.0
 
 # Creeps that count as "the wave we were dragging" at the end of the episode:
 # any enemy lane creep still within this radius of where the wave was when the
@@ -146,6 +179,40 @@ def creep_hits_on(g, hero):
     return out
 
 
+def aggro_flip(hits, rc_first, t_end, w=AGGRO_W, back=LOOKBACK_S):
+    """Did our FIRST right-click of the episode flip a wave that was NOT on us?
+
+    True  = clean lookback AND a creep row inside the window (a flip).
+    False = a creep row inside the window but the wave was already on us
+            (`aggro_within` says "chased", this says "not a flip"), or no
+            creep row at all.
+    None  = same right-censoring as `aggro_within`.
+
+    The anchor is the FIRST right-click, not the last: the flip is caused by
+    the attack that starts the exchange, and anchoring on the last one lets
+    every re-attack inside a genuine sustained pull invalidate its own
+    lookback.
+    """
+    if rc_first is None or rc_first + w > t_end:
+        return None
+    if any(rc_first - back <= t <= rc_first for t in hits):
+        return False
+    return any(rc_first < t <= rc_first + w for t in hits)
+
+
+def aggro_within(hits, rc_last, t_end, w=AGGRO_W):
+    """Did the wave hit us inside the fixed window after the last right-click?
+
+    None when the window is not fully covered by the replay's combat log
+    (`t_end` is the last event, charter #130's frozen tail sits after it).
+    The window is OPEN at the anchor: a creep row stamped at exactly the
+    right-click instant is aggro this attack cannot have caused yet.
+    """
+    if rc_last is None or rc_last + w > t_end:
+        return None
+    return any(rc_last < t <= rc_last + w for t in hits)
+
+
 def is_rightclick(atk, hero, r):
     """Did this hero right-click the aggro target in `poke`'s own window?"""
     return any(r['t'] - 1.0 <= t <= r['t'] + 2.0
@@ -193,9 +260,19 @@ def episode_metrics(g, ep, atk):
            if r0['t'] - 1.0 <= t <= t1]
     n_rc = len(rcs)
     aggro_tail = None
+    # aggro25: the specific quantity. None = NOT MEASURABLE, and the two
+    # reasons are different: no right-click at all (no anchor), or the 2.5 s
+    # window runs past the last combat-log row in the replay. The second is
+    # right-censoring, not a zero -- charter #130's frozen tail (~25 s of
+    # duplicated frames with ZERO combat rows at the end of every game) would
+    # otherwise manufacture "the wave stopped chasing" for free on whichever
+    # leg happens to own the late episodes.
+    aggro25 = flip = None
     if rcs:
         hits = [t for t in creep_hits_on(g, hero) if rcs[-1] <= t <= t1 + 6.0]
         aggro_tail = round(hits[-1] - rcs[-1], 1) if hits else 0.0
+        aggro25 = aggro_within(creep_hits_on(g, hero), rcs[-1], g.t_end)
+        flip = aggro_flip(creep_hits_on(g, hero), rcs[0], g.t_end)
 
     follow = None
     w0 = wave_centroid(g, team, r0['t'], s0['x'], s0['y'], R_CREEP)
@@ -225,7 +302,8 @@ def episode_metrics(g, ep, atk):
                 # site's only means of holding it is to re-attack every 1.2 s,
                 # which requires walking back into range -- the exact thing the
                 # drag is supposed to be doing the opposite of).
-                n_rc=n_rc, aggro_tail=aggro_tail,
+                n_rc=n_rc, aggro_tail=aggro_tail, aggro25=aggro25, flip=flip,
+                arm_side='radiant' if g.armed_team == RADIANT else 'dire',
                 n_pull=n_pull, run=best, clean=clean,
                 net=None if net is None else round(net),
                 follow=None if follow is None else round(follow),
@@ -304,6 +382,46 @@ def selfcheck():
     w1 = wave_centroid(g2, 2, 10.0, w0[0], w0[1], WAVE_R)
     chk('follow: away -> < 0',
         ((w1[0] - w0[0]) * ux + (w1[1] - w0[1]) * ux) < -1000)
+    # aggro25 -- the specific quantity's window semantics.
+    chk('aggro25: hit inside window -> True',
+        aggro_within([12.0], 10.0, 1000.0) is True)
+    chk('aggro25: no hit -> False',
+        aggro_within([20.0], 10.0, 1000.0) is False)
+    chk('aggro25: hit AT the anchor is not it',
+        aggro_within([10.0], 10.0, 1000.0) is False,
+        'aggro already present cannot be caused by this right-click')
+    chk('aggro25: right edge inclusive',
+        aggro_within([12.5], 10.0, 1000.0) is True)
+    chk('aggro25: just past the edge -> False',
+        aggro_within([12.6], 10.0, 1000.0) is False)
+    chk('aggro25: window past last event -> None',
+        aggro_within([12.0], 10.0, 12.4) is None,
+        'right-censored, must NOT be scored as "wave stopped chasing"')
+    chk('aggro25: window exactly covered -> not None',
+        aggro_within([], 10.0, 12.5) is False)
+    chk('aggro25: no anchor -> None', aggro_within([12.0], None, 1000.0) is None)
+
+    # flip -- the clause the registered spelling is missing.
+    chk('flip: clean lookback + hit -> True',
+        aggro_flip([12.0], 10.0, 1000.0) is True)
+    chk('flip: wave already on us -> False',
+        aggro_flip([1.0, 12.0], 10.0, 1000.0) is False,
+        'a creep row inside the lookback means nothing was flipped')
+    chk('flip: lookback edge is inclusive',
+        aggro_flip([0.0, 12.0], 10.0, 1000.0) is False)
+    chk('flip: older than the lookback does not count',
+        aggro_flip([-0.1, 12.0], 10.0, 1000.0) is True)
+    chk('flip: clean lookback, no hit -> False',
+        aggro_flip([20.0], 10.0, 1000.0) is False)
+    chk('flip: tidehunter case (this round) reads False',
+        aggro_flip([118.1, 119.5, 130.2], 128.1, 700.0) is False,
+        '20260823_182327_slot6 -- CHASED but not a flip')
+    chk('flip: zuus case (this round) reads True',
+        aggro_flip([210.4, 210.8, 211.4], 208.5, 750.0) is True,
+        '20260823_181204_slot11 -- flip, wave followed 2.0k u')
+    chk('flip: censored window -> None',
+        aggro_flip([12.0], 10.0, 12.4) is None)
+
     g3 = FakeG((0.0, 0.0), (9000.0, 9000.0))
     w0 = wave_centroid(g3, 2, 0.0, 0.0, 0.0, R_CREEP)
     chk('follow: next wave not swapped in',
@@ -425,6 +543,95 @@ def main():
               % (leg, len(xs), med([r['n_rc'] for r in xs]),
                  100.0 * one / max(len(xs), 1), med(tails),
                  100.0 * zero / max(len(tails), 1)))
+
+    # --- axis 4: THE specific acceptance quantity (see AGGRO_W). Reported the
+    # way #148 says every armed/baseline comparison has to be: both physical
+    # strata separately (two strata that disagree in SIGN = noise, not effect),
+    # plus the supply (episodes per game) that the rate is conditioned on --
+    # #86's lesson is that a rate can move purely because the two legs enter
+    # the domain at different speeds.
+    print('\n[axis 4] SPECIFIC: enemy lane-creep damage row on the bot within '
+          '%.1f s AFTER its last right-click on the aggro target' % AGGRO_W)
+    strata = [('radiant-armed', 'radiant'), ('dire-armed', 'dire'),
+              ('POOLED (#148)', None)]
+    for key, title in (('aggro25', 'CHASED  (registered spelling: any creep '
+                                   'row in the window)'),
+                       ('flip', 'FLIP    (+ the wave was NOT already on us '
+                                'in the %.0f s before)' % LOOKBACK_S)):
+        print('\n  %s' % title)
+        print('  %-16s %-9s %6s %6s %8s %8s %10s'
+              % ('stratum', 'leg', 'games', 'n', 'yes', 'rate', 'eps/game'))
+        rates = {}
+        for lbl, side in strata:
+            ng = len([1 for g, _, _ in games
+                      if side is None
+                      or ('radiant' if g.armed_team == RADIANT else 'dire') == side])
+            for leg in ('armed', 'baseline'):
+                xs = [r for r in core
+                      if r['leg'] == leg and r['n_atk_pull'] >= 1
+                      and r[key] is not None
+                      and (side is None or r['arm_side'] == side)]
+                hit = sum(1 for r in xs if r[key])
+                rate = 100.0 * hit / max(len(xs), 1)
+                rates[(lbl, leg)] = (len(xs), hit, rate)
+                print('  %-16s %-9s %6d %6d %8d %7.1f%% %10.2f'
+                      % (lbl, leg, ng, len(xs), hit, rate,
+                         len(xs) / float(max(ng, 1))))
+        for lbl, _ in strata:
+            a_n, _, a_r = rates[(lbl, 'armed')]
+            b_n, _, b_r = rates[(lbl, 'baseline')]
+            print('    %-16s delta = %+.1f pp (armed n=%d, baseline n=%d)'
+                  % (lbl, a_r - b_r, a_n, b_n))
+    # --- axis 4b: the side-BALANCED estimator. Within one stratum the paired
+    # (armed - baseline) difference still carries the whole physical-side term,
+    # because the armed leg IS one physical side there; averaging the two
+    # strata's paired differences cancels that term exactly (it enters with
+    # opposite sign in ab and ba). This round's corpus is the worked example:
+    # per-game domain supply reads +1.40 in dire-armed and -0.17 in
+    # radiant-armed -- neither is the effect, their mean is.
+    print('\n[axis 4b] per-game counts, paired within game, then averaged over '
+          'the two armed-side strata (#148)')
+    print('%-14s %10s %10s %10s %8s'
+          % ('quantity', 'ab (rad)', 'ba (dire)', 'balanced', '|t|'))
+    per = defaultdict(lambda: defaultdict(int))
+    gside = {}
+    for r in core:
+        if r['n_atk_pull'] < 1:
+            continue
+        per[r['game']][r['leg'] + '_n'] += 1
+        gside[r['game']] = r['arm_side']
+        for k in ('flip', 'aggro25'):
+            if r[k]:
+                per[r['game']][r['leg'] + '_' + k] += 1
+    for key, lbl in (('n', 'episodes'), ('aggro25', 'chased'), ('flip', 'FLIP')):
+        cell = {}
+        for s in ('radiant', 'dire'):
+            d = [per[g]['armed_' + key] - per[g]['baseline_' + key]
+                 for g in per if gside[g] == s]
+            m = sum(d) / float(len(d))
+            var = sum((x - m) ** 2 for x in d) / max(len(d) - 1, 1)
+            cell[s] = (m, var / len(d))
+        bal = 0.5 * (cell['radiant'][0] + cell['dire'][0])
+        se = 0.5 * math.sqrt(cell['radiant'][1] + cell['dire'][1])
+        print('%-14s %+10.3f %+10.3f %+10.3f %8.2f'
+              % (lbl + '/game', cell['radiant'][0], cell['dire'][0], bal,
+                 abs(bal / se) if se else float('inf')))
+    print('  (|t| is a noise ruler, not a gate -- the promote bar is the '
+          "owner's three conditions, not a p-value.)")
+
+    cens = [r for r in core if r['n_atk_pull'] >= 1 and r['n_rc']
+            and r['aggro25'] is None]
+    print('  right-censored by the replay tail (excluded, charter #130): %d'
+          % len(cens))
+    # How much of "chased" is pre-existing aggro rather than a flip: the size
+    # of the false-positive channel, per leg.
+    for leg in ('armed', 'baseline'):
+        ch = [r for r in core if r['leg'] == leg and r['n_atk_pull'] >= 1
+              and r['aggro25']]
+        fl = sum(1 for r in ch if r['flip'])
+        print('  %-9s of %d CHASED episodes, %d are flips = %.1f%% '
+              '(the rest: the wave was already on us)'
+              % (leg, len(ch), fl, 100.0 * fl / max(len(ch), 1)))
 
     print('\n%-26s %10s %10s' % ('hero net drag (u)', 'armed', 'baseline'))
     for label, sel in (('all core episodes', lambda r: True),

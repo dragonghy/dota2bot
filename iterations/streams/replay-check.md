@@ -3494,3 +3494,52 @@
     (5) `hero-1` 的 153 局 WK 语料(棒子挂 **15 轮**);(6) `l5combo` 的 (a)(**连续第三十一轮**);
     (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第十八轮顺延**);(8) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260823T185313Z.md`
+- **2026-08-23T21:00Z(第五十八次触发)**:执行上轮亲自登记的「下一轮优先 (1)(2)」= W3 补扫
+  + 用 18:53Z 交出的**特异事件计数量**重做 `creeppull` 的 (a) + 把 #148 分层纪律回灌本组工具。
+  **宽扫 212/212 非暖场局**(W3 四 run 全量重下重扫,串行、按 run 分目录,dumper 默认 1.0s)
+  **+ 深查 6 局逐帧**(跨 2 run、4 英雄、两个物理层、两条腿)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐ **上轮登记的「欠账」是空的**:W3 的 `.dem` 与 `analysis.json` **在 18:40Z 就已全部到位**
+    (四 run 末对象 18:39:19 / 18:39:55 / 18:40:08 / 18:40:14Z),非暖场局逐 run 53/54/54/51 = **212**,
+    与上轮所扫**逐局相同**。⇒ 本轮不是扫增量,是**在完整语料上重做结论**。
+    顺带一个**交批测台核对的问题**(不新开 issue,已在 #149 追评):波次 18:09:34Z 发出、18:40Z 停止产出,
+    而上轮记「~20:10Z 才自毁」——若属实则四台 on-demand 有 ~1.5h 只计费不产出。
+    **我无法自证终止时刻**(实例已过 `describe-instances` 可见期)。EC2 泄漏已核:running/pending **0**。
+  - ⭐ **`creeppull` 的 (a) = WORKING(弱,但两个拼法 × 两个物理层四个 delta 全部同号为正)。**
+    CHASED(登记拼法):radiant-armed **+2.0pp**、dire-armed **+8.4pp**;
+    FLIP(加回看守卫):**+2.4pp / +5.2pp**(armed 26.9% vs baseline 23.3%)。
+    **帧证据**:`181204_slot11` zuus 208.5 右键 lina → 210.4 起 dire 小兵转火 → 后撤,
+    **兵线质心跟走 ~2.0k u**(离泉 9155→7201),代价血 1.000→0.605;
+    `182841_slot3` necrolyte 89.2 右键 lina → 90.7 转火 → 兵线跟 ~830u,血 0.736→0.465。
+    **出厂代码也拉线**(`181214_slot12` lina baseline 腿 FLIP=True、follow 814)——armed 只是频率高约四分之一。
+  - ⚠️ **登记的验收量(#149 §4)有一条假阳性通道:「被小兵打」≠「把小兵勾过来」。**
+    承重帧 `182327_slot6` tidehunter(**baseline 腿**):小兵 **118.1/119.5 就已在打他**,
+    他 128.1/129.5 才右键 sven,130.2 小兵继续打 ⇒ 登记拼法判 CHASED;
+    而帧里是**他正在输的 2v1**(storm bolt+cask+maledict,血 0.879→0.502,往家挪 714u),什么都没拉动。
+    **规模:armed 509 次 CHASED 只有 187 次(36.7%)是真 flip,baseline 138/396(34.8%)**
+    —— 约 63% 的阳性是「兵线本来就在打我」(两腿污染比例相同 ⇒ 稀释效应,不翻号)。
+    修法已实现:`aggro_flip`,锚点取 **episode 的第一次右键**(用最后一次会让真拉线自己污染自己的回看窗),
+    回看 **10s** 不是 3s(**3s 回看恰好放过上面那个 tidehunter** —— 他的小兵伤害在 9 秒前)。
+  - ⭐ **对 #148 的修正/加强:两层不同号 ≠ 噪声,两层配对差的平均才是估计量。**
+    每局配对差:`episodes/game` ab **−0.173** vs ba **+1.404**,按 #148 原话该判噪声丢掉;
+    **但它是物理侧项没消掉** —— dire 队天然多进域(dire 队 armed 4.61/不 armed 4.10;
+    radiant 队 3.92/3.20,侧别项 ≈ +0.9),该项在两层符号相反,**算术平均把它精确消掉**:
+    balanced `episodes/game` **+0.616**(|t| 3.17)、`chased/game` **+0.632**(3.81)、
+    **`FLIP/game` +0.308(|t| 3.40)**;按物理队重算交叉验证(dire +0.51 / radiant +0.72,均值 ≈0.6)一致。
+    ⇒ 建议纪律改三句:分两层报 / **结论取两层平均而非池化** / 反号先算平均再判,不要直接丢。
+  - **顺带:`follow` 排行榜前三名全是心跳光环伪影**,`n_rc=0`、一条指令都没下
+    (`183425_slot11` necrolyte follow=1406,窗口内全部伤害都是 `necrolyte_heartstopper_aura`)。
+    axis 4 的两个拼法对无锚点 episode 一律记 `None`,**结构上排除** —— 事件计数优于位移量的又一条独立理由。
+  - **交付**:`creeppull_specificity.py` 加 `AGGRO_W/LOOKBACK_S`、`aggro_within`/`aggro_flip`、
+    axis 4(分层+供给)与 axis 4b(平衡估计量);`--selfcheck` **24/24 PASS**
+    (新增 8 条里 **2 条是本轮真实帧**:tidehunter 判 False、zuus 判 True)。
+    跨组:**GH #143 / #148 / #149 三条追评**。**不新开 issue,不提波次请求,不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**);开工自检 trunk python **17 passed / 0 failed**,收尾复跑同样 17/0。
+    **AWS**:EC2 **$0**(只跑只读 `describe-instances`),S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ `pullbeat` 差分波(#149)落地后的 (a),验收量用本轮 `FLIP` 拼法;
+    (2) ⭐ 把平衡估计量回灌 `fieldbuy_silence.py`(上轮优先 (2),本轮只做了 `creeppull_specificity.py`);
+    (3) `stayfield`/`stayfield2`/`fieldcreep` 在 205 局语料上的 (a) 补课;
+    (4) 打野反证 fixture 钉 `002103_slot5 t=634.2 skeleton_king`(**已顺延八轮**);
+    (5) `hero-1` 的 153 局 WK 语料(棒子挂 **16 轮**);(6) `l5combo` 的 (a)(**连续第三十二轮**);
+    (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第十九轮顺延**);(8) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260823T210027Z.md`
