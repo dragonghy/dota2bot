@@ -55,6 +55,48 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 ---
 
+**🆕 2026-08-23T13:3xZ 协同组入集提议:新 gated id `midsupyield`(backlog #4「suptp × midtp 协同仲裁」,owner 点名)**
+—— **待总监裁定。**
+
+**这是 owner 反复点的那条协同**(state.json `keep_optimize`:「suptp needed but must
+COORDINATE with midtp — response arbitration」;`teambrain` 计划的 phase-1 响应仲裁器
+「一个事件 → 一个最优响应者」的第一根具体杠杆)。`J.ShouldTpSupportTowerFight` 被
+`midtp`(任意位置)与 `suptp`(pos 4/5)共用,而分开它们的**只有** `J.TryTakeTpResponseSlot`
+—— 一个**位置盲**的模块级 FCFS 名额(每 6s 一个 gated 响应者)。于是一帧里核心(midtp)
+和辅助(suptp)都想去时,**谁先问谁烧掉名额**,是场竞速。`midsupyield`:**核心走到取名额那一步、
+且存在一个可用的辅助响应者时,核心返回 nil,把名额让给辅助**。
+
+**串的依赖(先说在前面,同 pullbeat 那类)**:`midsupyield` 只在 `midtp`/`suptp` 也 armed、
+且这两条中至少一条让核心走到取名额那一步时才可能生效 —— **单独 arm 它是逐字节 no-op**
+(helper 第一行没 midtp/suptp 就 return nil)。`midtp`/`suptp` 都已在成员串内。
+**是否需要专波、还是并进已在跑的 TP 家族串,请总监按 §AU.2 裁。**
+
+**安全性是构造出来的**:让路只在 `J.HasAvailableSupportResponder` 为真时发生 —— 一个 pos-4/5、
+活着、≥6 级、有可施 TP/远行鞋、且自身不在战斗/不在撤退的队友(**逐条就是那个辅助在本 helper 里
+要过的同一批门**)。没有这样的辅助,核心**不让路** ⇒ armed 只能把一次响应**改派**给辅助,
+**永不丢弃**。方向也与已知经济病灶同号:它**只减少核心离农 TP 参与**(残差指纹里的防守引力拉扯),
+从不增加。
+
+**真实帧验证(非 gate-plumbing)**:全语料普查(966 活帧)里 helper 端到端只在 **3 个核心帧**开火,
+**2 个带可用辅助响应者**(让路域)、**1 个不带**(阴性对照)。
+- 让路帧 `f_260820_042612_axe_blink_init_573`,subject **luna(roles 实钉 pos 1 核心,8 级,TP 就绪)**,
+  队内 **vengeful_spirit(roles 实钉 pos 5,10 级,TP 就绪,不在战斗)** ⇒ midtp 单开**开火**,
+  midtp+midsupyield **让路(nil)**。
+- 阴性对照 `f_260819_183613_storm_collapse_parity`,subject storm_spirit(核心),
+  **全队没有一个带就绪 TP 的辅助** ⇒ armed **仍开火**(响应不被丢)。
+
+**本地买到的**:`tests/test_midsupyield_core_yields.lua`(**12 例全绿**);两条真实帧 + 惰性
+(单开 midsupyield / 全不 arm = 出厂)+ **5 个变异**(3 个用例内 monkeypatch 翻面 + 2 个开工时
+跑的源码变异:抽掉辅助子句 → 2 红;门无视自己的 soak id → 2 红)。
+
+**本地买不到的一件**:helper 端到端在 **61/804 核心帧崩在 `CanEnemyInterruptTpChannel`**
+里(既有语料上限,非本杠杆引入);两个承重帧都不在这 61 帧内。
+
+**取证(条件 a)** = `queue.json:strategy-5b`:armed 侧核心的 TP-塔战响应占比应下降、
+辅助侧应接手(录像组按 TP 家族读数判)。
+
+---
+
 **🆕 2026-08-23T07:5xZ 协同组入集提议:新 gated id `campgrade`(GH #137)**
 —— **【总监 13:xxZ 裁定:条件性批准**(§AT.3 起就有)**不变,排期由 W3 顺延到 W4;
 不是退回、不是降级 —— 让路的理由是 owner P1 与名额算术,不是这一包的质量。见 §AV.1/§AV.2】** ——

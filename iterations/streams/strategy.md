@@ -943,7 +943,18 @@
    全局"响应预算"缺失。用批测归档录像做行为差分,别再开专门批测。
 3. **TeamBrain phase 2:响应预算** — 全队对同一事件的响应人数/位移上限
    (与 −18 残差假说同源,可能一并解决)。
-4. **suptp × midtp 协同仲裁**(owner:suptp 需要和 midtp 协同)。
+4. ~~**suptp × midtp 协同仲裁**(owner:suptp 需要和 midtp 协同)。~~
+   **【2026-08-23T13:3xZ 落地首根杠杆:gated `midsupyield`】** 共用 helper
+   `J.ShouldTpSupportTowerFight` 被 midtp(任意位)与 suptp(pos4/5)分享,分开它们的
+   **只有位置盲的 FCFS 名额** `J.TryTakeTpResponseSlot`。`midsupyield`:核心走到取名额那步、
+   且存在可用辅助响应者(`J.HasAvailableSupportResponder`,逐条同辅助自身的门)时,
+   **核心返回 nil 让名额给辅助**。构造安全:无辅助不让路 ⇒ 只改派、不丢弃、不抬高核心 TP 参与。
+   真实帧验证(966 帧普查,helper 端到端只在 3 核心帧开火,2 带辅助):让路帧
+   `f_260820_042612_axe_blink_init_573`/luna(roles pos1)+ venge(roles pos5)、阴性对照
+   `f_260819_183613_storm_collapse_parity`/storm(无就绪 TP 辅助 ⇒ 仍开火)。
+   `tests/test_midsupyield_core_yields.lua` 12 例全绿、5 变异全抓。入集提议在 `test_set.md`
+   (13:3xZ 行,待总监),取证 `queue.json:strategy-5b`。**这是 TeamBrain phase-1 响应仲裁器
+   的第一根具体杠杆**(state.json teambrain 计划);后续(全局响应预算、跨事件仲裁)仍是 backlog #3。
 5. **`lf_rescue` 落点可达性(issue #37)—— 候选 3 已实现(gated `tpdead`),
    候选 1 与候选 2 **都已被真实帧证伪,不要再写****。见 2026-08-19T17:45Z 状态。
    **仍然待办的那一半**:`tpdead` 只回收已经浪费的 12s 承诺,**不阻止那次注定
@@ -1053,6 +1064,30 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T13:40Z:**`[strategy]` open issue 全部已交出下一棒 ⇒ 走 backlog,认领 #4
+  「suptp × midtp 协同仲裁」(owner 反复点名)。落地 gated `midsupyield`:核心让 TP-响应名额给辅助。**
+  开工自检 **worst exit 0**(UNLANDED 无 / cadence clean / trunk python **17 passed**);
+  `HEAD == origin/main == aae8edb`;容器无 `lua5.1`/`luacheck`,已装。
+  **缺陷**:`J.ShouldTpSupportTowerFight` 被 midtp(任意位)与 suptp(pos4/5)共用,分开它们的
+  **只有位置盲的 FCFS 名额** `J.TryTakeTpResponseSlot` ⇒ 核心和辅助都想去时**谁先问谁烧名额**,
+  是场竞速。标准 turbo 策略:辅助 TP 守边路(免费反杀),核心留图打钱。
+  **修法**:新纯谓词 `J.HasAvailableSupportResponder`(逐条同辅助自身在 helper 里的门)+ 调用点
+  一条 gated 子句(在取名额**之前**,靠 `and` 短路 ⇒ 让路永不消耗名额),turbo 继承 + `IsCore` 限定
+  ⇒ **辅助永不让路**。**构造安全**:无可用辅助不让路 ⇒ 只**改派**不**丢弃**、不抬高核心 TP 参与;
+  方向与残差防守引力病灶同号(只减核心离农 TP)。
+  **⭐ 真实帧(966 帧普查,helper 端到端只在 3 核心帧开火,2 带辅助)**:让路帧
+  `f_260820_042612_axe_blink_init_573`/luna(**roles 实钉 pos1**)+ venge(**roles 实钉 pos5**,TP 就绪)
+  ⇒ midtp 单开**开火**、+midsupyield **让路(nil)**;阴性对照 `..storm_collapse_parity`/storm
+  (**全队无就绪 TP 辅助**)⇒ armed **仍开火**(响应不丢)。辅助枚举双向可读(138 在 / 666 不在,
+  逐队友 TP 410/234);61/804 核心帧崩在 `CanEnemyInterruptTpChannel`(既有语料上限,两承重帧不在其中)。
+  **本地**:`tests/test_midsupyield_core_yields.lua` **12 例全绿,5 变异 5 抓**(3 用例内 monkeypatch
+  + 2 开工源码变异:删辅助子句→2 红 / 门无视 soak id→2 红,还原复绿)。**门**:luacheck **0 警告**。
+  **定位**:state.json `teambrain` 计划 phase-1 响应仲裁器(「一事件→一最优响应者」)的**第一根具体杠杆**;
+  全局响应预算/跨事件仲裁仍是 backlog #3。
+  **交棒**:总监(`test_set.md` 13:3xZ 提议;`midsupyield` 单 arm 是 no-op,串**必须带 midtp+suptp**,
+  专波与否按 §AU.2 裁)、批测台(`queue.json:strategy-5b`)、录像组(条件 a 用 TP 家族现有读数:
+  核心响应份额降 / 辅助份额升;**阴性判据不许省**:塔战响应总数不许塌向 0 = 丢弃响应)、
+  主会话(P1/P2 球权,连续多轮请核对)。报告 `iterations/reports/strategy/20260823T134006Z.md`。
 - 2026-08-23T11:33Z:**认领 GH #143(录像组 10:53Z,54/54 局宽扫 + 7 局逐帧,明写
   「建议的修法(协同组)」;同时是 owner P1 拉野链的下一根杠杆)。产出 gated `pullbeat`
   —— 但写的不是它建议的那条。** 开工自检 **worst exit 0**(UNLANDED 无 / cadence clean /

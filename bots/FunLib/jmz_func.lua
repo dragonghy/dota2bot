@@ -7393,6 +7393,46 @@ function J.IsLaneFrontTooDeepToHold( bot, vLoc )
 	return ( 1 + nAllies ) <= nEnemies
 end
 
+-- [midsupyield / backlog #4 "suptp x midtp 协同仲裁"] Is there a SUPPORT teammate
+-- who could take a tower-defense response TP in my place? Standard turbo strategy:
+-- supports rotate/TP to defend sibling lanes (a usually-free counter-kill --
+-- LANING_PLAYBOOK L5-TPDEF), cores stay on the map farming; a core that TP-defends
+-- pays the higher opportunity cost (this is the same off-farm defensive-gravity
+-- pull that the residual-fingerprint diagnosis costed at ~half the -25 gpm). So
+-- when a core reaches the shared response helper, it should yield the team's one
+-- TP-response slot (J.TryTakeTpResponseSlot) to a support that is ALSO a viable
+-- responder, rather than racing it first-come-first-served.
+--
+-- "Viable responder" mirrors, member by member, the exact gates the support would
+-- itself have to clear inside J.ShouldTpSupportTowerFight: alive, a valid hero,
+-- pos >= 4, level >= 6, a castable TP or Boots of Travel, and NOT already in its
+-- own team fight or retreating. If no such support exists the core does NOT yield
+-- (it is the only responder available), so this can only REALLOCATE a response to
+-- a support, never DROP one. Pure predicate -- the soak gate lives at the call
+-- site (mirrors the [tparrive] gate right below it).
+function J.HasAvailableSupportResponder( bot )
+	if bot == nil then return false end
+	local tPlayers = GetTeamPlayers( GetTeam() )
+	if tPlayers == nil then return false end
+	for i = 1, #tPlayers do
+		local hAlly = GetTeamMember( i )
+		if hAlly ~= nil and hAlly ~= bot
+		and J.IsValidHero( hAlly )
+		and hAlly:IsAlive()
+		and J.GetPosition( hAlly ) >= 4
+		and hAlly:GetLevel() >= 6
+		and not J.IsInTeamFight( hAlly, 1600 )
+		and not J.IsRetreating( hAlly )
+		then
+			local tp = J.GetItem2( hAlly, 'item_tpscroll' )
+			if tp ~= nil and tp:IsFullyCastable() then return true end
+			local boots = J.GetItem2( hAlly, 'item_travel_boots' )
+			if boots ~= nil and boots:IsFullyCastable() then return true end
+		end
+	end
+	return false
+end
+
 -- [GH #15] Mid 6-level TP support. Observed gap: when a fight breaks out at one
 -- of OUR towers (an ally being dived, a lane under pressure) the MID hero --
 -- which in turbo has a short TP cooldown and is usually level 6+ -- stands idle
@@ -7503,6 +7543,15 @@ function J.ShouldTpSupportTowerFight( bot )
 				and ( J.SafeToCommitFight( bot, tEnemies[1] )
 					or ( J.IsSoakCandidate( 'tparrive' )
 						and J.SafeToCommitFightOnArrival( bot, tEnemies[1] ) ) )
+				-- [midsupyield / backlog #4] A core yields the team's single
+				-- TP-response slot to a viable support (see the helper above).
+				-- Gated + turbo (inherited) + core-only: supports never yield,
+				-- and with no viable support this is a no-op, so armed can only
+				-- REALLOCATE a response, never drop one. Placed BEFORE the quota
+				-- take so a yield never consumes the slot (Lua and short-circuit).
+				and not ( J.IsSoakCandidate( 'midsupyield' )
+					and J.IsCore( bot )
+					and J.HasAvailableSupportResponder( bot ) )
 				-- Team quota: one gated TP responder per window (fix B).
 				and J.TryTakeTpResponseSlot() then
 					bot.lastFrontAnswerT = DotaTime()
