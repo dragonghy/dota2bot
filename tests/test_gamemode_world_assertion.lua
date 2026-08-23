@@ -659,7 +659,14 @@ tests['[recorded] the corpus-wide auction figures, and how they were taken'] = f
     local n = 0
     for _, _ in ipairs(fixture_files()) do n = n + 1 end
     assert(n == 100, 'the figures above are for a 100-fixture corpus; got ' .. n)
-    assert(#mode_files() == 21, 'and 21 mode files; got ' .. #mode_files())
+    -- 21 -> 22 on 2026-08-23: bots/mode_item_generic.lua landed (itemtrip, GH
+    -- #120). The figures recorded above were taken with 21 and STILL STAND,
+    -- which is a claim about that file rather than an assumption: unarmed it
+    -- defines no GetDesire at all, so it contributes no bid cell and cannot win
+    -- an auction. If it ever bids in an unarmed world, its own load-time gate
+    -- is broken and these figures need re-taking -- which is exactly what
+    -- tests/test_itemtrip_wasteful_trip.lua asserts on a real frame.
+    assert(#mode_files() == 22, 'and 22 mode files; got ' .. #mode_files())
     for _, f in ipairs({ 'tests/fixtures/f_260820_042612_axe_blink_init_573.lua',
                          'tests/fixtures/f_260820_043124_axe_blink_flee_555.lua',
                          'tests/fixtures/f_260820_162859_es_blink_flee_615.lua' }) do

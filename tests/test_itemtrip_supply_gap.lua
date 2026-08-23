@@ -177,7 +177,15 @@ local function census()
     for _, path in ipairs(mode_item_files()) do
         local lines = lines_of(path)
         for i, line in ipairs(lines) do
-            if line:find('BOT_MODE_ITEM', 1, true) then
+            -- Comment lines are skipped, added 2026-08-23 when this census
+            -- read its own successor's head comment as three new branch sites.
+            -- It is the SAME textual-detector failure this file's §5之二 fixed
+            -- in the defend-ping ratchet's favour, arriving from the other
+            -- direction: a census of BRANCHES must not count prose that names
+            -- the constant. Trailing comments are left alone -- a line with
+            -- code on it is a site regardless of what follows the `--`.
+            if line:find('BOT_MODE_ITEM', 1, true)
+                and not line:match('^%s*%-%-') then
                 local w = {}
                 for j = math.max(1, i - LOOKBACK), math.min(#lines, i + LOOKAHEAD) do
                     w[#w + 1] = lines[j]
@@ -227,6 +235,16 @@ tests['[census] all 8 BOT_MODE_ITEM branches, and 0 of them contest the trip'] =
         error('a branch now contests the item-mode trip itself: '
             .. table.concat(names, ', ') .. ' -- re-read this file\'s head comment')
     end
+    -- ...and the contest that DOES now exist is not in this census, which is a
+    -- statement about what the census measures rather than a loophole. It
+    -- counts sites that COMPARE against BOT_MODE_ITEM; the interceptor written
+    -- on 2026-08-23 is the item mode -- bots/mode_item_generic.lua, whose bid
+    -- the engine only asks for while it is already considering that mode -- so
+    -- it never needs to name the constant. Asserted here so "0 contest it"
+    -- cannot be read as "nothing contests the trip" after this round.
+    assert(exists('bots/mode_item_generic.lua'),
+        'the itemtrip interceptor is gone, and with it the only thing that '
+        .. 'contests this trip; 0 CONTESTS_TRIP now means what it said in #120')
 end
 
 tests['[census] the three general-hero branches are all post-arrival'] = function()
@@ -253,11 +271,37 @@ end
 -- B. What a future itemtrip may gate on -- and what it must not.
 -- ---------------------------------------------------------------------------
 
-tests['[reverse] the tree ships no loadable item-mode file'] = function()
-    assert(not exists('bots/mode_item_generic.lua'),
-        'bots/mode_item_generic.lua now exists -- BOT_MODE_ITEM is no longer '
-        .. 'Valve\'s built-in, so #120\'s premise and this file\'s verdict '
-        .. 'both need re-deriving before you trust either')
+tests['[reverse] the loadable item-mode file bids only when armed'] = function()
+    -- UPDATED 2026-08-23, by the round this file was written to gate: the
+    -- interceptor landed, so bots/mode_item_generic.lua now exists and the
+    -- original form of this assertion ("it must not exist") has been retired
+    -- deliberately rather than quietly. What it was protecting is NOT retired:
+    -- #120's premise is that BOT_MODE_ITEM is Valve's built-in bid, and that
+    -- premise still holds in every game where the soak id is not armed --
+    -- because the new file installs no GetDesire at all until then. So the
+    -- assertion moves from "the file is absent" to "the file cannot bid
+    -- unarmed", which is the property #120's premise actually rests on.
+    assert(exists('bots/mode_item_generic.lua'),
+        'bots/mode_item_generic.lua is gone -- the itemtrip interceptor was '
+        .. 'reverted; say so here rather than leaving this test asserting a '
+        .. 'file that no longer exists')
+    local live = read_file('bots/mode_item_generic.lua')
+    local gate_at = live:find("J.IsSoakCandidate( 'itemtrip' )", 1, true)
+    local bid_at = live:find('function GetDesire', 1, true)
+    assert(gate_at ~= nil, 'the itemtrip load-time gate is gone from the item-mode file')
+    assert(bid_at ~= nil, 'the item-mode file no longer defines GetDesire')
+    -- The ORDER is the gate. A GetDesire defined above the armed check is
+    -- defined in every game, armed or not, and that is a shipped behaviour
+    -- change wearing a gate's clothes -- the exact failure this file was
+    -- written to keep shut.
+    assert(gate_at < bid_at,
+        'GetDesire is defined BEFORE the armed check in bots/mode_item_generic.lua '
+        .. '-- unarmed games would then get a script bid instead of the engine\'s')
+    -- ...and the check has to actually stop the load, not merely be mentioned.
+    local head = live:sub(1, bid_at)
+    assert(head:find("if not J.IsSoakCandidate( 'itemtrip' ) then return end", 1, true),
+        'the armed check no longer returns out of the file scope, so the '
+        .. 'unarmed load does not stop before GetDesire is defined')
     assert(exists('bots/--mode_item_generic.lua'),
         'the disabled item-mode file is gone; #120\'s lead was built on it')
     local src = read_file('bots/--mode_item_generic.lua')
@@ -276,18 +320,28 @@ tests['[reverse] nil-fallthrough is documented and has zero users in bots/'] = f
     assert(doc:find('Returning nil from `GetDesire()`', 1, true),
         'the nil-fallthrough contract left BOT_API_REFERENCE; if it was deleted '
         .. 'because it is false, say so here')
-    -- Zero users. A contract nothing exercises is a claim, not a behaviour, and
-    -- a gate built on it fails OPEN (item mode suppressed everywhere) rather
-    -- than closed. Measured over every mode file's own GetDesire body.
-    local users = 0
+    -- UPDATED 2026-08-23: the count moved 0 -> 1, and the one user is the
+    -- itemtrip file this round landed. That is a change of KIND, so it is
+    -- named rather than re-baselined: the contract is still undischarged (no
+    -- shipped game exercises it, because the only user is behind a load-time
+    -- soak gate), but it is now REACHABLE -- an armed wave will discharge it
+    -- one way or the other, and the item-mode file's head comment registers
+    -- both outcomes in advance.
+    --
+    -- Why the contract may never be used as a GATE regardless of how that
+    -- turns out: a gate built on it fails OPEN (item mode suppressed in every
+    -- shipped game) rather than closed. itemtrip therefore uses it only INSIDE
+    -- an already-armed bid, where being wrong costs the armed side of one wave.
+    local users = {}
     for _, f in ipairs(ls('bots', '^%-?%-?mode_.*_generic%.lua$')) do
         local body = read_file('bots/' .. f):match('\nfunction GetDesire%(%)(.-)\nend')
-        if body and body:find('return%s+nil') then users = users + 1 end
+        if body and body:find('return%s+nil') then users[#users + 1] = f end
     end
-    assert(users == 0,
-        'the nil-fallthrough contract now has ' .. users .. ' user(s) in bots/ -- '
-        .. 'if it has been exercised in a real game, this file\'s "undischarged" '
-        .. 'framing is stale and an itemtrip gate may use it')
+    assert(#users == 1 and users[1] == 'mode_item_generic.lua',
+        'the nil-fallthrough contract users moved to {' .. table.concat(users, ', ')
+        .. '} -- exactly one user is expected (mode_item_generic.lua, gated on '
+        .. 'itemtrip). A second user means somebody spent an undischarged engine '
+        .. 'contract somewhere new; read this file\'s head comment first')
 end
 
 tests['[reverse] the contract-free gate already ships: mode_attack defines GetDesire conditionally'] = function()
@@ -338,7 +392,16 @@ tests['[census] 11 mode files already return at file scope before defining GetDe
         local before = head:match('^(.-)\nfunction GetDesire%(%)')
         if before and before:find('then return end', 1, true) then n = n + 1 end
     end
-    assert(n == 11, 'mode files with a head early-return before GetDesire moved from 11 to ' .. n)
+    -- A FLOOR, not an equation (GH #127: seven files went red at once the last
+    -- time a growable population was pinned as `== N`). 11 when this file was
+    -- written, 12 once bots/mode_item_generic.lua landed and used the same
+    -- mechanism as its gate. Another mode file adopting the idiom should make
+    -- this census stronger, not red.
+    assert(n >= 12, 'mode files with a head early-return before GetDesire fell to ' .. n
+        .. ' -- the idiom this file calls ordinary is disappearing from the tree')
+    local head = read_file('bots/mode_item_generic.lua')
+    assert(head:match('^(.-)\nfunction GetDesire%(%)'):find('then return end', 1, true),
+        'the itemtrip gate is no longer one of these file-scope early returns')
 end
 
 -- ---------------------------------------------------------------------------

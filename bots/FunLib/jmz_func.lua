@@ -4924,6 +4924,98 @@ function J.ShouldFieldBuyRegen( bot )
 	return not J.HasFieldRegenSource( bot )
 end
 
+-- [itemtrip / GH #120] The OTHER end of the same "don't walk home" family, and
+-- the one nothing in this tree could speak on: the HEALTHY trip home.
+--
+-- The replay desk read all 643 home TPs made above 55% HP across 283 turbo
+-- games and attributed each one to a branch in bots/. 76 (11.8%, 0.27/game)
+-- had no branch whose necessary conditions held -- median HP 81.7%, 25 of them
+-- above 95%, 41 of them with no enemy inside 1600 for the whole trip, median
+-- round trip 40.1 seconds. The bearing frame is lina 20260822_123136_slot3
+-- t=434.6: full HP, nearest enemy 4,212 units, the courier visibly working,
+-- and she goes home anyway to combine an orchid -- 49 seconds, ~8% of a turbo
+-- game. The pre-flight audit (tests/test_itemtrip_supply_gap.lua) found why
+-- nothing explains it: BOT_MODE_ITEM is Valve's BUILT-IN mode here, because
+-- this tree's own item-mode file is disabled by its filename
+-- (bots/--mode_item_generic.lua), and all eight sites in bots/ that branch on
+-- BOT_MODE_ITEM either are hero-specific or run AFTER arrival -- zero contest
+-- the decision to make the trip.
+--
+-- This predicate is the decision half. Its only caller is
+-- bots/mode_item_generic.lua, which installs a GetDesire ONLY when the soak id
+-- is armed; unarmed, that file defines nothing and the engine keeps its
+-- built-in bid, byte for byte. So this function carries no gate of its own --
+-- and it must acquire no other caller, or the behaviour ships ungated.
+--
+-- The clause budget is fixed by the audit and is not a style choice: on a
+-- fixture, stash contents, courier state and bot:GetActiveMode() are
+-- respectively a crash, a crash, and a constant 0 (the eighteenth and
+-- thirteenth world assertions), so any clause resting on one of them runs
+-- fast, green and all-zero without ever being checked. What a real frame does
+-- carry is HP, the enemy ring, and distance from the fountain, and that is
+-- the whole of what is spent below.
+--
+-- 0.55 is not a new constant. It is the SAME number J.IsFieldRegenSituation
+-- stops at, taken from the other side: that family owns [0.18, 0.55] -- the
+-- hurt bot who should drink in the field instead of going home -- and this one
+-- owns >= 0.55. Together they partition owner priority P2's "don't go home"
+-- rule across the whole health axis with no gap and no overlap, and it is also
+-- the population line the replay desk drew when it defined "high-HP home TP".
+-- The 1600 ring and the attributed-damage read are likewise copied from that
+-- function rather than re-tuned: a healthy bot walking away from a fight it is
+-- losing is a retreat, and this lever must not pin it in place.
+--
+-- 5000 is the cost claim, converted. #120 measures a median round trip of 40.1
+-- seconds; at a typical ~300 movement speed that is ~12,000 units of walking,
+-- i.e. ~6,000 one way. 5000 is the conservative floor of that -- below it the
+-- trip is not the thing #120 measured and this lever has no argument about it.
+--
+-- ⚠ NO INVENTORY CLAUSE, and that is a finding rather than an omission. The
+-- obvious draft carried `Item.GetEmptyInventoryAmount( bot ) > 0` ("a full bag
+-- is a legitimate fetch, leave it alone"). On the bearing frame the bag is
+-- FULL -- the courier delivered the claymore into the ninth slot ~0.2s before
+-- the snapshot -- so that clause would have made this lever inert on the exact
+-- frame that motivated it, which is the Luna-chase failure mode this desk
+-- already paid for once. It is also unnecessary: the 136 genuine "bag full, go
+-- fetch" trips #120 counted are labelled 撤退:1 and come from the retreat
+-- mode's shop motive, a code path this file cannot reach. Recorded here so the
+-- next author does not re-add it as an obvious improvement.
+--
+-- Condition (c): with a courier delivering, a healthy core's trip home buys an
+-- item a few seconds earlier and pays 40+ seconds of map presence for it --
+-- in a ~20 minute turbo game that is the standard "let the courier do it"
+-- advice, which is owner's stated turbo rule ("回程太费时间") applied above the
+-- health band rather than below it.
+function J.IsWastefulItemTrip( bot )
+	if not J.IsModeTurbo() then return false end
+
+	-- Healthy: below this the trip home may be the genuine heal/escape, and
+	-- that band belongs to J.IsFieldRegenSituation, not here.
+	if J.GetHP( bot ) < 0.55 then return false end
+
+	-- Nobody near: an enemy in the ring makes going home a retreat.
+	if #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0 then return false end
+
+	-- Attributed danger, identical in shape to the field-regen read: recent
+	-- hero damage only counts when the hero that dealt it is still in reach,
+	-- because a global ult from across the map is not someone chasing me.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then
+		local hEnemyList = J.GetNearbyHeroes( bot, 3000, true, BOT_MODE_NONE )
+		for _, hEnemy in pairs( hEnemyList ) do
+			if J.IsValidHero( hEnemy )
+				and bot:WasRecentlyDamagedByHero( hEnemy, 3.0 )
+			then
+				return false
+			end
+		end
+	end
+
+	-- Far enough that the walk is the cost #120 measured.
+	if J.GetDistanceFromAllyFountain( bot ) < 5000 then return false end
+
+	return true
+end
+
 -- [obs 20260722] Laning trade-survival: retreat BEFORE the burst lands, not
 -- after. Frame-by-frame review of ~19 Wraith King deaths (iterations/
 -- obs_20260722_focus_deaths.md) showed the dominant death is NOT overextension:

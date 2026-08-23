@@ -76,6 +76,22 @@
    "acceptance": "(1) decides whether the WRITTEN REASON for the t10 flip survives: if enemy-hero drain channels turn out to be common (say more than a couple per game with meaningful duration), the +10pp slow is collectible far more often than the fixture read suggests and the hero desk re-argues or reverts the row in hero_lion.lua -- tests/test_focus_talent_anchor.lua enforces that the reasoning travels with the row either way. It does NOT decide whether the change can ship: it already has, and there is no gate to arm. (2) is a pre-flight, not a verdict: a count of Hex firing moments blocked by <= 2s of cooldown is the ONLY thing that could turn the t15 row from 'no measurable asymmetry, default holds' into a decidable pair. Report it as a rate per game with the total number of firing moments as denominator; a zero here must be recorded as UNDERPOWERED, not EMPTY (narrow band on a continuous quantity -- the standing lesson from GH #115).",
    "status": "pending",
    "result": ""
+  },
+  {
+   "id": "strategy-3",
+   "stream": "strategy",
+   "bundle": "itemtrip",
+   "seeds": [
+    888,
+    895,
+    896,
+    906
+   ],
+   "priority": 2,
+   "question": "NO DEDICATED WAVE REQUESTED -- please fold 'itemtrip' into the next multi-id wave (same reasoning as fieldcreep: this is an in-arm reading of the armed leg, not a paired econ question). GH #120 / owner priority P2's family, above the health band: 76 of 643 high-HP home TPs across 283 games (0.27/game, median round trip 40.1s) have no branch in bots/ that explains them, because BOT_MODE_ITEM is the ENGINE's mode here. The new bots/mode_item_generic.lua installs a GetDesire ONLY when 'itemtrip' is armed; unarmed it defines nothing and the engine keeps its built-in bid byte for byte. This wave buys condition (a). It ALSO discharges an engine semantics question this repo has never been able to answer: docs/BOT_API_REFERENCE.md:52 claims GetDesire() returning nil falls through to the built-in bid, and until this file there were ZERO users of that contract in bots/. The armed bid returns NONE on wasteful frames and nil otherwise, so the replay read separates the two worlds with no extra instrumentation. Registered BEFORE the wave, on purpose.",
+   "acceptance": "Primary (replay desk, condition a): on the armed leg, re-run tools/batch_test/behavioral/hometp_highhp.py and split the high-HP home trips by #120's own labels. TWO outcomes, both useful and both pre-registered: (1) the residual 'no branch explains it' bucket drops while escape2/shop/defend/healmana stay put -> the nil-fallthrough contract HOLDS and itemtrip works as designed; (2) high-HP home trips collapse to ~0 across ALL labels that route through item mode -> the contract is FALSE (nil reads as 0), armed means item mode is off for the whole game, and that fact is now discharged for every future author. Do NOT read outcome (2) as 'the fix is broken' without saying which of the two it is -- the distinction is the point. NEGATIVE control that must NOT move: the 136 'shop' trips (retreat mode's shop motive, X.IsInvFull) do not route through BOT_MODE_ITEM and must be unchanged in both outcomes; if they move, something other than this file did it. Secondary (condition b, coarse, no significance test per owner 2026-08-01): no obvious negative on gpm/deaths for the armed leg. Frame evidence requested for at least one hero that was going to make the trip and did not.",
+   "status": "pending",
+   "result": ""
   }
  ],
  "done": [
