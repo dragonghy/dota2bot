@@ -86,8 +86,64 @@ Until an extended dump provides `vis`, vision is **approximated** (an enemy is
 network a per-team visibility bitmask, so exact fog must be reconstructed from
 vision sources — see `docs/ANALYSIS_PANEL.md`.
 
+## Frame-corpus retrieval (`corpus_query.py`)
+
+`make_fixture.py` freezes ONE instant a human picked out of ONE replay. That
+answers "is this decision correct here". It cannot answer the question a
+promotion turns on — **on how many of the frames where this rule applies does
+it fire?** — because that needs a population, and a population needs a
+denominator somebody computed.
+
+`corpus_query.py` sweeps a corpus of timelines, evaluates a declarative
+predicate on every (hero, snapshot) frame, reports matched-over-examined with
+every excluded frame accounted for by name, and then feeds the survivors to
+`make_fixture.py` in bulk.
+
+```bash
+# how often is a support low, alone, and past the midline with an enemy on it?
+python3 corpus_query.py .sweep_out/<run>/timelines/*.json \
+    --name lowhp_deep --dedup 15 \
+    --query '{"all":[{"term":"hp_pct","lt":0.35},
+                     {"term":"depth","gt":0},
+                     {"term":"enemies_within","args":[1200],"ge":1},
+                     {"term":"allies_within","args":[1500],"eq":0}]}' \
+    --jsonl hits.jsonl \
+    --fixtures ../../../tests/fixtures --tag lowdeep \
+    --analysis-dir .sweep_out/<run>/analysis
+python3 corpus_query.py --list-terms   # the vocabulary
+```
+
+Reading the output:
+
+- `CORPUS … frames_total=N postgame=… out_of_window=… paused=… dead=… examined=…`
+  — these balance exactly (`frames_total` is the corpus files' own snapshot
+  count) and the tool **aborts** if they don't. `postgame` is the GH #43 frozen
+  tail that `detect.Timeline` drops upstream; it is counted here rather than
+  left silent because a denominator that starts a third below the file's row
+  count is the same defect as an unnamed cap.
+- `CLAUSE true=k/r reached …` — per-leaf, against the frames that clause was
+  actually **offered** (`all` short-circuits), never against the global
+  `examined`. `VACUOUS` means the clause selects nothing (typo'd item, an
+  ability the corpus never leveled, a threshold on the wrong side); `INERT`
+  means it narrows nothing. Both are invisible in a plain hit count.
+- `POPULATION matched=… deduped=…` — `matched` is raw frames, `deduped` is
+  hits after collapsing each hero's 1Hz run to one per `--dedup` seconds.
+  Quote `deduped` as the population; a 20-second condition is one situation,
+  not twenty independent frames.
+
+It selects by **world state only** and has no opinion about what the bot did
+there. "The rule applies here" is this tool's output; "the rule fired here" is
+the fixture test's. Keeping those on opposite sides of the fixture boundary is
+the point — a selector that already knew the answer would be measuring itself.
+
+Malformed predicates (unknown term or operator, wrong arity, stray keys) and a
+missing corpus file are hard errors, never a quiet zero. Tests:
+`tests/test_corpus_query.py`.
+
 ## Files
 
+- `corpus_query.py` — frame-corpus retrieval + batch fixture front-end (above).
+- `make_fixture.py` — one timeline instant → a real-frame Lua fixture.
 - `template.html` — the renderer. Reads `window.__REPLAY__` + `window.__ICONS__`
   (injected at the `/*__REPLAYSCOPE_INJECT__*/` marker). Renders standalone with
   a tiny synthetic sample if opened directly.
