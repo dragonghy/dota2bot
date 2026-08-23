@@ -754,8 +754,71 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     行[10],而行[10] 落在 11 级)。**非承重**(t10 那一刻技能已学、论证不塌),所以没在本轮扫,
     但**读者会照抄**。谁先碰那两个文件谁顺手改;改完在 GH #134 上销账。
 
+22. ~~**WK 造不出魔棒(GH #136,2026-08-23 owner 开)**~~ **2026-08-23T08:00Z done
+    并已落地(纯构筑、无 gate ⇒ 稳定版漂移)**:`skeleton_king` pos_3 的
+    `item_branches` → `item_double_branches`(pos_2/4/5 别名一起吃到),
+    `life_stealer` pos_1 同款一并修。详见「当前状态」头条。
+    **别重查的三件事**:(a) 「队列不严格阻塞」是**错的** —— 采购层结构上补不齐,
+    机制在 GH #139;(b) `grep item_branches` **会误报**(batrider 的两处在 sSellList、
+    marci 写了连着两行 = 两根),口径是「展开合成宏后**恰好 1 根**才坏,0 根和 >=2 根都合法」;
+    (c) 「魔棒要两根」在**离线验不了**(mock 的 `GetItemComponents` 恒空),锚是仓库自己的
+    15 个带 `item_recipe_magic_wand` 的合成宏 **15/15 供两根**。
+    **下一棒已交**:queue `hero-6`(条件 a:WK 是否曾同时持有两根树枝,0/40 → ~40/40)、
+    GH #139(通用侧根因给总监)、GH #136 **留言不关闭**。
+
+23. **GH #139 的非树枝普查**(2026-08-23 立,从 §22 分出)—— #139 的触发条件是
+    「配方要 2 件同款、买单先给了 1 件」,本轮只普查了**树枝**这一种(367 条买单,
+    br==1 从 2 → 0)。**gauntlets / circlet / slippers / null_talisman 等同款重复组件
+    一件都没扫过。** 做法可直接复用 `tests/test_wk_magic_wand_branches.lua` 里的
+    `flatten` + `buy_lists` + `strip_comments`(注意:解析器**必须先剥注释**,
+    否则会把理由块里带引号的物品名数成采购 —— 本轮真踩过)。
+    **前置**:得先知道哪些配方含同款重复组件,而离线拿不到配方(见 §22(c))⇒
+    要么等 mock 喂真配方(GH #100/#128 同族),要么从 `aba_item.lua` 的合成宏反推。
+
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T08:00Z(报告 `iterations/reports/hero/20260823T080000Z.md`;GH **#139**
+  本组开(通用采购层根因);queue **`hero-6`** pending;GH **#136** 已留言**不关闭**;
+  backlog §22 划掉、新增 §23):
+  **GH #136 落地:WK 终于买得起第二根树枝。`skeleton_king` pos_3
+  `item_branches` → `item_double_branches`(pos_2/4/5 别名一起吃到),`life_stealer`
+  pos_1 同款一并修。纯构筑、无 gate ⇒ 本轮稳定版漂移。** 零 AWS、零新 gated id、
+  零外部读。开工自检 **worst exit 0**(无未落地 commit、cadence 无洞、trunk python 15/15)。
+  Owner 优先项 P1/P2 的球都在协同组 ⇒ 按章程取 issue 流最新的 [hero]。
+  - **issue 的首要嫌疑对了,但「队列不严格阻塞」这句是错的 —— 采购层结构上补不齐**:
+    ① `Item.GetBasicItems`(`aba_item.lua:1239`)丢掉已持有的组件,但**连续重复的第二个**
+    被 `sLastRepeatItem` 救回 ⇒ 存活清单 `{branches, recipe}`,**这一步是对的**;
+    ② `item_purchase_generic.lua:1250` 的 `_buildRequiredCounts` 数的是**这份已过滤的**
+    清单 ⇒ `required = 1`;③ `_stillNeeds` 拿它跟**背包总持有量**(1)比,`1 < 1` 假 ⇒ 弹掉。
+    **分子取自过滤后的世界,分母取自过滤前的世界**,只有持有量为 0 时才自洽。
+    于是唯一被买的是 recipe —— **与 40/40 局的背包逐位对上**。已单开 **GH #139**
+    (不是 WK 专属;非树枝的同款重复组件**一件都没扫过**,见 §23)。
+  - **判据被改了,而这正是普查能做对的原因**:**恰好 1 根才是坏的量**
+    —— 0 根合法(一根都没有时两根都会买),>=2 合法,只有**部分持有**会被那个计数读成完整。
+    全 BotLib 展开合成宏后普查:**367 条想要魔棒的买单,br==1 从 2 → 0**(0 根 6 条、
+    >=2 根 359 → 361)。两个 offender = `skeleton_king` pos_3 与 `life_stealer` pos_1。
+    **`grep item_branches` 会误报**:batrider 的两处在 **sSellList**、marci 写了**连着两行**
+    = 两根。普查已作为**常设断言**入库,并断言两种合法结局都仍非空(否则在空世界上通过)。
+  - **「魔棒要两根」锚在仓库自己的数据上,因为离线验不了**:`tests/mock/bot_api.lua:303`
+    的 `GetItemComponents` **恒返回 `{}`** ⇒ `Item['item_magic_wand']` 在测试里是 **nil**。
+    锚 = `aba_item.lua` 里 15 个带 `item_recipe_magic_wand` 的 `item_*` 合成宏,
+    **15/15 供恰好两根**(14 个走 `item_double_branches`,`item_priest_outfit` 走两个独立条目),
+    零反例。这条边界写成了断言,**mock 哪天长出真配方它会自己红**。
+  - **12 次变异 12 抓,但过程里出了一条该立成规矩的教训**:
+    **报告「逃逸」的变异必须先证明它真的施加上了。** M8(拆掉剥注释那一步)第一次报
+    **0 红 = 逃逸**,实际是那条 `sed` 的 Lua 模式转义没匹配上,**变异根本没落到文件里**;
+    换成 python 精确替换 + 断言 needle 存在之后,M8 立刻被 2 条断言抓住。
+    **一个没施加的变异和一个逃逸的变异,在计分板上长得一模一样。**
+  - **另一条方法教训(差点骗过自己)**:第一版普查把**修复行上方那段解释注释里被引号
+    括起来的 `"item_branches"` 也数成了一次采购**,报 pos_3 有 **3** 根。
+    **会读散文的解析器就会报告散文。** 剥注释现在是共用函数 + 专门自测钉住。
+  - **诚实边界**:(a) 本轮**不是**一个已测量的收益,是一个**有机制的构筑修复**
+    —— 4007 未花金里有一个魔棒形状的洞,但普查说不出解开队头之后剩下的清单会不会真的流起来;
+    (b) `life_stealer` **没有自己的语料读数**(不在焦点五、不在 `run_001140` 阵容),
+    按结构同一性修,已写进他的文件;(c) 那 4/40 走到 phase_boots/bracer 的局**没有追**
+    (大概率是 `rebuildCount < 3` 的 `GetReducedPurchaseList` 旁路);
+    (d) GH #136 正文引用的 `tests/fixtures/f_260823_002103_wk_ancient_camp_634.lua`
+    **树上不存在**(105 个 fixture,无 `f_260823_*`),已在 issue 上更正。
 - 2026-08-23T06:00Z(登记 `state.json:lion_t15_no_flip_20260823T0600Z`;报告
   `iterations/reports/hero/20260823T060000Z.md`;GH **#134** 本组开(跨英雄的映射错误);
   backlog §20 划掉、新增 §21):
