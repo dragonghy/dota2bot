@@ -649,6 +649,45 @@ function X.ConsiderW()
 end
 
 
+--- Soak candidate `axecull` (turbo-only, INERT until armed) -- GH #146: let the
+--- Culling Blade execute branch fire on a spell-immune target.
+---
+--- THE FACT.  Culling Blade pierces spell immunity -- `bkbpierce: "Yes"` on
+--- axe_culling_blade, damage type Pure (odota/dotaconstants build/abilities.json,
+--- package 10.8.0, read 2026-08-23; the same source the 09:50Z round used for the
+--- duplicate-component laws).  Its whole point is that it kills a BKB'd hero.  The
+--- shipped branch below nevertheless carried `not npcEnemy:IsMagicImmune()`, and
+--- whoever wrote it flagged it on the spot: `--V BUG` is the ONLY occurrence of
+--- that marker anywhere under bots/ (grep, 2026-08-23), i.e. an upstream author
+--- knew and left it.
+---
+--- WHY IT IS A GATE AND NOT A PLAIN FIX.  It ADDS a cast, and this stream ships an
+--- action-adding change dark until a wave has sized its domain.  Gate OFF the
+--- clause reduces to `not npcEnemy:IsMagicImmune()` -- the shipped predicate,
+--- unchanged, because Lua short-circuits `or` and the second operand is only
+--- reached on an immune target.
+---
+--- THE COST SIDE, stated so it can be argued with.  Every other guard on the
+--- branch stays: aegis, invulnerability, Linken's/Lotus/Aeon (X.HasSpecialModifier)
+--- and the health test.  So the frames this opens are exactly "a visible enemy
+--- hero inside 375u whose effective health is already below the execute
+--- threshold, who happens to be spell-immune".  On those the cast is a kill, and
+--- a kill resets Culling's own cooldown -- which is why this is one of the rare
+--- levers whose downside is bounded by the health test that precedes it.
+---
+--- WHAT IS NOT KNOWN.  The domain is UNSIZED: the fixture corpus holds three
+--- spell-immune hero-instants in 104 frames (all Juggernaut Blade Fury, none in a
+--- game containing Axe) and ZERO Black King Bars in any item slot, so it cannot
+--- answer this.  That is a SUPPLY reading, not an empty domain.  See
+--- tests/test_axe_cull_immune_veto.lua and the hero-9 request in
+--- iterations/queue.json -- do NOT promote this on the (c) argument alone.
+function X.IsCullPierceOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecull' )
+
+end
+
+
 function X.ConsiderR()
 
 
@@ -691,7 +730,7 @@ function X.ConsiderR()
 			and npcEnemy:GetHealth() + npcEnemy:GetHealthRegen() * 0.8 < nKillDamage
 			and not J.IsHaveAegis( npcEnemy )
 			and not npcEnemy:IsInvulnerable()
-			and not npcEnemy:IsMagicImmune() --V BUG
+			and ( not npcEnemy:IsMagicImmune() or X.IsCullPierceOn() ) --V BUG (see X.IsCullPierceOn)
 			and not X.HasSpecialModifier( npcEnemy )
 			and not X.IsKillBotAntiMage( npcEnemy )
 		then

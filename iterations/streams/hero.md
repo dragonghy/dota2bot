@@ -819,9 +819,82 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     否则会把理由块里带引号的物品名数成采购 —— 本轮真踩过)。
     **前置**:得先知道哪些配方含同款重复组件,而离线拿不到配方(见 §22(c))⇒
     要么等 mock 喂真配方(GH #100/#128 同族),要么从 `aba_item.lua` 的合成宏反推。
+    - **2026-08-23T13:50Z 第一次被别的测试用上,而且当场抓到东西**:
+      `tests/test_axe_cull_immune_veto.lua` 的语料普查按本条拆出 `scan_frames(frames, IMMUNE)`
+      这个缝,喂一个合成 offender + 三个近失 + 两个「载体放不出技能」。**M12(只计数、
+      不报告)与 M11/M13/M14/M15 全靠这几条合成输入才被抓住** —— 在干净的树上,
+      报告那一半没有任何真实数据能驱动。本条继续开着(受众清单未做完)。
+
+25. **`X.ConsiderR`(Axe 斩杀)里剩下的两根杠杆**(2026-08-23T13:50Z 立,第三根已做完见「当前状态」头条)。
+    - **第一根 = `nKillDamage = 150 + 100*lv` 陈旧常数**(GH #115 §5,queue `hero-2`,
+      处置 `NARROW-BAND-UNMEASURABLE`)。**不动**,等事件侧读数。
+    - ~~**第二根 = 「有效环是 375 不是 175」**(原 §18b 登记为「第二根杠杆,单独登记、没动」)~~
+      **2026-08-23T13:50Z 降级:事实成立,但「这是 bug」那半句没有依据。**
+      `grep -rn "nInBonusEnemyList" bots/`:**这是全仓通行的习语** —— juggernaut / lich /
+      slark / lina / legion_commander / tidehunter 等都用「`cast_range + 200` 的列表」开火,
+      让引擎自己走进射程再放。单独把 Axe 这一处当缺陷改 = **逆着全仓约定改一个英雄**。
+      ⇒ 除非有帧证据说明走这 200u 有代价,否则不动。**死局部 `nInRangeEnemyList` 也不要删**:
+      `test_axe_culling_threshold_preflight.lua` §3 断言它在 `X.ConsiderR` 里**恰好出现 1 次**。
 
 
 ## 当前状态(每次触发后更新)
+- 2026-08-23T13:50Z(报告 `iterations/reports/hero/20260823T135000Z.md`;本组开 GH **#146**;
+  queue **`hero-9`** 新增 pending;backlog §24 追记、新增 §25 并划掉其中一根):
+  **`axecull` 落地:Axe 的斩杀分支不再(在 armed 时)对魔免目标收手 —— 因为斩杀穿魔免。
+  gated、turbo-only、未 armed;gate-off 谓词与出货逐字节同义。域没量出来、且本地量不出来。**
+  零 AWS、外部读 1 次(odota `dotaconstants build/abilities.json`,10.8.0)。开工自检 worst exit 0。
+  Owner P1/P2 的球都在协同组 ⇒ 走 issue 流 / backlog。
+  - **事实一句话**:`hero_axe.lua` 的 `X.ConsiderR` 守卫链里那条
+    `and not npcEnemy:IsMagicImmune() --V BUG` 是**全 `bots/` 唯一一处** `--V BUG` 标记
+    (上游作者当时就看出来了),而 `axe_culling_blade` 的 **`bkbpierce: "Yes"`**、伤害 **Pure**。
+    **穿魔免斩杀正是这个技能存在的理由。** 分支上没有别的东西盖住这些帧:
+    `X.HasSpecialModifier` **不含** `modifier_black_king_bar_immune`。
+    **仓内旁证**(不靠外部源一条腿站着):仓库自己就有 `J.CanCastOnMagicImmune`(穿透)与
+    `J.CanCastOnNonMagicImmune`(非穿透)两套词汇,十几个英雄文件在用;Axe 的斩杀两个都没用,
+    **手写**了一条非穿透形式。
+  - **落地形状**:`and ( not npcEnemy:IsMagicImmune() or X.IsCullPierceOn() )`,
+    `X.IsCullPierceOn() = J.IsModeTurbo() and J.IsSoakCandidate('axecull')`。
+    Lua 的 `or` 短路 ⇒ 非魔免目标上第二个操作数根本不求值。
+  - **桌面预检:七类塌陷排掉六类,全部在测试 §3 上棘轮** —— 无上游同胞(整函数**一条**
+    开火分支,且 `ConsiderR` 是 `SkillsComplement` 的**第一个**消费者)、无下游支配、
+    消费点可达(下一行就是 `ActionQueue_UseAbilityOnEntity`)、无更强既有守卫(这条**就是**
+    唯一的魔免守卫,改动是放宽它)、载体在(焦点英雄)、**不是窄带**(存在性谓词,不是
+    `hero-2` 那种连续量上的 25 点带)。**第七类 SUPPLY 没答上,而这正是本轮的诚实结论。**
+  - **⭐ 域 = UNSIZED,处置写作 `SUPPLY-STARVED-IN-CORPUS`,不是空域**:104 帧逐个 `dofile`,
+    26 帧带 Axe、**20 帧**斩杀可施放(挡住 4 未学 / 1 冷却 / 1 蓝);全语料**魔免英雄瞬时只有 3 个**
+    (全是 `modifier_juggernaut_blade_fury`,**全在没有 Axe 的局里**);**黑黄杖在任何物品栏里 0 件**
+    ⇒ 配对 0、域 0。**这个 0 对局内频率什么也没说**:语料切自**局时上限 10 分钟**的 turbo 局
+    (时刻 0:51–11:30),BKB 4050 金,而 **GH #108 已把上限提到 25 分钟** —— 最可能推翻这个供给
+    读数的改动,任何归档帧都照不到。按 §Y.2:桌面能证 EMPTY 不能证 RARE,**这里连 EMPTY 都证不了**。
+  - **真实帧 + 一字段反事实**:`f_260820_043637_axe_ring_close` t=393.4(Axe 6 级、斩杀 1 级就绪、
+    286 蓝;skywrath 221/940 血、188u,低于连出货那条偏低的 250 线 ⇒ **出货代码今天就在那儿开火**)。
+    gate on/off 在**未改动的**真实帧上给出**完全相同**的出价(0.75 瞄 skywrath)—— 反回归那一半。
+    魔免那一例是**反事实**:同一真实帧**只翻一个字段**,gate-off desire 0 / 无目标,gate-on 0.75。
+    器械与标注沿用 `f_232320_wk_od_burst`(只动一个整数)。
+  - **⭐ 方法学两条**:① **backlog §24 的「判据/报告双合成自测」第一次被别的测试用上,当场抓到东西**
+    —— 普查拆出 `scan_frames` 缝 + 合成 offender/近失,**M12(只计数不报告)和另外四条变异全靠它才被抓住**;
+    ② **`J.IsModeTurbo()` 会 memoise**(`bModeTurboCache`,`jmz_func.lua:8474`)—— 第一版「turbo AND
+    candidate」用例先调 helper 再翻 `GetGameMode`,读到陈旧缓存、**看上去像门坏了**;正确写法是
+    **每条腿开一个全新的世界**。对所有想在同一个测试里翻 game mode 的人都成立。
+  - **诚实边界**:(a) **不是被测量的收益**,条件 (a) 从未买到**且本地买不到**;
+    (b) 魔免那一例是反事实不是回放瞬时;(c) (c) 依据很硬(技能自己的 `bkbpierce` 标志)但
+    **只有 (c) 不能 promote 一个增加动作的改动**(`lanefix` 教训);(d) 代价侧是**论证的不是测量的**
+    (开的帧血量判据已经通过 ⇒ 那一发是击杀、且击杀重置斩杀冷却,但没有波次证明过);
+    (e) **能退役这个 id 的事实**已写进 hero-9 验收:若引擎对 bot 下令**不认**这个穿透
+    (放了没杀掉),整个杠杆作废 —— 离线证不了,mock 里 `IsMagicImmune` 是我们自己喂的。
+  - **核验**:luacheck **0 警告**;`test_axe_cull_immune_veto` **18/18 / 15 次变异 15 抓**
+    (变异两侧都打:M1–M10 源码、M11–M15 普查自身;每个变异**先断言 needle 在文件里**才算数);
+    `axe_culling_threshold` 8/8、`gate_claim_consistency` 7/7、`smoke_load` 2/2、`axe_blink` 53/53、
+    `axe_t15` 13/13、`focus_talent_anchor` 12/12、`replay_260820_axe` 33/33。
+    **整套:155 个文件全部跑过、1507 例、0 失败、零遗漏 —— 但是逐文件跑出来的,不是
+    一个进程。** 原因(值得进 GH #124):**这个例行容器在两次前台调用之间几乎冻住** ——
+    单进程整套要 ≈32 分钟连续 CPU(前台 `timeout 580` 实测走到 444 例、0F/0E、EXIT=124),
+    而丢后台**买不到时间**(空等时日志 665→665 一个字节不涨,一次前台调用期间 665→672)。
+    可行解 = **可续跑的逐文件驱动**,3 次前台调用跑完。**代价**:逐文件跑**不会**暴露
+    跨文件的全局态泄漏,单进程会 —— 两者不等价,别把这次的绿当成 09:50Z 那种绿。
+  - **下一棒已交**:GH **#146**(帧证据 + 验收)+ queue **`hero-9`**(**不申请专波**,折进任何多 id 波,
+    **在事件侧**量供给/域/是否杀掉;**事先登记**:没有魔免敌人的 SILENT = CARRIER-ABSENT,不是阴性结果)。
+    **入测试集要总监批。gated 未 armed ⇒ 不是 shipped。**
 - 2026-08-23T11:45Z(报告 `iterations/reports/hero/20260823T114555Z.md`;认领 GH **#144**;
   queue **`hero-8`** 新增 pending、**`hero-5`** 前提就地改写;backlog 新增并划掉 §-1):
   **`cmboots` 落地:CM pos_5 的 arcane boots 改动进 turbo-only soak gate,gate-off 逐字节
