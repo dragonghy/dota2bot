@@ -80,6 +80,7 @@ DRAG_KEEP = 1400.0     # an enemy still this close at the end of the drag
 POKE_BACK, POKE_FWD = 1.0, 2.0
 TP_TAIL = 1.5          # see clean_window(): the landing lands one sample late
 EPISODE_GAP = 3.0      # consecutive domain frames <= this apart are one episode
+WALK_CAP = 660.0       # measured plain-walking u/s ceiling; see the drag guard
 
 RADIANT, DIRE = 2, 3
 
@@ -455,15 +456,29 @@ def main():
         rows.extend(scan_game(g, name, seed))
 
     # Post-scan guard: after the TP/death exclusions no surviving drag may
-    # exceed what a hero can physically walk in DRAG_S seconds (~550 u/s with
-    # every haste in the game). A violation means another body-teleport channel
-    # is leaking in, exactly the way the TP one did on the first cut.
+    # exceed what a hero can physically walk in DRAG_S seconds. A violation
+    # means another body-teleport channel is leaking in, exactly the way the TP
+    # one did on the first cut.
+    #
+    # [2026-08-23, replay-check] The cap was `550 * DRAG_S` with the comment
+    # "~550 u/s with every haste in the game" -- the SAME removed game rule
+    # (the old hard movespeed cap) that `pullcamp_domain.WALK_CAP` carried, and
+    # the same bare `sys.exit(2)` failure mode: one full-speed fountain-ward
+    # walk and the tool produces no reading at all. The measured ceiling for
+    # plain walking on this corpus is 660 u/s (879,106 clean 1 s steps of the
+    # 00:11Z wave; five ability-less heroes all top out at exactly 660), so
+    # 550 was BELOW what walking does and 1650 u was a live false-fatal here.
+    # Ability dashes and Blink Dagger stay outside the exclusion on purpose so
+    # the guard keeps teeth (earthshaker 1597 u/s, PA 1146, SB 1142, jugg 983).
+    # Note this guard reads a PROJECTION, not a displacement, so it can only be
+    # more forgiving than the u/s bound -- which is why the false-fatal had not
+    # fired yet (max clean drag measured 1177 u on the 213-game wave).
     worst = max((r for r in rows if r['clean']), key=lambda r: r['drag'], default=None)
     n_dirty = sum(1 for r in rows if not r['clean'])
     print('drag guard: max clean drag = %s u (cap %d); %d/%d domain frames '
           'excluded as TP-channel/death windows'
-          % (worst['drag'] if worst else 'n/a', 550 * DRAG_S, n_dirty, len(rows)))
-    if worst and worst['drag'] > 550 * DRAG_S:
+          % (worst['drag'] if worst else 'n/a', WALK_CAP * DRAG_S, n_dirty, len(rows)))
+    if worst and worst['drag'] > WALK_CAP * DRAG_S:
         print('[fatal] drag guard tripped: %s' % worst)
         sys.exit(2)
 
