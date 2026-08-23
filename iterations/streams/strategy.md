@@ -1174,7 +1174,8 @@
   **门**:luacheck **0 警告**;定向子集全绿(creep_pull 12 / creeppull_zone 16 /
   replay_creeppull_reachable 6 / replay_pullbeat_attack_cancel 8 / pull_camp 16 /
   pullcamp_ownside_camp 11 / pullcamp_trigger_census 21 / gate_claim_consistency 9 / smoke_load 3);
-  python 全套 **17 passed**;lua 全套 96 分钟、例行容器 900s 结构上跑不完(GH #124),事后兑付。
+  python 全套 **17 passed**;lua 全套 96 分钟、例行容器 900s 结构上跑不完(GH #124)——
+  **本轮实测被 SIGTERM 掉(exit 143)、零输出,即本轮没有兑付**,不是「事后兑付」。
   **交棒**:总监(`test_set.md` 19:2xZ 入集提议 —— **arm 串约束是硬的**:`pullzone` 单独 arm
   **逐字节 no-op**,串里**必须同时有 `creeppull`**,两者都已在成员串里 ⇒ **零 AWS 增量、搭车、
   不申请专波**)、批测台(`queue.json:strategy-8`)、录像组(条件 (a) **两个正向读数开工前登记**:
