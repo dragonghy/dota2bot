@@ -84,13 +84,29 @@ local function pull_branch()
     return src:sub(at, to)
 end
 
+--- The same branch with every `--` comment removed, i.e. the CODE surface.
+--- [20260823] Split out during the promote, after a comment cost two false
+--- reds in one sitting: the promote note explaining why the old
+--- `IsSoakCandidate('pullcad') and IsSoakCandidate('pullbeat')` conjunction was
+--- dropped contains that expression verbatim, so every source matcher that
+--- scanned the raw branch found the gate it was asserting gone -- and, in the
+--- sister file, read the SHIPPED beat as the armed one. This is
+--- test_detector_source_constants.py's §2b lesson in Lua: a source census that
+--- reads prose is measuring documentation, not code. Assertions ABOUT prose
+--- (the turbo rationale below) still read pull_branch(); assertions about what
+--- the engine executes read this. Keeping both surfaces named is the point --
+--- collapsing them either way loses a real check.
+local function pull_code()
+    return (pull_branch():gsub('%-%-[^\n]*', ''))
+end
+
 --- The two constants that shape the cadence, read from that branch.
 --- [20260823] The beat moved from a literal in the `if` line to `local nBeat`
 --- when soak candidate 'pullcad' gave it a second value; this reads the SHIPPED
 --- one, which is what every assertion in this file is about (`pullcad` is never
 --- armed here). Both spellings are accepted so the reader survives either shape.
 local function cadence()
-    local body = pull_branch()
+    local body = pull_code()
     local beat = body:match('bot%.creepPullAttackTime%) > ([%d%.]+) then')
         or assert(body:match('local nBeat = ([%d%.]+)'),
             'the shipped attack beat is no longer a literal in the creep-pull branch')
@@ -126,11 +142,16 @@ local function drive(sArmed)
     rawset(bot, 'Action_AttackUnit', nil)
     rawset(bot, 'Action_MoveToLocation', nil)
 
-    -- 'creeppull' opens the branch at all; 'pullbeat' is the candidate under test.
-    J.IsSoakCandidate = function(id)
-        if id == 'creeppull' then return true end
-        return sArmed == true and id == 'pullbeat'
-    end
+    -- [PROMOTE 20260823] Both 'creeppull' and 'pullbeat' were promoted to turbo
+    -- defaults, so neither is a gate any more: the branch opens on turbo alone
+    -- and the wind-up hold is unconditional. Nothing in this file arms anything
+    -- now -- `sArmed` is kept only so the signature still reads, and a caller
+    -- passing true must NOT get different behaviour (asserted below). The
+    -- pre-promote legs of this file measured a configuration that no longer
+    -- exists; they were rewritten in place rather than deleted, because the
+    -- defect they recorded is the whole reason the hold is there.
+    J.IsSoakCandidate = function(_) return false end
+    local _ = sArmed
 
     dofile('bots/mode_roam_generic.lua')
 
@@ -161,32 +182,57 @@ tests['[GH #143] the pull bid is still reachable on the real frame'] = function(
     run(1)
 end
 
-tests['[GH #143 DEFECT] unarmed, the poke is cancelled on the very next frame'] = function()
-    local _, _, run = drive(false)
-    local log = run(2)
-    assert(log == 'AM', 'expected the poke then an immediate cancelling move '
-        .. 'order, got ' .. log)
+tests['[control] the comment stripper actually strips'] = function()
+    -- A stripper that quietly returned its input would send every code-shape
+    -- assertion in this file back to reading prose -- the exact failure it was
+    -- added to fix, in a form where nothing goes red. Pinned on a string this
+    -- branch is guaranteed to carry: the promote note names the ids it dropped.
+    local raw, code = pull_branch(), pull_code()
+    assert(#code < #raw, 'pull_code() removed nothing from the branch')
+    assert(raw:find('PROMOTED', 1, true),
+        'the creep-pull branch no longer records that it was promoted')
+    assert(not code:find('PROMOTED', 1, true),
+        'pull_code() left comment text behind: it is not a code surface')
+    assert(code:find('creepPullAttackTime', 1, true),
+        'pull_code() stripped the code as well as the comments')
 end
 
-tests['[GH #143 DEFECT] unarmed, every frame of the beat cancels'] = function()
+tests['[GH #143 PROMOTED] the poke is no longer cancelled on the very next frame'] = function()
+    -- The exact inversion of the defect this file was opened for. Pre-promote
+    -- the shipped log over these two frames was 'AM' -- the poke, then a move
+    -- order 33ms later that cancelled it before the attack had begun. It is now
+    -- 'A.': the second frame issues NOTHING, which leaves the attack running.
+    local _, _, run = drive(false)
+    local log = run(2)
+    assert(log == 'A.', 'expected the poke and then a HELD frame (the promoted '
+        .. 'wind-up), got ' .. log .. ' -- "AM" specifically means the GH #143 '
+        .. 'defect is back in shipped behaviour')
+end
+
+tests['[GH #143 PROMOTED] the defect signature is absent from shipped behaviour'] = function()
+    -- The defect's signature was "an order on EVERY frame of the beat": a poke
+    -- followed by an unbroken run of cancelling moves, never a held frame. That
+    -- is what the pre-promote leg of this test asserted as the shipped default;
+    -- it is now the thing that must NOT be true. Kept as its own case rather
+    -- than folded into the FIX test below, because the two ask different
+    -- questions -- that one asks whether the hold is the right SHAPE, this one
+    -- asks whether the defect can reappear at all.
     local beat = cadence()
     local _, _, run = drive(false)
-    -- One full beat plus one frame: the next poke must be the last entry.
     local nFrames = math.floor(beat / STEP) + 2
     local log = run(nFrames)
     assert(log:sub(1, 1) == 'A', 'the beat no longer opens with the poke')
     assert(log:sub(-1) == 'A', 'the next beat no longer lands after ' .. beat
         .. 's, got ' .. log)
-    assert(not log:find('%.'),
-        'the shipped default must issue an order on EVERY frame -- a held '
-        .. 'frame means the gate leaked into default behaviour: ' .. log)
+    assert(log:find('%.'), 'no frame of the shipped beat is held -- every frame '
+        .. 'issues an order, which IS the GH #143 defect: ' .. log)
     local nMoves = select(2, log:gsub('M', ''))
-    assert(nMoves == nFrames - 2,
-        'expected every non-poke frame of the beat to issue a move order, got '
-        .. nMoves .. ' of ' .. (nFrames - 2))
+    assert(nMoves < nFrames - 2, 'every non-poke frame still issues a move '
+        .. 'order (' .. nMoves .. ' of ' .. (nFrames - 2) .. ') -- the poke is '
+        .. 'being cancelled again')
 end
 
-tests['[GH #143 FIX] armed, the wind-up is held and then the drag resumes'] = function()
+tests['[GH #143 PROMOTED] shipped, the wind-up is held and then the drag resumes'] = function()
     local beat, hold = cadence()
     local _, _, run = drive(true)
     local nFrames = math.floor(beat / STEP) + 2
@@ -231,27 +277,45 @@ tests['[GH #143 FIX] the hold is strictly shorter than the beat'] = function()
         .. 'attack point -- it protects nothing')
 end
 
-tests['[GH #143 GATE] with pullbeat unarmed the cadence is byte-identical'] = function()
+tests['[PROMOTE] no soak candidate can turn the wind-up hold off'] = function()
+    -- Pre-promote this case asserted the OPPOSITE: that arming 'pullbeat'
+    -- changed the log, i.e. that the hold was gated. The promoted invariant is
+    -- that no armed string reaches it -- so the two legs must now be identical,
+    -- and the identical one must be the one that holds. Driving both legs (not
+    -- just asserting the source shape) is what catches a gate re-introduced
+    -- under a different id.
     local beat = cadence()
     local nFrames = math.floor(beat / STEP) + 2
     local _, _, runOff = drive(false)
     local off = runOff(nFrames)
     local _, _, runOn = drive(true)
     local on = runOn(nFrames)
-    assert(off ~= on, 'the candidate changes nothing when armed -- it is a no-op')
-    assert(not off:find('%.'), 'the unarmed leg held a frame: ' .. off)
-    -- ...and the gate is the ONLY thing separating them: same poke, same beat.
-    assert(off:sub(1, 1) == on:sub(1, 1) and off:sub(-1) == on:sub(-1),
-        'arming moved the poke itself, not just the frames after it')
+    assert(off == on, 'arming a soak candidate still moves the creep-pull '
+        .. 'cadence -- the hold was re-gated: ' .. off .. ' vs ' .. on)
+    assert(off:find('%.'), 'the shipped leg holds no frame: ' .. off)
 end
 
-tests['[GH #143] the branch is behind the pullbeat gate'] = function()
-    local body = pull_branch()
-    assert(body:find("J.IsSoakCandidate('pullbeat')", 1, true),
-        'the pullbeat gate is gone from the creep-pull branch')
+tests['[PROMOTE] the wind-up hold is behind no candidate gate'] = function()
+    local body = pull_code()
+    assert(not body:find("IsSoakCandidate('pullbeat')", 1, true),
+        "'pullbeat' is wired again in the creep-pull branch -- it was PROMOTED "
+        .. '2026-08-23 and must not reappear as a gate; a promoted id in an '
+        .. 'armed string arms nothing and reads back as "tested, no effect"')
+    assert(not body:find("IsSoakCandidate('creeppull')", 1, true),
+        "'creeppull' is wired again in the creep-pull branch -- same reason")
+    -- The hold itself must still be there, unconditional: `elseif <time test>`
+    -- with no candidate call between the elseif and the comparison.
+    local cond = assert(body:match('elseif%s*(.-)%s*then'),
+        'the wind-up hold is no longer an elseif in the creep-pull branch')
+    assert(cond:find('creepPullAttackTime', 1, true),
+        'the elseif after the poke is no longer the wind-up hold: ' .. cond)
+    assert(not cond:find('IsSoakCandidate', 1, true),
+        'the wind-up hold is gated again: ' .. cond)
     -- Turbo is structural, not stated -- the header says so, and the reason
-    -- must stay readable or the next reader adds a redundant check.
-    assert(body:find('IsModeTurbo', 1, true),
+    -- must stay readable or the next reader adds a redundant check. This one
+    -- reads the PROSE surface on purpose: it is asserting that an explanation
+    -- exists, not that code runs.
+    assert(pull_branch():find('IsModeTurbo', 1, true),
         'the branch no longer records WHY it does not re-check turbo')
 end
 

@@ -2,14 +2,18 @@
 -- core resets the lane equilibrium by attack-ordering an enemy hero standing next
 -- to the enemy creep wave (drawing the creeps' aggro) then walking back to drag
 -- them onto our side. J.ShouldCreepPullLane is the TRIGGER (when to pull); it must
--- be inert unless the game is turbo AND this side carries the 'creeppull' soak
--- candidate, and it must fire ONLY on the narrow, safe, disadvantaged case:
---   FIRE     = turbo + armed, laning core, disadvantaged (zoned / wave on our
---              half), one enemy hero adjacent to the enemy creeps, and safe ->
+-- be inert unless the game is turbo, and it must fire ONLY on the narrow, safe,
+-- disadvantaged case:
+--   FIRE     = turbo, laning core, disadvantaged (zoned / wave on our half),
+--              one enemy hero adjacent to the enemy creeps, and safe ->
 --              returns a pull intent { enemy, retreat }.
 --   NO-FIRE  = favorable/even lane, no enemy adjacent to the wave, or unsafe
 --              (hurt / a second enemy = possible gank) -> nil.
---   OFF      = not turbo / not the candidate -> inert (shipped default), nil.
+--   OFF      = not turbo -> inert, nil.
+-- [PROMOTE 20260823] Was 'turbo AND the soak candidate creeppull'. The candidate
+-- was promoted to a turbo default together with its sibling 'pullbeat' (owner
+-- rule 2 on the pair; evidence in the function header), so turbo is the whole
+-- gate now and the OFF case that used to un-arm it asserts the inverse.
 
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
@@ -18,7 +22,7 @@ local tests = {}
 
 -- Build the full disadvantaged-lane scenario: our healthy laning core `bot` is
 -- zoned by a lone enemy `enemy` that stands right next to the enemy creep wave
--- `creep`. Turbo + the 'creeppull' candidate armed. Tests tweak one knob each to
+-- `creep`. Turbo (the candidate was promoted). Tests tweak one knob each to
 -- drive the NO-FIRE / OFF branches. Returns J, bot, enemy.
 local function scenario(opts)
 	opts = opts or {}
@@ -78,9 +82,11 @@ local function scenario(opts)
 	api.install({ bot = bot })
 	local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
 
-	-- Arm the gate: turbo + the 'creeppull' soak candidate on this side.
+	-- Turbo is the whole gate since the 2026-08-23 promote. Nothing is armed:
+	-- the scenario must reach the trigger on shipped defaults alone, which is
+	-- what makes the PROMOTE case below meaningful rather than circular.
 	GetGameMode = function() return GAMEMODE_TURBO end -- luacheck: ignore
-	J.IsSoakCandidate = function(id) return id == 'creeppull' end
+	J.IsSoakCandidate = function() return false end
 
 	-- The bot is a laning core (the helper restricts to pos 1-3). Pin it so the
 	-- trigger does not depend on the role-map lookup for the mock hero.
@@ -150,11 +156,21 @@ tests['OFF: inert in normal (non-turbo) mode'] = function()
 		'normal mode must never trigger a creep pull')
 end
 
-tests['OFF: inert off the soak candidate'] = function()
-	local J, bot = scenario()
+tests['PROMOTE: no soak candidate can turn the trigger off'] = function()
+	-- Pre-2026-08-23 this asserted the opposite -- that with no candidate armed
+	-- the trigger stayed inert, because 'creeppull' was the gate. It was
+	-- PROMOTED to a turbo default (owner rule 2 on the creeppull+pullbeat pair;
+	-- see the function header for the (a)/(b)/(c) evidence), so the only thing
+	-- that may hold it back now is non-turbo -- pinned by the case above. The
+	-- inversion is kept as a live case rather than deleted: it is what catches
+	-- the trigger being re-gated by accident, which would silently un-ship a
+	-- promoted behaviour with nothing else going red.
+	local J, bot, enemy = scenario()
 	J.IsSoakCandidate = function() return false end
-	assert(J.ShouldCreepPullLane(bot) == nil,
-		'off the candidate side the trigger must stay inert (shipped default)')
+	local pull = J.ShouldCreepPullLane(bot)
+	assert(type(pull) == 'table' and pull.enemy == enemy,
+		'the creep-pull trigger is inert with nothing armed -- it was promoted '
+		.. 'to a turbo default and must fire on its own')
 end
 
 tests['FIRE [L1-DRAG]: melee core pecked by 2 ranged from distance -> pull'] = function()

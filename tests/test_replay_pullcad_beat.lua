@@ -31,14 +31,22 @@
 -- also the beat the sister camp pull in the same file has used since wave13 --
 -- asserted below, so the two cadences cannot silently drift apart.
 --
--- 'pullbeat' IS A STRUCTURAL PRECONDITION. Without it the poke is cancelled
--- 33ms after it is ordered (that is what 'pullbeat' fixes), so aggro is drawn
--- only by luck -- and a longer beat then buys FEWER lucky draws, i.e. strictly
--- worse than shipped. The source therefore demands both gates, which makes
--- 'pullcad' armed alone a byte-for-byte no-op; the test below is what turns
--- that from a claim into a fact. ARM-CHAIN CONSTRAINT for the admission desk:
--- 'pullcad' only means anything in a chain that already carries BOTH
--- 'creeppull' and 'pullbeat'.
+-- THE WIND-UP HOLD IS A STRUCTURAL PRECONDITION of this lever. Without it the
+-- poke is cancelled 33ms after it is ordered, so aggro is drawn only by luck --
+-- and a longer beat then buys FEWER lucky draws, i.e. strictly worse than
+-- shipped.
+-- [PROMOTE 20260823] When this file was written the hold was soak candidate
+-- 'pullbeat' and the gate here was the conjunction `pullcad and pullbeat`, so
+-- that the precondition was code rather than prose and 'pullcad' armed alone
+-- was a byte-for-byte no-op. 'creeppull' and 'pullbeat' have since been
+-- promoted to turbo defaults (director ruling, owner rule 2 on the pair), and
+-- the conjunct had to go WITH that promote: a promoted id is in no armed
+-- string, so `pullcad and pullbeat` would have been frozen false forever --
+-- 'pullcad' inert in every wave it could be armed in, check_armed_wiring.py
+-- still calling it WIRED because the call site exists, and the verdict reading
+-- back "tested, no effect". The precondition is now satisfied BY CONSTRUCTION,
+-- which is strictly stronger than a gate. ARM-CHAIN CONSTRAINT for the
+-- admission desk is therefore GONE: 'pullcad' is armed alone.
 --
 -- Honest notes on what is real here and what is not (identical in kind to the
 -- sister file tests/test_replay_pullbeat_attack_cancel.lua, which pins the same
@@ -98,6 +106,21 @@ local function pull_branch()
     return src:sub(at, to)
 end
 
+--- The same branch with every `--` comment removed, i.e. the CODE surface.
+--- [20260823] Added during the promote of 'creeppull'/'pullbeat', which cost
+--- this file four false reds in one run: the promote note explaining why the
+--- old `IsSoakCandidate('pullcad') and IsSoakCandidate('pullbeat')` conjunction
+--- was dropped contains that expression verbatim, so cadence()'s
+--- "IsSoakCandidate('pullcad') .- nBeat = N" matcher anchored on the COMMENT
+--- and then read the first `nBeat =` after it -- the SHIPPED 1.2, reported as
+--- the armed beat. Every downstream assertion about the armed cadence was then
+--- comparing 1.2 against itself. A source census that reads prose is measuring
+--- documentation, not code (test_detector_source_constants.py §2b, same lesson
+--- in Python). Assertions ABOUT prose still read pull_branch().
+local function pull_code()
+    return (pull_branch():gsub('%-%-[^\n]*', ''))
+end
+
 --- The camp-pull branch, isolated the same way -- it carries the 3.0s beat this
 --- lever is being brought into line with.
 local function camp_branch()
@@ -111,7 +134,7 @@ end
 
 --- The three constants that shape the creep-pull cadence, read from source.
 local function cadence()
-    local body = pull_branch()
+    local body = pull_code()
     local shipped = assert(body:match('local nBeat = ([%d%.]+)'),
         'the shipped attack beat is no longer a literal in the creep-pull branch')
     local armed = assert(body:match("IsSoakCandidate%('pullcad'%).-nBeat = ([%d%.]+)"),
@@ -150,8 +173,12 @@ local function drive(tArmed)
     rawset(bot, 'Action_AttackUnit', nil)
     rawset(bot, 'Action_MoveToLocation', nil)
 
+    -- [PROMOTE 20260823] 'creeppull' and 'pullbeat' are turbo defaults now, so
+    -- neither is armable and neither needs to be: the branch opens on turbo
+    -- alone and the wind-up hold is unconditional. 'pullcad' is the only
+    -- candidate this file can arm, and after the promote it is the WHOLE lever
+    -- rather than half of a conjunction.
     J.IsSoakCandidate = function(id)
-        if id == 'creeppull' then return true end
         return (tArmed or {})[id] == true
     end
 
@@ -188,11 +215,20 @@ tests['[P1 (c)] the pull bid is still reachable on the real frame'] = function()
     run(1)
 end
 
-tests['[P1 (c) GATE] pullcad armed ALONE is byte-for-byte the shipped cadence'] =
-function()
-    -- The structural half of "pullbeat is a precondition": armed by itself this
-    -- id must not move one order. This is the assertion that makes the
-    -- dependency a fact rather than a sentence in the header.
+tests['[PROMOTE] pullcad armed ALONE is now the whole lever'] = function()
+    -- The exact inversion of what this case asserted before 2026-08-23, and the
+    -- reason it had to be inverted rather than deleted:
+    --
+    -- Pre-promote the gate read `IsSoakCandidate('pullcad') and
+    -- IsSoakCandidate('pullbeat')`, so that arming 'pullcad' by itself was a
+    -- byte-for-byte no-op -- the dependency on the wind-up hold expressed as
+    -- code instead of prose, which was the right call while the hold was a
+    -- candidate. Promoting 'pullbeat' deletes it from every armed string, which
+    -- would have frozen that conjunction FALSE forever: 'pullcad' inert in
+    -- every wave, check_armed_wiring.py still reporting it WIRED because the
+    -- call site exists, and the verdict coming back "no effect" with nothing
+    -- raising a hand. So the conjunct went, and this case now pins the opposite
+    -- property -- arming 'pullcad' alone must MOVE the cadence.
     local _, armedBeat = cadence()
     local nFrames = math.floor(armedBeat / STEP) + 2
     -- One driver at a time: drive() rebinds the global GetDesire/Think, so a
@@ -201,10 +237,12 @@ function()
     local off = runOff(nFrames)
     local _, _, runOn = drive({ pullcad = true })
     local on = runOn(nFrames)
-    assert(off == on,
-        "'pullcad' armed without 'pullbeat' changed the order log -- the "
-        .. 'longer beat is live in a configuration where it only buys fewer '
-        .. 'lucky aggro draws')
+    assert(off ~= on, "'pullcad' armed alone changes nothing -- it is a no-op "
+        .. 'in every wave that can arm it, and no wiring check would say so: '
+        .. off)
+    assert(count(on, 'A') < count(off, 'A'),
+        "'pullcad' armed alone did not remove any of the pokes that cannot "
+        .. 'draw: ' .. off .. ' -> ' .. on)
 end
 
 tests['[P1 (c) DEFECT] the shipped beat re-pokes inside the live aggro'] = function()
@@ -216,7 +254,7 @@ tests['[P1 (c) DEFECT] the shipped beat re-pokes inside the live aggro'] = funct
     assert(shipped < AGGRO_HOLD_S, 'the shipped beat (' .. shipped
         .. 's) no longer lands inside the ' .. AGGRO_HOLD_S
         .. 's aggro -- this defect is gone and this test is stale')
-    local _, _, run = drive({ pullbeat = true })
+    local _, _, run = drive(nil)
     local nFrames = math.floor(AGGRO_CD_S / STEP) + 2
     local log = run(nFrames)
     assert(count(log, 'A') >= 3, 'expected at least three pokes inside one '
@@ -227,7 +265,7 @@ end
 tests['[P1 (c) FIX] armed, one poke per aggro cycle and the rest is drag'] =
 function()
     local _, armedBeat, hold = cadence()
-    local _, _, run = drive({ pullcad = true, pullbeat = true })
+    local _, _, run = drive({ pullcad = true })
     -- One full armed beat plus one frame: the next poke must be the last entry.
     local nFrames = math.floor(armedBeat / STEP) + 2
     local log = run(nFrames)
@@ -260,9 +298,9 @@ function()
     local _, armedBeat = cadence()
     local nFrames = math.floor(armedBeat / STEP) + 2
     -- One driver at a time (see the GATE test above).
-    local _, _, runOff = drive({ pullbeat = true })
+    local _, _, runOff = drive(nil)
     local off = runOff(nFrames)
-    local _, _, runOn = drive({ pullcad = true, pullbeat = true })
+    local _, _, runOn = drive({ pullcad = true })
     local on = runOn(nFrames)
     assert(count(on, 'M') > count(off, 'M'), 'arming did not buy any extra '
         .. 'drag frames: ' .. count(off, 'M') .. ' -> ' .. count(on, 'M'))
@@ -282,18 +320,45 @@ tests['[P1 (c)] the armed beat clears both published aggro numbers'] = function(
         .. 'than the armed beat -- the bot would never drag')
 end
 
-tests['[P1 (c)] the gate demands pullbeat in the source, not in prose'] =
-function()
-    local body = pull_branch()
-    local cond = assert(body:match("(if J%.IsSoakCandidate%('pullcad'%)[^\n]*\n[^\n]*)"),
+tests['[PROMOTE] the pullcad gate names no promoted id'] = function()
+    -- The general hazard this promote surfaced, pinned so the next one cannot
+    -- repeat it: a gate whose condition conjoins ANOTHER candidate id goes
+    -- permanently false the day that id is promoted, and nothing warns --
+    -- check_armed_wiring.py checks that a call site exists, not that the
+    -- condition can ever be true, so the wave comes back "no effect" and the
+    -- lever is quietly written off. Every id named in this condition must
+    -- therefore still be an armable candidate.
+    local body = pull_code()
+    local cond = assert(body:match("(if J%.IsSoakCandidate%('pullcad'%)[^\n]*)"),
         "the 'pullcad' gate is gone from the creep-pull branch")
-    assert(cond:find("IsSoakCandidate('pullbeat')", 1, true),
-        "the 'pullcad' gate no longer also demands 'pullbeat' -- armed alone "
-        .. 'it now buys fewer lucky aggro draws than shipped')
+    local PROMOTED = { creeppull = true, pullbeat = true }
+    for id in cond:gmatch("IsSoakCandidate%s*%(%s*'([%w_]+)'") do
+        assert(not PROMOTED[id], "the 'pullcad' gate conjoins '" .. id
+            .. "', which was PROMOTED and so is in no armed string -- this "
+            .. 'gate can never be true and no wiring check would say so')
+    end
+    -- ...and it is still a gate: 'pullcad' itself is unpromoted.
+    assert(cond:find("IsSoakCandidate('pullcad')", 1, true),
+        "the 'pullcad' gate no longer names its own id")
     -- Turbo is structural, not restated: the plan only exists because
     -- J.ShouldCreepPullLane returned non-nil, and that opens with IsModeTurbo.
-    assert(body:find('IsModeTurbo', 1, true),
+    -- Read on the PROSE surface -- this asserts an explanation exists.
+    assert(pull_branch():find('IsModeTurbo', 1, true),
         'the branch no longer records WHY it does not re-check turbo')
+end
+
+tests['[control] the comment stripper actually strips'] = function()
+    -- A stripper that quietly returned its input would put cadence() and the
+    -- gate census back on the prose surface -- the exact failure it was added
+    -- to fix, in a form where nothing goes red.
+    local raw, code = pull_branch(), pull_code()
+    assert(#code < #raw, 'pull_code() removed nothing from the branch')
+    assert(raw:find('PROMOTED', 1, true),
+        'the creep-pull branch no longer records that it was promoted')
+    assert(not code:find('PROMOTED', 1, true),
+        'pull_code() left comment text behind: it is not a code surface')
+    assert(code:find('creepPullAttackTime', 1, true),
+        'pull_code() stripped the code as well as the comments')
 end
 
 tests['[P1 (c)] the two pull cadences in this file agree'] = function()
