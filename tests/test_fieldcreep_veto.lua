@@ -323,17 +323,23 @@ tests['census: 5 of the 50 are vetoed, and the veto never widens'] = function()
     -- decision-side ids' domain), 3 do not (the supply id's domain). Both ends
     -- of owner P2's family are affected, which is why this is one clause in
     -- the shared predicate and not three copies.
-    assert(SWEEP_C.vetoed_heal == 2, 'with a heal: ' .. tostring(SWEEP_C.vetoed_heal))
-    assert(SWEEP_C.vetoed_dry == 3, 'without: ' .. tostring(SWEEP_C.vetoed_dry))
+    cs.ratchet(SWEEP_C.vetoed_heal, 2, 'vetoed frames with a heal')
+    cs.ratchet(SWEEP_C.vetoed_dry, 3, 'vetoed frames without a heal')
+    assert(SWEEP_C.vetoed_heal + SWEEP_C.vetoed_dry == SWEEP_C.vetoed,
+        'the two halves must exhaust the vetoed set')
 end
 
 tests['census: the seven askable rows, and the two that must NOT be vetoed'] = function()
-    assert(#SWEEP_ROWS == 7, 'expected 7 rows, got ' .. #SWEEP_ROWS)
+    cs.ratchet(#SWEEP_ROWS, 7, 'askable rows')
     local vetoed, spared = {}, {}
     for _, r in ipairs(SWEEP_ROWS) do
         if r.creep then vetoed[#vetoed + 1] = r else spared[#spared + 1] = r end
     end
-    assert(#vetoed == 5 and #spared == 2, 'expected 5 vetoed / 2 spared')
+    cs.ratchet(#vetoed, 5, 'vetoed rows')
+    cs.ratchet(#spared, 2, 'spared rows')
+    assert(#vetoed + #spared == #SWEEP_ROWS,
+        'vetoed and spared must partition the askable rows: '
+        .. #vetoed .. ' + ' .. #spared .. ' ~= ' .. #SWEEP_ROWS)
     -- Every vetoed row took real damage inside the window; every spared row
     -- took none. A row with dmg == 0 that is still vetoed would mean the
     -- loader and the fixture disagree.

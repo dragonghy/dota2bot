@@ -444,12 +444,16 @@ end
 
 tests['[WORLD ASSERTION] the laning bid moves on 23 of 100 frames, and always downward'] = function()
     local s = corpus()
-    assert(#s.laning_moved == 23,
-        'expected the laning bid to move on 23 of 100 fixtures; got ' .. #s.laning_moved)
+    -- GH #127, second pass: a per-fixture count, so it ratchets. The DIRECTION
+    -- is the finding and stays absolute -- `laning_up == 0` is the claim, and
+    -- the identity below ties the two counters so a moved frame cannot go
+    -- unclassified.
+    cs.ratchet(#s.laning_moved, 23, 'fixtures where the laning bid moves')
     assert(s.laning_up == 0,
         'no fixture bids laning HIGHER with an honest game mode; got ' .. s.laning_up)
-    assert(s.laning_down == 23,
-        'all 23 move down; got ' .. s.laning_down)
+    assert(s.laning_down == #s.laning_moved,
+        'every moved frame moves down; got ' .. s.laning_down
+        .. ' of ' .. #s.laning_moved)
     -- The direction is not a coincidence and it is worth stating as a
     -- mechanism, not a statistic: the ladder in
     -- FunLib/override_generic/mode_laning_generic.lua is a sequence of

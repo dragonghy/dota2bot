@@ -404,10 +404,10 @@ tests['[recorded] corpus: GH #123 would silence 13 of the 28, and rescue reaches
     assert(tonumber(dry_split) == tonumber(rescuable) + tonumber(stuck),
         'the split no longer partitions: ' .. dry_split
         .. ' ~= ' .. rescuable .. ' + ' .. stuck)
-    assert(tonumber(dry_split) == 13,
-        'dry frames the proposed fix would silence: ' .. dry_split)
-    assert(tonumber(rescuable) == 13,
-        'of those, frames the shipped rescuer can clear: ' .. rescuable)
+    cs.ratchet(tonumber(dry_split), 13, 'dry frames the proposed fix would silence')
+    cs.ratchet(tonumber(rescuable), 13, 'of those, frames the shipped rescuer can clear')
+    -- NOT softened: a stuck salve is the defect this whole family exists to
+    -- rule out, so the zero has to stay a zero.
     assert(tonumber(stuck) == 0,
         'frames with no swappable main item -- a real stuck salve: ' .. stuck)
 end
@@ -425,11 +425,14 @@ tests['[recorded] corpus: 18 of the 28 dry frames fall in BOTH shipped holes'] =
     local laning, lvl6, both, hpceil = out:match(
         'HOLE laning=(%d+) level6plus=(%d+) both=(%d+) hpceil=(%d+)')
     assert(laning, 'the sweep did not report a HOLE line')
-    assert(tonumber(laning) == 24, 'dry frames inside the laning phase: ' .. laning)
-    assert(tonumber(lvl6) == 22, 'dry frames at level 6+: ' .. lvl6)
-    assert(tonumber(both) == 18, 'dry frames in both holes at once: ' .. both)
-    assert(tonumber(hpceil) == 13,
-        'dry frames above fieldregen s 0.45 ceiling: ' .. hpceil)
+    cs.ratchet(tonumber(laning), 24, 'dry frames inside the laning phase')
+    cs.ratchet(tonumber(lvl6), 22, 'dry frames at level 6+')
+    cs.ratchet(tonumber(both), 18, 'dry frames in both holes at once')
+    cs.ratchet(tonumber(hpceil), 13, 'dry frames above fieldregen s 0.45 ceiling')
+    -- The containment that carries the claim, and it holds at any corpus size:
+    -- "both holes at once" cannot exceed either hole on its own.
+    assert(tonumber(both) <= tonumber(laning) and tonumber(both) <= tonumber(lvl6),
+        'the intersection outgrew one of the sets it is an intersection of')
     -- The two holes together must cover more than either alone, otherwise one
     -- of them is not a hole at all but a restatement of the other.
     assert(tonumber(both) < tonumber(laning) and tonumber(both) < tonumber(lvl6),
