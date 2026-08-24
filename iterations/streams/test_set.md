@@ -1,7 +1,12 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach
 
-**成员串 28**(上一行)。本行 2026-08-24T19:xxZ 的两处变动(全文档案 **§BB**,裁定 GH #164):
+**成员串 29**(上一行)。本行 2026-08-24T22:xxZ 的一处变动(全文档案 **§BC**,来源 GH #159):
+- **`tpreach` 入集**(总监自写自批,理由与自我制约见 §BC.3)。门是**它自己那一条**
+  (`jmz_func.lua:5878`,`IsModeTurbo` and `tpreach`)⇒ **无合取项、无 §BA.2 冻结风险,
+  单独 arm 即有意义**。零 AWS 增量、搭下一波全集的车,**不申请专波**。
+
+**下面是 2026-08-24T19:xxZ 那一行的两处变动(全文档案 §BB,裁定 GH #164):**
 - **`pulllane` 入集**(协同组 02:0xZ 提议,零 AWS 搭车)。**⚠️ arm 串约束成立且必须照办**:
   门是 `pullcamp` **and** `pulllane` 的合取(外层 `J.ShouldPullNeutralCamp` 在
   `jmz_func.lua:7915` 早退于 `pullcamp`,新子句在 `8037` 门于 `pulllane`)。
@@ -23,10 +28,76 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 - **`pullbeat` 留在集合里**:§AV.7 写的入集条件是「与 W3 发波同生共死 —— 归因波若没能成功
   收割就退回」,**归因波已于 14:10Z 成功收割**(275 有效局,unfinished 0)⇒ 条件已满足。
 
-(26 + `pulllane` + `towerfear` = **28**。上一行的 26 = 27 − `creeppull` − `pullbeat` + `pullcad`。
+(26 + `pulllane` + `towerfear` = **28**,+ `tpreach` = **29**。
+上一行的 26 = 27 − `creeppull` − `pullbeat` + `pullcad`。
 可 arm 串见各 §x.0,与成员串**不是一回事**。)
 
 ---
+
+## §BC 2026-08-24T22:xxZ 总监:`tpreach` —— 已 promote 的 tpsafe2 里一条**不可达分支**(GH #159)
+
+### §BC.0 一句话
+
+`J.CanEnemyInterruptTpChannel` **扫 700,却拿 `GetAttackRange() + 150` 去比**。
+这两个数**没有序关系**:攻击距离 > 550 的远程英雄 reach 就 > 700
+(viper 575→725,lina/CM/lion/WD/silencer 600→750,drow 625→775,skywrath 700→850),
+于是 **`[700, reach]` 这条带上,`nNow <= nReach` 这一支永远为假** —— 不是它判错了,
+是那种敌人**从来没进过候选表**。函数上方的注释逐字写着「within ~700 that is EITHER
+already inside its own attack reach」——**它假设了 700 支配所有 reach,而 700 不支配**。
+这是 **#29 / #31 那个复发类别的第三例**:「作者写的判据 ≠ 引擎能求值的判据」,
+前两例是 desire 被 cap 砍掉 / 被顺序遮蔽,这一例是**判据的定义域小于它自己的谓词**。
+
+### §BC.1 这**不是** GH #159 的结论,只是 #159 域里能从源码单独证明的一块
+
+#159 报的是 W4 208 局里 **12.6% 的 TP 按下**在按下瞬间已有敌方英雄在 725u 内、
+其中 **17.2% 死在通道里**(基础 3.9%)。**总监本轮的裁定是:那 1,296 次按下不是一个域,
+是三个,不能记在 tpsafe2 一家头上**(详见 GH #159 追评):
+
+| 来源 | 谁管 | 在 #159 的域里是什么 |
+|---|---|---|
+| `nMode == BOT_MODE_RETREAT` 的三条撤退支 | **`J.ShouldWalkNotTp`(#3,已 promote)**,tpsafe2 被调用点**按设计排除** | 它的三条 fall-through(定身/移速<285/on-face burst 能秒了我)**故意放行**「最后一搏的逃命 TP」。#159 §2.2 的 sven 自己就写着「回退支放行」⇒ **这一格里 17.2% 的致死率是设计后果,不是洞** |
+| 非撤退的 travel TP,敌人在 **700 内** | tpsafe2(已 promote,live) | 真正该由 tpsafe2 拦下的域 |
+| 非撤退的 travel TP,敌人在 **[700, reach]** | **没有人**——本节这条不可达分支 | **本轮修的就是这一格** |
+
+⇒ #159 §4 的验收「on-face 按下由 12.6% 降到 <5%」**当前不可照单接受**:
+字面执行它要求把第一格(最后一搏的逃命 TP)也压掉,而那正是 #3 A/B 花了
+−15 GPM 学会**不要**压的东西。**改判据**:验收必须**先按 mode 分层**,
+只对第二、三格设阈值;第一格报数但不设阈值。这条已写进 #159 追评,**issue 不关**。
+
+### §BC.2 修法为什么是**非对称**的(这是本条唯一值得测的地方)
+
+armed 后扫描半径 700 → **1200**(支配池内最宽 reach:sniper 带 Take Aim ≈ 690+150),
+但**只有「现在就能打到我」这一支跟着变宽**;「正在拉近距离」那一支**留在原来的 700**。
+理由不是保守,是**已经量过**:把「朝我走」这一支放到 1200,等于复现 GH #3 的第一版
+(任何一个从一屏外溜达过来的敌人都能否决每一次 travel TP),那一版**实测 −15 GPM、
+零挽救死亡**。**arming 只能加一个域,不能改老域。**
+
+未 armed 时不仅返回值相同,**语句序列也相同**(`nSoon` 仍然无条件求值)——
+这条不是洁癖:`test_itemdesire_world_assertion.lua` 的 crash 普查
+(`jmz_func:2597` = 178 次)**就是在数这个 helper 上那次未打桩的引擎调用**,
+第一版把 `nSoon` 挪进分支里,普查立刻从 210 掉到 164、178 掉到 131 —— **棘轮抓住了**。
+
+### §BC.3 自写自批的自我制约(总监开自己的 id,规矩要更紧不能更松)
+
+铁律 5 把 `[bug]` 判给总监,于是「谁写谁批」在这条上不可避免。三条制约:
+
+1. **入集不等于放行**:`tpreach` 和别的 id 一样要走 (a)(b)(c) 三条件,
+   **(a) 必须由录像组独立核验**(不是总监自己看)。已在 GH #159 追评里点名交棒。
+2. **不申请专波、不请求任何 AWS 增量**:搭下一波全集的车。总监本轮**零 AWS 调用**。
+3. **它是 gated 的,所以今天的每一局真实 Turbo 里逐字节没有变化** ——
+   `test_tpreach_band.lua` 的 case 1 就是**把这个洞按在原地当作现状钉住**:
+   未 armed 时 900u 外那个够得着我们的敌人**依然看不见**。
+   哪天 case 1 开始返回 true,说明有人把 gate 拆了。
+
+### §BC.4 验收(交给录像组的 (a),和交给批测台的 (b))
+
+- **(a) 录像组**:在带 `tpreach` 的波次里,找**非撤退 mode**下、敌人在 `(700, reach]` 带内
+  的按下点,确认 armed 腿**不按**、baseline 腿**按**。
+  `tp_channel_death.py` 已经算了 `near`(决策侧插值),**只差按 mode 分层**;
+  如果 dump 里没有 mode 字段,这条就先退化成「按 `near ∈ (700,725]` 的占比两腿差分」。
+- **(b) 批测台**:全集波里跟着读,**不单列**;主判据是胜负无明显负面。
+- **(c) 理论依据**:「不要在能被打断的地方起 3 秒读条」是标准打法,#3/#9 已各自
+  用 A/B 认过;本条不新增策略主张,只是**把已认可的判据修到它自己声称的定义域**。
 
 ## §BB 2026-08-24T19:xxZ 总监裁定:`pulllane` + `towerfear` **批准入集**(GH #164)
 
