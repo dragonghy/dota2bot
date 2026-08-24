@@ -1,7 +1,15 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear
 
-**成员串 26**(上一行)。本行 2026-08-23T23:xxZ 的三处变动(全文档案 **§BA**):
+**成员串 28**(上一行)。本行 2026-08-24T19:xxZ 的两处变动(全文档案 **§BB**,裁定 GH #164):
+- **`pulllane` 入集**(协同组 02:0xZ 提议,零 AWS 搭车)。**⚠️ arm 串约束成立且必须照办**:
+  门是 `pullcamp` **and** `pulllane` 的合取(外层 `J.ShouldPullNeutralCamp` 在
+  `jmz_func.lua:7915` 早退于 `pullcamp`,新子句在 `8037` 门于 `pulllane`)。
+  **两者都在成员串里 ⇒ 全集波自动同时 arm**;发隔离波时**必须两个一起写进 armed 串**,
+  漏一个 = 逐字节 no-op 且**没有任何计数会报警**(§BA.2 那个形状)。
+- **`towerfear` 入集**(协同组 14:0xZ 提议,零 AWS 搭车)。门是**它自己那一条**
+  (`mode_retreat_generic.lua:907`,`towerfear` and `IsModeTurbo`)⇒ **无合取风险,单独 arm 即有意义**。
+- 以下为 2026-08-23T23:xxZ 那一行的三处变动,留档(**§BA**):
 - **`creeppull` + `pullbeat` PROMOTED,出集** —— 不是退回也不是 reject,是**毕业**。
   owner 铁律 2 的三条件在这一对上首次同时齐备,gate 已从源码移除,turbo 默认开。
   **promote 的单位是这一对,不是 `creeppull` 单独**(理由见 §BA.1)。
@@ -15,7 +23,73 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 - **`pullbeat` 留在集合里**:§AV.7 写的入集条件是「与 W3 发波同生共死 —— 归因波若没能成功
   收割就退回」,**归因波已于 14:10Z 成功收割**(275 有效局,unfinished 0)⇒ 条件已满足。
 
-(27 − `creeppull` − `pullbeat` + `pullcad` = **26**。可 arm 串见各 §x.0,与成员串**不是一回事**。)
+(26 + `pulllane` + `towerfear` = **28**。上一行的 26 = 27 − `creeppull` − `pullbeat` + `pullcad`。
+可 arm 串见各 §x.0,与成员串**不是一回事**。)
+
+---
+
+## §BB 2026-08-24T19:xxZ 总监裁定:`pulllane` + `towerfear` **批准入集**(GH #164)
+
+### §BB.0 裁定
+
+**两条都批准,成员串 26 → 28。** 两条都是「搭车、不申请专波、零 AWS 增量」,
+下一波全集自动带上;**本裁定不请求任何新波次**。
+
+### §BB.1 为什么这一轮必须裁,而不是「等下一轮按顺序读」
+
+批测台 18:12Z 发出 W7 全集波时,这两条**代码在树上、接线门 WIRED、只差一个批准**,
+于是**空过了一波全集**(GH #164)。总监 16:xxZ 报告写的是「本轮不新做 promote/reject…**不加急**」——
+那句话的**代价**本轮被量出来了,而且不对称:
+
+- **入集裁定是零成本的**(markdown + registry,不花 AWS、不占波次);
+- **空过一波全集是有成本的**($1.48 已经花掉,而这两条本可以免费搭上去);
+- ⇒ **「不加急」对入集提议是错的默认**。搭车提议的正确默认是**批或退,当轮给结论**,
+  因为它唯一的成本是**不裁**。**这条写进 §BB.4 作为流程补则。**
+
+其中 `pulllane` 是 **owner P1(拉野)连接率**那一格 —— P1 的责任链本轮卡在总监这一步,
+铁律 9 的连带规则(修好≠做完,下一棒必须显式交出去)正指着它。
+
+### §BB.2 `pulllane`:批准。合取门经**源码侧**核实是活的,不是 §BA.2 那个被冻死的形状
+
+§BA.2 的教训是「`X and Y` 的合取会在 Y 被 promote 的那天被永久冻结为 FALSE,
+而 `check_armed_wiring.py` 仍然报 WIRED(它查的是调用点存在,不是谓词**能不能为真**)」。
+`creeppull` **本轮刚 promote**,所以这个检查不是形式主义。**逐字核实**:
+
+| 环节 | 源码 | 读数 |
+|---|---|---|
+| 外层函数早退 | `jmz_func.lua:7915` `if not J.IsSoakCandidate('pullcamp') then return nil end` | `pullcamp` **在成员串里、未 promote** ⇒ 可为真 |
+| 新子句门 | `jmz_func.lua:8037` `if J.IsSoakCandidate('pulllane') then` | 本裁定后在成员串里 ⇒ 可为真 |
+| 合取项里有无已 promote 的 id | `grep` `pullcamp`/`pulllane`/`IsCampBesideLane` 全仓 | **无** —— `creeppull`/`pullbeat` 不出现在这条门的任何合取项里 |
+
+⇒ **合取可以为真,§BA.2 的形状不适用。** 清单侧:`tests/test_pullcamp_lane_gap.lua`
+本轮在 main 上实跑 **15/15 绿**;luacheck `bots game` **0 警告**。
+
+**批准理由(除机制外)**:常数 1200 的出处是录像组自己量到的 max 拖拽 1,170u 向上取整
+(`0NUM` 合规,不是发明的数);提议**自证了可分离性**并把反 SILENT 读法**事先登记**进
+`queue.json:strategy-11`(`poke_episodes` 塌零读作「常数太紧」而非「场景稀缺」)——
+这正是 §AT.1 要求的预登记形状。
+
+### §BB.3 `towerfear`:批准。门是单条,armed 谓词是出厂谓词的**子集**
+
+`mode_retreat_generic.lua:907` 的门是 `IsSoakCandidate('towerfear') and IsModeTurbo()`——
+**没有第二个候选 id 做合取项** ⇒ 结构上没有 §BA.2 风险。armed 只把时钟腿 `5*60` 折半到 `2:30`,
+等级腿 / 塔环 / 校准判据一律不动 ⇒ 这个 `return 2` **只可能少开、不可能多开**,
+最坏情况是回到出厂行为的一个子集。清单侧:`tests/test_towerfear_clock_leg.lua`
+本轮在 main 上实跑 **15/15 绿**(含 08-24 16:41Z 协同组补的 `declare_defend_ping(J,'stale')`,
+GH #91 棘轮本轮实跑 **8/8 绿**)。
+
+**登记一条诚实边界(不构成退回理由,但要写进验收)**:本地帧域 **1/966**
+是**这份语料的下界**,不是 turbo 的估计(批测局在攻塔前自终止,该 fixture 集当初为别的问题采)。
+⇒ 若波次回来三个读数全不动,**按 `queue.json:strategy-12` 已登记的读法**:
+第一嫌疑 arm 串漏 id,第二嫌疑事件率本身太稀,**此时不许再收窄谓词,要去量事件率**。
+
+### §BB.4 流程补则(本轮新立):**搭车入集提议,当轮批或退**
+
+一个自称「搭车、不申请专波、零 AWS 增量」的入集提议,**其唯一成本是不裁**。
+因此总监**不得**以「不加急 / 让下一轮按顺序读」处置它 —— 那不是保守默认,
+那是把一个零成本决定拖成一次空过的波次。**批或退,当轮给结论;退回必须写理由**,
+以免它每一波都排在「差一个批准」的位置上。(§BA.4 的补则管的是「裁定必须落到成员串,
+写在散文里不算送达」;本条管的是**裁定的时限**。)
 
 ---
 

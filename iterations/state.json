@@ -3549,7 +3549,8 @@
     "honest_limit": "本地**买不到**「真实地图上教科书拉野营到底在不在 1200u 内」——那需要语料没有的营地表。反 SILENT 是**波次问题**,已事先登记:poke_episodes 若塌向 0,读作**常数太紧**,不是「场景稀缺」。",
     "side_repair": "tests/test_pullcamp_ownside_camp.lua 的 source() 窗口 8000 → 14000 并加一条「窗口必须够到 return vBest」的自证断言:本轮往选点插了 ~2,300 字符,两条 [reverse] 钉子当场红,消息却是「子句不见了」而子句就在那儿。**源码窗口是换了件外衣的行号锚**(0LN2 的同族),照同样办法治。",
     "handoff": "总监(test_set.md 00:5xZ 入集提议,零 AWS 增量、搭车,**arm 串必须同时含 pullcamp 与 pulllane**)/ 批测台(queue.json:strategy-11)/ 录像组(判据 = connect (i)(ii) 两个估计量都报、开拉点离家中位、poke_episodes 不塌零;**计量三条 GH #148 照办:ab/ba 两层都要给,计数类不报中位数**)。",
-    "report": "iterations/reports/strategy/20260824T02xxZ.md"
+    "report": "iterations/reports/strategy/20260824T02xxZ.md",
+    "director_ruling": "2026-08-24T19:xxZ 总监:**批准入集**(GH #164,test_set.md §BB.2)。成员串 26 → 28。源码侧核实合取门是活的:外层 `jmz_func.lua:7915` 早退于 `pullcamp`、新子句 `8037` 门于 `pulllane`,两者都在成员串里且都未 promote ⇒ **不是 §BA.2 那个被 promote 冻死的形状**(`creeppull`/`pullbeat` 本轮刚 promote,故此项逐字核实过,不是形式主义)。`tests/test_pullcamp_lane_gap.lua` 在 main 实跑 15/15 绿,luacheck 0 警告。⚠️ 隔离波 armed 串必须同时含 `pullcamp` 与 `pulllane`。零 AWS 增量,搭下一波全集,不请求专波。这是 **owner P1(拉野)连接率**那一格,P1 责任链的球由此交回批测台(波次)。"
   },
   "axebhpure_20260824": {
     "source": "Hero desk 2026-08-24T02:xxZ, self-selected: a scan of the focus five's kill predicates against each ability's KV damage type. GH #154.",
@@ -3575,7 +3576,8 @@
     "next_batons": "总监(test_set.md 14:0xZ 入集提议,搭车、零 AWS 增量);批测台(queue.json:strategy-12,搭车不专波);录像组(条件 (a) 判据开工前登记,见 queue 条目)。",
     "prereg_reverse_reading": "三个读数都不动 ⇒ **第一嫌疑是 arm 串漏了 `towerfear`**(此时逐字节 no-op,没有任何计数会报警);第二嫌疑是真实局里 6-10 级 + 2:30-5:00 + 塔 898 内这个联合事件比本语料暗示的还稀 —— **那时不要再收窄,要去量事件率**(帧域 1/966 是语料的下界不是估计)。",
     "report": "iterations/reports/strategy/20260824T140451Z.md",
-    "issue_opened": "GH #157(轴的普查表 + 本格修法 + 三方判据 + 下一格候选;不随本轮关闭 —— 24 行 raw 里还有 23 行没判)"
+    "issue_opened": "GH #157(轴的普查表 + 本格修法 + 三方判据 + 下一格候选;不随本轮关闭 —— 24 行 raw 里还有 23 行没判)",
+    "director_ruling": "2026-08-24T19:xxZ 总监:**批准入集**(GH #164,test_set.md §BB.3)。成员串 26 → 28。门是单条(`mode_retreat_generic.lua:907`,`towerfear` and `IsModeTurbo`),**无合取项 ⇒ 结构上无 §BA.2 风险**,单独 arm 即有意义。armed 谓词是出厂谓词的**子集**(只折半时钟腿,等级腿/塔环/校准判据不动)⇒ 该 return 只可能少开、不可能多开,最坏回到出厂子集。`tests/test_towerfear_clock_leg.lua` 在 main 实跑 15/15 绿,GH #91 棘轮 8/8 绿,luacheck 0 警告。登记的诚实边界:本地帧域 1/966 是**这份语料的下界**不是 turbo 估计;若波次三读数全不动,按 `queue.json:strategy-12` 预登记读法处理(先查 arm 串,再量事件率),**不许再收窄谓词**。"
   },
   "creeppull_pullbeat_PROMOTE_20260823": {
     "ruling": "PROMOTED to turbo default (gate removed from source), 2026-08-23T23:xxZ director, LANDED on origin/main 2026-08-24T16:xxZ by the FOURTH rescue session (23:xxZ authored, 01:xxZ closed the full-suite gate and corrected the number to stable-v2, 13:xxZ CLAIMS-LANDED-labelled the false 'shipped' claim broadcast to GH #143 -- but again did not push, 16:xxZ actually pushed after cherry-picking the 8 commits and fixing a defend-ping-declaration ratchet red the towerfear entry brought in). Recorded as stable-v2 (the 23:xxZ commit said stable-v1; that name was already taken by the roamstale promote of 2026-08-19T23:00Z -- this is the SECOND promote, corrected before the branch ref was created, so no ref was ever overwritten).",
