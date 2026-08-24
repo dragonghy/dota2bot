@@ -107,6 +107,24 @@ LIMITS -- read these before believing a finding
    to the row -- the reader judges the sentence.  Absence of the marker is NOT
    evidence that a commit made no claim.
 
+   One false-positive class is excluded rather than tolerated, because it was
+   guaranteed rather than occasional: a QUOTED claim.  The commit that added
+   this feature tripped its own flag, and so did the report commit describing
+   the incident, both because they quote the false sentence in order to explain
+   it.  Every commit that documents a false landing claim contains one, so a
+   claim enclosed in "..." / `...` / CJK brackets is read as reported, not
+   asserted.  Cost of that rule, paid knowingly: a real claim someone happens to
+   put in quotes is missed.
+
+   RESIDUAL, measured and left alone: the clause tests are PER LINE, while the
+   prose wraps.  "promote 落 main 在\\n**01:xxZ**" splits a copula from its
+   object, so that line reads as an assertion and is flagged.  Left as-is on
+   purpose -- chasing it is whack-a-mole on line breaks, and the commit it
+   currently flags does belong to the delivery that made the false claim, so the
+   marker still points at the right place.  Final reading on the corpus that
+   motivated the feature: 4 rows, all four from that one delivery; both rescue
+   notes clean; the two commits that ADDED this feature clean.
+
    It also does not fire on the inverse and more common case: a report that
    claims a landing while the commit carrying that claim itself landed fine and
    only the CODE stayed behind.  Catching that needs a per-claim referent, which
@@ -171,6 +189,10 @@ _NEGATION_RE = re.compile(
 _CLAUSE_TAIL_RE = re.compile(
     r"""^\s*(
           (之)?[后後前] | 时 | 之时 | 才 | 再 | 就 | 以后 | 以前
+        # "promote 落 main 是 **01:xxZ**" / "...是本轮" -- the copula makes the
+        # landing the SUBJECT of a statement about when it happens, not a claim
+        # that it has happened.  Both surviving false positives were this.
+        | \s*是
         | \s*(after|before|once|until|when)\b
         )""",
     re.IGNORECASE | re.VERBOSE,
@@ -194,6 +216,54 @@ _CLAUSE_HEAD_RE = re.compile(
 )
 
 
+_QUOTE_PAIRS = (("「", "」"), ("『", "』"), ("“", "”"))
+
+
+def _inside_quotes(line, start, end, carry=False):
+    """Is the span [start:end) sitting inside a quotation?
+
+    `carry` says a quote was still open when this line began -- commit messages
+    and markdown wrap, so the opening delimiter is routinely on a previous line
+    and a per-line parity check cannot see it.  The report commit for the
+    2026-08-24 incident wrapped in exactly that place.
+
+    Found by dogfooding, which is the only reason it is here: the commit that
+    ADDED this feature tripped it, and so did the report commit describing the
+    incident -- both because they quote the false sentence in order to explain
+    it.  That class is not rare, it is guaranteed: every commit that documents a
+    false landing claim contains one.  A sentence a commit is REPORTING is not a
+    sentence it is ASSERTING."""
+    if carry:
+        return True
+    for open_q, close_q in _QUOTE_PAIRS:
+        if open_q in line[:start] and close_q in line[end:]:
+            return True
+    # Symmetric delimiters: an odd count before the match means it opened and
+    # did not close, so the match is inside it.
+    for q in ('"', "`", "'"):
+        if line[:start].count(q) % 2 == 1:
+            return True
+    return False
+
+
+def _scan_lines(lines):
+    """Yield (line, carry) where carry means a quote was open at line start.
+
+    Reset on a blank line: a paragraph boundary bounds the damage from one
+    unbalanced delimiter, which otherwise silences every claim after it."""
+    open_dq = False
+    open_cjk = 0
+    for ln in lines:
+        if not ln.strip():
+            open_dq, open_cjk = False, 0
+            yield ln, False
+            continue
+        yield ln, (open_dq or open_cjk > 0)
+        open_dq ^= ln.count('"') % 2 == 1
+        open_cjk += ln.count("「") - ln.count("」")
+        open_cjk = max(0, open_cjk)
+
+
 def landing_claim(cwd, sha):
     """First line of this commit that ASSERTS the work is on the trunk, or None.
 
@@ -212,25 +282,32 @@ def landing_claim(cwd, sha):
     except RuntimeError:
         diff = ""
 
-    lines = [ln.strip() for ln in body.splitlines()]
-    lines += [
-        ln[1:].strip()
-        for ln in diff.splitlines()
-        if ln.startswith("+") and not ln.startswith("+++")
+    # Scanned as two SEPARATE blocks: quote state must not carry from the commit
+    # message into the diff, which is a different document.
+    blocks = [
+        [ln.strip() for ln in body.splitlines()],
+        [
+            ln[1:].strip()
+            for ln in diff.splitlines()
+            if ln.startswith("+") and not ln.startswith("+++")
+        ],
     ]
-    for ln in lines:
-        if not ln:
-            continue
-        if _NEGATION_RE.search(ln):
-            continue
-        m = _CLAIM_RE.search(ln)
-        if not m:
-            continue
-        if _CLAUSE_TAIL_RE.match(ln[m.end():]):
-            continue          # "...落 main 后还欠两件收尾" -- a plan, not a report
-        if _CLAUSE_HEAD_RE.search(ln[: m.start()]):
-            continue          # "等 promote 落 main" -- a precondition
-        return ln
+    for block in blocks:
+        for ln, carry in _scan_lines(block):
+            if not ln:
+                continue
+            if _NEGATION_RE.search(ln):
+                continue
+            m = _CLAIM_RE.search(ln)
+            if not m:
+                continue
+            if _CLAUSE_TAIL_RE.match(ln[m.end():]):
+                continue      # "...落 main 后还欠两件收尾" -- a plan, not a report
+            if _CLAUSE_HEAD_RE.search(ln[: m.start()]):
+                continue      # "等 promote 落 main" -- a precondition
+            if _inside_quotes(ln, m.start(), m.end(), carry):
+                continue      # REPORTING the sentence, not making it
+            return ln
     return None
 
 

@@ -259,6 +259,17 @@ CLAIM_CASES = [
      "\u843d main \u540e\u8fd8\u6b20**\u4e24\u4ef6\u6536\u5c3e**\uff1a(i) `git push origin HEAD:stable-v2`", False),
     ("CONDITIONAL HEAD -- english",
      "Once the suite is green it will be pushed to main.", False),
+    # Found by dogfooding: the commit that ADDED this feature tripped its own
+    # flag, because explaining the incident means quoting the false sentence.
+    # Every commit documenting a false landing claim contains one.
+    ("QUOTED -- a commit REPORTING the false claim, not making it",
+     'The round wrote "promote already landed on main" into the charter.', False),
+    ("QUOTED -- CJK brackets, the same shape",
+     "\u8ffd\u8bc4\u300c\u5df2\u843d main\uff0c`stable-v2`\uff0csha\u300d\u3002", False),
+    # The copula: the landing is the SUBJECT of a statement about WHEN, which is
+    # how both surviving false positives were phrased.
+    ("COPULA -- 'the landing on main IS this round', a statement about timing",
+     "\u5b83 00:09:32Z \u53d1\u6ce2\uff0c\u800c promote \u843d main \u662f **01:xxZ**", False),
 ]
 with tempfile.TemporaryDirectory() as tmp:
     up = new_origin(tmp)
