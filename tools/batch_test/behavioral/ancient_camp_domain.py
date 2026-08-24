@@ -251,6 +251,12 @@ def episodes_for_game(tl, path, gap=DEFAULT_GAP, tail=DEFAULT_TAIL,
                 "kills": len(g_kills),
                 "gold": round(g_gold),
                 "opened": bool(dealt_ts and taken_ts and dealt_ts[0] < taken_ts[0]),
+                # Where the fight was.  Ancient camps resolve to exactly two
+                # map clusters per side (see the ANCIENT UNIT SET note), so the
+                # sign of x is which team OWNS the camp -- the only thing
+                # `IsCampAllowedForLevel`'s enemy-camp clause needs.
+                "x0": round(f0["x"]),
+                "y0": round(f0["y"]),
                 "nearest_enemy": round(near) if near is not None else None,
                 "regen_used": used,
                 "ended_tp_home": tped,

@@ -3599,3 +3599,56 @@
     (5) `hero-1` 的 153 局 WK 语料(棒子挂 **17 轮**);(6) `l5combo` 的 (a)(**连续第三十三轮**);
     (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第二十轮顺延**);(8) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260823T231221Z.md`
+- **2026-08-24T00:59Z(第六十次触发)**:W4(`campgrade` 独占波,00:12Z 发)落地即开工 ——
+  **宽扫 200/200 已落地非暖场局**(四 run,按 run 分目录)**+ 深查 6 局逐帧**(5 英雄、两条腿、两个物理层)。
+  零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐ **`campgrade` 的 (a) = SILENT**(用 GH #137 §4 自己登记的验收量,写成可分腿谓词:
+    远古营 `level>=12`、敌方远古 `level>=15`,**复合**)。两个物理层反号(ab **+0.192** / ba **−0.138**),
+    按 21:00Z 对 #148 的修正**先算平衡估计量**:**违规/局 +0.027(|t| 0.44)**、仅远古子句 +0.021、
+    仅 `opened` +0.025。**一个要把该人口清零的杠杆,在自己的验收量上读出正号。**
+    绝对量:armed 48 次违规 / 89 个远古 episode / 120+80 局;baseline 40 / 58。
+    对照 #137 原始的 12/40=0.30 次/局:本语料 armed 0.225、baseline 0.185,**两腿仍同量级**。
+  - ⭐ **为什么 SILENT 是查出来的:单向的「列表免责」判据。** `J.Role.availableCampTable`
+    (`aba_role.lua:292`)是**全队共用的模块级表**,`mode_farm_generic.lua:241` 用**碰巧在
+    `sec∈(0,2)` 跑到那一帧的那一个 bot 的等级**整表覆写 ⇒ 「营地能进名单」的最弱前提是
+    「全队某人某次刷新时够得着门」。取「全队历史最高等级 < 门」为免责(**只在一个方向成立**)。
+    **48 次 armed 违规里 23 次(47.9%)列表免责**(14 次 `opened=True`)⇒ **存在第二条不走名单的通路**;
+    另 25 次的队伍最高等级落在 {12..16},与共享表通路一致。
+  - ⭐ **两条通路各有承重帧**。**A(不走名单)**:`mode_farm_generic.lua:706-724` 的
+    `GetNearbyCreeps(900,true)`,门只判 `nNeutrals[1]:IsAncientCreep()` 且阈值是 **10 不是 12**,
+    而目标由 `FindFarmNeutralTarget`(兜底 `GetMinHPCreep`,**对远古零过滤**)在**整张表**里选
+    ⇒ 900u 内的普通营给远古营当挡箭牌;**viper 的 farm 类型是 `maxHP`,远古正是血最厚的**。
+    帧:`_2651cb/20260824_002635_slot10` spirit_breaker **L8 ARMED,全队最高仅 L11**,
+    543–547 在 ogre 营(-4245,357),**549.0 他先出手**打 `prowler_shaman`(-4641,479),
+    0.9s 后远古才还手,550.3 中 `spawnlord_master_freeze_root`,552.1 `charge_of_darkness` **冲进去**。
+    **B(名单被队友刷开)**:`_2651cb/20260824_001430_slot8` bristleback L10(队最高 L13)
+    **直线走 2,900u** 进营、**16 秒逐帧不动**;`_001427_slot8` sven L9(队最高 **L12,恰好卡门上**);
+    `_002612_slot2` bristleback L11 **在 21% 血上**连打两个远古营 23 秒;`_002650_slot6` viper L10(队最高 L15)。
+    **对照** `_c17493/20260824_003150_slot12` bristleback L11 **BASELINE**:同时点着两个远古营,
+    血 **0.868→0.050**,TP 逃回泉水 —— **#137 承重案例的逐字重演**。
+    ⇒ **两腿同病 = SILENT 而非 BUGGY**:armed 没有新坏行为,只是旧的一点没少。
+  - ⚠️ **不要读成效应的读数**:远古 episode 里 L≤11 的**占比** armed 50.6% vs baseline 63.8%
+    —— **分母动了**(armed episode 总数多 53%),绝对次数 45 vs 37。主判据因此用每局计数(#148(ii) 同理)。
+  - **踩到并显式复核了「`.dem` 同名跨 run 撞车」**:200 行 manifest 只有 **190 个不同局名**,
+    10 组撞名、**0 组 armed 侧别不一致**;工具逐 sweep 目录读 timeline ⇒ 没丢局。
+    **本轮抓到一个活的反例**:临时调试脚本的局名字典 last-wins 把 `003150_slot12` 解析成
+    没有 bristleback 的那一份,`KeyError` 当场炸出来 —— **那条警告不是历史记载。**
+  - **交付**:新工具 `tools/batch_test/behavioral/campgrade_ladder.py`(`--selfcheck` **18/18 PASS**,
+    含两条**方法学**断言:纯侧别项 ⇒ 平衡估计量必须精确为 0;两层同号真效应必须活过平均);
+    `ancient_camp_domain.py` 仅**追加** `x0`/`y0`(营地归属按**几何**判 —— 距哪一方远古建筑近,
+    不硬编码 x 的符号)。跨组:**GH #137 追评**(含两条通路的行号 + 建议修法 + 验收量)。
+    **不新开 issue,不提波次请求,不花 AWS 钱。**
+  - **本轮欠账(诚实登记)**:00:41Z 就开工不等收割,四个 run 的 `.dem` 列表按到达时刻取;
+    波次此后继续产出到自毁 ⇒ 覆盖 **200/232 = 86.2%**,**剩余 ~32 局归下一轮**。
+    收尾核:running/pending 实例 **0**。
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**);`tests/run_py_tests.sh` **18 passed / 0 failed**(开工与收尾各一次一致)。
+    **AWS**:EC2 **$0**(只读 `describe-instances`),S3 只读,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **W4 剩余 ~32 局补扫**,在完整语料上复核平衡估计量;
+    (2) ⭐ **ab/ba 分层 + 平衡估计量回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`**
+    ——**连续第四轮登记、连续第四轮没做**(本轮只把纪律用在了新工具上);
+    (3) `stayfield`(TP 腿)在 205 局上补第一失败子句分解;
+    (4) 打野反证 fixture 钉 `002103_slot5 t=634.2 skeleton_king`(**已顺延十轮**);
+    (5) `hero-1` 的 153 局 WK 语料(棒子挂 **18 轮**);(6) `l5combo` 的 (a)(**连续第三十四轮**);
+    (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第二十一轮顺延**);(8) `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260824T005934Z.md`
