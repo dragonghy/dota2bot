@@ -281,6 +281,16 @@ local abilityE = bot:GetAbilityByName( sAbilityList[3] )
 local abilityR = bot:GetAbilityByName( sAbilityList[6] )
 local talent4 = bot:GetAbilityByName( sTalentList[4] )
 local talent5 = bot:GetAbilityByName( sTalentList[5] )
+-- FACT (GH #166, two sources joined by tools/agent/talent_slot_census.py, read
+-- 2026-08-24).  sTalentList is built by aba_skill.X.GetTalentList in the game's
+-- own talent ROW order, so index 7 / 8 are the two halves of the t25 row:
+--
+--     [7] special_bonus_unique_lion_4  ->  lion_voodoo/radius            = +250
+--     [8] special_bonus_unique_lion_2  ->  lion_impale/AbilityCastRange  = +600
+--
+-- Every read of `talent8` below decides something about lion_voodoo (Hex) -- yet
+-- the talent it names modifies lion_impale.  The Hex-AoE talent is the OTHER
+-- half of the same row.  Read through X.IsHexAoe, never raw; see the note there.
 local talent8 = bot:GetAbilityByName( sTalentList[8] )
 
 local castQDesire, castQLocation
@@ -375,7 +385,7 @@ function X.SkillsComplement()
 
 		J.SetQueuePtToINT( bot, true )
 
-		if talent8:IsTrained()
+		if X.IsHexAoe()
 		then
 			bot:ActionQueue_UseAbilityOnLocation( abilityW, castWTarget )
 		else
@@ -661,12 +671,12 @@ function X.ConsiderW()
 	for _, npcEnemy in pairs( nInBonusEnemyList )
 	do
 		if J.IsValidHero( npcEnemy )
-			and ( J.CanCastOnTargetAdvanced( npcEnemy ) or talent8:IsTrained() )
+			and ( J.CanCastOnTargetAdvanced( npcEnemy ) or X.IsHexAoe() )
 			and J.CanCastOnNonMagicImmune( npcEnemy )
 		then
 			if npcEnemy:IsChanneling()
 			then
-				if talent8:IsTrained()
+				if X.IsHexAoe()
 				then
 					return BOT_ACTION_DESIRE_HIGH, npcEnemy:GetLocation(), 'W-打断吟唱:'..J.Chat.GetNormName( npcEnemy )
 				else
@@ -677,7 +687,7 @@ function X.ConsiderW()
 			if npcEnemy:IsCastingAbility()
 				and J.IsInRange( bot, npcEnemy, nCastRange + 50 )
 			then
-				if talent8:IsTrained()
+				if X.IsHexAoe()
 				then
 					return BOT_ACTION_DESIRE_HIGH, npcEnemy:GetLocation(), 'W-打断施法:'..J.Chat.GetNormName( npcEnemy )
 				else
@@ -693,7 +703,7 @@ function X.ConsiderW()
 		and ( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )
 	then
 
-		if talent8:IsTrained()
+		if X.IsHexAoe()
 		then
 			local nAoeLoc = J.GetAoeEnemyHeroLocation( bot, nCastRange, 250, 2 )
 			if nAoeLoc ~= nil
@@ -709,7 +719,7 @@ function X.ConsiderW()
 		do
 			if J.IsValid( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
-				and ( J.CanCastOnTargetAdvanced( npcEnemy ) or talent8:IsTrained() )
+				and ( J.CanCastOnTargetAdvanced( npcEnemy ) or X.IsHexAoe() )
 				and not J.IsDisabled( npcEnemy )
 				and not J.IsTaunted( npcEnemy )
 				and not npcEnemy:IsDisarmed()
@@ -726,7 +736,7 @@ function X.ConsiderW()
 		if npcMostDangerousEnemy ~= nil
 			and J.IsInRange( bot, npcMostDangerousEnemy, nCastRange + 50 )
 		then
-			if talent8:IsTrained()
+			if X.IsHexAoe()
 			then
 				return BOT_ACTION_DESIRE_HIGH, npcMostDangerousEnemy:GetLocation(), 'W-团战:'..J.Chat.GetNormName( npcMostDangerousEnemy )
 			else
@@ -742,13 +752,13 @@ function X.ConsiderW()
 	then
 		if J.IsValidHero( botTarget )
 			and J.CanCastOnNonMagicImmune( botTarget )
-			and ( J.CanCastOnTargetAdvanced( botTarget ) or talent8:IsTrained() )
+			and ( J.CanCastOnTargetAdvanced( botTarget ) or X.IsHexAoe() )
 			and J.IsInRange( bot, botTarget, nCastRange + 150 )
 			and not J.IsDisabled( botTarget )
 			and not J.IsTaunted( botTarget )
 			and not botTarget:IsDisarmed()
 		then
-			if talent8:IsTrained()
+			if X.IsHexAoe()
 			then
 				return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation(), 'W-进攻:'..J.Chat.GetNormName( botTarget )
 			else
@@ -767,12 +777,12 @@ function X.ConsiderW()
 		do
 			if J.IsValid( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
-				and ( J.CanCastOnTargetAdvanced( npcEnemy ) or talent8:IsTrained() )
+				and ( J.CanCastOnTargetAdvanced( npcEnemy ) or X.IsHexAoe() )
 				and not J.IsDisabled( npcEnemy )
 				and not J.IsTaunted( npcEnemy )
 				and not npcEnemy:IsDisarmed()
 			then
-				if talent8:IsTrained()
+				if X.IsHexAoe()
 				then
 					return BOT_ACTION_DESIRE_HIGH, npcEnemy:GetLocation(), 'W-保护自己:'..J.Chat.GetNormName( npcEnemy )
 				else
@@ -792,12 +802,12 @@ function X.ConsiderW()
 				and ( bot:WasRecentlyDamagedByHero( npcEnemy, 4.0 )
 						or GetUnitToUnitDistance( bot, npcEnemy ) <= 600 )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
-				and ( J.CanCastOnTargetAdvanced( npcEnemy ) or talent8:IsTrained() )
+				and ( J.CanCastOnTargetAdvanced( npcEnemy ) or X.IsHexAoe() )
 				and not J.IsDisabled( npcEnemy )
 				and not J.IsTaunted( npcEnemy )
 				and not npcEnemy:IsDisarmed()
 			then
-				if talent8:IsTrained()
+				if X.IsHexAoe()
 				then
 					return BOT_ACTION_DESIRE_HIGH, npcEnemy:GetLocation(), 'W-撤退:'..J.Chat.GetNormName( npcEnemy )
 				else
@@ -815,7 +825,7 @@ function X.ConsiderW()
 			and not J.IsDisabled( botTarget )
 			and not botTarget:IsDisarmed()
 		then
-			if talent8:IsTrained()
+			if X.IsHexAoe()
 			then
 				return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation(), 'W-肉山:'..J.Chat.GetNormName( botTarget )
 			else
@@ -1209,6 +1219,47 @@ function X.CanCastAbilityROnTarget( nTarget )
 	end
 
 	return false
+
+end
+
+
+--- Is Hex an AREA spell right now?  Every `talent8` read in X.ConsiderW,
+--- X.ConsiderStopDrain and the W dispatch in X.SkillsComplement asks this one
+--- question, so they all come through here.
+---
+--- WHY IT IS A QUESTION AT ALL (GH #166).  `talent8` = sTalentList[8] =
+--- special_bonus_unique_lion_2, which the game's KV shows as an override on
+--- lion_impale/AbilityCastRange (+600).  It does not touch lion_voodoo.  The
+--- talent that gives Hex a radius is special_bonus_unique_lion_4 (+250), and it
+--- is sTalentList[7] -- the other half of the same t25 row.  So the shipped
+--- reads name the wrong half, and this file's own tTalentTreeList picks
+--- ['t25'] = {10, 0} => aba_skill.X.GetTalentBuild index 4 = 8, i.e. the build
+--- trains exactly the half that makes these reads answer true.
+---
+--- Two things go wrong when it does, and only the first needs the engine:
+---   * the dispatch swaps ActionQueue_UseAbilityOnEntity for
+---     ActionQueue_UseAbilityOnLocation, while lion_voodoo's AbilityBehavior is
+---     DOTA_ABILITY_BEHAVIOR_UNIT_TARGET with no talent override anywhere in the
+---     KV -- a location order for a unit-target ability.  What the engine does
+---     with that cannot be settled offline (AGENTS.md: no bot-side debugging),
+---     so it is stated as the risk it is, not as a measured no-op;
+---   * `( J.CanCastOnTargetAdvanced( x ) or X.IsHexAoe() )` drops the
+---     cast-legality check on the strength of the same false premise.  That one
+---     needs no engine reading to be wrong: Hex is unit-targeted either way, so
+---     there is never a reason to skip it.
+---
+--- NARROWING (soak candidate 'lionhexaoe', turbo-only).  The shipped read runs
+--- FIRST and a `return false` is the only thing the armed path can add, so
+--- gate-off equivalence is structural rather than measured -- the dual of the
+--- widening shape GH #154 wrote down, and the same discipline as GH #165's
+--- "armed may only take the min".
+function X.IsHexAoe()
+
+	if talent8 == nil or not talent8:IsTrained() then return false end
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'lionhexaoe' ) then return false end
+
+	return true
 
 end
 

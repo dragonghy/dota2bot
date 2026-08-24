@@ -22,6 +22,29 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-7. ~~**GH #166:Lion 的 `talent8` 读的是同一行 t25 天赋的另一半**~~
+   **2026-08-24T22:30Z done —— 十五处调用点全部改道** 新谓词 `X.IsHexAoe()`,
+   gated **`lionhexaoe`**(turbo-only,**未 armed**,**不申请入集、不提 queue**,理由是域为空且量过)。
+   `sTalentList[8]` = `special_bonus_unique_lion_2` = `lion_impale/AbilityCastRange +600`,
+   **不碰妖术**;给妖术半径的是 slot 7 的 `special_bonus_unique_lion_4`(`lion_voodoo/radius +250`)。
+   而 `tTalentTreeList['t25'] = {10, 0}` ⇒ 出货构筑**训的正是**让那十五处答 true 的那一半。
+   - **新工具值得抄**:`tools/agent/talent_slot_census.py` —— **odota 的槽位顺序 × 游戏 KV 里
+     override 出现的位置**,join 出「`sTalentList[N]` 是谁、它改哪个技能的哪个 key」。
+     这是 #162 那把 key 尺子**自认缺口**(不解析句柄→技能)的**槽位那一半**。
+     **判据单向**:`mods` 非空是证明,`mods` 为空什么都不证明。
+   - **⚠️ 域为空,且是量出来的**:读数全在 25 级天赋下游;测试**不引用 GH #84**,
+     在 104 枚 fixture 上重量最高英雄等级并断言 `< 25`,**语料首次出现 25 级就红并点名下一步**。
+     处置与 `alchrage` 同(不 arm / 不入集 / 不提 queue)。
+   - **改法的方向性**:收紧型的门写成「出货读数先跑,armed 只能 `return false`」——
+     GH #154 放宽型对偶、GH #165「只准取 min」同族。**收紧与放宽不要写进同一个谓词**,
+     混方向就把结构性 gate-off 等价降级成「测出来的等价」(GH #144 M7 逃逸的那个层级)。
+   - **留给后来人**:① 天赋句柄有**两个**独立正确性问题(槽位指向谁 / 那天赋的效果是不是
+     代码假设的那种),key 普查只答得了第二个的一半;② 判句柄绑对没有,最便宜的判别式是
+     **同一文件的散文怎么写的**(本例散文对代码错,与 #134 那族方向相反 ⇒ **两个方向都要看**);
+     ③ 「turbo 里这一行是死的」是关于**构筑会不会点它**的论断,**不能顺带豁免读它的句柄**;
+     ④ 新测试文件的自足性(`package.path`)只有在它是某 filter 里**第一个**加载时才被检验。
+   - **下一棒有意没交**:修的另一半(真正利用 slot 7 的 +250 半径)是**放宽**,留给 #108 之后的人。
+
 -6. ~~**GH #165:Alchemist 的两条 turbo 时钟从来没决定过任何事**~~
    **2026-08-24T19:46Z done —— 四处全修**(`hero_alchemist.lua` + rubick 逐字拷贝 ×2 处),
    gated **`alchrage`**(turbo-only,**未 armed**,**不申请入集也不提 queue**,理由是域为空,见下),
@@ -1046,6 +1069,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-24T22:30Z(报告 `iterations/reports/hero/20260824T2230Z.md`;**自选,GH #166 已开**
+  ——open 的 `[hero]` issue **一条都不可在桌面推进**(#162/#154/#151/#150/#146 的下一棒全是
+  queue `hero-11..14` 的归档扫描,#165 本组 19:46Z 刚做完),owner P1/P2 球在协同组、P3 在总监
+  ⇒ 本组无优先项。新 gated id **`lionhexaoe`**(turbo-only,**未 armed**,**不申请入集、
+  不提 queue**);登记 `state.json:lionhexaoe_20260824`;backlog 新增 §-7;**稳定版未漂移**;
+  零 AWS):
+  **Lion 用 `talent8` 判「妖术是不是 AoE」判了十五处,而 `sTalentList[8]` 今天是
+  `special_bonus_unique_lion_2` = `lion_impale/AbilityCastRange +600`,根本不碰妖术 ——
+  真正给妖术半径的 `special_bonus_unique_lion_4`(`lion_voodoo/radius +250`)是 slot 7,
+  同一行 t25 的另一半。** 而本文件 `tTalentTreeList['t25'] = {10, 0}` ⇒ `GetTalentBuild`
+  第 4 项 = 8 ⇒ **出货构筑训的正是让那十五处答 true 的那一半**。
+  - **两条后果,只有第一条需要引擎**:① 调度把实体指令换成 `ActionQueue_UseAbilityOnLocation`,
+    而 `lion_voodoo` 是 `UNIT_TARGET` 且**整份 KV 无天赋 override 改过 AbilityBehavior`**
+    ⇒ 对单位指向技能下地面指令,引擎行为**离线断不了**,**登记为风险不写成实测 no-op**;
+    ② `( J.CanCastOnTargetAdvanced(x) or talent8:IsTrained() )` 拿同一假前提绕过施法合法性检查,
+    **这一半不需要引擎就能判错**。
+  - **新工具 `tools/agent/talent_slot_census.py` + 生成快照 `tests/mock/talent_slots.lua`**
+    (odota 槽位顺序 × 游戏 KV 的 override 位置,零 AWS)。**判据单向**:`mods` 非空是证明,
+    `mods` 为空什么都不证明(通用行/facet 行在 `npc_abilities.txt`,不读)。
+  - **关掉的是 #162 那把尺子自认的缺口**:key 普查**不解析句柄→技能**,所以「key 在」什么都
+    不证明。本轮先做了它的**类型对偶**(`GetSpecialValueInt` 读小数被截断)——**焦点五零真阳性**,
+    唯一命中是假阳性(Axe `duration` 撞上 `berserkers_call` 的 2.1/2.4/2.7/3.0,而 `abilityW`
+    是 `battle_hunger`,值是 12.0)**——正是那个假阳性把工作单元换成了「先解析句柄」**。
+  - **⚠️ 域是空的,量出来的**:所有读数在 25 级天赋下游;不引用 GH #84,而在 104 枚 fixture 上
+    **重量最高英雄等级**并断言 `< 25`。**处置同 `alchrage`:不 arm / 不入集 / 不提 queue。**
+    那条断言**自我重开** —— 语料首次出现 25 级(#108 cap 10→25 最可能)当场红并点名下一步。
+    与 `alchrage` 直接读 `SOAK_CAP_MIN` **同形不同源**:那里阈值是**时钟**可直接读局长上限,
+    这里是**英雄等级**,只能量语料。
+  - **槽位顺序没只信一个源**:树里已站着的四条 datafeed 声明(`hero_axe.lua:280` 7=axe_2、
+    `hero_zuus.lua` 5=zeus_2 且 3=zeus_4 大招 +75、GH #150 6=wk_facet_3)与新快照**逐槽相符**,
+    六条全写成断言 ⇒ 哪个源重排都当场红。
+  - **关掉的第二道缝**:`test_focus_talent_anchor.lua` 有意只钉 t10/t15、把 t20/t25 记成不钉,
+    理由是 GH #84 让它们在 turbo 是**死行**。**那条理由说的是「构筑会不会点它」,没有覆盖
+    「一个句柄去读它」** —— 缺陷就住在这道缝里,新文件为**第二个理由**钉住 t25 这一对。
+  - 顺带修一个记录漂移:`test_focus_talent_anchor.lua` 把 WK slot 4 记成 `special_bonus_hp_300`,
+    活源读作 `hp_350`(只进断言消息,行为零影响)。
+  - **下一棒有意没交给任何人**(总监无入集提议 / 批测台无 queue / 录像组无可能帧)。
+    **留给 #108 之后的人**:修的另一半 —— 真正**利用** slot 7 的 +250 半径(保留实体指令、
+    优先选身边有人的目标)—— **有意没写,因为那是放宽而本单元是收紧**,混方向就丢掉结构性等价。
+  - **一次自己踩的坑**:新测试第一版漏了 `package.path = 'tests/?.lua;' ..`,单跑与
+    `--filter talent` 全绿,**只有 `--filter lion` 红**(按字母序它在那一档排第一)。
+    **教训:文件自足性只有在它是某个 filter 里第一个加载的文件时才被检验;新测试加完
+    要挑一个能让它排第一的 filter 跑一次。**
 - 2026-08-24T19:46Z(报告 `iterations/reports/hero/20260824T194616Z.md`;**认领 GH #165**
   ——协同组 19:26Z 开的,本轮唯一一条**不排在任何队列后面**的 open `[hero]` issue
   (#162/#154/#151/#150/#146/#136/#126 全在等 `hero-11..14` 或波次语料);owner P1/P2 球在

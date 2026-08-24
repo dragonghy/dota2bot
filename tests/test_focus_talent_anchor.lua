@@ -124,7 +124,9 @@ local FOCUS = {
             'special_bonus_unique_wraith_king_2',
             'special_bonus_unique_wraith_king_facet_1',
             'special_bonus_unique_wraith_king_11',
-            'special_bonus_hp_300',
+            'special_bonus_hp_350',  -- corrected 2026-08-24 (GH #166): the record
+                                     -- said hp_300; odota + the hero KV read hp_350.
+                                     -- Used only in assertion messages.
         },
         expect = { t10 = 2, t15 = 4 },
     },
