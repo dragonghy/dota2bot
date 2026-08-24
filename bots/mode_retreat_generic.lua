@@ -882,7 +882,32 @@ function X.ShouldRun()
             nLongEnemyTowers = bot:GetNearbyTowers(1100, true);
             nEnemyTowers     = bot:GetNearbyTowers(980, true);
         end
-        if ( botLevel <= 5 or DotaTime() < 5 * 60 )
+        -- [towerfear] `botLevel <= 5 or DotaTime() < 5*60` is ONE question --
+        -- "am I still an early-game-fragile hero" -- written twice. In normal
+        -- mode the two legs nearly coincide (a hero is level ~5 at 5:00). Turbo
+        -- doubles xp, so the same wall-clock instant holds a level 7-10 hero:
+        -- the clock leg goes on firing for exactly the levels the level leg has
+        -- already released, and this return is BOT_MODE_DESIRE_ABSOLUTE * 1.1
+        -- upstream (GetDesireHelper), i.e. it outbids every other mode.
+        --
+        -- Armed, the clock leg is halved to the same RELATIVE maturity. The
+        -- halving is not invented here: the engine halves its own turbo phase
+        -- timers (neutral-item tiers) and this repo already mirrors that in
+        -- Buff/NeutralItems.lua (17->8.5 / 27->13.5 / 37->18.5 / 60->30) and in
+        -- J.IsEarlyGame (10->5). Nothing else in the clause moves, so the armed
+        -- predicate is a SUBSET of the shipped one: this return can only fire
+        -- LESS often, never more. Exactly one lever.
+        --
+        -- What catches the released frames instead is the CALIBRATED clause
+        -- directly below -- same tower ring, but it asks whether the tower is
+        -- actually shooting this bot and whether it is alone. Same shape as
+        -- [towerreach] in GetDesireHelper: the crude test is the one that got
+        -- wired to the consumer while the calibrated one sits next to it.
+        local nFearClock = 5 * 60
+        if J.IsSoakCandidate('towerfear') and J.IsModeTurbo() then
+            nFearClock = nFearClock / 2
+        end
+        if ( botLevel <= 5 or DotaTime() < nFearClock )
             and nEnemyTowers[1] ~= nil
         then
             return 2;
