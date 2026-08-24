@@ -125,6 +125,12 @@ local function world(path, hero, opts)
     opts = opts or {}
     local J, bot, heroes, fx = rf.load(path, hero)
     for k, v in pairs(DESIRE) do _G[k] = v end
+    -- GH #91 ratchet (test_defend_ping_declaration_ratchet.lua): every driver
+    -- that reaches a defend-mode bid must say which side of the stamp its
+    -- reading assumed. This test is about retreat-mode bids in the ordinary
+    -- (nobody just pinged) window; declaring 'stale' also holds the whole
+    -- ls-bots/mode_*.lua auction on the same side.
+    rf.declare_defend_ping(J, 'stale')
     J.IsSoakCandidate = function(id)
         return opts.armed == true and id == (opts.id or 'towerfear')
     end
