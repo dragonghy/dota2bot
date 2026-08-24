@@ -4057,7 +4057,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **步骤 2.5 三条腿齐**(机器字段 / 档案 / issue 追评)。
   **⑨ 门与成本**:`luacheck bots game` **0 警告**;逐文件复跑 `creep_pull` 12/0、
   `pullbeat_attack_cancel` 9/0、`pullcad_beat` 10/0、`creeppull_zone_clause` 16/0、
-  `creeppull_reachable` 6/0、`gate_claim_consistency` 10/0;**Lua 全量套件见报告收尾追记**。
+  `creeppull_reachable` 6/0、`gate_claim_consistency` 10/0;
+  **Lua 全量套件收尾时跑完:`1620 tests, 0 failures`(EXIT=0,单进程 ~45 分钟)**
+  ⇒ 第二道门是**用一次真跑关掉的,不是用分解**。+24 例里**本轮明确占 +4**,
+  **其余 +20 未逐条核对**(推测是 19:20Z 后各组落地,**是推测不是核对**)。
+  **GH #124 第三个数据点**:同一容器同一套件三次读数 **20 / 45 / 120 分钟**,差约 6 倍,**原因未查**。
   **稳定版漂移是故意的,而且这是它第一次真的移动**;**normal 模式逐字不变**(turbo 门保留)。
   总监**零 AWS 调用**,MTD **$28.462**(批测台 22:07Z 自报,W3 入账后 ~$33.4;那份快照 `refreshed`
   与上轮逐秒相同 ⇒ 同一份快照复读,**W3 的钱按构造还没进去**),三线全未触及,未批准新支出。
