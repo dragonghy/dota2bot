@@ -427,6 +427,33 @@ check('real prose decoy still present (why the stripping exists at all)',
       '(>800 ancient-distance depth)' in body)
 eq('depth read is the code value, not the prose one', L1_DEPTH, 800.0)
 
+# The two promoted TP guards (GH #159).  `tp_channel_death.py` mirrors BOTH
+# radii, and the whole finding of 2026-08-24T21:48Z is that they DISAGREE:
+# `tpsafe2` scans 700 u but never runs in BOT_MODE_RETREAT, while `tpsafe` --
+# the guard that does run there -- only looks 350 u, so the band between them
+# is refused by neither.  Pinning both makes that asymmetry machine-checked
+# instead of prose: if either Lua radius moves, the band moves with it and the
+# `band_of()` split silently starts measuring a gap that no longer exists.
+import tp_channel_death as tpcd                    # noqa: E402
+
+WALK_GUARD_R = call_arg('J.ShouldWalkNotTp', 'J.GetNearbyHeroes',
+                        index=1, where={2: 'true'})
+TP_SCAN_R = call_arg('J.CanEnemyInterruptTpChannel', 'J.GetNearbyHeroes',
+                     index=1, where={2: 'true'})
+eq('tp_channel_death.WALK_GUARD_RADIUS_U mirrors J.ShouldWalkNotTp',
+   float(tpcd.WALK_GUARD_RADIUS_U), WALK_GUARD_R)
+eq('tp_channel_death.SCAN_RADIUS_U mirrors J.CanEnemyInterruptTpChannel',
+   float(tpcd.SCAN_RADIUS_U), TP_SCAN_R)
+# The ally-refuge scan in ShouldWalkNotTp is the decoy: same callee, same
+# argument slot, `false` instead of `true`.  Without `where=` the walk guard's
+# on-face radius would silently read 600 and the gap would vanish on paper.
+eq('the ally-refuge scan is a different call (the decoy)',
+   call_arg('J.ShouldWalkNotTp', 'J.GetNearbyHeroes',
+            index=1, where={2: 'false'}), 600.0)
+check('the two TP guards really do disagree (the #159 gap exists in source)',
+      WALK_GUARD_R < TP_SCAN_R,
+      '(walk=%r scan=%r)' % (WALK_GUARD_R, TP_SCAN_R))
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
