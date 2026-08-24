@@ -3587,5 +3587,20 @@
     "collateral": "Promoting pullbeat would have frozen the 'pullcad' gate (pullcad AND pullbeat) permanently FALSE -- see test_set.md BA.2 and the new CLAUDE.md learning. The conjunct was removed in the same change; two source-level cases now pin (i) pullcad armed alone must move the cadence and (ii) pullcad's gate condition may name no promoted id.",
     "test_set": "member string 27 -> 26 (-creeppull -pullbeat +pullcad).",
     "gates": "luacheck bots game 0 warnings; full lua5.1 tests/run_tests.lua green (count in the director report)."
+  },
+  "farmfear_census_20260824": {
+    "issue": "[strategy] GH #160(本轮开);沿 0CLK / GH #157 的时钟常数轴走第二格。**本轮不落 gate** —— 量完发现牙齿 0。",
+    "why_not_the_two_named_candidates": "0CLK 点名的两格 (i) `J.ShouldConserveManaInLane` 的 10*60、(ii) `J.GetRescueTpTarget` 的 8*60(backlog 5 `lfcorelane`)**都读了源码之后降级**:两者的外层门是 `J.IsLaneFixOn('mana'/'rescue')`,而 `lf_mana` / `lf_rescue` **都不在测试集**(test_set.md 全文零命中)⇒ helper 本身 inert,给它的常数再套 gate,armed 之后仍是逐字节 no-op,**结构上买不到条件 (a)**。**新判据:一个 gate 的时钟腿不比它外面那道门更活;先问函数在真实局里跑不跑,再问常数值对不对。**",
+    "unit_examined": "bots/mode_farm_generic.lua 的 X.ShouldRun「前期谨慎冲塔」块 —— towerfear 那个块的同名孪生,**无任何 gate**(返回非零 ⇒ GetDesireHelper 直接给 BOT_MODE_DESIRE_ABSOLUTE × 1.1,并按返回值闩住那么多秒)。",
+    "lever_verdict": "**牙齿 0,不落 gate**。966 帧:长子句问到 33 开火 0;近子句问到 16 开火 1,那 1 帧由**等级腿**持有(4 级 lina,t=201.3)⇒ **时钟腿单独持有 0 帧**,折半是逐字节 no-op。",
+    "why_zero_two_kinds": "**两种零不是一回事**。只看两条腿不问塔环:t<120 有 70 帧、0 帧已过 `lvl<=2`;t<180 有 100 帧、**3 帧**已过 `lvl<=4` ⇒ **域存在(3 帧)**,杀死它的是**塔环那个合取项**(没有一帧是「5 级以上、3:00 之前、敌方塔 898 内」)。不是「常数已够紧」,是 towerfear 同一条语料短板(批测局攻塔前自终止)。**要买这一格的牙齿先要帧,不是先改常数。**",
+    "structural_finding": "⭐ **块被写了两遍,第二遍在鸣笛后决定不了任何事**。块 2 的每个环都在块 1 对应环里面(999<1200、988<1100、966<980;非 mid 时两块都不重新 local 近环,读同一个 898),等级/时钟/校准腿逐字相同 ⇒ 块 2 每条子句蕴含块 1 的,而块 1 先跑并 return;**唯一不对称是块 1 多一个 `DotaTime() > 0`** ⇒ 块 2 只可能在鸣笛前决定事情,而它的外层门鸣笛前不成立 ⇒ **~28 行 `return 1` 死代码,且带另一个闩长(1s vs 2s)**。语料同意:块 2 门开而块 1 门关 **0 帧**;块 2 环有塔而块 1 环没有 **0 帧**。**推测原意是分级反应(近=强/远=弱),写成了宽环配长闩且排在前面 ⇒ 分级塌成恒定 2 秒。本轮不修**(重排/删除是行为改动,域 1/966,先要帧)。",
+    "classification_refinement": "**0CLK 的 (乙) 桶要按布尔结构再劈一刀**:**析取** `lvl<=N or t<T`(towerfear、本块两条粗子句)= 同一问题的两种写法,turbo 里时钟腿为等级腿已放行的等级继续开火 ⇒ 折半 = 向等级腿收敛、armed 是出厂子集,**可做**;**合取** `lvl<N and t<T`(同文件 `botLevel < 6 and DotaTime() > 30 and DotaTime() < 8*60`)= 时钟腿是**兜底**,turbo 里等级腿先收口 ⇒ 折半只会撤掉「8 分钟还没到 6 级」这种真·落后英雄的保护,**不许折半**,与 (甲) 同处理。",
+    "world_assertion_quantified": "`GetAssignedLane` 不在 mock 里 ⇒ 落 `^Get` 默认 **0**,未知 ALL_CAPS 全局解析成 ≥1001 独立 id ⇒ **966/966 帧不等于任何 LANE_* 常数**(事实早由 test_pullcamp_trigger_census (4) 与 test_towerfear_clock_leg 声明,本轮补全语料两方向计数)。后果:**两个块的 mid 分支本地一帧都验不了**,支配关系只能从源码算术证。bots/ 里 41 处 / 24 文件,其中 4 处直接与 LANE_MID 比较(全结构性 FALSE),其余 37 处把非法 lane id 0 传给下游。",
+    "tests": "`tests/test_farmfear_block2_dominated.lua` **8 例全绿 0.3s**(刻意不在用例里跑那 37s 普查 —— GH #124);含 **>10 万格纯模型网格**覆盖 fixture 到不了的 mid,并**反向断言鸣笛前角落非空**。**16 变异 15 抓 + 1 控制正确保持绿**(控制 = 块 2 长环 999→1199,仍被支配 ⇒ 应绿);两条 `<` vs `<=` 近失单列(块 2 长环→1200、块 1 长环→999,即两环相等)。普查 `tests/_farmfear_sweep.lua`(37s,零 AWS)。",
+    "gh91_red_fixed": "⚠ **本组 14:04Z 自己造的一条红**:`test_defend_ping_declaration_ratchet.lua` 的 [ratchet] 在 main 上红,点名唯一文件是 `test_towerfear_clock_leg.lua`。未声明的 fixture 世界里 defendPings 不是「没人 ping」而是「这一瞬刚被 ping」⇒ farm 与三条 push 模式被静音,而 towerfear 的**竞价冠军**结论正是在那个退化世界里读的。**已按 `stale` 重取并把理由写在调用点**:22 个模式文件、16 个可驱动、**零位移**,mode_farm_generic 两种世界都出价 0,冠军仍是 retreat 1.1 ⇒ **上一轮结论存活**,towerfear 15 例仍全绿。",
+    "gates": "luacheck bots game **0 警告**(bots/ 一行未改,变异后 git status 核对干净);mode_farm_generic 的 12 个消费方用例文件逐个实跑 + gate_claim 10 / smoke_load 3 / pullcamp_census 21 / creeppull_zone 16 / pullcamp_lane_gap 15 / towerfear 15,**合计 0 失败**;全套见 GH #124。",
+    "handoff": "录像组:要**一帧**「t<180 且 5 级以上且敌方塔 898 内」(同时解锁杠杆与分级重排,**与 GH #157 / towerfear 同一格语料**);总监:无入集申请,建议把 classification_refinement 收进 test_set.md 方法学节;批测台:**无请求,零 AWS**。",
+    "report": "iterations/reports/strategy/20260824T164159Z.md"
   }
 }

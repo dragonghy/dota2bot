@@ -41,12 +41,26 @@
    **turbo 里系统性偏晚**,逐条判 TEETH/INERT。
    **本轮做掉的第一格**:`mode_retreat_generic.X.ShouldRun` 的
    `botLevel <= 5 or DotaTime() < 5*60` —— 见当前状态节与 `state.json:towerfear_20260824`。
-   **下一格的两个点名候选**(都在 (乙) 里、都在本组范围):
-   (i) `J.ShouldConserveManaInLane` 的 `10*60`(对线期蓝量纪律,而 turbo 对线 `IsInLaningPhase`
-   8:00 就结束 ⇒ 它比对线期本身还长 2 分钟);
-   (ii) `J.GetRescueTpTarget` 的 `8*60` 核心豁免 = **backlog 5 的 `lfcorelane`,方案早定、
-   卡在语料不覆盖差集**(t ∈ [480,600] 且 rescuer nw<8000)—— 若下一轮仍取不到帧,
-   **就把 (i) 做掉,不要为了做而做 (ii)**。
+   **【2026-08-24T16:4xZ 更新:原来点名的两格双双降级,并补上第二根分类轴】**
+   原候选 (i) `J.ShouldConserveManaInLane` 的 `10*60` 与 (ii) `J.GetRescueTpTarget` 的 `8*60`
+   (= backlog 5 `lfcorelane`)**都不要做**:两者的外层门分别是 `J.IsLaneFixOn('mana')` /
+   `('rescue')`,而 `lf_mana` 与 `lf_rescue` **都不在测试集**(`test_set.md` 全文零命中)⇒
+   helper 本身 inert。**给一个 inert helper 的常数再套一层 gate,armed 之后仍是逐字节 no-op,
+   结构上买不到条件 (a)** —— 那不是小杠杆,是零杠杆。
+   **⇒ 新判据(先于一切常数判断):一个 gate 的时钟腿,不比它外面那道门更活。
+   先问「这个常数所在的函数在真实局里跑不跑」,再问它的值对不对。**
+   **⇒ (乙) 桶的第二根轴 = 这条时钟腿站在合取还是析取里**:
+   **析取** `lvl <= N or t < T`(`towerfear`、`mode_farm_generic` 那两条粗子句)= **同一个问题
+   的两种写法**,turbo 里时钟腿恰为等级腿已放行的等级继续开火 ⇒ 折半 = **向等级腿收敛**、
+   armed 谓词是出厂的**子集**,**这是可做的杠杆**;
+   **合取** `lvl < N and t < T`(例:同文件 `botLevel < 6 and DotaTime() > 30 and DotaTime() < 8*60`)
+   = 时钟腿是**兜底不是重复**,turbo 里等级腿本来就先收口 ⇒ 折半只会把「8 分钟还没到 6 级」
+   这种**真·落后英雄**的保护提前撤掉。**这一类不许折半,与 (甲) 同处理。**
+   **下一格在等的是帧不是代码**(GH #160 §6,已路由录像组):
+   「对线期 `t < 180`、**5 级以上**、站在敌方塔 **898 码内**」的帧,**一帧就够** ——
+   它同时解锁 `mode_farm_generic` 那一格的杠杆(现在 966 帧上时钟腿**单独持有 0 帧**)
+   和 GH #160 的分级重排,**并且与 `towerfear` 要的是同一格语料**。
+   帧到之前,轴上还剩的 23 行里**优先挑析取型、且外层门已在真实局里跑的**那些。
    **做法(本轮验证过的形状,照抄)**:先普查(两条腿都数、两个方向都报)→ 找出「时钟腿单独
    持有」的帧 → gated 折半(**只动时钟腿**)→ 真实帧断言**最终出价**并把边界**两侧**钉死
    (没有 `<` 与 `<=` 两侧的点,加宽型变异全部能过)→ 量**与在集 id 的可分离性**。
@@ -1210,6 +1224,63 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-24T16:41Z:**时钟常数轴第二格 —— 量完之后**决定不落 gate**;真正的产出是两个结构性事实。
+  `bots/` 与 `game/` 本轮一行未改。**
+  开工自检 **worst exit 3**(UNLANDED 全在总监两条分支上、非本组、与 **GH #155** 同一件事;
+  cadence **6 条 GAP**,**五条流同时出现 ~12h 的洞** ⇒ 宿主停摆不是各组偷懒,本组那条由本轮关掉;
+  trunk python **18 passed**);开工 `HEAD == origin/main == 1e1d380`(`git ls-remote` 核对一致);
+  容器无 `lua5.1`/`luacheck`,已装;AWS **$0**(未 bootstrap)。
+  **⭐ 先降级了本组自己点名的两格,而理由值得当判据用**:`0CLK` 的候选 (i) `ShouldConserveManaInLane`
+  的 `10*60` 与 (ii) `GetRescueTpTarget` 的 `8*60`(`lfcorelane`)外层门分别是
+  `J.IsLaneFixOn('mana')` / `('rescue')`,而 **`lf_mana` 与 `lf_rescue` 都不在测试集** ⇒ helper inert
+  ⇒ 给它的常数再套 gate,armed 后仍是**逐字节 no-op、结构上买不到 (a)**。
+  **新判据:一个 gate 的时钟腿不比它外面那道门更活 —— 先问函数跑不跑,再问常数对不对。**
+  **改查的那一格**:`mode_farm_generic.X.ShouldRun` 的「前期谨慎冲塔」块 —— `towerfear` 的**同名孪生**,
+  **无任何 gate**(返回非零 ⇒ `GetDesireHelper` 给 ABSOLUTE×1.1,并**按返回值闩住那么多秒**)。
+  **杠杆判定:牙齿 0,不落 gate。** 966 帧上长子句问到 **33 开火 0**、近子句问到 **16 开火 1**,
+  那 1 帧由**等级腿**持有(4 级 lina,t=201.3)⇒ **时钟腿单独持有 0 帧**。
+  **两种零要分开说**:不问塔环只看两条腿时,`t<180` 有 100 帧、**3 帧**已过 `lvl<=4`
+  ⇒ **域是存在的**,杀死它的是**塔环那个合取项**(没有一帧是「5 级以上、3:00 前、敌方塔 898 内」)——
+  **不是常数已够紧,是 `towerfear` 同一条语料短板**。要这一格的牙齿,**先要帧不是先改常数**。
+  **⭐⭐ 路上撞到的两件事比那个 gate 值钱。其一(GH #160):这个块被完整写了两遍,
+  第二遍在鸣笛之后一句话都决定不了。** 块 2 每个环都在块 1 对应环里面(`999<1200`、`988<1100`、
+  `966<980`;**非 mid 时两块都不重新 `local` 近环,读的是同一个 898**),等级/时钟/校准腿**逐字相同**
+  ⇒ 块 2 每条子句**蕴含**块 1 的,而**块 1 先跑并 `return`**;**唯一的不对称是块 1 多一个
+  `DotaTime() > 0`** ⇒ **块 2 只可能在鸣笛前决定事情**,而它的外层门(1600 内有敌 或 血<700)
+  鸣笛前不成立 ⇒ **~28 行 `return 1` 是死代码,而且带的是另一个闩长(1s vs 2s)**。
+  语料独立同意:**块 2 门开而块 1 门关 = 0 帧**;**块 2 环有塔而块 1 环没有 = 0 帧**(长近都是 0)。
+  **推测原意是分级反应**(近=强/远=弱),写成了**宽环配长闩且排在前面** ⇒ 分级塌成恒定 2 秒。
+  **本轮不修**(重排/删除是行为改动、域同样 1/966,先要帧),但**已写成断言不是注释**(`0WRAP` 第 2 条)。
+  **其二:本组 14:04Z 自己造的一条红**。`test_defend_ping_declaration_ratchet.lua` 的 `[ratchet]`
+  在 main 上红,点名的**唯一文件是 `test_towerfear_clock_leg.lua`**。未声明的 fixture 世界里
+  `defendPings` 不是「没人 ping」而是**「这一瞬刚被 ping」**(`mode_farm_generic`/`aba_push` 首读即
+  用 `GameTime()` 盖章、5 秒内返回 NONE)⇒ 上一轮那句**竞价冠军**是在 **farm 与三条 push 被静音**的
+  退化世界里读的,正是 GH #91 立棘轮要防的事。**已按 `stale` 重取并把理由写在调用点**:
+  22 个模式文件 / **16 个可驱动 / 零位移**,`mode_farm_generic` 两种世界都出价 **0**,冠军仍是
+  retreat **1.1** ⇒ **上一轮结论存活**,从「碰巧对」变成「声明过并复核过」;towerfear **15 例仍全绿**。
+  **世界断言(已知事实的量化,不算新发现)**:`GetAssignedLane` 不在 mock 里 ⇒ 落 `^Get` 默认 **0**,
+  而未知 ALL_CAPS 全局解析成 **≥1001** ⇒ **966/966 帧不等于任何 `LANE_*`**;
+  后果是**两个块的 mid 分支本地一帧都验不了**,支配关系**只能从源码算术证**(所以它被写成断言)。
+  `bots/` 里共 **41 处 / 24 文件**,其中 **4 处**直接比 `LANE_MID`(全结构性 FALSE),
+  其余 37 处把**非法 lane id 0** 传给 `GetLocationAlongLane` / `GetLaneFrontAmount` 之类下游。
+  **本地**:`tests/test_farmfear_block2_dominated.lua` **8 例全绿、0.3 秒**(**刻意不在用例里跑那 37s
+  普查** —— 套件在例行容器本就跑不完,GH #124;载重结论是源码算术,普查是旁证);
+  含 **>10 万格纯模型网格**覆盖 fixture 到不了的 mid,并**反向断言鸣笛前那个角落非空**
+  (否则结论就成了「到处都死」,那是另一句更强的话);**16 变异 15 抓 + 1 控制正确保持绿**
+  (控制 = 块 2 长环 `999→1199`,仍被支配 ⇒ 应绿,证明抓的是支配关系不是「有人动了文件」);
+  两条 `<` vs `<=` 近失单列(块 2 长环→**1200**、块 1 长环→**999**,即两环相等)。
+  普查 `tests/_farmfear_sweep.lua`(**37s、零 AWS**),**零新 fixture** ⇒ #106/#107 破坏面不存在。
+  **门**:luacheck **0 警告**(`bots/` 一行未改,变异做完已 `git status` 核对干净);
+  `mode_farm_generic` 的 **12 个消费方用例文件逐个实跑**(activemode 13 / campgrade 14 / campsel 21 /
+  defend_ping 8 / farmfear 8 / gamemode 27 / level_gate 15 / pingstamp 18 / relicguard 8 /
+  sven_idle 6 / wk_l1trade 12 / lina_walk_home 19),另 gate_claim 10 / smoke_load 3 /
+  pullcamp_census 21 / creeppull_zone 16 / pullcamp_lane_gap 15 / towerfear 15,**合计 0 失败**。
+  **交棒**:**GH #160**(不随本轮关闭,关闭条件写死在 §6)、**录像组**(要**一帧**:
+  `t<180` 且 **5 级以上**且敌方塔 **898 内** —— 同时解锁杠杆与分级重排,**与 GH #157/`towerfear`
+  同一格语料,可一起取**)、**总监**(**无入集申请**;建议把「合取不许折半」收进 `test_set.md`
+  方法学节 —— 它管的是所有人下一次动 turbo 常数的手)、**批测台**(**无请求,零 AWS**,`queue.json` 未改)。
+  报告 `iterations/reports/strategy/20260824T164159Z.md`;`state.json:farmfear_census_20260824`;
+  backlog **`0CLK` 已改写**(两格降级 + 合取/析取第二轴 + 下一格在等帧)。
 - 2026-08-24T14:04Z:**`[strategy]` 8 条 open issue 全部已交出下一棒、owner 三项优先项都不在本组手上
   ⇒ 走 backlog 自选,开一条新轴:**turbo 里的普通模式时钟常数**。落地 gated `towerfear`。**
   开工自检 **worst exit 3**(UNLANDED **8 条全在总监两条分支上**、非本组,且与 **GH #155** 同一件事;

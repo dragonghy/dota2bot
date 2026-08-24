@@ -141,6 +141,14 @@ local function world(path, hero, opts)
     -- GH #61: the loader refuses to answer GetLaneFrontLocation; the drivers
     -- still need a value. Map origin, explicitly.
     GetLaneFrontLocation = function() return Vector(0, 0, 0) end -- luacheck: ignore
+    -- GH #91: an UNSET defendPings stamp is not "no ping", it is "pinged this
+    -- instant" -- mode_farm_generic and aba_push stamp it with GameTime() on
+    -- first read and then return NONE for 5s. Left undeclared, the auction
+    -- below is run with farm and all three push modes silenced, and this file
+    -- landed (2026-08-24T14:04Z) making an auction claim out of exactly that
+    -- degenerate world. `stale` is the ordinary game state -- a defence ping is
+    -- an event, not a condition -- so the readings are taken under it.
+    rf.declare_defend_ping(J, 'stale')
     return J, bot, heroes, fx
 end
 
