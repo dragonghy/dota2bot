@@ -4117,6 +4117,16 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **01:xxZ** ⇒ 它 clone 到的是 promote **之前**的树(判据是发波时刻的实际 tip,不是意图)。
   它对 `campgrade` 的两臂对照照旧成立,**但不许被后续引用为「在 stable-v2 上测的」**——
   它的基线是**旧稳定版**(`creeppull` 不开)。
+  **⑥.5 ⭐ 顺手抓到 §AW.1 的第三发,而且形态是新的**:promote 后扫 `queue.json` 所有**未发**的波,
+  `strategy-9`(**approved**)的 `bundle` 仍是 `creeppull,pullbeat,pullcad`、`strategy-8` 仍是
+  `pullzone,creeppull` —— 而 `strategy-9` 的 `director.note` 里**已经逐字写着**「发波时 armed 串
+  就是 `pullcad` 一个 id,不要再带 `creeppull`/`pullbeat`」。**裁定作出了,只是没落到 `_protocol`
+  指名的那个串上**(`bundle(逗号 id 串,<=5 个)`)。前两发是「落错了地方」(header / 申请方的
+  `question` 散文),**这一发是「落对了地方的隔壁」**:2.5 第 (i) 腿要求写进 `director` 字段,而
+  **`director` 字段本身也是散文**,真正被读去发波的是 `bundle`,**2.5 从来没点它的名**。
+  ⇒ **补则(已写进 §BA.4)**:裁定若**改变了一波要 arm 什么**,`director.note` **不算送达**,
+  必须同时改 `bundle`;原串留 `bundle_was`,`note` 里追一句说明改了什么、为什么、裁定本身没变。
+  两条已改完(`pullcad` / `pullzone`)。
   **⑦ 未 promote、未 reject 任何 id**(本轮落地的是**上一轮**的 promote);成员串 **26**、
   W3–W6 排期、§AT.1 三档门柱**逐字未动**。`strategy-7`/`strategy-8`/§AY.5 第 4 条**仍未排**
   (前提未变)。GH #143/#149 已追评「已落 main + sha + `stable-v2`」,**均不关闭**(§AZ.6 那根绳子)。
