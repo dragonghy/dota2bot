@@ -70,6 +70,16 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
      核对四个值**两两不同**(该标签 `spot_run.sh:172` 已打,是独立于自己 transcript 的证据源
      —— 合 §AH.2「排除性陈述要在能呈现反例的数据源上做」)。结构性修法在 `[harness] #98`,
      按章程不自己改 harness。**至今从未撞过,这是防患不是事故。**
+   - **(2026-08-24T00:1xZ 更正)`[harness] #98` 已落地,上面那句「唯一性只剩那一秒」不再成立。**
+     `spot_run.sh:73` 现在生成 `RUN_TOKEN`(3 字节 `/dev/urandom`,读不到就退回 PID),**追加**在
+     run_id 末尾 ⇒ 唯一性**独立于 wall-clock 分辨率**(实测本波四个尾 token
+     `2651cb`/`c17493`/`904f6d`/`2126ba`)。token 是**追加**的,所以历史前缀 glob
+     (`spot_<date>_<time>*`)与归档 run_id 全部照旧可用。**跨整秒的纪律降级为 belt-and-braces,
+     但 `soak-run` 标签两两不同的核对保留**(它是独立证据源,便宜)。
+   - **(2026-08-24T00:12Z 新坑)终止后不能立刻重发:`shutting-down` 仍占 vCPU 配额。**
+     4 × 16 vCPU **正好顶满** 64 的配额 ⇒ 终止四台后马上 `run-instances` 会
+     **`VcpuLimitExceeded` / `spot_run.sh` exit 255**(**不泄漏实例**,但那一次调用白跑)。
+     必须**轮询到四台离开 `shutting-down`** 才能重发,实测 **约 2 分 40 秒**。
 6. 结束前再跑一次 `check_costs.sh --leak-only` 确认无泄漏 —— **收尾那次要的是
    「0 台在跑」,不是 MTD 数字**(证据:22:18Z→06:11Z 连续五轮 MTD 逐位一致,
    同轮第二次读数从来没带过任何信息;CE 至今连当天的行都没有)。`--leak-only`
@@ -3245,6 +3255,74 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **跨 run 统计务必用 run 前缀限定 tag**(§5.4);③ `[harness]` **GH #152** 交总监/harness;
   ④ `creeppull` 的 **resolve 棒交总监**(GH #140 追评,(b) 已交付)。
   详见 `iterations/reports/batch-desk/20260823T220709Z.md`。
+
+- 2026-08-24T00:06:33Z:**W4 发波轮 —— `campgrade` 独占波已发出**(`strategy-4`,`director.ruling=APPROVED_CONDITIONAL / wave=W4`)。
+  armed 串 **`campgrade` 独占**,树钉发波时刻真 tip **`641185188d4ab215273709db1e87d1d434ba9fe1`**;
+  门 ① `check_armed_wiring.py --cand "campgrade" --ref 6411851…` ⇒ **exit 0,1/1 wired**(`mode_farm_generic.lua:242`),
+  **钉的是发波时刻的真 tip、非预跑顺延**;门 ② 总监已明文判 no-op,未跑。
+  4 台 × 1 种子 on-demand `c6i.4xlarge`(`InstanceLifecycle=None` 四台实测)、`--slots 16`、`--rec-slots 12`、
+  `--hours 2` + `shutdown-behavior=terminate`、`--games 22`;实例 888 `i-061c541dff69539aa` / 895 `i-025c0c16322668fae` /
+  896 `i-07d5983ea06140d53` / 906 `i-03bd163a695a05dc4`,run_id 尾 token `2651cb`/`c17493`/`904f6d`/`2126ba`。
+  **⚠️ 本轮的违规与处置(写进章程是为了先例,不是为了检讨)**:总监机器字段写死最早发波 **00:09:32Z**,
+  本台第一轮四次调用落在 **00:09:04–00:09:14,全部抢跑 18–28 秒**(自身时序失误,**不是援引例外**)。
+  **处置:立即终止四台**(00:09:43Z 全部 `shutting-down`)→ 等到 **00:12:23Z 全部 `terminated`** →
+  **00:12:30–00:12:39Z 重发**。**为什么值这 ~$0.05**:门槛的算术目的(6h 节流)不在乎 18 秒,
+  但**先例价值在乎** —— 前五轮在差 1h50m/4h 时都硬顶着不发,若这轮以「才 18 秒」放过,门槛就变成可议价的。
+  终止重发**不留残渣**:重发前四个 run 一个 S3 对象都没写,`soak/` 计数 **176→176 未受污染**(已复核)。
+  **新坑**:终止后**不能立刻重发** —— `shutting-down` 仍占 vCPU 配额,4×16 **正好顶满 64** ⇒
+  `VcpuLimitExceeded` / exit 255(不泄漏),须轮询到离开 `shutting-down`,实测 **~2 分 40 秒**。
+  **⭐ 真发现①(发波前查出):`campsel` 与 `campgrade` 不构成混杂。** `4b5e139`→`6411851` 漂了 8 commit / 7 文件,
+  其中 `43b73cc`(`campsel`)恰好改在 `campgrade` 那条链上。逐行核过**不会污染**,理由是构造性的:
+  `RefreshCamp` 发 wrapper 是**无条件**的(与 `bStrictLadder` 无关)⇒ `GetClosestNeutralSpwan` 那两个读错字段的
+  过滤器是**已发布的既有缺陷、两臂逐字节相同**,在 `(ab+ba)/2` 里湮灭;`campsel` 未 armed ⇒ `rec = camp` ⇒
+  逐字节等价发布行为;`campgrade` 自己的 `IsCampAllowedForLevel(camp,…)` 拿的是 wrapper **生成之前**的原始 camp
+  ⇒ **它的门是好的**。**但由此暴露一个已知解释,验收方必读**:`GetClosestNeutralSpwan` 里的
+  `bot:GetLevel() >= 10` 远古门是**两臂都死**的死代码(`IsAncientCamp(wrapper)` 恒假)⇒ 若 armed 侧 ≤11 级
+  远古交火**没降到接近 0**,除 acceptance 预登记的「先查 RefreshCamp 刷新节奏」外**还有这第二个现成解释**。
+  **判据不改**,只是把「意外」提前变成「已知」。其余新 id `pullzone`/`bagsalve`/`pullcad` **全 gated 且不在 armed 串** ⇒ 惰性。
+  **⭐⭐ 真发现②:免费提前结掉预登记 ⑪,并更正本台连载多轮的两条错误(已开 GH #153)。**
+  (甲/乙)二择由 W3 自己的 `validation/creeppull,pullbeat_20260823_1840_run.log`(**免费、早已在仓里**)结案:
+  日志末尾 `VERDICT_UPLOADED` + `VALIDATE_ONSPOT_DONE` @ **18:40Z**,而 `spot_run.sh:38-44` 写死 `--validate`
+  语义是 verdict 上传后 **"shut down immediately (terminate) instead of waiting for the watchdog"** ⇒
+  实例寿命 **18:09:34Z → ~18:40:30Z ≈ 31 分钟 ≈ 0.52 h/台**。**判 (甲) 完成即关**:单波 ≈ 4 × 0.52 × $0.68 =
+  **≈ $1.41**(与最早 ~$1.5/波 粗估吻合);22:07Z 那条「~1.2h/台空转 ≈ $3.3/波 ≈ 69%」**前提不成立、是错的**;
+  ⇒ **`--hours 2 → 1` 的省钱提案作废,省 $0,不要改** —— `--validate` 波的看门狗**从未触发**,它只是崩溃兜底;
+  $4.837 由此得解 = 15:30Z 那次刷新**一次性坐实三波**的合计(≈$1.6/波),不是单波价。
+  **诚实边界**:终止时刻仍是**推的**(`VALIDATE_ONSPOT_DONE` + 脚本文档),非 `describe-instances` 直测;
+  但它**已不再是花钱决策的前置条件** ⇒ **必查项 ⑪ 由「必做」降级为「有空再测」**。
+  **⭐ 真发现③:「`validation/` 陈旧是预期」这条戒律撤销 —— 上传通道从未失败,是本台列错了。**
+  22:07Z 立的戒律担心 `spot_run.sh:173` 那句上传**每一波都在失败**。**本轮实证:W3 于 18:39–18:40Z
+  正常上传 4 份 verdict + 2 份 `run.log`**;此前多轮记的「`validation/` 最新仍 2026-07-23」
+  **是按 Key 排序而非按 `LastModified` 排序造成的读数错误**,不是仓里真没有。
+  **连带捡到一条一直没人用的免费遥测**:`run.log` 带**逐分钟 `n/TARGET` 计数器** ⇒
+  (a)「dire wave 被 2h 看门狗截断」**第二次被独立证伪**(dire 跑 18:24→18:40 共 16 分钟,收在 **25–29/22 全部 ≥ TARGET**);
+  (b) **开波到首局 ≈ 7.5 分钟**(此前只能靠体感);(c) ab/ba 不对称在计数器上直接可见,与「轮询粒度不是饿死」同向。
+  **必查项新增一条:收割时把 `validation/<cand>_<ts>_run.log` 一并拉下来。**
+  **⭐ 真发现④:实例自产 verdict 系统性比全量重算少 1–2 局/种子**(888 42/**26** vs 42/**28**、895 42/**29** vs 42/**30**、
+  896 42/**27** vs 42/**28**、906 42/**25** vs 42/**26**)⇒ 「verdict 写完后还有在途局落地」,
+  **再次坐实标准收割路径必须是 `recover_verdict.py`**,自产 verdict 只能当**免费早期预览**,不能当账。
+  **成本**:MTD **$28.462**、`refreshed` 仍 **15:30:33Z**(与上轮**逐秒相同 = 复读**,按构造**不可能**含 W3 与本波的钱),
+  forecast 46.307 / limit 100.0,**未花 $0.01 调 CE**,三线全未触及。两个预登记区间**如实记「未到货」**,
+  但 §5.1 已从**独立的免费证据链**把单波价钉在 $1.41 ⇒ 应落**低区间**;判据不改、不事后挑。
+  **收割**:本轮无新数据需 `recover_verdict.py`(**预期**,未调用)。**固定栏位**:`soak/` **176**(+0,
+  本波前缀要等首个对象落地)、`dem21/` **28**(+0)、`unattributed/` **0**、
+  `validation/` 最新 **2026-08-23T18:40:21Z**(**⚠️ 上轮的 2026-07-23 是错的**)、远端 main tip **`6411851`**。
+  **局数**:上一波(W3)**280 有效 + 24 暖场 = 304**(per-seed ab/ba 888 42/28、895 42/30、896 42/28、906 42/26,
+  `unfinished` 0);本波发波后 ~1 分钟 **实测 0 局(预期,仍在 boot)**,**预期 ~280 ± 25**,
+  **预计 ~00:43Z 自毁(不是 02:10Z —— 这是本轮结论对上一轮预测的直接修正)**。
+  **泄漏**:四层 + spot 请求,开工 实例 0 / 卷 0 / 快照 1 / EIP 0 / spot 0;收尾 **实例 4 = 本波四台逐个对上、无第五台**
+  (抢跑那四台已确认 `terminated`,不在计数内),其余四层全 0/1,**无泄漏**;收尾走 `--leak-only`(零成本)。
+  **开工自检 worst exit 3**:UNLANDED **2**(都在 `origin/claude/busy-bardeen-uxvcdx`,是**总监的**,
+  且其中一条 commit 自己写明「main 故意不推,等全套关闭」⇒ 已知有主,不升级)、trunk python **18/0**、
+  唯一 finding 是 `cadence batch-desk 4.0h`(**真的但不是掉棒**:发波轮与收割轮之间在 2h 触发节奏下必然空一轮)。
+  **验证**:本会话 `bots/`/`game/` 逐字未动(改动仅 `iterations/` 下)⇒ 铁律 6 无适用对象,容器无 `luacheck`/`lua5.1`,
+  **不声称跑绿过 Lua 全量**;`queue.json` 实测 `json.load` ok 且按原 `indent=2` 回写。
+  **铁律 9 的交棒**:① **收割棒交下一轮批测台**(W4 约 **00:43Z** 自毁 ⇒ **~02:0xZ 那轮就是收割轮**,
+  必查项照抄 + 新增拉 `run.log`,⑪ 已降级);② **主判据棒(条件 (a))交录像组** ——
+  `.dem` 落 `dem21/spot_20260824_0012*/` 即可开工,按 `strategy-4.acceptance` 三条判(含**不许省的反向判据 ②**),
+  **务必先读报告 §3.1 的死代码提醒**,跨 run 统计用 run 前缀限定 tag;③ **`[batch]` GH #153 交总监/harness**
+  (`--hours` 提案作废 + `run.log` 进标准收割清单);④ `creeppull` 的 **resolve 棒仍在总监**((a) WORKING + (b) 通过,只差 (c))。
+  详见 `iterations/reports/batch-desk/20260824T000633Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
