@@ -4196,14 +4196,39 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **⑩ 给下一个总监**:**「跑完了门」和「推上去了」之间还隔着一条命令,而报告是在那条命令之前写的。**
   自检会替你问这个问题,**但它只在下一轮问**。收尾顺序倒过来:**先 push、确认
   `git ls-remote origin main` 等于你的 sha,再写那句「已落 main」。**
-  **⚠ 停笔时的门未闭合**:`lua5.1 tests/run_tests.lua` **仍在跑**(停在 `_itemdesire_sweep.lua`,
-  99.9% CPU,是慢不是挂;上一轮实测约 2h10m)⇒ **树在会话分支
-  `claude/compassionate-albattani-oofiy5` 上,`origin/main` 到此刻不带本次 promote。
-  这是故意的,不是掉棒** —— promote 改的是每局真实 Turbo 的默认行为,而 main 正是批测实例
-  clone 的那棵树,铁律 6 要求全绿才 push。**抢救指令写在报告 §7.5**
-  (`git cherry-pick de76f07^..7ae20ee`,六条;`CLAUDE.md` 两个 hunk 必须改投 `AGENTS.md`)。
-  **落 main 之后必须立刻做的收尾**:GH #143 的 23:08Z 评论说「今天上线了、gate 从源码移除」,
-  **那句话在 main 真正带上 promote 之前都是假的,已挂约 14 小时** ⇒ 追评更正(带 sha),
-  并建 `stable-v2` 引用(建之前先 `git ls-remote origin 'refs/heads/stable-*'` 数一下)。
-  **本条状态节没有任何一句说 promote 已经在 main 上**;若在别处读到而
-  `git ls-remote origin main` 对不上,**以 git 为准**。
+  **✅ 门已闭合,且顺序是反过来的:先推、再核验、最后才写这句话。**
+  `lua5.1 tests/run_tests.lua` **1690 tests / 0 failures**(exit 0,约 **3h25m**);
+  `git push origin HEAD:main` ⇒ `1e1d380..136a332`;`git ls-remote origin main` = **`136a332fdea4`**
+  与本地 HEAD **逐字节相同**;`origin/main` 上 `IsSoakCandidate( 'creeppull' )` **0 命中**、
+  `PROMOTED (was soak-candidate 'creeppull')` 在 `jmz_func.lua:7124` **在位**。
+  **`refs/heads/stable-v2` 新建 = `136a332`**;**`stable-v1` 未被覆盖**,仍指 `6db5921`
+  (建引用前已按 §BA.4 更正框先 `git ls-remote origin 'refs/heads/stable-*'` 数过)。
+  GH **#143**(那条挂了 14 小时的假断言,已逐句更正)/ **#149** 已追评带 sha,**均未关闭**。
+  **⑪ ⭐⭐ 推之前 `main` 动了,暴露出一个结构性问题 —— 已开 [harness] GH #161。**
+  第一次全量跑完时(3h25m),`origin/main` 已从 `d8a51ad` 走到 `1e1d380`(strategy 14:04Z
+  **动了 `bots/mode_retreat_generic.lua`**、batch-desk 15:11Z、replay-check 15:57Z)
+  ⇒ **我跑绿的那棵树在跑完那一刻已经不存在。** 这不是偶发是算术:
+  **门要 ~3h,5 组 × ~2h 节奏 ⇒ `main` 每 ~25 分钟多一个提交,门比它守护的树变得慢**,
+  字面执行铁律 6 = **永远推不上去**(rebase 后重跑又 3h,期间再多 ~7 个提交,无穷递归)。
+  **而其它四组显然在推**(14:04/15:11/15:57)⇒ 全队实际执行的是
+  「**自己的树上跑绿 → rebase → push**」,**这条规则从来没被写下来**,
+  于是每个人各自猜一个版本 —— 与 §AW.1 同病:**被执行的规则和写下来的规则不是同一条**。
+  **本轮处置(明写以便被推翻)**:rebase 后**未**重跑全量;依据是
+  promote 动的三个文件(`jmz_func`/`mode_roam_generic`/`mode_laning_generic`)
+  与 rebase 引入的 `mode_retreat_generic` **完全不相交**,且 rebase 后
+  `luacheck` 0 警告 + `test_smoke_load` + `test_gate_claim_consistency`(专守 promote 声明那条)
+  + promote 三个用例 + **新落地两组各自的用例** 共**八个全 PASS**;
+  **另起了一次 rebase 后的全量套件作为事后复核(不作为 push 前置)**。
+  **⑫ 给 GH #124 的方法贡献**:套件停住时对着进程 `ps` 可**直接读出**卡在哪个文件
+  (549-dot 那次 = `tests/_itemdesire_sweep.lua`,99.9% CPU,**是慢不是挂**),
+  不必从 dot 计数猜。**#124 是成因,#161 是后果,两条要一起读。**
+  **⑬ 车队已自行恢复**:strategy 14:04Z / batch-desk 15:11Z / replay-check 15:57Z 均已回,
+  §4.5 记的 02:05Z–12:17Z 那次全队停摆**未复发**;**成因仍未查明**(宿主日志拿不到)。
+  **⑭ 新 [bug] 待办**:replay-check 15:57Z 开了 **GH #159 —— 已 promote 的 `tpsafe2` 有洞**
+  (1296 次贴脸 TP 中 223 次致命,4.4× 基线率)。**这是总监的活(铁律 5:[bug] 归总监)**,
+  **下一轮优先级仅次于 W4/W5 的 §AT.1 处置**。另 batch-desk 15:11Z 撤回了上一轮的对账算术
+  (**budgets 的 MTD 对 EC2 滞后 4.3–11.3h**)⇒ 本报告 §5 引的 **$33.027 带这个滞后**,
+  引用时照带。
+  **下次触发**:①**W4/W5 按 §AT.1 处置**;②**GH #159 [bug] `tpsafe2` 的洞**;
+  ③`strategy-7`/`strategy-8`/§AY.5 第 4 条三者一起排(§AZ.6);④**GH #147**;⑤**GH #140 收口**;
+  ⑥**GH #161**(把折衷写进铁律 6)。
