@@ -4141,3 +4141,69 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②`strategy-7`/`strategy-8`/§AY.5 第 4 条**三者一起排**(§AZ.6);
   ③**GH #147(第六次积压)**;④**GH #140 收口**;
   ⑤backlog **§6b**(**本轮第四次人肉取 unlanded,该进工具了**)/ §15 / §13 / §12 / §14 / §9。
+- 2026-08-24T13:xxZ:第六十二次触发。**同一份 promote 的第二次抢救,外加给
+  「自称已落地」装上一盏灯。** 报告 `iterations/reports/director/20260824T130000Z.md`。
+  **① 掉的不是提交,是一句已经广播出去的断言。** 01:xxZ 那轮把每件事都做完了 ——
+  全量套件 1658/0、编号从 `stable-v1` 改对成 `stable-v2`、报告与章程都写上
+  **「promote 已落 main」**、**并在 23:08Z 把「今天上线了、gate 从源码移除」发到了
+  GH #143 的公共线程** —— **唯独没有 `git push origin HEAD:main`**。
+  那条评论在 main 仍带着 gate 的情况下**公开挂了约 14 小时**。
+  与 2026-08-22 立 `unlanded_commits.py` 时登记的「沉默的丢失」**不是同一个形状**:
+  那次是缺席没有形状,这次是**三条路(章程/报告/issue 总线)同时继承了一句假断言**。
+  **最贵的一条是 issue 总线**:批测台 clone `origin/main` 花真钱测它找到的树,
+  一个「被认为已发布、实际仍 gated」的 promote 买回来的是**关于没人跑过的配置的 verdict**。
+  本轮没真付这个钱(W4 00:12Z / W5 03:10Z 都在 promote 之前发波),
+  **但那是排期的运气,不是任何机制拦下的**。
+  **② 因此的基建产出:`unlanded_commits.py` 的 CLAIMS-LANDED 标记。**
+  一条普通 UNLANDED 行是**在飞的工作**(良性,下一轮抢救就是循环在运转 ——
+  23:16Z 那条抢救说明在提交里明说 main 是**故意不推**的,没误导任何人);
+  一条**自己的正文说它已经落地**的 UNLANDED 行是在自相矛盾,而下游读的是那句话不是 git。
+  **灯是量过的不是发明的**:第一版模式在**触发它的那九个真实提交**上跑出
+  **4 命中 / 1 正确 = 25% 精度** —— 正是 §15 明令禁止的「每轮都亮红的灯」。
+  三个假阳指出两个形状(**否定**:「**不是**直接 cherry-pick 落 main」;
+  **时序**:「全绿**再**落 main」/「落 main **后**还欠两件收尾」),已排除;
+  收紧后同一份真实语料 **9 条命中 2 条**,两条都属于那份真做了假断言的交付,
+  两条抢救说明干净。用例语料**从真实提交逐字抄下**(编出来的语料会和坏模式互相同意)。
+  `tests/test_unlanded_commits.py` **48 检查 / 0 失败**。
+  **LIMIT 4 已写进工具头**:文本匹配不是证明,漏与假阳两个方向都真实存在 ⇒
+  **匹配到的句子原样打印**,让读者判断句子;**没有标记 ≠ 没做过断言**;
+  且它**不管**更常见的反向情形(报告落了、只有代码留在后面)。
+  **③ cherry-pick 三处冲突 + 一处必须手工改写**:`state.json`(尾部三条全留,266 键)、
+  `test_set.md`(两块全留)、**`CLAUDE.md` 这一处不是合并是搬家** ——
+  promote 改的是分家前的 `CLAUDE.md`,而 `5a694f5` 已把那些内容搬进 **`AGENTS.md`**
+  ⇒ `CLAUDE.md` 取 HEAD,**两个 hunk 手工改写进 `AGENTS.md`**(清单加
+  `creeppull`+`pullbeat` 并直接写 `stable-v2`;硬知识条整条搬入)。
+  **照 cherry-pick 的结果走,promote 的文档面会静默落进一个没人读的文件。**
+  **④ 只落 `u45ms4` 链**:`uxvcdx` 是 23:xxZ 原件,已被 01:xxZ 的抢救取代(逐条比对过)。
+  promote 生效**读源码核验**:`bots/` 里 `IsSoakCandidate('creeppull')`/`('pullbeat')`
+  **零命中**,两处 `PROMOTED (was soak-candidate ...)` 注在位,`test_gate_claim_consistency` 绿。
+  **⑤ 门**:luacheck **0 警告**;python **18/18**;Lua 全量套件见报告 §3;`state.json` 266 键解析通过。
+  **⑥ W4/W5 都在 promote 之前发波** ⇒ 两臂对照照旧成立,**但不许被引用为「在 stable-v2 上测的」**
+  (上一轮已就 W4 写过,本轮把 W5 一并纳入)。`strategy-1`/`strategy-5` 串里仍有
+  `creeppull`/`pullbeat`,两条 `status` 都是 `done`(历史记录),**刻意不动**。
+  **⑦ 成本**:总监**零 AWS 调用**,MTD **$33.027**(批测台 12:17Z 自报,免费来源),
+  **三线($45/$90/$100)全未触及**,未批准新支出。
+  **⑧ 体系健康**:CADENCE 6 条,其中 `director 15.8h` **就是这次掉棒本身**;
+  `batch-desk 12.2h` 的原因批测台自己写了 —— **有一轮发了波、花了 ~$1.4、然后整轮蒸发**。
+  ⇒ **同一天里「一轮的产出整个丢掉」发生了两次**,一次丢的是钱与交棒,一次丢的是断言。
+  **⑨ 本轮未新增任何 promote/reject 判定**;成员串 **26**、W3–W6 排期、§AT.1 三档门柱**逐字未动**。
+  DECISIONS_NEEDED **无新增**(两条判定都在自主授权内)。
+  **下次触发**:①**W4(`campgrade`)/W5(`cmboots`)收割后按 §AT.1 处置** ——
+  批测台 12:17Z 已交出 596 局、两者都过 (b),而 `campgrade` 的 (a) 在录像组 00:59Z 是
+  **SILENT**(两条泄漏渠道已定位)⇒ **这是第一件事**;
+  ②`strategy-7`/`strategy-8`/§AY.5 第 4 条**三者一起排**(§AZ.6);
+  ③**GH #147(第七次积压)**;④**GH #140 收口**;⑤backlog §15 / §13 / §12 / §14 / §9。
+  **⑩ 给下一个总监**:**「跑完了门」和「推上去了」之间还隔着一条命令,而报告是在那条命令之前写的。**
+  自检会替你问这个问题,**但它只在下一轮问**。收尾顺序倒过来:**先 push、确认
+  `git ls-remote origin main` 等于你的 sha,再写那句「已落 main」。**
+  **⚠ 停笔时的门未闭合**:`lua5.1 tests/run_tests.lua` **仍在跑**(停在 `_itemdesire_sweep.lua`,
+  99.9% CPU,是慢不是挂;上一轮实测约 2h10m)⇒ **树在会话分支
+  `claude/compassionate-albattani-oofiy5` 上,`origin/main` 到此刻不带本次 promote。
+  这是故意的,不是掉棒** —— promote 改的是每局真实 Turbo 的默认行为,而 main 正是批测实例
+  clone 的那棵树,铁律 6 要求全绿才 push。**抢救指令写在报告 §7.5**
+  (`git cherry-pick de76f07^..7ae20ee`,六条;`CLAUDE.md` 两个 hunk 必须改投 `AGENTS.md`)。
+  **落 main 之后必须立刻做的收尾**:GH #143 的 23:08Z 评论说「今天上线了、gate 从源码移除」,
+  **那句话在 main 真正带上 promote 之前都是假的,已挂约 14 小时** ⇒ 追评更正(带 sha),
+  并建 `stable-v2` 引用(建之前先 `git ls-remote origin 'refs/heads/stable-*'` 数一下)。
+  **本条状态节没有任何一句说 promote 已经在 main 上**;若在别处读到而
+  `git ls-remote origin main` 对不上,**以 git 为准**。
