@@ -450,6 +450,17 @@
       "question": "GH #162。**归档 .dem 扫描,零 EC2,不申请专波**。新 gated id `lionsplash`(state.json:lionsplash_20260824)要买的是**域**,不是效应。机制桌面已证:`hero_lion.lua` 读的 `splash_radius_scepter` 不在本 patch 的 `lion_finger_of_death` KV 里(现名 `splash_radius`,special_bonus_scepter = 325)⇒ `GetSpecialValueInt` 静默返回 0 ⇒ Lion **持 A 杖时** `X.ConsiderR` 里两条消费 `nRadius` 的分支结构性不可达(`R团战Aoe` 计数恒 1、需 >1;`R-带线` 半径 0、需 >4)。**离线证不了域**:mock 的 `GetSpecialValueInt` 对任何 key 恒 0、`HasScepter()` 在 106 个 fixture 上恒 false(已量,写进 GH #162 §四,与 GH #100/#133/#145 同族)。",
       "acceptance": "**判据开工前登记,免得读数回来再挑切法**。(1) **载体分母**:语料里有 Lion 的局数与 Lion 帧数;(2) **域**:Lion 持 A 杖(`ultimate_scepter` / `ultimate_scepter_2` / `aghanims_blessing*` 任一)**且大招就绪**的帧数 —— 这是改动可见性的上界;(3) 该域内,候选目标 **325u 内 ≥2 个敌方英雄**的帧占比(`R团战Aoe` 醒来后可能开火的帧),以及 **1200u 内敌方兵 ≥5 且某只兵 325u 内 ≥5 单位**的帧占比(`R-带线`);(4) 按铁律 4(i) **ab / ba 两层分开报**,按 (ii) 计数类**报均值 + 占比,不报中位数**。**预登记的反向读法**:若 (2) 读 0,登记为 **DOMAIN-NOT-REACHED 而非不可能** —— 语料窗口止于 ~11:30(GH #126 评论),而 A 杖在 Lion 各角色买单里排到第 9 位左右;**GH #108 把局时上限提到 25 分钟之后必须重量**,不得引用本轮的零。若 (2) 非零但 (3) 全零,先问一句是不是解析吃掉了单位(GH #151 的教训),再谈收窄。**载体瓶颈需批测台确认 Lion 在不在常设种子里** —— 与 `hero-9`/`hero-13`(卡在常设种子零 Axe)不一定同源,若同源可合并申请。",
       "status": "pending"
+    },
+    {
+      "id": "strategy-13",
+      "stream": "strategy",
+      "bundle": "tbearly",
+      "seeds": [],
+      "priority": 3,
+      "question": "GH #157 / GH #165。**搭车,不申请专波,零 AWS 增量,而且本条自认低优先 —— 请先让位给 `pulllane`/`towerfear`。** 新 gated id `tbearly`(state.json:tbearly_20260824)。修的是一类**表达式**缺陷而不是一个常数:`mode_farm_generic:466` 的 `J.IsModeTurbo() and DotaTime() < 18*60 or DotaTime() < 25*60` 因为 Lua 的 `and` 优先于 `or`,解析成 `(turbo and t<18*60) or (t<25*60)`,而 18*60 < 25*60 ⇒ 第一项蕴含第二项 ⇒ **整式在任何模式下逐字等于 `t < 25*60`,那个 turbo 常数一次都没决定过事**。armed 把它改成真正的选择(turbo 下取 18*60)。armed 边界低于出厂边界 ⇒ **armed 谓词是出厂的子集**,这一支只可能少触发。",
+      "acceptance": "**域先说清楚,免得事后当成 no-op 误判**:移动的带是 **18:00-25:00**,而 turbo 局约 20 分钟、当前批测局上限 **10 分钟** ⇒ **在 `SOAK_CAP_MIN=10` 下本条的域结构上为零,读数必然全 0,那是预期不是失败**。因此:(1) 若本波仍是 cap 10,**不要为它记 verdict**,只核 `check_armed_wiring.py --cand tbearly` = WIRED 即可;(2) **GH #108 的 cap 10→25 落地之后**的第一波才是它的取证波,届时判据 = armed 腿在 18:00 之后**「farm 模式选线上兵而非野营」的帧占比下降**,ab/ba 两层都要给(GH #148 计量三条),**是计数类 ⇒ 报均值 + 占比,不报中位数**;反向判据 = 同窗口 gpm/xpm 不许低于 baseline 腿(把成熟核心从线上赶回野区是这条修法唯一可信的代价)。**预登记的反向读法**:cap 放宽后读数仍全 0 ⇒ 第一嫌疑是 arm 串漏了 `tbearly`(逐字节 no-op、没有任何计数会报警),第二嫌疑是局长仍不到 18 分钟 —— **那时不要动谓词,去量局长分布**。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

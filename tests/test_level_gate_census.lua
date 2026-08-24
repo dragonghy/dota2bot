@@ -85,6 +85,10 @@ local cs = require('corpus_scale')
 -- That change moved every mode_farm_generic row by +11 (a wrapper inserted at
 -- the file-local declarations) and every aba_site row by +36 (a comment block
 -- above GetClosestNeutralSpwan); the rows below carry the new numbers.
+-- The 2026-08-24 'tbearly' change then moved the LAST TWO mode_farm_generic
+-- rows by a further +30 (the gated rewrite of the bEarlyGame turbo ternary at
+-- what is now :463-495); the first three rows sit above the insertion point
+-- and did not move. Both directions of that split are what this file checks.
 -- The `:392 / :506 / :796 / :860` style labels in the header prose and in test
 -- names above and below are GH #84's OWN numbering of the tree it was filed
 -- against. They are stable labels for the rows, not current line numbers, and
@@ -122,7 +126,7 @@ local GATES = {
          .. 'is DotaTime() > 18*60 in turbo, false in every frame of the archive. Both '
          .. 'fallbacks dead => the very-high farmer never joins a defence this way.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 524, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 554, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then',
       why = 'cores are covered by `bCore`; for a SUPPORT the remaining two rungs are the '
@@ -130,7 +134,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 553, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 583, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '

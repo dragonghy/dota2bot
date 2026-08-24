@@ -463,7 +463,37 @@ function GetDesireHelper()
 			-- Early game: prefer lane farming over jungle
 			-- Lane creeps give more gold/XP per minute than jungle camps,
 			-- especially before the bot has farming items.
-			local bEarlyGame = (J.IsModeTurbo() and DotaTime() < 18 * 60 or DotaTime() < 25 * 60)
+			--
+			-- [tbearly] The turbo scaling this clause was WRITTEN with never
+			-- decided anything, and the reason is Lua precedence, not the
+			-- constant.  The shipped text was
+			--     J.IsModeTurbo() and DotaTime() < 18 * 60 or DotaTime() < 25 * 60
+			-- and `and` binds tighter than `or`, so it parses as
+			--     (turbo and t < 18*60) or (t < 25*60).
+			-- The `a and b or c` ternary idiom only behaves like a ternary when
+			-- `b` can never be false.  Here `b` IS a boolean, and 18*60 < 25*60,
+			-- so the first disjunct is a strict SUBSET of the second: when it is
+			-- true the second is true as well, and when it is false the second
+			-- decides alone.  The whole expression was therefore literally
+			-- `DotaTime() < 25 * 60` in EVERY mode -- the 18-minute turbo bound
+			-- was unreachable.  That is a dominance relation between two
+			-- constants, so it is asserted as arithmetic rather than sampled on
+			-- a frame: tests/test_turbo_ternary_dominance.lua, which also
+			-- ratchets the same shape across the rest of bots/.
+			--
+			-- The rewrite below is byte-for-byte the shipped behaviour with the
+			-- gate closed (both modes keep 25 * 60).  Armed, and only in turbo,
+			-- the intended 18-minute bound is restored by SELECTING it instead
+			-- of OR-ing it, so the armed predicate is a subset of the shipped
+			-- one: lane-front farming can be preferred LESS often, never more.
+			-- The band this moves is 18:00-25:00, i.e. the tail of a ~20-minute
+			-- turbo game; no fixture in the corpus reaches it (max t = 690.5s),
+			-- which is itself pinned so the day one does, the pin says so.
+			local nEarlyClock = 25 * 60
+			if J.IsSoakCandidate('tbearly') and J.IsModeTurbo() then
+				nEarlyClock = 18 * 60
+			end
+			local bEarlyGame = DotaTime() < nEarlyClock
 				and bot:GetNetWorth() < 15000
 			local nDeaths = GetHeroDeaths(bot:GetPlayerID())
 
