@@ -22,6 +22,22 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-4. ~~**GH #156:`cmboots` 非 armed 腿 1/103 漏成秘法鞋 —— 源码侧证伪领头嫌疑**~~
+   **2026-08-24T13:57Z done ——** 逐树读源码证伪 issue 的领头嫌疑(`tEarlyBoots` 四个调用点
+   全非下单;唯一的 role→boots 表 `advanced_item_strategy.lua` 无人 require);剩下的真机制
+   「引擎按配方自动合成」对 **CM pos_5 出货腿也不成立**(供 0 wizard_hat + 0 sobi_mask,
+   秘法鞋两样都要 ⇒ 构造性装不出,无论购买顺序/消耗模型)。⇒ **1/103 仍未解释**,唯一残余是
+   issue 自陈的**反向可能**(gate 在加载时序上求值为真),那是 harness 世界断言型问题、不归本组。
+   新 `tests/test_boots_supply_paths.lua`(9 例 / 12 变异 11 抓 + 1 no-op 逃逸);**`bots/` 零改动、
+   无 gate、稳定版未漂移、零 AWS**。详见「当前状态」头条。
+   - **留给后来人**:① 判「谁下了鞋单」前先做散件普查——«零供给是证明,非零供给什么都不证明»;
+     ② 任何**只改鞋买表一项**的候选(含已落地 `cmboots`)验收「持某鞋比例」时,先用该供给表
+     扣掉「结构上装不出的零腿」——那张表就是可复用口径;③ 一个组件替一批腿承重时单独断言它
+     (本轮 wizard_hat 替所有出货腿承重)。
+   - **下一棒已交(#156 追评)**:反向可能 = 开一个 harness 断言核验 gate 加载时序,或钉承重帧
+     `032512_slot8` t=237.4 fixture(断言该帧 `IsSoakCandidate('cmboots')==false` 且下一未持有项
+     不是秘法鞋系)。**归 harness/总监,非本组。**
+
 -3. **GH #154:Axe 战斗饥饿的伤害类型错价**(2026-08-24T02:05Z 立,gated `axebhpure` 已落地、
    **未 armed**、域待 `hero-13`)。`axe_battle_hunger` 是 **PURE**(KV `AbilityUnitDamageType`
    + tooltip `DPS_Pure`),而 `X.ConsiderW` 的击杀分支把它喂给 `J.WillMagicKillTarget`
@@ -977,6 +993,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-24T13:57Z(报告 `iterations/reports/hero/20260824T135727Z.md`;**认领 GH #156**
+  ——本轮唯一一条桌面就能推进且属于本组的新 open issue;backlog 新增 §-4;新
+  `tests/test_boots_supply_paths.lua`;**`bots/`/`game/` 零改动、无新 gated id、稳定版未漂移、
+  零 AWS、外部读 1 次(odota dotaconstants v10.8.0)**):
+  **`cmboots` 非 armed 腿 1/103 漏成秘法鞋:源码侧证伪领头嫌疑,泄漏仍未解释。**
+  逐树读源码 ⇒ `tEarlyBoots` 四个调用点全非下单(possession / skip / sell),唯一的 role→boots 表
+  `advanced_item_strategy.lua:BOOTS_BY_POSITION` `grep -rn` 证明整个 `bots/` 无人 require ⇒
+  「一条不读角色买表的早鞋通路」这条领头嫌疑**不成立**。剩下的真机制 = **引擎按配方自动合成**
+  (散件凑齐即合成,不关心谁买的),但**对 CM pos_5 出货腿也不成立**:它供 **0 wizard_hat +
+  0 sobi_mask**,而秘法鞋两样都要 ⇒ **构造性装不出,无论购买顺序/消耗模型**。承重帧
+  `032512_slot8` t=237.4 那个 ring_of_basilius 在出货买表里**没有任何合法来源**。
+  开工自检 worst exit **3**:8 条 UNLANDED **全部是总监本轮的树**(`busy-bardeen-uxvcdx`/`-u45ms4`,
+  自陈「main deliberately not pushed until suite closes」);cadence 洞在 batch-desk/director/strategy/
+  replay-check;citation clean、trunk python 18/18。Owner P1/P2 的球都在协同组。
+  - **方向性(重要)**:「零供给」是证明,「非零供给」**什么都不证明**,本文件**故意不对非零下判词**
+    (GH #136 普查教训:整表计数会同时造假阳假阴,要读非零得带购买顺序 + 消耗)。⇒ 本轮结论**单向**:
+    CM pos_5 出货腿**排除**自动合成 ⇒ 1/103 **仍未解释**,而非被解释掉。
+  - **wizard_hat 是替所有出货腿承重的那一个零**:全焦点五里 wizard_hat 只出现在两个点名秘法鞋的
+    物品(arcane_boots / guardian_greaves)里;几张表供了 1~3 个 sobi_mask(Orchid/Bloodthorn/
+    Urn/Spirit Vessel)但 wizard_hat 恒 0。测试单独断言这一点,哪天有别的物品带 wizard_hat,
+    §「wizard_hat 承重」会在主检查还绿时先红,提示 sobi 侧要独立成立。
+  - **仓库内对照外部配方源(不盲信 dotaconstants v10.8.0)**:`item_priest_outfit`(CM pos_4 arcane 腿)
+    读 2 sobi/1 hat 且明文点名秘法鞋;`item_mage_outfit`(pos_5)读 0/0 点名宁静鞋;`cmboots` 门只把
+    pos_5 开局在这两个宏之间切换 ⇒ 门的两半正好骑在供给边界两侧(这是为什么结论是关于 `cmboots`)。
+  - **下一棒已交(#156 追评)= 反向可能的加载时序核验,归 harness/总监**:`GetSoakSideConf()` 模块级
+    缓存 + CM gate 文件加载期求值 ⇒ 那一刻 `GetTeam()` 是否已是该 bot 队伍,源码/录像都证不了
+    (与 GH #100/#133/#145 同族)。建议开 harness 断言核验加载时序,或钉 `032512_slot8` t=237.4 fixture
+    (断言该帧 `IsSoakCandidate('cmboots')==false` 且下一未持有项不是秘法鞋系)。
+  - **对本组连带影响(已登记进测试)**:任何**只改鞋买表一项**的候选(含已落地 `cmboots`)验收
+    「持某鞋比例」时,先用 `test_boots_supply_paths.lua` 的供给表扣掉「结构上装不出的零腿」——
+    别把那 ~1% 当泄漏。
+  - **核验**:luacheck **0 警告**;新测试 **9 例 / 12 次变异 11 抓 + 1 no-op 对照如期逃逸**
+    (M4 用 Orchid 造 sobi 却不造 hat ⇒ §wizard_hat 承重红;M12 加从不被买的散件行 = no-op 逃逸);
+    **变异判定读 runner 的 `N tests, M failures` 计数、不用行子串**(修正上一轮 `case *"0 failures"*`
+    的子串误判)。整套逐文件 **167 文件 / 1672 例 / 0 失败**(`test_itemdesire_world_assertion.lua`
+    单列,GH #124 未变)。
+  - **下一轮建议**:等 `hero-10/11/12/13` 读数;不等的话做 GH **#126**(CM pos_5 整局无蓝装)——
+    本轮已顺带确认 CM pos_5 出货腿结构上不带秘法鞋(0 wizard_hat),正是 #126 动机之一;接着量
+    `cmboots` armed 腿的蓝装可达性。**别重推**:§25 Axe `nKillDamage` 仍 `NARROW-BAND-UNMEASURABLE`。
 - 2026-08-24T02:05Z(报告 `iterations/reports/hero/20260824T020516Z.md`;**没有可推进的
   `[hero]` issue(#126 等 W5、#146 等供给数、#150/#151 等 `hero-11`/`hero-12`),owner P1/P2
   的球都在协同组 ⇒ 按章程取自选项**:焦点五的「击杀判据 × 技能 KV 伤害类型」交叉核对;
