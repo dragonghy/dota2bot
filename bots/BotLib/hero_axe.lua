@@ -477,6 +477,93 @@ function X.ConsiderQ()
 end
 
 
+--- SOAK CANDIDATE 'axebhpure' (turbo-only, GH #154).  Not armed; gate OFF is the
+--- shipped predicate, byte-for-byte, because the widening below is only ever
+--- reached after J.WillMagicKillTarget has already answered false.
+---
+--- THE FACT.  Battle Hunger deals PURE damage -- `AbilityUnitDamageType`
+--- `DAMAGE_TYPE_PURE` on axe_battle_hunger, and the tooltip property is
+--- `DPS_Pure` (game KV via the d2vpkr mirror, the same source
+--- tools/agent/gen_ability_meta.py reads; fetched 2026-08-24).  X.ConsiderW
+--- nevertheless hands its damage claim to J.WillMagicKillTarget, which hardcodes
+--- `nDamageType = DAMAGE_TYPE_MAGICAL` and finishes on
+--- `npcTarget:GetActualIncomingDamage( EstDamage, nDamageType )`.  Pure damage is
+--- not reduced by magic resistance, so the shipped kill branch under-states its
+--- own spell by at least the 25% every hero carries at base, and by more against
+--- any magic-resistance item.  At rank 4 with this file's t15 talent that is
+--- 384 pure declared as 288.
+---
+--- IT IS NOT A HOUSE STYLE -- THIS FILE GETS IT RIGHT ELSEWHERE.  X.ConsiderR
+--- declares `nDamageType = DAMAGE_TYPE_PURE` and compares Culling Blade against
+--- RAW health (`GetHealth() + GetHealthRegen() * 0.8 < nKillDamage`), with no
+--- mitigation term at all.  Same file, same damage type, opposite arithmetic.
+--- Across the five focus heroes axe_battle_hunger is the ONLY ability whose KV
+--- damage type is not MAGICAL and whose damage still reaches a magical-only kill
+--- predicate (census in tests/test_axe_battle_hunger_pure.lua; the other kill
+--- calls -- CM Frostbite, Lion Impale/Finger, Zeus Bolt, WK Hellfire Blast --
+--- are all MAGICAL, and WK's passes its type explicitly).
+---
+--- WHY IT IS A GATE.  It ADDS a cast, and this stream ships an action-adding
+--- change dark until a wave has sized its domain.
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  Exactly one term changes: the mitigation.
+--- The spell-amp factor stays (the shipped helper applies it and this round is
+--- one lever, not two), the 12-second regeneration term stays, and the widening
+--- REFUSES every target J.WillMagicKillTarget holds a special opinion about
+--- (Medusa's mana shield, Kunkka's ghost-ship delay, Templar Assassin's
+--- refraction, and Bristleback's rear arc), so it cannot regress any of them --
+--- three of those four absorb pure damage too.
+---
+--- WHAT IS NOT KNOWN, AND CANNOT BE KNOWN HERE.  The domain is UNSIZED and the
+--- fixture corpus structurally cannot size it: `GetActualIncomingDamage` is not
+--- modelled, so it answers the mock's generic `Get*` default 0 on all 1040 hero
+--- handles in 104 fixtures, which makes J.WillMagicKillTarget false on all 966
+--- living units and true on all 74 corpses.  Every kill branch in every focus
+--- hero is therefore silent offline; a green fixture over this branch is a false
+--- green, not evidence.  See the hero-13 request in iterations/queue.json.
+function X.IsBattleHungerPureOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axebhpure' )
+
+end
+
+
+--- The modifiers (and the one unit name) J.WillMagicKillTarget scales its
+--- estimate by.  The pure widening declines to have an opinion on any of them
+--- rather than re-implementing four special cases it would then have to keep in
+--- step; three of the four cut pure damage as well, so refusing is the safe side.
+local tBattleHungerPureAbstain = {
+	'modifier_medusa_mana_shield',
+	'modifier_kunkka_ghost_ship_damage_delay',
+	'modifier_templar_assassin_refraction_absorb',
+}
+
+
+--- Shipped predicate first, unchanged; the gated widening only ever answers on
+--- the frames it already refused, so gate OFF is byte-for-byte the old behaviour.
+function X.WillBattleHungerKill( npcEnemy, nDamage, nDelay )
+
+	if J.WillMagicKillTarget( bot, npcEnemy, nDamage, nDelay ) then return true end
+
+	if not X.IsBattleHungerPureOn() then return false end
+
+	for _, sModifier in pairs( tBattleHungerPureAbstain )
+	do
+		if npcEnemy:HasModifier( sModifier ) then return false end
+	end
+
+	if npcEnemy:GetUnitName() == 'npc_dota_hero_bristleback' then return false end
+
+	-- J.WillMagicKillTarget with its two magical-only terms neutralised: no
+	-- resistance on the damage, and the regeneration it subtracts is no longer
+	-- divided by a resistance factor.  Pure damage takes neither.
+	local nEstDamage = nDamage * ( 1 + bot:GetSpellAmp() ) - npcEnemy:GetHealthRegen() * nDelay
+
+	return nEstDamage >= npcEnemy:GetHealth()
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -490,7 +577,7 @@ function X.ConsiderW()
 	
 	local nDuration = abilityW:GetSpecialValueInt( 'duration' )
 	local nDamage = abilityW:GetSpecialValueInt( 'damage_per_second' ) * nDuration
-	
+
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 	local nInRangeEnemyList = J.GetAroundEnemyHeroList( nCastRange )
 	local nInBonusEnemyList = J.GetAroundEnemyHeroList( nCastRange + 200 )
@@ -504,7 +591,7 @@ function X.ConsiderW()
 		if J.IsValid( npcEnemy )
 			and J.CanCastOnNonMagicImmune( npcEnemy )
 			and J.CanCastOnTargetAdvanced( npcEnemy )
-			and J.WillMagicKillTarget( bot, npcEnemy, nDamage , nDuration )
+			and X.WillBattleHungerKill( npcEnemy, nDamage, nDuration )
 			and not npcEnemy:HasModifier( 'modifier_axe_battle_hunger_self' )
 		then
 			hCastTarget = npcEnemy

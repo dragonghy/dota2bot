@@ -22,6 +22,29 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-3. **GH #154:Axe 战斗饥饿的伤害类型错价**(2026-08-24T02:05Z 立,gated `axebhpure` 已落地、
+   **未 armed**、域待 `hero-13`)。`axe_battle_hunger` 是 **PURE**(KV `AbilityUnitDamageType`
+   + tooltip `DPS_Pure`),而 `X.ConsiderW` 的击杀分支把它喂给 `J.WillMagicKillTarget`
+   —— 那个 helper 首行写死 `DAMAGE_TYPE_MAGICAL`、末行 `GetActualIncomingDamage(..., MAGICAL)`
+   ⇒ **满级带天赋 384 读成 288**,方向是漏杀。**同一个文件的 `X.ConsiderR` 是对的**
+   (声明 PURE + 裸血比),所以这是疏漏不是设计。**焦点五里唯一的一处**(普查见 issue)。
+   - **⚠️ 桌面塌缩检查不干净,引用时必须带**:`X.ConsiderW` 分支 2/3/4 **不带伤害判据**,
+     同一个敌人上放宽即 no-op ⇒ **DOWNSTREAM-DOMINATED 风险**(WK lever A 同形)。
+     **登记为风险不是判词**;桌面能证 EMPTY 不能证 RARE,而这里两样都没证到 ⇒ **不申请入集,先买域**。
+   - **下一棒 = queue `hero-13`**(归档 .dem 事件流扫描,零 EC2,四种读法已预登记)。
+     若为正,载体瓶颈与 `hero-9`/`axecull` **是同一个**(常设种子零 Axe,`--find axe ⇒ 899/910/911`)
+     ⇒ **两条可合并申请一波**。
+   - **⭐ 第二十二条世界断言(归 harness,本组只登记)**:`GetActualIncomingDamage` 在
+     **1040/1040** 个英雄 handle 上读 mock 通用默认 **0**(`GetMagicResist` 同样 0/1040)⇒
+     `J.WillMagicKillTarget` 对 **966 个活人全 false、74 具尸体全 true**。
+     **焦点五每一条击杀分支离线都是哑的**(CM 冰封禁制 / Lion 穿刺·大招 / Zeus 雷击同一个调用),
+     **绿色 fixture 是假绿**,离线数「击杀分支会开火的帧」数到的**恰好是死人**。
+   - **留给后来人**:① 写击杀判据前先读 KV 的 `AbilityUnitDamageType` —— 仓库有三个类型正确的
+     helper,而 `J.WillMagicKillTarget` 名字带 Magic 却因为算法最强被所有人随手用;
+     ② 判「疏漏还是设计」最便宜的判别式是**同一个文件里另一处怎么写的**;
+     ③ **放宽型的门写成「出货判据先跑一遍」的形状**,gate-off 等价性就从测出来的变成结构上的
+     (变异 M6 正是靠这条被抓);④ 凡「某分支在语料里从不开火」,**先问它读的引擎函数在 mock 里返回什么**。
+
 -2. ~~**GH #134:等级读数 off-by-one 的收尾清扫**~~ **2026-08-24T00:00Z done —— issue 点名的
    两处待扫散文早就修好了(散文比代码晚,第三次同型),于是把问题换成「这一族还剩几处」:
    全量清扫焦点五 + 相关测试,**活着的错五处全部改正**(Axe t10 论证、WK 四处、
@@ -954,6 +977,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-24T02:05Z(报告 `iterations/reports/hero/20260824T020516Z.md`;**没有可推进的
+  `[hero]` issue(#126 等 W5、#146 等供给数、#150/#151 等 `hero-11`/`hero-12`),owner P1/P2
+  的球都在协同组 ⇒ 按章程取自选项**:焦点五的「击杀判据 × 技能 KV 伤害类型」交叉核对;
+  本组开 GH **#154**;新 gated id **`axebhpure`**(turbo-only,**未 armed**);
+  queue **`hero-13`** 新增 pending;登记 `state.json:axebhpure_20260824`;backlog 新增 §-3;
+  **稳定版未漂移**(改动全在 gate 之后,gate-off 结构性等于出货谓词);零 AWS;外部读 5 次):
+  **`axe_battle_hunger` 是 PURE 伤害,而 `X.ConsiderW` 的击杀分支把它喂给只认魔法的
+  `J.WillMagicKillTarget` ⇒ 至少低估一个基础魔抗(满级带天赋 384 读成 288),漏杀。
+  同一个文件的 `X.ConsiderR` 把同一种伤害类型写对了,所以是疏漏不是设计。**
+  开工自检 worst exit **3**:8 条 UNLANDED **全部是总监本轮的树**
+  (`busy-bardeen-uxvcdx` / `-u45ms4`,提交信息自陈「main is deliberately not pushed
+  until the full suite closes」),cadence 的洞在 batch-desk / director,都不是本组;
+  citation clean、trunk python 18/18。
+  - **普查结论**:焦点五里非 MAGICAL 的技能只有 Axe 三个(全 PURE)与 WK bone_guard(PHYSICAL),
+    而**只有 battle_hunger 把伤害喂进了只认魔法的判据** —— culling_blade 走裸血比、
+    hellfire_blast 走 `J.CanKillTarget` 且显式传类型、CM/Lion/Zeus 全 MAGICAL。**唯一的一处。**
+  - **⭐ 第二十二条世界断言(归 harness,本组只登记,已写进 #154 §3)**:
+    `GetActualIncomingDamage` 吃通用 `^Get` 默认 **0**,**1040/1040** 个英雄 handle
+    (104 个可加载 fixture);`GetMagicResist` 同样 **0/1040**。拿 99999 伤害驱动
+    `J.WillMagicKillTarget`:**活人 0/966 判 true、尸体 74/74 判 true**。
+    **分母对照**:同样 1040 个 handle 上 `GetHealth()>0` 的恰好 **966** ⇒ 这不是解析事故。
+    ⇒ **焦点五每条击杀分支离线都是哑的,绿色 fixture 是假绿**;本轮行为读数因此**只能合成**,
+    而第 5 节把「为什么只能合成」钉在一个真实 Axe 帧上。
+  - **改动形状(可复用)**:`X.WillBattleHungerKill` **先跑出货 helper,它说 true 就 true**
+    ⇒ gate-off 等价性是**结构性的不是量出来的**,测试直接对结构断言(M6 靠这条被抓)。
+    放宽只中和两个魔法项(**一根杠杆**:法强系数与 12 秒回血项都留着),
+    并对出货 helper 有特殊意见的四个目标(美杜莎盾/幽灵船/折光/刚背)**一律弃权** ——
+    其中三个照吃纯伤,弃权是安全的那侧。
+  - **⚠️ 桌面塌缩检查不干净,别把结论单独引用**:分支 2/3/4 不带伤害判据 ⇒
+    同一敌人上放宽即 no-op,**DOWNSTREAM-DOMINATED 风险**(WK lever A 同形)。
+    **登记为风险不是判词**,所以**不申请入集**,先买域(`hero-13`,四种读法已预登记)。
+  - **核验**:luacheck **0 警告**;新测试 **17 例 / 11 次变异 11 抓 + 1 no-op 对照如期逃逸**
+    (含跨函数 M10:让 `X.ConsiderR` 改用魔法 helper);整套**逐文件 166 文件 / 1663 例 / 0 失败**
+    (`test_itemdesire_world_assertion.lua` 单列,GH #124 未变)。**变异判定读 runner 的
+    `N tests, M failures` 计数,不是行子串**,并在已知红/已知绿两侧各验过一次。
+  - **下一轮建议**:等 `hero-10`/`hero-11`/`hero-12`/`hero-13` 读数。不等的话,
+    §-3 的载体瓶颈与 `hero-9` 相同 ⇒ 可以做一件**桌面就能做完**的事:
+    把 `hero-9`(axecull)与 `hero-13`(axebhpure)**合并成一次含 Axe 种子集的申请**,
+    省掉一次独占波。**别重推**:§25 Axe `nKillDamage` 仍是 `NARROW-BAND-UNMEASURABLE`。
 - 2026-08-24T00:00Z(报告 `iterations/reports/hero/20260824T000000Z.md`;认领 **GH #134**
   (唯一一条把「下一个工作单元可做」写进正文的 open [hero] issue);**issue 已关**;
   登记 `state.json:focus_level_claims_sweep_20260824T00`;backlog 新增 §-2;
