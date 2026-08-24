@@ -1,5 +1,5 @@
 -- A turbo scaling written with the `a and b or c` ternary idiom is a NO-OP
--- whenever `b` is a boolean -- and this repo has five of them.
+-- whenever `b` is a boolean -- and this repo had five of them (one left).
 --
 -- THE SHAPE.  Lua has no ternary operator; the idiom is `cond and x or y`, and
 -- it is correct only while `x` can never be false or nil.  A turbo constant
@@ -40,9 +40,10 @@
 --
 -- WHAT IT DOES NOT CLAIM.  It does not say 18*60 is the right turbo bound (that
 -- is the clock-constant axis, GH #157, and the reason the fix ships gated).  It
--- does not touch the five allowlisted sites: four are Alchemist's and its
--- Rubick copy's (hero-group territory), the fifth is an orphan with no callers.
--- Their verdicts are recorded here as data for whoever claims them.
+-- does not touch what is left on the allowlist: one orphan with no callers.
+-- (Alchemist's four were claimed by the hero desk on 2026-08-24, GH #165, and
+-- are asserted in tests/test_alchemist_rage_objective_clock.lua.)  The verdict
+-- on the survivor is recorded below as data for whoever claims it.
 --
 -- LIMITS, stated so nobody over-reads the ratchet.
 --   * The scan is LINE-BASED.  An occurrence split across two source lines is
@@ -108,27 +109,24 @@ local function scan_bots()
     return hits
 end
 
--- The five that survive this change, each with the pair of constants that makes
--- it dominated.  `turbo` is the bound the author meant; `normal` is the bound
--- the expression actually uses in every mode.
+-- The ones that survive, each with the pair of constants that makes it
+-- dominated.  `turbo` is the bound the author meant; `normal` is the bound the
+-- expression actually uses in every mode.
 -- ORDER IS LOAD-BEARING: rows are paired to scan hits positionally, and the
 -- scan walks `find bots -name "*.lua" | sort`.
+--
+-- 2026-08-24, hero desk, GH #165: the four Alchemist rows (hero_alchemist.lua
+-- 15/30 and 16/32, and their verbatim rubick_hero copies) are GONE -- both
+-- files now route those clauses through X.GetRageObjectiveClock, whose armed
+-- branch takes a math.min so the narrowing is structural.  The list shrank
+-- from five to one, which is the only direction it is allowed to move.
 local ALLOWED = {
-    { file = 'bots/BotLib/hero_alchemist.lua',          turbo = 15, normal = 30,
-      note = 'hero group: Alchemist. Turbo band 15:00-30:00 is dead -- a real '
-          .. 'slice of a ~20-minute turbo game, unlike the mode_farm one.' },
-    { file = 'bots/BotLib/hero_alchemist.lua',          turbo = 16, normal = 32,
-      note = 'hero group: Alchemist, second clause of the same pair.' },
     { file = 'bots/FunLib/aba_site.lua',                turbo = 8,  normal = 12,
       note = 'ORPHAN: ____exports.IsInLaningPhase has zero callers in bots/ or '
           .. 'typescript/ -- every consumer reaches J.IsInLaningPhase in '
           .. 'jmz_func, which is written with NUMERIC ternaries and is correct. '
           .. 'Generated from typescript/bots/FunLib/aba_site.ts, so a fix has '
           .. 'to move both files; it buys no behaviour either way.' },
-    { file = 'bots/FunLib/rubick_hero/alchemist.lua',   turbo = 15, normal = 30,
-      note = 'verbatim copy of the hero file, stolen-spell path.' },
-    { file = 'bots/FunLib/rubick_hero/alchemist.lua',   turbo = 16, normal = 32,
-      note = 'verbatim copy of the hero file, stolen-spell path.' },
 }
 
 -- ---------------------------------------------------------------------------

@@ -491,6 +491,53 @@ function X.ConsiderUnstableConcoctionThrow()
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
+
+--- Clock bound for burning Chemical Rage on a neutral objective, in seconds.
+--- `nTurboMin` is the bound the author wrote for turbo, `nShippedMin` the one
+--- the shipped expression actually used.
+---
+--- SHIPPED (gate off, tried first): `nShippedMin * 60`, and that is not a
+--- reinterpretation -- it is exactly what the two call sites below evaluated
+--- to before this helper existed, in EVERY mode.  They were written as
+---
+---     ( J.IsModeTurbo() and DotaTime() < 15 * 60 or DotaTime() < 30 * 60 )
+---
+--- and Lua has no ternary operator: `and` binds tighter than `or`, so that
+--- parses as `(turbo and t < 15*60) or (t < 30*60)`.  The `x` slot holds a
+--- COMPARISON, which can be false, so the idiom is not a ternary at all; and
+--- because 15*60 < 30*60 the first disjunct implies the second.  The whole
+--- expression was literally `DotaTime() < 30 * 60` whatever the mode -- the
+--- turbo constant decided nothing, ever, and no counter reported it (GH #165;
+--- the repo-wide census and its ratchet live in
+--- tests/test_turbo_ternary_dominance.lua).  Note the correct numeric form of
+--- the same idiom, `J.IsModeTurbo() and 5 * 60 or 10 * 60` (jmz_func.lua), is
+--- fine: a number in the `x` slot is never false.
+---
+--- NARROWED (soak candidate 'alchrage', turbo only): honour the bound the
+--- author meant.  A turbo game runs ~20 minutes, so 15:00-20:00 is a real
+--- slice of one, and past it Chemical Rage is worth more held for a fight than
+--- spent on Roshan or the Tormentor -- the same reason the shipped 30:00
+--- exists for a ~40-minute normal game.
+---
+--- The narrowing is one-directional BY CONSTRUCTION, not by the two constants
+--- that happen to be passed: the armed branch can only take the minimum, so
+--- the armed predicate is always a subset of the shipped one and these clauses
+--- can only fire less.  A future caller that passes a turbo bound ABOVE the
+--- shipped bound therefore still cannot widen anything.
+function X.GetRageObjectiveClock( nTurboMin, nShippedMin )
+
+	local nClock = nShippedMin * 60
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'alchrage' )
+	then
+		nClock = math.min( nClock, nTurboMin * 60 )
+	end
+
+	return nClock
+
+end
+
+
 function X.ConsiderChemicalRage()
 	if not ChemicalRage:IsFullyCastable()
 	then
@@ -571,7 +618,7 @@ function X.ConsiderChemicalRage()
         if J.IsRoshan(botTarget)
         and J.IsInRange(bot, botTarget, 500)
         and J.IsAttacking(bot)
-		and (J.IsModeTurbo() and DotaTime() < 15 * 60 or DotaTime() < 30 * 60)
+		and DotaTime() < X.GetRageObjectiveClock(15, 30)
         then
             return BOT_ACTION_DESIRE_HIGH
         end
@@ -582,7 +629,7 @@ function X.ConsiderChemicalRage()
         if J.IsTormentor(botTarget)
         and J.IsInRange(bot, botTarget, 400)
         and J.IsAttacking(bot)
-		and (J.IsModeTurbo() and DotaTime() < 16 * 60 or DotaTime() < 32 * 60)
+		and DotaTime() < X.GetRageObjectiveClock(16, 32)
         then
             return BOT_ACTION_DESIRE_HIGH
         end

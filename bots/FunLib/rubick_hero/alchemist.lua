@@ -426,6 +426,35 @@ function X.ConsiderUnstableConcoctionThrow()
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
+
+--- Clock bound for burning a stolen Chemical Rage on a neutral objective, in
+--- seconds.  Verbatim twin of X.GetRageObjectiveClock in
+--- bots/BotLib/hero_alchemist.lua -- read the long comment there for why the
+--- two call sites below could not be left as they were, and change both files
+--- together.
+---
+--- SHIPPED (gate off, tried first): `nShippedMin * 60`, which is precisely what
+--- `( J.IsModeTurbo() and DotaTime() < 15 * 60 or DotaTime() < 30 * 60 )`
+--- evaluated to in every mode -- `and` binds tighter than `or` and the `x` slot
+--- held a comparison, so the turbo bound decided nothing (GH #165).
+---
+--- NARROWED (soak candidate 'alchrage', turbo only): take the author's turbo
+--- bound.  Narrowing only, by construction: the armed branch can only lower the
+--- clock, so it is always a subset of the shipped predicate.
+function X.GetRageObjectiveClock( nTurboMin, nShippedMin )
+
+	local nClock = nShippedMin * 60
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'alchrage' )
+	then
+		nClock = math.min( nClock, nTurboMin * 60 )
+	end
+
+	return nClock
+
+end
+
+
 function X.ConsiderChemicalRage()
 	if not ChemicalRage:IsFullyCastable()
 	then
@@ -504,7 +533,7 @@ function X.ConsiderChemicalRage()
         if J.IsRoshan(botTarget)
         and J.IsInRange(bot, botTarget, 500)
         and J.IsAttacking(bot)
-		and (J.IsModeTurbo() and DotaTime() < 15 * 60 or DotaTime() < 30 * 60)
+		and DotaTime() < X.GetRageObjectiveClock(15, 30)
         then
             return BOT_ACTION_DESIRE_HIGH
         end
@@ -515,7 +544,7 @@ function X.ConsiderChemicalRage()
         if J.IsTormentor(botTarget)
         and J.IsInRange(bot, botTarget, 400)
         and J.IsAttacking(bot)
-		and (J.IsModeTurbo() and DotaTime() < 16 * 60 or DotaTime() < 32 * 60)
+		and DotaTime() < X.GetRageObjectiveClock(16, 32)
         then
             return BOT_ACTION_DESIRE_HIGH
         end
