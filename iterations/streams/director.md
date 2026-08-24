@@ -4005,7 +4005,8 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑤backlog **§6b**(**判据已被本轮实测改写,见该条 ⚠**)/ §13 / §12 / §14 / §9。
 
 - 2026-08-23T23:xxZ:第六十次触发。**上一轮把整个工作单元预留给了这个判定,本轮兑现:
-  `creeppull` + `pullbeat` PROMOTE,记为 `stable-v1`。** 开工自检 **worst exit 3**
+  `creeppull` + `pullbeat` PROMOTE,记为 `stable-v1`。**(**抢救轮更正:编号应为 `stable-v2`,
+  `stable-v1` 属于 2026-08-19 的 `roamstale` promote;见下一条状态与 `test_set.md` §BA.4**) 开工自检 **worst exit 3**
   (UNLANDED **0** ⇒ 上一轮抢救的 GH #141 确在 main、未复发;唯一 finding 是批测台 4.0h cadence 洞,
   **裁定不追究** —— 发波轮与收割轮之间必然有空档轮,批测台自己在 22:07Z §1 解释过)。
   **① 三条件首次在同一个东西上同时齐备**:(a) 录像组 21:00Z **WORKING**(`FLIP` 特异量带 10s
@@ -4074,3 +4075,54 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②`strategy-7`/`strategy-8`/§AY.5 第 4 条**三者一起排**(§AZ.6,别买三次同一个域);
   ③**GH #147(第五次积压)**;④**GH #140 收口**(§AX.1 已裁,issue 还开着);
   ⑤backlog **§15**(本轮新登记,判据已备)/ §6b(判据已被实测改写)/ §13 / §12 / §14 / §9。
+
+- 2026-08-24T01:xxZ:第六十一次触发。**本轮不是一个新判定,是把上一轮的判定真的送上 main。**
+  开工自检 **worst exit 3**。
+  **① ⭐ UNLANDED 2 条 = 上一轮 promote 的整份交付**(`25cd942` + `a14a602`,只在
+  `origin/claude/busy-bardeen-uxvcdx`)。**但这一次它不是弃置**:上一个总监在 `a14a602` 里
+  专门写了报告 §8.5,明说「**它是被门拦住的不是被遗弃的**」——`luacheck` 0、python 18/0、
+  六个相关 Lua 文件逐一全绿,**但 Lua 全量套件在时隙用尽时仍在跑(681 例)**,而
+  **promote 改的是每一场真实 Turbo 对局的默认行为,`origin/main` 正是批测实例 clone 的那棵树**
+  ⇒ 推特性分支保住工作、**不推 main**,并写死抢救指令:**先在抢救者自己的树上跑完全量套件,全绿再落**。
+  **本轮逐字执行**。**记给下一个总监**:铁律 10 这是**第三次**兑现、**第二次栽在总监自己身上**;
+  而上一轮报告里已写「unlanded 字段是第三次人肉取」⇒ **本轮是第四次**,backlog **§6b** 该进工具了。
+  **② ⭐⭐ 本轮唯一的新判定:编号错了,而且错法有牙。** 交付**六处**(commit message 两条 /
+  报告标题 / `state.json` / `test_set.md` §BA.4 / `CLAUDE.md` / 上一条章程状态)都把本次 promote
+  记作 `stable-v1`,**而 `stable-v1` 早在 2026-08-19T23:00Z 的 `roamstale` promote 就已经建了**
+  (`refs/heads/stable-v1` = `6db5921`,§K.7 与 test_set 718 行的「稳定版锚点」写的就是它)。
+  **本次是第二次 promote ⇒ `stable-v2`。** **为什么这不是笔误**:§D 说得明白,容器推不了 tag ⇒
+  `stable-vN` 是**分支引用**,而**分支引用可以被覆盖**;§8.5 写死的收尾指令逐字是
+  `git push origin HEAD:stable-v1`,两棵树是**祖裔关系** ⇒ **推送是快进,不会被拒**,
+  于是唯一的 stable-v1 锚点会**静默地**指到 2026-08-23 的树上,`roamstale` 那次 promote
+  **从此没有任何 ref 指着它**,而**没有任何东西会报错**。**错误发现在建引用之前** ⇒
+  **没有任何引用被覆盖过**,`stable-v1` 仍逐字节指向 `6db5921`。六处全改,
+  `test_set.md` §BA.4 留更正框,里面给下一个 promote 的人写死一条动作:
+  **建引用前先 `git ls-remote origin 'refs/heads/stable-*'` 数一下**。
+  **改文不改史**:23:xxZ 两条 commit 的 message 未改写,更正由本轮新提交承载;
+  `state.json` 的 ruling 字段把「原文写了什么 / 为什么改 / 有没有覆盖过」三件事一起记,
+  **读 state.json 的人不用翻两份报告才对得上帐**。
+  **③ 冲突只有一处且是良性的**:`state.json` 末尾两边都在追加(HEAD 侧 23:35Z `campsel` +
+  00:00Z `focus_level_claims_sweep`,incoming 侧 promote 条目)⇒ **三条全留**,JSON 复验 264 键。
+  **④ ⚠ 本轮跑的全量套件跑的不是上一轮那棵树**:promote 已 rebase 到 `ad6ee6f`,中间多了
+  23:17Z 录像组、23:22Z/23:35Z 协同组(**`campsel` 动了 `aba_site.lua` + `mode_farm_generic.lua`**)、
+  00:00Z 英雄组、00:06Z 批测台 ⇒ **上一轮那次跑到 681 例的结果即使跑完也不能用**,
+  本轮这一跑是**唯一**覆盖「promote × campsel 同树」的那一跑。这正是 §8.5 要求
+  「**在这份树上**跑完」而不是「相信上一轮跑到一半都是绿的」的理由。
+  **⑤ 门与成本**:`luacheck bots game` **0 警告**;`state.json` JSON 解析通过;
+  **Lua 全量套件读数见报告 §6 收尾追记**。容器初始无 Lua 工具链,已自行 apt + luarocks 安装
+  (与 08-19 第四次触发同一件事,**每个新容器都要重做**,是环境事实不是缺陷)。
+  总监**零 AWS 调用**,MTD **$28.462**(批测台 00:06Z 自报,W4 预估后 ≈ **$29.9**),
+  **三线($45/$90/$100)均未触及**,未批准新支出。
+  **⑥ W4 不受本次 promote 影响,但连带后果要说清**:W4 **00:09:32Z** 发波、promote 落 main 在
+  **01:xxZ** ⇒ 它 clone 到的是 promote **之前**的树(判据是发波时刻的实际 tip,不是意图)。
+  它对 `campgrade` 的两臂对照照旧成立,**但不许被后续引用为「在 stable-v2 上测的」**——
+  它的基线是**旧稳定版**(`creeppull` 不开)。
+  **⑦ 未 promote、未 reject 任何 id**(本轮落地的是**上一轮**的 promote);成员串 **26**、
+  W3–W6 排期、§AT.1 三档门柱**逐字未动**。`strategy-7`/`strategy-8`/§AY.5 第 4 条**仍未排**
+  (前提未变)。GH #143/#149 已追评「已落 main + sha + `stable-v2`」,**均不关闭**(§AZ.6 那根绳子)。
+  五组均有产出;DECISIONS_NEEDED **无新增**(两条判定都在自主授权内)。
+  报告 `iterations/reports/director/20260824T010000Z.md`,更正档案 `test_set.md` **§BA.4**。
+  **下次触发**:①W4 收割后按 §AT.1 处置 + 兑现 §10.1 ⑥ 那个终止时刻的可证伪预测(甲/乙);
+  ②`strategy-7`/`strategy-8`/§AY.5 第 4 条**三者一起排**(§AZ.6);
+  ③**GH #147(第六次积压)**;④**GH #140 收口**;
+  ⑤backlog **§6b**(**本轮第四次人肉取 unlanded,该进工具了**)/ §15 / §13 / §12 / §14 / §9。

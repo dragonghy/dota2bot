@@ -132,7 +132,7 @@ wlok/wkbuild/midguard/ccburst/l1kite/l5trees/skysilence/aegisgroup`).
 **Promoted turbo defaults (no gate left — these are LIVE in every Turbo game):**
 `lanesurv`, `tphome`, `tpsafe`, `tpsafe2`, `pushguard`, `nodive`, `punish`,
 `regroup`, `deathzone`, `vsafe`, `skyburst`, `fight`, `roamstale`, and
-`creeppull`+`pullbeat` (2026-08-23, `stable-v1` — the first pair to clear all
+`creeppull`+`pullbeat` (2026-08-23, `stable-v2` — the first pair to clear all
 three of the owner's rule-2 conditions; promoted as ONE atom because `pullbeat`
 sits inside `creeppull`'s execution body and `creeppull` alone is the broken
 configuration GH #143 measured). Read this
