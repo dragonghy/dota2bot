@@ -234,6 +234,75 @@ with tempfile.TemporaryDirectory() as tmp:
         "shrink to match the finding",
     )
 
+
+# ---------------------------------------------------------------- case 7
+# Regression corpus for CLAIMS-LANDED.  The first cut of the pattern ran at 1
+# true positive in 4 on the real commits of 2026-08-24, so the sentences below
+# are TRANSCRIBED from those commits rather than invented -- an invented corpus
+# would have agreed with the broken pattern.
+print("case 7: CLAIMS-LANDED separates an assertion from a plan, a denial and a condition")
+CLAIM_CASES = [
+    # (label, sentence, should_flag)
+    ("assertion, the 2026-08-24T03:11Z loss verbatim",
+     "\u21d2 \u00a78.5 \u90a3\u9053\u95e8**\u8fc7\u4e86**\uff0cpromote \u843d main\u3002", True),
+    ("assertion, charter status line",
+     "\u5168\u91cf\u5957\u4ef6 1658 tests / 0 failures \u21d2 promote \u5df2\u843d main\u3002", True),
+    ("assertion, english",
+     "The promote landed on main as stable-v2.", True),
+    ("DENIAL -- the rescue note of 23:16Z, which must stay clean",
+     "main is deliberately not pushed until the full suite closes", False),
+    ("DENIAL -- chinese, 'the right move is NOT to cherry-pick onto main'",
+     "**\u21d2 \u62a2\u6551\u7684\u6b63\u786e\u505a\u6cd5\u4e0d\u662f\u76f4\u63a5 cherry-pick \u843d main\uff0c\u662f\u5148\u8865\u4e0a\u90a3\u9053\u95e8**", False),
+    ("SEQUENCING -- 'all green, THEN land on main'",
+     "\u5728\u8fd9\u4efd\u6811\u4e0a\u8dd1\u5b8c `lua5.1 tests/run_tests.lua`\uff0c**\u5168\u7eff\u518d\u843d main**\uff1b", False),
+    ("TEMPORAL TAIL -- 'AFTER landing on main, two things remain'",
+     "\u843d main \u540e\u8fd8\u6b20**\u4e24\u4ef6\u6536\u5c3e**\uff1a(i) `git push origin HEAD:stable-v2`", False),
+    ("CONDITIONAL HEAD -- english",
+     "Once the suite is green it will be pushed to main.", False),
+]
+with tempfile.TemporaryDirectory() as tmp:
+    up = new_origin(tmp)
+    git(["checkout", "-q", "-b", "claude/claimer"], up)
+    os.makedirs(os.path.join(up, "iterations"), exist_ok=True)
+    shas = []
+    for i, (label, sentence, want) in enumerate(CLAIM_CASES):
+        # Put the sentence in a report under iterations/, NOT in the commit
+        # subject: the 2026-08-24 loss put its false claim in the prose every
+        # fresh session reads at startup, which is the harder source to reach.
+        shas.append(commit(up, "iterations/r%d.md" % i, sentence + "\n", "director: case %d" % i))
+    git(["checkout", "-q", "main"], up)
+    work = clone(tmp, up, "claimwork")
+    code, out = run_tool(work, "--days", "3650")
+    check(code == 3, "the claim corpus is unlanded work (exit %d)" % code)
+    for (label, sentence, want), sha in zip(CLAIM_CASES, shas):
+        short = sha[:7]
+        row = [ln for ln in out.splitlines() if short in ln and "cherry-pick" not in ln]
+        flagged = bool(row) and "[CLAIMS-LANDED]" in row[0]
+        check(bool(row), "case is reported at all: %s" % label)
+        check(flagged == want,
+              "%s -> %s (got %s)" % (label, "FLAG" if want else "clean",
+                                     "FLAG" if flagged else "clean"))
+    want_n = sum(1 for _, _, w in CLAIM_CASES if w)
+    check("of which CLAIMS-LANDED : %d" % want_n in out,
+          "the CLAIMS-LANDED count is printed and equals %d" % want_n)
+    check('claims: "' in out,
+          "the matched sentence is QUOTED, so the reader judges the line and not the tool")
+
+# ---------------------------------------------------------------- case 8
+print("case 8: the CLAIMS-LANDED count prints even at zero (anti-empty-match)")
+with tempfile.TemporaryDirectory() as tmp:
+    up = new_origin(tmp)
+    git(["checkout", "-q", "-b", "claude/quiet"], up)
+    commit(up, "quiet.txt", "no prose at all\n", "strategy: a work unit that claims nothing")
+    git(["checkout", "-q", "main"], up)
+    work = clone(tmp, up, "quietwork")
+    code, out = run_tool(work, "--days", "3650")
+    check(code == 3, "still reports the unlanded commit (exit %d)" % code)
+    check("of which CLAIMS-LANDED : 0" in out,
+          "zero claims is PRINTED as zero -- 'no claim' and 'the scan did not run' "
+          "must not look alike")
+    check("[CLAIMS-LANDED]" not in out, "and no row is flagged")
+
 print("\n%d checks, %d failed" % (checks, len(failures)))
 if failures:
     for f in failures:
