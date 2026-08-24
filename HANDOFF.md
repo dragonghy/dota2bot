@@ -1,16 +1,22 @@
 # 主会话交接文档(HANDOFF)
 
-写于 2026-08-24,交接人:上一任主会话(integrator)。接手前**按顺序**读:
-`CLAUDE.md` → `iterations/streams/README.md`(铁律)→
+写于 2026-08-24,交接人:上一任主会话(Claude Code integrator)。
+2026-08-24 修订:**integrator 座位改到 Cursor**;五个 automation 仍在
+Claude Code Cloud Routine 上跑(预计再维持约一个月,再议迁到 Cursor)。
+
+接手前**按顺序**读:
+`AGENTS.md`(谁在哪跑)→ `iterations/streams/README.md`(铁律)→
 `iterations/OWNER_PRIORITIES.md` → `iterations/streams/test_set.md` 最新 § 节 →
 `iterations/DECISIONS_NEEDED.md` → 五份章程(`iterations/streams/*.md`)→
 各组最新 2-3 份报告(`iterations/reports/<组>/`)。
 
 ## 1. 你的角色:整合者,不是执行者
 
-owner(中文交流)只跟你聊。五个专业 agent 以 **Routine**(每 2h,fresh-session)
-自治运行:批测台 batch-desk / 录像检查组 replay-check / 协同组 strategy /
-英雄组 hero / 总监 director。**他们的活你不要抢**(分工在各自章程里);你做:
+owner(中文交流)只跟你聊。五个专业 agent 仍以 Claude Code **Routine**
+(每 2h,fresh-session)自治运行:批测台 batch-desk / 录像检查组 replay-check /
+协同组 strategy / 英雄组 hero / 总监 director。**他们的活你不要抢**
+(分工在各自章程里);你也不要在 Cursor 上另起一套平行 cron 去替代它们,
+直到 owner 明确说搬迁。你做:
 
 - 汇总现状回答 owner(数据从 reports/、test_set.md、issue 拉,别凭记忆);
 - 把 owner 的意图变成机制:改章程文件、维护 `OWNER_PRIORITIES.md`(只有主会话
@@ -19,6 +25,12 @@ owner(中文交流)只跟你聊。五个专业 agent 以 **Routine**(每 2h,fres
   (ReplayScope 页 + Artifact)、`replay-analyst`(逐帧诊断)、`batch-runner`;
 - 盯接力棒:凡 owner 决定/优先项,进 OWNER_PRIORITIES + issue 点名,
   不许沉入普通队列(这是 owner 两次失望的根源,铁律 9 有全文)。
+
+调整各组行为的正确姿势是**改章程文件**(每轮 fresh session 都会重读),
+参数底稿在 `iterations/streams/routine_prompts.md`。Claude Code 的
+`list_triggers` / `send_later` 在旧主会话里一直被权限挡住,不要依赖去改
+Routine。Cursor 侧若 owner 要定期摘要,只用本对话的 timer 订阅做 briefing,
+不要拿它跑五个工作单元。
 
 ## 2. 当前状态快照(2026-08-24T02:00Z)
 
@@ -52,20 +64,18 @@ owner(中文交流)只跟你聊。五个专业 agent 以 **Routine**(每 2h,fres
 
 ## 4. 环境与工具的坑(真实踩过)
 
-- **claude-code-remote MCP 工具(list_triggers/send_later/create_trigger 等)
-  在主会话一直被权限审批挡住**——Routine 是 owner 手动建的,你大概率也调不了;
-  调整各组行为的正确姿势是**改章程文件**(每轮 fresh session 都会重读),
-  参数底稿在 `iterations/streams/routine_prompts.md`。
-- 自我唤醒用**后台 `sleep`**(Bash run_in_background);容器重启会悄悄杀掉它,
-  醒来先 re-arm。不要依赖 CronCreate(会话挂起即失)。
-- push 纪律:`git push -u origin <本会话分支> && git push origin HEAD:main`;
-  被拒 `git pull --rebase origin main` 后重推。stop-hook 会催未推提交。
-- GitHub 一律走 `mcp__github__*` 工具(无 gh CLI)。commit/PR/代码里**禁止模型名**。
-- AWS:每个新会话先 `bash tools/batch_test/aws/session_setup.sh`,之后只用
-  `awsx`。主会话一般只做只读(S3 ls/cp);花钱是批测台的独占权。
+- 五个 Routine **还在 Claude Code Cloud 上**。改它们的行为 = 改章程,不是
+  在 Cursor 里重写 cron。底稿:`iterations/streams/routine_prompts.md`。
+- Cursor 本会话:**不要** `git push origin HEAD:main`;走功能分支 + PR。
+  `gh` 只读。GitHub 写操作(开 PR)用环境提供的 PR 工具。
+- Claude Code Routine 仍走它们章程里的 `push origin HEAD:main` 路径
+  (那是它们的宿主,不是你的)。
+- commit/PR/代码里**禁止模型名**。
+- AWS:每个需要云的新会话先 `bash tools/batch_test/aws/session_setup.sh`,
+  之后只用 `awsx`。主会话一般只做只读(S3 ls/cp);花钱是批测台的独占权。
 - 验证:`luacheck bots game` 0 警告 + `lua5.1 tests/run_tests.lua` 全绿
   (fresh 容器要先 apt 装 lua5.1/luacheck);只改 markdown 可免。
-- token 统计:`python3 tools/agent/token_usage.py`(已修 message.id 去重)。
+- token 统计(Claude Code 流报告用):`python3 tools/agent/token_usage.py`。
 - 回放页:子代理用 `tools/batch_test/replayscope/`;dumper 用
   `tools/batch_test/behavioral/get_dumper.sh`(S3 缓存,秒级),宽扫用
   `sweep_run.sh`。dumper 事件流英雄名无下划线,统计过滤暂停段。

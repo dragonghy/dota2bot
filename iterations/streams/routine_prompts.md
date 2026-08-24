@@ -1,5 +1,10 @@
 # Routine 创建参数(owner 手动创建用,2026-08-01)
 
+**宿主(2026-08-24):** 这五个 job **仍在 Claude Code Cloud Routine 上跑**。
+Owner 对话/调度/总结在 Cursor。未明确搬迁前不要在 Cursor Automations 里
+复制一份平行 cron。改行为 = 改 `iterations/streams/*.md`(每轮 fresh session
+重读),不必重建 Routine,除非 cron 或这段 prompt 本身要变。
+
 每个 Routine:**每次触发创建全新会话**(fresh session per fire),
 环境 = dota2bot 的默认远程环境。cron 均为 UTC。
 

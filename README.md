@@ -105,7 +105,9 @@ Permanent customization (survives updates): copy the `Customize` folder to `<Ste
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The inherited OHA codebase architecture we build on — file map, naming conventions, all systems |
 | [docs/PATCH_UPDATE_GUIDE.md](docs/PATCH_UPDATE_GUIDE.md) | Our runbook for adapting the scripts to new Dota 2 patches |
 | [docs/BOT_API_REFERENCE.md](docs/BOT_API_REFERENCE.md) | Comprehensive Valve bot scripting API reference with examples |
-| [CLAUDE.md](CLAUDE.md) | AI coding assistant guide — project focus, common tasks, rules, workflows |
+| [AGENTS.md](AGENTS.md) | Shared always-on agent prompt (Cursor + Claude Code) |
+| [CLAUDE.md](CLAUDE.md) | Claude Code entry (imports AGENTS.md) |
+| [HANDOFF.md](HANDOFF.md) | Owner-facing integrator charter (Cursor) |
 
 ### Internal Name References
 

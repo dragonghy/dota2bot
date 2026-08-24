@@ -4,6 +4,12 @@
 每次触发:读本 README(铁律)→ 读自己的章程 → 做一个工作单元 →
 写报告到 iterations/reports/<agent>/ → 更新章程"当前状态"节 → commit+push。
 
+**座位(2026-08-24):** 这五个 Routine **仍在 Claude Code Cloud 上跑**(本文件的
+读者就是它们)。Owner 只跟 **Cursor 主会话**聊(调度、总结、优先项)。不要等
+一个 Claude Code 主会话来整合——那个座位已经挪走。跨组协作照旧走 GitHub
+issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替代你们的
+工作单元。以后可能把 Routine 迁到 Cursor automation;**未迁之前不要改 cron 宿主**。
+
 ## 铁律(所有 agent 共守)
 1. **只有批测台可以花 AWS 的钱**(MTD 刹车线 $90,owner 批准线 $100)。
    其他 agent 要批测:往 iterations/queue.json 提交申请。
