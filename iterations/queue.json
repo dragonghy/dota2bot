@@ -312,7 +312,7 @@
     {
       "id": "strategy-8",
       "stream": "strategy",
-      "bundle": "pullzone,creeppull",
+      "bundle": "pullzone",
       "seeds": [
         888,
         895,
@@ -330,8 +330,9 @@
         "wave": "unscheduled (解锁时刻同 strategy-7)",
         "at": "2026-08-23T21:xxZ",
         "ref": "test_set.md §AZ.6",
-        "note": "同 strategy-7 的排期理由。⚠ 额外约束:pullzone 与 GH #149(pullbeat 不可分离)、#143 §3(episode 误标)是同一根绳子的两端(触发器侧 vs 检测器侧),而 §AY.5 第 4 条已把「creeppull 单开 vs 双开的差分波」摆上桌 ⇒ 这三者应当一起排,否则会买三次同一个域。"
-      }
+        "note": "同 strategy-7 的排期理由。⚠ 额外约束:pullzone 与 GH #149(pullbeat 不可分离)、#143 §3(episode 误标)是同一根绳子的两端(触发器侧 vs 检测器侧),而 §AY.5 第 4 条已把「creeppull 单开 vs 双开的差分波」摆上桌 ⇒ 这三者应当一起排,否则会买三次同一个域。 || 2026-08-24T01:xxZ 抢救轮:`bundle` 由 `pullzone,creeppull` 改为 `pullzone` —— `creeppull` 已 promote 为 turbo 默认,不再是任何 armed 串里的 id(带上它 = 用不存在的 id 污染串,check_armed_wiring.py 会报 ABSENT)。裁定本身(DEFERRED_PENDING_W3_RESOLVE)未变。"
+      },
+      "bundle_was": "pullzone,creeppull (pre-promote; creeppull was promoted to a turbo default 2026-08-23 and no longer exists as an arm id)"
     },
     {
       "id": "hero-11",
@@ -355,7 +356,7 @@
     {
       "id": "strategy-9",
       "stream": "strategy",
-      "bundle": "creeppull,pullbeat,pullcad",
+      "bundle": "pullcad",
       "seeds": [
         888,
         895,
@@ -372,8 +373,9 @@
         "wave": "unscheduled (搭车,零 AWS 增量)",
         "at": "2026-08-23T23:xxZ",
         "ref": "test_set.md §BA.3",
-        "note": "`pullcad` 入集批准,成员串 26。(c) 由申请书自带且是本轮 promote 的 KNOWN RESIDUAL 的正面:节拍 1.2s 与它模仿的机制(2.3s 仇恨 + 2–3s 冷却)差 2.5 倍,第 2、3 拍结构上拉不到东西且把已拉住的兵线往回拖。**⚠️ 申请书里那条 arm 串约束已作废,必须按新写法排波**:原门是 `pullcad and pullbeat` 的合取,而 `pullbeat` 本轮被 promote ⇒ 它从此不在任何 armed 串里 ⇒ 那个合取会被永久冻结为 FALSE,`pullcad` 在每一个能 arm 它的波里都是逐字节 no-op,而 `check_armed_wiring.py` 仍会报 WIRED(它查的是调用点存在,不是谓词能为真),verdict 回来是「测过了,无影响」,**没有任何计数会报警** —— 这正是 campgrade 那次擦身而过的形状。已在同一次改动里把合取拆掉(前置条件改由构造满足,严格强于门),并留下两条用例钉住:`pullcad` 单独 arm 现在必须移动节拍;`pullcad` 的门条件里不许出现任何已 promote 的 id。⇒ **发波时 armed 串就是 `pullcad` 一个 id,不要再带 `creeppull`/`pullbeat`(带了 = 用不存在的 id 污染串)**。排期照常等名额,与 strategy-7/8 及 §AY.5 第 4 条一起排(§AZ.6 那根绳子不变)。"
-      }
+        "note": "`pullcad` 入集批准,成员串 26。(c) 由申请书自带且是本轮 promote 的 KNOWN RESIDUAL 的正面:节拍 1.2s 与它模仿的机制(2.3s 仇恨 + 2–3s 冷却)差 2.5 倍,第 2、3 拍结构上拉不到东西且把已拉住的兵线往回拖。**⚠️ 申请书里那条 arm 串约束已作废,必须按新写法排波**:原门是 `pullcad and pullbeat` 的合取,而 `pullbeat` 本轮被 promote ⇒ 它从此不在任何 armed 串里 ⇒ 那个合取会被永久冻结为 FALSE,`pullcad` 在每一个能 arm 它的波里都是逐字节 no-op,而 `check_armed_wiring.py` 仍会报 WIRED(它查的是调用点存在,不是谓词能为真),verdict 回来是「测过了,无影响」,**没有任何计数会报警** —— 这正是 campgrade 那次擦身而过的形状。已在同一次改动里把合取拆掉(前置条件改由构造满足,严格强于门),并留下两条用例钉住:`pullcad` 单独 arm 现在必须移动节拍;`pullcad` 的门条件里不许出现任何已 promote 的 id。⇒ **发波时 armed 串就是 `pullcad` 一个 id,不要再带 `creeppull`/`pullbeat`(带了 = 用不存在的 id 污染串)**。排期照常等名额,与 strategy-7/8 及 §AY.5 第 4 条一起排(§AZ.6 那根绳子不变)。 || 2026-08-24T01:xxZ 抢救轮:上面那句「发波时 armed 串就是 `pullcad` 一个 id」当时**只写在这段散文里,没有落到 `bundle` 机器字段**(它仍是 `creeppull,pullbeat,pullcad`)。按 _protocol,`bundle` 就是逗号 id 串本身,批测台照它发波 ⇒ 这正是 §AW.1 立步骤 2.5 要防的那个形状,第三发。**`bundle` 已改为 `pullcad`**,原串留在 `bundle_was`。"
+      },
+      "bundle_was": "creeppull,pullbeat,pullcad (pre-promote; creeppull+pullbeat were promoted to turbo defaults 2026-08-23 and no longer exist as arm ids)"
     },
     {
       "id": "hero-12",
