@@ -970,7 +970,7 @@ function X.ConsiderR()
 	local nRawDamage = 475 + 125 * nSkillLV
 	if bot:HasScepter()
 	then
-		nRadius = abilityR:GetSpecialValueInt( 'splash_radius_scepter' )
+		nRadius = X.GetAbilityRSplashRadius()
 		nRawDamage = 575 + 125 * nSkillLV
 	end
 
@@ -1140,6 +1140,48 @@ function X.ConsiderR()
 
 	return BOT_ACTION_DESIRE_NONE
 
+
+end
+
+
+--- Splash radius of a scepter Finger of Death, in units.
+---
+--- SHIPPED (no gate, tried first): the key `splash_radius_scepter`, which this
+--- file has always read off lion_finger_of_death.
+---
+--- WIDENED (soak candidate 'lionsplash', GH #162): that key is not in the
+--- ability's AbilityValues block in this patch.  Its name today is
+--- 'splash_radius' (npc_dota_hero_lion.txt: AbilityValues/splash_radius/
+--- special_bonus_scepter = 325, affected_by_aoe_increase = 1), and a
+--- GetSpecialValueInt for a key the ability does not have answers 0 -- with no
+--- error, and nothing a bot-side print could show (AGENTS.md).  So the shipped
+--- read is a silent zero, and BOTH consumers of nRadius in X.ConsiderR are
+--- dead code whenever Lion holds a scepter:
+---   * the R团战Aoe branch counts enemies within nRadius of the candidate and
+---     needs > 1; at radius 0 only the candidate itself is ever inside, so the
+---     count is 1 and the branch cannot fire;
+---   * the R-带线 branch needs GetNearbyAroundLocationUnitCount(..., nRadius,
+---     ...) > 4 around a creep; at radius 0 it cannot clear 4.
+---
+--- The widening is one-directional by construction: the shipped key runs FIRST
+--- and wins whenever it answers anything positive, so gate-off is structurally
+--- -- not merely measurably -- the shipped path, and gate-on differs only on
+--- the exact frames where the shipped key reads 0 AND the current key does not.
+--- (Which is why this is a candidate and not a promoted default: see the LIMIT
+--- in tests/test_lion_r_splash_radius_key.lua -- the offline world answers 0
+--- for EVERY key and false for HasScepter, so no fixture can watch it fire.)
+function X.GetAbilityRSplashRadius()
+
+	local nShipped = abilityR:GetSpecialValueInt( 'splash_radius_scepter' )
+	if nShipped > 0 then return nShipped end
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'lionsplash' )
+	then
+		local nCurrent = abilityR:GetSpecialValueInt( 'splash_radius' )
+		if nCurrent > 0 then return nCurrent end
+	end
+
+	return nShipped
 
 end
 

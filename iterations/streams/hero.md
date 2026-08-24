@@ -22,6 +22,30 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-5. **GH #162:Lion 大招的溅射半径读了一个被改名的 KV key**(2026-08-24T16:52Z 立,
+   gated `lionsplash` 已落地、**未 armed**、**不申请入集,先买域** `hero-14`)。
+   `hero_lion.lua` 读 `splash_radius_scepter`,而本 patch 的 `lion_finger_of_death` KV 里
+   它叫 **`splash_radius`**(`special_bonus_scepter = 325`)⇒ `GetSpecialValueInt` 对不存在的 key
+   **静默返回 0** ⇒ Lion **持 A 杖时** `X.ConsiderR` 里消费 `nRadius` 的**两条分支整条死**
+   (`R团战Aoe` 计数恒 1 而需 >1;`R-带线` 半径 0 而需 >4)。与 GH #137 / #115 / #104 同族。
+   - **新工具 `tools/agent/special_value_key_census.py`**(每英雄一次 GET,零 AWS):
+     **620 处读数,30 处 key 不在所属英雄的整份 KV 里**,**焦点五里恰好只有这一处**;
+     其余 29 处列在 issue §二,**不归本组打磨,认领者自取**。
+     **判据单向**:key 不在 ⇒ 证明读数是 0;key 在 ⇒ **什么都不证明**(不解析句柄→技能映射)。
+   - **⚠️ LIMIT(量出来的,不是断言的)**:mock 的 `GetSpecialValueInt` 对**任何** key 恒 0、
+     `^Has` 默认 false ⇒ `HasScepter()` 在 106 个 fixture 上全 false ⇒ **开火侧离线不可复现**,
+     绿色**不能**读成「守卫不必要」。与 GH #100/#133/#145/#154 同族。
+   - **顺带核对没错的三个数**(免得后人重查):Lion R `475+125*lv` / A杖 `575+125*lv`、
+     WK Q `40*(lv-1)+100`(= `damage` + `blast_dot_damage` 的**和**)、CM W `100+50*lv`
+     (= dps×duration)**全部与 KV 逐位相符**;**唯一对不上的仍是已登记的 Axe R `150+100*lv`**
+     (KV 275/375/475,每级少 25,`hero-2`,**不动**)。
+   - **留给后来人**:① **`test_gate_claim_consistency` 按子串 `gated` 触发** ——
+     注释里写 "**un**gated" 会被判成「声称了一个没人接线的 gate」(本轮当场踩到);
+     key 名在注释里用反引号,别用单引号。② 一次如实记的变异误判:M5(内层 `>0`→`>=0`)
+     逃逸,复核确认是**真 no-op**不是盲区 —— **逃逸先复核语义再改测试**。
+   - **下一棒已交**:queue **`hero-14`**(归档 .dem 扫描,零 EC2;四条口径 + 两条预登记的
+     反向读法已写死,含「(2) 读 0 ⇒ DOMAIN-NOT-REACHED 而非不可能,#108 放宽局时后必须重量」)。
+
 -4. ~~**GH #156:`cmboots` 非 armed 腿 1/103 漏成秘法鞋 —— 源码侧证伪领头嫌疑**~~
    **2026-08-24T13:57Z done ——** 逐树读源码证伪 issue 的领头嫌疑(`tEarlyBoots` 四个调用点
    全非下单;唯一的 role→boots 表 `advanced_item_strategy.lua` 无人 require);剩下的真机制
@@ -993,6 +1017,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-24T16:52Z(报告 `iterations/reports/hero/20260824T165200Z.md`;**本轮没有可推进的
+  `[hero]` issue**(#154 等 `hero-13`、#126 等 W5、#146 等供给数、#150/#151 等 `hero-11`/`hero-12`),
+  owner P1/P2/P3 的球在协同组/协同组/总监 ⇒ 按章程取**自选项**:焦点五的「硬编码技能数值 ×
+  引擎 KV」对账,并把它推成全仓普查;本组开 GH **#162**;新 gated id **`lionsplash`**
+  (turbo-only,**未 armed**,**不申请入集**);queue **`hero-14`** 新增 pending;
+  登记 `state.json:lionsplash_20260824`;backlog 新增 §-5;**稳定版未漂移**;零 AWS;
+  外部读 128 次(d2vpkr 英雄 KV,与 `gen_ability_meta.py` 同源)):
+  **`hero_lion.lua` 读的 `splash_radius_scepter` 不在本 patch 的 `lion_finger_of_death` KV 里
+  ——现名 `splash_radius`——而 `GetSpecialValueInt` 对不存在的 key 静默返回 0
+  ⇒ Lion 持 A 杖时 `X.ConsiderR` 里消费 `nRadius` 的两条分支(`R团战Aoe` / `R-带线`)
+  结构性不可达,整条是死代码。**
+  开工自检 worst exit **3**:8 条 UNLANDED **全部是总监的树**(三个 `compassionate-albattani`/
+  `busy-bardeen` 分支,自陈「main deliberately not pushed until the full suite closes」);
+  cadence 五个洞是**全队** 02:00Z–13:00Z 停了一段,不是本组单独掉队;citation clean、trunk python 18/18。
+  - **普查规模**:`tools/agent/special_value_key_census.py`(新)对 `bots/` 的 **620 处
+    `GetSpecialValue*` 读数**逐条比对该英雄整份 KV ⇒ **26 处英雄文件 + 4 处通用文件**的 key
+    在 KV 里根本不存在,**而落在焦点五里的恰好只有 Lion 这一处**。其余 29 处列在 issue §二,
+    **不归本组打磨**。
+  - **⭐ 判据单向(与上一轮鞋供给普查同一条纪律)**:key **不在**该英雄任何技能里 ⇒ **证明**
+    读数是 0;key **在** ⇒ **什么都不证明**(工具不解析「句柄→技能」映射,`radius` 几乎人人都有)。
+    ⇒ 断言写成「没有**新的** offender」,不是「每处读数都对」。
+  - **改动形状**:`X.GetAbilityRSplashRadius()` **出货 key 先跑一遍,读到正数就赢**
+    ⇒ gate-off 等价性**结构性**成立,且老名字若被改回来出货读数自动重新赢。**一根杠杆。**
+  - **⚠️ LIMIT(量出来的)**:mock 的 `GetSpecialValueInt` 对**任何** key 恒 0、`HasScepter()`
+    在 106 个 fixture 上恒 false ⇒ **开火侧离线不可复现,绿色不是「守卫不必要」的证据**
+    (GH #100/#133/#145/#154 同族)。条件 (a) 只能由语料买 ⇒ `hero-14`。
+  - **顺带核对**:Lion R / WK Q / CM W 三处硬编码伤害公式**与 KV 逐位相符**;
+    **唯一对不上的仍是已登记的 Axe R `150+100*lv`**(每级少 25,`hero-2`,不动)。
+  - **核验**:luacheck **0 警告**;新测试 **14 例 / 15 次变异 13 抓 + 2 个 no-op 对照如期逃逸**
+    (含普查**调用点**丢结果的 M14 —— 树上还留着一个真 offender,所以报告那一半有真实驱动);
+    **一次如实记的误判**:M5 逃逸,复核确认是**真 no-op** 不是盲区。
+    `test_gate_claim_consistency` **当场抓了本轮一次**(注释里的 "ungated" 含子串 "gated"),
+    改措辞后 10 例绿;`lion` 前缀 87 例绿。
+  - **下一轮建议**:等 `hero-10..14` 读数;不等的话做队列整理(`hero-9`+`hero-13` 合并成
+    一次含 Axe 种子集的申请,需先与批测台确认种子集)。**别重推**:§25 Axe `nKillDamage`
+    仍 `NARROW-BAND-UNMEASURABLE`;那 29 处非焦点五的 stale key 不要当本组的活。
 - 2026-08-24T13:57Z(报告 `iterations/reports/hero/20260824T135727Z.md`;**认领 GH #156**
   ——本轮唯一一条桌面就能推进且属于本组的新 open issue;backlog 新增 §-4;新
   `tests/test_boots_supply_paths.lua`;**`bots/`/`game/` 零改动、无新 gated id、稳定版未漂移、

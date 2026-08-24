@@ -438,6 +438,16 @@
       "question": "GH #157。搭车,不申请专波,零 AWS 增量。新 gated id `towerfear`(state.json:towerfear_20260824,test_set.md 14:0xZ 入集提议)要买条件 (a)。它改的是 mode_retreat_generic.X.ShouldRun 「前期谨慎冲塔」块里那条粗判据的**时钟腿**:`botLevel <= 5 or DotaTime() < 5*60` 两条腿是同一个谓词的两种写法,turbo 双倍经验让时钟腿为等级腿已放行的 6-10 级继续开火,而这个 return 经 GetDesireHelper 是 ABSOLUTE×1.1、压过所有模式。armed 把时钟腿折半到 2:30(引擎自己对 turbo 计时器的折半比例,本仓库 NeutralItems 四档与 IsEarlyGame 已照做)。armed 谓词是出厂谓词的子集 ⇒ 只可能少逃、不可能多逃;放掉的帧由紧邻的校准判据(塔真的在打我 + 我一个人)接。**单独 arm 就有意义,无结构性同伴**,且实测与在集 25 个 id 在承重帧上零交互(全集 armed 该帧仍读 1.1,towerfear 单开与 towerfear+全集逐位相同)⇒ 搭任何一波都行。",
       "acceptance": "**判据开工前登记,免得事后挑**。正向两个读数,ab/ba 两层都要给(GH #148 计量三条):(1) armed 腿**对线期(2:30-5:00)因塔而起的撤退 episode 数下降** —— 用「离敌方塔 ≤898 且 2s 内开始向自家泉水位移」的事件计数,**是计数类 ⇒ 报均值+占比,不报中位数**;(2) **同窗口内 6-10 级英雄的敌方塔附近停留时长上升**(这是修法声称买到的东西)。**反向判据不许省**:(3) 同窗口 armed 腿**死亡数不许上升**(这是本修法唯一的可信代价:少逃 ⇒ 可能多死),(4) 塔下**总撤退**不许塌向 0(那不是收窄是关闭 —— 校准判据必须仍在接),(5) 对线期 gpm/xpm 不许低于 baseline 腿。**预登记的反向读法**:三个读数都不动 ⇒ 第一嫌疑是 **arm 串漏了 `towerfear`**(逐字节 no-op、没有任何计数会报警);第二嫌疑是这个联合事件(6-10 级 + 2:30-5:00 + 塔 898 内)在真实局里比本语料暗示的更稀 —— **那时不要再收窄谓词,要去量事件率**:本地帧域 1/966 是**这份语料的下界**(批测局在攻塔前自终止,fixture 当初为别的问题采),不是 turbo 的估计。",
       "status": "pending"
+    },
+    {
+      "id": "hero-14",
+      "stream": "hero",
+      "bundle": "lionsplash",
+      "seeds": [],
+      "priority": 3,
+      "question": "GH #162。**归档 .dem 扫描,零 EC2,不申请专波**。新 gated id `lionsplash`(state.json:lionsplash_20260824)要买的是**域**,不是效应。机制桌面已证:`hero_lion.lua` 读的 `splash_radius_scepter` 不在本 patch 的 `lion_finger_of_death` KV 里(现名 `splash_radius`,special_bonus_scepter = 325)⇒ `GetSpecialValueInt` 静默返回 0 ⇒ Lion **持 A 杖时** `X.ConsiderR` 里两条消费 `nRadius` 的分支结构性不可达(`R团战Aoe` 计数恒 1、需 >1;`R-带线` 半径 0、需 >4)。**离线证不了域**:mock 的 `GetSpecialValueInt` 对任何 key 恒 0、`HasScepter()` 在 106 个 fixture 上恒 false(已量,写进 GH #162 §四,与 GH #100/#133/#145 同族)。",
+      "acceptance": "**判据开工前登记,免得读数回来再挑切法**。(1) **载体分母**:语料里有 Lion 的局数与 Lion 帧数;(2) **域**:Lion 持 A 杖(`ultimate_scepter` / `ultimate_scepter_2` / `aghanims_blessing*` 任一)**且大招就绪**的帧数 —— 这是改动可见性的上界;(3) 该域内,候选目标 **325u 内 ≥2 个敌方英雄**的帧占比(`R团战Aoe` 醒来后可能开火的帧),以及 **1200u 内敌方兵 ≥5 且某只兵 325u 内 ≥5 单位**的帧占比(`R-带线`);(4) 按铁律 4(i) **ab / ba 两层分开报**,按 (ii) 计数类**报均值 + 占比,不报中位数**。**预登记的反向读法**:若 (2) 读 0,登记为 **DOMAIN-NOT-REACHED 而非不可能** —— 语料窗口止于 ~11:30(GH #126 评论),而 A 杖在 Lion 各角色买单里排到第 9 位左右;**GH #108 把局时上限提到 25 分钟之后必须重量**,不得引用本轮的零。若 (2) 非零但 (3) 全零,先问一句是不是解析吃掉了单位(GH #151 的教训),再谈收窄。**载体瓶颈需批测台确认 Lion 在不在常设种子里** —— 与 `hero-9`/`hero-13`(卡在常设种子零 Axe)不一定同源,若同源可合并申请。",
+      "status": "pending"
     }
   ],
   "done": [
