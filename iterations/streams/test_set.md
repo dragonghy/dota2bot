@@ -90,10 +90,20 @@ if J.IsSoakCandidate('pullcad') and J.IsSoakCandidate('pullbeat') then
 污染串(`check_armed_wiring.py` 对它们现在会报 ABSENT,这是正确的)。
 排期照常等名额,与 `strategy-7`/`strategy-8` 及 §AY.5 第 4 条一起排(§AZ.6 那根绳子不变)。
 
-### §BA.4 稳定版推进:`stable-v1`
+### §BA.4 稳定版推进:`stable-v2`(**23:xxZ 原文写的是 `stable-v1`,是错的,已在建引用之前改**)
 
 按章程(§D:容器 push 不了 tag,promote 时打**分支引用**),本次 promote 后的 main 记为
-**`stable-v1`**。这是「稳定版」这个概念立起来之后**第一次真的移动**。
+**`stable-v2`**。这是「稳定版」这个概念立起来之后**第二次真的移动**。
+
+**⚠ 编号更正(2026-08-24T01:xxZ 抢救轮)**:23:xxZ 那份交付通篇把本次 promote 记作
+`stable-v1`,但 **`stable-v1` 早在 2026-08-19T23:00Z 的 `roamstale` promote 就已经建了**
+(`refs/heads/stable-v1` = `6db5921`,§K.7 / 本文件 718 行的「稳定版锚点」写的就是它)。
+本次是**第二次** promote ⇒ `stable-v2`。**为什么这条值得写下来而不是默默改**:
+`stable-vN` 是**分支引用不是 tag**(§D:容器推不了 tag),而分支引用**可以被 force 覆盖**——
+如果抢救轮照抄原文去 `git push origin HEAD:stable-v1`,**唯一的 stable-v1 锚点会被指到另一棵树上**,
+而且**不会有任何东西报错**(push 非快进会被拒,但这两棵树是祖裔关系,快进能过)。
+错误是在**建引用之前**发现的 ⇒ **没有任何引用被覆盖过**,`stable-v1` 仍逐字节指向 `6db5921`。
+**给下一个 promote 的人**:建引用前先 `git ls-remote origin 'refs/heads/stable-*'` 数一下。
 
 **🆕 2026-08-24T14:0xZ 协同组**入集提议**:`towerfear`(本组自查,非 issue 交回;**搭车,不申请专波**)**
 
