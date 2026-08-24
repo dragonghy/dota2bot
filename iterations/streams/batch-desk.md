@@ -3516,6 +3516,72 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   零 AWS,`capmono_refusal.py` 已有 `modifier_teleporting` 通道;
   ⑤ **录像组 —— W4 `campgrade` 的 (a)**(录像组自己登记顺延,记在此以免掉棒)。
   详见 `iterations/reports/batch-desk/20260824T151149Z.md`。
+- 2026-08-24T18:15Z:**发波 —— W7 全集例行波,连续两轮的封锁解除。**
+  **⭐ 真发现①:promote 已经在 main 上了,上两轮那条决定性的「基线是错的」不再成立。**
+  源码侧直接核实(不是读报告):`origin/main` **`a5b7dab` → `03fb378`**;
+  `jmz_func.lua:7124` 从 `if not J.IsSoakCandidate('creeppull')` 变成
+  **`-- PROMOTED (was soak-candidate 'creeppull') 2026-08-23, together with its sibling 'pullbeat'`**;
+  `PROMOTED (was soak-candidate` 全文件 **9** 处。⇒ **稳定版腿第一次真的是 `stable-v2`**,
+  本波是它落地后的第一波,也是 **creeppull+pullbeat 作为 turbo 默认出现在两条腿上的第一份语料**。
+  **诚实边界**:`stable-v2` 的**分支引用在远端还不存在**(`ls-remote 'refs/heads/stable-*'` 与 `--tags` 都空)——
+  树对了,锚点没建,「stable-v2 是哪棵树」目前只活在散文里(交棒②)。
+  **自检 UNLANDED 8 条本轮判读相反**:内容已由总监 16:xxZ 抢救链落上 main(cherry-pick 换了 SHA),
+  自检点的是那几条 SHA 本身 ⇒ **不再当掉棒、不再开 issue**;判据是源码核实不是工具输出。
+  **⭐ 真发现②:两条「搭车」id 差一个批准,眼睁睁空过这一波(新开 GH #164)。**
+  `check_armed_wiring.py --cand "pulllane,towerfear" --ref 03fb378` ⇒ **两条都 WIRED**
+  (`jmz_func.lua:8037` / `mode_retreat_generic.lua:907`),两条都自称「搭车、不申请专波」,
+  **两条都不在可 arm 串里** —— 头部成员串仍是 **26**(23:xxZ 那一行),总监 13:xxZ 逐字「成员串 26 逐字未动」、
+  16:xxZ §4「不新做 promote/reject … 不加急」。**这不是「等下一轮就好」**:`strategy-11` 的门是
+  `pullcamp and pulllane` 的**合取** ⇒ 只 arm `pullcamp` 是**逐字节 no-op 且没有任何计数会报警**
+  (§BA.2 那个形状),而 `pulllane` 正是 **owner P1 连接率**(21.5% → 12.1%/9.9%)那一格。
+  **本台不替总监批入集**(§AW.1 管的是「裁定已作出时别用相反的保守默认」,不是「可以替总监裁」)。
+  **启动决策:启动 —— 三条节流全过,且上一轮不发的五条理由本轮逐条复核后有三条真的变了。**
+  (i) 距上一波 03:10:28Z ⇒ **15.0h** ✅;(ii) 树变了(含 promote)且当前树+成员串累计种子 **0 < 8** ✅;
+  (iii) $36.206 + $1.48 = **$37.69 ≤ $45** ✅(纪律(甲):近 12h 零波次 ⇒ 加计 $0)。
+  **变的三条**:① **基线**已对(真发现①);② **排期权**已交回 —— 总监 16:xxZ §6 逐字
+  「总监不加急买波 … `strategy-7/-8/-12` 与 `hero-9` **由批测台按排期走**」,
+  上一轮那条「总监离线无法反对时不得单方面插波」的先例**保护的是缺席情形,不适用于在场并已表态**;
+  ③ **下游**已动 —— 五流全部 6h 内产出,录像组 15:57Z 已把 W4 消化到 208 局全语料 + 一条 `tpsafe2` [bug]
+  ⇒ 12:17Z 那条「把钱花在瓶颈的下游」不再成立。
+  **W6 的占位没动**:`strategy-5b` 的条件(§AX.2 事件轴量级)在录像组 15:57Z 报告**仍零处提及**
+  ⇒ 「拿到之前不排发波时刻」继续生效,**本波编号取 W7,W6 仍留给 `strategy-5b`**;
+  `strategy-6` 是 `RECEIVED` 不发;`strategy-7`/`strategy-8` 的新 id(`bagsalve`/`pullzone`)**不在成员串里**
+  ⇒ 带不上,**本台不替总监宣布它们的 `DEFERRED_PENDING_W3_RESOLVE` 解锁**(虽然 W3 的 resolve 事实上已落地)。
+  **发波参数**:armed = 头部成员串 **26 逐字**(接线门 **26/26 WIRED exit 0**);
+  载体门 `--assert-carrier "crystal_maiden,zuus,lion,obsidian_destroyer"` **exit 0**
+  (cm/zuus **FULL** 4/4;lion/odaoe **PARTIAL** 只 s896 ⇒ 另三个种子是波内零腿,**该新规仍未裁**);
+  正面证据发牌表:s895 dire pos1 / s906 radiant pos3 = `skeleton_king` ⇒ `hero-6` 有分母;
+  钉树 **`03fb37877def67cc2be320b960f2521192e4a716`**(发波时刻 `ls-remote` 真 tip);
+  4 台 × 1 种子(888/895/896/906)、`--on-demand`(GH #158 未裁前的保守默认)、`--slots 16`、
+  **`--rec-slots 12`**(第五次验收 exit 0;本波只动 id 集合、不动采集配置)、`--hours 2` + terminate、`--games 22`。
+  run_id 尾 token `a0d128`/`2b3d86`/`cdc15c`/`188e3c`,发波 18:12:41/45/49/52Z;
+  **唯一性双保险**:四次调用各跨整秒 + `soak-run` 标签 **4 值两两不同**,`describe-instances` 只回 4 台。
+  **收割:无新 verdict** —— `validation/` 最新仍是 **2026-08-24T03:42:42Z**(与上轮收尾逐位相同),
+  W5 之后零产出,与「上一轮未发波」一致 ⇒ 无 status 因收割而变。
+  **局数**:上一波 W5 **273 有效 + 24 暖场 = 297**(888 42/28、895 41/27、896 42/27、906 42/24,unfinished 0,原样引用不重算);
+  本波两次读数:+2.1 分钟(18:14:49Z)与 **+7.4 分钟(18:20:06Z)** 四个 run **均 0 局** —— 仍在预期内
+  (W3 实测首局在开波 **+7.5 分钟**,本轮收尾时刻正好压在那个点上,**不是异常,但也还没看到正样本**),预期 **~275 ± 25 有效局**;
+  **预计自毁 ≈ 18:45Z**(0.550 h/台的账单侧读数,不是 20:12Z 看门狗)。
+  **成本**:MTD **$36.206**(budgets refreshed **14:37:15Z**,脚本按 $35 自动 CE 复核 **$36.2056796871** 逐位吻合),
+  forecast 64.471/limit 100.0,三线全未触及;本轮 CE 花费 **$0.01**。
+  **纪律(乙)照办**:未用「MTD 增量对得上波费」做任何推断 —— 本波 18:12Z 发出、快照停在 14:37Z,
+  **必然不在这个读数里**,这是时间戳给的不是拟合。
+  **泄漏**:四层 + spot 请求,开工 实例 **0**/卷 0/快照 1/EIP 0/spot 0;收尾 实例 **4 = 本波四台逐个对上,无第五台**,
+  其余层不变 ⇒ **无泄漏**;下一轮收尾判据回到「0 台在跑」。
+  **固定栏位**:`soak/` **184**(持平 —— **本波四个 run 前缀此刻还不存在**:S3 前缀要等第一个对象落地才出现,
+  收尾时刻 18:20Z 四个 run 各 0 局 ⇒ 预期收割时读到 **188**)、`dem21/` 36(持平)、`unattributed/` 0、
+  `validation/` 最新 **2026-08-24T03:42:42Z**(持平)、远端 main tip **`03fb378`**(**含 promote**)。
+  **验证**:`bots/`/`game/` **逐字未动**(改动仅 `iterations/` 下)⇒ 铁律 6 无适用对象;
+  容器无 `luacheck`/`lua5.1`,**不声称跑绿过 Lua 全量**;`queue.json` 按原 `indent=2` 回写,`git diff --stat` 9 增 7 删,无重排噪声。
+  **铁律 9 的交棒**:① **⭐ 总监 —— 批 `pulllane`/`towerfear` 入集(GH #164)**,零 AWS 增量,
+  批准即下一波全集自动带上;退回请写理由,本台改 `rejected`。**按 §BA.4 补则必须落到头部成员串**;
+  ② **总监 —— `stable-v2` 的分支引用还没建**(远端 `stable-*` 与 tag 都空);
+  ③ **总监 —— 载体门 PARTIAL 的惰性种子 = 波内零腿**(第二轮催,本波 lion/odaoe 正踩在上面);
+  ④ **录像组 —— W7 收割后三份 (a) 核验**:`pullcad`(FLIP/兵线位移/右键次数,ab/ba 两层)、
+  `hero-6`(WK 双树枝,s895/s906 有载体)、外加这是 creeppull+pullbeat 作为默认的第一份语料;
+  ⑤ **录像组 —— W6 解锁棒(第三轮催)**:`strategy-5b` 的事件轴量级,零 AWS;
+  ⑥ **总监 —— W4 `campgrade` 的处置**:录像组 15:57Z 208 局全语料重跑后**更 SILENT**,退回/收窄/关闭归总监。
+  详见 `iterations/reports/batch-desk/20260824T181500Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
