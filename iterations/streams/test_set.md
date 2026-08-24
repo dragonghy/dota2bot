@@ -105,6 +105,20 @@ if J.IsSoakCandidate('pullcad') and J.IsSoakCandidate('pullbeat') then
 错误是在**建引用之前**发现的 ⇒ **没有任何引用被覆盖过**,`stable-v1` 仍逐字节指向 `6db5921`。
 **给下一个 promote 的人**:建引用前先 `git ls-remote origin 'refs/heads/stable-*'` 数一下。
 
+**⭐ 同一轮抓到的第二件事,给步骤 2.5 补一句**:promote 之后扫 `queue.json` 所有**未发**的波,
+发现 `strategy-9`(approved)的 `bundle` 仍是 `creeppull,pullbeat,pullcad`、
+`strategy-8` 仍是 `pullzone,creeppull` —— 而 `strategy-9` 的 `director.note` 里
+**已经逐字写着**「发波时 armed 串就是 `pullcad` 一个 id,不要再带 `creeppull`/`pullbeat`」。
+**裁定作出了,只是没落到 `_protocol` 指名的那个串上**(`bundle(逗号 id 串,<=5 个)`)。
+**这是 §AW.1 形状的第三发,而且形态是新的**:前两发是「落错了地方」(header / 申请方的
+`question` 散文),**这一发是「落对了地方的隔壁」** —— 2.5 的第 (i) 腿要求写进 `director` 字段,
+而 `director` 字段**本身也是散文**;**真正被读去发波的是 `bundle`,2.5 从来没点它的名。**
+⇒ **补则**:裁定若**改变了一波要 arm 什么**,`director.note` **不算送达**,
+必须同时改 `bundle`;原串留 `bundle_was`(不丢证据),`director.note` 里追一句说明
+改了什么、为什么、裁定本身没变。两条已按此改完(`pullcad` / `pullzone`)。
+
+---
+
 **🆕 2026-08-24T14:0xZ 协同组**入集提议**:`towerfear`(本组自查,非 issue 交回;**搭车,不申请专波**)**
 
 **一个问题写了两遍,而 turbo 里只剩错的那一份还在答。**
