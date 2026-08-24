@@ -84,6 +84,27 @@
   —— 与「泄漏永远 ≤0.30s」之间有 5 倍余量。**写存活/复活判据前先问:这英雄会不会原地复活**
   (WK 大招、aegis、烈魂之刃)。注意 #78 §3 规定的范式和 `detect.py:463-467` 的现成实现
   **都用 `hp > 0`**,对 WK 会在第一帧泄漏处就误判复活。
+- **[2026-08-24 新踩,#57 的加强]** **`analysis.json:team_slot % 5 + 1` 不是 bot 脚本里的 `sRole`。**
+  #57 钉的是「位置按局读不按种子推」;那条**不够**——`team_slot` 只是队内槽位序,
+  `sRole`(决定 `X['sBuyList']` 取哪张表)是 bot 自己算的,两者会分歧。踩法:按 `team_slot`
+  分组时 W5 seed 888 有 12/70 局「CM 在 pos_5」,看起来直接推翻批测台「888 是结构性零腿」;
+  **逐帧一看 888 的 CM 全程走 `item_priest_outfit`**(urn/mekansm/headdress 链),
+  `team_slot` 的读数是伪的。**角色不要猜** —— 角色门候选的可靠观测量只有 gate 里
+  **能观测的那条子句**(`jmz_func.lua:4654` 的 `GetTeam() == armed side`),
+  角色本身要么用**买表专有物品**当签名(且要先确认该物品在其它角色表里不出现),要么不分组。
+- **[2026-08-24 新踩]** **组件占比差异不等于行为差异 —— 先拿一帧确认合成关系再解读。**
+  W5 armed 腿 `ring_of_basilius` +88pp / `sobi_mask` +76pp / `wizard_hat` +58pp(两层同号),
+  差点写成「买表被改动了别的地方」;**这三个就是当前版本秘法鞋的合成件**
+  (帧 `1d9ae5/031904_slot7` t=428.5:`arcane_boots` 同帧吃掉 `boots_of_speed+ring_of_basilius+wizard_hat`)。
+  组件只有在**装配期间**停留在栏位里才会被 1Hz 快照看见 ⇒ 组件占比量的是**装配时长**,不是选择。
+  反面同理:`energy_booster`(旧版秘法鞋的合成件)在差异表里**一次都没出现**。
+- **[2026-08-24 新能力]** **主动物品「用了没有」可以从事件流量出来,不必等 fixture 层。**
+  `events[] type=='ITEM' actor=<hero> inflictor='item_<x>'` = 谁放的;
+  `events[] type=='MODIFIER_ADD' target=<hero> inflictor='modifier_item_<x>'` = 谁吃到。
+  这是本组第一次给条件 (a) 买到「买了 **且** 用了」两层(W5 `cmboots`,自放 +2.4 次/局、SILENT 2/106)。
+  **GH #100 的「物品层完全不可观测」只对 fixture 过程侧成立,对 `.dem` 结果侧不成立**(已追评)。
+  离线**没有** per-ability 蓝耗表 ⇒ 蓝量判据只能用「低于该英雄最便宜技能」的**严格地板**
+  (CM 用 `mp<100`),当地板读,不当比率读。
 - **[2026-08-21]** `hp_pct > 0` 作为存活判据的**真实宽度**:corpse 帧 **96.2% 精确读 0**,
   泄漏 ≈0.24 帧/死亡且**永远是 DEATH 之后 ≤0.30s 的那一拍**(实测 735 个死亡区间)。
   它确实漏,但漏的是**一帧**;而 `LAG_S=1.0` 让窗口够到 `t−1`,**致命普攻本身就在窗口内**
@@ -3652,3 +3673,50 @@
     (5) `hero-1` 的 153 局 WK 语料(棒子挂 **18 轮**);(6) `l5combo` 的 (a)(**连续第三十四轮**);
     (7) `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**连续第二十一轮顺延**);(8) `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260824T005934Z.md`
+- **2026-08-24T13:00Z(第六十一次触发)**:W5(`cmboots` 独占波,03:10Z 发出、12:17Z 才被补记收割)
+  是**整波未检的新语料**,按章程第 1 条优先于历史补课。**宽扫 233/233 有 `.dem` 的局**
+  (297 局有 `analysis.json`,24 局暖场 ⇒ **有效 209 局**;四 run 按 run 分目录,**22 组跨 run 撞名**已用
+  `(run, tag)` 主键化解)**+ 深查 8 局逐帧**(3 run、4 seed、两个物理层、两条腿)。
+  零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐ **`cmboots` 的 (a) = WORKING,而且第一次是三层都有帧证据的 WORKING。**
+    **所有权**:CM 在 armed 队 **106 局,持过 tranquil 0 局(0.0%)、arcane 106 局、bearing 0 局**;
+    两层同号(radiant 0/60、dire 0/46)。非 armed 队 103 局里 72 局 tranquil。
+    **执行**:合成路径逐帧对上 —— `1d9ae5/031904_slot7` t=428.5 `arcane_boots` 同帧吃掉
+    `boots_of_speed+ring_of_basilius+wizard_hat`;同 seed 非 armed 腿 `1d9ae5/033503_slot9`
+    t=285.4 `tranquil_boots` 吃掉 `boots_of_speed+wind_lace`。
+  - ⭐⭐ **本组第一次买到「用了没有」:`.dem` 事件流看得见 Replenish 的每一次激活。**
+    CM 源码注释写着这条「语料完全看不见(GH #100)—— argued, not measured」。
+    每局均值(分两层 + 平衡估计量,**五行两层全部同号**):自放 Replenish **+2.355**(去 888 **+2.988**)、
+    收到 **+1.500**、技能施放数 **+2.04**、存活帧 `mp<100` 占比 **−3.5pp**、平均 `mp_pct` **+5.9pp**。
+    **阴性对照**(队友放的 Replenish)平衡 **−0.38 且两层反号** ⇒ 装置没有整体漂移。
+    **SILENT 率 2/106**。**她自己那双不冗余**:非 armed 腿队友每局放 2.8–4.4 次而 CM 收到 0.00–1.07 次
+    (帧 `033503_slot9`:队友放 11 次,CM 收到 **0** 次)。
+  - ⚠️ **纠正我自己的分组错误(已写进上面的工具坑)**:按 `team_slot%5+1` 分组,seed 888 有 12/70 局
+    「CM 在 pos_5」,看起来推翻批测台 §2.3 的「结构性零腿」;**逐帧是我错了** —— 888 的 CM 全程走
+    `item_priest_outfit`,两腿都原生持秘法鞋。**批测台那条读法逐帧成立**,而且从工具断言升级为帧证据
+    (R9:888 两腿自放 4.67 vs 4.50、收到 2.00 vs 2.07、`mp<100` .098 vs .084,**逐项相同**)。
+  - ⚠️ **另一个差点写成结论的读数**:armed 腿 `ring_of_basilius` +88pp / `sobi_mask` +76pp /
+    `wizard_hat` +58pp(两层同号)—— **那是秘法鞋的合成件**,组件占比量的是装配时长不是选择差异。
+  - ⚠️ **代价也量了,建议进 (c) 的账本**:鞋子完成推迟 **+70~85s**(中位 394–420 vs 313–344,
+    单局 +143s);**战鼓完成率 −21.9pp**(两层同号,单局 +100s)—— 375g 差价在 10 分钟封顶的 Turbo 里
+    直接推掉下一件。死亡数**两层反号**(−0.73/+0.08)⇒ 不读。
+  - **交棒**:**GH #144 追评**((a)=WORKING 全文 + 分组更正 + 代价登记);**GH #100 追评**
+    (物品层有第二个证人:`.dem` 结果侧可观测,fixture 过程侧仍黑,口径决定价值不减);
+    **GH #156 新开 [bug]**(非 armed 腿 **1/103** 局漏成秘法鞋,承重帧 `a2b6a9/032512_slot8` **t=237.4**,
+    领头嫌疑 `tEarlyBoots` 这条不读角色买表的鞋子通路 ⇒ 若属实则所有改鞋候选都带 ~1% 对照腿污染)。
+    **不申请波次,不花 AWS 钱,本组不裁 resolve/promote。**
+  - **开工自检**:worst exit 3;**独立复核确认总监的 `creeppull`+`pullbeat` PROMOTE 仍未进 main**
+    (`origin/main:jmz_func.lua:7125` 仍是 `if not J.IsSoakCandidate('creeppull')`)⇒ owner P1 的 promote
+    做完了但没生效。批测台 12:17Z 已在报,本组只记第二个独立读数,不重复开 issue。
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**);trunk python **18 passed / 0 failed**。
+    **AWS**:S3 只读,EC2 **$0**,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **W4 剩余 ~32 局补扫**(顺延一轮);
+    (2) ⭐ **把「主动物品激活计数」做成通用检测器进仓** —— 本轮实证它能回答 (a),别留在 scratchpad;
+    (3) ⭐ **ab/ba 分层 + 平衡估计量回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`**
+    (**连续第五轮登记、第五轮没做**);(4) `pullbeat` 差分波(#149)落地后的 (a);
+    (5) `stayfield`(TP 腿)第一失败子句分解;(6) 打野反证 fixture 钉
+    `002103_slot5 t=634.2 skeleton_king`(**已顺延十一轮**);(7) `hero-1` 的 153 局 WK 语料(**19 轮**);
+    `l5combo` 的 (a)(**第三十五轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第二十二轮**);
+    `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260824T130015Z.md`
