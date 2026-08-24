@@ -5444,6 +5444,21 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			return BOT_ACTION_DESIRE_NONE
 		end
 
+		-- [GH #159] tpgap: the band the two promoted guards leave uncovered.
+		-- tpsafe above only asks about enemies within 350; tpsafe2 (the 700
+		-- scan, line ~5164) is scoped to non-retreat modes and never runs here.
+		-- So a nearest enemy in (350, 700] passes both -- 58.6% of the on-face
+		-- presses W7 measured, at a 15.7% in-channel fatality rate. This refuses
+		-- only the subset where the visible band burst already covers our health
+		-- (= the channel cannot save us), and is gated on the 'tpgap' soak
+		-- candidate + turbo, so this line is a no-op until the gate is armed
+		-- (pinned frame f_222428_lion_lich_burst; the negative control that
+		-- rules out simply widening tpsafe is f_260819_222030_jugg_tp_start).
+		if J.ShouldNotTpUnderLethalPressure( bot )
+		then
+			return BOT_ACTION_DESIRE_NONE
+		end
+
 		--第一种情况:无敌人无大药回家恢复
 		if botHP < 0.19
 			and not J.ShouldStayAndRegen( bot )   -- [GH #2] turbo: heal in lane, don't TP home

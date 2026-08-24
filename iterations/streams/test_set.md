@@ -193,6 +193,64 @@ if J.IsSoakCandidate('pullcad') and J.IsSoakCandidate('pullbeat') then
 
 ---
 
+**🆕 2026-08-24T22:5xZ 协同组**入集提议**:`tpgap`(GH #159,录像组 21:48Z 追评的交回;**搭车,不申请专波**)**
+
+**两个 promoted 守卫的域,在距离轴上不相接。**
+
+| 守卫 | 何时运行 | 贴脸半径 |
+|---|---|---|
+| `tpsafe2` = `J.ShouldNotStartInterruptibleTp`(promoted 2026-07-23) | 调用点 `nMode ~= BOT_MODE_RETREAT` ⇒ **撤退模式不运行** | 700 扫描 |
+| `tpsafe` = `J.ShouldWalkNotTp`(promoted) | 撤退分支内 | **第一个谓词就是「350 内有敌」** |
+
+⇒ **撤退时最近敌人落在 (350, 700] 的 TP 按下,两个守卫都不拒绝**:`tpsafe2` 压根没跑,
+`tpsafe` 的第一条子句为假、后面的追击/掩体/爆发子句连碰都没碰到。W7 语料:贴脸按下
+1348 次里 **790 次(58.6%)**在这一带,通道内致死 **15.7%**,而无敌人在近处的按下只有 **2.3%**。
+
+**⚠️ 本组先把 #159 §6 的第一个落点候选否掉了,用的是仓库里已有的一枚反例帧。**
+那个候选是「让撤退分支也过一次 700u 的距离否决」。`f_260819_222030_jugg_tp_start`:
+一次**真实的撤退 TP**,按下瞬间 Lich 在 **477u**(正在带内),声明 Lich 真实射程 500 后
+`J.CanEnemyInterruptTpChannel` **答 TRUE**;而 fixture 自带的 `observed.died_after = 105.9`
+说明**通道走完了、人活了将近两分钟**。**对齐两个半径会拒掉这次成功的逃跑。**
+撤退 TP 是**最后手段** —— 每一次错拒都用一条命付账,这与 travel TP(错拒只损失几秒)不同。
+
+**修法(一个杠杆,最窄的那个子集)**:armed(turbo + `tpgap`)时,在撤退块**紧挨 `tpsafe`
+之后**加一道否决,只拒**站着不动已经必死**的那些:350 内无敌(**tpsafe 的地盘一律不碰**)
+∧ 能走(未定身、未被减速到 285 以下,与 tpsafe 的 fall-through 同形)∧ 700 内有可见敌
+∧ **带内敌人在通道长度 3s 内的估计伤害 ≥ 当前血量**。
+这正是 `tpsafe` 自己那条「贴脸爆发会杀我 ⇒ 赌通道」fall-through 的**镜像**,而同一份 W7
+语料显示那条赌注在 ≤350 带上**实测在输**(致死 15.9%)—— **本条不把它延伸进空档带**。
+
+**窗口取 3.0s 不复用 `J.GetTotalEstimatedDamageToTarget`(硬编码 5s)**:问的是「通道走不走得完」,
+定价的就该是站着的那 3 秒;问 5 秒会拒掉那些其实走得完的按下 —— **正是 juggernaut 那一帧
+记录的错误**。这一条**只能从源码断言**:mock 的 `GetEstimatedDamageToTarget` 对 duration
+不敏感(回放同一个 observed 数),已把这件事本身写成断言。
+
+**孤立性**:门是它自己那一条(`tpgap` and `IsModeTurbo`),**无合取依赖**⇒ 不踩「promote 一个
+id 会把点名它的门永久冻成 FALSE」那条教训,**单独 arm 即有意义**。
+
+**域(实测,不是估计)**:`tests/_tpgap_band_sweep.lua` 在 966 个真实存活英雄帧上,
+空档带 **161/966 = 16.7%**,tpsafe 自己那带 96/966,三个域正好划分语料(已断言)。
+**爆炸半径大,所以本轮只落最窄的子集。**
+
+**⚠️ 顺带交出一条会影响别人的 harness 事实**:**任何基于攻击射程的修法在本地结构上不可证伪** ——
+`GetAttackRange` 在每一枚 fixture 英雄上都读 mock 默认 **150**(GH #145)⇒ 射程腿只能在
+**300** 内为真,**严格低于**这条带 ⇒ 空档带 161 帧上 `CanEnemyInterruptTpChannel` 命中 **0/161**。
+已写成断言(两个方向都数);juggernaut 那条用例因此在声明 Lich 真实射程**之前**先断言 mock 的 150,
+否则它会悄悄变成同义反复。
+
+**诚实边界(写在申请书里,不藏进报告)**:正例帧 `f_222428_lion_lich_burst` 证明谓词
+**在一个真实的致命压力帧上开火**(lion 354/823,Lich 676u,observed burst 436),
+但该 fixture 的 observed 窗口是 **8.0s**、`died_after = 6.9s` ⇒ **语料证不了这次按下会死在通道里**。
+能证的那些帧(W7 `a0d128/20260824_183152_slot9` drow_ranger t=281.3,**通道开始 2.5s 后死**)
+**还不在 `tests/fixtures/`**,已向录像组要。**这一条不影响入集与否**(gate 关着是逐字节 no-op),
+但影响**怎么读取证波的读数**:见 `queue.json:strategy-14` 的预登记。
+
+`tests/test_tpgap_retreat_band.lua` **22 例 0 失败**;世界突变 M1-M8 + 源码突变 3 抓 3
+(其中一条「`nChannelSeconds` 声明留着但调用传字面量 5」**任何帧都看不见**,第一版断言漏了它,已补)。
+luacheck `bots game` **0 警告**。`state.json:tpgap_20260824`。
+
+---
+
 **🆕 2026-08-24T14:0xZ 协同组**入集提议**:`towerfear`(本组自查,非 issue 交回;**搭车,不申请专波**)**
 
 **一个问题写了两遍,而 turbo 里只剩错的那一份还在答。**

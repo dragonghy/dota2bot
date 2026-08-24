@@ -5878,6 +5878,97 @@ function J.CanEnemyInterruptTpChannel( bot )
 	return false
 end
 
+-- [GH #159] soak candidate 'tpgap' -- the GAP between the two promoted TP
+-- guards, on the RETREAT branch only.
+--
+-- THE HOLE (replay-check, W4 208 games + W7 207 games, independently
+-- replicated): 12.5% of all TP presses happen with an enemy hero already
+-- inside its own attack reach, and those presses are fatal within the 5s
+-- channel window at 15.6-17.2% against a 3.9% base rate -- a ~4x lift. The
+-- mechanism is NOT a broken guard, it is two guards whose domains do not meet:
+--   * tpsafe2 (J.ShouldNotStartInterruptibleTp) scans 700 -- but its only call
+--     site (ability_item_usage_generic.lua) is scoped to nMode ~= RETREAT, so
+--     it never runs on a retreat TP;
+--   * tpsafe (J.ShouldWalkNotTp) runs on the retreat branch -- but its FIRST
+--     predicate is "an enemy within 350", so it falls straight through on
+--     anything farther.
+-- => in retreat, a nearest enemy in (350, 700] is refused by neither guard.
+-- 58.6% of the on-face presses (790 of 1348 in W7) sit in exactly that band,
+-- with a 15.7% fatality rate against 2.3% for presses with no enemy near.
+--
+-- WHY THIS IS NOT "JUST ALIGN THE TWO RADII" (the obvious fix, measured
+-- against ground truth and rejected). The corpus already contains the
+-- counterexample: f_260819_222030_jugg_tp_start, a real retreat TP pressed
+-- with Lich 477u away -- squarely in the gap band, and
+-- J.CanEnemyInterruptTpChannel answers TRUE on it -- yet observed ground truth
+-- says the channel COMPLETED and the juggernaut lived another 105.9 seconds.
+-- Widening tpsafe to 700, or letting the retreat branch run tpsafe2, would
+-- have refused that escape. A retreat TP is a LAST RESORT: refusing it costs a
+-- life whenever the bot would in fact have gotten away.
+--
+-- WHAT THIS GUARD REFUSES INSTEAD: only the presses where standing still is
+-- already lethal. A TP scroll is ~3s of not moving; if the enemies we can see
+-- in the band can deal more than our current health over the channel window,
+-- the channel cannot save us -- it only guarantees we are stationary while it
+-- fails. Walking is then strictly better: it is the one action that can still
+-- change the geometry. This is the mirror image of tpsafe's own "on-face burst
+-- would kill us -> gamble on the channel" fall-through, which the same W7
+-- sweep found is losing in the <=350 band (15.9% fatality); we do not extend
+-- that gamble into the gap band.
+--
+-- THE WINDOW IS THE CHANNEL, NOT J.GetTotalEstimatedDamageToTarget's 5s. The
+-- question this guard asks is "can the channel finish", so the exposure it
+-- prices is the ~3s the bot stands still, not a 5s window with margin. Asking
+-- for 5s would refuse presses that in fact complete and escape -- the exact
+-- error the juggernaut frame above documents -- so the shared helper (hardcoded
+-- 5) is deliberately not reused here.
+--
+-- Deliberately NOT in the predicate:
+--   * the <=350 band -- that is tpsafe's turf, unchanged here, so this guard
+--     can never re-decide a press tpsafe already ruled on;
+--   * an attack-reach leg -- GetAttackRange reads a mock default on every
+--     fixture frame (GH #145), so a reach clause would be locally unfalsifiable
+--     while adding nothing the 700 scan + the damage estimate do not cover.
+-- Fall-throughs (= let it TP) mirror tpsafe's: rooted/stunned/hexed or too slow
+-- to outrun means walking is not actually available, so the channel is the only
+-- thing left.
+function J.ShouldNotTpUnderLethalPressure( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'tpgap' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+
+	-- tpsafe owns this band, fall-throughs and all. Never second-guess it.
+	local hOnFaceEnemies = J.GetNearbyHeroes( bot, 350, true, BOT_MODE_NONE )
+	if hOnFaceEnemies ~= nil and #hOnFaceEnemies > 0 then return false end
+
+	-- Can't walk out of it -> channeling is the only option left; let it TP.
+	if bot:IsRooted() or bot:IsStunned() or bot:IsHexed() or bot:IsNightmared()
+	then
+		return false
+	end
+	if bot:GetCurrentMovementSpeed() < 285 then return false end
+
+	-- The gap band itself: visible enemy heroes neither guard asks about.
+	local hGapEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
+	if hGapEnemies == nil or #hGapEnemies == 0 then return false end
+
+	-- Standing still is already lethal -> the channel cannot complete in time
+	-- to matter. Keep walking instead of freezing in their face.
+	local nChannelSeconds = 3.0
+	local nBandBurst = 0
+	for _, hEnemy in pairs( hGapEnemies )
+	do
+		if J.IsValidHero( hEnemy )
+			and not J.IsSuspiciousIllusion( hEnemy )
+		then
+			nBandBurst = nBandBurst
+				+ hEnemy:GetEstimatedDamageToTarget( true, bot, nChannelSeconds, DAMAGE_TYPE_ALL )
+		end
+	end
+
+	return nBandBurst >= bot:GetHealth()
+end
+
 -- [GH #4] Lethality-or-numbers gate for committing a fight. Returns true when
 -- it is SAFE to dive toward `target` because EITHER
 --   (a) LETHAL: our combined estimated burst from allies (incl. self) near the
