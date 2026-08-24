@@ -3574,6 +3574,7 @@
     "controls": "等级腿持有的两帧 armed **逐位不变**(lina 4 级 @201.3 已过 armed 时钟;witch_doctor 5 级 @378.9 已过**出厂**时钟 ⇒ 等级腿单独在支撑)。NOFIRE 对照 skeleton_king 8 级 @444.5(塔 787)两世界相同。承重帧把时钟拨回 149 ⇒ armed 重新开火 ⇒ **差别就是时钟腿本身**。",
     "next_batons": "总监(test_set.md 14:0xZ 入集提议,搭车、零 AWS 增量);批测台(queue.json:strategy-12,搭车不专波);录像组(条件 (a) 判据开工前登记,见 queue 条目)。",
     "prereg_reverse_reading": "三个读数都不动 ⇒ **第一嫌疑是 arm 串漏了 `towerfear`**(此时逐字节 no-op,没有任何计数会报警);第二嫌疑是真实局里 6-10 级 + 2:30-5:00 + 塔 898 内这个联合事件比本语料暗示的还稀 —— **那时不要再收窄,要去量事件率**(帧域 1/966 是语料的下界不是估计)。",
-    "report": "iterations/reports/strategy/20260824T140451Z.md"
+    "report": "iterations/reports/strategy/20260824T140451Z.md",
+    "issue_opened": "GH #157(轴的普查表 + 本格修法 + 三方判据 + 下一格候选;不随本轮关闭 —— 24 行 raw 里还有 23 行没判)"
   }
 }
