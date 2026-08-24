@@ -4232,3 +4232,48 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **下次触发**:①**W4/W5 按 §AT.1 处置**;②**GH #159 [bug] `tpsafe2` 的洞**;
   ③`strategy-7`/`strategy-8`/§AY.5 第 4 条三者一起排(§AZ.6);④**GH #147**;⑤**GH #140 收口**;
   ⑥**GH #161**(把折衷写进铁律 6)。
+  **⚠ 停笔时的门未闭合**:`lua5.1 tests/run_tests.lua` **仍在跑**(停在 `_itemdesire_sweep.lua`,
+  99.9% CPU,是慢不是挂;上一轮实测约 2h10m)⇒ **树在会话分支
+  `claude/compassionate-albattani-oofiy5` 上,`origin/main` 到此刻不带本次 promote。
+  这是故意的,不是掉棒** —— promote 改的是每局真实 Turbo 的默认行为,而 main 正是批测实例
+  clone 的那棵树,铁律 6 要求全绿才 push。**抢救指令写在报告 §7.5**
+  (`git cherry-pick de76f07^..7ae20ee`,六条;`CLAUDE.md` 两个 hunk 必须改投 `AGENTS.md`)。
+  **落 main 之后必须立刻做的收尾**:GH #143 的 23:08Z 评论说「今天上线了、gate 从源码移除」,
+  **那句话在 main 真正带上 promote 之前都是假的,已挂约 14 小时** ⇒ 追评更正(带 sha),
+  并建 `stable-v2` 引用(建之前先 `git ls-remote origin 'refs/heads/stable-*'` 数一下)。
+  **本条状态节没有任何一句说 promote 已经在 main 上**;若在别处读到而
+  `git ls-remote origin main` 对不上,**以 git 为准**。
+
+- 2026-08-24T16:xxZ:**第六十三次触发,同一份 promote 的第四次抢救,加一处 ratchet 红**。
+  报告 `iterations/reports/director/20260824T160000Z.md`。
+  **① 抢救链落地**:`cherry-pick de76f07..deb7cd7`(8 条)从 `oofiy5` 分支进本会话
+  分支 `claude/compassionate-albattani-uv8bab`(以 `origin/main` `8e43496` 为基)。
+  两处冲突都是**主 main 与抢救链各自新增了内容**,不是逻辑冲突,双方全留:`state.json` 加
+  `towerfear_20260824` + `creeppull_pullbeat_PROMOTE_20260823`(267 keys 校验通过);
+  `test_set.md` §AZ.x 段的 `towerfear` 提议 + 01:xxZ 补则拼接(顺序自然)。
+  **② 一处 ratchet 红,只有全量套件抓得到**:`test_defend_ping_declaration_ratchet.lua ::
+  [ratchet]` 在第 289 号测试上报 F —— 策略组 14:04Z 落的 `test_towerfear_clock_leg.lua` 使用
+  `ls bots/mode_*.lua` 拉全量 mode 打竞价,触发 GH #91 的判据但没声明 defend-ping。
+  修法:在 `world()` 里加 `rf.declare_defend_ping(J, 'stale')`(retreat-mode 的日常帧读数,
+  「没人刚打过 defend 平」是它的默认世界)。ratchet 与 towerfear 双绿。
+  **③ 门与推**:luacheck **0 警告**(cherry-pick 后立刻验);Lua 全量套件在本轮开头启动,
+  收尾报告 §7 与 token 用量节写实际读数。**push 分支先做**(先手保住抢救链)——
+  从这一刻起,即使全量套件跑不到会话终点,下一轮总监可以从
+  `origin/claude/compassionate-albattani-uv8bab` 直接 `git push origin HEAD:main`,
+  **不需要再抢救一遍**。**push main 在全量套件绿灯之后**。
+  **④ 没有新的 promote/reject**;`state.json:creeppull_pullbeat_PROMOTE_20260823` 的
+  `ruling` 字段本轮追补「LANDED on main 2026-08-24T16:xxZ by the fourth rescue session」
+  (在实际 push main 之后)。
+  **⑤ 成本**:总监**零 AWS 调用**,MTD **$36.206**(批测台 15:11Z 自报),三线全未触及,
+  未批准新支出。
+  **⑥ 体系健康**:CADENCE 6 条,`director 18.8h` **就是这次掉棒本身**(第五次连续);
+  其余五条都在批测台 12:17Z 停摆的形状里,已由批测台 15:11Z 自查。
+  **⑦ DECISIONS_NEEDED 新增第 9 条**:发波 on-demand vs spot,GH #158,方法学题(镜像 A/B
+  两臂在同一台先后跑,一次中段 spot 回收=丢整条后臂=该种子配对差结构性作废)—— 进 W35
+  周日邮件;在 owner 回复前批测台按当前默认走 on-demand。
+  **下次触发**:①核对 `git ls-remote origin main` 是否等于本轮最后 sha;
+  ②`strategy-7`/`strategy-8`/§AY.5 第 4 条三者一起排(§AZ.6);
+  ③GH #147 第七次积压;④GH #140 收口;⑤backlog §15 / §13 / §12 / §14 / §9。
+  **⑧ 给下一个总监**:**抢救 → 门 → push 分支 → 后台跑全量套件 → 全量绿 → push main**。
+  这是本轮的顺序修正:上一轮的顺序把 push 排在了套件之后,导致「跑完 2h 就没会话了」四连击。
+  推分支不占同步 checkpoint,先做;推 main 需要门全绿,等它。
