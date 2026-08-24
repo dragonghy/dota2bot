@@ -3720,3 +3720,44 @@
     `l5combo` 的 (a)(**第三十五轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第二十二轮**);
     `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260824T130015Z.md`
+- **2026-08-24T15:57Z(第六十二次触发)**:上轮登记的欠账「W4 剩余 32 局补齐」落地 ——
+  **宽扫 208/208 有 `.dem` 的非暖场局**(补 8 局到完整语料;24 个原以为是补扫的实际是 warmup)
+  **+ 深查 6 局逐帧**(4 英雄、两条腿、两个物理层)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐ **`campgrade` 在完整语料上仍 SILENT**(平衡估计量 `violation/game` ab **+0.183** / ba **−0.102** /
+    **balanced +0.041,|t| 0.66**)—— 200 局是 +0.027、|t| 0.44,同量级同判定;两腿反号且量级相当,
+    平均后几乎为零。list-exoneration 率 **22/49 = 44.9%**(上轮 200 局是 47.9%,同量级),
+    第二通路(不走 `availableCampTable` 的通路)结论不动。**GH #137 追评已发。**
+  - ⭐⭐ **新发现 [bug] GH #159**:promoted turbo default `tpsafe2` 的核心
+    `J.CanEnemyInterruptTpChannel` 有洞。同一份 208 局语料的**10,319 次 TP 按下**里,
+    **1,296 次(12.6%)按下瞬间敌方英雄已在 725u 打击距离内**;其中 **223 次(17.2%)5s 内死在通道里**,
+    全体基础致死率只有 **3.9%** ⇒ **贴脸按 TP 死亡率 = 基础的 4.4 倍**。两条腿读数同号同量级
+    (radiant-armed/baseline 49/77,dire-armed/baseline 46/51;平衡 `on-face fatal/game` **−0.154**),
+    符合「promoted 默认两腿都 live」的预期 —— 信号不在腿差,在四个格子都 13–20% 远高于 3.9%。
+  - **承重帧**(#159 §2):`_c17493/20260824_003713_slot7` **jakiro L11 t=636.6** —— 按下瞬间 viper
+    **598u**(< 700u 扫描半径,< 750u 打击距离),从 t=628.9 起持续打 636 点,按下前 3s 血 0.762→0.530,
+    按下后 2.4s 死亡。**逐字符合** `nNow <= nReach` 条件,理应返回 true(= 不该起 TP),但起了。
+    另两帧:`_2651cb/002125_slot5` sven L9 t=594.0(tide 51u、按后 4s 被 lina Laguna+LSA 秒);
+    `_2126ba/003221_slot6` tidehunter L10 t=628.9(通道内没死但严重掉血,不计入 223)。
+  - ⚠️ **方法学(08-23T21:00Z §5 用在按下决策上)**:决策侧读数 `near`(按下瞬间线性插值)= 1,297 行;
+    结果侧 `near_min`(通道 5s 最小)= 2,346 行;**两列差 1,049 行是「按下时敌人还离得远,通道中走上来」**
+    —— 这些不是 tpsafe2 的责任,是走位/预判。与 `ancient_camp_domain.nearest_enemy` /
+    `nearest_enemy_t0` 同一族的教训(见交付)。
+  - **交付**:新工具 `tp_channel_death.py`(独立,复用 `creeppull_domain.load_sweep`)`--selfcheck` **12/12 PASS**
+    含 12 条断言(决策 vs 结果两列可解读性、通道窗口内/外死亡、盟友/死敌不计、按下越界不夹取、
+    `MODIFIER_REMOVE` 不当按下);`ancient_camp_domain.py` 加 `nearest_enemy_t0` 字段(31/31 PASS,
+    新增 4 条钉住两列可解读性);`campgrade_ladder.py` 打印补 `t0=` 一列(24/24 PASS,未改判据)。
+    **跨组**:**GH #159 新开 [bug]**(责任协同/英雄组或总监分派),**GH #137 追评**。
+    **不申请波次、不新开除 #159 外的 issue、不改 bot Lua、gate 未动。**
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**);`tests/run_py_tests.sh` **18 passed / 0 failed**(开工与收尾各一次一致)。
+    **AWS**:S3 只读,EC2 **$0**(running/pending 0),**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **`tp_channel_death.py` 加「贴脸致死率 >> 基础致死率」的量级断言**
+    (现在 selfcheck 只有单帧断言,量级判据没进 —— 修复落地后要用同一工具当验收器);
+    (2) ⭐ **ab/ba 分层 + 平衡估计量回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`**
+    (**连续第六轮登记、第六轮没做** —— 本轮又把纪律先用在了新工具上);
+    (3) `pullbeat` 差分波(#149)落地后的 (a);
+    (4) `stayfield`(TP 腿)第一失败子句分解;
+    (5) 打野反证 fixture 钉 `002103_slot5 t=634.2 skeleton_king`(**已顺延十二轮**);
+    (6) `hero-1` 的 153 局 WK 语料(**20 轮**);`l5combo` 的 (a)(**第三十六轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第二十三轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260824T155736Z.md`

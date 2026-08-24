@@ -425,19 +425,21 @@ def main():
                key=lambda r: -(r['hp0'] - (r['hp_min'] or r['hp0'])))
     for r in v[:a.top]:
         print('  %s %-16s t=%.1f-%.1f L%d need%d %s hp %.3f->%.3f gold=%d '
-              'opened=%s near=%s'
+              'opened=%s near=%s/t0=%s'
               % (r['game'], r['hero'], r['t0'], r['t1'], r['level'], r['need'],
                  r['camp_side'], r['hp0'], r['hp_min'] if r['hp_min'] is not None
-                 else -1, r['gold'], r['opened'], r['nearest_enemy']))
+                 else -1, r['gold'], r['opened'], r['nearest_enemy'],
+                 r.get('nearest_enemy_t0')))
     print('\n--- baseline-leg violations, worst first (the control) ---')
     v = sorted([r for r in recs if r['leg'] == 'baseline' and r['violation']],
                key=lambda r: -(r['hp0'] - (r['hp_min'] or r['hp0'])))
     for r in v[:a.top]:
         print('  %s %-16s t=%.1f-%.1f L%d need%d %s hp %.3f->%.3f gold=%d '
-              'opened=%s near=%s'
+              'opened=%s near=%s/t0=%s'
               % (r['game'], r['hero'], r['t0'], r['t1'], r['level'], r['need'],
                  r['camp_side'], r['hp0'], r['hp_min'] if r['hp_min'] is not None
-                 else -1, r['gold'], r['opened'], r['nearest_enemy']))
+                 else -1, r['gold'], r['opened'], r['nearest_enemy'],
+                 r.get('nearest_enemy_t0')))
 
     with open(a.out, 'w') as fh:
         for r in recs:

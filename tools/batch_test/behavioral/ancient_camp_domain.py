@@ -217,7 +217,25 @@ def episodes_for_game(tl, path, gap=DEFAULT_GAP, tail=DEFAULT_TAIL,
             g_kills = [k for k in kills.get(h, []) if t0 <= k[0] <= t1 + 1.0]
             g_gold = sum(v for t, v in gold.get(h, []) if t0 <= t <= t1 + 1.0)
             # nearest enemy hero over the episode (min across sampled frames)
+            #
+            # RESULT SIDE, NOT DECISION SIDE -- read the pair, never `near`
+            # alone.  A min over [t0, t1] answers "did an enemy ever get
+            # close during this trade", which is not the same question as
+            # "was he alone when he started it".  The two come apart, and
+            # they come apart on exactly the episodes that matter:
+            # 20260824_003713_slot7 (W4, armed leg) has an L11 jakiro and an
+            # L11 drow_ranger open the ENEMY ancient camp at t0=623.8/624.8
+            # with the nearest enemy 1,528 u / 1,551 u away; viper's first
+            # cast lands at 628.9, 5.1 s later, and both die.  `near` reports
+            # 420/497, which reads as "this was a teamfight, not a farming
+            # decision" and would exonerate the ladder on the two episodes it
+            # most clearly failed.  Measured over that run's 12 armed-leg
+            # violations, 3 (25%) flip sides between the two columns; none
+            # flip the other way (a min cannot).  Same family as the
+            # 2026-08-23 stayfield2 anchor bug: the anchor must be the
+            # decision instant, never a frame from its future.
             near = None
+            near_t0 = None
             for s in fr:
                 if not (t0 <= s["t"] <= t1):
                     continue
@@ -229,6 +247,14 @@ def episodes_for_game(tl, path, gap=DEFAULT_GAP, tail=DEFAULT_TAIL,
                         continue
                     dd = math.dist((s["x"], s["y"]), (s2["x"], s2["y"]))
                     near = dd if near is None else min(near, dd)
+            for h2, fr2 in frames.items():
+                if h2 == h or teams.get(h2) == teams.get(h):
+                    continue
+                s2 = frame_at(fr2, t0)
+                if s2 is None or s2["hp_pct"] <= 0:
+                    continue
+                dd = math.dist((f0["x"], f0["y"]), (s2["x"], s2["y"]))
+                near_t0 = dd if near_t0 is None else min(near_t0, dd)
             died = any(t1 <= dt <= t1 + after for dt in deaths.get(h, []))
             # A TP pressed inside the episode's tail still "ends" it: the
             # channel takes ~3 s and the camp keeps hitting during it, so the
@@ -258,6 +284,10 @@ def episodes_for_game(tl, path, gap=DEFAULT_GAP, tail=DEFAULT_TAIL,
                 "x0": round(f0["x"]),
                 "y0": round(f0["y"]),
                 "nearest_enemy": round(near) if near is not None else None,
+                # decision-side twin of the above; see the comment at its
+                # computation for why the pair must be read together
+                "nearest_enemy_t0": round(near_t0) if near_t0 is not None
+                else None,
                 "regen_used": used,
                 "ended_tp_home": tped,
                 "ended_death": died,
@@ -365,7 +395,8 @@ def run(paths, gap, tail, after, level_cut, verbose):
         print(f"  {e['game'][:22]:22s} {e['hero']:16s} t={e['t0']:6.1f}-{e['t1']:6.1f} "
               f"lvl={e['level']:2d} hp {e['hp0']:.3f}->{e['hp_min']:.3f} "
               f"gold={e['gold']:4d} kills={e['kills']} "
-              f"near={e['nearest_enemy']} tp={int(e['ended_tp_home'])} died={int(e['ended_death'])}")
+              f"near={e['nearest_enemy']}/t0={e['nearest_enemy_t0']} "
+              f"tp={int(e['ended_tp_home'])} died={int(e['ended_death'])}")
     if verbose:
         print("\n-- all rows --")
         for e in sorted(eps, key=lambda e: (e["game"], e["t0"])):
@@ -471,6 +502,28 @@ def selfcheck(real_paths):
                        "inflictor": "item_flask", "value": 0}]
     eps4, _ = episodes_for_game(_mk(ev4, snaps, {H: 2}), "s4.json")
     chk("in-episode salve is tagged", eps4 and "item_flask" in eps4[0]["regen_used"])
+
+    # nearest_enemy (result side) vs nearest_enemy_t0 (decision side).
+    # The enemy sits 5,000 u away when the trade opens at t=10 and walks in to
+    # 100 u by t=25 -- the shape of W4 20260824_003713_slot7, where reading
+    # `near` alone turns a solo farming decision into "he was in a fight".
+    E = "npc_dota_hero_lina"
+    esnaps = [{"t": float(t), "hero": E, "x": (5000.0 if t < 20 else 100.0),
+               "y": 0.0, "hp": 100, "hp_pct": 1.0, "mp": 0, "max_mp": 1,
+               "mp_pct": 0.0, "level": 9, "items": ["", "", ""]}
+              for t in range(0, 156)]
+    eps6, _ = episodes_for_game(
+        _mk(ev, snaps + esnaps, {H: 2, E: 3}, t_end=130.0), "s6.json")
+    e6 = [e for e in eps6 if e["dur"] > 1.0]
+    chk("nearest_enemy is the min over the episode (result side)",
+        bool(e6) and e6[0]["nearest_enemy"] == 100)
+    chk("nearest_enemy_t0 is measured at the decision instant only",
+        bool(e6) and e6[0]["nearest_enemy_t0"] == 5000)
+    chk("the two columns come apart (this is the whole point)",
+        bool(e6) and e6[0]["nearest_enemy_t0"] > e6[0]["nearest_enemy"])
+    chk("no enemy in the dump leaves both columns None",
+        bool(eps4) and eps4[0]["nearest_enemy"] is None
+        and eps4[0]["nearest_enemy_t0"] is None)
 
     # ---- real-corpus assertions (only if a corpus was handed in) ----
     if real_paths:
