@@ -218,7 +218,10 @@ end
 
 tests['the gate helper itself is turbo AND candidate, not either'] = function()
     -- Each leg gets a FRESH world. J.IsModeTurbo memoises into bModeTurboCache on
-    -- its first call (jmz_func.lua:8474), so flipping GetGameMode after the helper
+    -- its first call (jmz_func.lua:8760 -- re-anchored 20260824 from :8474; most
+    -- of that ~280-line drift predates the GH #117 §4 insertion, which moved it
+    -- only 83 lines -- a prose pointer nobody re-reads goes stale silently), so
+    -- flipping GetGameMode after the helper
     -- has run once changes nothing -- the first draft of this case asserted against
     -- a stale cache and read as a broken gate.
     local _, _, _, _, _, _, _, Xturbo = bid(true, false)

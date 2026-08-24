@@ -270,12 +270,22 @@ end
 
 -- --------------------------------------------------- 4. source pins [reverse] --
 
+-- [20260824] The window was 8000 chars until GH #117 §4 added ~2,300 chars of
+-- clause and comment to the selector, which pushed `return vBest` out of it --
+-- and every pin below then failed reading "the clause is gone" when the clause
+-- was right there. A source window is a LINE ANCHOR wearing a different hat, so
+-- it gets the same treatment: widen it, and assert that it still reaches the end
+-- of the function so the next insertion fails with a message that is true.
 local function source()
     local fh = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
     local src = fh:read('*a'); fh:close()
     local at = assert(src:find('function J.ShouldPullNeutralCamp', 1, true),
         'J.ShouldPullNeutralCamp moved')
-    return src:sub(at, at + 8000)
+    local body = src:sub(at, at + 14000)
+    assert(body:find('return vBest', 1, true),
+        'the source window no longer reaches the end of J.ShouldPullNeutralCamp '
+        .. '-- widen it; the pins below are about the clauses, not about length')
+    return body
 end
 
 tests['[reverse] the selector filters on distance to our ancient, not just the bot'] = function()

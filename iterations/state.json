@@ -3536,5 +3536,19 @@
       "Nothing here measures play. Every number is arithmetic on the shipped build rows."
     ],
     "verification": "luacheck 0 warnings; new file 17 cases; 16/16 mutations caught, 2 no-op controls escaped as expected."
+  },
+  "pulllane_20260824": {
+    "issue": "[strategy] GH #117 §4(录像组 2026-08-23T09:09Z 的交回,自那以后 8 轮无人认领). 08-22 落地的 own-side 选点子句把营地挪近了「家」,没挪近「我这条线」:两波 348 局 146 poke episode 上,安全代价确实关掉了(20s 内死亡 2/97 → 0/146,翻面拉 7.2% → 0.0%,两波一致),但**连接率没跟着好** —— 21.5% → 12.1%/9.9%。算术在拖拽里:跟随小野从野点最远只走出中位 742u(p90 992,max 1,170),而野点离最近线兵中位还差 1,068u,**这两个数在修法前后一步没动**。",
+    "unit": "jmz_func:J.ShouldPullNeutralCamp 选点循环加第二条子句(垂直轴):候选营必须落在**本 bot 被分配的那条 lane 的路径** PULL_CAMP_LANE_GAP=1200u 之内。路径 = `GetLocationAlongLane(nLane, k/20)` 采 21 点(nLane 是均衡子句上面已解出的同一个值),新 helper `J.IsCampBesideLane` 量的是**到线段**的距离不是到采样点(21 点在 ~15,400u 的 lane 上间距 ~770u,点式读法在判定线上会高估 ~60u —— 这一类误差被线段式整个消掉)。",
+    "gate": "新 id `pulllane`,turbo-only 且**结构性从属于 `pullcamp`**(函数首两行先过 IsModeTurbo + pullcamp)。`pulllane` 未 armed ⇒ tLanePath = nil ⇒ helper 恒 TRUE ⇒ **逐字节 no-op**(已成用例,不是承诺)。**排波必须两个 id 同 arm**,漏一个是静默 no-op、没有任何计数会报警。",
+    "constant_source": "1200 = 录像组自己量到的**拖拽长度上限**(165 个 poke episode / 三波:中位 742u、p90 992u、**max 1,170u**)向上取整。语义是「营离线的垂直距离超过有史以来最长的一次拖拽 ⇒ 小野结构上到不了兵线 ⇒ 这不是更差的拉野,是不成立的拉野」。**刻意取数据支持的最宽值**,因为反 SILENT 那一侧本地不可测。",
+    "add_not_replace": "录像组 §4 的原话是「换成」。**本轮是「加上」**:own-side 子句正是买到那份两波一致安全收益(死亡 2/97→0/146、翻面 7.2%→0.0%)的那一条,换掉它等于用安全收益去换连接率 = 两个杠杆。两条子句正交:own-side 管纵向(离家多深),pulllane 管横向(离线多远)。已成 [reverse] 用例:两条子句必须同时在。",
+    "one_lever": "刻意未动:1500 reach、拉野窗口、J.IsLanePullSafe 的 `>= 0.5` 血量门(#117 §3.3 第二杠杆,总监明令另开 id)。三条 [reverse] 钉子照旧,并新增一条钉 PULL_CAMP_LANE_GAP 常数本身。",
+    "tests": "tests/test_pullcamp_lane_gap.lua **15 例全绿,14 变异 14 抓**。承重帧 = f_260820_162821_lion_drain_lethal 的 ogre_magi(dire 辅助,深在自家半场)—— **挑它正是因为 botDepth + 1500 < boundary 结构性成立 ⇒ own-side 子句在这一帧上算术上拒不掉任何东西 ⇒ 每一次拒绝都唯一归给新子句**(已成断言)。牙齿:离线 600u 的营(离 bot 1,342u)vs 离线 1,300u 的营(离 bot **1,300u = 更近**)—— 出厂选更近的那个(DEFECT 用例断言了),armed 选更远但在线边的那个。另有 ±20u 边界、精确 1200u 严格比较(轴对齐路径上 sqrt(1200^2) 可精确表示)、线段 vs 采样点盲区帧、jakiro 形状(1,630u 离线、1,130u 离 bot,出厂取 armed 拒)。",
+    "declared_vs_real": "**声明的是 lane 几何**:mock 的 `GetLocationAlongLane` 恒 Vector(0,0,0),语料结构上没有任何 lane 几何 —— 所以每条 lane 都是用**该帧两座真实远古**连成的轴、平移到离 bot 指定距离处。**真实且承重的**:bot、队伍、坐标、两座远古、以及由它们算出的每一个距离。camp 坐标同样是声明的(GetNeutralSpawners() 在 930/930 语料帧上是 {},trigger_census 的 STOPPER 2)。",
+    "honest_limit": "本地**买不到**「真实地图上教科书拉野营到底在不在 1200u 内」——那需要语料没有的营地表。反 SILENT 是**波次问题**,已事先登记:poke_episodes 若塌向 0,读作**常数太紧**,不是「场景稀缺」。",
+    "side_repair": "tests/test_pullcamp_ownside_camp.lua 的 source() 窗口 8000 → 14000 并加一条「窗口必须够到 return vBest」的自证断言:本轮往选点插了 ~2,300 字符,两条 [reverse] 钉子当场红,消息却是「子句不见了」而子句就在那儿。**源码窗口是换了件外衣的行号锚**(0LN2 的同族),照同样办法治。",
+    "handoff": "总监(test_set.md 00:5xZ 入集提议,零 AWS 增量、搭车,**arm 串必须同时含 pullcamp 与 pulllane**)/ 批测台(queue.json:strategy-11)/ 录像组(判据 = connect (i)(ii) 两个估计量都报、开拉点离家中位、poke_episodes 不塌零;**计量三条 GH #148 照办:ab/ba 两层都要给,计数类不报中位数**)。",
+    "report": "iterations/reports/strategy/20260824T02xxZ.md"
   }
 }

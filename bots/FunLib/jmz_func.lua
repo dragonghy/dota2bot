@@ -7976,6 +7976,42 @@ function J.ShouldPullNeutralCamp( bot )
 	-- J.IsLanePullSafe. This narrows the domain -- the deep half of the episodes
 	-- is exactly what it is meant to drop -- but it cannot empty it: 48/115 of
 	-- the measured episodes started within 9,000u of home, i.e. on our own side.
+	--
+	-- [GH #117 §4, 20260824] ALIGNMENT, the second half of the same selector.
+	-- The own-side clause above moved the camp closer to HOME; it did not move it
+	-- closer to THIS LANE. Measured on the two post-fix waves (348 games, 146 poke
+	-- episodes): the "pull yourself into a death" cost really did close (20s-death
+	-- 2/97 -> 0/146, wrong-side pulls 7.2% -> 0.0%, both consistent across waves),
+	-- but the connect rate did NOT follow -- 12.1% / 9.9%, if anything below the
+	-- 20.3% it started from. The arithmetic of why is in the drag, not in the
+	-- estimator: the followers walk a median 742u from the box while the box sits
+	-- a median 1,068u short of the nearest lane creep, and those two numbers did
+	-- not move at all. A mid/off-lane support can and does pick a camp that is on
+	-- our half yet nowhere near his own wave -- witness `run_001127/
+	-- 20260823_003129_slot4` jakiro pos5 at t=161.4, where the followers' distance
+	-- to the nearest lane creep climbed MONOTONICALLY from 1,696u to 3,418u over
+	-- the first six seconds: he dragged them away from the lane.
+	-- So this clause filters on the perpendicular axis the own-side clause cannot
+	-- see: the camp must sit within one drag-length of the lane path this bot is
+	-- assigned to. It ADDS to the own-side clause rather than replacing it (the
+	-- replay desk's §4 wording was "replace") because the own-side clause is the
+	-- one that bought the two-wave-consistent safety win above; dropping it would
+	-- hand that back to buy the connect rate, which is two levers, not one.
+	-- Gated separately as 'pulllane' so the connect rate remains attributable:
+	-- with it disarmed the path is nil and every line below is byte-identical.
+	-- nLane is the lane this bot was assigned, already resolved above -- so this
+	-- costs 21 engine calls inside a window that is already ~10s of a 6-minute
+	-- laning phase, and no new failure mode (an unreadable sample is skipped, and
+	-- a path too short to have a segment answers TRUE rather than muting a pull).
+	local tLanePath = nil
+	if J.IsSoakCandidate( 'pulllane' ) then
+		tLanePath = {}
+		for k = 0, 20 do
+			local v = GetLocationAlongLane( nLane, k / 20 )
+			if v ~= nil then tLanePath[#tLanePath + 1] = v end
+		end
+	end
+
 	local tCamps = GetNeutralSpawners()
 	if tCamps == nil then return nil end
 	local nMidToOwn = J.GetLocationToLocationDistance( vMid, vOwn )
@@ -7983,6 +8019,7 @@ function J.ShouldPullNeutralCamp( bot )
 	for _, camp in pairs( tCamps ) do
 		if camp ~= nil and camp.location ~= nil and camp.team == GetTeam()
 			and J.GetLocationToLocationDistance( camp.location, vOwn ) < nMidToOwn
+			and J.IsCampBesideLane( camp.location, tLanePath )
 		then
 			local d = GetUnitToLocationDistance( bot, camp.location )
 			if d < nBestDist then
@@ -7992,6 +8029,52 @@ function J.ShouldPullNeutralCamp( bot )
 		end
 	end
 	return vBest
+end
+
+-- [GH #117 §4, 20260824] How far a candidate pull camp may sit OFF the lane
+-- path, in units. Derived from the replay desk's own measurement of the drag
+-- itself (GH #117 comment 20260823T090937Z, 165 poke episodes over three waves):
+-- the neutrals that follow the puller walk a MEDIAN 742u from their box, p90
+-- 992u, and a MAXIMUM of 1,170u before the leash breaks and they go home. A camp
+-- whose perpendicular gap to the lane exceeds the longest drag ever observed
+-- therefore cannot deliver its neutrals into the wave at all -- the pull is not
+-- worse, it is structurally impossible. 1200 is that observed maximum rounded
+-- up, i.e. deliberately the WIDEST constant the measurement supports: the
+-- anti-SILENT side (do the real textbook pull camps fit under it?) cannot be
+-- measured locally, because GetNeutralSpawners() is `{}` on every corpus frame.
+local PULL_CAMP_LANE_GAP = 1200
+
+-- Distance from `v` to the SEGMENT ab, not to its endpoints. The segment form is
+-- the point: a lane sampled at 21 points has ~770u between samples, so a
+-- min-over-samples read would overestimate the gap by up to ~60u at the decision
+-- line purely because the closest point on the lane fell between two samples.
+-- Measuring to the segments removes that error class entirely, and leaves only
+-- the polyline's own approximation of a lane that is nearly straight anyway.
+local function DistanceToSegment( v, a, b )
+	local abx, aby = b.x - a.x, b.y - a.y
+	local nLen2 = abx * abx + aby * aby
+	if nLen2 <= 0 then return J.GetLocationToLocationDistance( v, a ) end
+	local t = ( ( v.x - a.x ) * abx + ( v.y - a.y ) * aby ) / nLen2
+	if t < 0 then t = 0 elseif t > 1 then t = 1 end
+	local dx, dy = v.x - ( a.x + abx * t ), v.y - ( a.y + aby * t )
+	return math.sqrt( dx * dx + dy * dy )
+end
+
+-- True when `vCamp` lies within PULL_CAMP_LANE_GAP of the lane polyline
+-- `tLanePath`, i.e. when the neutrals dragged out of it can actually reach the
+-- creep wave. A nil/empty path means "not armed, or the lane is unreadable" and
+-- answers TRUE, so the caller is byte-for-byte unchanged in that case -- an
+-- engine that cannot answer where the lane is must never mute the mechanic.
+function J.IsCampBesideLane( vCamp, tLanePath )
+	if vCamp == nil or tLanePath == nil or #tLanePath < 2 then return true end
+	for i = 1, #tLanePath - 1 do
+		if DistanceToSegment( vCamp, tLanePath[i], tLanePath[i + 1] )
+			< PULL_CAMP_LANE_GAP
+		then
+			return true
+		end
+	end
+	return false
 end
 
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
