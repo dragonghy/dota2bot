@@ -5853,8 +5853,30 @@ end
 -- the tpsafe2 gate in the item-usage flow and so used to bypass it entirely
 -- (TP audit fix D: game 175703 t=47.4, Sven channeling a 3s response TP while
 -- focused). Each caller carries its own soak gate; this predicate has none.
+--
+-- [tpreach, GH #159] SCAN RADIUS vs REACH -- a structural blind band.
+-- The scan below asks for enemies within 700, then tests each against its own
+-- reach, GetAttackRange() + 150. Those two numbers are not ordered: every
+-- ranged hero with attack range > 550 has reach > 700 (viper 575 -> 725,
+-- lina/CM/lion/WD/silencer 600 -> 750, drow 625 -> 775, skywrath 700 -> 850),
+-- so the strike clause `nNow <= nReach` is UNREACHABLE on the band
+-- [700, reach]: an enemy standing there can auto-attack us and break the
+-- channel, and is never in the candidate list to be asked. The comment above
+-- this function reads "within ~700 that is EITHER already inside its own
+-- attack reach" -- it assumed 700 dominates every reach, and it does not.
+--
+-- Armed, the scan widens to 1200 (dominates the widest reach in the pool:
+-- sniper with Take Aim ~ 690 + 150) and the enemies the widening ADDS are held
+-- to the strike clause ONLY. The "closing the gap" clause keeps the original
+-- 700 domain. That asymmetry is the whole point of the narrowing: extending
+-- "is walking toward us" out to 1200 would re-create the first cut of GH #3
+-- (any enemy strolling in from a screen away vetoes every travel TP), which
+-- measured about -15 GPM with no deaths saved. Unarmed, this function is
+-- byte-for-byte the old predicate -- the widening is the only new domain, and
+-- inside the old 700 both clauses still run in the old order.
 function J.CanEnemyInterruptTpChannel( bot )
-	local hEnemies = J.GetNearbyHeroes( bot, 700, true, BOT_MODE_NONE )
+	local bWide = J.IsModeTurbo() and J.IsSoakCandidate( 'tpreach' )
+	local hEnemies = J.GetNearbyHeroes( bot, bWide and 1200 or 700, true, BOT_MODE_NONE )
 	if hEnemies == nil or #hEnemies == 0 then return false end
 
 	local vBotLoc = bot:GetLocation()
@@ -5867,9 +5889,13 @@ function J.CanEnemyInterruptTpChannel( bot )
 			local nReach = hEnemy:GetAttackRange() + 150
 			local nNow = J.GetLocationToLocationDistance( vBotLoc, hEnemy:GetLocation() )
 			local nSoon = J.GetLocationToLocationDistance( vBotLoc, hEnemy:GetExtrapolatedLocation( 0.5 ) )
-			-- Can strike us now, or is closing the gap toward us -> it will
-			-- break the channel; don't start the TP this frame.
-			if nNow <= nReach or nSoon < nNow - 10 then
+			-- Can strike us now (the clause the widening extends), or is
+			-- closing the gap toward us (kept at the ORIGINAL 700 -- see the
+			-- tpreach note above) -> it will break the channel; don't start
+			-- the TP this frame.
+			if nNow <= nReach
+				or ( ( not bWide or nNow <= 700 ) and nSoon < nNow - 10 )
+			then
 				return true
 			end
 		end

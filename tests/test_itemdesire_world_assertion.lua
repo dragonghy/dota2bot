@@ -436,8 +436,30 @@ tests['[world] the first of those two sits on a SHIPPED, ungated road'] = functi
     local body = src:sub(at, at + 1200)
     assert(body:find('GetExtrapolatedLocation( 0.5 )', 1, true),
         'the unstubbed call moved out of this helper')
-    assert(not body:find('IsSoakCandidate', 1, true),
-        'the shared core must stay ungated -- that is what makes it live')
+    -- 2026-08-24 (director, GH #159): this used to read "no IsSoakCandidate
+    -- anywhere in the body". That was the right claim written one notch too
+    -- coarsely, and the tpreach fix tripped it while honouring it: the helper
+    -- gained a gate that can only WIDEN its scan (700 -> 1200 for the strike
+    -- clause), and the shipped road -- gate off -- still runs every statement
+    -- it ran before, in the same order. What actually has to hold is not
+    -- "no gate in the body" but "no gate BETWEEN the shipped road and this
+    -- call": a future edit that hides the extrapolation behind an armed-only
+    -- branch would make the census below measure a road nobody drives.
+    --
+    -- So: at most the one recorded widening flag, spelled so that arming can
+    -- only add. `not bWide or` is the load-bearing token -- with it, every
+    -- clause is reachable unarmed. The behavioural half of this claim is
+    -- tests/test_tpreach_band.lua case 4 (unarmed, a chaser inside 700 and out
+    -- of reach still fires), which drives the predicate rather than reading it.
+    local _, nGates = body:gsub('IsSoakCandidate', '')
+    assert(nGates <= 1, 'the shared core grew a SECOND gate (' .. nGates
+        .. ') -- name it here and prove the shipped road is still whole')
+    if nGates == 1 then
+        assert(body:find("local bWide = J.IsModeTurbo() and J.IsSoakCandidate( 'tpreach' )", 1, true),
+            'the one permitted gate is the tpreach widening flag; this is a different gate')
+        assert(body:find('not bWide or ', 1, true),
+            'the widening must be written so the unarmed road keeps every clause')
+    end
     -- tpsafe2 was promoted on 2026-07-23; nothing in bots/ gates it any more.
     local n = 0
     local p = assert(io.popen("grep -rl \"IsSoakCandidate('tpsafe2')\" bots 2>/dev/null | wc -l"))
