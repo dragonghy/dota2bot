@@ -38,6 +38,33 @@ TWO TRAPS THIS TOOL IS BUILT AROUND
    equivalence, so the walk is `git cherry`, which marks `-` for a patch already
    upstream and `+` for one that genuinely is not.
 
+CLAIMS-LANDED -- why one unlanded commit is worse than another
+--------------------------------------------------------------
+2026-08-24T12:xxZ, director.  Not all UNLANDED rows are equal, and until this
+round the tool printed them as if they were.
+
+A plain unlanded commit is WORK IN FLIGHT.  It is benign by default: the next
+round's selfcheck names it and rescues it, which is the loop working.  That is
+what 2026-08-22 was, and what the rescue note of 2026-08-23T23:16Z was -- it
+said, in the commit itself, that main was DELIBERATELY not pushed until a gate
+closed, and it left the rescue instruction.  Nothing was misinformed.
+
+An unlanded commit whose own text says IT ALREADY LANDED is a different animal.
+2026-08-24T01:xxZ ran its gate to completion (full suite 1658/0), wrote
+"promote 已落 main" into both its report and the charter status section, and
+then ended without the push.  Every downstream reader inherits an assertion
+that is false: the charter is the first thing each fresh routine session reads,
+and one of those readers -- the batch desk -- CLONES `origin/main` and spends
+real money measuring whatever tree it finds there.  A promote believed shipped
+but still gated is a wave that measures the wrong defaults and reports back a
+verdict about a configuration nobody ran.
+
+So the claim is worth surfacing separately from the commit.  The row still says
+UNLANDED; it now also says whether that commit is quietly contradicting itself,
+and prints the line it found so the reader judges the sentence, not the tool's
+opinion of it.  See LIMIT 4 -- this is a text match, and it is reported as a
+QUESTION for exactly the reason LIMIT 2 gives.
+
 ANTI-EMPTY-MATCH
 ----------------
 "Nothing is unlanded" and "the scan matched nothing" are the same output unless
@@ -69,6 +96,22 @@ LIMITS -- read these before believing a finding
 3. A shallow clone leaves most refs uncertifiable (172 of 213 here).  Those are
    counted and named as refused, never silently judged.
 
+4. CLAIMS-LANDED IS A TEXT MATCH, NOT A PROOF.  It reads the commit message and
+   the lines the commit ADDS under `iterations/` (the prose the next session
+   actually reads), and looks for a sentence asserting the work is on main, with
+   same-line negations excluded so a rescue note saying "main is deliberately
+   not pushed" does not trip it.  Both error directions are real: a claim
+   phrased in words the pattern does not know is MISSED, and a sentence quoting
+   or predicting a landing ("W4 clones the tree only after the promote lands")
+   is a FALSE POSITIVE.  That is why the matched line is printed verbatim next
+   to the row -- the reader judges the sentence.  Absence of the marker is NOT
+   evidence that a commit made no claim.
+
+   It also does not fire on the inverse and more common case: a report that
+   claims a landing while the commit carrying that claim itself landed fine and
+   only the CODE stayed behind.  Catching that needs a per-claim referent, which
+   this does not have.
+
 EXIT CODES
     0  scanned, nothing unlanded
     2  cannot certify (zero refs scanned, or `git` refused)
@@ -77,12 +120,118 @@ EXIT CODES
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
 DEFAULT_REMOTE = "origin"
 DEFAULT_TRUNK = "main"
+
+# A sentence asserting the work is already on the trunk.  Deliberately narrow:
+# a missed claim costs one round (the plain UNLANDED row still prints), while a
+# lamp that reddens every round is one nobody reads -- the failure the charter
+# section 15 names outright.
+_CLAIM_RE = re.compile(
+    r"""(
+          已\s*落\s*(地|入)?\s*(主干|trunk|main)   # "已落 main"
+        | 落\s*(了)?\s*main\b                       # "promote 落 main"
+        | 已\s*(推|合)\s*(送|入|进)?\s*(到|进)?\s*main\b
+        | 已\s*在\s*(origin/)?main\s*上
+        | landed\s+(on|in)\s+(origin/)?main
+        | (is|are|was|were)\s+now\s+(on|in)\s+(origin/)?main
+        | reached\s+(origin/)?main
+        | merged\s+(in)?to\s+(origin/)?main
+        | pushed\s+to\s+(origin/)?main
+        )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# Same-line disqualifiers.  Measured, not guessed: the first cut of this pattern
+# ran at 1 true positive in 4 on the very commits that motivated the tool, and a
+# lamp that reddens every round is one nobody reads (charter section 15).  The
+# three false positives named the two shapes below, and both are now excluded.
+_NEGATION_RE = re.compile(
+    r"""(
+        # (A) the sentence DENIES the landing
+          未\s*落 | 没\s*(有\s*)?落 | 尚未 | 从未 | 不\s*推 | 未\s*推 | 别\s*推 | 不要\s*推
+        | 不是 | 而不是 | 并非 | 並非
+        | never\s+(on|in|reached|landed|pushed)
+        | not\s+(yet\s+)?(pushed|landed|on|in|reach)
+        | deliberately\s+not
+        | before\s+the\s+push
+        )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# (B) the landing is a TEMPORAL or CONDITIONAL clause, not an assertion that it
+# happened: "落 main 后还欠两件收尾" is a plan, "落 main 之前" is a deadline.
+# Anchored to the claim itself rather than the whole line, because these
+# particles are ordinary words everywhere else in the sentence.
+_CLAUSE_TAIL_RE = re.compile(
+    r"""^\s*(
+          (之)?[后後前] | 时 | 之时 | 才 | 再 | 就 | 以后 | 以前
+        | \s*(after|before|once|until|when)\b
+        )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+_CLAUSE_HEAD_RE = re.compile(
+    r"""(
+          若 | 如果 | 一旦 | 等到? | 待 | 将要? | 即将 | 打算 | 应该 | 应当 | 须 | 必须
+        # English modals/subordinators anywhere in the prefix, not end-anchored:
+        # "Once the suite is green it WILL BE pushed to main" puts four words
+        # between the modal and the claim.  Cost of the wider match is a missed
+        # claim in a sentence that merely contains "will" -- LIMIT 4's stated
+        # direction of error, and the plain UNLANDED row still prints.
+        | \b(once|if|when|until|unless|after|before)\b
+        | \b(will|would|shall|should|must|plan(s|ned)?\s+to|going\s+to|intend)\b
+        # "全绿**再**落 main" / "...才落 main": a sequencing particle immediately
+        # before the claim turns it into an instruction.  End-anchored, because
+        # these characters are common words anywhere else in the sentence.
+        | [再才就]\s*\**\s*$
+        )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+def landing_claim(cwd, sha):
+    """First line of this commit that ASSERTS the work is on the trunk, or None.
+
+    Two sources, because the two readers differ: the commit message is what a
+    triaging agent reads, and the lines added under `iterations/` (reports,
+    charters, state) are what every FRESH session reads at startup.  The
+    2026-08-24T01:xxZ loss put its false claim in the second one."""
+    try:
+        body = git(["show", "-s", "--format=%B", sha], cwd)
+    except RuntimeError:
+        body = ""
+    try:
+        # Added lines only: a commit is not responsible for prose it merely
+        # carries past.  `-U0` keeps context lines out of the `+` set.
+        diff = git(["show", "-U0", "--format=", sha, "--", "iterations/"], cwd)
+    except RuntimeError:
+        diff = ""
+
+    lines = [ln.strip() for ln in body.splitlines()]
+    lines += [
+        ln[1:].strip()
+        for ln in diff.splitlines()
+        if ln.startswith("+") and not ln.startswith("+++")
+    ]
+    for ln in lines:
+        if not ln:
+            continue
+        if _NEGATION_RE.search(ln):
+            continue
+        m = _CLAIM_RE.search(ln)
+        if not m:
+            continue
+        if _CLAUSE_TAIL_RE.match(ln[m.end():]):
+            continue          # "...落 main 后还欠两件收尾" -- a plan, not a report
+        if _CLAUSE_HEAD_RE.search(ln[: m.start()]):
+            continue          # "等 promote 落 main" -- a precondition
+        return ln
+    return None
 
 
 def git(args, cwd, check=True):
@@ -234,7 +383,7 @@ def main(argv=None):
             if when < floor:
                 continue
             subject = git(["show", "-s", "--format=%s", sha], cwd).strip()
-            findings.append((when, sha[:7], ref, subject))
+            findings.append((when, sha[:7], ref, subject, landing_claim(cwd, sha)))
 
     # ---- denominator, always, so a clean run cannot be confused with no run ----
     print("=== unlanded-commit scan ===")
@@ -277,10 +426,22 @@ def main(argv=None):
         print("\nOK: no unlanded work in the certifiable window.")
         return 0
 
+    claiming = [f for f in findings if f[4]]
     print("\nUNLANDED WORK (%d commit(s)) -- committed and pushed, never on %s:" % (len(findings), trunk_ref))
-    for when, short, ref, subject in sorted(findings, reverse=True):
-        print("  %s  %s  %s" % (when.isoformat(timespec="seconds"), short, subject))
+    # The count goes first and is printed even when it is zero, so "no commit
+    # claims to have landed" and "the claim scan did not run" cannot look alike
+    # -- the same anti-empty-match rule the denominators above follow.
+    print("  of which CLAIMS-LANDED : %d (see LIMIT 4 -- text match, judge the quoted line)" % len(claiming))
+    for when, short, ref, subject, claim in sorted(findings, reverse=True):
+        flag = "  [CLAIMS-LANDED]" if claim else ""
+        print("  %s  %s  %s%s" % (when.isoformat(timespec="seconds"), short, subject, flag))
         print("      on %s   ->  git cherry-pick %s" % (ref, short))
+        if claim:
+            said = claim if len(claim) <= 150 else claim[:147] + "..."
+            print('      claims: "%s"' % said)
+            print("      ^ this commit is UNLANDED while its own text says otherwise -- every")
+            print("        fresh session reads that sentence, and the batch desk spends money")
+            print("        on the tree at %s. Rescue this one FIRST." % trunk_ref)
     return 3
 
 
