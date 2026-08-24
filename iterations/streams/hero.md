@@ -1049,7 +1049,15 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (含普查**调用点**丢结果的 M14 —— 树上还留着一个真 offender,所以报告那一半有真实驱动);
     **一次如实记的误判**:M5 逃逸,复核确认是**真 no-op** 不是盲区。
     `test_gate_claim_consistency` **当场抓了本轮一次**(注释里的 "ungated" 含子串 "gated"),
-    改措辞后 10 例绿;`lion` 前缀 87 例绿。
+    改措辞后 10 例绿;`lion` 前缀 87 例绿。整套**逐文件跑了两遍**:rebase 前
+    **169 文件 / 1724 例 / 1 失败**,rebase 到 `9a128b2` 后**重跑 170 文件 / 1734 例 / 0 失败**
+    + luacheck 复跑 0 警告(`test_itemdesire_world_assertion.lua` 单列,GH #124 未变)。
+  - **⚠️ 一次如实记的时点事故**:那 1 条失败(`test_defend_ping_declaration_ratchet` 点名
+    协同组的 `test_towerfear_clock_leg.lua`)本组开了 GH **#163** 交棒,**rebase 之后发现
+    协同组 16:41Z 自己已经修好了** ⇒ 当场自撤关闭。**教训**:开工自检跑在 15:57Z 的 main 上、
+    写 issue 时已 16:5xZ,中间隔了三个组各一轮 —— **跨组报红前先 `git fetch origin main`
+    看一眼 tip**(2 秒)。这与「推了没落地」是同一枚硬币的另一面:那条说别人的活可能已经
+    落地了,这条说**别人的红可能已经修好了**。
   - **下一轮建议**:等 `hero-10..14` 读数;不等的话做队列整理(`hero-9`+`hero-13` 合并成
     一次含 Axe 种子集的申请,需先与批测台确认种子集)。**别重推**:§25 Axe `nKillDamage`
     仍 `NARROW-BAND-UNMEASURABLE`;那 29 处非焦点五的 stale key 不要当本组的活。
