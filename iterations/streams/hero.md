@@ -22,6 +22,53 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-14. ~~**GH #187:文件写下了一个物品名 —— 游戏里有这个名字的物品吗?**~~
+   **2026-08-25T19:55Z done —— 零行为改动(`bots/` 一行未改)、无新 gate、`state.json` 无新增、
+   稳定版未漂移、零 AWS、不提 queue 请求。** 新轴两根:**`ITEMID`** 与 **`LVLQUEUE`**。
+   - **`ITEMID`**:物品名进引擎只有两扇门,**两扇门对错名字都只回答沉默** ——
+     `FindItemSlot`/`HasItem` 答 −1/false(与「没这件装」**一模一样**)⇒
+     `not HasItem(bot,'item_typo')` **恒真**;买单里不是真物品也不是宏的条目被
+     `Item.GetBasicItems` 的 `Item[v] == nil` 分支**原样转发**给采购层。
+     **275 文件 / 544 在售名 / 186 宏:10 个未知名字、11 站点(6 LOOKUP + 5 PROBE)。**
+   - **⭐ 焦点五 0 处,而这个 0 是核验**:本轴看**字面量**,写全了就没有句柄解析那一步可怀疑
+     ⇒ 与 #162/#177 的 UNRESOLVED 不同,**对写死的名字没有盲区**。
+   - **活的那一处**:`aba_site.lua:1488` 的 `item_gleipnir` —— **真名 `item_gungir`**
+     (items.txt 里那块的注释确实写 `// Gleipnir`,键是 `item_gungir`)⇒ 恒真合取项 ⇒
+     `netWorth < 18000` 时该分支**无条件 return true**;`aba_site` 被 `jmz_func.lua:29` require。
+     **有意不改**:改对 = 恒真分支变有条件 = 行为改动,域 127 个英雄不是本组的五个(#170/#177 处置)。
+     另 5 处:`item_drum_of_endurance`(真名 `item_ancient_janggo`,`sell_pair_census` 已登记 Q1,
+     且 boots_of_bearing **吃掉**鼓 ⇒ 无代价)、`item_great_scepter`(tidehunter,#168 惯例)、
+     `item_new`(上游模板桩,`ConsiderItemDesire` 按精确名索引 ⇒ **设计使然**)、
+     `item_pipe_of_insight`/`item_battlefury`(真名 `item_pipe`/`item_bfury`,
+     **该文件全仓无人 require ⇒ 今天代价为零**)。
+   - **⭐ #179 的教训又付了一次**:第一版结论对,**但坏解析器输出一模一样** ——
+     `"item_maelstrom"` 既是块名又是配方需求里的**值**,深度盲的读法会让**被改名的物品隐形**
+     (它仍被旧配方引用)⇒ `--self-test` 喂嵌套需求值 / 只在注释里的名字 / `ItemResult`,
+     断言三种**都不算声明**;主程序另加「解析出 < 400 个名字就拒绝出结果」。
+   - **`LVLQUEUE`**:`sSkillList` 是**队列**,而花它的代码**头部阻塞** ——
+     `ability_item_usage_generic.lua` 取队头,加不了时穿过所有分支落到最后那个 `else`,
+     **而那里的 `table.remove` 被 `botLevel > 25` 守着** ⇒ **来早了的条目不会被跳过,
+     它停在队头,后面每个技能点跟着停**,运行期一个字看不到。
+     ⇒ **队列顺序是正确性属性**,而此前没人检(`test_focus_level_claims.lua` 钉的是**散文**)。
+     **七条表(axe / zuus×2 / wk 默认 / wk `wkbuild` / lion / cm)全部合法**,
+     唯一共同例外是大招阶梯都是 `[6,12,17]` 而三级要 18 ⇒ 17 级停一个点一级;
+     **登记 NON-DEFECT,理由是检出来的**:17 级时三个基础技能**全部满级**(最后一点都 ≤16)
+     ⇒ **那个点没有任何合法去处**,而大招三级在它存在的第一个等级被拿到。
+   - **⭐ 本轮最贵的方法教训(量到的)**:「17 级时其它技能都满了」第一版写成**内联断言**
+     `<= 17`,**变异(放宽到 `<= 99`)逃逸** —— 真值 16、离界四级,**树上没有相邻的合法形状**
+     能证伪一个被放宽的判据(§24 盲区)。抽成 `unmaxed_slot_at()` 喂合成输入后才抓得住。
+     **推论:§24 的「树上有没有相邻合法形状」要逐条判据地问,不是逐文件地问** ——
+     同一文件里报告那半可能有活反例(本轮 5 个 PROBE 站点),另一条判据一个都没有。
+   - **交付**:`tools/agent/item_name_census.py`(单次 GET + `--snapshot` + `--self-test`)、
+     冻结快照 `tests/mock/item_names.lua`(544 名)、
+     `tests/test_item_name_census.lua`(6 用例,**变异 5/5 抓 + 1 对照逃逸**)、
+     `tests/test_focus_build_level_legality.lua`(6 用例,**变异 6/6 抓 + 1 对照逃逸**;
+     先把头部阻塞那个**源码形状本身**钉住,全文意义都压在它上面)。
+     **源码侧变异各一**:Lion 买单塞 `item_aether_lense`、CM 表把大招提前一行 ⇒ 都当场红。
+   - **下一棒**:`item_gleipnir` 的修复归写 `aba_site` 的人(要 gate + 域);
+     `item_great_scepter` 按 #168 挂着;**不需要批测**;patch 更新后要
+     `--snapshot` 重冻结(快照短了会把每个正确名字变成假 MISSING,棘轮第 1 条用例防这个)。
+
 -13. ~~**GH #183:焦点五 19 处施法的开场动作,只接受一个叫 AGILITY 的状态**~~
    **2026-08-25T16:56Z done —— 零行为改动(`bots/` 一行未改)、无新 gate、稳定版未漂移、零 AWS;
    提了 queue `hero-18`(归档扫描、零 EC2)。** 新轴 **`PTSTAT`**。
@@ -1294,6 +1341,30 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T19:55Z(报告 `iterations/reports/hero/20260825T195519Z.md`;**自选,GH #187 已开**
+  —— 自检 **UNLANDED 0**,cadence 洞五组都有;owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项;
+  open 的 `[hero]` issue 下一棒仍全是 queue 归档扫描或归 harness。**本轮零行为改动**:
+  `bots/` 一行未改、**无新 gate id**、`state.json` 无新增、**不提 queue 请求**、
+  **稳定版未漂移**、零 AWS。**刻意换轴** —— 前六轮的轴全落在**技能**上,这一轮挪到**物品**
+  与**加点表**:
+  - **`ITEMID`** —— 物品名进引擎只有两扇门,**两扇门对错名字都只回答沉默**
+    (`FindItemSlot`/`HasItem` 答 −1/false,与「没这件装」一模一样;买单里的未知名被
+    `Item.GetBasicItems` 的 `Item[v] == nil` 分支**原样转发**给采购层)。
+    **275 文件 / 544 在售名 / 186 宏:10 个未知名字、11 站点(6 LOOKUP + 5 PROBE)。**
+  - **⭐ 焦点五 0 处,而这个 0 是核验**:本轴看**字面量**,没有句柄解析那一步可怀疑
+    ⇒ 与 #162/#177 的 UNRESOLVED 不同,**对写死的名字没有盲区**。
+  - **活的一处**:`aba_site.lua:1488` 的 `item_gleipnir`,**真名 `item_gungir`** ⇒
+    恒真合取项 ⇒ `netWorth < 18000` 时该分支无条件 return true。**有意不改**(域是 127 个英雄)。
+  - **`LVLQUEUE`** —— `sSkillList` 是队列,花它的代码**头部阻塞**(最后那个 `else` 的
+    `table.remove` 被 `botLevel > 25` 守着)⇒ **来早了的条目停在队头,后面每个点跟着停**。
+    **七条表全部合法**;唯一共同例外(大招 `[6,12,17]` 而三级要 18)**登记 NON-DEFECT
+    且理由是检出来的**:17 级时三个基础技能全部满级 ⇒ 那个点没有合法去处。
+  - **⭐ 最贵的方法教训(量到的)**:内联写的「其它技能都满了」被放宽变异**逃逸**,
+    因为真值离界四级、**树上没有相邻的合法形状**能证伪它(§24 盲区)⇒
+    **§24 要逐条判据地问,不是逐文件地问**。抽函数 + 合成输入后 6/6 抓。
+  - 交付:`item_name_census.py` + 快照 `tests/mock/item_names.lua` +
+    `test_item_name_census.lua`(5/5 抓)+ `test_focus_build_level_legality.lua`(6/6 抓),
+    两个对照变异如实逃逸,**源码侧变异各一**(Lion 买单塞假名 / CM 表大招提前一行)当场红。
 - 2026-08-25T16:56Z(报告 `iterations/reports/hero/20260825T165651Z.md`;**自选,GH #183 已开**
   —— 自检 **UNLANDED 0**,cadence 洞五组都有;owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项;
   open 的 `[hero]` issue 仍**一条都不可在桌面推进**。**本轮零行为改动**:`bots/` 一行未改、
