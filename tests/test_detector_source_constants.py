@@ -476,6 +476,64 @@ check('the two TP guards really do disagree (the #159 gap exists in source)',
       WALK_GUARD_R < TP_SCAN_R,
       '(walk=%r scan=%r)' % (WALK_GUARD_R, TP_SCAN_R))
 
+# `towerfear` (GH #171, replay-check 2026-08-25).  This reader is unusual in
+# that its whole design -- four rectangles in (game-time, hero-level) -- IS the
+# shipped clause's own algebra, so six separate literals have to keep mirroring
+# `X.ShouldRun` or the "released rectangle" stops being the released rectangle
+# and the three controls stop being controls.  The mid-lane override is the
+# decoy here: `nEnemyTowers` is assigned TWICE in the same function, 898 and
+# then 980 for LANE_MID, and the two assignments differ only by the word
+# `local`.  Reading the wrong one moves the ring by 82 u on every frame.
+RETREAT_LUA = os.path.join(ROOT, 'bots', 'mode_retreat_generic.lua')
+
+import towerfear_domain as tf                      # noqa: E402
+
+TF_RING = literal('X.ShouldRun',
+                  r'local nEnemyTowers\s*=\s*bot:GetNearbyTowers\(\s*(?P<n>[\d.]+)',
+                  path=RETREAT_LUA)
+TF_RING_MID = literal('X.ShouldRun',
+                      r'\n\s+nEnemyTowers\s+=\s*bot:GetNearbyTowers\(\s*(?P<n>[\d.]+)',
+                      path=RETREAT_LUA)
+TF_CTX_U = call_arg('X.ShouldRun', 'J.GetEnemyList', 1, path=RETREAT_LUA)
+TF_CTX_HP = literal('X.ShouldRun', r'bot:GetHealth\(\) < (?P<n>[\d.]+)',
+                    path=RETREAT_LUA)
+TF_LEVEL_CAP = literal('X.ShouldRun',
+                       r'botLevel <= (?P<n>\d+) and DotaTime\(\) > 0',
+                       path=RETREAT_LUA)
+TF_LEVEL_LEG = literal('X.ShouldRun',
+                       r'botLevel <= (?P<n>\d+) or DotaTime\(\) < nFearClock',
+                       path=RETREAT_LUA)
+TF_CLOCK_MIN = literal('X.ShouldRun',
+                       r'local nFearClock\s*=\s*(?P<n>[\d.]+)\s*\*\s*60',
+                       path=RETREAT_LUA)
+TF_HALVING = literal('X.ShouldRun',
+                     r'nFearClock\s*=\s*nFearClock\s*/\s*(?P<n>[\d.]+)',
+                     path=RETREAT_LUA)
+
+eq('towerfear_domain.RING_U mirrors the default tower ring',
+   float(tf.RING_U), TF_RING)
+eq('towerfear_domain.RING_MID_U mirrors the LANE_MID override (the decoy)',
+   float(tf.RING_MID_U), TF_RING_MID)
+eq('towerfear_domain.CTX_U mirrors J.GetEnemyList', float(tf.CTX_U), TF_CTX_U)
+eq('towerfear_domain.CTX_HP mirrors the hp leg of the gate context',
+   float(tf.CTX_HP), TF_CTX_HP)
+eq('towerfear_domain.LEVEL_CAP mirrors the level<=10 cap',
+   float(tf.LEVEL_CAP), TF_LEVEL_CAP)
+eq('towerfear_domain.LEVEL_LEG mirrors the level<=5 leg',
+   float(tf.LEVEL_LEG), TF_LEVEL_LEG)
+eq('towerfear_domain.SHIPPED_CLOCK mirrors nFearClock',
+   float(tf.SHIPPED_CLOCK), TF_CLOCK_MIN * 60.0)
+# The armed clock is not a literal anywhere -- it is the shipped one DIVIDED.
+# Deriving it here means a change to either half goes red, which is the point:
+# the rectangle boundary at 150 s is the armed value, not a chosen number.
+eq('towerfear_domain.ARMED_CLOCK is the shipped clock over the shipped divisor',
+   float(tf.ARMED_CLOCK), (TF_CLOCK_MIN * 60.0) / TF_HALVING)
+check('the two rings really do differ (mid-lane override exists)',
+      TF_RING < TF_RING_MID, '(default=%r mid=%r)' % (TF_RING, TF_RING_MID))
+check('the armed predicate is a strict subset of the shipped one',
+      tf.ARMED_CLOCK < tf.SHIPPED_CLOCK,
+      '(armed=%r shipped=%r)' % (tf.ARMED_CLOCK, tf.SHIPPED_CLOCK))
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
