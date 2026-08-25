@@ -39,6 +39,16 @@ new decision. Gate-plumbing tests are not enough.
 - `luacheck bots game --formatter plain` → 0 warnings.
 - Targeted lua tests for the new file plus anything that pins line numbers
   in the files you touched.
+- **`bash tests/run_py_tests.sh` — yes, for a Lua change.** Gating a shipped
+  constant is not only a Lua edit: a family of python detectors reads Lua
+  thresholds *as source* (`tools/batch_test/behavioral/source_constants.py`),
+  and the moment a gate turns a literal into an expression
+  (`700` → `bWide and 1200 or 700`) every one of them goes red **for a reason
+  that has nothing to do with the behavior you changed**. Seconds to run.
+  When it does fire, the fix is `call_arg(..., arm='shipped')` (or `'armed'`)
+  at the assertion — pin **both** legs, never delete the assertion. Caught on
+  `tpreach` 2026-08-25 after the change had already ridden a branch and a
+  `luacheck` + targeted-lua pass clean.
 - File or update a GitHub issue with frame evidence and the proposed
   acceptance. Admission to `iterations/streams/test_set.md` is the
   **director** stream's job; a batch wave is the **batch-desk** job via
