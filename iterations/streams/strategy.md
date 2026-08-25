@@ -27,6 +27,40 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ANIM. **【2026-08-25T22:4xZ 新增,GH #186;两条判据 + 一个已落地的 gated id + 一个九处调用点的 harness 事实;本轮由它产出】
+   **一个伪造的 `0`,让本仓大部分 mode `Think()` 的头两行在我们拥有的每一个用例里永久敞开。**
+   `mode_roam_generic` 的营地拉野节拍(戳一次 → 中间的帧走 500u)在 **42%** 的戳营帧上
+   **一步没走**(录像组 W10 逐帧,ab 48% / ba 39% 同号)。原因**不在节拍里**:`Think()`
+   第 2、3 行就是 `IsBotThinkingMeaningfulAction(...) then return`,而 `utils.lua` 的
+   `meaningfulActivities` **第一、第二项就是 `ACTIVITY_RUN` / `ACTIVITY_ATTACK`** ——
+   刚戳完营的英雄**按构造**在攻击动画里,野怪反击又把它按在那儿 ⇒ **节流恰好吃掉
+   必须下拖拽指令的那些帧**,英雄站在营里被吃(wave13「站桩 TANK」指纹从节拍看不见的一行绕回)。
+   落成 gated **`pullthink`**(`state.json:pullthink_20260825`,`queue.json:strategy-18`,
+   `tests/test_pullthink_anim_throttle.lua` **10 例 / 11 变异 11 抓 + 1 控制**):
+   **一个 id 两个不可分的半边** —— (1) 有拉野计划时跳过节流;(2) 给营地分支补上
+   它姊妹小兵分支早已出厂的起手 hold(promoted `pullbeat`)。**(2) 是 (1) 的结构性前提**:
+   只放 (1) = 把 GH #143 在小兵侧量到的缺陷原样搬到营地侧。**刻意没写成合取**(`pullcad` 陷阱)。
+   **⚠ 判据一(本轮主产出):一个「两把锁」的解释里,可能只有一把是真的锁。**
+   第一版写了两条世界断言(GetAnimActivity 恒 0 / `ACTIVITY_*` 全 nil ⇒ 名单是空表),
+   **第二条当场被自己的用例打红**:`bot_api.lua:404` 给 `_G` 装了 `__index`,
+   **任何没见过的全大写全局都自动解析成从 1000 起递增的稳定数** ⇒ `ACTIVITY_ATTACK` 是 **1175**,
+   名单**是满的**。真正的锁**只有一把,而且它是一个数**:`GetAnimActivity()` 的默认 **0**
+   ——`0` 结构上不可能出现在从 1000 起编号的集合里(GH #133 同型)。
+   **它按住的不是一个谓词是九个调用点**:mode_roam / mode_farm / mode_ward / mode_outpost /
+   mode_secret_shop / mode_side_shop / mode_team_roam + aba_defend + aba_push。
+   `test_replay_pullbeat_attack_cancel.lua` 能在**同一个 `Think`** 上驱动 46 帧一次没撞上它。
+   **教训的形状:「两条独立理由」听起来比一条稳,但它让人不去查第二条 ⇒ 冗余的解释要么验,要么别写。**
+   **⚠ 判据二:没被执行到的分支,和执行了但没效果的分支,证据长得一模一样。**
+   录像组给的三个方向前两个都假设分支跑了,而两者与真相产生**同一份**可观测证据
+   (坐标不动 + POKE 连续)。**判别器不是位移也不是 POKE,是指令日志**:没被执行到 ⇒
+   那一帧**一条指令都没有**(出厂腿在整个 3s 节拍上打印 **91 个 `.`**)。已写进
+   `strategy-18` 的预登记反向读法。
+   **⚠ 顺带一条 harness 事实**:`check_armed_wiring.py` 默认读 `--ref HEAD` 的**已提交**内容,
+   不是工作树 ⇒ **commit 之前跑它,新 id 一律报 UNWIRED**,而那条错误信息读起来像
+   「id 从没接线」。本轮吃过这一下,记在这里。
+   **下一格(不在本组手上)**:小兵拉野撞**同一行**节流,但它已有 hold ⇒ 是**独立**杠杆,
+   排不排由总监裁。**另登记**:GH #190(CM 站在队伍「蓝半径」外)自己写死第一步是**纯读数**
+   且对照要跨同局五个位置 ⇒ 本组接它**要先有那份读数**,登记为本组下一格。
 0ARITY. **【2026-08-25T19:2xZ 新增,GH #188;三条判据 + 一条已在位的棘轮 + 一个真的被修好的缺陷;本轮由它产出】
    **`0DEAD` 的姊妹洞,同一个 `only={"1"}` 造的 —— 而这一次那一类里有一条不是死代码,是一层被关掉的物品逻辑。**
    Lua **不检查参数个数**:少传 = nil,多传 = 丢掉,两者都不是错误;`.luacheckrc` 的
@@ -1520,6 +1554,58 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T22:4xZ:**拉野拖拽那一步没迈出去,而吃掉它的那行不在节拍里 —— 一个伪造的 `0`
+  让本仓九处 `Think` 节流在我们拥有的每一个用例里永久敞开。**
+  开工自检 **UNLANDED 0**;cadence 9 条 GAP(**含本组一条** 04:23Z→07:54Z 3.5h);
+  未裁 queue 请求 **0**;trunk python 开工/收尾均 **29 passed 0 failed**;
+  trunk Lua 快检测器开工 **SKIP**(那一刻 `lua5.1` 未就绪);
+  开工 `origin/main == 2b9c521`;容器无 `lua5.1`/`luacheck`,已装;
+  **AWS $0**(未 bootstrap,结构上不需要)。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 三条优先项**本组无未完成格**
+  (P1 第 1 棒早交、P2 决策侧已落地、P3 是总监的);open `[strategy]` issue 逐条过完
+  (#190 是 22:00Z 刚开的,自己写死第一步是**纯读数**且对照要跨五个位置 ⇒ 本组接它要先有读数,
+  已登记下一格;#188/#182 是本组前两轮自己开的;#137/#117/#143/#168/#172/#174 都是已交出去的棒;
+  #160「先要帧」;#157 可做格已判空)⇒ 落到 **GH #186**,它**同时是 owner P1 的前置**
+  (issue 自己写:在这条修好之前 connect 侧的读数混着「没走」和「走错方向」两件事),
+  躺了 **~3.4 小时 / 约两轮**,零 AWS。
+  **⭐ 缺陷**:营地拉野节拍每 3s 戳一次营、中间的帧走 500u,但 **42% 的戳营帧后一秒位移 < 50u**
+  (ab 48% / ba 39% 同号)。原因是 `Think()` 的**第 2、3 行**
+  `IsBotThinkingMeaningfulAction(...) then return`,而它匹配的 `meaningfulActivities`
+  **第一、第二项就是 `ACTIVITY_RUN` / `ACTIVITY_ATTACK`** ⇒ **刚戳完营的英雄按构造在攻击动画里**,
+  野怪反击把它按住 ⇒ **节流恰好吃掉必须下拖拽指令的那些帧**,分支**根本没被执行到**。
+  出厂腿在整整一个 3s 节拍上打印 **91 个 `.`**(一个 `A`、一个 `M` 都没有)。
+  **⭐⭐ 修法**:gated **`pullthink`**,**一个 id 两个不可分的半边** ——
+  (1) 有拉野计划时跳过节流(未 armed 时只多一次对恒 nil 字段的比较,`IsSoakCandidate` 连叫都不叫);
+  (2) 给营地分支补上姊妹小兵分支**早已出厂**的起手 hold(promoted `pullbeat`,0.5s 不下指令)。
+  **(2) 是 (1) 的结构性前提不是第二根杠杆**:只放 (1) = 把 GH #143 的缺陷原样搬到营地侧。
+  **刻意没写成合取**(`pullbeat` 已 promote ⇒ 当天冻结 FALSE,`pullcad` 陷阱),源码用例钉住「恰好两处」。
+  turbo **结构性**(`roamCampPull` 只经 `ShouldPullNeutralCamp` 存在,那里开头就是 `IsModeTurbo`+`pullcamp`)。
+  **域刻意收窄到营地拉野**;小兵拉野撞同一行但已有 hold ⇒ 独立杠杆,交总监裁。
+  **⭐⭐⭐ 本轮两条判据**:①**一个「两把锁」的解释里可能只有一把是真锁** ——
+  第一版的 W2(`ACTIVITY_*` 全 nil ⇒ 名单是空表)**当场被自己的用例打红**:
+  `bot_api.lua:404` 的 `_G.__index` **把任何没见过的全大写全局解析成从 1000 起递增的稳定数**
+  ⇒ `ACTIVITY_ATTACK` = **1175**,名单**是满的**;真锁只有 `GetAnimActivity()` 的默认 **0**
+  (GH #133 同型),而它按住的是**九个调用点**。**冗余的解释要么验,要么别写。**
+  ②**没被执行到 vs 执行了没效果,证据同形** —— 判别器不是位移也不是 POKE,**是指令日志**。
+  **本地**:`tests/test_pullthink_anim_throttle.lua` **10 例全绿,11 变异 11 抓 + 1 控制**;
+  承重帧 = **全语料最近的同侧营地接近**(medusa,天辉英雄距天辉简单野营 355u,四营全语料普查选出);
+  **本文件任何一处都不 arm `pulldrag`** ⇒ 拖拽终点是**真实泉水**,没有断言压在
+  `GetLocationAlongLane`(mock 常数 `Vector(0,0,0)`)上。
+  **顺带一条 harness 事实**:`check_armed_wiring.py` 默认读 `--ref HEAD` 的**已提交**内容 ⇒
+  **commit 之前跑它,新 id 一律报 UNWIRED**,而错误信息读起来像「从没接线」。
+  **门**:luacheck **0 警告 EXIT=0**;python **29 passed 0 failed**;
+  Lua 切片 pull 139 / camp 114 / roam 27 / gate_claim 10 / smoke 3 / level_gate_census 15 /
+  lf_ 41 = **349 例 0 失败**,新文件 **10 例 0 失败**。
+  **`bots/` 只动一个文件、零新 fixture 文件、零 AWS。**
+  **交棒**:**总监**(①入集提议 `pullthink`,搭车零增量,排波前置 = 同腿必须 armed `pullcamp`
+  ②收两条判据 + 九调用点的 harness 事实 + `check_armed_wiring` 读 HEAD 那条
+  ③小兵拉野那根独立杠杆排不排)、**录像组**((a) 要等有人 arm `pullthink` 的波;
+  核验点 = 戳营帧后一秒位移 < 50u 的占比,**两条反向护栏一条不许省**:
+  `pulldrag` lane_win 不许降、**armed 腿戳营帧总数不许塌**)、
+  **批测台**(`queue.json:strategy-18`,不申请专波;`campfarm` 的教训照抄:
+  波里有什么以 verdict 的 `cand` 串为准)、**英雄组**(无)。
+  报告 `iterations/reports/strategy/20260825T224124Z.md`;
+  `state.json:pullthink_20260825`;backlog 新增 **`0ANIM`**。
 - 2026-08-25T19:2xZ:**`lf_salve` 的就地回复分支从落地那天起一口药都没喝过 —— 少传两个参数
   让派发器五条臂一条都不中,而它上面那个 `return` 还顺手关掉了整层物品。**
   开工自检 **UNLANDED 0**(上一轮点名了四轮的两个 `tpreach` commit **已落地**);

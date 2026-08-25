@@ -181,7 +181,48 @@ end
 
 function Think()
     if J.CanNotUseAction(bot) then return end
-	if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "roam") then return end
+	-- [GH #186 20260825] Soak candidate 'pullthink': THE DRAG STEP IS NEVER
+	-- ISSUED ON 42% OF POKE FRAMES, and the reason is this line, not the drag.
+	--
+	-- The camp-pull cadence below is "poke the camp, then walk lane-ward in
+	-- between so the neutrals follow". The walk is an order the cadence has to
+	-- issue every beat -- and this throttle returns BEFORE the cadence is
+	-- reached whenever bot:GetAnimActivity() is one of utils.lua's
+	-- meaningfulActivities, a list that opens with ACTIVITY_RUN and
+	-- ACTIVITY_ATTACK. A hero that is mid-attack-animation on the camp it just
+	-- poked is BY CONSTRUCTION in ACTIVITY_ATTACK, so the frames on which the
+	-- drag must be ordered are exactly the frames this line eats. The neutrals
+	-- keep hitting back, the hero re-acquires them, and the throttle never
+	-- reopens: the replay desk's reading is 31 of 73 armed poke frames moving
+	-- < 50 u in the following second (ab 48% / ba 39%, same sign), with one
+	-- hero standing on 6 CONSECUTIVE seconds of identical coordinates while its
+	-- HP fell 1.00 -> 0.84. That is the wave13 "stood and TANKED the camp"
+	-- fingerprint the cadence below was written to remove, reappearing through
+	-- a line the cadence cannot see.
+	--
+	-- Skipping the throttle costs nothing here: the camp-pull branch returns
+	-- before ThinkIndividualRoaming / ThinkGeneralRoaming, so the work this
+	-- knob exists to skip is not reached on these frames anyway.
+	--
+	-- WHY THIS IS INVISIBLE TO EVERY TEST WE HAVE (world assertion): the mock
+	-- answers bot:GetAnimActivity() with a fabricated 0 on every corpus frame,
+	-- and 0 is not any ACTIVITY_* the engine sends -- the GH #133 shape. On top
+	-- of that, ACTIVITY_* are undefined globals under the mock, so utils.lua
+	-- builds meaningfulActivities as an EMPTY table. Two independent reasons
+	-- this line reads false locally; tests/test_pullthink_anim_throttle.lua
+	-- injects the activity to make it readable at all.
+	--
+	-- Turbo is structural, not asserted: bot.roamCampPull only exists when
+	-- J.ShouldPullNeutralCamp returned non-nil, and that opens with
+	-- J.IsModeTurbo() and the 'pullcamp' gate. Unarmed, the added test is one
+	-- nil compare on a field that is nil in every non-pull frame, and the
+	-- throttle is asked exactly as shipped.
+	--
+	-- Scoped to the CAMP pull only. The creep pull hits the same line, but its
+	-- cadence already holds for the wind-up (promoted 'pullbeat'), and one
+	-- lever at a time -- see the report's hand-off.
+	if not (bot.roamCampPull ~= nil and J.IsSoakCandidate('pullthink'))
+	and J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "roam") then return end
 
 	-- [pull rehome 20260723] Execute the pull plan set by GetDesire this
 	-- frame (cleared there whenever the window is closed, so no staleness).
@@ -276,6 +317,40 @@ function Think()
 		and (bot.campPullAttackTime == nil or now - bot.campPullAttackTime > 3.0) then
 			bot:Action_AttackUnit(tNeut[1], true)
 			bot.campPullAttackTime = now
+		elseif bCampHere
+		and J.IsSoakCandidate('pullthink')
+		and (now - bot.campPullAttackTime) < 0.5 then
+			-- [GH #186 20260825] Part two of 'pullthink', and a STRUCTURAL
+			-- PRECONDITION of part one rather than a second lever. This is the
+			-- wind-up hold the sister creep-pull branch above already ships
+			-- (promoted 'pullbeat', GH #143): issue NO ORDER for one attack
+			-- wind-up after the poke, which leaves the attack order running.
+			--
+			-- The camp branch never had it because it never needed it: the
+			-- throttle above was eating the next frame anyway. Un-eating that
+			-- frame without this hold would hand the camp pull the exact defect
+			-- GH #143 measured on the creep pull -- Action_MoveToLocation on the
+			-- frame after Action_AttackUnit cancels an attack whose wind-up has
+			-- not started, so the poke lands no damage and the neutrals never
+			-- acquire. The 46-frame order log that pinned it there reads
+			-- `A` then 36 consecutive `M`. Shipping part one alone is therefore
+			-- not "a smaller change", it is the configuration already measured
+			-- as broken, which is why both parts read ONE id.
+			--
+			-- Deliberately NOT written as `IsSoakCandidate('pullthink') and
+			-- IsSoakCandidate('pullbeat')`: 'pullbeat' was promoted 2026-08-23
+			-- and a promoted id is in no armed string, so that conjunction would
+			-- be frozen FALSE in every wave while check_armed_wiring.py still
+			-- called it WIRED -- the pullcad trap, verbatim.
+			--
+			-- 0.5 s and the reasoning behind it are the promoted branch's, not a
+			-- new number: it covers the median hero attack point (~0.3-0.65 s)
+			-- and stays well inside the 3.0 s beat so the drag still owns most
+			-- of the window. GetAttackPoint() would be the principled source but
+			-- it is absent from the mock.
+			--
+			-- Reaching this elseif with bCampHere implies campPullAttackTime is
+			-- non-nil (the branch above claims the nil case), same as upstairs.
 		elseif bCampHere then
 			-- [GH #117, 20260825] 'pulldrag': walk toward THIS LANE, not toward
 			-- home. The line below already says "so the camp follows into the
