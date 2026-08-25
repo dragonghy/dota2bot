@@ -105,6 +105,32 @@ note $?
 # slow selfcheck -- it is the thing that teaches people to ignore the line.  If
 # the count below stops being seconds, move the slow file's sweep behind a
 # function instead of dropping it from the set.
+# Added 2026-08-25T13:xxZ (director), after test_set.md §BF.0.  §BB.4 says a
+# rideshare admission proposal must be approved or returned in the round it
+# arrives, because its only cost is not being ruled.  Measured at 13:xxZ, that
+# rule's enforcement record since it was written was 0/6: `campsel` had sat
+# un-ruled for four rounds, `tpgap`/`tbearly`/`tpdeathbuy` for three.
+#
+# Nothing was broken and nobody was told, because the 待裁区 of test_set.md is
+# prose and prose does not raise its hand -- an empty `director` field appeared
+# in no selfcheck output, and the batch desk's full-set waves ran fine six ids
+# short without an error, a lost game, or a missing verdict.
+#
+# Same shape as this wrapper's own header (a detector nobody runs), one step
+# earlier: a detector nobody WROTE.  Cheap -- it reads one JSON file.
+#
+# It is a QUESTION like the others (see the tool's LIMITS): an un-ruled request
+# may be legitimately parked behind a wave slot that does not exist yet, and
+# `RECEIVED_NOT_SCHEDULED` is a real ruling this tool cannot tell from silence.
+# But LOOK.
+printf '\n=== un-ruled queue requests (director field) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/pending_rulings.py --no-age
+    note $?
+else
+    printf 'SKIP (no python3)\n'
+fi
+
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     if suite=$(bash tests/run_py_tests.sh 2>&1); then

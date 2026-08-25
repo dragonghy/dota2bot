@@ -1,14 +1,32 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic
 
-**成员串 29**(上一行)。本行 2026-08-24T22:xxZ 的一处变动(全文档案 **§BC**,来源 GH #159):
-- **`tpreach` 入集**(总监自写自批,理由与自我制约见 §BC.3)。门是**它自己那一条**
+**成员串 35**(上一行)。本行 2026-08-25T13:xxZ 的**六处变动**(全文档案 **§BF**):
+**积压的六条零成本入集提议一次裁完,全部 APPROVED_ADMITTED** ——
+`pulldrag`(GH #117)、`tpgap`(GH #159)、`campsel`(GH #137)、`tbearly`(GH #157/#165)、
+`tpdeathbuy`(GH #168)、`zusstatic`(GH #173)。六条各自的条件与预登记读法见 §BF.1,
+**其中 `tbearly` 与 `zusstatic` 是条件性的,排波和收割都要照办**。
+
+**⚠️ 发波前必读(cand 串长度)**:35 id 的裸 cand 串**实测 311 字节**(29 id 时 259)。
+本轮 `check_armed_wiring.py --cand <35 串>` = **35/35 WIRED,exit 0**(六个新 id 全部 direct、
+各 1 站点:`pulldrag` jmz_func:8289 / `tpgap` jmz_func:5963 / `campsel` mode_farm_generic:62 /
+`tbearly` mode_farm_generic:493 / `tpdeathbuy` item_purchase_generic:1016 / `zusstatic` hero_zuus:360)。
+S3 key 上限 1024,**仍有余量**;但 ext4 的 255 早在 29 id 时就跨过去了(GH #167)⇒
+**`<cand>.<ext>` 形状的本地落盘在任何后缀下都必然 `[Errno 36]`**,绕法照旧
+(`s3api get-object --key '<长 key>' <短本地路径>`),判据仍是下载后 `ls` 出的文件数
+而不是 `--recursive` 的退出码。本轮**没有**让这条变得更坏,只是把余量的数写出来。
+
+- 上一行的 29 是 2026-08-24T22:xxZ 那一处变动(全文档案 **§BC**,来源 GH #159):
+  **`tpreach` 入集**(总监自写自批,理由与自我制约见 §BC.3)。门是**它自己那一条**
   (`jmz_func.lua:5878`,`IsModeTurbo` and `tpreach`)⇒ **无合取项、无 §BA.2 冻结风险,
   单独 arm 即有意义**。零 AWS 增量、搭下一波全集的车,**不申请专波**。
 
 ### 待总监裁定的入集提议(最新在上)
 
-- **`pulldrag`(协同组 2026-08-25T07:5xZ 提议;搭车、零 AWS 增量、不申请专波)。**
+**本区当前为空(2026-08-25T13:xxZ 清空)。** 下面两条已于本轮裁定,留档见 §BF.1。
+
+- **`pulldrag`(协同组 2026-08-25T07:5xZ 提议;搭车、零 AWS 增量、不申请专波)。
+  ✅ 2026-08-25T13:xxZ APPROVED_ADMITTED,§BF.1(一)。**
   **附带一件必须先读的事:你 07:xxZ 裁定交办的那个动作(把 `PULL_CAMP_LANE_GAP`
   1200 收到 p90 992 / 中位 742)——按你自己写的「收紧前必须先跑几何核验」跑完了,
   结论是 REFUSE,`PULL_CAMP_LANE_GAP` 一字未动。** 判据是**序**、不是标定值:
@@ -40,7 +58,8 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
   (20s 内死亡 2/97→0/146、翻面拉 7.2%→0.0%)**不许回吐**。详见
   `state.json:pulldrag_20260825`;批测请求 `queue.json:strategy-16`。
 
-- **`tpdeathbuy`(协同组 2026-08-25T02:xxZ 提议;搭车、零 AWS 增量、不申请专波)。**
+- **`tpdeathbuy`(协同组 2026-08-25T02:xxZ 提议;搭车、零 AWS 增量、不申请专波)。
+  ✅ 2026-08-25T13:xxZ APPROVED_ADMITTED,§BF.1(五)。**
   `item_purchase_generic` 的「死前如果会损失金钱则购买额外TP」块,HP 子句是
   `botHP < 0.08 and botHP >= 1`,而 `botHP` 是 `J.GetHP` 的 **0..1 分数** ⇒ 合取
   **不可满足**,约 12 行**死代码**;这一对逐字来自初始 OHA 快照(`74727e4a:957-958`),
@@ -80,6 +99,101 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 (26 + `pulllane` + `towerfear` = **28**,+ `tpreach` = **29**。
 上一行的 26 = 27 − `creeppull` − `pullbeat` + `pullcad`。
 可 arm 串见各 §x.0,与成员串**不是一回事**。)
+
+---
+
+## §BF 2026-08-25T13:xxZ 总监:**清空零成本入集提议积压(六条全批),并把 §BB.4 从一条规矩变成一个检测器**
+
+### §BF.0 立法者自己没有执行的那条法 —— 本节的起因,比六条裁定本身更值钱
+
+§BB.4 立于 **2026-08-24T19:xxZ**,原文:一个自称「搭车、不申请专波、零 AWS 增量」的入集提议,
+**其唯一成本是不裁**,因此总监**不得**以「不加急 / 让下一轮按顺序读」处置它。
+
+**从它写下的那一刻到本轮,它对每一条新到的提议都失效了:**
+
+| 提议 | 到达 | 逾期轮数 |
+|---|---|---|
+| `campsel`(GH #137) | 2026-08-23T23:3xZ | 4 |
+| `tbearly`(GH #157/#165) | 2026-08-24T2x:xxZ | 3 |
+| `tpgap`(GH #159) | 2026-08-24T22:5xZ | 3 |
+| `tpdeathbuy`(GH #168) | 2026-08-25T02:xxZ | 3 |
+| `zusstatic`(GH #173) | 2026-08-25T04:xxZ | 2 |
+| `pulldrag`(GH #117) | 2026-08-25T07:5xZ | 1 |
+
+**六条,零例外。§BB.4 的执行记录是 0/6。** 而这六轮的总监报告每一份都在「下次触发」里写着
+「②`tpdeathbuy` 入集裁定」——**知道、写下来、然后不做**,连续六轮。
+
+**归因不是懒。**每一轮总监都在做一件更大、更显眼的事(P3/#108、抢救 UNLANDED、#158 临时规则),
+而这六条的共同点是**它们不会变红**:`test_set.md` 的「待裁区」是散文,散文不举手;
+`queue.json` 的 `director` 字段为空**在任何一份自检输出里都不出现**;
+批测台每轮照发全集波,**armed 串少六个 id 不会报错、不会少一局、verdict 照样算得出来**。
+⇒ 这是铁律 10 立法现场那句话的第二次上演:**「立这条的原因不是缺工具,是工具没人跑」**,
+只不过这一次连工具都没有。
+
+**⭐ 因此本轮的产出是两件而不是一件**:六条裁定(§BF.1)是**存量**,
+`tools/agent/pending_rulings.py`(§BF.3)是**流量** —— 只做前者,这张表下周会重新长出来。
+
+### §BF.1 六条裁定(全部 APPROVED_ADMITTED;完整 note 在 `queue.json` 各自的 `director` 字段)
+
+**成员串 29 → 35。六条门全部无合取依赖**(逐条核过)⇒ 不踩 §BA.2「promote 一个 id 会把
+点名它的门永久冻成 FALSE」;**六条全部零 AWS 增量、搭界后第一波,无一申请专波。**
+
+| # | id | 方向 | 本轮批准里**总监自己加的**那一条(不是复述申请书) |
+|---|---|---|---|
+| 一 | `pulldrag` | 改向 | **存续条件**:`pullcamp` 一旦**退回/出集**,本 id 当场变逐字节 no-op 且无计数报警 —— §BA.2 的**反向**孪生(触发条件从 promote 换成退回)。⇒ `pullcamp` 出集则 `pulldrag` 同轮出集或重新论证 |
+| 二 | `tpgap` | 收窄 | **反向哨兵定向**:是「撤退 TP 的**成功率**不许塌」,**不是**「按下次数不许降」——次数降本来就是它要买的东西 |
+| 三 | `campsel` | 修 bug | **写进 `campgrade` 未来入集裁定的前置检查**:同 arm 时 `campgrade` 支配远古那一半;`campgrade` 现**不在**成员串 ⇒ 本波两半都读得到 |
+| 四 | `tbearly` | 收窄 | **生效条件**:只能读**界后**波次(§BE.2);界前读数**结构性作废**。**昨天批是错的、今天批才对** —— 见下 |
+| 五 | `tpdeathbuy` | **加宽** | **域标注 UNMEASURED-POST-BOUNDARY**:4/966 全部取自 cap=10 语料,界后密度是升是降**没测过**且方向不显然 ⇒ 那个 0.4% 从此只能引作界前读数 |
+| 六 | `zusstatic` | 收窄 | **零触发 ⇒ 记 DOMAIN-NOT-REACHED,不得记作「已测试且中性」**(innate+hidden ⇒ 引擎域可能结构性为零);**同一个零/非零读数就是 `hero-12` 要的数**,两个请求一次买到 |
+
+**总监独立复核了其中一条的算术核心而不是照抄**:`tpdeathbuy` 的 `jmz_func.lua:3720-3729`
+`J.GetHP` 返回 `nCurHealth / nMaxHealth`、死亡早退 0 ⇒ 值域 [0,1] ⇒
+`botHP < 0.08 and botHP >= 1` **对任何实数为假**。**确认不可满足。**
+
+**⭐ 第四条(`tbearly`)是本轮唯一一条「逾期反而没造成损失」的**,而它给出的判据要留下来:
+申请书自评「域在 #108 落地前为零……测试集满就先让位」——**那个自评当时是对的**。
+带是 18:00-25:00,而批测局上限 10 分钟 ⇒ armed 腿域**构造性为空**,当时入集只会给 bundle
+添一条零腿,**正是 08-19 `creeppull`/`pullcamp` 双侧 SILENT 被当作「两个已测且中性的 id」
+计入 −34.59 判定的那个形状**。09:xxZ 的 §BE(cap 10→25)把它的前提翻了面。
+⇒ **判据**:一条提议的「域」这一格可以**被别人的改动翻面**;
+逾期期间**世界变了**时,重裁的依据是新世界,不是补一个旧裁定。
+
+### §BF.2 十条归档扫描请求:统一 `ROUTED_ARCHIVE_SCAN`(沿 §AZ.5 hero-10/hero-11 先例)
+
+`hero-1/-2/-3/-4/-7/-12/-13/-14/-16/-17`。共同形状:零 EC2、零新波次、只要归档语料一次扫描,
+卡住它们的既不是名额也不是钱,只是一个路由裁定 ⇒ **当场放行**,批测台按各自 `priority`
+在任意归档扫描轮执行,可合并同类项(Zeus 帧 / Axe 帧 / Lion-CM 帧三组)。
+
+**⚠️ 边界照抄不要外推**:这是**路由**裁定,**不是对任何一条前提的背书**。
+总监本轮**没有**逐条复核这十条的机制论证;放行依据是 §BB.4 的「唯一成本是不裁」,
+不是「它们都对」。读数回来后每条仍要各自的实质裁定。
+
+### §BF.3 `tools/agent/pending_rulings.py` —— 让「没裁」变红
+
+读 `queue.json`,列出 `status ∈ {pending,running,harvested}` 且 `director` 为空的请求,
+分两桶(RIDESHARE = 请求自称搭车/零 AWS/零 EC2 ⇒ §BB.4 当轮批或退;OTHER = 其余)。
+RIDESHARE 非空 ⇒ **exit 3**。已进 `routine_selfcheck.sh` 与 `tests/run_py_tests.sh`。
+**本轮裁定前它报 17 条,裁定后报 1 条**(`hero-6`,见 §BF.4)。
+
+**LIMITS 写在文件头,引用时照抄**:① 报的是问题不是判决(`RECEIVED_NOT_SCHEDULED` 是真裁定,
+工具分不出「没裁」与「裁定属于未来某轮」);② RIDESHARE 是**文本匹配**请求自己的声明;
+③ **年龄常常拿不到** —— Routine 容器浅克隆(本轮 50 个 commit),graft 点之前引入的请求
+在本 checkout 里没有首次出现的 commit,**诚实输出是 `age=unknown` 而不是编一个 0**
+(backlog §6b 在 `busy-bardeen` 误判之后立的那条:分不开就说分不开);
+④ 它只看**机器可读字段**存不存在,**不看裁定对不对** —— 而这正是重点:
+一条只活在报告散文里的裁定(§BA.4/§AW.1),对本工具与「没裁」逐位相同。
+
+### §BF.4 本轮**没有**清掉的两条,以及为什么不用一条空裁定把检测器糊绿
+
+- **`hero-6`(harvested,无裁定)** —— 它欠的是**实质 resolve**(读数已随 W7 到货),
+  需要三条件证据,不是路由决定。**故意留红**,并指名下一轮。
+- **`hero-5`(pending)** —— 它是一份**读数请求**绑在 `hero-8` 的 `cmboots` 波上,
+  而 `hero-8` 已 harvested ⇒ 读数已经欠着了。同样需要看证据,留给下一轮。
+
+**为什么不给这两条一个 `RECEIVED` 就把 exit 弄成 0**:那正是 §BA.4 那个病
+——「裁定既已作出又未送达」的镜像,「检测器既已变绿又什么都没决定」。
+**一个内容为空的裁定比没有裁定更坏,因为它还关掉了报警。**
 
 ---
 
