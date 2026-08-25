@@ -58,9 +58,31 @@ note $?
 # 11 files and runs in seconds -- cheap enough that "is main red right now?"
 # stops depending on who happens to reach their push gate first.
 #
-# NOT the Lua suite: that one needs lua5.1 + minutes, and is the push gate's
-# job (README rule 6), not 开工's.  A red here is a QUESTION like the others --
-# it may be someone else's in-flight breakage, not yours -- but LOOK.
+# A red here is a QUESTION like the others -- it may be someone else's in-flight
+# breakage, not yours -- but LOOK.
+#
+# This block USED to end "NOT the Lua suite: that one needs lua5.1 + minutes,
+# and is the push gate's job (README rule 6), not 开工's."  That exemption cost
+# a red trunk on 2026-08-24T22:55Z (1d41fb1, strategy): a fresh corpus-size pin
+# reddened tests/test_corpus_scale.lua's detector, and it sat red on origin/main
+# for ~5 hours across five stream triggers -- batch-desk 00:19Z, strategy
+# 01:24Z, replay-check 01:35Z, hero 01:51Z, batch-desk 03:12Z -- every one of
+# which ran THIS script and got a clean trunk-health line, because the leg it
+# ran was the python one.
+#
+# That is GH #116's shape for the third time, and the second time in this very
+# file: "the ratchet caught it; the only missing step was somebody running the
+# suite."  The exemption's premise was also wrong in the half that mattered --
+# the whole Lua suite is minutes, but the detectors are NOT.  They read the tree
+# instead of loading fixtures: 6 files / 51 checks / 4.2s measured, against a
+# ~48-minute full suite.  The push gate still owns the full suite; 开工 now owns
+# the tree-scanning subset, which is exactly the subset ANYONE'S landing can
+# redden.
+#
+# Discovery is by tag, not by list, so it cannot rot: a test named
+# `[detector] ...` or `[ratchet] ...` is picked up the day it is written.  Two
+# tree-scanners predate the convention and are named explicitly; tag new ones
+# rather than extending that list.
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     if suite=$(bash tests/run_py_tests.sh 2>&1); then
@@ -72,6 +94,38 @@ if command -v python3 >/dev/null 2>&1; then
     fi
 else
     printf 'SKIP (no python3)\n'
+fi
+
+printf '\n=== trunk health (fast Lua detectors) ===\n'
+if command -v lua5.1 >/dev/null 2>&1; then
+    # By tag, so a detector written tomorrow is covered without editing this
+    # file.  The two trailing names predate the tag convention.
+    files=$( { grep -l '\[detector\]\|\[ratchet\]' tests/test_*.lua 2>/dev/null
+               ls tests/test_gate_claim_consistency.lua \
+                  tests/test_data_consistency.lua 2>/dev/null
+             } | sort -u )
+    ran=0 red=0
+    for f in $files; do
+        ran=$((ran + 1))
+        if ! out=$(lua5.1 tests/run_tests.lua "$(basename "$f")" 2>&1); then
+            red=$((red + 1))
+            printf '%s\n' "$out" | grep -E '^(FAIL:|      )' | head -4
+        fi
+    done
+    if [ "$ran" -eq 0 ]; then
+        # Discovery matching nothing is the dead-lifecycle-rule failure this
+        # wrapper's own header warns about: on the books, matching nothing.
+        printf 'NO DETECTORS FOUND -- discovery matched 0 files; the tag or the paths moved.\n'
+        note 3
+    elif [ "$red" -gt 0 ]; then
+        printf 'TRUNK RED -- %d of %d Lua detector file(s) failing before you changed anything.\n' \
+            "$red" "$ran"
+        note 3
+    else
+        printf '%d detector file(s), 0 failures\n' "$ran"
+    fi
+else
+    printf 'SKIP (no lua5.1 -- apt-get install lua5.1)\n'
 fi
 
 printf '\nselfcheck worst exit: %d\n' "$worst"
