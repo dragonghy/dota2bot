@@ -1618,8 +1618,9 @@
   **这次代改了别组文件**(上一轮同类明写「刻意不代改」):上一轮那些是**散文**,变旧不会红;
   这次是**活断言且 main 是红的**,而位移是本组自己的 commit 造成的。已追评 GH #187 / #171。
   **本组自检也没抓到**:开工 Lua 腿读 `SKIP`(那一刻没装 `lua5.1`)—— 与 #171 逐字同型。
-  收尾重跑:census **6 例 0 失败**、luacheck **0 警告**、`pullthink` **10 例 0 失败**、
-  python **29 passed**。
+  收尾重跑:`item` 全切片 **56 例 0 失败**(修复前 1 失败)⇒ **main 的 Lua 侧恢复绿色**;
+  census **6 例 0 失败**、luacheck **0 警告 EXIT=0**、`pullthink` **10 例 0 失败**、
+  python **29 passed 0 failed**、`check_armed_wiring` **37/37 WIRED EXIT=0**。
   报告 `iterations/reports/strategy/20260825T224124Z.md`;
   `state.json:pullthink_20260825`;backlog 新增 **`0ANIM`**。
 - 2026-08-25T19:2xZ:**`lf_salve` 的就地回复分支从落地那天起一口药都没喝过 —— 少传两个参数
