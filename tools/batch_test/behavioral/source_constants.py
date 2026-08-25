@@ -92,16 +92,41 @@ def _strip_comments(body):
     return '\n'.join(re.sub(r'--.*$', '', ln) for ln in body.split('\n'))
 
 
-def _num(tok, what):
+# [GH #167 follow-on] A gated widening: `<flag> and <armed> or <shipped>`.
+#
+# This is the ONE non-literal form this module reads, and only when the caller
+# says which leg it means.  It exists because a soak candidate that moves a
+# threshold turns a literal into an expression, and the module's fail-loud
+# default then takes a detector that was correctly mirroring the SHIPPED value
+# down with it -- which is what happened the first time (`tpreach` widened
+# J.CanEnemyInterruptTpChannel's scan and test_detector_source_constants.py
+# went red on a reading that had not actually changed for any corpus in hand).
+#
+# Refusing outright would push the next author toward deleting the assertion;
+# guessing a leg would silently mirror the wrong number on half the waves.
+# So: readable, but only with the leg named at the call site.
+_GATED_WIDEN = re.compile(r'^(\w+)\s+and\s+([0-9]+(?:\.[0-9]+)?)'
+                          r'\s+or\s+([0-9]+(?:\.[0-9]+)?)$')
+
+
+def _num(tok, what, arm=None):
     try:
         return float(tok)
     except ValueError:
-        raise SourceConstantError('%s: `%s` is not a numeric literal '
-                                  '(computed thresholds cannot be read here)'
-                                  % (what, tok))
+        pass
+    m = _GATED_WIDEN.match(tok)
+    if m is not None and arm in ('shipped', 'armed'):
+        return float(m.group(2) if arm == 'armed' else m.group(3))
+    hint = ''
+    if m is not None:
+        hint = ("; this is a gated widening on `%s` -- pass arm='shipped' or "
+                "arm='armed' to say which leg you mean" % m.group(1))
+    raise SourceConstantError('%s: `%s` is not a numeric literal '
+                              '(computed thresholds cannot be read here)%s'
+                              % (what, tok, hint))
 
 
-def call_arg(func, callee, index, where=None, path=None):
+def call_arg(func, callee, index, where=None, path=None, arm=None):
     """Numeric argument `index` (0-based) of the unique matching `callee(` call.
 
     `where` selects among several calls to the same callee by pinning other
@@ -109,6 +134,12 @@ def call_arg(func, callee, index, where=None, path=None):
     enemies-not-allies variant of `J.GetNearbyHeroes`.  Matching is on the
     literal token, so a caller cannot accidentally select "whichever one comes
     first".
+
+    `arm` is for an argument a soak candidate has turned into a gated widening
+    (`bWide and 1200 or 700`): 'shipped' reads the ungated leg, 'armed' the
+    other.  Omitted -- the default -- such an argument is still refused, so a
+    threshold that quietly became computed cannot be read as though it were
+    still one number.
     """
     body = _strip_comments(function_body(func, path))
     hits = []
@@ -124,7 +155,7 @@ def call_arg(func, callee, index, where=None, path=None):
         raise SourceConstantError(
             '%s: expected exactly 1 matching call site, found %d%s'
             % (what, len(hits), '' if not hits else ' (%s)' % ', '.join(hits)))
-    return _num(hits[0], what)
+    return _num(hits[0], what, arm)
 
 
 def assignment(name, path=None):

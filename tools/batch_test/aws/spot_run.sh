@@ -170,7 +170,11 @@ EOF
 sleep 60   # let the first slots actually launch
 CAND_REF='$vref' bash /opt/dota2bot/tools/batch_test/soak/validate_onspot.sh \
     '$vcand' '$vseeds' '${vgames:-12}' '$S3_BUCKET' "\$RUN_ID" >> /var/log/validate.log 2>&1
-aws s3 cp /var/log/validate.log "s3://$S3_BUCKET/validation/${vcand}_\$(date +%Y%m%d_%H%M)_run.log" --quiet || true
+# [GH #167] same NAME_MAX collapse as the verdict object -- this basename is
+# only ~12 bytes shorter than that one, so it overflows one wave later, not
+# never.  One helper, so the two names cannot drift apart.
+LOGNAME=\$(bash /opt/dota2bot/tools/batch_test/soak/soak_name.sh '$vcand' "_\$(date +%Y%m%d_%H%M)_run.log")
+aws s3 cp /var/log/validate.log "s3://$S3_BUCKET/validation/\$LOGNAME" --quiet || true
 shutdown -h now
 EOF
     fi

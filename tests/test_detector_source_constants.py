@@ -438,12 +438,34 @@ import tp_channel_death as tpcd                    # noqa: E402
 
 WALK_GUARD_R = call_arg('J.ShouldWalkNotTp', 'J.GetNearbyHeroes',
                         index=1, where={2: 'true'})
+# [tpreach, GH #159] That scan is now a gated widening, `bWide and 1200 or 700`.
+# The detector mirrors the SHIPPED leg on purpose: `tpreach` is a soak candidate
+# that entered the test set at 2026-08-24T22:xxZ, AFTER W8 launched, so every
+# corpus in hand -- and every one in flight -- was produced with it unarmed.
+# The armed leg is pinned too, so that the day a wave arms `tpreach`, the
+# reading the detector owes that corpus is already written down here rather
+# than inferred from the Lua by whoever is reading the verdict.
 TP_SCAN_R = call_arg('J.CanEnemyInterruptTpChannel', 'J.GetNearbyHeroes',
-                     index=1, where={2: 'true'})
+                     index=1, where={2: 'true'}, arm='shipped')
+TP_SCAN_R_ARMED = call_arg('J.CanEnemyInterruptTpChannel', 'J.GetNearbyHeroes',
+                           index=1, where={2: 'true'}, arm='armed')
 eq('tp_channel_death.WALK_GUARD_RADIUS_U mirrors J.ShouldWalkNotTp',
    float(tpcd.WALK_GUARD_RADIUS_U), WALK_GUARD_R)
-eq('tp_channel_death.SCAN_RADIUS_U mirrors J.CanEnemyInterruptTpChannel',
+eq('tp_channel_death.SCAN_RADIUS_U mirrors the SHIPPED leg of J.CanEnemyInterruptTpChannel',
    float(tpcd.SCAN_RADIUS_U), TP_SCAN_R)
+check('arming tpreach can only WIDEN that scan, never narrow it',
+      TP_SCAN_R_ARMED > TP_SCAN_R,
+      '(shipped=%r armed=%r)' % (TP_SCAN_R, TP_SCAN_R_ARMED))
+# Omitting `arm=` must still refuse: a threshold that quietly became computed
+# is exactly what this module exists to fail loudly on, and the tpreach reading
+# above must not have relaxed that for everyone else.
+try:
+    call_arg('J.CanEnemyInterruptTpChannel', 'J.GetNearbyHeroes',
+             index=1, where={2: 'true'})
+    check('a gated widening is still refused without arm=', False)
+except SourceConstantError as exc:
+    check('a gated widening is still refused without arm=, and names the fix',
+          "arm='shipped'" in str(exc), str(exc))
 # The ally-refuge scan in ShouldWalkNotTp is the decoy: same callee, same
 # argument slot, `false` instead of `true`.  Without `where=` the walk guard's
 # on-face radius would silently read 600 and the gap would vanish on paper.

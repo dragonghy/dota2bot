@@ -5,7 +5,9 @@
 # locally (via soak_side + ab_version), reads the finished games back FROM S3
 # (the farm uploads each game to s3://<bucket>/soak/<run_id>/ and deletes it
 # locally, so we MUST read S3, not the local disk), computes the multi-seed
-# verdict, uploads it to s3://<bucket>/validation/<cand>_<stamp>.verdict.json,
+# verdict, uploads it to s3://<bucket>/validation/<name>_<stamp>.verdict.json
+# (<name> = the armed string, collapsed by soak_name.sh when it would overflow
+# NAME_MAX -- GH #167),
 # and the instance then self-terminates.
 #
 #   validate_onspot.sh <cand-id> "<seed1 seed2 ...>" <games-per-wave> <s3-bucket> <run-id>
@@ -123,8 +125,12 @@ v["suggested"]=("promote" if (g is not None and g>5 and rows and
 print(json.dumps(v,indent=1))
 PY
 cat "$OUT/verdict.json"
-aws s3 cp "$OUT/verdict.json" "s3://$BUCKET/validation/${CAND}_${STAMP_TS}.verdict.json" --quiet \
-  && echo "VERDICT_UPLOADED s3://$BUCKET/validation/${CAND}_${STAMP_TS}.verdict.json"
+# [GH #167] NAME_MAX: the armed string is monotonically growing and passed 255
+# bytes at 26 ids, which killed every `s3 cp --recursive validation/`.
+# soak_name.sh keeps short names verbatim and collapses only the long ones.
+VNAME=$(bash "$HERE/soak_name.sh" "$CAND" "_${STAMP_TS}.verdict.json") || exit 1
+aws s3 cp "$OUT/verdict.json" "s3://$BUCKET/validation/$VNAME" --quiet \
+  && echo "VERDICT_UPLOADED s3://$BUCKET/validation/$VNAME"
 printf "return { side = false, cand = false }\n" | sudo -u ubuntu tee "$REPO/bots/Customize/soak_side.lua" >/dev/null
 sudo rm -f /opt/soak/ab_version
 echo "VALIDATE_ONSPOT_DONE"

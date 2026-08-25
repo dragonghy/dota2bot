@@ -26,7 +26,7 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 - **`pulllane` 入集**(协同组 02:0xZ 提议,零 AWS 搭车)。**⚠️ arm 串约束成立且必须照办**:
   门是 `pullcamp` **and** `pulllane` 的合取(外层 `J.ShouldPullNeutralCamp` 在
-  `jmz_func.lua:7941` 早退于 `pullcamp`,新子句在 `8063` 门于 `pulllane`)。
+  `jmz_func.lua:8032` 早退于 `pullcamp`,新子句在 `8154` 门于 `pulllane`)。
   **两者都在成员串里 ⇒ 全集波自动同时 arm**;发隔离波时**必须两个一起写进 armed 串**,
   漏一个 = 逐字节 no-op 且**没有任何计数会报警**(§BA.2 那个形状)。
 - **`towerfear` 入集**(协同组 14:0xZ 提议,零 AWS 搭车)。门是**它自己那一条**
@@ -145,8 +145,8 @@ armed 后扫描半径 700 → **1200**(支配池内最宽 reach:sniper 带 Take 
 
 | 环节 | 源码 | 读数 |
 |---|---|---|
-| 外层函数早退 | `jmz_func.lua:7941` `if not J.IsSoakCandidate('pullcamp') then return nil end` | `pullcamp` **在成员串里、未 promote** ⇒ 可为真 |
-| 新子句门 | `jmz_func.lua:8063` `if J.IsSoakCandidate('pulllane') then` | 本裁定后在成员串里 ⇒ 可为真 |
+| 外层函数早退 | `jmz_func.lua:8032` `if not J.IsSoakCandidate('pullcamp') then return nil end` | `pullcamp` **在成员串里、未 promote** ⇒ 可为真 |
+| 新子句门 | `jmz_func.lua:8154` `if J.IsSoakCandidate('pulllane') then` | 本裁定后在成员串里 ⇒ 可为真 |
 | 合取项里有无已 promote 的 id | `grep` `pullcamp`/`pulllane`/`IsCampBesideLane` 全仓 | **无** —— `creeppull`/`pullbeat` 不出现在这条门的任何合取项里 |
 
 ⇒ **合取可以为真,§BA.2 的形状不适用。** 清单侧:`tests/test_pullcamp_lane_gap.lua`
