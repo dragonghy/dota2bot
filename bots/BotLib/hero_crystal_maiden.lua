@@ -262,10 +262,77 @@ function X.SkillsComplement()
 
 end
 
+--- Can the engine actually ACCEPT a cast order for Arcane Aura?
+---
+--- WHY THIS IS A QUESTION AT ALL (GH #177, axis `CASTSHAPE`).  Every other axis
+--- this desk opened asked what a number was worth.  This one asks whether the
+--- order the file writes is one the engine can take.  `bot:Action*_UseAbility`,
+--- `...OnEntity` and `...OnLocation` are three different orders and an
+--- ability's `AbilityBehavior` flags decide which of them it accepts --
+--- `DOTA_ABILITY_BEHAVIOR_PASSIVE` accepts none of them, ever.
+---
+--- `crystal_maiden_brilliance_aura` is declared
+--- `"AbilityBehavior" "DOTA_ABILITY_BEHAVIOR_PASSIVE"` in the game's own hero
+--- KV -- that one flag and nothing else.  So the `ActionQueue_UseAbility(
+--- ArcaneAura )` at the top of X.SkillsComplement is an order the engine cannot
+--- execute.  Census over all 128 shipped heroes: 11 such sites in 10 files, and
+--- this is the ONLY one in the focus five (tools/agent/cast_shape_census.py,
+--- frozen in tests/mock/ability_behavior.lua).
+---
+--- WHAT IT COSTS TODAY IS ZERO, AND THAT IS EXACTLY THE PROBLEM.  The branch is
+--- dead upstream of the order: `J.CanCastAbility` rejects on `ability:IsPassive()`
+--- before anything else.  So the whole reasoning rests on ONE engine predicate
+--- that cannot be read from here (AGENTS.md: no bot-side debugging; the mock
+--- answers false for every `Is*` it does not know, so offline agreement is not
+--- evidence).  And the cost of that predicate being false is not one wasted
+--- cast: this branch runs FIRST in X.SkillsComplement and `return`s, so a
+--- non-zero desire eats Crystal Nova, Frostbite, Crystal Clone AND Freezing
+--- Field for that tick, every tick CM is going on someone within 500 units.
+--- A silent dependency with that blast radius is worth converting into a fact.
+---
+--- NARROWING (soak candidate 'cmaurapassive', turbo-only).  The shipped read
+--- runs FIRST and `return false` is the only thing the armed path can add, so
+--- gate-off equivalence is STRUCTURAL, not measured -- the same shape as
+--- `lionhexaoe` (GH #166) and the dual of GH #154's widening.  Direction is
+--- single: armed can only ever refuse a cast the shipped code allowed.
+function X.IsArcaneAuraCastable()
+
+	if not J.CanCastAbility( ArcaneAura ) then return false end
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmaurapassive' )
+	and X.HasPassiveBehavior( ArcaneAura )
+	then
+		return false
+	end
+
+	return true
+
+end
+
+--- Does this ability carry DOTA_ABILITY_BEHAVIOR_PASSIVE in its behavior mask?
+---
+--- A behavior of 0, or a constant this VM does not define, means "we could not
+--- read it" -- answer false and let the shipped predicate stand.  Inventing a
+--- default here would be the mistake GH #162 wrote down: a silent zero is not
+--- a value, and a guard built on one is a guard built on nothing.
+function X.HasPassiveBehavior( hAbility )
+
+	if hAbility == nil then return false end
+
+	local nFlag = DOTA_ABILITY_BEHAVIOR_PASSIVE
+	if type( nFlag ) ~= 'number' or nFlag <= 0 then return false end
+
+	local nBehavior = hAbility:GetBehavior()
+	if type( nBehavior ) ~= 'number' or nBehavior <= 0 then return false end
+
+	return bit.band( nBehavior, nFlag ) == nFlag
+
+end
+
 function X.ConsiderArcaneAura()
 	--进攻
 	if J.IsGoingOnSomeone( bot )
-	and J.CanCastAbility(ArcaneAura)
+	and X.IsArcaneAuraCastable()
 	then
 		local npcTarget = J.GetProperTarget( bot )
 		if J.IsValidHero( npcTarget )

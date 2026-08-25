@@ -548,6 +548,18 @@
         "ref": "test_set.md §BE",
         "note": "总监自提自批（owner P3 / GH #108 的验收棒）。**零 AWS 增量支出**：不申请专波，搭下一波的顺风车；总监本轮零 AWS 调用、未批准任何新支出。排在 `wave: next` 而不是某个编号，是因为它对波次内容没有要求 —— 界后第一波是什么由你们按自己的优先级定，本条只搭车。"
       }
+    },
+    {
+      "id": "hero-17",
+      "stream": "hero",
+      "bundle": "cmaurapassive",
+      "seeds": [],
+      "priority": 3,
+      "question": "GH #177。**归档 .dem 扫描,零 EC2,不申请专波**(只要 Crystal Maiden 帧,可与任何已排期的归档扫描搭车)。新 gated id `cmaurapassive`(state.json:cmaurapassive_20260825)要买的是**域**,不是效应,而且这一条的域问题比前几轮**更靠前**:先问「这条分支在真实对局里到底开不开火」。机制桌面已证、无需引擎:`crystal_maiden_brilliance_aura` 的 KV 行为位是**一个** —— `DOTA_ABILITY_BEHAVIOR_PASSIVE`,而被动技能**任何形状的施法指令都不可能被引擎执行**;`hero_crystal_maiden.lua` 的 `X.SkillsComplement` **第一条分支**就是 `bot:ActionQueue_UseAbility( ArcaneAura )` 后面跟一个 `return`。**今天的代价是零 —— 而这正是问题**:整条「它已经死了」的判断只压在**一个引擎谓词** `ability:IsPassive()` 上,而那个谓词在桌面上读不到(真实 CM 帧上 `IsPassive()` 读 **false**、`GetBehavior()` 读 **0**,`J.CanCastAbility` 为 false 的真实原因是 `IsActivated()` 这个 mock 默认值,与被动性无关 —— **两边一致是巧合,已在测试里写明不得当作佐证**)。若该谓词在引擎里为 false,代价不是浪费一次施法:这条分支跑在最前且 `return`,**每一个 CM 处于 IsGoingOnSomeone 且 500 距离内有目标的 tick,新星 / 冰封禁制 / 冰晶分身 / 极寒领域四条一起被吃掉**。",
+      "axis": "CASTSHAPE -- tooling/corpus scan;零 EC2、零新局,只读归档录像",
+      "acceptance": "**判据开工前登记,免得读数回来再挑切法**。(1) **载体分母**:语料里含 Crystal Maiden 的局数与 CM 帧数;(2) **上游域**:CM 处于进攻姿态(`IsGoingOnSomeone` 的可观测代理:有攻击目标 / 3s 内对敌方英雄造成过伤害)**且** 500u 内有合法敌方英雄的帧数 —— 这是出厂分支今天**至多**能到达的帧的上界;(3) **签名帧**:(2) 的帧里,CM 当前**有一条本该开火的技能就绪且蓝够**(新星 / 冰封禁制 / 极寒领域,按 KV 蓝耗 115-175 / 125-155 / 200-400-600 与该帧等级判)**但接下来 1.0s 内一条都没放**的占比 —— 这一格就是「分支吃掉了这个 tick」的行为签名,armed 与出厂唯一可能分歧的域;(4) 一个**对照读数**:同一份语料里其它四个焦点英雄在同样姿态下的同一签名占比 —— CM 若不显著高于对照,说明签名来自别处(上游还有 `J.CanNotUseAbility` / `IsInvisible` / `ConsiderCombo` 三条更早的分支),**回去重诊断而不是买波次**。(5) 按铁律 4(i) **ab / ba 两层分开报**,按 (ii) 计数类**报均值 + 占比,不报中位数**。**预登记的反向读法,写死免得事后挑**:(a) 若 (3) 读 **0 或与对照持平**,**正确结论是引擎的 `IsPassive()` 确实为真、这条分支确实是死的** ⇒ **直接不入集、不买波次**,把结论写回 GH #177 并把 id 标成 CONFIRMED-DEAD(这是本申请**最有价值的可能结局**,不是失败);(b) 若 (3) 明显高于对照,那么 armed 腿是在**恢复**四条技能的调度权,效应量应该在「CM 每分钟施法次数」上,而**不是**在经济上 —— 别用 gpm 判;(c) 若 (2) 本身读 0,先问一句是不是姿态代理选错了(`IsGoingOnSomeone` 不可从 .dem 直接读),再谈域。**比域更便宜的一条棒同时交给 harness**:让 `tests/mock/replay_fixture.lua` 从 `tests/mock/ability_behavior.lua` 给每个 fixture 技能补上 KV 行为位(与 `ability_meta.lua` 给「是不是大招」补位完全同型,GH #36)—— 这一步一旦落地,**整条 CASTSHAPE 轴就从「只能造假句柄」变成 fixture 可判**,本申请的 (3) 也就有了离线对照。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

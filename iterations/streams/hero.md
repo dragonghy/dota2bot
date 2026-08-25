@@ -22,6 +22,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-11. ~~**GH #177:CM 的调度第一条分支给一个被动技能下施法指令**~~
+   **2026-08-25T10:58Z done —— gated `cmaurapassive`(turbo-only,未 armed,不申请入集,
+   先买域 `hero-17`);稳定版未漂移;零 AWS。** 新轴 **`CASTSHAPE`**。
+   前五轮问的都是**一个数值值多少**;这一轮问的是 **文件写下的施法指令,引擎接不接得住**。
+   `Action*_UseAbility` / `...OnEntity` / `...OnLocation` 是三条**不同**的指令,
+   `AbilityBehavior` 位决定接哪一条,而 `DOTA_ABILITY_BEHAVIOR_PASSIVE` **一条都不接**;
+   形状错了**不报错**(AGENTS.md),**只是不发生** —— 而发它的分支通常带 `return`。
+   - **⭐ 值钱的不是「有一处错」,是「今天代价为零」这件事本身**:该分支在**上游**就死了
+     (`J.CanCastAbility` 的 `ability:IsPassive()`)⇒ 整条判断**只压在一个桌面读不到的
+     引擎谓词上**;而它为假的代价**不是浪费一次施法** —— 这条分支跑在**最前**且 `return`,
+     ⇒ **每个 CM 处于进攻姿态、500u 内有目标的 tick,新星/冰封禁制/冰晶分身/极寒领域
+     四条一起被吃掉**。有这个爆炸半径的静默依赖,值得从「推断」变成「事实」。
+   - **新工具 `tools/agent/cast_shape_census.py` + 冻结快照 `tests/mock/ability_behavior.lua`**
+     (每英雄一次 GET,零 AWS;测试不上网)。**755 条施法指令 / 493 条可解析 /
+     11 处 PASSIVE-DISPATCH 散在 10 个文件,焦点五里恰好 1 处**;
+     另有 22 处 SHAPE-MISMATCH(**故意判得更弱**:`ALT_CASTABLE`/`AUTOCAST`/facet 覆盖
+     让「位里没有这个形状」≠「引擎不接」)、6 处 NO-KV(**不是证明**)。
+   - **⚠️ 这次的「看不见」比 #162 更要紧**:262 条句柄走 `sAbilityList[N]`/天赋表 ⇒ UNRESOLVED,
+     而**焦点五 15 条施法指令里 12 条正是这样 —— axe/zuus/lion 一条字面量绑定都没有,
+     对本普查结构性不可见**。「焦点五恰好一处」是**下界不是体检合格**,已写成断言。
+   - **只修焦点五那一处**,helper `X.IsArcaneAuraCastable`:出厂谓词是**第一句**且自己
+     `return false` ⇒ gate-off **结构性等价**(`lionhexaoe` 形状,#154 放宽形状的对偶);
+     **方向单一**(armed 只有一个出口 `false`,按 `return true` 处数钉住);
+     行为位读 0 或常量缺失 ⇒ **落回出厂**不发明 flag 值(#162 规矩)。
+     **有意没做**:① 不删死分支(删死代码是另一个方向的清扫,#170 同样处置);
+     ② 其余 10 处不碰(九个非焦点英雄,各自要各自的 id,#168)。
+   - **⚠ LIMIT 全是量出来的**(承重帧 `f_260820_102645_cm_laning_release` t=556.5):
+     `IsPassive()` 离线读 **false**(**整条判断赖以成立的谓词读反**)、`GetBehavior()` 读 **0**
+     (⇒ armed 腿离线也开不了火)、`J.CanCastAbility` 为 false 的**真实原因是 `IsActivated()`**
+     这个 mock 默认值(#133/#145 族)⇒ **两边一致是巧合,写死了不得当作佐证**。
+   - **⭐ 三条必读的教训**:① **一个 mock 默认值悄悄声明了世界事实并把正确实现判红** ——
+     `bot_api.lua` 给不认识的 ALL_CAPS 全局发**顺序整数**⇒ mock 的 `DOTA_ABILITY_BEHAVIOR_*`
+     **不是互不相交的 2 的幂**,`band(NO_TARGET, PASSIVE) == PASSIVE` 读出 **true**;
+     造反例要用 `bnot` **清位**,不能点另一个 flag 的名字。
+     ② **逃逸先复核语义再改测试**:`== f` → `~= 0` 逃逸,复核确认 PASSIVE 是**单个 bit**
+     ⇒ 真 no-op。③ **源码棘轮钉结构不钉拼写**:对照变异(纯改名)第一版被抓住,
+     因为断言点了局部变量名 —— 已改成数守卫处数。
+   - **顺手修的工具 bug(记下来免得重踩)**:KV 解析器沿用「`{` 独占一行」的写法在
+     brewmaster 上**失步并静默丢掉该文件后面全部技能**(`brewmaster_liquid_courage`
+     明明在文件里、下一行就写着 PASSIVE)。改成逐行数括号后计数 10 → 11。
+     **一个会对文件后半段静默沉默的解析器比会报错的更坏 —— 普查读起来像「那里没东西」。**
+   - **下一棒已交**:queue **`hero-17`**(归档扫描、零 EC2、只要 CM 帧,可搭车),
+     **预登记了最有价值的可能结局**:签名帧读 0 或与对照持平 ⇒ **正确结论是引擎的
+     `IsPassive()` 确实为真、分支确实是死的** ⇒ **直接不入集别买波次**,标 CONFIRMED-DEAD;
+     **那不是失败**。另有一条更便宜、归 harness 的棒:让 `replay_fixture.lua` 从
+     `ability_behavior.lua` 给 fixture 技能补行为位(与 `ability_meta.lua` 补「是不是大招」
+     完全同型,GH #36)⇒ **整条 `CASTSHAPE` 轴从「只能造假句柄」变成 fixture 可判**。
+
 -10. ~~**GH #175:`GetAbilityDamage()` 读的是技能顶层 `AbilityDamage`,58 处读数里 46 处可证为 0**~~
    **2026-08-25T07:49Z done —— gated `zusboltcap`(turbo-only,未 armed,不申请入集,
    先买域 `hero-16`);稳定版未漂移;零 AWS。** 新轴 **`0DMG`**。
@@ -1173,6 +1221,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T10:58Z(报告 `iterations/reports/hero/20260825T105832Z.md`;**自选,GH #177 已开**
+  —— 自检无 OFF-TRUNK(只有各组都有的 cadence 洞);owner P1/P2 球在协同组、P3 在总监 ⇒
+  本组无优先项;open 的 `[hero]` issue 仍**一条都不可在桌面推进**(#136/#150/#151/#154/#162/
+  #170/#173/#175 的下一棒全是 queue 归档扫描或归 harness;#165/#166 是本组刚做完的)。
+  新 gated id **`cmaurapassive`**(turbo-only,**未 armed**,**不申请入集,先买域** `hero-17`);
+  登记 `state.json:cmaurapassive_20260825`;backlog 新增 §-11;**稳定版未漂移**;零 AWS。
+  **刻意换轴**:前五轮问的都是**一个数值值多少**(常数 / 被改名的 key / 槽位 / 表的维度 /
+  一个 API 调用读哪个字段),这一轮换成问 **文件写下的施法指令,引擎接不接得住**):
+  **`Action*_UseAbility` / `...OnEntity` / `...OnLocation` 是三条不同的指令,
+  `AbilityBehavior` 位决定接哪一条,而 `DOTA_ABILITY_BEHAVIOR_PASSIVE` 一条都不接;
+  `hero_crystal_maiden.lua` 的调度第一条分支正是给一个被动技能下 `UseAbility` 再 `return`。**
+  - **⭐ 值钱的不是「有一处错」,是「今天代价为零」这件事本身**:分支在上游就死了
+    (`J.CanCastAbility` 的 `IsPassive()`)⇒ **整条判断只压在一个桌面读不到的引擎谓词上**;
+    它为假的代价**不是浪费一次施法** —— 分支跑在**最前**且 `return` ⇒
+    **每个符合条件的 tick 里新星/冰封禁制/冰晶分身/极寒领域四条一起被吃掉**。
+  - **新工具 `cast_shape_census.py` + 冻结快照 `tests/mock/ability_behavior.lua`**:
+    **755 条施法指令 / 493 可解析 / 11 处 PASSIVE-DISPATCH(10 个文件),焦点五恰好 1 处**;
+    22 处 SHAPE-MISMATCH **故意判得更弱**;**262 处 UNRESOLVED,其中焦点五 15 条里占 12 条 ——
+    axe/zuus/lion 一条字面量绑定都没有,对本普查结构性不可见** ⇒ 「恰好一处」是**下界**。
+  - **改动形状**:出厂谓词是**第一句**且自己 `return false` ⇒ gate-off **结构性等价**;
+    **方向单一**(armed 唯一出口 `false`,按 `return true` 处数钉住);
+    行为位读 0 或常量缺失 ⇒ 落回出厂**不发明 flag 值**(#162)。**有意没删死分支**(#170 处置)。
+  - **⚠ LIMIT 量出来的**:真实 CM 帧上 `IsPassive()` 读 **false**、`GetBehavior()` 读 **0**、
+    `CanCastAbility` 为 false 的**真因是 `IsActivated()`**(mock 默认值,#133/#145 族)
+    ⇒ **两边一致是巧合,不得当作佐证**。
+  - 测试 `tests/test_cm_arcane_aura_passive.lua`:16 例,**变异 8 次 6 抓 + 2 条声明的逃逸**。
+    **⭐ 一个 mock 默认值把正确实现判红**:`bot_api.lua` 给不认识的 ALL_CAPS 全局发**顺序整数**
+    ⇒ mock 的 `DOTA_ABILITY_BEHAVIOR_*` **不是互不相交的 2 的幂**,
+    `band(NO_TARGET, PASSIVE) == PASSIVE` 读出 true;**造反例要 `bnot` 清位,别点另一个 flag 的名字**。
+    另两条:**逃逸先复核语义**(`== f`→`~= 0` 是真 no-op,PASSIVE 是单个 bit);
+    **源码棘轮钉结构不钉拼写**(对照变异纯改名被抓,已把断言改成数守卫处数)。
+  - **顺手修的工具 bug**:KV 解析器「`{` 独占一行」的写法在 brewmaster 上**失步并静默丢掉
+    该文件后面全部技能**(计数 10 → 11)。**会对文件后半段静默沉默的解析器比会报错的更坏。**
 - 2026-08-25T07:49Z(报告 `iterations/reports/hero/20260825T074901Z.md`;**自选,GH #175 已开**
   —— 自检无 OFF-TRUNK(只有各组都有的 cadence 洞);owner P1/P2 球在协同组、P3 在总监 ⇒
   本组无优先项;open 的 `[hero]` issue 仍**一条都不可在桌面推进**(#136 卡 `hero-6`;
