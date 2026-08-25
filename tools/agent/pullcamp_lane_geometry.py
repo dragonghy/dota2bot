@@ -174,6 +174,38 @@ def line_intersection(p1, p2, p3, p4):
     return (p1[0] + d1x * t, p1[1] + d1y * t)
 
 
+def corner_vertex(lane):
+    """The bend where a side lane turns, or None for a lane that has none.
+
+    Parameter-free: the intersection of the two straight tower stretches that
+    meet at the bend (radiant tier2->tier1 and dire tier1->tier2).  Two lines
+    always meet somewhere, so the intersection alone proves nothing -- an
+    essentially straight lane produces a meeting point somewhere in the MIDDLE
+    of itself.  The test is therefore geometric rather than a tolerance: a real
+    map corner lies FARTHER from the map centre than both tier-1s it joins,
+    because it is the OUTSIDE of the turn.  On mid the solution lands between
+    the towers and is rejected.
+
+    [20260825] This replaces an `abs(x) < 9000 and abs(y) < 9000` box, which
+    admitted the mid-lane solution at (1364, 1274) and inserted a spurious
+    vertex that made the corner-restored mid polyline double back on itself.
+    It was HARMLESS for every reading in this file -- the extra segments lie
+    along the mid lane, so a min-distance-to-lane reading is unchanged, and the
+    cross-check prints the camps moving 0-1u either way.  It is NOT harmless for
+    a reader that wants the lane's TANGENT (tools/agent/lane_drag_direction.py),
+    where a doubled-back vertex reverses the direction outright.
+    """
+    r = LANE_TOWERS[(RADIANT, lane)]
+    d = LANE_TOWERS[(DIRE, lane)]
+    v = line_intersection(r[1], r[2], d[0], d[1])
+    if v is None:
+        return None
+    norm = lambda p: math.hypot(p[0], p[1])  # noqa: E731
+    if norm(v) > norm(r[2]) and norm(v) > norm(d[0]):
+        return v
+    return None
+
+
 def lane_paths(towers, ancients, corners=False):
     """The three lane polylines, radiant ancient -> dire ancient.
 
@@ -209,10 +241,8 @@ def lane_paths(towers, ancients, corners=False):
         d = LANE_TOWERS[(DIRE, lane)]              # t1, t2, t3 (inward)
         mid = []
         if corners:
-            v = line_intersection(r[1], r[2], d[0], d[1])
-            # Mid lane is essentially straight: its "corner" solves far off the
-            # map, and forcing a vertex there would bend a lane that has no bend.
-            if v is not None and abs(v[0]) < 9000 and abs(v[1]) < 9000:
+            v = corner_vertex(lane)
+            if v is not None:
                 mid = [v]
         paths[lane] = [ancients[RADIANT]] + r + mid + d + [ancients[DIRE]]
     return paths
