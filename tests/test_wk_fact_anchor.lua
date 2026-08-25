@@ -349,7 +349,15 @@ local STRUCTURAL_CENSUS = {
     chaos_knight = 1,      -- bIgnoreMagicImmune = talent6:IsTrained()
     legion_commander = 2,  -- picks UseAbilityOnLocation vs UseAbilityOnEntity
     lich = 2,              -- gates the repair-buildings and heal-ally branches
-    lion = 14,             -- talent8 (t25) throughout Hex/Finger targeting
+    -- 2026-08-25, hero group: 14 -> 1.  NOT a removal.  GH #166 routed all
+    -- fifteen `talent8` call sites through one predicate, `X.IsHexAoe()`, so the
+    -- structural read that used to be repeated at every site now happens once,
+    -- at hero_lion.lua:1258.  The behaviour census is unchanged -- the same
+    -- decisions still hang off the same t25 handle, they just read it in one
+    -- place.  (This line was red on main from 22:30Z 08-24 until it was noticed
+    -- here: the census is a drift alarm, and #166 was exactly the drift it is
+    -- for.)
+    lion = 1,              -- talent8 (t25), read once inside X.IsHexAoe()
     skeleton_king = 2,     -- the two X.ConsiderW release disjuncts
     warlock = 2,           -- one of them is `talent6:IsTrained() and false`
     zuus = 1,              -- picks UseAbilityOnLocation vs UseAbilityOnEntity

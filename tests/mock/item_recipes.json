@@ -1,0 +1,1086 @@
+{
+"_note": "regenerate: python3 tools/agent/sell_pair_census.py --snapshot",
+"_source": "https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json",
+"names": [
+"item_abyssal_blade",
+"item_aegis",
+"item_aeon_disk",
+"item_aether_lens",
+"item_aghanims_shard",
+"item_aghanims_shard_roshan",
+"item_ancient_guardian",
+"item_ancient_janggo",
+"item_angels_demise",
+"item_apex",
+"item_arcane_blink",
+"item_arcane_boots",
+"item_arcane_ring",
+"item_armlet",
+"item_ascetic_cap",
+"item_ash_legion_shield",
+"item_assault",
+"item_avianas_feather",
+"item_ballista",
+"item_basher",
+"item_belt_of_strength",
+"item_bfury",
+"item_black_grimoire",
+"item_black_king_bar",
+"item_black_powder_bag",
+"item_blade_mail",
+"item_blade_of_alacrity",
+"item_blades_of_attack",
+"item_blight_stone",
+"item_blink",
+"item_blitz_knuckles",
+"item_blood_grenade",
+"item_bloodstone",
+"item_bloodthorn",
+"item_book_of_shadows",
+"item_boots",
+"item_boots_of_bearing",
+"item_boots_of_elves",
+"item_bottle",
+"item_bottomless_chalice",
+"item_bracer",
+"item_branches",
+"item_broadsword",
+"item_broom_handle",
+"item_buckler",
+"item_bullwhip",
+"item_butterfly",
+"item_caster_rapier",
+"item_ceremonial_robe",
+"item_chainmail",
+"item_chasm_stone",
+"item_cheese",
+"item_chipped_vest",
+"item_circlet",
+"item_clarity",
+"item_claymore",
+"item_cloak",
+"item_cloak_of_flames",
+"item_clumsy_net",
+"item_conjurers_catalyst",
+"item_consecrated_wraps",
+"item_cornucopia",
+"item_courier",
+"item_craggy_coat",
+"item_crellas_crozier",
+"item_crimson_guard",
+"item_crippling_crossbow",
+"item_crown",
+"item_cyclone",
+"item_dagger_of_ristul",
+"item_dagon",
+"item_dagon_2",
+"item_dagon_3",
+"item_dagon_4",
+"item_dagon_5",
+"item_dandelion_amulet",
+"item_defiant_shell",
+"item_demon_edge",
+"item_demonicon",
+"item_desolator",
+"item_desolator_2",
+"item_devastator",
+"item_dezun_bloodrite",
+"item_diadem",
+"item_diffusal_blade",
+"item_diffusal_blade_2",
+"item_disperser",
+"item_divine_regalia",
+"item_divine_regalia_broken",
+"item_dormant_curio",
+"item_doubloon",
+"item_dragon_lance",
+"item_dragon_scale",
+"item_duelist_gloves",
+"item_dust",
+"item_eagle",
+"item_echo_sabre",
+"item_eldwurms_edda",
+"item_elixer",
+"item_elven_tunic",
+"item_enchanted_mango",
+"item_enchanted_quiver",
+"item_enchanters_bauble",
+"item_energy_booster",
+"item_enhancement_alert",
+"item_enhancement_audacious",
+"item_enhancement_boundless",
+"item_enhancement_brawny",
+"item_enhancement_crude",
+"item_enhancement_curious",
+"item_enhancement_dominant",
+"item_enhancement_evolved",
+"item_enhancement_feverish",
+"item_enhancement_fierce",
+"item_enhancement_fleetfooted",
+"item_enhancement_greedy",
+"item_enhancement_hulking",
+"item_enhancement_keen_eyed",
+"item_enhancement_manic",
+"item_enhancement_mystical",
+"item_enhancement_nimble",
+"item_enhancement_quickened",
+"item_enhancement_restorative",
+"item_enhancement_thick",
+"item_enhancement_timeless",
+"item_enhancement_titanic",
+"item_enhancement_tough",
+"item_enhancement_vampiric",
+"item_enhancement_vast",
+"item_enhancement_vital",
+"item_enhancement_wise",
+"item_essence_distiller",
+"item_essence_ring",
+"item_eternal_shroud",
+"item_ethereal_blade",
+"item_ex_machina",
+"item_eye_of_the_vizier",
+"item_faded_broach",
+"item_faerie_fire",
+"item_falcon_blade",
+"item_fallen_sky",
+"item_famango",
+"item_flask",
+"item_flayers_bota",
+"item_flicker",
+"item_fluffy_hat",
+"item_flying_courier",
+"item_foragers_health",
+"item_foragers_kit",
+"item_foragers_mana",
+"item_foragers_stats",
+"item_force_boots",
+"item_force_field",
+"item_force_staff",
+"item_furion_gold_bag",
+"item_fusion_rune",
+"item_gale_guard",
+"item_gauntlets",
+"item_gem",
+"item_ghost",
+"item_giant_maul",
+"item_giants_ring",
+"item_glimmer_cape",
+"item_gloves",
+"item_gossamer_cape",
+"item_great_famango",
+"item_greater_crit",
+"item_greater_faerie_fire",
+"item_greater_famango",
+"item_greater_mango",
+"item_grisgris",
+"item_grove_bow",
+"item_guardian_greaves",
+"item_gungir",
+"item_gunpowder_gauntlets",
+"item_hand_of_midas",
+"item_harmonizer",
+"item_harpoon",
+"item_havoc_hammer",
+"item_headdress",
+"item_heart",
+"item_heavens_halberd",
+"item_heavy_blade",
+"item_helm_of_iron_will",
+"item_helm_of_the_dominator",
+"item_helm_of_the_overlord",
+"item_helm_of_the_undying",
+"item_holy_locket",
+"item_hood_of_defiance",
+"item_horizon",
+"item_hurricane_pike",
+"item_hydras_breath",
+"item_hyperstone",
+"item_idol_of_screeauk",
+"item_illusionsts_cape",
+"item_imp_claw",
+"item_infused_raindrop",
+"item_invis_sword",
+"item_iron_talon",
+"item_ironwood_tree",
+"item_javelin",
+"item_jidi_pollen_bag",
+"item_kaya",
+"item_kaya_and_sange",
+"item_keen_optic",
+"item_kobold_cup",
+"item_lance_of_pursuit",
+"item_lesser_crit",
+"item_lifesteal",
+"item_light_collector",
+"item_lotus_orb",
+"item_madstone_bundle",
+"item_maelstrom",
+"item_mage_slayer",
+"item_magic_stick",
+"item_magic_wand",
+"item_magnifying_monocle",
+"item_mana_draught",
+"item_mango_tree",
+"item_manta",
+"item_mantle",
+"item_martyrs_plate",
+"item_mask_of_madness",
+"item_mechanical_arm",
+"item_medallion_of_courage",
+"item_mekansm",
+"item_metamorphic_mandible",
+"item_meteor_hammer",
+"item_mind_breaker",
+"item_miniboss_minion_summoner",
+"item_minotaur_horn",
+"item_mirror_shield",
+"item_misericorde",
+"item_mithril_hammer",
+"item_mjollnir",
+"item_monkey_king_bar",
+"item_moon_shard",
+"item_muertas_gun",
+"item_mutation_tombstone",
+"item_mysterious_hat",
+"item_mystic_staff",
+"item_necronomicon",
+"item_necronomicon_2",
+"item_necronomicon_3",
+"item_nemesis_curse",
+"item_nether_shawl",
+"item_ninja_gear",
+"item_null_talisman",
+"item_nullifier",
+"item_oblivion_staff",
+"item_occult_bracelet",
+"item_ocean_heart",
+"item_octarine_core",
+"item_ofrenda",
+"item_ofrenda_pledge",
+"item_ofrenda_shovel",
+"item_ogre_axe",
+"item_ogre_seal_totem",
+"item_orb_of_corrosion",
+"item_orb_of_destruction",
+"item_orb_of_frost",
+"item_orb_of_venom",
+"item_orchid",
+"item_outworld_staff",
+"item_overwhelming_blink",
+"item_paintball",
+"item_paladin_sword",
+"item_panic_button",
+"item_partisans_brand",
+"item_pavise",
+"item_penta_edged_sword",
+"item_pers",
+"item_phase_boots",
+"item_philosophers_stone",
+"item_phoenix_ash",
+"item_phylactery",
+"item_pipe",
+"item_pirate_hat",
+"item_platemail",
+"item_pocket_roshan",
+"item_pocket_tower",
+"item_pogo_stick",
+"item_point_booster",
+"item_polliwog_charm",
+"item_poor_mans_shield",
+"item_possessed_mask",
+"item_power_treads",
+"item_princes_knife",
+"item_prophets_pendulum",
+"item_psychic_headband",
+"item_pupils_gift",
+"item_pyrrhic_cloak",
+"item_quarterstaff",
+"item_quelling_blade",
+"item_quickening_charm",
+"item_quicksilver_amulet",
+"item_radiance",
+"item_rapier",
+"item_rattlecage",
+"item_reaver",
+"item_recipe_abyssal_blade",
+"item_recipe_aeon_disk",
+"item_recipe_aether_lens",
+"item_recipe_ancient_janggo",
+"item_recipe_angels_demise",
+"item_recipe_arcane_blink",
+"item_recipe_arcane_boots",
+"item_recipe_armlet",
+"item_recipe_assault",
+"item_recipe_basher",
+"item_recipe_bfury",
+"item_recipe_black_king_bar",
+"item_recipe_blade_mail",
+"item_recipe_bloodstone",
+"item_recipe_bloodthorn",
+"item_recipe_boots_of_bearing",
+"item_recipe_bracer",
+"item_recipe_buckler",
+"item_recipe_butterfly",
+"item_recipe_consecrated_wraps",
+"item_recipe_crellas_crozier",
+"item_recipe_crimson_guard",
+"item_recipe_cyclone",
+"item_recipe_dagon",
+"item_recipe_dagon_2",
+"item_recipe_dagon_3",
+"item_recipe_dagon_4",
+"item_recipe_dagon_5",
+"item_recipe_desolator",
+"item_recipe_devastator",
+"item_recipe_diffusal_blade",
+"item_recipe_disperser",
+"item_recipe_dragon_lance",
+"item_recipe_echo_sabre",
+"item_recipe_essence_distiller",
+"item_recipe_eternal_shroud",
+"item_recipe_ethereal_blade",
+"item_recipe_falcon_blade",
+"item_recipe_fallen_sky",
+"item_recipe_force_staff",
+"item_recipe_glimmer_cape",
+"item_recipe_great_famango",
+"item_recipe_greater_crit",
+"item_recipe_greater_famango",
+"item_recipe_guardian_greaves",
+"item_recipe_gungir",
+"item_recipe_hand_of_midas",
+"item_recipe_harpoon",
+"item_recipe_headdress",
+"item_recipe_heart",
+"item_recipe_heavens_halberd",
+"item_recipe_helm_of_the_dominator",
+"item_recipe_helm_of_the_overlord",
+"item_recipe_holy_locket",
+"item_recipe_hood_of_defiance",
+"item_recipe_hurricane_pike",
+"item_recipe_hydras_breath",
+"item_recipe_invis_sword",
+"item_recipe_iron_talon",
+"item_recipe_kaya",
+"item_recipe_kaya_and_sange",
+"item_recipe_lesser_crit",
+"item_recipe_lotus_orb",
+"item_recipe_maelstrom",
+"item_recipe_mage_slayer",
+"item_recipe_magic_wand",
+"item_recipe_manta",
+"item_recipe_mask_of_madness",
+"item_recipe_medallion_of_courage",
+"item_recipe_mekansm",
+"item_recipe_meteor_hammer",
+"item_recipe_mjollnir",
+"item_recipe_monkey_king_bar",
+"item_recipe_moon_shard",
+"item_recipe_necronomicon",
+"item_recipe_necronomicon_2",
+"item_recipe_necronomicon_3",
+"item_recipe_null_talisman",
+"item_recipe_nullifier",
+"item_recipe_oblivion_staff",
+"item_recipe_octarine_core",
+"item_recipe_orb_of_corrosion",
+"item_recipe_orchid",
+"item_recipe_overwhelming_blink",
+"item_recipe_pavise",
+"item_recipe_pers",
+"item_recipe_phase_boots",
+"item_recipe_phylactery",
+"item_recipe_pipe",
+"item_recipe_poor_mans_shield",
+"item_recipe_power_treads",
+"item_recipe_radiance",
+"item_recipe_rapier",
+"item_recipe_refresher",
+"item_recipe_revenants_brooch",
+"item_recipe_ring_of_aquila",
+"item_recipe_ring_of_basilius",
+"item_recipe_rod_of_atos",
+"item_recipe_sange",
+"item_recipe_sange_and_yasha",
+"item_recipe_satanic",
+"item_recipe_sheepstick",
+"item_recipe_shivas_guard",
+"item_recipe_silver_edge",
+"item_recipe_skadi",
+"item_recipe_solar_crest",
+"item_recipe_soul_booster",
+"item_recipe_soul_ring",
+"item_recipe_specialists_array",
+"item_recipe_sphere",
+"item_recipe_spirit_vessel",
+"item_recipe_swift_blink",
+"item_recipe_tranquil_boots",
+"item_recipe_travel_boots",
+"item_recipe_travel_boots_2",
+"item_recipe_trident",
+"item_recipe_ultimate_scepter",
+"item_recipe_ultimate_scepter_2",
+"item_recipe_urn_of_shadows",
+"item_recipe_vanguard",
+"item_recipe_veil_of_discord",
+"item_recipe_vladmir",
+"item_recipe_ward_dispenser",
+"item_recipe_wind_waker",
+"item_recipe_witch_blade",
+"item_recipe_wraith_band",
+"item_recipe_wraith_pact",
+"item_recipe_yasha",
+"item_recipe_yasha_and_kaya",
+"item_refresher",
+"item_refresher_shard",
+"item_relic",
+"item_repair_kit",
+"item_revenants_brooch",
+"item_riftshadow_prism",
+"item_ring_of_aquila",
+"item_ring_of_basilius",
+"item_ring_of_health",
+"item_ring_of_protection",
+"item_ring_of_regen",
+"item_ring_of_tarrasque",
+"item_rippers_lash",
+"item_river_painter",
+"item_river_painter2",
+"item_river_painter3",
+"item_river_painter4",
+"item_river_painter5",
+"item_river_painter6",
+"item_river_painter7",
+"item_robe",
+"item_rod_of_atos",
+"item_roshans_banner",
+"item_royal_jelly",
+"item_royale_with_cheese",
+"item_safety_bubble",
+"item_sange",
+"item_sange_and_yasha",
+"item_satanic",
+"item_searing_signet",
+"item_seeds_of_serenity",
+"item_seer_stone",
+"item_serrated_shiv",
+"item_shadow_amulet",
+"item_shawl",
+"item_sheepstick",
+"item_shivas_guard",
+"item_silver_edge",
+"item_sisters_shroud",
+"item_skadi",
+"item_slippers",
+"item_smoke_of_deceit",
+"item_sobi_mask",
+"item_solar_crest",
+"item_soul_booster",
+"item_soul_ring",
+"item_spark_of_courage",
+"item_specialists_array",
+"item_spell_prism",
+"item_spellslinger",
+"item_sphere",
+"item_spider_legs",
+"item_spirit_vessel",
+"item_splintmail",
+"item_spy_gadget",
+"item_staff_of_wizardry",
+"item_stonefeather_satchel",
+"item_stormcrafter",
+"item_stout_shield",
+"item_super_blink",
+"item_swift_blink",
+"item_talisman_of_evasion",
+"item_tango",
+"item_tango_single",
+"item_the_leveller",
+"item_third_eye",
+"item_tiara_of_selemene",
+"item_tidehunter_fish",
+"item_tier1_token",
+"item_tier2_token",
+"item_tier3_token",
+"item_tier4_token",
+"item_tier5_token",
+"item_timeless_relic",
+"item_titan_sliver",
+"item_tome_of_aghanim",
+"item_tome_of_knowledge",
+"item_tpscroll",
+"item_tranquil_boots",
+"item_travel_boots",
+"item_travel_boots_2",
+"item_trickster_cloak",
+"item_trident",
+"item_trusty_shovel",
+"item_ultimate_orb",
+"item_ultimate_scepter",
+"item_ultimate_scepter_2",
+"item_ultimate_scepter_roshan",
+"item_unrelenting_eye",
+"item_unstable_wand",
+"item_unwavering_condition",
+"item_urn_of_shadows",
+"item_vambrace",
+"item_vampire_fangs",
+"item_vanguard",
+"item_veil_of_discord",
+"item_vindicators_axe",
+"item_vitality_booster",
+"item_vladmir",
+"item_void_stone",
+"item_voodoo_mask",
+"item_ward_dispenser",
+"item_ward_observer",
+"item_ward_sentry",
+"item_weighted_dice",
+"item_whisper_of_the_dread",
+"item_wind_lace",
+"item_wind_waker",
+"item_witch_blade",
+"item_witless_shako",
+"item_wizard_hat",
+"item_woodland_striders",
+"item_wraith_band",
+"item_wraith_pact",
+"item_yasha",
+"item_yasha_and_kaya"
+],
+"recipes": {
+"item_abyssal_blade": [
+"item_basher",
+"item_sange"
+],
+"item_aeon_disk": [
+"item_vitality_booster",
+"item_energy_booster"
+],
+"item_aether_lens": [
+"item_energy_booster",
+"item_void_stone"
+],
+"item_ancient_janggo": [
+"item_headdress",
+"item_belt_of_strength",
+"item_wind_lace"
+],
+"item_angels_demise": [
+"item_phylactery",
+"item_soul_booster"
+],
+"item_arcane_blink": [
+"item_blink",
+"item_mystic_staff"
+],
+"item_arcane_boots": [
+"item_boots",
+"item_ring_of_basilius",
+"item_wizard_hat"
+],
+"item_armlet": [
+"item_helm_of_iron_will",
+"item_gloves",
+"item_blades_of_attack"
+],
+"item_assault": [
+"item_buckler",
+"item_hyperstone",
+"item_platemail"
+],
+"item_basher": [
+"item_mithril_hammer",
+"item_belt_of_strength"
+],
+"item_bfury": [
+"item_pers",
+"item_broadsword",
+"item_broadsword",
+"item_quelling_blade"
+],
+"item_black_king_bar": [
+"item_mithril_hammer",
+"item_ogre_axe"
+],
+"item_blade_mail": [
+"item_broadsword",
+"item_splintmail"
+],
+"item_bloodstone": [
+"item_veil_of_discord",
+"item_soul_booster"
+],
+"item_bloodthorn": [
+"item_orchid",
+"item_oblivion_staff",
+"item_javelin"
+],
+"item_boots_of_bearing": [
+"item_tranquil_boots",
+"item_ancient_janggo",
+"item_ring_of_tarrasque"
+],
+"item_bracer": [
+"item_circlet",
+"item_gauntlets"
+],
+"item_buckler": [
+"item_ring_of_protection"
+],
+"item_butterfly": [
+"item_eagle",
+"item_claymore",
+"item_talisman_of_evasion"
+],
+"item_consecrated_wraps": [
+"item_vitality_booster",
+"item_shawl",
+"item_crown"
+],
+"item_crellas_crozier": [
+"item_ghost",
+"item_soul_booster"
+],
+"item_crimson_guard": [
+"item_vanguard",
+"item_helm_of_iron_will"
+],
+"item_cyclone": [
+"item_staff_of_wizardry",
+"item_void_stone",
+"item_wind_lace"
+],
+"item_dagon": [
+"item_point_booster",
+"item_crown",
+"item_wizard_hat"
+],
+"item_desolator": [
+"item_mithril_hammer",
+"item_mithril_hammer",
+"item_blight_stone"
+],
+"item_devastator": [
+"item_witch_blade",
+"item_mystic_staff"
+],
+"item_diffusal_blade": [
+"item_blade_of_alacrity",
+"item_robe"
+],
+"item_diffusal_blade_2": [
+"item_diffusal_blade",
+"item_recipe_diffusal_blade"
+],
+"item_disperser": [
+"item_diffusal_blade",
+"item_eagle"
+],
+"item_dragon_lance": [
+"item_blade_of_alacrity",
+"item_belt_of_strength"
+],
+"item_echo_sabre": [
+"item_ogre_axe",
+"item_broadsword",
+"item_void_stone"
+],
+"item_essence_distiller": [
+"item_urn_of_shadows",
+"item_chainmail",
+"item_wizard_hat"
+],
+"item_eternal_shroud": [
+"item_cloak",
+"item_ogre_axe",
+"item_vitality_booster"
+],
+"item_ethereal_blade": [
+"item_ultimate_orb",
+"item_ghost"
+],
+"item_falcon_blade": [
+"item_blades_of_attack",
+"item_fluffy_hat",
+"item_sobi_mask"
+],
+"item_force_staff": [
+"item_staff_of_wizardry",
+"item_fluffy_hat"
+],
+"item_glimmer_cape": [
+"item_shadow_amulet",
+"item_shawl"
+],
+"item_great_famango": [
+"item_famango",
+"item_famango",
+"item_famango"
+],
+"item_greater_crit": [
+"item_lesser_crit",
+"item_demon_edge"
+],
+"item_greater_famango": [
+"item_great_famango",
+"item_great_famango"
+],
+"item_guardian_greaves": [
+"item_arcane_boots",
+"item_mekansm"
+],
+"item_gungir": [
+"item_rod_of_atos",
+"item_point_booster",
+"item_chasm_stone"
+],
+"item_hand_of_midas": [
+"item_gloves"
+],
+"item_harpoon": [
+"item_echo_sabre",
+"item_diadem"
+],
+"item_headdress": [
+"item_ring_of_regen"
+],
+"item_heart": [
+"item_reaver",
+"item_ring_of_tarrasque"
+],
+"item_heavens_halberd": [
+"item_talisman_of_evasion",
+"item_splintmail",
+"item_ring_of_health"
+],
+"item_helm_of_the_dominator": [
+"item_helm_of_iron_will",
+"item_crown"
+],
+"item_helm_of_the_overlord": [
+"item_helm_of_the_dominator",
+"item_ultimate_orb"
+],
+"item_holy_locket": [
+"item_magic_wand",
+"item_crown"
+],
+"item_hurricane_pike": [
+"item_force_staff",
+"item_dragon_lance"
+],
+"item_hydras_breath": [
+"item_specialists_array",
+"item_dragon_lance",
+"item_orb_of_venom"
+],
+"item_invis_sword": [
+"item_claymore",
+"item_blitz_knuckles",
+"item_shadow_amulet"
+],
+"item_iron_talon": [
+"item_quelling_blade",
+"item_ring_of_protection"
+],
+"item_kaya": [
+"item_staff_of_wizardry",
+"item_robe"
+],
+"item_kaya_and_sange": [
+"item_kaya",
+"item_sange"
+],
+"item_lesser_crit": [
+"item_claymore",
+"item_blades_of_attack"
+],
+"item_lotus_orb": [
+"item_pers",
+"item_platemail",
+"item_energy_booster"
+],
+"item_maelstrom": [
+"item_mithril_hammer",
+"item_javelin",
+"item_gloves"
+],
+"item_mage_slayer": [
+"item_pers",
+"item_cloak",
+"item_blades_of_attack",
+"item_orb_of_venom"
+],
+"item_magic_wand": [
+"item_magic_stick",
+"item_branches",
+"item_branches"
+],
+"item_manta": [
+"item_yasha",
+"item_diadem"
+],
+"item_mask_of_madness": [
+"item_broadsword",
+"item_lifesteal"
+],
+"item_medallion_of_courage": [
+"item_chainmail",
+"item_sobi_mask",
+"item_blight_stone"
+],
+"item_mekansm": [
+"item_headdress",
+"item_chainmail"
+],
+"item_meteor_hammer": [
+"item_kaya",
+"item_crown"
+],
+"item_mjollnir": [
+"item_maelstrom",
+"item_hyperstone"
+],
+"item_monkey_king_bar": [
+"item_demon_edge",
+"item_blitz_knuckles",
+"item_javelin"
+],
+"item_moon_shard": [
+"item_hyperstone",
+"item_hyperstone"
+],
+"item_necronomicon": [
+"item_sobi_mask",
+"item_sobi_mask",
+"item_belt_of_strength"
+],
+"item_necronomicon_2": [
+"item_necronomicon",
+"item_recipe_necronomicon"
+],
+"item_necronomicon_3": [
+"item_necronomicon_2",
+"item_recipe_necronomicon"
+],
+"item_null_talisman": [
+"item_circlet",
+"item_mantle"
+],
+"item_nullifier": [
+"item_relic",
+"item_splintmail"
+],
+"item_oblivion_staff": [
+"item_blitz_knuckles",
+"item_robe",
+"item_sobi_mask"
+],
+"item_octarine_core": [
+"item_soul_booster",
+"item_tiara_of_selemene"
+],
+"item_orb_of_corrosion": [
+"item_boots_of_elves",
+"item_orb_of_frost",
+"item_blight_stone"
+],
+"item_orchid": [
+"item_oblivion_staff",
+"item_claymore"
+],
+"item_overwhelming_blink": [
+"item_blink",
+"item_reaver"
+],
+"item_pavise": [
+"item_wizard_hat",
+"item_fluffy_hat",
+"item_ring_of_protection"
+],
+"item_pers": [
+"item_ring_of_health",
+"item_void_stone"
+],
+"item_phase_boots": [
+"item_boots",
+"item_chainmail",
+"item_blades_of_attack"
+],
+"item_phylactery": [
+"item_pers",
+"item_diadem"
+],
+"item_pipe": [
+"item_ring_of_tarrasque",
+"item_cloak",
+"item_shawl"
+],
+"item_power_treads": [
+"item_boots",
+"item_gloves",
+"item_belt_of_strength"
+],
+"item_radiance": [
+"item_relic",
+"item_talisman_of_evasion"
+],
+"item_rapier": [
+"item_relic",
+"item_demon_edge"
+],
+"item_refresher": [
+"item_ring_of_tarrasque",
+"item_tiara_of_selemene"
+],
+"item_revenants_brooch": [
+"item_lesser_crit",
+"item_voodoo_mask"
+],
+"item_ring_of_basilius": [
+"item_sobi_mask"
+],
+"item_rod_of_atos": [
+"item_staff_of_wizardry",
+"item_vitality_booster"
+],
+"item_sange": [
+"item_ogre_axe",
+"item_belt_of_strength"
+],
+"item_sange_and_yasha": [
+"item_sange",
+"item_yasha"
+],
+"item_satanic": [
+"item_reaver",
+"item_claymore",
+"item_lifesteal"
+],
+"item_sheepstick": [
+"item_mystic_staff",
+"item_tiara_of_selemene"
+],
+"item_shivas_guard": [
+"item_platemail",
+"item_splintmail",
+"item_chasm_stone"
+],
+"item_silver_edge": [
+"item_invis_sword",
+"item_demon_edge"
+],
+"item_skadi": [
+"item_ultimate_orb",
+"item_ultimate_orb",
+"item_orb_of_frost"
+],
+"item_solar_crest": [
+"item_pavise",
+"item_chainmail",
+"item_wind_lace"
+],
+"item_soul_booster": [
+"item_point_booster",
+"item_vitality_booster",
+"item_energy_booster"
+],
+"item_soul_ring": [
+"item_ring_of_protection",
+"item_gauntlets",
+"item_gauntlets"
+],
+"item_specialists_array": [
+"item_blade_of_alacrity",
+"item_broadsword"
+],
+"item_sphere": [
+"item_pers",
+"item_ultimate_orb"
+],
+"item_spirit_vessel": [
+"item_urn_of_shadows",
+"item_diadem"
+],
+"item_swift_blink": [
+"item_blink",
+"item_eagle"
+],
+"item_tranquil_boots": [
+"item_boots",
+"item_wind_lace",
+"item_ring_of_regen"
+],
+"item_travel_boots": [
+"item_boots"
+],
+"item_travel_boots_2": [
+"item_travel_boots",
+"item_recipe_travel_boots"
+],
+"item_trident": [
+"item_kaya",
+"item_sange",
+"item_yasha"
+],
+"item_ultimate_scepter": [
+"item_point_booster",
+"item_staff_of_wizardry",
+"item_ogre_axe",
+"item_blade_of_alacrity"
+],
+"item_ultimate_scepter_2": [
+"item_ultimate_scepter"
+],
+"item_urn_of_shadows": [
+"item_sobi_mask",
+"item_ring_of_protection",
+"item_circlet"
+],
+"item_vanguard": [
+"item_vitality_booster",
+"item_ring_of_health"
+],
+"item_veil_of_discord": [
+"item_voodoo_mask",
+"item_robe",
+"item_fluffy_hat"
+],
+"item_vladmir": [
+"item_buckler",
+"item_ring_of_basilius",
+"item_lifesteal",
+"item_blades_of_attack"
+],
+"item_ward_dispenser": [
+"item_ward_sentry",
+"item_ward_observer"
+],
+"item_wind_waker": [
+"item_cyclone",
+"item_mystic_staff"
+],
+"item_witch_blade": [
+"item_oblivion_staff",
+"item_chainmail",
+"item_orb_of_venom"
+],
+"item_wraith_band": [
+"item_circlet",
+"item_slippers"
+],
+"item_wraith_pact": [
+"item_vladmir",
+"item_point_booster"
+],
+"item_yasha": [
+"item_blade_of_alacrity",
+"item_boots_of_elves"
+],
+"item_yasha_and_kaya": [
+"item_yasha",
+"item_kaya"
+]
+}
+}
