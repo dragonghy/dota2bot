@@ -194,9 +194,21 @@ local tRegistered = {
         'a buy-list entry no item answers to; Item.GetBasicItems forwards it '
         .. 'verbatim to the purchase layer.  Non-focus hero -- reported, not '
         .. 'fixed, per the GH #168 convention.',
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6774'] =
+    -- [strategy 20260825T23:xxZ] Re-keyed 6774 -> 6781, and :1013 -> :1020 in
+    -- the note.  NOT a repair of this census and NOT a loosening: same kind,
+    -- same name, same site -- only the line number moved, by exactly the +7
+    -- that commit c48dc11b (strategy 19:26Z, the lf_salve SetUseItem fix) added
+    -- to this file at :993, i.e. ABOVE both numbers.  The baseline landed at
+    -- 19:55Z carrying 6774, which was already one commit stale when it was
+    -- written, so this ratchet was RED on main from the moment it landed.
+    -- Charter 0LN2's fourth example and a new sub-shape: the first three had a
+    -- pin PUSHED OUT by a later edit; this one was WRITTEN stale against a
+    -- checkout behind main (GH #161's gate-slower-than-main race, GH #171's
+    -- red-trunk blindness).  Verified per commit:
+    --   089bee2a -> 6774 | c48dc11b (+7) -> 6781 | 1fcfcd83 -> 6781 | HEAD -> 6781
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6781'] =
         'the upstream template stub (its comment is literally "--新物品").  '
-        .. 'X.ConsiderItemDesire is indexed by the exact item name at :1013, so '
+        .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
     ['LOOKUP item_pipe_of_insight bots/FunLib/advanced_item_strategy.lua:314'] =
         'Pipe ships as item_pipe.  No file in the tree requires '
