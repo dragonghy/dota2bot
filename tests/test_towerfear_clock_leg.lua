@@ -217,7 +217,12 @@ end)()
 local BLOCK = (function()
     local at = assert(SRC:find('前期谨慎冲塔', 1, true),
         'the 前期谨慎冲塔 block lost its comment anchor')
-    local block = SRC:sub(at, at + 3400)
+    -- Byte length, so PROSE moves it: the 2026-08-25 GH #178 comment rewrite
+    -- (the calibrated clause's real division of labour) added ~1.2 kB inside
+    -- the block and pushed the calibrated clause past a 3400-byte window.
+    -- Widened, not anchored to a later marker, because every assertion below
+    -- wants the window to stop before the NEXT block.
+    local block = SRC:sub(at, at + 4800)
     -- Self-witnessing window (charter 0LN2): if the window is too short, say
     -- THAT, instead of reporting "the clause disappeared" about a clause that
     -- is merely past the end of the substring.

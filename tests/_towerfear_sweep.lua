@@ -52,7 +52,9 @@ local BLOCK = (function()
     -- below silently measures a truncated block and the failure message names
     -- the wrong thing ("the clause is gone" when it is merely past the window).
     -- Self-witnessing, as the charter's 0LN2 note demands: fail with the truth.
-    local block = SRC:sub(at, at + 3400)
+    -- Widened 3400 -> 4800 on 2026-08-25: the GH #178 comment rewrite inside
+    -- this block added ~1.2 kB of prose. The window is bytes, so PROSE moves it.
+    local block = SRC:sub(at, at + 4800)
     assert(block:find('nEnemyTowers%[1%]:GetAttackTarget%(%) == bot'),
         'the source window from 前期谨慎冲塔 no longer reaches the calibrated '
         .. 'clause -- widen it; the block itself may be intact')

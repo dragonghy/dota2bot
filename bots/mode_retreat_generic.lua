@@ -898,11 +898,28 @@ function X.ShouldRun()
         -- predicate is a SUBSET of the shipped one: this return can only fire
         -- LESS often, never more. Exactly one lever.
         --
-        -- What catches the released frames instead is the CALIBRATED clause
-        -- directly below -- same tower ring, but it asks whether the tower is
-        -- actually shooting this bot and whether it is alone. Same shape as
-        -- [towerreach] in GetDesireHelper: the crude test is the one that got
-        -- wired to the consumer while the calibrated one sits next to it.
+        -- The CALIBRATED clause below catches only the INNER part of what this
+        -- releases. A tower's attack range is 700 u while this block's ring is
+        -- 898 u, so in the 700-898 u annulus `GetAttackTarget() == bot` can
+        -- never be true -- there the calibrated clause is not "rare", it is
+        -- structurally unable to fire. Measured over W8+W9 (418 games, GH
+        -- #178): 72.7% of the released frames sit in that annulus with no
+        -- catcher, and need none, because a tower cannot reach them. What the
+        -- calibrated clause does catch is the dive: 10.2% of released frames
+        -- are witnessed tower shots on a bot who is alone. A second gap is
+        -- clause design rather than geometry -- the calibrated clause's own
+        -- `botLevel <= 9` is one level narrower than this block's `<= 10`, so
+        -- level-10 released frames (0.9%) have no catcher either.
+        --
+        -- `nLongEnemyTowers` above is WRITE-ONLY in this file. The verbatim
+        -- sibling copy of this block in mode_farm_generic:1196-1206 reads it as
+        -- rung 1 of a GRADED ladder (widest ring for the youngest band); this
+        -- copy lost that rung, so the ladder here is flat -- one ring for every
+        -- level up to 10. Left as it is rather than restored or swept: over the
+        -- fixture archive the rung's own band (level <= 2 or t < 2:00) never
+        -- comes closer than 1310 u to an enemy tower, against the 1200 u ring
+        -- it would use, so restoring it buys zero frames. Pinned by
+        -- tests/test_write_only_local_census.py section 3.
         local nFearClock = 5 * 60
         if J.IsSoakCandidate('towerfear') and J.IsModeTurbo() then
             nFearClock = nFearClock / 2
