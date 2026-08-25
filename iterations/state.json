@@ -3735,7 +3735,7 @@
     "not_fixed": "The other four focus-five proven-zero reads (zuus X.ConsiderW ranged-creep snipe; lion X.ConsiderQ's kill branch; lion W/E where nDamage is an unread local). Un-deadening a kill branch is a WIDENING and needs its own evidence and its own id; GH #175 section 3 files them. tests/test_zuus_bolt_kill_cap.lua ratchets their counts so a later reader cannot move them silently.",
     "armed": false,
     "in_test_set": false,
-    "validation": "tests/test_zuus_bolt_kill_cap.lua -- 12 cases; mutation scan 11 mutations, 10 caught + 1 declared control escape (a pure local rename, a true no-op). LIMITS measured, not asserted: the mock answers 0 for every Get* it does not know, so offline BOTH legs read 0 (the shipped leg for a reason unrelated to the KV -- that agreement is a coincidence and is recorded as such), and FindAoELocation is absent from the mock, so there is no firing-side fixture and its absence is measured. Condition (a) must be bought from the corpus: queue hero-16.",
+    "validation": "tests/test_zuus_bolt_kill_cap.lua -- 11 cases; mutation scan 11 mutations, 10 caught + 1 declared control escape (a pure local rename, a true no-op). LIMITS measured, not asserted: the mock answers 0 for every Get* it does not know, so offline BOTH legs read 0 (the shipped leg for a reason unrelated to the KV -- that agreement is a coincidence and is recorded as such), and FindAoELocation is absent from the mock, so there is no firing-side fixture and its absence is measured. Condition (a) must be bought from the corpus: queue hero-16.",
     "next": "queue hero-16 (archived .dem scan, zero EC2)."
   }
 }

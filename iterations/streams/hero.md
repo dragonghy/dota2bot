@@ -1200,7 +1200,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **有意没折进 `( 1 + GetSpellAmp() )`**;**核对为正确、有意没动** `nRadius = 325`(KV `spread_aoe`)。
   - **⚠ LIMIT 量出来的**:两条腿离线都读 0,且**出厂腿读 0 的原因与 KV 无关 —— 一致是巧合**;
     `FindAoELocation` 不在 mock 里 ⇒ **开火侧没有 fixture,而这个「没有」是量出来的**。
-  - 测试 `tests/test_zuus_bolt_kill_cap.lua`:12 例,**变异 11 次 10 抓 + 1 条对照逃逸**。
+  - 测试 `tests/test_zuus_bolt_kill_cap.lua`:11 例,**变异 11 次 10 抓 + 1 条对照逃逸**。
     **⭐ 一次瞄歪的变异**:`perl -0pi` 非全局 `s///` 只改了**注释里的第一处**,
     全绿看着像逃逸其实**没落到代码上**;**读绿/红之前先 grep 变异落在哪一行**(#170 同族)。
 - 2026-08-25T04:53Z(报告 `iterations/reports/hero/20260825T045337Z.md`;**自选,GH #173 已开**
@@ -2289,7 +2289,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **登记但没做**:`X.ConsiderR` 的 `nKillDamage = 150 + 100*lv`(**250/350/450**)对不上
     Culling Blade 今天的伤害(**275/375/475**)⇒ 低估自己 25 点纯伤害、在那 25 点带内拒绝
     本来能杀的一发。**是「加动作」⇒ 要真实帧 + 量过的域**,预注册域写进了代码注释。
-  - 交付:`tests/test_focus_talent_anchor.lua`(**12 例**,档位算术与奇偶语义**读出式**、
+  - 交付:`tests/test_focus_talent_anchor.lua`(**11 例**,档位算术与奇偶语义**读出式**、
     五英雄 t10/t15 **驱动真函数**解析、Axe 改动与其理由块的源码棘轮、7.2x 名字不得回到活代码、
     两个 talent handle 仍是 t25 且 **identifier 与 `sTalentList[N]` 下标两半都查**)。
     **7 次变异 7 抓**;并记下 **§1 的已知盲区**(变异 M3 发现的,不是想出来的):只翻 t10 行时
