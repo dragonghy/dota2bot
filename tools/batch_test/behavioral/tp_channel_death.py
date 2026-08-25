@@ -52,6 +52,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from creeppull_domain import load_sweep  # noqa: E402
+# GH #176: entity keying and the corpse filter are SHARED, not copied -- two
+# estimators in this tree have already drifted apart once by being copied.
+from entities import (canon, frames_by_hero, interp,  # noqa: E402
+                      alive_interp, death_times, DROPPED_ENTITIES)
 
 # GetAttackRange() + 150 for the longest-ranged hero in the pool; the guard
 # uses each enemy's own range, which is not in the dump, so this is the
@@ -77,10 +81,6 @@ ATTACK_INFLICTOR = 'dota_unknown'
 HOME_RADIUS_U = 1500.0
 # Turbo TP channel ~3 s; read the landing one sample after it completes.
 LANDING_DELAY_S = 4.5
-
-
-def canon(name):
-    return (name or '').replace('npc_dota_hero_', '')
 
 
 def band_of(near, reach=DEFAULT_REACH_U):
@@ -249,41 +249,20 @@ def lift_stats(rows, reach=DEFAULT_REACH_U):
                 base_rate=base, onface_rate=on_rate, lift=lift)
 
 
-def interp(frames, t):
-    """Hero state at an arbitrary instant, linearly interpolated.
-
-    Returns None outside the sampled range rather than clamping: a press
-    before the first snapshot or after the last one has no honest position,
-    and clamping would silently invent one.
-    """
-    lo = hi = None
-    for s in frames:
-        if s['t'] <= t and (lo is None or s['t'] > lo['t']):
-            lo = s
-        if s['t'] >= t and (hi is None or s['t'] < hi['t']):
-            hi = s
-    if lo is None or hi is None:
-        return None
-    if hi['t'] == lo['t']:
-        return dict(t=t, x=float(lo['x']), y=float(lo['y']),
-                    hp_pct=float(lo['hp_pct']), level=lo['level'])
-    a = (t - lo['t']) / (hi['t'] - lo['t'])
-    return dict(t=t,
-                x=lo['x'] + a * (hi['x'] - lo['x']),
-                y=lo['y'] + a * (hi['y'] - lo['y']),
-                hp_pct=lo['hp_pct'] + a * (hi['hp_pct'] - lo['hp_pct']),
-                level=lo['level'])
-
-
-def presses_for_game(timeline, game, reach=DEFAULT_REACH_U):
-    fr = collections.defaultdict(list)
-    team = {}
-    for s in timeline['snapshots']:
-        h = canon(s['hero'])
-        fr[h].append(s)
-        team[h] = s['team']
-    for h in fr:
-        fr[h].sort(key=lambda s: s['t'])
+def presses_for_game(timeline, game, reach=DEFAULT_REACH_U,
+                     alive_rule='events'):
+    # GH #176.  Keyed by ENTITY (`idx`), not by hero name: an illusion carries
+    # the same name and player_id as the hero it copies, and a name-keyed
+    # table interleaves their rows so an interpolated read answers with
+    # whichever unit sorted adjacent.  The engine predicate makes exactly this
+    # distinction -- `J.CanEnemyInterruptTpChannel` skips
+    # `J.IsSuspiciousIllusion( hEnemy )` before it ever tests reach -- so
+    # counting an illusion here measures a guard the bot does not have.
+    fr, team = frames_by_hero(timeline)
+    # `events`: exact death instants from the event stream (default).
+    # `bracket`: GH #176's prescribed rule, kept so the two can be COMPARED on
+    # the same corpus instead of one being assumed equivalent to the other.
+    dead = death_times(timeline) if alive_rule == 'events' else {}
 
     fount = fountains(timeline['snapshots'])
     press = collections.defaultdict(list)
@@ -298,6 +277,17 @@ def presses_for_game(timeline, game, reach=DEFAULT_REACH_U):
 
     out = []
     for h, ts in press.items():
+        if h not in fr:
+            # the presser is an entity we dropped (post-horn twin): illusions
+            # do not press TP, so this is a dump we do not understand rather
+            # than a row to invent a position for.
+            continue
+        # THE PRESSER IS READ WITH PLAIN interp, DELIBERATELY.  At a fatal
+        # press his own bracket is [alive, dead] by construction -- he pressed
+        # and then died inside the channel -- so putting the corpse filter on
+        # the ACTOR would delete precisely the rows that are the numerator of
+        # this census's fatality rate.  The press event is its own proof of
+        # aliveness; only the cross-entity geometry below needs the filter.
         for t in ts:
             s0 = interp(fr[h], t)
             if s0 is None:
@@ -307,12 +297,26 @@ def presses_for_game(timeline, game, reach=DEFAULT_REACH_U):
             for h2 in fr:
                 if h2 == h or team.get(h2) == team.get(h):
                     continue
-                s2 = interp(fr[h2], t)
-                if s2 is not None and s2['hp_pct'] > 0:
+                # GH #176: bracketing samples, not the blended hp.  An
+                # interpolation across a death frame yields a small POSITIVE
+                # hp and a point the unit never stood on -- so `hp > 0` on the
+                # blend passes the corpse through, because the blend is what
+                # manufactured the positive hp.
+                s2 = alive_interp(fr[h2], t,
+                                  dead.get(h2) if alive_rule == 'events'
+                                  else None)
+                if s2 is not None:
                     dd = math.dist((s0['x'], s0['y']), (s2['x'], s2['y']))
                     if near is None or dd < near:
                         near, who = dd, h2
-                # result side: min over the channel, for contrast only
+                # Result side: min over the channel, for contrast only.  The
+                # ENEMY sample here is raw, so its `hp_pct` is a real reading
+                # and needs no bracket check; the PRESSER's position is still
+                # plain-interpolated and can therefore blend across his own
+                # death frame on a fatal row.  Left as is on purpose: this
+                # column never feeds `on_face` / `band` / the lift statistic,
+                # and tightening it would silently empty `near_min` for
+                # exactly the fatal rows it is printed beside.
                 for s2b in fr[h2]:
                     if not (t <= s2b['t'] <= t + CHANNEL_WINDOW_S):
                         continue
@@ -342,7 +346,7 @@ def presses_for_game(timeline, game, reach=DEFAULT_REACH_U):
     return out
 
 
-def scan_sweep(d, reach):
+def scan_sweep(d, reach, alive_rule='events'):
     rows = []
     manifest = {m['game']: m for m in load_sweep(d)}
     for p in sorted(glob.glob(os.path.join(d, 'timelines', '*.timeline.json'))):
@@ -351,7 +355,7 @@ def scan_sweep(d, reach):
         if m is None:
             continue
         tl = json.load(open(p))
-        for r in presses_for_game(tl, game, reach):
+        for r in presses_for_game(tl, game, reach, alive_rule):
             r['seed'] = m['seed']
             r['arm_side'] = m['side']
             r['leg'] = 'armed' if (
@@ -404,9 +408,12 @@ def selfcheck():
             fail += 1
             print('  FAIL %-58s %s' % (name, detail))
 
-    def snaps(hero, team, pts, level=9):
+    def snaps(hero, team, pts, level=9, idx=None):
+        if idx is None:
+            idx = abs(hash(hero)) % 900 + 1
         return [{'t': float(t), 'hero': hero, 'team': team, 'x': float(x),
-                 'y': float(y), 'hp_pct': hp, 'level': level, 'items': []}
+                 'y': float(y), 'hp_pct': hp, 'level': level, 'items': [],
+                 'idx': idx}
                 for t, x, y, hp in pts]
 
     H, E = 'npc_dota_hero_jakiro', 'npc_dota_hero_viper'
@@ -459,6 +466,169 @@ def selfcheck():
     r5 = presses_for_game({'snapshots': sn5, 'events': [ev2[0]]}, 'g')[0]
     chk('a dead enemy on face is not an interrupter',
         r5['near'] is None and r5['on_face'] is False)
+
+    # ---- GH #176: a hero NAME is not an entity key, and an INTERPOLATED hp
+    # is not aliveness.  Both contaminants manufacture exactly the reading
+    # this census counts -- "an enemy was on my face when I pressed" -- so
+    # both belong here as assertions, not as prose.  Written RED first
+    # (issue #176 §5.1: the assertion that will fail comes before the fix).
+    # ------------------------------------------------------------------------
+    # (1) ILLUSIONS.  Same hero name, same player, different `idx`, and they
+    # only enter the stream after the horn.  `20260825_061900_slot11`: lina is
+    # idx 1507 (from t=-54) plus idx 857 / 2400 (both from t=490).  The engine
+    # predicate skips `J.IsSuspiciousIllusion` before it ever tests reach, so
+    # an illusion counted as a band enemy measures a guard the bot lacks.
+    real = snaps(E, 2, [(t, 5000, 0, 1.0) for t in range(0, 20)], idx=1507)
+    illu = snaps(E, 2, [(t, 100, 0, 1.0) for t in range(6, 20)], idx=2400)
+    bot_h = snaps(H, 3, [(t, 0, 0, 1.0) for t in range(0, 20)], idx=11)
+    # NOTE the ORDER: the twin is listed before the hero.  That is not a
+    # contrivance, it is the mechanism -- with one list per NAME the rows of
+    # both units interleave at every shared timestamp and the read returns
+    # whichever unit sorted adjacent.  Which one that is depends on the
+    # dump's order, so the same code reads the hero in one game and the
+    # illusion in the next, silently.
+    ri = presses_for_game({'snapshots': bot_h + illu + real,
+                           'events': [ev2[0]]}, 'g')[0]
+    chk('illusion-not-a-band-enemy (post-horn twin at 100u is dropped)',
+        ri['near'] == 5000 and ri['on_face'] is False,
+        'near=%s (real lina 5000, illusion 100)' % ri['near'])
+    # REVERSE ASSERTION: the fix must drop the twin, not the hero.  Without
+    # this, "return None for anything with a duplicate name" would pass above.
+    rj = presses_for_game({'snapshots': bot_h + snaps(
+        E, 2, [(t, 300, 0, 1.0) for t in range(0, 20)], idx=1507) + illu,
+        'events': [ev2[0]]}, 'g')[0]
+    chk('real-hero-survives-her-illusion (the hero at 300u still counts)',
+        rj['near'] == 300 and rj['on_face'] is True, 'near=%s' % rj['near'])
+    # And the illusion must not change the answer at all: same corpus minus
+    # the twin must read identically.
+    rk = presses_for_game({'snapshots': bot_h + real, 'events': [ev2[0]]},
+                          'g')[0]
+    chk('one-track-per-name (illusion changes no column)',
+        (ri['near'], ri['near_min'], ri['band'])
+        == (rk['near'], rk['near_min'], rk['band']),
+        '%s vs %s' % ((ri['near'], ri['near_min'], ri['band']),
+                      (rk['near'], rk['near_min'], rk['band'])))
+
+    # (2) CORPSES.  `20260825_063640_slot6`: viper's last live sample is
+    # t=375.5 at 918 u and his next sample (376.5) is a death frame.  A press
+    # at 376.4 interpolated across that bracket lands at 768 u -- inside the
+    # band -- with hp_pct ~0.05, which passes an `hp > 0` filter precisely
+    # BECAUSE the blend is what manufactures the positive hp.
+    # Both units carry a pre-horn sample, because real heroes do -- that is
+    # the very discriminator frames_by_hero uses, so a synthetic corpse
+    # without one would be dropped as an illusion and the case would pass for
+    # the wrong reason.
+    corpse = snaps(E, 2, [(-5.0, 918, 0, 1.0), (375.5, 918, 0, 0.14),
+                          (376.5, 100, 0, 0.0)], idx=77)
+    botc = snaps(H, 3, [(-5.0, 0, 0, 1.0)]
+                 + [(t / 10.0, 0, 0, 1.0) for t in range(3740, 3790)], idx=11)
+    evc = [{'t': 376.4, 'type': 'MODIFIER_ADD', 'actor': H, 'target': H,
+            'inflictor': 'modifier_teleporting', 'value': 0}]
+    rc = presses_for_game({'snapshots': botc + corpse, 'events': evc}, 'g')[0]
+    chk('death-bracket-not-a-band-enemy (corpse at t+0.9 is not at 768u)',
+        rc['near'] is None and rc['on_face'] is False,
+        'near=%s' % rc['near'])
+    # REVERSE ASSERTION: an enemy who is alive at BOTH brackets still counts.
+    evc2 = [dict(evc[0], t=375.4)]
+    corpse2 = snaps(E, 2, [(-5.0, 918, 0, 1.0), (374.5, 918, 0, 0.30),
+                           (375.5, 918, 0, 0.14), (376.5, 100, 0, 0.0)],
+                    idx=77)
+    rc2 = presses_for_game({'snapshots': botc + corpse2, 'events': evc2}, 'g')
+    chk('death-bracket-alive-before (a live enemy is not filtered with him)',
+        rc2 and rc2[0]['near'] == 918, 'near=%s' % (rc2[0]['near'] if rc2
+                                                    else None))
+
+    # (2b) THE OTHER DIRECTION, which #176's prescribed bracket rule gets
+    # wrong: an enemy who dies 0.6 s AFTER the press still has a death frame
+    # inside the press's bracket.  He was alive, on his feet and hitting the
+    # presser at the DECISION instant; dropping him is a false negative in
+    # exactly the population this census counts.  The death EVENT settles it,
+    # and these two assertions pin the two rules apart rather than assuming
+    # they agree.
+    late = snaps(E, 2, [(-5.0, 200, 0, 1.0), (10.0, 200, 0, 0.30),
+                        (11.0, 100, 0, 0.0)], idx=77)
+    botl = snaps(H, 3, [(-5.0, 0, 0, 1.0)]
+                 + [(float(t), 0, 0, 1.0) for t in range(8, 16)], idx=11)
+    evl = [{'t': 10.4, 'type': 'MODIFIER_ADD', 'actor': H, 'target': H,
+            'inflictor': 'modifier_teleporting', 'value': 0},
+           {'t': 10.9, 'type': 'DEATH', 'actor': H, 'target': E,
+            'inflictor': 'x', 'value': 1, 'target_hero': True}]
+    tll = {'snapshots': botl + late, 'events': evl}
+    re_ = presses_for_game(tll, 'g', alive_rule='events')[0]
+    rb_ = presses_for_game(tll, 'g', alive_rule='bracket')[0]
+    # 160, not 200: he is still interpolated between his 10.0 sample (200 u)
+    # and his 11.0 death frame (100 u).  Counting him is the claim under test;
+    # where exactly he stood is a separate, coarser question.
+    chk('enemy who dies AFTER the press still counts (event anchor)',
+        re_['near'] == 160 and re_['on_face'] is True, 'near=%s' % re_['near'])
+    chk('the bracket rule drops him -- the two rules are NOT the same',
+        rb_['near'] is None, 'near=%s' % rb_['near'])
+    # ...and an enemy already dead BEFORE the press must stay excluded under
+    # the event anchor too, or it has simply undone the corpse fix.
+    evl2 = [dict(evl[0], t=10.4), dict(evl[1], t=9.9)]
+    rd_ = presses_for_game({'snapshots': botl + late, 'events': evl2},
+                           'g', alive_rule='events')[0]
+    chk('enemy who died BEFORE the press stays excluded (event anchor)',
+        rd_['near'] is None, 'near=%s' % rd_['near'])
+    # Wraith King resurrects IN PLACE, so "respawn = jumped to the fountain"
+    # mis-times him by tens of seconds (charter, 2026-08-21).  Read back from
+    # positive hp instead: he is an enemy again the moment he stands up.
+    wk = 'npc_dota_hero_skeleton_king'
+    wksn = snaps(wk, 2, [(-5.0, 200, 0, 1.0), (9.0, 200, 0, 0.20),
+                         (10.0, 200, 0, 0.0), (11.0, 200, 0, 1.0),
+                         (12.0, 200, 0, 0.98), (13.0, 200, 0, 0.99)], idx=78)
+    evw = [{'t': 11.5, 'type': 'MODIFIER_ADD', 'actor': H, 'target': H,
+            'inflictor': 'modifier_teleporting', 'value': 0},
+           {'t': 9.5, 'type': 'DEATH', 'actor': H, 'target': wk,
+            'inflictor': 'x', 'value': 1, 'target_hero': True}]
+    rw = presses_for_game({'snapshots': botl + wksn, 'events': evw},
+                          'g', alive_rule='events')[0]
+    chk('an in-place resurrect (WK) is an enemy again, not a corpse',
+        rw['near'] == 200 and rw['on_face'] is True, 'near=%s' % rw['near'])
+    # A SINGLE leaked positive-hp sample after the death event is not a
+    # resurrection.  Real frame: `20260824_003733_slot10` witch_doctor dies at
+    # t=406.10 and is still sampled at hp=0.081 on t=406.5 -- a 0.40 s leak,
+    # wider than the 0.30 s the charter records against the death FRAME -- then
+    # hp=0 from 407.5 on.  A leak-window constant of 0.35 s read that corpse as
+    # alive and put it back in the band at 553 u; two-consecutive-samples does
+    # not.  This assertion is the frame, transcribed.
+    leaksn = snaps(E, 2, [(-5.0, 200, 0, 1.0), (405.5, 200, 0, 0.20),
+                          (406.5, 200, 0, 0.081), (407.5, 200, 0, 0.0),
+                          (408.5, 200, 0, 0.0), (409.5, 200, 0, 0.0),
+                          (410.5, 200, 0, 0.0), (411.5, 200, 0, 0.0)], idx=79)
+    botk = snaps(H, 3, [(-5.0, 0, 0, 1.0)]
+                 + [(t / 10.0, 0, 0, 1.0) for t in range(4055, 4115, 10)],
+                 idx=11)
+    evk = [{'t': 410.0, 'type': 'MODIFIER_ADD', 'actor': H, 'target': H,
+            'inflictor': 'modifier_teleporting', 'value': 0},
+           {'t': 406.1, 'type': 'DEATH', 'actor': H, 'target': E,
+            'inflictor': 'x', 'value': 1, 'target_hero': True}]
+    rl = presses_for_game({'snapshots': botk + leaksn, 'events': evk},
+                          'g', alive_rule='events')[0]
+    chk('one leaked hp frame after the death is NOT a resurrection',
+        rl['near'] is None, 'near=%s (corpse 3.9 s after its death event)'
+        % rl['near'])
+
+    # (3) THE TRAP IN THE FIX ITSELF.  The PRESSER's own bracket at a FATAL
+    # press is [alive, dead] by construction -- he pressed and then died.
+    # Applying the bracketing-alive rule to the presser would therefore drop
+    # exactly the rows that are the numerator of the 17.2% this census
+    # reports.  The press EVENT is its own proof of aliveness; only the
+    # cross-entity geometry needs the corpse filter.
+    fatal_bot = snaps(H, 3, [(-5.0, 0, 0, 1.0), (10.0, 0, 0, 0.4),
+                             (11.0, 0, 0, 0.0)], idx=11)
+    fatal_en = snaps(E, 2, [(-5.0, 200, 0, 1.0), (10.0, 200, 0, 1.0),
+                            (11.0, 200, 0, 1.0)], idx=77)
+    evf = [{'t': 10.4, 'type': 'MODIFIER_ADD', 'actor': H, 'target': H,
+            'inflictor': 'modifier_teleporting', 'value': 0},
+           {'t': 10.9, 'type': 'DEATH', 'actor': E, 'target': H,
+            'inflictor': 'x', 'value': 1, 'target_hero': True}]
+    rf = presses_for_game({'snapshots': fatal_bot + fatal_en,
+                          'events': evf}, 'g')
+    chk('presser-fatal-press-not-dropped (the numerator survives the fix)',
+        len(rf) == 1 and rf[0]['died_in_channel'] is True
+        and rf[0]['on_face'] is True,
+        'rows=%d' % len(rf))
 
     # A press outside the sampled range has no honest position.
     ev6 = [{'t': 99.0, 'type': 'MODIFIER_ADD', 'actor': H, 'target': H,
@@ -613,6 +783,11 @@ def main():
     ap.add_argument('--selfcheck', action='store_true')
     ap.add_argument('--reach', type=float, default=DEFAULT_REACH_U)
     ap.add_argument('--top', type=int, default=15)
+    ap.add_argument('--alive-rule', choices=('events', 'bracket'),
+                    default='events',
+                    help='how a corpse is excluded from the geometry: exact '
+                         'DEATH events (default) or GH #176\'s bracketing-'
+                         'sample rule')
     ap.add_argument('--out', default='/tmp/tp_channel_death.jsonl')
     a = ap.parse_args()
     if a.selfcheck:
@@ -622,10 +797,11 @@ def main():
 
     rows = []
     for d in a.sweeps:
-        rows.extend(scan_sweep(d, a.reach))
+        rows.extend(scan_sweep(d, a.reach, a.alive_rule))
     games = len({(r['game'], r['arm_side']) for r in rows})
     print('corpus: %d games / %d TP presses from %d sweep dir(s)'
           % (games, len(rows), len(a.sweeps)))
+    print('aliveness rule: %s' % a.alive_rule)
     print('reach bound %.0f u (GetAttackRange()+150, permissive), '
           'guard scan radius %.0f u, channel window %.1f s'
           % (a.reach, SCAN_RADIUS_U, CHANNEL_WINDOW_S))

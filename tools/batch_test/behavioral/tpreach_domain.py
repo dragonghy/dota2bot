@@ -75,6 +75,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # it) and the destination proxy for "which guard owned this press".  A second
 # copy of either is how two estimates drift apart -- the lesson `pullcamp_frames`
 # paid for on 2026-08-25.
+from entities import (canon, frames_by_hero, interp,  # noqa: E402
+                      alive_interp, HORN_T, DROPPED_ENTITIES)
 from tp_channel_death import fountains, tp_destination  # noqa: E402
 
 # Armed scan radius (`bWide and 1200 or 700`).
@@ -124,10 +126,6 @@ SOURCE_CITED_RANGE = {
 }
 
 
-def canon(name):
-    return (name or '').replace('npc_dota_hero_', '')
-
-
 def pct(vals, p):
     if not vals:
         return None
@@ -140,121 +138,10 @@ def pct(vals, p):
     return s[lo] + (s[hi] - s[lo]) * (k - lo)
 
 
-# Heroes exist in the snapshot stream before the horn; an ILLUSION does not.
-HORN_T = 0.0
-
-# Set by frames_by_hero so the caller can report what it dropped.
-DROPPED_ENTITIES = collections.Counter()
-
-
-def frames_by_hero(timeline):
-    """Real heroes only, keyed by hero -- ILLUSIONS AND DUPLICATE ENTITIES DROPPED.
-
-    THE BUG THIS EXISTS TO KILL (replay-check 2026-08-25, caught frame-by-frame
-    on `20260825_061900_slot11 spirit_breaker t=574.8`).  A hero NAME is not an
-    entity key.  In that game `npc_dota_hero_lina` is THREE snapshot streams --
-    idx 1507 (the hero, sampled from t=-54) and idx 857 / 2400 (illusions, both
-    from t=490, both reaching hp_pct 1.00).  Keying by name concatenates all
-    three into one list with three rows at every timestamp, and an interpolating
-    read then binary-searches a list whose neighbours belong to different units:
-    the answer it returns is whichever unit sorted adjacent, silently.
-
-    That is not hypothetical.  The first cut of this file classified that press
-    as ADDED with "lina at 736 u" while the real lina was 3,837 u away and
-    walking the other way; the 736 came from an ILLUSION standing 486 u from the
-    bot.  18 of 60 sampled W9 games carry duplicate (t, hero) rows, so this is a
-    corpus-wide contaminant, not one bad game.
-
-    It is also the SAME distinction the engine-side predicate makes and this
-    detector was silently not making: `J.CanEnemyInterruptTpChannel` skips
-    `J.IsSuspiciousIllusion( hEnemy )` before testing reach at all.  Counting an
-    illusion as a band enemy measures a guard the bot does not have.
-
-    THE DISCRIMINATOR is spawn time, not hp: illusions reach full health and do
-    move, so an hp or motion filter does not separate them -- but every real
-    hero is sampled before the horn (t < 0) and no illusion is.
-    """
-    ent = collections.defaultdict(list)
-    meta = {}
-    for s in timeline['snapshots']:
-        ent[s['idx']].append(s)
-        meta[s['idx']] = (canon(s['hero']), s['team'])
-    fr, team = {}, {}
-    for idx, ss in sorted(ent.items()):
-        ss.sort(key=lambda s: s['t'])
-        h, tm = meta[idx]
-        if ss[0]['t'] > HORN_T:
-            DROPPED_ENTITIES[h] += 1
-            continue
-        if h in fr:
-            # two pre-horn entities under one name: keep the longer-lived one
-            # and count the other, rather than letting sort order decide
-            DROPPED_ENTITIES[h] += 1
-            if len(ss) <= len(fr[h]):
-                continue
-        fr[h] = ss
-        team[h] = tm
-    return fr, team
-
-
-def interp(frames, t):
-    """Position/state at t, linearly interpolated between bracketing samples.
-
-    Returns None outside the hero's sampled span -- never clamps, because a
-    clamped read would silently answer with a frame from before the hero
-    existed (or after it stopped being sampled) and those answers look normal.
-    """
-    if not frames or t < frames[0]['t'] or t > frames[-1]['t']:
-        return None
-    lo, hi = 0, len(frames) - 1
-    while lo < hi - 1:
-        mid = (lo + hi) // 2
-        if frames[mid]['t'] <= t:
-            lo = mid
-        else:
-            hi = mid
-    a, b = frames[lo], frames[hi]
-    span = b['t'] - a['t']
-    if span <= 0:
-        return a
-    w = (t - a['t']) / span
-    return dict(t=t,
-                x=a['x'] + (b['x'] - a['x']) * w,
-                y=a['y'] + (b['y'] - a['y']) * w,
-                hp_pct=a['hp_pct'] + (b['hp_pct'] - a['hp_pct']) * w,
-                level=a['level'])
-
-
-def alive_interp(frames, t):
-    """interp(), but only when BOTH bracketing samples show the unit alive.
-
-    THE LEAK THIS CLOSES (replay-check 2026-08-25, caught frame-by-frame on
-    `20260825_063640_slot6 lina t=376.4`).  Viper died at t=375.7.  His last
-    live sample is 375.5 at 918 u and his next sample, 376.5, is a death frame.
-    Interpolating the press instant 376.4 between them blends a live frame with
-    a dead one: the resulting hp_pct is ~0.05 -- comfortably above zero -- and
-    the resulting POSITION is a point viper never occupied, 768 u away, right
-    inside the blind band.  A corpse was thereby counted as an enemy able to
-    break a TP channel.
-
-    Filtering on the interpolated hp cannot catch this, because the blend is
-    what manufactures the positive hp.  The bracketing samples have to be
-    checked instead -- the same shape as the `closed='death'` fix in
-    `towerfear_domain` (2026-08-25) and the charter's standing note that a
-    dropped death frame leaves a hole and the next frame is the fountain.
-    """
-    if not frames or t < frames[0]['t'] or t > frames[-1]['t']:
-        return None
-    lo, hi = 0, len(frames) - 1
-    while lo < hi - 1:
-        mid = (lo + hi) // 2
-        if frames[mid]['t'] <= t:
-            lo = mid
-        else:
-            hi = mid
-    if frames[lo]['hp_pct'] <= 0 or frames[hi]['hp_pct'] <= 0:
-        return None
-    return interp(frames, t)
+# GH #176 -- entity keying, interpolation and the corpse filter moved to
+# `entities.py` (issue §5.3: this fix started here and was about to be copied
+# into `tp_channel_death.py`; two estimators in this tree already drifted
+# apart once by exactly that route).  Imported above, not redefined.
 
 
 def velocity(frames, t, window=1.5):
