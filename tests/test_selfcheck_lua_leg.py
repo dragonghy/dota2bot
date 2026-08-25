@@ -77,14 +77,20 @@ check(leg.count("note 3") >= 2,
 check("grep -l" in leg and r"\[detector\]" in leg and r"\[ratchet\]" in leg,
       "2a: discovery greps for the [detector]/[ratchet] tags")
 
-# Re-run the wrapper's own discovery, then compare it against an independent
-# scan of the tree.  This is the anti-rot claim: it fails the day someone adds
-# a tagged detector that the expression does not reach.
+# Run the wrapper's OWN discovery block, lifted verbatim out of the script,
+# then compare it against an independent scan of the tree.
+#
+# Lifting it matters, and the first draft got this wrong: it re-typed the
+# discovery command here instead.  That made every coverage claim below vacuous
+# with respect to the script -- deleting a named file from the wrapper left
+# this test green, because this test was reading its own copy.  Two mutations
+# (drop test_level_gate_census, drop test_wk_fact_anchor) SURVIVED and are what
+# said so.  A test that mirrors the thing it checks is checking the mirror.
+_dm = re.search(r"^(\s*files=\$\(.*?\| sort -u \))\s*$", leg, re.S | re.M)
+check(_dm is not None, "2a2: the discovery block can be lifted out of the script")
 disc = subprocess.run(
-    ["bash", "-c",
-     'cd "$1" && { grep -l \'\\[detector\\]\\|\\[ratchet\\]\' tests/test_*.lua 2>/dev/null; '
-     'ls tests/test_gate_claim_consistency.lua tests/test_data_consistency.lua 2>/dev/null; } '
-     '| sort -u', "_", REPO],
+    ["bash", "-c", 'cd "$1" || exit 1\n' + (_dm.group(1) if _dm else "files=") +
+     '\nprintf "%s\\n" $files', "_", REPO],
     capture_output=True, text=True)
 discovered = set(p for p in disc.stdout.split() if p)
 
@@ -102,6 +108,23 @@ check(not missing,
       "2b: every tagged detector is discovered (missed: %s)" % (missing or "none"))
 check("tests/test_corpus_scale.lua" in discovered,
       "2c: the detector that caught the 2026-08-24 red is in the set")
+
+# The four reds actually sitting on origin/main on 2026-08-25, per the 00:5xZ
+# full-suite run (1796 tests / 4 failures, all trunk-pre-existing).  This is the
+# leg's reason for existing stated as a test: it must cover the real cases, not
+# a class defined to fit whatever it already covers.
+for f, why in (("tests/test_corpus_scale.lua", "the tpgap corpus-size pin"),
+               ("tests/test_level_gate_census.lua", "ability_item_usage_generic 5768/5823"),
+               ("tests/test_wk_fact_anchor.lua", "hero_lion drift, GH #166")):
+    check(f in discovered, "2d: %s is covered (%s)" % (f, why))
+
+# `[census]` names the same kind of claim but must NOT become a discovery tag:
+# the tag marks what a test claims, not what it costs, and adding it drags in
+# the GH #124 sweep family -- measured, 4.2s -> 7m08s.  Named tree-scanners are
+# how the fast census files get in.
+check(r"\[census\]" not in leg,
+      "2e: [census] is not a discovery tag (it costs 7m08s -- time the set "
+      "before adding a tag)")
 
 # ---------------------------------------------------------------------------
 # 3. matching nothing is a finding
@@ -140,13 +163,23 @@ if shutil.which("lua5.1") is None:
 elif not LEG_SRC:
     print("  SKIP  5: leg source not isolated")
 else:
+    # The leg is a 开工 check, so its whole claim is that it is fast.  The
+    # budget is an assertion, not a convenience: without it, widening discovery
+    # to the `[census]` tag turns this test into a 14-minute hang instead of a
+    # failure (it did -- that mutation had to be killed by hand).  A hang reads
+    # as "still working"; a red reads as "you broke it".
+    BUDGET_S = 120
+
     def run_leg(tree):
-        """Run the real leg source in `tree`, return (leg_text, said_red)."""
+        """Run the real leg source in `tree` -> (text, said_red, rc)."""
         harness = ("set -u\nworst=0\n"
                    "note() { [ \"$1\" -gt \"$worst\" ] && worst=\"$1\"; return 0; }\n"
                    + LEG_SRC + "\nexit \"$worst\"\n")
-        p = subprocess.run(["bash", "-c", harness], cwd=tree,
-                           capture_output=True, text=True)
+        try:
+            p = subprocess.run(["bash", "-c", harness], cwd=tree,
+                               capture_output=True, text=True, timeout=BUDGET_S)
+        except subprocess.TimeoutExpired:
+            return ("__TIMEOUT__", False, -1)
         out = p.stdout + p.stderr
         return out, ("TRUNK RED" in out), p.returncode
 
@@ -162,6 +195,10 @@ else:
                         ignore=shutil.ignore_patterns(".git"))
 
         clean_leg, clean_red, clean_rc = run_leg(tree)
+        check(clean_leg != "__TIMEOUT__",
+              "5a0: the leg finishes inside %ds -- it is a 开工 check, and a "
+              "discovery set that outgrows the budget must fail here rather "
+              "than hang" % BUDGET_S)
         check(not clean_red, "5a: a clean tree does not report TRUNK RED")
         check(clean_rc == 0, "5a2: a clean tree exits 0 on this leg (got %d)" % clean_rc)
         check(re.search(r"\d+ detector file\(s\), 0 failures", clean_leg) is not None,

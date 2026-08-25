@@ -74,17 +74,28 @@ note $?
 # file: "the ratchet caught it; the only missing step was somebody running the
 # suite."  The exemption's premise was also wrong in the half that mattered --
 # the whole Lua suite is minutes, but the detectors are NOT.  They read the tree
-# instead of loading fixtures: 6 files / 51 checks / 4.2s measured, against a
-# ~48-minute full suite.  The push gate still owns the full suite; 开工 now owns
-# the tree-scanning subset, which is exactly the subset ANYONE'S landing can
-# redden.
+# instead of loading fixtures: 8 files / 78 checks / 4.9s measured, against a
+# ~48-minute full suite (the 00:5xZ full run measured 3h01m / 1796 tests).
+# The push gate still owns the full suite; 开工 now owns the tree-scanning
+# subset, which is exactly the subset ANYONE'S landing can redden.
 #
 # Discovery is by tag, not by list, so it cannot rot: a test named
-# `[detector] ...` or `[ratchet] ...` is picked up the day it is written.  Two
+# `[detector] ...` or `[ratchet] ...` is picked up the day it is written.  Four
 # tree-scanners predate the convention and are named explicitly; tag new ones
 # rather than extending that list.
 #
-# LIMIT -- the 4.2s is a property of TODAY'S members, not of the tag.  Four
+# WHY `[census]` IS NOT A DISCOVERY TAG, though it names the same kind of claim.
+# The four reds that were actually sitting on origin/main on 2026-08-25 were
+# test_corpus_scale (1), test_level_gate_census (2), and test_wk_fact_anchor
+# (1).  Covering all four is the goal, and `[census]` looked like the way to
+# reach the middle one -- but the tag marks what a test CLAIMS, not what it
+# COSTS, and adding it drags in the sweep family of GH #124: measured, the
+# tagged set went from 4.2s to **7m08s**, which is not a 开工 check any more.
+# So the two fast ones are named instead (276ms and 345ms), and the tag set
+# stays the two that have never cost more than milliseconds.  If you are about
+# to add a tag here, TIME the resulting set first.
+#
+# LIMIT -- the runtime is a property of TODAY'S members, not of the tag.  Four
 # files in tests/ take >25s just to LOAD (their top-level sweeps run at require
 # time: test_creeppull_zone_clause, test_fieldcreep_veto,
 # test_fightback_world_assertion, test_towerfear_clock_leg).  None of them is
@@ -110,10 +121,13 @@ fi
 printf '\n=== trunk health (fast Lua detectors) ===\n'
 if command -v lua5.1 >/dev/null 2>&1; then
     # By tag, so a detector written tomorrow is covered without editing this
-    # file.  The two trailing names predate the tag convention.
+    # file.  The four trailing names predate the tag convention (see the
+    # `[census]` note above for why the last two are named and not tagged).
     files=$( { grep -l '\[detector\]\|\[ratchet\]' tests/test_*.lua 2>/dev/null
                ls tests/test_gate_claim_consistency.lua \
-                  tests/test_data_consistency.lua 2>/dev/null
+                  tests/test_data_consistency.lua \
+                  tests/test_level_gate_census.lua \
+                  tests/test_wk_fact_anchor.lua 2>/dev/null
              } | sort -u )
     ran=0 red=0
     for f in $files; do
