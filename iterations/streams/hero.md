@@ -22,6 +22,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-10. ~~**GH #175:`GetAbilityDamage()` 读的是技能顶层 `AbilityDamage`,58 处读数里 46 处可证为 0**~~
+   **2026-08-25T07:49Z done —— gated `zusboltcap`(turbo-only,未 armed,不申请入集,
+   先买域 `hero-16`);稳定版未漂移;零 AWS。** 新轴 **`0DMG`**。
+   该调用只读技能的**顶层 `AbilityDamage`** 字段(`docs/BOT_API_REFERENCE.md:1526`),
+   现代 Dota 早把逐级伤害搬进 `AbilityValues` ⇒ **不声明它的技能静默返回 0**。
+   全仓 128 英雄的 KV 里只有 **16 个技能**声明了非零值。
+   - **⭐ 值钱的不是那 46,是同一个 0 在同一个文件里往两个相反方向切**:
+     ① `X.ConsiderW2` 把它交给 `FindAoELocation` 的**最后一个参数 `nMaxHealth`**,
+     而引擎规则是 **0 = 不过滤血量**(`BOT_API_REFERENCE.md:1288`)⇒ 那条自己取名
+     `nCanKillHeroLocationAoE` 的斩杀分支,**实际问的是「射程内有没有敌方英雄」**,
+     以 `DESIRE_HIGH` + 120–135 蓝回答「有」= **放宽**;
+     ② 同一个 0 喂给 `J.WillMagicKillTarget`(`X.ConsiderW`、Lion `X.ConsiderQ`)
+     **把击杀分支整条杀死** = **收紧**。
+     **⇒ 一个静默的 0 往哪边切必须逐个调用点读 —— 这正是 #162 那把 key 尺子答不了的那一半。**
+   - **判据比 #162 强的一处:不需要解析句柄**。`hero_<h>.lua` 里的读数只可能取在 `<h>`
+     自己的技能上 ⇒ `<h>` 一个非零 `AbilityDamage` 都没有 ⇒ 那处读数是 0,**无论句柄指向谁**。
+     反向照旧什么都不证明(`<h>` 有一个 ⇒ UNRESOLVED)。焦点五:zuus 2 / lion 3 全 PROVEN-ZERO;
+     axe / skeleton_king / crystal_maiden **一处都没有**。
+   - **只修了放宽那一处**,helper `X.GetBoltKillHealthCap`:出厂表达式是**最后一句**、
+     armed 是唯一绕行 ⇒ gate-off 等价结构性;`<= 0` 的 key **落回出厂**不发明默认值(#162 规矩)
+     ⇒ **armed 不可能比出厂更宽**;**方向单一**(#166 教训)。
+     **有意没折进 `( 1 + GetSpellAmp() )`** —— 那是**另一个放宽搭着收紧的门上车**。
+     **顺带核对为正确、有意没动**:`nRadius = 325` 与 KV `spread_aoe = 325` 逐位相符。
+   - **(B) 一族有意不修**:救活死掉的击杀分支是**放宽**,各自要各自的依据和 id(#168)。
+     测试对它们的**处数上棘轮**。
+   - **⚠ LIMIT 量出来的**:mock 对不认识的 `Get*` 一律答 0 ⇒ **两条腿离线都读 0**,
+     且**出厂腿读 0 的原因与 KV 无关 —— 这个一致是巧合,写死了不得当作佐证**;
+     `FindAoELocation` **不在 mock 里** ⇒ **开火侧没有 fixture**,而这个「没有」是量出来的。
+   - **⭐ 一次瞄歪的变异,必读**:`perl -0pi -e "s/'zusboltcap'/'zusboltcapX'/"` ——
+     `-0` 整文件 slurp + **非全局** `s///` ⇒ 只替换**全文件第一处**,**而那一处在注释里**;
+     测试全绿**看起来是逃逸,其实变异没落到代码上**。与 #170 的 `__pycache__` 事故同族:
+     **读绿/红之前先 grep 一眼变异落在哪一行。**
+   - **下一棒已交**:queue **`hero-16`**(归档扫描、零 EC2、**可与 `hero-15` 合并**,
+     两者都只要 Zeus 帧),含预登记的反向读法「(2) 非零而 (3) 极小 ⇒ **正确结论是无效应、
+     不是无害**,直接不入集别买波次」。其余 10 处 UNRESOLVED + 2 处 GLOBAL 列在 issue §一,
+     **不归本组打磨,认领者自取**;缺的那一步是**句柄→技能**解析(天赋那一半
+     `talent_slot_census.py` 做过,技能这一半还没人做)。
+
 -9. ~~**GH #173:Zeus 的静电场按 9% 算,KV 说 3.45% + 0.05/等级**~~
    **2026-08-25T04:53Z done —— gated `zusstatic`(turbo-only,未 armed,不申请入集,
    先买域 `hero-15`);稳定版未漂移;零 AWS。**
@@ -1135,6 +1173,36 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T07:49Z(报告 `iterations/reports/hero/20260825T074901Z.md`;**自选,GH #175 已开**
+  —— 自检无 OFF-TRUNK(只有各组都有的 cadence 洞);owner P1/P2 球在协同组、P3 在总监 ⇒
+  本组无优先项;open 的 `[hero]` issue 仍**一条都不可在桌面推进**(#136 卡 `hero-6`;
+  #150/#151/#154/#162/#170/#173 的下一棒全是 queue 归档扫描或归 harness;#165/#166 是本组
+  刚做完的)。新 gated id **`zusboltcap`**(turbo-only,**未 armed**,**不申请入集,先买域**
+  `hero-16`);登记 `state.json:zusboltcap_20260825`;backlog 新增 §-10;**稳定版未漂移**;零 AWS。
+  **刻意换轴**:前四轮问的是常数值 / 表达式怎么解析 / 槽位指向谁 / 表的维度,
+  这一轮问的是 **一个 API 调用本身读的是什么**):
+  **`ability:GetAbilityDamage()` 只读技能的顶层 `AbilityDamage` 字段,而现代 Dota 早把
+  逐级伤害搬进了 `AbilityValues` —— 全仓 128 英雄里只有 16 个技能声明了非零值,
+  `bots/` 的 58 处读数里 46 处可证为 0。而 Zeus 那个 0 不是「小一点」,是换了一个谓词。**
+  - **⭐ 同一个 0,同一个文件,两个相反方向**:`X.ConsiderW2` 把它交给 `FindAoELocation`
+    的 `nMaxHealth`,而 **0 = 不过滤血量**(`BOT_API_REFERENCE.md:1288`)⇒ 那条自己取名
+    `nCanKillHeroLocationAoE` 的斩杀分支**实际问的是「射程内有没有敌方英雄」**,
+    以 `DESIRE_HIGH` + 120–135 蓝回答「有」(**放宽**);同一个 0 喂给
+    `J.WillMagicKillTarget` 时**把击杀分支整条杀死**(**收紧**)。
+    **⇒ 静默的 0 往哪边切必须逐个调用点读 —— #162 那把尺子答不了的那一半。**
+  - **与 GH #173 / backlog §4 是同一笔账的第三条线索**:#173 是「蓝花在一个不存在的击杀上」,
+    本条是「花在一个**根本没问过能不能杀**的施法上」,§4 量的是「斩杀窗口来的时候没蓝」。
+  - **新工具 `tools/agent/ability_damage_census.py` + 冻结快照 `tests/mock/ability_damage.lua`**
+    (每英雄一次 GET,零 AWS;测试不上网)。**判据比 #162 强的一处:不需要解析句柄** ——
+    `hero_<h>.lua` 的读数只可能取在 `<h>` 自己的技能上。**反向照旧什么都不证明。**
+  - **只修放宽那一处**,`X.GetBoltKillHealthCap`(出厂表达式是最后一句 ⇒ gate-off 结构性等价;
+    `<= 0` 落回出厂不发明默认值 ⇒ **armed 不可能更宽**;**方向单一**)。
+    **有意没折进 `( 1 + GetSpellAmp() )`**;**核对为正确、有意没动** `nRadius = 325`(KV `spread_aoe`)。
+  - **⚠ LIMIT 量出来的**:两条腿离线都读 0,且**出厂腿读 0 的原因与 KV 无关 —— 一致是巧合**;
+    `FindAoELocation` 不在 mock 里 ⇒ **开火侧没有 fixture,而这个「没有」是量出来的**。
+  - 测试 `tests/test_zuus_bolt_kill_cap.lua`:12 例,**变异 11 次 10 抓 + 1 条对照逃逸**。
+    **⭐ 一次瞄歪的变异**:`perl -0pi` 非全局 `s///` 只改了**注释里的第一处**,
+    全绿看着像逃逸其实**没落到代码上**;**读绿/红之前先 grep 变异落在哪一行**(#170 同族)。
 - 2026-08-25T04:53Z(报告 `iterations/reports/hero/20260825T045337Z.md`;**自选,GH #173 已开**
   —— open 的 `[hero]` issue 仍**一条都不可在桌面推进**(#136 早已修好、卡在 `hero-6` 的语料;
   #150/#151/#154/#162/#170 的下一棒全是 queue 归档扫描或归 harness;#165/#166 是本组前两轮

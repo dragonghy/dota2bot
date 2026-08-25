@@ -646,6 +646,47 @@ function X.ConsiderW()
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
+--- The HP filter handed to FindAoELocation by X.ConsiderW2's kill-AoE branch --
+--- soak candidate 'zusboltcap' (turbo-only, GH #175, axis `0DMG`).
+---
+--- The shipped expression is `abilityW:GetAbilityDamage()`.  That call reads the
+--- ability's TOP-LEVEL `AbilityDamage` KV field and nothing else, and today's
+--- `zuus_lightning_bolt` does not declare one -- the block's "// Damage." section
+--- is literally empty; the numbers live in `AbilityValues/damage` (140 220 300
+--- 380).  So the read is 0, silently, on every level of the bolt.
+---
+--- Zero is not a small number HERE, it is a DIFFERENT PREDICATE.  FindAoELocation's
+--- last argument is `nMaxHealth`, and docs/BOT_API_REFERENCE.md:1288 records the
+--- engine's rule: "Pass 0 for no HP filter (target any HP)".  So the branch whose
+--- own local is named `nCanKillHeroLocationAoE` -- written to ask "is there a spot
+--- where one bolt FINISHES somebody" -- has been asking "is there an enemy hero
+--- anywhere in cast range", and answering yes with BOT_ACTION_DESIRE_HIGH at
+--- 120-135 mana a cast.  Note the direction: the same zero, fed to
+--- J.WillMagicKillTarget over in X.ConsiderW, would KILL that branch instead.
+--- Which way a silent zero cuts has to be read per call site (GH #175 §2).
+---
+--- Armed, the filter becomes the KV damage, which is what the branch's name says
+--- it wanted.  That is strictly TIGHTENING: gate-off admits every HP, armed admits
+--- a subset.  A key that answers <= 0 falls through to the shipped expression
+--- rather than inventing a default (the house rule from GH #162), so armed can
+--- never be WIDER than shipped -- and the two directions are never mixed inside
+--- this predicate (the lesson from GH #166).
+---
+--- Deliberately NOT folded in here: `( 1 + bot:GetSpellAmp() )`.  X.ConsiderW
+--- applies it and this branch never did; adding it would be a second, separate
+--- widening riding along on a tightening's gate.
+function X.GetBoltKillHealthCap( hAbility )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusboltcap' )
+	then
+		local nKvDamage = hAbility:GetSpecialValueInt( 'damage' )
+		if type( nKvDamage ) == 'number' and nKvDamage > 0 then return nKvDamage end
+	end
+
+	return hAbility:GetAbilityDamage()
+
+end
+
 -- Returns desire, cast location and -- third, added for GH #47 -- the enemy hero
 -- the location was aimed at, but ONLY for the poke branches at the bottom. The
 -- kill-AoE, channel-interrupt and retreat branches deliberately report no target
@@ -660,7 +701,9 @@ function X.ConsiderW2()
 	local nCastRange = abilityW:GetCastRange()
 	local nCastPoint = abilityW:GetCastPoint()
 	local manaCost = abilityW:GetManaCost()
-	local nDamage = abilityW:GetAbilityDamage()
+	local nDamage = X.GetBoltKillHealthCap( abilityW )
+	-- Verified against the KV, 2026-08-25: zuus_lightning_bolt/AbilityValues/
+	-- spread_aoe = 325.  Correct, left alone.
 	local nRadius = 325
 
 	local nAllies = J.GetNearbyHeroes(bot, 800, false, BOT_MODE_NONE )
