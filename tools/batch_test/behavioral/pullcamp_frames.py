@@ -53,8 +53,19 @@ def main():
           % (a.game, side, canon(hero), g.leg(hero), g.pos.get(hero), team))
     print('own fountain (%.0f, %.0f); %d friendly camps of %d derived'
           % (fx, fy, len(mine), len(camps)))
-    print('%-7s %-15s %-5s %-8s %-9s %-7s %-6s %-4s %s'
-          % ('t', 'pos', 'hp', 'd(camp)', 'd(fount)', 'dFount', 'neut', 'enm', 'events'))
+    # `d(wave)` / `foll->wave` added 2026-08-25 for the `pulllane` (a) review.
+    # The connect judgement rests on ONE number per frame -- how close the
+    # neutrals that are following the puller get to a lane creep -- and the
+    # 2026-08-23T09:09Z deep dive had to recompute it in an ad-hoc script,
+    # which is how the two estimators drifted apart in the first place. Both
+    # columns print `stale` rather than a number when this second has no creep
+    # sample (the dumper emits creeps every 3 s), and `foll->wave` prints `-`
+    # when no neutral is inside R_FOLLOW, i.e. when nothing is being dragged:
+    # a frame with no followers has no connect distance, and printing 0 or the
+    # bare nearest-creep distance there would manufacture a connect.
+    print('%-7s %-15s %-5s %-8s %-9s %-7s %-6s %-4s %-8s %-10s %s'
+          % ('t', 'pos', 'hp', 'd(camp)', 'd(fount)', 'dFount', 'neut', 'enm',
+             'd(wave)', 'foll->wave', 'events'))
     prev_df = None
     for t in sorted(x for x in g.frames[hero] if a.t0 <= x <= a.t1):
         s = g.frames[hero][t]
@@ -66,6 +77,16 @@ def main():
         nenm = sum(1 for o in g.by_t.get(t, [])
                    if o['team'] != team and o['hp_pct'] > 0
                    and dist(s['x'], s['y'], o['x'], o['y']) <= R_SAFE)
+        lw = g.lane_creeps_at(t)
+        if lw is None:
+            dw, fw = 'stale', 'stale'
+        else:
+            dw = '%.0f' % min((dist(s['x'], s['y'], c['x'], c['y'])
+                               for c in lw), default=-1)
+            foll = [c for c in (nb or [])
+                    if dist(s['x'], s['y'], c['x'], c['y']) <= R_FOLLOW]
+            fw = ('%.0f' % min(dist(c['x'], c['y'], w['x'], w['y'])
+                               for c in foll for w in lw)) if (foll and lw) else '-'
         ev = []
         for e in g.raw_events:
             if not (t - 0.5 <= e['t'] < t + 0.5):
@@ -76,10 +97,10 @@ def main():
             ev.append('%s %s->%s%s' % (e['type'], act or '-', tgt_ or '-',
                                        (' [%s]' % e['inflictor'])
                                        if e.get('inflictor') else ''))
-        print('%-7.1f (%6.0f,%6.0f) %-5.2f %-8.0f %-9.0f %-7s %-6s %-4d %s'
+        print('%-7.1f (%6.0f,%6.0f) %-5.2f %-8.0f %-9.0f %-7s %-6s %-4d %-8s %-10s %s'
               % (t, s['x'], s['y'], s['hp_pct'], dc, df,
                  ('%+d' % (df - prev_df)) if prev_df is not None else '-',
-                 nn if nn >= 0 else 'stale', nenm, '; '.join(ev[:4])))
+                 nn if nn >= 0 else 'stale', nenm, dw, fw, '; '.join(ev[:4])))
         prev_df = df
 
 

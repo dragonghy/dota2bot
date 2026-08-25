@@ -67,6 +67,16 @@ def main():
     ap.add_argument('sweeps', nargs='+')
     ap.add_argument('--rows', default='/tmp/pullcamp_rows.jsonl')
     ap.add_argument('--leg', default='armed')
+    # GH #148 (i): every armed/baseline reading must be given in BOTH physical
+    # strata.  `side` is the manifest's candidate-armed side, so `--side
+    # radiant` is the `ab` layer and `--side dire` the `ba` layer; run the tool
+    # once per side and average the two for the balanced estimator.  Pooling is
+    # still the default because the pooled read is what the pre-fix waves were
+    # reported under, and the two must stay comparable.  A filter rather than a
+    # built-in split on purpose: the pooled code path below is untouched, so a
+    # stratified run cannot change what an unstratified run prints.
+    ap.add_argument('--side', choices=('radiant', 'dire'), default=None,
+                    help='keep only games where this side is candidate-armed')
     a = ap.parse_args()
 
     # Key on (sweep_dir, game).  `.dem` basenames COLLIDE across runs of the
@@ -81,8 +91,16 @@ def main():
     rows = [json.loads(l) for l in open(a.rows)]
     eps = [e for e in episodes([r for r in rows if r['leg'] == a.leg])
            if any(r['poke'] for r in e)]
-    print('%s leg: %d poke episodes over %d games (%d unique basenames)'
-          % (a.leg, len(eps), len(man), len({k[1] for k in man})))
+    if a.side:
+        # Drop the games first, so the games denominator printed below is the
+        # stratum's own and not the whole wave's -- an episodes/game rate read
+        # against a pooled denominator is off by ~2x and looks like an effect.
+        man = {k: m for k, m in man.items() if m['side'] == a.side}
+        eps = [e for e in eps
+               if (e[0].get('sweep', a.sweeps[0]), e[0]['game']) in man]
+    print('%s leg%s: %d poke episodes over %d games (%d unique basenames)'
+          % (a.leg, ' [%s-armed]' % a.side if a.side else '',
+             len(eps), len(man), len({k[1] for k in man})))
     if not eps:
         return
 
@@ -99,6 +117,21 @@ def main():
         return cache[key]
 
     d_own, d_enm, drops, lows, leash, near_wave = [], [], [], [], [], []
+    # DECISION-SIDE reading of the `pulllane` clause, added 2026-08-25.
+    # `near_wave` below is a RESULT: it asks how close the neutrals got after
+    # the drag, so a low number can mean either "good camp choice" or "lucky
+    # wave push", and it is only defined for episodes that dragged at all.
+    # `J.IsCampBesideLane` filters on the camp's perpendicular gap to the
+    # assigned lane BEFORE any of that, at the selector.  The lane polyline is
+    # not in the dump, but the wave standing on that lane is, so the gap from
+    # the poke site to the nearest lane creep AT THE POKE FRAME is the same
+    # geometry read one frame earlier -- defined for every poke episode,
+    # drag or no drag, and immune to what happened afterwards.
+    # LIMIT, stated rather than hidden: creeps of BOTH teams count, because the
+    # clause is about the lane and both waves stand on it; and a frame whose
+    # creep sample is stale (`lane_creeps_at` returns None) is skipped, never
+    # defaulted to 0.
+    poke_wave = []
     deaths = far = flipped = 0
     conn_i = conn_ii = n_drag = 0
     per_hero = defaultdict(lambda: defaultdict(int))
@@ -115,6 +148,10 @@ def main():
         do = dist(s0['x'], s0['y'], fx, fy)
         de = dist(s0['x'], s0['y'], ex, ey)
         d_own.append(do); d_enm.append(de)
+        lc0 = g.lane_creeps_at(t0)
+        if lc0:
+            poke_wave.append(min(dist(s0['x'], s0['y'], c['x'], c['y'])
+                                 for c in lc0))
         far += 1 if do > 9000 else 0
         flipped += 1 if de < do else 0
         per_hero[canon(hero)]['poke_eps'] += 1
@@ -164,6 +201,10 @@ def main():
                         eps[0][0]['game'])).fountain[DIRE]))
     print('  poked >9000 u from our own fountain : %s' % pct(far, n))
     print('  closer to the ENEMY fountain than ours: %s' % pct(flipped, n))
+    print('  DECISION SIDE -- poke site to the nearest lane creep, at the poke')
+    print('    frame (the `pulllane` clause read one frame before the drag)')
+    print('    gap at the poke frame              : %s  [n=%d of %d]'
+          % (q(poke_wave), len(poke_wave), n))
 
     print('\n--- COST to the puller ---')
     print('  HP lost within %gs of the first poke : %s'
