@@ -14,6 +14,19 @@ two are complementary and deliberately not merged: arity asks "is this call
 handed the right number of things", form asks "is there anything at the other
 end of this call at all, and is it being called the way it was declared".
 
+WHAT ALREADY COVERS PART OF THIS, AND EXACTLY WHERE IT STOPS.
+`tests/test_no_undefined_jmz_refs.lua` (GH #48) asserts that every `J.<name>`
+referenced under `bots/` is defined under `bots/`, for the same stated reason
+as this file.  It is in the suite and it runs every round.  It walked past
+`mode_farm_generic:710` because its patterns capture ONE component after the
+dot: `J.Site.IsCampDangerous` is read as a reference to `J.Site`, which IS
+defined (`J.Site = require(...)`), and the name `IsCampDangerous` is never
+asked about.  Every J sub-table -- J.Site, J.Skill, J.Item, J.Role, J.Utils,
+J.Chat -- lives behind that blind spot, and so does every non-J table.  That
+gap, plus the two call-FORM shapes below, is what this tool adds; the premise
+is pinned in tests/test_call_form_census.py section 0 so that deepening the
+older scan reports a conflict instead of silently duplicating this one.
+
 WHY IT MATTERS MORE HERE THAN IN ORDINARY LUA.  `AGENTS.md`: `print()` never
 reaches the server console and the engine's error handler is broken -- an error
 inside a Think surfaces as `error in error handling` with the Lua text masked.

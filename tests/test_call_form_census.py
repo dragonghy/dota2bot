@@ -17,8 +17,12 @@ caught at the desk.
 
 Four layers, same shape as tests/test_call_arity_census.py:
 
-  LAYER 0 -- the premise.  `.luacheckrc` still restricts luacheck to the 1xx
-  family, so this tool is not duplicating the gate.
+  LAYER 0 -- the premise, in two halves.  `.luacheckrc` still restricts
+  luacheck to the 1xx family, so this tool is not duplicating the gate; and
+  tests/test_no_undefined_jmz_refs.lua (GH #48) -- which DOES test this class
+  for `J.<name>` and has run every round since -- still stops at the first dot,
+  which is exactly why it walked past mode_farm_generic:710.  If either premise
+  changes, this file says so instead of quietly overlapping another check.
 
   LAYER 1 -- the ratchet.  `bots/` carries exactly these findings today and
   every one is judged in the tool's ALLOWLIST with a reason.  A new one is red
@@ -44,6 +48,7 @@ Run: python3 tests/test_call_form_census.py   (or tests/run_py_tests.sh)
 
 import importlib.util
 import os
+import re
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -74,6 +79,31 @@ ok("luacheck is still restricted to the 1xx family",
    'only = { "1" }' in _rc or "only = { '1' }" in _rc,
    ".luacheckrc no longer says only={\"1\"}; re-read this file's premise "
    "before extending the allowlist")
+
+# The SECOND half of the premise, and the more surprising one.  A test for this
+# exact class already exists and has run every round since GH #48:
+# tests/test_no_undefined_jmz_refs.lua, "every `J.<name>` referenced under
+# bots/ must be defined under bots/" -- its header even cites the same masked
+# engine error handler.  It walked straight past mode_farm_generic:710 for one
+# reason: its patterns capture ONE component after the dot, so
+# `J.Site.IsCampDangerous` is read as a reference to `J.Site` (which is defined,
+# by `J.Site = require(...)`) and the name `IsCampDangerous` is never asked
+# about.  Every J sub-table -- J.Site, J.Skill, J.Item, J.Role, J.Utils,
+# J.Chat -- is behind that blind spot.
+#
+# So this assertion is not decoration: if someone deepens those patterns, this
+# tool's NILCALL half starts overlapping a check the Lua suite already runs,
+# and whoever does that should be told rather than left to duplicate it.
+_jmz_test = open(os.path.join(REPO, "tests", "test_no_undefined_jmz_refs.lua"),
+                 encoding="utf-8").read()
+_JMZ_REF_LINE = "for name in line:gmatch('J%.([%w_]+)') do"
+_jmz_follows_subtables = re.search(r"J%\.[^\n']*%\.", _jmz_test) is not None
+ok("the GH #48 scan still stops at the first dot",
+   _JMZ_REF_LINE in _jmz_test and not _jmz_follows_subtables,
+   "tests/test_no_undefined_jmz_refs.lua changed its patterns.  If it now "
+   "follows sub-table paths (J.Site.X), it covers part of this tool's NILCALL "
+   "half -- reconcile the two rather than running both blind, and re-read the "
+   "premise recorded here.")
 
 # ---------------------------------------------------------------------------
 # 1 + 2. The ratchet and its denominators.
