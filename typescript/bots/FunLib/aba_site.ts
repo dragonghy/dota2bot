@@ -333,6 +333,12 @@ export const IsLargeCamp = function (camp: any): boolean {
 // enemy-side ancient camp needs both 15 (enemy) and 12 (ancient), not just the
 // first one that matches. Testing them as an if/else over camp kind is the
 // same fall-through mistake one level up.
+// [GH #137 §3 suggestion 2] The ancient tier's bound, named once so the farm
+// path (FilterFarmNeutrals) and the camp ladder cannot drift apart.
+// IsCampAllowedForLevel keeps its literal on purpose -- the ladder's own test
+// reads that line as source.
+export const ANCIENT_MIN_LEVEL = 12;
+
 export const IsCampAllowedForLevel = function (camp: any, botLevel: number, attackDamage: number): boolean {
     if (IsEnemyCamp(camp) && botLevel < 15) {
         return false;
@@ -499,6 +505,45 @@ export const GetMinHPCreep = function (creepList: Unit[]): Unit | null {
     }
 
     return targetCreep;
+};
+
+// [GH #137 §3 suggestion 2] Soak candidate 'campfarm' (turbo-only). The gate is
+// resolved ONCE, at the single wrapper (NeutralFarmList) in
+// bots/mode_farm_generic.lua, and arrives here as bStrictAncient.
+//
+// The neutral-farm path guards ancient camps with `GetLevel() >= 10 or not
+// nNeutrals[1]:IsAncientCreep()` -- a question about the FIRST creep of a 900u
+// sweep -- and then hands the WHOLE list to FindFarmNeutralTarget, so a normal
+// creep at [1] opens the gate while the target picked out of the list can still
+// be an ancient one. For a maxHP farmer the ancient creep is precisely the one
+// that gets picked. Armed, a bot below the ancient tier does not see ancient
+// creeps on this path at all. Unarmed, at or above the tier, or with nothing to
+// drop, the SAME array comes back (identity, not a copy).
+export const FilterFarmNeutrals = function (
+    creepList: Unit[],
+    botLevel: number,
+    bStrictAncient?: boolean
+): Unit[] {
+    if (!bStrictAncient || botLevel >= ANCIENT_MIN_LEVEL) {
+        return creepList;
+    }
+
+    const kept: Unit[] = [];
+    let bDropped = false;
+
+    for (const creep of creepList) {
+        if (creep !== undefined && !creep.IsNull() && creep.IsAncientCreep()) {
+            bDropped = true;
+        } else {
+            kept[kept.length] = creep;
+        }
+    }
+
+    if (!bDropped) {
+        return creepList;
+    }
+
+    return kept;
 };
 
 export const FindFarmNeutralTarget = function (creepList: Unit[]): Unit | null {

@@ -62,6 +62,22 @@ local function ClosestCamp(hBot, tCamps)
 		J.IsModeTurbo() and J.IsSoakCandidate('campsel'))
 end
 
+-- [GH #137 §3 suggestion 2] Every neutral-creep sweep on the farm path goes
+-- through here, so the soak candidate 'campfarm' is resolved in exactly one
+-- place. The shipped `bot:GetLevel() >= 10 or not nNeutrals[1]:IsAncientCreep()`
+-- clauses below are left EXACTLY where they are: unarmed this wrapper returns
+-- the very table GetNearbyCreeps handed it, so the shipped path keeps its own
+-- object identity. Armed, a bot under the ancient tier stops seeing ancient
+-- creeps here, which is the only way every reader of the list -- the two `[1]`
+-- clauses, the `#nNeutrals >= 3` latch, the target selection and the raw
+-- Action_AttackUnit fallback -- can agree with each other.
+-- tests/test_campfarm_ancient_target.lua asserts the CALL-SITE COUNT rather
+-- than trusting that a future sweep remembers to come through here.
+local function NeutralFarmList(hBot, tCreeps)
+	return J.Site.FilterFarmNeutrals(tCreeps, hBot:GetLevel(),
+		J.IsModeTurbo() and J.IsSoakCandidate('campfarm'))
+end
+
 
 if bot.farmLocation == nil then bot.farmLocation = bot:GetLocation() end
 
@@ -705,7 +721,7 @@ function Think()
 	if preferedCamp ~= nil then
 		local targetFarmLoc = preferedCamp.cattr.location;
 		local cDist = GetUnitToLocationDistance(bot, targetFarmLoc);
-		local nNeutrals = bot:GetNearbyCreeps(900, true);
+		local nNeutrals = NeutralFarmList(bot, bot:GetNearbyCreeps(900, true));
 
 		-- Don't steal farm from an ally already at this camp
 		local nAllyNearCamp = J.GetAlliesNearLoc(targetFarmLoc, 800)
@@ -725,7 +741,7 @@ function Think()
 			if preferedCamp == nil then return end
 			targetFarmLoc = preferedCamp.cattr.location
 			cDist = GetUnitToLocationDistance(bot, targetFarmLoc)
-			nNeutrals = bot:GetNearbyCreeps(900, true)
+			nNeutrals = NeutralFarmList(bot, bot:GetNearbyCreeps(900, true))
 		end
 
 		if #nNeutrals >= 3 and cDist <= 600 and cDist > 240
@@ -776,7 +792,7 @@ function Think()
 				bot:Action_MoveToLocation(targetFarmLoc);
 				return;
 		else
-			local neutralCreeps = bot:GetNearbyCreeps(1000, true); 
+			local neutralCreeps = NeutralFarmList(bot, bot:GetNearbyCreeps(1000, true)); 
 			
 			if #neutralCreeps >= 2 then
 

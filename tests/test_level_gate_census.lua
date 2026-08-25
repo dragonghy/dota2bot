@@ -89,6 +89,12 @@ local cs = require('corpus_scale')
 -- rows by a further +30 (the gated rewrite of the bEarlyGame turbo ternary at
 -- what is now :463-495); the first three rows sit above the insertion point
 -- and did not move. Both directions of that split are what this file checks.
+-- The 2026-08-25 'campfarm' change then moved ALL FIVE mode_farm_generic rows
+-- by a further +16 -- a second file-local wrapper (NeutralFarmList) at the same
+-- declarations block the 'campsel' wrapper went into, so this time the shift is
+-- uniform and no row straddles the insertion point.  The same change moved both
+-- aba_site rows by +59 (a named constant above IsCampAllowedForLevel, +6, and
+-- the FilterFarmNeutrals block above FindFarmNeutralTarget, +53).
 -- The `:392 / :506 / :796 / :860` style labels in the header prose and in test
 -- names above and below are GH #84's OWN numbering of the tree it was filed
 -- against. They are stable labels for the rows, not current line numbers, and
@@ -104,7 +110,7 @@ local GATES = {
          .. 'is dead code for the whole game, and reserving for buyback when your own t3s '
          .. 'are falling is live turbo behaviour at level 12.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 303, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 319, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 18 or not J.IsCore(bot) then',
       why = 'GH #84 (乙). Supports keep the exit through `not J.IsCore(bot)`; a core\'s '
@@ -112,13 +118,13 @@ local GATES = {
          .. 'Note the standing warning: dropping farm desire is not the same as fighting -- '
          .. 'this row is a candidate, and it needs a final-desire assertion, not a reachability one.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 387, op = '>=', n = 23, eff = 23,
+    { file = 'bots/mode_farm_generic.lua', line = 403, op = '>=', n = 23, eff = 23,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'or (bot:GetLevel() >= 23 and nAlliesCount >= 3)',
       why = 'rung 2 of 3. It only loosens the grouped-allies count from 4 to 3; rung 1 '
          .. '(nAlliesCount >= 4) and rung 3 (GetRoshanDesire()) carry the same purpose live.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 410, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 426, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if #nNeutrals == 0 and #nDefendAllies >= 2 and (not beVeryHighFarmer or bot:GetLevel() >= 15 or J.IsLateGame()) then',
       why = 'for a `beVeryHighFarmer` the first rung is false by construction, so the '
@@ -126,7 +132,7 @@ local GATES = {
          .. 'is DotaTime() > 18*60 in turbo, false in every frame of the archive. Both '
          .. 'fallbacks dead => the very-high farmer never joins a defence this way.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 554, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 570, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then',
       why = 'cores are covered by `bCore`; for a SUPPORT the remaining two rungs are the '
@@ -134,7 +140,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 583, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 599, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '
@@ -171,7 +177,7 @@ local GATES = {
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
          .. 'attacking the ancient); the level rung only widens it.' },
 
-    { file = 'bots/FunLib/aba_site.lua', line = 832, op = '>=', n = 20, eff = 20,
+    { file = 'bots/FunLib/aba_site.lua', line = 891, op = '>=', n = 20, eff = 20,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() >= 20 and allyCount <= 1 and botNetWorth < 21000 then',
       why = 'named 合取(有牙齿) in GH #84 §3(甲); reads INERT here. The row\'s subject is a '
@@ -181,7 +187,7 @@ local GATES = {
          .. 'It does reach a FOCUS hero -- skeleton_king delegates here (:1001) -- which is '
          .. 'why the row was worth reading rather than waving through.' },
 
-    { file = 'bots/FunLib/aba_site.lua', line = 896, op = '>', n = 20, eff = 21,
+    { file = 'bots/FunLib/aba_site.lua', line = 955, op = '>', n = 20, eff = 21,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 20 and botNetWorth < 23333 then',
       why = 'same shape, huskar\'s entry (luna delegates here at :853). Subject is a '

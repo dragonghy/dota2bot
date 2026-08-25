@@ -419,6 +419,12 @@ end
 -- enemy-side ancient camp needs both 15 (enemy) and 12 (ancient), not just the
 -- first one that matches. Testing them as an if/elseif over camp kind is the
 -- same fall-through mistake one level up.
+-- [GH #137 §3 suggestion 2] The ancient tier's bound, named once so the farm
+-- path below and the camp ladder cannot drift apart. IsCampAllowedForLevel
+-- keeps its literal on purpose (tests/test_campgrade_tier_ladder.lua reads that
+-- line as SOURCE); tests/test_campfarm_ancient_target.lua asserts the two agree
+-- instead of trusting that a future edit touches both.
+____exports.ANCIENT_MIN_LEVEL = 12
 ____exports.IsCampAllowedForLevel = function(camp, botLevel, attackDamage)
     if ____exports.IsEnemyCamp(camp) and botLevel < 15 then
         return false
@@ -571,6 +577,59 @@ ____exports.GetMinHPCreep = function(creepList)
         end
     end
     return targetCreep
+end
+-- [GH #137 §3 suggestion 2] Soak candidate 'campfarm' (turbo-only). The gate is
+-- resolved ONCE, at the single wrapper (NeutralFarmList) in
+-- bots/mode_farm_generic.lua, and arrives here as bStrictAncient.
+--
+-- THE DEFECT this closes. The neutral-farm path guards ancient camps with
+--     bot:GetLevel() >= 10 or not nNeutrals[1]:IsAncientCreep()
+-- -- a question about the FIRST creep of a 900u sweep -- and then hands the
+-- WHOLE list to FindFarmNeutralTarget. Two camps can both sit inside that
+-- radius (the replay desk's bearing case has an ogre camp and an ancient camp
+-- ~590u apart), so a normal creep at [1] opens the gate while the target picked
+-- out of the list is an ancient one. For a maxHP farmer (viper, naga_siren,
+-- huskar, a bfury/maelstrom/mjollnir/radiance holder) that is not a corner
+-- case: the ancient creep is exactly the one with the most health on the field,
+-- so it is the one that gets picked. The third read of the sweep, the 1000u
+-- `neutralCreeps` branch further down, carries no ancient clause at all.
+-- Measured (GH #137, replay desk 2026-08-24T00:59Z / 2026-08-24T15:57Z): 22 of
+-- 49 gate violations on the armed leg happened in games where NO member of the
+-- team ever reached the tier, i.e. that camp cannot have come from the camp
+-- list -- a second path the ladder ('campgrade') does not manage.
+--
+-- Armed, a bot below the ancient tier does not see ancient creeps on this path
+-- at all, so every reader of the list agrees with every other one: the two [1]
+-- clauses, the `#nNeutrals >= 3` count that latches FARM_STATE_FARM, the
+-- UpdateCommonCamp bookkeeping, the target selection, and the raw
+-- Action_AttackUnit(nNeutrals[1]) fallback -- which has no ancient clause of its
+-- own today.
+--
+-- DECLARED CONSEQUENCE, not a hidden one: when the only creeps in the sweep are
+-- ancient ones, the armed list is EMPTY, and the farm block then takes its own
+-- existing "nothing here" path (re-pick a camp / walk to the camp location)
+-- rather than a new one this fix invents.
+--
+-- Unarmed, at or above the tier, or with nothing to drop, the SAME TABLE comes
+-- back -- identity, not an equivalent copy -- so the shipped path is unchanged
+-- down to the object the callers hold.
+____exports.FilterFarmNeutrals = function(creepList, botLevel, bStrictAncient)
+    if not bStrictAncient or botLevel >= ____exports.ANCIENT_MIN_LEVEL then
+        return creepList
+    end
+    local kept = {}
+    local bDropped = false
+    for ____, creep in ipairs(creepList) do
+        if creep ~= nil and not creep:IsNull() and creep:IsAncientCreep() then
+            bDropped = true
+        else
+            kept[#kept + 1] = creep
+        end
+    end
+    if not bDropped then
+        return creepList
+    end
+    return kept
 end
 ____exports.FindFarmNeutralTarget = function(creepList)
     local bot = GetBot()
