@@ -503,7 +503,7 @@ function X.ConsiderInfest()
             and not enemyHero:IsDisarmed()
             then
                 if J.IsChasingTarget(enemyHero, bot) or #nEnemyHeroes > #nAllyHeroes and botHP < 0.5 then
-                    local enemyDamage = J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot, 5.0)
+                    local enemyDamage = J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot)
                     if enemyDamage > (bot:GetHealth() + bot:GetHealthRegen() * 5.0) then
                         for _, allyHero in ipairs(nAllyHeroes) do
                             if bot ~= allyHero

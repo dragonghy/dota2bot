@@ -336,7 +336,7 @@ function X.SkillsComplement()
 
     nEnemyHeroes = J.GetNearbyHeroes(bot, 1600, true)
     nAllyHeroes = J.GetNearbyHeroes(bot, 1600, false)
-    isInLaningPhase = J.IsInLaningPhase(bot)
+    isInLaningPhase = J.IsInLaningPhase()
 
     if bot:HasModifier(modifier_invoker_ghost_walk_self)
     and (bot:WasRecentlyDamagedByAnyHero(6)

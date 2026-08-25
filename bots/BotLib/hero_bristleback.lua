@@ -617,7 +617,16 @@ function X.ConsiderWarpath()
 	if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
 		for _, enemyHero in pairs(nEnemyHeroes) do
 			if J.IsValidHero(enemyHero) and J.IsInRange(bot, enemyHero, 500) and J.IsChasingTarget(enemyHero, bot) then
-				if (J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot, 8.0) > bot:GetHealth() * 1.15)
+				-- GH #189: this read `..., bot, 8.0)`.  J.GetTotalEstimatedDamageToTarget
+				-- declares (nUnits, target) and hardcodes its own 5-second window
+				-- (`GetEstimatedDamageToTarget(true, target, 5, ...)`), so Lua dropped
+				-- the 8.0 silently -- the comparison has always run on 5 seconds.  The
+				-- argument is removed rather than plumbed: 5s is the repo-wide window
+				-- for this question (hero_mars/hero_life_stealer/mode_attack_generic all
+				-- ask for 5.0), and an 8-second sum of "damage they could deal" is a bad
+				-- burst estimate for "am I about to die while retreating".  Byte-for-byte
+				-- the same behaviour as before; only the lie is gone.
+				if (J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot) > bot:GetHealth() * 1.15)
 				or (#nEnemyHeroes > #nAllyHeroes and botHP < 0.4)
 				then
 					return BOT_ACTION_DESIRE_HIGH

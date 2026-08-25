@@ -127,29 +127,72 @@ ok("the synthetic battery passes", C.selfcheck() == 0)
 # ---------------------------------------------------------------------------
 # 4. The one row with teeth, pinned.
 # ---------------------------------------------------------------------------
-print("\n3. the row with teeth")
+print("\n3. the OVER half, swept (GH #189)")
 
+# The row that had teeth was hero_bristleback:620 -- an 8.0 handed to a helper
+# with a hardcoded 5-second window.  It was swept together with the other seven
+# OVER sites (hero group, 2026-08-25); every one passed a literal constant, so
+# every removal is byte-for-byte the same behaviour.  What this section defends
+# is the swept state, not the defect: an OVER can never crash, so holding the
+# half at zero costs nothing and makes the next one red on arrival.
 _teeth = [k for k, v in C.ALLOWLIST.items() if v[1].startswith("TEETH")]
-ok("exactly one behaviour-bearing row",
-   len(_teeth) == 1,
-   "the TEETH set changed (%d rows); if a mismatch was promoted or demoted, "
-   "say so in a report" % len(_teeth))
+ok("no behaviour-bearing row is being tolerated",
+   not _teeth,
+   "a TEETH row is back in the allowlist (%d): a behaviour-bearing arity "
+   "mismatch is routed to its owner and fixed, not judged and kept" % len(_teeth))
+
+_over = [k for k in C.ALLOWLIST if k[2] == "OVER"]
+ok("the OVER half is still empty",
+   not _over,
+   "an OVER row is back in the allowlist:\n        "
+   + "\n        ".join("%s  %s  passed %d declares %d"
+                       % (k[0], k[1], k[3], k[4]) for k in _over)
+   + "\n        The extra argument is silently dropped; the fix is to delete "
+     "it at the call site (recording the intent in a comment if it had one), "
+     "not to allowlist it.")
 
 _jmz = open(os.path.join(REPO, "bots", "FunLib", "jmz_func.lua"),
             encoding="utf-8").read()
 ok("J.GetTotalEstimatedDamageToTarget still hardcodes its window",
    "GetEstimatedDamageToTarget(true, target, 5, DAMAGE_TYPE_ALL)" in _jmz,
-   "the shared helper stopped hardcoding 5 seconds -- if it now takes a "
-   "duration, hero_bristleback:620's 8.0 became correct and the TEETH row "
-   "must be deleted")
+   "the shared helper stopped hardcoding 5 seconds.  If it now takes a "
+   "duration, the three call sites this sweep shortened are the ones that "
+   "wanted one -- re-read hero_bristleback:620's comment before extending it")
+ok("J.GetTotalEstimatedDamageToTarget still declares two parameters",
+   "function J.GetTotalEstimatedDamageToTarget(nUnits, target)" in _jmz,
+   "the helper's signature changed; the swept call sites were shortened "
+   "against exactly this declaration")
+
+_bristle = open(os.path.join(REPO, "bots", "BotLib", "hero_bristleback.lua"),
+                encoding="utf-8").read()
+ok("hero_bristleback's burst check calls the helper with two arguments",
+   "J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot)" in _bristle
+   and "J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot, " not in _bristle,
+   "the 8.0 is back at hero_bristleback:620.  Lua drops it, so the check "
+   "still runs on 5 seconds while reading as 8 -- see GH #189")
+ok("the dropped window is recorded where the reader will look",
+   "GH #189" in _bristle,
+   "the call site lost the comment explaining why it does NOT pass a "
+   "duration; without it the next reader re-adds the 8.0")
 
 _mars = open(os.path.join(REPO, "bots", "BotLib", "hero_mars.lua"),
              encoding="utf-8").read()
 ok("the sister that DOES take a duration is still there",
    "function X.GetTotalEstimatedDamageToTarget(hUnitList, hTarget, fDuration)"
    in _mars,
-   "hero_mars.lua's duration-taking copy is gone; it is the reason the "
-   "three-argument call reads as correct, and the TEETH row's argument cites it")
+   "hero_mars.lua's duration-taking copy is gone.  It is the reason the "
+   "three-argument shape reads as correct in this repo, and therefore the "
+   "reason the swept sites are worth pinning")
+
+_iglp = ("J.IsGoingOnSomeone", "J.IsInLaningPhase")
+_still_over = sorted(
+    "%s:%d %s" % (f["file"], f["line"], f["name"])
+    for f in FINDINGS if f["kind"] == "OVER" and f["name"] in _iglp)
+ok("no caller passes a radius to a helper that has none",
+   not _still_over,
+   "J.IsGoingOnSomeone reads GetActiveMode() and J.IsInLaningPhase declares "
+   "no parameters; an argument handed to either is read by a human and "
+   "discarded by Lua:\n        " + "\n        ".join(_still_over))
 
 # ---------------------------------------------------------------------------
 # 5. The repaired call site.

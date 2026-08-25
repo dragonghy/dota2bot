@@ -22,6 +22,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-15. ~~**GH #189 认领 + GH #192 新轴:名字在树上根本不存在的那个点调用**~~
+   **2026-08-25T22:56Z done —— 本轮改了 `bots/`(前七轮都是零行为改动,这一轮不是):
+   八处 OVER 实参删除是逐字节零行为,`hero_queenofpain:503` 的点改冒号是行为改动、未 gate;
+   无新 gate id、`state.json` 无新增、零 AWS、不提 queue 请求。** 新轴 **`CALLFORM`**。
+   - **#189 结案**:采纳方向 (1) 并把 OVER 半边**八处一起扫空**(传的全是字面常量 ⇒ 删掉逐字节等价):
+     bristleback 的 `8.0`、life_stealer/mode_attack 的 `5.0`、enchantress/undying 的 `1200`
+     (`J.IsGoingOnSomeone` 只读 `GetActiveMode()`)、invoker/pudge/tinker 的 `bot`
+     (`J.IsInLaningPhase()` 声明零参)。ALLOWLIST 的 OVER 半边现在是**空的**,
+     `test_call_arity_census.py` §3 从「钉那个缺陷」改成「**守住那个空**」。
+   - **⭐ 除 #189 的性价比理由外,多给了一条就事论事的**:5 秒是本仓库回答「这波爆发会不会
+     打死我」的**统一窗口**(mars/life_stealer/mode_attack 三处都要 5.0),而「8 秒内他们能打出的
+     总伤害」作为撤退时的爆发估计本身偏大 ⇒ **被丢掉的那个 8.0 本来也不是更对的那个数**。
+   - **新轴的由来**:`call_arity_census.py` 的 `census()` 第一行 `if name not in decls: continue`
+     ⇒ **解析不到声明的名字连 stats 都进不去**。而 Lua 里 `A.b()` 当 `b` 不存在是
+     `attempt to call a nil value`,配上**坏掉的引擎错误处理器**(`AGENTS.md`)⇒
+     **这种崩溃不自报家门,症状只是某个 bot 的 Think 从半路停住**。
+   - **275 文件 / 2530 声明名 / 28364 点调用 + 20774 冒号调用:NILCALL 7、SELFLESS 13、BOUND 0。**
+   - **⭐ 两处有牙齿的**:① `hero_queenofpain:503` 的 `abilityE.IsFullyCastable()` —— **点**,
+     而同文件这个句柄的**另外 9 处全是冒号**(#154 的「同文件另一处怎么写」判别式)⇒ **已修**
+     (未 gate,依据 #188 先例;**总监若判定该走 gate 请退回**)。
+     ② `mode_farm_generic:710` 的 `J.Site.IsCampDangerous` —— **整棵树没有这个声明**,
+     `aba_site` 是无 metatable 的平表 ⇒ **未 gate 的活 nil 调用**,每次换野点都撞上
+     ⇒ **有意不改**(农场策略决定 + 协同组的文件),**已单开 #193**,并写明**可能与 owner P1
+     第 1 条同链路(是线索不是结论)**。
+   - **其余 18 处逐条读 body 判良性**:`Debug.IsDebug`×12 / `Utilities.CanPlaySound` 是 SELFLESS
+     但**两个 body 都不读 `self`**;`v.callback`×4 是 DYNAMIC;`enemy.IsHero` 是 DEADFILE。
+     **BOUND 的 0 是排除假阳性之后的** —— ts_libs 转译产物的 `function T.m(self, ...)` + `T:m()`
+     显式豁免,否则造出两条「修了就坏」的假阳性。
+   - **⚠ 判据单向,而这次有量到的反例**:解析按名字**最后一段**在全树找(故意宽松,危险方向是
+     假阳性)⇒ **解析得到什么都不证明**。同一个文件里 `enemy.IsHero(` 是 finding,而上下几行
+     **一模一样缺陷**的三处 `bot.GetUnitName(` 不是,只因 `aba_global_overrides.lua` 声明了
+     `function CDOTA_Bot_Script:GetUnitName()`。**已写进头注并配这个例子。**
+   - **⭐ 焦点五 0 处,但这个 0 比前几轮弱一档**:#187/#179 的 0 是核验(看**字面量**、无解析盲区),
+     **本轴的 0 排除不了「名字存在但属于另一张表」的跨表笔误**。**别引成「焦点五的调用都对」。**
+   - **交付**:`tools/agent/call_form_census.py`(15 条 selfcheck,**多数钉「什么不是 finding」**)、
+     `tests/test_call_form_census.py`(四层 + **一条双向断言**:#193 那个调用与它的 ALLOWLIST 行
+     **必须同生同灭**,行被删而调用还在 ⇒ 棘轮停止盯着一个活的 nil 调用 ⇒ 红)。
+     **变异 5/5 抓 + 1 条对照(Lion 里 39 处局部改名)如实逃逸。**
+   - **⭐ 最贵的方法教训**:**变异回滚用 `git checkout -- <file>` 会连没提交的修复一起抹掉** ⇒
+     后三次变异读数全污染,而**污染的表现是"更红"** —— 方向与逃逸相反,**没人会因为红而起疑**。
+     **推论:回滚手段本身也是实验器材,要和变异一样被检查。** 同轮第二条:变异脚本的
+     `assert count==1` 没命中时**没有执行变异**,却把测试通过打印成 **ESCAPED** ⇒
+     **变异没落地与变异被逃逸,输出一模一样**(§-13 教训 ② 同族)。
+   - **下一棒**:#193 归协同组(修法 + P1 排除);#192 的 gate 判定归总监;**不需要批测**;
+     `advanced_item_strategy.lua` 的 4 处同族由唤醒该文件的人一并修(ALLOWLIST 已写死条件)。
+
 -14. ~~**GH #187:文件写下了一个物品名 —— 游戏里有这个名字的物品吗?**~~
    **2026-08-25T19:55Z done —— 零行为改动(`bots/` 一行未改)、无新 gate、`state.json` 无新增、
    稳定版未漂移、零 AWS、不提 queue 请求。** 新轴两根:**`ITEMID`** 与 **`LVLQUEUE`**。
@@ -1341,6 +1387,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T22:56Z(报告 `iterations/reports/hero/20260825T225641Z.md`;**认领 GH #189,
+  开了 GH #192(本组新轴)+ GH #193(转协同组)** —— 自检 **UNLANDED 0**,cadence 洞五组都有;
+  owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项。**本轮改了 `bots/`,前七轮的「零行为改动」
+  在这一轮中断了**:八处 OVER 实参删除**逐字节零行为**,而 `hero_queenofpain:503` 的
+  点改冒号**是行为改动、未 gate**(依据 #188 先例;**总监若判定该走 gate 请退回,我改成 gated 重提**)。
+  **无新 gate id、`state.json` 无新增、零 AWS、不提 queue 请求。**
+  - **#189 结案**:采纳方向 (1),并把 OVER 半边**八处一起扫空**(传的全是字面常量 ⇒ 删掉逐字节
+    等价)⇒ `call_arity_census.py` 的 OVER 半边**现在是空的**,`test_call_arity_census.py` §3
+    从「钉那个缺陷」改成「**守住那个空**」。**⭐ 多给了一条 #189 没有的、就事论事的理由**:
+    5 秒是本仓库回答「这波爆发会不会打死我」的**统一窗口**,而 8 秒的总伤害作为撤退时的爆发估计
+    本身偏大 ⇒ **被丢掉的那个 8.0 本来也不是更对的那个数**。
+  - **新轴 `CALLFORM`** —— 由来是读 #189 时看见 arity 普查的 `census()` 第一行
+    `if name not in decls: continue`:**解析不到声明的名字连 stats 都进不去**。而
+    `attempt to call a nil value` 配上**坏掉的引擎错误处理器** ⇒ **这种崩溃不自报家门**,
+    症状只是某个 bot 的 Think 从半路停住。**275 文件 / 2530 声明名 / 28364 点调用 +
+    20774 冒号调用:NILCALL 7、SELFLESS 13、BOUND 0。**
+  - **⭐ 两处有牙齿**:① `hero_queenofpain:503` 的 `abilityE.IsFullyCastable()` 是**点**,
+    而同文件这个句柄**另外 9 处全是冒号**(#154 判别式)⇒ **已修**;
+    ② `mode_farm_generic:710` 的 `J.Site.IsCampDangerous` —— **整棵树没有这个声明**、
+    `aba_site` 是无 metatable 的平表 ⇒ **未 gate 的活 nil 调用**,farm 中每次「最近野点近 200+」
+    的帧都撞上 ⇒ **有意不改**(协同组的文件 + 农场策略决定),**已单开 #193**,
+    并写明**可能与 owner P1 第 1 条同链路 —— 是线索不是结论**。
+  - **其余 18 处逐条读 body 判良性**;**BOUND 的 0 是排除了 ts_libs 的 `function T.m(self,...)`
+    这个假阳性之后的**。
+  - **⚠ 单向判据 + 量到的反例**:解析按名字**最后一段**全树找 ⇒ **解析得到什么都不证明**。
+    同文件里 `enemy.IsHero(` 是 finding 而**一模一样缺陷**的 `bot.GetUnitName(` 不是,
+    只因别处声明了 `CDOTA_Bot_Script:GetUnitName`。**⭐ 焦点五 0 处,但这个 0 比 #187/#179
+    的弱一档**(那两根轴看字面量、无解析盲区),**别引成「焦点五的调用都对」**。
+  - **变异 5/5 抓 + 1 对照(Lion 39 处局部改名)如实逃逸**;arity 侧另有 **6/6 抓 + 1 对照逃逸**。
+  - **⭐ 最贵的方法教训**:**变异回滚用 `git checkout --` 会连没提交的修复一起抹掉**,
+    而污染的表现是**"更红"** —— 方向与逃逸相反,**没人会因为红而起疑**;
+    **回滚手段本身也是实验器材**。第二条:`assert count==1` 没命中时**变异没落地**,
+    脚本却打印 **ESCAPED** ⇒ **没落地与被逃逸输出一模一样**。
+  - **如实记一笔**:`run_py_tests.sh` 第一次跑报 `test_call_arity_census.py` 1 failed,
+    **单独跑 exit=0、随后两次整套重跑 30/0**,原因未查明(已排除"另一个测试在改被扫的树":
+    tests 对 `bots/` 全是只读)。**不编原因,登记为一次未复现的失败。**
 - 2026-08-25T19:55Z(报告 `iterations/reports/hero/20260825T195519Z.md`;**自选,GH #187 已开**
   —— 自检 **UNLANDED 0**,cadence 洞五组都有;owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项;
   open 的 `[hero]` issue 下一棒仍全是 queue 归档扫描或归 harness。**本轮零行为改动**:

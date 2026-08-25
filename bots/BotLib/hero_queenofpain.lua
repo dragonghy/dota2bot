@@ -500,7 +500,15 @@ function X.ConsiderW()
 					
 					if J.IsValidHero(bot:GetTarget())
 					then
-						if J.CanKillTarget( bot:GetTarget(), ScreamOfPainDamage, DAMAGE_TYPE_MAGICAL ) and abilityE.IsFullyCastable()
+						-- GH #192: this read `abilityE.IsFullyCastable()`, with a dot.
+						-- All 9 other uses of this handle in the file are colon
+						-- calls (`abilityE:IsFullyCastable()` at :569 among them),
+						-- which is the "same file, other site" discriminator for typo
+						-- vs design.  A dot reaches the method without its receiver, so
+						-- the conjunct cannot answer the question it is asking -- and
+						-- an error raised here is masked by the engine's broken error
+						-- handler (AGENTS.md), which is why nothing ever reported it.
+						if J.CanKillTarget( bot:GetTarget(), ScreamOfPainDamage, DAMAGE_TYPE_MAGICAL ) and abilityE:IsFullyCastable()
 						then
 							return BOT_ACTION_DESIRE_VERYHIGH
 						end

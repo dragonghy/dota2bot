@@ -370,7 +370,7 @@ function X.ConsiderSoulRip()
         end
     end
 
-	if J.IsGoingOnSomeone(bot, 1200)
+	if J.IsGoingOnSomeone(bot)
 	then
 		local targetAlly = nil
 		local hp = 1000

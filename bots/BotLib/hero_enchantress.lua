@@ -497,7 +497,7 @@ function X.ConsiderLittleFriends()
         end
     end
 
-    if J.IsGoingOnSomeone(bot, 1200)
+    if J.IsGoingOnSomeone(bot)
     then
         local botTarget = J.GetStrongestUnit(nCastRange, bot, true, false, nDuration)
 

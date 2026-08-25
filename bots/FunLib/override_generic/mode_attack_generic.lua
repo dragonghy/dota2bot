@@ -331,7 +331,7 @@ function Generic.Think()
 			local nInRangeEnemy = J.GetEnemiesNearLoc(enemy:GetLocation(), 900)
 
 			local enemyScore = (math.min(1, bot:GetAttackRange() / GetUnitToUnitDistance(bot, enemy)))
-				* ((1 - J.GetHP(enemy)) * J.GetTotalEstimatedDamageToTarget(nAllyHeroes_Attacking, enemy, 5.0))
+				* ((1 - J.GetHP(enemy)) * J.GetTotalEstimatedDamageToTarget(nAllyHeroes_Attacking, enemy))
 				* mul
 				* (math.exp(RemapValClamped(#nInRangeAlly - #nInRangeEnemy, -4, 4, 0, 1.6)) - 1)
 

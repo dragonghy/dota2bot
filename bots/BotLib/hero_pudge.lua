@@ -798,7 +798,7 @@ function X.ConsiderDismember(Dismember, botTarget, botHP, nEnemyHeroesNearRot)
 		end
     end
 
-    if J.IsInLaningPhase(bot)
+    if J.IsInLaningPhase()
     then
         local nInRangeEnemy = J.GetNearbyHeroes(bot,nCastRange + 100, true, BOT_MODE_NONE)
         local nInRangeTower = bot:GetNearbyTowers(700, true)

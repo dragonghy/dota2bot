@@ -96,38 +96,29 @@ DECISION_FILES = [
 #   TEETH      behaviour-bearing.  Routed, with an issue, to whoever owns it.
 ALLOWLIST = {
     # ---- OVER -------------------------------------------------------------
-    # J.GetTotalEstimatedDamageToTarget(nUnits, target) hardcodes a 5-second
-    # window inside (`GetEstimatedDamageToTarget(true, target, 5, ...)`).  Two
-    # of the three sites pass 5.0, which is what the helper does anyway.
-    ("bots/BotLib/hero_life_stealer.lua",
-     "J.GetTotalEstimatedDamageToTarget", "OVER", 3, 2):
-        (1, "COSMETIC: passes 5.0, the helper's own hardcoded window"),
-    ("bots/FunLib/override_generic/mode_attack_generic.lua",
-     "J.GetTotalEstimatedDamageToTarget", "OVER", 3, 2):
-        (1, "COSMETIC: passes 5.0, the helper's own hardcoded window"),
-    # ...and one does not.
-    ("bots/BotLib/hero_bristleback.lua",
-     "J.GetTotalEstimatedDamageToTarget", "OVER", 3, 2):
-        (1, "TEETH (hero group): passes 8.0 into a 5-second helper, so the "
-            "'will the incoming burst kill me' comparison at hero_bristleback "
-            "sees 5/8 of the damage the author asked for.  The sister "
-            "X.GetTotalEstimatedDamageToTarget(hUnitList, hTarget, fDuration) "
-            "in hero_mars.lua takes the duration for real, which is why the "
-            "three-argument shape looks right at a glance."),
-    # J.IsGoingOnSomeone(bot) reads the active mode only; it has never had a
-    # radius.  The 1200 is read by a human as a range and by Lua as nothing.
-    ("bots/BotLib/hero_enchantress.lua", "J.IsGoingOnSomeone", "OVER", 2, 1):
-        (1, "COSMETIC: helper reads GetActiveMode() only, no radius exists"),
-    ("bots/BotLib/hero_undying.lua", "J.IsGoingOnSomeone", "OVER", 2, 1):
-        (1, "COSMETIC: helper reads GetActiveMode() only, no radius exists"),
-    # J.IsInLaningPhase() is a global clock read; the bot handed to it is
-    # dropped.  Reads per-hero, is not.
-    ("bots/BotLib/hero_invoker.lua", "J.IsInLaningPhase", "OVER", 1, 0):
-        (1, "COSMETIC: global clock, takes no arguments"),
-    ("bots/BotLib/hero_pudge.lua", "J.IsInLaningPhase", "OVER", 1, 0):
-        (1, "COSMETIC: global clock, takes no arguments"),
-    ("bots/BotLib/hero_tinker.lua", "J.IsInLaningPhase", "OVER", 1, 0):
-        (1, "COSMETIC: global clock, takes no arguments"),
+    # EMPTY, and that is a state worth defending (hero group, 2026-08-25,
+    # GH #189).  All eight OVER sites were swept in one commit: the extra
+    # argument was a literal constant at every one of them, so deleting it is
+    # byte-for-byte the same behaviour and removes the only thing the argument
+    # ever did, which was mislead a reader.
+    #
+    #   hero_bristleback:620   passed 8.0 into a helper with a hardcoded 5s
+    #                          window -- the one row that ever had teeth.  The
+    #                          8.0 is recorded in a comment at the call site,
+    #                          not plumbed: 5s is the repo-wide window for this
+    #                          question and the better burst estimate anyway.
+    #   hero_life_stealer:506, mode_attack_generic:334
+    #                          passed 5.0, the helper's own constant.
+    #   hero_enchantress:500, hero_undying:373
+    #                          passed 1200 to J.IsGoingOnSomeone(bot), which
+    #                          reads GetActiveMode() and has never had a radius.
+    #   hero_invoker:339, hero_pudge:801, hero_tinker:464
+    #                          passed `bot` to J.IsInLaningPhase(), a global
+    #                          clock that declares no parameters.
+    #
+    # An OVER can never crash, which is why an empty OVER half is cheap to hold
+    # and worth holding: the next one is red the day it lands.  See
+    # tests/test_call_arity_census.py section 3.
 
     # ---- UNDER ------------------------------------------------------------
     # J.IsInTeamFight(bot, nRadius): `if nRadius == nil or nRadius > 1600 then

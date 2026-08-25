@@ -461,7 +461,7 @@ function X.ConsiderLaser()
 		end
 
         if J.IsValidHero(nEnemyHeroes[1])
-        and J.IsInLaningPhase(bot)
+        and J.IsInLaningPhase()
         then
             local nAllyTowers = bot:GetNearbyTowers(1600, false)
             if nAllyTowers ~= nil and #nAllyTowers >= 1
