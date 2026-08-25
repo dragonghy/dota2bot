@@ -276,6 +276,7 @@ HP_CENSUS = {
     'stayfield2_margin:SHIPPED_HP_HI':   ('MIRROR', 'J.ShouldStayAndRegen; wider than the situation test BY DESIGN'),
     'hometp_highhp:HEAL_CORE_HP':        ('MIRROR', 'cores need HP < 0.75 (:1315)'),
     'itemtrip_contract:HP_FLOOR':        ('MIRROR', 'J.IsWastefulItemTrip; pinned above'),
+    'tpdefend_events:HEAT_HP':           ('MIRROR', 'J.ShouldTpSupportTowerFight heat gate; pinned above'),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
@@ -533,6 +534,67 @@ check('the two rings really do differ (mid-lane override exists)',
 check('the armed predicate is a strict subset of the shipped one',
       tf.ARMED_CLOCK < tf.SHIPPED_CLOCK,
       '(armed=%r shipped=%r)' % (tf.ARMED_CLOCK, tf.SHIPPED_CLOCK))
+
+# `midsupyield` event-axis reader (replay-check 2026-08-25, the AX.5 unlock
+# bar).  Every one of these six numbers decides whether a TP press counts as a
+# tower-defense ANSWER, i.e. whether the event population the director asked to
+# be sized exists at all.  The decoy in this function is the RADIUS PAIR: 1200
+# appears twice (enemies near the tower, allies near the tower) and 1600 twice
+# more (the repeat-front memory, and `J.IsInTeamFight(hAlly, 1600)` in the
+# sibling helper) -- reading either 1600 as the front radius would inflate the
+# front area by 78% and silently widen every count in the census.
+import tpdefend_events as tde                      # noqa: E402
+
+TDE_FAR = literal('J.ShouldTpSupportTowerFight',
+                  r'GetUnitToUnitDistance\(\s*bot,\s*building\s*\)\s*>\s*(?P<n>[\d.]+)')
+TDE_FRONT_E = call_arg('J.ShouldTpSupportTowerFight', 'J.GetEnemiesNearLoc', 1)
+TDE_FRONT_A = call_arg('J.ShouldTpSupportTowerFight', 'J.GetAlliesNearLoc', 1)
+TDE_HEAT_HP = literal('J.ShouldTpSupportTowerFight',
+                      r'J\.GetHP\(\s*ally\s*\)\s*<\s*(?P<n>[\d.]+)')
+TDE_HEAT_S = call_arg('J.ShouldTpSupportTowerFight',
+                      'ally:WasRecentlyDamagedByAnyHero', 0)
+TDE_REPEAT_S = literal('J.ShouldTpSupportTowerFight',
+                       r'DotaTime\(\) - bot\.lastFrontAnswerT < (?P<n>[\d.]+)')
+TDE_REPEAT_U = literal('J.ShouldTpSupportTowerFight',
+                       r'bot\.lastFrontAnswerY or 0[^<]*<\s*(?P<n>[\d.]+)')
+TDE_LEVEL = literal('J.ShouldTpSupportTowerFight',
+                    r'bot:GetLevel\(\) < (?P<n>\d+)')
+TDE_RESPAWN = literal('J.ShouldTpSupportTowerFight',
+                      r'bot\.lastRespawnTime or -999 \)\s*<\s*(?P<n>[\d.]+)')
+TDE_CORE = literal('J.IsCore', r'J\.GetPosition\(bot\) <= (?P<n>\d+)')
+TDE_SUP = literal('J.HasAvailableSupportResponder',
+                  r'J\.GetPosition\(\s*hAlly\s*\)\s*>=\s*(?P<n>\d+)')
+
+eq('tpdefend_events.FAR_U mirrors the > 3500 responder clause',
+   float(tde.FAR_U), TDE_FAR)
+eq('tpdefend_events.FRONT_R_U mirrors GetEnemiesNearLoc(vTower, .)',
+   float(tde.FRONT_R_U), TDE_FRONT_E)
+check('the two front radii really are the same number in the rule',
+      TDE_FRONT_E == TDE_FRONT_A,
+      '(enemies=%r allies=%r)' % (TDE_FRONT_E, TDE_FRONT_A))
+eq('tpdefend_events.HEAT_HP mirrors the heat gate hp leg',
+   float(tde.HEAT_HP), TDE_HEAT_HP)
+eq('tpdefend_events.HEAT_S mirrors WasRecentlyDamagedByAnyHero',
+   float(tde.HEAT_S), TDE_HEAT_S)
+eq('tpdefend_events.REPEAT_S mirrors the repeat-front window',
+   float(tde.REPEAT_S), TDE_REPEAT_S)
+eq('tpdefend_events.REPEAT_U mirrors the repeat-front radius',
+   float(tde.REPEAT_U), TDE_REPEAT_U)
+eq('tpdefend_events.MIN_LEVEL mirrors the level-6 floor',
+   float(tde.MIN_LEVEL), TDE_LEVEL)
+eq('tpdefend_events.RESPAWN_S mirrors the fresh-respawn cooldown',
+   float(tde.RESPAWN_S), TDE_RESPAWN)
+# The core band is not a literal in this reader either -- it is J.IsCore's
+# boundary, and `midsupyield` yields FROM that band TO the support band.  The
+# two must tile the 1..5 axis with no gap and no overlap, or "core share" and
+# "support share" stop summing to the population.
+eq('tpdefend_events.CORE_MAX_POS is J.IsCore\'s boundary',
+   float(tde.CORE_MAX_POS), TDE_CORE)
+check('core and support bands tile positions 1-5 exactly',
+      TDE_SUP == TDE_CORE + 1, '(core<=%r sup>=%r)' % (TDE_CORE, TDE_SUP))
+check('the front radius is NOT the repeat-front radius (the 1200/1600 decoy)',
+      TDE_FRONT_E != TDE_REPEAT_U,
+      '(front=%r repeat=%r)' % (TDE_FRONT_E, TDE_REPEAT_U))
 
 import tempfile                                    # noqa: E402
 
