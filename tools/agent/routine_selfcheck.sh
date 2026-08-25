@@ -83,6 +83,17 @@ note $?
 # `[detector] ...` or `[ratchet] ...` is picked up the day it is written.  Two
 # tree-scanners predate the convention and are named explicitly; tag new ones
 # rather than extending that list.
+#
+# LIMIT -- the 4.2s is a property of TODAY'S members, not of the tag.  Four
+# files in tests/ take >25s just to LOAD (their top-level sweeps run at require
+# time: test_creeppull_zone_clause, test_fieldcreep_veto,
+# test_fightback_world_assertion, test_towerfear_clock_leg).  None of them is
+# tagged today.  If one ever is, 开工 gets that cost silently and every trigger
+# pays it.  Deliberately NOT guarded with a per-file timeout: a timeout would
+# report a slow detector as a red one, and a false TRUNK RED is worse than a
+# slow selfcheck -- it is the thing that teaches people to ignore the line.  If
+# the count below stops being seconds, move the slow file's sweep behind a
+# function instead of dropping it from the set.
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     if suite=$(bash tests/run_py_tests.sh 2>&1); then
