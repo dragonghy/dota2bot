@@ -535,6 +535,58 @@ check('the armed predicate is a strict subset of the shipped one',
       tf.ARMED_CLOCK < tf.SHIPPED_CLOCK,
       '(armed=%r shipped=%r)' % (tf.ARMED_CLOCK, tf.SHIPPED_CLOCK))
 
+# `towerfear`'s CALIBRATED clause (`mode_retreat_generic.lua:915-922`), the
+# thing the source comment claims catches the frames the lever releases --
+# read by `towerfear_catch.py` (replay-check 2026-08-25, queue.json:strategy-12
+# acceptance item 4).  Two decoys sit inside a dozen lines of each other:
+#
+#   (1) THE LEVEL TRIPLET.  `botLevel <=` appears THREE times in one block --
+#       10 (the block cap), 5 (the crude clause's level leg), 9 (the
+#       calibrated clause).  Grab the wrong one and the catchable share moves
+#       by every level-10 frame in the corpus, in the direction that flatters
+#       the comment.
+#   (2) THE 1600 PAIR.  `J.GetEnemyList(bot,1600)` and `J.GetAllyList(bot,1600)`
+#       are adjacent lines with the SAME radius, so a reader that grabbed the
+#       enemy one would be right by accident today and silently wrong the day
+#       either moves.  They are pinned separately and then asserted distinct
+#       calls, so the coincidence cannot hide a mix-up.
+import towerfear_catch as tfc                      # noqa: E402
+
+TF_CALIB_LEVEL = literal(
+    'X.ShouldRun',
+    r'botLevel <= (?P<n>\d+)\s*\n\s*and nEnemyTowers\[1\] ~= nil'
+    r'\s*\n\s*and nEnemyTowers\[1\]:CanBeSeen',
+    path=RETREAT_LUA)
+TF_ALLY_CAP = literal(
+    'X.ShouldRun',
+    r'nEnemyTowers\[1\]:GetAttackTarget\(\) == bot'
+    r'\s*\n\s*and #hAllyHeroList <= (?P<n>\d+)',
+    path=RETREAT_LUA)
+TF_ALLY_R = call_arg('X.ShouldRun', 'J.GetAllyList', 1, path=RETREAT_LUA)
+
+eq('towerfear_catch.CALIB_LEVEL mirrors the calibrated clause level leg',
+   float(tfc.CALIB_LEVEL), TF_CALIB_LEVEL)
+eq('towerfear_catch.ALLY_CAP mirrors #hAllyHeroList <= N',
+   float(tfc.ALLY_CAP), TF_ALLY_CAP)
+eq('towerfear_catch.ALLY_R_U mirrors J.GetAllyList (not the enemy list)',
+   float(tfc.ALLY_R_U), TF_ALLY_R)
+check('the level triplet is really three different numbers (decoy 1)',
+      TF_LEVEL_LEG < TF_CALIB_LEVEL < TF_LEVEL_CAP,
+      '(leg=%r calib=%r cap=%r)' % (TF_LEVEL_LEG, TF_CALIB_LEVEL,
+                                    TF_LEVEL_CAP))
+check('ally list and enemy list are separate calls that happen to agree '
+      '(decoy 2)',
+      TF_ALLY_R == TF_CTX_U,
+      '(ally=%r enemy=%r -- if these ever differ, re-read which one the '
+      'calibrated clause counts)' % (TF_ALLY_R, TF_CTX_U))
+# The tower attack range is NOT a repo literal -- it is the engine's, and it is
+# what makes `GetAttackTarget() == bot` arithmetically impossible out at the
+# ring edge.  Pinning the RELATION is what matters: the day someone widens the
+# ring or narrows it past 700, the "hard-zero band" in the reading changes.
+check('the calibrated clause has a hard-zero band inside the ring',
+      tfc.TOWER_ATTACK_RANGE_U < TF_RING,
+      '(range=%r ring=%r)' % (tfc.TOWER_ATTACK_RANGE_U, TF_RING))
+
 # `midsupyield` event-axis reader (replay-check 2026-08-25, the AX.5 unlock
 # bar).  Every one of these six numbers decides whether a TP press counts as a
 # tower-defense ANSWER, i.e. whether the event population the director asked to
