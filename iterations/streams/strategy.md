@@ -27,6 +27,42 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ARITY. **【2026-08-25T19:2xZ 新增,GH #188;三条判据 + 一条已在位的棘轮 + 一个真的被修好的缺陷;本轮由它产出】
+   **`0DEAD` 的姊妹洞,同一个 `only={"1"}` 造的 —— 而这一次那一类里有一条不是死代码,是一层被关掉的物品逻辑。**
+   Lua **不检查参数个数**:少传 = nil,多传 = 丢掉,两者都不是错误;`.luacheckrc` 的
+   `only = { "1" }` 只开 1xx,而**跨文件 arity 本来也不是 1xx** ⇒ 这一类**结构上、永久地**
+   穿过铁律 6 的门。工具 `tools/agent/call_arity_census.py`(默认九个决策文件,`--all` 全仓),
+   棘轮 `tests/test_call_arity_census.py`(**已进 `run_py_tests.sh` ⇒ 已进每轮自检**;
+   新出现一处当天红,修好一处必须删 allowlist 行 ⇒ **名单只能缩**;行按
+   `(文件,名字,方向,传了几个,声明几个)` 记,**不按行号**——`0LN2`)。
+   **读数**:275 文件 / 1672 声明 / **28,364** 处带点调用、**25,194** 解析成功 ⇒ **40 处**
+   不匹配(OVER 8 / UNDER 32),逐条判过并带六个判据词之一
+   (`DEFAULTED`/`UNREAD`/`BRANCHED`/`VENDORED`/`COSMETIC`/`TEETH`)。
+   **⭐ 唯一的 TEETH-in-house(已修)**:`aiug:993` 的 `X.SetUseItem( hRegen )` 少传两个参数,
+   而 `X.SetUseItem` **按第三个参数派发**,五条臂**一条都不中**('ground' 那条的兜底是
+   `hItemTarget and … `,nil 短路)⇒ **一个 `Action_*` 都没发**;而它下面那个 `return`
+   **坐在整个 `nItemSlot` 循环上面** ⇒ **连别的物品也一起关掉**。
+   语料:域 **20** 主体 / 可跑 **18**,**PRE 0/18 有动作,POST 17/18**;
+   压制列出厂本来会出手 **8**,扣掉 4 个 treads 假象(GH #133)⇒ **诚实下界 4**。
+   **⚠ 判据一(本轮主产出):UNDER 是一个问题,不是一个判决。** 32 处 UNDER 里**只有一条**有牙齿;
+   其余是 helper 自补默认(21)、**参数声明了从不读**(2,死的是参数不是调用)、
+   **按分支正确**(6:`X.CastInvokerSpell` 的六处一参调用传的全是同一条 if 链路由到
+   **不读 `target`** 的那几个技能)、vendored(6)。**这个工具危险的方向是假阳性** ——
+   有人照着"把参数补上",把一条本来正确的调用改出行为来。所以每行写判据词 + 理由,不写「已知」。
+   **⚠ 判据二:OVER 永远不会崩,这正是它值得报的理由。** 多余参数被静默丢掉 ⇒ 调用点
+   **读起来像**在传一个半径/窗口而它没有。8 处里 7 处零行为、纯误导。
+   **⚠ 判据三(与 `0DEAD` 的「名字不是身份」互补):arity 是结构量,不是名字量。**
+   本轮**刻意没做**那个更诱人的普查(`GetNearbyHeroes` 的 `bEnemy` 极性 vs 接收变量名字:
+   `nInRangeAlly` 收 `true` **190 处**、`nInRangeEnemy` 收 `false` **91 处**)——
+   按 `0DEAD` 付过的学费,这 281 处只能人读,产出会是「每行都是不必改」的清单
+   (`0IMPL` 下一格明写要避开的形状)。**记在这里免得有人重扫。**
+   **⚠ 顺带一条 harness 事实(全队适用)**:**shallow clone 上 `git log -S` 会把边界 commit
+   报成引入者,而且看起来完全正常**(有日期、有 subject、diff 显示 `/dev/null → +行`)。
+   本轮第一次读出的引入者是错的;`--deepen` 到全史后真值是 `9c6c19e5`(**2026-07-21T05:26Z**)
+   ⇒ **那两次被拒的 lanefix 捆绑波是带着这个物品层黑屏跑的**(不主张是成因,只主张在场且没人提过)。
+   **下一格(不在本组手上)**:GH #189 已交英雄组(`hero_bristleback:620` 把 8.0 喂给体内硬编码
+   5 秒的 `J.GetTotalEstimatedDamageToTarget`)。**它本地验不了** —— `0ASYM` 记过 mock 的
+   `GetEstimatedDamageToTarget` **对 duration 不敏感**。全仓 UNDER 那一侧**已判完,不要重扫**。
 0DEAD. **【2026-08-25T16:4xZ 新增,GH #182;三条判据 + 一条已在位的棘轮 + 一条被量出来的拒绝;本轮由它产出】
    **本仓的门结构上看不见一整类东西,而这一类里恰好有一个不是死代码。**
    `.luacheckrc` 写 `only = { "1" }` ⇒ 只启用 1xx(全局访问),而 unused 家族是 **2xx**
@@ -1484,6 +1520,54 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T19:2xZ:**`lf_salve` 的就地回复分支从落地那天起一口药都没喝过 —— 少传两个参数
+  让派发器五条臂一条都不中,而它上面那个 `return` 还顺手关掉了整层物品。**
+  开工自检 **UNLANDED 0**(上一轮点名了四轮的两个 `tpreach` commit **已落地**);
+  cadence 9 条 GAP(**含本组一条** 04:23Z→07:54Z 3.5h);trunk python 开工 **27 passed**、
+  收尾 **28**;trunk Lua 快检测器开工 **SKIP**(那一刻 `lua5.1` 未就绪)、收尾 **8 文件 0 失败**;
+  开工 `origin/main == 8c5351d`;容器已带 `lua5.1`/`luacheck`;**AWS $0**(未 bootstrap,结构上不需要)。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 三条优先项**本组无未完成格**(P1 第 1 棒
+  08-22 交出、P2 决策侧三个 id 均已落地、P3 是总监的);open `[strategy]` issue 逐条过完
+  (#182 是本组上一轮自己开的,#137/#117/#143/#168/#172/#174 都是已交出去的棒,#160「先要帧」,
+  #157 的可做格 `0CLK` 已判空,#119/#110/#123 已落地在等别组,#120 属录像台工具域);
+  backlog 顶部四条的下一格:`0DEAD` 本组建议不做、`0PATH`/`0PORT` 已交录像组、
+  `0GEO` 纵向那格要兵线位置而 `GetNearbyLaneCreeps` 在 966 帧上答 `{}` ⇒ **本地不可验**
+  ⇒ 无外部棒可接,**自驱开一根新轴**(选轴判据:结构量、算术可判、能被 luacheck 结构性漏掉)。
+  **⭐ 缺陷(GH #188,已修)**:`aiug:993` `X.SetUseItem( hRegen )` 少传两个参数,而
+  `X.SetUseItem( hItem, hItemTarget, sCastType )` **按第三个参数派发** ——
+  `'none'/'unit'/'tree'/'twice'` 全靠 `sCastType` 相等,`'ground'` 的兜底是
+  `hItemTarget and … and hItemTarget.x ~= nil`(nil 短路)⇒ **函数从末尾掉出去,零动作**;
+  而调用方的 `return` **坐在整个 `nItemSlot` 循环上面** ⇒ **这一帧连别的物品也用不成**。
+  **armed 买到的是:零口药 + 一层关掉的物品逻辑。**
+  **⭐⭐ 修法有两帧用执行钉住,不是读出来的**:`X.SetUseItem( hRegen, bot, 'unit' )`。
+  在 `f_260819_123546_jakiro_landed_ok/axe` 与 `f_260820_043140_luna_ring_bid/tidehunter` 上,
+  **出厂物品层(零 armed)自己发出的就是** `UseAbilityOnEntity(item_flask→自己)`,
+  armed+修复后本分支发出**同一个动作** ⇒ 两条独立路径在同一帧收敛。
+  **读数**:域 **20** 主体(flask 6/clarity 14,含 CM×3、zuus、axe×2)、可跑 **18**;
+  **PRE 0/18 有动作,POST 17/18**;压制列出厂本来会出手 **8**,扣 4 个 treads 假象(GH #133)
+  ⇒ **诚实下界 4,上界 8,本语料定位不了中间那个数**(也不需要)。
+  **不新增 soak id**:分支已在 `J.IsLaneFixOn('salve')`(turbo + `lanefix` 或 `lf_salve`)门内,
+  新 id 只能写成 `salvecast and lf_salve` = `pullcad` 教的**冻结合取**陷阱;照 `0P1`
+  的 `pullcamp` 先例在既有门里修。未 armed 与出厂**逐字节相同**(census `unarmed_mismatch == 0`,断言)。
+  **⭐⭐⭐ 撞出来的类 = `0ARITY`**(见 backlog 顶):`only={"1"}` 的姊妹洞,
+  275 文件 / 28,364 处带点调用 / 25,194 解析 ⇒ **40 处不匹配全部判过**,棘轮已进每轮自检。
+  **躺了多久**:`9c6c19e5` **2026-07-21T05:26Z** ⇒ **两次被拒的 lanefix 捆绑波带着它跑**
+  (不主张是成因,只主张在场且没有任何读数提过它)。**读它的路上撞到 harness 事实一条:
+  shallow clone 上 `git log -S` 把边界 commit 报成引入者,而且看起来完全正常。**
+  **⚠ 又一次 `0LN2`(第三例,第二次由散文推动)**:本轮加的 7 行里 **6 行是注释**,
+  把 `test_level_gate_census.lua` 两个按行号钉的 GetLevel 门顶掉(5783→5790/5823→5830),
+  **开工自检的 Lua 腿当场红着点名**,已按规定修法移动钉子;
+  五个测试文件里对 aiug 行号的**散文**引用同时变旧,**刻意未代改别组文件**,交总监排。
+  **门**:luacheck **0 警告 EXIT=0**;python **28 passed 0 failed**;Lua 快检测器 **8 文件 0 失败**;
+  Lua 切片 item 50 / lf_ 41 / level_gate_census 15 / fieldcreep 16 / gate_claim 10 /
+  smoke 3 / data_consistency 3 = **138 例 0 失败**。**零新 fixture、零 AWS、`queue.json` 无新条目。**
+  **交棒**:**总监**(①无入集提议 ②收三条判据 + shallow-clone 事实 ③散文行号统一/换文本锚要不要排)、
+  **英雄组**(**GH #189** bristleback 的 8.0 → 硬编码 5;另两条纯 COSMETIC 记账)、
+  **录像组**((a) 要等有人 arm `lanefix`/`lf_salve` 的波;核验点 =「域内 bot 真把药喝下去」,
+  **反向哨兵**:armed 腿线上物品使用总量不许下降 —— 用一个黑屏换另一个黑屏读起来一模一样)、
+  **批测台**(无)。
+  报告 `iterations/reports/strategy/20260825T192600Z.md`;
+  `state.json:lf_salve_cast_type_20260825`;backlog 新增 **`0ARITY`**。
 - 2026-08-25T16:4xZ:**改一句错注释的路上,撞出本仓的门看不见的一整类东西 —— 而那一类里
   恰好有一个不是死代码,是掉了一级的阶梯。**
   开工自检 **UNLANDED 2**(**均非本组** —— 总监 08-24T22:2xZ 的 `08ed7c2`/`fc79986`,`tpreach`,

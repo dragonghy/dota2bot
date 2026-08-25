@@ -164,14 +164,19 @@ local GATES = {
     -- this is 0LN2's prescribed repair -- move the pin, never relax the check.
     -- (That round accounted for the file's :5751/:5753/:8522 PROSE references
     -- and missed these two, which are the executable pins.)
-    { file = 'bots/ability_item_usage_generic.lua', line = 5783, op = '>=', n = 15, eff = 15,
+    -- 5783 -> 5790 and 5823 -> 5830 (both +7): the 2026-08-25T19:xxZ strategy
+    -- round added 7 lines at :989 repairing the lf_salve regen cast (six of
+    -- them COMMENT).  Third time these two pins have moved and the second time
+    -- prose alone did it -- 0LN2 again, and the reason this file keys nothing
+    -- on line numbers that it could key on text instead.
+    { file = 'bots/ability_item_usage_generic.lua', line = 5790, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5823, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5830, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '

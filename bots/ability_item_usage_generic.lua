@@ -988,9 +988,16 @@ local function ItemUsageComplement()
 
 	-- [lanefix] Recover in lane with a ready Salve/Clarity when hurt and safe,
 	-- instead of nursing tango or TPing home (loses tempo). Inert off lanefix.
+	-- The cast type is NOT optional here. X.SetUseItem dispatches on sCastType and
+	-- every one of its five arms needs either a non-nil type or a location-shaped
+	-- target, so the two-argument-short call this used to be fell off the end of
+	-- the function and issued no engine action at all -- while the `return` below
+	-- still skipped the whole item loop. 'unit' on the bot itself is what the
+	-- shipped ConsiderItemDesire entries for both of the items this helper can
+	-- return (item_flask, item_clarity) hand back for self-use.
 	local hRegen = J.LaneRegenItemToUse( bot )
 	if hRegen ~= nil then
-		X.SetUseItem( hRegen )
+		X.SetUseItem( hRegen, bot, 'unit' )
 		return BOT_ACTION_DESIRE_HIGH
 	end
 
