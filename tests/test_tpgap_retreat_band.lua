@@ -45,6 +45,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local tests = {}
 
@@ -313,17 +314,24 @@ local function sweep()
     return c
 end
 
-tests['census: the uncovered band is 161 of 966 live hero-frames'] = function()
+tests['census: the uncovered band is at least 161 of 966 live hero-frames'] = function()
     local c = sweep()
+    -- Source constants, NOT corpus-scale quantities: these two are read out of
+    -- the shipped helper, so they stay equalities. The whole finding is that
+    -- 350 and 700 disagree; a ratchet here would let one of them drift.
     assert(c.src_onface == 350 and c.src_band == 700,
         'the sweep reads both radii out of the shipped helper; they moved')
-    assert(c.live == 966 and c.fixtures == 104,
-        ('corpus moved (%d frames / %d fixtures) -- re-measure the counts below')
-            :format(c.live or -1, c.fixtures or -1))
-    assert(c.gap == 161,
-        ('gap band was 161/966 (16.7%%), now %d -- a fix here is not a corner '
-         .. 'case, and the blast radius moved'):format(c.gap or -1))
-    assert(c.onface == 96, 'tpsafe\'s own band was 96/966')
+    -- [GH #106 / #127] Everything below is a SUM OVER FIXTURES, so it may only
+    -- rise as tests/fixtures/ grows -- pinning it with `==` re-stated the corpus
+    -- size and went red on the next fixture, for a reason having nothing to do
+    -- with this band. A count going DOWN is still impossible under append and
+    -- still fails, which is the only thing these numbers were written to catch.
+    cs.corpus(c.fixtures, 'tpgap corpus')
+    cs.ratchet(c.live, 966, 'live hero frames')
+    cs.ratchet(c.gap, 161, 'uncovered gap band (161/966 = 16.7% when measured)')
+    cs.ratchet(c.onface, 96, "tpsafe's own band (96/966 when measured)")
+    -- Growth-immune and deliberately still an equality: the three domains must
+    -- partition the corpus at ANY size, or one of them is double-counting.
     assert(c.gap + c.onface + c.band_clear == c.live,
         'the three domains must partition the corpus, or one of them is '
         .. 'silently double-counting')
