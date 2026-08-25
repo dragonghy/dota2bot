@@ -153,14 +153,19 @@ local GATES = {
          .. '[recorded] buyback test below: this path is unreachable for a SECOND, '
          .. 'independent reason, which is the part worth following up.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5768, op = '>=', n = 15, eff = 15,
+    -- 5768 -> 5783 and 5808 -> 5823 (both +15): the 2026-08-24T22:55Z strategy
+    -- round inserted 15 lines at ~5445 for `tpgap`.  Source text unchanged, so
+    -- this is 0LN2's prescribed repair -- move the pin, never relax the check.
+    -- (That round accounted for the file's :5751/:5753/:8522 PROSE references
+    -- and missed these two, which are the executable pins.)
+    { file = 'bots/ability_item_usage_generic.lua', line = 5783, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5808, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5823, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '

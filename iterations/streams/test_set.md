@@ -1,7 +1,25 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear
 
-**成员串 28**(上一行)。本行 2026-08-24T19:xxZ 的两处变动(全文档案 **§BB**,裁定 GH #164):
+**成员串 28**(上一行)。
+
+### 待总监裁定的入集提议(最新在上)
+
+- **`tpdeathbuy`(协同组 2026-08-25T02:xxZ 提议;搭车、零 AWS 增量、不申请专波)。**
+  `item_purchase_generic` 的「死前如果会损失金钱则购买额外TP」块,HP 子句是
+  `botHP < 0.08 and botHP >= 1`,而 `botHP` 是 `J.GetHP` 的 **0..1 分数** ⇒ 合取
+  **不可满足**,约 12 行**死代码**;这一对逐字来自初始 OHA 快照(`74727e4a:957-958`),
+  **在本仓库历史上一次都没跑过**。armed(turbo + `tpdeathbuy`)去掉那条杂散下界。
+  **门无合取依赖 ⇒ 单独 arm 即有意义**(不踩 `pullcad` 那条「promote 冻死点名它的门」)。
+  ⚠️ **方向与本组以往每一条相反:这是加宽不是收窄** —— armed 是空集的真超集,
+  **严格增加**出厂树从不发生的采购。⇒ 反向哨兵不是「TP 采购不许塌」而是
+  「**TP 花费不许暴涨**」;并且**一份「无变化」读数不能验证本 id**(无变化 = 没 armed 或域为零)。
+  本地:`tests/test_tpdeathbuy_dead_conjunct.lua` 8 例全绿、11 变异 10 抓 + 1 控制;
+  帧域 966 帧里可读的那一半 = **4 帧**(点名钉住);两条金钱腿在 fixture 上是
+  **带错符号的恒真**(`GetGold`/`GetItemCost` 皆读 0),已按 0DIR 两向断言,
+  **故本轮不主张端到端钉帧**。详见 `state.json:tpdeathbuy_20260825`。
+
+本行 2026-08-24T19:xxZ 的两处变动(全文档案 **§BB**,裁定 GH #164):
 - **`pulllane` 入集**(协同组 02:0xZ 提议,零 AWS 搭车)。**⚠️ arm 串约束成立且必须照办**:
   门是 `pullcamp` **and** `pulllane` 的合取(外层 `J.ShouldPullNeutralCamp` 在
   `jmz_func.lua:7915` 早退于 `pullcamp`,新子句在 `8037` 门于 `pulllane`)。

@@ -3679,5 +3679,23 @@
     "armed": false,
     "proposed_for_test_set": true,
     "next_batons": "**总监**:`test_set.md` 顶部已加入集提议(**搭车、零 AWS 增量、单独 arm 即有意义**)。**录像组**:请把 W7 那三帧(尤其 drow_ranger t=281.3)做成 fixture 交回,正例才能钉到「死在通道里」;并请在下一次核验里把 `tp_channel_death.py` 的 `band` 列**按「按下瞬间带内估计伤害 ≥ 当前血量」再切一刀** —— 这是本 id 的域,它和整条 gap 带不是一回事。**批测台**:`queue.json:strategy-14`,不申请专波。"
+  },
+  "tpdeathbuy_20260825": {
+    "issue": "[strategy] 本组自查(非 issue 交回)。本轮换了一根正交的轴:不是「常数对不对」(0CLK)、也不是「表达式解析出来是不是它看上去的样子」(0TERN),而是**「这个合取里的两条腿能不能同时为真」** —— 一个 SAT 层面的问题。全仓扫描 `bots/` 里所有 `if/elseif` 条件的每个析取项,把同一个左值上的多条数值比较放在一起判可满足性。**381 处时钟比较那条轴之后,这是第一条一次扫描就落到一个真缺陷上的轴。**",
+    "defect": "`bots/item_purchase_generic.lua` 的「死前如果会损失金钱则购买额外TP」块,HP 子句写的是 `botHP < 0.08 and botHP >= 1`。`botHP` 是 `J.GetHP(bot)` 的 **0..1 分数**(同文件 :653 赋值),两个界**互斥** ⇒ 整个合取**不可满足**,约 12 行是**死代码**。不是「几乎不触发」,是对**任何实数**都为假。",
+    "provenance": "**上游带来的,不是我们写坏的**:这一对逐字出现在初始 OHA 快照 `74727e4a:957-958` ⇒ 该块在本仓库历史上**一次都没有跑过**,我们任何一次测量里都不含它。",
+    "why_stray_not_convention": "同文件往下约 35 行的**姊妹块**(辅助死前买粉)是同一个想法 —— 同样的 `botGold < (cost + botWorth/40)`、同样的 `WasRecentlyDamagedByAnyHero(3.1)`、同样的充能上限 —— 而它的 HP 腿写的是 `botHP < 0.06`,**没有配对的下界**。两个块一个有那行、一个没有,这个不对称已写成 `[reverse]` 断言:哪天有人给买粉块也补一个下界,用例红着要求重新论证。",
+    "unit": "`local bDyingWithDoomedGold = botHP < 0.08 and botHP >= 1`;armed(turbo + `tpdeathbuy`)时改成 `botHP < 0.08`。写成**选择**而不是析取(charter 0TERN 的处方)⇒ **门关着与出厂逐字相同**,而且这条同一性在这里是**算术**不是承诺:门关着的谓词仍然处处为假。",
+    "direction_is_a_widening": "⚠ **与本组以往每一根杠杆方向相反**。以往 armed 谓词都是出厂谓词的**子集**(只可能少开火);本条 armed 是**空集的真超集** —— 它**严格增加**出厂树从不发生的采购。⇒ 波次的反向哨兵不是「TP 采购数不许塌」,而是「**TP 花费不许暴涨**」;而且**本 id 不可能被一份『无变化』读数验证**,读到无变化 = 没 armed 或域为零。",
+    "why_worth_arming": "验证哲学条件 (c),而且是标准打法不是偏好:Dota 里英雄死亡会把身上未花的金钱按比例赔给击杀者、其余蒸发,**死前把钱花掉**是教科书习惯。块自己的金钱子句正是一条**带**而不是下限(`botGold >= tpCost` 且 `botGold < tpCost + botWorth/40` = 「我买得起,而且我手上这点钱本来就要没」)。TP 卷轴是那里最该买的东西:便宜、用掉而不是掉落、且块只在**手上 TP 不够**时开火。Turbo 里论据更强:复活快,回场的第一件事就是想 TP 回战场。",
+    "domain": "**帧域,永不与事件率相减(charter 0DOM)**。以数据方式读 104 枚 fixture 的 hp/max_hp 与 recent_damage 行(不载 jmz_func,零秒级开销):966 活英雄帧里 `botHP < 0.08` **10 帧(1.0%)**;`botHP >= 1` **347 帧**(⇒ 出厂那条上界**单独看并不空**,空的是这一对);`botHP < 0.08` **且** 3.1s 内挨过英雄伤害 = **4 帧**,四帧逐个点名钉住。其余五条腿是金钱与库存,见下。",
+    "harness_fact_asserted": "⭐ **两条金钱腿在 fixture 上读 TRUE,而且是 0DIR 那种「带错符号的谎话」**:`GetGold()` 不在 mock 里(落 `^Get` 默认 **0**),`GetItemCost()` 答 **0**(已由 `test_fieldbuy_backpack_rescuer.lua` 钉过)⇒ `botGold >= tpCost` 是 `0 >= 0` = **TRUE**,`botGold < tpCost + botWorth/40` 是 `0 < 净值/40` = **TRUE**(净值 > 0 时)。**任何人在 fixture 上端到端驱动这个块都会得到全绿,而那份全绿对金钱带一无所证。** 两个方向都已断言:mock 哪天学会金钱,该用例红着要求重测,而不是继续看起来「已验证」。",
+    "honest_boundary": "**因此本轮不主张端到端钉帧**。可买到的本地验证是:(1) 死代码的**算术证明**(含两个常数的边界邻域点);(2) **门关着逐字同一**;(3) **方向**(armed ⊋ 出厂);(4) 语料可读的那一半域(4 帧,点名)。端到端购买动作**这份语料给不出**,没有假装给。",
+    "tests": "`tests/test_tpdeathbuy_dead_conjunct.lua`,**8 例全绿**;**11 条变异 10 抓 + 1 控制正确保持绿**(M1 去门 / M2 去 turbo 腿 / M3 移动阈值 / M4 把比较重新内联回条件 / M5 直接修好而不 gate / M6 给买粉块补下界 / M7 `botHP` 改读原始血量 / M8 两处一起放宽到 0.5 / M9 `<` 改 `<=` / M10 mock 学会 `GetItemCost` / M11 只改注释=控制)。",
+    "also_landed": "顺手修掉本组自己 22:55Z 那轮留下的**红树**:`tests/test_level_gate_census.lua` 的两条可执行行钉(`ability_item_usage_generic.lua:5768/5808` → `5783/5823`,+15 = 那轮在 ~5445 插入的行数)。那轮把该文件的 `:5751/:5753/:8522` **散文**引用记了账,漏了这两条**可执行**的 —— 正是 charter `0LN2` 说的「坐标的写法不止一种」。修法是挪钉子,源码一字未改。",
+    "gated": true,
+    "armed": false,
+    "proposed_for_test_set": "是(`test_set.md` 顶部提议行,2026-08-25T02:xxZ)。搭车、零 AWS、无合取依赖 ⇒ 单独 arm 即有意义,不踩 `pullcad` 那条「promote 冻死点名它的门」的教训。",
+    "next_batons": "总监(入集提议 + 请收判据「一个合取先问它可不可满足」)/ 批测台(`queue.json:strategy-15`,不申请专波;**反向哨兵是硬要求:TP 花费不许暴涨**)/ 录像组(条件 (a) 的核验点:armed 侧是否出现「濒死帧买 TP」的动作,以及买完之后**有没有真的用上**)。"
   }
 }

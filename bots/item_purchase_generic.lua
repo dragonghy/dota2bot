@@ -997,12 +997,29 @@ function ItemPurchaseThink()
 	end
 
 	--死前如果会损失金钱则购买额外TP
+	-- [tpdeathbuy, 20260825] The shipped HP clause is `botHP < 0.08 and botHP >= 1`.
+	-- botHP is J.GetHP's 0..1 FRACTION (assigned ~350 lines above in this file), so
+	-- the two bounds are mutually exclusive: NO value satisfies both and this whole
+	-- block is dead code exactly as shipped.  Inherited verbatim from the upstream
+	-- OHA snapshot (74727e4:957-958), so it has never fired in this repo's history.
+	-- What makes it a stray conjunct rather than a convention is the sibling dust
+	-- block ~35 lines below: same "spend the gold you are about to lose" idea,
+	-- written with `botHP < 0.06` and NO companion lower bound.
+	-- Armed (turbo + 'tpdeathbuy') the stray bound is dropped so the block can fire.
+	-- Written as a SELECTION, not as a disjunction, so that gate-off is the shipped
+	-- expression byte for byte (charter 0TERN).
+	-- ⚠ DIRECTION: this is a WIDENING.  Every other lever this stream ships is a
+	-- subset of the factory predicate; this one strictly ADDS purchases the shipped
+	-- tree never makes (dead -> live).  Read the acceptance that way.
 	local tpCost = GetItemCost( "item_tpscroll" )
+	local bDyingWithDoomedGold = botHP < 0.08 and botHP >= 1
+	if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then
+		bDyingWithDoomedGold = botHP < 0.08
+	end
 	if botGold >= tpCost
 		and bot:IsAlive()
 		and botGold < ( tpCost + botWorth / 40 )
-		and botHP < 0.08
-		and botHP >= 1
+		and bDyingWithDoomedGold
 		and bot:WasRecentlyDamagedByAnyHero( 3.1 )
 		and not HasSufficientTp()
 		and Item.GetItemCharges( bot, 'item_tpscroll' ) <= 2
