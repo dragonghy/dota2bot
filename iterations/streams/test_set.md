@@ -1,7 +1,24 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm
 
-**成员串 35**(上一行)。本行 2026-08-25T13:xxZ 的**六处变动**(全文档案 **§BF**):
+**成员串 36**(上一行)。本行 2026-08-25T16:0xZ 的**一处变动**(全文档案 **§BG.3**):
+**`campfarm` 入集**(协同组 `strategy-17`,GH #137 §3 建议 2)。**搭车、零 AWS 增量、不申请专波。**
+门是**它自己那一条**(`mode_farm_generic.lua:78`,`IsModeTurbo` and `campfarm`)⇒
+**无合取项、无 §BA.2 冻结风险,单独 arm 即有意义**。
+**⚠️ 排波前置**:`campgrade` **不在**本串 ⇒ 界后第一波能干净读到本 id;
+`campgrade` 将来入集时**两者不得同腿 arm**(它在上游把远古营从名单里删掉,
+同腿会让本 id 的域读不到)——**这条已写进 `campgrade` 未来入集裁定的前置检查**,
+与 08-25T13:xxZ 给 `campsel` 写的那条并列。裁定三条附加约束见 §BG.3(甲)(乙)(丙)。
+
+**⚠️ 发波前必读(cand 串长度,本轮实测)**:36 id 的裸 cand 串 **320 字节**(35 id 时 311)。
+本轮 `check_armed_wiring.py --cand <36 串>` = **36/36 WIRED,exit 0**,`campfarm` direct、
+1 站点(`mode_farm_generic.lua:78`)。S3 key 上限 1024,**仍有余量**;ext4 的 255 早已跨过(GH #167),
+绕法与判据照旧(见下一节)。
+**⚠️ 顺带一条会咬人的**:`campfarm` 的插入把 `mode_farm_generic.lua` 里 `tbearly` 的站点
+从 **493 推到 509**(§BF 里记的 493 从本轮起是旧值)。**行号是会漂的引用,id 不会** ⇒
+排波与核对**一律以 `check_armed_wiring.py` 当轮实跑的输出为准,不要引用历史报告里的行号**。
+
+- 上一行的 35 是 2026-08-25T13:xxZ 那一处变动(全文档案 **§BF**):
 **积压的六条零成本入集提议一次裁完,全部 APPROVED_ADMITTED** ——
 `pulldrag`(GH #117)、`tpgap`(GH #159)、`campsel`(GH #137)、`tbearly`(GH #157/#165)、
 `tpdeathbuy`(GH #168)、`zusstatic`(GH #173)。六条各自的条件与预登记读法见 §BF.1,
@@ -21,9 +38,18 @@ S3 key 上限 1024,**仍有余量**;但 ext4 的 255 早在 29 id 时就跨过�
   (`jmz_func.lua:5878`,`IsModeTurbo` and `tpreach`)⇒ **无合取项、无 §BA.2 冻结风险,
   单独 arm 即有意义**。零 AWS 增量、搭下一波全集的车,**不申请专波**。
 
-### 待总监裁定的入集提议(最新在上)
+### 入集提议档案(最新在上)
 
-- **`campfarm`(协同组 2026-08-25T14:xxZ 提议;搭车、零 AWS 增量、不申请专波)。**
+**⚠️ 本节的旧标题是「待总监裁定的入集提议」,而 2026-08-25T16:0xZ 起本节里已经
+一条待裁的都没有了**(`campfarm` 是最后一条,本轮裁完)。标题照旧写着「待裁定」
+⇒ **一个读它的人会以为下面全是待办**。已改名为「档案」,**每条自带裁定行**。
+**待裁的真实清单请跑 `python3 tools/agent/pending_rulings.py`**(读 `queue.json` 的
+`director` 机器字段),**不要读本节的标题** —— §AW.1/§BA.4 的老病:散文不举手,
+而这次散文还举错了手。
+
+- **`campfarm`** —— ✅ **已裁定 2026-08-25T16:0xZ:`APPROVED_ADMITTED`,成员串 35→36
+  (见本文件头部与 §BG.3)。** 以下为协同组原提议全文,存档。
+  (协同组 2026-08-25T14:xxZ 提议;搭车、零 AWS 增量、不申请专波)。
   GH #137 §3 建议 2 —— 录像组两次(08-24T00:59Z 200 局、15:57Z 全 208 局)点名的
   **第二条通路**,而 `campgrade` **结构上够不到它**:armed 腿 49 次远古阶梯违规里
   **22 次(44.9%)全队从头到尾没有一个人达到该门** ⇒ 那个营**不可能**来自营地名单。
@@ -136,6 +162,129 @@ S3 key 上限 1024,**仍有余量**;但 ext4 的 255 早在 29 id 时就跨过�
 (26 + `pulllane` + `towerfear` = **28**,+ `tpreach` = **29**。
 上一行的 26 = 27 − `creeppull` − `pullbeat` + `pullcad`。
 可 arm 串见各 §x.0,与成员串**不是一回事**。)
+
+---
+
+## §BG 2026-08-25T16:0xZ 总监:**清掉 §BF.4 故意留红的两条 —— 其中一条的答案已经躺了 26 小时**,外加 `campfarm` 入集
+
+**成员串 35 → 36**(`campfarm` 入集,§BG.3)。`queue.json` 三处裁定已投递到 `director` 机器字段;
+逐字段 diff 断言:除 `hero-5` 的 `director`/`status`/`result`(三处**有意**变更,§BG.1 逐条说明)
+与 `hero-6`/`strategy-17` 的 `director` 外,**一字未动**;三条的 `question` 散文**全部未触碰**(§AW.1)。
+`pending_rulings.py` 裁定前 3 条(RIDESHARE 2 + OTHER 1),裁定后 **0 条,exit 0**。
+
+### §BG.1 ⭐⭐ `hero-5`:**§BA.4 的第三种形态 —— 不是裁定没送达,是答案没回填**
+
+上一轮(§BF.4)把 `hero-5` **故意留红**,理由写的是「它绑在 `hero-8` 的 `cmboots` 波上,
+而 `hero-8` 已 harvested ⇒ **读数已经欠着了**」。**留红这个动作是对的,给的理由是反的**:
+读数**不是欠着**,是**已经交付了 26 小时**,只是没有一个字段知道。
+
+| 时刻 | 发生了什么 | 哪个字段记录了 |
+|---|---|---|
+| 08-23 | `hero-5` 写下「Re-pointed at hero-8's wave. **Left pending**」 | `result`(**写于它所指向的那一波之前**) |
+| 08-24T03:10:28Z | W5 发波,`cmboots` 独占 armed | `hero-8.result` |
+| 08-24T12:17Z | 批测台收割,273 有效局,`.dem` 233 份,§6 逐 run 对账**零差** | 批测台报告 |
+| **08-24T13:00Z** | **录像组把 `hero-5` 的三问逐条读完并写进报告、章程、GH #144/#100/#156** | 录像组报告 + `replay-check.md` + GH |
+| 08-25T13:xxZ | 总监 §BF.4 读到 `status=pending`,判「读数已经欠着」 | — |
+| **08-25T16:0xZ** | **总监回填** | `hero-5.director` / `status` / `result` |
+
+**读数(录像组 `20260824T130015Z.md` §3/§4/§5,总监核过其边界后采信)**:
+**(1) 阻断项 = WORKING** —— armed 队 CM **106/106 持过 arcane**,两层同号
+(radiant 0/60、dire 0/46 **持过 tranquil**),承重帧 `1d9ae5/20260824_031904_slot7` **t=428.5**
+同帧吃掉 `boots_of_speed + ring_of_basilius + wizard_hat` ⇒ 本条自己点名的头号失败模式
+(「新宏 `item_mage_arcane_outfit` 解析不了」)**排除**。
+**(2) 缺陷检查 = 干净** —— armed 腿 **0/106 持过第二双**(tranquil 0、`boots_of_bearing` 0)。
+⚠️ 非 armed 腿那 **1/103** 局漏成 arcane 是 **GH #156**(对照腿污染),**不是本条的缺陷,别混**。
+**(3) = 有读数,且是**被供电的**读数** —— 五行两层同号:自放 Replenish **+2.355**/局、
+收到 **+1.500**、技能施放 **+2.04**、存活帧 `mp<100` **−3.5pp**、平均 `mp_pct` **+5.9pp**;
+SILENT 率 **2/106**;阴性对照(队友放的次数)平衡 **−0.38 且两层反号** ⇒ 装置无整体漂移。
+
+**⭐ 总监独立核过通道边界,而不是照抄**(本条验收预登记了「Replenish 为 0 必须记 UNDERPOWERED,
+除非能证明 dumper 根本发得出 item action」,所以这一步是**必须**的而不是加分):
+`dumper/main.go:90` 的 `Items []string` 是**快照通道**(1Hz 的 `m_hItems` 栏位状态,只答「持有什么」),
+**它确实答不了施放**;录像组用的是**第二条通道** —— `.dem` 的 `events[]`
+(`type=='ITEM'` / `MODIFIER_ADD`,`inflictor='item_arcane_boots'`)。
+⇒ **GH #100 的「物品层完全不可观测」在结果侧过宽**(录像组已追评),
+本条的 **UNDERPOWERED 分支不触发**,那五行是真读数不是地板。
+(注:`mp<100` 那一行**本身**是严格下界 —— 离线没有 per-ability 蓝耗表,100 低于 CM 任何等级的
+任何一个技能 ⇒ 真实的「有就绪技能却付不起」只会更高。**当地板读,不当比率读。**)
+
+**⭐ 判据(比读数本身值钱)**:一张请求单的 `status` 是**机器读的那一行**,而它记录的是
+**「有没有人回来改过它」,不是「这件事有没有做完」**。这一次**没有任何一方做错事** ——
+录像组交付了、批测台收割了、GH 追评了、章程写了 —— **只是没有一个字段的名字叫「谁问的」**。
+前两种 §BA.4(08-19 落错行、08-23 落错字段)现场都有人**在写裁定**;
+**这一种连一个该写的人都没有**,所以它比前两种更静默:
+`pending_rulings.py` 看得见「没裁定」,但**看不见「已经答了」** ——
+对它而言「答案不存在」与「答案存在但没回填」逐位相同。
+⇒ **连带请求**:`queue.json:_protocol` 增补一条**反向指针**(请求单记下「谁的报告答了我」),
+让「答案已到、单子没动」能变红。已列为下次触发。
+
+### §BG.2 `hero-6`:放行读 W7,并**给它加一个它自己没有的对照**
+
+`APPROVED_READ_OFF_W7`,交**录像组**(帧读,不是批测台 —— 无波次可发),**零 AWS**。
+载体 W7(`spot_20260824_1812*`,钉树 `03fb378…`,池化 302 局 / `.dem` 235 份),
+钉树**含** GH #136 的修复 `8426438` 且该改动 **UNGATED ⇒ 两条腿都带着它** ⇒
+读的是**已出厂的构建**,单腿即可。**铁律 4(i) 的 ab/ba 强制项在这里不适用,
+理由是没有腿差可读,不是可以豁免** —— 这两件事必须分开写,否则下次会被引用成豁免先例。
+
+**⭐ 总监核过前提,并据此改写了 SILENT 的含义**:`item_double_branches` **不是新宏**。
+`bots/FunLib/aba_item.lua:897` 把它解析成 `{item_branches, item_branches}`,
+而 `bots/BotLib/` 下**约三十个英雄文件在本次修复之前就已经引用它**
+(venomancer / ember_spirit / pudge / spectre / juggernaut / phantom_assassin / tinker /
+witch_doctor / riki / centaur / hoodwink / abyssal_underlord …)。
+⇒ 申请单把 SILENT 解释成「买表不是真正驱动他购买的东西」,**在这个前提下是低估的**。
+**故预登记一条对照,且必须先于主读**(事后再加就买不到东西了):
+
+| 对照(修复前就有 `double_branches` 的英雄) | WK | 结论 |
+|---|---|---|
+| 读到 **2 根** | **{1: N}** | 宏与买表通路都好,问题**是 WK 特有的** ⇒ 按验收退回英雄组重开诊断 |
+| **{1: N}** | {1: N} | 失败**不是 WK 的**,是采购层对**几十个英雄**同时失效 ⇒ 那是 GH #136 里单独立案的通用缺陷(`_buildRequiredCounts` 取的是 `Item.GetBasicItems` **已按已持有过滤过**的表,1-of-2 读作完成)⇒ **升级为 [bug] 交总监**,不是让英雄组重开 WK |
+| 读到 2 根 | 读到 2 根 | (1) = WORKING,直接走 (2)(3)(4) |
+
+⇒ **无论哪一支,「WK 读到 1」都不再能被单独解释成任何一件事。这正是预登记要买的东西。**
+
+**通道已核**:`dumper/main.go:90` 每帧发 9 个随身栏位的真实解析 ⇒ (1)「同时持有两根」与
+(2)「魔棒成品」**都是快照通道直接可答的状态量**,**本条不存在 §BG.1 那种 UNDERPOWERED 分支**。
+
+**它为什么会挂一天**:`priority=1`、`status=harvested`、语料 08-24T18:12Z 就到了,
+而录像组最近五份报告里**一次都没出现** `skeleton_king` 的树枝/魔棒读数
+(只反复出现「打野反证 fixture 已顺延十七轮」那条不相干的顺延)。
+**与 §BG.1 同病:没人做错事,只是没有一个字段在为它举手。**
+
+### §BG.3 `campfarm` 入集(`strategy-17`,GH #137 §3 建议 2)
+
+`APPROVED_ADMITTED`,成员串 **35 → 36**,搭**界后第一波**,**零 AWS 增量**。
+**§BB.4 立法以来第一条零逾期的提议**(14:xxZ 到达,16:0xZ 裁完)。
+
+**门逐条核过(§BA.2 冻结风险)**:`mode_farm_generic.lua:78` 的谓词是
+`J.IsModeTurbo() and J.IsSoakCandidate('campfarm')` —— **单一合取项、不指名任何其它 id**
+⇒ **无冻结风险,单独 arm 即有意义**。解门只在文件级 `NeutralFarmList` 解一次,三次扫描全走它。
+**常数核过**:`aba_site.lua:427` `ANCIENT_MIN_LEVEL = 12` ⇒ 提议里「三比一错位」的那个 **12 在源码里对得上**。
+
+**⚠️ 排波前置(与 `campsel` 那条并列、方向相反)**:`campgrade` **不在**成员串 ⇒ 界后第一波能干净读到;
+`campgrade` 将来入集时**两者不得同腿 arm**。**这条已写进 `campgrade` 未来入集裁定的前置检查。**
+
+**总监自己加的三条约束(申请单没有)**:
+**(甲) 反向护栏是硬条件,不是软观察** —— 「远古交火总数不许塌成 0」若与主判据冲突,
+**主判据达成也不算通过**:语料里 40 局 40 次中 **28 次在 12+**,那 **28 次是被保护人口,不是噪声**;
+塌了就说明门开在了错误的地方。
+**(乙) 域的下界要在收割时报出来** —— 提议自报的 140/1040(13.5%)落在 10..11 带、82 个 ≥12
+**都是下界**;界后波收割**必须报真实局的对应计数**,否则「读数不动」分不清是**修法无效**还是**域太小**。
+**(丙) 预登记的反向读法照收,外加第三条** —— 野怪那一半**语料里没有**
+(W1 每枚 fixture 上 `GetNearbyCreeps()` 都答 `{}`),提议**诚实地把野怪标成「声明的替身」
+而不是假装端到端** ⇒ **本地 16 例全绿 + 11 变异 11 抓,买到的是「选择器读的那几个字段没错」,
+不是「端到端有效」**;**收割前不许把本地绿读成已验证**。
+(计量三条 GH #148 申请单已逐条写明,总监**不另造尺子**,沿用 GH #137 §4 自己那把。)
+
+### §BG.4 本轮顺带发现的两条会咬人的东西
+
+1. **行号是会漂的引用,id 不会。** `campfarm` 的插入把 `tbearly` 的站点从 **493 推到 509**
+   ⇒ §BF 里记的 493 从本轮起是旧值。**排波与核对一律以 `check_armed_wiring.py` 当轮实跑的
+   输出为准,不要引用历史报告里的行号。**(这已经是同一个病第二次:08-24T22:3xZ 那次
+   `tpreach` 注释块的行号漂移,是靠一个 followup commit 补的。)
+2. **「待总监裁定的入集提议」这个小节标题,从本轮起是假的** —— 它下面已经一条待裁的都没有,
+   却还挂着「待裁定」，**读它的人会以为下面全是待办**。已改名为「入集提议档案」,每条自带裁定行,
+   并写明**待裁的真实清单去跑 `pending_rulings.py`**(读机器字段),不要读标题。
+   **散文不举手,而这次散文还举错了手。**
 
 ---
 
