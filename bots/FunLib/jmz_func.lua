@@ -8224,6 +8224,100 @@ function J.IsCampBesideLane( vCamp, tLanePath )
 	return false
 end
 
+-- Closest point on the SEGMENT ab. Deliberately NOT a refactor of
+-- DistanceToSegment above into a shared core: that function is inside the armed
+-- 'pulllane' clause, and rewriting code an armed candidate depends on while
+-- landing a different lever is exactly the "one lever at a time" rule this
+-- family already paid for twice.
+local function ClosestPointOnSegment( v, a, b )
+	local abx, aby = b.x - a.x, b.y - a.y
+	local nLen2 = abx * abx + aby * aby
+	if nLen2 <= 0 then return a end
+	local t = ( ( v.x - a.x ) * abx + ( v.y - a.y ) * aby ) / nLen2
+	if t < 0 then t = 0 elseif t > 1 then t = 1 end
+	return Vector( a.x + abx * t, a.y + aby * t, a.z )
+end
+
+-- [GH #117, 20260825] WHERE THE DRAG WALKS. Soak candidate 'pulldrag'.
+--
+-- The camp selector above now answers "which camp"; this answers "which way do I
+-- walk once the neutrals are aggroed", and that is where the connect rate is
+-- actually decided. mode_roam_generic's drag cadence walks HOME-WARD between
+-- pokes -- its own comment states the intent as "so the camp follows into the
+-- lane path", but the vector it uses is J.GetTeamFountain(). Home is a proxy for
+-- the lane, and measured against the real map it is a very lossy one.
+--
+-- The arithmetic, on the four camps the engine actually pulls from (the camp
+-- table is the replay desk's W7/W8 reading, GH #117 20260825T01:3xZ; the lane
+-- geometry is the 22 towers every fixture carries, identical in all 61 of them;
+-- reproduced by tools/agent/pullcamp_lane_geometry.py):
+--
+--     camp                       gap to lane   500u toward FOUNTAIN closes
+--     radiant (3994,-5137)          1,220u          67u   (87% wasted)
+--     dire    (-4007, 4947)         1,084u          67u   (87% wasted)
+--     radiant (  200,-5200)         1,069u          94u   (81% wasted)
+--     dire    ( -800, 5000)         1,019u          89u   (82% wasted)
+--
+-- Walking toward the nearest point of the lane closes the full 500u. So the
+-- shipped drag spends 81-87% of its motion parallel to the lane it is trying to
+-- reach, and with the followers' leash breaking after a median 742u (p90 992u,
+-- max 1,170u) it closes only ~100-140u of a ~1,100u gap before they go home.
+-- That is the arithmetic reason the connect numerator is 2 and 2: not the camp
+-- filter, which the director's 07:xxZ ruling proposed tightening, but the
+-- direction of the walk. Tightening the filter was refused on the same geometry
+-- (the two connect-producing camps are the two WIDEST-gap camps still firing, so
+-- a distance threshold deletes the numerator before it deletes anything else).
+--
+-- The destination is the closest point on the assigned lane's path to the CAMP,
+-- not to the bot: it is fixed for the whole drag (a moving target would swing
+-- the walk as the bot moves) and the bot starts at the camp anyway. It is cached
+-- per camp+lane, so the 21 samples are paid once per pull rather than once per
+-- frame.
+--
+-- Returns nil -- and the caller then walks home-ward exactly as shipped -- when
+-- not armed, not turbo, or the engine cannot say where the lane is. An engine
+-- that cannot answer must never redirect a pull into the fog.
+--
+-- Gated STANDALONE, not conjoined with 'pullcamp': a gate written as
+-- `IsSoakCandidate('pulldrag') and IsSoakCandidate('pullcamp')` would freeze
+-- FALSE the day 'pullcamp' is promoted, because a promoted id is in no armed
+-- string. Turbo and the pullcamp gate are already structural here anyway -- this
+-- code is only reached through J.ShouldPullNeutralCamp, which opens with both.
+function J.GetLanePullDragTarget( bot, vCamp )
+	if bot == nil or vCamp == nil then return nil end
+	if not J.IsModeTurbo() then return nil end
+	if not J.IsSoakCandidate( 'pulldrag' ) then return nil end
+
+	local nLane = bot:GetAssignedLane()
+	if nLane == nil then return nil end
+
+	if bot.pullDragCampX == vCamp.x and bot.pullDragCampY == vCamp.y
+		and bot.pullDragLane == nLane
+	then
+		return bot.pullDragTarget
+	end
+
+	local tPath = {}
+	for k = 0, 20 do
+		local v = GetLocationAlongLane( nLane, k / 20 )
+		if v ~= nil then tPath[#tPath + 1] = v end
+	end
+
+	local vDest, nBest = nil, nil
+	if #tPath >= 2 then
+		for i = 1, #tPath - 1 do
+			local v = ClosestPointOnSegment( vCamp, tPath[i], tPath[i + 1] )
+			local d = J.GetLocationToLocationDistance( vCamp, v )
+			if nBest == nil or d < nBest then nBest, vDest = d, v end
+		end
+	end
+
+	bot.pullDragCampX, bot.pullDragCampY = vCamp.x, vCamp.y
+	bot.pullDragLane = nLane
+	bot.pullDragTarget = vDest
+	return vDest
+end
+
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
 -- ~300-1000u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle

@@ -8,6 +8,38 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 
 ### 待总监裁定的入集提议(最新在上)
 
+- **`pulldrag`(协同组 2026-08-25T07:5xZ 提议;搭车、零 AWS 增量、不申请专波)。**
+  **附带一件必须先读的事:你 07:xxZ 裁定交办的那个动作(把 `PULL_CAMP_LANE_GAP`
+  1200 收到 p90 992 / 中位 742)——按你自己写的「收紧前必须先跑几何核验」跑完了,
+  结论是 REFUSE,`PULL_CAMP_LANE_GAP` 一字未动。** 判据是**序**、不是标定值:
+  仍在开火的四个营里,产出全部 connect 的那两个是**垂距最宽的两个**(1220 / 1084),
+  从未产出 connect 的两个是**最窄的两个**(1069 / 1019)。距离阈值**从宽端删**
+  ⇒ **任何会改变行为的收紧都先把分子整个删掉**,留下的恰是不产出的那两个。
+  而且它**不会读成 SILENT**(poke episode 照常、connect 恒 0),比 SILENT 更难发现。
+  几何用**语料自己的地图**算:61 枚带 buildings 的 fixture 对 **22 座塔**坐标逐个一致
+  ⇒ 地图是实测常数;**边缘对照**是 W7→W8 的实际划分,单一阈值复现成功
+  (仍开火最宽 **1220** < 归零最近 **1282**),拐角敏感性用 corner-restored 折线复核过
+  (该行只动 1u,且序在两模型下一致)。工具 `tools/agent/pullcamp_lane_geometry.py`,
+  棘轮 `tests/test_pullcamp_lane_geometry.py`(**已进 `run_py_tests.sh` ⇒ 已进每轮自检**,
+  谁再去收紧那个常数,红的是这条,并指着这段裁决)。
+  **本 id 是那次 REFUSE 之后的落点(裁定说「binding constraint 是拖拽不是筛子」,
+  这就是拖拽那一格)**:drag 那 500u 的**方向**从泉水改成**本 bot 被分配 lane
+  路径上离该营最近的一点**。源码注释本来就写着 “so the camp follows into the lane
+  path”,而向量取的是泉水 —— 在引擎实际会拉的四个营上,朝家走每 500u 只关掉
+  **67 / 67 / 94 / 89 u** 的垂距(**81-87% 的位移平行于兵线**),朝线走关掉整 500u;
+  配上 leash 中位 742u,回家式拖拽在脱缰前只关掉 ~100-140u 的 ~1,100u 缺口。
+  **这就是两波两层 connect 绝对数恒为 2 的算术原因。**
+  **门是独立的一条**(turbo + `pulldrag`,**不与 `pullcamp` 合取** —— 踩 `pullcad`
+  那条「promote 冻死点名它的门」的风险为零);未 armed ⇒ 返回 nil ⇒ 出厂回家式行走
+  **逐字节不变**(含「未 armed 连 21 次引擎调用都不许花」的用例)。
+  ⚠️ **但排波仍需 `pullcamp` 与 `pulllane` 同时 armed**:本代码只经
+  `J.ShouldPullNeutralCamp` 到达,那两个是**结构性前置**,不是本 id 的门。
+  本地:`tests/test_pulldrag_lane_step.lua` **13 例全绿,11 变异 11 抓 + 1 控制**;
+  真实帧两侧,radiant 那枚**只断言不等式**(它落在拐角敏感区,在拐角上断言量级
+  就是在断言拐角)。**反向哨兵**:own-side 子句买到的两波一致安全收益
+  (20s 内死亡 2/97→0/146、翻面拉 7.2%→0.0%)**不许回吐**。详见
+  `state.json:pulldrag_20260825`;批测请求 `queue.json:strategy-16`。
+
 - **`tpdeathbuy`(协同组 2026-08-25T02:xxZ 提议;搭车、零 AWS 增量、不申请专波)。**
   `item_purchase_generic` 的「死前如果会损失金钱则购买额外TP」块,HP 子句是
   `botHP < 0.08 and botHP >= 1`,而 `botHP` 是 `J.GetHP` 的 **0..1 分数** ⇒ 合取

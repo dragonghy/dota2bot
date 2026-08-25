@@ -277,7 +277,16 @@ function Think()
 			bot:Action_AttackUnit(tNeut[1], true)
 			bot.campPullAttackTime = now
 		elseif bCampHere then
+			-- [GH #117, 20260825] 'pulldrag': walk toward THIS LANE, not toward
+			-- home. The line below already says "so the camp follows into the
+			-- lane path" -- the fountain was standing in for the lane path, and
+			-- on the four camps the engine actually pulls from that proxy wastes
+			-- 81-87% of every step (see J.GetLanePullDragTarget for the table).
+			-- nil = not armed / lane unreadable -> the shipped home-ward walk,
+			-- byte for byte.
 			local vB, vF = bot:GetLocation(), J.GetTeamFountain()
+			local vLane = J.GetLanePullDragTarget(bot, bot.roamCampPull)
+			if vLane ~= nil then vF = vLane end
 			local dx, dy = vF.x - vB.x, vF.y - vB.y
 			local n = math.sqrt(dx * dx + dy * dy)
 			if n > 1 then

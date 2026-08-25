@@ -508,6 +508,17 @@
       "acceptance": "⚠️ **先读 LIMIT,否则会把一份空读数读成阴性结果**:静电场是 `Innate 1` + hidden,**没有任何 .dem 带这个技能**(Zeus 真实帧上 `GetAbilityList(bot)[5]` 是 nil,GH #151 同族),所以**不要去 .dem 里找静电场的技能行**;要看的是**大招/雷击的施放事件**与其后果。(a) 条件,唯一阻塞项:WORKING = armed 腿与 baseline 腿的**大招施放次数或其后果分布可分辨**(哪怕只是施放次数下降),带局/时刻;SILENT = 两腿逐位相同 ⇒ 说明 `lowHPCount` 根本不是决定施放的那一条(`ConsiderR` 上游还有 retreat / IsDyingUnderAttack / IsInTeamFight 三条更早的分支),**本桌回去重诊断而不是重修**,这是本条最有价值的可能结局。(b) 粗粒度、非显著性(owner 2026-08-01):gpm/xpm/deaths 无明显负面即可;**本条特有的正向哨兵**是「施放后 3s 内零击杀」的**占比应下降或持平**。计量:**armed/baseline 每一项都必须 ab / ba 两个分层分别给**(铁律 4(i));(1)(2) 是**整数小值域计数类 ⇒ 报均值 + 占比,不报中位数**(铁律 4(ii));登记效应量时连切法一起登记(4(iii))。载体门:发波前跑 `seed_draft.py <seeds> --assert-carrier zuus`,**分母按真正抓到 Zeus 的种子算**,惰性种子按波内零腿声明(hero-8 的教训)。",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "strategy-16",
+      "stream": "strategy",
+      "bundle": "pulldrag",
+      "seeds": [],
+      "priority": 1,
+      "question": "GH #117 / owner P1。**搭车,不申请专波,零 AWS 增量。** 新 gated id `pulldrag`(`state.json:pulldrag_20260825`)。总监 07:xxZ 裁定把 `pullcamp`+`pulllane` 判 HOLD,指出 binding constraint 是**拖拽**不是筛子,并交办「先跑几何核验再收紧 `PULL_CAMP_LANE_GAP`」。核验跑完 ⇒ **收紧被 REFUSE**(产 connect 的两个营是垂距**最宽**的两个,收紧先删分子),常数一字未动;本 id 是拖拽那一格:每 3s poke 之间那 500u 的**方向**从泉水改成**本 bot 被分配 lane 路径上离该营最近的一点**。实测(引擎真会拉的四个营):朝家走每 500u 只关掉 67/67/94/89 u 垂距(**81-87% 的位移平行于兵线**),朝线走关掉整 500u;leash 中位 742u ⇒ 回家式拖拽在脱缰前只关掉 ~100-140u 的 ~1,100u 缺口。**这就是两波两层 connect 绝对数恒为 2 的算术原因。** ⚠️ **排波必须同时 armed `pullcamp` + `pulllane` + `pulldrag`**:前两个是**结构性前置**(本代码只经 `J.ShouldPullNeutralCamp` 到达),不是本 id 的门;漏一个 = 逐字节 no-op 且没有任何计数会报警(§BA.2 那个形状)。",
+      "acceptance": "⚠️ **分子是绝对数,不是率** —— 这正是上一轮踩过的刀口(#148(ii)):`pulllane` 那 17.1% 全部来自 drag episode 44→24,connect 绝对数两波两层**全是 2**。判据:(1) **connect 绝对次数**明显高于 2(ab/ba 两层分别给,计数类 ⇒ 报均值+占比,不报中位数);(2) **机制签名 = 跟随小野→最近线兵的中位继续下降**(现 933/1021)—— connect 涨而它不降,涨的就不是这条子句买来的;(3) `poke_episodes` **不得塌向 0**:本 id **不碰选点**,所以它塌了不是「常数太紧」,是别处出事,请当异常报。(4) ⭐ **反向哨兵(硬要求)**:本 id 把辅助引向**兵线**而不是引向家,所以 own-side 子句买到的那份两波一致安全收益 **20s 内死亡(0/146)与翻面拉(0.0%)不许回吐**;若拉野后 20s 死亡回升,读作本 id 的代价,**不要读成噪声**。**条件 (a) 归录像组**:armed 腿录像里「仇恨野怪后朝**自己那条兵线**走(而不是朝泉水走)」的逐帧形状,CONN/MISS 在 `min(foll→wave)` 上历来不重叠(CONN ≤282 / MISS ≥661),直接对读即可。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [
