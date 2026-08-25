@@ -439,8 +439,23 @@ tests['[4] the two index-4/5 bindings are still unguarded, unlike WK\'s abilityW
         'hero_zuus.lua no longer binds abilityD from sAbilityList[4]')
     assert(zs:find('local abilityAS = bot:GetAbilityByName( sAbilityList[5] )', 1, true),
         'hero_zuus.lua no longer binds abilityAS from sAbilityList[5]')
-    assert(zs:find('if abilityAS:IsTrained() then', 1, true),
-        'hero_zuus.lua no longer calls abilityAS:IsTrained() unguarded')
+    -- RELOCATED 2026-08-25 (GH #173, gated 'zusstatic'), NOT weakened: the call
+    -- used to read `if abilityAS:IsTrained() then abilityASBonus = 0.09 end`
+    -- inline in X.SkillsComplement.  The handle is now passed to
+    -- X.GetStaticFieldBonus, whose FIRST statement is the same unguarded
+    -- IsTrained() -- so the property this assertion records (the first thing
+    -- done with the index-5 handle is an unguarded method call) is unchanged,
+    -- and both halves of it are pinned separately below.  The hero desk hit its
+    -- own 2026-08-25 lesson here: before moving a call site, grep for the
+    -- censuses that are counting it.
+    assert(zs:find('X.GetStaticFieldBonus( abilityAS )', 1, true),
+        'hero_zuus.lua no longer hands abilityAS to X.GetStaticFieldBonus')
+    local sBonus = zs:gsub('%-%-[^\n]*', ''):match('function X%.GetStaticFieldBonus%b()(.-)\nend')
+    assert(sBonus, 'X.GetStaticFieldBonus is gone; where does the index-5 handle go now?')
+    assert(sBonus:match('^%s*if not hAbility:IsTrained%(%) then'),
+        'X.GetStaticFieldBonus no longer OPENS on an unguarded IsTrained() on the '
+        .. 'handle it was given. If a nil guard was added, delete this assertion '
+        .. 'and say so -- it exists to record the unguarded call, not to demand it.')
 end
 
 -- ---------------------------------------------------------------------------

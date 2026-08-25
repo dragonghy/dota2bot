@@ -322,6 +322,53 @@ function X.zuus_ShouldSaveManaForUlt( hBot, hTarget, hSpell )
 end
 
 
+--- [zusstatic] GH #173 -- Static Field's percentage, taken off the ability
+--- instead of the hardcoded 0.09.
+---
+--- Both consumers of `abilityASBonus` add `target:GetHealth() * abilityASBonus`
+--- to a kill estimate: X.ConsiderW's ranged-creep snipe and X.ConsiderR's
+--- `lowHPCount` loop, the one that decides whether the ~130s global execute is
+--- cashed in.  The shipped 0.09 says Static Field takes 9% of the target's
+--- current health.  The game's own KV for `zuus_static_field` (d2vpkr mirror,
+--- the source tools/agent/special_value_key_census.py already reads) says:
+---
+---     AbilityValues/damage_health_pct/value        = 3.45
+---     AbilityValues/damage_health_pct/hero_levelup = +0.05
+---
+--- i.e. 3.45% at level 1 rising to ~4.9% at level 30 -- so the shipped constant
+--- is roughly TWICE the truth at every level the ability can be at, and the
+--- error is in the optimistic direction: the bot believes it can finish targets
+--- it cannot, fires, and the cooldown is gone.  That is the same failure the
+--- hero backlog's Zeus item already blames for missed execute windows, arriving
+--- through a different door (mana spent on a kill that was never there).
+---
+--- Gate-off is the shipped constant by construction: the armed branch is the
+--- only detour and the function's last statement is the 0.09.  Armed, a key
+--- that answers <= 0 drops the term rather than inventing a default -- the
+--- house rule from GH #162, and the reason the offline reading is 0 (see the
+--- measured LIMIT in tests/test_zuus_static_field_pct.lua).
+---
+--- The handle is a PARAMETER rather than the file-local `abilityAS` because in
+--- the fixture world that local is a handle for a nil name: Static Field is
+--- innate + hidden, so no .dem carries it and `sAbilityList[5]` is nil offline
+--- (GH #151's family; measured, not assumed, in §LIMIT of the test).  Taking it
+--- as an argument is what lets a test drive both legs at all.
+function X.GetStaticFieldBonus( hAbility )
+
+	if not hAbility:IsTrained() then return 0 end
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusstatic' )
+	then
+		local nPct = hAbility:GetSpecialValueFloat( 'damage_health_pct' )
+		if type( nPct ) == 'number' and nPct > 0 then return nPct / 100 end
+		return 0
+	end
+
+	return 0.09
+
+end
+
+
 function X.SkillsComplement()
 
 
@@ -339,7 +386,7 @@ function X.SkillsComplement()
 
 	local aether = J.IsItemAvailable( "item_aether_lens" )
 	if aether ~= nil then aetherRange = 250 end
-	if abilityAS:IsTrained() then abilityASBonus = 0.09 end
+	abilityASBonus = X.GetStaticFieldBonus( abilityAS )
 	-- DELETED 2026-08-22: `talentDamage` was assigned here and at its declaration and
 	-- read NOWHERE in the repo (the same shape GH #104 removed from Wraith King and
 	-- GH #73 from Lion).  Its one input, talent8, is index 8 =

@@ -483,6 +483,17 @@
       "acceptance": "⚠️ **先读这一条,否则会把本 id 读反**:与本组以往每一根杠杆相反,**这是加宽不是收窄** —— armed 谓词是**空集的真超集**,它**严格增加**出厂树从不发生的采购。**推论 1:一份『armed 与 baseline 无差别』的读数不能用来验证本 id**,那只说明没 armed 或域为零(域很窄:966 真实帧里可读的那一半只有 4 帧)。**推论 2:反向哨兵不是『TP 采购数不许塌』,而是『TP 花费不许暴涨』。** 请给:(1) armed / baseline 两腿的**人均 TP 购买次数**与**花在 TP 上的金钱占净值比**,**ab / ba 两个分层分别给**(GH #148 计量三条;计数类 ⇒ **报均值 + 占比,不报中位数**);(2) 粗粒度条件 (b):gpm / deaths / winrate 无明显负面即可,不做显著性检验。**条件 (a) 归录像组**:在 armed 腿的录像里找「濒死(<8% 血)且刚被英雄打过 → 立刻买了 TP」这一动作,并顺带看**买完之后有没有真的用上**(买了没用上 = 域对但价值存疑,是下一格的问题,不是本 id 的失败)。",
       "status": "pending",
       "result": ""
+    },
+    {
+      "id": "hero-15",
+      "stream": "hero",
+      "bundle": "zusstatic",
+      "seeds": [],
+      "priority": 2,
+      "question": "英雄组,GH #173,新 gated id `zusstatic`(`state.json:zusstatic_20260825`)。**搭车,不申请专波,零 AWS 增量;归档 .dem 扫描即可回答,不必等新波。** 缺陷:`hero_zuus.lua` 把静电场伤害比例写死 **0.09**,而本 patch KV `zuus_static_field/damage_health_pct` = **3.45 + 0.05/英雄等级**(31 级 ~4.95)⇒ 出厂常数在**任何等级上**都是真值的 **1.8–2.6 倍**,且错在**乐观**侧。`abilityASBonus` **恰好两个消费方,两个都是击杀判据**:`X.ConsiderW` 的远程兵斩杀,和 `X.ConsiderR` 里决定**交不交大招**的 `lowHPCount` 循环(`>=1` ⇒ MODERATE)。承重帧 `f_230952_zuus_ult_hoard`(t=567.0,9 级 Zeus,五个活敌共 4007 血):出厂记 **360.6 HP**,KV 带只允许 138–198 ⇒ **凭空多记 162–222 HP,且每一个敌人都被高估**。⚠️ **方向是收紧不是加宽**:armed 腿的击杀估值在整条 KV 带上**严格小于** baseline,所以 armed 只会**更少**开火,不会更多。想要的读数(任意含 Zeus 的 turbo 语料,armed/baseline 两腿):(1) Zeus 的**大招施放次数**;(2) **施放后 3 秒内敌方英雄死亡数**;(3) 「施放后 3s 内零击杀」的**局数占比**;(4) Zeus 的 gpm/xpm/deaths/末局未花金。",
+      "acceptance": "⚠️ **先读 LIMIT,否则会把一份空读数读成阴性结果**:静电场是 `Innate 1` + hidden,**没有任何 .dem 带这个技能**(Zeus 真实帧上 `GetAbilityList(bot)[5]` 是 nil,GH #151 同族),所以**不要去 .dem 里找静电场的技能行**;要看的是**大招/雷击的施放事件**与其后果。(a) 条件,唯一阻塞项:WORKING = armed 腿与 baseline 腿的**大招施放次数或其后果分布可分辨**(哪怕只是施放次数下降),带局/时刻;SILENT = 两腿逐位相同 ⇒ 说明 `lowHPCount` 根本不是决定施放的那一条(`ConsiderR` 上游还有 retreat / IsDyingUnderAttack / IsInTeamFight 三条更早的分支),**本桌回去重诊断而不是重修**,这是本条最有价值的可能结局。(b) 粗粒度、非显著性(owner 2026-08-01):gpm/xpm/deaths 无明显负面即可;**本条特有的正向哨兵**是「施放后 3s 内零击杀」的**占比应下降或持平**。计量:**armed/baseline 每一项都必须 ab / ba 两个分层分别给**(铁律 4(i));(1)(2) 是**整数小值域计数类 ⇒ 报均值 + 占比,不报中位数**(铁律 4(ii));登记效应量时连切法一起登记(4(iii))。载体门:发波前跑 `seed_draft.py <seeds> --assert-carrier zuus`,**分母按真正抓到 Zeus 的种子算**,惰性种子按波内零腿声明(hero-8 的教训)。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

@@ -22,6 +22,40 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-9. ~~**GH #173:Zeus 的静电场按 9% 算,KV 说 3.45% + 0.05/等级**~~
+   **2026-08-25T04:53Z done —— gated `zusstatic`(turbo-only,未 armed,不申请入集,
+   先买域 `hero-15`);稳定版未漂移;零 AWS。**
+   `hero_zuus.lua` 写死 `abilityASBonus = 0.09`,而 `zuus_static_field/damage_health_pct`
+   = **3.45 + 0.05/英雄等级**(31 级 ~4.95)⇒ **任何等级上都是真值的 1.8–2.6 倍**,
+   且错在**乐观**侧。它**恰好两个消费方,两个都是击杀判据**:`ConsiderW` 的远程兵斩杀,
+   和 `ConsiderR` 里决定**交不交 ~130s 全图大招**的 `lowHPCount`。
+   - **与 backlog §4 是同一个病的两扇门**:那条量出「斩杀窗口来的时候没蓝」,
+     本条给出**蓝去哪了的一半 —— 花在一个从来不存在的击杀上**。
+   - **承重帧**(已在库,非新造)`f_230952_zuus_ult_hoard` t=567.0,9 级 Zeus,
+     五个活敌共 4007 血:出厂记 **360.6 HP**,KV 带只允许 138–198 ⇒ **凭空 162–222 HP**,
+     且**逐个敌人**成立(测试对每个活敌单独断言),不是聚合效应。
+   - **一个被本地化当场否掉的假设**:「静电场只打英雄」——
+     `abilities_english.txt` 说 "**any enemy** ... percentage of their **current health**"
+     ⇒ 喂给远程兵那一处**目标合法**、`GetHealth()`(当前血)**也对**,**只有数字错**。
+     **教训:KV 给数值、本地化给作用域,改消费方之前两个都要读。**
+   - **三条 LIMIT 全是量出来的**:① 静电场 `Innate 1`+hidden ⇒ **没有 .dem 带它**,
+     Zeus 真实帧上 `GetAbilityList(bot)[5]` 是 nil、`abilityAS` 是「nil 名字的句柄」
+     ⇒ **两条腿在未加工 fixture 上都读 0**(GH #151 同族)—— **这是把句柄改成参数的
+     唯一理由**;② mock 的 `GetSpecialValueFloat` 恒 0 ⇒ armed 离线读 0 不是 3.45;
+     ③ `GetActualIncomingDamage` 恒 0(第二十二条世界断言)⇒ 开火侧离线不可复现。
+   - **⭐ 本组自己三小时前立的教训落到自己头上**:`test_focus_innate_index_anchor.lua`
+     的 GH #151 棘轮**按字面数 `abilityAS:IsTrained()` 这个调用点**,本改动把它挪进
+     helper ⇒ 当场红。处置是**改写不是削弱**(现在钉两半:句柄仍交给 helper、
+     helper **第一句**仍是无守卫 `IsTrained()`)。**搬调用点之前先 grep 谁在数它。**
+   - **顺带核对、有意没动**:`ConsiderR` 的 `nCastRange = 1600` 与 `ConsiderE` 的
+     `nJumpDistance = 450` **都是只写不读的局部量**(同 2026-08-22 删掉的 `talentDamage`),
+     删除属**另一个方向**的清扫,不混进本单元;**核对为正确的**:`ConsiderE` 的
+     `600 + nSkillLV*100` 与 KV `zuus_heavenly_jump/range = 700 800 900 1000` 逐位相符。
+   - **下一棒已交**:queue **`hero-15`**(搭车、零 AWS 增量、归档 .dem 即可),
+     预登记了两条**容易读反的前提**(方向是收紧;别去 .dem 找静电场技能行)与
+     **最有价值的可能结局** SILENT ⇒ `lowHPCount` 不是决定施放的那一条
+     (上游还有 retreat / `IsDyingUnderAttack` / `IsInTeamFight` 三条更早分支)⇒ **回去重诊断**。
+
 -8. ~~**GH #170:卖装表是角色盲的,而买单按 pos 分表**~~
    **2026-08-25T01:51Z done —— `bots/` 零改动、无 gate、无新 id、稳定版未漂移、零 AWS。**
    `X['sSellList']` **没有角色维度**,`sRoleItemsBuyList` 有 ⇒ 一张卖装表被 pos_1..pos_5
@@ -1101,6 +1135,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T04:53Z(报告 `iterations/reports/hero/20260825T045337Z.md`;**自选,GH #173 已开**
+  —— open 的 `[hero]` issue 仍**一条都不可在桌面推进**(#136 早已修好、卡在 `hero-6` 的语料;
+  #150/#151/#154/#162/#170 的下一棒全是 queue 归档扫描或归 harness;#165/#166 是本组前两轮
+  刚做完的);owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项。新 gated id **`zusstatic`**
+  (turbo-only,**未 armed**,**不申请入集,先买域** `hero-15`);登记
+  `state.json:zusstatic_20260825`;backlog 新增 §-9;**稳定版未漂移**;零 AWS。
+  自选方向**刻意换轴**:前三轮(#170 `0SELL` / #166 槽位 / #165 `0TERN`)都是**普查造尺子**,
+  这一轮回到**读一个焦点英雄的源码**,尺子只当工具用):
+  **`hero_zuus.lua` 把静电场伤害比例写死成 `0.09`,而本 patch 的
+  `zuus_static_field/damage_health_pct` 是 3.45 + 0.05/英雄等级(31 级也才 ~4.95)
+  —— 出厂常数在任何等级上都是真值的 1.8–2.6 倍,而且错在乐观那一侧;
+  它恰好两个消费方,两个都是击杀判据,其中一个就是决定要不要交 ~130 秒全图大招的那条。**
+  - **与 backlog §4 同病两门**:那条量出「斩杀窗口来的时候没蓝」,本条给出**蓝去哪了的
+    一半 —— 花在一个从来不存在的击杀上**。
+  - **承重帧**(已在库)`f_230952_zuus_ult_hoard` t=567.0,9 级 Zeus,五个活敌共 4007 血:
+    出厂记 **360.6 HP**,KV 带只允许 138–198 ⇒ **凭空 162–222 HP**,且**逐个敌人**成立。
+  - **被本地化当场否掉的假设**:「静电场只打英雄」—— `abilities_english.txt` 说
+    "**any enemy** ... **current health**" ⇒ 远程兵那一处目标合法、`GetHealth()` 也对,
+    **只有数字错**。**KV 给数值、本地化给作用域,两个都要读。**
+  - **三条 LIMIT 全是量出来的**(① 没有 .dem 带 innate ⇒ `GetAbilityList(bot)[5]` 是 nil,
+    **这是把句柄改成参数的唯一理由**;② mock 的 `GetSpecialValueFloat` 恒 0;
+    ③ `GetActualIncomingDamage` 恒 0 ⇒ 开火侧离线不可复现)。
+  - **⭐ 本组三小时前立的教训落到自己头上**:`test_focus_innate_index_anchor.lua` 的
+    GH #151 棘轮按字面数 `abilityAS:IsTrained()`,挪进 helper ⇒ 当场红。
+    **改写不是削弱**(钉两半:句柄仍交给 helper、helper 第一句仍是无守卫 `IsTrained()`)。
+  - 测试 `tests/test_zuus_static_field_pct.lua`:13 例,**10 次变异 9 抓 + 1 条如实记录的
+    no-op 对照逃逸**(`nPct > 0` → `>= 0`,复核确认真 no-op)。
 - 2026-08-25T01:51Z(报告 `iterations/reports/hero/20260825T015101Z.md`;**自选,GH #170 已开**
   —— open 的 `[hero]` issue **一条都不可在桌面推进**(#162/#154/#151/#150/#146/#136/#126 的
   下一棒全是 queue `hero-11..14` 的归档扫描或波次语料;#166/#165 是本组前两轮刚做完的);
