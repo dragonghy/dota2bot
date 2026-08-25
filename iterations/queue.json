@@ -1,5 +1,5 @@
 {
-  "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填) || 2026-08-23T15:xxZ 总监补字段 `director`(机器可读的裁定轴,起因见 test_set.md §AW.1):总监的排期/批准裁定**只写进 `director` 字段**,不再追加进申请方的 `question` 散文 —— 14:10Z 批测台按章程 4a 只看 `status=pending`,而 13:05Z 的 W3 裁定当时只存在于 `question` 散文与 test_set.md §AV 里,于是同一份裁定既已作出又『未送达』,批测台的保守默认与裁定相反。 `director` = {ruling: APPROVED|APPROVED_CONDITIONAL|RECEIVED|REJECTED, wave: W3|W4|W5|unscheduled, at, ref(test_set.md 节号), note}。**批测台选波先读 `director.wave`,再读 status/priority**;无 `director` 字段 = 总监还没裁,按原规则走。",
+  "_protocol": "批测申请队列。各流 append 到 requests;批测台按优先级执行,完成后把条目移到 done 并附 verdict 摘要。字段:id(流名-序号), stream, bundle(逗号id串,<=5个), seeds([4个]), priority(1高3低), question(这波回答什么), acceptance(判据), status(pending|running|done|rejected), result(批测台填) || 2026-08-23T15:xxZ 总监补字段 `director`(机器可读的裁定轴,起因见 test_set.md §AW.1):总监的排期/批准裁定**只写进 `director` 字段**,不再追加进申请方的 `question` 散文 —— 14:10Z 批测台按章程 4a 只看 `status=pending`,而 13:05Z 的 W3 裁定当时只存在于 `question` 散文与 test_set.md §AV 里,于是同一份裁定既已作出又『未送达』,批测台的保守默认与裁定相反。 `director` = {ruling: APPROVED|APPROVED_CONDITIONAL|RECEIVED|REJECTED, wave: W3|W4|W5|unscheduled, at, ref(test_set.md 节号), note}。**批测台选波先读 `director.wave`,再读 status/priority**;无 `director` 字段 = 总监还没裁,按原规则走。 || 2026-08-25T21:3xZ 总监补字段 `director_resolve`(机器可读的**结案**轴,与排期轴 `director` 分开):`director` 回答「这波什么时候跑」,批测台读 `director.wave`;`director_resolve` 回答「这个 id 最终 promote 了没有」,= {ruling: PROMOTED|NOT_PROMOTED_RETURN_ON_C|REJECTED, at, ref(state.json 键 + test_set.md 节号), issue, note}。**分成两个字段而不是覆盖 `director`**,是因为覆盖会把排期裁定(含预登记的域与分母)擦掉,而那正是事后复核结论时要回去看的那一行。无 `director_resolve` = 尚未结案。",
   "requests": [
     {
       "id": "strategy-1",
@@ -254,6 +254,13 @@
         "at": "2026-08-23T13:05Z",
         "ref": "test_set.md §AV.4/§AV.5/§AV.7",
         "note": "排期 W5。发波前必跑 `seed_draft.py 888 895 896 906 --assert-carrier crystal_maiden:5` 并把 `satisfied=3 verdict=PARTIAL` 抄进预登记 —— 种子 888 把 CM 发在 pos 4,该种子整段惰性;收割分母按 3 个种子算,不是 4 个。常设种子集 974/986/1024 对它是 exit 1/ABSENT,不许登记为常设。"
+      },
+      "director_resolve": {
+        "ruling": "NOT_PROMOTED_RETURN_ON_C",
+        "at": "2026-08-25T21:3xZ",
+        "ref": "test_set.md §BI; state.json:cmboots_RESOLVE_20260825T2130Z",
+        "issue": "GH #144 (追评), GH #190 (下一棒)",
+        "note": "本请求问的是条件 (b),(b) 已由批测台 08-24T12:17Z 判 PASS,本字段不动它。三条件合议结果:(a) WORKING 不推翻、(b) PASS 不推翻、**(c) 判为 as filed 不成立** ⇒ cmboots 不 promote、不进稳定版、不打 stable-vN tag;gate 保留,**不是 reject**。它本就不在 36-id 成员串里,故无「出集」动作。(c) 不成立的四条腿见 §BI;一句话版:铁律 2(c) 自带的检索判据对**这个英雄**恰好反向(标准打法给 CM 选 Tranquil,给的理由正是 Arcane Aura),而唯一真正 bot-specific 的那条测量(队友放 Replenish 2.8–4.4/局、CM 收到 0.00–1.07,半径 1200 = 她自己光环的 proximity 半径)指向**站位**而不是鞋子 —— 站位是零金币的,鞋子是 375g + 鞋子 +70~85s + ancient_janggo −21.9pp。重新入集路线 A = GH #190 的检测器读数(零 AWS、跑现成语料)。**裁定可证伪**:若 #190 读回来 CM 并不比同局其他位更远,第 (3) 条腿被推翻,总监应凭该读数重开 (c)。"
       }
     },
     {
