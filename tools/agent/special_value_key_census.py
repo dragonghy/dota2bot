@@ -112,14 +112,26 @@ def kv_keys(text):
     the top-level `Ability*` names present, and every immediate child name of
     an `AbilityValues` block (both the `"k" "v"` shorthand and the
     `"k" { "value" "v" }` long form).
+
+    Braces are COUNTED per line rather than recognised only at the start of a
+    line: `"key" {` on one line exists in the wild, and a parser that ignores
+    such a line never pushes the brace, falls out of step, and then silently
+    mis-files or drops the rest of the file -- which reads exactly like "the key
+    is not there", i.e. like a finding.  GH #177 hit that on brewmaster with the
+    cast-shape parser.  MEASURED here across all 128 shipped heroes on
+    2026-08-25: exactly one file disagrees with the old walk (largo -- 3 keys it
+    missed, 1 spurious), and NO census verdict changes, because no read in
+    hero_largo.lua names one of them.  So this is a fidelity fix, not a defect
+    fix, and it is recorded as such.
     """
     keys, stack, pend = set(), [], None
     for raw in text.splitlines():
         line = raw.split("//")[0].strip()
         if not line:
             continue
+        opens, closes = line.count("{"), line.count("}")
         pair = re.match(r'^"([^"]+)"\s+"([^"]*)"$', line)
-        if pair:
+        if pair and opens == 0 and closes == 0:
             name = pair.group(1)
             if len(stack) >= 2 and stack[-1] == "AbilityValues":
                 keys.add(name)                      # "k" "v" shorthand
@@ -127,17 +139,19 @@ def kv_keys(text):
                 keys.add(name)
             continue
         lone = re.match(r'^"([^"]+)"$', line)
-        if lone:
+        if lone and opens == 0 and closes == 0:
             pend = lone.group(1)
             continue
-        if line.startswith("{"):
-            if pend is not None and stack and stack[-1] == "AbilityValues":
-                keys.add(pend)                      # "k" { "value" "v" } form
-            stack.append(pend if pend is not None else "?")
+        toks = re.findall(r'"([^"]*)"', line)
+        for _ in range(opens):
+            name = pend if pend is not None else (toks[0] if toks else None)
+            if name is not None and stack and stack[-1] == "AbilityValues":
+                keys.add(name)                      # "k" { "value" "v" } form
+            stack.append(name if name is not None else "?")
             pend = None
-            continue
-        if line.startswith("}") and stack:
-            stack.pop()
+        for _ in range(closes):
+            if stack:
+                stack.pop()
     return keys
 
 

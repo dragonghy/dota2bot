@@ -22,6 +22,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-12. ~~**GH #179:`GetSpecialValue*` 的另一半 —— key 在 ≠ 读到的是那个数**~~
+   **2026-08-25T13:54Z done —— 零行为改动(`bots/` 一行未改)、无新 gate、不提 queue 请求;
+   稳定版未漂移;零 AWS。** 新轴 **`VALSHAPE`**。
+   #162 那把尺子只问「key 在不在」,漏掉同一处读数的另一半:
+   ① **LOSSY-INT**(key 在、值是小数、调用点用 `GetSpecialValueInt`;值在 (0,0.5) 内
+   **截断与舍入都塌成 0**,≥0.5 只敢称有损**不报量级** —— 截断还是舍入桌面读不到);
+   ② **NO-BASE**(key 在、但条目**没有基础 `value`**,只有 `special_bonus_*`
+   ⇒ 不满足条件的施法者读到 0;key 普查把它算 PRESENT,没错且什么都没说)。
+   **128 文件 / 700 处读数:COLLAPSE 2、LOSSY-INT 5、NO-BASE 4、MISSING 25(#162 老轴原样复现)。**
+   - **⭐ 焦点五在这根轴上是空的(Int 读小数 0 处),而那个「空」是一次核验**:
+     唯一的 NO-BASE 是**我们自己 #162 放进去的那处**。key 普查**分不出「修好了」和
+     「把一个静默的 0 换成另一个静默的 0」**,因为新 key 的条目根本没有基础值;
+     按形状读才是事实:`lion_finger_of_death/splash_radius` base 无、
+     `special_bonus_scepter = 325` ⇒ 没杖 0、有杖 325,消费方本来就在 `HasScepter()` 里
+     ⇒ **修复成立**。`test_lion_r_splash_radius_key.lua` §5 用**散文**写下过这个形状,
+     **从没被机器检过**;现在检了。同型正确写法另有 `hero_earthshaker.lua:406`。
+   - **单向判据**(#175 同族,不解析句柄):`duration` 在 berserkers_call 上 2.1–3.0、
+     在 battle_hunger 上 12.0 ⇒ axe 那处判 **UNRESOLVED**,已写成用例。
+   - **焦点五之外 8 处不修**(#168 惯例,认领者自取):ursa `hop_duration` 0.25→0、
+     snapfire `jump_duration` 0.484→0、pugna `delay` 0.8(落地延迟从施法时间估计里消失)、
+     slark/mars/troll/kez 各一处、**mars `soldier_offset` 无基础值且无条件项 ⇒ 恒 0**。
+   - **⭐ 教训:「解析器丢了一个 key」和「那里没有这个 key」读起来一模一样。**
+     本脚本第一版会把 lion `splash_radius` 报成 MISSING = **「#162 的修复也是个 0」的假警报**,
+     去读原始 KV 才拦下(#177 brewmaster 同族)⇒ 配了 `--self-test`。
+     **self-test 第一版放跑过一次变异**(`no_base` 用例的子行会把 key 重新登记),
+     补**空块**与**纯嵌套**两例才有区分度。棘轮 6 变异 6 抓,**其中一次先逃逸**:
+     `find('lionsplash')` 被 `'lionsplashX'` 子串满足,改**带引号**才抓得住。
+   - **顺手加固(measured,非缺陷修复)**:`special_value_key_census.py:kv_keys` 改为逐行数括号;
+     全 128 英雄**只有 largo 不一致**(漏 3 多 1)、**零判定翻转**、焦点五快照逐字节不变。
+   - **下一棒**:不需要批测;归 harness 的便宜一棒是让 `bot_api.lua` 从
+     `special_value_shapes.lua` 给 `GetSpecialValue*` 供数(与 `ability_meta.lua` 同型,GH #36)
+     ⇒ `VALSHAPE` 与 #162 两根轴**第一次有开火侧**。
+
 -11. ~~**GH #177:CM 的调度第一条分支给一个被动技能下施法指令**~~
    **2026-08-25T10:58Z done —— gated `cmaurapassive`(turbo-only,未 armed,不申请入集,
    先买域 `hero-17`);稳定版未漂移;零 AWS。** 新轴 **`CASTSHAPE`**。
@@ -1221,6 +1254,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-25T13:54Z(报告 `iterations/reports/hero/20260825T135400Z.md`;**自选,GH #179 已开**
+  —— 自检:**UNLANDED 2 条,都是总监的**(`08ed7c2`/`fc79986`,GH #159 `tpreach`,停在
+  `origin/claude/compassionate-albattani-4zcohy`,已在报告里点名);cadence 洞五组都有;
+  owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项;open 的 `[hero]` issue 仍**一条都不可在
+  桌面推进**。**本轮零行为改动**:`bots/` 一行未改、**无新 gate id**、`state.json` 无新增、
+  **不提 queue 请求**(桌面可证的负结论,没有需要 (a) 证据的行为)、**稳定版未漂移**、零 AWS。
+  **刻意换轴**:前六轮都在问「某个数/某个 key/某个槽位/某条施法指令对不对」,
+  这一轮问的是 **读到的那个数,是不是那个数**):
+  **`GetSpecialValueInt` 读一个小数会静默截断/舍入;一个只有 `special_bonus_*`、
+  没有基础 `value` 的 key,对不满足条件的施法者恒读 0 —— 而 #162 那把 key 尺子
+  对这两件事结构性失明,因为它只问「key 在不在」。**
+  - **128 文件 / 700 处读数:COLLAPSE 2、LOSSY-INT 5、NO-BASE 4、MISSING 25**(老轴复现)。
+  - **⭐ 焦点五 Int 读小数 0 处 —— 空的;而那个空是一次核验**:唯一的 NO-BASE 就是
+    #162 自己放进去的 `lion splash_radius`(base 无 + `special_bonus_scepter = 325`,
+    消费方在 `HasScepter()` 内)⇒ **修复成立**,而 key 普查**分不出「修好了」和
+    「换了一个静默的 0」**。`test_lion_r_splash_radius_key.lua` §5 的散文第一次被机器检。
+  - **新工具** `special_value_shape_census.py` + 快照 `tests/mock/special_value_shapes.lua`
+    + 源码棘轮 `tests/test_special_value_shape.lua`(10 例,6 变异 6 抓、其中一次先逃逸)。
+  - **⭐ 三条教训**:① **解析器丢 key 与「没有这个 key」读起来一模一样** —— 第一版会把
+    #162 的修复误报成「也是个 0」,读原始 KV 才拦下(#177 同族)⇒ 配 `--self-test`;
+    ② **self-test 自己也会不足**:`no_base` 用例的子行把 key 重新登记 ⇒ 测不到「块打开时登记」,
+    补空块/纯嵌套两例;③ **子串判据会放跑改名变异**(`'lionsplashX'` ⊃ `lionsplash`),
+    要**带引号**钉。
+  - **加固要报「没变什么」**:`kv_keys` 逐行数括号后 128 英雄里只有 largo 不一致、
+    **零判定翻转**、快照逐字节不变 ⇒ **保真度修复,不是缺陷修复**(写进 docstring,免得被引成 bug)。
+  - **⚠ LIMIT**:mock 对 `GetSpecialValue*` 一律答 0 ⇒ **本轴与 #162 轴在 fixture 里都不可判**,
+    本轮任何一句都不是行为证据。
 - 2026-08-25T10:58Z(报告 `iterations/reports/hero/20260825T105832Z.md`;**自选,GH #177 已开**
   —— 自检无 OFF-TRUNK(只有各组都有的 cadence 洞);owner P1/P2 球在协同组、P3 在总监 ⇒
   本组无优先项;open 的 `[hero]` issue 仍**一条都不可在桌面推进**(#136/#150/#151/#154/#162/
