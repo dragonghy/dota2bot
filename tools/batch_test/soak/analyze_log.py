@@ -4,8 +4,9 @@
 Wraps parse_log.py's scoreboard parse and adds behavior/health signals:
   - VScript runtime errors (with surrounding context lines)
   - script-perf warnings ("Script function ... took N ms"), aggregated
-  - duration outliers (turbo game dragging past 40 game-minutes = bots
-    failing to close; or ending before 10 = a stomp/insta-end bug)
+  - duration outliers, both tied to SOAK_CAP_MIN rather than pinned ([GH #108]):
+    past cap+15 game-minutes the referee that force-wins at the cap is dead;
+    below 10 with no ancient down is the premature-forcewin artifact
   - feeding pattern: deaths >= 8 with kills <= 2
   - farming cores: core-tagged hero below 300 GPM (turbo!) is broken
 
@@ -79,27 +80,53 @@ def analyze(path):
     if team_gold["radiant"] or team_gold["dire"]:
         econ_winner = "radiant" if team_gold["radiant"] >= team_gold["dire"] else "dire"
     cap_min = float(os.environ.get("SOAK_CAP_MIN", "30"))
+
+    # [GH #108 checklist 1] Did the game end because somebody took the ancient?
+    # At SOAK_CAP_MIN=10 this was nearly a constant false (no turbo game loses
+    # its fort in 10 minutes), so "sub-cap ending" and "referee artifact" were
+    # the same set and the recovery heuristic below could not be wrong. At 25
+    # they come apart: most games are expected to end naturally, and a REAL win
+    # by the economic loser (a comeback, a throw) is exactly a sub-cap engine
+    # ending whose winner disagrees with the gold -- i.e. it looks bit for bit
+    # like the artifact the heuristic exists to repair. So the fort is asked
+    # first: a destroyed ancient is a scoreboard, and no economic reasoning is
+    # allowed to overwrite one.
+    fort = next((t for t in base.get("towers", [])
+                 if str(t.get("building", "")).endswith("_fort")), None)
+    natural_end = fort is not None
+
     winner_by = "engine"
-    if base.get("winner") is not None and econ_winner and dur_min >= cap_min - 0.5:
+    if natural_end:
+        # parse_log already derives the winner from the fort when the signout
+        # block is missing; when both exist the signout is the same fact.
+        winner_by = "engine_natural"
+    elif base.get("winner") is not None and econ_winner and dur_min >= cap_min - 0.5:
         base["winner"] = econ_winner
         winner_by = f"economy_{int(cap_min)}min_cap"
     elif base.get("winner") is not None and econ_winner and dur_min < cap_min - 0.5:
-        # [freehunt2 finding 1] A sub-cap "engine" ending is the referee's
-        # premature forcewin signature (ancient 4500->0 between samples with
-        # every tower/rax alive; engine winner dire 50/50 times): the engine
-        # attribution is an artifact of the surrender mechanism, not a real
-        # win. Trust the economy instead so ~10% of verdicts stop flipping.
+        # [freehunt2 finding 1] A sub-cap "engine" ending with NO fort down is
+        # the referee's premature forcewin signature (ancient 4500->0 between
+        # samples with every tower/rax alive; engine winner dire 50/50 times):
+        # the engine attribution is an artifact of the surrender mechanism, not
+        # a real win. Trust the economy instead so ~10% of verdicts stop
+        # flipping.
         if base["winner"] != econ_winner:
             base["winner"] = econ_winner
             winner_by = "economy_forcewin_recovery"
 
     if base.get("winner") is None:
         anomalies.append({"type": "no_winner", "note": "game did not finish"})
-    elif dur_min > 40:
+    elif dur_min > cap_min + 15:
+        # The referee force-wins at the cap, so this band is unreachable while
+        # the referee works -- which is the whole point: it detects a DEAD
+        # REFEREE, not slow bots. Tied to the cap so it keeps meaning that
+        # after #108 (at cap=25 it is the same literal 40 it always was).
         anomalies.append({"type": "slow_close",
                           "duration_min": round(dur_min, 1),
-                          "note": "turbo game dragged past 40 min — closing problem"})
-    elif dur_min < 10:
+                          "note": f"game ran past cap {cap_min:g}+15 min — referee likely dead"})
+    elif not natural_end and dur_min < min(10.0, cap_min):
+        # An ending far below the cap with nobody's ancient down. This is the
+        # artifact above, not a stomp; a genuine 9-minute stomp has a fort.
         anomalies.append({"type": "insta_end", "duration_min": round(dur_min, 1)})
 
     for p in base.get("players", []):
@@ -123,6 +150,11 @@ def analyze(path):
         "econ_winner": econ_winner,
         "duration_s": base.get("duration_s"),
         "duration_min": round(dur_min, 1),
+        # [GH #108 acceptance 1] The natural-end RATE is the number the owner's
+        # cap decision is judged by, and it has to be a field: deriving it from
+        # winner_by at report time is how a definition drifts between two desks.
+        "natural_end": natural_end,
+        "cap_min": cap_min,
         "wall_s": base.get("wall_s"),
         "effective_timescale": base.get("effective_timescale"),
         "mode": base.get("mode_guess"),

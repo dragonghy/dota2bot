@@ -405,8 +405,11 @@ tests['[hero] the corpus holds no level-25 hero, so this fix has no domain yet']
         .. 'verdict below would be an artefact of the parser')
 
     -- The reopen condition, written as the assertion rather than as prose.  When
-    -- a level-25 hero first appears (GH #108 raises SOAK_CAP_MIN 10 -> 25), this
-    -- goes RED and the gate becomes proposable for the test set.
+    -- a level-25 hero first appears, this goes RED and the gate becomes
+    -- proposable for the test set.  GH #108 landed the cap 10 -> 25 on
+    -- 2026-08-25, so the farm side of the blocker is gone; this stays green only
+    -- until frames harvested under the new cap reach tests/fixtures/, which is
+    -- the lag this assertion measures and prose could not.
     assert(nMax < 25, 'the corpus now reaches level ' .. nMax .. '. `' .. CAND_ID
         .. '` finally has a domain: propose it for test_set.md and open a queue '
         .. 'request for condition (a), and rewrite this assertion')

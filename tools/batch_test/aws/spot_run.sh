@@ -44,6 +44,7 @@ VALIDATE=""         # "--validate 'CAND SEED1 SEED2 ... [--games N] [--cand-ref 
 MARKET="--instance-market-options MarketType=spot,SpotOptions={SpotInstanceType=one-time,InstanceInterruptionBehavior=terminate}"
 SPOT=1
 DRYRUN=0
+ALLOW_SHORT_WATCHDOG=0   # [GH #108] see the wave-budget guard below
 TAG_PREFIX=dota2bot-soak-spot
 STAMP=$(date +%Y%m%d_%H%M%S)
 # [harness] #98: run_id must not rest on STAMP's 1-second resolution. Within ONE
@@ -80,12 +81,54 @@ while [ $# -gt 0 ]; do
         --type) INSTANCE_TYPE=$2; shift 2 ;;
         --validate) VALIDATE=$2; shift 2 ;;
         --on-demand) MARKET=""; SPOT=0; TAG_PREFIX=dota2bot-soak-od; shift ;;
+        --allow-short-watchdog) ALLOW_SHORT_WATCHDOG=1; shift ;;
         --dry-run) DRYRUN=1; shift ;;
         *) echo "unknown arg $1" >&2; exit 1 ;;
     esac
 done
 
 WATCHDOG_MIN=$((HOURS * 60))
+
+# ---- [GH #108] wave-budget guard: does the watchdog outlast the wave it backs?
+# The 2026-07 "852 accident" was a seed that got no games because the instance
+# self-terminated mid-wave; the wave still produced a verdict, computed on the
+# seeds that HAD run, and nothing in it said a seed was missing. Raising the cap
+# 10 -> 25 multiplies every wave's wall time by ~2.5x, so the same accident that
+# needed a 4-seed wave to happen now happens at 2 seeds on the default 3h.
+# So the arithmetic is done here, BEFORE any money is spent, and a wave that
+# cannot fit is refused with the --hours it needs rather than truncated.
+# The estimate is deliberately crude and stated in the message so a human can
+# overrule it: --allow-short-watchdog launches anyway (legitimate for a wave
+# that is meant to be cut short, e.g. a smoke launch).
+if [ -n "$VALIDATE" ]; then
+    g_games=$(echo "$VALIDATE" | grep -oE -- '--games [0-9]+' | awk '{print $2}' || true)
+    g_games=${g_games:-12}
+    # same stripping as build_user_data, or --games' value counts as a seed
+    g_seeds=$(echo "$VALIDATE" | sed -e 's/--games [0-9]*//' -e 's/--cand-ref [^ ]*//' \
+              | cut -d' ' -f2- | xargs | wc -w)
+    [ "$g_seeds" -ge 1 ] || g_seeds=1
+    g_cap=$(sed -n 's/^SOAK_CAP_MIN=\${SOAK_CAP_MIN:-\([0-9]\{1,\}\)}.*/\1/p' \
+            ../soak/soak_loop.sh 2>/dev/null | head -1)
+    case "${g_cap:-}" in ''|*[!0-9]*) g_cap=25 ;; esac
+    # cap/1.8 wall-minutes per game (measured control-slot timescale), one
+    # drained game plus ceil(games/slots) fresh ones per half-wave, two
+    # half-waves per seed, plus ~12 min of boot + steam refresh + `sleep 60`.
+    g_per=$(( (g_cap * 10 + 17) / 18 ))
+    g_rounds=$(( (g_games + SLOTS - 1) / SLOTS ))
+    g_need=$(( g_seeds * 2 * (1 + g_rounds) * g_per + 12 ))
+    g_hours=$(( (g_need + 59) / 60 ))
+    if [ "$g_need" -gt "$WATCHDOG_MIN" ]; then
+        echo "wave budget: cap=${g_cap}min x ${g_seeds} seed(s) x 2 legs x $((1 + g_rounds)) game(s)/leg" >&2
+        echo "             ~${g_need} min needed, watchdog is ${WATCHDOG_MIN} min (--hours $HOURS)." >&2
+        echo "             the last seed(s) would get no games, and the verdict would not say so." >&2
+        if [ "$ALLOW_SHORT_WATCHDOG" -eq 1 ]; then
+            echo "             --allow-short-watchdog given: launching anyway." >&2
+        else
+            echo "REFUSED: relaunch with --hours ${g_hours}, or pass --allow-short-watchdog." >&2
+            exit 1
+        fi
+    fi
+fi
 
 build_user_data() {
     # $1 = RUN_ID (also the S3 run prefix under soak/)

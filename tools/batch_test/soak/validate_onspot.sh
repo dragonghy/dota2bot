@@ -22,6 +22,19 @@ BUCKET="${4:?s3 bucket}"; RUN_ID="${5:?s3 run id (soak/<run_id>)}"
 CAND_REF="${CAND_REF:-}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO=/opt/dota2bot
+# [GH #108] The stall budget is a MULTIPLE OF THE GAME CAP, not a constant.
+# A half-wave costs: the drain of whatever game each slot is already in, plus
+# ceil(TARGET/slots) fresh games, each about cap/1.8 wall-minutes (the farm's
+# measured control-slot timescale).  The literal 35 this replaces was 3.5x the
+# 10-minute cap; at 25 it would have been 1.4x the wall time of a SINGLE game
+# and every wave would have "stalled" while perfectly healthy -- under-producing
+# silently, because the caller does `|| true` and scores whatever arrived.
+# The cap itself is read from soak_loop.sh so the two cannot drift apart; that
+# file is the single source of truth for it (env still wins, as it does there).
+CAP_MIN=${SOAK_CAP_MIN:-$(sed -n 's/^SOAK_CAP_MIN=\${SOAK_CAP_MIN:-\([0-9]\{1,\}\)}.*/\1/p' \
+    "$HERE/soak_loop.sh" 2>/dev/null | head -1)}
+case "${CAP_MIN:-}" in ''|*[!0-9]*) CAP_MIN=25 ;; esac
+STALL_MIN=${STALL_MIN:-$(( CAP_MIN * 7 / 2 ))}
 S3RUN="s3://$BUCKET/soak/$RUN_ID"
 # Second-resolution + host suffix: two same-minute runs of the same candidate
 # used to OVERWRITE each other's verdict (happened three times on 2026-07-23:
@@ -59,14 +72,14 @@ deploy_wave() { # side seed stamp
   echo "$3" | sudo tee /opt/soak/ab_version >/dev/null
 }
 
-wait_wave() { # stamp -> 0 when TARGET reached, 1 on stall (~35 min)
+wait_wave() { # stamp -> 0 when TARGET reached, 1 on stall (STALL_MIN minutes)
   local stamp="$1" n=0 i=0
   while true; do
     sync_s3
     n=$(count_stamped "$stamp")
     echo "$(date +%H:%M) [$stamp] $n/$TARGET"
     [ "$n" -ge "$TARGET" ] && return 0
-    i=$((i+1)); [ "$i" -ge 35 ] && { echo "STALL [$stamp] at $n"; return 1; }
+    i=$((i+1)); [ "$i" -ge "$STALL_MIN" ] && { echo "STALL [$stamp] at $n after ${STALL_MIN}min (cap=${CAP_MIN})"; return 1; }
     sleep 60
   done
 }

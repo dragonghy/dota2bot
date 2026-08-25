@@ -58,21 +58,23 @@
 --     caller handing it a turbo bound ABOVE the shipped bound still cannot
 --     widen anything (§4).  One lever, and it can only fire less.
 --
--- ⚠️ LIMIT -- THE DOMAIN IS CURRENTLY EMPTY ON THE FARM, AND THAT IS MEASURED
--- BELOW, NOT ASSERTED.  tools/batch_test/soak/soak_loop.sh caps games at
--- SOAK_CAP_MIN=10 game-minutes, and the armed bound is 15:00.  Inside a capped
--- game `DotaTime() < 15*60` is true at every instant, so armed and factory are
--- POINTWISE IDENTICAL there and a wave could not buy condition (a) for this id
--- however many games it ran.  §7 measures the same thing on the frame corpus:
--- every fixture in tests/fixtures sits below the armed bound.  Consequences,
--- stated so nobody over-reads a green run:
+-- ⚠️ LIMIT -- THE DOMAIN WAS EMPTY ON THE FARM UNTIL 2026-08-25, AND THAT WAS
+-- MEASURED BELOW, NOT ASSERTED.  tools/batch_test/soak/soak_loop.sh used to cap
+-- games at SOAK_CAP_MIN=10 game-minutes against an armed bound of 15:00; inside
+-- a capped game `DotaTime() < 15*60` was true at every instant, so armed and
+-- factory were POINTWISE IDENTICAL there and no number of games could buy
+-- condition (a).  Consequences, stated so nobody over-reads a green run: a
+-- green run here was NOT evidence the change fires and NOT evidence it is
+-- unnecessary; it was evidence about arithmetic and about the gate's shape.
 --
---   * a green run here is NOT evidence the change fires, and NOT evidence it is
---     unnecessary.  It is evidence about arithmetic and about the gate's shape.
---   * this id is therefore NOT proposed for the test set.  Its domain unblocks
---     with GH #108 (the owner's cap 10 -> 25 decision), at which point 15:00 is
---     inside the window and both a wave and a real-frame fixture become
---     possible.  §7 goes red the day a fixture lands in the band and says so.
+-- UPDATE 2026-08-25 (GH #108): the director executed the owner's cap decision,
+-- SOAK_CAP_MIN is now 25, and the [domain] test below turned over exactly as it
+-- was wired to -- it is kept with the sign flipped rather than deleted.  The
+-- band 15:00-25:00 now sits inside a capped game, so BOTH a wave and a
+-- real-frame fixture are possible and this id is worth proposing for the test
+-- set (baton in GH #108 / #165, hero desk).  §7 still measures the frame
+-- corpus, which lags the farm: every fixture in tests/fixtures is still below
+-- the armed bound, and §7 goes red the day one lands in the band and says so.
 --
 -- WHAT THIS FILE DOES NOT CLAIM.  That waking these two clauses is GOOD.
 -- Locally-correct is not emergently-good (AGENTS.md, the lanefix lesson) --
@@ -362,19 +364,24 @@ tests['[corpus] no fixture in tests/fixtures can tell armed from factory'] = fun
         :format(sMax, tMax, ARMED, CALL_SITES[1].shipped * 60))
 end
 
-tests['[domain] the wave cap is below the armed bound, so a wave buys nothing yet'] = function()
+tests['[domain] the wave cap is above the armed bound, so a wave can buy (a)'] = function()
     local sh = read_file('tools/batch_test/soak/soak_loop.sh')
     local nCap = tonumber(sh:match('SOAK_CAP_MIN=%${SOAK_CAP_MIN:%-(%d+)}'))
     assert(nCap, 'cannot read SOAK_CAP_MIN out of soak_loop.sh; the domain claim in the '
         .. 'header is unverifiable, go re-read it before quoting it')
     local ARMED = CALL_SITES[1].turbo * 60
-    -- Not a wish: while the cap is under the armed bound, EVERY instant of a
-    -- capped game satisfies both predicates, so no wave can buy condition (a).
-    -- When GH #108 raises the cap this goes red -- which is the signal that the
-    -- id is finally worth proposing for the test set.
-    assert(nCap * 60 <= ARMED, ('SOAK_CAP_MIN is now %d minutes, at or above the armed '
-        .. 'bound of %d. The domain this id was parked for has opened (GH #108): the '
-        .. 'header LIMIT is stale, and `%s` can now be proposed for the test set.')
+    -- 2026-08-25, GH #108: the director raised the cap 10 -> 25 and this
+    -- assertion turned over, exactly as the hero desk wired it to. It is kept
+    -- (not deleted) with the sign flipped, because the claim it now pins is the
+    -- one somebody would otherwise re-derive by hand: while the cap sits ABOVE
+    -- the armed bound the band 15:00-25:00 is inside a capped game, so a wave
+    -- can distinguish armed from factory and condition (a) is buyable. Lower
+    -- the cap back under 15:00 and this goes red -- which is the signal that
+    -- any wave reading for `alchrage` has gone void, not merely uninformative.
+    assert(nCap * 60 > ARMED, ('SOAK_CAP_MIN is %d minutes, at or below the armed bound '
+        .. 'of %d: every instant of a capped game satisfies both predicates again, so '
+        .. 'no wave can buy condition (a) for `%s`. Whoever lowered the cap owes the '
+        .. 'test set a re-read (GH #108 checklist 7).')
         :format(nCap, CALL_SITES[1].turbo, CAND))
 end
 

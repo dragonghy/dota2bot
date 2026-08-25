@@ -72,9 +72,15 @@ def M(xss):
 # often").  A -42 gpm mean can come from one hero collapsing while the team
 # still wins more games than it loses -- and 2(b) names the latter.
 #
-# Hence winner_by is printed alongside, always: only the `engine` bucket
-# (games that ended naturally, sub-cap, un-rewritten) carries information
-# independent of gold.  If that bucket is small, so is the independence.
+# Hence winner_by is printed alongside, always: only games that ended because
+# an ancient fell carry information independent of gold.  [GH #108] That bucket
+# now has its own name, `engine_natural`, and reading the old `engine` bucket as
+# "ended naturally" is wrong in BOTH directions: it used to also hold sub-cap
+# forcewin artifacts whose engine winner happened to agree with the gold (so it
+# over-counted), and under SOAK_CAP_MIN=25 a real natural win is no longer rare
+# (so it under-counts what the cap change bought).  `engine_natural` is the
+# gold-independent bucket, and its share is the natural-end rate #108 is judged
+# by.  If it is small, so is the independence.
 def wr(games, cand_team):
     """Candidate-side win rate over games that actually finished.
 

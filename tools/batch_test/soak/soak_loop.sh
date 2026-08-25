@@ -10,9 +10,31 @@ S3_PREFIX=${2:?s3 prefix}
 DOTA=/opt/dota2
 REPO=/opt/dota2bot
 PORT=$((27020 + SLOT))
-SOAK_CAP_MIN=${SOAK_CAP_MIN:-10}   # game-minute lock enforced by the referee
-GAME_CAP_MIN=15          # wall-clock kill backstop; the rcon referee should
-                         # always end the match first with a real scoreboard
+# [GH #108] Owner decision 2026-08-22: the game-minute lock goes 10 -> 25.
+# Turbo games run ~15-20 game-minutes, so at 25 most of them END NATURALLY: the
+# verdict stops being an economic proxy and becomes a real win (validation
+# condition (b) reads the thing it names), and the scenarios that were
+# STRUCTURALLY unreachable at 10 -- high ground, buyback, post-rax, ancient
+# defence -- enter the corpus for the first time (#87; 11,048 archived games,
+# 0 of them past a high-ground fight).
+# ⚠ Readings taken on either side of this line are NOT comparable: game length,
+# games per wave, natural-end rate and every threshold calibrated on an
+# ~11-minute game all move together.  The boundary is recorded in
+# iterations/state.json (cap25_boundary_20260825) and the review checklist
+# lives in GH #108.
+SOAK_CAP_MIN=${SOAK_CAP_MIN:-25}   # game-minute lock enforced by the referee
+# Wall-clock kill backstop.  DERIVED from the cap, not pinned, because a pinned
+# value is exactly what breaks first when the cap moves: at 25 game-minutes the
+# literal 15 this replaces would have killed EVERY game ~10 game-minutes early,
+# and nothing downstream would have reported "backstop" -- it would have
+# reported "no winner", i.e. the harness would have lied about the bots.
+# The farm's measured end-to-end timescale on control slots is ~1.79-1.93
+# (batch-desk 2026-08-22/23 fits of duration_s/wall_s, map load included), so
+# one game costs about cap/1.8 wall-minutes.  This is 2x that plus 5 minutes of
+# load slack.  At the OLD cap the formula yields 16 -- it reproduces the
+# hand-picked 15 it replaces, and that agreement is the only reason to trust it
+# at the new cap (32).
+GAME_CAP_MIN=${GAME_CAP_MIN:-$(( SOAK_CAP_MIN * 10 / 9 + 5 ))}
 RCON_PW=soakref          # LAN-only dedicated server, constant password is fine
 REFEREE="$REPO/tools/batch_test/soak/referee.py"
 
