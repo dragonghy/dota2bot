@@ -454,6 +454,13 @@ def scan_game(g, name, seed, camps, sweep=''):
                             leg=g.leg(hero), t=round(t, 1),
                             hp=round(s['hp_pct'], 3), x=s['x'], y=s['y'],
                             camp_d=round(cd), strict=strict, clean=clean,
+                            # [20260825, replay-check] the camp ITSELF, not just
+                            # the distance to it: `pulldrag` redirects the walk
+                            # between pokes at a point derived from the camp, so
+                            # a reader of these rows cannot re-derive the drag
+                            # target from camp_d alone.  Additive field only --
+                            # every existing consumer keys by name.
+                            camp_x=round(camp[0]), camp_y=round(camp[1]),
                             approach=round(appr), at_camp=at_camp,
                             approached=approached, poke=poke, drag=drag,
                             connect_own=connect_own, connect_enemy=connect_enemy))

@@ -152,6 +152,39 @@ REGISTRY = [
 for label, got, want in REGISTRY:
     eq(label, float(got), float(want))
 
+# ---- `pulldrag`, the drag DESTINATION (replay-check 2026-08-25) -------------
+# Three numbers this candidate's (a)-reading rests on, and the failure each
+# pin prevents:
+#   LANE_GAP  the camp-beside-lane gate `pulldrag` rides through.  The reader
+#             uses it to decide whether a camp's ASSIGNED LANE is recoverable
+#             (GetAssignedLane() is not in the dump); read it too wide and the
+#             lane becomes ambiguous, too narrow and camps vanish from the
+#             domain.
+#   STEP      the 500 u drag step.  The whole "81-87% of the step is wasted"
+#             arithmetic is per-step, so a changed step silently rescales it.
+#   CADENCE   the 3.0 s poke period.  The direction window is one cadence plus
+#             one 1 Hz sample; if the period grew, that window would start
+#             measuring the NEXT poke's approach instead of this drag.
+ROAM_LUA = os.path.join(ROOT, 'bots', 'mode_roam_generic.lua')
+import pulldrag_walk as pdw                # noqa: E402
+
+PULLDRAG_GAP = assignment('local PULL_CAMP_LANE_GAP')
+PULLDRAG_STEP = literal('Think', r'dx / n \* (?P<n>\d+)', path=ROAM_LUA)
+PULLDRAG_CADENCE = literal('Think', r'campPullAttackTime > (?P<n>[\d.]+)',
+                           path=ROAM_LUA)
+eq('pulldrag_walk.LANE_GAP', float(pdw.LANE_GAP), float(PULLDRAG_GAP))
+eq('pulldrag_walk.STEP', float(pdw.STEP), float(PULLDRAG_STEP))
+check('pulldrag_walk.CADENCE_HI covers one poke period',
+      PULLDRAG_CADENCE < pdw.CADENCE_HI <= PULLDRAG_CADENCE + 1.5,
+      '(cadence=%s, window=%s)' % (PULLDRAG_CADENCE, pdw.CADENCE_HI))
+# The decoy: `pulldrag` is gated STANDALONE on purpose (a conjoined gate would
+# freeze FALSE the day `pullcamp` is promoted -- the `pullcad` lesson).  If
+# someone conjoins it, the reader above would be scoring a dead lever.
+check('pulldrag gate is not conjoined with another candidate id',
+      "IsSoakCandidate( 'pulldrag' ) and J.IsSoakCandidate"
+      not in open(os.path.join(ROOT, 'bots', 'FunLib', 'jmz_func.lua')).read())
+
+
 # The GH #90 incident itself, stated as an assertion: the live domain floor is
 # no longer the invented literal.  `LEGACY_ENE_LO` may keep it (archived
 # readings must stay reproducible) but the domain the tool scans may not.
