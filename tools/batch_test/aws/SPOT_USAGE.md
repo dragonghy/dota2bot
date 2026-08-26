@@ -24,7 +24,10 @@ bash tools/batch_test/aws/bootstrap_creds.sh     # once per session; then use aw
 # print the plan without launching:
 ./spot_run.sh --count 4 --dry-run
 
-# escape hatch — on-demand instead of spot (no reclaim risk, ~2.6x price):
+# escape hatch — on-demand instead of spot (~2.6x price).
+# Owner 2026-08-26: this is a *capacity* fallback only. Do not pass
+# --on-demand because a wave is "weight-bearing" or to avoid reclaim risk.
+# Try c6i.4xlarge spot, then c6a.4xlarge spot, then --on-demand.
 ./spot_run.sh --on-demand
 ```
 

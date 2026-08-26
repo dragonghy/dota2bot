@@ -118,7 +118,7 @@ explicitly directed this):
 
 | Profile | Job | Hand it |
 |---|---|---|
-| `batch-runner` | AWS 批测全流程:launch(镜像A/B, on-demand, bundle 支持)、监控、收 verdict、被抢占时本地恢复、汇总多 seed 结果、成本与泄漏检查 | "跑一轮批测 / 收批测结果 / 查实例花费" |
+| `batch-runner` | AWS 批测全流程:launch(镜像A/B, **Spot 优先**/没容量才 on-demand, bundle 支持)、监控、收 verdict、被抢占时本地恢复、汇总多 seed 结果、成本与泄漏检查 | "跑一轮批测 / 收批测结果 / 查实例花费" |
 | `replay-analyst` | 录像诊断:逐帧还原(硬规则:先逐帧后聚合)+ 检测器/经济差分 + fixture 钉帧 | "看录像找问题 / 诊断批测行为差异" |
 | `replay-artifact` | ReplayScope 网页制作 + Artifact 发布 + 时刻导览 | "把录像做成页面给 owner 看" |
 
