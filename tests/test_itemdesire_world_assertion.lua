@@ -413,12 +413,29 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     --     That is the second half of #106's rule: a shared corpus is broken not
     --     only by ADDING a fixture but by HEALING one, and the heal gives no
     --     mechanism warning to the file it breaks.
-    assert(c.crash_2597 == 178,
-        'jmz_func:2597 crash count moved: ' .. c.crash_2597)
+    -- 2597 -> 2704 and 3325 -> 3432, BOTH +107, on 2026-08-26T15:5xZ (director,
+    -- GH #216).  Not a corpus move and not a behaviour change: 1663b81b
+    -- (strategy 07:5xZ, gated `abilanc`, GH #196) inserted 107 lines into
+    -- jmz_func.lua ABOVE both crash sites, and the sweep builds these keys out
+    -- of the runtime error text (`jmz_func%.lua:(%d+)` in _itemdesire_sweep.lua
+    -- :149).  A shift therefore RENAMES the key, the old name falls through the
+    -- default-0 metatable, and the pin reads 0 -- which is why the failure text
+    -- said `moved: 0` rather than some neighbouring count.  BOTH COUNTS ARE
+    -- BYTE-IDENTICAL ACROSS THE MOVE (178 and 35, measured, `crash_total` 213
+    -- unchanged); the statements themselves are untouched, `local x2 = sLoc.x`
+    -- at 2704 and `local nTopDesire = GetFarmLaneDesire( LANE_TOP )` at 3432.
+    --
+    -- This sat red on main from 07:5xZ, ~8h and five landings, seen by nothing:
+    -- the file is ~9min so no gate in the container runs it (GH #124).  The
+    -- structural half -- a line number is a coordinate any upstream edit
+    -- rewrites, and the two parties live in different files with no machine
+    -- between them -- is GH #221, deliberately not patched here.
+    assert(c.crash_2704 == 178,
+        'jmz_func:2704 crash count moved: ' .. c.crash_2704)
     -- 33 -> 35 on 2026-08-26: both of f_212636_tide_ancient's new crashes land
-    -- here; :2597 is unmoved, so no third site appeared.
-    assert(c.crash_3325 == 35,
-        'jmz_func:3325 crash count moved: ' .. c.crash_3325)
+    -- here; the other site is unmoved, so no third site appeared.
+    assert(c.crash_3432 == 35,
+        'jmz_func:3432 crash count moved: ' .. c.crash_3432)
     assert(c.crash_2597 + c.crash_3325 == c.crash_total,
         'a THIRD crash site appeared -- name it before touching these numbers')
 
