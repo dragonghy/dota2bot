@@ -302,7 +302,16 @@ function X.ConsiderDevour()
                 if creep
                 and creep:GetTeam() == TEAM_NEUTRAL
                 then
-                    nCreepTarget = J.GetMostHpUnit(nCreeps)
+                    -- [GH #196] The ONE opt-out of soak candidate 'abilanc'
+                    -- (see J.GetMostHpUnit): the three branches below already
+                    -- decide the ancient case themselves -- devour it with the
+                    -- talent, devour a non-ancient without, fall through when
+                    -- it is an ancient and the talent is untrained -- so this
+                    -- is the only caller for which removing ancients from the
+                    -- input would delete a correct decision rather than a
+                    -- defective one. Not a hero exception: the mechanism is
+                    -- "the consumer reads IsAncientCreep BEFORE it commits".
+                    nCreepTarget = J.GetMostHpUnitAnyTier(nCreeps)
                 end
 
                 if nCreepTarget ~= nil

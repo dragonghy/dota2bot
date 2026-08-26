@@ -1763,7 +1763,113 @@ function J.IsItemAvailable( sItemName )
 end
 
 
+-- [GH #196] Soak candidate 'abilanc' (turbo-only). The gate is resolved HERE,
+-- once, inside the selector -- not at the 19 call sites -- because that is the
+-- only placement a future call site cannot silently miss.
+--
+-- THE DEFECT this closes. The replay desk measured (GH #196, W11 125 games,
+-- 7 games frame-by-frame) that a level 10-11 hero's fight with an ANCIENT camp
+-- is mostly not opened by the neutral-farm target selection at all: on the
+-- armed leg, 10 of 12 "the bot landed the first blow" episodes were opened by
+-- an ABILITY, 6 of them cast at the ancient camp (baseline leg 7 of 9 / 6).
+-- Frame: `.../20260825_212701_slot2` luna L11, t=515.5,
+-- `ABILITY luna_lucent_beam -> npc_dota_neutral_prowler_shaman`.
+-- The camp-tier work so far -- 'campgrade' (the camp LIST), 'campsel' (the camp
+-- pick) and 'campfarm' (the farm path's target) -- all sit on the neutral-FARM
+-- path. None of them is on this one: a hero's own ability code sweeps
+-- `bot:GetNearbyNeutralCreeps(...)` itself and hands the raw table straight to
+-- this selector, which never passes through the farm-list filter 'campfarm'
+-- gates in aba_site.lua. (That filter's name is deliberately NOT written here:
+-- tests/test_campfarm_ancient_target.lua asserts by whole-file grep that it has
+-- exactly two files, and a comment quoting it reads as a third call site. Same
+-- shape as GH #193 -- fix your own comment, do not loosen someone else's
+-- ratchet.)
+--
+-- And this selector picks the ancient BY CONSTRUCTION. An ancient creep is the
+-- unit with the most health on the field, so "most HP" and "the ancient" are
+-- the same answer whenever an ancient camp is inside the sweep. The two
+-- exclusions already written here -- Roshan and the Tormentor -- are exactly
+-- this class of "biggest thing nearby that you must not pick"; the ancient
+-- camps are the member of it nobody added. Census of the 20 call sites outside
+-- this file (tests/test_abilanc_selector_census.lua pins the counts): 18 feed
+-- it a `GetNearbyNeutralCreeps` sweep, 1 a lane sweep (nothing ancient can be
+-- in it), 1 is the opt-out below. Exactly two mention IsAncientCreep at all,
+-- and hero_mirana.lua:480 reads it AFTER the pick -- i.e. today she declines
+-- the ancient this selector hands her rather than picking the normal creep
+-- standing next to it, which is GH #196's complaint with the sign flipped.
+--
+-- Threshold read from source, not restated: J.Site.ANCIENT_MIN_LEVEL, the same
+-- 12 the camp ladder and 'campfarm' use.
+--
+-- THE ONE OPT-OUT, and why it names a mechanism rather than a hero.
+-- `bAllowAncient` exists for the single caller whose consumer WANTS an ancient
+-- to be pickable: hero_doom_bringer.lua:305 already carries the full tri-state
+-- -- devour an ancient if `special_bonus_unique_doom_2` is trained, devour a
+-- non-ancient otherwise, fall through when it is an ancient and the talent is
+-- not -- so it is the one site where emptying ancients out of the input would
+-- take away a decision the shipped tree already makes correctly. That talent's
+-- level is an engine fact this repo cannot read (the string occurs exactly once
+-- in the tree and no talent-level table stands behind it), so the collision
+-- window is not boundable from the desktop. The opt-out costs nothing and
+-- removes the question.
+--
+-- WHY THE OPT-OUT IS A SECOND NAME AND NOT A SECOND PARAMETER. It was written
+-- as `J.GetMostHpUnit(list, bAllowAncient)` first, and the arity ratchet from
+-- GH #188 (tests/test_call_arity_census.py, in every routine's selfcheck) went
+-- red on all 16 files that still pass one argument -- correctly, because an
+-- optional parameter makes "passed 1, declares 2" the shape of every existing
+-- call site. Judging those 16 rows DEFAULTED would have grown a list whose
+-- whole design is that it can only shrink. Two names cost nothing, keep every
+-- call site at 1-of-1, and put the exception in the reader's face at the call
+-- site instead of behind a bare `true`. The default name is the guarded one, so
+-- a new call site lands on the filtered side by writing the obvious thing.
+--
+-- UNARMED THE PATH IS UNCHANGED DOWN TO THE PREDICATE CALLS: bStrictAncient is
+-- false, the added conjunct short-circuits before IsAncientCreep() is ever
+-- asked, and the same handle comes back. Armed, the only difference is that a
+-- bot below the tier stops seeing ancient creeps as the answer -- so the branch
+-- either picks the normal creep that shares the sweep, or gets nil and declines
+-- through the `J.IsValid(targetCreep)` clause every call site already has (nil
+-- is not a new outcome here: an empty list, or a list of nothing but Roshan,
+-- already returns nil today).
+--
+-- WHAT IT DELIBERATELY DOES NOT COVER, so the next lever has a denominator:
+-- the 54 sites that read `list[1]` and the 14 that take a CENTER of the sweep.
+-- `[1]` is engine order, which MAY be an ancient but is not the ancient by
+-- construction, and the centre-of-mass reads are the "an ancient camp is worth
+-- an AoE" reasons GH #196 §3.2 explicitly asks not to touch.
 function J.GetMostHpUnit( unitList )
+
+	-- Resolved once per call, before the loop, so an armed run asks GetBot()
+	-- and IsSoakCandidate() once rather than once per unit.
+	local bStrictAncient = J.IsModeTurbo() and J.IsSoakCandidate( 'abilanc' )
+	if bStrictAncient
+	then
+		local hSelf = GetBot()
+		bStrictAncient = hSelf ~= nil
+			and hSelf:GetLevel() < J.Site.ANCIENT_MIN_LEVEL
+	end
+
+	return J.MostHpUnitOf( unitList, bStrictAncient )
+
+end
+
+
+-- The tier-BLIND selector: the shipped body, with no gate of its own. One
+-- caller in the whole tree, hero_doom_bringer.lua's devour path -- see the
+-- opt-out paragraph above. Anything else wanting "the biggest thing nearby"
+-- should call J.GetMostHpUnit and get the 'abilanc' filter with it.
+function J.GetMostHpUnitAnyTier( unitList )
+
+	return J.MostHpUnitOf( unitList, false )
+
+end
+
+
+-- The one implementation both entry points share, so the two names can never
+-- drift apart on the parts that are NOT about the ancient tier (Roshan, the
+-- Tormentor, the nil guard, the max-health scan).
+function J.MostHpUnitOf( unitList, bStrictAncient )
 
 	local mostHpUnit = nil
 	local maxHP = 0
@@ -1773,6 +1879,7 @@ function J.GetMostHpUnit( unitList )
 		if unit ~= nil
 		and not J.IsRoshan(unit)
 		and not J.IsTormentor(unit)
+		and not ( bStrictAncient and unit:IsAncientCreep() )
 		and uHp > maxHP
 		then
 			mostHpUnit = unit
