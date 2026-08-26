@@ -4380,6 +4380,59 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   卡的只是有人去跑;**下一次「归档扫描轮」应优先清这批**(按 §BF.2 合并同类项:Zeus 帧 / Axe 帧 /
   Lion·CM 帧 / power_treads 帧)。
   详见 `iterations/reports/batch-desk/20260826T092000Z.md`。
+- 2026-08-26T15:15Z:**发 W14(界后第五波,首个 37-id 波次),零收割,AWS 支出 $0.02(两次 CE),无泄漏。**
+  **一、自检** worst exit 3(非阻断):unlanded OK(40 可证 ref,376/416 浅 clone REFUSED = 拒答不是通过);
+  cadence 3 处洞(本台 08-25T06:17→15:11Z 旧洞 + replay-check 3.7h + strategy 3.8h),**本台本轮无新洞**;
+  两锚点 EXISTS/PINNED/SHIPPED 全 ok;trunk python **35 passed 0 failed**(上一轮 33);快 Lua 检测器 8 文件 0 失败;
+  RIDESHARE 本轮该裁 none;open requests 33。
+  **二、⭐⭐ 本轮实质产出:逐日 CE 把「MTD 含不含今天的波次」从推断变成了读数,并推翻了围栏算术。**
+  `budgets` **$43.463**(刷新 **09:32:22Z**)与 CE **$43.4628** 逐位一致,但**逐日 CE 实测
+  `2026-08-26` 当日 TOTAL = `$0.0000`** ⇒ **W12(03:10:52Z)/ W13(09:13:08Z)/ W14(15:14:24Z)
+  三波一台都没进 MTD**。而章程 §2 (甲) 的 **12h 窗口只是「还没进 MTD」的一个代理**:
+  15:14:24Z 回看 12h = 03:14:24Z,**W12 早 3m32s 被排除,却同样没进 MTD** ⇒ 机械照做得 **$47.76**,
+  **真值三波全算 $54.11,差一整波**,且**失效方向与 (甲) 自己警告的「滞后让 MTD 系统性偏低」同向叠加**。
+  **这不是 (乙) 禁掉的手法**——(乙) 禁的是拿增量反推归属,本条是**直接读当日总额为零**,
+  零额不需要归属推断。四个口径($2.05/$2.15/$3.05 单价 × 证据口径,加机械口径)里**三个 ≥ $50**,
+  唯一低于 $50 的是已被证伪的机械口径。**已开 GH #217**,建议把 12h 窗口改成
+  「**MTD 刷新时刻之后发的全部波次**」(刷新时刻 `budgets` 免费给,边界按构造与 MTD 重合)。
+  **三、📧 $50 配套义务本轮触发(章程 4b(iii) 抬高 $45→$60 的对价,已写进报告 §2.4)**:
+  「本轮跨过 $50,owner 会收到一封 Budget ACTUAL 告警邮件(第一档,= $100 限额的 50%),
+  原因是 MTD $43.46 + 今日三波 W12/W13/W14 各约 $2.15,合计约 $54.1。**不是超支**:
+  批准档 $100,自停线 $60,刹车线 $90。」
+  **四、发波三闸**:(i) **PASS** —— W13 末台 09:13:08Z ⇒ 解锁 15:13:08Z,先打钟点(`date -u`
+  = **15:14:05Z**)再比,**超出 57 秒**;(ii) **PASS** —— `bots/` 自 W13 树起 2 个 commit;
+  (iii) **PASS** —— $54.11 ≤ $60,**但余量只剩 $5.89 ≈ 2.7 波**。
+  **五、W14**:树 **`039cb1ae`**(`git ls-remote origin main` 真 tip,与本地 HEAD 逐位相等,全 40 位钉 `--ref`);
+  armed **37 id = 第 2 行的 36 逐字 + `abilanc`**(328 字节)—— **上一轮预登记照做:§BL 裁定压过陈旧的第 2 行**
+  (第 2 行至今仍是 36-id,GH #210 第二轮未果);接线门 exit 0 `all 37 wired`,`abilanc` → `jmz_func.lua:1845`;
+  **合取门(§BL.4)通过**(单合取,另一半是 `IsModeTurbo()` 模式谓词不是 soak id);`campgrade` 不在串内
+  ⇒ §BG.3/§BK 互斥前置自动满足;smoke exit 0;luacheck **0 warnings**(容器缺 luacheck,`luacheck_gate.sh` 自装 `lua-check`);
+  载体门 exit 0,与 **W8–W13 逐字复现**(cm/zuus FULL 4/4,lion/od PARTIAL 仅 s896,skeleton_king PARTIAL s895/s906);
+  4 台 × 1 种子 888/895/896/906;`--slots 16 --rec-slots 12 --hours 2 --on-demand --games 12`;
+  发波 **15:14:24/27/30/32Z**(间隔 3/3/2 秒,跨整秒);#98 双保险:`soak-run` 4 值两两不同、恰 4 台、
+  `InstanceLifecycle` 全 `None`;尾 token `8b9082`/`a2baf3`/`31afa3`/`2c6d8e`;
+  实例 `i-0563559d582c226e1`/`i-0adddcbe4a2ea5b5b`/`i-01a7de3bbd8321676`/`i-06d6253ee88d6353c`。
+  **六、树漂移(浅 clone 两步走,exit 0 不是空输出)**:2 个 commit,`1039cad8` `bbrespawn` /
+  `71b53d58` `bbfight`,**均未入集、队列无请求、总监未裁 ⇒ 本波不 arm**(保守默认)。
+  `bbfight` gate-off 返回字面量 80 = 出厂值,**逐字节惰性**;`bbrespawn` gate-off 是出厂表达式,
+  **但新增的 `if hBot == nil ... return 0` 是 ungated** ⇒ 登记一条小的跨波口径断点(与 W13 `zusbind` 同型同处置,
+  只登记不作结论)。**好消息**:`bbfight` 源码注释明写「deliberately NOT conjoined with 'bbrespawn' (GH #207)」
+  ⇒ **§BL.4 那条合取检查已被协同组在写代码时主动照做**,`pullcad`/`zusstatic` 那一族没有第三例。
+  **七、收割:零** —— 自 W13 起 S3 无新 run(`validation/` 无新 verdict),不重复劳动。
+  **八、泄漏检查两次**:开工 running/pending 段空;收尾恰 4 台全是本波 W14,无游离实例,常驻只剩 AMI + 快照。
+  **交棒**:① 总监 —— **GH #217(新,本轮最重要)** 围栏公式 12h 窗口 vs MTD 边界不重合;
+  ② 总监 —— **GH #218(新)** `bbrespawn`/`bbfight` 路由三选一,不裁则每波原样惰性下去;
+  ③ 总监 + owner —— **GH #219(新)** 余量只剩 ~2.7 波($54.11 vs 自停线 $60),
+  **W15 后 ~$56.3、W16 后 ~$58.4、W17 必被 (iii) 拒**,四条路(抬 (iii) / 降频 / 缩 `--games` / 转 spot 一并解 #158)
+  已摆出算术,**提前两波提是因为被拒的那一轮已经来不及**;④ 总监 —— #207 `zusstatic` 三选一(第二轮,
+  **本波 W14 再空转一次同一条腿**);⑤ 总监 —— #210 第 2 行 vs §BL 裁定不一致(第二轮);
+  ⑥ 总监 —— #204 `(ab−ba)/2` 身份(第三轮候裁);⑦ 总监 —— #211 归档扫描路由错配(第二轮);
+  ⑧ 总监 —— 存量催办 #75(第四轮)/ #158(第八轮)/ #180(第八轮)/ #171(第六轮)/ #200(第五轮)/ #181 /
+  载体门 PARTIAL(第十三轮)/ `stable-v*` tag(第十轮)/ `campdanger`(第五轮)/ §BL.4 机械化进基建 backlog;
+  ⑨ **下一轮本台 —— 收割 W14**(4 run,树 `039cb1ae`,走 `recover_verdict.py` 全量重算,
+  按报告 §5.1 的预登记读法读 `abilanc` 与 `zusstatic`),**6h 闸解锁 `2026-08-26T21:14:32Z`**
+  (先打钟点再跟 `date -u` 比)。
+  详见 `iterations/reports/batch-desk/20260826T151500Z.md`。
 - 2026-08-26T12:21Z:**收割 W13(界后第四波),零发波,AWS 支出 $0.01(仅 CE 复核),无泄漏。**
   **一、自检** worst exit 3(非阻断):unlanded OK(40 可证 ref,371/411 因浅 clone 被 REFUSED =
   拒答不是通过);cadence 2 处洞(本台 08-25T06:17→15:11Z 那处旧洞 + replay-check 3.7h),本轮无新洞;
