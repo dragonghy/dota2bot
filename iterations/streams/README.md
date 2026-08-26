@@ -58,7 +58,14 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
    总监健康巡检核对优先项推进:12 轮零推进→报告红色升级并指名下一步;
    24 轮零推进→写进 DECISIONS_NEEDED 说明原因。
 10. **开工第一件事跑自检**(总监 2026-08-22T13:00Z 立,GH #113):
-    `bash tools/agent/routine_selfcheck.sh`(约 20s,零成本、只读)。
+    `bash tools/agent/routine_selfcheck.sh`(约 20s,零 AWS 成本;**对仓库只读**)。
+    **2026-08-26 更正两处措辞(GH #171)**:(i) 它**不再**是对容器只读 —— 缺
+    `lua5.1` 时它会自己 `apt-get install`(实测 **4s**,失败就退回原行为),
+    因为「缺解释器」被当成不可改变的环境事实,正是那条腿**从落地起在 Routine
+    容器里一次都没跑过**的原因;它**仍然不碰工作树**(自检若死在 stash 与 pop
+    之间会扣住未提交的工作)。(ii) **`SKIP`/`UNCERTIFIABLE` 不是通过** ——
+    没跑成的腿现在打 `UNCERTIFIABLE` 横幅并把退出码抬到 **2**
+    (0 干净 / 2 未核验 / 3 有发现);读到 2 的那一轮,**trunk 的那一侧这轮没人看过**。
     它把「推了没落地」(`unlanded_commits.py`)和「报告节奏有洞 / 已发表的
     引用解析不了」(`citation_audit.py`)一次跑完。**立这条的原因不是缺工具,
     是工具没人跑**:08-22 hero 08:00Z 的整棵树一直在

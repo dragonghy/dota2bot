@@ -20,11 +20,32 @@ The load-bearing claims, in the order they can fail:
      picked up without editing the wrapper
   3. discovery matching NOTHING is itself a finding, not a pass (the empty-match
      trap: "on the books, matching nothing")
-  4. a missing lua5.1 SKIPs and does NOT claim trunk is red -- an absent
-     interpreter is not a failing test
+  4. a missing lua5.1 is BOUGHT if it can be (bounded, best-effort), and if it
+     cannot be, the leg reports UNCERTIFIABLE and raises the exit code to 2 --
+     never 3.  [amended 2026-08-26, GH #171; see below]
   5. END TO END on a real tree: a reddened detector file makes the real script
      print TRUNK RED and exit 3; a clean tree exits 0 on this leg.  Case 5 is
      the one that would have caught the 08-24 miss.
+  6. END TO END with no interpreter and no way to get one: exit 2, and a banner
+     that does not read like the pass line.
+
+WHAT CHANGED ON 2026-08-26 (GH #171), AND WHY IT IS AN OVERTURN, NOT AN EDIT.
+Claim 4 used to read "a missing lua5.1 SKIPs and does NOT raise the exit code",
+and the mutation list included "make SKIP raise the exit code" as a mutation
+that must go RED.  That assertion was this file pinning a policy, and the policy
+was wrong -- so the pin had to be rewritten, not extended.
+
+The ground it stood on ("an absent interpreter is not a failing test") is still
+correct and is still enforced: the uncertifiable path raises 2, never 3.  What
+the ground did not survive is the measurement.  From the day this leg landed it
+had, in a Routine container, NEVER ONCE RUN: `SKIP` and `PASS` were one
+unremarkable line each with no exit-code difference, so the leg built to answer
+"is trunk red?" answered "SKIP" every round, and two streams caught it within
+100 minutes of each other -- batch-desk 21:14Z, strategy 22:52Z.  The strategy
+one is load-bearing: a real red (test_item_name_census, 1fcfcd83) sat on main
+~3h behind a SKIP line.  GH #171's founding sentence was "the detector caught
+it; nobody ran the gate"; the gate then existed and printed SKIP.  Same
+blindness, new reason.
 
 Run:  python3 tests/test_selfcheck_lua_leg.py
 """
@@ -60,6 +81,23 @@ src = open(SCRIPT, encoding="utf-8").read()
 at = src.find("trunk health (fast Lua detectors)")
 check(at != -1, "1a: the script has a fast-Lua-detector leg at all")
 leg = src[at:] if at != -1 else ""
+
+
+def code_only(text):
+    """Drop whole-line comments.
+
+    Checks that assert a shape is ABSENT must read code, not prose.  The
+    wrapper documents at length what its branches used to print, so
+    `"SKIP (no python3)" not in src` matched the comment explaining why that
+    string is gone and failed on a correct script.  Asserting over prose makes
+    the wrapper's own history unwritable.
+    """
+    return "\n".join(ln for ln in text.splitlines()
+                     if not ln.lstrip().startswith("#"))
+
+
+src_code = code_only(src)
+leg_code = code_only(leg)
 
 # ---------------------------------------------------------------------------
 # 1. the red path raises the exit code
@@ -133,15 +171,62 @@ check("NO DETECTORS FOUND" in leg,
       "3: zero discovered files is reported, not passed over silently")
 
 # ---------------------------------------------------------------------------
-# 4. no lua5.1 => SKIP, not red
+# 4. no lua5.1 => buy it if possible; otherwise UNCERTIFIABLE (2), never red (3)
 # ---------------------------------------------------------------------------
 check("command -v lua5.1" in leg, "4a: the leg checks for lua5.1 first")
-skip_at = leg.find("SKIP (no lua5.1")
-check(skip_at != -1, "4b: a missing interpreter SKIPs")
-# The SKIP branch must not be the red branch: `note 3` must not follow it.
-check(skip_at == -1 or "note 3" not in leg[skip_at:],
-      "4c: SKIP does not raise the exit code -- an absent interpreter is not "
-      "a failing test")
+
+unc_at = leg.find("UNCERTIFIABLE")
+check(unc_at != -1,
+      "4b: the un-run path says UNCERTIFIABLE -- a leg that did not run is not "
+      "a leg that passed")
+# The banner must not be re-shaped back into a line that reads like the pass
+# line.  This is the defect itself, not a style point: `SKIP (no lua5.1)` and
+# `8 detector file(s), 0 failures` differed in neither channel a reader has.
+check("SKIP (no lua5.1" not in leg_code,
+      "4b2: the un-run path is not a bare SKIP line again")
+check(unc_at == -1 or "NOT a pass" in leg[unc_at:],
+      "4b3: the banner says in words that it is not a pass")
+
+# The load-bearing pair.  2 and not 0: silence is what made the leg invisible
+# for its whole life.  2 and not 3: an absent interpreter is not a red trunk,
+# and a false TRUNK RED is what teaches people to ignore the line.
+check(unc_at == -1 or "note 2" in leg[unc_at:],
+      "4c: the uncertifiable path raises the exit code to 2 (a leg that did "
+      "not run must not be silent -- GH #171)")
+check(unc_at == -1 or "note 3" not in leg[unc_at:],
+      "4c2: the uncertifiable path does NOT raise 3 -- an absent interpreter "
+      "is not a failing test")
+
+# The install attempt: it is what makes the difference between a leg that runs
+# and a leg that explains why it did not.  Measured 4s (director 08-26), after
+# two independent stream measurements said the same.
+check("try_install_lua51" in leg and leg.count("try_install_lua51") >= 2,
+      "4d: the leg tries to install lua5.1 before declaring it missing "
+      "(defined and called)")
+_inst = re.search(r"try_install_lua51\(\)\s*\{(.*?)\n\}", leg, re.S)
+check(_inst is not None, "4d2: the install helper's body can be isolated")
+inst_body = _inst.group(1) if _inst else ""
+# Bounded, for the same reason the end-to-end case below carries a budget: a
+# hang in 开工自检 reads as "still working" and blocks every stream's first
+# command.  apt-get with a half-there network is exactly that risk.
+check("timeout " in inst_body,
+      "4e: the install is bounded by a timeout (an unbounded apt-get in the "
+      "one command every stream runs at 开工 is a hang, and a hang reads as "
+      "'still working')")
+check("apt-get" in inst_body and "command -v apt-get" in inst_body,
+      "4f: the install is guarded on apt-get actually existing")
+check("sudo -n" in inst_body,
+      "4f2: non-root only proceeds with passwordless sudo (a password prompt "
+      "would block the trigger forever)")
+check(re.search(r"if\s*!\s*command -v lua5\.1", leg) is not None,
+      "4g: the install is attempted ONLY when lua5.1 is missing -- a "
+      "selfcheck that apt-gets unconditionally taxes every trigger")
+
+# Whole-script invariant, not just this leg: no OTHER leg may keep the silent
+# shape this ruling removed.  Without this, the next leg someone adds
+# reintroduces it and no test says so.
+check("SKIP (no python3)" not in src_code,
+      "4h: no leg anywhere in the wrapper still has a silent did-not-run path")
 
 # ---------------------------------------------------------------------------
 # 5. end to end on a real tree
@@ -229,6 +314,46 @@ else:
         check(red_rc == 3, "5g: the leg raises the exit code to 3 (got %d)" % red_rc)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+# ---------------------------------------------------------------------------
+# 6. end to end with NO interpreter and no way to get one
+# ---------------------------------------------------------------------------
+# The section-4 checks read the source; this one runs it, and it is the case
+# that was actually happening in every Routine container for this leg's whole
+# life.  It is reachable regardless of whether lua5.1 exists here: an empty PATH
+# hides both lua5.1 and apt-get, so try_install_lua51 returns 1 at its first
+# guard and the leg must take the uncertifiable branch.  `command -v` and
+# `printf` are bash builtins, so the branch under test needs no PATH at all --
+# and grep/ls/sort, which do, are only on the branch this case must not take.
+if not LEG_SRC:
+    print("  SKIP  6: leg source not isolated")
+else:
+    empty = tempfile.mkdtemp(prefix="selfcheck_nopath_")
+    # bash itself must be resolved BEFORE the empty PATH is handed over: the
+    # launcher looks the executable up in the child's PATH, so passing "bash"
+    # with PATH="" fails to start anything at all -- which is a green-looking
+    # crash, not a test.
+    BASH = shutil.which("bash") or "/bin/bash"
+    try:
+        harness = ("set -u\nworst=0\n"
+                   "note() { [ \"$1\" -gt \"$worst\" ] && worst=\"$1\"; return 0; }\n"
+                   + LEG_SRC + "\nexit \"$worst\"\n")
+        p = subprocess.run([BASH, "-c", harness], cwd=REPO, timeout=120,
+                           capture_output=True, text=True, env={"PATH": empty})
+        out = p.stdout + p.stderr
+        check(p.returncode == 2,
+              "6a: no interpreter and no installer => exit 2, not 0 (got %d). "
+              "This is the GH #171 case itself: for this leg's whole life it "
+              "returned 0 here, which is what a clean trunk returns."
+              % p.returncode)
+        check("UNCERTIFIABLE" in out,
+              "6b: the un-run banner is printed (got: %r)" % out[:200])
+        check("TRUNK RED" not in out,
+              "6c: a missing interpreter is NOT reported as a red trunk")
+        check("detector file(s), 0 failures" not in out,
+              "6d: the un-run path does not emit the pass line")
+    finally:
+        shutil.rmtree(empty, ignore_errors=True)
 
 print("\n%d checks, %d failures" % (checks, len(failures)))
 for f in failures:

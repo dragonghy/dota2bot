@@ -38,6 +38,16 @@ done
 worst=0
 note() { [ "$1" -gt "$worst" ] && worst="$1"; return 0; }
 
+# [director 20260826, GH #171] A leg that DID NOT RUN is uncertifiable, not
+# clean.  Every `SKIP (no python3)` below used to be one unremarkable line with
+# no effect on the exit code -- i.e. indistinguishable from a clean read in BOTH
+# channels a reader has.  That is the same defect GH #171 measured on the Lua
+# leg (see its long note further down), one dependency over.
+unchecked() {
+    printf 'UNCERTIFIABLE -- %s did NOT run (no python3). This line is NOT a pass.\n' "$1"
+    note 2
+}
+
 printf '=== unlanded work (pushed to a branch, never landed) ===\n'
 python3 tools/agent/unlanded_commits.py --fetch
 note $?
@@ -128,7 +138,7 @@ if command -v python3 >/dev/null 2>&1; then
     python3 tools/agent/pending_rulings.py --no-age
     note $?
 else
-    printf 'SKIP (no python3)\n'
+    unchecked 'the un-ruled-queue check'
 fi
 
 # Added 2026-08-26T01:0xZ (director).  The director charter's 『下次触发』 list
@@ -154,7 +164,7 @@ if command -v python3 >/dev/null 2>&1; then
     python3 tools/agent/stable_anchors.py
     note $?
 else
-    printf 'SKIP (no python3)\n'
+    unchecked 'the stable-anchor invariants'
 fi
 
 # [director 20260826, GH #198 §3] Both TRUNK RED banners below used to end
@@ -181,10 +191,74 @@ if command -v python3 >/dev/null 2>&1; then
         note 3
     fi
 else
-    printf 'SKIP (no python3)\n'
+    unchecked 'the python trunk-health suite'
 fi
 
+# [director 20260826, GH #171] This leg USED to end `SKIP (no lua5.1 --
+# apt-get install lua5.1)` with no `note`, on the stated ground that "an absent
+# interpreter is not a failing test".  That ground is still correct and is NOT
+# what changed.  What changed is the measurement: from the day this leg landed
+# it had, in a Routine container, NEVER ONCE RUN.  Two streams reported the same
+# live shape within 100 minutes of each other -- batch-desk 21:14Z and strategy
+# 22:52Z -- and the strategy one is the load-bearing case: a real red
+# (test_item_name_census, 1fcfcd83) sat on main ~3h while the selfcheck printed
+# SKIP.  GH #171's original sentence was "the detector caught it; nobody ran the
+# gate."  The gate now exists, and it printed SKIP every round.  Same outcome,
+# new reason.
+#
+# `SKIP` and `PASS` were the same thing in both machine-readable channels: one
+# unremarkable line, and no effect on the exit code.  So the leg is now
+# UNCERTIFIABLE (`note 2`) rather than silent -- which is not a new policy but
+# this wrapper's own three-value convention (header: "Exit 0 clean, 2
+# uncertifiable, 3 findings"), applied to a leg that was skipping it.  It is
+# deliberately NOT `note 3`: a missing interpreter is not a red trunk, and a
+# false TRUNK RED is what teaches people to ignore the line (see the LIMIT note
+# above).
+#
+# AND the interpreter is bought before it is declared missing.  Treating "no
+# lua5.1" as an immutable environment fact was the actual error: measured three
+# times independently -- batch-desk 08-25 ("seconds"), strategy 08-25 ("~20s"),
+# director 08-26 (**4s**, root, no `apt-get update` needed) -- the install is
+# cheaper than the reading it unblocks.  Bounded, best-effort, and silent on
+# failure: if apt is absent, or we are non-root without passwordless sudo, or
+# the network is down, the fall-through is exactly today's behaviour plus the
+# UNCERTIFIABLE banner.  No new failure mode.
+#
+# NOT A CONTRADICTION with the "deliberately not auto-stashing" note above: that
+# refuses to mutate the WORKING TREE, because a selfcheck dying between stash
+# and pop strands a session's uncommitted work.  Installing a package touches no
+# repo state and can strand nothing.  The line is what the check can destroy.
+#
+# The helper is defined AFTER this leg's banner printf, not before it, and that
+# placement is load-bearing: tests/test_selfcheck_lua_leg.py isolates "the leg"
+# as the source from that printf onward and runs it.  Defined above the banner,
+# the helper would be outside the isolated source, the end-to-end case would run
+# a `try_install_lua51: command not found` that happens to fall through to the
+# same branch, and the test would look green while exercising nothing.  That is
+# this file's own recorded trap (test 2a2: "a test that mirrors the thing it
+# checks is checking the mirror") wearing different clothes.
 printf '\n=== trunk health (fast Lua detectors) ===\n'
+
+try_install_lua51() {
+    command -v apt-get >/dev/null 2>&1 || return 1
+    local as_root=""
+    if [ "$(id -u)" != 0 ]; then
+        command -v sudo >/dev/null 2>&1 || return 1
+        sudo -n true >/dev/null 2>&1 || return 1
+        as_root="sudo"
+    fi
+    # No `apt-get update` on purpose: it is the expensive half (tens of seconds,
+    # and it is the half that hangs when the network is half-there), while the
+    # install off existing lists is the 4s that was measured.
+    timeout 120 $as_root apt-get install -y lua5.1 >/dev/null 2>&1 || return 1
+    command -v lua5.1 >/dev/null 2>&1
+}
+
+if ! command -v lua5.1 >/dev/null 2>&1; then
+    if try_install_lua51; then
+        printf 'installed lua5.1 (it was missing; apt-get, bounded)\n'
+    fi
+fi
 if command -v lua5.1 >/dev/null 2>&1; then
     # By tag, so a detector written tomorrow is covered without editing this
     # file.  The four trailing names predate the tag convention (see the
@@ -217,7 +291,13 @@ if command -v lua5.1 >/dev/null 2>&1; then
         printf '%d detector file(s), 0 failures\n' "$ran"
     fi
 else
-    printf 'SKIP (no lua5.1 -- apt-get install lua5.1)\n'
+    # Deliberately NOT shaped like the pass line above.  `SKIP (no lua5.1)` and
+    # `8 detector file(s), 0 failures` shared a visual region and an exit code;
+    # that is the whole defect GH #171's two follow-ups reported.
+    printf 'UNCERTIFIABLE -- the Lua detector leg did NOT run (no lua5.1, and the install attempt failed).\n'
+    printf '  Trunk Lua side is UNCHECKED this round. This line is NOT a pass.\n'
+    printf '  Buy it with: apt-get install -y lua5.1   (measured 4s, 2026-08-26)\n'
+    note 2
 fi
 
 printf '\nselfcheck worst exit: %d\n' "$worst"
