@@ -821,6 +821,55 @@ check('tbearly has exactly one gate site naming exactly one candidate',
       len(TB_GATE) == 1 and TB_GATE[0].count('IsSoakCandidate') == 1,
       str(TB_GATE))
 
+# --------------------------------------------------------------------------
+# tpdeathbuy (replay-check 2026-08-26).  The whole reading of this id rests on
+# an ARITHMETIC fact about the shipped clause and on two rival TP-purchase
+# sites staying where they are.  Ratchet all three, so the conclusion cannot
+# expire unnoticed the way a number quoted in an old report can.
+# --------------------------------------------------------------------------
+import tpdeathbuy_domain as tdb                     # noqa: E402
+
+TD = tdb.read_source()
+check('tpdeathbuy shipped clause is still `botHP < 0.08 and botHP >= 1`',
+      TD['shipped_hi'] == 0.08 and TD['shipped_lo'] == 1.0, str(TD))
+check('tpdeathbuy armed clause is still `botHP < 0.08`', TD['armed_hi'] == 0.08,
+      str(TD))
+check('tpdeathbuy verdict on the shipped tree is WIDENING',
+      tdb.verdict(TD)[0] == 'WIDENING', tdb.verdict(TD)[1])
+# The attribution window in the report is `DotaTime <= 240`, and it is only a
+# window because the ORDINARY spare-TP buy is gated on `currentTime > 4*60`.
+# If that clock moves, every "uniquely attributable" row stops being unique.
+check('the ordinary spare-TP buy is still gated on 4*60', TD['normal_clock'] == 240,
+      str(TD['normal_clock']))
+check('WasRecentlyDamagedByAnyHero window is still 3.1', TD['dmg_window'] == 3.1,
+      str(TD['dmg_window']))
+# The other rival site: mode_roam_generic buys a TP inside the fountain radius.
+check('the roam TP-buy fountain radius is still 150', TD['roam_radius'] == 150.0,
+      str(TD['roam_radius']))
+check('bots/ still has exactly 4 item_tpscroll purchase sites (a new one '
+      'would break the attribution window)', TD['tp_buy_sites'] == 4,
+      str(TD['tp_buy_sites']))
+# The pullcad lesson, third time: a gate written as a conjunction of two soak
+# ids freezes FALSE the day either is promoted.  read_source() raises on that;
+# assert it explicitly too.
+TD_GATE = [l for l in open(os.path.join(ROOT, 'bots', 'item_purchase_generic.lua'),
+                           encoding='utf-8').read().splitlines()
+           if "IsSoakCandidate('tpdeathbuy')" in l and not l.strip().startswith('--')]
+check('tpdeathbuy has exactly one gate site naming exactly one candidate',
+      len(TD_GATE) == 1 and TD_GATE[0].count('IsSoakCandidate') == 1,
+      str(TD_GATE))
+# The instrument fault the same round found: PURCHASE `value` is a PER-REPLAY
+# name-table index.  The dumper now resolves it; assert the resolution is
+# still there and still scoped to PURCHASE, because a revert would send every
+# cross-game purchase read back to aggregating noise -- silently.
+DUMPER = open(os.path.join(BEHAV, 'dumper', 'main.go'), encoding='utf-8').read()
+check('dumper still resolves the PURCHASE name index into value_name',
+      'ValueName' in DUMPER and 'DOTA_COMBATLOG_PURCHASE' in DUMPER)
+check('dumper resolves it for PURCHASE ONLY (a magnitude must never be run '
+      'through the name table)',
+      DUMPER.count('valueName = name(') == 1 and
+      'if m.GetType() == dota.DOTA_COMBATLOG_TYPES_DOTA_COMBATLOG_PURCHASE {' in DUMPER)
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:

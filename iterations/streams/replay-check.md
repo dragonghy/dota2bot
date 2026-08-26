@@ -4680,3 +4680,77 @@
     `hero-1` 的 153 局 WK 语料(**34 轮**);`l5combo` 的 (a)(**第五十轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十七轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260826T125436Z.md`
+- **2026-08-26T16:03Z(第七十七次触发)**:**`tpdeathbuy` 条件 (a) = WORKING**(接上一轮
+  backlog 第 1 棒 —— §1 计数翻出的三个 0 记录 id 里的第二个)。**宽扫 131/131 有效局 = 100%**
+  (同一份 W13 语料,155 `.dem` − 24 局裸 sha `a883d7c` 暖场局,与上一轮逐位一致)+
+  **深查 9 局逐帧**。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **本轮的第一件产出是一个仪器故障,不是读数**:`events[].value` 在 **PURCHASE** 上是
+    **这一份录像自己的 `CombatLogNames` 下标**,不是稳定物品 id。同一波、同一棵树的两局里,
+    **21 个共同下标只有 1 个**指同一件物品(下标 10 = `magic_wand` / `ancient_janggo`;
+    下标 94 在 g1 是 `item_tpscroll`,而第一版的经验映射把它猜成 `clarity`)。
+    **跨局聚合干净地产出噪声** —— 与上一轮「零值那格被裸 `Counter` 吃掉」同族:**伪影长得像读数**。
+    修法:`dumper/main.go` 加 `value_name`,**只对 PURCHASE 解析**(别的类型 `value` 是量值,
+    同一次查表会把数额变成像模像样的物品名)。`get_dumper.sh` 的缓存键含 `main.go` 的 sha
+    ⇒ **自动 cache MISS 重建,不需要 [harness] 单**;本会话手工重建约 1 分钟。
+    工具**拒绝回退**:没有 `value_name` 的 timeline 直接 RuntimeError。
+  - ⭐⭐ **判据的力量来自「baseline 腿算术上必须为空」**:出厂 `botHP < 0.08 and botHP >= 1`
+    不可满足 ⇒ 对照线不是「另一种行为」而是**保证为零的线**,所以不需要效应量,只需要数开火次数。
+    **唯一归属窗口** = `DotaTime <= 240` ∧ 血<8% ∧ 3.1s 内被敌方英雄打过 ∧ 远离自家泉水
+    (另三个 TP 采购站点分别被 `currentTime > 4*60` 和「距泉水 ≤150」挡住)。
+    **这把刀被数据校准过**:baseline 腿 240 秒前的 16 次采购里 **13 次落在 `t = 240.0` 整**
+    —— **dumper 的游戏钟与 `DotaTime()` 对齐是这个悬崖亲自证的**,不是假设。
+  - ⭐⭐ **读数(ab/ba 两层同号)**:唯一窗口 **armed 21 : baseline 1**;血<8%∧刚挨打
+    armed **136**(dire 42 / radiant 94)vs baseline **48**(dire 10 / radiant 38);
+    低血采购 165 vs 75。**反向哨兵通过**:总 TP 采购 armed **4636 < baseline 5087**(#168 §3
+    要的是「代价不许暴涨」)。**曝光量不是解释**:域普查 armed 3,289 vs baseline 3,000,
+    机会差 9.6% 而动作差 21:1(那 9.6% 是 36-id bundle 合成效应,**不记到本 id 头上**)。
+  - ⭐ **结清总监的 UNMEASURED-POST-BOUNDARY**:界后(cap 25,max game-clock 1646.5s)
+    血<8%/活着 **0.4486%**、血<8%∧挨打/活着 **0.3481%**、每局 48.0 hero-frame
+    ⇒ 与界前 0.4% **同一量级、小幅下降**。切法一并登记(计量三条 (iii)):分母 = 活着的
+    hero-frame(`entities.alive_at`,死亡**事件**锚定,不用插值 `hp>0`);分子 = `hp_pct<0.08`
+    ∧ 3.1s 内有**敌方**英雄 DAMAGE(自伤/友伤已剔)。
+  - ⭐ **(c) 的直接行为证据**:armed 的 136 枚开火里 **3 秒内死 77 枚(57%)**、5 秒 64%、
+    10 秒 68% ⇒「这点钱本来就要蒸发」在三分之二的开火里当场兑现;TP 卷轴**死亡不掉落**,
+    复活后那张 TP 还在。**#168 §7 的「买完用上了吗」**:30s 内起 TP 通道 armed 40% vs
+    baseline 12%;⚠ **120s 那一列(74% vs 71%)没有特异性,不要引用**。
+    顺带一条没人量过的:承重帧里 viper 采购瞬间 **6 格全满** —— TP 进专属槽,**满包不挡这个块**。
+  - ⚠⭐ **没解释掉的东西(GH #220 [bug] 新开)**:唯一窗口在 baseline 腿上不是 0 是 **1**;
+    扩查到「240 秒前的全部 baseline TP 采购」共 **3 枚**(2 局),**4 个已知站点没有一个能解释**,
+    而且**后两枚血量 0.0996 / 0.1042 高于 0.08 ⇒ 连 armed 谓词都不满足** ⇒ **不是 gate 漏到
+    对面,是第 5 条采购路径**。第一枚(血 0.0796)贴着阈值、在 1 秒采样格的插值分辨率以下
+    (±0.014 骑在 0.08 两侧),**本组不主张它是什么**。不推翻结论(污染 2.3% 对 21 次),
+    但把「唯一窗口」降级成**近似唯一**。
+  - ⚠ **能力边界**:dump 里**没有金钱**(有 `net_worth`,没有 `GetGold()`)、**也没有 TP 充能**
+    (`resolveItems` 只给 0-8 格,TP 在 9+;`resolveTP` 对「没有 TP」和「不在 CD」**都返回 (0,0)**)
+    ⇒ 金钱带 / `not HasSufficientTp()` / `charges<=2` **四条离线不可评估**,
+    **每个计数都是真域的上界**。这与 #168 §5 那条 mock 事实同族:一侧恒真、一侧缺席。
+  - **交付**:新工具 `tpdeathbuy_domain.py`(`--selfcheck` **27 PASS / 0 FAIL**;常数全部从 Lua 读,
+    **外加 AST 断言**禁止在执行代码里重打这些数字,**再加反 selfskip** 用合成源码证明那条断言
+    真会红;`verdict()` 反事实:出厂合取变得**可满足** ⇒ **REFUSE** 而不是悄悄换意思;
+    域普查**按队伍分桶**,池化的普查切不出 ab/ba;`--source` 零语料零成本复现);
+    `tests/test_detector_source_constants.py` **新增 9 条**棘轮(含**普通块的 `4*60` 钟**
+    —— 它一动唯一窗口就不再唯一、**TP 采购站点仍恰好 4 个**、**dumper 仍只对 PURCHASE 解析
+    名字下标** —— 一次 revert 会让所有跨局采购读数**静默**退回噪声)。
+  - **交棒**:**GH #168 追评**(全文读数 + UNMEASURED-POST-BOUNDARY 结清 + 两条 §7 问题的答);
+    **GH #220 新开 [bug]**。**球在总监**:#168 三条件判定(另有 #207、#212、`campfarm` 仍未裁)。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**(改的是 `tools/` 与 `tests/`);
+    `bash tools/agent/luacheck_gate.sh` → **exit 0,`luacheck bots game: 0 warnings`**
+    (容器里没有 luacheck,脚本自己装的 —— 铁律 6 的第一条门**开了**);
+    `tests/run_py_tests.sh` **35 passed / 0 failed**;`--selfcheck` **27 PASS / 0 FAIL**;
+    本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **AWS**:S3 **只读**(155 个 `.dem` 流式下载即弃,峰值磁盘 < 3 GB),
+    **未启动/未终止任何实例**,**未调用 Cost Explorer**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **`tpgap` 的条件 (a)** —— §1 计数翻出的最后一个 0 记录 id,
+    `tp_channel_death.py` 已在,只差按「带内估计伤害 ≥ 当前血量」再切一刀(验收书已写好切法);
+    (2) ⭐ **GH #220 的 fixture**(本组自己就能做,`094054_slot3 t=163.0 drow_ranger`;
+    第二枚 `t=171.0 jakiro` 更干净,血量离阈值有余量);(3) ⭐ 把「每个 id 在本组报告里的篇数」
+    grep 做成每轮固定输出(**第二轮登记**);(4) ⭐ `camp_prelit` 列(**第五轮**);
+    占用度量按 idx 去重(**第四轮**);`tpdefend_events` 结果侧列(**#191 落地后,第十轮**);
+    幻象余量做进 `sweep_run.sh`(**第七轮**);`entities.py` 推广(**第八轮**);
+    12:41Z §6.1 那 23 帧做 fixture(**第十轮**);`pulldrag` 的 connect 侧;
+    第二种视野证人(**连续第十四轮顺延**);ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`
+    (**连续第二十一轮登记**);`stayfield` 第一失败子句;打野反证 fixture(**二十七轮**);
+    `hero-1` 的 153 局 WK 语料(**35 轮**);`l5combo` 的 (a)(**第五十一轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十八轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260826T160352Z.md`

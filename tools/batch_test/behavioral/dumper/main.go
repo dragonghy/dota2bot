@@ -128,8 +128,22 @@ type event struct {
 	Target     string  `json:"target"`
 	Inflictor  string  `json:"inflictor"`
 	Value      uint32  `json:"value"`
-	ActorHero  bool    `json:"actor_hero"`
-	TargetHero bool    `json:"target_hero"`
+	// ValueName resolves Value through the SAME "CombatLogNames" string table
+	// that actor/target/inflictor use.  Emitted ONLY for the combat-log types
+	// whose m_iValue is a name index (PURCHASE), and left empty everywhere
+	// else -- for DAMAGE/HEAL/GOLD/XP the value is a magnitude, and running it
+	// through the name table would manufacture a plausible-looking item name
+	// out of an amount.
+	//
+	// WHY (replay-check 2026-08-26): the raw Value on a PURCHASE is an index
+	// into a PER-REPLAY table, not a stable item id.  Measured on two W13
+	// games from the same run: of the 21 indices present in both, exactly
+	// ONE meant the same item (10 = magic_wand in one game, ancient_janggo in
+	// the other).  Any cross-game read keyed on the integer is silently
+	// garbage that still aggregates and still plots.
+	ValueName  string `json:"value_name,omitempty"`
+	ActorHero  bool   `json:"actor_hero"`
+	TargetHero bool   `json:"target_hero"`
 }
 
 type heroState struct {
@@ -667,6 +681,11 @@ func main() {
 				return nil // drop pure creep/tower noise; keep anything touching a hero
 			}
 		}
+		// Only PURCHASE carries a name index in m_iValue; see event.ValueName.
+		valueName := ""
+		if m.GetType() == dota.DOTA_COMBATLOG_TYPES_DOTA_COMBATLOG_PURCHASE {
+			valueName = name(m.GetValue())
+		}
 		events = append(events, event{
 			T:          round1(ts), // raw engine time; converted to game-clock below
 			Type:       strings.TrimPrefix(m.GetType().String(), "DOTA_COMBATLOG_"),
@@ -674,6 +693,7 @@ func main() {
 			Target:     target,
 			Inflictor:  inflictor,
 			Value:      m.GetValue(),
+			ValueName:  valueName,
 			ActorHero:  m.GetIsAttackerHero(),
 			TargetHero: m.GetIsTargetHero(),
 		})
