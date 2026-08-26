@@ -195,8 +195,16 @@ tests['[hero] SkillsComplement takes the bonus from the helper and nowhere else'
     local src = strip_comments(read_file(ZUUS))
     local sComplement = src:match('function X%.SkillsComplement%(%)(.-)\nend\n')
     assert(sComplement, 'X.SkillsComplement not found')
-    assert(sComplement:find('X.GetStaticFieldBonus( abilityAS )', 1, true),
-        'the one assignment must go through the helper, with the file-local handle')
+    -- RE-POINTED 2026-08-26 (zusbind, GH #203): the handle is no longer taken
+    -- raw.  `abilityAS` is sAbilityList[5], and index 5 is Static Field in none
+    -- of the eight drop-worlds (tests/test_zuus_ability_index_binding.lua), so
+    -- the assignment now routes through X.GetBoundAbility.  The ratchet is
+    -- re-aimed rather than relaxed: it still demands ONE assignment, still
+    -- demands the helper, and now also demands that the routed name is the
+    -- ability this file's percentage is about.
+    assert(sComplement:find(
+        "X.GetStaticFieldBonus( X.GetBoundAbility( abilityAS, 'zuus_static_field' ) )", 1, true),
+        'the one assignment must go through the helper, with the routed file-local handle')
 
     -- abilityASBonus is written in exactly two places: the per-tick reset and
     -- the helper call.  A third write would be a leg nothing here is watching.

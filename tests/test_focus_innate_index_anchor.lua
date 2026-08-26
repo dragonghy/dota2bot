@@ -38,8 +38,13 @@
 --   exactly where hero_crystal_maiden.lua binds CrystalClone and
 --   hero_zuus.lua binds abilityD (with abilityAS at 5).  Section 4 records who
 --   binds what, so the blast radius of that unknown is bounded rather than
---   guessed at: it is Zeus and Crystal Maiden, and neither binding is nil-guarded
---   the way hero_skeleton_king.lua's abilityW is.
+--   guessed at: it is Zeus and Crystal Maiden.  UPDATE 2026-08-26 (GH #203):
+--   the Zeus half stopped being an unknown -- enumerating the drop decision over
+--   the three optional abilities and driving the shipped walk in each world
+--   showed index 5 is Static Field in none of them and nil in four
+--   (tests/test_zuus_ability_index_binding.lua), and both Zeus consumers are now
+--   routed and nil-guarded.  The Crystal Maiden binding still is not, the way
+--   hero_skeleton_king.lua's abilityW is.
 --
 -- WHAT IS PINNED HERE
 --   1. corpus ground truth: the engine ability-name set per focus hero, with
@@ -416,7 +421,7 @@ tests['[4] only Zeus and Crystal Maiden bind above index 3 -- that is the blast 
     end
 end
 
-tests['[4] the two index-4/5 bindings are still unguarded, unlike WK\'s abilityW'] = function()
+tests['[4] Crystal Maiden\'s index-4 binding is still unguarded, unlike WK\'s abilityW'] = function()
     -- Recorded, not argued: hero_skeleton_king.lua re-fetches abilityW behind
     -- `if not abilityW or abilityW:IsHidden()`, and gates X.ConsiderW on
     -- `abilityW:GetName() ~= "skeleton_king_bone_guard"`.  The Zeus and CM
@@ -444,23 +449,26 @@ tests['[4] the two index-4/5 bindings are still unguarded, unlike WK\'s abilityW
         'hero_zuus.lua no longer binds abilityD from sAbilityList[4]')
     assert(zs:find('local abilityAS = bot:GetAbilityByName( sAbilityList[5] )', 1, true),
         'hero_zuus.lua no longer binds abilityAS from sAbilityList[5]')
-    -- RELOCATED 2026-08-25 (GH #173, gated 'zusstatic'), NOT weakened: the call
-    -- used to read `if abilityAS:IsTrained() then abilityASBonus = 0.09 end`
-    -- inline in X.SkillsComplement.  The handle is now passed to
-    -- X.GetStaticFieldBonus, whose FIRST statement is the same unguarded
-    -- IsTrained() -- so the property this assertion records (the first thing
-    -- done with the index-5 handle is an unguarded method call) is unchanged,
-    -- and both halves of it are pinned separately below.  The hero desk hit its
-    -- own 2026-08-25 lesson here: before moving a call site, grep for the
-    -- censuses that are counting it.
-    assert(zs:find('X.GetStaticFieldBonus( abilityAS )', 1, true),
-        'hero_zuus.lua no longer hands abilityAS to X.GetStaticFieldBonus')
+    -- ANSWERED 2026-08-26 for Zeus (GH #203, gated 'zusbind'), and this half is
+    -- re-pointed exactly as the CM half above still instructs: the open question
+    -- this assertion recorded -- "the first thing done with the index-4/5 handle
+    -- is an unguarded method call" -- is no longer true of hero_zuus.lua, so the
+    -- assertion now records what replaced it rather than demanding the old
+    -- shape.  Enumerating the drop worlds (tests/test_zuus_ability_index_binding.lua)
+    -- turned the unknown into a measurement: index 5 is Static Field in NONE of
+    -- the eight, and four of them hand back nil.  Both consumers now route
+    -- through X.GetBoundAbility and both nil-check ungated.
+    assert(zs:find("X.GetStaticFieldBonus( X.GetBoundAbility( abilityAS, 'zuus_static_field' ) )", 1, true),
+        'hero_zuus.lua no longer routes abilityAS through X.GetBoundAbility')
+    assert(zs:find("X.GetBoundAbility( abilityD, 'zuus_cloud' )", 1, true),
+        'hero_zuus.lua no longer routes abilityD through X.GetBoundAbility')
     local sBonus = zs:gsub('%-%-[^\n]*', ''):match('function X%.GetStaticFieldBonus%b()(.-)\nend')
     assert(sBonus, 'X.GetStaticFieldBonus is gone; where does the index-5 handle go now?')
-    assert(sBonus:match('^%s*if not hAbility:IsTrained%(%) then'),
-        'X.GetStaticFieldBonus no longer OPENS on an unguarded IsTrained() on the '
-        .. 'handle it was given. If a nil guard was added, delete this assertion '
-        .. 'and say so -- it exists to record the unguarded call, not to demand it.')
+    assert(sBonus:match('^%s*if hAbility == nil then return 0 end'),
+        'X.GetStaticFieldBonus no longer OPENS on the ungated nil check. That check is '
+        .. 'the whole ungated half of GH #203 -- four of the eight drop-worlds hand '
+        .. 'back nil, and indexing nil inside X.SkillsComplement is a silent whole-tick '
+        .. 'abort.')
 end
 
 -- ---------------------------------------------------------------------------

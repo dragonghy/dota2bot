@@ -22,6 +22,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-17. ~~**新轴 `GRANTSLOT`:`sAbilityList` 的下标不是槽位(GH #203,gated `zusbind`)**~~
+   **2026-08-26T05:02Z done —— 本轮改了 `bots/`,gated `zusbind`(turbo-only、未 armed、不申请入集)
+   + **两处未 gate 的空指针检查**(沿 #188/#192 先例);`state.json` 新增 `zusbind_20260826`;
+   零 AWS;不提 queue 请求。**
+   - **承重读数,而且它把一个读不到的谓词枚举掉了**:`sAbilityList` 是 `GetAbilityList` 用
+     `table.insert` **压实**出来的(唯一固定下标是大招的 6)⇒ 下标 N = 「walk 接受的第 N 个技能」。
+     Zeus 前面插着两个可选技能(杖技 `zuus_cloud` @slot3、魔晶技 `zuus_lightning_hands` @slot4,
+     innate `zuus_static_field` @slot6,大招 @slot5)。把丢弃决定枚举成 **2³ = 8 个世界**、
+     每个都跑**出货的** walk:**`[5]` 是静电场的世界 0/8**(`lightning_hands` 2、**nil 4**、
+     `generic_hidden` 2),**`[4]` 是 Nimbus 的世界恰好是保留 grant 的那 4 个**。
+     ⇒ `abilityAS`(唯一消费方 `X.GetStaticFieldBonus`)**在任何世界里都不是静电场**;
+     `abilityD` 对不对压在读不到的 `IsHidden()` 上;**4/8 是 nil** = 未 gate 那半边的全部理由。
+   - **⭐ 第一版假设被本轮自己证伪,而证伪比命中值钱**:原以为「杖/魔晶技能加载时不存在 ⇒ 句柄恒 nil」。
+     普查打掉它:`bots/BotLib` 下**已有 40 处**按**字面名字**取 grant 技能的出货站点,
+     而 KV 里这些技能的 mask **自带 `HIDDEN`** ⇒ 引擎出生即造好、只是藏着。
+     **教训:先数「同一个仓库里多数人怎么写」,再决定要不要把少数写法叫缺陷。**
+     真正的轴在证伪之后才露出来:**按名字取没问题,按下标取才有问题**。
+   - **声明出来的依赖(它自己就是「别数下标」的论据)**:walk 写完固定下标 6 之后**还在 append**,
+     于是后面每次 `table.insert` 都对**带洞的表**问 `#` —— **Lua 5.1 未定义**。本 VM 答 6;
+     **答 4 的 VM 会把保留的静电场放到下标 5**,上面那张表就变了。已钉成 world assertion。
+   - **变异 9/10 抓 + 1 对照如实逃逸**;**逃掉的 M10 复核后判为分工不是盲区**
+     (它是 walk 丢弃**机制**的变异,本文件枚举的是**结果**;**实测**由
+     `test_focus_innate_index_anchor.lua` §3 抓着)。
+   - **两个既有棘轮当场红,重新指向而非放宽**:`test_zuus_static_field_pct.lua` 的调用点断言;
+     `test_focus_innate_index_anchor.lua` §4(它自己写着「加了 nil guard 就删掉这条并说明」,照做)。
+   - **下一棒**:① `zusstatic` **必须与 `zusbind` 同臂**(否则 #173 量的是错技能缺失的 key = 0),
+     **故意不写成合取门**(AGENTS.md 的 promote 冻结坑),依赖登记在 issue + `state.json`,归总监排波;
+     ② 入集判定归总监,本组不申请;③ 见 backlog 新条 `-17b`(CM 那根 + 轴的另一半)。
+
+-17b. **`GRANTSLOT` 的两半剩余量**(2026-08-26T05:02Z 立,未做)。
+   - **CM 那根(第二根杠杆,登记没写)**:`hero_crystal_maiden.lua` 的
+     `CrystalClone = sAbilityList[4]`,而 `crystal_maiden_crystal_clone` 是 `IsGrantedByShard`、
+     在**槽位 3**(innate 4、大招 5)⇒ **保留 grant 的两个世界里是对的**、丢弃的世界里是错的。
+     **比 Zeus 弱一档**,要做先想清楚这一档怎么论证。CM 那侧的「首次使用即无保护方法调用」棘轮仍在原处。
+   - **轴的另一半**:本轮只数清了**按名字**绑定(40 处 file-scope 站点);**按下标**那一半要逐英雄
+     的槽位顺序(每英雄一次 datafeed GET),**是一次真正的普查工具,不是一个工作单元塞得下的**。
+
 -16. ~~**§18 的 Lever C 终于写了:WK 打肉分支的 600 绝对蓝(GH #199,gated `wkrosh`)**~~
    **2026-08-26T01:52Z done —— 本轮改了 `bots/`(1 个新 helper + 1 行分支条件),
    gated `wkrosh`(turbo-only、未 armed)⇒ 稳定版未漂移;`state.json` 新增
@@ -1434,6 +1471,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-26T05:02Z(报告 `iterations/reports/hero/20260826T050213Z.md`;**自选,开了 GH #203**,
+  新轴 **`GRANTSLOT`**)—— 自检 **UNLANDED 0**、两条稳定版锚点不变量 ok、py 32/0;cadence 洞在
+  replay-check(3.7–4.2h)与 strategy(3.5h);owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项。
+  **本轮改了 `bots/`,而且两个半边都有**:gated `zusbind`(turbo-only、**未 armed**、**不申请入集**)
+  ⇒ 稳定版未漂移;**外加两处未 gate 的空指针检查**(沿 #188/#192「被迫的修复不 gate、策略 gate」)。
+  `state.json` 新增 `zusbind_20260826`;**零 AWS**;**不提 queue 请求**。
+  - **⭐ 承重读数 —— 把一个读不到的谓词枚举掉,而不是猜它**:丢弃规则里的 `IsHidden()` 在游戏 VM 外
+    永远读不到,于是把三个可选技能的丢弃决定枚举成 **2³ = 8 个世界**,每个世界都拿**出货的**
+    `J.Skill.GetAbilityList` 在 Zeus 真实槽位顺序上跑:**`[5]` 是静电场的世界 0/8**
+    (`zuus_lightning_hands` 2、**nil 4**、`generic_hidden` 2),**`[4]` 是 Nimbus 的恰好是保留 grant
+    的那 4 个**。⇒ `abilityAS` **在任何世界里都不是它唯一消费方以为的技能**;`abilityD` 对不对
+    压在读不到的谓词上;**4/8 的 nil** 就是未 gate 半边的全部理由。
+  - **⭐ 本轮最值钱的一条是自己的假设被自己证伪**:原假设「杖/魔晶技能加载时不存在 ⇒ 句柄恒 nil」
+    被普查打掉 —— 全仓**已有 40 处**按字面名字取 grant 技能的**出货**站点,且 KV 里这些技能的
+    mask **自带 `HIDDEN`**(引擎出生即造好、只是藏着)。**先数「多数人怎么写」,再决定要不要把
+    少数写法叫缺陷。** 轴在证伪之后才露出来:**按名字取没问题,按下标取才有问题。**
+  - **声明出来的依赖**:walk 写完固定下标 6 后**还在 append** ⇒ 后续 `table.insert` 对**带洞的表**
+    问 `#`,**Lua 5.1 未定义**;本 VM 答 6,**答 4 的 VM 会把保留的静电场放到下标 5**。
+    钉成 world assertion,**而它本身就是「别再数下标」的论据**。
+  - **变异 9/10 抓 + 1 对照如实逃逸**;**逃掉的 M10 复核后判为分工不是盲区**(它变异的是 walk 的
+    丢弃**机制**,本文件枚举的是**结果**;**实测**它被 `test_focus_innate_index_anchor.lua` §3 抓着)。
+  - **两个既有棘轮当场红 ⇒ 重新指向而非放宽**(其中 §4 那条自己写着「加了 nil guard 就删掉并说明」,
+    照做并同步改了抬头散文,免得散文比代码旧)。
+  - **门(如实)**:luacheck **exit 0 / 0 警告**;`run_py_tests.sh` **32/0**;
+    `run_tests.lua` **全量没跑**(GH #124),跑的是**可复现 grep 出来的相关子集**
+    **47 文件 / 590 用例 / 0 失败**,**逐文件断言跑到了 >0 个用例**(现在 runner 自己也按 GH #200
+    对 0 用例抬 exit 2,双保险)⇒ **本轮 Lua 侧的说法是「相关子集 590 用例全绿」,不是「全量全绿」**。
 - 2026-08-26T01:52Z(报告 `iterations/reports/hero/20260826T015238Z.md`;**自选 backlog §18 Lever C,
   开了 GH #199**)—— 自检 **UNLANDED 0**、稳定版两条锚点不变量全 ok、py 31/0;cadence 洞在
   replay-check(3.7–6.1h)与 strategy(3.5h);owner P1/P2 球在协同组、P3 在总监 ⇒ 本组无优先项;

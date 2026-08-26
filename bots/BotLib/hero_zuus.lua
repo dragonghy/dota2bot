@@ -322,8 +322,82 @@ function X.zuus_ShouldSaveManaForUlt( hBot, hTarget, hSpell )
 end
 
 
+--- [zusbind] Resolve one of this file's index-bound handles BY NAME.
+---
+--- WHY (axis `GRANTSLOT`).  `sAbilityList` is not the hero's slot array, it is
+--- the array `J.Skill.GetAbilityList` COMPACTS out of slots 0..10: every
+--- accepted ability is appended with `table.insert`, and only the ultimate is
+--- written to a fixed index (6).  So index N means "the Nth ability the walk
+--- accepted", and any ability the walk accepts before the one you wanted
+--- shifts it.  Zeus has two such abilities and BOTH sit in front:
+---
+---     slot 0 zuus_arc_lightning      slot 4 zuus_lightning_hands  (shard)
+---     slot 1 zuus_lightning_bolt     slot 5 zuus_thundergods_wrath (ult -> 6)
+---     slot 2 zuus_heavenly_jump      slot 6 zuus_static_field     (innate)
+---     slot 3 zuus_cloud   (scepter)
+---
+--- (order read off the Dota 2 datafeed, hero_id=22, 2026-08-26; the two grant
+--- flags are `IsGrantedByScepter`/`IsGrantedByShard` in the game's own KV.)
+---
+--- `abilityD` reads index 4 and every consumer of it is behind
+--- `bot:HasScepter()`, so the file means Nimbus; `abilityAS` reads index 5 and
+--- its only consumer is X.GetStaticFieldBonus, so the file means Static Field.
+--- The walk's drop rule (`NOT_LEARNABLE and IsHidden()`) cannot be evaluated
+--- offline, so which names those two indices actually carry is not settled
+--- here -- but it does not have to be.  Enumerate the drop decision for the
+--- three optional abilities (2^3 worlds, driven through the SHIPPED
+--- GetAbilityList in tests/test_zuus_ability_index_binding.lua):
+---
+---     index 5 is Static Field in ZERO of the eight worlds
+---        (zuus_lightning_hands in 2, nil in 4, generic_hidden in 2)
+---     index 4 is Nimbus in exactly the four worlds that KEEP grant abilities
+---
+--- So `abilityAS` never names what its only consumer thinks it names, whatever
+--- the engine decides about hidden flags, and `abilityD` is right only under a
+--- predicate nothing here can read.  Four worlds hand back nil, which is what
+--- the two ungated nil checks below are for.
+---
+--- What that costs today, in the two consumers, is the point:
+---   * X.GetStaticFieldBonus adds `target:GetHealth() * bonus` to the kill
+---     estimate that decides whether the ~130s global execute is cashed in.
+---     Read off a handle that is not Static Field, the shipped 0.09 becomes a
+---     term gated on an unrelated ability's IsTrained(), and the armed
+---     `zusstatic` leg reads `damage_health_pct` off an ability that has no
+---     such key -- a silent 0 (the GH #162 house rule), which is the one
+---     answer that makes GH #173's fix indistinguishable from doing nothing.
+---   * X.ConsiderD casts on a LOCATION; Lightning Hands is TOGGLE|ATTACK and
+---     Thundergod's Wrath is NO_TARGET, so a wrong handle there is an order the
+---     engine cannot execute (axis `CASTSHAPE`, GH #177) plus the `return` that
+---     eats the rest of the dispatch tick.
+---
+--- Binding by NAME is not a new idea in this repo: 40 file-scope sites in
+--- bots/BotLib already fetch a shard/scepter ability by its literal name, and
+--- hero_skeleton_king.lua re-fetches `abilityW` by name after checking it.
+--- Zeus is the outlier that reaches for these two by index.
+---
+--- Gate-off is the shipped handle by construction: the armed branch is the only
+--- detour and the function's last statement returns the caller's own local.  A
+--- name that the engine cannot resolve yields nil and falls back rather than
+--- inventing a handle.
+function X.GetBoundAbility( hShipped, sName )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusbind' )
+	then
+		local hNamed = bot:GetAbilityByName( sName )
+		if hNamed ~= nil then return hNamed end
+	end
+
+	return hShipped
+
+end
+
+
 --- [zusstatic] GH #173 -- Static Field's percentage, taken off the ability
 --- instead of the hardcoded 0.09.
+---
+--- READ THIS WITH `zusbind` ABOVE.  The handle this function is HANDED decides
+--- whether anything below is about Static Field at all; `zusstatic` armed
+--- without `zusbind` armed measures the wrong ability's missing key, i.e. 0.
 ---
 --- Both consumers of `abilityASBonus` add `target:GetHealth() * abilityASBonus`
 --- to a kill estimate: X.ConsiderW's ranged-creep snipe and X.ConsiderR's
@@ -354,6 +428,14 @@ end
 --- (GH #151's family; measured, not assumed, in §LIMIT of the test).  Taking it
 --- as an argument is what lets a test drive both legs at all.
 function X.GetStaticFieldBonus( hAbility )
+
+	-- Ungated: `sAbilityList[5]` is nil in the fixture world (measured, see the
+	-- test's LIMIT section) and `GetAbilityByName( nil )` is not documented to
+	-- return a handle.  Indexing nil here raises, and a raise inside
+	-- X.SkillsComplement takes the whole tick with it silently (AGENTS.md: the
+	-- engine error handler is broken).  Structurally a no-op wherever the
+	-- shipped code does not already raise.
+	if hAbility == nil then return 0 end
 
 	if not hAbility:IsTrained() then return 0 end
 
@@ -386,7 +468,7 @@ function X.SkillsComplement()
 
 	local aether = J.IsItemAvailable( "item_aether_lens" )
 	if aether ~= nil then aetherRange = 250 end
-	abilityASBonus = X.GetStaticFieldBonus( abilityAS )
+	abilityASBonus = X.GetStaticFieldBonus( X.GetBoundAbility( abilityAS, 'zuus_static_field' ) )
 	-- DELETED 2026-08-22: `talentDamage` was assigned here and at its declaration and
 	-- read NOWHERE in the repo (the same shape GH #104 removed from Wraith King and
 	-- GH #73 from Lion).  Its one input, talent8, is index 8 =
@@ -467,7 +549,7 @@ function X.SkillsComplement()
 
 		J.SetQueuePtToINT( bot, true )
 
-		bot:ActionQueue_UseAbilityOnLocation( abilityD, castDLocation )
+		bot:ActionQueue_UseAbilityOnLocation( X.GetBoundAbility( abilityD, 'zuus_cloud' ), castDLocation )
 		return
 	end
 	
@@ -796,8 +878,14 @@ end
 
 function X.ConsiderD()
 
-	if not bot:HasScepter()
-		or not abilityD:IsFullyCastable()
+	-- [zusbind] see X.GetBoundAbility: index 4 is Nimbus only in the worlds
+	-- where the walk keeps grant abilities.  The nil check is ungated for the
+	-- same reason as the one in X.GetStaticFieldBonus.
+	local hCloud = X.GetBoundAbility( abilityD, 'zuus_cloud' )
+
+	if hCloud == nil
+		or not bot:HasScepter()
+		or not hCloud:IsFullyCastable()
 		or bot:IsInvisible()
 	then
 		return BOT_ACTION_DESIRE_NONE, nil
