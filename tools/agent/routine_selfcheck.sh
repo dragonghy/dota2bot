@@ -131,6 +131,32 @@ else
     printf 'SKIP (no python3)\n'
 fi
 
+# Added 2026-08-26T01:0xZ (director).  The director charter's 『下次触发』 list
+# carried "stable-v1/stable-v2 打 tag" for TEN consecutive rounds, each round
+# deferring it as not-done.  Measured on 08-26: both refs had been on `origin`
+# the whole time, and `stable-v1` pointed at exactly the right commit.  What did
+# not exist was a *tag* -- and this container's credentials cannot push one
+# (refs/tags/* is a hard HTTP 403; the same session, same credentials, pushes
+# branches fine).  So the deferred action was also un-doable.
+#
+# The root cause is one level earlier than the wrapper's other checks: not "a
+# detector nobody runs" and not "prose that does not raise its hand", but a
+# WRONG CRITERION.  Every round answered "is the anchor built?" with `git tag
+# -l`, which is empty by construction, and a wrong criterion never raises its
+# hand either.  Ten rounds of a director trigger went to a question that a
+# 2-second read answers.
+#
+# It is a QUESTION like the others (see the tool's LIMITS): a MOVED anchor may
+# be a legitimate relocation, and in a shallow container invariant 3 comes back
+# UNCERTIFIABLE rather than ok.  But LOOK.
+printf '\n=== stable version anchors (铁律 3) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/stable_anchors.py
+    note $?
+else
+    printf 'SKIP (no python3)\n'
+fi
+
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     if suite=$(bash tests/run_py_tests.sh 2>&1); then

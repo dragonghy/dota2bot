@@ -13,7 +13,18 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
    b. **promote/reject 判定**:对测试集每个 id 检查三条件
       (录像组核验 WORKING + 批测胜负无明显负面 + 逻辑依据成立)。
       三条件齐 → promote:把 gate 改为 turbo 默认开、出测试集(test_set.md
-      留历史行)、打 stable-vN tag、更新 state.json。
+      留历史行)、**建 stable-vN 锚点**、更新 state.json。
+      **锚点是 branch ref 不是 tag(2026-08-26 更正)**:本容器的凭据
+      **推不了 tag** —— `refs/tags/*` 一律 HTTP 403,同一套凭据 push branch
+      成功,GitHub MCP 也没有 create-tag/create-ref 工具。旧措辞「打 tag」
+      与仓库里实际存的东西从来没对过账,代价是这条待办在『下次触发』清单里
+      **顺延了十轮**:每轮用 `git tag -l` 是空的当判据去问「锚点建了没有」,
+      而两个 ref 早就在 origin 上,`stable-v1` 还恰好指着对的 commit。
+      ⇒ **promote 落地时必须往 `iterations/stable_anchors.json` 加一行**
+      (name / ref / ref_sha / promote_commit / promoted_ids / state_json_key),
+      开工自检的 `tools/agent/stable_anchors.py` 每轮核三条不变量
+      (ref 在 origin / 仍指 ref_sha / 与 promote_commit 之间 `bots/`+`game/`
+      逐字节相同)。**漏登记不会自己举手 —— 加那一行就是让它会。**
       核验为 BUGGY/SILENT 且修不动 → 退回对应组(开 issue);
       明显有害 → reject 出集,gate 保留但永不 arm,state.json 记录。
    c. 测试集变更提议审批(test_set.md 的 pending 提议);
@@ -4941,3 +4952,54 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   反向指针 + `pending_rulings.py` 新不变式(「三条件已齐/已裁但无归宿」);
   ③`hero-18` 读数回来后的实质裁定;④`[bug] #156`/`[harness] #161/#152/#169`;
   ⑤**W35 周日(08-30)邮件**。
+
+- 2026-08-26T01:0xZ:本轮把**积压十轮的 `stable-v1`/`stable-v2` 锚点结案了**,
+  报告 `iterations/reports/director/20260826T010000Z.md`,机器记录
+  `state.json:stable_anchors_RESOLVE_20260826T0100Z`,登记表
+  `iterations/stable_anchors.json`,GH **[harness] #195**。**零 AWS、`bots/`/`game/` 零改动。**
+  **① 选题仍是被自己上一轮的规矩逼定的**:自检**没有红**(`pending_rulings.py` 0、
+  UNLANDED 0、py 套件 30 passed),owner 优先项 P1/P2 球在协同组 ⇒ 上一轮那句
+  「第十轮积压 —— 再顺延就必须写进 `DECISIONS_NEEDED`」当场生效。**做掉了,
+  `DECISIONS_NEEDED` 不用动。**
+  **② ⭐⭐ 结论不是「补建了」,是那十轮**问的是个错问题**。** 两个 ref
+  **早就在 `origin` 上**,`stable-v1` 还恰好指着对的 promote commit `6db5921c`。
+  不存在的是 **tag**,而**本容器推不了 tag**:`git push origin stable-v1 stable-v2`
+  稳定 **HTTP 403**(四次退避重试逐字相同),**同一次会话同一套凭据** push branch
+  **成功**,GitHub MCP 也没有 create-tag/create-ref ⇒ **被顺延的那个动作,做也做不成**。
+  更根本的是**没有任何机器可读的记录**说锚点在哪 ⇒ 每轮用「`git tag -l` 是空的」
+  当判据去问「锚点建了没有」,那个判据**由构造永远返回「没有」**。
+  **⭐ 根因分类:错判据 —— 比本仓库已记的两种失败更早一步。**
+  `unlanded_commits.py` 治「检测器没人跑」、`pending_rulings.py` 治「散文不会举手」,
+  这一条是**判据本身是错的,而错判据也不会举手**:散文(章程 2b)说 tag、
+  仓库里存的是 branch ref(`state.json` 原文写的就是「稳定版锚点 = **分支引用**」),
+  两边从来没对过账。成本 = 十轮总监触发的一个待办位。
+  **③ 裁定:`stable-v2` 不 force-push 去「对齐」。** 它指着 `136a332f` 而非 promote
+  commit `d8ecde5e`,但实测 `136a332f` 是 `d8ecde5e` 的后代、`origin/main` 的祖先,且
+  **`git diff d8ecde5e 136a332f -- bots/ game/` 空(逐字节相同)**⇒ 在铁律 3 定义锚点的
+  **唯一**维度上该 ref **正确**,差的只是 dev-only 目录。本轮那次 non-fast-forward
+  拒绝**是保护不是障碍**;而讽刺的是**这个 promote 自己的档案里就写着**
+  「corrected before the branch ref was created, **so no ref was ever overwritten**」。
+  连带登记:`d8ecde5e` 标题写的 `(stable-v1)` 是历史不是缺陷,**不要「修」**。
+  **④ 基建**:`stable_anchors.json`(登记表)+ `tools/agent/stable_anchors.py`
+  (三条不变量:EXISTS / PINNED / SHIPPED)+ `tests/test_stable_anchors.py`
+  (三条各正反两向 + 登记表自洽)+ 接进开工自检。**刻意的设计**:浅克隆里不变量 3 报
+  **UNCERTIFIABLE 而不是 ok**(与 `unlanded_commits.py` 的 REFUSED 同一条纪律);
+  登记表为空报 `NO ANCHORS REGISTERED` 而不是干净通过(死规则形状)。
+  **章程 2b 已同步改写**:「打 tag」→「**建锚点**」+ promote 落地必须加登记表那一行,
+  **漏登记不会自己举手,加那一行就是让它会**。
+  **⑤ 验证**:`bots/`/`game/` **零改动**(⇒ 铁律 6 的 Lua 门不适用;容器无 `lua5.1`,
+  本轮未付那笔 `apt-get`,如实登记);py 套件 **30 → 31 passed, 0 failed**;
+  `state.json` **19 insertions / 1 deletion**(那 1 个删除是被重写的收尾 `}`),
+  程序化断言**顶层键 283 → 284、每个原有键逐位相等**(APPEND-ONLY 已断言);
+  `queue.json` **零改动**(本轮无排期/结案裁定)。
+  **⑥ 体系健康 / 成本**:五组均有产出;CADENCE 7 洞(3.5–8.9h)与前三轮同型不升级,
+  仍点名 batch-desk 8.9h。owner 优先项 P1/P2 球在协同组,**未触 12 轮红线**。
+  总监**零 AWS 调用、零支出**,有效 MTD ≈ **$43**,**不跨 $50 ⇒ owner 本轮不会收到
+  Budget 告警**,$60/$90/$100 三线未触及;§BH.3 配套义务尚未到期,无欠账。
+  `DECISIONS_NEEDED` 无新增;W35 周日(08-30)邮件未发。
+  **下次触发**:①`hero-18` 读数回来后的实质裁定(四格判据已预登记);
+  ②`_protocol` 的 `answers` 反向指针 + `pending_rulings.py` 新不变式
+  (「三条件已齐/已裁但无归宿」);③`[bug] #156`/`[harness] #161/#152/#169`;
+  ④**W35 周日(08-30)邮件**(`DECISIONS_NEEDED` 第 9b 条是重点);
+  ⑤GH #190 读回后按 `cmboots_RESOLVE` 的可证伪条款决定是否重开 (c)。
+  **「stable-vN 打 tag」已结案,不再进本清单。**

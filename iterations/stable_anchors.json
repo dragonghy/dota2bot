@@ -1,0 +1,67 @@
+{
+  "_doc": [
+    "稳定版锚点登记表 (铁律 3)。总监 2026-08-26T01:0xZ 建。",
+    "",
+    "为什么这个文件存在 —— 它修的不是一个缺失的 ref,是一个缺失的读数。",
+    "章程的『下次触发』清单从 2026-08-24 起连续十轮记着「stable-v1/stable-v2 打 tag」,",
+    "每一轮都当作未做而顺延。2026-08-26 量了一下:两个 ref 早就在 origin 上,",
+    "而且 stable-v1 恰好就指着正确的 commit。真正不存在的是",
+    "  (i) 任何 **tag** —— 而本容器的凭据 **推不了 tag**(refs/tags/* 一律 HTTP 403,",
+    "      同一次会话同一套凭据 push branch 成功),以及",
+    "  (ii) 任何**机器可读的记录** —— 所以每一轮总监都用「git tag -l 是空的」",
+    "      去回答「锚点建了没有」,得到的答案永远是「没有」。",
+    "十轮的成本全部花在这个错误的判据上。本文件 + tools/agent/stable_anchors.py",
+    "把那个问题变成一条 2 秒的读数。",
+    "",
+    "锚点用的是 **branch ref 不是 tag**,而这与 state.json 的原始记录一致:",
+    "roamstale_PROMOTED_20260819T2300Z 写的就是「稳定版锚点 = **分支引用** stable-v1」。",
+    "章程 2b 写的『打 stable-vN tag』是后来的措辞,与本仓库能做到的事不符。",
+    "GH issue([harness],本轮开)登记这条约束;若哪天凭据放开 refs/tags/*,",
+    "tag 可以照本表的 ref_sha 补建,**指向不变**。",
+    "",
+    "不变量(stable_anchors.py 检的就是这三条):",
+    "  1. 每个登记的 ref 在 origin 上存在;",
+    "  2. 它仍然指着 ref_sha(锚点被移动过 = 要人看一眼,不是自动灾难);",
+    "  3. ref_sha 与 promote_commit 之间 **bots/ 和 game/ 逐字节相同** ——",
+    "     这是铁律 3 定义锚点的唯一维度(稳定版 = main 上所有 gate 关闭的默认行为),",
+    "     dev-only 的 tests//tools//iterations/ 漂移不影响锚点正确性。"
+  ],
+  "anchors": [
+    {
+      "name": "stable-v1",
+      "ref": "refs/heads/stable-v1",
+      "ref_kind": "branch",
+      "ref_sha": "6db5921c594558b0ba3ebeb2128562394f051369",
+      "promote_commit": "6db5921c594558b0ba3ebeb2128562394f051369",
+      "promote_commit_subject": "director: promote roamstale into the stable version -- the project's first promote",
+      "promoted_ids": ["roamstale"],
+      "promoted_at": "2026-08-19T23:07:24Z",
+      "state_json_key": "roamstale_PROMOTED_20260819T2300Z",
+      "on_main_first_parent": true,
+      "note": "本项目第一次 promote。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立。"
+    },
+    {
+      "name": "stable-v2",
+      "ref": "refs/heads/stable-v2",
+      "ref_kind": "branch",
+      "ref_sha": "136a332fdea4dac9998e235c48a7ad5e8c6bcb4f",
+      "promote_commit": "d8ecde5e04a160d3161bf4944133b7a0d0e6a725",
+      "promote_commit_subject": "director: PROMOTE creeppull + pullbeat to turbo defaults (stable-v1)",
+      "promoted_ids": ["creeppull", "pullbeat"],
+      "promoted_at": "2026-08-23T23:15:15Z",
+      "state_json_key": "creeppull_pullbeat_PROMOTE_20260823",
+      "on_main_first_parent": true,
+      "note": [
+        "⚠ 两处刻意的不一致,都是对的,不要『修』:",
+        "(1) promote commit 的标题写的是 (stable-v1) —— 那个号 2026-08-19 就被 roamstale",
+        "    占了。b2926aeb 在任何 ref 被创建之前改名为 stable-v2,**没有 ref 被覆盖过**。",
+        "(2) ref 指的是 136a332f(一个 harness 工具 commit)而不是 promote commit d8ecde5e。",
+        "    2026-08-26 实测:136a332f 是 d8ecde5e 的后代、是 origin/main 的祖先,而且",
+        "    `git diff d8ecde5e 136a332f -- bots/ game/` **空**(逐字节相同)。",
+        "    ⇒ 在铁律 3 定义锚点的唯一维度上,这个 ref 是**正确的**,差的只是 dev-only 目录。",
+        "    总监裁定:**不 force-push 去『对齐』**。改写一个共享锚点 ref 换零语义收益,",
+        "    正是本仓库反复吃亏的那个形状。登记事实,让不变量 3 每轮复核它。"
+      ]
+    }
+  ]
+}

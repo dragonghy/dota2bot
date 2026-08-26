@@ -3828,5 +3828,23 @@
     "acceptance": "GH #186's own yardstick, do not invent a second one: in a same-shape wave, the share of poke frames moving < 50u in the following second falls from 42% to < 15%, reproduced in BOTH physical strata (iron rule 4(i)); AND 'pulldrag''s lane_win share does not fall (this lever repairs WHETHER the hero walks, it must not change WHERE). Reverse guard: total armed poke frames must not collapse -- a fix that stops the pull happening at all would read as a win on the primary. Zero AWS increment: the reading comes off already-uploaded W10 corpus via tools/batch_test/behavioral/pulldrag_walk.py's `still` column.",
     "prereg_read": "If the reading does not move: FIRST suspect the arm string missed 'pullthink' (a no-op with no counter that would complain), SECOND that the 42% population is not attack-animation at all but a second cause (a pathing block at the camp box, or a competing mode winning the frame) -- in which case the order log is the discriminator, because this fix cannot make a move order appear if Think was never called.",
     "wave": "NO dedicated wave requested -- ride-along, zero AWS increment. queue.json:strategy-18."
+  },
+  "stable_anchors_RESOLVE_20260826T0100Z": {
+    "ruling": "总监 2026-08-26T01:0xZ:章程『下次触发』积压十轮的「stable-v1/stable-v2 打 tag」**结案**。结论不是「补建了」,是**问题问错了**:两个 ref 早就在 origin 上,而且 stable-v1 恰好指着正确的 promote commit;不存在的是 tag,而本容器**推不了 tag**。锚点现登记在 iterations/stable_anchors.json,由 tools/agent/stable_anchors.py 每轮开工核三条不变量。",
+    "what_was_actually_missing": "(1) 任何 **tag** —— 实测 `git push origin stable-v1 stable-v2` 稳定 HTTP 403(四次重试同结果),同一次会话同一套凭据 `git push -u origin <session-branch>` 成功 ⇒ 凭据允许 refs/heads/* 拒绝 refs/tags/*,GitHub MCP 也无 create-tag/create-ref 工具 ⇒ **那十轮里被顺延的动作,做也做不成**。(2) 任何**机器可读的记录**说锚点在哪 ⇒ 每轮总监用 `git tag -l` 是空的当判据回答「锚点建了没有」,答案永远是「没有」。",
+    "root_cause_class": "⭐ **错判据**,比本仓库已记的两种失败更早一步。`unlanded_commits.py` 治的是「检测器没人跑」,`pending_rulings.py` 治的是「散文不会举手」,这一条是**判据本身是错的,而错判据也不会举手**:散文(章程 2b)说「打 tag」,仓库里存的是 branch ref(state.json:roamstale_PROMOTED_20260819T2300Z 原文写的就是「稳定版锚点 = **分支引用** stable-v1」),两边从来没有对过账。成本 = 十轮总监触发的一个待办位。",
+    "anchor_stable_v1": "refs/heads/stable-v1 -> 6db5921c594558b0ba3ebeb2128562394f051369 = promote commit 本身(roamstale,2026-08-19T23:07:24Z,origin/main first-parent 线上)⇒ 不变量 3 平凡成立。**本轮未改动该 ref**(push 是 no-op:它已经指着这里)。",
+    "anchor_stable_v2": "refs/heads/stable-v2 -> 136a332fdea4dac9998e235c48a7ad5e8c6bcb4f,**不是** promote commit d8ecde5e04a160d3161bf4944133b7a0d0e6a725。实测:136a332f 是 d8ecde5e 的后代、是 origin/main 的祖先,且 `git diff d8ecde5e 136a332f -- bots/ game/` **空(逐字节相同)**⇒ 在铁律 3 定义锚点的唯一维度(稳定版 = main 上所有 gate 关闭的默认行为)上该 ref **正确**,差的只是 dev-only 目录(136a332f 是一个 unlanded_commits 假阳性修复 commit)。",
+    "ruling_no_force_push": "**裁定:不 force-push 去『对齐』 stable-v2。** 本轮的 `git push origin d8ecde5e:refs/heads/stable-v2` 被 non-fast-forward 拒绝,这是**保护而不是障碍**。改写一个共享锚点 ref、换取零语义收益,正是本仓库反复吃亏的那个形状(参见同一个 promote 自己的档案:『corrected before the branch ref was created, so no ref was ever overwritten』)。登记事实,让不变量 2/3 每轮复核它。",
+    "naming_note": "d8ecde5e 的标题写的是 (stable-v1) —— 那个号 2026-08-19 已被 roamstale promote 占用;b2926aeb 在任何 ref 被创建前改名 stable-v2。**没有 ref 被覆盖过**,标题与 ref 名的不一致是历史不是缺陷,已写进登记表 note,不要『修』。",
+    "infra_landed": [
+      "iterations/stable_anchors.json —— 锚点登记表(name/ref/ref_sha/promote_commit/promoted_ids/state_json_key)",
+      "tools/agent/stable_anchors.py —— 三条不变量:EXISTS(ref 在 origin)/ PINNED(仍指 ref_sha)/ SHIPPED(ref_sha 与 promote_commit 之间 bots/+game/ 逐字节相同)。exit 0/2/3,浅克隆下不变量 3 报 UNCERTIFIABLE **而不是 ok**(与 unlanded_commits.py 的 REFUSED 同一条纪律)",
+      "tests/test_stable_anchors.py —— 三条不变量各正反两向 + 登记表自洽(state_json_key 必须真在 state.json 里、promote_commit 必须是 ref_sha 的祖先)。py 套件 30 -> 31 passed",
+      "tools/agent/routine_selfcheck.sh —— 接进开工自检(铁律 10)"
+    ],
+    "honest_bounds": "(1) 本工具**不核 promote 本身对不对** —— 三条件住在 state.json 的 promote 记录里,这里只核锚点指对了没有。(2) MOVED 是问题不是判决:一次合法重定位与一次误推在这里长得一样。(3) 不变量 3 在 depth-50 的 routine 容器里买不到(promote commit 在 graft point 以下),需 `git fetch --deepen=400 origin main`(实测 ~3s);本轮已 deepen 到 720 commit 后核过,读数 OK。(4) branch ref 可变,不变量 2 就是给这件事兜底的那一条。",
+    "next": "[harness] issue 登记 refs/tags/* 的 403 约束;若哪天凭据放开,tag 可照登记表的 ref_sha 补建,**指向不变**。今后每次 promote 除了改 gate/state.json,还要往 stable_anchors.json 加一行 —— 不加的话自检会说 NO ANCHORS/漏登记不会自己举手,这一点已写进章程 2b。",
+    "report": "iterations/reports/director/20260826T010000Z.md"
   }
 }
