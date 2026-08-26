@@ -206,18 +206,26 @@ check("try_install_lua51" in leg and leg.count("try_install_lua51") >= 2,
 _inst = re.search(r"try_install_lua51\(\)\s*\{(.*?)\n\}", leg, re.S)
 check(_inst is not None, "4d2: the install helper's body can be isolated")
 inst_body = _inst.group(1) if _inst else ""
-# Bounded, for the same reason the end-to-end case below carries a budget: a
-# hang in 开工自检 reads as "still working" and blocks every stream's first
-# command.  apt-get with a half-there network is exactly that risk.
-check("timeout " in inst_body,
-      "4e: the install is bounded by a timeout (an unbounded apt-get in the "
-      "one command every stream runs at 开工 is a hang, and a hang reads as "
-      "'still working')")
-check("apt-get" in inst_body and "command -v apt-get" in inst_body,
-      "4f: the install is guarded on apt-get actually existing")
-check("sudo -n" in inst_body,
-      "4f2: non-root only proceeds with passwordless sudo (a password prompt "
-      "would block the trigger forever)")
+
+# AMENDED 2026-08-26 (GH #205, option B).  These three used to read the install
+# body HERE, because the install body was here.  It moved to
+# tools/agent/ensure_lua_toolchain.sh so rule 6's other half (luacheck) buys the
+# same way instead of carrying a second copy.  The properties did not move --
+# they are asserted on the shared file by tests/test_ensure_lua_toolchain.py,
+# which is where a mutation to them now goes red.  What this file still owns is
+# the WIRING: the leg must delegate rather than quietly grow its own installer
+# back, and it must source by a path that survives an empty PATH (case 6).
+check("ensure_lua_toolchain.sh" in inst_body and "ensure_lua_tool lua5.1" in inst_body,
+      "4e: the leg delegates the buy to the shared "
+      "tools/agent/ensure_lua_toolchain.sh (one installer, two callers)")
+check(re.search(r"\.\s+\./tools/agent/ensure_lua_toolchain\.sh", inst_body) is not None,
+      "4e2: it is sourced by an explicit ./ path -- a bare name searches PATH, "
+      "and case 6 runs this leg with no PATH at all")
+check("timeout " not in inst_body and "apt-get" not in inst_body,
+      "4f: the leg does NOT keep its own second copy of the install (that is "
+      "what option B removed; the shared file is the one place)")
+check(os.path.exists(os.path.join(REPO, "tools", "agent", "ensure_lua_toolchain.sh")),
+      "4f2: the file it delegates to exists")
 check(re.search(r"if\s*!\s*command -v lua5\.1", leg) is not None,
       "4g: the install is attempted ONLY when lua5.1 is missing -- a "
       "selfcheck that apt-gets unconditionally taxes every trigger")

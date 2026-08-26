@@ -204,10 +204,24 @@ stay gated — the helper ships, the sharpened domain does not.
 ## Verification (run before every push)
 
 ```bash
-luacheck bots game --formatter plain   # static analysis; must be 0 warnings
+bash tools/agent/luacheck_gate.sh      # static half: buys luacheck, then runs it
 lua5.1 tests/run_tests.lua             # unit tests under mock Bot API (tests/)
 ```
 
+- **A fresh container has neither binary, and that is not a reason to skip
+  either half** (GH #205). The gate script installs what it needs first
+  (`tools/agent/ensure_lua_toolchain.sh`, bounded + guarded + silent on
+  failure); measured cold, end to end, **18s** — 5.5s to install, 13s to run,
+  0 warnings on trunk (2026-08-26). It exits **0 clean / 2 could-not-run /
+  3 warnings**, so a gate that did not run cannot be mistaken for one that
+  passed. `lua5.1` is bought the same way by 开工自检.
+  ⚠️ The apt package is **`lua-check`**, not `luacheck` — `apt-get install
+  luacheck` answers `Unable to locate package`, and *that* is why three
+  separate rounds recorded "luacheck isn't in apt" and skipped rule 6's first
+  door. `.github/workflows/ci.yml` has always had the right name.
+- Running `luacheck bots game --formatter plain` by hand is still fine — it is
+  the same command the gate runs. What the script adds is that it cannot be
+  passed by not running.
 - `.luacheckrc` whitelists all legit Bot API / engine globals. A new "accessing
   undefined variable" warning means a typo or a leaked local — fix the code;
   only extend `read_globals` for a genuinely new engine API.

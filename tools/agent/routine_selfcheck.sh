@@ -239,25 +239,29 @@ fi
 # checks is checking the mirror") wearing different clothes.
 printf '\n=== trunk health (fast Lua detectors) ===\n'
 
+# [director 20260826, GH #205] The install BODY moved out to
+# tools/agent/ensure_lua_toolchain.sh and this is now a two-line delegation.
+# Reason: rule 6's OTHER half (luacheck) needed the identical bounded/guarded/
+# silent-on-failure buy, and a second copy of it is a second thing to keep
+# right.  The properties that made it safe are asserted on the shared file now
+# (tests/test_ensure_lua_toolchain.py), not here.
+#
+# Sourced with a leading `./` so it resolves with NO PATH at all: case 6 of
+# tests/test_selfcheck_lua_leg.py runs this leg with an empty PATH, and a
+# bare-name `.` would search PATH and find nothing.  The wrapper cd's to the
+# repo root at the top, so the relative path is the repo's.
+#
+# The helper is still DEFINED AFTER this leg's banner printf, and that placement
+# is still load-bearing: the test isolates "the leg" as the source from that
+# printf onward and runs it.  Defined above the banner, the delegation would be
+# outside the isolated source and the end-to-end case would exercise nothing.
 try_install_lua51() {
-    command -v apt-get >/dev/null 2>&1 || return 1
-    local as_root=""
-    if [ "$(id -u)" != 0 ]; then
-        command -v sudo >/dev/null 2>&1 || return 1
-        sudo -n true >/dev/null 2>&1 || return 1
-        as_root="sudo"
-    fi
-    # No `apt-get update` on purpose: it is the expensive half (tens of seconds,
-    # and it is the half that hangs when the network is half-there), while the
-    # install off existing lists is the 4s that was measured.
-    timeout 120 $as_root apt-get install -y lua5.1 >/dev/null 2>&1 || return 1
-    command -v lua5.1 >/dev/null 2>&1
+    . ./tools/agent/ensure_lua_toolchain.sh 2>/dev/null || return 1
+    ensure_lua_tool lua5.1
 }
 
 if ! command -v lua5.1 >/dev/null 2>&1; then
-    if try_install_lua51; then
-        printf 'installed lua5.1 (it was missing; apt-get, bounded)\n'
-    fi
+    try_install_lua51 || true
 fi
 if command -v lua5.1 >/dev/null 2>&1; then
     # By tag, so a detector written tomorrow is covered without editing this

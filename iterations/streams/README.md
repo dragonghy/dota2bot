@@ -43,6 +43,12 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
 6. push 前:luacheck bots game --formatter plain 0 警告 + lua5.1
    tests/run_tests.lua 全绿。push 当前分支并同步 origin main;被拒先
    git pull --rebase 重试;仍失败只提交自己的报告/章程文件并在报告中记录。
+   **2026-08-26 补(GH #205):静态那半跑 `bash tools/agent/luacheck_gate.sh`** ——
+   它先**自己把 luacheck 装上**再跑(冷启实测 **18s** = 装 5.5s + 跑 13s,trunk 0 警告),
+   退出码 **0 干净 / 2 没跑成 / 3 有警告**。**「容器里没有 luacheck」从来不是跳过的理由**:
+   apt 包名是 **`lua-check`** 不是 `luacheck`,后者 `Unable to locate package`,
+   于是三轮独立地把它记成「不在 apt 里」,而**铁律 6 的第一条门在容器里一次都没开过**
+   (与 GH #171 的 `lua5.1` 同族,但那次丢的是读数,这次丢的是门)。
 7. 提交信息不含模型名。工作单元要小,干完就结束会话,不空转等待。
 8. **报告末尾必须带本次会话的 token 用量**(owner 2026-08-19 要求):
    收尾时跑 `python3 tools/agent/token_usage.py`,把最后那行

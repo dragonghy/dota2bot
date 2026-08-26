@@ -3996,5 +3996,19 @@
     "local": "tests/test_bbrespawn_double_subtract.lua **16 例全绿,9 变异 9 抓 + 控制干净**。真实帧 `tests/fixtures/f_080225_wk_revive.lua`(t=403.0,turbo)上的 **zuus L8 `alive=false`** —— 出厂表达式做减法用的那个钟 `DotaTime()` 是这一帧自己的 403.0。R 是**声明的替身且声明成会倒数的**(每格喂 getter `R-e`);`[W1]` 断言 dump 里没有 respawn 字段(mock 默认 0 + 全 fixture 归档零命中),恒定替身会把被测的误读本身建进测试里。",
     "gate_shape": "单合取,另一半是 `J.IsModeTurbo()` 这个模式谓词,不是另一个 soak id ⇒ 不属于 GH #207 / `pullcad` 的结构性零腿族;`[source]` 用例把「恰好一处解析、且解析成 turbo AND 'bbrespawn'」钉成断言。",
     "gates": "luacheck 0 警告 EXIT=0;python 32 passed 0 failed;Lua 切片 bbrespawn 16 / abilanc 13 / gate_claim 10 / smoke 3 / no_undefined 3 / jmz 3 / level_gate 15 / camp 128 / pull 139 / farm 29 / roam 27 / ancient 47 / tp 190 全部 0 失败。`bots/` 只动两个文件,零新 fixture 文件,零 AWS。"
+  },
+
+  "luacheck_gate_RULING_20260826T1250Z": {
+    "what": "GH #205 裁定 = 选项 (B):共用 tools/agent/ensure_lua_toolchain.sh,自检与新的 tools/agent/luacheck_gate.sh 两个调用者共用一份安装器。铁律 6 静态那半从此在容器里跑得起来。",
+    "why_not_A": "开工自检加第五条腿被否决:开工时还没改任何东西,luacheck 测的是「我改的东西干不干净」,与那个文件其余四条腿(测 trunk 红没红)不同轴。",
+    "why_not_C": "只写 README 被否决:本仓已记三次「散文不会举手」。",
+    "root_cause_layer_4": "包名。立案文引批测台说 luacheck「不在 apt 里」,上一轮总监据此量了 luarocks 两步(5s+7s)并信了。实测 apt 包名是 lua-check(5.5s);`apt-get install luacheck` 的 `Unable to locate package` 读起来正好就是「不在 apt 里」。前三层是没人试过装,这一层是试过了用错名字。ci.yml:15 一直写着对的那个;协同组 10:34Z 记下的。",
+    "measurements_20260826": "apt-get install -y lua-check 5.5s;luacheck bots game --formatter plain 13s / rc=0 / 0 警告(trunk 基线);门冷启端到端 18.0s。自检 Lua 腿冷启(apt-get remove lua5.1 后)12.3s。",
+    "landed": "tools/agent/ensure_lua_toolchain.sh(新)、tools/agent/luacheck_gate.sh(新,退出码 0/2/3)、routine_selfcheck.sh 的 try_install_lua51 收成两行委托、tests/test_ensure_lua_toolchain.py(新,29 检查)、tests/test_selfcheck_lua_leg.py 4e/4f 改钉接线(40 检查)、AGENTS.md + iterations/streams/README.md 铁律 6 措辞。",
+    "scope_narrow_on_purpose": "脚本叫 luacheck_gate.sh 不叫 rule6_gate.sh:动态那半(lua5.1 tests/run_tests.lua,~100min,GH #124)不在射程内。GH #198 §2 的教训。",
+    "verification": "变异 13 条全红(含立案文点名的三条:摘抬码/去 timeout/去守卫),控制组绿且脚本还原后逐字节相同;空 PATH 下买返回 1 且零输出、门 exit 2 + UNCERTIFIABLE;py 套件 33 → 34 passed 0 failed。",
+    "own_defect_registered": "第一版「失败路径不许说话」断言写成正则形状 printf.*||\\s*return 1,把 printf 放到 || 另一侧的变异活了下来。改成数数(函数体恰好一个 printf 且是成功行)+ 空 PATH 跑一遍。对形状做断言,漏的就是换个形状的同一件事。",
+    "baton": "GH #213(铁律 9 同轮交出):#205 解的是「跑不起来」,「没人跑」原样还在 —— 门仍靠人记得,push path 中间没有东西挡着。(甲) pre-push hook / (乙) 只靠 CI / (丙) 承认荣誉制并降级措辞,刻意不夹带。",
+    "cost": "零 AWS 调用、零支出;bots/ game/ 零改动。"
   }
 }
