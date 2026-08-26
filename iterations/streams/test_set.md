@@ -8296,7 +8296,7 @@ if J.IsModeTurbo() and J.IsSoakCandidate( 'bbshort'   ) then   -- jmz_func.lua:1
 根因是结构性的:**16 个 gate 测试文件共用同一个物理开关** `bots/Customize/soak_side.lua`
 (各自 `io.open(SIDE_PATH,'w')` 写、`os.remove` 删),两个进程同时跑就是在同一个开关上打架,
 **而失败方向是假红**。本轮**刻意不夹带修复**(工作单元要小,且它与本节的路由裁定无关),
-已开成独立 [harness] issue 并记进章程 backlog。**在它修好之前的纪律:gate 测试只在一个进程里跑。**
+已开成独立 [harness] **GH #229** 并记进章程 backlog §17。**在它修好之前的纪律:gate 测试只在一个进程里跑。**
 
 ### §BM.7 `pullthink` 入集(`strategy-18` / GH #186)——**本轮修好检测器之后,它是第一个被报出来的**
 
