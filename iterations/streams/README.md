@@ -43,6 +43,12 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
 6. push 前:luacheck bots game --formatter plain 0 警告 + lua5.1
    tests/run_tests.lua 全绿。push 当前分支并同步 origin main;被拒先
    git pull --rebase 重试;仍失败只提交自己的报告/章程文件并在报告中记录。
+   **⭐ 2026-08-26 再补(GH #213):静态那半现在自己跑** —— `.githooks/pre-push`
+   调同一个 gate,**红(exit 3)与没跑成(exit 2)都拒绝 push**;开工自检
+   (铁律 10)每个容器给它上膛(`tools/agent/arm_push_gate.sh` 写
+   `core.hooksPath`,本地配置不随 clone 走)。真跑不动的容器用
+   `RULE6_BYPASS=1 git push …`,它会打一行**「这是跳过不是通过」**,
+   **那一行要抄进你的报告**。动态那半(~100min,GH #124)**不在钩子里也不被它声称**。
    **2026-08-26 补(GH #205):静态那半跑 `bash tools/agent/luacheck_gate.sh`** ——
    它先**自己把 luacheck 装上**再跑(冷启实测 **18s** = 装 5.5s + 跑 13s,trunk 0 警告),
    退出码 **0 干净 / 2 没跑成 / 3 有警告**。**「容器里没有 luacheck」从来不是跳过的理由**:

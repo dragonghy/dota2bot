@@ -37,6 +37,13 @@ If rejected: `git pull --rebase origin main` then retry. The stop-hook will
 nudge unpushed commits. Owner 2026-08-26: this repo does not use PRs —
 Cursor integrator sessions use the same `push origin HEAD:main` path.
 
+**这条路径上现在有一道门(GH #213):** 开工自检把 `core.hooksPath` 指向
+`.githooks`,于是**上面两条 `git push` 各自跑一次铁律 6 的静态门**
+(`luacheck_gate.sh`,冷启 18s / 热 13s);红或没跑成都会**拒绝 push**。
+容器真跑不动时用 `RULE6_BYPASS=1 git push …`,并把它打出来的
+「SKIPPED, not passed」那行**写进报告**。此前这里**中间没有任何东西挡着**,
+那正是 #213 的立案句。
+
 ## Subagent dispatch
 
 Rare one-offs from a Claude Code interactive session: Agent tool →

@@ -48,7 +48,21 @@ unchecked() {
     note 2
 }
 
-printf '=== unlanded work (pushed to a branch, never landed) ===\n'
+# [director 20260826, GH #213] FIRST, because a leg that dies later must not
+# take the arming with it -- and because this leg is the cheap one: it runs
+# nothing, it sets one local git config key so that `git push` runs rule 6's
+# static gate (tools/agent/luacheck_gate.sh) instead of relying on the pusher
+# remembering.  The body lives in tools/agent/arm_push_gate.sh (bounded,
+# guarded, loud on failure); this stays a two-line delegation for the same
+# reason try_install_lua51 did -- one copy of the properties, asserted once.
+#
+# Not the fifth leg GH #205 rejected: that one would have RUN luacheck at 开工,
+# on an unchanged tree, answering a different question than rule 6 asks.  This
+# arms; the 13s still costs at the push, where it belongs.
+printf '=== iron rule 6 push gate (arm for this container) ===\n'
+bash tools/agent/arm_push_gate.sh || note 2
+
+printf '\n=== unlanded work (pushed to a branch, never landed) ===\n'
 python3 tools/agent/unlanded_commits.py --fetch
 note $?
 

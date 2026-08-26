@@ -220,6 +220,16 @@ lua5.1 tests/run_tests.lua             # unit tests under mock Bot API (tests/)
   luacheck` answers `Unable to locate package`, and *that* is why three
   separate rounds recorded "luacheck isn't in apt" and skipped rule 6's first
   door. `.github/workflows/ci.yml` has always had the right name.
+- **The static half now runs itself, at `git push`** (GH #213, 2026-08-26).
+  `.githooks/pre-push` calls that same gate and **refuses the push** on red
+  (exit 3) *and* on could-not-run (exit 2). 开工自检 arms it per container
+  (`tools/agent/arm_push_gate.sh` sets `core.hooksPath` — local config does not
+  travel with a clone), so a fresh container is covered by the one command
+  every stream already runs. Escape hatch for a container where the gate truly
+  cannot run: `RULE6_BYPASS=1 git push …` — it prints a line calling itself a
+  **skip, not a pass**, and you are expected to quote that line in your report.
+  The dynamic half (`lua5.1 tests/run_tests.lua`, ~100 min, GH #124) is **not**
+  in the hook and is not claimed by it.
 - Running `luacheck bots game --formatter plain` by hand is still fine — it is
   the same command the gate runs. What the script adds is that it cannot be
   passed by not running.

@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Iron rule 6's static half, moved from prose into the push itself.
+#
+# WHY (GH #213, director ruling 2026-08-26T19:xxZ, option 甲).
+#
+# GH #205 made the gate RUNNABLE (`tools/agent/luacheck_gate.sh`: buys
+# `lua-check` in 5.5s, runs in 13s, exits 0/2/3).  It did not make it RUN.
+# Rule 6 stayed an obligation written in prose, and this repo has measured four
+# times what prose costs:
+#
+#   GH #113  detector exists, nobody runs it            -> 开工自检 (rule 10)
+#   GH #171  selfcheck's Lua leg exists, cannot run     -> buy lua5.1 (4s)
+#   GH #205  rule 6's static gate exists, cannot run    -> buy lua-check (5.5s)
+#   GH #213  rule 6's static gate runs, nobody runs it  -> THIS FILE
+#
+# The push path in .claude/rules/claude-code.md had nothing between the author
+# and `origin/main`.  Now it has this.  A gate that blocks is the difference
+# between an omission being SILENT and being an ACT: `RULE6_BYPASS=1` still gets
+# you through a dead container, but you have to type it, and it prints a line
+# you are expected to quote in your report.  That is the whole design -- not
+# "make pushing hard", but "make skipping visible".
+#
+# SCOPE IS DELIBERATELY NARROW.  The dynamic half (`lua5.1 tests/run_tests.lua`,
+# ~100 min, GH #124) is NOT here and is not claimed here; a wrapper whose name
+# or banner claims more than it asserts is a trap this repo has already paid for
+# (GH #198 §2).  This hook says exactly "the static half ran".
+#
+# Armed per container by tools/agent/arm_push_gate.sh, which 开工自检 calls --
+# `core.hooksPath` is local config and does NOT travel with a clone, so a fresh
+# container has it disarmed until the one command every stream already runs
+# arms it.
+#
+# Exit 0 = push proceeds.  Exit 1 = push refused.
+set -u
+
+# git runs hooks from the top level of the working tree; the `cd` is belt and
+# braces so the hook behaves the same when invoked by hand or by a test.
+cd "$(dirname "$0")/.." 2>/dev/null || true
+
+if [ "${RULE6_BYPASS:-}" = "1" ]; then
+    printf 'RULE6_BYPASS=1 -- the static gate was SKIPPED, not passed.\n'
+    printf '  This push carries an UNCHECKED iron rule 6 static half. Say so in your report.\n'
+    exit 0
+fi
+
+bash tools/agent/luacheck_gate.sh
+rc=$?
+
+case "$rc" in
+    0) exit 0 ;;
+    3)
+        printf 'PUSH REFUSED -- iron rule 6 static half is RED (see the warnings above).\n'
+        printf '  Fix them, or push anyway with:  RULE6_BYPASS=1 git push ...\n'
+        exit 1
+        ;;
+    *)
+        # Uncertifiable (exit 2) refuses too, and that is the load-bearing
+        # choice in this file.  "Could not run" reading as "allowed" is exactly
+        # how GH #171's SKIP and GH #205's `Unable to locate package` both
+        # became established facts: each was one unremarkable line with no
+        # effect on any machine-readable channel.  Refusing puts the decision in
+        # a human's hands; the bypass keeps it from stranding work (GH #113
+        # measured what unlanded work costs).
+        printf 'PUSH REFUSED -- iron rule 6 static half could NOT RUN (gate exit %d).\n' "$rc"
+        printf '  That is not a pass. Buy it (apt-get install -y lua-check) or push with:\n'
+        printf '    RULE6_BYPASS=1 git push ...   (and record the bypass in your report)\n'
+        exit 1
+        ;;
+esac
