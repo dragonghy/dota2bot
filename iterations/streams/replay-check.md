@@ -4547,3 +4547,66 @@
     打野反证 fixture(**二十四轮**);`hero-1` 的 153 局 WK 语料(**32 轮**);`l5combo` 的 (a)(**第四十八轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十五轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260826T070906Z.md`
+- **2026-08-26T10:00Z(第七十五次触发)**:接**批测台 09:20Z §④ 的棒(GH #207)** ——
+  `zusstatic` 被判为「结构性零腿」,本组用帧去核。**宽扫 121/121 局**(W12 全语料:
+  192 份 archive → 144 份 `.dem` → 跳过 23 局裸 sha 暖场 ⇒ 有效 121,**帧通道覆盖率 100%**)
+  + **深查 7 局逐帧**(四种子 × 两条腿全覆盖)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **GH #207 的 STRUCTURAL-ZERO 登记「未成立」,而它漏掉的是一个算术不是一个细节**:
+    那条判定把「armed 分支**读到**的值是 0」当成了「这条腿**改变**的东西是 0」,
+    而 `X.GetStaticFieldBonus` 的 gate-off 出口返回的**不是 0,是 0.09**。
+    ⇒ **是三个世界不是两个**,由同一个引擎事实(`sAbilityList[5]` 解析成什么)分开:
+    **W-nil**(nil ⇒ W12 树无护栏,`nil:IsTrained()` 在 `SkillsComplement` 里 raise ⇒ 两腿一起哑)、
+    **W-untrained**(两腿都 0 = 真零腿,#207 要登记的那格)、
+    **W-trained**(armed 0 vs baseline **0.09** = **活腿**,且方向单侧:`+hp*bonus ≥ 0` ⇒ armed 只会更少开火)。
+    英雄组 `3d00e262` 的 2^3 枚举答的是「index 5 是不是 Static Field」(0/8),**不是「是不是 nil」**。
+  - ⭐⭐ **W-nil 当场出局,带余量**:**哑局 0/121**,每局施法 min **85** / 中位 133;
+    **121/121 局有大招**,合计 **646** 次。`:389` 是那条可能 raise 的赋值,而 `:396` 的
+    `castRDesire = X.ConsiderR()` 是**紧接着的下一条语句** ⇒ **一次大招 = 那一 tick 没 raise**。
+    第二证人 `zuus_cloud`(`:470`,更靠下 74 行)**42/121 局**。
+    ⇒ **句柄非 nil**,英雄组 8 个世界里「index 5 = nil」那 4 个出局;
+    **顺带撤掉批测台 §⑤ 的一半**:「旧树为 nil 时会 raise」在 W12 上**实测 0/121 未发生**
+    (字节确实被 `3d00e262` 动了,那条登记不撤;但它在本语料上**没有可观测行为面**)。
+    顺带第二件:`zuus_static_field` **0/121** 给 `test_zuus_static_field_pct.lua` §LIMIT
+    的那条(此前只在 fixture 上量过)补上了 121 局的分母。
+  - ⭐ **消费方 ①(`X.ConsiderW` 远程兵斩杀)= DOMAIN-TOO-SMALL**:3,979 次 bolt 施法里,
+    打到远程兵的伤害事件 **10 次**(armed 3 / baseline 7,1 s 内转化 5 次)= **每局 0.08 次**。
+    `X.ConsiderW` 在到那一支之前有两条 `return`。**不出读数,也不许记成「测过且中性」。**
+  - ⚠️⭐ **本轮工具坑(发表前抓到,已写进工具 docstring + selfcheck 六条)**:
+    **ABILITY 事件的 `target=='dota_unknown'` 不等于「这一发打的是兵」,等于「dumper 没解析出句柄」。**
+    第一版据此读出 **4/4 种子 armed<baseline**、**看着和大招通道一样漂亮 —— 那是仪器伪影**。
+    承重帧 `031246_slot7`:28 次 bolt 有 21 次读 `dota_unknown`,与其后 1.2 s 的 bolt DAMAGE 对起来
+    **除 1 次外全部落在敌方英雄**;全语料 3,979 次施法里 **3,060 次**未解析。
+    **修法:这一支改从 DAMAGE 流读**(兵在 DAMAGE 里带名字)。
+  - ⭐ **消费方 ②(`X.ConsiderR` 大招)方向 4/4 同号,但归因不到本 id**:大招 /10 分钟
+    888 **2.107 vs 2.212**、895 **1.866 vs 1.984**、896 **1.858 vs 1.932**、906 **2.150 vs 2.456**
+    (armed vs baseline),源码给的是**单侧**预测 ⇒ 单侧符号检验 p=**0.0625**,**提示不是判决**。
+    **物理侧混淆被 906 挡掉**(它的 Zeus 在 dire,映射整个反过来,符号照旧);
+    **特异性对照** arc / jump 两个非消费方 **2/4、3/4 分号,没有方向**。
+    **但 W12 是 36-id 全集波** ⇒ 「Zeus 在 armed 腿」的局里他 4 个队友也全 armed
+    ⇒ **腿差是 36 个 id 的合成读数**,**本组不写成 `zusstatic` 的效应量**,只登记为波次级。
+    (08-19 那条教训的另一面:那次是把双侧 SILENT 记成两个已测 id,这次的诱惑是把 bundle 效应记成单 id 效应。)
+    想切开混淆的那一刀切了**不锋利**:绕魔晶授予(89/121 局,中位 t=696)的 DiD
+    armed −0.157 / baseline −0.025(腿差 +0.179 → +0.312),**方向对但授予前腿差就不是 0**
+    且与 DiD 同阶 ⇒ **探索性读数,不作结论**。
+  - **深查 7 局**:每局最早一次大招 t=**208.5 / 303.3 / 307.2 / 368.7 / 437.9 / 493.4 / 558.4**,
+    **两条腿都在**;每一帧技能表都不含 `zuus_static_field`
+    ⇒ **离线看不到 `sAbilityList[5]` 是谁**,能力边界写在明处,**不假装买到 W-untrained/W-trained 的裁决**。
+  - **交付**:新工具 `zusstatic_domain.py`(`--selfcheck` **32 PASS / 0 FAIL**;常数从 Lua 读不重打;
+    `import entities` 没再抄一份);`tests/test_detector_source_constants.py` **新增 4 条**
+    (0.09 未漂、`damage_health_pct` 未改名、**`zusstatic` 的 gate 不许写成与另一个 id 的合取**、
+    以及 **`X.ConsiderR` 的 dispatch 必须仍在 `:389` 之下** —— 否则本轮 §2 的论证会静默过期)。
+  - **交棒**:**GH #207 追评**(三世界表 + 全文读数;建议 **(A)** 原子 arm 或 **(B)** 出集,
+    **(C) 会把一个未定的二选一写成已定的一**);**GH #173 追评**((a) 现状 + 两个消费方的域)。
+    **球在总监**:#207 三选一。**本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 luacheck 一条无适用对象(容器无 luacheck,**不声称跑过**);
+    本轮未改任何 Lua(**不声称跑绿过全量**,GH #124);`tests/run_py_tests.sh` **32 passed / 0 failed**。
+    **AWS**:S3 **只读**(144 个 `.dem` 流式下载即弃),**未启动/未终止任何实例**,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **W13 首检**(本轮开工时尚无语料);(2) ⭐ `camp_prelit` 列(**第三轮**);
+    (3) ⭐ 占用度量按 idx 去重(**第二轮**);(4) ⭐ `tpdefend_events` 结果侧列(**#191 落地后,第八轮**);
+    (5) ⭐ 幻象余量做进 `sweep_run.sh`(**第五轮**);(6) ⭐ `entities.py` 推广(**第六轮**);
+    (7) ⭐ 12:41Z §6.1 那 23 帧做 fixture(**第八轮**);⭐ `pulldrag` 的 connect 侧;
+    ⭐ 第二种视野证人(**连续第十二轮顺延**);ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`
+    (**连续第十九轮登记**);`stayfield` 第一失败子句;打野反证 fixture(**二十五轮**);
+    `hero-1` 的 153 局 WK 语料(**33 轮**);`l5combo` 的 (a)(**第四十九轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十六轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260826T100000Z.md`

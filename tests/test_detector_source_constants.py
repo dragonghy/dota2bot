@@ -757,6 +757,35 @@ check('campdanger has exactly one gate site naming exactly one candidate',
       len(CD_GATE) == 1 and CD_GATE[0].count('IsSoakCandidate') == 1,
       str(CD_GATE))
 
+import zusstatic_domain as zsd                     # noqa: E402
+
+# replay-check 2026-08-26, GH #207.  The whole reading turns on the two legs
+# disagreeing by 0.09 - 0, so the tool reads BOTH ends out of the Lua rather
+# than retyping either.  If the gate-off constant or the KV key ever moves,
+# the three-world argument in the tool's docstring is stale and must go red.
+check('zusstatic gate-off constant is still the hardcoded 0.09',
+      zsd.shipped_baseline_bonus() == 0.09, str(zsd.shipped_baseline_bonus()))
+check('the armed branch still reads damage_health_pct off its parameter',
+      zsd.armed_reads_key() == 'damage_health_pct', zsd.armed_reads_key())
+ZUUS_SRC = open(os.path.join(ROOT, 'bots', 'BotLib', 'hero_zuus.lua'),
+                encoding='utf-8').read()
+# The `pullcad` lesson: zusstatic's gate must not name a second id.  The
+# dependency on `zusbind` is registered in state.json and GH #207 for the
+# director's ARMING decision -- coding it as a conjunction would freeze the
+# gate FALSE the day zusbind is promoted.
+ZS_GATE = [l for l in ZUUS_SRC.splitlines()
+           if "IsSoakCandidate( 'zusstatic' )" in l
+           and not l.strip().startswith('--')]
+check('zusstatic has exactly one gate site naming exactly one candidate',
+      len(ZS_GATE) == 1 and ZS_GATE[0].count('IsSoakCandidate') == 1,
+      str(ZS_GATE))
+# The witness the corpus reading leans on: X.ConsiderR must still be
+# dispatched BELOW the assignment that can raise, or "Zeus ulted" stops being
+# proof that the handle resolved.
+check('the ConsiderR dispatch still sits below the GetStaticFieldBonus call',
+      ZUUS_SRC.index('castRDesire = X.ConsiderR()')
+      > ZUUS_SRC.index('abilityASBonus = X.GetStaticFieldBonus('))
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
