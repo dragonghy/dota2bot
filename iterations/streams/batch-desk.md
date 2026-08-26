@@ -4324,6 +4324,62 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   发波前置 `git ls-remote origin main` 核树 + 接线门 + **smoke 用 `lua5.1 tests/run_tests.lua smoke_load`**(#200);
   收割下载 `--include` 必须带 `*.demclaim.json`。
   详见 `iterations/reports/batch-desk/20260826T061500Z.md`。
+- 2026-08-26T09:20Z:**W13 已发(界后第四波)**,外加**本轮的实质产出 —— 发波前置查出
+  `zusstatic` 是一条结构性零腿(GH #207,新)**。
+  **⭐ 一、`zusstatic` 空转,而接线门按构造看不见。** `3d00e262`(hero 05:02Z)在
+  `hero_zuus.lua` 的 `X.GetBoundAbility` 文档里**逐字写着**「`zusstatic` armed without
+  `zusbind` armed measures the wrong ability's missing key, i.e. 0」——`sAbilityList` 是
+  `GetAbilityList` **压缩**出来的数组(下标 N = walk 接受的第 N 个技能),三个可选技能的
+  **2^3 = 8 个世界里 index 5 是 Static Field 的世界数为 0**,而 `sAbilityList[5]` 的唯一
+  消费方 `X.GetStaticFieldBonus` 正是 `zusstatic` 的落点(`hero_zuus.lua:442`)。
+  **`zusstatic` 在 armed 36 串里(§BF 08-25 入集),`zusbind` 不在** ⇒ 它在 W11/W12/W13
+  三波里都是 silent 0。**接线门 exit 0 + `all 36 armed ids wired` 照旧打出来**,因为它查的是
+  「调用点存在」不是「读到的是它以为的那个东西」——**这是 `pullcad` 那条教训的同族第二例**
+  (上一例死因「被 promote 的 id 冻结了合取项」,这一例死因「**合取项从未入集**」)。
+  载体侧**不是**瓶颈(`zuus` 载体门 FULL 4/4,与 W8-W12 逐字复现)⇒ **语料一直有,读数一直是 0**。
+  三选一交总监(#207):(A) `zusbind`+`zusstatic` 作一个原子一起 arm(同 `stable-v2` 先例,
+  本台推荐,零 AWS 增量)/ (B) `zusstatic` 出集 36→35 / (C) 维持但明写 STRUCTURAL-ZERO。
+  **未裁前的执行方式(预登记):W13 的 `zusstatic` 腿登记为 STRUCTURAL-ZERO,不出读数、
+  不计入 bundle 的「已测 id 数」。**
+  **二、W13 参数**:树 `a883d7c666fb84504c5565f4d7d6a90fce4f42fb`(`git ls-remote` 真 tip,
+  与本地 HEAD 逐位相等);armed = `test_set.md` 第 2 行逐字 **320 字节 / 36 id**(与 W11/W12 同串);
+  4 台 × 1 种子(888/895/896/906);`--slots 16 --rec-slots 12 --hours 2 --on-demand --games 12`;
+  发波 09:13:01/03/06/08Z;`soak-run` 标签 **4 值两两不同**、恰 4 台、`InstanceLifecycle` 全 `None`;
+  尾 token `536dc6`/`11effb`/`b97d8b`/`cec811`。三闸:**(i) PASS 实测超出解锁时刻 109 秒**
+  (先打钟点再比 `date -u`,W11 早发 21 秒那次的修法照做);(ii) PASS;(iii) PASS。
+  预算闸未拒发,`--dry-run` 先行逐项核对无误。`--rec-slots 12` / `--on-demand` 均为未裁前的保守默认。
+  **三、树漂移核查(`14004d85` → `a883d7c6`)**:浅 clone 纪律照做(先 `fetch --depth 1` 再 `git log`,
+  **exit 0** 不是空输出)。4 个 commit:`basesiege` 门内且 gate-off **逐字节等于出厂**、
+  `abilanc`/`cmclone` gated 未入集 ⇒ 三条惰性;但 **`3d00e262` 新增的 nil 保护是 ungated**
+  ⇒ **稳定腿不逐字节不变**,**登记一条跨波口径断点:W13 vs W12 在 Zeus 出场的局上不完全可比**
+  (波内腿间差不受影响,W13 自己的读数照常可用)。这也是 (ii) 的实质内容,不是凑数。
+  **⭐ 四、围栏算术 + 2.b(iii) 配套义务本轮触发并照办。** `budgets` **$41.182,刷新时刻
+  `2026-08-26T02:13:56Z` 与上一轮逐位相同(它 7 小时没前进)**,而自动 $0.01 CE 复核读到
+  **$43.4628(高出 $2.28)**——**上一轮两者还「逐位一致」** ⇒ **取大者(CE)作围栏基数**。
+  + W11(窗外 3 分钟,照样计入)/W12/W13 各 $2.15 = **围栏值 $49.91 ≤ $60 ⇒ (iii) 满足**;
+  按已登记上界 $2.36/波则 **$50.54**。两个读数骑在 $50 刀口两侧 ⇒ **本台按「跨了」执行**,
+  报告 §2 已写下那行解释(义务的全部目的是让 owner 的告警邮件永远有对得上的书面解释)。
+  **上一轮「下一波落 ~$49.7 仍不跨」的预告被 CE 的 $2.28 推翻**。未用被禁用的对账手法。
+  **五、收割零**(W12 之后无新 verdict/soak 对象;W12 上一轮已全量重算归档);
+  **W13 收割棒交下一轮**(约 10:1x-10:3xZ 落盘)。
+  **六、泄漏检查两次**:开工 running/pending 段空;收尾 `--leak-only` 恰 4 台全是 W13 刚发的,
+  无游离实例,常驻只剩 AMI + 快照。
+  **交棒**:① 总监 —— **GH #207(新,最重要)**,不裁则 W13 收割按 STRUCTURAL-ZERO 登记且下一波再空转一次;
+  ② 总监 —— **GH #204(第二轮)**,W13 会给出第三个侧偏样本(W11 +10.58 / W12 +70.04 差 6.6 倍);
+  ③ 总监 —— `strategy-20`/`abilanc` **本轮该裁**(自检 §BB.4 RIDESHARE 点名);
+  ④ 总监 —— 章程 §2 界后单价改区间 $1.82-$2.36(第六轮),**本轮 CE/budgets 分叉 $2.28 使它更急:
+  围栏基数取哪个源现在会改变 $50 刀口的判定**;⑤ 总监 —— #75(第三轮)/ #158(第七轮)/
+  #180 互锁(第六轮)/ #171 SKIP(第四轮)/ #200(第三轮)/ #181 / 载体门 PARTIAL 惰性种子(第十一轮)/
+  `stable-v*` tag(第八轮)/ `campdanger`(第三轮);⑥ 录像组 —— `campfarm` 端到端核验(GH #194,
+  W13 又一份同构语料、帧通道 12/16,可与 W11/W12 合并取样)、W6 解锁(第十二轮)、`tpreach` 的 (a)、
+  W8 `towerfear` 五判据(第八轮);⑦ **下一轮本台 —— 收割 W13**(`recover_verdict.py` 全量重算,
+  下载 `--include` **必须带 `*.demclaim.json`**),**6h 闸解锁 `2026-08-26T15:13:08Z`**,
+  开工先打钟点再跟 `date -u` 比,围栏基数按本轮先例取 budgets/CE 的大者,**下一波必然实打实跨 $50**;
+  ⑧ **归档扫描欠账(零 AWS,本轮未动)** —— queue 里 `ROUTED_ARCHIVE_SCAN` 已放行仍 pending 的有
+  **hero-1/-2/-3/-4/-7/-10/-11/-12/-13/-14/-16/-17/-18 共 13 条**,最早的 hero-10/-11 自 08-23 挂了 3 天,
+  卡的只是有人去跑;**下一次「归档扫描轮」应优先清这批**(按 §BF.2 合并同类项:Zeus 帧 / Axe 帧 /
+  Lion·CM 帧 / power_treads 帧)。
+  详见 `iterations/reports/batch-desk/20260826T092000Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
