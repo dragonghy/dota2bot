@@ -259,6 +259,21 @@ function X.ConsiderMalefice()
     end
 
 	local nCastRange = J.GetProperCastRange(false, bot, Malefice:GetCastRange())
+    -- ⚠️ `'value'` IS NOT A KEY OF THIS ABILITY -- both reads below are silent
+    -- 0s, so nStunInstances is 0 and nDamage (per-instance * instances) is 0.
+    -- enigma_malefice's entries are tick_rate / stun_duration /
+    -- shard_bonus_stun_duration_tooltip / damage / stun_instances /
+    -- eidolon_spawns_per_tick.  Axis ABILVALUE, GH #228 §6.3; census:
+    -- tools/agent/ability_value_key_census.py.
+    -- The two reads need OPPOSITE repairs, which is why they are annotated as
+    -- two things and not one:
+    --   * the first wants `stun_instances` (3/3/3/3);
+    --   * the second wants nothing -- it is the talent term of GH #228's
+    --     harmless kind.  `stun_instances` already folds
+    --     special_bonus_unique_enigma_2 ("+4") for a caster who trained it, so
+    --     the engine has already added it and repairing this line would
+    --     DOUBLE-COUNT.  Its honest repair is deletion.
+    -- Both are behaviour changes on a non-focus hero: registered, not done here.
     local nStunInstances = Malefice:GetSpecialValueInt('value')
 
     if MaleficeAdditionalInstanceTalent:IsTrained()
@@ -554,6 +569,17 @@ function X.ConsiderMidnightPulse()
     local nCastRange = J.GetProperCastRange(false, bot, MidnightPulse:GetCastRange())
     local nRadius = MidnightPulse:GetSpecialValueInt('radius')
 
+    -- ⚠️ Two independent axes land on this one branch, and both say it decides
+    -- nothing.  (1) `'value'` is not a key of enigma_midnight_pulse (entries:
+    -- radius / base_damage / damage_percent / duration / tick_rate), so the
+    -- term is a silent 0 -- axis ABILVALUE, GH #228 §6.3.  (2) The talent it is
+    -- gated on is misnamed: `special_bonus_unique_enigma_6` modifies
+    -- enigma_black_hole/damage ("+50"); the one that widens this radius is
+    -- `special_bonus_unique_enigma_9` ("+200") -- GH #223 §6.3.
+    -- The honest repair is DELETION, not a new key: `radius` above already
+    -- carries the trained talent (the engine folds the sub-key), so pointing
+    -- this term at a handle that answers would double-count.  Non-focus hero,
+    -- so it is registered rather than changed here.
     if MidnightPulseRadiusTalent:IsTrained()
     then
         nRadius = nRadius + MidnightPulse:GetSpecialValueInt('value')
@@ -641,6 +667,11 @@ function X.ConsiderBlackHole()
 
 	local nCastRange = J.GetProperCastRange(false, bot, BlackHole:GetCastRange())
     local nRadius = BlackHole:GetSpecialValueInt('radius')
+    -- ⚠️ `'value'` is not a key of enigma_black_hole -- silent 0, so nDamage is
+    -- 0.  The entry it wants is plainly `damage` (100/150/200), which sits
+    -- right beside `radius` and `duration`, both of which this block reads
+    -- correctly.  Axis ABILVALUE, GH #228 §6.3; census:
+    -- tools/agent/ability_value_key_census.py.  Non-focus hero: registered.
     local nDamage = BlackHole:GetSpecialValueInt('value')
     local nDuration = BlackHole:GetSpecialValueInt('duration')
 

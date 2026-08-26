@@ -429,6 +429,14 @@ function X.ConsiderSproink()
 
     local nAllyHeroes = J.GetNearbyHeroes(bot,nAttackRange + 100, false, BOT_MODE_NONE)
     local nEnemyHeroes = J.GetNearbyHeroes(bot,nAttackRange, true, BOT_MODE_NONE)
+    -- ⚠️ `'value'` is not a key of enchantress_impetus -- silent 0, so the
+    -- multiplier is 0 and the CanKillTarget below is handed 0 damage at every
+    -- distance.  Entries: distance_damage_pct / distance_cap /
+    -- illusion_damage_multiplier; the one wanted is `distance_damage_pct`
+    -- (5/10/15/20) -- and the `/ 100` here is already the right shape for it,
+    -- so this is the one site on the axis whose repair is a single key swap.
+    -- Axis ABILVALUE, GH #228 §6.3; census:
+    -- tools/agent/ability_value_key_census.py.  Non-focus hero: registered.
     local nImpetusMul = Impetus:GetSpecialValueFloat('value') / 100
     local botTarget = J.GetProperTarget(bot)
 

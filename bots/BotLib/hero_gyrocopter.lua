@@ -128,6 +128,14 @@ function X.ConsiderRocketBarrage()
     end
 
 	local nRadius = RocketBarrage:GetSpecialValueInt('radius')
+    -- ⚠️ `'value'` is not a key of gyrocopter_rocket_barrage -- silent 0, so the
+    -- CanKillTarget below is handed `0 * rockets_per_second * 3` and the kill
+    -- branch can never fire.  Entries: radius / rockets_per_second /
+    -- rocket_interval / barrage_duration / rocket_damage; the one wanted is
+    -- `rocket_damage` (8/14/20/26 per rocket).  Note the neighbouring
+    -- `rockets_per_second` read on the next line is correct -- one key of the
+    -- pair was right and the other never existed.  Axis ABILVALUE, GH #228 §6.3;
+    -- census: tools/agent/ability_value_key_census.py.  Non-focus: registered.
     local nDamage = RocketBarrage:GetSpecialValueInt('value')
     local nRocketsPerSecond = RocketBarrage:GetSpecialValueInt('rockets_per_second')
     local nDuration = 3

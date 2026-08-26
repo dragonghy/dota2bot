@@ -219,6 +219,16 @@ function X.ConsiderAvalanche()
 
 	local nCastRange = J.GetProperCastRange(false, bot, Avalanche:GetCastRange())
 	local nRadius = Avalanche:GetSpecialValueInt('radius')
+	-- ⚠️ `'value'` IS NOT A KEY OF THIS ABILITY -- this read is a silent 0, so
+	-- nDamage is 0 and the CanKillTarget finisher branch below cannot fire.
+	-- tiny_avalanche's AbilityValues entries are AbilityCastRange / radius /
+	-- tick_interval / total_duration / tick_count / stun_duration /
+	-- projectile_speed / avalanche_damage / AbilityCooldown; `value` is the
+	-- INNER key of the long-form entries, not an entry.  Intended key:
+	-- `avalanche_damage` (90/180/270/360).  Axis ABILVALUE, GH #228 §6.3 --
+	-- census: tools/agent/ability_value_key_census.py.  Repairing this is a
+	-- behaviour change on a non-focus hero and is NOT annotation work: it needs
+	-- a gate and a real frame, so it is registered, not done here.
 	local nDamage = Avalanche:GetSpecialValueInt('value') * (1 + bot:GetSpellAmp())
 	local nManaCost = Avalanche:GetManaCost()
 	local botTarget = J.GetProperTarget(bot)

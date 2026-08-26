@@ -387,6 +387,22 @@ function X.ConsiderDemonZeal()
 		return BOT_ACTION_DESIRE_NONE
 	end
 
+    -- ⚠️ THE ONE SITE ON THIS AXIS THAT FAILS IN THE SPENDING DIRECTION, AND
+    -- THE ONE WHERE THE OBVIOUS REPAIR IS ALSO WRONG.
+    -- `'value'` is not a key of terrorblade_demon_zeal (entries:
+    -- berserk_bonus_attack_speed / berserk_bonus_movement_speed / duration /
+    -- hp_regen / radius / health_cost_pct / reflection_pct), so this is a
+    -- silent 0: nHealthCost is 0, and the guard below --
+    -- `((hp - nHealthCost) / maxhp) > 0.5` -- reads the cast as free and binds
+    -- on nothing.  Axis ABILVALUE, GH #228 §6.3; census:
+    -- tools/agent/ability_value_key_census.py.
+    -- ⭐ The key it wants is `health_cost_pct`, whose KV value is 20:
+    -- twenty PERCENT, not a fraction.
+    -- This line multiplies by current health
+    -- directly, so swapping the key ALONE turns the cost from 0 into 20x the
+    -- hero's health and flips the guard from always-true to never-true.  The
+    -- repair is two edits (`health_cost_pct` AND `/ 100`), never one.
+    -- Non-focus hero, so it is registered rather than changed here.
     local nHealthCost = bot:GetHealth() * DemonZeal:GetSpecialValueFloat('value')
     local nRadius = bot:GetAttackRange() + Metamorphosis:GetSpecialValueInt('bonus_range')
 	local botTarget = J.GetProperTarget(bot)
