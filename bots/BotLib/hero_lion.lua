@@ -1198,6 +1198,18 @@ end
 
 function X.GetAbilityRDamageBonus()
 
+	-- FACT, 2026-08-26 (GH #228, axis TALENTVALUE).  nTalantDamage is 0 and always has
+	-- been: special_bonus_unique_lion_8 is a hero-UNIQUE talent, and unique talents own
+	-- no KV block anywhere, so the handle answers no key -- `value` included.  The +20
+	-- lives inside the ability the next line already reads:
+	--     lion_finger_of_death / "damage_per_kill" { "value" "25"
+	--                                                "special_bonus_unique_lion_8" "+20" }
+	-- which is where the engine folds it for a caster who trained it.  So nDamageBonus
+	-- is ALREADY correct and repointing this term would double-count -- the same fold
+	-- the neighbouring GH #162 repair (`splash_radius`, an entry with no base value at
+	-- all) depends on to be worth anything.  Do not "fix" it; 21 sites tree-wide share
+	-- the shape (tools/agent/talent_value_read_census.py,
+	-- tests/test_talent_value_read_anchor.lua).
 	local nTalantDamage = talent5:IsTrained() and talent5:GetSpecialValueInt( 'value' ) or 0
 	local nDamageBonus = abilityR:GetSpecialValueInt( 'damage_per_kill' ) + nTalantDamage
 	local sModifierName = "modifier_lion_finger_of_death_kill_counter"

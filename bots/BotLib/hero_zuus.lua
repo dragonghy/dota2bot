@@ -42,11 +42,18 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- in it is ult RANK 1, where the +75 given up is +27% of a 275-damage ult -- the
 -- larger single payout, and we are giving it up on frequency grounds.  Arc casts per
 -- game were NOT counted: 20% per cast pays back a 106-mana shortfall only after ~5
--- casts between top-ups.  And note the file's ult kill-check reads `talent5` (line
--- ~719) for "the ult damage talent" -- that handle is the t20 ARC damage talent
--- today and its special value is not named 'value', so nothing in this file ever saw
--- the +75 anyway; that is recorded, not relied on, because whether the engine folds
--- talent bonuses into GetSpecialValueInt cannot be settled offline.
+-- casts between top-ups.  And note X.ConsiderR's kill-check reads `talent5` for "the
+-- ult damage talent" -- that handle is the t20 ARC damage talent today, so nothing in
+-- this file ever saw the +75 anyway.
+--   CORRECTED 2026-08-26 (GH #228): the rest of that sentence used to read "and its
+-- special value is not named 'value'", which is the same wrong reason the call site
+-- itself carried.  A hero-unique talent has NO KV block at all, so it answers no key
+-- whatsoever; and because the bonus instead lives inside the modified ability's own
+-- entry -- which is where the engine folds it -- `abilityR:GetSpecialValueInt('damage')`
+-- already carries whatever ult-damage talent the caster trained.  The open question is
+-- therefore NOT "does the engine fold" (the KV has nowhere else to put the bonus, and
+-- GH #162's landed `lionsplash` already bets on the fold); it is only which talent row
+-- this build should take, argued above on reachability.  See the note at the call site.
 local tTalentTreeList = {
 						['t25'] = {0, 10},
 						['t20'] = {0, 10},
@@ -935,15 +942,36 @@ function X.ConsiderR()
 	local manaCost = abilityR:GetManaCost()
 	local nDamage = abilityR:GetSpecialValueInt( 'damage' )
 	
-	-- FACT, 2026-08-22 (datafeed hero_id=22, GH #104's method): this line wants "the
-	-- Thundergod's Wrath damage talent", but index 5 is special_bonus_unique_zeus_2 =
-	-- +60 ARC LIGHTNING damage -- a t20 row, never trained in turbo (GH #84), and its
-	-- special value is named 'bonus_arc_damage', not 'value'.  So the term is two ways
-	-- wrong and contributes nothing.  The ult-damage talent is index 3 (t15), and as of
-	-- today this hero no longer takes it (see the tTalentTreeList block).  NOT changed
-	-- here: pointing the handle at talent3 would either double-count (if the engine
-	-- already folds talent bonuses into GetSpecialValueInt) or silently raise this
-	-- kill-check's estimate, and which one is true cannot be settled offline.
+	-- FACT, 2026-08-22 (GH #104's method): this line wants "the Thundergod's Wrath
+	-- damage talent", but index 5 is special_bonus_unique_zeus_2 = +60 ARC LIGHTNING
+	-- damage -- a t20 row, never trained in turbo (GH #84).  The ult-damage talent is
+	-- index 3 (t15, special_bonus_unique_zeus_4 = +75), and as of today this hero no
+	-- longer takes it (see the tTalentTreeList block).
+	--
+	-- CORRECTED 2026-08-26 (GH #228, axis TALENTVALUE, read off the game's own KV
+	-- rather than the datafeed -- the source swap GH #214 made).  The 08-22 note said
+	-- the talent's special value "is named 'bonus_arc_damage', not 'value'".  It is
+	-- named NOTHING: a hero-UNIQUE talent has no KV block anywhere, so it answers no
+	-- key at all.  Its payload lives inside the ability it modifies, as a sub-key of
+	-- that ability's own entry --
+	--     zuus_arc_lightning / "arc_damage" { "value" "105 130 155 180"
+	--                                         "special_bonus_unique_zeus_2" "+60" }
+	-- which is where the engine folds it for a caster who trained it.  Two consequences,
+	-- and the second is the one that keeps this line where it is:
+	--   (1) the term is 0, as 08-22 concluded -- right answer, wrong reason.  The
+	--       reason matters: it invites a "repair" that reads 'bonus_arc_damage', which
+	--       is 0 for the same structural cause and looks like it should not be;
+	--   (2) because the fold happens inside `abilityR:GetSpecialValueInt('damage')`
+	--       above, repointing this term at a handle that DID answer would DOUBLE-COUNT.
+	--       This tree already bets on that fold in a landed repair: GH #162's
+	--       `lionsplash` reads lion_finger_of_death/splash_radius, an entry with NO
+	--       base value and only `special_bonus_scepter "325"` in it.
+	-- The whole idiom is 21 sites tree-wide, all UNIQUE, all 0 -- census
+	-- tools/agent/talent_value_read_census.py, pinned by
+	-- tests/test_talent_value_read_anchor.lua.  Left in place rather than deleted:
+	-- three ratchets quote this shape by name (test_focus_t15_payoff,
+	-- test_lion_hex_talent_slot, test_wk_fact_anchor) and narrowing them is its own
+	-- change, registered in GH #228.
 	if talent5:IsTrained() then nDamage = nDamage + talent5:GetSpecialValueInt('value') end
 	
 	local nDamageType = DAMAGE_TYPE_MAGICAL

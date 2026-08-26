@@ -362,6 +362,17 @@ function X.ConsiderQ()
 	local nSkillLV = abilityQ:GetLevel()
 	
 	local nRadius = abilityQ:GetSpecialValueInt( 'radius' )
+	-- FACT, 2026-08-26 (GH #228, axis TALENTVALUE).  The second term is 0 and always
+	-- has been: special_bonus_unique_axe_2 is a hero-UNIQUE talent, and unique talents
+	-- own no KV block anywhere, so the handle answers no key -- `value` included.  The
+	-- +85 lives inside the ability this line already read:
+	--     axe_berserkers_call / "radius" { "value" "315"
+	--                                      "special_bonus_unique_axe_2" "+85" }
+	-- i.e. the engine folds it into `abilityQ:GetSpecialValueInt('radius')` above for a
+	-- caster who trained it.  So nRadius is ALREADY correct, and repointing this term at
+	-- a handle that answered would double-count.  Do not "fix" it; 21 sites tree-wide
+	-- share the shape (tools/agent/talent_value_read_census.py,
+	-- tests/test_talent_value_read_anchor.lua).
 	if talent7:IsTrained() then nRadius = nRadius + talent7:GetSpecialValueInt( 'value' ) end
 	
 	local nCastRange = nRadius
@@ -803,6 +814,19 @@ function X.ConsiderR()
 	-- current health falls in (150 + 100*lv, ability damage] -- count episodes, not
 	-- frames.
 	local nKillDamage = 150 + 100 * nSkillLV
+	-- FACT, 2026-08-26 (GH #228, axis TALENTVALUE), and this is the ONE site in the
+	-- focus five where "the dead term is harmless" does NOT follow.  The term is 0 for
+	-- the usual structural reason -- special_bonus_unique_axe_5 is hero-UNIQUE, unique
+	-- talents own no KV block, so the handle answers no key.  Its +150 lives inside
+	-- axe_culling_blade / "damage", where the engine folds it.  Everywhere else the
+	-- base was read off the ability, so the fold already delivered the bonus and the
+	-- dead term cost nothing.  HERE THE BASE IS HARDCODED one line up, so no fold
+	-- reaches it: this kill-check is short the talent as well as short the 25/level the
+	-- lever below already documents.  Both are collected by the SAME repair -- read the
+	-- base off `abilityR:GetSpecialValueInt('damage')` -- which is the registered
+	-- `hero-2` lever, deliberately not taken here (it ADDS a cast; see the note above).
+	-- Whoever takes it: drop this line in the same change, or the fold and the term
+	-- double-count.
 	if talent8 ~= nil and talent8:IsTrained() then nKillDamage = nKillDamage + talent8:GetSpecialValueInt( 'value' ) end
 	
 	local nDamageType = DAMAGE_TYPE_PURE
