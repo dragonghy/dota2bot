@@ -292,7 +292,20 @@ if command -v lua5.1 >/dev/null 2>&1; then
         printf '  Whether main is red too is NOT established by this line: re-run after `git stash`.\n'
         note 3
     else
-        printf '%d detector file(s), 0 failures\n' "$ran"
+        # [director 20260826, GH #216 §5] The line NAMES ITS DOMAIN.  It read
+        # `8 detector file(s), 0 failures`, and a reader with only that line in
+        # front of them takes it for "trunk's Lua side was looked at this
+        # round".  It is 8 of ~200 files, chosen by TAG -- and the round this
+        # was written found the counter-example: tests/test_item_name_census.lua
+        # had been red on main for over five hours across four landings, and
+        # carries no [detector]/[ratchet] tag, so this leg had never once
+        # discovered it.  Same family as the `SKIP` this leg's else-branch
+        # already fixed (GH #171) and the empty smoke gate (GH #200): what makes
+        # a green line dangerous is not being wrong, it is being read as
+        # covering more than it does.  Nothing about WHAT runs changes here --
+        # widening the subset is GH #124's problem and costs ~100min.
+        printf '%d tagged detector file(s), 0 failures -- FAST SUBSET, not the full suite.\n' "$ran"
+        printf '  Untagged tests (and anything needing one process for the whole suite) are NOT covered here.\n'
     fi
 else
     # Deliberately NOT shaped like the pass line above.  `SKIP (no lua5.1)` and

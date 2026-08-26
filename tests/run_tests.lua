@@ -22,9 +22,41 @@
 -- output).  Fixing that per-file would be 190 copies of a rule this runner
 -- enforces once, so the runner is the only supported entry point.
 
+-- [director 20260826, GH #216] A FAILURE PRINTS ITS NAME AND TEXT AT THE MOMENT
+-- IT HAPPENS, not only in the end-of-run block.  Until this, the only way to
+-- learn WHICH case is red was to wait out the whole run -- ~100min (GH #124),
+-- dominated by a handful of slow files -- because `failures[]` was printed
+-- after the loop.  That tied the diagnosis cost of "the suite is red" to the
+-- slowest file in the suite, and the two reds standing on trunk when this was
+-- written (#216) were reported WITHOUT their names for exactly that reason:
+-- two independent full runs were still going when the finder had to hand off.
+-- Two details are load-bearing, not decoration:
+--   * the write is FLUSHED.  stdout to a pipe or a file is block-buffered, and
+--     a ~100min run is always redirected somewhere -- an unflushed "immediate"
+--     print is not immediate at all, it just joins the same end-of-run blob by
+--     another route.  Flushing on failure (not on every dot) keeps the cost off
+--     the passing path.
+--   * the end-of-run block STAYS.  It is the one place the failures appear
+--     together, and a reader who scrolls to the bottom must still find them
+--     all.  The immediate line is tagged `FAIL[n]` so a duplicate is legible
+--     as the same failure seen twice, not as two failures.
 local filter = arg[1]
 
 local root = arg[0]:match('^(.*)/[^/]+$') or 'tests'
+
+local failures = {}
+
+-- Record a failure and announce it immediately; see the header note (GH #216).
+-- `marker` keeps the progress stream's own distinction intact: `E` is a file
+-- that never got as far as running a test body, `F` is a test body that ran and
+-- failed.  Collapsing the two would lose the difference at a glance.
+local function record_failure(marker, name, err)
+    failures[#failures + 1] = { name = name, err = err }
+    io.write(marker, '\n')
+    io.stdout:write(string.format('FAIL[%d]: %s\n', #failures, name))
+    io.stdout:write('      ', (err:gsub('\n', '\n      ')), '\n')
+    io.stdout:flush()
+end
 
 -- enumerate tests/test_*.lua without LuaFileSystem
 local function list_test_files()
@@ -39,7 +71,6 @@ local function list_test_files()
 end
 
 local total, failed, skipped, matched = 0, 0, 0, 0
-local failures = {}
 
 for _, file in ipairs(list_test_files()) do
     if not filter or file:find(filter, 1, true) then
@@ -48,15 +79,13 @@ for _, file in ipairs(list_test_files()) do
         if not chunk then
             failed = failed + 1
             total = total + 1
-            failures[#failures + 1] = { name = file, err = 'load error: ' .. tostring(load_err) }
-            io.write('E')
+            record_failure('E', file, 'load error: ' .. tostring(load_err))
         else
             local ok, tests = pcall(chunk)
             if not ok then
                 failed = failed + 1
                 total = total + 1
-                failures[#failures + 1] = { name = file, err = 'setup error: ' .. tostring(tests) }
-                io.write('E')
+                record_failure('E', file, 'setup error: ' .. tostring(tests))
             else
                 local names = {}
                 for name in pairs(tests) do names[#names + 1] = name end
@@ -68,8 +97,7 @@ for _, file in ipairs(list_test_files()) do
                         io.write('.')
                     else
                         failed = failed + 1
-                        failures[#failures + 1] = { name = file .. ' :: ' .. name, err = tostring(err) }
-                        io.write('F')
+                        record_failure('F', file .. ' :: ' .. name, tostring(err))
                     end
                 end
             end

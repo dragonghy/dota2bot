@@ -294,9 +294,9 @@ else:
               "than hang" % BUDGET_S)
         check(not clean_red, "5a: a clean tree does not report TRUNK RED")
         check(clean_rc == 0, "5a2: a clean tree exits 0 on this leg (got %d)" % clean_rc)
-        check(re.search(r"\d+ detector file\(s\), 0 failures", clean_leg) is not None,
+        check(re.search(r"\d+ tagged detector file\(s\), 0 failures", clean_leg) is not None,
               "5b: a clean tree reports the count it actually ran")
-        n_clean = re.search(r"(\d+) detector file\(s\)", clean_leg)
+        n_clean = re.search(r"(\d+) tagged detector file\(s\)", clean_leg)
         check(n_clean is not None and int(n_clean.group(1)) > 0,
               "5c: the clean run is not vacuous (ran > 0 files)")
 
@@ -362,6 +362,27 @@ else:
               "6d: the un-run path does not emit the pass line")
     finally:
         shutil.rmtree(empty, ignore_errors=True)
+
+# ---------------------------------------------------------------------------
+# 7. the PASS line names its own domain (GH #216 §5)
+# ---------------------------------------------------------------------------
+# This is an assertion about TEXT, and that is not a lapse into checking prose:
+# here the text IS the deliverable.  The line is the only channel the reader
+# gets, its exit code is 0 either way, and the defect being fixed is precisely
+# that `8 detector file(s), 0 failures` gets read as "trunk's Lua side was
+# checked" when it means "8 of ~200 files, chosen by tag, were checked".  The
+# round that added this had the counter-example in hand: a real red sitting on
+# main for five hours in a file this leg cannot discover.
+_pass = [ln for ln in leg.splitlines()
+         if "detector file(s), 0 failures" in ln and "printf" in ln]
+check(len(_pass) == 1, "7a: exactly one pass line (found %d)" % len(_pass))
+if _pass:
+    check("SUBSET" in _pass[0].upper(),
+          "7b: the pass line says it is a subset -- a bare count reads as "
+          "coverage it does not have (line: %r)" % _pass[0].strip())
+    check("tagged" in _pass[0],
+          "7c: the pass line says the subset is chosen BY TAG, which is the "
+          "property that decides whether YOUR file is in it")
 
 print("\n%d checks, %d failures" % (checks, len(failures)))
 for f in failures:

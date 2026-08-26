@@ -206,7 +206,13 @@ local tRegistered = {
     -- checkout behind main (GH #161's gate-slower-than-main race, GH #171's
     -- red-trunk blindness).  Verified per commit:
     --   089bee2a -> 6774 | c48dc11b (+7) -> 6781 | 1fcfcd83 -> 6781 | HEAD -> 6781
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6781'] =
+    -- 6781 -> 6785 (director 2026-08-26T15:5xZ): 71b53d58 (strategy 14:28Z,
+    -- gated `bbfight`, GH #215) added 4 lines above BOTH pins in this file.  One
+    -- commit, two red keys, and this one only became visible after the other was
+    -- fixed -- the check errors on the FIRST new name it meets, so a drifted pin
+    -- hides every drifted pin behind it.  That is why the count of reds a run
+    -- reports is a LOWER BOUND for this file, not its content.
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6785'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
@@ -224,9 +230,22 @@ local tRegistered = {
         'the FretBots copy of the line above (AGENTS.md: always both files).',
     ['PROBE item_double bots/FunLib/aba_item.lua:1239'] =
         'matches the item_double_* macro family by prefix.',
-    ['PROBE item_recipe bots/mode_retreat_generic.lua:1049'] =
+    -- 1049 -> 1053 (director 2026-08-26T15:5xZ): 1039cad8 (strategy 10:34Z,
+    -- gated `bbrespawn`, GH #208).  A DIFFERENT commit from the two pins below,
+    -- five hours earlier -- so this file was already red on 224fa713, the tree
+    -- GH #216 measured, and stayed red across four more landings without any
+    -- gate saying so.  Three pins, two commits, one afternoon.
+    ['PROBE item_recipe bots/mode_retreat_generic.lua:1053'] =
         'matches every recipe by prefix.',
-    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:803'] =
+    -- 803 -> 807 (director 2026-08-26T15:5xZ).  FIFTH instance of the shape the
+    -- note at :198 names: 71b53d58 (strategy 14:28Z, gated `bbfight`, GH #215)
+    -- added 4 lines ABOVE this site, and the pin moved with the file while the
+    -- key did not.  The probe itself is unchanged -- same one `string.find`, same
+    -- prefix, same file; only its line number moved.  Found by the full suite,
+    -- which was the only thing running this file: until the same round tagged
+    -- 3b below, it carried no discovery tag and the selfcheck's Lua leg never
+    -- picked it up (GH #216).
+    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:807'] =
         'matches every recipe by prefix.',
 }
 
@@ -250,24 +269,85 @@ check(nMacro >= 100, 'aba_item.lua yielded only ' .. nMacro .. ' macro keys; a '
     .. 'macro reader that lost its keys reports live buy lists as broken')
 end
 
-tests['3b. the tree\'s unknown item names are exactly the registered ones'] = function()
-local tSeen = {}
+-- [director 20260826, GH #216] REPORTS EVERY DISCREPANCY, NOT THE FIRST ONE.
+-- Both loops used to `assert` inside the loop, so the run died on the first key
+-- and each repair bought exactly one more line of information: the 08-26 14:28Z
+-- shift moved THREE pins, and finding that out took three full edit-and-rerun
+-- cycles because pins two and three were hidden behind pin one.  Same defect
+-- this round fixed in the runner (a failure you cannot see until the slow thing
+-- ahead of it finishes), one level down.
+--
+-- Reporting the two halves TOGETHER is the other half of the fix, and it is what
+-- turns the message into a diagnosis.  A pin whose line moved shows up twice --
+-- once as a NEW key at the new line, once as a VANISHED key at the old one --
+-- and neither half says "this moved" on its own.  Side by side they do, so the
+-- MOVED section below pairs them up and prints the two line numbers.
+-- TAGGED `[ratchet]` 2026-08-26 (director, GH #216) so the 开工 selfcheck's Lua
+-- leg discovers it.  It costs 0.64s and it is the file that sat red on main for
+-- ~3h on 08-25 and >5h on 08-26 with no gate saying so; the leg exists for
+-- exactly this class and had never covered it.
+--
+-- Found by accident, and the accident is worth recording: the leg's discovery is
+-- `grep -l '\[detector\]\|\[ratchet\]'` over RAW FILE CONTENT, so merely writing
+-- the tag inside a COMMENT enrolls the file.  The note above, which said this
+-- file carried no tag, enrolled it by saying so -- 8 files became 9 and the
+-- sentence made itself false.  The comment was reworded and the tag put here, on
+-- the test NAME, which is the documented mechanism and the one
+-- tests/test_selfcheck_lua_leg.py's coverage check reads.  That discovery cannot
+-- tell a tag from a mention is a separate defect and is handed off, not patched
+-- here.
+tests['[ratchet] 3b. the tree\'s unknown item names are exactly the registered ones'] = function()
+local tSeen, tNew, tGone = {}, {}, {}
 for _, sPath in ipairs(tFiles) do
     for _, tHit in ipairs(offences_in(sPath, read_file(sPath), tMacro)) do
         local sKey = tHit[1] .. ' ' .. tHit[2] .. ' ' .. tHit[3]
         tSeen[sKey] = true
-        check(tRegistered[sKey] ~= nil,
-            'NEW unknown item name: ' .. sKey .. '.  Either the name is a typo '
-            .. '(fix it) or the patch renamed the item (fix the name and '
-            .. 'regenerate tests/mock/item_names.lua).')
+        if tRegistered[sKey] == nil then tNew[#tNew + 1] = sKey end
     end
 end
 
     for sKey in pairs(tRegistered) do
-        check(tSeen[sKey] == true,
-            'registered site no longer present: ' .. sKey .. '.  If it was '
-            .. 'repaired, delete its line here.')
+        if tSeen[sKey] ~= true then tGone[#tGone + 1] = sKey end
     end
+    table.sort(tNew)
+    table.sort(tGone)
+
+    -- `KIND name path:line` -> `KIND name path` (the part a line shift leaves
+    -- alone), so the two halves of one moved pin can find each other.
+    local function stem(sKey) return (sKey:gsub(':%d+$', '')) end
+    local tMoved, tNewOnly, tGoneOnly, tStem = {}, {}, {}, {}
+    for _, sKey in ipairs(tGone) do tStem[stem(sKey)] = sKey end
+    for _, sKey in ipairs(tNew) do
+        local sOld = tStem[stem(sKey)]
+        if sOld then
+            tMoved[#tMoved + 1] = sOld .. '  ->  ' .. sKey:match(':(%d+)$')
+            tStem[stem(sKey)] = nil
+        else
+            tNewOnly[#tNewOnly + 1] = sKey
+        end
+    end
+    for _, sKey in ipairs(tGone) do
+        if tStem[stem(sKey)] == sKey then tGoneOnly[#tGoneOnly + 1] = sKey end
+    end
+
+    local tMsg = {}
+    if #tMoved > 0 then
+        tMsg[#tMsg + 1] = #tMoved .. ' MOVED (same kind+name+file, new line -- '
+            .. 'an edit above the site pushed the pin out; update the line '
+            .. 'number here):\n  ' .. table.concat(tMoved, '\n  ')
+    end
+    if #tNewOnly > 0 then
+        tMsg[#tMsg + 1] = #tNewOnly .. ' NEW unknown item name(s).  Either the '
+            .. 'name is a typo (fix it) or the patch renamed the item (fix the '
+            .. 'name and regenerate tests/mock/item_names.lua):\n  '
+            .. table.concat(tNewOnly, '\n  ')
+    end
+    if #tGoneOnly > 0 then
+        tMsg[#tMsg + 1] = #tGoneOnly .. ' registered site(s) no longer present.  '
+            .. 'If repaired, delete the line here:\n  '
+            .. table.concat(tGoneOnly, '\n  ')
+    end
+    check(#tMsg == 0, table.concat(tMsg, '\n'))
 end
 
 return tests
