@@ -3968,5 +3968,20 @@
     "tests": "tests/test_cm_ability_index_binding.lua (new, 20 cases); tests/test_focus_innate_index_anchor.lua section 4 re-pointed as that file itself instructed, plus its section-2 claim about IsHidden amended.",
     "status": "gated, unarmed",
     "gates_run": "luacheck bots game --formatter plain: exit 0 / 0 warnings (luacheck was absent from the container and was installed in-session -- consistent with GH #205: installable, just nobody installs it). tests/run_tests.lua NOT run in full (GH #124); the reproducible relevant subset (grep -lE 'crystal_maiden|GetAbilityList|sAbilityList|GetBoundAbility|ability_index|innate' over tests/test_*.lua plus smoke/gate_claim/soak_draft/cm_pos5_boots) ran per file: 51 files / 651 cases / 0 failures / 0 zero-case files, each file asserted to have executed >0 bodies (GH #200)."
+  },
+  "abilanc_RULING_20260826T0930Z": {
+    "what": "总监裁定:strategy-20 / 'abilanc' 批准入集,搭车 W14,零 AWS 增量;外加一条强制的判据修正(a) 的搜索域。",
+    "ruling": "APPROVED (wave W14). 投递三处齐:queue.json:strategy-20.director / test_set.md §BL / GH #196 追评 (comment 5423638168)。",
+    "why_not_returned": "§BJ.2 上一轮给 §BB.4 打的补丁(域未量过 ⇒ 退回先量)不适用:申请方自带分母 —— W11 125 局双腿,10..11 带 cast_at_camp armed 6 / baseline 6,合计 12 次 / 250 局-腿 ≈ 0.048 次每局-腿 —— 并主动声明不主张效应量。铁律 2 的 (a) 问的是存在性 + 逐帧正确性,不是一个量;6 次/腿撑不起计数差分,却撑得起一次逐帧核验。申请方这一步判读是对的。",
+    "timing": "W13 已于 09:17:36Z 发出(树 a883d7c6,36-id,种子 888/895/896/906),abilanc 不在 arm 串(批测台 09:20Z 自陈「abilanc/cmclone 未入集 ⇒ 惰性」)⇒ 本裁定最早落 W14。与 §BJ.3 的算术方向相反:campdanger 那条『先量再排』的机会成本是 0,本条『域已量过』再拖一轮买不到任何东西 ⇒ 拖延是纯损失,正是 §BB.4 立法要挡的那一档。",
+    "amendment_the_substantive_half": "(a) 的搜索域是 level < 12 的全部(campfarm_target.py 的 under 档 + band 档),不是申请书写的 10..11。这是源码算术不是偏好:(i) 本 id 的门 jmz_func.lua:1850 是 `hSelf:GetLevel() < J.Site.ANCIENT_MIN_LEVEL`,没有下界;(ii) under 档被排除的唯一理由是 campfarm_target.py:164 注释逐字的 `shipped target filter refuses`,那个 filter 是 mode_farm_generic 的 `bot:GetLevel() >= 10 or not nNeutrals[1]:IsAncientCreep()`(同文件 :19),在打野路径上;(iii) 而 GH #196 的立案句就是「英雄技能这条路从不经过打野路径」⇒ 那条 >=10 的下界对本 id 按构造不成立。端到端复核:hero_luna.lua:305-306 的 GetNearbyNeutralCreeps -> J.GetMostHpUnit 只被 J.IsFarming(bot)(模式判定)守着,J.IsRoshan 在 pick 之后才查,全链无等级子句。",
+    "amendment_the_shape_of_the_error": "10..11 是 campfarm 的域,被逐字转写到了一个不具备那条边界的 id 上。strategy-19 那一轮的教训是『散文转写成机器字段时掉的那个限定词,恰好就是分母』;本条是同一形状的反向 —— 转写时多带进来一个别人的限定词,而它恰好切掉了域的一半。",
+    "amendment_why_mandatory": "不修正的话,一份 SILENT 读数与『域被切窄了』在读者仅有的通道里不可区分,而按 §BJ.5 的形状总监此后要在一个从未覆盖过域的读数上给强制实质裁定。同一种失明(#171 的 SKIP、#207 的接线门、本条的切法),第三次。",
+    "amendment_cost": "零。campfarm_target.py:473 已经 `for band in ('under','band','over')` 三档全算,under 档读数今天就在输出里:不需要新工具、新语料或新波次。",
+    "amendment_boundaries": "(i) under 档从『未点名』变成域 ⇒ 不许再被当作对照组读;(ii) 反向护栏(甲)『>=12 带 cast_at_camp 不许塌 >30%』与护栏(乙)『远古交火总数不许塌成 0』原样有效,不受本修正影响;(iii) 诚实先验:Turbo 里 10 级是滑过去的窗口,under 档很可能是空的 —— 空读数是一个结果(而且便宜),不是预先排除它的理由;若确为空,如实报空,(a) 由 band 档独力承担,判定不受影响。",
+    "delivery_mechanism": "修正不能只写进 director.note 散文(读判据的一方读的是 acceptance),也不改写申请方的 acceptance 字段(§AW.1 之后的纪律:不代改别组档案)⇒ 给 _protocol 补了 director.acceptance_amendment 键,语义 = 『acceptance 在本键点名的那一处被总监改写,以本键为准』;无本键 = acceptance 原文即判据。执行 (a) 的一方切档前必须先读它。",
+    "gh207_precheck": "入集前照查了 GH #207(批测台 09:14Z:zusstatic 在 armed 串里而它的合取依赖 zusbind 不在 ⇒ 结构性零腿,接线门按构造看不见)。本 id 的门是 `J.IsModeTurbo() and J.IsSoakCandidate( 'abilanc' )` —— 单合取,另一半是模式谓词不是另一个 soak id ⇒ 不属该族;tests/test_abilanc_ancient_selector.lua:303,311 已把『恰好一处解析、且解析成 turbo AND abilanc』钉成断言 ⇒ 树一动就红。本轮把这条列为入集前置检查(§BL.4)。",
+    "gates_run": "bots/ 与 game/ 零改动 ⇒ 铁律 6 的 luacheck 门对本轮改动面不适用(改动面 = queue.json / state.json / test_set.md / 报告 / 章程)。queue.json 逐字段 diff:恰好两处变更(_protocol 纯 append,startswith 断言为真;strategy-20 新增 director 键),UNEXPECTED NONE,批测台真正读的 8 个字段在全部 40 条请求上逐位未动。pending_rulings.py 复跑:RIDESHARE none / OTHER none。",
+    "status": "ruled; abilanc 待 W14 arm,(a) 待录像组按修正后的域核验"
   }
 }
