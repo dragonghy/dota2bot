@@ -4834,3 +4834,69 @@
     `l5combo` 的 (a)(**第五十二轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十九轮**);
     `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260826T191649Z.md`
+- **2026-08-26T22:15Z(第七十九次触发)**:**`abilanc` 条件 (a) 首检**(接上一轮 backlog 第 2 棒 ——
+  W14 才入集的唯一新 id,**0 记录**)。**宽扫 132/132 有效局 = 100%**(同一份 W14 语料,
+  156 `.dem` − 24 局暖场,与上一轮逐位一致;`(run,game)` 键 132 个、**裸名碰撞 10** 由工具自己打印)+
+  **深查 9 局逐帧**(全部 14 枚低等级远古施法逐枚裁定)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  W15 于 `21:14:38Z` 才发波,本轮开工时**无新语料**。
+  - ⭐⭐ **本轮的第一件产出:总监 §BL.3 点名的那份读数,当时并不在任何输出里。** 裁定把 (a) 的域
+    从「10..11 带」改成 `level < 12` 全部,并写明**代价为零**,理由逐字是「`campfarm_target.py:473`
+    已经三档全算,`under` 档读数**今天就在输出里**」。**那句话对 `:473` 为真,对判据要读的那一列为假**:
+    `:473` 是 **episode/opened/mixed 表**;`cast AT camp` 列在 `:505`,循环写的是 `('band','over')`,
+    **`under` 从来没被打印过**。第二处更隐蔽:`:538` 的**标题**是 `CONTROL -- <10 band ... expect no move`,
+    而 §BL.3 边界 1 逐字禁止把 `under` 当对照组读 —— **标题是给读者的指令,一个工具服务两个 id 时不能共用**。
+    **同族第四例**(#171 `SKIP` 丢读数 / #213 丢门 / #207 接线门 / 本条丢裁定要的半个域)。
+    已修三处 + 加棘轮(`cast AT camp` 表必须三档全印),**GH #230 新开 [harness]**。
+  - ⭐⭐ **结论:`abilanc` = SILENT,(a) 未买到 —— 但不是构造性死腿**(与 `tbearly` 必须区分):
+    门是活的(§BL.4 已裁:单合取 `IsModeTurbo()`,无 soak 依赖)、**域非空**(低于 12 级、活着、
+    离远古营质心 ≤1000u 的英雄-帧 **7,181**,其中**文件里确实喂 `J.GetMostHpUnit` 的 13 个英雄**
+    占 **armed 572 / baseline 263**)。空掉的是 **{对远古施法} ∩ {目标来自 `J.GetMostHpUnit`}**
+    这个**交集**,**armed 与 baseline 两条腿在 132 局里各 0 次** ⇒ **armed 的 0 不能读成「门挡住了」**。
+  - ⭐⭐ **逐帧:14 枚低等级远古施法,一枚都不走门。** 全部来自 4 个英雄/技能对:
+    `zuus_arc_lightning` 7(`hero_zuus.lua:668-673` 的 `nNeutralCreeps[1]`,**且带一条
+    `IsAncientCreep()` 子句把远古营当成「更该放」的理由**)/ `tidehunter_gush` 3
+    (`hero_tidehunter.lua:511-527` 的 `bot:GetAttackTarget()` 过滤 `TEAM_NEUTRAL`)/
+    `phantom_assassin_phantom_strike` 2(`:641` 的 `J.GetProperTarget`,`nCreeps` 只当计数)/
+    `witch_doctor_paralyzing_cask` 2(`:457-465` 循环第一个 `J.IsValid`)。
+    **承重帧 `2c6d8e/20260826_153231_slot10` PA ARMED L11 t=737.9**:营 t=737.0 先打的他,
+    他 **平A 杀的是小雷兽**(738.0→740.8,+88 金 +102 经验),**741.4 才转向 big_thunder_lizard**
+    ⇒ **他打的不是最大的那只**,`GetMostHpUnit` 在该 sweep 里必然返回 big。**帧与源码两条独立证据同向。**
+  - ⭐ **物理侧效应在两个带里都大于腿效应**(新观测量上复现 README 铁律 4(i) 的立法依据):
+    域(<12)物理 radiant **12** vs dire **2**(**6.0×**),腿 armed 6 / baseline 8(0.75×);
+    ≥12 带物理 360 vs 190(1.9×),腿 326 / 224(1.46×)。**这个量任何池化读法都会读错**,登记在案。
+    聚合层两读数(事件层与 episode 层)**两层都不同号 ⇒ 按铁律 4(i) 不构成读数**。
+  - ⭐ **§BL.3 边界 3 的「诚实先验」如实兑现**:`under`(<10)档的 `cast AT camp` **两条腿都是 0**。
+  - ⭐ **「门够不着」的类别比 `jmz_func.lua:1836-1840` 写的多两类**:注释点名 54 处 `list[1]` + 14 处质心;
+    本轮实测出 **(γ) sweep 只当计数、目标来自 `J.GetProperTarget`** 与 **(δ) 目标来自 `bot:GetAttackTarget()`**。
+    γ/δ 与 `list[1]` **性质不同**——`list[1]` 至少从这张表里取,γ/δ **目标根本不来自那张表**,
+    **任何列表编辑在原理上都够不着** ⇒ 这不是 bug,是**分母的形状**(同 `tpgap` 的「天花板」交付)。
+  - ⭐ **对入集分母的一条更正(不推翻 §BL.1 的批准)**:W11「10..11 带 `cast_at_camp` armed 6/baseline 6」
+    是 **episode 层布尔**,含 AoE 溅射与瞄别处的施法;**它的「走门」子集在 W14 上是空的**
+    ⇒ 那 6/6 是**真域的上界**。批准逻辑没错,但**下一轮谁读它,读的必须是走门的那一层**。
+  - **交付**:新工具 `abilanc_domain.py`(`--selfcheck` **33 PASS / 0 FAIL**;`--source` 零语料复现;
+    常数全部从 Lua 读 —— 门必须**只有一个** `IsSoakCandidate`、必须是严格上界 `<`、**必须没有下界**
+    (这条就是 §BL.3),三条各有**反 selfskip** 用合成源码证明真会红;**等级用 bracket 不插值**
+    (阶梯函数插值会造出 10.4,同 GH #176 的 `hp_pct` 混合),`straddle` 单列一行本波 = 0;
+    `verdict()` 六个世界全有用例且**顺序被钉住** —— **两层反号必须先于池化 Δ=0 判**,
+    否则一次侧别抵消会被读成 SILENT,而**真正两层皆平**的 Δ=0 仍读 SILENT(`tbearly` 那条));
+    `campfarm_target.py` 三处修正;`tests/test_detector_source_constants.py` **新增 6 条**棘轮。
+  - **交棒**:**GH #196 追评**(全文读数 + 14 枚裁定表 + 承重帧 + γ/δ + 分母更正);**GH #230 新开 [harness]**。
+    **球在总监**:`abilanc` 三条件判定(另有 #207、#212、#220、#159、`campfarm` 仍未裁)。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**(改的是 `tools/` 与 `tests/`);
+    `bash tools/agent/luacheck_gate.sh` → **exit 0,`luacheck bots game: 0 warnings`**(容器里没有,脚本自己装的);
+    `tests/run_py_tests.sh` **39 passed / 0 failed**;`abilanc_domain.py --selfcheck` **33 PASS / 0 FAIL**;
+    `campfarm_target.py --selfcheck` **ALL PASS**;本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **AWS**:S3 **只读**(156 个 `.dem` 流式下载即弃),**未启动/未终止任何实例**,**未调用 Cost Explorer**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **#159 的 fixture**(`2c6d8e/20260826_155416_slot4 t=1382.2 slardar`,**第二轮**);
+    (2) ⭐⭐ **W15 首检**(`79f32c92`,四 run `7f0cc4/552d6b/4f267b/ffdcb6`);
+    (3) ⭐ **GH #220 的 fixture**(`094054_slot3 t=163.0 drow_ranger`,**第三轮**);
+    (4) ⭐ 把「每个 id 在本组报告里的篇数」grep 做成每轮固定输出(**第四轮登记**);
+    (5) ⭐ `camp_prelit` 列(**第七轮**);占用度量按 idx 去重(**第六轮**);
+    `tpdefend_events` 结果侧列(**#191 落地后,第十二轮**);幻象余量做进 `sweep_run.sh`(**第九轮**);
+    `entities.py` 推广(**第十轮**);12:41Z §6.1 那 23 帧做 fixture(**第十二轮**);
+    `pulldrag` 的 connect 侧;第二种视野证人;ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`
+    (**连续第二十三轮登记**);`stayfield` 第一失败子句;打野反证 fixture(**二十九轮**);
+    `hero-1` 的 153 局 WK 语料(**37 轮**);`l5combo` 的 (a)(**第五十三轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260826T221500Z.md`

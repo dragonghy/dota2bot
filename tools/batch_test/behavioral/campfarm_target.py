@@ -502,7 +502,12 @@ def report(res, top=12):
     print('  %-8s %-9s %8s %8s %8s %12s %10s'
           % ('band', 'leg', 'attack', 'ability', 'item', 'cast AT camp',
              'chose it'))
-    for band in ('band', 'over'):
+    # `under` was missing here until 2026-08-26.  For THIS id it is a control,
+    # but director ruling §BL.3 made `under` half of `abilanc`'s domain and
+    # called the read zero-cost "because campfarm_target.py:473 already loops
+    # three bands" -- true of the EPISODE table above, false of this one.  A
+    # band that is not printed is indistinguishable from a band that is empty.
+    for band in ('under', 'band', 'over'):
         for leg in ('armed', 'baseline'):
             xs = [r for r in clean
                   if r['band'] == band and r['leg'] == leg and r['opened']]
@@ -534,7 +539,21 @@ def report(res, top=12):
          per_game(clean, ng, lambda r: r['band'] == 'band'), ng)
     show('REVERSE GUARD (甲) -- >=12 band, all episodes (must NOT collapse)',
          per_game(clean, ng, lambda r: r['band'] == 'over'), ng)
-    show('CONTROL -- <10 band (shipped filter already refuses; expect no move)',
+    # Director ruling §BL.3 mandates that `abilanc`'s (a) be read over
+    # `under` + `band` TOGETHER.  Iron rule 4(i) then requires the layers, so
+    # the mandated read is given here as a layered table rather than as the two
+    # pooled cells of the cast column above.  The event-level counterpart (one
+    # row per cast rather than per episode) is `abilanc_domain.py`.
+    show('§BL.3 DOMAIN **for `abilanc`** -- level < %d, opened, a cast AT the'
+         ' camp\n     (episode-level; abilanc_domain.py counts the casts'
+         ' themselves)' % ANCIENT_MIN_LEVEL,
+         per_game(clean, ng,
+                  lambda r: r['band'] in ('under', 'band') and r['opened']
+                  and r['cast_at_camp']), ng)
+    show('CONTROL **for `campfarm` only** -- <10 band (shipped filter already'
+         '\n     refuses; expect no move).  NOT a control for `abilanc`:'
+         ' director\n     ruling §BL.3 boundary 1 makes this band half of THAT'
+         ' id\'s domain,\n     and it is read there by abilanc_domain.py.',
          per_game(clean, ng, lambda r: r['band'] == 'under'), ng)
     show('10..11 band, opened AND a normal camp within %d u' % R_SWEEP,
          per_game(clean, ng,

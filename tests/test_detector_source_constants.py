@@ -917,6 +917,54 @@ eq('a number quoted in a trailing comment is not the threshold',
            path=SYNTH), 250.0)
 os.unlink(SYNTH)
 
+# --------------------------------------------------------------------------
+# abilanc (GH #196, director ruling §BL) -- replay-check 2026-08-26T21:xxZ.
+# The (a) reading is an EXISTENCE argument on a domain the ruling had to
+# correct once already ("level < 12 entire, not the 10..11 band").  Each fact
+# below is a premise of that argument; if one moves silently, the reading
+# stops being about `abilanc`.
+# --------------------------------------------------------------------------
+import abilanc_domain as AD                            # noqa: E402
+
+AD_GATE = AD.gate_facts()
+check('abilanc still gates on exactly one soak id, turbo-first',
+      AD_GATE['min_level'] == 12)
+check('abilanc\'s level test is still a strict upper bound',
+      AD_GATE['op'] == '<', str(AD_GATE['op']))
+check('abilanc still has NO lower level bound -- this IS director ruling '
+      '§BL.3: the domain is `under` + `band`, never the 10..11 band alone',
+      AD_GATE['has_lower_bound'] is False)
+
+AD_GUARDED, AD_OPTOUT = AD.selector_sites()
+check('the tier-blind selector still has exactly ONE caller outside '
+      'jmz_func (doom\'s devour) -- a second one would be an unaccounted '
+      'uncovered path in every residual adjudication',
+      len(AD_OPTOUT) == 1 and 'doom_bringer' in list(AD_OPTOUT)[0],
+      str(sorted(AD_OPTOUT)))
+check('the guarded selector still feeds a double-digit set of hero files',
+      len(AD_GUARDED) >= 10, str(len(AD_GUARDED)))
+# Load-bearing for every residual verdict: a hero with no site in his own file
+# is read as "this cast cannot have come through the selector".  That holds
+# only while the shared, runs-for-everyone file's sites are ITEM considers,
+# whose casts appear in the combat log as ITEM rather than ABILITY.
+AD_GEN = AD.generic_sites_are_items()
+check('the shared ability file\'s selector sites are still ALL item considers '
+      '-- an ABILITY consider there would break "no site in his file means '
+      'not reachable" for every residual',
+      bool(AD_GEN) and all(o == 'ItemDesire' for o in AD_GEN),
+      str(AD_GEN))
+
+# The rendering ratchet.  `campfarm_target.py`'s `cast AT camp` table looped
+# ('band','over') while the ruling that made `under` a domain called the read
+# zero-cost "because the file already loops three bands" -- true of a
+# different table in the same file.  A band that is never printed reads
+# exactly like a band that is empty.
+CFT = open(os.path.join(BEHAV, 'campfarm_target.py'), encoding='utf-8').read()
+check('campfarm_target still prints ALL THREE bands in the `cast AT camp` '
+      'table (a dropped band is indistinguishable from an empty one)',
+      CFT.count("for band in ('under', 'band', 'over'):") == 2,
+      str(CFT.count("for band in ('under', 'band', 'over'):")))
+
 print()
 if FAIL:
     print('%d FAILED: %s' % (len(FAIL), ', '.join(FAIL)))
