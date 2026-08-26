@@ -436,7 +436,13 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     -- here; the other site is unmoved, so no third site appeared.
     assert(c.crash_3432 == 35,
         'jmz_func:3432 crash count moved: ' .. c.crash_3432)
-    assert(c.crash_2597 + c.crash_3325 == c.crash_total,
+    -- ⚠️ THIS LINE IS WHY THE RE-PIN ABOVE TOOK TWO ROUNDS.  The 15:5xZ pass
+    -- renamed the two asserts and MISSED this third reference, so it read
+    -- `0 + 0 == 213` and fired "a THIRD crash site appeared" -- a sum that
+    -- silently re-derives the old key names is a third place the rename has to
+    -- reach, and it is the one with no number of its own to notice.  The guard
+    -- did its job: it refused the tree rather than pass a stale arithmetic.
+    assert(c.crash_2704 + c.crash_3432 == c.crash_total,
         'a THIRD crash site appeared -- name it before touching these numbers')
 
     -- Both are engine globals the mock never defines, so the Get* default
