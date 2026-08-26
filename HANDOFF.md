@@ -68,6 +68,12 @@ Routine。Cursor 侧若 owner 要定期摘要,只用本对话的 timer 订阅做
 
 - 五个 Routine **还在 Claude Code Cloud 上**。改它们的行为 = 改章程,不是
   在 Cursor 里重写 cron。底稿:`iterations/streams/routine_prompts.md`。
+- **无头 Routine 会被 Claude Code 的 per-call approval 卡住**(owner 2026-08-26
+  在 UI 上看到了;仓库侧对应形状是「触发照常、产出落不了地」)。
+  `list_triggers`/`send_later` 从 07-19 起就因此不用。平台 bug:
+  定时 CCR 的 MCP 调用返回 `MCP tool call requires approval`,无头会话没有
+  可点的对话框。**真修在 Claude Code Routine 的 Permissions:Bash + GitHub MCP
+  设成 always allow。** 仓库侧铁律 11:提示出现立刻跳过,不许坐等。
 - **落地 = `main`,这个仓库不用 PR**(owner 2026-08-26 原话:「我们一般都在
   main 上直接改,这个 repo 不用 pr」)。Cursor 整合者和五个 Routine 同一条路:
   `git push origin HEAD:main`;被拒先 `git pull --rebase origin main`。

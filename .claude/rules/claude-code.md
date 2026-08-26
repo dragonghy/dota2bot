@@ -56,6 +56,11 @@ Routines are owner-built and fire on their own cron. Steering them is done
 by **editing charter files** (`iterations/streams/*.md`), which every fresh
 session re-reads. `list_triggers` / `send_later` / `create_trigger` have
 historically been blocked on permission approval in the old main session.
+**Iron rule 11 (owner 2026-08-26):** a headless Routine has nobody to click
+Approve. If a tool returns `requires approval` / `MCP tool call requires
+approval`, skip that tool immediately (git via Bash; GitHub comments go in
+the report if MCP is blocked). Do not sit waiting — that is how a wave
+launches and the whole session evaporates (2026-08-24 W5; GH #180).
 
 - In-memory schedules (CronCreate etc.) **do not survive session suspend**.
 - Fallback background `sleep` dies silently on container restart.
