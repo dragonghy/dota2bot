@@ -364,8 +364,17 @@ end
 
 tests['[source] the ladder constants this model assumes are still the tree'] = function()
     local body = read_file(AIUG)
-    assert(body:find('if nFullRespawnTime < ' .. GATE_FULL .. ' then', 1, true),
+    -- RATCHET MOVED, NOT LOOSENED (GH #222). This used to read the literal
+    -- `if nFullRespawnTime < 60 then` off the tree. That gate is now behind
+    -- 'bbshort', so the pin follows it to the helper -- and what fight_rung()
+    -- actually depends on is not the literal but the VALUE this gate takes
+    -- while 'bbshort' is not in the wave string, which is what is asserted.
+    assert(body:find('if nFullRespawnTime < J.BuybackShortRespawnFloor() then', 1, true),
         'the gate above the rung moved; fight_rung() models a ladder that is gone')
+    local jmz = read_file(JMZ)
+    assert(jmz:find('J.BUYBACK_SHORT_FLOOR  = ' .. GATE_FULL, 1, true),
+        'the gate above the rung no longer defaults to ' .. GATE_FULL
+        .. '; fight_rung() is modelling the wrong ladder for an unarmed wave')
     assert(body:find('if nRemainingRespawnTime < ' .. GATE_LATE .. '\n', 1, true)
         or body:find('nRemainingRespawnTime < ' .. GATE_LATE, 1, true),
         'the gate below the rung moved; re-read the ladder before trusting [limit]')
@@ -375,17 +384,26 @@ end
 -- [limit] what this lever does NOT move
 ----------------------------------------------------------------------
 
-tests['[limit] the sibling misreading is still untouched (one lever per round)'] = function()
+tests['[limit] the sibling misreading moved in its own round, and only there'] = function()
     local body = read_file(AIUG)
-    -- GH #208's registered NEXT CELL. `nFullRespawnTime` is the same getter
-    -- read under a name that claims a constant, so this gate fires in the last
-    -- minute of EVERY death rather than only on short ones. It is the reason
-    -- the [defect] rows above use engine_remaining() for the gate and not a
-    -- per-death constant, and it moves in its own round.
+    -- GH #208's registered NEXT CELL, taken up in GH #222 as 'bbshort'. RATCHET
+    -- MOVED, NOT LOOSENED: the row used to assert the sibling was untouched; it
+    -- now asserts the sibling moved to exactly ONE place and that this file's
+    -- own lever did not ride along with it. `nFullRespawnTime` is still the
+    -- same getter read under a name that claims a constant, which is why the
+    -- [defect] rows above use engine_remaining() for the gate and not a
+    -- per-death constant.
     assert(body:find('local nFullRespawnTime = bot:GetRespawnTime()', 1, true),
         'the sibling read moved; re-check whether this lever is still alone')
-    assert(body:find('if nFullRespawnTime < 60 then', 1, true),
-        'the sibling gate moved; the NEXT CELL note in jmz_func is now stale')
+    assert(body:find('if nFullRespawnTime < J.BuybackShortRespawnFloor() then', 1, true),
+        "the sibling gate is not behind 'bbshort' any more; the NEXT CELL note "
+        .. 'in jmz_func and the [source] row above are both stale')
+    local jmz = read_file(JMZ)
+    local _, nOther = jmz:gsub("IsSoakCandidate%(%s*'bbshort'%s*%)", '')
+    assert(nOther == 1, "'bbshort' must stay one resolution site; got " .. tostring(nOther))
+    local fn = jmz:match('function J%.BuybackFightRespawnFloor.-\nend')
+    assert(not fn:find('bbshort', 1, true),
+        'this round\'s lever picked up the sibling id; the two must stay separable')
 end
 
 tests['[limit] the other two rungs of the ladder keep their shipped thresholds'] = function()

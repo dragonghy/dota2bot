@@ -4028,6 +4028,26 @@
     "byproduct": "**`test_level_gate_census.lua` 里一条登记了 5 天的 INFERENCE 系数是错的**:它写「turbo halves respawn time」(0.5)。那个系数是承重的 —— 若真是 0.5,天花板 50s,阶梯**上方**的 `< 60` 早退恒真,**三条买活通路全死**、共享同一个判决;按有据可查的 0.75,天花板 75s,三条通路**分岔**:第 2 条被判成 DECIDED(结构性零,常数间的支配),第 1/3 条仍是 RECORDED CLAIM(要 20s/40s,天花板放得过,关掉它们的是「中位英雄 10 级」这个语料事实 —— 罕见,不是不可能)。已就地改正并加两条棘轮。",
     "gates": "luacheck bots game 0 警告 EXIT=0;python 34 passed 0 failed;Lua 受影响面(全部 grep 到 aiug/jmz_func 的 101 个文件)分 6 段并行跑完。`bots/` 只动两个文件,零新 fixture 文件,零 AWS,`queue.json` 零改动。"
   },
+
+  "bbshort_20260826": {
+    "id": "bbshort",
+    "status": "gated, turbo-only, NOT live. 入集**建议与 GH #218 的 `bbrespawn`/`bbfight` 一起裁**(三条在同一段阶梯上),本轮**不提波次请求**;本组只提一条离线零 EC2 的分母请求(见 denominator)。",
+    "landed": "2026-08-26T1x:xxZ strategy",
+    "issue": "GH #222(本组本轮自开);认领依据 = 上一轮(GH #215)在章程「下一格」里显式登记的姊妹误读,且**不需要新语料**",
+    "defect": "买活三段阶梯里 rung 1 与 rung 2/3 之间那道早退 `if nFullRespawnTime < 60 then return end`,**60 是普通模式的时长** —— 这是同一段阶梯里**第三个**没有随模式缩放的秒数常量(前两个:GH #208 的双减、GH #215 的 80)。**这条发现不依赖 getter 怎么读**:60 是**复活秒数**,而 turbo 把每一个复活时长乘 0.75。读法 A(local 名字自称的「完整时长」):它选中的英雄集合**严格小于**被写出来时要选的那个。读法 B(有据可查的 remaining 语义,GH #208):remaining ≤ R ≤ 75 ⇒ 下面两级只在 remaining ∈ [60,75] 可达 = **一次死亡最初的 ≤ 15 秒**;且**凡 turbo 复活时长 R < 60 的英雄,门在 elapsed 0 就已为真** ⇒ 下面两级**整场死亡全关**(turbo R < 60 ⟺ 普通 R < 80,是复活表的大部分)。",
+    "not_claimed": "**明确不是 `bbfight` 那种结构性零**。R ≥ 60 时下面两级确实会开,诚实的说法是「**模式缩掉的一块域**」,测试里就当作域来量;唯一主张为零的地方(turbo R < 60)是**逐 R 主张 + 带反向控制**的。`[arith]` 有一条**拒绝越界**的断言:floor 若涨到 ≥ 天花板才会变成结构性零,而它现在不是 —— 写在那里防止下一个读者把 `bbfight` 那句话借给这条。",
+    "direction": "**单向**:只降一个「挡住买活」的下限,只可能打开一级、永远不可能关掉一级(`[lever]` 一条穷举断言);并额外钉住它**不许**动下面那条 `< 40`(那是 `bbrespawn` 的地盘)与上面 rung 1 的 `> 20`。依据 (c):rung 3 的世界条件是「遗迹旁敌人数 ≥ 我方存活英雄数」= 买活的教科书用途,而 turbo 买活金更便宜、CD 更短,标准打法只会更宽松。",
+    "fix": "`J.BuybackShortRespawnFloor()`(jmz_func),armed 返回 `J.BUYBACK_SHORT_FLOOR * J.TURBO_RESPAWN_FACTOR` = 45;**未 armed 返回出厂那个字面量 60**。armed 值**算出来,函数体里不许出现字面量 45**(`[source]` 断言)。复用 `bbfight` 已具名的 `J.TURBO_RESPAWN_FACTOR`,不新造系数。",
+    "one_lever": "同一段阶梯的另外三个阈值(rung 1 的 `> 20`、rung 2 的 `bbfight` floor、rung 3 的 `< 40`)与 `J.RespawnRemaining` 里的双减本体**都没动**,`[limit]` 两条用例原样钉住。",
+    "domain": "64 格可达网格(R ∈ {9,20,40,50,55,60,70,75} × e,e ≤ R)上:shipped **12 格** / armed **24 格**,新开 **12 格**。其中 **R = 50 开 3 格、R = 55 开 4 格**,而这两行 shipped 是**整场死亡 0 格** —— 这是本杠杆真正买到的东西。另一侧诚实:**R = 40 armed 后仍全关**(40 < 45),不主张救得回它。",
+    "gate_shape": "单合取,另一半是 `J.IsModeTurbo()` 模式谓词,**不与 `bbfight` / `bbrespawn` 合取** ⇒ 不属于 GH #207 / `pullcad` 族。armed 的 24 格是在**两个邻居都是出厂读法**(rung 2 仍是结构性零、rung 3 仍读 R−2e)上取到的 ⇒ **单独 arm 就打得响**;并有一条**单调性**用例:`bbrespawn` 也 armed 时窗口只会变宽,不会变窄。",
+    "local": "tests/test_bbshort_turbo_respawn_floor.lua **21 例全绿,11 变异 11 抓 + 控制前后各一次干净**(变异含 3 条**模型层**的:门改读 R−2e / 网格删掉 R=50,55 / armed 值退回 60,分别抓到 3/4/4 条)。真实帧 `tests/fixtures/f_080225_wk_revive.lua`(t=403.0,turbo)上 zuus L8 `alive=false`,**零新 fixture 文件**。",
+    "criterion": "**判据:两个互相独立的原因会关掉这条阶梯上的格子,只有一个是这道门的。** `[defect-control]` 把门**整个拿掉**再数:R = 9 / 20 两行**仍然 0 格**,关掉它们的是下面那条 `< 40`,**不是本轮这道门** —— 把它们算到本杠杆头上就是 GH #215 判据二那条错误换了一对原因;同时 R ∈ {40,50,55} 在无门世界里开 **8 格**,那才是这道门真正关掉的,所以控制项不能靠「把一切都关掉」蒙混过关。沿用 GH #208 判据一:R 是**会倒数的**声明替身(`[W1]`),静止替身会把被测的误读本身建进测试里。新增 `[W3]`:rung 3 自己的两个**世界计数**不建模 ⇒ 本文件量的是「**够得到**那一级」,**从来不是「买了活」**,并把这一点断言在 shipped 源码上而不是写成散文。",
+    "denominator": "**本轮全部主张都停在没有分母的地方**:turbo 语料里「复活时长 R < 60s」占多少,离线可量、零 EC2,已作为请求交录像组(GH #222)。`[W3]` 那半(rung 3 的世界条件多久成立一次)同样无分母,未主张。",
+    "ratchets": "本轮碰倒 3 个文件 4 条 pin,**全部移钉不放松**:`test_bbfight_turbo_respawn_ceiling.lua` 2 条(`[source]` 跟到 helper + 断言未 armed 默认值仍是 60;`[limit]` 从「姊妹没动」改成「姊妹只动到一处、且没被本 id 吸收」)、`test_bbrespawn_double_subtract.lua` 1 条(同上,并新增可分离性检查)、`test_level_gate_census.lua` 1 条(文本 pin 跟到 helper + 默认值)。另有**行号注册键**(GH #221 那一族)按 `0LN2` 移钉:aiug 三行 588→594 / 5794→5800 / 5834→5840(:149 在插入点之上,未动 —— 分裂式位移,与 `tbearly`/`campdanger` 同型),表头按惯例逐条记录了这次位移的来源与幅度。",
+    "gates": "luacheck bots game 0 警告 EXIT=0;python 36 passed 0 failed;Lua 受影响面全集分段跑完。`bots/` 只动**两个**文件,**零新 fixture 文件**,**零 AWS**,`queue.json` **零改动**。"
+  },
+
   "luacheck_gate_RULING_20260826T1250Z": {
     "what": "GH #205 裁定 = 选项 (B):共用 tools/agent/ensure_lua_toolchain.sh,自检与新的 tools/agent/luacheck_gate.sh 两个调用者共用一份安装器。铁律 6 静态那半从此在容器里跑得起来。",
     "why_not_A": "开工自检加第五条腿被否决:开工时还没改任何东西,luacheck 测的是「我改的东西干不干净」,与那个文件其余四条腿(测 trunk 红没红)不同轴。",

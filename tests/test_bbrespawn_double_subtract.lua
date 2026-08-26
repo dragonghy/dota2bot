@@ -340,12 +340,22 @@ tests['[limit] the sibling misreading of the same getter is untouched'] = functi
     -- Under the documented semantics this line means "stop considering buyback
     -- once you are within a minute of respawning", not the intended "a short
     -- respawn is not worth buying out of". It gates the two branches BELOW it;
-    -- this round's lever gates the branch ABOVE it. One lever per round, so it
-    -- stays exactly as it shipped until its own round.
+    -- this round's lever gates the branch ABOVE it.
+    --
+    -- RATCHET MOVED, NOT LOOSENED (GH #222). Its own round came: the sibling
+    -- is behind 'bbshort' now. What this row exists to protect is unchanged --
+    -- that THIS file's lever did not silently absorb the sibling -- so the pin
+    -- follows it rather than being deleted, and gains the separability check
+    -- the old literal could not express.
     assert(body:find('local nFullRespawnTime = bot:GetRespawnTime()', 1, true),
         'the sibling read moved; re-check whether this lever is still alone')
-    assert(body:find('if nFullRespawnTime < 60 then', 1, true),
-        'the sibling gate moved; the NEXT CELL note in jmz_func is now stale')
+    assert(body:find('if nFullRespawnTime < J.BuybackShortRespawnFloor() then', 1, true),
+        "the sibling gate is not behind 'bbshort' any more; the NEXT CELL note "
+        .. 'in jmz_func is now stale')
+    local jmz = read_file(JMZ)
+    local fn = jmz:match('function J%.RespawnRemaining.-\nend')
+    assert(fn ~= nil and not fn:find('bbshort', 1, true),
+        "this file's helper picked up the sibling id; the two must stay separable")
 end
 
 tests['[limit] the consumers of this number, counted'] = function()

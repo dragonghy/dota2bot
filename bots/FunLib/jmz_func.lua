@@ -10544,13 +10544,14 @@ end
 -- can reach at all (see the NEXT CELL note below), and it is the one whose
 -- window this shrinks from R-20 seconds down to (R-20)/2.
 --
--- ONE LEVER. The sibling misreading of the same getter at
--- ability_item_usage_generic.lua:580 -- `if nFullRespawnTime < 60 then return
--- end`, which under the documented semantics means "stop considering buyback
--- once you are within a minute of respawning" rather than the intended "a
--- short respawn is not worth buying out of" -- is DELIBERATELY NOT TOUCHED
--- here. It gates the two branches BELOW it, this one gates the branch ABOVE
--- it, and the charter's one-lever rule says they move in separate rounds.
+-- ONE LEVER. The sibling misreading of the same getter -- `if nFullRespawnTime
+-- < 60 then return end`, which under the documented semantics means "stop
+-- considering buyback once you are within a minute of respawning" rather than
+-- the intended "a short respawn is not worth buying out of" -- was DELIBERATELY
+-- NOT TOUCHED in this round. It gates the two branches BELOW it, this one gates
+-- the branch ABOVE it, and the charter's one-lever rule said they move in
+-- separate rounds. It moved in its own round since: GH #222, 'bbshort', see
+-- J.BuybackShortRespawnFloor below.
 --
 -- Gated (`bbrespawn`), turbo-only. Unarmed this returns the shipped expression
 -- token for token, including the fDeathTime == 0 short circuit, so the default
@@ -10594,6 +10595,45 @@ function J.BuybackFightRespawnFloor()
 		return J.BUYBACK_FIGHT_FLOOR * J.TURBO_RESPAWN_FACTOR
 	end
 	return J.BUYBACK_FIGHT_FLOOR
+end
+
+-- [GH #222] The gate ABOVE that rung -- `if nFullRespawnTime < 60 then return
+-- end` (ability_item_usage_generic.lua) -- is the third number in this ladder
+-- carrying a normal-mode duration into a mode that scaled every duration.
+--
+-- The finding does not depend on which way the getter is read, and that is the
+-- point: 60 is SECONDS OF RESPAWN, and turbo multiplies every respawn duration
+-- by J.TURBO_RESPAWN_FACTOR. Under the name the local claims (a full duration:
+-- "a short respawn is not worth buying out of") the gate selects the heroes
+-- whose respawn is long enough to matter, and leaving it at 60 in a 0.75 world
+-- selects a strictly smaller set than it was written to. Under the documented
+-- semantics (`GetRespawnTime` is the REMAINING time -- GH #208) it means "stop
+-- considering buyback once you are within a minute of respawning", and there
+-- the turbo ceiling bites outright:
+--   * remaining <= R <= 75, so the two rungs below this gate are reachable only
+--     while remaining is in [60, 75] -- at most the first R - 60 <= FIFTEEN
+--     seconds of a death;
+--   * and for every hero whose turbo respawn duration is under 60s the gate is
+--     already true at elapsed 0, so those two rungs are shut for the WHOLE
+--     death. Turbo R < 60 is normal R < 80, i.e. most of the respawn table.
+-- This is NOT the clean structural zero 'bbfight' has: above R = 60 the rungs
+-- do open. It is a domain the mode shrank, stated as a domain and measured as
+-- one in tests/test_bbshort_turbo_respawn_floor.lua.
+--
+-- Scaled by the same documented factor rather than re-guessed: 60 * 0.75 = 45.
+--
+-- Gated ('bbshort'), turbo-only, single conjunct against a mode predicate, and
+-- deliberately NOT conjoined with 'bbfight' or 'bbrespawn' (GH #207): the armed
+-- domain below is taken on the SHIPPED reading of both neighbours, so arming
+-- this id alone still fires. One-directional -- it only ever lowers a floor
+-- that blocks buyback, so it can open a rung and never close one.
+J.BUYBACK_SHORT_FLOOR  = 60
+
+function J.BuybackShortRespawnFloor()
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'bbshort' ) then
+		return J.BUYBACK_SHORT_FLOOR * J.TURBO_RESPAWN_FACTOR
+	end
+	return J.BUYBACK_SHORT_FLOOR
 end
 
 function J.DoesUnitHaveTemporaryBuff(hUnit)

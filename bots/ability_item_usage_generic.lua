@@ -577,7 +577,13 @@ local function BuybackUsageComplement()
 		end
 	end
 
-	if nFullRespawnTime < 60 then
+	-- The 60-second floor above the two rungs below is a NORMAL-mode duration in
+	-- a mode that scales every respawn by 0.75, and under the documented getter
+	-- semantics it shuts both rungs for the whole death whenever the turbo
+	-- respawn duration is under 60s. Moved behind J.BuybackShortRespawnFloor
+	-- (soak candidate 'bbshort'); unarmed it returns the literal 60 this line
+	-- shipped with.
+	if nFullRespawnTime < J.BuybackShortRespawnFloor() then
 		return
 	end
 

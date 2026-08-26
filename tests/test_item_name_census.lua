@@ -206,13 +206,20 @@ local tRegistered = {
     -- checkout behind main (GH #161's gate-slower-than-main race, GH #171's
     -- red-trunk blindness).  Verified per commit:
     --   089bee2a -> 6774 | c48dc11b (+7) -> 6781 | 1fcfcd83 -> 6781 | HEAD -> 6781
+    -- 6785 -> 6791 (strategy 2026-08-26T1x:xxZ, gated `bbshort`, GH #222): the
+    -- 6-line comment above the buyback ladder's `< 60` floor sits above BOTH
+    -- pins in this file again -- SIXTH instance of the shape at :198, and the
+    -- second time the SAME pair moved together.  Re-anchored, not relaxed; the
+    -- probe and the lookup are textually unchanged.  This round found it the way
+    -- the note below says it should be found: the selfcheck's Lua leg, on the
+    -- working tree, before the push -- so the pin was never red on main.
     -- 6781 -> 6785 (director 2026-08-26T15:5xZ): 71b53d58 (strategy 14:28Z,
     -- gated `bbfight`, GH #215) added 4 lines above BOTH pins in this file.  One
     -- commit, two red keys, and this one only became visible after the other was
     -- fixed -- the check errors on the FIRST new name it meets, so a drifted pin
     -- hides every drifted pin behind it.  That is why the count of reds a run
     -- reports is a LOWER BOUND for this file, not its content.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6785'] =
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6791'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
@@ -237,6 +244,8 @@ local tRegistered = {
     -- gate saying so.  Three pins, two commits, one afternoon.
     ['PROBE item_recipe bots/mode_retreat_generic.lua:1053'] =
         'matches every recipe by prefix.',
+    -- 807 -> 813 (strategy 2026-08-26T1x:xxZ, gated `bbshort`, GH #222): same
+    -- 6-line comment as the lookup pin above; see that note.
     -- 803 -> 807 (director 2026-08-26T15:5xZ).  FIFTH instance of the shape the
     -- note at :198 names: 71b53d58 (strategy 14:28Z, gated `bbfight`, GH #215)
     -- added 4 lines ABOVE this site, and the pin moved with the file while the
@@ -245,7 +254,7 @@ local tRegistered = {
     -- which was the only thing running this file: until the same round tagged
     -- 3b below, it carried no discovery tag and the selfcheck's Lua leg never
     -- picked it up (GH #216).
-    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:807'] =
+    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:813'] =
         'matches every recipe by prefix.',
 }
 

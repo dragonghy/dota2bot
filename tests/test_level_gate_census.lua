@@ -106,6 +106,15 @@ local cs = require('corpus_scale')
 -- and that check is the step that turns the banner into a fact. Only the `line`
 -- field moved here; file, op, n, eff, text and verdict are untouched, so the
 -- text assertion below still re-reads the row it was classified from.
+-- The 2026-08-26 'bbshort' change (GH #222) then moved the THREE
+-- ability_item_usage_generic rows that sit below the buyback ladder's `< 60`
+-- floor by +6 (the explanatory block above it): :588 -> :594, :5794 -> :5800,
+-- :5834 -> :5840. The :149 row is above the insertion point and did not move,
+-- so this is a split shift like 'tbearly' and 'campdanger'. Same discipline as
+-- every entry above -- only the `line` field moved; file, op, n, eff, text and
+-- verdict are untouched. This is GH #221's "line number as a registration key"
+-- in its intended mode: the ratchet fired, and the pin was re-anchored on the
+-- same row rather than relaxed.
 -- The `:392 / :506 / :796 / :860` style labels in the header prose and in test
 -- names above and below are GH #84's OWN numbering of the tree it was filed
 -- against. They are stable labels for the rows, not current line numbers, and
@@ -166,7 +175,7 @@ local GATES = {
     -- 584 -> 588 (+4): the 2026-08-26T1x:xxZ strategy round added a four-line
     -- COMMENT above this branch landing `bbfight`.  Source text unchanged, so
     -- this is 0LN2's prescribed repair -- move the pin, never relax the check.
-    { file = 'bots/ability_item_usage_generic.lua', line = 588, op = '>', n = 24, eff = 25,
+    { file = 'bots/ability_item_usage_generic.lua', line = 594, op = '>', n = 24, eff = 25,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 24',
       why = 'buyback path 2 of 3. Inert on its own terms (a level-25 hero). The SECOND, '
@@ -186,14 +195,14 @@ local GATES = {
     -- them COMMENT).  Third time these two pins have moved and the second time
     -- prose alone did it -- 0LN2 again, and the reason this file keys nothing
     -- on line numbers that it could key on text instead.
-    { file = 'bots/ability_item_usage_generic.lua', line = 5794, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5800, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5834, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5840, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
@@ -570,9 +579,14 @@ tests['[recorded] all three automatic buyback paths are shut in turbo'] = functi
     -- rather than deleted. Full reasoning: tests/test_ancient_hp_unit.lua.
     assert(src:find('if J.IsAncientBadlyHurt( ancient ) then', 1, true),
         'buyback path 1 changed -- re-read the units observation in GH #84 follow-up')
-    -- paths 2 and 3 both sit below this early return.
-    assert(src:find('if nFullRespawnTime < 60 then', 1, true),
+    -- paths 2 and 3 both sit below this early return. RATCHET MOVED, NOT
+    -- LOOSENED (GH #222): the floor is behind 'bbshort' now, so the pin follows
+    -- it to the helper AND to the unarmed value, which is the number the
+    -- reasoning below is written against.
+    assert(src:find('if nFullRespawnTime < J.BuybackShortRespawnFloor() then', 1, true),
         'the respawn-time floor above buyback paths 2/3 moved')
+    assert(read_file('bots/FunLib/jmz_func.lua'):find('J.BUYBACK_SHORT_FLOOR  = 60', 1, true),
+        'the floor above paths 2/3 no longer defaults to 60; the split below is stale')
     assert(src:find('if bot:GetLevel() > 24', 1, true), 'buyback path 2 gate moved')
     -- CORRECTION (GH #215). This slot used to read "turbo HALVES respawn time",
     -- and the factor was load-bearing: at 0.5 the turbo ceiling is 50s, the
@@ -590,6 +604,17 @@ tests['[recorded] all three automatic buyback paths are shut in turbo'] = functi
     --     impossible, and still not measurable here (GetRespawnTime is not in
     --     the dump). Unchanged in kind: a claim to check in-game or via a dumper
     --     field, never asserted as measured.
+    -- FOLLOW-UP (GH #222). Path 3 got one step more decided without any new
+    -- corpus: the 60 in the floor above it is a normal-mode duration too, and
+    -- under the documented REMAINING semantics it is already true at elapsed 0
+    -- for every hero whose turbo respawn duration is under 60s -- so path 3 is
+    -- shut for those whole deaths by ARITHMETIC, not by the level claim. It is
+    -- behind 'bbshort' now; tests/test_bbshort_turbo_respawn_floor.lua carries
+    -- the domain count and, importantly, the control separating this floor's
+    -- zeros from the `< 40` rung's. Path 1 is untouched by that and stays a
+    -- pure RECORDED CLAIM. What is still missing for path 3 is the denominator
+    -- (how much of the corpus has turbo respawn under 60s), which is the
+    -- outstanding request to the replay desk -- not something asserted here.
     -- The factor itself is external to this repo and unverifiable from a
     -- container, so it is a named constant with its own ratchet rather than a
     -- number retyped here.
