@@ -11,7 +11,13 @@
 --
 -- Crystal Maiden's slot order (datafeed hero_id=5, fetched 2026-08-26; the
 -- grant/innate flags are the feed's own `ability_is_granted_by_shard` /
--- `ability_is_innate`):
+-- `ability_is_innate`).  ⭐ CONFIRMED 2026-08-26 (GH #209) against the game's
+-- own npc_heroes.txt, which publishes the ability-index map the datafeed does
+-- not: the six rows below match it exactly, and
+-- tests/test_hero_slot_order_anchor.lua re-checks them every run -- so this is
+-- no longer the assumption the LIMITS section below calls it, and a patch that
+-- moves a row turns this candidate red instead of silently pointing it at
+-- another ability:
 --
 --     slot 0  crystal_maiden_crystal_nova
 --     slot 1  crystal_maiden_frostbite

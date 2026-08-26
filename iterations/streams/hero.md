@@ -87,11 +87,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - **下一棒**:① 入集判定归总监,本组不申请(建议与 `zusbind` 同族,但**不写成合取门**);
      ② 见下条 `-17c`。
 
--17c. **`GRANTSLOT` 的另一半:逐英雄槽位顺序普查**(2026-08-26T07:45Z 立,未做)。
-   `-17` 只数清了**按名字**绑定(40 处 file-scope 站点);**按下标**那一半要逐英雄的槽位顺序
-   (每英雄一次 datafeed GET),**是一次真正的普查工具,不是一个工作单元塞得下的**。
-   **`-17b` §2 的 dumper 单向读数把它变便宜了**:凡是在语料里出现过的技能,
-   现在都能确定 walk 不会丢它 —— 普查因此可以只在「语料里没出现过的可选技能」上枚举世界。
+-17d. ~~**`GRANTSLOT`:焦点五在这条轴上闭合(GH #209,零行为改动、零 gate)**~~
+   **2026-08-26T10:56Z done —— `bots/` 零改动、无新 gate id、`state.json` 无新增、零 AWS、不提 queue 请求。**
+   下一轮**不要重推**这五个:**Axe/Lion 结构性正确**(只读下标 1/2/3/6,前面什么都没有,
+   大招 slot 5 ≥ 4)、**WK 按名字绑**、**CM/Zeus 已各有候选**(`cmclone`/`zusbind`)。
+   - **⭐ 承重读数一:那个「假设」有权威离线来源,而且是一次 GET 不是 127 次。**
+     `-17c` 原估「每英雄一次 datafeed GET」——**去证实来源才发现 datafeed 根本没有 slot 字段**
+     (只有 `name`/`ability_is_innate`/`ability_is_granted_by_*`,顺序是展示顺序)。
+     游戏自己的 **`npc_heroes.txt` 有字面 `"AbilityN"`**,而本仓库**早就在读同一个镜像**
+     (`gen_ability_meta.py`)。⇒ 一次 ~900KB GET = 全 127 英雄。
+     **推论:找新数据源之前,先数一遍仓库已经在读什么。**(与 `-17` 那条「先数多数人怎么写」同族。)
+   - **⭐ 承重读数二:#203/#206 引用的槽表与 KV 逐行相同 ⇒ 它们不再是假设。**
+     Zeus 7 行、CM 6 行全对,**没有任何东西需要落地**;
+     `test_hero_slot_order_anchor.lua` §2 每轮重核抬头里的 `--  slot N  name`,
+     patch 挪了槽位 ⇒ **红的是那个候选**,而不是它悄悄开始量另一个技能。
+   - **⭐ 承重读数三:空槽是 `generic_hidden` 而 walk 留着它** —— 这就是
+     `X.GetAbilityList` 敢写死 `slot >= 4` + 下标 6 的**全部理由**(KV 约定:
+     Ability1..3 常显、4/5 额外或占位、6 大招)。Axe:slot 3/4 都是占位符、大招 slot 5、innate slot 6。
+     **顺带卸下 §26/#151 那条 LIMIT 的最细一条腿**(LIMIT 本身仍成立):
+     `test_focus_innate_index_anchor.lua` §5 证「dump 顺序 ≠ slot 顺序」原本压在
+     「Axe 大招 **1/26** 帧冷却」这个 n=1 上;KV 直说大招在 slot 5、前两格是 dumper 滤掉的占位符,
+     **这正是他 dump 数组只有 4 条的原因**。**断言一条没动**,且**仍然不许从语料推 index map**。
+   - **判别式是量出来的不是断言的**:§3 除了断言 Axe/Lion 四个绑定在**每个** drop-world 不变,
+     **在同一循环里断言 CM 的下标 4 会变** —— 否则「Axe/Lion 全绿」可能只是这条轴对谁都成立。
+   - **变异 9 抓 8**;逃掉的 **M9**(丢弃规则 `and`→`or`)**复核判为分工不是盲区**:
+     本文件按构造把丢弃决定当**不透明谓词**枚举(#203 同款),而那个合取由
+     `test_focus_innate_index_anchor.lua` §3 的文本断言盯着(**实测**:施加 M9 后它当场红)。
+     **对照变异如实逃逸**,且按 `-16` 的教训**特意挑了本文件所有文本棘轮都够不着的位置**。
+   - **⭐ 最该被拿走的方法教训:我自造的 runner 买到一个假 red。**
+     为跑子集写的「每文件一个新进程」跑法让 `test_cm_arcane_aura_passive.lua` 一条 armed 断言红了;
+     **官方 runner 跑同一个文件 16/0 全绿**(它单进程跑全部文件,存在跨文件 in-process 状态)。
+     而 `run_tests.lua` 抬头就写着「**the runner is the only supported entry point**」。
+     **别再自造 runner** —— 子集用 `run_tests.lua <filename>` 过滤器逐个跑。
+
+-17c. **`GRANTSLOT` 的另一半:非焦点英雄那 15 个下标绑定**(2026-08-26T07:45Z 立,
+   2026-08-26T10:56Z **工具已就位、线索已具名**,仍未做;**非焦点英雄,认领者自取**)。
+   `-17` 数清了**按名字**绑定(40 处 file-scope 站点);**按下标**那一半现在有了权威槽表:
+   `tools/agent/hero_slot_map.py` → `tests/mock/hero_slots.lua`(127 英雄,0 基槽位为键)。
+   **全仓 46 个英雄文件按下标绑,17 个读到下标 4/5**,焦点五占 2(都已有候选),**剩 15 个是线索**:
+   - **slot 3 是可选技能、下标 4 被它占掉**:juggernaut / lich / necrolyte / nevermore / oracle /
+     phantom_assassin / sniper / witch_doctor / slark / ogre_magi(还读 5)/ kunkka(该行已注释掉);
+   - **slot 4 是占位符**:muerta / omniknight / riki / dazzle(读 5)。
+   ⚠️ **线索不是判词**:槽位顺序只是一半,另一半是 `NOT_LEARNABLE and IsHidden()`,离线读不到。
+   **`-17b` §2 的 dumper 单向读数在这 15 个上可复用**(名字出现在某帧 ability 数组 ⇒ 那帧不 hidden),
+   **但缺席仍是析取**。`test_hero_slot_order_anchor.lua` §4 已把这 17 个的**集合**钉成棘轮:
+   再有文件开始读 4/5 就红,并被指回 GH #209。
 
 -16. ~~**§18 的 Lever C 终于写了:WK 打肉分支的 600 绝对蓝(GH #199,gated `wkrosh`)**~~
    **2026-08-26T01:52Z done —— 本轮改了 `bots/`(1 个新 helper + 1 行分支条件),
@@ -1505,6 +1545,38 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-26T10:56Z(报告 `iterations/reports/hero/20260826T105631Z.md`;**自选 backlog `-17c` 的
+  焦点五切片,开了 GH #209**,`GRANTSLOT` 的**另一半:槽位顺序本身**)—— 自检 **worst exit 3**:
+  UNLANDED 0、两条稳定版锚点不变量 ok、py 32/0、queue 待裁 0;cadence 洞在 batch-desk(8.9h)与
+  replay-check(3.7–3.8h),**本组无洞**;owner P1/P2 球在协同组、P3 在总监 ⇒ **本组无优先项**。
+  **本轮 `bots/` 零改动**(前三轮连着改 `bots/`,这一轮不是):无新 gate id、`state.json` 无新增、
+  **零 AWS**、**不提 queue 请求**。三处既有文件的改动是**纯注释**(diff 非注释行 **0**)。
+  - **⭐ 承重读数一:那个「假设」有权威离线来源,而且是一次 GET 不是 127 次。**
+    `-17c` 原估「每英雄一次 datafeed GET」;**先去证实来源,才发现 datafeed 根本没有 slot 字段**
+    (只有 `name`/`ability_is_innate`/`ability_is_granted_by_*`,顺序是展示顺序)——
+    **而按 datafeed 顺序读 Axe,大招落在 slot 3、`slot >= 4` 失败、下标 6 永不写、`abilityR` 是 nil**。
+    真来源是游戏自己的 **`npc_heroes.txt`**(字面 `"AbilityN"`),而本仓库**早就在读同一个镜像**。
+    **推论:找新数据源之前,先数一遍仓库已经在读什么。**
+  - **⭐ 承重读数二:#203/#206 引用的槽表与 KV 逐行相同** —— Zeus 7 行、CM 6 行全对
+    ⇒ **两个已落地候选的承重假设变成了测量**,且 §2 每轮重核抬头里的 `--  slot N  name`,
+    patch 挪槽位 ⇒ **红的是那个候选**。
+  - **⭐ 承重读数三:空槽是 `generic_hidden`,walk 留着它** —— 这是 `X.GetAbilityList`
+    敢写死 `slot >= 4` + 下标 6 的**全部理由**。**顺带卸下 §26/#151 那条 LIMIT 的 n=1 腿**
+    (Axe 大招 1/26 帧冷却):KV 直说大招在 slot 5、前两格是 dumper 滤掉的占位符。
+    **断言一条没动,且仍然不许从语料推 index map。**
+  - **结论:Axe/Lion 不需要第五个候选,而且是结构性的** —— 只读 1/2/3/6,下标 1..3 前面什么都没有。
+    **判别式是量出来的**:同一循环里断言 **CM 的下标 4 会变**,否则「Axe/Lion 全绿」什么也没证。
+  - **下一棒**:`-17c` 剩下的 **15 个非焦点英雄**已具名(GH #209 §四),**不归本组**,
+    §4 已把这 17 个的集合钉成棘轮。
+  - **变异 9 抓 8 + 1 对照如实逃逸**;M9 复核判为分工不是盲区(实测邻居棘轮抓得住)。
+  - **⭐ 一次自己的量测事故:自造的 runner 买到一个假 red。** 每文件一个新进程的跑法让
+    `test_cm_arcane_aura_passive.lua` 红了一条 armed 断言,**官方 runner 同文件 16/0 全绿**。
+    `run_tests.lua` 抬头写着「the runner is the only supported entry point」。**别再自造 runner。**
+  - **门(如实)**:luacheck **exit 0 / 0 警告**(7.9s,容器里已装,与 GH #205 一致);
+    `run_py_tests.sh` **33/0**(含新增 11 例);`run_tests.lua` **全量没跑**(GH #124),
+    跑的是**可复现 grep 出来的相关子集 28 文件 / 387 用例 / 0 失败**,
+    **逐文件断言跑到了 >0 个用例**,**全部经由官方 runner**
+    ⇒ **本轮 Lua 侧的说法是「相关子集 387 用例全绿」,不是「全量全绿」。**
 - 2026-08-26T07:45Z(报告 `iterations/reports/hero/20260826T074500Z.md`;**自选 backlog `-17b`,
   开了 GH #206**,`GRANTSLOT` 的 **CM 那一半**)—— 自检 **worst exit 3**:UNLANDED 0、两条稳定版
   锚点不变量 ok、py 32/0;cadence 洞在 batch-desk(8.9h)、replay-check(3.7–3.8h)、strategy(3.5h);

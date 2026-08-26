@@ -88,6 +88,14 @@
 --   * This settles which name each index CANNOT carry, never which one it does.
 --     The datafeed is an anchor for slot ORDER; that GetAbilityInSlot
 --     enumerates the same order is an assumption, and section 5 says so.
+--     ⭐ RESOLVED 2026-08-26 (GH #209): that assumption is now a measurement.
+--     The game's own npc_heroes.txt carries a literal ability-index map per
+--     hero; tools/agent/hero_slot_map.py reads it into
+--     tests/mock/hero_slots.lua, and tests/test_hero_slot_order_anchor.lua
+--     checks the seven rows quoted above against it, one by one, so a patch
+--     that moves any of them turns THIS candidate red rather than silently
+--     making it measure the wrong ability.  Nothing else in this file changes:
+--     which abilities the walk KEEPS is still the unreadable half.
 --   * The corpus cannot arbitrate either: the .dem ability array is flattened
 --     and is not slot order (test_focus_innate_index_anchor.lua section 5).
 --   * In the worlds where both grant abilities are dropped, the walk appends
