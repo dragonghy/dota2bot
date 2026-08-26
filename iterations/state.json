@@ -3998,6 +3998,22 @@
     "gates": "luacheck 0 警告 EXIT=0;python 32 passed 0 failed;Lua 切片 bbrespawn 16 / abilanc 13 / gate_claim 10 / smoke 3 / no_undefined 3 / jmz 3 / level_gate 15 / camp 128 / pull 139 / farm 29 / roam 27 / ancient 47 / tp 190 全部 0 失败。`bots/` 只动两个文件,零新 fixture 文件,零 AWS。"
   },
 
+  "bbfight_20260826": {
+    "id": "bbfight",
+    "status": "gated, turbo-only, NOT live. **本轮不提入集、不提波次请求** —— 域已量成结构性的(见 domain),但它的两个未观测合取项(等级 25、有团战点)在本仓语料里都够不着,先要一个分母:turbo 局里「等级 ≥ 25 的死亡」有多少次。分母请求已交录像组(GH #215)。",
+    "landed": "2026-08-26T1x:xxZ strategy",
+    "issue": "GH #215(本组本轮自开);认领依据 = GH #212 §4 把 shipped 侧问题交回本组,顺着同一条「内层常数被外层支配」的形状走到买活阶梯",
+    "defect": "`ability_item_usage_generic` 的买活三段阶梯,中间那段写成 `bot:GetLevel() > 24 and nRemainingRespawnTime > 80`,而 **80 是普通模式的时长**。两条有据可查的引擎事实:英雄复活表从 1 级 12s 升到 25 级 100s(25 级以上保持最大值);**turbo 复活快 25%**。⇒ turbo 的**复活时长天花板 = 100 × 0.75 = 75 秒**,比这条分支要的 80 **低 5 秒**。所以 `nRemainingRespawnTime > 80` 在任何可达 turbo 帧上都是假 —— **两种读法都是**(出厂的 R−2e 衰减更快)。这是**结构性零**,而且是在复活表**自己的最大值**上、在这条分支**唯一为之而写的那个等级**上成立的零。",
+    "direction": "**单向,只会打开本该允许的买活**:阈值只降不升,门上方的 `nFullRespawnTime < 60` 早退与门下方的 `< 40` 早退都不动。`[lever]` 用例把「armed 从不关掉任何一格」钉成穷举断言。",
+    "fix": "`J.BuybackFightRespawnFloor()`(jmz_func),armed 返回 `J.BUYBACK_FIGHT_FLOOR * J.TURBO_RESPAWN_FACTOR` = 60;**未 armed 返回出厂那个字面量 80**。三个常数(100 / 0.75 / 80)**具名**并各带棘轮,因为它们是**本容器无法核验的外部引擎事实** —— 具名 + 棘轮让漂移变成红测试而不是悄悄过期的结论。armed 值**是算出来的,不许写字面量 60**(`[source]` 断言函数体里没有 `60`)。",
+    "one_lever": "同一段阶梯里的另外两个阈值(`> 20` 守遗迹、`< 40` 早退)与姊妹误读 `nFullRespawnTime < 60`(GH #208 登记的下一格)**都故意没动**,`[limit]` 两条用例原样钉住。",
+    "domain": "**结构性,不是「域太小」**:出厂腿在整张可达网格(R ∈ turbo 值域 9..75 × e)上 **0/50 格**为真;armed 腿 **6 格**为真(R=70 的 e=0/1,R=75 的 e=0/1/5/7)—— 复活表顶端、死亡最初几秒。**未观测的两个合取项**(等级 > 24、`GetTeamFightLocation ~= nil`)是分母未知的那一半。",
+    "local": "tests/test_bbfight_turbo_respawn_ceiling.lua **20 例全绿,10 变异 10 抓 + 控制前后各一次干净**。真实帧 `tests/fixtures/f_080225_wk_revive.lua`(t=403.0,turbo)上的 zuus L8 `alive=false`。两条世界事实照钉:`[W1]` dump 没有 respawn 字段(R 是**会倒数的**声明替身,沿用 GH #208 的判据一);`[W2]` **全 fixture 归档等级上限 = 19** ⇒ `GetLevel() > 24` 在真实帧上也**从没见过** —— 这条分支在语料里够不着有**两个互相独立的原因**,只有一个是代码缺陷,测试特意不把另一个洗成缺陷(`[defect]` 那格**显式授予**等级合取项,外加一条反向控制)。",
+    "gate_shape": "单合取,另一半是 `J.IsModeTurbo()` 模式谓词,不是另一个 soak id ⇒ 不属于 GH #207 / `pullcad` 族;`[lever]` 另有一条**独立性**用例:armed 腿的 6 格是在**出厂的 R−2e 读法**上取到的,所以 `bbfight` **单独 arm 也打得响**,不依赖 `bbrespawn` 是否在串里。",
+    "byproduct": "**`test_level_gate_census.lua` 里一条登记了 5 天的 INFERENCE 系数是错的**:它写「turbo halves respawn time」(0.5)。那个系数是承重的 —— 若真是 0.5,天花板 50s,阶梯**上方**的 `< 60` 早退恒真,**三条买活通路全死**、共享同一个判决;按有据可查的 0.75,天花板 75s,三条通路**分岔**:第 2 条被判成 DECIDED(结构性零,常数间的支配),第 1/3 条仍是 RECORDED CLAIM(要 20s/40s,天花板放得过,关掉它们的是「中位英雄 10 级」这个语料事实 —— 罕见,不是不可能)。已就地改正并加两条棘轮。",
+    "gates": "luacheck bots game 0 警告 EXIT=0;python 34 passed 0 failed;Lua 受影响面(全部 grep 到 aiug/jmz_func 的 101 个文件)分 6 段并行跑完。`bots/` 只动两个文件,零新 fixture 文件,零 AWS,`queue.json` 零改动。"
+  },
+
   "luacheck_gate_RULING_20260826T1250Z": {
     "what": "GH #205 裁定 = 选项 (B):共用 tools/agent/ensure_lua_toolchain.sh,自检与新的 tools/agent/luacheck_gate.sh 两个调用者共用一份安装器。铁律 6 静态那半从此在容器里跑得起来。",
     "why_not_A": "开工自检加第五条腿被否决:开工时还没改任何东西,luacheck 测的是「我改的东西干不干净」,与那个文件其余四条腿(测 trunk 红没红)不同轴。",

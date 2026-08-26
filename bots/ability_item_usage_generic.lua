@@ -581,8 +581,12 @@ local function BuybackUsageComplement()
 		return
 	end
 
+	-- The 80-second floor is a NORMAL-mode duration and turbo's respawn ceiling
+	-- is 75s, so this branch is a structural zero in turbo. Moved behind
+	-- J.BuybackFightRespawnFloor (soak candidate 'bbfight'); unarmed it returns
+	-- the literal 80 this line shipped with.
 	if bot:GetLevel() > 24
-		and nRemainingRespawnTime > 80
+		and nRemainingRespawnTime > J.BuybackFightRespawnFloor()
 	then
 		local nTeamFightLocation = J.GetTeamFightLocation( bot )
 		if nTeamFightLocation ~= nil

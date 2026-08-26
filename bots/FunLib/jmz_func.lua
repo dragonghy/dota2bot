@@ -10562,6 +10562,40 @@ function J.RespawnRemaining( hBot, fDeathTime )
 	end
 	return hBot:GetRespawnTime() - ( DotaTime() - fDeathTime )
 end
+
+-- [GH #215] The buyback ladder's level-25 teamfight branch demands eighty
+-- seconds of respawn still to run. In turbo that number cannot occur.
+--
+-- Two documented engine facts, neither of them observable from a dump and both
+-- named here so a ratchet can pin them:
+--   * the hero respawn table runs from 12s at level 1 up to 100s at level 25,
+--     and stays at its maximum above that;
+--   * turbo makes respawn 25% faster.
+-- The turbo CEILING is therefore 100 * 0.75 = 75 seconds -- five seconds BELOW
+-- the floor the branch asks for -- so `nRemainingRespawnTime > 80` is false on
+-- every reachable turbo frame, under EITHER reading of the getter (the shipped
+-- R - 2e decays faster still). It is a structural zero, and it is one at the
+-- respawn table's own maximum, on the one level the branch was written for.
+--
+-- The threshold is a normal-mode duration, so it is scaled by the same
+-- documented factor rather than re-guessed: 80 * 0.75 = 60, which at the turbo
+-- ceiling of 75 leaves the first fifteen seconds of a level-25 death inside the
+-- branch instead of none of it.
+--
+-- Gated (`bbfight`), turbo-only, and deliberately NOT conjoined with
+-- 'bbrespawn' (GH #207): armed alone it must still be able to fire, so the
+-- shipped R - 2e reading is what the armed leg has to clear.
+J.RESPAWN_TABLE_MAX    = 100
+J.TURBO_RESPAWN_FACTOR = 0.75
+J.BUYBACK_FIGHT_FLOOR  = 80
+
+function J.BuybackFightRespawnFloor()
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'bbfight' ) then
+		return J.BUYBACK_FIGHT_FLOOR * J.TURBO_RESPAWN_FACTOR
+	end
+	return J.BUYBACK_FIGHT_FLOOR
+end
+
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then

@@ -163,12 +163,18 @@ local GATES = {
       why = 'a bloodseeker-only opt-out at the level cap. The subject of the branch is a '
          .. 'level-30 hero; that hero does not exist in turbo, so nothing is lost.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 584, op = '>', n = 24, eff = 25,
+    -- 584 -> 588 (+4): the 2026-08-26T1x:xxZ strategy round added a four-line
+    -- COMMENT above this branch landing `bbfight`.  Source text unchanged, so
+    -- this is 0LN2's prescribed repair -- move the pin, never relax the check.
+    { file = 'bots/ability_item_usage_generic.lua', line = 588, op = '>', n = 24, eff = 25,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 24',
-      why = 'buyback path 2 of 3. Inert on its own terms (a level-25 hero). See the '
-         .. '[recorded] buyback test below: this path is unreachable for a SECOND, '
-         .. 'independent reason, which is the part worth following up.' },
+      why = 'buyback path 2 of 3. Inert on its own terms (a level-25 hero). The SECOND, '
+         .. 'independent reason this row used to hand on as "worth following up" has '
+         .. 'since been decided (GH #215): the sibling conjunct asks for 80 seconds of '
+         .. 'respawn still to run and turbo cannot produce more than 75, so the branch '
+         .. 'is a structural zero even for the level-25 hero it was written for. Behind '
+         .. "'bbfight' now; this level term is still the shipped text." },
 
     -- 5768 -> 5783 and 5808 -> 5823 (both +15): the 2026-08-24T22:55Z strategy
     -- round inserted 15 lines at ~5445 for `tpgap`.  Source text unchanged, so
@@ -180,14 +186,14 @@ local GATES = {
     -- them COMMENT).  Third time these two pins have moved and the second time
     -- prose alone did it -- 0LN2 again, and the reason this file keys nothing
     -- on line numbers that it could key on text instead.
-    { file = 'bots/ability_item_usage_generic.lua', line = 5790, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5794, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5830, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5834, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
@@ -568,12 +574,27 @@ tests['[recorded] all three automatic buyback paths are shut in turbo'] = functi
     assert(src:find('if nFullRespawnTime < 60 then', 1, true),
         'the respawn-time floor above buyback paths 2/3 moved')
     assert(src:find('if bot:GetLevel() > 24', 1, true), 'buyback path 2 gate moved')
-    -- INFERENCE, stated as one: turbo halves respawn time and our games end with
-    -- a median hero at level 10, so `bot:GetRespawnTime() >= 60` is not a state
-    -- we believe occurs. The harness cannot decide this -- GetRespawnTime is not
-    -- in the dump -- so it is recorded as a claim to be checked in-game or by a
-    -- dumper field, never asserted as measured.
-    assert(true)
+    -- CORRECTION (GH #215). This slot used to read "turbo HALVES respawn time",
+    -- and the factor was load-bearing: at 0.5 the turbo ceiling is 50s, the
+    -- `nFullRespawnTime < 60` floor above never opens, and all three paths are
+    -- dead. The documented factor is 25% faster, not 50%, so the ceiling is
+    -- 100 * 0.75 = 75s and the three paths split instead of sharing one verdict:
+    --   * path 2 (`> 80`) is DECIDED -- 75 < 80 is a dominance between two
+    --     constants, true even for the level-25 hero the branch was written for,
+    --     so it is a structural zero rather than something "we believe" is rare.
+    --     It is behind 'bbfight' now; tests/test_bbfight_turbo_respawn_ceiling.lua
+    --     carries the arithmetic and the two world facts it rests on.
+    --   * paths 1 and 3 stay RECORDED CLAIMS: they need 20s and 40s of respawn,
+    --     which the ceiling allows, so what shuts them is the corpus fact that
+    --     our games end with a median hero around level 10 -- rare, not
+    --     impossible, and still not measurable here (GetRespawnTime is not in
+    --     the dump). Unchanged in kind: a claim to check in-game or via a dumper
+    --     field, never asserted as measured.
+    -- The factor itself is external to this repo and unverifiable from a
+    -- container, so it is a named constant with its own ratchet rather than a
+    -- number retyped here.
+    assert(src:find('and nRemainingRespawnTime > 20 then', 1, true), 'buyback path 1 rung moved')
+    assert(src:find('if nRemainingRespawnTime < 40', 1, true), 'buyback path 3 floor moved')
 end
 
 return tests
