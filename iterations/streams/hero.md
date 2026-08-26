@@ -22,6 +22,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-18. ~~**新轴 `TALENTSLOT`:天赋槽位的**来源**一直是一张展示列表(GH #214,零行为改动、零 gate)**~~
+   **2026-08-26T13:57Z done —— `bots/` 零改动、无新 gate id、`state.json` 新增 `talentkv_20260826`
+   (`gated:false`)、稳定版未漂移、零 AWS、不提 queue 请求。**
+   - **动手前先数了一遍仓库已经在读什么,而那次数数本身就是读数**:天赋名到下标 GH #166 已经钉过了
+     ⇒ 直接开工会重做一遍 08-24。**但 census 的 docstring 自己写着,槽位顺序取自 odota
+     `dotaconstants` 的 `talents[]` —— 一张展示列表**,而 `-17d`(#209)刚刚证过
+     **展示列表不是槽位列表**。⇒ 没做的那一半不是「天赋轴」,是**天赋轴的来源**。
+   - **⭐ 承重读数(全 127 英雄,零 AWS)**:天赋是一段**连续的** `"AbilityN" "special_bonus_*"`,
+     **每个英雄恰好 8 条且连续**;**段起点不总是 Ability10** —— 123/127 是,
+     **kez/rubick 从 12、largo 从 15、invoker 从 17**(下面槽位装着真技能)。
+     odota 顺序 == KV 段 **106/127**;**Valve datafeed == KV 段 22/22 英雄、176 行逐行相同**,
+     而 odota 与那两者都不同的有 **18/22** ⇒ **落后的是 odota,而这是裁出来的不是猜的**。
+     裁判是仓库**已经在用**的 datafeed ⇒ 不是引入第三个信仰,是让已有的那个开口说话。
+     **⚠️ 「起点不总是 10」不是理论**:parser 第一版写死 10,把 invoker 的天赋报成
+     `invoker_emp`/`invoker_alacrity`/… —— **八个像技能名的技能名,零报错**。
+   - **焦点五命中一处,且是活的那一档**:WK slot **[4]** 是 `special_bonus_hp_300`
+     (KV + datafeed `value=300`),odota 说 `hp_350`;`['t15']={10,0}` 解析到下标 4
+     ⇒ **就是他实际拿的 t15**。**行为影响是结构性的零**:`sTalentList` 由引擎在运行期
+     从 `GetAbilityInSlot` 建出,**从不读任何镜像** —— 错的是**记录**,不是出货逻辑。
+   - **⭐ 本轮最该被拿走的一条:「两个源都这么说」里的第二个源说不出话。**
+     仓库**同时持有两个答案两天**没人发现(`hero_skeleton_king.lua:271` 说 hp_300 = 对的;
+     快照与 anchor 说 hp_350)。08-24 把理由记成「odota + the hero KV read hp_350」——
+     **它不可能是两个**:`npc_dota_hero_skeleton_king.txt` 装的是 `AbilityValues` 覆盖键、
+     **一个天赋名字都没有**(grep 命中 0),**而这句话就写在 census 自己 docstring 里、
+     在引用它那一行往上三段**。⇒ **写「两个源一致」之前,先确认第二个源有没有能力不一致。**
+   - **落地物**:census 改读 `npc_heroes.txt`、odota 降级为交叉核对、新增 `--cross-check`
+     (**feed 与被快照的 KV 段不一致 ⇒ 退出码 3**;odota 单独不一致只是备注 —— **方向是刻意分开的**);
+     快照重生成(**唯一变动的数据行就是 WK 那行,其余逐字节相同**);
+     anchor 新增 **§5 互相钉住快照**(**是一致性棘轮不是正确性棘轮 —— 两个文件同时错成一样仍然绿**,
+     管正确性的是源,源由退出码 3 守着,**源码里写明了这个分工**);
+     新 `tests/test_talent_slot_census.py` 19 例;`state.json` 里 08-24 那条 `drive_by`
+     **就地打 RETRACTED**(不删原文,免得下一份摘要重抄同样的推理)。
+   - **变异 12 条,11 抓 + 1 对照如实逃逸**。**两条第一版逃掉的,如实修不是丢掉**:
+     ① **生成器不再声明来源**逃逸 —— header 断言读的是**已提交的 .lua** ⇒ 可以骑到下个 patch;
+     抽出 `snapshot_header()` 让**生成器本身**被断言。**推论:对生成物的断言看不见生成器。**
+     ② **裁判源取不到时用 KV 段回填**逃逸 —— 两种情况退出码都是 0,而它会打出一张
+     **三列一致**的表,**而三列一致正是读者来看的那个结论**。
+     **推论:只断言返回值的测试,看不见「输出在撒谎」这一整类。**
+   - **下一棒**:本组不欠任何一棒(无入集申请 / 零 AWS / 不涉及任何帧)。
+     **留名给认领者(非焦点)**:全仓 **8 处**按**字面天赋名**绑定 ——
+     `enigma`×2 / `doom_bringer` / `earth_spirit` / `ancient_apparition` / `dawnbreaker` /
+     `silencer` / `rubick` —— **从未**与这份 KV 段对过,而 **`doom_bringer` 正是 odota 陈旧的
+     18 个之一**([1]/[4]/[6] 三行都在动)。按名字绑**不怕重排,怕改名/移除**
+     (`GetAbilityByName` 答 nil → `nil:IsTrained()` 撞坏掉的引擎错误处理器 ⇒ Think 半路停住,#192 同族)。
+
 -17. ~~**新轴 `GRANTSLOT`:`sAbilityList` 的下标不是槽位(GH #203,gated `zusbind`)**~~
    **2026-08-26T05:02Z done —— 本轮改了 `bots/`,gated `zusbind`(turbo-only、未 armed、不申请入集)
    + **两处未 gate 的空指针检查**(沿 #188/#192 先例);`state.json` 新增 `zusbind_20260826`;
@@ -1545,6 +1590,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-26T13:57Z(报告 `iterations/reports/hero/20260826T135747Z.md`;**自选,开了 GH #214**,
+  新轴 **`TALENTSLOT`** —— 不是天赋轴本身,是**天赋轴的来源**)—— 自检 **worst exit 3**:
+  UNLANDED 0、两条稳定版锚点不变量 ok、py 34/0、Lua 检测器 8 文件 0 失败、待裁 queue 请求 0;
+  cadence 洞在 batch-desk(8.9h)与 replay-check(3.7h),**本组无洞**;
+  owner P1/P2 球在协同组、P3 在总监 ⇒ **本组无优先项**;[hero] open issue 全是本组已落地等裁定,
+  backlog 顶条 `-17c` 章程写明非焦点 ⇒ 走自选。
+  **本轮 `bots/` 零改动**:无新 gate id、`state.json` 新增 `talentkv_20260826`(`gated:false`)、
+  稳定版未漂移、**零 AWS**、**不提 queue 请求**。
+  - **⭐ 先数了一遍仓库已经在读什么,而那次数数本身就是本轮的入口**:天赋名到下标 GH #166
+    早钉过 ⇒ 直接开工会重做 08-24。**但 census 的槽位顺序取自 odota `talents[]` 一张展示列表**,
+    而 `-17d`(#209)刚证过展示列表不是槽位列表。
+  - **⭐ 承重读数(127 英雄,零 AWS)**:天赋是连续 8 条 `"AbilityN" "special_bonus_*"`,127/127;
+    **起点不总是 Ability10**(kez/rubick 12、largo 15、invoker 17);
+    **Valve datafeed == `npc_heroes.txt` 段,22/22 英雄、176 行逐行相同**,
+    odota 与两者都不同的 **18/22** ⇒ **落后的是 odota,裁出来的**。
+    parser 第一版写死 10,把 invoker 天赋报成 `invoker_emp`/`invoker_alacrity`/…,**零报错**。
+  - **焦点五命中一处,且是活的那档**:WK slot [4] = `special_bonus_hp_300`(datafeed `value=300`),
+    odota 说 `hp_350`;`['t15']={10,0}` → 下标 4 ⇒ 他实际拿的 t15。
+    **行为影响是结构性的零**:`sTalentList` 由引擎运行期建出,**从不读镜像** ⇒ 错的是记录不是逻辑。
+  - **⭐ 最该被拿走的一条:「两个源都这么说」里的第二个源说不出话。**
+    仓库同时持有两个答案两天没人发现;08-24 记的「odota + the hero KV read hp_350」
+    **不可能是两个** —— `npc_dota_hero_skeleton_king.txt` 一个天赋名字都没有(grep 命中 0),
+    **而这句话就写在 census 自己 docstring 里、在引用它那行往上三段**。
+    ⇒ **写「两个源一致」之前,先确认第二个源有没有能力不一致。**
+  - **落地物**:census 改读 KV + `--cross-check`(**feed 不一致 ⇒ 退出码 3**,odota 不一致只是备注);
+    快照重生成(**唯一变动的数据行就是 WK 那行**);anchor **新增 §5 与快照互钉**
+    (**一致性棘轮不是正确性棘轮**,分工写进源码);新 `tests/test_talent_slot_census.py` 19 例;
+    08-24 那条 `drive_by` **就地 RETRACTED**(不删原文)。
+  - **变异 12 抓 11 + 1 对照如实逃逸**;两条第一版逃掉的如实修:
+    ①「生成器不再声明来源」——**对生成物的断言看不见生成器**;
+    ②「裁判源取不到时用 KV 回填」——**只断言返回值的测试看不见「输出在撒谎」**。
+  - **门(如实)**:`luacheck_gate.sh` **exit 0 / 0 警告**(容器里没有,脚本自己装的,包名 `lua-check`);
+    `run_py_tests.sh` **35/0**;新 py 文件 **19/0**;`test_focus_talent_anchor` 及五个相关邻居单跑全绿。
+    **⚠️ `run_tests.lua` 全量跑了两遍(本树 + 干净 HEAD 的 worktree 并行),而 trunk 上就有 2 处红:**
+    干净 HEAD F 在用例 **701/723**,本树 F 在 **703/725** —— **偏移恰好等于本轮新加的 2 个用例**
+    ⇒ **同样两处、本轮净影响 0**。两处**单独跑都绿**(`test_itemtrip_supply_gap` / `test_l1_trade`)
+    ⇒ **依赖单进程跨文件状态**,是 `-17d`「每文件新进程买到假 red」的**反向孪生**(过滤器跑买到假 green)。
+    **不归本组**,**已单开 GH #216**(复现步骤 + 位置证据 + 「runner 即时打印失败名」的止血建议),证据在报告 §7。
+  - **下一棒**:本组不欠任何一棒。留名给认领者(非焦点):**8 处按字面天赋名绑定**的站点从未与
+    这份 KV 段对过,其中 **`doom_bringer` 正是 odota 陈旧的 18 个之一**。
 - 2026-08-26T10:56Z(报告 `iterations/reports/hero/20260826T105631Z.md`;**自选 backlog `-17c` 的
   焦点五切片,开了 GH #209**,`GRANTSLOT` 的**另一半:槽位顺序本身**)—— 自检 **worst exit 3**:
   UNLANDED 0、两条稳定版锚点不变量 ok、py 32/0、queue 待裁 0;cadence 洞在 batch-desk(8.9h)与

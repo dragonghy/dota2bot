@@ -30,15 +30,25 @@
 --      rationale block that has to travel with it;
 --   4. a ratchet that the dead 7.2x talent names never come back as live data.
 --
+--   5. that this record and tests/mock/talent_slots.lua cannot drift apart
+--      again -- see section 5 and GH #214, which is what let them disagree
+--      about Wraith King's slot 4 for two days.
+--
 -- HONEST BOUNDS
 --   * The talent NAMES below are RECORDED from
 --     https://www.dota2.com/datafeed/herodata?language=english&hero_id=<id>, read
---     2026-08-22.  This test cannot reach the network; what it can enforce is the
---     repo-local half (which index each row selects, and that the source still says
---     what the record says).
---   * Name-to-index rests on the feed listing talents in ability-slot order, which
---     is the order J.Skill.GetTalentList returns.  Section 1 does not depend on it
---     at all -- it is arithmetic on the index.  For Axe there are two independent
+--     2026-08-22 and re-read 2026-08-26.  This test cannot reach the network;
+--     what it can enforce is the repo-local half (which index each row selects,
+--     that the source still says what the record says, and that the generated
+--     snapshot says the same thing).
+--   * Name-to-index NO LONGER rests on a display list (GH #214).  It is measured
+--     against the game's own npc_heroes.txt, where a hero's talents are a
+--     contiguous run of "AbilityN" "special_bonus_*" entries and N is the slot
+--     bot:GetAbilityInSlot indexes -- the same argument GH #209 made for
+--     abilities.  Corroboration on 2026-08-26: Valve's datafeed order equalled
+--     that KV run on 22 of 22 heroes read (176 rows), while odota's display list
+--     disagreed with both on 18 of them.  Section 1 never depended on this at
+--     all -- it is arithmetic on the index.  For Axe there are two further
 --     corroborations in the shipped file itself: talent7 is consumed as a
 --     Berserker's Call radius bonus and [7] is the Call AoE talent; talent8 is
 --     consumed as Culling Blade kill damage and [8] is the Culling damage talent.
@@ -124,9 +134,19 @@ local FOCUS = {
             'special_bonus_unique_wraith_king_2',
             'special_bonus_unique_wraith_king_facet_1',
             'special_bonus_unique_wraith_king_11',
-            'special_bonus_hp_350',  -- corrected 2026-08-24 (GH #166): the record
-                                     -- said hp_300; odota + the hero KV read hp_350.
-                                     -- Used only in assertion messages.
+            -- RE-CORRECTED 2026-08-26 (GH #214) back to what it was before
+            -- 2026-08-24.  The 08-24 edit put hp_350 here and recorded its
+            -- reason as "odota + the hero KV read hp_350" -- two agreeing
+            -- sources.  It cannot have been two: npc_dota_hero_skeleton_king.txt
+            -- carries AbilityValues override keys and no talent NAMES at all, so
+            -- a generic row like this one can never appear in it.  The one real
+            -- source was odota's display list, and it is a patch behind.  Valve's
+            -- own datafeed (hero_id 42, read 2026-08-26) says
+            -- special_bonus_hp_300 with special_values value = 300, and the
+            -- game's npc_heroes.txt agrees: "Ability13" "special_bonus_hp_300".
+            -- Used only in assertion messages, so nothing shipped moved either
+            -- time -- what moved is whether the record can be trusted.
+            'special_bonus_hp_300',
         },
         expect = { t10 = 2, t15 = 4 },
     },
@@ -338,6 +358,61 @@ tests['[hero] both axe talent handles are still t25, so turbo reads nothing from
         .. '20 on 0 of 210 hero-slots, so both were dead weight in turbo. A read of '
         .. 'index 1-4 is a LIVE read and needs its own accounting (GH #104 section 4 '
         .. 'splits these into ADDITIVE and STRUCTURAL).')
+end
+
+-- ---------------------------------------------------------------------------
+-- 5. The record above and the generated snapshot must name the same talents.
+--
+-- WHY (GH #214).  Both files answer "what is sTalentList[N] for this hero", and
+-- from 2026-08-24 to 2026-08-26 they answered differently for Wraith King's
+-- slot 4 -- the record said special_bonus_hp_350, the snapshot said the same,
+-- and hero_skeleton_king.lua's own comment said hp_300, which was the right
+-- one.  Nothing was watching the pair, so the disagreement was invisible until
+-- somebody read all three by hand.  This closes that: regenerating the snapshot
+-- after a patch now fails HERE until the record is re-read from the datafeed,
+-- which is the moment a human is supposed to look at it anyway.
+--
+-- Direction matters.  This is a CONSISTENCY test, not a correctness one: both
+-- files being wrong in the same way still passes.  The thing that makes them
+-- right is the source, and the source is asserted in the census tool
+-- (tools/agent/talent_slot_census.py --cross-check exits 3 when Valve's
+-- datafeed disagrees with the KV run it snapshots).
+
+tests['[hero] the recorded talent names match tests/mock/talent_slots.lua'] = function()
+    local snapshot = dofile('tests/mock/talent_slots.lua').SLOTS
+    for hero, spec in pairs(FOCUS) do
+        local rows = snapshot[hero]
+        assert(rows, 'tests/mock/talent_slots.lua has no rows for ' .. hero
+            .. '. Regenerate it: python3 tools/agent/talent_slot_census.py --snapshot')
+        for idx, name in ipairs(spec.talents) do
+            assert(rows[idx] and rows[idx].name == name,
+                hero .. ' slot [' .. idx .. ']: this file records "' .. name
+                .. '", tests/mock/talent_slots.lua says "'
+                .. ((rows[idx] and rows[idx].name) or '<missing>')
+                .. '". These are the same claim read from two places, so one of '
+                .. 'them is stale. The snapshot is generated from the game\'s '
+                .. 'npc_heroes.txt; this record is read by hand from Valve\'s '
+                .. 'datafeed (hero_id ' .. spec.id .. '). Re-read the datafeed '
+                .. 'and fix whichever one disagrees with it -- do NOT just copy '
+                .. 'one into the other, which is how GH #214 happened.')
+        end
+    end
+end
+
+tests['[hero] the snapshot still carries all eight talent rows per focus hero'] = function()
+    local snapshot = dofile('tests/mock/talent_slots.lua').SLOTS
+    for hero in pairs(FOCUS) do
+        local rows = snapshot[hero]
+        for idx = 1, 8 do
+            assert(rows[idx] and rows[idx].name ~= '',
+                hero .. ' is missing snapshot slot [' .. idx .. ']. sTalentList '
+                .. 'is a COMPACTED list (aba_skill.X.GetTalentList table.inserts '
+                .. 'every IsTalent() handle it walks past), so a hero with fewer '
+                .. 'than eight talent rows renumbers every index after the gap '
+                .. 'and every talentN binding in that hero file starts naming a '
+                .. 'different talent, silently.')
+        end
+    end
 end
 
 return tests
