@@ -786,6 +786,41 @@ check('the ConsiderR dispatch still sits below the GetStaticFieldBonus call',
       ZUUS_SRC.index('castRDesire = X.ConsiderR()')
       > ZUUS_SRC.index('abilityASBonus = X.GetStaticFieldBonus('))
 
+import tbearly_domain as tbd                       # noqa: E402
+
+# replay-check 2026-08-26.  `tbearly`'s reading is an ARITHMETIC one: the
+# armed bound (18*60) equals the turbo cutoff of J.IsLateGame(), which is a
+# conjunct of the block the clause sits inside, so the two legs can differ on
+# nothing but the single instant t == 1080.0.  Every number in that sentence
+# lives in a different file from the tool, so all four are ratcheted here: if
+# ANY of them moves, the STRUCTURAL-ZERO verdict is stale and must go red
+# rather than quietly keep being quoted out of an old report.
+TB = tbd.read_source()
+check('J.IsLateGame turbo cutoff is still 18*60', TB['late_turbo'] == 1080,
+      str(TB['late_turbo']))
+check('J.IsLateGame normal cutoff is still 30*60', TB['late_normal'] == 1800,
+      str(TB['late_normal']))
+check('tbearly shipped nEarlyClock is still 25*60', TB['shipped_clock'] == 1500,
+      str(TB['shipped_clock']))
+check('tbearly armed nEarlyClock is still 18*60', TB['armed_clock'] == 1080,
+      str(TB['armed_clock']))
+# The load-bearing structural fact, asserted with the block matcher rather
+# than with a line range: reformatting mode_farm_generic.lua must not be able
+# to silently invalidate it, and neither must MOVING the clause out.
+check('the tbearly clause is still lexically inside the '
+      '`not J.IsLateGame()` block', TB['enclosed_by_not_late'])
+check('tbearly verdict computed from the shipped tree is STRUCTURAL-ZERO',
+      tbd.verdict(TB)[0] == 'STRUCTURAL-ZERO', tbd.verdict(TB)[1])
+# The `pullcad` lesson again: a gate written as a conjunction of two soak ids
+# freezes FALSE the day either is promoted.  read_source() raises on that, so
+# reaching this line at all is the assertion; keep it explicit anyway.
+TB_GATE = [l for l in open(os.path.join(ROOT, 'bots', 'mode_farm_generic.lua'),
+                           encoding='utf-8').read().splitlines()
+           if "IsSoakCandidate('tbearly')" in l and not l.strip().startswith('--')]
+check('tbearly has exactly one gate site naming exactly one candidate',
+      len(TB_GATE) == 1 and TB_GATE[0].count('IsSoakCandidate') == 1,
+      str(TB_GATE))
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
