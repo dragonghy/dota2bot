@@ -4376,3 +4376,54 @@
     `l5combo` 的 (a)(**第四十五轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十二轮**);
     `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260825T215624Z.md`
+- **2026-08-26T01:07Z(第七十二次触发)**:接**批测台 00:18Z §9.5 的棒** —— `campfarm` 端到端 (a)
+  核验(GH #137 §4 的尺子 + 总监 (甲)(乙)(丙))。**宽扫 125/125 局**(W11 全语料:201 落盘 →
+  149 带 `.dem` → 24 局裸 sha 暖场跳过 → 125 有效,**覆盖率 100%**)+ **深查 7 局逐帧**。
+  零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **(a) 买不到,而且原因是量出来的:`campfarm` 能管的那条通路在 125 局里只有 4 次**
+    (armed 2 / baseline 2)。它编辑的是 `FindFarmNeutralTarget` 的输入表,那次挑选**以攻击指令执行**;
+    而 10-11 带的远古交火**绝大多数由英雄技能自己点名远古目标打开**(armed 12 次 `opened` 里
+    10 次由技能落第一下、其中 6 次是**对着远古营施法**;baseline 9 次里 7 次/6 次)。
+    ⇒ **不是 SILENT-because-broken,是 domain-too-small**。机制切的平衡估计量 **−0.005/局**。
+  - ⭐⭐ **`opened` 不等于「他选的」——本轮抓到的静默污染**:`zuus_static_field` 每次施法对周围
+    全体生效、`zuus_arc_lightning` 自己弹,所以**一次都没抡过远古**的宙斯会**先于**远古落下第一下,
+    被记成「他开的这架」。承重帧 `ec0ae8/20260825_212603_slot9 zuus t=712.0`:实为与 slardar 的单挑
+    (711.1 lightning_bolt→slardar、712.0 arc/static **溅到** black_dragon、717.2 被打死),
+    掉血 0.882 全带最高,**零普攻**。⇒ **GH #137 00:59Z / 15:57Z 已发表的 violation 计数混着 AoE 溅射**
+    (§5 已更正:方向不变,域比当时报的小)。新列 `attacked` / `opened_by` / `cast_at_camp` 是这条的修法。
+  - ⭐ **(甲) 反向护栏通过**:≥12 带 armed 570 / baseline 532(每局 4.56 vs 4.26),**没塌**。
+    **(乙) 域下界照报**:10..11 级英雄采样帧 armed 67,673 / baseline 66,183,其中**距远古营 ≤1000u
+    只有 1,252 / 1,025**(约 10 英雄-秒/局)—— cap=25 的 Turbo 里 10-11 级是滑过去的窗口。
+    **(丙) 两个预登记嫌疑用测量排掉**:125/125 局 cand 串含 `campfarm`,`campgrade` **0/125**。
+  - ⭐ **带内所有切法两层反号,而反号跟着物理侧走**:radiant 腿(不论哪条腿)带内 opened 共 19 次,
+    dire 腿 2 次 —— **10:1 的侧别效应,比腿效应大一个量级**。池化会读出一个纯侧别数。
+  - ⚠️⭐ **两个没解释掉的 armed 反例(GH #197 [bug] 新开)**:
+    `d21f62/20260825_212636_slot7 tidehunter L10 t=627.5` 第一下就是**普攻远古**且**前一帧未挨打**
+    (首次挨打晚 2 秒 ⇒ 不是引擎自动还手);`082cd8/20260825_212624_slot5 sven L11 t=668.5` 同型
+    (670.5 才升 12)。armed + `level<12` 时远古不在 `nNeutrals` 里 ⇒ 目标选择与
+    `Action_AttackUnit(nNeutrals[1])` 兜底都取不到它。**离线分不开「bot 下的攻击指令」与「引擎自动索敌」**
+    —— 这是能力边界,写在明处,**不假装买到 BUGGY**;建议 fixture 裁决。
+  - **交付**:新工具 `campfarm_target.py`(`--selfcheck` **21 PASS / 0 FAIL**,含反 selfskip-trap 三条:
+    清洗器必须真删掉一条幻象流 / 支持度裁剪必须真裁掉尾巴 / 级联必须单调且末格非空);
+    常数**从 Lua 读**(`ANCIENT_MIN_LEVEL` 走 `source_constants.assignment`,900/1000 与三个包装点按形状断言);
+    `entities.py` 直接 import(**没有再抄一份**,#176 §5.3);
+    `tests/test_detector_source_constants.py` **新增 10 条**(含 `campgrade_ladder` 的转写不许漂、
+    「两种拼法的下界都还是 10」、以及 `pullcad` 那条教训:`campfarm` 的 gate 不许写成与另一个 id 的合取)。
+    **营地几何独立复现 GH #137 §5**:远古恰好 **2 个簇**(相距 8863u,占 87.1% 采样;不裁尾巴会得到 26 个)。
+  - **交棒**:**GH #137 追评**(全文读数 + (甲)(乙)(丙) + §5 更正);**GH #196 新开 [strategy]**
+    (`hero_luna.lua:303-317` 的 `J.GetMostHpUnit(GetNearbyNeutralCreeps)` 无等级/档次子句 —— 血最厚的
+    中立单位就是远古野;全库 73 个英雄文件 / 113 个站点,`IsAncientCreep` 在 BotLib 里 75 次几乎全是
+    「更该放 AoE」的**理由**而不是门);**GH #197 新开 [bug]**(上面两个反例 + 建议钉 627.5 那帧)。
+    **球回总监**:`campfarm` 的三条件判定。**本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**;自检那格是 **SKIP 不是 PASS**);`tests/run_py_tests.sh` **30 passed / 0 failed**。
+    **AWS**:S3 只读,**未启动/未终止任何实例**,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **#197 的 fixture**(本组自己就能做,`make_fixture.py` 钉 `212636_slot7 t=627.5`)
+    —— 唯一能把那两个反例从「没解释掉」变成结论的东西;(2) ⭐ `tpdefend_events.py` 加结果侧列(**第五轮**);
+    (3) ⭐ 幻象出生下界 vs 检测器域上界的余量做成 `sweep_run.sh` 常规输出(**第二轮**);
+    (4) ⭐ `entities.py` 推广到 #176 §3 其余检测器(**第三轮**);(5) ⭐ 12:41Z §6.1 那 23 帧做 fixture(**第五轮**);
+    (6) ⭐ `pulldrag` 的 connect 侧;(7) ⭐ 第二种视野证人(**连续第九轮顺延**);
+    ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第十六轮登记**);`stayfield` 第一失败子句;
+    打野反证 fixture(**二十二轮**);`hero-1` 的 153 局 WK 语料(**30 轮**);`l5combo` 的 (a)(**第四十六轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十三轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260826T010748Z.md`

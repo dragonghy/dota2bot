@@ -681,6 +681,53 @@ check('the front radius is NOT the repeat-front radius (the 1200/1600 decoy)',
       TDE_FRONT_E != TDE_REPEAT_U,
       '(front=%r repeat=%r)' % (TDE_FRONT_E, TDE_REPEAT_U))
 
+# ---- `campfarm`, the 10..11 BAND (replay-check 2026-08-26) ------------------
+# campfarm_target.py's whole domain argument is "three shipped sites bound this
+# decision and two of them say 10, the ladder says 12, so the band is 10..11".
+# Each of those three numbers is a separate site that can move on its own, and
+# if any of them does, the band is the wrong band and the (a)-verdict is read
+# on the wrong population.  campgrade_ladder.py keeps a TRANSCRIPTION of the
+# ladder constant; campfarm_target.py DERIVES it -- so the pair also pins the
+# transcription, which is the copy that rots.
+import campfarm_target as cft                      # noqa: E402
+import campgrade_ladder as cgl                     # noqa: E402
+
+ABA_SITE_PATH = os.path.join(ROOT, 'bots', 'FunLib', 'aba_site.lua')
+FARM_MODE_PATH = os.path.join(ROOT, 'bots', 'mode_farm_generic.lua')
+UTILS_PATH = os.path.join(ROOT, 'bots', 'FunLib', 'utils.lua')
+
+eq('campfarm_target.ANCIENT_MIN_LEVEL ~ aba_site export',
+   cft.ANCIENT_MIN_LEVEL,
+   assignment('____exports.ANCIENT_MIN_LEVEL', ABA_SITE_PATH))
+eq('campgrade_ladder transcription has not drifted from the export',
+   cgl.ANCIENT_MIN_LEVEL, cft.ANCIENT_MIN_LEVEL)
+
+FARM_SRC = open(FARM_MODE_PATH, encoding='utf-8').read()
+UTILS_SRC = open(UTILS_PATH, encoding='utf-8').read()
+check('mode_farm ancient clause still spells the lower edge >= 10',
+      'bot:GetLevel() >= 10' in FARM_SRC)
+check('utils.IsValidCreep still spells the same edge > 9',
+      'GetLevel() > 9' in UTILS_SRC)
+eq('campfarm_target reads that edge as 10', cft.SHIPPED_ANCIENT_MIN, 10)
+check('the band is exactly the two levels between the two edges',
+      [lv for lv in range(1, 26) if cft.band_of(lv) == 'band'] == [10, 11],
+      str([lv for lv in range(1, 26) if cft.band_of(lv) == 'band']))
+
+RADII, WRAPPED = cft.sweep_sites(FARM_MODE_PATH)
+check('the farm mode still sweeps neutrals at 900 and 1000',
+      RADII == [900.0, 1000.0], str(RADII))
+check('all three sweeps still go through the ONE gated wrapper',
+      WRAPPED == 3, '%d NeutralFarmList(bot, ...) sites' % WRAPPED)
+
+# The `pullcad` lesson (charter 2026-08-23): a gate written as a conjunction of
+# two candidate ids freezes FALSE the day either is promoted, and nothing goes
+# red.  `campfarm`'s gate must stay a single candidate conjoined with turbo.
+CF_GATE = [l for l in FARM_SRC.splitlines() if "IsSoakCandidate('campfarm')" in l]
+check('campfarm has exactly one gate site', len(CF_GATE) == 1, str(CF_GATE))
+check('campfarm\'s gate names no other candidate id',
+      CF_GATE and CF_GATE[0].count('IsSoakCandidate') == 1
+      and 'IsModeTurbo' in CF_GATE[0], CF_GATE[0] if CF_GATE else '')
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
