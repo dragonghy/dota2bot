@@ -127,6 +127,14 @@ local Doom          = bot:GetAbilityByName('doom_bringer_doom')
 local DevourAbility1 = bot:GetAbilityByName('doom_bringer_empty1')
 local DevourAbility2 = bot:GetAbilityByName('doom_bringer_empty2')
 
+-- [GH #223] `special_bonus_unique_doom_2` is NOT one of the eight talents this
+-- patch gives Doom (measured against the game's own npc_heroes.txt talent run
+-- by tools/agent/talent_name_binding_census.py; snapshot in
+-- tests/mock/talent_name_bindings.lua).  A hero only carries the abilities its
+-- own block lists, so this handle is nil in every game -- and a method call on
+-- it lands in the engine's broken error handler, which stops Think() part-way
+-- through the frame with nothing printed anywhere.  The binding stays (a patch
+-- can hand the name back); reading it goes through X.CanDevourAncient below.
 local DevourAncientTalent = bot:GetAbilityByName('special_bonus_unique_doom_2')
 
 local DevourDesire, DevourTarget
@@ -203,6 +211,15 @@ function X.SkillsComplement()
 
     --     return
     -- end
+end
+
+-- "May this bot devour an ancient?" -- the shipped question, asked without
+-- assuming the handle exists.  See the binding of DevourAncientTalent above:
+-- the answer is false for the whole of this patch, which is also the shipped
+-- ANSWER for a Doom who never trained that talent, so the branch below behaves
+-- exactly as it was written to when the talent is not held.
+function X.CanDevourAncient()
+    return DevourAncientTalent ~= nil and DevourAncientTalent:IsTrained()
 end
 
 function X.ConsiderDevour()
@@ -317,7 +334,7 @@ function X.ConsiderDevour()
                 if nCreepTarget ~= nil
                 then
                     if nCreepTarget:IsAncientCreep()
-                    and DevourAncientTalent:IsTrained()
+                    and X.CanDevourAncient()
                     then
                         return BOT_ACTION_DESIRE_HIGH, nCreepTarget
                     end
