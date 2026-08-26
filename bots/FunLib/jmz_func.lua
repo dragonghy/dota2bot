@@ -10636,6 +10636,53 @@ function J.BuybackShortRespawnFloor()
 	return J.BUYBACK_SHORT_FLOOR
 end
 
+-- [GH #227] The salve's self-use gate is an ABSOLUTE amount of missing health,
+-- in a file whose other healing consumables ask the very same question as a
+-- RATIO -- and that file says in its own words why a ratio is the right form.
+--
+-- ability_item_usage_generic's salve consider opens its self-use branch with
+--     bot:OriginalGetMaxHealth() - bot:OriginalGetHealth() > <a fixed amount>
+-- while forty lines below it the healing-lotus helper -- same file, same shape
+-- (try yourself first, then a nearby ally), same DistanceFromFountain( 3000 )
+-- guard -- takes its thresholds as REMAINING ratios, over a comment reading
+-- "a hero at 30% HP is critical regardless of their max HP pool". The salve is
+-- the one member of that family still asking the absolute question.
+--
+-- What the absolute number costs is arithmetic, not preference. The health
+-- pools the archived turbo frames actually carry run from 538 (a level-1
+-- Crystal Maiden) to 2566 -- a factor of nearly five -- and the same floor is
+-- asked of every one of them. At 538 the gate means "below 7% health"; at 2566
+-- it means "below 81%". The same line is a last-resort at one end of the roster
+-- and a routine top-up at the other, and the end it is harshest on is exactly
+-- the small-pool laning support a salve is bought for.
+--
+-- THE ARMED FLOOR IS NOT A RE-GUESSED NUMBER. The shipped floor is itself half
+-- of a 1000-health pool -- the mid-laning pool it reads as calibrated for -- so
+-- the fix keeps the shipped number and only stops it demanding more than that
+-- same half once the pool is smaller: Min( floor, maxHealth * ratio ). The
+-- ratio therefore lands on the shipped constant's own implied one, and it
+-- coincides with the most conservative tier of the sibling lotus family, which
+-- is a second and independent reason to prefer it to that family's looser
+-- tiers. The looser tier was measured and REJECTED even though it buys strictly
+-- more frames -- see the [refusal] row in
+-- tests/test_salvepool_missing_floor.lua. A constant fitted to the corpus is
+-- not a derivation.
+--
+-- Gated ('salvepool'), turbo-only, a single conjunct against a mode predicate.
+-- ONE-DIRECTIONAL: Min can only lower a floor that BLOCKS drinking, so the
+-- branch can open and never close. DELIBERATELY NOT applied to the ally branch
+-- of the same function, which carries its own, larger absolute amount -- one
+-- lever per round, and that one is registered in the charter backlog.
+J.SALVE_SELF_MISSING_FLOOR = 500
+J.SALVE_SELF_POOL_RATIO    = 0.5
+
+function J.SalveSelfMissingFloor( nMaxHealth )
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'salvepool' ) then
+		return Min( J.SALVE_SELF_MISSING_FLOOR, nMaxHealth * J.SALVE_SELF_POOL_RATIO )
+	end
+	return J.SALVE_SELF_MISSING_FLOOR
+end
+
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then

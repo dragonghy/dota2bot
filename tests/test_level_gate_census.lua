@@ -115,6 +115,14 @@ local cs = require('corpus_scale')
 -- verdict are untouched. This is GH #221's "line number as a registration key"
 -- in its intended mode: the ratchet fired, and the pin was re-anchored on the
 -- same row rather than relaxed.
+-- The 2026-08-26 'salvepool' change (GH #227) then moved the TWO
+-- ability_item_usage_generic rows that sit below the salve consider by +3
+-- (a comment plus one local at ~:2299): :5800 -> :5803, :5840 -> :5843. The
+-- :594 and :149 rows are above the insertion point and did not move -- a split
+-- shift again, and the THIRD consecutive strategy round to move this same pair.
+-- Same discipline as every entry above: only the `line` field moved; file, op,
+-- n, eff, text and verdict are untouched, so the text assertion below still
+-- re-reads the row it was classified from.
 -- The `:392 / :506 / :796 / :860` style labels in the header prose and in test
 -- names above and below are GH #84's OWN numbering of the tree it was filed
 -- against. They are stable labels for the rows, not current line numbers, and
@@ -195,14 +203,14 @@ local GATES = {
     -- them COMMENT).  Third time these two pins have moved and the second time
     -- prose alone did it -- 0LN2 again, and the reason this file keys nothing
     -- on line numbers that it could key on text instead.
-    { file = 'bots/ability_item_usage_generic.lua', line = 5800, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5803, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5840, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5843, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '

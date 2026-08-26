@@ -2296,7 +2296,10 @@ X.ConsiderItemDesire["item_flask"] = function( hItem )
 	local nInRangeEnmyList = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE )
 
 
-	if bot:OriginalGetMaxHealth() - bot:OriginalGetHealth() > 500
+	-- [salvepool] Pool-blind absolute floor; see J.SalveSelfMissingFloor.
+	local nSelfMaxHealth = bot:OriginalGetMaxHealth()
+
+	if nSelfMaxHealth - bot:OriginalGetHealth() > J.SalveSelfMissingFloor( nSelfMaxHealth )
 		and #nInRangeEnmyList == 0
 		and not bot:WasRecentlyDamagedByAnyHero( 2.2 )
 		and not bot:HasModifier( "modifier_filler_heal" )
