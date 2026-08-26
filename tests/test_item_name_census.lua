@@ -206,6 +206,12 @@ local tRegistered = {
     -- checkout behind main (GH #161's gate-slower-than-main race, GH #171's
     -- red-trunk blindness).  Verified per commit:
     --   089bee2a -> 6774 | c48dc11b (+7) -> 6781 | 1fcfcd83 -> 6781 | HEAD -> 6781
+    -- 6794 -> 6796 (strategy 2026-08-26T2x:xxZ, gated `salveally`, GH #231): the
+    -- salve consider's ALLY branch traded its literal for a one-line comment and
+    -- a delegating call -- EIGHTH instance of the shape at :198, and the FOURTH
+    -- consecutive strategy round to move this same pin.  Re-anchored, not
+    -- relaxed; probe and lookup textually unchanged, and found once more by the
+    -- selfcheck's Lua leg on the working tree, before the push.
     -- 6791 -> 6794 (strategy 2026-08-26T2x:xxZ, gated `salvepool`, GH #227): the
     -- salve consider's self-use branch grew a comment and a local three screens
     -- above this pin -- SEVENTH instance of the shape at :198, and the THIRD
@@ -228,7 +234,7 @@ local tRegistered = {
     -- fixed -- the check errors on the FIRST new name it meets, so a drifted pin
     -- hides every drifted pin behind it.  That is why the count of reds a run
     -- reports is a LOWER BOUND for this file, not its content.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6794'] =
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6796'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',

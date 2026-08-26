@@ -2325,7 +2325,9 @@ X.ConsiderItemDesire["item_flask"] = function( hItem )
 			and not npcAlly:WasRecentlyDamagedByAnyHero( 3.0 )
 			and not npcAlly:IsIllusion()
 			and not npcAlly:IsChanneling()
-			and npcAlly:OriginalGetMaxHealth() - npcAlly:OriginalGetHealth() > 550 
+			-- [salveally] Pool-blind absolute amount; unsatisfiable at ANY health
+			-- for a pool <= it. See J.SalveAllyMissingEnough.
+			and J.SalveAllyMissingEnough( npcAlly )
 		then
 			if( npcAlly:OriginalGetHealth() < nNeedHealAllyHealth )
 			then

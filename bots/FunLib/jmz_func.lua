@@ -10683,6 +10683,60 @@ function J.SalveSelfMissingFloor( nMaxHealth )
 	return J.SALVE_SELF_MISSING_FLOOR
 end
 
+-- GH #231 -- the OTHER half of the same consider, and this half is not merely
+-- pool-blind: on a pool the archive actually carries it is ARITHMETICALLY
+-- UNSATISFIABLE.
+--
+-- The salve's ally branch picks a teammate on
+--     npcAlly:OriginalGetMaxHealth() - npcAlly:OriginalGetHealth() > 550
+-- Missing health can never exceed the pool, so for any ally whose pool is at or
+-- below 550 that test is false at EVERY health, one included. It is not a small
+-- domain, it is an empty one, and it is empty by arithmetic rather than by
+-- statistics -- the `bbfight` shape, not the "too rare to measure" shape. The
+-- archive carries such a pool on a plausible frame: a level-1 Crystal Maiden at
+-- 538. Read as the fraction of health she would have to be missing, the shipped
+-- floor asks for 102.2% of her -- so the one hero a laning salve is most often
+-- bought for is the one the ally branch can never be spent on.
+--
+-- Above 550 the SECOND defect takes over, and it is the same pool-blindness the
+-- self branch was just fixed for, only harsher: at a 669 pool the ally must be
+-- under 17.8% health, at 2566 under 78.6%. One line, opposite meanings.
+--
+-- The two loops being compared are not analogous, they are the SAME loop. The
+-- healing-lotus helper forty lines below runs GetAlliesNearLoc( ..., 700 ), the
+-- same IsValid / ~= bot / IsIllusion / heal-modifier / WasRecentlyDamagedByAnyHero
+-- guards, and then asks its question as a REMAINING RATIO. The single structural
+-- difference between the two ally loops in this file is the form of this one
+-- predicate.
+--
+-- THE ARMED RATIO IS DERIVED, NOT FITTED, by the same rule the self floor used:
+-- read the shipped constant as a fraction of the 1000-health mid-laning pool it
+-- is calibrated against (550/1000), keep that number, and only stop it demanding
+-- MORE than that fraction once the pool is smaller. Independently, 0.55 missing
+-- is stricter than all three ally tiers of the sibling lotus family (which fire
+-- at 0.4 / 0.5 / 0.5 missing), so this moves the salve toward that family
+-- without passing its most conservative member.
+--
+-- Gated ('salveally'), turbo-only, a single conjunct against a mode predicate.
+-- ONE-DIRECTIONAL: Min can only lower a floor that BLOCKS the heal.
+J.SALVE_ALLY_MISSING_FLOOR = 550
+J.SALVE_ALLY_POOL_RATIO    = 0.55
+
+function J.SalveAllyMissingFloor( nMaxHealth )
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'salveally' ) then
+		return Min( J.SALVE_ALLY_MISSING_FLOOR, nMaxHealth * J.SALVE_ALLY_POOL_RATIO )
+	end
+	return J.SALVE_ALLY_MISSING_FLOOR
+end
+
+-- The pool is read ONCE here rather than at the call site, so the subtraction
+-- and the floor can never end up reading two different numbers, and so the read
+-- stays behind the caller's IsValid short-circuit.
+function J.SalveAllyMissingEnough( hAlly )
+	local nMaxHealth = hAlly:OriginalGetMaxHealth()
+	return nMaxHealth - hAlly:OriginalGetHealth() > J.SalveAllyMissingFloor( nMaxHealth )
+end
+
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then

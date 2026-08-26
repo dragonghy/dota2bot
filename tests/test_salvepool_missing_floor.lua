@@ -433,16 +433,30 @@ end
 -- [limit] what this lever does NOT move
 ----------------------------------------------------------------------
 
-tests['[limit] the ally branch of the same function keeps its own floor'] = function()
-    -- One lever per round. The ally branch asks an even larger absolute amount
-    -- of a teammate, which for a 538 pool is unreachable at ANY health -- a
-    -- genuine structural zero, and a separate round's work.
+tests['[limit] the ally branch of the same function is a separate lever'] = function()
+    -- PIN MOVED, NOT LOOSENED (2026-08-26, GH #231). This round's lever was the
+    -- SELF branch; the ally branch was left alone and registered in the charter
+    -- backlog as the next one, and the next round took it: it is now gated
+    -- 'salveally' behind J.SalveAllyMissingEnough, with its own file
+    -- (tests/test_salveally_missing_floor.lua). What this assertion exists to
+    -- protect is unchanged -- the two branches are separate levers with separate
+    -- ids -- so it now pins the delegation instead of the literal it replaced.
     local body = read_file(AIUG)
-    assert(body:find('npcAlly:OriginalGetMaxHealth() - npcAlly:OriginalGetHealth() > ' .. ALLY_FLOOR, 1, true),
-        'the ally branch moved; it is not this round\'s lever')
+    assert(body:find('and J.SalveAllyMissingEnough( npcAlly )', 1, true),
+        'the ally branch no longer delegates to its own helper')
+    local jmz = read_file(JMZ)
+    assert(jmz:find('J.SALVE_ALLY_MISSING_FLOOR = ' .. ALLY_FLOOR, 1, true),
+        'the ally floor moved off ' .. ALLY_FLOOR .. '; the reasoning below cites it')
     assert(ALLY_FLOOR > POOL_MIN_REAL - 1 and ALLY_FLOOR > FLOOR,
-        'the ally floor is no longer above the smallest real pool; the backlog '
-        .. 'entry that calls it a structural zero needs redoing')
+        'the ally floor is no longer above the smallest real pool; the structural '
+        .. 'zero GH #231 is built on needs redoing')
+    -- And this file's lever must still be the self one only: exactly one live
+    -- call site (the comment above it mentions the name too, so count code).
+    local n = 0
+    for line in body:gmatch('[^\n]+') do
+        if not line:match('^%s*%-%-') and line:find('SalveSelfMissingFloor', 1, true) then n = n + 1 end
+    end
+    assert(n == 1, 'the self helper is called from ' .. n .. ' live sites in this file, not one')
 end
 
 tests['[limit] the sibling lotus family and the fountain guard are untouched'] = function()
