@@ -228,7 +228,7 @@ function X.SkillsComplement()
 	if CrystalCloneDesire > 0
 	then
 		J.SetQueuePtToINT(bot, false)
-		bot:ActionQueue_UseAbilityOnLocation(CrystalClone, CrystalCloneLocation)
+		bot:ActionQueue_UseAbilityOnLocation( X.GetBoundAbility( CrystalClone, 'crystal_maiden_crystal_clone' ), CrystalCloneLocation)
 		return
 	end
 
@@ -1279,9 +1279,95 @@ function X.ConsiderR()
 
 end
 
+--- [cmclone] GH #206 -- `GRANTSLOT`, the Crystal Maiden half of GH #203.
+---
+--- `sAbilityList` is NOT this hero's slot array.  It is the array
+--- `J.Skill.GetAbilityList` COMPACTS out of slots 0..10 with `table.insert`
+--- (bots/FunLib/aba_skill.lua); the only fixed index is 6, written directly for
+--- the ultimate.  So index N means "the Nth ability the walk ACCEPTED", and any
+--- ability the walk accepts ahead of the one you meant shifts it by one.
+---
+--- Crystal Maiden's slot order (datafeed hero_id=5, read 2026-08-26):
+---
+---     slot 0  crystal_maiden_crystal_nova
+---     slot 1  crystal_maiden_frostbite
+---     slot 2  crystal_maiden_brilliance_aura
+---     slot 3  crystal_maiden_crystal_clone    ability_is_granted_by_shard
+---     slot 4  crystal_maiden_glacial_guard    ability_is_innate
+---     slot 5  crystal_maiden_freezing_field   ultimate -> index 6
+---
+--- The walk drops an ability only when NOT_LEARNABLE **and** IsHidden() are both
+--- true.  Enumerating the drop decision over the two optional abilities gives
+--- four worlds, and index 4 is Crystal Clone in only two of them: it is the
+--- INNATE in one and the empty-slot placeholder `generic_hidden` in one
+--- (tests/test_cm_ability_index_binding.lua).
+---
+--- ⭐ AND THE CORPUS PICKS THE WORLD, because IsHidden() turned out to be
+--- readable offline after all -- in one direction.  The behavioural dumper
+--- (tools/batch_test/behavioral/dumper/main.go, isRealAbility) walks the same
+--- `m_vecAbilities` and drops every entry with `m_bHidden` set.  So an ability
+--- PRESENT in a fixture frame's array was not hidden on that frame.  Wraith
+--- King's and Lion's innates are present on 31/31 and 23/23 frames; Crystal
+--- Maiden's ability array is exactly four entries on 51/51 frames, with the
+--- innate and the shard grant on ZERO -- against a live denominator, since
+--- zuus_lightning_hands (a shard grant) does appear on one Zeus frame.
+--- ⇒ both of her optional abilities are hidden, both are dropped, and index 4
+--- falls to the fourth world.  What lands there is NOT nil: the walk name-checks
+--- `generic_hidden` (a file-local string, aba_skill.lua:5) BEFORE it applies the
+--- drop rule, so an empty engine slot is kept whatever its flags say -- and with
+--- three abilities in front of the fixed index 6, `#{1,2,3,[6]}` answers 3 on
+--- this VM and the first placeholder lands squarely on index 4.  So the shipped
+--- `CrystalClone` is a handle to `generic_hidden`: `IsTrained()` is false, the
+--- branch answers NONE forever, and nothing raises.  Silent, not loud.
+---
+--- The same corpus CONFIRMS the slot order rather than assuming it (the
+--- assumption GH #203 had to declare): the ultimate reaches the fixed index 6
+--- only from `slot >= 4`, she has just three always-visible abilities, and her
+--- ultimate is on cooldown on 10 of those 51 frames -- so it WAS cast, so index
+--- 6 was written, so at least one optional ability really does sit ahead of it.
+---
+--- And the binding is frozen: `sAbilityList` is computed once at file scope,
+--- before any shard exists.  Turbo hands out a free Aghanim's Shard at 15:00,
+--- which GH #108's cap=25 finally puts inside the scored window -- and this
+--- handle would still be the one resolved at t=0.  Crystal Clone is unreachable
+--- for the whole game, in every game, and that is index arithmetic rather than a
+--- decision anyone made.
+---
+--- ⚠️ The nil check below is UNGATED (the split GH #188 / #192 / #203 settled:
+--- forced repairs ship, policy ships gated) -- and it is INSURANCE, not the
+--- repair of an observed nil.  Say it that way when citing this.  `#` over a
+--- table with a hole is UNSPECIFIED in Lua 5.1: this VM answers 3 for
+--- `#{1,2,3,[6]}` and hands index 4 the placeholder, but a VM answering 6 would
+--- append past the hole and leave index 4 nil.  Both answers are legal and the
+--- game VM's is not readable from here.  In that second world the shipped
+--- `CrystalClone:IsTrained()` raises inside X.SkillsComplement, the engine's
+--- error handler is broken (AGENTS.md), and since this branch sits ABOVE
+--- ConsiderQ/W/R the whole spell dispatch dies silently.  The corpus says that
+--- is not what ships today -- her ultimate is on cooldown on 10 of 51 frames,
+--- and the only Freezing Field cast site in the repo is below this branch.
+---
+--- Binding by name is this repo's majority pattern, not an invention: GH #203
+--- counted 40 file-scope sites under bots/BotLib that already fetch a shard or
+--- scepter ability by literal name.  That count is CARRIED FORWARD from #203
+--- rather than re-measured here.
+function X.GetBoundAbility( hShipped, sName )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmclone' )
+	then
+		local hNamed = bot:GetAbilityByName( sName )
+		if hNamed ~= nil then return hNamed end
+	end
+
+	return hShipped
+
+end
+
 function X.ConsiderCrystalClone()
-	if not CrystalClone:IsTrained()
-	or not CrystalClone:IsFullyCastable()
+	local hClone = X.GetBoundAbility( CrystalClone, 'crystal_maiden_crystal_clone' )
+
+	if hClone == nil
+	or not hClone:IsTrained()
+	or not hClone:IsFullyCastable()
 	then
 		return BOT_ACTION_DESIRE_NONE
 	end

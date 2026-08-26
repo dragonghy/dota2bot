@@ -24,9 +24,21 @@
 --   (2) THE MECHANISM.  J.Skill.GetAbilityList does not read an innate flag; no
 --       such flag exists in the bot API.  It drops an ability only when
 --       DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE **and** ability:IsHidden() are both
---       true, and nothing offline in this repo can evaluate IsHidden.  So "the
+--       true, and nothing offline in this repo can EVALUATE IsHidden.  So "the
 --       feed says innate, therefore it is dropped, therefore my index map holds"
 --       is an assumption, not a derivation.
+--
+--       ⭐ AMENDED 2026-08-26 (GH #206): it cannot be evaluated, but it can be
+--       OBSERVED, in one direction.  The behavioural dumper walks the same
+--       m_vecAbilities and drops every entry with m_bHidden set
+--       (tools/batch_test/behavioral/dumper/main.go, isRealAbility: `if hidden {
+--       return false }`), so a name PRESENT in a fixture frame's ability array
+--       was not hidden on that frame.  That is why sections 1 and 2 below turn
+--       out to be saying more than they claimed: WK's and Lion's innates being
+--       present on 31/31 and 23/23 frames is a measurement that the walk KEEPS
+--       them.  Absence stays a disjunction (hidden, or an unleveled talent row,
+--       or a blacklisted generic, or not in the vector) and is never read as
+--       one.
 --
 -- WHY IT IS NOT MERELY PEDANTIC
 --   Of the focus five, three innates (axe_one_man_army, crystal_maiden_
@@ -43,8 +55,13 @@
 --   the three optional abilities and driving the shipped walk in each world
 --   showed index 5 is Static Field in none of them and nil in four
 --   (tests/test_zuus_ability_index_binding.lua), and both Zeus consumers are now
---   routed and nil-guarded.  The Crystal Maiden binding still is not, the way
---   hero_skeleton_king.lua's abilityW is.
+--   routed and nil-guarded.  UPDATE 2026-08-26 (GH #206): so is the Crystal
+--   Maiden half, and its four-world enumeration
+--   (tests/test_cm_ability_index_binding.lua) reports index 4 as Crystal Clone in
+--   two worlds, her innate in one, and the empty-slot placeholder in one.  Note
+--   what THAT does to the sentence just above: for Crystal Maiden the drop no
+--   longer "rests entirely on IsHidden", because the corpus reads IsHidden in
+--   one direction -- see the note on section 2.
 --
 -- WHAT IS PINNED HERE
 --   1. corpus ground truth: the engine ability-name set per focus hero, with
@@ -438,11 +455,24 @@ tests['[4] Crystal Maiden\'s index-4 binding is still unguarded, unlike WK\'s ab
     local cm = read_file('bots/BotLib/hero_crystal_maiden.lua')
     assert(cm:find('local CrystalClone = bot:GetAbilityByName( sAbilityList[4] )', 1, true),
         'hero_crystal_maiden.lua no longer binds CrystalClone from sAbilityList[4]')
-    assert(cm:find('if not CrystalClone:IsTrained()', 1, true),
-        'X.ConsiderCrystalClone no longer opens on CrystalClone:IsTrained(). If a '
-        .. 'nil guard was added, delete this assertion and say so -- it exists to '
-        .. 'record that the first thing done with the handle is an unguarded '
-        .. 'method call.')
+    -- ANSWERED 2026-08-26 (GH #206, gated 'cmclone').  This assertion used to
+    -- demand `if not CrystalClone:IsTrained()` and told its next reader, in as
+    -- many words, to delete it once a nil guard landed.  Doing exactly that.
+    -- What replaced the open question is a measurement
+    -- (tests/test_cm_ability_index_binding.lua): index 4 is Crystal Clone in only
+    -- two of the four drop-worlds, and the world the corpus selects is the one
+    -- where it is the empty-slot placeholder `generic_hidden` -- so the handle is
+    -- not nil today, it is simply never Crystal Clone.  The consumer now routes
+    -- through X.GetBoundAbility and nil-checks ungated.
+    assert(cm:find("X.GetBoundAbility( CrystalClone, 'crystal_maiden_crystal_clone' )", 1, true),
+        'hero_crystal_maiden.lua no longer routes CrystalClone through X.GetBoundAbility')
+    local sClone = cm:gsub('%-%-[^\n]*', ''):match('function X%.ConsiderCrystalClone%(%)(.-)\nend')
+    assert(sClone, 'X.ConsiderCrystalClone is gone; where does the index-4 handle go now?')
+    assert(sClone:find('hClone == nil', 1, true),
+        'X.ConsiderCrystalClone no longer nil-checks the routed handle before indexing it. '
+        .. 'That check is the ungated half of GH #206: on a VM whose `#` border differs '
+        .. 'from this one, index 4 is nil, and indexing nil here is a silent whole-tick '
+        .. 'abort that takes ConsiderQ/W/R with it.')
 
     local zs = read_file('bots/BotLib/hero_zuus.lua')
     assert(zs:find('local abilityD = bot:GetAbilityByName( sAbilityList[4] )', 1, true),
