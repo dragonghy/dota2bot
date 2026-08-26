@@ -6728,6 +6728,58 @@ function J.IsCreepPullSafe( bot )
 	return true
 end
 
+-- [GH #193] Camp-switch safety, for the one conjunct in mode_farm_generic's
+-- Think() that decides whether a farming bot abandons its current camp for a
+-- nearer one.
+--
+-- THE DEFECT THIS REPLACES. That conjunct used to negate a call to a J.Site
+-- field named `IsCampDangerous`, handing it the bot and the candidate camp.
+-- The name is declared in NO file under bots/, under any of the six
+-- declaration forms; J.Site is `require(FunLib/aba_site)`, a transpiled module
+-- of plain `____exports.name = function` assignments with no setmetatable and
+-- no __index, so no dynamic fall-back exists either. The field was nil and the
+-- line raised `attempt to call a nil value` INSIDE Think(). The engine's error
+-- handler is broken and print() never reaches the console, so it never read as
+-- a crash -- it read as a SILENT Think abort, ungated, in every game, on every
+-- frame where a farming bot's nearest available camp was more than 200 units
+-- closer than its current pick. Everything below that line in Think(), the
+-- whole block that walks to the camp and attacks the neutrals, was eaten on
+-- those frames. tests/test_no_undefined_jmz_refs.lua (GH #48) exists for
+-- exactly this class and ran past it every round: its pattern stops at the
+-- first dot, so `J.Site.<name>` is read as a reference to `J.Site` -- which IS
+-- defined -- and the second component is never asked about.
+--
+-- THE SPLIT. Unarmed this returns FALSE, which is byte-for-byte the camp
+-- decision the abort produced: an abort updates nothing, so "do not switch" IS
+-- the shipped verdict, and the only unarmed change is that Think() now runs on.
+-- Restoring that tail is the forced half and carries no invented camp policy.
+-- Which semantics the switch SHOULD have is a genuine fork (write a danger
+-- predicate, or drop the term and always switch), there is no shipped verdict
+-- to preserve because the predicate never returned, and policy ships dark --
+-- hence the gate on everything above the plain `false`.
+--
+-- NEITHER OPERAND IS INVENTED. J.GetLastSeenEnemiesNearLoc is the shipped
+-- fog-memory query (alive-gated, time_since_seen < 5.0) and carries no
+-- `i <= 3` cap, unlike mode_farm_generic's own X.IsUnitAroundLocation, which
+-- would have asked only the first three enemy players. 800 is that file's OWN
+-- radius for the question "who is standing at this camp": the ally-farm check
+-- a few lines below the call site asks J.GetAlliesNearLoc(targetFarmLoc, 800)
+-- about the same kind of point. Same question, same file, other team.
+--
+-- Takes the camp only. Every operand is team-scoped through GetOpposingTeam(),
+-- so a bot parameter would be declared and never read -- the shape GH #188's
+-- arity census exists to flag.
+J.CAMP_DANGER_RADIUS = 800
+function J.IsCampSwitchSafe( tCamp )
+	if tCamp == nil or tCamp.cattr == nil or tCamp.cattr.location == nil then
+		return false
+	end
+	if not (J.IsModeTurbo() and J.IsSoakCandidate('campdanger')) then
+		return false
+	end
+	return #J.GetLastSeenEnemiesNearLoc( tCamp.cattr.location, J.CAMP_DANGER_RADIUS ) == 0
+end
+
 -- [pushguard / freehunt#2 20260723] Deep SOLO push against converging
 -- defenders. 30 deaths / 50 games, winning side included: a lone pusher
 -- rides the wave far past the midline and stays while visible defenders

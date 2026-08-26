@@ -152,18 +152,12 @@ ALLOWLIST = {
     # ---- NILCALL ----------------------------------------------------------
     # hero_queenofpain:503 and mode_farm_generic:710 are NOT here.  They are
     # the two findings this census was written for; see GH #192 and the
-    # repaired call site pinned in tests/test_call_form_census.py section 4.
-    ("bots/mode_farm_generic.lua", "J.Site.IsCampDangerous", "NILCALL"):
-        (1, "NOWHERE (strategy group, GH #193): `IsCampDangerous` is declared "
-            "in no file under bots/ under any declaration form, and J.Site is "
-            "`require(FunLib/aba_site)`, a transpiled module of plain "
-            "`____exports.name = function` assignments with no metatable -- so "
-            "the field is nil and the call raises inside mode_farm_generic's "
-            "Think().  Ungated, reached whenever a farming bot's nearest "
-            "available camp is >200 units closer than its current pick.  Left "
-            "in place deliberately: the repair is a farm-policy decision (write "
-            "the predicate, or drop the conjunct and always switch), and this "
-            "file belongs to the strategy group."),
+    # repaired call sites pinned in tests/test_call_form_census.py section 4.
+    # The mode_farm_generic row was DELETED 2026-08-26 by the strategy group
+    # together with the call it watched (GH #193): the conjunct now reads
+    # `X.IsCampSwitchSafe(nearest)`, a real local predicate.  The row and the
+    # call had to land or leave together -- section 4 asserts exactly that, so
+    # deleting one without the other is red either way.
     ("bots/FunLib/advanced_item_strategy.lua", "enemy.IsHero", "NILCALL"):
         (1, "DEADFILE: `enemy` is an engine handle and IsHero is an engine "
             "method, so the dot reaches it without its receiver.  Nothing in "

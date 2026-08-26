@@ -95,6 +95,17 @@ local cs = require('corpus_scale')
 -- uniform and no row straddles the insertion point.  The same change moved both
 -- aba_site rows by +59 (a named constant above IsCampAllowedForLevel, +6, and
 -- the FilterFarmNeutrals block above FindFarmNeutralTarget, +53).
+-- The 2026-08-26 'campdanger' change (GH #193) then moved the LAST mode_farm
+-- row alone by a further +38 -- the explanatory block above `function Think()`,
+-- which sits between the fourth row (:570) and the fifth (:599 -> :637). Split
+-- again, like 'tbearly': the first four rows are above the insertion point and
+-- did not move. NOTE FOR THE NEXT EDITOR OF THAT FILE: the shift was found by
+-- the selfcheck's Lua leg, whose banner reads "failing before you changed
+-- anything" -- that string is canned, not a determination. It was checked
+-- against a stashed tree (main: 15/15 green) before these numbers were touched,
+-- and that check is the step that turns the banner into a fact. Only the `line`
+-- field moved here; file, op, n, eff, text and verdict are untouched, so the
+-- text assertion below still re-reads the row it was classified from.
 -- The `:392 / :506 / :796 / :860` style labels in the header prose and in test
 -- names above and below are GH #84's OWN numbering of the tree it was filed
 -- against. They are stable labels for the rows, not current line numbers, and
@@ -140,7 +151,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 599, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 637, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '

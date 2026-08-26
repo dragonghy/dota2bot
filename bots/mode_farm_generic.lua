@@ -590,6 +590,44 @@ function OnEnd()
 	bot:SetTarget(nil);
 end
 
+-- [GH #193] The camp-switch conjunct below used to negate a call to a J.Site
+-- field named `IsCampDangerous`, passing it the bot and the candidate camp.
+-- That name is declared in NO file under bots/, under any of the six
+-- declaration forms. J.Site is `require(FunLib/aba_site)`, a transpiled
+-- module of plain `____exports.name = function` assignments with no
+-- setmetatable and no __index, so there is no dynamic fall-back either: the
+-- field is nil and the line raised `attempt to call a nil value` INSIDE
+-- Think(). The engine's error handler is broken (`error in error handling`
+-- masks the text) and print() never reaches the console, so this never
+-- surfaced as a crash -- it surfaced as a SILENT Think abort, ungated, in
+-- every game, on every frame where a farming bot's nearest available camp was
+-- more than 200 units closer than its current pick. Everything below this
+-- point in Think() -- the whole preferedCamp block that actually walks to the
+-- camp and attacks the neutrals -- was eaten on those frames.
+--
+-- The repair is split at the line where the evidence stops being forced:
+--
+--  * UNGATED (forced, and conservative BY CONSTRUCTION): the nil call is gone.
+--    Unarmed this returns false, so the conjunct is false and preferedCamp is
+--    NOT switched -- which is byte-for-byte the camp decision the abort
+--    produced, because an abort updates nothing. What changes unarmed is only
+--    that Think() now RUNS ON. Restoring that tail is the whole of the ungated
+--    half; no camp policy is invented to get it.
+--
+--  * GATED 'campdanger' (turbo-only): the conjunct starts answering the
+--    question it asks. There is no shipped verdict to preserve here -- the
+--    predicate never returned -- so which semantics the switch should have is
+--    a farm-policy choice, and policy ships dark. Armed, the bot switches to
+--    the nearer camp unless an enemy hero was last seen within CAMP_DANGER_R
+--    of it.
+--
+-- The predicate itself lives in FunLib/jmz_func.lua as J.IsCampSwitchSafe,
+-- beside its siblings J.IsLanePullSafe / J.IsCreepPullSafe. Not for tidiness:
+-- `X` here is a file-local, so a predicate parked in it cannot be called by a
+-- test at all, and the only "validation" left would be transcribing the gate
+-- into the test and asserting the copy -- which is what the charter means by a
+-- gate-plumbing test. As a J.* helper the fixture drives the SHIPPED function.
+
 function Think()
 	if J.CanNotUseAction(bot) then return end
 	if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "farm") then return end
@@ -707,7 +745,7 @@ function Think()
 			if nearest then
 				local newDist = GetUnitToLocationDistance(bot, nearest.cattr.location)
 				-- switch if we save >800 units or ETA improves a lot and danger isn’t worse
-				if newDist + 200 < oldDist and not J.Site.IsCampDangerous(bot, nearest) then
+				if newDist + 200 < oldDist and J.IsCampSwitchSafe(nearest) then
 					preferedCamp = nearest
 				end
 			end
