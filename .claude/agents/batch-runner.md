@@ -21,7 +21,7 @@ awsx ec2 describe-instances --region us-west-2 --filters Name=tag:Name,Values=do
 ```
   有不该在的实例 → terminate 并向主会话报告。
 
-## 启动一轮镜像验证批测(owner 定价策略:SPOT 优先,失败才 on-demand)
+## 启动一轮镜像验证批测(owner 2026-08-26 再确认:SPOT 优先,没容量才 on-demand)
 ```bash
 cd tools/batch_test/aws
 # 第一选择:spot(便宜 60-70%)
@@ -31,10 +31,13 @@ bash spot_run.sh --type c6a.4xlarge ...(同参数)
 # 两种机型的 spot 都拿不到,才降级 on-demand:
 bash spot_run.sh --on-demand ...(同参数)
 ```
-- **SPOT 优先是 owner 明确的策略(2026-07-23)**。被抢占不可怕:每局游戏完成即上传 S3,
-  verdict 可用 recover_verdict.py 完整重算——抢占只损失在跑的那几局。
-- 抢占后的处理:发现实例 `Service initiated` 终止 → 不要傻等 verdict,直接从
-  `soak/<run_id>/` 恢复已有 seed 的数据;缺的 seed 补一台新实例(仍然 spot 优先)接着跑。
+- **SPOT 优先是 owner 明确的策略(2026-07-23;2026-08-26 原话再确认 GH #158)**:
+  「On demand和spot之间肯定优先用spot呀,除非没有spot的机器」。**不是混合选项 C**
+  —— 例行波和镜像裁定波同一条规则。被抢占不可怕:每局游戏完成即上传 S3,
+  verdict 可用 recover_verdict.py 完整重算。
+- 抢占后的处理(事先登记,不许收割时再定):发现实例 `Service initiated` 终止 →
+  不要傻等 verdict,直接从 `soak/<run_id>/` 恢复已有 seed 的数据;缺臂的那粒种子
+  配对差作废,**不要整波作废**;缺的 seed 补一台新实例(仍然 spot 优先)接着跑。
 - `<CAND>` 可以是单个候选 id,也可以是**逗号串 bundle**(如 `l1trade,ccburst,midguard`,无空格)——IsSoakCandidate 支持逗号解析。**绝不用 `all`**(会把已否决的候选也打开)。
 - 参考价:c6i.4xlarge spot ≈ $0.25/h,on-demand ≈ $0.68/h;一轮 2 seeds ≈ 2h。
 - 多台并行提速:每台跑不同 seed 对(如 801 802 / 803 804 / 805 806)。
