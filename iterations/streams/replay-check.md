@@ -4427,3 +4427,78 @@
     打野反证 fixture(**二十二轮**);`hero-1` 的 153 局 WK 语料(**30 轮**);`l5combo` 的 (a)(**第四十六轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十三轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260826T010748Z.md`
+- **2026-08-26T03:53Z(第七十三次触发)**:接**本组自己上一轮的 backlog 第 1 棒** ——
+  给 GH #197 的两个 `campfarm` armed 反例做 **fixture 裁决**。W12 于 03:10:52Z 首台实发,
+  开工 03:38Z 时 **S3 上 W11 之后零新对象** ⇒ **宽扫 0/0 局(无语料,不是跳过)**,
+  **深查 2 局逐帧**(#197 点名的两局,两侧事件流全量重放)。零 EC2 支出,
+  `bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **结论:门没坏,两个反例都不是「(i) 门在那一刻没生效」的证据** ⇒ 01:07Z 的
+    (a) 读数(**domain-too-small,不是 SILENT-because-broken**)**逐字不变**。
+    新 fixture `tests/fixtures/f_212636_tide_ancient.lua` + `tests/test_replay_212636_tide_ancient.lua`
+    (**9 tests / 0 failures**,**零 `J.*` 打桩**,gate 走**真的** `bots/Customize/soak_side.lua`
+    写→跑→删):armed + L10 时真的 `J.Site.FilterFarmNeutrals` **确实剔掉两只远古、
+    只留泥人**(阴性对照),L12 **按恒等返回同一张表**;`IsModeTurbo()` /
+    `IsSoakCandidate('campfarm')` 该帧都为 **true**(`campfarm:s896:radiant`,主角 team 2)。
+    **两条反证防 selfskip-trap**:`side='dire'` 同帧同表**一字不动**(排掉「其实是等级
+    单独在剔」)、无 soak 文件恒等返回。
+  - ⭐⭐ **例 ① 被它自己的大招解释掉**:`212636_slot7` 那个营地**整局第一次战斗事件
+    就是主角本人的 `tidehunter_ravage`(t=614.7,`granite/mud/rock×2` 各 193)**,
+    比被举报的 627.1 普攻**早 12.8 秒**;622.4 营地光环上身、623.5 `rock_golem` 打队友 zuus、
+    623.6–626.6 luna(L14)一直在打这个营;1600u 内**零个活敌人**(slardar 665u /
+    ogre_magi 877u 都是尸体),两个队友在营 800u 环内 ⇒ **打野路径的防抢野分支
+    (`mode_farm_generic.lua:764-782`)会把他推离这个营**。
+    ⇒ **#197 §1 用来排除引擎自动索敌的「此前一帧都没挨过打」在帧上不成立** ——
+    它只看了**打到主角身上**的伤害,且 episode 窗口**从 624.5 才开**,把主角自己 12.8 秒前
+    的 AoE 关在窗口外。
+  - ⭐ **例 ② 只能部分解释,照实写**:`212624_slot5` 远古雷兽营**整局第一次战斗是
+    t=642.8 它打 sven 的队友 spirit_breaker**(早 25.3 秒);660.3–663.5 是团战
+    (大招→storm_bolt→warcry→MoM,drow 用 `wave_of_silence` 沉默击退至 667.3);
+    **sven 对中立单位的第一下是 665.8 的被动 `sven_great_cleave` 溅射**(打的是隔壁半人马营)。
+    但**他对这个远古营的第一下确实就是 668.1 那记普攻** ⇒ 只能说「冷启动挑中远古」不是
+    自然读法,**不能像例 ① 那样判掉**;离线分不开下令方的能力边界**照原样保留**。
+  - ⭐ **没开的那个 issue**:一度想报「开着大招的 sven 丢下 0.41 血的 drow 去打野」,
+    逐帧一看**不成立**(663.3–667.3 被沉默击退,解沉默时 drow 已在 1054u 外撤退)。
+    **证据不支持的指控不开 issue。**
+  - ⚠️⭐ **新工具坑(写进上面「工具坑」的同族):`opened_by` 分类是对的,窗口是错的。**
+    `tidehunter_ravage`/`anchor_smash`(主动 AoE)与 **`sven_great_cleave`/`luna_moon_glaive`
+    (被动,无 ABILITY 事件,只在 DAMAGE 的 `inflictor` 里露头)** 都会被
+    `campfarm_target.py` 正确归到 `ability` —— **工具没读错**。缺口在 **episode 窗口**:
+    `attacked` 为真的那一下可能落在**早已被点燃的营**上。⇒ 新列 **`camp_prelit`**
+    (episode 首帧前 N 秒内该营与任一方英雄有无伤害往来);本轮两例读数 **12.8 s / 25.3 s**。
+  - ⚠️⭐ **连带:四处语料规模断言的分母**(**没有放宽任何断言**,各按本文件惯例加了带日期的注释):
+    `test_write_only_local_census.py` `carrier_fixtures` 61→**62**(`towers==22` 几何常量未动);
+    `test_activemode_world_assertion.lua` `in_teamfight_1500` 86→**89**、hero-frames 966→**974**
+    (不是 976 —— 那帧两个是尸体,sweep 只数 `u.alive`);
+    `test_focus_innate_index_anchor.lua` cm 50→**51**、lion 22→**23**、zuus `frames` 50→**51**
+    `with` 47→**48**(axe / skeleton_king 不在那帧,未动);
+    `test_itemdesire_world_assertion.lua` **五处**:`crash_total` 211→**213**、`crash_3325` 33→**35**
+    (`:2597` 未动 ⇒ 没冒出第三个崩溃点)、`alive_H` 563→**571**、buildings 块切分 61/43→**62/43**,
+    **以及不是纯记账的那一处** `rest5_H` 211→**218** / `sole_blocker_H` 207→**214**
+    (`outer_and_H` 不动:该帧最高 14 级,**没人到 15**)。
+    **两条教训写进这里**:① **加一枚 fixture 会动语料计数,这四个文件必须一起跑**;
+    ② **先失败的断言会挡住后面的断言** —— 第一次扫只报 4 条,修完再扫才露出第 5 条(`rest5_H`),
+    再扫才露出第 4 个文件。**要反复扫到零失败为止,不能拿第一次的失败清单当全集。**
+  - **交棒**:**GH #197 追评**(全文帧证据 + fixture 三问读数,**建议总监据此关闭**);
+    **GH #137 追评**((a) 读数不变 + `camp_prelit` 的必要性 + §5 更正的第三、四例)。
+    **球仍在总监**:`campfarm` 的三条件判定。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 luacheck 一条无适用对象(容器无 luacheck,
+    **不声称跑过**);Lua 侧本轮 `apt-get install lua5.1` 装上后**是真跑的**:
+    新测试 **9/0**、`campfarm` **16/0**、`test_corpus_scale` **8/0**、
+    `test_activemode_world_assertion` **13/0**、`test_focus_innate_index_anchor` **13/0**、
+    `test_itemdesire_world_assertion` **25/0**,外加对 **31 个会枚举 `tests/fixtures/` 的
+    测试文件**逐个清扫,**收尾一轮零失败**;
+    **全量 Lua 套件容器里跑不完(≈100 min,GH #124),不声称跑绿过全量**。
+    `tests/run_py_tests.sh` **31 passed / 0 failed**。
+    **AWS**:S3 **只读**(2 个 `.dem` + 2 个 `analysis.json` + dumper 缓存命中),
+    **未启动/未终止任何实例**,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **W12 首检**(下一轮应有语料);(2) ⭐ **`camp_prelit` 列**
+    (本轮立的,两例读数已在手);(3) ⭐ `tpdefend_events.py` 加结果侧列(**#191 落地后**,
+    **第六轮**);(4) ⭐ 幻象出生下界 vs 检测器域上界的余量做成 `sweep_run.sh` 常规输出(**第三轮**);
+    (5) ⭐ `entities.py` 推广到 #176 §3 其余检测器(**第四轮**);(6) ⭐ 12:41Z §6.1 那 23 帧做 fixture(**第六轮**);
+    (7) ⭐ `pulldrag` 的 connect 侧;(8) ⭐ 第二种视野证人(**连续第十轮顺延**);
+    ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第十七轮登记**);
+    `stayfield` 第一失败子句;打野反证 fixture(**二十三轮**);`hero-1` 的 153 局 WK 语料(**31 轮**);
+    `l5combo` 的 (a)(**第四十七轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十四轮**);
+    `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260826T035334Z.md`

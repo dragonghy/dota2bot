@@ -362,7 +362,11 @@ tests['[measure] honest TP handle: 0 -> 2 actions and 0 -> 210 crashes'] = funct
     -- more live hero frame reaching the same unstubbed engine global.  The
     -- test NAME keeps the historical 210 as a marker of when this was first
     -- measured; the live number is the assertion.
-    assert(c.crash_total == 211,
+    -- 211 -> 213 on 2026-08-26T03:5xZ (replay-check): f_212636_tide_ancient
+    -- (GH #197) adds 8 live hero frames, 2 of which reach the same unstubbed
+    -- engine global. Both land at jmz_func:3325 (see below), so the two-site
+    -- partition still holds.
+    assert(c.crash_total == 213,
         'crashes under the honest probe moved: ' .. c.crash_total)
     -- 2026-08-23: the corpus grew a SECOND action (see the [recorded] test
     -- below -- it is an honest one, not another origin phantom), so the
@@ -411,7 +415,9 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     --     mechanism warning to the file it breaks.
     assert(c.crash_2597 == 178,
         'jmz_func:2597 crash count moved: ' .. c.crash_2597)
-    assert(c.crash_3325 == 33,
+    -- 33 -> 35 on 2026-08-26: both of f_212636_tide_ancient's new crashes land
+    -- here; :2597 is unmoved, so no third site appeared.
+    assert(c.crash_3325 == 35,
         'jmz_func:3325 crash count moved: ' .. c.crash_3325)
     assert(c.crash_2597 + c.crash_3325 == c.crash_total,
         'a THIRD crash site appeared -- name it before touching these numbers')
@@ -589,12 +595,18 @@ tests['[census] the level term is the sole blocker on 204 honest frames'] = func
     -- 3 -> 4 ** (that fixture's viper is level 15 AND satisfies the other five
     -- operands), so the finding is now "the level term is the sole blocker on
     -- all but FOUR of the honest frames", not all but three.
-    assert(c.alive_H == 563, 'honest-building hero frames moved: ' .. c.alive_H)
+    -- 563 -> 571 on 2026-08-26: f_212636_tide_ancient (GH #197) carries a
+    -- buildings block, so its 8 live hero frames land in the HONEST half; the
+    -- fallback half (alive_F) is untouched.  ** NOT bookkeeping-only: rest5_H
+    -- went 211 -> 218 ** (7 of those 8 heroes satisfy the other five operands).
+    -- outer_and_H did NOT move: nobody on that frame is level 15 (the highest
+    -- is luna/lina at 14), so all 7 land on the sole-blocker side.
+    assert(c.alive_H == 571, 'honest-building hero frames moved: ' .. c.alive_H)
     assert(c.alive_F == 403, 'fallback-ancient hero frames moved: ' .. c.alive_F)
     assert(c.alive_H + c.alive_F == c.alive, 'the split partitions the corpus')
-    assert(c.rest5_H == 211,
+    assert(c.rest5_H == 218,
         'honest frames where the other five operands hold: ' .. c.rest5_H)
-    assert(c.sole_blocker_H == 207,
+    assert(c.sole_blocker_H == 214,
         'honest frames where GetLevel() >= 15 is the ONLY closed operand: '
         .. c.sole_blocker_H)
     assert(c.outer_and_H == 4, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
@@ -722,7 +734,10 @@ tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = f
     -- 60/43 -> 61/43 on 2026-08-23: the WK ancient-camp fixture carries a
     -- buildings block, so the fallback (no-block) side is untouched -- which is
     -- the half this whole test is about.
-    assert(nb == 61 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
+    -- 61/43 -> 62/43 on 2026-08-26: f_212636_tide_ancient carries a buildings
+    -- block, so the fallback (no-block) side is again untouched -- which is the
+    -- half this whole test is about.
+    assert(nb == 62 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
 end
 
 tests['[MECHANISM] the fallback ancient is one unit, both teams, unstable'] = function()

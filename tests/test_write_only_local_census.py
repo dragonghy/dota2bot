@@ -262,7 +262,10 @@ r = D.band_report(max_level=2, max_time=120.0)
 # a model.  If either number moves, every distance below is re-derived, not
 # re-quoted.
 eq("22 towers, identical across every carrier fixture", r["towers"], 22)
-eq("...carried by 61 fixtures", r["carrier_fixtures"], 61)
+# Grows by one every time a fixture is generated against a live map (62 since
+# f_212636_tide_ancient, GH #197).  The count is a corpus size, not a geometry
+# constant -- only `towers` above is the engine invariant.
+eq("...carried by 62 fixtures", r["carrier_fixtures"], 62)
 
 # The separation, and both of the "is this just a thin corpus?" answers.
 ok("the archive does contain tower-adjacent frames (so a zero is not sampling)",

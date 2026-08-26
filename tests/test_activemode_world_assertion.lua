@@ -328,8 +328,15 @@ tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = fu
     -- `u.alive`. mode_nonzero is still 0 and the filter is still ignored on
     -- every one of the 930 -- the world assertion itself did not move, only
     -- its denominator (GH #106).
-    assert(s.in_teamfight_1500 == 86, string.format(
-        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (86 when pinned)',
+    -- 86 -> 89 on 2026-08-26T03:5xZ: the replay desk added the GH #197 frame
+    -- (f_212636_tide_ancient), contributing 3 TRUE readings -- t=627.5 is the
+    -- instant right after a teamfight, with three allies inside 350 u of each
+    -- other, which is the whole reason it is a fixture. Hero-frames 966 -> 974,
+    -- not 976: slardar and ogre_magi are DEAD on that frame and this sweep
+    -- counts only `u.alive`. mode_nonzero is still 0 and the filter is still
+    -- ignored on every one of the 974 -- again only the denominator moved.
+    assert(s.in_teamfight_1500 == 89, string.format(
+        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (89 when pinned)',
         s.in_teamfight_1500, s.hero_frames))
 end
 

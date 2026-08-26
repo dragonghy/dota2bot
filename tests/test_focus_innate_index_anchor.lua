@@ -86,7 +86,12 @@ local ENGINE_INNATE = {
     skeleton_king   = 'skeleton_king_innate_vampiric_spirit',
 }
 
--- Corpus ground truth, measured 2026-08-23.  hero -> { frames, {name = count} }.
+-- Corpus ground truth, measured 2026-08-23; re-measured 2026-08-26 when
+-- f_212636_tide_ancient (GH #197) added one frame carrying crystal_maiden,
+-- lion and zuus (+1 each; zuus's `with` went 47 -> 48 because that frame does
+-- dump his ability array). axe and skeleton_king are not on that frame and did
+-- not move -- a denominator change, not a name-set change.
+-- hero -> { frames, {name = count} }.
 -- Talent rows (special_bonus_*) leak into the dumped ability array on some
 -- frames; they are excluded here because J.Skill.GetAbilityList filters
 -- ability:IsTalent() anyway.
@@ -94,20 +99,20 @@ local CORPUS = {
     axe = { frames = 26, with = 26, names = {
         axe_berserkers_call = 26, axe_battle_hunger = 26,
         axe_counter_helix = 26, axe_culling_blade = 26 } },
-    crystal_maiden = { frames = 50, with = 50, names = {
-        crystal_maiden_crystal_nova = 50, crystal_maiden_frostbite = 50,
-        crystal_maiden_brilliance_aura = 50, crystal_maiden_freezing_field = 50 } },
-    lion = { frames = 22, with = 22, names = {
-        lion_impale = 22, lion_voodoo = 22, lion_mana_drain = 22,
-        lion_innate_to_hell_and_back = 22, lion_finger_of_death = 22 } },
+    crystal_maiden = { frames = 51, with = 51, names = {
+        crystal_maiden_crystal_nova = 51, crystal_maiden_frostbite = 51,
+        crystal_maiden_brilliance_aura = 51, crystal_maiden_freezing_field = 51 } },
+    lion = { frames = 23, with = 23, names = {
+        lion_impale = 23, lion_voodoo = 23, lion_mana_drain = 23,
+        lion_innate_to_hell_and_back = 23, lion_finger_of_death = 23 } },
     skeleton_king = { frames = 34, with = 31, names = {
         skeleton_king_hellfire_blast = 31, skeleton_king_bone_guard = 31,
         skeleton_king_mortal_strike = 31,
         skeleton_king_innate_vampiric_spirit = 31,
         skeleton_king_reincarnation = 31 } },
-    zuus = { frames = 50, with = 47, names = {
-        zuus_arc_lightning = 47, zuus_lightning_bolt = 47,
-        zuus_heavenly_jump = 47, zuus_thundergods_wrath = 47,
+    zuus = { frames = 51, with = 48, names = {
+        zuus_arc_lightning = 48, zuus_lightning_bolt = 48,
+        zuus_heavenly_jump = 48, zuus_thundergods_wrath = 48,
         zuus_lightning_hands = 1 } },
 }
 
