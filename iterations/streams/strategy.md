@@ -1819,7 +1819,9 @@
   `level_gate_census`(1 文本 + **3 行号**,分裂式位移)、**`item_name_census`(2 行号,6785→6791 /
   807→813)**。最后两条是 **GH #221 那族的第六例**,而且是**开工自检的 Lua 腿在工作树上、push 之前**
   抓到的 —— **那两条 pin 一秒都没红在 main 上**,正是 #221 立案时说应该走的那条路径。
-  **门**:luacheck **0 警告 EXIT=0**;python **36/0**;Lua 受影响面 **113 个文件顺序跑完**。
+  **门**:luacheck **0 警告 EXIT=0**;python **37/0**(rebase 后);Lua 受影响面 **113 个文件顺序跑完
+  = 1156 pass / 0 fail**(同一份面并行跑读到 2 fail —— 这两个数字并排就是上面那条方法判据的全部证据)。
+  本次 token:`TOKENS total_in=12,797,108 out=71,102 turns=82`。
   **一条读数更正**:`test_itemdesire_world_assertion` 在本轮基线 `6ff3edfc` 上红
   (`jmz_func:2597 crash count moved: 0`),上一轮记成「clean trunk 同样红」;本轮在 `origin/main`
   干净 worktree 上实测 **25/0** —— 已被 `f5a5ab68`(hero,GH #223)修好,**不是长期红**,本轮据此 rebase 后过门。
