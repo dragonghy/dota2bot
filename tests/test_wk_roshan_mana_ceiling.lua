@@ -57,6 +57,14 @@
 -- cost of the spell it gates.  That is a lever worth pulling -- and it is still
 -- NOT pulled here.
 --
+-- 2026-08-26 UPDATE, so this header does not rot under the code: the lever HAS
+-- since been pulled, GATED -- `wkrosh`, turbo-only, unarmed
+-- (bots/BotLib/hero_skeleton_king.lua X.GetRoshanManaFloor, and
+-- tests/test_wk_roshan_mana_floor.lua for its own evidence).  Nothing in THIS
+-- file changes: every number here is about the SHIPPED leg, which still demands
+-- 600, and section 3 now reaches it through the helper.  The domain paragraph
+-- below is unchanged and still binding.
+--
 -- WHY NOT PULLED: THE DOMAIN CANNOT BE BOUGHT OFFLINE
 --
 -- A fractional floor is a behaviour change, and its domain is "Wraith King in
@@ -385,14 +393,31 @@ end
 -- ---------------------------------------------------------------------------
 -- 3. The corrected claim, computed off the shipped source.
 
-tests['[hero] the Roshan branch still gates on the same absolute floor'] = function()
+tests['[hero] the Roshan branch still prices itself off the same 600'] = function()
+    -- UPDATED 2026-08-26.  This assertion used to demand the literal shape
+    --     BOT_MODE_ROSHAN ... and bot:GetMana() >= 600
+    -- and it FIRED the day the lever this file registered was finally written
+    -- (`wkrosh`, gated).  That is the ratchet doing its job, not a false alarm --
+    -- so it is re-pointed rather than relaxed.  Every crossing level in this file
+    -- is about the number the SHIPPED leg still demands, and the shipped leg is
+    -- now the default return of X.GetRoshanManaFloor.  Both halves are checked:
+    -- the branch must still consult that helper, and the helper's shipped default
+    -- must still be 600.
     local src = read_file(WK)
-    local sFloor = src:match('BOT_MODE_ROSHAN[^\n]*\n%s*and bot:GetMana%(%) >= (%d+)')
-    assert(sFloor, 'the Roshan branch in ' .. WK .. ' no longer reads '
-        .. '`GetActiveMode() == BOT_MODE_ROSHAN` followed by an absolute '
-        .. '`GetMana() >= N`; every number in this file is about that shape')
-    assert(tonumber(sFloor) == 600, 'the floor is now ' .. sFloor
+    assert(src:find('BOT_MODE_ROSHAN[^\n]*\n%s*and bot:GetMana%(%) >= '
+        .. 'X%.GetRoshanManaFloor'), 'the Roshan branch in ' .. WK .. ' no longer '
+        .. 'reads `GetActiveMode() == BOT_MODE_ROSHAN` followed by the floor '
+        .. 'helper; every number in this file is about that comparison')
+    local sShipped = src:match('function X%.GetRoshanManaFloor.-local nShipped = (%d+)')
+    assert(sShipped, 'X.GetRoshanManaFloor no longer declares a shipped floor')
+    assert(tonumber(sShipped) == 600, 'the shipped floor is now ' .. sShipped
         .. '; the crossing levels recorded here are for 600')
+    -- And the armed leg is somebody else's file to test -- named here so the two
+    -- cannot drift apart silently.
+    assert(src:find("J%.IsSoakCandidate%( 'wkrosh' %)"), 'the widened leg is gone '
+        .. 'from ' .. WK .. '. If `wkrosh` was PROMOTED, the crossing levels here '
+        .. 'describe a floor the bot no longer uses: rewrite, do not delete. '
+        .. 'See tests/test_wk_roshan_mana_floor.lua')
 end
 
 tests['[hero] with the shipped build the floor is reachable inside turbo'] = function()

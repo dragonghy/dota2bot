@@ -353,6 +353,72 @@ function X.SkillsComplement()
 
 end
 
+--- Absolute mana the Roshan branch of X.ConsiderQ demands before it will spend
+--- Wraithfire Blast on Roshan.  Takes the blast's own cost so the two legs are
+--- priced off the same number the branch is about to pay.
+---
+--- SHIPPED (no gate): a flat 600, and it is the wrong KIND of number.  The spell
+--- it gates costs 95/110/125/140 (npc_dota_hero_skeleton_king.txt,
+--- skeleton_king_hellfire_blast/AbilityManaCost, read 2026-08-26), so the floor is
+--- 4.3x the price of one cast at rank 4.  Worse, it is absolute while the pool it
+--- is drawn against is not: at every pre-scepter milestone in the shipped buy
+--- lists the crossing pool is exactly 603 (tests/test_wk_roshan_mana_ceiling.lua
+--- computes those milestones off the lists rather than typing them in), so 600 is
+--- 99.5% OF THE POOL -- one blast drops him under it for the rest of the fight.
+---
+--- WIDENED (soak candidate 'wkrosh', turbo-only): the floor becomes "pay for the
+--- blast and still hold the reincarnation mana".  That is not a number picked to
+--- be smaller; it is THIS FILE'S OWN reserve rule.  X.ShouldSaveMana already
+--- refuses any cast that would leave bot:GetMana() below abilityR:GetManaCost(),
+--- and it is consulted on the first line of X.ConsiderQ -- but only while
+--- Reincarnation is within 3.0s of ready.  A Roshan fight is precisely where that
+--- window should be permanent, so the Roshan branch applies the same reserve
+--- unconditionally instead of a constant that predates it.  Both sides scale with
+--- rank: Reincarnation costs 220/110/0 (same file, AbilityValues/AbilityManaCost,
+--- read 2026-08-26 -- rank 3 is FREE, which is why the armed floor collapses to
+--- the blast's own price at level 16+), so the armed floor is 315/330 at R rank 1,
+--- 235/250 at rank 2 and 95..140 at rank 3, against 600 either way today.
+---
+--- ONE-DIRECTIONAL BY CONSTRUCTION, not by today's arithmetic: the relative floor
+--- is returned only when it is strictly BELOW the shipped one, so no future KV
+--- edit can make the armed leg demand MORE mana than the shipped leg.  The lever's
+--- whole claim is "this floor is too high"; a leg that could raise it would be
+--- testing something nobody argued for.
+---
+--- WHY IT IS SAFE TO LOOSEN, AND WHAT IT COSTS (condition (c), argued not assumed)
+---   * Nothing else in this file casts on Roshan.  The farming branch above
+---     excludes him by name (not J.IsRoshan(targetCreep)) and every other branch
+---     in X.ConsiderQ iterates hero lists, so this branch is the only Roshan path
+---     -- it is not DOWNSTREAM-DOMINATED and it is not a duplicate of a sibling.
+---   * Mana held during a Roshan fight has no competing spender: the bot is
+---     standing in the pit hitting Roshan, and the one thing the mana IS needed
+---     for -- coming back after a gank lands on the pit -- is exactly what the
+---     reserve half of the new floor keeps.
+---   * The cost is real and one-sided: a blast spent on Roshan is a blast not
+---     available for the fight that starts 8-14s later (its cooldown), and the
+---     shipped 600 buys that insurance by never firing.  This lever trades that
+---     insurance for the damage; it does not claim the trade is free.
+---   * Below level 6 abilityR is unlearned and what GetManaCost answers then is
+---     an engine question this desk cannot settle.  It does not matter here in
+---     practice (X.ShouldSaveMana is itself nLV >= 6, and a level-5 Wraith King in
+---     BOT_MODE_ROSHAN is not a real frame), but a reader sizing this must not
+---     assume the rank-1 220 is what arrives.
+function X.GetRoshanManaFloor( nAbilityManaCost )
+
+	local nShipped = 600
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'wkrosh' )
+	then
+		local nReserve = 0
+		if abilityR ~= nil then nReserve = abilityR:GetManaCost() end
+		local nRelative = nAbilityManaCost + nReserve
+		if nRelative < nShipped then return nRelative end
+	end
+
+	return nShipped
+
+end
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable()
@@ -563,16 +629,17 @@ function X.ConsiderQ()
 	-- drops him under it for the rest of the Roshan fight.  An absolute floor 4.3x
 	-- the cost of the spell it gates is the defect; the level was never the point.
 	--
-	-- STILL NOT CHANGED HERE, for the reason the old note gave and one it did not:
-	-- a fractional floor is a behaviour change whose domain has never been
-	-- measured, and the domain CANNOT be measured offline.  The 13th world
-	-- assertion (tests/test_activemode_world_assertion.lua) is that no fixture
-	-- carries an active mode at all -- GetActiveMode is bot-VM state, not entity
-	-- state, so it is in no .dem -- which makes this comparison constant FALSE on
-	-- every frame in the archive, not rare.  Sizing it needs a positional proxy
-	-- from the batch corpus (queue hero-10), not another fixture.
+	-- WRITTEN 2026-08-26, GATED (`wkrosh`, turbo-only, unarmed) -- the shape the
+	-- 2026-08-23 round registered for it ("absolute 600 -> a relative floor that
+	-- still leaves the reincarnation mana behind").  The floor now comes out of
+	-- X.GetRoshanManaFloor below; read the argument there.  What has NOT changed
+	-- is the domain: GetActiveMode is bot-VM state, not entity state, so it is in
+	-- no .dem (13th world assertion, tests/test_activemode_world_assertion.lua) and
+	-- this comparison is constant FALSE on every archived frame -- a fact about the
+	-- harness, not a frequency.  Sizing still needs the positional proxy asked for
+	-- as queue hero-10; do NOT read a fixture-driven zero here as an empty domain.
 	if bot:GetActiveMode() == BOT_MODE_ROSHAN
-		and bot:GetMana() >= 600
+		and bot:GetMana() >= X.GetRoshanManaFloor( nManaCost )
 	then
 		local npcTarget = bot:GetAttackTarget()
 		if J.IsRoshan( npcTarget )
