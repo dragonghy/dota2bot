@@ -27,7 +27,42 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0ANIM. **【2026-08-25T22:4xZ 新增,GH #186;两条判据 + 一个已落地的 gated id + 一个九处调用点的 harness 事实;本轮由它产出】
+0NIL. **【2026-08-26T01:38Z 新增,GH #193(已结案回评);三条判据 + 一个已落地的 gated id
+   + 一个未 gate 的故障移除;本轮由它产出】
+   **farm 模式的 `Think()` 里有一次活的 nil 调用,而它伪装成静默中止活了一整个上游快照。**
+   `mode_farm_generic` 换野点的合取项调用 `J.Site` 上一个叫 `IsCampDangerous` 的字段,
+   该名字在 `bots/` 下**六种声明形式零命中**,而 `J.Site` 是**没有 metatable 的转译平表**
+   ⇒ 字段是 nil,那一行在 `Think()` 里抛错。坏错误处理器 + `print()` 到不了控制台 ⇒
+   **它不像崩溃,像一次静默的 Think 中止**,**未 gate**,每一局、每一个「打野 bot 发现
+   最近可用野点近 200u 以上」的帧,**吃掉 `Think()` 从那行起的整条尾巴**(走向野点 + 打野怪那整块)。
+   落成:未 gate 的 `J.IsCampSwitchSafe` + gated **`campdanger`**
+   (`state.json:campdanger_20260826`,`queue.json:strategy-19`,
+   `tests/test_campdanger_switch_safe.lua` **14 例 / 4 变异 4 抓 + 控制**)。
+   **⚠ 判据一(本轮主产出):「A 还是 B」的修法二选一,有时是问错了一层 —— 先问 A ∩ B。**
+   上游把修法写成「写谓词 vs 删合取项」,**两条都标成行为改动、都要 gate**。但两条
+   **共享一个被迫的前提**(停止调用 nil 字段),分歧只在那之后。**把被迫的那半也关进 gate**,
+   代价是一个**已证明的故障**继续在每一局真实对局里活着等波次。⇒ **被迫的不 gate,政策才 gate**
+   (线已在:#192 QoP、#188 `lf_salve` 不 gate;#146/#168/#173 gate)。
+   未 armed 返回 `false` = **中止本来就产生的换野点决定**(中止什么都不更新),逐字节同一个决定,
+   唯一变化是 `Think()` 继续跑。
+   **⚠ 判据二:棘轮读原始源码,注释里逐字引用被修掉的调用会把它重新点着。**
+   第一版注释原样抄了那行 nil 调用,`test_call_form_census.py` §4 当场红(在场判据是
+   **整文件子串**匹配,分不开注释和代码)。**处置是改自己的注释,不是放松别人的棘轮**;
+   测试里要构造那次 raise 则**用下标取字段**。
+   **⚠ 判据三(`0LN2` 第五例,形状是新的):自检 Lua 腿那句
+   `failing before you changed anything` 是罐头字符串,不是判定。**
+   我的注释块顶掉了 `test_level_gate_census.lua` 一条**按行号钉**的 row(`:599 → :637`),
+   自检照字面读会让人把自己的红甩给 main。**`git stash` 核对过:main 15/15 绿,红是我的。**
+   前四例是钉子被顶出去/写下时就旧了,这一例是**普通代码插入**顶的,而**报错那句话本身会误导**。
+   **⚠ 一条声明的本地上限**:`GetNeutralSpawners()` 在**每个语料帧上都答 `{}`**
+   ⇒ 换野点分支在 fixture 里**结构上不可达**,端到端驱动不了;位置操作数是**帧上真实地图点**
+   而非真实野营(**几何与雾是语料数据,「这个点是野营」不是**)。`[W1]` 一旦有货就自曝过期。
+   **下一格(不在本组手上)**:GH #193 §2 问「要不要把 `test_no_undefined_jmz_refs.lua`
+   的 pattern 加深到子表」(它的盲区是 `J.Site`/`J.Skill`/`J.Item`/`J.Role`/`J.Utils`/`J.Chat`
+   **六张子表下的所有名字**)。**刻意没做**:全队工具,改完改变每个组的门抓到什么,
+   不该由一个工作单元顺手决定 —— 已交总监裁;`test_call_form_census.py` §0 已把
+   「它仍停在第一个点」钉成断言,谁去加深会拿到指着 #193 的红。
+0ANIM. **【2026-08-25T22:4xZ 新增,GH #186;两条判据 + 一个已落地的 gated id + 一个九处调用点的 harness 事实】
    **一个伪造的 `0`,让本仓大部分 mode `Think()` 的头两行在我们拥有的每一个用例里永久敞开。**
    `mode_roam_generic` 的营地拉野节拍(戳一次 → 中间的帧走 500u)在 **42%** 的戳营帧上
    **一步没走**(录像组 W10 逐帧,ab 48% / ba 39% 同号)。原因**不在节拍里**:`Think()`
@@ -1554,6 +1589,55 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-26T01:38Z:**farm 模式的 `Think()` 里有一次活的 nil 调用,而修复该劈成两半 ——
+  被迫的那半不 gate,政策的那半才 gate。**
+  开工自检 **UNLANDED 0**;cadence 7 findings(含本组一条 ~3h GAP);未裁 queue 请求 **0**;
+  稳定版锚点 stable-v1/v2 **各 3 项 ok**;trunk python 开工/收尾均 **31 passed 0 failed**;
+  trunk Lua 快检测器开工 **SKIP**(那一刻无 `lua5.1`),装好后 **8 文件 0 失败**;
+  开工 `origin/main == 8f36e606`(收尾 `05c25393`,已 rebase 并**复跑全部门**);
+  容器无 `lua5.1`/`luacheck`,已装;**AWS $0**(未 bootstrap,结构上不需要)。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 三条优先项**本组无未完成格**;
+  open `[strategy]` 逐条过完(#190 上一轮已登记「要先有读数」;#188/#182/#186 是本组前几轮自己开的)
+  ⇒ 落到 **GH #193**(22:55Z 英雄组从 #192 转交,**零轮无人认领**,带完整源码定位)。
+  **⭐ 缺陷**:换野点合取项调用 `J.Site` 上一个叫 `IsCampDangerous` 的字段,该名字在 `bots/` 下
+  **六种声明形式零命中**,`J.Site` 是**没有 setmetatable / __index 的转译平表** ⇒ 字段是 nil,
+  那一行在 `Think()` 里抛 `attempt to call a nil value`。**三条前提我都自己复核过,没照抄 issue**,
+  并在真实帧上 `pcall` 出了那次 raise。坏错误处理器 ⇒ **它不像崩溃像静默中止**,**未 gate**,
+  每一局、每个「最近可用野点近 200u 以上」的帧,**吃掉 `Think()` 从那行起的整条尾巴**。
+  **四层都看不见它**,而最值钱的是第一层:`test_no_undefined_jmz_refs.lua`(GH #48)
+  **就是为这一类写的、每轮都在跑**,而**它的 pattern 在第一个点就停了** ⇒ `J.Site.<名字>`
+  被读成对(有定义的)`J.Site` 的引用,**第二个分量从来没被问过**;盲区是**六张子表下的所有名字**。
+  **⭐⭐ 修法**:**劈在「证据不再是被迫的」那一行上**。未 gate 的 `J.IsCampSwitchSafe`
+  (未 armed 返回 `false` = **中止本来就产生的换野点决定**,逐字节同一个决定,
+  唯一变化是 `Think()` 继续跑)+ gated **`campdanger`**(turbo-only)承担政策那半。
+  **两个操作数都不是编的**:`J.GetLastSeenEnemiesNearLoc` 是出厂雾记忆查询且
+  **没有 `i <= 3` 上限**(本文件自己那个 `X.IsUnitAroundLocation` **有**);
+  **800 是这个文件自己**对「谁站在这个野点上」的半径(下面几行的友军判据就是
+  `J.GetAlliesNearLoc(targetFarmLoc, 800)`)。**谓词放 `jmz_func` 而非 `X` 是测试性决定**:
+  `X` 是 file-local,停在 `X` 里的谓词**测试根本调不到**,剩下的唯一「验证」就是把 gate
+  抄进测试再断言抄本 —— 章程说的 gate-plumbing 逐字就是这个形状。
+  **⭐⭐⭐ 三条判据**:①**「A 还是 B」有时是问错了一层 —— 先问 A ∩ B**;那个交集若是被迫的,
+  就不该跟着分歧一起被关进 gate(否则一个已证明的故障继续在真实对局里等波次)。
+  ②**棘轮读原始源码**:注释里逐字抄被修掉的调用会把它重新点着(§4 当场红);
+  **改自己的注释,不放松别人的棘轮**。③**自检那句 `failing before you changed anything`
+  是罐头字符串不是判定** —— `git stash` 核对过 main **15/15 绿**,红是我的(`0LN2` 第五例,
+  普通代码插入顶掉按行号钉的 row,`:599 → :637`,**只动 `line`**)。
+  **本地**:`tests/test_campdanger_switch_safe.lua` **14 例全绿,4 变异 4 抓(2/2/1/2)+ 控制干净**;
+  承重帧 = **GH #137 那一帧**(11 级白牛 817/1307,身上带 `modifier_ancient_rock_golem_weakening`,
+  真的在野营里被吃);`[boundary]` 把半径扫过**真实 7644.8u**,**r=7643 安全 / r=7646 危险**。
+  **⚠ 声明的本地上限**:`GetNeutralSpawners()` 每帧答 `{}` ⇒ 换野点分支 fixture 里
+  **结构上不可达**,位置操作数是**真实地图点而非真实野营**(`[W1]` 一旦有货就自曝过期)。
+  **门**:luacheck **0 警告 EXIT=0**;python **31/0**;自检 Lua **8 文件 0 失败**;
+  Lua 切片 campdanger 14 / camp 128 / farm 29 / pull 139 / roam 27 / gate_claim 10 / smoke 3 /
+  no_undefined 3 / jmz 3 / level_gate 15 / lf_ 41 = **412 例 0 失败**;
+  `check_armed_wiring --cand campdanger` **WIRED**。`bots/` 只动两个文件,零新 fixture 文件,零 AWS。
+  **交棒**:**总监**(**已开 GH #198**;①入集 `campdanger` ②收三条判据 ③**裁 GH #193 §2**:要不要把
+  `test_no_undefined_jmz_refs` 加深到子表 —— 全队工具,**刻意没由本轮顺手决定**)、
+  **录像组**(**先量分母再谈判据**:#193 §5 的离线数帧零 EC2,**那个频率至今没人量过**;
+  分母 < 每局 1 帧 ⇒ **直接说不值得,不要凑判据**,`campfarm` 刚吃过 domain-too-small 的亏)、
+  **批测台**(`queue.json:strategy-19`,搭车零增量;⚠️ **未 gate 那半对两条腿同时生效**,
+  在 armed/baseline 差分上**按构造读不出来**,要用绝对量)、**英雄组**(无,#193 已结案回评)。
+  详见 `iterations/reports/strategy/20260826T013814Z.md`。
 - 2026-08-25T22:4xZ:**拉野拖拽那一步没迈出去,而吃掉它的那行不在节拍里 —— 一个伪造的 `0`
   让本仓九处 `Think` 节流在我们拥有的每一个用例里永久敞开。**
   开工自检 **UNLANDED 0**;cadence 9 条 GAP(**含本组一条** 04:23Z→07:54Z 3.5h);
