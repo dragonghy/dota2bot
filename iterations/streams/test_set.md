@@ -1,7 +1,30 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink
 
-**成员串 36**(上一行)。本行 2026-08-25T16:0xZ 的**一处变动**(全文档案 **§BG.3**):
+**成员串 40**(上一行)。本行 2026-08-26T22:xxZ 的**四处变动**(全文档案 **§BM**):
+**`abilanc` 补录**(§BL 09:5xZ 已裁 APPROVED,但**这一行迟了四轮没同步** —— GH **#210**,本轮结案)+
+**`bbfight` / `bbshort` 入集**(GH #218 裁定,§BM.1)+
+**`pullthink` 入集**(`strategy-18`,GH #186,§BM.7 —— **它是本轮修好 `pending_rulings.py`
+之后第一个被工具报出来的待裁请求**)。**四条都是搭车、零 AWS 增量、不申请专波。**
+
+**⚠️ 关于 `abilanc` 那一格,要记的不是「补上了」而是「为什么补了四轮才补」**:
+§BL 是**正式裁定且就写在本文件里**,而第 2 行是它**尚未同步的投影**;批测台章程步骤 6
+写的取串规则是「第 2 行**逐字**」⇒ W14 与 W15 **两波**都得靠人**手工判「裁定压过陈旧的行」**
+才没漏掉它(见 GH #210 与批测台 21:15Z 报告 §arm 串的裁决依据)。
+**这条与 §AW.1 是同一个形状的第三例**:裁定作出了、存进了档案、**没落到被裁方读的那一行上**。
+⇒ **本轮起把它并进裁定动作本身**:入集裁定**未改第 2 行 = 裁定未完成**,不许留到「下一轮补」。
+
+**⚠️ 发波前必读(cand 串长度,本轮实测)**:40 id 的裸 cand 串 **354 字节**(36 id 时 320)。
+本轮 `check_armed_wiring.py --cand <40 串>` = **40/40 WIRED,exit 0**;
+`abilanc` jmz_func:1845(direct,1 站点)/ `bbfight` jmz_func:10594(1)/ `bbshort` jmz_func:10633(1)/
+`pullthink` mode_roam_generic:224(**2 站点** —— 它是一个 id 的两个不可分半边,见 §BM.7)。
+S3 key 上限 1024,**仍有余量**;ext4 的 255 早已跨过(GH #167),绕法与判据照旧。
+
+**⚠️ 本轮新增的互斥前置(§BM.3,排波必读)**:**`bbrespawn` 与 `bbshort` 不得同腿 arm。**
+`bbrespawn` 目前是 REJECTED + `readmit_on`(不在串里),但它的复活条款**恰恰以 `bbshort` armed 为触发**,
+所以这条互斥**从它回到排期轴的那一刻起立即生效**,不是将来某天的事 —— 理由见 §BM.2 的格点读数。
+
+- 上一行的 36 是 2026-08-25T16:0xZ 那一处变动(全文档案 **§BG.3**):
 **`campfarm` 入集**(协同组 `strategy-17`,GH #137 §3 建议 2)。**搭车、零 AWS 增量、不申请专波。**
 门是**它自己那一条**(`mode_farm_generic.lua:78`,`IsModeTurbo` and `campfarm`)⇒
 **无合取项、无 §BA.2 冻结风险,单独 arm 即有意义**。
@@ -8152,3 +8175,168 @@ local bStrictAncient = J.IsModeTurbo() and J.IsSoakCandidate( 'abilanc' )
 
 **这条检查目前是总监手做的**;把它机械化(遍历 armed 串,报出「门里点名了不在串里的 soak id」)
 是一条值得进基建 backlog 的候选,本轮**刻意不夹带**(工作单元要小),已记在章程「下次触发」里。
+
+## §BM 2026-08-26T22:xxZ 总监裁定:买活阶梯三条 gated id 一次裁完(GH #218)—— **两条入集、一条退回带复活条款**;外加 GH #210 结案(第 2 行迟了四轮)
+
+机器投递在 `iterations/queue.json:strategy-21`(`bbfight,bbshort`)与 `:strategy-22`(`bbrespawn`),
+落地物在 `state.json:bbfight_20260826` / `bbshort_20260826` / `bbrespawn_20260826`,
+来源 issue GH #208(`bbrespawn`)/ #215(`bbfight`)/ #222(`bbshort`),路由请求 GH #218(批测台开)。
+
+**⚠️ 这三条落地时一条队列请求都没有** —— 它们是**批测台在排波前用肉眼发现的**,
+不是任何工具报出来的。`pending_rulings.py` 读 `queue.json`,**一个从未被申请的 id 它看不见**;
+`check_armed_wiring.py` 查的是「调用点存在」,**不在串里的 id 它根本不会被问到**。
+⇒ **本轮把它开成 [harness](见章程 backlog):一个 gated、已接线、有测试、既未 promote 也未 reject
+的 id,如果在 `queue.json` 里没有任何请求,应该有东西举手。** 本条的三个 id 是它的第一份语料。
+
+### §BM.1 裁定
+
+| id | 裁定 | 波次 |
+|---|---|---|
+| `bbfight` (GH #215) | **APPROVED_ADMITTED** | 搭车,下一波全集;零 EC2、零 AWS 增量、不申请专波 |
+| `bbshort` (GH #222) | **APPROVED_ADMITTED** | 同上 |
+| `bbrespawn` (GH #208) | **REJECTED + `readmit_on`** | 不入集;复活条款见 §BM.2 |
+
+申请方(协同组,GH #218 §表)提的就是这个结论,**但给 `bbrespawn` 的理由只对了一半,
+而错的那一半会在几周后无声地过期** —— 所以本节记的是总监自己重算的那一份。
+
+### §BM.2 ⭐ 判据是**总监自己枚举的格点**,不是申请方的表
+
+`ability_item_usage_generic.lua:556-620` 的买活阶梯,在 turbo 下按 `(R, e)` 双参数全枚举
+(R = turbo 复活时长 ∈ [0, 75],e = 死后经过秒数 ∈ [0, R],步长 0.5s;
+`RESPAWN_TABLE_MAX 100 × TURBO_RESPAWN_FACTOR 0.75 = 75` 是天花板)。
+**每格记的不是「哪一档终结」而是「哪些档的门被打开」** —— rung 1 / rung 2 的内层条件
+(遗迹周围人数 / 有无团战点)**失败时是往下落不是 return**,把它们当终结档会读出一个不存在的
+「armed 关掉了一档」。**第一版就是这么错的,枚举改成「门集合」后消失。**
+
+单独 arm、其余两条出厂,与出厂全集比:
+
+| armed 单条 | 变格数 | 门集合迁移 | 关掉任何一档? |
+|---|---|---|---|
+| `bbrespawn` | **0**(24 级与 25 级都是 0) | — | 否 |
+| `bbshort` | **745** | `() → (r3)` | **否** |
+| `bbfight` | **240**(**只在 25 级**;24 级 = 0) | `(r3) → (r2, r3)` | **否** |
+
+三条结论:
+
+- **(甲) `bbrespawn` 单独 arm 是可证的算术零,不是「语料里没观测到」。**
+  申请方给的理由是「唯一的下游前置 `J.IsAncientBadlyHurt` 在 58 个遗迹快照里 hp 全 = 1.0」——
+  那只杀死了 **rung 1**。真正的原因是**它修的那个数的每一个消费方,在出厂 `60` 底板留下的
+  可达区里全部惰性**:出厂底板要求 `nFullRespawnTime = R − e ≥ 60`,而 R ≤ 75
+  ⇒ `e ≤ 15` ⇒ 出厂读法 `R − 2e = (R−e) − e ≥ 60 − 15 = 45 > 40`
+  ⇒ **`nRemainingRespawnTime < 40` 那道早退在可达区里从不咬合**,两种读法下到达 rung 3 的格点**逐格相同**;
+  rung 2 的 `> 80` 在 R ≤ 75 下两种读法都是结构零;rung 1 的门压在从不 arm 的 `bbancient` 底下。
+  **⇒ 与经验读数无关,加语料也不会变。**
+- **(乙) ⭐⭐ 而「零」是**有寿命**的:`bbshort` 一旦 armed,`bbrespawn` 立刻变成 650 格。**
+  底板降到 45 后可达区变成 `e ≤ R − 45`,那道 `< 40` 早退**开始咬合**(R ≥ 50 时
+  `(R−40)/2 < R−45`),而 armed 的 `R − e ≥ 45 > 40` **正好清掉它** ⇒ `() → (r3)` 650 格。
+  **这就是申请方那半个理由的过期时刻**:按「下游是空的」写下的暂缓,会在 `bbshort` 入集的
+  同一天失效,**而没有任何东西会举手**(铁律 9 的掉棒形状)。⇒ 本裁定不写「暂缓」,写
+  `readmit_on`,把复活判据钉成**可证伪的一句**(§BM.3)。
+- **(丙) `bbfight` 与 `bbshort` 是可分离的两根杠杆,同波 arm 不损归因。**
+  `bbfight` 叠在 armed `bbshort` 上仍是**同样的 240 格、同样的迁移**;而两者的格集**不相交**
+  (`bbshort` 开的 745 格出厂读作 `()`,`bbfight` 的 240 格出厂已经读作 `(r3)`)。
+  ⇒ **两条同波 arm 是安全的**,这不是希望而是枚举出来的。
+
+### §BM.2b 诚实登记:**(甲) 依赖 getter 语义,(乙)(丙) 不依赖**
+
+上表整个建立在**读法 B**(`GetRespawnTime()` = 剩余时间,`docs/BOT_API_REFERENCE.md` + GH #208)上。
+按**读法 A**(local 名字自称的「恒定完整时长」)重跑同一枚举:
+`bbshort` **765 格**、`bbfight` **465 格(仍只在 25 级)**、两者仍**不关任何一档**
+⇒ **两条入集裁定与读法无关**;
+但 `bbrespawn` 变成 **2480 格**,是三条里最响的一条。
+
+**⇒ `bbrespawn` 的「零」只在读法 B 下成立。而暂缓在两种读法下都是对的,理由相反**:
+读法 B 下 arm 它买不到任何读数;读法 A 下它响,**是因为 armed 腿会让那个数彻底不再衰减
+(armed 直接返回 getter 本身)** —— 那是 arm 一个缺陷,不是 arm 一个修复。
+**结论在不确定性两侧都活着,这是本条敢单裁的原因;换一条不具这个性质的 id 不许照抄。**
+
+### §BM.3 `bbrespawn` 的 `readmit_on`(可证伪,写进 `queue.json:strategy-22.director.readmit_on`)
+
+> `bbshort` 在某一波真的 armed,且该波的执行核验(条件 a)对 `bbshort` 给出 WORKING
+> —— 从那一刻起 `bbrespawn` 自动回到排期轴,**申请方不需要重新申请**,
+> 总监在该读数落地后的下一次触发**必须**给实质裁定。
+
+**并列一条互斥前置(排波必读)**:**`bbrespawn` 与 `bbshort` 不得同腿 arm。**
+理由与 `campfarm`/`campgrade`、`abilanc`/`campgrade` 那两条**同族但方向相反** ——
+那两条是上游把域删掉让下游读不到;这一条是 **`bbrespawn` 的 650 格恰好是 `bbshort` 那 745 格
+开出来的同一片区域的子集**,同腿 arm 会让 `bbshort` 自己的读数不可归因。
+⇒ 复活之后要单独一腿,或至少与 `bbshort` 错波。
+
+### §BM.4 §BL.4(GH #207 结构性零腿)照查,三条全过
+
+```lua
+if J.IsModeTurbo() and J.IsSoakCandidate( 'bbrespawn' ) then   -- jmz_func.lua:10561
+if J.IsModeTurbo() and J.IsSoakCandidate( 'bbfight'   ) then   -- jmz_func.lua:10594
+if J.IsModeTurbo() and J.IsSoakCandidate( 'bbshort'   ) then   -- jmz_func.lua:10633
+```
+
+三条**都是单合取,另一半是 `IsModeTurbo()` 这个模式谓词,不是另一个 soak id ⇒ 不属该族,通过。**
+反向也查了:全仓没有第二处门在合取里点名这三个 id 中的任何一个。
+**并且本轮给这条检查补了它缺的一半** —— §BL.4 查的是**门里的合取**,
+而 `bbrespawn` 的零**不在门里,在控制流里**(被上游一道早退和一个从不 arm 的兄弟门支配)。
+⇒ **§BL.4 的检查范围从本轮起写明是两条**:(i) 门的合取项里有没有不在串里的 soak id;
+(ii) **这个 id 的消费方,在其余 id 全部出厂的世界里,是不是全部惰性**。
+(ii) 只能靠读控制流或枚举格点,**接线门与 `pending_rulings.py` 都答不出来**。
+
+### §BM.5 其余排波前置
+
+- **无互斥冲突**:39 串里**没有第二个 id 的站点落在 `ability_item_usage_generic.lua`**
+  (逐条核过本轮 `check_armed_wiring.py` 的 39 行输出;`tpdeathbuy` 在 `item_purchase_generic.lua:1016`,
+  是死亡期间**买东西**不是**买活**,不同通路)。
+- **接线**:39/39 WIRED,exit 0,`bbfight` → `jmz_func.lua:10594`、`bbshort` → `jmz_func.lua:10633`。
+- **本地验证**:`tests/test_bbfight_turbo_respawn_ceiling.lua` / `tests/test_bbshort_turbo_respawn_floor.lua`
+  均在树上(协同组落地时带的真实帧 fixture)。**⚠️ 见 §BM.6:这两个文件不能与其它 gate 测试并行跑。**
+- **预登记的反向读法**:两个 id 都是**只降底板、从不抬**的单向杠杆(§BM.2 表最后一列已枚举为
+  「不关任何一档」)⇒ 收割时若读到**买活次数下降**,第一嫌疑不是本 id 而是 arm 串或收割口径。
+
+### §BM.6 GH #218 的第二半(方法学)本轮**不裁实质,已开成独立 [harness]**
+
+协同组在 #218 末尾附了一条与路由无关的东西:**「受影响面分 N 段并行跑」会制造假红** ——
+`test_bbrespawn_double_subtract` 并行跑读到 3 failures,顺序单跑 16 tests 0 failures。
+根因是结构性的:**16 个 gate 测试文件共用同一个物理开关** `bots/Customize/soak_side.lua`
+(各自 `io.open(SIDE_PATH,'w')` 写、`os.remove` 删),两个进程同时跑就是在同一个开关上打架,
+**而失败方向是假红**。本轮**刻意不夹带修复**(工作单元要小,且它与本节的路由裁定无关),
+已开成独立 [harness] issue 并记进章程 backlog。**在它修好之前的纪律:gate 测试只在一个进程里跑。**
+
+### §BM.7 `pullthink` 入集(`strategy-18` / GH #186)——**本轮修好检测器之后,它是第一个被报出来的**
+
+**⭐ 这一条的来历比裁定本身重要。** 它不是被读报告读出来的,是**总监本轮修 `pending_rulings.py`
+之后,工具自己在同一分钟里报出来的第一条**:该工具的 `is_unruled` 写作
+`req.get("director") in (None, {}, "")`,而 `strategy-18` 的字段是
+`{"ruling": "", "wave": "", "at": "", "ref": ""}` —— **一个被搭好架子但没填的 dict 不在那个集合里**,
+于是它被记成**已裁**,工具对一个欠着 §BB.4 裁定的队列印出 `none`。
+**旧判据问的是「字段空不空」,而这个工具存在的意义是问「裁定空不空」。**
+修法与回归见 `tools/agent/pending_rulings.py` / `tests/test_pending_rulings.py`(30 检查,
+变异「改回旧谓词」5 红、还原后逐字节相同)。
+
+**⇒ 与 §BM 开头那条 GH #210 是同一条投递链的两端,而且都不举手:**
+一端是**裁定作出了却没落到被裁方读的那一行**(`test_set.md` 第 2 行迟四轮);
+另一端是**字段建好了却从没等到裁定,而检测器把空架子读成已裁**。两端都是**肉眼发现的**。
+
+**裁定:`APPROVED_ADMITTED`,搭车、零 AWS 增量、不申请专波。** 理由:
+
+- **申请方自带分母与反向护栏**(与 `abilanc` 同型,与 `campdanger` 相反):主判据
+  「戳营帧后一秒位移 < 50u 的占比 **42% → < 15%**」的基线来自**已在 S3 的 W10/W11 语料**,
+  两条反向护栏(`pulldrag` 的 lane_win 占比不许降、armed 腿戳营帧总数不许塌)
+  各自堵住一种「读成大胜」的假阳,计量三条(占比 + 分母、两个物理分层各自复现)已照办。
+- **`pullcad` 陷阱已被申请方主动避开**:两个半边**刻意没有**写成
+  `IsSoakCandidate('pullthink') and IsSoakCandidate('pullbeat')` —— `pullbeat` 08-23 已 promote,
+  那样写会当天冻结成 FALSE。**这是本仓第一次有申请方在落地时就自己躲开这个陷阱**,记一笔。
+- **§BL.4 (i) 通过**:两个站点(`mode_roam_generic.lua:224` 与 `:321`)的合取项分别是
+  `bot.roamCampPull ~= nil` 与 `bCampHere` + 一个时间比较,**都不是另一个 soak id**。
+
+**⚠️ 而 §BL.4 (ii)(本轮新补的那一半)在这条上抓到了真东西 —— 排波必读:**
+`pullthink` **依赖 `pullcamp` 同腿 armed,但这条依赖不在任何门的合取里**:
+`bot.roamCampPull` 只在 `J.ShouldPullNeutralCamp` 返回非 nil 时存在,而那个函数
+开门就是 `IsModeTurbo() and IsSoakCandidate('pullcamp')`。
+⇒ **依赖活在控制流里(一个字段是不是 nil),接线门按构造看不见它**
+(它查的是「调用点存在」,而 `pullthink` 的两个调用点无论如何都存在)。
+**本波满足**:`pullcamp` 在 40 串里(第 21 位)。**但这条必须写下来**,因为
+`pullcamp` 将来一旦 promote,`IsSoakCandidate('pullcamp')` 在任何 armed 串里都为假
+⇒ **`pullthink` 会在那一天无声冻结,而 40/40 WIRED 会照常打印**。
+**这正是 `pullcad` 陷阱的控制流版本**,与 §BM.2(甲) 的 `bbrespawn` 是同一层的两个例子。
+
+**⚠️ 域的前置(申请方已声明,复述以免掉棒)**:本 id 的域 = 「已经在戳营的帧」,
+所以要读到它,波里必须真的有人在拉野;`pulldrag` 同 arm **不冲突也不遮蔽**
+(它改的是往哪走,本 id 改的是走不走)。**本 id 只管营地拉野**,小兵拉野撞同一行节流
+但它自己已有 hold(promoted `pullbeat`),是**下一格**,不在本轮。

@@ -88,8 +88,39 @@ def is_open(req):
 
 
 def is_unruled(req):
-    """No machine-read ruling.  Absent field and null both count (§AW.1)."""
-    return req.get("director") in (None, {}, "")
+    """No machine-read ruling.
+
+    Absent field and null both count (§AW.1).  So does a `director` dict whose
+    `ruling` is blank -- added 2026-08-26 (director, GH #218's round) after this
+    tool reported `none` on a queue that contained `strategy-18`, whose field
+    reads `{"ruling": "", "wave": "", "at": "", "ref": ""}`.
+
+    That shape is what a stream writes when it files the request and leaves the
+    director's axis for the director to fill; it is EXACTLY the state this tool
+    exists to name, and it was the one state that got past it.  The old test
+    (`in (None, {}, "")`) asked whether the FIELD was empty; the question the
+    tool is for is whether the RULING is.  A scaffolded-but-blank dict answers
+    "yes" to the second and "no" to the first, so it scored as ruled and left
+    `strategy-18` invisible for as long as it has been open.
+
+    Same family as the defect that turned up in the same round on the other
+    side of the delivery path -- `test_set.md`'s line 2 sat four rounds behind a
+    ruling that had been made (GH #210).  One end of the path had a ruling that
+    never reached the field; this end had a field that never reached a ruling.
+    Neither raised a hand, and both were found by eye.
+    """
+    director = req.get("director")
+    if director in (None, {}, ""):
+        return True
+    if isinstance(director, dict):
+        # `ruling: null` must not survive as the string "None" -- the first cut
+        # of this fix wrote `str(director.get("ruling", "")).strip()` and read a
+        # JSON null as a four-character ruling.  Caught by the row that spells
+        # that case out, which is why the rows enumerate the blanks instead of
+        # testing one representative of them.
+        ruling = director.get("ruling")
+        return ruling is None or not str(ruling).strip()
+    return False
 
 
 def is_rideshare(req):

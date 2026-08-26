@@ -101,6 +101,24 @@ check(pr.is_unruled({"id": "x"}), "absent director field read as ruled")
 check(not pr.is_unruled({"id": "x", "director": {"ruling": "APPROVED_ADMITTED"}}),
       "a real ruling read as un-ruled")
 
+# A SCAFFOLDED-BUT-BLANK dict is the shape that got past this tool (director
+# 2026-08-26, GH #218's round): `strategy-18` carried
+# {"ruling": "", "wave": "", "at": "", "ref": ""} -- written by the stream that
+# filed the request, leaving the director's axis for the director -- and the old
+# `in (None, {}, "")` test scored it as RULED, so the tool printed `none` on a
+# queue that owed a §BB.4 rideshare ruling.  The old test asked whether the
+# FIELD was empty; the question this tool is for is whether the RULING is.
+for blank in ("", "   ", "\n", None):
+    check(pr.is_unruled({"id": "x", "director": {"ruling": blank, "wave": "", "at": ""}}),
+          "blank ruling %r inside a scaffolded dict read as ruled" % (blank,))
+check(pr.is_unruled({"id": "x", "director": {"wave": "W9", "at": "2026-01-01"}}),
+      "a director dict with no `ruling` key at all read as ruled")
+# ...and the converse must still hold: a real ruling is not un-ruled just
+# because its siblings are blank.  Without this row the fix could be "return
+# True whenever any field is empty", which would flood the tool with noise.
+check(not pr.is_unruled({"id": "x", "director": {"ruling": "REJECTED", "wave": "", "at": ""}}),
+      "a real ruling with blank siblings read as un-ruled")
+
 # Open states.  A harvested request still owes a resolve ruling -- that is
 # backlog §12's case and the reason `harvested` is in the open set.
 for st in ("pending", "running", "harvested"):

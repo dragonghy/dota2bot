@@ -754,10 +754,11 @@
       "acceptance": "**判据沿用 GH #186 §5 自己那把尺子,不要另造**,读的是已在 S3 的 W10/W11 语料(`tools/batch_test/behavioral/pulldrag_walk.py` 的 `still` 列),**零 AWS 增量**。**主判据**:戳营帧后一秒位移 < 50u 的占比从 **42%** 降到 **< 15%**,且**两个物理分层各自复现**(铁律 4(i),两层反号 = 噪声不入结论)。**同等重要的反向护栏两条**:(i) `pulldrag` 的 lane_win 占比**不许下降** —— 本 id 修的是「有没有走」,不该改「往哪走」;(ii) armed 腿的**戳营帧总数不许塌** —— 一个「干脆不拉野了」的改动会在主判据上读成大胜。**计量三条照办**(GH #148):占比类量报占比 + 分母,不报中位数;效应量连切法一起登记。**预登记的反向读法**:读数不动时,第一嫌疑是 arm 串漏了 `pullthink`(no-op 且没有任何计数会报警,`campfarm` 上一轮刚吃过这个亏);第二嫌疑是那 42% 根本不是攻击动画而是第二个成因(营地箱体寻路卡住、或别的 mode 抢走了这一帧)—— **指令日志是判别器**:本修复不可能让一条 `Action_MoveToLocation` 在 `Think` 压根没被调用的帧上出现。",
       "status": "pending",
       "director": {
-        "ruling": "",
-        "wave": "",
-        "at": "",
-        "ref": ""
+        "ruling": "APPROVED_ADMITTED",
+        "wave": "下一波全集(搭车;零 EC2、零 AWS 增量、不申请专波)",
+        "at": "2026-08-26T22:xxZ",
+        "ref": "test_set.md §BM.7",
+        "note": "**⚠️ 本条逾期,而逾期的原因是检测器瞎了不是总监忘了 —— 两者对申请方没有区别,记在这里是为了不重演。** `pending_rulings.py` 的 `is_unruled` 写作 `director in (None, {}, \"\")`,而本请求的字段是被搭好架子但没填的 `{\"ruling\": \"\", ...}` ⇒ **不在那个集合里 ⇒ 被记成已裁**,工具对一个欠着 §BB.4 裁定的队列印出 `none`。本轮修好(`tests/test_pending_rulings.py` 30 检查,变异 5 红),**本条是修好后工具报出来的第一条**,同轮裁完。|| **裁定理由**:申请方自带分母(W10/W11 已在 S3,基线 42%)+ 两条反向护栏 + 计量三条照办;`pullcad` 陷阱由申请方在落地时自己躲开(**本仓第一次**)。**§BL.4 (i) 通过**:两个站点的合取项是 `bot.roamCampPull ~= nil` 与 `bCampHere`,都不是 soak id。|| **⚠️ §BL.4 (ii) 在本条上抓到真东西**:`pullthink` **依赖 `pullcamp` 同腿 armed,而这条依赖不在任何门的合取里** —— `bot.roamCampPull` 只在 `J.ShouldPullNeutralCamp`(开门即 `IsModeTurbo() and IsSoakCandidate('pullcamp')`)返回非 nil 时存在 ⇒ **接线门按构造看不见它**。本波满足(`pullcamp` 在 40 串第 21 位);但 `pullcamp` 一旦 promote,本 id 会**无声冻结而 WIRED 照常打印** = `pullcad` 陷阱的控制流版本。|| 成员串 **39 → 40**;接线 40/40 WIRED exit 0,`pullthink` → `mode_roam_generic.lua:224`(**2 站点**,一个 id 的两个不可分半边)。"
       }
     },
     {
@@ -813,6 +814,53 @@
         }
       },
       "result": "2026-08-26T12:21Z batch-desk:**未上机**(W14 的 6h 闸解锁时刻 2026-08-26T15:13:08Z,本轮 12:21Z 差 2h52m)。排波前置已登记:`test_set.md` 第 2 行仍是 36-id、abilanc 不在其中,而章程步骤 6 写的是「逐字取第 2 行」⇒ 机械照做会漏掉本 id 并被读成 SILENT。本台预登记:**裁定压过陈旧的行**,W14 arm = 36 + abilanc = 37 id,除非届时第 2 行已更新。campgrade 仍不在串内 ⇒ §BG.3 / §BK 的互斥前置自动满足。 | W14 发波 2026-08-26T15:14:24-32Z,树 039cb1ae,37-id arm 串(36 + abilanc),种子 888/895/896/906,4 台 on-demand。 || 2026-08-26T18:15Z batch-desk 收割(报告 iterations/reports/batch-desk/20260826T181500Z.md):4 run 8b9082/a2baf3/31afa3/2c6d8e,**208 局落盘 / 184 计分 / unfinished 0**。落盘语料核实 8 个 mirror 分组全是同一条 37-id 串、abilanc 在第 37 位 ⇒ **上一轮那条预登记(裁定压过陈旧的第 2 行)在语料上为真,本 id 确实上了机**。波次级经济读数(全集 37-id,**不可归因到单 id**):gpm −36.81(1/4)、winrate 0.499(1/4)、suggested=hold_or_reject;其中 gpm 完全由种子 906(−138.2)驱动,另三种子 −8.67/−3.46/+3.07,种子中位数只有 −6.06(铁律 4(iii) 两种切法均登记)。**acceptance 的 (a) 主判据本轮 = UNREAD,不是 SILENT**:指定工具 campfarm_target.py 的位置参数是逐帧 sweep,而批测侧 soak/<run>/ 实测只有 *.analysis.json / *.demclaim.json / *.log.gz,**逐帧字段一个没有**(GH #211 路由错配的第一个实证受害者);「跑了没找到」与「没跑成」不是一件事,故不报 SILENT、也不据此怀疑修法。**帧语料已就位并交棒录像组**:dem21/<run>/ 共 **156 个 .dem**(36/48/36/36),与 156 个 demclaim 逐个对上,**21 天过期(约 2026-09-16 前有效)**。status 维持 running:波次跑完了,(a) 还没买到。 W15 launched 2026-08-26T21:14:5xZ (spot, tree 79f32c92, 37-id arm, seeds 888/895/896/906)."
+    },
+    {
+      "id": "strategy-21",
+      "stream": "strategy",
+      "bundle": "bbfight,bbshort",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 2,
+      "question": "**⚠️ 本请求由总监代建(2026-08-26T22:xxZ),不是申请方提交的。** 三个买活阶梯 gated id(`bbrespawn` GH #208 / `bbfight` GH #215 / `bbshort` GH #222)落地时**一条队列请求都没有**,是批测台在排波前肉眼发现并开了 GH #218 请裁。按投递纪律 2.5,裁定必须落到被裁方读的机器字段上,而这三条连载体都没有 ⇒ 总监建载体并同轮填裁定。|| **`bbfight`(GH #215)**:买活阶梯中段 `bot:GetLevel() > 24 and nRemainingRespawnTime > 80`,而 80 是**普通模式**时长;turbo 复活天花板 = `RESPAWN_TABLE_MAX 100 × TURBO_RESPAWN_FACTOR 0.75 = 75` < 80 ⇒ 该分支在任何可达 turbo 帧上都是**结构性零**(两种 getter 读法下都是)。修法 `J.BuybackFightRespawnFloor()`,armed 返回 `80 × 0.75 = 60`。|| **`bbshort`(GH #222)**:阶梯上方那道早退 `if nFullRespawnTime < 60 then return end`,60 同样是普通模式时长 —— **同一段阶梯里第三个没随模式缩放的秒数常量**。修法 `J.BuybackShortRespawnFloor()`,armed 返回 `60 × 0.75 = 45`。|| **搭车,不申请专波,零 AWS 增量,零 EC2。**",
+      "acceptance": "**判据形状 = 存在性 + 逐帧正确性(条件 a),不主张效应量。** 买活是低频事件,而这两条都是**只降底板、从不抬**的单向杠杆。|| **总监自己枚举的域(不是申请方的表,全文 test_set.md §BM.2)**:对 `(R, e)` 全枚举(R = turbo 复活时长 ∈ [0,75],e = 死后经过秒数,步长 0.5s),每格记**被打开的门集合**(rung 1/2 的内层条件失败是往下落不是 return,当成终结档会读出一个不存在的『armed 关掉了一档』)。单独 arm、其余出厂:`bbshort` = **745 格**,迁移 `() → (r3)`;`bbfight` = **240 格**,迁移 `(r3) → (r2,r3)`,**只在 25 级**(24 级 = 0)。**两者都不关任何一档。** 读法 A 下分别是 765 / 465 格 ⇒ **两条的可听性与 getter 读法无关**。|| **可分离性(同波 arm 安全,已枚举不是希望)**:`bbfight` 叠在 armed `bbshort` 上仍是同样的 240 格同样的迁移,且两者格集**不相交**(`bbshort` 开的 745 格出厂读作 `()`,`bbfight` 的 240 格出厂已读作 `(r3)`)。|| **(a) 的判据**:armed 腿上找出至少一个**出厂腿会早退、armed 腿走到 rung 2 或 rung 3** 的死亡瞬间,逐帧确认买活决定(或该分支的内层条件明确失败后继续下落)。`bbfight` 的取证只能在**25 级**的死亡里找 —— 24 级一格都没有,找不到时先查该波有没有 25 级死亡,再怀疑修法。|| **❌ 明确不报**:买活次数的计数差分(n 太小);**任何『买活次数下降』的读数,第一嫌疑是 arm 串或收割口径,不是本 id** —— 两条杠杆按枚举不可能关掉任何一档。|| **⚠️ 排波互斥**:`bbrespawn`(strategy-22)**不得与 `bbshort` 同腿 arm**,理由见 §BM.3。",
+      "status": "pending",
+      "director": {
+        "ruling": "APPROVED_ADMITTED",
+        "wave": "下一波全集(搭车;零 EC2、零 AWS 增量、不申请专波)",
+        "at": "2026-08-26T22:xxZ",
+        "ref": "test_set.md §BM.1 / §BM.2 / §BM.5",
+        "note": "GH #218 请裁,三条一次裁完。成员串 **36 → 40**(同轮补录了迟四轮的 `abilanc`(GH #210 结案)与 `pullthink`)。**§BL.4 照查通过**:三条门都是 `IsModeTurbo() and IsSoakCandidate('<id>')` 单合取,另一半是模式谓词不是 soak id;反向也查了,全仓没有第二处门在合取里点名这三个 id。**并给 §BL.4 补了它缺的一半**:该检查从本轮起写明是两条 —— (i) 门的合取项,(ii) **消费方在其余 id 全出厂的世界里是否全部惰性**(`bbrespawn` 的零就在这一层,门里看不见)。**接线** 40/40 WIRED exit 0,`bbfight` jmz_func:10594 / `bbshort` jmz_func:10633。**无互斥冲突**:40 串里没有第二个 id 的站点落在 `ability_item_usage_generic.lua`。**⚠️ 本地验证前置**:这两个 id 的测试文件与其余 14 个 gate 测试共用同一个物理开关 `bots/Customize/soak_side.lua`,**并行跑会造假红**(GH #218 第二半,已开成独立 [harness]);跑它们只用一个进程。"
+      },
+      "result": ""
+    },
+    {
+      "id": "strategy-22",
+      "stream": "strategy",
+      "bundle": "bbrespawn",
+      "seeds": [
+        888,
+        895,
+        896,
+        906
+      ],
+      "priority": 3,
+      "question": "**⚠️ 本请求由总监代建(2026-08-26T22:xxZ),见 strategy-21 的同一段说明。** **`bbrespawn`(GH #208)**:`X.GetRemainingRespawnTime` 出厂写成 `bot:GetRespawnTime() - ( DotaTime() - fDeathTime )`,而 `Unit:GetRespawnTime()` 按 `docs/BOT_API_REFERENCE.md` **已经是剩余时间、自己在倒数**。设 R 为复活时长、e 为死后经过秒数:引擎给回 `R−e`,该表达式返回 **`R−2e`** ⇒ 读数以两倍钟速衰减,在死亡过程正中间穿过 0。修法 `J.RespawnRemaining`,gated `bbrespawn`,turbo-only。申请方(协同组)**自己就没有申请入集**,理由是「修好的腿今天打不响」。",
+      "acceptance": "**本请求当前不排波,判据是复活条款的触发判据。** 见 director.readmit_on。复活后要买的仍是条件 (a) 的存在性:armed 腿上找出**出厂腿因 `nRemainingRespawnTime < 40` 早退、armed 腿走到 rung 3** 的死亡瞬间,逐帧确认。**⚠️ 复活后必须与 `bbshort` 错波**(§BM.3 互斥前置)。",
+      "status": "pending",
+      "director": {
+        "ruling": "REJECTED",
+        "wave": "none(不入集;单独 arm 是可证的算术零,arm 它买不到任何读数)",
+        "at": "2026-08-26T22:xxZ",
+        "ref": "test_set.md §BM.1 / §BM.2(甲)(乙) / §BM.2b / §BM.3",
+        "readmit_on": "`bbshort` 在某一波真的 armed,且该波的执行核验(条件 a)对 `bbshort` 给出 WORKING —— 从那一刻起本 id **自动回到排期轴,申请方不需要重新申请**;总监在该读数落地后的下一次触发**必须**给实质裁定,不许以「已经裁过了」续命。**判据可证伪**:`bbshort` armed 后本 id 的变格数从 0 变成 **650**(`() → (r3)`),枚举见 §BM.2(乙)。",
+        "note": "**申请方给的理由只对了一半,而错的那一半会无声过期。** 申请方说「唯一的下游前置 `J.IsAncientBadlyHurt` 在 58 个遗迹快照里 hp 全 = 1.0」—— 那只杀死了 rung 1。真正的零在于:出厂 `60` 底板要求 `R−e ≥ 60`,而 R ≤ 75 ⇒ `e ≤ 15` ⇒ 出厂读法 `R−2e ≥ 45 > 40` ⇒ **`< 40` 那道早退在可达区里从不咬合**,两种读法下到达 rung 3 的格点逐格相同;rung 2 的 `> 80` 在 R ≤ 75 下两种读法都是结构零;rung 1 压在从不 arm 的 `bbancient` 底下。**⇒ 与语料无关,加局不会变。** 而这个零**有寿命**:`bbshort` 一旦 armed,底板降到 45,那道 `< 40` 早退开始咬合,armed 的 `R−e ≥ 45 > 40` 正好清掉它 ⇒ 650 格。按「下游是空的」写下的暂缓会在 `bbshort` 入集那天失效**而没有任何东西举手**(铁律 9 掉棒形状)⇒ 所以本条不写「暂缓」写 `readmit_on`。**⚠️ 诚实登记(§BM.2b)**:「零」只在读法 B 下成立;读法 A 下本 id 是三条里最响的(2480 格)。**但退回在两种读法下都对,理由相反**:读法 B 下 arm 它买不到读数;读法 A 下它响是因为 armed 腿让那个数彻底不再衰减(直接返回 getter 本身)= arm 一个缺陷而不是一个修复。"
+      },
+      "result": ""
     }
   ],
   "done": [
