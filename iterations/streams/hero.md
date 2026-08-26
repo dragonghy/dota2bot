@@ -47,6 +47,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      `test_focus_innate_index_anchor.lua` §3 抓着)。
    - **两个既有棘轮当场红,重新指向而非放宽**:`test_zuus_static_field_pct.lua` 的调用点断言;
      `test_focus_innate_index_anchor.lua` §4(它自己写着「加了 nil guard 就删掉这条并说明」,照做)。
+   - **⚠️ 下一棒里最急的一条(收尾核 `test_set.md` 才发现,已追评 GH #203)**:
+     `zusstatic` **不是「将来要同臂」,它已经在 armed 集里**(08-25T13:xxZ APPROVED_ADMITTED,
+     串 29 → 35,§BF/§BF.1),而 **W12 已于 03:10:52Z 发出**、`zusbind` 不在它的串里
+     ⇒ **W12 的 `zusstatic` 腿量的是一个没有 `damage_health_pct` 的技能,两腿逐位相同**。
+     §BF.1 预登记把「armed 触发 0」的成因只写了**引擎侧**那一个(Innate+hidden ⇒ 域可能为零),
+     今天给出**代码侧**的第二个成因,**两者读数逐位同形、语料分不开**
+     ⇒ 照预登记记成 DOMAIN-NOT-REACHED 会**把一个已能证伪的成因固化进档案**;
+     建议按 `INSTRUMENT-INVALID` 处置,**裁定权在总监**。
    - **下一棒**:① `zusstatic` **必须与 `zusbind` 同臂**(否则 #173 量的是错技能缺失的 key = 0),
      **故意不写成合取门**(AGENTS.md 的 promote 冻结坑),依赖登记在 issue + `state.json`,归总监排波;
      ② 入集判定归总监,本组不申请;③ 见 backlog 新条 `-17b`(CM 那根 + 轴的另一半)。
