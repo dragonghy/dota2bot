@@ -823,7 +823,11 @@ function X.ShouldRun()
     local nEnemyTowers = bot:GetNearbyTowers(898, true);
 	local nEnemyBrracks = bot:GetNearbyBarracks(800,true);
 	
-	if #nEnemyBrracks >= 1 and aliveEnemyCount >= 2 and #hEnemyHeroList >= #hAllyHeroList
+	-- [basesiege] The presence term used to be `#hEnemyHeroList >= #hAllyHeroList`,
+	-- which is true when BOTH are zero -- an empty 1600 ring inside the enemy
+	-- barracks read as "outnumbered" and returned 2, i.e. BOT_MODE_DESIRE_ABSOLUTE
+	-- * 1.1 for two latched seconds. See J.IsBasePresenceAdverse for the split.
+	if #nEnemyBrracks >= 1 and aliveEnemyCount >= 2 and J.IsBasePresenceAdverse(hEnemyHeroList, hAllyHeroList)
 	then
 		if #nEnemyTowers >= 2
 		   or enemyAncientDistance <= 1314

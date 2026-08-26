@@ -3894,5 +3894,16 @@
       "GH #198 §3 → 协同组是对的,已修,并连同 python 腿那句逐字相同的罐头字符串一起改(只修被报的那一句会留下同一缺陷的另一半):两句 banner 现在写 ON THE WORKING TREE 并给出判据(git stash 后复跑)。驳回「让自检自己跑 stash 对照」:开工自检是每个组动任何东西前都跑的命令,一个改动工作树的自检若在 stash 与 pop 之间死掉会扣住未提交的工作。"
     ],
     "verification": "开工自检 python 腿 31 → 32 passed 0 failed;Lua 检测器腿 8 file(s) 0 failures;test_call_form_census.py exit 0(抬头改写未触发棘轮);bots/ game/ 零改动。"
+  },
+  "basesiege_20260826": {
+    "id": "basesiege",
+    "status": "gated, turbo-only, NOT live -- no test-set proposal and no wave request filed yet, deliberately: the enclosing branch's domain is unmeasured (see domain_split)",
+    "landed": "2026-08-26T0x:xxZ strategy",
+    "issue": "GH #202 (opened this round); charter backlog item 0a third bullet, registered 2026-08-20T11:30Z as blocked on corpus",
+    "defect": "mode_retreat_generic.lua X.ShouldRun and mode_farm_generic.lua X.ShouldRun carry the same copy-pasted block whose presence term is `#hEnemyHeroList >= #hAllyHeroList`. Both lists come from J.GetEnemyList/J.GetAllyList at radius 1600 and the ally list excludes the bot itself, so the comparison is TRUE when both are zero -- an empty ring reads as 'outnumbered'. The enclosing branch requires an enemy barracks within 800, and a non-zero ShouldRun becomes BOT_MODE_DESIRE_ABSOLUTE * 1.1 latched for 2s (the farm caller also drops preferedCamp and calls Action_ClearActions(true)). Net: a lone bot inside the enemy barracks ring with no defender in sight is turned around.",
+    "fix": "gated helper J.IsBasePresenceAdverse(hEnemyHeroList, hAllyHeroList) in jmz_func.lua. Unarmed it is byte-for-byte `#enemies >= #allies`. Armed (turbo + 'basesiege') it returns false when the enemy count is zero, which differs from shipped ONLY in the both-zero cell -- proved exhaustively over 0..5 x 0..5 in tests/test_basesiege_presence.lua [lever], not asserted in prose.",
+    "local_validation": "tests/test_basesiege_presence.lua, 13 cases green, 6 mutations 6 caught + clean control. Real frames throughout: the presence counts are produced by the shipped J.GetEnemyList/J.GetAllyList against real positions and real fog.",
+    "domain_split": "MEASURED (predicate): census over the whole fixture archive with the shipped helpers -- 966 live addressable hero frames, 302 both-zero (31.3%), 161 zero-enemy-with-ally, 151 enemy-no-ally, 352 both non-empty. NOT MEASURED (branch): needs an enemy barracks within 800 and no fixture puts a hero closer than 4838u to one (10-minute cap until GH #108 raised it to 25). Do not quote 31.3% as the branch's domain. The case for arming rests on value per firing (a rax decision), not frequency.",
+    "next_baton": "replay-check: offline frame count, zero EC2 -- how often does a bot stand within 800 of an enemy barracks in a cap=25 game, and with what presence in its 1600 ring? director: whether that reading is worth buying before a leg is spent, cf. the strategy-19 / campdanger ruling (test_set.md BB.4)."
   }
 }

@@ -6780,6 +6780,65 @@ function J.IsCampSwitchSafe( tCamp )
 	return #J.GetLastSeenEnemiesNearLoc( tCamp.cattr.location, J.CAMP_DANGER_RADIUS ) == 0
 end
 
+-- [basesiege] "the defenders around me are at least as many as my friends",
+-- written as `#hEnemyHeroList >= #hAllyHeroList` -- a comparison that is TRUE
+-- when both sides are zero, i.e. when nobody at all is around.
+--
+-- WHERE IT SITS. Two call sites, the same copy-pasted block in
+-- mode_retreat_generic.lua X.ShouldRun and mode_farm_generic.lua X.ShouldRun:
+--
+--     if #nEnemyBrracks >= 1 and aliveEnemyCount >= 2
+--        and <this predicate>
+--     then
+--         if #nEnemyTowers >= 2 or enemyAncientDistance <= 1314
+--            or enemyFountainDistance <= 2828 then return 2 end
+--     end
+--
+-- A non-zero ShouldRun is not a hint. Both callers turn it into
+-- BOT_MODE_DESIRE_ABSOLUTE * 1.1 -- the highest desire in the system, above
+-- every other mode -- and latch it for the returned number of seconds; the farm
+-- caller also drops preferedCamp and calls Action_ClearActions(true). So the
+-- reading decided here is "abort what I am doing and run", and the situation it
+-- fires on is a bot standing inside the enemy barracks ring.
+--
+-- WHY BOTH-ZERO IS THE WRONG READING. hEnemyHeroList / hAllyHeroList are
+-- J.GetEnemyList(bot,1600) / J.GetAllyList(bot,1600); the ally list does not
+-- contain the bot itself (bot:GetNearbyHeroes never returns self). Both empty
+-- therefore means "no living hero of either team within 1600 of me" -- a lone
+-- bot deep in the enemy base with no defender in sight. The clause is a
+-- head-count of a fight, and there is no fight; it reads an empty ring as
+-- "outnumbered" and turns a bot that is one attack from a rax around. That is
+-- the single most valuable decision instant a Turbo game has.
+--
+-- EXACTLY ONE LEVER. Armed, the answer changes ONLY in the both-zero case:
+-- with zero enemies and any ally present the shipped comparison is already
+-- false, and with one or more enemies nothing here is consulted at all. Every
+-- other conjunct of the enclosing branch is untouched, so armed this return can
+-- only fire LESS often, never more.
+--
+-- DOMAIN, MEASURED AND SPLIT -- do not quote one half as the other.
+-- The PREDICATE's both-zero case is common: 149 of the 563 live hero frames in
+-- tests/fixtures (26.5%) read zero allies and zero enemies within 1600.
+-- The enclosing BRANCH's domain is NOT measured and is not claimed here: it
+-- needs an enemy barracks within 800, and no fixture in the corpus puts any
+-- hero closer than 4838 units to one (games were capped at 10 game-minutes
+-- until GH #108 raised it to 25). The frames behind that 26.5% are heroes alone
+-- in midlane, not heroes at a rax. Arming this id is worth a leg because of
+-- value per firing, not frequency -- and the frequency question is open.
+function J.IsBasePresenceAdverse( hEnemyHeroList, hAllyHeroList )
+	local nEnemies = hEnemyHeroList ~= nil and #hEnemyHeroList or 0
+	local nAllies  = hAllyHeroList ~= nil and #hAllyHeroList or 0
+
+	if nEnemies == 0
+		and J.IsModeTurbo()
+		and J.IsSoakCandidate('basesiege')
+	then
+		return false
+	end
+
+	return nEnemies >= nAllies
+end
+
 -- [pushguard / freehunt#2 20260723] Deep SOLO push against converging
 -- defenders. 30 deaths / 50 games, winning side included: a lone pusher
 -- rides the wave far past the midline and stays while visible defenders

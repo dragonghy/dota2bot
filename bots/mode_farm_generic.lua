@@ -1175,7 +1175,11 @@ function X.ShouldRun(bot)
 	local nEnemyTowers = bot:GetNearbyTowers(898, true);
 	local nEnemyBrracks = bot:GetNearbyBarracks(800,true);
 	
-	if #nEnemyBrracks >= 1 and aliveEnemyCount >= 2 and #hEnemyHeroList >= #hAllyHeroList
+	-- [basesiege] Same block as mode_retreat_generic X.ShouldRun, same repair:
+	-- the presence term was `#hEnemyHeroList >= #hAllyHeroList`, true with both
+	-- at zero. Here a non-zero return also drops preferedCamp and calls
+	-- Action_ClearActions(true). See J.IsBasePresenceAdverse for the split.
+	if #nEnemyBrracks >= 1 and aliveEnemyCount >= 2 and J.IsBasePresenceAdverse(hEnemyHeroList, hAllyHeroList)
 	then
 		if #nEnemyTowers >= 2
 		   or enemyAncientDistance <= 1314
