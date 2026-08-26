@@ -1439,9 +1439,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     被 timeout 杀掉,而 runner **全缓冲** ⇒ **被杀时一个字都没留下**(GH #124 说的就是这个;
     **教训:在这个容器里跑全量,要么给足 >100 分钟,要么别用一个会被 kill 的单进程 ——
     被 kill 的全缓冲进程留下的信息量是零**)。改跑**可复现地 grep 出来的相关子集**
-    (引用了本轮改动文件或 helper 的 48 个测试,含 `smoke` / `gate_claim_consistency` /
-    `no_undefined_jmz_refs`):**48 ok / 0 failed / 0 timeout**,< 10 分钟。
-    **⇒ 本轮 Lua 侧的说法是「相关子集全绿」,不是「全量全绿」。**
+    (引用了本轮改动文件或 helper 的测试,含 `smoke_load` / `gate_claim_consistency` /
+    `no_undefined_jmz_refs` / `item_name_census`):**49 文件 / 636 用例 / 0 失败**,
+    rebase 到 main 之后重跑过。**⇒ 本轮 Lua 侧的说法是「相关子集 636 用例全绿」,
+    不是「全量全绿」。**
+  - **⭐⭐ 同轮第三条教训,也是最难堪的一条**:第一次报的「48 ok」是**塌掉的分母** ——
+    子集脚本给 runner 传 `^name$`,而 runner 对**文件名**做 Lua `match` ⇒ 匹配不上
+    ⇒ **48 次全跑了 0 个用例**,而脚本判据是 `grep -q "0 failures"`
+    ⇒ **「一个都没跑」被逐字读成「全过」**。靠 rebase 后手工重跑时输出里那句
+    `0 tests, ... 188 files skipped` 才偶然发现。**我在同一轮里刚给两个新工具写完分母断言,
+    转头就在自己的验证脚本上栽了同一个坑** ⇒ 教训不是"要写分母断言",是
+    **「分母断言要写在每一个会产出读数的东西上,包括临时写的验证脚本」**。
   - **如实记一笔**:`run_py_tests.sh` 第一次跑报 `test_call_arity_census.py` 1 failed,
     **单独跑 exit=0、随后两次整套重跑 30/0**,原因未查明(已排除"另一个测试在改被扫的树":
     tests 对 `bots/` 全是只读)。**不编原因,登记为一次未复现的失败。**
