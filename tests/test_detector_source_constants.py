@@ -870,6 +870,35 @@ check('dumper resolves it for PURCHASE ONLY (a magnitude must never be run '
       DUMPER.count('valueName = name(') == 1 and
       'if m.GetType() == dota.DOTA_COMBATLOG_TYPES_DOTA_COMBATLOG_PURCHASE {' in DUMPER)
 
+# --------------------------------------------------------------------------
+# tpgap (GH #159) -- replay-check 2026-08-26T19:xxZ.  The whole attribution of
+# `tpgap_domain.py` rests on three source facts.  If any of them changes and
+# nobody notices, that round's reading silently becomes a reading about
+# something else.
+# --------------------------------------------------------------------------
+sys.path.insert(0, BEHAV)
+import tpgap_domain as TG                              # noqa: E402
+
+TG_SRC = TG.read_source()
+check('tpgap still scans tpsafe\'s 350 inside tpsafe2\'s 700',
+      (TG_SRC['onface_radius'], TG_SRC['band_radius']) == (350.0, 700.0),
+      str(TG_SRC))
+check('tpgap prices the CHANNEL (3 s), not the shared helper\'s 5 s -- the '
+      'juggernaut counter-example frame is the reason',
+      TG_SRC['channel_seconds'] == 3.0, str(TG_SRC['channel_seconds']))
+check('tpgap gates on exactly one candidate id (a conjunction would freeze '
+      'FALSE the day the other id is promoted)',
+      TG_SRC['gate_id'] == 'tpgap')
+# `dest in {home, died}` is how the corpus tells a RETREAT press from a travel
+# press.  It is only valid while every retreat-branch TP goes to the fountain.
+check('every retreat-branch TP still teleports to the own fountain, so `dest` '
+      'still separates retreat presses from travel presses',
+      TG.assert_retreat_dest_is_fountain() >= 3)
+# And `tpreach` must stay out of the retreat branch, or the leg difference in
+# the gap band stops being attributable to tpgap at all.
+check('tpsafe2 (which tpreach widens) is still scoped out of retreat mode',
+      TG.assert_retreat_only_guard() is True)
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
