@@ -1,5 +1,31 @@
 -- [GH #48, class-level] Every `J.<name>` referenced under bots/ must be defined
--- under bots/.
+-- under bots/ -- where `<name>` is the FIRST component after the dot, and only
+-- that one.
+--
+-- [director 20260826, ruling on GH #198 §2] That scope line is not a caveat
+-- bolted on; it is the correction.  The header used to advertise "every
+-- `J.<name>`" flat, and this test then walked past a live nil call in a shipped
+-- Think() -- `J.Site.IsCampDangerous` (GH #193) -- because its pattern captures
+-- one component, so the reference was scored against `J.Site`, which IS defined
+-- (`J.Site = require(...)`), and `IsCampDangerous` was never asked about.  The
+-- blind spot covers every name under J.Site / J.Skill / J.Item / J.Role /
+-- J.Utils / J.Chat; a census counted 78 of them, 77 resolving by luck rather
+-- than by anything checking.
+--
+-- THE RULING WAS NOT "DEEPEN THIS TEST".  The deeper half already exists and is
+-- already enforced: tools/agent/call_form_census.py resolves `J.<sub>.<name>`
+-- against each sub-table's own module (aba_site.lua and friends are transpiled
+-- flat tables of `____exports.x = `, with no metatable and so no dynamic
+-- fallback), and tests/test_call_form_census.py fails on any finding that has
+-- no verdict in that tool's ALLOWLIST.  Re-deriving that resolution here would
+-- mean a second implementation of one rule in a second language, across six
+-- modules with their own export conventions -- which is how two checks drift
+-- until neither is trusted.  That same python test pins "this file still stops
+-- at the first dot" as an assertion, so anyone who deepens the patterns below
+-- gets a red pointing at the overlap instead of discovering it afterwards.
+--
+-- In short: this file owns the first component, the census owns the rest, and
+-- neither is allowed to quietly grow into the other.
 --
 -- GH #48 was one instance of a defect class this repo cannot see any other way:
 -- a J-helper referenced under a name nobody ever defined. Lua resolves it at

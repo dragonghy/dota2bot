@@ -157,13 +157,27 @@ else
     printf 'SKIP (no python3)\n'
 fi
 
+# [director 20260826, GH #198 §3] Both TRUNK RED banners below used to end
+# "failing before you changed anything".  That was a canned string, not a
+# finding: BOTH legs run the WORKING TREE, so the clause asserted something the
+# check never established.  Strategy 01:38Z hit the concrete cost -- their own
+# edit displaced a line-number-pinned row in test_level_gate_census.lua
+# (:599 -> :637) and the banner told them main was already red; `git stash`
+# showed main at 15/15 green.  Read literally, the next reader ships their own
+# red.  Now the banners name the working tree and name what would settle it.
+#   DELIBERATELY NOT auto-stashing to answer it here: a selfcheck that mutates
+# the tree can strand a session's uncommitted work if it dies between stash and
+# pop, and 开工自检 is the one command every stream runs before touching
+# anything.  Printing the command the reader can choose to run is the cheap
+# half; doing it for them is not worth that failure mode.
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     if suite=$(bash tests/run_py_tests.sh 2>&1); then
         printf '%s\n' "$suite" | tail -1
     else
         printf '%s\n' "$suite" | grep -E '^(FAIL|failed:|[0-9]+ passed)' || true
-        printf 'TRUNK RED -- a test is failing before you changed anything.\n'
+        printf 'TRUNK RED -- a python test is failing ON THE WORKING TREE.\n'
+        printf '  Whether main is red too is NOT established by this line: re-run after `git stash`.\n'
         note 3
     fi
 else
@@ -195,8 +209,9 @@ if command -v lua5.1 >/dev/null 2>&1; then
         printf 'NO DETECTORS FOUND -- discovery matched 0 files; the tag or the paths moved.\n'
         note 3
     elif [ "$red" -gt 0 ]; then
-        printf 'TRUNK RED -- %d of %d Lua detector file(s) failing before you changed anything.\n' \
+        printf 'TRUNK RED -- %d of %d Lua detector file(s) failing ON THE WORKING TREE.\n' \
             "$red" "$ran"
+        printf '  Whether main is red too is NOT established by this line: re-run after `git stash`.\n'
         note 3
     else
         printf '%d detector file(s), 0 failures\n' "$ran"

@@ -3869,5 +3869,30 @@
     "limit": "The DOMAIN is unchanged and still unbuyable offline: GetActiveMode is bot-VM state, in no .dem, so the branch guard is constant FALSE on every archived frame (13th world assertion). 0 of 34 is EMPTY ON THIS CORPUS, never RARE IN THE GAME -- every frame is level <= 12 because the corpus was cut from 10-game-minute turbo games, while the pool crosses 603 at level 18-19. GH #108's 25-minute cap means a NEWER corpus can contain frames this scan structurally could not. Mana costs are frame-external anchors: tests/mock answers 0 for GetManaCost on every handle, so a test that read them off handles would price every spell at zero.",
     "tests": "tests/test_wk_roshan_mana_floor.lua -- 14 cases; 9 mutations caught (7 behavioural + 2 text ratchets), 1 true no-op control escaped as designed. Recorded honestly: the first control (renaming a helper-local) was CAUGHT by the section-5 text ratchet, i.e. it was not a valid control; a second control renaming a local in X.ConsiderQ escaped, which is the one that earns the claim.",
     "status": "gated, unarmed, awaiting queue hero-10's positional domain read"
+  },
+  "campdanger_RULING_20260826T0400Z": {
+    "what": "总监按 §BB.4 对 strategy-19 / `campdanger` 的入集申请当轮裁定:RETURNED(不入集),先量分母。",
+    "ruling": "REJECTED + readmit_on(退回但带可证伪的自动入集条款,申请方不需重新申请)",
+    "at": "2026-08-26T04:0xZ",
+    "ref": "test_set.md §BJ; queue.json:strategy-19.director; GH #198 / #201",
+    "why": [
+      "§BB.4 的立法前提「搭车提议唯一的成本是不裁」在这一族上已被测量推翻:campfarm 入集时分母同样没量过,W11 armed 125/125 局,可管通路全语料 armed 2 / baseline 2 ⇒ (a) 买不到。账单不是 AWS 美元(零),是一条腿的读数 + 录像组一个工作单元(35KB 新工具)+ 总监一个裁定位。campdanger 同文件同函数(mode_farm_generic.lua Think())、同类决定、同样没量分母。",
+      "申请方自己把分母写成阻断前提(strategy-19 验收乙「分母 < 每局 1 帧 ⇒ 直接说不值得,不要凑判据」;GH #198 §1「我不主张现在就排波」)⇒ 本裁定与申请方一致。",
+      "时机上批准买不到东西:W12 已于 03:10:52Z 发出且 campdanger 不在 arm 串里 ⇒ 批准最早只能上 W13,而离线测量放得进 W12→W13 空档 ⇒ 先量再排,零波次延迟代价。",
+      "总监自核的源码事实:该合取项不是每帧求值,外层被 bot._farm_repick_at 节流到 1.0 秒一次(mode_farm_generic.lua:741),且该节流先于修复存在(48ff29fe 只动合取项那一行 + 注释,git show 核过)。GH #193 §3 写对了,queue.json:strategy-19 的 question 散文把节流丢了。决策率 1 Hz 与语料采样率 1 Hz 同频 ⇒ 离线计数不吃混叠代价。"
+    ],
+    "readmit_on": "录像组量出三条可达性条件同时成立的帧频率(每局,离线,零 EC2)。⚠️ preferedCamp 是 bot 内部状态、不在 .dem 帧表里 ⇒ 离线只买得到上界,而上界单向够用:上界 < 1 帧/局 ⇒ 判决成立,永不入集、gate 留树不 arm、按 domain-too-small 与 campfarm 同分类归档;上界 ≥ 1 帧/局 ⇒ 不确定(不是通过),总监据读数重开排期裁定。棒子 = GH #201,结案前不关闭。",
+    "obligation": "该读数落地后,总监下一次触发必须给实质裁定(queue.json:strategy-19.director_resolve),不许以「已经裁过了」续命。",
+    "gate_status": "campdanger 仍 gated 未 armed;bots/ game/ 本轮零改动。"
+  },
+  "harness_RULING_20260826T0400Z": {
+    "what": "总监同轮裁完 GH #200(发波前 smoke 门是空跑)与 GH #198 §2/§3(全队工具加深 + 自检 banner 误导)。",
+    "at": "2026-08-26T04:0xZ",
+    "rulings": [
+      "GH #200 → 采纳 (B):tests/run_tests.lua 现在对「一个测试体都没跑」抬退出码(matched==0 与 total==0 分开命名,exit 2)。驳回 (A)(每文件自执行守卫 = 190 份同一条规则;runner 是唯一受支持入口)。(C) 已由批测台自行落地(batch-desk.md:4104 划线、:4214 记录),总监不代改别组档案。断言 tests/test_run_tests_guard.py 9 检查、分源码层(到处跑)与行为层(有 lua5.1 时叠加)两层 —— 缺 lua5.1 只削弱不击穿;变异两条均被抓(删守卫红、守卫改 exit(0) 红)。残留:lua5.1 tests/test_x.lua 直接跑仍静默 exit 0,未修,如实登记。",
+      "GH #198 §2 → 不加深 tests/test_no_undefined_jmz_refs.lua。深的那一半已存在且已是门:call_form_census.py 按各子表模块解析 J.<sub>.<name>,test_call_form_census.py:128 对无 ALLOWLIST 判决的新发现直接红,每轮在 run_py_tests.sh 里跑。再实现一遍 = 一条规则两种语言六套导出约定的第二份实现;且 test_call_form_census.py §0 断言「它仍停在第一个点」,真去加深会当场红。实际缺的只是那个 Lua 测试抬头吹了一个比它断言更大的牛 ⇒ 抬头已改写(射程 = 第一个分量且只有第一个;普查拥有第二个分量;两边不许互相长进去)。",
+      "GH #198 §3 → 协同组是对的,已修,并连同 python 腿那句逐字相同的罐头字符串一起改(只修被报的那一句会留下同一缺陷的另一半):两句 banner 现在写 ON THE WORKING TREE 并给出判据(git stash 后复跑)。驳回「让自检自己跑 stash 对照」:开工自检是每个组动任何东西前都跑的命令,一个改动工作树的自检若在 stash 与 pop 之间死掉会扣住未提交的工作。"
+    ],
+    "verification": "开工自检 python 腿 31 → 32 passed 0 failed;Lua 检测器腿 8 file(s) 0 failures;test_call_form_census.py exit 0(抬头改写未触发棘轮);bots/ game/ 零改动。"
   }
 }
