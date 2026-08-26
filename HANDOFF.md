@@ -68,10 +68,11 @@ Routine。Cursor 侧若 owner 要定期摘要,只用本对话的 timer 订阅做
 
 - 五个 Routine **还在 Claude Code Cloud 上**。改它们的行为 = 改章程,不是
   在 Cursor 里重写 cron。底稿:`iterations/streams/routine_prompts.md`。
-- Cursor 本会话:**不要** `git push origin HEAD:main`;走功能分支 + PR。
-  `gh` 只读。GitHub 写操作(开 PR)用环境提供的 PR 工具。
-- Claude Code Routine 仍走它们章程里的 `push origin HEAD:main` 路径
-  (那是它们的宿主,不是你的)。
+- **落地 = `main`,这个仓库不用 PR**(owner 2026-08-26 原话:「我们一般都在
+  main 上直接改,这个 repo 不用 pr」)。Cursor 整合者和五个 Routine 同一条路:
+  `git push origin HEAD:main`;被拒先 `git pull --rebase origin main`。
+  不要为整合者的改动开 PR,除非 owner 当场要一张。`gh` 仍只读。
+- Claude Code Routine 的 push 路径本来就是这条,不用改。
 - commit/PR/代码里**禁止模型名**。
 - AWS:每个需要云的新会话先 `bash tools/batch_test/aws/session_setup.sh`,
   之后只用 `awsx`。主会话一般只做只读(S3 ls/cp);花钱是批测台的独占权。

@@ -24,7 +24,8 @@ move those jobs onto Cursor Automations until the owner says so.
 
 If you are the integrator, read `HANDOFF.md` next. If you are a named stream,
 read `iterations/streams/README.md` then your own charter — do not wait for a
-Claude Code main session; that seat moved.
+Claude Code main session; that seat moved. **Everyone lands on `main`
+directly** (owner 2026-08-26: this repo does not use pull requests).
 
 ---
 

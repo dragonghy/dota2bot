@@ -31,10 +31,13 @@ Follow `HANDOFF.md` for the integrator job. Talk to the owner in 简体中文
   /batch-desk/replay-check).
 - Do not spend AWS money; that is batch-desk / `batch-runner` only. S3
   read-only is fine.
-- Do not call `mcp__github__*` tool names. `gh` is **read-only**. Open or
-  update PRs with this environment's pull-request tools, not `gh pr create`.
-- Do not push this session branch to `main`. Cursor agents use a feature
-  branch and a pull request.
+- Do not call `mcp__github__*` tool names. `gh` is **read-only**. GitHub
+  write that must happen (close a stale PR, etc.) uses this environment's
+  PR tools, not `gh`.
+- **Land on `main` directly.** Owner 2026-08-26: this repo does not use
+  PRs; everyone (Routines and the Cursor integrator) edits on `main`.
+  After commit: `git push origin HEAD:main` (rebase onto `origin/main`
+  if rejected). Do not open a pull request unless the owner asks for one.
 - Do not use Claude Code Routines, `send_later`, or CronCreate as the
   automation host. If the owner wants a Cursor-side briefing cadence, use
   this environment's timer subscription tools — briefings only, not stream

@@ -34,8 +34,8 @@ git push -u origin <this-session-branch> && git push origin HEAD:main
 ```
 
 If rejected: `git pull --rebase origin main` then retry. The stop-hook will
-nudge unpushed commits. Cursor Cloud Agents must **not** follow this path —
-they use feature branches and PRs.
+nudge unpushed commits. Owner 2026-08-26: this repo does not use PRs —
+Cursor integrator sessions use the same `push origin HEAD:main` path.
 
 ## Subagent dispatch
 
