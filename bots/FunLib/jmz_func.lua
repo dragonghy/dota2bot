@@ -10512,6 +10512,56 @@ function J.IsAncientBadlyHurt( hAncient )
 	end
 	return hAncient:GetHealth() < 0.8
 end
+
+
+-- HOW LONG AM I STILL DEAD -- the number every buyback gate is a threshold on,
+-- read twice in fifteen lines and subtracted from itself once.
+--
+-- `Unit:GetRespawnTime()` is documented in docs/BOT_API_REFERENCE.md as
+-- "Seconds until this hero respawns" -- it is ALREADY the remaining time, and
+-- it counts down on its own. The shipped body in ability_item_usage_generic's
+-- X.GetRemainingRespawnTime subtracts the elapsed time from it a second time:
+--
+--     bot:GetRespawnTime() - ( DotaTime() - fDeathTime )
+--
+-- With R the respawn duration and e the seconds since death, the engine hands
+-- back R - e and the expression returns R - 2e. The reading therefore decays
+-- at TWICE the wall clock and crosses zero at e = R/2 -- halfway through the
+-- death, while the hero still has R/2 seconds of lying down left to do. The
+-- name of the local it feeds (`nFullRespawnTime` at the same call site, for
+-- the same getter) records the misreading that produced the body: the author
+-- read the getter as a constant full duration, which is the one reading under
+-- which subtracting elapsed time is arithmetic rather than a bug.
+--
+-- WHICH GATES THIS MOVES, and in which direction. Every consumer is a lower
+-- bound on the number, so under-reporting it can only CLOSE a buyback:
+--   `nRemainingRespawnTime > 20`  (defend the ancient)     -> e < (R-20)/2
+--   `nRemainingRespawnTime > 80`  (level > 24 rejoin)      -> e < (R-80)/2
+--   `nRemainingRespawnTime < 40`  (early return)           -> fires from
+--                                  e = (R-40)/2 onward, and unconditionally
+--                                  for the whole back half of every death.
+-- In Turbo the ancient-defense branch is the only one of the three the mode
+-- can reach at all (see the NEXT CELL note below), and it is the one whose
+-- window this shrinks from R-20 seconds down to (R-20)/2.
+--
+-- ONE LEVER. The sibling misreading of the same getter at
+-- ability_item_usage_generic.lua:580 -- `if nFullRespawnTime < 60 then return
+-- end`, which under the documented semantics means "stop considering buyback
+-- once you are within a minute of respawning" rather than the intended "a
+-- short respawn is not worth buying out of" -- is DELIBERATELY NOT TOUCHED
+-- here. It gates the two branches BELOW it, this one gates the branch ABOVE
+-- it, and the charter's one-lever rule says they move in separate rounds.
+--
+-- Gated (`bbrespawn`), turbo-only. Unarmed this returns the shipped expression
+-- token for token, including the fDeathTime == 0 short circuit, so the default
+-- tree is byte-identical until the fix is validated.
+function J.RespawnRemaining( hBot, fDeathTime )
+	if hBot == nil or fDeathTime == 0 then return 0 end
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'bbrespawn' ) then
+		return hBot:GetRespawnTime()
+	end
+	return hBot:GetRespawnTime() - ( DotaTime() - fDeathTime )
+end
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then

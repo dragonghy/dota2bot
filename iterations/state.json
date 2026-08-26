@@ -3983,5 +3983,18 @@
     "gh207_precheck": "入集前照查了 GH #207(批测台 09:14Z:zusstatic 在 armed 串里而它的合取依赖 zusbind 不在 ⇒ 结构性零腿,接线门按构造看不见)。本 id 的门是 `J.IsModeTurbo() and J.IsSoakCandidate( 'abilanc' )` —— 单合取,另一半是模式谓词不是另一个 soak id ⇒ 不属该族;tests/test_abilanc_ancient_selector.lua:303,311 已把『恰好一处解析、且解析成 turbo AND abilanc』钉成断言 ⇒ 树一动就红。本轮把这条列为入集前置检查(§BL.4)。",
     "gates_run": "bots/ 与 game/ 零改动 ⇒ 铁律 6 的 luacheck 门对本轮改动面不适用(改动面 = queue.json / state.json / test_set.md / 报告 / 章程)。queue.json 逐字段 diff:恰好两处变更(_protocol 纯 append,startswith 断言为真;strategy-20 新增 director 键),UNEXPECTED NONE,批测台真正读的 8 个字段在全部 40 条请求上逐位未动。pending_rulings.py 复跑:RIDESHARE none / OTHER none。",
     "status": "ruled; abilanc 待 W14 arm,(a) 待录像组按修正后的域核验"
+  },
+  "bbrespawn_20260826": {
+    "id": "bbrespawn",
+    "status": "gated, turbo-only, NOT live. **本轮刻意不提入集、不提波次请求** —— 它今天的两个下游消费方一个已被测空(`bbancient` 的 ancient hp,58 快照全 1.0)、一个压在本轮**故意没动**的姊妹缺陷底下(`nFullRespawnTime < 60` 早退)⇒ arm 它买不到任何读数,只会往 arm 串里塞一条 GH #207 那种打不响的腿。",
+    "landed": "2026-08-26T1x:xxZ strategy",
+    "issue": "GH #208(本组本轮自开);来源是本组章程 backlog `0i` 2026-08-21T22:00Z 顺带登记的第二个杠杆,5 天无人认领",
+    "defect": "`X.GetRemainingRespawnTime`(ability_item_usage_generic:368)写成 `bot:GetRespawnTime() - ( DotaTime() - fDeathTime )`,而 `Unit:GetRespawnTime()` 按 docs/BOT_API_REFERENCE.md 是「Seconds until this hero respawns」= **已经是剩余时间、自己在倒数**。设 R 为复活时长、e 为死后经过秒数:引擎给回 R-e,这个表达式返回 **R-2e** ⇒ 读数**以两倍钟速衰减**,在 **e = R/2**(死亡过程正中间)穿过 0,此后为负,而英雄还要再躺 R/2 秒。喂它的那个 local 叫 `nFullRespawnTime`(同一个 getter、同一个误读)—— 那个名字正是产生这段函数体的读法:只有把 getter 读成「恒定的完整时长」,再减一次 elapsed 才是算术而不是缺陷。",
+    "direction": "**单向,只会关掉本该允许的买活**:三个消费方全是这个数的下界 —— `> 20`(守遗迹)、`> 80`(24 级归队)、`< 40`(早退)。窗口从 R-20 缩到 (R-20)/2;后半程恒 ≤ 0 ⇒ 每一次死亡的后半段三个门全关。",
+    "fix": "`J.RespawnRemaining( hBot, fDeathTime )`(jmz_func),armed 返回 `hBot:GetRespawnTime()`;**未 armed 逐字等于出厂表达式**,含 `fDeathTime == 0` 短路。调用点改为委派。",
+    "one_lever": "同一个 getter 在 15 行内的**姊妹误读** `if nFullRespawnTime < 60 then return end`(:580)**故意没动** —— 它守着它下面两个分支,本轮杠杆守着它上面那个,一次动一个小杠杆。`[limit]` 用例把它原样钉住。",
+    "local": "tests/test_bbrespawn_double_subtract.lua **16 例全绿,9 变异 9 抓 + 控制干净**。真实帧 `tests/fixtures/f_080225_wk_revive.lua`(t=403.0,turbo)上的 **zuus L8 `alive=false`** —— 出厂表达式做减法用的那个钟 `DotaTime()` 是这一帧自己的 403.0。R 是**声明的替身且声明成会倒数的**(每格喂 getter `R-e`);`[W1]` 断言 dump 里没有 respawn 字段(mock 默认 0 + 全 fixture 归档零命中),恒定替身会把被测的误读本身建进测试里。",
+    "gate_shape": "单合取,另一半是 `J.IsModeTurbo()` 这个模式谓词,不是另一个 soak id ⇒ 不属于 GH #207 / `pullcad` 的结构性零腿族;`[source]` 用例把「恰好一处解析、且解析成 turbo AND 'bbrespawn'」钉成断言。",
+    "gates": "luacheck 0 警告 EXIT=0;python 32 passed 0 failed;Lua 切片 bbrespawn 16 / abilanc 13 / gate_claim 10 / smoke 3 / no_undefined 3 / jmz 3 / level_gate 15 / camp 128 / pull 139 / farm 29 / roam 27 / ancient 47 / tp 190 全部 0 失败。`bots/` 只动两个文件,零新 fixture 文件,零 AWS。"
   }
 }

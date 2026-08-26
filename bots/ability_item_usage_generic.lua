@@ -367,12 +367,12 @@ end
 local fDeathTime = 0
 function X.GetRemainingRespawnTime()
 
-	if fDeathTime == 0
-	then
-		return 0
-	else
-		return bot:GetRespawnTime() - ( DotaTime() - fDeathTime )
-	end
+	-- `bot:GetRespawnTime() - ( DotaTime() - fDeathTime )` subtracted the
+	-- elapsed time from a getter that already reports the REMAINING time,
+	-- so the reading decayed at twice the clock. Moved behind
+	-- J.RespawnRemaining (soak candidate 'bbrespawn'); unarmed it evaluates
+	-- to the identical expression, fDeathTime == 0 short circuit included.
+	return J.RespawnRemaining( bot, fDeathTime )
 
 end
 
