@@ -4502,3 +4502,48 @@
     `l5combo` 的 (a)(**第四十七轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十四轮**);
     `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260826T035334Z.md`
+- **2026-08-26T07:09Z(第七十四次触发)**:接**总监 §BJ.1 交给本组的棒(GH #201)** ——
+  离线量 `campdanger` 合取项的分母。**宽扫 121/121 局(W12 全语料:四 run 各 36 个 `.dem` = 144,
+  自动跳过 23 局裸 sha 暖场 ⇒ 有效 121,覆盖率 100%)** + **深查 6 局逐帧**。
+  零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **答案:分母不小,`readmit_on` 的条件不成立**。八级单调级联:头条(行为锚定的估计)
+    **149.6 帧/局**,最紧的末格 **36.1 帧/局**;逐局 **min 17 / p25 30 / 中位 37 / p75 41 / max 67,
+    0 命中的局 0/121**。⇒ 按 #201 §2 **逐字**判据(上界 <1 才算判决成立)= **INCONCLUSIVE,
+    明确不是通过**。形状与 `campfarm` 的 domain-too-small **相反**:不是「多数局 0」,是「每局几十帧」。
+    **本组不裁**;`strategy-19` 的实质裁定按 §BJ.5 是总监**下一次触发的强制义务**。
+  - ⭐⭐ **逐帧先行把头条砍掉一半,而且机制是源码坐实的**:6 局深查里 **5 局**的承重帧都是同一种伪命中
+    ——「他站在**刚打完的那个营**上」。`aba_site.lua:779 UpdateCommonCamp` 在 bot 贴近某营野怪时
+    把该营(野怪 500u 内)**从 `availableCampTable` splice 掉**,而 `RefreshCamp` 只在
+    `math.floor(DotaTime()) % 60 ∈ (0,2)` 重建 ⇒ **刚 farm 过的营,这一分钟内 `ClosestCamp` 取不到**,
+    那些帧**不在域里**。做成末格 L8 后 72.5 → **36.1**。**没有这一格,报出去的下限翻一倍。**
+  - ⭐ **第 6 局是真命中,帧证据齐**:`032814_slot3 jakiro t=1165.4`(armed 腿)——
+    **站在 camp13 上 24u**、该营**有野**、**本分钟内他没打过它**(上次接野 t=1001.6 是别的营,
+    早于 1140 刷新点)、**1600u 内无敌人**、最近队友 1524u(过得了 `IsTheClosestOne`),
+    而他 **t=1174.1 才在 1565u 外的 camp20 开打**。连续三帧(1164.4/1165.4/1166.4)同型。
+  - ⚠️⭐ **无假设的上界是空的,这一条要跟着数走**:`preferedCamp` 不在帧表里,而
+    **L0x(存在某营比最近营远出 margin)占 L0 的 100.0%** ⇒ #201 想要的那种「严格上界」
+    **买不到**;买到的是**行为锚定的估计**,两个误差方向都登记(高估:mode 不可观测;
+    低估:真实 `preferedCamp` 可能更陈旧 ⇒ 真 `oldDist` 更大)。**L4 是唯一朝低估偏的一格**
+    (`IsTheClosestOne` 只数 Farm 模式的队友,离线数所有活队友)。
+  - **交付**:新工具 `campswitch_domain.py`(`--selfcheck` **27 PASS / 0 FAIL**,含**六条反 selfskip-trap**:
+    窗口/margin/队友门/敌人环/占用/**营表**各自必须能答 NO);常数**从 Lua 读**且断言合取项仍是
+    `newDist + N < oldDist and J.IsCampSwitchSafe(`;营地几何**从 `timeline['creeps']`(team 4)聚**
+    ——**28 簇,两个不相交半份语料各 28/28 一致,180° 镜像全部 ≤994u**(⚠️ 容差 1000u 是看过 994 后定的,
+    **是漂移报警不是独立确认**,worst miss 每轮照印);`tests/test_detector_source_constants.py` **新增 5 条**
+    (含「48ff29fe 拿掉的那个 nil 字段没回来」与 `pullcad` 那条「gate 不许写成两个 id 的合取」)。
+  - **交棒**:**GH #201 追评**(全文读数 + 六帧表 + 机制),**本组不关闭该 issue**;
+    **没开新 issue**(jakiro 那条线索正是 `campdanger` 要管的事,已被 #198/#201/`strategy-19` 拥有,
+    另开只会制造第二个所有权)。**球回总监**:`strategy-19` 的 `director_resolve`。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动** ⇒ 铁律 6 的 Lua 两条无适用对象(容器无 luacheck/lua5.1,
+    **不声称跑绿过 Lua 全量**;自检那格是 **SKIP 不是 PASS**);`tests/run_py_tests.sh`
+    **32 passed / 0 failed**。**AWS**:S3 **只读**,**未启动/未终止任何实例**,**未调用 Cost Explorer**。
+  - **下一轮优先**:(1) ⭐ **W12 的 armed id 核验**(本轮预算给了 #201 的棒);(2) ⭐ `camp_prelit` 列(**第二轮**);
+    (3) ⭐ **占用度量改成按 idx 去重的存活计数**(「打完的营还剩野」那条线索**证据不够,先不开 issue**);
+    (4) ⭐ `tpdefend_events` 结果侧列(**#191 落地后,第七轮**);(5) ⭐ 幻象出生下界余量做进 `sweep_run.sh`(**第四轮**);
+    (6) ⭐ `entities.py` 推广(**第五轮**);(7) ⭐ 12:41Z §6.1 那 23 帧做 fixture(**第七轮**);
+    ⭐ `pulldrag` 的 connect 侧;⭐ 第二种视野证人(**连续第十一轮顺延**);
+    ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第十八轮登记**);`stayfield` 第一失败子句;
+    打野反证 fixture(**二十四轮**);`hero-1` 的 153 局 WK 语料(**32 轮**);`l5combo` 的 (a)(**第四十八轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第三十五轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260826T070906Z.md`

@@ -728,6 +728,35 @@ check('campfarm\'s gate names no other candidate id',
       CF_GATE and CF_GATE[0].count('IsSoakCandidate') == 1
       and 'IsModeTurbo' in CF_GATE[0], CF_GATE[0] if CF_GATE else '')
 
+# --- campswitch_domain (GH #201): the camp-switch conjunct ------------------
+# The detector reasons about ONE line of mode_farm_generic.  Three ways that
+# line can move out from under it, each with its own assertion: the margin, the
+# 1 Hz throttle the whole "no aliasing cost" argument rests on, and the guard
+# the 48ff29fe repair put where the nil call used to be.  A transcription is
+# never allowed to stand in for any of them.
+import campswitch_domain as csd                    # noqa: E402
+
+MARGIN, THROTTLE = csd.switch_constants(FARM_MODE_PATH)
+check('camp-switch margin still reads 200 u out of the farm mode',
+      MARGIN == 200.0, str(MARGIN))
+check('the repick throttle is still 1.0 s (== the corpus sample rate, which '
+      'is why the offline count does not alias)', THROTTLE == 1.0,
+      str(THROTTLE))
+CS_GATE = [l for l in FARM_SRC.splitlines()
+           if 'J.IsCampSwitchSafe(' in l and not l.strip().startswith('--')]
+check('the switch is guarded by IsCampSwitchSafe at exactly one site',
+      len(CS_GATE) == 1, str(CS_GATE))
+check('the nil field the repair removed has not come back',
+      'J.Site.IsCampDangerous' not in FARM_SRC)
+# The `pullcad` lesson again: campdanger's own gate must not name a second id.
+CD_GATE = [l for l in open(os.path.join(ROOT, "bots", "FunLib", "jmz_func.lua"),
+                           encoding='utf-8').read().splitlines()
+           if "IsSoakCandidate('campdanger')" in l
+           and not l.strip().startswith('--')]
+check('campdanger has exactly one gate site naming exactly one candidate',
+      len(CD_GATE) == 1 and CD_GATE[0].count('IsSoakCandidate') == 1,
+      str(CD_GATE))
+
 import tempfile                                    # noqa: E402
 
 with tempfile.NamedTemporaryFile('w', suffix='.lua', delete=False) as fh:
