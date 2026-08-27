@@ -70,6 +70,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import talent_slot_census as T  # noqa: E402
+from lua_corpus import bots_lua_files, read_lua  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if not os.path.isdir(os.path.join(REPO, "bots")):
@@ -137,11 +138,8 @@ def hero_of(path):
 
 
 def hero_files(root=None):
-    root = os.path.join(root or REPO, "bots")
-    for base, _, names in os.walk(root):
-        for name in sorted(names):
-            if name.endswith(".lua"):
-                yield os.path.join(base, name)
+    # GH #243: one listing, one exclusion list, shared with every other census.
+    return bots_lua_files(root or REPO)
 
 
 # The previous line is read only when THIS line is a continuation of it -- the
@@ -189,8 +187,7 @@ def guarded(lines, idx, var):
 def scan_file(path, lines=None):
     """[(var, talent, bind_line, [(call_line, guarded), ...]), ...]"""
     if lines is None:
-        with open(path, "r", encoding="utf-8") as fh:
-            lines = strip_comments(fh.read())
+        lines = strip_comments(read_lua(path))   # GH #243: vanish -> exit 2
     found = []
     for n, line in enumerate(lines):
         m = BIND.search(line)

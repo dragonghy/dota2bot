@@ -75,6 +75,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from guard_implication_census import STRATEGY_FILES, strip_file  # noqa: E402
+from lua_corpus import bots_lua_files, read_lua  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -140,8 +141,9 @@ _STRIP_CACHE = {}
 def stripped(path):
     """Stripped source, memoized -- `--all` cross-references O(files x findings)."""
     if path not in _STRIP_CACHE:
-        with open(path, "r", encoding="utf-8", errors="replace") as fh:
-            _STRIP_CACHE[path] = strip_file(fh.readlines())
+        # GH #243: keepends=True is `readlines()` exactly; vanish -> exit 2.
+        _STRIP_CACHE[path] = strip_file(
+            read_lua(path, errors="replace").splitlines(True))
     return _STRIP_CACHE[path]
 
 
@@ -235,12 +237,8 @@ def other_file_readers(name, targets):
 
 
 def all_bot_files():
-    out = []
-    for root, _dirs, files in os.walk(os.path.join(REPO, "bots")):
-        for f in sorted(files):
-            if f.endswith(".lua"):
-                p = os.path.join(root, f)
-                out.append((p, os.path.relpath(p, REPO)))
+    # GH #243: one listing, one exclusion list, shared with every other census.
+    out = [(p, os.path.relpath(p, REPO)) for p in bots_lua_files(REPO)]
     return sorted(out, key=lambda t: t[1])
 
 

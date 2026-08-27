@@ -56,6 +56,10 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from lua_corpus import bots_lua_files, read_lua  # noqa: E402
+
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # The nine files the strategy charter (`0CLK`) calls this group's decision path.
@@ -368,8 +372,7 @@ def depends_on(lvalue):
 
 
 def scan_file(path, rel, stats=None):
-    with open(path, "r", encoding="utf-8", errors="replace") as fh:
-        raw = fh.readlines()
+    raw = read_lua(path, errors="replace").splitlines()   # GH #243: vanish -> exit 2
     code = strip_file([l.rstrip("\n") for l in raw])
     if stats is None:
         stats = {}
@@ -600,12 +603,7 @@ def main():
     args = ap.parse_args()
 
     if args.all:
-        targets = []
-        for root, _dirs, files in os.walk(os.path.join(REPO, "bots")):
-            for f in sorted(files):
-                if f.endswith(".lua"):
-                    p = os.path.join(root, f)
-                    targets.append((p, os.path.relpath(p, REPO)))
+        targets = [(p, os.path.relpath(p, REPO)) for p in bots_lua_files(REPO)]
     else:
         targets = [(os.path.join(REPO, r), r) for r in STRATEGY_FILES]
 

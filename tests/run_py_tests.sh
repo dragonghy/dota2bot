@@ -12,14 +12,30 @@
 set -u
 cd "$(dirname "$0")/.."
 
+# [director 20260827, GH #243] Exit code 2 from a test means IT DID NOT RUN --
+# it could not read its input -- as distinct from 1, which means it ran and the
+# answer was wrong.  Before this, both printed `FAIL <file>` and 开工自检
+# escalated either one to `TRUNK RED -- a python test is failing ON THE WORKING
+# TREE`.  A census whose corpus file vanished mid-scan therefore told a whole
+# round that trunk was red.  Same 0/2/3 vocabulary as rule 10 (GH #171) and the
+# push gate (GH #213): could-not-run is its own answer, and it is not a pass
+# either -- this runner still exits non-zero on it.
 pass=0
 fail=0
+unrun=0
 failed=""
+uncertifiable=""
 for f in tests/test_*.py; do
     [ -e "$f" ] || continue
-    if out=$(python3 "$f" 2>&1); then
+    out=$(python3 "$f" 2>&1); rc=$?
+    if [ "$rc" -eq 0 ]; then
         pass=$((pass + 1))
         printf 'PASS  %s\n' "$f"
+    elif [ "$rc" -eq 2 ]; then
+        unrun=$((unrun + 1))
+        uncertifiable="$uncertifiable $f"
+        printf 'UNCERTIFIABLE  %s  (did NOT run -- this is not a pass and not a failure)\n' "$f"
+        printf '%s\n' "$out" | sed 's/^/      /'
     else
         fail=$((fail + 1))
         failed="$failed $f"
@@ -28,8 +44,12 @@ for f in tests/test_*.py; do
     fi
 done
 
-printf '\n%d passed, %d failed\n' "$pass" "$fail"
+printf '\n%d passed, %d failed, %d uncertifiable\n' "$pass" "$fail" "$unrun"
 if [ "$fail" -ne 0 ]; then
     printf 'failed:%s\n' "$failed"
     exit 1
+fi
+if [ "$unrun" -ne 0 ]; then
+    printf 'uncertifiable:%s\n' "$uncertifiable"
+    exit 2
 fi

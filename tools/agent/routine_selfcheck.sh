@@ -196,8 +196,19 @@ fi
 # half; doing it for them is not worth that failure mode.
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
-    if suite=$(bash tests/run_py_tests.sh 2>&1); then
+    suite=$(bash tests/run_py_tests.sh 2>&1); suite_rc=$?
+    if [ "$suite_rc" -eq 0 ]; then
         printf '%s\n' "$suite" | tail -1
+    elif [ "$suite_rc" -eq 2 ]; then
+        # [director 20260827, GH #243] The runner's exit 2 means some test could
+        # not read its input.  Calling that TRUNK RED is a claim about main that
+        # the reading does not support -- and it is exactly the false red #243
+        # measured (one round read 39/2 where two later runs of the same tree
+        # read 41/0).  Uncertifiable is not a pass either: it still notes 2.
+        printf '%s\n' "$suite" | grep -E '^(UNCERTIFIABLE|uncertifiable:|[0-9]+ passed)' || true
+        printf 'UNCERTIFIABLE -- a python test did NOT run (could not read its input). This line is NOT a pass,\n'
+        printf '  and it is NOT evidence that trunk is red: re-run on a quiet tree (nothing writing under bots/).\n'
+        note 2
     else
         printf '%s\n' "$suite" | grep -E '^(FAIL|failed:|[0-9]+ passed)' || true
         printf 'TRUNK RED -- a python test is failing ON THE WORKING TREE.\n'

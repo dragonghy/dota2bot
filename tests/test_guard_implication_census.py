@@ -56,6 +56,10 @@ _spec = importlib.util.spec_from_file_location("guard_implication_census", TOOL)
 G = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(G)
 
+sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
+from lua_corpus import (  # noqa: E402
+    CorpusVanished, bots_lua_relpaths, uncertifiable)
+
 FAIL = []
 
 
@@ -85,8 +89,14 @@ def scan_source(lua):
 def repo_scan(paths):
     findings = []
     stats = {}
-    for rel in paths:
-        findings.extend(G.scan_file(os.path.join(REPO, rel), rel, stats))
+    # GH #243: a file that vanished between listing and reading means this scan
+    # has NO answer.  Reporting it as a ratchet miss would read as "a new dead
+    # branch appeared" -- the exact false red this guard exists to stop.
+    try:
+        for rel in paths:
+            findings.extend(G.scan_file(os.path.join(REPO, rel), rel, stats))
+    except CorpusVanished as exc:
+        uncertifiable(exc, "tests/test_guard_implication_census.py")
     return findings, stats
 
 
@@ -116,13 +126,9 @@ ok("some fact and some later condition actually shared an lvalue",
 # -- zero behaviour, kept because removing it needs its own argument.
 ALLOWLIST = {("bots/mode_attack_generic.lua", 8)}
 
-ALL_LUA = []
-for root, _dirs, files in os.walk(os.path.join(REPO, "bots")):
-    for f in sorted(files):
-        if f.endswith(".lua"):
-            p = os.path.join(root, f)
-            ALL_LUA.append(os.path.relpath(p, REPO))
-ALL_LUA.sort()
+# GH #243: the shared corpus listing, which excludes the gitignored farm-only
+# gate switch that 16 Lua gate tests create and delete mid-run.
+ALL_LUA = sorted(bots_lua_relpaths(REPO))
 
 allf, all_stats = repo_scan(ALL_LUA)
 

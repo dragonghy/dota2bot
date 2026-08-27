@@ -92,6 +92,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import hero_slot_map as S  # noqa: E402
+from lua_corpus import bots_lua_files, read_lua  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if not os.path.isdir(os.path.join(REPO, "bots")):
@@ -235,11 +236,9 @@ def ability_value_keys(text):
 
 
 def hero_files(root=None):
-    root = os.path.join(root or REPO, "bots")
-    for base, _, names in os.walk(root):
-        for name in sorted(names):
-            if name.endswith(".lua"):
-                yield os.path.join(base, name)
+    # GH #243: the listing and the exclusion both live in lua_corpus, so this
+    # census cannot disagree with another one about what the corpus is.
+    return bots_lua_files(root or REPO)
 
 
 def scan_file(path, lines=None):
@@ -251,8 +250,7 @@ def scan_file(path, lines=None):
     has no site of that shape today.
     """
     if lines is None:
-        with open(path, "r", encoding="utf-8") as fh:
-            lines = strip_comments(fh.read())
+        lines = strip_comments(read_lua(path))   # GH #243: vanish -> exit 2
     bind = {}
     for line in lines:
         for m in BIND.finditer(line):

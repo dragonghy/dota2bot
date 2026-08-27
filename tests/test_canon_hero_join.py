@@ -37,7 +37,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools", "batch_test", "behavioral"))
+sys.path.insert(0, os.path.join(ROOT, "tools", "agent"))
 import roam_conversion as RC  # noqa: E402
+from lua_corpus import CorpusVanished, bots_lua_files, read_lua, uncertifiable  # noqa: E402
 
 failures = []
 
@@ -54,12 +56,14 @@ def roster():
     """Every `npc_dota_hero_*` name the shipped bot scripts mention."""
     names = set()
     pat = re.compile(r"npc_dota_hero_[a-z0-9_]+")
-    for base, _dirs, files in os.walk(os.path.join(ROOT, "bots")):
-        for f in files:
-            if not f.endswith(".lua"):
-                continue
-            with open(os.path.join(base, f), encoding="utf-8", errors="ignore") as fh:
-                names.update(pat.findall(fh.read()))
+    # GH #243: shared corpus listing (excludes the gitignored gate switch) and
+    # a read that reports a mid-scan vanish as did-not-run, not as a shorter
+    # roster -- a roster that silently lost a file reads as a real join defect.
+    try:
+        for path in bots_lua_files(ROOT):
+            names.update(pat.findall(read_lua(path, errors="ignore")))
+    except CorpusVanished as exc:
+        uncertifiable(exc, "tests/test_canon_hero_join.py")
     return sorted(names)
 
 

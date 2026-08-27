@@ -47,6 +47,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
 
 import ability_value_key_census as C  # noqa: E402
+from lua_corpus import UNCERTIFIABLE_EXIT, uncertifiable  # noqa: E402
 
 
 # Shapes taken from the real per-hero KV: `radius` long-form with a talent
@@ -239,4 +240,16 @@ class SelfTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main(verbosity=0)
+    # GH #243.  Several cases below drive a REAL tree scan, so a file that
+    # vanishes mid-scan surfaces here as a unittest ERROR -- which prints
+    # identically to "the census answer changed".  unittest owns the try/except
+    # inside a case, so the only place left to tell the two apart is the
+    # result object: an error whose traceback names CorpusVanished means the
+    # scan never read its input, and that is exit 2 (did not run), not exit 1.
+    _prog = unittest.main(verbosity=0, exit=False)
+    _vanished = [tb for _case, tb in _prog.result.errors if "CorpusVanished" in tb]
+    if _vanished:
+        uncertifiable(_vanished[0].strip().splitlines()[-1],
+                      "tests/test_ability_value_key_census.py")
+        sys.exit(UNCERTIFIABLE_EXIT)          # unreachable; kept explicit
+    sys.exit(0 if _prog.result.wasSuccessful() else 1)
