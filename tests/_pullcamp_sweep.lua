@@ -12,6 +12,7 @@
 --   CHAIN <fixture> <hero> <sec>        frame reaching the lane clause, OLD window
 --   NEWONLY <fixture> <hero> <sec>      frame the travel lead newly admits
 --   WIT <fixture> <hero> <team> <pos> <x> <y> <hp01> <pullsafe> <neut1400>
+--   NEUTDMG <fixture> <hero> <support> <hits> <value> <t>
 --   DONE
 -- Absence of the final DONE line is treated by the test as a failed subprocess.
 
@@ -145,6 +146,44 @@ for _, path in ipairs(fixture_files()) do
                         loc.x, loc.y, J.GetHP(bot),
                         tostring(J.IsLanePullSafe(bot)), tostring(camp_up)))
                 end
+
+                -- [GH #250 20260827] What does the WHOLE trigger answer on a
+                -- real frame, with its two shipped preconditions handed to it?
+                -- Runs LAST in the frame body and on a per-frame-fresh J, so
+                -- the overrides below cannot reach any counter above.
+                do
+                    local nd, ndv = 0, 0
+                    for _, r in ipairs(u.recent_damage or {}) do
+                        if type(r.src) == 'string'
+                            and r.src:find('neutral', 1, true)
+                        then
+                            nd, ndv = nd + 1, ndv + (r.value or 0)
+                        end
+                    end
+                    if nd > 0 then
+                        bump('neut_dmg')
+                        if support then
+                            bump('neut_dmg_support')
+                            if tw then bump('neut_dmg_support_window') end
+                        end
+                        out:write(string.format('NEUTDMG %s %s %s %d %d %.1f\n',
+                            path, u.name, tostring(support), nd, ndv, t))
+                    end
+
+                    J.IsModeTurbo = function() return true end
+                    J.IsSoakCandidate = function(sId) return sId == 'pullcamp' end
+                    local ok, v = pcall(J.ShouldPullNeutralCamp, bot)
+                    if not ok then
+                        bump('spnc_raise')
+                        if tostring(v):find('GetLaneFrontLocation', 1, true) then
+                            bump('spnc_raise_lanefront')
+                        end
+                    elseif v ~= nil then
+                        bump('spnc_nonnil')
+                    else
+                        bump('spnc_nil')
+                    end
+                end
             end
         end
     end
@@ -156,6 +195,8 @@ for _, k in ipairs({
     'pullsafe', 'peacetime_lane_support', 'chain_old', 'chain_new',
     'depth_honest', 'depth_past_mid', 'depth_forced_nil', 'depth_own_half',
     'depth_inert',
+    'spnc_nil', 'spnc_nonnil', 'spnc_raise', 'spnc_raise_lanefront',
+    'neut_dmg', 'neut_dmg_support', 'neut_dmg_support_window',
 }) do
     out:write(string.format('C %s %d\n', k, c[k]))
 end

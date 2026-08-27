@@ -493,4 +493,109 @@ tests['[reverse] the helper header no longer claims the removed clause'] = funct
         'the header no longer says where the occupancy question went')
 end
 
+-- --------------- 4. [GH #250] what a FIXTURE RECIPE may ask of this trigger --
+--
+-- GH #250 (replay desk, W16 first pass) proposes a fixture whose FIRST step is
+--
+--     assert( J.ShouldPullNeutralCamp( bot ) ~= nil )
+--
+-- and attaches a two-branch reading to the answer: non-nil means the frame is
+-- `pullthink`'s to explain, nil means "this example has nothing to do with
+-- `pullthink`, and GH #186's attribution needs a second look".
+--
+-- THE PREDICATE IS A CONSTANT ON THIS INSTRUMENT. Measured below with BOTH of
+-- the helper's own preconditions handed to it (turbo forced true, `pullcamp`
+-- armed): 0 non-nil out of 974 alive hero frames, 105 fixtures. So the recipe
+-- cannot select its first branch on any frame that exists, and the branch it
+-- does select -- retire the attribution -- would be authored by the mock, not
+-- by the replay. The failure direction is the expensive one: a real attribution
+-- withdrawn on instrument grounds, reported as measured.
+--
+-- ⭐ THE REUSABLE JUDGEMENT, which is about recipes and not about this helper:
+-- BEFORE a predicate is proposed as an acceptance step, ask what its RANGE is
+-- on the instrument that will be used to read it. A predicate already known to
+-- be constant there is not a measurement; and once a two-branch reading is
+-- attached to it, the instrument stops being the thing that answers and starts
+-- being the thing that concludes. This is the recipe-side twin of the
+-- STOPPER census in section 1: that section says what the corpus cannot see,
+-- this one says what may therefore not be asked of it.
+--
+-- WHY IT IS CONSTANT -- attributed, not asserted. It is NOT (only) the
+-- `GetNeutralSpawners` stub of STOPPER 2: the camp loop is never reached at
+-- all. Every frame that survives the clauses above it dies one clause earlier,
+-- on the GH #61 loader refusal for `GetLaneFrontLocation`, and the sweep shows
+-- that set is exactly `chain_new` -- the same conjunction, arrived at
+-- independently. Answering GH #250 step 1 on a fixture would therefore need
+-- TWO declarations (a lane world AND a camp list), which by this file's own
+-- section 2 labelling makes it a DECLARED-WORLD test: it can exercise the
+-- clauses, and it cannot witness what the replay frame did.
+
+tests['[GH #250] the trigger is a constant nil on every real frame'] = function()
+    -- A zero that a ruling is argued from: equality on purpose (see
+    -- corpus_scale's "what is deliberately not softened"). One non-nil frame
+    -- is the news -- it would mean a fixture recipe can finally ask this.
+    -- MUTATION HONESTY: on a clean tree this zero cannot be told apart from a
+    -- `>= 0`, so it was verified against a PLANTED violation in the instrument
+    -- (the sweep's nil/non-nil classifier swapped) rather than against a world
+    -- that produces a non-nil frame -- no such world is reachable here, which
+    -- is the claim itself. The two assertions the SECTION-4 REASONING rests on
+    -- (the raise-set equality below, and the order pin) are mutation-caught
+    -- against the source.
+    assert(C('spnc_nonnil') == 0,
+        'J.ShouldPullNeutralCamp now answers non-nil on ' .. C('spnc_nonnil')
+        .. ' frame(s) -- GH #250 step 1 has become askable; re-read section 4')
+    cs.universal(C('spnc_nil') + C('spnc_raise'), C('frames'),
+        'every frame either answers nil or raises')
+end
+
+tests['[GH #250] the camp loop is never reached -- the refusal comes first'] = function()
+    -- The attribution. Not "the camp list is empty so the loop selects
+    -- nothing" -- the loop does not run. `chain_new` is computed by this sweep
+    -- from the clauses spelled out one at a time; `spnc_raise` is computed by
+    -- calling the shipped helper and catching what it throws. They are the same
+    -- number because they are the same conjunction, so if this equality ever
+    -- breaks, a clause moved and section 4's reasoning needs re-deriving.
+    cs.ratchet(C('spnc_raise'), 18, 'frames reaching the equilibrium clause')
+    assert(C('spnc_raise') == C('chain_new'),
+        'the frames that raise (' .. C('spnc_raise') .. ') are no longer the '
+        .. 'frames that reach the lane clause (' .. C('chain_new')
+        .. ') -- a clause moved; re-derive section 4')
+    assert(C('spnc_raise_lanefront') == C('spnc_raise'),
+        'a raise that is NOT the GH #61 GetLaneFrontLocation refusal appeared ('
+        .. (C('spnc_raise') - C('spnc_raise_lanefront')) .. ') -- attribute it '
+        .. 'before trusting the count')
+end
+
+tests['[GH #250 §4] the neutral-count clause has an empty offline domain'] = function()
+    -- The issue's second suggestion, ruled on the same way: the safety clause
+    -- only counts ENEMY HEROES, and a pos 5 walking into a 12-stack camp is a
+    -- loss the clause cannot see. That is a defensible lever -- and it cannot
+    -- be landed under this stream's discipline today, because the corpus has no
+    -- frame to pin it on. Fixtures carry no neutral ENTITIES at all (STOPPER 1,
+    -- camp_up == 0 everywhere); the only trace of a neutral is a recent-damage
+    -- row with a `src` name, and there are 3 of those in the whole corpus, 1 on
+    -- a non-core, and 0 inside the laning window the pull lives in.
+    cs.ratchet(C('neut_dmg'), 3, 'frames damaged by a named neutral')
+    cs.ratchet(C('neut_dmg_support'), 1, 'non-core frames damaged by a neutral')
+    assert(C('neut_dmg_support_window') == 0,
+        'a non-core frame damaged by neutrals now exists inside the 60-360s '
+        .. 'pull window (' .. C('neut_dmg_support_window') .. ') -- the lever '
+        .. 'GH #250 §4 proposes has become fixture-validatable; go land it')
+end
+
+tests['[reverse][GH #250] the camp loop is still the terminal clause'] = function()
+    -- Section 4 reasons "the loop never runs", which is only true while the
+    -- loop is still BELOW the clause that raises. Pinned as an ORDER, because
+    -- that is what the reasoning uses -- both halves being present is not
+    -- enough.
+    local body = helper_body()
+    local at_front = body:find('GetLaneFrontLocation', 1, true)
+    local at_camps = body:find('GetNeutralSpawners()', 1, true)
+    assert(at_front, 'the equilibrium clause no longer reads GetLaneFrontLocation')
+    assert(at_camps, 'the camp loop no longer reads GetNeutralSpawners()')
+    assert(at_front < at_camps,
+        'the camp loop now runs BEFORE the clause that raises on the corpus -- '
+        .. 'section 4 attributes the constant nil to the refusal; re-derive it')
+end
+
 return tests
