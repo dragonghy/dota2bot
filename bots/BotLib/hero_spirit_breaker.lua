@@ -289,7 +289,12 @@ function X.ConsiderChargeOfDarkness()
             and ((#nNeutralCreeps >= 3 and nLocationAoE.count >= 3)
                 or (#nNeutralCreeps >= 2 and nNeutralCreeps[1]:IsAncientCreep() and nLocationAoE.count >= 2))
             then
-                if J.CanBeAttacked(nNeutralCreeps[1])
+                -- [GH #262] Soak candidate 'aimguard', resolved inside
+                -- J.CanBeAttackedPair: the guard read [1] while the charge
+                -- target returned below is [2]. Unarmed this is literally
+                -- `J.CanBeAttacked(nNeutralCreeps[1])`; armed it also requires
+                -- the unit actually charged. No level clause -- GH #263.
+                if J.CanBeAttackedPair(nNeutralCreeps[1], nNeutralCreeps[2])
                 then
                     return BOT_ACTION_DESIRE_HIGH, nNeutralCreeps[2]
                 end

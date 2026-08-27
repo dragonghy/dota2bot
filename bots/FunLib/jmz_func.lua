@@ -3885,8 +3885,53 @@ function J.CanBeAttacked( unit )
 			and (unit:GetTeam() == GetTeam() 
 					or not unit:HasModifier("modifier_crystal_maiden_frostbite") )
 			and (unit:GetTeam() ~= GetTeam() 
-			     or ( unit:GetUnitName() ~= "npc_dota_wraith_king_skeleton_warrior" 
+			     or ( unit:GetUnitName() ~= "npc_dota_wraith_king_skeleton_warrior"
 					  and unit:GetHealth()/unit:GetMaxHealth() < 0.5 ) )
+end
+
+
+-- [GH #262] Soak candidate 'aimguard' (turbo-only). A guard that is asked
+-- about one unit while a DIFFERENT unit is the one acted on is not a guard --
+-- it is a coincidence that happens to hold most of the time.
+--
+-- THE SITE. hero_spirit_breaker.lua's farm branch tests
+-- `J.CanBeAttacked(nNeutralCreeps[1])` and then returns `nNeutralCreeps[2]` as
+-- the charge target. Index [2] is never asked anything. Both disjuncts that
+-- reach it already require `#nNeutralCreeps >= 2`, so [2] exists; what is
+-- missing is that it is alive, visible and not immune -- exactly the states
+-- `J.CanBeAttacked` was written to rule out for [1].
+--
+-- WHY THERE IS NO LEVEL CLAUSE HERE, unlike 'abilanc'/'abil1st' which share
+-- this site's family. GH #263 measured that band on W18 (68 games, 143
+-- ancient episodes): below level 12 there are 5 episodes and 1 abandoned; at
+-- or above it, 138 episodes and 41 abandoned. The shipped rate is nearly the
+-- same on both sides (20.0% vs 29.7%) -- the edge is in the numerator, not in
+-- the ratio -- so a level threshold selects almost none of the defect. This
+-- lever is on the axis the defect is actually on: whether the unit being
+-- charged can be charged at all.
+--
+-- NOT A CONJUNCT of 'abilanc' or 'abil1st' (the `pullcad` trap in AGENTS.md:
+-- an id written into another gate's conjunction freezes to FALSE the day that
+-- other id is promoted, while check_armed_wiring.py still reports it WIRED).
+--
+-- UNIDIRECTIONAL BY CONSTRUCTION, and that is readable in the body below
+-- rather than argued: the unarmed path returns `J.CanBeAttacked(hGuard)`
+-- unchanged, and the armed path can only ADD a conjunct to it. Armed can
+-- withhold a firing that ships today; it can never create one. A mutation
+-- that swaps the two units instead of conjoining them breaks that property,
+-- and tests/test_aimguard_target_axis.lua asks the discriminating input
+-- (guard attackable, target not) that tells the two apart.
+function J.CanBeAttackedPair( hGuard, hTarget )
+
+	if not J.CanBeAttacked( hGuard ) then return false end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'aimguard' ) )
+	then
+		return true
+	end
+
+	return J.CanBeAttacked( hTarget )
+
 end
 
 
