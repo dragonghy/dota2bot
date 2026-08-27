@@ -5190,3 +5190,65 @@
     打野反证 fixture(**三十三轮**);`hero-1` 的 153 局 WK 语料(**41 轮**);`l5combo` 的 (a)(**第五十七轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十四轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260827T1030Z.md`
+- **2026-08-27T13:28Z(第八十二次触发)**:**`pullthink` 首检 = `UNRESOLVED`((a) NOT BOUGHT)**,
+  而本轮真正值钱的是**它的验收线本身裁不了它**(接上一轮 backlog 第 1 棒)。
+  **宽扫 337/337 计分局 = 100%**(12 个 run:W16+W16-R **162 局**、W15+W15-R **175 局**;
+  `.sweep_out/` 在新容器里是空的,12 个 run 全部重新宽扫)+ **深查 8 局逐帧**(章程下限 6)。
+  零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **GH #186 §5 的验收量「戳营帧后一秒位移 &lt;50u 占比 &lt;15%」不具判别力,两条独立理由**:
+    ① **本底与信号同量级**:baseline 腿(`pullcamp` 未 armed ⇒ `bot.roamCampPull` 每帧 nil ⇒
+    `pullthink` 两个站点都够不着,拉野节拍**一帧没进过**)读 **57.1%**(W16)/ **33.3%**(W15),
+    armed 腿读 **26.3%** / **40.6%**;**全语料最长的零位移串(8 帧)就在 baseline 腿上**
+    (承重帧 `c1d1cf/20260827_065522_slot5` jakiro **t=309.4→318.4 坐标逐位相同 10 秒**,
+    期间在**清营**、GOLD/XP 进账、血 0.99→1.00 ⇒ 「站在营边不动」是辅助打野的正常形状)。
+    ② **池化的 −14.3pp 过不了英雄分层**:两波都有 N≥21 的三个英雄读 **+9.1 / −4.0 / −11.4pp**
+    (CM 反向),池化差异**主要由 zuus(n=3)与 witch_doctor(n=5)扛着** ——
+    **是英雄构成变了,不是同一群英雄变了**(#148 (iii))。**GH #249 新开 [bug]**,并**划掉 #186 §5**。
+  - ⭐⭐ **`pullthink` armed 之后 wave13「站桩 TANK」指纹仍在**:`c1d1cf/20260827_065534_slot6`
+    crystal_maiden(armed 腿, dire)**t=343.5→350.5 坐标逐位相同 8 秒**,**12 只叠营**围打,
+    **血 1.00→0.58**,全程只还手一次,然后**烧 TP 卷轴撤**。**GH #250 新开 [strategy]**
+    (钉帧配方 `t=346.5`,**断言顺序不能反**:先断 `ShouldPullNeutralCamp ~= nil` 再断
+    `Action_MoveToLocation`,否则计划本来就不存在的帧会被读成「该走没走」)。
+  - ⭐ **对照的代码同一性是核过的,不是假设**:`bots/mode_roam_generic.lua` 在两棵树之间
+    **`git diff --quiet` 逐字节相同**;`jmz_func.lua` 的差异是 `:10683` 起的**单个 hunk**(大药那族),
+    grep 8 个 pull 路径符号 **0 行**。arm 串差 3 个,`bbfight`/`bbshort` 只改**买活门槛**
+    (须已死 + 等级门)⇒ 对 [60,360] 秒里活着的辅助**结构上够不着**(上一轮实测全语料 **0 次买活**)。
+  - ⭐ **两个独立量具逐格吻合**(#186 点名的 `pulldrag_walk.py` `still` 列 vs 新工具 `still v1`):
+    8 个格里 7 格**逐位相同**,唯一分歧 **1 帧**,原因已定位(`[t+1.0,t+1.5]` 的第一帧
+    vs 「t 之后严格第一帧 + 用该步自己的 dt 折算」)。
+  - ⚠️ **中途读数会骗人,留档**:71 局 vs 61 局时两个物理分层**反号**(radiant −53.6 / dire **+9.0**),
+    337 局时才同号。**部分语料上的分层符号不是结论。**
+  - **交付**:新工具 `pullthink_domain.py`(`--selfcheck` **14 PASS / 0 FAIL**;domain/子句/实体纪律
+    **全部 import 自 `pullcamp_domain` 不重实现**;每步**用自己的 dt**,&gt;2.5s 的步**丢弃不拉伸**;
+    TP/死亡/尸体三种脏帧各自有反 selfskip)。`tests/test_detector_source_constants.py` **§8 新增 6 条**棘轮
+    (2 站点 / site A 的 `roamCampPull` 守卫 / `pullcamp` **仍 gated** / 两 id **未合取**(pullcad 陷阱)/
+    无源错误 / **两个工具的 50u 是同一个数**),**做过变异**:改 60.0 变红,改回全绿。
+  - **诚实标注**:第一次跑全语料时工具被 **OOM 杀掉(exit 137)且 stdout 全空** ——
+    337 个 `Game` 同时驻留;已改 `WARM_GAMES=10` + 逐局装载即弃 + **营地数稳定性断言**
+    (首 10 局与末 10 局派生的营地数必须相同)。种子 896(`8ca428`,19 局)是 spot 回收的孤儿 ab 腿,
+    本轮**按物理分层分别报占比**,孤儿只放大 ab 层的 N,不污染任一层的占比。
+  - **交棒**:**GH #249 / #250 两个新开**;**GH #186 追评并划掉 §5**(换量不是软化 ——
+    替代验收 = 已条件在「有中野跟随」上的 DRAG 签名,本轮 armed **48/95 = 51%** vs 对照 **47/133 = 35%**,
+    且**强制同报 baseline 本底 + 按英雄分层**)。
+    **球在总监**:#250、#249、#247、#246、#245、#244、#241、#236、#235、#159、#207、#212、#220、
+    `campfarm`;`bbfight`/`bbshort` 三条件判定。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**;`bash tools/agent/luacheck_gate.sh` → **exit 0,0 warnings**;
+    `bash tests/run_py_tests.sh` **42 passed / 0 failed / 0 uncertifiable**;
+    `pullthink_domain.py --selfcheck` **14 PASS / 0 FAIL**。本轮未改任何 Lua ⇒
+    **不声称跑绿过 Lua 全量**(GH #124)。**AWS**:S3 **只读**,**未启动/未终止实例**,**未调用 CE**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **W17 首检**(`spot_20260827_1219*`×4,**与 W16 同树同 arm 串**、4 粒新种子)
+    —— `pullthink` 的 armed 腿语料可**直接翻倍并入英雄分层表**,那三个 N≥21 的英雄有机会各自到 N≥40;
+    **这是本轮结论唯一能被证伪的预登记**;
+    (2) ⭐⭐ **#236 裁下后 `mv` 落地 #159 的 fixture**(**第八轮**);
+    (3) ⭐ **GH #250 的 fixture**(`c1d1cf/065534_slot6 t=346.5 crystal_maiden`);
+    (4) ⭐ **把锚点修正回灌 `roam_conversion.death_spans`**(等 #247 裁定;回灌前先量影响面);
+    (5) ⭐ **GH #220 的 fixture**(`094054_slot3 t=163.0 drow_ranger`,**第八轮**);
+    (6) ⭐ 每 id 篇数做成独立小脚本(**第四轮登记**);
+    (7) `camp_prelit` 列(**第十二轮**);占用度量按 idx 去重(**第十一轮**);`tpdefend_events` 结果侧列
+    (#191 后,**第十七轮**);幻象余量做进 `sweep_run.sh`(**第十四轮**);`entities.py` 推广(**第十五轮**);
+    12:41Z §6.1 那 23 帧做 fixture(**第十七轮**);`pulldrag` 的 connect 侧;第二种视野证人;
+    ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第二十八轮登记**);`stayfield` 第一失败子句;
+    打野反证 fixture(**三十四轮**);`hero-1` 的 153 局 WK 语料(**42 轮**);`l5combo` 的 (a)(**第五十八轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十五轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260827T132825Z.md`

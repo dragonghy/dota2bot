@@ -1103,6 +1103,47 @@ check("the short floor's return still sits ABOVE the fight rung -- flip it and "
 check('bbfloor_domain reports no source-assertion error on trunk',
       BB_SRC.errors == [], repr(BB_SRC.errors))
 
+# ---------------------------------------------------------------------------
+print()
+print('=== 8. `pullthink`: the facts its CONTROL DESIGN rests on ===')
+# `pullthink` has no usable armed/baseline contrast, because its domain
+# (`bot.roamCampPull ~= nil`) exists only when `pullcamp` is armed and
+# `pullcamp` is armed on one leg only.  The replay desk therefore reads it
+# against the ARMED LEG OF A WAVE WHERE `pullcamp` IS ARMED AND `pullthink` IS
+# NOT (W16 vs W15).  Four shipped facts make that design valid rather than
+# merely convenient, and each of them can be deleted by an ordinary edit:
+#
+#  * two call sites -- one id, two inseparable halves;
+#  * site A's `bot.roamCampPull ~= nil` guard -- delete it and the id stops
+#    being a camp-pull lever, so the domain the reading is taken over is no
+#    longer the domain the id acts on;
+#  * `pullcamp` still GATED -- promote it and the baseline leg acquires a
+#    camp-pull domain.  The cross-wave control then measures the wrong thing
+#    while every number it prints still parses;
+#  * the two ids NOT conjoined -- the pullcad trap, which this repo has already
+#    paid for once.
+import pullthink_domain as PT                           # noqa: E402
+
+PT_SRC = PT.load_source()
+eq('pullthink still has exactly 2 call sites', PT_SRC.sites, 2)
+check("site A still guards on `bot.roamCampPull ~= nil`", PT_SRC.site_a_guard)
+check("`pullcamp` is still GATED -- promoting it gives the baseline leg a "
+      "camp-pull domain and voids the cross-wave control in "
+      "iterations/reports/replay-check/", PT_SRC.dep_gated)
+check('pullthink is NOT conjoined with pullcamp (the pullcad trap)',
+      PT_SRC.no_conjunction)
+check('pullthink_domain reports no source-assertion error on trunk',
+      PT_SRC.errors == [], repr(PT_SRC.errors))
+
+# The acceptance criterion in GH #186 is stated on ONE number -- "位移 < 50 u"
+# -- and TWO tools now compute it (pulldrag_walk's `still` column and
+# pullthink_domain's `still v1`).  Let them drift and the issue's bar is
+# silently two different bars.
+import pulldrag_walk as PW                              # noqa: E402
+
+eq("GH #186's 50 u threshold is the same number in both tools that read it",
+   float(PW.STILL_U), float(PT.STILL_U))
+
 print()
 if FAIL:
     print('%d FAILED: %s' % (len(FAIL), ', '.join(FAIL)))
