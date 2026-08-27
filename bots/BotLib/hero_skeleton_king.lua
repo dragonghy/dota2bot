@@ -102,8 +102,11 @@ local tAllAbilityBuildList = {
 --     branch 2   nStack == maxStack         ->    2 /   4 /   6 /   8 charges
 --
 -- and the only term that can bypass either test is `talent6:IsTrained()`, which
--- section 2 of tests/test_wk_fact_anchor.lua shows is a level-20 test and which
--- the GH #84 census read on 0 of 210 turbo hero-slots.  (That bypass is NOT a
+-- section 2 of tests/test_wk_fact_anchor.lua shows is a level-20 test.  It used
+-- to say the GH #84 census read that on 0 of 210 turbo hero-slots, i.e. never;
+-- CORRECTED 2026-08-27 -- that zero was the 10-minute batch cap, and this hero
+-- is one of the three focus heroes the first post-cap frame catches above 20
+-- (level 26; GH #235).  The bypass IS live from level 20 on.  (It is NOT a
 -- defect, checked 2026-08-23: the talent at that slot is "+5 Bone Guard
 -- Skeletons Spawned" over a base min_skeleton_spawn of 0, so with it trained a
 -- release from an empty bank still fields five skeletons and "release regardless
@@ -276,8 +279,14 @@ aba_skill.lua rather than asserting it):
 
 tTalentTreeList above therefore resolves to [2] at t10, [4] at t15, [6] at t20 and
 [7] at t25 ({10,0} takes the even/right index, {0,10} the odd/left one -- see
-aba_skill.lua:135).  Only the t10 and t15 picks can ever be taken in turbo: the
-level census behind GH #84 read level >= 20 on 0 of 210 hero-slots, high-water 19.
+aba_skill.lua:135).  All four picks are taken in turbo.  This used to read "only
+the t10 and t15 picks can ever be taken in turbo: the level census behind GH #84
+read level >= 20 on 0 of 210 hero-slots, high-water 19".  CORRECTED 2026-08-27:
+that zero was the batch harness's 10-minute economy cap, not turbo.  Owner
+priority P3 (GH #108) removed the cap and the first frame past it has Wraith King
+himself at level 26 in a 24.9-minute naturally-ended game (GH #235).  Note both
+of his t20/t25 alternatives at [2] and [6] are FACET rows, and nothing in this
+repo reads which facet the game rolled -- settle that before pricing the pair.
 
 modifier_skeleton_king_bone_guard                 -- stack count = charges held
 modifier_skeleton_king_hellfire_blast
@@ -300,9 +309,12 @@ local abilityQ = bot:GetAbilityByName('skeleton_king_hellfire_blast')
 local abilityW = bot:GetAbilityByName('skeleton_king_bone_guard')
 local abilityR = bot:GetAbilityByName('skeleton_king_reincarnation')
 -- talent6 is sTalentList[6] = the t20 slot (aba_skill.lua:140).  Both places it is
--- read below are OR-bypasses, so in turbo -- where level 20 does not happen -- they
--- contribute nothing and the sibling stack test is the whole condition.  What they
--- mean when they DO become live: index 6 is "+5 Bone Guard Skeletons Spawned", a
+-- read below are OR-bypasses.  This used to say they contribute nothing "in turbo
+-- -- where level 20 does not happen"; CORRECTED 2026-08-27 (GH #235): level 20
+-- does happen, this hero reaches 26 in the first frame taken past the removed
+-- batch cap, so from level 20 the bypasses are live and the sibling stack test is
+-- no longer the whole condition.  What they mean now that they ARE live: index 6
+-- is "+5 Bone Guard Skeletons Spawned", a
 -- flat floor, so the bypass buys "release even on an empty bank" and that is
 -- coherent, not a bug.  One residual is registered rather than settled -- if the
 -- engine only carries modifier_skeleton_king_bone_guard while charges >= 1, the
@@ -620,10 +632,15 @@ function X.ConsiderQ()
 	--     wand + bracer                    18     <- both shipped pos_3 entries
 	--     + aghanim's scepter              every level from 1 (pool 622 at level 1)
 	--
-	-- GH #84's turbo level census reads level >= 20 on 0 of 210 hero-slots with a
-	-- HIGH-WATER OF 19, so the shipped build reaches its crossing level in the tail
-	-- of that distribution instead of never.  The branch is not arithmetically
-	-- dead.  What IS wrong with it is narrower and survives the correction: at
+	-- This used to argue from GH #84's turbo level census (level >= 20 on 0 of 210
+	-- hero-slots, HIGH-WATER OF 19), reading the crossing level as "the tail of
+	-- that distribution instead of never".  CORRECTED 2026-08-27 (GH #235): the
+	-- census was taken under a 10-minute batch cap that owner priority P3
+	-- (GH #108) removed, and the first frame past it has this hero at level 26,
+	-- high-water 27.  The crossing level is not in a tail at all -- it is ordinary.
+	-- The correction only STRENGTHENS this note, which is why it survives it: the
+	-- branch is even less arithmetically dead than the note claimed.  What IS
+	-- wrong with it is narrower and survives both readings: at
 	-- every pre-scepter milestone the crossing pool is exactly 603, so the 600
 	-- floor demands 99.5% OF THE POOL, and one Wraithfire Blast (95/110/125/140)
 	-- drops him under it for the rest of the Roshan fight.  An absolute floor 4.3x
@@ -684,9 +701,13 @@ function X.ConsiderQ()
 	--   for one 14-second ability.  tAllAbilityBuildList leaves Wraithfire Blast
 	--   at rank 1 -- 14s cd -- from hero level 2 to 12 (the 2nd point lands at 13,
 	--   corrected 2026-08-24 per GH #134; the old note said "to 11" by counting
-	--   row indices as levels), which is where GH #84's
-	--   turbo level census actually lives (0 of 210 hero-slots reached 20;
-	--   high-water 19).  Measured
+	--   row indices as levels).  This used to add "which is where GH #84's turbo
+	--   level census actually lives (0 of 210 hero-slots reached 20; high-water
+	--   19)" -- RETIRED 2026-08-27 (GH #235): that census ran under a 10-minute
+	--   batch cap, and levels 13-27 are ordinary now, so "levels 2-12 is where
+	--   turbo lives" is no longer a supporting argument for anything.  The
+	--   measurement below is untouched by that and still carries the branch.
+	--   Measured
 	--   over the fixture library: every frame carrying a living WK with two or more
 	--   living enemies inside 568u has the Blast unlearned or on cooldown.  The
 	--   branch is not reached on a single one.

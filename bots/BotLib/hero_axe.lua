@@ -36,9 +36,19 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- J.Skill.GetTalentBuild drives {1,2} from t10, {3,4} from t15, {5,6} from t20 and
 -- {7,8} from t25; {0,10} takes the ODD index of a pair, {10,0} the EVEN one
 -- (aba_skill.lua:135 -- tests/test_focus_talent_anchor.lua reads that arithmetic
--- out of the code instead of asserting it).  Only t10 and t15 can ever be taken in
--- turbo: the level census behind GH #84 read level >= 20 on 0 of 210 hero-slots,
--- high-water 19.  Two independent checks say the feed's order is the slot order
+-- out of the code instead of asserting it).  All four tiers are taken in turbo.
+-- This used to read "only t10 and t15 can ever be taken in turbo", argued from
+-- the level census behind GH #84: level >= 20 on 0 of 210 hero-slots, high-water
+-- 19.  CORRECTED 2026-08-27: that zero was a property of the batch HARNESS, not
+-- of turbo -- every game self-terminated at a 10-minute economy cap, so no
+-- hero-slot could reach 20.  Owner priority P3 (GH #108) raised the cap to 25
+-- minutes, and the first frame taken past it reads ten heroes at level 22-27 in
+-- a 24.9-minute naturally-ended game (GH #235).  Real turbo games average ~20
+-- minutes, so it was never a property of the shipped product either.  t20 and
+-- t25 are live rows whose picks have never been argued in this repo -- they are
+-- the upstream defaults; tests/test_focus_talent_anchor.lua pins them as of
+-- 2026-08-27 and section 6 there shows where the queue asks for them.
+-- Two independent checks say the feed's order is the slot order
 -- here: talent7 below is used as a Berserker's Call radius bonus and [7] is the
 -- Call AoE talent; talent8 is used as Culling Blade kill damage and [8] is the
 -- Culling Blade damage talent.
@@ -283,9 +293,30 @@ local talent7 = bot:GetAbilityByName( sTalentList[7] ) -- t25 pair, odd index: t
 -- over: special_bonus_unique_axe is index [3] today (+8 Battle Hunger dps), and
 -- index [8] is special_bonus_unique_axe_5, +Culling Blade DAMAGE.  Adding it to
 -- nKillDamage below still reads correctly under the new name -- Culling has had no
--- separate kill threshold since the mechanic was folded into its pure damage -- but
--- both talent handles here are t25, so GH #84's census (level >= 20 on 0 of 210
--- hero-slots) makes them dead weight in turbo either way.
+-- separate kill threshold since the mechanic was folded into its pure damage.
+--
+-- The sentence that used to close this block -- "both talent handles here are t25,
+-- so GH #84's census (level >= 20 on 0 of 210 hero-slots) makes them dead weight in
+-- turbo either way" -- is RETIRED 2026-08-27.  That zero was the 10-minute batch
+-- cap, not turbo (GH #235; see the header).  What replaces it is not one fact but
+-- two, and they point opposite ways, which is why the retired sentence was worth
+-- more than a comment edit:
+--
+--   * talent7 is LIVE from level 25.  This file's t25 row is {0,10} = index [7],
+--     so the handle above is the one this Axe actually trains, and the
+--     `nRadius + talent7:GetSpecialValueInt('value')` line below now really runs.
+--     It adds 0, and GH #228 says that is CORRECT -- the engine has already folded
+--     the +85 into the base `radius` the site reads, so a handle that answered
+--     would double-count.  The ruling has not changed; what changed is that it
+--     used to be protected by the branch being unreachable as well, and now the
+--     fold argument is the only thing holding it up.
+--   * talent8 is STRUCTURALLY UNTRAINED.  A hero takes one talent per tier and
+--     this file takes [7], so `talent8:IsTrained()` is false for the whole game
+--     and the nKillDamage term it guards is dead code -- not merely a zero read.
+--     Whoever takes the registered `hero-2` lever inherits both halves: the base
+--     is hardcoded AND the talent term can never fire.  Flipping the t25 row to
+--     {10,0} would make it fire; do not do that as a side effect of fixing
+--     `hero-2`, because it is a talent-pick change and owes its own rationale.
 local talent8 = bot:GetAbilityByName( sTalentList[8] )
 
 local castQDesire, castQTarget

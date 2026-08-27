@@ -18,7 +18,14 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --       [3] = special_bonus_unique_zeus_4, [4] = special_bonus_unique_zeus_6
 --   t20 [5] +60 Arc Lightning damage     [6] +0.5s Lightning Bolt ministun
 --   t25 [7] AoE Lightning Bolt (+325)    [8] +3 Heavenly Jump charges
--- t20/t25 are dead rows in turbo (GH #84: level >= 20 on 0 of 210 hero-slots).
+-- t20/t25 are LIVE rows.  This line used to read "t20/t25 are dead rows in turbo
+-- (GH #84: level >= 20 on 0 of 210 hero-slots)"; CORRECTED 2026-08-27, because
+-- that zero belonged to the batch harness and not to turbo -- games self-
+-- terminated at a 10-minute economy cap.  Owner priority P3 (GH #108) removed the
+-- cap and the first frame past it has Zeus himself at level 23 in a 24.9-minute
+-- game (GH #235).  This hero's t20 row takes [5] and t25 takes [7]; both are the
+-- upstream defaults and neither has ever been argued here.  Pinned as of
+-- 2026-08-27 in tests/test_focus_talent_anchor.lua.
 --
 -- t15 CHANGED 2026-08-22: [3] -> [4].  The two payouts are not comparable in size,
 -- they are comparable in REACHABILITY, and this hero's binding constraint is mana:

@@ -27,7 +27,24 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --       [3] = special_bonus_unique_lion_5, [4] = special_bonus_unique_lion_11
 --   t20 [5] +20 Finger dmg per kill       [6] Earth Spike 30-degree cone
 --   t25 [7] +250 AoE Hex                  [8] +600 Earth Spike cast range
--- t20/t25 are dead rows in turbo (GH #84: level >= 20 on 0 of 210 hero-slots).
+-- t20/t25 are LIVE rows, and for this hero that is not a bookkeeping note.  This
+-- line used to read "t20/t25 are dead rows in turbo (GH #84: level >= 20 on 0 of
+-- 210 hero-slots)"; CORRECTED 2026-08-27, because that zero belonged to the batch
+-- harness and not to turbo -- games self-terminated at a 10-minute economy cap.
+-- Owner priority P3 (GH #108) removed the cap and the first frame past it reads
+-- ten heroes at level 22-27 in a 24.9-minute naturally-ended game (GH #235).
+--
+-- WHAT THAT COSTS HERE.  The t25 row below is {10, 0} = index [8] =
+-- special_bonus_unique_lion_2, +600 Earth Spike cast range -- i.e. exactly the
+-- half that makes every `talent8` read in this file answer TRUE while the reader
+-- believes it means "Hex is an area spell now" (GH #166; the Hex-radius talent is
+-- [7], the other half of the same row).  So from level 25 a shipped turbo Lion
+-- trains [8], X.IsHexAoe answers true, and the W dispatch swaps
+-- ActionQueue_UseAbilityOnEntity for ActionQueue_UseAbilityOnLocation on a
+-- UNIT_TARGET ability.  GH #166 landed the narrowing as soak candidate
+-- 'lionhexaoe' and ruled its domain EMPTY -- on the corpus that could not reach
+-- level 25.  That ruling rests on the premise this line just retired: re-open
+-- GH #166 rather than reading the empty domain forward.
 --
 -- t10 CHANGED 2026-08-22: [1] -> [2].  Not because +20 move speed is the bigger
 -- payout -- it is the smaller one -- but because of where each one can be COLLECTED:

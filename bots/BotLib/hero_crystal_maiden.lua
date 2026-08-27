@@ -94,6 +94,13 @@ sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_3']
 -- would buy a SECOND pair of boots (movement speed does not stack) and strand
 -- 1500 gold.  No corpus unit owns one, but that zero is OUT-OF-WINDOW, not
 -- empty -- the corpus ends at 11:30 and Bearing is a 4225g fifth item.
+-- 2026-08-27: "the corpus ends at 11:30" was true of the corpus, never of turbo.
+-- Owner priority P3 (GH #108) lifted the batch game cap from 10 to 25 minutes,
+-- and the first frame taken past it (GH #235) is at 23:02 with this Crystal
+-- Maiden at level 22 and holding boots_of_bearing.  The OUT-OF-WINDOW reading is
+-- confirmed rather than overturned -- Bearing does get bought, just later than
+-- anything the old corpus could see -- but the zero is now BUYABLE evidence, so
+-- it should be re-measured rather than argued the next time this is opened.
 --
 -- WHY THIS IS GATED AND NO LONGER SHIPPED (GH #144, director 2026-08-23):
 -- 9fa4898 landed it UNGATED.  The mirrored A/B reports a difference of

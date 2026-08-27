@@ -22,10 +22,21 @@
 --      repo's own J.Skill.GetTalentBuild by flipping one row at a time -- never
 --      asserted from convention (the same method GH #104 had to switch to after a
 --      mutation walked through an asserted version);
---   2. the resolved t10/t15 index of all five focus heroes, parsed from their own
---      source.  t20/t25 are recorded but not pinned: GH #84's level census read
---      level >= 20 on 0 of 210 hero-slots (high-water 19), so in turbo they are
---      dead rows and pinning them would only create noise;
+--   2. the resolved t10/t15/t20/t25 index of all five focus heroes, parsed from
+--      their own source.  t20/t25 WERE recorded but not pinned, on this reason:
+--      "GH #84's level census read level >= 20 on 0 of 210 hero-slots
+--      (high-water 19), so in turbo they are dead rows and pinning them would
+--      only create noise".  THAT REASON IS GONE (GH #235, and the axis this
+--      round opened).  The zero was an artefact of the batch harness, not a
+--      property of turbo: every game self-terminated at the 10-minute
+--      economy cap, so no hero-slot could reach 20.  Owner priority P3
+--      (GH #108) raised the cap to 25 minutes, and the first frame taken past
+--      it -- iterations/pending/tpgap_159_fixture/, t=1382.2 (23:02) of a
+--      24.9-minute naturally-ended game -- reads TEN heroes at level 22-27,
+--      three of them focus heroes (crystal_maiden 22, zuus 23,
+--      skeleton_king 26).  t20 and t25 are live rows, they are reached in the
+--      order section 6 pins, and the ten picks they resolve to have never been
+--      examined by this project: they are the OpenHyperAI snapshot's defaults;
 --   3. Axe's t10 change of 2026-08-22 (index [1] -> [2]) together with the
 --      rationale block that has to travel with it;
 --   4. a ratchet that the dead 7.2x talent names never come back as live data.
@@ -62,8 +73,16 @@ local api = require('mock.bot_api')
 local BOTLIB = 'bots/BotLib/'
 
 -- The five focus heroes, and what the datafeed said their eight talents were on
--- 2026-08-22.  Only indices 1-4 (t10, t15) matter in turbo; 5-8 are recorded for
--- the next reader and deliberately not pinned.
+-- 2026-08-22 (indices 1-4) and 2026-08-27 (indices 5-8, added when the "only 1-4
+-- matter in turbo" premise fell -- see the header).
+--
+-- Indices 5-8 are read from Valve's datafeed BY HAND, the same way 1-4 were, and
+-- NOT copied out of tests/mock/talent_slots.lua.  Section 5 exists to catch the
+-- two sources disagreeing, and it can only do that while they are two sources;
+-- copying one into the other is precisely how GH #214 happened.  Read
+-- 2026-08-27 from https://www.dota2.com/datafeed/herodata?hero_id=<id> for all
+-- five heroes: 40 of 40 rows agreed with the KV-derived snapshot, indices 5-8
+-- included.
 local FOCUS = {
     axe = {
         id = 2,
@@ -72,8 +91,30 @@ local FOCUS = {
             'special_bonus_unique_axe_8',
             'special_bonus_unique_axe',
             'special_bonus_unique_axe_7',
+            'special_bonus_strength_15',
+            'special_bonus_unique_axe_4',
+            'special_bonus_unique_axe_2',
+            'special_bonus_unique_axe_5',
         },
-        expect = { t10 = 2, t15 = 3 },
+        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
+        -- [5] +15 Strength over [6] +40 Counter Helix damage, and [7] +85
+        -- Berserker's Call AoE over [8] +150 Culling Blade damage. Both are the
+        -- upstream OpenHyperAI defaults; neither has ever been argued in this
+        -- repo. Two things this file's own reads say about the pair, recorded
+        -- here because they are consequences, not opinions:
+        --   * hero_axe.lua reads BOTH talent7 and talent8, but a hero takes one
+        --     talent per tier -- so with the row on [7], `talent8:IsTrained()`
+        --     is structurally false for the whole game and the nKillDamage term
+        --     it guards is dead code, not merely a zero read (GH #232 priced the
+        --     read; this prices the guard). Whoever takes `hero-2` inherits both
+        --     halves of that.
+        --   * `talent7:IsTrained()` becomes TRUE for the first time at level 25.
+        --     GH #228 ruled that read harmless because the engine folds the +85
+        --     into the base `radius` the site already reads -- and until this
+        --     round that ruling was also protected by the branch being
+        --     unreachable. It is not any more: the fold argument is now the only
+        --     thing holding it. It still holds; it is now load-bearing.
+        expect = { t10 = 2, t15 = 3, t20 = 5, t25 = 7 },
     },
     crystal_maiden = {
         id = 5,
@@ -82,7 +123,17 @@ local FOCUS = {
             'special_bonus_intelligence_12',
             'special_bonus_unique_crystal_maiden_frostbite_castrange',
             'special_bonus_unique_crystal_maiden_5',
+            'special_bonus_unique_crystal_maiden_glacial_guard_mana_multiplier',
+            'special_bonus_unique_crystal_maiden_3',
+            'special_bonus_unique_crystal_maiden_1',
+            'special_bonus_unique_crystal_maiden_2',
         },
+        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
+        -- [6] +50 Freezing Field damage over [5] +20% Glacial Guard mana-to-
+        -- barrier, and [7] +1.0s Frostbite duration over [8] +300 Crystal Nova
+        -- damage. Upstream defaults, never argued here. Crystal Maiden is the
+        -- focus hero the counter-example frame actually carries at level 22
+        -- (pending fixture, 23:02), so this is not a hypothetical tier for her.
         -- t10 EXAMINED 2026-08-23 and deliberately NOT changed, so it is not
         -- re-litigated on taste: the +12 INT side has a real, measurable payoff
         -- (9 of 26 ready ability slots on in-domain frames are mana-blocked
@@ -93,7 +144,7 @@ local FOCUS = {
         -- evidence that would reopen it, and the honest bounds:
         -- tests/test_cm_t10_payoff.lua. t15 was decided in the same series
         -- (GH #122) and also holds.
-        expect = { t10 = 1, t15 = 3 },
+        expect = { t10 = 1, t15 = 3, t20 = 6, t25 = 7 },
     },
     zuus = {
         id = 22,
@@ -102,14 +153,22 @@ local FOCUS = {
             'special_bonus_hp_200',
             'special_bonus_unique_zeus_4',
             'special_bonus_unique_zeus_6',
+            'special_bonus_unique_zeus_2',
+            'special_bonus_unique_zeus_3',
+            'special_bonus_unique_zeus_5',
+            'special_bonus_unique_zeus_jump_charges',
         },
+        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
+        -- [5] +60 Arc Lightning damage over [6] +0.5s Lightning Bolt ministun,
+        -- and [7] AoE Lightning Bolt (325 radius) over [8] +3 Heavenly Jump
+        -- charges. Upstream defaults, never argued here.
         -- t15 CHANGED 2026-08-22, [3] -> [4]: the +75 Thundergod's Wrath damage row
         -- can only pay on a cast that happens, and on this corpus the ult is
         -- ready-and-unaffordable on 7 of 16 ready frames.  [4] takes 20% off the mana
         -- cost of Arc Lightning, the ability that empties the pool.  Full analysis and
         -- its honest bounds: tests/test_focus_t15_payoff.lua and the rationale block
         -- in hero_zuus.lua.
-        expect = { t10 = 2, t15 = 4 },
+        expect = { t10 = 2, t15 = 4, t20 = 5, t25 = 7 },
     },
     lion = {
         id = 26,
@@ -118,7 +177,24 @@ local FOCUS = {
             'special_bonus_movement_speed_20',
             'special_bonus_unique_lion_5',
             'special_bonus_unique_lion_11',
+            'special_bonus_unique_lion_8',
+            'special_bonus_unique_lion_10',
+            'special_bonus_unique_lion_4',
+            'special_bonus_unique_lion_2',
         },
+        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed -- and THIS is
+        -- the row the axis was worth opening for. The t25 row takes [8]
+        -- special_bonus_unique_lion_2 (+600 Earth Spike cast range), i.e. exactly
+        -- the half that makes every `talent8` read in hero_lion.lua answer TRUE
+        -- while believing it means "Hex is an AoE spell now". The talent that
+        -- actually gives Hex a radius is [7]. GH #166 landed the narrowing
+        -- (soak candidate 'lionhexaoe') and closed with "domain is empty" --
+        -- BECAUSE NO HERO IN THE CORPUS REACHED LEVEL 25. That premise is the
+        -- one this round retired. From level 25 on, a shipped turbo Lion trains
+        -- [8], X.IsHexAoe answers true, and the W dispatch swaps
+        -- ActionQueue_UseAbilityOnEntity for ActionQueue_UseAbilityOnLocation on
+        -- a UNIT_TARGET ability. 'lionhexaoe' is not an empty-domain candidate
+        -- any more; re-open GH #166 before pricing this pair on taste.
         -- t10 CHANGED 2026-08-22, [1] -> [2]: the +10pp Mana Drain slow is only
         -- collectible while channelling on an enemy hero, and X.ConsiderE reaches
         -- those two branches only when Earth Spike, Hex and Finger are ALL
@@ -126,7 +202,7 @@ local FOCUS = {
         -- honest bounds: tests/test_lion_t10_payoff.lua and the rationale block in
         -- hero_lion.lua.  t15 was examined in the same pass and deliberately left
         -- alone -- see the same block.
-        expect = { t10 = 2, t15 = 4 },
+        expect = { t10 = 2, t15 = 4, t20 = 6, t25 = 8 },
     },
     skeleton_king = {
         id = 42,
@@ -147,8 +223,19 @@ local FOCUS = {
             -- Used only in assertion messages, so nothing shipped moved either
             -- time -- what moved is whether the record can be trusted.
             'special_bonus_hp_300',
+            'special_bonus_attack_speed_50',
+            'special_bonus_unique_wraith_king_facet_3',
+            'special_bonus_unique_wraith_king_10',
+            'special_bonus_unique_wraith_king_4',
         },
-        expect = { t10 = 2, t15 = 4 },
+        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
+        -- [6] +5 Bone Guard skeletons over [5] +50 attack speed, and [7] -2s
+        -- Mortal Strike cooldown over [8] Reincarnation casts Wraithfire Blast.
+        -- Upstream defaults, never argued here. Two of them are FACET rows
+        -- (facet_1, facet_3) -- whether they are even offered depends on the
+        -- facet the game rolled, which nothing in this repo reads; do not price
+        -- this pair without settling that first.
+        expect = { t10 = 2, t15 = 4, t20 = 6, t25 = 7 },
     },
 }
 
@@ -255,7 +342,7 @@ end
 -- 2. What each focus hero actually picks, driven through the same function.
 
 for hero, spec in pairs(FOCUS) do
-    tests['[hero] ' .. hero .. ' resolves its turbo-reachable talents to the recorded pair'] = function()
+    tests['[hero] ' .. hero .. ' resolves all four talent tiers to the recorded pick'] = function()
         local rows = talent_rows(hero)
         with_skill_lib(hero, function(J)
             local picks = J.Skill.GetTalentBuild(rows)
@@ -269,7 +356,33 @@ for hero, spec in pairs(FOCUS) do
             assert(picks[2] == spec.expect.t15,
                 hero .. ' now takes ' .. named(picks[2]) .. ' at level 15; the record '
                 .. 'says ' .. named(spec.expect.t15) .. '.')
+            assert(picks[3] == spec.expect.t20,
+                hero .. ' now takes ' .. named(picks[3]) .. ' at level 20; the record '
+                .. '(datafeed hero_id ' .. spec.id .. ', read 2026-08-27) says '
+                .. named(spec.expect.t20) .. '. This tier was pinned on 2026-08-27, '
+                .. 'when the reason not to pin it -- "turbo never reaches level 20" -- '
+                .. 'turned out to be an artefact of the 10-minute batch cap that '
+                .. 'owner priority P3 removed.')
+            assert(picks[4] == spec.expect.t25,
+                hero .. ' now takes ' .. named(picks[4]) .. ' at level 25; the record '
+                .. 'says ' .. named(spec.expect.t25) .. '.')
         end)
+    end
+end
+
+-- The pins above are only worth having if the record they compare against is a
+-- record of TODAY's ladder.  Slots 5-8 were added to FOCUS on 2026-08-27 and
+-- nothing else in this file would notice if a hero were left with four.
+tests['[hero] every focus hero has all eight talent slots recorded'] = function()
+    for hero, spec in pairs(FOCUS) do
+        assert(#spec.talents == 8,
+            hero .. ' records ' .. #spec.talents .. ' talents, not 8. t20/t25 resolve '
+            .. 'to indices 5-8, so a four-entry record makes the assertion messages '
+            .. 'above print nil for exactly the two tiers this section was extended '
+            .. 'to cover.')
+        for _, tier in ipairs({ 't10', 't15', 't20', 't25' }) do
+            assert(spec.expect[tier], hero .. ' has no recorded ' .. tier .. ' pick.')
+        end
     end
 end
 
@@ -339,7 +452,7 @@ tests['[hero] no focus hero uses a 7.2x axe talent name as live data'] = functio
     end
 end
 
-tests['[hero] both axe talent handles are still t25, so turbo reads nothing from them'] = function()
+tests['[hero] hero_axe.lua still reads exactly the two t25 talent handles'] = function()
     local reads = {}
     for _, line in ipairs(live_lines(read_file(BOTLIB .. 'hero_axe.lua'))) do
         -- Both halves matter and they are NOT the same claim: the identifier says
@@ -354,10 +467,15 @@ tests['[hero] both axe talent handles are still t25, so turbo reads nothing from
     table.sort(seen)
     assert(table.concat(seen, ',') == '7,8',
         'hero_axe.lua now reads talent handles {' .. table.concat(seen, ',')
-        .. '}, not {7,8}. Indices 7,8 are the t25 pair and GH #84 measured level >= '
-        .. '20 on 0 of 210 hero-slots, so both were dead weight in turbo. A read of '
-        .. 'index 1-4 is a LIVE read and needs its own accounting (GH #104 section 4 '
-        .. 'splits these into ADDITIVE and STRUCTURAL).')
+        .. '}, not {7,8}. Indices 7,8 are the two halves of the t25 pair. This used '
+        .. 'to be filed as harmless on the grounds that GH #84 measured level >= 20 '
+        .. 'on 0 of 210 hero-slots -- that zero was the 10-minute batch cap, not '
+        .. 'turbo (GH #235), and both reads are reachable now. A hero takes ONE '
+        .. 'talent per tier, and this file\'s t25 row takes [7]: talent7 is live '
+        .. 'from level 25 and talent8 is structurally untrained, so the two reads '
+        .. 'are NOT the same kind of thing any more. A read of index 1-4 is a LIVE '
+        .. 'read and needs its own accounting (GH #104 section 4 splits these into '
+        .. 'ADDITIVE and STRUCTURAL).')
 end
 
 -- ---------------------------------------------------------------------------
@@ -413,6 +531,85 @@ tests['[hero] the snapshot still carries all eight talent rows per focus hero'] 
                 .. 'different talent, silently.')
         end
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- 6. WHERE in the level-up queue the four tiers actually sit.
+--
+-- WHY THIS SECTION EXISTS.  The moment t20/t25 stopped being dead rows, the
+-- first thing a reader worries about is whether the queue asks for them too
+-- early -- because ability_item_usage_generic.lua consumes sSkillList strictly
+-- from the head and does NOT skip an entry it cannot level: the branch that
+-- removes an unlevelable head is guarded by `botLevel > 25`, so a premature
+-- talent at the head would stall every later entry behind it.  That worry is
+-- answerable without the engine, and the answer is that the queue is right.
+--
+-- Positions, driven out of the real function below: talents land at list
+-- positions 10, 15, 18, 19, 20, 21, 22, 23 -- NOT at 10/15/20/25.  That reads
+-- wrong and is right, because a list position is not a hero level: it is the
+-- Nth ability point SPENT, which is how the consumer itself reads it
+-- (ability_item_usage_generic.lua computes `nPointsSpent = botLevel -
+-- bot:GetAbilityPoints()` and trims that many entries off the front).  A hero
+-- spends 15 points on abilities and one at each of levels 10/15/20/25, so
+-- positions 1-17 are the 15 abilities plus the t10 and t15 talents, position 18
+-- is the 18th point -- level 20 -- and position 19 is the 19th -- level 25.
+-- The tiers land exactly where they belong.
+--
+-- WORLD ASSERTION, registered not asserted: that a hero receives ability points
+-- at levels 1-15 and at 10/15/20/25 and at no other level.  Nothing offline can
+-- evaluate it -- the mock answers a constant for GetAbilityPoints() -- and the
+-- arithmetic above is the only thing that makes positions 18/19 mean levels
+-- 20/25.  If it is wrong, this section's positions are still right and their
+-- INTERPRETATION is wrong, which is the failure worth being able to find later.
+--
+-- WHAT IS NOT REACHED.  Positions 20-23 are nTalentBuildList[5..8] -- the OTHER
+-- half of each already-taken tier, permanently unlevelable.  Under the same
+-- arithmetic there is no 20th ability point, so they are never dequeued and the
+-- `botLevel > 25` escape never has to fire.  Recorded because "the tail is dead
+-- weight" and "the tail jams the queue" are different claims and only the first
+-- one is true.
+
+tests['[hero] the t20 and t25 picks are queued as the 18th and 19th ability points'] = function()
+    with_skill_lib('axe', function(J)
+        local abilities = { 'A1', 'A2', 'A3', 'A4', 'A5', 'A6' }
+        local build = { 2, 3, 1, 3, 3, 6, 3, 2, 2, 2, 6, 1, 1, 1, 6 }  -- hero_axe.lua's own row
+        local talents = { 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8' }
+        local picks = J.Skill.GetTalentBuild(talent_rows('axe'))
+        local list = J.Skill.GetSkillList(abilities, build, talents, picks)
+
+        local at = {}
+        for pos, name in ipairs(list) do
+            if name:match('^T%d$') then at[#at + 1] = pos end
+        end
+        assert(table.concat(at, ',') == '10,15,18,19,20,21,22,23',
+            'talents are queued at list positions {' .. table.concat(at, ',')
+            .. '}, not {10,15,18,19,20,21,22,23}. A list position is the Nth '
+            .. 'ability point spent, and the whole reason the t20/t25 picks are '
+            .. 'safe at 18 and 19 is that a hero has spent exactly 17 points by '
+            .. 'the time it can take a t20 talent. Re-read section 6 before '
+            .. 'accepting a new layout: the consumer takes the head of this queue '
+            .. 'and will not skip an entry it cannot level below level 26.')
+
+        -- Which PICK sits at 18/19, not merely that something does. Asserting the
+        -- positions alone would survive a GetTalentBuild that returned its four
+        -- tier picks in any order.
+        assert(list[18] == talents[picks[3]] and list[19] == talents[picks[4]],
+            'the entries at positions 18 and 19 are ' .. tostring(list[18]) .. '/'
+            .. tostring(list[19]) .. ', not the t20 and t25 picks ('
+            .. tostring(talents[picks[3]]) .. '/' .. tostring(talents[picks[4]])
+            .. '). The tier order in the queue is what makes "position 18 = level 20" '
+            .. 'a statement about t20 at all.')
+    end)
+end
+
+tests['[hero] the level-up consumer still cannot skip a head it fails to level'] = function()
+    local src = read_file('bots/ability_item_usage_generic.lua')
+    assert(src:find('if botLevel > 25 then', 1, true),
+        'ability_item_usage_generic.lua no longer guards its only unlevelable-head '
+        .. 'escape on `botLevel > 25`. Section 6 argues that the t20/t25 picks are '
+        .. 'safe at queue positions 18/19 GIVEN that a stalled head is expensive; '
+        .. 'if the consumer learned to skip, that argument is about a cost that no '
+        .. 'longer exists and section 6 should be re-read, not deleted.')
 end
 
 return tests
