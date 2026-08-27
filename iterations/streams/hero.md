@@ -22,6 +22,57 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-27. ~~**`TALENTPRICE` 第五轮(收官):skeleton_king 的 t20/t25 —— 两行都留;而产出是「那道 FACET 门根本不存在」(GH #255)**~~
+   **2026-08-27T16:51Z done —— `bots/` **零可执行行改动**(hero 文件只改注释);无新 gate id;
+   `state.json` 新增 `wkt20t25_20260827`(`gated:false`);零 AWS;不申请入集;
+   条件 (a) 骑已 pending 的 `hero-19`,**另提 `hero-20`**(归档扫描,零 EC2)。
+   **棒 ② 到此 CLOSED**(lion → axe → zuus → crystal_maiden → skeleton_king)。**
+   - **入口是本组 13:55Z 自己交出的棒 ②**,章程写明 skeleton_king 最后 —— 因为他的 t20/t25 备选
+     ([2] / [6])是 **FACET 行**,而 `hero_skeleton_king.lua` **把一句拒绝写进了源码**:
+     「本仓没有任何东西读得到游戏 roll 了哪个 facet —— **先把这个了结再定价**」。
+   - **⭐ 问的是一个英雄,答出来的是整张表。** 新工具 `tools/agent/facet_census.py` 从
+     `npc_heroes.txt`(取天赋槽序用的**同一个文件**)读 `Facets` 块:**129 个英雄、339 条 facet 条目里,
+     0 条**点到 `special_bonus_*` 或天赋槽区间 `AbilityIndex 10..17` —— facet 块里只有
+     `Icon/Color/GradientID/Deprecated` 加一个**授予技能**的子块(有活 facet 的英雄也一样)。
+     ⇒ **任何 facet 都动不了任何英雄的天赋槽**,这道门对整条轴从来没关过,**前四轮回溯地也不欠它**。
+     每英雄那半:**WK 恰好两条 facet,两条都 `Deprecated true`**;Axe 2 / Zeus 2 / Lion 2 / CM 4
+     **全 Deprecated** ⇒ **焦点五加起来零条活 facet**。
+   - **⭐ 那两条废弃 facet 是两条已记录事实的机制,不是杂物**:`..._facet_bone_guard` 授予
+     `skeleton_king_bone_guard` ⇒ **这就是骨盾今天是朴素 `Ability2` 的原因**;`..._facet_cursed_blade`
+     授予 `skeleton_king_spectral_blade` ⇒ **「那个名字每次加载解析成 nil」从观察升格成原因**。
+     **对定价的后果**:[2]/[6] 各有一半落在 spectral_blade 上 ⇒ **那一半是死的**,活的恰好是
+     `blast_dot_duration +2` 与 `min_skeleton_spawn +5`,**只给这两半定价**。
+   - **⭐ t20 留 [6],焦点五里最强的一个「留」**:[6] 是**这棵树上唯一一个决策层读得到的天赋** ——
+     `talent6:IsTrained()` 是 `X.ConsiderW` **两条分支上的 OR 旁路**,旁路掉的正是本文件 GH #17 块
+     自己论证「几乎够不着」的弹药阈值(level 7 上限就顶到 8,而批测读他 **15 补刀 / 0.6 人头**)。
+     点 [6] = 骨盾从「等填满」变成「**按 42s 平 CD 放、保底 5 只**」。挪到 [5](纯 +50 攻速)
+     **会把那句谓词全局冻成 false** —— Lion GH #166 的形状,**且这里还多赔上修复本身**。
+   - **⭐ t25 留 [7],两边都对决策层隐形 ⇒ 体量说了算**,三条同向:(i) **量子化** —— [7] 是速率
+     (**+66.7% 暴击频率**,每次挥手都付),[8] 是事件(要死一次、900 内有敌人、rank3 **120s** CD),
+     而 t25 的窗口**开在一局 turbo 的最后几分钟**(GH #235 那枚帧:24.9 分钟局、23:02、26 级)
+     ⇒ **[8] 期望赔付 ≤1、很容易是 0**;(ii) **看净不看毛** —— [8] **不是加是换**,顶掉出厂的
+     600 内 4s/-75% 减速,而 `reincarnate_time = 3` ⇒ **1.6s 晕在他还站不起来时就过期了(早 1.4s)**,
+     被顶掉的减速**在他落地那刻还剩 1 秒**;(iii) 出装花在 [7] 的轴上(唯一伤害技能就是致命一击)——
+     **这正是 Axe t20 那轮反向得出的那半论证,尺子相同、英雄不同**。
+   - **⭐ 顺手拓宽(未取)**:`ConsiderQ` 的 `nDamage` 硬编码**从 10 级起就陈旧**,不只是标度错 ——
+     出厂 t10 取 [2] = `blast_dot_duration +2`,而 `blast_dot_damage` 是**每秒** ⇒ **dot 翻倍**,
+     诚实值 120/180/240/300 → **160/260/360/460**,方向是「以为杀不掉」。
+   - **⭐ 本轮自己踩住的坑(近失,方向最危险)**:census 的英雄头正则**第一版漏了 `re.M`**,
+     零个英雄匹配,于是打印 `focus five with a LIVE facet: none` —— **和正确运行的最后一行一模一样**。
+     **一次读到零的解析,和结论达成了一致。** 修法两道:工具 `MIN_HEROES` **拒绝出报告**、
+     测试 §0 断言 `facet_entries > 200`。**变异 10 条:9 抓 + 1 对照。**
+   - **诚实边界**:**本仓没有一枚 25 级 WK 帧**,窗口长度由**一局** post-cap 局推得(测试不断言窗口);
+     「重生触发时 900 内有几个敌人」**没人量过** —— 那个数高则 [8] 变好,应重新定价;
+     **唯一源 + 明显的第二意见是陷阱** —— Valve 的 `datafeed/herodata` 对**每个**英雄都答
+     `facets: []`(7/7,含 Bristleback,而它 KV 里确有 facet 机制)⇒ **用它读 WK 会对得起结论、错在理由**;
+     **「facet 到处都死了」是假的** —— 32 条活 facet 分布在 12 个英雄上。
+   - **下一棒**:**棒 ② CLOSED,棒 ③(`tests/` 等级前提登记表,9 个文件)仍未动**。**交出去三棒**:
+     `hero-19` 的 WK 那一格(骑已 pending 的请求)、**已提的 `hero-20`「重生触发频率 + 触发帧 900/600 内敌人数分布」**
+     (唯一能诚实重开 t25 的读数)、`ConsiderQ` `nDamage` 修复(与 Axe `hero-2`、CM `ConsiderW` 同族)。
+   - **可复用判据**:12 个活 facet 英雄里 **Lich / Tidehunter / Witch Doctor 在候选英雄池里** ——
+     它们进焦点五那天**只继承全局那半(槽位不变),不继承每英雄那半**,而且活 facet 还能经
+     `required_facet` 卡天赋**取值**(`special_value_key_census.py` 的地盘)。**已写成断言不是散文。**
+
 -26. ~~**`TALENTPRICE` 第四轮:Crystal Maiden 的 t20/t25 第一次定价 —— 棒 ② 里第一次两行都翻(GH #251)**~~
    **2026-08-27T13:55Z done —— `bots/` 可执行行改动 = 两个 table 字面量(t20 `{10,0}`→`{0,10}`、
    t25 `{0,10}`→`{10,0}`);天赋行 ⇒ **真行为改动、不 gate**;无新 gate id;`state.json` 新增
@@ -1909,6 +1960,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-27T16:51Z(报告 `iterations/reports/hero/20260827T165139Z.md`;**GH #255**;
+  **棒 ② 的第五个也是最后一个英雄 skeleton_king**,轴仍是 **`TALENTPRICE`**;**棒 ② 到此 CLOSED**)
+  —— 自检 **worst exit 3**:UNLANDED 0、两条稳定版锚点 ok、py **44/0**、Lua 快速检测器 **12** 文件
+  0 失败、待裁 queue 请求 0(open 36);cadence 洞只有 **replay-check(6.1h)**,**本组无洞**;
+  owner 四条优先项**没有一条球在本组**。开着的 `[hero]` issue 里带帧证据的仍是 **#245/#244(OD)**,
+  不在焦点五 ⇒ 按章程继续棒 ②。
+  **本轮 `bots/` 零可执行行改动**(`hero_skeleton_king.lua` 只改注释);**两行天赋都留**
+  (t20 `{10,0}`=[6]、t25 `{0,10}`=[7]);无新 gate id;`state.json` 新增
+  `wkt20t25_20260827`(`gated:false`);**零 AWS**;不申请入集;条件 (a) 骑已 pending 的 `hero-19`,
+  **另提 `hero-20`**(归档扫描,零 EC2 —— 买的是唯一能诚实重开 t25 的读数,不是 (a))。
+  - **⭐ 本轮真正的产出不是定价,是拆掉一道写进源码的门。** `hero_skeleton_king.lua` 里那句
+    「两个备选都是 FACET 行,本仓读不到 roll 了哪个 facet —— **先了结再定价**」是**有道理的**:
+    `GetTalentList` 走**运行时**槽位,而这个文件把 `sTalentList[6]` 绑成 `talent6` 并在
+    `X.ConsiderW` **两条分支各读一次**;槽位若随 facet 变,**同一句谓词在不同局里谈不同天赋**。
+  - **⭐ 答案比问题大一圈:129 英雄 / 339 条 facet 条目里 0 条点到天赋行**
+    (`special_bonus_*` 或 `AbilityIndex 10..17`)⇒ **任何 facet 都动不了任何英雄的天赋槽**,
+    **这道门对整条轴从来没关过,前四轮回溯地也不欠它**。每英雄那半:**WK 两条 facet 全 `Deprecated`**,
+    Axe 2 / Zeus 2 / Lion 2 / CM 4 **也全 Deprecated** ⇒ **焦点五零条活 facet**。
+    工具 `tools/agent/facet_census.py` + 快照 `tests/mock/hero_facets.lua` + 13 条断言
+    `tests/test_wk_facet_settlement.lua`。
+  - **⭐ 两条废弃 facet 补上了两条机制**:一条曾授予 `skeleton_king_bone_guard`(**骨盾今天是朴素
+    `Ability2` 的原因**),一条曾授予 `skeleton_king_spectral_blade`(**「那名字每次解析成 nil」从观察
+    升格成原因**)。**定价后果**:[2]/[6] 各有一半落在 spectral_blade 上 ⇒ **死的**,活的只有
+    `blast_dot_duration +2` 与 `min_skeleton_spawn +5`。
+  - **⭐ t20 留 [6]** —— **这棵树上唯一一个决策层读得到的天赋**,`talent6:IsTrained()` 旁路的正是
+    本文件 GH #17 块自己论证「几乎够不着」的弹药阈值;挪到 [5] **会把那句谓词全局冻成 false**
+    (Lion GH #166 的形状),**且多赔上修复本身**。
+  - **⭐ t25 留 [7]** —— 两边都对决策层隐形 ⇒ 体量说了算:[7] 是**速率**(+66.7% 暴击频率),
+    [8] 是**事件**(要死一次 + 900 内有敌人 + 120s CD)而 t25 窗口**开在一局的最后几分钟**;
+    且 [8] **不是加是换**,顶掉出厂 4s/-75% 减速,而 `reincarnate_time = 3` ⇒
+    **1.6s 晕早 1.4s 就过期了**。
+  - **⭐ 近失(方向最危险)**:census 正则**漏 `re.M`** ⇒ 零个英雄匹配 ⇒ 打印的最后一行
+    **和正确运行一模一样**(`focus five with a LIVE facet: none`)。**读到零的解析与结论达成一致。**
+    修法:工具 `MIN_HEROES` **拒绝出报告** + 测试 §0 反真空。**变异 10:9 抓 + 1 对照。**
+  - **下一棒**:**棒 ③(`tests/` 等级前提登记表,9 个文件)仍未动**;交出去三棒 —— `hero-19` 的
+    WK 那一格(骑已 pending)、**新测量「重生触发时 900 内敌人数分布」**(唯一能诚实重开 t25 的读数)、
+    `ConsiderQ` `nDamage` 修复(本轮查明**从 10 级起**陈旧,与 Axe `hero-2`、CM `ConsiderW` 同族)。
 - 2026-08-27T13:55Z(报告 `iterations/reports/hero/20260827T135500Z.md`;**GH #251**;
   **棒 ② 的第四个英雄 crystal_maiden**,轴仍是 **`TALENTPRICE`**)—— 自检 **worst exit 3**:
   UNLANDED 0、两条稳定版锚点 ok、py **43/0**、Lua 快速检测器 **12** 文件 0 失败、待裁 queue 请求 0

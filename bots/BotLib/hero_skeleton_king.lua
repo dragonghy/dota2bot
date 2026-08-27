@@ -284,9 +284,109 @@ the t10 and t15 picks can ever be taken in turbo: the level census behind GH #84
 read level >= 20 on 0 of 210 hero-slots, high-water 19".  CORRECTED 2026-08-27:
 that zero was the batch harness's 10-minute economy cap, not turbo.  Owner
 priority P3 (GH #108) removed the cap and the first frame past it has Wraith King
-himself at level 26 in a 24.9-minute naturally-ended game (GH #235).  Note both
-of his t20/t25 alternatives at [2] and [6] are FACET rows, and nothing in this
-repo reads which facet the game rolled -- settle that before pricing the pair.
+himself at level 26 in a 24.9-minute naturally-ended game (GH #235).
+
+THE FACET BLOCKER, SETTLED 2026-08-27 -- IT WAS NEVER A BLOCKER
+---------------------------------------------------------------
+This block used to end "both of his t20/t25 alternatives at [2] and [6] are
+FACET rows, and nothing in this repo reads which facet the game rolled -- settle
+that before pricing the pair".  Settled, and with a stronger answer than the
+question asked for.  tools/agent/facet_census.py reads the `Facets` block out of
+the same npc_heroes.txt this project already takes slot order from:
+
+  * ROSTER-WIDE, 0 of 339 facet entries name a `special_bonus_*` row or an
+    AbilityIndex inside the talent run (10..17).  A facet block carries Icon /
+    Color / GradientID / Deprecated and, at most, an `Abilities` sub-block that
+    GRANTS an ability.  No facet can move a talent slot for ANY hero, so a
+    t20/t25 price is never an argument about a row the game might not ship --
+    for Wraith King or for the other four.
+  * WRAITH KING has exactly two facet entries and BOTH read `"Deprecated" "true"`,
+    i.e. neither can be rolled.  So do all of Axe's (2), Zeus's (2), Lion's (2)
+    and Crystal Maiden's (4): the focus five have ZERO live facets between them.
+  * The two names are not decoration.  `skeleton_king_facet_bone_guard` granted
+    `skeleton_king_bone_guard` at AbilityIndex 1 -- which is WHY Bone Guard is a
+    plain "Ability2" on this hero today.  `skeleton_king_facet_cursed_blade`
+    granted `skeleton_king_spectral_blade` -- which is the MECHANISM behind the
+    fact recorded at abilityW below as an observation only ("a name that exists
+    nowhere in the game's ability set"): the only thing that ever granted it is
+    deprecated.  The `_facet_1` / `_facet_3` in the talent names is vestige from
+    that era, not a live condition.
+  * CONSEQUENCE FOR THE PRICE: half of what the KV says [2] and [6] do lands on
+    `skeleton_king_spectral_blade` (cursed_damage_pct +15 and curse_cooldown -25%)
+    and is therefore DEAD.  What survives is exactly `blast_dot_duration +2` for
+    [2] and `min_skeleton_spawn +5` for [6] -- price those halves and nothing else.
+
+Two things that are NOT proved here, kept apart because conflating them is how
+this would go wrong: (i) a facet can still gate a talent's VALUE through
+`required_facet` inside AbilityValues -- this hero has one such key
+(reincarnation/clear_curse, required_facet skeleton_king_facet_cursed_blade,
+i.e. also dead) but that is special_value_key_census.py's ground; (ii) "facets
+are dead everywhere now" is FALSE -- 32 entries across 12 heroes are live, and
+three of them (Lich, Tidehunter, Witch Doctor) sit in this project's candidate
+hero pool, so the day one of those joins the focus five its talent pricing has
+to ask this question again.  tests/test_wk_facet_settlement.lua and
+tests/mock/hero_facets.lua.
+
+⚠️ ONE SOURCE ONLY, AND THE OBVIOUS SECOND OPINION IS A TRAP.  Valve's
+datafeed/herodata endpoint answers `facets: []` and `facet_abilities: []` for
+EVERY hero queried (7 of 7 on 2026-08-27, this hero and Bristleback included) --
+and Bristleback demonstrably has facet machinery in the KV.  Reading WK's empty
+array there as "he has no facets" would have produced the right conclusion for
+the wrong reason, and the same read would have "proved" it for heroes where it
+is false.  The KV is the source; the feed is not a second opinion about facets.
+
+THE PRICE, 2026-08-27 -- BOTH ROWS STAY (t20 [6], t25 [7]), argued not assumed
+------------------------------------------------------------------------------
+t20 KEEPS [6] on the REACHABILITY ruler, and it is the strongest case in the
+focus five for keeping a row: [6] is the ONLY talent in this hero's tree that
+the shipped decision layer reads.  `talent6:IsTrained()` is the OR-bypass on
+both branches of X.ConsiderW, and what it bypasses is the bank threshold this
+file's own GH #17 block argues is close to unreachable (cap 8 by hero level 7,
+on the hero the batch reads at 15 last hits and 0.6 kills a game).  Taking [6]
+turns Bone Guard from "fires when a bank he struggles to fill is full" into
+"fires on its flat 42s cooldown with at least five skeletons guaranteed"
+(min_skeleton_spawn 0 -> 5).  The alternative [5] is `special_bonus_attack_speed_50`,
+a pure stat block with no decision-layer contact at all -- and moving the row to
+it would FREEZE `talent6:IsTrained()` false forever, killing the only place a
+talent changes a command in this file.  That is the Lion GH #166 hazard and the
+one Zeus's t25 round refused for the same reason; here it would also throw away
+the fix, not just the wiring.
+
+t25 KEEPS [7] (`..._wraith_king_10`, Mortal Strike AbilityCooldown 5 -> 3) over
+[8] (`..._wraith_king_4`, Reincarnation casts Wraithfire Blast instead of the
+slow).  Neither is read by any decision layer here and neither can create a
+stale reading -- [7] folds into an AbilityCooldown nothing in this file reads,
+[8] into `reincarnation/trigger_wraithfire_blast`, a key with no reader in the
+repo -- so unlike t20 this is a pure combat-power question and size decides it.
+Three things decide it the same way:
+  * QUANTIZATION.  [7] is a RATE: +66.7% crit frequency (crit_mult 280% at rank
+    4, and the shipped row maxes Mortal Strike by hero level 8), paid on every
+    attack for the rest of the game.  [8] is an EVENT: it needs Wraith King to
+    die with enemies inside 900 and Reincarnation off a 120s rank-3 cooldown.
+    t25 is reached in the last minutes of a turbo game -- the post-cap frame that
+    reopened this whole axis has him at 26 at 23:02 of a 24.9-minute game -- so
+    [8]'s expected number of payouts in the window it lives in is at or below
+    ONE, and can easily be zero, while [7] pays out on every swing in it.
+  * NET, NOT GROSS.  [8] does not ADD its effect, it REPLACES one: the shipped
+    Reincarnation already slows everything within slow_radius 600 by -75% move
+    and -75 attack for 4s.  What [8] buys is the DIFFERENCE between that and a
+    rank-4 blast (1.6s stun, 140 + 2s x 80 dot, -20% slow, 900 radius) -- and
+    reincarnate_time is 3, so the 1.6s stun has expired 1.4s BEFORE he is back
+    on his feet, whereas the 4s slow it replaces still has a second left at that
+    instant.  A stun that ends while its owner is still un-attackable is worth
+    less to a bot than the chase-denial it displaced.
+  * THE BUILD SPENDS ON [7]'S AXIS.  This is a pos_1/pos_3 right-click hero
+    whose only damage ability IS Mortal Strike; the crit compounds with every
+    damage and attack-speed item in sRoleItemsBuyList.  This is the half of
+    Axe's t20 argument that came out the OTHER way there (his role lists buy no
+    attack items, so his +attack-damage row did not compound); the ruler is the
+    same, the hero is not.
+HONEST BOUNDS on the t25 half: no frame in this repo shows a Wraith King at 25,
+so the window length is inferred from ONE post-cap game (GH #235), and "how
+often does Reincarnation trigger with enemies inside 900" is a corpus question
+nobody has asked -- if that number turns out high, [8]'s case improves and this
+row should be re-priced.  Nothing here is gated, so both rows are live in every
+turbo game that reaches the level; keeping them is a decision, not an omission.
 
 modifier_skeleton_king_bone_guard                 -- stack count = charges held
 modifier_skeleton_king_hellfire_blast
@@ -304,6 +404,12 @@ local abilityQ = bot:GetAbilityByName('skeleton_king_hellfire_blast')
 -- Was seeded with 'skeleton_king_spectral_blade', a name that exists nowhere in
 -- the game's ability set nor anywhere else in this repo, so it resolved to nil on
 -- every load and the whole W path rode on the SkillsComplement fallback below.
+-- MECHANISM found 2026-08-27: the name is real in npc_heroes.txt, but the only
+-- thing that ever granted it is the facet `skeleton_king_facet_cursed_blade`,
+-- and that facet reads "Deprecated" "true" -- so it is granted in no game.  See
+-- the facet settlement in the block above; this upgrades a recorded observation
+-- to a cause, and it is why no patch note is going to bring the name back on its
+-- own.
 -- Seeding it with the real name leaves that fallback in place and is a no-op for
 -- every read of abilityW (the fallback re-fetches the same handle).
 local abilityW = bot:GetAbilityByName('skeleton_king_bone_guard')
@@ -316,7 +422,12 @@ local abilityR = bot:GetAbilityByName('skeleton_king_reincarnation')
 -- no longer the whole condition.  What they mean now that they ARE live: index 6
 -- is "+5 Bone Guard Skeletons Spawned", a
 -- flat floor, so the bypass buys "release even on an empty bank" and that is
--- coherent, not a bug.  One residual is registered rather than settled -- if the
+-- coherent, not a bug.  (The KV gives that talent a second effect,
+-- spectral_blade/curse_cooldown -25%, and it is DEAD -- spectral_blade is granted
+-- only by a deprecated facet.  The flat floor is the whole of what slot 6 buys;
+-- see the facet settlement above.  Slot 6 is also facet-INVARIANT: no facet block
+-- in the game's roster names a talent row, so this handle binds the same talent in
+-- every game.)  One residual is registered rather than settled -- if the
 -- engine only carries modifier_skeleton_king_bone_guard while charges >= 1, the
 -- guard at the top of X.ConsiderW re-imposes the very ammunition test the bypass
 -- lifts.  tests/test_wk_bone_guard_talent_bypass.lua sections 1 and 5.
@@ -459,6 +570,18 @@ function X.ConsiderQ()
 	-- the honest number first, and that is not free either -- the cast also brings
 	-- a 1.0-1.6s stun and a -20% slow, which is exactly what decides whether the
 	-- target is still standing in the dot when it expires.
+	--
+	-- WIDENED 2026-08-27 (talent pricing round): the gap is not static, it OPENS
+	-- AT LEVEL 10.  The shipped t10 pick is slot [2] = ..._wraith_king_facet_1,
+	-- whose surviving half is blast_dot_duration +2 -- and because blast_dot_damage
+	-- is PER SECOND, doubling the duration 2 -> 4 doubles the dot: the honest
+	-- impact-plus-dot goes 120/180/240/300 -> 160/260/360/460.  The engine folds
+	-- that into the handle (GH #228) but this hardcode never asked the handle, so
+	-- from hero level 10 on the constant is stale in the "thinks it cannot kill"
+	-- direction as well as mis-scaled.  Whoever repairs it should read
+	-- blast_dot_damage x blast_dot_duration off abilityQ rather than re-typing a
+	-- second constant, which is the same repair Crystal Maiden's ConsiderW needs
+	-- (that one is exact only while no talent touches the duration).
 	local nDamage = 40 * ( nSkillLV - 1 ) + 100
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 
