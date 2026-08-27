@@ -322,11 +322,18 @@ function X.ConsiderDoubleEdge()
         and bot:GetHealth() > nDamage * 1.5
         and (bot:GetHealth() - nDamage) / bot:GetMaxHealth() > 0.3
         then
+            -- [GH #259] Soak candidate 'abil1st' (see J.GetFirstUnit): unarmed
+            -- this is nNeutralCreeps[1], and the nil answer subsumes both of
+            -- the guards it replaces. The shipped health clause is NOT the
+            -- tier clause it looks like -- an ancient is exactly the unit that
+            -- is always above 0.33 -- so a self-damage nuke landed on one at
+            -- level 11 passes it every time.
             local nNeutralCreeps = bot:GetNearbyNeutralCreeps(nCastRange * 2)
-            if nNeutralCreeps ~= nil and #nNeutralCreeps >= 1
-            and J.GetHP(nNeutralCreeps[1]) > 0.33
+            local hNeutralTarget = J.GetFirstUnit(nNeutralCreeps)
+            if hNeutralTarget ~= nil
+            and J.GetHP(hNeutralTarget) > 0.33
             then
-                return BOT_ACTION_DESIRE_HIGH, nNeutralCreeps[1]
+                return BOT_ACTION_DESIRE_HIGH, hNeutralTarget
             end
 
             local nEnemyLaneCreeps = bot:GetNearbyLaneCreeps(nCastRange * 2, true)

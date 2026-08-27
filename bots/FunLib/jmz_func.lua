@@ -1834,7 +1834,12 @@ end
 -- already returns nil today).
 --
 -- WHAT IT DELIBERATELY DOES NOT COVER, so the next lever has a denominator:
--- the 54 sites that read `list[1]` and the 14 that take a CENTER of the sweep.
+-- the sites that read `list[1]` and the 14 that take a CENTER of the sweep.
+-- [GH #259] That denominator got its first frames and its first two members
+-- taken: hero_zuus.lua and hero_centaur.lua now read the sweep through
+-- J.GetFirstUnit under the SEPARATE id 'abil1st' (separate for the `pullcad`
+-- reason -- see that function). The count left is pinned in
+-- tests/test_abil1st_first_unit_reader.lua, not restated here.
 -- `[1]` is engine order, which MAY be an ancient but is not the ancient by
 -- construction, and the centre-of-mass reads are the "an ancient camp is worth
 -- an AoE" reasons GH #196 §3.2 explicitly asks not to touch.
@@ -1888,6 +1893,67 @@ function J.MostHpUnitOf( unitList, bStrictAncient )
 	end
 
 	return mostHpUnit
+
+end
+
+
+-- [GH #259] Soak candidate 'abil1st' (turbo-only). The SECOND population of the
+-- ability layer's ancient problem: the sites that read `unitList[1]` instead of
+-- asking a selector. 'abilanc' deliberately left them uncovered "so the next
+-- lever has a denominator" -- this is that lever, and the denominator produced
+-- its first frames in W17-R: 3 ancient casts below the tier, 3 of 3 from this
+-- population, two of them the same waste shape (two casts, camp not taken, walk
+-- away).
+--
+-- WHY IT IS A SECOND ID AND NOT A CONJUNCT OF 'abilanc'. The `pullcad` trap in
+-- AGENTS.md: `IsSoakCandidate('X') and IsSoakCandidate('abilanc')` freezes to
+-- FALSE the day 'abilanc' is promoted, because a promoted id appears in no
+-- armed string -- and check_armed_wiring.py still reports it WIRED. The two
+-- levers share a threshold and a rationale, nothing else; they arm and promote
+-- independently.
+--
+-- WHY `[1]` IS A DIFFERENT DEFECT FROM "most HP". `J.GetMostHpUnit` picks the
+-- ancient BY CONSTRUCTION (an ancient carries the most health on the field).
+-- `[1]` is engine order: it MAY be an ancient. That is why this gets its own
+-- id rather than a wider 'abilanc' -- the domain is empirical, not structural,
+-- and the two will not measure the same thing on any wave.
+--
+-- Threshold read from source, not restated: J.Site.ANCIENT_MIN_LEVEL, the same
+-- 12 'abilanc', the camp ladder and 'campfarm' use.
+--
+-- UNARMED THIS IS `unitList[1]`, down to the nil list. Armed and below the
+-- tier it is the first NON-ancient unit of the same sweep, or nil -- which is
+-- not a new outcome class, because `unitList[1]` is already nil for the empty
+-- sweep every call site can get today. The call sites therefore keep their own
+-- shape and only stop naming the raw `[1]`; see the two of them for the guard
+-- that stops a nil target being returned alongside a HIGH desire.
+--
+-- ORDER IS THE MECHANISM here, so the scan is ipairs, not the pairs used by
+-- the most-HP scan above: "the first" of an unordered walk is not a decision
+-- anyone can reproduce.
+function J.GetFirstUnit( unitList )
+
+	if unitList == nil then return nil end
+
+	local bStrictAncient = J.IsModeTurbo() and J.IsSoakCandidate( 'abil1st' )
+	if bStrictAncient
+	then
+		local hSelf = GetBot()
+		bStrictAncient = hSelf ~= nil
+			and hSelf:GetLevel() < J.Site.ANCIENT_MIN_LEVEL
+	end
+
+	if not bStrictAncient then return unitList[1] end
+
+	for _, unit in ipairs( unitList )
+	do
+		if unit ~= nil and not unit:IsAncientCreep()
+		then
+			return unit
+		end
+	end
+
+	return nil
 
 end
 

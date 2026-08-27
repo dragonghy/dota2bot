@@ -722,11 +722,19 @@ function X.ConsiderQ()
 	--Farming: use Arc Lightning on neutral/lane creeps
 	if J.IsFarming( bot ) and J.GetManaAfter( manaCost ) > 0.3
 	then
+		-- [GH #259] Soak candidate 'abil1st', resolved inside J.GetFirstUnit:
+		-- unarmed this IS nNeutralCreeps[1]. The added nil guard is what keeps
+		-- the second disjunct -- "there is one creep and it is an ANCIENT",
+		-- written here as a reason to fire and carrying no level clause of its
+		-- own -- from returning HIGH desire with no target once a below-tier
+		-- bot stops seeing the ancient as an answer.
 		local nNeutralCreeps = bot:GetNearbyNeutralCreeps( nCastRange )
-		if #nNeutralCreeps >= 2
-			or ( #nNeutralCreeps >= 1 and J.IsValid( nNeutralCreeps[1] ) and nNeutralCreeps[1]:IsAncientCreep() )
+		local hNeutralTarget = J.GetFirstUnit( nNeutralCreeps )
+		if hNeutralTarget ~= nil
+			and ( #nNeutralCreeps >= 2
+				or ( #nNeutralCreeps >= 1 and J.IsValid( nNeutralCreeps[1] ) and nNeutralCreeps[1]:IsAncientCreep() ) )
 		then
-			return BOT_ACTION_DESIRE_HIGH, nNeutralCreeps[1]
+			return BOT_ACTION_DESIRE_HIGH, hNeutralTarget
 		end
 		local nLaneCreeps = bot:GetNearbyLaneCreeps( nCastRange, true )
 		if #nLaneCreeps >= 3
