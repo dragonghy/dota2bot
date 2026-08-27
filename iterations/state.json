@@ -4249,5 +4249,15 @@
     "in_test_set": false,
     "next": "Baton 2 still owes zuus, crystal_maiden, then skeleton_king LAST (two of his rows are FACET rows and nothing in this tree reads which facet was rolled). Baton 3 (the tests/ level-premise registry, working down from 9 files) is untouched. Handed OUT this unit: a queue request for behavioural condition (a) on the t20 change -- an Axe that reaches level 20 in an uncapped turbo game, so the first in-domain Axe frame this repo has ever held can be read.",
     "report": "iterations/reports/hero/20260827T081500Z.md"
+  },
+  "campteam_SETTLED_20260827": {
+    "id": "campteam (premise, not a soak id)",
+    "status": "SETTLED 2026-08-27T10:1xZ (director) -- GetNeutralSpawners().team IS a team id comparable with GetTeam()",
+    "issue": "GH #241 (the .team half; the .type / .speed halves stay OPEN)",
+    "ruling": "test_set.md §BN.2",
+    "evidence": "Three steps, all from readings the lab already owned. (1) DOOR: J.ShouldPullNeutralCamp (jmz_func.lua:8248) admits a camp only on `camp.team == GetTeam()`, returns nil otherwise, and the pull behaviour in mode_roam_generic.lua:102 is reachable only through a non-nil return (no second `function` token between 8248 and 8397; the comment at :8503 says the same). (2) READING: test_set.md §AO.1 -- replay desk 2026-08-22T15:05Z, 283 scored games, --rec-slots 16 -- bought pullcamp's condition (a) EXECUTION: poke episodes armed 115 : baseline 11, drags 74 : 4, frame-level closure (witch_doctor aggroes at :13.5 and walks two neutrals 1375u home). GH #117 later measured the geometry of 165 more episodes. (3) ARITHMETIC: if camp.team never equalled GetTeam(), the loop selects nothing on every frame of BOTH legs, vCamp is always nil, and none of those readings can exist.",
+    "boundary": "Settles that OWN-side camps carry our team id. Does NOT settle that ENEMY-side camps carry the enemy id -- that is what campsel's 1.5x needs in order to be non-uniform, and it is still open.",
+    "consequences": "(i) GH #241 s5's cross-line to owner P1 is RETIRED: pullcamp is not constructively SILENT via camp.team, so P1's three root-cause candidates are not looking in the wrong place. (ii) GH #241 s2's 'campsel is the identity transform' no longer holds -- armed, IsEnemyCamp(rec) is a real predicate and own-side camps regain the 15000 reach the shipped wrapper collapsed to an effective 10000; the 04:05Z REFUSE now reads 'the reading is drowned by side bias', not 'it may be a no-op'. (iii) doc row upgraded to (settled) in docs/BOT_API_REFERENCE.md with which side moved: NEITHER -- the refuter was retired 08-27 by strategy, the assertion was confirmed by our own games.",
+    "method_note": "Before commissioning an online probe for a premise, ask whether some already-measured behaviour has that predicate on its path. A gate that produced a measurable behavioural difference between two legs has incidentally proven every predicate on its own path. test_set.md §BN.4."
   }
 }

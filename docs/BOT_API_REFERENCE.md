@@ -2,6 +2,20 @@
 
 > Comprehensive reference for the Valve bot scripting API used in custom lobby bot scripts. Detailed parameter descriptions, return value semantics, usage examples, and important caveats.
 > Ref: https://developer.valvesoftware.com/wiki/Dota_2_Workshop_Tools/Scripting/API
+
+> **Provenance banner (director, 2026-08-27, GH #241).** This file is a
+> *convenience* reference, not an observation record. Two facts about it were
+> measured on the `GetNeutralSpawners()` entry and apply to **every** entry
+> until an entry says otherwise: (1) the header ref above points at the
+> **server-vscript** API, which is a different API from bot scripting, and
+> Valve publishes no field list for at least some of the functions documented
+> here; (2) whole entries appear verbatim in an unrelated third-party repo
+> under this same filename, so this file and that one are **one lineage, not
+> two sources**. Consequence, and this is the rule: **a row here may be used
+> to describe intent, but it may not be used to REFUTE shipped code.** A field
+> type written here is evidence only if the row names the observation it came
+> from. Where a row has been settled from real play, it says so and cites the
+> reading.
 ---
 
 ## Table of Contents
@@ -646,10 +660,23 @@ spawners, and what side of the river they're on."* The table below is
 **what shipped code in this repo reads off the returned record**, not
 documented engine truth. See GH #241.
 
-- `team` (unverified): which team's jungle. Three shipped sites compare it
-  directly to `GetTeam()` (`aba_site.lua` `IsEnemyCamp`, `jmz_func.lua`'s
-  pull-camp filter, `hero_templar_assassin.lua`'s camp list), i.e. all three
-  assume a **team id**, not `TEAM_NEUTRAL`.
+- `team` (settled): which team's jungle, **as a value that compares equal to
+  `GetTeam()`** for a non-empty set of camps every game. Three shipped sites
+  compare it directly to `GetTeam()` (`aba_site.lua` `IsEnemyCamp`,
+  `jmz_func.lua`'s pull-camp filter, `hero_templar_assassin.lua`'s camp list).
+  **Settled 2026-08-27 (director) from play we already owned, not from a
+  document.** `J.ShouldPullNeutralCamp` returns `nil` unless some camp
+  satisfies `camp.team == GetTeam()`, and the pull behaviour in
+  `mode_roam_generic.lua` is reachable only through a non-`nil` return; the
+  replay desk measured that behaviour on 283 scored games as armed-only 115:11
+  poke episodes / 74:4 drags with frame-level closure (a witch doctor aggroing
+  at `:13.5` and walking two neutrals 1375u home), and GH #117 later measured
+  the geometry of 165 more. If `.team` never equalled `GetTeam()` that filter
+  would select nothing on every frame of both legs and none of those readings
+  could exist. Archive: `test_set.md` §BN, `state.json:campteam_SETTLED_20260827`.
+  **Boundary, do not over-read:** this settles that own-side camps carry our
+  team id. Whether enemy-side camps carry the *enemy* id (the thing that makes
+  `campsel`'s 1.5x non-uniform) is a separate question and is still open.
 - `type` (unverified): camp tier. Six shipped comparisons test it against the
   **strings** `"small"` / `"medium"` / `"large"` / `"ancient"`
   (`aba_site.lua` `IsAncientCamp` / `IsSmallCamp` / `IsMediumCamp` /
@@ -665,8 +692,9 @@ documented engine truth. See GH #241.
 - `min` (vector): spawn box minimum corner. No shipped reader.
 - `max` (vector): spawn box maximum corner. No shipped reader.
 
-> **UNVERIFIED -- the three `unverified` rows above are open questions, not
-> settled types (GH #241).**
+> **UNVERIFIED -- the rows still marked `unverified` above are open questions,
+> not settled types (GH #241).** (`team` is no longer one of them; see its row
+> and the closing paragraph.)
 > Until 2026-08-27 this entry declared `team` (int), `type` (int) and `speed`
 > (float), and was cited as *refuting* the shipped string comparisons -- i.e.
 > as evidence that soak candidates `campsel` and `pullcamp` are dead code.
@@ -690,6 +718,22 @@ documented engine truth. See GH #241.
 > here proves `.type` is a string.** Whoever settles this must do it from an
 > in-game observation (`print()` does not reach the server console -- it has
 > to be a behavioural probe) and record here which side moved.
+>
+> **Which side moved, for `team` (2026-08-27, director).** Neither side of the
+> original disagreement: the row was retired as a source on 08-27 (above), and
+> the code was confirmed by *play the lab already had on disk*. The probe this
+> paragraph used to ask for had in fact been run hundreds of times -- every
+> game in which `pullcamp` was armed is a behavioural probe of
+> `camp.team == GetTeam()`, because that predicate is the only door between
+> the armed gate and the pull, and the pull was measured on the far side of it.
+> The lesson worth carrying to `.type` and `.speed`: **before commissioning an
+> online probe, ask which shipped predicate is already load-bearing for a
+> behaviour someone has measured.** For `.type` today the answer is thin --
+> `RefreshCamp`'s tier chain pushes an identical wrapper down all four
+> branches, so it discriminates nothing, and the selector's ancient clause gets
+> the wrapper (dead) unless `campsel` is armed -- which leaves
+> `hero_templar_assassin.lua`'s small/medium exclusion as the one shipped,
+> ungated reader whose choices would show the answer.
 
 ### `GetIncomingTeleports()`
 
