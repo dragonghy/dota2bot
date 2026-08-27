@@ -8,9 +8,100 @@ local sTalentList = J.Skill.GetTalentList( bot )
 local sAbilityList = J.Skill.GetAbilityList( bot )
 local sRole = J.Item.GetRoleItemsBuyList( bot )
 
+-- [hero] TALENTPRICE -- Crystal Maiden's t20 and t25, priced for the first time
+-- 2026-08-27 (baton 2 of GH #238 section 6; lion -> axe -> zuus -> here).  Both
+-- rows were OpenHyperAI snapshot defaults, pinned but never argued.  BOTH MOVE,
+-- and they move for two different reasons -- one is reachability, one is a
+-- stale reading this file already carries today.  Talent rows are not gated, so
+-- these are live in every turbo game that reaches 20 / 25 (GH #235: heroes read
+-- 22-27 once owner priority P3 lifted the 10-minute cap; CM herself reads 22 on
+-- that frame).
+--
+-- t20 {10,0} -> {0,10}: sTalentList[5]
+--   `special_bonus_unique_crystal_maiden_glacial_guard_mana_multiplier`
+--   (+20 on Glacial Guard's mana-to-barrier percentage) INSTEAD OF [6]
+--   `special_bonus_unique_crystal_maiden_3` (+50 Freezing Field damage).
+--
+--   Priced on PAYOFF REACHABILITY -- the same ruler that decided t10 and t15.
+--   [6] is denominated in CHANNEL-SECONDS HELD: it pays +50 per Freezing Field
+--   explosion and stops paying the instant the channel breaks.  This file's own
+--   pinned frames are what that costs.  20260819_003005_slot1 t=373.4: she was
+--   stunned 0.6s into a 10s channel -- 6% of its maximum -- and died 5.9s later
+--   (X.nRGuardCloseBuffer's block below).  20260820_103216_slot1 t=473.5: she
+--   opened at 26% health while carrying a stun, and was dead 1.0s later
+--   (X.nRSelfHpFloor's block).  The three candidates that would guard the
+--   opening -- 'cmrguard', 'cmrcap', 'cmrself' -- are all still SOAK CANDIDATES,
+--   so the SHIPPED default opens Freezing Field in exactly those situations.
+--   Buying more damage per explosion is buying a multiplier on a quantity this
+--   desk has never once measured as large.
+--
+--   [5] is denominated in MANA SPENT ON ABILITIES: "a portion of the mana
+--   Crystal Maiden spends on her abilities is converted into a physical
+--   barrier" (Valve's own tooltip, abilities_english.txt, read 2026-08-27),
+--   barrier_duration 8, mana_multiplier 30 with hero_levelup +2 -- about 70% at
+--   level 20, which the talent takes to 90%, i.e. +20 barrier per 100 mana
+--   spent, ~+29% more barrier than the row buys today.  There is no cast to
+--   land, no channel to hold, no aim: she pays it on every Nova and every
+--   Frostbite, wave-clear casts included.  And it pays out ON the very action
+--   [6] is betting on -- Freezing Field costs 600 mana at rank 3, so opening the
+--   channel is itself worth +120 barrier at the moment she is rooted and focused.
+--
+--   AFFORDABLE FOR THE SAME REASON AXE'S t20 WAS: the flip is inert to the
+--   decision layer, so it can only move combat power.  Nothing in this file
+--   reads `crystal_maiden_freezing_field/damage` (X.ConsiderR sizes itself off
+--   GetOffensivePower), and nothing holds a handle on the innate at all -- it is
+--   hidden on 51 of 51 corpus frames and dropped from sAbilityList before this
+--   file ever sees it (GH #206).  Neither direction can create a stale read.
+--
+--   External corroboration, weakest ground and listed last: Valve's own default
+--   bot build for this hero takes [5] at 20 (npc_heroes.txt, "Bot"/"Build",
+--   entry "20").  It disagrees with us at t10, which is why it is not the
+--   argument.
+--
+--   HONEST BOUNDS.  (i) The channel evidence is n=2, both from the 10-minute
+--   capped corpus and both below level 20, so it bounds the SHAPE of [6]'s
+--   payoff (channels get cut), not its rate at 20+.  (ii) The barrier is
+--   PHYSICAL only -- it does nothing against the magical burst that also kills
+--   her.  (iii) Whether `hero_levelup +2` counts from level 0 or 1 moves the
+--   ~70% by 2 points; the ratio the decision rests on does not move.  (iv) All
+--   four entries in this hero's "Facets" block read Deprecated -- which is WHY
+--   Glacial Guard is a plain `"Innate" "1"` ability today.  If a patch
+--   re-attaches it to a facet, this row becomes facet-conditional and must be
+--   re-priced (the family skeleton_king's two rows are already in).
+--
+-- t25 {0,10} -> {10,0}: sTalentList[8]
+--   `special_bonus_unique_crystal_maiden_2` (+300 Crystal Nova damage) INSTEAD
+--   OF [7] `special_bonus_unique_crystal_maiden_1` (+1.0s Frostbite duration).
+--
+--   This one is a DECISION-LAYER ruling, not a magnitude call, and the row
+--   shipped today is the wrong half of it.  X.ConsiderW reconstructs Frostbite's
+--   damage by hand: `nDamage = ( 100 + nSkillLV * 50 )`, which is exactly
+--   damage_per_second 100 x duration 1.5/2/2.5/3 = 150/200/250/300 -- correct at
+--   all four ranks, and correct only while no talent touches the duration.  [7]
+--   takes rank 4 to 4.0s, i.e. 400 real damage against a kill-check that still
+--   says 300: a live 25% UNDERESTIMATE from level 25 on, in the "thinks it
+--   cannot kill" direction, in every turbo game that gets there.  Taking [8]
+--   REMOVES that band rather than creating one -- the twin of Axe's t25, where
+--   the same shape argued for keeping the row where it was.
+--
+--   [8] lands on `crystal_maiden_crystal_nova/nova_damage`, and X.ConsiderQImpl
+--   reads that key LIVE (`abilityQ:GetSpecialValueInt('nova_damage')`) before
+--   handing it to bot:FindAoELocation for both the hero-kill and the creep-kill
+--   search.  The engine folds a trained talent into the base read (GH #228), so
+--   the bot hits for 560 instead of 260 AND KNOWS IT: the kill branch fires at
+--   the enlarged threshold with no code change anywhere.
+--
+--   WHAT IS GIVEN UP, written down rather than left as a surprise: one extra
+--   second of a single-target root, which is real teamfight value the engine
+--   would have applied for free and this file does not measure.  The trade is
+--   taken because +115% on the nuke the decision layer already reads beats +33%
+--   on a duration it cannot see, not because the root is worthless.
+--
+-- Both rows, the arithmetic behind them, and the conditions that reopen them:
+-- tests/test_cm_t20t25_payoff.lua; the ladder record: tests/test_focus_talent_anchor.lua.
 local tTalentTreeList = {
-						['t25'] = {0, 10},
-						['t20'] = {10, 0},
+						['t25'] = {10, 0},
+						['t20'] = {0, 10},
 						['t15'] = {0, 10},
 						['t10'] = {0, 10},
 }

@@ -151,12 +151,45 @@ local FOCUS = {
             'special_bonus_unique_crystal_maiden_1',
             'special_bonus_unique_crystal_maiden_2',
         },
-        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
-        -- [6] +50 Freezing Field damage over [5] +20% Glacial Guard mana-to-
-        -- barrier, and [7] +1.0s Frostbite duration over [8] +300 Crystal Nova
-        -- damage. Upstream defaults, never argued here. Crystal Maiden is the
-        -- focus hero the counter-example frame actually carries at level 22
-        -- (pending fixture, 23:02), so this is not a hypothetical tier for her.
+        -- t20/t25 RECORDED 2026-08-27 (first pin, both unpriced), then PRICED
+        -- later the same day -- baton 2 of GH #238 section 6, fourth hero, and
+        -- the FIRST round in which BOTH rows move. They move for two different
+        -- reasons, which is why they can move together: one is a reachability
+        -- call that is inert to the decision layer, the other repairs a stale
+        -- reading this file carries today. Crystal Maiden is the focus hero the
+        -- counter-example frame actually carries at level 22 (pending fixture,
+        -- 23:02), so this is not a hypothetical tier for her.
+        --
+        -- t20 CHANGED, [6] -> [5]: +20 Glacial Guard mana-to-barrier instead of
+        -- +50 Freezing Field damage. On payoff REACHABILITY -- the ruler that
+        -- decided t10 and t15 -- [6] is denominated in CHANNEL-SECONDS HELD, and
+        -- the only two Freezing Field channels this repo has ever read frame by
+        -- frame were cut at 6% of maximum (stunned 0.6s in, dead 5.9s later) and
+        -- at ~10% (opened at 26% hp carrying a stun, dead 1.0s later) -- both
+        -- pinned in hero_crystal_maiden.lua's own guard blocks, whose three
+        -- candidates ('cmrguard', 'cmrcap', 'cmrself') are all still soak
+        -- candidates, so the SHIPPED default opens the channel exactly there.
+        -- [5] is denominated in mana spent on abilities ("a portion of the mana
+        -- Crystal Maiden spends on her abilities is converted into a physical
+        -- barrier", Valve's tooltip): ~70% -> 90% at level 20, no cast to land,
+        -- no channel to hold, and it pays out ON the 600-mana Freezing Field too.
+        -- Affordable for Axe's t20 reason: nothing here reads freezing_field's
+        -- damage and nothing holds a handle on the innate (hidden on 51/51
+        -- frames, GH #206), so the flip can only move combat power.
+        --
+        -- t25 CHANGED, [7] -> [8]: +300 Crystal Nova damage instead of +1.0s
+        -- Frostbite duration -- a decision-layer ruling, and the twin of Axe's
+        -- t25 with the sign reversed. X.ConsiderW hardcodes Frostbite's damage
+        -- as `100 + nSkillLV * 50` = 150/200/250/300, which is exactly dps 100 x
+        -- duration 1.5/2/2.5/3 -- correct, and correct only while no talent
+        -- touches the duration. [7] takes rank 4 to 4.0s = 400 real damage
+        -- against a kill-check still saying 300, so the shipped row carries a
+        -- live 25% underestimate from level 25 on ("thinks it cannot kill").
+        -- [8] lands on nova_damage, which X.ConsiderQImpl reads LIVE and feeds
+        -- to FindAoELocation, so the engine's fold (GH #228) reaches the
+        -- kill-check by itself: 260 -> 560 and the bot knows it.
+        -- Both rows, their arithmetic, and what reopens them:
+        -- tests/test_cm_t20t25_payoff.lua.
         -- t10 EXAMINED 2026-08-23 and deliberately NOT changed, so it is not
         -- re-litigated on taste: the +12 INT side has a real, measurable payoff
         -- (9 of 26 ready ability slots on in-domain frames are mana-blocked
@@ -167,7 +200,7 @@ local FOCUS = {
         -- evidence that would reopen it, and the honest bounds:
         -- tests/test_cm_t10_payoff.lua. t15 was decided in the same series
         -- (GH #122) and also holds.
-        expect = { t10 = 1, t15 = 3, t20 = 6, t25 = 7 },
+        expect = { t10 = 1, t15 = 3, t20 = 5, t25 = 8 },
     },
     zuus = {
         id = 22,
