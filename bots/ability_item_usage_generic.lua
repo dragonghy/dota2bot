@@ -8185,7 +8185,7 @@ X.ConsiderItemDesire["item_polliwog_charm"] = function( hItem )
 		and not allyHero:HasModifier("modifier_juggernaut_healing_ward_heal")
 		and not allyHero:HasModifier("modifier_juggernaut_healing_ward_heal")
 		and not allyHero:IsChanneling()
-		and (allyHero:GetMaxHealth() - allyHero:GetHealth() > 100)
+		and (J.PolliwogAllyMissingHealth( allyHero ) > 100)
 		then
 			if allyHero:GetHealth() < nNeedHealAllyHealth then
 				hNeedHealAlly = allyHero

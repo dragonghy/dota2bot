@@ -10793,6 +10793,58 @@ function J.ShouldYieldSalveToAlly( hBot, hAlly, bAllyBranchOpen )
 		and nAllyHealth * nBotMaxHealth < nBotHealth * nAllyMaxHealth
 end
 
+-- [GH #254] The polliwog charm's ally gate is the one health read in this
+-- family that goes through the OVERRIDDEN getters -- and that override is not
+-- one thing wearing one name, it is TWO.
+--
+-- bots/FunLib/aba_global_overrides.lua replaces CDOTA_Bot_Script:GetHealth with
+--   (a) a SENTINEL -- the literal 666 for any unit that cannot be seen -- and
+--   (b) a MODEL -- Medusa's health plus the damage her CURRENT MANA would
+--       absorb (mana * 2.6 * 0.95, the rate halved below level 12),
+-- and GetMaxHealth carries the same Medusa term over her MAX mana.
+-- OriginalGetHealth / OriginalGetMaxHealth are the un-overridden reads. Three
+-- of the four ally-selection considers in ability_item_usage_generic ask their
+-- question through the Original pair; the charm is the fourth.
+--
+-- WHICH HALF CAN REACH THIS LINE is answerable from the source, not from a
+-- corpus: the loop's first conjunct is J.IsValidHero, which routes to
+-- utils.IsValidUnit and requires CanBeSeen(). The 666 sentinel is therefore
+-- excluded before this read ever happens, and everything left is the Medusa
+-- model.
+--
+-- AND THE MEDUSA MODEL IS THE WRONG QUESTION FOR *THIS* CONJUNCT, by
+-- arithmetic rather than by taste. The gate asks how much health is missing;
+-- the charm restores HEALTH. Under the overridden pair the missing amount is
+--     (maxHealth - health) + (maxMana - mana) * k
+-- so an ally missing only MANA reads as missing health that no heal can put
+-- back. The archive carries this, and not as a rarity: on all FIVE archived
+-- (holder, allied Medusa within the charm's 1000 cast range) pairs the shipped
+-- gate admits her and the Original pair refuses -- 5 of 5, at 98.7% to 100.0%
+-- of her real health, missing as much as 497.9 "health" of which every point
+-- is mana.
+--
+-- ONE-DIRECTIONAL. maxMana >= mana for every living unit and k > 0, so the
+-- armed reading is never LARGER than the shipped one. Arming can only remove a
+-- candidate the shipped gate admitted; it can never admit one it refused, and
+-- on a frame where the shipped code found nobody the armed code also finds
+-- nobody -- so no frame loses a cast that would otherwise have happened.
+--
+-- DELIBERATELY NOT APPLIED TO THE SELECTION LINE four lines below it, which
+-- asks a DIFFERENT question -- who is nearest to dying -- and for that question
+-- absorbed damage is a defensible part of the answer. "Unify the four sites
+-- onto one getter" is a question this lever refuses to answer as posed: inside
+-- one consider the two reads want opposite sides, because one of them is about
+-- what the item can restore and the other is about who is in danger. The 100
+-- floor is likewise not this round's lever -- unchanged, and pinned.
+--
+-- Gated ('pollyhp'), turbo-only, a single conjunct against a mode predicate.
+function J.PolliwogAllyMissingHealth( hAlly )
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'pollyhp' ) then
+		return hAlly:OriginalGetMaxHealth() - hAlly:OriginalGetHealth()
+	end
+	return hAlly:GetMaxHealth() - hAlly:GetHealth()
+end
+
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then
