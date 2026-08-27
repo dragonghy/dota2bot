@@ -4900,3 +4900,71 @@
     `hero-1` 的 153 局 WK 语料(**37 轮**);`l5combo` 的 (a)(**第五十三轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260826T221500Z.md`
+- **2026-08-27T00:40Z(第八十次触发)**:**GH #159 铁证帧的 fixture —— 做完、验证过、故意没落地**
+  (接上一轮 backlog 第 1 棒,该棒**连续第三轮**列为优先项)。**宽扫 0 局**(W15 四台被回收三台,
+  W15-R 补跑 00:15Z 才发、本轮开工时未落地 ⇒ 无未检有效局)+ **深查 1 局逐帧**
+  (`a2baf3/20260826_155416_slot4`)。**未达章程 6 局下限,如实写明不当达标** —— 本轮工作单元是
+  「把一枚已定案的帧钉成 fixture」,非 armed id 核验。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **铁证帧的地址两处都错(GH #234 新开)**:19:16Z 报告记的 `2c6d8e/…155416_slot4, seed 906`,
+    实为 **`a2baf3` / seed 895**。`2c6d8e` 里**没有任何 `1554xx` 的局**(末局 `154713_slot2`)
+    ⇒ **不是裸名碰撞,是错接** —— 游戏名来自 `a2baf3`,run 标签与 seed 来自 `2c6d8e`
+    (§4.2 的 juggernaut 帧 `154631_slot10` **确实**在 `2c6d8e`/906,**两帧共用了同一行出处**)。
+    seed 由两个 run 各自 `script_version` 反解(`:s895:dire` / `:s906:dire`)。
+    **实质结论不动**:slardar team 3 = dire = armed 腿,逐帧读数与 §4.1 **逐行相同**。
+    **同族第五例**(#171 丢读数 / #213 丢门 / #207 接线门 / #230 丢半个域 / **本条丢地址**):
+    `citation_audit.py` 审的是报告↔issue 的引用,**`(run,game)` 在 S3 上存不存在不在它的检查面里**。
+  - ⭐ **fixture 6/6 全绿**,`--window 3.0`(**刻意取**,等于守卫的 `nChannelSeconds`)产出
+    **`burst={bristleback:451}` / `died_after=2.8`**,与 §4.1 **逐位吻合**。
+    gate OFF(两种)读 false、gate ON 读 true ⇒ **不是恒真断言,守卫确实被驱动**。
+    ⭐ **第 6 条断言把 §4.2 的能力边界从散文变成了会红的测试**:估计器压到「差一点致命」⇒ 放行,
+    即「W14 没拒」只有在**引擎当时估到 ≥320** 时才是 bug,而**没有 `.dem` 能回答**。
+    **距离小更正**:§4.1 的 484u 是 t=1382.2 插值位;fixture 冻结的是按下前最后一帧(1381.5),
+    实测 **531.8u**,两者都在 `(350,700]` 带内。作用域两条写明:timeline **不带逐队视野位**(v1,
+    全可见;视野结论靠 §4.1 的平A 证人独立成立)、slardar 带 `modifier_teleporting`(本守卫不读)。
+  - ⭐⭐ **没落地的原因:第一枚后期帧点红 16 个文件(GH #236 新开)——`RAN=147 RED=16`。**
+    **不是这枚 fixture 的问题**:owner **P3(GH #108,局时 cap 10→25 分钟)**落地后批测局第一次
+    打到自然结束(本局 24.9 分钟 / `natural_end` / `engine_natural`),而全仓库约 19 个普查文件把
+    「语料永远到不了后期 / 20 级 / 25 级 / BKB」当成**关于 turbo 的事实** —— **那些零一直只是
+    10 分钟 cap 的伪影**。⇒ **W14/W15 之后每一枚 fixture 都会撞同一堵墙。**
+    红的 16 个分三类:**零断言绊线 4**(alchemist / axe_cull BKB 0→4 / bbfight 27 级 / lion_hex 27 级)、
+    **计数棘轮 6**(#106 §4 迁移未做完)、**行为可能真变了/待读 6**(fieldcreep「N2 不再被豁免」等)。
+    **本组不代为改判**:`lion_hex` 的指令逐字要求「提进 test_set.md 并开 queue 申请条件 (a)」,
+    `axe_cull` 要求重跑域扫描并重读 header,**都越过本组座位**。
+    **与 #106/#127 的区别**:`corpus_scale.lua` 的棘轮只管「对 fixture 求和」的计数,**零断言它明确不管**
+    (逐字:零断言必须在第一个反例上变红,**that is the point of them**)——**本轮它完全按设计工作了**;
+    新事实是**这些零因一次 owner 决定而同时全部到期**。
+  - ⭐ **两个文件本组已改完验证过(全绿)后连同 fixture 一并回退,做法留档 GH #235**:
+    `test_level_gate_census.lua` 的 LIMITS 节**一半预言中了、一半自我否证** —— 它正确预言 18 分钟那条零
+    是 cap 伪影,却把等级列**明确排除**在伪影之外(「一个英雄不可能在一局中位数 10 级的比赛的最后一分钟
+    长到 20 级」);打满 25 分钟后**十个英雄全过 22 级**,high-water **19→27 一次追加** ⇒ 4 条 INERT 的
+    论据「那个英雄在 turbo 里不存在」不成立(按 27 分档:**8 条现可被真实帧反驳**、**1 条 `aiug:149` N=30
+    仍够不着**、另 **2 条 TEETH** 靠 `IsLateGame`)。**做法不是软化**:`pending_reread()` **按谓词**
+    (不按行号 —— 已漂过两次)列出受影响行并断言规模,**清空登记 = 完成重读**。
+    `test_turbo_ternary_dominance.lua` 的绊线逐字写着「the day a fixture lands in [18:00,25:00) this goes
+    red ... **the moment a real-frame assertion becomes possible**」——**那一天到了**,已换成它自己要的钉子:
+    t=1382.2 上 `bEarlyGame` 出厂 true / armed(`tbearly`)false,**两个真实英雄**(jakiro 12655、
+    bristleback 12779)使该帧具判别力,armed ⊂ 出厂。**这是 `tbearly` 第一次有真实帧证据**(此前只有算术)。
+    顺带:该帧 10 个英雄**只有 2 个**仍在 15000 净值线下 —— `tbearly` 域大小的一手读数。
+  - **交棒**:**GH #234 / #235 / #236 三个新开**;**GH #159 追评**(地址更正 + fixture 状态 + 估计器地板;
+    **条件 (a) 仍 NOT BOUGHT**,本轮无新对局语料)。**待落地**:`iterations/pending/tpgap_159_fixture/`
+    (fixture + 测试 + README + 两分钟复现配方),**`mv` 两个文件即完成,前提是 #236 已裁**。
+    **球在总监**:#236、#235、#159、#207、#212、#220、`campfarm` 仍未裁。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**,`tests/`/`tools/` **0 净改动**(改完已回退,`git status` 只剩
+    `iterations/`);`bash tools/agent/luacheck_gate.sh` → **exit 0,`luacheck bots game: 0 warnings`**
+    (容器里没有,脚本自装 `lua-check`,冷启 16.3s);`tests/run_py_tests.sh` **40 passed / 0 failed**
+    (与开工自检逐位相同);快 Lua 检测器 9 文件 **0 red**;语料相关 147 文件**回退后 0 red**
+    (未回退时 16 red)。本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **AWS**:S3 **只读**(1 `.dem` + 2 `analysis.json`),**未启动/未终止实例**,**未调用 CE**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **W15 + W15-R 首检**(补跑 `fc61ad`/`21e0a8`/`7b6b1f`,种子 888/895/896,
+    预计 01:15–02:15Z 落地;届时才有 4 种子)—— **恢复 6 局深查下限**;
+    (2) ⭐⭐ **#236 裁下后 `mv` 落地 #159 的 fixture**(**第四轮**,落地成本 = 两条 `mv`);
+    (3) ⭐ **GH #220 的 fixture**(`094054_slot3 t=163.0 drow_ranger`,**第四轮**);
+    (4) ⭐ 每 id 篇数 grep 做成固定输出(**第五轮登记**);
+    (5) `camp_prelit` 列(**第八轮**);占用度量按 idx 去重(**第七轮**);`tpdefend_events` 结果侧列
+    (#191 后,**第十三轮**);幻象余量做进 `sweep_run.sh`(**第十轮**);`entities.py` 推广(**第十一轮**);
+    12:41Z §6.1 那 23 帧做 fixture(**第十三轮**);`pulldrag` 的 connect 侧;第二种视野证人;
+    ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第二十四轮登记**);`stayfield` 第一失败子句;
+    打野反证 fixture(**三十轮**);`hero-1` 的 153 局 WK 语料(**38 轮**);`l5combo` 的 (a)(**第五十四轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十一轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260827T004000Z.md`
