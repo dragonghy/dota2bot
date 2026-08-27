@@ -121,9 +121,18 @@ local tAllAbilityBuildList = {
 -- and every one is a GENERIC row; hero-unique rows appear zero times, on any
 -- hero, at any level -- including a level-19 frame holding three trained
 -- talents.  So a corpus read of talent6:IsTrained() can only come back zero
--- whether or not it is trained, and the zero is not evidence.  Whether the
--- dumper drops unique talents or the bots never train them is undecided and
--- filed; the argument above does not rest on either.
+-- whether or not it is trained, and the zero is not evidence.
+--
+-- DECIDED 2026-08-27, later the same day, on the first post-cap frame (GH #235,
+-- still parked in iterations/pending/): the fork left open above -- dumper drops
+-- unique talents, OR the bots never train them -- comes down on the DUMPER.  Ten
+-- hero-slots at levels 22-27, this hero among them at 26, must have spent 36
+-- talent points between them by the shipped level-up queue; the frame shows 8,
+-- all generic.  Three heroes at levels 24-25 show none at all, which "the bots
+-- only take generic rows" cannot produce -- a generic pick is a visible row.
+-- Consequence for the block above and for the four other TALENTPRICE rounds:
+-- the rows they priced ARE rows the bots take; what no frame can do is confirm
+-- which.  tests/test_lategame_talent_visibility.lua.
 -- tests/test_fixture_talent_blindness.lua, tools/agent/fixture_talent_census.py.
 -- So in turbo every early
 -- point in Bone Guard raises, monotonically and on both branches, the bank WK has

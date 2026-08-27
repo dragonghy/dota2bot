@@ -56,8 +56,14 @@
 --   * Section 1 does not claim the bypass is GOOD, only that it is coherent: it
 --     is a widening disjunct over a real flat floor.  Whether releasing five
 --     skeletons the instant a single enemy is within 650u beats banking is a
---     question about a level-20 world nothing in turbo has reached (GH #84:
---     level >= 20 on 0 of 210 hero-slots, high-water 19).
+--     question about the level-20 world.  RE-READ 2026-08-27 (GH #235), and
+--     this is the clause that changed: that world is REAL and this hero is in
+--     it.  The line used to read "nothing in turbo has reached (GH #84:
+--     level >= 20 on 0 of 210 hero-slots, high-water 19)" -- and that zero was
+--     the 10-minute batch economy cap, lifted by owner priority P3 / GH #108.
+--     The first frame taken past it holds ten heroes at levels 22-27 including
+--     THIS ONE at level 26.  So the question the bypass poses is live in every
+--     turbo game that goes long, not academic; section 5's trigger has fired.
 --   * One residual, registered and NOT resolved here: the empty-bank case the
 --     bypass exists for may be pre-empted by the guard ABOVE it, if the engine
 --     only applies modifier_skeleton_king_bone_guard while charges >= 1.  That
@@ -473,8 +479,22 @@ end
 -- empty bank" case can never happen no matter how the disjuncts read.  That is
 -- an in-game question -- HasModifier is engine state, and the corpus cannot
 -- answer it for the reasons above -- so it is registered rather than argued.
--- It only becomes payable at level 20, which turbo has not reached (GH #84);
--- GH #108 raising the batch game-time cap 10 -> 25 minutes is the change most
--- likely to make it payable, and is the trigger for re-opening this.
+--
+-- STATUS 2026-08-27 (GH #235): the trigger this note named HAS FIRED.  It said
+-- the residual "only becomes payable at level 20, which turbo has not reached
+-- (GH #84)", and that GH #108's cap lift 10 -> 25 minutes was the change most
+-- likely to make it payable.  The cap is lifted and the first post-cap frame
+-- reads this hero at level 26 in a naturally-ended 24.9-minute game.  So the
+-- residual is now a question about games we actually play.
+--
+-- What has NOT changed is that no frame can settle it, and 2026-08-27 upgraded
+-- that from an observation to a mechanism: the dumper's isRealAbility() drops
+-- every hero-unique talent before it is ever written, so a corpus read of
+-- talent6:IsTrained() answers zero whether or not it is trained.  Ten hero-slots
+-- at levels 22-27 must have spent 36 talent points between them and the frame
+-- shows 8, all generic -- which is what rules out "the bots just never take
+-- it".  tests/test_lategame_talent_visibility.lua.  The reading that would
+-- settle the residual is an in-game one, and queue request `hero-21` (a re-dump
+-- with the drop rule lifted) is the cheapest thing that gets near it.
 
 return tests

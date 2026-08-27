@@ -40,6 +40,17 @@
 -- pins the one corpus fact that separates them -- inside a SINGLE frame, where
 -- an instrument cannot be blind and not-blind at once.
 --
+-- SETTLED the same day, and NOT from this corpus: H1.  Everything in this file
+-- is scoped to tests/fixtures/, which tops out at hero level 19 because of the
+-- very cap GH #84's zero came from, so it could not reach the band where the
+-- question answers itself.  The first post-cap frame (GH #235, parked in
+-- iterations/pending/ behind GH #236) holds ten heroes at levels 22-27 who must
+-- have spent 36 talent points between them; it shows 8, all generic, and three
+-- heroes at 24-25 show none at all -- which H2 cannot produce, since a generic
+-- pick is a visible row.  Nothing below changes: every assertion here is a
+-- statement about tests/fixtures/ and every one of them is still true of it.
+-- The verdict lives in tests/test_lategame_talent_visibility.lua.
+--
 -- HONEST BOUNDS, carried here because they travel with the finding:
 --   * The point accounting (section 4) counts a facet-granted ability as a
 --     spent point, because a dump cannot tell one from a learned ability.  That

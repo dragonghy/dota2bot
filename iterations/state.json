@@ -4386,8 +4386,26 @@
     "gated": false,
     "armed": false,
     "in_test_set": false,
-    "next": "Filed [harness] issue: rebuild the dumper with the Special_Bonus_Base line removed and re-dump ONE archived replay (zero EC2, zero new games) -- that separates H1 from H2 in a single run. Queue request hero-21 carries it.",
+    "next": "Filed [harness] issue: rebuild the dumper with the Special_Bonus_Base line removed and re-dump ONE archived replay (zero EC2, zero new games) -- that separates H1 from H2 in a single run. Queue request hero-21 carries it. SUPERSEDED the same day by talentvis_20260827: the fork was separable offline after all.",
     "issue": "GH #260",
     "report": "iterations/reports/hero/20260827T195500Z.md"
+  },
+  "talentvis_20260827": {
+    "source": "Hero desk 2026-08-27T22:xxZ. Baton 3 (the tests/ level-premise registry) plus the fork talentblind_20260827 left open four hours earlier. Entry point: the parked late-game frame nobody had read for talents.",
+    "axis": "TALENTBLIND, continued. A property of the evidence base, not of a hero. Zero behaviour change, zero gate, zero AWS.",
+    "not_a_gate": "ZERO executable lines changed under bots/ (hero_skeleton_king.lua comment block only). No new soak-candidate id. New tool tools/agent/lategame_talent_census.py, new snapshot tests/mock/lategame_talent_frame.lua, new test tests/test_lategame_talent_visibility.lua (8 assertions, mutation 12 caught + 1 control).",
+    "verdict": "H1 (INSTRUMENT) WINS; H2 (WORLD) IS REFUTED. The first post-cap frame -- GH #235, parked in iterations/pending/tpgap_159_fixture/ behind GH #236, t=1382.2 of a 24.9-minute naturally-ended turbo game -- holds ten hero-slots at levels 22-27. By the shipped level-up queue they must have spent 36 talent points; the frame shows 8 rows, every one generic, unique rows 0. Three heroes at levels 24/25/25 show NONE AT ALL, and H2 cannot produce that: H2 says the bots pick generic rows, and a generic pick is a visible row. Conservative reading counting only t10+t15: 12 of 20 invisible. The drop rule in isRealAbility() is SUFFICIENT to explain the whole deficit with no assumption about the world.",
+    "why_it_matters": "The five TALENTPRICE rounds are NOT invalidated -- the fear they carried ('we priced rows nobody takes') was H2. Every 'no frame confirms this talent fired' bound they recorded stays true and now has a mechanism instead of an open fork.",
+    "queue_model": "'must' is not observed. X.GetSkillList parks the four talent picks at queue positions 10/15/18/19 of a 15-entry ability build, and ability_item_usage_generic.lua pops the head only when botLevel >= GetHeroLevelRequiredToUpgrade(), banking the point otherwise -- so the binding constraint is the tier level itself. Section 1 of the test drives the shipped function rather than restating it.",
+    "baton_3": "tests/test_wk_bone_guard_talent_bypass.lua re-read and CLEARED from the registry in tests/test_level_premise_registry.lua; ceiling 9 -> 8. Its section 5 named GH #108's cap lift as the trigger to re-open the residual: the trigger has fired and is recorded as fired.",
+    "correction": "GH #260 published 'no frame ever carries two talents'. Still true of tests/fixtures/; NOT a property of the pipeline -- dragon_knight at level 26 carries two here. One row per hero was the 10-minute cap again.",
+    "honest_bounds": "ONE frame, ONE game -- 36 is not a rate. A queue stalled for some other reason lowers 'must' and shrinks the deficit, which is why the t10+t15 floor is asserted separately. The mechanism (section 4) is a source read of dumper/main.go: a dropped entity leaves no trace, so no fixture can ever witness the drop.",
+    "tests": "tests/test_lategame_talent_visibility.lua (8): anti-vacuum + snapshot self-consistency + late-band check; the queue model driven through the shipped GetSkillList and the real training branch's condition; the 36-vs-8 deficit; the H2 refutation (all ten short, three empty at >= 24); the t10+t15 floor; zero unique rows at 22-27; the dumper drop ordering read out of the FUNCTION BODY (the doc comment above it states both strings in the right order and never moves); the two-row correction.",
+    "gated": false,
+    "armed": false,
+    "in_test_set": false,
+    "next": "hero-21 NARROWS rather than closes: a re-dump no longer buys the fork, it buys WHICH unique rows the bots take -- the only reading that could tell a TALENTPRICE round whether the row it priced is the row the game got. Nothing offline can answer that.",
+    "issue": "GH #260 (follow-up comment)",
+    "report": "iterations/reports/hero/20260827T224500Z.md"
   }
 }

@@ -111,9 +111,23 @@ local PENDING = {
     ['tests/test_wk_fact_anchor.lua']              = 'hero -- section 4 STRUCTURAL t20/t25 read census',
     ['tests/test_wk_roshan_mana_ceiling.lua']      = 'hero -- crossing-level tail argument (wkrosh)',
     ['tests/test_wk_bone_guard_thresholds.lua']    = 'hero -- untrained-stub-is-turbo-reality claim',
-    ['tests/test_wk_bone_guard_talent_bypass.lua'] = 'hero -- talent6 bypass reachability',
     ['tests/test_wk_q_aim_preflight.lua']          = 'hero -- level distribution note',
 }
+
+-- CLEARED, newest first.  A row leaves this list when the VERDICT above the
+-- premise was re-read, not when the sentence was deleted -- so what the row
+-- becomes is a line saying what the re-read decided.
+--
+--   test_wk_bone_guard_talent_bypass.lua  (hero, 2026-08-27)
+--     The premise sat in HONEST BOUNDS and in section 5, both saying the
+--     bypass question is about a level-20 world turbo never reaches.  Re-read:
+--     that world is real (GH #235 -- ten heroes at 22-27 in a naturally-ended
+--     24.9-minute game, this hero at 26), so section 5's own re-open trigger
+--     has fired and is recorded as fired.  The verdict that survived is
+--     narrower than the premise it was written under: the bypass is live from
+--     level 20, and no frame can confirm it fires -- for a MECHANICAL reason
+--     found the same day, not for a level one (the dumper drops hero-unique
+--     talents before writing them; tests/test_lategame_talent_visibility.lua).
 
 local function read_lines(path)
     local fh = io.open(path, 'r')
@@ -242,9 +256,11 @@ tests['[hero] the stale-premise registry shrinks or holds, never grows'] = funct
         end
     end
     table.sort(gone)
-    assert(still <= 9,
+    assert(still <= 8,
         still .. ' registry files still argue from the retired premise; the '
-        .. 'registered ceiling is 9. This number is a debt, so it may only fall.')
+        .. 'registered ceiling is 8 (9 on 2026-08-27, lowered when '
+        .. 'test_wk_bone_guard_talent_bypass.lua was re-read). This number is a '
+        .. 'debt, so it may only fall.')
 
     -- When a row is genuinely re-read, delete it from PENDING in the same change.
     -- Leaving a settled row on the list makes the ceiling read as more debt than
