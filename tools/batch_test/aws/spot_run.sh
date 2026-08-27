@@ -12,6 +12,9 @@
 #   ./spot_run.sh --slots 12 --hours 2    # 12 slots, 2h hard watchdog
 #   ./spot_run.sh --rec-slots 16          # record a .dem on ALL 16 slots (#75)
 #   ./spot_run.sh --on-demand             # escape hatch: on-demand (no reclaim risk)
+#   ./spot_run.sh --az us-west-2a         # pin this instance to one AZ (#252)
+#   ./spot_run.sh --az us-west-2a,us-west-2c   # rotate a wave over these AZs
+#   ./spot_run.sh --no-az-spread          # legacy: let EC2 choose (pre-#252)
 #   ./spot_run.sh --dry-run               # print the plan, launch nothing
 #
 # Cost safety (see SPOT_USAGE.md):
@@ -71,6 +74,30 @@ STAMP=$(date +%Y%m%d_%H%M%S)
 RUN_TOKEN=$(od -An -N3 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')
 [ -n "$RUN_TOKEN" ] || RUN_TOKEN=$(printf '%06x' $$)
 
+# [harness] #252: placement. Until 2026-08-27 this script passed NO placement at
+# all, so every instance landed wherever EC2 put it -- which in practice was the
+# same AZ every time (W17: four instances, all us-west-2b, all four reclaimed in
+# the SAME SECOND by one `instance-terminated-no-capacity` event; the whole wave
+# produced 128 radiant-only orphans and zero usable seeds for ~$0.48). The 4x1
+# topology's redundancy was fully cancelled at the placement layer.
+#
+# NOTE ON THE ROTATION KEY -- this is the same trap as RUN_TOKEN above, and #252
+# asks for the version that falls into it. "Nth instance takes the Nth AZ" is
+# void under the batch desk's standing 4x1 topology, because those four
+# instances are four separate COUNT=1 processes and `n` is 1 in every one of
+# them; the rotation would put all four back in one AZ, i.e. exactly today's
+# failure. So the rotation offset is RANDOM PER PROCESS by default (like
+# RUN_TOKEN, and for the same reason: uniqueness must not rest on something the
+# four calls share). With 4 AZs that turns P(all four in one AZ) from ~1 into
+# 4^-3 = 1/64, and P(at least two AZs) into 63/64.
+#   For a GUARANTEED spread, pass the AZ explicitly (--az us-west-2a, one per
+#   call) or launch the wave as one --count 4 call: an explicit --az list is
+#   walked from offset 0, so a single call with N AZs and --count N is
+#   deterministic and hits each AZ exactly once.
+# AZ_LIST (aws.env) empty, or --no-az-spread, restores the pre-#252 behavior.
+AZ_SPREAD=1
+AZ_ARG=""           # --az value: one AZ pins, a comma list rotates
+
 while [ $# -gt 0 ]; do
     case "$1" in
         --count) COUNT=$2; shift 2 ;;
@@ -80,6 +107,8 @@ while [ $# -gt 0 ]; do
         --hours) HOURS=$2; shift 2 ;;
         --type) INSTANCE_TYPE=$2; shift 2 ;;
         --validate) VALIDATE=$2; shift 2 ;;
+        --az) AZ_ARG=$2; shift 2 ;;
+        --no-az-spread) AZ_SPREAD=0; shift ;;
         --on-demand) MARKET=""; SPOT=0; TAG_PREFIX=dota2bot-soak-od; shift ;;
         --allow-short-watchdog) ALLOW_SHORT_WATCHDOG=1; shift ;;
         --dry-run) DRYRUN=1; shift ;;
@@ -88,6 +117,24 @@ while [ $# -gt 0 ]; do
 done
 
 WATCHDOG_MIN=$((HOURS * 60))
+
+# ---- [harness] #252: build the AZ ring and pick this process's start offset.
+AZS=()
+if [ "$AZ_SPREAD" -eq 1 ]; then
+    IFS=',' read -r -a _az_raw <<< "${AZ_ARG:-${AZ_LIST:-}}"
+    for _az in "${_az_raw[@]:-}"; do
+        _az=$(echo "$_az" | xargs)          # tolerate "a, b" spacing
+        [ -n "$_az" ] && AZS+=("$_az")
+    done
+fi
+AZ_OFFSET=0
+if [ ${#AZS[@]} -gt 0 ] && [ -z "$AZ_ARG" ]; then
+    # random start ONLY for the implicit (aws.env) ring -- see the note above:
+    # a per-process constant start is what makes four COUNT=1 calls collide.
+    _r=$(od -An -N2 -tu2 /dev/urandom 2>/dev/null | tr -d ' \n')
+    [ -n "$_r" ] || _r=$$
+    AZ_OFFSET=$(( _r % ${#AZS[@]} ))
+fi
 
 # ---- [GH #108] wave-budget guard: does the watchdog outlast the wave it backs?
 # The 2026-07 "852 accident" was a seed that got no games because the instance
@@ -223,8 +270,29 @@ EOF
     fi
 }
 
+launch_one() {
+    # $1 = AZ ("" = let EC2 choose, the pre-#252 behavior), $2 = NAME,
+    # $3 = RUN_ID, $4 = user-data. Echoes the instance id.
+    local az=$1 name=$2 run_id=$3 ud=$4
+    aws ec2 run-instances --region "$AWS_REGION" \
+        --image-id "$AMI_ID" --instance-type "$INSTANCE_TYPE" \
+        ${KEY_NAME:+--key-name "$KEY_NAME"} --security-group-ids "$SECURITY_GROUP" \
+        --iam-instance-profile Name="$IAM_PROFILE" \
+        ${az:+--placement AvailabilityZone=$az} \
+        $MARKET \
+        --instance-initiated-shutdown-behavior terminate \
+        --user-data "$ud" \
+        --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$name},{Key=soak-run,Value=$run_id}]" \
+        --query 'Instances[0].InstanceId' --output text
+}
+
 echo "plan: $COUNT x $( [ $SPOT -eq 1 ] && echo SPOT || echo on-demand ) $INSTANCE_TYPE"
 echo "  ref=$REF  slots=$SLOTS  rec_slots=$REC_SLOTS  watchdog=${HOURS}h  region=$AWS_REGION"
+if [ ${#AZS[@]} -gt 0 ]; then
+    echo "  az ring=${AZS[*]}  start=${AZS[$AZ_OFFSET]}$( [ -z "$AZ_ARG" ] && echo ' (random offset, see #252)' )"
+else
+    echo "  az=<ec2 chooses>  (no AZ spread: pre-#252 behavior)"
+fi
 echo
 
 LAUNCHED=()
@@ -232,25 +300,36 @@ for n in $(seq 1 "$COUNT"); do
     RUN_ID="spot_${STAMP}_${n}_${REF//\//-}_${RUN_TOKEN}"
     NAME="${TAG_PREFIX}-${n}"
     UD=$(build_user_data "$RUN_ID")
+    AZ=""
+    [ ${#AZS[@]} -gt 0 ] && AZ=${AZS[$(( (AZ_OFFSET + n - 1) % ${#AZS[@]} ))]}
 
     if [ $DRYRUN -eq 1 ]; then
-        echo "[dry-run] would launch $NAME  run_id=$RUN_ID"
+        echo "[dry-run] would launch $NAME  run_id=$RUN_ID  az=${AZ:-<ec2 chooses>}"
         echo "          S3: s3://$S3_BUCKET/soak/$RUN_ID/"
         continue
     fi
 
-    ID=$(aws ec2 run-instances --region "$AWS_REGION" \
-        --image-id "$AMI_ID" --instance-type "$INSTANCE_TYPE" \
-        ${KEY_NAME:+--key-name "$KEY_NAME"} --security-group-ids "$SECURITY_GROUP" \
-        --iam-instance-profile Name="$IAM_PROFILE" \
-        $MARKET \
-        --instance-initiated-shutdown-behavior terminate \
-        --user-data "$UD" \
-        --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$NAME},{Key=soak-run,Value=$RUN_ID}]" \
-        --query 'Instances[0].InstanceId' --output text)
+    # A pinned AZ can fail outright where an unpinned launch would have been
+    # placed elsewhere ("no capacity" is per-AZ). Losing an instance to the
+    # spread guard would be worse than the exposure it removes, so a pinned
+    # failure falls back ONCE to the pre-#252 unpinned call.
+    ERRLOG=$(mktemp)
+    if ID=$(launch_one "$AZ" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
+        :
+    elif [ -n "$AZ" ]; then
+        echo "  ! $NAME: launch in $AZ failed -- $(tail -1 "$ERRLOG")" >&2
+        echo "  ! retrying once with EC2-chosen placement (pre-#252 behavior)" >&2
+        AZ=""
+        ID=$(launch_one "" "$NAME" "$RUN_ID" "$UD")
+    else
+        cat "$ERRLOG" >&2
+        rm -f "$ERRLOG"
+        exit 1
+    fi
+    rm -f "$ERRLOG"
 
     LAUNCHED+=("$ID")
-    echo "launched $NAME  id=$ID  run_id=$RUN_ID"
+    echo "launched $NAME  id=$ID  run_id=$RUN_ID  az=${AZ:-<ec2 chose>}"
     echo "   S3: s3://$S3_BUCKET/soak/$RUN_ID/"
 done
 

@@ -29,10 +29,40 @@ bash tools/batch_test/aws/bootstrap_creds.sh     # once per session; then use aw
 # --on-demand because a wave is "weight-bearing" or to avoid reclaim risk.
 # Try c6i.4xlarge spot, then c6a.4xlarge spot, then --on-demand.
 ./spot_run.sh --on-demand
+
+# pin ONE instance to an AZ (the 4x1 topology's guaranteed spread: one call
+# per seed, a different --az in each), or rotate a single call over a list:
+./spot_run.sh --count 1 --az us-west-2c
+./spot_run.sh --count 4 --az us-west-2a,us-west-2b,us-west-2c,us-west-2d
+
+# pre-#252 placement (EC2 chooses; the W17 wave that lost four instances to one
+# capacity event was launched this way):
+./spot_run.sh --no-az-spread
 ```
 
 Options: `--count N` `--ref GITREF` `--slots S` `--hours H` `--type INSTANCE`
-`--on-demand` `--dry-run`.
+`--on-demand` `--az AZ[,AZ...]` `--no-az-spread` `--dry-run`.
+
+### AZ spread ([harness] #252)
+
+W17 (2026-08-27) launched four instances as four `--count 1` calls; EC2 put all
+four in `us-west-2b` and one `instance-terminated-no-capacity` event took all
+four in the **same second**, 27.5 min in. Every instance runs "ab leg, then ba
+leg", so none reached its second leg: 128 games landed, all single-leg orphans,
+zero usable seeds, ~$0.48. The 4x1 topology's redundancy was real; the
+placement layer cancelled it.
+
+Waves now rotate over `AZ_LIST` in `aws.env`. **The rotation offset is random
+per process, not the instance index** — under 4x1 every call has `n=1`, so an
+index rotation would put all four back in one AZ (the same trap as `RUN_TOKEN`
+/ GH #98). Random offset makes "all four in one AZ" 4⁻³ = 1/64 instead of ~1;
+**passing `--az` explicitly, one per call, is the only guarantee.** An explicit
+`--az` list is walked from offset 0, so it is deterministic.
+
+If a pinned launch fails (a pinned AZ can be out of capacity where an unpinned
+one would have been placed elsewhere), the script retries that instance **once**
+without the pin and says so on stderr — the spread must never cost an instance.
+`AZ_LIST=` (empty) or `--no-az-spread` restores the exact pre-#252 call.
 
 Each instance is tagged `dota2bot-soak-spot-<n>` (or `dota2bot-soak-od-<n>` for
 on-demand) and writes to `s3://<bucket>/soak/spot_<stamp>_<n>_<ref>/`. Distinct
