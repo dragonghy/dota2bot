@@ -62,15 +62,30 @@ local rf = require('mock.replay_fixture')
 local tests = {}
 
 -- Real frames, chosen because they straddle the threshold the fix introduces
--- with the SAME hero: skeleton_king at level 10 and at level 12. (The frame
--- GH #137 §3 names, f_260823_002103_wk_ancient_camp_634, is not in the tree
--- on any ref -- see the report; level 11 for a Wraith King is therefore not
--- purchasable and level 10, inside the issue's own <= 11 bucket, is the
--- nearest real frame. The exact 11/12 boundary is pinned below off other real
--- heroes, which the corpus does carry at level 11.)
+-- with the SAME hero: skeleton_king at level 10 and at level 12.
+--
+-- [CORRECTION 2026-08-27, GH #248] This paragraph used to read "the frame
+-- GH #137 §3 names, f_260823_002103_wk_ancient_camp_634, is not in the tree on
+-- any ref ... level 11 for a Wraith King is therefore not purchasable". Both
+-- halves are false at HEAD: the frame IS in the corpus and its skeleton_king
+-- IS level 11, so every claim this file made about "the bearing-weight case"
+-- was made on a STAND-IN while the case itself sat one directory away. The
+-- correction is not a reworded comment. A prose claim about what the corpus
+-- does NOT contain is an assertion about a set that only ever GROWS: it is
+-- true when written, and it turns false without anybody touching this file,
+-- with nothing going red -- the failure direction is a false GREEN, and the
+-- shape it takes is a stand-in wearing the bearing case's name.
+-- tests/corpus_scale.lua handles the opposite direction (growth turning a
+-- COUNT equality falsely RED) and has no handle on this one. So the claim is
+-- executable now: BEARING below is looked up, its level is asserted, and
+-- tests/test_corpus_existence_claims.lua forbids the prose form repo-wide.
 local WK_L10 = { 'tests/fixtures/f_260820_043124_axe_blink_flee_555.lua', 'npc_dota_hero_skeleton_king' }
 local WK_L12 = { 'tests/fixtures/f_260820_162859_es_blink_flee_615.lua', 'npc_dota_hero_skeleton_king' }
 local AXE_L11 = { 'tests/fixtures/f_050713_es_defend_1v3.lua', 'npc_dota_hero_axe' }
+-- GH #137 §3's own bearing-weight frame: skeleton_king, level 11, standing in
+-- an ancient camp (modifier_ancient_rock_golem_weakening, 11.0s elapsed at
+-- t=634.1), 817/1307 HP on the way from 100% to 13.5%.
+local WK_L11_BEARING = { 'tests/fixtures/f_260823_002103_wk_ancient_camp_634.lua', 'npc_dota_hero_skeleton_king' }
 
 local function subject(spec)
     local J, _, heroes = rf.load(spec[1], spec[2])
@@ -139,7 +154,7 @@ tests['[world W1] the corpus carries no neutral spawners at all'] = function()
 end
 
 tests['[world W2] every fixture hero reads attack damage 0'] = function()
-    for _, spec in ipairs({ WK_L10, WK_L12, AXE_L11 }) do
+    for _, spec in ipairs({ WK_L10, WK_L12, AXE_L11, WK_L11_BEARING }) do
         local _, bot = subject(spec)
         assert(bot:GetAttackDamage() == 0, string.format(
             '%s on %s reads attack damage %s; if the dump started carrying it, ' ..
@@ -181,8 +196,9 @@ end
 tests['[the fix] armed, the level-10 Wraith King loses the ancient camps'] = function()
     local J, bot = subject(WK_L10)
     local got = refresh(J, bot, true)
-    assert(not got['ancient/own'], 'the bearing-weight case: level 10 must not ' ..
-        'be handed an ancient camp')
+    assert(not got['ancient/own'], 'level 10 -- inside the issue\'s own <= 11 ' ..
+        'bucket, though NOT the bearing-weight case, which is pinned below on ' ..
+        'its own frame -- must not be handed an ancient camp')
     assert(not got['ancient/enemy'], 'and certainly not the enemy one')
     assert(not got['small/enemy'] and not got['medium/enemy'] and not got['large/enemy'],
         'the enemy jungle is a level-15 tier')
@@ -193,7 +209,7 @@ tests['[the fix does not starve the farm] small and medium camps survive at ever
     -- camps at all would fall back to the "no camp found" path in
     -- mode_farm_generic (preferedCamp == nil), which is a behaviour change far
     -- wider than this lever.
-    for _, spec in ipairs({ WK_L10, WK_L12, AXE_L11 }) do
+    for _, spec in ipairs({ WK_L10, WK_L12, AXE_L11, WK_L11_BEARING }) do
         local J, bot = subject(spec)
         local got = refresh(J, bot, true)
         assert(got.__n >= 2, string.format('%s (level %d) armed got %d camps',
@@ -214,12 +230,64 @@ tests['[the fix does not overshoot] level 12 keeps its own ancient camp'] = func
 end
 
 tests['[boundary] 11 refuses and 12 admits, both off real frames'] = function()
-    local J11, b11 = subject(AXE_L11)
-    assert(b11:GetLevel() == 11, 'frame no longer carries level 11')
-    assert(not refresh(J11, b11, true)['ancient/own'], 'level 11 is below the ancient tier')
+    for _, spec in ipairs({ AXE_L11, WK_L11_BEARING }) do
+        local J11, b11 = subject(spec)
+        assert(b11:GetLevel() == 11, spec[1] .. ' no longer carries level 11')
+        assert(not refresh(J11, b11, true)['ancient/own'],
+            spec[2] .. ' at level 11 is below the ancient tier')
+    end
 
     local J12, b12 = subject(WK_L12)
     assert(refresh(J12, b12, true)['ancient/own'], 'level 12 is the ancient tier')
+end
+
+--============================================================================
+-- The bearing-weight case itself, which this file used to argue from a
+-- stand-in because a comment said the frame was not purchasable.
+--============================================================================
+
+tests["[bearing case] GH #137's own frame is in the corpus, and it is level 11"] = function()
+    -- The executable form of the claim the header used to make in prose. A
+    -- negative existence claim about a growing corpus cannot be a comment: it
+    -- goes false on its own, silently, in the flattering direction.
+    local f = io.open(WK_L11_BEARING[1], 'r')
+    assert(f, 'the bearing-weight frame is gone from the corpus: ' .. WK_L11_BEARING[1] ..
+        ' -- if it was deliberately dropped, say so with a red test, not a comment')
+    f:close()
+    local _, bot = subject(WK_L11_BEARING)
+    assert(bot:GetLevel() == 11,
+        'the bearing frame no longer carries level 11; got ' .. tostring(bot:GetLevel()))
+    -- ...and it is genuinely an ancient-camp frame, not merely a level-11 WK:
+    -- the debuff only the ancient rock golem camp applies is on him.
+    local fx = assert(dofile(WK_L11_BEARING[1]))
+    local bWeakening = false
+    for _, u in ipairs(fx.units) do
+        if u.name == WK_L11_BEARING[2] then
+            for _, m in ipairs(u.modifiers or {}) do
+                if m.name == 'modifier_ancient_rock_golem_weakening' then bWeakening = true end
+            end
+        end
+    end
+    assert(bWeakening, 'the subject carries no ancient-camp debuff -- this is not ' ..
+        'the frame GH #137 measured, and the tests below would be arguing from a name')
+end
+
+tests['[bearing case] the defect and the fix, on the frame the issue measured'] = function()
+    local J, bot = subject(WK_L11_BEARING)
+    -- Today: the chain decides nothing, so the level-11 Wraith King is handed
+    -- the very camp the replay shows him losing 86.5% of his HP inside.
+    local shipped = refresh(J, bot, false)
+    assert(shipped.__n == 8,
+        'the shipped default admits every camp; got ' .. tostring(shipped.__n))
+    assert(shipped['ancient/own'] and shipped['ancient/enemy'],
+        'the defect, on the bearing frame: level 11 is handed the ancient camps')
+    -- Armed: refused, at the exact level of the case, with the same hero, on
+    -- the same frame. This is the assertion the stand-ins could only approximate.
+    local armed = refresh(J, bot, true)
+    assert(not armed['ancient/own'] and not armed['ancient/enemy'],
+        'armed must refuse the ancient camp AT level 11 on this frame')
+    assert(armed['small/own'] and armed['medium/own'],
+        'and it must not starve him: the always-tier survives')
 end
 
 tests['[enemy tier] the enemy jungle opens at 15, measured on the real level ladder'] = function()
@@ -274,7 +342,7 @@ tests['[off-candidate equivalence] unarmed is the pre-fix chain, camp for camp']
         return out
     end
 
-    for _, spec in ipairs({ WK_L10, WK_L12, AXE_L11 }) do
+    for _, spec in ipairs({ WK_L10, WK_L12, AXE_L11, WK_L11_BEARING }) do
         local J, bot = subject(spec)
         local nOwnTeam = bot:GetTeam()
         with_camps(nOwnTeam, function()
