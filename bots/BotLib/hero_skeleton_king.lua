@@ -111,7 +111,21 @@ local tAllAbilityBuildList = {
 -- Skeletons Spawned" over a base min_skeleton_spawn of 0, so with it trained a
 -- release from an empty bank still fields five skeletons and "release regardless
 -- of the bank" is the right rule.  tests/test_wk_bone_guard_talent_bypass.lua
--- section 1.)  So in turbo every early
+-- section 1.)
+--
+-- BOUNDED 2026-08-27 (hero, fixture talent census): "the bypass IS live from
+-- level 20 on" is an argument from the game's KV plus a level reading, and that
+-- is ALL it can ever be here -- no frame this repo holds can confirm the bypass
+-- fires, and none ever will while sTalentList[6] is a `special_bonus_unique_*`
+-- row.  Across 960 hero-frames in tests/fixtures/ there are 67 talent sightings
+-- and every one is a GENERIC row; hero-unique rows appear zero times, on any
+-- hero, at any level -- including a level-19 frame holding three trained
+-- talents.  So a corpus read of talent6:IsTrained() can only come back zero
+-- whether or not it is trained, and the zero is not evidence.  Whether the
+-- dumper drops unique talents or the bots never train them is undecided and
+-- filed; the argument above does not rest on either.
+-- tests/test_fixture_talent_blindness.lua, tools/agent/fixture_talent_census.py.
+-- So in turbo every early
 -- point in Bone Guard raises, monotonically and on both branches, the bank WK has
 -- to accumulate before he will release any skeletons at all.  The default row has
 -- all four points down by level 7: from level 7 on it asks an 8-charge bank of the

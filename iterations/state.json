@@ -4316,7 +4316,6 @@
     "next": "等总监入集裁定;入集后等 (a) 证据再判 (b)/(c)。**不为剩下 8 个 `[1]` 站点开格**,直到它们里有一个拿到帧证据 —— 这正是 `abilanc` 留分母的用法。",
     "report": "iterations/reports/strategy/20260827T192954Z.md"
   },
-
   "pollyhp_20260827": {
     "id": "pollyhp",
     "status": "gated, turbo-only, NOT live. 本轮**不提入集、不提波次请求**:谓词层分歧在归档上 5/5 命中,但**没有任何归档单位身上带着这枚中立装**(0/1050)⇒ 端到端一帧没有。",
@@ -4336,7 +4335,6 @@
     "next": "`0POLL` 的原始措辞(把 polliwog 的 getter 统一到 `Original*`)**只落地了它的一半,另一半被明确裁定不做** —— 选人那一行留在 override 侧。剩下的自然下一格:(i) 等总监对 mock override 层的范围裁定;(ii) 若不扩 mock,则本组这条 getter 线**收官**,回 `[strategy]` issue 或 owner 优先项重新认领。**不为「统一另外三处」开格**(判据(二)说明那是错的问题)。",
     "report": "iterations/reports/strategy/20260827T1xxxxxZ.md"
   },
-
   "wkt20t25_20260827": {
     "source": "Hero desk 2026-08-27T16:51Z. NOT self-selected: the LAST hero of baton 2 (GH #238 section 6 -- price the ten t20/t25 picks of the focus five, one hero per round). Order: lion 05:30Z, axe 08:15Z, zuus 10:55Z, crystal_maiden 13:55Z, skeleton_king here. Baton 2 is CLOSED with this unit.",
     "axis": "TALENTPRICE. Wraith King was held back to last for a stated reason -- his t20/t25 alternatives at [2] and [6] are FACET rows, and hero_skeleton_king.lua shipped a written refusal to price them: 'nothing in this repo reads which facet the game rolled -- settle that before pricing the pair'.",
@@ -4355,5 +4353,24 @@
     "next": "Baton 2 (TALENTPRICE, focus five t20/t25) is CLOSED: lion / axe / zuus / crystal_maiden / skeleton_king all priced. Baton 3 (the tests/ level-premise registry, working down from 9 files) still untouched. Handed OUT this unit: (a) the WK half of the already-pending hero-19 archive scan -- does WK reach 20/25 in post-cap archived games, and does the 20-point land on ..._facet_3 and the 25-point on ..._wraith_king_10; (b) FILED THIS UNIT as queue request hero-20 -- how often Reincarnation triggers and how many enemies are inside 900 on that frame, the only reading that would honestly reopen t25 (acceptance pre-registers the denominator, a validate-the-detector-first step, the 600-vs-900 pair whose DIFFERENCE is [8]'s gross gain, level strata, and a third outcome); (c) the ConsiderQ nDamage repair, now known to be stale from level 10 rather than only mis-scaled -- same family as Axe's hero-2 Culling band and CM's ConsiderW hardcode.",
     "issue": "GH #255",
     "report": "iterations/reports/hero/20260827T165139Z.md"
+  },
+  "talentblind_20260827": {
+    "source": "Hero desk 2026-08-27T19:5xZ. NOT self-selected in the usual sense: baton 2 (TALENTPRICE) closed at 16:51Z after five rounds, and every one of those rounds recorded the same honest bound -- 'no frame in this repo shows the talent trained'. This unit asks the question the bound never asked: CAN a frame in this repo show one?",
+    "axis": "TALENTBLIND. A property of the evidence base, not of a hero. Zero behaviour change, zero gate, zero AWS.",
+    "not_a_gate": "ZERO executable lines changed under bots/ (hero_skeleton_king.lua comment block only). No new soak-candidate id. New tool tools/agent/fixture_talent_census.py, new snapshot tests/mock/fixture_talent_sightings.lua, new test tests/test_fixture_talent_blindness.lua (9 assertions, mutation 10/10 caught + 1 control).",
+    "verdict": "THE CORPUS IS BLIND TO HERO-UNIQUE TALENTS. 960 hero-frames across 105 fixtures carry 67 talent sightings; every one is a GENERIC row (special_bonus_hp_200 / _attack_damage_25 / _movement_speed_20 / ...). Hero-unique (special_bonus_unique_*) rows appear ZERO times -- on any hero, at any level. No frame ever carries more than ONE talent, and the 9 frames at level >= 15 (where the game guarantees at least two trained talents) carry none. So a corpus read of 'was this unique talent trained' can only ever come back zero, and that zero is not evidence -- same shape as GH #238, where the zero was a property of the 10-minute cap rather than of turbo.",
+    "why_not_vacuous": "The focus five have SINGLE-ROW talent tables, so their shipped t10 pick is decidable offline via aba_skill.X.GetTalentBuild ({0,10} -> slot 1, {10,0} -> slot 2). It splits 3-2 BY KIND: crystal_maiden (slot 1, hp_200) 15 sightings / 15 frames >= lv10, zuus (slot 2, hp_200) 10/10, lion (slot 2, movement_speed_20) 1/5, axe (slot 2, unique_axe_8) 0/10, skeleton_king (slot 2, unique_wraith_king_facet_1) 0/5. Generic picks are seen by name on the hero that picks them; unique picks never are.",
+    "undecided": "Two accounts survive and are observationally identical from a dump. H1 INSTRUMENT: the dumper drops unique talents -- isRealAbility() in tools/batch_test/behavioral/dumper/main.go discards Special_Bonus_Base / Special_Bonus_Attributes BEFORE the branch that keeps leveled talents, and that first line only does work on an entity that IS leveled (an untrained talent is already dropped by level > 0 on the next line); the surviving names are CLASS names, not KV names (special_bonus_h_p200, never the KV's special_bonus_hp_200). H2 WORLD: the bots never train a unique talent and the point is banked. Consequences differ enormously (H1 = every corpus talent read is blind; H2 = five rounds priced rows nobody takes).",
+    "tiebreak_evidence": "27 fixtures both SHOW one hero's talent and HIDE another's inside the same frozen instant -- an instrument cannot be blind and not-blind in one frame. The sharpest is inside the focus five: Lion's t10 pick is GENERIC today, the corpus shows him that exact talent in one frame and none in four others where he is level 11 and one skill point short. NOT decisive here: it needs Lion's pick to have been the same on 2026-08-20 when those games were played, and this container's git history starts 2026-08-26.",
+    "point_accounting": "Independent of names: deficit = level - points visibly on abilities - talents dumped. 79 of 228 frames at level >= 10 carry a deficit >= 1. FLOOR, not a measurement -- a facet-granted ability is indistinguishable from a learned one and inflates the visible point count, biasing the deficit down.",
+    "consequence_for_wk": "sTalentList[6] (unique_wraith_king_facet_3) is the only talent any focus hero's decision layer reads: talent6:IsTrained() bypasses the Bone Guard bank threshold twice inside X.ConsiderW. The GH #17 block's 'the bypass IS live from level 20 on' is an argument from KV plus a level reading and can never be more than that while slot 6 is unique-named. Bounded in the file this round, not withdrawn.",
+    "tests": "tests/test_fixture_talent_blindness.lua (9): anti-vacuum floors + snapshot self-consistency; zero unique sightings; max one talent per frame and zero at level >= 15; focus-five single-row check; the {0,10}/{10,0} decode pinned against aba_skill's own line; the 3-2 generic/unique split; WK+Axe invisible; deficit population nests inside the zero-talent population; the split-fixture tiebreak evidence still present.",
+    "honest_bounds": "'unique' is matched on the token in the dumped name -- a hero-specific talent named without it would count as generic. The corpus tops out at level 19, so nothing here speaks about t20/t25 rows directly. Section 1's assertion is written to go RED when a unique talent finally appears, because that is good news, not a regression.",
+    "gated": false,
+    "armed": false,
+    "in_test_set": false,
+    "next": "Filed [harness] issue: rebuild the dumper with the Special_Bonus_Base line removed and re-dump ONE archived replay (zero EC2, zero new games) -- that separates H1 from H2 in a single run. Queue request hero-21 carries it.",
+    "issue": "GH #260",
+    "report": "iterations/reports/hero/20260827T195500Z.md"
   }
 }
