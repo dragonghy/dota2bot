@@ -23,9 +23,59 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- that zero belonged to the batch harness and not to turbo -- games self-
 -- terminated at a 10-minute economy cap.  Owner priority P3 (GH #108) removed the
 -- cap and the first frame past it has Zeus himself at level 23 in a 24.9-minute
--- game (GH #235).  This hero's t20 row takes [5] and t25 takes [7]; both are the
--- upstream defaults and neither has ever been argued here.  Pinned as of
--- 2026-08-27 in tests/test_focus_talent_anchor.lua.
+-- game (GH #235).  Pinned as of 2026-08-27 in tests/test_focus_talent_anchor.lua.
+--
+-- t20 and t25 PRICED 2026-08-27, axis TALENTPRICE (baton 2 of GH #238 section 6,
+-- one focus hero per round: lion 05:30Z, axe 08:15Z, zuus here).  NEITHER ROW
+-- CHANGED -- t20 keeps [5], t25 keeps [7] -- but they are no longer the unargued
+-- upstream defaults they were this morning.  Talent names and the KV keys the
+-- engine folds them into are read off tools/agent/talent_slot_census.py.
+--
+-- t20 KEEPS [5] (+60 zuus_arc_lightning/arc_damage) over [6] (+0.5
+-- zuus_lightning_bolt/ministun_duration, over a 0.35 base).  Start with what this
+-- file can SEE of each payoff, because the answer is NEITHER, and that is what
+-- makes the rest a combat-power call rather than a decision-layer one:
+--   * [5] is the only talent in the focus five whose payoff lands on a KV key
+--     this file already queries.  The engine folds it into `arc_damage` and
+--     X.ConsiderQ reads exactly that key.  But that read has ONE consumer -- the
+--     J.WillKillTarget creep test -- and the consumer sits behind
+--     `bot:GetActiveMode() == BOT_MODE_LANING`.  The fold is reachable at level
+--     20 and the consumer is not: laning is over by then in any turbo game.  So
+--     the fold delivers into a door that has closed, and the direction is benign
+--     (the engine still applies the +60; the bot merely under-rates its own Arc).
+--   * [6] folds into `ministun_duration`, which NO site in this repo reads.
+-- Tie broken on combat power, and there [5] wins on volume and on rank.  Arc
+-- Lightning is the ability BOTH rows of tAllAbilityBuildList max, it costs 85-100
+-- on a 1.6s cooldown, X.ConsiderQ bids it from nine separate branches, and the
+-- +60 is paid PER JUMP -- 180 -> 240 at the rank held there, +33%, multiplied by
+-- the bounce count.  [6] buys 0.35 -> 0.85s of ministun on an ability whose 0.35
+-- already interrupts channels and teleports; the extra 0.5s is chase-and-kite
+-- time, and this file has no code that converts it -- X.ConsiderE is the only
+-- mobility branch and it never sequences off a stun.
+-- HONEST BOUND, stated rather than buried: Arc casts per game and the realised
+-- bounce count were NOT measured in this round.  The +33% is per-cast arithmetic
+-- off the KV, not a game-level effect size, and no in-domain frame exists -- the
+-- fixture library's Zeus frames are all far below level 20.
+--
+-- t25 KEEPS [7] (zuus_lightning_bolt/aoe_radius = 325) over [8] (+3
+-- zuus_heavenly_jump/AbilityCharges), and THIS one is a decision-layer ruling, not
+-- a magnitude call.  The t25 pick and the talent7 branch in X.SkillsComplement
+-- stand or fall together: `talent7:IsTrained()` there swaps
+-- ActionQueue_UseAbilityOnEntity for ActionQueue_UseAbilityOnLocation, and index 7
+-- really is the AoE talent.  That makes this file the WORKING twin of the wiring
+-- that was BROKEN on Lion (GH #166), where the same idiom read index 8 and would
+-- have location-cast a UNIT_TARGET Hex.  Point-casting the bolt is legal with or
+-- without the talent -- the base ability carries spread_aoe = 325, verified at the
+-- X.ConsiderW2 site -- so the talent upgrades "strike one unit near the point"
+-- into "strike every unit near the point", and X.ConsiderW2 already point-casts
+-- unconditionally.  Taking [8] would freeze `talent7:IsTrained()` false for the
+-- whole game and turn the only place in this file where a talent changes an ORDER
+-- into dead code.
+-- The honest half, recorded because it is the one real argument for [8]: its
+-- payoff needs no decision-layer support whatsoever, since AbilityCharges is spent
+-- through the `IsFullyCastable` test X.ConsiderE already gates on.  It loses on
+-- volume anyway -- W is bid from nine branches across X.ConsiderW and
+-- X.ConsiderW2, E from two.
 --
 -- t15 CHANGED 2026-08-22: [3] -> [4].  The two payouts are not comparable in size,
 -- they are comparable in REACHABILITY, and this hero's binding constraint is mana:
@@ -951,9 +1001,25 @@ function X.ConsiderR()
 	
 	-- FACT, 2026-08-22 (GH #104's method): this line wants "the Thundergod's Wrath
 	-- damage talent", but index 5 is special_bonus_unique_zeus_2 = +60 ARC LIGHTNING
-	-- damage -- a t20 row, never trained in turbo (GH #84).  The ult-damage talent is
+	-- damage -- a t20 row.  The ult-damage talent is
 	-- index 3 (t15, special_bonus_unique_zeus_4 = +75), and as of today this hero no
 	-- longer takes it (see the tTalentTreeList block).
+	--
+	-- CORRECTED 2026-08-27 (GH #235).  The clause struck from the sentence above read
+	-- "never trained in turbo (GH #84)", and it was the LAST surviving copy under
+	-- bots/ of the premise the 02:15Z sweep retired the same day: that zero belonged
+	-- to a 10-minute batch cap, not to turbo, and the first frame past the cap has
+	-- this very hero at level 23.  It survived the sweep because it is a TENTH
+	-- phrasing -- it quotes no number, so none of the registry's numeric fingerprints
+	-- could see it.  tests/test_level_premise_registry.lua section 3 was added in the
+	-- same change to close that hole; the header of this file is where the corrected
+	-- reading lives.
+	-- WHAT THE CORRECTION COSTS THIS LINE, which is the part that is not prose: this
+	-- file's t20 row takes [5], so `talent5:IsTrained()` is TRUE from level 20 on and
+	-- the guarded term below really runs.  Until today the term was ALSO protected by
+	-- the branch being unreachable.  It is not any more, so the fold argument set out
+	-- in (2) below is now the only thing holding this line up.  It still holds; it is
+	-- now load-bearing.  (Same shape, same day, as hero_axe.lua's talent7.)
 	--
 	-- CORRECTED 2026-08-26 (GH #228, axis TALENTVALUE, read off the game's own KV
 	-- rather than the datafeed -- the source swap GH #214 made).  The 08-22 note said

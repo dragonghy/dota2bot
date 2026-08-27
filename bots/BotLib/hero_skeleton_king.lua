@@ -812,8 +812,18 @@ function X.ShouldSaveMana( nAbility )
 
 	-- (a commented-out `if talent5:IsTrained() then return false end` used to open
 	-- this function.  talent5 is sTalentList[5] = the other t20 slot, today
-	-- special_bonus_attack_speed_50 -- nothing to do with mana, and unreachable in
-	-- turbo regardless.  The handle it needed is gone with it.)
+	-- special_bonus_attack_speed_50 -- nothing to do with mana.  The handle it
+	-- needed is gone with it.)
+	-- CORRECTED 2026-08-27 (GH #235): the clause struck here read "and unreachable in
+	-- turbo regardless".  It is the second hole the 02:15Z sweep left, and a
+	-- different one from the tenth-phrasing hole -- this claim is SPLIT ACROSS A LINE
+	-- BREAK, so no line-by-line sweep can match it however many phrasings it carries.
+	-- tests/test_level_premise_registry.lua section 3 scans adjacent line pairs for
+	-- exactly that reason.  Nothing about this note's conclusion moves: the talent is
+	-- an attack-speed row and has nothing to do with mana whether it is trained or
+	-- not, which is why only the reachability clause is struck.  This hero's own t20
+	-- and t25 pricing is still OWED (baton 2 of GH #238 section 6 takes him LAST,
+	-- because two of his rows are FACET rows); do not read this edit as that pricing.
 	if nLV >= 6
 	and nAbility ~= nil
 	and abilityR ~= nil

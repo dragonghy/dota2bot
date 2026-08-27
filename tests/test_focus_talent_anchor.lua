@@ -181,10 +181,44 @@ local FOCUS = {
             'special_bonus_unique_zeus_5',
             'special_bonus_unique_zeus_jump_charges',
         },
-        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
-        -- [5] +60 Arc Lightning damage over [6] +0.5s Lightning Bolt ministun,
-        -- and [7] AoE Lightning Bolt (325 radius) over [8] +3 Heavenly Jump
-        -- charges. Upstream defaults, never argued here.
+        -- t20/t25 RECORDED 2026-08-27 (first pin, both unpriced), then PRICED
+        -- later the same day -- baton 2 of GH #238 section 6, one hero per round,
+        -- lion 05:30Z then axe 08:15Z then zuus. NEITHER ROW CHANGED: t20 keeps
+        -- [5] (+60 zuus_arc_lightning/arc_damage) and t25 keeps [7]
+        -- (zuus_lightning_bolt/aoe_radius = 325). Argued in full in
+        -- hero_zuus.lua's pricing block; the two load-bearing halves are these.
+        --
+        -- t20 is a COMBAT-POWER call, and it is one only because the decision
+        -- layer turns out to be blind to BOTH sides. [5] is the one talent in
+        -- the focus five whose payoff lands on a KV key its own file already
+        -- queries: the engine folds it into `arc_damage` and X.ConsiderQ reads
+        -- exactly that key. But that read has ONE consumer, and the consumer
+        -- sits behind `bot:GetActiveMode() == BOT_MODE_LANING` -- so the fold is
+        -- reachable at level 20 and the door it arrives at is not. [6] folds
+        -- into `ministun_duration`, which no site in the repo reads at all. With
+        -- both invisible the tie goes to volume and rank: Arc is maxed by both
+        -- build rows, bid from nine branches, 1.6s cooldown, and the +60 is paid
+        -- PER JUMP (180 -> 240, +33%). Honest bound: casts and bounces per game
+        -- were not measured, and no in-domain Zeus frame exists.
+        --
+        -- t25 is the opposite kind of ruling -- decision-layer, not magnitude --
+        -- and it is the mirror of the Lion row priced this morning. hero_zuus.lua
+        -- reads `talent7:IsTrained()` to swap UseAbilityOnEntity for
+        -- UseAbilityOnLocation, and index 7 REALLY IS the AoE talent, so this is
+        -- the WORKING twin of the wiring GH #166 found broken on Lion (same
+        -- idiom, index 8, on a UNIT_TARGET Hex). Taking [8] would freeze that
+        -- predicate false for the whole game and make the only place in the file
+        -- where a talent changes an ORDER into dead code. [8]'s honest merit,
+        -- recorded: AbilityCharges needs no decision-layer support at all, being
+        -- spent through the `IsFullyCastable` test X.ConsiderE already gates on.
+        -- It loses on volume -- W is bid from nine branches, E from two.
+        --
+        -- One prediction from the axe round, resolved the other way and recorded
+        -- so nobody reads it forward: that round expected zuus's t20 to move onto
+        -- the EVEN index, which would have made its own new pair assertion the
+        -- sole catcher of mutation M3. t20 stays on [5], the ODD index, so zuus
+        -- still catches a collapsed t20 mapping through section 2 and that
+        -- overlap is still real.
         -- t15 CHANGED 2026-08-22, [3] -> [4]: the +75 Thundergod's Wrath damage row
         -- can only pay on a cast that happens, and on this corpus the ult is
         -- ready-and-unaffordable on 7 of 16 ready frames.  [4] takes 20% off the mana
@@ -591,6 +625,69 @@ tests['[hero] the axe t25 pricing and the hardcoded Culling threshold stand or f
         .. 'so in the block instead of leaving a claim that quietly stopped being '
         .. 'true. Removing the claim while the literal stays is the same error the '
         .. 'other way.')
+end
+
+-- ---------------------------------------------------------------------------
+-- 4c. The Zeus t20/t25 pricing (2026-08-27).
+--
+-- Both rulings are IF-AND-ONLY-IFs against something already in hero_zuus.lua,
+-- which is what makes them worth pinning rather than restating.  The t25 pick
+-- and the talent7 dispatch are the same decision seen twice: flip the row to [8]
+-- and the dispatch becomes dead code, delete the dispatch and the row is free to
+-- re-price.  The t20 ruling turns entirely on the folded read having exactly one
+-- consumer and that consumer being behind a laning test.
+
+tests['[hero] the zeus t25 pick and the talent7 cast-shape dispatch stand or fall together'] = function()
+    local src = read_file(BOTLIB .. 'hero_zuus.lua')
+    local dispatch = false
+    local lines = live_lines(src)
+    for i, line in ipairs(lines) do
+        if line:find('talent7:IsTrained()', 1, true) then
+            local window = table.concat(lines, '\n', i, math.min(#lines, i + 6))
+            if window:find('ActionQueue_UseAbilityOnLocation', 1, true)
+                and window:find('ActionQueue_UseAbilityOnEntity', 1, true)
+            then
+                dispatch = true
+            end
+        end
+    end
+    local takes_seven = FOCUS.zuus.expect.t25 == 7
+    assert(dispatch == takes_seven,
+        'hero_zuus.lua has the talent7 location/entity dispatch = ' .. tostring(dispatch)
+        .. ' but this file records the t25 row taking [7] = ' .. tostring(takes_seven)
+        .. '. These are one decision. A hero trains one talent per tier, so with the '
+        .. 'row on [8] `talent7:IsTrained()` is structurally false for the whole game '
+        .. 'and the branch is dead code -- the same shape GH #232 priced for reads and '
+        .. 'the axe round priced for guards. And with the dispatch gone there is no '
+        .. 'longer a decision-layer reason to prefer [7], so the pair goes back to '
+        .. 'being a magnitude call and owes a fresh pricing. Whichever half moved, '
+        .. 'move the other or write down why not.')
+end
+
+tests['[hero] the zeus t20 ruling still rests on a folded read with one laning-gated consumer'] = function()
+    local src = read_file(BOTLIB .. 'hero_zuus.lua')
+    local lines = live_lines(src)
+    local reads, consumers, laning_gated = 0, 0, 0
+    for i, line in ipairs(lines) do
+        if line:find("GetSpecialValueInt( \"arc_damage\" )", 1, true) then reads = reads + 1 end
+        if line:find('J.WillKillTarget( creep, nDamage', 1, true) then
+            consumers = consumers + 1
+            local window = table.concat(lines, '\n', math.max(1, i - 12), i)
+            if window:find('BOT_MODE_LANING', 1, true) then
+                laning_gated = laning_gated + 1
+            end
+        end
+    end
+    assert(reads == 1 and consumers == 1 and laning_gated == 1,
+        'hero_zuus.lua now has ' .. reads .. ' read(s) of the folded `arc_damage` key, '
+        .. consumers .. ' consumer(s) of it, ' .. laning_gated .. ' of them behind a '
+        .. 'BOT_MODE_LANING test. The t20 ruling says the +60 talent is invisible to '
+        .. 'the decision layer NOT because the fold fails -- it works, and this is the '
+        .. 'only site in the focus five where it lands on a key the file already asks '
+        .. 'for -- but because its single consumer is a laning-phase creep test and t20 '
+        .. 'unlocks long after laning. A second consumer outside laning, or the gate '
+        .. 'coming off this one, makes [5] decision-visible and reopens the pair on '
+        .. 'better terms than it was priced on.')
 end
 
 -- ---------------------------------------------------------------------------

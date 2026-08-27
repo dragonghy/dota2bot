@@ -49,6 +49,33 @@
 --     caught.  That is why bots/ is an equality and not merely a ceiling: the
 --     one place a new phrasing is cheap to notice is the place with nine known
 --     ones already.
+--
+-- SECTION 3 EXISTS BECAUSE THE TENTH PHRASING HAPPENED THE SAME DAY.  Section 1
+-- read ZERO uncorrected sites under bots/ from the hour it landed, and it was
+-- wrong twice, both misses found by hand on 2026-08-27 while pricing Zeus's t20
+-- row -- which is the row one of them sat on:
+--
+--   * hero_zuus.lua said "a t20 row, never trained in turbo (GH #84)".  It quotes
+--     NO NUMBER, so not one of the six numeric fingerprints could see it, and it
+--     stood 930 lines below a header block that had already been corrected to say
+--     the opposite.  The file contradicted itself and the ratchet read clean.
+--   * hero_skeleton_king.lua said "and unreachable in\n turbo regardless".  That
+--     phrasing IS on the claim list -- but it is split across a line break, and a
+--     line-by-line scan cannot match it however many phrasings it carries.
+--
+-- The two misses are different failures, so section 3 answers both: a CLAIM list
+-- that keys on the verdict wording instead of on the number, scanned over ADJACENT
+-- LINE PAIRS instead of single lines.  The obvious cheap fix -- adding the bare
+-- string "GH #84" to FINGERPRINTS -- was measured and rejected: it does find the
+-- Zeus site, and it also drags 7 new test files onto the registry whose only sin
+-- is citing the issue as provenance, inflating a debt ceiling from 9 to 16 with
+-- rows nobody owes.  A citation is not an argument.
+--
+--   * SECTION 3 IS bots/ ONLY, deliberately.  Over tests/ the same sweep reads 6
+--     uncorrected sites in 3 files (test_focus_talent_anchor, test_wk_fact_anchor
+--     x4, test_lion_hex_talent_slot), all three ALREADY on PENDING below for the
+--     numeric list.  Ratcheting them twice would double-count one debt; the
+--     re-read that clears their row clears these too.
 --   * THIS FILE EXCLUDES ITSELF, and has to.  It is the file whose subject is
 --     those strings, so it contains every one of them; a sweep that included it
 --     would report its own prose as a defect.  Same lesson GH #228 paid for --
@@ -229,6 +256,134 @@ tests['[hero] the stale-premise registry shrinks or holds, never grows'] = funct
             .. 'in this file and lower the ceiling, so the number keeps meaning '
             .. 'what it says.')
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- 3. The two holes section 1 read straight through (2026-08-27).
+--
+-- The claim wording, not the number, and scanned over adjacent line pairs so a
+-- sentence that wraps is still one sentence.  Plain substring matching on
+-- purpose: these are prose, and a Lua pattern escape is one more thing to get
+-- wrong in a file whose whole job is quoting strings.
+
+local CLAIM_FINGERPRINTS = {
+    'never trained in turbo',
+    'unreachable in turbo',
+    'dead row',
+    'dead weight in turbo',
+    'can ever be taken in turbo',
+    'cannot be taken in turbo',
+    'never reached in turbo',
+}
+
+-- A retraction always carries a retraction verb, which is what separates a
+-- QUOTED claim from an ASSERTED one.  GH #235 and the date cover the 08-27
+-- sweep; WITHDRAWN and RETIRED cover the earlier rounds that retired a claim
+-- for their own reasons and named it.
+local CLAIM_MARKERS = { 'GH #235', '2026-08-27', 'WITHDRAWN', 'RETIRED' }
+
+--- Comment leader and indentation stripped, internal whitespace collapsed, so
+--- that joining two source lines reproduces the sentence the author wrote.
+local function norm(line)
+    if line == nil then return '' end
+    return (line:gsub('^%s*', ''):gsub('^%-%-+%s*', ''):gsub('%s+', ' '))
+end
+
+local function has_plain(hay, needles)
+    for _, n in ipairs(needles) do
+        if hay:find(n, 1, true) then return true end
+    end
+    return false
+end
+
+--- Hits are attributed to the line the sentence STARTS on: a pair matches only
+--- when the second line alone does not, so one occurrence is never counted twice.
+---
+--- Takes LINES, not a path, so the wrap case below can drive this exact function
+--- on a two-line fixture.  Written the other way first, and the wrap test then
+--- re-implemented the join instead of testing it -- so deleting the join from
+--- here left the suite green (mutation M7, caught by running it).
+local function scan_claim_lines(lines)
+    local hits, uncorrected, bad = 0, 0, {}
+    for i = 1, #lines do
+        local next_alone = norm(lines[i + 1])
+        local pair = norm(lines[i]) .. ' ' .. next_alone
+        if has_plain(pair, CLAIM_FINGERPRINTS)
+            and not has_plain(next_alone, CLAIM_FINGERPRINTS)
+        then
+            hits = hits + 1
+            local marked = false
+            for j = math.max(1, i - WINDOW), math.min(#lines, i + WINDOW) do
+                if has_plain(lines[j], CLAIM_MARKERS) then marked = true; break end
+            end
+            if not marked then
+                uncorrected = uncorrected + 1
+                bad[#bad + 1] = i
+            end
+        end
+    end
+    return { hits = hits, uncorrected = uncorrected, bad = bad }
+end
+
+local function scan_claims(path)
+    local lines = read_lines(path)
+    if not lines then return { hits = 0, uncorrected = 0, bad = {} } end
+    return scan_claim_lines(lines)
+end
+
+tests['[hero] no file under bots/ asserts the level ceiling in words either'] = function()
+    local bad, total = {}, 0
+    for _, path in ipairs(bots_paths()) do
+        if path ~= SELF then
+            local r = scan_claims(path)
+            total = total + r.hits
+            if r.uncorrected > 0 then
+                bad[#bad + 1] = path .. ':' .. table.concat(r.bad, ',')
+            end
+        end
+    end
+    table.sort(bad)
+    assert(#bad == 0,
+        'these shipped files state the retired level ceiling as a VERDICT rather '
+        .. 'than quoting it: ' .. table.concat(bad, ', ') .. '. Section 1 keys on '
+        .. 'the numbers GH #84 reported; this one keys on the wording, because on '
+        .. '2026-08-27 two sites carried the claim with no number in it and section '
+        .. '1 read them as clean. Keep the sentence if a verdict above it needs it, '
+        .. 'and name the correction within ' .. WINDOW .. ' lines (GH #235, the '
+        .. '2026-08-27 date, WITHDRAWN or RETIRED).')
+
+    -- Anti-vacuum, and it is doing real work here: the two sites this section was
+    -- built for were corrected by QUOTING the struck clause, so if the pair scan
+    -- silently stops matching -- a norm() regression, a changed comment leader --
+    -- this count is what notices.
+    assert(total >= 7,
+        'the claim sweep found only ' .. total .. ' site(s) under bots/, and 7 were '
+        .. 'standing when it was written (5 already-corrected quotes plus the two '
+        .. 'sites corrected in the same change). This reads as a broken sweep, not '
+        .. 'as a clean tree. One of the seven WRAPS across two lines, so a scan that '
+        .. 'quietly went back to reading single lines lands here at 6.')
+end
+
+tests['[hero] the claim sweep still sees a sentence split across two lines'] = function()
+    -- The hero_skeleton_king.lua miss, driven through the real scanner rather
+    -- than through a re-implementation of it.
+    local wrapped = { '-- said this branch was "unreachable in', '-- turbo regardless".' }
+
+    local both = scan_claim_lines(wrapped)
+    assert(both.hits == 1,
+        'the claim scanner reads ' .. both.hits .. ' hit(s) in a claim that wraps '
+        .. 'across two comment lines, not 1. A sentence is not a line: this is the '
+        .. 'miss section 3 was added for on 2026-08-27, and a single-line scan '
+        .. 'cannot see it however many phrasings the list carries.')
+    assert(both.bad[1] == 1,
+        'the wrapped claim was attributed to line ' .. tostring(both.bad[1])
+        .. ', not to the line the sentence starts on.')
+
+    assert(scan_claim_lines({ wrapped[1] }).hits == 0
+        and scan_claim_lines({ wrapped[2] }).hits == 0,
+        'one half of the wrapped claim now matches on its own, so this case no '
+        .. 'longer tests wrapping at all -- rewrite it against a claim that really '
+        .. 'straddles the break.')
 end
 
 return tests
