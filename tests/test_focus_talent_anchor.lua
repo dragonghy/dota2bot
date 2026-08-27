@@ -182,19 +182,33 @@ local FOCUS = {
             'special_bonus_unique_lion_4',
             'special_bonus_unique_lion_2',
         },
-        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed -- and THIS is
-        -- the row the axis was worth opening for. The t25 row takes [8]
-        -- special_bonus_unique_lion_2 (+600 Earth Spike cast range), i.e. exactly
-        -- the half that makes every `talent8` read in hero_lion.lua answer TRUE
-        -- while believing it means "Hex is an AoE spell now". The talent that
-        -- actually gives Hex a radius is [7]. GH #166 landed the narrowing
-        -- (soak candidate 'lionhexaoe') and closed with "domain is empty" --
-        -- BECAUSE NO HERO IN THE CORPUS REACHED LEVEL 25. That premise is the
-        -- one this round retired. From level 25 on, a shipped turbo Lion trains
-        -- [8], X.IsHexAoe answers true, and the W dispatch swaps
-        -- ActionQueue_UseAbilityOnEntity for ActionQueue_UseAbilityOnLocation on
-        -- a UNIT_TARGET ability. 'lionhexaoe' is not an empty-domain candidate
-        -- any more; re-open GH #166 before pricing this pair on taste.
+        -- t25 CHANGED 2026-08-27, [8] -> [7] (GH #166 re-opened; the pricing round
+        -- the 08-27T02:15Z LVLPREMISE pass handed forward as baton 2, Lion first
+        -- because this is the row that carries a live defect).
+        -- The row USED TO take [8] special_bonus_unique_lion_2 (+600 Earth Spike
+        -- cast range), i.e. exactly the half that makes every `talent8` read in
+        -- hero_lion.lua answer TRUE while believing it means "Hex is an AoE spell
+        -- now". The talent that actually gives Hex a radius is [7]. It now takes
+        -- [7], on three grounds, argued in full in hero_lion.lua's t25 block:
+        --   1. +250 Hex radius is the marquee t25 (weakest ground: lookupable);
+        --   2. it is worth more to a BOT and [8] is worth less -- Hex is
+        --      UNIT_TARGET so the engine applies the radius with no aiming, while
+        --      Earth Spike is a led line skillshot whose hit rate falls with the
+        --      range [8] would extend 500 -> 1100;
+        --   3. one talent per tier => `talent8` is now structurally untrained =>
+        --      X.IsHexAoe answers false everywhere, which is the CORRECT answer
+        --      for a unit-target ability, so GH #166's defect is removed by
+        --      construction rather than gated around.
+        -- What is given up: the clustered-target ("W-团控") branch is skipped, a
+        -- missed optimisation and a WIDENING, left to a later hand per #166 §9.
+        -- 'lionhexaoe' STAYS as a gate: the row and Valve's slot order are not
+        -- this file's to guarantee. Its domain is now empty for a STRUCTURAL
+        -- reason, not the retired corpus one -- do not read the old ruling forward.
+        -- t20 PRICED 2026-08-27 and NOT changed: the row already takes [6], the
+        -- 30-degree Earth Spike cone, which is the side this desk argues for --
+        -- unconditional, and it buys the same aiming forgiveness as ground 2.
+        -- [5] (+20 Finger damage per kill) banks stacks only after Finger KILLS
+        -- and arrives at level 20, late in a ~20-minute turbo game.
         -- t10 CHANGED 2026-08-22, [1] -> [2]: the +10pp Mana Drain slow is only
         -- collectible while channelling on an enemy hero, and X.ConsiderE reaches
         -- those two branches only when Earth Spike, Hex and Finger are ALL
@@ -202,7 +216,7 @@ local FOCUS = {
         -- honest bounds: tests/test_lion_t10_payoff.lua and the rationale block in
         -- hero_lion.lua.  t15 was examined in the same pass and deliberately left
         -- alone -- see the same block.
-        expect = { t10 = 2, t15 = 4, t20 = 6, t25 = 8 },
+        expect = { t10 = 2, t15 = 4, t20 = 6, t25 = 7 },
     },
     skeleton_king = {
         id = 42,

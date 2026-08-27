@@ -26,7 +26,9 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --   t15 [3] -2s Hex cooldown              [4] +15% To Hell and Back amp
 --       [3] = special_bonus_unique_lion_5, [4] = special_bonus_unique_lion_11
 --   t20 [5] +20 Finger dmg per kill       [6] Earth Spike 30-degree cone
+--       [5] = special_bonus_unique_lion_8, [6] = special_bonus_unique_lion_10
 --   t25 [7] +250 AoE Hex                  [8] +600 Earth Spike cast range
+--       [7] = special_bonus_unique_lion_4, [8] = special_bonus_unique_lion_2
 -- t20/t25 are LIVE rows, and for this hero that is not a bookkeeping note.  This
 -- line used to read "t20/t25 are dead rows in turbo (GH #84: level >= 20 on 0 of
 -- 210 hero-slots)"; CORRECTED 2026-08-27, because that zero belonged to the batch
@@ -34,17 +36,46 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- Owner priority P3 (GH #108) removed the cap and the first frame past it reads
 -- ten heroes at level 22-27 in a 24.9-minute naturally-ended game (GH #235).
 --
--- WHAT THAT COSTS HERE.  The t25 row below is {10, 0} = index [8] =
--- special_bonus_unique_lion_2, +600 Earth Spike cast range -- i.e. exactly the
--- half that makes every `talent8` read in this file answer TRUE while the reader
--- believes it means "Hex is an area spell now" (GH #166; the Hex-radius talent is
--- [7], the other half of the same row).  So from level 25 a shipped turbo Lion
--- trains [8], X.IsHexAoe answers true, and the W dispatch swaps
--- ActionQueue_UseAbilityOnEntity for ActionQueue_UseAbilityOnLocation on a
--- UNIT_TARGET ability.  GH #166 landed the narrowing as soak candidate
--- 'lionhexaoe' and ruled its domain EMPTY -- on the corpus that could not reach
--- level 25.  That ruling rests on the premise this line just retired: re-open
--- GH #166 rather than reading the empty domain forward.
+-- t25 CHANGED 2026-08-27: {10, 0} -> {0, 10}, i.e. index [8] -> [7].  This is the
+-- first time either of this hero's two late rows has been ARGUED rather than
+-- inherited from the OpenHyperAI snapshot, and it is a real behaviour change in
+-- every turbo game that reaches level 25 -- talent rows are not gated.  Three
+-- reasons, in ascending order of how much they belong to THIS project:
+--   1. Standard strategy, and the weakest of the three because anyone can look it
+--      up: +250 Hex radius is Lion's marquee t25.  It turns a single-target 4s
+--      disable into a team-wide one centred on the target; +600 Earth Spike cast
+--      range adds no disable and no damage, only delivery distance.
+--   2. It is worth MORE to a bot than to a human, and [8] is worth LESS.  Hex is
+--      DOTA_ABILITY_BEHAVIOR_UNIT_TARGET: the +250 radius is applied by the engine
+--      on cast, so a bot collects the whole talent with zero aiming, zero
+--      prediction and zero new code.  Earth Spike is a LINE skillshot with travel
+--      time, the one ability on this hero that must be led; raising its cast range
+--      500 -> 1100 more than doubles the lead distance, and an unled line's hit
+--      rate falls with distance.  [8] hands extra range to the ability the bot is
+--      worst at, [7] hands a free radius to the one it just clicks.
+--   3. It removes GH #166's live defect STRUCTURALLY instead of gating around it.
+--      Fifteen reads in this file ask `talent8` whether "Hex is an area spell now"
+--      while slot 8 is the Earth-Spike-range half and does not touch lion_voodoo
+--      at all.  With [7] trained, talent8 is structurally untrained in the shipped
+--      build, X.IsHexAoe answers false everywhere, and false is the CORRECT answer
+--      for a unit-target ability under either talent: the entity dispatch is kept
+--      and the cast-legality check is no longer skipped.  Nothing is lost, because
+--      the engine applies the radius whether or not this file knows about it.
+-- WHAT IS GIVEN UP, stated so it is not discovered later as a surprise: the
+-- `J.GetAoeEnemyHeroLocation` branch in X.ConsiderW (the "W-团控" one) is skipped
+-- when IsHexAoe is false, so the bot no longer PREFERS a clustered target once it
+-- really does have AoE Hex.  That is a missed optimisation, not a defect -- the
+-- most-dangerous-enemy branch directly below it serves the same fight -- and it is
+-- a WIDENING, which GH #166 §9 deliberately left to a later hand.  Filed there.
+-- t20 PRICED 2026-08-27 and NOT CHANGED -- the row already takes [6].
+-- [6] is the 30-degree cone, which is the side this desk would have argued for
+-- anyway, so the pricing confirmed the inheritance rather than rubber-stamping it.
+-- [5] (+20 Finger
+-- damage per kill) pays only after Finger KILLS, and it arrives at level 20 -- late
+-- in a ~20-minute turbo game, with few casts left to bank stacks on.  [6] is
+-- unconditional and it buys the same thing reason 2 above buys: forgiveness for
+-- lateral aiming error on the one skillshot this bot must lead.  Nothing in this
+-- file reads talent6, and nothing needs to -- the cone is applied by the engine.
 --
 -- t10 CHANGED 2026-08-22: [1] -> [2].  Not because +20 move speed is the bigger
 -- payout -- it is the smaller one -- but because of where each one can be COLLECTED:
@@ -133,7 +164,7 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- Maiden bind index 4/5 and are the two that would care.  Measured and pinned in
 -- tests/test_focus_innate_index_anchor.lua.
 local tTalentTreeList = {
-						['t25'] = {10, 0},
+						['t25'] = {0, 10},
 						['t20'] = {10, 0},
 						['t15'] = {10, 0},
 						['t10'] = {10, 0},
@@ -308,6 +339,13 @@ local talent5 = bot:GetAbilityByName( sTalentList[5] )
 -- Every read of `talent8` below decides something about lion_voodoo (Hex) -- yet
 -- the talent it names modifies lion_impale.  The Hex-AoE talent is the OTHER
 -- half of the same row.  Read through X.IsHexAoe, never raw; see the note there.
+--
+-- SINCE 2026-08-27 the handle is also STRUCTURALLY UNTRAINED: the t25 row above
+-- takes {0, 10} = [7], and a hero trains ONE talent per tier, so `talent8` can
+-- never answer IsTrained() true in the shipped build.  The binding is kept, and
+-- so is the gate in X.IsHexAoe, because neither the row nor Valve's slot order is
+-- this file's to guarantee -- if either moves, the guard is what stands between
+-- the change and fifteen location orders on a unit-target ability.
 local talent8 = bot:GetAbilityByName( sTalentList[8] )
 
 local castQDesire, castQLocation
@@ -1261,9 +1299,19 @@ end
 --- lion_impale/AbilityCastRange (+600).  It does not touch lion_voodoo.  The
 --- talent that gives Hex a radius is special_bonus_unique_lion_4 (+250), and it
 --- is sTalentList[7] -- the other half of the same t25 row.  So the shipped
---- reads name the wrong half, and this file's own tTalentTreeList picks
+--- reads name the wrong half.  This file's own tTalentTreeList USED TO pick
 --- ['t25'] = {10, 0} => aba_skill.X.GetTalentBuild index 4 = 8, i.e. the build
---- trains exactly the half that makes these reads answer true.
+--- trained exactly the half that makes these reads answer true.
+---
+--- CHANGED 2026-08-27: the row now takes {0, 10} = [7], the real +250 Hex radius.
+--- One talent per tier => `talent8` is structurally untrained => every read here
+--- answers false, which is the CORRECT answer for a unit-target ability under
+--- either talent.  That was not the reason for the change (see the t25 pricing
+--- block at the top of this file: [7] is simply the stronger talent, and more so
+--- for a bot than for a human) -- it is what the change happens to buy, and it
+--- means the two consequences below are now unreachable BY CONSTRUCTION rather
+--- than merely gated.  The gate is kept anyway: neither the row nor Valve's slot
+--- order is this file's to guarantee, and a green test is not a promise.
 ---
 --- Two things go wrong when it does, and only the first needs the engine:
 ---   * the dispatch swaps ActionQueue_UseAbilityOnEntity for

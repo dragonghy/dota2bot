@@ -214,9 +214,24 @@ tests['[hero] lion t25: slot 8 modifies Earth Spike, slot 7 is the Hex one'] = f
 end
 
 -- ---------------------------------------------------------------------------
--- 2. ...and this build trains it.  Read out of the file, never restated.
+-- 2. ...and this build NO LONGER trains it.  Read out of the file, never restated.
+--
+-- CHANGED 2026-08-27.  This case used to assert index 8 -- the half that makes
+-- every `talent8` read answer true -- and its failure message said "if it now
+-- takes 7 the shipped reads would name the RIGHT talent and the gate has nothing
+-- left to narrow".  That is exactly what happened, and it happened on purpose:
+-- the t25 row was re-priced to {0, 10} = [7], the real +250 Hex radius, on the
+-- three grounds recorded in hero_lion.lua's t25 block (marquee talent; worth more
+-- to a bot, since Hex is UNIT_TARGET and needs no aiming while Earth Spike is a
+-- led line skillshot; and it removes this issue's defect BY CONSTRUCTION).
+-- The assertion is inverted rather than deleted, because the thing worth pinning
+-- did not change -- it is still "which half of the t25 row does the shipped build
+-- train", and it must still self-report if anyone moves it back.
+-- The gate in X.IsHexAoe is deliberately KEPT (section 3 still drives it): one
+-- talent per tier makes `talent8` structurally untrained TODAY, but neither the
+-- row nor Valve's slot order is hero_lion.lua's to guarantee.
 
-tests['[hero] lion`s own t25 row selects sTalentList index 8'] = function()
+tests['[hero] lion`s own t25 row selects sTalentList index 7, not 8'] = function()
     api.reset_modules()
     api.install({ bot = api.MakeHero('npc_dota_hero_lion') })
     local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
@@ -232,9 +247,22 @@ tests['[hero] lion`s own t25 row selects sTalentList index 8'] = function()
         .. 'so which t25 index it takes cannot be read this way any more')
 
     local tPicks = fnReal(tCaptured)
-    assert(tPicks[4] == 8, 'this build takes sTalentList index ' .. tostring(tPicks[4])
-        .. ' at t25, not 8 -- if it now takes 7 the shipped reads would name the '
-        .. 'RIGHT talent and the gate has nothing left to narrow')
+    assert(tPicks[4] == 7, 'this build takes sTalentList index ' .. tostring(tPicks[4])
+        .. ' at t25, not 7. Index 7 is special_bonus_unique_lion_4 (+250 Hex '
+        .. 'radius), chosen 2026-08-27. If this reads 8 again, the build is back on '
+        .. 'special_bonus_unique_lion_2 (+600 Earth Spike cast range) and every '
+        .. '`talent8` read in hero_lion.lua goes live from level 25 believing it '
+        .. 'means "Hex is an area spell now" -- see GH #166.')
+
+    -- The other half of the same statement, and the one that makes the gate's
+    -- domain structural rather than corpus-measured: a hero trains ONE talent per
+    -- tier, so picking 7 at t25 is what makes talent8 unreachable. Pin the pair,
+    -- not just the winner, so a build that somehow took both would not read green.
+    assert(tPicks[8] == 8, 'the t25 pair no longer resolves to {7, 8}; '
+        .. 'tPicks[4]=' .. tostring(tPicks[4]) .. ' tPicks[8]=' .. tostring(tPicks[8])
+        .. '. Index 4 is the trained pick and index 8 the abandoned half of the '
+        .. 'same row, so "talent8 is structurally untrained" is only true while '
+        .. 'these two are the two halves of one tier.')
 end
 
 -- ---------------------------------------------------------------------------
@@ -313,6 +341,19 @@ tests['[hero] no raw talent8 read survives outside X.IsHexAoe'] = function()
         .. 'the shipped file had fifteen `talent8:IsTrained()` reads, so some were dropped '
         .. 'rather than routed')
 
+    -- ADDED 2026-08-27, and it is not decoration.  With the t25 row on [7],
+    -- `talent8` is structurally untrained, so EVERY assertion in sections 3 and 4
+    -- now runs on a handle no shipped game will ever train.  A later reader who
+    -- notices that has one obvious cheap move -- delete the helper and the fifteen
+    -- call sites as dead weight -- and it is the wrong move: the row and Valve's
+    -- slot order are not this file's to guarantee, and the guard is the only thing
+    -- between a change to either and fifteen location orders on a unit-target
+    -- ability.  Pin the count so "clean up the dead branch" cannot pass quietly.
+    assert(nCalls >= 15, 'the IsHexAoe call sites were pruned to ' .. nCalls
+        .. '. If the reason was "talent8 is untrained anyway": that is true only '
+        .. 'while the t25 row takes [7] (section 2). Move the row back and every '
+        .. 'pruned site is a silent GH #166 regression with no guard left.')
+
     -- The gate must stay turbo-only, and it must stay a NARROWING one: the only
     -- thing the armed branch may do is return false.
     assert(sBody:find('J%.IsModeTurbo%(%)') ~= nil, 'the gate lost its turbo-only clause')
@@ -322,6 +363,61 @@ tests['[hero] no raw talent8 read survives outside X.IsHexAoe'] = function()
     assert(sArmed ~= nil and sArmed:find('return%s+false') ~= nil,
         'the armed branch no longer returns false; a narrowing gate that can return '
         .. 'true has stopped being structurally gate-off-equivalent')
+end
+
+-- ---------------------------------------------------------------------------
+-- 4b. The three decisions of 2026-08-27, pinned as source prose.
+--
+-- The t25 change carries two disclosures that no assertion elsewhere can make,
+-- because they are about what was DELIBERATELY not done:
+--   * the clustered-target branch ("W-团控") is given up, and giving it up is a
+--     missed optimisation left open as a WIDENING, not a thing nobody noticed;
+--   * the gate is kept on purpose even though its domain is now structural.
+-- And one that records a decision people will otherwise re-litigate from scratch:
+--   * t20 was priced this round and deliberately NOT changed.
+-- Deleting any of the three costs nothing today and loses the reason later, which
+-- is the failure this stream has now paid for three times.  Each is asserted
+-- against a sentence that occupies ONE source line, because the same three rounds
+-- also taught that an assertion written against prose that wraps goes red on the
+-- very comment it is protecting -- the cheap repair is to keep the load-bearing
+-- sentence unwrapped in the source, never to loosen the assertion.
+
+tests['[hero] the t25/t20 decisions of 2026-08-27 are still stated in the source'] = function()
+    local sSrc = read_file(SRC)
+
+    local tClaims = {
+        {
+            what = 'the widening that taking [7] gives up',
+            -- Deliberately stops before the section mark: this file is read by
+            -- lua5.1, which has no \x escape, and a literal multi-byte char in a
+            -- test anchor is one more thing that can go wrong for a reason that
+            -- has nothing to do with the claim being protected.
+            find = 'a WIDENING, which GH #166 ',
+            why  = 'without it, the skipped clustered-target branch reads as an '
+                .. 'oversight instead of a filed follow-up',
+        },
+        {
+            what = 'why the gate is kept once its domain went structural',
+            find = 'order is this file\'s to guarantee, and a green test is not a promise.',
+            why  = 'without it, the next reader deletes a guard whose domain is '
+                .. 'empty only while the t25 row stays on [7]',
+        },
+        {
+            what = 'that t20 was priced this round and left alone',
+            find = 't20 PRICED 2026-08-27 and NOT CHANGED -- the row already takes [6].',
+            why  = 'without it, [6] reads as an unexamined OpenHyperAI default and '
+                .. 'gets re-priced from zero',
+        },
+    }
+
+    for _, c in ipairs(tClaims) do
+        assert(sSrc:find(c.find, 1, true) ~= nil,
+            'hero_lion.lua no longer states ' .. c.what .. ' on one line. '
+            .. 'Expected to find, verbatim: "' .. c.find .. '". ' .. c.why .. '. '
+            .. 'If the sentence was rewritten rather than deleted, update this '
+            .. 'assertion in the same change -- and keep the replacement on a '
+            .. 'single source line.')
+    end
 end
 
 -- ---------------------------------------------------------------------------
@@ -378,9 +474,29 @@ tests['[hero] the talent snapshot covers all five focus heroes, all eight rows']
 end
 
 -- ---------------------------------------------------------------------------
--- 6. The domain, measured -- and the condition that re-opens this.
+-- 6. The domain -- and WHY it is empty, which is not what it was.
+--
+-- RE-DERIVED 2026-08-27.  This section used to BE the domain ruling: the corpus
+-- held no level-25 hero, therefore no frame could reach the true branch,
+-- therefore `lionhexaoe` could not buy condition (a) and was not proposed.
+-- That reasoning inherited GH #84's `level >= 20 on 0 of 210 hero-slots`, and
+-- that zero was a property of the measuring rig, not of turbo: every batch game
+-- self-terminated at a 10-minute economy cap.  GH #108 removed the cap and the
+-- first frame past it reads ten heroes at 22-27 (GH #235).  So the old ruling was
+-- retired even though this assertion is still green -- the corpus simply has not
+-- caught up yet, and a green that survives only because the harvest lags is not
+-- a reading anyone should have leaned on.
+--
+-- The domain is STILL empty, for a reason that does not depend on any corpus:
+-- the t25 row now takes [7] (section 2), a hero trains one talent per tier, so
+-- `talent8` is structurally untrained and X.IsHexAoe returns false at its FIRST
+-- statement, before the gate is ever consulted.  Section 2 is therefore the load-
+-- bearing assertion now, and this one measures harvest lag: it is kept because
+-- the day it goes red is the day this corpus can finally speak about level-25
+-- Lions at all -- including about the widening (prefer clustered targets once Hex
+-- really is AoE) that GH #166 §9 left to a later hand.
 
-tests['[hero] the corpus holds no level-25 hero, so this fix has no domain yet'] = function()
+tests['[hero] the corpus still holds no level-25 hero -- harvest lag, not the ruling'] = function()
     api.install({})
     local sDir = 'tests/fixtures'
     local fh = io.popen('ls ' .. sDir .. '/*.lua 2>/dev/null')
@@ -404,15 +520,16 @@ tests['[hero] the corpus holds no level-25 hero, so this fix has no domain yet']
     assert(nMax > 0, 'no hero level read at all; the scan lost its field, so the '
         .. 'verdict below would be an artefact of the parser')
 
-    -- The reopen condition, written as the assertion rather than as prose.  When
-    -- a level-25 hero first appears, this goes RED and the gate becomes
-    -- proposable for the test set.  GH #108 landed the cap 10 -> 25 on
-    -- 2026-08-25, so the farm side of the blocker is gone; this stays green only
-    -- until frames harvested under the new cap reach tests/fixtures/, which is
-    -- the lag this assertion measures and prose could not.
-    assert(nMax < 25, 'the corpus now reaches level ' .. nMax .. '. `' .. CAND_ID
-        .. '` finally has a domain: propose it for test_set.md and open a queue '
-        .. 'request for condition (a), and rewrite this assertion')
+    -- GH #108 landed the cap 10 -> 25 on 2026-08-25, so the farm side is done;
+    -- this stays green only until frames harvested under the new cap reach
+    -- tests/fixtures/.  That lag is the whole of what this measures now -- read
+    -- the section header before quoting a green run for anything else.
+    assert(nMax < 25, 'the corpus now reaches level ' .. nMax .. '. This is the '
+        .. 'harvest lag closing, NOT `' .. CAND_ID .. '` acquiring a domain -- that '
+        .. 'is settled by section 2 (the t25 row takes [7], so talent8 is '
+        .. 'structurally untrained). What the new frames DO unlock is the widening '
+        .. 'GH #166 §9 left open: prefer clustered targets now that Hex really is '
+        .. 'AoE. Rewrite this assertion when you take that up.')
 end
 
 return tests
