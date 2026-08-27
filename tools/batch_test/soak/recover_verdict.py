@@ -8,6 +8,29 @@
 #       --exclude "*" --include "*.analysis.json"
 #   python3 recover_verdict.py ./g <cand-id> [--cand-ref <ref-armed-string>]
 #
+# POOLING FOUR RUNS (the 4x1 topology every wave since W10 uses) -- [GH #225]
+#   Give each run its OWN subdirectory and point this tool at the parent:
+#
+#     for r in 7f0cc4 552d6b 4f267b ffdcb6; do
+#       aws s3 cp s3://<bucket>/soak/<run-$r>/ ./pool/$r/ --recursive \
+#           --exclude "*" --include "*.analysis.json"
+#     done
+#     python3 recover_verdict.py ./pool <cand-id>
+#
+#   The collection below walks the tree and keys games by PATH, not by
+#   basename, so nothing is lost.  Flattening four runs into one directory --
+#   the obvious thing to do, and what the single-run usage above invites --
+#   is the failure this tool now refuses: per-game files are named
+#   `<YYYYmmdd_HHMMSS>_slot<N>.analysis.json` with no run token (soak_loop.sh:76),
+#   the four instances are launched in the same second, and their slot cadence
+#   matches, so cross-run basename collisions are the NORM, not an accident.
+#   W14 measured it: 208 files became 188, 184 scored games became 170, and the
+#   effect size moved 3.6 gpm -- and NOTHING raised a hand, because `cp` had
+#   already destroyed the evidence at the filesystem layer and this tool could
+#   only ever see the survivors.  `scored_games` shrank too, but no wave has an
+#   expected count to compare it against (W12 23 / W13 24 / W14 24 drained
+#   games), so 170 looked exactly as normal as 184.
+#
 # [GH #141] --cand-ref declares that the wave was a TWO-ARM bisect: the
 # reference leg carried its own armed string (soak_side.lua's `cand_ref`)
 # instead of running stable. The math below is unchanged -- it is still
@@ -28,7 +51,28 @@
 # metric (test_set.md AS.4).
 # Only seeds with BOTH waves present are scored; partial seeds are reported but
 # excluded from the mean.
-import json, glob, statistics, sys, re, os
+#
+# REFUSALS (exit 2, always with the count that motivated them) -- [GH #225].
+# Every one of these used to be a silent drop, and a silent drop in THIS tool
+# fails toward danger: it still prints a verdict, still prints `suggested`, and
+# the number it prints is wrong by an amount nobody can bound after the fact.
+#   R1  the same basename at >1 path with identical bytes -> the same game
+#       would be counted twice (a pool downloaded into both `pool/` and
+#       `pool/runX/`).  Both halves of that predicate are load-bearing: same
+#       basename with DIFFERENT bytes is the legitimate cross-run case fix (A)
+#       exists to support, and identical bytes under DIFFERENT basenames is two
+#       games that merely scored alike, which is a synthetic corpus's business
+#       and not a duplicate.
+#   R2  one directory holding raw-tag basenames from >1 seed -> a flattened
+#       multi-run pool, i.e. the W14 shape above.  One run carries exactly one
+#       seed (mirror_ab.sh takes SEED as an argument and runs its two waves
+#       sequentially), so two seeds under raw tag names in ONE directory means
+#       `cp` has already been given the chance to overwrite.  Overridable with
+#       --allow-pooled-basenames for a corpus whose layout is known-safe by
+#       other means; the override prints that it is a SKIP, not a pass.
+#   R3  a file that does not parse -> a lost game.  Overridable with
+#       --allow-unparseable, same discipline.
+import json, glob, statistics, sys, re, os, hashlib
 
 run_dir, cand = sys.argv[1], sys.argv[2]
 argv = sys.argv[3:]
@@ -38,14 +82,78 @@ if "--cand-ref" in argv:
     if i + 1 >= len(argv):
         sys.exit("--cand-ref needs a value (the reference leg's armed string)")
     cand_ref = argv[i + 1]
+allow_pooled = "--allow-pooled-basenames" in argv
+allow_unparseable = "--allow-unparseable" in argv
 
-games = []
-for f in glob.glob(os.path.join(run_dir, "*.analysis.json")):
+# soak_loop.sh:76 -- TAG="$(date +%Y%m%d_%H%M%S)_slot$SLOT".  A basename that
+# still matches this carries NO run token, so two runs can collide on it.  A
+# basename that does not match it (the batch desk's `<run>__<tag>` rename) has
+# already been disambiguated by the caller and is not R2's business.
+RAW_TAG_BASENAME = re.compile(r"^\d{8}_\d{6}_slot\d+\.analysis\.json$")
+STAMP_SEED = re.compile(r"^mirror:%s:s(\d+):" % re.escape(cand))
+
+
+def refuse(title, lines):
+    """Die loudly, in rec_slot_cost.py's house style: exit 2, never a number."""
+    sys.stderr.write("REFUSED (recover_verdict.py, GH #225): %s\n" % title)
+    for ln in lines:
+        sys.stderr.write("  %s\n" % ln)
+    sys.exit(2)
+
+
+# Keyed by PATH, walked recursively: this is the whole of fix (A).  `**` with
+# recursive=True matches zero directories too, so the single-run flat usage in
+# the header keeps working unchanged.
+paths = sorted(glob.glob(os.path.join(run_dir, "**", "*.analysis.json"),
+                         recursive=True))
+loaded, unparseable, by_digest = {}, [], {}
+for f in paths:
     try:
-        a = json.load(open(f))
-        games.append(a)
-    except Exception:
-        pass
+        raw = open(f, "rb").read()
+        a = json.loads(raw.decode("utf-8"))
+    except Exception as e:
+        unparseable.append("%s  (%s)" % (f, str(e)[:100]))
+        continue
+    loaded[f] = a
+    by_digest.setdefault((os.path.basename(f),
+                          hashlib.sha256(raw).hexdigest()), []).append(f)
+
+if unparseable and not allow_unparseable:
+    refuse("%d of %d files did not parse -- each one is a lost game"
+           % (len(unparseable), len(paths)),
+           unparseable[:20] +
+           (["... and %d more" % (len(unparseable) - 20)] if len(unparseable) > 20 else []) +
+           ["re-download them, or pass --allow-unparseable to score without them"])
+
+dups = [ps for ps in by_digest.values() if len(ps) > 1]
+if dups:
+    refuse("%d game(s) are present at more than one path -- scoring this pool "
+           "would count them twice" % len(dups),
+           [" == ".join(ps) for ps in dups[:10]] +
+           (["... and %d more" % (len(dups) - 10)] if len(dups) > 10 else []) +
+           ["delete the redundant copy; do not let this tool guess which one you meant"])
+
+# R2: per DIRECTORY, which seeds appear under a still-raw tag basename.
+seeds_per_dir = {}
+for f, a in loaded.items():
+    m = STAMP_SEED.match(a.get("script_version") or "")
+    if m and RAW_TAG_BASENAME.match(os.path.basename(f)):
+        seeds_per_dir.setdefault(os.path.dirname(f) or ".", set()).add(m.group(1))
+pooled_dirs = sorted((d, sorted(s)) for d, s in seeds_per_dir.items() if len(s) > 1)
+if pooled_dirs and not allow_pooled:
+    refuse("a flattened multi-run pool: one directory holds raw tag basenames "
+           "from %d seeds" % sum(len(s) for _, s in pooled_dirs),
+           ["%s  seeds=%s" % (d, ",".join(s)) for d, s in pooled_dirs] +
+           ["one run carries one seed, so these came from >1 run and `cp` has "
+            "already had the chance to overwrite games silently (W14: 208 -> 188)",
+            "give each run its own subdirectory and point this tool at the parent",
+            "or pass --allow-pooled-basenames if this layout is safe by other means"])
+if pooled_dirs and allow_pooled:
+    sys.stderr.write("--allow-pooled-basenames: R2 SKIPPED, NOT PASSED. "
+                     "Losslessness of %d pooled director%s is UNVERIFIED.\n"
+                     % (len(pooled_dirs), "y" if len(pooled_dirs) == 1 else "ies"))
+
+games = list(loaded.values())
 
 def sv(a, t, m):
     return [p.get(m) or 0 for p in a.get("players", []) if p.get("team") == t]
@@ -122,7 +230,16 @@ for seed in seeds:
 
 v = {"cand": cand, "cand_ref": cand_ref or None,
      "contrast": "two_arm" if cand_ref else "vs_stable",
-     "recovered_locally": True, "per_seed": rows, "mean": {}, "comps_better": {}}
+     "recovered_locally": True, "per_seed": rows, "mean": {}, "comps_better": {},
+     # [GH #225] The input census, printed every run.  `scored_games` alone
+     # could never expose a lossy download because no wave has an expected
+     # count to compare it against; `files_seen` CAN be reconciled against the
+     # S3 object count by the caller, and `source_dirs` says whether the pool
+     # was flattened.  A number you can check beats a number you must trust.
+     "input": {"files_seen": len(paths), "games_loaded": len(games),
+               "source_dirs": len(set(os.path.dirname(f) for f in loaded)),
+               "unparseable": len(unparseable),
+               "pooled_basename_dirs_overridden": len(pooled_dirs) if allow_pooled else 0}}
 complete = [r for r in rows if "gpm" in r]
 for m in ("gpm", "xpm", "deaths", "last_hits"):
     xs = [r[m] for r in complete if m in r]
