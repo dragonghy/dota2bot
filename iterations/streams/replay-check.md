@@ -5330,3 +5330,71 @@
     打野反证 fixture(**三十五轮**);`hero-1` 的 153 局 WK 语料(**43 轮**);`l5combo` 的 (a)(**第五十九轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十六轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260827T160000Z.md`
+- **2026-08-27T18:50Z(第八十五次触发)**:**W17-R 首检 —— arm 串是真的,但这份语料对 `abilanc` 的 (a)
+  价值是结构性的零**(接上一轮 backlog 第 1 棒)。**stamp 普查 64/64 = 100%**,四条 stamp 的 40-id 串
+  **长 374 字节、彼此逐字节相同、且与 `test_set.md` 第 2 行逐字节相同** ⇒ **GH #253 的形状(cand 位放种子号)
+  在 W17-R 上没有复发**,批测台上一轮的「抽查干净」升级为**普查**。
+  **行为宽扫 18/25 带 stamp 的 `.dem`** + **深查 7 局逐帧**(章程下限 6)。
+  零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **单腿孤儿语料对「英雄级门」的 id 是结构性的零,不是样本量问题**:
+    `fed_exposure`(level<12、活着、离远古营 ≤1000u、**且其英雄文件确实调用被改选择器**)读
+    **armed 123 / baseline 0**。18 局出现 22 个英雄,喂选择器的只有
+    `ogre_magi`/`phantom_assassin`/`skeleton_king`,**三个全部只落在 armed 腿**;
+    跨 seed 换过边的 4 个(CM/sniper/zuus/centaur)**没有一个喂选择器**。
+    机制:镜像对局里同一英雄换腿**必须靠 ab/ba 那一次 swap**,W17-R 四台全 radiant 只有 ab 一层。
+    **⚠️ 直接更正批测台 08-27T18:25Z 交棒第 10 条**:249 局孤儿**可以取帧**(GH #259 就是这么取的),
+    **不能做任何 armed/baseline 差值**。
+  - ⭐⭐ **同一份语料自己标出了混杂量**:反向护栏(甲)`>=12` 的远古施法**门够不着**,
+    却读出 **armed 75 vs baseline 26 = 2.9 倍**;而域里只差 **1 发**(armed 1 / baseline 2)。
+    **本 id provably 不能动的那一列差 2.9 倍,信号差 1 发** ⇒ 噪声大一个数量级以上。
+  - ⭐⭐ **`abilanc` 的域第一次不空,而 3 发全部在射程之外**:`certain_under 3`
+    (armed centaur `double_edge`→`rock_golem` 1 发;baseline zuus `arc_lightning`→`prowler_shaman` 2 发,
+    同局隔 2 秒)。**逐行核过源码不是转抄判词**:`hero_zuus.lua:725-729` 与 `hero_centaur.lua:325-329`
+    **都读 `nNeutralCreeps[1]`**,两文件里**都没有** `J.GetMostHpUnit` ⇒ 正是本 id 注释点名
+    「故意不覆盖的 54 个 `list[1]` 站点」。**`abilanc` 维持 SILENT**,累计 (a) 语料
+    **W14 132 + W17-R 18 = 150 局,0 次可归因触发**。
+  - ⭐⭐ **GH #257 新开 [bug]**:`abilanc_domain.py:layered()` 用 `max(ngames[side],1)` 做分母、
+    `verdict()` 从不问那层有没有局 ⇒ `dire` **0 局**被打成 `one layer flat (not a contradiction)`,
+    verdict 打出 **`WORKING-WITH-RESIDUAL`**。**「这层没有局」被渲染成「这层量过、读数是平的」** ——
+    与 GH #253、批测台 §3.2 同族(**缺席被渲染成一个测到的零**),适用面 **249 局**。
+    建议新状态 `SINGLE-LAYER`,并查 `pullthink_domain`/`pullcamp_domain`/`campfarm_target`/`bbfloor_domain` 同族写法。
+  - ⭐ **GH #258 新开 [harness]**:`…_333bf7/20260827_151652_slot11.dem` 让 dumper
+    `panic: unexpected EOF`(**可复现**,单独跑 exit 2 / stdout 0 字节),
+    `sweep_run.sh` 的 `set -euo pipefail` ⇒ **整条退出,已跑完的 5 局也没写 summary/manifest/哨兵**,
+    下游按 GH #102 **正确地拒答** ⇒ **1 个坏文件拿走 6/25 = 24% 的语料**。
+    ⚠️ 该局 `natural_end=True`、`.dem` 22.4 MB 与同 run 其余 11 个同量级 —— **大小和肉眼都看不出它坏**。
+  - ⭐ **GH #259 新开 [strategy]**:两帧「低等级戳远古营然后走人」——
+    `88d937/151652_slot10 t=620.4` zuus lvl11 两发弧闪(蓝 1.00→0.81)后 `624.4` 掉头;
+    `88d937/151632_slot8 t=759.4` centaur lvl11 在 **0.59 血**上放自伤 `double_edge`(自伤 291,→0.48)后掉头。
+    **正对照同语料内**:`89f466/151640_slot10 t=697.3` PA lvl11 离远古营 376u,去打 `mud_golem` 并吃完 8 秒。
+    ⚠️ `hero_zuus.lua:727` **把「只有一只但它是远古」显式写成开火理由,且该分支无等级子句**;Zeus 是焦点英雄。
+    **不许合取进 `abilanc`**(`pullcad` 陷阱)。
+  - ⭐ **量具边界(登记,不改工具)**:5 段最长曝光段逐帧 = **1 段真营地决策 / 2 段英雄团战(两次都死)/
+    2 段纯路过** ⇒ **123 帧这个分母高估决策机会约 3–4 倍**(它量「站得近」不量「能选」)。
+  - **诚实标注**:上一轮预登记的另一半(`pullthink` 英雄分层表翻倍)**本轮未执行**,机时给了 `abilanc`
+    (批测台交棒点名),**不算证伪,记为未做**。行为覆盖 **18/41 = 44%**,arm 串结论覆盖 **64/64 = 100%**,
+    两个分母不要混。「PA 去打普通营」**只是与 WORKING 相容,不是证明**(离线看不到 sweep 内容)。
+    报告节奏 6.1h 洞是真的、连续第三轮被点名,**本组改不了 cron**,请总监裁。
+  - **交棒**:**#257 / #258 / #259 三个新开**;**GH #196 追评**(`abilanc` (a) 第二次取证全文)。
+    **⚠️ 给批测台**:孤儿语料的 (a) 价值对英雄级门的 id 是零,要买 `abilanc` 的 (a) **必须**有一粒
+    ab/ba 都落地的种子。**球在总监**:#259、#258、#257、#253、#250、#249、#247、#246、#245、#244、
+    #241、#236、#235、#159、#207、#212、#220、`campfarm`;`bbfight`/`bbshort` 与 `abilanc` 的三条件判定。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**;`abilanc_domain.py --selfcheck` **ALL PASS**;
+    **未使用 `RULE6_BYPASS`**;本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **AWS**:S3 **只读**(64 `analysis.json` + 25 `.dem`),**未启动/未终止实例**,**未调用 CE**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **W18 首检**(`spot_20260827_1820*`×4)—— 开工先跑 stamp 普查(秒级);
+    **若拿到 ab/ba 两腿都落地的种子,立刻做 `abilanc` 的 (a)**(§4 说明这是唯一能买到它的语料形状,
+    **本轮结论唯一能被证伪的预登记**);(2) ⭐⭐ **`pullthink` 英雄分层表**(**第二轮登记**,
+    W17-R 那 18 局是真 armed,可直接并进 armed 腿);(3) ⭐⭐ **#236 裁下后 `mv` 落地 #159 的 fixture**(**第十轮**);
+    (4) ⭐ **GH #259 的 fixture**(`88d937/151652_slot10 t=620.4 zuus`,**出厂腿、不依赖 arm 串**);
+    (5) ⭐ **GH #250 的出厂帧 fixture**(**第二轮**);(6) ⭐ 锚点修正回灌 `roam_conversion.death_spans`(等 #247);
+    (7) ⭐ **GH #220 的 fixture**(**第十轮**);(8) poke 普查小脚本入库与否(**第二轮**);
+    每 id 篇数独立小脚本(**第六轮**);(9) `camp_prelit` 列(**第十四轮**);占用度量按 idx 去重(**第十三轮**);
+    `tpdefend_events` 结果侧列(**第十九轮**);幻象余量做进 `sweep_run.sh`(**第十六轮**);
+    `entities.py` 推广(**第十七轮**);12:41Z §6.1 那 23 帧做 fixture(**第十九轮**);`pulldrag` 的 connect 侧;
+    第二种视野证人;ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第三十轮登记**);
+    `stayfield` 第一失败子句;打野反证 fixture(**三十六轮**);`hero-1` 的 153 局 WK 语料(**44 轮**);
+    `l5combo` 的 (a)(**第六十轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十七轮**);
+    `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260827T185018Z.md`
