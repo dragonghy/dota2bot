@@ -20,6 +20,10 @@
 #                            side vs the baseline side of each game
 #   all_findings.jsonl    -- every finding, tagged with game/cand/seed/side
 #   games_manifest.jsonl  -- one line per swept game (cand/seed/side)
+#   unparseable.txt       -- one line per game the dumper could not read
+#                            ([harness] #258); also counted in sweep_summary.md
+#                            and listed in sweep_complete.json. A bad .dem
+#                            costs its own game and nothing else.
 #   timelines/, findings/ -- per-game dumper + detect.py output (kept for
 #                            follow-up frame-level digging)
 #
@@ -32,7 +36,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC=${1:?"usage: sweep_run.sh <s3_run_prefix> [out_dir]"}
 [[ "$SRC" == */ ]] || SRC="$SRC/"
 OUT=${2:-"$REPO/.sweep_out/$(basename "${SRC%/}")"}
-mkdir -p "$OUT/dem" "$OUT/analysis" "$OUT/timelines" "$OUT/findings"
+mkdir -p "$OUT/dem" "$OUT/analysis" "$OUT/timelines" "$OUT/findings" "$OUT/unparseable"
 
 AWS_CMD=awsx; command -v awsx >/dev/null 2>&1 || AWS_CMD=aws
 
@@ -56,8 +60,16 @@ echo "[sweep] found ${#DEMS[@]} .dem files" >&2
 
 SWEPT=0
 SKIPPED=0
+UNPARSEABLE=0
 : > "$OUT/all_findings.jsonl"
 : > "$OUT/games_manifest.jsonl"
+# [harness] #258: names of games the dumper could not parse. Kept in a FILE,
+# not a bash array, on purpose -- an empty array expanded under `set -u` is
+# itself an error on older bash, and a degrade path that dies is not a degrade
+# path. Truncated here for the same reason the sentinel is removed below: a
+# leftover list from an earlier sweep of this same out_dir would be read as
+# this sweep's.
+: > "$OUT/unparseable.txt"
 # [harness] #102: clear any sentinel from an EARLIER complete sweep of this same
 # out_dir before touching the manifest. A re-run that dies halfway would
 # otherwise leave last time's sentinel sitting on top of this time's truncated
@@ -90,7 +102,29 @@ for dem in "${DEMS[@]}"; do
     demf="$OUT/dem/${name}.dem"
     $AWS_CMD s3 cp "${DEM_SRC}${dem}" "$demf" --quiet
     tlf="$OUT/timelines/${name}.timeline.json"
-    "$BIN" "$demf" > "$tlf"
+    # [harness] #258: ONE .dem the dumper cannot parse used to take the whole
+    # run with it. Under `set -e` the failed exec exited before the summary and
+    # the sentinel were written, so the 5 games already swept were correctly
+    # refused by every #102 consumer -- 1 bad file cost 6/25 = 24% of a wave's
+    # corpus, on a preemption wave that could least afford it (W17-R).
+    # The sentinel was not wrong; the bug was upstream promoting "this GAME is
+    # unparseable" (a property of one file) to "this RUN never ran" (a property
+    # of the sweep). Degrade per game: count it, name it, keep going.
+    #
+    # BOUNDARY, deliberate: only the dumper call degrades. A `detect.py` failure
+    # below stays fatal, because that is a property of OUR code on an already
+    # parsed timeline -- swallowing it per game would hide a real defect behind
+    # a shrinking corpus, which is the very shape #102 exists to catch.
+    if ! "$BIN" "$demf" > "$tlf" 2> "$OUT/unparseable/${name}.dumper.err" \
+       || [ ! -s "$tlf" ]; then
+        rm -f "$tlf" "$demf"
+        echo "$name" >> "$OUT/unparseable.txt"
+        UNPARSEABLE=$((UNPARSEABLE+1))
+        echo "[sweep] UNPARSEABLE $name (dumper failed or wrote nothing; stderr in" \
+             "$OUT/unparseable/${name}.dumper.err) -- counted, run continues" >&2
+        continue
+    fi
+    rm -f "$OUT/unparseable/${name}.dumper.err"
     python3 "$REPO/detect.py" "$tlf" --json "$OUT/findings/${name}.findings.json" > /dev/null
 
     python3 - "$OUT/findings/${name}.findings.json" "$name" "$cand" "$seed" "$side" "$tlf" >> "$OUT/all_findings.jsonl" <<'PY'
@@ -114,7 +148,19 @@ PY
     echo "[sweep] $SWEPT/${#DEMS[@]} done: $name (cand=$cand seed=$seed side=$side)" >&2
 done
 
-echo "[sweep] swept=$SWEPT skipped=$SKIPPED (of ${#DEMS[@]} total .dem)" >&2
+echo "[sweep] swept=$SWEPT skipped=$SKIPPED unparseable=$UNPARSEABLE (of ${#DEMS[@]} total .dem)" >&2
+
+# [harness] #258: the one case the per-game degrade must NOT swallow. If every
+# stamped game failed to parse, "keep going" would hand the consumers a
+# complete-looking sentinel over an EMPTY corpus -- unparseable read as absent,
+# the #253/#257 family, and the exact failure this fix is supposed to remove
+# rather than relocate. No summary, no sentinel, loud exit.
+if [ "$SWEPT" -eq 0 ] && [ "$UNPARSEABLE" -gt 0 ]; then
+    echo "[sweep] FATAL: 0 games swept and $UNPARSEABLE unparseable -- refusing to" \
+         "write a summary/sentinel over an empty corpus. Rebuild the dumper" \
+         "(get_dumper.sh) or check the .dem source; see $OUT/unparseable.txt" >&2
+    exit 4
+fi
 
 python3 - "$OUT" "$SWEPT" "$SKIPPED" <<'PY'
 import json, os, sys
@@ -123,6 +169,7 @@ from collections import Counter, defaultdict
 out, swept, skipped = sys.argv[1], sys.argv[2], sys.argv[3]
 findings = [json.loads(l) for l in open(os.path.join(out, "all_findings.jsonl"))]
 games = [json.loads(l) for l in open(os.path.join(out, "games_manifest.jsonl"))]
+unparseable = [l.strip() for l in open(os.path.join(out, "unparseable.txt")) if l.strip()]
 
 by_detector = Counter(f["detector"] for f in findings)
 per_game_dets = defaultdict(set)
@@ -140,9 +187,22 @@ for f in findings:
         unknown_hits[d] += 1
 
 detectors = sorted(by_detector)
+# [harness] #258: `unparseable K` is printed ALWAYS, including K == 0. Printing
+# it only when non-zero would make "no bad games" and "swept by a version that
+# did not count them" the same bytes -- absent again reading as zero, which is
+# the whole complaint. The `games swept: N (` prefix is load-bearing: consumers
+# parse it as split(':')[1].split('(')[0] and cross-check it against the
+# manifest line count (null_leg_occupancy.py:load_manifest), so K goes INSIDE
+# the parenthesis and N keeps meaning "games in the manifest".
 lines = [
     "# Sweep summary\n\n",
-    f"games swept: {swept} (skipped {skipped} warmup/unstamped)\n\n",
+    f"games swept: {swept} (skipped {skipped} warmup/unstamped, "
+    f"unparseable {len(unparseable)})\n\n",
+]
+if unparseable:
+    lines.append("unparseable games (dumper could not read the .dem; NOT in the "
+                 "counts below): " + ", ".join(sorted(unparseable)) + "\n\n")
+lines += [
     "| detector | total | games with >=1 | candidate-side hits | baseline-side hits |\n",
     "|---|---|---|---|---|\n",
 ]
@@ -171,13 +231,19 @@ PY
 python3 - "$OUT" "${#DEMS[@]}" "$SWEPT" "$SKIPPED" "$DEM_SRC" <<'PY'
 import json, os, sys
 out, dem_found, swept, skipped, src = sys.argv[1:6]
+# [harness] #258: the sentinel carries the unparseable count AND the names, so a
+# consumer can make its own call (accept the shrunken corpus / re-sweep / refuse)
+# instead of the sweep making it for everyone by dying.
+unparseable = [l.strip() for l in open(os.path.join(out, "unparseable.txt")) if l.strip()]
 json.dump({
     "dem_found": int(dem_found),
     "swept": int(swept),
     "skipped": int(skipped),
+    "unparseable": len(unparseable),
+    "unparseable_games": sorted(unparseable),
     "exit_code": 0,
     "s3_prefix": src,
 }, open(os.path.join(out, "sweep_complete.json"), "w"), indent=2)
 PY
 
-echo "[sweep] wrote $OUT/sweep_summary.md + all_findings.jsonl + games_manifest.jsonl + sweep_complete.json" >&2
+echo "[sweep] wrote $OUT/sweep_summary.md + all_findings.jsonl + games_manifest.jsonl + sweep_complete.json (unparseable=$UNPARSEABLE)" >&2
