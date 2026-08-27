@@ -59,10 +59,32 @@ index rotation would put all four back in one AZ (the same trap as `RUN_TOKEN`
 **passing `--az` explicitly, one per call, is the only guarantee.** An explicit
 `--az` list is walked from offset 0, so it is deterministic.
 
-If a pinned launch fails (a pinned AZ can be out of capacity where an unpinned
-one would have been placed elsewhere), the script retries that instance **once**
-without the pin and says so on stderr — the spread must never cost an instance.
 `AZ_LIST=` (empty) or `--no-az-spread` restores the exact pre-#252 call.
+
+### When a pinned AZ has no capacity ([harness] #256)
+
+The spread must never cost an instance, so a failed pin always ends with a
+launch — but **where** it re-aims is the whole point. W18 (the first live wave
+under #252) passed its acceptance and showed the residue: the old fallback
+dropped the pin entirely, and EC2's own choice put 2 of 4 instances back into
+`us-west-2b`, the AZ that had just zeroed two consecutive waves. Dropping the
+constraint restores the correlation #252 removes, at the moment it is most
+likely to be fatal — the pin failed *because* capacity is tight.
+
+So a failed pin now walks the `AZ_LIST` ring, starting after the AZ that
+failed, and only a fully exhausted ring falls back to unpinned. Two stderr
+shapes, and they mean different things:
+
+| line | meaning | report it as |
+|---|---|---|
+| `! <name>: re-aiming inside the ring -> <az>` | the pin failed, another ring AZ took it | not a degradation, but name "asked X, got Y" |
+| `!! <name>: AZ RING EXHAUSTED …` | every AZ refused; placement abandoned | **wave-level warning** — reclaims are correlated again |
+
+The retry ring is `AZ_LIST`, **not** the `--az` value: under the batch desk's
+one-explicit-AZ-per-call convention the pin is a single AZ, so a retry keyed on
+it would have nowhere to walk and would degrade to the #256 bug on the first
+failure. Walk order is deterministic and starts after the failed AZ, so two
+calls that failed in *different* AZs do not pile onto the same next one.
 
 Each instance is tagged `dota2bot-soak-spot-<n>` (or `dota2bot-soak-od-<n>` for
 on-demand) and writes to `s3://<bucket>/soak/spot_<stamp>_<n>_<ref>/`. Distinct

@@ -12,7 +12,9 @@
 #   ./spot_run.sh --slots 12 --hours 2    # 12 slots, 2h hard watchdog
 #   ./spot_run.sh --rec-slots 16          # record a .dem on ALL 16 slots (#75)
 #   ./spot_run.sh --on-demand             # escape hatch: on-demand (no reclaim risk)
-#   ./spot_run.sh --az us-west-2a         # pin this instance to one AZ (#252)
+#   ./spot_run.sh --az us-west-2a         # pin this instance to one AZ (#252);
+#                                         # if it has no capacity the launch
+#                                         # walks the AZ_LIST ring (#256)
 #   ./spot_run.sh --az us-west-2a,us-west-2c   # rotate a wave over these AZs
 #   ./spot_run.sh --no-az-spread          # legacy: let EC2 choose (pre-#252)
 #   ./spot_run.sh --dry-run               # print the plan, launch nothing
@@ -135,6 +137,62 @@ if [ ${#AZS[@]} -gt 0 ] && [ -z "$AZ_ARG" ]; then
     [ -n "$_r" ] || _r=$$
     AZ_OFFSET=$(( _r % ${#AZS[@]} ))
 fi
+
+# ---- [harness] #256: the RETRY ring, which is NOT the placement ring.
+# #252 landed the spread; W18 was its first live wave and its acceptance passed
+# (4 instances, 3 distinct AZs). The same wave exposed the residue: a pinned
+# --az that fails fell back to "let EC2 choose", and what EC2 chooses is its own
+# capacity signal -- which put 2 of the 4 instances straight back into
+# us-west-2b, the AZ that had just zeroed W17 and W17-R ($0.79 for zero usable
+# seeds). Dropping the constraint quietly restores the very correlation #252
+# exists to remove, and it does so in the one situation where the correlation is
+# most likely to be fatal: the pin failed BECAUSE capacity is tight right now.
+#
+# So a failed pin re-aims INSIDE the ring first, and only a fully exhausted ring
+# falls back to unpinned.
+#
+# The retry ring cannot be AZS. Under the batch desk's standing convention
+# (§5: one explicit --az per call, four different ones) AZS has exactly ONE
+# element, so "walk to the next AZ in the ring" would have nowhere to walk and
+# would degrade to today's bug on the first failure. The retry ring is therefore
+# the full aws.env AZ_LIST, plus any --az the caller named that is not in it
+# (a caller may legitimately pin an AZ outside the default list).
+#
+# Walk order is deterministic and starts AFTER the AZ that failed, so two calls
+# that failed in DIFFERENT AZs re-aim at different places. Two calls pinned to
+# the SAME AZ do re-aim identically -- accepted: the convention gives each call
+# its own AZ, and a deterministic order is what makes the retry testable.
+AZ_RETRY_RING=()
+if [ "$AZ_SPREAD" -eq 1 ]; then
+    IFS=',' read -r -a _rr_raw <<< "${AZ_LIST:-}"
+    for _az in "${_rr_raw[@]:-}"; do
+        _az=$(echo "$_az" | xargs)
+        [ -n "$_az" ] && AZ_RETRY_RING+=("$_az")
+    done
+    for _az in "${AZS[@]:-}"; do
+        _seen=0
+        for _r2 in "${AZ_RETRY_RING[@]:-}"; do
+            [ "$_r2" = "$_az" ] && _seen=1
+        done
+        [ "$_seen" -eq 0 ] && AZ_RETRY_RING+=("$_az")
+    done
+fi
+
+az_retry_order() {
+    # $1 = the AZ that just failed. Echoes every OTHER ring AZ, one per line,
+    # in ring order starting after $1. Silent when the ring holds nothing else.
+    local failed=$1 n=${#AZ_RETRY_RING[@]} i start=0
+    [ "$n" -gt 1 ] || return 0
+    for i in $(seq 0 $((n - 1))); do
+        if [ "${AZ_RETRY_RING[$i]}" = "$failed" ]; then
+            start=$i
+            break
+        fi
+    done
+    for i in $(seq 1 $((n - 1))); do
+        echo "${AZ_RETRY_RING[$(( (start + i) % n ))]}"
+    done
+}
 
 # ---- [GH #108] wave-budget guard: does the watchdog outlast the wave it backs?
 # The 2026-07 "852 accident" was a seed that got no games because the instance
@@ -312,15 +370,36 @@ for n in $(seq 1 "$COUNT"); do
     # A pinned AZ can fail outright where an unpinned launch would have been
     # placed elsewhere ("no capacity" is per-AZ). Losing an instance to the
     # spread guard would be worse than the exposure it removes, so a pinned
-    # failure falls back ONCE to the pre-#252 unpinned call.
+    # failure must still end with an instance -- but it re-aims INSIDE the ring
+    # first ([harness] #256; see the AZ_RETRY_RING note above for why the
+    # unpinned fallback is the wrong FIRST move and only an acceptable LAST
+    # one). Ring exhaustion prints a distinct `!!` line: the whole point of #256
+    # is that "we gave up on placement" must not read like a normal launch.
     ERRLOG=$(mktemp)
     if ID=$(launch_one "$AZ" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
         :
     elif [ -n "$AZ" ]; then
         echo "  ! $NAME: launch in $AZ failed -- $(tail -1 "$ERRLOG")" >&2
-        echo "  ! retrying once with EC2-chosen placement (pre-#252 behavior)" >&2
-        AZ=""
-        ID=$(launch_one "" "$NAME" "$RUN_ID" "$UD")
+        ID=""
+        _alts=()
+        for _a in $(az_retry_order "$AZ"); do _alts+=("$_a"); done
+        for _a in "${_alts[@]:-}"; do
+            [ -n "$_a" ] || continue
+            echo "  ! $NAME: re-aiming inside the ring -> $_a" >&2
+            if ID=$(launch_one "$_a" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
+                AZ=$_a
+                break
+            fi
+            echo "  ! $NAME: launch in $_a failed -- $(tail -1 "$ERRLOG")" >&2
+            ID=""
+        done
+        if [ -z "$ID" ]; then
+            echo "  !! $NAME: AZ RING EXHAUSTED (${AZ_RETRY_RING[*]:-<empty>}) --" \
+                 "falling back to EC2-chosen placement, which is where #256's" \
+                 "correlation comes back. Treat this line as a wave-level warning." >&2
+            AZ=""
+            ID=$(launch_one "" "$NAME" "$RUN_ID" "$UD")
+        fi
     else
         cat "$ERRLOG" >&2
         rm -f "$ERRLOG"

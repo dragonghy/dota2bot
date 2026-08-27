@@ -27,6 +27,16 @@ output is asserted; an intercepting PATH proves no AWS call is made):
   * --az pins / rotates deterministically from offset 0;
   * --no-az-spread and an empty AZ_LIST both restore the pre-#252 call shape.
 
+AND THE RESIDUE #256 FOUND, one wave later.  W18 passed #252's acceptance (4
+instances, 3 distinct AZs) and in the same wave showed that a pinned AZ with no
+capacity fell back to "let EC2 choose" — which chose us-west-2b, the AZ that
+had just zeroed W17 and W17-R.  The fallback quietly restored the correlation
+#252 removes, in the one situation where it is most likely to be fatal (the pin
+failed BECAUSE capacity is tight).  Section 7 below drives the real script
+against a fake EC2 that refuses named AZs, and asserts the ring walk: the
+separating assertion is not "an instance launched" — the buggy version launches
+one too — but "the instance it launched is still inside the ring".
+
 NOT COVERED HERE, deliberately:
   * that a launch into AZ X actually succeeds -- that needs real capacity and
     real money.  #252's acceptance ("next 4x1 wave shows >=2 distinct
@@ -83,6 +93,54 @@ def run_dry(args, env=None, poison=None):
     azs = [m.group(1).strip() for m in
            (AZ_LINE.match(l) for l in p.stdout.splitlines()) if m]
     return p.stdout, azs
+
+
+LAUNCH_RE = re.compile(r"^launched \S+\s+id=(\S+)\s+run_id=\S+\s+az=(.+)$")
+
+
+def make_fake_ec2(tmp, fail_azs):
+    """An `awsx` on PATH that SIMULATES run-instances, failing in `fail_azs`.
+
+    Returns (bindir, calllog).  Every call appends the requested AZ (or the
+    literal `none` for an unpinned call) to calllog, so the retry walk is
+    readable as a sequence, not just as a final state.  Real AWS is never
+    reached: spot_run.sh routes every `aws` through `awsx`, and this one
+    shadows it on PATH.
+    """
+    d = os.path.join(tmp, "fakebin")
+    os.makedirs(d, exist_ok=True)
+    calllog = os.path.join(tmp, "calls.txt")
+    path = os.path.join(d, "awsx")
+    with open(path, "w") as f:
+        f.write(
+            "#!/bin/bash\n"
+            "az=none\n"
+            "for a in \"$@\"; do\n"
+            "  case \"$a\" in AvailabilityZone=*) az=${a#AvailabilityZone=} ;; esac\n"
+            "done\n"
+            "echo \"$az\" >> %s\n"
+            "for bad in %s; do\n"
+            "  if [ \"$az\" = \"$bad\" ]; then\n"
+            "    echo 'An error occurred (InsufficientInstanceCapacity) ...' >&2\n"
+            "    exit 254\n"
+            "  fi\n"
+            "done\n"
+            "echo \"i-fake${az//[!a-z0-9]/}\"\n"
+            % (calllog, " ".join(fail_azs) or "__none__")
+        )
+    os.chmod(path, 0o755)
+    return d, calllog
+
+
+def run_live(args, fakebin):
+    """Run spot_run.sh for real (no --dry-run) against the fake EC2."""
+    e = dict(os.environ)
+    e["PATH"] = fakebin + os.pathsep + e["PATH"]
+    p = subprocess.run(["bash", SCRIPT] + args, cwd=AWSDIR, env=e,
+                       capture_output=True, text=True)
+    launched = [(m.group(1), m.group(2).strip()) for m in
+                (LAUNCH_RE.match(l) for l in p.stdout.splitlines()) if m]
+    return p, launched
 
 
 def make_poison(tmp):
@@ -176,9 +234,90 @@ def main():
     # The fallback: a pinned AZ that has no capacity must not cost us the
     # instance -- worse than the exposure the spread removes.
     check(src.count("launch_one ") >= 2 and 'ID=$(launch_one "" ' in src,
-          "a failed pinned launch retries ONCE unpinned")
+          "a failed pinned launch still ends with an instance (unpinned last resort)")
     check("--count 1" in src or "4x1" in src,
           "the file states the topology the offset rule exists for")
+
+    # ---- 7. [harness] #256: a failed pin re-aims INSIDE the ring ---------
+    # W18 (2026-08-27) passed #252's acceptance (3 distinct AZs of 4) and in the
+    # same wave showed the residue: seed 921 asked for us-west-2c, the pin
+    # failed, the fallback dropped placement entirely, and EC2 put it in
+    # us-west-2b -- the AZ that had just zeroed W17 and W17-R.  The assertion
+    # that separates the fix from the bug is not "an instance was launched"
+    # (the buggy version launches one too); it is "the instance it launched is
+    # still inside the ring".
+    with tempfile.TemporaryDirectory() as tmp:
+        # 7a. one AZ dead -> next ring AZ, NOT <ec2 chose>.
+        fake, calllog = make_fake_ec2(tmp, ["us-west-2c"])
+        p, launched = run_live(["--count", "1", "--az", "us-west-2c"], fake)
+        check(p.returncode == 0, "a dead pinned AZ is not fatal (exit %d)" % p.returncode)
+        check(len(launched) == 1, "exactly one instance launched: %r" % (launched,))
+        got_az = launched[0][1] if launched else ""
+        check(got_az != "<ec2 chose>",
+              "a dead pin does NOT fall back to EC2-chosen placement -- this is "
+              "the #256 assertion the pre-fix script fails (got %r)" % got_az)
+        check(got_az in ring and got_az != "us-west-2c",
+              "it re-aims at another ring AZ: %r" % got_az)
+        check(got_az == "us-west-2d",
+              "the walk starts AFTER the failed AZ in ring order (2c -> 2d): %r" % got_az)
+        check("re-aiming inside the ring" in p.stderr,
+              "the re-aim is announced on stderr")
+        calls = open(calllog).read().split()
+        check(calls == ["us-west-2c", "us-west-2d"],
+              "exactly one wasted call, then the next ring AZ: %r" % (calls,))
+        check(len(calls) >= 1, "anti-vacuity: the fake EC2 really ran")
+
+        # 7b. the walk diverges: two calls that failed in DIFFERENT AZs do not
+        # pile onto the same next AZ (that would rebuild the correlation).
+        os.makedirs(os.path.join(tmp, "b"), exist_ok=True)
+        fake2, _ = make_fake_ec2(os.path.join(tmp, "b"), ["us-west-2a"])
+        _, launched2 = run_live(["--count", "1", "--az", "us-west-2a"], fake2)
+        check(launched2 and launched2[0][1] == "us-west-2b",
+              "a 2a failure re-aims at 2b, not at 2d: %r" % (launched2,))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 7c. only the last ring AZ alive -> the whole ring is walked, once each.
+        fake, calllog = make_fake_ec2(tmp, ["us-west-2b", "us-west-2c", "us-west-2d"])
+        p, launched = run_live(["--count", "1", "--az", "us-west-2b"], fake)
+        calls = open(calllog).read().split()
+        check(calls == ["us-west-2b", "us-west-2c", "us-west-2d", "us-west-2a"],
+              "the ring is walked in order and each AZ tried exactly once: %r" % (calls,))
+        check(launched and launched[0][1] == "us-west-2a",
+              "the surviving AZ is used: %r" % (launched,))
+        check("AZ RING EXHAUSTED" not in p.stderr,
+              "a ring with one live AZ is not 'exhausted'")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 7d. whole ring dead -> unpinned last resort, but LOUDLY.
+        fake, calllog = make_fake_ec2(tmp, list(ring))
+        p, launched = run_live(["--count", "1", "--az", "us-west-2a"], fake)
+        check(p.returncode == 0, "ring exhaustion still launches (exit %d)" % p.returncode)
+        check(launched and launched[0][1] == "<ec2 chose>",
+              "the last resort is the pre-#252 unpinned call: %r" % (launched,))
+        check("AZ RING EXHAUSTED" in p.stderr,
+              "ring exhaustion is announced as its own `!!` line, not as a normal launch")
+        check("!!" in p.stderr, "the exhaustion line is visually distinct from `!` retries")
+        calls = open(calllog).read().split()
+        check(calls == list(ring) + ["none"],
+              "every ring AZ is tried before placement is abandoned: %r" % (calls,))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 7e. anti-vacuity for the happy path: no retry when the pin succeeds.
+        fake, calllog = make_fake_ec2(tmp, [])
+        p, launched = run_live(["--count", "1", "--az", "us-west-2d"], fake)
+        calls = open(calllog).read().split()
+        check(calls == ["us-west-2d"],
+              "a pin that works makes exactly ONE call (no gratuitous retry): %r" % (calls,))
+        check(launched and launched[0][1] == "us-west-2d",
+              "and reports the AZ it actually used: %r" % (launched,))
+        check("re-aiming" not in p.stderr, "no re-aim line on the happy path")
+
+    # 7f. structural: the retry ring is NOT the placement ring.  Under the batch
+    # desk's one-explicit-AZ-per-call convention AZS has a single element, so a
+    # retry keyed on AZS would have nowhere to walk -- i.e. #256 again.
+    check("AZ_RETRY_RING" in src and 'IFS=\',\' read -r -a _rr_raw <<< "${AZ_LIST:-}"' in src,
+          "the retry ring is built from aws.env AZ_LIST, not from the --az pin")
+    check("az_retry_order" in src, "the walk order is a named, testable function")
 
     print("\n%d checks, %d failures" % (CHECKS, len(FAILURES)))
     if FAILURES:
