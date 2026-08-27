@@ -995,19 +995,55 @@ check('BOTH predicates are still called on `rec` -- putting either back on '
 # The premise ratchet.  `campsel` (and `pullcamp`, and templar assassin's ult)
 # all assume the ENGINE hands back `.team` as a team id and `.type` as the
 # STRING "ancient".  Nothing in the tree verifies that -- the fix's own
-# fixtures supply a camp table the fixer wrote -- and docs/BOT_API_REFERENCE.md
-# contradicts it.  This does not decide who is right; it refuses to let either
-# side of the contradiction disappear quietly.
+# fixtures supply a camp table the fixer wrote.
+#
+# GH #241 filed this as a two-sided contradiction: those shipped sites against
+# docs/BOT_API_REFERENCE.md, which typed both fields `int`.  2026-08-27
+# (strategy) retired the second side.  That row never observed this API --
+# Valve publishes no field list for GetNeutralSpawners and the engine dump
+# gives `variant`; the same six rows appear verbatim in an unrelated
+# third-party repo under the same filename; and the row contradicted itself,
+# every numeric annotation in it sitting next to a string-valued description.
+#
+# So the ratchet moved rather than relaxed.  The shipped-site counts are
+# unchanged; what used to pin "the doc still disagrees" now pins the three
+# facts that retired it, so the refuter cannot come back unannounced.
 CS_PRE = CS.premise_sites()
 check('>= 3 shipped sites still compare camp.team to GetTeam()',
       len(CS_PRE['team_readers']) >= 3, str(CS_PRE['team_readers']))
 check('>= 1 shipped site still compares camp.type to the STRING "ancient"',
       any(lit == 'ancient' for _f, _l, lit in CS_PRE['type_readers']),
       str(CS_PRE['type_readers']))
-check('the API reference still documents GetNeutralSpawners().team/.type -- '
-      'if this row ever stops disagreeing with the code, say which one moved',
+check('the API reference still names GetNeutralSpawners().team/.type -- if '
+      'this section stops parsing, the audit above is reading nothing',
       set(CS_PRE['doc_fields']) >= {'team', 'type'},
       str(CS_PRE['doc_fields']))
+check('the API reference no longer types .team/.type as int -- putting the '
+      'int back re-arms a refuter that was never a source (GH #241)',
+      CS_PRE['doc_fields'].get('team') != 'int'
+      and CS_PRE['doc_fields'].get('type') != 'int',
+      str(CS_PRE['doc_fields']))
+# Both #241 pointers are pinned by an EXACTLY-ONCE substring, not by `'#241'
+# in section`: the token occurs twice, so a membership test survives deleting
+# either one of them (measured -- that mutant SURVIVED the first batch).  Same
+# shape as the 0SALT uniqueness lesson, read from the other end: a needle that
+# is not unique is not a pin.
+for _needle in ('See GH #241.',                  # the pointer on the entry
+                'settled types (GH #241)'):      # the blockquote's own claim
+    check('the API reference still carries %r exactly once -- retiring the '
+          'refuter did NOT settle the question' % _needle,
+          CS_PRE['doc_section'].count(_needle) == 1,
+          str(CS_PRE['doc_section'].count(_needle)))
+check('the API reference says out loud that these rows are UNVERIFIED',
+      CS_PRE['doc_section'].count('UNVERIFIED') == 1,
+      str(CS_PRE['doc_section'].count('UNVERIFIED')))
+check('shipped code compares camp.speed to the STRINGS "fast"/"slow" -- the '
+      'retired row typed it `float`, which is what made it self-refuting',
+      sorted(CS_PRE['speed_readers']) == ['fast', 'slow'],
+      str(CS_PRE['speed_readers']))
+check('shipped code reads a camp.idx the retired row never listed at all -- '
+      'the row was incomplete as well as mistyped',
+      CS_PRE['idx_readers'] >= 4, str(CS_PRE['idx_readers']))
 
 # --------------------------------------------------------------------------
 # odaoe (GH #54) -- the ARMED-ONLY reading in odaoe_domain.py is only valid

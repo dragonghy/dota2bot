@@ -209,10 +209,21 @@ def premise_sites(srcs=None):
     """Every shipped reader of a RAW engine camp record, plus the doc's claim.
 
     This is the audit half of the file: the armed leg's whole meaning rests on
-    `.team` being a team id and `.type` being the string "ancient", and the
-    tree contains both an assertion (three call sites written that way) and a
-    contradiction (our own API reference calls both fields ints).  Reported,
-    never resolved -- a `.dem` cannot answer it.
+    `.team` being a team id and `.type` being the string "ancient".
+
+    GH #241 filed this as a two-sided contradiction -- three shipped sites
+    against our own API reference, which called both fields ints.  2026-08-27
+    (strategy) retired the second side: that row was never an observation of
+    this API (Valve publishes no field list; the engine dump says `variant`),
+    the same six rows appear verbatim in an unrelated third-party repo, and
+    the row contradicted itself -- every numeric annotation in it sat next to
+    a string-valued description (`type` (int) "small, medium, large, ancient";
+    `speed` (float) where shipped code compares to "fast"/"slow").
+
+    So the doc no longer refutes anything, and `doc_fields` is now audited for
+    the opposite property: that it does NOT re-assert a scalar type it cannot
+    source.  The underlying question is still open -- removing a bad refuter
+    does not confirm the code, and a `.dem` still cannot answer it.
     """
     srcs = srcs or {}
     def src(key, path):
@@ -231,14 +242,26 @@ def premise_sites(srcs=None):
             type_readers.append((os.path.basename(path),
                                  body[:m.start()].count('\n') + 1,
                                  m.group(1)))
+    # The other two RAW fields shipped code compares against STRINGS.  They
+    # are what makes the retired doc row self-contradicting rather than merely
+    # wrong, so they are pinned here and not left to prose.
+    speed_readers = []
+    for m in re.finditer(r'camp\.cattr\.speed\s*[~=]=\s*"(\w+)"',
+                         src('aba', ABA_SITE)):
+        speed_readers.append(m.group(1))
+    idx_readers = len(re.findall(r'camp\.idx\b', src('aba', ABA_SITE)))
+
     doc = srcs.get('doc')
     if doc is None:
         doc = _read(API_DOC) if os.path.exists(API_DOC) else ''
     m = re.search(r'###\s*`GetNeutralSpawners\(\)`(.*?)(?=\n###\s)', doc, re.S)
-    doc_fields = dict(re.findall(r'^-\s*`(\w+)`\s*\((\w+)\)', m.group(1), re.M)
-                      ) if m else {}
+    section = m.group(1) if m else ''
+    doc_fields = dict(re.findall(r'^-\s*`(\w+)`\s*\((\w+)\)', section, re.M))
     return {'team_readers': team_readers,
             'type_readers': type_readers,
+            'speed_readers': speed_readers,
+            'idx_readers': idx_readers,
+            'doc_section': section,
             'doc_fields': doc_fields}
 
 
@@ -858,6 +881,33 @@ def selfcheck():
     chk('ANTI-SELFSKIP a removed team reader is seen',
         len(premise_sites({'jmz': 'nothing\n'})['team_readers'])
         == len(pr['team_readers']) - 1)
+    # ---- the retired refuter (2026-08-27) ---------------------------------
+    # `speed` and `idx` are why the old doc row is self-contradicting rather
+    # than merely a wrong guess: shipped code compares `speed` to STRINGS the
+    # row typed `float`, and reads an `idx` the row never listed.
+    chk('shipped code compares camp.speed to strings, not a float',
+        sorted(pr['speed_readers']) == ['fast', 'slow'],
+        str(pr['speed_readers']))
+    chk('shipped code reads a camp.idx the old doc row never listed',
+        pr['idx_readers'] >= 4, str(pr['idx_readers']))
+    chk('ANTI-SELFSKIP a removed speed reader is seen',
+        premise_sites({'aba': 'nothing\n'})['speed_readers'] == [])
+    chk('ANTI-SELFSKIP a removed idx reader is seen',
+        premise_sites({'aba': 'nothing\n'})['idx_readers'] == 0)
+    chk('the doc no longer types team/type as int',
+        pr['doc_fields'].get('team') != 'int'
+        and pr['doc_fields'].get('type') != 'int',
+        str(pr['doc_fields']))
+    # Exactly-once, not membership: `#241` occurs twice in that section, so
+    # `'#241' in section` survives deleting either pointer (measured).
+    chk('the doc section still says out loud that this is UNVERIFIED',
+        pr['doc_section'].count('UNVERIFIED') == 1
+        and pr['doc_section'].count('See GH #241.') == 1
+        and pr['doc_section'].count('settled types (GH #241)') == 1)
+    chk('ANTI-SELFSKIP the UNVERIFIED read really reads the section',
+        'UNVERIFIED' not in premise_sites(
+            {'doc': '### `GetNeutralSpawners()`\n\n- `team` (str): x\n'
+                    '\n### `Next()`\n'})['doc_section'])
 
     # ---- geometry / episodes ----------------------------------------------
     cs = cluster([(0, 0), (10, 10), (5000, 0), (5010, 5)])

@@ -640,13 +640,56 @@ local nearbyEnemies = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
 
 ### `GetNeutralSpawners()`
 
-**Returns:** `{table...}` -- Table of tables, each containing:
-- `team` (int): Which team's jungle.
-- `type` (int): Camp type (small, medium, large, ancient).
-- `speed` (float): Creep movement speed.
-- `location` (vector): Camp spawn location.
-- `min` (vector): Spawn box minimum corner.
-- `max` (vector): Spawn box maximum corner.
+**Returns:** `variant` -- Valve publishes **no field list** for this function.
+Its engine help string is, verbatim, *"Get the location of all neutral
+spawners, and what side of the river they're on."* The table below is
+**what shipped code in this repo reads off the returned record**, not
+documented engine truth. See GH #241.
+
+- `team` (unverified): which team's jungle. Three shipped sites compare it
+  directly to `GetTeam()` (`aba_site.lua` `IsEnemyCamp`, `jmz_func.lua`'s
+  pull-camp filter, `hero_templar_assassin.lua`'s camp list), i.e. all three
+  assume a **team id**, not `TEAM_NEUTRAL`.
+- `type` (unverified): camp tier. Six shipped comparisons test it against the
+  **strings** `"small"` / `"medium"` / `"large"` / `"ancient"`
+  (`aba_site.lua` `IsAncientCamp` / `IsSmallCamp` / `IsMediumCamp` /
+  `IsLargeCamp`, and two clauses in `hero_templar_assassin.lua`).
+- `speed` (unverified): creep movement speed. `aba_site.lua`'s
+  `GetCampStackTime` compares it against the **strings** `"fast"` / `"slow"`.
+- `location` (vector): camp spawn location. The one field with a
+  cross-checkable use -- it is handed straight to `GetUnitToLocationDistance`,
+  and the resulting distances are sane in play.
+- `idx` (unverified): read by `aba_site.lua`'s `RefreshCamp` when it builds
+  its camp wrappers. **Not present in the field list this entry used to
+  carry** -- see the note below.
+- `min` (vector): spawn box minimum corner. No shipped reader.
+- `max` (vector): spawn box maximum corner. No shipped reader.
+
+> **UNVERIFIED -- the three `unverified` rows above are open questions, not
+> settled types (GH #241).**
+> Until 2026-08-27 this entry declared `team` (int), `type` (int) and `speed`
+> (float), and was cited as *refuting* the shipped string comparisons -- i.e.
+> as evidence that soak candidates `campsel` and `pullcamp` are dead code.
+> It is not a second source, on three counts:
+> 1. **It never observed this API.** Valve's published bot-scripting docs list
+>    `GetNeutralSpawners` with no field documentation at all, and the engine's
+>    own dump gives the return type as `variant`. This file's header cites
+>    `Dota_2_Workshop_Tools/Scripting/API` -- the **server-vscript** API, a
+>    different API from bot scripting.
+> 2. **The same six rows appear verbatim in an unrelated third-party repo**
+>    (`shikyo13/Dota2AI`, same `docs/BOT_API_REFERENCE.md` filename, same
+>    header ref). Shared lineage, not independent confirmation.
+> 3. **The row contradicted itself.** It annotated `type` as `int` while
+>    naming `small, medium, large, ancient` -- string values -- as its
+>    contents, and `speed` as `float` where shipped code compares to
+>    `"fast"`/`"slow"`. Every numeric annotation in the row sat next to a
+>    string-valued description. That is the fingerprint of a type column that
+>    was invented rather than read.
+>
+> Removing a bad refuter is not the same as confirming the code. **Nothing
+> here proves `.type` is a string.** Whoever settles this must do it from an
+> in-game observation (`print()` does not reach the server console -- it has
+> to be a behavioural probe) and record here which side moved.
 
 ### `GetIncomingTeleports()`
 

@@ -27,6 +27,37 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0CAMP. **【2026-08-27T07:3xZ 新增,GH #241 认领并裁定;一条可复用主判据 + 两条方法自伤;
+   `bots/` **零 diff**,零新 gate id。】
+   **GH #241 立案的「三处 shipped 代码 vs 本仓 API 参考」不是两方矛盾 —— 那一行**从来没有
+   观测过 bot API**,因此反驳方退役;但退掉一个坏的反驳方 **≠** 确认了代码。**
+   **⭐ 主判据(可复用)**:**一份文档比它自己引的来源知道得更多,它就不是来源。**
+   Valve 的 wiki(两份独立镜像)对 `GetNeutralSpawners` **零字段文档**;ModDota 的引擎 dump
+   给 `: variant` + 一句 help 串,也没有字段表;而本仓这一行有**六个字段各带类型标注**。
+   页首引的还是 `Dota_2_Workshop_Tools/Scripting/API`(**server-vscript**,不是 bot scripting)。
+   同样六行**逐字**出现在无关第三方仓 `shikyo13/Dota2AI` 的**同名文件**里 ⇒ 同一血统,非独立确认。
+   **⭐⭐ 不需要外部来源的那半(最硬)**:该行**每一个数字型标注都紧挨着一个字符串型描述** ——
+   `type` (int) 却把 `small/medium/large/ancient` 写成它的取值;`speed` (float) 而 shipped 代码
+   比 `"fast"/"slow"`;外加 `idx` **该行根本没列**却被 `RefreshCamp` 读 **4** 次 ⇒
+   **类型错 + 不完整**,是被**编出来**而不是被读出来的类型列的指纹。
+   **⭐⭐⭐ 对 owner P1**:#241 §5 那条交叉线(`camp.team` 使 `pullcamp` **构造性 SILENT**)
+   **失去依据**;引擎 help 串 *"...what side of the river they're on"* 反而是弱正向信号 ⇒
+   **P1 第 1 项的归因不必重开**。但 `.type == "ancient"` 那一半**仍然完全未验证**。
+   **落地**:doc 改写(`variant` + 三个 `(unverified)` + 补 `idx` + 退役说明,**doc 里不写行号**,
+   GH #221 教训);`campsel_domain.premise_sites()` 加 `speed_readers`/`idx_readers`/`doc_section`,
+   selfcheck **63 → 70 PASS**;棘轮**移钉不放松** —— 「API 参考仍在唱反调」那一条拆成 **5 条**
+   (含「`int` 不许放回去」与两个 `#241` 指针各恰好一次)+ 2 条把「它自相矛盾」的论据本身钉住。
+   **⚠ 方法自伤二条(方向都是「把没通过报成通过」)**:**(i) 变异夹具的还原路径不许经过版本控制** ——
+   `restore()` 用 `git checkout` 把**本轮未提交的被测改动**擦掉,两端 CONTROL 全 DIRTY、
+   五个变异 SETUP-FAILED;改成 scratchpad 快照 `cp`。**(ii) `'#241' in section` 不是 pin** ——
+   该 token 在那节里出现**两次**,只删一处的变异 **SURVIVED**;这是 `0SALT`
+   「针必须唯一」的**反向**同族(那次变异打在没被断言的拷贝上,这次断言落在不唯一的针上),
+   **修法是换针不是补断言**:两个各自唯一的整句各 `count == 1`,`UNVERIFIED` 同样 `count == 1`
+   (**重复它也会红**,已作为变异验证)。三批 **10/10/12**,活 **5(夹具失效)/1/0**,两端控制项干净。
+   **下一格**:#241 剩下的那一半要一次**在线行为探针**(`print()` 到不了控制台),
+   **不是容器里做得完的工作单元** ⇒ 本组不为它开格。回 `0POLL`,或按 owner 优先项 / issue 重新认领。
+   **顺带交给总监的范围决定**:`docs/BOT_API_REFERENCE.md` **整份**都带那条 server-vscript 页首 ref
+   且与第三方仓同源 ⇒ **这一行大概率不是唯一一行**;要不要立全文件对表普查,本组不自行扩面。**
 0SALT. **【2026-08-27T04:2xZ 新增,GH #242;一条可复用主判据 + 一条裁定「不落地」+
    一条四次同族的方法自伤;本轮由上一格 `0SALY` 在「下一格」里登记(并**同时登记了一条必须先答的
    反对意见**)后认领。`bots/` **零 diff**,零新 gate id。】
@@ -1959,6 +1990,61 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-27T07:37Z:**GH #241 立案的那个「两方矛盾」解散了 —— 被当作反驳方的那一行
+  **从来没有观测过 bot API**;而本轮真正学到的是「**一份文档比它自己引的来源知道得更多,
+  它就不是来源**」,外加一条:**退掉一个坏的反驳方 ≠ 确认了代码**。**
+  开工自检 **UNLANDED 0**;cadence **1 finding**(strategy 3.8h,本组历史间隔);未裁 queue
+  请求 **0**(open 35);稳定版锚点 stable-v1/v2 **各 3 项 ok**;trunk python **42 passed
+  0 failed**;trunk 快 Lua 检测器 **11 文件 0 失败**;selfcheck worst exit **3**(全部来自
+  cadence);开工 `HEAD == a3a2483` 与 `origin/main` 同步;容器有 `lua5.1`(自检装的)、
+  无 `luacheck`(gate 自己装,apt 包名 `lua-check`);**AWS $0**。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 常设运维球在批测台,P1 第 1 棒 08-22 已结、
+  P2 决策侧两棒已交、球都在总监,P3 归总监 ⇒ **本组无未完成格**;章程「下一格」`0POLL`
+  **刻意不修**且要求先答一个全文件级问题 ⇒ 不动它。**认领 GH #241**:它带 `[bug]` 前缀,
+  但 §5 明写 `jmz_func.lua` 那处 `camp.team == GetTeam()` **就是 `pullcamp` 自己的选营过滤器**,
+  而拉野与对线期策略**是本组范围**;#241 §6 明说录像组答不了这条。
+  **⭐ 主判据(可复用)**:**一份文档比它自己引的来源知道得更多,它就不是来源。**
+  Valve wiki(两份独立镜像)对 `GetNeutralSpawners` **零字段文档**;ModDota 引擎 dump 给
+  `: variant` + 一句 help 串,同样无字段表;本仓那一行却有**六个字段各带类型标注**,
+  且页首引的是 `Dota_2_Workshop_Tools/Scripting/API`(**server-vscript**,不是 bot scripting)。
+  同样六行**逐字**出现在无关第三方仓 `shikyo13/Dota2AI` 的**同名文件**里 ⇒ 同一血统。
+  **⭐⭐ 不需要外部来源的那半(最硬)**:该行**每一个数字型标注都紧挨着一个字符串型描述** ——
+  `type` (int) 却把 `small/medium/large/ancient` 写成取值;`speed` (float) 而 shipped 比
+  `"fast"/"slow"`;`idx` **该行没列**却被 `RefreshCamp` 读 **4** 次 ⇒ 类型错 **+** 不完整。
+  **⭐⭐⭐ 对 owner P1**:#241 §5 那条交叉线(`camp.team` 使 `pullcamp` **构造性 SILENT**)
+  **失去依据**,引擎 help 串 *"...what side of the river they're on"* 反而是弱正向信号 ⇒
+  **P1 第 1 项的归因不必重开**。**但 `.type == "ancient"` 那一半仍然完全未验证** ——
+  本轮**明确不声称**它对,`campsel` 的 (a) 仍未买到(replay-check 08-27T04:05Z REFUSE),
+  **只是它的理由已经不再是「它可能是 no-op」**。
+  **产出**:`docs/BOT_API_REFERENCE.md` 该条改写(`variant` + 三个 `(unverified)` + 补 `idx`
+  + 退役说明;**doc 里一律不写行号**,GH #221 教训);`campsel_domain.premise_sites()` 加
+  `speed_readers`/`idx_readers`/`doc_section`,`--selfcheck` **63 → 70 PASS / 0 FAIL**;
+  棘轮**移钉不放松** —— 「API 参考仍在唱反调」拆成 **5 条**(含「`int` 不许放回去」)
+  + 2 条**把「它自相矛盾」的论据本身钉住**。**`bots/` 零 diff、零新 gate id ⇒ 未顶任何行数棘轮**
+  (本组连续第七轮)。
+  **⚠ 方法自伤二条(方向都是「把没通过报成通过」)**:**(i) 变异夹具的还原路径不许经过版本控制**
+  —— `restore()` 用 `git checkout` 把**本轮未提交的被测改动**擦掉,两端 CONTROL 全 DIRTY、
+  五个变异 SETUP-FAILED(事后 `git status` 坐实);改成 scratchpad 快照 `cp`。
+  **(ii) `'#241' in section` 不是 pin** —— 该 token 在那节出现**两次**,只删一处的变异
+  **SURVIVED**;这是 `0SALT`「针必须唯一」的**反向**同族,**修法是换针不是补断言**:
+  两个各自唯一的整句各 `count == 1`,`UNVERIFIED` 同样 `count == 1`(**重复它也会红**,已验)。
+  三批 **10 / 10 / 12**,活下来 **5(夹具失效)/ 1 / 0**,两端控制项干净;判定读数一律用
+  **退出码**不用 stdout 子串(`0SALY` 教训),全程顺序执行不并发。
+  **门**:luacheck **0 警告 EXIT=0**;`bots/`+`game/` diff **空**;python 套件 **42 文件 0 red**;
+  `campsel_domain --selfcheck` **70/0**;`test_detector_source_constants` 全绿;
+  Lua 受影响面 `smoke_load` 3/0、`gate_claim` 10/0、`campsel_wrapper_fields` 21/0、
+  `campgrade_tier_ladder` 14/0、`pullcamp_trigger_census` 21/0。
+  **全量 Lua 套件未跑**(~100min,GH #124);`bots/`/`game/` 未改 ⇒ **不声称它绿**。
+  `queue.json` **零改动**,**零 AWS**。
+  **交棒**:**总监**((i) #241 可否按本轮裁定降级 —— 它现在是「一个来源,而且不是来源」;
+  (ii) **一个范围决定**:本仓 `BOT_API_REFERENCE.md` **整份**都带那条 server-vscript 页首 ref
+  且与第三方仓同源 ⇒ **这一行大概率不是唯一一行**,要不要立全文件对表普查,本组不自行扩面)、
+  **录像组**(**无请求**,`.dem` 答不了这条)、**批测台**(**本轮无请求**)、
+  **英雄组**(登记不做:`hero_templar_assassin.lua` 两处 `.type` 字符串比较压在同一前提上,
+  与 `aba_site.lua` 那四处是**同一个原子**)。
+  **下一格**:#241 剩下那一半要一次**在线行为探针**,**不是容器里做得完的工作单元** ⇒
+  本组不为它开格;回 `0POLL`,或按 owner 优先项 / `[strategy]` issue 重新认领。
+  详见 `iterations/reports/strategy/20260827T073716Z.md`。
 - 2026-08-27T04:27Z:**大药选人这一格的裁定是「不要落地」—— 支配构造对 argmin 型现状
   **按算术为空**,唯一可做的改动是裸选一根轴(即拟合);而本轮真正学到的是
   「**source pin 只有在那个字符串于文件内唯一时才是 pin**」。**
