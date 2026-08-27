@@ -4968,3 +4968,74 @@
     打野反证 fixture(**三十轮**);`hero-1` 的 153 局 WK 语料(**38 轮**);`l5combo` 的 (a)(**第五十四轮**);
     `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十一轮**);`axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260827T004000Z.md`
+- **2026-08-27T04:05Z(第八十一次触发)**:**`campsel` 首检 = `REFUSE`(侧别抵消,(a) NOT BOUGHT)**,
+  而本轮真正值钱的是**它整条论证踩在一个谁都没核过的前提上**(接上一轮 backlog 第 1 棒 —— W15 首检)。
+  **宽扫 175/175 计分局 = 100%**(215 `.dem` − 40 局暖场,7 个 run,4 种子 × 2 侧 = 8 个 stamp;
+  arm 串从落盘 `script_version` 反解 = **37 id / 328 字节**,`campsel` 在串里)+ **深查 9 局逐帧**
+  (24 个英雄-episode,armed / baseline 各半,4 个 run 全覆盖)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐ **`campsel` 的整条论证站在「引擎会怎么答」上,而树里两边的说法都在,谁都没核过。**
+    它把两个谓词的**操作数**从 wrapper 换成 `camp.cattr`,于是 `IsEnemyCamp` 读 `.team`、
+    `IsAncientCamp` 读 `.type == "ancient"` —— **要求** `.team` 是队伍号、`.type` 是**字符串**。
+    三处 shipped 代码这么写(`aba_site.lua:392` / `jmz_func.lua:8145` / `hero_templar_assassin.lua:605`),
+    **而 `docs/BOT_API_REFERENCE.md:641-649` 把两个都写成 `int`**。**若文档为真,armed 后两半都是 no-op**,
+    收割读回来是「测了,没效果」,**没有任何东西举手**。**修法的本地验证够不着**:协同组
+    08-23T23:35Z (W1) 逐字说 `GetNeutralSpawners()` 在每枚 fixture 上都是 `{}`、营地表是
+    **「声明的替身」** ⇒ **判定 `.type` 是不是字符串的那张表,是修法作者自己写的**。**GH #241 新开 [bug]**。
+    **同族第六例**(#171 丢读数 / #213 丢门 / #207 接线门 / #230 丢半个域 / #234 丢地址 / **本条丢前提**),
+    且是同族里第一个**假设本身**:不是工具没跑,是**判据的一个前提只有一个来源,而那个来源是它自己**。
+  - ⭐⭐ **顺带点到 owner P1 一根没人查过的线**:`jmz_func.lua:8145` 那处 `camp.team == GetTeam()`
+    **就是 `pullcamp` 自己的选营过滤器**。P1 的 SILENT 归因单子(`IsLanePullSafe` + 和平期闸门 +
+    6:00 宵禁)**没有这一条**;若 `.team` 不是队伍号,那个过滤器**每帧筛空**,`pullcamp` 是
+    **构造性 SILENT**,三条候选原因**一条都不是**。本组不裁,已写进 #241。
+  - ⭐⭐ **读数 `REFUSE`,不是 SILENT**:域极大(**18,847** 次营地交火落在已知营地上,占 19,116 的 98.6%),
+    锐化观测量(**argmin 证人**:打了敌方半区的营,而出发时某个己方营在 armed 代价下严格更便宜)
+    armed **1,110** / baseline **1,256**(lead 20s)⇒ **两条腿都不空**;但 ab/ba **反号**
+    (条件分母 10s **−0.137/+0.127**、20s **−0.098/+0.106**、30s **−0.080/+0.099**)⇒ 铁律 4(i) 不构成读数。
+    **刀口已排除**(4(ii)):margin 均值 armed 0.332 / baseline 0.329,距阈值 10% 以内仅 **3.5% / 3.2%**。
+  - ⭐ **铁律 4(i) 的算术这次打出来了**:同一份 18,847 次交火,**物理侧效应 6.4 pp**
+    (radiant 0.307 vs dire 0.243)**> 腿效应 2.0 pp**(armed 0.265 vs baseline 0.285),**3.2 倍**。
+  - ⭐ **样本量的一巴掌**:同工具同波次,**91 局**时条件证人表读 `both layers agree`、armed 两层都更低
+    (ab −0.027 / ba −0.107);**175 局**后同一张表读 `OPPOSED`。**在部分语料上收工的一轮会把 WORKING 发出去。**
+  - ⭐ **两处只有逐帧抓得到的量具缺陷**(硬规则本轮兑了两次现):(i) **英雄在决策前置窗口里 TP 穿图**
+    (`ffdcb6/20260826_211631_slot6` sniper t0=190.8,5 s 内 `(-5507,4918)`→`(4466,-5211)`)⇒ 加
+    **model-free 速度闸**(不匹配 `modifier_teleporting`,顺带抓闪烁/强制位移/复活;550 u/s 是硬上限,
+    取 700),**丢掉 11,028 次证人读数,打印在语料节里**;(ii) **`half` 原本读英雄坐标而不是他打的那个营**
+    —— `…slot6` phantom_assassin t0=325.7 离己方半区营 **255u**(就是他在打的),**自己的坐标**却落在敌方半区
+    (中垂线附近人和脚下的营分两边)⇒ **门选的是营,侧别归营**。两处**都不是参数问题,是问错了主体**。
+  - **承重帧**:`ffdcb6/20260826_211631_slot6` seed 906 **skeleton_king ARMED L20 t0=1145.5** ——
+    t=1125.5 己方营 2000 / 敌方营 1942(armed 代价下己方更便宜:2000 < 1.5×1942),20 秒后在敌方半区营开打并停留 25 秒;
+    `fc61ad/20260827_001732_slot7` seed 888 **zuus ARMED L23 t0=1233.0** 同形(己方营 **218u**)。
+    ⚠️ **这些帧证明不了「门坏了」**,只证明门没按住这类决策(farm 模式与否 `.dem` 答不出)——
+    **这正是判 REFUSE 而不是 BUGGY 的原因**。
+  - ⭐ **章程第 (2) 条(核验记录最少的 id)本轮做成了固定输出**(backlog 第 4 棒,**连续第五轮登记后兑现**):
+    37 个 armed id 里 **`odaoe` 与 `campsel` 并列 2 篇且都从未被裁定过**;`odaoe` 要 OD 进 draft,故先看 `campsel`。
+  - **交付**:新工具 `campsel_domain.py`(`--selfcheck` **63 PASS / 0 FAIL**;`--source` 零语料复现;
+    `--frames armed|baseline` 打逐帧;常数全部从 Lua 读 —— 惩罚 1.5、截断 15000、远古等级 10、
+    门只有一个 soak id、调用点 **== 1**、操作数 swap 还在、**两个谓词都还调在 `rec` 上**;
+    **七条各有反 selfskip** 用合成源码证明真会红;缺选择器/缺调用点**抛异常不回退默认值**;
+    `verdict()` 六个世界全有用例且**顺序钉住**,外加**一条专造 composition shift 的世界**断言它**不会**被读成 SILENT)。
+    `tests/test_detector_source_constants.py` **新增 7 条棘轮**,其中三条是**前提棘轮**
+    (三处 `camp.team`、至少一处 `camp.type == "ancient"`、**以及 API 参考那两行** ——「哪天不再打架了,说清是谁动了」)。
+  - **交棒**:**GH #241 新开 [bug]**(前提类型问题,`campsel` 与 `pullcamp` 两个 id 的存亡都压在上面;
+    本组答不了,`.dem` 里没有营地表);**GH #137 追评**(全文读数 + 承重帧 + 两处量具缺陷 + (a) NOT BOUGHT);
+    **owner P1 责任链**:`pullcamp` SILENT 归因单子少了 `camp.team` 这一条,球仍在**协同组(P1 第 1 项)**。
+    **球在总监**:`campsel` 三条件判定(另有 #236、#235、#159、#207、#212、#220、`campfarm` 仍未裁)。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**(改的是 `tools/` 与 `tests/`);
+    `bash tools/agent/luacheck_gate.sh` → **exit 0,`luacheck bots game: 0 warnings`**(容器里没有,脚本自装 `lua-check`);
+    `bash tests/run_py_tests.sh` **40 passed / 1 failed**(`test_selfcheck_lua_leg.py`,**与开工自检逐位相同,开工前就红**,不属本组);
+    `campsel_domain.py --selfcheck` **63 PASS / 0 FAIL**;`tests/test_detector_source_constants.py` 全绿(含新增 7 条)。
+    本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **AWS**:S3 **只读**(215 `.dem` 流式下载即弃 + analysis.json),**未启动/未终止实例**,**未调用 CE**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **`odaoe` 首检** —— 与 `campsel` 并列 0 裁定的另一个;**先量分母**
+    (obsidian_destroyer 在 175 局镜像 draft 里出现几次),**分母为零本身就是结论**;
+    (2) ⭐⭐ **#236 裁下后 `mv` 落地 #159 的 fixture**(**第五轮**,成本 = 两条 `mv`);
+    (3) ⭐ **GH #220 的 fixture**(`094054_slot3 t=163.0 drow_ranger`,**第五轮**);
+    (4) ⭐ **把「每 id 篇数」那张表做成独立小脚本**(本轮是手跑 grep,**登记转兑现但还没有工具**);
+    (5) `camp_prelit` 列(**第九轮**);占用度量按 idx 去重(**第八轮**);`tpdefend_events` 结果侧列
+    (#191 后,**第十四轮**);幻象余量做进 `sweep_run.sh`(**第十一轮**);`entities.py` 推广(**第十二轮**);
+    12:41Z §6.1 那 23 帧做 fixture(**第十四轮**);`pulldrag` 的 connect 侧;第二种视野证人;
+    ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第二十五轮登记**);`stayfield` 第一失败子句;
+    打野反证 fixture(**三十一轮**);`hero-1` 的 153 局 WK 语料(**39 轮**);`l5combo` 的 (a)(**第五十五轮**);
+    `make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十二轮**);`axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260827T040506Z.md`

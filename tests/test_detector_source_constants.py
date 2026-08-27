@@ -965,6 +965,50 @@ check('campfarm_target still prints ALL THREE bands in the `cast AT camp` '
       CFT.count("for band in ('under', 'band', 'over'):") == 2,
       str(CFT.count("for band in ('under', 'band', 'over'):")))
 
+# --------------------------------------------------------------------------
+# campsel (GH #137) -- replay-check 2026-08-27T0x:xxZ.
+# The whole (a) argument is "restoring two OPERANDS changes two predicates",
+# so every premise below is load-bearing: the multiplier that makes the
+# argmin move, the cut-off it scales, the level the ancient clause names, and
+# above all the fact that the predicates are called on `rec` and not on the
+# wrapper again -- the last one would turn the armed leg back into the
+# shipped leg with nothing red anywhere.
+# --------------------------------------------------------------------------
+import campsel_domain as CS                            # noqa: E402
+
+CS_GATE = CS.gate_facts()
+eq('campsel is gated by exactly one soak id', CS_GATE['cands'], ['campsel'])
+check('campsel is still resolved at exactly ONE call site -- a second one '
+      'would be a path this detector has never looked at',
+      CS_GATE['call_sites'] == 1, str(CS_GATE['call_sites']))
+eq('the enemy-camp penalty is still 1.5', CS_GATE['penalty'], 1.5)
+eq('the selector cut-off is still 15000', CS_GATE['cutoff'], 15000.0)
+eq('the selector\'s ancient clause still names level 10',
+   CS_GATE['ancient_level'], 10)
+check('the operand swap (`rec = camp.cattr` under the gate) is still there',
+      CS_GATE['selection'] is True)
+check('BOTH predicates are still called on `rec` -- putting either back on '
+      'the wrapper silently restores the shipped behaviour on the ARMED leg',
+      CS_GATE['preds_on_rec'] == 2 and CS_GATE['preds_on_camp'] == 0,
+      'rec=%d camp=%d' % (CS_GATE['preds_on_rec'], CS_GATE['preds_on_camp']))
+
+# The premise ratchet.  `campsel` (and `pullcamp`, and templar assassin's ult)
+# all assume the ENGINE hands back `.team` as a team id and `.type` as the
+# STRING "ancient".  Nothing in the tree verifies that -- the fix's own
+# fixtures supply a camp table the fixer wrote -- and docs/BOT_API_REFERENCE.md
+# contradicts it.  This does not decide who is right; it refuses to let either
+# side of the contradiction disappear quietly.
+CS_PRE = CS.premise_sites()
+check('>= 3 shipped sites still compare camp.team to GetTeam()',
+      len(CS_PRE['team_readers']) >= 3, str(CS_PRE['team_readers']))
+check('>= 1 shipped site still compares camp.type to the STRING "ancient"',
+      any(lit == 'ancient' for _f, _l, lit in CS_PRE['type_readers']),
+      str(CS_PRE['type_readers']))
+check('the API reference still documents GetNeutralSpawners().team/.type -- '
+      'if this row ever stops disagreeing with the code, say which one moved',
+      set(CS_PRE['doc_fields']) >= {'team', 'type'},
+      str(CS_PRE['doc_fields']))
+
 print()
 if FAIL:
     print('%d FAILED: %s' % (len(FAIL), ', '.join(FAIL)))
