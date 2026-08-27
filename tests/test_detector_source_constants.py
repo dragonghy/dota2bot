@@ -1009,6 +1009,27 @@ check('the API reference still documents GetNeutralSpawners().team/.type -- '
       set(CS_PRE['doc_fields']) >= {'team', 'type'},
       str(CS_PRE['doc_fields']))
 
+# --------------------------------------------------------------------------
+# odaoe (GH #54) -- the ARMED-ONLY reading in odaoe_domain.py is only valid
+# while the gated area branch sits strictly BELOW the shipped single-target
+# exit.  Hoist it and armed starts REDIRECTING casts instead of only adding
+# them, at which point every "armed_only" count in the 2026-08-27 report means
+# something else.  That is a source fact, so it gets a source ratchet.
+import odaoe_domain as OA                              # noqa: E402
+
+OA_SRC = OA.read_source_constants()
+eq('odaoe is gated by exactly one soak id', OA_SRC['gate_ids'], ['odaoe'])
+check('od_GetEclipseAoeLocation still has exactly ONE call site',
+      OA_SRC['call_sites'] == 1, str(OA_SRC['call_sites']))
+eq('the area branch still needs 2 targets', OA_SRC['min_targets'], 2)
+eq('the worth-hitting threshold is still 25% of current HP',
+   OA_SRC['min_damage_pct'], 0.25)
+check('the gated area branch is STILL below the shipped single-target exit -- '
+      'if it moves above, armed can redirect casts and the ARMED-ONLY bucket '
+      'in iterations/reports/replay-check/20260827T0730Z.md stops meaning '
+      '"the shipped loop had no exit here"',
+      OA_SRC['gated_below_shipped'] is True)
+
 print()
 if FAIL:
     print('%d FAILED: %s' % (len(FAIL), ', '.join(FAIL)))
