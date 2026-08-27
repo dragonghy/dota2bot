@@ -45,9 +45,11 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- minutes, and the first frame taken past it reads ten heroes at level 22-27 in
 -- a 24.9-minute naturally-ended game (GH #235).  Real turbo games average ~20
 -- minutes, so it was never a property of the shipped product either.  t20 and
--- t25 are live rows whose picks have never been argued in this repo -- they are
--- the upstream defaults; tests/test_focus_talent_anchor.lua pins them as of
--- 2026-08-27 and section 6 there shows where the queue asks for them.
+-- t25 WERE live rows whose picks had never been argued in this repo -- upstream
+-- defaults, pinned but unpriced by tests/test_focus_talent_anchor.lua on
+-- 2026-08-27, whose section 6 shows where the queue asks for them.  They are
+-- PRICED 2026-08-27 in the block directly above tTalentTreeList: t20 changed,
+-- t25 kept and now argued.
 -- Two independent checks say the feed's order is the slot order
 -- here: talent7 below is used as a Berserker's Call radius bonus and [7] is the
 -- Call AoE talent; talent8 is used as Culling Blade kill damage and [8] is the
@@ -121,9 +123,76 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 -- the row picked the talent its own comment said it rejected.  The exact wording is
 -- quoted once, in tests/test_focus_talent_anchor.lua, which also guards against it
 -- coming back; do not paste it here.
+--
+-- t20 CHANGED 2026-08-27, [5] -> [6].  t25 PRICED 2026-08-27 and NOT changed.
+-- This is baton 2 of the three this desk handed forward at 02:15Z (GH #238
+-- section 6): price the ten t20/t25 picks of the focus five, one hero per round.
+-- Until now both rows were OpenHyperAI snapshot defaults that nobody here had read.
+--
+-- t20 -- [5] special_bonus_strength_15 (+15 strength) against [6]
+-- special_bonus_unique_axe_4 (axe_counter_helix / damage +40, on a base of
+-- 100 120 140 160).  The row now takes [6].
+-- On reachability alone [5] wins outright, and this change does not pretend otherwise.
+-- That matters, because REACHABILITY is the ruler the t10 and t15 blocks above used,
+-- and here it is silent: [5] is a stat block with no payout condition at all.  What
+-- decides this pair is what each payout is DENOMINATED in, and whether this Axe can
+-- spend that currency:
+--   * [5] pays in attack damage (Strength is Axe's primary attribute) and in health.
+--     This build is already long on both.  Nothing in this file has a right-click
+--     decision layer -- every Consider* here is Q/W/E/R -- and neither role list buys
+--     attack speed or a damage item, so +15 attack damage compounds with nothing; at
+--     a 1.7 base attack time it is under 9 dps.  The health half lands on the hero
+--     whose pos_3 list opens item_tank_outfit -> item_crimson_guard ->
+--     item_blade_mail, i.e. on the single axis this build already spends its first
+--     ~8.5k on (the blink note below sizes that prefix).
+--   * [6] pays in PURE damage, the one currency neither this build nor the enemy's
+--     supplies.  Armor does not touch it, and t20 unlocks in the last third of a
+--     turbo game -- exactly when the mode's fast timings have handed enemy cores the
+--     armor that [5]'s physical half runs into.  At the rank Axe holds here it is
+--     160 -> 200, +25% on his principal damage source, and it is the only damage he
+--     has that multiplies by the number of enemies present -- the state X.ConsiderQ
+--     manufactures on purpose, taunting everything inside Call's radius into Counter
+--     Helix's 275.
+-- The t20 flip is inert to the decision layer: this file has no talent5 or talent6 handle.
+-- That is why a magnitude call is affordable at t20 and is NOT affordable at t25 --
+-- the flip can only move combat power, and cannot create a stale read either way.
+-- COSTS AND BOUNDS: no in-domain frame exists.  Not one Axe frame anywhere in this
+-- repo is at the tier: the 105 fixtures hold ten Axe frames, levels 1-11, and the one
+-- late frame the corpus has gained (GH #235, 23:02, ten heroes at 22-27) has no Axe in
+-- it.  On those ten frames one has an enemy inside Counter Helix's 275
+-- (tools/agent/fixture_proximity_census.py axe 275 315 400).  That reading does NOT
+-- support this change -- it is recorded rather than dropped, and it is nine or more
+-- levels out of domain on a sample frozen for other heroes' decisions, so it is not
+-- evidence against it either.  +15 strength converts to health at the game's
+-- global rate (22 per point at time of writing), a world constant NOT verified against
+-- KV here; nothing above depends on its exact value.  Pick-rate corroboration was not
+-- fetched again -- the numbers are Valve's own KV via tools/agent/talent_slot_census.py,
+-- not a guide.
+--
+-- t25 -- [7] special_bonus_unique_axe_2 (axe_berserkers_call / radius +85) against
+-- [8] special_bonus_unique_axe_5 (axe_culling_blade / damage +150).  The row KEEPS
+-- [7], and here the decision layer decides it, not a judgement about size:
+--   * [7] is delivered to this bot for free.  The engine folds the +85 into the
+--     `radius` X.ConsiderQ already reads, and that value becomes nCastRange, which the
+--     same function then uses to find its targets.  So Axe both catches more (315 ->
+--     400 is +61% area) and KNOWS he catches more, with no code change at all.  One
+--     frame in the corpus happens to show the annulus doing exactly that
+--     (f_175703_sven_tp47: one enemy inside 315, two inside 400).  n = 1, at level 1,
+--     and it is corroboration of the mechanism, not a measurement of how often it pays.
+--   * [8] would be bought and then not used.  The Culling kill-check further down is
+--     a hardcoded literal, 150 + 100 * lv, so no fold reaches it, and the talent term
+--     beside it reads 0 (GH #228: hero-unique talents own no KV block).  Real Culling
+--     damage with [8] is 425/525/625 against a threshold still reading 250/350/450.
+-- Taking [8] would multiply this file's existing Culling blind band by seven.
+-- Today that band is (450, 475] at rank 3 -- 25 wide, the stale-constant defect the
+-- `hero-2` lever is registered for.  With [8] it becomes (450, 625], 175 wide, and
+-- every point of the extra 150 is a kill Axe can make and declines to try.
+-- So t25 is not a free choice until `hero-2` lands: whoever repairs the kill-check by
+-- reading abilityR:GetSpecialValueInt('damage') collects the fold, and may re-price
+-- this pair on its merits afterwards.  Filed forward, not silently absorbed.
 local tTalentTreeList = {
 						['t25'] = {0, 10},
-						['t20'] = {0, 10},
+						['t20'] = {10, 0},
 						['t15'] = {0, 10},
 						['t10'] = {10, 0},
 }

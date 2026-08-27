@@ -96,11 +96,34 @@ local FOCUS = {
             'special_bonus_unique_axe_2',
             'special_bonus_unique_axe_5',
         },
-        -- t20/t25 RECORDED 2026-08-27, first pricing, NOT changed. The row takes
-        -- [5] +15 Strength over [6] +40 Counter Helix damage, and [7] +85
-        -- Berserker's Call AoE over [8] +150 Culling Blade damage. Both are the
-        -- upstream OpenHyperAI defaults; neither has ever been argued in this
-        -- repo. Two things this file's own reads say about the pair, recorded
+        -- t20/t25 RECORDED 2026-08-27 (first pin, both unpriced), then PRICED
+        -- later the same day -- baton 2 of GH #238 section 6, one hero per round.
+        --
+        -- t20 CHANGED, [5] -> [6]: +40 Counter Helix damage instead of +15
+        -- Strength. Argued in full in hero_axe.lua's pricing block, and argued on
+        -- a ruler this file does not otherwise use, which is the part worth
+        -- carrying here. On payoff REACHABILITY -- the ruler that decided t10 and
+        -- t15 -- [5] wins outright, because a stat block has no payout condition
+        -- at all. The change is made on what the payout is DENOMINATED in: [5]
+        -- pays in attack damage (no right-click decision layer exists in that
+        -- file, and neither role list buys attack speed or damage) and in health
+        -- (the axis pos_3 already spends its first ~8.5k on), while [6] pays in
+        -- PURE damage, 160 -> 200 at the rank held there, on the only source Axe
+        -- has that multiplies by the number of enemies his own Call gathers.
+        -- It is affordable BECAUSE hero_axe.lua has no talent5 or talent6 handle:
+        -- the flip is inert to the decision layer and can only move combat power.
+        -- Honest bound travelling with it: no in-domain frame exists. Ten Axe
+        -- fixture frames, levels 1-11, one with an enemy inside helix range.
+        --
+        -- t25 PRICED and NOT changed, and that one is not a magnitude call. [7]'s
+        -- +85 is folded by the engine into the `radius` X.ConsiderQ already reads,
+        -- so the bot catches more AND knows it. [8]'s +150 would be folded into
+        -- axe_culling_blade/damage, which the kill-check does NOT read -- it is a
+        -- hardcoded 150 + 100*lv -- so taking [8] widens the existing Culling
+        -- blind band from (450, 475] to (450, 625] at rank 3, seven times over.
+        -- The pair is not free to re-price until the `hero-2` lever lands.
+        --
+        -- Two things this file's own reads say about the t25 pair, recorded
         -- here because they are consequences, not opinions:
         --   * hero_axe.lua reads BOTH talent7 and talent8, but a hero takes one
         --     talent per tier -- so with the row on [7], `talent8:IsTrained()`
@@ -114,7 +137,7 @@ local FOCUS = {
         --     round that ruling was also protected by the branch being
         --     unreachable. It is not any more: the fold argument is now the only
         --     thing holding it. It still holds; it is now load-bearing.
-        expect = { t10 = 2, t15 = 3, t20 = 5, t25 = 7 },
+        expect = { t10 = 2, t15 = 3, t20 = 6, t25 = 7 },
     },
     crystal_maiden = {
         id = 5,
@@ -490,6 +513,84 @@ tests['[hero] hero_axe.lua still reads exactly the two t25 talent handles'] = fu
         .. 'are NOT the same kind of thing any more. A read of index 1-4 is a LIVE '
         .. 'read and needs its own accounting (GH #104 section 4 splits these into '
         .. 'ADDITIVE and STRUCTURAL).')
+end
+
+-- ---------------------------------------------------------------------------
+-- 4b. The Axe t20/t25 pricing (2026-08-27), and the three sentences that carry
+-- the parts of it no other assertion in this file can state.
+--
+-- Section 2 already pins WHICH pick each tier resolves to, so it catches the row
+-- being flipped back.  What it cannot catch is the pair moving under the pick:
+-- if GetTalentBuild's t20 mapping were re-pointed at another index pair, `expect
+-- .t20 = 6` would still be satisfied by a [6] that is no longer Counter Helix.
+-- Lion's round found exactly that shape with a mutation (M4), and only a pair
+-- assertion caught it.
+--
+-- The prose ratchets are here for the reason the earlier rounds established: the
+-- load-bearing part of a pricing is what it ADMITS.  Two of the three sentences
+-- below record something no test could otherwise state -- that the usual ruler
+-- favours the REJECTED talent, and that the change is only affordable because
+-- nothing reads it.  Delete those and the row keeps passing while the reasoning
+-- that made it defensible is gone.  Keep them unwrapped and ASCII in the source
+-- (lua5.1 has no \x escape, and a wrapped sentence cannot be matched).
+
+tests['[hero] the axe t20 row still drives the Counter Helix / Strength pair'] = function()
+    with_skill_lib('axe', function(J)
+        local function rows(t20)
+            return { t10 = { 10, 0 }, t15 = { 10, 0 }, t20 = t20, t25 = { 10, 0 } }
+        end
+        local odd = J.Skill.GetTalentBuild(rows({ 0, 10 }))
+        local even = J.Skill.GetTalentBuild(rows({ 10, 0 }))
+        assert(odd[3] == 5 and even[3] == 6,
+            'the t20 row now resolves to {' .. odd[3] .. ',' .. even[3] .. '}, not '
+            .. '{5,6}. The pricing block in hero_axe.lua argues one NAMED talent '
+            .. 'against another -- special_bonus_strength_15 against '
+            .. 'special_bonus_unique_axe_4 -- so if this pair moves, the row can '
+            .. 'still take "index 6" while buying something nobody argued for. '
+            .. 'Re-read the pricing block, do not re-point this test.')
+    end)
+end
+
+tests['[hero] the axe t20/t25 pricing rationale is still in the hero file'] = function()
+    local src = read_file(BOTLIB .. 'hero_axe.lua')
+    local needles = {
+        -- The admission that the file's usual ruler favours the talent NOT taken.
+        '-- On reachability alone [5] wins outright, and this change does not pretend otherwise.',
+        -- Why a magnitude call was affordable at t20 and not at t25.
+        '-- The t20 flip is inert to the decision layer: this file has no talent5 or talent6 handle.',
+        -- The arithmetic that makes t25 a decision-layer ruling rather than a taste.
+        "-- Taking [8] would multiply this file's existing Culling blind band by seven.",
+    }
+    for _, needle in ipairs(needles) do
+        assert(src:find(needle, 1, true),
+            'the axe t20/t25 pricing block no longer carries the sentence "' .. needle
+            .. '". Each of the three records something no other assertion here can: '
+            .. 'that the rejected talent wins on the usual ruler, that the t20 flip '
+            .. 'is affordable only because nothing consumes it, and the seven-fold '
+            .. 'blind band that rules out [8]. A pricing without its admissions is '
+            .. 'not a pricing. If a sentence became untrue, correct it and update '
+            .. 'this list in the same change -- do not delete it to get green.')
+    end
+end
+
+tests['[hero] the axe t25 pricing and the hardcoded Culling threshold stand or fall together'] = function()
+    local src = read_file(BOTLIB .. 'hero_axe.lua')
+    local hardcoded = false
+    for _, line in ipairs(live_lines(src)) do
+        if line:find('150 + 100 * nSkillLV', 1, true) then hardcoded = true end
+    end
+    local claim = src:find('blind band by seven', 1, true) ~= nil
+    assert(hardcoded == claim,
+        'hero_axe.lua has the hardcoded Culling threshold = ' .. tostring(hardcoded)
+        .. ' but the seven-fold blind-band claim = ' .. tostring(claim) .. '. These '
+        .. 'are the same fact seen twice. The whole t25 ruling -- keep [7], do not '
+        .. 'take the +150 Culling talent -- rests on the kill-check being a literal '
+        .. 'no engine fold can reach. If the `hero-2` lever lands and that literal '
+        .. 'is replaced by abilityR:GetSpecialValueInt(\'damage\'), the ruling is '
+        .. 'not merely stale, the pair becomes free to re-price on its merits: say '
+        .. 'so in the block instead of leaving a claim that quietly stopped being '
+        .. 'true. Removing the claim while the literal stays is the same error the '
+        .. 'other way.')
 end
 
 -- ---------------------------------------------------------------------------
