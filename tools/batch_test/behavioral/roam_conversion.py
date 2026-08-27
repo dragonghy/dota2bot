@@ -203,6 +203,28 @@ def death_spans(tl, real_idx):
     this helper: a hero is dead from its DEATH event until it respawns, and
     respawn is detected by the fountain teleport (hp back above 0.5 AND a
     >1500u jump), never by hp alone.
+
+    WHAT THE `#247` ANCHOR FIX DOES *NOT* MOVE (director ruling 2026-08-27,
+    test_set.md section BO).  The jump anchor changed below, and the reflex is
+    to assume every historical reading built on this helper shifted with it.
+    It did not, and the reason is arithmetic rather than measurement: the only
+    thing this function EXPORTS is `(t_death, t_respawn)` -- `jumped` never
+    leaves the loop -- and the loop breaks on `jumped or s['t'] - td >= 1.5`.
+    So for any candidate frame at or after `td + 1.5` the break fires on the
+    clock alone and `tr` cannot depend on the anchor at all.  The anchor can
+    only reach `tr` through a frame in the OPEN window `(td, td + 1.5)` that
+    already carries `hp_pct > 0.5`, and that window holds no real revival:
+    the fountain floor is 6s (measured min 6.2s at level 1, GH #246), aegis and
+    Reincarnation are ~5s and ~3s, while the hp leak the 1.5s guard exists for
+    is a STALE COPY of the last live sample -- same position, so both anchors
+    read it as no-jump.  `tests/test_death_span_corpse_anchor.py` pins this as
+    a differential against a frozen copy of the pre-fix anchor rather than as
+    prose: every case where the two disagree must exhibit such a frame.
+
+    That is why the corpus-wide rescan `#247` asked for before backfilling is
+    not owed here, and IS owed by any consumer that exports `jumped` or `span`
+    itself (`bbfloor_domain.py` does -- the bearing frame was its only buyback
+    candidate on the whole W16 corpus, and the anchor deleted it).
     """
     per = collections.defaultdict(list)
     for s in tl['snapshots']:
@@ -219,7 +241,21 @@ def death_spans(tl, real_idx):
         if spans[h] and spans[h][-1][1] > td:
             continue                      # already inside a known death span
         snaps = per.get(h) or []
-        loc = next(((s['x'], s['y']) for s in reversed(snaps) if s['t'] <= td), None)
+        # ANCHOR THE FOUNTAIN-JUMP TEST ON THE CORPSE, NOT ON THE LAST LIVE
+        # SAMPLE (`[bug] GH #247`).  The last frame at or before the DEATH event
+        # can be up to a full sample BEFORE the hero fell, and a hero running at
+        # 300+ u/s covers 300u in one sample against a 1500u threshold.
+        # Frame-verified on `c1d1cf/20260827_063128_slot8` skeleton_king L19,
+        # DEATH t=1081.3: the last live sample is t=1080.5 at (-5397.2, 765.3)
+        # while the body lies at t=1081.5 at (-5074.9, 796.3).  He REINCARNATES
+        # in place at t=1085.5 at (-3744.0, 1184.0) -- 1386u from the corpse but
+        # 1705u from the running frame, so the old anchor called a 4.2s
+        # Reincarnation a fountain teleport.  Same rule as
+        # `bbfloor_domain.death_spans`, kept in step deliberately.
+        corpse = next(((s['x'], s['y']) for s in snaps
+                       if s['t'] >= td and s['hp_pct'] <= 0.5), None)
+        loc = corpse or next(((s['x'], s['y']) for s in reversed(snaps)
+                              if s['t'] <= td), None)
         tr = float('inf')
         for s in snaps:
             if s['t'] <= td or s['hp_pct'] <= 0.5:
