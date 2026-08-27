@@ -2296,22 +2296,10 @@ X.ConsiderItemDesire["item_flask"] = function( hItem )
 	local nInRangeEnmyList = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE )
 
 
-	-- [salvepool] Pool-blind absolute floor; see J.SalveSelfMissingFloor.
-	local nSelfMaxHealth = bot:OriginalGetMaxHealth()
-
-	if nSelfMaxHealth - bot:OriginalGetHealth() > J.SalveSelfMissingFloor( nSelfMaxHealth )
-		and #nInRangeEnmyList == 0
-		and not bot:WasRecentlyDamagedByAnyHero( 2.2 )
-		and not bot:HasModifier( "modifier_filler_heal" )
-		and not bot:HasModifier( "modifier_elixer_healing" )
-		and not bot:HasModifier( "modifier_flask_healing" )
-		and not bot:HasModifier( "modifier_juggernaut_healing_ward_heal" )
-	then
-		hEffectTarget = bot
-		sCastMotive = '自己吃'
-		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
-	end
-
+	-- [salveyield] The ally scan is hoisted ABOVE the self branch so the self
+	-- branch can be asked whether it is pre-empting a worse-off teammate. The
+	-- loop only reads, so hoisting it is behaviour-preserving on its own; the
+	-- one conjunct below is the whole behaviour change, and it is gated.
 	local hAllyList = J.GetAlliesNearLoc( bot:GetLocation(), 700 )
 	local hNeedHealAlly = nil
 	local nNeedHealAllyHealth = 99999
@@ -2336,7 +2324,31 @@ X.ConsiderItemDesire["item_flask"] = function( hItem )
 			end
 		end
 	end
-	if hNeedHealAlly ~= nil and #hNearbyEnemyHeroList == 0
+	-- The ally branch's own firing condition, named once so the self branch
+	-- above can be told exactly what it would be pre-empting. [salveyield]
+	local bAllyBranchOpen = hNeedHealAlly ~= nil and #hNearbyEnemyHeroList == 0
+
+	-- [salvepool] Pool-blind absolute floor; see J.SalveSelfMissingFloor.
+	local nSelfMaxHealth = bot:OriginalGetMaxHealth()
+
+	if nSelfMaxHealth - bot:OriginalGetHealth() > J.SalveSelfMissingFloor( nSelfMaxHealth )
+		and #nInRangeEnmyList == 0
+		and not bot:WasRecentlyDamagedByAnyHero( 2.2 )
+		and not bot:HasModifier( "modifier_filler_heal" )
+		and not bot:HasModifier( "modifier_elixer_healing" )
+		and not bot:HasModifier( "modifier_flask_healing" )
+		and not bot:HasModifier( "modifier_juggernaut_healing_ward_heal" )
+		-- [salveyield] No arbitration exists between these two halves: the self
+		-- branch returns and the ally branch below is never reached. See
+		-- J.ShouldYieldSalveToAlly -- unarmed this is literally false.
+		and not J.ShouldYieldSalveToAlly( bot, hNeedHealAlly, bAllyBranchOpen )
+	then
+		hEffectTarget = bot
+		sCastMotive = '自己吃'
+		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
+	end
+
+	if bAllyBranchOpen
 	then
 		hEffectTarget = hNeedHealAlly
 		sCastMotive = '给队友贴:'..J.Chat.GetNormName( hEffectTarget )

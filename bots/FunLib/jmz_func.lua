@@ -10737,6 +10737,62 @@ function J.SalveAllyMissingEnough( hAlly )
 	return nMaxHealth - hAlly:OriginalGetHealth() > J.SalveAllyMissingFloor( nMaxHealth )
 end
 
+-- GH #237 -- the THIRD defect in the same consider, and the only one that is
+-- not about a constant: between the salve's two halves there is no arbitration
+-- at all.
+--
+-- The self branch returns the moment its own conjuncts hold, so the ally branch
+-- forty lines below is never consulted -- not "outranked", never reached. The
+-- self floor is an absolute missing amount, so on a large pool it is satisfied
+-- while the bot is still comfortable: at a 2566 pool, missing 501 leaves the
+-- bot at 80.5% health, and that is enough to drink the salve on itself with a
+-- teammate at 14% standing 400u away. Nothing in the function compares the two
+-- heroes. This is the one half of the family the sibling healing-lotus helper
+-- does NOT answer differently -- it returns on self-use too -- so the argument
+-- for this lever is not "the tree already says so" but the plain Turbo reading
+-- that a consumable with one charge should land on whoever is worse off.
+--
+-- WHICH AXIS -- and the reason there is no constant here. Ratio and absolute
+-- health disagree about who is worse off, and for a FIXED-amount heal (the
+-- salve restores a flat amount) neither reading is obviously right: the ratio
+-- picks whoever is nearest death as a fraction, the absolute picks whoever dies
+-- to the smallest burst, and 400 health is most of a support's pool and a
+-- sliver of a carry's. Rather than pick the axis -- and a margin on it -- that
+-- makes the archive read best, this yields only under DOMINANCE: the ally must
+-- be worse off on BOTH readings at once. That is the intersection of the two
+-- candidate rules, so it is the most conservative of them by construction, it
+-- introduces no threshold to fit, and no choice of axis can be said to have
+-- been made in its favour. Fitting a constant to the corpus is what the
+-- [refusal] row of tests/test_salvepool_missing_floor.lua exists to forbid.
+--
+-- The ratio comparison is written as a cross-multiplication rather than two
+-- divisions so it needs no epsilon and cannot divide by zero; both pools are
+-- checked positive first, which is also what keeps the inequality's direction
+-- valid.
+--
+-- Gated ('salveyield'), turbo-only, a single conjunct against a mode predicate.
+-- NEVER DROPS THE CAST. The caller passes bAllyBranchOpen, which is the ally
+-- branch's own firing condition (a selected ally, and the consider's enemy list
+-- empty) evaluated on the same frame. Yielding therefore hands control to a
+-- branch that is already known to return HIGH on that same ally, so the effect
+-- of an armed frame is strictly a change of TARGET, never a frame where the
+-- salve goes unused. tests/test_salveyield_arbitration.lua pins that.
+function J.ShouldYieldSalveToAlly( hBot, hAlly, bAllyBranchOpen )
+	if not bAllyBranchOpen or hAlly == nil then return false end
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'salveyield' ) ) then return false end
+
+	local nBotMaxHealth  = hBot:OriginalGetMaxHealth()
+	local nAllyMaxHealth = hAlly:OriginalGetMaxHealth()
+	if nBotMaxHealth <= 0 or nAllyMaxHealth <= 0 then return false end
+
+	local nBotHealth  = hBot:OriginalGetHealth()
+	local nAllyHealth = hAlly:OriginalGetHealth()
+
+	-- worse off on the absolute reading AND on the remaining-ratio reading
+	return nAllyHealth < nBotHealth
+		and nAllyHealth * nBotMaxHealth < nBotHealth * nAllyMaxHealth
+end
+
 function J.DoesUnitHaveTemporaryBuff(hUnit)
 	local sUnitName = hUnit:GetUnitName()
 	if sUnitName == 'npc_dota_hero_huskar' and J.GetHP(hUnit) < 0.6 then

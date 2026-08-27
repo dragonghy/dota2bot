@@ -607,8 +607,31 @@ tests['[source] the three radii the model uses are the ones the branch uses'] = 
     assert(QUIET_RADIUS == 1000, 'the ally branch\'s enemy-list radius moved to ' .. QUIET_RADIUS)
     assert(SELF_QUIET_RADIUS == 900, 'the self branch\'s enemy-list radius moved to ' .. SELF_QUIET_RADIUS)
     local _, fn = salve_consider()
-    assert(fn:find('if hNeedHealAlly ~= nil and #hNearbyEnemyHeroList == 0', 1, true),
-        'the ally branch no longer gates on the file-level enemy list being empty')
+    -- RE-ANCHORED 2026-08-27 (strategy, gated `salveyield`, GH #237), NOT
+    -- relaxed. This used to pin the ally branch's gate as one literal line:
+    --     if hNeedHealAlly ~= nil and #hNearbyEnemyHeroList == 0
+    -- GH #237 hoisted the ally scan above the self branch and gave that exact
+    -- condition a name, so the self branch could be asked what it pre-empts:
+    --     local bAllyBranchOpen = hNeedHealAlly ~= nil and #hNearbyEnemyHeroList == 0
+    --     ...
+    --     if bAllyBranchOpen
+    -- Both conjuncts still gate the ally branch and nothing was added to or
+    -- removed from them, so the assertion checks the SAME TWO FACTS against the
+    -- new shape rather than dropping to something weaker: the condition must
+    -- carry both operands, and the ally branch must fire on exactly it. A
+    -- future edit that adds a third operand, or that fires the branch on
+    -- anything other than this local, still turns this red.
+    local sCond = fn:match('local bAllyBranchOpen%s*=%s*([^\n]+)')
+    assert(sCond ~= nil,
+        'the ally branch\'s gate is no longer a named condition in the consider')
+    assert(sCond:find('hNeedHealAlly ~= nil', 1, true),
+        'the ally branch no longer gates on having selected an ally: ' .. sCond)
+    assert(sCond:find('#hNearbyEnemyHeroList == 0', 1, true),
+        'the ally branch no longer gates on the file-level enemy list being empty: ' .. sCond)
+    assert(sCond:gsub('%s+', '') == 'hNeedHealAlly~=niland#hNearbyEnemyHeroList==0',
+        'the ally branch\'s gate grew or lost an operand: ' .. sCond)
+    assert(fn:find('if bAllyBranchOpen', 1, true),
+        'the ally branch no longer fires on exactly that condition')
 end
 
 tests['[source] the pool is read once, inside the predicate helper'] = function()
