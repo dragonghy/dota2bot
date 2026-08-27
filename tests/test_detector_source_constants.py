@@ -313,6 +313,7 @@ HP_CENSUS = {
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
+    'bbfloor_domain:CORPSE_HP_MAX':      ('INDEPENDENT', 'corpse-run band, paired with a position test; NOT a liveness proxy -- a live, still hero under it is a KNOWN false positive, asserted in that module\'s selfcheck'),
 }
 
 # A module-level assignment of an HP-looking name to a fraction in [0, 1].
@@ -1065,6 +1066,42 @@ check('the gated area branch is STILL below the shipped single-target exit -- '
       'in iterations/reports/replay-check/20260827T0730Z.md stops meaning '
       '"the shipped loop had no exit here"',
       OA_SRC['gated_below_shipped'] is True)
+
+# ---------------------------------------------------------------- bbshort / bbfight
+# The two turbo-scaled buyback floors (GH #222 / #215).  Three source facts
+# carry the whole 2026-08-27 reading, and each fails a DIFFERENT way:
+#
+#  * one soak id per gate -- two ids in one gate is the #207 freeze shape, and
+#    `check_armed_wiring.py` would still call it WIRED;
+#  * one call site each -- a second site means the floor is being asked
+#    somewhere this tool never looked;
+#  * the short floor's `return` must stay ABOVE the fight rung.  This is the
+#    load-bearing one.  W16 armed BOTH ids on the same leg, so `bbfight`'s
+#    reachability was measured under an armed `bbshort`.  That co-arming is
+#    harmless ONLY because every one of the 434 fight-rung deaths measured
+#    R >= 70.9s, clearing either floor -- an argument that assumes the two gates
+#    are still in this order.  Flip them and the co-armed reading changes
+#    meaning with nothing raising a hand.
+import bbfloor_domain as BB                             # noqa: E402
+
+BB_SRC = BB.load_source()
+eq('bbfight is gated by exactly one soak id', BB_SRC.fight_ids, ['bbfight'])
+eq('bbshort is gated by exactly one soak id', BB_SRC.short_ids, ['bbshort'])
+eq('the turbo respawn factor is still 0.75', BB_SRC.turbo_factor, 0.75)
+eq('the respawn table maximum is still 100', BB_SRC.table_max, 100.0)
+eq('the unarmed fight floor is still 80', BB_SRC.fight_floor, 80.0)
+eq('the unarmed short floor is still 60', BB_SRC.short_floor, 60.0)
+eq('the fight rung still asks for level > 24', BB_SRC.fight_min_level, 24.0)
+eq('the ladder is still shut at or below level 15', BB_SRC.ladder_min_level, 15.0)
+check('each floor still has exactly ONE call site',
+      BB_SRC.fight_sites == 1 and BB_SRC.short_sites == 1,
+      '(fight=%d short=%d)' % (BB_SRC.fight_sites, BB_SRC.short_sites))
+check("the short floor's return still sits ABOVE the fight rung -- flip it and "
+      "the co-armed W16 reading in iterations/reports/replay-check/ silently "
+      "changes meaning",
+      BB_SRC.short_above_fight is True)
+check('bbfloor_domain reports no source-assertion error on trunk',
+      BB_SRC.errors == [], repr(BB_SRC.errors))
 
 print()
 if FAIL:
