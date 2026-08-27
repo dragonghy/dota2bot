@@ -52,6 +52,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local JMZ  = 'bots/FunLib/jmz_func.lua'
 local AIUG = 'bots/ability_item_usage_generic.lua'
@@ -441,13 +442,23 @@ end
 tests['[w1correction] two of GH #231 [W1]\'s five conjuncts ARE in the dump'] = function()
     local c = corpus()
     assert(c.units > 0, 'no units read')
-    -- The claim was "NOT in any dump". These are the coverage fractions that
+    -- The claim was "NOT in any dump". These are the coverage counts that
     -- falsify it. Pinned so a dump change cannot turn a partial model into a
     -- silently claimed full one. [V2]
-    assert(c.with_mods == 433, 'units carrying `modifiers` moved: ' .. c.with_mods)
-    assert(c.with_dmg  == 181, 'units carrying `recent_damage` moved: ' .. c.with_dmg)
-    assert(c.units == 1050, 'archive unit count moved: ' .. c.units)
-    assert(c.files == 105, 'archive file count moved: ' .. c.files)
+    --
+    -- Ratchets, not equalities (GH #106 / GH #127 doctrine, tests/corpus_scale.lua).
+    -- Every one of these is a SUM OVER FIXTURES -- this file's own `corpus()`
+    -- sweeps `tests/fixtures/*.lua` and adds what each one carries -- so landing
+    -- the next fixture raises them without anything they measure having moved.
+    -- The falsification they exist for is a count going DOWN (a lost fixture, or
+    -- these modifiers vanishing from the dump), and ratchet catches that exactly.
+    -- The file-count line was the one the [detector] in test_corpus_scale.lua
+    -- could see, because it is the corpus size itself; the three above it are the
+    -- same defect in quantities that detector cannot name.
+    cs.ratchet(c.with_mods, 433, 'units carrying `modifiers`')
+    cs.ratchet(c.with_dmg,  181, 'units carrying `recent_damage`')
+    cs.ratchet(c.units,    1050, 'archive unit count')
+    cs.corpus(c.files, 'archive file count')
 end
 
 tests['[w1correction] GH #231\'s published table reproduces exactly, unmodelled'] = function()
