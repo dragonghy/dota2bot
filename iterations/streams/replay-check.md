@@ -112,6 +112,17 @@
   (帧 `1d9ae5/031904_slot7` t=428.5:`arcane_boots` 同帧吃掉 `boots_of_speed+ring_of_basilius+wizard_hat`)。
   组件只有在**装配期间**停留在栏位里才会被 1Hz 快照看见 ⇒ 组件占比量的是**装配时长**,不是选择。
   反面同理:`energy_booster`(旧版秘法鞋的合成件)在差异表里**一次都没出现**。
+- **[2026-08-28 新踩] arm 串的 stamp 不住在 `soak_stamp` 里,它就是 `analysis.json` 的 `script_version` 字段。**
+  按 `soak_stamp` / `stamp` / `meta.soak_stamp` 去找,W19 四个 run **全部读成 `<none>`** ——
+  那会写出一条**与 GH #253 同级、但完全虚构**的「整波丢 stamp」结论(#253 是 cand 位放种子号,**串还在**;
+  这里会读成串根本不存在)。**判别子是暖场局**:暖场的 `script_version` 是**裸 commit sha**(如 `3110f323`),
+  正式局才是 `mirror:<40 串>:s<种子>:<侧>`;`sweep_run.sh` 也正是按这个字段跳暖场
+  (`SKIP … warmup/unstamped, script_version=…`)。**先看一局的完整 JSON 再写普查脚本。**
+- **[2026-08-28 新踩] `.dem` 不在 `soak/<run>/` 下,在 `dem21/<run>/`(单录制槽的波次才留在 archive 旁边)。**
+  `awsx s3 ls s3://<bucket>/soak/<run>/ | grep '\.dem$'` 会得到 **0**,而 `soak/<run>/` 下有
+  `.demclaim.json` 侧车文件**声称录像存在** ⇒ **「有 claim 无 dem」看起来像丢录像,其实只是找错前缀**。
+  `sweep_run.sh:53-57` 已经处理了这个降级(archive 旁找不到就去 `dem21/`),**手工列桶时要自己降级**。
+  另:桶名是 `dota2bot-batch-results-4924`(见 `tools/batch_test/aws/aws.env` 的 `S3_BUCKET`),**不是** `dota2bot-batch-results`。
 - **[2026-08-24 新能力]** **主动物品「用了没有」可以从事件流量出来,不必等 fixture 层。**
   `events[] type=='ITEM' actor=<hero> inflictor='item_<x>'` = 谁放的;
   `events[] type=='MODIFIER_ADD' target=<hero> inflictor='modifier_item_<x>'` = 谁吃到。
@@ -5489,3 +5500,71 @@
     `l5combo` 的 (a)(**第六十一轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十八轮**);
     `axebuyblink` armed 的波次。
   - 完整报告:`iterations/reports/replay-check/20260827T215425Z.md`
+- **2026-08-28T00:45Z(第八十七次触发)**:**W19 首检 —— `campfarm` 的域第一次不空,而三次泄漏全在 armed 腿**
+  (接上一轮 backlog 第 1 棒;⚠️ 上一轮把 W19 记成 `spot_20260827_2118*`,**那两台其实是 W18-R**,
+  真正的 W19 是 `spot_20260828_0020*`×4,commit `3110f323` = tip)。
+  **宽扫:stamp 普查 48/48 落盘局(100%)+ 行为宽扫 19/19 带 stamp 且有 `.dem` 的局(unparseable 0 ⇒ #258 未复发)**;
+  **深查 6 局逐帧**(章程下限 6)。零 EC2 支出,`bots/`/`game/` **0 改动**,gate 未动。
+  - ⭐⭐⭐ **`campfarm` 记 `NOT WORKING`**(BUGGY 或 SILENT,离线不可分)。承重帧
+    `1a45f5/20260828_002224_slot10` **4 级 Earthshaker**:t=219.1 以 **0.281 血**进 Black Dragon 远古营,
+    **19 秒里穿越仇恨半径六次**(y≈-190 ↔ y≈-1470),**对远古 DAMAGE 事件 0 条**,
+    t∈[228,240] 挨的伤害逐条求和 **100% 来自远古小兵**(dragon 125 + drake 97,无任何英雄来源),
+    t=230.1 **3000u 内敌方英雄 0 个**,**t=238.1 `DEATH actor=npc_dota_neutral_black_drake`**。
+    另两段:`5fcfc2/002239_slot9` 与 `002249_slot10` **Bristleback 11 级两次开远古营**
+    (坐标逐位相同静止 **20 秒 / 12 秒**,血 0.699→0.425 / 1.000→0.803,**升到 12 级就走**,最近敌人 9454u / 3046u)。
+    `hero_bristleback.lua` **全文零 neutral 代码** ⇒ 开火不来自英雄技能扫描(那是 `abilanc` 的域)。
+    **GH #265 新开 [strategy]**(带两条 fixture 断言:门本身对不对 / 门有没有被走到)。
+  - ⭐⭐ **arm 串干净**:354 字节 sha1 `e388d41c`,40 id,与 `test_set.md` L2 **逐字节相同**,
+    **#253 的形状连续第三波(W18/W18-R/W19)未复发**。
+  - ⭐⭐ **自我更正一条已发表结论**:**GH #263 的「41 倍」不可复算**。立案用的 episode 脚本
+    **写在 `/tmp` 从未入库**,W18 那 68 局**重算不了**;换用已入库的
+    `campfarm_target.py`+`ancient_camp_domain` 在 W19 19 局读 **门内 10 / 门外 61 = 6.1×**
+    (每局率门内 0.074→0.53,**分歧几乎全在门内那一列**)。按铁律 4(iii) 两把尺子不可相减。
+    **已发追评**;定性主张不受影响,**受影响的是能拿去做入集裁定的量级** ——
+    建议裁 `abil1st` 前先用已入库量具重跑 W18(零 AWS)。
+    **这把 backlog「episode 口径入库+棘轮」从 nice-to-have 变成一条已发表结论的复算被卡住。**
+  - ⭐ **GH #264 新开 [batch]**:批测台解 pin 的记账里 **4 项有 2 项买不到** ——
+    `abil1st`(`jmz_func.lua:1938`)/`aimguard`(`:3928`)/`pollyhp`(`:10953`,报告未点名)都是 gated
+    且**不在 40-id 串里** ⇒ W19 对它们与续 pin **逐字等价**。`SoakStrArms` 是精确匹配、
+    farm 日志 `+ CAND_REF=`(空)⇒ 两腿都 false。**没有门会说这句话**:`check_armed_wiring.py` 校「串→树」,
+    缺的是「树→串」。建议只打印不阻断的反向接线检查。
+  - ⚠️ **种子 930 的第四台被 Spot 回收**:`6c47b6` 00:20:11Z 起飞 → **00:31:36Z `SPOT INTERRUPTION`**,
+    S3 下只有 `soak_farm.log` 一个对象,**零局零录像**。按 owner「回收处置」该粒补发一台(仍 spot 优先)。**棒给批测台。**
+  - **量具坑(本轮踩一次当场改掉,已写进章程工具坑)**:**stamp 不在 `soak_stamp` 字段,它就是 `script_version`**;
+    按 `soak_stamp` 找会四个 run 全读成 `<none>`,**差点写出一条与 #253 同级但完全虚构的结论**。
+    判别子是暖场局(暖场 = 裸 commit sha,正式局 = `mirror:` 串),`sweep_run.sh` 正是按这个字段跳暖场。
+  - **诚实标注**:**取数时 W19 仍在飞**(00:40Z 快照 / 00:20Z 起飞)⇒ 局数与「四台全 `:radiant`」都是
+    **一次快照不是终局计数**;**但 §4 三段帧是「armed 腿上存在本不该存在的形状」,单腿可判,不依赖终局计数**。
+    **本轮没有任何 armed/baseline 差值进入结论**(`ba games 0`,工具每行都打 `strata agree in sign: NO`);
+    聚合表只用于选点。ES 的「零输出」是**事件流的零**,不是「没下命令」的证明。
+    6.1× 按**已观测一次**登记、**不按已复现**登记。远古营簇计数 **3≠2** 的几何告警**新登记、不自裁**。
+    报告节奏 2.9h 无洞;自检报的 6.1h 洞是 08-27 旧洞,**连续第六轮**,本组改不了 cron。
+  - **交棒**:**#265 / #264 两个新开**;**GH #263 追评**(自我更正 + 建议重跑 W18)。
+    **⚠️ 给批测台**:种子 930 补发;W19 到 00:40Z **只有 radiant 腿**,要买任何 armed/baseline 差值**必须**等 dire 腿。
+    **球在总监**:#265、#264、#263、#262、#261、#259、#258、#257、#253、#250、#249、#247、#246、#245、
+    #244、#241、#236、#235、#159、#207、#212、#220、`campfarm`(条件 (a) 本轮买到了,**而且是反向的**);
+    `bbfight`/`bbshort` 与 `abilanc` 的三条件判定。
+    **本组不裁 promote/reject、不申请波次、不改 bot Lua、不花 AWS 钱。**
+  - **验证**:`bots/`/`game/` **0 改动**(本轮**未写任何新脚本**,全用已入库工具);
+    `bash tools/agent/luacheck_gate.sh` → **exit 0,`luacheck bots game: 0 warnings`**(容器里没有,脚本自装 `lua-check`);
+    `campfarm_target.py --selfcheck` **ALL PASS**;**未使用 `RULE6_BYPASS`**;
+    本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **AWS**:S3 **只读**(48 `analysis.json` + 36 `.dem` + 4 份 `soak_farm.log` + 一份 W18 对拍),
+    **未启动/未终止实例**,**未调用 CE**,**零支出**。
+  - **下一轮优先**:(1) ⭐⭐ **W19 复检,专看 dire 腿有没有落地**(开工先跑 stamp 普查,秒级);
+    **若两腿都在,立刻把 §4 三段泄漏做成分层读数** —— **这是本轮结论唯一能被证伪的预登记**
+    (若 baseline 腿也有同量级 <12 级远古营开火,「armed 腿泄漏」要改写成「出厂缺陷」);
+    (2) ⭐⭐ **GH #265 的两个 fixture**(`002224_slot10 t=221.5 earthshaker` + `002249_slot10 t=639.2 bristleback`,
+    **同时钉一份 baseline 腿对照帧**);(3) ⭐⭐ **episode 口径入库 + 棘轮**(**第四轮登记**,现在它卡住 #263 的复算);
+    (4) ⭐ **用已入库量具重跑 W18 68 局**给 #263 一个可复算的比;(5) ⭐ **#236 裁下后 `mv` 落地 #159 的 fixture**(**第十二轮**);
+    (6) ⭐ GH #262 的 fixture;GH #259 的 fixture(**第三轮**);GH #250 的出厂帧 fixture(**第四轮**);
+    (7) ⭐ `pullthink` 英雄分层表(**第四轮**);锚点回灌 `roam_conversion.death_spans`(等 #247);
+    GH #220 的 fixture(**第十二轮**);每 id 篇数独立小脚本(**第八轮**);
+    (8) 远古营簇计数 3≠2(**新登记**);`camp_prelit` 列(**第十六轮**);占用度量按 idx 去重(**第十五轮**);
+    `tpdefend_events` 结果侧列(**第二十一轮**);幻象余量做进 `sweep_run.sh`(**第十八轮**);
+    `entities.py` 推广(**第十九轮**);12:41Z §6.1 那 23 帧做 fixture(**第二十一轮**);`pulldrag` 的 connect 侧;
+    第二种视野证人;ab/ba 回灌 `fieldbuy_silence.py`/`stayfield2_margin.py`(**连续第三十二轮登记**);
+    `stayfield` 第一失败子句;打野反证 fixture(**三十八轮**);`hero-1` 的 153 局 WK 语料(**46 轮**);
+    `l5combo` 的 (a)(**第六十二轮**);`make_fixture.py` 钉 `062551 t=205.5 jakiro`(#45,**第四十九轮**);
+    `axebuyblink` armed 的波次。
+  - 完整报告:`iterations/reports/replay-check/20260828T004500Z.md`
