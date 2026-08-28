@@ -1101,6 +1101,15 @@ tests['[recorded] two of the three turbo clock dilations are written and never r
     -- moves the cap the clause writes (0.95 -> 0.92 under an honest mode, and
     -- past_honest falls to 0); killing aba_push's own leaves every reading in
     -- this file byte-identical. No gate, no change to bots/.
+    --
+    -- ⚠ THE THIRD SITE WAS CARRIED OVER, NOT RE-DERIVED. The correction above
+    -- was bought by measuring the two aba_push sites. aba_defend's * 1.65 was
+    -- reclassified from the same repo-wide `.currentTime` grep that had just
+    -- been shown to misattribute this family -- so it was right, but on the
+    -- weakest evidence available. It is re-derived from containment, and the
+    -- unwritten premise this whole block rests on (that the three accessors
+    -- return three DIFFERENT tables) is pinned, in the section immediately
+    -- below.
     local n = 0
     for _, f in ipairs({ 'bots/FunLib/aba_defend.lua', 'bots/FunLib/global_cache.lua',
                          'bots/FunLib/aba_push.lua' }) do
@@ -1152,6 +1161,262 @@ tests['[recorded] two of the three turbo clock dilations are written and never r
     assert(push:find('if nH > 0 and currentTime <= StartToPushTime then', 1, true),
         'the second reader moved -- it is behind a human-players-on-the-enemy-team clause, '
         .. 'which is 0 in every bot-vs-bot batch game, so it is inert on this corpus')
+end
+
+-- ---------------------------------------------------------------------------
+-- The independent re-take of the block above (2026-08-28, second round on
+-- GH #278). The previous round corrected WHICH two of the three dilations are
+-- dead and registered, in its own report, that aba_defend's `* 1.65` had been
+-- reclassified by the same argument that had just been shown wrong -- i.e. it
+-- was carried over, not re-derived. This section derives it, from a different
+-- kind of evidence, and pins the step the argument leans on hardest and never
+-- states.
+--
+-- ⭐ THE JUDGEMENT (reusable, and one level below the previous round's).
+-- "Which writer does this reader ride" is settled by the accessor the reading
+-- function called -- that was last round's correction. The question that
+-- correction does not answer, and that nothing in this file asked, is whether
+-- TWO ACCESSORS RETURN THE SAME TABLE. If they ever do, the accessor-binding
+-- criterion gives the wrong answer too, in the same dangerous direction
+-- (a live dilation attributed to a dead site), and EVERY assertion in the
+-- block above stays green while it happens: the three literal-string pins
+-- still match, `readers == 2` still holds, `foreign == 0` still holds, and the
+-- `getGlobalGameState()` binding pin still holds. Object identity is the load-
+-- bearing premise of the whole attribution and it is the one premise nobody
+-- wrote down. A "dedupe the three game-state caches" refactor -- the single
+-- most likely edit anyone will ever make to these three functions, since they
+-- build near-identical tables -- is exactly the edit that breaks it silently.
+--
+-- MEASURED, not argued. The three writers are module-locals reached through
+-- debug.getupvalue on an exported function of each file, called on a real
+-- frame, both ways:
+--
+--   plain (mock sentinel mode)   defend 641.4  push 641.4   global 641.4
+--   honest (GetGameMode() == 23) defend 1058.31 push 1282.8 global 1282.8
+--
+-- i.e. under the fixture world the fifteenth world assertion switches all
+-- THREE dilations off at once, and only an honest mode can measure them at
+-- all -- which is why the block above could only ever pin them as strings.
+-- ---------------------------------------------------------------------------
+
+local DEFEND_F = 'bots/FunLib/aba_defend.lua'
+local GLOBAL_F = 'bots/FunLib/global_cache.lua'
+
+--- The named upvalue of `fn`, or nil. The two writers under test are file-
+--- locals with no export, so this is the only way to call them directly
+--- instead of inferring their behaviour from a consumer.
+local function upvalue(fn, name)
+    local i = 1
+    while true do
+        local n, v = debug.getupvalue(fn, i)
+        if not n then return nil end
+        if n == name then return v end
+        i = i + 1
+    end
+end
+
+--- Drive all three game-state cache writers on one frame and hand back the
+--- tables themselves, so identity as well as value can be asked.
+local function dilations(path, honest)
+    world(path, honest)
+    for k in pairs(package.loaded) do
+        local s = tostring(k)
+        if s:find('aba_push', 1, true) or s:find('aba_defend', 1, true)
+            or s:find('global_cache', 1, true) then
+            package.loaded[k] = nil
+        end
+    end
+    local okd, Defend = pcall(dofile, DEFEND_F)
+    local okp, Push = pcall(dofile, PUSH)
+    if not (okd and okp) then unprobe(); return nil end
+    local wd = upvalue(Defend.ShouldDefend, 'updateDefendGameStateCache')
+    local wp = upvalue(Push.IsEnemyTP, 'updateGameStateCache')
+    -- ⚠ TAKEN FROM THE READER, NOT FROM A FRESH dofile OF global_cache.lua.
+    -- This driver's first version loaded global_cache itself, which makes a
+    -- SECOND module instance with its own globalGameStateCache local -- so the
+    -- identity assertions below were trivially true, for the wrong reason, and
+    -- M2 (a dedupe refactor, the exact edit they exist to catch) walked past
+    -- them. That is this section's own judgement biting its own harness one
+    -- level down: the table a reader rides is reached through the accessor the
+    -- READER holds. aba_push binds it at :43 as a file-local, so it is an
+    -- upvalue of aba_push's exports, and that is where it has to come from.
+    local wg = upvalue(Push.GetPushDesireHelper, 'getGlobalGameState')
+    if type(wd) ~= 'function' or type(wp) ~= 'function' or type(wg) ~= 'function' then
+        unprobe(); return nil
+    end
+    local t = DotaTime()
+    local ok1, td = pcall(wd)
+    local ok2, tp = pcall(wp)
+    local ok3, tg = pcall(wg)
+    unprobe()
+    if not (ok1 and ok2 and ok3) then return nil end
+    return { raw = t, defend = td, push = tp, global = tg }
+end
+
+local DILATION_FRAME = 'tests/fixtures/f_260820_043637_axe_ring_alone.lua'
+
+tests['[recorded] the three dilations are three DISTINCT tables -- the premise nothing pinned'] = function()
+    -- The driver takes the third writer out of aba_push's upvalues, so name
+    -- the file it is supposed to have come from: if that require ever points
+    -- somewhere else, the accessor is some other writer's and every identity
+    -- reading below is about the wrong pair of tables.
+    local pushsrc = read_file(PUSH)
+    assert(pushsrc:find('local ____global_cache = require(GetScriptDirectory()..'
+        .. '"/FunLib/global_cache")', 1, true),
+        'aba_push no longer requires ' .. GLOBAL_F)
+    assert(pushsrc:find('local getGlobalGameState = ____global_cache.getGlobalGameState', 1, true),
+        'aba_push no longer binds getGlobalGameState as a file-local, so it is not an '
+        .. 'upvalue of its exports and this driver cannot reach the reader\'s own accessor')
+    local d = dilations(DILATION_FRAME, true)
+    assert(d ~= nil, 'all three game-state cache writers are drivable on this frame')
+    -- THE ASSERTION THIS SECTION EXISTS FOR. Pairwise object identity. If any
+    -- two of these ever become the same table, the dead/live attribution in
+    -- the block above is void -- and nothing else in this file would notice.
+    assert(d.defend ~= d.global,
+        'aba_defend and global_cache must build SEPARATE tables -- if they are merged, '
+        .. 'aba_defend\'s * 1.65 is no longer dead and the accounting block above is void')
+    assert(d.push ~= d.global,
+        'aba_push\'s own cache and global_cache must build SEPARATE tables -- if they are '
+        .. 'merged, GetPushDesireHelper\'s two readers no longer discriminate between the '
+        .. 'writers and the attribution above is void')
+    assert(d.defend ~= d.push,
+        'aba_defend and aba_push must build SEPARATE tables')
+    -- And the multipliers, measured rather than grepped. A string pin cannot
+    -- tell an unreachable dilation from a live one; these numbers can.
+    local eps = 1e-6
+    assert(math.abs(d.defend.currentTime - d.raw * 1.65) < eps,
+        'aba_defend dilates by 1.65 in Turbo; got ' .. tostring(d.defend.currentTime)
+        .. ' from raw ' .. tostring(d.raw))
+    assert(math.abs(d.push.currentTime - d.raw * 2) < eps,
+        'aba_push dilates by 2 in Turbo; got ' .. tostring(d.push.currentTime))
+    assert(math.abs(d.global.currentTime - d.raw * 2) < eps,
+        'global_cache dilates by 2 in Turbo; got ' .. tostring(d.global.currentTime))
+    -- So "dead" here means UNREAD, not "not computed": all three really do run.
+    assert(d.defend.currentTime ~= d.raw and d.global.currentTime ~= d.raw,
+        'every one of the three dilations is actually evaluated -- the dead ones cost the '
+        .. 'multiply, which is the only cost this section claims for them')
+    -- The two conventions disagree, and that is shipped state, not a defect:
+    -- 1.65 is what mode_laning_generic uses, 2 is what the cache family uses.
+    -- Recorded because anyone moving a decision between the two layers inherits
+    -- a clock that runs at a different rate.
+    assert(d.defend.currentTime < d.global.currentTime,
+        'the repo ships TWO turbo clock conventions (1.65 and 2) and the cache family is '
+        .. 'the faster one')
+end
+
+tests['[recorded] under the fixture world all three dilations are switched off at once'] = function()
+    -- The other half, as always. This is the fifteenth world assertion read at
+    -- the cache layer: `gameMode == 23` is false under the mock sentinel, so
+    -- every cache in the family hands its consumers the raw clock. It is also
+    -- why the block above could only pin these three as strings -- there is no
+    -- number to measure until the mode is made honest.
+    local plain = dilations(DILATION_FRAME, false)
+    assert(plain ~= nil, 'all three writers are drivable on this frame in the plain world too')
+    for _, name in ipairs({ 'defend', 'push', 'global' }) do
+        assert(plain[name].currentTime == plain.raw,
+            'in the mock world ' .. name .. ' hands out the RAW clock, undilated; got '
+            .. tostring(plain[name].currentTime) .. ' vs raw ' .. tostring(plain.raw))
+    end
+end
+
+tests['[recorded] aba_defend\'s 1.65 is dead by CONTAINMENT, not by the repo-wide grep'] = function()
+    -- WHY THIS IS NOT THE SAME ASSERTION AS `foreign == 0` ABOVE. That one
+    -- searches the whole repo for the string `.currentTime` and finds two
+    -- lines, neither in aba_defend. It is a syntax-shaped search over a
+    -- syntax-shaped surface, and it is the exact kind of evidence that
+    -- misattributed this family once already. The stronger fact, available
+    -- here and never stated, is that defendGameStateCache NEVER LEAVES ITS
+    -- FILE: the writer is a file-local, its only four call sites are in the
+    -- same file, each binds the return to a plain local, and no export hands
+    -- the table out. So the reader set is not "the repo" -- it is one file,
+    -- and it can be enumerated exhaustively instead of searched.
+    local src = read_file(DEFEND_F)
+    -- 1. The writer is contained. Six mentions repo-wide, all in this file:
+    --    the file-local declaration, the definition, and four call sites.
+    local p = assert(io.popen('grep -rn "updateDefendGameStateCache" bots/ game/ --include=*.lua'))
+    local mentions, elsewhere = 0, 0
+    for l in p:lines() do
+        mentions = mentions + 1
+        if not l:find(DEFEND_F, 1, true) then elsewhere = elsewhere + 1 end
+    end
+    p:close()
+    assert(elsewhere == 0,
+        'the defend game-state writer is named outside aba_defend -- its cache can now '
+        .. 'escape the file and this whole block has to be re-taken; got ' .. elsewhere)
+    assert(mentions == 6,
+        'expected six mentions (declaration + definition + four call sites); got ' .. mentions)
+    -- 2. Every call site binds the return to a local and nothing else -- it is
+    --    never returned, stored on a bot, or put in another table.
+    local calls, bound = 0, 0
+    for _ in src:gmatch('updateDefendGameStateCache%(%)') do calls = calls + 1 end
+    for _ in src:gmatch('local gameState = updateDefendGameStateCache%(%)') do bound = bound + 1 end
+    assert(calls == 5, 'expected the definition line plus four calls; got ' .. calls)
+    assert(bound == 4,
+        'every call site must bind the cache to a plain local -- a call whose result goes '
+        .. 'anywhere else can carry currentTime out of the file; got ' .. bound)
+    -- 3. The enumeration. These are ALL the fields this file reads off that
+    --    table, and currentTime is not one of them. This is the assertion that
+    --    turns red the day the 1.65 comes alive, and it says so.
+    local READ = {}
+    for f in src:gmatch('gameState%.([A-Za-z_][A-Za-z0-9_]*)') do READ[f] = (READ[f] or 0) + 1 end
+    local n = 0
+    for _ in pairs(READ) do n = n + 1 end
+    assert(n == 6,
+        'aba_defend reads exactly six fields off its own game-state cache; got ' .. n)
+    for _, f in ipairs({ 'aliveAllyCount', 'enemyTeam', 'isLaningPhase', 'ourAncient',
+                         'team', 'teamFountainTpPoint' }) do
+        assert(READ[f], 'a field aba_defend used to read off its cache is gone: ' .. f)
+    end
+    assert(READ['currentTime'] == nil,
+        'aba_defend now READS its own dilated clock -- the * 1.65 at :239 is LIVE, the '
+        .. 'accounting block above is out of date, and any turbo tuning that assumed the '
+        .. 'defend cache carries a raw clock has to be re-read')
+    -- 4. Closing the two blind spots of the string search, so the enumeration
+    --    above is the whole reader set and not merely the dot-spelled part.
+    local q = assert(io.popen(
+        'grep -rn "\\[.currentTime.\\]" bots/ game/ --include=*.lua | wc -l'))
+    local bracket = tonumber(q:read('*a'))
+    q:close()
+    assert(bracket == 0,
+        'a cache clock is now read with bracket syntax, which the dot-spelled census in '
+        .. 'the block above cannot see; got ' .. tostring(bracket))
+    local r = assert(io.popen(
+        'grep -rn "pairs(gameState)\\|pairs(defendGameStateCache)\\|pairs(gameStateCache)\\|'
+        .. 'pairs(globalGameStateCache)" bots/ game/ --include=*.lua | wc -l'))
+    local wholesale = tonumber(r:read('*a'))
+    r:close()
+    assert(wholesale == 0,
+        'a game-state cache is now consumed wholesale, so a named-field census no longer '
+        .. 'bounds who reads currentTime; got ' .. tostring(wholesale))
+end
+
+tests['[recorded] the defend cache is not a subset of the global one, so "just dedupe them" is not free'] = function()
+    -- Recorded next to the identity assertion because it is the reason the
+    -- refactor that would break that assertion looks attractive: the three
+    -- tables are near-identical. They are not identical. aba_defend carries
+    -- two fields global_cache does not, and global_cache carries six that
+    -- aba_defend does not -- and aba_defend READS one of its two exclusives.
+    local d = dilations(DILATION_FRAME, true)
+    assert(d ~= nil, 'the writers are drivable')
+    for _, f in ipairs({ 'teamFountain', 'teamFountainTpPoint' }) do
+        assert(d.defend[f] ~= nil, 'aba_defend builds ' .. f)
+        assert(d.global[f] == nil,
+            'global_cache does not build ' .. f .. ' -- merging the caches would hand '
+            .. 'aba_defend a nil where it reads one today')
+    end
+    for _, f in ipairs({ 'teamNetworth', 'enemyNetworth', 'averageLevel', 'hasAegis',
+                         'aliveAllyCoreCount', 'aliveEnemyCoreCount' }) do
+        assert(d.global[f] ~= nil, 'global_cache builds ' .. f)
+        assert(d.defend[f] == nil, 'aba_defend does not build ' .. f)
+    end
+    -- aba_push's own cache IS field-identical to global_cache's -- which is
+    -- precisely why it is the one that would get deduped, and why the identity
+    -- assertion above is pointed at that pair first.
+    for f in pairs(d.global) do
+        assert(d.push[f] ~= nil,
+            'aba_push\'s own cache used to carry every field global_cache carries; ' .. f
+            .. ' is missing')
+    end
 end
 
 tests['[recorded] what a census reading owes the call chain above it'] = function()
