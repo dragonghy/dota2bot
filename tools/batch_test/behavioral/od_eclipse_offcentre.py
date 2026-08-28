@@ -115,14 +115,43 @@ def analyse(paths,label):
             tot[key]+=1
             if not on_enemy and off:
                 far=max(dist(p,odp) for p in pts)
-                rows.append((g,c['t0'],len(c['tg']),far,
+                # MARGIN (added 2026-08-28T18:xxZ; PRINT ONLY -- the three bucket
+                # predicates above are untouched so W20/W21 counts stay comparable).
+                # `miss` = by how many units the BEST enemy-centred disk fails to
+                # cover the hit set.  A verdict of OFF-CENTRE ONLY is only as
+                # trustworthy as that number is large compared with how far the hit
+                # heroes move between two 1 Hz samples (`step`): the frame table is
+                # a snapshot, the cast is not, so a miss smaller than one sample
+                # step is inside the reconstruction error, not evidence about which
+                # code path ran.
+                # Why this exists: replay-check 2026-08-28T18:xxZ, the pre-registered
+                # falsification round.  s1138's BASELINE leg (odaoe NOT armed) threw
+                # one OFF-CENTRE ONLY -- `124513_slot5 t=610.5`, hit span 576 u
+                # against the 560 u endpoint budget = **miss 16 u**, while one of the
+                # two hit heroes (skeleton_king) had moved **381 u** in the preceding
+                # second.  24x inside the noise.  The armed leg's bearing casts miss
+                # by 249..413 u, i.e. by more than a sample step -- so the id survived
+                # the test, but only the margin column shows why.  Read the margin,
+                # never the bucket alone.
+                miss=min([max(dist(p,q) for q in pts)-(RADIUS+SLACK)
+                          for p in allen if dist(p,odp)<=CAST_RANGE+SLACK] or [float('nan')])
+                step=0.0
+                for (h,idx),fr in st.items():
+                    if h not in c['tg']: continue
+                    a=before(fr,c['t0'])
+                    pv=[s for s in fr if s['t']<a['t']]
+                    if a and pv: step=max(step,dist((a['x'],a['y']),(pv[-1]['x'],pv[-1]['y'])))
+                rows.append((g,c['t0'],len(c['tg']),far,miss,step,
                              ','.join(h.replace('npc_dota_hero_','') for h in c['tg'])))
     n=sum(tot.values())
     print('== %s: %d multi-hero eclipse casts' % (label,n))
     for k in ('shipped-explainable','OFF-CENTRE ONLY','neither(range)','neither(shape)'):
         if n: print('   %-20s %3d  (%.1f%%)' % (k,tot[k],100.0*tot[k]/n))
     for r in rows[:12]:
-        print('     off-centre: %s t=%.1f n=%d farthest_hit_from_OD=%.0f  %s' % r)
+        print('     off-centre: %s t=%.1f n=%d farthest_hit_from_OD=%.0f '
+              'miss=%.0f step=%.0f %s  %s'
+              % (r[0],r[1],r[2],r[3],r[4],r[5],
+                 'INSIDE-NOISE' if r[4]<=r[5] else 'clear',r[6]))
     return tot
 
 if __name__=='__main__':
