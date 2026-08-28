@@ -113,7 +113,6 @@ local WINDOW = 14
 local PENDING = {
     ['tests/corpus_scale.lua']                     = 'harness -- states the ge20==0 policy itself (GH #236)',
     ['tests/test_level_gate_census.lua']           = 'harness/director -- the 22 GH #84 verdicts (GH #235)',
-    ['tests/test_focus_build_level_legality.lua']  = 'hero -- scope claim argued from the zero',
     ['tests/test_wk_roshan_mana_ceiling.lua']      = 'hero -- crossing-level tail argument (wkrosh)',
     ['tests/test_wk_bone_guard_thresholds.lua']    = 'hero -- untrained-stub-is-turbo-reality claim',
     ['tests/test_wk_q_aim_preflight.lua']          = 'hero -- level distribution note',
@@ -122,6 +121,27 @@ local PENDING = {
 -- CLEARED, newest first.  A row leaves this list when the VERDICT above the
 -- premise was re-read, not when the sentence was deleted -- so what the row
 -- becomes is a line saying what the re-read decided.
+--
+--   test_focus_build_level_legality.lua  (hero, 2026-08-28)
+--     The premise sat in WHAT IS NOT CLAIMED, excusing the t20/t25 queue
+--     positions from the file's scope on TWO grounds, and the re-read retired
+--     both.  Ground one was the ceiling itself ("out of turbo's domain") -- void
+--     for the usual reason (GH #235), and pointedly so here: the recorded frame
+--     puts crystal_maiden at 22 and zuus at 23, INSIDE the very 21-24 band the
+--     bullet declared unreachable.  Ground two survived the ceiling and died on
+--     its own: "it costs nothing ... by then there is nothing else in the queue"
+--     is false as measured.  Driving the shipped GetTalentBuild/GetSkillList over
+--     all seven focus rows, the queue runs to position 23 -- picks at 10/15/18/19
+--     and the four ABANDONED talent halves at 20-23 -- so there IS something else
+--     and the bot asks the engine for every bit of it.  What replaced the reason
+--     is a criterion that never looks at a level: every entry behind the last
+--     pick is the other half of a tier whose pick sits earlier in the SAME queue,
+--     and one talent per tier makes it unspendable at any hero level.  The
+--     verdict (both parks costless, both out of scope) therefore stands on new
+--     ground, and the level-19 park now uses exactly one level fact instead of a
+--     census: the single entry behind it is the t25 pick.  New section 4; the
+--     level-free half is asserted at level 25, so it cannot be satisfied by the
+--     ceiling coming back.
 --
 --   test_lion_hex_talent_slot.lua  (hero, 2026-08-28)
 --     The premise sat in that file's ⚠️ LIMIT header, which ruled `lionhexaoe`'s
@@ -298,12 +318,12 @@ tests['[hero] the stale-premise registry shrinks or holds, never grows'] = funct
         end
     end
     table.sort(gone)
-    assert(still <= 6,
+    assert(still <= 5,
         still .. ' registry files still argue from the retired premise; the '
-        .. 'registered ceiling is 6 (9 on 2026-08-27, lowered as '
-        .. 'test_wk_bone_guard_talent_bypass.lua, test_wk_fact_anchor.lua and '
-        .. 'test_lion_hex_talent_slot.lua were re-read). This number is a debt, so '
-        .. 'it may only fall.')
+        .. 'registered ceiling is 5 (9 on 2026-08-27, lowered as '
+        .. 'test_wk_bone_guard_talent_bypass.lua, test_wk_fact_anchor.lua, '
+        .. 'test_lion_hex_talent_slot.lua and test_focus_build_level_legality.lua '
+        .. 'were re-read). This number is a debt, so it may only fall.')
 
     -- When a row is genuinely re-read, delete it from PENDING in the same change.
     -- Leaving a settled row on the list makes the ceiling read as more debt than

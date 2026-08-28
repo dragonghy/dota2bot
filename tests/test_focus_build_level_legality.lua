@@ -51,11 +51,32 @@
 --   * Legal is not good.  This says a row does not STALL; which row wins a game
 --     is the batch's question (GH #17's `wkbuild` is exactly that question and
 --     is still gated).
---   * Beyond level 17 the queue holds only talents, and the rows put t20 at
---     queue position 18 and t25 at 19 -- both blocked until 20 / 25.  That is
---     out of this test's scope AND out of turbo's domain (GH #84 read level >= 20
---     on 0 of 210 hero-slots), and it costs nothing for the same reason the
---     level-17 park does: by then there is nothing else in the queue.
+--   * Beyond level 17 the queue holds only talents, and the rows put the t20 pick
+--     at queue position 18 and the t25 pick at 19 -- so a point ARRIVES before
+--     each is legal and parks, at level 19 and again at 21-24.  Which rank each
+--     ability holds there is still out of this test's scope (section 2 grades
+--     ability ranks and every one of them is spent by 18).  What the parks COST
+--     is section 4's, and it is priced there rather than waved away.
+--
+--     RE-READ 2026-08-28 (GH #235).  The wording this bullet used to carry waved
+--     them away on two grounds and both are retired.  It said the band was "out
+--     of turbo's domain (GH #84 read level >= 20 on 0 of 210 hero-slots)": that
+--     zero was the batch harness's 10-minute economy cap, not turbo.  The first
+--     frame taken past the raised cap reads ten heroes at level 22-27 -- with
+--     crystal_maiden 22 and zuus 23 sitting INSIDE the 21-24 park, and
+--     skeleton_king 26 past it.  And it said the parks "cost nothing for the same
+--     reason the level-17 park does: by then there is nothing else in the queue".
+--     Driven, that is false: the queue runs to position 23, because
+--     J.Skill.GetTalentBuild returns all EIGHT talent rows and GetSkillList
+--     appends the four ABANDONED halves behind the four picks.  There is
+--     something else in the queue; the bot asks for all of it.
+--
+--     The verdict outlives its reason.  Section 4 replaces the level argument
+--     with one that never looks at a level: every entry behind the last pick is
+--     the other half of a tier whose pick sits earlier in the SAME queue, and a
+--     hero takes one talent per tier, so no hero level makes any of them
+--     spendable.  The level-19 park needs one level fact and gets exactly one
+--     (the single entry behind it is the t25 pick, and 25 > 19).
 
 package.path = package.path .. ';./tests/?.lua;./tests/mock/?.lua'
 
@@ -128,6 +149,15 @@ local tFile = {
     ['npc_dota_hero_skeleton_king']  = 'bots/BotLib/hero_skeleton_king.lua',
     ['npc_dota_hero_lion']           = 'bots/BotLib/hero_lion.lua',
     ['npc_dota_hero_crystal_maiden'] = 'bots/BotLib/hero_crystal_maiden.lua',
+}
+
+-- The key tests/mock/talent_slots.lua files each hero under (unit short name).
+local sShort = {
+    ['npc_dota_hero_axe']            = 'axe',
+    ['npc_dota_hero_zuus']           = 'zuus',
+    ['npc_dota_hero_skeleton_king']  = 'skeleton_king',
+    ['npc_dota_hero_lion']           = 'lion',
+    ['npc_dota_hero_crystal_maiden'] = 'crystal_maiden',
 }
 
 --- THE CRITERION, extracted so section 3 can drive it on synthetic input: the
@@ -260,6 +290,244 @@ check(unmaxed_slot_at({ [2] = { 1, 3, 5, 18 }, [ULT_SLOT] = { 6, 12, 17 } }, 17)
     'a slot still unmaxed at the parked level was read as costless')
 check(unmaxed_slot_at({ [2] = { 1, 3, 5, 17 }, [ULT_SLOT] = { 6, 12, 17 } }, 17) == nil,
     'a slot maxed on exactly the parked level was read as still wanting a point')
+end
+
+--------------------------------------------------------------------------------
+-- 4. The t20 / t25 parks, priced (2026-08-28 re-read of the scope bullet)
+--------------------------------------------------------------------------------
+-- The header's fourth "not claimed" bullet used to excuse queue positions 18 and
+-- 19 twice over, and this section is what replaced both excuses.  It is here and
+-- not in prose for the reason section 3 exists: an argument nothing drives is an
+-- argument nothing can contradict.
+--
+-- HONEST BOUNDS
+--   * The build rows come from the source literal (skillmap.build_row), the same
+--     reader section 2 uses, not from a captured call -- two of the seven rows
+--     (zuus pos_4/5, the gated wkbuild) are alternates the file never passes at
+--     load, so there is no call to capture for them.  4a pins the ROUTING once,
+--     on axe, so "the queue built here" and "the queue the bot spends" are the
+--     same object for at least one row.
+--   * The talent NAMES come from tests/mock/talent_slots.lua, because the mock
+--     bot's ability slots above 5 are empty (same limitation
+--     tests/test_lion_hex_talent_slot.lua records).  Slot->tier is arithmetic on
+--     the snapshot's own documented order (1-2 = t10 ... 7-8 = t25), not a guess.
+--   * "Permanently illegal" is the game's one-talent-per-tier rule, which is not
+--     readable offline any more than GetHeroLevelRequiredToUpgrade is -- it is a
+--     constant here, exactly like tBasicReq / tUltReq above.  What is DRIVEN is
+--     that positions 20-23 really are the other halves of the picked tiers.
+--   * Whether the engine accepts the four doomed orders the spender issues at
+--     level 25 is not decided here and cannot be: print() never reaches the
+--     server console (AGENTS.md).
+
+local api = require('mock.bot_api')
+local SNAPSHOT = 'tests/mock/talent_slots.lua'
+
+-- The snapshot's documented slot order: 1-2 = t10, 3-4 = t15, 5-6 = t20, 7-8 = t25.
+local function tier_of_slot(nSlot) return math.floor((nSlot - 1) / 2) + 1 end
+local tTierLevel = { 10, 15, 20, 25 }
+
+--- Build the real upgrade queue for one row, by driving the shipped functions.
+--- Returns the queue, the talent build (8 rows) and name->tier.
+local function queue_for(sHero, sShort, sFile, nWhich, sTable)
+    local sSrc = skillmap.read_file(sFile)
+    local tBuild = skillmap.build_row(sSrc, nWhich, sTable)
+    local tTalentRows = skillmap.talent_rows(sSrc)
+
+    api.reset_modules()
+    api.install({ bot = api.MakeHero(sHero) })
+    local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
+    local bot = GetBot()
+
+    local tSlots = assert(dofile(SNAPSHOT).SLOTS[sShort],
+        'no talent snapshot for ' .. sShort)
+    local sTalentList, tTierOf = {}, {}
+    for i = 1, 8 do
+        sTalentList[i] = assert(tSlots[i], 'snapshot slot ' .. i .. ' missing').name
+        tTierOf[sTalentList[i]] = tier_of_slot(i)
+    end
+
+    local nTalentBuild = J.Skill.GetTalentBuild(tTalentRows)
+    local tQueue = J.Skill.GetSkillList(J.Skill.GetAbilityList(bot), tBuild,
+                                        sTalentList, nTalentBuild)
+    return tQueue, nTalentBuild, tTierOf, sTalentList, #tBuild
+end
+
+--- THE REPLACEMENT CRITERION, extracted so 4c can drive it on synthetic input.
+--- From position `nFrom` to the end of the queue, is there an entry a hero at
+--- `nLevel` could legally spend a point on?  A talent is spendable only if its
+--- tier is not already picked EARLIER in the same queue (one talent per tier) and
+--- its tier level has been reached; anything that is not a known talent is
+--- treated as live, which is the conservative direction for a "nothing to spend
+--- it on" claim.  Returns nil when the tail is dead, else the first live position.
+local function live_entry_behind(tQueue, nFrom, tTierOf, nLevel)
+    local nLast = 0
+    for k in pairs(tQueue) do if k > nLast then nLast = k end end
+
+    local tPicked = {}
+    for i = 1, nFrom - 1 do
+        local nTier = tTierOf[tQueue[i]]
+        if nTier ~= nil then tPicked[nTier] = true end
+    end
+
+    for i = nFrom, nLast do
+        local sName = tQueue[i]
+        if sName ~= nil then
+            local nTier = tTierOf[sName]
+            if nTier == nil then return i end
+            if not tPicked[nTier] and nLevel >= tTierLevel[nTier] then return i end
+        end
+    end
+    return nil
+end
+
+local TAIL = 20        -- first abandoned half
+local PICK_POS = { 10, 15, 18, 19 }
+
+tests['4a. the queue does not end at the t25 pick: it runs to 23, abandoned halves behind'] = function()
+-- The routing, once: the shipped file really hands its build to GetSkillList, so
+-- the queue this section constructs is the queue the level-up routine spends.
+api.reset_modules()
+api.install({ bot = api.MakeHero('npc_dota_hero_axe') })
+local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
+local fnReal, tSeen = J.Skill.GetSkillList, nil
+J.Skill.GetSkillList = function(sAbil, nAbil, sTal, nTal)
+    tSeen = { nAbil = nAbil, nTal = nTal }
+    return fnReal(sAbil, nAbil, sTal, nTal)
+end
+local bOk, sErr = pcall(dofile, tFile['npc_dota_hero_axe'])
+J.Skill.GetSkillList = fnReal
+check(bOk, 'loading hero_axe.lua failed: ' .. tostring(sErr))
+check(type(tSeen) == 'table' and type(tSeen.nTal) == 'table',
+    'hero_axe.lua no longer routes its build through J.Skill.GetSkillList, so the '
+    .. 'queue built below is no longer the queue the bot spends')
+check(#tSeen.nTal == 8,
+    'the talent build carries ' .. #tSeen.nTal .. ' rows, not 8 -- this whole '
+    .. 'section is about the four it carries BEHIND the picks')
+
+for _, tRow in ipairs(tRows) do
+    local sLabel, sHero, sTable, nWhich = tRow[1], tRow[2], tRow[3], tRow[4]
+    local tQueue, nTalentBuild, _, sTalentList, nRowLen =
+        queue_for(sHero, sShort[sHero], tFile[sHero], nWhich, sTable)
+
+    check(nRowLen == 15, sLabel .. ': the ability build has ' .. nRowLen
+        .. ' entries, not 15. The queue positions below are ARITHMETIC on that '
+        .. 'length (a talent goes in once the abilities run out), so re-derive '
+        .. 'them instead of loosening this.')
+
+    for nPick, nPos in ipairs(PICK_POS) do
+        check(tQueue[nPos] == sTalentList[nTalentBuild[nPick]],
+            sLabel .. ': queue position ' .. nPos .. ' holds ' .. tostring(tQueue[nPos])
+            .. ', not the t' .. tTierLevel[nPick] .. ' pick. The picks land at '
+            .. '10/15/18/19, NOT 10/15/20/25 -- which is why a point parks at 19 '
+            .. 'and again at 21-24.')
+    end
+    -- Non-vacuity first: `tQueue[p] == sTalentList[nTalentBuild[k]]` is satisfied
+    -- by nil == nil, which is exactly what a talent build that stopped returning
+    -- its abandoned halves would produce (mutation M1, 2026-08-28).
+    check(#nTalentBuild == 8, sLabel .. ': the talent build returned '
+        .. #nTalentBuild .. ' rows, not 8 -- indices 5-8 ARE the abandoned halves')
+    for i = 0, 3 do
+        check(type(tQueue[TAIL + i]) == 'string', sLabel .. ': queue position '
+            .. (TAIL + i) .. ' is empty; the tail this section prices is not there')
+        check(tQueue[TAIL + i] == sTalentList[nTalentBuild[5 + i]],
+            sLabel .. ': queue position ' .. (TAIL + i) .. ' holds '
+            .. tostring(tQueue[TAIL + i]) .. ', not the abandoned half of tier '
+            .. (i + 1) .. '. The retired scope bullet said there was "nothing else '
+            .. 'in the queue" past the picks; these four are what there is.')
+    end
+    check(tQueue[24] == nil, sLabel .. ': the queue runs past position 23, so '
+        .. 'something now sits behind the abandoned t25 half and the dead-tail '
+        .. 'argument in 4b has an entry it has never reasoned about')
+end
+end
+
+tests['4b. every entry behind the last pick is a picked tier\'s other half, at any level'] = function()
+for _, tRow in ipairs(tRows) do
+    local sLabel, sHero, sTable, nWhich = tRow[1], tRow[2], tRow[3], tRow[4]
+    local tQueue, _, tTierOf = queue_for(sHero, sShort[sHero], tFile[sHero], nWhich, sTable)
+
+    -- The pick and the abandoned half of a tier are two different handles.
+    for i = 0, 3 do
+        check(tQueue[TAIL + i] ~= tQueue[PICK_POS[i + 1]],
+            sLabel .. ': tier ' .. (i + 1) .. "'s abandoned half and its pick are the "
+            .. 'same name, so "the other half" is not what position ' .. (TAIL + i)
+            .. ' holds and the illegality argument below is empty')
+        check(tTierOf[tQueue[TAIL + i]] == i + 1,
+            sLabel .. ': position ' .. (TAIL + i) .. ' is a tier '
+            .. tostring(tTierOf[tQueue[TAIL + i]]) .. ' talent, not tier ' .. (i + 1))
+    end
+
+    -- The level-free half: dead even at 25, the highest level the ladder has.
+    check(live_entry_behind(tQueue, TAIL, tTierOf, 25) == nil,
+        sLabel .. ': something behind the t25 pick is spendable at level 25, so the '
+        .. 'park at 21-24 is holding a point that HAD somewhere to go')
+
+    -- The one level fact the level-19 park needs, and no more: the single entry
+    -- behind the t20 pick is the t25 pick, and 25 > 19.
+    check(live_entry_behind(tQueue, PICK_POS[4], tTierOf, 19) == nil,
+        sLabel .. ': the point parked at level 19 had a legal alternative behind '
+        .. 'the head')
+    check(live_entry_behind(tQueue, PICK_POS[4], tTierOf, 25) == PICK_POS[4],
+        sLabel .. ': the t25 pick is not read as spendable at level 25 -- the '
+        .. 'criterion has stopped seeing the one live entry this queue has')
+end
+end
+
+tests['4c. the dead-tail criterion, both directions'] = function()
+-- A queue shaped like the shipped one: picks at 10/15/18/19, halves at 20-23.
+local tTierOf = {}
+local function mk()
+    local q = {}
+    for i = 1, 9 do q[i] = 'ability_' .. i end
+    for i = 11, 14 do q[i] = 'ability_' .. i end
+    for i = 16, 17 do q[i] = 'ability_' .. i end
+    for k, nPos in ipairs(PICK_POS) do
+        q[nPos] = 'pick_t' .. k
+        tTierOf['pick_t' .. k] = k
+        q[TAIL + k - 1] = 'drop_t' .. k
+        tTierOf['drop_t' .. k] = k
+    end
+    return q
+end
+
+local tClean = mk()
+check(live_entry_behind(tClean, TAIL, tTierOf, 25) == nil,
+    'the clean tail was reported live')
+
+-- Offender 1: an ability entry in the tail (what a 16-entry build row would put
+-- there).  It is not a talent, so no tier argument covers it.
+local tOffA = mk(); tOffA[22] = 'ability_late'
+check(live_entry_behind(tOffA, TAIL, tTierOf, 25) == 22,
+    'an ability entry sitting behind the t25 pick was swallowed as dead tail')
+
+-- Offender 2: a tier whose pick is NOT ahead of it -- the shape a build row that
+-- skipped a tier would produce.  Reachable at 25, so it is a real alternative.
+local tOffB = mk(); tOffB[19] = nil
+check(live_entry_behind(tOffB, TAIL, tTierOf, 25) == 23,
+    'the abandoned half of an UNPICKED tier was read as permanently illegal')
+
+-- Near miss: that same unpicked tier, at a level its tier has not reached.
+check(live_entry_behind(tOffB, TAIL, tTierOf, 24) == nil,
+    'an unpicked t25 half was called spendable at level 24')
+end
+
+tests['4d. the park band is a level band shipped turbo actually reaches'] = function()
+-- The reason this section had to be written at all: the retired bullet ruled the
+-- band out of turbo's domain on GH #84's zero, which was the 10-minute cap.
+local tFrame = dofile('tests/mock/lategame_talent_frame.lua')
+local tSeen, nInBand = {}, 0
+for _, tSlot in ipairs(tFrame.slots) do
+    tSeen[tSlot.hero] = tSlot.level
+    if tSlot.level >= 19 then nInBand = nInBand + 1 end
+end
+check(nInBand == 10, 'only ' .. nInBand .. ' of the frame\'s hero-slots are at '
+    .. 'level 19+; the park band this section prices was read as reachable off '
+    .. 'this snapshot and that reading has changed')
+check(tSeen['crystal_maiden'] == 22 and tSeen['zuus'] == 23,
+    'the two focus heroes that sit INSIDE the 21-24 park in the recorded frame '
+    .. 'are no longer at 22 / 23 -- re-read the band before trusting section 4')
+check(tSeen['skeleton_king'] == 26,
+    'skeleton_king is no longer past the band in the recorded frame')
 end
 
 return tests

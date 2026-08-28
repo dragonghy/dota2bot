@@ -22,6 +22,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-34. **GH #274:trunk 是红的,而红的那两个数驮着本组已发表的判决** —— **下一棒优先做这条**
+   - `b50a7727` 加的两枚 venomancer fixture 一次移动四个登记计数;本组欠其中两份**重读**(不是抄数字):
+     (i) `test_axe_t15_payoff.lua` 在 **28** 帧 / ceiling **2.33** 上重取 t15 读数,
+     明确回答 **Battle Hunger 还算不算 saturated**;
+     (ii) `test_wk_bone_guard_talent_bypass.lua` 按它 `:269` 自己的要求**重读整份普查**
+     (36 帧 / 只给 HasModifier 越门 22 帧)。
+   - 第三个红(`test_write_only_local_census.py` 62→64)是**纯分母**,归 harness/总监,本组不动。
+   - 顺带在同一棒里回答 #274 第 3 问:加 fixture 的那一轮要不要在同一改动里重取计数
+     (这是**第三次**出现的形状)。
+
+-33. **棒 ③ 剩下的三行全是 WK,建议与 #274 的 WK 那半并成一棒**
+   - `test_wk_roshan_mana_ceiling.lua`(crossing-level tail argument,`wkrosh`)/
+     `test_wk_bone_guard_thresholds.lua`(untrained-stub-is-turbo-reality claim)/
+     `test_wk_q_aim_preflight.lua`(level distribution note)。
+   - `corpus_scale.lua` 与 `test_level_gate_census.lua` 归 harness/总监(GH #236 管排序),本组不认领。
+
+-32. ~~**棒 ③ 第 4 行:`test_focus_build_level_legality.lua` 的 scope bullet 用两条论证豁免 t20/t25,两条都退休了**~~
+   **2026-08-28T07:47Z done —— `bots/` **零行改动**;无新 gate id;
+   `state.json` 新增 `levelpremise_focusbuild_20260828`(`gated:false`);零 AWS;不申请入集;
+   **不提 queue**;**新开 GH #274**。报告 `iterations/reports/hero/20260828T074756Z.md`。**
+   - 第一条论证(天花板)作废,**落点刺眼**:已录快照里 crystal_maiden 22 / zuus 23
+     **正落在它宣称够不着的 21–24 停车带里**。
+   - **第二条论证死在自己的测量上**:「by then there is nothing else in the queue」**可测的假** ——
+     七行焦点构筑全跑,队列到 **23** 位,选中的在 **10/15/18/19**,放弃的四半在 **20–23**,
+     **bot 每一个都向引擎要过**(把 lion 那轮的读数推广到全部七行)。
+   - **换上的判据一句等级都不看**,并**断在 25 级**上,故不可能靠天花板回来而被满足。
+   - **变异 5 抓 + 1 对照;M1 先逃过 4a**(`nil == nil` 恒真)⇒ 补非空断言后双抓。
+   - **下一棒**:**GH #274 本组那半**(见 -34),之后回棒 ③ 的三行 WK(见 -33)。
+
 -31. ~~**棒 ③ 第 3 行:`test_lion_hex_talent_slot.lua` 的头注与它自己的 §6 对着说了一天反话 —— 而清它买到的是「结构性不等于 bot 从来不要」**~~
    **2026-08-28T04:48Z done —— `bots/` **零行改动**(一个英雄文件都没碰);无新 gate id;
    `state.json` 新增 `levelpremise_lionhex_20260828`(`gated:false`);零 AWS;不申请入集;**不提 queue**。
@@ -2106,6 +2135,57 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T07:47Z(报告 `iterations/reports/hero/20260828T074756Z.md`;轴 **`LEVELPREMISE` 重读续**;
+  **棒 ③ 第 4 行**,登记表天花板 **6 → 5**;**新开 GH #274**)—— 自检 **worst exit 3**:
+  UNLANDED 0、两条稳定版锚点 ok、Lua 快速检测器 **16** 文件 0 失败、待裁 queue 请求 0(open 37);
+  cadence 洞是 **replay-check(6.1h)+ strategy(6.2h)**,**本组无洞**;owner 四条优先项
+  **没有一条球在本组**;`[hero]` open issue 里带帧证据且属焦点五的**一条都没有**
+  ⇒ 按 backlog 取上一轮点名的 `test_focus_build_level_legality.lua`。
+  **本轮 `bots/` 零行改动**;无新 gate id;`state.json` 新增
+  `levelpremise_focusbuild_20260828`(`gated:false`);**零 AWS**;不申请入集;**不提 queue**。
+  - **⭐ 被判掉的不只是那个 0,还有「队列后面什么都没有」。** 那条 scope bullet 用**两条**论证
+    把 t20/t25 两个队列位排除在文件之外。第一条是天花板本身(「out of turbo's domain,
+    GH #84 读 level >= 20 得 0/210」)—— 作废,而且**落点特别刺眼**:已录快照里
+    **crystal_maiden 22、zuus 23 正正落在它宣称够不着的 21–24 停车带里面**,
+    skeleton_king 26 在带子外侧,**两个都是焦点英雄**。
+  - **⭐ 第二条论证熬过了天花板,死在自己的测量上。** 「it costs nothing … by then there is
+    **nothing else in the queue**」**是可测的假**。驱动出货的 `GetTalentBuild` + `GetSkillList`,
+    **七行焦点构筑全跑**(含 zuus pos_4/5 与 gated `wkbuild`):技能行都是 15 条 ⇒ 队列到 **23** 位,
+    **选中的在 10/15/18/19**(不是 10/15/20/25),**放弃的四个半边在 20/21/22/23**。
+    队列后面**有四个东西,而且 bot 每一个都向引擎要过** —— 把 05:xxZ 在 **lion 一个英雄**上的
+    读数**推广到全部七行**。
+  - **⭐ 换上的判据一句等级都不看**:停着的队首后面的每个条目,都是**同一条队列里更早已点掉的
+    那一档的另一半**;一档一个 ⇒ **任何等级都取不到**。§4b **断在 25 级**(阶梯顶),
+    所以**不可能靠等级上限回来而被满足**。level-19 那处停车**只给一个等级事实**:
+    它后面只有 t25 选中项,25 > 19。**过去用语料普查豁免一整个带子,现在用出装。**
+  - **⭐ 顺手抓到并交出去的:trunk 现在是红的,不是本轮造成(GH #274)。**
+    `b50a7727`(replay-check 07:05Z)加的两枚 venomancer fixture,一帧十个 slot,
+    **同时移动四个登记计数、三个文件变红**:`test_axe_t15_payoff`(26→28、~1.94→2.33)、
+    `test_wk_bone_guard_talent_bypass`(34→36、20→22)、`test_write_only_local_census.py`(62→64)。
+    **`git stash` 后在 HEAD 上逐位复现。刻意不就地改数字** —— 其中两个数**驮着已发表判决**
+    (Axe 那个 ceiling 正是让「Battle Hunger 只在 1 帧上活着」读作 SATURATED 而非 NEGLECTED 的数;
+    WK 那个文件 `:269` 明文要求「先重读整份普查再引用任何数字」)⇒
+    抄数字 = **用便宜的编辑顶替昂贵的重读**,正是登记表存在的理由。
+  - **⭐ 变异 5 抓 + 1 对照**,而 **M1 第一轮先逃过 4a**:
+    `tQueue[p] == sTalentList[nTalentBuild[k]]` 在两边都 `nil` 时**恒真**,
+    而「天赋构筑不再返回放弃的半边」产生的正是两边都 nil ⇒ 就地补非空断言,现在双抓。
+    **合成 offender 之外还要防断言被空值满足。** 变异后 `bots/` 全还原。
+  - **诚实边界**:构筑行读自源码字面量(两行备选行没有调用可截;**§4a 在 axe 上把 routing 钉了一次**);
+    天赋名来自 `tests/mock/talent_slots.lua`;「永远非法」是**常量**(被驱动的是「20–23 真的是
+    已点档位的另一半」);25 级发出的四条注定失败的升级命令**引擎接不接受不判也判不了**;
+    **本轮无真实帧**;队列位是技能行长度的算术(故单独断言 `nRowLen == 15`)。
+  - **登记表棘轮自己先响**:头部一改好它立刻变红并点名要删哪一行、降到几 —— **机制在工作**。
+  - 铁律 6:`luacheck_gate.sh` **0 warnings / exit 0**(容器本来没有 luacheck,gate 自己装的);
+    push gate 已上膛;**未用 `RULE6_BYPASS`**。全量套件一进程跑不完(GH #124)⇒ 影响面单跑:
+    `focus_build_level_legality` **10/0**、`level_premise` **5/0**、`lion` **99/0**、
+    `zuus` **110/0**、`smoke_load` **3/0**;`axe` 2 红 / `talent` 3 红 = **GH #274,非本轮**。
+  - **下一棒**:**优先 GH #274 本组那半** —— 在 64 文件语料上**重取** Axe t15 读数与 WK Bone Guard
+    普查,并记下判决是否变化。**这比登记表剩下的行更值钱,因为 trunk 是红的。**
+    之后回棒 ③:剩 **5 行**(本组欠 **3**,`test_wk_roshan_mana_ceiling` /
+    `test_wk_bone_guard_thresholds` / `test_wk_q_aim_preflight`,**三行全是 WK**
+    ⇒ **建议与 #274 的 WK 那半并成一棒**)。`hero-19`/`hero-20`/`hero-21` 仍 pending;
+    WK `ConsiderQ` 的 `nDamage` 修复仍等归档扫描;**GH #268 那一格未被认领,不由本组扩**。
+
 - 2026-08-28T04:48Z(报告 `iterations/reports/hero/20260828T044807Z.md`;轴 **`LEVELPREMISE` 重读续**;
   **棒 ③ 第 3 行**,登记表天花板 **7 → 6**)—— 自检 **worst exit 3**:UNLANDED 0、两条稳定版锚点 ok、
   py **47/0**、Lua 快速检测器 **16** 文件 0 失败、待裁 queue 请求 0(open 37);cadence 洞只有
