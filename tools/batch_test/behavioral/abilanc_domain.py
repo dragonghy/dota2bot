@@ -354,7 +354,16 @@ def scan(dirs, warmup=WARMUP_GAMES):
 
 
 def layered(casts, ngames, pred):
-    """(ab, ba) counts and per-game rates -- iron rule 4(i), never pooled only."""
+    """(ab, ba) counts and per-game rates -- iron rule 4(i), never pooled only.
+
+    A layer with ZERO GAMES is flagged, never rendered as a measurement (GH
+    #257).  `max(ngames[side], 1)` keeps the division safe but it also makes an
+    absent layer arithmetically identical to a measured-and-flat one: both come
+    out `0/0.000` with `delta == 0`.  Those are different facts -- one leg was
+    watched and did nothing, the other was never watched -- so the difference is
+    carried out of here in `absent` (and per-side `row['absent']`) rather than
+    left for a reader to notice in the `games` column.
+    """
     out = {}
     for side in ('radiant', 'dire'):
         row = {}
@@ -364,7 +373,9 @@ def layered(casts, ngames, pred):
             row[leg + '_n'] = n
             row[leg] = n / float(max(ngames[side], 1))
         row['delta'] = row['armed'] - row['baseline']
+        row['absent'] = ngames[side] == 0
         out[side] = row
+    out['absent'] = tuple(s for s in ('radiant', 'dire') if out[s]['absent'])
     out['pooled'] = {
         leg + '_n': sum(1 for c in casts if c['leg'] == leg and pred(c))
         for leg in ('armed', 'baseline')}
@@ -387,11 +398,20 @@ def show(title, tab, ngames):
           % ('arm side', 'games', 'armed', 'baseline', 'delta'))
     for side in ('radiant', 'dire'):
         r = tab[side]
+        if r['absent']:
+            # Not `0/0.000 ... 0.000`.  That row is what an unfought layer
+            # looks like, and this layer was never dealt into the wave.
+            print('  %-9s %7d %10s %10s %9s'
+                  % (side, ngames[side], '-', '-', 'ABSENT'))
+            continue
         print('  %-9s %7d %4d/%.3f %4d/%.3f %9.3f'
               % (side, ngames[side], r['armed_n'], r['armed'],
                  r['baseline_n'], r['baseline'], r['delta']))
     p = tab['pooled']
-    if tab['opposed']:
+    if tab['absent']:
+        note = ('LAYER ABSENT (0 games: %s) -- NOT a flat layer'
+                % ','.join(tab['absent']))
+    elif tab['opposed']:
         note = 'OPPOSED => NOISE (rule 4i)'
     elif tab['one_layer_flat']:
         note = 'one layer flat (not a contradiction)'
@@ -402,20 +422,43 @@ def show(title, tab, ngames):
 
 
 def verdict(res):
-    """WORKING / BUGGY-SUSPECT / SILENT / EMPTY-DOMAIN / REFUSE.
+    """NO-CORPUS / EMPTY-DOMAIN / SINGLE-LAYER / SILENT / REFUSE / WORKING /
+    WORKING-WITH-RESIDUAL / BUGGY-SUSPECT.
 
     Deliberately ordered so that a zero delta reads SILENT and can never be
     swallowed by the two-layer test, and so that an empty domain is its own
     answer rather than being reported as a silence the lever caused.
+
+    The first three exist to keep ABSENCE from being rendered as a measured
+    zero (GH #257).  They are ordered outward from the emptiest fact: nothing
+    was scanned, then nothing in what was scanned entered the domain, then the
+    domain was entered but only one of rule 4(i)'s two layers exists.  Each one
+    of them refuses to answer the armed-vs-baseline question rather than
+    answering it from a leg that was never dealt.
     """
     casts = [c for c in res['casts'] if c['placed'] == 'certain_under']
     tab = layered(casts, res['ngames'], lambda c: True)
     a = tab['pooled']['armed_n']
     b = tab['pooled']['baseline_n']
     exposed = sum(v for (leg, side, band), v in res['exposure'].items())
+    if res['ngames']['radiant'] + res['ngames']['dire'] == 0:
+        # EMPTY-DOMAIN below asserts a scan happened and found nothing in the
+        # domain.  With no games there was no scan, and saying so is the same
+        # distinction this whole block is about.
+        return 'NO-CORPUS', ('0 games loaded -- nothing was measured; this is '
+                             'NOT an empty domain')
     if exposed == 0:
         return 'EMPTY-DOMAIN', ('no alive under-tier hero-frame came within '
                                 '%d u of an ancient camp' % R_SWEEP_MAX)
+    if tab['absent']:
+        # Ahead of every armed/baseline branch below, INCLUDING the a==b
+        # silence: on a one-layer corpus each of those would be a statement
+        # about a comparison rule 4(i) says we do not have.
+        return 'SINGLE-LAYER', (
+            'no games on the %s arm-side, so iron rule 4(i)\'s second layer '
+            'does not exist; the one layer present (armed %d, baseline %d) '
+            'cannot carry an armed-vs-baseline reading'
+            % (' and '.join(tab['absent']), a, b))
     if a == 0 and b == 0:
         return 'SILENT', ('domain is non-empty (%d exposed hero-frames) but '
                           'neither leg ever cast at an ancient under tier'
@@ -648,6 +691,35 @@ def selfcheck():
     chk('a FLAT layer is not an opposition (it would eat most readings)',
         t3['opposed'] is False and t3['one_layer_flat'] is True)
 
+    print('--- an ABSENT layer is not a flat one (GH #257)')
+    # W17-R shape: four boxes all radiant, so the `dire` arm-side has zero
+    # games.  Arithmetically indistinguishable from the flat case above -- the
+    # `dire` delta is 0 in both -- which is exactly why the flag is carried.
+    ng_one = {'radiant': 18, 'dire': 0}
+    one = [{'arm_side': 'radiant', 'leg': 'baseline'},
+           {'arm_side': 'radiant', 'leg': 'baseline'},
+           {'arm_side': 'radiant', 'leg': 'armed'}]
+    t4 = layered(one, ng_one, lambda c: True)
+    chk('a layer with 0 games is flagged ABSENT', t4['absent'] == ('dire',))
+    chk('the layer that DOES have games is not flagged',
+        t4['radiant']['absent'] is False and t4['dire']['absent'] is True)
+    chk('absence is still not an opposition, and `one_layer_flat` alone '
+        'cannot tell the two apart',
+        t4['opposed'] is False and t4['one_layer_flat'] is True
+        and t3['absent'] == ())
+    import io as _io
+    import contextlib as _ctx
+    buf = _io.StringIO()
+    with _ctx.redirect_stdout(buf):
+        show('t', t4, ng_one)
+    rendered = buf.getvalue()
+    chk('the note says LAYER ABSENT, never "one layer flat"',
+        'LAYER ABSENT (0 games: dire)' in rendered
+        and 'one layer flat' not in rendered)
+    chk('the absent ROW prints no rate either -- `0/0.000` is what a watched '
+        'and silent layer looks like',
+        '0/0.000' not in rendered and 'ABSENT' in rendered)
+
     print('--- verdict, all five worlds, and the ORDER between them')
     base = {'ngames': ng, 'exposure': Counter({('armed', 'radiant', 'band'): 5}),
             'fed_exposure': Counter(), 'engage': Counter()}
@@ -685,6 +757,41 @@ def selfcheck():
     chk('an over-tier cast never enters the domain count',
         verdict(mk([c('radiant', 'armed', 'certain_over'),
                     c('dire', 'armed', 'certain_over')]))[0] == 'SILENT')
+
+    # GH #257.  The reproduction in the issue is this exact shape: 18 radiant
+    # games, armed 1 < baseline 2, dire never dealt -- and it printed
+    # WORKING-WITH-RESIDUAL, i.e. half of condition (a), off one layer.
+    one_layer = dict(base)
+    one_layer['ngames'] = ng_one
+    one_layer['casts'] = [c('radiant', 'baseline'), c('radiant', 'baseline'),
+                          c('radiant', 'armed')]
+    chk('armed < baseline on a ONE-LAYER corpus is SINGLE-LAYER, not '
+        'WORKING-WITH-RESIDUAL (GH #257)',
+        verdict(one_layer)[0] == 'SINGLE-LAYER')
+    for label, casts_ in (
+            ('armed empty (would have read WORKING)',
+             [c('radiant', 'baseline'), c('radiant', 'baseline')]),
+            ('armed more (would have read BUGGY-SUSPECT)',
+             [c('radiant', 'armed'), c('radiant', 'armed'),
+              c('radiant', 'baseline')]),
+            ('armed == baseline (would have read SILENT)',
+             [c('radiant', 'armed'), c('radiant', 'baseline')])):
+        d = dict(one_layer)
+        d['casts'] = casts_
+        chk('  ... and so is %s' % label, verdict(d)[0] == 'SINGLE-LAYER')
+    chk('SINGLE-LAYER does NOT pre-empt EMPTY-DOMAIN -- a one-layer corpus '
+        'whose domain never occurred still says so',
+        verdict(mk([], Counter()))[0] == 'EMPTY-DOMAIN')
+    no_corpus = dict(base)
+    no_corpus['ngames'] = {'radiant': 0, 'dire': 0}
+    no_corpus['casts'] = []
+    chk('zero games is NO-CORPUS, not an empty domain (nothing was scanned)',
+        verdict(no_corpus)[0] == 'NO-CORPUS')
+    chk('a two-layer corpus is unaffected: WORKING-WITH-RESIDUAL survives',
+        verdict(mk([c('radiant', 'baseline'), c('radiant', 'baseline'),
+                    c('dire', 'baseline'), c('dire', 'baseline'),
+                    c('radiant', 'armed'), c('dire', 'armed')]))[0]
+        == 'WORKING-WITH-RESIDUAL')
 
     print('\n%s' % ('ALL PASS' if ok else 'FAILURES ABOVE'))
     return 0 if ok else 1

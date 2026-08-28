@@ -1,5 +1,23 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard
+
+**成员串 41**(上一行)。本行 2026-08-28T00:5xZ 的**一处变动**(全文档案 **§BS.4**):
+**`aimguard` 入集**(协同组 §BR.1,GH #262 的落地物)。**搭车、零 AWS 增量、不申请专波。**
+门是**它自己那一条**(`jmz_func.lua:3928`,`IsModeTurbo` and `aimguard`)⇒ **无合取项**,
+总监已在源码核过 **armed ⊆ 未 armed 是结构性的**(未 armed 结尾 `return true`,armed 结尾
+`return J.CanBeAttacked(hTarget)`)⇒ 它只能**扣下**一次今天会发生的冲锋,**造不出一次**。
+**⚠️ 附加条件(§BS.4)**:它的 (a) 读数**必须来自双层语料**;单腿孤儿语料上的读数按
+`SINGLE-LAYER` 处理(GH #257/#266),**不得记为 (a) 的一半**。
+
+**⚠️ 发波前必读(cand 串长度,本轮实测)**:41 id 的裸 cand 串 **363 字节**(40 id 时 354)。
+本轮 `check_armed_wiring.py --cand <41 串>` = **41/41 WIRED,exit 0**;
+`aimguard` direct、1 站点(`jmz_func.lua:3928`)。S3 key 上限 1024,**仍有余量**;
+ext4 的 255 早已跨过(GH #167),绕法与判据照旧。
+**⚠️ 行号漂移提醒(照 §BG 的老规矩)**:本轮实跑里 `zusstatic` 报在 `hero_zuus.lua:506`
+(§BF 记的 360)、`bbfight` 10705(§BM 记的 10594)、`bbshort` 10744(§BM 记的 10633)、
+`abilanc` 1850(§BM 记的 1845)—— **行号是会漂的引用,id 不会**;
+排波与核对一律以**当轮实跑输出**为准,不要引用历史报告里的行号。
+
 
 **成员串 40**(上一行)。本行 2026-08-26T22:xxZ 的**四处变动**(全文档案 **§BM**):
 **`abilanc` 补录**(§BL 09:5xZ 已裁 APPROVED,但**这一行迟了四轮没同步** —— GH **#210**,本轮结案)+
@@ -8686,3 +8704,110 @@ H1 的机制部分**总监已在源码上核实**:`dumper/main.go:232` 的无条
 **不为完成度子句开格**:#263 建议的「打不打得完」方向是对的,但本地语料**不带任何小兵实体**、
 也不带战斗结果,完成度谓词**今天钉不到帧**;凭直觉落地它正是 `lanefix` 的失败形状。
 重开条件:待录像组把 §6 的 episode 口径**入库并加棘轮**,给出逐帧的「戳营帧 → 15s 内是否击杀」读数。
+
+---
+
+## §BS 2026-08-28T00:5xZ 总监裁定:GH #257 落地(缺席不是一个量到的零)+ 它其实是**一族三个**(GH #266);外加围栏 (iii) **取消自由度**抬到 $80、`aimguard` 入集、**`abilanc` 不因 §BR.2 的反例帧退集**(那一帧够不着它)
+
+### BS.1 GH #257 落地 —— 按首选修法,外加两处 issue 没要求的
+
+`abilanc_domain.py`:`layered()` 增 `absent`;`show()` 的 note 改 `LAYER ABSENT (0 games: X) -- NOT a flat layer`;
+`verdict()` 增 **`SINGLE-LAYER`**,排在 `EMPTY-DOMAIN` 之后、**一切** armed/baseline 分支之前(含 `a == b` 那条 SILENT ——
+单层语料上"打了一样多次"同样是一句关于我们没有的那个对照的话)。
+
+**比 issue 多做的两处,都是落地时才暴露的**:
+
+1. **absent 那一行不再印速率。** issue 只要求改 note。可只改 note 的话那一行仍是 `0/0.000 0/0.000 0.000`,
+   **而那正是"量过且为零"的长相** —— 缺陷的主体还留在行里,note 只是给它加了个标签。
+2. **新增 `NO-CORPUS`。** 零局语料原本落进 `EMPTY-DOMAIN`,而它的话术是「没有任何存活的 under-tier 英雄帧
+   进入过营地半径」——**那句话断言扫描发生过**。零局时什么都没扫。**同一族缺陷在同一个函数里的第二处。**
+
+验收:`--selfcheck` 新增 11 条全绿;**另建 `tests/test_abilanc_single_layer.py`(16 检查全绿)**,
+因为**全树没有任何测试调用这些模块的 `--selfcheck`**,`run_py_tests.sh` 只 loop `tests/test_*.py` ——
+只加 selfcheck 等于加一条没人跑的检查(Z.4 的死 S3 规则、催生 `run_py_tests.sh` 的那四个无 runner 测试,
+仓库已经拒绝过两次这个形状)。新测试**驱动真 `report()`** 读那两行,带**变异**(把 `absent` 强制成空
+= 修复前的程序 ⇒ 退回 `WORKING-WITH-RESIDUAL` + `one layer flat` + `0/0.000`),
+控制项**真双层语料读数逐字不变**(否则是拿"拒绝一切读数"换诚实,`tbearly` 教训)。
+`run_py_tests.sh` 45 → **46**;`bots/`/`game/` 一行未改。
+**#257 不由总监关闭**:它的验收 1(W17-R 真复现命令)要真语料,Routine 容器没有 `.sweep_out/`。
+
+### BS.2 ⭐ 本轮主判读:**#257 是一族三个,而它恰好是先被人跑到的那一个**(GH #266)
+
+修完顺手 grep 了那个分母:
+
+```
+abilanc_domain.py:374   n / float(max(ngames[side], 1))   <-- #257 已修
+campfarm_target.py:399  hits / float(max(ngames[side], 1))
+campsel_domain.py:537   n / float(max(ngames[side], 1))
+```
+
+`campsel_domain.py` 是**完整同型**(`:545`/`:565` 两个 `layered()` 变体各算 `one_layer_flat`,
+`:771`/`:791` 两处渲染它,`:569` 的 `verdict()` 两个 `EMPTY-DOMAIN` 出口之后**没有一处问过 `ngames` 是不是 0**)。
+`campfarm_target.py` 带同一个分母但没有 `one_layer_flat`,失效形状**轻一档也更隐蔽**:
+缺席那层不会被贴"flat"标签,它**只是印出 `0/0.000` 的一行**,与一条真量过且为零的行**逐字节相同**。
+
+**为什么这条重要**:批测台 08-28T00:20Z 交棒 ⑪ 正把 **249 局单腿孤儿**(W15 30 + W16-896 27 + W17 128 + W17-R 64)
+指给录像组做 (a) 取证,而 `campsel`/`campfarm` 都在集、都要在这批语料上读。
+**只修 #257,那批语料在另外两个检测器上照样打出看起来合法的双层结论。**
+⇒ 已立 **GH #266**,带 grep 证据 + 照抄本轮落地的修法模板 + 四条验收(含变异与控制项)。
+
+**判读的那一句(登记为可复用形状)**:一个按"某文件的 bug"立案的缺陷,**立案人看到的是它被跑到的那一次**,
+不是它的作用域。#253(stamp 放种子号仍叫 WIRED)、批测台 §3.2(`per_seed` 非空 ≠ 有可用种子)、#257,
+**三例的共同形状都是「缺席被渲染成一个测到的零」** —— 而本轮说明这个形状**在同一目录里就有三份拷贝**。
+修一族之前先 grep 那一族的判别式,成本一条命令。
+
+### BS.3 围栏 (iii) $60 → **$80**,并**取消这个数的自由度**(批测台交棒 ④)
+
+批测台算得很清楚:围栏值 $56.01,发完 W19 到 $56.97,**再两波必破 $60**,而刹车 $90 / owner 档 $100 都还远。
+$45→$60 只换了个数,于是 $60 也只是"$45 加点余量",十波后必然再来一次。**同一条推理第二次上门,
+说明被修的不是数值,是这个数没有来源。**
+
+⇒ **新写法:围栏 = 下一个尚未跨过的 owner 可见 Budget ACTUAL 告警档。**
+`dota2bot-batch` 的告警在限额 $100 的 50/80/100% = **$50 / $80 / $100**;$50 已跨(书面解释在 08-27T15:15Z 报告 §2),
+**下一档就是 $80**。围栏因此不再是猜的,它**恰好停在「owner 会收到一封他没有解释的邮件」之前** ——
+那正是 08-25 那次抬高写下的立法目的,当时用一个自由参数去近似它。
+**副作用即是目的**:下一次"该不该再抬"不再由总监自由裁量,因为再往上就是 **$90 刹车线**,那是 owner 的地界。
+
+**刹车 $90 / owner 批准线 $100 本轮都不动。** 估价仍须 spot 与"全程降级按需"**两种都过**(§2 甲)——
+这是抬高的对价:单波实测对预估的偏离已实测到 **3.7 倍**(GH #233(a)),$80 与 $90 之间那 $10 就是留给它的。
+跨 $80 需要总监**当轮明确裁定**(不是"写一行就走");跨 $90 仍是刹车,停,报 owner。
+**投递**:已改 `iterations/streams/batch-desk.md` 第 4b(iii) 条本身 —— 那是批测台发波时真正读的那一行;
+08-25 那段原始理由**降级为存档并显式注明"最后一句『跨 $60 仍然停』已被取代"**,避免两个操作数并存。
+
+### BS.4 `aimguard` **批准入集**(§BR.1),搭车、零 AWS 增量
+
+总监**在源码里核过**,不是照抄申请:`jmz_func.lua:3924-3935`
+——未 armed 路径 `if not J.CanBeAttacked(hGuard) then return false end` 之后 `return true`;
+armed 只是把结尾换成 `return J.CanBeAttacked(hTarget)`。⇒ **armed ⊆ 未 armed 是结构性的,不只是被测出来的**:
+它只能**扣下**一次今天会发生的冲锋,**永远造不出一次**。`IsSoakCandidate` 在门里恰好 1 次,
+**不与 `abilanc`/`abil1st` 合取**(`pullcad` 陷阱已避开);全树调用点恰好 1 处
+(`hero_spirit_breaker.lua:297`)。`lua5.1 tests/test_aimguard_target_axis.lua` **exit 0**,带 `[ratchet]`
+(本轮开工自检快腿报 **15 个 tagged 检测器文件 0 失败**,已含它)。
+
+**(a) 的判读点**(按申请所请写进裁定):spirit_breaker 冲锋帧后 5s 内,被冲锋的那只单位是否仍存活/可攻击。
+**附加条件(本轮新立,因 BS.1/BS.2)**:它的 (a) 读数**必须来自双层语料**;单腿孤儿语料上的读数
+按 `SINGLE-LAYER` 处理,**不得记为 (a) 的一半**。
+端到端未做一节:接受其 `[limit reach]` 钉法(分支在 `J.IsAttacking` 之后,读三个 dump 不携带的动画量),
+理由是上面那条**结构性单向性** —— 最坏情况是 SILENT,不存在"造出一次冲锋"的分支。
+
+### BS.5 ⭐ `abilanc` **不因 §BR.2 的反例帧退集** —— 那一帧**结构上够不着它**
+
+协同组请总监"一并重看 `abilanc` 的同一条阈值",依据是那枚反例帧:
+`843688/20260827_185943_slot12` t=708.0,zuus **lvl 11(门内)**,两发 Arc Lightning 击杀 black_dragon,GOLD+XP 入账。
+
+**用本轮刚修的那个工具查了一句就结了**:
+
+```
+python3 -c "... AD.selector_sites() ..."   ->  zuus in guarded set: False   (guarded files: 16)
+grep -n "GetMostHpUnit" bots/BotLib/hero_zuus.lua   ->  (无输出)
+```
+
+`abilanc` **只改 `J.GetMostHpUnit` 的返回值**,而 **`hero_zuus.lua` 从不调用它**。
+⇒ 那次"干净盈利的门内击杀"**armed 之后照样发生**;反例帧是针对 `abil1st` 的证据,**不通过共享阈值传导到 `abilanc`**。
+**"读同一个 `J.Site.ANCIENT_MIN_LEVEL`"不等于"作用在同一批帧上"** —— 前者是常量共享,后者要求调用点共享,
+这正是 §BR.3 自己立的那条判据("谓词必须和它许可的那个对象是同一个对象")**反向用在提议人自己身上**。
+
+**仍然开着的那一半**:BR.2 的**人口/比率**论证(<12 带 5 episodes、可及面 0.074 episode/局,刀口在分子不在比率)
+是关于**等级轴本身**的,它**不因上面这条而失效**,只是它论证的是"域太小",不是"符号错"。
+那正是 249 局语料上 (a) 取证要回答的问题 —— 而 BS.1/BS.2 恰好保证了那个回答**不能从单腿语料上贱买**。
+⇒ **`abilanc` 留在集,不退不促;`abil1st` 的撤回接受**(协同组本就不建议入集,本轮无需另裁)。
