@@ -22,7 +22,62 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--38. **棒 ③ 剩下的**两**行 WK(-37 清掉了 ceiling 那行)** —— **下一棒做这条**。
+-39. **两个 lever 现在缺的是同一批帧:12 级以上的取证帧** —— **下一棒做这条**。
+   -38 的 section 3 记了一条没归因的账:条件 (c) 的寿命结束在 **20 级**,而 `wkbuild`
+   的取证语料**全部测自 ≤12 级**;-37 早已为 `wkrosh` 点名过**同一个形状**
+   (撑着它的 24/31 帧「全在最不可能打肉山的等级带」)。
+   - **不要各提各的**:两条要的是同一批帧(post-GH#108 的后期语料)。并成**一个**
+     语料请求,域仍是 queue `hero-10`。
+   - 做之前先读 -38 的 §3 与 -37 的 lever 代价那条 —— 两处写的是同一个缺口的两半。
+
+-38. ~~**棒 ③ 剩下的**两**行 WK(-37 清掉了 ceiling 那行)**~~
+   **2026-08-28T19:53Z done —— `bots/`/`game/` **零行改动**;无新 gate id;
+   `wkbuild`/`wkqaim` 的门与 armed 状态未动;`state.json` 新增
+   `wkpremise_REGISTRY_CLEARED_20260828`(`gated:false`);零 AWS;不申请入集;
+   **不提 queue**;不开新 issue。ceiling **4 → 2**,**剩下两行全在 harness/director 名下
+   (GH #236)—— 棒 ③ 在本组这一侧结清**。
+   报告 `iterations/reports/hero/20260828T195320Z.md`。**
+   - **⚠️ -38 自己的预判对了一半,而错的那一半正是重点。** 它猜「那两个文件**大概率也用**
+     `ls tests/fixtures/f_*.lua`」:q_aim **是**(见下),thresholds **完全不读语料** ——
+     它是纯 mock 文件,**一个 glob 都没有**。所以在那边等着的不是地平线,
+     是**造帧函数里的前提**。**按上一棒的形状去找,会正好找不到它。**
+   - **⭐ 两条债不是同一种债,藏得深的那条不在散文里。** q_aim 的 premise 是**注释里一句
+     cross-check**(划掉后断言一字不动);thresholds 的 premise 在**造帧函数里** ——
+     `make_frame` 递给 `X.ConsiderW` 的 untrained talent6 桩,**正是它让两条分支的
+     `or talent6:IsTrained()` 惰性、threshold 才扫得出来**。天花板一退休,
+     **sections 2/3/4 三节一起悬空**。「注释里的一句话」和「实验装置的前提」看着一样,
+     **代价差一整个文件**。
+   - **⭐ 替代理由根本不看等级带**:条件 (c) 的命题是「**帽子什么时候抬起来**」,
+     而两条 build row 把四个 Bone Guard 点**在 12 级前花完**(default 1/3/5/7、
+     `wkbuild` 1/9/10/12),t20 行**最早 20 级**才存在 ⇒ 每一次帽子跃迁都发生在
+     bypass 不可训练的世界里。新 **section 7** 直接读 shipped build row 断言这个 gap。
+   - **⭐⭐ 主产出:修正的代价是条件 (c) 有了寿命,而这是天花板一直遮着的。**
+     桩改成**参数**后拿 shipped `X.ConsiderW` 跑同一张网格:**trained ⇒ section 4 读出的
+     每个 threshold 全塌到 0,两条分支都是**;最响一格 **rank-4 lane:8 → 0**。
+     那个 8 就是 `wkbuild` 延迟加点买的全部东西 ⇒ **(c) 在 12-19 级成立,20 级作废**,
+     **而这仓唯一一枚后期帧(26 级、Bone Guard 已 rank 4)就站在寿命外面**。
+     **不撤销 `wkbuild`,不提请重审** —— 论证的那段等级没被动,只是第一次知道到哪儿为止。
+   - **⭐ q_aim 的修正是收窄不是放宽**:丢掉的是「**for most of a turbo game**」那半句 ——
+     Q 不再稀缺的等级带**是达得到的**,所以 supply 变成**前中期**的判词、对后期**沉默**。
+     结论不动,因为理由 (2)(自卫分支在 catch-all **上游**)**从来不看等级**。
+   - **⭐ glob 地平线:这次是量出来的「没有」。** section 1 的 tripwire 是全称命题、
+     枚举却是 `ls tests/fixtures`(-37 同一形状)。查了:那枚 parked 帧的 WK 是
+     **全语料唯一一个 supply 不是阻塞项的位**(26 级 / Q rank 4 / cd 0 / mp 762 /
+     R rank 3 ⇒ ShouldSaveMana 预留也是 0,**四个 conjunct 一个不挡**),
+     **挡住它的是几何**:568u 环里 **0 人**,最近活敌 **10,309u**。⇒ 全称命题**活着**。
+     现已把该帧**接进 `fixture_files()`**(存在性 + basename 双保险:GH #236 落地
+     不管 move 还是 copy **都只读一次**)+ 新 **section 4** 对着文件断言读数。
+   - **⭐ 变异 8 个:7 抓 1 对照。⚠️ 而 M7 本来是对照,它逃逸了 —— 那是个真洞。**
+     `reincarn_rank` 当时没有任何断言读它,可它是 section 1 第四个 conjunct
+     (`ShouldSaveMana` 留蓝)的全部依据。补上断言后 M7 立刻变成抓到,另找注释日期当对照。
+     **一个逃逸的对照,先问它是不是该逃逸。**
+   - **诚实边界**:**一枚帧**,杀得死全称命题、**不是分布**,全轮没有一句说 20 级以上
+     占多少;section 6 证明 bypass **解除** threshold,**不证明它触发过** ——
+     也永远证明不了(GH #260 dumper 丢 unique 天赋行,`talent6:IsTrained()` 训没训都读 0);
+     section 6 把 `modifier_skeleton_king_bone_guard` 按构造置真,定的是**分支测试**的价、
+     不是顶上那道 guard 的价(residual 仍在 bypass 文件里)。
+
+   - **(原棒的委托,存档)** ~~**下一棒做这条**~~:
    `test_wk_bone_guard_thresholds.lua`(untrained-stub-is-turbo-reality claim)与
    `test_wk_q_aim_preflight.lua`(level distribution note)。两者都还在
    `test_level_premise_registry.lua` 的 PENDING 上,ceiling 现为 **4**。
@@ -2270,6 +2325,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T19:53Z(报告 `iterations/reports/hero/20260828T195320Z.md`;轴 **backlog -38:
+  棒 ③ 剩下的两行 WK**;**ceiling 4 → 2,棒 ③ 在本组这一侧结清**)
+  —— 自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  待裁 queue 请求 0(open 37);expired waits none;stable-v1/v2 锚点各三项 ok;
+  trunk python **51 passed / 0 failed**,快速 Lua 检测器 17 文件 0 失败(FAST SUBSET)。
+  owner 四条优先项**没有一条球在本组**(常设运维球在批测台,P1/P2 球在协同组,P3 球在总监)
+  ⇒ 按章程走 backlog,而 **-38 明写「下一棒做这条」**。
+  **本轮 `bots/`/`game/` 零行改动**;**无新 gate id**;
+  **`wkbuild` / `wkqaim` 的门与 armed 状态一个字没动**(`wkqaim` 从来没被写出来,本轮也没写);
+  `state.json` 新增 `wkpremise_REGISTRY_CLEARED_20260828`(`gated:false`);
+  **零 AWS**;不申请入集;**不提 queue**;**不开新 issue**。
+  - **⚠️ -38 自己的预判对了一半,错的那一半正是重点**:它猜两个文件「大概率也用
+    `ls tests/fixtures/f_*.lua`」——q_aim **是**,thresholds **完全不读语料**
+    (纯 mock,一个 glob 都没有)。**按上一棒的形状去找,会正好找不到它。**
+  - **⭐ 藏得深的那条不在散文里**:thresholds 的 premise 在**造帧函数**里 ——
+    `make_frame` 递的 untrained talent6 桩,**正是它让 `X.ConsiderW` 两条分支的
+    `or talent6:IsTrained()` 惰性、threshold 才扫得出来**;天花板一退休,
+    **sections 2/3/4 三节一起悬空**。q_aim 那条只是注释里一句 cross-check,划掉后**断言一字不动**。
+  - **⭐ 替代理由不看等级带**:两条 build row 把四个 Bone Guard 点**在 12 级前花完**
+    (default 1/3/5/7、`wkbuild` 1/9/10/12),t20 行**最早 20 级**才存在 ⇒
+    每次帽子跃迁都在 bypass 不可训练的世界里。**新 section 7** 读 shipped build row 断言这个 gap。
+  - **⭐⭐ 主产出:修正的代价是条件 (c) 有了寿命 —— 天花板一直遮着它。**
+    桩改成参数后跑 shipped `X.ConsiderW`:**trained ⇒ section 4 的每个 threshold 全塌到 0**,
+    两条分支都是;最响一格 **rank-4 lane 8 → 0**。那个 8 就是 `wkbuild` 延迟加点买的全部东西
+    ⇒ **(c) 在 12-19 级成立,20 级作废**,而**这仓唯一一枚后期帧(26 级、Bone Guard 已 rank 4)
+    就站在寿命外面**。**不撤销 `wkbuild`,不提请重审**。
+  - **⭐ q_aim 的修正是收窄不是放宽**:丢掉「for most of a turbo game」那半句,supply 变成
+    **前中期**判词、对后期**沉默**。结论不动 —— 理由 (2)(自卫分支在 catch-all 上游)**不看等级**。
+  - **⭐ glob 地平线这次是量出来的「没有」**:parked 帧的 WK 是**全语料唯一一个 supply 不是
+    阻塞项的位**(26 级 / Q rank 4 / cd 0 / mp 762 / R rank 3 ⇒ ShouldSaveMana 预留也是 0,
+    **四个 conjunct 一个不挡**),**挡住它的是几何**:568u 环 **0 人**,最近活敌 **10,309u**
+    ⇒ 全称命题**活着**。已把该帧接进 `fixture_files()`(存在性 + basename 双保险,
+    GH #236 落地不管 move 还是 copy **只读一次**)+ **新 section 4** 对着文件断言读数。
+  - **⭐ 变异 8 个 7 抓 1 对照。⚠️ M7 本来是对照,它逃逸了 —— 那是个真洞**:
+    `reincarn_rank` 当时没人读,可它是 section 1 第四个 conjunct 的全部依据;补上断言后立刻变成抓到。
+    **一个逃逸的对照,先问它是不是该逃逸。** 变异一律先 `diff` 确认非 no-op、还原用备份不用
+    `git checkout`;`bots/` 在 M1 后逐字节还原(`git status` 里 `bots/` 干净)。
+  - **诚实边界**:**一枚帧**,杀得死全称命题**不是分布**,全轮没有一句说 20 级以上占多少;
+    section 6 证明 bypass **解除** threshold,**不证明它触发过**,也永远证明不了
+    (GH #260 dumper 丢 unique 天赋行);section 6 定的是**分支测试**的价,不是顶上
+    `HasModifier` guard 的价(residual 仍在 bypass 文件里)。
+  - **registry**:PENDING 4 → **2**,`CEILING` 4 → **2**(`CEILING == pending_count()` 绑定
+    强制同一改动内完成)。**剩下两行 `corpus_scale.lua` / `test_level_gate_census.lua`
+    全在 harness/director 名下(GH #236),本组不再欠这笔债。**
+  - **验证**:`luacheck_gate.sh` **0 警告 exit 0**(容器本来没有 luacheck,gate 自己装的);
+    `tests/run_py_tests.sh` **51/0**;Lua filter:`wk_` **177/0**(`wk_bone_guard` 21→**24**、
+    `wk_q_aim` 9→**11**)、`level_premise` 5/0、`corpus_scale` 8/0、`gate_claim` 10/0、
+    `level_gate_census` 15/0、`smoke_load` 3/0、`focus_build` 10/0、`fixture_talent` 9/0、
+    `lategame_talent` 8/0。
+    **全量套件单进程跑不完(GH #124),本轮未跑全量 —— 是没跑,不是跑绿了。**
+    **未用 `RULE6_BYPASS`。**
+  - **下一棒**:backlog **-39** —— `wkbuild` 的取证语料**全部 ≤12 级**,而 (c) 的寿命
+    结束在 20 级;-37 已为 `wkrosh` 点名过同一形状。**两条要的是同一批帧**,
+    并成**一个**语料请求(域仍 queue `hero-10`),不要各提各的。
+
 - 2026-08-28T16:57Z(报告 `iterations/reports/hero/20260828T165744Z.md`;轴 **backlog -37:
   `wkrosh` 的两条读数并成一棒 —— ceiling 的 tail argument 与 floor 的余量**;
   **新开 GH #281** 交 harness/总监)

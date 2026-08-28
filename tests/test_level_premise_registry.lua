@@ -113,13 +113,11 @@ local WINDOW = 14
 local PENDING = {
     ['tests/corpus_scale.lua']                     = 'harness -- states the ge20==0 policy itself (GH #236)',
     ['tests/test_level_gate_census.lua']           = 'harness/director -- the 22 GH #84 verdicts (GH #235)',
-    ['tests/test_wk_bone_guard_thresholds.lua']    = 'hero -- untrained-stub-is-turbo-reality claim',
-    ['tests/test_wk_q_aim_preflight.lua']          = 'hero -- level distribution note',
 }
 
 -- The debt, as a number.  Kept as its own constant so the ratchet below can check
 -- that it still DESCRIBES the list -- see CEILING_TRACKS_PENDING.
-local CEILING = 4
+local CEILING = 2
 
 -- CEILING_TRACKS_PENDING.  The ceiling assertion says this number "may only
 -- fall", and until 2026-08-28 nothing enforced that: raising it to 9 and touching
@@ -138,6 +136,55 @@ end
 -- CLEARED, newest first.  A row leaves this list when the VERDICT above the
 -- premise was re-read, not when the sentence was deleted -- so what the row
 -- becomes is a line saying what the re-read decided.
+--
+--   test_wk_q_aim_preflight.lua  (hero, 2026-08-28)
+--     The premise was reason (1)'s cross-check: the shipped build leaves
+--     Wraithfire Blast at rank 1 through level 11, "and GH #84's census read a
+--     turbo high-water of 19, so rank 1 is what WK plays with for most of a turbo
+--     game".  With the ceiling retired the correction cuts BOTH WAYS, and the
+--     honest reading is NARROWER than the one it replaces: the levels where the
+--     ability stops being scarce are reachable, so supply is a claim about the
+--     early and mid game and is SILENT about the late game instead of covering
+--     it.  The assertion under the note never needed the census -- it measures
+--     the build level at which rank 4 arrives -- so it stands unchanged and only
+--     the clause dressing it as a cross-check is struck.  The verdict does not
+--     move, because reason (2) (the recently-damaged branch sits UPSTREAM of the
+--     catch-all and takes the combat frames) never depended on a level.
+--     What the re-read ADDED is the horizon check: section 1's tripwire
+--     enumerated `ls tests/fixtures` while the only post-cap frame in the repo
+--     sat in iterations/pending/, so its universal was a statement about one
+--     directory -- the exact mechanism GH #281 carries repo-wide.  Checked rather
+--     than assumed here, and the universal SURVIVES: that frame's Wraith King is
+--     the one case in the corpus where supply is NOT the blocker (level 26,
+--     Wraithfire Blast rank 4, off cooldown, 762 mana), and its 568u ring is
+--     empty by a margin of most of a map -- nearest living enemy 10,309u.  The
+--     frame is now enumerated by fixture_files() so the universal covers it
+--     mechanically, and new section 4 asserts the reading against the file so a
+--     future move cannot turn a measured answer back into an unasked question.
+--
+--   test_wk_bone_guard_thresholds.lua  (hero, 2026-08-28)
+--     The premise was load-bearing in the frame BUILDER, not in prose: make_frame
+--     handed X.ConsiderW an untrained talent6 stub because "an untrained stub is
+--     the turbo reality (GH #84: level >= 20 on 0 of 210 hero-slots)", and that
+--     stub is what makes the two `or talent6:IsTrained()` disjuncts inert so the
+--     charge thresholds can be swept at all.  With the ceiling retired the stub
+--     needed a reason that is still true, and it has one that never looks at the
+--     reachable range: condition (c) is a claim about WHEN THE CAP RISES, and
+--     both shipped rows spend all four Bone Guard points by hero level 12
+--     (default 1/3/5/7, 'wkbuild' 1/9/10/12) -- eight levels below the earliest
+--     level at which the t20 row can exist.  Every cap transition the file sweeps
+--     therefore happens while the bypass is untrainable.  New section 7 asserts
+--     that gap off the shipped build rows rather than leaving it as prose.
+--     The re-read also PRICED what the correction costs, which the ceiling had
+--     hidden: the stub is now a PARAMETER, and driving the shipped ConsiderW with
+--     it trained collapses every threshold section 4 read to zero on both
+--     branches -- rank-4 lane goes 8 -> 0.  So condition (c) has a LIFETIME.  The
+--     'wkbuild' delay buys its frequency advantage over levels 12-19 and that
+--     advantage expires at 20, and post-cap turbo demonstrably plays past the
+--     expiry (this hero at 26, Bone Guard already rank 4, in the parked frame).
+--     Not shown, and it cannot be shown here: that the bypass ever fires in a
+--     game.  The dumper drops hero-unique talent rows (GH #260) and slot 6 is
+--     one, so a corpus read of talent6:IsTrained() returns zero either way.
 --
 --   test_wk_roshan_mana_ceiling.lua  (hero, 2026-08-28)
 --     The premise WAS the verdict's supporting clause, not decoration: the file
@@ -363,9 +410,11 @@ tests['[hero] the stale-premise registry shrinks or holds, never grows'] = funct
         still .. ' registry files still argue from the retired premise; the '
         .. 'registered ceiling is ' .. CEILING .. ' (9 on 2026-08-27, lowered as '
         .. 'test_wk_bone_guard_talent_bypass.lua, test_wk_fact_anchor.lua, '
-        .. 'test_lion_hex_talent_slot.lua, test_focus_build_level_legality.lua and '
-        .. 'test_wk_roshan_mana_ceiling.lua were re-read). This number is a debt, '
-        .. 'so it may only fall.')
+        .. 'test_lion_hex_talent_slot.lua, test_focus_build_level_legality.lua, '
+        .. 'test_wk_roshan_mana_ceiling.lua, test_wk_bone_guard_thresholds.lua and '
+        .. 'test_wk_q_aim_preflight.lua were re-read). This number is a debt, '
+        .. 'so it may only fall. What is left belongs to the harness/director '
+        .. 'seats (GH #236 owns the ordering); the hero desk owes none of it.')
 
     -- When a row is genuinely re-read, delete it from PENDING in the same change.
     -- Leaving a settled row on the list makes the ceiling read as more debt than

@@ -17,10 +17,35 @@
 --       branch 1   nStack / maxStack >= 0.6      (needs a single nearby target)
 --       branch 2   nStack == maxStack            (lane front or farming)
 --   with `talent6:IsTrained()` as the only bypass on either -- a level-20 test
---   (test_wk_fact_anchor.lua section 2) that the GH #84 census read on 0 of 210
---   turbo hero-slots.  Both tests are thresholds ON THE CAP, so raising the cap
---   raises the bank WK must hold before he will release anything.  Early Bone
---   Guard points make his own Bone Guard rarer.
+--   (test_wk_fact_anchor.lua section 2).  This block used to add that the GH #84
+--   census read level 20 on 0 of 210 turbo hero-slots, i.e. that the bypass was
+--   dead and the thresholds were the whole rule.  CORRECTED 2026-08-28 (GH #235):
+--   that zero was the batch harness's 10-minute economy cap, and the first frame
+--   taken past it has THIS hero at level 26 with Bone Guard already at rank 4.
+--   The bypass is live from level 20 on, and section 6 below measures what it
+--   does.  Both tests are thresholds ON THE CAP, so raising the cap raises the
+--   bank WK must hold before he will release anything.  Early Bone Guard points
+--   make his own Bone Guard rarer -- see WHERE THAT HOLDS.
+--
+-- WHERE THAT HOLDS (this is what replaced the census, 2026-08-28)
+--   The sweep below needs the bypass inert, and it used to get that from the
+--   ceiling: level 20 never happened, so talent6 never existed.  With the ceiling
+--   retired the inertness has to come from somewhere that is still true, and it
+--   does -- from the DOMAIN OF THE QUANTITY rather than from the reachable range.
+--   Condition (c) is a claim about WHEN THE CAP RISES, and both shipped rows have
+--   spent all four Bone Guard points by hero level 12 (default 1/3/5/7, the
+--   'wkbuild' row 1/9/10/12; the last test in this file pins both).  Twelve is
+--   eight levels below the earliest level at which talent6 can exist, so every
+--   cap transition this file sweeps happens while the bypass is untrainable, and
+--   the untrained stub is the right frame for the question being asked.
+--   Section 7 asserts that gap mechanically instead of leaving it as prose.
+--
+--   The honest cost of the correction is that condition (c) now has a LIFETIME.
+--   From level 20 the bypass short-circuits both branches unconditionally, so the
+--   'wkbuild' delay buys its frequency advantage over levels 12-19 and that
+--   advantage EXPIRES -- and post-cap turbo demonstrably plays past the expiry
+--   (ten hero-slots at 22-27 in a 24.9-minute naturally-ended game).  Section 6
+--   reads the expiry out of the shipped function rather than asserting it.
 --
 -- WHAT IS PINNED HERE
 --   1. the frame is honest (the release CAN fire there, so silence is a decision
@@ -47,6 +72,23 @@
 --   * No real frame.  This is the shipped X.ConsiderW under the mock API.
 --   * The datafeed numbers in section 5 are RECORDED, not re-derived; this test
 --     cannot reach the network.
+--   * Section 6 shows the bypass DISARMS the thresholds when talent6 is trained.
+--     It does not show the bypass ever fires in a game.  No frame this repo holds
+--     can: the dumper drops hero-unique talent rows before writing them (960
+--     hero-frames, 67 talent sightings, zero unique rows --
+--     tests/test_lategame_talent_visibility.lua, GH #260), and slot 6 is a
+--     `special_bonus_unique_*` row.  A corpus read of talent6:IsTrained() comes
+--     back zero whether or not it is trained, so the zero is not evidence.
+--     tests/test_wk_bone_guard_talent_bypass.lua carries that residual, together
+--     with the second one section 6 inherits: if the engine only carries
+--     modifier_skeleton_king_bone_guard while charges >= 1, X.ConsiderW's own top
+--     guard re-imposes the ammunition test the bypass lifts.  Section 6 holds
+--     that modifier true by construction, so it prices the BRANCH TESTS and not
+--     the guard above them.
+--   * The level-26 reading is ONE frame.  It kills the universal ("level 20 does
+--     not happen in turbo") because a universal dies to one counterexample; it is
+--     not a distribution, and nothing here says how much of a turbo game is spent
+--     past level 20.
 
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
@@ -69,7 +111,13 @@ local tests = {}
 --              and that enemy is his current target              -> branch 1 only
 -- Keeping the two apart is what makes a silence attributable to one threshold.
 
-local function make_frame(where, boneLevel, stacks)
+--
+-- `talentTrained` (default false) arms the t20 bypass `talent6:IsTrained()`.
+-- Sections 1-4 leave it false, which is the level-1..19 world every cap
+-- transition in the shipped builds happens in; section 6 sets it true to price
+-- what the bypass does once it CAN be trained.
+
+local function make_frame(where, boneLevel, stacks, talentTrained)
     api.reset_modules()
 
     local maxCharges = MAX_CHARGES[boneLevel]
@@ -110,11 +158,18 @@ local function make_frame(where, boneLevel, stacks)
             if name == BONE then return bone end
             if name == 'skeleton_king_reincarnation' then return reincarnation end
             -- sTalentList is empty under the mock, so the file's
-            -- `bot:GetAbilityByName(sTalentList[6])` arrives here as nil. An
-            -- untrained stub is the turbo reality (GH #84: level >= 20 on 0 of
-            -- 210 hero-slots), and it is what makes the disjuncts inert.
+            -- `bot:GetAbilityByName(sTalentList[6])` arrives here as nil.  This
+            -- used to hand back an untrained stub unconditionally, on the ground
+            -- that "an untrained stub is the turbo reality (GH #84: level >= 20
+            -- on 0 of 210 hero-slots)".  CORRECTED 2026-08-28 (GH #235): that
+            -- zero was the batch cap, not turbo.  The stub is still untrained for
+            -- sections 1-4, but now for the reason in WHERE THAT HOLDS -- the cap
+            -- transitions being swept are all spent by hero level 12 -- and it is
+            -- a PARAMETER, so section 6 can price the trained side instead of
+            -- assuming it away.
             if name == nil then
-                return api.MakeAbility('mock_t20_talent', { IsTrained = false })
+                return api.MakeAbility('mock_t20_talent',
+                    { IsTrained = (talentTrained == true) })
             end
             return api.MakeAbility(name)
         end,
@@ -132,8 +187,8 @@ local function make_frame(where, boneLevel, stacks)
     return X, bot, enemy
 end
 
-local function fires(where, boneLevel, stacks)
-    local X = make_frame(where, boneLevel, stacks)
+local function fires(where, boneLevel, stacks, talentTrained)
+    local X = make_frame(where, boneLevel, stacks, talentTrained)
     return X.ConsiderW() > 0
 end
 
@@ -291,19 +346,26 @@ tests['[GH #104] the Wraithfire dot is recorded as a PER-SECOND figure'] = funct
         .. 'compared against')
 end
 
+-- Hero levels at which a build row spends a Bone Guard point (ability index 2).
+-- Module scope because section 7 asks the same question of the same rows, and a
+-- second copy of the parser is a second thing to keep in step.
+local function bone_level_list(src, name)
+    local row = src:match('local ' .. name .. ' = {%s*{([%d,]+)}')
+    assert(row, name .. ' must still be a single build row in ' .. WK_SRC)
+    local levels, lv = {}, 0
+    for n in row:gmatch('%d+') do
+        lv = lv + 1
+        if n == '2' then levels[#levels + 1] = lv end
+    end
+    return levels
+end
+
 tests['[GH #17] wkbuild still delays Bone Guard rather than dropping it'] = function()
     -- The re-argued (c) is about WHEN the cap rises, so it is false the moment
     -- the rows stop being a permutation of the same four points.
     local src = read_file(WK_SRC)
     local function bone_levels(name)
-        local row = src:match('local ' .. name .. ' = {%s*{([%d,]+)}')
-        assert(row, name .. ' must still be a single build row in ' .. WK_SRC)
-        local levels, lv = {}, 0
-        for n in row:gmatch('%d+') do
-            lv = lv + 1
-            if n == '2' then levels[#levels + 1] = lv end
-        end
-        return table.concat(levels, '/')
+        return table.concat(bone_level_list(src, name), '/')
     end
     assert(bone_levels('tAllAbilityBuildList') == '1/3/5/7',
         'the default row reaches the 8-charge cap at hero level '
@@ -313,6 +375,98 @@ tests['[GH #17] wkbuild still delays Bone Guard rather than dropping it'] = func
         'the wkbuild row now takes Bone Guard at '
         .. bone_levels('tKillBuildList') .. ', recorded 1/9/10/12. It is a '
         .. 'DELAY, not a drop -- if that changed, so did condition (c).')
+end
+
+----------------------------------------------------------------------
+-- 6. What the t20 bypass does, now that it is reachable (2026-08-28, GH #235).
+--
+-- Sections 2-4 measure the thresholds with talent6 untrained.  That used to be
+-- the only world -- the GH #84 census read level 20 on 0 of 210 turbo hero-slots
+-- and the bypass was therefore dead weight.  It is not dead: the first frame
+-- taken past the removed 10-minute batch cap has this hero at level 26 with Bone
+-- Guard at rank 4 (iterations/pending/tpgap_159_fixture/, t=1382.2 of a
+-- 24.9-minute naturally-ended game).
+--
+-- So the question the correction opens is not "does the threshold still hold"
+-- but "for how long", and that is answerable off the shipped function.  Both
+-- disjuncts are `<threshold> or talent6:IsTrained()`, so a trained talent6
+-- should collapse every threshold section 4 read to zero.  Measured, not
+-- asserted: sweep the same grid and read the required bank back out.
+
+local function min_bank_that_fires_with_talent(where, boneLevel)
+    for stacks = 0, 12 do
+        if fires(where, boneLevel, stacks, true) then return stacks end
+    end
+    return nil
+end
+
+tests['[GH #17] a trained t20 talent zeroes every threshold section 4 read'] = function()
+    for _, where in ipairs({ 'lane', 'duel' }) do
+        for lv = 1, 4 do
+            local untrained = min_bank_that_fires(where, lv)
+            local trained = min_bank_that_fires_with_talent(where, lv)
+            assert(trained == 0, string.format(
+                'on the %s branch at Bone Guard rank %d the release still needs a '
+                .. 'bank of %s with talent6 TRAINED (it needs %s untrained). Both '
+                .. 'branch tests are written `<threshold> or talent6:IsTrained()`, '
+                .. 'so a trained t20 row must release off an empty bank; if it does '
+                .. 'not, the bypass is not the bypass this file and '
+                .. "tests/test_wk_bone_guard_talent_bypass.lua both price, and "
+                .. "'wkbuild' condition (c) has to be re-argued at every level, not "
+                .. 'just below 20.', where, lv, tostring(trained), tostring(untrained)))
+            assert(untrained ~= nil and untrained > 0, string.format(
+                'the untrained arm of this comparison read a required bank of %s on '
+                .. 'the %s branch at rank %d. It has to be positive, or the two arms '
+                .. 'are the same measurement and this section proves nothing about '
+                .. 'the bypass.', tostring(untrained), where, lv))
+        end
+    end
+end
+
+tests["[GH #17] condition (c) therefore has a LIFETIME, and it ends at level 20"] = function()
+    -- Stated as the difference it makes rather than as a level: at rank 4 the
+    -- untrained rule wants a full 8-charge bank on the lane branch, and the
+    -- trained rule wants none.  That gap IS the frequency advantage the 'wkbuild'
+    -- delay is bought with, and it is gone from the level the t20 row is taken.
+    local untrained = min_bank_that_fires('lane', 4)
+    local trained = min_bank_that_fires_with_talent('lane', 4)
+    assert(untrained == 8 and trained == 0, string.format(
+        'the rank-4 lane threshold reads %s untrained / %s trained, recorded 8 / 0. '
+        .. 'The 8 is what makes early Bone Guard points cost frequency; the 0 is why '
+        .. 'that cost stops being paid once the t20 row is trained. If either moved, '
+        .. 'the expiry argument in WHERE THAT HOLDS moved with it.',
+        tostring(untrained), tostring(trained)))
+end
+
+----------------------------------------------------------------------
+-- 7. The gap the untrained stub now stands on, asserted instead of narrated.
+--
+-- Sections 2-4 are only about a world where talent6 cannot be trained.  With the
+-- level ceiling retired that is no longer "all of turbo", so what keeps them
+-- honest is that every cap transition they sweep is SPENT before the bypass can
+-- exist.  That is a fact about the shipped build rows, so read it off them.
+
+local TALENT_FIRST_LEVEL = 20   -- t20 row; FunLib/aba_skill.lua puts a talent at
+                                -- every hero level i >= 10 with i % 5 == 0.
+
+tests['[GH #17] every Bone Guard point is spent well below the t20 bypass'] = function()
+    local src = read_file(WK_SRC)
+    for _, name in ipairs({ 'tAllAbilityBuildList', 'tKillBuildList' }) do
+        local levels = bone_level_list(src, name)
+        assert(#levels == 4, string.format(
+            '%s spends %d Bone Guard point(s), not 4 -- sections 2-4 sweep ranks '
+            .. '1-4 and the domain argument is about all four of them',
+            name, #levels))
+        local last = levels[#levels]
+        assert(last < TALENT_FIRST_LEVEL, string.format(
+            '%s takes its last Bone Guard point at hero level %d, at or above the '
+            .. 'level %d t20 row. The untrained stub in make_frame is justified by '
+            .. 'this gap and by nothing else since GH #235 retired the level '
+            .. 'ceiling: if a cap transition can happen after the bypass is '
+            .. 'trainable, sections 2-4 are measuring a case the bot does not '
+            .. 'always play, and this file owes a swept talent6 there too.',
+            name, last, TALENT_FIRST_LEVEL))
+    end
 end
 
 return tests

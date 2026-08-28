@@ -18,9 +18,22 @@
 --   (1) SUPPLY.  The catch-all is the LAST of nine branches competing for one
 --       14-second ability.  The shipped build (tAllAbilityBuildList) leaves
 --       Wraithfire Blast at rank 1 -- 14s cooldown -- from hero level 2 all the
---       way to level 11, and GH #84's level census read a turbo high-water of 19
+--       way to level 11, and rank 4 (8s) does not arrive before level 14.
+--       Section 3 pins both build facts.
+--
+--       This used to add "and GH #84's level census read a turbo high-water of 19
 --       across 210 hero-slots, so rank 1 is what WK actually plays with for most
---       of a turbo game.  Section 3 pins that build fact.
+--       of a turbo game".  CORRECTED 2026-08-28 (GH #235): that high-water was
+--       the batch harness's 10-minute economy cap, not turbo.  The correction cuts
+--       BOTH WAYS and the honest reading is narrower than the one it replaces:
+--       the levels where Wraithfire Blast stops being scarce are reachable after
+--       all, and the one post-cap frame this repo holds shows exactly that --
+--       Wraith King at level 26 with Wraithfire Blast at rank 4 and off cooldown.
+--       So supply is a claim about the EARLY AND MID game, where the build facts
+--       put it, and it is silent about the late game rather than covering it.
+--       Section 3 no longer cross-checks against a census; section 4 records the
+--       frame that retired it.  Reason (2) never depended on a level and is
+--       untouched, so the disposition (no `wkqaim` written) does not move.
 --
 --       Measured on real frames: across this repo's fixture library, EVERY frame
 --       that has a living Wraith King with two or more living enemies inside 568u
@@ -45,6 +58,26 @@
 -- red and names the frame, which is precisely the real frame `wkqaim` would need.
 -- That is the opposite of pinning the corpus size as an equation, which GH #106
 -- filed as a hazard.
+--
+-- THE HORIZON (added 2026-08-28, the reason this round happened)
+-- --------------------------------------------------------------
+-- Section 1's scan enumerated `ls tests/fixtures`, and the only frame in this
+-- repo taken past the removed 10-minute batch cap is parked one directory away
+-- in iterations/pending/ behind GH #236.  So the tripwire's universal ("no frame
+-- reaches the branch") was, strictly, a statement about one directory, and a
+-- scan that cannot see a frame renders that blindness the same way it renders a
+-- measured zero.  That is the mechanism the sibling Wraith King files were caught
+-- by on 2026-08-28 (tests/test_wk_roshan_lategame_reconciliation.lua; GH #281
+-- carries it repo-wide).
+--
+-- Here it was checked rather than assumed, and the answer is that the universal
+-- SURVIVES: the parked frame's Wraith King is alive at level 26 with Wraithfire
+-- Blast rank 4 and off cooldown -- the one frame in the repo where supply is NOT
+-- what empties the domain -- and the nearest living enemy is 10,309u away, so
+-- the 568u ring is empty and the frame never becomes a row.  The frame is now
+-- enumerated (fixture_files below) so the universal covers it mechanically, and
+-- section 4 pins the reading so a future move of the file cannot quietly turn
+-- this measured answer back into an unasked question.
 --
 -- HONEST BOUNDS -- READ BEFORE QUOTING ANY NUMBER FROM HERE
 --   * The fixture library is a CURATED set of frames, cut for other
@@ -85,6 +118,10 @@ local function read_file(path)
     return body
 end
 
+-- The parked post-cap frame (GH #235/#236).  It lives one directory OUTSIDE
+-- tests/fixtures/, which is the whole reason it is named here: see THE HORIZON.
+local PARKED = 'iterations/pending/tpgap_159_fixture/f_260826_155416_slardar_tpgap.lua'
+
 local function fixture_files()
     local files = {}
     local p = assert(io.popen('ls tests/fixtures'))
@@ -93,6 +130,24 @@ local function fixture_files()
     end
     p:close()
     table.sort(files)
+    -- Appended, not globbed: this scan's universal is only as wide as what it
+    -- enumerates, and until 2026-08-28 it enumerated one directory while the only
+    -- post-cap frame the repo holds sat in another.  Guarded on existence AND on
+    -- basename, so the day GH #236 lands the frame in tests/fixtures/ it is read
+    -- exactly once whether that landing is a move or a copy -- a frame counted
+    -- twice would inflate wk_frames, which is a floor this file leans on.
+    local base = PARKED:gsub('.*/', '')
+    local already = false
+    for _, f in ipairs(files) do
+        if f:gsub('.*/', '') == base then already = true; break end
+    end
+    if not already then
+        local fh = io.open(PARKED, 'r')
+        if fh then
+            fh:close()
+            files[#files + 1] = PARKED
+        end
+    end
     return files
 end
 
@@ -332,18 +387,117 @@ T['section 3: the shipped build leaves Wraithfire Blast at rank 1 through hero l
     end
 end
 
-T['section 3: rank 1 is the rank a turbo game actually plays with (level census cross-check)'] = function()
+T['section 3: Wraithfire Blast is not maxed before hero level 14'] = function()
     local builds = shipped_builds(read_file(SRC))
-    -- GH #84 read level >= 20 on 0 of 210 hero-slots, high-water 19.  The point is
-    -- not the exact high-water; it is that the level at which Wraithfire Blast
-    -- stops being a 14-second ability sits deep into the reachable range, so the
-    -- catch-all is bidding for a scarce cast for most of the game.
+    -- This test used to be titled "the rank a turbo game actually plays with
+    -- (level census cross-check)" and its note read "GH #84 read level >= 20 on 0
+    -- of 210 hero-slots, high-water 19 ... the level at which Wraithfire Blast
+    -- stops being a 14-second ability sits deep into the reachable range".
+    -- CORRECTED 2026-08-28 (GH #235): the census was the batch cap.  What the
+    -- assertion actually measures is a BUILD fact and always was -- the level at
+    -- which rank 4 arrives -- so the assertion is unchanged and only the census
+    -- clause that dressed it as a cross-check is struck.  What is lost with that
+    -- clause is the "for most of the game" half: how much of a turbo game is
+    -- played below 14 is a corpus question this file does not ask.  Section 4
+    -- records the one post-cap frame, which is on the other side of it.
     for i, order in ipairs(builds) do
         local rank4 = level_of_rank(order, 1, 4)
         assert(rank4 == nil or rank4 >= 14, string.format(
             'build row %d maxes Wraithfire Blast at hero level %s; the pre-flight assumes it is not '
             .. 'maxed until level 14 or later', i, tostring(rank4)))
     end
+end
+
+-- ---------------------------------------------------------------- section 4 --
+-- The post-cap frame, read rather than assumed (2026-08-28, GH #235; see THE
+-- HORIZON).  This is the one frame in the repo where reason (1)'s supply story
+-- does NOT hold -- Wraithfire Blast is rank 4 and ready -- so it is the frame
+-- that would open `wkqaim`'s domain if the geometry cooperated.  It does not.
+--
+-- RECORDED from PARKED on 2026-08-28.  The reading is asserted against the file
+-- while the file is reachable, so this cannot decay into a quoted number.
+
+local PARKED_WK = {
+    level = 26, blast_rank = 4, blast_cd = 0, mp = 762, reincarn_rank = 3,
+    ring = 0,              -- living enemies inside RING (568u)
+    nearest_enemy = 10309, -- floor, in units, on the nearest LIVING enemy
+}
+
+T['section 4: the post-cap frame is enumerated by this file\'s own scan'] = function()
+    local fh = io.open(PARKED, 'r')
+    if not fh then return end   -- GH #236 landed it; the ls above now carries it.
+    fh:close()
+    local seen = false
+    for _, path in ipairs(fixture_files()) do
+        if path == PARKED then seen = true; break end
+    end
+    assert(seen, PARKED .. ' exists but is not in fixture_files(). Section 1 is a '
+        .. 'universal over whatever this function enumerates: dropping the only '
+        .. 'post-cap frame in the repo puts the tripwire back behind the horizon '
+        .. 'it was widened past on 2026-08-28.')
+end
+
+T['section 4: on the post-cap frame supply is fine and the RING is what is empty'] = function()
+    local ok, fx = pcall(dofile, PARKED)
+    if not ok or type(fx) ~= 'table' then return end   -- frame moved; section 1 still covers it.
+    local me
+    for _, u in ipairs(fx.units) do
+        if u.name == WK and u.alive then me = u end
+    end
+    assert(me, PARKED .. ' no longer carries a living Wraith King, so the reading '
+        .. 'recorded in PARKED_WK is about a frame that is not there any more.')
+    assert(me.level == PARKED_WK.level, string.format(
+        'the parked Wraith King reads level %s, recorded %d -- that level is the '
+        .. 'whole reason the GH #84 ceiling was retired here',
+        tostring(me.level), PARKED_WK.level))
+
+    local q = ability(me, 'skeleton_king_hellfire_blast')
+    assert(q and q.level == PARKED_WK.blast_rank and (q.cd or 0) <= PARKED_WK.blast_cd,
+        string.format('the parked Wraith King reads Wraithfire Blast rank %s cd %s, '
+            .. 'recorded rank %d cd %d. This frame matters BECAUSE supply is not the '
+            .. 'blocker on it; if the ability were unlearned or on cooldown it would '
+            .. 'be an ordinary section 1 row and section 4 would be saying nothing.',
+            tostring(q and q.level), tostring(q and q.cd),
+            PARKED_WK.blast_rank, PARKED_WK.blast_cd))
+    assert(me.mp >= Q_MANA[PARKED_WK.blast_rank], string.format(
+        'the parked Wraith King holds %s mana against a rank-%d cost of %d; the '
+        .. '"supply is fine here" reading needs the cast to be affordable too',
+        tostring(me.mp), PARKED_WK.blast_rank, Q_MANA[PARKED_WK.blast_rank]))
+
+    -- X.ShouldSaveMana is the fourth conjunct section 1 reproduces, so "nothing
+    -- blocks the cast on this frame" is not complete without it.  It costs
+    -- nothing here for a reason worth recording: Reincarnation is rank 3, and
+    -- R_MANA[3] is 0, so there is no mana to hold back.
+    local r = ability(me, 'skeleton_king_reincarnation')
+    assert(r and r.level == PARKED_WK.reincarn_rank
+        and me.mp - Q_MANA[PARKED_WK.blast_rank] >= R_MANA[r.level],
+        string.format('the parked Wraith King reads Reincarnation rank %s '
+            .. '(recorded %d, reserve %d mana). If the reserve is no longer zero, '
+            .. 'X.ShouldSaveMana may be what empties this frame and the section 4 '
+            .. 'reading "the RING is what is empty" needs re-deriving.',
+            tostring(r and r.level), PARKED_WK.reincarn_rank,
+            R_MANA[PARKED_WK.reincarn_rank] or -1))
+
+    -- The geometry, which is what actually keeps the domain empty on this frame.
+    local ring, nearest = 0, math.huge
+    for _, u in ipairs(fx.units) do
+        if u.name:match('^npc_dota_hero_') and u.team ~= me.team and u.alive then
+            local d = dist(u, me)
+            if d < nearest then nearest = d end
+            if d <= RING then ring = ring + 1 end
+        end
+    end
+    assert(ring == PARKED_WK.ring, string.format(
+        'the parked frame now has %d living enemies inside %du, recorded %d. If '
+        .. 'this is >= 2 the frame is a section 1 row with supply available, i.e. '
+        .. 'the tripwire should be red and `wkqaim` finally has the real frame '
+        .. 'queue.json hero-1 asked for -- re-read the pre-flight, do not silence '
+        .. 'this.', ring, RING, PARKED_WK.ring))
+    assert(nearest >= PARKED_WK.nearest_enemy, string.format(
+        'the nearest living enemy on the parked frame is %.0fu away, recorded at '
+        .. 'least %du. The emptiness of this ring is not marginal -- it is most of '
+        .. 'a map -- and that margin is why one post-cap frame does not reopen the '
+        .. 'candidate.', nearest, PARKED_WK.nearest_enemy))
 end
 
 return T
