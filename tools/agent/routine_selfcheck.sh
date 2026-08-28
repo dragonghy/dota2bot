@@ -171,6 +171,35 @@ else
     unchecked 'the un-ruled-queue check'
 fi
 
+# Added 2026-08-28T19:xxZ (strategy).  The leg above watches ONE end of the
+# delivery path -- a request nobody ruled.  The other end had nothing on it:
+# a stream still recording "等总监裁 `X` 入集(仍挂着)" after that ruling
+# landed.
+#
+# Measured founding case: `campexit` was admitted at 06:5xZ and commit
+# `e7e57979` put it in `test_set.md` line 2; the strategy charter then carried
+# "`campexit` 入集裁定仍欠" in FOUR consecutive 当前状态 entries, and the first
+# of them printed `开工 HEAD == e7e5797` -- the ruling commit -- in its own
+# report.  The leg above ran in all four rounds and said `un-ruled: none`,
+# truthfully: the wait was never a queue request, so the instrument that
+# reports pending rulings could not see it, and nobody reconciled the two.
+#
+# The cost is not the sentence.  Two of those rounds picked their work unit by
+# reading their own 下一格 as 阻塞 -- an expired wait breaks nothing, reddens
+# nothing, and quietly decides what the next rounds do.
+#
+# It is a QUESTION like the others (see the tool's LIMITS): a stream may be
+# waiting on a SECOND ruling about an already-armed id, which this tool cannot
+# tell from an expired admission wait.  But LOOK.
+sc_leg 'stale-waits'
+printf '\n=== expired waits (ruling already landed) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/stale_waits.py --no-age
+    note $?
+else
+    unchecked 'the expired-wait check'
+fi
+
 # Added 2026-08-26T01:0xZ (director).  The director charter's 『下次触发』 list
 # carried "stable-v1/stable-v2 打 tag" for TEN consecutive rounds, each round
 # deferring it as not-done.  Measured on 08-26: both refs had been on `origin`
