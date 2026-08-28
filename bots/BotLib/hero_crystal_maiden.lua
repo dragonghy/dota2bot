@@ -182,16 +182,31 @@ sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_3']
 -- not measured.
 --
 -- Bearing has to go with the tranquils: with arcane in the opener its recipe
--- would buy a SECOND pair of boots (movement speed does not stack) and strand
--- 1500 gold.  No corpus unit owns one, but that zero is OUT-OF-WINDOW, not
--- empty -- the corpus ends at 11:30 and Bearing is a 4225g fifth item.
--- 2026-08-27: "the corpus ends at 11:30" was true of the corpus, never of turbo.
--- Owner priority P3 (GH #108) lifted the batch game cap from 10 to 25 minutes,
--- and the first frame taken past it (GH #235) is at 23:02 with this Crystal
--- Maiden at level 22 and holding boots_of_bearing.  The OUT-OF-WINDOW reading is
--- confirmed rather than overturned -- Bearing does get bought, just later than
--- anything the old corpus could see -- but the zero is now BUYABLE evidence, so
--- it should be re-measured rather than argued the next time this is opened.
+-- would buy a SECOND pair of boots and strand 1500 gold.  That is not a rules-
+-- of-Dota claim, it is a fact about THIS repo's purchase code, and it is the
+-- one leg this removal now stands on: item_purchase_generic.lua's _stillNeeds
+-- refuses a second pair of basic boots when the hero already has boots, EXCEPT
+-- when the current build target is in its tBootsUpgrades whitelist -- and
+-- item_boots_of_bearing is in that whitelist, while item_arcane_boots is in
+-- Item['tEarlyBoots'].  Keeping the terminus on the arcane line would switch
+-- that guard off on purpose.
+--
+-- 2026-08-28 (GH #279): the OTHER leg is gone, and the terminus is PRICED.
+-- This used to add "no corpus unit owns one, and that zero is OUT-OF-WINDOW,
+-- not empty -- the corpus ends at 11:30 and Bearing is a 4225g fifth item".
+-- Two fixtures landed with THIS Crystal Maiden holding boots_of_bearing, and
+-- the item's own modifier dates the purchase to t=773.5s = 12:53 at level 14,
+-- net worth 7746, with the tranquils and the drum both consumed out of the
+-- inventory.  So the out-of-window reading was right but only just: the
+-- terminus sat 83 seconds past the old corpus edge, not a game away.  It is
+-- reachable, it is measured, and the deletion pays a real price for it --
+-- including one the file had never stated: the candidate keeps
+-- item_ancient_janggo and deletes its only upgrade, so it ends on a drum whose
+-- charges do not replenish where the shipped line ends on Bearing's, which do.
+-- What keeps the deletion cheap is that the aura's observed reach is thin --
+-- 1 ally-frame out of 8.  All of it is asserted in tests/test_cm_pos5_boots.lua
+-- section 3, ceilings included, so a corpus that makes the terminus look
+-- valuable turns that file red instead of leaving this comment stale.
 --
 -- WHY THIS IS GATED AND NO LONGER SHIPPED (GH #144, director 2026-08-23):
 -- 9fa4898 landed it UNGATED.  The mirrored A/B reports a difference of

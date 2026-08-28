@@ -19,9 +19,20 @@
 --       the whole build, not just the boots -- and the confound is reported
 --       (mean level per arm) rather than argued away.
 --
--- It also counts, corpus-wide, who owns Boots of Bearing (the terminus the
--- swap removes) and how long the observation window is, so that zero can be
--- read as OUT-OF-WINDOW rather than as EMPTY.
+-- It also PRICES, corpus-wide, the terminus the swap removes: who owns Boots of
+-- Bearing, when they bought it (the item's own modifier carries its age), what
+-- the recipe consumed to get there, and how far the aura reaches in the same
+-- frame.  Until 2026-08-28 there were no owners and this channel could only
+-- report the observation window, so the zero was read as OUT-OF-WINDOW rather
+-- than as EMPTY; it now has owners and reports the purchase instead.
+--
+-- CLOCK CONVENTION, measured rather than assumed.  A modifier's `elapsed` runs
+-- on an engine clock whose origin PRECEDES the frame's `time` (which starts at
+-- the horn): the corpus contains modifiers with elapsed > time, and the counter
+-- `pregame_mods` below reports how many.  So an acquisition instant is
+-- `time - elapsed`, and it is allowed to come out negative for something held
+-- from spawn.  A small elapsed on a bought item is therefore safe to read
+-- directly -- 11.9s of age at t=785.4 cannot be a clock-origin artefact.
 --
 -- EXTERNAL ANCHORS (the dump carries no ability or item specs):
 --   * mana costs by rank, datafeed hero_id=5 read 2026-08-23 -- same table as
@@ -45,6 +56,12 @@
 --   SLOT <fixture> <T|A|X> <ability> <rank> <cost> <mp> <blocked01>
 --   DELTA <mana_delta> <unblocked>  on arm T only
 --   BEARING <fixture> <unit>        any corpus unit holding boots_of_bearing
+--   TERM <fixture> <unit> <t> <lv> <nw> <mp> <maxmp> <acq> <tranq01> <janggo01>
+--                                   <aura_allies> <team_alive>
+--                                   one per Bearing owner: the terminus, priced.
+--                                   <acq> = t - elapsed of the item's own
+--                                   modifier, i.e. when it entered the
+--                                   inventory (see CLOCK CONVENTION above).
 --   WINDOW <min> <median> <max>     fixture timestamps, seconds
 --   DONE
 -- Absence of the final DONE line is treated by the test as a failed subprocess.
@@ -86,6 +103,32 @@ local function arm_of(tHeld)
     return 'X'
 end
 
+--- Age of a named modifier on a unit, in seconds, or nil if it is not there.
+local function modifier_age(u, sName)
+    for _, m in ipairs(u.modifiers or {}) do
+        if m.name == sName then return m.elapsed end
+    end
+    return nil
+end
+
+local BEARING_AURA = 'modifier_item_boots_of_bearing_aura'
+
+--- How far the Bearing aura reached in this frame: allies (excluding the owner
+--- itself, which always carries it) holding the aura modifier, and how many
+--- living units the owner's team has on the frame at all -- the denominator,
+--- so a "1 of 1" cannot be read as a "1 of 5".
+local function aura_reach(fx, nOwner)
+    local u = fx.units[nOwner]
+    local nHit, nTeam = 0, 0
+    for i, o in ipairs(fx.units) do
+        if o.team == u.team and o.alive and i ~= nOwner then
+            nTeam = nTeam + 1
+            if modifier_age(o, BEARING_AURA) ~= nil then nHit = nHit + 1 end
+        end
+    end
+    return nHit, nTeam
+end
+
 local arms = { T = { n = 0, lv = 0, slots = 0, blocked = 0 },
                A = { n = 0, lv = 0, slots = 0, blocked = 0 },
                X = { n = 0, lv = 0, slots = 0, blocked = 0 } }
@@ -98,16 +141,30 @@ for _, path in ipairs(fixture_files()) do
     if type(fx) == 'table' and fx.units and fx.time then
         bump('fixtures')
         times[#times + 1] = fx.time
-        for _, u in ipairs(fx.units) do
+        for iU, u in ipairs(fx.units) do
             local tHeld = {}
             for _, s in ipairs(u.items or {}) do
-                if s ~= '' then
-                    tHeld[s] = true
-                    if s == 'boots_of_bearing' then
-                        bump('bearing_owners')
-                        out:write(string.format('BEARING %s %s\n', path, u.name))
-                    end
-                end
+                if s ~= '' then tHeld[s] = true end
+            end
+            -- The clock-origin control (see CLOCK CONVENTION in the header):
+            -- modifiers older than the frame's own clock exist, so `elapsed`
+            -- is not measured from the horn.
+            for _, m in ipairs(u.modifiers or {}) do
+                bump('mods_total')
+                if (m.elapsed or 0) > fx.time then bump('pregame_mods') end
+            end
+            if tHeld.boots_of_bearing then
+                bump('bearing_owners')
+                out:write(string.format('BEARING %s %s\n', path, u.name))
+                local nAge = modifier_age(u, 'modifier_item_boots_of_bearing')
+                local nHit, nTeam = aura_reach(fx, iU)
+                out:write(string.format(
+                    'TERM %s %s %.1f %d %d %d %d %.1f %d %d %d %d\n',
+                    path, u.name, fx.time, u.level or 0, u.net_worth or 0,
+                    u.mp or 0, u.max_mp or 0,
+                    nAge and (fx.time - nAge) or -99999,
+                    tHeld.tranquil_boots and 1 or 0,
+                    tHeld.ancient_janggo and 1 or 0, nHit, nTeam))
             end
             if u.name == 'npc_dota_hero_crystal_maiden' and u.alive then
                 bump('cm_frames')

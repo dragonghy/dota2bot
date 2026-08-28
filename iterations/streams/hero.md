@@ -22,7 +22,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--36. **GH #279:CM pos5 被删掉的 Boots of Bearing 终点第一次可定价了** —— **下一棒优先做这条**
+-37. **回棒 ③ 剩下的三行 WK(见 -35 / -33)** —— **下一棒做这条**。
+   从 `test_wk_roshan_mana_ceiling.lua` 起,和 `test_wk_roshan_mana_floor.lua`
+   收窄中的余量(141 → **129**)**并成一棒读** —— ceiling 那份的 crossing-level
+   tail argument 和这个余量**是同一个量的两种说法**。
+
+-36. ~~**GH #279:CM pos5 被删掉的 Boots of Bearing 终点第一次可定价了**~~
+   **2026-08-28T13:51Z done —— 删除维持,但从两条腿变一条腿;`bots/` **只改注释**;
+   无新 gate id;`state.json` 新增 `cmboots_TERMINUS_PRICED_20260828`(`gated:false`);
+   零 AWS;不申请入集;不提 queue;**GH #279 已评论并关闭**。
+   报告 `iterations/reports/hero/20260828T135142Z.md`。**
+   - **两条防线死在同一对帧上**:`#BEARING == 0` 与 `WINDOW.max < 1500` 守的是同一个论证
+     (「那个 0 是 OUT-OF-WINDOW 不是 EMPTY」)。**「还没人走到」这种防线,一旦有人走到就无话可说** ⇒
+     不修断言,**把 0 换成价格**。
+   - **⭐ 终点定价:t=773.5s = 12:53.5,level 14,net worth 7746。** 物品自己的 modifier 驮着年龄
+     (785.4 帧 elapsed 11.9 / 790.4 帧 elapsed 16.9),**相隔 5 秒的两帧算到小数点后一位一致**。
+     owner **既无 `tranquil_boots` 也无 `ancient_janggo`** ⇒ recipe 确实吃掉了组件。
+   - **⭐ 时钟约定是测的不是假设的**:全语料 1471 个 modifier 里 **108 个 elapsed 大于自己那帧的 time**
+     ⇒ `elapsed` 不从哨声起算,购入时刻 = `t - elapsed`;偏移是**几十秒**量级,
+     所以 **11.9s 龄的物品可以直接定价**。已作为控制项断言。
+   - **⭐ 「窗口外」当年对,但只对了 83 秒**:旧边界 t=690.5,购入 t=773.5。这**修正了** 08-27 那条注
+     —— 它从**单枚 23:02 越帽帧**外推出「比旧语料能看到的任何东西都晚」,实际是 **12:53、14 级**。
+     **从一枚帧外推出的「晚得多」,被两枚帧改成「晚 83 秒」。**
+   - **⭐ 活下来那条腿换了地基**:从「移速不叠加」这种 Dota 规则断言,换成**本仓源码读数** ——
+     `_stillNeeds` 有鞋时拒买基础鞋,**除非** target 在 `tBootsUpgrades` 白名单里,
+     而 `item_boots_of_bearing` **就在里面**,`item_arcane_boots` 又在 `Item['tEarlyBoots']` 里 ⇒
+     **在 arcane 线上留着终点 = 故意把那道门关掉**。三条事实逐条断言。
+     (排除了一个担心:会跳过 `item_tranquil_boots` 的 `tSkipBoots` 在 **ARDM 换英雄**分支里,Turbo 走不到。)
+   - **⭐ 两条此前从没写过的代价**:(1) **candidate 留着 `item_ancient_janggo` 却删掉它唯一的升级** ——
+     出货线上鼓是**组件**,candidate 线上鼓是**终点**;鼓的充能不回,Bearing 的回。
+     (2) 4225g 的终点出货线 12:53 实打实走到。**让删除仍然便宜的是光环实测覆盖很薄:8 个 ally-frame 里 1 个**
+     (4 中 1 / 4 中 **0**),**写成天花板** —— 哪天它 buff 半个队就变红,而不是让结论悄悄过期。
+   - **变异 7 抓 + 1 对照**;M3/M4 动 `bots/` 后逐字节还原。
+     **⭐ 过程里被咬了一口**:M1 收尾用 `git checkout` 还原变异,**把本轮自己对该文件的改动一起还原了**。
+     **在自己刚改过的文件上做变异,还原手段不能是 `git checkout`** —— 后续改用备份文件。
+   - **诚实边界**:两枚 owner-frame **同一局** ⇒ 定的是一次购买的价不是分布;dump **不区分**光环施放者/接收者
+     modifier,断言的是「非 owner 队友身上带着该 aura modifier」**不是**「buff 已被施加」;
+     组件最后一次被看到在**别的局**(t ≤ 661.5),**没有任何一局被全程看着完成合成**;鼓的充能代价是论证不是测量。
+   - **`cmboots` 的门与 armed 状态一个字没动**;`cmboots_RESOLVE_20260825T2130Z` 的 **RETURN_ON_C 未被触碰**,
+     Route A / GH #190 仍是活着的重新入集路径 —— 本轮**不是**在重打那一仗。
+   - 原始立案正文:
    - `tests/test_cm_pos5_boots.lua:439` 红,而这**正是该文件被写出来要产生的红**:
      `b50a7727` 的两帧里 **`npc_dota_hero_crystal_maiden` 自己就带着 `boots_of_bearing`**
      (`items = { null_talisman, magic_wand, observer_ward, boots_of_bearing, dustof_appearance, glimmer_cape, …}`),
@@ -2172,6 +2211,63 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T13:51Z(报告 `iterations/reports/hero/20260828T135142Z.md`;轴 **GH #279:
+  被删掉的 Boots of Bearing 终点定价**;**删除维持,但两条腿变一条腿**;**GH #279 已评论并关闭**)
+  —— 自检 **exit 0**,无 findings;owner 四条优先项**没有一条球在本组**;
+  `[hero]` 带帧证据的 open issue 就是 **#279 本身**(上一轮亲手开的、置于 backlog 顶端)⇒ 直接认领。
+  **本轮 `bots/` 只改注释**(`hero_crystal_maiden.lua` 的 OUT-OF-WINDOW 段);无新 gate id;
+  `state.json` 新增 `cmboots_TERMINUS_PRICED_20260828`(`gated:false`);
+  **零 AWS**;不申请入集;**不提 queue**。
+  - **⭐ §3 的两条防线守着同一个论证,死在同一对帧上。** `#BEARING == 0` 与 `WINDOW.max < 1500`
+    合起来说的是「那个 0 是 OUT-OF-WINDOW 不是 EMPTY」。`b50a7727` 的两枚帧里
+    **CM 本人**(焦点英雄、本仓自己的 pos_5 线)握着 `boots_of_bearing` ⇒
+    **「还没人走到」这种防线,一旦有人走到就无话可说**。所以不修断言,**把 0 换成价格**。
+  - **⭐ 价格:t=773.5s = 12:53.5,level 14,net worth 7746。** 物品自己的 modifier 驮着年龄,
+    785.4 帧 elapsed 11.9、790.4 帧 elapsed 16.9,**相隔 5 秒的两帧算到小数点后一位完全一致** ——
+    **算术在自查,不是挑读数**。owner **既无 tranquil 也无鼓** ⇒ recipe 确实吃掉了组件。
+  - **⭐ 时钟约定测出来了**:1471 个 modifier 里 **108 个 elapsed 大于自己那帧的 time**,
+    ⇒ `elapsed` **不从哨声起算**,购入时刻 = `t - elapsed`,对出生就带的东西**允许算成负数**。
+    偏移是几十秒量级,所以 **11.9s 龄的物品可以直接定价** —— 已作为控制项断言,免得后人重推。
+  - **⭐ 「窗口外」当年是对的,但只对了 83 秒**(旧边界 690.5,购入 773.5)。这**修正了** 08-27 那条注:
+    它从**单独一枚 23:02 越帽帧**(GH #235,CM 22 级)外推出「比旧语料能看到的任何东西都晚」,
+    实际 **12:53、14 级**。**一枚帧外推的「晚得多」,被两枚帧改成「晚 83 秒」。**
+  - **⭐ 删除仍然成立,但活下来那条腿换了地基** —— 从「移速不叠加」的 Dota 规则断言,
+    换成**本仓 purchase 源码**:`_stillNeeds` 有鞋时拒买基础鞋,**除非** build target 在
+    `tBootsUpgrades` 白名单里;**`item_boots_of_bearing` 就在那张白名单里**,
+    而 `item_arcane_boots` 在 `Item['tEarlyBoots']` 里 ⇒ **在 arcane 线上留着终点,
+    等于故意把那道本来会拦住二次购鞋的门关掉**。三条事实逐条断言。
+    (顺带排除:会跳过 `item_tranquil_boots`、从而让 recipe **卡住**的 `tSkipBoots`,
+    在 **ARDM 换英雄重建**分支里,**Turbo 走不到** ⇒ 本仓的形状是「买双鞋」不是「卡住」。)
+  - **⭐ 两条这个文件此前从没写过的代价**:(1) **candidate 留着 `item_ancient_janggo`,
+    却删掉了它唯一的升级** —— 出货线上鼓是**组件**(12:53 被吃掉),candidate 线上鼓是**终点**;
+    鼓的充能**不回**,Bearing 的**回**。(2) 4225g 的终点,出货线 **12:53 就实打实走到**。
+    **而让删除仍然便宜的是光环实测覆盖很薄:8 个 ally-frame 里只有 1 个**(4 中 1 / 4 中 **0**)——
+    **写成天花板**(`nHit*2 < allyFrames`),分母一起断言:哪天它 buff 半个队就变红,
+    **而不是让结论悄悄过期**。
+  - **变异 7 抓 + 1 对照**(购入时刻塌回帧时刻 / 光环把每个队友都算成被 buff /
+    `item_boots_of_bearing` 出白名单 / `item_arcane_boots` 出 `tEarlyBoots` / 两帧互相矛盾 /
+    owner 同时握 tranquil / 时钟对照弄瞎;对照 = 改没人读的 `net_worth`,仍绿)。
+    M3/M4 动 `bots/` 后逐字节还原。**⭐ 过程里被咬了一口并记下**:M1 收尾用
+    `git checkout <文件>` 还原变异,**把本轮自己对该文件的改动一起还原了** ⇒
+    **在自己刚改过的文件上做变异,还原手段不能是 `git checkout`**,后续改用备份文件。
+  - **诚实边界**:两枚 owner-frame **同一局** ⇒ 定的是**一次购买**的价、不是分布;
+    dump **不区分**光环的施放者/接收者 modifier,断言的是「**非 owner 的队友身上带着该 aura modifier**」
+    **不是**「buff 已被施加」;组件最后一次被看到是在**别的局**(t ≤ 661.5),
+    **没有任何一局被全程看着完成这次合成**;鼓的充能代价是**从物品数据论证**,不是测量。
+  - **`cmboots` 自己的门与 armed 状态一个字没动**;`cmboots_RESOLVE_20260825T2130Z` 的
+    **RETURN_ON_C 裁决未被触碰**,Route A / GH #190 仍是活着的重新入集路径 ——
+    **本轮不是在重打那一仗**。
+  - 铁律 6:`luacheck_gate.sh` **0 warnings / exit 0**(容器本来没有 luacheck,gate 自己装的);
+    **未用 `RULE6_BYPASS`**。全量套件一进程跑不完(GH #124)⇒ 影响面单跑:
+    `cm_pos5_boots` **19/0**、`cm_` **178/0**、`boots` **28/0**、`corpus_scale` **8/0**、
+    `gate_claim` **10/0**、`smoke_load` **3/0**。
+    **trunk 红况**:上一轮点名的 `axe_t15_payoff`(13/0)与 `wk_bone_guard`(21/0)**已绿**;
+    **本轮清掉 `test_cm_pos5_boots.lua`**;仍红的只剩 `test_gamemode_world_assertion.lua`(1 failure)——
+    **协同组辖区,GH #278 已交出去**,本组不动手。
+  - **下一棒**:backlog **-37**(= 回棒 ③ 的三行 WK,见 -35/-33),从
+    `test_wk_roshan_mana_ceiling.lua` 起,**与 `test_wk_roshan_mana_floor.lua` 收窄中的余量
+    (141 → 129)并成一棒读**。`hero-19`/`hero-20`/`hero-21` 仍 pending;
+    WK `ConsiderQ` 的 `nDamage` 修复仍等归档扫描;**GH #268 那一格未被认领,不由本组扩**。
 - 2026-08-28T10:51Z(报告 `iterations/reports/hero/20260828T105124Z.md`;轴 **GH #274 重读**;
   **两个已发表 verdict 都 UNCHANGED**;**新开 GH #278** 交协同组)—— 自检 **worst exit 3**:
   findings 全部来自 `cadence` 腿,`UNCERTIFIABLE: none`,stable-v2 锚点三项 ok,

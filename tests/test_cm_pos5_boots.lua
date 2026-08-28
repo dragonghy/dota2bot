@@ -76,10 +76,14 @@
 --     earlier in the game.
 --   * Boots of Bearing (4225g, = tranquil_boots + ancient_janggo +
 --     ring_of_tarrasque) left the pos_5 list, because with arcane in the
---     opener its recipe would buy a second pair of boots and movement speed
---     does not stack.  No unit in the corpus owns one -- but the corpus ends
---     at t=690.5 (11:30) and Bearing is a fifth item, so that zero is
---     OUT-OF-WINDOW, not EMPTY.
+--     opener its recipe would buy a second pair of boots.  2026-08-28 (GH
+--     #279): this bullet used to end "no unit in the corpus owns one -- but
+--     the corpus ends at t=690.5 (11:30) and Bearing is a fifth item, so that
+--     zero is OUT-OF-WINDOW, not EMPTY."  There are owners now, so the zero is
+--     retired and section 3 prices the purchase instead: t=773.5s (12:53),
+--     level 14, 83 seconds past the old corpus edge.  The removal stands on
+--     its structural leg alone, and that leg is now read out of
+--     item_purchase_generic.lua rather than asserted (section 3 again).
 --   * A test elsewhere paid for it: the role discriminator in
 --     tests/test_replay_260820_cm_es_aftershock.lua used to read "pos_5 has
 --     tranquil, pos_4 has arcane, they share no basic".  Both openers carry
@@ -89,15 +93,19 @@
 --     because that is what the build bought then.
 --
 -- WHAT WOULD REOPEN IT (assertions below, not promises)
---   * the corpus gaining a Boots of Bearing owner, or its window extending
---     past ~11:30 (the 25-minute batch cap, GH #108) -- either makes the
---     removed terminus priceable instead of unpriceable;
+--   * SPENT 2026-08-28, and this is what a tripwire firing looks like: "the
+--     corpus gaining a Boots of Bearing owner, or its window extending past
+--     ~11:30" was listed here, both halves fired on the same pair of frames,
+--     and section 3 was rewritten from a zero into a price.  Its replacements
+--     are the ceilings in section 3 -- the aura reaching half the team, a
+--     non-CM owner, a Bearing owner still holding the components;
 --   * the arcane arm's unaffordable-slot count ceasing to be zero;
 --   * the tranquil arm's shortfall closing on its own (a mana item arriving
 --     elsewhere in the pos_5 line, or nKeepMana moving).
 
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
+local cs  = require('corpus_scale')
 
 local HERO   = 'bots/BotLib/hero_crystal_maiden.lua'
 local ITEMS  = 'bots/FunLib/aba_item.lua'
@@ -118,6 +126,7 @@ local function sweep()
         'the corpus sweep subprocess did not finish (no DONE line)')
     local c, arm, delta, rows, slots, bearing = {}, {}, {}, {}, {}, {}
     local window
+    local term = {}
     for line in text:gmatch('[^\n]+') do
         local k, v = line:match('^C ([%w_]+) (%-?%d+)$')
         if k then c[k] = tonumber(v) end
@@ -134,6 +143,16 @@ local function sweep()
         end
         local bf, bu = line:match('^BEARING (%S+) (%S+)$')
         if bf then bearing[#bearing + 1] = { fix = bf, unit = bu } end
+        local tf, tu, tt, tlv, tnw, tmp, tmax, tacq, ttq, tjg, tah, tan =
+            line:match('^TERM (%S+) (%S+) ([%d%.]+) (%d+) (%d+) (%d+) (%d+) '
+                .. '(%-?[%d%.]+) (%d) (%d) (%d+) (%d+)$')
+        if tf then
+            term[#term + 1] = { fix = tf, unit = tu, t = tonumber(tt),
+                lv = tonumber(tlv), nw = tonumber(tnw), mp = tonumber(tmp),
+                maxmp = tonumber(tmax), acq = tonumber(tacq),
+                tranquil = ttq == '1', janggo = tjg == '1',
+                aura_allies = tonumber(tah), team_alive = tonumber(tan) }
+        end
         local rf_, ra, rlv, rmp, rmaxmp, rhp, rmaxhp, rs, rb, rj =
             line:match('^ROW (%S+) (%a) (%d+) (%d+) (%d+) (%d+) (%d+) (%d+) (%d+) (%d)$')
         if rf_ then
@@ -150,10 +169,10 @@ local function sweep()
                 blocked = sb == '1' }
         end
     end
-    return c, arm, delta, rows, slots, bearing, window
+    return c, arm, delta, rows, slots, bearing, window, term
 end
 
-local C, ARM, DELTA, ROWS, SLOTS, BEARING, WINDOW = sweep()
+local C, ARM, DELTA, ROWS, SLOTS, BEARING, WINDOW, TERM = sweep()
 
 --- The shipped pos_5 list, read out of the hero source rather than restated.
 --- (The M13 lesson: a census that copies the constant it measures reports the
@@ -433,23 +452,166 @@ tests['[hero] how much of the shortfall each mana delta reaches'] = function()
 end
 
 -- ---------------------------------------------------------------------------
--- 3. The removed terminus, and why its zero may not be spent as evidence.
+-- 3. The removed terminus, PRICED (GH #279, 2026-08-28).
+--
+-- This section used to rest on two defences and both expired on the same pair
+-- of frames.  It said the Bearing zero was OUT-OF-WINDOW rather than EMPTY,
+-- guarded by `#BEARING == 0` and `WINDOW.max < 1500`; b50a7727 added
+-- f_20260828_004757_venomancer_785/790, and in both of them
+-- npc_dota_hero_crystal_maiden -- a focus hero, on this repo's own pos_5 line --
+-- is holding boots_of_bearing.  A defence that says "no one has reached it yet"
+-- has nothing left to say once someone has.  So the zero is retired and the
+-- purchase is measured in its place.
+--
+-- WHAT THE PURCHASE COSTS AND WHEN IT LANDS.  The item's own modifier carries
+-- its age, so the acquisition instant is recoverable: t=785.4 with
+-- modifier_item_boots_of_bearing at elapsed 11.9, and t=790.4 at elapsed 16.9,
+-- both giving t=773.5s = 12:53.5.  Two frames five seconds apart agreeing to
+-- the decimal is the arithmetic checking itself.  Level 14, net worth 7746.
+-- That is comfortably inside the 25-minute turbo cap (GH #108), so the terminus
+-- is REACHABLE, not theoretical -- which is exactly what the old defence
+-- assumed it was not.
+--
+-- WHAT THE VERDICT DOES WITH THAT.  The removal STANDS, but on one leg instead
+-- of two, and the surviving leg is the structural one, now read out of the
+-- shipped purchase code rather than asserted from the rules of Dota:
+-- item_purchase_generic.lua's `_stillNeeds` refuses a second pair of basic
+-- boots when the hero already has boots -- UNLESS the current build target is
+-- in its tBootsUpgrades whitelist, and item_boots_of_bearing is in that
+-- whitelist.  Arcane boots are in Item['tEarlyBoots'], so HasBootsInMainSolt is
+-- true for the candidate's CM.  Keeping the terminus on the arcane line would
+-- therefore switch OFF the very guard that exists to stop the double purchase,
+-- deliberately, and buy the tranquil component anyway.  That is a source fact
+-- about this repo, asserted below, and no amount of new corpus moves it.
+--
+-- WHAT THE REMOVAL PAYS, STATED RATHER THAN WAVED OFF.  Three things, and the
+-- first two are new here:
+--   * The candidate keeps item_ancient_janggo and deletes its only upgrade.  On
+--     the shipped line the drum is a COMPONENT (the Bearing owner holds neither
+--     it nor the tranquils); on the candidate line the drum is a TERMINUS.
+--     Drum charges do not replenish and Bearing's do, so the candidate holds a
+--     decaying aura item where the shipped line ends with a refreshing one.
+--     Argued from the item, not measured -- the corpus has no charge channel.
+--   * 4225g of endpoint that the shipped line demonstrably reaches by 12:53.
+--   * The regen and slot costs already stated in the header.
+-- Against which: the aura's OBSERVED reach in the only two frames that have it
+-- is thin -- 1 ally-frame out of 8 -- and that is the reading that keeps the
+-- removal cheap.  It is asserted as a ceiling, so if the terminus ever starts
+-- buffing half the team the removal has to be re-read rather than re-assumed.
 
-tests['[hero] Boots of Bearing: unowned, and out of window rather than empty'] = function()
-    assert(#BEARING == 0,
-        'a corpus unit owns Boots of Bearing now (' .. tostring((BEARING[1] or {}).fix)
-        .. '). The terminus this change removed is priceable at last -- price it '
-        .. 'before leaving the removal in place.')
+tests['[hero] the terminus is priced now: bought at 12:53, not out of window'] = function()
+    cs.ratchet(#TERM, 2, 'Boots of Bearing owner-frames')
+    for _, r in ipairs(TERM) do
+        assert(r.unit == 'npc_dota_hero_crystal_maiden',
+            'a NON-CM unit owns Boots of Bearing now (' .. r.unit .. ' in ' .. r.fix
+            .. '). This section prices CM\'s own terminus; a different owner is a '
+            .. 'different question and must not be folded in silently.')
+        -- The purchase instant, not the observation instant. Anything at or
+        -- before 0 would mean the arithmetic ran off the clock's origin.
+        assert(r.acq > 0 and r.acq < r.t,
+            r.fix .. ': acquisition instant ' .. r.acq .. ' is not inside (0, '
+            .. r.t .. '); the modifier-age arithmetic has broken')
+        assert(r.acq < 1500,
+            r.fix .. ': Bearing bought at t=' .. r.acq .. 's, past the 25-minute '
+            .. 'turbo cap. Re-read whether it is reachable at all.')
+        assert(r.lv >= 12, r.fix .. ': owner is level ' .. r.lv
+            .. '; the terminus was priced at level 14')
+    end
+    -- Independent frames of the SAME purchase must agree on when it happened.
+    local lo, hi = TERM[1].acq, TERM[1].acq
+    for _, r in ipairs(TERM) do
+        if r.acq < lo then lo = r.acq end
+        if r.acq > hi then hi = r.acq end
+    end
+    assert(hi - lo < 1.0,
+        'the owner-frames disagree about the purchase instant by '
+        .. string.format('%.1f', hi - lo) .. 's (' .. lo .. '..' .. hi
+        .. '). Either they are different purchases -- in which case stop '
+        .. 'treating them as one -- or the modifier age is not what it looks like.')
+end
+
+tests['[hero] the recipe consumed its components, so the drum really is a step'] = function()
+    for _, r in ipairs(TERM) do
+        assert(not r.tranquil, r.fix .. ': the Bearing owner ALSO holds tranquil '
+            .. 'boots. That is the double-boots state this build change exists to '
+            .. 'avoid, showing up on the shipped line -- read it before going on.')
+        assert(not r.janggo, r.fix .. ': the Bearing owner ALSO holds ancient_janggo, '
+            .. 'so the drum was not consumed into it. The "drum is the step before '
+            .. 'Bearing" reading in the header is then wrong.')
+    end
+    -- The path is walked by frames that never reach the end of it, too.
+    cs.ratchet(C.cm_janggo, 14, 'CM frames owning ancient_janggo')
+end
+
+tests['[hero] what the aura actually reached, denominator included'] = function()
+    local nHit, nAllyFrames = 0, 0
+    for _, r in ipairs(TERM) do
+        nHit = nHit + r.aura_allies
+        nAllyFrames = nAllyFrames + r.team_alive
+        assert(r.team_alive > 0,
+            r.fix .. ': no living allies on the owner\'s team, so the aura reading '
+            .. 'has no denominator and 0 hits would mean nothing')
+    end
+    -- Iron rule 4(ii): a small integer count is reported with its share, not on
+    -- its own. Observed 1 of 8 ally-frames (1 of 4 at t=785.4, 0 of 4 at 790.4)
+    -- -- present, and thin. The ceiling is what carries the verdict: while the
+    -- terminus buffs under half the team it stays cheap to delete.
+    assert(nHit * 2 < nAllyFrames,
+        'the Bearing aura now reaches ' .. nHit .. ' of ' .. nAllyFrames
+        .. ' ally-frames (was 1 of 8). Past half the team the removed terminus '
+        .. 'is a team item, not a stat stick, and the deletion needs re-reading.')
+end
+
+tests['[hero] the clock the purchase instant is read off'] = function()
+    -- The honest caveat, measured instead of assumed: `elapsed` does not run
+    -- from the horn -- the corpus holds modifiers older than their own frame.
+    assert(C.mods_total > 0, 'no modifiers were swept at all')
+    assert(C.pregame_mods > 0,
+        'no modifier in the corpus is older than its frame any more. The header '
+        .. 'says elapsed runs on a clock that predates the horn; if that has '
+        .. 'stopped being visible, re-check what t-elapsed means.')
+    -- ...and that is precisely why a 12-second-old item is safe to date: the
+    -- offset the corpus shows is tens of seconds, not hundreds.
+    for _, r in ipairs(TERM) do
+        assert(r.t - r.acq < 60,
+            r.fix .. ': the Bearing modifier is ' .. (r.t - r.acq)
+            .. 's old, big enough for the clock-origin offset to matter. '
+            .. 'The purchase instant is no longer safe to read directly.')
+    end
+end
+
+tests['[hero] the guard that stops a second pair of boots is waived for Bearing'] = function()
+    -- The surviving leg of the removal, read out of the shipped source. If any
+    -- of these three facts changes, keeping Bearing off the arcane line stops
+    -- being free and the whole section has to be re-argued.
+    local src = read_file('bots/item_purchase_generic.lua')
+    local body = src:match('local function _stillNeeds%b()(.-)\nend')
+    assert(body, 'cannot find _stillNeeds in item_purchase_generic.lua')
+    assert(body:find('HasBootsInMainSolt', 1, true)
+        and body:find('tBootsUpgrades%[currentTarget%]'),
+        '_stillNeeds no longer gates the second pair of boots on '
+        .. 'HasBootsInMainSolt and the build target; re-read why Bearing was '
+        .. 'dropped from the arcane line')
+    local ups = body:match('tBootsUpgrades%s*=%s*{(.-)}')
+    assert(ups and ups:find('item_boots_of_bearing%s*=%s*true'),
+        'item_boots_of_bearing is no longer in _stillNeeds\'s tBootsUpgrades '
+        .. 'whitelist. It was the reason the double-boots purchase would go '
+        .. 'through unopposed on the arcane line.')
+    -- ...and arcane boots are what makes HasBootsInMainSolt true in the first
+    -- place, so the waiver actually fires for this candidate.
+    local early = read_file(ITEMS):match("Item%['tEarlyBoots'%]%s*=%s*{(.-)}")
+    assert(early and early:find('item_arcane_boots', 1, true),
+        'item_arcane_boots left Item[\'tEarlyBoots\'], so HasBootsInMainSolt no '
+        .. 'longer sees the candidate\'s boots and the waiver above is moot')
+end
+
+tests['[hero] the observation window, recorded rather than defended'] = function()
     assert(WINDOW ~= nil, 'the sweep must report its observation window')
-    assert(WINDOW.max < 1500,
-        'the corpus now reaches t=' .. WINDOW.max .. 's. Past ~11:30 a 4225g '
-        .. 'fifth item stops being out-of-window, and the Bearing zero above '
-        .. 'starts meaning something. Re-read it.')
-    -- The path up to the terminus IS walked, which is what makes the removal a
-    -- decision rather than a tidy-up: a third of the CM frames own the drum.
-    assert(C.cm_janggo >= 12,
-        'CM frames owning ancient_janggo: ' .. tostring(C.cm_janggo)
-        .. ' (was 12). The drum is the step before Bearing.')
+    -- Was `WINDOW.max < 1500`, a tripwire guarding the out-of-window reading.
+    -- That reading is retired, so the window is a ratchet now: it may grow, and
+    -- it shrinking means fixtures were deleted.
+    cs.ratchet(WINDOW.max, 790.4, 'corpus reach (seconds)')
+    cs.corpus(C.fixtures, 'cm pos_5 boots sweep')
 end
 
 -- ---------------------------------------------------------------------------
