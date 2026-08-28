@@ -251,6 +251,24 @@ _hi = src.find(LEG_END)
 check(_lo != -1 and _hi > _lo, "5-pre: the leg's source can be isolated")
 LEG_SRC = src[_lo:_hi] if (_lo != -1 and _hi > _lo) else ""
 
+# [director 20260828, GH #267 4b] The harness used to hand-roll `worst=0` plus a
+# two-line `note()`.  That was a MIRROR of the wrapper's accumulator, and this
+# file's own recorded trap (test 2a2) is "a test that mirrors the thing it
+# checks is checking the mirror" -- so when the accumulator became a real file
+# (tools/agent/selfcheck_tally.sh, source-attributed exit codes), the mirror
+# stopped matching and BOTH end-to-end cases went red on the harness rather than
+# on the leg.  It now sources the same file the wrapper sources, and announces
+# the leg the same way the wrapper does, so there is one copy of the accumulator
+# and this test exercises it.
+#
+# `. ./` and not a bare name: case 6 runs with an EMPTY PATH, where a bare-name
+# `.` argument would be searched for on PATH and found nowhere.  Both cases run
+# with cwd at a repo root, so the relative path is that repo's.
+HARNESS_PRE = ("set -u\n"
+               ". ./tools/agent/selfcheck_tally.sh\n"
+               "note() { sc_note \"$1\"; }\n"
+               "sc_leg 'trunk-red(lua)'\n")
+
 if shutil.which("lua5.1") is None:
     print("  SKIP  5: end-to-end needs lua5.1")
 elif not LEG_SRC:
@@ -265,9 +283,7 @@ else:
 
     def run_leg(tree):
         """Run the real leg source in `tree` -> (text, said_red, rc)."""
-        harness = ("set -u\nworst=0\n"
-                   "note() { [ \"$1\" -gt \"$worst\" ] && worst=\"$1\"; return 0; }\n"
-                   + LEG_SRC + "\nexit \"$worst\"\n")
+        harness = HARNESS_PRE + LEG_SRC + "\nexit \"$worst\"\n"
         try:
             p = subprocess.run(["bash", "-c", harness], cwd=tree,
                                capture_output=True, text=True, timeout=BUDGET_S)
@@ -343,9 +359,7 @@ else:
     # crash, not a test.
     BASH = shutil.which("bash") or "/bin/bash"
     try:
-        harness = ("set -u\nworst=0\n"
-                   "note() { [ \"$1\" -gt \"$worst\" ] && worst=\"$1\"; return 0; }\n"
-                   + LEG_SRC + "\nexit \"$worst\"\n")
+        harness = HARNESS_PRE + LEG_SRC + "\nexit \"$worst\"\n"
         p = subprocess.run([BASH, "-c", harness], cwd=REPO, timeout=120,
                            capture_output=True, text=True, env={"PATH": empty})
         out = p.stdout + p.stderr

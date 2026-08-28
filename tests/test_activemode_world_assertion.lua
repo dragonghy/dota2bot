@@ -13,8 +13,15 @@
 --
 -- (209, not the 210 this file said until 2026-08-28: the census counted three
 --  comment lines that MENTION the predicate as if they were call sites -- GH
---  #267, fixed in strip_line_comment below.  The claim is unchanged; the number
---  is now the one the sentence always meant.)
+--  #267, fixed in `strip_line_comment`.  The claim is unchanged; the number is
+--  now the one the sentence always meant.)
+--
+-- WHERE THE CENSUS LIVES NOW: tests/test_activemode_call_site_census.lua.
+-- It was MOVED there, not copied (GH #267 §4 ruling (c), director 2026-08-28),
+-- because this file cannot be tagged into 开工自检 -- it loads the whole fixture
+-- archive twice, ~4s -- while the census only greps `bots/`.  The pin that sat
+-- red for 22 hours is the one in that file; the numbers quoted in the prose
+-- above are asserted there.  If you change a count here, change it there.
 --
 -- WHY THIS IS A WORLD ASSERTION AND NOT A MISSING STUB
 -- ---------------------------------------------------
@@ -208,83 +215,6 @@ local function scan_mode_names()
     return ordered
 end
 
---- Cut a line at its first `--` that is NOT inside a quoted string.
---
--- GH #267 (director 2026-08-28T06:5xZ).  The census below counts "shipped call
--- sites", and its own prose says "shipped comparison lines" -- but the pattern
--- read PROSE too, so a comment that MENTIONS `bot:GetActiveMode()` moved the
--- number exactly like a new call would.  That is how this file went red on
--- 08-27 without one executable line changing: hero_zuus.lua grew a doc comment
--- quoting the very predicate this file is about.  Two more had been miscounted
--- since the pin was first taken (a commented-out clause in jmz_func.lua and a
--- commented-out local in mode_outpost_generic.lua), so the old 255/210 were
--- never the numbers the prose claimed.
---
--- FAILURE DIRECTION, and why the pin was RE-TAKEN rather than RAISED: raising
--- 255 -> 256 would have folded a comment into a count of executable sites
--- permanently, and the next doc line would demand the same courtesy.  The
--- assertion is unchanged ("every shipped comparison line is constant FALSE");
--- only the instrument now measures the set its name always claimed.
---
--- Deliberately conservative: `--` inside a string literal does NOT start a
--- comment, so a real call sitting after such a string is still counted.  The
--- naive `line:find('--')` would have dropped it -- an over-wide cut is the same
--- class of defect as the over-wide pattern this fixes.
-local function strip_line_comment(line)
-    local quote = nil
-    local i = 1
-    while i <= #line do
-        local c = line:sub(i, i)
-        if quote then
-            if c == '\\' then
-                i = i + 1
-            elseif c == quote then
-                quote = nil
-            end
-        elseif c == '"' or c == "'" then
-            quote = c
-        elseif c == '-' and line:sub(i + 1, i + 1) == '-' then
-            return line:sub(1, i - 1)
-        end
-        i = i + 1
-    end
-    return line
-end
-
---- Shipped call-site counts for the three things this file is about.
--- Counts EXECUTABLE occurrences only (see strip_line_comment / GH #267).
--- Long comments (`--[[ ... ]]`) are not tracked across lines; there are none
--- around these three patterns today, and the mutation batch would catch it if
--- one appeared, because the count would move without an executable line moving.
-local function scan_call_sites()
-    local out = { get_active_mode = 0, compare_lines = 0, teamfight_consumers = 0,
-                  commented_out = 0 }
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
-    for file in p:lines() do
-        for raw in io.lines(file) do
-            local line = strip_line_comment(raw)
-            for _ in line:gmatch('GetActiveMode%s*%(%s*%)') do
-                out.get_active_mode = out.get_active_mode + 1
-            end
-            if raw:match('GetActiveMode%s*%(%s*%)')
-                and not line:match('GetActiveMode%s*%(%s*%)')
-            then
-                out.commented_out = out.commented_out + 1
-            end
-            if line:match('GetActiveMode%s*%(%s*%)') and line:match('BOT_MODE_') then
-                out.compare_lines = out.compare_lines + 1
-            end
-            for _ in line:gmatch('J%.GetTeamFightLocation%s*%(') do
-                if not line:match('^%s*function') then
-                    out.teamfight_consumers = out.teamfight_consumers + 1
-                end
-            end
-        end
-    end
-    p:close()
-    return out
-end
-
 local tests = {}
 
 -- ---------------------------------------------------------------------------
@@ -394,8 +324,23 @@ tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = fu
     -- not 976: slardar and ogre_magi are DEAD on that frame and this sweep
     -- counts only `u.alive`. mode_nonzero is still 0 and the filter is still
     -- ignored on every one of the 974 -- again only the denominator moved.
-    assert(s.in_teamfight_1500 == 89, string.format(
-        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (89 when pinned)',
+    -- 89 -> 93 on 2026-08-28T09:xxZ (director): the replay desk added the two
+    -- GH #271 venomancer frames (f_20260828_004757_venomancer_785 / _790),
+    -- contributing 3 and 1 TRUE readings respectively -- measured by holding
+    -- each one out, and the two are additive (89+3+1). Hero-frames 974 -> 993,
+    -- not 994: lina is DEAD on the 785 frame (hp 0, alive=false) and this sweep
+    -- counts only `u.alive`. mode_nonzero is still 0 and the filter is still
+    -- ignored on every one of the 993 -- once again only the denominator moved.
+    --
+    -- HOW THIS RED WAS FOUND, which is the part worth keeping: not by anyone
+    -- running the suite, but by GH #267 §4b's own landing round opening this
+    -- file for the (c) split.  It had been red on trunk since the 07:05Z
+    -- landing.  That is #267's founding shape for the SECOND time in this same
+    -- file, and it is the argument for the split below: nothing in 开工自检 can
+    -- discover an untagged file, so the new source-attributed breakdown would
+    -- not have named it either.
+    assert(s.in_teamfight_1500 == 93, string.format(
+        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (93 when pinned)',
         s.in_teamfight_1500, s.hero_frames))
 end
 
@@ -497,45 +442,6 @@ tests['[reverse] GetTeamFightLocation hands that origin back as a location'] = f
     -- 1500 excluding self vs 1400 including self: the shell between them is the
     -- in-game path to an empty list, and it is the reason this is recorded as a
     -- candidate lever rather than dismissed as a harness artefact.
-end
-
-tests['[recorded] call-site census: how much rides on the missing datum'] = function()
-    local c = scan_call_sites()
-    -- GH #267: EXECUTABLE sites only.  Re-taken 2026-08-28 (was 255/210 while the
-    -- pattern still read comments); the claim did not move, the instrument did.
-    assert(c.get_active_mode == 253,
-        'GetActiveMode() call sites moved from 253 to ' .. c.get_active_mode)
-    assert(c.compare_lines == 209,
-        'lines comparing GetActiveMode() to a BOT_MODE_* moved from 209 to ' .. c.compare_lines)
-    assert(c.teamfight_consumers == 35,
-        'J.GetTeamFightLocation consumers moved from 35 to ' .. c.teamfight_consumers)
-end
-
-tests['[recorded] GH #267: the census separates prose from code, and says so'] = function()
-    local c = scan_call_sites()
-    -- The census must SEE the commented-out mentions and REFUSE to count them.
-    -- Asserting only the executable number would pass just as well on a scanner
-    -- that could not read comments at all -- which is what 255 came from.
-    assert(c.commented_out == 3,
-        'GetActiveMode() mentions inside comments moved from 3 to ' .. c.commented_out ..
-        ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
-        'never fold it into get_active_mode')
-    assert(c.get_active_mode + c.commented_out == 256,
-        'executable + commented must equal the raw pattern count (256); if it does ' ..
-        'not, strip_line_comment cut somewhere it should not have')
-
-    -- Direct unit checks on the cut, including the one the naive `find("--")`
-    -- gets wrong.
-    assert(strip_line_comment('local x = bot:GetActiveMode()')
-        == 'local x = bot:GetActiveMode()', 'a plain code line must survive whole')
-    assert(not strip_line_comment('-- local x = bot:GetActiveMode()')
-        :match('GetActiveMode'), 'a leading comment must be cut')
-    assert(not strip_line_comment('return true -- bot:GetActiveMode() ~= BOT_MODE_RETREAT')
-        :match('GetActiveMode'), 'a trailing comment must be cut')
-    assert(strip_line_comment('f("a--b") local x = bot:GetActiveMode()')
-        :match('GetActiveMode'), '`--` inside a string does not start a comment')
-    assert(strip_line_comment("f('a--b') local x = bot:GetActiveMode()")
-        :match('GetActiveMode'), 'single-quoted strings count too')
 end
 
 return tests

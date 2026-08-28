@@ -35,8 +35,20 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-worst=0
-note() { [ "$1" -gt "$worst" ] && worst="$1"; return 0; }
+# [director 20260828, GH #267 4b] The tally moved out to
+# tools/agent/selfcheck_tally.sh so that a leg's exit level is recorded WITH THE
+# LEG THAT RAISED IT.  `note` keeps its name and its signature -- every call
+# site below is unchanged -- but each leg now announces itself with `sc_leg`
+# first, and the tail prints the breakdown.  The reason is in that file's
+# header: for ~22 hours a real trunk red and a long-standing cadence gap were
+# the same integer, and every report in the window attributed the 3 to cadence
+# BY HAND.
+#
+# Sourced with a leading `./` for the same reason try_install_lua51 is: the
+# lua-leg test runs a slice of this file with an empty PATH, and a bare-name `.`
+# would search PATH and find nothing.  The wrapper cd's to the repo root above.
+. ./tools/agent/selfcheck_tally.sh
+note() { sc_note "$1"; }
 
 # [director 20260826, GH #171] A leg that DID NOT RUN is uncertifiable, not
 # clean.  Every `SKIP (no python3)` below used to be one unremarkable line with
@@ -59,13 +71,16 @@ unchecked() {
 # Not the fifth leg GH #205 rejected: that one would have RUN luacheck at 开工,
 # on an unchanged tree, answering a different question than rule 6 asks.  This
 # arms; the 13s still costs at the push, where it belongs.
+sc_leg 'push-gate'
 printf '=== iron rule 6 push gate (arm for this container) ===\n'
 bash tools/agent/arm_push_gate.sh || note 2
 
+sc_leg 'unlanded'
 printf '\n=== unlanded work (pushed to a branch, never landed) ===\n'
 python3 tools/agent/unlanded_commits.py --fetch
 note $?
 
+sc_leg 'cadence'
 printf '\n=== report cadence + published citations ===\n'
 python3 tools/agent/citation_audit.py --cadence --fetch "${extra[@]+"${extra[@]}"}"
 note $?
@@ -147,6 +162,7 @@ note $?
 # may be legitimately parked behind a wave slot that does not exist yet, and
 # `RECEIVED_NOT_SCHEDULED` is a real ruling this tool cannot tell from silence.
 # But LOOK.
+sc_leg 'queue-rulings'
 printf '\n=== un-ruled queue requests (director field) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     python3 tools/agent/pending_rulings.py --no-age
@@ -173,6 +189,7 @@ fi
 # It is a QUESTION like the others (see the tool's LIMITS): a MOVED anchor may
 # be a legitimate relocation, and in a shallow container invariant 3 comes back
 # UNCERTIFIABLE rather than ok.  But LOOK.
+sc_leg 'stable-anchors'
 printf '\n=== stable version anchors (铁律 3) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     python3 tools/agent/stable_anchors.py
@@ -194,6 +211,7 @@ fi
 # pop, and 开工自检 is the one command every stream runs before touching
 # anything.  Printing the command the reader can choose to run is the cheap
 # half; doing it for them is not worth that failure mode.
+sc_leg 'trunk-red(python)'
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     suite=$(bash tests/run_py_tests.sh 2>&1); suite_rc=$?
@@ -262,6 +280,7 @@ fi
 # same branch, and the test would look green while exercising nothing.  That is
 # this file's own recorded trap (test 2a2: "a test that mirrors the thing it
 # checks is checking the mirror") wearing different clothes.
+sc_leg 'trunk-red(lua)'
 printf '\n=== trunk health (fast Lua detectors) ===\n'
 
 # [director 20260826, GH #205] The install BODY moved out to
@@ -342,5 +361,7 @@ else
     note 2
 fi
 
+sc_report
+worst=$(sc_worst)
 printf '\nselfcheck worst exit: %d\n' "$worst"
 exit "$worst"

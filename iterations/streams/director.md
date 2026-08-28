@@ -6040,3 +6040,53 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑦批测台交棒⑤/⑥/⑦/⑩ ⑧`[bug] #249` ⑨#236 甲 ⑩#240 ⑪#207(第十六轮) ⑫#218 后续
   ⑬#217(第十五轮) ⑭#211(第十六轮) ⑮backlog §18 ⑯§16/§17 ⑰§BL.4(i) ⑱#75(第十八轮)
   ⑲**W35 周日邮件** ⑳`aimguard` 的 (a) ㉑`bbrespawn` 的 `readmit_on` ㉒盯 #257 的验收 1。
+
+- 2026-08-28T09:4xZ:总监触发。**两件主产出,而第二件是第一件的落地过程自己抓到的。**
+  报告 `iterations/reports/director/20260828T094500Z.md`。**零 AWS 调用、零支出;`bots/`/`game/` 一行未改;
+  `queue.json` 一字未动。**
+  **① 还上一轮的第①:`GH #267 §4(b)` 落地 —— 退出码按来源分列。** 新 `tools/agent/selfcheck_tally.sh`
+  (可 source),`routine_selfcheck.sh` 的 `note()` **保名保签名(7 个调用点一个没改)**,每条腿加 `sc_leg`,
+  收尾 `sc_report`;**`selfcheck worst exit:` 那一行逐字节不动**(各组 grep 它,测试钉住这一点)。
+  抽成单独文件是因为**验收要同时制造两个源**而整个自检 ~20s 且联网 —— 同 `ensure_lua_toolchain.sh`(#205)那一步。
+  **承重断言不是「分列打印出来了」而是 test 3:cadence 与 trunk-red 同时红时两个都要点名**
+  (那是 08-27 的形状,也是唯一一条装饰性实现过不了的);第二条是 **test 6:量具不许悄悄自相矛盾** ——
+  绕过 `sc_leg` 抬 `worst` 就打 `ATTRIBUTION BROKEN`,而不是让 `FINDINGS: none` 与 `worst exit: 3`
+  并排装权威(**那就是原缺陷穿上修复的衣服**)。验收 `tests/test_selfcheck_exit_attribution.py`
+  **26 检查 0 失败**,**变异 7/7 全红**、控制绿、还原后逐字节相同。
+  **⭐ 它在自己的验收里立刻多点了一个源,而那个源是本轮改动自己**:`test_selfcheck_lua_leg.py`
+  **手搓了一份 `worst`+`note()` 镜像**,累加器变成真文件后两个端到端用例红在 harness 上;
+  修法是**让它 source 同一个文件**(该测试自己的用例 2a2 就写着「mirrors the thing it checks is checking
+  the mirror」,当时说的是发现块,这次轮到累加器),并**核了它没被改空**(把腿里 `note 3` 改 `note 0`,5g 照旧红)。
+  **② (c) 的拆分打开那个文件,发现它此刻正红在 trunk 上 —— 同一文件里的第二个 22 小时级红。**
+  `test_activemode_world_assertion.lua:397` 的 corpus 钉 `in_teamfight_1500` 实为 **93/993** 而钉 89/974,
+  **不是 #267 修好的那条 census 断言**;**新装的分列也点不到它**,因为快腿按 tag 发现而该文件**没有 tag 也不能有**
+  (整个 fixture 档案加载两遍)⇒ **(c) 不是顺带的收尾,是这一半的正解**。
+  **归因是量出来的**:两个 fixture 各自拿掉重跑,`_785` +3/+9、`_790` +1/+10、**可加**(89+3+1=93);
+  hero-frames +19 不是 +20 因为 **`_785` 帧上 lina 是死的**(该 sweep 只数 `u.alive`),与该文件既有记账体例逐条对上;
+  祸首是 **replay-check 07:05Z(`b50a7727`)的两个 GH #271 venomancer fixture**,**世界断言本身没动,动的只有分母**。
+  按体例**重新取钉 89 → 93**。拆分产物 `tests/test_activemode_call_site_census.lua` 带 **`[ratchet]`**
+  (快腿 16 → 17);**扫描器是 MOVE 不是 COPY**(`strip_line_comment`/`scan_call_sites` 只在新文件里,
+  老文件留散文+指路)—— **留两份就是刚踩过的镜像陷阱,而且踩在开出 #267 的那把量具上**。
+  **⚠️ ③ 价钱不是裁定里引的 0.144s,我改了那个数**:0.144s 是**扫描本身**,而自检付的是
+  **发现集合多一个成员**的边际成本,**每个成员各付一次 runner 启动**(glob 218 文件 + 加载 mock)。
+  实测真实发现循环:**16 文件 8.86s / 17 文件 10.34s ⇒ 边际 1.48s**;整文件打 tag 则 4.1s(冷 5.7s)。
+  **拆分仍然对(约三分之一),但它是 1.5s 不是 0.14s**;按铁律 4(iii) 把**实测连切法一起**写进新文件头,
+  并留话「按这个数预算,不要引上一轮的数字」——该文件本来就写着「加标签前先计时」,
+  **这一次是照做的结果与被引的数不一致**。
+  **④ 验证**:luacheck gate **exit 0 / 0 警告**(**未用 `RULE6_BYPASS`**)、`run_py_tests.sh`
+  **48 passed 0 failed**(落地前 47)、快 Lua 全集 **17 files 0 red**、`activemode_world_assertion` 12/0、
+  `activemode_call_site_census` 2/0、smoke 3/0、corpus_scale 8/0;**全量 Lua 套件未跑**
+  (`bots/`/`game/` 未改)⇒ **不声称它绿**。落地后自检 `FINDINGS (exit 3): cadence` ⇒
+  **「exit 3 全部来自 cadence」从本轮起是读数不是推断**。
+  **⑤ #267 保持 open**:验收量是**下一轮别组报告里贴出带 `FINDINGS:` 分列的那一行**,总监不自己关。
+  **⑥ 体系健康 / 成本**:五组均有产出无空转;CADENCE `replay-check` 6.1h **同一历史窗口第九轮**不升级,
+  **`strategy` 8.5h 本轮首次出现,列观察项,下轮仍在则升级**;owner 优先项未触 12 轮红线。
+  总监**零 AWS 支出**;批测台 08:48Z 自报 MTD **$59.749**(CE 逐位一致第十五轮),围栏 **$61.543**
+  ≤ 闸 (iii) $80(余量 $18.46),刹车 $90 / 批准线 $100 未触及,本轮未发波。
+  `DECISIONS_NEEDED` 无新增;**W35 周日(08-30)邮件未发**(今日周五)。
+  **下次触发**:①**GH #271**(值一个完整工作单元,已顺延一轮) ②**GH #266**(已顺延三轮)
+  ③**W20 早发 3分31秒的裁定**(已欠两轮) ④盯 #269 的验收 ⑤盯 #267 的验收(别组报告里的 `FINDINGS:` 行)
+  ⑥#204 的 n=8(第十六轮) ⑦批测台交棒⑤/⑥/⑦/⑩ ⑧`[bug] #249` ⑨#236 甲 ⑩#240
+  ⑪#207(第十六轮) ⑫#218 后续 ⑬#217(第十五轮) ⑭#211(第十六轮) ⑮backlog §18
+  ⑯§16/§17 ⑰§BL.4(i) ⑱#75(第十八轮) ⑲**W35 周日邮件** ⑳`aimguard` 的 (a)
+  ㉑`bbrespawn` 的 `readmit_on` ㉒盯 #257 的验收 1 ㉓**`strategy` cadence 8.5h 若复现则升级**。
