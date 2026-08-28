@@ -55,6 +55,22 @@
 --     assertion moved 1 winner in 94; this one moves 18.)
 --   * the push-cap clause that the split runs through does NOT move on this
 --     corpus (0/96 either way) -- see the honest boundary on it below.
+--     ^^ CORRECTED 2026-08-28 (GH #278). The line above is kept as published.
+--     It has since EXPIRED, in the way its own boundary comment predicted: GH
+--     #108 raised the batch cap to 25 game minutes, b50a7727 cut the first two
+--     fixtures past DotaTime 750s (785.4s and 790.4s), and the honest reading
+--     is now 2, not 0. The clause OPENS on those frames -- bPastCloseByTime
+--     goes true and the cap it writes moves 0.92 -> 0.95 -- and the push desire
+--     still does not move, because both of its consequences are downstream of a
+--     `#alliesHere <= 1` return that these two frames take. So the correct
+--     reading is not "the clause does not move" but "on the frames we have it
+--     moves a DEAD LOCAL". The plain reading stays 0 and now for a structural
+--     reason rather than a corpus one: the literal `== 23` spelling never
+--     dilates, so it needs a raw DotaTime past 1500s -- past the raised cap.
+--     A SECOND correction from the same re-read: the operand of that expression
+--     is built in global_cache.lua, NOT in the aba_push copy this file used to
+--     pin, and the accounting block at the bottom named the wrong two of the
+--     three dilation sites as dead. Both are corrected in place, below.
 --
 -- DELIVERY TO GH #84 §5. The default next pick for the (b) shape was
 -- `item_purchase_generic.lua:228` (`bot:GetLevel() >= 18`, classified TEETH by
@@ -201,6 +217,56 @@ local function bid(path, file, honest, opts)
     return out
 end
 
+--- Drive FunLib/aba_push's push desire on one frame, and report BOTH the
+--- number it returned and where it left the helper.
+---
+--- The mode files (mode_push_tower_*_generic.lua) cannot be driven through
+--- bid(): they read `bot.PushLaneDesire[LANE_TOP]` behind a `== nil` guard,
+--- and the mock answers every unknown bot field with a FUNCTION, so the guard
+--- passes and the index throws. That is a harness limit, not a finding -- the
+--- helper underneath is the thing the clause lives in, so call it directly.
+---
+--- `where` is the last line executed inside GetPushDesireHelper, i.e. the
+--- return that actually ended the call, and `open` / `cap` are the clause's own
+--- locals read AT that return. Without those two the "did not move" reading
+--- below is unreadable: a desire that does not move because the clause never
+--- fired and a desire that does not move because something downstream ate it
+--- are opposite findings with the same number.
+local PUSH = 'bots/FunLib/aba_push.lua'
+local HELPER_FIRST, HELPER_LAST = 127, 362
+local function push_desire(path, lane, honest)
+    world(path, honest)
+    -- rf.load() hands back a fresh copy of every bots/ module (verified: the
+    -- global_cache table is not the same table across two loads), so the 0.5s
+    -- TTL cache inside getGlobalGameState cannot carry the plain reading into
+    -- the honest one. Re-dofile aba_push for the same reason.
+    for k in pairs(package.loaded) do
+        if tostring(k):find('aba_push', 1, true) then package.loaded[k] = nil end
+    end
+    local okload, Push = pcall(dofile, PUSH)
+    if not okload or type(Push) ~= 'table' then unprobe(); return nil end
+    local where, open, cap
+    debug.sethook(function(_, ln)
+        local info = debug.getinfo(2, 'S')
+        if not (info and info.short_src and info.short_src:find('aba_push', 1, true)) then return end
+        if ln < HELPER_FIRST or ln > HELPER_LAST then return end
+        where = ln
+        local i = 1
+        while true do
+            local nm, val = debug.getlocal(2, i)
+            if not nm then break end
+            if nm == 'bPastCloseByTime' then open = val end
+            if nm == 'nMaxDesire' then cap = val end
+            i = i + 1
+        end
+    end, 'l')
+    local ok, d = pcall(Push.GetPushDesire, GetBot(), lane)
+    debug.sethook()
+    unprobe()
+    if not ok then return nil end
+    return { desire = d, where = where, open = open, cap = cap }
+end
+
 -- ---------------------------------------------------------------------------
 -- Premises. Asked of rf.load / the base mock DIRECTLY, never through world():
 -- world() rawsets the constant itself, so asking it these questions would be
@@ -324,7 +390,7 @@ local function corpus()
     if corpus_cache then return corpus_cache end
     local s = { fixtures = 0, by_name = 0, by_number = 0, helper = 0, latest = 0,
                 laning_moved = {}, laning_down = 0, laning_up = 0,
-                past_plain = 0, past_honest = 0,
+                past_plain = 0, past_honest = 0, past_frames = {},
                 probe_both = 0, probe_helper = 0, ping_changed = 0 }
     for _, path in ipairs(fixture_files()) do
         s.fixtures = s.fixtures + 1
@@ -341,7 +407,12 @@ local function corpus()
         if ((GetGameMode() == 23) and t * 2 or t) > nCloseByTime then
             s.past_plain = s.past_plain + 1
         end
-        if t * 2 > nCloseByTime then s.past_honest = s.past_honest + 1 end
+        if t * 2 > nCloseByTime then
+            s.past_honest = s.past_honest + 1
+            -- Kept, not just counted: the block below has to DRIVE these frames
+            -- to answer what the clause does, and a count cannot be driven.
+            s.past_frames[#s.past_frames + 1] = { path = path, t = t }
+        end
 
         -- Probe integrity: the honest world must be honest on BOTH spellings,
         -- and the named helper must still say turbo. Moving only GetGameMode
@@ -509,10 +580,26 @@ tests['[WORLD ASSERTION] the split runs through the middle of one expression'] =
         'the threshold moved')
     assert(src:find('local bPastCloseByTime = gameState.currentTime > nCloseByTime', 1, true),
         'the comparison moved')
+    -- CORRECTED 2026-08-28 (GH #278). This used to pin the operand out of
+    -- aba_push.lua, because the file that holds the comparison also holds an
+    -- `adjustedTime` writer. It is the WRONG COPY: `gameState` here is bound at
+    -- :146 to getGlobalGameState(), so the operand this expression rides is
+    -- built in global_cache.lua and aba_push's own writer never reaches it.
+    -- Measured, not argued -- killing the dilation in global_cache moves the
+    -- cap this clause writes (0.95 -> 0.92 under the honest mode); killing
+    -- aba_push's own leaves every reading byte-identical. Same shape as this
+    -- file's mode_laning_generic lesson, which also named the wrong copy until
+    -- a mutation said otherwise -- and the same fix: pin the live one, and keep
+    -- the second pinned AS the second.
+    assert(src:find('local gameState = getGlobalGameState()', 1, true),
+        'the helper no longer reads the global cache -- which copy the clause rides has changed')
+    local gc = read_file('bots/FunLib/global_cache.lua')
+    assert(gc:find('local adjustedTime = gameMode == 23 and currentTime * 2 or currentTime', 1, true),
+        'the LIVE operand moved (global_cache.lua)')
+    assert(gc:find('currentTime = adjustedTime,', 1, true),
+        'the live operand is still what lands in the cache field')
     assert(src:find('local adjustedTime = gameMode == 23 and currentTime * 2 or currentTime', 1, true),
-        'the operand moved')
-    assert(src:find('currentTime = adjustedTime,', 1, true),
-        'the operand is still what lands in the cache field')
+        'the SECOND copy of the operand moved (aba_push.lua, no readers -- see the accounting block)')
     -- The same table literal builds four SIBLING fields the named way.
     for _, sib in ipairs({ 'isEarlyGame = jmz.IsEarlyGame()', 'isMidGame = jmz.IsMidGame()',
                            'isLateGame = jmz.IsLateGame()', 'isLaningPhase = jmz.IsInLaningPhase()' }) do
@@ -520,29 +607,147 @@ tests['[WORLD ASSERTION] the split runs through the middle of one expression'] =
     end
 end
 
-tests['[WORLD ASSERTION] but that clause does not move on this corpus -- honest boundary'] = function()
+tests['[WORLD ASSERTION] the honest boundary EXPIRED -- the clause opens, on 2 frames'] = function()
     local s = corpus()
-    -- 0/94 either way, and the reason is the corpus, not the mechanism: the
-    -- honest reading needs DotaTime > 750s (25*60 halved by the *2 dilation)
-    -- and the latest frame anyone has is 690.5s, because batch games
-    -- self-terminate on economy_10min_cap at ~640s. Real Turbo games average
-    -- ~20 minutes, so in the game this clause opens for the last third of the
-    -- match. This is the SAME honest boundary the level-gate census recorded
-    -- for J.IsLateGame(): a property of turbo AND a property of the harness,
-    -- and it must be quoted with the reading.
-    assert(s.past_plain == 0, 'as loaded the push cap clause never opens; got ' .. s.past_plain)
-    assert(s.past_honest == 0, 'and with an honest mode it still does not, on THIS corpus; got '
-        .. s.past_honest)
-    assert(s.latest > 690 and s.latest < 691,
-        'the latest frame in the corpus is 690.5s; got ' .. tostring(s.latest))
-    assert(s.latest * 2 < 25 * 60,
-        'which is why: even doubled it is short of the 25-minute threshold')
+    -- RE-TAKEN 2026-08-28 (GH #278). What stood here was:
+    --
+    --   assert(s.past_honest == 0, ...)
+    --   assert(s.latest > 690 and s.latest < 691, ...)
+    --   assert(s.latest * 2 < 25 * 60, ...)
+    --
+    -- with a comment explaining that the zero was a property of the HARNESS --
+    -- batch games self-terminated on economy_10min_cap at ~640s, so nobody had
+    -- a frame past DotaTime 750s (25*60 halved by the *2 dilation). GH #108
+    -- raised that cap to 25 game minutes; b50a7727 cut two fixtures from a
+    -- post-#108 game at 785.4s and 790.4s; and the boundary expired exactly the
+    -- way its own comment said it would. The old assertions did not report that
+    -- as a reading -- they reported it as a RED, on the desk that added the
+    -- fixtures, whose change touched nothing this file is about.
+    --
+    -- ⭐ THE JUDGEMENT (reusable). A boundary recorded as "the corpus cannot
+    -- reach this yet" is a claim with an EXPIRY DATE, and it has to be written
+    -- so that expiring is a reading rather than a red. This one named the very
+    -- event that would invalidate it ("real Turbo games average ~20 minutes")
+    -- and then froze the number anyway -- so the cheapest way past the red was
+    -- to retype 690 as 790 and re-arm the same trap. Same family as the
+    -- `carrier_fixtures == 62` pin (GH #273), one turn sharper: there the
+    -- comment merely disagreed with the assertion, here the comment PREDICTED
+    -- the failure.
+    --
+    -- The shape a corpus MAXIMUM takes is a monotone bound, because appending
+    -- fixtures can only raise it -- and the thing actually being argued (is the
+    -- boundary crossed?) becomes its own assertion instead of a side effect of
+    -- a frozen literal. Which of the four survives as an equality is decided
+    -- one at a time, by asking what its red would say:
+    --
+    --   past_plain == 0  -- KEPT as an equality. It can only move if the mock
+    --     split is repaired (GH #93) or a fixture lands past DotaTime 1500s,
+    --     and either of those IS the news this block exists to carry.
+    --   past_honest      -- RETIRED. It is a sum over fixtures: longer games
+    --     only add. Ratchet.
+    --   s.latest         -- RETIRED. A maximum over fixtures; monotone bound.
+    --   s.latest*2 < 1500 -- FLIPPED. It is now > 1500, and that is the finding.
+    assert(s.past_plain == 0,
+        'as loaded the push cap clause still never opens -- the literal `== 23` spelling '
+        .. 'never dilates, so the plain reading needs a raw DotaTime past 1500s, which is '
+        .. 'past the raised cap itself; got ' .. s.past_plain)
+    cs.ratchet(s.past_honest, 2, 'frames past the honest push-cap boundary')
+    cs.ratchet(s.latest, 790.4, 'latest DotaTime in the corpus')
+    assert(s.latest * 2 > 25 * 60,
+        'and the corpus now REACHES the threshold when the mode is honest; got '
+        .. tostring(s.latest * 2))
+    -- Derived rather than restated: the count above and the boundary it is a
+    -- count of are computed from the same two numbers, so assert the frames it
+    -- kept really are the ones over 750s. A sweep that silently stopped
+    -- dilating would drop past_honest to 0 -- and a ratchet catches that -- but
+    -- one that dilated the WRONG frames would not move the count at all.
+    assert(#s.past_frames == s.past_honest, 'the kept frames and the count disagree')
+    for _, f in ipairs(s.past_frames) do
+        assert(f.t > 750, 'a frame counted past the boundary is not past it: ' .. f.path)
+    end
     -- corpus() restates the shipped 25 * 60 rather than reading it, so the
     -- measurement above cannot notice the threshold moving. Pin it here, next
     -- to the claim that depends on it (M7 lesson, fourteenth world assertion).
     local push = read_file('bots/FunLib/aba_push.lua')
     assert(push:find('jmz.IsModeTurbo() and 25 * 60 or 40 * 60', 1, true),
         'the threshold this boundary is computed against moved')
+end
+
+tests['[WORLD ASSERTION] the clause OPENS and the push desire still does not move'] = function()
+    -- GH #278 (1), answered by driving the frames rather than by reading the
+    -- source: now that the boundary is crossed, does the split change a push
+    -- decision?
+    --
+    -- MEASURED, both spellings x every frame past the boundary x three lanes:
+    --   * the clause DOES open. bPastCloseByTime is false as loaded and TRUE
+    --     under the honest mode, and nMaxDesire moves 0.92 -> 0.95 with it.
+    --     This is the first time in this file's life that it has been true of
+    --     any frame.
+    --   * the returned desire moves on NONE of them. Both readings return
+    --     BotModeDesire.None.
+    --
+    -- The reason is not that the clause is inert. It is that BOTH of its
+    -- consequences are downstream of an unconditional return that these frames
+    -- take: `#alliesHere <= 1 and aliveEnemyCount >= 3` -- the venomancer is
+    -- alone with three enemies up. So the cap it raised is never read and the
+    -- bonus it would have added is never reached.
+    --
+    -- Which makes the honest answer to (1) neither "a decision" nor "a cache
+    -- field": ON THESE FRAMES IT MOVES A DEAD LOCAL. That is a property of the
+    -- two frames we happen to have -- a bot past 12.5 minutes standing WITH
+    -- allies would reach both sites -- so this is a boundary again, and it is
+    -- written as one: the zero is asserted, and the frame property that causes
+    -- it is asserted next to it, so that a future frame which does reach the
+    -- sites turns this red instead of passing quietly.
+    local s = corpus()
+    assert(#s.past_frames > 0, 'nothing past the boundary -- the block above should have caught this')
+    local opened, moved, driven = 0, 0, 0
+    for _, f in ipairs(s.past_frames) do
+        for _, lane in ipairs({ LANE_TOP, LANE_MID, LANE_BOT }) do
+            local plain = push_desire(f.path, lane, false)
+            local honest = push_desire(f.path, lane, true)
+            if plain and honest then
+                driven = driven + 1
+                if honest.open == true and plain.open == false then opened = opened + 1 end
+                if plain.desire ~= honest.desire then moved = moved + 1 end
+                assert(plain.where == honest.where,
+                    'the two readings left the helper at different lines (' .. tostring(plain.where)
+                    .. ' vs ' .. tostring(honest.where) .. ') on ' .. f.path
+                    .. ' -- the preemption below is no longer what decides this frame')
+                assert(honest.cap == 0.95 and plain.cap == 0.92,
+                    'the cap did not take the values the clause writes; got plain='
+                    .. tostring(plain.cap) .. ' honest=' .. tostring(honest.cap))
+            end
+        end
+    end
+    assert(driven == #s.past_frames * 3,
+        'some frame/lane pair could not be driven: ' .. driven .. ' of ' .. (#s.past_frames * 3))
+    -- The clause opening is the news; assert it universally, not as a count.
+    assert(opened == driven,
+        'the clause did not open under the honest mode on every past-boundary frame; got '
+        .. opened .. ' of ' .. driven)
+    -- And the zero stays an equality: one frame where the desire DOES move is
+    -- the finding this whole block is waiting for, and it must go red.
+    assert(moved == 0,
+        'the push desire now MOVES with the game mode on ' .. moved .. ' frame/lane pairs -- '
+        .. 'the split has reached a decision; re-take this reading')
+end
+
+tests['[WORLD ASSERTION] the preemption sits BETWEEN the clause and both its consequences'] = function()
+    -- Why the measurement above reads zero, stated as source order rather than
+    -- as a line number: a line number would have to be re-typed by any
+    -- refactor of the file, which is the `s.latest > 690` trap one level up.
+    -- Order is the actual claim, and it is what a refactor could break.
+    local src = read_file('bots/FunLib/aba_push.lua')
+    local cap = src:find('nMaxDesire = math.max(nMaxDesire, 0.95)', 1, true)
+    local stop = src:find('if #alliesHere <= 1 and gameState.aliveEnemyCount >= 3 then', 1, true)
+    local bonus = src:find('nPushDesire = nPushDesire + 0.35', 1, true)
+    assert(cap, 'the cap arm of the push-cap clause moved')
+    assert(stop, 'the preempting return moved')
+    assert(bonus, 'the additive arm of the push-cap clause moved')
+    assert(cap < stop and stop < bonus,
+        'the preempting return no longer sits between the two consequences of '
+        .. 'bPastCloseByTime -- the "moves a dead local" reading above depends on this order')
 end
 
 -- ---------------------------------------------------------------------------
@@ -866,13 +1071,36 @@ end
 tests['[recorded] two of the three turbo clock dilations are written and never read'] = function()
     -- Three shipped sites compute an `adjustedTime` and store it as a cache
     -- field called `currentTime`. Repo-wide there are exactly TWO readers of
-    -- that field and BOTH belong to aba_push (the push cap clause at :172 and
-    -- the human-players clause at :240). The dilations in aba_defend (* 1.65)
-    -- and global_cache (* 2) therefore cost a multiply and change nothing --
-    -- the same three-writes-zero-reads shape as the towerreach calibration
-    -- flag (GH #67). No gate, no change: this is a note for whoever next tries
-    -- to make a defend or global-cache decision turbo-aware and assumes the
-    -- clock in the cache is already dilated.
+    -- that field and BOTH belong to aba_push (the push cap clause at :173 and
+    -- the human-players clause at :221).
+    --
+    -- ⚠ THE COUNT WAS RIGHT AND THE NAMES WERE WRONG (corrected 2026-08-28,
+    -- GH #278). What stood here was "the dilations in aba_defend (* 1.65) and
+    -- global_cache (* 2) therefore cost a multiply and change nothing". Two of
+    -- the three really are dead -- but they are aba_defend and ABA_PUSH'S OWN,
+    -- and global_cache's is the one live dilation in the repo. Both readers sit
+    -- inside GetPushDesireHelper, and that function binds `gameState` at :146
+    -- to getGlobalGameState() -- global_cache's table. aba_push's own writer is
+    -- reached through updateGameStateCache(), which its OTHER functions call
+    -- (WhichLaneToPush, PushThink, ...) and none of them reads .currentTime.
+    --
+    -- ⭐ THE JUDGEMENT (reusable). "Written and never read" cannot be settled
+    -- by file co-location once the value travels in a table. The reader-to-
+    -- writer binding is made by WHICH ACCESSOR THE READING FUNCTION CALLED, and
+    -- a file that both writes its own cache and reads someone else's gets
+    -- attributed to itself by any co-location test -- which is exactly what the
+    -- `foreign == 0` assertion below measures, correctly, and what the old
+    -- prose then over-read. The failure direction is the dangerous one: it
+    -- EXONERATES the live site and condemns a dead one. This block's stated
+    -- purpose was to warn whoever next makes a global-cache decision turbo-
+    -- aware that "the clock in the cache is not dilated" -- pointed at the one
+    -- file where it is, and where deleting the multiply as dead code would have
+    -- moved every Turbo push-cap decision silently.
+    --
+    -- Measured both ways rather than argued: killing global_cache's dilation
+    -- moves the cap the clause writes (0.95 -> 0.92 under an honest mode, and
+    -- past_honest falls to 0); killing aba_push's own leaves every reading in
+    -- this file byte-identical. No gate, no change to bots/.
     local n = 0
     for _, f in ipairs({ 'bots/FunLib/aba_defend.lua', 'bots/FunLib/global_cache.lua',
                          'bots/FunLib/aba_push.lua' }) do
@@ -897,6 +1125,27 @@ tests['[recorded] two of the three turbo clock dilations are written and never r
     assert(foreign == 0,
         'and both are in aba_push -- neither aba_defend nor global_cache reads its own dilation; got '
         .. foreign)
+    -- The step the old reading skipped, now asserted: co-location is not the
+    -- binding. Both readers are inside GetPushDesireHelper, and that function
+    -- takes its gameState from the OTHER file's accessor -- so the writer they
+    -- ride is global_cache's, not the one sitting beside them.
+    local pushsrc = read_file('bots/FunLib/aba_push.lua')
+    local helper_at = pushsrc:find('function ____exports.GetPushDesireHelper(bot, lane)', 1, true)
+    local helper_end = pushsrc:find('\nfunction presence_adjust(', helper_at, true)
+    assert(helper_at and helper_end and helper_end > helper_at, 'could not delimit GetPushDesireHelper')
+    for _, reader in ipairs({ 'local bPastCloseByTime = gameState.currentTime > nCloseByTime',
+                              'local currentTime = gameState.currentTime' }) do
+        local at = pushsrc:find(reader, 1, true)
+        assert(at, 'a .currentTime reader moved: ' .. reader)
+        assert(at > helper_at and at < helper_end,
+            'a .currentTime reader left GetPushDesireHelper -- it may now ride a different '
+            .. 'writer, so the attribution in this block has to be re-taken: ' .. reader)
+    end
+    local bind = pushsrc:find('local gameState = getGlobalGameState()', helper_at, true)
+    assert(bind and bind < helper_end,
+        'GetPushDesireHelper no longer binds gameState to getGlobalGameState() -- the two '
+        .. 'readers may have switched to aba_push\'s own dilation, which would flip which '
+        .. 'two of the three sites are dead')
     local push = read_file('bots/FunLib/aba_push.lua')
     assert(push:find('local bPastCloseByTime = gameState.currentTime > nCloseByTime', 1, true),
         'the push-cap reader moved')
