@@ -5698,3 +5698,42 @@
   - **下一轮第一件事:W20 首检**(`spot_20260828_0616*`×4,树 `62ad180`,**与 W19/W19-R 的 `3110f323` 不同树**),
     先跑 stamp 普查确认 dire 腿;两腿都在就**当场执行欠下的那笔预登记**。
   - 完整报告:`iterations/reports/replay-check/20260828T070500Z.md`
+- **2026-08-28T09:52Z(W20 首检)**:`spot_20260828_0616{32,36,41,45}_1_62ad1803…_{f48af2,f49eda,f4eda4,60e52a}`
+  (树 `62ad180`,arm 串 **41 id / 363 字节 / sha1 `8f78d4cf`**,与 test_set.md 第 2 行三方一致)。
+  **宽扫 A(stamp)204/204 = 100%;宽扫 B(行为)2/4 个 run = 56 局**(`f4eda4`/`60e52a` 收尾时仍在扫,留下轮);
+  **深查 6 局**(全在 `f48af2`/seed 947:`061903_slot11`、`063124_slot5`、`063133_slot3`、
+  `063134_slot9`、`063140_slot2`、`063147_slot6`),另 13 局做了实体层普查。
+  - ⭐ **两腿都在(3/4 个 run)**:radiant-armed 125 / dire-armed 55;`f49eda`(seed 959)是**单腿孤儿**
+    (26 局全 `:radiant`,30.8 min 被 spot 回收),按 `SINGLE-LAYER`(GH #257/#266)处理。
+    ⇒ 上一轮「预登记买不到」的**前半个理由消失了**;但 **#272 仍未修**
+    (`git log campfarm_target.py` 最新是 08-27T06:21Z 的 W16 那笔),章程「分带读数不下判词」照旧
+    ⇒ **#265 的四量同形预登记本轮仍不执行**,阻塞原因由「没有 ba 层」换成「#272 未修」。
+  - ⭐⭐⭐ **`aimguard`: SILENT(域缺失,不是「门未为真」)** —— 180/180 个 stamped 局**零 `spirit_breaker`**。
+    逐帧买法:13 局逐 snapshot 建实体名集合,`PROBE npc_dota_hero_spirit_breaker -> 0/13`,
+    且实体层 10 个名字与 draft 名单**逐个相同**(不拿 draft 名单证明 draft 缺失)。
+    **根因是载体门问错了英雄**:批测台 06:17Z 的载体门 `exit 0`、`terms=5` 是**写死的焦点五**,
+    于是 2/5 个 term 花在 `axe`/`skeleton_king`(arm 串里**没有**任何 axe/SK-scoped 的 id)上,
+    **没问** `obsidian_destroyer`(`odaoe`,侥幸在场)与 `spirit_breaker`(`aimguard`,不在场)。
+    **新开 [batch] GH #276**(terms 从 arm 串机械推导 + `ABSENT ⇒ 拒发` + 部分覆盖分数进报告)。
+    ⚠️ **推导必须跟着消费点走**:前五个 hero-scoped id 的 `IsSoakCandidate` 就写在 `hero_*.lua` 里一 grep 就有,
+    **`aimguard` grep 不到** —— 门在 `jmz_func.lua:3993`,唯一消费点在 `hero_spirit_breaker.lua:297`;
+    **只按门站点推载体的实现会恰好漏掉本次出事的那一个**。
+    `--rates` 实测 `spirit_breaker` **P(4 粒种子全不在)=0.518**;近 11 粒种子草案只有 **1 粒**带它
+    (W19 的 s935,而那波 arm 串是 40 id、`aimguard` 还没入集)⇒ **它至今没有一波同时满足「已 armed」与「载体在场」**。
+  - ⭐⭐ **`odaoe`: WORKING(条件 (a) 首次买到)**。判别子**来自源码不是阈值**:出厂 exit
+    (`hero_obsidian_destroyer.lua:479`)`return ..., enemyHero:GetLocation()` ⇒ 500 圆**永远以某个敌人为心**;
+    armed 分支(`:575`)候选集含**每一对的中点** ⇒ 能把圆放在没人站的地方。
+    读数(`tools/batch_test/behavioral/od_eclipse_offcentre.py`,本轮落地):
+    armed 腿 **7/34 = 20.6% 只能离心**,baseline 腿 **0/6**;圆心**试遍每个活敌**(蓝≥OD 的敌人吃 0 伤不发事件)⇒ 只会少报。
+    逐帧最硬的一条:**749 / 728 / 706 / 701 距离上的敌人被打到** —— 它们在 `GetNearbyHeroes(bot,700)` 之外,
+    出厂路径连选都选不到,只有中点圆能把它们罩进 500 半径。
+    ⭐ **侧别天然受控**:seed 947 与 974 **都把 OD 放在 radiant** ⇒ armed/baseline 两腿里 OD 都站 radiant,
+    铁律 4(i) 要防的侧别混杂**被构造性消掉**(不是靠两层反号检验)。**镜像抽签把某英雄只放一侧时,
+    该英雄专属 id 的对比是侧别纯净的。** 代价:本读数**只来自 seed 947**。
+    诚实边界:baseline 腿只有 6 次多人大招(承重的是源码不可能性);armed 分支**坐在出厂循环下面**
+    ⇒ 24 次「出厂可解释」里有多少其实是 armed 打的,**本方法答不了也不声称**。
+  - ⚠️ **自我更正(防下轮重踩)**:`--assert-carrier` 的退出码第一次读成 0,因为 `… | head` 之后的 `$?` 是 `head` 的;
+    **落盘再取 `$?` 得到真值 1**,门本身没问题 —— 与批测台「先落盘再取 `$?`」同一条纪律。
+  - **下一轮第一件事**:扫完 `f4eda4`/`60e52a` 把宽扫 B 补到 4/4,并**在 seed 974 上复算 `odaoe` 的离心率**
+    —— 这是 §4 结论**唯一能被证伪的预登记**(同号 ⇒ 升为双种子;反号 ⇒ 退回「单种子巧合」)。
+  - 完整报告:`iterations/reports/replay-check/20260828T095218Z.md`
