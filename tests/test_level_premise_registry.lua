@@ -77,7 +77,12 @@
 --     PENDING below for the numeric list.  Ratcheting them twice would
 --     double-count one debt; the re-read that clears their row clears these too.
 --     That is what happened to test_wk_fact_anchor on 2026-08-28 -- its four went
---     with its row, which is the mechanism working, not a gap opening.
+--     with its row, which is the mechanism working, not a gap opening -- and to
+--     test_lion_hex_talent_slot the same day.  All three are now clean, so the
+--     bots/-only scope of section 3 currently costs nothing; keep reading it as a
+--     deliberate scope and not as a measured all-clear over tests/, because the
+--     lion file's miss WAS a section-3 shape (a header contradicting its own
+--     section 6) that only the numeric list happened to catch.
 --   * THIS FILE EXCLUDES ITSELF, and has to.  It is the file whose subject is
 --     those strings, so it contains every one of them; a sweep that included it
 --     would report its own prose as a defect.  Same lesson GH #228 paid for --
@@ -109,7 +114,6 @@ local PENDING = {
     ['tests/corpus_scale.lua']                     = 'harness -- states the ge20==0 policy itself (GH #236)',
     ['tests/test_level_gate_census.lua']           = 'harness/director -- the 22 GH #84 verdicts (GH #235)',
     ['tests/test_focus_build_level_legality.lua']  = 'hero -- scope claim argued from the zero',
-    ['tests/test_lion_hex_talent_slot.lua']        = 'hero -- carries the lionhexaoe empty-domain reading (GH #166)',
     ['tests/test_wk_roshan_mana_ceiling.lua']      = 'hero -- crossing-level tail argument (wkrosh)',
     ['tests/test_wk_bone_guard_thresholds.lua']    = 'hero -- untrained-stub-is-turbo-reality claim',
     ['tests/test_wk_q_aim_preflight.lua']          = 'hero -- level distribution note',
@@ -118,6 +122,27 @@ local PENDING = {
 -- CLEARED, newest first.  A row leaves this list when the VERDICT above the
 -- premise was re-read, not when the sentence was deleted -- so what the row
 -- becomes is a line saying what the re-read decided.
+--
+--   test_lion_hex_talent_slot.lua  (hero, 2026-08-28)
+--     The premise sat in that file's ⚠️ LIMIT header, which ruled `lionhexaoe`'s
+--     domain empty because no fixture reached level 25 and then said section 6
+--     "goes RED when the corpus first contains a level-25 hero, which is the
+--     moment this becomes proposable".  Section 6 itself was re-derived on
+--     2026-08-27 and the header was not, so for a day the file argued both ways
+--     400 lines apart -- the hero_zuus.lua shape section 3 below exists to catch,
+--     this time inside tests/ where section 3 does not reach.  Re-read: the
+--     disposition (not armed, not proposed, no queue request) SURVIVES and its
+--     final sentence does not.  The domain is empty structurally, not by harvest:
+--     the t25 row takes [7], one talent per tier, so talent8 is never trained and
+--     no number of new frames can change that.  What the re-read added is a
+--     measurement that keeps "structural" from being read as "the bot never asks"
+--     -- driven through the real J.Skill.GetSkillList, the shipped queue carries
+--     all four ABANDONED talent halves behind the picks (positions 20-23 against
+--     picks at 10/15/18/19), so special_bonus_unique_lion_2 -- the exact handle
+--     talent8 binds -- is requested in every game that reaches 25, and the
+--     level-up ladder's fallback branch issues that order without consulting
+--     CanAbilityBeUpgraded().  The guard is therefore held against a live request,
+--     not against a hypothetical future edit.
 --
 --   test_wk_fact_anchor.lua  (hero, 2026-08-28)
 --     Section 4 is a repo-wide census of structural t20/t25 reads, and the read
@@ -273,11 +298,12 @@ tests['[hero] the stale-premise registry shrinks or holds, never grows'] = funct
         end
     end
     table.sort(gone)
-    assert(still <= 7,
+    assert(still <= 6,
         still .. ' registry files still argue from the retired premise; the '
-        .. 'registered ceiling is 7 (9 on 2026-08-27, lowered when '
-        .. 'test_wk_bone_guard_talent_bypass.lua and then test_wk_fact_anchor.lua '
-        .. 'were re-read). This number is a debt, so it may only fall.')
+        .. 'registered ceiling is 6 (9 on 2026-08-27, lowered as '
+        .. 'test_wk_bone_guard_talent_bypass.lua, test_wk_fact_anchor.lua and '
+        .. 'test_lion_hex_talent_slot.lua were re-read). This number is a debt, so '
+        .. 'it may only fall.')
 
     -- When a row is genuinely re-read, delete it from PENDING in the same change.
     -- Leaving a settled row on the list makes the ceiling read as more debt than

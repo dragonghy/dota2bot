@@ -79,16 +79,45 @@
 -- the min"): the direction of a gate is carried by the shape of the code, not by
 -- today's constants.  Section 3 drives all five combinations.
 --
--- ⚠️ LIMIT -- THE DOMAIN IS OUT OF REACH TODAY, AND THAT IS MEASURED (section 6)
+-- ⚠️ LIMIT -- THE DOMAIN IS EMPTY, AND THE REASON IS NOT THE ONE WRITTEN HERE
+-- FIRST (re-read 2026-08-28, GH #235)
 --
--- Every read here is downstream of a level-25 talent.  GH #84 measured
--- `level >= 20` on 0 of 210 hero-slots (high-water 19) under SOAK_CAP_MIN=10,
--- and section 6 re-measures the same thing on this repo's fixture corpus rather
--- than citing it.  So: NOT armed, NOT proposed for the test set, and NO queue
--- request -- the same disposition GH #165 took for `alchrage`, and for the same
--- reason (an empty domain cannot buy condition (a) no matter how many games run).
--- Section 6 is written so that it goes RED when the corpus first contains a
--- level-25 hero, which is the moment this becomes proposable.
+-- What this block used to say, kept as a quote because sections 3 and 6 are
+-- unreadable without it: "Every read here is downstream of a level-25 talent.
+-- GH #84 measured `level >= 20` on 0 of 210 hero-slots (high-water 19) under
+-- SOAK_CAP_MIN=10 ... Section 6 is written so that it goes RED when the corpus
+-- first contains a level-25 hero, which is the moment this becomes proposable."
+--
+-- Both halves of that are retired.  The zero belonged to the measuring rig -- every
+-- batch game self-terminated at a 10-minute economy cap -- and GH #108 removed the
+-- cap; the first frame taken past it reads ten heroes at 22-27 (GH #235).  So the
+-- LAST sentence was the load-bearing one and it is now simply false: section 6
+-- going red would NOT make `lionhexaoe` proposable, because since 2026-08-27 the
+-- domain has been empty for a reason no corpus can change (section 2 -- the t25 row
+-- takes [7], a hero trains one talent per tier, so `talent8` is never trained and
+-- X.IsHexAoe returns false at its FIRST statement, before the gate is consulted).
+-- Section 6 was re-derived that day and this header was not, so the file spent a
+-- day contradicting itself 400 lines apart -- the hero_zuus.lua shape that section
+-- 3 of tests/test_level_premise_registry.lua exists to catch.
+--
+-- THE DISPOSITION IS UNCHANGED AND SO IS ITS CONSEQUENCE: NOT armed, NOT proposed
+-- for the test set, NO queue request -- what changed is that this no longer waits
+-- on a harvest.  An empty domain cannot buy condition (a) however many games run
+-- (the disposition GH #165 took for `alchrage`), and a structural emptiness cannot
+-- stop being empty by collecting frames.
+--
+-- ...AND "STRUCTURAL" IS NOT "THE BOT NEVER ASKS" (section 7, measured 2026-08-28).
+-- Driving the real J.Skill.GetSkillList on this hero's real build lists puts
+-- sTalentList[8] -- the exact handle talent8 binds -- in the shipped upgrade queue,
+-- at the last position, because GetTalentBuild returns all EIGHT rows and the
+-- abandoned halves are queued behind the four picks.  The bot asks the engine to
+-- train special_bonus_unique_lion_2 in every game that reaches 25; the level-up
+-- ladder's third branch issues that ActionImmediate_LevelAbility without consulting
+-- CanAbilityBeUpgraded().  What keeps talent8 untrained is the GAME's one-per-tier
+-- rule refusing a request this repo really makes -- so "keep the gate" (section 4b)
+-- stops being a precaution about a hypothetical future edit and becomes a guard on
+-- a request that is live today.  That is the measurement that made this re-read
+-- worth doing rather than a comment fix.
 --
 -- A GREEN RUN HERE IS NOT EVIDENCE THE GUARD IS UNNECESSARY.  The mock's talent
 -- slots are empty (tests/mock/bot_api.lua returns nil for slot > 5), so the real
@@ -116,6 +145,13 @@
 --   M10 helper drops `not talent8:IsTrained()` (widening)               CAUGHT (2 cases)
 --   M11 a synthetic level-25 fixture added to the corpus                CAUGHT (1 case)
 --   M12 a comment line added above X.IsHexAoe (no-op control)           ESCAPED
+--
+-- MUTATION RECORD, section 7 (2026-08-28: 4 run, 4 caught, 1 no-op control escaped)
+--   M13 GetTalentBuild[8] pinned to 7 (abandoned half stops being [8])  CAUGHT (2 cases)
+--   M14 GetSkillList drops the `ability_idx > #nAbilityBuildList` clause CAUGHT (1 case)
+--   M15 the "still try it" branch gains a CanAbilityBeUpgraded() check  CAUGHT (1 case)
+--   M16 lion tTalentTreeList['t25'] back to {10, 0}                     CAUGHT (2 cases)
+--   M17 the header block re-worded only (no-op control)                 ESCAPED
 
 package.path = 'tests/?.lua;' .. package.path
 
@@ -530,6 +566,132 @@ tests['[hero] the corpus still holds no level-25 hero -- harvest lag, not the ru
         .. 'structurally untrained). What the new frames DO unlock is the widening '
         .. 'GH #166 §9 left open: prefer clustered targets now that Hex really is '
         .. 'AoE. Rewrite this assertion when you take that up.')
+end
+
+-- ---------------------------------------------------------------------------
+-- 7. What "structurally untrained" does NOT mean (measured 2026-08-28).
+--
+-- Section 2 settles that this build takes [7] at t25, and every disposition above
+-- rests on the consequence: talent8 is never trained, so X.IsHexAoe returns false
+-- at its first statement.  That is true.  It is also easy to read as "the abandoned
+-- half is simply absent from the build", and it is not: J.Skill.GetTalentBuild
+-- returns ALL EIGHT rows -- indices 1-4 are the picks, 5-8 the abandoned halves --
+-- and J.Skill.GetSkillList appends 5-8 to the upgrade queue behind the picks.  So
+-- the shipped queue really does ask the engine to level special_bonus_unique_lion_2.
+--
+-- The queue positions matter and are pinned, because they are arithmetic, not a
+-- table: GetSkillList puts a talent at i >= 10 when `i % 5 == 0` OR when the
+-- abilities have run out, and Lion's ability build has 15 entries, so the picks
+-- land at 10/15/18/19 (NOT 10/15/20/25) and the abandoned halves at 20/21/22/23.
+-- Change the ability build's length and those positions move.
+--
+-- WHY THIS IS THE POINT OF THE RE-READ.  Section 4b keeps the gate on the grounds
+-- that "neither the row nor Valve's slot order is this file's to guarantee" -- a
+-- statement about edits nobody has made.  This section says something stronger and
+-- present-tense: the request is issued today.  The only thing between it and a
+-- trained talent8 is the game refusing it.
+--
+-- HONEST BOUNDS
+--   * The talent NAMES fed to GetSkillList come from tests/mock/talent_slots.lua,
+--     not from the mock bot (whose ability slots > 5 are empty, which is why the
+--     header says a green run here is not evidence the guard is unnecessary).  The
+--     ability build and the talent build are the shipped file's own, captured from
+--     the real call.
+--   * Whether the engine ACCEPTS the request is not decided here and cannot be:
+--     print() never reaches the server console (AGENTS.md).  The claim is about
+--     what this repo asks for, not about what Dota does with it.
+--   * The level-up ladder's branch is read from source, not driven --
+--     AbilityLevelUpComplement is a file-local in bots/ability_item_usage_generic.lua
+--     with no exported handle (same limitation tests/test_lategame_talent_visibility.lua
+--     records).  The assertion is therefore narrow: that the branch which issues the
+--     order does not consult CanAbilityBeUpgraded().
+
+tests['[hero] the shipped queue asks for sTalentList[8] anyway -- picks 10/15/18/19, abandoned 20-23'] = function()
+    api.reset_modules()
+    api.install({ bot = api.MakeHero('npc_dota_hero_lion') })
+    local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
+
+    -- Capture the shipped file's OWN ability build and talent build from the real
+    -- call, so nothing here restates a list that hero_lion.lua could change.
+    local fnReal, tArgs = J.Skill.GetSkillList, nil
+    J.Skill.GetSkillList = function(sAbil, nAbil, sTal, nTal)
+        tArgs = { sAbil = sAbil, nAbil = nAbil, nTal = nTal }
+        return fnReal(sAbil, nAbil, sTal, nTal)
+    end
+    local ok, err = pcall(dofile, SRC)
+    J.Skill.GetSkillList = fnReal
+    if not ok then error('loading ' .. SRC .. ' failed: ' .. tostring(err)) end
+
+    assert(type(tArgs) == 'table' and type(tArgs.nAbil) == 'table' and type(tArgs.nTal) == 'table',
+        'hero_lion.lua no longer routes its build through J.Skill.GetSkillList, so the '
+        .. 'upgrade queue cannot be read this way any more')
+    assert(#tArgs.nTal == 8, 'the talent build carries ' .. #tArgs.nTal .. ' rows, not 8. '
+        .. 'The whole point below is that it carries the abandoned halves too.')
+
+    -- Real talent names, from the same snapshot section 1 reads.
+    local tLion = assert(dofile(SNAPSHOT).SLOTS['lion'], 'no talent snapshot for lion')
+    local sTalentList = {}
+    for i = 1, 8 do sTalentList[i] = tLion[i].name end
+
+    local tQueue = fnReal(tArgs.sAbil, tArgs.nAbil, sTalentList, tArgs.nTal)
+
+    -- The picks, where the ability-build length actually puts them.
+    local tExpectPick = { [10] = 1, [15] = 2, [18] = 3, [19] = 4 }
+    for nPos, nPick in pairs(tExpectPick) do
+        assert(tQueue[nPos] == sTalentList[tArgs.nTal[nPick]],
+            'queue position ' .. nPos .. ' holds ' .. tostring(tQueue[nPos]) .. ', not the t'
+            .. ({ 10, 15, 20, 25 })[nPick] .. ' pick. Lion`s ability build has '
+            .. #tArgs.nAbil .. ' entries and GetSkillList inserts a talent once those run '
+            .. 'out, so t20/t25 sit at 18/19 rather than at 20/25. If the build length '
+            .. 'changed, re-derive these positions instead of loosening the assertion.')
+    end
+
+    -- ...and the four abandoned halves, queued behind them.
+    for i = 0, 3 do
+        assert(tQueue[20 + i] == sTalentList[tArgs.nTal[5 + i]],
+            'queue position ' .. (20 + i) .. ' holds ' .. tostring(tQueue[20 + i])
+            .. ', not the abandoned half of tier ' .. (i + 1) .. '. GetTalentBuild returns '
+            .. 'all eight rows and GetSkillList appends 5..8; if that stopped being true '
+            .. 'the claim below (the bot asks for talent8) would no longer hold.')
+    end
+    assert(tQueue[24] == nil, 'the queue runs past position 23, so the abandoned t25 half '
+        .. 'is no longer last -- something now sits behind a row that cannot be upgraded '
+        .. 'before level 25, which is a stall this file never had to reason about.')
+
+    -- The claim itself: the handle hero_lion.lua binds is in the queue.
+    assert(tQueue[23] == IMPALE_TALENT,
+        'the last queue entry is ' .. tostring(tQueue[23]) .. ', not ' .. IMPALE_TALENT
+        .. '. That entry IS sTalentList[8] -- the handle talent8 binds -- and the header`s '
+        .. '"the bot asks for it anyway" rests on it being here.')
+    assert(tQueue[19] == HEX_TALENT,
+        'the t25 PICK is ' .. tostring(tQueue[19]) .. ', not ' .. HEX_TALENT
+        .. '; section 2 says this build takes [7], so the pick and the abandoned half '
+        .. 'disagree between the two sections and one of them is wrong.')
+end
+
+tests['[hero] the branch that issues the doomed level-up does not check CanAbilityBeUpgraded'] = function()
+    local sSrc = read_file('bots/ability_item_usage_generic.lua')
+
+    -- The fallback branch: reached when the strict branch above it declined, and
+    -- it issues the order on level alone.
+    local sBranch = sSrc:match(
+        'elseif not abilityToLevelup:IsHidden%(%) and botLevel >= abilityToLevelup:'
+        .. 'GetHeroLevelRequiredToUpgrade%(%) then(.-)\n\t\telseif')
+        or sSrc:match(
+        'elseif not abilityToLevelup:IsHidden%(%) and botLevel >= abilityToLevelup:'
+        .. 'GetHeroLevelRequiredToUpgrade%(%) then(.-)\n\t\telse\n')
+    assert(sBranch ~= nil,
+        'bots/ability_item_usage_generic.lua no longer has the "still try it" branch that '
+        .. 'levels an ability on IsHidden + required-level alone. This file`s header claims '
+        .. 'the abandoned talent request is really issued; re-read that claim rather than '
+        .. 'deleting this assertion.')
+    assert(sBranch:find('ActionImmediate_LevelAbility') ~= nil,
+        'the "still try it" branch no longer issues ActionImmediate_LevelAbility')
+    assert(sBranch:find('CanAbilityBeUpgraded') == nil,
+        'the "still try it" branch now consults CanAbilityBeUpgraded(), so an untakeable '
+        .. 'talent would be filtered out before the order is sent. Good news for the engine, '
+        .. 'but it retires the header`s claim that the request is live today -- re-read the '
+        .. '2026-08-28 block above in the same change.')
 end
 
 return tests

@@ -22,6 +22,47 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-31. ~~**棒 ③ 第 3 行:`test_lion_hex_talent_slot.lua` 的头注与它自己的 §6 对着说了一天反话 —— 而清它买到的是「结构性不等于 bot 从来不要」**~~
+   **2026-08-28T04:48Z done —— `bots/` **零行改动**(一个英雄文件都没碰);无新 gate id;
+   `state.json` 新增 `levelpremise_lionhex_20260828`(`gated:false`);零 AWS;不申请入集;**不提 queue**。
+   报告 `iterations/reports/hero/20260828T044807Z.md`。**
+   - **入口是上一棒点的名**:01:58Z 写明「优先 `tests/test_lion_hex_talent_slot.lua` ——
+     §6 已在 08-27 重推过,但登记表那行仍带未更正的数字站点」。
+   - **⭐ 文件在自己内部矛盾了一天。** §6 08-27 已重推(域为空,理由从「语料够不到 25 级」
+     换成「t25 取 `[7]` ⇒ `talent8` 永不 trained」),**头注的 ⚠️ LIMIT 块没跟着**,
+     还留着承重的最后一句「§6 变红就是它变得可提的那一刻」—— **结构性的空不会因为多收帧就不空**。
+     **这正是登记表 §3 的形状(`hero_zuus.lua` 头注对着 930 行外的正文说反话),
+     而 §3 的扫描范围只有 `bots/`** ⇒ 这次是数字清单恰好抓到的,范围注释已就地补。
+     **处置不变**(`lionhexaoe` 不 arm / 不入集 / 不提 queue),**变的是它不再等收割**。
+   - **⭐ 本轮真正买到的读数:出货队列真的会去点那半天赋。** 驱动**真的**
+     `J.Skill.GetSkillList`(参数从加载时的真实调用截获):`GetTalentBuild` 返回**八行**
+     (`[1..4]` 选中 / `[5..8]` 放弃),`GetSkillList` 把放弃的接在后面 ⇒
+     Lion 的队列位是 **10/15/18/19 = 选中**(不是 20/25,因为技能行 15 条用完会提前插),
+     **20/21/22/23 = 放弃的四半**,而 **23 就是 `sTalentList[8]` = `special_bonus_unique_lion_2`**,
+     `talent8` 绑的那一个。加上升级阶梯的兜底分支
+     (`ability_item_usage_generic.lua` 的 `elseif not IsHidden() and botLevel >= required`)
+     **不查 `CanAbilityBeUpgraded()` 就发 `ActionImmediate_LevelAbility`**
+     ⇒ **让 `talent8` 保持 untrained 的是游戏在拒绝一个本仓真的发出的请求。**
+     §4b 的「门要留着」于是从「关于没人做过的改动的话」变成**对今天就在发的请求的守卫**,
+     并堵死了后来者最便宜的错误动作(把 helper 和十五个调用点当死代码删)。
+   - **诚实边界**:引擎接不接受**不判也判不了**(`print()` 到不了控制台);升级分支是**源码读数**
+     (`AbilityLevelUpComplement` 是文件内 local,无导出句柄,同 `test_lategame_talent_visibility`
+     记的限制),断言窄到「发命令那条分支里没有 `CanAbilityBeUpgraded()`」;
+     天赋**名**来自 `tests/mock/talent_slots.lua`(mock bot 的 slot > 5 为空),
+     技能行/天赋行是出货文件自己的;队列位是**技能行长度的算术**,长度一变位置就动。
+   - **⭐ 变异 4 抓 + 1 对照**:M13 `GetTalentBuild[8]` 恒 7 / M14 `GetSkillList` 去掉
+     「技能行用完」子句 / M15 兜底分支加 `CanAbilityBeUpgraded()` / M16 lion t25 改回 `{10,0}`
+     全 CAUGHT;M17 只重写头注 ESCAPED(设计如此)。变异后 `bots/` 全还原。
+   - **登记表**:删行、天花板 **7 → 6**、`CLEARED` 写下重读决定了什么;
+     重扫后本文件 hits=2 / **uncorrected=0**,仍带未更正站点的 6 个与天花板逐位相符。
+   - **顺手记下(非本轮造成)**:临时 `pairs()` 跑法让 `test_cm_arcane_aura_passive.lua` 红一例,
+     走**真正的 runner** 是 **16/0 绿** —— 差别是用例执行顺序,而它是 16 个共用同一个物理
+     `soak_side.lua` 开关的 gate 测试之一 ⇒ **GH #229 同族,方向同样是「凭空多出失败」**。
+     **临时跑法不是 runner,别拿它的红去开 issue。**
+   - **下一棒**:棒 ③ 剩 **6 行**(本组欠 4),**优先 `tests/test_focus_build_level_legality.lua`**
+     —— 它的登记理由是「scope claim argued from the zero」,而连着两轮的替代判据都是
+     **「能不能取到 = 出装,不是等级」**,这一行被它改写得最直接。
+
 -30. ~~**棒 ③ 第 2 行:`test_wk_fact_anchor.lua` §4 的读法被判**作废**(不是答错),而替代它的判据从来不看等级**~~
    **2026-08-28T01:58Z done —— `bots/` **零行改动**(一个英雄文件都没碰);无新 gate id;
    `state.json` 新增 `levelpremise_wkfact_20260828`(`gated:false`);零 AWS;不申请入集;**不提 queue**。
@@ -2065,6 +2106,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T04:48Z(报告 `iterations/reports/hero/20260828T044807Z.md`;轴 **`LEVELPREMISE` 重读续**;
+  **棒 ③ 第 3 行**,登记表天花板 **7 → 6**)—— 自检 **worst exit 3**:UNLANDED 0、两条稳定版锚点 ok、
+  py **47/0**、Lua 快速检测器 **16** 文件 0 失败、待裁 queue 请求 0(open 37);cadence 洞只有
+  **replay-check(6.1h)**,**本组无洞**;owner 四条优先项**没有一条球在本组**;
+  `[hero]` open issue 里带帧证据且属焦点五的**一条都没有**(#245/#244 是 OD),其余全是本组自己的判决
+  ⇒ 按 backlog 取上一轮点名的 `test_lion_hex_talent_slot.lua`。
+  **本轮 `bots/` 零行改动**(一个英雄文件都没碰);无新 gate id;
+  `state.json` 新增 `levelpremise_lionhex_20260828`(`gated:false`);**零 AWS**;不申请入集;**不提 queue**。
+  - **⭐ 这个文件对着自己说了一天反话。** §6 08-27 已重推(域为空,理由从「语料够不到 25 级」换成
+    「t25 取 `[7]` ⇒ 一档一个 ⇒ `talent8` 永不 trained ⇒ `X.IsHexAoe` 第一条语句就 false」),
+    **头注的 ⚠️ LIMIT 块没跟着**,还留着承重的最后一句「§6 变红就是它变得可提的那一刻」——
+    **结构性的空不会因为多收帧就不空**。**这是登记表 §3 的形状,而 §3 只扫 `bots/`** ⇒
+    这次是数字清单恰好抓到的;§3 的范围注释已就地补上这句。**处置不变**
+    (`lionhexaoe` 不 arm / 不入集 / 不提 queue,同 GH #165 对 `alchrage`),**变的是它不再等收割**。
+  - **⭐ 而「结构性」≠「bot 从来不要」—— 这是本轮买到的量。** 驱动**真的**
+    `J.Skill.GetSkillList`(参数从 `hero_lion.lua` 加载时的真实调用截获,不重抄表):
+    `GetTalentBuild` 返回**八行**(`[1..4]` 选中 / `[5..8]` 放弃),`GetSkillList` 把放弃的
+    **接在选中的后面排进升级队列** ⇒ Lion 队列位 **10/15/18/19 = 四个选中**
+    (**不是 20/25**:技能行 15 条用完会提前插),**20/21/22/23 = 放弃的四半**,
+    而 **位 23 = `sTalentList[8]` = `special_bonus_unique_lion_2`**,`talent8` 绑的正是它。
+    再加上升级阶梯的兜底分支**不查 `CanAbilityBeUpgraded()` 就发 `ActionImmediate_LevelAbility`**
+    ⇒ **让 `talent8` 保持 untrained 的,是游戏在拒绝一个本仓真的发出的请求。**
+    §4b 的「门要留着」由此从「关于没人做过的改动的话」变成**对今天就在发的请求的守卫**。
+  - **诚实边界**:引擎接不接受**不判也判不了**(`print()` 到不了控制台);升级分支是**源码读数**
+    (`AbilityLevelUpComplement` 无导出句柄),断言窄到「发命令那条分支里没有 `CanAbilityBeUpgraded()`」;
+    天赋**名**取自 `tests/mock/talent_slots.lua`;队列位是**技能行长度的算术**。**本轮无真实帧。**
+  - **⭐ 变异 4 抓 + 1 对照**(M13–M17,详见报告 §5),变异后 `bots/` 全还原。
+  - **顺手记下(非本轮造成)**:临时 `pairs()` 跑法让 `test_cm_arcane_aura_passive.lua` 红一例,
+    **真正的 runner 是 16/0 绿** —— 差别是用例执行顺序,而它是 16 个共用同一个物理 `soak_side.lua`
+    开关的 gate 测试之一 ⇒ **GH #229 同族**。**临时跑法不是 runner,别拿它的红去开 issue。**
+  - 铁律 6:`luacheck_gate.sh` **0 warnings / exit 0**(容器本来没有 luacheck,gate 自己装的);
+    push gate 已上膛。全量套件一进程跑不完(GH #124)⇒ 影响面按过滤器单跑:
+    `lion` **99/0**、`level_premise` **5/0**、`talent` **72/0**。
+  - **下一棒**:棒 ③ 剩 **6 行**(本组欠 4;`corpus_scale` / `test_level_gate_census` 归 harness/总监),
+    **优先 `tests/test_focus_build_level_legality.lua`**(登记理由「scope claim argued from the zero」,
+    被「能不能取到 = 出装不是等级」这条判据改写得最直接);`hero-19`/`hero-20`/`hero-21` 仍 pending;
+    WK `ConsiderQ` 的 `nDamage` 修复仍等归档扫描;**GH #268 交出去的那一格未被认领,不由本组扩**。
+
 - 2026-08-28T01:58Z(报告 `iterations/reports/hero/20260828T015816Z.md`;轴 **`LEVELPREMISE` 重读**;
   **棒 ③ 第 2 行**,登记表天花板 **8 → 7**)—— 自检 **worst exit 3**:UNLANDED 0、两条稳定版锚点 ok、
   py **46/0**、Lua 快速检测器 **15** 文件 0 失败、待裁 queue 请求 0(open 37);cadence 洞只有
