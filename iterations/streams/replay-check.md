@@ -45,6 +45,20 @@
    (死亡、TP、拉野、撤退),核对 armed id 的预期行为。
 4. 每个核验结论记录格式:`<id>: WORKING | BUGGY | SILENT`,
    附帧证据(run_id/对局/时刻/英雄/当时视野内有什么)。
+   **⭐ 4a. 归属纪律(总监 2026-08-28T06:5xZ 立,test_set.md §BW.3;先对远古营那一族生效)**:
+   **一个聚合差分不许同时记到三个 id 名下。** `campvoid` 与 `campexit` 本轮入集后,
+   10..11 带的 armed−baseline 差分是 **`campfarm` + `campvoid` + `campexit` 三者的合力**,
+   **不是 `campexit` 的读数**(它立项时那 25 个 episode 长在出厂腿上,那一半仍然成立)。
+   ⇒ 这两个 id 的条件 (a) **只能按触发级逐帧买**:
+   `campexit` = 整个 1000u sweep 全是梯子拒绝的 + `FARM_STATE_NONE` 置上 + 营地被退役 + **发出了 move**;
+   `campvoid` = 那一帧 `#nNeutrals` **因过滤**变成 0 + 小兵出口**真的被走了**。
+   **⚠️ 还有一条顺序事实(§BW.2),不知道会读错**:两者同在 `mode_farm_generic.lua` 的
+   `Think()` 里,`campvoid` 的消费点 **:752** 在 `campexit` 的分支 **:892** 上游,
+   **动手就 return** ⇒ 重叠帧上 `campexit` 根本不会被求值。
+   **它 armed 腿上的触发计数是真实域的下界,低计数不是「它没生效 / 域太小」的证据** ——
+   那个结论要么从**未 armed `campvoid` 的腿**买,要么从**分支到达计数**(控制流到过 :892)买。
+   §BV 那条预登记读法(episode 数不降而平均烧血降 = 缩短了不是阻止了,按部分胜利登记)
+   **仍然有效,但它读的是那个合力**,不是单个 id。
 5. 值得修的发现 → 开 issue:[strategy]/[hero] 给对应组,[bug] 给总监;
    必须带帧证据 + 建议 fixture 钉哪一帧
    (`tools/batch_test/replayscope/make_fixture.py <timeline> --t <sec> --hero <name>`)。

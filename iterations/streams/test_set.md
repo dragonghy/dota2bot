@@ -1,7 +1,21 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,campexit
 
-**成员串 41**(上一行)。本行 2026-08-28T00:5xZ 的**一处变动**(全文档案 **§BS.4**):
+**成员串 43**(上一行)。本行 2026-08-28T06:5xZ 的**两处变动**(全文档案 **§BW**):
+**`campvoid` 入集**(协同组 §BT,GH #265 的落地物)+ **`campexit` 入集**(协同组 §BV,
+GH #265 的预登记证伪落地物)。**两条都搭车、零 AWS 增量、不申请专波。**
+总监**在源码核过两条的单向性**(§BW.1):`campvoid` 的 filter 是**只删不增**
+(`aba_site.lua:616-633`,`kept[#kept+1]` 追加式,无删可删时**返回同一张表**)⇒
+`#nNeutrals == 0` 只能 false→true ⇒ 它只能**打开**那条小兵出口,**关不掉**出厂走过的任何一条;
+`campexit` 未 armed **字面量 `return false`**(`jmz_func.lua:2013`)⇒ 结构性惰性。
+**⚠️ 附加条件(§BW.3)**:`campexit` 的 (a) **不得从 10..11 带的 armed−baseline 差分读出** ——
+同一条腿上 `campfarm`/`campvoid` 也在改这批帧,那个差分是**三个 id 的合力**;
+它自己的 (a) 只能来自**触发级逐帧**(退役营地 + move,且整个 sweep 都是梯子拒绝的)。
+**⚠️ 顺序事实(§BW.2)**:两者同在 `Think()`,`campvoid` 的消费点在 **:752**、`campexit` 的分支在 **:892**,
+前者动手就 `return` ⇒ **重叠帧上 `campvoid` 抢走 `campexit` 的触发**;
+故 `campexit` 的 armed 腿触发计数是它真实域的**下界**,**低计数不是「它没生效」的证据**。
+
+（上一行的历史记录)2026-08-28T00:5xZ 的**一处变动**(全文档案 **§BS.4**):
 **`aimguard` 入集**(协同组 §BR.1,GH #262 的落地物)。**搭车、零 AWS 增量、不申请专波。**
 门是**它自己那一条**(`jmz_func.lua:3928`,`IsModeTurbo` and `aimguard`)⇒ **无合取项**,
 总监已在源码核过 **armed ⊆ 未 armed 是结构性的**(未 armed 结尾 `return true`,armed 结尾
@@ -9,12 +23,14 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 **⚠️ 附加条件(§BS.4)**:它的 (a) 读数**必须来自双层语料**;单腿孤儿语料上的读数按
 `SINGLE-LAYER` 处理(GH #257/#266),**不得记为 (a) 的一半**。
 
-**⚠️ 发波前必读(cand 串长度,本轮实测)**:41 id 的裸 cand 串 **363 字节**(40 id 时 354)。
-本轮 `check_armed_wiring.py --cand <41 串>` = **41/41 WIRED,exit 0**;
-`aimguard` direct、1 站点(`jmz_func.lua:3928`)。S3 key 上限 1024,**仍有余量**;
+**⚠️ 发波前必读(cand 串长度,2026-08-28T06:5xZ 实测)**:43 id 的裸 cand 串 **381 字节**
+(41 id 时 363,40 id 时 354)。本轮 `check_armed_wiring.py --cand <43 串>` =
+**43/43 WIRED,exit 0**;`campvoid` direct、1 站点(`mode_farm_generic.lua:119`),
+`campexit` direct、1 站点(`mode_farm_generic.lua:892`)。S3 key 上限 1024,**仍有余量**;
 ext4 的 255 早已跨过(GH #167),绕法与判据照旧。
-**⚠️ 行号漂移提醒(照 §BG 的老规矩)**:本轮实跑里 `zusstatic` 报在 `hero_zuus.lua:506`
-(§BF 记的 360)、`bbfight` 10705(§BM 记的 10594)、`bbshort` 10744(§BM 记的 10633)、
+**⚠️ 行号漂移提醒(照 §BG 的老规矩)**:本轮实跑里 `aimguard` 报在 `jmz_func.lua:3993`
+(§BS 记的 3928,**六小时漂了 65 行**)、`bbfight` 10770(§BM 记的 10594)、
+`bbshort` 10809(§BM 记的 10633)、`zusstatic` `hero_zuus.lua:506`(§BF 记的 360)、
 `abilanc` 1850(§BM 记的 1845)—— **行号是会漂的引用,id 不会**;
 排波与核对一律以**当轮实跑输出**为准,不要引用历史报告里的行号。
 
@@ -9050,3 +9066,76 @@ ES 在 19 秒里**自己零 DAMAGE 事件**却被打死。**浪费不在于它�
   那个频率**没量过,本组不猜**。
 - **预登记读法**:若带内 episode 数**不降**而平均烧血**降了**,那是「缩短了 episode 而不是阻止了它」,
   **按部分胜利登记**,不许读成「没效果」。
+
+---
+
+## §BW 2026-08-28T06:5xZ 总监裁定:`campvoid`(§BT)与 `campexit`(§BV)**同轮双双入集** —— 但**「同腿」不是一个可裁的选项**,而 (a) 的读法**必须按 id 分开买**
+
+**结论先行**:两条都 **APPROVED 入集**,armed 串 41 → **43**(363→381 字节,43/43 WIRED exit 0)。
+`queue.json` 零改动,零 AWS,`bots/`/`game/` 本轮总监一行未改。
+
+### BW.1 源码核验(总监自己读的,不是转述提议)
+
+按 §BS.4 立下的规矩,入集前总监**在源码里核单向性**,而不是引用提议方的断言:
+
+| id | 核的是什么 | 读到的 |
+|---|---|---|
+| `campvoid` | filter 是不是**只删不增** | `aba_site.lua:616-633`:`kept[#kept+1]` 追加式,**无删可删时 `return creepList` 返回同一张表**(identity 不是等价拷贝)⇒ armed 表 ⊆ 入参表 |
+| `campvoid` | 消费点吃的是哪个方向 | `mode_farm_generic.lua:753` 的 `#nNeutrals == 0` 是**小兵出口的准入条件** ⇒ 表变小只能让它**更容易为真** ⇒ **只开不关**,与提议一致 |
+| `campexit` | 未 armed 是不是结构性惰性 | `jmz_func.lua:2013` **第一行就是 `if not bArmed then return false end`** ⇒ 未 armed 字面量为假,**不是「通常为假」** |
+
+⇒ 两条的「armed 只能加不能减一条出厂路径」都**成立**,且**不靠行为测试**成立
+(行为测试是加固,不是承重)。
+
+### BW.2 ⭐ 本轮总监加的那一条:**两个 id 在同一个 `Think()` 里有执行顺序,而顺序会吃掉触发计数**
+
+§BT 与 §BV 各自都对,但**放在一起才有的那个事实两边都没写**:
+
+- `campvoid` 的消费点在 `Think()` **:752**,动手就 `bot:Action_*` + `return`;
+- `campexit` 的分支在同一个 `Think()` **:892**,**在它下游**。
+
+⇒ **重叠帧上(900u 内有小兵 **且** sweep 全是梯子拒绝的营),`campvoid` 先动手并 return,
+`campexit` 那一帧根本不会被求值。**
+
+**这不是缺陷,是必须预登记的读法**:`campexit` 在 armed 腿上的触发计数是它**真实域的下界**,
+**低计数不构成「它没生效 / 域太小」的证据** —— 那个结论要么从**未 armed `campvoid` 的腿**买,
+要么从**分支到达计数**(控制流到过 :892)而不是从触发计数买。
+失效方向与 §BV.2 自己点名的那个**同型**:一个长得像判决的空操作;区别是那边的成因是
+**守错了分支**,这边的成因是**被上游抢走了帧**。
+
+### BW.3 ⚠️ (a) 的归属:**10..11 带的 armed−baseline 差分不是 `campexit` 的读数**
+
+§BV 给录像组的预登记比较项是「出厂腿的 episode 数与平均烧血」,仪器是同一张
+`campfarm_target.py` 的 10..11 带表。**这一半批准,另一半必须钉死**:
+
+- 那 25 个 episode 长在**出厂腿**上,这一点是 `campexit` 立项的正当理由,**成立**;
+- 但入集之后,armed 腿的那批帧上**同时**有 `campfarm`(空攻击表)、`campvoid`(开小兵出口)、
+  `campexit`(退役营地)三个 id 在动手 ⇒ **armed−baseline 的带内差分是三者合力**,
+  **不许记到任何单个 id 名下**。
+- ⇒ `campexit` 的条件 (a) **只能从触发级逐帧买**:整个 1000u sweep 都是梯子拒绝的、
+  `FARM_STATE_NONE` 被置上、`UpdateAvailableCamp` 退役该营、**发出了 move**。
+  同理 `campvoid` 的 (a) = 那一帧 `#nNeutrals` 因过滤而**变成 0**、且小兵出口**真的被走了**。
+
+这是铁律 4(i)(两层反号 = 噪声)**往上一层的同一件事**:那边说的是**同一个 id 的读数在两层里要一致**,
+这边说的是**同一个差分不能同时归给三个 id**。§BR/§BS 已经在 `abilanc` 上吃过一次
+「读同一个常量 ≠ 作用在同一批帧上」;本条是它的**逆命题**:**作用在同一批帧上 ≠ 可以分开记账**。
+
+### BW.4 §BT.2 那个「要不要与 `campfarm` 同腿 arm」的问题:**它不是一个选项**
+
+协同组要求显式裁,应当裁,但答案是**这个自由度在本装置里不存在**:
+`campfarm` **已经在 armed 串里**(第 36 位),而测试集就是**一条腿**(§AU.1 的湮灭定理:
+一棵树、一个旋钮)⇒ **`campvoid` 一入集就自动与 `campfarm` 同腿**,没有第二种落法。
+想要「有 `campfarm` 没 `campvoid`」的对照,那是**另一个 cand 串**、**另一波**,
+要走 §AU.4 的「差异先表达成 gate」和 queue 的排波申请,**不是入集裁定能给的东西**。
+⇒ 采纳协同组的建议(同腿、两个独立 id、不合取、可分别 promote),**并记明它为什么无需裁**。
+
+### BW.5 §BV.4 的两条 `campfarm` 棘轮加固:**知悉并背书**
+
+两条都是**射程变宽、主张未变**,方向正确(§BT.3 的主判据说的正是「断言的名字宣称了一个
+它自己的 pattern 够不到的全集」)。总监**不额外要求**回退或收窄。
+
+### BW.6 诚实边界
+
+- **gated ⇒ 不是 live**。两条的条件 (a) **一帧都没买到**,(b) 未测,(c) 成立(源码算术)。
+- 本裁定**没有**为它们排任何波次;下一次例行波按 43 串发即可,**零增量**。
+- 总监本轮**没跑**全量 Lua 套件(~100min,GH #124):`bots/`/`game/` 未改 ⇒ **不声称它绿**。
