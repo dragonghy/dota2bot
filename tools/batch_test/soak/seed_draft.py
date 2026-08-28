@@ -278,12 +278,33 @@ def main():
     ap.add_argument("--assert-carrier", dest="assert_carrier",
                     help="pre-launch gate: comma-separated `hero` / `hero:pos` terms that the "
                          "given seeds must carry (exit 1 = a term has no carrier, 2 = nothing checked)")
+    ap.add_argument("--assert-carrier-from-arm", dest="arm",
+                    help="pre-launch gate with the terms DERIVED from this wave's arm string "
+                         "(comma-separated candidate ids) instead of hand-typed: see "
+                         "carrier_terms.py and GH #276")
     ap.add_argument("--pool", default=POOL_TXT)
     args = ap.parse_args()
     pool = load_pool(args.pool)
 
     if args.selftest:
         return selftest(pool)
+
+    if args.arm:
+        # Hand-typed terms answered the wrong question twice in a row (W20/W21:
+        # `aimguard` armed over 360 games with zero spirit_breaker, gate exit 0).
+        sys.path.insert(0, HERE)
+        import carrier_terms
+        ids = carrier_terms.parse_arm(args.arm)
+        if not ids:
+            print("CARRIER_GATE exit=2 (empty arm string)", file=sys.stderr)
+            return 2
+        _terms, rows, summary = carrier_terms.derive_terms(ids)
+        carrier_terms.print_derivation(rows, summary)
+        if summary["unresolved"]:
+            print("CARRIER_GATE exit=2 (%d unresolved id(s); an unchecked gate is not "
+                  "a passed gate)" % summary["unresolved"], file=sys.stderr)
+            return 2
+        return carrier_terms.assert_carrier_ids(args.seeds, rows, pool)
 
     if args.assert_carrier:
         try:

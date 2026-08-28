@@ -6090,3 +6090,60 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑪#207(第十六轮) ⑫#218 后续 ⑬#217(第十五轮) ⑭#211(第十六轮) ⑮backlog §18
   ⑯§16/§17 ⑰§BL.4(i) ⑱#75(第十八轮) ⑲**W35 周日邮件** ⑳`aimguard` 的 (a)
   ㉑`bbrespawn` 的 `readmit_on` ㉒盯 #257 的验收 1 ㉓**`strategy` cadence 8.5h 若复现则升级**。
+
+- 2026-08-28T13:07Z:总监触发。**一个工作单元:GH #276 落地** ——
+  载体门的 term 从**手写焦点五**改为**从 arm 串机械推导**。报告
+  `iterations/reports/director/20260828T130754Z.md`。**零 AWS 调用、零支出;`bots/`/`game/` 一行未改;
+  `queue.json` 一字未动。**
+  **① 改序的依据是读数不是偏好**:上一轮排的第①是 #271,但本轮开工时 W21 已在飞,
+  离线复跑其四粒种子(983/986/995/1138)⇒ **又是零 `spirit_breaker`**。
+  ⇒ `aimguard` **连续两波** armed 在一个结构上买不到它 (a) 的语料上,**两波的门都 exit 0**;
+  `--rates` 说下一波还有 **51.8%** 几率复发,**每复发一次按波计费**;#271 顺延的代价可逆。
+  **② 承重判据:显而易见的实现拿 5/6 分,而漏掉的正是唯一出过事的那个。**
+  43 个 armed id 里 6 个 hero-scoped,**5 个的门就写在 `hero_*.lua` 里、一次 grep 全中**;
+  **第六个 `aimguard` grep 不到** —— 门在 `jmz_func.lua:3993`(`J.CanBeAttackedPair`),
+  唯一消费点在 `hero_spirit_breaker.lua:297`。⇒ 推导跟**消费点**走(门站点→所在函数→调用点,
+  递归,深度上限 6);测试第 1 条钉它,并**反向钉**「`hero_spirit_breaker.lua` 里没有 `aimguard` 的门字面量」,
+  否则第 1 条会被文件名实现骗过去。
+  **③ 落地物**:`tools/batch_test/soak/carrier_terms.py`(新)、`seed_draft.py --assert-carrier-from-arm`(新参数,
+  **旧 `--assert-carrier` 输出逐字节未动、有测试钉死,但不再是发波门**)、`tests/test_carrier_terms.py`(**31 检查 0 失败**);
+  **投递**:`batch-desk.md` **硬知识节**(被裁方每轮真读的那一节)+ `test_set.md` **§BX** 全文档案 + GH #276 追评。
+  **④ 三条设计判据先量后定**:多载体 id 是**析取**不是合取(`abilanc` 的 helper 有 19 个调用点、16 个在 hero 文件里
+  ⇒ 摊平成合取 = **永远拒发**,而**永远拒发的门和永远放行的门一样没用且更贵**);
+  **`unresolved` ≠ `generic`**(CLI exit 2,失效方向必须偏向**多问**,因为**假 generic = 少一个 term = 正是本缺陷**);
+  载体不在池子里 ⇒ **`UNDRAFTABLE`** 与 `ABSENT` 分开命名(解药一个是摘 id 一个是换种子);
+  `rubick_hero/<x>.lua` 的载体是 **rubick** 不是 `<x>`。
+  **⑤ ⚠️ 一处对 #276 的修正,而它同时解释了 9 个 `unresolved`**:第一版把 `abilanc` 读成 **14 个英雄**、
+  9 个 id 判 `unresolved`,**两个是同一个 bug 的两面** —— `X.ConsiderItemDesire["item_tpscroll"] = function(...)`
+  这种**派发表匿名定义**没被认出,向上扫描径直走过它、落到 60 行外的 `X.IsBaseTowerDestroyed`,
+  于是 `midtp`/`teambrain`/`stayfield`/`tpreach`/`wandbleed` 全"解析"到同一个假函数并死在环检测上,
+  而 `abilanc` 真正的 generic 消费点(`ability_item_usage_generic.lua:7560`)被同一处错判吃掉。
+  修好后 **6 hero-scoped / 37 generic / 0 unresolved ⇒ 5 term**,**与录像组手推的六条逐条相同**
+  (两条独立推导对上,不是自证);**#276 手推里没有 `abilanc` 是对的,错的是我的第一版**。
+  **⑥ 先证后立**:全覆盖 5 term 的四粒种子不稀缺 —— `1139/1140/1141/1150` 实测 **exit 0**,
+  贪心第 9 次命中,`1139..1538` 里 12.8% 带 SB;**真搜不到时不许降门**,报总监裁"放弃哪个 id 的 (a)"。
+  **⑦ 现场复跑**:W20 与 W21 新门**均 exit 1**(`aimguard` ABSENT),并逐位复现 #276 的预言
+  (`odaoe` 2/4、`liondrainstop` 1/4)。
+  **⑧ `aimguard` 裁定**:维持 armed、不退集、**两波读数不得记到它名下**(SILENT 域缺失,认可录像组);
+  它的 (a) 由新门保证下一波必然可买 —— **"再漏一波"从这轮起不可能悄悄发生**。
+  **⑨ 验证**:luacheck gate **exit 0 / 0 警告**(**未用 `RULE6_BYPASS`**)、`run_py_tests.sh`
+  **49 passed 0 failed 0 uncertifiable**(落地前 48)、变异 **7/7 红**控制绿还原后逐字节相同;
+  **全量 Lua 套件未跑**(`bots/`/`game/` 未改)⇒ **不声称它绿**。
+  ⚠️ **变异脚本的守卫本轮兑现了一次**:第一版 M2 是个**加字典键的空变异、判绿**,
+  改成真的把 `unresolved` 写成 `generic` 才转红 —— **「全红」可以被一个没落上的 pattern 买到**。
+  **⑩ #267 的验收买到一半**:批测台 12:16Z 报告 §1 **贴出了带来源分列的那一行**(登记的正是这个量);
+  另一半(快腿 census 红时有人当轮看见)仍无现场 ⇒ **保持 open,不自己关**。
+  **⑪ 体系健康 / 成本**:五组均有产出无空转;**`strategy` cadence 9.2h —— 兑现上一轮的㉓,升级**,
+  但**归因先查后报**:该组自己记了这个洞、当轮有实质产出(GH #277)⇒ **不是空转是节奏拉长**,
+  不开 issue,登记为「下一轮仍 >7h 则开 `[harness]` issue 查触发链」;`replay-check` 6.1h 第十轮不升级。
+  总监**零 AWS 支出**;批测台 12:16Z 自报 MTD **$59.749**(CE 逐位一致第十一轮),
+  围栏 **$61.35 / 最坏 $62.70** ≤ 闸 (iii) $80,刹车 $90 / 批准线 $100 未触及;W21 已发(spot 4/4)。
+  `DECISIONS_NEEDED` 无新增;**W35 周日(08-30)邮件未发**(今日周五)。
+  **下次触发**:①**GH #271**(已顺延两轮) ②**GH #266**(已顺延四轮)
+  ③W20 早发的裁定(**批测台已自行落地防复发条款并实测拦下四次** ⇒ 降级为"确认销号 + 补书面裁定")
+  ④**盯 #276 的验收**(W22 发波报告里出现 `CARRIER_TERMS derived from …` 那一行,且 `aimguard` 被真的问到)
+  ⑤盯 #269 ⑥盯 #267 的另一半 ⑦**`strategy` cadence 仍 >7h 则开 `[harness]`**
+  ⑧#204 的 n=8(第十七轮) ⑨批测台交棒⑤/⑥/⑦/⑩ ⑩`[bug] #249` ⑪#236 甲 ⑫#240
+  ⑬#207(第十七轮) ⑭#218 后续 ⑮#217(第十六轮) ⑯#211(第十七轮) ⑰backlog §18
+  ⑱§16/§17 ⑲§BL.4(i) ⑳#75(第十九轮) ㉑**W35 周日邮件** ㉒`bbrespawn` 的 `readmit_on`
+  ㉓盯 #257 的验收 1 ㉔**GH #140**(角色/等级 term,#276 第 4 条另案,第二十六轮)。

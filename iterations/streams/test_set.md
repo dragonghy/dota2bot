@@ -9139,3 +9139,63 @@ ES 在 19 秒里**自己零 DAMAGE 事件**却被打死。**浪费不在于它�
 - **gated ⇒ 不是 live**。两条的条件 (a) **一帧都没买到**,(b) 未测,(c) 成立(源码算术)。
 - 本裁定**没有**为它们排任何波次;下一次例行波按 43 串发即可,**零增量**。
 - 总监本轮**没跑**全量 Lua 套件(~100min,GH #124):`bots/`/`game/` 未改 ⇒ **不声称它绿**。
+
+## §BX 2026-08-28T14:xxZ 总监裁定 + 落地:GH #276 —— 载体门的 term 改为**从 arm 串机械推导**;它连拦两波都没拦,而漏掉的恰好是**唯一一个用文件名读不出来的 id**
+
+**裁定**:#276 的建议 1/2/3 **全部采纳并本轮落地**;第 4 条(与 GH #140 的角色/等级半边合流)**不采纳进本次改动**,
+另案(#140 已挂第二十六轮,它需要的是 term 语法扩到 `hero:role`,与本条的"该问哪个 hero"是两层)。
+
+**立案事实(两波,不是一次坏运气)**:
+
+| 波 | 种子 | 手写 terms | `spirit_breaker` | 门的退出码 | 新门复跑 |
+|---|---|---|---|---|---|
+| W20 | 947/959/971/974 | 5(含 axe、SK) | **0/180 局** | **0(放行)** | **1(拒发)** |
+| W21 | 983/986/995/1138 | 5(含 SK) | **0 局** | **0(放行)** | **1(拒发)** |
+
+两波的 arm 串里**没有任何 axe-scoped 或 SK-scoped 的 id**,而**当轮唯一新入集的 `aimguard`** 的载体
+**一次都没被问过**。⇒ `aimguard` 至今**没有在任何一波里同时满足「已 armed」与「载体在场」**,
+其条件 (a) 是**结构上买不到**,不是"测了没效果"。
+
+**为什么"照文件名读"这个显而易见的实现是错的(本条的承重句)**:
+43 个 armed id 里 6 个 hero-scoped,其中 **5 个的 `J.IsSoakCandidate(...)` 就写在 `bots/BotLib/hero_*.lua` 里**,
+一次 grep 全中。**第六个是 `aimguard`,而它 grep 不到** —— 门在 `bots/FunLib/jmz_func.lua:3993`
+(`J.CanBeAttackedPair`),**唯一消费点**在 `bots/BotLib/hero_spirit_breaker.lua:297`。
+⇒ **一个按文件名分类的实现会拿 5/6 的分,而漏掉的正是唯一出过事的那个。**
+所以推导跟着**消费点**走(门站点 → 所在函数 → 该函数的调用点,递归,深度上限 6),
+`tests/test_carrier_terms.py` 的**第 1 条**就钉这件事,并**反向钉**了
+"`hero_spirit_breaker.lua` 里没有 `aimguard` 的门字面量"——否则第 1 条可以被文件名实现骗过去。
+
+**落地物**:`tools/batch_test/soak/carrier_terms.py`(推导 + 按 id 的载体门)、
+`seed_draft.py --assert-carrier-from-arm`(新门;旧 `--assert-carrier` **输出逐字节未动**,有测试钉死)、
+`tests/test_carrier_terms.py`(**31 检查 0 失败**)。发波调用形式已写进 **`batch-desk.md` 硬知识节**
+(被裁方每轮真读的那一节,§2.5 投递纪律)。
+
+**三个设计判据,每一条都是先量了再定的**:
+
+1. **多载体 id 是析取不是合取**(`term=lich|sven`,任一在场即满足)。
+   `abilanc` 的 helper `J.GetMostHpUnit` 有 **19 个调用点、16 个在 hero 文件里**;
+   摊平成 16 个独立 term = 要求 4 粒种子(40 个英雄位)同时凑齐 16 个英雄 ⇒ **永远拒发**。
+   **一道永远拒发的门和一道永远放行的门一样没用,而且更贵**(发现成本更高)。
+2. **`unresolved` 不是 `generic`**(CLI **exit 2**,"未查 ≠ 通过",与铁律 10 / GH #171 同一套 0/2/3 词汇)。
+   失效方向必须偏向**多问**,因为**假 generic = 少一个 term = 正是本条要修的那个缺陷**。
+3. **载体不在 `hero_pool.txt` ⇒ `UNDRAFTABLE`**,与 `ABSENT` 分开命名:
+   前者的解药是**摘 id 或改池子**,后者是**换种子**。同理
+   `bots/FunLib/rubick_hero/<x>.lua` 的载体是 **`rubick`** 不是 `<x>`(那是 Rubick 偷来的技能)。
+
+**⚠️ 一处对 #276 的修正 —— `abilanc` 不是 hero-scoped**:#276 手推的 6 个 hero-scoped id 里没有它,**这是对的**;
+但本工具第一版把它读成 **14 个英雄**,原因是同一个 bug 的另一面 ——
+`ability_item_usage_generic.lua` 用 `X.ConsiderItemDesire["item_tpscroll"] = function( hItem )` 这种
+**派发表匿名函数**定义,向上找"所在函数"时会**径直走过它**,落到 60 行以外的另一个具名函数上。
+这一处错判**同时**制造了 9 个 `unresolved`(`midtp`/`teambrain`/`stayfield`/`tpreach`/`wandbleed` …
+全部"解析"到 `X.IsBaseTowerDestroyed` 然后死在环检测上)**和** `abilanc` 那 14 个假载体。
+修好之后:**6 hero-scoped / 37 generic / 0 unresolved ⇒ 5 个 term**,
+**与录像组手推的六条逐条相同**(两条独立推导对上,不是同一个实现自证)。
+
+**这道门买得起(先证后立)**:全覆盖 5 个 term 的四粒种子**不稀缺** ——
+`1139/1140/1141/1150` 实测 **exit 0**,贪心搜索第 9 次尝试命中;`1139..1538` 里 12.8% 带 `spirit_breaker`。
+**下一波要买 `aimguard` 的 (a),按 §BS.4 仍须双层语料**(W20 的 3/4 个 run 两腿都在,形状够,缺的只是载体)。
+
+**验收**(变异 **7/7 全红**、控制绿、还原后逐字节相同,变异脚本带"没落上就判失败"守卫):
+M1 rubick_hero 按 `<x>` 读 / M2 `unresolved` 报成 `generic` / M3 朴素 `--` 切注释 /
+M4 派发表匿名定义不认 / M5 多载体当合取 / M6 只按门站点文件名分类 / M7 `ABSENT` 不抬退出码。
+**M6 是最值钱的一发**:它就是那个"看起来对、拿 5/6 分"的实现。

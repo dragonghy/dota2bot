@@ -267,6 +267,34 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **`hero:pos`** 两种形式 ⇒ **角色门 / 等级门的 id(如 `creeppull` 的 `J.IsCore`、`campgrade` 的等级)
   它表达不了**;这类 id 的载体门按总监先例读作 **no-op**,但**必须附发牌表作正面证据**
   (`seed_draft.py <seeds>`,数满足那条轴的槽位),不能只写一句 no-op。缺口在 GH #140。
+- **⭐ 载体门的 term 从 2026-08-28T14:xxZ 起必须机械推导,不许手写(总监裁定,GH #276)**:
+  **W22 及以后的每一波,发波前跑的是**
+
+  ```bash
+  ARM=$(sed -n '2p' iterations/streams/test_set.md)
+  python3 tools/batch_test/soak/seed_draft.py <seeds> --assert-carrier-from-arm "$ARM" > /tmp/carrier.txt
+  echo "exit=$?"    # 先落盘再取 $?,不要接 | tail
+  ```
+
+  **exit 1 = 拒发**(某个 id 这一波结构上零载体),exit 2 = 有 id 推不出载体(**未查 ≠ 通过**)。
+  旧的 `--assert-carrier "手写英雄串"` **保留**(它的输出逐字节没动,有测试钉死),
+  但**不再是发波门** —— 只用于回答"某个特定英雄在不在这几粒种子里"这类临时问题。
+  **立这条的原因是它连拦两波都没拦**:W20 与 W21 的手写 `terms=5` 里
+  **两个 term 花在 `axe`/`skeleton_king` 上**(41/43-id 的 arm 串里没有任何 axe/SK-scoped 的 id),
+  而**当轮唯一新入集的 `aimguard` 的载体 `spirit_breaker` 一次都没被问过**;
+  两波各 ~180 局 stamped,**零载体**,门两次都 `exit 0`,**没有任何东西举手**。
+  新门在这两波的四粒种子上复跑均 **exit 1**(`aimguard` `verdict=ABSENT`)。
+  **多载体 id 是析取不是合取**(`term=lich|sven`,任一在场即满足);
+  载体不在 `hero_pool.txt` 里 ⇒ `verdict=UNDRAFTABLE`,**解药是摘 id 或改池子,不是再找种子**。
+  报告里请照抄 `CARRIER_TERMS derived from N armed ids: M hero-scoped, K generic, U unresolved`
+  那一行 —— **它就是用来区分「推出来是 5 个」和「手写了 5 个」的**(#276 建议 3)。
+  ⚠️ **满足度仍要写进预登记域**:本轮 `cmrguard`/`odaoe`/`zusult`/`zusstatic` 常见 1/4,
+  **那一粒被回收 ⇒ 该 id 这一波读数归零而非变薄**(批测台自己 W21 §5.2 的诚实边界)。
+  **这道门买得起,总监先证了再立的**:5 个 term 全覆盖的四粒种子**不稀缺** ——
+  `1139/1140/1141/1150` 实测 **exit 0**(SB←1139、CM←1140、lion←1139/1141、OD+zuus←1150),
+  贪心搜索**第 9 次尝试**就命中;`1139..1538` 里 **12.8%** 的种子带 `spirit_breaker`。
+  **一道永远拒发的门和一道永远放行的门一样没用,而且更贵** ⇒ 若某轮真的搜不到全覆盖组合,
+  **不许降门**:按 §BX 报给总监,由总监裁"这一波放弃哪个 id 的 (a)"。
 - **两臂(bisect)波:总监 2026-08-23T19:xxZ 落地 GH #141,现在发得出来了。**
   `spot_run.sh --validate '<cand> <seeds> --games N --cand-ref <ref串>'` ⇒ 基线腿带
   `<ref串>`,波内直接买 armA-vs-armB(跑间噪声整个消掉,成本减半)。
