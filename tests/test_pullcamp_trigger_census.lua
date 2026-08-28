@@ -68,6 +68,45 @@
 -- deliberately sampled at combat instants. IT IS NOT THE DEAD CONDITION;
 -- the vision clause was.
 --
+-- [GH #277 20260828] CORRECTION TO THE PARAGRAPH ABOVE -- the reading is on
+-- the wrong population, and section 1b is the corrected one. "No enemy inside
+-- 800" is `J.ShouldPullNeutralCamp`'s OWN threat veto, and that veto cannot
+-- change what the shipped chain does: the helper has exactly one call site,
+-- `mode_roam_generic`'s GetDesire, and it reads
+--
+--     if vCamp ~= nil and J.IsLanePullSafe(bot) then
+--
+-- -- i.e. every authorised pull is ALSO required to have no visible enemy hero
+-- inside 1800. An enemy inside 800 of the bot is inside 1800 of the bot, and
+-- the two predicates gate on the same `J.IsValidHero` (which requires
+-- `CanBeSeen`) and the same `IsSuspiciousIllusion` filter, so the 800 clause
+-- is outcome-dead at the only place it is reached. Measured: 0 frames of 993
+-- pass 1800 while failing 800, and 324 do the reverse.
+--
+-- The consequence is not that a redundant line sits in the helper. It is that
+-- the DoD's population was DEFINED by the dead clause, so every number in the
+-- paragraph above describes a set of frames the shipped chain never faces --
+-- and it is bigger, in the direction that flatters the answer. On the same
+-- corpus, with `J.IsLanePullSafe` in the 800 clause's place: 22 peacetime
+-- lane-support frames, not 39; 4 admitted by the old window, not 10; 9 by the
+-- widened one, not 18. The scenario is ~44% scarcer than the DoD reported, and
+-- the widened window's gain (+5 frames) is a little over half of what the
+-- published +8 says.
+--
+-- REUSABLE CRITERION: a clause subsumed by a conjunct its only caller adds is
+-- not merely redundant -- a census will reach for it to define its population,
+-- because it is the clause written inside the function under study. The
+-- reading then lands on frames the shipped chain never sees, and nothing turns
+-- red, because every individual assertion is true of the helper in isolation.
+-- Ask which conjuncts the CALL SITE adds before choosing the population.
+--
+-- WHAT THIS CORRECTION DOES NOT SAY. It does not reopen the SILENT root cause:
+-- the vision clause was the dead condition and still is, and `IsLanePullSafe`
+-- still passes on 385/993 frames, so it is still not a second dead condition.
+-- It moves a frequency, not a verdict. And it is not an argument for deleting
+-- the 800 clause from the helper -- see section 1b for the one frame class
+-- where it is NOT subsumed (`bots/` is unchanged by this round).
+--
 -- CORPUS NOTE (2026-08-22T10:xxZ): first measured on 98 fixtures / 911 frames
 -- and re-measured on 100 / 930 when the branch rebased onto main. What moved:
 -- 33 -> 36 peacetime frames, 7 -> 10 old-window, 12 -> 15 new-window, 334 ->
@@ -227,6 +266,151 @@ tests['census: the old window`s 10 frames are none of them a lane'] = function()
     assert(by_kind.ss_chase == 7 and by_kind.lina_tp_home == 3,
         'the chain composition moved: ' .. by_kind.ss_chase .. ' / '
         .. by_kind.lina_tp_home)
+end
+
+-- --------------- 1b. THE POPULATION THE SHIPPED CHAIN ACTUALLY FACES [#277] --
+--
+-- Section 1 defines its population with the helper's own 800 veto. The single
+-- call site conjoins J.IsLanePullSafe (1800) onto the helper's answer, so that
+-- veto cannot change the chain's outcome, and the population it defines is
+-- larger than the one the chain sees. These four tests are (i) the subsumption
+-- itself, measured; (ii) the source pins that keep the subsumption argument
+-- true; (iii) the corrected counts; (iv) the honest exception.
+
+tests['#277: passing 1800 implies passing 800 -- 0 violations'] = function()
+    -- The whole correction rests on this implication. It is not asserted from
+    -- geometry alone: `no800` reads GetUnitList(UNIT_LIST_ENEMY_HEROES) while
+    -- IsLanePullSafe reads bot:GetNearbyHeroes(1800), two different engine
+    -- sweeps, and the two could disagree for reasons no arithmetic covers.
+    -- Measured on every alive hero frame in the corpus.
+    assert(C('pullsafe_not_no800') == 0,
+        'a frame now passes J.IsLanePullSafe while an enemy hero sits inside '
+        .. '800 (' .. C('pullsafe_not_no800') .. ') -- the 800 clause is no '
+        .. 'longer subsumed and section 1b`s corrected counts must be re-read')
+    -- ...and the converse is the size of the gap. If this collapsed toward 0
+    -- the two populations would have merged and the correction would be moot;
+    -- it is a third of the corpus.
+    assert(C('no800_not_pullsafe') > C('frames') * 0.2,
+        'frames that pass 800 but fail 1800 fell below a fifth of the corpus ('
+        .. C('no800_not_pullsafe') .. '/' .. C('frames') .. ')')
+end
+
+tests['#277: [reverse] the call site is what makes the 800 clause dead'] = function()
+    -- The subsumption is only interesting because of the conjunction at the
+    -- call site. Pin BOTH halves at source level: the helper still carries its
+    -- own 800 veto, and the sole caller still ANDs IsLanePullSafe onto it. If
+    -- either moves, the corrected counts above stop describing the chain.
+    local fh = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
+    local jf = fh:read('*a'); fh:close()
+    local at = assert(jf:find('function J.ShouldPullNeutralCamp', 1, true),
+        'J.ShouldPullNeutralCamp moved')
+    local stop = assert(jf:find('\nend\n', at, true), 'the helper has no end')
+    local body = jf:sub(at, stop)
+    local veto = 0
+    for line in body:gmatch('[^\n]+') do
+        if not line:match('^%s*%-%-')
+            and line:find('GetEnemiesNearLoc', 1, true)
+            and line:find('800', 1, true)
+        then
+            veto = veto + 1
+        end
+    end
+    assert(veto == 1,
+        'the helper no longer has exactly one non-comment 800-radius enemy '
+        .. 'veto (' .. veto .. ')')
+
+    fh = assert(io.open('bots/mode_roam_generic.lua', 'r'))
+    local roam = fh:read('*a'); fh:close()
+    local sites, guarded = 0, 0
+    for line in roam:gmatch('[^\n]+') do
+        if not line:match('^%s*%-%-')
+            and line:find('ShouldPullNeutralCamp', 1, true)
+        then
+            sites = sites + 1
+        end
+        if not line:match('^%s*%-%-')
+            and line:find('vCamp ~= nil', 1, true)
+            and line:find('J.IsLanePullSafe', 1, true)
+        then
+            guarded = guarded + 1
+        end
+    end
+    assert(sites == 1, 'J.ShouldPullNeutralCamp now has ' .. sites
+        .. ' call sites in mode_roam_generic -- the subsumption argument is '
+        .. 'per-call-site and must be redone')
+    assert(guarded == 1,
+        'the camp-pull authorisation no longer reads `vCamp ~= nil and '
+        .. 'J.IsLanePullSafe(bot)` on one line -- re-read GH #277')
+    -- And nowhere else in bots/ reaches the helper (the sweep drives it
+    -- directly, which is why the counters can see the 800 clause at all).
+    local other = 0
+    local p = assert(io.popen(
+        'grep -rl "ShouldPullNeutralCamp" bots/ --include=*.lua 2>/dev/null'))
+    for f in p:lines() do
+        if f ~= 'bots/FunLib/jmz_func.lua'
+            and f ~= 'bots/mode_roam_generic.lua'
+            and f ~= 'bots/mode_laning_generic.lua' -- comment reference only
+        then
+            other = other + 1
+        end
+    end
+    p:close()
+    assert(other == 0, 'a new file mentions J.ShouldPullNeutralCamp')
+end
+
+tests['#277: the corrected DoD frequency (22 / 4 / 9, not 39 / 10 / 18)'] = function()
+    -- Same three clauses as section 1's DoD test, with the live threat gate in
+    -- the dead one's place. Ratchets, not equalities: the corpus grows.
+    cs.ratchet(C('peacetime_live'), 22, 'peacetime lane-support frames [live gate]')
+    cs.ratchet(C('chain_old_live'), 4, 'old-window chain frames [live gate]')
+    cs.ratchet(C('chain_new_live'), 9, 'new-window chain frames [live gate]')
+    -- The direction is the point, and the ratchets above cannot carry it: they
+    -- are lower bounds, so a counter that silently went back to reading the
+    -- DEAD clause (39 / 10 / 18) would pass all three of them. What separates
+    -- the two populations is that the live gate is strictly stronger, so its
+    -- count must be strictly SMALLER on this corpus -- 324 frames pass 800 and
+    -- fail 1800, and 17 of them are peacetime lane-support frames. Equality
+    -- here means either the counters merged or the corpus lost every such
+    -- frame; both are news, and this file should be re-read either way.
+    assert(C('peacetime_live') < C('peacetime_lane_support'),
+        'the live-gate population no longer reads strictly smaller than the '
+        .. 'published one (' .. C('peacetime_live') .. ' vs '
+        .. C('peacetime_lane_support') .. ') -- is it still measuring the '
+        .. '1800 gate?')
+    assert(C('chain_old_live') < C('chain_old')
+        and C('chain_new_live') < C('chain_new'),
+        'a live-gate window count stopped reading strictly below its published '
+        .. 'counterpart (' .. C('chain_old_live') .. '/' .. C('chain_old')
+        .. ', ' .. C('chain_new_live') .. '/' .. C('chain_new') .. ')')
+    -- The travel lead still buys frames under the live gate -- if it did not,
+    -- the second half of the GH #13 repair would be unmeasurable on the
+    -- population that matters, which is a different (and worse) finding.
+    assert(C('chain_new_live') > C('chain_old_live'),
+        'under the live gate the travel lead admits no frame the aggro-mark '
+        .. 'window rejected -- the GH #13 repair loses its witness')
+end
+
+tests['#277: the one frame class where 800 is NOT subsumed'] = function()
+    -- Honest boundary, and the reason this round leaves `bots/` alone. The two
+    -- predicates are not identical filters: J.GetNearbyHeroes drops EVERY hero
+    -- when `bot` itself carries modifier_arc_warden_tempest_double (the check
+    -- is on the bot, not on the scanned hero), so on such a frame
+    -- IsLanePullSafe answers true with enemies standing on top of the bot and
+    -- the helper's own 800 veto is the only threat clause left. The corpus has
+    -- no such frame -- which is exactly why the subsumption measured clean --
+    -- so the clause is dead in practice and load-bearing in principle. Deleting
+    -- it is a behaviour change with a real (if tiny) domain; this test pins the
+    -- asymmetry so the next reader does not "clean up" the line.
+    local fh = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
+    local jf = fh:read('*a'); fh:close()
+    local at = assert(jf:find('function J.GetNearbyHeroes', 1, true),
+        'J.GetNearbyHeroes moved')
+    local body = jf:sub(at, assert(jf:find('\nend\n', at, true)))
+    assert(body:find('not bot:HasModifier(\'modifier_arc_warden_tempest_double\')',
+        1, true),
+        'J.GetNearbyHeroes no longer filters on the BOT`s tempest-double '
+        .. 'modifier -- if it now filters the scanned hero instead, the 800 '
+        .. 'clause is subsumed with no exception and GH #277 can be closed')
 end
 
 -- ------------------------- 2. DECLARED-WORLD behaviour on ONE real frame ----

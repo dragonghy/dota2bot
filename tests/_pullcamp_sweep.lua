@@ -92,7 +92,37 @@ for _, path in ipairs(fixture_files()) do
                 if lane == 0 then bump('lane_zero') end
                 if camp_up then bump('camp_up') end
                 if spawners then bump('spawners_nonempty') end
-                if J.IsLanePullSafe(bot) then bump('pullsafe') end
+                -- [GH #277 20260828] The 800 clause vs the clause that
+                -- actually gates the chain. `no800` above is
+                -- J.ShouldPullNeutralCamp's OWN threat veto; `pullsafe` is
+                -- J.IsLanePullSafe, which mode_roam_generic conjoins onto the
+                -- helper's answer at the single call site. Both are counted
+                -- HERE, on the same frame, so the two populations below are
+                -- differences of measurement rather than of argument.
+                local pullsafe = J.IsLanePullSafe(bot)
+                if pullsafe then bump('pullsafe') end
+                -- Subsumption, measured: an enemy hero inside 800 of the bot is
+                -- inside 1800 of the bot, and both predicates gate on the same
+                -- J.IsValidHero (which requires CanBeSeen) and the same
+                -- IsSuspiciousIllusion filter. So `pullsafe` should IMPLY
+                -- `no800` on every frame; a non-zero count here is the news.
+                if pullsafe and not no800 then bump('pullsafe_not_no800') end
+                -- The converse is the size of the gap, and it is not small.
+                if no800 and not pullsafe then bump('no800_not_pullsafe') end
+
+                -- [GH #277 20260828] The SAME three-clause population, but with
+                -- the threat clause the shipped chain actually applies. The
+                -- block below defines "peacetime lane support" with `no800`,
+                -- which is J.ShouldPullNeutralCamp's internal veto -- and that
+                -- veto cannot change the chain's answer, because the only call
+                -- site conjoins J.IsLanePullSafe onto it. These counters use
+                -- `pullsafe` in its place and are otherwise line-for-line the
+                -- same question; the test compares the two readings.
+                if tw and support and pullsafe then
+                    bump('peacetime_live')
+                    if sw_old then bump('chain_old_live') end
+                    if sw_new then bump('chain_new_live') end
+                end
 
                 if tw and support and no800 then
                     bump('peacetime_lane_support')
@@ -193,6 +223,8 @@ for _, k in ipairs({
     'fixtures', 'frames', 'timewin', 'secwin_old', 'secwin_new', 'support',
     'no800', 'lane_nil', 'lane_zero', 'camp_up', 'spawners_nonempty',
     'pullsafe', 'peacetime_lane_support', 'chain_old', 'chain_new',
+    'pullsafe_not_no800', 'no800_not_pullsafe',
+    'peacetime_live', 'chain_old_live', 'chain_new_live',
     'depth_honest', 'depth_past_mid', 'depth_forced_nil', 'depth_own_half',
     'depth_inert',
     'spnc_nil', 'spnc_nonnil', 'spnc_raise', 'spnc_raise_lanefront',

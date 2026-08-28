@@ -27,6 +27,45 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0POP. **【2026-08-28T10:3xZ 新增,GH #277;一条可复用主判据 + 一处 owner P1 DoD① 读数的修正;
+   `bots/` **仅 12 行注释**,零新 gate id,零行为改动。】
+   **一个普查用「写在被研究函数体内」的那条子句定义了人口 —— 而那条子句被它唯一调用点
+   所加的合取吞掉了。于是 owner P1 DoD① 的频率读数描述的是 shipped 链**从不面对**的一组帧。**
+   `J.ShouldPullNeutralCamp` 自带威胁否决「800 内无敌方英雄」;
+   `bots/mode_roam_generic.lua` 的**唯一**调用点写的是
+   `if vCamp ~= nil and J.IsLanePullSafe(bot) then`(1800 内无可见敌方英雄)。
+   两者同过 `J.IsValidHero`(→ `utils.IsValidHero`,**要求 `CanBeSeen()`**)与 `IsSuspiciousIllusion`,
+   800 ⊂ 1800 ⇒ **`pullsafe` 蕴含 `no800`** ⇒ 那条 800 子句**在结果上永远改变不了答案**。
+   而 `tests/_pullcamp_sweep.lua` 的 `peacetime_lane_support` 正是用 `no800` 定义的。
+   **⭐ 主判据(可复用)**:**一条被「它唯一调用点所加的合取」吞掉的子句,不只是冗余 ——
+   普查会伸手去拿它来定义人口,因为它是写在被研究的那个函数体内的那一条。
+   于是读数落在 shipped 链从不面对的一组帧上,而且没有任何东西会转红:
+   每一条断言对**孤立的 helper** 都为真。选人口之前,先问调用点加了哪些合取。**
+   失效方向是**偏宽**(读数比真相乐观),不是噪声红;与 `0EXIST` 同族,但替身是**人口**不是**帧**。
+   **算术(107 fixtures / 993 alive hero frames,同帧求值)**:`pullsafe and not no800` = **0**(反例),
+   `no800 and not pullsafe` = **324**(缝);peacetime lane-support **39(800)→ 22(1800)**;
+   旧窗口 chain **10 → 4**;新窗口 chain **18 → 9** ⇒ 场景比 DoD 报的**稀缺约 44%**,
+   「加行程提前量多买到 +8 帧」在活的门下是 **+5**。
+   **⭐⭐ 最硬的一半(ratchet 对这个失效方向是瞎的)**:`cs.ratchet` 是**单调下界**,
+   计数器哪天偷偷改回读死子句(39/10/18)**三条 ratchet 全部照过**,`<=` 版的子集断言也照过(取等)。
+   真正扣住它的是**严格小于**(活的门严格更强 ⇒ 计数必须严格更小)。
+   **M8(把 `<` 放松成 `<=` 再重放 M1)SURVIVED —— 设计内的存活,它就是那条线存在的证明。**
+   **落地**:sweep 加 5 个计数器;census 新增 **§1b(4 例)**(蕴含实测 / 两处源码 pin:
+   helper 恰一条非注释 800 否决 + 调用点恰一处合取 + `bots/` 无第三引用者 / 修正读数 /
+   arc-warden 例外 pin);头注把已发表段落标为**被修正**,**不删历史行**;
+   `jmz_func` 那条 header 保证旁加 12 行注释。**变异 7 个:6 CAUGHT / 1 设计内 SURVIVED**,
+   三处 CONTROL 干净,还原逐字节相同;夹具走 scratchpad 快照且**快照那步本身被断言**
+   (`0QUOTE` 教训已前置生效,本轮没有重演「快照没跑而变异跑了」)。
+   **⚠ 诚实边界**:**不推翻 SILENT 根因**(死条件仍是那条 vision 子句;`IsLanePullSafe`
+   仍在 385/993 帧通过,**仍然不是第二条死条件**)——本条挪的是**频率**不是判决;
+   **不建议删那条 800 子句**:`J.GetNearbyHeroes` 在 **`bot` 自己**带
+   `modifier_arc_warden_tempest_double` 时丢掉**每一个**英雄(判的是 bot 不是被扫的 hero),
+   那种帧上它是**仅剩的**威胁子句 ⇒ **实践上死、原理上承重**,删它是有真实域的行为改动;
+   语料是**本仓 fixture 语料**(战斗瞬间采样)⇒ 两个人口的**绝对**值都不代表真实频率,
+   **比值**才是产出;**零行为改动 ⇒ 无任何「已上线」主张**。
+   **下一格**:等总监①收 22/4/9 作为 P1 DoD① 的登记读数、②裁 `campexit`(仍挂着);
+   建议总监接判据后做一次**跨文件普查**(「人口由函数体内子句定义,而调用点还加了合取」),
+   **本组不自行扩面**;**不为「删掉 800 子句」开格**。**
 0QUOTE. **【2026-08-28T07:3xZ 新增,GH #273;一条可复用主判据 + 一条**当轮 trunk 红**被修回绿;
    `bots/` **零 diff**,零新 gate id,零行为改动。】
    **一条自己写着「每加一枚 fixture 就 +1」的量被 `eq` 钉死 —— 而同一条断言,
@@ -2290,6 +2329,59 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T10:35Z:**一个普查用「写在被研究函数体内」的那条子句定义了人口 ——
+  而那条子句被它唯一调用点所加的合取吞掉了。于是 owner P1 DoD① 的频率读数描述的是
+  shipped 链**从不面对**的一组帧,而且偏宽:`39 / 10 / 18` 实为 `22 / 4 / 9`。**
+  开工自检 **UNLANDED 0**;cadence **2 findings**(replay-check 6.1h + 本组 8.7h,本轮即在补);
+  未裁 queue 请求 **0**(open 37);稳定版锚点 stable-v1/v2 **各 3 项 ok**;
+  开工 trunk python **47 passed / 0 failed / 0 uncertifiable**;trunk 快 Lua 检测器 **16 文件 0 失败**;
+  selfcheck worst exit **3**(全部来自 cadence);开工 `HEAD == ec264bc`;容器有 `lua5.1`、
+  无 `luacheck`(gate 自己装,apt 包名 `lua-check`);**AWS $0,S3 零访问**。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 常设运维球在批测台,P1 DoD① / P2 DoD① 均已完成、
+  球在总监/批测台/录像组,P3 归总监 ⇒ **本组无未完成优先项格**;open `[strategy]` 逐条过
+  (#265/#263/#262/#259/#254/#250/#248/#242/#237/#231/#227/#222/#215/#196/#186/#137)
+  **全部已认领或已裁定**,07:30Z 之后**无新 [strategy] issue**;backlog 最上一条 `0QUOTE`
+  的下一格是**等总监裁 `campexit`** ⇒ 阻塞 ⇒ 取 backlog 数字条里 P1 家族仍在的
+  **#6 pullcamp / #7 拉野节奏**所在代码面复审,在复审中撞到本条。开 **GH #277**。
+  **⭐ 主判据(可复用)**:**一条被「它唯一调用点所加的合取」吞掉的子句,不只是冗余 ——
+  普查会伸手去拿它来定义人口,因为它是写在被研究的那个函数体内的那一条。于是读数落在
+  shipped 链从不面对的一组帧上,而且没有任何东西会转红:每一条断言对**孤立的 helper** 都为真。
+  选人口之前,先问调用点加了哪些合取。** 失效方向是**偏宽**不是噪声红;`0EXIST` 同族,
+  但替身是**人口**不是**帧**。
+  **算术**:唯一调用点是 `if vCamp ~= nil and J.IsLanePullSafe(bot) then`(1800),
+  helper 自带的是 800;两者同过 `J.IsValidHero`(**要求 `CanBeSeen()`**)与 `IsSuspiciousIllusion`
+  ⇒ `pullsafe` 蕴含 `no800`。实测 993 帧:反例 **0**、缝 **324**;
+  peacetime lane-support **39→22**、旧窗口 chain **10→4**、新窗口 chain **18→9**
+  ⇒ 稀缺约 **44%**,行程提前量的 **+8 实为 +5**。
+  **⭐⭐ 最硬的一半**:`cs.ratchet` 是**下界**,计数器改回读死子句(39/10/18)**三条全过**,
+  `<=` 版子集断言也过(取等)⇒ 扣住它的是**严格小于**;
+  **M8(放松成 `<=` 再重放 M1)SURVIVED —— 设计内,即那条线存在的证明**。
+  **产出**:`_pullcamp_sweep.lua` **+34/-1**(5 个新计数器,与已发表口径**同帧**求值);
+  `test_pullcamp_trigger_census.lua` **+184**(§1b 4 例:蕴含实测 / 两处源码 pin / 修正读数 /
+  arc-warden 例外 pin;头注把已发表段落标为**被修正**,不删历史行);
+  `bots/FunLib/jmz_func.lua` **+12 纯注释**。**变异 7 个:6 CAUGHT / 1 设计内 SURVIVED**,
+  三处 CONTROL 干净,还原四文件逐字节相同;夹具走 scratchpad 快照且**快照那步本身被断言**。
+  **⚠ 诚实边界**:**不推翻 SILENT 根因**(死条件仍是 vision 子句;`IsLanePullSafe` 仍
+  **385/993** 通过,**仍不是第二条死条件**)——挪的是频率不是判决;**不删那条 800 子句**
+  (`J.GetNearbyHeroes` 在 **bot 自己**带 `modifier_arc_warden_tempest_double` 时丢掉每一个英雄
+  ⇒ 那种帧上它是**仅剩的**威胁子句:**实践上死、原理上承重**);语料是本仓 fixture 语料
+  (战斗瞬间采样)⇒ **比值**是产出、绝对值不是;**零行为改动 ⇒ 无「已上线」主张**,
+  本轮不碰任何 gate id 的入集状态;**GH #267 本组第四次点名,仍不擅自抬那个数字**。
+  **门**:`luacheck_gate.sh` **0 warnings EXIT=0**;python **47 passed / 0 failed**;
+  快 Lua 检测器 **16 文件 0 失败**;`pullcamp_trigger_census` **29/0**(改前 25/0)、
+  `pull_camp` 16/0、`pullcamp_ownside_camp` 11/0、`pullcamp_lane_gap` 15/0、`pullthink` 10/0、
+  `pulldrag` 13/0、`creeppull` 22/0、`smoke_load` 3/0、`no_undefined_jmz_refs` 3/0、
+  `gate_claim_consistency` 10/0。**全量 Lua 套件未跑**(~100min,GH #124);**`RULE6_BYPASS` 未使用**。
+  **棘轮**:`test_pullcamp_trigger_census.lua` **+184**;`_pullcamp_sweep.lua` **+34/-1**;
+  `test_set.md` **零改动**(无新 gate id ⇒ 无入集提议);`queue.json` **零改动**;**零 AWS**。
+  **交棒**:**总监**(① 收 **22/4/9** 作为 P1 DoD① 的登记读数——建议收,已发表那行保留并标注;
+  ② `campexit` 入集裁定**仍欠**,只提醒不重复请求;③ 判据若接受值得一次**跨文件普查**
+  ——「人口由被研究函数体内的子句定义,而调用点还加了合取」,**本组不自行扩面**;
+  ④ GH #267 立场不变)、**录像组**(**无请求**;顺带:下一波若有 `pullcamp` 两腿语料,
+  触发前提请按 **1800 那道门**统计,否则批测侧会重复同一个偏宽)、
+  **批测台**(**本轮无请求,零 AWS**)、**英雄组**(无)。
+  **下一格**:等总监的两项裁定;**不为「删掉 800 子句」开格**。
+  详见 `iterations/reports/strategy/20260828T103543Z.md`。
 - 2026-08-28T07:30Z:**一条自己写着「每加一枚 fixture 就 +1」的量被 `eq` 钉死 ——
   而同一条断言,对「解析器悄悄漏掉两枚」是瞎的。本轮真正学到的是「一个冻结的字面量,
   只有在**它转红时说得出这一节正在论证的那件事**时才可断言」。**

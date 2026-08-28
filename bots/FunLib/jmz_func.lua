@@ -8400,6 +8400,18 @@ end
 --   * a FRIENDLY neutral camp is within reach (<= 1500) -- occupancy is asked
 --     on arrival by roam's Think, not here (GH #13 root cause, see below), and
 --   * no enemy hero is right on us (<= 800) -- pulling under threat feeds.
+--     [GH #277] READ THIS BEFORE QUOTING THAT LINE AS A GUARANTEE: it is
+--     outcome-dead at the only call site. mode_roam_generic conjoins
+--     J.IsLanePullSafe (no visible enemy hero within 1800, same J.IsValidHero,
+--     same illusion filter) onto this function's answer, so every frame the
+--     800 veto would reject is already rejected -- measured 0 of 993 corpus
+--     frames pass 1800 while failing 800, against 324 the other way. It is
+--     kept, not deleted, for the one asymmetry: J.GetNearbyHeroes drops every
+--     hero when the BOT carries modifier_arc_warden_tempest_double, and on
+--     such a frame this is the only threat clause left. The consequence that
+--     cost a round: a census reaching for the clause written INSIDE this
+--     function to define its population measures frames the shipped chain
+--     never faces -- see tests/test_pullcamp_trigger_census.lua section 1b.
 --
 -- SCOPED NON-GOAL (honest): the owner's fuller taxonomy also names the
 -- DISADVANTAGED-lane pull of the ENEMY's big camp (wave stuck under the enemy
