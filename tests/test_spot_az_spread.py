@@ -37,6 +37,17 @@ against a fake EC2 that refuses named AZs, and asserts the ring walk: the
 separating assertion is not "an instance launched" — the buggy version launches
 one too — but "the instance it launched is still inside the ring".
 
+AND THE RESIDUE #282 FOUND, four waves later.  W22 launched 4x1 with four
+different --az values and two instances landed in us-west-2a, each with a
+single log line: `launched … az=us-west-2a`, no failure line, no `re-aiming`
+line.  #256's acceptance criterion was not FALSE on that log, it was
+UNEXECUTABLE -- `az=` printed the script's derived belief, and nothing printed
+the caller's request or EC2's answer, so "EC2 moved it" and "this process never
+received your --az" printed byte-identically.  Section 8 drives both stories
+against the fake EC2 and asserts they are now distinguishable: the separating
+assertions are `requested=`/`actual=` on the launch line (story i) and the raw
+`--az arg=` echo in the plan header (story ii).
+
 NOT COVERED HERE, deliberately:
   * that a launch into AZ X actually succeeds -- that needs real capacity and
     real money.  #252's acceptance ("next 4x1 wave shows >=2 distinct
@@ -95,10 +106,12 @@ def run_dry(args, env=None, poison=None):
     return p.stdout, azs
 
 
-LAUNCH_RE = re.compile(r"^launched \S+\s+id=(\S+)\s+run_id=\S+\s+az=(.+)$")
+LAUNCH_RE = re.compile(
+    r"^launched \S+\s+id=(\S+)\s+run_id=\S+\s+az=(\S+)\s+"
+    r"requested=(\S+)\s+actual=(\S+)\s*$")
 
 
-def make_fake_ec2(tmp, fail_azs):
+def make_fake_ec2(tmp, fail_azs, placed_az=None, unpinned_az="us-west-2b"):
     """An `awsx` on PATH that SIMULATES run-instances, failing in `fail_azs`.
 
     Returns (bindir, calllog).  Every call appends the requested AZ (or the
@@ -106,6 +119,16 @@ def make_fake_ec2(tmp, fail_azs):
     readable as a sequence, not just as a final state.  Real AWS is never
     reached: spot_run.sh routes every `aws` through `awsx`, and this one
     shadows it on PATH.
+
+    The fake answers with the two fields the real `run-instances --query
+    'Instances[0].[InstanceId,Placement.AvailabilityZone]'` returns, because
+    #282 is about the SECOND one:
+      placed_az   -- force the reported placement to this, whatever was asked.
+                     `"None"` reproduces an API answer that omits the field;
+                     any AZ reproduces the W22 shape, "asked X, EC2 gave Y,
+                     no failure and no re-aim anywhere in between".
+      unpinned_az -- what EC2 "chooses" when the call carries no --placement.
+                     Defaults to us-west-2b, the AZ that actually zeroed W17.
     """
     d = os.path.join(tmp, "fakebin")
     os.makedirs(d, exist_ok=True)
@@ -125,8 +148,13 @@ def make_fake_ec2(tmp, fail_azs):
             "    exit 254\n"
             "  fi\n"
             "done\n"
-            "echo \"i-fake${az//[!a-z0-9]/}\"\n"
-            % (calllog, " ".join(fail_azs) or "__none__")
+            "placed=$az\n"
+            "[ \"$az\" = none ] && placed=%s\n"
+            "forced=%s\n"
+            "[ -n \"$forced\" ] && placed=$forced\n"
+            "printf 'i-fake%%s\\t%%s\\n' \"${az//[!a-z0-9]/}\" \"$placed\"\n"
+            % (calllog, " ".join(fail_azs) or "__none__",
+               unpinned_az, placed_az or "")
         )
     os.chmod(path, 0o755)
     return d, calllog
@@ -138,7 +166,8 @@ def run_live(args, fakebin):
     e["PATH"] = fakebin + os.pathsep + e["PATH"]
     p = subprocess.run(["bash", SCRIPT] + args, cwd=AWSDIR, env=e,
                        capture_output=True, text=True)
-    launched = [(m.group(1), m.group(2).strip()) for m in
+    # (id, az, requested, actual) -- the last two are #282's fields.
+    launched = [m.groups() for m in
                 (LAUNCH_RE.match(l) for l in p.stdout.splitlines()) if m]
     return p, launched
 
@@ -233,7 +262,7 @@ def main():
           "an empty AZ emits NO --placement flag, i.e. byte-identical to pre-#252")
     # The fallback: a pinned AZ that has no capacity must not cost us the
     # instance -- worse than the exposure the spread removes.
-    check(src.count("launch_one ") >= 2 and 'ID=$(launch_one "" ' in src,
+    check(src.count("launch_one ") >= 2 and 'launch_one "" "$NAME"' in src,
           "a failed pinned launch still ends with an instance (unpinned last resort)")
     check("--count 1" in src or "4x1" in src,
           "the file states the topology the offset rule exists for")
@@ -253,7 +282,7 @@ def main():
         check(p.returncode == 0, "a dead pinned AZ is not fatal (exit %d)" % p.returncode)
         check(len(launched) == 1, "exactly one instance launched: %r" % (launched,))
         got_az = launched[0][1] if launched else ""
-        check(got_az != "<ec2 chose>",
+        check(got_az != "<ec2-chose>",
               "a dead pin does NOT fall back to EC2-chosen placement -- this is "
               "the #256 assertion the pre-fix script fails (got %r)" % got_az)
         check(got_az in ring and got_az != "us-west-2c",
@@ -292,7 +321,7 @@ def main():
         fake, calllog = make_fake_ec2(tmp, list(ring))
         p, launched = run_live(["--count", "1", "--az", "us-west-2a"], fake)
         check(p.returncode == 0, "ring exhaustion still launches (exit %d)" % p.returncode)
-        check(launched and launched[0][1] == "<ec2 chose>",
+        check(launched and launched[0][1] == "<ec2-chose>",
               "the last resort is the pre-#252 unpinned call: %r" % (launched,))
         check("AZ RING EXHAUSTED" in p.stderr,
               "ring exhaustion is announced as its own `!!` line, not as a normal launch")
@@ -318,6 +347,107 @@ def main():
     check("AZ_RETRY_RING" in src and 'IFS=\',\' read -r -a _rr_raw <<< "${AZ_LIST:-}"' in src,
           "the retry ring is built from aws.env AZ_LIST, not from the --az pin")
     check("az_retry_order" in src, "the walk order is a named, testable function")
+
+    # ---- 8. [harness] #282: the launch line must state ASKED vs GOT ------
+    # W22 (2026-08-28) is the motivating log.  Four `--count 1` calls each named
+    # a different --az; two instances landed in us-west-2a and their whole log
+    # block was one line, `launched ... az=us-west-2a`, with no failure line and
+    # no `re-aiming` line.  #256's acceptance criterion ("if it re-aimed, the log
+    # carries THAT line, not `az=`") was not violated on that log -- it was
+    # UNEXECUTABLE, because `az=` printed the script's own derived belief and
+    # nothing printed either the caller's request or EC2's answer.  The two
+    # stories that produce that byte-identical line are:
+    #   (i)  EC2 placed the instance somewhere other than the pin;
+    #   (ii) this process never received the caller's --az at all, built the
+    #        random ring instead, and was internally consistent with it.
+    # 8b separates (i); 8c separates (ii).  Neither is separable pre-fix, and
+    # that -- not the absence of a field -- is what #282 is.
+    with tempfile.TemporaryDirectory() as tmp:
+        # 8a. happy path: all three fields agree, and NOTHING raises a hand.
+        fake, _ = make_fake_ec2(tmp, [])
+        p, launched = run_live(["--count", "1", "--az", "us-west-2d"], fake)
+        check(len(launched) == 1,
+              "the launch line still parses with the #282 fields: %r" % (p.stdout,))
+        if launched:
+            _id, az, req, act = launched[0]
+            check((az, req, act) == ("us-west-2d",) * 3,
+                  "a clean pin reports requested==az==actual: %r" % (launched[0],))
+        check("PLACEMENT MISMATCH" not in p.stderr,
+              "no mismatch line when the pin was honoured")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 8b. THE W22 SHAPE, story (i): pin 2c, EC2 answers 2a, no failure and
+        # no re-aim anywhere.  Pre-fix this printed `az=us-west-2c` and was
+        # silent; the separating assertion is that the move is now BOTH
+        # readable and flagged as unexplained.
+        fake, calllog = make_fake_ec2(tmp, [], placed_az="us-west-2a")
+        p, launched = run_live(["--count", "1", "--az", "us-west-2c"], fake)
+        check(open(calllog).read().split() == ["us-west-2c"],
+              "anti-vacuity: exactly one launch call, the pinned one")
+        check("re-aiming" not in p.stderr and "launch in" not in p.stderr,
+              "the drift happens with no failure line and no re-aim -- W22's shape")
+        if launched:
+            _id, az, req, act = launched[0]
+            check(req == "us-west-2c" and act == "us-west-2a",
+                  "asked and got are BOTH on the line: %r" % (launched[0],))
+        check("PLACEMENT MISMATCH requested=us-west-2c actual=us-west-2a" in p.stderr,
+              "requested != actual raises its own hand: %r" % (p.stderr,))
+        check("re-aimed=no" in p.stderr and "UNEXPLAINED (#282)" in p.stderr,
+              "and says the move had no explanation in the log: %r" % (p.stderr,))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 8c. story (ii): the caller's --az never arrived.  Nothing downstream
+        # can tell -- the ring the script builds is self-consistent -- so the
+        # ONLY separator is the raw argument, echoed before any derivation.
+        fake, _ = make_fake_ec2(tmp, [])
+        p_with, _ = run_live(["--count", "1", "--az", "us-west-2c"], fake)
+        p_without, _ = run_live(["--count", "1"], fake)
+        check("--az arg=us-west-2c" in p_with.stdout,
+              "the header echoes the literal --az it received")
+        check("--az arg=<empty>" in p_without.stdout,
+              "and says <empty> when it received none -- the W22 diagnostic")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 8d. an UNREPORTED placement is not a mismatch.  If the API omits the
+        # field, "unknown" must read as unknown; inventing a mismatch here would
+        # make the new line cry wolf on every launch that does not answer.
+        fake, _ = make_fake_ec2(tmp, [], placed_az="None")
+        p, launched = run_live(["--count", "1", "--az", "us-west-2c"], fake)
+        if launched:
+            _id, az, req, act = launched[0]
+            check(act == "<unreported>",
+                  "a missing Placement reads as <unreported>: %r" % (launched[0],))
+            check(az == "us-west-2c" and _id.startswith("i-"),
+                  "and the id/pin are still recovered from the 2-field answer: %r"
+                  % (launched[0],))
+        check("PLACEMENT MISMATCH" not in p.stderr,
+              "an unreported placement is never reported as a mismatch")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # 8e. ring exhaustion DOES move the instance, and that move is
+        # explained.  The mismatch line must fire (the spread was lost) but not
+        # claim the move is unexplained -- the `!!` line above it explains it.
+        fake, _ = make_fake_ec2(tmp, list(ring), unpinned_az="us-west-2b")
+        p, launched = run_live(["--count", "1", "--az", "us-west-2a"], fake)
+        if launched:
+            _id, az, req, act = launched[0]
+            check(req == "us-west-2a" and act == "us-west-2b",
+                  "exhaustion still records what was asked: %r" % (launched[0],))
+        check("PLACEMENT MISMATCH" in p.stderr and "re-aimed=yes" in p.stderr,
+              "the exhaustion move is flagged as a mismatch: %r" % (p.stderr,))
+        check("UNEXPLAINED (#282)" not in p.stderr,
+              "but NOT as unexplained -- the AZ RING EXHAUSTED line explains it")
+
+    # 8f. structural: `actual` has to come from EC2's own answer, not from a
+    # second describe call (which would cost an API round trip per instance) and
+    # not from the script's variable (which is the belief #282 says is not
+    # evidence).
+    check("Instances[0].[InstanceId,Placement.AvailabilityZone]" in src,
+          "the placement is read out of the run-instances response itself")
+    check("split_launch" in src and '[ "$LAST_AZ" = "None" ]' in src,
+          "a named helper splits the answer and maps `None` to unknown")
+    check('echo "  --az arg=' in src,
+          "the raw --az argument is echoed unconditionally in the plan header")
 
     print("\n%d checks, %d failures" % (CHECKS, len(FAILURES)))
     if FAILURES:

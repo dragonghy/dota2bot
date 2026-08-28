@@ -80,6 +80,43 @@ shapes, and they mean different things:
 | `! <name>: re-aiming inside the ring -> <az>` | the pin failed, another ring AZ took it | not a degradation, but name "asked X, got Y" |
 | `!! <name>: AZ RING EXHAUSTED …` | every AZ refused; placement abandoned | **wave-level warning** — reclaims are correlated again |
 
+### Reading the placement off the log (#282)
+
+W22 (2026-08-28) showed that the table above is not enough to *execute* #256's
+acceptance criterion. Two instances asked for `2c`/`2d` and landed in `2a`, and
+each one's whole log block was a single `launched … az=us-west-2a` line — no
+failure line, no `re-aiming` line. The criterion ("if it re-aimed, the log
+carries *that* line and not `az=`") was not violated; it was **unexecutable**,
+because `az=` printed the script's own derived belief and nothing printed either
+what the caller asked for or what EC2 answered. Two very different stories
+printed byte-identically: *EC2 moved it*, and *this process never received your
+`--az` at all*.
+
+The launch path therefore now prints, **unconditionally, on the success path
+too**:
+
+```
+  --az arg=us-west-2c                     <- plan header: the RAW argument received
+launched <name>  id=…  run_id=…  az=us-west-2c  requested=us-west-2c  actual=us-west-2a
+  ! <name>: PLACEMENT MISMATCH requested=us-west-2c actual=us-west-2a re-aimed=no <- UNEXPLAINED (#282): …
+```
+
+- `--az arg=` is the literal argument, echoed before any ring is derived — the
+  one field that separates "your `--az` never arrived" (prints `<empty>`) from
+  everything else. Everything downstream of it is self-consistent either way.
+- `requested=` is where the instance was aimed **before** any re-aim
+  (`<none>` if no placement was asked for at all).
+- `actual=` is `Placement.AvailabilityZone` **as `run-instances` itself
+  reports it** — the same response, no extra API call, and the only one of the
+  three fields that is not this script's opinion. `<unreported>` when the API
+  omits it, and an unreported placement is never counted as a mismatch.
+- The `! … PLACEMENT MISMATCH` line fires whenever `requested != actual`.
+  `re-aimed=yes` means the `!`/`!!` lines above it already explain the move;
+  **`re-aimed=no … UNEXPLAINED (#282)`** is W22's shape and should be reported.
+
+Per-wave check: for each instance, `requested == actual`, or there is a line
+saying why not.
+
 The retry ring is `AZ_LIST`, **not** the `--az` value: under the batch desk's
 one-explicit-AZ-per-call convention the pin is a single AZ, so a retry keyed on
 it would have nowhere to walk and would degrade to the #256 bug on the first

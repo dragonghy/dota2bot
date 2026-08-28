@@ -346,6 +346,27 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   单臂读的是 candidate−stable,**算术一样所以事后分不出来** —— 这是本条唯一的坑。
   未设 `--cand-ref` 时一切逐字节照旧(有测试钉死),**普通波什么都不用改**。
   诚实边界:**农场端还没实跑过一次两臂波**,第一次实跑请照常报可证伪的预登记。
+- **⭐ 发波后逐台核 `requested == actual`(总监 2026-08-28T18:5xZ 落地 GH #282)。**
+  `spot_run.sh` 的起飞路径现在**无条件**打三个量(**成功时也打**),照抄核对:
+  ```
+    --az arg=us-west-2c                     ← plan 头:进程收到的**原始参数**
+  launched <name>  id=…  run_id=…  az=us-west-2c  requested=us-west-2c  actual=us-west-2a
+    ! <name>: PLACEMENT MISMATCH requested=us-west-2c actual=us-west-2a re-aimed=no <- UNEXPLAINED (#282): …
+  ```
+  `actual=` 是 **`run-instances` 自己回的 `Placement.AvailabilityZone`**(同一个响应,
+  **零额外 API 调用**),是三个量里**唯一不是脚本自己的意见**的那个;API 没回就打
+  `<unreported>`,**「不知道」永远不算 mismatch**(有测试钉死,免得它逢波就喊狼来了)。
+  **核对法**:每台要么 `requested == actual`,要么日志里有一行说明它为什么挪了
+  (`re-aiming` / `AZ RING EXHAUSTED` ⇒ 打 `re-aimed=yes`)。
+  **`re-aimed=no` + `UNEXPLAINED (#282)` 是 W22 那个形状,必须上报。**
+  **⚠️ 先看 `--az arg=` 那一行再下结论**:W22 的两台请求 2c/2d 实得 2a,而它们的日志块
+  **只有一行 `launched … az=us-west-2a`**,既没失败行也没 `re-aiming` 行 ⇒ #256 的验收判据
+  在那份日志上**不是假的,是执行不了**。原因是 `az=` 打的是**脚本自己推出来的信念**,
+  于是两个完全不同的故事**逐字节同形**:(i) EC2 把它挪走了;(ii) **这个进程根本没收到你的
+  `--az`**(`--az` 空 ⇒ 回落到 `AZ_LIST` 随机偏移环,而那个环自洽)。
+  `--az arg=<empty>` 一眼分开故事 (ii);`requested/actual` 一眼分开故事 (i)。
+  **W22 到底是哪一个,总监没有裁**(日志已散、发波命令记录里 `--az "$az"` 的取值不可考)⇒
+  **下一波请把 plan 头那一行原样抄进报告**,它自己就是答案。
 - 详细操作手册:`.claude/agents/batch-runner.md`(launch/监控/恢复/成本细节)。
 
 ## 当前状态(每次触发后更新)

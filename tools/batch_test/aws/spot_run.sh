@@ -328,9 +328,30 @@ EOF
     fi
 }
 
+# ---- [harness] #282: the launch line printed what the SCRIPT BELIEVED, not
+# what EC2 did, and it printed the placement it derived rather than the
+# placement the caller asked for. W22 (2026-08-28) is the shape: four `--count 1`
+# calls each naming a different `--az`, two instances landed in us-west-2a, and
+# their log blocks held ONE line each -- `launched ... az=us-west-2a` -- with no
+# failure line and no `re-aiming` line. #256's acceptance criterion reads "if an
+# instance re-aimed, the log must carry THAT line and not `az=`", and on that
+# log the criterion is not false, it is UNEXECUTABLE: the line does not say what
+# was asked, and it does not say what EC2 actually returned. Two very different
+# stories -- "EC2 placed it elsewhere" and "this process never received your
+# --az at all" -- print byte-identically today.
+#
+# So the launch path now prints all three quantities UNCONDITIONALLY (on the
+# success path too, which is where W22 lost them):
+#   requested= what this instance was aimed at BEFORE any re-aim, `<none>` if
+#              the caller asked for no placement at all;
+#   az=        what was finally PINNED on the winning call (post re-aim);
+#   actual=    Placement.AvailabilityZone as run-instances itself reports it.
+# `actual` costs no extra API call -- it comes back in the same response -- and
+# it is the only one of the three that is not this script's own opinion.
 launch_one() {
     # $1 = AZ ("" = let EC2 choose, the pre-#252 behavior), $2 = NAME,
-    # $3 = RUN_ID, $4 = user-data. Echoes the instance id.
+    # $3 = RUN_ID, $4 = user-data. Echoes "<instance-id> <actual-az>"
+    # (tab-separated by --output text; `None` when EC2 does not report one).
     local az=$1 name=$2 run_id=$3 ud=$4
     aws ec2 run-instances --region "$AWS_REGION" \
         --image-id "$AMI_ID" --instance-type "$INSTANCE_TYPE" \
@@ -341,11 +362,27 @@ launch_one() {
         --instance-initiated-shutdown-behavior terminate \
         --user-data "$ud" \
         --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$name},{Key=soak-run,Value=$run_id}]" \
-        --query 'Instances[0].InstanceId' --output text
+        --query 'Instances[0].[InstanceId,Placement.AvailabilityZone]' --output text
+}
+
+# Splits launch_one's output into LAST_ID / LAST_AZ. LAST_AZ is left EMPTY when
+# the field is absent or the literal `None`: an unreported placement must read
+# as "unknown", never as a mismatch we then blame on EC2.
+split_launch() {
+    LAST_ID=$(printf '%s\n' "$1" | head -1 | awk '{print $1}')
+    LAST_AZ=$(printf '%s\n' "$1" | head -1 | awk '{print $2}')
+    [ "$LAST_AZ" = "None" ] || [ "$LAST_AZ" = "null" ] && LAST_AZ=""
+    return 0
 }
 
 echo "plan: $COUNT x $( [ $SPOT -eq 1 ] && echo SPOT || echo on-demand ) $INSTANCE_TYPE"
 echo "  ref=$REF  slots=$SLOTS  rec_slots=$REC_SLOTS  watchdog=${HOURS}h  region=$AWS_REGION"
+# The literal --az the process RECEIVED, echoed unconditionally (#282). W22's
+# per-instance lines were self-consistent with the ring the script built; what
+# no line stated is which ring that was, so "the caller's --az never arrived"
+# and "EC2 moved it" were indistinguishable after the fact. One field separates
+# them, and it has to be the raw argument, not anything derived from it.
+echo "  --az arg=${AZ_ARG:-<empty>}"
 if [ ${#AZS[@]} -gt 0 ]; then
     echo "  az ring=${AZS[*]}  start=${AZS[$AZ_OFFSET]}$( [ -z "$AZ_ARG" ] && echo ' (random offset, see #252)' )"
 else
@@ -375,30 +412,35 @@ for n in $(seq 1 "$COUNT"); do
     # unpinned fallback is the wrong FIRST move and only an acceptable LAST
     # one). Ring exhaustion prints a distinct `!!` line: the whole point of #256
     # is that "we gave up on placement" must not read like a normal launch.
+    REQ_AZ=$AZ          # what this instance was aimed at, before any re-aim (#282)
+    REAIMED=no
     ERRLOG=$(mktemp)
-    if ID=$(launch_one "$AZ" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
-        :
+    if _OUT=$(launch_one "$AZ" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
+        split_launch "$_OUT"
     elif [ -n "$AZ" ]; then
         echo "  ! $NAME: launch in $AZ failed -- $(tail -1 "$ERRLOG")" >&2
-        ID=""
+        LAST_ID=""; LAST_AZ=""
         _alts=()
         for _a in $(az_retry_order "$AZ"); do _alts+=("$_a"); done
         for _a in "${_alts[@]:-}"; do
             [ -n "$_a" ] || continue
             echo "  ! $NAME: re-aiming inside the ring -> $_a" >&2
-            if ID=$(launch_one "$_a" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
+            REAIMED=yes
+            if _OUT=$(launch_one "$_a" "$NAME" "$RUN_ID" "$UD" 2>"$ERRLOG"); then
+                split_launch "$_OUT"
                 AZ=$_a
                 break
             fi
             echo "  ! $NAME: launch in $_a failed -- $(tail -1 "$ERRLOG")" >&2
-            ID=""
+            LAST_ID=""; LAST_AZ=""
         done
-        if [ -z "$ID" ]; then
+        if [ -z "$LAST_ID" ]; then
             echo "  !! $NAME: AZ RING EXHAUSTED (${AZ_RETRY_RING[*]:-<empty>}) --" \
                  "falling back to EC2-chosen placement, which is where #256's" \
                  "correlation comes back. Treat this line as a wave-level warning." >&2
             AZ=""
-            ID=$(launch_one "" "$NAME" "$RUN_ID" "$UD")
+            REAIMED=yes
+            split_launch "$(launch_one "" "$NAME" "$RUN_ID" "$UD")"
         fi
     else
         cat "$ERRLOG" >&2
@@ -406,9 +448,18 @@ for n in $(seq 1 "$COUNT"); do
         exit 1
     fi
     rm -f "$ERRLOG"
+    ID=$LAST_ID
 
     LAUNCHED+=("$ID")
-    echo "launched $NAME  id=$ID  run_id=$RUN_ID  az=${AZ:-<ec2 chose>}"
+    echo "launched $NAME  id=$ID  run_id=$RUN_ID  az=${AZ:-<ec2-chose>}" \
+         " requested=${REQ_AZ:-<none>}  actual=${LAST_AZ:-<unreported>}"
+    # #282: the mismatch has to raise its own hand. `requested != actual` with
+    # re-aimed=no is precisely W22's unexplained move -- nothing else in the log
+    # marks it, and it is the case that silently costs #252 its spread.
+    if [ -n "$REQ_AZ" ] && [ -n "$LAST_AZ" ] && [ "$REQ_AZ" != "$LAST_AZ" ]; then
+        echo "  ! $NAME: PLACEMENT MISMATCH requested=$REQ_AZ actual=$LAST_AZ" \
+             "re-aimed=$REAIMED$( [ "$REAIMED" = no ] && echo ' <- UNEXPLAINED (#282): no failure line and no re-aim produced this move' )" >&2
+    fi
     echo "   S3: s3://$S3_BUCKET/soak/$RUN_ID/"
 done
 
