@@ -22,10 +22,69 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--37. **回棒 ③ 剩下的三行 WK(见 -35 / -33)** —— **下一棒做这条**。
-   从 `test_wk_roshan_mana_ceiling.lua` 起,和 `test_wk_roshan_mana_floor.lua`
-   收窄中的余量(141 → **129**)**并成一棒读** —— ceiling 那份的 crossing-level
-   tail argument 和这个余量**是同一个量的两种说法**。
+-38. **棒 ③ 剩下的**两**行 WK(-37 清掉了 ceiling 那行)** —— **下一棒做这条**。
+   `test_wk_bone_guard_thresholds.lua`(untrained-stub-is-turbo-reality claim)与
+   `test_wk_q_aim_preflight.lua`(level distribution note)。两者都还在
+   `test_level_premise_registry.lua` 的 PENDING 上,ceiling 现为 **4**。
+   - **做之前先读 -37 的第 3 节**:那两个文件大概率也用
+     `ls tests/fixtures/f_*.lua` 枚举语料 ⇒ 它们的「零/极值」同样可能是
+     **glob 的地平线**而不是测到的事实,而 parked 的那枚 26 级 WK 帧
+     (`iterations/pending/tpgap_159_fixture/`)对 bone guard 那行**直接相关**
+     (该帧 Bone Guard 已 rank 4)。先问「这个零是扫不到还是不存在」,再问别的。
+
+-37. ~~**回棒 ③ 剩下的三行 WK:ceiling 的 tail argument 与 floor 的余量并成一棒读**~~
+   **2026-08-28T16:57Z done —— `bots/`/`game/` **零行改动**;无新 gate id;
+   `wkrosh` 门与 armed 状态未动;`state.json` 新增
+   `wkrosh_LATEGAME_RECONCILED_20260828`(`gated:false`);零 AWS;不申请入集;
+   **不提 queue**;**新开 GH #281**(harness/总监)。
+   报告 `iterations/reports/hero/20260828T165744Z.md`。**
+   - **-35 的直觉对,而且比它自己写的还对**:两条读数不只是「同一个量的两种说法」,
+     **错的方式也是同一个,并且被同一枚帧同时打掉** ——
+     `iterations/pending/tpgap_159_fixture/f_260826_155416_slardar_tpgap.lua`
+     (t=1382.2 = 23:02,GH #235)的 WK 位:**level 26 / mp 762 / max_mp 855 /
+     Blast 4 / Reincarnation 3**。
+   - **⭐ 余量不是收窄,是变号**:129 **之下** → 255 **之上**;而分支判的是**当前**蓝量
+     762 ⇒ **shipped 600 第一次有帧过闸**。ceiling 的 tail 同时按**观测**退休
+     (26 过了全部三条 crossing level 21/19/18)。**两条判词都没被撤回** ——
+     它们本来的立足点更窄(600 = 603 crossing pool 的 **99.5%**、法术价格的 **4.3 倍**),
+     **等级从来不是重点**,这也是 `bots/` 头注 08-27 已自行吸收、本轮不必动一行的原因。
+   - **⭐⭐ 主产出:glob 就是地平线。** 两个文件都用 `ls tests/fixtures/f_*.lua`,
+     那枚帧停在 `iterations/pending/`(GH #236)—— **glob 之外一个目录**,于是
+     两个扫描**都把「扫不到」渲染成量到的极值**(一个零、一个 high-water)。
+     **最毒的证据是 floor 自己的预言**:它把「post-GH#108 语料可能有旧扫描structurally
+     看不到的帧」写成**关于将来**的事(写于 **08-28**),而回答它的帧**从 08-26 起就在树里**。
+     同 GH #257/#266 族,且**正是该文件自己两节后用另一个名字警告过的陷阱**。
+     全仓 **53 个测试文件**共用这句 glob ⇒ **GH #281**。§1 把这条机制**变成机器检查**:
+     两 sibling 仍用那一句 glob / parked 在 glob 之外 / 该文件在那路径上**读得到**
+     (**结构性看不见,不是文件缺失** —— 这个区分才让它是缺陷而非意外)。
+   - **⭐ 模型外推第一次可检验,偏了 14 点智力**:预测 687 vs 实测 `max_mp` **855**,
+     差 **168 = 恰好 14 int**;**不是漏算物品**(五件装备按 ceiling 自己的 `ITEM_STATS`
+     逐件断言全 0 智力);**控制项**:1 级锚点 267 仍精确 ⇒ 差**与等级相关**。
+     **记录不归因**,两候选:(a) 26 级必然已花的**四个天赋**而帧只显示**一个**
+     —— GH #260 已坐实语料**从没解析出英雄专属天赋行**(960 帧 0 条),
+     **恰好就在这个维度欠观测**;(b) 12 级以上某条平坦 1.4/级驮不动的属性机制。
+     **一枚帧分不开**,需第二枚不同等级的后期 WK 位。**方向是承重的那一半**:
+     模型**偏低** ⇒ 真实 crossing level **更早不会更晚** ⇒ 下游**只需重新指向,不需撤回**。
+   - **⭐ 对 lever 本身的代价(登记,不解决)**:这枚帧上**两条腿都放行**
+     (600 ≤ 762;armed = 140+0,Reincarnation 3 级免费)⇒ **`wkrosh` 在这一帧上是 no-op**,
+     而这**恰是本仓唯一一枚「晚到打肉山是常态」的帧**。**不撤销 lever**
+     (咬合窗口 `[cost+reserve, 600)`,最宽 505 最窄 240,**最宽处正是 R 1-2 级**),
+     但**重新指了取证方向**:现撑着它的 **24/31 全部测自 ≤12 级**的帧 ——
+     **最不可能打肉山的等级带**,对真正咬合的带子**一个字没说**。域仍是 queue hero-10。
+   - **registry 未经提示地正确响了两次**,并**顺手补上它自己的洞**:变异实测
+     ceiling **4→9 静默通过**,而文件写着这个数「may only fall」——
+     **天花板抓不到自己被抬高**。现绑成常量并断言 `CEILING == #PENDING`:
+     还债只能**删行**,凭空造余量得**造一行**而那行会被既有 `gone` 检查顶回。两种绕法都实测被抓。
+   - **11 变异 10 抓 + 1 对照按设计逃逸**。**⚠️ 过程教训**:M9 第一次读作「没抓到」,
+     实际是 `sed` **一个字符都没匹配上**(把 Lua pattern 转义写进了 sed)——
+     **no-op 变异和漏网变异长得一模一样**。**信「没抓到」之前先确认变异真的改到了文件。**
+     变异一律**从备份还原,不用 `git checkout`**(-36 那轮的教训)。
+   - **诚实边界**:**一枚帧**,足以杀全称命题(全称命题死于一个反例)但**不是分布**,
+     全轮**没有一句**说 26 级 WK 有多常见;**快照不是直读**(沿用
+     `tests/mock/lategame_talent_frame.lua` 的理由)但**加强了** ——
+     §5 控制项趁 parked 还读得到,把每个数(含 bag 按**集合**)从原文件重推一遍;
+     **完全没碰域**(`GetActiveMode` 是 bot-VM 状态,第 13 条 world assertion),
+     **蓝量读数不是域读数**;两 sibling 的**计数一个没动**。
 
 -36. ~~**GH #279:CM pos5 被删掉的 Boots of Bearing 终点第一次可定价了**~~
    **2026-08-28T13:51Z done —— 删除维持,但从两条腿变一条腿;`bots/` **只改注释**;
@@ -2211,6 +2270,59 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T16:57Z(报告 `iterations/reports/hero/20260828T165744Z.md`;轴 **backlog -37:
+  `wkrosh` 的两条读数并成一棒 —— ceiling 的 tail argument 与 floor 的余量**;
+  **新开 GH #281** 交 harness/总监)
+  —— 自检 **worst exit 3**:legs run 7,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  UNLANDED 0(500 refs 里 454 REFUSED,shallow clone);**cadence 洞是 director 4.2h + strategy 9.2h,
+  本组无洞**;待裁 queue 请求 0(open 37);stable-v1/v2 锚点两项 ok;
+  trunk python **50 passed / 0 failed**,快速 Lua 检测器 17 文件 0 失败(FAST SUBSET)。
+  (退出码按上一条的教训用 `${PIPESTATUS[0]}` 取。)
+  owner 四条优先项**没有一条球在本组**(P1/P2 球在协同组,常设运维球在批测台);
+  open `[hero]` issue 有 7 条,但 **backlog -37 写明「下一棒做这条」** ⇒ 按章程取 backlog 顶端。
+  **本轮 `bots/`/`game/` 零行改动**(头注 08-27 已自行吸收该更正);无新 gate id;
+  **`wkrosh` 的门与 armed 状态一个字没动**;
+  `state.json` 新增 `wkrosh_LATEGAME_RECONCILED_20260828`(`gated:false`);
+  **零 AWS**;不申请入集;**不提 queue**。
+  - **⭐ -35 的直觉对,而且比它自己写的还对**:两条读数不只是「同一个量的两种说法」,
+    **错的方式也是同一个,并被同一枚帧同时打掉** ——
+    `iterations/pending/tpgap_159_fixture/f_260826_155416_slardar_tpgap.lua`(t=1382.2 = 23:02,
+    GH #235)的 WK 位 **level 26 / mp 762 / max_mp 855 / Blast 4 / Reincarnation 3**。
+  - **⭐ 余量不是收窄是变号**:129 **之下** → 255 **之上**;分支判的是**当前**蓝量 762 ⇒
+    **shipped 600 第一次有帧过闸**;ceiling 的 tail 同时按**观测**退休(26 过了 21/19/18 全部三条)。
+    **两条判词都没被撤回** —— 立足点本来更窄(600 = 603 crossing pool 的 **99.5%**、
+    法术价格的 **4.3 倍**),**等级从来不是重点**。
+  - **⭐⭐ 主产出:glob 就是地平线。** 两文件都用 `ls tests/fixtures/f_*.lua`,而那枚帧停在
+    `iterations/pending/`(GH #236)——**glob 外一个目录**,于是两个扫描**都把「扫不到」
+    渲染成量到的极值**。**最毒的证据是 floor 自己的预言**:它把「旧扫描 structurally 看不到的帧」
+    写成**关于将来**的事(**写于 08-28**),而回答它的帧**从 08-26 起就在树里**。
+    同 GH #257/#266 族,**且正是该文件自己两节后用另一个名字警告过的陷阱**。
+    **53 个测试文件**共用这句 glob ⇒ **GH #281**。§1 把机制**变成机器检查**
+    (**结构性看不见 ≠ 文件缺失** —— 这个区分才让它是缺陷)。
+  - **⭐ 模型外推第一次可检验,偏 14 点智力**:预测 687 vs 实测 855(差 **168 = 恰好 14 int**);
+    **不是漏算物品**(五件按 ceiling 自己的 `ITEM_STATS` 逐件断言全 0);
+    **控制项** 1 级锚点 267 仍精确 ⇒ 差**与等级相关**。**记录不归因**(候选:26 级必然已花的
+    四个天赋而帧只显示一个,GH #260 已坐实该维度欠观测 / 12 级以上某属性机制);
+    **方向承重**:模型**偏低** ⇒ 真实 crossing level **更早不会更晚** ⇒ 下游**只需重指,不需撤回**。
+  - **⭐ lever 的代价(登记不解决)**:该帧上**两条腿都放行** ⇒ **`wkrosh` 是 no-op**,
+    而这**恰是本仓唯一一枚「晚到打肉山是常态」的帧**。**不撤销**(咬合窗口最宽 505 最窄 240,
+    **最宽处正是 R 1-2 级**),但**重指取证方向**:撑着它的 **24/31 全部测自 ≤12 级** ——
+    **最不可能打肉山的等级带**。域仍是 queue hero-10。
+  - **registry 未经提示正确响两次**,并**补上它自己的洞**:变异实测 ceiling **4→9 静默通过**
+    (**天花板抓不到自己被抬高**)⇒ 现绑成常量断言 `CEILING == #PENDING`,还债只能**删行**;
+    ceiling 5 → **4**。
+  - **11 变异 10 抓 + 1 对照按设计逃逸**。**⚠️ 过程教训**:M9 初读「没抓到」,实际是 `sed`
+    **一个字符都没匹配上** —— **no-op 变异和漏网变异长得一模一样**;
+    **信「没抓到」之前先确认变异真的改到了文件**。还原一律用**备份文件不用 `git checkout`**。
+  - **诚实边界**:**一枚帧**,足以杀全称命题但**不是分布**,全轮**没有一句**说 26 级 WK 多常见;
+    **快照不是直读**但**加强了**(§5 控制项趁 parked 还读得到把每个数重推一遍,bag 按**集合**);
+    **完全没碰域**,**蓝量读数不是域读数**;两 sibling 的**计数一个没动**。
+  - **验证**:`luacheck_gate.sh` **0 警告 exit 0**(前后各一次);`run_py_tests.sh` **50/0**;
+    Lua filter:wk_ 172/0、wk_roshan 43/0、level_premise 5/0、corpus_scale 8/0、
+    gate_claim_consistency 10/0、level_gate_census 15/0、activemode 14/0、focus_build 10/0、smoke_load 3/0。
+    **全量套件单进程跑不完(GH #124),本轮未跑全量 —— 是没跑,不是跑绿了。**
+    **未用 `RULE6_BYPASS`。**
+
 - 2026-08-28T13:51Z(报告 `iterations/reports/hero/20260828T135142Z.md`;轴 **GH #279:
   被删掉的 Boots of Bearing 终点定价**;**删除维持,但两条腿变一条腿**;**GH #279 已评论并关闭**)
   —— 自检 **worst exit 3**:legs run 7,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;

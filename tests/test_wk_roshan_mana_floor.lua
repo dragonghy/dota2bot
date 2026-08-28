@@ -1,6 +1,15 @@
 -- [hero] `wkrosh` -- Wraith King's Roshan branch asks for 600 absolute mana
--- before it will spend a 95..140 mana spell, and 600 is above the ENTIRE pool of
--- every Wraith King frame this repo has ever recorded.
+-- before it will spend a 95..140 mana spell, and 600 is above the entire pool of
+-- every Wraith King frame in tests/fixtures/.
+--
+-- THAT SCOPE IS LOAD-BEARING AND IT USED TO BE MISSING.  This header said "every
+-- Wraith King frame this repo has ever recorded", which is a claim about the repo
+-- and was FALSE when it was written: the settling frame was parked in
+-- iterations/pending/ (level 26, mp 762, max_mp 855 -- it clears the shipped 600
+-- on both), one directory outside the `ls tests/fixtures/f_*.lua` scan below.
+-- Corrected 2026-08-28; the counts in section 2 are unchanged and still true of
+-- the population they scan.  The full read is
+-- tests/test_wk_roshan_lategame_reconciliation.lua.
 --
 -- THE DEFECT
 -- ----------
@@ -43,6 +52,19 @@
 -- could not -- so the next round that grows the WK corpus should expect the
 -- margin to keep closing and should re-read rather than re-baseline.
 --
+-- THAT FORECAST WAS ANSWERED THE SAME DAY, AND IT WAS WRONG ABOUT THE SHAPE.  The
+-- margin did not keep closing; it CHANGED SIGN.  The frame is
+-- iterations/pending/tpgap_159_fixture/f_260826_155416_slardar_tpgap.lua at
+-- t=1382.2 (GH #235): Wraith King at level 26 with mp 762 and max_mp 855, i.e.
+-- 255 ABOVE the shipped 600, so the shipped floor has its first admitted frame.
+-- The forecast read as a statement about FUTURE corpus growth; the answering
+-- frame had been in the tree for two days, unseeable to the scan below because it
+-- is parked one directory away behind GH #236.  Everything in section 2 stands as
+-- a reading of tests/fixtures/ -- what is retired is quantifying it over the repo.
+-- tests/test_wk_roshan_lategame_reconciliation.lua carries that read, including
+-- what it costs this lever (at those ranks BOTH legs admit, so `wkrosh` is a
+-- no-op on the one frame late enough for a Roshan fight to be ordinary).
+--
 -- The 0/36 is the load-bearing number and it does NOT depend on the mode
 -- predicate, which is what makes it worth having: the domain question (section 4)
 -- is unanswerable offline, but the mana question is not, and the mana question
@@ -54,8 +76,11 @@
 --     from turbo games capped at 10 game-minutes; the pool crosses 603 at level
 --     18-19 with the shipped wand+bracer.  GH #108 raised the cap to 25 game
 --     minutes, so a corpus cut AFTER that change can contain frames this scan
---     structurally could not.  When one exists, re-run section 2 before quoting
---     it.
+--     structurally could not.  ONE NOW EXISTS and it is not future work: see the
+--     sign-flip paragraph above.  This bullet stays because it is still the right
+--     warning for the NEXT such frame -- but note how it failed, which is that it
+--     said "a corpus cut after that change" and the frame was already in the tree
+--     under a path this scan does not glob.  Absence from a scan is not absence.
 --   * The two mana costs are FRAME-EXTERNAL ANCHORS.  Fixtures carry ability
 --     names, levels and cooldowns; they do not carry mana costs, and the mock
 --     answers 0 for GetManaCost on every handle (section 4 pins that).  So the
@@ -248,8 +273,10 @@ tests['section 2: the shipped 600 admits 0 of 36 real Wraith King frames'] = fun
     assert(nMaxPool == 471, 'the largest MAX pool on any Wraith King frame in the '
         .. 'archive was 471 (was 459 before the 2026-08-28 re-take); got ' .. nMaxPool)
     assert(nMaxPool < SHIPPED_FLOOR, 'the whole point: 600 is above the entire '
-        .. 'pool of every recorded frame, so the branch is mana-dead on this '
-        .. 'corpus with a FULL bar -- independent of the mode predicate')
+        .. 'pool of every frame IN tests/fixtures/, so the branch is mana-dead on '
+        .. 'this corpus with a FULL bar -- independent of the mode predicate. '
+        .. 'Not a claim about the repo: the parked frame at max_mp 855 clears it '
+        .. '(test_wk_roshan_lategame_reconciliation.lua)')
 end
 
 tests['section 2: the armed floor admits 24 of the 31 learned-Blast frames'] = function()

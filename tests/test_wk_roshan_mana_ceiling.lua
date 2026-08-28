@@ -50,6 +50,21 @@
 -- of the turbo level distribution, not never: the branch is not arithmetically
 -- dead, and anything quoting the old sentence is quoting a withdrawn claim.
 --
+-- THE TAIL IS GONE TOO, 2026-08-28 -- and this file survives that the way it
+-- survived the last correction, by getting STRONGER.  The census was taken under
+-- a 10-minute batch cap that owner priority P3 (GH #108) removed, and the first
+-- frame past it (GH #235) has this hero at level 26 with a pool of 855 -- past
+-- all three crossing levels below, not in the tail of anything.  So "not
+-- arithmetically dead" upgrades to "observed alive", and the defect this file
+-- names is untouched, because it was never about the level.  TURBO_HIGH_WATER_LEVEL
+-- below is KEPT as a dated census reading rather than deleted: the census was
+-- correctly taken, it is the population that moved.  The read that settles it,
+-- together with the sibling file's mana margin -- the same quantity in levels and
+-- in mana -- is tests/test_wk_roshan_lategame_reconciliation.lua, which also
+-- records that the pool model below UNDER-predicts that frame by 14 intelligence
+-- on its first testable extrapolation past level 12.  The direction is the safe
+-- one: true crossing levels are EARLIER than 21/19/18, never later.
+--
 -- The defect that SURVIVES the correction is sharper than the old one.  At every
 -- pre-scepter milestone the crossing pool is exactly 603, so a 600 floor asks
 -- for 99.5% of the pool; Wraithfire Blast costs 95/110/125/140, so one cast puts
@@ -82,10 +97,17 @@
 --
 --   * That Wraith King ever actually reaches level 18-19 with a wand and a full
 --     pool in a turbo game.  The crossing level is arithmetic; the population at
---     that level is GH #84's, and it is a high-water, not a mode.
+--     that level is GH #84's, and it is a high-water, not a mode.  (One frame now
+--     shows level 26 -- see the 2026-08-28 note above.  One frame is a
+--     counterexample to a universal, still not a population.)
 --   * That the engine computes mana exactly this way.  33 of 34 real frames is
 --     the whole warrant, and every one of them is level 12 or below -- the model
 --     is EXTRAPOLATED past that, which is precisely the range the claim needs.
+--     THE EXTRAPOLATION HAS SINCE BEEN TESTED ONCE AND IT MISSED, low by 14
+--     intelligence at level 26; the warrant below is unchanged and so is every
+--     crossing level, because missing LOW makes them conservative.  Do not quote
+--     a pool from this model above level 12 without reading
+--     tests/test_wk_roshan_lategame_reconciliation.lua section 4 first.
 --   * Anything about whether casting Wraithfire Blast on Roshan is a good idea.
 --     That is the lever's (c) argument and it has not been made.
 
@@ -106,6 +128,10 @@ local BASE_MANA, MANA_PER_INT = 75, 12
 local BASE_INT, INT_PER_LEVEL = 16, 1.4
 
 -- GH #84's turbo level census: level >= 20 on 0 of 210 hero-slots, high-water 19.
+-- DATED READING, superseded as a population but kept as the census it was: taken
+-- under the 10-minute batch cap GH #108 removed, and a level-26 frame now exists
+-- (GH #235).  Section 3 uses it as an upper bound on the SHIPPED build's crossing
+-- level, and that use survives -- the observed 26 only makes the bound looser.
 local TURBO_HIGH_WATER_LEVEL = 19
 
 -- Intelligence and flat mana per item, from odota dotaconstants 10.8.0 (read

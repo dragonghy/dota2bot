@@ -113,14 +113,50 @@ local WINDOW = 14
 local PENDING = {
     ['tests/corpus_scale.lua']                     = 'harness -- states the ge20==0 policy itself (GH #236)',
     ['tests/test_level_gate_census.lua']           = 'harness/director -- the 22 GH #84 verdicts (GH #235)',
-    ['tests/test_wk_roshan_mana_ceiling.lua']      = 'hero -- crossing-level tail argument (wkrosh)',
     ['tests/test_wk_bone_guard_thresholds.lua']    = 'hero -- untrained-stub-is-turbo-reality claim',
     ['tests/test_wk_q_aim_preflight.lua']          = 'hero -- level distribution note',
 }
 
+-- The debt, as a number.  Kept as its own constant so the ratchet below can check
+-- that it still DESCRIBES the list -- see CEILING_TRACKS_PENDING.
+local CEILING = 4
+
+-- CEILING_TRACKS_PENDING.  The ceiling assertion says this number "may only
+-- fall", and until 2026-08-28 nothing enforced that: raising it to 9 and touching
+-- nothing else was measured (mutation M7 of the wkrosh re-read round) and passed
+-- silently, because a ceiling cannot catch its own loosening.  Binding it to the
+-- row count closes that: paying a debt down means DELETING A ROW, and inventing
+-- headroom now has to invent a row to hold it -- which section 2's `gone` check
+-- then rejects, because an invented row carries no uncorrected premise.  This is
+-- the registry's own rule made mechanical; it is not a new policy.
+local function pending_count()
+    local n = 0
+    for _ in pairs(PENDING) do n = n + 1 end
+    return n
+end
+
 -- CLEARED, newest first.  A row leaves this list when the VERDICT above the
 -- premise was re-read, not when the sentence was deleted -- so what the row
 -- becomes is a line saying what the re-read decided.
+--
+--   test_wk_roshan_mana_ceiling.lua  (hero, 2026-08-28)
+--     The premise WAS the verdict's supporting clause, not decoration: the file
+--     concluded the shipped 600 floor is crossable "in the TAIL of the turbo level
+--     distribution, not never", and the tail was GH #84's high-water of 19 sitting
+--     just under the crossing levels 21/19/18.  The re-read retires the tail by
+--     OBSERVATION rather than by arithmetic -- the parked post-cap frame has this
+--     hero at level 26 with a pool of 855, past all three -- so the conclusion
+--     strengthens from "not arithmetically dead" to "observed alive", and the
+--     defect the file names survives untouched because it was never about the
+--     level (600 is 99.5% of the 603 crossing pool and 4.3x the spell it gates).
+--     TURBO_HIGH_WATER_LEVEL is KEPT as a dated census reading: section 3 uses it
+--     as an UPPER BOUND on the shipped build's crossing level, and an observed 26
+--     only loosens that bound, so the one live use of the number survives its own
+--     retirement.  Read together with the sibling floor file, whose mana margin is
+--     the same quantity in the other unit -- the joint read, the sign-flip it
+--     found, and the 14-intelligence miss in this file's pool model on its first
+--     testable extrapolation past level 12 are in
+--     tests/test_wk_roshan_lategame_reconciliation.lua.
 --
 --   test_focus_build_level_legality.lua  (hero, 2026-08-28)
 --     The premise sat in WHAT IS NOT CLAIMED, excusing the t20/t25 queue
@@ -318,12 +354,18 @@ tests['[hero] the stale-premise registry shrinks or holds, never grows'] = funct
         end
     end
     table.sort(gone)
-    assert(still <= 5,
+    assert(CEILING == pending_count(), 'the registered ceiling is ' .. CEILING
+        .. ' but PENDING holds ' .. pending_count() .. ' rows. The ceiling is a '
+        .. 'description of that list, not a free parameter: pay the debt down by '
+        .. 'DELETING a row (with its CLEARED entry), never by raising the number.')
+
+    assert(still <= CEILING,
         still .. ' registry files still argue from the retired premise; the '
-        .. 'registered ceiling is 5 (9 on 2026-08-27, lowered as '
+        .. 'registered ceiling is ' .. CEILING .. ' (9 on 2026-08-27, lowered as '
         .. 'test_wk_bone_guard_talent_bypass.lua, test_wk_fact_anchor.lua, '
-        .. 'test_lion_hex_talent_slot.lua and test_focus_build_level_legality.lua '
-        .. 'were re-read). This number is a debt, so it may only fall.')
+        .. 'test_lion_hex_talent_slot.lua, test_focus_build_level_legality.lua and '
+        .. 'test_wk_roshan_mana_ceiling.lua were re-read). This number is a debt, '
+        .. 'so it may only fall.')
 
     -- When a row is genuinely re-read, delete it from PENDING in the same change.
     -- Leaving a settled row on the list makes the ceiling read as more debt than
