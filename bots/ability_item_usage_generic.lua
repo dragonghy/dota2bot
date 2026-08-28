@@ -28,6 +28,40 @@ local DireFountain = Vector(6928, 6372, 392)
 local bNeedARDMReload = false
 local nLastKnownPosition = nil  -- tracks bot's position for !pos swap detection
 
+-- GH #286. A build table may reference an sAbilityList index that is nil (the
+-- commonest source: a hero whose ultimate sits in slot < 4, so aba_skill never
+-- writes sAbilityList[6] and every build entry of 6 resolves to nil). Those nil
+-- holes travel into sAbilityLevelUpList, and in Lua 5.1 a hole that reaches
+-- index 1 collapses `#` to 0 while the real entries survive at higher indices:
+--
+--   t = {'a','b','c','d','e',nil,'g','h'}   -- #t == 8
+--   5 x table.remove(t, 1)                  -- t[1] == nil, #t == 0, next(t) == 5
+--
+-- Two consequences, and the second one is why this is not fixed by moving the
+-- existing nil handler above the `#` gate:
+--   (1) `#sAbilityLevelUpList >= 1` is false forever, so level-ups stop for the
+--       rest of the game (measured: OD stalled at 6 spent points in 5/6 games);
+--   (2) table.remove(t, 1) at #t == 0 shifts nothing -- it is a no-op -- so a
+--       hoisted handler would spin on the same hole every frame instead of
+--       draining it, and its `return` would additionally shadow the botLevel>25
+--       rebuild below, which is today the only path that ever recovers.
+-- So compact by key order rather than relying on `#`, and do not return: an
+-- unbroken list leaves this a single table index, and a truly empty one is left
+-- alone so the existing fallbacks still see it.
+local function CompactSkillList( tList )
+	local nMaxKey = 0
+	for k in pairs( tList ) do
+		if type( k ) == 'number' and k > nMaxKey then nMaxKey = k end
+	end
+
+	local tDense = {}
+	for i = 1, nMaxKey do
+		if tList[i] ~= nil then table.insert( tDense, tList[i] ) end
+	end
+
+	return tDense
+end
+
 -- Reload BotBuild for the current hero+role (shared by ARDM swap and !pos swap)
 local function ReloadBotBuild(reason)
 	local heroFile = string.gsub(botName, "npc_dota_", "")
@@ -187,6 +221,13 @@ local function AbilityLevelUpComplement()
 	if GetGameMode() == GAMEMODE_ARDM and bot:GetAbilityPoints() > 0 then
 		print("[ARDM] "..botName.." Lv"..botLevel.." has "..bot:GetAbilityPoints().." ability points, skill list has "..#sAbilityLevelUpList.." entries"
 			..(#sAbilityLevelUpList > 0 and (", next: "..tostring(sAbilityLevelUpList[1])) or ""))
+	end
+
+	-- GH #286: drain a nil hole that has reached the head before the `#` gate
+	-- reads it, otherwise the collapsed length freezes level-ups permanently.
+	-- No-op unless the head is actually nil AND something is still in the table.
+	if sAbilityLevelUpList[1] == nil and next( sAbilityLevelUpList ) ~= nil then
+		sAbilityLevelUpList = CompactSkillList( sAbilityLevelUpList )
 	end
 
 	if #sAbilityLevelUpList >= 1

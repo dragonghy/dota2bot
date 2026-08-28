@@ -244,7 +244,17 @@ local tRegistered = {
     -- fixed -- the check errors on the FIRST new name it meets, so a drifted pin
     -- hides every drifted pin behind it.  That is why the count of reds a run
     -- reports is a LOWER BOUND for this file, not its content.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6808'] =
+    -- 6808 -> 6849 (director 2026-08-28T22:xxZ, GH #286, UNGATED): the nil-head
+    -- drain repair -- a CompactSkillList helper near the top of the file plus its
+    -- call site above the `#sAbilityLevelUpList >= 1` gate, +41 lines, all of it
+    -- ABOVE this pin.  TENTH instance of the shape at :198 and the first one
+    -- moved by the director rather than the strategy desk, which is the part
+    -- worth noting: the note above reads the recurrence as "each round's fix
+    -- lands in the same forty lines", and this landing is nowhere near those
+    -- forty lines -- it is at the top of the file.  So the shape is not about a
+    -- hot region, it is about pinning a LINE NUMBER in a file anyone may edit.
+    -- Re-anchored, not relaxed.
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6849'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
@@ -279,7 +289,9 @@ local tRegistered = {
     -- which was the only thing running this file: until the same round tagged
     -- 3b below, it carried no discovery tag and the selfcheck's Lua leg never
     -- picked it up (GH #216).
-    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:813'] =
+    -- 813 -> 854 (director 2026-08-28T22:xxZ, GH #286): same +41 as the lookup
+    -- pin above; see that note.
+    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:854'] =
         'matches every recipe by prefix.',
 }
 
