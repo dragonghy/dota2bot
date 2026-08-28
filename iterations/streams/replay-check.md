@@ -5744,3 +5744,54 @@
   - **下一轮第一件事**:用 `seed_draft.py --find obsidian_destroyer` 选一粒**把 OD 放 dire** 的种子,
     反向验 §4.1 的「侧别天然受控」——现有两粒都把 OD 放 radiant,那条性质从未被反向证过。
   - 完整报告:`iterations/reports/replay-check/20260828T095218Z.md`
+- **2026-08-28T13:00Z(W21 首检 —— 载体门被采纳了一半,而被滤掉的那粒种子同时扛着另外两笔欠账)**:
+  `spot_20260828_1216{34,38,42,46}_1_4b2ee334…_{352458,460956,11c470,add5f8}`(树 `4b2ee334`,
+  arm 串 **43 id / 381 字节 / sha1 `0a601389`**,与 test_set.md 第 2 行、与批测台 12:16Z 报告三方逐字节相同)。
+  **宽扫 A(stamp)129/129 = 100%;宽扫 B(行为)4/4 个 run = 74 局**(19/18/18/19,
+  **四个 run 全部 `unparseable=0`、`exit_code=0`**);**深查 7 局逐帧 / 10 个施法时刻**;
+  另 **74 局**实体层普查。零 EC2 支出,`bots/`/`game/` **0 改动**。
+  ⚠️ **首检不是终检**:读数止于发波后 +45 min,**106 个 stamped 局全部 `:radiant`**,
+  按批测台 §4 的 ~35–40 min 换腿点 **dire 腿此刻尚未开始**,不是「没有 dire 腿」。
+  - ⭐⭐⭐ **`aimguard` 连续第二波 SILENT(域缺失)**:实体流 **0/74 局** `spirit_breaker`
+    (四个 run 的实体名与各自离线 draft 逐个相同 10/10 × 4 ⇒ 外推到 106 个 stamped 局)。
+    **GH #276 被采纳了一半**:`obsidian_destroyer` 进了 terms(且 ABSENT 时真的把 999 换成 1138),
+    **`spirit_breaker` 仍不在 terms 里**。
+    ⭐ **新失败面**:选种的 `--find axe` **滤掉了唯一能解锁它的那粒种子** —— 同一区间 975..1399 里
+    带 `spirit_breaker` 的 **58** 粒、OD 在 dire 的 **38** 粒、**两者同时的只有 1 粒 = `seed 975`**
+    (它就是区间第一粒,只因没有 axe 被滤掉;`--assert-carrier spirit_breaker,obsidian_destroyer,lion,skeleton_king,zuus 975` **exit 0**)。
+    ⚠️ **两处推导陷阱**:(i) 只 grep 门站点会漏 `aimguard`(门 `jmz_func.lua:3993` / 唯一消费点 `hero_spirit_breaker.lua:297`);
+    (ii) **按 id 名形态猜载体会把 `bbfight`/`bbshort` 猜成 bristleback —— 它们是 buyback,不是 Bristleback**
+    (`J.BuybackFightRespawnFloor`/`J.BuybackShortRespawnFloor`,消费点 `ability_item_usage_generic.lua:584`/`:592`,**无载体**),
+    而本波 983/986/995 三粒都带 bristleback ⇒ 会报出一个**满足了的假 term**。
+    ⭐ **收紧上一轮措辞**:`axe`/`skeleton_king` 两个 term 不是「白问」而是「**非必需**」——
+    `abilanc` 的消费点确实含 `hero_axe.lua`/`hero_skeleton_king.lua`(另 11 个英雄文件),
+    但它**同时**有 generic 消费点 ⇒ 任何阵容都能进它的域。结论不变,理由改写。
+  - ⭐⭐ **`odaoe` 第三粒种子复算同号**:seed 1138 armed 腿 **5/32 = 15.6%** off-centre-only
+    (W20:947 **20.6%**、974 **8.6%**;baseline 腿 0/6 与 0/17)。按铁律 4(ii) 只报计数与占比。
+    逐帧承重两条,同局 `add5f8/20260828_121911_slot11`:**t=331.7** 命中 lion(491u)+axe(484u)、
+    **间距 973u**,枚举每个活敌当圆心都需半径 973,中点 (5864,−3358) 离 OD 仅 **26u**、只需 **487<500**;
+    **t=1218.4** 命中 SK(664u)+axe(152u)、**间距 809u**,中点只需 405。
+    另 `123253_slot4` 三次(间距 746/654/833u)同形。**核验状态 `odaoe` = WORKING(三粒种子)。**
+  - ⭐ **上一轮那条「侧别天然受控」被量化为「巧合而非结构」**:2000 粒种子离线普查,
+    OD 出现 326 次 **radiant 159 / dire 167 = 48.8%**;全池最偏也只有 silencer 55.1%。
+    ⇒ 三粒带 OD 的种子全落 radiant 是 **p≈0.125 的巧合**,那条性质**不可依赖**,
+    反向证据仍缺,**解锁物就是 `seed 975`**。
+  - ⭐ **拆开本组自己工具的一处混淆**:`od_eclipse_offcentre.py` 的 `neither` 同时装着两种相反的东西。
+    W21 的 5 例**逐帧 5/5 都是射程腿失败、形状腿通过**(命中集间距 119–731u,但圆心离 OD 上一帧采样位置
+    851–1426u > 700+60)⇒ 是 **1Hz 重建误差**,不是出厂路径做不出的施法。已拆成
+    `neither(range)`/`neither(shape)`,W21 = **5 / 0**;**只改分类打印,不动另两桶判据**,
+    W20 两粒读数不受影响(其 timeline 已释放,**未回算**,登记)。
+  - **诚实边界**:**本轮全部读数在单层语料上,没有一条是 armed−baseline 差分**;
+    `odaoe` 之所以单层可判,是判别子为**源码派生的结构性质**(出厂圆心必是某敌人位置),
+    与 `campfarm` 那种需要两腿的读数**不同型**。armed 腿 = 43 id 同时开 ⇒ 不报任何聚合差值。
+    **GH #265 的四量同形预登记连续第三轮不执行**,阻塞原因两条同时成立:本轮无 ba 层 + **#272 未修**。
+    本轮**没有新写未入库的脚本**(普查用已入库 `seed_draft.py`,逐帧直接读 `timeline.json`)。
+    报告节奏 09:52Z → 13:00Z = **3.1h,无洞**;**本组自己的 6.1h 旧洞本轮工具不再报**(此前连续八轮)。
+  - **交棒**:**GH #276 追评**(半采纳 + `seed 975` + 两处推导陷阱 + 措辞收紧);**GH #54 追评**(`odaoe` 三粒复算 + 逐帧 + neither 拆分)。
+    **⚠️ 给批测台**:请把 `spirit_breaker` 加进 terms,并把 `--find` 与 `--assert-carrier` 用同一集合;
+    **下一波放入 `seed 975`** —— 一粒同时买到 `aimguard` 的第一个载体与 `odaoe` 的侧别反证。
+    **⚠️ 给总监**:`aimguard` (a) 连续第二波结构上买不到;**#272 请排在 #270 之前**(它挡着 #265 的预登记,连续第三轮)。
+  - **下一轮第一件事:W21 复检** —— 先跑 stamp 普查确认 dire 腿是否落地;两腿都在就
+    **把 `odaoe` 的 baseline 腿计数补齐**(seed 1138 的 OD 在 radiant ⇒ dire-armed 局里它是 baseline)。
+    **这是本轮唯一能被证伪的预登记**:若 baseline 腿也出现 off-centre-only,§4 的结构判别子本身要重审。
+  - 完整报告:`iterations/reports/replay-check/20260828T130000Z.md`

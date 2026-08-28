@@ -92,7 +92,26 @@ def analyse(paths,label):
             mids=[((p[0]+q[0])/2,(p[1]+q[1])/2) for i,p in enumerate(pts) for q in pts[i+1:]]
             off=any(dist(c2,odp)<=CAST_RANGE+SLACK and
                     all(dist(c2,q)<=RADIUS+SLACK for q in pts) for c2 in pts+mids)
-            key='shipped-explainable' if on_enemy else ('OFF-CENTRE ONLY' if off else 'neither')
+            # `neither` hid two different failures until 2026-08-28T13:xxZ, and
+            # they carry opposite meanings.  Split them by which leg failed:
+            #   neither(range)  -- a 500-disk DOES cover the hit set (the shape
+            #       leg passes), but every such centre sits further than
+            #       CAST_RANGE+SLACK from OD's last pre-damage sample.  That is
+            #       a reconstruction artifact of 1 Hz sampling (the first damage
+            #       event is not the cast frame, and OD closes ~300 u/s), not a
+            #       cast the shipped path could not make.
+            #   neither(shape) -- no disk of RADIUS covers the hit set at all,
+            #       from any centre.  That one is a real anomaly (a merged pair
+            #       of casts, or a hit set this ability could not produce) and
+            #       is the only half worth a frame read.
+            # Measured on W21 seed 1138 (19 games): 5 `neither`, ALL of them
+            # (range) -- spans 119..731 u, centres 851..1426 u from OD.
+            shape_ok=any(all(dist(c2,q)<=RADIUS+SLACK for q in pts)
+                         for c2 in pts+mids+allen)
+            if on_enemy:   key='shipped-explainable'
+            elif off:      key='OFF-CENTRE ONLY'
+            elif shape_ok: key='neither(range)'
+            else:          key='neither(shape)'
             tot[key]+=1
             if not on_enemy and off:
                 far=max(dist(p,odp) for p in pts)
@@ -100,7 +119,7 @@ def analyse(paths,label):
                              ','.join(h.replace('npc_dota_hero_','') for h in c['tg'])))
     n=sum(tot.values())
     print('== %s: %d multi-hero eclipse casts' % (label,n))
-    for k in ('shipped-explainable','OFF-CENTRE ONLY','neither'):
+    for k in ('shipped-explainable','OFF-CENTRE ONLY','neither(range)','neither(shape)'):
         if n: print('   %-20s %3d  (%.1f%%)' % (k,tot[k],100.0*tot[k]/n))
     for r in rows[:12]:
         print('     off-centre: %s t=%.1f n=%d farthest_hit_from_OD=%.0f  %s' % r)
