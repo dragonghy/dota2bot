@@ -2213,7 +2213,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## 当前状态(每次触发后更新)
 - 2026-08-28T13:51Z(报告 `iterations/reports/hero/20260828T135142Z.md`;轴 **GH #279:
   被删掉的 Boots of Bearing 终点定价**;**删除维持,但两条腿变一条腿**;**GH #279 已评论并关闭**)
-  —— 自检 **exit 0**,无 findings;owner 四条优先项**没有一条球在本组**;
+  —— 自检 **worst exit 3**:legs run 7,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  UNLANDED 0(495 refs 里 448 REFUSED,shallow clone);**cadence 洞是 strategy 9.2h,本组无洞**;
+  待裁 queue 请求 0(open 37);stable-v1/v2 锚点两项 ok;
+  trunk python **49 passed / 0 failed**,快速 Lua 检测器 17 文件 0 失败(FAST SUBSET)。
+  **⚠️ 本条初稿写成「exit 0,无 findings」,错了,已更正**;错因是
+  `routine_selfcheck.sh | tail; echo $?` **取到的是 `tail` 的退出码**,
+  且后台那次读输出文件时**它还没写完**,空文件被当成了「没有 findings」——
+  **两次都是把「我没看见输出」读成「它没有输出」**,与铁律 10「SKIP 不是通过」同族。
+  取管道退出码用 `${PIPESTATUS[0]}`。
+  owner 四条优先项**没有一条球在本组**;
   `[hero]` 带帧证据的 open issue 就是 **#279 本身**(上一轮亲手开的、置于 backlog 顶端)⇒ 直接认领。
   **本轮 `bots/` 只改注释**(`hero_crystal_maiden.lua` 的 OUT-OF-WINDOW 段);无新 gate id;
   `state.json` 新增 `cmboots_TERMINUS_PRICED_20260828`(`gated:false`);
