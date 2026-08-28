@@ -80,7 +80,12 @@ def write(root, rel, obj):
 
 
 def run(root, *extra):
-    out = subprocess.run([sys.executable, SCRIPT, root, CAND] + list(extra),
+    # [GH #269] `--min-arm-depth 1` is DECLARATIVE: this corpus is 2-3 games
+    # per leg (it is about basename collisions, not about statistical depth),
+    # and the real gate would refuse to score it.  The gate is tested at its
+    # real default in tests/test_verdict_arm_depth.py.
+    out = subprocess.run([sys.executable, SCRIPT, root, CAND,
+                          "--min-arm-depth", "1"] + list(extra),
                          capture_output=True, text=True)
     parsed = None
     if out.returncode == 0:

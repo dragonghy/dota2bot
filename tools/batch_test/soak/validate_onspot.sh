@@ -105,7 +105,20 @@ AB,BA=load(rs),load(ds)
 row={"seed":seed,"ab_games":len(AB),"ba_games":len(BA)}
 drafts=set(tuple(sorted((p.get("hero") or "") for p in a.get("players",[]))) for a in AB+BA)
 row["distinct_drafts"]=len(drafts)
-if AB and BA:
+# [GH #269] The farm's happy path is THIS copy, so the depth gate has to live
+# here too -- a gate that exists only in recover_verdict.py is a gate every
+# non-reclaimed wave runs without.  MIN_ARM_DEPTH must equal the literal in
+# recover_verdict.py (tests/test_verdict_arm_depth.py asserts both copies carry
+# the same number).  arm_depth = harmonic mean of the two leg counts = games
+# per leg this seed is worth, because Var[(ab+ba)/2] = s^2/(2*arm_depth); the
+# `if AB and BA` gate alone could not tell ba=1 from ba=15, and on W19 one dire
+# game moved the wave mean 76.5 gpm while every other field looked normal.
+MIN_ARM_DEPTH=8
+row["arm_depth"]=round((2.0*len(AB)*len(BA)/(len(AB)+len(BA))) if (AB and BA) else 0.0,2)
+row["scored"]=bool(AB and BA) and row["arm_depth"]>=MIN_ARM_DEPTH
+if not (AB and BA): row["excluded"]="NO-PAIR"
+elif not row["scored"]: row["excluded"]="THIN-ARM"
+if row["scored"]:
     for m in ("gpm","xpm","deaths","last_hits"):
         ab=M([sv(a,"radiant",m) for a in AB])-M([sv(a,"dire",m) for a in AB])
         ba=M([sv(a,"dire",m) for a in BA])-M([sv(a,"radiant",m) for a in BA])
@@ -131,9 +144,22 @@ for m in ("gpm","xpm","deaths","last_hits"):
     v["mean"][m]=round(statistics.mean(xs),2)
     neg=m=="deaths"
     v["comps_better"][m]=f"{sum(1 for x in xs if (x<0 if neg else x>0))}/{len(xs)}"
+# [GH #269] The excluded seeds are published, not left in the per-seed rows for
+# a reader who has no reason to suspect them.
+complete=[r for r in rows if "gpm" in r]
+v["min_arm_depth"]=8
+v["thin_arm_seeds"]=[{"seed":r["seed"],"ab_games":r.get("ab_games"),
+                      "ba_games":r.get("ba_games"),"arm_depth":r.get("arm_depth")}
+                     for r in rows if r.get("excluded")=="THIN-ARM"]
 g=v["mean"].get("gpm"); d=v["mean"].get("deaths")
-v["suggested"]=("promote" if (g is not None and g>5 and rows and
-    int(v["comps_better"]["gpm"].split('/')[0])*2>len(rows) and (d is None or d<=0))
+# [GH #269] The majority test counts the SCORED seeds, matching both the mean
+# above it and `comps_better`'s own denominator.  It used to divide by
+# `len(rows)`, so a seed excluded from the mean still voted against promote
+# here -- the same incoherence #269 names (a seed too thin to be measured must
+# not decide the reading), just with the sign that happened to look safe.
+# recover_verdict.py has always used the scored count; the two copies now agree.
+v["suggested"]=("promote" if (g is not None and g>5 and complete and
+    int(v["comps_better"]["gpm"].split('/')[0])*2>len(complete) and (d is None or d<=0))
     else "hold_or_reject")
 print(json.dumps(v,indent=1))
 PY

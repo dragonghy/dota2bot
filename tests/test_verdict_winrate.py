@@ -64,7 +64,12 @@ def run(games, allow_crash=False):
     for i, g in enumerate(games):
         with open(os.path.join(d, "g%03d.analysis.json" % i), "w") as f:
             json.dump(g, f)
-    out = subprocess.run([sys.executable, SCRIPT, d, CAND],
+    # [GH #269] `--min-arm-depth 1` is DECLARATIVE, not a workaround: these
+    # corpora are 3-4 hand-built games per leg, far below the 8 games/leg the
+    # farm's real waves carry, and the depth gate would (correctly) refuse to
+    # score them.  The gate itself is tested behaviorally, at its real default,
+    # in tests/test_verdict_arm_depth.py.
+    out = subprocess.run([sys.executable, SCRIPT, d, CAND, "--min-arm-depth", "1"],
                          capture_output=True, text=True)
     if out.returncode != 0:
         if allow_crash:

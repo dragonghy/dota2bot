@@ -66,6 +66,33 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    **一律用 `tools/batch_test/soak/recover_verdict.py` 从 S3 逐局数据全量重算**
    (实例自产 verdict 两次不完整,已定为标准收割路径)。结果写进报告 +
    更新 `iterations/queue.json` 对应请求的 status/result。
+   **⭐ 2026-08-28T03:5xZ 总监裁定 GH #269(本台 03:13Z 上报,三选一)——落地 (A) 硬门,
+   但门开在 `arm_depth` 上,不开在 `min(ab,ba)` 上;两份拷贝都已改,档案 `test_set.md §BU`。**
+   - **收割侧现在会看到的新字段**(offline 与 farm 自产 verdict 都有):
+     每行 `arm_depth`(= 两腿局数的**调和平均**)、`scored`、`excluded`(`NO-PAIR`/`THIN-ARM`);
+     顶层 `min_arm_depth`(现为 **8**)、`thin_arm_seeds`。被判 `THIN-ARM` 的种子
+     **不带任何四量字段**,与 `ba=0` 同等处理 ⇒ **它出不了 `mean`,也出不了 `comps_better` 的分母**。
+     W19 的 928(ab41/ba1)在新门下 `arm_depth=1.95` ⇒ 出集;935(ab38/ba15)`21.51` ⇒ 照常计分。
+   - **为什么是 `arm_depth` 不是 `min()`**:种子读数是 `(ab+ba)/2`,于是
+     `Var = s²/(2·arm_depth)`,`arm_depth` **就是「这粒种子值几局/腿」** ——
+     一个阈值同时挡住「一条腿是舍入误差」和「两条腿都薄」,`min()` 要两个旋钮。
+     **(B) 加权按算术驳回**(不是口味):两波平均的存在理由是抵消 ~+1.5k 的 Radiant 侧偏,
+     41:1 加权会把该粒种子变回**没 swap 的单侧读数** —— 它不只是把薄臂藏得更深,
+     而是**把两波平均当初要防的那个 bug 装了回去**。**(C) 只报不拦**按 #269 自己第 2 节驳回:
+     同族前两例(W14 basename、W17-R `per_seed` 非空)留下的都是**读法**,本条复发本身
+     就是「读法不是门」的证据。
+   - **报告里怎么写**:`mean` 旁边照抄 `min_arm_depth` 与 `thin_arm_seeds`;
+     被排除的种子**仍要在报告里点名**(它的局数是真花了钱的)。
+   - **⚠️ 一条不许悄悄做的事(已写进代码的 REVISION CONDITION)**:
+     `--min-arm-depth <小于 8>` 存在,但它会打一行**「这是 SKIP 不是 pass」**,
+     和 `--allow-pooled-basenames` 同一纪律 —— **用了就把那一行抄进报告**。
+     整波被这道门清零时(≥2 粒配对种子、无一过门),工具会打
+     `WAVE ZEROED BY THE GATE`:**那是关于这一波形状的报告,不是调低门槛的理由**,
+     当轮按上报流程交给总监,不要自行降门。
+   - **顺带对齐的一处**(farm 自产 verdict):`suggested` 的多数判据以前除以 `len(rows)`,
+     而 `mean`/`comps_better` 除以计分种子数 ⇒ 一粒**进不了 `mean` 的种子仍在投票**。
+     现已与 `recover_verdict.py` 一致除以计分数。**方向上这让 promote 更容易触发**,
+     所以照旧:`suggested` 只是提示,promote 仍走三条件。
 4. 决定本轮要不要开新批测(优先级从高到低):
    a. `iterations/queue.json` 里 status=pending 的请求(先进先出,priority 高者先)。
       **(2026-08-23T15:xxZ 总监加一行,起因是一次差点买单的送达失败:先读 `director` 字段。)**

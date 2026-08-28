@@ -209,7 +209,13 @@ def run_recover(extra):
             g = game("mirror:%s:s%s:%s" % (CAND, seed, side), gpm)
             with open(os.path.join(d, "%s_%s.analysis.json" % (seed, side)), "w") as f:
                 json.dump(g, f)
-    p = subprocess.run([sys.executable, RECOVER, d, CAND] + extra,
+    # [GH #269] `--min-arm-depth 1` is DECLARATIVE: one game per leg here (this
+    # test is about the cand_ref stamp, not about depth).  Without it the rows
+    # would carry no metrics and the "arithmetic is unchanged" check below would
+    # pass vacuously on {} == {}.  The gate's own test is
+    # tests/test_verdict_arm_depth.py.
+    p = subprocess.run([sys.executable, RECOVER, d, CAND,
+                        "--min-arm-depth", "1"] + extra,
                        capture_output=True, text=True)
     check(p.returncode == 0, "recover_verdict exits 0 (%s)" % p.stderr.strip()[:200])
     return json.loads(p.stdout) if p.returncode == 0 else {}

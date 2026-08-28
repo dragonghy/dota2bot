@@ -52,6 +52,39 @@
 # Only seeds with BOTH waves present are scored; partial seeds are reported but
 # excluded from the mean.
 #
+# [GH #269] "BOTH waves present" was the whole gate, and it cannot tell
+# `ba_games=1` from `ba_games=15`.  W19's seed 928 passed it with ab=41/ba=1,
+# and because the seed reading is (ab + ba) / 2 -- each leg 50% regardless of
+# depth -- ONE dire game decided half of that seed.  It moved the wave mean by
+# 76.5 gpm (-23.4 with the sound seed alone, -99.9 with 928 folded in) while
+# `scored_games`, `unfinished`, `per_seed`, `mean` and `suggested` all looked
+# normal.  The only field that could show it was `ba_games` itself.  Third
+# member of the family that fails toward danger (W14 basename collisions,
+# W17-R's "non-empty per_seed != a usable seed"); the first two left READING
+# advice, and this recurrence is the proof that reading advice is not a gate.
+#
+# THE GATE IS ON THE SEED'S ARM DEPTH, NOT ON min(ab, ba).  The estimator says
+# which quantity to gate:  Var[(ab + ba) / 2] = (s^2/ab + s^2/ba) / 4
+#                                             = s^2 / (2 * H),  H = 2ab/(ab+ba)
+# -- the harmonic mean of the two leg counts.  So H is not a taste parameter
+# dressed up: it is literally HOW MANY GAMES PER LEG THIS SEED IS WORTH, and a
+# single threshold on it rejects both failure shapes that a raw min() needs two
+# knobs for (a leg that is a rounding error, and two legs that are both thin).
+# W19 separates cleanly: the poison seed is worth 1.95 games/leg, the sound one
+# 21.5.  MIN_ARM_DEPTH = 8 sits between with margin on both sides, and (since
+# H <= 2 * min(ab, ba)) it also guarantees the thin leg alone holds >= 4 games.
+#
+# Weighting the legs by game count instead (option B of #269) is refused on
+# arithmetic, not taste: the two-wave average exists to cancel the ~+1.5k
+# Radiant side bias (CLAUDE.md), and 41:1 weighting turns the seed back into an
+# un-swapped single-side read -- it does not merely hide the thin arm, it
+# reinstates the bug the average was built to prevent.
+#
+# REVISION CONDITION, registered so lowering the number is never quiet: if a
+# wave is ever zeroed BY THIS GATE (>= 2 seeds have both legs non-empty and all
+# of them fall below the threshold), that is a report about the wave's shape,
+# not a reason to lower MIN_ARM_DEPTH.
+#
 # REFUSALS (exit 2, always with the count that motivated them) -- [GH #225].
 # Every one of these used to be a silent drop, and a silent drop in THIS tool
 # fails toward danger: it still prints a verdict, still prints `suggested`, and
@@ -84,6 +117,39 @@ if "--cand-ref" in argv:
     cand_ref = argv[i + 1]
 allow_pooled = "--allow-pooled-basenames" in argv
 allow_unparseable = "--allow-unparseable" in argv
+
+# [GH #269] Keep this literal in sync with validate_onspot.sh's embedded copy
+# (tests/test_verdict_arm_depth.py asserts both carry the same number): the
+# farm's happy path runs THAT copy, so a gate that lives only here is a gate
+# the farm does not have.
+MIN_ARM_DEPTH_DEFAULT = 8
+min_arm_depth = MIN_ARM_DEPTH_DEFAULT
+if "--min-arm-depth" in argv:
+    i = argv.index("--min-arm-depth")
+    if i + 1 >= len(argv):
+        sys.exit("--min-arm-depth needs a value (games per leg, default %d)"
+                 % MIN_ARM_DEPTH_DEFAULT)
+    try:
+        min_arm_depth = float(argv[i + 1])
+    except ValueError:
+        sys.exit("--min-arm-depth takes a number, got %r" % argv[i + 1])
+    if min_arm_depth < MIN_ARM_DEPTH_DEFAULT:
+        # Same discipline as --allow-pooled-basenames: an override announces
+        # that it is a SKIP, not a pass, so the line can be quoted in a report.
+        sys.stderr.write(
+            "--min-arm-depth %g LOWERED from the default %d: thin-arm seeds "
+            "are being SCORED. This is a SKIP of the GH #269 gate, NOT a pass.\n"
+            % (min_arm_depth, MIN_ARM_DEPTH_DEFAULT))
+
+
+def arm_depth(ab, ba):
+    """Games-per-leg this seed is worth: harmonic mean of the two leg counts.
+
+    Var[(ab+ba)/2] == s^2 / (2 * arm_depth), so this is the depth of the
+    balanced pair that would read as precisely as this unbalanced one.  0 when
+    either leg is empty (there is no pair to be worth anything).
+    """
+    return (2.0 * ab * ba / (ab + ba)) if (ab and ba) else 0.0
 
 # soak_loop.sh:76 -- TAG="$(date +%Y%m%d_%H%M%S)_slot$SLOT".  A basename that
 # still matches this carries NO run token, so two runs can collide on it.  A
@@ -213,19 +279,50 @@ for seed in seeds:
     ds = "mirror:%s:s%s:dire" % (cand, seed)
     AB, BA = by_stamp.get(rs, []), by_stamp.get(ds, [])
     row = {"seed": seed, "ab_games": len(AB), "ba_games": len(BA)}
-    if AB and BA:
+    # [GH #269] Published on EVERY row, scored or not -- the failure this
+    # replaces was invisible precisely because the row carried no field that
+    # said how thin it was.
+    row["arm_depth"] = round(arm_depth(len(AB), len(BA)), 2)
+    if not (AB and BA):
+        row["scored"] = False
+        row["excluded"] = "NO-PAIR"
+    elif row["arm_depth"] < min_arm_depth:
+        row["scored"] = False
+        row["excluded"] = "THIN-ARM"
+    else:
+        row["scored"] = True
+    if row["scored"]:
         for m in ("gpm", "xpm", "deaths", "last_hits"):
             ab = M([sv(a, "radiant", m) for a in AB]) - M([sv(a, "dire", m) for a in AB])
             ba = M([sv(a, "dire", m) for a in BA]) - M([sv(a, "radiant", m) for a in BA])
             row[m] = round((ab + ba) / 2, 2)
+    # [GH #269] The census is computed for every PAIRED seed, scored or not.
+    # Before the depth gate "paired" and "scored" were the same predicate, so
+    # leaving it inside the scored branch would silently withdraw the game
+    # counts from exactly the waves the gate exists to expose -- the gate would
+    # take the evidence for itself down with it.
+    if AB and BA:
         # same two-wave average as the economy metrics, for the same reason
         # (it cancels the ~+1.5k Radiant side bias, CLAUDE.md).
         ab_w, ab_n = wr(AB, "radiant")
         ba_w, ba_n = wr(BA, "dire")
         row["scored_games"] = ab_n + ba_n
         row["unfinished"] = (len(AB) - ab_n) + (len(BA) - ba_n)
-        if ab_n and ba_n:
+        # [GH #269] SECOND instance of the same defect in this same function:
+        # the winrate legs are the FINISHED counts, which can be far thinner
+        # than the leg counts already gated above (a seed with 41/15 games can
+        # carry a single finished dire game), and `if ab_n and ba_n` is the
+        # very predicate #269 says cannot tell 1 from 15.  Same estimator, same
+        # 50/50 average, so the same depth gate applies -- measured on its own
+        # denominators, never inherited from the economy gate.  No `scored`
+        # check is needed here and none is implied: finished counts are <= leg
+        # counts, so winrate_arm_depth <= arm_depth always, and a seed the
+        # economy gate rejected can never pass this one.
+        row["winrate_arm_depth"] = round(arm_depth(ab_n, ba_n), 2)
+        if row["winrate_arm_depth"] >= min_arm_depth:
             row["winrate"] = round(((ab_w / ab_n) + (ba_w / ba_n)) / 2, 3)
+        elif ab_n and ba_n:
+            row["winrate_excluded"] = "THIN-ARM"
     rows.append(row)
 
 v = {"cand": cand, "cand_ref": cand_ref or None,
@@ -256,6 +353,11 @@ if wrs:
     v["mean"]["winrate"] = round(statistics.mean(wrs), 3)
     v["comps_better"]["winrate"] = "%d/%d" % (sum(1 for x in wrs if x > 0.5), len(wrs))
     v["winrate_neutral"] = 0.5
+# [GH #269] The census hangs off "a wave was counted", NOT off "a winrate
+# survived the gate".  Left coupled to `wrs`, a wave of nothing but thin seeds
+# -- the exact shape this gate exists to expose -- would print no game counts
+# at all, so the gate would take the evidence for itself down with it.
+if any("scored_games" in r for r in rows):
     v["scored_games"] = sum(r.get("scored_games", 0) for r in rows)
     v["unfinished_games"] = sum(r.get("unfinished", 0) for r in rows)
     # The independence disclosure (see the wr() header): only `engine` games
@@ -267,6 +369,33 @@ if wrs:
     v["winner_by"] = by
     v["winrate_independent_of_gold"] = "%d/%d games" % (by.get("engine", 0),
                                                         sum(by.values()) or 0)
+
+# [GH #269] The exclusion is published at the top level, not left for a reader
+# to reconstruct from per-seed rows.  `ba_games` was already the only field
+# that could show the W19 defect, and nobody reads a per-seed field they have
+# no reason to suspect.
+v["min_arm_depth"] = min_arm_depth
+v["thin_arm_seeds"] = [{"seed": r["seed"], "ab_games": r["ab_games"],
+                        "ba_games": r["ba_games"], "arm_depth": r["arm_depth"]}
+                       for r in rows if r.get("excluded") == "THIN-ARM"]
+v["thin_arm_winrate_seeds"] = [r["seed"] for r in rows
+                               if r.get("winrate_excluded") == "THIN-ARM"]
+if v["thin_arm_seeds"]:
+    sys.stderr.write(
+        "GH #269 depth gate: %d seed(s) EXCLUDED from the mean as THIN-ARM "
+        "(arm_depth < %g games/leg): %s\n"
+        % (len(v["thin_arm_seeds"]), min_arm_depth,
+           ", ".join("s%s(ab=%d,ba=%d,depth=%.2f)"
+                     % (r["seed"], r["ab_games"], r["ba_games"], r["arm_depth"])
+                     for r in v["thin_arm_seeds"])))
+# The registered revision condition (see the header): a wave zeroed BY THIS
+# GATE is a report about the wave, not an argument for a smaller number.
+paired = [r for r in rows if r.get("excluded") != "NO-PAIR"]
+if len(paired) >= 2 and not complete:
+    sys.stderr.write(
+        "GH #269 depth gate: WAVE ZEROED BY THE GATE -- %d paired seeds, none "
+        "at %g games/leg. Report the wave's shape; do NOT lower the gate.\n"
+        % (len(paired), min_arm_depth))
 
 g = v["mean"].get("gpm"); d = v["mean"].get("deaths")
 v["suggested"] = ("promote" if (g is not None and g > 5 and complete and
