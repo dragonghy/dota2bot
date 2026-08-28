@@ -62,9 +62,11 @@ local function ClosestCamp(hBot, tCamps)
 		J.IsModeTurbo() and J.IsSoakCandidate('campsel'))
 end
 
--- [GH #137 §3 suggestion 2] Every neutral-creep sweep on the farm path goes
--- through here, so the soak candidate 'campfarm' is resolved in exactly one
--- place. The shipped `bot:GetLevel() >= 10 or not nNeutrals[1]:IsAncientCreep()`
+-- [GH #137 §3 suggestion 2] Every `bot:GetNearbyCreeps` sweep on the farm path
+-- goes through here, so the soak candidate 'campfarm' is resolved in exactly one
+-- place. (The header used to say "every neutral-creep sweep", which was a claim
+-- about a universe its own census could not see -- see NeutralPresenceList
+-- below and GH #265.) The shipped `bot:GetLevel() >= 10 or not nNeutrals[1]:IsAncientCreep()`
 -- clauses below are left EXACTLY where they are: unarmed this wrapper returns
 -- the very table GetNearbyCreeps handed it, so the shipped path keeps its own
 -- object identity. Armed, a bot under the ancient tier stops seeing ancient
@@ -76,6 +78,45 @@ end
 local function NeutralFarmList(hBot, tCreeps)
 	return J.Site.FilterFarmNeutrals(tCreeps, hBot:GetLevel(),
 		J.IsModeTurbo() and J.IsSoakCandidate('campfarm'))
+end
+
+-- [GH #265] THE OTHER API. This file reads neutrals through TWO engine calls,
+-- not one: `bot:GetNearbyCreeps` (3 sites, all wrapped above) and
+-- `bot:GetNearbyNeutralCreeps` (3 sites, none of them wrapped, and none of them
+-- visible to the census that called itself "every neutral sweep"). Of those
+-- three, exactly one is on the ACTION path -- Think()'s lane-creep escape,
+--
+--     local nNeutrals = bot:GetNearbyNeutralCreeps(nSearchRange)
+--     if J.IsValid(farmTarget) and #nNeutrals == 0 then   -- go hit a lane creep
+--
+-- -- and its polarity runs AGAINST the filter above. 'campfarm' armed empties
+-- the ATTACK list for an under-tier bot standing at an ancient camp, but the
+-- ancient creeps it dropped are still counted HERE, and counting them holds the
+-- lane-creep escape SHUT. The two questions "may I attack a neutral here" and
+-- "are there neutrals here" then answer with different lists, by construction,
+-- on exactly the frames the gate fires -- leaving a state the shipped code has
+-- no branch for: nothing to attack, and no reason to leave. GH #265 photographed
+-- it on the armed leg: a level-4 Earthshaker crossed the Black Dragon camp's
+-- aggro radius six times in 19s with ZERO damage events of its own, 3000u clear
+-- of any enemy hero, and died to `npc_dota_neutral_black_drake` at t=238.1.
+--
+-- ONE LEVER, and it is monotone: FilterFarmNeutrals can only REMOVE entries, so
+-- `#nNeutrals == 0` can only flip false -> true. Armed can therefore only OPEN
+-- the lane-creep escape and can never close one that the shipped path took --
+-- asserted, not described, in tests/test_campvoid_presence_axis.lua.
+--
+-- DELIBERATELY NOT CHANGED: the other two `GetNearbyNeutralCreeps` sites (in
+-- GetDesireHelper) only stamp `teamTime`; they set no action and this lever does
+-- not touch a desire number. That restraint is an assertion in the test file too,
+-- so "we widened it later" cannot happen silently.
+--
+-- NOT CONJOINED with 'campfarm' (AGENTS.md: promoting an id silently freezes any
+-- gate that names it). Armed alone it still stands on its own feet: an under-tier
+-- bot with an enemy lane creep in 900u goes and hits the lane creep instead of
+-- standing in an ancient camp the ladder says it may not take.
+local function NeutralPresenceList(hBot, tCreeps)
+	return J.Site.FilterFarmNeutrals(tCreeps, hBot:GetLevel(),
+		J.IsModeTurbo() and J.IsSoakCandidate('campvoid'))
 end
 
 
@@ -708,7 +749,7 @@ function Think()
 		local farmTarget = J.Site.GetFarmLaneTarget(hLaneCreepList);
 		local nSearchRange = bot:GetAttackRange() + 180
 		if nSearchRange > 1600 then nSearchRange = 1600 end
-		local nNeutrals = bot:GetNearbyNeutralCreeps(nSearchRange);
+		local nNeutrals = NeutralPresenceList(bot, bot:GetNearbyNeutralCreeps(nSearchRange));
 		if J.IsValid(farmTarget) and #nNeutrals == 0 then
 			if farmTarget:GetTeam() ~= bot:GetTeam() then
 				local nEnemyTowers = bot:GetNearbyTowers(1600, true)

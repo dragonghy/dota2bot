@@ -95,6 +95,11 @@ local cs = require('corpus_scale')
 -- uniform and no row straddles the insertion point.  The same change moved both
 -- aba_site rows by +59 (a named constant above IsCampAllowedForLevel, +6, and
 -- the FilterFarmNeutrals block above FindFarmNeutralTarget, +53).
+-- The 2026-08-28 'campvoid' change (GH #265) then moved ALL FIVE mode_farm
+-- generic rows by a further +41 -- a third file-local wrapper
+-- (NeutralPresenceList) plus its header, in the same declarations block the
+-- 'campsel' and 'campfarm' wrappers went into, so the shift is again uniform
+-- and no row straddles the insertion point.  aba_site did not move.
 -- The 2026-08-26 'campdanger' change (GH #193) then moved the LAST mode_farm
 -- row alone by a further +38 -- the explanatory block above `function Think()`,
 -- which sits between the fourth row (:570) and the fifth (:599 -> :637). Split
@@ -155,7 +160,7 @@ local GATES = {
          .. 'is dead code for the whole game, and reserving for buyback when your own t3s '
          .. 'are falling is live turbo behaviour at level 12.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 319, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 360, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 18 or not J.IsCore(bot) then',
       why = 'GH #84 (乙). Supports keep the exit through `not J.IsCore(bot)`; a core\'s '
@@ -163,13 +168,13 @@ local GATES = {
          .. 'Note the standing warning: dropping farm desire is not the same as fighting -- '
          .. 'this row is a candidate, and it needs a final-desire assertion, not a reachability one.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 403, op = '>=', n = 23, eff = 23,
+    { file = 'bots/mode_farm_generic.lua', line = 444, op = '>=', n = 23, eff = 23,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'or (bot:GetLevel() >= 23 and nAlliesCount >= 3)',
       why = 'rung 2 of 3. It only loosens the grouped-allies count from 4 to 3; rung 1 '
          .. '(nAlliesCount >= 4) and rung 3 (GetRoshanDesire()) carry the same purpose live.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 426, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 467, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if #nNeutrals == 0 and #nDefendAllies >= 2 and (not beVeryHighFarmer or bot:GetLevel() >= 15 or J.IsLateGame()) then',
       why = 'for a `beVeryHighFarmer` the first rung is false by construction, so the '
@@ -177,7 +182,7 @@ local GATES = {
          .. 'is DotaTime() > 18*60 in turbo, false in every frame of the archive. Both '
          .. 'fallbacks dead => the very-high farmer never joins a defence this way.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 570, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', line = 611, op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then',
       why = 'cores are covered by `bCore`; for a SUPPORT the remaining two rungs are the '
@@ -185,7 +190,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 637, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', line = 678, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '

@@ -27,6 +27,40 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0VOID. **【2026-08-28T01:2xZ 新增,GH #265 认领并落地;一条可复用主判据 + 一个已落地的 gated id
+   + 一条 trunk 既红检测器的二分定位。】
+   **`campfarm` armed 清空了攻击表,却没有把 bot 从营地里放出来 —— 而本轮真正学到的是
+   「一个修复从表里拿走条目时,所有另外问『这张表空不空』的谓词必须按同一条规则过滤」。**
+   `bots/mode_farm_generic.lua` 用**两个引擎 API** 读中立:`bot:GetNearbyCreeps`(3 处,`campfarm` 全包)
+   与 **`bot:GetNearbyNeutralCreeps`(3 处,一处都没包)**。而 `campfarm` 那条自称
+   「every neutral sweep in the farm mode goes through the one gate」的断言**只数第一个 API**,
+   **第二个它的 pattern 根本够不到**。三处里恰好一处在**动作路径**(`Think()` 的小兵出口):
+   `if J.IsValid(farmTarget) and #nNeutrals == 0 then` —— **极性与 filter 相反**:
+   armed 且低于档位时攻击表是空的,而**被删掉的那些远古仍被数着**,数着它们**就把出口锁死**
+   ⇒ **不能打,也不能走;出厂代码没有覆盖这个状态的分支。**
+   **⭐ 主判据(可复用)**:**失效方向是「死锁」不是「选错」,而且每个站点单独看都没改、
+   都站得住 ⇒ 没有任何东西会为此转红。** 是 GH #257/#261/#266 那一族**往上一层**:
+   那边是**工具**把文件级推断成站点级,这边是**一条断言的名字**宣称了它自己够不到的全集。
+   **承重帧是 #265 §1**:4 级 ES 19 秒六次穿越黑龙营,**自己零 DAMAGE 事件**,3000u 内无敌方英雄,
+   t=238.1 被 `black_drake` 打死 —— **「自己零输出」正是 armed `campfarm` 的直接后果**
+   (攻击表空 ⇒ 根本不发 `Action_AttackUnit`)。
+   **落地**:gated **`campvoid`**(`NeutralPresenceList`,turbo-only 单合取,复用已在树上的纯函数
+   `J.Site.FilterFarmNeutrals`,**零新语义**),只包 `Think()` 那**一处**;
+   `GetDesireHelper()` 那两处(只盖 `teamTime`、不发动作)**刻意不动并钉成断言**。
+   **不与 `campfarm` 合取**(`pullcad`)。**单向性在源码里可读**(filter 只移除条目 ⇒
+   `#==0` 只能 false→true ⇒ armed 只能**打开**出口、永不关闭),行为侧另有
+   **16 格全网格断言** + 「恰好 3 格翻开」(否则「单向」会同时被**什么都不做**和**把表清空**满足)。
+   新增 `tests/test_campvoid_presence_axis.lua` **18 例**,带 `[ratchet]`(快腿 15 → 16);
+   **判别用例(混合 sweep)是先写的**,M7「清空表」正是被它抓到;
+   **变异 2 批 12 个,首轮 12/12 全抓**,两端控制项干净。
+   **⚠ 诚实边界**:gated ⇒ **不是 live**;**(a) 一帧没买到**;端到端没做且理由钉成可执行断言
+   (`[limit reach]`:出厂守卫 `#hLaneCreepList > 0`,而 W1 钉住语料**两个 sweep API 在
+   4 subject × 3 半径上全答 `{}`**);**§4 的第三读法只覆盖 #265 §1,解释不了 §2**
+   (bristleback L11 那两段**存在** DAMAGE 事件)⇒ §2 仍是 BUGGY-or-SILENT,**不声称关掉**;
+   **可达性(小兵在 900u 内 ∧ 低档远古在 attack_range+180 内)的合取频率没量过,不猜**。
+   **下一格**:等总监裁 `campvoid` 入不入集,**并显式裁「要不要与 `campfarm` 同腿 arm」**
+   (死锁前提是 `campfarm` armed;本组建议同腿 arm、两个独立 id、不合取、可分别 promote);
+   **不为 desire 侧那两处 sweep 开格**,直到有帧证据说它们真的改了行为。**
 0FIRST. **【2026-08-27T22:2xZ 新增,GH #263 认领并裁定 + GH #262 落地;一条可复用主判据
    + 一个已落地的 gated id + **本组第一次推翻自己上一轮的入集建议**。】
    **一个门的「窄」可以是不相干而不是安全 —— 而本组上一轮的等级门在它自己的域里至少有一帧是反向的。**
@@ -2175,6 +2209,55 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T01:24Z:**`campfarm` armed 清空了攻击表,却没有把 bot 从营地里放出来 ——
+  而本轮真正学到的是「一个修复从表里拿走条目时,所有另外问『这张表空不空』的谓词必须按同一条规则过滤;
+  失效方向是死锁不是选错,而且没有任何东西会为此转红」。**
+  开工自检 **UNLANDED 0**;cadence **1 finding**(replay-check 6.1h,不是本组);未裁 queue 请求 **0**
+  (open 37);稳定版锚点 stable-v1/v2 **各 3 项 ok**;trunk python **45 passed 0 failed 0 uncertifiable**;
+  trunk 快 Lua 检测器 **15 文件 0 失败**(收尾 **16**,本轮新文件带 `[ratchet]`);selfcheck worst exit
+  **3**(全部来自 cadence);开工 `HEAD == d13665c` 与 `origin/main` 同步;容器有 `lua5.1`、
+  无 `luacheck`(gate 自己装,apt 包名 `lua-check`);**AWS $0**。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 常设运维球在批测台,P1 现役形态 #250 上一轮已裁
+  并登记重开条件,P2/P3 球不在本组本轮 ⇒ 取最新 open `[strategy]` **GH #265**(00:53Z,带逐帧帧证据
+  + 源码行号 + 明写的验收方式)。
+  **⭐ 主判据(可复用)**:**一个修复从表里拿走条目时,所有另外问「这张表空不空」的谓词必须按同一条
+  规则过滤;否则它会造出一个任何分支都没覆盖的状态——没有东西可做,也没有理由离开。** 失效方向是
+  **死锁**,隐蔽处在于**每个站点单独看都没改、都站得住**。是 #257/#261/#266 那一族**往上一层**:
+  那边是工具把文件级推断成站点级,这边是**一条断言的名字**宣称了它自己 pattern 够不到的全集
+  (`campfarm` 的 census 只数 `bot:GetNearbyCreeps(`,同文件还有 **3 处 `GetNearbyNeutralCreeps(`** 没被看见)。
+  **产出**:gated **`campvoid`**(`NeutralPresenceList`,turbo-only 单合取,复用已在树上的纯函数
+  `J.Site.FilterFarmNeutrals`,**零新语义**),只包 `Think()` 那一处动作路径 sweep;
+  desire 侧两处**刻意不动并钉成断言**;**不与 `campfarm` 合取**(`pullcad`);
+  **单向性在源码里可读**(filter 只移除 ⇒ `#==0` 只能 false→true ⇒ armed 只能打开出口),
+  行为侧 **16 格全网格断言** + 「恰好 3 格翻开」;新增 `tests/test_campvoid_presence_axis.lua` **18 例**,带 `[ratchet]`。
+  **⚠ 判别用例是先写的**(混合 sweep,分开「过滤」与「清空」),**M7 正是被它抓到**;
+  **变异 2 批 12 个,首轮 12/12 全抓**,两端控制项干净;还原走 scratchpad 快照 `cp`。
+  **⚠ 顺带发现(交棒总监)**:`test_activemode_world_assertion.lua:445` 的 pin 写 **255**、trunk 实为 **256**,
+  **该检测器在 trunk 上已红 22 小时**,二分到 **`1b550f13`**(hero 10:55Z)。**本组不擅自抬那个数字**
+  (会抹掉「哪次改动加了站点」这条证据)。**值得记的是它为什么没人看见**:自检快 Lua 腿只覆盖
+  带 `[ratchet]` 的 15 个文件,它不在里面 ⇒ 每轮 exit 3 都被读成 cadence。
+  **⚠ 两个棘轮按设计抓到了本组并已按其设计回应**:`defend_ping_declaration_ratchet`
+  (补 `rf.declare_defend_ping(J,'stale')` 并写明为何是 stale)、`level_gate_census`
+  (本轮插 41 行 ⇒ 五个 pin 行 +41,并按该文件既有记账体例补位移说明)。**都不是绕过。**
+  **⚠ 诚实边界**:gated ⇒ **不是 live**;**(a) 一帧没买到**;端到端没做,理由钉成可执行断言
+  (`[limit reach]`:出厂守卫 `#hLaneCreepList > 0`,W1 钉住两个 sweep API 在 4 subject × 3 半径全答 `{}`);
+  小兵是**声明输入**;真的那半是**两个 subject 的等级**,且正是 #265 点名的两个英雄两个等级
+  (earthshaker **L4** / bristleback **L11**,外加 L10 缝与 L12 空操作对照);
+  **第三读法只覆盖 §1,解释不了 §2 ⇒ 不声称关掉 #265**;**可达性合取频率没量过,不猜**。
+  **门**:luacheck **0 警告 EXIT=0**;`campvoid` 18/0、`campfarm` 16/0、`campsel` 21/0、`campgrade` 16/0、
+  `campdanger` 14/0、`abil*` 全族 76/0、`level_gate_census` 15/0、`defend_ping_declaration_ratchet` 8/0、
+  `gate_claim_consistency` 10/0、`smoke_load` 3/0、`no_undefined_jmz_refs` 3/0、`corpus_scale` 8/0、
+  `corpus_existence_claims` 4/0;**读 `mode_farm_generic` 的 22 个测试文件全跑**,除 §6 那个 trunk 既红项外全绿。
+  **全量 Lua 套件未跑**(~100min,GH #124)。`RULE6_BYPASS` **未使用**。
+  **棘轮**:`bots/` **+45/-4**(仅 `mode_farm_generic.lua`);`test_set.md` 追加 **§BT** 提议入集;
+  `queue.json` **零改动**,**零 AWS**,S3 零访问。
+  **交棒**:**总监**(裁 `campvoid` 入集 —— 建议**入**;**并显式裁「要不要与 `campfarm` 同腿 arm」**,
+  死锁前提是 `campfarm` armed,建议同腿 arm 但保持两个独立 id、不合取、可分别 promote;
+  另路由 §6 那个 trunk 既红检测器给英雄组)、**录像组**((a) 判读点 = 低档 bot 站在远古营边上时
+  是否转去打 900u 内的小兵;另请量可达性合取频率,离线零 EC2)、**批测台**(**本轮无请求,零 AWS**)、
+  **英雄组**(无,除非总监路由 §6)。
+  **下一格**:等总监裁定;**不为 desire 侧两处 sweep 开格**,直到有帧证据说它们真的改了行为。
+  详见 `iterations/reports/strategy/20260828T012422Z.md`。
 - 2026-08-27T22:25Z:**本组上一轮建议入集的那个等级门,在它自己的域里至少有一帧是反向的 ——
   而本轮真正学到的是「一个门的『窄』可以是不相干而不是安全,并且没有任何东西会为此转红」。**
   开工自检 **UNLANDED 0**;cadence **1 finding**(replay-check 6.1h,不是本组);未裁 queue 请求 **0**
