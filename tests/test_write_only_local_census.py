@@ -39,8 +39,10 @@ comes and asks for the argument.
 Run: python3 tests/test_write_only_local_census.py   (or tests/run_py_tests.sh)
 """
 
+import glob
 import importlib.util
 import os
+import re
 import sys
 import tempfile
 
@@ -259,13 +261,41 @@ _dspec.loader.exec_module(D)
 r = D.band_report(max_level=2, max_time=120.0)
 
 # `0GEO`, reproduced: the map is a measured constant of this engine build, not
-# a model.  If either number moves, every distance below is re-derived, not
-# re-quoted.
+# a model.  If it moves, every distance below is re-derived, not re-quoted.
 eq("22 towers, identical across every carrier fixture", r["towers"], 22)
-# Grows by one every time a fixture is generated against a live map (62 since
-# f_212636_tide_ancient, GH #197).  The count is a corpus size, not a geometry
-# constant -- only `towers` above is the engine invariant.
-eq("...carried by 62 fixtures", r["carrier_fixtures"], 62)
+
+# ---- `0QUOTE`: a frozen literal is assertable only if its red says something
+# about the argument the section is making.  This line used to read
+# `eq(carrier_fixtures, 62)` while its OWN comment said the count "grows by one
+# every time a fixture is generated against a live map".  Those two sentences
+# cannot both be kept: the corpus grew to 64 when replay-check added two
+# fixtures at 2026-08-28T07:05Z and trunk went red -- a red naming the wrong
+# change (nothing about towers, bands or the dropped rung moved) whose cheapest
+# exit is re-quoting 62 -> 64, which re-arms it for the next fixture.  GH #236
+# predicted exactly this ("every fixture after W14 walks into the same wall").
+#
+# Contrast the two literals this section keeps.  `towers` is an engine
+# invariant.  `band_min` below is an EXTREMUM against a ring: adding fixtures
+# can only push it DOWN, i.e. it can only move in the direction that WEAKENS
+# the separation being argued, so its red is information.  `carrier_fixtures`
+# moves on every legitimate add and only in the direction that STRENGTHENS the
+# argument -- its red is never information.  So it is derived, not quoted.
+#
+# Derived two ways that do NOT share a parser: `band_report` finds the
+# `buildings = { ... }` BLOCK and reads tower rows out of it; the scan below
+# never looks for the block at all.  Equality between them is strictly stronger
+# than the old literal, which could not tell "62 because that is all there are"
+# from "62 because the block regex silently stopped matching two of them".
+_carriers_by_line_scan = sum(
+    1 for _p in sorted(glob.glob(os.path.join(REPO, "tests", "fixtures", "*.lua")))
+    if re.search(r"name = 'tower'", open(_p, encoding="utf-8", errors="replace").read()))
+eq("every fixture carrying a tower row is counted as a carrier (independent scan)",
+   r["carrier_fixtures"], _carriers_by_line_scan)
+# The floor is the ratchet half: 62 is the corpus the distances below were
+# derived at (`f_212636_tide_ancient`, GH #197).  The corpus may grow freely;
+# it may not silently shrink under the argument.
+ok("...and the carrier corpus has not shrunk below the 62 the distances were "
+   "derived at", r["carrier_fixtures"] >= 62, "carriers %r" % r["carrier_fixtures"])
 
 # The separation, and both of the "is this just a thin corpus?" answers.
 ok("the archive does contain tower-adjacent frames (so a zero is not sampling)",

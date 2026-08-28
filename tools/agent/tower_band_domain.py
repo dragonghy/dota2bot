@@ -28,8 +28,11 @@ LIMITS:
     the static 22, so late-game readings over-count (a dead tower still counts).
     That is harmless for the bands this answers about -- nothing is down at
     level <= 2 -- and it is why the tool prints the band's own frame count.
-  * The archive is 106 INCIDENT-selected fixtures, not a uniform sample of
-    frames.  Treat a count as a lower bound.  The separation above does not
+  * The archive is INCIDENT-selected fixtures, not a uniform sample of frames,
+    and it GROWS -- so no count of it is quoted here on purpose (`0QUOTE`: a
+    frozen corpus size in prose rots silently, because nothing asserts prose;
+    the live number is `carrier_fixtures` in the report below).  Treat a count
+    as a lower bound.  The separation above does not
     rest on the sample: a hero at level <= 2 is at their own lane's creep-meet
     point, roughly midway between the two tier-1s, and the measured median
     (2086 u) is what that geometry predicts.
