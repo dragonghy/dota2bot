@@ -4439,7 +4439,7 @@
     "armed": false,
     "in_test_set": false,
     "next": "Baton 3 row 2: tests/test_lion_hex_talent_slot.lua -- the only remaining hero row whose verdict this round touches (its section 6 was re-derived 08-27 but the row still carries an uncorrected numeric site). Separately, the four non-focus census heroes now hold a COUNT with no verdict; warlock's `talent6:IsTrained() and false` is the sharpest of them -- with the level argument gone, a literal `false` is the only thing left killing that branch.",
-    "issue": "GH #268 (to file)",
+    "issue": "GH #268",
     "report": "iterations/reports/hero/20260828T023000Z.md"
   }
 }

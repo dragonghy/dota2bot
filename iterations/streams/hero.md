@@ -2086,7 +2086,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **⭐ 这一格是别人指名欠这个文件的**:`test_focus_talent_anchor.lua` §4a 自己写着
     「a read of index 1-4 is a LIVE read and needs its own accounting」并**点名转给 §4**。
     本轮之前**全仓没有任何断言把 structural 普查与出装交叉过**。
-  - **⭐ 交出去、且明确不由本组扩的一格**:四个非焦点英雄(chaos_knight / legion_commander /
+  - **⭐ 交出去的一格(GH #268,已请求指派),明确不由本组扩**:四个非焦点英雄(chaos_knight / legion_commander /
     lich / warlock)**保留计数、失去判决**——「够不着所以无害」对它们也不再成立而没人补。
     最尖的是 `hero_warlock.lua:532` `if talent6:IsTrained() and false`:等级论证没了之后,
     **一个字面 `false` 是唯一还在杀那条分支的东西**。
