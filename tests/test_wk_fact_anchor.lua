@@ -37,10 +37,18 @@
 --      talent6 disjunct is the only thing that could fire the release.  The
 --      shipped decision flips with IsTrained, which is the proof the disjunct has
 --      teeth -- and the level census behind GH #84 (level >= 20 on 0 of 210
---      hero-slots, high-water 19) is what makes those teeth unreachable in turbo;
+--      hero-slots, high-water 19) is what USED TO make those teeth unreachable in
+--      turbo.  That clause is RETIRED (2026-08-28, GH #235): the zero was a
+--      property of the 10-minute economy cap every batch game self-terminated at,
+--      not of turbo.  Owner priority P3 (GH #108) lifted the cap, and the first
+--      frame taken past it reads ten heroes at level 22-27 -- this one at 26.
+--      The quote stays, because section 3 is unreadable without it; what it buys
+--      is now the opposite of what it bought.  The teeth BITE;
 --   4. a repo-wide census of the same shape: every live read of a t20/t25 talent
---      handle in bots/BotLib, split into ADDITIVE (pulls a number to add; costs
---      nothing when unreachable) and STRUCTURAL (selects a branch or an action).
+--      handle in bots/BotLib, split into ADDITIVE (pulls a number to add) and
+--      STRUCTURAL (selects a branch or an action).  Section 4's own recorded read
+--      was written under the same retired premise and was re-read on 2026-08-28;
+--      the replacement discriminator is stated above the census.
 --
 -- HONEST BOUNDS
 --   * No real frame here.  Section 3 is the shipped function under the mock API,
@@ -305,10 +313,14 @@ end
 tests['[GH #17] talent6 trained: the same frame DOES release'] = function()
     local X = make_frame(true)
     assert(X.ConsiderW() == BOT_ACTION_DESIRE_HIGH,
-        'the disjunct must have teeth -- otherwise "it is unreachable in turbo" '
-        .. 'would be a statement about nothing. It flips the shipped decision on '
-        .. 'this frame, and it can only be true at hero level 20 (section 2), '
-        .. 'which the GH #84 census puts at 0 of 210 hero-slots.')
+        'the disjunct must have teeth -- otherwise the note it carries would be a '
+        .. 'statement about nothing. It flips the shipped decision on this frame, '
+        .. 'and it can only be true at hero level 20 (section 2), which the GH #84 '
+        .. 'census put at 0 of 210 hero-slots. RETIRED 2026-08-28 (GH #235): that '
+        .. 'zero was the 10-minute batch cap, and WK reaches level 26 in a '
+        .. 'naturally-ended turbo game -- so this test no longer prices a '
+        .. 'hypothetical. WK`s own t20 row takes [6] (section 4b), so the disjunct '
+        .. 'this frame flips is LIVE from level 20 in shipped turbo games.')
 end
 
 -- ---------------------------------------------------------------------------
@@ -362,7 +374,7 @@ local STRUCTURAL_CENSUS = {
     warlock = 2,           -- one of them is `talent6:IsTrained() and false`
     zuus = 1,              -- picks UseAbilityOnLocation vs UseAbilityOnEntity
 }
--- Read of the census, recorded with it: three of the six non-WK heroes
+-- Read of the census, recorded with it 2026-08-22: three of the six non-WK heroes
 -- (legion_commander, lion, zuus) use the handle to choose GROUND-cast over
 -- UNIT-cast, and the unreachable half is the ground cast -- the else branch is
 -- the correct default, so their unreachability costs nothing observable.  The
@@ -370,6 +382,52 @@ local STRUCTURAL_CENSUS = {
 -- considered), lich (two whole branches never taken) and skeleton_king (the
 -- release condition is strictly tighter than written).  This split is the reason
 -- the census stores COUNTS and not a verdict: the shape does not decide it.
+--
+-- RE-READ 2026-08-28 (GH #235; this file's registry row in
+-- tests/test_level_premise_registry.lua is cleared by this block).
+--
+-- Every sentence above turns on the word UNREACHABLE, and that word came from
+-- GH #84's `level >= 20 on 0 of 210 hero-slots` -- a zero the 10-minute batch cap
+-- manufactured, not a fact about turbo.  So the question the census was built to
+-- answer ("what does unreachability cost?") is VOID, not merely wrong: there is
+-- no unreachability left to price.  The counts survive; the read of them does not.
+--
+-- THE REPLACEMENT DISCRIMINATOR, and why it is a different question.  With levels
+-- reachable, a structural read is dead only if the handle it binds is one this
+-- hero's OWN BUILD never trains.  A hero takes ONE talent per tier, so exactly one
+-- of {5,6} and one of {7,8} is ever trained, and which one is decided offline by
+-- the file's own `tTalentTreeList` through J.Skill.GetTalentBuild (section 2).
+-- That test never depended on levels, which is why it is what is left.
+--
+-- Applied to the focus heroes, it splits a bucket the old read had collapsed:
+--
+--   * zuus [7] and skeleton_king [6] are TRAINED by their own shipped builds.
+--     Both were filed above as costing nothing -- zuus explicitly, as one of the
+--     three "the else branch is the correct default" heroes.  They are live
+--     branches in shipped turbo games from level 25 and 20 respectively.
+--   * lion [8] is NOT trained: hero_lion.lua's t25 row takes [7], so `talent8` is
+--     structurally untrained and X.IsHexAoe returns false at its first statement.
+--     Lion sat in the SAME census bucket as zuus, and the two are now opposite --
+--     for a reason (build selection) that the discarded reason (levels) had been
+--     masking.  See tests/test_lion_hex_talent_slot.lua sections 2 and 6.
+--
+-- This is the accounting tests/test_focus_talent_anchor.lua section 4a defers to
+-- this file by name ("a read of index 1-4 is a LIVE read and needs its own
+-- accounting").  It is discharged for the focus heroes below and NOWHERE ELSE.
+--
+-- HONEST BOUNDS on the re-read
+--   * FOCUS HEROES ONLY.  The trained-set arithmetic needs the hero's own
+--     tTalentTreeList; chaos_knight, legion_commander, lich and warlock are not
+--     focus heroes and are not priced here.  Their rows keep the 08-22 counts and
+--     LOSE the 08-22 verdict: "unreachable, so harmless" is not available to them
+--     any more either, and nobody has replaced it.
+--   * TRAINED IS NOT CORRECTLY BOUND.  This says the handle can be trained, not
+--     that it names the talent its branch is about.  For zuus that second question
+--     runs through `sAbilityList[2]`, and GH #203 measured that sAbilityList
+--     indices are NOT ability slots -- so what abilityW is on the frame where the
+--     ground cast fires is open, and is deliberately not asserted here.
+--   * Still no real frame.  Reachability is argued from GH #235's frame, which is
+--     not in tests/fixtures/ (it is parked in iterations/pending/, GH #236).
 
 tests['[GH #84] the t20/t25 STRUCTURAL read census has not drifted'] = function()
     local counted = {}
@@ -388,10 +446,121 @@ tests['[GH #84] the t20/t25 STRUCTURAL read census has not drifted'] = function(
     for hero, n in pairs(counted) do
         assert(STRUCTURAL_CENSUS[hero],
             'hero_' .. hero .. '.lua grew ' .. n .. ' structural t20/t25 read(s) '
-            .. 'and is not in the recorded census. In turbo that branch cannot '
-            .. 'fire (GH #84: level >= 20 on 0 of 210 hero-slots) -- say what it '
-            .. 'costs before shipping it.')
+            .. 'and is not in the recorded census. This used to read "in turbo '
+            .. 'that branch cannot fire (GH #84: level >= 20 on 0 of 210 '
+            .. 'hero-slots)"; that zero was the 10-minute batch cap and is retired '
+            .. '(GH #235, 2026-08-28). The branch CAN fire -- so say whether this '
+            .. 'hero`s own tTalentTreeList trains the index it binds, and what the '
+            .. 'branch does when it does, before shipping it.')
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- 4b. The replacement discriminator, run (2026-08-28, GH #235).
+--
+-- For each focus hero that owns a structural t20/t25 read: does that hero's own
+-- shipped build ever train the index the read binds?  Driven through the real
+-- J.Skill.GetTalentBuild on the real tTalentTreeList literal, because a
+-- re-implementation of "{10,0} means the even one" is the exact mutation section
+-- 2 was written to catch.
+
+--- { t10 = {a,b}, ... } read out of a shipped hero file.
+local function talent_rows(hero)
+    local body = read_file(BOTLIB .. 'hero_' .. hero .. '.lua')
+        :match('local tTalentTreeList = {(.-)\n}')
+    assert(body, 'hero_' .. hero .. '.lua has no tTalentTreeList literal')
+    local rows = {}
+    for tier, a, b in body:gmatch("%['(t%d+)'%]%s*=%s*{%s*(%d+)%s*,%s*(%d+)%s*}") do
+        rows[tier] = { tonumber(a), tonumber(b) }
+    end
+    for _, tier in ipairs({ 't10', 't15', 't20', 't25' }) do
+        assert(rows[tier], 'hero_' .. hero .. '.lua has no ' .. tier .. ' row')
+    end
+    return rows
+end
+
+-- hero -> { idx = the structural read's talent index, trained = does the build
+-- take it, picks = the {t20, t25} indices its own rows resolve to, what = the
+-- branch it selects }.  Recorded 2026-08-28.
+--
+-- `picks` is here because `trained` alone cannot see whose literal was read: all
+-- three of these heroes take [7] at t25, so a talent_rows() that returned one
+-- hero's rows for everybody answers all three questions correctly by accident
+-- (measured, not feared).  Pinning the PAIR separates zuus ({5,7}) from the other
+-- two.  It does not separate lion from skeleton_king -- their literals are equal
+-- today -- and no assertion here could, which is why `idx` differing is what
+-- carries that pair.
+local FOCUS_STRUCTURAL = {
+    { hero = 'zuus',          idx = 7, trained = true,  picks = { 5, 7 },
+      what = 'ground-cast vs unit-cast of abilityW (hero_zuus.lua:~566)' },
+    { hero = 'skeleton_king', idx = 6, trained = true,  picks = { 6, 7 },
+      what = 'the two X.ConsiderW release disjuncts' },
+    { hero = 'lion',          idx = 8, trained = false, picks = { 6, 7 },
+      what = 'X.IsHexAoe (GH #166)' },
+}
+
+tests['[GH #235] each focus hero`s structural t20/t25 read, against its own build'] = function()
+    api.reset_modules()
+    api.install({ bot = api.MakeHero('npc_dota_hero_skeleton_king') })
+    local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
+
+    -- The census, indexed by hero -> set of talent indices read STRUCTURALLY.
+    -- Without this half the rows below would be arithmetic about handles nobody
+    -- reads, which is how a census and a verdict drift apart in the first place.
+    local read_idx = {}
+    for _, s in ipairs(talent_read_sites()) do
+        if not s.additive then
+            read_idx[s.hero] = read_idx[s.hero] or {}
+            for idx in s.line:gmatch('talent(%d)') do
+                read_idx[s.hero][tonumber(idx)] = true
+            end
+        end
+    end
+
+    for _, row in ipairs(FOCUS_STRUCTURAL) do
+        assert(read_idx[row.hero] and read_idx[row.hero][row.idx],
+            'hero_' .. row.hero .. '.lua no longer reads talent' .. row.idx
+            .. ' structurally (recorded: ' .. row.what .. '). The build arithmetic '
+            .. 'below would then be pricing a handle nothing selects on -- re-read '
+            .. 'the site and update this row.')
+
+        -- A hero takes one talent per tier, so the trained set is exactly the
+        -- four picks GetTalentBuild returns at [1..4]; [5..8] are the halves NOT
+        -- taken.  X.GetSkillList only ever queues the first four.
+        local picks = J.Skill.GetTalentBuild(talent_rows(row.hero))
+        local trained = {}
+        for i = 1, 4 do trained[picks[i]] = true end
+
+        assert(picks[3] == row.picks[1] and picks[4] == row.picks[2],
+            'hero_' .. row.hero .. '.lua`s t20/t25 rows now resolve to {' .. picks[3]
+            .. ',' .. picks[4] .. '}, recorded {' .. row.picks[1] .. ','
+            .. row.picks[2] .. '}. Either the file`s talent tree changed -- in which '
+            .. 'case the verdict below changed with it -- or this test is reading '
+            .. 'the wrong hero`s literal.')
+
+        assert((trained[row.idx] == true) == row.trained,
+            'hero_' .. row.hero .. '.lua binds talent' .. row.idx .. ' for ' .. row.what
+            .. ', and its own t20/t25 rows now resolve to {' .. picks[3] .. ',' .. picks[4]
+            .. '}, so that handle is ' .. (trained[row.idx] and 'TRAINED' or 'UNTRAINED')
+            .. ' -- recorded ' .. (row.trained and 'TRAINED' or 'UNTRAINED') .. '. Since '
+            .. 'GH #235 retired the level ceiling, build selection is the ONLY thing '
+            .. 'left that can make a structural t20/t25 read dead, so this flip '
+            .. 'changes whether the branch ships live. Re-read section 4 before '
+            .. 'updating the row.')
+    end
+
+    -- Anti-vacuum with teeth: the whole point of the re-read is that these three
+    -- do NOT agree, so a bug that made every hero read the same way (talent_rows
+    -- returning one hero's literal, GetTalentBuild stubbed) has to land here.
+    local seen_true, seen_false = false, false
+    for _, row in ipairs(FOCUS_STRUCTURAL) do
+        if row.trained then seen_true = true else seen_false = true end
+    end
+    assert(seen_true and seen_false,
+        'FOCUS_STRUCTURAL no longer holds both a trained and an untrained row. The '
+        .. 'finding IS the split -- zuus and lion sat in the same 08-22 census '
+        .. 'bucket and their handles have opposite fates. A one-sided table makes '
+        .. 'this test pass for a reason unrelated to what it says.')
 end
 
 tests['[GH #84] warlock still carries the doubly-dead `and false` read'] = function()

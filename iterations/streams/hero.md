@@ -22,6 +22,31 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-30. ~~**棒 ③ 第 2 行:`test_wk_fact_anchor.lua` §4 的读法被判**作废**(不是答错),而替代它的判据从来不看等级**~~
+   **2026-08-28T01:58Z done —— `bots/` **零行改动**(一个英雄文件都没碰);无新 gate id;
+   `state.json` 新增 `levelpremise_wkfact_20260828`(`gated:false`);零 AWS;不申请入集;**不提 queue**。
+   报告 `iterations/reports/hero/20260828T015816Z.md`。**
+   - **入口是上一棒自己点的名**,不是自选:22:53Z 写明「优先 `test_wk_fact_anchor.lua` ——
+     它的 §4 是 t20/t25 的 STRUCTURAL 读数普查,本轮判决直接改写它的前提」。
+   - **⭐ 判掉的是问题不是答案。** §4 与普查一起登记的读法**每一句都转在 UNREACHABLE 上**;
+     GH #235 拿掉「够不着」之后,「**够不着要花多少钱**」**是空的**。计数活,读法死。
+   - **⭐ 替代判据:出装,不是等级。** 每档只点一个天赋 ⇒ structural 读数变死当且仅当
+     **这个英雄自己的 `tTalentTreeList` 不点它绑的那格**。新 §4b 驱动**真的**
+     `J.Skill.GetTalentBuild`,**把 08-22 同一个桶里的 zuus 与 lion 劈成相反两半**:
+     **zuus `talent7` 点**(槽 7 = `unique_zeus_5` = `lightning_bolt/aoe_radius 325`)
+     ⇒ 25 级起地面施法**真的会发生且是重点**,而它 08-22 被明文归进「不产生可观测代价」;
+     **WK `talent6` 点 ⇒ 20 级起活**;**lion `talent8` 不点 ⇒ 结构性死**。
+   - **⭐ 这是别人指名欠这个文件的账**:`test_focus_talent_anchor.lua` §4a 点名把它转过来,
+     而本轮之前**全仓没有断言把 structural 普查与出装交叉过**。
+   - **⭐ 交出去、不自行扩**:四个非焦点英雄**保留计数、失去判决**;
+     `hero_warlock.lua:532` `talent6:IsTrained() and false` 最尖 —— 等级论证没了之后,
+     **字面 `false` 是唯一还在杀那条分支的东西**。
+   - **诚实边界**:「点得到」≠「绑对了」(zuus 第二问穿 `sAbilityList[2]`,GH #203 实测下标非槽位,
+     **刻意不断言**);仍无真实帧;lion 与 WK 天赋字面量今天相等,这里分不开,靠 `idx` 承担。
+   - **⭐ 变异 5 抓 + 1 对照**;M3 是新加 `picks` 列的理由:三个英雄 t25 **全解到 `[7]`**,
+     只断言 `trained` 时「读错英雄字面量」**三问全蒙对**(实测)。
+   - **下一棒**:棒 ③ 剩 **7 行**(本组欠 5),**优先 `tests/test_lion_hex_talent_slot.lua`**。
+
 -29. ~~**棒 ③ 开工:登记表清掉第一行 —— 而清它的那份证据,同时判掉了棒 ② 留下的岔口**~~
    **2026-08-27T22:53Z done —— `bots/` **零可执行行改动**(`hero_skeleton_king.lua` 只加注释块);
    无新 gate id;`state.json` 新增 `talentvis_20260827`(`gated:false`);零 AWS;不申请入集;
@@ -2040,6 +2065,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T01:58Z(报告 `iterations/reports/hero/20260828T015816Z.md`;轴 **`LEVELPREMISE` 重读**;
+  **棒 ③ 第 2 行**,登记表天花板 **8 → 7**)—— 自检 **worst exit 3**:UNLANDED 0、两条稳定版锚点 ok、
+  py **46/0**、Lua 快速检测器 **15** 文件 0 失败、待裁 queue 请求 0(open 37);cadence 洞只有
+  **replay-check(6.1h)**,**本组无洞**;owner 优先项 P1/P2 球在协同组、P3 在总监,**本组零项**;
+  `[hero]` open issue 全是本组自己发表的判决,无待认领带帧请求 ⇒ 按 backlog 取上一轮点名的
+  `test_wk_fact_anchor.lua`。**本轮 `bots/` 零行改动**(一个英雄文件都没碰);无新 gate id;
+  `state.json` 新增 `levelpremise_wkfact_20260828`(`gated:false`);**零 AWS**;不申请入集;**不提 queue**。
+  - **⭐ 判掉的不是一个答案,是一个问题。** §4 那份 11 处 structural t20/t25 普查,和它一起登记的
+    读法**每一句都转在 UNREACHABLE 上**(「else 分支是正确默认值,所以够不着不产生可观测代价」)。
+    GH #235 把「够不着」拿掉之后 ⇒ **「够不着要花多少钱」是空问题,不是答错的问题**。
+    **计数活下来,对计数的读法没有。**
+  - **⭐ 换上的判据从来不看等级**:英雄每档只点一个天赋 ⇒ 一处 structural 读数变死,当且仅当
+    **这个英雄自己的 `tTalentTreeList` 不点它绑的那一格**。新 §4b **驱动真的
+    `J.Skill.GetTalentBuild`**(不重抄「{10,0} 取偶数」),结果**把 08-22 捏在同一个桶里的两个劈开**:
+    **zuus `talent7` 点(`{5,7}`)** 且槽 7 = `unique_zeus_5` = `zuus_lightning_bolt/aoe_radius 325`
+    ⇒ **25 级起地面施法分支在实装 turbo 里是活的,而它 08-22 被明文归进「不产生可观测代价」那三个**;
+    **WK `talent6` 点(`{6,7}`)⇒ 20 级起活**;**lion `talent8` 不点(t25 取 `[7]`)⇒ 结构性死**。
+    **zuus 与 lion 长得一样、同一个桶、结论相反,而分开它们的正是被丢掉的等级论证一直遮着的那一维。**
+  - **⭐ 这一格是别人指名欠这个文件的**:`test_focus_talent_anchor.lua` §4a 自己写着
+    「a read of index 1-4 is a LIVE read and needs its own accounting」并**点名转给 §4**。
+    本轮之前**全仓没有任何断言把 structural 普查与出装交叉过**。
+  - **⭐ 交出去、且明确不由本组扩的一格**:四个非焦点英雄(chaos_knight / legion_commander /
+    lich / warlock)**保留计数、失去判决**——「够不着所以无害」对它们也不再成立而没人补。
+    最尖的是 `hero_warlock.lua:532` `if talent6:IsTrained() and false`:等级论证没了之后,
+    **一个字面 `false` 是唯一还在杀那条分支的东西**。
+  - **诚实边界**:「点得到」≠「绑对了」—— zuus 第二问穿过 `sAbilityList[2]`,而 **GH #203 实测
+    该下标不是技能槽位** ⇒ 地面施法真发生那帧 `abilityW` 是什么,**开放,刻意不断言**;
+    仍无真实帧(可达性靠 GH #235 那枚停在 `iterations/pending/` 的帧);
+    **lion 与 WK 今天天赋字面量相等**,这里没有任何断言分得开这一对,靠 `idx` 不同承担。
+  - **⭐ 变异 5 抓 + 1 对照,而 M3 是新加 `picks` 那一列的理由**:三个英雄 t25 **全解到 `[7]`**,
+    只断言 `trained` 时「读错英雄的字面量」**三问全部蒙对**(实测,不是担心)。
+    对照(同时拿掉普查链接 + 改 idx)**正确地不抓** —— 那正是证明普查链接是承重那半的东西。
+  - 铁律 6:`luacheck_gate.sh` **0 warnings / exit 0**(容器本来没有 luacheck,gate 自己装的);
+    push gate 已上膛。全量套件一进程跑不完(GH #124,已知)⇒ **影响面 15 个文件单跑,149 断言全绿**。
+  - **下一棒**:棒 ③ 还剩 **7 行**(本组欠 5),**优先 `tests/test_lion_hex_talent_slot.lua`** ——
+    它 §6 已在 08-27 重推过,但登记表那行**仍带未更正的数字站点**,且是本轮判决**唯一直接碰到**的
+    剩余 hero 行。`hero-19`/`hero-20` 仍 pending,`hero-21` 已收窄未关;
+    WK `ConsiderQ` 的 `nDamage` 修复仍等归档扫描(本地语料域为空)。
+
 - 2026-08-27T22:53Z(报告 `iterations/reports/hero/20260827T225311Z.md`;轴 **`TALENTBLIND` 续**;
   **棒 ③ 开工**,登记表清掉第一行)—— 自检 **worst exit 3**:UNLANDED 0、两条稳定版锚点 ok、
   py **45/0**、Lua 快速检测器 **14** 文件 0 失败、待裁 queue 请求 0(open 37);cadence 洞只有
