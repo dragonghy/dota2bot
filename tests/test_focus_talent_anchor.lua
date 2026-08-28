@@ -174,7 +174,7 @@ local FOCUS = {
         -- barrier", Valve's tooltip): ~70% -> 90% at level 20, no cast to land,
         -- no channel to hold, and it pays out ON the 600-mana Freezing Field too.
         -- Affordable for Axe's t20 reason: nothing here reads freezing_field's
-        -- damage and nothing holds a handle on the innate (hidden on 51/51
+        -- damage and nothing holds a handle on the innate (hidden on 53/53
         -- frames, GH #206), so the flip can only move combat power.
         --
         -- t25 CHANGED, [7] -> [8]: +300 Crystal Nova damage instead of +1.0s

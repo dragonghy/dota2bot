@@ -22,23 +22,34 @@
 -- WHAT THIS FILE ADDS THAT THE CEILING FILE DID NOT HAVE
 -- -----------------------------------------------------
 -- A reading off real frames in the dimension the lever is about.  Section 2 walks
--- every Wraith King hero row in tests/fixtures -- 34 of them -- and asks each one
+-- every Wraith King hero row in tests/fixtures -- 36 of them -- and asks each one
 -- the branch's own mana question with the frame's own mana, level and ability
 -- ranks:
 --
---     shipped floor (600) admits  0 of 34.
---     the highest MAX pool on any of those frames is 459 -- so on this corpus the
+--     shipped floor (600) admits  0 of 36.
+--     the highest MAX pool on any of those frames is 471 -- so on this corpus the
 --     branch is mana-dead with a FULL bar, whatever Roshan is doing and whatever
 --     mode the bot is in.
---     armed floor admits 22 of the 29 frames that have the Blast learned at all.
+--     armed floor admits 24 of the 31 frames that have the Blast learned at all.
 --
--- The 0/34 is the load-bearing number and it does NOT depend on the mode
+-- RE-TAKEN 2026-08-28 (GH #274), VERDICT UNCHANGED.  b50a7727 added two WK rows.
+-- Both have the Blast learned and both are ADMITTED by the armed floor, so
+-- learned 29 -> 31 and armed-ok 22 -> 24 while the REFUSAL set did not move at
+-- all: still exactly 7, still all rank-1 Reincarnation.  The number that did
+-- move in a direction worth saying out loud is the high-water MAX pool, 459 ->
+-- 471: the mana-dead verdict survives, but its margin under the shipped 600
+-- narrowed from 141 to 129.  This is the file's own honest bound below coming
+-- due -- a post-GH#108 corpus can hold frames the original scan structurally
+-- could not -- so the next round that grows the WK corpus should expect the
+-- margin to keep closing and should re-read rather than re-baseline.
+--
+-- The 0/36 is the load-bearing number and it does NOT depend on the mode
 -- predicate, which is what makes it worth having: the domain question (section 4)
 -- is unanswerable offline, but the mana question is not, and the mana question
 -- alone closes the branch on every frame in the archive.
 --
 -- HONEST BOUNDS -- READ BEFORE QUOTING ANY NUMBER FROM HERE
---   * 0 of 34 is EMPTY ON THIS CORPUS, never RARE IN THE GAME (the stream's Y.2
+--   * 0 of 36 is EMPTY ON THIS CORPUS, never RARE IN THE GAME (the stream's Y.2
 --     rule).  Every frame here is level 12 or below because the corpus was cut
 --     from turbo games capped at 10 game-minutes; the pool crosses 603 at level
 --     18-19 with the shipped wand+bracer.  GH #108 raised the cap to 25 game
@@ -54,7 +65,7 @@
 --   * Section 2 says nothing about whether blasting Roshan is a good idea.  That
 --     is the lever's (c) argument and it lives in the doc block above
 --     X.GetRoshanManaFloor, where the cost side is stated too.
---   * `armed admits 22 of 29` is not "the gate always says yes": 7 learned-Blast
+--   * `armed admits 24 of 31` is not "the gate always says yes": 7 learned-Blast
 --     frames still fail the armed floor, all of them frames where Reincarnation
 --     is rank 1 and its 220 reserve is doing the refusing.  That asymmetry is
 --     asserted, not narrated -- it is the evidence that the armed leg is a
@@ -221,9 +232,9 @@ end
 -- ---------------------------------------------------------------- section 2 --
 -- The real frames.
 
-tests['section 2: the shipped 600 admits 0 of 34 real Wraith King frames'] = function()
+tests['section 2: the shipped 600 admits 0 of 36 real Wraith King frames'] = function()
     local tRows = wk_frames()
-    assert(#tRows == 34, 'the archive carried 34 Wraith King hero rows when this '
+    assert(#tRows == 36, 'the archive carried 36 Wraith King hero rows when this '
         .. 'was measured, now ' .. #tRows .. '. The counts below are of THAT '
         .. 'population -- re-read them rather than lowering the bar.')
 
@@ -234,14 +245,14 @@ tests['section 2: the shipped 600 admits 0 of 34 real Wraith King frames'] = fun
     end
 
     assert(nShippedOk == 0, nShippedOk .. ' frame(s) now clear the shipped floor')
-    assert(nMaxPool == 459, 'the largest MAX pool on any Wraith King frame in the '
-        .. 'archive was 459; got ' .. nMaxPool)
+    assert(nMaxPool == 471, 'the largest MAX pool on any Wraith King frame in the '
+        .. 'archive was 471 (was 459 before the 2026-08-28 re-take); got ' .. nMaxPool)
     assert(nMaxPool < SHIPPED_FLOOR, 'the whole point: 600 is above the entire '
         .. 'pool of every recorded frame, so the branch is mana-dead on this '
         .. 'corpus with a FULL bar -- independent of the mode predicate')
 end
 
-tests['section 2: the armed floor admits 22 of the 29 learned-Blast frames'] = function()
+tests['section 2: the armed floor admits 24 of the 31 learned-Blast frames'] = function()
     local tRows = wk_frames()
     local nLearned, nArmedOk, nRefused = 0, 0, 0
     for _, tRow in ipairs(tRows) do
@@ -254,8 +265,8 @@ tests['section 2: the armed floor admits 22 of the 29 learned-Blast frames'] = f
             end
         end
     end
-    assert(nLearned == 29, '29 of the 34 frames had the Blast learned; got ' .. nLearned)
-    assert(nArmedOk == 22, 'the armed floor admitted 22 of them; got ' .. nArmedOk)
+    assert(nLearned == 31, '31 of the 36 frames had the Blast learned; got ' .. nLearned)
+    assert(nArmedOk == 24, 'the armed floor admitted 24 of them; got ' .. nArmedOk)
     assert(nRefused == 7, 'and refused 7; got ' .. nRefused)
 end
 

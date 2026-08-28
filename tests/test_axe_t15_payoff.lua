@@ -7,6 +7,30 @@
 -- re-litigated on taste -- the same job tests/test_cm_t10_payoff.lua does for
 -- Crystal Maiden's t10.
 --
+-- RE-TAKEN 2026-08-28 (GH #274), VERDICT UNCHANGED.  b50a7727 added two
+-- fixtures cut from one venomancer game; each carries all ten hero-slots, so
+-- the Axe census grew without anyone touching this file (26 -> 28 live-Axe
+-- frames, 16 -> 18 of them with modifier data).  The re-read, not a bump:
+--   * BOTH new frames are DRY -- Axe at level 14, Call rank 3 / Hunger rank 4,
+--     and neither modifier live on either one.  So they add ceiling and no
+--     observation: call_ceiling 1.94 -> 2.33, hunger_ceiling 14.00 -> 16.00,
+--     hunger_live and call_live both unmoved at 5 and 1.
+--   * The health reading SURVIVES, with less room.  Call realises 1/2.33 = 43%
+--     of its own ceiling (was 52%); Battle Hunger realises 5/16 = 31% (was
+--     36%).  Call is still the SATURATED side and Battle Hunger still the side
+--     with slack, which is the whole content of section 3's second test -- but
+--     the ratio between the two shares fell from 1.44x to 1.37x.
+--   * SENSITIVITY, so the next reader knows what can actually move this.  The
+--     direction holds iff call_live * hunger_ceiling > hunger_live *
+--     call_ceiling, i.e. 16 > 11.65 today.  Adding k more DRY modifier-carrying
+--     Axe frames at these ranks makes that 16 + k > 11.65 + 0.965k, which is
+--     true for every k -- corpus growth alone can NEVER flip it.  What flips it
+--     is observation: two more frames with Battle Hunger live (and Call still
+--     not) put it at 18 < 7 * 2.72.  So a red here means the bot's behaviour
+--     moved, which is exactly what the pin is for.
+--   * The structural half (section 2) is untouched by any of this: it reads the
+--     datafeed and the build row, not the corpus.
+--
 -- THE RULER (the one the other four pairs were decided with): payoff
 -- REACHABILITY.  Not "which single payout is bigger" but "how much of the game
 -- is each talent's payoff condition actually true for".  A talent on an ability
@@ -27,17 +51,16 @@
 --       on grew (~5x, not ~4x), but the same bug would have flipped a closer
 --       pair; the mapping now comes from running that function, in
 --       tests/skill_level_map.lua, which tests/test_lion_t15_payoff.lua shares.
---   (2) CORPUS -- the modifiers this repo's fixtures actually dumped.  On the 16
+--   (2) CORPUS -- the modifiers this repo's fixtures actually dumped.  On the 18
 --       Axe frames that carry modifier data, an enemy hero is carrying
 --       modifier_axe_battle_hunger on 5, and Axe is carrying
 --       modifier_axe_berserkers_call_armor on 1.
 --   (3) CHANNEL HEALTH -- each side's observed count against its own structural
---       ceiling summed over the same 16 frames (GH #115's rule: a small number
+--       ceiling summed over the same 18 frames (GH #115's rule: a small number
 --       has to be readable as SATURATED or as UNDERPOWERED, not guessed at).
---       The Call side is at roughly half its ceiling with a ceiling of ~1.9
---       frames; the Battle Hunger side is at roughly a third of a ceiling of
---       14 frames.  So the gap is not the bot under-using Call -- Call simply
---       cannot be up more.
+--       The Call side realises ~43% of a ceiling of ~2.3 frames; the Battle
+--       Hunger side realises ~31% of a ceiling of 16 frames.  So the gap is not
+--       the bot under-using Call -- Call simply cannot be up more.
 --   (4) CONSUMER ASYMMETRY -- whether either talent also moves a DECISION.
 --       damage_per_second is read by X.ConsiderW and multiplied into the damage
 --       claim handed to J.WillMagicKillTarget; bonus_armor is read by nothing.
@@ -47,7 +70,7 @@
 --   * NO FRAME IN THIS CORPUS IS IN DOMAIN.  The highest level any Axe reaches
 --     in a fixture is 14; a t15 talent exists at 15.  Everything above is a
 --     PROXY measured one level below the talent, and it is pinned as such.
---   * n = 1 on the Call side.  One frame against a ceiling of ~1.9 frames
+--   * n = 1 on the Call side.  One frame against a ceiling of ~2.3 frames
 --     carries no statistical weight at all; it corroborates the structural
 --     arithmetic, it does not establish anything by itself.
 --   * The comparison of magnitudes (about +96 raw magic damage over a full
@@ -375,13 +398,18 @@ end
 -- 3. Corpus channel, and its health.
 
 tests['[hero] axe t15 corpus: Battle Hunger is live on 5 axe frames, Call armor on 1'] = function()
-    assert(CORPUS.axe_frames == 26,
-        'the corpus now holds ' .. CORPUS.axe_frames .. ' live-Axe frames, not 26. '
+    -- Deliberately still EQUALITIES after GH #274, unlike the pure name census
+    -- in test_focus_innate_index_anchor.lua that this round moved to
+    -- corpus_scale.ratchet: here a frame that arrives without an observation
+    -- moves the ceiling underneath the verdict, so growth is not free and has to
+    -- raise a hand.  Re-baselined 2026-08-28; see the RE-TAKEN block at the top.
+    assert(CORPUS.axe_frames == 28,
+        'the corpus now holds ' .. CORPUS.axe_frames .. ' live-Axe frames, not 28. '
         .. 'The t15 reading is a count over exactly these frames -- re-take it '
         .. '(this test does the counting; just update the three numbers together).')
-    assert(CORPUS.axe_frames_with_modifiers == 16,
+    assert(CORPUS.axe_frames_with_modifiers == 18,
         'modifier data now covers ' .. CORPUS.axe_frames_with_modifiers
-        .. ' of the Axe frames, not 16.  That is the denominator of both counts below.')
+        .. ' of the Axe frames, not 18.  That is the denominator of both counts below.')
     assert(CORPUS.hunger_live == 5,
         'Battle Hunger is live on ' .. CORPUS.hunger_live .. ' Axe frames, not 5.')
     assert(CORPUS.call_live == 1,
@@ -392,17 +420,17 @@ tests['[hero] axe t15 corpus: Battle Hunger is live on 5 axe frames, Call armor 
 end
 
 tests['[hero] axe t15 corpus health: Call is near its ceiling, Battle Hunger is not'] = function()
-    -- GH #115: a small count has to be readable.  Call being live on 1 of 16
+    -- GH #115: a small count has to be readable.  Call being live on 1 of 18
     -- frames is not the bot neglecting it -- summed over the ranks these frames
     -- actually held, Call could not have been live on much more than 2.
-    assert(math.abs(CORPUS.call_ceiling - 1.94) < 0.05,
+    assert(math.abs(CORPUS.call_ceiling - 2.33) < 0.05,
         'the summed Berserker\'s Call uptime ceiling over the modifier-carrying '
         .. 'Axe frames is now ' .. string.format('%.2f', CORPUS.call_ceiling)
-        .. ', not ~1.94.  This is the number that makes "live on 1 frame" read as '
+        .. ', not ~2.33.  This is the number that makes "live on 1 frame" read as '
         .. 'SATURATED rather than as NEGLECTED.')
-    assert(math.abs(CORPUS.hunger_ceiling - 14.00) < 0.05,
+    assert(math.abs(CORPUS.hunger_ceiling - 16.00) < 0.05,
         'the summed Battle Hunger uptime ceiling is now '
-        .. string.format('%.2f', CORPUS.hunger_ceiling) .. ', not ~14.00.')
+        .. string.format('%.2f', CORPUS.hunger_ceiling) .. ', not ~16.00.')
     assert(CORPUS.call_live / CORPUS.call_ceiling > CORPUS.hunger_live / CORPUS.hunger_ceiling,
         'the direction that settled t15 has reversed.  It was: Call realises a '
         .. 'LARGER share of its (tiny) ceiling than Battle Hunger does of its '

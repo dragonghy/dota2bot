@@ -14,8 +14,8 @@
 --
 --   (1) THE NAME.  The engine does not call it skeleton_king_vampiric_spirit.
 --       Every Wraith King frame in this repo's fixture corpus carries
---       skeleton_king_INNATE_vampiric_spirit -- on all 31 WK frames that dump
---       an ability array at all (of 34 WK frames) -- and the datafeed's name
+--       skeleton_king_INNATE_vampiric_spirit -- on all 33 WK frames that dump
+--       an ability array at all (of 36 WK frames) -- and the datafeed's name
 --       appears on 0.  Lion has the identical shape:
 --       lion_innate_to_hell_and_back on 22 of 22, the feed's
 --       lion_to_hell_and_back on 0.  So a name read off the datafeed is not a
@@ -35,7 +35,7 @@
 --       return false }`), so a name PRESENT in a fixture frame's ability array
 --       was not hidden on that frame.  That is why sections 1 and 2 below turn
 --       out to be saying more than they claimed: WK's and Lion's innates being
---       present on 31/31 and 23/23 frames is a measurement that the walk KEEPS
+--       present on 33/33 and 23/23 frames is a measurement that the walk KEEPS
 --       them.  Absence stays a disjunction (hidden, or an unleveled talent row,
 --       or a blacklisted generic, or not in the vector) and is never read as
 --       one.
@@ -101,6 +101,7 @@
 --   * Nothing here is a behaviour claim.  No bots/ decision changes, no gate.
 
 package.path = 'tests/?.lua;' .. package.path
+local cs = require('corpus_scale')
 
 local FOCUS = { 'axe', 'crystal_maiden', 'lion', 'skeleton_king', 'zuus' }
 
@@ -131,20 +132,24 @@ local ENGINE_INNATE = {
 -- frames; they are excluded here because J.Skill.GetAbilityList filters
 -- ability:IsTalent() anyway.
 local CORPUS = {
-    axe = { frames = 26, with = 26, names = {
-        axe_berserkers_call = 26, axe_battle_hunger = 26,
-        axe_counter_helix = 26, axe_culling_blade = 26 } },
-    crystal_maiden = { frames = 51, with = 51, names = {
-        crystal_maiden_crystal_nova = 51, crystal_maiden_frostbite = 51,
-        crystal_maiden_brilliance_aura = 51, crystal_maiden_freezing_field = 51 } },
+-- RE-TAKEN 2026-08-28 (GH #274).  b50a7727's two fixtures carry all ten
+-- hero-slots each, so axe 26 -> 28, crystal_maiden 51 -> 53 and skeleton_king
+-- 34 -> 36 / 31 -> 33 moved without anyone editing this file.  See the note on
+-- section 1 below for why the ASSERTIONS, not just the numbers, changed here.
+    axe = { frames = 28, with = 28, names = {
+        axe_berserkers_call = 28, axe_battle_hunger = 28,
+        axe_counter_helix = 28, axe_culling_blade = 28 } },
+    crystal_maiden = { frames = 53, with = 53, names = {
+        crystal_maiden_crystal_nova = 53, crystal_maiden_frostbite = 53,
+        crystal_maiden_brilliance_aura = 53, crystal_maiden_freezing_field = 53 } },
     lion = { frames = 23, with = 23, names = {
         lion_impale = 23, lion_voodoo = 23, lion_mana_drain = 23,
         lion_innate_to_hell_and_back = 23, lion_finger_of_death = 23 } },
-    skeleton_king = { frames = 34, with = 31, names = {
-        skeleton_king_hellfire_blast = 31, skeleton_king_bone_guard = 31,
-        skeleton_king_mortal_strike = 31,
-        skeleton_king_innate_vampiric_spirit = 31,
-        skeleton_king_reincarnation = 31 } },
+    skeleton_king = { frames = 36, with = 33, names = {
+        skeleton_king_hellfire_blast = 33, skeleton_king_bone_guard = 33,
+        skeleton_king_mortal_strike = 33,
+        skeleton_king_innate_vampiric_spirit = 33,
+        skeleton_king_reincarnation = 33 } },
     zuus = { frames = 51, with = 48, names = {
         zuus_arc_lightning = 48, zuus_lightning_bolt = 48,
         zuus_heavenly_jump = 48, zuus_thundergods_wrath = 48,
@@ -240,26 +245,40 @@ local tests = {}
 -- ---------------------------------------------------------------------------
 -- 1. Corpus ground truth: names and denominators.
 
+-- RATCHETS, NOT EQUALITIES (GH #274, 2026-08-28).  Every number in this test is
+-- a sum over fixtures with NO verdict resting on its exact value: this file is
+-- about which NAMES the engine answers and at which index, not about how many
+-- frames carry them.  Held as equalities, the three focus heroes in b50a7727's
+-- two new fixtures turned this file red without a single claim of it becoming
+-- false -- and neither of the two repro commands in GH #274 selects this
+-- filename, so it was the red nobody was looking at.  tests/corpus_scale.lua
+-- exists for exactly this and was never adopted here.  Note the "all N of N"
+-- claims get STRICTLY STRONGER: `universal` states them over whatever the corpus
+-- holds, where `== 31` only ever spoke about the thirty-one we had.  The
+-- verdict-bearing counts in test_axe_t15_payoff.lua and
+-- test_wk_bone_guard_talent_bypass.lua are deliberately NOT converted -- there a
+-- new frame moves a ceiling underneath a published reading, so growth must
+-- still raise a hand.
 tests['[1] the engine ability-name set of each focus hero is what was recorded'] = function()
     local r = scan()
     for _, h in ipairs(FOCUS) do
         local rec, got = CORPUS[h], r[h]
-        assert(got.frames == rec.frames,
-            'hero ' .. h .. ' now has ' .. got.frames .. ' entries in tests/fixtures/, '
-            .. 'recorded ' .. rec.frames .. '.')
+        cs.ratchet(got.frames, rec.frames, h .. ' entries in tests/fixtures/')
         -- The name counts below are out of `with`, not `frames`: some hero
-        -- entries carry no ability array at all (WK 34 entries / 31 with, Zeus
-        -- 50 / 47). Dividing a name count by the wrong one of those two is the
+        -- entries carry no ability array at all (WK 36 entries / 33 with, Zeus
+        -- 51 / 48). Dividing a name count by the wrong one of those two is the
         -- same mistake in miniature that this whole file is about.
-        assert(got.with == rec.with,
-            'hero ' .. h .. ' dumps an ability array on ' .. got.with .. ' entries, '
-            .. 'recorded ' .. rec.with .. ' of ' .. rec.frames .. '. Every name '
-            .. 'count in this file is a fraction of THAT denominator -- re-measure '
-            .. 'before quoting any of them.')
+        cs.ratchet(got.with, rec.with,
+            h .. ' entries dumping an ability array (of ' .. got.frames .. ')')
         for name, n in pairs(rec.names) do
-            assert(got.names[name] == n,
-                h .. "'s ability '" .. name .. "' is on " .. tostring(got.names[name])
-                .. ' frames, recorded ' .. n .. ' of ' .. rec.with .. '.')
+            if n == rec.with then
+                -- Recorded as universal, so assert universality itself.
+                cs.universal(got.names[name] or 0, got.with,
+                    h .. " ability '" .. name .. "'", rec.with)
+            else
+                cs.ratchet(got.names[name] or 0, n,
+                    h .. " ability '" .. name .. "' (of " .. got.with .. ')')
+            end
         end
         for name, n in pairs(got.names) do
             assert(rec.names[name],
@@ -294,11 +313,13 @@ tests['[2] the two innates the engine DOES expose carry an _innate_ infix the fe
         for name, n in pairs(r[h].names) do
             if name:find('_innate_', 1, true) then
                 found[h] = name
-                assert(n == CORPUS[h].with,
-                    h .. "'s innate " .. name .. ' is on ' .. n .. ' of '
-                    .. CORPUS[h].with .. ' frames, not all of them. A partial '
-                    .. 'count would mean the entry comes and goes, which changes '
-                    .. 'what index 4 can be.')
+                -- Against the LIVE denominator, not the recorded one (GH #274):
+                -- "on every frame that dumps an ability array" is the claim, and
+                -- stating it that way keeps holding over fixtures not yet cut.
+                cs.universal(n, r[h].with,
+                    h .. "'s innate " .. name .. ' -- a partial count would mean '
+                    .. 'the entry comes and goes, which changes what index 4 can '
+                    .. 'be', CORPUS[h].with)
                 -- the feed's name is this one with the infix removed
                 local stripped = name:gsub('_innate_', '_', 1)
                 assert(stripped == FEED_INNATE[h],

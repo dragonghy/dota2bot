@@ -55,9 +55,9 @@ local tTalentTreeList = {
 -- shape of sentence is load-bearing in four other focus files:
 --   * THE NAME.  The engine does not use the feed's name.  Every WK frame in
 --     tests/fixtures/ that dumps an ability array carries
---     skeleton_king_INNATE_vampiric_spirit -- 31 of 31 -- and the feed's
+--     skeleton_king_INNATE_vampiric_spirit -- 33 of 33 -- and the feed's
 --     skeleton_king_vampiric_spirit appears on 0.  Lion is identical
---     (lion_innate_to_hell_and_back 22/22 vs the feed's lion_to_hell_and_back 0).
+--     (lion_innate_to_hell_and_back 23/23 vs the feed's lion_to_hell_and_back 0).
 --     A name read off the datafeed is not a name you may match an engine ability
 --     against; the feed is still authoritative for VALUES.
 --   * THE MECHANISM.  J.Skill.GetAbilityList reads no innate flag -- the bot API
@@ -279,7 +279,7 @@ numbers, so the old block's numbering is dropped rather than guessed at):
   skeleton_king_vampiric_spirit     -- ability_is_innate: true, not learnable
                                     -- NB the ENGINE spells this
                                     -- skeleton_king_innate_vampiric_spirit
-                                    -- (31/31 frames); the feed's spelling is on 0
+                                    -- (33/33 frames); the feed's spelling is on 0
   skeleton_king_reincarnation       -- the ultimate
 
 talents, in the feed's order, ASSUMED to be ability-slot order -- which is the
@@ -891,11 +891,12 @@ function X.ConsiderQ()
 
 end
 
--- NOT VALIDATABLE ON A FIXTURE (measured 2026-08-23).  The first guard below asks
--- for modifier_skeleton_king_bone_guard, and that modifier is on 0 of the 34
--- Wraith King frames in tests/fixtures -- including the 17 that carry a modifier
--- list at all, 17 of which carry a sibling modifier_skeleton_king_* .  So this
--- function returns 0 on 34 of 34 real frames whatever else is true of them, and a
+-- NOT VALIDATABLE ON A FIXTURE (measured 2026-08-23, census re-read 2026-08-28
+-- over a corpus grown by two frames -- GH #274).  The first guard below asks
+-- for modifier_skeleton_king_bone_guard, and that modifier is on 0 of the 36
+-- Wraith King frames in tests/fixtures -- including the 19 that carry a modifier
+-- list at all, 19 of which carry a sibling modifier_skeleton_king_* .  So this
+-- function returns 0 on 36 of 36 real frames whatever else is true of them, and a
 -- "domain = 0" reading taken from the corpus about Bone Guard measures the tool,
 -- not the game (the axeblink trap).  The name is right: this is the repo's only
 -- caster of the ability, and four corpus frames catch it mid-cooldown against its

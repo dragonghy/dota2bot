@@ -261,7 +261,7 @@ tests['[hero] neither t20 side is visible to this file, which is what made the f
     assert(not live:find('glacial_guard', 1, true),
         'hero_crystal_maiden.lua now names crystal_maiden_glacial_guard in live code. '
         .. 'The t20 flip was affordable BECAUSE no handle existed (the innate is hidden '
-        .. 'on 51/51 corpus frames and dropped from sAbilityList before this file sees '
+        .. 'on 53/53 corpus frames and dropped from sAbilityList before this file sees '
         .. 'it, GH #206). A handle means the row can now create a stale read, so the '
         .. 'pricing has to be redone with that read in it.')
     assert(not live:match("GetSpecialValue%w*%(%s*'damage'%s*%)"),

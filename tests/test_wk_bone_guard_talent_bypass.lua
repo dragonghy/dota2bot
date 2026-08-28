@@ -23,11 +23,28 @@
 -- WHAT THE ROUND FOUND INSTEAD (sections 2-4)
 -- The first guard of X.ConsiderW is
 --     not bot:HasModifier("modifier_skeleton_king_bone_guard")  -> return 0
--- and that modifier appears on ZERO of the 34 Wraith King frames in the fixture
--- corpus, including 17 that carry a modifier list at all (those 17 carry the
--- innate `modifier_skeleton_king_vampiric_spirit_aura` on 17 of 17, so the
+-- and that modifier appears on ZERO of the 36 Wraith King frames in the fixture
+-- corpus, including 19 that carry a modifier list at all (those 19 carry the
+-- innate `modifier_skeleton_king_vampiric_spirit_aura` on 19 of 19, so the
 -- absence is not "this corpus has no WK modifiers").  Consequence: the shipped
--- X.ConsiderW returns 0 on 34 of 34 real frames, whatever else is true of them.
+-- X.ConsiderW returns 0 on 36 of 36 real frames, whatever else is true of them.
+--
+-- CENSUS RE-READ 2026-08-28 (GH #274), VERDICT UNCHANGED.  :269 below instructs
+-- that no number in this file may be quoted without re-reading the whole census
+-- first, so b50a7727's two fixtures (one venomancer game, all ten hero-slots
+-- per frame) bought a re-read rather than a bump.  What the re-read found:
+--   * The load-bearing ZERO is intact and its denominator GREW: 0 bone-guard
+--     carriers over 36 WK frames, 19 of them carrying a modifier list, sibling
+--     control 19 of 19.  A wider denominator makes the unfalsifiable-offline
+--     verdict stronger, not weaker.
+--   * The shipped function still returns 0 on all 36 with 0 loader refusals.
+--   * The blind spot grew 20 -> 22, and the delta is FULLY ATTRIBUTED: both new
+--     frames are among the 22.  They are WK at level 11 with Bone Guard already
+--     rank 4, so the modifier guard is the only thing standing between them and
+--     branch 2 -- the same reason the other 20 are there.  The complement is
+--     therefore still exactly 14 frames that stop earlier for reasons the corpus
+--     CAN answer, which is why that number in section 3 did not move.
+--   * Share of the corpus in the blind spot: 22/36 = 61% (was 20/34 = 59%).
 --
 -- The name is NOT wrong.  X.ConsiderW is the only caster of this ability in the
 -- whole repo -- `grep -rn bone_guard bots/` outside this hero file finds one
@@ -47,7 +64,7 @@
 -- cannot answer.
 --
 -- HONEST BOUNDS -- read before quoting
---   * "0 of 34" is a statement about the CORPUS, not about a game.  How often WK
+--   * "0 of 36" is a statement about the CORPUS, not about a game.  How often WK
 --     actually holds charges is unmeasured and unmeasurable here; the baton for
 --     it is queue.json `hero-11` (archive event stream, not fixtures).
 --   * The datafeed strings in section 1 are RECORDED from a read of odota
@@ -201,7 +218,7 @@ end
 -- input at the end of this section.
 --
 -- Section 24's own correction applies here in BOTH directions, unusually: the
--- loosening direction has a live counterexample in the tree (17 frames carry a
+-- loosening direction has a live counterexample in the tree (19 frames carry a
 -- sibling `modifier_skeleton_king_*`, so a substring predicate immediately
 -- reports), and the silence direction needs the synthetic offender.
 
@@ -262,22 +279,22 @@ local function corpus_frames()
     return frames
 end
 
-tests['[section 2] 34 WK frames, 17 with modifiers, 0 carrying the bone modifier'] =
+tests['[section 2] 36 WK frames, 19 with modifiers, 0 carrying the bone modifier'] =
 function()
     local c = scan_frames(corpus_frames())
-    if c.wk ~= 34 then
-        error('the corpus holds ' .. c.wk .. ' Wraith King frames, recorded 34. '
+    if c.wk ~= 36 then
+        error('the corpus holds ' .. c.wk .. ' Wraith King frames, recorded 36. '
             .. 'Fixtures were added or removed; re-read the whole census before '
             .. 'quoting any number from this file (GH #106)')
     end
-    if c.with_mods ~= 17 then
+    if c.with_mods ~= 19 then
         error(c.with_mods .. ' of the WK frames carry a modifier list, recorded '
-            .. '17.  This is the denominator that makes the 0 below evidence '
+            .. '19.  This is the denominator that makes the 0 below evidence '
             .. 'rather than an artefact of v1 fixtures')
     end
-    if c.sibling ~= 17 then
+    if c.sibling ~= 19 then
         error(c.sibling .. ' of the WK frames carry SOME modifier_skeleton_king_'
-            .. '* modifier, recorded 17.  If this ever drops below with_mods, '
+            .. '* modifier, recorded 19.  If this ever drops below with_mods, '
             .. 'the corpus stopped carrying WK modifiers at all and the '
             .. 'bone-guard 0 loses its control group')
     end
@@ -326,8 +343,8 @@ tests['[section 2] loosening has a live counterexample -- the sibling column'] =
 function()
     -- Section 24's correction: check whether the tree carries a legal-but-
     -- adjacent shape before deciding the synthetic input has to cover both
-    -- directions.  Here it does -- 17 real frames -- so a predicate loosened to
-    -- the family prefix reports 17 instead of 0 without any synthetic help.
+    -- directions.  Here it does -- 19 real frames -- so a predicate loosened to
+    -- the family prefix reports 19 instead of 0 without any synthetic help.
     local c = scan_frames(corpus_frames())
     if c.sibling <= c.bone then
         error('the corpus no longer separates "an exact-name miss" from "no WK '
@@ -371,7 +388,7 @@ local function desire_on(path, grant)
     return d
 end
 
-tests['[section 3] shipped X.ConsiderW is 0 on 34 of 34 real WK frames'] =
+tests['[section 3] shipped X.ConsiderW is 0 on 36 of 36 real WK frames'] =
 function()
     local paths = wk_fixture_paths()
     local n, fired, refused = #paths, 0, 0
@@ -380,8 +397,8 @@ function()
         if d == 'REFUSED' then refused = refused + 1
         elseif type(d) == 'number' and d > 0 then fired = fired + 1 end
     end
-    if n ~= 34 then
-        error('drove ' .. n .. ' WK frames, recorded 34 (see section 2)')
+    if n ~= 36 then
+        error('drove ' .. n .. ' WK frames, recorded 36 (see section 2)')
     end
     if fired ~= 0 or refused ~= 0 then
         error('shipped X.ConsiderW fired on ' .. fired .. ' frame(s) and hit a '
@@ -391,24 +408,30 @@ function()
     end
 end
 
-tests['[section 3] granting ONLY HasModifier moves 20 frames past the guard'] =
+tests['[section 3] granting ONLY HasModifier moves 22 frames past the guard'] =
 function()
     -- The counterfactual that makes "the modifier guard is what silences it"
     -- a measurement rather than a reading of the source: flip that one field and
-    -- nothing else.  20 frames then run on into X.IsNearLaneFront, where the
+    -- nothing else.  22 frames then run on into X.IsNearLaneFront, where the
     -- loader refuses to invent lane fronts (GH #61) -- i.e. on those frames the
     -- guard was the ONLY thing between the bot and branch 2.  The other 14 stop
     -- earlier for reasons the corpus CAN answer (Bone Guard unlearned or on
     -- cooldown, or the level 4 floor).
+    --
+    -- 20 -> 22 on 2026-08-28 (GH #274) and the complement did NOT move: both of
+    -- b50a7727's frames are in the blind spot, both WK level 11 with Bone Guard
+    -- at rank 4.  That is the re-read :269 demands, not a re-baseline -- an
+    -- unattributed +2 here would have been indistinguishable from the guard
+    -- starting to silence frames it used not to.
     local paths = wk_fixture_paths()
     local moved = 0
     for _, path in ipairs(paths) do
         local before, after = desire_on(path, false), desire_on(path, true)
         if before == 0 and after ~= 0 then moved = moved + 1 end
     end
-    if moved ~= 20 then
+    if moved ~= 22 then
         error('granting HasModifier alone changed the outcome on ' .. moved
-            .. ' frames, recorded 20.  This number is the size of the blind '
+            .. ' frames, recorded 22.  This number is the size of the blind '
             .. 'spot: re-read it before quoting the corpus about Bone Guard')
     end
 end

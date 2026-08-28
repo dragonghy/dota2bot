@@ -51,9 +51,9 @@
 -- not in the vector at all) and is never treated as one here.
 --
 -- That asymmetry is enough, because the two innates the corpus DOES carry are
--- the control: Wraith King's innate is present on 31 of 31 frames and Lion's on
+-- the control: Wraith King's innate is present on 33 of 33 frames and Lion's on
 -- 23 of 23, so an innate is exactly the kind of entry this pipeline shows.
--- Crystal Maiden's array is four entries on 51 of 51 frames -- her innate on
+-- Crystal Maiden's array is four entries on 53 of 53 frames -- her innate on
 -- ZERO and the shard grant on ZERO -- and `zuus_lightning_hands`, a shard
 -- grant, appears on one Zeus frame, which is the denominator that makes a
 -- grant's zero readable at all.
@@ -72,7 +72,7 @@
 --   occupied no slot ahead of the ultimate, the ultimate would sit at slot 3,
 --   fall through to `table.insert`, and `sAbilityList[6]` would be nil -- i.e.
 --   `abilityR` unusable and Freezing Field never cast.  The corpus refutes that
---   directly: her ultimate is ON COOLDOWN on 10 of 51 frames, and the only cast
+--   directly: her ultimate is ON COOLDOWN on 10 of 53 frames, and the only cast
 --   site for `abilityR` in the whole repo is inside X.SkillsComplement.
 --
 -- ⚠️ WHY THE NIL GUARD IS INSURANCE AND NOT A REPAIR
@@ -85,7 +85,7 @@
 --   (AGENTS.md) so the tick dies silently, and since this branch sits ABOVE
 --   ConsiderQ/W/R it would take her entire spell dispatch with it.  The corpus
 --   says that is not the world that ships today -- her ultimate is on cooldown
---   on 10 of 51 frames and the only Freezing Field cast site in the repo is
+--   on 10 of 53 frames and the only Freezing Field cast site in the repo is
 --   below this branch.  So the guard covers a legal-but-unobserved VM answer.
 --   Section 4 pins that distinction so nobody upgrades it in a later summary.
 --
@@ -114,7 +114,7 @@
 --   of which the grant subset is #203's 40).
 --
 -- ⚠️ LIMITS -- READ BEFORE CITING
---   * "Hidden on 51 of 51 frames" is a read of THIS corpus, curated for other
+--   * "Hidden on 53 of 53 frames" is a read of THIS corpus, curated for other
 --     investigations.  It is an existence read, never a density, and it says
 --     nothing about a game where somebody buys the shard before minute 10.
 --   * `m_bHidden` (dumper) and `ability:IsHidden()` (bot API) being the same bit
@@ -125,6 +125,7 @@
 --     gate's job.
 
 package.path = 'tests/?.lua;' .. package.path
+local cs = require('corpus_scale')
 
 local api = require('mock.bot_api')
 local rf  = require('mock.replay_fixture')
@@ -426,17 +427,19 @@ tests['[corpus] the dumper filters hidden abilities -- presence is a read of IsH
             .. 'GetAbilityInSlot exposes is why its filter says anything about the bot API')
 end
 
-tests['[corpus] the pipeline DOES show innates -- WK 31/31 and Lion 23/23'] = function()
+tests['[corpus] the pipeline DOES show innates -- WK 33/33 and Lion 23/23'] = function()
     -- The control.  Without it, "Crystal Maiden's innate is absent" and "this
     -- pipeline cannot show an innate" look identical.
+    --
+    -- Stated over the LIVE denominator since 2026-08-28 (GH #274): the claim is
+    -- "on every frame that dumps an array", and as an equality against a
+    -- remembered 31 it went red when b50a7727 grew the WK corpus without any of
+    -- it becoming false.
     local r = scan()
-    assert(r.skeleton_king.names.skeleton_king_innate_vampiric_spirit == 31,
-        "Wraith King's innate is on "
-            .. tostring(r.skeleton_king.names.skeleton_king_innate_vampiric_spirit)
-            .. ' frames, recorded 31 of 31 with an array')
-    assert(r.lion.names.lion_innate_to_hell_and_back == 23,
-        "Lion's innate is on " .. tostring(r.lion.names.lion_innate_to_hell_and_back)
-            .. ' frames, recorded 23 of 23')
+    cs.universal(r.skeleton_king.names.skeleton_king_innate_vampiric_spirit or 0,
+        r.skeleton_king.with, "Wraith King's innate", 33)
+    cs.universal(r.lion.names.lion_innate_to_hell_and_back or 0,
+        r.lion.with, "Lion's innate", 23)
     -- and a grant, so a grant's zero is readable too
     assert(r.zuus.names.zuus_lightning_hands == 1,
         'zuus_lightning_hands is on ' .. tostring(r.zuus.names.zuus_lightning_hands)
@@ -448,10 +451,9 @@ end
 tests['[corpus] Crystal Maiden carries neither optional ability on any frame'] = function()
     local r = scan()
     local cm = r.crystal_maiden
-    assert(cm.frames == 51 and cm.with == 51,
-        'Crystal Maiden has ' .. cm.frames .. ' entries in tests/fixtures/, ' .. cm.with
-            .. ' with an ability array; recorded 51 and 51. Every count here is a fraction '
-            .. 'of THAT denominator -- re-measure before quoting any of them.')
+    cs.ratchet(cm.frames, 53, 'Crystal Maiden entries in tests/fixtures/')
+    cs.universal(cm.with, cm.frames,
+        'Crystal Maiden entries dumping an ability array', 53)
     assert(cm.names[CLONE] == nil,
         CLONE .. ' now appears on ' .. tostring(cm.names[CLONE]) .. ' frames. That is a '
             .. 'frame where the shard grant was NOT hidden -- the world set narrows with '
@@ -465,9 +467,8 @@ tests['[corpus] Crystal Maiden carries neither optional ability on any frame'] =
                 .. 'and index 4 becomes it rather than nil.')
     end
     -- exactly four real abilities on every frame that has an array
-    assert(cm.entries[4] == 51,
-        'Crystal Maiden dumps four real abilities on ' .. tostring(cm.entries[4])
-            .. ' of 51 frames, recorded 51')
+    cs.universal(cm.entries[4] or 0, cm.with,
+        'Crystal Maiden frames dumping exactly four real abilities', 53)
 end
 
 -- ---------------------------------------------------------------------------
@@ -477,7 +478,7 @@ tests['[corpus] her ultimate was cast, so an optional ability really sits ahead 
     local r = scan()
     assert(r.crystal_maiden.ult_on_cd == 10,
         "Crystal Maiden's ultimate is on cooldown on " .. r.crystal_maiden.ult_on_cd
-            .. ' frames, recorded 10 of 51. That count is the whole slot-order argument: '
+            .. ' frames, recorded 10 of 53. That count is the whole slot-order argument: '
             .. 'if it reaches zero, re-state the order as ASSUMED.')
 
     -- The argument, made executable rather than left in prose: with only the

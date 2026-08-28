@@ -50,7 +50,7 @@ local sRole = J.Item.GetRoleItemsBuyList( bot )
 --   decision layer, so it can only move combat power.  Nothing in this file
 --   reads `crystal_maiden_freezing_field/damage` (X.ConsiderR sizes itself off
 --   GetOffensivePower), and nothing holds a handle on the innate at all -- it is
---   hidden on 51 of 51 corpus frames and dropped from sAbilityList before this
+--   hidden on 53 of 53 corpus frames and dropped from sAbilityList before this
 --   file ever sees it (GH #206).  Neither direction can create a stale read.
 --
 --   External corroboration, weakest ground and listed last: Valve's own default
@@ -1405,8 +1405,8 @@ end
 --- (tools/batch_test/behavioral/dumper/main.go, isRealAbility) walks the same
 --- `m_vecAbilities` and drops every entry with `m_bHidden` set.  So an ability
 --- PRESENT in a fixture frame's array was not hidden on that frame.  Wraith
---- King's and Lion's innates are present on 31/31 and 23/23 frames; Crystal
---- Maiden's ability array is exactly four entries on 51/51 frames, with the
+--- King's and Lion's innates are present on 33/33 and 23/23 frames; Crystal
+--- Maiden's ability array is exactly four entries on 53/53 frames, with the
 --- innate and the shard grant on ZERO -- against a live denominator, since
 --- zuus_lightning_hands (a shard grant) does appear on one Zeus frame.
 --- ⇒ both of her optional abilities are hidden, both are dropped, and index 4
@@ -1421,7 +1421,7 @@ end
 --- The same corpus CONFIRMS the slot order rather than assuming it (the
 --- assumption GH #203 had to declare): the ultimate reaches the fixed index 6
 --- only from `slot >= 4`, she has just three always-visible abilities, and her
---- ultimate is on cooldown on 10 of those 51 frames -- so it WAS cast, so index
+--- ultimate is on cooldown on 10 of those 53 frames -- so it WAS cast, so index
 --- 6 was written, so at least one optional ability really does sit ahead of it.
 ---
 --- And the binding is frozen: `sAbilityList` is computed once at file scope,
@@ -1441,7 +1441,7 @@ end
 --- `CrystalClone:IsTrained()` raises inside X.SkillsComplement, the engine's
 --- error handler is broken (AGENTS.md), and since this branch sits ABOVE
 --- ConsiderQ/W/R the whole spell dispatch dies silently.  The corpus says that
---- is not what ships today -- her ultimate is on cooldown on 10 of 51 frames,
+--- is not what ships today -- her ultimate is on cooldown on 10 of 53 frames,
 --- and the only Freezing Field cast site in the repo is below this branch.
 ---
 --- Binding by name is this repo's majority pattern, not an invention: GH #203

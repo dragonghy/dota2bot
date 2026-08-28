@@ -22,15 +22,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--34. **GH #274:trunk 是红的,而红的那两个数驮着本组已发表的判决** —— **下一棒优先做这条**
-   - `b50a7727` 加的两枚 venomancer fixture 一次移动四个登记计数;本组欠其中两份**重读**(不是抄数字):
-     (i) `test_axe_t15_payoff.lua` 在 **28** 帧 / ceiling **2.33** 上重取 t15 读数,
-     明确回答 **Battle Hunger 还算不算 saturated**;
-     (ii) `test_wk_bone_guard_talent_bypass.lua` 按它 `:269` 自己的要求**重读整份普查**
-     (36 帧 / 只给 HasModifier 越门 22 帧)。
-   - 第三个红(`test_write_only_local_census.py` 62→64)是**纯分母**,归 harness/总监,本组不动。
-   - 顺带在同一棒里回答 #274 第 3 问:加 fixture 的那一轮要不要在同一改动里重取计数
-     (这是**第三次**出现的形状)。
+-36. **GH #279:CM pos5 被删掉的 Boots of Bearing 终点第一次可定价了** —— **下一棒优先做这条**
+   - `tests/test_cm_pos5_boots.lua:439` 红,而这**正是该文件被写出来要产生的红**:
+     `b50a7727` 的两帧里 **`npc_dota_hero_crystal_maiden` 自己就带着 `boots_of_bearing`**
+     (`items = { null_talisman, magic_wand, observer_ward, boots_of_bearing, dustof_appearance, glimmer_cape, …}`),
+     **焦点英雄本人**。
+   - 同一对帧**同时**让 §3 的另一半到期:`WINDOW.max < 1500` 那条防线本来说
+     「过了 ~11:30,4225g 的第五件就不再 out-of-window,那个零才开始有意义」——
+     语料现在到 **t=790.4s(13:10)**。**out-of-window 的两半在同一刻一起过期**,
+     而删除终点这个决定**目前骑在一个前提已经没有的论证上**。
+   - 这不是计数重取,是**出装决定**(`hero_crystal_maiden.lua` 的 pos5 行),所以是完整一棒:
+     给终点定价 → 要么带着新证据维持删除,要么把终点 gated 加回来;顺带在同一次 sweep 里
+     重读 `C.cm_janggo >= 12` 与重钉 `WINDOW.max`。
+
+-35. **回棒 ③ 剩下的三行 WK(见 -33)** —— 做的时候先看一眼 `test_wk_roshan_mana_floor.lua`
+   的新读数。本轮重取时 **high-water MAX pool 459 → 471**,而 `wkrosh` 承重的
+   「shipped 600 高过语料里每一帧的满蓝条」余量从 141 掉到 **129**。
+   棒 ③ 里 `test_wk_roshan_mana_ceiling.lua` 的 crossing-level tail argument
+   **和这个余量是同一个量的两种说法**,应当合并成一棒读,而不是各读各的。
+
+-34. ~~**GH #274:trunk 是红的,而红的那两个数驮着本组已发表的判决**~~
+   **2026-08-28T10:51Z done —— 两个 verdict 都 UNCHANGED;`bots/` 只改注释;无新 gate id;
+   `state.json` 不动;零 AWS;不申请入集;不提 queue;**新开 GH #278**(交给协同组)。
+   报告 `iterations/reports/hero/20260828T105124Z.md`。**
+   - **Axe t15 NOT FLIPPED**:两枚新帧**都是干的**(level 14 / Call rank 3 / Hunger rank 4,
+     两个 modifier 都没 live)⇒ 只加天花板不加观测,ceiling 1.94→2.33 与 14.00→16.00,
+     live 计数 5 与 1 **一个没动**。Call 兑现 52%→**43%**,Hunger 36%→**31%**,方向仍成立,
+     两率之比 1.44x→1.37x。**做了灵敏度**:再加多少干帧都翻不了它
+     (`16+k > 11.65+0.965k` 恒真),能翻它的只有 **2 帧 Battle Hunger live**。
+     (注:#274 正文把两侧**说反了** —— 文件断言的是 *Call* 近天花板。)
+   - **WK Bone Guard 零完好且分母变宽**:0 carriers / 36 帧 / 19 带 modifier / sibling 19-of-19,
+     shipped `X.ConsiderW` 在 36 帧上仍是 0 且 0 拒绝。盲区 20→22 **全额归因**:
+     越门的两帧**就是**新加的两帧(WK level 11、Bone Guard 已 rank 4)⇒ **补集纹丝不动仍是 14**,
+     那个 14 没动本身就是归因正确的独立佐证。
+   - **⭐ #274 的红名单少了一半,而漏的方式可预测。** 它列 3 个文件,**实际 6 个**;
+     多出来的三个文件名里既没有 `axe` 也没有 `talent`,而 run_tests 的 filter 是**文件名子串**
+     ⇒ **红名单是用会漏的工具取的**。今后答「trunk 有几处红」要么跑全集,要么按
+     `grep -rln "ls tests/fixtures" tests/*.lua`(53 个)枚举。
+   - **#274 第 3 问已答:不要「重取」,按计数类型分流,而机制已在仓库里。**
+     纯分母/纯名字普查 → 迁 `corpus_scale.ratchet`/`universal`(本轮迁了
+     `test_focus_innate_index_anchor.lua` 与 `test_cm_ability_index_binding.lua`,
+     「N of N」改 `universal` 是**严格变强**);驮 verdict 的计数 → **保持等式**,
+     且必须由读它的那个组重取,加 fixture 的一轮**没有能力**替别人重取;
+     加 fixture 的一轮**不重取但必须交棒**。6 个红里 **3 个属于第一类,根本不该响**。
+     「corpus fingerprint」**不必新造**,`FLOOR`+`ratchet` 就是,缺的只是采用率。
+   - **第二条(python 62→64)本轮已自绿**:它现在写成「未跌破 62」的 ratchet 形式,
+     harness/总监那半无需再动 ⇒ **#274 可以关**。
 
 -33. **棒 ③ 剩下的三行全是 WK,建议与 #274 的 WK 那半并成一棒**
    - `test_wk_roshan_mana_ceiling.lua`(crossing-level tail argument,`wkrosh`)/
@@ -2135,6 +2172,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T10:51Z(报告 `iterations/reports/hero/20260828T105124Z.md`;轴 **GH #274 重读**;
+  **两个已发表 verdict 都 UNCHANGED**;**新开 GH #278** 交协同组)—— 自检 **worst exit 3**:
+  findings 全部来自 `cadence` 腿,`UNCERTIFIABLE: none`,stable-v2 锚点三项 ok,
+  python trunk 48 passed / 0 failed。owner 四条优先项**没有一条球在本组**;
+  backlog 上一轮点名 -34(#274 本组那半)⇒ 直接认领。
+  **本轮 `bots/` 只改注释**(`hero_skeleton_king.lua` 34→36/17→19、
+  `hero_crystal_maiden.lua` 51→53 四处);无新 gate id;`state.json` 不动;
+  **零 AWS**;不申请入集;**不提 queue**。
+  - **⭐ 重读的结论是「都没变」,但买到的不是「都没变」这四个字,是它们为什么不变。**
+    Axe 那两枚新帧**都是干的** ⇒ 只加天花板不加观测,这才是 ceiling 涨 0.39 而 live 计数不动
+    的原因;WK 那 20→22 的增量**逐 path 归因到那两帧本身**,所以补集**仍然恰好 14** ——
+    一个没归因的 +2 会和「门开始挡它以前不挡的帧」**长得完全一样**。
+  - **⭐ 灵敏度比读数更有用。** Axe §3 方向成立当且仅当
+    `call_live × hunger_ceiling > hunger_live × call_ceiling`(今天 16 > 11.65)。
+    **语料增长本身永远翻不了它**(`16+k > 11.65+0.965k` 恒真);翻它需要 **2 帧
+    Battle Hunger live 而 Call 不 live**。所以这里将来变红 **= bot 行为动了**,
+    这正是 pin 的用途 —— 也是「保持等式」在这个文件里说得通的理由。
+  - **⭐ #274 的红名单只列了 3 个,真实是 6 个,而漏的机制可预测**:它的复现命令用
+    `run_tests.lua axe` / `talent`,filter 是**文件名子串**,漏掉的三个文件名里两个词都没有。
+    **红名单是用会漏的工具取的**;本轮改用 `grep -rln "ls tests/fixtures" tests/*.lua` 枚举 53 个。
+  - **⭐ 6 个红里有 3 个根本不该响。** 它们是纯名字/纯分母普查,没有任何 verdict 骑在精确值上,
+    `corpus_scale.lua`(GH #106→#127 就为这个存在)**从没被它们采用**。已迁;
+    「N of N」改 `cs.universal(hits, live_total)` 是**严格变强**(对还没剪出来的 fixture 也成立)。
+    零主张按 corpus_scale 成文原则**保持等式**。
+  - **⭐ 唯一真的动了的读数在 `wkrosh`**:high-water MAX pool **459 → 471**,
+    mana-dead verdict 存活但余量 141 → **129**。这是该文件自己写的 honest bound
+    (「GH #108 抬闸后新语料会含结构上够不到的帧」)**到期**。下一棒预期它继续收窄。
+  - **⭐ 最后数出来是 7 个红,不是 6 个,第 7 个是本组自己的**:`test_cm_pos5_boots.lua:439` ——
+    **CM 本人**在新帧里带着 `boots_of_bearing`,而同一对帧让 `WINDOW.max < 1500`
+    也同时到期。「被删掉的终点是 out-of-window 不是 empty」这个论证**两半一起没了前提**。
+    这是**出装决定**不是计数重取 ⇒ 开 **GH #279** 并放 backlog 最上面(-36),本轮不动手。
+  - **交棒**:`test_gamemode_world_assertion.lua:534` 也红,`past_honest` **0 → 2**
+    (新帧 `time=785.4/790.4`,×2 后越过 1500)—— `aba_push.lua` 的 push cap 语句
+    honest 读数**第一次有非空定义域**。协同组辖区,**在这里重设基线正是 #274 反对的那种替换**,
+    故只开 **GH #278** 不动手。
 - 2026-08-28T07:47Z(报告 `iterations/reports/hero/20260828T074756Z.md`;轴 **`LEVELPREMISE` 重读续**;
   **棒 ③ 第 4 行**,登记表天花板 **6 → 5**;**新开 GH #274**)—— 自检 **worst exit 3**:
   UNLANDED 0、两条稳定版锚点 ok、Lua 快速检测器 **16** 文件 0 失败、待裁 queue 请求 0(open 37);
