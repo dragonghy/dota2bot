@@ -350,9 +350,26 @@ tests['[source] every neutral sweep in the farm mode goes through the one gate']
     local _, nSweeps = code:gsub('bot:GetNearbyCreeps%s*%(', '')
     assert(nSweeps == 3, 'the farm mode now sweeps neutrals ' .. nSweeps ..
         ' times, not 3 -- a new sweep needs to come through NeutralFarmList too')
-    local _, nWrapped = code:gsub('NeutralFarmList%s*%(%s*bot%s*,%s*bot:GetNearbyCreeps%s*%(', '')
-    assert(nWrapped == 3, 'only ' .. nWrapped .. ' of the 3 sweeps are wrapped -- ' ..
-        'an unwrapped sweep silently misses the gate and reads unfiltered creeps')
+    local _, nInline = code:gsub('NeutralFarmList%s*%(%s*bot%s*,%s*bot:GetNearbyCreeps%s*%(', '')
+    -- [GH #265 follow-up] A sweep may also be bound to a local and handed to the
+    -- wrapper BY NAME: 'campexit' needs the raw table as well as the filtered
+    -- one, and reusing the one sweep is exactly what keeps the count above at 3
+    -- instead of adding a fourth engine call. That sweep is still wrapped, so
+    -- the census resolves the one-hop binding rather than reporting an unwrapped
+    -- sweep that does not exist. This is a WIDER REACH for the same claim, not a
+    -- weaker claim -- and it is the GH #265 shape (a pattern that cannot see the
+    -- universe its own name asserts) landing on this very file.
+    local nBound = 0
+    for name in code:gmatch('local%s+([%w_]+)%s*=%s*bot:GetNearbyCreeps%s*%(') do
+        assert(code:find('NeutralFarmList%s*%(%s*bot%s*,%s*' .. name .. '%s*%)'),
+            'the sweep bound to `' .. name .. '` is never handed to NeutralFarmList -- ' ..
+            'binding a sweep to a local is not a way around the gate')
+        nBound = nBound + 1
+    end
+    assert(nInline + nBound == 3, 'only ' .. (nInline + nBound) ..
+        ' of the 3 sweeps are wrapped (' .. nInline .. ' inline, ' .. nBound ..
+        ' through a local) -- an unwrapped sweep silently misses the gate and ' ..
+        'reads unfiltered creeps')
 end
 
 tests['[source] the wrapper is the only gate, and it is turbo-only'] = function()
@@ -365,16 +382,42 @@ tests['[source] the wrapper is the only gate, and it is turbo-only'] = function(
     local _, nGates = code:gsub("J%.IsSoakCandidate%s*%(%s*'campfarm'%s*%)", '')
     assert(nGates == 1, "'campfarm' is resolved in " .. nGates .. ' places -- a ' ..
         'second resolution point is a second gate to keep in step')
-    -- and no other file in bots/ calls the filter directly
+    -- and no other file in bots/ resolves the campfarm gate through the filter.
+    -- [GH #265 follow-up] The claim this protects is "'campfarm' is decided in
+    -- one place", asserted above as nGates == 1. The file list is the second
+    -- lock, and it used to say "exactly two files, full stop" -- which also
+    -- forbids a DIFFERENT lever reusing the pure filter, something the filter's
+    -- purity is what makes safe. 'campexit' (J.IsOverTierCampOnly) is that
+    -- reuse: it asks the filter "would the ladder keep anything here", passing a
+    -- LITERAL true, and carries its own gate at its own call site. So the third
+    -- file is admitted by NAME and then held to the stricter test -- it must not
+    -- mention campfarm at all, and must not pass a gate call into the filter.
+    -- Widening the list without that test would be a loosening; this is not.
+    local ALLOWED = {
+        ['bots/FunLib/aba_site.lua'] = 'the filter itself',
+        ['bots/mode_farm_generic.lua'] = 'the one campfarm wrapper',
+        ['bots/FunLib/jmz_func.lua'] = 'campexit, a gateless reuse of the filter',
+    }
     local p = assert(io.popen("grep -rl 'FilterFarmNeutrals' bots/ | sort"))
     local files = {}
     for line in p:lines() do files[#files + 1] = line end
     p:close()
     table.sort(files)
-    assert(#files == 2 and files[1] == 'bots/FunLib/aba_site.lua'
-        and files[2] == 'bots/mode_farm_generic.lua',
-        'FilterFarmNeutrals gained a call site outside the single wrapper: ' ..
-        table.concat(files, ' '))
+    assert(#files == 3, 'FilterFarmNeutrals is referenced by ' .. #files ..
+        ' files, not 3: ' .. table.concat(files, ' '))
+    for _, f in ipairs(files) do
+        assert(ALLOWED[f], 'FilterFarmNeutrals gained a call site outside the ' ..
+            'single wrapper: ' .. f)
+    end
+    local other = strip_comments(read('bots/FunLib/jmz_func.lua'))
+    for line in other:gmatch('[^\n]*FilterFarmNeutrals[^\n]*') do
+        assert(not line:find('campfarm'), 'the reuse site now resolves campfarm: ' .. line)
+        assert(not line:find('IsSoakCandidate'),
+            'the reuse site passes a gate into the filter, so campfarm is no ' ..
+            'longer decided in one place: ' .. line)
+        assert(line:find(',%s*true%s*%)'), 'the reuse site no longer passes a ' ..
+            'literal true, so it is making a tier decision of its own: ' .. line)
+    end
 end
 
 tests['[source] the farm bound and the camp ladder read the same number'] = function()

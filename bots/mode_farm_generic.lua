@@ -871,8 +871,38 @@ function Think()
 				bot:Action_MoveToLocation(targetFarmLoc);
 				return;
 		else
-			local neutralCreeps = NeutralFarmList(bot, bot:GetNearbyCreeps(1000, true)); 
-			
+			-- [GH #265 follow-up] The raw sweep is read into a local FIRST, so this
+			-- stays the same `bot:GetNearbyCreeps(` site it has always been (the
+			-- census in tests/test_campvoid_presence_axis.lua pins that count at 3)
+			-- and 'campexit' can still read the world rather than campfarm's
+			-- already-filtered view of it.
+			local tNearbyCreeps = bot:GetNearbyCreeps(1000, true)
+			local neutralCreeps = NeutralFarmList(bot, tNearbyCreeps);
+
+			-- THE ONE call site of 'campexit' (turbo-only). This is the third
+			-- neutral branch, and it is the only one of the three with no tier
+			-- clause of its own -- which is why the two shipped `>= 10` guards
+			-- above are decorative once FARM_STATE_FARM has latched. Armed, an
+			-- under-tier bot whose whole 1000u sweep is creeps the ladder refuses
+			-- RETIRES this camp and walks to the next one instead of standing in it
+			-- trading roughly 1:1 with an ancient. It RELEASES rather than refuses,
+			-- deliberately: GH #265 photographed what "stop attacking" alone does.
+			-- Unarmed J.IsOverTierCampOnly is literally `false`.
+			if J.IsOverTierCampOnly(bot, tNearbyCreeps,
+				J.IsModeTurbo() and J.IsSoakCandidate('campexit'))
+			then
+				farmState = FARM_STATE_NONE;
+				J.Role['availableCampTable'], preferedCamp = J.Site.UpdateAvailableCamp(bot, preferedCamp, J.Role['availableCampTable']);
+				availableCamp = J.Role['availableCampTable'];
+				preferedCamp = ClosestCamp(bot, availableCamp);
+				if preferedCamp ~= nil then
+					bot:Action_MoveToLocation(preferedCamp.cattr.location);
+				else
+					bot:Action_MoveToLocation((RB + DB) / 2);
+				end
+				return;
+			end
+
 			if #neutralCreeps >= 2 then
 
 				farmState = FARM_STATE_FARM;

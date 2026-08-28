@@ -27,6 +27,48 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0BAND. **【2026-08-28T04:3xZ 新增,GH #265 的**预登记证伪**落地;一条可复用主判据
+   + 一个已落地的 gated id + 两条被打红的普查棘轮(**都加固,不放松**)。】
+   **那个浪费在**出厂腿**上,而「把守卫的常数改对」是个**可证明的 no-op**。**
+   录像组 03:52Z 执行了 #265 自己写下的预登记(语料 19→**86 局**,ab 74 / ba 12,两个物理分层都有 armed 腿),
+   结论是**改写**:10..11 带上 armed 34 个 / baseline 25 个 episode,**四个分布量逐位相同**
+   (0.103/0.104、35.3%/36.0%、8.3s/8.4s、38.2%/36.0%),五张分层表**全部两层反号**。
+   出厂腿五帧(venomancer L10 / dragon_knight L11 / necrolyte L10 / lion L10 / storm_spirit L11)
+   **敌方英雄伤害全为 0**;venomancer 那段满血走 3800u 去 Prowler 营,**普攻**开打,
+   **15.0s 坐标逐位相同**,输出 1007 / 挨打 898(**≈1:1 赔本**),然后走人。
+   录像组原话:**「它今天没有任何 armed id 管得着。」**
+   **⭐ 主判据(可复用)**:**一道门值不值得抬高,取决于它守的那条分支是不是**真正动手**的那条。**
+   失效方向是**一个长得像判决的空操作**:改法会 arm、会量不到东西、会被读回成「测过了,没效果」,
+   **而没有任何东西会为此举手**。
+   **算术**:farm 文件把远古档位**写了两遍字面量 10**,而申报档位是 `ANCIENT_MIN_LEVEL = 12`
+   ⇒ 被量到的带 **{10,11} 正好是两个常数之间的缝**。
+   **承重**:`Think()` 的**第三条中立分支**(1000u `neutralCreeps`)**一条档位子句都没有**;
+   10-11 级时 `#nNeutrals>=3` 那个**闩**通过它自己的 `>=10`、置 `FARM_STATE_FARM`,
+   此后每帧**穿过两条带守卫的分支**落进没守卫的那条 ⇒ **上面两条 `>=10` 是装饰**,抬高它们是 no-op。
+   (`aba_site.lua` 的 `FilterFarmNeutrals` 注释**从 GH #137 起就写着**第三次读没有远古子句,**没人动过手**。)
+   **落地**:gated **`campexit`**(`J.IsOverTierCampOnly`,turbo-only 单合取,gate 在唯一调用点解析)。
+   为真 = sweep **非空** ∧ **不含 Roshan** ∧ `FilterFarmNeutrals` **一个都留不下**;
+   **档位判定就是那个 filter 本身**(不复制第二份定义)。
+   **armed 是放行不是拒绝**:`FARM_STATE_NONE` → 出厂 `UpdateAvailableCamp` 退役该营 →
+   唯一 `ClosestCamp` 重选 → **两条臂都必然发 move**,块以 `return` 收口 ——
+   把 `campvoid` 那条死锁教训**前置**。**不与 `campfarm`/`campvoid` 合取**,且读**原始 sweep**
+   (喂过滤后的表会让 `campfarm` 一 arm 就把它悄悄关掉 —— 变异 M9)。
+   新增 `tests/test_campexit_tier_release.lua` **17 例**,带 `[ratchet]`(快腿 15 → 16);
+   **判别用例(混合 sweep)是先写的**,M4 正是被它抓到;**变异 3 批 17 个,首轮 17/17 全抓**。
+   **⚠ 两条 `campfarm` 棘轮被打红并已加固**:(1) 「every neutral sweep …」只数**内联**包裹,
+   而把 sweep 绑到 local 再传(**正是把引擎调用数保持在 3 的做法**)被读成没包裹 ⇒ 现在**解析这一跳绑定**
+   并额外断言任何绑定了 sweep 的 local 都必须到达 `NeutralFarmList`;(2) 「the wrapper is the only gate」
+   把 filter 的文件表钉死在两个文件,**顺带禁止了别的杠杆复用这个纯函数** ⇒ 现在第三个文件**按名准入**
+   并被更严的测试扣住(不许提 `campfarm`、不许把 gate 传进 filter、**必须传字面量 true**)。
+   **两条都用 M15/M16/M17 复验过还咬得动。**
+   **⚠ 诚实边界**:gated ⇒ **不是 live**;**(a) 一帧没买到**;端到端没做且理由钉成可执行断言
+   (`[limit reach]`:两个中立 sweep API 在 4 subject × 3 半径全答 `{}`);turbo 由 loader 强制
+   (`[limit gate]`);**可达性(bot 已在第三条分支里)没量过,不猜**;**不声称关掉 #265**(§2 仍 BUGGY-or-SILENT,
+   armed 腿为何不收缩也不由本条回答)。
+   **⚠ `test_activemode_world_assertion:445` 仍红(GH #267)**:`git stash` 后在**净 trunk 上复现同一数字**,
+   本轮新增 `GetActiveMode()` 站点 **0 个** ⇒ **不是本轮引入的**,本组**仍不擅自抬那个数字**。
+   **下一格**:等总监裁 `campexit` 入不入集(建议**入**,且**可以单独 arm**);
+   **不为「把两个 `>=10` 抬成 12」开格** —— 本轮已把它证明成 no-op。**
 0VOID. **【2026-08-28T01:2xZ 新增,GH #265 认领并落地;一条可复用主判据 + 一个已落地的 gated id
    + 一条 trunk 既红检测器的二分定位。】
    **`campfarm` armed 清空了攻击表,却没有把 bot 从营地里放出来 —— 而本轮真正学到的是
@@ -2209,6 +2251,53 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-28T04:30Z:**那个浪费在**出厂腿**上,而抬高守卫是个**可证明的 no-op** ——
+  本轮真正学到的是「一道门值不值得抬高,取决于它守的那条分支是不是**真正动手**的那条」。**
+  开工自检 **UNLANDED 0**;cadence **1 finding**(replay-check 6.1h,不是本组);未裁 queue 请求 **0**
+  (open 37);稳定版锚点 stable-v1/v2 **各 3 项 ok**;trunk python **46 passed 0 failed 0 uncertifiable**;
+  trunk 快 Lua 检测器 **15 文件 0 失败**(收尾 **16**,本轮新文件带 `[ratchet]`);selfcheck worst exit
+  **3**(全部来自 cadence);开工 `HEAD == a41c06e` 与 `origin/main` 同步;容器有 `lua5.1`、
+  无 `luacheck`(gate 自己装,apt 包名 `lua-check`);**AWS $0**。
+  **认领依据**:铁律 9 过 `OWNER_PRIORITIES.md` —— 常设运维球在批测台,P1 现役形态 #250 已裁,
+  P2/P3 球不在本组本轮 ⇒ 走 open `[strategy]`;**GH #265 在 03:52Z 收到录像组复核,而那条复核不是补充是推翻**
+  (执行了 #265 自己的预登记:语料 19→**86 局**,ab 74 / ba 12,两个物理分层都有 armed 腿)⇒
+  认领它复核后剩下的那个洞:**「这个浪费是出厂缺陷,它今天没有任何 armed id 管得着。」**
+  **⭐ 主判据(可复用)**:**一道门值不值得抬高,取决于它守的那条分支是不是**真正动手**的那条。**
+  失效方向是**一个长得像判决的空操作** —— 改法会 arm、会量不到东西、会被读回成「测过了,没效果」,
+  **而没有任何东西会为此举手**。算术那半:farm 文件把档位**写了两遍字面量 10**,申报档位是 **12**,
+  **被量到的带 {10,11} 正好是缝**;承重那半:**第三条中立分支一条档位子句都没有**,
+  10-11 级时闩通过自己的 `>=10` 置 `FARM_STATE_FARM`,此后每帧**穿过两条带守卫的分支**落进没守卫的那条。
+  **产出**:gated **`campexit`**(`J.IsOverTierCampOnly`,turbo-only 单合取,唯一调用点解析 gate,
+  **档位判定就是 `FilterFarmNeutrals` 本身**);**armed 是放行不是拒绝**
+  (`FARM_STATE_NONE` → 出厂 `UpdateAvailableCamp` → 唯一 `ClosestCamp` 重选 → **两条臂都必然发 move**),
+  把 `campvoid` 的死锁教训**前置**;**不与 `campfarm`/`campvoid` 合取**且读**原始 sweep**(M9);
+  新增 `tests/test_campexit_tier_release.lua` **17 例**带 `[ratchet]`;
+  **判别用例(混合 sweep)先写的**,M4 被它抓到;**变异 3 批 17 个,首轮 17/17 全抓**,两端控制项干净,
+  还原 `diff -q` 逐字节相同。
+  **⚠ 两条 `campfarm` 自己的普查棘轮被打红,两条都是加固不是放松**:一条只数**内联**包裹
+  (绑到 local 再传 —— **正是把引擎调用数保持在 3 的做法** —— 被读成没包裹)⇒ **解析这一跳绑定**;
+  一条把 filter 的文件表钉死在两个文件,**顺带禁止了别的杠杆复用这个纯函数** ⇒ 第三个文件**按名准入**
+  + 更严的测试(不许提 `campfarm`、不许把 gate 传进 filter、**必须传字面量 true**)。**M15/M16/M17 复验。**
+  **⚠ 诚实边界**:gated ⇒ **不是 live**;**(a) 一帧没买到**;端到端没做且理由钉成可执行断言
+  (`[limit reach]`:两个中立 sweep API 在 4 subject × 3 半径全答 `{}`);turbo 由 loader 强制(`[limit gate]`);
+  **可达性没量过,不猜**;**不声称关掉 #265**。
+  **⚠ `test_activemode_world_assertion:445` 仍红(GH #267)**:`git stash` 后在**净 trunk 上复现同一数字**,
+  本轮新增 `GetActiveMode()` 站点 **0 个** ⇒ **不是本轮引入的**;**本组仍不擅自抬那个数字**,并**再点一次名**。
+  **门**:luacheck **0 警告 EXIT=0**;`campexit` 17/0、`campfarm` 16/0、`campvoid` 18/0、`campsel` 21/0、
+  `campgrade` 16/0、`campdanger` 14/0、`creeppull` 22/0、`pullcamp` 51/0、`abilanc` 13/0、
+  `gate_claim_consistency` 10/0、`smoke_load` 3/0、`no_undefined_jmz_refs` 3/0、`level_gate_census` 15/0、
+  `turbo_ternary_dominance` 12/0、`corpus_scale` 8/0、`corpus_existence_claims` 4/0、
+  `defend_ping_declaration_ratchet` 8/0;**读 `mode_farm_generic` 的 23 个测试文件全跑**,除 §6 那个 trunk 既红项外全绿。
+  **全量 Lua 套件未跑**(~100min,GH #124)。`RULE6_BYPASS` **未使用**。
+  **棘轮**:`bots/` **+99/-1**;`test_campfarm_ancient_target.lua` **+50/-9**(两条棘轮加固);
+  `test_set.md` 追加 **§BV**;`queue.json` **零改动**,**零 AWS**,S3 零访问。
+  **交棒**:**总监**(裁 `campexit` 入集 —— 建议**入**且**可以单独 arm**:它是唯一够得着**出厂腿**
+  那个 population 的 id,按构造独立于 `campfarm`/`campvoid`;另请知悉两条 `campfarm` 棘轮已加固)、
+  **录像组**((a) 判读点 = 低于 12 级的 bot 站进远古营后**是否在几秒内离开**;
+  **预登记读法**:episode 数不降但平均烧血降了 = **缩短而非阻止**,按**部分胜利**登记,不许读成「没效果」)、
+  **批测台**(**本轮无请求,零 AWS**)、**英雄组**(无)。
+  **下一格**:等总监裁定;**不为「把两个 `>=10` 抬成 12」开格** —— 本轮已把它证明成 no-op。
+  详见 `iterations/reports/strategy/20260828T0430Z.md`。
 - 2026-08-28T01:24Z:**`campfarm` armed 清空了攻击表,却没有把 bot 从营地里放出来 ——
   而本轮真正学到的是「一个修复从表里拿走条目时,所有另外问『这张表空不空』的谓词必须按同一条规则过滤;
   失效方向是死锁不是选错,而且没有任何东西会为此转红」。**

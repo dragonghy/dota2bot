@@ -1958,6 +1958,71 @@ function J.GetFirstUnit( unitList )
 end
 
 
+-- [GH #265 follow-up, replay desk 2026-08-28T03:52Z] Soak candidate 'campexit'
+-- (turbo-only; the gate is resolved at the ONE call site in
+-- bots/mode_farm_generic.lua and arrives here as bArmed).
+--
+-- THE DEFECT, and it is on the SHIPPED leg. mode_farm_generic states the ancient
+-- tier twice as the literal 10 --
+--     ( bot:GetLevel() >= 10 or not nNeutrals[1]:IsAncientCreep() )
+-- -- while this repo's declared tier is J.Site.ANCIENT_MIN_LEVEL = 12, the value
+-- 'campfarm', 'campgrade', 'abilanc' and 'abil1st' all read. The 10..11 band the
+-- replay desk measured ON THE BASELINE LEG (25 episodes, mean 10.4pp of the
+-- bot's own health burned, 36% of them burning more than 10pp, most with no
+-- enemy hero anywhere near) is exactly the two levels between those two numbers.
+-- Frames, all factory-leg: venomancer L10 t=786.3 stood 15.0s at (-4800,207)
+-- trading 1007 damage out for 898 in against a Prowler camp; dragon_knight L11
+-- t=703.5 15.0s; necrolyte L10 t=738.8 16.0s; lion L10 t=618.5; storm_spirit
+-- L11 t=694.4. Zero enemy-hero damage in every one of them.
+--
+-- WHY THE LEVER IS NOT "RAISE THE TWO LITERALS". Because that is provably a
+-- no-op, and that is the part worth keeping: the THIRD neutral branch of Think()
+-- -- the 1000u `neutralCreeps` read -- carries no tier clause at all. At level
+-- 10 or 11 the `#nNeutrals >= 3` latch passes its own `>= 10` test, sets
+-- FARM_STATE_FARM, and from then on every frame lands in that third branch and
+-- attacks the ancient with no tier question asked. The two guards above it are
+-- decorative whenever an ancient is inside the sweep, so the lever has to sit on
+-- the branch. (aba_site.lua's FilterFarmNeutrals header already says that third
+-- read "carries no ancient clause at all"; nothing had acted on it.)
+--
+-- WHY THIS IS A RELEASE AND NOT A REFUSAL. GH #265 is the lesson, one round old:
+-- 'campfarm' armed emptied the attack list without giving the bot a reason to
+-- leave, and the failure direction was a DEADLOCK, not a wrong pick. So armed,
+-- the call site does not merely decline to attack -- it retires the camp and
+-- walks to the next one, which is the shipped "done with this camp" path
+-- (UpdateAvailableCamp + re-pick) rather than a new one this fix invents.
+--
+-- DOMAIN, deliberately narrow: true only when EVERY unit in the sweep is one the
+-- tier refuses. One farmable normal creep in range and this is false -- the bot
+-- stays and farms it. Roshan is excluded by name for the same reason
+-- J.GetMostHpUnit excludes it: "the biggest thing nearby that you must not pick"
+-- is not the question this predicate answers, and a bot that reached Roshan got
+-- there through a path this branch has no business ending.
+--
+-- Threshold read from source, not restated: the membership test IS
+-- J.Site.FilterFarmNeutrals, the same function 'campfarm' gates, so "a creep
+-- this bot may not take" has one definition and not two.
+--
+-- NOT CONJOINED with 'campfarm' or 'campvoid' (AGENTS.md: promoting an id
+-- freezes FALSE any gate that names it). It reads the RAW sweep, not the
+-- campfarm-filtered one, so it stands on its own feet whichever of those is
+-- armed -- and unarmed it is literally `false`, so the shipped branch below the
+-- call site keeps every byte of its behaviour.
+function J.IsOverTierCampOnly( hBot, tCreeps, bArmed )
+
+	if not bArmed then return false end
+	if hBot == nil or tCreeps == nil or #tCreeps == 0 then return false end
+
+	for _, creep in ipairs( tCreeps )
+	do
+		if J.IsRoshan( creep ) then return false end
+	end
+
+	return #J.Site.FilterFarmNeutrals( tCreeps, hBot:GetLevel(), true ) == 0
+
+end
+
+
 function J.GetLeastHpUnit( unitList )
 
 	local leastHpUnit = nil
