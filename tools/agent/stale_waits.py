@@ -49,6 +49,11 @@ LIMITS (read these before quoting the output)
    re-arm after a returned wave).  The tool cannot tell those from an
    expired admission wait; it can only say the admission half is over.
    Judge the quoted line.
+   **Partially closed 2026-08-29 (director):** the one sub-class that IS
+   lexically provable -- a line that says 重裁/再裁/复裁 -- is now exempt in
+   code (RE_RULING), because that word presupposes the first ruling landed.
+   The rest of LIMIT 1 stands: a promote wait phrased without a re-ruling
+   word still reads as an admission wait, and still wants a human read.
 2. **Only the live 当前状态 block is a finding.**  Backlog entries carry
    their own timestamps and are deliberately historical -- `0BAND` saying
    "等总监裁 `campexit`" was TRUE at 04:3xZ and stays true as a record.
@@ -92,7 +97,18 @@ BOTS = os.path.join(REPO, "bots")
 NOT_A_CHARTER = ("test_set.md", "README.md", "routine_prompts.md")
 
 STATUS_HEADER = "## 当前状态"
-BULLET = re.compile(r"^- 20\d\d-\d\d-\d\dT")
+# A status bullet.  The leading `**` and the bare-date form are not cosmetic
+# variants to be tolerated -- they are two more ways this tool was dark.
+# `replay-check.md` bolds every timestamp (`- **2026-08-19T00:44Z(...`) and
+# opens with a bare `- 2026-08-01 初始化。`, so the original
+# `^- 20\d\d-\d\d-\d\dT` matched NOTHING there: empty live block, and
+# "no expired admission wait in any live block" printed for a charter the tool
+# never read a line of.  With director.md/batch-desk.md's ordering bug (below),
+# the ratchet was live on two of the five stream charters, not five.
+BULLET = re.compile(r"^- \*{0,2}20\d\d-\d\d-\d\d")
+# The sortable prefix of a status bullet.  Minutes may be elided as `06:5xZ`;
+# the time may be absent entirely, which sorts before any timed entry that day.
+STAMP = re.compile(r"^- \*{0,2}(20\d\d-\d\d-\d\d(?:T[\dxX]{2}:[\dxX]{2})?)")
 BACKTICKED = re.compile(r"`([a-z][a-z0-9_]{2,})`")
 PROMOTED = re.compile(r"PROMOTED \(was soak-candidate '([a-z0-9_]+)'\)")
 
@@ -115,6 +131,33 @@ OUTSTANDING_MARKERS = ("等", "仍欠", "仍挂着", "阻塞", "未裁", "还挂
 # wait on another.
 RESOLVED_MARKERS = ("已入集", "已落地", "已裁", "过期", "更正", "作废",
                     "不需要再裁", "已 armed", "已armed")
+
+# A SECOND ruling is not an expired FIRST one (LIMIT 1, promoted from prose
+# to code by the director 2026-08-29T00:xxZ).
+#
+# LIMIT 1 named this class and left it to the reader's judgement: "a stream
+# may be waiting on a SECOND ruling about an id that is already armed".  The
+# docstring above even promises the escape -- "if the wait is real but about
+# something else (a promote decision, a re-arm), say so on the line".  That
+# escape did not exist in code.  Strategy's 22:15Z entry said so on the line
+# in the plainest available words -- "等总监**重裁** `campexit`", opened GH
+# #288 for it, and handed the re-ruling to the director in the same block --
+# and `重裁` still matched ADMISSION_MARKERS through `裁 `.  Trunk went red
+# on a live baton the day after the tool landed, which is the exact shape
+# INVARIANT 2 exists to prevent, one wording over.
+#
+# The exemption is deliberately ONE lexically provable class, not a general
+# "the stream says it is fine" hatch: 重/再/复(新)裁 PRESUPPOSES a ruling
+# that already landed, so a line carrying it cannot be an expired admission
+# wait -- and the founding failure mode is unreachable through it, because
+# the four stale rounds copied "入集裁定仍欠" forward precisely BECAUSE they
+# did not know the ruling had landed.  A stream that writes 重裁 has already
+# done the check this tool exists to force.
+#
+# Line-scoped, not block-scoped: the word modifies the verb of THIS wait.
+# Block scope would let one re-ruling silence a genuinely expired admission
+# wait on another id elsewhere in the same entry.
+RE_RULING = re.compile(r"[重再复]新?裁")
 
 
 class InputError(Exception):
@@ -172,10 +215,13 @@ def charter_files(streams_dir=STREAMS):
 def split_charter(path):
     """(live status block, everything else) as two lists of (lineno, text).
 
-    The live block runs from the first `- <ISO timestamp>` bullet after the
-    当前状态 header to the next such bullet (or EOF).  A charter without
-    that header has an empty live block -- not an error: only the five
-    stream charters carry one.
+    The live block runs from the NEWEST `- <ISO timestamp>` bullet after the
+    当前状态 header to the next such bullet (or EOF).  Newest by timestamp,
+    not by position: `director.md` and `batch-desk.md` append oldest-first
+    while `strategy.md`/`hero.md`/`replay-check.md` prepend newest-first, and
+    reading position as recency made this tool scan a ten-day-old entry on the
+    two appending charters.  A charter without that header has an empty live
+    block -- not an error: only the five stream charters carry one.
     """
     with open(path, encoding="utf-8") as fh:
         lines = fh.read().splitlines()
@@ -186,13 +232,39 @@ def split_charter(path):
     except StopIteration:
         return [], numbered
     body = numbered[header + 1:]
-    try:
-        start = next(i for i, (_n, t) in enumerate(body) if BULLET.match(t))
-    except StopIteration:
+    starts = [i for i, (_n, t) in enumerate(body) if BULLET.match(t)]
+    if not starts:
         return [], numbered
-    rest = body[start + 1:]
-    end = next((i for i, (_n, t) in enumerate(rest) if BULLET.match(t)), len(rest))
-    live = body[start:start + 1 + end]
+    # The live entry is the NEWEST one by timestamp, not the topmost one.
+    #
+    # This tool's first cut said "the first bullet after the header", which
+    # silently assumed every charter is written newest-first.  Two of the five
+    # are not: `director.md` and `batch-desk.md` APPEND (oldest-first), so the
+    # block being scanned as "current state" was the entry from 2026-08-19 --
+    # ninety-odd entries and ten days stale.  The ratchet was therefore dark on
+    # 40% of the charters from the day it landed, and dark in the quiet
+    # direction: an expired wait in a real live block reads as history, and
+    # `no expired admission wait in any live block` is printed either way.
+    # Found 2026-08-29 by the director, while editing the neighbouring line.
+    #
+    # Ordering by timestamp is agnostic to which convention a charter uses, so
+    # neither has to change.  Comparison is lexical on the ISO prefix, which is
+    # correct for this format and tolerates the `T06:5xZ` minute-elision the
+    # streams use ('x' sorts above every digit, so an elided minute reads as
+    # the end of its hour -- close enough to order entries, and it only ever
+    # matters between two entries inside the same hour).
+    def stamp(i):
+        m = STAMP.match(body[i][1])
+        # A bullet BULLET matched but STAMP did not is a malformed timestamp.
+        # Sort it lowest rather than crashing: under-reporting is this tool's
+        # standing failure direction (LIMIT 4), and a charter must never be
+        # able to take the whole self-check down by mistyping one heading.
+        return (m.group(1) if m else "", i)
+
+    start = max(starts, key=stamp)
+    after = [i for i in starts if i > start]
+    end = after[0] if after else len(body)
+    live = body[start:end]
     live_nums = {n for n, _t in live}
     return live, [(n, t) for n, t in numbered if n not in live_nums]
 
@@ -214,6 +286,8 @@ def stale_hits(block, settled):
         if not any(m in text for m in ADMISSION_MARKERS):
             continue
         if not any(m in text for m in OUTSTANDING_MARKERS):
+            continue
+        if RE_RULING.search(text):  # a second ruling, not an expired first one
             continue
         ids = sorted({i for i in BACKTICKED.findall(text)
                       if i in settled and i not in already_reported})

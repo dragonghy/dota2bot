@@ -1,7 +1,9 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,campexit
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid
 
-**成员串 43**(上一行)。本行 2026-08-28T06:5xZ 的**两处变动**(全文档案 **§BW**):
+**成员串 42**(上一行)。本行 **2026-08-29T00:xxZ 的变动:`campexit` 退集**(43 → 42,总监裁定全文 **§CA**)—— 立案量(等级)在协同组深查的六段上是**常数**,而谓词只读等级 ⇒ 六段全释放,其中**四段是盈利的吃下**;gate 与代码保留、永不 arm,退回协同组按**完成度轴**重窄。下方 43 那段是 06:5xZ 的历史记录,原样保留。
+
+**成员串 43**(历史,2026-08-28T06:5xZ 起至 08-29T00:xxZ)。那一行的**两处变动**(全文档案 **§BW**):
 **`campvoid` 入集**(协同组 §BT,GH #265 的落地物)+ **`campexit` 入集**(协同组 §BV,
 GH #265 的预登记证伪落地物)。**两条都搭车、零 AWS 增量、不申请专波。**
 总监**在源码核过两条的单向性**(§BW.1):`campvoid` 的 filter 是**只删不增**
@@ -9391,3 +9393,77 @@ M6 query 退回只要 `InstanceId` / M7 把 `None` 悄悄换成 pin)。
 两条判据本来就不同粒度,**分岔是正常的**;但**在 W22 上两条都不该被当成裁决** ——
 如果真相是故事 (ii),那波**从来没有按四个 AZ 发过**,两条判据量的都不是它们想量的东西。
 **⇒ #252/#256 的下一次验收以「`--az arg=` 非空」为前置条件**;前置不成立时判 **UNCERTIFIABLE,不判通过也不判不通过**(同 §AU.6 「未查 ≠ 通过」)。
+
+## §CA 2026-08-29T00:xxZ 总监裁定:`campexit` **退集**(gate 保留、永不 arm,直到重窄到完成度轴)—— 立案理由被同一份报告里相隔五十行的那张表推翻,而**谓词读的那个量在这六段上是常数**
+
+**裁定:`campexit` 出 armed 集**(线 2 由 43 → **42** id)。gate 与代码**原样保留**、
+`bots/`/`game/` **逐字节零 diff**;它只是不再出现在任何一波的 arm 串里。
+**不是 reject**(域里的浪费是真的),是**退回重窄**。责任链见文末「下一棒」。
+
+### 1. 判据(可复用):立案量与谓词量必须是同一个量
+
+`campexit` 的立案理由是「**等级 10..11 的远古营 = 浪费**」。谓词
+(`jmz_func.lua:2011-2023`)的输入**只有三个**:`bArmed`、sweep 里有没有 Roshan、
+以及 `J.Site.FilterFarmNeutrals( tCreeps, hBot:GetLevel(), true )` 是否清空 ——
+即 **等级 + sweep 物种 + 非空**。**没有血量、没有出/入伤害比、没有敌方距离、
+没有任何完成度信号。**
+
+协同组 22:15Z 深查的六段,等级是 `10/10/10/11/11/10` —— **全部落在拒绝带内,
+且等级在这六段上是常数**。⇒ armed 时**六段全释放**,谓词**没有任何自由度**
+去分开它们。而 `20260828T035500Z.md` **§4**(150–160 行)给的结局是:
+
+| 英雄 | lvl | 出/入 | 结局 |
+|---|---|---|---|
+| dragon_knight | 11 | **6.3×** | 干净吃下 |
+| death_prophet | 10 | **9.3×** | 吃下 |
+| necrolyte | 10 | **3.7×** | 吃下 |
+| storm_spirit | 11 | **5.2×** | 吃下 |
+| lion | 10 | 3.6× | 打一半 TP 走(烧 28pp) |
+| venomancer | 10 | **1.1×** | **白烧 45pp 后走人** |
+
+**六段四段盈利。** 立案头注点名的五帧里有三帧在它自己引用的那份报告里记着「吃下」。
+⇒ 铁律 2 的条件 (c)(逻辑依据)**对当前谓词已被证伪**:被主张为判据的那个量
+(等级),经测量**不区分浪费与盈利**;真正排开这六段的是「打得完吗」(出/入比),
+而谓词读不到它。**这不推翻「10..11 带存在真实浪费」**(venomancer 45pp 是真的)——
+推翻的是「这个域可以整体当成浪费」。
+
+### 2. 为什么现在退,而不是留到 W22 收割后再裁(**这半才是急的**)
+
+两条,任一条单独成立即可:
+
+**(i) (a) 会被失效模式买单,读起来像 WORKING。** `state.json` 里 `campexit` 的
+条件 (a) 读点是「几秒内**离开**那个营」。**释放 dragon_knight 那个 6.3× 的营
+同样满足这个读点。** ⇒ 若带着它收割 W22,买回来的 (a) **不是「没买到证据」,
+是「买到一个方向错了的 WORKING」** —— 比没有读数更贵,因为它会被当成 (a) 达成
+写进 state.json,而后续每一轮都从那行读起。协同组 22:15Z 已点名(⚠ 最尖的操作后果),
+本裁定采纳:**(a) 必须先劈成「释放了打不完的营」vs「释放了正在拿下的营」,
+劈开之前不收 `campexit` 的 (a)。**
+
+**(ii) 一个方向错的 id 污染的不止它自己。** arm 串是**整条腿一起 armed** 的:
+`campexit` 若在六段里放掉四个盈利营,armed 腿的经济就被它拖着走,而
+**同串另外 42 个 id 的 armed−baseline 差分全部骑在这条被污染的腿上**。
+这是「locally-correct ≠ emergently-good」的**投递侧**版本:`lanefix` 是一个 bundle
+自己变负,这里是**一个 id 把别人的读数一起带偏**,且没有任何东西会为此转红。
+
+### 3. 诚实边界(不许在下一轮被读大)
+
+- 六段**不是**那 25 个 episode;**6:4 这个比例不代表整个域**,它只证明
+  「等级在本样本上零区分力」,不证明「域里多数是盈利的」。
+- 五段在**出厂腿**、一段 armed —— 这是**出厂缺陷的证据**,与 `campexit` armed 后
+  会做什么是**两件事**;上表读的是「谓词若 armed 会释放哪些段」,不是实测释放。
+- 本裁定**零 AWS、零行为改动、零 gate 删除**;`campexit` 的代码一行没动。
+- **不裁 #284 判据**(协同组 19:0xZ 交棒 ③),不在本轮范围。
+
+### 4. 下一棒(鉴于铁律 9 连带规则:退回必须把下一棒显式交出去)
+
+- **协同组**:重窄 `campexit` 到**完成度轴**(候选量:出/入伤害比、或「预计打完
+  所需时间 vs 当前 hp 斜率」),而**不是**等级轴;重窄件带真实帧 fixture,
+  且 fixture **必须同时含一段「该释放」与一段「不该释放」**(本轮六段现成:
+  venomancer 1.1× 与 dragon_knight 6.3×)。重窄完成后走常规入集提议(搭车、零 AWS)。
+  **重新入集提议就是本裁定要求交出的下一棒**;协同组 22:15Z 自己写的
+  「不为『落地完成度子句』开格(先要一次可复算的分母)」**本裁定不推翻** ——
+  分母(#263 登记的 W18 68 局重跑)可以后到,重窄件不必等它。
+- **录像组**:`campexit` 的 (a) **本轮起不收**(退集了,W22 里也不再 armed);
+  §BW.2 那条「按 id 分开买」的要求对 `campvoid` **依然有效**。
+- **批测台**:下一波 arm 串按线 2 的 **42 id** 取,**本裁定不新增波次、零 AWS 增量**。
+  W22 已发出的那波:`campexit` 那一格的读数**作废**(不作废整波,`campvoid` 等其余 id 照常)。
