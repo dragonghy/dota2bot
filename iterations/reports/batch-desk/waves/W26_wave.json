@@ -1,7 +1,7 @@
 {
   "wave": "W26",
   "_note": "First-hand launch record, written 2026-08-29T18:1xZ WHILE all four SIRs were still active/fulfilled (carry-forward duty from GH #271; the SIR record is not reconstructable after the instances terminate -- W23 lost it exactly that way).",
-  "_harvest_todo": "Fill status_code/update/ab/ba/arm_depth from describe-spot-instance-requests + recover_verdict.py at harvest.",
+  "_harvest_todo": "FILLED 2026-08-29T21:xxZ from describe-spot-instance-requests (status_code/update) + recover_verdict.py on the 199 merged per-game files (ab/ba/arm_depth). All four self-terminated between 19:00:10Z and 19:11:37Z; ZERO reclaims, 4/4 paired seeds, 4/4 scored (no THIN-ARM).",
   "tree": "b834e88717d68cd80ef93e931907033db1e6c744",
   "tree_note": "CODE-IDENTICAL to W25's tree b51bac77. The two commits touching bots/ between them (8785bdd0 jmz_func.lua +30, 8e535741 hero_skeleton_king.lua +79/-17) are COMMENT-ONLY: with Lua comments and long-bracket blocks stripped, both files are byte-identical across b51bac77..b834e88. => W26 is POOLABLE with W25.",
   "arm_ids": 44,
@@ -14,17 +14,146 @@
   "rec_slots_note": "Registered branch of the pre-registered rec_slot_cost.py acceptance test: W25 returned exit 1, and GH #308 asked the director to re-rule before the 18:16:54Z gate. No ruling landed (issue had zero comments at 18:1xZ) => path (A), fall back to 1. Frame channel is 1/16 this wave.",
   "watchdog_hours": 2,
   "games_per_seed": 12,
-  "carrier_terms": ["crystal_maiden","lion","obsidian_destroyer","skeleton_king","spirit_breaker","zuus"],
+  "carrier_terms": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+  ],
   "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0; ids=8 seeds=4; every term has >= 2 carriers (min 2: crystal_maiden, lion, obsidian_destroyer, spirit_breaker, zuus at 2; skeleton_king 3).",
   "seed_selection_note": "Four seeds NEVER used in any prior wave, so pooled W25+W26 gives 8 DISTINCT seeds on one code-identical tree+arm string -- which is exactly what charter gate (ii)'s third disjunct ('cumulative seeds < 8') asks for, and what W25's own honest boundary (mean/SE 0.90; leave-one-out +40.16 -> +4.99) needs.",
   "seed_search_note": "The candidate-pool pruning used in the W25 round ('the 4 seeds must all lie in the union of the two scarcest terms') is UNSOUND and returned ZERO valid sets here. It is invalid when a seed carries both scarce terms: two dual-carrier seeds satisfy both >=2 requirements and free the other two slots. Exhaustive 6-bit-mask enumeration over all 181 seeds in [1600,1780] finds 56 valid mask-combinations. Filed as GH issue this round.",
   "machines": [
-    {"seed": 1698, "az": "us-west-2a", "instance_id": "i-00c44ed5529d001a3", "sir": "sir-wwsqkgkm", "run_id": "spot_20260829_181702_1_b834e88717d68cd80ef93e931907033db1e6c744_8d47de", "requested_az": "us-west-2a", "actual_az": "us-west-2a", "launched_at": "18:17:02Z", "sir_state_at_launch": "active/fulfilled", "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null},
-    {"seed": 1733, "az": "us-west-2b", "instance_id": "i-05a60ac01c9cb8c65", "sir": "sir-59n7hv1n", "run_id": "spot_20260829_181713_1_b834e88717d68cd80ef93e931907033db1e6c744_ae0223", "requested_az": "us-west-2b", "actual_az": "us-west-2b", "launched_at": "18:17:13Z", "sir_state_at_launch": "active/fulfilled", "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null},
-    {"seed": 1743, "az": "us-west-2c", "instance_id": "i-021d59fe389bcdcc2", "sir": "sir-8jhzjrsq", "run_id": "spot_20260829_181723_1_b834e88717d68cd80ef93e931907033db1e6c744_d686ce", "requested_az": "us-west-2c", "actual_az": "us-west-2c", "launched_at": "18:17:23Z", "sir_state_at_launch": "active/fulfilled", "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null},
-    {"seed": 1747, "az": "us-west-2d", "instance_id": "i-062dc74d73dd5527e", "sir": "sir-xixzka6p", "run_id": "spot_20260829_181734_1_b834e88717d68cd80ef93e931907033db1e6c744_d7bb48", "requested_az": "us-west-2d", "actual_az": "us-west-2d", "launched_at": "18:17:34Z", "sir_state_at_launch": "active/fulfilled", "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null}
+    {
+      "seed": 1698,
+      "az": "us-west-2a",
+      "instance_id": "i-00c44ed5529d001a3",
+      "sir": "sir-wwsqkgkm",
+      "run_id": "spot_20260829_181702_1_b834e88717d68cd80ef93e931907033db1e6c744_8d47de",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2a",
+      "launched_at": "18:17:02Z",
+      "sir_state_at_launch": "active/fulfilled",
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T19:09:10Z",
+      "ab": 31,
+      "ba": 14,
+      "arm_depth": 19.29,
+      "dem_uploaded": 6
+    },
+    {
+      "seed": 1733,
+      "az": "us-west-2b",
+      "instance_id": "i-05a60ac01c9cb8c65",
+      "sir": "sir-59n7hv1n",
+      "run_id": "spot_20260829_181713_1_b834e88717d68cd80ef93e931907033db1e6c744_ae0223",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "launched_at": "18:17:13Z",
+      "sir_state_at_launch": "active/fulfilled",
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T19:10:28Z",
+      "ab": 32,
+      "ba": 13,
+      "arm_depth": 18.49,
+      "dem_uploaded": 6
+    },
+    {
+      "seed": 1743,
+      "az": "us-west-2c",
+      "instance_id": "i-021d59fe389bcdcc2",
+      "sir": "sir-8jhzjrsq",
+      "run_id": "spot_20260829_181723_1_b834e88717d68cd80ef93e931907033db1e6c744_d686ce",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "launched_at": "18:17:23Z",
+      "sir_state_at_launch": "active/fulfilled",
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T19:00:10Z",
+      "ab": 30,
+      "ba": 12,
+      "arm_depth": 17.14,
+      "dem_uploaded": 6
+    },
+    {
+      "seed": 1747,
+      "az": "us-west-2d",
+      "instance_id": "i-062dc74d73dd5527e",
+      "sir": "sir-xixzka6p",
+      "run_id": "spot_20260829_181734_1_b834e88717d68cd80ef93e931907033db1e6c744_d7bb48",
+      "requested_az": "us-west-2d",
+      "actual_az": "us-west-2d",
+      "launched_at": "18:17:34Z",
+      "sir_state_at_launch": "active/fulfilled",
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T19:11:37Z",
+      "ab": 31,
+      "ba": 12,
+      "arm_depth": 17.3,
+      "dem_uploaded": 6
+    }
   ],
-  "rideshares": ["hero-22 (odbuild / obsidian_destroyer carrier, 3 seeds)", "hero-23 (wkqdmg / skeleton_king carrier, 3 seeds)"],
+  "rideshares": [
+    "hero-22 (odbuild / obsidian_destroyer carrier, 3 seeds)",
+    "hero-23 (wkqdmg / skeleton_king carrier, 3 seeds)"
+  ],
   "ladder": "stopped at rung 1: c6i.4xlarge spot filled in all four AZs. No InsufficientInstanceCapacity, no re-aiming, no AZ RING EXHAUSTED, never reached c6a, never reached --on-demand. Zero degradation.",
-  "flags_not_used": ["--on-demand", "--cand-ref", "--allow-pooled-basenames", "--min-arm-depth", "--allow-short-watchdog", "RULE6_BYPASS"]
+  "flags_not_used": [
+    "--on-demand",
+    "--cand-ref",
+    "--allow-pooled-basenames",
+    "--min-arm-depth",
+    "--allow-short-watchdog",
+    "RULE6_BYPASS"
+  ],
+  "placement": {
+    "requested_equals_actual": "4/4 (no PLACEMENT MISMATCH; GH #282 fourth consecutive clean wave)",
+    "distinct_azs": 4,
+    "re_aiming": "none",
+    "az_ring_exhausted": "none",
+    "capacity_ladder": "step 1 (c6i.4xlarge spot) took all four; no c6a fallback, no --on-demand"
+  },
+  "verdict": {
+    "files": 199,
+    "games_loaded": 199,
+    "scored_games": 175,
+    "unfinished": 0,
+    "warmup_unstamped": 24,
+    "mean": {
+      "gpm": 24.34,
+      "xpm": 16.09,
+      "deaths": -0.25,
+      "last_hits": 1.47,
+      "winrate": 0.515
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "3/4",
+      "deaths": "3/4",
+      "last_hits": "2/4",
+      "winrate": "2/4"
+    },
+    "per_seed_gpm": {
+      "1698": 28.53,
+      "1733": 11.69,
+      "1743": 58.6,
+      "1747": -1.45
+    },
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "suggested": "promote",
+    "layers_gpm": {
+      "pooled_ab": 133.79,
+      "pooled_ba": -83.02,
+      "residual_ab_minus_ba_over_2": 108.41,
+      "sign_flips": "4/4 metrics"
+    },
+    "frame_channel": {
+      "rec_slots": 1,
+      "dem_uploaded": 24,
+      "note": "1/16 channel (GH #308 path A fallback). W25, same tree and same arm string, uploaded 145 .dem at rec_slots 12. The pooled corpus therefore holds 169 replays of which 86% are W25's -- carrier forensics (hero-22/hero-23) should draw frames from W25."
+    }
+  }
 }

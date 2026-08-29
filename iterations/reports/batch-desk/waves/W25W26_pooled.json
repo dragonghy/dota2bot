@@ -1,0 +1,276 @@
+{
+  "pool": "W25+W26",
+  "_note": "First 8-DISTINCT-seed reading this lab has ever had on ONE code-identical tree + ONE byte-identical arm string. Pooling is legitimate because (a) the two trees b51bac77 and b834e88 differ only in Lua comments (W26_wave.json:tree_note) and (b) all 395 per-game stamps carry a single 44-id / 387-byte arm string, verified by sha256 over the corpus, not by reading test_set.md.",
+  "trees": [
+    "b51bac77e8fe7f47b076a2b3ea3c32ec24ab2097 (W25)",
+    "b834e88717d68cd80ef93e931907033db1e6c744 (W26)"
+  ],
+  "arm_ids": 44,
+  "arm_bytes": 387,
+  "arm_string_sha256_12": "f0e03819073c",
+  "seeds": [
+    1603,
+    1633,
+    1664,
+    1698,
+    1733,
+    1743,
+    1747,
+    1770
+  ],
+  "input": {
+    "files_seen": 395,
+    "games_loaded": 395,
+    "source_dirs": 8,
+    "unparseable": 0,
+    "pooled_basename_dirs_overridden": 0
+  },
+  "scored_games": 347,
+  "unfinished": 0,
+  "warmup_unstamped": 48,
+  "per_seed": [
+    {
+      "seed": "1603",
+      "ab_games": 31,
+      "ba_games": 15,
+      "arm_depth": 20.22,
+      "scored": true,
+      "scored_games": 46,
+      "gpm": 44.8,
+      "xpm": 24.14,
+      "deaths": -0.63,
+      "last_hits": 3.48,
+      "winrate": 0.5
+    },
+    {
+      "seed": "1633",
+      "ab_games": 29,
+      "ba_games": 13,
+      "arm_depth": 17.95,
+      "scored": true,
+      "scored_games": 42,
+      "gpm": 145.67,
+      "xpm": 98.28,
+      "deaths": -1.13,
+      "last_hits": 6.68,
+      "winrate": 0.703
+    },
+    {
+      "seed": "1664",
+      "ab_games": 27,
+      "ba_games": 15,
+      "arm_depth": 19.29,
+      "scored": true,
+      "scored_games": 42,
+      "gpm": 43.64,
+      "xpm": 23.15,
+      "deaths": -0.08,
+      "last_hits": -0.9,
+      "winrate": 0.537
+    },
+    {
+      "seed": "1698",
+      "ab_games": 31,
+      "ba_games": 14,
+      "arm_depth": 19.29,
+      "scored": true,
+      "scored_games": 45,
+      "gpm": 28.53,
+      "xpm": 16.05,
+      "deaths": -0.28,
+      "last_hits": 5.51,
+      "winrate": 0.461
+    },
+    {
+      "seed": "1733",
+      "ab_games": 32,
+      "ba_games": 13,
+      "arm_depth": 18.49,
+      "scored": true,
+      "scored_games": 45,
+      "gpm": 11.69,
+      "xpm": 13.45,
+      "deaths": -0.07,
+      "last_hits": -0.34,
+      "winrate": 0.5
+    },
+    {
+      "seed": "1743",
+      "ab_games": 30,
+      "ba_games": 12,
+      "arm_depth": 17.14,
+      "scored": true,
+      "scored_games": 42,
+      "gpm": 58.6,
+      "xpm": 46.65,
+      "deaths": -0.65,
+      "last_hits": 1.95,
+      "winrate": 0.533
+    },
+    {
+      "seed": "1747",
+      "ab_games": 31,
+      "ba_games": 12,
+      "arm_depth": 17.3,
+      "scored": true,
+      "scored_games": 43,
+      "gpm": -1.45,
+      "xpm": -11.79,
+      "deaths": 0.02,
+      "last_hits": -1.22,
+      "winrate": 0.565
+    },
+    {
+      "seed": "1770",
+      "ab_games": 28,
+      "ba_games": 14,
+      "arm_depth": 18.67,
+      "scored": true,
+      "scored_games": 42,
+      "gpm": -73.47,
+      "xpm": -43.29,
+      "deaths": 0.65,
+      "last_hits": -2.39,
+      "winrate": 0.5
+    }
+  ],
+  "mean": {
+    "gpm": 32.25,
+    "xpm": 20.83,
+    "deaths": -0.27,
+    "last_hits": 1.6,
+    "winrate": 0.537
+  },
+  "comps_better": {
+    "gpm": "6/8",
+    "xpm": "6/8",
+    "deaths": "6/8",
+    "last_hits": "4/8",
+    "winrate": "4/8"
+  },
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "thin_arm_winrate_seeds": [],
+  "suggested": "promote",
+  "contrast": "vs_stable",
+  "dispersion": {
+    "gpm": {
+      "sd": 61.64,
+      "se": 21.79,
+      "mean_over_se": 1.48
+    },
+    "xpm": {
+      "sd": 41.29,
+      "se": 14.6,
+      "mean_over_se": 1.43
+    },
+    "winrate": {
+      "sd": 0.074,
+      "se": 0.026,
+      "mean_minus_half_over_se": 1.43
+    },
+    "drop_one_gpm_means": {
+      "drop_1603": 30.46,
+      "drop_1633": 16.05,
+      "drop_1664": 30.62,
+      "drop_1698": 32.78,
+      "drop_1733": 35.19,
+      "drop_1743": 28.49,
+      "drop_1747": 37.07,
+      "drop_1770": 47.35
+    },
+    "what_the_pooling_bought": "W25 alone: mean +40.16, mean/SE 0.90, and dropping seed 1633 collapsed it to +4.99 -- the SIGN of the effect rested on one seed. Pooled to 8: mean +32.25, mean/SE 1.48, and the WORST leave-one-out is +16.05 (still drop-1633). All 8 leave-one-out means are positive, range +16.05..+47.35. The reading no longer depends on any single seed. That, not the smaller point estimate, is what the second wave bought.",
+    "per_wave_means_gpm": {
+      "W25": 40.16,
+      "W26": 24.34
+    }
+  },
+  "layers": {
+    "_rule": "README 铁律 4(i): every armed/baseline comparison publishes BOTH the ab and ba stratum.",
+    "gpm": {
+      "ab": 126.57,
+      "ba": -56.96,
+      "avg": 34.8,
+      "residual_ab_minus_ba_over_2": 91.77
+    },
+    "xpm": {
+      "ab": 103.34,
+      "ba": -59.33,
+      "avg": 22.0,
+      "residual_ab_minus_ba_over_2": 81.34
+    },
+    "deaths": {
+      "ab": -1.35,
+      "ba": 0.74,
+      "avg": -0.31,
+      "residual_ab_minus_ba_over_2": -1.04
+    },
+    "last_hits": {
+      "ab": 11.72,
+      "ba": -7.76,
+      "avg": 1.98,
+      "residual_ab_minus_ba_over_2": 9.74
+    },
+    "winrate": {
+      "ab": 0.109,
+      "ab_n": 239,
+      "ba": 0.963,
+      "ba_n": 108,
+      "avg": 0.536
+    },
+    "note": "All four economy metrics sign-flip between strata. Per GH #299 that is the EXPECTED signature of the mirrored design (the stratum residual IS the side bias), not the noise flag 铁律 4(i) warns about; the residual is same-signed and same-order across W23/W24/W25/W26. NOTE the game-weighted pooled avg (+34.80 gpm) is not identical to the seed-mean (+32.25) because seeds carry unequal game counts; the seed-mean is the reported quantity."
+  },
+  "side_saturation_finding": {
+    "what": "Across all 347 scored games, dire won 317 (91.4%) and radiant 30 (8.6%) -- while radiant held MORE team gold in both strata (+15805 mean when armed-on-radiant, +7276 when armed-on-dire).",
+    "winner_by": "engine_natural 347/347 -- none of these are the analyze_log.py econ_winner rewrite, they are real ancient kills",
+    "why_it_matters": "铁律 2(b) names WINS/LOSSES as the promote witness, and recover_verdict.py now computes it. But with the strata pinned at 0.109 and 0.963 the swap-and-average has almost no headroom left: an armed effect has to move a probability that is already within 4-11 points of a boundary. The pooled winrate 0.537 sits 1.43 SE off neutral -- the same order as gpm -- so it is not contradicting the economy read, but it is NOT the independent witness 2(b) reads as. Filed for the director.",
+    "corroboration": "The team-gold delta between strata is 15805-7276 = 8529 gold in favour of the armed leg, same sign as gpm +32.25 -- the economy read has a second, coarser witness even though the winrate does not."
+  },
+  "carrier_supply": {
+    "_for": "hero-22 (odbuild) and hero-23 (wkqdmg) rideshares -- corpus facts only, the frame reading is the hero/replay group's",
+    "obsidian_destroyer": {
+      "armed_leg_appearances": 129,
+      "baseline_leg_appearances": 133,
+      "W25": {
+        "armed": 71,
+        "baseline": 59
+      },
+      "W26": {
+        "armed": 58,
+        "baseline": 74
+      }
+    },
+    "skeleton_king": {
+      "armed_leg_appearances": 111,
+      "baseline_leg_appearances": 145,
+      "W25": {
+        "armed": 56,
+        "baseline": 70
+      },
+      "W26": {
+        "armed": 55,
+        "baseline": 75
+      }
+    },
+    "end_level": {
+      "OD_armed_mean": 23.9,
+      "OD_baseline_mean": 22.5,
+      "WK_armed_mean": 24.6,
+      "WK_baseline_mean": 23.5,
+      "pct_ge_13": "100% for all four groups"
+    },
+    "warning": "END level is NOT cast-time level. hero-23's corrected domain is hero level 2-12 with a byte-identical no-op from 13 up; every one of these games ENDS above 13, so the end-level census can neither confirm nor refute the prescreen. That question needs per-cast frames, i.e. .dem, not analysis.json."
+  },
+  "frame_channel": {
+    "W25": {
+      "rec_slots": 12,
+      "dem": 145
+    },
+    "W26": {
+      "rec_slots": 1,
+      "dem": 24
+    },
+    "pooled_dem": 169,
+    "note": "86% of the pooled frame evidence is W25's. W26 fell back to rec_slots 1 as the registered path (A) of the rec_slot_cost.py acceptance test because GH #308's re-ruling never landed. Measured cost of that un-ruled issue, on the wave whose stated purpose was carrier forensics: ~121 replays."
+  }
+}
