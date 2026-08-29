@@ -33,6 +33,16 @@
 --      direction.  A test that asserted "the retreat desire is 0.9 here" or
 --      "the mandible wants to fire here" may have been reading the mock.
 --
+--      DRIVEN SINCE (`tests/test_zero_true_sites_driven.lua`, the -45 baton),
+--      and the drive amends this paragraph in one direction: the polarity
+--      reading is RIGHT, but on a fixture frame the fix turns neither green red,
+--      because each site has a SECOND unmodelled zero UPSTREAM of the call (the
+--      subject's own outgoing damage estimate; every enemy's attack damage and
+--      speed).  Both branches still fire unconditionally with the fixed default
+--      in place -- so "may have been reading the mock" is still true today, only
+--      via a different mock datum.  Supply the upstream datum before citing
+--      either path.
+--
 --   2. A FURTHER 4 SITES FAILED AS "PICK NOBODY", NOT AS "DECLINE".  They are
 --      argmax/argmin selection loops scoring candidates BY the incoming damage.
 --      Under the zero every candidate scored 0, the running best started at 0,

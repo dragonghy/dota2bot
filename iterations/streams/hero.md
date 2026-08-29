@@ -22,7 +22,36 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--45. **`ZERO_TRUE` 那两个站点欠一次真正的驱动核验** —— **下一棒做这条**(-44 交出来的)
+-46. **两个上游 0 的量具缺口交给了 harness,本组这边只剩「引用时必须自带上游数据」这条纪律**
+   (-45 交出来的;**不是本组的下一棒**,本组下一棒回到 **-43a**)
+   `tests/test_zero_true_sites_driven.lua` §3/§6/§7 已经是自动到期装置:
+   谁把主角输出估计或敌人攻击力建模了,它当天打红并指名「去重读已发表的说法」。
+   本组要做的只有一件:**任何人在这两条路径上写断言之前,先按 §2/§5 的样子把上游数据声明出来**。
+
+-45. ~~**`ZERO_TRUE` 那两个站点欠一次真正的驱动核验**~~
+   **2026-08-29T13:50Z done —— `bots/`/`game/` 零行改动;无新 gate id;零 AWS;不提批测请求。
+   新文件 `tests/test_zero_true_sites_driven.lua`(6 节,`[detector]` ⇒ 进自检快腿);
+   报告 `iterations/reports/hero/20260829T135016Z.md`。**
+   - **⭐⭐ 主发现:那次量具修复在 fixture 帧上一个绿都没变红。** 极性读法是对的(已驱动),
+     但**两个站点各自还有一个上游的 0,而它属于量具不属于帧**,于是原样活过了那次修复:
+     退撤那侧是**主角自己的** `GetEstimatedDamageToTarget` 恒 0
+     (`replay_fixture` 只有「敌人打到主角」的地面真相 `observed.burst`,没有「主角打出去」的来源);
+     下颚那侧是每个敌人的 `GetAttackDamage`/`GetAttackSpeed` 恒 0(.dem 切片两个都不带)。
+     ⇒ 普查那句「可能是在读 mock」**今天仍然成立**,只是**发绿的那个 mock 数据换了一个**。
+     §3/§6 因此**在修好的默认值在位时**断言 0.9 / `DESIRE_HIGH`,并在失败信息里写明
+     「这个值是上游给的、不是挣来的」;§7 把两个上游 0 钉到源码行上,**谁建模了谁打红**。
+   - **⭐ 域只有两帧宽**(107 枚 fixture 里):`f_260820_043124_axe_blink_flee_529`(塔距 285u,t=529.6)
+     与 `f_260820_102030_wk_tower_in_reach`(787u,t=444.5),**都是焦点五**;
+     近失手 `f_260820_163429_es_blink_init_621` 塔距只有 212u,**被 `DotaTime() > 10*60` 挡掉,不是被几何**。
+     §1 用**存在性 + 下限**不用等号(合规新增 fixture 不该打红 trunk,GH #273 的形状)。
+   - **变异 4 条条条见红且红在该红的节上**;其中「把 mock 默认值改回 0」只红两个**驱动**节、
+     §3/§6 **保持绿** —— 那个绿本身就是主发现。对照 6/0 绿。
+   - **⚠️ 一条散文版 GH #221,记录不代改**:三处别的文件按行号引用 `tests/mock/bot_api.lua`
+     (`:232`、`:288`、`:288-293`),**在本轮之前就已经指错**(彼时 232 是 mock slot 命名、
+     288 是 `RandomVector` 里的 `math.random()`);本轮给该文件加了 10 行注释,于是又各漂 10 行。
+   - **⚠️ 全量套件本轮没跑完**(GH #124);trunk 上另有 GH #302 / #295,**都不是本组的**。
+   -- 原文如下 --
+   **`ZERO_TRUE` 那两个站点欠一次真正的驱动核验** —— **下一棒做这条**(-44 交出来的)
    本轮的普查只在**源码层**证明了极性(调用在 `<` 的小侧 + 比较式钉在语句窗口里),
    **没有端到端驱动** `X.RetreatWhenTowerTargetedDesire()`(`mode_retreat_generic.lua`)
    与 `X.ConsiderItemDesire["item_metamorphic_mandible"]`(`ability_item_usage_generic.lua`)。
@@ -2552,6 +2581,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T13:50Z(报告 `iterations/reports/hero/20260829T135016Z.md`;轴 **backlog -45:
+  上一棒明确交出来的驱动核验**;**-45 结清,-46 记下纪律,本组下一棒回到 -43a**)——
+  自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  stable-v1/v2 锚点 ok;trunk python 52/0、快 Lua 腿 26 文件 0 失败。
+  owner 四条优先项**没有一条球在本组**(常设运维→批测台,P1/P2→协同组,P3→总监)。
+  **`bots/`/`game/` 零行改动;无新 gate id;零 AWS;不提批测请求;入集队列本轮无新增待裁 id。**
+  新文件 `tests/test_zero_true_sites_driven.lua`(6 节,`[detector]`);
+  订正两处已发表说法(`tests/mock/bot_api.lua` 头注、普查头注)+
+  `state.json:mockdmg_ZERO_20260829.driven_20260829_follow_up`。
+  - **⭐⭐ 主发现:那次量具修复在 fixture 帧上一个绿都没变红。** 普查读的极性**是对的**
+    (§2/§5 用真实帧 + 真实模块驱动坐实:旧的 0 就地复原 ⇒ 退撤恒 0.9、下颚恒 `DESIRE_HIGH`;
+    修好的默认值 + 足够的伤害 ⇒ 两边都拒绝,且伤害真不够时仍然开火),
+    **但两个站点各自还有一个上游的 0,而它属于量具不属于帧**:
+    退撤那侧是**主角自己的** `GetEstimatedDamageToTarget` 恒 0
+    (loader 只有 `observed.burst` = 敌人打到主角,**没有主角打出去的任何来源**),
+    下颚那侧是每个敌人的 `GetAttackDamage`/`GetAttackSpeed` 恒 0。
+    ⇒ **「断言这一帧退撤欲望 0.9 可能是在读 mock」今天仍然成立**,只是发绿的那个 mock 数据换了一个。
+    **引用这两条路径前,必须像 §2/§5 那样先把上游数据声明出来。**
+  - **⭐ 站点 A 的域只有两帧宽**(107 枚里):`f_260820_043124_axe_blink_flee_529`(285u,t=529.6)、
+    `f_260820_102030_wk_tower_in_reach`(787u,t=444.5),**都是焦点五**;
+    最近的那枚塔(212u,`f_260820_163429_es_blink_init_621`)**被时钟挡掉不是被几何**(t=621)。
+    §1 是存在性 + 下限,不是等号(GH #273 的形状)。
+  - **⭐ §7 是自动到期装置**:两个上游 0 钉在源码行上,**谁把其中任何一个建模了本文件当天打红**,
+    红的信息直接写「这是好消息,并且它作废本条断言:去重读所有已发表的相关说法」。
+  - **变异 4 条条条见红且红在该红的节上**(mock 默认值回滚 2 红=**两个驱动节**,而 §3/§6 **保持绿**,
+    那个绿本身就是主发现;`< 0.88` 翻号 2 红;loader 给输出估计 2 红;mock 加 `GetAttackDamage` 默认值 2 红);
+    对照 6/0 绿。变异还原走**盘外备份 + `cp`**,`md5sum` + `git status` 双证。
+    luacheck `bots game` **0 警告 exit 0**,**未用 `RULE6_BYPASS`**。
+  - **⚠️ 全量套件到收尾仍在后台跑**(GH #124)。**不要把本条读成「全量套件绿」。**
+    trunk 上另有 GH **#302**(8 红 / 3 文件)与 **#295**,**都不是本组的**,本轮一字未动那三个文件。
+  - **⚠️ 散文版 GH #221,记录不代改**:`test_pingstamp_world_assertion.lua:57`、
+    `test_itemdesire_world_assertion.lua:60`、`test_relicguard_siege_gate.lua:269` 三处按行号引用
+    `tests/mock/bot_api.lua`(`:232` / `:288` / `:288-293`),**进本轮时就已经指错**;
+    本轮给该文件加 10 行注释后又各漂 10 行。正确目标有歧义,**点名不代改**。
+  - **交出去的棒**:两个上游 0 是**量具缺口**,`GetAttackDamage`/`GetAttackSpeed`
+    **在 .dem 里是有的**(`make_fixture.py` 不抽),抽出来站点 B 当天可判 —— 与 GH #293 / #305 同族,
+    已按铁律 5 开 `[harness]` issue(见报告 §7);主角**输出**伤害无地面真相,是设计问题不是抽取问题。
 - 2026-08-29T10:48Z(报告 `iterations/reports/hero/20260829T104857Z.md`;轴 **backlog -44:
   上一棒明确交出来的枚举**)—— 自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,
   `UNCERTIFIABLE: none`;stable-v1/v2 锚点 ok;trunk python 52/0、快 Lua 腿 23 文件 0 失败。

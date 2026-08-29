@@ -113,6 +113,16 @@ local function default_for(key, ...)
     -- green. The full per-site census, its classes and its limits:
     -- `tests/test_incoming_damage_callsite_census.lua`.
     --
+    -- ...EXCEPT ON A FIXTURE FRAME, where it turns nothing red, because both of
+    -- those sites have a SECOND unmodelled zero UPSTREAM of this call and it is
+    -- this harness's, not the frame's: the subject's own
+    -- `GetEstimatedDamageToTarget` is 0 on every fixture (replay_fixture has
+    -- ground truth only for damage dealt TO the subject), and every enemy's
+    -- `GetAttackDamage`/`GetAttackSpeed` are 0 (a .dem slice carries neither).
+    -- Both branches therefore still fire unconditionally with this default in
+    -- place. Driven, with the corpus reachability and the labelled mutations:
+    -- `tests/test_zero_true_sites_driven.lua`.
+    --
     -- The OTHER kill-confirm helper is not a second opinion: `J.WillMagicKillTarget`
     -- (:1110) does its whole resistance/shield/refraction estimate and then ends
     -- in `GetActualIncomingDamage(EstDamage, ...)` too (:1151), so BOTH helpers
