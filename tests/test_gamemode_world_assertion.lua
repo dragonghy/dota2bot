@@ -1447,37 +1447,49 @@ tests['[recorded] what a census reading owes the call chain above it'] = functio
     -- filename, which appears twice in that file and could not fail --
     -- mutation M15.)
     --
-    -- 2026-08-29, GH #302/#303 round: the pin used to include `line = 228`,
-    -- and it went red when the census DROPPED its `line` field -- re-keying
-    -- its rows on (file, whitespace-stripped source text) precisely because a
-    -- line number is not a registration key (GH #221; the same medicine the
-    -- crash pins took the same day). So the guard was red for a change that
-    -- IMPROVED the thing it guards, which is the failure direction that gets a
-    -- guard switched off rather than fixed. Re-anchored on the row's stable
-    -- identity -- file plus the gate's own `op`/`n` -- and the `text` field is
-    -- now asserted too, so a row that keeps the verdict while silently
-    -- becoming a different gate still turns this red.
+    -- RE-ANCHORED 2026-08-29 (GH #302 / #221 / #303 round; reached independently
+    -- by the director and by strategy, which is why this block merges both).
+    -- The pin used to address the row by `line = 228`. The census deleted all 22
+    -- of its `line = NNNN` fields at 87c69bdc (director 07:13Z) precisely BECAUSE
+    -- a line number is not a registration key -- its own header now reads
+    -- "THE KEY IS THE TEXT, NOT THE LINE". That fix swept the census's own
+    -- assertions and stopped there; this pin lives in a DIFFERENT file and reads
+    -- the census as text, so it went red at 07:13Z and stayed red.
+    --
+    -- Two things worth keeping about that red. Its failure text said "the census
+    -- row for this site moved" -- the row had not moved, its ADDRESSING SCHEME
+    -- had. And the guard was red for a change that IMPROVED the thing it guards,
+    -- which is the failure direction that gets a guard switched off rather than
+    -- fixed. Do not repair this by putting a line number back: address the row by
+    -- the census's own key, (file, whitespace-stripped source text).
     local census = read_file('tests/test_level_gate_census.lua')
-    local KEY = "{ file = 'bots/item_purchase_generic.lua', op = '>=', n = 18"
-    assert(census:find(KEY, 1, true),
-        'the census row for this site moved')
-    local at = census:find(KEY, 1, true)
+    local ROW = "{ file = 'bots/item_purchase_generic.lua', op = '>=', n = 18, eff = 18"
+    -- Counted, not just found: an anchor that matches in several places cannot
+    -- fail informatively (mutation M15), and one that matches nowhere is the
+    -- red this comment is about.
+    local _, hits = census:gsub(ROW:gsub('%W', '%%%0'), '')
+    assert(hits == 1,
+        'exactly one census row addresses this site by the post-#221 key; got ' .. hits)
+    local at = census:find(ROW, 1, true)
     -- Bounded to THIS row. An unbounded find from `at` matches a TEETH verdict
     -- in some later row and can never fail -- mutation M15b, the third empty
     -- assertion of the "searched a whole file for a string that is in it
-    -- twenty times" shape this group has now catalogued.
-    -- ...starting PAST this row's own opening brace: `at` now points at the
-    -- `{` itself (it used to point at the `line = 228` in the middle of the
-    -- row), so an unbounded search from `at` matches THIS row and hands the
-    -- assertions below an empty string -- an always-red pin, the mirror of
-    -- M15b's always-green one. Caught by this test failing on its own fix.
-    local nxt = census:find('{ file = ', at + #KEY, true) or #census
+    -- twenty times" shape this group has now catalogued. And it must start PAST
+    -- this row's own opening brace: `at` now points at the `{` itself (it used
+    -- to point at the `line = 228` mid-row), so a search from `at` matches THIS
+    -- row and hands the assertions below an empty string -- an always-red pin,
+    -- the mirror of M15b's always-green one. Both sides hit this on their own fix.
+    local nxt = census:find('{ file = ', at + #ROW, true) or #census
     local row = census:sub(at, nxt)
+    -- The census's key is (file, source text). Pinning the text half is what
+    -- makes this pin survive line drift; the trailing "'," matters, because
+    -- the mode_farm_generic row's text has this one as a strict PREFIX.
+    assert(row:find("text = 'if bot:GetLevel() >= 18',", 1, true),
+        'the census still keys THIS site by the shipped source text')
+    assert(not row:find('line = ', 1, true),
+        'the row has not re-acquired a line-number field -- GH #221 ruled that key out')
     assert(row:find("verdict = 'TEETH'", 1, true),
         'the census still reads THIS site TEETH -- if that changes, re-read this record')
-    assert(row:find("text = 'if bot:GetLevel() >= 18'", 1, true),
-        'the census row still describes THIS gate -- a verdict is only a '
-        .. 'verdict about the source text it was read from')
 end
 
 tests['[recorded] the ARDM comparisons are on the right side of the split by luck'] = function()
