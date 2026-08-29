@@ -950,6 +950,25 @@
         "ref": "test_set.md §CF(裁定全文);提议 §CD;queue hero-23",
         "note": "**ROUTED_RIDESHARE —— 路由裁定,不是对请求前提的背书**(沿 §BF.2 / §AZ.5 的先例措辞)。两条的共同形状:**搭车、零 AWS 增量、不申请专波**,卡住它们的既不是名额也不是钱,只是一个路由裁定 ⇒ **当场放行**(铁律 §BB.4:搭车提议的唯一成本就是不被裁)。⚠️ **边界照抄不要外推**:总监核了两条的**入集资格**(真实帧 fixture、变异台、turbo-only 单合取 gate、`bots/` 事后逐字节还原),**没有**逐条复核机制论证的每一步 —— 读数回来之后每一条仍要各自的实质裁定。⚠️ **本条迟到了**:两条分别在 05:xxZ / 07:xxZ 到达,开工自检连续两轮点名 `OTHER (routing/slot ruling still owed)`,上一轮总监(07:07Z)明写「留下一轮,别掉棒」。§BB.4 要求搭车提议**在到达那一轮**被裁,实际用了三轮 —— 记录在案,不追究,归因是那两轮的工作单元都被主干红占满。\n\n**hero-23 `wkqdmg` 专属两条**:\n(1) **入集通过**,armed 成员串 42 → 44(与 hero-22 同轮)。资格依据:**纯收窄** —— armed 取 `min(出厂, 命中 + dot每秒*dot时长)`,只能撤回一个已声明的击杀、不能造一个;两个值都从句柄读(引擎把 trained talent 折进去,GH #228);gate off 逐字复现出厂的 `nDamage * 1.68`;创兵那一处**故意不动**,域比出厂窄。\n(2) **载体供给先于结论**(申请方自己写进 acceptance 的第 (1)(3) 条,总监照准并加重):一例「出厂会开火、armed 不开火」都没有时,**先问载体供给**(该波有没有 skeleton_king、Q 有没有到 rank 2+、英雄有没有到 10 级),**不许**直接读成「测过了没效果」。本条价值随**英雄等级**走(t10 天赋把 dot 时长翻倍)而 turbo 局 ~20 分钟 ⇒ WK 等级分布压根没到 10 的波次,读数按 UNINTERPRETABLE 退回并**把等级分布一起交出来**。这与 hero-10 的 (4) 是同一族的**地平线问题**。"
       }
+    },
+    {
+      "id": "strategy-23",
+      "stream": "strategy",
+      "bundle": "fieldsip",
+      "seeds": [],
+      "priority": 2,
+      "axis": "soak candidate 'fieldsip' 的条件 (a)(执行核验)与 (b)(粗粒度胜负)。搭车、零 AWS 增量、不申请专波 —— 任一例行波即可。",
+      "question": "**⚠️ 本请求由总监代建(2026-08-29T18:5xZ),先例 strategy-21 / strategy-22。**\n协同组 10:xxZ 只把提议写进 `test_set.md §CE`,**没有开 queue 请求行** ⇒ `pending_rulings.py` 连续三轮报 `none`,提议对整个体系隐形、无人裁(归因全文 §CG.1)。\n\n已落地(2026-08-29 协同组,入集提议 test_set.md §CE,裁定 §CG):`bots/FunLib/jmz_func.lua` 新增 `J.FIELD_SIP_HEAL` / `J.FIELD_SIP_MIN_FRACTION = 0.25` / 纯函数 `J.FieldRegenSipValue` + turbo-only gated 谓词 `J.IsFieldSipEnough`(`:5197`),被**两个消费方以相反极性**读:`J.ShouldRegenNotGoHome`(留守,`:5348`)与 `J.ShouldFieldBuyRegen`(购买,`:5419`)。\n\n**立案**:`J.HasFieldRegenSource` 是 presence 谓词,对 faerie_fire(85 血)与大药(400 血)答同一个 TRUE(4.7 倍量程)⇒ 同一口 85 血**同时**充当「留下的理由」和「不用买大药的理由」。铁证帧是 owner P2 自己钉的 `f_260822_063722_lina_tp_home`:Lina 346/1088 = 31.8% 血,唯一补给是 faerie_fire = 血条的 **7.8%**。\n\n**未 armed 逐字节惰性**:谓词首行 `return true` ⇒ 留守侧 `A and true ≡ A`、购买侧 `not (A and true) ≡ not A`,两侧同时退化成出厂表达式;`GetMaxHealth()` nil/<=0 同样惰性放行。**armed 是单向的**:只能把留守 TRUE→FALSE、把购买 FALSE→TRUE,**分区按构造保住**(永不同帧为真、无帧无主)。",
+      "acceptance": "(1) **(a) 的判读点**:armed 腿上,处在 situation 且**只带 tango / faerie_fire** 的 bot,此后 **10 秒内是否出现一次 `item_flask` 购买**(而**不是**一次回城)。\n(2) ⚠️ **(a) 不得从 `stayfield` / `stayfield2` 的留守率差分读出**(§BW.3 同款):那批帧上 `stayfield`/`stayfield2`/`fieldbuy`/`fieldsip` **四个 id 同时动手**,那个差分是合力不是它自己的。\n(3) ⚠️ **载体供给先于结论**(§CF (2) 同款):一例都没有时,先问语料里到底有没有「situation 成立 + 包里只有小口补给」的帧,**不许**读成「测过了没效果」。先验人口来自 §CE.4 的普查(107 枚 fixture / 993 帧里 54 帧 situation、其中 23 帧带补给、21 帧是小口)—— 那是**关于语料的事实,不是关于 Dota 的事实**,真实波次比例可能完全不同,**这正是要买的东西**。\n(4) **(b)**:胜负无明显负面(粗粒度,非显著性)。\n(5) ⚠️ **书面条件 D(§CG.3)**:`fieldbuy` 一旦出集 / promote / 拆分,**同一工作单元内**必须一并处置 `fieldsip`(随之出集,或重新论证它单独成立)—— 本杠杆在留守侧是**收窄**,价值全压在同一批帧**转由 `fieldbuy` 接手**这一侧;`fieldbuy` 不在集里时它就是净收窄零补偿。**故意不写成代码合取**:写成 `IsSoakCandidate('fieldsip') and IsSoakCandidate('fieldbuy')` 会在 `fieldbuy` promote 当天冻结为 FALSE,而 `check_armed_wiring.py` 仍报 WIRED、verdict 读回来是「测过了没效果」(`pullcad` 原案)。**漏做不会自己举手。**",
+      "status": "pending",
+      "result": "",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一例行波(搭车,零 EC2 增量,零新波次)",
+        "at": "2026-08-29T18:5xZ",
+        "ref": "test_set.md §CG(裁定全文);提议 §CE;queue strategy-23(总监代建)",
+        "note": "**ROUTED_RIDESHARE —— 路由裁定,不是对请求前提的背书**(沿 §CF / §BF.2 / §AZ.5 的先例措辞)。**入集通过,armed 成员串 44 → 45**,`test_set.md` 第 2 行本轮已同步改毕(§BM 的规矩:未改第 2 行 = 裁定未完成)。\n\n**总监在源码独立复核过三条**(不是照抄提议自述,§CG.2):(i) 未 armed 逐字节惰性且是**结构性**的(`jmz_func.lua:5197-5204` 首行 `return true`,`GetMaxHealth()` nil/<=0 同样惰性放行 ⇒ 引擎读数失败时退回出厂,不改判「释放」);(ii) **`pullcad` 陷阱已避开** —— 谓词体内 `IsSoakCandidate` **恰好 1 次**,且 `stayfield`/`stayfield2`/`fieldbuy`/`fieldcreep`/`bagsalve` 一个都不出现(本轮 grep 实测 0);(iii) **只有两个消费方,没有第三个** —— 全 `bots/` 树 `IsFieldSipEnough` 命中 4 处全在 `jmz_func.lua`(定义 :5197 / 注释 :5414 / 调用 :5348 留守 / 调用 :5419 购买)⇒ 分区是**定理不是巧合**。**这一条必须自己数**:一个第三消费方会让分区降级。\n\n**wiring 实测**(45-id 串):`check_armed_wiring.py` **45/45 WIRED,exit 0**;`fieldsip` direct、1 站点、`bots/FunLib/jmz_func.lua:5198`;裸串 **396 字节**(44 id 时 388),S3 key 上限 1024 仍有余量。`tests/test_fieldsip_magnitude.lua` 本轮 exit 0,带 `[ratchet]`,已被自检快腿 29 文件 0 失败覆盖。\n\n⚠️ **本条迟到三轮,而归因与 §CF 那两条不同族,这是本次裁定最该被读走的东西**:`odbuild`/`wkqdmg` 有 queue 行,自检**连续两轮点名**它们(失守原因是「没人有空」);`fieldsip` **没有 queue 行**,自检报 `none`(失守原因是「**没人被点名**」)。⇒ `pending_rulings.py` 的失效方向是**漏报**,不能拿「它一向偏保守」安慰。补救见 §CG.5:让它反查 `test_set.md` 的入集提议小节、无对应请求行则报 `ORPHAN_PROPOSAL`,属总监类 `[harness]`,**下一轮第一优先**;在它落地之前,**提入集必须同时开 queue 请求行**。\n\n⚠️ **边界照抄不要外推**:总监核的是**入集资格**,**没有**逐条复核 §CE.4 的阈值网格与 §CE.5 的每一条断言;读数回来之后仍要各自的实质裁定。"
+      }
     }
   ],
   "done": [

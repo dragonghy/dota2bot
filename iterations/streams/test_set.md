@@ -1,7 +1,9 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip
 
-**成员串 44**(上一行)。本行 **2026-08-29T10:xxZ 的变动:`odbuild` 与 `wkqdmg` 双双入集**(42 → 44,总监裁定全文 **§CF**,提议分别是 §CC / §CD)—— 两条都是**搭车、零 AWS 增量、不申请专波**,按铁律 §BB.4「搭车提议的唯一成本就是不被裁」当场放行;两条各自的 **UNINTERPRETABLE 退回门**(`odbuild` 看 `skill_point_stall.py`,`wkqdmg` 看 WK 等级分布)写在 §CF 与 `queue.json` 各自的 `director` 字段里,**收割前必读**。
+**成员串 45**(上一行)。本行 **2026-08-29T18:5xZ 的变动:`fieldsip` 入集**(44 → 45,总监裁定全文 **§CG**,提议是 §CE)—— 搭车、零 AWS 增量、不申请专波。**收割前必读两条**:(i) 它的 (a) **不得**从 `stayfield`/`stayfield2` 的留守率差分读出(那批帧上四个 id 同时动手,§CG.4);(ii) **书面条件 D**(§CG.3):`fieldbuy` 一旦出集/promote,**同一工作单元内**必须一并处置 `fieldsip` —— 这条**故意不写成代码合取**(写成合取会在 `fieldbuy` promote 当天冻结为 FALSE,`pullcad` 原案)。**⚠️ 顺带记一条别的组要用的事实**:本条提议在 `queue.json` 里**没有请求行**,于是开工自检的 `pending_rulings.py` 连续三轮报 `none` 而它一直未裁(§CG.1)⇒ **在 `ORPHAN_PROPOSAL` 检测器落地之前,提入集必须同时开 queue 请求行。**
+
+**成员串 44**(历史,2026-08-29T10:xxZ 起至 18:5xZ)。那一行的变动:`odbuild` 与 `wkqdmg` 双双入集**(42 → 44,总监裁定全文 **§CF**,提议分别是 §CC / §CD)—— 两条都是**搭车、零 AWS 增量、不申请专波**,按铁律 §BB.4「搭车提议的唯一成本就是不被裁」当场放行;两条各自的 **UNINTERPRETABLE 退回门**(`odbuild` 看 `skill_point_stall.py`,`wkqdmg` 看 WK 等级分布)写在 §CF 与 `queue.json` 各自的 `director` 字段里,**收割前必读**。
 
 **成员串 42**(上一行)。本行 **2026-08-29T00:xxZ 的变动:`campexit` 退集**(43 → 42,总监裁定全文 **§CB**,03:5xZ 前写作 §CA)—— 立案量(等级)在协同组深查的六段上是**常数**,而谓词只读等级 ⇒ 六段全释放,其中**四段是盈利的吃下**;gate 与代码保留、永不 arm,退回协同组按**完成度轴**重窄。下方 43 那段是 06:5xZ 的历史记录,原样保留。
 
@@ -9895,3 +9897,107 @@ tango 是对线续航、faerie_fire 是爆发补点。四分之一血条在 ~460
 而它每一次失守的直接原因都不是有人反对,是**没人有空**。
 ⇒ 这条规则缺的不是共识,是一个**比「记得裁」更便宜的触发点**;
 自检已经能点名(它这两轮都点了),下一步是让点名**有牙齿**,同 `DECISIONS_NEEDED.md §14`。
+
+## §CG 2026-08-29T18:5xZ 总监裁定:`fieldsip`(§CE)**入集**(成员串 44 → 45)—— 而本节最该被读的不是裁词,是**它为什么迟了三轮:它从来没在机器读的那张表上出现过**
+
+### CG.0 裁词
+
+**`ROUTED_RIDESHARE / ADMITTED`**,armed 成员串 **44 → 45**(第 2 行本轮同步改毕)。
+附一条**书面依赖条件**(CG.3)与一条 **UNINTERPRETABLE 退回门**(CG.4)。
+
+**ROUTED_RIDESHARE —— 路由裁定,不是对请求前提的背书**(沿 §CF / §BF.2 / §AZ.5 的先例措辞)。
+形状与 §CF 两条相同:**搭车、零 AWS 增量、不申请专波**,卡住它的既不是名额也不是钱。
+
+### CG.1 ⭐⭐ 立案迟到的归因:**不是「没人有空」,是「没人被点名」** —— 与 §CF 的诊断不同族
+
+§CF 写下「**§BB.4 的执行记录到今天为止是 0/8**,而它每一次失守的直接原因都不是有人反对,
+是**没人有空**」。`fieldsip` 把这个记录推到 **0/9**,但**它的失守机制是另一种,而且更坏**:
+
+| | `odbuild` / `wkqdmg`(§CF) | `fieldsip`(本节) |
+|---|---|---|
+| `queue.json` 里有请求行 | **有**(hero-22 / hero-23) | **没有** |
+| 开工自检 `pending_rulings.py` | **连续两轮点名** `OTHER (routing/slot ruling still owed)` | **报 `none`** |
+| 迟到轮数 | 3 轮(有人喊,没人有空) | **3 轮(没人喊)** |
+
+**本轮实测**:`fieldsip` 在 `iterations/queue.json` 里 **grep 计数 = 0**;
+本轮开工自检的 `un-ruled queue requests` 段逐字是
+`RIDESHARE (§BB.4: rule this round): none` / `OTHER (routing/slot ruling still owed): none`,
+**而此刻一条搭车入集提议已经躺了 8 小时未裁**。
+
+⇒ **这是一次"干净"读数,不是一次干净现场。** `pending_rulings.py` 扫的是 `queue.json` 的
+`director` 字段;一份**只存在于 `test_set.md` 的提议**在它眼里不存在 —— 它的失效方向是
+**漏报**(与 GH #276 那条"多问"的检测器**反号**,所以不能拿"它一向偏保守"来安慰自己)。
+这正是 **§AW.1 / §BM「裁定落到档案而不是落到被裁方读的那个字段上」的镜像**:
+那三次丢的是**裁定**,这一次丢的是**请求**;同一条投递纪律的**上游那一半从来没被写下来过**
+—— 章程 2.5 规定了裁定要落到 `director` 字段,**没有任何一条规定提议必须先有请求行**。
+⇒ 见 CG.5 的补救。
+
+### CG.2 入集资格:总监在源码核过的三条(不是转述提议)
+
+本轮**独立复核**(不是照抄 §CE 的自述):
+
+1. **未 armed 逐字节惰性,且是结构性的**:`jmz_func.lua:5197-5204`,
+   `J.IsFieldSipEnough` 首行 `if not J.IsSoakCandidate('fieldsip') then return true end`
+   ⇒ 留守侧 `A and true ≡ A`、购买侧 `not (A and true) ≡ not A`,**两侧同时**退化成出厂表达式。
+   `GetMaxHealth()` 为 `nil` / `<= 0` 时**同样 `return true`**(惰性放行)⇒ 引擎读数失败时它退回出厂,
+   而不是改判"释放"。
+2. **`pullcad` 陷阱已避开**:谓词体内 `IsSoakCandidate` **恰好 1 次**,
+   且 `stayfield` / `stayfield2` / `fieldbuy` / `fieldcreep` / `bagsalve` **一个都不出现**(本轮 grep 实测 0)。
+3. **只有两个消费方,没有第三个**:全 `bots/` 树 `IsFieldSipEnough` **命中 4 处,全在 `jmz_func.lua`**
+   —— 定义 1(:5197)、注释 1(:5414)、调用 2(:5348 留守 / :5419 购买)。
+   **分区按构造保住**:两处读的是同一个合取式的正负两面 ⇒ armed 之后仍**永不同帧为真、无帧无主**。
+   (这一条必须自己数,不能信自述 —— 一个第三消费方会让"分区"从定理降级成巧合。)
+
+**wiring 实测**(45-id 串,本轮跑):`check_armed_wiring.py --cand <45 串>` = **45/45 WIRED,exit 0**,
+`fieldsip` **direct、1 站点、`bots/FunLib/jmz_func.lua:5198`**;裸串 **396 字节**(44 id 时 388),
+S3 key 上限 1024 **仍有余量**。`tests/test_fieldsip_magnitude.lua` 本轮 **exit 0**,
+带 `[ratchet]`,已被自检快腿的 **29 文件 0 失败**覆盖。
+
+### CG.3 ⚠️ 书面依赖条件:**`fieldsip` 不得在 `fieldbuy` 离集之后单独留在集里**
+
+§CE.6 自己把这一问交给总监:本杠杆在**留守侧是收窄**(21/23 帧不再被留住),
+它的全部价值压在**同一批帧转由 `fieldbuy` 接手**这一侧。
+⇒ 若 `fieldbuy` 不在集里,`fieldsip` 就是一次**净收窄、零补偿**。
+
+**本轮事实**:`fieldbuy` **在 44 串里**(第 2 行第 24 位),且当前测试集是**单腿** ⇒
+**同腿 arm 是自动的**,§CE.6 提的那条备选裁法**此刻已被满足**,不必另加机制。
+
+**但是**——把它写成**代码里的合取**(`IsSoakCandidate('fieldsip') and IsSoakCandidate('fieldbuy')`)
+是**明确禁止的**:那正是 CLAUDE.md「promote 一个 id 会静默杀死任何点名它的 gate」那条,
+`fieldbuy` 一旦 promote,合取**冻结为 FALSE**,`check_armed_wiring.py` 仍报 WIRED,
+verdict 读回来是"测过了没效果",**没有任何东西举手**(`pullcad` 的原案)。
+⇒ **依赖只能是书面条件,不能是代码**:
+
+> **条件 D**:任何一轮若 `fieldbuy` 出集(退集 / promote / 拆分),
+> **同一个工作单元内**必须一并处置 `fieldsip` —— 或随之出集,或重新论证它单独成立。
+> 处置人 = 做那次 `fieldbuy` 变动的裁定方。**漏做不会自己举手**,与 CG.1 同病。
+
+### CG.4 UNINTERPRETABLE 退回门(收割前必读)
+
+照准 §CE.7,并加重一条:
+
+1. **(a) 的判读点**:armed 腿上,处在 situation 且**只带 tango / faerie_fire** 的 bot,
+   此后 **10 秒内是否出现一次 `item_flask` 购买**(而**不是**一次回城)。
+2. ⚠️ **(a) 不得从 `stayfield` / `stayfield2` 的留守率差分读出**(§BW.3 同款):
+   那批帧上 `stayfield`/`stayfield2`/`fieldbuy`/`fieldsip` **四个 id 同时动手**,
+   那个差分是合力,不是它自己的。
+3. ⚠️ **载体供给先于结论**(§CF (2) 同款):一例都没有时,**先问语料里到底有没有
+   「situation 成立 + 包里只有小口补给」的帧**,再下结论;**不许**读成"测过了没效果"。
+   本条的先验人口来自 §CE.4 的普查(107 枚 fixture / 993 帧里 **54** 帧 situation、
+   其中 **23** 帧带补给、**21** 帧是小口)—— 那是**关于语料的事实,不是关于 Dota 的事实**,
+   真实波次的比例可能完全不同,**这正是要买的东西**。
+4. **(b)**:胜负无明显负面(粗粒度,非显著性)。
+5. **边界照抄不要外推**:总监核的是**入集资格**(CG.2 三条 + fixture + 变异台 14/14),
+   **没有**逐条复核 §CE.4 的网格与 §CE.5 的每一条断言;读数回来之后仍要实质裁定。
+
+### CG.5 补救:把「提议必须先有请求行」写成规矩,并给它一个会举手的检测器
+
+**本轮已做的**:总监**代建** `queue.json` 请求行 `strategy-23`(先例:`strategy-21`/`strategy-22`
+同为总监代建),裁词落进它的 `director` 字段 ⇒ 章程 2.5 的三处投递(`director` 字段 /
+`test_set.md` 全文 / 活 issue 线程)本轮补齐。
+
+**本轮没做、交出去的**:让 `pending_rulings.py` **也扫 `test_set.md` 里的「提议入集」小节**,
+对每一节反查 `queue.json` 是否存在对应请求行,**没有就报 `ORPHAN_PROPOSAL`**。
+这条改动属于总监类 `[harness]`,**下一轮第一优先**;在它落地之前,
+**任何组提入集必须同时开 queue 请求行** —— 否则那份提议对整个体系是隐形的,
+唯一的发现路径是有人恰好读到 `test_set.md` 的那一节(本轮就是这么发现的,**运气不是机制**)。
