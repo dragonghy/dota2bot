@@ -39,6 +39,16 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+-- [director 2026-08-29, GH #221] Every absolute count below is a SUM OVER
+-- FIXTURES, so an equality on it re-states the corpus size and goes red on
+-- growth that has nothing to do with this lever.  That is what happened: the
+-- 121/64 pin below stood red on trunk while the assertion the whole file exists
+-- to make -- `nEndToEnd == 0`, three lines under it -- was never reached at all,
+-- because assert() short-circuits the test body.  A scale pin sitting ABOVE a
+-- structural claim does not merely cost a re-pin round; it silently stops the
+-- claim from being checked.  See tests/corpus_scale.lua for the argument that
+-- makes ratchet safe, and for why the zeros here deliberately stay equalities.
+local cs = require('corpus_scale')
 
 local FIX  = 'tests/fixtures/f_260819_004858_cm_centaur_far.lua'
 local JMZ  = 'bots/FunLib/jmz_func.lua'
@@ -230,7 +240,7 @@ tests['[W3] the sub-floor pools in the archive are NOT claimed as a structural z
             names[r.name] = true
         end
     end
-    assert(n == 16, 'sub-floor alive frames moved to ' .. n .. '; re-read whether they are real')
+    cs.ratchet(n, 16, 'sub-floor alive frames')
     local nDistinct = 0
     for _ in pairs(names) do nDistinct = nDistinct + 1 end
     assert(nDistinct == 1, string.format(
@@ -247,29 +257,56 @@ tests['[lever] the lever\'s own conjunct opens twenty archived frames'] = functi
     local nShipped = count(fires_shipped)
     local nArmed   = count(fires_armed)
     local nOpened  = count(opened)
-    assert(nShipped == 169 and nArmed == 189, string.format(
-        'missing-health conjunct fires shipped/armed %d/%d (expected 169/189)',
-        nShipped, nArmed))
-    assert(nOpened == 20, 'frames opened: ' .. nOpened .. ' (expected 20)')
+    -- Not red yet on 2026-08-29, and converted anyway: these are the same
+    -- sum-over-fixtures shape as the 121/64 that WAS red, so leaving them as
+    -- equalities just schedules the next re-pin round.  The direction that
+    -- matters -- a count FALLING, i.e. the lever's domain shrinking -- is what
+    -- ratchet keeps.
+    cs.ratchet(nShipped, 169, 'missing-health conjunct fires (shipped floor)')
+    cs.ratchet(nArmed, 189, 'missing-health conjunct fires (armed floor)')
+    assert(nArmed >= nShipped, 'the armed floor fires on fewer frames than the '
+        .. 'shipped one, which contradicts the one-directional claim below')
+    cs.ratchet(nOpened, 20, 'frames the armed floor opens and the shipped floor refuses')
 end
 
 tests['[lever] with the branch\'s other readable conjunct it is ten, not twenty'] = function()
     local nOpened = count(function(r) return opened(r) and r.quiet end)
-    assert(nOpened == 10, string.format(
-        'frames opened with no enemy hero within 900: %d (expected 10). The '
-        .. 'unqualified 20 is the looser number and must not be quoted alone', nOpened))
+    cs.ratchet(nOpened, 10, 'frames opened with no enemy hero within 900')
+    -- The point of this test is the RELATION, not the literal: the qualified
+    -- number must stay strictly below the unqualified one, or "the unqualified
+    -- 20 is the looser number and must not be quoted alone" stops being true.
+    assert(nOpened < count(opened), string.format(
+        'the enemy-proximity conjunct no longer narrows anything: %d of %d',
+        nOpened, count(opened)))
 end
 
-tests['[W2] and with the salve actually in the bag it is ZERO'] = function()
+-- [ratchet] ⭐ THE TAG IS THE POINT OF THIS NAME, not decoration.
+-- routine_selfcheck.sh's fast Lua leg discovers files by grepping tests/ for
+-- `[detector]`/`[ratchet]`; this file carried neither, so it was invisible to
+-- 开工 and its red stood on trunk for a day being read as green every round
+-- (the same family as GH #216/#171: an instrument that cannot see a thing
+-- reports its absence as health).  Timed before tagging, as the script's own
+-- header demands: this file is **sub-second** (measured 2026-08-29, <1s wall
+-- for all 19 tests), so the fast set stays a 开工 check.
+-- ⚠️ Its sibling red, test_itemdesire_world_assertion.lua, is deliberately NOT
+-- tagged: **383s measured the same day**.  That is the GH #124 sweep family the
+-- header excludes by name, and tagging it would turn a ~20s selfcheck into a
+-- ~7min one -- which is how a check stops being run at all.  The coverage gap
+-- that leaves is real and is a scheduling question, not a tagging one; it is
+-- written up in DECISIONS_NEEDED.md §14.
+tests['[ratchet] [W2] and with the salve actually in the bag it is ZERO'] = function()
     -- The number that decides this round asks for no wave. The dispatcher only
     -- reaches this consider for an item the bot holds, so a frame that opens
     -- the branch end to end must satisfy all three. None does.
     local nHeld = count(function(r) return r.flask end)
     local nHeldQuiet = count(function(r) return r.flask and r.quiet end)
     local nEndToEnd = count(function(r) return opened(r) and r.quiet and r.flask end)
-    assert(nHeld == 121 and nHeldQuiet == 64, string.format(
-        'salve-holding alive frames %d, of them quiet %d (expected 121/64)',
-        nHeld, nHeldQuiet))
+    -- 121/64 -> 124/67 on 2026-08-29: corpus growth, ratcheted.  These two are
+    -- CONTEXT for the zero below; they must never again be the reason the zero
+    -- goes unchecked.
+    cs.ratchet(nHeld, 121, 'salve-holding alive frames')
+    cs.ratchet(nHeldQuiet, 64, 'salve-holding alive frames with no enemy within 900')
+    -- STAYS an equality: this zero is the [W2] refusal the whole round rests on.
     assert(nEndToEnd == 0, string.format(
         'the archive now HAS %d end-to-end frame(s) -- that is the (a)-evidence '
         .. 'this round said it could not buy, so go buy it', nEndToEnd))
@@ -277,9 +314,10 @@ tests['[W2] and with the salve actually in the bag it is ZERO'] = function()
     -- the SHIPPED floor does fire on salve-holding quiet frames, so the
     -- conjunction is reachable and only this lever's band is unpopulated.
     local nShippedEndToEnd = count(function(r) return fires_shipped(r) and r.quiet and r.flask end)
-    assert(nShippedEndToEnd == 7, string.format(
-        'shipped end-to-end frames %d (expected 7); if this were 0 the zero above '
-        .. 'would be about the branch, not about this lever', nShippedEndToEnd))
+    assert(nShippedEndToEnd > 0, string.format(
+        'shipped end-to-end frames %d; if this is 0 the zero above is about the '
+        .. 'branch, not about this lever', nShippedEndToEnd))
+    cs.ratchet(nShippedEndToEnd, 7, 'shipped end-to-end frames')
 end
 
 tests['[lever] armed is strictly one-directional: it never closes a frame'] = function()

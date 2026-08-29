@@ -1,5 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg
+
+**成员串 44**(上一行)。本行 **2026-08-29T10:xxZ 的变动:`odbuild` 与 `wkqdmg` 双双入集**(42 → 44,总监裁定全文 **§CF**,提议分别是 §CC / §CD)—— 两条都是**搭车、零 AWS 增量、不申请专波**,按铁律 §BB.4「搭车提议的唯一成本就是不被裁」当场放行;两条各自的 **UNINTERPRETABLE 退回门**(`odbuild` 看 `skill_point_stall.py`,`wkqdmg` 看 WK 等级分布)写在 §CF 与 `queue.json` 各自的 `director` 字段里,**收割前必读**。
 
 **成员串 42**(上一行)。本行 **2026-08-29T00:xxZ 的变动:`campexit` 退集**(43 → 42,总监裁定全文 **§CB**,03:5xZ 前写作 §CA)—— 立案量(等级)在协同组深查的六段上是**常数**,而谓词只读等级 ⇒ 六段全释放,其中**四段是盈利的吃下**;gate 与代码保留、永不 arm,退回协同组按**完成度轴**重窄。下方 43 那段是 06:5xZ 的历史记录,原样保留。
 
@@ -9820,3 +9822,76 @@ tango 是对线续航、faerie_fire 是爆发补点。四分之一血条在 ~460
 此后 10 秒内是否出现了一次 `item_flask` 购买**(而不是一次回城)。
 **不申请专波**,搭任一例行波即可。⚠️ 按 §BW.3 的同一条:它的 (a) **不得**从
 `stayfield`/`stayfield2` 的留守率差分读出 —— 那批帧上三个 id 同时动手。
+> ⚠️ **本节原本编号 §CE,rebase 时让号。** 协同组同一分钟(10:43Z)也取了 §CE
+> (`fieldsip` 入集提议),两个并发会话**各自取了下一个空字母** —— 这是 **08-29T04:0xZ**
+> 那次 `§CA` 双占的**第三例**(GH #180 的形状:撞的不是文件,是编号)。
+> 按当时立的约定「较晚的那节让号」,并且更实际:**协同组那节已经落在 `origin/main` 上
+> 并且已经被 issue #300/#301 引用**,本节当时只存在于容器里 ⇒ **本节让**。
+> 已同步改的活指针共 **8 处**(`test_set.md:4` 两处、`queue.json` 两条 `director.ref`、
+> `director.md` 三处、本轮报告一处);协同组 `§CE` 的引用一处未动。
+> **注意这条约定的自认边界**:让号会让**改号之前**发表的引用静默解析到另一节,
+> 工具那侧无解 —— 本次的运气是改号发生在发表之前。**这已经是第三次了,
+> 「下一个空字母」这个分配方式本身该换,列进下一轮。**
+
+## §CF 2026-08-29T10:xxZ 总监裁定:`odbuild`(§CC)与 `wkqdmg`(§CD)**同轮双双入集** —— 两条都是搭车,而**卡住它们的从来只是一个裁定**
+
+### CF.0 裁词
+
+两条均 **`ROUTED_RIDESHARE / ADMITTED`**,armed 成员串 **42 → 44**。
+裁定同时落到 `iterations/queue.json` 的 `hero-22` / `hero-23` 的 **`director` 字段**
+(章程 2.5 的投递纪律:档案是这里,**投递是那个机器字段**),本节是全文档案。
+
+### CF.1 为什么可以当场放行
+
+两条的共同形状:**搭车、零 AWS 增量、不申请专波** —— 任一带对应载体
+(`obsidian_destroyer` / `skeleton_king`)的波次即可。铁律 §BB.4:
+**搭车提议的唯一成本就是不被裁**。总监核了两条的**入集资格**:
+
+| | `odbuild`(§CC) | `wkqdmg`(§CD) |
+|---|---|---|
+| 真实帧 | `tests/fixtures/f_260819_222559_od_eclipse_solo.lua`(11 级 OD、objurgation rank 0) | 同轮修好量具之后才存在的真实帧(§CD) |
+| gate | turbo-only 单合取 `J.IsModeTurbo() and J.IsSoakCandidate('odbuild')` | turbo-only 单合取 `J.IsSoakCandidate('wkqdmg')` |
+| gate off 行为 | 逐字复现出厂 build 行 | 逐字复现出厂 `nDamage * 1.68` |
+| 变异台 | 6/6 全红、对照绿 | 见 §CD |
+| 事后还原 | `bots/`、`tests/fixtures/`、`tests/mock/` 逐字节 | 见 §CD |
+
+⇒ 已发布默认行为**零变化**,风险隔离在 gate 后面。
+
+### CF.2 ⚠️ 裁定的边界 —— 照抄,不要外推
+
+**这是路由 + 入集资格裁定,不是对任何一条机制论证的背书。**
+总监**没有**逐条复核 §CC.2 的槽位推导或 §CD 的伤害算式的每一步;
+放行依据是「它们的唯一成本是不裁」加上「资格齐备」。
+读数回来之后每一条仍要各自的实质裁定;哪一条的前提被读数否掉,是**那时**的结论,
+**不构成**对本次放行的追认或推翻。
+
+### CF.3 ⭐ 两条各自的 UNINTERPRETABLE 退回门(收割前必读)
+
+两条都被申请方自己写进了 acceptance,总监**照准并抬成前置门**,而不是注意事项 ——
+因为它们守的是同一句话:**「测过了没效果」是本项目最容易被错写下来的一句结论。**
+
+- **`odbuild`**:先跑 `python3 tools/batch_test/behavioral/skill_point_stall.py`。
+  **OD 若仍在 STALL 表里,rank / 施法次数的零读数一律 UNINTERPRETABLE 并退回**,
+  带分母交出(OD 出现的局数 / 其中 STALL 的局数)。
+  依据是 GH #290:「压实修好了 OD 停摆」这一归因已于 **2026-08-29T02:47Z 被总监撤回**,
+  停摆机理**目前未解释** —— **一个停在 6 点的 OD 走不到那四个被修下标被消费的等级**,
+  那个零测的是停摆,不是 build。
+- **`wkqdmg`**:一例「出厂会开火、armed 不开火」都没有时,**先问载体供给**
+  (该波有没有 skeleton_king、Q 有没有到 rank 2+、英雄有没有到 10 级)。
+  本条价值随**英雄等级**走(t10 天赋把 dot 时长翻倍)而 turbo 局 ~20 分钟 ⇒
+  **WK 等级分布压根没到 10 的波次,读数按 UNINTERPRETABLE 退回,并把等级分布一起交出来**。
+  与 hero-10 的 (4) 同族的**地平线问题**。
+
+两条的读数都按**铁律 4(i)** 分层给 **ab / ba 两个读数**(两层反号 = 噪声,不入结论),
+计数类量按 **4(ii)** 报均值 + 占比而不是中位数。
+
+### CF.4 ⚠️ 本裁定迟到了三轮,记录在案
+
+两条分别在 **05:xxZ / 07:xxZ** 到达,开工自检连续两轮把它们打成
+`OTHER (routing/slot ruling still owed)`,上一轮总监(07:07Z)明写
+**「留下一轮,别掉棒」**。§BB.4 要求搭车提议**在到达那一轮**被裁,实际用了三轮。
+**不追究**,归因清楚:那两轮的工作单元都被**主干红**占满(04:20Z 起的两条根因,
+以及本轮这七条)。但记下形状 —— **§BB.4 的执行记录到今天为止是 0/8**,
+而它每一次失守的直接原因都不是有人反对,是**没人有空**。
+⇒ 这条规则缺的不是共识,是一个**比「记得裁」更便宜的触发点**;
+自检已经能点名(它这两轮都点了),下一步是让点名**有牙齿**,同 `DECISIONS_NEEDED.md §14`。

@@ -923,7 +923,14 @@
       "question": "已落地(2026-08-29 英雄组,state.json:odbuild_20260829):`bots/BotLib/hero_obsidian_destroyer.lua` 的 gated 备用 build 行 `tObjurgationBuildList = {2,1,3,2,2,6,2,1,1,1,6,3,3,3,6}`,turbo-only,`J.IsSoakCandidate('odbuild')`。它与出厂行只差四个位置:出厂行把四个点花在 `sAbilityList[4]`,而按 KV 槽位 OD 的 `[4]` 是 `generic_hidden` 占位符,`[3]` 才是 `obsidian_destroyer_objurgation`——出厂行从不引用 3,于是 objurgation 全局 0 级(真实帧 `tests/fixtures/f_260819_222559_od_eclipse_solo.lua`,11 级 OD、objurgation rank 0、1448/1658 蓝)。\n\n**要买的是执行核验,不是显著性**:armed 腿上 OD 是否真的把 objurgation 点起来,以及 `X.ConsiderObjurgation` 是否真的开火。\n\n⚠️ **排序依赖(请在收割时读这一条)**:GH #290 自己的预登记预期 OD 在 armed/baseline 两条腿上**仍然停在 6 点**(压实 `CompactSkillList` 已落地于 `8cf5ae0c`,但总监 2026-08-29T02:47Z 已**撤回**「压实修好了 OD 停摆」这一归因,停摆机理目前**未解释**)。**一个停在 6 点的 OD 永远走不到这四个被修下标被消费的等级** ⇒ 若 `skill_point_stall.py` 在这波仍把 OD 列进 STALL 表,则本条的空读数**不可解释**,不要写成「odbuild 无效」,而是把它退回并等 #290。",
       "acceptance": "同一波带 OD 的语料,armed 与 baseline 两腿都要读,并按铁律 4(i) **分层给 ab / ba 两个读数**(两层反号 = 噪声,不入结论):\n(1) **前置门**:先跑 `python3 tools/batch_test/behavioral/skill_point_stall.py`。**OD 若仍在 STALL 表里,(2)(3) 的零读数一律标记为 UNINTERPRETABLE 并退回本条**(见 question 的排序依赖)。带分母:OD 出现的局数 / 其中 STALL 的局数。\n(2) **条件 (a) 主判据**:armed 腿上 `obsidian_destroyer_objurgation` 的**最终 rank 分布**,按局给分母,报**均值 + 各 rank 的占比**(铁律 4(ii):整数小值域不报中位数)。预登记:armed 腿 `rank >= 1` 的占比应显著高于 baseline 腿的 **0**;baseline 腿任何一局出现 `rank >= 1` 都是**本条前提被证伪**,请点名该局。\n(3) **条件 (a) 副判据**:armed 腿上 OD 的 `obsidian_destroyer_objurgation` 施法次数(每局均值 + 零次局占比)。预登记:baseline 腿恒为 0(rank 0 不可施法)。**这一格若 armed 也接近 0 而 rank 却起来了**,那么问题在 `X.ConsiderObjurgation` 的开火条件而不在 build,请交回英雄组而不是判 odbuild 无效。\n(4) **条件 (b)**:粗粒度胜负,只问「有没有明显负面」,不做显著性检验。\n⚠️ 语料保质期:`dem21-expire-21d`。",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一带 obsidian_destroyer 载体的波次(搭车,零 EC2 增量,零新波次)",
+        "at": "2026-08-29T10:xxZ",
+        "ref": "test_set.md §CF(裁定全文);提议 §CC;queue hero-22",
+        "note": "**ROUTED_RIDESHARE —— 路由裁定,不是对请求前提的背书**(沿 §BF.2 / §AZ.5 的先例措辞)。两条的共同形状:**搭车、零 AWS 增量、不申请专波**,卡住它们的既不是名额也不是钱,只是一个路由裁定 ⇒ **当场放行**(铁律 §BB.4:搭车提议的唯一成本就是不被裁)。⚠️ **边界照抄不要外推**:总监核了两条的**入集资格**(真实帧 fixture、变异台、turbo-only 单合取 gate、`bots/` 事后逐字节还原),**没有**逐条复核机制论证的每一步 —— 读数回来之后每一条仍要各自的实质裁定。⚠️ **本条迟到了**:两条分别在 05:xxZ / 07:xxZ 到达,开工自检连续两轮点名 `OTHER (routing/slot ruling still owed)`,上一轮总监(07:07Z)明写「留下一轮,别掉棒」。§BB.4 要求搭车提议**在到达那一轮**被裁,实际用了三轮 —— 记录在案,不追究,归因是那两轮的工作单元都被主干红占满。\n\n**hero-22 `odbuild` 专属两条**:\n(1) **入集通过**,armed 成员串 42 → 44(与 hero-23 同轮)。资格依据:真实帧 `tests/fixtures/f_260819_222559_od_eclipse_solo.lua`(11 级 OD、objurgation rank 0)、变异 6/6 全红对照绿、`tests/test_od_build_objurgation.lua` §5 把「只差那四处 `4 → 3`」钉成断言、turbo-only 单合取 gate ⇒ **未 arm 时逐字复现出厂行**,已发布默认行为零变化。\n(2) ⭐ **收割顺序的硬依赖照单全收,并且总监把它抬成前置门而不是注意事项**:`skill_point_stall.py` 若在该波仍把 OD 列进 STALL 表,则 (2)(3) 的零读数一律 **UNINTERPRETABLE 并退回本条**,**不许**写成「odbuild 无效」。理由是 GH #290:「压实修好了 OD 停摆」这一归因已于 2026-08-29T02:47Z **被总监撤回**,停摆机理目前**未解释** —— 一个停在 6 点的 OD 走不到那四个被修下标被消费的等级,所以那个零测的是停摆不是 build。**这正是「测过了没效果」这句话最容易被错写下来的地方。**"
+      }
     },
     {
       "id": "hero-23",
@@ -935,7 +942,14 @@
       "question": "已落地(2026-08-29 英雄组,state.json:wkqdmg_20260829,入集提议 test_set.md §CD):`bots/BotLib/hero_skeleton_king.lua` 新增 `X.wk_GetBlastKillDamage`,turbo-only、`J.IsSoakCandidate('wkqdmg')`,只被 X.ConsiderQ 的**英雄**击杀确认消费。gate off 逐字复现出厂的 `nDamage * 1.68`;armed 取 `min(出厂, 命中 + dot每秒*dot时长)`,两个值都从句柄读(引擎会把 trained talent 折进去,GH #228)。\n\n**这是纯收窄**:armed 只能撤回一个已声明的击杀,不能造一个(rank 2+ 且 t10 天赋到手后诚实读数反超出厂,`min` 就是为此)。\n\n**要买的是执行核验,不是显著性**:armed 腿上 Q 少放在哪些目标上,那些目标此后是否仍被别的手段收掉。",
       "acceptance": "(1) armed 腿上确实出现「出厂会开火、armed 不开火」的实例(帧证据:目标血量落在 min 的两侧);若一例都没有,先问载体供给(该波有没有 skeleton_king、Q 有没有到 rank 2+、英雄有没有到 10 级)再下结论,**不许**直接读成「测过了没效果」。\n(2) 条件 (b):胜负无明显负面(粗粒度,非显著性)。\n(3) ⚠️ 预登记一条:本条的价值随**英雄等级**走(t10 天赋把 dot 时长翻倍),而 turbo 局 ~20 分钟。若该波 WK 的等级分布压根没到 10,读数按 UNINTERPRETABLE 退回,并把等级分布一起交出来 —— 这与 hero-10 的 (4) 是同一族的地平线问题。\n(4) 顺带请求(零额外成本):同一批帧上记录 WK 的 Q 施放中,目标在 5 秒内是否死亡 —— 这是给「没有建模的那一半」(眩晕+减速换来的平A)第一次定价的语料。",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一带 skeleton_king 载体的波次(搭车,零 EC2 增量,零新波次)",
+        "at": "2026-08-29T10:xxZ",
+        "ref": "test_set.md §CF(裁定全文);提议 §CD;queue hero-23",
+        "note": "**ROUTED_RIDESHARE —— 路由裁定,不是对请求前提的背书**(沿 §BF.2 / §AZ.5 的先例措辞)。两条的共同形状:**搭车、零 AWS 增量、不申请专波**,卡住它们的既不是名额也不是钱,只是一个路由裁定 ⇒ **当场放行**(铁律 §BB.4:搭车提议的唯一成本就是不被裁)。⚠️ **边界照抄不要外推**:总监核了两条的**入集资格**(真实帧 fixture、变异台、turbo-only 单合取 gate、`bots/` 事后逐字节还原),**没有**逐条复核机制论证的每一步 —— 读数回来之后每一条仍要各自的实质裁定。⚠️ **本条迟到了**:两条分别在 05:xxZ / 07:xxZ 到达,开工自检连续两轮点名 `OTHER (routing/slot ruling still owed)`,上一轮总监(07:07Z)明写「留下一轮,别掉棒」。§BB.4 要求搭车提议**在到达那一轮**被裁,实际用了三轮 —— 记录在案,不追究,归因是那两轮的工作单元都被主干红占满。\n\n**hero-23 `wkqdmg` 专属两条**:\n(1) **入集通过**,armed 成员串 42 → 44(与 hero-22 同轮)。资格依据:**纯收窄** —— armed 取 `min(出厂, 命中 + dot每秒*dot时长)`,只能撤回一个已声明的击杀、不能造一个;两个值都从句柄读(引擎把 trained talent 折进去,GH #228);gate off 逐字复现出厂的 `nDamage * 1.68`;创兵那一处**故意不动**,域比出厂窄。\n(2) **载体供给先于结论**(申请方自己写进 acceptance 的第 (1)(3) 条,总监照准并加重):一例「出厂会开火、armed 不开火」都没有时,**先问载体供给**(该波有没有 skeleton_king、Q 有没有到 rank 2+、英雄有没有到 10 级),**不许**直接读成「测过了没效果」。本条价值随**英雄等级**走(t10 天赋把 dot 时长翻倍)而 turbo 局 ~20 分钟 ⇒ WK 等级分布压根没到 10 的波次,读数按 UNINTERPRETABLE 退回并**把等级分布一起交出来**。这与 hero-10 的 (4) 是同一族的**地平线问题**。"
+      }
     }
   ],
   "done": [

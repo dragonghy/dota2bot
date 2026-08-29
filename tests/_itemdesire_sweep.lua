@@ -16,6 +16,7 @@
 --   C <base|honest> <key> <n>            a counter bucket
 --   MATURE <fixture> <hero> <level> <H|F> <rest01>
 --   CAST <base|honest> <fixture> <hero> <fn> <item>
+--   CRASHAT <base|honest> <n> <stripped jmz_func source line>   (text runs to EOL)
 --   LOADFAIL <hero> <n>
 --   DONE
 -- The test treats absence of the final DONE line as a failed subprocess.
@@ -47,6 +48,34 @@ local function fixture_files()
     return files
 end
 
+-- [director 2026-08-29, GH #221] A CRASH SITE IS NAMED BY ITS SOURCE TEXT, NOT
+-- BY ITS LINE NUMBER.  The counters used to be keyed `crash_<lineno>` off the
+-- runtime error text, and the test pinned `crash_2704 == 178`.  A line number is
+-- a COORDINATE: any insertion above the site in jmz_func.lua renames the key,
+-- the old name falls through the default-0 metatable, and the pin reads 0 --
+-- which is why the recorded failures said `moved: 0` rather than some
+-- neighbouring count.  That happened at least twice (2597 -> 2704 -> ?, both
+-- caused by unrelated landings in a file two parties never read together), each
+-- time costing a red trunk and a re-pin round, and each time the STATEMENT at
+-- the site was byte-identical.  Keying on the statement makes the rename
+-- impossible for a pure insertion and keeps a genuine move of the crashing
+-- expression loud.  Same remedy as test_level_gate_census.lua's
+-- `(file, whitespace-stripped source text)` key.
+local jmz_source_line = (function()
+    local lines = {}
+    local fh = assert(io.open('bots/FunLib/jmz_func.lua', 'r'),
+        'jmz_func.lua is not readable -- crash sites cannot be named')
+    for line in fh:lines() do lines[#lines + 1] = line end
+    fh:close()
+    return function(nLine)
+        if not nLine then return '(not in jmz_func.lua)' end
+        local s = lines[tonumber(nLine)]
+        if not s then return '(jmz_func.lua:' .. nLine .. ' is past end of file)' end
+        -- Whitespace-stripped, so re-indentation is not a rename.
+        return (s:gsub('%s+', ' '):gsub('^ ', ''):gsub(' $', ''))
+    end
+end)()
+
 local out = io.stdout
 
 --- One full pass. `honest_tp` supplies the TP scroll handle the two clauses the
@@ -62,6 +91,7 @@ local function sweep(tag, honest_tp)
         c[k] = c[k] + 1
     end
     local load_fail = {}
+    local crash_src = {}
 
     for _, path in ipairs(fixture_files()) do
         local ok0, _, _, heroes = pcall(rf.load, path)
@@ -146,7 +176,10 @@ local function sweep(tag, honest_tp)
                             local okt, terr = pcall(_G.ItemUsageThink)
                             if not okt then
                                 bump('crash_total')
-                                bump('crash_' .. (tostring(terr):match('jmz_func%.lua:(%d+)') or 'other'))
+                                local nLine = tostring(terr):match('jmz_func%.lua:(%d+)')
+                                bump('crash_' .. (nLine or 'other'))
+                                local sSrc = jmz_source_line(nLine)
+                                crash_src[sSrc] = (crash_src[sSrc] or 0) + 1
                             elseif #log == 0 then
                                 bump('no_action')
                             else
@@ -168,6 +201,11 @@ local function sweep(tag, honest_tp)
 
     for _, k in ipairs(order) do
         out:write(string.format('C %s %s %d\n', tag, k, c[k]))
+    end
+    -- The source text is the LAST field precisely because it contains spaces;
+    -- the `C` grammar's `%S+` key could never have carried it.
+    for s, v in pairs(crash_src) do
+        out:write(string.format('CRASHAT %s %d %s\n', tag, v, s))
     end
     if not honest_tp then
         for n, v in pairs(load_fail) do

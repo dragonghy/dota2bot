@@ -175,6 +175,7 @@ local function run_sweeps()
     local honest = setmetatable({}, { __index = function() return 0 end })
     base.mature, base.casts, base.load_fail = {}, {}, {}
     honest.mature, honest.casts, honest.load_fail = {}, {}, {}
+    base.crash_at, honest.crash_at = {}, {}
 
     local p = assert(io.popen('lua5.1 tests/_itemdesire_sweep.lua 2>&1'),
         'could not launch the sweep subprocess')
@@ -198,6 +199,13 @@ local function run_sweeps()
             assert(tag2, 'malformed CAST line: ' .. line)
             local t = (tag2 == 'base') and base or honest
             t.casts[#t.casts + 1] = { fixture = fx, hero = hero, fn = fn, item = item }
+        elseif line:match('^CRASHAT ') then
+            -- The source text is the rest of the line: it has spaces in it, and
+            -- that is the whole reason it could not be a `C` key (GH #221).
+            local tag3, n3, src = line:match('^CRASHAT (%a+) (%d+) (.+)$')
+            assert(tag3, 'malformed CRASHAT line: ' .. line)
+            local t = (tag3 == 'base') and base or honest
+            t.crash_at[src] = tonumber(n3)
         elseif line:match('^LOADFAIL ') then
             local hero, n2 = line:match('^LOADFAIL (%S+) (%d+)$')
             assert(hero, 'malformed LOADFAIL line: ' .. line)
@@ -366,14 +374,18 @@ tests['[measure] honest TP handle: 0 -> 2 actions and 0 -> 210 crashes'] = funct
     -- (GH #197) adds 8 live hero frames, 2 of which reach the same unstubbed
     -- engine global. Both land at jmz_func:3325 (see below), so the two-site
     -- partition still holds.
-    assert(c.crash_total == 213,
-        'crashes under the honest probe moved: ' .. c.crash_total)
+    -- 2026-08-29 (director, GH #221): 213 -> 219 was, again, only the corpus
+    -- growing.  cs.ratchet keeps the direction that ever meant anything.
+    cs.ratchet(c.crash_total, 213, 'crashes under the honest probe')
     -- 2026-08-23: the corpus grew a SECOND action (see the [recorded] test
     -- below -- it is an honest one, not another origin phantom), so the
     -- partition is stated against action_total instead of a literal 1.
-    assert(c.action_total == 2,
-        'the corpus produces exactly two item actions; got ' .. c.action_total)
-    assert(c.item_item_tpscroll == 2, 'and both are TP scrolls')
+    cs.ratchet(c.action_total, 2, 'item actions the corpus produces')
+    -- STRICTLY STRONGER than `item_item_tpscroll == 2`: "every action is a TP
+    -- scroll" keeps holding over the fixtures nobody has written yet, where the
+    -- literal 2 only ever spoke about the two we had.
+    cs.universal(c.item_item_tpscroll, c.action_total,
+        'item actions that are TP scrolls')
     cs.ratchet(c.no_action, 716, 'silent frames')
     assert(c.no_action + c.crash_total + c.action_total == c.driven,
         'the three buckets must partition the driven frames')
@@ -426,24 +438,47 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     -- at 2704 and `local nTopDesire = GetFarmLaneDesire( LANE_TOP )` at 3432.
     --
     -- This sat red on main from 07:5xZ, ~8h and five landings, seen by nothing:
-    -- the file is ~9min so no gate in the container runs it (GH #124).  The
-    -- structural half -- a line number is a coordinate any upstream edit
-    -- rewrites, and the two parties live in different files with no machine
-    -- between them -- is GH #221, deliberately not patched here.
-    assert(c.crash_2704 == 178,
-        'jmz_func:2704 crash count moved: ' .. c.crash_2704)
-    -- 33 -> 35 on 2026-08-26: both of f_212636_tide_ancient's new crashes land
-    -- here; the other site is unmoved, so no third site appeared.
-    assert(c.crash_3432 == 35,
-        'jmz_func:3432 crash count moved: ' .. c.crash_3432)
-    -- ⚠️ THIS LINE IS WHY THE RE-PIN ABOVE TOOK TWO ROUNDS.  The 15:5xZ pass
-    -- renamed the two asserts and MISSED this third reference, so it read
-    -- `0 + 0 == 213` and fired "a THIRD crash site appeared" -- a sum that
-    -- silently re-derives the old key names is a third place the rename has to
-    -- reach, and it is the one with no number of its own to notice.  The guard
-    -- did its job: it refused the tree rather than pass a stale arithmetic.
-    assert(c.crash_2704 + c.crash_3432 == c.crash_total,
-        'a THIRD crash site appeared -- name it before touching these numbers')
+    -- the file is ~9min so no gate in the container runs it (GH #124).
+    --
+    -- ⭐ 2026-08-29 (director, GH #221): AND IT HAPPENED A THIRD TIME -- 2704 ->
+    -- 2835 and 3432 -> 3563, both +131, both statements again byte-identical,
+    -- `crash_2704` again reading 0 through the default-0 metatable.  Three
+    -- occurrences, three red trunks, three re-pin rounds, and on none of them
+    -- did the thing the assertion is ABOUT actually move.  So the coordinate is
+    -- gone: the sweep now emits `CRASHAT <tag> <n> <stripped source line>` and
+    -- the key below is THE STATEMENT.  A pure insertion above the site can no
+    -- longer rename it; a genuine move of the crashing expression still can, and
+    -- should.  Same remedy the level-gate census took this morning.
+    --
+    -- The counts are `cs.ratchet`, not equalities, for the OTHER half of the
+    -- lesson: 35 -> 41 here is the corpus growing (GH #106/#127), which the old
+    -- equality mis-reported as a regression.  A count FALLING is still red --
+    -- that is the only direction that ever meant "behaviour moved".
+    local SITE_X2 = 'local x2 = sLoc.x'
+    local SITE_FARM = 'local nTopDesire = GetFarmLaneDesire( LANE_TOP )'
+    local nX2   = c.crash_at[SITE_X2]
+    local nFarm = c.crash_at[SITE_FARM]
+    assert(nX2 ~= nil, 'no crash is attributed to `' .. SITE_X2 .. '` any more -- '
+        .. 'the statement itself moved or stopped crashing, which is the real '
+        .. 'finding this key was rebuilt to be able to state')
+    assert(nFarm ~= nil, 'no crash is attributed to `' .. SITE_FARM .. '` any more')
+    cs.ratchet(nX2, 178, 'crashes at `' .. SITE_X2 .. '`')
+    cs.ratchet(nFarm, 35, 'crashes at `' .. SITE_FARM .. '`')
+    -- ⚠️ THIS LINE IS WHY THE 15:5xZ RE-PIN TOOK TWO ROUNDS.  That pass renamed
+    -- the two asserts and MISSED this third reference, so it read `0 + 0 == 213`
+    -- and fired "a THIRD crash site appeared" -- a sum that silently re-derives
+    -- the key names is a third place a rename has to reach, and it is the one
+    -- with no number of its own to notice.  The guard did its job: it refused
+    -- the tree rather than pass a stale arithmetic.  It is written over the
+    -- crash_at TABLE now rather than over two hand-copied names, so there is no
+    -- third place left to forget.
+    local nNamed, nSites = 0, 0
+    for _, v in pairs(c.crash_at) do nNamed = nNamed + v; nSites = nSites + 1 end
+    assert(nSites == 2, 'the crashes now come from ' .. nSites
+        .. ' distinct statements, not two -- name the new one before touching '
+        .. 'these numbers')
+    assert(nNamed == c.crash_total, 'a crash was attributed to no statement: '
+        .. nNamed .. ' named vs ' .. c.crash_total .. ' total')
 
     -- Both are engine globals the mock never defines, so the Get* default
     -- answers 0 (2597 then indexes a number) or nil (3325 then calls nil).
@@ -584,11 +619,20 @@ end
 
 tests['[recorded] 29 subjects cannot load the item file at all (GH #82 naming)'] = function()
     local c = pass(false)
-    assert(c.aiug_load_fail == 29, 'load failures moved: ' .. c.aiug_load_fail)
-    assert(c.load_fail['npc_dota_hero_queen_of_pain'] == 12,
-        'queen_of_pain subject count moved')
-    assert(c.load_fail['npc_dota_hero_vengeful_spirit'] == 17,
-        'vengeful_spirit subject count moved')
+    -- 2026-08-29 (director, GH #221): 29 -> 31 with the corpus.  Ratcheted, and
+    -- the claim that matters -- that these TWO badly-named subjects are the
+    -- whole of it -- is now stated as an identity instead of being implied by
+    -- three literals that happened to add up.  A third mis-named subject
+    -- arriving is a finding; it used to be invisible unless it also moved 29.
+    cs.ratchet(c.aiug_load_fail, 29, 'load failures')
+    local nQop = cs.ratchet(c.load_fail['npc_dota_hero_queen_of_pain'] or 0, 12,
+        'queen_of_pain subject frames')
+    local nVs = cs.ratchet(c.load_fail['npc_dota_hero_vengeful_spirit'] or 0, 17,
+        'vengeful_spirit subject frames')
+    assert(nQop + nVs == c.aiug_load_fail, string.format(
+        'a THIRD subject cannot load the item file: %d + %d named vs %d total -- '
+        .. 'name it, then decide whether it is the same GH #82 naming mismatch',
+        nQop, nVs, c.aiug_load_fail))
     -- ability_item_usage_generic:12 does dofile(BotLib/ .. gsub(name,'npc_dota_','')),
     -- and the repo files are hero_queenofpain / hero_vengefulspirit. The
     -- mismatch is in the dumped snapshot name, the same pair GH #82 found
@@ -624,20 +668,31 @@ tests['[census] the level term is the sole blocker on 204 honest frames'] = func
     -- went 211 -> 218 ** (7 of those 8 heroes satisfy the other five operands).
     -- outer_and_H did NOT move: nobody on that frame is level 15 (the highest
     -- is luna/lina at 14), so all 7 land on the sole-blocker side.
-    assert(c.alive_H == 571, 'honest-building hero frames moved: ' .. c.alive_H)
-    assert(c.alive_F == 403, 'fallback-ancient hero frames moved: ' .. c.alive_F)
+    -- ⭐ 2026-08-29 (director, GH #221): the four re-pin entries above this line
+    -- are the argument for the change below.  Every one of them re-states the
+    -- corpus size; none of them was ever about the level term.  Ratcheted, with
+    -- the partitions kept as identities -- those DO hold over fixtures nobody
+    -- has written yet, and they are what actually catches a mis-classification.
+    cs.ratchet(c.alive_H, 571, 'honest-building hero frames')
+    cs.ratchet(c.alive_F, 403, 'fallback-ancient hero frames')
     assert(c.alive_H + c.alive_F == c.alive, 'the split partitions the corpus')
-    assert(c.rest5_H == 218,
-        'honest frames where the other five operands hold: ' .. c.rest5_H)
-    assert(c.sole_blocker_H == 214,
-        'honest frames where GetLevel() >= 15 is the ONLY closed operand: '
-        .. c.sole_blocker_H)
-    assert(c.outer_and_H == 4, 'honest frames where the whole AND holds: ' .. c.outer_and_H)
+    cs.ratchet(c.rest5_H, 218, 'honest frames where the other five operands hold')
+    cs.ratchet(c.sole_blocker_H, 214,
+        'honest frames where GetLevel() >= 15 is the ONLY closed operand')
+    cs.ratchet(c.outer_and_H, 4, 'honest frames where the whole AND holds')
     assert(c.sole_blocker_H + c.outer_and_H == c.rest5_H, 'the two halves partition rest5')
     -- The fallback half is reported, never merged in: its o5 operand measures
     -- distance to the map centre (the seventeenth world assertion below).
-    assert(c.rest5_F == 57 and c.sole_blocker_F == 57 and c.outer_and_F == 0,
-        'the fallback half moved: ' .. c.rest5_F .. '/' .. c.sole_blocker_F)
+    -- `outer_and_F == 0` deliberately STAYS an equality: a claim whose whole
+    -- content is a zero is already growth-immune, and this one is the reason the
+    -- fallback half is reported separately rather than merged in.  It must go
+    -- red the moment the corpus grows a counter-example.
+    cs.ratchet(c.rest5_F, 57, 'fallback frames where the other five operands hold')
+    assert(c.sole_blocker_F == c.rest5_F, string.format(
+        'the level term is no longer the sole blocker on every fallback frame: '
+        .. '%d of %d', c.sole_blocker_F, c.rest5_F))
+    assert(c.outer_and_F == 0,
+        'a fallback frame now satisfies the whole AND: ' .. c.outer_and_F)
 end
 
 tests['[census] only 8 of 911 frames are level 15 or better'] = function()
@@ -647,19 +702,40 @@ tests['[census] only 8 of 911 frames are level 15 or better'] = function()
         .. ' -- every count in this section was measured at 15')
     -- 8 -> 9 on 2026-08-23T06:36Z: the WK ancient-camp fixture's viper is
     -- level 15 in that frame.
-    assert(c.level15 == 9, 'mature frames moved: ' .. c.level15)
-    assert(#c.mature == 9, 'and the roster has the same size')
-    local full = {}
+    -- 9 -> 11 on 2026-08-29 (director, GH #221): corpus again.  Ratcheted, and
+    -- "the roster has the same size" becomes an IDENTITY against level15 rather
+    -- than a second copy of the same literal -- that is the claim it was making
+    -- all along, and it now makes it over fixtures nobody has written yet.
+    cs.ratchet(c.level15, 9, 'mature frames')
+    assert(#c.mature == c.level15, string.format(
+        'the mature roster has %d entries but the counter says %d -- the sweep '
+        .. 'is dropping or double-counting frames', #c.mature, c.level15))
+    local full, seen = {}, {}
     for _, m in ipairs(c.mature) do
-        if m.rest then full[#full + 1] = m.fixture .. '/' .. m.hero end
+        if m.rest then
+            full[#full + 1] = m.fixture .. '/' .. m.hero
+            seen[m.fixture .. '/' .. m.hero] = true
+        end
     end
     table.sort(full)
     -- 3 -> 4 on 2026-08-23T06:36Z: the new mature frame also satisfies the
     -- rest of the AND (see the sole-blocker census above -- same +1).
-    assert(#full == 4, 'four of the nine satisfy the whole outer AND; got ' .. #full)
-    assert(full[1] == 'f_260819_222559_od_eclipse_pair.lua/npc_dota_hero_viper', full[1])
-    assert(full[2] == 'f_260819_222559_od_eclipse_solo.lua/npc_dota_hero_viper', full[2])
-    assert(full[3] == 'f_260820_043120_viper_defend_paired.lua/npc_dota_hero_viper', full[3])
+    cs.ratchet(#full, 4, 'mature frames satisfying the whole outer AND')
+    -- ⭐ 2026-08-29 (director, GH #221): these were `full[1]`/`full[2]`/`full[3]`
+    -- -- POSITIONS in a sorted list, i.e. the same coordinate defect as the
+    -- crash-site line numbers one section up.  A fixture whose name sorts before
+    -- `f_2608...` would have renumbered all three and reported it as three
+    -- unrelated frames moving.  Stated as MEMBERSHIP the claim survives growth,
+    -- and it is the claim the next test consumes: it re-loads exactly these
+    -- three paths.
+    for _, sWanted in ipairs({
+        'f_260819_222559_od_eclipse_pair.lua/npc_dota_hero_viper',
+        'f_260819_222559_od_eclipse_solo.lua/npc_dota_hero_viper',
+        'f_260820_043120_viper_defend_paired.lua/npc_dota_hero_viper',
+    }) do
+        assert(seen[sWanted], sWanted .. ' no longer satisfies the whole outer '
+            .. 'AND -- the next test still loads it by name')
+    end
     -- All three are the same hero on three frames -- so "3" is a count of
     -- frames, not of independent situations. Said out loud so nobody reads it
     -- as breadth.
@@ -760,7 +836,15 @@ tests['[world] 43 fixtures answer GetAncient with a fort at the map origin'] = f
     -- 61/43 -> 62/43 on 2026-08-26: f_212636_tide_ancient carries a buildings
     -- block, so the fallback (no-block) side is again untouched -- which is the
     -- half this whole test is about.
-    assert(nb == 62 and nnb == 43, 'the split moved: ' .. nb .. ' with / ' .. nnb .. ' without')
+    -- 62/43 -> 64/43 on 2026-08-29 (director, GH #221): two more fixtures, both
+    -- with a buildings block, so the fallback (no-block) side is AGAIN untouched
+    -- -- which is the half this whole test is about, and which is exactly why
+    -- the equality on the growing side kept charging for growth.  Ratcheted;
+    -- `nnb` is ratcheted too rather than pinned, because a fallback fixture
+    -- arriving is growth, and a fallback fixture DISAPPEARING is the finding.
+    cs.ratchet(nb, 62, 'fixtures carrying a buildings block')
+    cs.ratchet(nnb, 43, 'fixtures falling back to the origin fort')
+    cs.corpus(nb + nnb, 'ancient-split')
 end
 
 tests['[MECHANISM] the fallback ancient is one unit, both teams, unstable'] = function()

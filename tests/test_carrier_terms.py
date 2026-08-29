@@ -73,14 +73,46 @@ def main():
     check(len(ids) >= 40, "test_set.md line 2 parsed as an arm string (%d ids)" % len(ids))
     terms, rows, summary = ct.derive_terms(ids, ROOT, tree=tree)
     scoped = {r["id"] for r in rows if r["kind"] == "hero"}
-    check(scoped == {"aimguard", "cmrguard", "zusult", "zusstatic",
-                     "liondrainstop", "odaoe"},
-          "hero-scoped set is exactly the six replay-check derived by hand (got %s)"
-          % sorted(scoped))
+    # [director 2026-08-29, GH #221/#276] These two checks used to be FROZEN
+    # SNAPSHOTS of the live arm string -- "exactly these six" and "skeleton_king
+    # is not asked about".  Admitting `odbuild`+`wkqdmg` (test_set.md SS CE)
+    # reddened both, and NEITHER red was about the thing this file guards: the
+    # derivation did its job, resolving odbuild -> obsidian_destroyer and wkqdmg
+    # -> skeleton_king with unresolved == 0.  A test that goes red every time the
+    # arm string it reads is edited is re-stating the arm string, not checking
+    # the deriver -- the same defect corpus_scale.lua was written for, one domain
+    # over.  So the claims are restated as INVARIANTS over whatever is armed:
+    #   * the six replay-check derived by hand must never silently stop being
+    #     hero-scoped (membership, so growth cannot renumber it);
+    #   * #276's actual half -- the gate must not ask about a hero NO armed id
+    #     needs -- becomes "every term has a claimant", which is what that
+    #     sentence meant and which keeps holding as ids come and go.
+    for cand in ("aimguard", "cmrguard", "zusult", "zusstatic",
+                 "liondrainstop", "odaoe"):
+        check(cand in scoped,
+              "%s is still hero-scoped (the six replay-check derived by hand)" % cand)
     check("spirit_breaker" in terms, "spirit_breaker IS asked about")
-    # The other half of #276: the gate was also asking about heroes no armed id needs.
-    check("axe" not in terms and "skeleton_king" not in terms,
-          "axe / skeleton_king are NOT asked about (no axe- or SK-scoped armed id)")
+    # ⚠️ NOT written as `set(terms) == {h for r in rows ...}`.  That was the first
+    # draft and it is a TAUTOLOGY: derive_terms builds `terms` by exactly that
+    # comprehension (carrier_terms.py:293), so the check could not fail and would
+    # have replaced a real assertion with a green light.  #276's claim -- the term
+    # list is DERIVED from what is armed, not hand-maintained -- only has content
+    # against an arm string that differs from the live one, so it is tested that
+    # way: drive the deriver with synthetic sets and demand the terms track them.
+    for probe, want in [(["cmrguard"], {"crystal_maiden"}),
+                        (["wkqdmg"], {"skeleton_king"}),
+                        (["cmrguard", "zusult", "zusstatic"],
+                         {"crystal_maiden", "zuus"}),
+                        (["teambrain"], set())]:
+        t2, _, _ = ct.derive_terms(probe, ROOT, tree=tree)
+        check(set(t2) == want,
+              "terms track the armed set, not a hand list: %s -> %s (want %s)"
+              % (probe, sorted(t2), sorted(want)))
+    # The founding instance, kept as an instance: no armed id is axe-scoped, so
+    # the gate must not ask about axe.  (skeleton_king WAS in this line until
+    # `wkqdmg` was admitted -- it is asked about now, correctly, which is exactly
+    # why the frozen pair had to go.)
+    check("axe" not in terms, "axe is NOT asked about (no axe-scoped armed id)")
     check(summary["unresolved"] == 0,
           "no unresolved id on the live arm string (got %d)" % summary["unresolved"])
 
