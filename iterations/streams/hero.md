@@ -22,6 +22,25 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-49. **`hero-22` 的前置门跑了没过;`odbuild` 的重测被 GH #320 挡住;下一棒仍然回到 -43a**
+   **2026-08-29T23:00Z done —— 认领 GH #309 §一(批测台与录像组各自独立点名给本组、
+   且明说不代跑的那一件事)。`bots/`/`game/` **零行改动**;无新 gate id;
+   `odbuild` 的门与 armed 状态一字未动(仍 gated、未 arm、不是 live);
+   **零 AWS 支出**(只有 S3 GET:12 份归档 `.dem` + 缓存 dumper);不申请波次。
+   新文件 `tools/batch_test/behavioral/od_stall_leg.py`(`--selfcheck` 12/12);
+   `state.json` 新增 `odbuild_PREGATE_20260829`;`queue.json` 的 `hero-22` 置
+   `returned_uninterpretable`。报告 `iterations/reports/hero/20260829T230000Z.md`。**
+   - **⭐⭐ 前置门 FAIL**:W25 树 `b51bac77` 的 12 份 `.dem`、9 局有 OD,**4/9 仍在 STALL 表**
+     (19–23 级 / **6 点** / `objurgation` 从未升级 / 冻结 78–83%)⇒ **`hero-22` UNINTERPRETABLE 退回**。
+   - **⭐⭐ 顺带买到的算术(GH #320,归 harness)**:armed 行第三点就是 objurgation ⇒
+     跑了它的局 3 级起 rank ≥1;而 `20260829_124418` **盖着 armed 章、OD 在 armed 侧、
+     收在 rank 0 且逐位等于出厂行预测** ⇒ **那局跑的是出厂行**。同 run/种子/侧的前一局到了 rank 4。
+     **它约束每个 id 的 armed 腿,不只 odbuild。**
+   - **教训(与 -47 的 ratchet 教训同族,但更便宜)**:队伍 id 是**引擎的 2/3**,
+     拿去和章里的 `radiant`/`dire` 字符串比,**每行都读成 baseline 而表面完全合理**。
+     捅破它的不是复核,是那条**单向证伪器**(rank 0 才是证明)。⇒ 分腿读数**必须**带一条
+     与腿无关的算术验尸,否则腿标错了没人看得出来。
+
 -48. **GH #314 的候选 1 是真的,而 issue 提议的 fixture 结构上判不了它;下一棒仍然回到 -43a**
    **2026-08-29T19:49Z done —— 认领 GH #314(`[hero]`,replay-check 19:07Z 开,带两帧证据)。
    `bots/`/`game/` **零行改动**;无新 gate id;`liondrainstop` 的门与 armed 状态一字未动
@@ -2652,6 +2671,38 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T23:00Z(报告 `iterations/reports/hero/20260829T230000Z.md`;轴 **GH #309 §一
+  ——`hero-22` 的前置门**;**门跑了没过,`hero-22` 已退回;本组下一棒仍是 -43a**)——
+  自检 **exit 0**;stable-v1/v2 锚点 ok。owner 四条优先项**没有一条球在本组**。
+  **`bots/`/`game/` 零行改动;无新 gate id;`odbuild` 的门与 armed 状态一字未动
+  (仍 gated、未 arm、不是 live);零 AWS(只有 S3 GET);不提批测请求。**
+  新文件 `tools/batch_test/behavioral/od_stall_leg.py`(`--selfcheck` **12/12**);
+  `state.json` 新增 `odbuild_PREGATE_20260829`;`queue.json` 的 `hero-22` 置
+  `returned_uninterpretable`。
+  - **⭐⭐ 主读数:前置门 FAIL。OD 仍在 STALL 表 —— W25 树 `b51bac77` 的 12 份 `.dem` 里
+    9 局有 OD,**4/9 是 STALL**(英雄 19–23 级、**6 个技能点**、`objurgation` 一级没点、
+    冻结 78–83%)。⇒ 按登记分支 **`hero-22` = UNINTERPRETABLE,退回**,
+    `odbuild` 的 W25 波读数**不得引用**。这一条**不依赖任何腿间比较**。
+  - **⭐⭐ 一行算术买到的更硬的东西(已开 GH #320,归 harness)**:armed 行
+    `{2,1,3,2,2,6,...}` 的**第三点就是 objurgation** ⇒ 跑了 armed 行的局英雄 3 级起
+    rank ≥1。而 `20260829_124418` 盖章 `s1603:radiant`、**OD 就在 armed 侧**,
+    却收在 objurgation **rank 0** 且技能表与出厂行预测**逐位相同**
+    ⇒ **那一局跑的是出厂行,而它自己的章说它 armed**。不是部署顺序:
+    同 run/种子/侧的**前一局**到了 rank 4。**它约束的是每个 id 的 armed 腿有多少真 armed。**
+  - **`odbuild` 条件 (a) = 部分 WORKING,未买到**:3/4 armed 局 objurgation 到 rank 4
+    (出厂行产不出)⇒ 机制在真实帧上看见了;但门没过 + 第 4 局与章矛盾 ⇒
+    **不登记 (a),不登记任何效应量**(n=9,OD 上**没有** ab/ba 两层,
+    `ARMED 1/4 vs baseline 2/2` **不许**读成 odbuild 降低了 stall)。
+  - **⚠️ 我自己先踩了一次**:第一版拿队伍 id(引擎 2/3)去比章里的字符串,
+    **每一行都读成 baseline** 且表面合理;是那行算术捅破的。selfcheck 第 1 例现在钉住它。
+  - **⚠️ 三条记录不代改**:(i) 录像组 16:19Z 报告称 W25「dem-backed 90 局」,而
+    `replays/` 下带该树全 sha 的 `.dem` **只有 12 份**(全天四棵树共 52 份);
+    (ii) `state.json:odbuild_20260829` 说 #290 item 1「落地于 `8cf5ae0c`」——
+    **该 commit 不是 origin/main 的祖先**,同内容经 `f13ada65` 进 main,**确在 W25 树里**;
+    (iii) **`CompactSkillList` 在 W25 树里在,却没挡住这 4 局** —— 其守卫要 `[1] == nil`,
+    而 OD 这条路上 `[4]` 解析出的是 **`generic_hidden` 这个真名字**,守卫**结构上够不着**。
+  - **不主张**:出厂行为什么能收在 rank 0 **以外**(两局 WARMUP 是 3 和 4)——
+    离线分不开「门为假」与「第二条路改写 build」,**记为 OPEN 写进 #320,两个方向都不认**。
 - 2026-08-29T19:49Z(报告 `iterations/reports/hero/20260829T194937Z.md`;轴 **GH #314
   ——`liondrainstop` 那 2 条没释放的 channel**;**#314 的候选 1/2 结清并把棒交给 harness 侧,
   本组下一棒仍是 -43a**)——
