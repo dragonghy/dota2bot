@@ -334,15 +334,27 @@ tests['LIMIT: offline every GetSpecialValue key reads 0, armed included'] = func
         'and so does a key that never existed -- the mock cannot tell them apart')
 end
 
-tests['LIMIT: GetActualIncomingDamage is 0, so the firing side cannot be driven'] = function()
+-- ⭐ LIMIT LIFTED 2026-08-29 (hero stream). This case used to assert
+-- `GetActualIncomingDamage == 0` -- the 22nd world assertion of GH #154 -- and
+-- concluded the firing side could not be driven. The zero was a MISSING MOCK
+-- DEFAULT, not a property of the frames: tests/mock/bot_api.lua now answers the
+-- raw damage (no reduction modelled, an upper bound), pinned by
+-- tests/test_mock_incoming_damage_default.lua. The follow-up this case's own text
+-- asked for -- "a firing-side fixture becomes possible and this file should grow
+-- one" -- is NOT taken here: it is its own work unit and needs a frame where the
+-- static-field percentage decides the verdict. Baton: hero.md backlog.
+tests['LIMIT LIFTED: the firing side is now drivable, so this file owes a fixture'] = function()
     local _, _, bot = load_zuus(true, true)
+    local living = 0
     for _, e in pairs(GetUnitList(UNIT_LIST_ENEMY_HEROES)) do
         if e ~= nil and e:IsAlive() then
-            assert(e:GetActualIncomingDamage(500, DAMAGE_TYPE_MAGICAL) == 0,
-                'the 22nd world assertion (GH #154) still holds; if it stops holding, '
-                .. 'a firing-side fixture becomes possible and this file should grow one')
+            living = living + 1
+            assert(e:GetActualIncomingDamage(500, DAMAGE_TYPE_MAGICAL) == 500,
+                'the mock models no reduction now; read tests/mock/bot_api.lua '
+                .. 'before concluding anything from a number here')
         end
     end
+    assert(living > 0, 'the frame must carry living enemies, or this proves nothing')
 end
 
 -- ---------------------------------------------------------------------------

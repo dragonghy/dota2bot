@@ -428,28 +428,70 @@ end
 
 -- ------------------------------------------------------------------ end to end
 
-tests['end to end: shipped reaches the loop, sees both enemies, and casts nothing'] = function()
-    local log, X, J, bot = run_skills(PAIR, false)
+-- ⭐⭐ REWRITTEN 2026-08-29 (hero stream), and the correction is load-bearing for
+-- how this file's lever should be read.
+--
+-- This case used to assert that shipped "casts nothing" on frame A, and read that
+-- as the shipped single-target exit refusing both enemies. THE REFUSAL WAS THE
+-- MOCK. `X.ConsiderSanitysEclipse`'s single-target exit ends in
+-- `J.CanKillTarget(enemyHero, ..., DAMAGE_TYPE_MAGICAL)`, and the mock declared no
+-- default for `GetActualIncomingDamage`, so the generic `^Get` fallthrough
+-- answered 0 -- no magical damage could kill anything, on any frame, in any hero
+-- file (tests/mock/bot_api.lua, pinned by
+-- tests/test_mock_incoming_damage_default.lua). With that corrected, shipped DOES
+-- fire on this frame: the medusa is at 227/230 HP and the estimated eclipse
+-- damage on her is 538.
+--
+-- WHAT SURVIVES AND WHAT DOES NOT:
+--   * the GAME-SIDE observation is untouched -- OD cast the ultimate zero times
+--     in 20260819_222559_slot1 and died 10 times holding it. That was measured on
+--     the replay, not in this mock;
+--   * this file's OFFLINE claim "the shipped loop refuses because neither enemy
+--     can be single-killed" does NOT survive as stated. Offline, with no
+--     reduction modelled, one of them can be;
+--   * so `odaoe`'s counterfactual on THIS frame is no longer "AoE instead of
+--     nothing" but "AoE covering both instead of a single-target cast on the
+--     medusa". The lever still changes the decision (the armed case below), but
+--     anybody sizing its VALUE must re-read that domain. Handed off, not
+--     resolved here: hero.md backlog + GH #54.
+--   * the honest boundary cuts both ways: "no reduction modelled" is an UPPER
+--     bound (heroes carry 25% base magic resistance), so the real match may sit
+--     between the two readings. A test that needs the real number must override
+--     GetActualIncomingDamage per unit and say so.
+tests['end to end: shipped fires the SINGLE-TARGET exit here (the refusal was the mock)'] = function()
+    local log, X, J, bot, heroes = run_skills(PAIR, false)
     local names = ability_names(log)
-    assert(not contains(names, ULT_NAME),
-        'the shipped single-target exit refuses this frame, got {'
-        .. table.concat(names, ',') .. '}')
-    -- This IS the bug, so "nothing was queued" is the correct shipped outcome
-    -- and cannot itself be the positive assertion. Instead pin that the frame
-    -- really drives the shipped code all the way into the loop that refuses:
     assert(J.IsGoingOnSomeone(bot),
         'the labelled mode mutation must put him in the shipped domain')
     local tEnemies = J.GetNearbyHeroes(bot, ULT_CAST_RANGE, true, BOT_MODE_NONE)
     assert(tEnemies ~= nil and #tEnemies == 2,
         'the shipped loop really had two enemies to look at, got '
         .. tostring(tEnemies and #tEnemies))
+    local medusa = heroes['npc_dota_hero_medusa']
+    assert(medusa:GetHealth() == 227,
+        'the executable enemy is the 227-HP medusa (real frame data), got '
+        .. medusa:GetHealth())
     local nDesire = X.ConsiderSanitysEclipse()
-    assert(nDesire == BOT_ACTION_DESIRE_NONE,
-        'and it still bids NONE on both of them, got ' .. tostring(nDesire))
-    assert(#names == 0,
-        'nothing else picked the frame up either -- the whole ability layer '
-        .. 'went quiet, which is exactly what GH #54 measured; got {'
-        .. table.concat(names, ',') .. '}')
+    assert(nDesire == BOT_ACTION_DESIRE_HIGH,
+        'shipped bids HIGH once a magical kill can be computed at all, got '
+        .. tostring(nDesire))
+    assert(contains(names, ULT_NAME),
+        'and the cast reaches the action queue, got {' .. table.concat(names, ',') .. '}')
+end
+
+tests['end to end: and the shipped cast is single-target, not the area the lever wants'] = function()
+    -- The distinction the lever lives on: shipped aims AT an enemy, armed aims at
+    -- a POINT chosen to cover two. Pin the shipped half so a future change that
+    -- quietly turns shipped into an area cast cannot pass as a no-op.
+    local log, _, _, _, heroes = run_skills(PAIR, false)
+    local vLoc = eclipse_location(log)
+    local medusa = heroes['npc_dota_hero_medusa']
+    local lich = heroes['npc_dota_hero_lich']
+    assert(vLoc ~= nil, 'the shipped branch queues a location cast too (it passes GetLocation)')
+    assert(GetUnitToLocationDistance(medusa, vLoc) < 1,
+        'shipped aims exactly at the single target it computed a kill on')
+    assert(GetUnitToLocationDistance(lich, vLoc) > 100,
+        'i.e. NOT at a point picked to cover the pair, which is what odaoe adds')
 end
 
 tests['end to end: armed queues Sanity Eclipse at the point covering both'] = function()

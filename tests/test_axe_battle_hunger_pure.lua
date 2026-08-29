@@ -370,24 +370,38 @@ end
 -- 5.  Why section 4 had to be synthetic.  One real Axe frame, reproducing the
 --     corpus-wide reading recorded at the top of this file.
 
-tests['world assertion: the fixture world cannot reach any kill branch'] = function()
+-- ⭐ THE LIMIT THIS SECTION WAS BUILT AROUND LIFTED, 2026-08-29 (hero stream).
+-- The assertion below used to read "GetActualIncomingDamage answers the generic
+-- Get* default 0" and to conclude the magical kill branch is structurally dead
+-- offline. It was: the mock declared no default for that engine call, so the
+-- `^Get` fallthrough answered 0 -- "no damage of any type ever reaches this
+-- unit" -- for every unit on every frame. `tests/mock/bot_api.lua` now answers
+-- the raw damage (no reduction modelled, an UPPER bound), pinned by
+-- tests/test_mock_incoming_damage_default.lua, and the branch is reachable.
+-- WHAT THIS SECTION STILL OWES, which is exactly what the old assertion's own
+-- text asked for: section 4 above is synthetic BECAUSE of the dead branch, and
+-- can now be rewritten on real frames. Not done here (it is its own work unit,
+-- and it needs a frame in Battle Hunger's band, which this corpus is not known
+-- to hold). Baton: GH #154 / queue hero-13, and hero.md backlog.
+tests['world assertion: the kill branch is reachable offline now, and by how much'] = function()
     local J, bot, heroes = rf.load('tests/fixtures/f_011405_jak_rescue_axe.lua')
-    local living, verdicts = 0, 0
+    local living, verdicts, floors = 0, 0, 0
     for _, h in pairs(heroes) do
         if h:GetHealth() > 0 then
             living = living + 1
-            assert(h:GetActualIncomingDamage(100, DAMAGE_TYPE_MAGICAL) == 0,
-                'GetActualIncomingDamage is expected to answer the generic Get* '
-                .. 'default 0 here.  If it now answers a real number the mock has '
-                .. 'grown a damage model, and section 4 should be rewritten on '
-                .. 'real frames -- see GH #154 and queue hero-13')
+            assert(h:GetActualIncomingDamage(100, DAMAGE_TYPE_MAGICAL) == 100,
+                'the mock now models no reduction rather than total immunity; if '
+                .. 'this stops holding, read tests/mock/bot_api.lua before '
+                .. 'rewriting anything here')
             if J.WillMagicKillTarget(bot, h, 99999, 0.3) then verdicts = verdicts + 1 end
+            if J.WillMagicKillTarget(bot, h, 1, 0.3) then floors = floors + 1 end
         end
     end
     assert(living > 0, 'the fixture must carry living heroes, or this proves nothing')
-    assert(verdicts == 0, 'with 99999 damage declared, J.WillMagicKillTarget still '
-        .. 'says "no kill" for every living unit: the branch is structurally dead '
-        .. 'offline, in this hero and in every other focus hero')
+    assert(verdicts == living, 'with 99999 damage declared, J.WillMagicKillTarget now '
+        .. 'says "kill" for every living unit -- the branch answers the DAMAGE it is '
+        .. 'given, which is the whole point of the repair (was: 0 of ' .. living .. ')')
+    assert(floors == 0, 'and 1 damage still kills nobody living: reachable, not open')
 end
 
 tests['and the same default makes it TRUE for corpses'] = function()

@@ -9648,3 +9648,60 @@ GH #290 自己的预登记(总监 2026-08-29T02:47Z 已**撤回**「压实修好
 `skeleton_king:tKillBuildList`、`warlock:tLaningAbilityBuildList`、
 `obsidian_destroyer:tObjurgationBuildList`,§8 把这个集合钉住)。
 **普查读数一位没变**(8 → 9 检查,原 8 条全绿),因为那三张表都不碰占位符。
+
+## §CD 2026-08-29T07:xxZ 英雄组提议入集:`wkqdmg`(WK 的 Q 击杀确认收窄)—— **搭车、零 AWS 增量、不申请专波**;它的真实帧**是同一轮修好量具之后才存在的**
+
+### CD.1 落地了什么
+
+`bots/BotLib/hero_skeleton_king.lua` 新增 `X.wk_GetBlastKillDamage( hAbility )`,
+被 `X.ConsiderQ` 的**英雄击杀确认**那一处消费(创兵那一处**故意不动**,见 CD.4):
+
+```
+出厂  J.CanKillTarget( npcEnemy, nDamage * 1.68, nDamageType )        -- 168/235/302/370
+armed J.CanKillTarget( npcEnemy, min(出厂, impact + dot_dps*dot_dur) ) -- 120/180/240/300
+```
+
+turbo-only 单合取 `J.IsModeTurbo() and J.IsSoakCandidate('wkqdmg')`;
+**gate off 逐字复现出厂表达式**(断言钉住,变异实测)。
+
+### CD.2 ⭐ 主判据:出厂那个数**两头都不是**,而且它结构上看不见天赋
+
+游戏自己的 KV(`skeleton_king_hellfire_blast`,2026-08-29 经
+`tools/agent/special_value_key_census.py` 的同一个镜像取):
+`damage 80/100/120/140`、`blast_dot_damage 20/40/60/80`(**每秒**)、
+`blast_dot_duration 2.0`。于是命中 80/100/120/140、命中加整段 dot 120/180/240/300,
+而 `100/140/180/220` 夹在两者中间,乘 1.68 之后**高过两者**(rank 4:369.6 对 300)。
+更要紧的是**天赋**:引擎把 trained talent 折进句柄(GH #228),而硬编码永远问不到句柄
+—— 本文件 t10 取的那一半把 `blast_dot_duration` 翻倍(2→4),诚实读数变 160/260/360/460,
+于是**从英雄 10 级起同一个常数在两个方向上同时失真**。
+
+### CD.3 ⭐⭐ 为什么是 `min` 而不是直接换成诚实读数
+
+诚实读数在 rank 2+ 且 t10 天赋到手后**反超**出厂(260 > 235.2)⇒ 直接换会**增加施法**,
+而增加动作的改动本台只在域被量过之后才发。`min` 让 armed 侧只能**撤回**一个已声明的击杀、
+永远不能凭空造一个(GH #165 的纪律,`lionhexaoe` 那条注释点的同一个形状)。
+`tests/test_replay_260820_wk_blast_overclaim.lua` 把这条**当成断言**钉住:
+rank 2 + 天赋那一格必须回落到出厂值,变异掉 `min` 立刻红。
+
+### CD.4 域与边界(请连这一段一起裁)
+
+- **真实帧**:`f_260820_181711_wk_l1trade_333`(t=333.5),160/1067 血的 juggernaut,
+  539u,不免疫,身上已经挂着 0.6 秒前那一发 blast。出厂声明 168 ≥ 160 开火;
+  blast 本身只有 120。⚠️ 该帧 Q 在 13.3s 冷却上,端到端两例**标注变异**了冷却;
+  血量/等级/距离/蓝量全是真实帧数据,ground truth 三例直接断言它们。
+- **供给读数**:全部 107 枚 `f_*.lua` 里**在带内的只有这一帧**。这是**供给读数不是空域**
+  —— 而且它在本轮之前**读不出来**:`J.CanKillTarget` 对所有非 PURE 伤害都落在
+  `GetActualIncomingDamage` 上,而 mock 对它**没有默认值**,泛型 `^Get` 回落答 0
+  ⇒ 全仓所有魔法击杀确认在**每一帧上结构性为假**(修复与档案见
+  `state.json:mockdmg_ZERO_20260829`,量具修好前后同一份普查:0 帧 → 1 帧)。
+- **没有建模的那一半**(写下来供反驳):blast 还带 1.0–1.6s 眩晕和 -20% 减速,
+  近战 WK 会把它们换成平A;1.68 很可能正是这个的替身。本条**不给它定价**
+  (`J.GetTotalAttackWillRealDamage` 能定,那是另一条改动、另一帧),
+  所以 armed 侧是**严格保守读法:"这一发本身能不能杀"**。
+- **创兵那一处不动**:`not J.CanKillTarget( targetCreep, nDamage, ... )` 收窄会把分支
+  **朝反方向**翻,不在本条范围内(源码棘轮把这一点钉住)。
+
+### CD.5 要买的是什么
+
+条件 (a) 执行核验:armed 腿上 WK 的 Q **少放**在哪些目标上,以及那些目标此后是否仍被别的
+手段收掉;条件 (b) 粗粒度胜负无明显负面。**不申请专波**,搭任一带 WK 载体的波次即可。

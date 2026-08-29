@@ -565,6 +565,66 @@ function X.GetRoshanManaFloor( nAbilityManaCost )
 
 end
 
+--- [wkqdmg] gated (turbo + soak candidate): what the HERO kill-confirm in
+--- X.ConsiderQ is allowed to claim Hellfire Blast will do.
+---
+--- THE SHIPPED CLAIM AND WHY IT IS ONE.  The kill check below reads
+--- `nDamage * 1.68` off a hardcode that is neither honest number (the block on
+--- X.ConsiderQ's own nDamage line has the arithmetic): 168/235/302/370 CLAIMED
+--- magical damage against an impact of 80/100/120/140 and an impact-plus-whole-dot
+--- of 120/180/240/300.  Read off the handle instead, the same two numbers come
+--- from `damage` and `blast_dot_damage x blast_dot_duration`, and the engine folds
+--- a trained talent into them (GH #228) -- which the hardcode structurally cannot
+--- see, so from hero level 10 on it is stale in BOTH directions at once (the t10
+--- pick doubles blast_dot_duration).
+---
+--- WHY MIN AND NOT THE HONEST NUMBER.  Taking the handle read straight would ADD
+--- casts at rank 2+ once the t10 talent lands (260 > 235), and this stream ships
+--- an action-adding change only with a sized domain.  `math.min` makes the armed
+--- side a pure NARROWING -- it can only withdraw a claimed kill, never invent one
+--- -- which is the discipline GH #165 wrote down and the shape hero_lion.lua's
+--- `lionhexaoe` note names.
+---
+--- WHAT IS DELIBERATELY NOT MODELLED, stated so it can be argued with: the blast
+--- also brings a 1.0-1.6s stun and a -20% slow, and a melee Wraith King standing
+--- on the target converts those into autoattacks.  The 1.68 is plausibly a
+--- stand-in for exactly that.  This lever does not price it (J.GetTotalAttackWillRealDamage
+--- exists and would; using it is a separate change with its own frame), so the
+--- armed side is the strictly conservative reading: "the blast ALONE kills".
+---
+--- THE REAL FRAME (tests/test_replay_260820_wk_blast_overclaim.lua):
+--- f_260820_181711_wk_l1trade_333, t=333.5, a juggernaut at 160 HP.  Shipped
+--- claims 168 and fires; impact-plus-dot is 120 and cannot.  It is the ONLY frame
+--- in the band across the whole 107-frame corpus, and it was invisible until the
+--- same round fixed the mock default that made `J.CanKillTarget` answer false for
+--- every non-PURE damage type on every frame (tests/mock/bot_api.lua).
+--- ⚠️ Q is on a 13.3s cooldown on that frame, so driving the branch end to end
+--- needs a LABELLED cooldown mutation; the 160 HP, the ranks and the distance are
+--- real frame data.
+function X.wk_GetBlastKillDamage( hAbility )
+
+	local nShipped = ( 40 * ( hAbility:GetLevel() - 1 ) + 100 ) * 1.68
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkqdmg' ) ) then return nShipped end
+
+	local nImpact = hAbility:GetSpecialValueInt( 'damage' )
+	local nDotDps = hAbility:GetSpecialValueInt( 'blast_dot_damage' )
+	local nDotDur = hAbility:GetSpecialValueFloat( 'blast_dot_duration' )
+
+	-- A zero here means the read did not resolve (a renamed key answers 0
+	-- silently -- tools/agent/special_value_key_census.py exists because of it).
+	-- Fall back to the shipped claim rather than to a fabricated 0-damage world.
+	if nImpact <= 0 or nDotDps <= 0 or nDotDur <= 0 then return nShipped end
+
+	local nHonest = nImpact + nDotDps * nDotDur
+
+	if nHonest < nShipped then return nHonest end
+
+	return nShipped
+
+end
+
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable()
@@ -638,7 +698,8 @@ function X.ConsiderQ()
 			end
 
 			if GetUnitToUnitDistance( bot, npcEnemy ) <= nCastRange + 80
-				and J.CanKillTarget( npcEnemy, nDamage * 1.68, nDamageType )
+				-- [wkqdmg] gate off this is `nDamage * 1.68`, byte for byte.
+				and J.CanKillTarget( npcEnemy, X.wk_GetBlastKillDamage( abilityQ ), nDamageType )
 			then
 				return BOT_ACTION_DESIRE_HIGH, npcEnemy
 			end

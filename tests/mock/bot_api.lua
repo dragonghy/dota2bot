@@ -91,8 +91,45 @@ local handle_getters = {
 }
 
 -- Getter defaults by prefix when a spec doesn't provide an override.
-local function default_for(key)
+-- `...` is the call's own arguments: a couple of engine getters answer a
+-- FUNCTION OF THEIR INPUT, and a constant default silently rewrites the world
+-- for every caller (see GetActualIncomingDamage below).
+local function default_for(key, ...)
     local first = key:sub(1, 2)
+    -- `GetActualIncomingDamage(dmg, type)` is the engine's resistance
+    -- calculator. The generic `^Get` default answered **0** -- i.e. "no amount
+    -- of damage of any type ever reaches this unit" -- and that zero is the
+    -- ONLY thing `J.CanKillTarget` (jmz_func.lua:1066) reads for every
+    -- non-PURE type, so EVERY magical and physical kill-confirm in the tree was
+    -- structurally false on EVERY fixture frame, at any damage number. 42 call
+    -- sites under bots/ route through it.
+    --
+    -- The OTHER kill-confirm helper is not a second opinion: `J.WillMagicKillTarget`
+    -- (:1110) does its whole resistance/shield/refraction estimate and then ends
+    -- in `GetActualIncomingDamage(EstDamage, ...)` too (:1151), so BOTH helpers
+    -- returned false for every magical kill on every frame, however the estimate
+    -- was built.
+    --
+    -- WHY RAW DAMAGE AND NOT A DAMAGE MODEL. A fixture carries no resistances and
+    -- no armor (make_fixture.py extracts none), so the mock cannot compute a
+    -- reduction without inventing one. The file's own sibling default already
+    -- says what to do with that missing datum: `GetMagicResist` answers 0, i.e.
+    -- "no resistance recorded" -- while a 0 out of GetActualIncomingDamage says
+    -- the opposite thing about the same unknown, "infinite resistance". Returning
+    -- the raw damage puts the two defaults on one assumption and makes the
+    -- branches reachable; a test that needs a real reduction overrides
+    -- GetActualIncomingDamage per unit through __spec, as with every other
+    -- datum the frame does not carry.
+    --
+    -- HONEST BOUNDARY: "no reduction modelled" is an UPPER bound. Heroes have 25%
+    -- base magic resistance in game, so a branch that fires here may still refuse
+    -- in a real match.
+    -- Same class as the GetIncomingTrackingProjectiles and GetTower gaps below:
+    -- a mock default that states a world assumption nobody declared.
+    if key == 'GetActualIncomingDamage' then
+        local dmg = ...
+        return type(dmg) == 'number' and dmg or 0
+    end
     if key:find('^Is') or key:find('^Has') or key:find('^Can') or key:find('^Was') then
         return false
     end
@@ -125,7 +162,7 @@ local unit_mt = {
             local v = spec and spec[key]
             if type(v) == 'function' then return v(self, ...) end
             if v ~= nil then return v end
-            return default_for(key)
+            return default_for(key, ...)
         end
         rawset(self, key, fn)
         return fn

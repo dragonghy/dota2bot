@@ -22,7 +22,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--43. **Zeus / Lion / Crystal Maiden 三个方向本组从未逐帧看过** —— **下一棒做这条**
+-44. **量具修好之后,谁还依赖"魔法击杀确认恒假"这个世界性质?** —— **下一棒做这条**
+   本轮修掉 `tests/mock/bot_api.lua` 里 `GetActualIncomingDamage` 的缺失默认值
+   (它答 0 ⇒ 全仓每一个非 PURE 击杀确认在每一帧上结构性为假,`bots/` 下 42 处调用点;
+   `J.WillMagicKillTarget` 最后一行是同一个调用,所以两个 helper 一起死着)。
+   本轮**已知**受影响的三个文件都处理了(axe §5 世界断言、zuus LIMIT、OD 端到端),
+   但**枚举没有做**。下一棒:要么跑完一次全量套件(~100min,GH #124),
+   要么对那 42 个调用点做一次静态普查,**点名还有哪些断言的绿是那个 0 给的**。
+   - **顺带三条 baton,都是别的轮次自己写下的出路,现在门开了**:
+     (i) `test_axe_battle_hunger_pure.lua` §4 可以从合成帧改写成真实帧(GH #154 / queue `hero-13`);
+     (ii) `test_zuus_static_field_pct.lua` 可以长出 firing-side fixture;
+     (iii) ⚠️ **`odaoe`(GH #54)的域要重读** —— 出厂在 A 帧上**现在会开火**
+     (单体点 227/230 血的美杜莎),所以它的反事实从「AoE 对什么都不放」变成
+     「覆盖两人的 AoE 对单体一发」。**游戏侧那个「大招 0 次」的观察不受影响**(那是在录像上量的)。
+   - **一条负面读数,免得下一棒重扫**:把真实模块驱动在焦点五全部 47 帧上跑
+     `X.SkillsComplement`,**只有 1 帧产出动作** —— 因为 dumper 不出
+     `GetActiveMode`/`GetAttackTarget`(GH #27 同族)。**"全驱动看它做什么"对聚合无用**,
+     只对钉单帧有用;要看行为得先给模式/目标打标注变异。
+
+-43. ~~**Zeus / Lion / Crystal Maiden 三个方向本组从未逐帧看过**~~
+   **2026-08-29T08:08Z 部分结清并改道 —— 逐帧做了(焦点五全部 47 枚真实帧),
+   但落点不在这三个英雄身上,而在 Wraith King 的 Q 击杀确认 + 量具本身。**
+   报告 `iterations/reports/hero/20260829T080806Z.md`。`bots/` **一处**改动
+   (`hero_skeleton_king.lua`,新 gate id **`wkqdmg`**,turbo-only,未 arm、未 promote、不是 live);
+   `state.json` 新增 `wkqdmg_20260829`(`gated:true`)与 `mockdmg_ZERO_20260829`(`gated:false`);
+   零 AWS;入集在 `test_set.md` **§CD** 提议;queue 新增 **hero-23**;不开新 issue。
+   - **⭐⭐ 主发现是量具**:`GetActualIncomingDamage` 在 mock 里没有默认值 ⇒ 泛型 `^Get` 答 0
+     ⇒ **所有魔法/物理击杀确认在所有帧上恒假**。0 不是"没有数据",它是"抗性无穷大",
+     而同一个文件里 `GetMagicResist` 的默认 0 说的是同一未知量的**反面**("没有记录到抗性")。
+     修成**答原始伤害**(不建模减免,**是上界**:游戏里有 25% 基础魔抗)。
+   - **⭐⭐ 修完量具,那条"等真实帧"等了七天的杠杆当场有帧了**:同一份带内普查,
+     **修前 0 帧 / 修后 1 帧** —— `f_260820_181711_wk_l1trade_333`(t=333.5),
+     160/1067 血的 juggernaut,出厂声明 `100*1.68=168 ≥ 160` 开火,而这一发本身
+     只有 `80 + 20*2 = 120`。⚠️ 该帧 Q 在 13.3s 冷却上,端到端两例标注变异了冷却。
+   - **⭐ 为什么 armed 取 `min` 而不是诚实读数**:诚实读数在 rank 2+ 且 t10 天赋到手后
+     **反超**出厂(260 > 235.2),直接换是**增加施法**;`min` 让它只能撤回、不能造
+     (GH #165 纪律)。测试把这一格**当断言**钉住,去掉 `min` 立刻红。
+   - **⭐ 两条绊线如期打红**:`test_axe_battle_hunger_pure.lua` §5 与
+     `test_zuus_static_field_pct.lua` 的 LIMIT,**原文都自带"如果这条不再成立就去做 X"**
+     —— 这是本仓库第一次有人把那种 baton 触发了。
+   - **变异 4 条(3/1/2/2+3 红)对照绿**;定向 9 组全绿(报告 §7)。
+   - **⚠️ 全量套件没跑完**(会话收尾时仍在后台,GH #124)。跑到的部分 2 条红:
+     一条是**改写前**的 axe 文件(改写后 17/0),一条是 `test_gamemode_world_assertion.lua:1450`
+     —— 它跨文件钉的那一行**今天已被总监 `dd8f5ca5`(07:07Z)从 census 里拿掉**,
+     两个文件本轮一字未动 ⇒ **GH #221 同族,记录并指名,不代改**。
+
+-43a. **Zeus / Lion / CM 三个方向仍然欠一次以它们为主角的逐帧**(-43 的原意)
    (-40 仍然成立:`hero-10` 的读数没回来之前,不为 `wkrosh`/`wkbuild` 开第二条语料请求;
    本条正是「在此之前做不依赖那批帧的活」那条兜底路径,章程工作流第 1 条)。
    - 从归档语料挑一局逐帧找个体问题(**聚合只用于选局**)。
@@ -2459,6 +2504,47 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T08:08Z(报告 `iterations/reports/hero/20260829T080806Z.md`;轴 **backlog -43 出发,
+  落在 WK 的 Q 击杀确认 + 量具**;**-43 部分结清并改道,-44 接棒**,原意留作 **-43a**)——
+  自检 **worst exit 3**:legs run **8**,`FINDINGS: unlanded cadence`,`UNCERTIFIABLE: none`;
+  stable-v1/v2 锚点各三项 ok;trunk python 52/0、快 Lua 腿 21 文件 0 失败。
+  owner 四条优先项**没有一条球在本组**。**本轮 `bots/` 一处改动**
+  (`hero_skeleton_king.lua`),`game/` 零行;**新 gate id `wkqdmg`**(turbo-only,
+  **未 arm、未 promote、不是 live**);`state.json` 新增 `wkqdmg_20260829`(`gated:true`)
+  与 `mockdmg_ZERO_20260829`(`gated:false`);**零 AWS**;入集在 `test_set.md` **§CD** 提议
+  (等总监裁);queue 新增 **hero-23**(申请方=本组,**不动裁定/路由/status/priority**);
+  **不开新 issue**(四条 baton 写进 backlog -44)。
+  - **⭐⭐ `GetActualIncomingDamage` 在 mock 里没有默认值,于是答 0** ⇒
+    `J.CanKillTarget` 对**所有非 PURE 伤害**恒假,**每一帧、每个英雄、任意伤害数值**;
+    `bots/` 下 **42 处**调用点;`J.WillMagicKillTarget` 把魔抗/护盾/折射算完之后
+    **最后一行是同一个调用**(:1151),所以它以同样的方式死着。
+    **0 不是"没有数据",是"抗性无穷大"** —— 而同一文件里 `GetMagicResist` 的默认 0
+    说的是同一未知量的**反面**。修成**答原始伤害**(不建模减免);
+    **这是上界**,游戏里有 25% 基础魔抗,离线开火的分支实战里仍可能不开火。
+  - **⭐⭐ 量具一修,那条登记了七天的杠杆当场有了真实帧**:同一份带内普查、同一份语料,
+    **修前 0 帧 / 修后 1 帧**。`f_260820_181711_wk_l1trade_333`(t=333.5):
+    juggernaut **160/1067**,539u,不免疫,身上挂着 0.6 秒前那一发 blast;
+    出厂声明 `100*1.68 = 168 ≥ 160` 开火,而这一发本身是 `80 + 20*2 = 120`。
+    ⚠️ **该帧 Q 在 13.3s 冷却上**,端到端两例标注变异了冷却;血/等级/距离/蓝是真实帧数据。
+  - **⭐ armed 取 `min(出厂, 命中+整段dot)` 而不是诚实读数**:诚实读数在 rank 2+ 且 t10 天赋
+    到手后**反超**出厂(260 > 235.2)⇒ 直接换是**增加施法**。`min` 让 armed 只能撤回、
+    不能造(GH #165 纪律)。**创兵那一处故意不动**(收窄会把 `not CanKillTarget` 翻向反面)。
+  - **⭐ 本仓库第一次有 baton 型绊线被真正触发**:`test_axe_battle_hunger_pure.lua` §5
+    与 `test_zuus_static_field_pct.lua` 的 LIMIT,两条原文都写着"如果这条不再成立就去做 X",
+    本轮双双打红并按原文改写(它们要的后续 **本轮不做**,baton 留在 -44)。
+  - **⚠️⚠️ 交出去的后果**:`odaoe`(GH #54)在 A 帧上的反事实变了 ——
+    出厂的单体出口结尾就是 `J.CanKillTarget`,量具一修**出厂会开火**
+    (单体点 227/230 血的美杜莎)⇒ 从「AoE 对什么都不放」变成「AoE 覆盖两人 对 单体一发」。
+    **游戏侧「该局大招 0 次」的观察不受影响**(在录像上量的)。已改写那两例并钉住
+    "出厂点人 / armed 点覆盖两人的点"这个真正的区别;**域的重读交出去,不在本轮解决**。
+  - **验证**:`luacheck_gate.sh` **0 警告 exit 0**(gate 自己装的 luacheck);**未用 `RULE6_BYPASS`**;
+    **变异 4 条**(gate 空转 3 红 / 去掉 `min` 1 红 / 消费点回滚 2 红 / mock 回滚 2+3 红)对照绿;
+    定向 9 组全绿(`wk_` 194、`replay_` 549、`zuus` 110、`axe_` 109、`cm_` 178、`lion_` 99 …)。
+  - **⚠️ 全量套件本轮没跑完**(收尾时仍在后台,GH #124 ~100min)——**不是"全绿"**。
+    跑到的部分 2 条红:一条是**改写前**的 axe 文件(改写后单独 17/0),
+    另一条 `test_gamemode_world_assertion.lua:1450` 跨文件钉的 census 行
+    **今天已被 `dd8f5ca5`(总监 07:07Z)从 `test_level_gate_census.lua` 里拿掉**
+    (`grep` 0 命中;而那个 census 自己 15/15 绿)⇒ **GH #221 同族,记录并指名,不代改**。
 - 2026-08-29T04:51Z(报告 `iterations/reports/hero/20260829T045154Z.md`;轴 **GH #287 §2 `odbuild`**;
   backlog **-42 结清,-43 接棒**)—— 自检 **worst exit 3**:legs run **8**,
   `FINDINGS: cadence trunk-red(python) trunk-red(lua)`,`UNCERTIFIABLE: none`;stable-v1/v2 锚点各三项 ok。
