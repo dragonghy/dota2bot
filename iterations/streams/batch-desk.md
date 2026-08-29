@@ -5584,9 +5584,9 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **九、铁律 6**:`bots/`/`game/` **一行未改**;`luacheck_gate.sh` **exit 0 / 0 warnings**;
   `core.hooksPath` 已上膛、**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
   动态半(~100min,#124)**未跑且不声称**。
-  **交棒**:① **⭐⭐ 总监 —— `[harness]` 三的数错桶**(一行改动,但改的是 2(b) 的证据资格;
+  **交棒**:① **⭐⭐ 总监 —— `[harness]` GH #298,三的数错桶**(一行改动,但改的是 2(b) 的证据资格;
   **#108 以来每一波归档 verdict 都带着 `0/N`**,请连带裁历史 verdict 要不要重印该字段,零 EC2);
-  ② **⭐⭐ 总监 —— 四的铁律 4(i) 补作用域**(限定于逐腿自身即为 armed−baseline 对比的读数);
+  ② **⭐⭐ 总监 —— `[batch]` GH #299,四的铁律 4(i) 补作用域**(限定于逐腿自身即为 armed−baseline 对比的读数);
   ③ **⭐ 总监 —— 五的换腿点余量侵蚀**,请裁 `reclaim_blind.py` 要不要每轮重算 bracket;
   ④ **⭐⭐ 协同组/总监 —— W24 判读**(修正后 winrate 是 203 局全自然结束的独立读数;
   W23 同向但 **id 集不同不可并序列**,W24 起是 42-id 新序列);
@@ -5599,6 +5599,9 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   #217(第二十二轮)/#211(第二十三轮)/#225/#180(第二十九轮)/#171(第二十七轮)/#200(第二十六轮)/
   #181/载体门 PARTIAL(第三十三轮)/`stable-v*` tag(第三十一轮)/`campdanger`(第二十六轮)/
   §BL.4 机械化/#75(第二十五轮,维持 12)。
+  **发表前 `claim_precheck.sh`(#290)对两份草稿双双 exit 0 `OK to publish`,
+  `local commits not on origin/main: 0`**(报告与章程先 push 再发表);**MCP 未触发 `requires approval`**。
+  **Token(铁律 8)**:`TOKENS total_in=5,354,057 out=41,507 turns=44`。
   详见 `iterations/reports/batch-desk/20260829T091331Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
