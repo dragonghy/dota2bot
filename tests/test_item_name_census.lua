@@ -254,7 +254,21 @@ local tRegistered = {
     -- forty lines -- it is at the top of the file.  So the shape is not about a
     -- hot region, it is about pinning a LINE NUMBER in a file anyone may edit.
     -- Re-anchored, not relaxed.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6849'] =
+    -- 6849 -> 6863 (strategy 2026-08-29T04:2xZ, GH #294): a 14-line COMMENT
+    -- above the '撤退:1' branch, recording that the promoted `tphome` veto can
+    -- only move [0.18, 0.19) at that call site.  ELEVENTH instance of the shape
+    -- at :198, and the cheapest one yet to produce: the edit changed no code at
+    -- all.  That is the sharpest reading available of what this pin costs --
+    -- a pure comment, in a file 6,800 lines above the pin, is enough to turn a
+    -- ratchet red.  Re-anchored, not relaxed; the probe and the lookup are
+    -- textually unchanged.  And the honest half: unlike the 15:5xZ landing four
+    -- notes above, this one WAS red on main for the length of one commit -- not
+    -- because a door was missing but because the author did not walk through
+    -- it.  This file is tagged, so the selfcheck's fast Lua leg covers it; that
+    -- leg was run at the START of the work unit (clean) and NOT re-run after the
+    -- comment was written.  A start-of-unit selfcheck certifies the tree you
+    -- arrived on, never the tree you push.
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6863'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
