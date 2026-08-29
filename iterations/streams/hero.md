@@ -22,7 +22,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--40. **等 `hero-10` 的读数,别为这两个 lever 再开第二条语料请求** —— **下一棒做这条**。
+-42. **GH #287 §2:`odbuild` —— 但要修的不是 issue 里写的那两条** —— **下一棒做这条**
+   (仍**排在 GH #290 item 1 之后**,录像组 2026-08-29T00:5xZ 的排序请求;#290 是
+   「#286 的压实修复从未落地」,而**停摆发生在 build 表被消费之前**)。
+   - -41 量到:**OD 的大招在 slot 5,`sAbilityList[6]` 本来就写得上** ⇒ §2 候选 (a)
+     (「让 `GetAbilityList` 对 `slot < 4` 的大招也写 `[6]`」)对 OD 是**空操作**;
+     **索引 4 是 slot 3 的 `generic_hidden`** ⇒ 候选 (b)(「build 从 `6` 改成 `4`」)
+     会把四个 build 位从大招挪到占位符上,**比现在更差**。
+   - 要写的是 **「索引 4 → 意图中的技能」**。OD 槽位行:
+     `0 arcane_orb / 1 astral_imprisonment / 2 objurgation / 3 generic_hidden /
+     4 equilibrium / 5 sanity_eclipse` ⇒ `objurgation` 是**索引 3**,build 从不引用 3。
+   - 落地按 `.claude/skills/gated-fix/`:gated + turbo-only + 真实帧 fixture
+     (#287 §4 建议的两帧,**语料保质期约 2026-09-18 前取**)。
+     改完 `tests/test_build_index_resolution.lua` §4/§5 会红 —— 那是**设计如此**,
+     按断言里写的话改成描述新 build 的读数,别放宽。
+
+-41. ~~**GH #287 §3 的枚举:哪些 build 表引用了解析不出技能的下标**~~
+   **2026-08-29T01:51Z done —— `bots/`/`game/` **零行改动**;无新 gate id;
+   `wkrosh`/`wkbuild`/`odbuild` 的门与 armed 状态未动;`state.json` 新增
+   `buildindex_CENSUS_20260829`(`gated:false`);零 AWS;不申请入集;**不开新 issue**
+   (在 #287 追评);**不动 queue**。新文件 `tests/test_build_index_resolution.lua`(8 节)。
+   报告 `iterations/reports/hero/20260829T015146Z.md`。**
+   - **⭐⭐ 主产出一:#287 §3 那句「这条判据离线读不出来(要引擎的 `GetAbilityInSlot`)」是错的。**
+     `tests/mock/hero_slots.lua`(GH #209,`npc_heroes.txt` 的 `"AbilityN"`,一次 HTTPS GET)
+     + `tests/mock/ability_meta.lua`(GH #36,KV 的 `AbilityType`)= **出厂 walk 可以离线跑**。
+     真正读不出来的只有 `IsHidden()`,**照 `test_hero_slot_order_anchor.lua` §3 枚举
+     2^k 个 drop-world**,命中写成「N 个世界里中 k 个」,**不猜**。
+   - **⭐⭐ 主产出二:恒为 nil 的下标全仓 0 个,OD 也在这个 0 里。**
+     126 个英雄入 census(`wisp` 无 build 字面量、`lone_druid_bear` 无 KV 槽位行,**点名不静默丢**)。
+     有条件 nil 4 个:`monkey_king[4]` 1/32、`nevermore[5]` 4/8、`phantom_assassin[5]` 2/4、
+     `troll_warlord[5]` 2/4。
+   - **⭐⭐ 主产出三:OD 的病在另一条轴 —— `generic_hidden`,而它是字符串不是 nil。**
+     `obsidian_destroyer[4]` 在 **2/2 个世界**里是占位符,**build 花 4 个点在它上面**,
+     **全仓唯一的无条件命中**(另有 6 个英雄有条件命中)。
+     **占位符是字符串 ⇒ 任何「是不是 nil」形状的检测器对它结构上沉默。**
+   - **⭐ #287 §3 假设的成因,成员数量到是 0**:**没有任何英雄的大招在 slot 4 以下**
+     (124 个在 slot 5,`ogre_magi` 在 6,`dark_willow` 的 `bedlam` 在 3 但 `terrorize` 在 5
+     ⇒ `[6]` 照写;`invoker` 在 `ability_meta` 里没有大招行,索引 6 是**巧合**,已写进 LIMITS)。
+   - **诚实边界**:静态读,只说「哪个下标指向什么」。
+     `ability_item_usage_generic.lua:310` 有 **`generic_hidden` 逃生口**(丢该条、点下一个)
+     ⇒ 占位符引用是**浪费掉的 build 位,不是被证明的停摆**;9/12 局停摆是 **GH #290** 的读数,
+     **本轮一句都没解释它,也不该被引用成解释**。
+   - **变异实测三条**(各自回滚):OD build `4→3` ⇒ §4/§5 红;Axe 加越界下标 ⇒ §2/§3/§7 红;
+     槽位 mock 把 `axe_culling_blade` 挪到 slot 3 ⇒ §4/§5/§6/§7 红。**四条轴都打得红。**
+
+-40. **等 `hero-10` 的读数,别为这两个 lever 再开第二条语料请求**(本轮**没动**,
+   仍然成立:读数回来之前不开第二条)。
    -39 已经把 `wkrosh` / `wkbuild` 的语料需求并成**一条**(queue `hero-10`,`acceptance`
    带第 (4) 项预登记读数)。**再开一条就是把刚合并的东西拆回去。**
    - **在读数回来之前,本组做不依赖那批帧的活**:焦点五里 **Zeus / Lion / Crystal Maiden**
@@ -2380,6 +2425,28 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T01:51Z(报告 `iterations/reports/hero/20260829T015146Z.md`;轴 **GH #287 §3
+  的枚举**;backlog -41 结清,-42 接棒)—— 自检 **worst exit 3**:legs run **8**,
+  `FINDINGS: cadence`,`UNCERTIFIABLE: none`;stable-v1/v2 锚点各三项 ok。
+  owner 四条优先项**没有一条球在本组**(常设运维→批测台,P1/P2→协同组,P3→总监);
+  [hero] open issue 里 **#287 最新且带证据**,§2 被录像组排在 GH #290 之后 ⇒ **本轮做 §3**。
+  **本轮 `bots/`/`game/` 零行改动**;**无新 gate id**;`state.json` 新增
+  `buildindex_CENSUS_20260829`(`gated:false`);**零 AWS**;不申请入集;**不开新 issue**
+  (在 #287 追评);**不动 queue、不动裁定与路由**。
+  - **⭐⭐ #287 §3 的「离线读不出来」是错的**:`hero_slots.lua`(GH #209)+
+    `ability_meta.lua`(GH #36)让**出厂 `GetAbilityList` 离线跑在每个英雄的真实槽位上**;
+    唯一读不了的 `IsHidden()` 用 **2^k drop-world 枚举**处理(沿 `test_hero_slot_order_anchor` §3)。
+  - **⭐⭐ 恒 nil 的下标 = 0 个(OD 也在这个 0 里);OD 的病是 `[4] = 'generic_hidden'`,
+    2/2 世界,被 build 引用 4 次,全仓唯一无条件命中。** 占位符是字符串 ⇒
+    **所有「是不是 nil」形状的检测器对它结构上沉默。**
+  - **⭐⭐ #287 §2 的两条候选修法都打偏**:OD 大招在 slot 5 ⇒ (a) 空操作;索引 4 是占位符
+    ⇒ (b) 更差。`odbuild` 该修的是**索引 4 → 意图中的技能**(已写进 -42 与 #287 追评)。
+  - **⭐ §3 假设的成因成员数 = 0**:没有英雄的大招在 slot 4 以下。
+  - **诚实边界**:静态读;`generic_hidden` 有逃生口 ⇒ 是**浪费的 build 位不是停摆**,
+    9/12 局停摆归 **GH #290**,本轮不解释它。
+  - **落地**:`tests/test_build_index_resolution.lua`(8 节)+ 三条变异实测(四条轴都能打红)。
+  - **⚠️ 全量 `run_tests.lua`(~100min,GH #124)后台起了但会话结束前没跑完** ——
+    **这不是「跑过了」**;静态门 0 警告、python 51/0、定向 9 组全绿(见报告 §7)。
 - 2026-08-28T22:51Z(报告 `iterations/reports/hero/20260828T225121Z.md`;轴 **backlog -39:
   两个 lever 缺的是同一批帧,并成一条语料请求**;**queue `hero-10` 申请方自改,-39 结清**)
   —— 自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence stale-waits trunk-red(python)`,
