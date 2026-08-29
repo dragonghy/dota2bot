@@ -6298,3 +6298,79 @@
     其次:若 **#293 已落地**,拿 05:30Z 那 96 局 `.dem` 原地重跑 `wandlimbo_domain.py`
     执行已写死的预登记;再次:W25 若带 `seed 975` 且两腿都在,当场执行 `aimguard` 预登记 + `odaoe` 第四格。
   - 完整报告:`iterations/reports/replay-check/20260829T094827Z.md`
+- **2026-08-29T13:06Z(章程点名的逐帧核验做完了,而我自己的工具先判了 BUGGY,11 帧逐个把它推翻)**:
+  **W24 stamp 普查 206/206 = 100%**(183 stamped + 23 warmup,`--declared` 取发波树 `2d1024ee` 第 2 行,
+  **42 id / 372 bytes / sha1 `607245e9`,四 run 单一取值,全 MATCH,exit 0**)。
+  **深查:80 局流式 dump(79 成功 / 1 unparseable `5f26ed/…_065716_slot4`,ab 40 + ba 39),
+  556 次 `item_blink` 逐次判支,门内 31 次逐帧,armed 腿 11 次全部手工重建。**
+  零 EC2 支出,S3 只读,`bots/`/`game/` **0 改动**。
+  - ⭐⭐⭐ **`blinkflee` 首检 = 条件 (a) INDETERMINATE,NOT BOUGHT**(43 个 armed id 里
+    **零记录**的一个,自 2026-08-20 GH #71 armed 至今从未被核验)。
+    **第一版几何封条**(cos>0.9 往家 + 跳跃 [1100,1700] + 1200 内有敌 + 离泉水>900)
+    **在 79 局上判了 `BUGGY in ab,ba`(armed 门内 11 次)—— 逐帧全灭**:
+    同一个 `X.ConsiderItemDesire['item_blink']` 里**有四条往家跳的分支,只有 retreat 支上了门**。
+    `IsStuck`(:1557)可用算术排掉(要 `TAd>2200` + 5 秒漂移<25u,本轮 31 次门内 `stuck_possible`=0);
+    **`IsProjectileIncoming`(:1614)离线不可判**(dump 无弹道流;代理「前 3 秒敌方施法」
+    **既不必要也不充分** —— 瞬发 AoE 点亮代理点不亮谓词),**armed 11 次里 10 次代理为真**;
+    **第 11 次被 `IsGoingOnSomeone`(:1647)杀掉,这一帧是本轮最值钱的东西**:
+    `de59cd/20260829_064305_slot9 t=1140.5` radiant earthshaker,**hp 100%、前 10 秒任何来源零伤害、
+    离本方远古 1038u(⇒ IsStuck 结构性为假)、前 3.5 秒无敌方施法(⇒ 弹道支基本排掉)**,
+    跳 1425u cos **+0.999** —— **然后把敌人放到同一条射线上量:zuus 1079u/17% 血 cos +0.999、
+    luna 1702u cos +1.000、CM 2295u cos +0.991,三人全在"我家远古"那条射线上**(他们在推高地),
+    而 ES **0.9 秒前刚放 Fissure**。⇒ **一次跳到 17% 血 zuus 头上的击杀跳,与逃跑跳几何完全一致。**
+    ⭐ **读法(建议总监裁)**:**基地防守把「往我家」和「往他们」变成同一条射线,
+    而逃跑跳恰恰住在基地防守里 ⇒ 几何只能认出「往家跳」,永远认不出「retreat 支」。**
+    这把「结构判别子必须带余量列」再推一格:**余量列本身可能整条不存在**。
+  - ⚠️ **两层反号**(ab armed 2 / baseline 15;ba armed 8 / baseline 6)⇒ 铁律 4(i),
+    **本轮不登记任何效应量**。⭐ **正对照**:唯一一次 `attributable` 在 **baseline 腿** ——
+    `9312b9/…_062116_slot12` OD t=859.3,hp 100%、前 87.4 秒无英雄伤害、跳 **1200 整** cos +1.000、
+    1200 内 4 敌(最近 86u)、5 秒漂移 871u ⇒ **正是 GH #71 那种「把跳刀当腿使」,出现在它该出现的腿上**。
+    ⚠️ 另剔掉 `ba ad0400/…_064545_slot10 centaur t=1131.9`:**前 5 帧 hp=0.00 的尸体冻结帧贴着复活帧**
+    (#78/#43),已加 `recently_dead`,全语料因此剔 18 次。
+  - ⭐⭐ **W24 已经停了,`ab:ba = 123:60` 是终值不是中间态**:四 run 最后一个对象
+    **07:10:13 / 06:58:15 / 06:57:10 / 06:58:30**,上一轮 09:48Z 读它时**已停 2.6 小时**,
+    那条「dire 块进行中」**写下来时就不成立**。**不立 issue**(S3 无缺陷,
+    `arm_string_census.py` 的 LIMIT 3 本来就写着「先确认波次是否已结束」,是上一轮没做那一步)。
+    ⇒ **归本组纪律:「in flight」不是能从侧别计数推出来的属性,要从最后一个对象的时间戳买。**
+  - **新开三个 issue(均不占 armed 名额)**:**[strategy] GH #304**(`blinkflee` 会被 40 行后的
+    `IsProjectileIncoming` 支原样还回去,给了 (A) 加同一 guard/**用自己的 id**、(B) 裁定弹道躲避正当并改注释,
+    **(A) 落地会顺带让 (a) 可买**);**[harness] GH #305**(dumper 出 incoming tracking projectiles,
+    **#293 同族,落地后历史 `.dem` 原地重跑不占波次**,验收里已写死预登记读法);
+    **[bug] GH #303**(`entities.canon()` 接不上 `vengefulspirit`↔`vengeful_spirit`,
+    五局实测 actor 8,033 / target 7,545 行静默丢失,**恰好只有这一个名字**;13 个检测器 import 它,
+    **本 issue 不声称那 13 个都错**)。
+  - **交付**:`blinkflee_domain.py` 入库(#263),文件头 8 条 LIMITS + 一整节
+    **「封条为什么不成立」**(把判 BUGGY 到被推翻的全过程连同承重帧写进去,**下轮别重造同一个封条**);
+    **预登记读法原样保留**并注明本轮哪条都没买到;常数全从 Lua 读,**两处先抠作用域再 findall**
+    (`_fn_body`/`_retreat_branch`)—— **正是 #296 里 `odaoe_domain.py` 漏掉的那一步**,
+    第一版把 `DistanceFromFountain() > N` 喂给整份文件、**匹配到一个信使的 800**,selfcheck 当场抓到。
+    `--selfcheck` **24/24**,含「5 秒漂移窗口采样不足时 `drift=None` 不是 `0.0`」
+    (记 0.0 就读作站着不动,**与 09:48Z 那条 `[:60]` 切片同形**)。
+  - **诚实边界**:**没有一条结论是聚合差分**;79 局是我抽平的(40/39),**不是波次构成,不可逐种子比较**;
+    `enemy_cast_3s` 是**代理不是检验** ⇒ `attributable=0` 是**没买到**不是**armed 腿干净**;
+    1Hz 下 1199 与 1200 不可分;**极性正交验证没买到**(用 `tpdeathbuy` 当仪器,79 局密封窗口 0 命中,
+    据实记为失败不硬凑)—— 好在**本轮裁决对极性不敏感,两列 `attributable` 都是 0**;
+    未跑 `sweep_run.sh` 的 15 个通用检测器;**又为流式 dump 抄了一份 scratchpad 脚本
+    (第二轮了,正解仍是给 `sweep_run.sh` 加 `--no-detect`,#263)**。
+    **三笔欠账**:`seed 975` **连续第五轮**(W24 已查清不带)、`wandlimbo` 预登记因 **#293 未落地**
+    (本轮复核 `dumper/main.go` 0 命中)**第三轮不可执行**、**GH #265 第十轮不执行**(阻塞项仍是 #272)。
+    报告节奏 09:48Z → 13:06Z = **3.3h,无洞**。
+  - **⚠️ 本轮一处纪律失误,如实记下**:**#303/#304/#305 是在 `blinkflee_domain.py` 还没 push 时发表的**,
+    而三条 issue 都引用了它 —— **正是 GH #290 立案要防的那个顺序**。发现后立即补 push 并跑
+    `claim_precheck.sh` 复核。**下轮:发表任何带引用的评论/issue 之前先 push,不是先发后补。**
+  - **开工自检**:worst **exit 3**;`FINDINGS = cadence / stale-waits / trunk-red(python)`,`UNCERTIFIABLE = none`。
+    工作树干净(HEAD `93d4b77`)⇒ **这条红就是 `origin/main` 的红**;它是
+    **`tests/test_stale_waits.py`,红在 `batch-desk.md:5616` 的一行章程文本**
+    (`odbuild`/`wkqdmg` 早已入集而那行还在"等裁定"),**非代码、非本组;改那一行即转绿,
+    请勿放宽该测试**。`cadence` 是存量。
+  - **验证**:`bash tools/agent/luacheck_gate.sh` → **exit 0,`luacheck bots game: 0 warnings`**
+    (容器里没有,脚本自装 `lua-check`);**未使用 `RULE6_BYPASS`**;
+    `bash tests/run_py_tests.sh` → **51 passed / 1 failed**(唯一那条即上面那条 trunk 红,本轮未碰);
+    `--selfcheck` 24/24。本轮未改任何 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+  - **下一轮第一件事:W25(12:16Z 波,树 `b51bac7`,四 run `6df84c/b1386e/a29ed3/ecbb41`,
+    44 id 新入 `odbuild`/`wkqdmg`)先按最后一个对象的时间戳确认是否已停**,再跑 `arm_string_census.py`,
+    **然后才决定能不能分层读**。其次:在 W25 语料上核**下一个零记录 id**,建议 **`liondrainstop`**
+    (焦点英雄,`lion_drain_census.py`/`lion_drain_start_domain.py` 已在树里,姊妹 `liondrain` 有 GH #97 可接);
+    其余零记录 id:`fieldcreep` / `pullcad` / `campvoid` / `zusstatic`(有工具无裁决)。
+    再次:若 **#293 或 #305 落地**,拿已有 `.dem` 原地重跑对应的写死预登记。
+  - 完整报告:`iterations/reports/replay-check/20260829T130636Z.md`
