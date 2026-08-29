@@ -309,6 +309,13 @@ HP_CENSUS = {
     'stayfield2_margin:SHIPPED_HP_HI':   ('MIRROR', 'J.ShouldStayAndRegen; wider than the situation test BY DESIGN'),
     'hometp_highhp:HEAL_CORE_HP':        ('MIRROR', 'cores need HP < 0.75 (:1315)'),
     'itemtrip_contract:HP_FLOOR':        ('MIRROR', 'J.IsWastefulItemTrip; pinned above'),
+    # [director 2026-08-29] Landed unregistered with the module (bb00ea75,
+    # replay-check 05:30Z) and stayed invisible for the rest of the day: this
+    # file died at IMPORT further down (the odaoe reader, ~500 lines below), so
+    # every reader of the red saw one traceback and none saw this row's name.
+    # Two findings, one banner -- record it, because "the suite is already red"
+    # is how the second one gets a free pass.
+    'wandlimbo_domain:HP_FRAC':          ('MIRROR', 'J.ShouldDrinkWandInLimbo jmz_func.lua:9348 -- `GetHealth() > GetMaxHealth() * 0.25` is the shipped test this reproduces'),
     'tpdefend_events:HEAT_HP':           ('MIRROR', 'J.ShouldTpSupportTowerFight heat gate; pinned above'),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
@@ -1054,8 +1061,55 @@ check('shipped code reads a camp.idx the retired row never listed at all -- '
 # something else.  That is a source fact, so it gets a source ratchet.
 import odaoe_domain as OA                              # noqa: E402
 
+# --------------------------------------------------------------------------
+# wandlimbo (registered in HP_CENSUS above as MIRROR) -- and a MIRROR that is
+# only a prose note is a comment, not a mirror.  Pin the number against the
+# shipped test it reproduces so a change to either side turns this red.
+import wandlimbo_domain as WL                           # noqa: E402
+
+WL_SHIPPED_HP = literal(
+    'J.ShouldDrinkWandInLimbo',
+    r'GetHealth\(\)\s*>\s*bot:GetMaxHealth\(\)\s*\*\s*(?P<n>[0-9.]+)')
+eq('wandlimbo HP_FRAC mirrors the shipped 25% floor', WL.HP_FRAC, WL_SHIPPED_HP)
+eq('wandlimbo MIN_DRAUGHT mirrors charges * 15', WL.MIN_DRAUGHT, 90)
+
 OA_SRC = OA.read_source_constants()
 eq('odaoe is gated by exactly one soak id', OA_SRC['gate_ids'], ['odaoe'])
+
+# [director 2026-08-29] Both directions of that read, because the check used to
+# have the wrong domain and nothing said so.  It scanned the WHOLE OD file for
+# a second `IsSoakCandidate`, so the day the hero stream landed 'odbuild' (GH
+# #287 §2) -- an independent gate ~560 lines away, sharing no expression with
+# odaoe -- this module raised at import and trunk read RED ON MAIN for hours
+# over a correct change.  The hazard (GH #207) is a second id CONJOINED INTO
+# THE SAME PREDICATE; a hero file carrying two independent candidates is normal
+# and must stay green.  Pin the distinction so the domain cannot widen back.
+_OD_TEXT = open(os.path.join(ROOT, 'bots', 'BotLib',
+                             'hero_obsidian_destroyer.lua'),
+                encoding='utf-8').read()
+check('an INDEPENDENT second candidate elsewhere in the OD file is not the '
+      "#207 shape -- 'odbuild' ships beside 'odaoe' today and must read green",
+      "IsSoakCandidate( 'odbuild' )" in _OD_TEXT
+      and OA.read_source_constants(text=_OD_TEXT)['gate_ids'] == ['odaoe'])
+
+
+def _odaoe_conjoined_raises():
+    poisoned = _OD_TEXT.replace(
+        "J.IsSoakCandidate('odaoe')",
+        "J.IsSoakCandidate('odaoe') and J.IsSoakCandidate('odbuild')", 1)
+    if poisoned == _OD_TEXT:
+        return 'the odaoe guard text moved -- this case poisoned nothing'
+    try:
+        OA.read_source_constants(text=poisoned)
+    except RuntimeError:
+        return None
+    return 'a second id conjoined into the odaoe guard did NOT raise'
+
+
+_odaoe_conj = _odaoe_conjoined_raises()
+check('a second id CONJOINED into the odaoe guard still raises (GH #207) -- '
+      'narrowing the domain must not blind the check it was written for',
+      _odaoe_conj is None, _odaoe_conj or '')
 check('od_GetEclipseAoeLocation still has exactly ONE call site',
       OA_SRC['call_sites'] == 1, str(OA_SRC['call_sites']))
 eq('the area branch still needs 2 targets', OA_SRC['min_targets'], 2)

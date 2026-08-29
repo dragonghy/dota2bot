@@ -78,10 +78,44 @@ local cs = require('corpus_scale')
 -- level a hero must actually reach (`> 24` needs 25).  `shape` is mechanical:
 -- CONJ = the level test is an operand of an AND chain (or a standalone `if`
 -- whose body is the branch), DISJ = it is one rung of an OR.
--- LINE NUMBERS IN THIS TABLE ARE LIVE AND RE-ANCHORED, THE ONES IN PROSE ARE NOT.
--- The `line` fields below are checked against the shipped source in both
--- directions, so any insertion above a row turns this file red -- which is
--- working as intended, and is how the 2026-08-24 'campsel' change was caught.
+--
+-- THE KEY IS THE TEXT, NOT THE LINE (director 2026-08-29, GH #221 closed out)
+-- --------------------------------------------------------------------------
+-- Rows used to carry a `line = NNNN` field checked against the shipped source
+-- in both directions, so ANY insertion above a row turned this file red. That
+-- was called "working as intended" for eight weeks. The log it produced is the
+-- argument against it: 'campsel' +11/+36, 'tbearly' +30, 'campfarm' +16/+59,
+-- 'campvoid' +41, 'campdanger' +38, 'bbshort' +6, 'salvepool' +3,
+-- 'salveally' +2, 'salveyield' +12, GH #286 +34/+41 -- TEN re-anchorings, every
+-- one of them resolved by moving the number with file/op/n/eff/text/verdict
+-- untouched, and not one of them a classification that had actually drifted.
+-- The tenth was different only in cost: the 2026-08-29T04:20Z strategy round
+-- (bc2ff86f, `tphome` veto) pushed the last two aiug rows +14 and left TRUNK
+-- RED ON MAIN. In the ~2h before this round read it, the hero stream landed on
+-- that tree, replay-check landed on it, and batch-desk launched W24 off it --
+-- because 铁律 6's push hook and the selfcheck banner both say "failing before
+-- you changed anything", which is canned text, and the one round that DID have
+-- to determine it (GH #193, see its note below) had to stash-and-re-run by hand
+-- to find out. A tripwire whose true-positive rate is 0/10 and whose false
+-- positives are indistinguishable from real ones is not a tripwire.
+--
+-- So the census now keys on `file .. '||' .. trimmed source text`. Every
+-- property the old key carried is still asserted, and one is new:
+--   * a NEW gate            -> its text is unpinned            -> red
+--   * a REWORDED gate       -> the pinned text stops resolving -> red
+--   * a DELETED gate        -> same                            -> red
+--   * a COPY-PASTED gate    -> the text now occurs twice       -> red (new)
+--   * two rows sharing text -> the key is ambiguous            -> red (new)
+--   * an insertion ABOVE it -> nothing                         -> green
+-- Verified on the tree this landed on: 22 shipped gates, 22 distinct
+-- (file, text) keys, zero collisions. This is the same cure GH #106 §4 / #127
+-- prescribed for the corpus-size equalities two rows down (`cs.ratchet`) --
+-- a hand-maintained number that any unrelated append breaks, replaced by the
+-- property it was standing in for. Line numbers below survive only in the
+-- historical prose, which was already flagged as not-current.
+--
+-- The record of what the old key cost, kept because it is the evidence:
+-- the 2026-08-24 'campsel' change was the first to be "caught" by it.
 -- That change moved every mode_farm_generic row by +11 (a wrapper inserted at
 -- the file-local declarations) and every aba_site row by +36 (a comment block
 -- above GetClosestNeutralSpwan); the rows below carry the new numbers.
@@ -152,7 +186,7 @@ local cs = require('corpus_scale')
 -- matches source TEXT, never a line.
 local GATES = {
     -- ---- generic files: these reach every hero, focus five included --------
-    { file = 'bots/item_purchase_generic.lua', line = 228, op = '>=', n = 18, eff = 18,
+    { file = 'bots/item_purchase_generic.lua', op = '>=', n = 18, eff = 18,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 18',
       why = 'sole writer of the file-local `t3AlreadyDamaged`; with it shut the '
@@ -160,7 +194,7 @@ local GATES = {
          .. 'is dead code for the whole game, and reserving for buyback when your own t3s '
          .. 'are falling is live turbo behaviour at level 12.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 360, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 18 or not J.IsCore(bot) then',
       why = 'GH #84 (乙). Supports keep the exit through `not J.IsCore(bot)`; a core\'s '
@@ -168,13 +202,13 @@ local GATES = {
          .. 'Note the standing warning: dropping farm desire is not the same as fighting -- '
          .. 'this row is a candidate, and it needs a final-desire assertion, not a reachability one.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 444, op = '>=', n = 23, eff = 23,
+    { file = 'bots/mode_farm_generic.lua', op = '>=', n = 23, eff = 23,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'or (bot:GetLevel() >= 23 and nAlliesCount >= 3)',
       why = 'rung 2 of 3. It only loosens the grouped-allies count from 4 to 3; rung 1 '
          .. '(nAlliesCount >= 4) and rung 3 (GetRoshanDesire()) carry the same purpose live.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 467, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if #nNeutrals == 0 and #nDefendAllies >= 2 and (not beVeryHighFarmer or bot:GetLevel() >= 15 or J.IsLateGame()) then',
       why = 'for a `beVeryHighFarmer` the first rung is false by construction, so the '
@@ -182,7 +216,7 @@ local GATES = {
          .. 'is DotaTime() > 18*60 in turbo, false in every frame of the archive. Both '
          .. 'fallbacks dead => the very-high farmer never joins a defence this way.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 611, op = '>=', n = 18, eff = 18,
+    { file = 'bots/mode_farm_generic.lua', op = '>=', n = 18, eff = 18,
       shape = 'DISJ', verdict = 'TEETH',
       text = 'if not J.IsInLaningPhase() and (bCore or J.IsLateGame() or bot:GetLevel() >= 18) then',
       why = 'cores are covered by `bCore`; for a SUPPORT the remaining two rungs are the '
@@ -190,7 +224,7 @@ local GATES = {
          .. 'the post-laning BOT_MODE_DESIRE_LOW farm floor. Whether that is wrong is a '
          .. 'design question -- what is pinned here is that no level-18 support decides it.' },
 
-    { file = 'bots/mode_farm_generic.lua', line = 678, op = '>=', n = 15, eff = 15,
+    { file = 'bots/mode_farm_generic.lua', op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if not bot:IsInvisible() and bot:GetLevel() >= 15',
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '
@@ -213,7 +247,7 @@ local GATES = {
     -- so the text assertion below still re-reads the row it was classified
     -- from, and the pre-change tree was run in a worktree (15/15 green on
     -- HEAD~1) before these numbers were touched.
-    { file = 'bots/ability_item_usage_generic.lua', line = 183, op = '>=', n = 30, eff = 30,
+    { file = 'bots/ability_item_usage_generic.lua', op = '>=', n = 30, eff = 30,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() >= 30',
       why = 'a bloodseeker-only opt-out at the level cap. The subject of the branch is a '
@@ -222,7 +256,7 @@ local GATES = {
     -- 584 -> 588 (+4): the 2026-08-26T1x:xxZ strategy round added a four-line
     -- COMMENT above this branch landing `bbfight`.  Source text unchanged, so
     -- this is 0LN2's prescribed repair -- move the pin, never relax the check.
-    { file = 'bots/ability_item_usage_generic.lua', line = 635, op = '>', n = 24, eff = 25,
+    { file = 'bots/ability_item_usage_generic.lua', op = '>', n = 24, eff = 25,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 24',
       why = 'buyback path 2 of 3. Inert on its own terms (a level-25 hero). The SECOND, '
@@ -242,20 +276,20 @@ local GATES = {
     -- them COMMENT).  Third time these two pins have moved and the second time
     -- prose alone did it -- 0LN2 again, and the reason this file keys nothing
     -- on line numbers that it could key on text instead.
-    { file = 'bots/ability_item_usage_generic.lua', line = 5858, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5898, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
          .. 'attacking the ancient); the level rung only widens it.' },
 
-    { file = 'bots/FunLib/aba_site.lua', line = 891, op = '>=', n = 20, eff = 20,
+    { file = 'bots/FunLib/aba_site.lua', op = '>=', n = 20, eff = 20,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() >= 20 and allyCount <= 1 and botNetWorth < 21000 then',
       why = 'named 合取(有牙齿) in GH #84 §3(甲); reads INERT here. The row\'s subject is a '
@@ -265,49 +299,49 @@ local GATES = {
          .. 'It does reach a FOCUS hero -- skeleton_king delegates here (:1001) -- which is '
          .. 'why the row was worth reading rather than waving through.' },
 
-    { file = 'bots/FunLib/aba_site.lua', line = 955, op = '>', n = 20, eff = 21,
+    { file = 'bots/FunLib/aba_site.lua', op = '>', n = 20, eff = 21,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 20 and botNetWorth < 23333 then',
       why = 'same shape, huskar\'s entry (luna delegates here at :853). Subject is a '
          .. 'level-21 hero; the three rows above it are net-worth-only and live.' },
 
     -- ---- hero files: not focus heroes, classified for completeness ---------
-    { file = 'bots/BotLib/hero_medusa.lua', line = 495, op = '>=', n = 20, eff = 20,
+    { file = 'bots/BotLib/hero_medusa.lua', op = '>=', n = 20, eff = 20,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'if bot:GetLevel() >= 20 or J.GetMP( bot ) > 0.88 then nShouldAoeCount = 3 end',
       why = 'the mana sibling is live and carries the same relaxation.' },
 
-    { file = 'bots/BotLib/hero_morphling.lua', line = 985, op = '>=', n = 26, eff = 26,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 26, eff = 26,
       shape = 'DISJ', verdict = 'INERT', text = 'if bot:GetLevel() >= 26 then count = 7',
       why = 'rung of the innate stat ladder (:984 seeds count = 0). All seven rungs are '
          .. 'above the turbo ceiling, so `count` stays 0 -- which is the correct estimate '
          .. 'for a sub-17 morphling. The consumer at :998-1004 is live.' },
-    { file = 'bots/BotLib/hero_morphling.lua', line = 986, op = '>=', n = 24, eff = 24,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 24, eff = 24,
       shape = 'DISJ', verdict = 'INERT', text = 'elseif bot:GetLevel() >= 24 then count = 6',
       why = 'same ladder.' },
-    { file = 'bots/BotLib/hero_morphling.lua', line = 987, op = '>=', n = 23, eff = 23,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 23, eff = 23,
       shape = 'DISJ', verdict = 'INERT', text = 'elseif bot:GetLevel() >= 23 then count = 5',
       why = 'same ladder.' },
-    { file = 'bots/BotLib/hero_morphling.lua', line = 988, op = '>=', n = 22, eff = 22,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 22, eff = 22,
       shape = 'DISJ', verdict = 'INERT', text = 'elseif bot:GetLevel() >= 22 then count = 4',
       why = 'same ladder.' },
-    { file = 'bots/BotLib/hero_morphling.lua', line = 989, op = '>=', n = 21, eff = 21,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 21, eff = 21,
       shape = 'DISJ', verdict = 'INERT', text = 'elseif bot:GetLevel() >= 21 then count = 3',
       why = 'same ladder.' },
-    { file = 'bots/BotLib/hero_morphling.lua', line = 990, op = '>=', n = 19, eff = 19,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 19, eff = 19,
       shape = 'DISJ', verdict = 'INERT', text = 'elseif bot:GetLevel() >= 19 then count = 2',
       why = 'same ladder. This is the only rung the archive comes within reach of '
          .. '(one hero-slot at level 19 in 940).' },
-    { file = 'bots/BotLib/hero_morphling.lua', line = 991, op = '>=', n = 17, eff = 17,
+    { file = 'bots/BotLib/hero_morphling.lua', op = '>=', n = 17, eff = 17,
       shape = 'DISJ', verdict = 'INERT', text = 'elseif bot:GetLevel() >= 17 then count = 1',
       why = 'same ladder.' },
 
-    { file = 'bots/BotLib/hero_necrolyte.lua', line = 382, op = '>', n = 24, eff = 25,
+    { file = 'bots/BotLib/hero_necrolyte.lua', op = '>', n = 24, eff = 25,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'or ( nCanHurtCount >= 2 and nCanKillCount >= 1 and bot:GetLevel() > 24 and #tableNearbyEnemyCreeps == 2 )',
       why = 'rung 6 of 6; the five rungs above it are live and strictly easier to satisfy.' },
 
-    { file = 'bots/BotLib/hero_necrolyte.lua', line = 587, op = '>=', n = 18, eff = 18,
+    { file = 'bots/BotLib/hero_necrolyte.lua', op = '>=', n = 18, eff = 18,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() >= 18 then EstDamage = EstDamage + targetMaxHealth * 0.016 end',
       why = 'an additive term modelling the level-3 ultimate. Below 18 the term should NOT '
@@ -329,6 +363,10 @@ local function trim(s) return (s:gsub('^%s+', ''):gsub('%s+$', '')) end
 
 --- Every `GetLevel() >=|> N` site in bots/ with an effective threshold >= 15,
 --- read straight off the shipped source.  Keyed 'file:line'.
+-- Keyed by `file .. '||' .. trimmed source text`, NOT by file:line -- see the
+-- "THE KEY IS THE TEXT" note above the table.  `lines` is the list of source
+-- lines that produced that key, so a text that occurs twice in one file is
+-- visible (and red) rather than silently collapsing two gates into one row.
 local function scan_source()
     local found = {}
     local p = assert(io.popen('find bots -name "*.lua" | sort'))
@@ -340,14 +378,28 @@ local function scan_source()
                 local eff = tonumber(num)
                 if op == '>' then eff = eff + 1 end
                 if eff >= 15 then
-                    found[file .. ':' .. n] = { op = op, n = tonumber(num), eff = eff,
-                                                text = trim(line) }
+                    local text = trim(line)
+                    local key = file .. '||' .. text
+                    local e = found[key]
+                    if e == nil then
+                        found[key] = { file = file, op = op, n = tonumber(num), eff = eff,
+                                       text = text, lines = { n } }
+                    else
+                        table.insert(e.lines, n)
+                    end
                 end
             end
         end
     end
     p:close()
     return found
+end
+
+-- Where a row currently lives, for error messages only.  Never an input to a
+-- verdict: the whole point of the re-key is that this number is derived.
+local function whereis(src)
+    if src == nil or src.lines == nil then return '?' end
+    return src.file .. ':' .. table.concat(src.lines, ',')
 end
 
 --- Levels of every hero-slot in every fixture, plus the frame clock.
@@ -394,19 +446,26 @@ local tests = {}
 tests['[census] the pinned set is exactly the set bots/ ships'] = function()
     local found = scan_source()
     local pinned = {}
-    for _, g in ipairs(GATES) do pinned[g.file .. ':' .. g.line] = g end
+    for _, g in ipairs(GATES) do
+        local key = g.file .. '||' .. g.text
+        assert(pinned[key] == nil, 'two GATES rows carry the same file and text ('
+            .. key .. ') -- the census key would not distinguish them; give the '
+            .. 'second one its own classification or delete it')
+        pinned[key] = g
+    end
 
     for key, src in pairs(found) do
         local g = pinned[key]
-        assert(g ~= nil, 'unpinned GetLevel gate at ' .. key .. ' (' .. src.text .. ') -- '
-            .. 'classify it in GATES (GH #84 甲) before shipping it')
+        assert(g ~= nil, 'unpinned GetLevel gate at ' .. whereis(src) .. ' ('
+            .. src.text .. ') -- classify it in GATES (GH #84 甲) before shipping it')
         assert(g.op == src.op and g.n == src.n,
-            key .. ': pinned ' .. g.op .. ' ' .. g.n .. ' but source reads '
+            whereis(src) .. ': pinned ' .. g.op .. ' ' .. g.n .. ' but source reads '
             .. src.op .. ' ' .. src.n)
     end
-    for key in pairs(pinned) do
-        assert(found[key] ~= nil, 'pinned gate ' .. key .. ' is gone from bots/ -- '
-            .. 'delete its GATES row and re-read the verdict it carried')
+    for key, g in pairs(pinned) do
+        assert(found[key] ~= nil, 'pinned gate ' .. g.file .. ' `' .. g.text
+            .. '` is gone from bots/ -- delete its GATES row and re-read the '
+            .. 'verdict it carried, do not just re-word the string')
     end
 end
 
@@ -423,14 +482,22 @@ tests['[census] 12 of the 22 sit at an effective threshold >= 20'] = function()
     assert(ge20 == 12, 'expected 12 gates at N >= 20, got ' .. ge20)
 end
 
-tests['[census] each pinned row still reads the text it was classified from'] = function()
+-- The text IS the key, so "the row still reads the text it was classified from"
+-- is now enforced by the set assertion above (a re-worded line simply stops
+-- resolving).  What is left to check is the thing the key cannot carry: that
+-- each classified text occurs EXACTLY ONCE in its file.  A copy-paste of a
+-- classified gate to a second site is the one way a real new gate could hide
+-- behind an existing row's classification, and it is the case the old
+-- file:line key caught for free.
+tests['[census] each pinned row resolves to exactly one shipped line'] = function()
     local found = scan_source()
     for _, g in ipairs(GATES) do
-        local src = found[g.file .. ':' .. g.line]
-        assert(src ~= nil, 'missing source for ' .. g.file .. ':' .. g.line)
-        assert(src.text == g.text, g.file .. ':' .. g.line
-            .. '\n  pinned: ' .. g.text .. '\n  source: ' .. src.text
-            .. '\n  the line changed -- re-read the verdict, do not just update the string')
+        local src = found[g.file .. '||' .. g.text]
+        assert(src ~= nil, 'missing source for ' .. g.file .. ' `' .. g.text .. '`')
+        assert(#src.lines == 1, g.file .. ' `' .. g.text .. '` now occurs at '
+            .. #src.lines .. ' lines (' .. table.concat(src.lines, ', ') .. ') -- '
+            .. 'one classification cannot stand for two call sites; classify the '
+            .. 'new one (its text must differ) or delete it')
     end
 end
 
@@ -474,7 +541,7 @@ end
 tests['[classification] every row with teeth sits at N = 15 or N = 18'] = function()
     for _, g in ipairs(GATES) do
         if g.verdict == 'TEETH' then
-            assert(g.eff == 15 or g.eff == 18, g.file .. ':' .. g.line
+            assert(g.eff == 15 or g.eff == 18, g.file .. ' `' .. g.text .. '`'
                 .. ' has teeth at N = ' .. g.eff .. ' -- the "look at N >= 20" heuristic '
                 .. 'would now find something; re-read the §5 acceptance criterion')
         end

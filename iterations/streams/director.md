@@ -6429,6 +6429,51 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑳#217(第十九轮) ㉑#211(第二十轮) ㉒backlog §18 ㉓§16/§17 ㉔§BL.4(i) ㉕#75(第二十二轮)
   ㉖**W35 周日邮件** ㉗`bbrespawn` 的 `readmit_on` ㉘盯 #257 的验收 1 ㉙**GH #140**(第二十九轮)。
 
+- 2026-08-29T07:07Z:一个工作单元,**主干红了 ~3 小时,两个独立根因都修完,回绿**。报告
+  `iterations/reports/director/20260829T0707Z.md`。**零 AWS 调用、零支出、未发波;
+  `bots/`/`game/` 逐字节零 diff**(两条红都在测试/工具侧)。
+  **① 开工自检第一读就是 `exit 3` / `trunk-red(python) trunk-red(lua)`,而工作树是干净的**
+  —— 所以说的是 `main`。往回查:`bc2ff86f`(strategy 04:20Z)和 `67633eb`(hero 04:51Z)
+  各带进来一条。
+  **② 两个根因是同一个形状:门盯的是代理量,不是它要护的性质。**
+  A = `test_level_gate_census.lua` 把 22 道 `GetLevel()>=N` 门按 **`file:line`** 钉死,
+  任何在上方的插入都变红;文件自己的注释就是控方证据 —— 我数了一遍,
+  **10 次重新锚定(campsel/tbearly/campfarm/campvoid/campdanger/bbshort/salvepool/
+  salveally/salveyield/#286),0 次分类真的漂移**,而假阳性和真阳性对读者不可区分
+  (横幅那句「failing before you changed anything」是罐头字符串,GH #198 §3 已判过;
+  唯一真去判定的 GH #193 靠手工 stash 才知道 main 是绿的)。
+  **key 换成 `(file, 去空白源文本)`** —— 旧 key 的每条性质都还在,还多了
+  「复制到第二处」和「两行共用 key」两条红;落地那棵树上 **22 门 / 22 个互异 key / 零碰撞**;
+  22 个 `line = NNNN` 字段整个删掉(留着不检查就会烂)。**这跟 GH #106 §4 / #127
+  给语料规模等式开的药方(`cs.ratchet`)是同一个。GH #221 本轮结案。**
+  B = `odaoe_domain.py` 要防的是 **GH #207 那族「同一个谓词里的第二个 id」**,
+  代码写的却是「**整个文件里**的第二个 id」;hero 落地的 `odbuild` 离 `odaoe`
+  **约 560 行、不共享任何表达式**,是两道**互相独立**的门 —— 读者 raise,
+  `test_detector_source_constants.py` **在 import 处就死**,主干为一个**正确的改动**红。
+  收到 `X.od_GetEclipseAoeLocation` 函数体内(`bbfloor_domain._gate_ids` 已有的形状),
+  **两向回归都钉了**:独立第二候选必须绿、合取进同一道门的必须还 raise。
+  **③ 修完 B 立刻吐出被 import 崩溃遮住的第三条红**:`wandlimbo_domain:HP_FRAC`
+  从 `bb00ea75`(replay-check 05:30Z)起就没登记进 `HP_CENSUS`,**整天隐形**
+  —— 崩溃点在它下面约 500 行,每个看到红的人只看见一条 traceback。
+  登记为 MIRROR(`J.ShouldDrinkWandInLimbo`,`jmz_func.lua:9348`),
+  **并把它变成真的 mirror**(section 2 两条钉:`HP_FRAC` 对源码 `0.25`、
+  `MIN_DRAUGHT` 对 `6*15=90`)—— 只写在散文里的 MIRROR 是注释不是镜像。
+  **两个发现一条横幅:「反正套件已经红了」正是第二个发现拿到免票的方式。**
+  **④ 本轮真正的发现是顺序,不是那两道门**(与 GH #290 立案句同型):
+  04:20Z 红 → hero 落地 ×3 → **06:20Z batch-desk 从红树上发 W24** → 06:48Z
+  replay-check 落地 → 07:0xZ 总监是当天第一个读到 exit 3 的人。自检**没有失灵,
+  它打印了然后没有下一步**。W24 不需要杀波重发(shipped 行为零 diff),但那是运气不是核过。
+  已写进 `DECISIONS_NEEDED.md §14`(排期题:自检 trunk-red 腿要不要有牙齿,
+  倾向「必填栏 + 白名单例外」)。
+  **验证:** `luacheck_gate.sh` exit 0 / 0 警告;`run_py_tests.sh` **52 passed 0 failed**
+  (改前 50/2);自检快子集 **21 tagged 文件 0 failures**;`FINDINGS (exit 3)` 只剩 `cadence`。
+  **没有用 `RULE6_BYPASS`。** 动态那半(~100min 全量,GH #124)未跑、不声称。
+  **⑤ 本轮明说没做的:** promote/reject 无可判;test_set 无新申请;
+  **成本核查未跑**(总监零 AWS 调用,MTD 以 batch-desk W24 报告为准,下轮补);
+  **`hero-22`(queue,`odbuild` 路由裁定)未裁** —— 自检点了它的名,
+  和根因 B 同一个 id 但裁定是排期题,**留下一轮,别掉棒**;patch 检查未做。
+  给 owner 的决定类邮件本轮**未发**(本周额度留着,无需拍板事项)。
+
 - 2026-08-29T04:0xZ:一个工作单元,**GH #290 §4③ 的「中间那一格」落地**。报告
   `iterations/reports/director/20260829T040809Z.md`。**零 AWS 调用、零支出、未发波;
   `bots/`/`game/` 逐字节零 diff。**

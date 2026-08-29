@@ -98,12 +98,29 @@ def read_source_constants(path=OD_LUA, text=None):
         raise RuntimeError("X.nRAoeMinDamagePct not found")
     out["min_damage_pct"] = float(m.group(1))
 
-    gates = re.findall(r"J\.IsSoakCandidate\(\s*'([a-z0-9_]+)'\s*\)", text)
+    # [director 2026-08-29, GH #290 family] The GH #207 hazard is a second id
+    # CONJOINED INTO THE SAME PREDICATE as 'odaoe' -- `IsSoakCandidate('odaoe')
+    # and IsSoakCandidate('X')` is frozen FALSE the day X is promoted, because a
+    # promoted id is in no armed string.  This check used to look for a second
+    # id ANYWHERE IN THE FILE, which is a different and much broader thing: a
+    # hero file is allowed to carry independent candidates.  On 2026-08-29 it
+    # collected the bill.  The hero stream landed 'odbuild' (GH #287 §2) as its
+    # own gate around the ability build list, ~560 lines above and sharing no
+    # expression with this one; the reader raised, tests/test_detector_source_
+    # constants.py died at import, and trunk read RED ON MAIN for hours over a
+    # change that was correct.  Scope the read to the function the constants
+    # describe -- the same shape bbfloor_domain._gate_ids already uses.
+    m = re.search(r"function\s+X\.od_GetEclipseAoeLocation\(.*?\n(.*?)\nend\n",
+                  text, re.S)
+    if not m:
+        raise RuntimeError("X.od_GetEclipseAoeLocation not found")
+    gates = re.findall(r"J\.IsSoakCandidate\(\s*'([a-z0-9_]+)'\s*\)", m.group(1))
     if gates != ["odaoe"]:
         raise RuntimeError(
-            "expected exactly one soak gate 'odaoe' in the OD file, found %r "
-            "-- a second id in the gate freezes it FALSE the day that id is "
-            "promoted (GH #207 family)" % (gates,))
+            "expected exactly one soak gate 'odaoe' inside "
+            "X.od_GetEclipseAoeLocation, found %r -- a second id in the SAME "
+            "gate freezes it FALSE the day that id is promoted (GH #207 "
+            "family)" % (gates,))
     out["gate_ids"] = gates
 
     calls = re.findall(r"X\.od_GetEclipseAoeLocation\(", text)

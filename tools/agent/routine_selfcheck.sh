@@ -235,6 +235,13 @@ fi
 # (:599 -> :637) and the banner told them main was already red; `git stash`
 # showed main at 15/15 green.  Read literally, the next reader ships their own
 # red.  Now the banners name the working tree and name what would settle it.
+#   [director 20260829] That specific generator is gone: test_level_gate_census
+# .lua no longer keys on line numbers (it keys on source text), so an insertion
+# above a row is green.  The banner wording still matters -- BOTH legs still run
+# the working tree, and any other red reaches the reader the same way.  What the
+# 08-29 round found is that the wording was never the whole gap: on that day the
+# banner printed TRUNK RED correctly and three streams landed on it anyway, one
+# of them launching a paid wave.  See iterations/DECISIONS_NEEDED.md section 14.
 #   DELIBERATELY NOT auto-stashing to answer it here: a selfcheck that mutates
 # the tree can strand a session's uncommitted work if it dies between stash and
 # pop, and 开工自检 is the one command every stream runs before touching
