@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""[ratchet] The two invariants behind test_set.md §BB.4 / §BA.4.
+"""[ratchet] The three invariants behind test_set.md §BB.4 / §BA.4 / §CG.5.
 
 INVARIANT 1 (the ratchet that matters).  Every id in `test_set.md`'s member
 string that HAS a queue request must have a **delivered** ruling -- a
@@ -13,6 +13,25 @@ INVARIANT 2.  `tools/agent/pending_rulings.py` partitions correctly.  A
 guard that silently drops a bucket is worse than no guard, so the partition
 is asserted exhaustive and disjoint on both synthetic input and the real
 queue.
+
+INVARIANT 3 (§CG.5, added 2026-08-29 by the director).  The orphan leg must
+fire on ITS OWN FOUNDING CASE.  `fieldsip` was proposed in `test_set.md` §CE
+at 10:xxZ with no `queue.json` row, and this tool printed `none` for three
+consecutive rounds while the proposal sat un-ruled for eight hours.  The
+regression row below rebuilds exactly that state -- section present, no row,
+not in the member string, and a `state.json` entry that the PROPOSING stream
+wrote -- and requires an ORPHAN_PROPOSAL out of it.  The last clause is the
+load-bearing one: keying "already ruled" off the mere existence of a
+`state.json` entry passes every other test in this file and is silent on the
+one case the leg exists for.
+
+What invariant 3 does NOT assert: that the real tree currently has zero
+orphans.  An un-ruled proposal is a transient the director clears in-round,
+and reddening every stream's test run over the director's inbox would create
+pressure to weaken the tool.  The exit-3 selfcheck leg is what reports that.
+What IS pinned on the real tree is parser health -- every proposal heading
+still yields an id -- because a parser that silently stops matching would
+turn this leg back into the `none` it was built to stop printing.
 
 Run: python3 tests/test_pending_rulings.py
 """
@@ -147,6 +166,169 @@ check([r["id"] for r in sother] == ["b"], "synthetic other bucket wrong")
 # clone cannot see the introducing commit (tool LIMIT 3).
 check(pr.first_seen("no-such-request-id-xyzzy") is None,
       "first_seen invented an age for an id that was never in the file")
+
+# ---------------------------------------------------------------- invariant 3
+# Parser health on the real archive.  Every §XX section that declares itself an
+# admission proposal must still yield an id; a heading form that stops matching
+# is how this leg would quietly become the `none` it was built to stop printing.
+ts_text = pr.read_test_set(TEST_SET)
+real_proposals = pr.find_proposals(ts_text)
+check(len(real_proposals) >= 7,
+      "proposal-heading parser found %d sections, fewer than the 7 on record"
+      % len(real_proposals))
+check(all(cand for _s, cand, _h in real_proposals),
+      "a real proposal heading yielded no id: %r"
+      % [s for s, cand, _h in real_proposals if not cand])
+check({s for s, _c, _h in real_proposals} >= {"BK", "BR", "BT", "BV", "CC", "CD", "CE"},
+      "a known proposal section stopped being recognised")
+by_section = {s: cand for s, cand, _h in real_proposals}
+check(by_section.get("BK") == "abilanc", "§BK's proposal id read wrong")
+check(by_section.get("BR") == "aimguard", "§BR's proposal id read wrong")
+check(by_section.get("CE") == "fieldsip", "§CE's proposal id read wrong")
+
+# The id must come from the POSITION AFTER THE MARKER, not from "first backtick
+# in the line".  Measured 2026-08-29: on all seven archived headings the two
+# rules agree -- §BK backticks the contrast id `campdanger` and §BR the
+# withdrawn `abil1st`, but both do so AFTER the proposal.  So the real corpus
+# cannot tell the rules apart, and the mutation that swaps them survives every
+# check above.  This synthetic is the discriminator: a heading that names the
+# withdrawn id first, which the archive is one edit away from containing.
+lead_md = ("# t\naaa\n\n"
+           "## §ZY 2026-01-01 协同组撤回对 `abil1st` 的建议,并提议入集:`aimguard`(GH #1)\n")
+check([c for _s, c, _h in pr.find_proposals(lead_md)] == ["aimguard"],
+      "a backticked id BEFORE the marker was parsed as the proposal")
+
+# The member string reader must be positional (line 2), not a fuzzy search --
+# the archive quotes historical member strings, and matching one of those would
+# score every ejected id as still armed.
+armed = pr.armed_ids(ts_text)
+check(set(members) == armed, "armed_ids disagrees with the line-2 member string")
+check("fieldsip" in armed, "fieldsip missing from the member string")
+# There are 13 bare member-string lines in the file; 12 are historical strings
+# quoted inside archive sections, the oldest 16 ids long.  A reader that lands
+# on any of them scores every id admitted since as un-armed, which silences the
+# orphan leg's resolution signal in exactly the direction that hides work.
+stale_md = "# t\ncur1,cur2,cur3\n\ntext\nold1,old2\nmore text\n"
+check(pr.armed_ids(stale_md) == {"cur1", "cur2", "cur3"},
+      "armed_ids read a member string other than line 2")
+check(pr.armed_ids("# t\n") == set(), "armed_ids invented ids from a file with no line 2")
+check(pr.armed_ids("# t\nnot a member string, with spaces\n") == set(),
+      "armed_ids parsed prose as a member string")
+
+# Token equality, not substring: `stayfield` and `stayfield2` are both real ids.
+rows = [{"id": "r1", "bundle": "stayfield2", "status": "pending"}]
+check(pr.queue_rows_for("stayfield2", rows), "exact bundle token not matched")
+check(not pr.queue_rows_for("stayfield", rows),
+      "`stayfield` matched a `stayfield2` row -- substring match, not token match")
+check(pr.queue_rows_for("b", [{"id": "r2", "bundle": "a, b, c"}]),
+      "comma-separated bundle token not matched")
+check(pr.queue_rows_for("x", [{"id": "r3", "bundle": "", "bundle_was": "x"}]),
+      "bundle_was not consulted")
+
+# ruled_in_state: a ruling key means ruled; an entry alone does NOT.
+proposing_entry = {"e": {"id": "zz", "handoff": "director: rule on admission"}}
+check(not pr.ruled_in_state("zz", proposing_entry),
+      "a bare state.json entry read as a ruling -- this is the founding case's shape")
+check(pr.ruled_in_state("zz", {"e": {"id": "zz", "director_ruling": "APPROVED"}}),
+      "director_ruling not read as a ruling")
+check(pr.ruled_in_state("zz", {"e": {"id": "zz", "director_ruling_20260829": "EJECTED"}}),
+      "a dated re-ruling key not read as a ruling")
+check(not pr.ruled_in_state("zz", {"e": {"id": "zz", "director_ruling": "  "}}),
+      "a blank ruling value read as a ruling")
+
+# THE FOUNDING CASE, rebuilt.  §CE present, no queue row, not armed, and a
+# state.json entry written by the proposing stream.
+FOUNDING_MD = (
+    "# test set\n"
+    "aaa,bbb,ccc\n"
+    "\n"
+    "## §CE 2026-08-29T10:xxZ 协同组提议入集:`fieldsip`(owner P2 的第一根杠杆)\n"
+)
+founding_state = {"fieldsip_20260829": {"id": "fieldsip",
+                                        "handoff": "director: rule on admission"}}
+orph, rowless, unparsed = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), [], pr.armed_ids(FOUNDING_MD), founding_state)
+check([(s, c) for s, c, _r, _rows in orph] == [("CE", "fieldsip")],
+      "the founding case did not produce an ORPHAN_PROPOSAL: %r" % (orph,))
+check(not rowless and not unparsed, "the founding case leaked into another bucket")
+
+# ...and each resolution signal alone must silence it, because neither is
+# universal: `aimguard` was admitted with no ruling key, `campexit` was ejected
+# and so is not in the member string.
+armed_md = FOUNDING_MD.replace("aaa,bbb,ccc", "aaa,bbb,fieldsip")
+orph2, rowless2, _u = pr.classify_proposals(
+    pr.find_proposals(armed_md), [], pr.armed_ids(armed_md), founding_state)
+check(not orph2 and len(rowless2) == 1,
+      "admission into the member string did not silence the orphan leg")
+ruled_state = {"fieldsip_20260829": {"id": "fieldsip", "director_ruling": "EJECTED"}}
+orph3, rowless3, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), [], pr.armed_ids(FOUNDING_MD), ruled_state)
+check(not orph3 and len(rowless3) == 1,
+      "a delivered director_ruling did not silence the orphan leg")
+
+# A row exists but is closed: a ruling has nowhere to land, so it is an orphan.
+closed_row = [{"id": "q1", "bundle": "fieldsip", "status": "done"}]
+orph4, _rl, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), closed_row, set(), founding_state)
+check(len(orph4) == 1 and "closed" in orph4[0][2],
+      "an unruled proposal whose only row is closed was scored as covered")
+open_row = [{"id": "q1", "bundle": "fieldsip", "status": "pending"}]
+orph5, _rl, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), open_row, set(), founding_state)
+check(not orph5, "an open row did not cover the proposal")
+
+# LIMIT 6: a heading whose id cannot be read is reported, never dropped.
+bad_md = "# t\naaa,bbb\n\n## §ZZ 2026-01-01 协同组提议入集:那个新杠杆\n"
+_o, _rl, unp = pr.classify_proposals(
+    pr.find_proposals(bad_md), [], pr.armed_ids(bad_md), {})
+check([s for s, _h in unp] == ["ZZ"], "an unreadable proposal heading was dropped")
+
+# A ruling section must not be mistaken for a proposal section.
+ruling_md = "# t\naaa\n\n## §CG 2026-08-29T18:5xZ 总监裁定:`fieldsip`(§CE)**入集**\n"
+check(pr.find_proposals(ruling_md) == [],
+      "a 总监裁定 section was parsed as an admission proposal")
+
+# LIMIT 7: statuses outside the vocabulary are invisible to both buckets, so
+# they must at least be named.  Measured on the real queue: `routed` and
+# `harvested_pending_verification` are both in use.
+check(pr.unknown_status_rows([{"id": "a", "status": "routed"}]),
+      "an out-of-vocabulary status was not reported")
+check(not pr.unknown_status_rows([{"id": "a", "status": "pending"}]),
+      "a known status was reported as unknown")
+
+# The exit contract, end to end.  An orphan must redden the process, not just
+# print a line -- the selfcheck leg reads the exit code, and a finding that
+# only exists in stdout is the `SKIP is not a pass` shape (GH #171).
+import subprocess  # noqa: E402
+import tempfile  # noqa: E402
+
+tmp = tempfile.mkdtemp()
+paths = {}
+for name, blob in (("queue.json", {"requests": []}),
+                   ("state.json", founding_state)):
+    paths[name] = os.path.join(tmp, name)
+    with open(paths[name], "w", encoding="utf-8") as fh:
+        json.dump(blob, fh)
+paths["md"] = os.path.join(tmp, "test_set.md")
+with open(paths["md"], "w", encoding="utf-8") as fh:
+    fh.write(FOUNDING_MD)
+run = subprocess.run(
+    [sys.executable, os.path.join(REPO, "tools", "agent", "pending_rulings.py"),
+     "--no-age", "--queue", paths["queue.json"], "--test-set", paths["md"],
+     "--state", paths["state.json"]],
+    capture_output=True, text=True)
+check(run.returncode == 3,
+      "an orphan proposal did not redden the exit code (got %d)" % run.returncode)
+check("ORPHAN_PROPOSAL" in run.stdout and "fieldsip" in run.stdout,
+      "the orphan was not named on stdout")
+# ...and an unreadable test_set.md is UNCERTIFIABLE (exit 2), never a clean 0.
+run2 = subprocess.run(
+    [sys.executable, os.path.join(REPO, "tools", "agent", "pending_rulings.py"),
+     "--no-age", "--queue", paths["queue.json"],
+     "--test-set", os.path.join(tmp, "no-such-file.md"), "--state", paths["state.json"]],
+    capture_output=True, text=True)
+check(run2.returncode == 2, "a missing test_set.md exited %d, not 2" % run2.returncode)
+check("UNCERTIFIABLE" in run2.stdout, "a leg that could not run did not say so")
 
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:

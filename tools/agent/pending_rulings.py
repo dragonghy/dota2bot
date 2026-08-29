@@ -29,6 +29,74 @@ two buckets, because they need two different rulings:
                 still need a routing/scheduling ruling, but §BB.4's
                 same-round deadline is not what binds them.
 
+...and, since 2026-08-29 (director, §CG.5), the OTHER END of the same path:
+
+  ORPHAN_PROPOSAL -- an admission proposal that exists ONLY as a `test_set.md`
+                section, with no `queue.json` request row to carry a
+                ruling, and no ruling delivered anywhere else yet.
+
+WHY THE ORPHAN LEG EXISTS (2026-08-29T18:5xZ, director; test_set.md §CG.1)
+--------------------------------------------------------------------------
+`fieldsip` was proposed for admission at 10:xxZ in `test_set.md` §CE -- a
+rideshare, zero AWS increment, the exact shape §BB.4 says must be ruled in
+the round it arrives.  It sat un-ruled for EIGHT HOURS across three rounds,
+and this tool printed, truthfully, in every one of them:
+
+    RIDESHARE (§BB.4: rule this round): none
+    OTHER (routing/slot ruling still owed): none
+
+Because it scans `queue.json`, and `fieldsip` had no row there -- grep count
+zero.  A clean read, not a clean scene.  Compare §CF's two ids (`odbuild`,
+`wkqdmg`): they had rows, this tool named them for two consecutive rounds,
+and they were still late -- but late with somebody shouting.  `fieldsip` was
+late with NOBODY shouting, and the only path by which it was eventually
+found was a human happening to read that section.  Luck is not a mechanism.
+
+This is the mirror of §AW.1 / §BM.  Those three cases lost a RULING that
+never reached the field the ruled party reads; this one lost the REQUEST.
+Charter 2.5 legislated the downstream half (a ruling must land in
+`director`) and never wrote the upstream half down at all -- nothing said a
+proposal must first have a row.  The failure direction is UNDER-report,
+which is the opposite sign from GH #276's over-asking detector, so "it errs
+conservative" is not available as consolation here.
+
+WHAT COUNTS AS "ALREADY RULED" FOR THE ORPHAN LEG
+--------------------------------------------------
+Two machine-readable signals, and the pair was chosen by running it against
+the founding case rather than by taste:
+
+  * the id is in `test_set.md` line 2 (the armed member string) -- admission
+    IS the ruling, and the harm is over; or
+  * its `iterations/state.json` entry carries a `director_ruling*` key.
+
+Deliberately NOT a signal: the mere EXISTENCE of a `state.json` entry.  At
+the founding commit (`351389e`, the round §CE landed) `fieldsip` already had
+a full `state.json` entry -- the proposing stream writes one AS the proposal,
+with `handoff: "director: rule on admission"` in it.  Keying off presence
+would have made this leg silent on the one case it was built for.  Neither
+signal alone suffices either: `aimguard` was admitted with no
+`director_ruling` key anywhere, `campexit` was ejected and so is not in the
+member string; each is caught by the other signal.
+
+LIMITS FOR THE ORPHAN LEG (in addition to 1-4 below)
+-----------------------------------------------------
+5. A proposal with no row but an already-delivered ruling is reported as
+   `ROWLESS (ruled elsewhere)` -- informational, no effect on the exit code.
+   §CG.5 read literally would redden those too; they are the three historical
+   sections (§BR/§BT/§BV) that predate the rule, and reddening on them every
+   round is how a detector gets ignored.
+6. The proposal id is parsed from the heading, after `提议入集:`.  A section
+   whose heading does not yield one is reported as `UNPARSED` rather than
+   dropped -- GH #171's rule: a leg that could not read is not a leg that
+   read clean.
+7. `UNKNOWN STATUS` names rows whose `status` is outside the vocabulary this
+   tool knows.  Those rows are invisible to BOTH buckets above, because
+   `is_open` answers False for anything it does not recognise.  Measured
+   2026-08-29: `hero-20` (`routed`, no `director` field, its ruling written
+   into `result` by the batch desk) and three
+   `harvested_pending_verification` rows.  Informational: the tool cannot
+   tell a genuinely-closed state from a drifted spelling of an open one.
+
 LIMITS (read these before quoting the output)
 ---------------------------------------------
 1. **It reports a problem, not a verdict.**  An un-ruled OTHER request may be
@@ -56,13 +124,17 @@ not a failure).  OTHER-bucket entries never change the exit code.
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 QUEUE = os.path.join(REPO, "iterations", "queue.json")
+TEST_SET = os.path.join(REPO, "iterations", "streams", "test_set.md")
+STATE = os.path.join(REPO, "iterations", "state.json")
 
 OPEN_STATES = ("pending", "running", "harvested")
+CLOSED_STATES = ("done", "rejected")
 
 # The declarations a rideshare proposal makes about itself.  Kept as literal
 # substrings on purpose: these are the exact phrases the streams write, and a
@@ -149,6 +221,131 @@ def first_seen(req_id, path=QUEUE):
     return lines[-1] if lines else None
 
 
+# --------------------------------------------------------------------------
+# The orphan leg (§CG.5).  Everything below reads `test_set.md` and
+# `state.json`; nothing above it does.
+# --------------------------------------------------------------------------
+
+# A proposal section's heading, e.g.
+#   ## §CE 2026-08-29T10:xxZ 协同组提议入集:`fieldsip`(owner P2 ...)
+# The id is the FIRST backticked token after the marker, on purpose: several
+# real headings also backtick a contrast id (§BK names `campdanger`) or a
+# withdrawal (§BR names `abil1st`), and those are not what is being proposed.
+PROPOSAL_HEADING = re.compile(r"^##\s+§(\S+)\s")
+PROPOSAL_MARKER = "提议入集"
+PROPOSED_ID = re.compile(PROPOSAL_MARKER + r"\s*[:：]\s*`([a-z][a-z0-9_]*)`")
+
+# Any key that records a director's ruling on the id.  Spelled as a prefix
+# because the archive uses `director_ruling` and `director_ruling_<date>` for
+# a re-ruling (see `campexit_20260828`, which carries both).
+RULING_KEY_PREFIX = "director_ruling"
+
+
+def read_test_set(path=TEST_SET):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def armed_ids(text):
+    """The armed member string, which is line 2 of `test_set.md`.
+
+    Positional by design, same as tests/test_pending_rulings.py's reader: a
+    fuzzy search would happily match one of the historical member strings
+    quoted in the archive sections further down, and then every ejected id
+    would read as still armed.
+    """
+    lines = text.splitlines()
+    if len(lines) < 2:
+        return set()
+    line = lines[1].strip()
+    if not line or "," not in line or " " in line:
+        return set()
+    return {s for s in line.split(",") if s}
+
+
+def find_proposals(text):
+    """[(section, id_or_None, heading)] for every admission-proposal section."""
+    out = []
+    for line in text.splitlines():
+        if PROPOSAL_MARKER not in line:
+            continue
+        head = PROPOSAL_HEADING.match(line)
+        if not head:
+            continue
+        cand = PROPOSED_ID.search(line)
+        out.append((head.group(1), cand.group(1) if cand else None, line.strip()))
+    return out
+
+
+def queue_rows_for(cand, requests):
+    """Rows whose `bundle` (or `bundle_was`) names this id, as a whole token.
+
+    Token equality, not substring: `stayfield` and `stayfield2` are both real
+    ids, and a substring match would let either answer for the other.
+    """
+    rows = []
+    for req in requests:
+        tokens = set()
+        for field in ("bundle", "bundle_was"):
+            value = req.get(field) or ""
+            tokens.update(t for t in re.split(r"[^A-Za-z0-9_]+", str(value)) if t)
+        if cand in tokens:
+            rows.append(req)
+    return rows
+
+
+def load_state(path=STATE):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
+
+
+def ruled_in_state(cand, state):
+    """True when some `state.json` entry for this id carries a ruling key.
+
+    NOT the same question as "does an entry exist" -- see the module docstring:
+    the proposing stream writes the entry as part of proposing, so presence is
+    a proposal signal, and using it here would have silenced the founding case.
+    """
+    for value in state.values():
+        if not isinstance(value, dict) or value.get("id") != cand:
+            continue
+        for key in value:
+            if key.startswith(RULING_KEY_PREFIX) and str(value[key]).strip():
+                return True
+    return False
+
+
+def classify_proposals(proposals, requests, armed, state):
+    """(orphans, rowless_ruled, unparsed).
+
+    orphans is the only bucket that reddens the exit code; each entry is
+    (section, id, reason, [row ids]).
+    """
+    orphans, rowless_ruled, unparsed = [], [], []
+    for section, cand, heading in proposals:
+        if cand is None:
+            unparsed.append((section, heading))
+            continue
+        rows = queue_rows_for(cand, requests)
+        ruled = cand in armed or ruled_in_state(cand, state)
+        row_ids = [r.get("id") for r in rows]
+        if not rows:
+            (rowless_ruled if ruled else orphans).append(
+                (section, cand, "no queue request row at all", row_ids))
+        elif not any(is_open(r) for r in rows) and not ruled:
+            orphans.append(
+                (section, cand, "only closed rows -- a ruling has nowhere to land", row_ids))
+    return orphans, rowless_ruled, unparsed
+
+
+def unknown_status_rows(requests):
+    known = set(OPEN_STATES) | set(CLOSED_STATES)
+    return [r for r in requests if r.get("status") not in known]
+
+
 def partition(requests):
     """Open+un-ruled requests, split into (rideshare, other).
 
@@ -165,6 +362,8 @@ def partition(requests):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--queue", default=QUEUE)
+    ap.add_argument("--test-set", default=TEST_SET)
+    ap.add_argument("--state", default=STATE)
     ap.add_argument("--no-age", action="store_true",
                     help="skip the git first-appearance lookup (faster)")
     args = ap.parse_args()
@@ -187,7 +386,54 @@ def main():
     render(ride, "RIDESHARE (§BB.4: rule this round)")
     render(other, "OTHER (routing/slot ruling still owed)")
     print("total open requests: %d" % sum(1 for r in requests if is_open(r)))
-    return 3 if ride else 0
+
+    unknown = unknown_status_rows(requests)
+    if unknown:
+        # LIMIT 7: invisible to both buckets above, because is_open() answers
+        # False for a status it does not recognise.  A question, not a verdict.
+        print("UNKNOWN STATUS (invisible to both buckets above): %d" % len(unknown))
+        for r in unknown:
+            print("  %-12s status=%-32s ruled=%s"
+                  % (r.get("id"), r.get("status"), not is_unruled(r)))
+
+    # ---------------------------------------------------------------- §CG.5
+    try:
+        text = read_test_set(args.test_set)
+    except OSError as exc:
+        print("\n=== orphan admission proposals (test_set.md sections with no queue row) ===")
+        print("UNCERTIFIABLE -- could not read %s (%s). This line is NOT a pass."
+              % (args.test_set, exc))
+        return 2
+
+    proposals = find_proposals(text)
+    orphans, rowless_ruled, unparsed = classify_proposals(
+        proposals, requests, armed_ids(text), load_state(args.state))
+
+    print("\n=== orphan admission proposals (test_set.md sections with no queue row) ===")
+    print("proposal sections scanned: %d" % len(proposals))
+    if orphans:
+        print("ORPHAN_PROPOSAL (§CG.5: open a queue request row, then rule it): %d"
+              % len(orphans))
+        for section, cand, reason, row_ids in orphans:
+            print("  §%-4s id=%-14s %s%s"
+                  % (section, cand, reason,
+                     (" (rows: %s)" % ", ".join(row_ids)) if row_ids else ""))
+    else:
+        print("ORPHAN_PROPOSAL (§CG.5: open a queue request row, then rule it): none")
+    if rowless_ruled:
+        # LIMIT 5: informational.  These are the pre-rule sections; reddening
+        # on them every round is how a detector gets ignored.
+        print("ROWLESS (ruled elsewhere -- informational): %d" % len(rowless_ruled))
+        for section, cand, _reason, _rows in rowless_ruled:
+            print("  §%-4s id=%s" % (section, cand))
+    if unparsed:
+        # LIMIT 6: a heading this tool could not read is not a heading it read
+        # clean (GH #171).
+        print("UNPARSED proposal headings (id not readable): %d" % len(unparsed))
+        for section, heading in unparsed:
+            print("  §%-4s %s" % (section, heading[:110]))
+
+    return 3 if (ride or orphans) else 0
 
 
 if __name__ == "__main__":
