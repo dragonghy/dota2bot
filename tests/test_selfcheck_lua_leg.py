@@ -25,7 +25,9 @@ The load-bearing claims, in the order they can fail:
      never 3.  [amended 2026-08-26, GH #171; see below]
   5. END TO END on a real tree: a reddened detector file makes the real script
      print TRUNK RED and exit 3; a clean tree exits 0 on this leg.  Case 5 is
-     the one that would have caught the 08-24 miss.
+     the one that would have caught the 08-24 miss.  [amended 2026-08-29,
+     GH #295: "clean" here means "not reddened by this test", NOT "green" --
+     see uncert() for why the green half is now UNCERTIFIABLE, not FAIL]
   6. END TO END with no interpreter and no way to get one: exit 2, and a banner
      that does not read like the pass line.
 
@@ -62,6 +64,7 @@ REPO = os.path.dirname(HERE)
 SCRIPT = os.path.join(REPO, "tools", "agent", "routine_selfcheck.sh")
 
 failures = []
+uncertified = []
 checks = 0
 
 
@@ -71,6 +74,41 @@ def check(cond, label):
     if not cond:
         failures.append(label)
         print("  FAIL  %s" % label)
+
+
+def uncert(label):
+    """A check whose FIXTURE PRECONDITION was violated -- it did not run.
+
+    [strategy 20260829T07xxZ, GH #295]  Case 5's fixture is a copy of the live
+    working tree, and "clean" there has always meant "not reddened BY THIS TEST"
+    -- never "green".  So any red anywhere in the tree, from any cause, also
+    reddened 5a/5a2/5b/5c, and their labels blamed the wrong object: "a clean
+    tree does not report TRUNK RED" reads as THE LEG IS BROKEN when what
+    happened is THE TREE IS RED.  Measured that morning: two pins in
+    test_level_gate_census.lua drifted +14, and re-anchoring those two lines --
+    with ZERO edits to this file -- took this script from 4 failures to 43/0.
+    One root cause was being reported as two independent red files, and the
+    second report pointed at the gate instead of at the tree.
+
+    Why this is NOT the GH #171 SKIP-reads-as-PASS trap that this same file was
+    written to close: the exit code.  A skip there was one unremarkable line
+    with NO exit-code difference, so it read exactly like a pass.  This path
+    raises the script's exit to 2, which tests/run_py_tests.sh already renders
+    as "UNCERTIFIABLE ... (did NOT run -- this is not a pass and not a failure)"
+    -- the repo's standing 0 clean / 2 could-not-run / 3 findings vocabulary.
+    An uncertified case can never be mistaken for a certified one.
+
+    And the precondition is decided by a BIT IN CODE, not by this docstring:
+    the leg's named files are re-run standalone, and only files that really are
+    red in the baseline earn the downgrade.  A leg that cries red over detectors
+    that pass standalone is still a genuine FAIL.  (That criterion is this
+    group's own 01:16Z one: an exemption living only in prose is not an
+    exemption.)
+    """
+    global checks
+    checks += 1
+    uncertified.append(label)
+    print("  UNC   %s" % label)
 
 
 src = open(SCRIPT, encoding="utf-8").read()
@@ -308,13 +346,46 @@ else:
               "5a0: the leg finishes inside %ds -- it is a 开工 check, and a "
               "discovery set that outgrows the budget must fail here rather "
               "than hang" % BUDGET_S)
-        check(not clean_red, "5a: a clean tree does not report TRUNK RED")
-        check(clean_rc == 0, "5a2: a clean tree exits 0 on this leg (got %d)" % clean_rc)
-        check(re.search(r"\d+ tagged detector file\(s\), 0 failures", clean_leg) is not None,
-              "5b: a clean tree reports the count it actually ran")
-        n_clean = re.search(r"(\d+) tagged detector file\(s\)", clean_leg)
-        check(n_clean is not None and int(n_clean.group(1)) > 0,
-              "5c: the clean run is not vacuous (ran > 0 files)")
+        # THE DISCRIMINATING BIT.  The baseline copy is the live tree, so a red
+        # here has two possible authors: the tree (someone's landing reddened a
+        # detector) or the leg (it cries red over detectors that are fine).
+        # Only the second is a finding of THIS test.  Separate them by re-running
+        # the files the leg named, standalone, with the same command the leg
+        # uses: a file that is red on its own is the tree's red, not the leg's.
+        baseline_red = []
+        if clean_red:
+            for name in re.findall(r"^FAIL: (test_\S+\.lua)", clean_leg, re.M):
+                if name in baseline_red:
+                    continue
+                solo = subprocess.run(
+                    ["lua5.1", "tests/run_tests.lua", name],
+                    cwd=tree, capture_output=True, text=True, timeout=BUDGET_S)
+                if solo.returncode != 0:
+                    baseline_red.append(name)
+
+        if baseline_red:
+            # The tree was already red when this test started.  Case 5's fixture
+            # precondition ("a tree whose only red is the one I inject") does not
+            # hold, so 5a-5c did not run.  Saying FAIL here blames the leg for
+            # someone else's landing -- the GH #295 defect this branch closes.
+            why = ("baseline tree already red in %s -- case 5's fixture is the "
+                   "live tree and it is not green; these four did NOT run"
+                   % ", ".join(baseline_red))
+            for lbl in ("5a: a clean tree does not report TRUNK RED",
+                        "5a2: a clean tree exits 0 on this leg",
+                        "5b: a clean tree reports the count it actually ran",
+                        "5c: the clean run is not vacuous (ran > 0 files)"):
+                uncert("%s [%s]" % (lbl, why))
+        else:
+            # Reaching here with clean_red set means the leg said TRUNK RED while
+            # every file it named passes standalone -- the leg IS the defect.
+            check(not clean_red, "5a: a clean tree does not report TRUNK RED")
+            check(clean_rc == 0, "5a2: a clean tree exits 0 on this leg (got %d)" % clean_rc)
+            check(re.search(r"\d+ tagged detector file\(s\), 0 failures", clean_leg) is not None,
+                  "5b: a clean tree reports the count it actually ran")
+            n_clean = re.search(r"(\d+) tagged detector file\(s\)", clean_leg)
+            check(n_clean is not None and int(n_clean.group(1)) > 0,
+                  "5c: the clean run is not vacuous (ran > 0 files)")
 
         # Redden one discovered detector the way a landing would: make an
         # assertion in it false.  test_corpus_scale.lua's own detector is the
@@ -398,7 +469,16 @@ if _pass:
           "7c: the pass line says the subset is chosen BY TAG, which is the "
           "property that decides whether YOUR file is in it")
 
-print("\n%d checks, %d failures" % (checks, len(failures)))
+print("\n%d checks, %d failures, %d uncertified"
+      % (checks, len(failures), len(uncertified)))
 for f in failures:
     print("  " + f)
-sys.exit(1 if failures else 0)
+for u in uncertified:
+    print("  UNCERTIFIABLE " + u)
+if uncertified and not failures:
+    # 2, not 0: run_py_tests.sh renders this as "did NOT run -- this is not a
+    # pass and not a failure".  Exiting 0 here would rebuild the exact GH #171
+    # trap one layer up -- a leg that certified nothing reading like a green one.
+    print("UNCERTIFIABLE -- %d check(s) did not run; this is NOT a pass."
+          % len(uncertified))
+sys.exit(1 if failures else (2 if uncertified else 0))
