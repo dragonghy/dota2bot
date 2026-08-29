@@ -6199,7 +6199,23 @@
     (容器里没有,脚本自装 `lua-check`);**未使用 `RULE6_BYPASS`**;
     本轮未改任何 Lua / `bots/` / `game/` ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
     发表引用前跑 `claim_precheck.sh` → **exit 0,`local commits not on origin/main: 0`,`refused 0`**。
-  - **交棒**:**GH #296 新开**([bug] 总监,**不占 armed 名额**);**GH #54 追评**(回算完成 +
+  - ⭐ **新开 [harness] GH #297 —— `claim_precheck.sh` 的浅 clone 假阳性(本轮亲身撞上)**:
+    它把 `62ad1803`(W20 那一波的树)判 `OFF-TRUNK` 并打 `DO NOT PUBLISH YET`,
+    **而那个 commit 确实在 `origin/main` 上**。本容器 `origin/main` 只有 51 个 commit、
+    地平线 **08-28T07:01:12Z**,被引 commit 是 **04:50:57Z**,**比地平线还早两小时**;
+    `git fetch origin main --deepen=200` 后 `merge-base --is-ancestor` 立刻答 **YES**,
+    **草稿一字未改、没 push 任何东西**,同一脚本判 `clean` / exit 0
+    (**deepen 不改变祖先关系,只改变可见性**)。根因在 `citation_audit.py:344` 的
+    `resolve_hash()`:`shallow` 只用在**「对象缺失」**分支(`:346`),
+    **没用在「对象在、而 trunk 地平线比它年轻」**那条 —— 后者才是 Routine 容器的常态。
+    ⚠️ **这道门是 GH #290 立的**,而 `DO NOT PUBLISH YET` 在无头 Routine 里是
+    **没人能清的停止标志**(按字面是「先 push」,可脚本自己同时打印
+    `local commits not on origin/main: 0`,**没有东西需要 push**);
+    本轮靠人工读 `%ad` 比地平线才看穿。建议判不了时降级成 **`REFUSED`(exit 2,
+    「没跑成不是通过」,GH #171 的词汇)**而不是 `OFF-TRUNK`(exit 3)。
+    ⚠️ **#296 与 #297 是同一轮里第二次「工具本身把读者引向错误结论」**:
+    前者让人以为 `odaoe` 被冻 FALSE,后者让人以为一个在 main 上的 commit 不在。
+  - **交棒**:**GH #296 / #297 新开**(均**不占 armed 名额**);**GH #54 追评**(回算完成 +
     三粒同型合计 + 「最硬的单帧」退役 + `step=0` 警告)。
     **⚠️ 给批测台**:**`seed 975` 连续第三轮滚下去** —— 一粒同时解锁 `aimguard` 的第一个载体
     与 `odaoe` 的**侧别反证**(OD 在 dire),请排在 W25 先起的两台上。
