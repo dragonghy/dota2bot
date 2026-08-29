@@ -129,9 +129,41 @@ local function test_files()
     return out
 end
 
---- A test drives a guarded mode if it calls GetDesire and either names one of
---- the guarded mode files or enumerates the whole mode set with a glob.
+--- A test that loads no code cannot drive a bid.
+---
+--- The `GetDesire` + mode-basename match is a TOKEN match, deliberately wide
+--- (see the header: the silent half of the defect is a file nobody remembers).
+--- Wide enough that a SOURCE-LEVEL census -- a test that opens bots/*.lua and
+--- reads it as text -- trips it on its own data: strategy's gated-helper
+--- nesting census carries `GetDesire` and `bots/mode_farm_generic.lua` as
+--- CENSUS ROWS and executes nothing at all. Its rows are the anchor, so they
+--- cannot be renamed away, and neither escape hatch fits honestly: the LEGACY
+--- registry means "drove a bid before this ruling", and `declares()` would be
+--- satisfied by writing the token `defendPings` into a comment -- a comment
+--- impersonating a call site, which is the exact failure GH #300 paid for.
+---
+--- So the narrowing is by MECHANISM, not by pattern: a file that never
+--- `require`s, `dofile`s, `loadfile`s or `loadstring`s cannot reach a mode's
+--- GetDesire, whatever tokens its text contains. MEASURED before landing, on
+--- 2026-08-29, because the obvious narrowing is a trap: requiring `GetDesire(`
+--- in CALL FORM instead would have dropped 4 of the 6 LEGACY entries, i.e.
+--- loosened the ratchet while looking like a tightening. This one spares
+--- exactly the census-shaped files and NONE of the registry -- asserted below
+--- rather than left as prose.
+local LOADERS = { 'require%s*[%(\'"]', 'dofile%s*%(', 'loadfile%s*%(',
+                  'loadstring%s*%(' }
+local function loads_code(src)
+    for _, p in ipairs(LOADERS) do
+        if src:find(p) then return true end
+    end
+    return false
+end
+
+--- A test drives a guarded mode if it loads code at all, calls GetDesire, and
+--- either names one of the guarded mode files or enumerates the whole mode set
+--- with a glob.
 local function drives_guarded_mode(src, modes)
+    if not loads_code(src) then return false end
     if not src:find('GetDesire', 1, true) then return false end
     if src:find('ls bots/mode_%*') then return true end
     for path in pairs(modes) do
@@ -205,6 +237,25 @@ return {
         end
         assert(modes['bots/mode_farm_generic.lua'] == 'direct',
             'mode_farm_generic should carry the guard in its own source')
+    end,
+
+    ['[ratchet] the loads-no-code narrowing pardons nobody in the registry'] = function()
+        -- The narrowing above is the only way a file leaves this ratchet
+        -- without declaring, so it is the only place it can rot into a pardon.
+        -- Every registry entry must still be seen as driving; a registry entry
+        -- that goes quiet because someone widened LOADERS would take its
+        -- unreviewed bid claims with it, silently.
+        for path in pairs(LEGACY) do
+            local src = read(path)
+            assert(loads_code(src), path .. ' is in the registry but now reads '
+                .. 'as loading no code, so the narrowing has swallowed it; the '
+                .. 'registry is a work queue, not a pardon')
+        end
+        -- and the narrowing must still bite something, or it is not a narrowing
+        assert(not loads_code('local x = 1\nreturn x\n'), 'loads_code says a '
+            .. 'file with no loader call loads code; the exemption is dead')
+        assert(loads_code("local api = require('mock.bot_api')"), 'loads_code '
+            .. 'no longer recognises require; every test would be exempt')
     end,
 
     ['[ratchet] every test driving a guarded mode declares the assumption'] = function()
