@@ -22,6 +22,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-48. **GH #314 的候选 1 是真的,而 issue 提议的 fixture 结构上判不了它;下一棒仍然回到 -43a**
+   **2026-08-29T19:49Z done —— 认领 GH #314(`[hero]`,replay-check 19:07Z 开,带两帧证据)。
+   `bots/`/`game/` **零行改动**;无新 gate id;`liondrainstop` 的门与 armed 状态一字未动
+   (仍 gated、未 promote、不是 live);零 AWS;不提批测请求;不开新 issue(在 #314 追评)。
+   新文件 `tests/test_lion_drainstop_vision_domain.lua`(8 例,`[detector]`);
+   `state.json` 新增 `liondrainstop_VISION_DOMAIN_20260829`(`gated:false`)。
+   报告 `iterations/reports/hero/20260829T194937Z.md`。**
+   - **⭐⭐ 主发现:检测器的谓词是全知的,门的谓词不是。** `X.lion_ShouldStopDrain` 的
+     `#J.GetNearbyHeroes(500)>0` 展开到 `Utils.IsValidUnit`(`utils.lua:541`)是
+     **`CanBeSeen() and IsAlive() and not IsInvulnerable()` 三条**,再叠引擎自身按视野给敌人;
+     而 `lion_drain_census.py` 的 `classify()` 域循环只读**快照距离 + hp>0**。
+     真实帧驱动实测(t=299.2,viper 484u):**只翻 `CanBeSeen`(或 `IsInvulnerable`)一个字段**,
+     门侧列表清空、`ShouldStopDrain` true→false,而**检测器侧每一个量逐字节不变**。
+     ⇒ #314 那 2 条「谓词连续成立却没释放」与「门在雾里看不见那个 SB」**在当前语料上不可区分**。
+   - **⭐ 同一机制的第二落点更早**:`X.IsAbilityEChanneling` 用**同一个** `J.GetNearbyHeroes`
+     (1200u,`:495`)确认 hero-target channel ⇒ 雾住**被拉的目标**时
+     `ConsiderStopDrain` 直接 NONE,**出厂的 `J.IsRetreating` 分支一起死**,不只是 armed 那条。
+     #314 两帧拉的都是 necrolyte(英雄),在域内。
+   - **⭐⭐ 为什么原提议的验收判不了**:`replay_fixture.lua:89` 的 fog 模型是对的
+     (`seen_by == nil` ⇒ 全可见),`make_fixture.py:307` 从快照 `vis` 键填它,
+     **但 dumper 不写 `vis`**(`main.go:794` 自己的 `vision_note`:Source2 录像没有
+     per-team fog bitmask)⇒ **107 枚 fixture 带 `seen_by` 的 = 0**,`CanBeSeen()` **按构造恒真**
+     ⇒ 在 t=200.4 钉一枚断言 `ShouldStopDrain == true` **必绿,而那个绿是量具给的**。
+     **-45 的 `ZERO_TRUE` 教训(GH #306)原样重演**,只是发绿的 mock 数据从「恒 0 的伤害」
+     换成了「恒真的可见性」。`vis` 现在是**两个消费者零个生产者**。
+   - **⭐ 候选 2 被算术排除**:tick 到 `ConsiderStopDrain` 之间唯一的节流是
+     `frameProcessTime * (1 + ThinkLess)`,两个因子都是常量(0.06 + <0.018,×2)⇒ **上界 <0.16s**,
+     而两条 channel 的 residual 是 **3.7s / 1.8s**,差一个数量级以上。候选 3 要引擎,没碰。
+   - **不推翻已发表读数,只收窄**:全知谓词**两条腿一起**抬高 ⇒ armed 2/30 vs baseline 33/67
+     的分裂与条件 (a)=WORKING **不受影响**;站不住的是**在排除雾之前把那 2 条叫缺陷**。
+   - **变异 7 条条条见红且只红在该红的节上**;对照 8/0 绿;盘外 `cp` 还原后 `cmp` 逐字节相同。
+   - **§5 是自动到期装置**(dumper 一开始写 `vis` 就红,失败文本自写
+     「EXPECTED EXPIRY, NOT A REGRESSION」并把读者送回 #314);总数用**下限**不用等号(GH #273 形状)。
+   - **⚠️ 全量套件本轮没跑完**(GH #124),读数记在报告 §8。
+
 -47. **`wkqdmg` 的域现在是代码不是散文;下一棒仍然回到 -43a**
    **2026-08-29T16:49Z done —— 认领 GH #311(`[hero]`,带 90 局帧证据)。
    `bots/` **只有注释**(`hero_skeleton_king.lua` 三处),`game/` 零行;**无新 gate id**,
@@ -2617,6 +2652,30 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T19:49Z(报告 `iterations/reports/hero/20260829T194937Z.md`;轴 **GH #314
+  ——`liondrainstop` 那 2 条没释放的 channel**;**#314 的候选 1/2 结清并把棒交给 harness 侧,
+  本组下一棒仍是 -43a**)——
+  自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  stable-v1/v2 锚点 ok;**trunk 两侧全绿**(python **53/0/0**;快 Lua 腿 **29** 文件 0 失败,
+  FAST SUBSET,不是全量)——上一轮记的 #302/#295/#296/#301 在本轮自检里已不复现。
+  owner 四条优先项**没有一条球在本组**(常设运维→批测台,P1/P2→协同组,P3→总监)。
+  **`bots/`/`game/` 零行改动;无新 gate id;`liondrainstop` 的门与 armed 状态一字未动
+  (仍 gated、未 promote、不是 live);零 AWS;不提批测请求;不开新 issue(在 #314 追评)。**
+  新文件 `tests/test_lion_drainstop_vision_domain.lua`(8 例,`[detector]`);
+  `state.json` 新增 `liondrainstop_VISION_DOMAIN_20260829`(`gated:false`)。
+  - **⭐⭐ 主发现:检测器谓词全知,门的谓词不全知。** `#J.GetNearbyHeroes(500)>0` 展开到
+    `Utils.IsValidUnit` 是 **`CanBeSeen()` + `IsAlive()` + `not IsInvulnerable()` 三条**;
+    `lion_drain_census.py` 的域循环只读**距离 + hp>0**。真实帧上**只翻一个字段**
+    (`CanBeSeen`)就让 `ShouldStopDrain` true→false,而**检测器侧读数逐字节不变**
+    ⇒ #314 那 2 条与「雾」在当前语料上**不可区分**。
+  - **⭐⭐ issue 提议的验收判不了它**:dumper 不写 `vis` ⇒ **107 枚 fixture 带 `seen_by` 的 = 0**
+    ⇒ `CanBeSeen()` **按构造恒真** ⇒ 钉 t=200.4 断言 `ShouldStopDrain == true` **必绿,
+    而那个绿是量具给的**(-45 的 `ZERO_TRUE` / GH #306 原样重演,换了个 mock 数据)。
+  - **⭐ 候选 2 算术排除**:唯一节流上界 **<0.16s** vs residual **3.7s / 1.8s**,差一个数量级以上。
+  - **不推翻 (a)=WORKING**:全知谓词两条腿一起抬高,分裂不受影响;
+    站不住的只是**在排除雾之前把那 2 条叫缺陷**。
+  - 变异 **7 条条条见红且只红在该红的节上**,对照 8/0 绿,盘外 `cp` 还原后 `cmp` 逐字节相同。
+  - **⚠️ 全量套件没跑完**(GH #124);读数见报告 §8。
 - 2026-08-29T16:49Z(报告 `iterations/reports/hero/20260829T164950Z.md`;轴 **GH #311
   ——「`wkqdmg` 的域注释把方向说反了」**;**#311 结清并可关闭,下一棒仍是 -43a**)——
   自检 **worst exit 3**:legs run **8**,`FINDINGS: unlanded cadence`,`UNCERTIFIABLE: none`;
