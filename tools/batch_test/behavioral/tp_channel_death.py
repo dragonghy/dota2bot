@@ -54,7 +54,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from creeppull_domain import load_sweep  # noqa: E402
 # GH #176: entity keying and the corpse filter are SHARED, not copied -- two
 # estimators in this tree have already drifted apart once by being copied.
-from entities import (canon, frames_by_hero, interp,  # noqa: E402
+from entities import (canon, hkey, frames_by_hero, interp,  # noqa: E402
                       alive_interp, death_times, DROPPED_ENTITIES)
 
 # GetAttackRange() + 150 for the longest-ranged hero in the pool; the guard
@@ -220,8 +220,11 @@ def saw_enemy(events, bot, enemy, t, lookback=VISION_LOOKBACK_S):
     for e in events:
         if (e['type'] == 'DAMAGE'
                 and e.get('inflictor') == ATTACK_INFLICTOR
-                and canon(e.get('actor')) == bot
-                and canon(e.get('target')) == enemy
+                # hkey, not canon: `bot`/`enemy` are SNAPSHOT spellings and
+                # `e['actor']` is an EVENT spelling, so `==` on canon drops
+                # every Vengeful Spirit witness (GH #303).
+                and hkey(e.get('actor')) == hkey(bot)
+                and hkey(e.get('target')) == hkey(enemy)
                 and t - lookback <= e['t'] <= t):
             return True
     return False
@@ -367,8 +370,11 @@ def scan_sweep(d, reach, alive_rule='events'):
 
 
 def _team_of(timeline, hero):
+    # `hero` arrives from the PRESS keys, which are event spellings, while
+    # `s['hero']` is a snapshot spelling -- so this comparison is cross-stream
+    # and has to go through the join key (GH #303).
     for s in timeline['snapshots']:
-        if canon(s['hero']) == hero:
+        if hkey(s['hero']) == hkey(hero):
             return s['team']
     return None
 

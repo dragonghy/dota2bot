@@ -6675,3 +6675,56 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑨GH #221 §3 ⑩**GH #266**(第十轮) ⑪W20 早发裁定的书面销号 ⑫#271 的 `c6a` n=1→3
   ⑬#204 的 n=8 ⑭`[bug] #283` / `#249` ⑮**GH #140**(第三十二轮) ⑯#289 顺带 1/2
   ⑰给 `claim_precheck.sh` 找自动触发点 ⑱backlog §16/§17/§18。
+
+- 2026-08-29T16:28Z:一个工作单元,**`[bug] #303` 两半都修完 + `#302` 的第三个文件复绿**。
+  报告 `iterations/reports/director/20260829T162836Z.md`。**零 AWS 调用、零支出、未发波;
+  `bots/`/`game/` 逐字节零 diff**(改动全在 `tools/batch_test/behavioral/` + `tests/`)。
+  **① #303 不是新缺陷,是 GH #82 的同一条规则在第二个模块里没被修**:
+  `roam_conversion.canon_hero()` 早就带着 `replace("_","")`,连"必须是规则不是别名表""必须无碰撞"
+  都在 `tests/test_canon_hero_join.py` 里论证过;而 `entities.py` 从没拿到它,
+  `blinkflee_domain.py` 本周又落了**第三份**拷贝。`entities.py` 自己开篇写着
+  「a copied fix is a fix with a half-life」——**这次是那句话的现场**。
+  ⇒ 规则收回 `entities.hkey()`,blinkflee 改为引用。
+  **② 修成四块,因为一个映射修不完**:(甲)`hkey` 共享 join key;
+  (乙)**`canon()` 故意不动**并把理由写进 docstring —— `tpreach.SOURCE_CITED_RANGE['crystal_maiden']`
+  与 `bbfloor:349 == 'skeleton_king'` 都吃它的下划线,**就地"修好"它会用一个静默零换好几个**;
+  (丙)`HeroMap`(**key 仍是展示名,只归一化查询**)让 `frames.get(canon(event_name))` 那一族
+  **一处不改全好**,且**不可能被改一半**;(丁)映射够不着的**跨流 `==`** 12 处逐个改经 `hkey`
+  (`tbearly` 3 / `tp_channel_death` 3,含 issue 没点到的 `_team_of` / `tpgap` 6);
+  (戊)`join_gaps()` = issue 的验收指标本身,**量被丢掉的分母**。
+  **13 个 importer 逐个审计写进报告 §1.4**:10 个真 join(全修),
+  `zusstatic`/`skill_point_stall` 纯快照不受影响,`entity_key_audit` 是审计工具本身;
+  **残留一处明说**:`campswitch:258` 把事件拼写当报表 hero 列输出(**只是显示,不丢行**)。
+  **③ 验证**:新 `tests/test_entity_key_join.py` **28 checks 全绿**(含对 `bots/` 全花名册
+  133 个名字的**无碰撞**断言);**变异台 4/4 红**(M2 别名表 → `anti_mage` 那条红,正是 #82
+  语料里**没有**的那个英雄;M4 十二处跨流 `==` 全退回 → 红 6 条一一对应);
+  `run_py_tests.sh` **53/0/0**;13 个 importer 的 `--selfcheck` 全绿;
+  `luacheck_gate.sh` **exit 0 / 0 警告**(**未用 `RULE6_BYPASS`**);全量 Lua 套件未跑,**不声称**。
+  **④ #302 第三个文件 `test_gamemode_world_assertion.lua` 32/1 → 33/0**:红的原因**不是**那 8 条
+  语料漂移,是**坐标当 key 的第四次现场** —— `:1450` 的 pin 找 `line = 228`,而**今晨那轮把 census
+  的 `line` 字段整个去掉了**(改 `(file, 去空白源文本)`,GH #221 的药方)⇒ **这道门是因为它守护的
+  东西被改好了而变红**。重锚到 `file`+`op`/`n`,并补一条 `text` 断言。修的过程里它**又红一次而且是对的**
+  (`at` 现在指行首 `{`,无界搜下一个 `{ file = ` 搜到本行自己 ⇒ **永远红的 pin**,M15b 的镜像)。
+  变异台 2/2 红,控制绿。**#302 三个文件现在全绿(8 条红清零)**。
+  **⑤ #302 正题的口径裁定(权在总监)——本轮裁:不把快 Lua 腿从 `[ratchet]` opt-in 翻成 `[slow]` opt-out。**
+  依据是数字不是偏好:`test_itemdesire_world_assertion.lua` **实测 383s**,翻过去会把每轮每组都跑的快腿
+  变成**跑不完的腿**,而"跑不完的门"与"覆盖不到的门"是同一失效方向的两种写法(#171:`SKIP` 不是通过)。
+  **正确的家是 `DECISIONS_NEEDED.md §14` 的第三腿(按天跑全量)**;#302 **保持 open**,
+  问题从"要不要翻"收窄成"第三腿何时排",§5.3 的普查一并挂那里。
+  **⑥ ⚠️ 两条自我记录**:(i) 做变异时我用 `git checkout <file>` 还原,
+  那还原到 **HEAD** 而不是变异前,**把本轮所有未提交的 `entities.py` 改动一起抹了**,
+  靠 `sha256sum -c` 当场发现;此后一律从 scratchpad 的**文件副本**还原。
+  **"变异台"这个做法本身要求先有一个不在 git 里的基线。**
+  (ii) `tpgap.active_modifiers` 返回**排序 list**,我按 set 写断言 → 红;**改的是断言不是代码。**
+  **⑦ 本轮明说没做的**:promote/reject **无可判**(批测台 15:17Z 的 W25 是五连负后第一个正的
+  +40.16 gpm,但那是**单波读数**,不是三条件里的任何一条,**不当判据**);
+  **成本核查未跑 —— 连续第三轮欠,下轮不许再顺延**;低频 patch 检查未做(连续多轮);
+  owner 邮件未发(今天周六,**W35 周日邮件是明天**),`DECISIONS_NEEDED.md` 本轮无新增;
+  `fieldsip`(§CE)**仍待裁**(顺延第二轮)。
+  **下次触发**:①**成本核查(欠三轮,第一优先)** ②**W35 周日邮件(明天就是周日)**
+  ③`fieldsip`(§CE)裁定 ④**DECISIONS_NEEDED §14 第三腿排期**(#302 现挂它下面)
+  ⑤盯 #290 的执行核验 ⑥盯 §CF 两条(`odbuild`/`wkqdmg`)的收割(**退回门要真被执行**)
+  ⑦`campswitch:258` 的显示拼写(#303 残留,小) ⑧GH #221 §3 ⑨**GH #266**(第十一轮)
+  ⑩W20 早发裁定的书面销号 ⑪#271 的 `c6a` n=1→3 ⑫#204 的 n=8 ⑬`[bug] #283` / `#249`
+  ⑭**GH #140**(第三十三轮) ⑮#289 顺带 1/2 ⑯给 `claim_precheck.sh` 找自动触发点
+  ⑰backlog §16/§17/§18 ⑱把"变异台还原必须走文件副本不走 `git checkout`"写进某处。

@@ -90,7 +90,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import source_constants as SC  # noqa: E402
-from entities import canon, frames_by_hero, interp, alive_interp, death_times  # noqa: E402
+from entities import (canon, hkey, frames_by_hero, interp,  # noqa: E402
+                      alive_interp, death_times)
 from tp_channel_death import (  # noqa: E402
     band_of, fountains, tp_destination, scan_sweep,
     SCAN_RADIUS_U, WALK_GUARD_RADIUS_U, CHANNEL_WINDOW_S, ATTACK_INFLICTOR,
@@ -324,10 +325,13 @@ def realized_burst(events, h, band, t, window):
     afterwards is not something the predicate could have priced.
     """
     tot = 0.0
-    band = set(band)
+    # hkey, not canon: `band`/`h` are SNAPSHOT spellings and the event stream
+    # spells Vengeful Spirit without the underscore, so a canon `==` drops
+    # every VS row of this sum (GH #303).
+    band = {hkey(b) for b in band}
     for e in events:
-        if (e['type'] == 'DAMAGE' and canon(e.get('target')) == h
-                and canon(e.get('actor')) in band
+        if (e['type'] == 'DAMAGE' and hkey(e.get('target')) == hkey(h)
+                and hkey(e.get('actor')) in band
                 and t <= e['t'] <= t + window):
             tot += float(e.get('value') or 0)
     return tot
@@ -408,7 +412,7 @@ def active_modifiers(events, hero, t):
     for e in sorted(events, key=lambda e: e['t']):
         if e['t'] > t:
             break
-        if canon(e.get('target')) != hero:
+        if hkey(e.get('target')) != hkey(hero):   # cross-stream, GH #303
             continue
         if e['type'] == 'MODIFIER_ADD':
             live[e.get('inflictor')] += 1
@@ -473,10 +477,10 @@ def vision_witness(events, enemy, bot_team, ally_heroes, t,
     for e in events:
         if not (t - lookback <= e['t'] <= t):
             continue
-        if canon(e.get('target')) != enemy:
+        if hkey(e.get('target')) != hkey(enemy):  # cross-stream, GH #303
             continue
         actor = e.get('actor') or ''
-        ally = (canon(actor) in ally_heroes
+        ally = (hkey(actor) in {hkey(a) for a in ally_heroes}
                 or (creep is not None and creep in actor))
         if not ally:
             continue

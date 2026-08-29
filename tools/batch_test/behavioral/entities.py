@@ -44,7 +44,120 @@ DROPPED_ENTITIES = collections.Counter()
 
 
 def canon(name):
+    """DISPLAY name: the `npc_dota_hero_` prefix stripped, nothing else.
+
+    Deliberately NOT the join key -- see `hkey()`.  Its shape is load-bearing
+    for readers that hold underscored literals (`tpreach_domain`'s
+    `SOURCE_CITED_RANGE['crystal_maiden']`, `bbfloor_domain`'s
+    `sp['hero'] == 'skeleton_king'`), so collapsing underscores HERE would
+    trade one silent zero for several.
+    """
     return (name or '').replace('npc_dota_hero_', '')
+
+
+def hkey(name):
+    """JOIN KEY for a hero across the snapshot stream and the event stream.
+
+    THE DEFECT (GH #303, measured on W24 `2d1024ee` 2026-08-29).  The two dump
+    streams do not agree on the spelling:
+
+        snapshots: npc_dota_hero_vengeful_spirit   events: ...vengefulspirit
+
+    8,033 actor rows and 7,545 target rows in five games had no snapshot
+    counterpart under `canon()`, and every one of them was Vengeful Spirit.
+    `canon()` maps the two to different keys, so a `canon()` join drops the
+    hero silently -- the same family as the `skeletonking` trap (2026-08-21),
+    the illusion streams (GH #176) and the `t < -60` fountain window (#292).
+
+    THIS IS THE SAME RULE `roam_conversion.canon_hero()` ALREADY CARRIES for
+    GH #82, and that is the point of putting it here rather than writing a
+    third copy: the dumper derives the snapshot name from the ENTITY CLASS
+    (`dumper/main.go snakeFromClass`, which re-inserts an underscore at every
+    camelCase boundary) while events carry the COMBAT LOG name, so wherever
+    the engine's own npc name concatenates two words the derivation invents a
+    separator.  `queen_of_pain`, `vengeful_spirit` and `anti_mage` are the
+    three names in this roster where that happens.
+
+    It has to be a RULE and not an alias table: `anti_mage` never appeared in
+    the corpus that motivated #82, so a table covering exactly the two
+    observed heroes would have looked complete and stayed blind to it.
+    `tests/test_entity_key_join.py` also pins that the rule stays
+    COLLISION-FREE over every `npc_dota_hero_*` name in `bots/` -- an
+    underscore-insensitive key is only safe while no two heroes collapse onto
+    one token, and if two ever did the join would MERGE them, which is worse
+    than the miss it repairs.
+    """
+    return canon(name).replace('_', '')
+
+
+def _flat(k):
+    """The underscore-free token `hkey` keys on, for an ALREADY-canon name."""
+    return (k or '').replace('_', '')
+
+
+class HeroMap(dict):
+    """`{display name: value}` whose LOOKUPS join across the two spellings.
+
+    Why a mapping and not 20 edited call sites.  Every consumer of
+    `frames_by_hero` / `death_times` reaches its rows the same way --
+    `frames.get(canon(event_name))` -- so normalising inside the lookup fixes
+    all of them at once and cannot be half-applied.  The stored KEYS stay in
+    display form, because iteration feeds report columns and equality tests
+    that hold underscored names (see `canon`'s note); only the query is
+    normalised.
+
+    WHAT THIS DOES NOT COVER, so nobody reads it as more than it is: a site
+    that compares two strings directly rather than looking one up, e.g.
+    `canon(ev['target']) == hero`.  Those are listed in GH #303.
+    """
+
+    def __init__(self, *a, **kw):
+        dict.__init__(self, *a, **kw)
+        self._alias = {}
+        for k in self:
+            self._alias.setdefault(_flat(k), k)
+
+    def _resolve(self, k):
+        if dict.__contains__(self, k):
+            return k                      # exact hit always wins
+        return self._alias.get(_flat(k), k)
+
+    def __setitem__(self, k, v):
+        dict.__setitem__(self, k, v)
+        self._alias.setdefault(_flat(k), k)
+
+    def __contains__(self, k):
+        return dict.__contains__(self, self._resolve(k))
+
+    def __getitem__(self, k):
+        return dict.__getitem__(self, self._resolve(k))
+
+    def get(self, k, default=None):
+        return dict.get(self, self._resolve(k), default)
+
+
+def join_gaps(timeline, key=canon):
+    """Hero names in the EVENT stream with no counterpart in the SNAPSHOT
+    stream under `key` -- `{name: row count}`.
+
+    This is GH #303's acceptance metric, and it is the only reading that makes
+    the failure loud: a join that drops a hero produces a smaller number, not
+    an error, so the thing to measure is the DENOMINATOR the join threw away.
+    Called with the default `canon` it reports the defect; called with `hkey`
+    it should report nothing.
+    """
+    have = {key(s['hero']) for s in timeline.get('snapshots', ())}
+    gaps = collections.Counter()
+    for e in timeline.get('events', ()):
+        for side, flag in (('actor', 'actor_hero'), ('target', 'target_hero')):
+            nm = e.get(side)
+            if not nm or not str(nm).startswith('npc_dota_hero_'):
+                continue
+            if flag in e and not e.get(flag):
+                continue
+            if key(nm) not in have:
+                gaps[nm] += 1
+    return dict(gaps)
 
 
 def frames_by_hero(timeline):
@@ -90,7 +203,9 @@ def frames_by_hero(timeline):
                 continue
         fr[h] = ss
         team[h] = tm
-    return fr, team
+    # HeroMap, not dict: an event-side lookup spells Vengeful Spirit without
+    # the underscore and would otherwise miss every one of its rows (GH #303).
+    return HeroMap(fr), HeroMap(team)
 
 
 def interp(frames, t):
@@ -152,7 +267,10 @@ def death_times(timeline):
             out[canon(e.get('target'))].append(e['t'])
     for h in out:
         out[h].sort()
-    return out
+    # Keys here are EVENT spellings while every caller asks with a SNAPSHOT
+    # spelling (`deaths.get(hero)` with `hero` from frames_by_hero), so this is
+    # the same join as frames_by_hero's, taken from the other side (GH #303).
+    return HeroMap(out)
 
 
 def alive_at(frames, deaths, t):

@@ -312,7 +312,9 @@ def deaths_before(timeline, hero, t):
     for ev in timeline.get('events', []):
         if ev.get('type') != 'DEATH':
             continue
-        if entities.canon(ev.get('target')) != hero:
+        # cross-stream `==` -- see GH #303; `hero` is snapshot-spelled
+        # and the event stream is not.
+        if entities.hkey(ev.get('target')) != entities.hkey(hero):
             continue
         if ev.get('t', 1e9) < t:
             c += 1
@@ -348,7 +350,11 @@ def cascade(timeline, sc):
         deaths_seen = 0
         death_ts = sorted(ev['t'] for ev in timeline.get('events', [])
                           if ev.get('type') == 'DEATH'
-                          and entities.canon(ev.get('target')) == hero)
+                          # cross-stream `==`: the death EVENT spells
+                          # Vengeful Spirit without the underscore the
+                          # SNAPSHOT-derived `hero` carries (GH #303).
+                          and entities.hkey(ev.get('target'))
+                          == entities.hkey(hero))
         di = 0
         for f in frames:
             t = f['t']
@@ -424,7 +430,11 @@ def deep(timeline, sc, game, run_id):
     for hero, frames in sorted(by_hero.items()):
         death_ts = sorted(ev['t'] for ev in timeline.get('events', [])
                           if ev.get('type') == 'DEATH'
-                          and entities.canon(ev.get('target')) == hero)
+                          # cross-stream `==`: the death EVENT spells
+                          # Vengeful Spirit without the underscore the
+                          # SNAPSHOT-derived `hero` carries (GH #303).
+                          and entities.hkey(ev.get('target'))
+                          == entities.hkey(hero))
         below = above = None
         for f in frames:
             if f['t'] <= reach:

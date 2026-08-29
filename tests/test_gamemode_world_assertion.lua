@@ -1446,18 +1446,38 @@ tests['[recorded] what a census reading owes the call chain above it'] = functio
     -- this red and the two are forced to meet. (First draft pinned the
     -- filename, which appears twice in that file and could not fail --
     -- mutation M15.)
+    --
+    -- 2026-08-29, GH #302/#303 round: the pin used to include `line = 228`,
+    -- and it went red when the census DROPPED its `line` field -- re-keying
+    -- its rows on (file, whitespace-stripped source text) precisely because a
+    -- line number is not a registration key (GH #221; the same medicine the
+    -- crash pins took the same day). So the guard was red for a change that
+    -- IMPROVED the thing it guards, which is the failure direction that gets a
+    -- guard switched off rather than fixed. Re-anchored on the row's stable
+    -- identity -- file plus the gate's own `op`/`n` -- and the `text` field is
+    -- now asserted too, so a row that keeps the verdict while silently
+    -- becoming a different gate still turns this red.
     local census = read_file('tests/test_level_gate_census.lua')
-    assert(census:find("{ file = 'bots/item_purchase_generic.lua', line = 228, op = '>=', n = 18", 1, true),
+    local KEY = "{ file = 'bots/item_purchase_generic.lua', op = '>=', n = 18"
+    assert(census:find(KEY, 1, true),
         'the census row for this site moved')
-    local at = census:find("line = 228, op = '>=', n = 18", 1, true)
+    local at = census:find(KEY, 1, true)
     -- Bounded to THIS row. An unbounded find from `at` matches a TEETH verdict
     -- in some later row and can never fail -- mutation M15b, the third empty
     -- assertion of the "searched a whole file for a string that is in it
     -- twenty times" shape this group has now catalogued.
-    local nxt = census:find('{ file = ', at, true) or #census
+    -- ...starting PAST this row's own opening brace: `at` now points at the
+    -- `{` itself (it used to point at the `line = 228` in the middle of the
+    -- row), so an unbounded search from `at` matches THIS row and hands the
+    -- assertions below an empty string -- an always-red pin, the mirror of
+    -- M15b's always-green one. Caught by this test failing on its own fix.
+    local nxt = census:find('{ file = ', at + #KEY, true) or #census
     local row = census:sub(at, nxt)
     assert(row:find("verdict = 'TEETH'", 1, true),
         'the census still reads THIS site TEETH -- if that changes, re-read this record')
+    assert(row:find("text = 'if bot:GetLevel() >= 18'", 1, true),
+        'the census row still describes THIS gate -- a verdict is only a '
+        .. 'verdict about the source text it was read from')
 end
 
 tests['[recorded] the ARDM comparisons are on the right side of the split by luck'] = function()

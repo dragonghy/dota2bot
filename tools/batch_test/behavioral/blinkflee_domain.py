@@ -192,20 +192,14 @@ def repo_root():
                                         '..', '..', '..'))
 
 
-def hkey(name):
-    """Join key for hero names across the event stream and the snapshot stream.
-
-    `entities.canon()` only strips the `npc_dota_hero_` prefix, and the two
-    streams DO NOT agree on the rest of the string: measured on W24
-    (2026-08-29), events spell Vengeful Spirit `npc_dota_hero_vengefulspirit`
-    while snapshots spell it `npc_dota_hero_vengeful_spirit` -- 8,033 actor
-    rows and 7,545 target rows in five games with no snapshot counterpart.
-    The charter's 2026-08-21 note ("events now carry the full underscored
-    name") is therefore true of most heroes and false of at least this one,
-    and a `canon()` join drops every Vengeful Spirit row silently.  Filed as a
-    [bug] for the shared helper; this tool does not wait for it.
-    """
-    return entities.canon(name).replace('_', '')
+# The join key now lives in the shared module (GH #303 closed the [bug] this
+# tool routed around locally).  Keeping the local copy would have been the
+# third implementation of one rule in this tree -- `entities.py`'s own opening
+# note is that a copied fix is a fix with a half-life, and `roam_conversion.
+# canon_hero` was already the second.  The measurement that motivated it (W24,
+# 8,033 actor + 7,545 target VS rows with no snapshot counterpart) is recorded
+# in `entities.hkey`'s docstring.
+hkey = entities.hkey
 
 
 def _fn_body(text, fname):
@@ -721,8 +715,8 @@ def selfcheck():
           len(r8) == 1 and r8[0]['gated_slice'])
 
     # the canon trap: events spell some heroes without the underscore
-    check('entities.canon() alone does NOT join the two spellings of VS '
-          '(the defect this tool routes around)',
+    check('entities.canon() still does NOT join the two spellings of VS '
+          '(it is the DISPLAY name by design -- hkey is the join key)',
           entities.canon('npc_dota_hero_vengefulspirit')
           != entities.canon('npc_dota_hero_vengeful_spirit'))
     check('hkey() joins the event spelling to the snapshot spelling',
