@@ -4624,5 +4624,29 @@
     "validation": "tests/test_replay_260820_wk_blast_overclaim.lua, 12 cases: ground truth on the real frame, gate-off byte equality, armed narrowing at rank 1 and 4, the min-discipline case (rank 2 with the t10 talent, where the honest read is LARGER and armed must fall back), the unresolved-key fallback, end-to-end through X.SkillsComplement both ways, a 'the gate only withdraws' case, and a source-wiring ratchet. Four labelled mutations run: gate no-op (3 red), min dropped (1 red), call site reverted (2 red), mock default reverted (2 red); control green.",
     "labelled_mutation": "The blast is on a 13.3s cooldown on that frame (it was just cast), so the end-to-end cases set IsFullyCastable/cooldown. The 160 HP, the ranks, the distance and WK's mana are real frame data and the ground-truth cases assert them directly. External anchors (make_fixture.py extracts no ability specs): cast range 525, mana cost 95, and the three AbilityValues, all from the game's own KV.",
     "not_modelled": "The blast also brings a 1.0-1.6s stun and a -20% slow, which a melee Wraith King converts into autoattacks; the 1.68 is plausibly a stand-in for exactly that. This lever does not price it (J.GetTotalAttackWillRealDamage would; that is a separate change with its own frame), so the armed side is the strictly conservative reading: 'the blast ALONE kills'."
+  },
+  "fieldsip_20260829": {
+    "id": "fieldsip",
+    "owner": "strategy",
+    "status": "gated, NOT armed -- admission proposed in test_set.md §CE, awaiting director",
+    "owner_priority": "P2 (low HP: do not go home -- buy a salve / heal in the field)",
+    "charter_item": "strategy.md backlog 0P2, the '留下之后够不够' half recorded 2026-08-22 and unclaimed since",
+    "what": "J.HasFieldRegenSource is a PRESENCE test read with OPPOSITE polarity by two ids on the same frame: stayfield/stayfield2 hold the bot in the field because there IS something to drink, fieldbuy buys a salve because there is NOT. One 85-health faerie fire therefore both justifies the hold and blocks the resupply, and nothing asks whether 85 was worth standing still for.",
+    "evidence_frame": "tests/fixtures/f_260822_063722_lina_tp_home.lua -- owner P2's own pinned frame. Lina 346/1088 = 31.8% HP, faerie_fire + EMPTY bottle. The sip that buys the hold is 85 health = 7.8% of her bar.",
+    "fix": "gated J.IsFieldSipEnough (unarmed = literal `return true` on the first line) consumed SYMMETRICALLY by both sides: hold = situation and HasFieldRegenSource and IsFieldSipEnough; buy = fieldbuy and situation and not(HasFieldRegenSource and IsFieldSipEnough). The partition over the situation is preserved by construction -- the campvoid lesson (GH #265) applied before the fact.",
+    "constant": "J.FIELD_SIP_MIN_FRACTION = 0.25 of max health. Chosen from an EMPTY GAP in the corpus, not tuned: 23 carrying frames split 21 rows at 0.062..0.156 (faerie fire / tango) and 2 rows at 0.360 / 0.460 (salve), nothing in between. Every threshold in 0.160..0.360 releases the same 21 rows; the [axis] test asserts the plateau width and the constant's margin to both edges, so the exact value is not load-bearing.",
+    "heal_table": "per SINGLE USE: flask 400, tango 115, tango_single 115, faerie_fire 85, bottle 135",
+    "census": "tests/_fieldsip_sweep.lua over 107 fixtures / 993 live hero frames: 54 situation frames, 23 carrying, 31 dry; armed moves 21 frames from the hold side to the buy side. Five impossible-state counters (both partition checks, hold-widened, buy-narrowed, source-without-value) are ZERO-INITIALISED and all read 0.",
+    "tests": "tests/test_fieldsip_magnitude.lua -- 15 cases, all green, [ratchet]. 14 mutations, 14/14 caught first pass; both CONTROL runs clean. The load-bearing mutations are (a) narrowing only the hold side, which breaks the partition, and (b) >= -> >, which NO corpus row can tell apart -- the [boundary] case with a derived exact bar was added for it after it survived the first battery.",
+    "honest_bounds": [
+      "gated => NOT live; condition (a) bought on zero frames; zero AWS this round.",
+      "The chain closing (a released bot actually buying its salve) is a CLAIM, not an assertion: gold, stock and a shop/courier are not in a fixture. The tests assert only that the frame changes owner.",
+      "The bottle leg can never answer on a fixture (mock GetCurrentCharges defaults to 0), the same declared blindness the presence test has; [limit] asserts zero bottle rows and says to upgrade rather than relax it if that changes.",
+      "The gap is a fact about 107 fixtures, not about Dota.",
+      "Direction: on the hold side this is a NARROWING (21 of 23 frames no longer held). Its value rests entirely on those frames being picked up by fieldbuy."
+    ],
+    "handoff": "director: rule on admission, and rule explicitly on whether fieldsip must be armed on the same leg as fieldbuy (per the §BW.2 precedent this is automatic in a single-leg test set). replay-check: (a) read-off = on the armed leg, does a bot in the situation carrying only tango/faerie_fire produce an item_flask purchase within 10s, rather than a trip home. batch-desk: no request, zero AWS.",
+    "next_lever": "J.ShouldStayAndRegen (PROMOTED, live in every turbo game) accepts flask/tango-or-90-gold with no magnitude either, and GH #294 already showed its TP-leg domain is [0.18,0.19). Whether the same magnitude question belongs on the promoted guard is NOT this group's call to make unilaterally -- it is a shipped default.",
+    "report": "iterations/reports/strategy/20260829T10xxZ.md"
   }
 }

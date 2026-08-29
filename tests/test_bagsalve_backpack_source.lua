@@ -98,6 +98,26 @@ local function read_file(path)
     return s
 end
 
+--- Line comments removed, so a CALL-SITE census counts call sites.
+-- Added 2026-08-29 ('fieldsip' round): the census below was a raw text count,
+-- so a comment that QUOTES the call form -- e.g. one saying "this used to read
+-- `not J.HasFieldRegenSource( bot )`" -- read as a third call site and turned
+-- the file red with no call site added. That is the same shape as the pure
+-- comment lines that moved a line-number pin on 08-29T04:20Z: a check whose
+-- pattern reaches text its claim does not cover. This STRENGTHENS the census
+-- (a comment can no longer trip it OR satisfy it); the mutation below proves a
+-- real third call site is still caught.
+-- Deliberately line comments only: this file has no --[[ block ]] comments and
+-- a general Lua comment stripper would have to understand long-bracket levels
+-- and strings, i.e. more machinery than the claim needs.
+local function strip_comments(src)
+    local out = {}
+    for line in (src .. '\n'):gmatch('([^\n]*)\n') do
+        out[#out + 1] = line:gsub('%-%-.*$', '')
+    end
+    return table.concat(out, '\n')
+end
+
 --- Load a frame with `armed` (a string id, a set-like table, or nil) armed.
 local function world(fix, hero, armed)
     local J, bot = rf.load(fix, hero)
@@ -320,14 +340,24 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
         'the turbo clause left the situation predicate')
     -- And nothing else calls the helper, so those two orders are the whole
     -- surface. Count the call sites off the source rather than trusting memory.
-    local nMentions = 0
-    for _ in src:gmatch('J%.HasFieldRegenSource%(') do nMentions = nMentions + 1 end
-    local nDefs = 0
-    for _ in src:gmatch('function J%.HasFieldRegenSource%(') do nDefs = nDefs + 1 end
+    local code = strip_comments(src)
+    local function count(hay)
+        local nMentions, nDefs = 0, 0
+        for _ in hay:gmatch('J%.HasFieldRegenSource%(') do nMentions = nMentions + 1 end
+        for _ in hay:gmatch('function J%.HasFieldRegenSource%(') do nDefs = nDefs + 1 end
+        return nMentions - nDefs, nDefs
+    end
+    local nCalls, nDefs = count(code)
     assert(nDefs == 1, 'J.HasFieldRegenSource is defined ' .. nDefs .. ' times')
-    assert(nMentions - nDefs == 2,
-        'J.HasFieldRegenSource has ' .. (nMentions - nDefs) .. ' call sites, not '
+    assert(nCalls == 2,
+        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not '
         .. '2; a new one may not inherit turbo')
+    -- The stripper must not have blunted the census: a real third call site
+    -- still trips it, and a comment quoting the call form still does not.
+    assert(count(strip_comments(src .. '\nJ.HasFieldRegenSource( bot )\n')) == 3,
+        'the census stopped seeing a real call site')
+    assert(count(strip_comments(src .. '\n-- see J.HasFieldRegenSource( bot ) above\n')) == 2,
+        'a comment can still masquerade as a call site')
 end
 
 tests['[reverse] the guarded branch selects for exactly this population'] = function()

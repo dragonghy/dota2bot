@@ -5085,6 +5085,124 @@ function J.HasFieldRegenSource( bot )
 	return false
 end
 
+-- [fieldsip / owner priority P2, GH issue filed 2026-08-29] MAGNITUDE.
+--
+-- J.HasFieldRegenSource above is a PRESENCE test: it answers the same TRUE for
+-- a faerie fire (85 health, once) as for a salve (400 over 13 seconds), a 4.7x
+-- spread, and the two consumers of that answer read it with OPPOSITE polarity
+-- on the same frame:
+--   * J.ShouldRegenNotGoHome (stayfield / stayfield2) holds the bot in the
+--     field BECAUSE there is something to drink;
+--   * J.ShouldFieldBuyRegen (fieldbuy) buys a salve BECAUSE there is not.
+-- So one 85-health item simultaneously justifies the hold and blocks the
+-- resupply, and nothing in the tree asks whether that 85 was worth standing
+-- still for. This is the "留下之后够不够" gap the charter's 0P2 entry recorded
+-- on 2026-08-22 and nothing has read since.
+--
+-- It is not hypothetical, and the frame it bites on is owner P2's OWN pinned
+-- evidence frame: f_260822_063722_lina_tp_home, Lina 346/1088 = 31.8% HP,
+-- carrying a faerie fire and an EMPTY bottle. The only accepted source is the
+-- faerie fire: 85 health on a 1088 bar = 7.8% of it. Unarmed, that 7.8% is
+-- what buys the hold, and it is also what stops fieldbuy from buying the salve
+-- the owner's rule actually names ("买大药").
+--
+-- Census over the whole fixture corpus (tests/_fieldsip_sweep.lua): 54 live
+-- hero frames satisfy the situation, 23 of them carry an accepted source, and
+-- the sip fraction is not a continuum -- it is two clusters with an EMPTY GAP:
+--   * 21 rows are faerie fire / tango, spanning 0.062 .. 0.156 of the bar;
+--   * 2 rows are a salve, at 0.360 and 0.460;
+--   * nothing at all in (0.156, 0.360) -- a 2.3x gap.
+-- So the constant below is chosen from the gap, not tuned to a frame, and the
+-- reading does not depend on its exact value: EVERY threshold in that open
+-- interval gives the identical 21/23 partition. The test asserts that on a
+-- grid, so the constant is not load-bearing -- if a future corpus puts a row
+-- inside the gap, the grid assertion fails and the constant gets re-derived
+-- instead of quietly deciding something.
+--
+-- Condition (c): a salve is the field-heal item (400 health for 100 gold,
+-- cancelled by enemy hero damage -- which is why the situation's empty-1600
+-- ring is its precondition, not merely conservative); a tango is lane sustain
+-- and a faerie fire is a burst top-up. A quarter of the bar separates them on
+-- any hero above ~460 max health, which is every hero in this corpus.
+--
+-- Values are PER SINGLE USE, matching J.HasFieldRegenSource's own framing
+-- ("one slot, one heal"): a three-charge tango stack still only answers 115
+-- here, because the decision this feeds is "is the next drink worth staying
+-- for", not "how much total healing do I own".
+J.FIELD_SIP_HEAL = {
+	item_flask        = 400,
+	item_tango        = 115,
+	item_tango_single = 115,
+	item_faerie_fire  =  85,
+	item_bottle       = 135,
+}
+J.FIELD_SIP_MIN_FRACTION = 0.25
+
+-- The largest single accepted sip in the six usable slots, in health. Ungated
+-- and side-effect free. It deliberately reads the SAME slot range and the SAME
+-- bottle-charge test as J.HasFieldRegenSource: if the two ever disagree about
+-- which items count, the census test fails.
+--
+-- The backpack ('bagsalve') is not re-read here on purpose. That widening only
+-- ever admits item_flask, which is the largest value in the table, so a frame
+-- bagsalve turns TRUE cannot be one this function would call too small; the
+-- test pins that reasoning as an assertion on the table rather than leaving it
+-- as prose.
+function J.FieldRegenSipValue( bot )
+	local nBest = 0
+	for i = 0, 5 do
+		local hItem = bot:GetItemInSlot( i )
+		if hItem ~= nil then
+			local sName = hItem:GetName()
+			local nHeal = J.FIELD_SIP_HEAL[sName]
+			if sName == 'item_bottle'
+				and ( tonumber( hItem:GetCurrentCharges() ) or 0 ) <= 0
+			then
+				nHeal = nil
+			end
+			if nHeal ~= nil and nHeal > nBest then
+				nBest = nHeal
+			end
+		end
+	end
+
+	if J.IsSoakCandidate( 'bagsalve' ) then
+		for i = 6, 8 do
+			local hItem = bot:GetItemInSlot( i )
+			if hItem ~= nil and hItem:GetName() == 'item_flask'
+				and J.FIELD_SIP_HEAL.item_flask > nBest
+			then
+				nBest = J.FIELD_SIP_HEAL.item_flask
+			end
+		end
+	end
+
+	return nBest
+end
+
+-- Gated on soak candidate 'fieldsip'. UNARMED IT IS THE LITERAL `true` on the
+-- first line, so both consumers below reduce to their shipped expressions --
+-- `A` and `not A` -- byte-for-byte. Armed it is a pure narrowing of A: it can
+-- only take the hold from TRUE to FALSE, and (because the two consumers read
+-- the same conjunction with opposite polarity) only take the buy from FALSE to
+-- TRUE. The partition is therefore PRESERVED: the two can still never fire on
+-- the same frame, and no frame is left owned by neither -- which is the
+-- 'campvoid' lesson (GH #265) applied before the fact rather than after it.
+--
+-- Deliberately NOT folded into J.HasFieldRegenSource itself: that helper's
+-- answer is also what tests/test_bagsalve_backpack_source.lua and the
+-- item-purchase comment describe as "is there anything drinkable", and a
+-- magnitude test wearing a presence test's name is how a predicate stops
+-- meaning what its call sites say it means.
+function J.IsFieldSipEnough( bot )
+	if not J.IsSoakCandidate( 'fieldsip' ) then return true end
+
+	local nMax = bot:GetMaxHealth()
+	if nMax == nil or nMax <= 0 then return true end
+
+	return J.FieldRegenSipValue( bot ) >= J.FIELD_SIP_MIN_FRACTION * nMax
+end
+
 -- [stayfield / owner priority P2, 2026-08-22] Turbo: a hurt bot with nobody
 -- anywhere near it and a heal in its own bag should drink it, not spend ~20
 -- seconds of a ~20 minute game inside the fountain.
@@ -5225,6 +5343,9 @@ end
 function J.ShouldRegenNotGoHome( bot )
 	if not J.IsFieldRegenSituation( bot ) then return false end
 	if not J.HasFieldRegenSource( bot ) then return false end
+	-- [fieldsip] Appended, never inserted: unarmed this line is the literal
+	-- `true`, so the clause order and the shipped answer above are unchanged.
+	if not J.IsFieldSipEnough( bot ) then return false end
 
 	return true
 end
@@ -5289,7 +5410,13 @@ function J.ShouldFieldBuyRegen( bot )
 	if not J.IsSoakCandidate( 'fieldbuy' ) then return false end
 	if not J.IsFieldRegenSituation( bot ) then return false end
 
-	return not J.HasFieldRegenSource( bot )
+	-- [fieldsip] The SAME conjunction the hold side asks, negated. Unarmed
+	-- J.IsFieldSipEnough is the literal `true`, so this is byte-for-byte the
+	-- shipped `not J.HasFieldRegenSource( bot )`. Armed, the two sides still
+	-- partition the situation exactly -- a sip too small to stay for is a sip
+	-- too small to count as "already supplied", and the bot buys the salve the
+	-- owner's rule names instead of being held on 85 health.
+	return not ( J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) )
 end
 
 -- [itemtrip / GH #120] The OTHER end of the same "don't walk home" family, and
