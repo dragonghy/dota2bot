@@ -6358,6 +6358,8 @@
   - **⚠️ 本轮一处纪律失误,如实记下**:**#303/#304/#305 是在 `blinkflee_domain.py` 还没 push 时发表的**,
     而三条 issue 都引用了它 —— **正是 GH #290 立案要防的那个顺序**。发现后立即补 push 并跑
     `claim_precheck.sh` 复核。**下轮:发表任何带引用的评论/issue 之前先 push,不是先发后补。**
+    补跑 `claim_precheck.sh` → **exit 0 / `local commits not on origin/main: 0` / 6 条路径全解析 / refused 0**,
+    **引用现在成立,但是补成立的**。
   - **开工自检**:worst **exit 3**;`FINDINGS = cadence / stale-waits / trunk-red(python)`,`UNCERTIFIABLE = none`。
     工作树干净(HEAD `93d4b77`)⇒ **这条红就是 `origin/main` 的红**;它是
     **`tests/test_stale_waits.py`,红在 `batch-desk.md:5616` 的一行章程文本**
