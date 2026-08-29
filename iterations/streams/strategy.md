@@ -27,6 +27,59 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0COARM. **【2026-08-29T22:27Z 新增,自选 backlog;**兑现 `0CONJ` 上一轮亲手登记、写明「本轮不动」的那一条**;
+   一条可复用主判据 + **两条被现行认证放过的 live 合取** + **一条有日期的后果**;`bots/`/`game/` **逐字节零 diff**,
+   零新 gate id,零行为改动,`queue.json` 一字未动,零 AWS。】**
+   **`J.IsSoakCandidate` 的合取是在被调用者的调用点上成立的,而全仓认证「这个 id 无合取项」时读的是
+   它自己那一行门。两个地址不是同一个,被检查的那个不是做决定的那个。**
+   `0CONJ` 钉的是 freeze 那一面(只 arm 外层 ⇒ 内层未 armed ⇒ 可能是 no-op);**本轮是另一面**:
+   **内层也 armed 时什么都没冻,而外层的 (a) 读数已经不是外层的了** —— 它是 `outer AND inner`,
+   波次却按请求行的 id 归属它。
+   **⭐ 主判据(可复用)**:**排名按 fan-out = 排名按潜力;register 只能由「源码普查 × arm 串」的 join 回答。**
+   `0CONJ` 登记 `J.IsInLaningPhase`(fan-out **15**,全仓最大)并结案「非 live」,**那句话本轮复核仍然对**,
+   原因还更强(**中心到这个程度的谓词正因为中心才没人敢入集**)。**但 register 不是被它回答的**:
+   实测 **8 条 live 合取,fan-out 全部是 1** —— 小、局部、不起眼的谓词,**正因为小才被入集**。
+   fan-out 表:`c2`/`c4` **15**(未 armed)、`depthnum` 5、`bagsalve`/`ccburst`/`esaftershock`/`lanehyst` 2,
+   armed 的七个(`fieldbuy` `fieldcreep` `fieldsip` `pulldrag` `stayfield2` `towerfear` `tpreach`)**全是 1**。
+   **⚠️ 两条被现行认证放过的 live 合取**:(i) **`tpreach`(§BC.3「门是它自己那一条 ⇒ 无合取项」)** ——
+   对门为真,但 `J.CanEnemyInterruptTpChannel` 的调用点 `jmz_func.lua:8312` **在
+   `J.ShouldTpSupportTowerFight` 体内、在它 `:8288` 那道 `midtp`/`suptp` 门之后**,两者今天都 armed;
+   armed 的 `tpreach` 把扫描 700→1200 拉宽 ⇒ 更常 veto ⇒ **`midtp`/`suptp` 量的是 `midtp AND NOT tpreach-veto`**。
+   (ii) **`pulldrag`(:176「门是独立的一条,不与 `pullcamp` 合取 —— 踩 `pullcad` 陷阱」)** —— 也对门为真、
+   规避是刻意的,但调用点 `mode_roam_generic.lua:363` 坐在 `:224` 那道**带 gate 的提前 return** 后面
+   (未 armed 的 `pullthink` 让节流在它被走到之前 `return`),而 armed 的 `pullthink` 又走 `:321`
+   那条 `elseif` **跳过 `:354` 这条调用所在的分支** ⇒ **`pullthink` 同时给它加帧和减帧,
+   而这既不是嵌套门、也不在任何一份合取普查的形状里**。
+   **⭐ 于是:陷阱在被检查的那个地址被绕开了,在做决定的那个地址被踩了。**
+   **判别便宜:对每个 armed id,别读它的门 —— 读谁调用它的 helper。**
+   **⚠️ 一条有日期的后果**:`fieldsip` **08-29T18:5xZ 入集**,它的 helper 被读在
+   `J.ShouldFieldBuyRegen` 体内 —— **那正是 `fieldbuy` 的门**;未 armed 时 `IsFieldSipEnough` 是字面量
+   `true` ⇒ 出厂读 `not source`,armed 后读 `not source OR not sip-enough`,**严格更宽**。
+   ⇒ **在没人碰 `fieldbuy`、也没有任何东西说话的情况下,它的 armed 腿在数的东西变了;
+   跨过那个日期的两次 `fieldbuy` 触发计数不是同一次测量。** §CG.4 预警的是 `fieldsip` 自己的 (a)、
+   点的名还是 `stayfield`/`stayfield2`。
+   **产出**:`tests/test_coarmed_attribution_register.lua`(`[ratchet]`,**11/11**,快腿 31 → 32)——
+   把总监一直在**手写**的那条附加条件(§BW.3 `campexit` / §CG.4 `fieldsip`)机械化。
+   **live 8 对**:`fieldbuy>fieldsip` `fieldbuy>fieldcreep` `fieldregen>fieldbuy` `tpdeathbuy>fieldbuy`
+   `midtp>tpreach` `suptp>tpreach` `pullthink>pulldrag` `pullcad>pulldrag`。
+   **⭐ 断言是 CONTAINMENT 不是等式,照总监自己的裁定写**(GH #221/#276,`test_carrier_terms.py`:
+   「每次它读的 arm 串被编辑就变红的测试是在复述 arm 串」)⇒ **退集永不红、入集不产生新对也不红,
+   只有产生新混淆时才红** —— 那正是该写附加条件、而此刻全仓没有任何东西举手的那一刻。
+   **变异 12 真 12/12 全抓**(M10→主断言 / M3→arm 串解析 / M11→fan-out **逐条核对是登记的那个测试在红**),
+   **每个变异先验证补丁真落上**(`0DODGE` M7 与 `0ADDR` M2 的自伤判据,本轮一次未发生);
+   **3 CONTROL 全绿**。加固三处:长注释控制**用多行**(`0CONJ` 自伤乙)、arm 串**按文档顺序锚定不按行号**
+   (`0ADDR`;实测 `test_set.md` **13 行**符合形状,第 1 行 live、其余 12 行历史,并补控制证明
+   **标题之上的 id 形状行不会被读成 arm 串**)、**读不到 arm 串一律 FAIL 不静默通过**。
+   **⚠️ 诚实边界**:8 对里 **3 对是宽体假行**(`fieldregen`/`tpdeathbuy>fieldbuy` 走 `ItemPurchaseThink`;
+   `pullcad>pulldrag` 走 `Think` 的**另一条**分支,`pullcad` 的门在 `:268` 的 `roamCreepPull` 块里)——
+   **逐条读过并把读数写进 ACKNOWLEDGED 的注释**,过收是 ratchet 该错的方向;
+   **在册 ≠ 混淆很大 ≠ 外层有错**,只说这两个 id 的 (a) 在同一条腿上不独立;
+   **fan-out 那条断言不依赖「文件进 key」**(池化后 `c2` 15→14,仍最大仍 ≥10 ⇒ 该变异抓不到)——
+   与 `0CONJ` 自伤甲**不同**(那里承重的是精确集合,这里是下界),**登记在案**。
+   **下一格**:球在**总监**(裁主判据 / 裁 `fieldbuy` (a) 跨 18:5xZ 不可池化 / 裁 register 的耦合位置);
+   **不为「把 3 条宽体假行按块结构收窄」开格**(`0CONJ` §2 已论证不该做);
+   **也不为「替总监改 §BC.3 与 :176 那两行认证」开格**(是总监的文件,本组只提)。**
+
 0CONJ. **【2026-08-29T19:27Z 新增,自选 backlog;**兑现本组两轮前自己登记、此后没人跑过的判别式**
    (`0DODGE` 主判据乙:「grep 被调用者的函数体」);两条可复用主判据 + 两条**当轮抓住并修好**的量具自伤
    + 一条**免费答掉上一轮交给总监的前置问题**;`bots/`/`game/` **逐字节零 diff**,零新 gate id,
@@ -2820,6 +2873,49 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T22:27Z(自选 backlog,兑现 `0CONJ` 亲手登记「本轮不动」的那一条;
+  **无入集提议 —— 本轮零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff**):
+  **合取是在被调用者的调用点上成立的,而认证「这个 id 无合取项」读的是它自己那一行门 ——
+  被检查的那个地址不是做决定的那个。**
+  `0CONJ` 钉的是 freeze 面(只 arm 外层 ⇒ 内层未 armed ⇒ 可能是 no-op);**本轮是 attribution 面**:
+  内层也 armed 时什么都没冻,而**外层的 (a) 已经不是外层的了**,是 `outer AND inner`,
+  波次却按请求行的 id 归属它。
+  认领依据走**铁律 9**:优先项四项里常设运维球在批测台、**P1 DoD① 早已完成**(`0P1`)、
+  **P2 本组那一格上一轮 `0SIP`/GH #300 做完并交棒**、P3 归总监 ⇒ 回 issue 流;
+  open `[strategy]` **六条**(#284/#288/#289/#294/#300/#304)已全部被本组此前认领、现等他组裁定,
+  **上一轮状态节漏列的 #262 本轮核过**(08-27 已由本组落地 `aimguard` 收编站点,球在批测台重放 seed 975
+  与录像组)⇒ **无一条点名本组**,落自选 backlog。
+  **⭐ 主判据(可复用)**:**排名按 fan-out = 排名按潜力;register 只能由「源码普查 × arm 串」的 join 回答。**
+  `0CONJ` 结案 `J.IsInLaningPhase`(fan-out **15**,全仓最大)为「非 live」**仍然对**,原因还更强
+  (中心到这个程度的谓词正因为中心才没人敢入集);**但 register 不是被它回答的** ——
+  实测 **8 条 live 合取,fan-out 全部是 1**:小、局部、不起眼的谓词,**正因为小才被入集**。
+  **⚠️ 两条被现行认证放过的 live 合取**:`tpreach`(§BC.3 认证「门是它自己那一条 ⇒ 无合取项」)的调用点
+  `jmz_func.lua:8312` **在 `J.ShouldTpSupportTowerFight` 的 `midtp`/`suptp` 门(`:8288`)之后**,
+  三者今天都 armed ⇒ **`midtp`/`suptp` 量的是 `midtp AND NOT tpreach-veto`**;
+  `pulldrag`(:176 认证「门是独立的一条,不与 `pullcamp` 合取 —— 踩 `pullcad` 陷阱」)的调用点
+  `mode_roam_generic.lua:363` 坐在 `:224` 那道**带 gate 的提前 return** 后面,而 armed 的 `pullthink`
+  又走 `:321` 的 `elseif` **跳过 `:354` 这条调用所在的分支** ⇒ **同时加帧和减帧**。
+  **⇒ 陷阱在被检查的地址被绕开了,在做决定的地址被踩了。判别便宜:别读它的门,读谁调用它的 helper。**
+  **⚠️ 一条有日期的后果**:`fieldsip` **08-29T18:5xZ 入集**,而它的 helper 被读在
+  `J.ShouldFieldBuyRegen`(= `fieldbuy` 的门)里,未 armed 是字面量 `true` ⇒ 出厂 `not source`、
+  armed 后 `not source OR not sip-enough` **严格更宽** ⇒ **没人碰 `fieldbuy`、也没有任何东西说话,
+  它的 armed 腿在数的东西就变了;跨那个日期的两次 `fieldbuy` 触发计数不是同一次测量。**
+  **产出**:`tests/test_coarmed_attribution_register.lua`(`[ratchet]`,**11/11**,快腿 31 → 32)——
+  把总监一直在**手写**的附加条件(§BW.3 / §CG.4)机械化;**断言是 CONTAINMENT 不是等式**,
+  照总监自己 GH #221/#276 的裁定(「每次 arm 串被编辑就变红 = 复述 arm 串」)⇒
+  **退集永不红、入集不产生新对也不红,只有产生新混淆时才红**。
+  **变异 12 真 12/12 全抓**(M10/M3/M11 逐条核对**是登记的那个测试**在红)+ **3 CONTROL 全绿**,
+  每个变异**先验证补丁真落上**(`0DODGE` M7 / `0ADDR` M2 的自伤判据,本轮一次未发生)。
+  开工自检 worst exit **3**(**仅 cadence**),python 腿 **53/0**,快腿 **31/0**;**UNLANDED 0**;
+  未裁 queue 请求 **0**;锚点 stable-v1/v2 **各 3 项 ok**;开工 `HEAD == 3ed7be4a`;**AWS $0,S3 零访问**。
+  **门**:`luacheck_gate.sh` **0 warnings EXIT=0**(冷启,自己装的 `lua-check`);**`RULE6_BYPASS` 未使用**;
+  新文件官方 runner **11/0**;**快 Lua 腿全跑 ran=32 red=0**;`git diff --stat -- bots game` **为空**。
+  **⚠️ 诚实边界**:**本轮无 fixture —— 因为没有行为改动要验证**,验证形态是变异 battery;
+  8 对里 **3 对是宽体假行**(逐条读过、读数写进 ACKNOWLEDGED 注释,过收是 ratchet 该错的方向);
+  **在册 ≠ 混淆很大 ≠ 外层有错**;**fan-out 那条断言不依赖「文件进 key」**(池化后 15→14 仍最大,
+  该变异抓不到 —— 与 `0CONJ` 自伤甲不同,那里承重的是精确集合,这里是下界),**登记在案**;
+  **全量单进程套件 ~100min(GH #124)本轮未跑完**。
+  **本轮先 push 再发表带引用的评论**(铁律 6 ⭐GH #290 的顺序),交棒走报告 + 章程 + issue。
 - 2026-08-29T19:27Z(自选 backlog;**兑现本组 `0DODGE` 两轮前自己登记、此后没人跑过的判别式**;
   **无入集提议 —— 本轮零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff**):
   **一个门里的门是两个 id 的合取,而全仓没有任何东西在数它。** `J.IsSoakCandidate` 不是谓词是**合取项**;
