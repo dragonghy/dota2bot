@@ -2617,7 +2617,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     本轮给该文件加 10 行注释后又各漂 10 行。正确目标有歧义,**点名不代改**。
   - **交出去的棒**:两个上游 0 是**量具缺口**,`GetAttackDamage`/`GetAttackSpeed`
     **在 .dem 里是有的**(`make_fixture.py` 不抽),抽出来站点 B 当天可判 —— 与 GH #293 / #305 同族,
-    已按铁律 5 开 `[harness]` issue(见报告 §7);主角**输出**伤害无地面真相,是设计问题不是抽取问题。
+    已按铁律 5 开 **GH #306**(`[harness]`);主角**输出**伤害无地面真相,是设计问题不是抽取问题。
+    发表前跑过 `claim_precheck.sh`:**`clean` exit 0**,`local commits not on origin/main: 0`
+    (先 push 再发表,GH #290 的顺序)。
 - 2026-08-29T10:48Z(报告 `iterations/reports/hero/20260829T104857Z.md`;轴 **backlog -44:
   上一棒明确交出来的枚举**)—— 自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,
   `UNCERTIFIABLE: none`;stable-v1/v2 锚点 ok;trunk python 52/0、快 Lua 腿 23 文件 0 失败。
