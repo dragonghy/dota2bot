@@ -18,7 +18,57 @@ local tAllAbilityBuildList = {
 						{2,1,4,2,2,6,2,1,1,1,6,4,4,4,6},--pos2
 }
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+-- [GH #287 §2] Soak candidate 'odbuild' (turbo-only). The SAME row with its
+-- one mis-resolved index aimed at the ability the row's own arithmetic says it
+-- meant. Nothing else about the order moves -- this is an index repair, not a
+-- rethink of the build.
+--
+-- WHAT THE INDEX RESOLVES TO. J.Skill.GetAbilityList (bots/FunLib/aba_skill.lua)
+-- walks the engine's slots in order; OD's slot row (tests/mock/hero_slots.lua,
+-- from the game's own npc_heroes.txt) is
+--   0 arcane_orb / 1 astral_imprisonment / 2 objurgation / 3 generic_hidden /
+--   4 equilibrium / 5 sanity_eclipse
+-- and the ultimate at slot >= 4 goes to the FIXED index 6. So the list this
+-- hero is levelled from is
+--   [1] arcane_orb  [2] astral_imprisonment  [3] objurgation
+--   [4] generic_hidden  ([5] equilibrium, the innate, when the walk keeps it)
+--   [6] sanity_eclipse
+-- The shipped row above spends FOUR points on [4] and never names [3].
+-- tests/test_build_index_resolution.lua measured [4] = 'generic_hidden' in 2 of
+-- 2 drop-worlds, the only unconditional placeholder reference in the repo.
+--
+-- WHY [3] IS WHAT THE AUTHOR MEANT, not a guess. The row is 15 entries and
+-- spends 4+4+4+3: OD has exactly three learnable basics (four ranks each) plus a
+-- three-rank ultimate, so 15 only balances if the 4x block is a basic -- and the
+-- only basic the row never names is the one at index 3. The two fixes GH #287
+-- §2 proposed were written for a different mechanism (a nil at index 6 from an
+-- ultimate below slot 4); OD's ultimate is at slot 5 and index 6 is already
+-- written, so neither of them applies here.
+--
+-- WHAT IT BUYS. Today those four points buy nothing: the level-up consumer meets
+-- 'generic_hidden' at the head and drops it (bots/ability_item_usage_generic.lua
+-- :351, or the not-found branch above it -- which one depends on whether the
+-- engine hands back a handle for the placeholder, and that is not readable
+-- offline). Either way the point is not lost, but objurgation stays at rank 0
+-- for the whole game, which makes X.ConsiderObjurgation below dead code: its
+-- first condition is Objurgation:IsFullyCastable(), false at rank 0. That
+-- handler is a mana-pool-scaling barrier (mana_pool_to_barrier_pct + barrier) on
+-- a hero whose whole item build is mana, and it has never once run.
+--
+-- BOUNDS. This is a static reading of which index names what; it does not say
+-- the fix wins games. Condition (a) is a replay question and is asked in the
+-- report. Turbo-only and gated, so shipped behaviour is byte-identical until
+-- 'odbuild' is armed.
+local tObjurgationBuildList = {
+						{2,1,3,2,2,6,2,1,1,1,6,3,3,3,6},--pos2, index 4 -> 3
+}
+
+local nAbilityBuildList
+if J.IsModeTurbo() and J.IsSoakCandidate( 'odbuild' ) then
+	nAbilityBuildList = J.Skill.GetRandomBuild( tObjurgationBuildList )
+else
+	nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+end
 
 local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
 

@@ -9573,3 +9573,78 @@ t = {'a','b','c','d','e',nil,'g','h'}   -- #t == 8
 **我手里有同样的离线证据,只是没去取** —— 我复核了 issue 的源码链(`aba_skill` 那段确实按 `slot >= 4` 写 `[6]`),
 **却没有去核那个链的输入**(OD 的大招到底在第几槽)。
 **复核一条推理的每一步,不等于复核它的前提。**
+
+---
+
+## §CC 2026-08-29T05:xxZ 英雄组提议入集:`odbuild`(GH #287 §2 落地物)—— **搭车、零 AWS 增量、不申请专波**;但**收割顺序有一条硬依赖**,请连同它一起裁
+
+### CC.1 落地了什么
+
+`bots/BotLib/hero_obsidian_destroyer.lua` 新增 gated 备用 build 行
+
+```
+出厂 tAllAbilityBuildList    = {2,1,4,2,2,6,2,1,1,1,6,4,4,4,6}
+armed tObjurgationBuildList  = {2,1,3,2,2,6,2,1,1,1,6,3,3,3,6}
+```
+
+turbo-only 单合取 `J.IsModeTurbo() and J.IsSoakCandidate('odbuild')`,
+选表点一个(与 `hero_skeleton_king.lua` 的 `wkbuild` 同一形状)。
+**两行只差四个位置,且每一处都是 `4 → 3`** —— 这是**下标修复,不是重排加点顺序**,
+`tests/test_od_build_objurgation.lua` §5 把「只差这四处」钉成断言,
+任何别的改动都会把它打红(变异 iii 实测)。
+
+### CC.2 ⭐ 主判据:**四个点现在买不到任何东西**,所以本条的反面不是「改差了」而是「维持零」
+
+按 KV 槽位(`tests/mock/hero_slots.lua`,来自 `npc_heroes.txt`),OD 是
+`0 arcane_orb / 1 astral_imprisonment / 2 objurgation / 3 generic_hidden /
+4 equilibrium / 5 sanity_eclipse`,出厂 walk `J.Skill.GetAbilityList` 因此产出
+`[1] arcane_orb [2] astral_imprisonment [3] objurgation [4] generic_hidden [6] sanity_eclipse`。
+
+出厂行**把四个点花在 `[4]`,而 `[4]` 是占位符**;`[3]` 从不被引用。
+这不是散文推断:`buildindex_CENSUS_20260829`(126 英雄普查)量到它是**全仓唯一的无条件占位符引用**。
+
+**「作者本来就想点 `[3]`」是算术不是猜**:行长 15、分配 4+4+4+3,
+而 OD **恰好三个可学基础技**(各 4 级)+ 三级大招 —— 15 只有在那个 4× 块是基础技时才平;
+而行里唯一没被点名的基础技就是 `[3]`。
+GH #287 §2 自己提的两个候选修法**都打偏**:OD 大招在 slot 5,`[6]` 本来就写得上(候选 a 是空操作);
+`6 → 4` 会把大招的点挪到占位符上(候选 b 更差)。
+
+**真实帧**:`tests/fixtures/f_260819_222559_od_eclipse_solo.lua`
+(`20260819_222559_slot1` @ t=661.5 = 11:01)—— 一个**真打过的 bot OD,11 级,
+`obsidian_destroyer_objurgation` rank 0,蓝 1448/1658**。
+出厂行预测「每个等级都是 0」,而任何点名 `[3]` 的行都产不出这个 0。
+
+**连带**:`X.ConsiderObjurgation`(同文件)第一条件是 `Objurgation:IsFullyCastable()`,
+rank 0 恒 false ⇒ **那个 handler 至今一次都没跑过**。它算的是随蓝池放大的护盾
+(`mana_pool_to_barrier_pct` + `barrier`),而这英雄整条出装都是蓝。
+
+### CC.3 ⚠️⚠️ 收割顺序的硬依赖 —— **请把这条写进裁定,不要只写进本节**
+
+GH #290 自己的预登记(总监 2026-08-29T02:47Z 已**撤回**「压实修好了 OD 停摆」)
+**预期 OD 在两条腿上仍然停在 6 点**,停摆机理**目前未解释**。
+**一个停在 6 点的 OD 永远走不到这四个被修下标被消费的等级。**
+
+⇒ 若这波 `tools/batch_test/behavioral/skill_point_stall.py` 仍把 OD 列进 STALL 表,
+本条的空读数**必须标 UNINTERPRETABLE 并退回**,**不许**读成「odbuild 测过了,没效果」。
+这正是 §BV.2 那条判据的另一种投影:**一个长得像判决的空操作,而没有任何东西会为此举手**——
+区别是这次举手的东西**现在就写下来了**(申请 `hero-22` 的 acceptance 第 (1) 项是前置门)。
+
+### CC.4 诚实边界(请连同判据一起裁)
+
+- **gated ⇒ 不是 live**;**条件 (a) 一帧没买到**,(b) 一局没跑。
+- **静态读 + 一枚帧**。那枚帧早于 `8cf5ae0c` 的压实,所以它的 OD **同时**在 #290 的六点停摆里;
+  本轮**只**从它读 objurgation 的那个零(两个缺陷都预测它),**没有**把其余 rank 当作出厂行的干净执行。
+- **本轮不回答「花四个点买护盾划不划算」**:未 arm 时那四个点**什么都不买**,
+  所以对照组不是「点别的」而是「点空气」。若日后要问前者,那是另一个 id。
+- **`[5]` 那一格(innate `equilibrium`)是否被 walk 丢掉,离线读不出来**(`IsHidden()` 是引擎侧);
+  两个 drop-world **都跑了**,四条断言在两个世界里各自成立。
+- **变异 6/6 全红、对照绿**,`bots/`、`tests/fixtures/`、`tests/mock/` 事后逐字节还原。
+
+### CC.5 顺带加固(不需要裁,只需知道)
+
+`tests/test_build_index_resolution.lua` 的解析器原来**只读 `tAllAbilityBuildList`**,
+于是它对**gated build 行结构上失明** —— 包括本轮为修它而写的这一行。
+现已改为读**全部 `t<Name>BuildList` 字面量**(全仓共三张非默认表:
+`skeleton_king:tKillBuildList`、`warlock:tLaningAbilityBuildList`、
+`obsidian_destroyer:tObjurgationBuildList`,§8 把这个集合钉住)。
+**普查读数一位没变**(8 → 9 检查,原 8 条全绿),因为那三张表都不碰占位符。

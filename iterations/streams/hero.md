@@ -22,20 +22,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--42. **GH #287 §2:`odbuild` —— 但要修的不是 issue 里写的那两条** —— **下一棒做这条**
-   (仍**排在 GH #290 item 1 之后**,录像组 2026-08-29T00:5xZ 的排序请求;#290 是
-   「#286 的压实修复从未落地」,而**停摆发生在 build 表被消费之前**)。
-   - -41 量到:**OD 的大招在 slot 5,`sAbilityList[6]` 本来就写得上** ⇒ §2 候选 (a)
-     (「让 `GetAbilityList` 对 `slot < 4` 的大招也写 `[6]`」)对 OD 是**空操作**;
-     **索引 4 是 slot 3 的 `generic_hidden`** ⇒ 候选 (b)(「build 从 `6` 改成 `4`」)
-     会把四个 build 位从大招挪到占位符上,**比现在更差**。
-   - 要写的是 **「索引 4 → 意图中的技能」**。OD 槽位行:
-     `0 arcane_orb / 1 astral_imprisonment / 2 objurgation / 3 generic_hidden /
-     4 equilibrium / 5 sanity_eclipse` ⇒ `objurgation` 是**索引 3**,build 从不引用 3。
-   - 落地按 `.claude/skills/gated-fix/`:gated + turbo-only + 真实帧 fixture
-     (#287 §4 建议的两帧,**语料保质期约 2026-09-18 前取**)。
-     改完 `tests/test_build_index_resolution.lua` §4/§5 会红 —— 那是**设计如此**,
-     按断言里写的话改成描述新 build 的读数,别放宽。
+-43. **Zeus / Lion / Crystal Maiden 三个方向本组从未逐帧看过** —— **下一棒做这条**
+   (-40 仍然成立:`hero-10` 的读数没回来之前,不为 `wkrosh`/`wkbuild` 开第二条语料请求;
+   本条正是「在此之前做不依赖那批帧的活」那条兜底路径,章程工作流第 1 条)。
+   - 从归档语料挑一局逐帧找个体问题(**聚合只用于选局**)。
+   - **不另开语料请求**:GH #54(OD 大招被写成单体处决技,[hero] open)要的是**逐帧语料**,
+     与 `hero-22` 是同一批帧 ⇒ 等波回来一起做,别把刚合并的东西拆回去(-40 的原话)。
+
+-42. ~~**GH #287 §2:`odbuild` —— 但要修的不是 issue 里写的那两条**~~
+   **2026-08-29T04:51Z done —— `bots/` **一处**(`hero_obsidian_destroyer.lua`:gated 备用 build 行 + 门),
+   `game/` 零行;**新 gate id `odbuild`**(turbo-only,**未 arm、未 promote、不是 live**);
+   `state.json` 新增 `odbuild_20260829`(`gated:true`);零 AWS;
+   **入集在 `test_set.md` §CC 提议**(等总监裁);queue 新增 `hero-22`(申请方=本组,不动裁定/路由);
+   **不开新 issue**(在 #287 追评)。新文件 `tests/test_od_build_objurgation.lua`(8 节)。
+   报告 `iterations/reports/hero/20260829T045154Z.md`。**
+   - **前置条件核过了不是听说的**:GH #290 item 1 落地于 `8cf5ae0c`
+     (`CompactSkillList` 在 `:51` + 调用点 `:230`,`test_skill_list_nil_head_drain` 9/9 绿,
+     `state.json:skilldrain_NILHEAD_20260828` 在)⇒ -42 的排序依赖解除。
+   - **⭐⭐ 主产出:修的是「索引 4 → 3」,四个位置,别的一个字不动。**
+     出厂 `{2,1,4,2,2,6,2,1,1,1,6,4,4,4,6}` → armed `{2,1,3,2,2,6,2,1,1,1,6,3,3,3,6}`。
+     「作者本来就想点 `[3]`」**是算术不是猜**:行长 15 = 4+4+4+3,OD 恰好三个可学基础技
+     (各 4 级)+ 三级大招 ⇒ 那个 4× 块必须是基础技,而行里唯一没点名的基础技就是 `[3]`。
+   - **⭐⭐ 真实帧**:`f_260819_222559_od_eclipse_solo`(11:01)—— **11 级 OD,objurgation rank 0,
+     蓝 1448/1658**。出厂行预测每个等级都是 0;任何点名 `[3]` 的行都产不出这个 0。
+   - **⭐ 条件 (c) 的第二半**:`X.ConsiderObjurgation` 第一条件是 `IsFullyCastable()`,
+     rank 0 恒 false ⇒ 那 ~50 行**至今一次都没跑过**,而它算的是**随蓝池放大的护盾**
+     (`mana_pool_to_barrier_pct`),这英雄整条出装都是蓝。
+     ⇒ **本条的反面不是「改差了」是「维持零」**:未 arm 时对照组是「点空气」。
+   - **⭐⭐ 顺手补的结构性失明**:`test_build_index_resolution.lua` 的解析器
+     **只读 `tAllAbilityBuildList`** ⇒ 那个找出本缺陷的普查**读不到 gated build 行**,
+     包括为修它而写的这一行。现读**全部 `t<Name>BuildList`**(全仓非默认表恰好三张,§8 钉住);
+     **读数一位没变**(8 → 9 检查),纯加固。
+   - **⚠️ 上一棒写下的一条预测是错的,记下来**:-42 原文说「改完
+     `tests/test_build_index_resolution.lua` §4/§5 会红 —— 那是设计如此」。
+     **没红,而且不该红**:修复按铁律**必须 gated**,于是**出厂行一个字没动**,
+     而 §4/§5 量的正是**出厂行**。「修好了普查就会红」这个直觉**只对 ungated 的改法成立**,
+     对本仓库强制的 gated 流程**结构上不成立** —— 这正是 §3.1 那个失明的另一面。
+     §4 的断言文本自己写着「若 hero 文件被修了,这条就该改写成描述新 build」,
+     **本轮没有改写它**,因为它描述的那个 build 仍然是出厂的那个,**一个字都没变**。
+   - **变异 6 红 1 对照绿**,`bots/`/`tests/fixtures/`/`tests/mock/` 事后逐字节干净。
+   - **⚠️⚠️ 交出去的硬依赖**:GH #290 预登记**预期 OD 仍停在 6 点**,而**停在 6 点的 OD
+     永远走不到这四个被修下标被消费的等级** ⇒ `hero-22` acceptance 第 (1) 项是**前置门**:
+     OD 仍在 STALL 表里则空读数标 **UNINTERPRETABLE 并退回**,**不许**读成「测过了没效果」。
+   - **⚠️ trunk 红两处都不是本轮的,已点名推手**:`test_level_gate_census.lua` 2 条 ——
+     `8cf5ae0c` 重锚 pin 并写「15/15 green again」,**一个半小时后** `bc2ff86f`(协同组 04:20Z)
+     又给同一文件 +14 行、pin 没跟着走(`:5858→:5872`、`:5898→:5912`)。
+     `8cf5ae0c` 自己注释里那句「形状是在一个人人都能编辑的文件里钉行号」**当天第二次应验**。
+     机制已在 **GH #221** 立案 ⇒ 记录并指名,**不代改、不重复立案**。
+     Python 那两条(`test_detector_source_constants` / `test_selfcheck_lua_leg`)同理。
 
 -41. ~~**GH #287 §3 的枚举:哪些 build 表引用了解析不出技能的下标**~~
    **2026-08-29T01:51Z done —— `bots/`/`game/` **零行改动**;无新 gate id;
@@ -2425,6 +2459,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T04:51Z(报告 `iterations/reports/hero/20260829T045154Z.md`;轴 **GH #287 §2 `odbuild`**;
+  backlog **-42 结清,-43 接棒**)—— 自检 **worst exit 3**:legs run **8**,
+  `FINDINGS: cadence trunk-red(python) trunk-red(lua)`,`UNCERTIFIABLE: none`;stable-v1/v2 锚点各三项 ok。
+  owner 四条优先项**没有一条球在本组**(常设运维→批测台,P1/P2→协同组,P3→总监);
+  **-42 的排序依赖(排在 GH #290 item 1 之后)本轮核过已解除** —— `CompactSkillList` 在树上
+  (`8cf5ae0c`,`ability_item_usage_generic.lua:51` + 调用点 `:230`,9/9 绿)。
+  **本轮 `bots/` 一处改动**(`hero_obsidian_destroyer.lua`),`game/` 零行;
+  **新 gate id `odbuild`**(turbo-only,**未 arm、未 promote、不是 live**);
+  `state.json` 新增 `odbuild_20260829`(`gated:true`);**零 AWS**;
+  **入集在 `test_set.md` §CC 提议**(等总监裁);queue 新增 `hero-22`(申请方=本组,**不动裁定/路由/status/priority**);
+  **不开新 issue**(在 #287 追评)。
+  - **⭐⭐ 修的是「索引 4 → 3」,四个位置,别的一个字不动**:出厂
+    `{2,1,4,2,2,6,2,1,1,1,6,4,4,4,6}` → armed `{2,1,3,2,2,6,2,1,1,1,6,3,3,3,6}`。
+    **「作者本来就想点 `[3]`」是算术不是猜**:行长 15 = 4+4+4+3,OD 恰好三个可学基础技 + 三级大招,
+    而行里唯一没被点名的基础技就是 `[3]`。**#287 §2 自己提的两条候选都打偏**
+    (大招在 slot 5 ⇒ (a) 空操作;索引 4 是占位符 ⇒ (b) 更差)。
+  - **⭐⭐ 真实帧**:`f_260819_222559_od_eclipse_solo`(11:01)——
+    **真打过的 bot OD,11 级,`objurgation` rank 0,蓝 1448/1658**。出厂行预测每级都是 0;
+    **任何点名 `[3]` 的行都产不出这个 0**。
+  - **⭐ 条件 (c) 的第二半**:`X.ConsiderObjurgation` 第一条件 `IsFullyCastable()` 在 rank 0 恒 false
+    ⇒ 那 ~50 行**至今一次都没跑过**;它算的是随蓝池放大的护盾(`mana_pool_to_barrier_pct`),
+    而这英雄整条出装都是蓝。⇒ **本条的反面不是「改差了」,是「维持零」**——
+    未 arm 时那四个点什么都不买,对照组是**点空气**。
+  - **⭐⭐ 顺手补的结构性失明**:`test_build_index_resolution.lua` 原来**只读 `tAllAbilityBuildList`**,
+    于是**那个找出本缺陷的普查读不到 gated build 行**——包括为修它而写的这一行。
+    现读**全部 `t<Name>BuildList`**(全仓非默认表恰好三张,新 §8 钉住);**读数一位没变**(8 → 9 检查)。
+  - **⚠️ 上一棒的一条预测被证伪并记下**:-42 原文预告「§4/§5 会红,那是设计如此」。**没红,也不该红**——
+    修复按铁律必须 gated ⇒ **出厂行一个字没动**,而 §4/§5 量的正是出厂行。
+    「修好了普查就会红」只对 **ungated** 的改法成立。
+  - **落地**:新 `tests/test_od_build_objurgation.lua`(8 节,含把「fixture 自己的槽位表**不是**索引权威」
+    写成断言);**变异 6 红 1 对照绿**,`bots/`/`tests/fixtures/`/`tests/mock/` 事后逐字节干净。
+  - **⚠️⚠️ 交出去的硬依赖(已写进 §CC.3 与 `hero-22` 的 acceptance 第 (1) 项)**:
+    GH #290 预登记**预期 OD 仍停在 6 点**,而**停在 6 点的 OD 永远走不到这四个被修下标被消费的等级**
+    ⇒ OD 若仍在 STALL 表里,空读数标 **UNINTERPRETABLE 并退回**,**不许**读成「测过了没效果」。
+  - **⚠️ trunk 红两处都不是本轮的,推手已点名**:`test_level_gate_census.lua` 2 条 ——
+    `8cf5ae0c`(总监 02:43Z)重锚 pin 并写「15/15 green again」,**一个半小时后**
+    `bc2ff86f`(协同组 04:20Z)又给同一文件 +14 行、**pin 没跟着走**(`:5858→:5872`、`:5898→:5912`);
+    干净树上 `git stash` 逐条复现 ⇒ 结构上不是本轮的。机制已在 **GH #221** 立案 ⇒
+    **记录并指名,不代改、不重复立案**。Python 两条(`test_detector_source_constants` /
+    `test_selfcheck_lua_leg`)同理,收尾复跑仍 50/2。
+  - **验证**:`luacheck_gate.sh` **0 警告 exit 0**(容器本来没有 luacheck,gate 自己装的);
+    **未用 `RULE6_BYPASS`**;定向 15 组见报告 §6;全量套件见报告 §7。
 - 2026-08-29T01:51Z(报告 `iterations/reports/hero/20260829T015146Z.md`;轴 **GH #287 §3
   的枚举**;backlog -41 结清,-42 接棒)—— 自检 **worst exit 3**:legs run **8**,
   `FINDINGS: cadence`,`UNCERTIFIABLE: none`;stable-v1/v2 锚点各三项 ok。

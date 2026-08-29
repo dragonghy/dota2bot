@@ -912,6 +912,18 @@
         "ref": "test_set.md §BQ",
         "note": "**ROUTED_ARCHIVE_REDUMP —— 当场放行,路由给录像组(replay-check)。** 形状与 §BF.2 的十条归档扫描同族:零 EC2、零新波次、零 gated id,只要归档 .dem 的一次重新导出,卡住它的既不是名额也不是钱,只是一个路由裁定 ⇒ 不排队。执行方是录像组:dumper 源、get_dumper.sh 缓存与归档 .dem 的读取权都在那一侧;英雄组只需在读数回来后处理自己那一半(快照重生成 / TALENTPRICE 边界)。\n\n**H1 的机制部分总监已在源码上核实,不必再论证**:`dumper/main.go:232` 的 `Special_Bonus_Base`/`_Attributes` 无条件丢弃**排在** `:235-236` 的「已升级就保留」**之前**,而未点的天赋在后一行本来就会被 `level > 0` 丢掉 ⇒ 第一行**只可能**作用在已升级的实体上;且 `:378` 的名字来自 `snakeFromClass(cn, ...)`(类名),与观测到的 `special_bonus_h_p200` 对得上,KV 名写的是 `special_bonus_hp_200`。**申请书的诊断成立,批准照做。**\n\n**⭐ 总监补一条开工前登记(这是本裁定的实质增量,不是复述)**:验收的三个读数按现在的写法**只留了 H1 / H2 两个出口**,而源码允许**第三种结果**,并且它最像被误读成 H2 —— 既然活下来的名字是**类名**,而「专属行共用一个基类」正是 H1 自己提出的解释,那么去掉第一行之后**很可能**是:**天赋条目数上去了(H1 预测兑现),但 `unique` 名字条数仍然是 0**(它们全部 snake 成同一个基类名,彼此不可分辨)。⇒ **预登记 H1b「量具部分修复:实体回来了,身份没回来」**,判据是**条目数**与**点数账缺口**这两个,**不是** `unique` 名字条数。若出现 H1b:**不许**把「`unique` 仍为 0」读成 H2 —— 那正是本申请要拆掉的那条推理的**第二版**(第一版是「语料里没有」,第二版是「改完之后名字里仍然没有」),后续是给 dumper 换一条**按实体句柄/KV 名**而不是类名的取名路径,另开 `[harness]` issue,不占本条。\n\n**优先级**:维持 2。抬到 1 的条件按申请书原文(H2 成立 ⇒ 焦点五身上的活 bug),**H1b 不触发抬级**(它是量具问题,归 `[harness]`)。**不要为它单独跑一次 sweep**:任意一轮归档扫描顺手带上即可,边际成本 ≈ 0。"
       }
+    },
+    {
+      "id": "hero-22",
+      "stream": "hero",
+      "bundle": "odbuild",
+      "seeds": [],
+      "priority": 2,
+      "axis": "GH #287 §2 — soak candidate 'odbuild' 的条件 (a)(执行核验)与 (b)(粗粒度胜负)。",
+      "question": "已落地(2026-08-29 英雄组,state.json:odbuild_20260829):`bots/BotLib/hero_obsidian_destroyer.lua` 的 gated 备用 build 行 `tObjurgationBuildList = {2,1,3,2,2,6,2,1,1,1,6,3,3,3,6}`,turbo-only,`J.IsSoakCandidate('odbuild')`。它与出厂行只差四个位置:出厂行把四个点花在 `sAbilityList[4]`,而按 KV 槽位 OD 的 `[4]` 是 `generic_hidden` 占位符,`[3]` 才是 `obsidian_destroyer_objurgation`——出厂行从不引用 3,于是 objurgation 全局 0 级(真实帧 `tests/fixtures/f_260819_222559_od_eclipse_solo.lua`,11 级 OD、objurgation rank 0、1448/1658 蓝)。\n\n**要买的是执行核验,不是显著性**:armed 腿上 OD 是否真的把 objurgation 点起来,以及 `X.ConsiderObjurgation` 是否真的开火。\n\n⚠️ **排序依赖(请在收割时读这一条)**:GH #290 自己的预登记预期 OD 在 armed/baseline 两条腿上**仍然停在 6 点**(压实 `CompactSkillList` 已落地于 `8cf5ae0c`,但总监 2026-08-29T02:47Z 已**撤回**「压实修好了 OD 停摆」这一归因,停摆机理目前**未解释**)。**一个停在 6 点的 OD 永远走不到这四个被修下标被消费的等级** ⇒ 若 `skill_point_stall.py` 在这波仍把 OD 列进 STALL 表,则本条的空读数**不可解释**,不要写成「odbuild 无效」,而是把它退回并等 #290。",
+      "acceptance": "同一波带 OD 的语料,armed 与 baseline 两腿都要读,并按铁律 4(i) **分层给 ab / ba 两个读数**(两层反号 = 噪声,不入结论):\n(1) **前置门**:先跑 `python3 tools/batch_test/behavioral/skill_point_stall.py`。**OD 若仍在 STALL 表里,(2)(3) 的零读数一律标记为 UNINTERPRETABLE 并退回本条**(见 question 的排序依赖)。带分母:OD 出现的局数 / 其中 STALL 的局数。\n(2) **条件 (a) 主判据**:armed 腿上 `obsidian_destroyer_objurgation` 的**最终 rank 分布**,按局给分母,报**均值 + 各 rank 的占比**(铁律 4(ii):整数小值域不报中位数)。预登记:armed 腿 `rank >= 1` 的占比应显著高于 baseline 腿的 **0**;baseline 腿任何一局出现 `rank >= 1` 都是**本条前提被证伪**,请点名该局。\n(3) **条件 (a) 副判据**:armed 腿上 OD 的 `obsidian_destroyer_objurgation` 施法次数(每局均值 + 零次局占比)。预登记:baseline 腿恒为 0(rank 0 不可施法)。**这一格若 armed 也接近 0 而 rank 却起来了**,那么问题在 `X.ConsiderObjurgation` 的开火条件而不在 build,请交回英雄组而不是判 odbuild 无效。\n(4) **条件 (b)**:粗粒度胜负,只问「有没有明显负面」,不做显著性检验。\n⚠️ 语料保质期:`dem21-expire-21d`。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

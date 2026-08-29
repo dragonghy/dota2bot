@@ -53,9 +53,11 @@
 --     The stall itself is GH #290's, measured from replays.
 --   * `tests/mock/hero_slots.lua` is a snapshot of the d2vpkr mirror.  A patch
 --     that moves a slot invalidates every reading below -- regenerate first.
---   * Build rows are parsed out of the hero file's `tAllAbilityBuildList`
---     literal (commented-out rows skipped).  A hero that computes its build
---     some other way is counted as uncensused and named, not silently dropped.
+--   * Build rows are parsed out of the hero file's `t<Name>BuildList` literals
+--     (commented-out rows skipped) -- ALL of them since 2026-08-29, not only
+--     `tAllAbilityBuildList`, because a gated row ships too; see parse_builds
+--     and section 8.  A hero that computes its build some other way is counted
+--     as uncensused and named, not silently dropped.
 --   * "Which name is an ultimate" comes from tests/mock/ability_meta.lua, and it
 --     has NO row for invoker (`invoker_invoke` is not ABILITY_TYPE_ULTIMATE in
 --     the KV).  So for invoker the walk writes no index 6 from the ultimate
@@ -90,21 +92,38 @@ local function read_file(sPath)
     return s
 end
 
---- Rows of `tAllAbilityBuildList`, commented-out rows excluded.
+--- Rows of EVERY top-level `t<Name>BuildList` literal, commented-out rows
+--- excluded.  Also returns the table names it read, in source order.
+---
+--- ⭐ WHY NOT JUST `tAllAbilityBuildList` (changed 2026-08-29, GH #287 §2).
+--- Reading only the default table makes this census blind to the one shape it
+--- exists to catch.  A GATED build row is a build this repo can ship -- arm the
+--- id and every bot on that side levels from it -- and four points spent on a
+--- placeholder cost the same there as in the default row.  Three such tables
+--- exist today (section 8 pins the set): hero_skeleton_king's tKillBuildList
+--- behind 'wkbuild', hero_warlock's tLaningAbilityBuildList, and
+--- hero_obsidian_destroyer's tObjurgationBuildList behind 'odbuild'.  Before
+--- this change the last of those -- written BECAUSE of section 4 -- would have
+--- been invisible to section 4.
+---
+--- The name pattern requires an upper-case letter after the `t` so that
+--- hero_wisp's `talentBuildList` (a call, not a literal) cannot be read as one.
 local function parse_builds(sSrc)
-    local sBlock = sSrc:match('tAllAbilityBuildList%s*=%s*(%b{})')
-    if sBlock == nil then return nil end
-    local tRows = {}
-    for sLine in sBlock:gmatch('[^\n]+') do
-        local sCode = sLine:gsub('%-%-.*$', '')
-        local sInner = sCode:match('{%s*([%d%s,]+)%s*}')
-        if sInner then
-            local tRow = {}
-            for sN in sInner:gmatch('%d+') do tRow[#tRow + 1] = tonumber(sN) end
-            if #tRow > 0 then tRows[#tRows + 1] = tRow end
+    local tRows, tNames = {}, {}
+    for sName, sBlock in sSrc:gmatch('\nlocal (t%u[%w_]*BuildList)%s*=%s*(%b{})') do
+        tNames[#tNames + 1] = sName
+        for sLine in sBlock:gmatch('[^\n]+') do
+            local sCode = sLine:gsub('%-%-.*$', '')
+            local sInner = sCode:match('{%s*([%d%s,]+)%s*}')
+            if sInner then
+                local tRow = {}
+                for sN in sInner:gmatch('%d+') do tRow[#tRow + 1] = tonumber(sN) end
+                if #tRow > 0 then tRows[#tRows + 1] = tRow end
+            end
         end
     end
-    return tRows
+    if #tNames == 0 then return nil end
+    return tRows, tNames
 end
 
 local function is_talent_name(sName)
@@ -188,7 +207,7 @@ local function census()
     }
     for _, sHero in ipairs(shipped_heroes()) do
         local tSlots = SLOTS[sHero]
-        local tRows = parse_builds(read_file('bots/BotLib/hero_' .. sHero .. '.lua'))
+        local tRows, tNames = parse_builds(read_file('bots/BotLib/hero_' .. sHero .. '.lua'))
         if tSlots == nil then
             tOut.skipped_no_slots[#tOut.skipped_no_slots + 1] = sHero
         elseif tRows == nil or #tRows == 0 then
@@ -215,6 +234,7 @@ local function census()
             end
             tOut.heroes[sHero] = {
                 nWorlds = #tWorlds, refs = tRefs, nilw = tNil, ghw = tGh,
+                tables = tNames, nRows = #tRows,
             }
             tOut.censused = tOut.censused + 1
         end
@@ -444,6 +464,52 @@ tests['[7] the focus five reference no nil and no placeholder in any world'] = f
                 .. 'Earthshaker carry TWO placeholders (slots 3 and 4) and stay clean '
                 .. 'only because their builds never index past 3 except at 6.')
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- 7. The set of NON-default build tables, pinned so a new one is read on
+--    purpose rather than silently.
+
+tests['[8] exactly three heroes carry a second build table'] = function()
+    local tExtra = {}
+    for sHero, tRec in pairs(CENSUS.heroes) do
+        for _, sName in ipairs(tRec.tables or {}) do
+            if sName ~= 'tAllAbilityBuildList' then
+                tExtra[#tExtra + 1] = sHero .. ':' .. sName
+            end
+        end
+    end
+    table.sort(tExtra)
+    local tExpect = {
+        'obsidian_destroyer:tObjurgationBuildList',  -- gated 'odbuild', GH #287 §2
+        'skeleton_king:tKillBuildList',              -- gated 'wkbuild'
+        'warlock:tLaningAbilityBuildList',           -- selected by lane role
+    }
+    assert(#tExtra == #tExpect,
+        'non-default build tables: ' .. table.concat(tExtra, ', ') .. '; recorded '
+            .. table.concat(tExpect, ', ') .. ' on 2026-08-29. A new one is not a '
+            .. 'failure -- add it here AFTER checking sections 2-5 still read the '
+            .. 'same, because its rows now enter the census too.')
+    for i, s in ipairs(tExpect) do
+        assert(tExtra[i] == s,
+            'expected ' .. s .. ' at position ' .. i .. ', got ' .. tostring(tExtra[i]))
+    end
+
+    -- The reason the parser was widened: OD's gated row must be visible to the
+    -- same census that found the defect it repairs.
+    local tOD = CENSUS.heroes.obsidian_destroyer
+    assert(tOD.nRows == 2,
+        'obsidian_destroyer contributes ' .. tostring(tOD.nRows) .. ' build rows to '
+            .. 'the census, recorded 2 (the shipped row and the gated odbuild row)')
+    assert(tOD.refs[3] == 4,
+        'the gated odbuild row no longer spends 4 points on index 3 (objurgation); '
+            .. 'refs[3] = ' .. tostring(tOD.refs[3]) .. '. Section 4 still measures the '
+            .. 'shipped row spending 4 on the placeholder at index 4 -- if THAT one '
+            .. 'went away, odbuild was promoted and both assertions move together.')
+    assert(tOD.ghw[3] == nil and tOD.nilw[3] == nil,
+        'obsidian_destroyer[3] no longer resolves to a real ability in every world. '
+            .. 'That index is the whole point of the odbuild row -- if it stopped '
+            .. 'naming objurgation, the fix is aimed at nothing.')
 end
 
 return tests
