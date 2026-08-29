@@ -27,6 +27,43 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0SITE. **【2026-08-29T04:2xZ 新增,GH #294;一条可复用主判据 + 一条从没写下来的约减 + 一处已发表 promote
+   判词的归属修正;`bots/` **纯注释 14 行**,`game/` 逐字节零 diff,零新 gate id,零行为改动,零 AWS。】**
+   **一个已 promote、每局 Turbo 都 live 的守卫,在它两个调用点上的射程差 57 倍 ——
+   而小的那个正是 owner P2 的那条腿。**
+   `J.ShouldStayAndRegen`(`tphome`)自己的带是 **[0.18, 0.75]**;走路腿
+   (`mode_retreat_generic`)调用点上方**没有任何 HP 上限**(唯一一处 `botHP` 比较与
+   `DotaTime() < 0` 同行,正常对局够不着)⇒ 整条带 live。TP 腿(`撤退:1`)第一条合取是
+   `botHP < 0.19` ⇒ 守卫**能改变结局**的域只有 **[0.18, 0.19),一个百分点**。
+   **⭐ 主判据(可复用)**:**一个守卫的域不是它自己谓词的域,而是那个域与它被放进去的
+   那条合取式其余部分的交。当分支的阈值恰好压在守卫下限上方一个百分点时,守卫在这个站点上
+   几乎是空操作,却在自己的源码里、在调用点的注释里都读起来像那条腿的机制。失效方向最贵:
+   不报错、不掉测试、不丢 promote 判词,只是让这条腿继续被记成「有守卫」,于是没人去找
+   这条腿上真正缺的那个 id。** **不是假想**:`stayfield` 是为 `撤退:3` 开的,理由白纸黑字
+   「unlike 撤退:1 above it carries no regen veto at all」——**`撤退:1` 因为「有一个」被跳过**。
+   **第二条约减(更尖,以前没人写下来)**:在守卫能改变结局的那批帧上,分支的
+   `itemFlask == nil` / `not modifier_tango_heal` / `not modifier_flask_healing`
+   **逐条否定了守卫内部 `bHasFlask` 那个析取的每一支**,而第一支是**同一个
+   `J.IsItemAvailable("item_flask")`、同一帧** ⇒ 守卫在这个站点上**退化成
+   `bot:GetGold() >= 90` 一条纯金钱判据**。**这个退化在守卫自己的文件里读不出来,只在调用点读得出来。**
+   **归属修正(本轮唯一对外主张)**:GH #2 给 `tphome` 买到的 **+51 GPM / +54 XPM /
+   −0.32 deaths(28 局)不可能是在 TP 腿上买到的** —— 那条腿最多挪动一条 1pp 的缝。
+   **那份效应属于走路腿。归属修正,不是正确性质疑。**
+   **产出**:`tests/test_tphome_tp_leg_counterfactual.lua`(`[ratchet]`,14 例;subject 是
+   owner P2 钉的真实帧 `f_260822_063722_lina_tp_home`;`[source]`×4 钉两个常数 + 同一访问器 +
+   走路腿无帽、`[arith]` 钉 57 倍、`[reduce]` 在真实帧上量出 **gold 89→false / 90→true**、
+   `[axis]` 141 点网格(守卫真 ≥100 点,其中 `<0.19` 只有 1..4 点且落在 `[0.18,0.19)`)、
+   `[control]`×2 非 turbo 与 3s 内伤害整条网格全假、`[limit]`×2 consider 不可驱动 + (3,8] 窗口是声明输入)
+   + `bots/ability_item_usage_generic.lua` 的**纯注释**更正。**变异 9 个,9/9 首轮全抓**,两端 CONTROL 干净。
+   **⚠ 诚实边界**:不推翻 `tphome` 的 promote;(3,8] 窗口**语料里没有帧**,是声明输入且声明本身写成断言;
+   `X.ConsiderItemDesire["item_tpscroll"]` 在 fixture 上不可达(GH #89)⇒ 分支归属走源码;
+   「1200 环 ⊆ 1600 环」**没当承重**(两个数据源:last-seen 2.0s vs 可见列表)。
+   **下一格**:等总监裁本判据 + 裁「归属要不要回写 `state.json` 的 `tphome` 条目」;
+   建议一次**跨 promoted id 的多调用点普查**(`nodive`/`pushguard`/`tpsafe`/`regroup` 都是多点消费),
+   **本组不自行扩面**。**不为「把 `撤退:1` 的帽抬上去」开格**(那是放大一个没有 (a) 证据的行为,
+   且会推进 owner P2 自己划的 genuine-escape 带);**也不为营地那一族开格**
+   (`campexit` 退集后 10..11 带又没人管,但再开一根要读营血/进度,而 fixture 语料**一只中立都不带** ——
+   只能再造一份声明输入的杠杆,**而一天前被退集的正是这种**)。**
 0VERB. **【2026-08-29T01:16Z 新增,GH #289;认领批测台交棒过来的 trunk RED;
    一条可复用主判据 + 一个被否掉的明显做法 + 一次跨座位撞车;`bots/` `game/` **逐字节零 diff**,
    零新 gate id,零行为改动。**净贡献只有一条断言 —— 机制那半是总监的**。】**
@@ -2540,6 +2577,42 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T04:20Z(GH #294):**一个已 promote、每局 Turbo 都 live 的守卫,在它两个调用点上的射程差 57 倍 ——
+  小的那个正是 owner P2 的 TP 回家腿。** `J.ShouldStayAndRegen`(`tphome`)自己的带是
+  **[0.18, 0.75]**;走路腿(`mode_retreat_generic`)调用点上方没有任何 HP 上限 ⇒ 整条带 live;
+  TP 腿(`撤退:1`)第一条合取是 `botHP < 0.19` ⇒ 守卫**能改变结局**的域只有 **[0.18, 0.19)**。
+  **⭐ 主判据(可复用)**:**一个守卫的域不是它自己谓词的域,而是那个域与它被放进去的那条合取式
+  其余部分的交;当分支阈值恰好压在守卫下限上方一个百分点时,守卫在这个站点上几乎是空操作,
+  却在自己的源码里和调用点注释里都读起来像那条腿的机制。失效方向最贵:不报错、不掉测试、
+  不丢 promote 判词,只是让这条腿继续被记成「有守卫」。** **不是假想** —— `stayfield` 是为 `撤退:3`
+  开的,理由白纸黑字「unlike 撤退:1 above it carries no regen veto at all」,**`撤退:1` 因为
+  「有一个」被跳过**。**第二条约减(更尖)**:分支的 `itemFlask == nil` /
+  `not modifier_tango_heal` / `not modifier_flask_healing` **逐条否定了守卫 `bHasFlask` 的每一支**
+  (第一支是**同一个 `J.IsItemAvailable("item_flask")`、同一帧**)⇒ 守卫在这个站点上**退化成
+  `bot:GetGold() >= 90`**;**这个退化只在调用点读得出来。**
+  **归属修正(本轮唯一对外主张)**:GH #2 给 `tphome` 的 **+51 GPM / +54 XPM / −0.32 deaths(28 局)
+  不可能在 TP 腿上买到** ⇒ **那份效应属于走路腿**。归属修正,**不推翻 promote**。
+  **产出**:`tests/test_tphome_tp_leg_counterfactual.lua`(`[ratchet]`,**14 例全绿**,自检快腿 18 → 19;
+  subject = owner P2 钉的真实帧 `f_260822_063722_lina_tp_home`;`[reduce]` 在真实帧上量出
+  **gold 89→false / 90→true**;`[axis]` 141 点网格里 `<0.19` 只有 1..4 点且落在 `[0.18,0.19)`)
+  + `bots/ability_item_usage_generic.lua` **纯注释 14 行**的更正。**变异 9 个,9/9 首轮全抓**,
+  两端 CONTROL 干净,还原后 `git diff bots/` 空。
+  开工自检 **worst exit 3(全部 cadence)**;**UNLANDED 0**;未裁 queue 请求 **0**(open 37);
+  过期等待 live 块 **0**;稳定版锚点 **各 3 项 ok**;trunk python **51/0/0**;trunk 快 Lua **18 文件 0 失败**;
+  开工 `HEAD == 4da08250`;**AWS $0,S3 零访问**。
+  **⚠ 诚实边界**:**零行为改动、零新 gate id、`game/` 逐字节零 diff**,`state.json` / `queue.json` /
+  `test_set.md` 一字未动(**本轮没有 id 可入集**);(3,8] 那个窗口**语料里没有帧**,是声明输入
+  且声明本身写成了断言;`X.ConsiderItemDesire["item_tpscroll"]` 在 fixture 上不可达(GH #89);
+  「1200 环 ⊆ 1600 环」**没当承重**(last-seen 2.0s vs 可见列表,两个数据源)。
+  **门**:`luacheck_gate.sh` **0 warnings EXIT=0**;`tphome_tp_leg` **14/0**;`smoke_load` **3/0**、
+  `lina` **45/0**、`gate_claim` **10/0**;全量套件读数见报告 §8;**`RULE6_BYPASS` 未使用**。
+  **交棒**:**总监**(① 裁本判据;② 裁「归属要不要回写 `state.json` 的 `tphome` 条目」——
+  改已 promote id 的档案不是本组的权;③ 建议一次**跨 promoted id 的多调用点普查**,
+  `nodive`/`pushguard`/`tpsafe`/`regroup` 都是多点消费,**本组不自行扩面**)、
+  **录像组**(唯一没有照片的那一格:HP ∈ [0.18,0.19) 且上次英雄伤害在 (3,8]s、≥90 金、
+  主槽无 flask 的帧,**请钉一帧**;频率本组不猜)、**批测台/英雄组**(无请求,零 AWS)。
+  **下一格**:回 backlog;**不为「抬 `撤退:1` 的帽」开格**,**也不为营地那一族开格**(理由见 `0SITE`)。
+  详见 `iterations/reports/strategy/20260829T042022Z.md`。
 - 2026-08-29T01:16Z:**同一个缺陷,一小时内被两个座位各自独立地找到并修好 —— 本组的那份是
   重复劳动,已整份丢弃。** 认领 GH #289(批测台按铁律 5 交棒过来的 trunk RED,`[strategy]` 前缀)。
   诊断:本组一天前落地的 `stale_waits.py`,其**不变量 2** 写着「对活着的接力棒报红的检测器

@@ -5535,6 +5535,20 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 		end
 
 		--第一种情况:无敌人无大药回家恢复
+		-- [correction 2026-08-29, strategy] The veto below is PROMOTED and LIVE,
+		-- but read what it can change HERE, not what its own source says. Its
+		-- band is [0.18, 0.75] and this branch caps at 0.19, so the conjunct can
+		-- only move frames in [0.18, 0.19) -- one percentage point of the 57 the
+		-- helper covers. And on those frames the branch's own `itemFlask == nil`
+		-- / no-tango_heal / no-flask_healing conjuncts have already falsified
+		-- every disjunct of the helper's bHasFlask (the first one is literally
+		-- the same J.IsItemAvailable("item_flask") call, line ~5228), so what is
+		-- left of it here is `bot:GetGold() >= 90` and nothing else.
+		-- => the TP leg is guarded on a sliver; the +51 GPM promote verdict for
+		-- 'tphome' (GH #2) belongs to the OTHER call site, mode_retreat_generic,
+		-- where no HP cap stands above the call. Pinned as arithmetic in
+		-- tests/test_tphome_tp_leg_counterfactual.lua -- moving either constant
+		-- turns that file red.
 		if botHP < 0.19
 			and not J.ShouldStayAndRegen( bot )   -- [GH #2] turbo: heal in lane, don't TP home
 			and ( bot:WasRecentlyDamagedByAnyHero( 8.0 ) or botHP < 0.12 )
