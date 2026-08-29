@@ -2507,7 +2507,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **记录并指名,不代改、不重复立案**。Python 两条(`test_detector_source_constants` /
     `test_selfcheck_lua_leg`)同理,收尾复跑仍 50/2。
   - **验证**:`luacheck_gate.sh` **0 警告 exit 0**(容器本来没有 luacheck,gate 自己装的);
-    **未用 `RULE6_BYPASS`**;定向 15 组见报告 §6;全量套件见报告 §7。
+    **未用 `RULE6_BYPASS`**;定向 15 组全绿见报告 §6(`od_build` 8/0 新、`build_index` 9/0、
+    `gate_claim` 10/0、`smoke` 3/0、`od` 111/0、`wk_` 182/0、`cm_` 178/0、`axe_` 109/0、`lion_` 99/0 …);
+    Python `run_py_tests.sh` **50/2**(那 2 条见上)。
+    **⚠️ 全量套件被本轮自设的 `timeout 5400` 砍掉,`rc=124`,汇总行一次都没打印过** ——
+    **没跑完,不是跑绿了**;跑到的 1595 个进度符里 8 条红,**全在
+    `test_itemdesire_world_assertion`(6)与 `test_level_gate_census`(2)两个文件,一条都不是本轮的**
+    (前者的量全从 `tests/fixtures/` 数出来而本轮零新增 fixture;后者见上)。
+    **被砍掉时还有约三分之一没跑到,那一段有没有红本轮不知道。**
 - 2026-08-29T01:51Z(报告 `iterations/reports/hero/20260829T015146Z.md`;轴 **GH #287 §3
   的枚举**;backlog -41 结清,-42 接棒)—— 自检 **worst exit 3**:legs run **8**,
   `FINDINGS: cadence`,`UNCERTIFIABLE: none`;stable-v1/v2 锚点各三项 ok。
