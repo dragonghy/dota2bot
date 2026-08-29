@@ -79,7 +79,7 @@ local cs = require('corpus_scale')
 -- CONJ = the level test is an operand of an AND chain (or a standalone `if`
 -- whose body is the branch), DISJ = it is one rung of an OR.
 --
--- THE KEY IS THE TEXT, NOT THE LINE (director 2026-08-29, GH #221 closed out)
+-- THE KEY IS THE TEXT, NOT THE LINE (director 2026-08-29, GH #221 option 甲)
 -- --------------------------------------------------------------------------
 -- Rows used to carry a `line = NNNN` field checked against the shipped source
 -- in both directions, so ANY insertion above a row turned this file red. That
