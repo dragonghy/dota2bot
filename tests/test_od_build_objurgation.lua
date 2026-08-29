@@ -1,6 +1,11 @@
--- [hero] GH #287 §2 -- soak candidate 'odbuild': the one mis-resolved index in
--- Obsidian Destroyer's skill build, aimed at the ability the row's own
+-- [ratchet] [hero] GH #287 §2 -- soak candidate 'odbuild': the one mis-resolved
+-- index in Obsidian Destroyer's skill build, aimed at the ability the row's own
 -- arithmetic says it meant.
+--
+-- Tagged `[ratchet]` so routine_selfcheck.sh's fast Lua leg reads it every round
+-- (~0.11s): §5 and §6 go red the moment someone edits the shipped row, renames
+-- the gate id, or promotes it -- events that must be noticed the same round,
+-- not whenever the ~100-minute full suite next completes (GH #124/#267).
 --
 -- WHAT THE DEFECT IS.  J.Skill.GetAbilityList walks the engine's slots; OD's
 -- real slot row (the game's npc_heroes.txt, mirrored into tests/mock/hero_slots.lua)

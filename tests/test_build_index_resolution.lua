@@ -1,5 +1,12 @@
--- [hero] GH #287 §3: the enumeration -- which shipped build tables reference an
--- `sAbilityList` index that does not resolve to a learnable ability.
+-- [ratchet] [hero] GH #287 §3: the enumeration -- which shipped build tables
+-- reference an `sAbilityList` index that does not resolve to a learnable ability.
+--
+-- The `[ratchet]` tag is what puts this file in routine_selfcheck.sh's fast Lua
+-- leg, so it is read every round rather than only in the ~100-minute full suite
+-- (GH #124/#267).  Added 2026-08-29, a day after the file landed: its own header
+-- called it "a measurement plus a ratchet" in prose, and prose is not what the
+-- discovery grep matches -- the same "the tool exists, nobody runs it" shape
+-- iron rule 10 was written for.  The whole census costs ~0.15s.
 --
 -- WHY THIS FILE EXISTS
 -- --------------------
