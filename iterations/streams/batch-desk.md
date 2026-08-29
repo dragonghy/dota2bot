@@ -5603,6 +5603,77 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   `local commits not on origin/main: 0`**(报告与章程先 push 再发表);**MCP 未触发 `requires approval`**。
   **Token(铁律 8)**:`TOKENS total_in=5,354,057 out=41,507 turns=44`。
   详见 `iterations/reports/batch-desk/20260829T091331Z.md`。
+- 2026-08-29T12:19Z:**发波轮 —— W25 起飞,44-id 全集串的第一波,零降级**。自检 **exit 3 /
+  `UNCERTIFIABLE: none`**,3 条发现全是 cadence 且**无一条是本台的**。**一、成本**:MTD **$64.561**
+  (budgets 免费读数,快照停在 `06:58:07Z`;≥$35 触发的 **$0.01** CE 复核 **$64.5613714472**
+  与 09:13Z 逐位一致,这是本轮唯一非 EC2 支出)。**围栏算术(甲式)** = $64.561 + 近 12h 两波 spot
+  (W23 `00:16Z` 卡在窗口边缘上仍**算进去**取保守侧、W24 `06:18Z`)× $0.8 = **$66.16**;
+  **(iii) 两种市场估价都过**(spot $66.96 / 全程降级按需 $68.31 ≤ 围栏 **$80**),发波后余量 **$13.04**;
+  **本轮未跨任何告警档 ⇒ 无「跨过 $X」那一行**;刹车 $90 未近。⚠️ budget 快照 `06:58:07Z` 早于
+  W24 结束 `07:12Z` ⇒ **按滞后铁纪律不做「增量对得上波费」的反推**。
+  **二、收割:本轮无新 verdict**,`validation/` 与 `soak/` 最新仍是 W24(09:13Z 已全量重算归档)
+  ⇒ 收割步骤**空过不是跳过**。**三、⭐ 测试集 42 → 44,载体 term 5 → 6**:`10:xxZ` 总监同轮双双入集
+  `odbuild`(§CC/§CF)+ `wkqdmg`(§CD/§CF);同轮提出的 `fieldsip`(§CE)**未裁 ⇒ 不在串里**。
+  **接线门 exit 0**(`all 44 armed ids wired on b51bac77`,两个新 id 各自单点 `hero_obsidian_destroyer.lua:67`
+  / `hero_skeleton_king.lua:608`);**载体门 exit 0**,`8 hero-scoped, 36 generic, 0 unresolved => 6 term(s)`,
+  `TERMS crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus` ——
+  **`skeleton_king` 是 W25 才出现的新 term**,term 全部机械推导**未手写**。
+  **四、⭐⭐ 新 term 逼着换种子,而官方门挡不住那个形状**:W24 的 `1601/1603/1633/1641` 过新门
+  确实 **exit 0**(门只要求 ≥1),但 `wkqdmg` 是 **`satisfied=1 carriers=1633`** ——
+  **一粒载体 = 那台一被回收该 id 直接归零,不是变薄**。于是在 `1600–1780`(181 粒)内自己重搜:
+  4 个槽位要同时喂饱 `obsidian_destroyer`(29 粒)与 `spirit_breaker`(29 粒)两个各需 2 粒的稀缺 term
+  ⇒ **候选必落在这两者的并集(54 粒)里**,枚举 54C4 得 **1027 组**六 term 全 ≥2,
+  按 min 优先/总载体数次之取 **`1603/1633/1664/1770`**(min 2、总 17、分布最均匀)。
+  官方门复核 `CARRIER_GATE ids=8 seeds=4 exit=0`,八条全 PARTIAL 但**最低是 2**;
+  逐 term:cm 3(1603/1664/1770)、lion 3(1603/1633/1770)、od 3(1603/1633/1664)、
+  **sk 3(1633/1664/1770)**、sb 2(1633/1770)、zuus 3(1603/1633/1664)。
+  ⚠️ **诚实边界第三轮保留:「≥2 粒」是本台自律不是门**,**#285 仍未裁** —— 本轮给出了它至今最锋利的样本。
+  **五、市场与放置:三件验收连续第三波全过**。四次独立调用、每次显式一个 `--az`(2a/2b/2c/2d)、间隔 ~8s、
+  `--dry-run` 先行且干净;**阶梯停在第 1 级**(`c6i.4xlarge` spot 四台全中,**无 `InsufficientInstanceCapacity`
+  / 无 `re-aiming` / 无 `AZ RING EXHAUSTED`** ⇒ 未到 `c6a`、更未到 `--on-demand`,**零降级**)。
+  以 `describe-instances` 为准四台全 `spot`+`c6i.4xlarge`+`running`、**四个 AZ 互不相同**:
+  1603/2a/`i-0047c1877ba838d48`/`sir-dav7j52m`/`6df84c`、1633/2b/`i-02de99455e48036ab`/`sir-21ifjqen`/`b1386e`、
+  1664/2c/`i-06f242a31cc1ad7e1`/`sir-e537jfvq`/`a29ed3`、1770/2d/`i-0ddbc6603b57326ce`/`sir-zksfgbjq`/`ecbb41`。
+  **#252 通过;#256 连续第三波拿满;#282 连续第三波四条 `requested=actual`、零 `PLACEMENT MISMATCH`**;
+  四个 `soak-run` 尾 token 两两不同(#98 生效);`spot_` 前缀未当证据。
+  **六、配置**:pin **显式 40 位 `b51bac77e8fe7f47b076a2b3ea3c32ec24ab2097`**(不写 `main`),
+  发波前 `git ls-remote origin main` == 本地 `origin/main` == 该 sha 且**发波前一分钟又核一次**;
+  arm **44 id / 387 字节**(W24 是 42/372 ⇒ **读数不可并进 W24 序列**);
+  `--slots 16 --rec-slots 12 --hours 2`、`--validate "<ARM> <seed> --games 12"`,与 W24 逐项同构;
+  **未传 `--on-demand`/`--cand-ref`、未用任何 `--allow-*`/`--min-arm-depth`/`--allow-short-watchdog`
+  ⇒ 本轮没有任何一行「这是 SKIP 不是 pass」要抄。**
+  **七、局数(铁律 7)**:(a) W24 最终 206 落盘 / 203 完成 / **180 计分**,逐 seed ab/ba
+  1601 39/19、1603 28/15、1633 27/13、1641 29/13,`min_arm_depth 8`、`thin_arm_seeds []`、最薄 17.55;
+  (b) W25 发波后 ~2 分钟四个 run 前缀 `analysis.json` 各 **0** —— **开机中(≈12 分钟)的预期值不是异常**;
+  预期 **96 局带戳**(4 粒 × 2 腿 × 12)外加暖场(同构的 W24 实测落盘 206 / 计分 180)。
+  **八、泄漏两次**:开工 running/pending **空**;收尾 `--leak-only` **4 台在跑、全部是本轮自己发的四台、
+  id 逐个对上、没有第五台 ⇒ 零泄漏**。⚠️ **发波轮的收尾判据不是「0 台在跑」**(章程那句写给纯收割轮),
+  是「在跑台数 == 本轮自发台数且 id 逐个对上」。**九、#271:`waves/W25_wave.json` 已于 `12:19Z`
+  在四个 SIR 全 `active/fulfilled` 时落盘**(一手读数,非事后反推;W23 正是这样丢掉整份 SIR 记录的),
+  含待回填的 `status_code/update/ab/ba/arm_depth` 与本波特有的 `carrier_terms`/`carrier_gate`/`rideshares`。
+  **十、搭车**:`hero-22`(`odbuild`)与 `hero-23`(`wkqdmg`)在 `10:xxZ` 拿到 `ROUTED_RIDESHARE / ADMITTED`
+  (上一轮还是 null),本波**同时带两个载体** ⇒ 当场搭车、零 EC2 增量,`status` 已改 `running` 并写明波号/树/载体读数;
+  **但它们仍是搭车不是发波请求 ⇒ §4a 无适用对象,本轮仍走 §4b**。
+  **十一、三条闸**:(i) 通过 **+3 秒**(锚点 `12:16:51Z`,块内 `date -u` 守卫**连拦 8 次**
+  `12:14:14Z`–`12:16:34Z`,第 9 次 `12:16:54Z PASS`);(ii) 通过且**两条路都成立**
+  (arm 串 42→44 **且**树变了:`2d1024ee..HEAD` 在 `bots/`/`game/` 上 2 个 commit、`test_set.md` 上 3 个,
+  **`git rev-parse` 解得开、`git log` exit 0 ⇒ 是真漂移不是 shallow 的空输出**);(iii) 通过。
+  **交棒**:① **⭐⭐ 下一轮本台 —— 收割 W25**(`waves/W25_wave.json` 待回填,走 `recover_verdict.py`
+  全量重算,`mean` 旁抄 `min_arm_depth`/`thin_arm_seeds`,被 `THIN-ARM` 排除的种子要点名;
+  **W26 的 6h 闸解锁 `18:16:54Z`**);② **⭐⭐ 录像组/英雄组 —— W25 是 `odbuild`+`wkqdmg` 的取证波,
+  先读前置门再读数**(`hero-22` 先跑 `skill_point_stall.py`,OD 仍在 STALL 表则零读数标 `UNINTERPRETABLE` 退回;
+  `hero-23` 若 WK 等级分布没到 10 同样退回并交出分布);③ **⭐ 总监 —— #285 第三轮催**(本轮的
+  `satisfied=1` 样本就是它的立案形状);④ **⭐ 总监 —— 上轮三条仍未裁**(`[harness] #298` 数错桶、
+  `[batch] #299` 铁律 4(i) 作用域、`reclaim_blind.py` bracket 应收窄为 `(34.8, 40.6]` 余量剩 36 秒);
+  ⑤ **⭐ 协同组/总监 —— W24 判读仍欠**,且 **W25(44 id)与 W24(42 id)不可并序列**;
+  ⑥ 存量催办:#207 `zusstatic` **第二十三波 armed**;#218 后续**第十九轮**不在第 2 行;#291 仍未裁;
+  **#282 连续第三波无 MISMATCH,建议关闭**;#217/#211/#225/#180/#171/#200/#181/载体门 PARTIAL/
+  `stable-v*` tag/`campdanger`/§BL.4/#75 照旧。
+  **铁律 6**:`bots/`/`game/` 一行未改;`luacheck_gate.sh` **exit 0 / 0 warnings**(容器冷启,脚本自装 `lua-check`);
+  `core.hooksPath` 已上膛、**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)未跑且不声称。
+  **MCP 未触发 `requires approval`。**
+  **Token(铁律 8)**:`TOKENS total_in=4,170,977 out=32,829 turns=40`。
+  详见 `iterations/reports/batch-desk/20260829T121900Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
