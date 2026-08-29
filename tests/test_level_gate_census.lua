@@ -196,7 +196,24 @@ local GATES = {
       why = 'the farm-mode runMode response block (enemy inside attack range, 2+ allies) '
          .. 'is a live turbo situation gated behind a 3.3% maturity proxy.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 149, op = '>=', n = 30, eff = 30,
+    -- The 2026-08-28T22:xxZ director round (GH #286, UNGATED) then moved ALL
+    -- FOUR ability_item_usage_generic rows, which is what makes it different in
+    -- kind from the five splits above: the insertion is at the TOP of the file
+    -- (a CompactSkillList helper, +34, plus its call site above the level-up
+    -- gate, +7), so nothing sits above it and there is no split. :149 -> :183
+    -- (+34, only the helper is above it), :594 -> :635, :5817 -> :5858,
+    -- :5857 -> :5898 (all +41).
+    -- Worth recording because the notes above read the recurrence as a property
+    -- of one hot region ("the same forty lines", "the third consecutive
+    -- strategy round to move this same pair"): this round is a director round,
+    -- lands nowhere near that region, and moves the pins anyway. The shape is
+    -- pinning a LINE NUMBER in a file anyone may edit -- GH #221's registration
+    -- key -- not any particular neighbourhood. Same discipline regardless: only
+    -- the `line` field moved; file, op, n, eff, text and verdict are untouched,
+    -- so the text assertion below still re-reads the row it was classified
+    -- from, and the pre-change tree was run in a worktree (15/15 green on
+    -- HEAD~1) before these numbers were touched.
+    { file = 'bots/ability_item_usage_generic.lua', line = 183, op = '>=', n = 30, eff = 30,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() >= 30',
       why = 'a bloodseeker-only opt-out at the level cap. The subject of the branch is a '
@@ -205,7 +222,7 @@ local GATES = {
     -- 584 -> 588 (+4): the 2026-08-26T1x:xxZ strategy round added a four-line
     -- COMMENT above this branch landing `bbfight`.  Source text unchanged, so
     -- this is 0LN2's prescribed repair -- move the pin, never relax the check.
-    { file = 'bots/ability_item_usage_generic.lua', line = 594, op = '>', n = 24, eff = 25,
+    { file = 'bots/ability_item_usage_generic.lua', line = 635, op = '>', n = 24, eff = 25,
       shape = 'CONJ', verdict = 'INERT',
       text = 'if bot:GetLevel() > 24',
       why = 'buyback path 2 of 3. Inert on its own terms (a level-25 hero). The SECOND, '
@@ -225,14 +242,14 @@ local GATES = {
     -- them COMMENT).  Third time these two pins have moved and the second time
     -- prose alone did it -- 0LN2 again, and the reason this file keys nothing
     -- on line numbers that it could key on text instead.
-    { file = 'bots/ability_item_usage_generic.lua', line = 5817, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5858, op = '>=', n = 15, eff = 15,
       shape = 'CONJ', verdict = 'TEETH',
       text = 'if bot:GetLevel() >= 15',
       why = '"guard the ancient" TP: 5-way AND whose other four operands (no enemies near '
          .. 'me, ShouldTpToFarm, far from fountain, no ally already at the ancient) are all '
          .. 'live turbo states. The level term is the maturity proxy that shuts it.' },
 
-    { file = 'bots/ability_item_usage_generic.lua', line = 5857, op = '>=', n = 15, eff = 15,
+    { file = 'bots/ability_item_usage_generic.lua', line = 5898, op = '>=', n = 15, eff = 15,
       shape = 'DISJ', verdict = 'REDUNDANT',
       text = 'and ( creep:GetAttackTarget() == nAncient or bot:GetLevel() >= 15 )',
       why = 'the sibling rung is the more specific and live predicate (a creep actually '
