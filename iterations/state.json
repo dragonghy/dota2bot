@@ -4649,6 +4649,7 @@
     "next_lever": "J.ShouldStayAndRegen (PROMOTED, live in every turbo game) accepts flask/tango-or-90-gold with no magnitude either, and GH #294 already showed its TP-leg domain is [0.18,0.19). Whether the same magnitude question belongs on the promoted guard is NOT this group's call to make unilaterally -- it is a shipped default.",
     "report": "iterations/reports/strategy/20260829T10xxZ.md",
     "issue": "GH #300",
-    "commit": "351389eb"
+    "commit": "351389eb",
+    "sibling_issue": "GH #301 -- test_cm_arcane_aura_passive.lua is order-dependent (fails alone, passes under run_tests.lua sorted order). NOT a trunk RED; the strategy desk first published it as one and corrected itself in the same work unit. Lesson registered: reproducing on a clean tree answers ATTRIBUTION, not EXISTENCE -- existence has to be asked with the command the reader runs."
   }
 }
