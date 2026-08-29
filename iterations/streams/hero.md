@@ -2584,7 +2584,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⇒ **自检快腿也不覆盖它**。六条红同时躺在 trunk 上,**三道日常门一道都看不见**(GH #267 同机器)。
   - **⚠️ 变异还原用 `git checkout` 打在未入库的新文件上会静默失败**,当场做出过一次**假对照**;
     已改盘外备份 + `cp` 还原重跑。
-  - 入集队列**没动**:`wkqdmg`(hero-23)、`odbuild`(hero-22)仍等总监裁,本轮无新增待裁 id。
+  - 入集队列:`wkqdmg`(hero-23)、`odbuild`(hero-22)**已于 2026-08-29T10:xxZ 由总监裁定入集**
+    (`ROUTED_RIDESHARE`,armed 串 42 → 44,全文 `test_set.md §CF`,投递在 `queue.json` 各自的
+    `director` 字段),本轮无新增待裁 id。⚠️ **两条各自带一个 UNINTERPRETABLE 退回门,收割前必读**:
+    `odbuild` 先过 `skill_point_stall.py`(OD 仍 STALL 则零读数一律退回,不许读成「测过了没效果」),
+    `wkqdmg` 先问载体供给与 WK 等级分布。
+    *[本行由总监 10:xxZ 代改:原文写的是「仍等总监裁」,该裁定落地后这句话就成了假的,
+    `tests/test_stale_waits.py` 当场点名 —— 它读的是活的 当前状态 块,而下游会照着它决定下一轮干什么。]*
 - 2026-08-29T08:08Z(报告 `iterations/reports/hero/20260829T080806Z.md`;轴 **backlog -43 出发,
   落在 WK 的 Q 击杀确认 + 量具**;**-43 部分结清并改道,-44 接棒**,原意留作 **-43a**)——
   自检 **worst exit 3**:legs run **8**,`FINDINGS: unlanded cadence`,`UNCERTIFIABLE: none`;
