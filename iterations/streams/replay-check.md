@@ -6605,6 +6605,10 @@
     `campvoid_escape.py --selfcheck` → **49 PASS / 0 FAIL**。
     本轮未改任何 `bots/` 或 `game/` 文件、未动 gate ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
     **MCP 未触发 `requires approval`。** AWS:S3 只读,**零 EC2、零 CE 调用**。
+  - **已发表**:**GH #318 `[strategy]`**(campvoid SILENT 裁决 + 146 u 几何根因 + fixture 验收 +
+    §6 的 harness 缺口)与 **GH #265 追评**(两层读数 + 9 级/8 级裸平砍帧)。
+    **两者发表前都跑了 `claim_precheck.sh` ⇒ exit 0、`local commits not on origin/main: 0`**
+    (即**先 push 后发**,GH #290 的顺序)。
   - **下一轮第一件事**:(1) `--escape-w 12` 敏感度 + 「振荡型死锁」跨 episode 合并规则(两笔欠账);
     (2) 下一个零记录 id:**`fieldcreep`**(与 owner P2 野区续航同族,优先)或 `pullcad`;
     (3) 若 W27 起飞,先跑 `arm_string_census.py` —— **它是 45 id 串(`fieldsip` 入集),
