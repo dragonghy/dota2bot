@@ -1,7 +1,7 @@
 {
   "wave": "W25",
   "_note": "First-hand launch record, written 2026-08-29T12:19Z WHILE all four SIRs were still active/fulfilled (carry-forward duty from the 09:13Z round item 5; the SIR record is not reconstructable after the instances terminate -- W23 lost it exactly that way).",
-  "_harvest_todo": "At harvest: fill status_code/update from describe-spot-instance-requests, and ab/ba/arm_depth from recover_verdict.py over the merged per-game files. Then run reclaim_blind.py --wave-json on this file.",
+  "_harvest_todo": "FILLED 2026-08-29T15:2xZ from describe-spot-instance-requests (status_code/update) + recover_verdict.py on the 196 merged per-game files (ab/ba/arm_depth). All four self-terminated between 13:00:13Z and 13:11:44Z; ZERO reclaims, 4/4 paired seeds.",
   "tree": "b51bac77e8fe7f47b076a2b3ea3c32ec24ab2097",
   "arm_ids": 44,
   "arm_bytes": 387,
@@ -12,9 +12,19 @@
   "rec_slots": 12,
   "watchdog_hours": 2,
   "games_per_seed": 12,
-  "carrier_terms": ["crystal_maiden", "lion", "obsidian_destroyer", "skeleton_king", "spirit_breaker", "zuus"],
+  "carrier_terms": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+  ],
   "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0; ids=8 seeds=4; every term has >= 2 carriers (min = spirit_breaker at 2). skeleton_king is a NEW term this wave, derived from wkqdmg.",
-  "rideshares": ["hero-22 (odbuild / obsidian_destroyer carrier)", "hero-23 (wkqdmg / skeleton_king carrier)"],
+  "rideshares": [
+    "hero-22 (odbuild / obsidian_destroyer carrier)",
+    "hero-23 (wkqdmg / skeleton_king carrier)"
+  ],
   "machines": [
     {
       "seed": 1603,
@@ -26,11 +36,11 @@
       "requested_az": "us-west-2a",
       "actual_az": "us-west-2a",
       "sir_state_at_launch": "active/fulfilled",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T13:11:44Z",
+      "ab": 31,
+      "ba": 15,
+      "arm_depth": 20.22
     },
     {
       "seed": 1633,
@@ -42,11 +52,11 @@
       "requested_az": "us-west-2b",
       "actual_az": "us-west-2b",
       "sir_state_at_launch": "active/fulfilled",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T13:00:13Z",
+      "ab": 29,
+      "ba": 13,
+      "arm_depth": 17.95
     },
     {
       "seed": 1664,
@@ -58,11 +68,11 @@
       "requested_az": "us-west-2c",
       "actual_az": "us-west-2c",
       "sir_state_at_launch": "active/fulfilled",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T13:02:21Z",
+      "ab": 27,
+      "ba": 15,
+      "arm_depth": 19.29
     },
     {
       "seed": 1770,
@@ -74,11 +84,11 @@
       "requested_az": "us-west-2d",
       "actual_az": "us-west-2d",
       "sir_state_at_launch": "active/fulfilled",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-29T13:02:45Z",
+      "ab": 28,
+      "ba": 14,
+      "arm_depth": 18.67
     }
   ],
   "placement": {
@@ -87,5 +97,53 @@
     "re_aiming": "none",
     "az_ring_exhausted": "none",
     "capacity_ladder": "step 1 (c6i.4xlarge spot) took all four; no c6a fallback, no --on-demand"
+  },
+  "verdict": {
+    "files": 196,
+    "games_loaded": 196,
+    "scored_games": 172,
+    "unfinished": 0,
+    "warmup_unstamped": 24,
+    "mean": {
+      "gpm": 40.16,
+      "xpm": 25.57,
+      "deaths": -0.3,
+      "last_hits": 1.72,
+      "winrate": 0.56
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "3/4",
+      "deaths": "3/4",
+      "last_hits": "2/4",
+      "winrate": "2/4"
+    },
+    "per_seed_gpm": {
+      "1603": 44.8,
+      "1633": 145.67,
+      "1664": 43.64,
+      "1770": -73.47
+    },
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "suggested": "promote",
+    "dispersion": {
+      "sd": 89.58,
+      "se": 44.79,
+      "mean_over_se": 0.9,
+      "drop_one_means": {
+        "drop_1603": 38.61,
+        "drop_1633": 4.99,
+        "drop_1664": 39.0,
+        "drop_1770": 78.03
+      }
+    },
+    "layers_gpm": {
+      "pooled_ab": 119.25,
+      "pooled_ba": -38.94,
+      "residual_ab_minus_ba_over_2": 79.1,
+      "sign_flips": "3/4"
+    },
+    "note": "Layer sign-flips are the EXPECTED signature of the mirrored design, not a noise flag -- see GH #299. Third consecutive same-signed residual: W25 +79.10 measured, W24 +68.22 measured (this round, reproducing the archived pooled ab/ba exactly), W23 +63.5 DERIVED from GH #299's figure. NOTE a labelling slip in #299: it prints '(ab-ba)/2 = +136 (W24) / +127 (W23)' but those are (ab-ba) UNDIVIDED; the /2 values are +68.22 / +63.5. Quantity and argument unaffected; the printed numbers are 2x."
   }
 }
