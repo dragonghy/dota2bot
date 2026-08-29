@@ -2445,8 +2445,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **诚实边界**:静态读;`generic_hidden` 有逃生口 ⇒ 是**浪费的 build 位不是停摆**,
     9/12 局停摆归 **GH #290**,本轮不解释它。
   - **落地**:`tests/test_build_index_resolution.lua`(8 节)+ 三条变异实测(四条轴都能打红)。
-  - **⚠️ 全量 `run_tests.lua`(~100min,GH #124)后台起了但会话结束前没跑完** ——
-    **这不是「跑过了」**;静态门 0 警告、python 51/0、定向 9 组全绿(见报告 §7)。
+  - **⚠️ 全量 `run_tests.lua` 跑了 ~117min 后被本轮自设的 `timeout 7000` 砍掉(rc=124)**
+    —— **没跑完,不是「全绿」**;静态门 0 警告、python 51/0、定向 9 组全绿(报告 §7)。
+  - **⚠️⚠️ 但它跑到的部分量到 trunk 上有 7 条红,两个文件,都不是本轮的**:
+    `test_itemdesire_world_assertion.lua` 6 条 + `test_salvepool_missing_floor.lua` 1 条。
+    两个文件的量**都是从 `tests/fixtures/` 数出来的**,而本轮**零新增 fixture**
+    ⇒ 结构上不可能是本轮移动的;推手是 **`b50a7727`(录像组 08-28T07:01Z)的两枚
+    venomancer fixture**,而 salvepool 那条 `121/64` 是 **`829c382e`(08-27T22:30Z)**
+    写的 ⇒ **那条红在 trunk 上站了约 19 小时**。这是 **GH #124 / #273 的同一台机器**。
+    **不新开 issue**(重复),已在 **GH #124 追评**并指出 #124 正文**没点到
+    `test_salvepool_missing_floor.lua`** —— 同一机制的第二个文件。
+    两个文件**都不在本组名下**(itemdesire→harness,`salvepool`→协同组)⇒ **记录并指名,不代改**。
 - 2026-08-28T22:51Z(报告 `iterations/reports/hero/20260828T225121Z.md`;轴 **backlog -39:
   两个 lever 缺的是同一批帧,并成一条语料请求**;**queue `hero-10` 申请方自改,-39 结清**)
   —— 自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence stale-waits trunk-red(python)`,
