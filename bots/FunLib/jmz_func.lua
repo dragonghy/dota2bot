@@ -9429,6 +9429,36 @@ end
 -- Cost of holding a wasted blink here is zero: the retreat mode's own
 -- movement still walks the bot toward ancient at ~355 ms with no CD spent,
 -- and the dagger stays available for the next real initiation / dodge.
+--
+-- SCOPE (GH #304, ruled option B by strategy 2026-08-29). This guard covers
+-- the RETREAT leg and nothing else. The same consider function has a second
+-- homeward blink ~40 lines below it -- the `J.IsProjectileIncoming(bot, 1200)`
+-- branch, which lands at 1199 toward the same ancient on strictly weaker
+-- conditions (no HP clause, no damage clause, no enemy count, no fountain
+-- distance). It is deliberately NOT gated, for two reasons:
+--   1. It is not a "leg". It fires only on `p.is_dodgeable and not p.is_attack`
+--      -- an enemy SPELL already in flight at this bot -- so blinking is the
+--      targeted-threat dodge that the Liquipedia rule cited above endorses,
+--      and its landing homeward is incidental to the dodge.
+--   2. The two clauses above cannot be transplanted onto it without inverting
+--      them. `and not J.ShouldHoldBlinkFlee(bot)` permits the dodge exactly
+--      when hp < 70% OR a hero has already damaged the bot inside 2.0s, and
+--      BOTH readings look backward -- while that branch's trigger is damage
+--      that has not landed. A first-strike spell arrives precisely on a frame
+--      where nothing has hit you yet, so the guard would be selected against.
+--      Measured on the fixture corpus (tests/test_blinkflee_scope_ruling.lua,
+--      431 live hero frames carrying a real backward damage window): the
+--      transplant holds the dagger on 275 of them (63.8%), and moving the 0.70
+--      constant anywhere in [0.10, 1.00] still leaves 174-348 (40.4%-80.7%)
+--      held -- the load-bearing half is the damage window, not the HP number.
+-- Also why (A) could not be written as GH #304 suggested: this helper carries
+-- its own gate, so a new call site under a new id would be armed only when
+-- BOTH ids are, and an isolation wave arming the new one alone measures a
+-- no-op while every wiring check still reads WIRED (the 'pullcad' family, but
+-- invisible to pullcad's grep -- the second id is inside the callee's body).
+-- The joint frame (backward-quiet + inbound projectile) cannot be pinned
+-- offline: the dump carries no projectile stream, so J.IsProjectileIncoming is
+-- false on all 993 fixture hero frames (GH #305 asks the harness for it).
 function J.ShouldHoldBlinkFlee( bot )
 	if not J.IsModeTurbo() then return false end
 	if not J.IsSoakCandidate( 'blinkflee' ) then return false end
