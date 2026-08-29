@@ -244,6 +244,25 @@ check([i for _n, _t, ids in sw.stale_hits(live8, SETTLED) for i in ids] == ["cam
 check(len(sw.stale_hits(sw.split_charter(charter(LIVE_STALE))[0], SETTLED)) == 1,
       "the 重裁 exemption swallowed the founding expired admission wait")
 
+# --- INVARIANT 6b (strategy 2026-08-29T01:xxZ, GH #289): verbs, not outcomes.
+# The cheapest wrong next edit to RE_RULING is "widen it a little" -- to 退集 /
+# 去留, the words a second ruling might DECIDE.  Those are not synonyms for the
+# act: they occur inside genuine FIRST-ruling waits too, so an exemption keyed
+# on them silences the very shape INVARIANT 1 exists to catch.  Only a verb
+# that cannot be said of a first ruling belongs in that pattern.  Asserted
+# rather than argued, because the argument lives in a docstring and the
+# founding lesson of this whole file is that a docstring is not a guard.
+OUTCOME_NOT_VERB = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-28T22:15Z:**下一格**:等总监裁 `campvoid` 入集,不入就退集(仍挂着)。
+"""
+p9 = charter(OUTCOME_NOT_VERB)
+live9, _rest9 = sw.split_charter(p9)
+check([i for _n, _t, ids in sw.stale_hits(live9, SETTLED) for i in ids] == ["campvoid"],
+      "an admission wait that merely MENTIONS an outcome word (退集) stopped being caught "
+      "-- RE_RULING was widened past the act of ruling")
+
 # --- INVARIANT 7: "live" is the newest entry, in either charter convention ---
 # Both halves were measured on the real tree on 2026-08-29, not imagined.
 #
