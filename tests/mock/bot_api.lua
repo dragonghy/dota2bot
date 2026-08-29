@@ -101,8 +101,17 @@ local function default_for(key, ...)
     -- of damage of any type ever reaches this unit" -- and that zero is the
     -- ONLY thing `J.CanKillTarget` (jmz_func.lua:1066) reads for every
     -- non-PURE type, so EVERY magical and physical kill-confirm in the tree was
-    -- structurally false on EVERY fixture frame, at any damage number. 42 call
-    -- sites under bots/ route through it.
+    -- structurally false on EVERY fixture frame, at any damage number. **41 call
+    -- expressions on 40 lines** under bots/ route through it -- the "42" this
+    -- comment first carried is a `grep -c` line count, and two of those 42 lines
+    -- are the hero_axe.lua prose that discusses the call without making it.
+    --
+    -- AND THE ZERO HAD A SECOND POLARITY, unnamed for a day: 2 of the 41 sites
+    -- put the call on the SMALL side of a `<`, so the zero made those branches
+    -- fire UNCONDITIONALLY (retreat-when-tower-targeted; the metamorphic_mandible
+    -- desire). Fixing the default can therefore turn a green RED, not only a red
+    -- green. The full per-site census, its classes and its limits:
+    -- `tests/test_incoming_damage_callsite_census.lua`.
     --
     -- The OTHER kill-confirm helper is not a second opinion: `J.WillMagicKillTarget`
     -- (:1110) does its whole resistance/shield/refraction estimate and then ends

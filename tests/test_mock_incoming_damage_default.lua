@@ -11,8 +11,12 @@
 --       = t:GetActualIncomingDamage( dmg, type ) >= t:GetHealth()   for non-PURE
 --
 -- so the answer was FALSE for every magical and physical kill-confirm, on every
--- fixture frame, at every damage number, for every hero.  42 call sites under
--- bots/ route through that engine call -- and the second kill-confirm helper is
+-- fixture frame, at every damage number, for every hero.  41 call expressions on
+-- 40 lines under bots/ route through that engine call (this header first said
+-- "42 call sites"; that number is a `grep -c` of lines MENTIONING the identifier,
+-- two of which are prose -- see tests/test_incoming_damage_callsite_census.lua,
+-- which also names the 2 sites where the zero made a branch fire UNCONDITIONALLY
+-- rather than never) -- and the second kill-confirm helper is
 -- not a second opinion: `J.WillMagicKillTarget` (:1110) builds a whole
 -- resistance/shield/refraction estimate and then ends in the SAME call (:1151),
 -- so it was dead in exactly the same way.  Every test that watched such a branch

@@ -22,7 +22,55 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--44. **量具修好之后,谁还依赖"魔法击杀确认恒假"这个世界性质?** —— **下一棒做这条**
+-45. **`ZERO_TRUE` 那两个站点欠一次真正的驱动核验** —— **下一棒做这条**(-44 交出来的)
+   本轮的普查只在**源码层**证明了极性(调用在 `<` 的小侧 + 比较式钉在语句窗口里),
+   **没有端到端驱动** `X.RetreatWhenTowerTargetedDesire()`(`mode_retreat_generic.lua`)
+   与 `X.ConsiderItemDesire["item_metamorphic_mandible"]`(`ability_item_usage_generic.lua`)。
+   这两条是 08-29 那次量具修复**唯一的绿→红方向落点**:旧的 0 让它们**无条件开火**,
+   所以任何断言"这一帧退撤欲望 0.9""这一帧下颚想出手"的绿**可能是 mock 给的**。
+   谁先要用这两条路径上的任何断言,**先驱动一次再引用**。
+   - **顺带**:全量套件的完整读数仍然欠着(GH #124)。它是「哪些绿**真的**是那个 0 给的」
+     的唯一答案来源;本轮起的那次到收尾仍在跑,已跑部分红 1 条且**不是本轮的**
+     (`test_gamemode_world_assertion.lua:1450`,GH #221 同族,已点名不代改)。
+
+-44. ~~**量具修好之后,谁还依赖"魔法击杀确认恒假"这个世界性质?**~~
+   **2026-08-29T10:48Z done —— `bots/`/`game/` 零行改动;无新 gate id;零 AWS;不提批测请求;
+   不开新 issue。新文件 `tests/test_incoming_damage_callsite_census.lua`(6 节,`[detector]` ⇒ 进自检快腿)。
+   报告 `iterations/reports/hero/20260829T104857Z.md`。**
+   - **⭐⭐ 主发现:那个 0 有两个极性,而写下来的只有一个。** 41 个调用表达式里 32 个是
+     `ZERO_FALSE`(分支永不开火,**已被写过的那一半**),但 **2 个是 `ZERO_TRUE`** ——
+     它们把调用放在 `<` 的**小的那一侧**,于是 0 让分支**无条件开火**:
+     `mode_retreat_generic.lua` 的 `X.RetreatWhenTowerTargetedDesire()`
+     (`nDamage / botTarget:GetHealth() < 0.88` ⇒ 恒 `return 0.9`)与
+     `ability_item_usage_generic.lua` 的 metamorphic_mandible consider
+     (`... < bot:GetHealth()` ⇒ 恒 `DESIRE_HIGH`)。
+     ⇒ **修默认值能把绿变红,不只是把红变绿**,而这个方向此前没人在看(接棒 -45)。
+     ⚠️ 退撤那个站点的 `<` **在调用的下一行** —— 这正是"只看调用那一行"会漏掉的形状,
+     普查因此把比较式**单独钉成 `cmp` 字段**在语句窗口里找。
+   - **⭐ 第二个形状:4 个站点的失效是「一个都不选」不是「拒绝开火」。** 按入伤打分的
+     argmax/argmin 循环(`hero_largo`、`hero_morphling` ×2、`minion_lib/utils.lua`)
+     在 0 下**每个候选都得 0 分**、擂主初值也是 0 ⇒ 看完整张名单返回 nil。
+     `U.GetWeakest` 是**除以**那个调用 ⇒ 每个候选 `inf`(尸体 `0/0 -> nan`)。
+     **这一条是驱动出来的**(普查 §5,真实模块、无 J.* 桩):修后选 300 血那个,旧的 0 下返回 nil。
+     `minion_lib/` 在全仓**没有第二个测试**,所以这个行为一次都没被观察过。
+   - **⭐ 订正一个三份文件都在重复的数**:「42 call sites」是 `grep -c`,即**提到该标识符的行数**。
+     真实是 **41 个调用表达式、40 行** —— 那 42 行里 **2 行是散文**(`hero_axe.lua` 头注),
+     而 `hero_silencer.lua` **一行两个调用**。已同步订正 mock 头注、ratchet 头注、
+     `state.json:mockdmg_ZERO_20260829`(新增 `census_20260829_follow_up`)。
+   - **⭐ 「every non-PURE kill-confirm」这个措辞漏了 2 个站点**:`X.sil_RealDamage` 与
+     `jmz_func` 的 `nRealPureDamge` **把 PURE 伤害直接递给引擎调用**,
+     `J.CanKillTarget` 的 PURE 短路根本没走到 ⇒ 单列成 `ZERO_PURE`。
+   - **普查自己的不变量**:每个调用必须被**恰好一条**普查行认领(不对就红,报错写着
+     「A NEW CALL SITE MUST BE CLASSIFIED」——**这条断言就是设计来在增长时炸的**,
+     与 GH #273 那条「合规增长就打红」**不同族**:那里增长合法,这里增长**必须**被分类);
+     认领用**内容子串不用行号**(GH #221);每条 key 必须自己含 `GetActualIncomingDamage`。
+     **变异 6 条条条见红,对照绿**。
+   - **⚠️ 一个操作教训,写下来免得下一个人做出假对照**:变异还原原本写 `git checkout <新文件>`,
+     而**新文件尚未入库** ⇒ `pathspec did not match`,两个变异**留在盘上**,
+     紧接着的"对照"读出 2 红。已改**盘外备份 + `cp` 还原**重跑。
+     一个还原失败的静默退出码,**读起来和"这条断言不咬"一模一样**。
+   - **⚠️ 全量套件没跑完**(收尾仍在后台,GH #124)。**不要把本条读成「全量套件绿」**。
+   -- 原文如下 --
    本轮修掉 `tests/mock/bot_api.lua` 里 `GetActualIncomingDamage` 的缺失默认值
    (它答 0 ⇒ 全仓每一个非 PURE 击杀确认在每一帧上结构性为假,`bots/` 下 42 处调用点;
    `J.WillMagicKillTarget` 最后一行是同一个调用,所以两个 helper 一起死着)。
@@ -2504,6 +2552,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-29T10:48Z(报告 `iterations/reports/hero/20260829T104857Z.md`;轴 **backlog -44:
+  上一棒明确交出来的枚举**)—— 自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,
+  `UNCERTIFIABLE: none`;stable-v1/v2 锚点 ok;trunk python 52/0、快 Lua 腿 23 文件 0 失败。
+  owner 四条优先项**没有一条球在本组**(P1/P2 协同组、P3 总监、常设运维批测台)。
+  **`bots/`/`game/` 零行改动;无新 gate id;零 AWS;不提批测请求;不开新 issue。**
+  新文件 `tests/test_incoming_damage_callsite_census.lua`(6 节,`[detector]`);
+  文档订正三处(mock 头注 / ratchet 头注 / `state.json:mockdmg_ZERO_20260829`)。
+  - **⭐⭐ 主发现**:「`GetActualIncomingDamage` 恒答 0」这个危害**有两个极性,写下来的只有一个**。
+    41 个调用表达式中 **2 个是 `ZERO_TRUE`**(调用在 `<` 的小侧 ⇒ 分支**无条件开火**):
+    `X.RetreatWhenTowerTargetedDesire()` 恒 `return 0.9`、metamorphic_mandible consider 恒 `DESIRE_HIGH`。
+    ⇒ **那次量具修复能把绿变红**,不只是把红变绿;**这是它唯一的绿→红方向落点**,接棒 **-45**。
+  - **⭐ 另 4 个站点的失效形状是「一个都不选」**(argmax/argmin 按入伤打分);
+    `minion_lib/utils.lua` 的 `U.GetWeakest` **除以**那个调用 ⇒ 每个候选 `inf` ⇒ 整张名单进、nil 出。
+    **已驱动证明**(真实模块、无 J.* 桩);`minion_lib/` 在全仓没有第二个测试。
+  - **⭐ 订正**:「42 call sites」是 `grep -c` 行数,真实是 **41 个调用、40 行**(2 行是 `hero_axe.lua` 散文,
+    `hero_silencer.lua` 一行两调用);另有 **2 个站点把 PURE 直接递给引擎调用**,
+    `J.CanKillTarget` 的 PURE 短路没保护到它们。
+  - **变异 6 条条条见红、对照绿**;luacheck `bots game` 0 警告;普查 6/0 绿。
+  - **⚠️ 全量套件到收尾仍在后台跑**(GH #124),而且**那次读数被本轮的变异污染过**
+    (变异改过 mock 与两个 `bots/` 文件,长跑套件按加载时刻读文件)⇒ **不当事实报**。
+    **不要把本条读成「全量套件绿」。**
+  - **⚠️⚠️ 但有一条在干净树上单独重跑坐实了:`test_itemdesire_world_assertion.lua`
+    `25 tests, 6 failures`(exit 1),而且一条都不是英雄组的** —— 该文件读到的我方文件只有
+    `tests/mock/bot_api.lua` 而本轮对它的 diff **每行都是注释**,且本轮**没有增删任何 fixture**。
+    机制是 **GH #221**(崩溃站点的键就是运行时行号,上游插行即改名 ⇒ 旧键读 0)与
+    **GH #106/#107**(加/治一枚 fixture 顶掉语料绝对计数)两族。**记录并指名,不代改、不重复立案**;
+    已在 **GH #221 追评**今天的读数。
+    ⚠️ **它为什么现在才被看见**:文件跑 ~9 分钟(全量从来跑不完,GH #124),而它的测试名
+    用的是 `[census]`/`[world]`/`[recorded]`/`[measure]`,**一个 `[detector]`/`[ratchet]` 都没有**
+    ⇒ **自检快腿也不覆盖它**。六条红同时躺在 trunk 上,**三道日常门一道都看不见**(GH #267 同机器)。
+  - **⚠️ 变异还原用 `git checkout` 打在未入库的新文件上会静默失败**,当场做出过一次**假对照**;
+    已改盘外备份 + `cp` 还原重跑。
+  - 入集队列**没动**:`wkqdmg`(hero-23)、`odbuild`(hero-22)仍等总监裁,本轮无新增待裁 id。
 - 2026-08-29T08:08Z(报告 `iterations/reports/hero/20260829T080806Z.md`;轴 **backlog -43 出发,
   落在 WK 的 Q 击杀确认 + 量具**;**-43 部分结清并改道,-44 接棒**,原意留作 **-43a**)——
   自检 **worst exit 3**:legs run **8**,`FINDINGS: unlanded cadence`,`UNCERTIFIABLE: none`;
