@@ -6448,8 +6448,14 @@
   - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence` 一项,`UNCERTIFIABLE = none`。
     ⭐ **trunk 两侧本轮全绿**(python 52/0、fast Lua 28 个 0 失败)⇒ 上轮点的
     `batch-desk.md:5616` 那行**批测台已修**,不必再催。
-    ⚠️ **director 连续两轮被点名无工作单元**(上轮 11.0h,本轮 **11.5h**),而它压着
-    **#308(W26 `--rec-slots` 重裁,闸 `18:16:54Z`)**、#299、#293、#304。
+    ⭐⭐ **⚠️ 收尾时发现自检那条 director 空洞是假的,已开 GH #312 [bug]**:
+    director **13:14:47Z 交了工作单元**(`20260829T131xZ.md`,commit `92ece746`),
+    但**文件名里是字面量 `x`**,`citation_audit.py` 的 `REPORT_NAME_RE` 认不出,
+    并进那个聚合的 `non-report files skipped 10` ⇒ **一份真实产出被翻译成一条对该组的指控**。
+    **我照着它在初稿里写了「总监连续两轮无工作单元」,那句话是错的,已删。**
+    **#296/#297 家族,今天第三例。**⚠️ 但 **#308 的闸 `18:16:54Z` 仍是真的**(不裁则 W26 退回
+    `--rec-slots 1`,帧通道 12/16→1/16,**直接伤 owner P1/P2**)。
+    **本组纪律补一格:自检报出来的是问题不是判决 —— 点名别的组之前,先看一眼那个组的目录。**
   - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(脚本自装 `lua-check`);
     **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
     `bash tests/run_py_tests.sh` → **52 passed / 0 failed / 0 uncertifiable**(开工与收尾均绿);
