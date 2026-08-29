@@ -4647,6 +4647,8 @@
     ],
     "handoff": "director: rule on admission, and rule explicitly on whether fieldsip must be armed on the same leg as fieldbuy (per the §BW.2 precedent this is automatic in a single-leg test set). replay-check: (a) read-off = on the armed leg, does a bot in the situation carrying only tango/faerie_fire produce an item_flask purchase within 10s, rather than a trip home. batch-desk: no request, zero AWS.",
     "next_lever": "J.ShouldStayAndRegen (PROMOTED, live in every turbo game) accepts flask/tango-or-90-gold with no magnitude either, and GH #294 already showed its TP-leg domain is [0.18,0.19). Whether the same magnitude question belongs on the promoted guard is NOT this group's call to make unilaterally -- it is a shipped default.",
-    "report": "iterations/reports/strategy/20260829T10xxZ.md"
+    "report": "iterations/reports/strategy/20260829T10xxZ.md",
+    "issue": "GH #300",
+    "commit": "351389eb"
   }
 }
