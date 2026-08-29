@@ -2831,13 +2831,25 @@
   「1200 环 ⊆ 1600 环」**没当承重**(last-seen 2.0s vs 可见列表,两个数据源)。
   **门**:`luacheck_gate.sh` **0 warnings EXIT=0**;`tphome_tp_leg` **14/0**;`smoke_load` **3/0**、
   `lina` **45/0**、`gate_claim` **10/0**;**`RULE6_BYPASS` 未使用**。
-  **⚠ 本轮自己造了一条 trunk 红并在下一个 commit 修回**:那 14 行**纯注释**把
-  `test_item_name_census.lua` 的行号 pin 从 `:6849` 顶到 `:6863`(该 pin 漂移史**第 11 次**,
-  **也是唯一一次一行代码都没加的**),已就地重锚,`item_name_census` **6/0** 复绿。
-  **⚠ 方法自伤(本轮唯一一条)**:这个文件**带 `[ratchet]`、在自检快 Lua 腿的覆盖里** ——
-  **门是有的,是我没走**:自检只在**工作单元开头**跑过(干净),写完注释后**没有再跑一遍**就推了。
-  **开工自检认证的是你到达时的那棵树,不是你推出去的那棵树。**(同文件四条注释之前的
-  08-26T15:5x 那一轮正是靠推送前再跑一次,让这个 pin「从没在 main 上红过」。)
+  **⚠ 本轮自己造了三条 trunk 红并全部修回**:那 14 行**纯注释**打红了**两个文件三条行号 pin** ——
+  `test_item_name_census.lua` `:6849→:6863`(该 pin 第 **11** 次漂移)、
+  `test_level_gate_census.lua` `:5858→:5872` 与 `:5898→:5912`(这一对第 **4** 次、
+  **第 3 次由散文干的**,而这次是**最干净的实例:原理上都不可能改变行为**)。
+  三条**只重锚不放松**,`item_name_census` **6/0**、`level_gate_census` **15/0** 复绿。
+  **全量套件终读:2443 tests / 10 failures = 本轮 3 条(已修)+ trunk 既有 7 条**
+  (`itemdesire_world_assertion` ×6 + `salvepool_missing_floor` ×1,与英雄组 02:0xZ 记的
+  「trunk 上 7 条红」**逐条对上**)。
+  **⚠ 方法自伤,两层**:(i) `test_item_name_census.lua` **带 `[ratchet]`、在自检快腿覆盖里** ——
+  **门是有的,是我没走**:自检只在**工作单元开头**跑过(干净),写完注释没再跑就推了 ⇒
+  它在 main 上红了一个 commit 的长度。**开工自检认证的是你到达时的那棵树,不是你推出去的那棵树。**
+  (ii) **而补跑整条 tagged 快腿(15 文件 0 失败)仍然不够** —— `test_level_gate_census.lua`
+  **不带标签、不在那 15 个文件里**,同一处编辑造成的另外两条 pin 红**躲过了两道门**,
+  只有全量套件抓到。**⭐ 由此得到本轮第二条可复用条**:**对一次 `bots/X` 的编辑,该跑的是
+  「所有把行号 pin 进 `X` 的测试」,而这个集合 `grep` 一次就有** —— 比「哪些测试带标签」更能定位风险。
+  已作为 [harness] 一格交总监。
+  **另**:python 侧 `test_detector_source_constants.py :: wandlimbo_domain:HP_FRAC (UNREGISTERED)`
+  **是随 rebase 进来的**(`bb00ea75` replay-check 05:30Z,在那个 commit 的干净检出上逐字复现)
+  ⇒ **报出来,不认领**(昨天 GH #289 刚因两座位抢同一条 trunk RED 白掉一轮)。
   全量套件其余部分本会话未跑完(**没跑完 ≠ 跑绿**),读数见报告 §8。
   **交棒**:**总监**(① 裁本判据;② 裁「归属要不要回写 `state.json` 的 `tphome` 条目」——
   改已 promote id 的档案不是本组的权;③ 建议一次**跨 promoted id 的多调用点普查**,
