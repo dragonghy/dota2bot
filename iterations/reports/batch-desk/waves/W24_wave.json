@@ -1,0 +1,32 @@
+{
+  "wave": "W24",
+  "_note": "First-hand launch record, written 2026-08-29T06:19Z WHILE the four SIRs were still active/fulfilled (last round's carry-forward 2: reclaim_blind.py needs --wave-json, and the SIR record is not reconstructable after the instances terminate -- W23 lost it exactly that way).",
+  "_harvest_todo": "At harvest, fill per machine: status_code (from describe-spot-instance-requests Status.Code -- instance-terminated-by-user = self-terminate, instance-terminated-no-capacity = reclaimed; any other code is UNKNOWN and forces exit 2, do not guess), update (termination time), ab, ba, arm_depth. Then: reclaim_blind.py --wave-json iterations/reports/batch-desk/waves/W24_wave.json",
+  "tree": "2d1024eeb31043d86efb13e1baa111aeb73ffbeb",
+  "arm_ids": 42,
+  "arm_bytes": 372,
+  "instance_type": "c6i.4xlarge",
+  "market": "spot",
+  "slots": 16,
+  "rec_slots": 12,
+  "watchdog_hours": 2,
+  "games_per_seed": 12,
+  "machines": [
+    {"seed": 1601, "az": "us-west-2a", "instance_id": "i-01d890540e078de23", "sir": "sir-a9kqkbrp",
+     "run_id": "spot_20260829_061824_1_2d1024eeb31043d86efb13e1baa111aeb73ffbeb_5f26ed",
+     "create": "2026-08-29T06:18:26Z", "requested_az": "us-west-2a", "actual_az": "us-west-2a",
+     "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null},
+    {"seed": 1603, "az": "us-west-2b", "instance_id": "i-02cf98e2450cec54a", "sir": "sir-zmdfkmwm",
+     "run_id": "spot_20260829_061832_1_2d1024eeb31043d86efb13e1baa111aeb73ffbeb_ad0400",
+     "create": "2026-08-29T06:18:34Z", "requested_az": "us-west-2b", "actual_az": "us-west-2b",
+     "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null},
+    {"seed": 1633, "az": "us-west-2c", "instance_id": "i-00d4eb0d698c13fb4", "sir": "sir-vvgfgjnq",
+     "run_id": "spot_20260829_061840_1_2d1024eeb31043d86efb13e1baa111aeb73ffbeb_9312b9",
+     "create": "2026-08-29T06:18:41Z", "requested_az": "us-west-2c", "actual_az": "us-west-2c",
+     "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null},
+    {"seed": 1641, "az": "us-west-2d", "instance_id": "i-0486b8c00eb12078f", "sir": "sir-ccmqjb5n",
+     "run_id": "spot_20260829_061847_1_2d1024eeb31043d86efb13e1baa111aeb73ffbeb_de59cd",
+     "create": "2026-08-29T06:18:49Z", "requested_az": "us-west-2d", "actual_az": "us-west-2d",
+     "status_code": null, "update": null, "ab": null, "ba": null, "arm_depth": null}
+  ]
+}

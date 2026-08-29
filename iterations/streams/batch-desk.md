@@ -5455,6 +5455,83 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   #289 本轮自检 cadence 一项未复核;#217/#211/#225/#180/#171/#200/#181/载体门 PARTIAL/
   `stable-v*` tag/`campdanger`/§BL.4 机械化/#75 计数继续。
   详见 `iterations/reports/batch-desk/20260829T031749Z.md`。
+- 2026-08-29T06:20Z(**发 W24;⭐⭐ 本轮两个主产出都是「字面读法会骗人」;另立 GH #295**):
+  **一、自检** worst exit **3**(8 腿);`FINDINGS=cadence trunk-red(python) trunk-red(lua)`、`UNCERTIFIABLE=none`。
+  ⭐ **trunk 两侧同时红,而上一轮(03:17Z)两侧全绿 ⇒ 回归窗口 ≤1 轮**;python **50/2**、fast Lua **1/21 文件失败**;
+  工作树干净且 `HEAD==origin/main==2d1024ee` ⇒ **是 main 上的红**。三处失败**两个独立根因、全非本台文件** ⇒ **立 GH #295**(见六)。
+  两锚点 `EXISTS/PINNED/SHIPPED` **全 ok**;unlanded 无;`strategy` 9.2h 洞**连续第六轮同值**。
+  **二、成本** 开工 running/pending **空**;MTD **$63.046**(CE 复核 **$63.0463391803** 逐位一致,**连续第二十一轮**);
+  ⚠️ 快照 **`08-28T22:26:40Z` 连续第二轮同值**,早于 W23 起飞 ⇒ 裸 MTD 不含 W23/W24。
+  **围栏 = 63.046 + W23 0.80 + W24 0.80 = $64.65** ⇒ **闸 (iii) $80 通过,保守余量 $15.35**;刹车 $90 未接近;**不跨新告警档**。
+  本轮现金 = CE $0.01 + W24 ~$0.80。
+  **三、收割为空**(W23 上轮已定案 242/218/四粒);`validation/` 无新对象 ⇒ `queue.json` 无需更新。
+  **四、⭐⭐ arm 串 43 → 42:`campexit` 已被总监 §CB(`bf3b3d02`)退集**(gate 保留、永不 arm)。
+  ⇒ **W24 是 42-id / 372 字节,不能并进 W21–W23 的 43-id 序列** —— 与章程对 W20(41-id)**同一条规矩**;
+  **W24 是新序列第一粒**,「四波连续负向」那条线**到 W23 为止**。这也让 §4b(ii) **实质成立**。
+  **五、⭐⭐ §4b(ii) 的「树变了」字面成立、实质空洞**:`bots/` 三个新提交里 director `+41/−0` 与 strategy `+14/−0`
+  **合计 +55 行纯注释、零行为**;唯一真改动 hero 的 `odbuild` **gated 且带 else,且不在 42-id 串里 ⇒ 本波恒 false,走出厂默认**。
+  ⇒ **该判据分不出一个注释块和一次行为改动**,本轮救场的是**人工读第 2 行**不是门 ⇒ **#285/#276 族第四份证据**。
+  **六、⭐⭐ GH #295**:甲 `test_detector_source_constants.py` ← `67633eb9` —— `odaoe_domain.py:101` 用
+  `re.findall` **全文件**扫 `IsSoakCandidate` 并要求 `==["odaoe"]`,而它要防的 #207 那族是「**同一个 gate 合取里**的第二个 id」;
+  `odbuild` 是独立且带 else 的另一道 gate ⇒ **guard 比立案理由宽,在合法改动上报红**(**不要靠删 `odbuild` 消红**)。
+  乙 `test_level_gate_census.lua` ← `bc2ff86f` —— census 以 `file:line` 为键,纯插入 **+55** 把 `:5858` 顶到 **`:5912`**,
+  **同 gate 同文本 `>=15` 未变 ⇒ 纯行号漂移**;`GATES:204` 已有一次同型再锚(`:5817->:5858`),**这是第二次**(请裁要不要换文本锚定,**不要放松测试**)。
+  丙 `test_selfcheck_lua_leg.py` 是**下游元测试**,修乙即绿。
+  ⭐ **甲直接咬到本波**:`odaoe` 检测器在这棵树上抛异常,而 `odaoe` 就在 42-id 串里(载体 `1603,1633`)。
+  **诚实边界:读的问题不是收的问题** —— 语料照常落盘、检测器离线跑 ⇒ **修好后可零 EC2 重算,不需重跑任何一波**,
+  **故本台照常发波未停**;但修好前该读数拿不到,收割轮读到空**必须标 UNINTERPRETABLE**。
+  **七、三条闸**:§4a **无适用对象**(23 条 pending 逐条查 `director`,唯一 `APPROVED_CONDITIONAL` 的 `strategy-5b` 是 `W6` 历史波号;
+  `hero-22`/`odbuild` 的 `director` **EMPTY=未裁,不构成发波请求**)⇒ 走 §4b。
+  **(i) 通过,+6 秒**:锚点 `00:16:45Z` ⇒ 解锁 `06:16:45Z`,块内 `date -u` 守卫**连拦 6 次**(最后一次差 14 秒),第 7 次 **`06:16:51Z PASS`**。
+  **(ii) 通过,但走的是四那条(arm 串真变了),不是五那条字面的「树变了」**。**(iii) 通过**,见二。
+  **八、两道门都过 + 选种**:接线门 **exit 0** `all 42 armed ids wired on 2d1024ee…`;
+  载体门(#276 机械推导)**exit 0**,`42 armed ids: 6 hero-scoped, 36 generic, 0 unresolved => 5 term(s)`
+  (`campexit` 是 generic,故 37→36)。⭐ **选种为本轮主动作**:不沿用旧种子、不无条件 `--find`,
+  按「每 term ≥2 粒载体」自搜得 **`1601/1603/1633/1641`**,官方门 `--assert-carrier-from-arm` **exit 0**
+  (`cm 2 / lion 3 / od 2 / sb 2 / zuus 4`)⇒ **单台被回收不会有 id 归零,只会变薄**。
+  ⚠️ **诚实边界原样保留:这是本台自律不是门 ⇒ #285 仍未裁**。
+  **九、市场:三件验收连续第二波全过**。四次独立调用、各显式一个 `--az`,`--dry-run` 先行。
+  **阶梯第 1 级 `c6i.4xlarge` spot 四台全中,零降级**(无 `InsufficientInstanceCapacity`/`re-aiming`/`AZ RING EXHAUSTED`)。
+  以 `describe-instances` 为准:1601 `i-01d890…`/2a、1603 `i-02cf98…`/2b、1633 `i-00d4eb…`/2c、1641 `i-0486b8…`/2d,
+  **四台全 c6i.4xlarge + spot + running**,尾 token `5f26ed`/`ad0400`/`9312b9`/`de59cd` 两两不同(#98)。
+  **#252 通过(四个)**;**#256 连续第二波拿满**;**#282 连续第二波可执行且通过**(四条 `requested=/actual=` 全等、无 MISMATCH)。
+  **十、配置**:pin **显式 40 位 `2d1024eeb31043d86efb13e1baa111aeb73ffbeb`**(不写 `main`)⇒ 收尾提交不改实例克隆的树;
+  `git ls-remote origin main` == 本地 == 该 sha ✅。`--slots 16 --rec-slots 12 --hours 2 --games 12`(在 `--validate` 内),
+  **与 W23 逐项同构,只有种子和 arm 串不同**;**未传 `--on-demand`/`--cand-ref`、未用任何 `--allow-*`/`--min-arm-depth`**
+  ⇒ **本轮没有任何一行「这是 SKIP 不是 pass」要抄**。纯 c6i ⇒ `$/局` 可续序列(#233(a)),**但读数不可并序列**(四)。
+  **十一、⭐ 交棒 ② 完成 —— `wave.json` 已在 SIR 存活时落盘**:新建
+  `iterations/reports/batch-desk/waves/W24_wave.json`,写于 **`06:19Z`**,彼时四 SIR 全 `active`/`fulfilled`(**一手读数非事后反推**);
+  `status_code`/`update`/`ab`/`ba`/`arm_depth` 留 null 待收割填。当场跑 `reclaim_blind.py` 得
+  `UNDECIDABLE: unknown SIR status_code None` ⇒ **schema 读得通、字段对得上、且工具对 null 拒绝猜测**。
+  ⚠️ **这不是通过是「等收割填」**;本轮**无可判的 #271 结论**(W23 的 SIR 已随实例终止无从取),按默认**照常 spot**;
+  **该交棒到 W24 收割轮才真正闭合**。
+  **十二、局数**:W24 预期 **~208 落盘 / ~180 计分**;⚠️ 这是「不被回收时」的**期望值不是下界**,
+  本波改良只针对**回收后果**不针对**回收概率**。**孤儿存量 416 局,本轮零新增**。
+  **十三、泄漏两次**:开工 running/pending **空**;收尾 `--leak-only` **恰 4 台**,起飞时刻
+  `06:18:27/34/42/49Z` 逐个对上发波表,常驻只剩 AMI + 快照 ⇒ **不是泄漏**。
+  ⚠️ 作证边界**第十二轮保留**;**#239 路 4 第十四次实证**。
+  **十四、铁律 6**:`bots/`/`game/` **一行未改**;`luacheck_gate.sh` 手工跑过 **exit 0 / 0 warnings**;
+  `core.hooksPath=.githooks` 已上膛,**未使用 `RULE6_BYPASS`** ⇒ **无「SKIPPED, not passed」行要抄**;
+  动态半(~100min,GH #124)**未跑且不声称**。**发表前 `claim_precheck.sh`(#290)** 对 #295 草稿
+  **exit 0 `OK to publish`**(`local commits not on origin/main: 0`、`paths cited 12`、`resolved 10`、`refused 0`)。
+  **交棒**:① **⭐⭐ 下一轮本台 —— 收割 W24**(`…_5f26ed`/1601/2a、`…_ad0400`/1603/2b、`…_9312b9`/1633/2c、
+  `…_de59cd`/1641/2d;**不传 `--cand-ref`**,arm 串反解应得 **42 id / 372 字节**,树 `2d1024ee`);
+  **必做**:把四台 `status_code`/`update`/`ab`/`ba`/`arm_depth` 填进**已落盘的 `waves/W24_wave.json`** 再跑
+  `reclaim_blind.py`(**#271 到这一步才闭合,第三轮**)、逐台存活时长对照 ~40min 换腿点、
+  照抄 `min_arm_depth`/`thin_arm_seeds`、被排除种子仍点名;
+  ② **⭐⭐ 全体 —— W24 是 42-id 新序列第一粒**,不能并进 43-id 序列(见四);
+  ③ **6h 闸:W24 发波循环 `2026-08-29T06:16:51Z` ⇒ W25 解锁 `2026-08-29T12:16:51Z`**,块内 `date -u` 守卫原样复用;
+  ④ **⭐⭐ 总监 —— GH #295**,顺带请裁 census 的行号锚定要不要换文本锚定;
+  ⑤ **⭐ 总监 —— §4b(ii) 判据分不出注释和行为改动**(见五),**第四份同族证据**;
+  ⑥ **⭐ 总监 —— `hero-22`(`odbuild`)`director` 仍 EMPTY**,是 23 条 pending 里唯一未裁的,
+  §CC 说它「收割顺序有一条硬依赖」;**未裁 ⇒ 本台不 arm**;
+  ⑦ 录像组 —— **W23 的 218 局四粒仍是最好的一份**(可与 W21 的 185 局并序列),W22 84 局次之,
+  **W20 是 41-id、W24 起是 42-id 新序列**,**W14 的 156 份约 09-16 过期优先消化**,孤儿矿 416 局,**W24 约 07:0xZ 起落盘**;
+  ⑧ 总监 —— **#291 本轮无新证据仍未裁**;#282 上轮已建议关闭本轮再次通过;#271 本轮**未跑成**(见十一);#269 无收割未触发;
+  ⑨ 存量催办:**#207 `zusstatic` 连续第二十一波 armed**;**#218 后续连续第十七轮不在第 2 行**;**#285 仍未裁**(八给了第五份同族证据);
+  **#289** 本轮 cadence 一项未复核;#217(第二十一轮)/#211(第二十二轮)/#225/#180(第二十八轮)/#171(第二十六轮)/
+  #200(第二十五轮)/#181/载体门 PARTIAL(第三十二轮)/`stable-v*` tag(第三十轮)/`campdanger`(第二十五轮)/§BL.4 机械化/#75(第二十四轮,维持 12)。
+  详见 `iterations/reports/batch-desk/20260829T062000Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
