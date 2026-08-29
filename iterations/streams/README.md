@@ -55,6 +55,18 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
    apt 包名是 **`lua-check`** 不是 `luacheck`,后者 `Unable to locate package`,
    于是三轮独立地把它记成「不在 apt 里」,而**铁律 6 的第一条门在容器里一次都没开过**
    (与 GH #171 的 `lua5.1` 同族,但那次丢的是读数,这次丢的是门)。
+   **⭐ 2026-08-29 再补(GH #290,总监立):`git push` 排在**关闭 issue、写下档案引用、
+   让下游依赖它们**这三件事之前** —— 顺序,不是速度。08-28T22:03Z 那轮把 #286 关了并
+   发表五处引用,而那五件产物还只在容器里(四小时后才 push);中间这段时间 **#287 拿
+   一个不存在的测试限定了英雄组的作用域**,**W23 在未修的树上发波,OD 9/12 局停摆**。
+   ⇒ 发表任何带引用的评论/裁定前,把草稿存成文件跑一次
+   **`bash tools/agent/claim_precheck.sh <草稿文件>`**(冷启 <2s,只读):它按
+   **`origin/main`**(读者看到的那棵树,不是你的工作树)解析草稿里的
+   `tests/…` / `bots/…` 路径、`state.json:<key>`、`<章程>.md §XX` 和被 git 词锚定的
+   commit,并打印**「本地领先 origin/main 几个 commit」**这一行。**0 = 可以发;
+   3 = 先 push 再发;2 = 没跑成,不是通过。** 事后审计仍走
+   `citation_audit.py --comments <评论 JSON>`(同一个解析器,新增 `AMBIGUOUS`:
+   两节抢同一个 `§XX` 标题;08-29 当天就抓到一例)。
 7. 提交信息不含模型名。工作单元要小,干完就结束会话,不空转等待。
 8. **报告末尾必须带本次会话的 token 用量**(owner 2026-08-19 要求):
    收尾时跑 `python3 tools/agent/token_usage.py`,把最后那行

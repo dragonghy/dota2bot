@@ -69,15 +69,69 @@ denominator is shown -- the failure this repo has now hit in #29, #31, #34, #37,
 #95, #103.  So every run prints sources / citations extracted / resolved, and a
 run that extracted ZERO citations exits 2 rather than reporting a clean bill.
 
+THE MIDDLE BOX (GH #290, 2026-08-29) -- CITATIONS THAT ARE NOT PATHS
+--------------------------------------------------------------------
+On 2026-08-28T22:03Z a round closed GH #286 and published FIVE citations for a
+fix that was committed locally but NOT YET PUSHED.  Between then and 02:xxZ the
+next reader saw "issue closed, tree empty": GH #287 went on to fence the hero
+group off a test file that did not exist, and W23 launched on the unfixed tree.
+
+Of those five citations this tool, as it stood, could only have caught ONE:
+
+    tests/test_skill_list_nil_head_drain.lua      path      -> MISSING, caught
+    bots/ability_item_usage_generic.lua           path      -> exists (the FILE
+                                                               did; the claimed
+                                                               function did not)
+    iterations/state.json:skilldrain_NILHEAD_...  key       -> not a citation kind
+    test_set.md §CA                               section   -> not a citation kind
+                                                               (and no repo-root
+                                                               prefix, so PATH_RE
+                                                               never saw it)
+    iterations/reports/director/ (a directory)    -         -> not a citation kind
+
+So two kinds are added here, exactly the two #290 §4 item 3 names:
+
+    KEY        `state.json:<key>`   resolved by parsing the file at trunk
+    SECTION    `<charter>.md §XX`   resolved against `^#{1,6} §XX` at trunk
+
+and one verdict falls out of the second for free: two rulings can claim the same
+section id (measured the same day -- §CA was written twice, by two concurrent
+director sessions), which makes every citation of it AMBIGUOUS rather than wrong.
+
+THE GRACE WINDOW (#290 comment, 2026-08-29T02:47Z)
+--------------------------------------------------
+A comment posted thirty seconds before `git push` cites work that is real and
+about to land.  Judging it against the trunk of that instant makes it red, and a
+detector that cries at correct behaviour gets muted.  So a citation that does not
+resolve is a FINDING only if its comment is older than --comment-grace-hours
+(default 2h, one routine cadence); younger ones print as PENDING and do not set
+the exit code.  Sources with no `created_at` get no grace -- the failure
+direction is toward asking, per #276.
+
+WHAT THIS DOES NOT DO
+---------------------
+- No off-trunk search for KEY/SECTION citations.  Resolving those means parsing
+  file CONTENT, and this clone can carry 500 remote refs; `unlanded_commits.py`
+  already answers "is there work on a branch".  A key/section that is not on
+  trunk reads MISSING, and the line says off-trunk was not searched.
+- No identifier claims.  "adds local `CompactSkillList`" is the citation that
+  would have caught #286 first, but every backticked word in a report has that
+  shape and the false-positive rate would bury the real ones.  Still open.
+- Section ids are matched as `[A-Z]{1,2}` + optional `.N`/`.Nx`.  `§4` and `§3.3`
+  inside "GH #286 §4" are ISSUE sections, not charter sections; requiring an
+  uppercase letter is what keeps them out.
+
 FINDING CLASSES
     MISSING    cited path/commit resolves on no remote ref  -> never pushed
     OFF-TRUNK  resolves only on a non-trunk remote ref      -> pushed, not landed
+    AMBIGUOUS  a section id that two headings both claim    -> cite resolves to 2
     REFUSED    unresolvable under a shallow clone           -> uncertifiable
     GAP        a hole in a stream's report cadence          -> lost trigger
+    PENDING    unresolved, but the comment is inside grace  -> printed, not a finding
 
 EXIT CODES
     0  audited, everything resolves
-    2  cannot certify (no citations extracted, stale trunk, git refused)
+    2  cannot certify (no citations extracted, stale trunk, stale corpus, git refused)
     3  findings
 """
 
@@ -109,6 +163,29 @@ ANCHOR_WORDS = (
 )
 ANCHOR_WINDOW = 60
 REPORT_NAME_RE = re.compile(r"^(\d{8}T\d{6}Z)\.md$")
+
+# --- the middle box (GH #290) -------------------------------------------------
+# `state.json:<key>`, with or without the `iterations/` prefix and with or
+# without the backticks the reports wrap it in.
+KEY_RE = re.compile(r"(?<![\w/])(?:iterations/)?state\.json:([A-Za-z0-9_]{3,})")
+
+# `<charter>.md §XX`.  The file anchor is REQUIRED and must be within
+# SECTION_WINDOW characters, because a bare `§CA` in prose is a back-reference
+# inside the same document, and `§4` after "GH #286" is an issue section.
+SECTION_FILES = {
+    "test_set.md": "iterations/streams/test_set.md",
+    "director.md": "iterations/streams/director.md",
+    "strategy.md": "iterations/streams/strategy.md",
+    "hero.md": "iterations/streams/hero.md",
+    "replay-check.md": "iterations/streams/replay-check.md",
+    "batch-desk.md": "iterations/streams/batch-desk.md",
+}
+SECTION_WINDOW = 24
+SECTION_RE = re.compile(
+    r"(?P<file>%s)(?P<between>[^\n]{0,%d}?)§(?P<sec>[A-Z]{1,2}(?:\.\d+[a-z]?)?)"
+    % ("|".join(re.escape(f) for f in SECTION_FILES), SECTION_WINDOW)
+)
+HEADING_RE_TMPL = r"^#{1,6}[ \t]*§%s(?![0-9A-Za-z.])"
 
 
 def git(args, cwd, check=True):
@@ -175,6 +252,25 @@ def anchored(text, start):
     return any(w in window for w in ANCHOR_WORDS)
 
 
+def extract_keys(text):
+    """-> [key] cited as `state.json:<key>`."""
+    return [m.group(1) for m in KEY_RE.finditer(text)]
+
+
+def extract_sections(text):
+    """-> [(repo_path, section_id)] cited as `<charter>.md §XX`.
+
+    Only the FIRST `§` within SECTION_WINDOW characters of the filename binds
+    (the `between` group is non-greedy and `§`-free by construction): a second
+    id further along the sentence is prose, not a citation of that file, and
+    guessing at it is how a detector earns its mute."""
+    out = []
+    for m in SECTION_RE.finditer(text):
+        assert "§" not in m.group("between")
+        out.append((SECTION_FILES[m.group("file")], m.group("sec")))
+    return out
+
+
 def extract(text, hash_mode):
     """-> (paths, hashes, hex_seen).  `hex_seen` is the denominator for trap 2."""
     paths = []
@@ -197,26 +293,43 @@ def extract(text, hash_mode):
     return paths, hashes, hex_seen
 
 
+def parse_ts(value):
+    """ISO-8601 (GitHub's `2026-08-29T02:47:22Z`) -> aware datetime, or None."""
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 def load_sources(comment_files, text_files):
-    """-> [(label, text)].  Comment JSON accepts either a bare list or the
-    GitHub-ish {"comments": [...]} envelope; each item needs a `body`."""
+    """-> (sources, fetched_at).  Each source is (label, text, created_at|None).
+
+    Comment JSON accepts a bare list or the GitHub-ish {"comments": [...]}
+    envelope; each item needs a `body`.  `created_at` (GitHub supplies it
+    verbatim) drives the grace window; `fetched_at` on the envelope is how a
+    stale corpus is told apart from a clean one."""
     sources = []
+    fetched_at = None
     for path in comment_files:
         raw = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
         data = json.loads(raw)
         if isinstance(data, dict):
+            fetched_at = fetched_at or parse_ts(data.get("fetched_at"))
             data = data.get("comments", data.get("items", []))
         for i, item in enumerate(data):
             if isinstance(item, str):
-                body, label = item, "%s#%d" % (path, i)
+                body, label, created = item, "%s#%d" % (path, i), None
             else:
                 body = item.get("body") or ""
                 label = item.get("html_url") or item.get("url") or "%s#%d" % (path, i)
+                created = parse_ts(item.get("created_at") or item.get("updated_at"))
             if body:
-                sources.append((label, body))
+                sources.append((label, body, created))
     for path in text_files:
-        sources.append((path, open(path, encoding="utf-8").read()))
-    return sources
+        sources.append((path, open(path, encoding="utf-8").read(), None))
+    return sources, fetched_at
 
 
 def resolve_path(cwd, path, trunk_ref, refs):
@@ -240,10 +353,71 @@ def resolve_hash(cwd, sha, trunk_ref, refs, shallow):
     return "MISSING", None
 
 
-def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode):
-    findings, counts = [], {"paths": 0, "hashes": 0, "hex_seen": 0, "ok": 0, "refused": 0}
+def show(cwd, ref, path):
+    """File content at a ref, or None when the path is not there."""
+    p = subprocess.run(["git", "show", "%s:%s" % (ref, path)], cwd=cwd,
+                       capture_output=True, text=True)
+    return p.stdout if p.returncode == 0 else None
+
+
+def resolve_key(cwd, key, trunk_ref, cache):
+    """A `state.json:<key>` citation -> ("OK"|"MISSING", note).
+
+    Off-trunk is NOT searched (see WHAT THIS DOES NOT DO): parsing content
+    across every remote ref is the expensive half, and `unlanded_commits.py`
+    already answers "does some branch have work"."""
+    if "state" not in cache:
+        raw = show(cwd, trunk_ref, "iterations/state.json")
+        try:
+            cache["state"] = json.loads(raw) if raw is not None else None
+        except ValueError:
+            cache["state"] = None
+    data = cache["state"]
+    if data is None:
+        return "MISSING", "iterations/state.json unreadable at %s" % trunk_ref
+    if key in data:
+        return "OK", None
+    return "MISSING", "no such key at %s (off-trunk refs not searched)" % trunk_ref
+
+
+def resolve_section(cwd, path, sec, trunk_ref, cache):
+    """A `<charter>.md §XX` citation -> ("OK"|"MISSING"|"AMBIGUOUS", note)."""
+    if path not in cache:
+        cache[path] = show(cwd, trunk_ref, path)
+    text = cache[path]
+    if text is None:
+        return "MISSING", "%s not at %s" % (path, trunk_ref)
+    hits = re.findall(HEADING_RE_TMPL % re.escape(sec), text, re.M)
+    if len(hits) == 1:
+        return "OK", None
+    if len(hits) > 1:
+        return "AMBIGUOUS", "%d headings claim §%s in %s" % (len(hits), sec, path)
+    return "MISSING", "no §%s heading in %s (off-trunk refs not searched)" % (sec, path)
+
+
+def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
+                    grace_hours=0.0, now=None):
+    findings = []
+    counts = {"paths": 0, "hashes": 0, "hex_seen": 0, "keys": 0, "sections": 0,
+              "ok": 0, "refused": 0, "pending": 0}
+    pending = []
+    cache = {}
+    now = now or datetime.now(timezone.utc)
+
+    def record(verdict, kind, what, label, where, created):
+        """Grace: an unresolved citation from a comment younger than the window
+        is PENDING (printed, no exit code) rather than a finding."""
+        if created is not None and grace_hours > 0:
+            age_h = (now - created).total_seconds() / 3600.0
+            if age_h < grace_hours:
+                counts["pending"] += 1
+                pending.append((kind, what, label, "%.1fh old, grace %.1fh"
+                                % (age_h, grace_hours)))
+                return
+        findings.append((verdict, kind, what, label, where))
+
     seen = set()
-    for label, text in sources:
+    for label, text, created in sources:
         paths, hashes, hex_seen = extract(text, hash_mode)
         counts["hex_seen"] += hex_seen
         for p in paths:
@@ -256,7 +430,7 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode):
             if verdict == "OK":
                 counts["ok"] += 1
             else:
-                findings.append((verdict, "path", p, label, where))
+                record(verdict, "path", p, label, where, created)
         for h in hashes:
             counts["hashes"] += 1
             key = ("hash", h)
@@ -269,8 +443,31 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode):
             elif verdict == "REFUSED":
                 counts["refused"] += 1
             else:
-                findings.append((verdict, "commit", h, label, where))
-    return findings, counts
+                record(verdict, "commit", h, label, where, created)
+        for k in extract_keys(text):
+            counts["keys"] += 1
+            key = ("key", k)
+            if key in seen:
+                continue
+            seen.add(key)
+            verdict, note = resolve_key(cwd, k, trunk_ref, cache)
+            if verdict == "OK":
+                counts["ok"] += 1
+            else:
+                record(verdict, "key", "state.json:%s" % k, label, note, created)
+        for spath, sec in extract_sections(text):
+            counts["sections"] += 1
+            key = ("section", spath, sec)
+            if key in seen:
+                continue
+            seen.add(key)
+            verdict, note = resolve_section(cwd, spath, sec, trunk_ref, cache)
+            if verdict == "OK":
+                counts["ok"] += 1
+            else:
+                record(verdict, "section", "%s §%s" % (os.path.basename(spath), sec),
+                       label, note, created)
+    return findings, counts, pending
 
 
 def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
@@ -346,6 +543,14 @@ def main(argv=None):
                          "and will report md5 sums and S3 keys")
     ap.add_argument("--fetch", action="store_true",
                     help="fetch the remote first; without it a stale trunk refuses")
+    ap.add_argument("--comment-grace-hours", type=float, default=2.0,
+                    help="a citation from a comment younger than this prints as "
+                         "PENDING instead of a finding (default 2.0, one routine "
+                         "cadence).  Sources with no created_at get no grace.")
+    ap.add_argument("--comments-max-age", type=float, default=0.0,
+                    help="refuse (exit 2) when the comment corpus envelope's "
+                         "`fetched_at` is older than this many hours.  0 (default) "
+                         "does not check.  A stale corpus certifies nothing.")
     args = ap.parse_args(argv)
 
     cwd = args.repo
@@ -372,17 +577,32 @@ def main(argv=None):
                   "with --fetch." % (trunk_ref, (local_sha or "?")[:8], (remote_sha or "?")[:8]))
             return 2
         try:
-            sources = load_sources(args.comments, args.text)
+            sources, fetched_at = load_sources(args.comments, args.text)
         except (OSError, ValueError) as exc:
             print("REFUSE  cannot read citation sources: %s" % exc)
             return 2
+        if args.comments and args.comments_max_age > 0:
+            if fetched_at is None:
+                print("REFUSE  the comment corpus carries no `fetched_at`; with "
+                      "--comments-max-age set, an undated corpus cannot be told "
+                      "apart from a stale one.")
+                return 2
+            age_h = (datetime.now(timezone.utc) - fetched_at).total_seconds() / 3600.0
+            if age_h > args.comments_max_age:
+                print("REFUSE  comment corpus is %.1fh old (max %.1fh) -- it "
+                      "certifies nothing about comments posted since.  Refresh it "
+                      "(see tools/agent/refresh_issue_corpus.md)."
+                      % (age_h, args.comments_max_age))
+                return 2
         try:
             refs = remote_refs(cwd, args.remote, trunk_ref)
             shallow = is_shallow(cwd)
         except RuntimeError as exc:
             print("REFUSE  git: %s" % exc)
             return 2
-        f, counts = audit_citations(cwd, sources, trunk_ref, refs, shallow, args.hash_mode)
+        f, counts, pending = audit_citations(
+            cwd, sources, trunk_ref, refs, shallow, args.hash_mode,
+            grace_hours=args.comment_grace_hours)
         findings += f
         print("CITATIONS  sources %d  refs %d  trunk %s%s" %
               (len(sources), len(refs) + 1, trunk_ref, "  (shallow clone)" if shallow else ""))
@@ -390,7 +610,14 @@ def main(argv=None):
               "resolved on trunk %d  refused %d" %
               (counts["paths"], counts["hashes"], counts["hex_seen"], args.hash_mode,
                counts["ok"], counts["refused"]))
-        if counts["paths"] + counts["hashes"] == 0:
+        print("           state.json keys cited %d  charter sections cited %d  "
+              "pending inside %.1fh grace %d" %
+              (counts["keys"], counts["sections"], args.comment_grace_hours,
+               counts["pending"]))
+        for kind, what, label, why in pending:
+            print("PENDING   %-7s %s\n          cited by: %s\n          %s"
+                  % (kind, what, label, why))
+        if counts["paths"] + counts["hashes"] + counts["keys"] + counts["sections"] == 0:
             # Anti-empty-match: an empty scan must not print as a clean bill.
             print("REFUSE  zero citations extracted from %d source(s) -- 'nothing bad' "
                   "and 'nothing matched' are the same output, so this refuses."

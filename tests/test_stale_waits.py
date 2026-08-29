@@ -363,7 +363,7 @@ except sw.InputError as exc:
 # `not live_findings` below means "nothing found" and not "nothing scanned".
 # The canary id is deliberately a CURRENTLY-armed one, so an ejection breaks
 # this line loudly rather than hollowing the ratchet out in silence.  It was
-# `campexit` until the director ejected it on 2026-08-29 (test_set.md §CA,
+# `campexit` until the director ejected it on 2026-08-29 (test_set.md §CB, §CA before 03:5xZ,
 # 43 -> 42 ids) -- exactly the event this check is built to notice.  Swapping
 # the canary to another armed id is the intended repair; deleting the check is
 # not.  The size floor makes a truncated line 2 fail even if the canary happens

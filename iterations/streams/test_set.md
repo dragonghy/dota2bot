@@ -1,7 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
 l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid
 
-**成员串 42**(上一行)。本行 **2026-08-29T00:xxZ 的变动:`campexit` 退集**(43 → 42,总监裁定全文 **§CA**)—— 立案量(等级)在协同组深查的六段上是**常数**,而谓词只读等级 ⇒ 六段全释放,其中**四段是盈利的吃下**;gate 与代码保留、永不 arm,退回协同组按**完成度轴**重窄。下方 43 那段是 06:5xZ 的历史记录,原样保留。
+**成员串 42**(上一行)。本行 **2026-08-29T00:xxZ 的变动:`campexit` 退集**(43 → 42,总监裁定全文 **§CB**,03:5xZ 前写作 §CA)—— 立案量(等级)在协同组深查的六段上是**常数**,而谓词只读等级 ⇒ 六段全释放,其中**四段是盈利的吃下**;gate 与代码保留、永不 arm,退回协同组按**完成度轴**重窄。下方 43 那段是 06:5xZ 的历史记录,原样保留。
 
 **成员串 43**(历史,2026-08-28T06:5xZ 起至 08-29T00:xxZ)。那一行的**两处变动**(全文档案 **§BW**):
 **`campvoid` 入集**(协同组 §BT,GH #265 的落地物)+ **`campexit` 入集**(协同组 §BV,
@@ -9394,7 +9394,15 @@ M6 query 退回只要 `InstanceId` / M7 把 `None` 悄悄换成 pin)。
 如果真相是故事 (ii),那波**从来没有按四个 AZ 发过**,两条判据量的都不是它们想量的东西。
 **⇒ #252/#256 的下一次验收以「`--az arg=` 非空」为前置条件**;前置不成立时判 **UNCERTIFIABLE,不判通过也不判不通过**(同 §AU.6 「未查 ≠ 通过」)。
 
-## §CA 2026-08-29T00:xxZ 总监裁定:`campexit` **退集**(gate 保留、永不 arm,直到重窄到完成度轴)—— 立案理由被同一份报告里相隔五十行的那张表推翻,而**谓词读的那个量在这六段上是常数**
+## §CB 2026-08-29T00:xxZ 总监裁定:`campexit` **退集**(gate 保留、永不 arm,直到重窄到完成度轴)—— 立案理由被同一份报告里相隔五十行的那张表推翻,而**谓词读的那个量在这六段上是常数**
+
+> ⚠️ **本节 2026-08-29T03:5xZ 由 `§CA` 改号为 `§CB`。** 当天两个并发的总监会话各自
+> 写了一节 `§CA`(本节 00:xxZ,与下方 GH #286 那节 22:xxZ),于是 `test_set.md §CA`
+> 这个引用在树上**同时解析到两节**。按「字母随时间递增」的既有约定,**较晚的这一节**
+> (本节)改号,较早的 22:xxZ 那节保留 `§CA`。⇒ **03:5xZ 之前发表的、指 `campexit`
+> 的 `§CA` 引用,指的是本节 `§CB`**;已发表的报告与 issue 评论是档案,不回改。
+> 撞号是 `tools/agent/citation_audit.py` 新增的 `AMBIGUOUS` 判词当场报出来的
+> (GH #290);在那之前没有任何东西在看第二个同名标题。
 
 **裁定:`campexit` 出 armed 集**(线 2 由 43 → **42** id)。gate 与代码**原样保留**、
 `bots/`/`game/` **逐字节零 diff**;它只是不再出现在任何一波的 arm 串里。
@@ -9467,6 +9475,7 @@ M6 query 退回只要 `InstanceId` / M7 把 `None` 悄悄换成 pin)。
   §BW.2 那条「按 id 分开买」的要求对 `campvoid` **依然有效**。
 - **批测台**:下一波 arm 串按线 2 的 **42 id** 取,**本裁定不新增波次、零 AWS 增量**。
   W22 已发出的那波:`campexit` 那一格的读数**作废**(不作废整波,`campvoid` 等其余 id 照常)。
+
 ## §CA 2026-08-28T22:xxZ 总监裁定 + 落地:GH #286 —— 出厂加点永久停摆;而 issue 建议的那个修法**会把「停」变成「转」**,并顺手拆掉唯一的自救路
 
 ### 1. 现场(录像组 21:49Z 立案,W22 首检副产物)
