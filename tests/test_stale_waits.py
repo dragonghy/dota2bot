@@ -263,6 +263,88 @@ check([i for _n, _t, ids in sw.stale_hits(live9, SETTLED) for i in ids] == ["cam
       "an admission wait that merely MENTIONS an outcome word (退集) stopped being caught "
       "-- RE_RULING was widened past the act of ruling")
 
+# --- INVARIANT 8 (director 2026-08-29T12:xxZ): the two halves are a CLAUSE's,
+# not a line's.  INVARIANT 5 keeps an admission RECORD quiet, and it did so at
+# line scope only -- so the moment a stream wrote the record and a DIFFERENT
+# id's un-ruled note on one line, the record inherited the wait.  The first
+# fixture is verbatim batch-desk's 12:19Z live line, which turned trunk red on
+# the two ids the director had armed three hours earlier; nothing on it was
+# false.  The remaining three are the ways this exemption must NOT be usable:
+# it is id-scoped (b), it cannot be entered by punctuation alone (c), and the
+# 重裁 exemption gets narrower with it rather than wider (d).
+RECORD_PLUS_OTHER_WAIT = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-29T12:19Z:**三、测试集 42 → 44**:`10:xxZ` 总监同轮双双入集
+  `campexit`(§CC/§CF)+ `campvoid`(§CD/§CF);同轮提出的 `fieldsip`(§CE)**未裁 ⇒ 不在串里**。
+"""
+p12 = charter(RECORD_PLUS_OTHER_WAIT)
+live12, _rest12 = sw.split_charter(p12)
+check(sw.stale_hits(live12, SETTLED) == [],
+      "a record of a LANDED admission was read as a wait because a different, "
+      "un-armed id was noted 未裁 later on the same line: %s"
+      % sw.stale_hits(live12, SETTLED))
+
+# (b) The un-ruled id being SETTLED too is the founding shape again, and the
+# clause scope must not have made it unreachable.
+RECORD_PLUS_STALE_WAIT = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-29T12:19Z:本轮入集 `campexit`;同轮提出的 `campvoid` **未裁 ⇒ 不在串里**。
+"""
+p13 = charter(RECORD_PLUS_STALE_WAIT)
+live13, _rest13 = sw.split_charter(p13)
+check([i for _n, _t, ids in sw.stale_hits(live13, SETTLED) for i in ids] == ["campvoid"],
+      "clause scope lost an expired wait sitting next to an unrelated record: %s"
+      % sw.stale_hits(live13, SETTLED))
+
+# (c) The dodge the borrow rule exists to close: park the outstanding word in
+# its own id-less clause and the wait would silence itself by punctuation.
+# Without `wait_scopes`' reach-back this reads clean, so it is asserted.
+MARKER_SPLIT_OFF = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-29T12:19Z:`campexit` 的入集裁定;仍欠。
+"""
+p14 = charter(MARKER_SPLIT_OFF)
+live14, _rest14 = sw.split_charter(p14)
+check([i for _n, _t, ids in sw.stale_hits(live14, SETTLED) for i in ids] == ["campexit"],
+      "an outstanding marker split into its own clause silenced the wait -- "
+      "the borrow rule is gone and a semicolon is now an escape hatch")
+
+# (d) Clause scope makes the 重裁 exemption STRICTER, not looser: a re-ruling
+# request no longer covers a genuinely expired admission wait later on the same
+# line.  Line scope exempted both ids here.
+RERULE_THEN_STALE_ONE_LINE = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-29T12:19Z:等总监重裁 `campexit`;另 `campvoid` 入集裁定**仍欠**。
+"""
+p15 = charter(RERULE_THEN_STALE_ONE_LINE)
+live15, _rest15 = sw.split_charter(p15)
+check([i for _n, _t, ids in sw.stale_hits(live15, SETTLED) for i in ids] == ["campvoid"],
+      "the 重裁 exemption still covers the whole line: got %s"
+      % sw.stale_hits(live15, SETTLED))
+
+# (e) The comma is NOT a clause boundary, and that is a decision with a cost
+# if it goes the other way.  Added because the mutation bench caught the claim
+# standing in a comment with nothing asserting it: widening CLAUSE_SPLIT to
+# commas left every check above green.  The shape it breaks is the enumerated
+# 交棒 the streams actually write -- ids in numbered clauses, ONE trailing
+# outstanding word for all of them.  Under comma scope the trailing clause
+# borrows only its immediate neighbour and every earlier id goes silent.
+ENUMERATED_SHARED_MARKER = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-29T12:19Z:**交棒**:**总监**(① `campexit` 入集裁定,② `campvoid` 入集裁定,均仍欠)。
+"""
+p16 = charter(ENUMERATED_SHARED_MARKER)
+live16, _rest16 = sw.split_charter(p16)
+check([i for _n, _t, ids in sw.stale_hits(live16, SETTLED) for i in ids] == ["campexit", "campvoid"],
+      "an enumerated wait with one shared outstanding word lost its earlier ids "
+      "-- CLAUSE_SPLIT was widened past sentence punctuation: %s"
+      % sw.stale_hits(live16, SETTLED))
+
 # --- INVARIANT 7: "live" is the newest entry, in either charter convention ---
 # Both halves were measured on the real tree on 2026-08-29, not imagined.
 #

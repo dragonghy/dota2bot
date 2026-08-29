@@ -32,10 +32,14 @@ WHAT IT REPORTS
 ---------------
 For each stream charter under `iterations/streams/`, the **live** 当前状态
 entry (the newest bullet; the one a fresh session reads as current state)
-is scanned for an ADMISSION wait -- a line that both asks for an admission
+is scanned for an ADMISSION wait -- a CLAUSE that both asks for an admission
 ruling (入集 / 裁 / 待裁 / 裁定) and says it is still outstanding (等 / 仍欠
 / 仍挂着 / 阻塞 / 未裁) -- naming a soak-candidate id in backticks that is
 ALREADY armed in `test_set.md` line 2, or already promoted in `bots/`.
+
+Clause, not line (2026-08-29, see CLAUSE_SPLIT): one line routinely records a
+ruling that landed AND notes a different id as still un-ruled, and reading the
+two halves anywhere-on-the-line makes the record inherit the other id's wait.
 
   STALE  -- the wait's own object is already in the arm string.  A finding.
   INFO   -- the same id/phrase elsewhere in the charter (backlog, history).
@@ -159,6 +163,30 @@ RESOLVED_MARKERS = ("已入集", "已落地", "已裁", "过期", "更正", "作
 # wait on another id elsewhere in the same entry.
 RE_RULING = re.compile(r"[重再复]新?裁")
 
+# Clause scope, not line scope (director 2026-08-29T12:xxZ).
+#
+# INVARIANT 5 already says an admission RECORD is not an admission WAIT -- and
+# it was only ever enforced at LINE scope: the two halves merely had to appear
+# somewhere on the same line.  So a line that RECORDS one ruling and, in the
+# next clause, notes a DIFFERENT id as still un-ruled reads as an expired wait
+# on the recorded ids.  Measured, not imagined: batch-desk's 12:19Z live entry
+#
+#   `odbuild`(§CC/§CF)+ `wkqdmg`(§CD/§CF);同轮提出的 `fieldsip`(§CE)**未裁 ⇒ 不在串里**。
+#
+# turned trunk red on the two ids the director had armed three hours earlier.
+# Nothing on that line was false, and it was the shape INVARIANT 5 exists to
+# keep quiet -- the 未裁 belongs to `fieldsip`, which is correctly NOT armed.
+# A detector that reddens on a correct record of its own ruling is INVARIANT
+# 2's failure mode one punctuation mark over.
+#
+# So a marker attaches to the ids in ITS OWN clause.  The borrow rule below is
+# what keeps that from being an escape hatch: an outstanding marker parked in
+# an id-less clause (``campexit` 入集裁定;仍欠`) would otherwise silence
+# itself by punctuation, so a clause naming no id at all reaches back to the
+# clause before it.  Commas are deliberately NOT boundaries: the founding shape
+# ("① `campexit` 入集裁定**仍欠**,只提醒") separates its halves with one.
+CLAUSE_SPLIT = re.compile(r"[;;。]")
+
 
 class InputError(Exception):
     """An input could not be read -- exit 2, never a silent pass."""
@@ -278,21 +306,44 @@ def resolved_in_block(block):
     return done
 
 
+def wait_scopes(text):
+    """The clause(s) of *text* that assert an outstanding wait, each already
+    widened to the ids the wait can be about (see CLAUSE_SPLIT).
+
+    Returned as a list of strings; each is judged on its own for the admission
+    half, the re-ruling exemption and the ids.  A line with no outstanding
+    marker yields nothing, which is INVARIANT 5's record case.
+    """
+    parts = CLAUSE_SPLIT.split(text)
+    scopes = []
+    for i, clause in enumerate(parts):
+        if not any(m in clause for m in OUTSTANDING_MARKERS):
+            continue
+        # An outstanding marker in a clause that names no id at all is talking
+        # about the ids just before it -- otherwise a semicolon silences a
+        # genuine expired wait.
+        if not BACKTICKED.search(clause) and i > 0:
+            scopes.append(parts[i - 1] + clause)
+        else:
+            scopes.append(clause)
+    return scopes
+
+
 def stale_hits(block, settled):
     """Lines in *block* that wait on an admission ruling for a settled id."""
     already_reported = resolved_in_block(block)
     hits = []
     for lineno, text in block:
-        if not any(m in text for m in ADMISSION_MARKERS):
-            continue
-        if not any(m in text for m in OUTSTANDING_MARKERS):
-            continue
-        if RE_RULING.search(text):  # a second ruling, not an expired first one
-            continue
-        ids = sorted({i for i in BACKTICKED.findall(text)
-                      if i in settled and i not in already_reported})
+        ids = set()
+        for scope in wait_scopes(text):
+            if not any(m in scope for m in ADMISSION_MARKERS):
+                continue
+            if RE_RULING.search(scope):  # a second ruling, not an expired first
+                continue
+            ids.update(i for i in BACKTICKED.findall(scope)
+                       if i in settled and i not in already_reported)
         if ids:
-            hits.append((lineno, text.strip(), ids))
+            hits.append((lineno, text.strip(), sorted(ids)))
     return hits
 
 
