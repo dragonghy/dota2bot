@@ -292,7 +292,11 @@ part needs no assumption at all (tests/test_wk_fact_anchor.lua reads it out of
 aba_skill.lua rather than asserting it):
 
   [1] special_bonus_unique_wraith_king_2          +% Vampiric Spirit lifesteal
-  [2] special_bonus_unique_wraith_king_facet_1    +s Wraithfire Blast slow dur.
+  [2] special_bonus_unique_wraith_king_facet_1    blast_dot_duration +2  (NOT the
+      slow duration -- that half of what the KV lists is DEAD, settled below and
+      pinned by tests/mock/talent_slots.lua + tests/mock/special_value_shapes.lua.
+      The surviving half is the whole of X.wk_GetBlastKillDamage's t10 arithmetic,
+      so a reader sent to the dead half is sent away from the only live one.)
   [3] special_bonus_unique_wraith_king_11         +s Wraithfire Blast stun dur.
   [4] special_bonus_hp_300                        +300 health
   [5] special_bonus_attack_speed_50               +50 attack speed
@@ -575,8 +579,22 @@ end
 --- of 120/180/240/300.  Read off the handle instead, the same two numbers come
 --- from `damage` and `blast_dot_damage x blast_dot_duration`, and the engine folds
 --- a trained talent into them (GH #228) -- which the hardcode structurally cannot
---- see, so from hero level 10 on it is stale in BOTH directions at once (the t10
---- pick doubles blast_dot_duration).
+--- see: the t10 pick doubles blast_dot_duration, so the honest read is rank- AND
+--- talent-dependent while the hardcode is neither.
+---
+--- THE DOMAIN, and it is not what this note said before GH #311.  Because
+--- `math.min` only ever withdraws, the armed side differs from shipped exactly
+--- where the honest read is SMALLER, and joined to the shipped upgrade row that is
+--- hero level <= 12 -- Q's second point is row entry 12 of tAllAbilityBuildList,
+--- which J.Skill.GetSkillList lands at hero level 13 (levels 10/15/20/25 are
+--- talent slots and spend no ability point).  Hero 2-9: narrows 168 -> 120.  Hero
+--- 10-12: the t10 talent lifts the honest read to 160, so it narrows by 8, NOT by
+--- more.  Hero 13+: Q is rank 2, the honest read overtakes shipped (260 > 235.2)
+--- and min returns shipped -- this lever is a byte-for-byte no-op there.
+--- Arming `wkbuild` moves that no-op floor from hero 13 to hero 10, NOT the whole
+--- domain to hero 5: rank 2 before the talent still narrows, harder (55.2).  See
+--- the ConsiderQ note below and tests/test_wk_qdmg_domain.lua, which derives both
+--- ladders from the real J.Skill.GetSkillList rather than re-typing them.
 ---
 --- WHY MIN AND NOT THE HONEST NUMBER.  Taking the handle read straight would ADD
 --- casts at rank 2+ once the t10 talent lands (260 > 235), and this stream ships
@@ -654,17 +672,50 @@ function X.ConsiderQ()
 	-- a 1.0-1.6s stun and a -20% slow, which is exactly what decides whether the
 	-- target is still standing in the dot when it expires.
 	--
-	-- WIDENED 2026-08-27 (talent pricing round): the gap is not static, it OPENS
-	-- AT LEVEL 10.  The shipped t10 pick is slot [2] = ..._wraith_king_facet_1,
-	-- whose surviving half is blast_dot_duration +2 -- and because blast_dot_damage
-	-- is PER SECOND, doubling the duration 2 -> 4 doubles the dot: the honest
-	-- impact-plus-dot goes 120/180/240/300 -> 160/260/360/460.  The engine folds
-	-- that into the handle (GH #228) but this hardcode never asked the handle, so
-	-- from hero level 10 on the constant is stale in the "thinks it cannot kill"
-	-- direction as well as mis-scaled.  Whoever repairs it should read
-	-- blast_dot_damage x blast_dot_duration off abilityQ rather than re-typing a
-	-- second constant, which is the same repair Crystal Maiden's ConsiderW needs
-	-- (that one is exact only while no talent touches the duration).
+	-- WIDENED 2026-08-27 (talent pricing round): the gap is not static.  The
+	-- shipped t10 pick is slot [2] = ..._wraith_king_facet_1, whose surviving half
+	-- is blast_dot_duration +2 -- and because blast_dot_damage is PER SECOND,
+	-- doubling the duration 2 -> 4 doubles the dot: the honest impact-plus-dot
+	-- goes 120/180/240/300 -> 160/260/360/460.  The engine folds that into the
+	-- handle (GH #228) but this hardcode never asked the handle, so it is
+	-- mis-scaled at every rank.  Whoever repairs it should read blast_dot_damage x
+	-- blast_dot_duration off abilityQ rather than re-typing a second constant,
+	-- which is the same repair Crystal Maiden's ConsiderW needs (that one is exact
+	-- only while no talent touches the duration).
+	--
+	-- CORRECTED 2026-08-29 (GH #311, which quotes the retired sentences verbatim).
+	-- What stood here said the gap widens from hero level 10 on, and that the
+	-- constant goes stale in the thinks-it-cannot-kill direction from there.  Both
+	-- sentences were argued PER Q RANK and never joined to the shipped upgrade
+	-- row, and joined to it the direction reverses.  The row
+	-- (tAllAbilityBuildList, :76) spends Q's SECOND point at row
+	-- entry 12, which J.Skill.GetSkillList lands at HERO LEVEL 13, not 12 -- levels
+	-- 10/15/20/25 are talent slots and consume no ability point.  So at hero level
+	-- 10, when the t10 talent doubles the dot, Q is still RANK 1, and the doubling
+	-- moves the honest read 120 -> 160 against a shipped claim of 168: the gap does
+	-- not open, it NARROWS from 48 to 8.  From rank 2 on with the talent trained
+	-- the honest read OVERTAKES shipped (260 > 235.2, 360 > 302.4, 460 > 369.6), so
+	-- X.wk_GetBlastKillDamage's math.min returns the shipped constant unchanged.
+	--
+	-- ⇒ THE `wkqdmg` DOMAIN, under the shipped row: hero 2-9 narrow by 48, hero
+	-- 10-12 narrow by 8, hero 13+ is a byte-for-byte no-op.  90 games of real
+	-- frames agree (tools/batch_test/behavioral/wkqdmg_domain.py: Q sits at rank 1
+	-- from hero level 2 through 12 and reaches rank 2 at 13; 66.7% of hero-target Q
+	-- casts are in the rank-1 band).  Anyone hunting this lever above hero 12 under
+	-- the shipped row is looking where it CANNOT act.
+	--
+	-- ⚠️ THAT DOMAIN IS CONDITIONAL ON `wkbuild` BEING UNARMED, and the two do not
+	-- compose the obvious way.  tKillBuildList (:159) takes Q's second point at
+	-- row entry 5 = hero level 5, and the tempting reading -- "so the domain moves
+	-- forward to hero 5" -- is wrong, because the rank ladder is only half of the
+	-- domain and the dot duration is the other half.  Rank 2 at a 2s dot still
+	-- narrows, and by MORE (235.2 - 180 = 55.2 > 48).  What arming wkbuild
+	-- actually removes is the TOP: rank 2 meets the t10 talent at hero 10 instead
+	-- of 13, so the domain runs hero 2-9 (48 then 55.2) instead of hero 2-12 (48
+	-- then 8).  Armed together, wkqdmg is therefore measured on a different and
+	-- more heavily weighted population than its own frames describe.  Both ladders
+	-- are derived from the real J.Skill.GetSkillList (never re-typed) in
+	-- tests/test_wk_qdmg_domain.lua §5.
 	local nDamage = 40 * ( nSkillLV - 1 ) + 100
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 
