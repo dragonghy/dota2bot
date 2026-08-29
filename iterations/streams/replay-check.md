@@ -6544,3 +6544,69 @@
     **先按最后一个对象的时间戳确认是否已停**,再跑 `arm_string_census.py`,**然后才决定能不能分层读**;
     (4) 若 **#310 / #293 / #305** 落地,拿**已有的 91 局 `.dem`** 原地重跑对应预登记(**不占波次**)。
   - 完整报告:`iterations/reports/replay-check/20260829T185751Z.md`
+- **2026-08-29T22:00Z(`campvoid` 条件 (a) = **SILENT**;三个假阳性全部由逐帧抓出)**:
+  上一轮点的名(「下一个零记录 id,建议 `campvoid`」)做完了。**宽扫 129/129 局**
+  (W25 四 run 121 局 + W26 四 run 8 局,`unparseable 0`),**深查逐帧 6 局**。
+  - ⭐⭐ **裁决:`campvoid` = SILENT。** 新工具 `campvoid_escape.py`(`--selfcheck` **49 PASS**)
+    在 **400 u 与 600 u 两个半径下四个格全 0**(两条 armed 腿合计 **0 / 160 个 episode**);
+    800 u 才出现 4 次而 **armed−baseline 两层反号**(ab +3 / ba −1)⇒ 铁律 4(i) 判噪声。
+    `escape` 是 `campvoid` **唯一能署名**的结局 —— `campfarm` 清的是攻击表,
+    没有任何分支会把 bot 走到小兵那里,能下那道命令的只有 `mode_farm_generic.lua:752`。
+  - ⭐ **根因是几何,不是接线。** 工具每次运行打出的读数:远古营中心与**最近普通营**中心
+    相距 **146 u / 338 u**(W25 子集独立复现 **127 u**),而 `:752` 的
+    `nSearchRange = min(GetAttackRange()+180, 1600)` 近战最小 **330 u**,
+    `FilterFarmNeutrals` **只删远古** ⇒ **邻营还活着时 `#nNeutrals` 过滤后仍 > 0,出口根本打不开**。
+    立案句「不能打也不能走」仍成立;**不成立的是「删掉远古就足以让 `#nNeutrals` 归零」**。
+    另有第二个未登记的收窄:`:752` 还要求 `GetNearbyLaneCreeps(900)` 非空 ——
+    站在野区远古营里 900 u 内有敌方小兵,本身就是稀有几何。
+  - ⭐⭐⭐ **三个假阳性,三次都是逐帧推翻聚合表,一次也不是表抓到的**(全部钉进 selfcheck):
+    (1) `6df84c/…124418_slot1` VS 10 级「27 秒死锁」实为**在打普通营**(`ice_shaman`+`frostbitten_golem`,
+    5 条 DEATH 记她名下)⇒ 死锁判据必须是「对**任何**中立零输出」;
+    (2) `6df84c/…123218_slot8` CM「逃逸」实为 **TP**(`item_tpscroll` t=593.6,下一帧 **10,417 u 外**)
+    ⇒ 接触点必须**走得到**(`900 + 550 u/s × escape_w`);
+    (3) `8d47de/…184550_slot1` oracle「逃逸」出现在 **gate 关着的 baseline 腿**上,
+    实为 `oracle_fortunes_end` **团战溅射** ⇒ 接触必须是**裸平砍**(`inflictor == dota_unknown`)。
+    **三次是同一个错误的三种外衣:把结果当机制,没先问机制在物理上产不产得出这个结果。**
+  - ⭐⭐ **`a29ed3/…123240_slot1` luna 10 级 armed 腿:GH #265 的形状在 armed 腿上原样复现。**
+    17 秒**三进三出**远古营(d_anc 415→1172→141→943→261),`t=613.2–619.8` 吃
+    `black_dragon`/`black_drake` 约 215 伤害,**她自己第一条输出要到 t=622.8**(而且先打普通营的
+    `alpha_wolf`),最近敌方英雄 **4,413–6,667 u**,hp 0.937→0.795(**14.2 pp**)换到零。
+    ⚠️ 这段被 episode 构造器拆成**三段短 `stuck`**(t0=604.5/611.5/618.5)⇒
+    「振荡型死锁」需要跨 episode 合并规则,**本轮没做,记为欠账**。
+  - ⭐⭐ **`6df84c/…123218_slot8` CM 9 级 armed 腿:15 条 `infl=dota_unknown` 的裸平砍打远古营**
+    (`granite_golem`/`rock_golem`,`t=564.6–580.7`,18 秒钉在 (-4602,466),最近敌方 3,798 u)。
+    **9 级低于 10..11 带** ⇒ `mode_farm_generic` 的 `>= 10`、`utils.IsValidCreep` 的 `> 9`、
+    armed `campfarm` 的 12 **三道门齐全,攻击照样发生** ⇒ 动手的分支**不在这三道门上**,
+    正是 `state.json:campexit_20260828` 那句「真正动手的那条分支根本不问等级」。
+    佐证第二局 `6df84c/…123211_slot6` **bristleback 8 级** 打 `prowler_` 远古豹营(含一条裸平砍 78)。
+  - **`campfarm` 的方向在 W25+W26 上与 GH #265 标题相反**:`trade_anc` 占比
+    三个半径 × 两个分层 **六个 Δ 全部同号(负)** —— 600 u:ab 22.2% vs 29.2%(p=0.302)、
+    **ba 0/43 vs 15/57(p=0.00011)**、池化 p=0.021。
+    ⚠️ **但这不是 `campfarm` 的读数**(章程 §4a):`campsel`/`abilanc` 也压同一个量。
+    唯一稳当的用法是**它抽掉了 #265 标题方向的语料支撑**,把 #265 §4 的二分推向 **SILENT**。
+  - ⚠️ **`.dem` 同名跨 run 撞车真的踩到了**:`20260829_123240_slot1` 在 `b1386e`(1633)与
+    `a29ed3`(1664)**两个 run 里都在**(`b1386e` 那局没有 luna,所以帧只可能来自 `a29ed3`)。
+    ⇒ `campvoid_escape.py` 的每条记录**本轮起带 `run` 字段**。
+  - **诚实边界**:章程 **§4a 要的触发级证据在这份语料上结构上买不到** ——
+    dumper 不发任何 creep 实体,`GetNearbyNeutralCreeps()` 与 `GetNearbyLaneCreeps()`
+    **两个合取项都读不到**;§3 买的是**结果**不是**触发**。
+    `escape` 是 campvoid 形状结局的**严格子集**(走出去但 6 秒内没平砍到的会落进 `left`,
+    而 `left` 占 62–95%)⇒ **「0 次」是下界读法**,下轮补 `--escape-w 12` 敏感度。
+    `stuck` 计数**两层反号**,不构成任何主张。W26 只有 **8 局有帧**(`rec_slots 1`,GH #308 未裁)。
+    **129 局不是我抽的,是录制槽决定的**;ab 82 / ba 47,最薄格 `ba/armed` 8 个 episode(400 u)。
+    侧别倾斜**第四次复现**,上轮已交总监,本轮不重复立案。未跑 15 个通用检测器。
+  - **欠账**:`seed 975` **第八轮**;`wandlimbo` 预登记因 **#293 未落地****第六轮**不可执行(未复核);
+    **GH #265 仍被 #272 阻塞**(本轮产出是给 #265 追评,不需要解阻塞)。
+  - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence`、`UNCERTIFIABLE = none`;
+    trunk 两侧全绿(python 53/0/0、fast Lua 31 个 0 失败);锚点 2/2 ok;`unlanded_commits` 无。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(脚本自装 `lua-check`);
+    **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `bash tests/run_py_tests.sh` → **53 passed / 0 failed / 0 uncertifiable**;
+    `campvoid_escape.py --selfcheck` → **49 PASS / 0 FAIL**。
+    本轮未改任何 `bots/` 或 `game/` 文件、未动 gate ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **MCP 未触发 `requires approval`。** AWS:S3 只读,**零 EC2、零 CE 调用**。
+  - **下一轮第一件事**:(1) `--escape-w 12` 敏感度 + 「振荡型死锁」跨 episode 合并规则(两笔欠账);
+    (2) 下一个零记录 id:**`fieldcreep`**(与 owner P2 野区续航同族,优先)或 `pullcad`;
+    (3) 若 W27 起飞,先跑 `arm_string_census.py` —— **它是 45 id 串(`fieldsip` 入集),
+    与 W25/W26 的 44 id 串不同,不能并进本轮这份语料**。
+  - 完整报告:`iterations/reports/replay-check/20260829T220049Z.md`
