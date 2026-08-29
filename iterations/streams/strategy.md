@@ -62,6 +62,12 @@
    **一个调用点都没新增就把它打红** —— 与 04:20Z 那 14 行纯注释顶行号 pin **同族**。
    **修法是加固**:加 `strip_comments`,并在**同一条测试里当场证明没钝化**
    (追加真调用点仍读 3、追加引用调用形式的注释仍读 2)。修前注释既能**误伤**也能**冒充**,修后都不行。
+   **⚠️⚠️ 顺带查出一条真的 trunk RED**(8 条 / 3 个文件:`test_itemdesire_world_assertion` 19/6、
+   `test_gamemode_world_assertion` 32/1、`test_salvepool_missing_floor` 18/1;按官方排序顺序、
+   在开工 `HEAD 1ccdeaa7` 上逐条复现,读数逐字节相同;全是**语料计数棘轮漂了**)。
+   **⭐ 三个文件一个都没带 `[ratchet]`,而自检快 Lua 腿只跑带 `[ratchet]` 的那 24 个 ⇒
+   GH #267 原样重演,这次 8 条**。起点强候选 `f08cdb56`(08-28T12:16Z)⇒ 约 **22 小时**。
+   **本组不认领**,已开 issue。
    **⚠️ 本轮出过一次错读并在同一工作单元内更正(值得记的是更正那一步)**:
    分块跑撞到 `test_cm_arcane_aura_passive.lua:226`,在**净 HEAD `1ccdeaa7`** 上也复现 ⇒
    我先写成了 **trunk RED**。**错了**:我的分块 runner 用 `pairs()` **无序**迭代,
@@ -2703,6 +2709,16 @@
   空隙是关于 **107 枚 fixture** 的事实不是关于 Dota 的;**方向上留守侧是收窄**(21/23 帧不再被留住),
   价值全压在同一批帧转由 `fieldbuy` 接手那一侧;`game/` 逐字节零 diff,`queue.json` 一字未动;
   **全量 Lua 套件按 229 个文件分块跑,分块 ≠ 单进程全量(GH #124),跨文件状态耦合未覆盖**。
+  **⚠️⚠️ 而清干净并发之后,真的 trunk RED 出现了 —— 8 条,3 个文件,自检快腿一条都看不见**:
+  按 `run_tests.lua` **排序**顺序、在**开工 `HEAD 1ccdeaa7`** 上逐条复现(读数逐字节相同):
+  `test_itemdesire_world_assertion` **19/6**、`test_gamemode_world_assertion` **32/1**、
+  `test_salvepool_missing_floor` **18/1**;失败文本**全是语料计数棘轮漂了**
+  (`... moved: 590 / 219 / 64 with 43 without / 0 / 31 / 11`、`census row ... moved`、`124/67 vs 121/64`)。
+  **与本轮无关**(本轮零新增 fixture)。**⭐ 为什么没人看见:三个文件一个都没带 `[ratchet]`**,
+  而快 Lua 腿**只跑带 `[ratchet]` 的那 24 个** ⇒ **GH #267 原样重演,这次是 8 条 / 3 个文件**。
+  起点**强候选**(非 bisect,shallow clone 取不到父 commit):`f08cdb56`(批测台 08-28T12:16Z,
+  唯一既新增 fixture 又最后动过其中两个文件的 commit)⇒ 若成立已红约 **22 小时**,
+  其间五个 stream 各跑过多轮开工自检。**本组不认领**(不是本组文件,快腿覆盖面是 #267/#213 的权),已开 issue。
   **⚠️ 本轮出过一次错读并当轮更正**:分块跑撞到 `test_cm_arcane_aura_passive.lua:226`、
   净 HEAD 上也复现 ⇒ 先写成 **trunk RED**,**错了** —— 我的分块 runner 用 `pairs()` 无序迭代,
   官方 `run_tests.lua:91-93` **排序**,排序后它**是绿的**。**「在净树上复现」回答归属,不回答存在。**
