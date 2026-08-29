@@ -6467,3 +6467,80 @@
     (**不占波次**)。其余零记录 id:`fieldcreep` / `pullcad` / `campvoid` / `zusstatic`(有工具无裁决)。
     ⚠️ **不建议下轮直接查 `odbuild`** —— `hero-22` 前置门在英雄组手上,门没过读数不可解释。
   - 完整报告:`iterations/reports/replay-check/20260829T161901Z.md`
+- **2026-08-29T18:57Z(`liondrainstop` 条件 (a) = **WORKING**;交棒那件事做完了)**:
+  **W25 是这个 id 有史以来第一波真正 armed 的波次** —— 44 id 串里的**第 19 个**,
+  而 `liondrain` **不在**串里 ⇒ `state.json:liondrainstop_20260820.scheduling_constraint`
+  (两个杠杆不许同波)**本波成立**,没有 axeblink 式混淆。
+  **宽扫 91/91**(W25 全部 Lion **且** dem-backed 的局,100% 流式 dump + census,0 失败;
+  上游 196/196 解 stamp,Lion 出场 130/172,dem-backed 91),**深查逐帧 6 局**。
+  - ⭐⭐⭐ **裁决:`liondrainstop` = WORKING**,而且**它不建立在 residual 差分上**。
+    仪器是**相位无关的两帧检验**:「同一条还在跑的 channel 里,谓词在两个相邻 1 Hz 快照上
+    连续成立过吗」——连续两帧 = 谓词横跨整整一秒,**能工作的 gate 不可能让它继续跑**。
+    读数:**armed 2/30(ab 2/19、ba 0/11)vs baseline 33/67(ab 18/43、ba 15/24)**,
+    Fisher 双侧 **ab p=0.0186 / ba p=0.00055 / 池化 p=0.00003**,**两层各自显著且同号**(铁律 4(i)),
+    **报计数+占比不报中位数**(铁律 4(ii))。
+  - ⭐⭐ **归属按触发级买下(章程 4a)**,44 个 id 同波 armed 时这一步不能省。最硬的一条是
+    **域外阴性对照**:不在谓词域里的 channel 长度**两腿之间没有方向且两层反号**
+    (armed ab 3.174 / ba 3.086;baseline ab 3.003 / ba 3.354 ⇒ 噪声),
+    而**域内**塌到 armed 1.232/1.155 vs baseline 2.340/3.371。
+    **缩短只发生在谓词域内** ⇒ **唯一像样的替代解释**(某个 id 让 Lion 更爱撤退,
+    于是出厂的 `J.IsRetreating` 释放路径更常触发)被否掉——它会**同时**压低域外那一列。
+    佐以:44 个 armed id 逐个 grep,**落在 `hero_lion.lua` 里的只有 `liondrainstop`**
+    (同文件另外三个 `lionsplash`/`lionhexaoe`/`liondrain` 都不在这 44 个里),
+    而该文件唯一那句 `Action_ClearActions( true )`(:365)正是 `ConsiderStopDrain()` 守着的。
+  - ⭐ **三帧正触发已逐帧核**:`6df84c/…124500_slot9` t=976.5(CM 进到 147u + 2 次英雄伤害 ⇒
+    **同一帧** `MODIFIER_REMOVE`,Lion 活着继续补兵);`ecbb41/…123257_slot7` t=604.4
+    (前三帧谓词 FALSE、3.2s 有效吸蓝没被打扰;反事实就在下三帧:CM 287u→140u→96u);
+    `ecbb41/…123254_slot8` **证明它不过度触发**——457.5/458.5 SB 在 431u 但 `herodmg2s=0` ⇒
+    不打断,459.5 两半齐了才结束,**松手后 3 秒走了约 800u**。
+    **baseline 反事实**:`ecbb41/…124534_slot4` 连续 4 帧谓词成立、5.0s 一次没松、钉在
+    (557,406) 掉 **398 血** —— 立项要治的病在 gate-OFF 腿上原样还在。
+  - ⭐ **2/30 未触发,已开 issue**(§4):`ecbb41/…124515_slot12`(3 帧连续)与
+    `ecbb41/…124504_slot11`(2 帧连续),**同 run、同侧、环内都是 `spirit_breaker`、
+    拉的都是 `necrolyte`**。**不是 hero-target 类的系统性失败**(hero-target 28 条里 25 条
+    residual ≤ 1 个间隔)。建议 fixture 钉 **t=200.4**(中间那一帧,前后都在域内,不吃相位)。
+  - **⚠️ 一个必须说出来的取样偏倚,方向保守**:armed 腿 `zero-snap` 更多
+    (21.0%/26.0% vs 14.8%/9.2%)、in-domain 计数更少(30 vs 67)——**同一件事的两面**:
+    被当场切掉的 channel 短到 1 Hz 网格一帧都没落进去。⇒ armed 的 residual n=30 是
+    **幸存者筛过的子集,漏掉的恰是切得最快的那些**,**把 armed 均值往上推不往下推**。
+  - **不主张的东西**(免得被过强引用):**不主张条件 (b)** —— 12s 死亡率**两层反号**
+    (armed/ab 37% vs base/ab 51%;armed/ba 27% vs base/ba 4%),按铁律 4(i) 是噪声,归批测台;
+    **不主张 GH #86 §5 的 ≥2.0s 门槛被池化 residual 过了** —— **没过**(ab −1.27 / ba −2.08 / 池化 −1.56s);
+    Lion 只在 **3 个种子**里(1603/1633/1770,1664 整个 draft 无 Lion)⇒ 那条
+    「≥12 双臂种子配对读」**结构上买不到**。
+    **互校**:baseline 腿 mean 1.933 / median 1.8 与登记在案的 gate-OFF 基线
+    (196 局归档 mean 1.91 / median 1.6, n=64)几乎逐位重合;总 channel 数 541 vs 546 基本相等
+    ⇒ 这个杠杆**没有减少 Mana Drain 的开出次数**(管开的是没 armed 的 `liondrain`)。
+  - **交付:`lion_drain_census.py` 三处入库改动**(#263,未新开 scratchpad 脚本):
+    (i) **铁律 4(i) 进工具** —— 新增 `lion_cand_side/ab`、`lion_base_side/ab`、
+    `lion_cand_side/ba`、`lion_base_side/ba` 四格,以前只给池化一个数;
+    (ii) **`--split-is {null-channel,armed-vs-baseline}`** —— 文件头原话
+    「no wave has ever armed `liondrainstop` … 所以 split 是 NULL CHANNEL」
+    **在 W25 上会把真读数读成空读数**;工具看不见 arm 串,所以做成**调用方必须声明**的参数,
+    默认仍保守,并在输出头一行打印口径;
+    (iii) **引用漂移修正** —— 钉的 `hero_lion.lua:1082/1112/1125/1127` 现已是
+    **:1351/:1390/:1394/:1396**(符号搬家,常量与阈值一字未改,逐行核过;#296/#297 家族)。
+    `--selfcheck` **25 → 33 asserts**,新增 8 条钉四格**恰好划分**池化格(games 与 residual n 两条都查)、
+    空格必须 `n=0 / mean=None`(**不能是 0.0**,那会被读成「测了,是零」)。
+    **本轮未改任何 `bots/` 或 `game/` 下的文件。**
+  - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence` 一项,`UNCERTIFIABLE = none`;
+    **trunk 两侧全绿**(python 53/0/0、fast Lua 29 个 0 失败);锚点三项 ok;`unlanded_commits` 无。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(脚本自装 `lua-check`);
+    **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `bash tests/run_py_tests.sh` → **53 passed / 0 failed / 0 uncertifiable**;
+    `lion_drain_census.py --verify` → **33 asserts OK**。未改 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **MCP 未触发 `requires approval`。**
+  - **欠账原样挂着**:`seed 975` **连续第七轮**;`wandlimbo` 预登记因 **#293 未落地** **第五轮**不可执行
+    (本轮未复核);**GH #265 第十二轮不执行**(阻塞项仍 **#272**,本轮未复核);
+    未跑 `sweep_run.sh` 的 15 个通用检测器。**侧别倾斜第三次复现**(W25 radiant 115 / dire 57;
+    Lion 语料 ab 59 / ba 32),上轮已交总监,本轮不重复立案。
+    最薄的格是 **`baseline/ba` 10 局 / 24 条域内 channel**,**不可逐种子比较**;
+    **91 局不是我抽的,是录制槽决定的**(W25 只有 145 局有 `.dem`)。
+  - **下一轮第一件事**:(1) `liondrainstop` 的 **(b) 不归本组**,(a) 已买到 ⇒ 接力棒已经以
+    issue 形式交给英雄组/总监,不掉在这;(2) 在 W25 语料上核**下一个零记录 id**,
+    建议 **`campvoid`**(章程 4a 已写好它的触发级买法,并明确它的计数是**下界**);
+    其余零记录 id:`fieldcreep` / `pullcad` / `zusstatic`;
+    (3) **W26**(18:17Z 波,树 `b834e887`,四 run `8d47de`/`ae0223`/`d686ce`/`d7bb48`)
+    **先按最后一个对象的时间戳确认是否已停**,再跑 `arm_string_census.py`,**然后才决定能不能分层读**;
+    (4) 若 **#310 / #293 / #305** 落地,拿**已有的 91 局 `.dem`** 原地重跑对应预登记(**不占波次**)。
+  - 完整报告:`iterations/reports/replay-check/20260829T185751Z.md`

@@ -2,7 +2,8 @@
 """`liondrainstop` condition-(a) census over an arbitrary Lion corpus.
 
 WHAT THIS ANSWERS (replay-check 2026-08-20T20:49Z §2.3, corrected 口径):
-`liondrainstop` (hero_lion.lua:1112 `X.lion_ShouldStopDrain`) releases a
+`liondrainstop` (hero_lion.lua:1390 `X.lion_ShouldStopDrain`, was :1112 when this
+file was written -- the symbol moved, the code did not) releases a
 Mana Drain channel that has already started when the SAME pressure test that
 refuses to start one is met.  Offline we cannot see `Action_ClearActions`, only
 "the channel ended".  So a channel is evidence for (a) only if a release would
@@ -36,17 +37,25 @@ t=307.4 (1.0s channel, Lion dead 1.5s later -- the class the filter discarded)
 and `20260820_182906_slot1` t=606.5 (5.0s channel, Lion survives and the enemy
 inside the radius dies) -- and the predicate answers HIGH on BOTH of them.
 
-WHAT IT IS NOT: an execution check.  No wave has ever armed `liondrainstop`
-(nor `liondrain`), so every reading here is COUNTERFACTUAL -- the corpus is the
-gate-OFF base rate.  The `side` column says which side of the mirror was the
-candidate side for OTHER ids; for this id both sides are gate-OFF, which is
-exactly why the armed:base split is a NULL CHANNEL and is printed as such.
+WHAT IT WAS NOT, UNTIL 2026-08-29 (W25):  an execution check.  Through W24 no
+wave had ever armed `liondrainstop`, so every reading was COUNTERFACTUAL and
+the armed:base split was a NULL CHANNEL -- printed as such.
+
+**W25 (wave tree `b51bac77`, four runs `6df84c`/`b1386e`/`a29ed3`/`ecbb41`)
+IS THE FIRST WAVE THAT ARMS IT** (id 19 of the 44-id string; `liondrain` is NOT
+in that string, so the scheduling constraint in
+`state.json:liondrainstop_20260820.scheduling_constraint` holds).  On a W25
+corpus `lion_cand_side` is therefore the GATE-ON leg and `lion_base_side` the
+gate-OFF leg, and the split is a real contrast, not a null channel.  On any
+PRE-W25 corpus it is still a null channel.  This file cannot tell the two
+cases apart -- the caller must, from the wave's arm string.  Read the split
+under `--split-is` (see main) and never assume.
 
 PREDICATE FIDELITY (all-stream rule U.1.1: every threshold verbatim from the
 gate source):
-  * `X.nEDrainDangerRadius = 500`                    (hero_lion.lua:1082)
-  * `hBot:WasRecentlyDamagedByAnyHero( 2.0 )`        (hero_lion.lua:1125)
-  * `J.GetNearbyHeroes( hBot, 500, true, ... )`      (hero_lion.lua:1127)
+  * `X.nEDrainDangerRadius = 500`                    (hero_lion.lua:1351)
+  * `hBot:WasRecentlyDamagedByAnyHero( 2.0 )`        (hero_lion.lua:1394)
+  * `J.GetNearbyHeroes( hBot, 500, true, ... )`      (hero_lion.lua:1396)
 `WasRecentlyDamagedByAnyHero` is NOT captured by the dumper (a known capture
 gap, charter "工具坑").  Proxy: a DAMAGE event with `target == Lion` and
 `actor_hero == true` in `(t-2.0, t]`.  This is a superset-leaning proxy in one
@@ -89,8 +98,8 @@ import math
 import os
 import sys
 
-DANGER_RADIUS = 500.0          # hero_lion.lua:1082  X.nEDrainDangerRadius
-DAMAGE_WINDOW = 2.0            # hero_lion.lua:1125  WasRecentlyDamagedByAnyHero(2.0)
+DANGER_RADIUS = 500.0          # hero_lion.lua:1351  X.nEDrainDangerRadius
+DAMAGE_WINDOW = 2.0            # hero_lion.lua:1394  WasRecentlyDamagedByAnyHero(2.0)
 RESOLVABLE_SPAN = 2.0          # SUPERSEDED filter -- kept as a reported column only
 MIN_CUT = 0.5                  # a release must remove at least this much channel
 LEAK_S = 0.5                   # #78: corpse frames observed up to ~0.4s after DEATH
@@ -284,11 +293,23 @@ def summarise(games):
             "resolvable": sum(1 for ch in chs if ch["resolvable"]),
             "residual": residual_stats(chs),
         }
-    return {
+    def layer(g):
+        # 铁律 4(i): `ab` = the wave leg whose CANDIDATE side is radiant, `ba`
+        # = candidate on dire.  Reporting one pooled number across both hides
+        # the side effect inside the leg effect, and the side effect here is
+        # NOT small: W25 came in radiant 115 / dire 57.
+        return "ab" if g.get("side") == "radiant" else "ba"
+    out = {
         "all": agg(lambda g: True),
         "lion_cand_side": agg(lambda g: g["lion_on_cand_side"]),
         "lion_base_side": agg(lambda g: not g["lion_on_cand_side"]),
     }
+    for lay in ("ab", "ba"):
+        out["lion_cand_side/" + lay] = agg(
+            lambda g, l=lay: g["lion_on_cand_side"] and layer(g) == l)
+        out["lion_base_side/" + lay] = agg(
+            lambda g, l=lay: (not g["lion_on_cand_side"]) and layer(g) == l)
+    return out
 
 
 def _verify():
@@ -398,7 +419,31 @@ def _verify():
     assert c5["in_domain"] and c5["span"] < RESOLVABLE_SPAN, c5
     assert not c5["resolvable"], "the superseded filter would have dropped it"
     assert c5["residual"] == 1.2, c5      # the new criterion keeps it
-    print("lion_drain_census --verify: 25 asserts OK")
+    # ---- 铁律 4(i): the cand/base split must ALSO come out per ab/ba layer.
+    # g (above) is a radiant-cand game with Lion on radiant => lion_cand_side,
+    # layer ab.  Build its mirror: same channels, cand side dire, Lion still
+    # radiant => lion_base_side, layer ba.  Pooling the two would report one
+    # number where the charter requires two.
+    g_ba = census(tl, {"tag": "t2", "side": "dire", "seed": "1"})
+    assert g["lion_on_cand_side"] and not g_ba["lion_on_cand_side"], (g, g_ba)
+    s2 = summarise([g, g_ba])
+    assert s2["lion_cand_side/ab"]["games"] == 1, s2["lion_cand_side/ab"]
+    assert s2["lion_cand_side/ba"]["games"] == 0, s2["lion_cand_side/ba"]
+    assert s2["lion_base_side/ba"]["games"] == 1, s2["lion_base_side/ba"]
+    assert s2["lion_base_side/ab"]["games"] == 0, s2["lion_base_side/ab"]
+    # the layers must partition the pooled cell exactly -- no game counted
+    # twice, none dropped
+    for side in ("lion_cand_side", "lion_base_side"):
+        assert (s2[side]["games"]
+                == s2[side + "/ab"]["games"] + s2[side + "/ba"]["games"]), side
+        assert (s2[side]["residual"]["n"]
+                == s2[side + "/ab"]["residual"]["n"]
+                + s2[side + "/ba"]["residual"]["n"]), side
+    # an empty layer reports n=0 with mean None -- never 0.0, which would read
+    # as "measured, and it was zero"
+    assert s2["lion_cand_side/ba"]["residual"] == {
+        "n": 0, "mean": None, "median": None, "sd": None}, s2["lion_cand_side/ba"]
+    print("lion_drain_census --verify: 33 asserts OK")
 
 
 def main():
@@ -406,6 +451,16 @@ def main():
     ap.add_argument("--timelines")
     ap.add_argument("--json")
     ap.add_argument("--verify", action="store_true")
+    ap.add_argument("--split-is", choices=("null-channel", "armed-vs-baseline"),
+                    default="null-channel",
+                    help="what the lion_cand_side/lion_base_side split MEANS on "
+                         "this corpus.  'null-channel' (default, correct for every "
+                         "pre-W25 corpus): `liondrainstop` was not in the wave's arm "
+                         "string, so both legs are gate-OFF and the split measures "
+                         "nothing about this id.  'armed-vs-baseline': the wave DID "
+                         "arm it (first time: W25, tree b51bac77), so cand side = "
+                         "gate ON.  The caller establishes this from the arm string "
+                         "(arm_string_census.py); this file cannot see it.")
     a = ap.parse_args()
     if a.verify:
         _verify()
@@ -425,16 +480,23 @@ def main():
     s = summarise(games)
     ivals = sorted({g["interval"] for g in games})
     print("games with Lion: %d   sampling interval(s) read: %s" % (len(games), ivals))
+    print("SPLIT MEANING (--split-is): %s   -- %s" % (
+        a.split_is,
+        "cand side = liondrainstop GATE ON, base side = gate OFF"
+        if a.split_is == "armed-vs-baseline" else
+        "BOTH legs gate-OFF; the cand/base split says nothing about this id"))
     print("PRIMARY criterion: post-domain residual (director ruling "
           "2026-08-21T15:0xZ / GH #86). The span>=2.0s columns below are the "
           "SUPERSEDED filter, printed for continuity with archived readings "
           "ONLY -- it is common-caused with the outcome (in-domain channels "
           "under 2.0s end with Lion dead within 12s 12/24 vs 6/40; Fisher "
           "p=0.0040), so it must never gate an arms comparison again.")
-    for k in ("all", "lion_cand_side", "lion_base_side"):
+    for k in ("all", "lion_cand_side", "lion_base_side",
+              "lion_cand_side/ab", "lion_base_side/ab",
+              "lion_cand_side/ba", "lion_base_side/ba"):
         v = s[k]
         r = v["residual"]
-        print("%-15s games %3d  channels %4d (hero-target %3d, zero-snap %3d)  "
+        print("%-18s games %3d  channels %4d (hero-target %3d, zero-snap %3d)  "
               "in-domain %3d (leak-only %d)  RESIDUAL n=%d mean=%s median=%s sd=%s"
               "   [superseded: span>=2.0s %3d  resolvable %3d]"
               % (k, v["games"], v["channels"], v["hero_target"], v["zero_snap"],
