@@ -148,6 +148,23 @@
   `.demclaim.json` 侧车文件**声称录像存在** ⇒ **「有 claim 无 dem」看起来像丢录像,其实只是找错前缀**。
   `sweep_run.sh:53-57` 已经处理了这个降级(archive 旁找不到就去 `dem21/`),**手工列桶时要自己降级**。
   另:桶名是 `dota2bot-batch-results-4924`(见 `tools/batch_test/aws/aws.env` 的 `S3_BUCKET`),**不是** `dota2bot-batch-results`。
+- **[2026-08-30 新踩,三条,GH `hero-20` 那轮] `snapshots[].abilities` 是 JSON `null` 不是缺键。**
+  开门前(以及技能书还没建起来)的帧上它是 `null` ⇒ **`s.get('abilities', ())` 的第二参数
+  永远不会生效**,`for a in s.get('abilities', ())` 当场 `TypeError`。必须写
+  `s.get('abilities') or ()`。**本轮第一次宽扫因此 72 局全崩、产出 0 条记录**,
+  而循环里每局都打印「done」——**看起来在跑,其实一条都没落。**
+- **[2026-08-30 新踩] 技能的 `cd` 字段会被同名句柄上的辅助计时器共用,`cd_len` 也救不了。**
+  `skeleton_king_reincarnation` 的真冷却帧上实测 **180 / 150 / 110s**(rank 1/2/3),
+  但 `modifier_skeleton_king_reincarnation_scepter_active` 的 **4.3s** 计时器
+  **写在同一个 `cd` 上**,而 **`cd_len` 恒读 4.3**。⇒ 「`cd` 由 0 变正」当触发识别子
+  **两个方向都会错**:假阴(真触发前一帧 cd=0.5 不是 0)与假阳(4.3s 抖动无死亡)
+  在同一份语料里各抓到一次。**要用 `cd` 就用幅度阈值,不要用上升沿**;
+  **能用事件就用事件** —— `events[] type=='ABILITY_TRIGGER'` 带 0.1s 时间戳,
+  不吃 1Hz 的相位(与 `wkqdmg` GH #310 输掉的那条正相反)。
+- **[2026-08-30 第 3 次踩,同一个坑]** **`pkill -f` / `pgrep -f` 匹配到发起它的那条 `bash -c` 自己。**
+  本文件 2026-08-25 已记过两次,本轮又踩(`pkill -f "...sweep.sh"` 打死自己,exit 144)。
+  **可执行版:先 `pgrep -a -f <pat>` 把行看清楚,认出真正的进程体,再 `kill <pid>`;
+  永远不要把 `-f` 模式直接喂给 `pkill`。**
 - **[2026-08-24 新能力]** **主动物品「用了没有」可以从事件流量出来,不必等 fixture 层。**
   `events[] type=='ITEM' actor=<hero> inflictor='item_<x>'` = 谁放的;
   `events[] type=='MODIFIER_ADD' target=<hero> inflictor='modifier_item_<x>'` = 谁吃到。
@@ -6758,3 +6775,99 @@
     (4) W25 剩下两个 run 可直接跑 `pullcad_beat.py`;
     (5) `--escape-w 12` 敏感度、「振荡型死锁」跨 episode 合并规则仍欠。
   - 完整报告:`iterations/reports/replay-check/20260830T040500Z.md`
+- **2026-08-30T07:10Z(`hero-20`:重生触发频率与触发时的敌人数 —— **测量,不是 gate 核验**;
+  预登记的 `DOMAIN-NOT-REACHED` 与 `METHOD-FAILED` 两个分支**都没有命中**)**:
+  **宽扫 71/72 局**(W17 + W17-R 里有 .dem 的全部 WK 局,1 局 dumper panic 已点名),
+  **深查逐帧 8 局**,**触发 episode 261**,载体分母 **WK 英雄-局 96 / 192 局语料**。
+  零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  本轮做的是上一行章程尾部编号 **(0)** 的那件事(已悬 2 轮),**不是自选题**。
+  - ⭐⭐⭐ **`acceptance` 与 `acceptance_amendment` 点名的两个识别子都不能用,第三个可以。**
+    (甲) `modifier_skeleton_king_reincarnation` 在 **71 局 / 632 次 WK 死亡**上仍是 **0 次**
+    (fixture 侧的 0 不是偶然,这个名字在当前版本根本不出现)。
+    (丙) 的 `cd` **0→正**上升沿**两个方向都错,同一个机制**:
+    `modifier_skeleton_king_reincarnation_scepter_active` 的 **4.3s** 计时器骑在同一个技能句柄上
+    ⇒ 假阴 `122211_slot9` t=982.3(前一帧 cd=**0.5** 不是 0,随后跳 **149.7**)、
+    假阳 `123454_slot3` t=452.5(0→**4.3**→3.1→2.3→1.1→0.3→0,**无死亡无触发**)。
+    **⚠️ `cd_len` 救不了它:该技能的 `cd_len` 恒读 4.3**,从来不是真冷却 110/150/180。
+    **能用的是事件:`events[] type=='ABILITY_TRIGGER' inflictor=='skeleton_king_reincarnation'`**,
+    带战斗日志 **0.1s** 时间戳 ⇒ **不受 (戊)「必须 ≥1s 持续态」约束**,
+    `wkqdmg`(GH #310)输掉的那条分辨率**这条不输**。
+  - ⭐⭐⭐ **本轮最该被读的一条:那个识别子在 trunk 上躺了 9 天,两轮取证都没找到它。**
+    英雄组 `8e535741`(08-21)为**另一个门** `wkreincarnmp` 写的
+    `tools/batch_test/behavioral/wk_reincarn_domain.py`,其 section C 头 **`:50-59`**
+    **已经写着**「`ABILITY_TRIGGER` whose inflictor is `skeleton_king_reincarnation`」
+    **以及**「`modifier_skeleton_king_reincarnation_scepter_active` is **NOT** the trigger」——
+    **正确识别子 + 那条否定结论,08-21 就在树上。**
+    而 08-30 的 `acceptance_amendment` 从 109 份 fixture **重新推导了同一对事实并推歪了**。
+    **归因是检索面不是能力**:请求方按 fixture 找识别子、总监按 fixture 复核,
+    **没有人 grep `tools/batch_test/behavioral/` 里同一个技能名**
+    (`grep -rn skeleton_king_reincarnation tools/` 当场命中)。
+    **与 GH #171 / #205 同族:不是缺工具,是没人查已有的那一份。**
+    ⚠️ **连带事故(本轮自己也踩了同一个洞)**:我把工具写完才发现同名文件已存在,
+    Write 覆盖了它;已 `git checkout HEAD --` **原样恢复(零 diff)**,本轮工具改名
+    `wk_reincarn_trigger_domain.py`。**新建工具前先 `git log --oneline -1 -- <路径>`。**
+  - **三识别子交叉核验(工具自己打印):A 事件 261 / B 冷却跳满长(阈值 60s)261,
+    逐次一致 261/261 ⇒ METHOD OK**;C **原地复活**(纯位置+血量,与技能系统无关)264,
+    一致 260/261,**1 个假阴 + 4 个假阳全部逐帧定因**
+    (假阴 `123452_slot10` t=1374.2 站起来一帧内被位移 **1583u**;
+    假阳 `122056_slot2` t=1365.2 **重生正在冷却中**(97.9→92.7)的原地满血复活 = aegis 型)。
+  - ⭐⭐ **`DOMAIN-NOT-REACHED` 没命中,批测台的预判反了**:WK **到 20 级 96/96 = 100%**、
+    **到 25 级 60/96 = 62.5%**(逐帧语料 49/71,最高 30 级)。
+    **t25 窗口实测 n=49:均值 208s(3.5 min),min 32s,max 453s** ——
+    源码 `:413` 自认「窗口长度只由 ONE post-cap 局推得」**从此不成立**;
+    GH #235 那局(23:02 / 26 级)**落在实测分布里,不是异常点**。
+  - ⭐⭐⭐ **主读数(261 次触发,均值+分布,铁律 4(ii) 不报中位数)**:
+    **900u 均值 2.046**(P(≥1)=**95.0%**)、**600u 均值 1.257**、
+    **900−600 = 0.789**(P(≥1)=58.6%)。触发后一帧逐格同号(2.011 / 1.257 / 0.755),
+    **相位敏感度 208/261 次为 0** ⇒ **结论不靠采样相位**。
+    **仪器标定**:引擎自己的 600u 答案(`modifier_skeleton_king_reincarnate_slow` 名单)
+    均值 **1.245** vs 位置法 1.257,逐次一致 pre 76.6% / post 85.1%,
+    **不一致处位置法系统性偏高一格**,成因是 **pre 帧的生死判定**不是距离
+    (`123442_slot12` t=1516.7:bristleback pre 帧 44u 判死、post 帧 710u 满血且在引擎名单里)
+    ⇒ **900u 若有偏,方向是低估**。
+  - ⭐⭐⭐ **定价答案(分母要按"到得了 25 级的局"算,不是全部局)**:
+    49 局到 25 级,**30 局(61.2%)在 25 级后一次都没触发**,18 局 1 次、1 局 2 次
+    ⇒ **0.408 次 / 到 25 级的局**;该层 900−600 = **0.650**
+    ⇒ **[8] 在它真正付钱的窗口里的期望毛收益 ≈ 0.27 个「多打到的敌人」/局**,
+    **且这还没扣**源码第二条论证(1.6s 晕比 `reincarnate_time = 3` 早 1.4s 过期)。
+    **⇒ 源码「expected payouts 至或低于 ONE,很容易是 0」被坐实,而且是实测不是推断。**
+    **预登记结局 (6) 不成立**(0.789 不是 ~0,半径优势是真的**只是小**)。
+  - ⭐ **论证里的权重排错了(结论对,理由不对)**:三个条件中
+    **「900 内有敌人」几乎不做功** —— 触发时 P(≥1)=**95.0%**(≥25 层 85.0%);
+    真正稀缺的是**触发本身**。
+  - **支点帧**:`151700_slot12` t=1529.4(WK 28 级)是整个 ≥25 语料里 **[8] 最好的一帧** ——
+    CM **648u** / zuus **671u** / drow **764u** 全在 600–900 的环里、**600 内一人没有**、
+    **引擎减速名单为空**;49 局里**这样的帧出现 1 次**。
+    模态形状是 `122201_slot8` t=1406.6(nevermore 121u / venomancer 131u / viper 243u
+    **三人全在 600 内**,引擎名单逐人相同)⇒ **900 计数 == 600 计数,[8] 多打到 0 人**。
+  - **进树**:`tools/batch_test/behavioral/wk_reincarn_trigger_domain.py`
+    (`--selfcheck` **14/14 PASS**,含把上面两个真实帧钉住的 B 假阴/假阳用例)+
+    `tests/test_wk_reincarn_trigger_domain.py`(把那 14 条纳进 `run_py_tests.sh`,
+    并钉住 `4.3 < B_MIN_CD < 109`)。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(自装 `lua-check`);
+    `run_py_tests.sh` → **54 passed / 0 failed / 0 uncertifiable**;
+    `routine_selfcheck.sh` → **exit 0**。
+    **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;未改 Lua ⇒ 不声称跑绿 Lua 全量(#124)。
+    AWS:S3 只读、**零 EC2、零 CE 调用**。
+  - ⚠️ **VERIFY 行:本轮没有,而且不是漏写。** `hero-20` 是总监指派的**归档测量**,
+    裁词与 queue 都写明**无 gated id** ⇒ 它不是任何 gate 的条件 (a)。
+    **本轮完成的 gate-id 执行核验数 = 0,原因如上,不是"散文里数不出来"。**
+    **同时暴露 VERIFY 模式的一个洞,已交总监**:枚举
+    `WORKING|BUGGY|SILENT|INDETERMINATE` **没有一格容得下"总监指派的非 gate 测量"**;
+    按 GH #317 的口径**本组不自造第五个词**,是否加 `MEASUREMENT` 一格由总监裁。
+  - **新工具坑(已并入本文件「工具坑」节)**:①`abilities` 在开门前的帧上是 JSON **`null` 不是缺键**
+    ⇒ `s.get('abilities', ())` 的默认值**永远不生效**,必须 `s.get('abilities') or ()`
+    (本轮第一次宽扫因此 **72 局全崩、0 条记录**);②`pkill -f` **第 3 次**匹配到发起它自己的
+    `bash -c`(exit 144)—— **收尸只用 PID**。
+  - **欠账**:`sweep_run.sh` 的 15 个通用检测器**连续第五轮**未跑;W25 只并了 2/4 个 run;
+    W26/W27 与 W25 **从未池化**;`seed 975` **第十一轮**;`wandlimbo` 因 #293 **第九轮**不可执行;
+    **GH #265 仍被 #272 阻塞**;rank-3 冷却 **~110s vs 源码 120s** 只有 n=3(深查 5 局),
+    **未排除冷却缩减装备,是指示不是判决**,全语料复测未做。
+  - **下一轮第一件事**:
+    **(0)** `hero-20` 的棒已交英雄组(读数落地 ⇒ 重开 `..._wraith_king_4` / `_10` 定价),
+    **不掉在本组**;VERIFY 模式那个洞已交总监。
+    (1) 下一个零记录 id:**`blinkflee`** 或 **`liondrainstop`**;
+    (2) 把 §4 那条「静止在小兵火力里」做成**树上的**检测器(仍欠,与 `fieldcreep` 前提检验并案);
+    (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`;
+    (4) rank-3 冷却全语料复测(便宜:`wk_reincarn_trigger_domain.py` 加一格即可)。
+  - 完整报告:`iterations/reports/replay-check/20260830T071054Z.md`
