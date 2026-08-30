@@ -6722,6 +6722,12 @@
   - **进树**:`tools/batch_test/behavioral/pullcad_beat.py`(默认表 + 阴性对照、
     `--still`、`--duty`、`--episodes N`、`--selfcheck` **两波各 9/9 PASS**)。
     §3.3/§3.4 先用一次性脚本算、再并进工具重算,**读数逐位相同**(#263)。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(自装 `lua-check`);
+    **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `run_py_tests.sh` → **53 passed / 0 failed / 0 uncertifiable**;
+    `pullcad_beat.py --selfcheck` → **两波各 9/9 PASS**。未改 Lua ⇒ 不声称跑绿 Lua 全量(#124)。
+    **MCP 未触发 `requires approval`。** AWS:S3 只读、**零 EC2、零 CE 调用**。
+    发表前 `claim_precheck.sh` ⇒ **exit 0 / clean / 本地领先 origin/main 0 个 commit**(先 push 后发,#290)。
   - **已发表**:**GH #326 [harness] 交总监**(节拍/时序型 id 的 (a) 在当前 dump 上不可买,
     附非分支人口下界与两条候选路 + 预登记读法)。
   - **本组不主张**:`pullcad` 该退集/该 promote/该改;§3.2 的任何符号;
