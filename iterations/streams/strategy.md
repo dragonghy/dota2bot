@@ -3025,8 +3025,12 @@
   `WasRecentlyDamagedByCreep` 两个世界仍未决,§2 的推理不依赖它。
   **交棒**:录像组(判别 §2 掉视野 vs TP;dumper 补 per-enemy `time_since_seen`)、
   总监/harness(**GH #327 原地扩范围**覆盖 #324 否定式,已在 #324 追评点明、不另开 issue)。
-  **先 push 再发表**(铁律 6 ⭐GH #290 的顺序);全量单进程套件读数见报告 §9。
-  报告:`iterations/reports/strategy/20260830T072426Z.md`。
+  **先 push(`bba8f204`)再发表**(铁律 6 ⭐GH #290 的顺序);`claim_precheck.sh` **exit 0**
+  (`local commits not on origin/main: 0`;paths cited 3 / resolved on trunk 3 / refused 0);
+  已发表 GH **#324** 追评 **5467408117**(裁定全文)与 GH **#327** 追评 **5467409450**(扩范围)。
+  快腿本轮**亲自跑过**(非引用自检):按自检自己的选文件规则 **ran=35 red=0**。
+  **全量单进程套件本轮未跑完**(回填时刻 977 个用例、`FAIL[` 计数 0;~100min,GH #124)——
+  **这是「跑到这里没红」不是「全绿」**。报告:`iterations/reports/strategy/20260830T072426Z.md`。
 - 2026-08-30T04:29Z(**认领 GH #323**,走章程工作流 1;
   **无入集提议 —— 本轮零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、`queue.json` 一字未动**):
   **#323 要的不是重新调常数,是一个 bot VM 里不存在的传感器;而它唯一有的旋钮被本仓语料上的一个平局证伪。**
