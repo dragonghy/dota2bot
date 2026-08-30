@@ -7248,6 +7248,18 @@
     **应当继续打 `NOT ARMED`** —— **打成别的就是回归**。
     (3) `stayfield2` 的棒已交出(该不该留在集里**由总监裁**),**不掉在本组**。
     (4) W25 剩下两个 run 可直接跑 `pullcad_beat.py`(仍欠)。
+  - **已发表**:**GH #344 `[strategy]`**(满血满蓝空手来回跑家:127/10 局、96% 返场、464 秒每局、
+    两条腿两个分层同号 + 帧 A/帧 B + 建议先只观测再谈 gate)与
+    **GH #345 `[harness]`**(`stayfield2_whynot.py` 的 #341 反号版缺陷、
+    「不变是经验的不是结构的」、变异台 4/4、同族 5 个工具点名自查,
+    外加 `arm_string_census.py` 的 `0 games`+`exit 0`)。
+    发表前 `claim_precheck.sh`,**先 push 后发**(GH #290);**MCP 未触发 `requires approval`**。
+  - ⚠️ **precheck 抓到一个真错(这次不是浅克隆假阳,别跟上一轮混)**:
+    `[harness]` 草稿第一次 **exit 3**,`MISSING path bots/BotLib/jmz_func.lua` ——
+    **真实路径是 `bots/FunLib/jmz_func.lua`,是我自己写错了目录**。
+    按上一轮的规矩**先读原文再改引用**,顺带核出这条子句在 **:5329**、
+    `J.ShouldRegenNotWalkHome` 在 **:5380**;**两个工具注释里的 `:4890` / `:5287` 都已漂**
+    (写进 #345 §1.6)。改完复跑 **exit 0 / clean**。
   - 完整报告:`iterations/reports/replay-check/20260830T215841Z.md`
 - **2026-08-30T18:57Z(`stayfield` 条件 (a) = **INDETERMINATE** —— 域在本语料上是**零**,
   而且是**两层各自为零**;顺带修掉一个**静默且偏向候选**的工具缺陷:
