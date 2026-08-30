@@ -1,0 +1,65 @@
+{
+  "wave": "W28",
+  "_note": "First-hand launch record, written 2026-08-30T06:2xZ WHILE all four SIRs read active/fulfilled. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest).",
+  "tree": "f015321ea2926ace44aa8a003b3d165122ededf2",
+  "tree_note": "bots/ and game/ are BYTE-IDENTICAL to W27's pin 5d9b9927 (git diff 5d9b9927..f015321 -- bots/ game/ is empty; the commits in between are reports/charters only). The 40-hex pin was written explicitly, never `main`, and `git ls-remote origin main` was re-verified inside the same shell block as the launch.",
+  "arm_ids": 45,
+  "arm_bytes": 396,
+  "arm_note": "test_set.md line 2, BYTE-IDENTICAL to W27's (diff of the two line-2 extractions is empty; 397 bytes with newline). The director's 04:12Z commit 837bc31e touched test_set.md for GH #317 (queue status vocabulary), NOT the arm string.",
+  "instance_type": "c6i.4xlarge",
+  "market": "spot",
+  "market_note": "Ladder stopped at level 1: c6i.4xlarge spot, all four filled. No InsufficientInstanceCapacity, no c6a fallback, no --on-demand. Evidence is describe-instances InstanceLifecycle=spot on all four, NOT the run_id `spot_` prefix. Sixth consecutive wave at zero degradation; owner's Spot-first ruling (GH #158) holds unchanged.",
+  "slots": 16,
+  "rec_slots": 1,
+  "rec_slots_note": "Registered branch (A) of GH #308, executed for the FIFTH wave. Pre-launch check at the gate 06:18:47Z: the issue carried only the batch desk's own four comments (18:26:56Z, 21:20:08Z, 00:27:10Z, 03:25:00Z), no director comment; no director commit touched it. Charter forbids changing the criterion after the fact => rec_slots stays 1. Frame channel 1/16 for the fifth wave; measured cost of the unruled issue is ~121 recordings per wave (W25 rec_slots 12 -> 145 .dem; W26/W27 at 1 -> 24/30).",
+  "watchdog_hours": 2,
+  "games_per_seed": 12,
+  "seeds": [1850, 1938, 2130, 2142],
+  "carrier_terms": ["crystal_maiden", "lion", "obsidian_destroyer", "skeleton_king", "spirit_breaker", "zuus"],
+  "carrier_terms_note": "Derived MECHANICALLY by carrier_terms.py from the 45-id arm string (8 hero-scoped / 37 generic / 0 unresolved => 6 terms). Identical term set to W27's, as expected: fieldsip is generic.",
+  "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0; ids=8 seeds=4. Per-term carriers: skeleton_king 4 (FULL), crystal_maiden 3, obsidian_destroyer 3, lion 2, spirit_breaker 2, zuus 2 => 16 carrier slots. HONEST BOUNDARY (sixth round): the '>=2 per term' rule is this desk's OWN discipline, not the gate; the official gate only requires >=1, and GH #285 is still unruled.",
+  "wiring_gate": "check_armed_wiring.py --cand <45-id string> --ref HEAD exit 0: all 45 armed ids wired on HEAD.",
+  "seed_selection_note": "Four seeds NEVER used in any prior wave: seed_roster_index --seed 1850 1938 2130 2142 reports 'no banked games' for all four, checked against a REFRESHED index (--build run first, per the discipline this desk adopted at W27).",
+  "seed_index_note": "seed_roster_index --build reported '277 run prefixes in S3, 277 already indexed, 0 to scan; nothing new' -- i.e. the index was ALREADY current because the previous (harvesting) round built it after W27's corpus landed. The discipline held on its first live test: the fixed pre-launch --build was a no-op precisely because the harvest-round build had already folded W27's four seeds in. 143 seeds with corpus.",
+  "seed_search_note": "Mask-exhaustive enumeration (GH #313 method) over the window [1801,2200] carried over from W27: 396 unused seeds, 352 with rosters, 46 distinct masks, 1438 valid 4-set combos at '>=2 carriers per term'. Picked the max-carrier-slot combo (16 slots, four pop-4 seeds). The window is NOT exhausted this round -- max popcount is still 4 and 1438 combos remain, so the combinatorial-exhaustion mechanism recorded at W27 has not yet recurred here. It WILL recur: taking the richest four each wave shaves the top popcount layer each wave.",
+  "machines": [
+    {"seed": 1850, "az": "us-west-2a", "instance": "i-0f37ed0041eaca3b3", "sir": "sir-6nkfha3n", "run_token": "990f5c", "launched": "2026-08-30T06:18:58Z", "requested_az": "us-west-2a", "actual_az": "us-west-2a", "carriers": ["lion", "obsidian_destroyer", "skeleton_king", "zuus"]},
+    {"seed": 1938, "az": "us-west-2b", "instance": "i-06d88875005df1130", "sir": "sir-h1qfk8dq", "run_token": "90463d", "launched": "2026-08-30T06:19:03Z", "requested_az": "us-west-2b", "actual_az": "us-west-2b", "carriers": ["crystal_maiden", "obsidian_destroyer", "skeleton_king", "spirit_breaker"]},
+    {"seed": 2130, "az": "us-west-2c", "instance": "i-06676c7c8de85d8f8", "sir": "sir-b1mzkeyq", "run_token": "e706a3", "launched": "2026-08-30T06:19:07Z", "requested_az": "us-west-2c", "actual_az": "us-west-2c", "carriers": ["crystal_maiden", "obsidian_destroyer", "skeleton_king", "spirit_breaker"]},
+    {"seed": 2142, "az": "us-west-2d", "instance": "i-0531992fa655fc6a8", "sir": "sir-93n7ghhq", "run_token": "8fffe9", "launched": "2026-08-30T06:19:11Z", "requested_az": "us-west-2d", "actual_az": "us-west-2d", "carriers": ["crystal_maiden", "lion", "skeleton_king", "zuus"]}
+  ],
+  "placement": {
+    "requested_equals_actual": "4/4",
+    "distinct_azs": 4,
+    "re_aiming": 0,
+    "ring_exhausted": 0,
+    "degradation": "none",
+    "gh_282": "sixth consecutive wave with zero PLACEMENT MISMATCH",
+    "gh_252": "pass (four instances, four distinct AZs)",
+    "gh_256": "sixth consecutive wave at full spread; one AZ capacity event exposes exactly one seed",
+    "run_tokens": ["990f5c", "90463d", "e706a3", "8fffe9"],
+    "run_tokens_distinct": true,
+    "sir_states": "all four active/fulfilled at 06:2xZ, LaunchedAvailabilityZone matching the requested AZ one-for-one"
+  },
+  "gates": {
+    "i_six_hour": "PASS. W27 took off 2026-08-30T00:18:47Z; +6h = 06:18:47Z. A `date -u` guard was written INTO the launch shell block and it REFUSED a first attempt at 06:16:43Z (exit 9). The wave went out at 06:18:58Z on the second call.",
+    "ii_new_to_test": "PASS by the SECOND branch only. bots/ and game/ are byte-identical to W27's pin and test_set.md line 2 is byte-identical => the first branch (new code or new arm string) FAILS. The accumulated seed count on this exact tree+test-set is 4 (W27 alone) < 8, and the charter's (ii) is an OR.",
+    "iii_cost": "PASS. Fence = 67.374 (budgets MTD) + W27 0.80 + W28 0.80 = $68.97 <= $80. Worst case, both waves fully degraded to on-demand at $2.15 = $71.67, also passes. Brake $90 and owner line $100 not approached; no new alarm tier crossed."
+  },
+  "cost": {
+    "mtd_at_launch": 67.374,
+    "mtd_source": "budgets/dota2bot-batch (free), snapshot refreshed 2026-08-29T22:17:33Z; CE cross-check $67.3735002094 agrees digit-for-digit (27th consecutive round)",
+    "mtd_staleness": "The snapshot is the SAME one the previous two rounds read: it predates W27 entirely (00:18-01:14Z), so W27's ~$0.80 is NOT in the bare MTD. Charter (甲) arithmetic is therefore not skipped.",
+    "fence_arithmetic": "67.374 + W27 0.80 + W28 0.80 = $68.97 <= $80; worst case $71.67",
+    "brake_90": "not approached",
+    "owner_line_100": "not approached",
+    "alarm_tier_crossed_this_round": "none ($50 long since crossed, $80 not crossed)",
+    "cash_this_round": "CE $0.01 + EC2 ~$0.80 + fractional-cent S3 GETs"
+  },
+  "skip_not_pass_lines": "none -- no --on-demand, no --cand-ref, no --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth, no --allow-short-watchdog, no RULE6_BYPASS. The wave budget gate did not refuse. --dry-run ran first and was clean.",
+  "expected_games": "4 seeds x 2 legs x --games 12 = 96 stamped games plus warm-ups (the byte-identical W25/W26/W27 landed 196/199/235 total).",
+  "pooling_note": "W28 IS poolable with W27: same 45-id / 396-byte arm string AND byte-identical bots//game/. Together they are the intended 8-seed read on the 45-id family. They must stay SEPARATE from the W25+W26 8-seed pool, which is a 44-id / 387-byte string and was sealed at W26.",
+  "harvest": {
+    "_todo": "backfilled by the harvesting round: status_code, wall_clock, files_seen/games_loaded/source_dirs/unparseable, scored, unfinished, winner_by, min_arm_depth, thin_arm_seeds, per-seed ab/ba/arm_depth, mean, comps_better, flags_used, stamp_check, placement_result, carriers_scored_games, dem_uploaded, and the W27+W28 pooled read"
+  }
+}
