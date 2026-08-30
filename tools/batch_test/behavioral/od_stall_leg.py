@@ -97,6 +97,41 @@ LIMITS -- READ BEFORE QUOTING A NUMBER
 6. The `abilities` array is not the engine slot array (`skill_point_stall.py`
    LIMIT 2): this module never re-derives a slot from it, only ability RANKS by
    name, which is what the row arithmetic needs.
+
+W28 ADDITION (replay-check 2026-08-30) -- `--frames`, AND WHY THE PRE-GATE
+HEADLINE HAD TO CARRY THE LEG SPLIT
+--------------------------------------------------------------------------
+Run on the 14 dem-backed games of W28 (tree f015321, the 45-id string, four
+runs 990f5c/90463d/e706a3/8fffe9), 10 of which carry an OD, 7 of them stamped:
+
+    leg        rows  objurgation  pts  frozen_frac  STALL
+    ARMED         3      4/4/4     16   5-24%         0/3
+    baseline      4      0/0/0/0    6   80-84%        4/4
+    WARMUP        3      4/0/0     16/6  7-83%        2/3
+
+The separation is 10/10 with no exception, and it is NOT confounded by side:
+in each of the three seeds OD's own team is CONSTANT across the pair and only
+the armed side flips (s1850 OD radiant, s1938 OD dire, s2130 OD dire), so both
+iron-rule-4(i) layers carry an ARMED row and both show rank 4.
+
+`--frames` prints the point-spend history that makes this a frame reading
+rather than an end-of-game table.  The armed row's third point lands on
+objurgation at hero level 3 in 3/3 armed games (t=69.5 / 69.4 / 77.4); the
+shipped row puts that point into astral_imprisonment instead and the hero then
+stops levelling for good at 6 points (t=256.5-340.5, hero level 7, riding to
+level 20-25 without spending another point or taking a single talent).
+
+That last sentence is why the PRE-GATE block below no longer prints a bare
+"UNINTERPRETABLE, returned".  `skill_point_stall.py` is leg-blind on purpose
+(its LIMIT 6: the GH #286 defect is on the factory path, "both legs
+identical").  For OD that premise is false, because the armed row is exactly
+the row that never names index 4 -- so the stall rows this door counts are the
+BASELINE's, and reading the door categorically returns the candidate for the
+defect it removes.  §CF's own wording is narrower than the old headline was:
+it returns "rank / 施法次数的**零读数**" as uninterpretable, and an armed leg
+at rank 4 is not a zero reading.  The block therefore prints the leg split and
+the armed-leg rank next to the verdict; deciding what §CF means is the
+director's, not this module's (replay-check does not rule on admission).
 """
 import argparse
 import collections
@@ -138,6 +173,34 @@ def ability_rank(row_frame, name):
     return 0
 
 
+def spend_history(timeline):
+    """[(t, hero_level, {ability: rank}), ...] -- one entry per frame where the
+    OD's spent-point vector CHANGED.  End-of-game frames carry an empty
+    `abilities` (the death/teardown shape, tool-pit note in the charter), so a
+    drop back to zero points is not a spend and is skipped rather than printed
+    as an un-levelling."""
+    fr, _team = frames_by_hero(timeline)
+    out, prev = [], None
+    for s in fr.get(HERO, ()):
+        ab = s.get('abilities') or ()
+        if not ab:
+            continue
+        ranks = {a.get('name'): (a.get('level') or 0) for a in ab}
+        key = tuple(sorted(ranks.items()))
+        if key != prev:
+            out.append((s.get('t'), s.get('level'), ranks))
+            prev = key
+    return out
+
+
+def first_rank(history, name):
+    """(t, hero_level) of the frame where `name` first reads >= 1, else None."""
+    for t, lvl, ranks in history:
+        if (ranks.get(name) or 0) >= 1:
+            return t, lvl
+    return None
+
+
 def od_row(timeline, game, script_version):
     """One row for the OD in one game, or None if this game has no OD."""
     fr, team = frames_by_hero(timeline)
@@ -157,12 +220,16 @@ def od_row(timeline, game, script_version):
     leg = leg_of(team[HERO], armed_side)
     # LIMIT 3: only the rank-0 direction is a proof, and only on an armed leg.
     contradicts = (leg == 'ARMED' and objurg == 0)
+    hist = spend_history(timeline)
+    got = first_rank(hist, OBJURGATION)
     return dict(game=game, seed=seed, armed_side=armed_side,
                 od_team=TEAM_NAME.get(team[HERO], team[HERO]), leg=leg,
                 level=r['level'], pts=r['pts'], pts_abil=r['pts_abil'],
                 pts_talent=r['pts_talent'], objurgation=objurg,
                 t_last_gain=r['t_last_gain'], frozen_frac=r['frozen_frac'],
                 stall=bool(is_stall(r, LEVEL_MIN, PTS_MAX)),
+                t_objurg_1=got[0] if got else None,
+                lvl_objurg_1=got[1] if got else None,
                 row_contradicts_stamp=contradicts)
 
 
@@ -191,11 +258,33 @@ def summarise(rows):
         if by_leg[leg]:
             out.append('  %-9s rows=%-3d STALL=%d' % (leg, by_leg[leg], st_leg[leg]))
     n_stall = sum(1 for r in rows if r['stall'])
+    armed = [r for r in rows if r['leg'] == 'ARMED']
+    armed_rank = [r['objurgation'] for r in armed]
+    armed_zero = bool(armed) and not any(armed_rank)
     out.append('')
-    out.append('  PRE-GATE (GH #309): OD %s in the STALL table -- %d/%d hero-game(s).'
+    out.append('  PRE-GATE (GH #309): OD %s in the STALL table -- %d/%d hero-game(s)'
                % ('IS STILL' if n_stall else 'is NOT', n_stall, len(rows)))
-    out.append('  => hero-22 %s' % ('UNINTERPRETABLE, returned' if n_stall
-                                    else 'pre-gate PASSES, reading may proceed'))
+    out.append('    stalls by leg: ARMED %d/%d | baseline %d/%d | WARMUP %d/%d'
+               % (st_leg['ARMED'], by_leg['ARMED'], st_leg['baseline'],
+                  by_leg['baseline'], st_leg['WARMUP'], by_leg['WARMUP']))
+    out.append('    armed-leg objurgation rank(s): %s'
+               % (', '.join(str(x) for x in armed_rank) or 'no armed row'))
+    # §CF returns "rank / cast-count 的**零读数**" -- a zero reading -- not any
+    # reading taken while some OD somewhere in the corpus stalled.  The two
+    # come apart exactly when the stalls sit on the leg the candidate repairs,
+    # so print which case this corpus is in and leave the ruling to the
+    # director (replay-check does not rule on admission).
+    if not armed:
+        out.append('  => no ARMED row: §CF cannot be evaluated on this corpus.')
+    elif armed_zero:
+        out.append('  => armed leg reads ZERO: this is the case §CF returns as '
+                   'UNINTERPRETABLE (a stalled OD never reaches the repaired '
+                   'indices, so the zero measures the stall, not the build).')
+    else:
+        out.append('  => armed leg is NON-ZERO (rank >= 1), so §CF\'s "零读数" '
+                   'condition is NOT met by this corpus; the stall rows are on '
+                   'the leg that keeps index 4. Whether §CF still returns '
+                   'hero-22 is the director\'s call, not this module\'s.')
 
     bad = [r for r in rows if r['row_contradicts_stamp']]
     out.append('')
@@ -286,7 +375,26 @@ def selfcheck():
         '{2,1,4,2,2,6,2,1,1,1,6,4,4,4,6}' in src,
         'EXPECTED EXPIRY, NOT A REGRESSION: the shipped row moved.')
 
-    print('\n%d/%d ok' % (12 - len(fails), 12))
+    # --frames (W28): the history is the frame evidence, so it has to survive
+    # the two shapes that would silently corrupt it.
+    tl = _tl(2, 26, healthy)
+    tl['snapshots'].append(dict(idx=1, hero=HERO, team=2, t=1600.0, level=26,
+                               abilities=[]))
+    hist = spend_history(tl)
+    chk('13 the empty end-of-game abilities frame is not a spend',
+        [h[0] for h in hist] == [-60.0, 300.0], [h[0] for h in hist])
+    chk('14 spend_history keeps one entry per CHANGE, not per frame',
+        len(hist) == 2, len(hist))
+
+    r = od_row(_tl(2, 26, healthy), 'g', armed_r)
+    chk('15 t_objurg_1 is the FIRST frame at rank >= 1, not the last',
+        r['t_objurg_1'] == 300.0 and r['lvl_objurg_1'] == 26,
+        '%s/%s' % (r['t_objurg_1'], r['lvl_objurg_1']))
+    r = od_row(_tl(2, 23, stalled), 'g', armed_r)
+    chk('16 never-levelled objurgation reports None, not 0.0 (a 0.0 would read '
+        'as "levelled at the horn")', r['t_objurg_1'] is None, r['t_objurg_1'])
+
+    print('\n%d/%d ok' % (16 - len(fails), 16))
     return 1 if fails else 0
 
 
@@ -297,13 +405,16 @@ def main():
     ap.add_argument('--analysis-dir',
                     help='directory of <game>.json analysis files carrying script_version')
     ap.add_argument('--json', help='write the raw rows here')
+    ap.add_argument('--frames', action='store_true',
+                    help='print the OD point-spend history per game (the frame '
+                         'evidence behind every row above)')
     ap.add_argument('--selfcheck', action='store_true')
     args = ap.parse_args()
 
     if args.selfcheck:
         return selfcheck()
 
-    rows = []
+    rows, frames = [], []
     for path in args.timelines:
         game = os.path.basename(path).split('.')[0]
         sv = ''
@@ -324,6 +435,8 @@ def main():
         r = od_row(tl, game, sv)
         if r:
             rows.append(r)
+            if args.frames:
+                frames.append((r, spend_history(tl)))
 
     if not rows:
         print('no OD rows -- pass timelines containing an obsidian_destroyer',
@@ -333,6 +446,16 @@ def main():
         with open(args.json, 'w') as fh:
             json.dump(rows, fh, indent=1)
     print(summarise(rows))
+    if args.frames:
+        print('\n== point-spend history (one line per CHANGE) ==')
+        for r, hist in sorted(frames, key=lambda x: x[0]['game']):
+            print('\n-- %s seed=%s leg=%s od=%s' % (r['game'], r['seed'],
+                                                    r['leg'], r['od_team']))
+            for t, lvl, ranks in hist:
+                nz = {k.replace(HERO + '_', ''): v
+                      for k, v in sorted(ranks.items()) if v}
+                print('   t=%8.1f lvl=%-3s pts=%-3d %s'
+                      % (t, lvl, sum(ranks.values()), nz))
     return 0
 
 

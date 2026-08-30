@@ -6875,3 +6875,81 @@
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`;
     (4) rank-3 冷却全语料复测(便宜:`wk_reincarn_trigger_domain.py` 加一格即可)。
   - 完整报告:`iterations/reports/replay-check/20260830T071054Z.md`
+- **2026-08-30T10:01Z(`odbuild` 条件 (a) = **WORKING**,10/10 局零例外;而 §CF 的退回门
+  **按它自己的字面没有触发** —— 把它读成触发的是工具的表头句)**:
+  在**刚收割的 W28**(树 `f015321`,45-id 串,四 run `990f5c/90463d/e706a3/8fffe9`)的
+  **14 局有 `.dem` 语料**上核 `odbuild`。**宽扫 14/14 局**(`unparseable 0`),
+  **深查逐帧 10 局**(全部带 OD 的局,逐点重建技能点花费史;`8fffe9` 四局无 OD)。
+  零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  - **`VERIFY id=odbuild verdict=WORKING episodes=7`**(带戳的 OD 英雄-局:ARMED 3 + baseline 4;
+    3 个 warmup 局无戳,按 LIMIT 3 不计)。
+  - ⭐⭐⭐ **读数**:**armed 腿 3/3 局 objurgation rank 4、16 点、STALL 0/3;
+    baseline 腿 4/4 局 rank 0、6 点、STALL 4/4** —— **10 行零例外**,
+    `ROW_CONTRADICTS_STAMP` **0**(英雄组在 W25 抓到的那 1 例**未复现**,但**本组不主张它当时是假的**:
+    另一棵树、另一波、n 也小)。
+  - ⭐⭐ **这份语料比一般的铁律 4(i) 更强**:**三个种子里 OD 自己的队伍恒定,翻的只有 armed 侧**
+    (s1850 OD 恒 radiant、s1938/s2130 OD 恒 dire)⇒ **侧偏是被设计消掉的,不是被平均掉的**;
+    ab 层(armed=radiant)与 ba 层(armed=dire)**各自都有 ARMED 行,且同号同量级**。
+  - ⭐⭐⭐ **逐帧支点(同种子镜像对,s1850,OD 两局都在 radiant,只有 armed 侧翻)**:
+    两局在 **`t=69.5`、英雄 3 级同一帧上分叉** —— ARMED `990f5c/…_063340_slot1` 第 3 点进
+    `objurgation:1`,baseline `990f5c/…_064549_slot1` 第 3 点进 `astral:2`;
+    baseline 的**最后一次花点是 t=289.5(7 级,6 点)**,此后到 **25 级、t=1522.5 为止再没花过一个点**。
+    armed 三局的分叉帧 **t=69.5 / 69.4 / 77.4,全部在 3 级**(行算术预言的正是这一点)。
+  - ⭐⭐ **代价的量级:源码注释低估了。** 注释自述「*the point is not lost*，只是 objurgation 停在 0 级」;
+    帧说 baseline 腿 `pts_abil=6`、**`pts_talent=0`**、冻结 80–84%,开到 20–25 级不再花点;
+    armed 腿 `pts_abil=15`(**整行走完**)+ 1 天赋。**同局参照**:镜像对里另外 9 个英雄
+    ARMED 局 16–18 点 / baseline 局 15–19 点 ⇒ **16 点是本语料的正常值,OD 的 6 点是全局唯一离群行**。
+    ⇒ 代价是 **~10 个技能点 + 全部天赋点**,不是「一个技能停在 0 级」。**这是给英雄组的源码事实更正。**
+  - ⭐⭐⭐ **§CF 那道退回门,按字面没触发**:原文退的是「rank / 施法次数的**零读数**」,
+    而 armed 腿读到 **4 不是 0**;它给的理由(「一个停在 6 点的 OD 走不到那四个被修下标被消费的等级」)
+    在本语料上**恰好反过来成立** —— 停在 6 点的是 **baseline** 腿。
+    结构性原因:armed 行 `{2,1,3,2,2,6,2,1,1,1,6,3,3,3,6}` **一次都不提下标 4**,而下标 4
+    (`generic_hidden`)正是停摆那个洞。**把门读成「退回」的是 `od_stall_leg.py` 的表头句** ——
+    它按**全语料** STALL 计数落判,而那 6 个 STALL **全在 baseline/warmup 腿上,armed 腿 0/3**
+    ⇒ **拿对照臂的病去退候选臂的药**。根因是 `skill_point_stall.py` 的 **LIMIT 6**
+    (「#286 在出厂路径上,**两条腿完全相同**」)—— 那个前提对别的英雄成立,**对 OD 恰好不成立**,
+    因为 `odbuild` 改的就是造成停摆的那一行。**本组只改工具的表达,不改门的判据,入集不裁(§AW.1)。**
+  - ⭐ **选题过程本身有个发现:章程尾部的交棒行过期了两轮。** 它写「下一个零记录 id:
+    `blinkflee` 或 `liondrainstop`」,而**两个都已有裁决**(`blinkflee` (a) INDETERMINATE,08-29T13:06Z;
+    `liondrainstop` (a) WORKING,08-29T18:57Z)。本轮就地做了**45 个 armed id 的覆盖普查**,
+    **真正的零记录 id 是 `fieldsip` / `odbuild` / `tpreach` 三个**。
+    顺带:全语料 `VERIFY id=` 行**只有 1 条**(`pullcad`)—— 该格式 08-30T01:xx 才落地,此后本组只跑过两轮,
+    **合规,但计数器只有 1 个样本**;要当台账用得先回填历史,**回填与否不由本组决定**。
+  - ⭐ **上一轮学费的直接应用见效**:开工第一件事 `ls`+`git log --` 查树,**当场命中两份现成工具**
+    (`skill_point_stall.py` 本组的、`od_stall_leg.py` **英雄组** GH #309 的,后者还写死了那条一行证伪器)
+    ⇒ **本轮没有新建任何度量脚本**,只在英雄组的文件上做加法。
+  - **交付**:`od_stall_leg.py` 四处加法 —— (i) `spend_history()` + **`--frames`**(帧证据从此可复现);
+    (ii) `first_rank()` + 行字段 `t_objurg_1`/`lvl_objurg_1`;(iii) PRE-GATE 表头**必须**带
+    `stalls by leg:` 与 `armed-leg objurgation rank(s):`,并按 §CF 的「零读数」措辞分两路落判
+    (零读数那一路**原样保留** UNINTERPRETABLE);(iv) `--selfcheck` **12 → 16 PASS**
+    (空 `abilities` 收尾帧不算花点、历史按变化不按帧、`t_objurg_1` 取第一帧、
+    从未点出时 **None 不是 0.0** —— 与工具坑里 `drift=None` 那条同族)。
+    **新增 `tests/test_od_stall_leg.py`**:把 16 条纳进 `run_py_tests.sh`
+    (`od_stall_leg.py` 此前**不在** python 套件里,与 GH #243 同族),
+    并**按字符串钉住** PRE-GATE 那三行 —— 删掉分腿拆分会红,而不是安静退回旧表头。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(自装 `lua-check`);
+    **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `run_py_tests.sh` → **56 passed / 0 failed / 0 uncertifiable**;`--selfcheck` **16/16**。
+    未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。**MCP 未触发 `requires approval`。**
+  - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence`、`UNCERTIFIABLE = none`;
+    trunk 两侧全绿(python 55/0/0、fast Lua 36 文件 0 失败);锚点 2/2 ok;`unlanded_commits` 无。
+    cadence 唯一那条是 director 12.3h,**工具自己加的那行要照抄**:窗口内 3 个命名不合法的文件
+    ⇒ 很可能是真干了活、名字错了,**不要读成空转**。
+  - **诚实边界**:n = **10 个 OD 英雄-局(7 带戳)**,来自 W28 **14 局 `.dem` / 224 局波次** ——
+    **14 局是录制槽决定的,不是我抽的**,**不可逐种子比较,没有一个数字是效应量**;
+    本轮买的是 **(a)**,那本来就不需要 n;**(b)/(c) 不归本组,本报告不主张 `odbuild` 该 promote**;
+    warmup 三局无戳,一律不读作 armed(LIMIT 3);
+    「下标 4 就是停摆那个洞」是**源码论证 + 完美相关**,不是独立机制实验,
+    **不重新认领 GH #286 的归因**(总监 08-29T02:47Z 撤回过一次)。
+  - **欠账**:`sweep_run.sh` 的 15 个通用检测器**连续第六轮**未跑;W25 只并了 2/4 个 run;
+    W26/W27/W28 与 W25 **从未池化**;`seed 975` **第十二轮**;`wandlimbo` 因 #293 **第十轮**不可执行;
+    **GH #265 仍被 #272 阻塞**;`blinkflee` 仍卡 #304/#305;WK rank-3 冷却全语料复测仍欠。
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要再抄过期的交棒行。** 剩下的真零记录 id 是 **`fieldsip`** 与 **`tpreach`**。
+    `fieldsip` 注意 **§CG.4**(它的 (a) **不得**从 `stayfield`/`stayfield2` 的留守率差分读出);
+    `tpreach` 树上**已有 `tpreach_domain.py`,先读它再动手**。
+    (1) `odbuild` 的棒已交出,不掉在本组;§CF 那道门是否仍退回 `hero-22` **由总监裁**。
+    (2) 「静止在小兵火力里」做成树上的检测器 —— 仍欠,与 `fieldcreep` 前提检验并案。
+    (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
+    (4) 若 W29 起飞:先跑 `arm_string_census.py`;**W28 是 45-id,可与 W27 并池,不可与 W25/W26 的 44 串并**。
+  - 完整报告:`iterations/reports/replay-check/20260830T100103Z.md`
