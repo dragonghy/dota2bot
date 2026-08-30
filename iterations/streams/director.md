@@ -6993,3 +6993,64 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ㉑把「变异台还原走文件副本」+「变异存活先怀疑断言」+**「量退出码不许带管道」**写进
   `.claude/skills/`(本轮第三次现场,仍只销一半)
   ㉒**W36 台账开头先核 `HARVEST`/`VERIFY` 两格**。
+
+- 2026-08-30T07:00Z:一个工作单元,**`[bug] GH #312` 修完并关闭**(抢占了上一轮点名的 ①
+  `§CE` 正则,按章程工作流第 2 条 `[bug]` 优先)。报告
+  `iterations/reports/director/20260830T070000Z.md`。**零 AWS 调用、零支出、未发波;
+  `bots`/`game` 逐字节零 diff;没有任何 gate 被动**(没 arm、没 promote、没加宽)。
+  改动落在 `tools/agent/citation_audit.py`(cadence 腿)+ `tests/test_citation_audit.py`
+  (case 8b)+ 新文件 `tests/test_report_name_conformance.py` + `iterations/state.json`
+  (`gh312_REPORT_NAME_RULING_20260830`)。
+  **① 缺陷**:cadence 腿按**文件名**读节奏,认不出的名字全折进一个聚合的 `skipped`,
+  而那个数字混着**两类意义相反的东西** —— 目录里公认的非报告文件(`efficiency_*.md`,
+  本该跳过)和**名字不合规的真实工作单元**(`20260829T131xZ.md`,字面量 `x`,
+  commit `92ece746` @ 13:14:47Z,本该被看见)。后者对这条腿隐形,
+  **而唯一可见的后果长成了另一件事:一个点名某个组的 cadence 空洞**。
+  下游照着行动过(录像组 `20260829T161901Z.md`、批测台 `20260829T151750Z.md` §一
+  各写了一句「总监十几小时没交工作单元」,#312 自己就是那两句的更正)。
+  **⭐ 全量普查:7 个不合规名字散在 4 个组**(director 3 / strategy 2 / hero 1 /
+  replay-check 1)——**这从来不是 director-only 的误读**,每组的历史节奏里都有同形状的洞。
+  **② 修法 = issue 的 (A) + 一件它没写的**:两类分开计数、**逐个打名字**
+  (`SKIPPED-IN-STREAM <stream>/<name>`),**并且含有这种文件的空洞会自己说出来**
+  (`[!] ... likely a real work unit; fix the NAME, do not read this gap as idle`)。
+  **空洞仍然是 finding** —— 没填的时间戳是真缺陷,修的是**读法**不是把腿闭嘴。
+  时间戳按**区间**从名字里恢复(`10xx` = 整个 10 点钟),**不用 git 提交时间**
+  (「什么时候落地」≠「什么时候跑的这一轮」);非法字段返回 None 打
+  `stamp unrecoverable`,不编。**没做 (B)**:放宽正则会让「没填时间戳」永远消失在视野里
+  —— 与上一轮 #317 裁定「口径改了,点名留着」是同一条原则的**第二次应用**。
+  **③ 裁定(issue 点名要总监裁):7 个存量文件一律不重命名。理由是算术不是口味** ——
+  这些名字被 `state.json` / 三个章程 / `DECISIONS_NEEDED.md` / 别组报告引用,
+  实测 **14+ 处活引用**,而 `citation_audit.py` 会解析 `iterations/…` 路径 ⇒
+  重命名会把它们**一次性变成 MISSING finding**。**拿「打断它读的那段历史」修
+  「一条误读历史的腿」,方向是反的。** 落地成 cure (C) 的可行版:
+  `tests/test_report_name_conformance.py` 带**冻结 grandfather 名单(7 个),只许缩不许长**
+  —— 任何**新的**不合规名字红在制造它的那一轮。
+  **④ ⚠️ 变异台救了一个假绿(本轮最值钱的方法学读数)**:M2(取消包含判定、
+  对该组每个空洞都标注)**第一版是活的**,而**缺陷在断言不在代码** —— 我的 control 组
+  **根本不拥有**不合规文件,「按组过滤」单独就把它接住了,**包含判定压根没被考验**。
+  按 ㉑ 的纪律(变异存活先怀疑断言)改成「该组**拥有**一个但它**落在洞外**」,M2 当即转红。
+  **这条纪律挂了三轮没进 skill,本轮第一次真正救了东西。**
+  **⑤ 验证**:`test_citation_audit.py` **61/0**(改前 51);**变异 3/3 红**
+  (M1 4 红 / M2 2 红 / M3 2 红),CONTROL 绿,**还原走文件副本 + `sha256sum -c` 两轮 OK**;
+  新测试反向变异(临造一个不合规名)**exit 1 且点名**;`tests/run_py_tests.sh` **54/0/0**
+  (改前 53);`luacheck_gate.sh` **exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+  `state.json` **13 insert / 0 delete**(先证 `indent=1`+无末尾换行 round-trip 逐字节相同);
+  开工自检 **worst exit 3,8 腿,UNCERTIFIABLE 0**,**不带管道前台跑,上一轮那课没重演**;
+  **全量 Lua 套件未跑,不声称**。
+  **⑥ 上一轮 ③ 的验收对上了**:`UNKNOWN STATUS` 行仍在(5 行)、`total open requests` = **42**
+  —— #317 的裁定没有把点名一起退役。
+  **⑦ 本轮明说没做的**:**`[bug] #325`(fieldcreep §AR.3(乙) 重裁)未裁 —— 欠得最重,
+  下一轮第一优先,排在 §CE 之前**;`[harness] #326`/`#327` 同批未裁;
+  promote/reject 无可判(W28 06:19Z 刚发,在飞);成本核查未重复(批测台 06:19Z 刚做,
+  本轮零 AWS 调用);§CE 正则已挂三轮;低频 patch 检查连续多轮欠;
+  `DECISIONS_NEEDED.md` 无新增;本轮无 owner 邮件。
+  **下次触发**:①**`[bug] #325` 重裁** ②`#326`/`#327` 两条裁路 ③**§CE 第一步**
+  (⚠️ 本轮动的是同一文件的 cadence 腿,**没动那条节号正则**,顺序约束不变)
+  ④**验收本轮:下一轮自检里 director 那条 12.3h 空洞应仍在但带 `[!]`,
+  `malformed report names` 读 7** ⑤盯 `hero-20`(§CH) ⑥盯 W27/W28 收割与 §CF 退回门
+  ⑦盯 `fieldsip` 的 (a) ⑧盯批测台分服务拆账 ⑨DECISIONS_NEEDED §14 第三腿 ⑩#302 正题
+  ⑪GH #221 §3 ⑫**GH #266**(第十六轮)⑬W20 早发裁定的书面销号 ⑭#271 的 `c6a` n=1→3
+  ⑮#204 的 n=8 ⑯`[bug] #283`/`#249` ⑰**GH #140**(第三十八轮)⑱#289 顺带 1/2
+  ⑲给 `claim_precheck.sh` 找自动触发点 ⑳backlog §16/§17/§18 ㉑**低频 patch 检查**
+  ㉒把三条纪律写进 `.claude/skills/`(**本轮第二条当场救了一个假绿,仍只在报告里**)
+  ㉓W36 台账开头先核 `HARVEST`/`VERIFY`。

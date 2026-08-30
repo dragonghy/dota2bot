@@ -257,6 +257,63 @@ def main():
         check("skipped 1" in out, "the non-report file is counted, not dropped")
         check("streams 2" in out, "prints the denominator")
 
+        # 8b. GH #312 -- a malformed report NAME is not an absence of work.
+        # The live shape: `20260829T131xZ.md` (literal `x`) fell into the
+        # aggregate `skipped` count, the round went invisible to this leg, and
+        # the 11.5h "director hole" it manufactured was published by two other
+        # streams as "that stream delivered nothing".
+        print("\ncase 8b: malformed report names (GH #312)")
+        mal = os.path.join(root, "mal")
+        for h in (1, 13):                 # a 12h hole in `holey`...
+            write(os.path.join(mal, "reports/holey",
+                               (now - timedelta(hours=h)).strftime("%Y%m%dT%H%M%SZ") + ".md"), "x")
+        # ...with a real work unit sitting INSIDE it, name missing its seconds.
+        inside = (now - timedelta(hours=7)).strftime("%Y%m%dT%H%M") + "Z.md"
+        write(os.path.join(mal, "reports/holey", inside), "a real work unit")
+        write(os.path.join(mal, "reports/holey", "efficiency_202634.md"), "not a report")
+        for h in (1, 13):                 # an identical hole with nothing in it
+            write(os.path.join(mal, "reports/empty",
+                               (now - timedelta(hours=h)).strftime("%Y%m%dT%H%M%SZ") + ".md"), "x")
+        # ...and this stream DOES own a malformed file, it just sits outside its
+        # hole.  Without it the control below only exercises the per-stream
+        # filter: a mutant that annotates every gap of a stream that owns one
+        # survives (measured -- it did, on the first version of this case).
+        outside = (now - timedelta(hours=30)).strftime("%Y%m%dT%H%M") + "Z.md"
+        write(os.path.join(mal, "reports/empty", outside), "older than the hole")
+        code, out = run(["--repo", mal, "--cadence", "--reports-dir", "reports"], mal)
+        check(code == 3, "the hole is STILL a finding -- an unfilled stamp is a real defect")
+        check("SKIPPED-IN-STREAM  holey/%s" % inside in out,
+              "the malformed file is named one by one, not folded into a count")
+        check("malformed report names 2" in out and "skipped 1" in out,
+              "malformed names and recognised non-report files are separate counts")
+        holey_gap = [ln for ln in out.splitlines() if "[!]" in ln]
+        check(len(holey_gap) == 1 and inside in holey_gap[0],
+              "the gap that contains it says so, and names the file")
+        check("do not read this gap as idle" in out,
+              "the reading that GH #312 was filed about is refused in words")
+        lines = out.splitlines()
+        head = [i for i, ln in enumerate(lines) if ln.split()[-1:] == ["empty"]
+                and ln.startswith("GAP")]
+        empty_block = "\n".join(lines[head[0]:head[0] + 3]) if head else ""
+        check(head and "[!]" not in empty_block,
+              "a hole whose stream owns a malformed file, but not inside the "
+              "hole, is NOT annotated -- containment, not mere ownership")
+
+        # The span is an interval recovered from the name, and it is honest
+        # about the digits the name does not carry.
+        sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
+        import citation_audit as ca
+        lo, hi = ca.malformed_span("20260829T10xxZ.md")
+        check((lo.hour, lo.minute, hi.hour, hi.minute, hi.second) == (10, 0, 10, 59, 59),
+              "`10xx` spans the whole hour rather than guessing a minute")
+        lo, hi = ca.malformed_span("20260829T0707Z.md")
+        check((lo.hour, lo.minute, lo.second, hi.second) == (7, 7, 0, 59),
+              "`HHMM` spans the minute it names")
+        check(ca.malformed_span("20260829T99xxxxZ.md") is None,
+              "an impossible field yields no span rather than a fabricated one")
+        check(ca.malformed_span("20260829T131xZ.md")[0].hour == 13,
+              "the live director file parses")
+
         # ------------------------------------------------------------------
         # GH #290 -- the middle box: citations that are content, not paths.
         # Of the five citations the 2026-08-28T22:03Z close comment published,

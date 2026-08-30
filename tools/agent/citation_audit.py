@@ -164,6 +164,47 @@ ANCHOR_WORDS = (
 ANCHOR_WINDOW = 60
 REPORT_NAME_RE = re.compile(r"^(\d{8}T\d{6}Z)\.md$")
 
+# GH #312.  A `.md` in a stream directory whose name OPENS with a `YYYYmmddT`
+# stamp is claiming to be a report; if it then fails REPORT_NAME_RE the name is
+# malformed (`20260829T131xZ.md`, `20260829T0707Z.md`), NOT "some other file".
+# Folding the two into one aggregate `skipped` count is what turned a real
+# director work unit into an 11.5h cadence hole that two other streams then
+# published as "that stream delivered nothing" -- the failure shape is not a
+# missing log line, it is a deliverable translated into an accusation.
+MALFORMED_REPORT_RE = re.compile(r"^\d{8}T.*\.md$")
+_FIELD_MAX = (23, 59, 59)
+
+
+def malformed_span(name):
+    """The [lo, hi] instants a malformed report stamp could denote, or None.
+
+    Deliberately an INTERVAL, not a guess: `20260829T10xxZ` says only "some
+    time in hour 10".  Unknown digits go to 0 for the floor and to the field's
+    maximum for the ceiling, so the span is honest about what the name does not
+    say.  Recovered from the NAME, never from git -- a file's commit time is
+    when it landed, which is a different question from when the round ran.
+    """
+    m = re.match(r"^(\d{8})T([0-9A-Za-z]*?)Z?\.md$", name)
+    if not m:
+        return None
+    day, part = m.group(1), m.group(2)[:6].ljust(6, "x")
+    lo, hi = [], []
+    for i in range(3):
+        f, cap = part[2 * i:2 * i + 2], _FIELD_MAX[i]
+        lo.append(int(("%s%s" % (f[0] if f[0].isdigit() else "0",
+                                 f[1] if f[1].isdigit() else "0"))))
+        top = int("%s%s" % (f[0] if f[0].isdigit() else "9",
+                           f[1] if f[1].isdigit() else "9"))
+        hi.append(min(top, cap))
+        if lo[i] > cap:
+            return None
+    try:
+        base = datetime.strptime(day, "%Y%m%d").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    return (base + timedelta(hours=lo[0], minutes=lo[1], seconds=lo[2]),
+            base + timedelta(hours=hi[0], minutes=hi[1], seconds=hi[2]))
+
 # --- the middle box (GH #290) -------------------------------------------------
 # `state.json:<key>`, with or without the `iterations/` prefix and with or
 # without the backticks the reports wrap it in.
@@ -475,7 +516,9 @@ def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
 
     Costs nothing and needs no input -- it is the half of #113 that sees the
     round which vanished without publishing anything at all."""
-    findings, counts = [], {"streams": 0, "reports": 0, "skipped": 0}
+    findings, counts = [], {"streams": 0, "reports": 0, "skipped": 0,
+                            "malformed": 0}
+    malformed = []                  # (stream, name, span or None) -- GH #312
     root = os.path.join(cwd, reports_dir)
     if not os.path.isdir(root):
         return findings, counts, "no such directory: %s" % reports_dir
@@ -489,7 +532,11 @@ def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
         for name in sorted(os.listdir(sdir)):
             m = REPORT_NAME_RE.match(name)
             if not m:
-                counts["skipped"] += 1     # named, never silently dropped
+                if MALFORMED_REPORT_RE.match(name):
+                    counts["malformed"] += 1
+                    malformed.append((stream, name, malformed_span(name)))
+                else:
+                    counts["skipped"] += 1  # named, never silently dropped
                 continue
             stamps.append(datetime.strptime(m.group(1), "%Y%m%dT%H%M%SZ")
                           .replace(tzinfo=timezone.utc))
@@ -501,19 +548,37 @@ def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
         recent = [s for s in stamps if s >= horizon]
         prior = [s for s in stamps if s < horizon]
         chain = ([prior[-1]] if prior else []) + recent
+        mine = [(n, sp) for s, n, sp in malformed if s == stream]
+
+        def extra(gap_h, a, b):
+            """`%.1fh`, plus the malformed-name files sitting INSIDE the hole.
+
+            GH #312: without this the hole reads as "this stream produced
+            nothing", and downstream acts on that reading.  The hole is still
+            reported -- an unfilled timestamp is a real defect -- but it may
+            not be reported as idleness when a deliverable is sitting in it.
+            """
+            inside = [n for n, sp in mine if sp and sp[1] > a and sp[0] < b]
+            if not inside:
+                return "%.1fh" % gap_h
+            return ("%.1fh  [!] %d malformed-name file(s) inside this window "
+                    "(%s) -- likely a real work unit; fix the NAME, do not read "
+                    "this gap as idle" % (gap_h, len(inside), ", ".join(inside)))
+
         for a, b in zip(chain, chain[1:]):
             gap = (b - a).total_seconds() / 3600.0
             if gap > cadence_h * tolerance:
                 findings.append(("GAP", "cadence", stream,
                                  "%s -> %s" % (a.strftime("%m-%dT%H:%MZ"),
                                                b.strftime("%m-%dT%H:%MZ")),
-                                 "%.1fh" % gap))
+                                 extra(gap, a, b)))
         if chain:
             trailing = (now - chain[-1]).total_seconds() / 3600.0
             if trailing > cadence_h * tolerance:
                 findings.append(("GAP", "cadence", stream,
                                  "%s -> now" % chain[-1].strftime("%m-%dT%H:%MZ"),
-                                 "%.1fh" % trailing))
+                                 extra(trailing, chain[-1], now)))
+    counts["malformed_files"] = malformed
     return findings, counts, None
 
 
@@ -632,9 +697,20 @@ def main(argv=None):
             return 2
         findings += f
         print("CADENCE    streams %d  reports %d  non-report files skipped %d  "
-              "window %.0fh  flag > %.1fh" %
+              "malformed report names %d  window %.0fh  flag > %.1fh" %
               (counts["streams"], counts["reports"], counts["skipped"],
-               args.cadence_window, args.cadence_hours * args.cadence_tolerance))
+               counts["malformed"], args.cadence_window,
+               args.cadence_hours * args.cadence_tolerance))
+        # GH #312: named one by one, and kept apart from the directory's
+        # recognised non-report files.  An aggregate count cannot tell the
+        # reader which class a number belongs to, and only one of the two
+        # classes means "a round's output is invisible to this leg".
+        for stream, name, span in counts.get("malformed_files", []):
+            when = ("%s..%s" % (span[0].strftime("%m-%dT%H:%M"),
+                                span[1].strftime("%H:%MZ"))
+                    if span else "stamp unrecoverable from the name")
+            print("SKIPPED-IN-STREAM  %s/%s  (claims a report stamp; %s)"
+                  % (stream, name, when))
         if counts["streams"] == 0:
             print("REFUSE  zero streams found under %s" % args.reports_dir)
             return 2
