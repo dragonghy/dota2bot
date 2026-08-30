@@ -6028,6 +6028,8 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   动态半(#124)未跑且不声称。**MCP 未触发 `requires approval`。**
   **铁律 6 顺序条款(GH #290)**:本轮**先 push 再发表带引用的评论**。
   **下一轮本台 = 闸 `2026-08-30T06:18:47Z` 之后发 W28(45-id 串,spot,四个 AZ),与 44-id 8 粒池分开登记。**
+  **本轮已发表评论(先 push 后发表)**:#308 追评 `5466459640`、#282 追评 `5466460537`;
+  两条草稿发表前 `claim_precheck.sh` 均 **exit 0 / clean / 本地领先 origin/main 0 个 commit**。
   **本轮 token**:`TOKENS total_in=3,761,063 out=27,241 turns=38`。
   详见 `iterations/reports/batch-desk/20260830T033000Z.md`。
 
