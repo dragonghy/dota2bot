@@ -7061,9 +7061,21 @@
   - **`VERIFY id=fieldsip verdict=WORKING episodes=15`**。
   - ⭐⭐ **买法的核心是「baseline 在这批帧上是结构性的零,不是小数」**:域帧上 bot **身上有
     accepted source** ⇒ baseline 腿 `J.ShouldFieldBuyRegen = not(TRUE and TRUE)` = **FALSE,
-    按构造不能触发**。读数:**AIRTIGHT 带 armed 5/15 拿到大药、base 0/13**;
-    5 次**全部** >2000u 环外(**野外快递,不是回泉水拿的**)、**全部在野外喝掉**。
-    两个物理侧分层 **AIRTIGHT gain 同号**(radiant 1>0、dire 4>0,base 两层都是 0)⇒ **4(i-b) 不否决**。
+    按构造不能触发**。读数(**§CG.4.1 预登记的 10 秒判读点**):
+    **AIRTIGHT armed 2/15 vs base 0/13**、**EXCL armed 3/20 vs base 0/20**、全域 10/55 vs 1/67;
+    命中**全部** >2000u 环外(**野外快递,不是回泉水拿的**)、**在野外喝掉**。
+    两个物理侧分层 **AIRTIGHT gain 同号**(radiant 1、dire 1,base 两层皆 0)⇒ **4(i-b) 不否决**。
+    **判决压在逐帧闭合的机制上,不压在比率上**(预登记窗口下 n 小)。
+  - ⭐⭐⭐ **差点用错判读窗口,是 `claim_precheck.sh` 逼出来的核对** —— 60 秒是
+    `fieldbuy_domain.py` 的窗口,**随它的管道一起被 import 进来**,而 `test_set.md`
+    **§CG.4 第 1 条**收割前就把本 id 的判读点钉成 **10 秒**(「只带 tango/faerie_fire 的 bot,
+    此后 **10 秒内**是否出现一次 `item_flask` 购买,而**不是**一次回城」)。
+    precheck 报 `MISSING section test_set.md §CG.4`(**标题写作 `### CG.4`,不带 `§`**),
+    去读原文才发现窗口错了。⇒ **两个窗口都报,结论只压在 10 秒那列**;60 秒作上下文。
+    **两个窗口下 EXCL 与 AIRTIGHT 的 base 都是 0,方向不随窗口变。**
+    ⚠️ 主证据帧的落点是 **+10.0s,恰好压在边界上**,**登记不修饰**。
+    ⭐ 顺带一条独立收敛:§CG.4.1 写的「**只带 tango / faerie_fire**」与本工具从
+    `J.FIELD_SIP_HEAL` 数值结构**独立推出**的 CERTAIN 类**逐字重合**。
   - ⚠️ **同一张表里有一列必须不读**:`armed-base eps/game` radiant **+1.500** / dire **−5.250**
     **反号** ⇒ 按 4(i-b) 是噪声,只用来选点。而且这个域**自我消耗**
     (大药送到就把「有小 sip 没大药」这个入域条件抹掉)⇒ **armed 腿 episode 更少是效果不是坏对照**。
@@ -7105,7 +7117,7 @@
     而表格照样干净**;沿用上一轮的写法陷阱登记,**不用 `'FAIL' not in stdout`**)。
   - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED」行**;
     `run_py_tests.sh` → **59 passed / 0 failed / 0 uncertifiable**(本轮 +1);
-    `--selfcheck` 带语料 **37/37**、无语料 **15/15**。未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+    `--selfcheck` 带语料 **39/39**、无语料 **17/17**。未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
     **MCP 未触发 `requires approval`。**
   - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence`、`UNCERTIFIABLE = none`;
     trunk 两侧全绿;锚点 2/2 ok;`unlanded_commits` 无;`ORPHAN_PROPOSAL` none。
@@ -7128,7 +7140,10 @@
     最弱的两个:**`tpreach`**(08-30T12:45Z INDETERMINATE,建议走 fixture)与
     **`stayfield`/`stayfield2`**(否决型,历史 INDETERMINATE;§CG.4 之后留守率差分**仍然不可用**,
     **本轮 `fieldsip` 的「结构性零对照」是可以照搬的模板**)。
-    (2) `fieldsip` 的棒已交出(#335),不掉在本组。
+    (2) `fieldsip` 的棒已交出,不掉在本组。**§CG.3 书面条件 D 仍挂着**
+    (`fieldbuy` 一旦出集/promote,同一工作单元内必须一并处置 `fieldsip`)。
+    ⭐ **引用章程小节时注意**:`test_set.md` 的标题写作 `### CG.4`(**不带 `§`**),
+    而正文里到处写 `§CG.4` ⇒ `claim_precheck.sh` 会报 `MISSING section`。**那是真信号,去读原文。**
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
     (4) 若 W29 起飞:先跑 `arm_string_census.py`;**10:09Z 后发波是 44-id ⇒ 不可与 W27/W28 并池**。
   - 完整报告:`iterations/reports/replay-check/20260830T155836Z.md`

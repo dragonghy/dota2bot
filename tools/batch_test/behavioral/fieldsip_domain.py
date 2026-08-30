@@ -120,6 +120,19 @@ from fieldbuy_domain import (           # noqa: E402
     EPISODE_GAP_S, LANING_FLOOR_S,
 )
 
+# ⭐ THE PRE-REGISTERED READ POINT IS 10 SECONDS, NOT 60.
+# test_set.md CG.4 item 1 fixes this id's (a) read point in advance: "armed leg,
+# a bot in the situation carrying ONLY tango / faerie_fire, does an
+# `item_flask` PURCHASE appear within 10 seconds (and not a trip home)".
+# The 60s window is `fieldbuy_domain`'s, inherited with its plumbing, and it is
+# a different question -- it tolerates a courier flight across the map.  Both
+# are reported, but the 10s column is the one the charter pre-registered, so it
+# is the one a verdict may lean on; the 60s column is context.
+# Nothing here is tuned to a reading: both numbers were fixed before this tool
+# was pointed at the corpus (one by CG.4, one by the sibling tool).
+HORIZON_S = BUY_HORIZON_S          # overridden by --horizon
+PREREG_HORIZON_S = 10.0            # test_set.md CG.4.1
+
 CAND_ID = "fieldsip"
 VEHICLE_ID = "fieldbuy"            # the call site the purchase actually goes through
 RIVAL_ID = "fieldregen"            # same item, overlapping domain, same wave
@@ -255,14 +268,14 @@ def scan_game(g, side):
             mine.append(cur)
         for n, e in enumerate(mine):
             hit = next((x for x in gains
-                        if e["t0"] <= x[0] <= e["t0"] + BUY_HORIZON_S), None)
+                        if e["t0"] <= x[0] <= e["t0"] + HORIZON_S), None)
             e["gain_dt"] = (hit[0] - e["t0"]) if hit else None
             e["gain_fdist"] = hit[1] if hit else None
             e["gain_usable"] = bool(hit and hit[2])
             e["gain_field"] = bool(hit and (hit[1] or 0.0) > FOUNTAIN_PICKUP_U)
             e["gain_field_usable"] = e["gain_field"] and e["gain_usable"]
             e["drink_dt"] = next((t - e["t0"] for t in drinks
-                                  if e["t0"] <= t <= e["t0"] + BUY_HORIZON_S), None)
+                                  if e["t0"] <= t <= e["t0"] + HORIZON_S), None)
             e["first"] = (n == 0)
         out.extend(mine)
     return out
@@ -337,9 +350,12 @@ def summarise(rows, interval):
     return per_leg, per_stratum, census, games, all_eps
 
 
-HDR = ("%-6s %6s %9s %11s %8s %13s %11s"
-       % ("leg", "eps", "eps/game", "flask<=60s", "rate", "field+USABLE",
-          "DRANK<=60s"))
+def hdr():
+    """Header carries the ACTUAL window, so a 10s table can never be read as a
+    60s one (the two answer different questions -- see HORIZON_S above)."""
+    return ("%-6s %6s %9s %11s %8s %13s %11s"
+            % ("leg", "eps", "eps/game", "flask<=%.0fs" % HORIZON_S, "rate",
+               "field+USABLE", "DRANK<=%.0fs" % HORIZON_S))
 
 
 def _row(leg, c, n_games, tag=""):
@@ -356,8 +372,12 @@ def report(rows, interval):
     per_leg, per_stratum, census, games, all_eps = summarise(rows, interval)
     n = games["all"]
     print("== fieldsip (a) execution probe ==")
-    print("games: %d   sampling interval: %.1fs   buy horizon: %.0fs"
-          % (n, interval, BUY_HORIZON_S))
+    print("games: %d   sampling interval: %.1fs   buy horizon: %.0fs%s"
+          % (n, interval, HORIZON_S,
+             "  <- PRE-REGISTERED (test_set.md CG.4.1)"
+             if HORIZON_S == PREREG_HORIZON_S else
+             "  <- inherited from fieldbuy_domain; CG.4.1 pre-registered %.0fs"
+             % PREREG_HORIZON_S))
     print("vehicle co-armed: %s   rival co-armed: %s" % (VEHICLE_ID, RIVAL_ID))
     print("")
     print("BASELINE IS A STRUCTURAL ZERO: on a domain frame the bot carries an")
@@ -366,18 +386,21 @@ def report(rows, interval):
     print("control -- it is `%s` reaching the same hero, and the EXCL/AIRTIGHT" % RIVAL_ID)
     print("bands are what remove it.")
     print("")
-    print(HDR)
+    print(hdr())
     for leg in ("armed", "base"):
         _row(leg, per_leg[leg], n)
     print("")
     print("-- EXCLUSIVE band (%s + shipped lane block unreachable at t0) --" % RIVAL_ID)
-    print(HDR)
+    print(hdr())
     for leg in ("armed", "base"):
         _row(leg, per_leg[leg], n, "excl_")
     print("")
     print("-- AIRTIGHT band (laning, level>=6, whole 60s window under %.0fs) --"
           % LANING_FLOOR_S)
-    print(HDR)
+    print("   NB the band itself is always sized on the sibling's 60s window,")
+    print("   not on --horizon: at a shorter horizon that is STRICTER than")
+    print("   needed, which is the safe direction for an attribution band.")
+    print(hdr())
     for leg in ("armed", "base"):
         _row(leg, per_leg[leg], n, "tight_")
     print("")
@@ -427,7 +450,7 @@ def report(rows, interval):
             per_hero[e["hero"]][e["leg"] + "_gain"] += 1
     if per_hero:
         print("-- per hero (episodes; gain = flask in hand within %.0fs) --"
-              % BUY_HORIZON_S)
+              % HORIZON_S)
         for h, c in sorted(per_hero.items(),
                            key=lambda kv: -(kv[1]["armed"] + kv[1]["base"]))[:14]:
             print("  %-18s armed %3d (gain %3d)   base %3d (gain %3d)"
@@ -517,6 +540,10 @@ def pure_checks():
                    == "CERTAIN"))
     checks.append(("sip_best reads slots 0..5 only",
                    sip_best({"items": ["", "", "", "", "", "", "flask"]}) == (0, None)))
+    checks.append(("the pre-registered read point is CG.4.1's 10s",
+                   PREREG_HORIZON_S == 10.0))
+    checks.append(("the inherited 60s window is NOT the pre-registered one",
+                   BUY_HORIZON_S != PREREG_HORIZON_S))
     checks.append(("laning is false after 600s",
                    not is_laning({"t": 601.0, "net_worth": 0})))
     checks.append(("laning is true before 480s regardless of net worth",
@@ -613,7 +640,12 @@ def main():
     ap.add_argument("--frames", action="store_true")
     ap.add_argument("--census", action="store_true")
     ap.add_argument("--limit", type=int, default=30)
+    ap.add_argument("--horizon", type=float, default=BUY_HORIZON_S,
+                    help="outcome window in seconds; test_set.md CG.4.1 "
+                         "pre-registered %.0f for this id" % PREREG_HORIZON_S)
     a = ap.parse_args()
+    global HORIZON_S
+    HORIZON_S = a.horizon
     rows = load_sweeps(a.dirs) if a.dirs else []
     if a.selfcheck:
         sys.exit(selfcheck(rows, a.interval))
