@@ -44,14 +44,34 @@
 -- there an enemy hero anywhere in cast range", and answering yes at
 -- BOT_ACTION_DESIRE_HIGH and 120-135 mana a cast.
 --
--- That is a WIDENING.  The very same zero, over in X.ConsiderW, is fed to
--- J.WillMagicKillTarget, where it KILLS the branch instead (a 0-damage nuke
--- finishes nobody).  One silent zero, two opposite directions, one file:
+-- That is a WIDENING.  The very same zero, over in X.ConsiderW, KILLS that
+-- branch instead.  One silent zero, two opposite directions, one file:
 -- **which way a silent zero cuts has to be read per call site**, which is the
 -- half GH #162's key census could not supply.  The other direction is filed,
 -- not fixed here -- un-deadening a kill branch is a widening and needs its own
 -- evidence and its own id (the lesson from GH #166: never put the two
 -- directions inside one predicate).
+--
+-- CORRECTED 2026-08-30 (hero, backlog -50's unmeasured second consumer, priced
+-- in tests/test_zuus_static_field_second_consumer.lua).  The paragraph above
+-- used to read "The very same zero, over in X.ConsiderW, is fed to
+-- J.WillMagicKillTarget, where it KILLS the branch instead (a 0-damage nuke
+-- finishes nobody)".  The verdict survived; the shape did not:
+--   * J.WillMagicKillTarget has ONE call site in hero_zuus.lua and it is
+--     X.ConsiderR's (:1100), not X.ConsiderW's.  X.ConsiderW's kill test is the
+--     inline GetActualIncomingDamage comparison at :795, and the two sites take
+--     their flat damage from different calls -- GetSpecialValueInt('damage') in
+--     ConsiderR (nonzero) versus GetAbilityDamage() here (zero).
+--   * The estimate at :795 is not a 0-damage nuke: it still carries
+--     `GetHealth() * abilityASBonus`.  The zero removes the SCALE, leaving
+--     `h < m*b*h`, i.e. `1 < m*b` -- health-free.  So the branch is dead for
+--     every creep at every health at every rank, and no percentage `zusstatic`
+--     can carry revives it (break-even b >= 1/m >= 1.0; shipped 0.09 is 11.1x
+--     short).  Total and percentage-proof, not marginal.
+-- Consequence for a SIBLING id, which is why it is recorded here too: with that
+-- consumer's domain empty, `zusstatic`'s ConsiderR-only (a) reading is the whole
+-- id -- but only while this zero holds.  Fixing the direction this file filed
+-- and did not fix re-opens it.
 --
 -- HOW BIG THE AXIS IS (tools/agent/ability_damage_census.py, new this trigger)
 --

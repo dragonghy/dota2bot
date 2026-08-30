@@ -815,9 +815,33 @@ end
 --- own local is named `nCanKillHeroLocationAoE` -- written to ask "is there a spot
 --- where one bolt FINISHES somebody" -- has been asking "is there an enemy hero
 --- anywhere in cast range", and answering yes with BOT_ACTION_DESIRE_HIGH at
---- 120-135 mana a cast.  Note the direction: the same zero, fed to
---- J.WillMagicKillTarget over in X.ConsiderW, would KILL that branch instead.
+--- 120-135 mana a cast.  Note the direction: the same zero, over in
+--- X.ConsiderW, KILLS that branch instead.
 --- Which way a silent zero cuts has to be read per call site (GH #175 §2).
+---
+--- CORRECTED 2026-08-30 (hero, backlog -50's unmeasured second consumer, priced
+--- in tests/test_zuus_static_field_second_consumer.lua).  The sentence above
+--- used to read "the same zero, fed to
+--- J.WillMagicKillTarget over in X.ConsiderW, would KILL that branch instead",
+--- and both halves of that were wrong even though the verdict was right:
+---   * J.WillMagicKillTarget has ONE call site in this file and it is in
+---     X.ConsiderR (:1100).  X.ConsiderW's kill test is the inline
+---     GetActualIncomingDamage comparison at :795.  The two also take their flat
+---     damage from DIFFERENT calls -- ConsiderR from GetSpecialValueInt('damage')
+---     (nonzero, 275 at rank 1), ConsiderW from GetAbilityDamage() (zero) -- so
+---     the sentence hung the zero on the site that does not have it.
+---   * "a 0-damage nuke finishes nobody" gets the right verdict off the wrong
+---     shape.  The estimate at :795 is NOT zero: it still carries
+---     `GetHealth() * abilityASBonus`.  What the zero removes is the SCALE.  The
+---     predicate degenerates to `h < m*b*h`, i.e. `1 < m*b` -- health-free -- so
+---     the deadness is total and percentage-proof, not marginal.  Break-even is
+---     b >= 1/m >= 1.0, i.e. Static Field taking 100% of current health; shipped
+---     0.09 is 11.1x short and the armed KV band 20.2-29.0x short.  That is why
+---     `zusstatic`'s second consumer has EMPTY domain today, and why arming or
+---     rejecting `zusstatic` cannot move this branch either way.
+--- The coupling that follows is a ratchet, not a remark: the ConsiderR reading
+--- is the whole `zusstatic` id only while this zero holds.  §6 of that test goes
+--- red the day it stops.
 ---
 --- Armed, the filter becomes the KV damage, which is what the branch's name says
 --- it wanted.  That is strictly TIGHTENING: gate-off admits every HP, armed admits

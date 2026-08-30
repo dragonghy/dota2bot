@@ -22,6 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-54. **连着三轮抄写没动的那条棒量掉了:`X.ConsiderW` 的域是**空的**,而且是**天花板**关的门;
+   「宽一个量级」在反事实里也不成立(0.24×–1.38×);下一棒仍然回到 -43a 的 Lion / CM**
+   **2026-08-30T13:55Z done —— 取 backlog -50 明写留下、-51/-52/-53 逐轮以 ⚠️ 抄写而没动的那条棒
+   (「`abilityASBonus` 的第二个消费方 `X.ConsiderW` 仍未量」)。本轮没有带新帧证据、点名本组的
+   新 `[hero]` issue ⇒ 走章程工作流第 1 条的自选路径,轴是**本组自己掉了三轮的接力棒**。
+   `bots/BotLib/hero_zuus.lua` **只改注释块、零可执行行**;`game/` 零行;**无新 gate id**;
+   `zusstatic`/`zusbind`/`zusboltcap` 的门与 armed 状态**一字未动**(三个都仍 gated、未 promote、不是 live);
+   没有 arm/promote/加宽任何东西;**零 AWS(连 S3 GET 都没有)**;不申请波次;不开新 issue。
+   新文件 `tests/test_zuus_static_field_second_consumer.lua`(14 例,`[ratchet]` ⇒ 进快 Lua 腿);
+   `state.json` 新增 `zusstatic_SECONDCONSUMER_20260830`(`gated:false`);
+   `queue.json:hero-15` 新增 `acceptance_amendment_hero_20260830_second_consumer`
+   (**退休**上一份订正的 (己) 条;**不动 `director`/`result`/`status`)。
+   报告 `iterations/reports/hero/20260830T135500Z.md`。**
+   - **⭐⭐ 主读数:第二个消费方的域是空的,而且**目标血量被约掉了**。** `:795` 的平伤项是
+     `abilityW:GetAbilityDamage()`,而本 patch 下**没有一个 Zeus 技能声明顶层 `AbilityDamage`**
+     (GH #175 普查:`zuus` 不在 `tests/mock/ability_damage.lua` 的 `NONZERO` 里;
+     雷击的 140/220/300/380 住在 `AbilityValues/damage`,那个调用看不见)⇒ `D=0`,
+     判据 `h < m*(D + h*b)` 塌成 **`1 < m*b`**。**不是变悲观的击杀估计,是与血量无关的常数。**
+   - **⭐⭐ 天花板不是余量(与 GH #328 的 WK t25 同形)**:平衡点 `b ≥ 1/m ≥ 1.0`,
+     即静电场要打掉**当前血量的 100%**;出厂 0.09 差 **11.1×**,armed KV 带差 **20.2–29.0×**。
+     ⇒ **arm 或退回 `zusstatic` 都动不了这个消费方**。
+   - **⭐ 预登记被双向推翻,照实记不修剪**:-50 写的是「带在创兵血量尺度上,**可能宽一个量级**」。
+     两个消费点代数同形 ⇒ 带宽 `W(D) = m*D*[1/(1-m*b_出厂) − 1/(1-m*b_armed)]`,
+     **只正比于 D,创兵血量尺度从不进入**。反事实(GH #175 另一方向被修好)里这条带只是大招那条的
+     `D_bolt/D_ult` 倍 = **140/575 … 380/275 = 0.24×–1.38×**,**骑在 1 上,同一个量级**;
+     绝对值(amp=0)**4.81–24.00 HP**。「创兵血量尺度」这个直觉**定价了错的量**。
+   - **⭐ 这给 id 买到什么 + 附带的绳子**:**今天** `X.ConsiderR` 那一份读数**就是整个 `zusstatic` id**
+     (`hero-15` 的 (a) 没漏东西),比 -50 记的位置严格更好;**但有条件** —— `zuus` 一旦获得非零
+     `AbilityDamage`、或 `:795` 不再读 `GetAbilityDamage()`,第二个消费方就重开,而 (a) 会**无声地**
+     不再覆盖整个 id。§6 是那道绊线,**这是文件带 `[ratchet]` 的全部理由**。
+   - **⭐ 顺带更正两句话**(`hero_zuus.lua:819` + `test_zuus_bolt_kill_cap.lua:47-49`):
+     「fed to **J.WillMagicKillTarget** over in **X.ConsiderW** … a 0-damage nuke finishes nobody」
+     **结论对、两个半句都错** —— `J.WillMagicKillTarget` 在本文件只有一个调用点且在 **`X.ConsiderR`**;
+     `:795` 的估值**不是零**(仍带 `h*b`),零抽掉的是**尺度**。与 #328 / #330 同族:
+     **结论活下来,缺陷的形状没有。**
+   - **⚠️ 未答的照实说**:「这条腿多久被**走到**」不是本轮的问题也没试着答 —— 本语料
+     **没有一枚 fixture 带线上兵**(`make_fixture.py` 只抽英雄);本轮答的是「走到了能不能开火」。
+     `m` 阶梯是**声明的不是实测的**(mock 不建模减免,是上界),但**结论不需要 `m`**
+     (对一切 `m ≤ 11.1` 成立)。**Lion / CM 两个方向本轮仍然没动。**
+   - **变异 8 条条条见红且只红在依赖它的节**(`[1]` / `[1][4c][6]` / `[2][6]` / `[2b]` /
+     `[3][3b][4b][5][5b]` / `[7][7b]` / `[2b][5b]` / `[7][7b]`),对照 14/0 绿,
+     盘外 `cp` 还原后四份 `cmp` 逐字节相同。
+
 -53. **OD 的 index-4 洞不是「白花一点」,是一次**双花**,而它把英雄在 7 级钉死;
    armed 腿另有一个丢天赋点的缺陷**不是** odbuild 的;`ConsiderW` 仍未量;下一棒仍然回到 -43a 的 Lion / CM**
    **2026-08-30T10:55Z done —— 认领 GH #330(录像组把 `odbuild` 条件 (a)=WORKING 落地,并把
@@ -2841,6 +2884,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T13:55Z(报告 `iterations/reports/hero/20260830T135500Z.md`;轴 **backlog -50 明写留下、
+  -51/-52/-53 逐轮抄写而没动的那条棒 —— `abilityASBonus` 的第二个消费方 `X.ConsiderW`**;
+  **本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
+  自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  trunk 两侧全绿(python **58/0/0**;快 Lua 腿 **39** 个 tagged 文件 0 失败,FAST SUBSET
+  —— ⚠️ 这个 39 **跨在本轮新文件上**(自检开头起、快 Lua 腿跑到时新文件已写好),
+  **不要拿它跟上一轮的 36 做差**,两个数还来自不同取集;裸
+  `grep -l '[detector]\|[ratchet]' tests/test_*.lua` 此刻是 **36**,含本轮新文件。
+  新文件是否绿**单独验过**:14 例 0 失败);stable-v1/v2 锚点 ok。
+  owner 四条优先项**没有一条球在本组**(批测台/协同组/协同组/总监)。
+  本轮**没有带新帧证据、点名本组的新 `[hero]` issue`**(#173/#309/#311/#314/#328/#330 前四轮已各自结清或退回)
+  ⇒ 走章程工作流第 1 条的自选路径。
+  **`hero_zuus.lua` 只改注释块、零可执行行;`game/` 零行;无新 gate id;
+  `zusstatic`/`zusbind`/`zusboltcap` 的门与 armed 状态一字未动(三个都仍 gated、未 promote、不是 live);
+  零 AWS(连 S3 GET 都没有);不申请波次;不开新 issue。**
+  新文件 `tests/test_zuus_static_field_second_consumer.lua`(14 例,`[ratchet]`);
+  `state.json` 新增 `zusstatic_SECONDCONSUMER_20260830`;`queue.json:hero-15` 新增
+  `acceptance_amendment_hero_20260830_second_consumer`(退休上一份订正的 (己) 条)。
+  - **⭐⭐ 主读数:第二个消费方的域是**空的**,而且目标血量被约掉了。** `:795` 的平伤项
+    `abilityW:GetAbilityDamage()` 是**被证明过的零**(GH #175 普查:`zuus` 不在 `NONZERO` 里;
+    雷击的 140/220/300/380 住在 `AbilityValues/damage`)⇒ `h < m*(D + h*b)` 塌成 **`1 < m*b`**
+    ⇒ **每个创兵、每个血量、每个 rank 都为假**。**不是变悲观的击杀估计,是与血量无关的常数。**
+  - **⭐⭐ 天花板不是余量**:平衡点 `b ≥ 1/m ≥ 1.0`(静电场要打掉当前血量的 **100%**);
+    出厂 0.09 差 **11.1×**,armed KV 带差 **20.2–29.0×** ⇒ **arm 或退回 `zusstatic` 都动不了它**。
+  - **⭐ 预登记双向被推翻**:两站点代数同形 ⇒ `W(D) = m*D*[1/(1-m*b_出厂) − 1/(1-m*b_armed)]`,
+    **只正比于 D**;反事实里这条带 = 大招那条的 **0.24×–1.38×**(**同一个量级**),
+    绝对值 **4.81–24.00 HP**(amp=0)。-50 的「宽一个量级」**定价了错的量**。
+  - **⭐ 买到的位置 + 绳子**:**今天** ConsiderR 那份读数**就是整个 id**(`hero-15` 的 (a) 没漏东西);
+    **但 `zuus` 一旦有非零 `AbilityDamage`、或 `:795` 不再读 `GetAbilityDamage()`,第二个消费方重开、
+    (a) 无声地不再覆盖整个 id** ⇒ §6 是绊线,**这是带 `[ratchet]` 的全部理由**。
+  - **⭐ 更正两句**(`hero_zuus.lua:819` + `test_zuus_bolt_kill_cap.lua:47-49`):
+    `J.WillMagicKillTarget` 在本文件**只有一个调用点且在 `X.ConsiderR`**;`:795` 的估值**不是零**
+    (仍带 `h*b`),零抽掉的是**尺度**。**结论活下来,缺陷的形状没有**(#328/#330 同族)。
+    绊线口径是「退休句只能出现在 `CORRECTED` 标记之下」而**不是**「一律不许出现」(-52 的教训)。
+  - **⚠️ 未答的照实说**:「这条腿多久被**走到**」没答也没试着答(**本语料零 fixture 带线上兵**);
+    `m` 阶梯是声明的不是实测的,但**结论不需要 `m`**;**Lion / CM 本轮仍然没动**。
+  - 变异 **8 条条条见红且只红在该红的节**,对照 14/0 绿,盘外 `cp` 还原后四份 `cmp` 逐字节相同。
+  - 铁律 6:`luacheck_gate.sh` **0 警告 exit 0**(冷启自己装的 `lua-check`);
+    `.githooks/pre-push` 在两次 push 上各跑一遍并放行,**没有用过 `RULE6_BYPASS`**。
+    **全量套件本轮没跑完** ⇒ **不主张主干全绿**,详见报告 §10。
 - 2026-08-30T10:55Z(报告 `iterations/reports/hero/20260830T105510Z.md`;轴 **GH #330 —— 录像组把
   `odbuild` 条件 (a)=WORKING 落地并把「更正那句源码注释」明写为英雄组的下一棒**;
   **本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
