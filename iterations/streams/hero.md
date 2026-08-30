@@ -22,6 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-50. **Zeus 那枚欠了的 firing-side fixture 有了:有一帧交不交大招只由 `0.09` 决定;
+   `abilityASBonus` 的第二个消费方 `ConsiderW` 仍未量;下一棒仍然回到 -43a**
+   **2026-08-30T01:54Z done —— 接 `tests/test_zuus_static_field_pct.lua:337` 本组 08-29 自己留下的棒
+   (Zeus 是 -43a 三个方向之一)。`bots/`/`game/` **零行改动**;无新 gate id;
+   `zusstatic`/`zusbind` 的门与 armed 状态一字未动(仍 gated、不是 live);
+   **零 AWS(连 S3 GET 都没有)**;不申请波次;不开新 issue。
+   新文件 `tests/test_replay_260820_zuus_static_band.lua`(15 例,`[hero]`);
+   `state.json` 新增 `zusstatic_BAND_20260830`(`gated:false`);
+   `queue.json` 的 `hero-15` 新增 `acceptance_amendment_hero_20260830`。
+   报告 `iterations/reports/hero/20260830T015421Z.md`。**
+   - **⭐⭐ 主读数:`f_260820_103216_cm_es_aftershock`(t=473.5,换 subject 成 Zeus)上,
+     `X.ConsiderR` 交不交那个 ~130s 全图斩杀,只由静电场那个写死的 `0.09` 决定。**
+     Zeus 9 级、大招 rank 1 **cd 0**、566/824 蓝对 250 花费;敌方 CM **292/1110 血**、268u、被晕,
+     且 CM 的 `recent_damage` 里过去 3.8s **Zeus 打了她 9 次(合计 588)**。rank-1 伤害 275(从
+     `tests/mock/special_value_shapes.lua` **解析**,不是重打):出厂 `275+292×0.09 = 301.28 ≥ 292` **开火**;
+     KV 3.85% 得 `286.24 < 292` **不开火**。**端到端驱动**:真的 `X.SkillsComplement()` 在出厂腿把
+     `zuus_thundergods_wrath` 放进动作队列,armed 腿不放。
+   - **⭐ 不依赖引擎怎么折 `hero_levelup`**:该帧的盈亏平衡百分比是 `(292−275)/292 = **5.82%`,
+     整条 KV 带 [3.45, 4.95] **全在它下面**,出厂 9% **在它上面 1.55 倍** ⇒ 31 个带刻度逐个推进
+     真的 `J.WillMagicKillTarget`,条条不开火。
+   - **⭐⭐ 两条腿都必须 arm `zusbind`**,否则离线 `sAbilityList[5]` 是 nil ⇒ **两腿 bonus 都是 0,
+     要比的那个差根本不存在**。这才把 **GH #173 的问题(百分比)**与 **GH #175 的问题(句柄)**分开。
+   - **⚠️ 实测 LIMIT,引用上面任何数字必须连它一起引**:mock **不建模减免**。开火条件是
+     `hp ≤ nDamage/(1/m − bonus)` ⇒ rank-1 时 m=1.00 带是 hp ∈ (286, 302],m=0.75(25% 基础魔抗)
+     下移到 (212, 221],**两边都只有 nDamage 的几个百分点宽**。语料普查(Zeus 且大招已点的 **37 枚**
+     fixture、**167** 个 (帧, 活敌) 对):**m=1.00 落 1 个(就是本帧)、m=0.75 落 0 个**,两个数都钉成断言。
+     **0 不是「永远够不着」** —— 37 帧不是频率估计,条件 (a) 仍要从波里买。
+   - **不受量具影响的那一半(条件 (a) 真正压着的性质)**:`GetHealth()*bonus` 恒 ≥ 0 且 armed 只调低
+     ⇒ **armed 的开火集合在任何抗性乘子下都是出厂的子集**。5 活敌 × 31 刻度**驱动**验证,不是断言。
+   - **⭐ 交出去的棒(铁律 9)**:`hero-15` 的订正把带宽写成**预登记的量级期望**,并加一句
+     **「差值小」不得读成「测过了没效果」也不得读成「域为零」** —— 两者分母不同(局 vs 施放事件);
+     另请一项零成本读数(每次施放记 `目标血量 / 该 rank nDamage` 比值的带内占比)。**不动 director 键。**
+   - **⚠️ 未测的另一半**:`abilityASBonus` 的第二个消费方 **`X.ConsiderW`(远程兵斩杀)本轮没量**,
+     它的带在**创兵血量尺度**上、`nDamage` 是雷击不是大招,**可能宽一个量级**;
+     且**不需要新语料**(创兵每帧都有)。只看大招的读数**不得代表整个 id**。
+   - **⚠️ 一条 Lua 陷阱,当场骗了我一次**:`src:sub(src:find(pat, 1, true))` —— `find` 返回**两个值**且
+     作为末位实参**全部展开** ⇒ 这句是 `sub(start, stop)`,拿到的是**匹配到的那几个字**而不是尾巴,
+     于是绊线**红在一个完全正常的文件上**。加括号截断即可(注释已写在那一行上面)。
+     **一条自证式绊线红了,先怀疑绊线自己的取值,再去改被测文件。**
+   - **变异 6 条条条见红且只红在该红的节上**(4/2/6/7/2/2),对照 15/0 绿;
+     还原走**盘外 `cp`**(不是 `git checkout`,backlog −44 那个假对照),
+     `hero_zuus.lua` / 承重帧 / KV 快照三份 `cmp` 逐字节相同。
+
 -49. **`hero-22` 的前置门跑了没过;`odbuild` 的重测被 GH #320 挡住;下一棒仍然回到 -43a**
    **2026-08-29T23:00Z done —— 认领 GH #309 §一(批测台与录像组各自独立点名给本组、
    且明说不代跑的那一件事)。`bots/`/`game/` **零行改动**;无新 gate id;
@@ -2676,6 +2719,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T01:54Z(报告 `iterations/reports/hero/20260830T015421Z.md`;轴 **`test_zuus_static_field_pct.lua:337`
+  本组 08-29 自己留下的 firing-side fixture 那条棒**;**Zeus 这一格结清,本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
+  自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  trunk 两侧全绿(python **53/0/0**;快 Lua 腿 **33** 个 `[ratchet]` 文件 0 失败,FAST SUBSET);
+  stable-v1/v2 锚点 ok。owner 四条优先项**没有一条球在本组**。
+  **`bots/`/`game/` 零行改动;无新 gate id;`zusstatic`/`zusbind` 的门与 armed 状态一字未动
+  (仍 gated、不是 live);零 AWS(连 S3 GET 都没有);不申请波次;不开新 issue。**
+  新文件 `tests/test_replay_260820_zuus_static_band.lua`(15 例,`[hero]`);
+  `state.json` 新增 `zusstatic_BAND_20260830`;`queue.json` 的 `hero-15` 新增
+  `acceptance_amendment_hero_20260830`。
+  - **⭐⭐ 主读数:归档语料里有一帧,交不交 ~130s 全图斩杀只由写死的 `0.09` 决定。**
+    `f_260820_103216_cm_es_aftershock`(t=473.5,`rf.load` 换 subject 成 Zeus):9 级 Zeus、
+    大招 rank 1 **cd 0**、566 蓝对 250 花费;敌方 CM **292/1110 血**、268u、被晕,
+    且过去 3.8s **Zeus 已打了她 9 次(合计 588)**。出厂 `275+292×0.09 = 301.28 ≥ 292` **开火**;
+    KV 3.85% 得 `286.24 < 292` **不开火**。**端到端**:真的 `X.SkillsComplement()` 出厂腿把
+    `zuus_thundergods_wrath` 放进动作队列,armed 腿不放。
+  - **⭐ 与 `hero_levelup` 怎么折无关**:该帧盈亏平衡是 **5.82%**,整条 KV 带 [3.45, 4.95]
+    在它下面、出厂 9% 在它上面 1.55 倍;31 个刻度逐个推进真的 `J.WillMagicKillTarget`。
+  - **⭐⭐ 两腿都要 arm `zusbind`**:离线 `sAbilityList[5]` 是 nil ⇒ 不 bind 时**两腿 bonus 都是 0**,
+    要比的差不存在。这才把 GH #173(百分比)与 GH #175(句柄)分开。
+  - **⚠️ 实测 LIMIT(必须连着引)**:mock **不建模减免**。带是 `hp ≤ nDamage/(1/m − bonus)` ⇒
+    rank-1 时 m=1.00 为 (286, 302]、m=0.75 为 (212, 221],**只有 nDamage 的几个百分点宽**。
+    普查 **37 枚**大招已点的 Zeus fixture / **167** 个 (帧, 活敌) 对:**m=1.00 落 1、m=0.75 落 0**,
+    两个数都钉成断言。**0 不是「永远够不着」**,条件 (a) 仍要从波里买。
+  - **不受量具影响的一半**:`GetHealth()*bonus` 恒 ≥ 0 且 armed 只调低 ⇒ **armed 开火集合恒是出厂的子集**
+    (5 活敌 × 31 刻度驱动验证)。
+  - **⭐ 交棒**:`hero-15` 订正写入带宽这条**预登记量级期望** + 「差值小 ≠ 测过了没效果 ≠ 域为零」
+    (分母:局 vs 施放事件)+ 一项零成本读数(带内施放占比)。**不动 director 键。**
+  - **⚠️ 未量的另一半**:`X.ConsiderW`(远程兵斩杀)是同一常数的第二个消费方,**本轮没量**,
+    带在创兵血量尺度上、可能宽一个量级,且**不需要新语料** ⇒ 已写进 backlog -50。
+  - **⚠️ Lua 陷阱**:`s:sub(s:find(pat,1,true))` 因 `find` 返回两值而变成 `sub(start,stop)`,
+    **绊线红在一个完全正常的文件上**;加括号截断。**自证式绊线红了先查绊线自己的取值。**
+  - 变异 **6 条条条见红且只红在该红的节上**(4/2/6/7/2/2),对照 15/0 绿,盘外 `cp` 还原后三份 `cmp` 逐字节相同。
 - 2026-08-29T23:00Z(报告 `iterations/reports/hero/20260829T230000Z.md`;轴 **GH #309 §一
   ——`hero-22` 的前置门**;**门跑了没过,`hero-22` 已退回;本组下一棒仍是 -43a**)——
   自检 **exit 0**;stable-v1/v2 锚点 ok。owner 四条优先项**没有一条球在本组**。
