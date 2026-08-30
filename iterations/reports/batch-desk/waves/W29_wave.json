@@ -49,7 +49,25 @@
     "lion",
     "obsidian_destroyer",
     "spirit_breaker"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "sir_state": "closed",
+   "create": "2026-08-30T18:16:06Z",
+   "update": "2026-08-30T19:08:26Z",
+   "status_message": "Spot Instance terminated due to user-initiated termination.",
+   "wall_clock_min": 52.33,
+   "last_s3_upload": "2026-08-30T19:06:12Z",
+   "upload_to_sir_offset_min": 2.23,
+   "reclaimed": false,
+   "harvest_ab": 32,
+   "harvest_ba": 16,
+   "harvest_arm_depth": 21.33,
+   "harvest_scored_games": 48,
+   "harvest_gpm": 35.98,
+   "harvest_xpm": 5.59,
+   "harvest_deaths": -0.04,
+   "harvest_last_hits": 0.88,
+   "harvest_winrate": 0.5
   },
   {
    "seed": 1842,
@@ -66,7 +84,25 @@
     "obsidian_destroyer",
     "skeleton_king",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "sir_state": "closed",
+   "create": "2026-08-30T18:16:13Z",
+   "update": "2026-08-30T19:11:18Z",
+   "status_message": "Spot Instance terminated due to user-initiated termination.",
+   "wall_clock_min": 55.08,
+   "last_s3_upload": "2026-08-30T19:08:45Z",
+   "upload_to_sir_offset_min": 2.55,
+   "reclaimed": false,
+   "harvest_ab": 38,
+   "harvest_ba": 20,
+   "harvest_arm_depth": 26.21,
+   "harvest_scored_games": 57,
+   "harvest_gpm": 89.96,
+   "harvest_xpm": 45.41,
+   "harvest_deaths": -0.56,
+   "harvest_last_hits": 3.75,
+   "harvest_winrate": 0.513
   },
   {
    "seed": 1902,
@@ -83,7 +119,25 @@
     "skeleton_king",
     "spirit_breaker",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "sir_state": "closed",
+   "create": "2026-08-30T18:16:19Z",
+   "update": "2026-08-30T19:11:14Z",
+   "status_message": "Spot Instance terminated due to user-initiated termination.",
+   "wall_clock_min": 54.92,
+   "last_s3_upload": "2026-08-30T19:08:37Z",
+   "upload_to_sir_offset_min": 2.62,
+   "reclaimed": false,
+   "harvest_ab": 35,
+   "harvest_ba": 23,
+   "harvest_arm_depth": 27.76,
+   "harvest_scored_games": 58,
+   "harvest_gpm": -35.79,
+   "harvest_xpm": -18.97,
+   "harvest_deaths": 0.46,
+   "harvest_last_hits": -2.96,
+   "harvest_winrate": 0.5
   },
   {
    "seed": 2013,
@@ -100,7 +154,25 @@
     "obsidian_destroyer",
     "skeleton_king",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "sir_state": "closed",
+   "create": "2026-08-30T18:16:26Z",
+   "update": "2026-08-30T18:59:38Z",
+   "status_message": "Spot Instance terminated due to user-initiated termination.",
+   "wall_clock_min": 43.2,
+   "last_s3_upload": "2026-08-30T18:56:26Z",
+   "upload_to_sir_offset_min": 3.2,
+   "reclaimed": false,
+   "harvest_ab": 28,
+   "harvest_ba": 15,
+   "harvest_arm_depth": 19.53,
+   "harvest_scored_games": 43,
+   "harvest_gpm": 4.05,
+   "harvest_xpm": -16.23,
+   "harvest_deaths": 0.15,
+   "harvest_last_hits": 0.7,
+   "harvest_winrate": 0.5
   }
  ],
  "placement": {
@@ -115,7 +187,7 @@
   "iv_reclaim_blind": "PASS (exit 0, NOT BLINDED). Run FIRST-HAND this round against W28_wave.json, at the gate, before launching -- this is the first wave where GH #271's gate was actually executed by the launching round rather than backfilled afterwards. Output: changeover 40.0 min (measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min); 4 of 4 machines carry a LOWER BOUND; bracket check SKIPPED OUT LOUD for seed 1850 (39.7 min is a lower bound below the 40.0 flip, so the 'moved earlier' clause is unsound on it); yield 4 paired seed(s) of 4; attribution 0 reclaimed before the flip; VERDICT not blinded; NEXT WAVE spot (GH #158 unchanged). The director's survival_bound=lower work (ea1c6852) is what makes this readable rather than the earlier BRACKET VIOLATED artifact."
  },
  "cost": {
-  "estimate_usd": 0.80,
+  "estimate_usd": 0.8,
   "estimate_basis": "Six prior spot waves at 4 x c6i.4xlarge: 0.795 / 0.799 / 0.747 measured, ~0.8 the standing charter figure. Settled next round by the SIR time method if the SIRs are still readable, otherwise from the S3 last-upload proxy with the +2.90 min self-destruct offset measured at 15:15Z (n=8) -- and that offset must NOT be applied to a reclaimed machine (zero measurements exist on that side)."
  },
  "skip_not_pass_lines": [
@@ -124,6 +196,134 @@
   "routine_selfcheck.sh: the trunk-health leg did not complete in this session (see the report); that side of trunk was NOT certified by this round."
  ],
  "expected_games": "4 seeds x 12 games x 2 sides = 96 scored, plus warm-ups; W28's actual was 224 landed / 200 scored, so the realistic expectation is materially higher than the nominal --games figure.",
- "pooling_note": "W29 is the SECOND wave on the 44-id arm string (the first was none -- W27/W28 were the 45-id family). It therefore does NOT pool with the W27+W28 8-seed reading that is still awaiting the director's ruling under GH #329/#332. Pool W29 only with future 44-id waves. Per iron rule 4(i-d), NEVER pool by weighting on game counts: swap-average each seed first, then take the arithmetic mean across seeds.",
- "harvest": null
+ "pooling_note": "CORRECTED AT HARVEST: W29 is the FIRST wave on the 44-id arm string, not the second (the launch record's prose said 'SECOND' while its own parenthesis said the first was none -- the ordinal was wrong, the operative half was right). It does NOT pool with the W27+W28 8-seed reading on the 45-id string, which is still awaiting the director under GH #329/#332. Pool W29 only with future 44-id waves. Per iron rule 4(i-d), NEVER pool by weighting on game counts: swap-average each seed first, then take the arithmetic mean across seeds.",
+ "harvest": {
+  "harvested_at": "2026-08-30T21:12Z",
+  "harvested_by": "batch-desk routine, report iterations/reports/batch-desk/20260830T211200Z.md",
+  "tool": "tools/batch_test/soak/recover_verdict.py <parent-of-4-run-dirs> <test_set.md line 2>",
+  "tool_exit": 0,
+  "tool_stderr": "empty",
+  "skip_not_pass_flags_used": "NONE -- no --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth. There is no 'this is a SKIP not a pass' line to quote from the harvest.",
+  "input": {
+   "files_seen": 229,
+   "games_loaded": 229,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0
+  },
+  "games": {
+   "landed": 229,
+   "stamped": 207,
+   "scored": 206,
+   "warmup": 22,
+   "unfinished": 1,
+   "warmup_note": "The 22 unstamped files carry the bare tree sha be442fb9 as script_version => warm-ups, not scored. W25/W26/W27/W28 had 24/24/23/24, so this is in-family.",
+   "arithmetic": "229 landed - 22 warm-up = 207 stamped; 207 - 1 unfinished = 206 scored. Self-consistent to the digit."
+  },
+  "corpus_attestation": {
+   "distinct_script_versions": 8,
+   "shape": "exactly 4 seeds x 2 sides; each is 'mirror:' + the 44-id arm string + ':s<seed>:<side>'",
+   "arm_byte_identical_to_test_set_line2": "8 of 8",
+   "leg_counts_reconcile": "radiant-tagged 32+38+35+28 = 133 = sum(ab_games); dire-tagged 16+20+23+15 = 74 = sum(ba_games)",
+   "arm_bytes_reconciliation": "The launch record's arm_bytes 386 counts the trailing newline; the harvest measured 385 for the stripped string. Same string, two conventions -- logged so a future round does not read it as drift."
+  },
+  "verdict": {
+   "mean": {
+    "gpm": 23.55,
+    "xpm": 3.95,
+    "deaths": 0.0,
+    "last_hits": 0.59,
+    "winrate": 0.503
+   },
+   "comps_better": {
+    "gpm": "3/4",
+    "xpm": "2/4",
+    "deaths": "2/4",
+    "last_hits": "3/4",
+    "winrate": "1/4"
+   },
+   "min_arm_depth": 8,
+   "thin_arm_seeds": [],
+   "seeds_excluded": 0,
+   "gate_269_note": "Zero exclusions: all four arm_depth values (19.53-27.76) sit more than 2x above the min_arm_depth of 8.",
+   "winner_by": {
+    "engine_natural": 228
+   },
+   "winrate_independent_of_gold": "0/228 games",
+   "tool_suggested": "promote",
+   "suggested_is_a_hint_not_a_ruling": "Per the charter, `suggested` is a hint; promote runs the three conditions and belongs to the director."
+  },
+  "strata": {
+   "gpm": {
+    "ab": 17.2,
+    "ba": 29.91,
+    "arm": 23.55,
+    "side": -6.35,
+    "sign_flip": false,
+    "side_gt_arm": "2/4"
+   },
+   "xpm": {
+    "ab": -7.68,
+    "ba": 15.59,
+    "arm": 3.95,
+    "side": -11.64,
+    "sign_flip": true,
+    "side_gt_arm": "2/4"
+   },
+   "deaths": {
+    "ab": -0.36,
+    "ba": 0.36,
+    "arm": 0.0,
+    "side": -0.36,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   },
+   "last_hits": {
+    "ab": -8.92,
+    "ba": 10.1,
+    "arm": 0.59,
+    "side": -9.51,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "reading": "Iron rule 4(i-a): both strata READINGS are registered, not the game counts. Iron rule 4(i-c): these four are per-seed 50/50 swap-averaged, so a sign flip is NOT a veto -- it is the identity |side| > |arm|. The only substantive content is that on xpm/deaths/last_hits this wave's draw carries more side bias than effect, i.e. those three are measured imprecisely here; gpm is the one quantity where |arm| (23.55) exceeds |side| (6.35). No game-count-weighted pooling was performed."
+  },
+  "precision": {
+   "gpm_arm_per_seed": [
+    35.98,
+    89.96,
+    -35.79,
+    4.05
+   ],
+   "sd": 53.12,
+   "se": 26.56,
+   "reading": "The mean (+23.55) is SMALLER than its own standard error (26.56) -- 0.89 SE from zero. The 2026-08-19 empirical mirrored-draft zero point was sigma=30.24; this wave's dispersion is 76% wider than that. => W29 ALONE supports neither promote nor reject. What it bought is four seeds of 44-id corpus, not a conclusion; the family needs a second wave to reach 8 seeds."
+  },
+  "cost": {
+   "instance_hours_measured": 3.424,
+   "mean_hours_per_machine": 0.856,
+   "spot_price_band_usd_per_hour": "0.231-0.250",
+   "measured_usd": "0.79-0.86",
+   "note": "The charter's ~$0.80/wave spot figure sits at the BOTTOM of this wave's measured range, and 0.856 h/machine is 15% above the charter's measured baseline of 0.745 h/machine. The dollar gap is ~$0.06 -- not a brake issue -- but writing the unit price low fails toward the danger side the charter itself names (every wave under-counted in the fence arithmetic). Raised with the director; this desk does not change the constant itself."
+  },
+  "gh332_proxy_offset": {
+   "n": 4,
+   "values_min": [
+    2.23,
+    2.55,
+    2.62,
+    3.2
+   ],
+   "mean_min": 2.65,
+   "range_min": "2.23-3.20",
+   "replication": "Falls ENTIRELY inside the n=8 range (2.15-3.32) measured at 15:15Z. Combined n=12 mean 2.82 min.",
+   "honest_boundary": "All 12 samples are self-destruct machines. The 'last upload -> SIR landing' offset for a RECLAIMED machine still has ZERO measurements, and the lower edge of the changeover bracket comes precisely from a reclaimed machine => this offset must still NOT be applied to the orphan side."
+  },
+  "placement_acceptance": {
+   "gh256": "eighth wave at 4 of 4 distinct AZs",
+   "gh282": "ninth consecutive wave at zero MISMATCH; twelfth recommendation to close"
+  },
+  "reclaim": "None. All four SIRs closed as instance-terminated-by-user => self-destruct, zero preemption, all inside the 2h watchdog.",
+  "dem_files": "NOT downloaded this round (s3 sync --exclude '*.dem'); the harvest does not need them and they stay in S3 for the replay streams."
+ }
 }
