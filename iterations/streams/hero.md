@@ -22,6 +22,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-56. **CM 找小兵 AoE 落点的环比她能施法的环宽 58%,而把落点变成施法点的十三个站点里
+   英雄那 5 个全在环内、小兵那 8 个一个都没查;修了(gated `cmqreach`),
+   而「超出会怎样」明确不主张 —— 那一格从 bot VM 里问不出来;
+   下一棒是 Silencer 那处同族 nil 守卫 + -43a 的 Zeus 方向**
+   **2026-08-30T19:57Z done —— 本轮没有带新帧证据、点名本组的新 `[hero]` issue
+   (#173/#328/#330 是本组前三轮自己的活;#309/#311/#314 是等波次的语料读数;#54/#287 等 `hero-22` 那批帧)
+   ⇒ 走章程工作流第 1 条的兜底路径,轴是 **-43a 三个方向里被连续四轮各自写下「本轮仍然没动」的 CM**。
+   `bots/BotLib/hero_crystal_maiden.lua` **两处可执行改动**(新 helper + 一个调用点);`game/` 零行;
+   **新 gate id `cmqreach`**(turbo-only,**未 arm、未 promote、不是 live**);
+   没有 arm/promote/加宽任何已在集的东西;**零 AWS(连 S3 GET 都没有)**;不申请波次;不开新 issue。
+   新文件 `tests/test_cm_q_creep_aoe_reach.lua`(16 例,`[ratchet]` ⇒ 进快 Lua 腿);
+   `state.json` 新增 `cmqreach_20260830`(`gated:true`);`queue.json` 新增 `hero-25`;
+   `test_set.md` 新增 §CN(入集提议)。报告 `iterations/reports/hero/20260830T195757Z.md`。**
+   - **⭐⭐ 主读数:这一节量的不是一个伤害数,是一个点在不在允许集里。**
+     `bot:FindAoELocation` 的第 4 个参数 `nMaxDistanceFromBase` 是 `targetloc` 落点的**唯一**约束
+     (`docs/BOT_API_REFERENCE.md:1366`)。`X.ConsiderQImpl` 四次搜索里两次**英雄**传 `nCastRange`、
+     两次**小兵**传 `nCastRange + nRadius`。寒霜新星 KV 每级都平(`AbilityCastRange 700`、
+     `radius/value 425`),`nCastRange = GetCastRange() + aetherRange + 32` ⇒ **可施法环 732、
+     找兵环 1157**,超出量恰好 `nRadius = 425 = 58.06%`,**不随等级/出装移动**
+     (以太之镜给两项各加 250 相消 —— 这条是量出来的,不是论证)。
+     四个数**不是手填的**:真实帧上驱动**真的** `X.SkillsComplement`,从引擎调用里读回来。
+   - **⭐⭐ 真正的立案句在消费侧,是一个 5-vs-8。** 十三个 `return DESIRE, <结果>.targetloc`:
+     **英雄 5 个全在环内**(4 个自查 `GetUnitToLocationDistance <= nCastRange`,第 5 个读的是
+     另一次跑在 `nCastRange - 300` 的搜索,按构造在环内);**小兵 8 个一个都没查**。
+     而 `SkillsComplement` 把点**原样**送进 `ActionQueue_UseAbilityOnLocation`。
+     普查从源码**解析**且**两个方向都钉了**(给小兵加守卫会红 M7,拿掉英雄守卫也会红 M8)。
+   - **⭐ 「超出会怎样」刻意不主张**:拒绝 ⇒ 小兵分支赢下 desire 然后空转;走过去 ⇒ 位置 5 辅助
+     往敌方兵线里走最多 425 码。**从 bot VM 里问不出来**(`AGENTS.md`)。
+     **论据不是猜哪一种,是同一个函数里的英雄分支两种都不肯做。** 域走 `hero-25`(四格,含预先接受的否定结果)。
+   - **⭐ 为什么缩搜索半径而不是补八个守卫**:补守卫**丢掉**这次施法;缩半径**按构造**给出可施法的点,
+     与第 5 个英雄站点是同一种正确性。**代价写在门旁边**:732 看不到比 1157 更多的兵 ⇒
+     `count >= 2/3/4/5` 只会更难,armed 清兵放新星**严格不多于**出厂,**从不挪动一次本来就合法的施法**。
+   - **⚠️ 开火侧读数没有,而这个「没有」是量出来的**:两枚归档 CM fixture 的新星**都是 rank 1**,
+     每条小兵分支要 `nSkillLV >= 3` ⇒ **本语料分支人口是空的,原因与冷却无关**;
+     所以钉在**搜索站点**(每条分支的上游,也正是错数被写下的地方)。与 `lionqdmg` 同族的缺口。
+   - **⚠️ 交出去的第二个缺陷,只登记不修**:`hero_silencer.lua:304` 的 nil 守卫,
+     then 分支第一件事就是**索引它刚判过可能为 nil 的那个值**,且**少了** CM 那句 `targetloc == nil` 检查
+     ⇒ 可以把 nil 传进 `J.GetInLocLaneCreepCount`。**Silencer 不在焦点五,一次一根杆**,
+     登记在 `state.json:cmqreach_20260830.known_gap` 第 (5) 条。
+   - **⚠️ 一条查过之后放弃的线索,记下来免得下一轮重推**:`X.ConsiderW` 手写的
+     `nDamage = ( 100 + nSkillLV * 50 )` **不是缺陷** —— KV 的 `damage_per_second` 平 100 ×
+     `duration` 1.5/2/2.5/3 = 150/200/250/300 **逐位相同**;唯一能让它错的
+     `special_bonus_unique_crystal_maiden_1` 在出厂 `t20 = {0, 10}` 下**不可达**。
+     这条**上一轮 `cmt20t25` 已写在文件头 76–85 行**,本轮只是独立复核到同一结论。
+   - **变异 8 条条条见红且只红在依赖它的节**(M1 拆接线/M2 去门/M3 去 turbo/M4 armed 变 no-op/
+     M5 只接一半/M6 英雄环被放宽/M7 小兵站点加守卫/M8 英雄站点丢守卫),对照 16/0 绿,
+     盘外 `cp` 还原后 `cmp` 逐字节相同。
+   - **⚠️ 动态半是子集不是全套**(GH #124):快 Lua 腿 44/0 red、CM 全家 + smoke + gate 一致性
+     12 个文件逐个 exit 0、python 全套 62/0/0(**exit 0 裸读**);**全套没跑完**,照实登记。
+
 -55. **Lion 的 Q 斩杀分支从来没能开过火 —— 天花板不是余量,而且 `dmg` 只通过一个乘积进入,
    所以任何法术增强都救不回来;修了(gated `lionqdmg`),代价比「Lion 从不斩杀」窄,
    窄的那一半写成了验收条款;下一棒是 -43a 剩下的 CM 方向**
@@ -2927,6 +2977,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T19:57Z(报告 `iterations/reports/hero/20260830T195757Z.md`;轴 **-43a 的 CM 方向 ——
+  被连续四轮各自写下「本轮仍然没动」的那一个**;**本组下一棒:`hero-25` 的域读数回来前不再碰这条线,
+  转 backlog -56 里交出去的 Silencer 同族缺陷 / -43a 的 Zeus 方向**)——
+  自检 **worst exit 0**(**裸读**,整条命令后台跑进文件再 `cat`,**没有**重演 `| tail` 吃退出码那一形):
+  `legs run 8`,`FINDINGS: none`,`UNCERTIFIABLE: none`;
+  trunk 两侧全绿(python **62/0/0**;快 Lua 腿 **43** 个 tagged 文件 0 失败,FAST SUBSET);
+  stable-v1/v2 锚点 ok。
+  ⚠️ 那个 **43** 是**开工那一刻**的读数,**跑在本轮新文件之前**;收尾重跑是 **44/0 red**,
+  **44 里包含本轮新文件**。**不要拿 43 和 44 做差** —— 两个数取自不同时刻的取集,
+  上上轮(39 vs 36)、上一轮(42 vs 39)已经各绊过一次,这是第三次照实写清楚。
+  owner 四条优先项**没有一条球在本组**(批测台/协同组/协同组/总监)。
+  本轮**没有带新帧证据、点名本组的新 `[hero]` issue**(#173/#328/#330 是本组前三轮自己的活;
+  #309/#311/#314 是等波次的语料读数;#54/#287 等 `hero-22` 那批帧)⇒ 走章程工作流第 1 条的兜底路径。
+  **`bots/BotLib/hero_crystal_maiden.lua` 两处可执行改动(新 helper `X.cm_GetCreepAoESearchRange`
+  + 一个调用点);`game/` 零行;新 gate id `cmqreach`(turbo-only,未 arm、未 promote、不是 live);
+  没有 arm/promote/加宽任何已在集的东西;零 AWS(连 S3 GET 都没有);不申请波次;不开新 issue。**
+  新文件 `tests/test_cm_q_creep_aoe_reach.lua`(16 例,`[ratchet]`);
+  `state.json` 新增 `cmqreach_20260830`;`queue.json` 新增 `hero-25`;`test_set.md` 新增 §CN(入集提议)。
+  - **⭐⭐ 主读数:量的不是一个伤害数,是一个点在不在允许集里。** `FindAoELocation` 的第 4 个参数
+    是 `targetloc` 落点的**唯一**约束(`docs/BOT_API_REFERENCE.md:1366`);`X.ConsiderQImpl` 四次搜索里
+    两次**英雄**传 `nCastRange`、两次**小兵**传 `nCastRange + nRadius` ⇒ **可施法环 732、找兵环 1157**,
+    超出量恰好 `nRadius = 425 = 58.06%`,**不随等级/出装移动**(以太之镜相消,量出来的)。
+    四个数从**真实帧上真的 `X.SkillsComplement`** 发出的引擎调用里读回来,不是手填。
+  - **⭐⭐ 立案句在消费侧,是一个 5-vs-8**:十三个 `return DESIRE, <结果>.targetloc` 里
+    **英雄 5 个全在环内**(4 个自查距离,第 5 个的搜索跑在 `nCastRange - 300`,按构造在内),
+    **小兵 8 个一个都没查**;而 `SkillsComplement` 把点**原样**送进 `ActionQueue_UseAbilityOnLocation`。
+    普查从源码**解析**,**两个方向都钉了**(加守卫红 M7 / 拿掉守卫红 M8)。
+  - **⭐ 「超出会怎样」刻意不主张**(拒绝 ⇒ 空转;走过去 ⇒ 位置 5 往兵线里走 425 码;
+    **从 bot VM 问不出来**)。**论据是同一个函数里的英雄分支两种都不肯做**,不是猜哪一种。域走 `hero-25`。
+  - **⭐ 缩搜索半径而不是补八个守卫**:补守卫**丢掉**这次施法,缩半径**按构造**给出可施法的点;
+    **代价写在门旁边** —— armed 清兵放新星**严格不多于**出厂,**从不挪动一次本来就合法的施法**。
+  - **⚠️ 开火侧读数没有,而这个「没有」是量出来的**(两枚 CM fixture 新星都 rank 1,分支要 `>= 3`
+    ⇒ 本语料分支人口空,**原因与冷却无关**);**交出去** `hero_silencer.lua:304` 的同族 nil 守卫,
+    **只登记不修**(不在焦点五);`X.ConsiderW` 手写的 `100 + nSkillLV * 50` 复核为**不是缺陷**
+    (KV 逐位相同,唯一能让它错的天赋在出厂 `t20 = {0,10}` 下不可达,且上一轮已写在文件头)。
+  - **变异 8/8 见红且只红在该红的节**,对照 16/0 绿,盘外 `cp` 还原后 `cmp` 逐字节相同。
+  - 铁律 6:`luacheck_gate.sh` **exit 0 / 0 警告**(**裸读**,冷启自己装的 `lua-check`);
+    `.githooks/pre-push` 在本轮每一次 push 上各跑一遍并放行,**一次都没用过 `RULE6_BYPASS`**。
+    动态半是**子集不是全套**(GH #124):快 Lua 腿 44/0、CM 全家 + smoke + gate 一致性 12 文件逐个 exit 0、
+    python 全套 **62/0/0**(exit 0 裸读)⇒ **不主张主干全绿**,详见报告 §6。
 - 2026-08-30T16:51Z(报告 `iterations/reports/hero/20260830T165112Z.md`;轴 **-43a 的 Lion 方向 ——
   连续四轮各自记着「本轮仍然没动」的那个**;**本组下一棒是 -43a 剩下的 CM 方向**)——
   自检 **worst exit 0**:`legs run 8`,`FINDINGS: none`,`UNCERTIFIABLE: none`;

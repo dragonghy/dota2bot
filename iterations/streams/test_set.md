@@ -10633,3 +10633,84 @@ AoE 要 3 个英雄、团控要 `J.IsInTeamFight`、攻击要 `J.IsGoingOnSomeon
   局部变量 —— 它们**没有任何消费方**,现在被钉成「无人读」,好让后来的人
   既不会把它们当成活 bug,也不会在没有**在新站点重读方向**之前悄悄给它们加一个消费方。
 - **不主张 promote**,也不主张 arm 的档期;本节只申请**入集**。
+
+## §CN 2026-08-30T20:xxZ 英雄组提议入集:`cmqreach`(-43a 的 **Crystal Maiden 方向**)—— **搭车、零 AWS 增量、不申请专波**;这一节的量不是一个伤害数,是**一个点在不在允许集里**
+
+**申请方**:英雄组。**裁定方**:总监。**成本**:0(任何带 CM 载体的波次即可搭车)。
+**登记**:`state.json:cmqreach_20260830`。**队列**:`queue.json:hero-25`(归档扫描,零 EC2)。
+**验证**:`tests/test_cm_q_creep_aoe_reach.lua`(16 例全绿,`[ratchet]`;变异 8/8 见红且只红在依赖它的节;
+盘外 `cp` 还原后 `cmp` 逐字节相同)。
+
+### §CN.1 改的是什么(一行)
+
+`bots/BotLib/hero_crystal_maiden.lua` 新 helper `X.cm_GetCreepAoESearchRange( nCastRange, nRadius )`,
+**一个调用点**(`nCreepSearch` 这个局部,被两次小兵 `FindAoELocation` 共读)。
+armed(turbo **且** `cmqreach`)时答 `nCastRange`;否则逐字答出厂的 `nCastRange + nRadius`。
+`game/` 零行,`tTalentTreeList` / 出装表一字未动。
+
+### §CN.2 立案:文件算出的点,和它**被允许**施法的点,是两个不同的集合
+
+`bot:FindAoELocation( bEnemies, bHeroes, vBase, nMaxDistanceFromBase, nRadius, fTimeInFuture, nMaxHealth )`
+返回 `{count, targetloc}`,而**第 4 个参数是 `targetloc` 落点的唯一约束**
+(`docs/BOT_API_REFERENCE.md:1366`)。`X.ConsiderQImpl` 从 `bot:GetLocation()` 跑四次:
+
+| 搜索 | `nMaxDistanceFromBase` | 无以太之镜时 |
+|---|---|---|
+| 英雄-击杀 | `nCastRange` | **732** |
+| 英雄-命中 | `nCastRange` | **732** |
+| 小兵-击杀 | `nCastRange + nRadius` | **1157** |
+| 小兵-命中 | `nCastRange + nRadius` | **1157** |
+
+寒霜新星的 KV **每一级都是平的**(`AbilityCastRange 700`、`radius/value 425`),
+`nCastRange = GetCastRange() + aetherRange + 32` ⇒ 超出量恰好是 `nRadius = 425`,
+即**施法距离的 58.06%**,且**不随等级、不随出装移动**(以太之镜给两项各加 250,相消)。
+
+### §CN.3 ⭐⭐ 真正的立案句在**消费侧**,而且是一个 5-vs-8
+
+十三个 `return DESIRE, <结果>.targetloc` 站点,按填它的那次搜索分:
+
+- **英雄 5 个 —— 5 个全在环内**:4 个自己再查一次
+  `GetUnitToLocationDistance( bot, loc ) <= nCastRange`(其中一个 +50);
+  第 5 个读的是**另一次**跑在 `nCastRange - 300` 的搜索,**按构造**在环内。
+- **小兵 8 个 —— 一个都没查。**
+
+而 `X.SkillsComplement` 把拿到的点**原样**送进
+`bot:ActionQueue_UseAbilityOnLocation( abilityQ, castQLoc )`。
+**同一个函数里,同一件事,英雄那半从不肯做,小兵那半八处全做。**
+普查不是数出来讲的,是 `tests/…:§5` 从源码里解析出来的,两个方向都钉了
+(给小兵站点**加**一道守卫会红,把英雄站点的守卫**拿掉**也会红)。
+
+### §CN.4 ⚠️ 「超出会怎样」**本节不主张**,这是刻意的
+
+引擎拿到一个超出施法距离的地面点,是**拒绝命令**还是**先走进射程**,
+**从 bot VM 里问不出来**(`AGENTS.md`:`print()` 到不了控制台,错误处理器坏了)。
+两种读法都坏,但坏法不同 —— 拒绝 ⇒ 小兵分支赢下 desire 然后**空转**;
+走过去 ⇒ 位置 5 辅助**主动往敌方兵线里走最多 425 码**清兵。
+**支持本 id 的论据不是猜哪一种**,而是:同一个函数里的英雄分支**两种都不肯做**,
+小兵分支与它们的差别只有一个参数加八处缺失的检查。
+域读数走 `queue.json:hero-25`(四格,含**预先接受的否定结果**)。
+
+### §CN.5 ⚠️ 语料里**没有**开火侧 fixture,而这个「没有」是量出来的
+
+两枚归档 CM fixture 的 `crystal_maiden_crystal_nova` **都是 rank 1**,
+而每一条小兵分支都要 `nSkillLV >= 3`,前面还压着一个冷却中必假的 `IsFullyCastable()`
+⇒ 本语料的分支人口**是空的,原因与冷却无关**。
+所以本文件把缺陷钉在**搜索站点**(它在每一条分支的上游,也正是那个错数被写下的地方),
+**唯一一处声明的变异**是把新星冷却 7.7 → 0,而且测试**量了**:不做这个变异时
+真的 `X.SkillsComplement` **一次搜索都不发**。与 `lionqdmg` 同族的缺口,照实登记。
+
+### §CN.6 本节明说**没做**的
+
+- **没有**碰任何英雄分支的搜索半径或守卫 —— 本 id 只动小兵那两次搜索的**上界**。
+- **没有**给那八个小兵站点补距离守卫。补守卫会**丢掉**这次施法,
+  而缩搜索半径**按构造**给出一个可施法的点,和第 5 个英雄站点是同一种正确性。
+  两条路的取舍写在 helper 自己的注释里,**代价的方向也写了**:
+  732 的搜索看不到比 1157 更多的兵 ⇒ 每个 `count >= 2/3/4/5` 门槛**只会更难**,
+  armed 那边清兵放新星的次数**严格不多于**出厂;它**从不挪动一次本来就合法的施法**。
+- **没有**动 `hero_silencer.lua:304` —— 那里有同族的另一个缺陷
+  (`nCanHurtCreepsLocationAoE == nil` 这个 nil 守卫,then 分支第一件事就是
+  `nCanHurtCreepsLocationAoE.count = 0`,即**索引它刚刚判过可能是 nil 的那个值**;
+  CM 那份至少还多一句 `targetloc == nil` 的检查,Silencer 那份没有,
+  于是可以把 nil 传进 `J.GetInLocLaneCreepCount`)。**Silencer 不在焦点五里,一次一根杆**,
+  只登记(`state.json:cmqreach_20260830.known_gap` 第 (5) 条),不修。
+- **不主张 promote**,也不主张 arm 的档期;本节只申请**入集**。

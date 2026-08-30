@@ -538,6 +538,53 @@ function X._nopush_ShouldSuppressWaveShove( hBot, vLocation, nRadius )
 	return J.GetInLocLaneCreepCount( hBot, 1600, nRadius, vLocation ) >= 2
 end
 
+--- How far from the bot may the CREEP AoE search place its centre?
+---
+--- THE ASYMMETRY THIS EXISTS TO CLOSE (axis `REACH`).  X.ConsiderQImpl runs four
+--- bot:FindAoELocation searches.  Its 4th argument is `nMaxDistanceFromBase`, so
+--- the returned `.targetloc` is guaranteed to sit within that distance of
+--- bot:GetLocation() and nowhere tighter.  The two HERO searches pass
+--- `nCastRange`; the two CREEP searches pass `nCastRange + nRadius`.
+---
+--- Then look at what each result is allowed to become a cast location:
+---
+---   * hero, 5 return sites -- 4 of them re-check
+---     `GetUnitToLocationDistance( bot, ... ) <= nCastRange` (+50 at one), and
+---     the 5th runs its own search at `nCastRange - 300`, i.e. contained by
+---     construction.  5/5 in range.
+---   * creep, 8 return sites -- not one checks anything.  0/8.
+---
+--- So the creep branches can hand X.SkillsComplement a point up to `nRadius`
+--- past the cast range and it goes straight into
+--- `bot:ActionQueue_UseAbilityOnLocation( abilityQ, castQLoc )`.  At rank 4 with
+--- no Aether Lens that is 425 of 732 units -- the overshoot is 58% of the whole
+--- cast range, not a rounding edge.
+---
+--- WHAT THE OVERSHOOT COSTS IS **NOT** CLAIMED HERE, and that is deliberate.
+--- The engine either refuses the order or walks her into range first, and which
+--- one it does is not readable from the bot VM (AGENTS.md: `print()` never
+--- reaches the console and the error handler is broken).  Refusal means this
+--- branch wins the desire contest and does nothing, every tick, while a wave is
+--- out there; a walk means a position-5 support strolls up to 425 units into a
+--- creep wave to farm.  Neither is a thing the hero branches in this same
+--- function are willing to do, and that -- not a guess about which -- is the
+--- argument.  The domain reading is requested in `queue.json:hero-25`.
+---
+--- NARROWING (soak candidate 'cmqreach', turbo-only).  The armed path only
+--- shrinks a search radius, so the point it yields is in range BY CONSTRUCTION,
+--- exactly the way the 5th hero site already is -- no new predicate, no new
+--- guard to get wrong.  Direction is single and it is honest about the cost: a
+--- smaller search can also see fewer creeps, so the `count >= 2/3/4/5`
+--- thresholds get harder and the armed side casts Nova on waves STRICTLY no
+--- more often.  It never moves a cast that was already legal.
+function X.cm_GetCreepAoESearchRange( nCastRange, nRadius )
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmqreach' )
+	then
+		return nCastRange
+	end
+	return nCastRange + nRadius
+end
+
 function X.ConsiderQ()
 	-- [lanefix] Conserve mana in lane when no kill is on the table.
 	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, 0 end
@@ -583,8 +630,12 @@ function X.ConsiderQImpl()
 
 	local nCanKillHeroLocationAoE = bot:FindAoELocation( true, true, bot:GetLocation(), nCastRange, nRadius , 0.8, nDamage )
 	local nCanHurtHeroLocationAoE = bot:FindAoELocation( true, true, bot:GetLocation(), nCastRange, nRadius , 0.8, 0 )
-	local nCanKillCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCastRange + nRadius, nRadius, 0.5, nDamage )
-	local nCanHurtCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCastRange + nRadius, nRadius, 0.5, 0 )
+	-- Gated ('cmqreach'): shipped answers nCastRange + nRadius, which is what
+	-- puts an out-of-cast-range point into the eight unguarded creep return
+	-- sites below.  See X.cm_GetCreepAoESearchRange.
+	local nCreepSearch = X.cm_GetCreepAoESearchRange( nCastRange, nRadius )
+	local nCanKillCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCreepSearch, nRadius, 0.5, nDamage )
+	local nCanHurtCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCreepSearch, nRadius, 0.5, 0 )
 
 	if nCanHurtCreepsLocationAoE == nil
 		or nCanHurtCreepsLocationAoE.targetloc == nil
