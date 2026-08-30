@@ -22,6 +22,47 @@ J.IsFieldRegenSituation (jmz_func.lua:4820):
     not ( WasRecentlyDamagedByAnyHero(3.0)
           and some enemy inside 3000 with WasRecentlyDamagedByHero(e,3.0) )
     #bot:GetNearbyTowers(1200, true) == 0
+    ** and, ARM-DEPENDENT, a FIFTH clause -- see the block below. **
+
+    ⚠ FIFTH CLAUSE, `fieldcreep` (GH #119, jmz_func.lua:5287), added
+    2026-08-30 after a frame showed this file was measuring the wrong
+    predicate on the armed leg:
+
+        if J.IsSoakCandidate('fieldcreep') and bot:WasRecentlyDamagedByCreep(3.0)
+        then return false end
+
+    It sits INSIDE J.IsFieldRegenSituation, after the tower clause, and it is
+    itself gated.  On a wave whose candidate arm carries `fieldcreep` (W25..W28
+    all did) the ARMED leg's predicate is therefore strictly STRICTER than the
+    baseline leg's -- a difference that has nothing to do with `stayfield` and
+    which this file used to charge to it silently, by scoring both legs with
+    the unarmed semantics.  `stayfield2_whynot.py` has declared and scored this
+    clause since it was written; this file did not, which made the armed leg's
+    SITUATION/STRICT counts an OVER-count and every armed-vs-baseline rate
+    printed here biased in `stayfield`'s FAVOUR (a bigger armed denominator
+    with the same numerator lowers the armed home_tp rate).
+
+    Frame that caught it -- W28 run e706a3, game 20260830_063416_slot1
+    (seed 2130, side=radiant, so RADIANT IS THE ARMED LEG), hero lich,
+    t=625.5..634.5: coordinates frozen at (223,-4921) for ten straight
+    seconds, hp 1.000 -> 0.229, nearest enemy HERO never closer than 1646u,
+    no attributed hero damage, no tower -- and 774 damage taken from
+    npc_dota_neutral_grown_frog + npc_dota_neutral_ancient_frog_mage, a hit
+    every ~1.3s.  Unarmed semantics: SITUATION TRUE.  What the engine actually
+    ran on that leg: WasRecentlyDamagedByCreep(3.0) TRUE => SITUATION FALSE.
+
+    It is now scored, per leg, in BOTH of §AR.1's worlds (never merged):
+        甲  WasRecentlyDamagedByCreep counts NEUTRALS  -> lane or neutral hits
+        乙  it does not                                -> lane hits only
+    甲 is the primary because it removes MORE armed rows, i.e. it is the
+    conservative world for every claim this file can make: it shrinks the
+    armed domain (making a "the domain never occurred" verdict harder to
+    reach by accident) and it shrinks the armed leak count (making a "the
+    gate leaked" accusation harder to make).  The disclosure header prints
+    both worlds' removals whether or not the clause is live -- a reader who
+    cannot see that block must conclude the tool did not check, never that
+    the corpus was clean.
+
 J.HasFieldRegenSource (jmz_func.lua:4748): one of the SIX usable slots holds
     flask / tango / tango_single / faerie_fire, or a bottle WITH CHARGES.
 
@@ -119,6 +160,14 @@ SIDE_TEAM = {"radiant": RADIANT, "dire": DIRE}
 
 CAND_ID = "stayfield"
 WALK_ID = "stayfield2"
+FIELDCREEP_ID = "fieldcreep"      # the gated 5th clause inside the situation
+
+# §AR.1's two worlds for WasRecentlyDamagedByCreep, never merged into one
+# number.  甲 counts neutrals, 乙 does not.  甲 is primary: it removes MORE
+# armed rows, which is the conservative direction for every claim this file
+# makes (see the fieldcreep block in the module docstring).
+WORLD_JIA = ("lane", "neutral", "mixed")
+WORLD_YI = ("lane", "mixed")
 
 HP_LO, HP_HI = 0.18, 0.55        # jmz_func.lua:4826
 RING_U = 1600.0                  # jmz_func.lua:4829
@@ -190,6 +239,17 @@ def load_sweeps(dirs):
 
 def dist(ax, ay, bx, by):
     return math.hypot(ax - bx, ay - by)
+
+
+def stratum_of(side):
+    """铁律 4(i): `ab` = games whose CANDIDATE side is radiant, `ba` = mirror.
+
+    Same convention as fieldcreep_domain.stratum_of / lion_drain_census.py.
+    Duplicated here rather than imported for the same cycle reason as the
+    fieldcreep classifier -- and it is one line of pure vocabulary, not a
+    predicate that can drift.
+    """
+    return "ab" if side == "radiant" else "ba"
 
 
 class Game(object):
@@ -422,8 +482,17 @@ def has_field_regen_source(s):
     return False
 
 
-def situation(g, hero, s):
-    """J.IsFieldRegenSituation, offline."""
+def situation(g, hero, s, creep_hits=None):
+    """J.IsFieldRegenSituation, offline.
+
+    `creep_hits` is the gated FIFTH clause (`fieldcreep`, jmz_func.lua:5287),
+    evaluated by the caller in one of §AR.1's two worlds and passed in.  The
+    default None means "do not evaluate it" -- the baseline leg, or a wave
+    whose arm string does not carry `fieldcreep`.  Keeping the default at None
+    is what makes this change behaviour-preserving for every existing caller
+    (fieldcreep_domain.py imports this function, and its own upstream-clause
+    count is DEFINED as the pre-fieldcreep one).
+    """
     if not (HP_LO <= s["hp_pct"] <= HP_HI):
         return False
     if g.enemies_within(hero, s, RING_U):
@@ -431,6 +500,8 @@ def situation(g, hero, s):
     if g.attributed_danger(hero, s):
         return False
     if g.enemy_tower_within(s, TOWER_U):
+        return False
+    if creep_hits:                      # gated 5th clause, armed leg only
         return False
     return True
 
@@ -454,7 +525,41 @@ def strict_branch(g, hero, s):
     return True
 
 
-def home_tp_events(g, side):
+def creep_world(inc, hero, t, fc_live, leg):
+    """(甲, 乙) truth of the gated fieldcreep clause on this frame.
+
+    Returns (False, False, 'none') wherever the clause is not live: the
+    baseline leg always, and every leg on a wave that did not arm
+    `fieldcreep`.  That is not a convenience default -- it IS the semantics,
+    because an unarmed `J.IsSoakCandidate('fieldcreep')` is literally false in
+    the engine.
+    """
+    if not fc_live or leg != "armed" or inc is None:
+        return False, False, "none"
+    kind, _tot = FC_CLASSIFY(FC_HITS(inc.get(hero, ()), t))
+    return kind in WORLD_JIA, kind in WORLD_YI, kind
+
+
+# Bound lazily by main() to fieldcreep_domain's own classifier.  Imported at
+# call time rather than at module scope because fieldcreep_domain.py imports
+# THIS module at ITS module scope -- a top-level import here is a cycle.  They
+# are re-used, never re-implemented: a second copy of the lane/neutral regexes
+# is exactly how two tools start disagreeing about the same frame.
+FC_HITS = None
+FC_CLASSIFY = None
+
+
+def bind_fieldcreep():
+    """Import fieldcreep_domain's classifier and bind it.  Idempotent."""
+    global FC_HITS, FC_CLASSIFY
+    if FC_HITS is not None:
+        return
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import fieldcreep_domain as FC          # noqa: E402  (cycle-avoidance)
+    FC_HITS, FC_CLASSIFY = FC.hits_in_window, FC.classify
+
+
+def home_tp_events(g, side, inc=None, fc_live=False):
     """Every home-TP in the game, scored on the LAST FRAME BEFORE the channel.
 
     This is the estimator that matches what the gate actually does.  The gate
@@ -498,21 +603,34 @@ def home_tp_events(g, side):
             # order is the source's own (jmz_func.lua:4820 downwards, then the
             # branch).  This is what turns "the domain is small" into "the
             # domain is small BECAUSE ...".
-            why = None
-            if not (HP_LO <= pre["hp_pct"] <= HP_HI):
-                why = "hp<0.18" if pre["hp_pct"] < HP_LO else "hp>0.55"
-            elif g.enemies_within(hero, pre, RING_U):
-                why = "enemy in 1600"
-            elif g.attributed_danger(hero, pre):
-                why = "attributed damage"
-            elif g.enemy_tower_within(pre, TOWER_U):
-                why = "enemy tower 1200"
-            elif not has_field_regen_source(pre):
-                why = "no heal in bag"
-            elif not strict_branch(g, hero, pre):
-                why = "branch cond (hp/level/flask/tp_cd)"
-            in_situation = situation(g, hero, pre) and has_field_regen_source(pre)
+            leg = "armed" if pre["team"] == armed_team else "baseline"
+            jia, yi, fc_kind = creep_world(inc, hero, pre["t"], fc_live, leg)
+
+            def _ladder(creep):
+                """First failing clause, in the source's own evaluation order."""
+                if not (HP_LO <= pre["hp_pct"] <= HP_HI):
+                    return "hp<0.18" if pre["hp_pct"] < HP_LO else "hp>0.55"
+                if g.enemies_within(hero, pre, RING_U):
+                    return "enemy in 1600"
+                if g.attributed_danger(hero, pre):
+                    return "attributed damage"
+                if g.enemy_tower_within(pre, TOWER_U):
+                    return "enemy tower 1200"
+                if creep:
+                    return "fieldcreep (armed leg)"
+                if not has_field_regen_source(pre):
+                    return "no heal in bag"
+                if not strict_branch(g, hero, pre):
+                    return "branch cond (hp/level/flask/tp_cd)"
+                return None
+
+            why = _ladder(jia)              # 甲, the conservative world
+            why_yi = _ladder(yi)
+            in_situation = (situation(g, hero, pre, creep_hits=jia)
+                            and has_field_regen_source(pre))
             out.append({
+                "why_not_yi": why_yi, "fc_kind": fc_kind,
+                "fc_jia": jia, "fc_yi": yi,
                 "hero": hero, "t_cast": a, "t_pre": pre["t"],
                 "hp": pre["hp_pct"], "team": pre["team"],
                 "leg": "armed" if pre["team"] == armed_team else "baseline",
@@ -528,8 +646,15 @@ def home_tp_events(g, side):
     return out
 
 
-def scan_game(g, side):
-    """Domain episodes with outcomes, tagged by leg."""
+def scan_game(g, side, inc=None, fc_live=False, _dropped=None):
+    """Domain episodes with outcomes, tagged by leg.
+
+    `_dropped`, when a Counter is passed, receives the per-world count of
+    frames the gated fieldcreep clause removed from the armed leg -- the
+    number the disclosure header prints.  It is an out-parameter rather than a
+    second scan because the alternative (scan twice, once per world) would
+    double the corpus pass for a number that is a by-product of the first.
+    """
     armed_team = SIDE_TEAM[side]
     rows = []
     for hero, tr in g.track.items():
@@ -541,7 +666,18 @@ def scan_game(g, side):
                 continue
             if not usable_items(s):        # corpse / empty bag
                 continue
-            if not situation(g, hero, s):
+            leg = "armed" if s["team"] == armed_team else "baseline"
+            jia, yi, _k = creep_world(inc, hero, s["t"], fc_live, leg)
+            if _dropped is not None and (jia or yi):
+                # only frames the OTHER four clauses already let through can be
+                # "removed by fieldcreep" -- otherwise the count would be of
+                # frames that were never in the domain to begin with.
+                if situation(g, hero, s) and has_field_regen_source(s):
+                    if jia:
+                        _dropped["jia"] += 1
+                    if yi:
+                        _dropped["yi"] += 1
+            if not situation(g, hero, s, creep_hits=jia):
                 continue
             if not has_field_regen_source(s):
                 continue
@@ -699,6 +835,55 @@ def selfcheck(games, interval):
         all("flask" not in e["items"] for e in eps if e["strict"]),
         "%d strict" % sum(1 for e in eps if e["strict"]))
 
+    # ---- the gated 5th clause -------------------------------------------
+    chk("stratum_of is a partition of the corpus",
+        set(stratum_of(row[4]) for row in games) <= {"ab", "ba"}
+        and len(set(stratum_of(row[4]) for row in games)) == 2,
+        dict(collections.Counter(stratum_of(row[4]) for row in games)))
+
+    # `creep_world` must be inert wherever the clause is not live.  This is
+    # the check that would have failed BEFORE the 08-30 fix -- not because the
+    # old code got these three cases wrong, but because it had no way to get
+    # them right or wrong: the clause did not exist in this file at all.
+    chk("fieldcreep inert when not armed",
+        creep_world({"h": [(1.0, "npc_dota_neutral_x", 40, "neutral")]},
+                    "h", 1.0, False, "armed") == (False, False, "none"))
+    chk("fieldcreep inert on the baseline leg",
+        creep_world({"h": [(1.0, "npc_dota_neutral_x", 40, "neutral")]},
+                    "h", 1.0, True, "baseline") == (False, False, "none"))
+    chk("fieldcreep inert with no damage index",
+        creep_world(None, "h", 1.0, True, "armed") == (False, False, "none"))
+
+    fc_here = FIELDCREEP_ID in [c.strip() for c in games[0][2].split(",")]
+    if fc_here:
+        bind_fieldcreep()
+        j, y, k = creep_world(
+            {"h": [(1.0, "npc_dota_neutral_grown_frog", 40, "neutral")]},
+            "h", 1.0, True, "armed")
+        chk("neutral hit separates the two worlds (甲 yes, 乙 no)",
+            (j, y, k) == (True, False, "neutral"), "%s/%s/%s" % (j, y, k))
+        j2, y2, k2 = creep_world(
+            {"h": [(1.0, "npc_dota_creep_badguys_melee", 40, "lane")]},
+            "h", 1.0, True, "armed")
+        chk("lane hit fires in BOTH worlds",
+            (j2, y2, k2) == (True, True, "lane"), "%s/%s/%s" % (j2, y2, k2))
+        # the clause can only ever SHRINK the armed domain -- so a zero found
+        # without it stays zero with it.  Asserted, because that implication
+        # is what lets the 08-30 verdict survive the tool having been wrong.
+        s0 = sum(1 for e in eps if True)
+        eps_fc = []
+        for _, _, _, _, side, tl in games[:6]:
+            bind_fieldcreep()
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            import fieldcreep_domain as FC          # noqa: E402
+            inc, _o = FC.load_nonhero_damage(tl)
+            eps_fc += scan_game(Game(tl, interval), side, inc=inc, fc_live=True)
+        chk("the clause only ever REMOVES armed episodes",
+            len(eps_fc) <= s0, "%d with clause <= %d without" % (len(eps_fc), s0))
+    else:
+        chk("fieldcreep corpus checks SKIPPED, not passed",
+            True, "`fieldcreep` is not in this wave's arm string")
+
     for name, ok, detail in checks:
         print("  [%s] %s%s" % ("PASS" if ok else "FAIL", name,
                                ("  -- %s" % detail) if detail else ""))
@@ -726,6 +911,9 @@ def main():
     ap.add_argument("--creep-band", type=float, default=CREEP_U,
                     help="radius for the creep/neutral GAP PROBE (not a source "
                          "constant -- J.IsFieldRegenSituation has no creep clause)")
+    ap.add_argument("--stratum", choices=["all", "ab", "ba"], default="all",
+                    help="铁律 4(i): ab = games whose CANDIDATE side is radiant, "
+                         "ba = the mirror. A partition, not a filter.")
     a = ap.parse_args()
     CREEP_U = a.creep_band          # gap probe radius, not a source constant
 
@@ -748,17 +936,61 @@ def main():
     if a.selfcheck:
         sys.exit(1 if selfcheck(games, a.interval) else 0)
 
+    # --- the gated 5th clause: live or not, this is DISCLOSED, never implied ---
+    fc_live = FIELDCREEP_ID in [c.strip() for c in cand.split(",")]
+    if fc_live:
+        bind_fieldcreep()
+
+    # 铁律 4(i): a partition, applied AFTER the arm-string guard so that a
+    # never-armed game is fatal in whichever layer is being read.
+    if a.stratum != "all":
+        games = [r for r in games if stratum_of(r[4]) == a.stratum]
+        if not games:
+            sys.exit("[fatal] stratum '%s' is empty in this corpus" % a.stratum)
+    print("stratum: %s   (%d game(s) in this layer)" % (a.stratum, len(games)))
+
     all_eps, all_tps = [], []
     per_game = collections.Counter()
+    dropped = collections.Counter()
     for run, game, _c, seed, side, tl in games:
         g = Game(tl, a.interval)
-        eps = scan_game(g, side)
-        tps = home_tp_events(g, side)
+        inc = None
+        if fc_live:
+            bind_fieldcreep()
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            import fieldcreep_domain as FC          # noqa: E402
+            inc, _outg = FC.load_nonhero_damage(tl)
+        eps = scan_game(g, side, inc=inc, fc_live=fc_live, _dropped=dropped)
+        tps = home_tp_events(g, side, inc=inc, fc_live=fc_live)
         for e in eps + tps:
             e["run"], e["game"], e["seed"], e["side"] = run, game, seed, side
         all_eps += eps
         all_tps += tps
         per_game[(run, game)] = len(eps)
+
+    # ---- MANDATORY disclosure (printed even when the clause is not live) ----
+    print("\n=== gated 5th clause `fieldcreep` (jmz_func.lua:5287) ===")
+    if not fc_live:
+        print("  NOT ARMED in this wave's cand string -> the clause is false in")
+        print("  the engine on BOTH legs, and both legs are scored with the")
+        print("  four-clause situation.  Nothing removed; nothing to correct.")
+    else:
+        print("  ARMED -> the ARMED leg's J.IsFieldRegenSituation is STRICTER")
+        print("  than the baseline leg's, and that difference belongs to")
+        print("  `fieldcreep`, NOT to `%s`." % a.id)
+        print("  SITUATION frames removed from the ARMED leg by this clause:")
+        print("      甲 (neutrals count) : %d   <- primary, conservative"
+              % dropped["jia"])
+        print("      乙 (lane only)      : %d" % dropped["yi"])
+        fcrows = [e for e in all_tps if e["leg"] == "armed"]
+        print("  home-TP pre-frames on the armed leg attributed to it:"
+              " 甲 %d / 乙 %d  (of %d)"
+              % (sum(1 for e in fcrows if e["why_not"] == "fieldcreep (armed leg)"),
+                 sum(1 for e in fcrows
+                     if e["why_not_yi"] == "fieldcreep (armed leg)"),
+                 len(fcrows)))
+    print("  ** A reader who cannot see this block must conclude the tool did")
+    print("     NOT check the clause -- never that the corpus was clean. **")
 
     ng = len(games)
     legs = {"armed": [e for e in all_eps if e["leg"] == "armed"],
@@ -820,12 +1052,42 @@ def main():
 
     print("\n=== WHY the gate's instant is rare: first failing clause on every "
           "home-TP ===")
+    print("(甲 = neutrals count toward WasRecentlyDamagedByCreep; 乙 = lane only."
+          " On the baseline leg, and on any wave that did not arm `fieldcreep`,"
+          " the two worlds are identical by construction.)")
     for leg in ("armed", "baseline"):
         rows = [e for e in all_tps if e["leg"] == leg]
+        if not rows:
+            print("  %s (n=0)" % leg)
+            continue
         cnt = collections.Counter(e["why_not"] or "IN STRICT DOMAIN" for e in rows)
+        cnt_yi = collections.Counter(e["why_not_yi"] or "IN STRICT DOMAIN"
+                                     for e in rows)
         print("  %s (n=%d)" % (leg, len(rows)))
+        print("      %-34s %8s %7s %8s" % ("clause", "甲", "甲%", "乙"))
         for k, v in cnt.most_common():
-            print("      %-34s %6d  %5.1f%%" % (k, v, 100.0 * v / len(rows)))
+            print("      %-34s %8d %6.1f%% %8d"
+                  % (k, v, 100.0 * v / len(rows), cnt_yi.get(k, 0)))
+
+    # 铁律 4(i-a): both layers' READINGS registered, not both layers' game
+    # counts.  Printed here rather than left to the caller because the number
+    # a reader quotes out of this file is the domain count, and a pooled
+    # domain count does not look side-correlated (fieldcreep_domain's note).
+    print("\n=== 铁律 4(i-a): the same two counts, per physical-side stratum ===")
+    print("  %-6s %6s %10s %12s %10s %14s"
+          % ("layer", "games", "home_TPs", "in SITUATION", "in STRICT",
+             "SITUATION eps"))
+    for lay in ("ab", "ba"):
+        gs = set((r[0], r[1]) for r in games if stratum_of(r[4]) == lay)
+        tps = [e for e in all_tps if stratum_of(e["side"]) == lay]
+        eps = [e for e in all_eps if stratum_of(e["side"]) == lay]
+        print("  %-6s %6d %10d %12d %10d %14d"
+              % (lay, len(gs), len(tps),
+                 sum(1 for e in tps if e["situation"]),
+                 sum(1 for e in tps if e["strict"]), len(eps)))
+    print("  (a zero that is zero in BOTH layers cannot be a side artefact --"
+          " that is the only kind of zero this file may report as a domain"
+          " finding.)")
 
     # ---- the clause the source does NOT have: enemy creeps in contact ----
     print("\n=== GAP PROBE: enemy creeps within %.0fu on the domain frame ===" % CREEP_U)

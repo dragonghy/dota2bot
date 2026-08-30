@@ -7147,3 +7147,104 @@
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
     (4) 若 W29 起飞:先跑 `arm_string_census.py`;**10:09Z 后发波是 44-id ⇒ 不可与 W27/W28 并池**。
   - 完整报告:`iterations/reports/replay-check/20260830T155836Z.md`
+- **2026-08-30T18:57Z(`stayfield` 条件 (a) = **INDETERMINATE** —— 域在本语料上是**零**,
+  而且是**两层各自为零**;顺带修掉一个**静默且偏向候选**的工具缺陷:
+  `stayfield_domain.py` **从来没有评估过 `IsFieldRegenSituation` 的第五条子句**)**:
+  在 **W28**(树 `f015321`,45-id 串,四 run `990f5c/90463d/e706a3/8fffe9`)的
+  **10 局带戳 `.dem`** 语料上核 `stayfield`。零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  - **`VERIFY id=stayfield verdict=INDETERMINATE episodes=0`** —— **域内 episode = 0,
+    但分母不是零**(201 次回家 TP、201 个 SITUATION episode)⇒ 零出现在**谓词**层,
+    **不是「测了没效果」**,按 §CG.4.3「载体供给先于结论」问过了才下的结论。
+  - ⭐⭐⭐ **两层各自为零(铁律 4(i-a),而且是能救这个判决的那种登记)**:
+    `ab` 118 次回家 TP → SITUATION 0 / STRICT 0;`ba` 83 次 → 0 / 0。
+    **只在池化里出现的零可能是侧偏 artefact,两层各自为零不可能是。**
+  - ⭐⭐⭐ **33 轮欠账「`stayfield` 第一失败子句」本轮交付,而且零的形状跟立项假设相反**:
+    主要杀手是 **`enemy in 1600`**(armed 36.7% / baseline 46.6%)——
+    这些回家 TP 是**逃命 TP**,最近敌人**中位数 890u / 864u**,前六行
+    **43u/59u/154u/166u/174u/196u** 贴脸,`IsFieldRegenSituation` **本来就该放行**
+    (owner 原则:危险时撤退合法)。其次 `hp>0.55`(21–31%)与 `hp<0.18`(24–26%)。
+    **「包里没补给」只占 2–7% ⇒ 补给供给不是瓶颈**,这一条交出去了。
+    ⚠️ **`branch cond` 那格的 0 是「没人走到那一步」不是「都通过了」** ——
+    201 行全死在更上游子句,`stayfield` 调用点自己的入口条件
+    (hp<0.34/level≥9/`itemFlask==nil`/TP 不在 CD)**本语料一次都没被检验过**,**登记为限制**。
+  - ⭐⭐⭐ **工具缺陷(已修 + 已钉)**:`J.IsFieldRegenSituation`(`jmz_func.lua:5287`)
+    在塔子句后**还有第五条**,`if J.IsSoakCandidate('fieldcreep') and bot:WasRecentlyDamagedByCreep(3.0)`,
+    **它本身是 gated 的**。W25–W28 的 arm 串**都带 `fieldcreep`** ⇒ **armed 腿的谓词严格严于 baseline**,
+    而这个差**属于 `fieldcreep` 不属于 `stayfield`**;本文件却用**四子句语义给两条腿同时打分**。
+    ⚠️ **偏的方向恰好偏向候选**:armed 分母被撑大、分子不变 ⇒ **armed 的 `home_tp` 率被压低**,
+    而那正是读者拿来说「这个 gate 有效」的那个数。量级:剔除 armed 帧
+    **甲 102 / 乙 69**(`ab` 71/45,`ba` 31/24),episodes 109→**104**,SUPPLY RATIO 1.12→**1.07**。
+    **兄弟工具 `stayfield2_whynot.py` 从写出来那天就声明并打分了这条子句,本文件没有** ——
+    **同族两个工具对同一条子句给出不同答案,这本身就是信号。**
+  - ⭐⭐ **修完结论不变,而且可证不是运气**:这条子句是 **veto 不是 permit**,
+    只可能把帧移出 armed 域 ⇒ **修前是零,修后必然还是零**。
+    该蕴含关系**直接钉进 `--selfcheck`**(`the clause only ever REMOVES armed episodes`,实测 126 ≤ 128)。
+    受影响的**是比率类读数**,见下一条。
+  - ⚠️ **必须不读的一列**:`home_tp rate delta` `ab` −6.9pp / `ba` −5.4pp(同号)——
+    **仍不许写进 `stayfield` 的结论**。(1) §CG.4.2:那批帧上四个 id 同时动手,是合力;
+    (2) ⭐ **本轮新增一条更硬的**:`stayfield` 的**唯一调用点**在这 201 次回家 TP 上 **reach = 0**
+    ⇒ **不管 −6pp 是谁做的,机制上不可能是它的调用点**。**那是排除,不是「分不清」。**
+    `SUPPLY RATIO` 两层**反号**(1.44 / 0.64)⇒ 按 4(i-b) 是噪声,只用来选点。
+  - ⭐ **逐帧素材(交出去,不是判决)**:`e706a3/20260830_063416_slot1`
+    (seed 2130,**side=radiant ⇒ radiant 是 armed 腿**)**lich t=625.5..634.5**,armed 腿:
+    **坐标冻结在 (223,−4921) 整整 10 秒**、hp **1.000→0.229**、最近敌方**英雄**全程 1646–2779u
+    (从没进过 1600)、无英雄伤害归因、无塔,**中立生物打了他 774 点**
+    (`grown_frog` 464 + `ancient_frog_mage` 310,每 ~1.3s 一下),包里**无任何补给**。
+    这**既是**欠账里「静止在小兵火力里」的形状,**又正是**上面那个工具缺陷的现场
+    (四子句读作 SITUATION TRUE,那条腿实际跑的是 FALSE)。
+  - **交付**:`stayfield_domain.py` 四处加法 —— (i) `situation(..., creep_hits=None)`,
+    **默认 None ⇒ 所有既有调用方逐字不变**(`fieldcreep_domain` 的「上游子句数」
+    **定义上就是 pre-fieldcreep 的**,不能被改);(ii) 按腿评估、**甲/乙两世界永不并数**,
+    甲 为主(**它对本文件的每一种主张都是保守方向**);(iii) **强制披露块**
+    (`fieldcreep` 没 arm 时**照样打**);(iv) **`--stratum {all,ab,ba}`**,
+    分层**在 arm 串守卫之后**才应用。分类器**import `fieldcreep_domain`,没重写**
+    (它在模块级 import 本文件 ⇒ 用**惰性 import** `bind_fieldcreep()` 破环)。
+    `--selfcheck` **11 → 17 PASS**。
+    **新增 `tests/test_stayfield_domain.py`**(该工具此前**不在** python 套件,GH #243 同族,
+    第四次同形):**24 个 check**,重点钉三件**会静默失效**的事 ——
+    **三条 inertness 路径分开钉**(未 arm / baseline 腿 / 无伤害索引;
+    **反方向搞错会开始剔除 baseline 帧,把同一个偏差翻到另一边,而且一样干净**)、
+    **两世界不许塌成一个**(乙 ⊂ 甲 双向钉)、**梯子顺序 tower→fieldcreep→heal** 与
+    **披露块按字符串钉**(删掉会红,不会安静退回「不查也不说」)。
+    沿用前两轮登记的写法陷阱:**不用 `'FAIL' not in stdout`**。
+    工具 `--selfcheck` 需 sweep 目录、CI 没有 ⇒ 本文件只跑纯逻辑半并**明说**
+    `corpus checks SKIPPED, not passed`。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `run_py_tests.sh` → **61 passed / 0 failed / 0 uncertifiable**(本轮 +1) ——
+    **下游 6 个 import 方全绿 ⇒ 默认 None 的行为保持性是跑出来的,不是推出来的**;
+    `--selfcheck` **17/17**;`tests/test_stayfield_domain.py` **24/24**。
+    未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+  - **开工自检**:**exit 0**,**8 腿全跑**;`FINDINGS = none`、`UNCERTIFIABLE = none`;
+    trunk 两侧全绿(python 60/0/0、fast Lua 42 文件 0 失败);锚点 2/2 ok;
+    `unlanded_commits` 无;`ORPHAN_PROPOSAL` none。
+    ⚠️ **它第一次跑超 300s 被掐掉**(章程写「约 20s」),换 900s 重跑才 exit 0 ——
+    **本容器上它不是 20 秒的东西**,登记。
+  - **诚实边界**:n = **10 局带戳 `.dem`**,来自 **224 局**波次 ——
+    **14 局是录制槽决定的,不是我抽的**(GH #308 未裁);**不可逐种子比较,没有一个数字是效应量**;
+    买的是 **(a)**(不需要 n),**(b)/(c) 不归本组**;
+    **不主张** `stayfield` 该 promote **也不主张**它该出集((a) 没买到 ≠ 该退回,退回门不归本组裁);
+    **不认领** `fieldcreep` 的任何裁定(它 10:09Z 已退集,W28 06:18Z 起飞时还在串里,已登记非事故);
+    视野方向一贯声明 ⇒ 本工具域是引擎域的**子集**,这里的零是**子集上的真零**,
+    可报「本语料无表面」,**不可报 SILENT**;帧 B 只是**一帧**,不是检测器读数。
+  - **欠账变化**:✅ **`stayfield` 第一失败子句(约 33 轮)交付**;
+    ✅ **`stayfield_domain.py` 的 ab/ba 分层交付**(该欠账原文点的是
+    `fieldbuy_silence.py`/`stayfield2_margin.py`,**那两个仍欠**,本轮只清了本工具这份)。
+    ⚠️「静止在小兵火力里」检测器**仍欠**,但本轮给了它**一帧现成素材**(帧 B)。
+    继承未动:W25 只并 2/4 run;W26/W27/W28 与 W25 从未池化;`seed 975` **第十五轮**;
+    `wandlimbo` 因 #293 **第十三轮**不可执行;GH #265 仍被 #272 阻塞;
+    `blinkflee` 仍卡 #304/#305;WK rank-3 冷却全语料复测仍欠。
+  - **W29 已 18:16Z 起飞**(树 `be442fb9`,**44-id**,run `3fcb3d/eb04aa/60c165/134c2f`,
+    watchdog 2h)⇒ 本轮开工时**未收割**,语料仍是 W28。
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要抄过期的交棒行。**
+    (1) **W29 应已收割** ⇒ 先跑 `arm_string_census.py` 核 **44-id,不可与 W27/W28 并池**。
+    ⚠️ 在 W29 上本工具的披露块**应当打 `NOT ARMED`**(`fieldcreep` 已退集)——
+    **打成别的就是回归**。
+    (2) **`stayfield2`**:`stayfield2_whynot.py` 早就写好,**从没在 W25+ 的语料上跑过**。
+    它的域比 `stayfield` **大** ⇒ §CG.4 的「无表面免责」**对它不成立**(§AO.4② 原话)。
+    (3) **帧 B 拿去做「静止在小兵火力里」检测器**(欠账),素材现成:
+    `e706a3/20260830_063416_slot1` lich t=625.5..634.5。
+    (4) `stayfield` 的棒已交出,**不掉在本组**;它该不该继续留在集里**由总监裁**。
+    (5) W25 剩下两个 run 可直接跑 `pullcad_beat.py`(仍欠)。
+  - 完整报告:`iterations/reports/replay-check/20260830T185715Z.md`
