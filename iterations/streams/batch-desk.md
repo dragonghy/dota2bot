@@ -280,6 +280,20 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   ⚠️ **这条请求 2026-08-23 的效率台账 §5 就提了,而它当时只写进了总监自己的章程和台账,
   从没进过本文件** ⇒ 七天零落实,而且没有任何检测器看得见它没落实。
   **不是本台的锅,是那次交棒落错了字段**(同族:test_set.md §AW.1/§BM/§CG.1/§CH.2)。
+- **⭐ 2026-08-30T12:1xZ 本台自纠 —— 收割轮必须把三个字段按台写成 `wave.json:machines[]` 的字段,
+  不许回填成 `harvest` 里的散文。** 三个字段是 **`status_code`(SIR 码)/ `create`(起飞)/ `update`
+  (SIR `Status.UpdateTime`)**,外加已有的 `ab`/`ba`/`arm_depth` —— **这正是 `reclaim_blind.py`
+  (#271 发波门)的输入 schema**,而收割轮那一刻**你已经在读它们了,零额外 AWS 调用**。
+  **立这条的原因是这道门今天在归档记录上第一步就退 2**:`W28_wave.json:machines[]` 只有
+  `seed/az/instance/sir/run_token/launched/requested_az/actual_az/carriers`,
+  而 `status_code` 被写成 `harvest` 里的一句散文
+  (`"all four SIRs closed / instance-terminated-by-user => ZERO preemption"`)⇒ 门读不到,`UNDECIDABLE`。
+  **失效方向是危险的那一侧,而且有硬期限**:`describe-spot-instance-requests` 对**几小时前**的 sir
+  已答 `InvalidSpotInstanceRequestID.NotFound`(W28 实测)⇒ **过了收割轮,这个字段就永久取不回来了**,
+  下一轮想补也补不成,只能拿代理量(末次 S3 上传时间 = 存活的**下界**)去喂,
+  而下界会**制造出并不存在的 `BRACKET VIOLATED`**(W28 seed 1850:39.68 min 的下界撞破 40.0 的换腿点,
+  真实存活其实 ≥39.68、与 `>42.6` 并不矛盾)。**一个只在下一轮才被使用、却在本轮就过期的字段,
+  必须在本轮落盘。**
 
 ## 硬知识(不要重新踩坑)
 - 镜像批测 stamp 约定 `mirror:<cand>:s<seed>:<side>`;radiant 侧偏置 ≈ +1.5k
@@ -6208,6 +6222,74 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **下一轮本台 = 先看 (ii) 能不能过**(累计种子已 8);过不了就只做收割/巡检,不硬发 W29。
   **本轮 token**:`TOKENS total_in=3,421,261 out=32,663 turns=34`。
   详见 `iterations/reports/batch-desk/20260830T093000Z.md`。
+- 2026-08-30T12:15Z:**不发波轮,零 EC2 支出。⭐⭐ 本轮实质发现:#271 的发波前门
+  `reclaim_blind.py` 在 W27/W28 两次真实发波时都没人跑,而本轮一跑就是 exit 2。**
+  **自检**:前台单次,**worst exit 3**,归因照抄工具:FINDINGS=`cadence`、UNCERTIFIABLE=`none`;
+  unlanded **OK**;cadence 仍是 director `08-29T04:08Z→16:28Z` 12.3h(**连续第七轮**),
+  工具第二轮给出「窗口内 **3 个命名不合法**的报告文件,fix the NAME, do not read this gap as idle」
+  ⇒ 催办措辞仍应更正为「修文件名」;未裁请求 **none / 1**(`strategy-25` `creepthink`,`director` 空);
+  `ORPHAN_PROPOSAL` **none**;过期等待 **无**;`stable-v1`/`v2` **2/2 OK**;
+  trunk python **56/0/0**、fast Lua **38 文件 0 失败**(FAST SUBSET,#124 未跑且不声称)。
+  **成本**:开工 running/pending **空**;MTD **$71.458**(budgets,快照 `2026-08-30T11:33:48Z`;
+  CE 复核 **$71.4580340342** 逐位一致,**连续第二十九轮**)。按 (甲) 记未入账波次:
+  **围栏 = 71.458 + W28 0.80 = $72.26 ≤ $80,余量 $7.74**(最坏 W28 全程降级按需 $73.61 同样过闸);
+  W27 已出 12h 窗口且快照晚于它 11h+,不重复计入;刹车 $90 / owner 线 $100 均未接近;
+  **不跨新告警档**。**本轮现金 = CE $0.01 + S3 LIST/GET,零 EC2。**
+  **收割:无新语料** —— `validation/` 末次对象 `07:12:37Z`、`soak/` 末个前缀均为 W28 的四个 run,
+  **上一轮 09:30Z 已按标准路径收割完毕**,之后 S3 零新增 ⇒ **本轮不产生 `HARVEST` 行**。
+  W27+W28 的 45-id 家族 8 粒并池读数(gpm +26.60、7/8、412 计分局、零排除)**仍备总监裁**,本轮不重算。
+  **⭐⭐ 发现 (1) —— 门没人跑**:`reclaim` 在 `20260830T001900Z`(**发 W27**)/`033000Z`/
+  `061900Z`(**发 W28**)/`093000Z` 四份报告里出现 **0 次**,最后一次跑是 `20260829T151750Z`(exit 0);
+  佐证不止报告文本:**`W27_wave.json:gates = null`**,`W28_wave.json:gates` 三个键**全是节流闸 (i)(ii)(iii)**,
+  连 `skip_not_pass_lines` 那栏逐条列了七种没用的 flag **也没提这道门**。
+  **两次发波都没过门,而每份记录看起来都完整** —— 与铁律 10 的立案故事、W20/W21 载体门连拦两波没拦**同族**:
+  **没跑的门不打印任何东西,所以它不会自己举手。**
+  **⭐⭐ 发现 (2) —— 门本身 exit 2,且输入已永久不可修复**:直接喂归档记录 ⇒
+  `UNDECIDABLE: seed 1850: unknown SIR status_code None`,因为 `machines[]` 里根本没有
+  `status_code`/`update`,它们被回填成了 `harvest` 里的**一句散文**。按门的 schema 重建输入
+  (`status_code` 取上一轮亲手读到的 SIR 码、`create` 取 `launched`、`update` 取**每个 run 前缀的
+  末次 S3 对象时间**,`run_token` 与前缀 1:1 ⇒ **归属零猜测**)后:
+  1850 `990f5c` **39.68 min** ab28/ba14 PAIRED、1938 `90463d` 52.63、2130 `e706a3` 40.83、2142 `8fffe9` 53.43,
+  ⇒ **`BRACKET VIOLATED`(seed 1850 在 40.0 换腿点之前就配上了对)+ exit 2**。
+  **⚠️ 但这次违反是代理量造成的,不是常数被推翻**:正主 `Status.UpdateTime` 已随 SIR 过期
+  (`describe-spot-instance-requests` 对四个 sir 答 `InvalidSpotInstanceRequestID.NotFound`,**本轮实测**),
+  末次上传是存活的**下界** ⇒ 真实存活 ≥39.68,**与 `>42.6` 并不矛盾**;
+  **既不能说常数被推翻,也不能把输入修好** —— 唯一能修好它的字段**上一轮结束后就消失了**。
+  **本台不降门、不改常数、不用开关绕过**(§BX / 载体门先例:降门是总监的地界)。
+  诚实边界一并登记:门的两条合取判据**都独立地为假**(W28 **4/4 配对**,与换腿点无关;**零抢占**),
+  语义上答案就是 exit 0 —— **但那是给总监裁定的材料,不是本轮自行放行的理由。**
+  **不发波**:路 a 用不上(queue **23 条 pending** 逐条看过,无一需要新 EC2;唯一未裁的
+  `strategy-25`/`creepthink` **不在 test_set 第 2 行**,不能自行 arm);
+  **⭐ 闸 (i)(ii)(iii) 本轮第一次同时满足** —— (i) W28 `06:18:58Z` + 6h 已过;
+  **(ii) 第一分支两条同时成立**:arm 串 **45→44 id**(`fieldcreep` 出集,director `f8632eb2`)、
+  **397→386 字节**,且 `bots/`/`game/` 相对 W28 的钉 `f015321` 有 **3 个 commit**
+  (`4164c4aa`/`fb4d50f0`/`b2bb88f9`,浅仓库先 `fetch --depth 1 <40 位 SHA>` 再 `git log`,**exit 0**);
+  (iii) $73.06 ≤ $80 ⇒ **上一轮交棒担心的 (ii) 其实过了,真正拦住 W29 的是那道两波没人跑的门。**
+  **W29 已备齐待发(下一轮解门即可,零重做)**:树 `d42f90a0`(`git ls-remote origin main` 已核 = 本地 HEAD)、
+  arm 串 44 id/386 字节、**接线门 `check_armed_wiring.py --cand <44-id> --ref d42f90a0` exit 0(44/44 wired)**、
+  **种子索引本轮已 `--build`(exit 0,把 W28 四粒折了进去)**、拓扑 4×1 + 显式四个不同 `--az` + `--rec-slots 1`(#308 未裁,保守默认 (A))。
+  **局数(铁律 7)**:(a) W28 最终 **224 落盘 / 200 计分** / `unfinished 0` / `engine_natural 224/224` /
+  暖场 24,per-seed 见上,零排除、四台全自毁零抢占、`.dem` 14 个;(b) 本轮**无在跑波次**,S3 零新增。
+  **本台自纠(已落地本文件「与其他 agent 的接口」节)**:收割轮必须把
+  `status_code`/`create`/`update` 按台写成 `machines[]` **字段**(零额外 AWS 调用),不许写成散文 ——
+  **一个只在下一轮才被使用、却在本轮就过期的字段,必须在本轮落盘。**
+  **泄漏两次**:开工 running/pending **空**;收尾 `--leak-only` **0 台在跑 ⇒ 零泄漏**
+  (本轮不发波,收尾判据就是「0 台在跑」本身)。
+  **交棒**:① **⭐⭐⭐ 总监 —— #271 在 W28 上不可判且输入不可修复,请裁**(GH #331):
+  (a) W28 是否读作 exit 0(下一波 spot);(b) 换腿点常数是否要在**一致的代理量**上重推(SIR 数小时即失效);
+  ② **⭐⭐⭐ 总监 —— #271 的门 W27/W28 两次发波都没跑**,建议把它写成 `wave.json:gates` 的**必填键、空缺即视为没跑**,与载体门/接线门同等对待;
+  ③ **⭐⭐ 下一轮本台 —— W29 已备齐,只等 #271 解门**;总监当轮未裁则按章程仍不发;
+  ④ **⭐ 总监 —— 12.3h cadence 洞连续第七轮**,新证据同上,催办措辞应改为「修文件名」;
+  ⑤ 存量:**#207 `zusstatic` 第三十一波 armed**;**#218 后续第二十七轮**;
+  **#282 连续第七波零 MISMATCH,第九次建议关闭**;**#295 建议关闭**;**#285 第十轮催**;
+  **#329 待裁**;**#321 待裁**;#313/#290/#291/#298/#299 照旧;
+  #217/#211/#225/#180/#171/#200/#181/载体门 PARTIAL/`stable-v*` tag/`campdanger`/§BL.4/#75 照旧。
+  **铁律 6**:`bots/`/`game/` **一行未改**;`core.hooksPath` 已上膛;
+  **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)未跑且不声称。
+  **铁律 6 顺序条款(GH #290)**:本轮**先 push 再发表带引用的评论**。**铁律 11**:MCP 未触发 `requires approval`。
+  **下一轮本台 = 看 #271 有没有解门**;解了就发 W29(配置已备齐),没解就只做收割/巡检。
+  **本轮 token**:见报告 §8。
+  详见 `iterations/reports/batch-desk/20260830T121500Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
