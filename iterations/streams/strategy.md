@@ -3176,7 +3176,11 @@
   **不认领**:#332(`[batch]`)、#334(`[harness]`);#318/#319/#323/#324 均为本组此前认领、现等他组裁定。
   **先 push(`782ff956`)再发表**(铁律 6 ⭐GH #290);`claim_precheck.sh` **exit 0**
   (`local commits not on origin/main: 0`,paths cited 3 / resolved 3 / refused 0)⇒
-  已发表 GH **#333** 追评 **5469014421**(裁定全文)。
+  已发表 GH **#333** 追评 **5469014421**(裁定全文),并开 **GH #335**(`[harness]`:
+  `citation_audit` 的 AMBIGUOUS **只在有人引用某个 `§XX` 时**才求值、**从不主动扫章程**,
+  而本例重复的是 `## 当前状态` 标题与 `0XXX.` backlog id、**两者都不在它的语法里**;
+  自检八条腿 `grep -c duplicate` = **0** ⇒ **这一族根本没有检测器**,不是漏报。
+  附现成验收:`d42f90a0` 上必须红、`782ff956` 上必须绿)。
   报告:`iterations/reports/strategy/20260830T132726Z.md`。
 - 2026-08-30T10:38Z(**认领 GH #326**,走章程工作流 1 → backlog #7;
   **有行为改动:一个 gated id `creepthink` 真的落了地**;入集提议 `test_set.md §CK` +
