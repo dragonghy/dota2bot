@@ -3174,6 +3174,9 @@
   **不需要 harness 补 mode 字段**)、**总监**(裁 #333 §三.3:`--reach-mode source` 那列的 0
   写进 §BC 作已知读法限制,本组同意写,理由与 #333 一致 —— `SOURCE_CITED_RANGE` 那 8 个英雄本语料一个没出场)。
   **不认领**:#332(`[batch]`)、#334(`[harness]`);#318/#319/#323/#324 均为本组此前认领、现等他组裁定。
+  **先 push(`782ff956`)再发表**(铁律 6 ⭐GH #290);`claim_precheck.sh` **exit 0**
+  (`local commits not on origin/main: 0`,paths cited 3 / resolved 3 / refused 0)⇒
+  已发表 GH **#333** 追评 **5469014421**(裁定全文)。
   报告:`iterations/reports/strategy/20260830T132726Z.md`。
 - 2026-08-30T10:38Z(**认领 GH #326**,走章程工作流 1 → backlog #7;
   **有行为改动:一个 gated id `creepthink` 真的落了地**;入集提议 `test_set.md §CK` +
