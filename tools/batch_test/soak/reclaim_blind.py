@@ -42,6 +42,18 @@ bearing and each one alone misclassifies the measured history:
     W19-R      3          3        0        yes        yes      BLINDED
     W20        4          1        3        no         yes      ok
     W21        4          0        4        no         no       ok
+    W24        4          0        4        no         no       ok
+    W25        4          0        4        no         no       ok
+    W28        4          0        4        no         no       ok   <- see below
+
+W24/W25 were added 2026-08-30 by the director while ruling GH #332.  They are
+first-hand SIR rows (`create` + `update` read while the requests were still
+alive) and they MOVED THE BRACKET: W24 seed 1633 paired after 40.63 min, which
+is 1.97 min shorter than the W21 survivor the upper edge used to quote.  The
+bracket has been (34.8, 40.63] since 2026-08-29 and nobody noticed, because
+this file's history table stopped at W21.  40.0 still sits inside it -- the
+constant is NOT refuted -- but the margin to the upper edge is 0.63 min, not
+2.6 min.  The next paired machine that lands under 40.0 refutes it for real.
 
 "Count the reclaims >= 2" would have fired on W18, a wave that delivered half
 its seeds.  Clause (2) is the more important of the two: without it a wave
@@ -55,9 +67,10 @@ a wave-level answer either -- it is an orphan with better paperwork.
 
 The changeover constant is BRACKETED, not chosen
 ------------------------------------------------
-Longest orphan observed: 34.8 min (W19-R).  Shortest paired survivor: 42.6
-min (W21 seed 995).  Every value in (34.8, 42.6] classifies all 27 machines
-observed so far identically; 40 sits inside that bracket.  The number is
+Longest orphan observed: 34.8 min (W19-R).  Shortest paired survivor: 40.63
+min (W24 seed 1633, ab27/ba13, arm_depth 17.55, first-hand SIR
+06:18:41Z -> 06:59:19Z).  Every value in (34.8, 40.63] classifies all 35
+machines observed so far identically; 40 sits inside that bracket.  The number is
 therefore a reading, not a preference -- and readings expire.  So this file
 re-checks the bracket against its own input on every run: a reclaimed machine
 that lived PAST the threshold and still came back unpaired, or a paired seed
@@ -95,6 +108,33 @@ Input JSON:
 is optional: when present it is held to --min-arm-depth (default 8, matching
 GH #269's MIN_ARM_DEPTH), when absent pairing falls back to ab>0 and ba>0 and
 the per-machine line says so rather than pretending the depth was checked.
+
+When the survival number is a PROXY, say so: `survival_bound`
+--------------------------------------------------------------
+Optional per-machine key, `"exact"` (default) or `"lower"`.  It exists because
+the SIR record expires within hours while the wave's own S3 uploads do not, so
+a wave read after the fact is scored on "time of last upload", which is a LOWER
+BOUND on survival -- the machine still had to finish shutting down.  Measured
+offset over the eight W24/W25 machines that have both readings: mean 2.90 min,
+range 2.15-3.32.
+
+A lower bound is not a weaker version of a measurement; it is sound in one
+direction and unsound in the other, and this file's two clauses face opposite
+ways:
+
+  * "reclaimed PAST the flip yet unpaired" needs survival > T.  lb > T implies
+    true > T, so this branch is SOUND on a lower bound and stays armed.
+  * "paired BEFORE the flip" needs survival < T.  lb < T implies NOTHING about
+    the true value, so this branch is UNSOUND on a lower bound and is skipped
+    -- out loud, naming the machine, never silently.
+  * the ATTRIBUTION clause ("reclaimed before the flip") also needs survival
+    < T.  A reclaimed machine whose lower bound falls under the flip is
+    therefore UNDECIDABLE -- exit 2, not a guess in either direction.  Guessing
+    "before" invents a BLINDED; guessing "after" hides one.
+
+GH #332 is the wave that forced this: W28's BRACKET VIOLATED was entirely an
+artifact of substituting the proxy, and the substitution was invisible because
+the field it was written into is named for a measurement.
 """
 import argparse
 import datetime as _dt
@@ -111,10 +151,20 @@ KNOWN_CODES = (SELF_TERMINATED, RECLAIMED)
 DEFAULT_CHANGEOVER_MIN = 40.0
 DEFAULT_MIN_ARM_DEPTH = 8.0
 
+# How to read a machine's survival number.  EXACT is the SIR's own
+# Status.UpdateTime; LOWER is a proxy that can only be too small (last S3
+# upload).  Anything else is UNKNOWN and forces exit 2, same stance as an
+# unknown status_code: a bound we cannot name is a bound we cannot honour.
+BOUND_EXACT = "exact"
+BOUND_LOWER = "lower"
+KNOWN_BOUNDS = (BOUND_EXACT, BOUND_LOWER)
+
 # The measured bracket the default constant sits inside.  Printed every run so
-# the next person can see what would narrow it.
-BRACKET_LO = 34.8   # longest orphan observed (W19-R)
-BRACKET_HI = 42.6   # shortest paired survivor observed (W21 seed 995)
+# the next person can see what would narrow it.  Narrowed 2026-08-30 (GH #332):
+# W24 seed 1633 is a first-hand paired survivor at 40.63 min, shorter than the
+# W21 seed 995 reading (42.6) the upper edge used to quote.
+BRACKET_LO = 34.8    # longest orphan observed (W19-R)
+BRACKET_HI = 40.63   # shortest paired survivor observed (W24 seed 1633)
 
 
 class Undecidable(Exception):
@@ -148,12 +198,22 @@ def survival_minutes(machine, where):
     raise Undecidable("%s: needs survival_min, or both create and update" % where)
 
 
+def survival_bound(machine, where):
+    """How the survival number may be used.  Absent means an exact reading."""
+    bound = machine.get("survival_bound", BOUND_EXACT)
+    if bound not in KNOWN_BOUNDS:
+        raise Undecidable("%s: unknown survival_bound %r (known: %s)"
+                          % (where, bound, ", ".join(KNOWN_BOUNDS)))
+    return bound
+
+
 def classify_machine(machine, changeover_min, min_arm_depth, where):
-    """One machine -> (survival, code, paired, depth_checked)."""
+    """One machine -> (survival, code, paired, depth_checked, bound)."""
     code = machine.get("status_code")
     if code not in KNOWN_CODES:
         raise Undecidable("%s: unknown SIR status_code %r (known: %s)"
                           % (where, code, ", ".join(KNOWN_CODES)))
+    bound = survival_bound(machine, where)
     survival = survival_minutes(machine, where)
 
     for field in ("ab", "ba"):
@@ -175,28 +235,59 @@ def classify_machine(machine, changeover_min, min_arm_depth, where):
         depth_checked = True
         if depth < min_arm_depth:
             paired = False
-    return survival, code, paired, depth_checked
+    return survival, code, paired, depth_checked, bound
 
 
 def check_bracket(rows, changeover_min):
     """Both directions the changeover constant can go stale.
 
-    Returns a list of human-readable violations.  Empty list = the constant
-    still separates this input the way it separated the seven waves it was
-    read off of.
+    Returns (violations, skipped).  An empty violations list = the constant
+    still separates this input the way it separated the waves it was read off
+    of.  `skipped` names every check a lower-bound survival made unsound, so a
+    suppressed check is still a visible one -- a bracket check that quietly
+    declines to run is the same shape of lie as a gate that prints nothing.
     """
     bad = []
+    skipped = []
     for row in rows:
-        seed, survival, code, paired = row["seed"], row["survival"], row["code"], row["paired"]
+        seed, survival, code = row["seed"], row["survival"], row["code"]
+        paired, bound = row["paired"], row["bound"]
+        # Sound on a lower bound: lb > T implies the true survival > T.
         if code == RECLAIMED and survival > changeover_min and not paired:
             bad.append("seed %s: reclaimed at %.1f min (PAST the %.1f min flip) "
                        "yet unpaired -- the flip point moved later"
                        % (seed, survival, changeover_min))
+        # Unsound on a lower bound: lb < T implies nothing about the true value.
         if paired and survival < changeover_min:
-            bad.append("seed %s: paired after only %.1f min (BEFORE the %.1f min flip) "
-                       "-- the flip point moved earlier"
-                       % (seed, survival, changeover_min))
-    return bad
+            if bound == BOUND_LOWER:
+                skipped.append("seed %s: %.1f min is a LOWER BOUND below the "
+                               "%.1f min flip -- says nothing about the true "
+                               "survival, so the 'moved earlier' check is not "
+                               "applied to this machine"
+                               % (seed, survival, changeover_min))
+            else:
+                bad.append("seed %s: paired after only %.1f min (BEFORE the %.1f min flip) "
+                           "-- the flip point moved earlier"
+                           % (seed, survival, changeover_min))
+    return bad, skipped
+
+
+def check_attribution_decidable(rows, changeover_min):
+    """Machines whose 'reclaimed before the flip' answer the input cannot give.
+
+    The attribution clause asks survival < T.  For a reclaimed machine carrying
+    only a lower bound under T, both answers are still open, and they fall on
+    opposite sides of the verdict: calling it 'before' invents a BLINDED wave
+    and a 3x more expensive instrument; calling it 'after' hides one.  So it is
+    exit 2 -- the one answer that is true.
+    """
+    return ["seed %s: reclaimed, and its %.1f min is a LOWER BOUND under the "
+            "%.1f min flip -- whether it died before the flip is exactly what "
+            "the attribution clause needs and exactly what this input cannot say"
+            % (r["seed"], r["survival"], changeover_min)
+            for r in rows
+            if r["code"] == RECLAIMED and r["bound"] == BOUND_LOWER
+            and r["survival"] < changeover_min]
 
 
 def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
@@ -205,9 +296,13 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
     lines = []
     name = wave.get("wave", "(unnamed)") if isinstance(wave, dict) else "(unnamed)"
     lines.append("=== reclaim-blind check (GH #271 ruling) -- wave %s ===" % name)
-    lines.append("changeover %.1f min  (measured bracket %.1f < x <= %.1f)  "
-                 "min_arm_depth %.1f" % (changeover_min, BRACKET_LO, BRACKET_HI,
-                                         min_arm_depth))
+    # The edges print at 2dp, not 1: at 1dp the upper edge reads 40.6 against a
+    # 40.0 constant, which rounds the 0.63 min of remaining margin out of the
+    # only line that shows it.
+    lines.append("changeover %.1f min  (measured bracket %.2f < x <= %.2f, "
+                 "margin above the constant %.2f min)  min_arm_depth %.1f"
+                 % (changeover_min, BRACKET_LO, BRACKET_HI,
+                    BRACKET_HI - changeover_min, min_arm_depth))
 
     if not isinstance(wave, dict):
         lines.append("UNDECIDABLE: top level is not an object")
@@ -225,10 +320,11 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
                 raise Undecidable("machine[%d]: not an object" % i)
             seed = machine.get("seed", "?")
             where = "seed %s" % seed
-            survival, code, paired, depth_checked = classify_machine(
+            survival, code, paired, depth_checked, bound = classify_machine(
                 machine, changeover_min, min_arm_depth, where)
             rows.append({"seed": seed, "survival": survival, "code": code,
                          "paired": paired, "depth_checked": depth_checked,
+                         "bound": bound,
                          "ab": int(machine["ab"]), "ba": int(machine["ba"])})
     except Undecidable as exc:
         lines.append("UNDECIDABLE: %s" % exc)
@@ -236,12 +332,29 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
 
     for row in rows:
         how = "depth-checked" if row["depth_checked"] else "ab/ba only (no arm_depth given)"
-        lines.append("  seed %-8s %6.1f min  %-34s ab%-3d/ba%-3d  %s  [%s]"
-                     % (row["seed"], row["survival"], row["code"],
+        mark = ">=" if row["bound"] == BOUND_LOWER else "  "
+        lines.append("  seed %-8s %s%6.1f min  %-34s ab%-3d/ba%-3d  %s  [%s]"
+                     % (row["seed"], mark, row["survival"], row["code"],
                         row["ab"], row["ba"],
                         "PAIRED " if row["paired"] else "NO-PAIR", how))
+    n_lower = sum(1 for r in rows if r["bound"] == BOUND_LOWER)
+    if n_lower:
+        lines.append("survival   : %d of %d machine(s) carry a LOWER BOUND (>=), not a "
+                     "reading -- see `survival_bound` in this file's header"
+                     % (n_lower, len(rows)))
 
-    violations = check_bracket(rows, changeover_min)
+    undecidable_attr = check_attribution_decidable(rows, changeover_min)
+    if undecidable_attr:
+        lines.append("UNDECIDABLE: the attribution clause cannot be evaluated on this input:")
+        for u in undecidable_attr:
+            lines.append("    %s" % u)
+        lines.append("UNDECIDABLE: re-run with an exact survival for those machine(s) "
+                     "(this is exit 2, not a pass and not a BLINDED)")
+        return 2, lines
+
+    violations, bracket_skipped = check_bracket(rows, changeover_min)
+    for s in bracket_skipped:
+        lines.append("bracket    : SKIPPED for %s" % s)
     if violations:
         lines.append("BRACKET VIOLATED -- the changeover constant no longer separates "
                      "this input; re-derive it before trusting any verdict:")

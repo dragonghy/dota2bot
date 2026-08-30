@@ -117,7 +117,9 @@ def main():
     check("NEXT WAVE: spot" in text, "1c W21 keeps the next wave on spot")
     check("BLINDED --" not in text, "1d W21 does not print a BLINDED verdict")
     check("4 paired seed(s) of 4 machine(s)" in text, "1e W21 yield line reads 4/4")
-    check("34.8 < x <= 42.6" in text, "1f the measured bracket is printed every run")
+    check("34.80 < x <= 40.63" in text, "1f the measured bracket is printed every run")
+    check("margin above the constant 0.63 min" in text,
+          "1g ... at a precision that still shows the margin (40.6 would not)")
 
     code, lines = rb.evaluate(W20)
     check(code == 0, "2a W20 (3 paired, 1 reclaim) -> exit 0")
@@ -233,6 +235,90 @@ def main():
           "16a survival from create/update = 44.95 min (published 44.9, truncated)")
     check(abs(rb.survival_minutes(m(1, 44.95, SELF, 1, 1), "x") - derived) < 1e-9,
           "16b an explicit survival_min reads the same as the derived one")
+
+    # --- 18: the bracket edges stay tied to the machines they were read off -
+    # A bracket edge is a READING.  Asserting the literal 40.63 would only pin
+    # a typo-free copy; these pin the arithmetic on the row it came from, so a
+    # future edit that moves the edge without a machine behind it fails here.
+    W24_1633 = {"seed": 1633, "status_code": SELF,
+                "create": "2026-08-29T06:18:41Z", "update": "2026-08-29T06:59:19Z",
+                "ab": 27, "ba": 13, "arm_depth": 17.55}
+    hi = rb.survival_minutes(W24_1633, "W24 seed 1633")
+    check(abs(hi - rb.BRACKET_HI) < 0.005,
+          "18a BRACKET_HI is W24 seed 1633's own survival (%.2f min)" % hi)
+    _, _, hi_paired, _, _ = rb.classify_machine(W24_1633, 40.0, 8.0, "W24 seed 1633")
+    check(hi_paired, "18b ... and that machine is PAIRED -- an unpaired row cannot set the upper edge")
+    lo = rb.survival_minutes(m(930, 34.8, GONE, 10, 0, 0.0), "W19-R seed 930")
+    check(abs(lo - rb.BRACKET_LO) < 0.005,
+          "18c BRACKET_LO is W19-R seed 930's own survival (the longest orphan)")
+    check(rb.BRACKET_LO < rb.DEFAULT_CHANGEOVER_MIN <= rb.BRACKET_HI,
+          "18d the default constant still sits inside the bracket it is read off of")
+
+    # --- 19..22: survival_bound -- a lower bound is sound in ONE direction --
+    def lb(row):
+        row = dict(row)
+        row["survival_bound"] = "lower"
+        return row
+
+    # 19: the unsound direction is skipped, and skipped OUT LOUD.  Same input
+    # as test 10 (paired before the flip) with the number relabelled a bound.
+    early_lb = {"wave": "W28-shaped", "machines": [
+        lb(m(1850, 39.68, SELF, 28, 14, 18.67)), lb(m(1938, 52.63, SELF, 42, 16, 23.17)),
+        lb(m(2130, 40.83, SELF, 28, 14, 18.67)), lb(m(2142, 53.43, SELF, 34, 24, 28.0))]}
+    code, lines = rb.evaluate(early_lb)
+    text = "\n".join(lines)
+    check(code == 0, "19a a lower bound below the flip does not fire 'moved earlier' -> exit 0")
+    check("BRACKET VIOLATED" not in text, "19b ... and no violation is claimed")
+    check("bracket    : SKIPPED" in text and "1850" in text,
+          "19c ... but the skip is printed and names the machine")
+    check("LOWER BOUND" in text, "19d ... and says why it was skipped")
+    check("VERDICT: not blinded" in text and "4 paired seed(s)" in text,
+          "19e ... and the verdict the two clauses give is still reached")
+    # The same rows called exact are exactly test 10 again: the label is what
+    # changed the answer, which is the whole point of having the label.
+    exact_same = {"wave": "same-rows-exact",
+                  "machines": [dict(x, survival_bound="exact") for x in early_lb["machines"]]}
+    check(rb.evaluate(exact_same)[0] == 2,
+          "19f the identical rows labelled EXACT still exit 2 -- the bound is load bearing")
+
+    # 20: the sound direction stays armed on a lower bound.
+    late_lb = {"wave": "drift-late-lb", "machines": [
+        lb(m(1, 50.0, GONE, 30, 0)), lb(m(2, 55.0, SELF, 30, 15)),
+        lb(m(3, 56.0, SELF, 31, 16)), lb(m(4, 57.0, SELF, 30, 14))]}
+    code, lines = rb.evaluate(late_lb)
+    check(code == 2, "20a reclaimed PAST the flip yet unpaired still fires on a lower bound")
+    check("BRACKET VIOLATED" in "\n".join(lines), "20b ... and it is a real violation, not a skip")
+
+    # 21: the attribution clause is UNDECIDABLE on a reclaimed lower bound
+    # under the flip -- the case where guessing either way flips the verdict.
+    # Yield must be <= 1 for the attribution clause to be load bearing: with 3
+    # paired seeds the verdict is exit 0 whatever the reclaim is doing, and the
+    # test would prove nothing about the clause it claims to be about.
+    attr = {"wave": "attr", "machines": [
+        lb(m(1, 20.0, GONE, 12, 0, 0.0)), lb(m(2, 22.0, GONE, 14, 0, 0.0)),
+        lb(m(3, 25.0, GONE, 11, 0, 0.0)), lb(m(4, 57.0, SELF, 30, 14, 18.8))]}
+    code, lines = rb.evaluate(attr)
+    text = "\n".join(lines)
+    check(code == 2, "21a a reclaimed lower bound under the flip -> exit 2, not a guess")
+    check("attribution clause" in text, "21b ... and it names the clause it could not evaluate")
+    check("VERDICT:" not in text and "NEXT WAVE" not in text,
+          "21c ... and never directs a wave off an answer it did not give")
+    # Called exact, the very same wave IS decidable -- and it is a BLINDED one.
+    attr_exact = {"wave": "attr-exact",
+                  "machines": [dict(x, survival_bound="exact") for x in attr["machines"]]}
+    check(rb.evaluate(attr_exact)[0] == 1,
+          "21d the same wave with exact readings is a BLINDED (exit 1) -- so exit 2 above "
+          "was suppressing a real escalation, not inventing one")
+
+    # 22: an unnameable bound is exit 2, and absence still means exact.
+    check(rb.evaluate({"wave": "b", "machines": [
+        dict(m(1, 30.0, SELF, 10, 5), survival_bound="approx")]})[0] == 2,
+          "22a an unknown survival_bound -> exit 2, never guessed into a bucket")
+    check("unknown survival_bound" in "\n".join(rb.evaluate({"wave": "b", "machines": [
+        dict(m(1, 30.0, SELF, 10, 5), survival_bound="approx")]})[1]),
+          "22b ... and it names the value it could not read")
+    check(rb.evaluate(W21)[0] == 0 and rb.survival_bound(W21["machines"][0], "x") == "exact",
+          "22c an absent survival_bound means exact -- every pre-existing wave reads unchanged")
 
     # --- 17: end to end through the CLI ------------------------------------
     code, out = run_cli(W21)

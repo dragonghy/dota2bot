@@ -49,7 +49,14 @@
     "obsidian_destroyer",
     "skeleton_king",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "survival_min": 39.68,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object for run_token 990f5c minus launched; the SIR Status.UpdateTime had already expired (InvalidSpotInstanceRequestID.NotFound). A machine uploads its last object BEFORE it finishes shutting down, so this can only be too small -- hence survival_bound=lower.",
+   "ab": 28,
+   "ba": 14,
+   "arm_depth": 18.67
   },
   {
    "seed": 1938,
@@ -65,7 +72,14 @@
     "obsidian_destroyer",
     "skeleton_king",
     "spirit_breaker"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "survival_min": 52.63,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object for run_token 90463d minus launched; the SIR Status.UpdateTime had already expired (InvalidSpotInstanceRequestID.NotFound). A machine uploads its last object BEFORE it finishes shutting down, so this can only be too small -- hence survival_bound=lower.",
+   "ab": 42,
+   "ba": 16,
+   "arm_depth": 23.17
   },
   {
    "seed": 2130,
@@ -81,7 +95,14 @@
     "obsidian_destroyer",
     "skeleton_king",
     "spirit_breaker"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "survival_min": 40.83,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object for run_token e706a3 minus launched; the SIR Status.UpdateTime had already expired (InvalidSpotInstanceRequestID.NotFound). A machine uploads its last object BEFORE it finishes shutting down, so this can only be too small -- hence survival_bound=lower.",
+   "ab": 28,
+   "ba": 14,
+   "arm_depth": 18.67
   },
   {
    "seed": 2142,
@@ -97,7 +118,14 @@
     "lion",
     "skeleton_king",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "survival_min": 53.43,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object for run_token 8fffe9 minus launched; the SIR Status.UpdateTime had already expired (InvalidSpotInstanceRequestID.NotFound). A machine uploads its last object BEFORE it finishes shutting down, so this can only be too small -- hence survival_bound=lower.",
+   "ab": 34,
+   "ba": 24,
+   "arm_depth": 28.14
   }
  ],
  "placement": {
@@ -121,7 +149,8 @@
  "gates": {
   "i_six_hour": "PASS. W27 took off 2026-08-30T00:18:47Z; +6h = 06:18:47Z. A `date -u` guard was written INTO the launch shell block and it REFUSED a first attempt at 06:16:43Z (exit 9). The wave went out at 06:18:58Z on the second call.",
   "ii_new_to_test": "PASS by the SECOND branch only. bots/ and game/ are byte-identical to W27's pin and test_set.md line 2 is byte-identical => the first branch (new code or new arm string) FAILS. The accumulated seed count on this exact tree+test-set is 4 (W27 alone) < 8, and the charter's (ii) is an OR.",
-  "iii_cost": "PASS. Fence = 67.374 (budgets MTD) + W27 0.80 + W28 0.80 = $68.97 <= $80. Worst case, both waves fully degraded to on-demand at $2.15 = $71.67, also passes. Brake $90 and owner line $100 not approached; no new alarm tier crossed."
+  "iii_cost": "PASS. Fence = 67.374 (budgets MTD) + W27 0.80 + W28 0.80 = $68.97 <= $80. Worst case, both waves fully degraded to on-demand at $2.15 = $71.67, also passes. Brake $90 and owner line $100 not approached; no new alarm tier crossed.",
+  "iv_reclaim_blind": "PASS (exit 0, NOT BLINDED), run by the director 2026-08-30 while ruling GH #332. NOT run at launch -- that is the defect #332 filed, and this key exists so its absence can never again look like a pass. Verdict: 4 paired seed(s) of 4 machine(s), 0 reclaimed before the flip => both BLINDED conjuncts independently false. The earlier BRACKET VIOLATED was an artifact of scoring a LOWER-BOUND proxy (last S3 upload) with a checker that assumed an exact reading; machines[] now carries survival_bound=lower and the tool skips the one clause that is unsound on a bound, out loud. NEXT WAVE: spot (GH #158 unchanged)."
  },
  "cost": {
   "mtd_at_launch": 67.374,
