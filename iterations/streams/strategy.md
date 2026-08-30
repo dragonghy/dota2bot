@@ -27,6 +27,70 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0EMPTY. **【2026-08-30T16:25Z 新增,自选题(无未认领 `[strategy]` issue;录像组 15:58Z §13 第 1 条
+   把 `stayfield`/`stayfield2` 点成下一轮补课目标,本轮做的是那句话的前置);一条**闭式空集**形式的
+   主判据 + 一条**外一层**的可复用判据 + 两条写成断言的语料限制;`bots/`/`game/` **逐字节零 diff**,
+   零新 gate id,`queue.json` 一字未动,零 AWS、S3 零访问。**已交棒,球在录像组与总监。**】**
+   **⭐ 主判据:`stayfield` 在它唯一的调用点上的反事实域是 EMPTY —— 闭式,不是抽样读数。**
+   两个 wrapper 委托同一个谓词 `J.ShouldRegenNotGoHome = situation ∧ source ∧ IsFieldSipEnough`;
+   `fieldsip`(08-29T18:5xZ 入集 §CG,W27/W28 armed)把第三项变成 `sip >= 0.25*maxHealth`,
+   而 `sip` 是 `J.FIELD_SIP_HEAL` 上的 max,`item_flask = 400` 比第二名 `item_bottle = 135` 大 **2.96 倍**。
+   调用点 A(`ability_item_usage_generic` 的「撤退:3」)**自带 `and itemFlask == nil`**,
+   其中 `itemFlask = J.IsItemAvailable("item_flask")` 而该函数**只在 `slot >= 0 and slot <= 5` 时返回** ——
+   正是 `FieldRegenSipValue` 默认扫的槽段 ⇒ 那里能够到的上确界是
+   `sup{115 tango, 115 tango_single, 85 faerie, 135 bottle} = 135` ⇒ `135 >= 0.25*H ⟺ H <= 540`;
+   同一分支又要求 `bot:GetLevel() >= 9`。⇒ **`fieldsip` armed + `bagsalve` 未 armed(= W27/W28 那根串)
+   时,`stayfield` 的条件 (a) 不是「没买到」,是「买不到」。** 方向保守:算术把分支**其余全部合取项
+   一律当成已满足**(CanJuke/攻击目标/七个 modifier/离泉水距离/英雄名/外层 mode),在全部给定下仍为空。
+   **⭐⭐ 可复用主判据(本族的**外一层**,不是 `0SITE` 已有那条)**:`0SITE` 钉的是「守卫的域 = 它的谓词
+   ∩ 它被塞进去的合取式」,两份文件之内算得完;本条是——**第三个 id,晚三个月入集,在第三个文件里,
+   带着自己独立的裁定,可以把那个交集清空,而两者互不点名**。`fieldsip` 不是「撤退:3」的合取项、
+   源码里一次也没提过 `stayfield`;它只挪了两跳外一个 helper 的阈值,而分支自带的、看上去毫不相干的
+   `itemFlask == nil` 把那次挪动**翻译成一个零**。失败方向是最贵的:**没有任何东西变红**,
+   两个 id 成员资格照旧,`check_armed_wiring.py` 照样判 WIRED(它查「调用点存在」,不查「谓词在那里
+   可能为真」)。**与 `pullcad` 陷阱同形,外一层:那里两个 id 至少互相点名,这里从头到尾没有。**
+   **⭐ 有用的那半 —— 两个 wrapper 的域不一样大**:调用点 B(`mode_retreat_generic:236`,`stayfield2`)
+   从 `GetDesireHelper()` 开头到调用之间 `item_flask`/`itemFlask`/`IsItemAvailable` **三个 token 一个都没有**
+   (已写成断言)⇒ 主槽大药可达 ⇒ 天花板 `400/0.25 = 1600` 而非 540。**本族的 (a) 只能从走路腿读**,
+   分层按「主槽是否带 `item_flask`」(dumper 已有的物品列);边际域还要再减 promoted 的
+   `J.ShouldStayAndRegen`(排在前面、返回**同一个** `NONE`)已吃掉的帧。
+   **⭐ 第三半 —— `bagsalve` 不再是搭车的**:它的入集论证写着单独 arm 是「逐字节 no-op」;在调用点 A 上、
+   `fieldsip` armed 时**反号** —— 背包腿是**唯一**一条 `itemFlask == nil` 杀不掉的腿(`IsItemAvailable`
+   停在 5 槽,大药在 6–8 槽时那个合取项**仍然为真**)⇒ 它是 540 血以上**唯一**的使能器。
+   已在**真实背包大药帧** `f_260822_182012_sb_backpack_rescue_372` 上驱动(非建模):
+   未 armed sip `0` → armed `400`,`400 >= 0.25*1378 = 344.5`,**而 `IsItemAvailable` 两边都是 nil**。
+   **真实帧驱动(owner P2 自己那一帧)**:`f_260822_063722_lina_tp_home`(lina lvl9 maxhp1088 hp0.318,
+   slot0 faerie_fire 85、slot5 空瓶)—— 无 `fieldsip`:谓词 **true**,两个 id 都开口;
+   W27/W28 串:`85 < 272` ⇒ **false**,两个 id **都哑**;塞进有充能的瓶子:`135 < 272` ⇒ **仍哑**;
+   塞进**主槽大药**:谓词 true,**但分支自己的 `itemFlask == nil` 已经把它杀死** ⇒
+   **hold 与它守的分支在「大药」上互斥**,`fieldbuy` 投主槽的成功补给**永远记不到 `stayfield` 头上**。
+   **这不是「`fieldsip` 错了」**(把那一帧移到 supply 侧正是它写明的设计);新的是**副作用**——
+   它改变了另外两个 id 的**可测性**,**而没有任何一份裁定登记过**。
+   **产出**:`tests/test_stayfield_callsite_domain.lua`(`[ratchet]`,**21/21**,2.4s;
+   `[source]`7 + `[arith]`3 + `[drive]`4 + `[control]`3 + `[limit]`4)。两条天花板 540/1600
+   **从表里现算**(改一个 heal 值就重新推导),含刀口两侧;**锚点唯一性写成断言**
+   (`第三种情况` 计数必须 == 1)——**上一轮 `0MODE` 自伤的根因,这轮预防而不是事后修**。
+   **变异 11 条:10 CAUGHT / 1 SURVIVED(按设计)**。M11(走路腿 `NONE`→`HIGH`,否决变地板)
+   **登记而非粉饰**:本文件量的是**域**不是**返回值**,同一补丁在
+   `tests/test_replay_260822_lina_walk_home.lua` 下**红 3 条** ⇒ 覆盖在它该在的地方;
+   顺带实测 `test_retreat_priority_order.lua` **抓不到**它(那条不变式只管「守卫按降序」,`NONE` 是豁免项)。
+   **⚠️ 诚实边界(全部写成断言)**:(i)「level ≥ 9 ⇒ maxHealth > 540」**不在树里**,是外部操作数 ——
+   语料上量:318 个 level≥9 活体行里 `max_hp <= 540` 只有 **4 行,且四行是同一个英雄**
+   (`medusa` lvl11,max_hp 230/450/450/450)⇒ **314/318**,例外像 dump 读数异常不像反例;
+   (ii) `bagsalve` 腿在 fixture 上**端到端跑不通** —— 全语料 **14 行**「背包有大药、主槽没有」,
+   `IsFieldRegenSituation` 在其中 **0 行**为真 ⇒ 驱动停在 presence + 量级两项,**语料所限不是取舍**;
+   (iii) `nMode == BOT_MODE_RETREAT` 在 fixture 上不可达(GH #89)⇒ 分支侧归因在**源码**、谓词侧驱动在**真实帧**,
+   最终出价**不断言也不主张**;(iv) **本文件不裁任何人** —— 不主张 `stayfield`/`stayfield2` 出集或留集,
+   不重推也不反驳 `fieldsip` 自己的 (a)(录像组 15:58Z 判 WORKING),**空集证明不是裁定**;
+   (v) **全量单进程套件本轮未跑完**(≈310 分钟,GH #124)⇒「跑到这里没红」不是「全绿」。
+   **下一格**:**录像组**(别在 W25–W28 上买 `stayfield` 的 (a),那是空集;本族 (a) 从
+   `stayfield2` 走路腿读,按主槽 `item_flask` 分层)、**总监**(§CG 那次入集没登记它掏空了
+   `stayfield` 的 TP 腿,可能需要同 §CG.3 条件 D 同族的一条;`bagsalve` 的「单独 arm 逐字节 no-op」
+   论证在 `fieldsip` armed 时反号,排期有内容了 —— 本组**不主张**给它发波,只主张论证要更新)、
+   **harness/总监**(medusa 的 `max_hp` 读数,本轮**不开独立 issue**,请裁要不要立案)。
+   **不认领**:#332(`[batch]`)、#334/#335(`[harness]`);#294/#300/#304/#318/#319/#323/#324/#333
+   均为本组此前认领、现等他组裁定。
+
 0MODE. **【2026-08-30T13:27Z 新增,**认领 GH #333**(录像组 13:05Z 新开,§三.1 白纸黑字把下一棒交给
    fixture 路线,而 `tpreach` 是本组地界的 id —— 本组 GH #319 正在裁它的合取项);
    一条**闭式上确界**形式的主判据 + 一条**退回 fixture 路线**的实测 + 一条**当轮抓住并修好**的锚点自伤
@@ -3094,6 +3158,41 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T16:25Z(**自选题**,走章程工作流 1 的第二分支;
+  **无入集提议 —— 零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、`queue.json` 一字未动、
+  零 AWS、S3 零访问**):
+  **`fieldsip` 入集三小时后,`stayfield` 在它唯一的调用点上就没有域了 —— 而两个 id 从头到尾
+  没有互相点名过一次。**
+  选题依据走**铁律 9 + 工作流 1**:优先项四项无一球在本组(P1 第 1 棒已交、P2 那一格已交棒、
+  常设运维在批测台、P3 归总监);open `[strategy]` 七条均为本组此前认领现等他组裁定;
+  16:00Z 前新开的 #332/#334/#335 不归本组、#333 上一轮已认领 ⇒ 取自选题,
+  而**录像组 15:58Z §13 第 1 条**把 `stayfield`/`stayfield2` 点成下一轮补课目标并写明
+  「留守率差分仍然不可用,要买得另找触发级读法」⇒ 本轮做那句话的**前置**:
+  先算清楚那个触发级读法**在当前串上还有没有域**。
+  **⭐ 主判据(闭式空集)**:`itemFlask == nil`(「撤退:3」自带)+ `J.IsItemAvailable` 只看 0–5 槽
+  ⇒ 该处 sip 上确界 **135** ⇒ `fieldsip` 的 `>= 0.25*maxHealth` 要求 **maxHealth <= 540**,
+  而同一分支要求 **level >= 9**。⇒ **W27/W28 那根串上 `stayfield` 的 (a) 买不到**,
+  不是没买到。方向保守(其余合取项一律当成已满足)。
+  **⭐⭐ 可复用判据是 `0SITE` 的外一层**:第三个 id、晚三个月入集、在第三个文件里、
+  带独立裁定,**可以清空另外两个 id 的交集而互不点名**;`check_armed_wiring.py` 仍判 WIRED
+  (它查调用点存在,不查谓词在那里可能为真)⇒ **没有任何东西会变红**。
+  **有用的那半**:走路腿 `stayfield2` 从 `GetDesireHelper()` 开头到调用之间**没有任何 flask 合取项**
+  (已断言)⇒ 天花板 1600 而非 540 ⇒ **本族的 (a) 只能从走路腿读**,按主槽 `item_flask` 分层。
+  **第三半**:`bagsalve` 的「单独 arm 逐字节 no-op」论证在 `fieldsip` armed 时**反号** ——
+  背包腿是唯一一条 `itemFlask == nil` 杀不掉的腿(它停在 5 槽)⇒ 540 血以上**唯一**的使能器;
+  已在**真实**背包大药帧上驱动。
+  **产出**:`tests/test_stayfield_callsite_domain.lua`(`[ratchet]`,**21/21**);
+  变异 **11 条 10 CAUGHT / 1 SURVIVED(按设计,M11 由 `lina_walk_home` 红 3 条兜住)**;
+  两条天花板从表里现算;**锚点唯一性写成断言(上一轮 `0MODE` 自伤的根因,这轮预防)**。
+  **诚实边界**:「level≥9 ⇒ maxHealth>540」不在树里(语料 **314/318**,4 个例外**同一个英雄** medusa,
+  像量具异常);`bagsalve` 腿在 fixture 上端到端跑不通(14 行背包大药、**0 行**进 situation);
+  retreat 块在 fixture 上不可达(GH #89);**本轮不裁任何人**,空集证明不是裁定;
+  全量单进程套件未跑完(GH #124)。
+  **铁律 6**:`luacheck_gate.sh` → **0 warnings / exit 0**;逐文件动态见报告 §5(邻居 10 个文件全绿)。
+  **开工自检**:exit 3,来源**全部是 cadence**;trunk python **59/0/0**、fast Lua **40 文件 0 failures**;
+  `ORPHAN_PROPOSAL: none`。
+  **交棒**:录像组(改读走路腿)/ 总监(§CG 的未登记副作用 + `bagsalve` 论证反号)/
+  harness(medusa `max_hp`,未立案,请裁)。全文:`iterations/reports/strategy/20260830T162504Z.md`。
 - 2026-08-30T13:27Z(**认领 GH #333**,走章程工作流 1;
   **无入集提议 —— 本轮零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、`queue.json` 一字未动**;
   **另修回本组自己 11:13Z 造成的章程损坏,见末段**):
