@@ -66,7 +66,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      —— **一个没有任何断言能发现的扫描器修复等于没修**;扫描器自测节(合成输入 + 精确行号)就是为堵这个洞加的。
    - **⚠️ 明说没做的**:Silencer(#346 本体)**没修**,**#346 不关闭**;Sniper 与
      `.cout` 拼写(`hero_sniper.lua:282`/`hero_muerta.lua:360`,`.cout` 恒 nil ⇒ 两条分支**恒假、从未开火**)
-     只登记;**这不是 CM 的 nil 安全声明** —— 全仓 **353 个** `FindAoELocation` 站点里 **350 个**无守卫索引,
+     只登记,已开 **GH #348**(并写明修它是**行为改动不是 typo 修正**);**这不是 CM 的 nil 安全声明** —— 全仓 **353 个** `FindAoELocation` 站点里 **350 个**无守卫索引,
      **三个就在 CM 同一个函数里** ⇒ 真返回 nil 的话 CM 仍会在四行后死。
      `350-vs-3` 同时是「nil 不可达」的最强可得证据(可达的话仓库会在 350 处崩而不是 3 处)——**证据不是证明**。
    - **⚠️ 继承的 trunk red,不是本轮造成**:`test_coarmed_attribution_register.lua:319` 报
@@ -3032,7 +3032,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 - 2026-08-30T22:56Z(报告 `iterations/reports/hero/20260830T225606Z.md`;轴 **认领 GH #346** ——
   本轮**有**一条带源码证据、点名本组的新 `[hero]` issue(总监 22:14:40Z 开),
   且它正是本组上一轮从 `cmqreach_20260830.known_gap (5)` 交出去的那根棒 ⇒ **走章程工作流第 1 条的主路径,
-  不是兜底路径**;**本组下一棒:Silencer(#346 本体,已追评、不关闭)+ 新开的 Sniper/`.cout` issue**)——
+  不是兜底路径**;**本组下一棒:Silencer(#346 本体,已追评、保持 open)+ 新开的 **GH #348**(Sniper 先索引后判 nil + `.cout`)**)——
   自检 **worst exit 3**,而**那条红不是本轮造成的**:`test_coarmed_attribution_register.lua:319`
   报新 co-armed 合取 `creepthink > pulldrag`(要求写进 `test_set.md` 入集节 + ACKNOWLEDGED)。
   **本 diff 不碰任何 gate、任何 armed id**,该红在动手前就在 `e1e7e02` 上 ⇒ **归属总监/协同组**,本组只登记。

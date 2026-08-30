@@ -4923,6 +4923,10 @@
     "inherited_trunk_red": "开工自检 worst exit 3 on arrival, NOT caused by this desk: tests/test_coarmed_attribution_register.lua:319 reports a new co-armed conjunction `creepthink > pulldrag`. This diff touches no gate and no armed id; the red predates it on e1e7e02. Attribution: director/strategy.",
     "aws": "zero -- not even an S3 GET. No wave requested: zero behavioral differential off the crashing frame means there is nothing measurable.",
     "gates": "static: tools/agent/luacheck_gate.sh => `luacheck bots game: 0 warnings`, exit 0, no RULE6_BYPASS. dynamic: nil_guard 5/0, activemode 14/0, smoke_load 3/0, gate_claim 10/0, cm_ 194/0 -- a SUBSET, the full suite did not finish (GH #124).",
-    "report": "iterations/reports/hero/20260830T225606Z.md"
+    "report": "iterations/reports/hero/20260830T225606Z.md",
+    "handoff": [
+      "GH #346 follow-up comment posted (#issuecomment-5471804072); #346 stays OPEN because Silencer is unfixed. Ball on the director for the general ruling: do crash-guard repairs need a gate.",
+      "GH #348 opened for hero_sniper.lua (indexed-before-guard) and the .cout typo at hero_sniper.lua:282 / hero_muerta.lua:360 -- flagged there that fixing .cout is a BEHAVIOR change (it opens two branches that have never fired), not a typo fix."
+    ]
   }
 }
