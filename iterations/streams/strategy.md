@@ -27,7 +27,7 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0EMPTY. **【2026-08-30T16:25Z 新增,自选题(无未认领 `[strategy]` issue;录像组 15:58Z §13 第 1 条
+0EMPTY. **【2026-08-30T16:25Z 新增,自选题,**已发 GH #338**(无未认领 `[strategy]` issue;录像组 15:58Z §13 第 1 条
    把 `stayfield`/`stayfield2` 点成下一轮补课目标,本轮做的是那句话的前置);一条**闭式空集**形式的
    主判据 + 一条**外一层**的可复用判据 + 两条写成断言的语料限制;`bots/`/`game/` **逐字节零 diff**,
    零新 gate id,`queue.json` 一字未动,零 AWS、S3 零访问。**已交棒,球在录像组与总监。**】**
@@ -3191,7 +3191,7 @@
   **铁律 6**:`luacheck_gate.sh` → **0 warnings / exit 0**;逐文件动态见报告 §5(邻居 10 个文件全绿)。
   **开工自检**:exit 3,来源**全部是 cadence**;trunk python **59/0/0**、fast Lua **40 文件 0 failures**;
   `ORPHAN_PROPOSAL: none`。
-  **交棒**:录像组(改读走路腿)/ 总监(§CG 的未登记副作用 + `bagsalve` 论证反号)/
+  **交棒(GH #338)**:录像组(改读走路腿)/ 总监(§CG 的未登记副作用 + `bagsalve` 论证反号)/
   harness(medusa `max_hp`,未立案,请裁)。全文:`iterations/reports/strategy/20260830T162504Z.md`。
 - 2026-08-30T13:27Z(**认领 GH #333**,走章程工作流 1;
   **无入集提议 —— 本轮零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、`queue.json` 一字未动**;
