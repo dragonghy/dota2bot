@@ -55,6 +55,23 @@
 --     more samples than an existence question does.  Size it on the EVENT side
 --     (casts that did/didn't happen), or not at all.
 --
+-- >>> HALF OF THAT RULE WAS RETRACTED ON 2026-08-30 -- READ BEFORE QUOTING IT.
+-- tests/test_axe_culling_band_power.lua (hero stream; state.json
+-- hero2_BANDPOWER_20260830) reproduces the "roughly 40 frames" figure from this
+-- repo's own corpus (median in-ring pool 1131 -> 45.2 frames, so the arithmetic
+-- above is right) and then shows it prices the wrong population.  band /
+-- health_pool is the POOL model: it asks how often a UNIFORMLY DRAWN frame lands
+-- in the window.  An enemy never occupies the band uniformly -- it ENTERS from
+-- above on the way down, so a crossing is caught with p = min(1, band/(v*dt)),
+-- which contains no health pool term.  Priced off `observed.burst` (real damage
+-- dealt, 58 fixtures, median 58.3 HP/s): 2.3 crossings per hit at the median and
+-- 14.4 at the fastest burst the corpus has recorded -- 19.4x and 3.1x better than
+-- the random-frame population.  So a narrow band CAN be sized from 1 Hz timelines
+-- by counting CROSSINGS; what cannot size it is a FIXTURE LIBRARY, which holds
+-- isolated instants and by construction contains no crossings at all.  This file's
+-- own verdict (UNDERPOWERED, lever not written) is unaffected -- the corpus scan
+-- below still comes back zero -- but the Y.2 rule as phrased above is too strong.
+--
 -- THE ARGUMENT THAT DOES NOT DEPEND ON THE DOMAIN
 -- -----------------------------------------------
 -- Worth recording because it is the strongest (c)-condition case here and it
