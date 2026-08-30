@@ -2830,7 +2830,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     录像组的文件,**§AW.1 不代改**,#328 追评点名(GH #221 同族)。
   - 变异 **7 条条条见红且只红在该红的节**,对照 7/0 绿,盘外 `cp` 还原后两份 `cmp` 逐字节相同。
   - 铁律 6:`luacheck_gate.sh` **0 警告 exit 0**;`.githooks/pre-push` 在两次 push 上各跑一遍并放行,
-    **没有用过 `RULE6_BYPASS`**。**全量套件本轮没跑完**(GH #124)⇒ **不主张主干全绿**,详见报告 §8。
+    **没有用过 `RULE6_BYPASS`**。**全量套件本轮没跑完**(GH #124:收尾时 7m13s / 977 例 / 0 FAIL,
+    进程仍在跑)⇒ **不主张主干全绿**,详见报告 §8。
+  - GH #328 追评**先 push 后发**(GH #290):`claim_precheck.sh` **exit 0**、
+    `local commits not on origin/main: 0`、`paths cited 7 / resolved 7 / refused 0` ⇒
+    https://github.com/dragonghy/dota2bot/issues/328#issuecomment-5467501742
 - 2026-08-30T04:5xZ(报告 `iterations/reports/hero/20260830T045500Z.md`;轴 **卡住 `hero-2` 的那个
   已发表的封锁数字**;**本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
   自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
