@@ -389,11 +389,13 @@ Three things decide it the same way:
   * QUANTIZATION.  [7] is a RATE: +66.7% crit frequency (crit_mult 280% at rank
     4, and the shipped row maxes Mortal Strike by hero level 8), paid on every
     attack for the rest of the game.  [8] is an EVENT: it needs Wraith King to
-    die with enemies inside 900 and Reincarnation off a 120s rank-3 cooldown.
-    t25 is reached in the last minutes of a turbo game -- the post-cap frame that
-    reopened this whole axis has him at 26 at 23:02 of a 24.9-minute game -- so
-    [8]'s expected number of payouts in the window it lives in is at or below
-    ONE, and can easily be zero, while [7] pays out on every swing in it.
+    die with enemies inside 900 and Reincarnation off its rank-3 cooldown (KV
+    120; the frames read 110 -- MEASURED (4) below).  t25 is reached in the last
+    minutes of a turbo game, and that window is now measured rather than read
+    off one frame: mean 208s over 49 games.  [8]'s expected number of payouts in
+    it is 0.408 -- "at or below ONE, and can easily be zero" was the right
+    shape, and the measurement lands far below one -- while [7] pays out on
+    every swing in the same window.
   * NET, NOT GROSS.  [8] does not ADD its effect, it REPLACES one: the shipped
     Reincarnation already slows everything within slow_radius 600 by -75% move
     and -75 attack for 4s.  What [8] buys is the DIFFERENCE between that and a
@@ -408,12 +410,66 @@ Three things decide it the same way:
     Axe's t20 argument that came out the OTHER way there (his role lists buy no
     attack items, so his +attack-damage row did not compound); the ruler is the
     same, the hero is not.
-HONEST BOUNDS on the t25 half: no frame in this repo shows a Wraith King at 25,
-so the window length is inferred from ONE post-cap game (GH #235), and "how
-often does Reincarnation trigger with enemies inside 900" is a corpus question
-nobody has asked -- if that number turns out high, [8]'s case improves and this
-row should be re-priced.  Nothing here is gated, so both rows are live in every
-turbo game that reaches the level; keeping them is a decision, not an omission.
+MEASURED, 2026-08-30 -- the corpus question this paragraph used to owe came back
+------------------------------------------------------------------------------
+GH #328, from replay-check's iterations/reports/replay-check/20260830T071054Z.md
+and its detector tools/batch_test/behavioral/wk_reincarn_trigger_domain.py, over
+the W17 + W17-R archives: 71 of 72 WK games scanned wide, 8 frame-by-frame, 261
+trigger episodes, carrier denominator 96 WK hero-games.  It replaces the HONEST
+BOUNDS paragraph that stood here, four of whose facts were wrong; the verdict
+they hedged is now the measured one.  What each correction does to the price:
+
+  (1) "no frame in this repo shows a Wraith King at 25" is RETIRED.  He reaches
+      20 in 96/96 hero-games and 25 in 60/96 (62.5%); the frame-by-frame subset
+      reads 49/71 with a high-water of 30.  The row is played, not theoretical.
+  (2) The window is no longer inferred from ONE post-cap game.  n=49: mean 208s
+      (3.5 min), min 32s, max 453s.  GH #235's game (level 26 at 23:02 of a
+      24.9-minute game) sits INSIDE that distribution; it was not an outlier.
+  (3) The three conditions in QUANTIZATION are not equally scarce, and the old
+      ordering priced the wrong one.  At a trigger, P(>=1 enemy inside 900) is
+      95.0% over the whole corpus and 85.0% in the >=25 stratum, so "enemies
+      inside 900" does almost no work.  The scarce condition is THE TRIGGER
+      ITSELF: of 49 games that reach 25, thirty never trigger again after 25,
+      eighteen trigger once, one twice.  Conclusion unchanged, reason re-weighted.
+  (4) The rank-3 cooldown is 120 in the KV, but the frames read 109-110 (rank 1
+      179, rank 2 149-150; n=3).  One parameter explains it exactly and it is
+      already in this repo: reincarnation/AbilityCooldown carries a
+      `special_bonus_scepter` of -10, and item_ultimate_scepter is in BOTH of
+      this hero's buy rows, so the Wraith King who is alive at 25 is the one who
+      has it.  120 - 10 = 110.  That is an EXPLANATION, not a confirmation: n=3,
+      and no frame here proves the scepter was owned.  Nothing below leans on it
+      except the ceiling in (6), which uses the SMALLER number and therefore
+      errs in [8]'s favour.
+  (5) THE PRICE, RECOMPUTED.  [8] gross = 0.408 triggers x 0.650 extra enemies
+      that the 900 ring catches and the 600 one does not (>=25 stratum means
+      1.900 against 1.250) = 0.265 extra enemies touched per level-25 game, and
+      that is GROSS -- the NET, NOT GROSS bullet above still has to come off it.
+      [7] over the same window = 208/3 - 208/5 = +27.7 crit opportunities at
+      full attack uptime, +27.7f at uptime f.  Break-even is 0.650 x T = 27.7f,
+      i.e. T = 42.6 triggers per game at f=1 and still T = 10.7 at a pessimistic
+      f=0.25, against a measured T = 0.408.
+  (6) AND [8] CANNOT REACH BREAK-EVEN, which is a stronger statement than losing
+      to it.  At a 110s rank-3 cooldown the mean 208s window holds at most
+      floor(208/110)+1 = 2 triggers, and the longest window in the corpus, 453s,
+      at most 5.  The corpus maximum observed is exactly 2.  Break-even needs
+      ~43 (~11 at f=0.25).  The re-price this paragraph used to invite -- "if
+      that number turns out high, [8]'s case improves" -- is closed by a
+      ceiling, not by a sample size.
+  (7) One prediction registered against this axis came out FALSE, recorded as
+      such: "the radius advantage is on paper only".  Over the whole corpus
+      mean(900) - mean(600) = 0.789 enemies.  The radius advantage is REAL.  It
+      is small, and what kills [8] is the trigger rate, not the ring.
+
+LIMITS.  (5) compares EVENTS, not damage: "extra enemies inside a 1.6s stun that
+has expired before he is back on his feet" and "extra 280% crits on a hero whose
+whole item row amplifies right-clicks" are not the same unit, and nothing in the
+corpus converts them per frame.  What survives the mismatch is the two orders of
+magnitude and the sign, both of which run against [8] on its GROSS number,
+before the deduction the NET bullet owes it.  Nothing here is gated, so both
+rows are live in every turbo game that reaches the level; keeping them is a
+decision, not an omission.  tests/test_wk_t25_reincarn_pricing.lua holds this
+arithmetic to the KV and to the shipped row, and goes red if a constant moves
+without the row moving with it.
 
 modifier_skeleton_king_bone_guard                 -- stack count = charges held
 modifier_skeleton_king_hellfire_blast
