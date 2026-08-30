@@ -145,6 +145,25 @@ for st in ("pending", "running", "harvested"):
 for st in ("done", "rejected"):
     check(not pr.is_open({"status": st}), "%s treated as open" % st)
 
+# GH #317 (director ruling 2026-08-30, 甲 variant): a status outside the
+# vocabulary counts as OPEN, not closed.  The old rule (`status in
+# OPEN_STATES`) answered False for every unrecognised spelling, which took the
+# row out of BOTH buckets -- `hero-20` sat unseen for two days that way.
+for st in ("routed", "harvested_pending_verification",
+           "returned_uninterpretable", "totally_made_up"):
+    check(pr.is_open({"status": st}),
+          "GH #317: drifted status %s read as closed" % st)
+check(pr.is_open({"id": "x"}), "GH #317: a row with no status read as closed")
+# The point of the ruling is visibility, so assert the end state, not just the
+# predicate: a drifted-status un-ruled row must REACH a bucket.
+drifted = {"id": "hero-20", "status": "routed", "question": "archive scan"}
+ride, other = pr.partition([drifted])
+check(drifted in ride + other,
+      "GH #317: a drifted-status un-ruled row still reaches neither bucket")
+# ...and a genuinely closed row must not, or the ruling would flood the buckets.
+check(pr.partition([{"id": "y", "status": "done"}]) == ([], []),
+      "GH #317: a closed row leaked into a bucket")
+
 # Rideshare classification is a text match on the request's own declaration.
 check(pr.is_rideshare({"question": "搭车,不申请专波,零 AWS 增量。"}), "zh rideshare missed")
 check(pr.is_rideshare({"question": "NO NEW WAVE NEEDED -- archive scan"}), "en rideshare missed")
@@ -288,9 +307,11 @@ ruling_md = "# t\naaa\n\n## §CG 2026-08-29T18:5xZ 总监裁定:`fieldsip`(§CE)
 check(pr.find_proposals(ruling_md) == [],
       "a 总监裁定 section was parsed as an admission proposal")
 
-# LIMIT 7: statuses outside the vocabulary are invisible to both buckets, so
-# they must at least be named.  Measured on the real queue: `routed` and
-# `harvested_pending_verification` are both in use.
+# LIMIT 7: statuses outside the vocabulary now COUNT AS OPEN (GH #317), but
+# must still be NAMED -- the ruling fixes what the drift costs, it does not
+# stop the drift, and a silent auto-accept would retire the only signal that
+# says the vocabulary moved.  Measured on the real queue: `routed`,
+# `harvested_pending_verification` and `returned_uninterpretable` are in use.
 check(pr.unknown_status_rows([{"id": "a", "status": "routed"}]),
       "an out-of-vocabulary status was not reported")
 check(not pr.unknown_status_rows([{"id": "a", "status": "pending"}]),

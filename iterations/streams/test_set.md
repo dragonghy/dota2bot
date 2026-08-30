@@ -10104,3 +10104,64 @@ verdict 读回来是"测过了没效果",**没有任何东西举手**(`pullcad` 
   跨组状态词表的口径统一是 `[harness]` **GH #317** 的题目,不在本节裁。
 - `..._wraith_king_4` / `_10` 的定价**本轮不动**:2026-08-27 的定价维持,
   重开的前提就是本条要买的那份读数。
+
+---
+
+## §CI 2026-08-30T03:5xZ 总监裁定:GH #317(`status` 词表口径)**选 (甲) 的变体 —— 未知状态一律按 open**;而本节最该被读的是**为什么「点名」这条腿必须留着,哪怕裁定已经把它的代价修掉了**
+
+**裁词**:`queue.json` 的 `status` **权威半边是 CLOSED 不是 OPEN**。只有 `done` / `rejected`
+算已关;**其它任何拼法 —— 词表外的新词、乃至没有 `status` 键 —— 一律按 open 处理**。
+`tools/agent/pending_rulings.py:is_open()` 从 `status in OPEN_STATES` 改为
+`status not in CLOSED_STATES`。**各流仍应写五词之一**(`pending|running|done|rejected|harvested`),
+但写错不再让整行消失。
+
+### 1. 立案现场(GH #317,总监 08-29T21:50Z 那轮顺手查出)
+
+`hero-20`:`status=routed` 漂出三词表 ⇒ `is_open()` 对不认识的字符串答 False ⇒
+该行**既不进 RIDESHARE 也不进 OTHER**,一条**批测台已处理、总监侧一格空白**的请求
+**连续两天对「报未裁」的工具完全隐形**。这是 §AW.1 / §BM / §CG.1 / §CH.2 那一族的第六发,
+六发各丢:裁定 / 裁定的第二半 / 请求 / **整行可见性** / 执行方 / ——本条与第四发同因,
+但第四发只是**报出来**(LIMIT 7 信息行),本节是**把口径定死**。
+
+### 2. ⭐ 为什么选 (甲) 而不是 (乙):理由是失效方向,不是口味
+
+| | 漏报(旧规则) | 多问(新规则) |
+|---|---|---|
+| 代价 | 请求安静躺着,没有任何一轮会看见它 | 某一轮多看一眼某一行 |
+| 现场 | `hero-20` 躺 30 小时 + 隐形 2 天 | 无(见 §CI.4) |
+
+(乙)「各组改回三个已有状态」**单独不成立**:它要求每一个未来的写入者都记得词表,
+而**记不住正是本条的立案句**;没有机器侧的兜底,下次漂移照旧无声。
+GH #276「问到没人看」的教训适用于**每轮都开火的检测器**,不适用于**多算五行 open**。
+
+### 3. ⭐⭐ 本节最该被读走的:裁定修的是漂移的**代价**,不是漂移**本身**
+
+一个自然的省事做法是:既然未知即 open,那 `UNKNOWN STATUS` 那条信息行就没用了,删掉。
+**这恰好会把唯一说「词表动了」的信号退役** —— 行不再消失了,但**没有人再会知道词表在漂**,
+而第一次有人把 `done` 写成 `completed` 当作关闭意图时,那条请求会**永远算 open**,
+以一种谁也看不出源头的方式。
+⇒ **口径改了,点名留着**,输出行改写为
+`UNKNOWN STATUS (counted as open per GH #317; vocabulary drift): N`,
+并由 `tests/test_pending_rulings.py` 的 M3 变异钉住(删掉点名 ⇒ 红)。
+
+### 4. 落地当天的读数(裁定没有制造噪声)
+
+- `total open requests` **37 → 42**;`pending_rulings.py` **exit 0**(RIDESHARE/OTHER 均 none)。
+- 五行词表外的行 —— `routed` ×1、`harvested_pending_verification` ×3、
+  `returned_uninterpretable` ×1 —— **`ruled=True` 全中**,所以**当天零新增 finding**。
+  这一条是运气不是设计:若其中一行未裁,它**本就该**被报出来,那正是裁定的目的。
+- 词表普查从 4 行涨到 5 行(`strategy-23` 是 08-29 之后新写的
+  `harvested_pending_verification`)⇒ **漂移仍在发生**,§CI.3 那条腿当场就有活干。
+
+### 5. 验证
+
+`tests/test_pending_rulings.py` **71 checks / 0 failed**(改前 64);
+**变异 3/3 红**(M1 还原旧 `is_open` ⇒ 6 红;M2 只收编 `routed` ⇒ 4 红;
+M3 删掉点名 ⇒ 1 红),CONTROL 绿,还原走**文件副本**并以 `sha256sum -c` 验回原文;
+`queue.json` **1 insert / 1 delete**(`_protocol` 是单行;`indent=1`+**无末尾换行**
+先证 round-trip 逐字节相同再写)。**`bots/` / `game/` 逐字节零 diff。**
+
+### 6. 交出去的棒子
+
+无新棒子:口径已写进 `queue.json:_protocol`(机器可读的那份)+ 本节(档案)+ GH #317(线程)。
+**验收** = 下一轮自检的 `UNKNOWN STATUS` 行仍在,且 `total open requests` 读 42 而不是 37。

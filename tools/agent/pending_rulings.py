@@ -90,12 +90,16 @@ LIMITS FOR THE ORPHAN LEG (in addition to 1-4 below)
    dropped -- GH #171's rule: a leg that could not read is not a leg that
    read clean.
 7. `UNKNOWN STATUS` names rows whose `status` is outside the vocabulary this
-   tool knows.  Those rows are invisible to BOTH buckets above, because
-   `is_open` answers False for anything it does not recognise.  Measured
-   2026-08-29: `hero-20` (`routed`, no `director` field, its ruling written
-   into `result` by the batch desk) and three
-   `harvested_pending_verification` rows.  Informational: the tool cannot
-   tell a genuinely-closed state from a drifted spelling of an open one.
+   tool knows.  Since the GH #317 ruling (2026-08-30) those rows are COUNTED
+   AS OPEN, so they are no longer invisible to the buckets above -- see
+   `is_open`.  They are still named, and that is deliberate: the ruling fixes
+   what the drift costs, it does not make the drift stop happening, and a
+   silent auto-accept would retire the only signal that says the vocabulary
+   moved.  The tool still cannot tell a genuinely-closed state from a drifted
+   spelling of an open one; it now errs toward open.  Measured 2026-08-30:
+   `routed` (1), `harvested_pending_verification` (3),
+   `returned_uninterpretable` (1) -- all five already ruled, so the ruling
+   added no findings on the day it landed.
 
 LIMITS (read these before quoting the output)
 ---------------------------------------------
@@ -133,6 +137,11 @@ QUEUE = os.path.join(REPO, "iterations", "queue.json")
 TEST_SET = os.path.join(REPO, "iterations", "streams", "test_set.md")
 STATE = os.path.join(REPO, "iterations", "state.json")
 
+# The vocabulary, after the GH #317 ruling (director 2026-08-30).  CLOSED is
+# the authoritative half: a row is open unless it says one of these.  OPEN
+# stays listed because it is the vocabulary streams are asked to write, and
+# because `unknown_status_rows` reports anything outside the pair -- but it is
+# no longer what `is_open` keys off.
 OPEN_STATES = ("pending", "running", "harvested")
 CLOSED_STATES = ("done", "rejected")
 
@@ -156,7 +165,24 @@ def load_requests(path=QUEUE):
 
 
 def is_open(req):
-    return req.get("status") in OPEN_STATES
+    """Open unless the row explicitly says it is closed (GH #317, 甲 variant).
+
+    This used to be `status in OPEN_STATES`, which answered False for every
+    spelling the tool did not recognise -- so a drifted status took the whole
+    row out of BOTH buckets and the request sat there unseen.  `hero-20` is
+    the measured case: `status="routed"`, `director` empty, its ruling written
+    into `result` by the batch desk, invisible to this tool for two days.
+
+    Keying off CLOSED instead flips the failure direction, which is the whole
+    reason for the ruling: a spelling drift now costs one extra look in some
+    round (the row shows up as open and, if genuinely un-ruled, is named),
+    where before it cost the request its visibility.  Over-asking is the
+    tolerable error here; GH #276's "asked until nobody read it" warning is
+    about a detector that fires every round, not about one extra row.
+
+    A missing `status` key is open for the same reason.
+    """
+    return req.get("status") not in CLOSED_STATES
 
 
 def is_unruled(req):
@@ -389,9 +415,11 @@ def main():
 
     unknown = unknown_status_rows(requests)
     if unknown:
-        # LIMIT 7: invisible to both buckets above, because is_open() answers
-        # False for a status it does not recognise.  A question, not a verdict.
-        print("UNKNOWN STATUS (invisible to both buckets above): %d" % len(unknown))
+        # LIMIT 7: since GH #317 these are COUNTED AS OPEN (so they reach the
+        # buckets above); they are still named because the drift itself is the
+        # thing worth seeing.  A question, not a verdict.
+        print("UNKNOWN STATUS (counted as open per GH #317; vocabulary drift): %d"
+              % len(unknown))
         for r in unknown:
             print("  %-12s status=%-32s ruled=%s"
                   % (r.get("id"), r.get("status"), not is_unruled(r)))
