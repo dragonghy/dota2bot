@@ -1,5 +1,8 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach
+
+**成员串 47**(上一行,**414 字节**)。本行 **2026-08-30T22:0xZ 的变动:`creepthink` / `lionqdmg` / `cmqreach` **三条同轮入集**(44 → 47,总监裁定全文 **§CO**,提议分别是 §CK / §CM / §CN;queue `strategy-25` / `hero-24` / `hero-25`)—— 三条都是**搭车、零 AWS 增量、不申请专波**,按铁律 §BB.4「搭车提议的唯一成本就是不被裁」放行;`cmqreach` 是**到达那一轮就被裁的第一条**。
+**收割前必读四条**:(i) **W30 起的读数不得与 W29 并池** —— 串不同(44 → 47),W29 那四粒是 44-id 家族的**唯一一波**,不会再被补厚;**这是可接受的,理由写在 §CO.4:owner 2026-08-01 的验证哲学里,条件 (b) 是「无明显负面」的粗粒度读数,不是显著性检验** —— 把 SE 26.56 读成「4 粒不够裁」等于把 08-01 废掉的那个检验又请回来。真正卡住 44/45-id 家族 promote 的是**条件 (a) 的逐 id 帧核验**,不是 (b) 的精度。(ii) ⚠️ **`pullcad` 的读数也在 W30 断了一道界**,而**没有人提议改动 `pullcad`**:`creepthink` 改的是那段代码**多久被问一次**,`pullcad` 的常数就坐在那个频率里(§CO.1)。**W30 起的 `pullcad` 读数不得与 W25–W29 的并池。**(iii) `creepthink` 的 (a) **有波内同域镜像对照**(`J.ShouldCreepPullLane` 无 soak gate,勾线两腿都跑),**不要**把 `pullthink` 的跨波致歉抄过来;但 `pullcad` 同波共 armed ⇒ 归属规则见 §CO.1。(iv) `lionqdmg` / `cmqreach` 是**归档扫描**(零 EC2),`executor` = `replay-check`,与 hero-14 / hero-17 合并成一次扫描;两条各自的 **UNINTERPRETABLE 退回门**写在 `queue.json` 的 `director` 字段里,**收割前必读**。
 
 **成员串 44**(上一行,**385 字节**)。本行 **2026-08-30T10:09Z 的变动:`fieldcreep` 退集**(45 → 44,总监裁定全文 **§CJ**,起因 GH #325 / #323 / #327)—— gate 与代码**保留、永不 arm**(当前形态),退回协同组。**⚠️ 这个 44 与 08-29T10:xxZ 那个 44 不是同一个串**(那个含 `fieldcreep` 不含 `fieldsip`,388 字节;本串 385)—— 别按 id 数对读。
 **收割前必读三条**:(i) **W29 起的读数不得与 W27/W28 并池** —— 串不同,而差的那一个 id 恰好收窄了 `stayfield`/`stayfield2`/`fieldbuy`/`fieldsip` 四个 id 共用的 `J.IsFieldRegenSituation` 域(§AR.0 当初同波 arm 就是为了这个);(ii) **已收割语料(W25–W28)= 带 `fieldcreep` 的窄版本,W29 起 = 不带**,两侧各自内部自洽,**跨界并池才是错的**;(iii) `fieldsip` 的 (a)(`strategy-23`)读的是**已落地的 W27/W28 语料**,不需要新波次 ⇒ **本次退集不作废它**,但它买到的是窄版本上的读数,写结论时要带这个限定。
@@ -10714,3 +10717,150 @@ armed(turbo **且** `cmqreach`)时答 `nCastRange`;否则逐字答出厂的 `nCa
   于是可以把 nil 传进 `J.GetInLocLaneCreepCount`)。**Silencer 不在焦点五里,一次一根杆**,
   只登记(`state.json:cmqreach_20260830.known_gap` 第 (5) 条),不修。
 - **不主张 promote**,也不主张 arm 的档期;本节只申请**入集**。
+
+## §CO 2026-08-30T22:0xZ 总监裁定:`creepthink`(§CK)/ `lionqdmg`(§CM)/ `cmqreach`(§CN)**三条同轮入集**(成员串 44 → 47)+ spot 单波围栏价 `~$0.8` → `~$0.90` —— 而本节最该被读的不是三条裁词,是 **§CO.4:「4 粒不够裁」把 owner 2026-08-01 废掉的那个显著性检验又请了回来**
+
+**裁定方**:总监。**成本**:0(三条全是搭车;本轮零 AWS 调用、零支出)。
+**登记**:`state.json:admit_three_20260830T22`。**投递**:`queue.json` 的
+`strategy-25` / `hero-24` / `hero-25` 三个 `director` 字段(§2.5:裁定要落到被裁方读的那个字段上)。
+**开工自检**:8 腿,`selfcheck worst exit: 3`,唯一 FINDING = `queue-rulings`,点名的正是这三条;
+trunk 健康(python 62 passed / 0 failed / 0 uncertifiable;44 个 tagged 检测器 0 失败)。
+
+### §CO.0 三条的共同资格(按源码核,不是按摘要核)
+
+| id | gate 站点 | 独立 gate | turbo | off 路径 | 测试(裸读 exit 0) |
+|---|---|---|---|---|---|
+| `creepthink` | `mode_roam_generic.lua:265` | 计数 1,无合取 | **结构性**(`jmz_func.lua:7793`) | 一次 nil 比较 | 12/12 |
+| `lionqdmg` | `hero_lion.lua:546` | 计数 1,无合取 | 显式合取 | 出厂表达式是**最后一条语句** | 13/13 |
+| `cmqreach` | `hero_crystal_maiden.lua:581` | 计数 1,无合取 | 显式合取 | 逐字返回 `nCastRange + nRadius` | 16/16 |
+
+三条都不与任何 id 合取 ⇒ **`pullcad` 陷阱不适用**(合取里若含一个已 promote 的 id,promote 当天冻结为 FALSE,
+而 `check_armed_wiring.py` 仍报 WIRED)。`creepthink` 的测试自己钉了这一条的两个方向。
+
+### §CO.1 `creepthink`:三条总监自己的读数,一条抬它、两条约束它
+
+**(一)⭐ 它不在 `pullthink` 的处境里,而这一条把申请书往上抬。**
+`pullthink_domain.py` 的表头立过一条:营地那半**两腿不共域** —— `roamCampPull` 要
+`J.ShouldPullNeutralCamp` 非 nil,而它开篇就要 `IsSoakCandidate('pullcamp')`,`pullcamp` 至今 gated
+⇒ baseline 腿一次营地拉都没有(实测 armed 59 vs baseline 4 episode / 139 局),
+armed/baseline 比的是**拉营 vs 顺路打野**,不是效应估计,只能退到跨波对照。
+**本条不同**:`J.ShouldCreepPullLane`(`jmz_func.lua:7792`)**没有任何 soak gate** ——
+`creeppull` 已于 2026-08-23 promote(`stable-v2`)⇒ 勾线在**两腿都跑**
+⇒ `creepthink` 的 (a) **有波内同域镜像对照**。**不要把 `pullthink` 的跨波致歉抄到本条上。**
+
+**(二)⚠️ `pullcad` 与它不只是同波共 armed,它们交互 —— 而这道界落在一个没人提议改动的 id 上。**
+两者动的是**同一段**(`mode_roam_generic.lua:270–315`):`pullcad` 把 `nBeat` 1.2 → 3.0;
+`creepthink` 改的是 **R —— 这段代码多久被问一次**。⇒ (i) 合力**不可加**;
+(ii) **W30 起的 `pullcad` 读数不得与 W25–W29 的并池**。
+形状与 §CJ / §AR.0 同族,**区别是它不会自己举手**:没有任何申请书、任何提议、任何 issue 提到 `pullcad`。
+
+**(三)⚠️ 白捡的一条,而且它改的是 `pullcad` 自己主张的东西。**
+`pullcad` 源码注释里的条件 (c) 算术 ——「the drag owns 2.5s of every 3.0s (83%) against
+0.7s of every 1.2s (58%)」—— 是在**没有节流阀**的模型上算的,即预设 Think 体每帧都被问到,
+而 §CK 的不等式否掉的正是这个预设。⇒ 那两个百分比**不是 W25–W29 测的那个世界**。
+这**不否掉 `pullcad`**(节流阀在时它仍把重开帧从 poke 变成 drag),但它主张的效应量
+是在「`creepthink` 已 armed」的世界里写的。**交棒协同组:重推或改写措辞,不许静默删数字。**
+
+**(a) 的归属规则(可执行的那半)**:判别子是**结构性**的 —— 节流阀在时,drag 指令只可能发在
+被重开的帧上;armed 之后它可以发在 `ACTIVITY_ATTACK` 内的帧上。**帧表若带 anim activity,
+这一条在一波之内就把两根杆分开**;若不带,退到跨波增量(W30-armed vs W29-armed,`pullcad` 两波都 armed),
+**按跨波对照报,永远不报成 A/B**。
+
+### §CO.2 `lionqdmg`:批的是一次「买域」,不是一个效应
+
+申请书预登记的 (乙)(丙) **逐字生效**;(甲) 的 DOMAIN-NOT-REACHED 是零读数的唯一合法读法。
+`executor` = **`replay-check`,恰好一个流**(§CH 立案句:`hero-20` 写了两个流 = 一个都没点,躺了 30 小时);
+与 hero-14 / hero-17 / hero-25 **合并成一次归档扫描**(§BF.2 ROUTED_ARCHIVE_SCAN,零 EC2)。
+**UNINTERPRETABLE 退回门**(`wkqdmg` 先例):载体不足时退回并交出载体分布,不许读成「测过了没效果」。
+**总监加一条**:(3) 的 0% / 15% / 20% 三栏**必须各自标出处**,并注明该档在 ~20 分钟 Turbo 局里
+**够不够得着** —— 语料里唯一近火帧恰好骑在 15% 上,**哪一栏真实可达,决定这份读数是域还是幻觉**。
+
+### §CO.3 `cmqreach`:收窄可以在没有开火侧 fixture 的情况下入集;而它带出来的那个缺陷不许继续住在它的登记键里
+
+准入的实质理由是**方向单边可证**:更小的搜索半径看不到更多的兵 ⇒ 每个 `count >= 2/3/4/5` 门槛只会更难
+⇒ armed 那边放新星**严格不多于**出厂,**从不挪动一次本来就合法的施法**。
+与 `wkqdmg` 入集时的「纯收窄」资格(§CF (1))同条:**失效方向朝安全侧的收窄,不需要开火侧 fixture 才能入集**。
+**它是到达那一轮就被裁的第一条**(20:xxZ 到,22:0xZ 裁;§BB.4 要求如此,而 `odbuild`/`wkqdmg` 用了三轮)。
+
+**⭐ 从它身上捡出一件不属于它的事。** §CN.6 登记的 `bots/BotLib/hero_silencer.lua:301-305`
+**已按源码复核属实,而且比 §CN.6 的措辞更硬**:
+
+```lua
+if nCanHurtCreepsLocationAoE == nil
+    or J.GetInLocLaneCreepCount( bot, 1600, nRadius, nCanHurtCreepsLocationAoE.targetloc ) <= 2
+then
+     nCanHurtCreepsLocationAoE.count = 0
+end
+```
+
+`or` 短路 ⇒ **第一条子句为真的那一刻,then 体第一件事就是索引那个刚被判定为 nil 的值**。
+**不需要知道引擎会不会返回 nil 就能判**:两种可能**都**是缺陷 —— 要么该子句**永远为假**
+(那是一条死守卫,而作者写下它说明他认为不是),要么它**为真过一次,那一帧 Silencer 的 think 静默炸掉**
+(本仓没有 bot 侧错误可见性:`error in error handling` 吞掉全部文本)。
+**一个住在别的 id 的 `known_gap` 键里的 nil 解引用,对每一条队列都是隐形的** ——
+这与 §CG.1 的 `ORPHAN_PROPOSAL`(提议没有请求行 ⇒ 工具连续三轮报 `none`)是同一种隐形。
+⇒ **交棒英雄组:开自己的 `[bug]` issue**,带上面这段二择一论证。
+**本轮总监不修**:Silencer 不在焦点五,且改的是**出厂默认**,按 `gated-fix` 纪律要各自的证据与 id。
+
+### §CO.4 ⭐ 本节最该被读的一条:「4 粒不够裁」把 owner 2026-08-01 废掉的那个检验又请了回来
+
+批测台 W29 报告 §3.6 是本轮唯一的实质反对意见,原文:
+四粒 gpm arm `+35.98 / +89.96 / −35.79 / +4.05` ⇒ SD 53.12、**SE 26.56**,均值 **+23.55 < SE**
+⇒「W29 单独既不支持 promote 也不支持 reject,它需要的是第二波把家族做厚到 8 粒」。
+**算术复核过,四个数、SD、SE 都对。** 但**那句结论用错了尺子**:
+
+- **铁律 2(owner 2026-08-01,取代旧的 4-seed 显著性检验)逐字是**:小改动**不做数据显著性检验**;
+  条件 (b) = 「批测显示对胜负**没有明显负面影响**(**粗粒度,非显著性**)」。
+- `+23.55 gpm`、`winrate 0.503`、`deaths 0.00`、`comps_better gpm 3/4` —— **这里没有任何负面**。
+  条件 (b) 问的是**有没有明显负面**,不是**效应量是否显著异于零**。
+  「均值 < SE ⇒ 不够裁」正是后者,而后者**在这个项目里已经被 owner 废掉三十天**。
+- ⇒ **W29 不是「买了四粒语料没买到结论」**;它买到的正是 (b) 要的那个结论:**44-id 家族没有明显负面**。
+
+**真正卡住 44/45-id 家族 promote 的从来是条件 (a)**(逐 id 的执行核验),
+本章程「当前状态」连续多轮自记「45-id 家族 +26.60 / 7/8 的 promote 仍缺条件 (a) 逐 id 帧核验」。
+**这条误读的代价是可计价的**:按它做,每一个家族都要 8 粒才敢说话 ⇒ 每次入集都要先冻结成员串两波
+⇒ 而本轮就有三条零成本的搭车提议在等,§BB.4 说它们唯一的成本就是不被裁。
+**⇒ 本裁定同轮改成员串 44 → 47,并接受 W29 成为 44-id 家族的唯一一波。**
+⚠️ **这不是说 SE 无用**:它是 (a) 之后**排序**候选、和判断**单个 id** 效应量时的正当工具,
+也仍然是 promote 前「有没有明显负面」以外任何**定量**主张的前提。废掉的只是
+**「显著才算测过」**这一步 —— 而它正是 08-01 之前那套的核心。
+**交棒批测台**:下一份 verdict 里 `suggested` 与 SE 照常打,但**「够不够裁」这句话不归 SE 管**,归三条件管。
+
+### §CO.5 spot 单波围栏价 `~$0.8` → `~$0.90`(应批测台 21:12Z §2.1 的请求,但不取它建议的 $0.85)
+
+批测台实测 W29 四台 SIR 墙钟均值 **0.856 h/台**、四台合计 **3.424 机时**,同期 spot 价带 $0.231–0.250/h
+⇒ **本波 $0.79–0.86**,而围栏用的 `~$0.8` **恰好压在区间最低点**。复核算术:
+`3.424 × 0.231 = 0.791`、`3.424 × 0.250 = 0.856` —— 两端都对。
+
+**不取 $0.85 的理由是算术不是口味**:$0.85 **仍落在本波实测区间之内**,
+即它在 W29 自己身上就可能少记 —— 而批测台自己指出失效方向是**危险的那一侧**(单价写低 ⇒ 每波少记)。
+**也不取 `max(费率) × max(价) × 4 = 0.948`**:那是两个从未同时出现过的极大值的积,
+正是本章程 §2 自己点名过的那种外推(cap-25 的 `$3.05` 高估 52%,朝安全侧失效 ⇒ 静静地少发波)。
+⇒ 取**已观测到的单波最高成本 $0.86 之上留余量的整数档 `~$0.90`**。
+账单侧已实测序列:$0.795(W16 外推)/ $0.799(W20)/ $0.747(W21)/ $0.79–0.86(W29)——
+**$0.90 覆盖全部四点**;对 $80 围栏的余量影响 ≈ 每波 $0.10,当前余量 ~$7 ⇒ 7.8 波 vs 8.7 波。
+
+**⭐ 并且给这个常数装上自动失效条款,理由与 GH #332 的 `BRACKET_HI` 完全同族**
+(那个 42.6 从 2026-08-29 起就该是 40.63,而它每轮照常被打印,因为**立论现场停止更新**):
+**任何一波的账单侧实测单波成本超过 $0.90,批测台在该轮报告里点名,总监下一次触发必须重裁这个常数。**
+常数**不许**靠人记得去复查。
+
+### §CO.6 ⚠️ 纪律 3(量退出码不许带管道)在 skill 已经落地的下一轮复发,而这是上一轮**预登记**过的判据
+
+上一轮(19:00Z)把四条纪律做进 `.claude/skills/evidence-discipline/`,并**预先写下**:
+「若纪律 3 在 skill 已在盘上的情况下复发第五次,说明补法必须是**机械的**不是文档的。」
+**本轮第一条命令就是 `bash tools/agent/routine_selfcheck.sh 2>&1 | tail -60`** ——
+harness 报回的 `exit code 0` 是 **`tail` 的**退出码,不是自检的(自检自己打的是 `worst exit: 3`)。
+该读数**已丢弃**,本节所有退出码改读工具自打的横幅或裸读 `$?`。
+⇒ **预登记的条件已满足:补法必须机械化。** 本轮**没有**建(工作单元是三条裁定 + 一个常数),
+**下一轮第一优先**:一个拒绝「管道后读退出码」的包装或扫描器,带自己的变异台。
+**这一条按纪律 4 记法登记:走的是「丢弃读数 + 改读工具自打横幅」这条路,不是「重跑一遍」。**
+
+### §CO.7 本节明说**没有**裁的
+
+- **不主张 promote**:三条只是入集(armed),距离 promote 还差各自的 (a)(b)(c)。
+- **没有**复核 §CK 那张右键间隔表的原始计数,**没有**裁 §CK 对 GH #326「域泄漏下界」那一步推论的证伪;
+  **没有**独立复核 `lion_impale` / `crystal_maiden_crystal_nova` 的 KV,采纳两个申请方在真实帧上的驱动自证。
+- **没有**动 `hero_silencer.lua`(见 §CO.3,交棒英雄组开 issue)。
+- **没有**裁 `#326` / `#324` / `#328`;**§CE 正则**仍挂;`state.json` round-trip 仍未修;
+  **低频 patch 检查**继续欠;`DECISIONS_NEEDED.md` 无新增;本周邮件与效率台账 01:20Z 已做 ⇒ **本轮无邮件**。

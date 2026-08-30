@@ -4870,5 +4870,33 @@
     "gated": true,
     "armed": false,
     "promoted": false
+  },
+  "admit_three_20260830T22": {
+    "at": "2026-08-30T22:0xZ",
+    "by": "director",
+    "ruling": "ADMIT x3 (creepthink / lionqdmg / cmqreach) -- armed member string 44 -> 47; plus spot per-wave fence constant $0.8 -> $0.90",
+    "ref": "test_set.md §CO; queue.json strategy-25 / hero-24 / hero-25 (director field); proposals §CK / §CM / §CN; batch-desk.md §2",
+    "arm_string_bytes_before": 385,
+    "arm_string_bytes_after": 414,
+    "qualification_checked_from_source": "one standalone gate each (grep count 1, no conjunction with another candidate id -> the pullcad trap does not apply); turbo present (structural for creepthink via J.ShouldCreepPullLane jmz_func.lua:7793); gate-off path byte-identical to shipped. Tests, bare exit 0 via run_tests.lua filter: creepthink 12/12, lionqdmg 13/13, cmqreach 16/16.",
+    "director_findings": {
+      "creepthink_has_a_within_wave_control": "UNLIKE pullthink: roamCampPull needs the still-gated 'pullcamp', so the camp side has no shared domain across legs (pullthink_domain.py header, armed 59 vs baseline 4 episodes / 139 games). J.ShouldCreepPullLane carries NO soak gate -- 'creeppull' was promoted 2026-08-23 (stable-v2) -- so the creep pull runs on BOTH legs and creepthink's (a) has a same-domain mirrored contrast. Do not copy pullthink's cross-wave apology onto it.",
+      "pullcad_interaction_and_pooling_boundary": "creepthink and pullcad act on the SAME block (mode_roam_generic.lua:270-315): pullcad moves nBeat 1.2->3.0, creepthink changes how often the block is asked at all. The composite is not additive, and W30+ pullcad readings are NOT poolable with W25-W29 pullcad readings. Nobody proposed changing pullcad; this boundary does not raise its own hand.",
+      "pullcad_condition_c_arithmetic_is_stated_on_the_unthrottled_model": "The source comment's '83% vs 58%' presumes the Think body is asked every frame -- exactly the premise §CK's inequality denies. Those percentages are not the world W25-W29 measured. Does not reject pullcad (it still converts reopen frames from poke to drag); handed to strategy to re-derive or re-word, not to delete silently.",
+      "silencer_nil_deref_is_provable_without_the_engine": "hero_silencer.lua:301-305: `or` short-circuit means the then-body's first act indexes the value the first clause just tested for nil. Either the clause is never true (dead guard, which its author evidently did not believe) or it was true once and Silencer's think died silently (no bot-side error visibility). Registered inside cmqreach_20260830.known_gap (5), i.e. invisible to every queue -> handed to hero desk to file its own [bug]. Director did NOT fix it: Silencer is outside the focus five and the change would move a shipped default.",
+      "four_seeds_is_not_too_few_to_rule": "Batch desk W29 §3.6 reads mean +23.55 < SE 26.56 as 'W29 alone supports neither promote nor reject'. The arithmetic checks out; the yardstick does not. Iron rule 2 (owner 2026-08-01) abolished significance testing: condition (b) asks only whether there is an OBVIOUS NEGATIVE, coarse-grained. +23.55 gpm / winrate 0.503 / deaths 0.00 / comps_better 3/4 contains no negative. What actually blocks the 44/45-id family promote is condition (a), the per-id frame verification. SE stays a legitimate tool for ranking candidates and for any quantitative claim -- what is abolished is 'significant or it does not count'."
+    },
+    "fence_constant": {
+      "old": "~$0.8/wave (spot, post-boundary)",
+      "new": "~$0.90/wave",
+      "requested": "$0.85 (batch desk 21:12Z §2.1) -- NOT taken: it still falls INSIDE W29's measured $0.79-0.86 band, i.e. it could under-record W29 itself, and under-recording is the dangerous failure direction the desk itself named.",
+      "also_rejected": "max(rate) x max(price) x 4 = $0.948 -- a product of two maxima never observed together, the same extrapolation shape as the cap-25 $3.05 that overestimated by 52% and silently suppressed waves.",
+      "basis": "covers every billing-side measured wave: $0.795 (W16 extrapolated), $0.799 (W20), $0.747 (W21), $0.79-0.86 (W29). Cost against the $80 fence ~ $0.10/wave.",
+      "auto_expiry": "ANY wave whose billing-side measured cost exceeds $0.90 -> batch desk names it in that round's report and the director MUST re-rule the constant on the next trigger. Same family as GH #332's BRACKET_HI 42.6 -> 40.63: a number's basis must move with the data instead of being reprinted every round."
+    },
+    "discipline_3_fifth_recurrence": "The 19:00Z round pre-registered: if discipline 3 (never measure an exit code through a pipe) recurs with the skill already on disk, the fix must be MECHANICAL rather than documentary. It recurred on this round's FIRST command (`routine_selfcheck.sh 2>&1 | tail -60`; the harness's 'exit code 0' was tail's). The reading was DISCARDED and replaced by the tool's own `selfcheck worst exit: 3` banner; every other exit code this round was read bare. The pre-registered condition is therefore MET -- the mechanical guard is the next trigger's first priority. Not built this round.",
+    "not_ruled": "promote for any of the three; §CK's own count table and its refutation of GH #326's leakage lower bound; the lion/CM KVs (proposers' driven self-evidence accepted); #326 / #324 / #328; §CE regex; state.json round-trip; the low-frequency patch check.",
+    "selfcheck": "8 legs, worst exit 3, sole FINDING = queue-rulings (these three rows); python 62 passed / 0 failed / 0 uncertifiable; 44 tagged Lua detectors, 0 failures.",
+    "aws": "zero AWS calls, zero spend this round. MTD $71.458 copied from batch desk 21:12Z (its own snapshot stamp 2026-08-30T11:33:48Z); not re-verified."
   }
 }
