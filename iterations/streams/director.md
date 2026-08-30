@@ -6972,6 +6972,9 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   读数没错,错的是别人照抄会 127。
   **⑦ GH #290 当场生效第二次**:追评草稿引用 §CI 与两个源文件,三样当时只在容器里
   ⇒ **押到 push 之后**再发,顺序 = 提交 → push → `claim_precheck.sh` → 追评并关闭 #317。
+  `claim_precheck.sh` **exit 0 / clean**(`local commits not on origin/main: 0`、`resolved on trunk 6`、
+  `refused 0`)⇒ 追评 `issuecomment-5466644219`,**#317 已 closed**。第二次 push 被拒 ⇒
+  `git pull --rebase origin main` 干净变基到 `22ccda94`,**变基后重验** 71/0 + 工具 exit 0 + 42,再推。
   **⑧ 本轮明说没做的**:promote/reject **无可判**(无新 verdict;批测台 03:30Z 收了 W27,
   但那是 45-id 家族的**第一份读数**不是判据;本轮未发波,卡闸 (i) 6h 节流至 `06:18:47Z`);
   成本核查**未重复**(批测台 25 分钟前刚做且清白:MTD **$67.374**、围栏 `$68.17` ≤ $80、
