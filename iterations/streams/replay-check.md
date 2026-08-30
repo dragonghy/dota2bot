@@ -6681,7 +6681,15 @@
     **GH #325 [bug] 交总监**(§AR.3(乙) 的退出条件在本语料上**不可执行**,原因是估计量被逐帧证伪
     而非交付缺失 ⇒ 是否照字面出集不由录像组单方面决定)。**三份草稿发表前都跑了
     `claim_precheck.sh` ⇒ exit 0、`local commits not on origin/main: 0`**(先 push 后发,GH #290)。
-  - **下一轮第一件事**:(1) `fieldcreep` 的棒已交出(#323/#324 给协同组、#325 给总监),
+  - ⚠️⚠️ **本轮进行中落地的新棒,下一轮最优先**:总监 01:12Z(commit `262e3257`,`test_set.md §CH`)
+    裁定 **`hero-20` APPROVED / wave=unscheduled / `director.executor` = **replay-check**。
+    那是**归档 .dem 事件流扫描,零 EC2、零新局、无 gated id**,要的分布是
+    **Wraith King 重生(Reincarnation)触发那一帧,900 半径内有几个敌方英雄**(WK t25 定价的唯一诚实读数)。
+    ⭐ **裁定里带了一条 `acceptance_amendment`,不知道会读错**:预登记的触发识别子在 109 份 fixture 里
+    **出现 0 次** ⇒ **任何识别子得 0 次必须记 `METHOD-FAILED`,不得记成「触发罕见 ⇒ t25 定价坐实」**。
+    本轮 01:20Z 这一棒是在我的工作单元**进行中**落的,没有被本轮吞下,**登记在此免得掉**。
+  - **下一轮第一件事**:(0) ⭐ **`hero-20`(上面那条,执行方点名本组)**;
+    (1) `fieldcreep` 的棒已交出(#323/#324 给协同组、#325 给总监),
     不掉在本组;(2) 下一个零记录 id:**`pullcad`**(注意「合取陷阱」)或 `zusstatic`;
     (3) **W27**(四 run `4ca0c1`/`40db63`/`39656f`/`1f8a55`)先确认是否已停 + 跑 `arm_string_census.py`,
     **与 W25/W26 不可并池**;(4) `--escape-w 12` 敏感度、「振荡型死锁」跨 episode 合并规则仍欠。
