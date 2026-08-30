@@ -1,7 +1,6 @@
 {
   "wave": "W27",
   "_note": "First-hand launch record, written 2026-08-30T00:2xZ WHILE all four SIRs were still active/fulfilled (carry-forward duty from GH #271; the SIR record is not reconstructable after the instances terminate -- W23 lost it exactly that way).",
-  "_harvest_todo": "Fill status_code/update from describe-spot-instance-requests, and ab/ba/arm_depth/dem_uploaded from recover_verdict.py on the merged per-game files. Next batch-desk round.",
   "tree": "5d9b9927c2c20d1b38548f4f7b318ff8995542e0",
   "tree_note": "bots/ and game/ are UNCHANGED since W26's tree b834e887 (git diff b834e887..5d9b9927 -- bots/ game/ is empty) => the CODE under test is byte-identical to W25 and W26. What changed is test_set.md line 2 only.",
   "arm_ids": 45,
@@ -40,12 +39,12 @@
       "launched_at": "00:18:47Z",
       "sir_state_at_launch": "active/fulfilled",
       "roster": "radiant: skeleton_king lion spirit_breaker crystal_maiden zuus (5 of 6 terms)",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "dem_uploaded": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-30T01:02:23Z",
+      "ab": 26,
+      "ba": 16,
+      "arm_depth": 19.81,
+      "dem_uploaded": 6
     },
     {
       "seed": 1828,
@@ -58,12 +57,12 @@
       "launched_at": "00:18:59Z",
       "sir_state_at_launch": "active/fulfilled",
       "roster": "skeleton_king lion crystal_maiden spirit_breaker (4 of 6 terms)",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "dem_uploaded": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-30T01:14:21Z",
+      "ab": 39,
+      "ba": 19,
+      "arm_depth": 25.55,
+      "dem_uploaded": 8
     },
     {
       "seed": 1835,
@@ -76,12 +75,12 @@
       "launched_at": "00:19:12Z",
       "sir_state_at_launch": "active/fulfilled",
       "roster": "obsidian_destroyer crystal_maiden skeleton_king zuus (4 of 6 terms)",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "dem_uploaded": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-30T01:14:17Z",
+      "ab": 40,
+      "ba": 15,
+      "arm_depth": 21.82,
+      "dem_uploaded": 8
     },
     {
       "seed": 2103,
@@ -94,12 +93,12 @@
       "launched_at": "00:19:25Z",
       "sir_state_at_launch": "active/fulfilled",
       "roster": "skeleton_king obsidian_destroyer zuus spirit_breaker lion (5 of 6 terms)",
-      "status_code": null,
-      "update": null,
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "dem_uploaded": null
+      "status_code": "instance-terminated-by-user",
+      "update": "2026-08-30T01:14:32Z",
+      "ab": 38,
+      "ba": 19,
+      "arm_depth": 25.33,
+      "dem_uploaded": 8
     }
   ],
   "placement": {
@@ -111,7 +110,12 @@
     "gh_282": "fifth consecutive wave with zero PLACEMENT MISMATCH",
     "gh_252": "pass (four instances, four distinct AZs)",
     "gh_256": "fifth consecutive wave at full spread; one AZ capacity event exposes exactly 1 seed",
-    "run_tokens": ["4ca0c1", "40db63", "39656f", "1f8a55"],
+    "run_tokens": [
+      "4ca0c1",
+      "40db63",
+      "39656f",
+      "1f8a55"
+    ],
     "run_tokens_distinct": true
   },
   "cost": {
@@ -123,5 +127,67 @@
     "alarm_tier_crossed_this_round": "none ($50 long since crossed, $80 not crossed)"
   },
   "skip_not_pass_lines": "none -- no --on-demand, no --cand-ref, no --allow-pooled-basenames, no --min-arm-depth, no --allow-short-watchdog, no RULE6_BYPASS",
-  "expected_games": "4 seeds x 2 legs x --games 12 = 96 stamped games plus warm-ups (the code-identical W25/W26 landed 196 and 199 respectively)"
+  "expected_games": "4 seeds x 2 legs x --games 12 = 96 stamped games plus warm-ups (the code-identical W25/W26 landed 196 and 199 respectively)",
+  "harvest": {
+    "harvested_at": "2026-08-30T03:3xZ",
+    "tool": "recover_verdict.py on four per-run subdirectories (never flattened)",
+    "files_seen": 235,
+    "games_loaded": 235,
+    "source_dirs": 4,
+    "unparseable": 0,
+    "pooled_basename_dirs_overridden": 0,
+    "scored_games": 212,
+    "unfinished_games": 0,
+    "winner_by": {
+      "engine_natural": 235
+    },
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "mean": {
+      "gpm": 29.92,
+      "xpm": 7.45,
+      "deaths": -0.08,
+      "last_hits": 0.14,
+      "winrate": 0.508
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "2/4",
+      "deaths": "2/4",
+      "last_hits": "2/4",
+      "winrate": "2/4"
+    },
+    "suggested": "promote",
+    "flags_used": "NONE -- no --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth. No \"SKIP, not a pass\" line exists for this harvest.",
+    "stamp_check": "All 212 stamped games decode to exactly ONE arm string, ids=45 bytes=396 -- byte-identical to test_set.md line 2. 23 unstamped files carry the bare tree sha 5d9b9927 = warmup, not scored (W25/W26 had 24 each; same shape).",
+    "placement_result": "4/4 requested == actual AZ, four distinct AZs, all four instance-terminated-by-user (self-destruct), ZERO preemption, no re-aiming, no AZ RING EXHAUSTED, no --on-demand. GH #282 sixth consecutive wave with zero MISMATCH; GH #256 sixth wave.",
+    "wall_clock": "launched 00:18:47-00:19:25Z, closed 01:02:23-01:14:32Z => 43.6-55.1 min per machine, inside the 2h watchdog.",
+    "carriers_scored_games": {
+      "obsidian_destroyer": {
+        "armed": 78,
+        "baseline": 34
+      },
+      "skeleton_king": {
+        "armed": 118,
+        "baseline": 94
+      },
+      "crystal_maiden": {
+        "armed": 95,
+        "baseline": 60
+      },
+      "lion": {
+        "armed": 84,
+        "baseline": 73
+      },
+      "spirit_breaker": {
+        "armed": 64,
+        "baseline": 93
+      },
+      "zuus": {
+        "armed": 69,
+        "baseline": 85
+      }
+    },
+    "pooling_note": "W27 is the FIRST wave of the 45-id family. It cannot be pooled with the W25+W26 8-seed 44-id read (different arm string, 396 vs 387 bytes). That 8-seed read is sealed; this is a separate 4-seed read on byte-identical bots/ code."
+  }
 }

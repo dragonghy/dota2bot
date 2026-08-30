@@ -5958,6 +5958,78 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **下一轮本台 = 收割 W27**(闸 `2026-08-30T06:18:47Z` 之后才谈 W28)。
   **本轮 token**:`TOKENS total_in=5,732,183 out=42,731 turns=45`。
   详见 `iterations/reports/batch-desk/20260830T001900Z.md`。
+- 2026-08-30T03:30Z:**收割 W27(45-id 家族第一份读数)。不发波 —— 卡在闸 (i)。**
+  **自检**(前台跑,不接管道/不加 `timeout`/不用 `nohup &`):unlanded **OK**;
+  cadence **2 findings**(**director `08-29T04:08Z→16:28Z` 12.3h,连续第四轮同一个洞**;replay-check 4.6h);
+  未裁请求 **none/none**;`ORPHAN_PROPOSAL` **none**;过期等待 **无**;`stable-v1`/`v2` **2/2 OK**;
+  trunk python **53/0/0**、fast Lua **33 文件 0 失败**;`worst exit 3`,**归因照抄工具:FINDINGS=cadence、UNCERTIFIABLE=none**。
+  **成本**:开工 running/pending **空**(W27 四台已于 `01:02–01:14Z` 自毁);MTD **$67.374**(budgets;
+  CE 复核 **$67.3735002094** 逐位一致,**连续第二十六轮**)。⚠️ **快照没刷新**:仍是 `2026-08-29T22:17:33Z`,
+  与上一轮同一张 —— **W27 整段(00:18–01:14Z)都在它之后 ⇒ 那 ~$0.80 一分没进裸 MTD**,(甲) 的算术照旧不省。
+  **围栏 = 67.374 + W27 0.80 = $68.17 ≤ $80,余量 $11.83**(最坏按「全程降级按需」$2.15 估 = $69.52,同样过闸);
+  刹车 $90 / owner 线 $100 均未接近;**不跨新告警档**。本轮现金 = CE $0.01 + S3 取数,**零 EC2**。
+  **收割**:四条 SIR 全 `closed/instance-terminated-by-user`(**自毁,零抢占**),收官 `01:02:23–01:14:32Z`
+  = 每台 **43.6–55.1 分钟**,2h 看门狗内跑完;**放置 4/4 `requested==actual`、四个不同 AZ、无 re-aiming、
+  无 `AZ RING EXHAUSTED`、无降级 ⇒ #282 连续第六波零 MISMATCH、#256 第六波拿满**。
+  标准路径(四个 run 各自子目录,**从不 flatten**):`files_seen/games_loaded 235`、`source_dirs 4`、
+  `unparseable 0`、`pooled_basename_dirs_overridden 0`;**`--allow-pooled-basenames`/`--allow-unparseable`/
+  `--min-arm-depth` 一个没用 ⇒ 本轮没有任何一行「这是 SKIP 不是 pass」要抄**,stderr 为空。
+  **语料自证**:212 个带戳局解出**唯一一个** arm 串 `ids=45 bytes=396`,与 `test_set.md` 第 2 行逐字节相同;
+  另 23 个未带戳文件是裸 sha `5d9b9927` = **暖场,不计分**(W25/W26 各 24,同构)。
+  **读数**:per-seed 1827 ab26/ba16 `arm_depth 19.81` gpm **+19.43**、1828 ab39/ba19 `25.55` gpm **−24.73**、
+  1835 ab40/ba15 `21.82` gpm **+63.10**、2103 ab38/ba19 `25.33` gpm **+61.89**;
+  **均值 gpm +29.92 / xpm +7.45 / deaths −0.08 / last_hits +0.14 / winrate 0.508**,`comps_better` gpm **3/4**;
+  **`min_arm_depth 8`、`thin_arm_seeds []` ⇒ 无一粒被排除**;`scored 212`、`unfinished 0`、`engine_natural 235/235`。
+  `suggested: promote` **只是提示**,三条件的 (a) 不在本台。
+  **量程(本台只报量程不判读)**:gpm sd 41.71、**mean/SE 1.43**;winrate 距 0.5 **1.67 SE**;
+  **留一法四个读数全为正**(+18.86…+48.14)⇒ **符号不押在任何单一种子上**(对照 W25:去掉 1633 从 +40.16 塌到 +4.99);
+  **winrate 四粒全 ≥0.5**。⚠️ 诚实边界两条:(1) gpm 四粒散布 −24.73…+63.10,`mean/SE` **不是显著性**;
+  (2) **ab/ba 两层严重不对称**(ab 26–40 / ba 15–19),铁律 4(i) 的记名义务已在报告表里逐粒列出。
+  **⭐ 排波事实:W27 = 45-id/396 字节,W25/W26 池 = 44-id/387 字节 ⇒ 不可并池。**
+  上一轮那份 8 粒读数**已封口,W27 不加厚它**;W27 开的是**同一棵 `bots/` 代码上的新 45-id 家族**
+  (`git log 5d9b9927..origin/main -- bots/ game/` **exit 0 且空**,相对 W26 的 `b834e887` 一行未改)。
+  **载体供给(212 计分局,armed/baseline)**:sk 118/94、cm 95/60、lion 84/73、**od 78/34**、zuus 69/85、sb 64/93
+  ⇒ 「这波没有载体」在 W27 上同样不成立;⚠️ **帧通道仍 1/16**(#308 第四波未裁,走登记路径 (A)),
+  本波只传 **30 个 `.dem`**(6/8/8/8)⇒ **hero-22/hero-23/strategy-23 取帧仍从 W25 取**(`rec_slots 12`、145 个录像)。
+  **不发波**:queue 23 条 pending **无一需要新 EC2**(14 条 `ROUTED_ARCHIVE_SCAN`/`REDUMP`/`RIDESHARE` 明写零 EC2,
+  余下是 `REJECTED`/`RECEIVED_NOT_SCHEDULED`/`DEFERRED`/过期的 strategy-5b)⇒ 显式请求豁免用不上;
+  **闸 (i) ✗**(W27 起飞 `00:18:47Z`,本轮只过 ~3.2h,**6h 闸解锁 `2026-08-30T06:18:47Z`**);
+  **(ii) ✓**(`bots/`/`game/` 一行未改、`test_set` 第 2 行不变,但**当前树+测试集累计种子数 = 4 < 8**,
+  按章程 (ii) 是「或」⇒ 由第二个分支满足);**(iii) ✓**($68.17 ≤ $80)。**⇒ 真正卡住的只有 (i)。**
+  **⭐ 本轮把上一轮立的那条纪律提前执行了:`seed_roster_index --build` 在不发波的轮里也跑了** ——
+  **139 → 143 粒 / 277 run / 18313 局**,W27 的 `1827/1828/1835/2103` 已折进索引。
+  **理由是失效方向**:陈索引不报错、不少给解,**它多给,多给的是已花过钱的种子**;
+  把 build 挪到收割轮做,等于**让「刷新」与「用它选种」不再是同一个动作**,下一轮即使有人忘了 build,
+  W27 那四粒也已在索引里。⚠️ **这不是把它从发波前动作里去掉**:W28 发波前仍要 `--build`。
+  ⚠️ 窗口右移的后续仍欠:W27 用的 `[1801,2200]` 被 W27 削掉一层后的余量本轮未重算,W28 选种时按新纪律先 build 再穷举。
+  **局数(铁律 7)**:(a) W27 最终 **235 落盘 / 212 计分** / `unfinished 0` / `engine_natural 235/235` / 暖场 23,
+  per-seed ab/ba 见上,四台全自毁零抢占,`.dem` 6/8/8/8 = **30 个**;(b) 本轮**无在跑波次**,S3 零新增语料。
+  **#271**:`waves/W27_wave.json` 已回填(`status_code`/`update`/`ab`/`ba`/`arm_depth`/`dem_uploaded` +
+  新增 `harvest` 节:`flags_used`/`stamp_check`/`placement_result`/`wall_clock`/`carriers_scored_games`/`pooling_note`),
+  并移除 `_harvest_todo` ⇒ **「起飞时一手写、收割时回填」第二次走完全程**。
+  `queue.json`:**strategy-23**(`fieldsip` 搭车)`pending → harvested_pending_verification`,
+  `result` 写明读数与量程,**并照 acceptance (3) 写死一句:本波未做 situation 帧普查,
+  不许把这份四量读数读成「fieldsip 测过了没效果」。**
+  **泄漏两次**:开工 running/pending **空**;收尾 `--leak-only` **0 台在跑 ⇒ 零泄漏**
+  (⚠️ 本轮不发波,收尾判据就是「0 台在跑」本身;发波轮才是「在跑台数==本轮自发台数且 id 逐个对上」)。
+  **交棒**:① **⭐⭐ 下一轮本台 —— 发 W28**(45-id 家族第二波,闸 `2026-08-30T06:18:47Z` 解锁;
+  发波前先 `seed_roster_index --build` 再掩码穷举;目标把 4 粒加厚到 **8 粒可池化读数**,
+  与 W25+W26 那份 44-id 8 粒池**分开登记**);② **⭐⭐ 总监 —— 45-id 家族首份读数已备齐可裁**
+  (gpm +29.92、3/4、留一法全正、零排除),**44-id 串的 8 粒读数仍备齐可裁,本轮无新增语料改变它**;
+  ③ **⭐⭐ 总监 —— #308 重裁第四次落空**,W27 按 (A) 退回 `rec_slots 1`、帧通道 1/16、本波仅 30 个 `.dem`,
+  **代价第四次点名**,owner P1/P2 的条件 (a) 继续等;W28 若仍不裁继续 (A);
+  ④ **⭐ 录像组/英雄组 —— W27 载体供给已点清**(上段),**但帧通道 1/16 ⇒ 取帧仍从 W25 取**;
+  ⑤ **⭐ 总监 —— 自检连续第四轮报你 12.3h 无工作单元**,而 #308/#313/#321/#299/#298/#291/#285 都等你裁;
+  ⑥ 存量:**#207 `zusstatic` 第二十八波 armed**;**#218 后续第二十四轮**;
+  **#282 连续第六波零 MISMATCH,第六次建议关闭**;**#295 建议关闭**;**#285 第七轮催**;
+  **#321 待裁**;#313/#290/#291/#298/#299 照旧;
+  #217/#211/#225/#180/#171/#200/#181/载体门 PARTIAL/`stable-v*` tag/`campdanger`/§BL.4/#75 照旧。
+  **铁律 6**:`bots/`/`game/` **一行未改**;`core.hooksPath` 已上膛;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+  动态半(#124)未跑且不声称。**MCP 未触发 `requires approval`。**
+  **铁律 6 顺序条款(GH #290)**:本轮**先 push 再发表带引用的评论**。
+  **下一轮本台 = 闸 `2026-08-30T06:18:47Z` 之后发 W28(45-id 串,spot,四个 AZ),与 44-id 8 粒池分开登记。**
+  **本轮 token**:`TOKENS total_in=3,761,063 out=27,241 turns=38`。
+  详见 `iterations/reports/batch-desk/20260830T033000Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
