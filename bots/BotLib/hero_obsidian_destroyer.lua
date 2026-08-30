@@ -45,20 +45,52 @@ local tAllAbilityBuildList = {
 -- ultimate below slot 4); OD's ultimate is at slot 5 and index 6 is already
 -- written, so neither of them applies here.
 --
--- WHAT IT BUYS. Today those four points buy nothing: the level-up consumer meets
--- 'generic_hidden' at the head and drops it (bots/ability_item_usage_generic.lua
--- :351, or the not-found branch above it -- which one depends on whether the
--- engine hands back a handle for the placeholder, and that is not readable
--- offline). Either way the point is not lost, but objurgation stays at rank 0
--- for the whole game, which makes X.ConsiderObjurgation below dead code: its
--- first condition is Objurgation:IsFullyCastable(), false at rank 0. That
--- handler is a mana-pool-scaling barrier (mana_pool_to_barrier_pct + barrier) on
--- a hero whose whole item build is mana, and it has never once run.
+-- WHAT IT BUYS. objurgation stays at rank 0 for the whole game, which makes
+-- X.ConsiderObjurgation below dead code: its first condition is
+-- Objurgation:IsFullyCastable(), false at rank 0. That handler is a
+-- mana-pool-scaling barrier (mana_pool_to_barrier_pct + barrier) on a hero whose
+-- whole item build is mana, and it has never once run.
 --
--- BOUNDS. This is a static reading of which index names what; it does not say
--- the fix wins games. Condition (a) is a replay question and is asked in the
--- report. Turbo-only and gated, so shipped behaviour is byte-identical until
--- 'odbuild' is armed.
+-- ...AND THAT IS THE SMALLER HALF OF THE COST. What stood here said the level-up
+-- consumer "meets 'generic_hidden' at the head and drops it (bots/
+-- ability_item_usage_generic.lua:351, or the not-found branch above it -- which
+-- one depends on whether the engine hands back a handle for the placeholder, and
+-- that is not readable offline). EITHER WAY THE POINT IS NOT LOST". Both halves
+-- of that are CORRECTED 2026-08-30 (GH #330, W28: 10 OD hero-games with .dem,
+-- zero exceptions), and quoted rather than deleted because the estimate has been
+-- cited:
+--
+--   * WHICH BRANCH RUNS IS NOW KNOWN, and it is :351. The frames read a baseline
+--     OD at astral rank 2 on its THIRD point (t=69.5, hero level 3). Only the
+--     :351 branch can produce that rank there, so the engine does hand back a
+--     handle for the placeholder and the disjunction is closed.
+--   * THE POINT IS NOT LOST -- THE QUEUE IS. That branch takes
+--     sAbilityLevelUpList[2], pops the HEAD, and levels the second entry WITHOUT
+--     popping it. One hero level then advances the queue by one entry and the
+--     ranks by two, so astral reaches rank 4 one entry early and the row's next
+--     astral request is over-rank. An untakeable head does not get skipped: the
+--     final `else` of the same function parks it and pops only above level 25.
+--     The hero stops levelling entirely, at hero level 7, having spent 6 points.
+--   * MEASURED COST: 6 ability points and 0 talent points, frozen 80-84% of the
+--     game, on 4 of 4 baseline legs -- against 15 ability points on the armed
+--     legs and 15-19 points for the other nine heroes in the same games. So the
+--     cost is ~10 skill points plus every talent, not one ability at rank 0.
+--
+-- tests/test_od_levelup_double_spend.lua drives the shipped spender over the
+-- shipped queue and lands on both corpus numbers (6 points, level 7); the 1:1
+-- "one entry, one wasted point" model that produced the withdrawn sentence
+-- predicts a hero that never stalls at all.
+--
+-- BOUNDS. This is a static reading of which index names what, plus the shipped
+-- spender's arithmetic; it does not say the fix wins games. Condition (a) was
+-- bought on W28 (GH #330: armed objurgation 4/4/4, baseline 0/0/0/0); (b) and
+-- (c) are still open and are not this comment's to claim. That the placeholder
+-- is THE hole which stalls OD is source argument plus this corpus's perfect
+-- correlation, not an independent mechanism experiment -- GH #286's attribution
+-- was withdrawn by the director 2026-08-29 and is not re-claimed here. The armed
+-- legs still lose talent points (frozen 5-24%), which `odbuild` does not touch
+-- and nothing here explains. Turbo-only and gated, so shipped behaviour is
+-- byte-identical until 'odbuild' is armed.
 local tObjurgationBuildList = {
 						{2,1,3,2,2,6,2,1,1,1,6,3,3,3,6},--pos2, index 4 -> 3
 }

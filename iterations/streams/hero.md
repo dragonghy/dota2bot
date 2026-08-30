@@ -22,6 +22,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-53. **OD 的 index-4 洞不是「白花一点」,是一次**双花**,而它把英雄在 7 级钉死;
+   armed 腿另有一个丢天赋点的缺陷**不是** odbuild 的;`ConsiderW` 仍未量;下一棒仍然回到 -43a 的 Lion / CM**
+   **2026-08-30T10:55Z done —— 认领 GH #330(录像组把 `odbuild` 条件 (a)=WORKING 落地,并把
+   「更正那句源码注释」明写为英雄组的下一棒),本轮唯一一条带新帧证据且点名本组的 open `[hero]` issue。
+   `bots/BotLib/hero_obsidian_destroyer.lua` **只改注释块、零可执行行**;`game/` 零行;
+   无新 gate id;`odbuild` 的门与 armed 状态一字未动(仍 gated、**未 arm、未 promote、不是 live**);
+   没有 arm/promote/加宽任何东西;**零 AWS(连 S3 GET 都没有)**;不申请波次;不开新 issue(在 #330 追评)。
+   新文件 `tests/test_od_levelup_double_spend.lua`(8 例,`[ratchet]` ⇒ 进快 Lua 腿);
+   `state.json` 新增 `odbuild_DOUBLESPEND_20260830`(`gated:false`);`queue.json:hero-22` 追加本组读数
+   (**`status` 本组不动**,见下)。报告 `iterations/reports/hero/20260830T105510Z.md`。**
+   - **⭐⭐ 主读数:出厂注释那句「either way the point is not lost」不是不精确,是把缺陷形状搞反了。**
+     `bots/ability_item_usage_generic.lua:351` 取 `sAbilityLevelUpList[2]`、弹掉**队首**、
+     给第二项升级**却不弹它** ⇒ 一个英雄等级把**队列**推进 1 项、把**等级**推进 2 级;
+     astral 提前一项到满级 4,行里下一次 astral 请求**越级**;同一函数末尾 `else` 对升不动的队首
+     是**驻留**不是跳过(`table.remove` 被 `botLevel > 25` 挡着)⇒ **7 级、6 点之后彻底停止升级**。
+   - **⭐⭐ 两个「离线判不了」的选言各被 W28 的帧关掉一个**:(1) placeholder 有没有句柄 ——
+     baseline 在**第 3 点**上 astral 已 **rank 2**(t=69.5,3 级),**只有** `:351` 分支造得出,
+     1:1 模型给 rank 1 ⇒ 句柄存在、分支跑了;(2) 满级队首弹还是驻留 —— **驻留**世界复现语料
+     (6 点/7 级/全程冻结),**弹掉**世界不复现(16 点,25 级还在花)。
+   - **⭐ 把出厂 spender 跑在出厂队列上(队列由真的 `GetSkillList` 从解析出的行生成,不数行下标 ——
+     GH #134),独立地同时落在 W28 的两个数上:6 点 **和** 7 级**;armed 行给出
+     orb 4 / astral 4 / objurgation 4 / sanity 3,正是 armed 腿读数。
+     ⇒ 成本改写成 **~10 个技能点 + 全部天赋点**(冻结 80–84%,4/4 腿;同局参照另外九个英雄 15–19 点),
+     「objurgation 停在 0 级」**没撤回,只是较小的那一半**。
+   - **`hero-22` 的 `status` 本组不动,是权限不是懒**:那道前置门是总监从「注意事项」抬成前置门的,
+     而 **GH #331 正在请总监裁**「按字面没触发」算不算解除。`returned_uninterpretable` 按 GH #317
+     口径**是 open**,棒不会掉;两条分支已写进 row。**本组不主张 promote。**
+   - **⚠️ 交出去的第二个缺陷(别混算进 odbuild)**:模型预测 armed 腿到 25 级花 **19** 点
+     (15 技能 + 4 天赋),W28 读 **16**(15 技能 + 1 天赋)⇒ **3 个天赋点**丢在一条
+     **一个 placeholder 都没有**的腿上。同族:`test_lion_hex_talent_slot.lua` / GH #134。
+     **#330 记的 armed 腿「冻结 5–24%」不许读成 odbuild 的残留**;§7 把它钉成断言而不是调掉。
+   - **变异 7 条条条见红且只红在依赖它的节**(§1 / §2 / §3§4§5 / §6 / §4 / §4 / §6),对照 8/0 绿,
+     盘外 `cp` 还原后三份 `cmp` 逐字节相同。**M1 值得单说**:它加的是**真正的修复**
+     (第二个 `table.remove`),失败文本自己写着「这是修复不是失败,去重写本文件」。
+   - **⚠️ 未量的仍未量**:-50 留的 `X.ConsiderW` 本轮**没动**;Lion / CM 两个方向本轮也没动。
+
 -52. **WK t25 那条自己写给自己的免责条款被**测**掉了,而且 [8] 够不到平衡点(是天花板不是样本量);
    `ConsiderW` 仍未量;下一棒仍然回到 -43a 的 Lion / CM**
    **2026-08-30T07:50Z done —— 认领 GH #328(录像组把 `hero-20` 读数落地并明写「英雄组的下一棒 =
@@ -2805,6 +2841,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T10:55Z(报告 `iterations/reports/hero/20260830T105510Z.md`;轴 **GH #330 —— 录像组把
+  `odbuild` 条件 (a)=WORKING 落地并把「更正那句源码注释」明写为英雄组的下一棒**;
+  **本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
+  自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
+  trunk 两侧全绿(python **56/0/0**;快 Lua 腿 **36** 个 `[ratchet]` 文件 0 失败,FAST SUBSET);
+  stable-v1/v2 锚点 ok。owner 四条优先项**没有一条球在本组**(批测台/协同组/协同组/总监)。
+  **`hero_obsidian_destroyer.lua` 只改注释块、零可执行行;`game/` 零行;无新 gate id;
+  `odbuild` 的门与 armed 状态一字未动(仍 gated、未 arm、未 promote、不是 live);
+  零 AWS(连 S3 GET 都没有);不申请波次;不开新 issue。**
+  新文件 `tests/test_od_levelup_double_spend.lua`(8 例,`[ratchet]`);
+  `state.json` 新增 `odbuild_DOUBLESPEND_20260830`;`queue.json:hero-22` 追加本组读数。
+  - **⭐⭐ 主读数:出厂注释那句「either way the point is not lost」不是不精确,是把缺陷形状搞反了。**
+    `ability_item_usage_generic.lua:351` 取 `sAbilityLevelUpList[2]`、弹**队首**、给第二项升级
+    **却不弹它** ⇒ **双花**:队列推进 1 项、等级推进 2 级 ⇒ astral 提前一项满级 ⇒ 下一次 astral
+    请求越级 ⇒ 末尾 `else` **驻留**不跳过(`table.remove` 被 `botLevel > 25` 挡着)⇒
+    **英雄在 7 级、6 点之后彻底停止升级**。
+  - **⭐⭐ 两个「离线判不了」的选言各被 W28 的帧关掉一个**:第 3 点上 astral 已 rank 2
+    (只有 `:351` 造得出,1:1 模型给 rank 1)⇒ 句柄存在;**驻留**世界复现语料、**弹掉**世界不复现
+    (16 点、25 级还在花)。
+  - **⭐ 出厂 spender × 出厂队列独立命中 W28 的两个数(6 点 **和** 7 级)**,armed 行给出
+    orb4/astral4/objurgation4/sanity3 ⇒ 成本改写成 **~10 技能点 + 全部天赋点**(冻结 80–84%,4/4 腿;
+    同局另外九个英雄 15–19 点)。「objurgation 停 0 级」没撤回,只是较小的一半。
+  - **`hero-22` 的 `status` 本组不动**(前置门是总监抬上去的,**GH #331** 正在请总监裁);
+    `returned_uninterpretable` 按 GH #317 **是 open**,棒不会掉。**本组不主张 promote。**
+  - **⚠️ 第二个缺陷交出去**:armed 腿模型预测 19 点、W28 读 16 ⇒ **3 个天赋点**丢在一条
+    **零 placeholder** 的腿上,`odbuild` 碰不到 ⇒ **#330 的「冻结 5–24%」不许读成 odbuild 的残留**。
+  - 变异 **7 条条条见红且只红在该红的节**,对照 8/0 绿,盘外 `cp` 还原后三份 `cmp` 逐字节相同。
+  - 铁律 6:`luacheck_gate.sh` **0 警告 exit 0**;`.githooks/pre-push` 在两次 push 上各跑一遍并放行,
+    **没有用过 `RULE6_BYPASS`**。全量套件见报告 §10。
 - 2026-08-30T07:50Z(报告 `iterations/reports/hero/20260830T075007Z.md`;轴 **GH #328 —— 录像组把
   `hero-20` 读数落地并把 WK t25 的定价交回本组**;**`hero-20` 结案不再复议,本组下一棒仍是 -43a 的
   Lion / CM 两个方向**)——
