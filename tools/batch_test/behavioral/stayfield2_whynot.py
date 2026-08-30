@@ -71,6 +71,7 @@ import stayfield_domain as SD            # noqa: E402
 from stayfield_domain import (           # noqa: E402
     Game, SIDE_TEAM, load_sweeps, usable_items, has_field_regen_source,
     HP_LO, HP_HI, RING_U, TOWER_U, DEATH_BLANK_S, FOUNTAIN_NEAR_U,
+    FIELDCREEP_ID,
 )
 from stayfield2_margin import (          # noqa: E402
     FAR_U, WALK_CAP_U, gap_reason, gained_item_near, PICKUP_WINDOW_S,
@@ -86,10 +87,16 @@ MONO_SLACK_U = 150.0   # pathing wobble tolerated on the homeward descent;
 # is small BECAUSE ...".
 #
 # ⚠ Clause 5 is `fieldcreep` (jmz_func.lua:4890), which sits INSIDE
-# J.IsFieldRegenSituation and is itself gated.  On this corpus (§AR.0's 24-id
-# string) `fieldcreep` IS ARMED, so the armed leg's predicate is strictly
-# stricter than the baseline leg's -- a difference that has nothing to do with
-# `stayfield2` and would be silently charged to it by a naive leg comparison.
+# J.IsFieldRegenSituation and is itself gated.  WHETHER IT IS LIVE IS A
+# PROPERTY OF THE WAVE'S ARM STRING, NOT OF THIS FILE -- it was armed for
+# W25..W28 (§AR.0) and RETIRED FROM THE SET on 2026-08-30T10:09Z (§CJ), so
+# main() reads the stamp and passes `inc=None` when it is not armed.  This
+# sentence used to say "on this corpus `fieldcreep` IS ARMED" as a standing
+# fact, and that is exactly what let the W29 reading charge two armed trips to
+# a clause the engine never evaluated.
+# When it IS armed the armed leg's predicate is strictly stricter than the
+# baseline leg's -- a difference that has nothing to do with `stayfield2` and
+# would be silently charged to it by a naive leg comparison.
 # It is therefore scored explicitly, in BOTH of §AR.1's worlds:
 #     甲  WasRecentlyDamagedByCreep counts NEUTRALS  -> lane or neutral hits
 #     乙  it does not                                -> lane hits only
@@ -569,13 +576,58 @@ def main():
     if a.selfcheck:
         sys.exit(0 if selfcheck(games, a.interval) else 1)
 
+    # --- armed-string guard: never score a gate that was never armed ---
+    # Same guard the sibling `stayfield_domain.py` carries.  Mixed strings mean
+    # two different engines in one corpus and there is no single right reading.
+    cands = set(r[2] for r in games)
+    if len(cands) != 1:
+        sys.exit("[fatal] mixed cand strings in this corpus: %s" % sorted(cands))
+    cand = cands.pop()
+    armed_ids = [c.strip() for c in cand.split(",")]
+    if CAND_ID not in armed_ids:
+        sys.exit("[fatal] `%s` is NOT in this wave's cand string -- refusing to "
+                 "score a gate that was never armed.\n         string: %s"
+                 % (CAND_ID, cand))
+    print("cand string (uniform, %s armed, %d ids): %s"
+          % (CAND_ID, len(armed_ids), cand))
+
+    # `fieldcreep` is the gated 5th clause (see CLAUSES).  Whether it is live is
+    # a property of THE WAVE'S ARM STRING, not of this file -- it was armed for
+    # W25..W28 and retired from the set on 2026-08-30T10:09Z (test_set.md §CJ).
+    # Evaluating it on a wave that did not arm it makes the armed leg's
+    # predicate stricter than the engine's, which removes armed trips from the
+    # predicate-TRUE pool and biases the reading TOWARD the candidate looking
+    # inert.  This is the GH #341 defect with its sign flipped.
+    fc_live = FIELDCREEP_ID in armed_ids
+
     rows = []
     for run, game, _c, _s, side, tl in games:
         g = Game(tl, a.interval)
-        inc, _outg = FC.load_nonhero_damage(tl)
+        inc = FC.load_nonhero_damage(tl)[0] if fc_live else None
         for r in walk_home_trips(g, side, inc):
             r["_run"], r["_game"], r["_side"] = run, game, side
             rows.append(r)
+
+    # ---- MANDATORY disclosure (printed even when the clause is not live) ----
+    armed_rows = [r for r in rows if r["leg"] == "armed"]
+    print("\n=== gated 5th clause `%s` (jmz_func.lua:4890) ===" % FIELDCREEP_ID)
+    if not fc_live:
+        print("  NOT ARMED in this wave's cand string -> the clause is false in")
+        print("  the engine on BOTH legs, and both legs are scored with the")
+        print("  four-clause predicate.  Nothing removed; nothing to correct.")
+    else:
+        print("  ARMED -> the ARMED leg's J.ShouldRegenNotWalkHome is STRICTER")
+        print("  than the baseline leg's, and that difference belongs to")
+        print("  `%s`, NOT to `%s`." % (FIELDCREEP_ID, CAND_ID))
+        print("  armed-leg departure frames charged to it: 甲 %d / 乙 %d  (of %d)"
+              % (sum(1 for r in armed_rows
+                     if r["why_not"] == "fieldcreep (armed leg)"),
+                 sum(1 for r in armed_rows
+                     if r["why_not_yi"] == "fieldcreep (armed leg)"),
+                 len(armed_rows)))
+    print("  ** A reader who cannot see this block must conclude the tool did")
+    print("     NOT check the clause -- never that the corpus was clean. **")
+
     if a.frames:
         frames(rows, a.limit)
     else:

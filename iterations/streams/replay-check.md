@@ -7147,6 +7147,108 @@
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
     (4) 若 W29 起飞:先跑 `arm_string_census.py`;**10:09Z 后发波是 44-id ⇒ 不可与 W27/W28 并池**。
   - 完整报告:`iterations/reports/replay-check/20260830T155836Z.md`
+- **2026-08-30T21:58Z(W29 首检:`stayfield2` 条件 (a) = **INDETERMINATE**,域**两层各自为零**;
+  修掉 **GH #341 缺陷的反号版**——姊妹工具 `stayfield2_whynot.py` 把一条 **W29 根本没 arm** 的
+  gated 子句照常算在 armed 腿上;并捞出一个**出厂腿也有**的新病:**满血满蓝空手来回跑家**)**:
+  在 **W29**(树 `be442fb9`,**44-id 串**,四 run `3fcb3d/eb04aa/60c165/134c2f`)的
+  **10 局带戳语料**上。零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  - **`VERIFY id=stayfield2 verdict=INDETERMINATE episodes=0`** —— **155 条真实回家步行轨迹**里,
+    armed 腿进入 gate 域的是 **0 条**,**两层各自为零**(`ab` radiant-armed **0/45**、
+    `ba` dire-armed **0/33**;baseline `ab` 0/30、`ba` 1/47)。any-frame 上界 `ab` armed 1/45、`ba` armed 0/33。
+    **分母不是零 ⇒ 判 INDETERMINATE 不是 SILENT。**
+  - ⭐⭐⭐ **§AO.4② 的欠账本轮清了,而且零的形状跟 `stayfield` 那次完全不同**:
+    `stayfield`(回家 TP)头号杀手是 `enemy in 1600`(逃命 TP,本该放行);
+    **`stayfield2`(回家步行)头号杀手是 `hp>0.55`,占 armed 腿 68/78 = 87.2%**
+    (`ab` 91.1% / `ba` 81.8%)—— **这些「回家」的英雄根本没受伤**:
+    armed 出发 hp **中位 1.000**、hp>0.90 占 **79.5%**;baseline 更极端(hp>0.55 占 94.8%)。
+    155 条里**只有 27 条(17.4%)整段路上任何一帧进过 [0.18,0.55]**,
+    真进了的中位**已走完 12% 的路、距泉水 6714u**。⇒ **它想拦的人口在本语料上几乎不存在。**
+  - ⭐⭐⭐ **工具缺陷(已修 + 已钉)= GH #341 同族,符号相反**:
+    `stayfield2_whynot.py` **无条件**在 armed 腿求值 gated 第 5 条子句 `fieldcreep`
+    (`jmz_func.lua:4890`),文件头还把「on this corpus `fieldcreep` IS ARMED」写成**常设事实**。
+    **子句活不活是「波次 arm 串」的属性,不是文件的属性** —— W25–W28 都 arm,**W29 起没有**(§CJ)。
+    W29 上它多否决了 **2 帧**(`3fcb3d/…_183121_slot1` spiritbreaker t=955.5 `creep_class=lane`;
+    `…_184327_slot1` lion t=1194.4 `creep_class=neutral`)。**偏的方向仍然偏向候选**
+    (多一条 veto 只会从 armed 的 predicate-TRUE 池里拿走 trip,而「没有作用域」正是
+    让 gate 以未测状态活下去的那个读数)。
+  - ⚠️⚠️ **这次「修完结论不变」是经验的,不是结构的 —— 不许把上一轮的保证搬过来。**
+    上一轮 `stayfield_domain.py` 那条是 veto-只移出、计数本来就零 ⇒ **可证**不变;
+    **本条排在 `no heal in bag` 之上,拿掉它可以把 trip 提成 predicate-TRUE 从而搬动裁定**。
+    W29 上两条 trip **恰好都落到 `no heal in bag`**(两人包里都没补给)⇒ 读数逐位不变,
+    **那是那两个包的运气**。该蕴含关系已**直接钉进测试**
+    (`removing the clause CAN promote a trip to predicate-TRUE`)。
+  - **交付**:`stayfield2_whynot.py` 三处加法,全部照抄姊妹工具形状 ——
+    (i) **arm 串守卫**(混串致命 / `stayfield2` 不在串里拒绝打分);
+    (ii) **`fc_live = FIELDCREEP_ID in armed_ids`**,`inc` 只在活时加载,
+    **`FIELDCREEP_ID` 从姊妹模块 import,不重拼字面量**;
+    (iii) **强制披露块**(`NOT ARMED` 时照样打)。W29 上现在打的正是上一轮交棒行预告的那句。
+    **新增 `tests/test_stayfield2_whynot.py`**(此前**不在** python 套件,GH #243 同族第五次同形):
+    **25 个 check**;**变异台 4/4 杀**(M1 改回无条件加载 / M2 挪梯子顺序 /
+    M3 反转 inertness / M4 掏空 `NOT ARMED` 那半),恢复后回绿。
+  - ⭐⭐ **新问题(交出去,不是判决):满血满蓝、空手来回跑家**。
+    **127 条 hp>0.90 回家步行 / 10 局,122 条(96%)60 秒内又走回 4000u 外**;
+    完整来回**中位 38s / p75 47s / 最长 72s**,合计 **4,638s ÷ 10 局 = 464 秒每局**英雄时间。
+    **补蓝不是原因**(出发 mp 中位 **1.00**,<0.35 只占 2%;全程 mp 增益中位 **+0.00**,
+    ≥+0.25 的只有 **1/127**);**拿东西也解释不了大头**(物品栏完全没变占 **51%**;
+    **满血+满蓝+零物品变化的「纯空跑」占 32%**)。泉水环内停留中位 **12s**。
+    **两条腿、两个分层同号 ⇒ 这是稳定版(全 gate 关闭)默认行为,不是 armed id 的产物,
+    也不是侧偏 artefact。**
+    - **铁证帧 A**:`eb04aa/20260830_184327_slot1`(seed 1842,**side=dire ⇒ dire 是 armed 腿**)
+      **lion t=1104.4..1139.4**:hp **1.000** / mp **1.00** **逐帧全程不变**,
+      从**贴着敌方 OD 852u** 掉头走 **7,065u** 回泉水(到 130u)再掉头走回来,
+      **来回 35 秒、物品栏一格没动、2000u 内队友全程 0**;
+      ⭐ **走到一半的 t=1118.8 队友 slardar 死了**,回来后 **t=1158.3 queenofpain 也死了**。
+    - **铁证帧 B(可解释的少数派)**:`3fcb3d/20260830_183121_slot1`(**radiant 是 armed 腿**)
+      **obsidiandestroyer t=1085.5..1134.5**:hp 1.000 全程,走 7,720u 回家,
+      **t=1103.5 `blade_of_alacrity` → `dragon_lance`**(回家合装备,GH #120 `BOT_MODE_ITEM` 路径,
+      **不算 `stayfield2` 泄漏**),**来回 ≈49 秒**。这一类**只占 8–17%**。
+  - **`stayfield` 顺带读数(首次非零,但只在一层)**:同语料上姊妹工具的 `NOT ARMED`
+    披露块**按交棒行预告正确打出,无回归**。STRICT episodes `ab` **0/0**、`ba` **armed 1 / baseline 2**
+    ⇒ **非零只在 `ba` 一层,按 4(i-b) 是选点信号不是结论**;
+    **armed 腿 79 次回家 TP 的 SITUATION 到达数仍是 0(第三份语料复现)**;STRICT leaks 两层两腿全 0。
+  - **arm 串普查(交棒行第 1 条,已做)**:`declared 44 ids / 385 bytes / sha1 3861df2f`,
+    **四个 run 全 MATCH**,`TOTAL 14 games = 10 stamped + 4 warmup`,
+    seeds 1801(2)/1842(3)/1902(3)/2013(2),**radiant-armed 5 / dire-armed 5**。
+    ⇒ **不可与 W27/W28 的 45-id 语料并池**,本轮没有一个数字跨界。
+    ⚠️ **口径坑(已发 issue)**:`arm_string_census.py` 用 `glob(<dir>/*.analysis.json)`,
+    而 `sweep_run.sh` 把 analysis 放在 **`<dir>/analysis/`**。喂 sweep 目录 ⇒
+    **`0 games / no stamped games` 且 `exit 0`**,**与「全部 MATCH」在退出码上不可区分**
+    (实测 `sweepdir_exit=0`、`analysisdir_exit=0`)。**正确用法:喂 `…/analysis`。**
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `run_py_tests.sh` → **63 passed / 0 failed / 0 uncertifiable**(本轮 +1);
+    `tests/test_stayfield2_whynot.py` **25/25**;变异台 **4/4 杀**。
+    未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+  - **开工自检**:**exit 3**,**8 腿全跑**,`UNCERTIFIABLE = none`,
+    `FINDINGS = queue-rulings`(`hero-25`/`strategy-25`/`hero-24` 的 director field 未裁
+    —— **总监的活,不是本组的**);trunk 两侧全绿(python 62/0/0、fast Lua 44 文件 0 失败);
+    锚点 2/2 ok;`unlanded_commits` 无;`ORPHAN_PROPOSAL` none;报告节奏 `clean`。
+    ⚠️ **第二次登记:它在本容器上不是 20 秒的东西** —— 300s 被掐掉一次,换 1200s 才跑完。
+    **章程写「约 20s」,连续两轮不成立。**
+  - **诚实边界**:n = **10 局带戳语料**,**14 局是录制槽决定的不是我抽的**(GH #308 未裁);
+    **不可逐种子比较,没有一个数字是效应量**;买的是 **(a)**(不需要 n),**(b)/(c) 不归本组**;
+    **不主张** `stayfield2` 该 promote **也不主张**它该出集((a) 没买到 ≠ 该退回);
+    **不认领** `stayfield` 的任何裁定(棒上一轮已交出,GH #340);
+    视野方向一贯声明 ⇒ 本工具域是引擎域的**子集**,这里的零是**子集上的真零**,
+    可报「本语料无表面」,**不可报 SILENT**;§4 只交形状与帧,**不提 id、不提修法**。
+  - **欠账变化**:✅ **§AO.4② 的 `stayfield2` 第一失败子句分解交付**;
+    ✅ **交棒行 (1) arm 串普查、(2) `stayfield2_whynot.py` 首次在 W25+ 语料上跑,都做完**。
+    继承未动:`fieldbuy_silence.py`/`stayfield2_margin.py` 的 ab/ba 分层仍欠;
+    「静止在小兵火力里」检测器仍欠(素材 `e706a3/20260830_063416_slot1` lich t=625.5..634.5);
+    W25 只并 2/4 run、`pullcad_beat.py` 剩两 run 仍欠;W26/W27/W28 与 W25 从未池化;
+    `seed 975` **第十六轮**;`wandlimbo` 因 #293 **第十四轮**不可执行;
+    GH #265 仍被 #272 阻塞;`blinkflee` 仍卡 #304/#305;WK rank-3 冷却全语料复测仍欠。
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要抄过期的交棒行。**
+    (1) ⭐ **`hp>0.55` 那 87.2% 是本轮最大的新信息面** —— 把 §4 的形状
+    **codify 成检测器**(「满血满蓝 + 物品栏无变化的回泉来回」),素材现成:
+    127 条 trip 的 run/game/hero/t 全在 sweep 产物里。**这比再核一个零域 id 值钱。**
+    (2) **W30 若起飞**:先跑 `arm_string_census.py`(**喂 `…/analysis` 子目录**)核串;
+    **只有 44-id 波之间才可并池**。修好的 `stayfield2_whynot.py` 在下一个 44-id 波上
+    **应当继续打 `NOT ARMED`** —— **打成别的就是回归**。
+    (3) `stayfield2` 的棒已交出(该不该留在集里**由总监裁**),**不掉在本组**。
+    (4) W25 剩下两个 run 可直接跑 `pullcad_beat.py`(仍欠)。
+  - 完整报告:`iterations/reports/replay-check/20260830T215841Z.md`
 - **2026-08-30T18:57Z(`stayfield` 条件 (a) = **INDETERMINATE** —— 域在本语料上是**零**,
   而且是**两层各自为零**;顺带修掉一个**静默且偏向候选**的工具缺陷:
   `stayfield_domain.py` **从来没有评估过 `IsFieldRegenSituation` 的第五条子句**)**:
