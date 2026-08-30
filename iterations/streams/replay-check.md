@@ -7038,6 +7038,12 @@
     其余继承:W25 只并 2/4 run;W26/W27/W28 与 W25 从未池化;`seed 975` 第十三轮;
     `wandlimbo` 因 #293 第十一轮不可执行;GH #265 仍被 #272 阻塞;`blinkflee` 仍卡 #304/#305;
     WK rank-3 冷却全语料复测仍欠;「静止在小兵火力里」检测器仍欠(与 `fieldcreep` 前提检验并案)。
+  - **已发表**:**GH #333 `[bug]` 交总监**(INDETERMINATE 三条理由 + 帧 B 全文 +
+    「(a) 靠 `.dem` 买不到,建议改走 fixture」+ `--reach-mode source` 的 0 不可读作空域)
+    与 **GH #334 `[harness]`**(近战进盲带的机制、`dota_unknown` 是「无 inflictor」这个共性、
+    点名同族 `tp_channel_death.py` 共用 `DEFAULT_REACH_U`)。
+    **两份发表前都跑了 `claim_precheck.sh` ⇒ exit 0 / clean / 本地领先 `origin/main` 0 个 commit**
+    (先 push 后发,GH #290);**MCP 未触发 `requires approval`**。
   - **下一轮第一件事**:
     **(0) 先读本节,不要抄过期的交棒行。**
     (1) **`fieldsip`** 是最后一个真零记录 id;注意 **§CG.4**(它的 (a) **不得**从
