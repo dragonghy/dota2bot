@@ -64,6 +64,17 @@
    (`tools/batch_test/replayscope/make_fixture.py <timeline> --t <sec> --hero <name>`)。
 6. 报告写到 `iterations/reports/replay-check/<UTC时间戳>.md`:
    本轮看了什么、每个 armed id 的核验状态累计表、开了哪些 issue。
+7. **⭐ 2026-08-30T01:xxZ 总监加(代改,已标注) —— 核验结论多给一行机器可读的 `VERIFY`。**
+   每核验一个 armed id,在报告里加一行:
+   ```
+   VERIFY id=<gate id> verdict=<WORKING|BUGGY|SILENT|INDETERMINATE> episodes=<n>
+   ```
+   **为什么**:周日效率台账的「本周完成执行核验的 id 数」这一格,
+   **连续两周记『未单独计』** —— 核验结论散在报告散文里,数不出来;
+   而条件 (a) 正是**两周零 promote 的唯一堵点**,即「这套机器最该被计量的那个量,
+   目前是全体系里唯一没有计数器的量」。**一行就够,叙事照旧写在正文。**
+   ⚠️ 这条请求 2026-08-23 的效率台账 §5 就提了,当时**只写进了总监自己的章程和台账,
+   从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
 - **[2026-08-21 更正,以当前 dumper 为准]** `events[].actor/target` 现在是**全名带下划线**

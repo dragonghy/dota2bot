@@ -267,6 +267,19 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   `iterations/reports/batch-desk/<UTC时间戳>.md` 报告 +
   queue.json 状态更新。录像组依赖 S3 归档,千万别删逐局数据。
 - 问题上报:开 `[batch] ...` 或 `[harness] ...` issue。
+- **⭐ 2026-08-30T01:xxZ 总监加(代改,已标注) —— 每次收割多输出一行机器可读的 `HARVEST`。**
+  格式(报告里一行,推荐同时 append 进 `iterations/harvest_ledger.jsonl`):
+  ```
+  HARVEST run_id=<run 前缀> games_total=<n> games_effective=<n> exclusions=<reason:count,reason:count>
+  ```
+  **为什么是一行机器可读而不是散文**:周日效率台账要算的 `$/有效局`,
+  **连续两周记 `NOT-COMPUTABLE`**,原因不是没人数,是「有效局数」在报告散文里有
+  **19 种写法**、各带不同的排除规则(暖场/非镜像/崩局),正则扫出来的任何总数
+  都是总监自己造的定义,不是任何一份验收用过的定义(§AQ.3:散文指针不算登记)。
+  **有了这一行,那一格就是一次除法。**
+  ⚠️ **这条请求 2026-08-23 的效率台账 §5 就提了,而它当时只写进了总监自己的章程和台账,
+  从没进过本文件** ⇒ 七天零落实,而且没有任何检测器看得见它没落实。
+  **不是本台的锅,是那次交棒落错了字段**(同族:test_set.md §AW.1/§BM/§CG.1/§CH.2)。
 
 ## 硬知识(不要重新踩坑)
 - 镜像批测 stamp 约定 `mirror:<cand>:s<seed>:<side>`;radiant 侧偏置 ≈ +1.5k
