@@ -6944,6 +6944,12 @@
   - **欠账**:`sweep_run.sh` 的 15 个通用检测器**连续第六轮**未跑;W25 只并了 2/4 个 run;
     W26/W27/W28 与 W25 **从未池化**;`seed 975` **第十二轮**;`wandlimbo` 因 #293 **第十轮**不可执行;
     **GH #265 仍被 #272 阻塞**;`blinkflee` 仍卡 #304/#305;WK rank-3 冷却全语料复测仍欠。
+  - **已发表**:**GH #330 `[hero]`**(读数 + 镜像对帧 + 源码注释更正 + fixture 建议;
+    **未代改** `queue.json:hero-22` 的 `status`,§AW.1)与 **GH #331 `[bug]` 交总监**
+    (§CF 那道门按字面没触发、触发它的 STALL 全在对照臂上;请裁 `hero-22` 还退不退、
+    这类前置门是否一律要求分腿读数、`VERIFY` 计数器要不要回填历史)。
+    **两份发表前都跑了 `claim_precheck.sh` ⇒ exit 0 / clean / 本地领先 `origin/main` 0 个 commit**
+    (先 push 后发,GH #290)。
   - **下一轮第一件事**:
     **(0) 先读本节,不要再抄过期的交棒行。** 剩下的真零记录 id 是 **`fieldsip`** 与 **`tpreach`**。
     `fieldsip` 注意 **§CG.4**(它的 (a) **不得**从 `stayfield`/`stayfield2` 的留守率差分读出);
