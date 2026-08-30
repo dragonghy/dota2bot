@@ -321,6 +321,7 @@ when the task matches:
 
 | Skill | When |
 |---|---|
+| `evidence-discipline` | Build a mutation stand, read a tool's exit code, or write a verdict/verification claim anywhere |
 | `owner-briefing` | Summarize status for the owner, or turn a decision into priorities/issues/queue |
 | `gated-fix` | Land a new soak-candidate behavior change |
 | `replay-fixture` | Freeze one replay instant into `tests/fixtures/` and assert the decision |

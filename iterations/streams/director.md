@@ -7310,3 +7310,46 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ④验收:下一份批测台报告应出现 `iv_reclaim_blind` 这一栏且由工具产出
   ⑤`#326`/`#324`/`#328` ⑥`state.json` round-trip ⑦45-id 家族的 (a)
   ⑧**低频 patch 检查**(连续多轮欠)⑨backlog §16/§17/§18。
+
+- 2026-08-30T19:00Z:**上一轮点名的第 1 优先做完 —— 四条纪律进 `.claude/skills/`,而且是带钉子进去的。**
+  报告 `iterations/reports/director/20260830T190000Z.md`,`state.json:evidence_discipline_SKILL_20260830`。
+  开工自检 **8 腿,FINDINGS 0,UNCERTIFIABLE 0,worst exit 0**(cadence 那盏连续八轮的红本轮**没出现**);
+  `luacheck_gate.sh` **exit 0 / 0 警告,未用 `RULE6_BYPASS`**;`git diff --stat bots game` **空**;
+  `tests/run_py_tests.sh` **61 passed / 0 failed / 0 uncertifiable**(此前 60)。
+  **本轮零 AWS 调用、零支出**(读数照抄批测台 12:15Z:MTD **$71.458**、围栏 **$72.26 ≤ $80**、
+  实例空、零泄漏;⚠️ 其自标快照 `11:33:48Z`;**未重复核查**)。
+  **① 这条债的欠款形状就是它自己要治的病。** 四条此前**只住在本章程的散文里**,而本章程 7300 行、
+  不在任何流的读路径上 ⇒ **纪律 3(量退出码不许带管道)连续三轮复发,其中一次就在立法的那一轮本身**;
+  **本轮第一次自检调用又是第四次**(`| tail -60`)。该读数已丢弃,改读工具自打的
+  `selfcheck worst exit: 0`;本轮其余每个退出码**一律裸跑读 `$?`**。
+  **② ⭐ 本轮最值钱的判断:纪律的衰变形态不是被删,是「留标题、掉手法」。** 四条里做功的
+  永远是机械的那一半(`sha256sum -c` 且点名 `git checkout` 不能用 / **合成用例** /
+  `returncode ==` 且保留 **143** 与 **argparse 2** 两个假读数 / 写明**走的哪条路**),
+  而把正文换成一句劝告的编辑**看起来完全无害**。⇒ 测试**不按标题断言,按分节切片后的机械 token 断言**。
+  **③ 落地**:`.claude/skills/evidence-discipline/SKILL.md` + `AGENTS.md` skill 表新增一行 +
+  `tests/test_skill_registry.py`(**37 检查**,裸跑 exit 0)。测试两条腿:
+  (1) **注册表普查(对所有 skill)**:frontmatter `name` == 目录名、`description` 非空
+  (**空的 = 在盘上而不可达**)、在 `AGENTS.md` 表里有行,**反向也查**(表行指向不存在的 skill 同样是错);
+  表行只认「第一格是裸反引号 token」,**散文提到 skill 名不算注册**;
+  (2) 四条纪律逐条钉机械 token + 「报告里怎么写」那一节。
+  **④ 变异 4/4 红**(M1 去注册 1 红 / M2 **留标题掉手法** 2 红 / M3 frontmatter 名漂移 1 红 /
+  M4 孤儿表行 1 红),CONTROL 绿,**还原一律走树外 `cp` + `sha256sum -c` 每次 OK,全程未用 `git checkout`**。
+  **M4 是纪律 2 用在这份测试自己身上** —— 反向腿在今天这棵树上**空洞满足**(零孤儿行),
+  不造一条就不知道它能不能判别。`state.json` **346 → 347 键,新增 1 / 删除 0,既有键值逐字节相同**
+  (仍走文本追加 + 写前解析核验)。
+  **⑤ ⚠️ 诚实边界**:这只让四条**可加载且不衰变**,**没有让它们自动** —— 树上没有任何东西
+  能在「管道量退出码」发生的那一刻抓住它,skill 得先被加载。机械补法(拒绝管道的包装 /
+  扫本轮自己的命令)**本轮没建**。**若纪律 3 在 skill 已在盘上的情况下复发第五次,
+  说明补法必须是机械的不是文档的。**
+  **⑥ 本轮明说没裁的**:**queue 两条待裁 `strategy-25`(`creepthink`)/ `hero-24`(`lionqdmg`)
+  —— `director` 字段为空,下一轮第一优先**;`#326`/`#324`/`#328` 未裁;**§CE 正则已挂七轮**;
+  **低频 patch 检查连续多轮欠**;`state.json` round-trip 未修;45-id 家族 **+26.60 / 7/8**
+  仍缺条件 (a) 逐 id 帧核验;`DECISIONS_NEEDED.md` 无新增;本周邮件与效率台账 01:20Z 已做
+  ⇒ **本轮无邮件、不重做台账**。四组本轮均有产出(W29 发波 / `fieldsip` (a)=WORKING /
+  `stayfield` 闭式空域 / Lion `lionqdmg`),**无空转**。
+  **下次触发**:①**裁 `strategy-25` 与 `hero-24`**(§2.5 投递纪律,落到 `director` 字段)
+  ②**§CE 第一步** ③**backlog §19**(cadence 腿改读 git 提交时刻)④`#326`/`#324`/`#328`
+  ⑤`state.json` round-trip ⑥45-id 家族的 (a) ⑦**低频 patch 检查**(连续多轮欠)
+  ⑧验收 `iv_reclaim_blind` 那一栏 ⑨**验收本轮:下几轮报告应出现那套记法**(变异 N/N 红 +
+  文件副本还原 + 裸读退出码 + `UNCERTIFIABLE` 不并进 pass)⑩给「管道量退出码」找机械补法
+  ⑪backlog §16/§17/§18。
