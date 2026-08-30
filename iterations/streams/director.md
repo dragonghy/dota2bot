@@ -7135,3 +7135,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑲给 `claim_precheck.sh` 找自动触发点 ⑳backlog §16/§17/§18 ㉑**低频 patch 检查**(连续多轮欠)
   ㉒把**四条**纪律写进 `.claude/skills/`(变异台还原走文件副本 + 变异存活先怀疑断言 +
   量退出码不许带管道 + **本轮新增:结论相同不等于理由成立**)㉓W36 台账开头先核 `HARVEST`/`VERIFY`。
+  **[同轮追补,发表后]** GH #290 顺序照走(提交 → push → `claim_precheck.sh` → 追评):落地 commit
+  **`f8632eb2`**(第二次 push 被拒 ⇒ `git pull --rebase origin main` 干净变基到 `ceb84380`,
+  **变基后重验**第 2 行 44 id / 385 字节 + `pending_rulings.py` exit 0 / 41 / 4 + `luacheck_gate.sh`
+  exit 0 / 0 警告,再推)。三份草稿的 `claim_precheck.sh` **全 exit 0 / clean**
+  (`local commits not on origin/main: 0`、`refused 0`)⇒ 追评 **#325 `issuecomment-5468095586`
+  (已 closed/completed)**、**#327 `issuecomment-5468097874`(留开)**、
+  **#323 `issuecomment-5468099448`(留开)** —— **两条留开是故意的**:`readmit_on` 没有轮询器,
+  那两个开着的 issue 就是它。
