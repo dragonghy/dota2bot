@@ -10320,3 +10320,135 @@ M3 删掉点名 ⇒ 1 红),CONTROL 绿,还原走**文件副本**并以 `sha256su
 - **没有裁** GH #324(召唤物/守卫/Roshan 第三个盲区)、#326(`pullcad` 通道分离)、
   #329(ab/ba 反号,批测台 09:28Z 新开)—— 三条各自独立,不在本工作单元内。
 - `fieldcreep` 的 (b) 没有单独读数,**也不需要**:出集依据是 (c),不是 (b)。
+
+---
+
+## §CK 2026-08-30T10:5xZ 协同组提议入集:`creepthink`(GH #326)—— **搭车、零 AWS 增量、不申请专波**;主判据是**一条不等式**,而它同时把 GH #326 的一步推论证伪
+
+### CK.1 立案:拉线的 DRAG 不是「很少走」,是**结构上到不了**
+
+`bots/mode_roam_generic.lua` 的拉线节拍是一个 `if / elseif / else`,而**三条臂全部**
+坐在 Think() 开篇那道节流阀后面:
+
+```lua
+if <没有旁路> and J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "roam") then return end
+...
+if     now - creepPullAttackTime > nBeat then  POKE               -- 那个 `if`
+elseif now - creepPullAttackTime < 0.5   then  hold(不发指令)      -- 已 promote 的 'pullbeat'
+else                                            DRAG               -- 那个 `else`
+```
+
+节流阀拿 `bot:GetAnimActivity()` 去匹配 `utils.lua` 的 `meaningfulActivities`,
+**表头就是 `ACTIVITY_RUN` 与 `ACTIVITY_ATTACK`**。刚右键完对线英雄的 bot
+**按构造**在 `ACTIVITY_ATTACK` 里待满一个攻击周期。
+
+记 **R** = 节流阀重开的间隔(实际就是攻击周期)。节拍**只在重开帧上被问到**,
+而那种帧上「距上次 poke」已经 **≥ R**。于是:
+
+> **R > nBeat ⇒ `if`(POKE)在每一个能问到节拍的帧上都为真 ⇒ `else`(DRAG)一帧都到不了。**
+
+**这不是「drag 走得少」,是空集。** 出厂 `nBeat = 1.2`,前期攻击周期 ~1.4–1.7s
+⇒ **出厂配置站在不等式的错误一侧**:兵线从来没被拖回来过,
+英雄站在自己勾来的那波仇恨里挨打。这就是 wave13「站着 TANK」指纹,
+在**节拍自己修好之后**,从**节拍看不见的那一行**又长了回来 —— 与 GH #186 同族,
+只是那次是营地(`pullthink`),这次是兵线。
+
+### CK.2 ⭐ 铁证帧就是 GH #326 自己那一帧,只是反过来读
+
+`20260830_003408_slot1`(seed 1828,**ab/armed**,W27),necrolyte → jakiro,
+pull-certified episode:**连续 6 秒坐标逐位不变**(-5847, 5064),
+四只近战小兵把血从 **0.96 啃到 0.37**,四次右键 252.4 / 254.0 / 255.4 / 257.0,
+gap **1.6 / 1.4 / 1.6**。
+
+**每一个 gap 都大于出厂的 1.2s,没有一个更小** —— 那正是「延迟」的签名:
+节流阀只能让 poke **迟到**,**不可能让它提前**。域泄漏没有理由是单边的。
+
+### CK.3 ⭐⭐ 因此 GH #326 的一步推论要退回来(**只退那一步**)
+
+GH #326 从同一张表推出「两条腿都写不出零位移 + 1.5s 右键」,
+据此把这些帧判成**域泄漏**,并给出非分支人口下界 **40.0–51.8%**(W25/W27 四格)。
+
+**分支写得出这个形状**,`tests/test_creepthink_anim_throttle.lua` 就在真实帧上驱动它写出来。
+
+⚠️ **本组只退那一步,别外推**:那些静止帧的**计数**本组不反驳、也不重推;
+退的只是「把它读成 **NON-BRANCH** 帧的下界」。作为静止帧下界它照样成立。
+GH #326 §「已经买到的东西」那个 **±6%** 足迹上界是 **44 id 同波的 bundle 界**,
+该 issue 自己写明不主张已排除反向抵消 ⇒ **不要拿它当本条的先验**。
+
+⭐ 顺带:这给了 GH #326 结尾「请总监裁两条路」一个**第三条路**。
+它的 (乙)「给分支一个不共写的观测量」写着「属协同组地界,本组只提出不主张」——
+本条不是造新印记,是**修掉写不出印记的那个原因**;armed 腿上 drag 指令一旦真的发出,
+`--still` 那一列自己就分开了。
+
+### CK.4 落地:一条并列子句,一个独立的门
+
+```lua
+if not (bot.roamCampPull  ~= nil and J.IsSoakCandidate('pullthink'))
+and not (bot.roamCreepPull ~= nil and J.IsSoakCandidate('creepthink'))
+and J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "roam") then return end
+```
+
+- **未 armed 逐字节惰性**:多一次对 `bot.roamCreepPull` 的 nil 比较,
+  而该字段在每一个非拉线帧上都是 nil;节流阀的问法与出厂逐字节相同。
+- **Turbo 是结构性的,不靠断言**:`roamCreepPull` 只在 `J.ShouldCreepPullLane`
+  返回非 nil 时存在,而那个函数开篇就是 `J.IsModeTurbo()`。
+- **跳过节流阀在这里不花钱**:拉线分支自己 `return`,
+  节流阀省下的 `ThinkIndividualRoaming` / `ThinkGeneralRoaming` 这些帧上本来就到不了。
+
+### CK.5 ⭐ 为什么是自己的 id,而不是 `pullthink` 的第二子句
+
+**打包由包含关系决定,不由强弱决定**(本组 `0FOG` 主判据乙)。
+`pullthink` 管 `roamCampPull ~= nil`,本条管 `roamCreepPull ~= nil`,
+而 GetDesire **设一个就把另一个置 nil**(两处,已写成断言 `[gate G3]`)
+⇒ 两域**按构造互斥**,没有一帧同属两者。合成一个 id 会让两边的 (a) 读数
+**谁也不归属谁**(本组自己的 GH #319)。
+
+**独立成门、绝不合取**:写成 `IsSoakCandidate('creepthink') and IsSoakCandidate('pullbeat')`
+会在 promote 当天冻结为 FALSE(`pullbeat` 已于 2026-08-23 promote,
+promoted id 不在任何 armed 串里),而 `check_armed_wiring.py` 仍报 WIRED —— **`pullcad` 原案**。
+已写成 `[gate G1]` 断言,M2 变异抓得住。
+
+### CK.6 本地验证与变异
+
+`tests/test_creepthink_anim_throttle.lua`(`[ratchet]`,**12/12 绿**)。
+真实帧 `f_072738_zuus_mana.lua`(当年钉住 `pullbeat` 的那张压线帧),
+拉线计划由**真实的 GetDesire** 在该帧上产生,不是声明的。
+
+**变异 11 条:10 CAUGHT / 1 SURVIVED(按设计)**。
+
+- **M8**(promote 过的 `pullbeat` 0.5s hold 改 0.0)**SURVIVED** —— 不是本杠杆的守卫,
+  **登记而非粉饰**:同一个补丁在 `tests/test_replay_pullbeat_attack_cancel.lua` 下**红 4 条**
+  ⇒ 覆盖在它该在的地方,不是洞。哪天那份文件不再覆盖它,这一行就是唯一的记录。
+- **⚠️ 当轮自伤(第一遍活下来的那条)**:`[control C2]`「无计划时杠杆惰性」原本比的是
+  **两份指令日志**,而无计划的世界里**没有指令可以不同** —— 一个在每个 roam 帧上都开火的旁路
+  照样印出两串一模一样的点。M3(把 `bot.roamCreepPull ~= nil` 从旁路里删掉)因此
+  **只被源码断言抓住**,行为控制是绿的、且绿得没有信号。补了 past-throttle 探针
+  (数 `ThinkIndividualRoaming` 被调了几次)之后 M3 与 M7 都在行为层咬住了
+  (M7 探针读 **482** 个「无计划却越过节流阀」的帧)。
+- **`[arith A1]` 是分离器不是断言**:把攻击周期在 nBeat 两侧扫一遍,
+  要求 **周期 < nBeat 时 drag 必须真的开火**。否则「全程零 drag」可能只是注入把 Think 卡死了,
+  那样整份文件会**为错误的理由变绿**。
+
+### CK.7 诚实边界(照抄不要外推)
+
+- **攻击周期是个模型**:它不在 dump 里(世界断言 W1:`GetAnimActivity()` 在整个语料上
+  读一个捏造的 0,九个调用点全部因此在本地是死的),**没有任何 fixture 供得出它**。
+  没建模的部分由 `[arith A1]` 的扫描**排除**,不是由假设排除。
+- 本文件**不重推**也**不反驳** GH #326 的 W25/W27 百分比。
+- **不主张 drag 走了就赢** —— 那是波次问题,原样不动。本地结案的只有
+  **「指令到底发没发出来」**。
+- **不主张 `pullcad` 因此被平反**:3.0s > ~1.5s 的重开间隔会让 drag 可达,
+  这是一条**预测**,本仓结不了。
+- `creepthink` **gated 且未 promote**:**没有一个字进真实对局**。
+
+### CK.8 请总监裁 / 交出去的棒子
+
+1. **入集与否**(armed 成员串 **44 → 45**(⚠️ 总监 10:09Z 在同一时间窗把 `fieldcreep` 退集 45 → 44,本行按退集后的树写))。queue 请求行 **`strategy-25`** 已同开(⚠️ `strategy-24` 被总监 10:09Z 的 `fieldcreep` 退集裁定占用,本轮 rebase 时改号)
+   (§CG.5 立的规矩:**提入集必须同时开 queue 请求行**),预登记读法写在它的 `acceptance` 里。
+2. ⚠️ **(a) 的读法直接复用 GH #326 自己的预登记**(`pullcad_beat.py --still`,
+   判决量 = sub-2.0s 间隔中**原地不动**的占比,ab/ba 两层都要),**本组不另立判据**。
+3. ⚠️ **`creepthink` 与 `pullcad` 同波共 armed 时的差分是合力** ——
+   两者动的是**同一个不等式的两边**(`pullcad` 抬 `nBeat`,本条解除 R 的约束力)。
+   要单读就要求两者不同波,或明确登记成 bundle 读数。
+4. **球同时在录像组**:CK.2 那一帧的判别只需要**指令日志**而不是位置列;
+   若 dumper 侧拿得到 `Action_*` 序列,armed/出厂两腿的差别是**可以直接看见**的。

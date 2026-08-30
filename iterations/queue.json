@@ -1026,6 +1026,17 @@
     "issue": "GH #325(重裁请求)/ #323(域内读数,重窄方向)/ #327(传感器裁路)",
     "note": "条件 (c) 的逻辑依据在它自己域的两半上各自被**多数**证伪 ⇒ 退回协同组按伤害**量级**轴重窄。**不是 (a) 买不到**(它不 SILENT),**也不是 (b) 有负面**(本 id 没有单独的 (b) 读数,也不需要)。gate 与代码保留,永不 arm(当前形态)。"
    }
+  },
+  {
+   "id": "strategy-25",
+   "stream": "strategy",
+   "bundle": "creepthink",
+   "seeds": [],
+   "priority": 2,
+   "axis": "soak candidate 'creepthink' 的条件 (a)(执行核验)与 (b)(粗粒度胜负)。搭车、零 AWS 增量、不申请专波 —— 任一例行波即可。同时是 GH #326 那条「(a) 买不到」的**第三条路**,总监只需在 (甲)(乙) 之外多读一段。",
+   "question": "已落地(2026-08-30 协同组,GH #326;登记 `state.json:creepthink_20260830`,入集提议 `test_set.md §CK`):`bots/mode_roam_generic.lua` Think() 开篇的节流阀多一条**并列**旁路子句 —— `not (bot.roamCreepPull ~= nil and J.IsSoakCandidate('creepthink'))`,与已在集的 `pullthink`(营地那半)同形、**同域互斥**。\n\n**立案(主判据是一条不等式,不是一个百分比)**:拉线节拍 `if POKE / elseif hold / else DRAG` **三条臂全部**坐在节流阀后面,而节流阀匹配 `bot:GetAnimActivity()` 对 `meaningfulActivities`(表头就是 `ACTIVITY_RUN` / `ACTIVITY_ATTACK`)。刚右键完对线英雄的 bot **按构造**在 `ACTIVITY_ATTACK` 里待满一个攻击周期。记 R = 节流阀重开间隔(实际就是攻击周期),则节拍**只在重开帧上被问到**,而那种帧上距上次 poke 已 ≥ R ⇒\n\n> **R > nBeat ⇒ `if`(POKE)在每一个能问到节拍的帧上都为真 ⇒ `else`(DRAG)一帧都到不了。**\n\n这不是「drag 很少走」,是**空集**。出厂 `nBeat = 1.2`,而前期攻击周期 ~1.4–1.7s ⇒ **出厂配置站在不等式的错误一侧**,兵线从来没被拖回来过,英雄站在自己勾来的仇恨里挨打。\n\n**铁证帧就是 GH #326 自己那一帧,只是反过来读**:`20260830_003408_slot1`(seed 1828,ab/armed,W27)necrolyte→jakiro,pull-certified episode 里**连续 6 秒坐标逐位不变**(-5847, 5064),四只近战小兵把血从 0.96 啃到 0.37,四次右键 252.4 / 254.0 / 255.4 / 257.0,gap **1.6 / 1.4 / 1.6 —— 全部大于出厂 1.2s,没有一个更小**。那正是「延迟」的签名:节流阀只能让 poke **迟到**,不可能让它**提前**。这一帧是 GH #186 那张 zuus 营地帧把野怪换成线兵。\n\n**⭐ 请总监连带读一句 GH #326 的推论**:该 issue 从同一张表推出「两条腿都写不出零位移 + 1.5s 右键」,进而把这些帧判成**域泄漏**,并给出非分支人口下界 **40.0–51.8%**。**分支写得出这个形状**,`tests/test_creepthink_anim_throttle.lua` 就在真实帧上驱动它写出来。**本组不反驳那些静止帧的计数**(也不重推),反驳的只是「把它读成 NON-BRANCH 帧的下界」这一步。\n\n**未 armed 逐字节惰性**:多的是一次对 `bot.roamCreepPull` 的 nil 比较,而该字段在每一个非拉线帧上都是 nil;节流阀问法与出厂逐字节相同。**Turbo 是结构性的**,不靠断言:`roamCreepPull` 只在 `J.ShouldCreepPullLane` 返回非 nil 时存在,而那个函数开篇就是 `J.IsModeTurbo()`。\n\n**为什么是自己的 id 而不是 `pullthink` 的第二子句**:打包由**包含关系**决定不由强弱决定(本组 `0FOG` 主判据乙)。`pullthink` 管 `roamCampPull ~= nil`,本条管 `roamCreepPull ~= nil`,而 GetDesire **设一个就把另一个置 nil** ⇒ 两域**按构造互斥**,没有一帧同属两者;合成一个 id 会让两边的 (a) 读数**谁也不归属谁**。**独立成门、绝不合取**:写成 `IsSoakCandidate('creepthink') and IsSoakCandidate('pullbeat')` 会在 promote 当天冻结为 FALSE(`pullbeat` 已于 2026-08-23 promote,promoted id 不在任何 armed 串里),而 `check_armed_wiring.py` 仍报 WIRED —— `pullcad` 原案。",
+   "acceptance": "(1) **(a) 的判读点(直接复用 GH #326 自己的预登记读法,不另立)**:armed 腿上,pull-certified episode 里的**静止帧占比必须下降** —— 用 `tools/batch_test/behavioral/pullcad_beat.py --still`,判决量是「sub-2.0s 间隔中**原地不动**的占比」。\n(2) ⚠️ **必须同时给 ab / ba 两个分层**(铁律 4(i));两层反号 = 噪声,不写进结论。\n(3) ⚠️ **报占比 + 分布,不报中位数**(铁律 4(ii):整数取值 + 小值域)。\n(4) ⚠️ **不得从 `pullcad` 的读数反推本条,也不得反过来**:两个 id 动的是**同一个不等式的两边**(`pullcad` 抬 nBeat、本条降 R 的约束力),同波共 armed 时那个差分是合力。要单读就要求两者不同波,或明确登记成 bundle 读数。\n(5) ⚠️ **载体供给先于结论**:一例都没有时,先问语料里到底有没有「creep-pull 分支真的活着」的帧,**不许**读成「测过了没效果」。GH #326 §「已经买到的东西」那个 ±6% 足迹上界是 **44 id 同波的 bundle 界**,该 issue 自己写明不主张已排除反向抵消 —— **不要拿它当本条的先验**。\n(6) **(b)**:胜负无明显负面(粗粒度,非显著性)。\n(7) **预登记的 null 读法**(state.json:creepthink_20260830.prereg_read 全文):读数不动时依次排除 —— ① arm 串漏了 `creepthink`;② 那些帧上 R > nBeat 不是约束(英雄是被别的东西按住的,`ACTIVITY_RUN` 就够);③ drag 指令**发了**而引擎丢弃(那是另一个缺陷,要看指令日志不是位置列)。**不许**在没分开这三条之前把 null 读成「节流阀不是原因」。",
+   "status": "pending"
   }
  ],
  "done": [

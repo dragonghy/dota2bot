@@ -221,7 +221,48 @@ function Think()
 	-- Scoped to the CAMP pull only. The creep pull hits the same line, but its
 	-- cadence already holds for the wind-up (promoted 'pullbeat'), and one
 	-- lever at a time -- see the report's hand-off.
+	--
+	-- [GH #326 20260830] Soak candidate 'creepthink': THE DEFERRED HALF ABOVE,
+	-- now with its own bearing frame. GH #326 photographed necrolyte on
+	-- 20260830_003408_slot1 (seed 1828, ab/armed, W27) inside a pull-certified
+	-- episode: SIX consecutive seconds of BYTE-IDENTICAL coordinates
+	-- (-5847, 5064) while four melee lane creeps ate it from 0.96 HP down to
+	-- 0.37, with four right-clicks (252.4 / 254.0 / 255.4 / 257.0) landing
+	-- inside that stillness. That is the zuus camp frame of GH #186 with the
+	-- creeps swapped in -- the SAME mechanism, on the branch the note above
+	-- deferred: a ranged core that right-clicks a lane opponent inside its
+	-- attack range stays in ACTIVITY_ATTACK while the aggroed wave beats on it,
+	-- so this line returns on every frame the drag has to be ordered on, and
+	-- the hero never walks the wave back.
+	--
+	-- READ #326 §"证据" AGAINST THIS: that issue infers from the same table
+	-- that "neither leg can write zero-displacement + 1.5s right-clicks", and
+	-- concludes the still frames are DOMAIN LEAKAGE rather than branch output
+	-- (its 40.0-51.8% non-branch lower bound rests on exactly that step). The
+	-- branch CAN write that shape, and this is how: the drag order is not
+	-- issued at all. The shipped 1.2s beat also predicts the observed
+	-- 1.4/1.6s gaps under this line -- a poke deferred to the first frame the
+	-- throttle happens to reopen is LATE, never early.
+	--
+	-- ITS OWN ID, NOT A SECOND CLAUSE OF 'pullthink': the two domains are
+	-- mutually exclusive BY CONSTRUCTION -- GetDesire nils roamCampPull when it
+	-- sets roamCreepPull and vice versa (see the two branches above) -- so
+	-- disjointness, not relative strength, is what decides the packaging, and
+	-- one shared id would make neither condition-(a) reading attributable.
+	-- Gated STANDALONE for the 'pullcad' trap: written as
+	-- `IsSoakCandidate('creepthink') and IsSoakCandidate('pullbeat')` it would
+	-- be frozen FALSE, because 'pullbeat' was promoted 2026-08-23 and a
+	-- promoted id is in no armed string.
+	--
+	-- Turbo is structural here too, and for the sibling reason: roamCreepPull
+	-- only exists when J.ShouldCreepPullLane returned non-nil, and that opens
+	-- with J.IsModeTurbo(). Unarmed, this adds one nil compare on a field that
+	-- is nil in every non-pull frame; the throttle is asked exactly as shipped.
+	-- Skipping it costs nothing for the same reason as the camp side: the
+	-- creep-pull branch returns before ThinkIndividualRoaming /
+	-- ThinkGeneralRoaming, so the work this knob exists to skip is not reached.
 	if not (bot.roamCampPull ~= nil and J.IsSoakCandidate('pullthink'))
+	and not (bot.roamCreepPull ~= nil and J.IsSoakCandidate('creepthink'))
 	and J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "roam") then return end
 
 	-- [pull rehome 20260723] Execute the pull plan set by GetDesire this

@@ -234,7 +234,16 @@ local PINNED = {
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_jakiro.lua",                                -- P
     "overchase | J.ShouldPunishOverchase | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                     -- P
     "ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                            -- P
-    "pullcad,pullthink | Think | J.GetLanePullDragTarget | pulldrag | bots/mode_roam_generic.lua",                                         -- W
+    -- [GH #326 20260830] 'creepthink' joined this row when it added a second
+    -- throttle-bypass clause to the same 400-line Think.  Read by hand before
+    -- re-pinning, and it stays (W): the callee `J.GetLanePullDragTarget` is
+    -- called ONLY from the camp-pull branch (`bot.roamCampPull ~= nil`), while
+    -- the new id's clause is guarded on `bot.roamCreepPull ~= nil` -- and
+    -- GetDesire nils each plan when it sets the other, so no frame can be in
+    -- both.  Not a conjunction at all: it is this census's wide net doing what
+    -- the header says it does.  'creepthink' is additive on its own arm anyway
+    -- (armed it can only SKIP a `return`, never add one).
+    "creepthink,pullcad,pullthink | Think | J.GetLanePullDragTarget | pulldrag | bots/mode_roam_generic.lua",                              -- W
     "towerfear | X.ShouldRun | J.IsBasePresenceAdverse | basesiege | bots/mode_retreat_generic.lua",                                       -- W
     "tpcommit,tpdead,tpdying | J.GetTpCommitDefendDesire | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/FunLib/jmz_func.lua",        -- P
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
