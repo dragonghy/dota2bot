@@ -1,7 +1,9 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,fieldcreep,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip
 
-**成员串 45**(上一行)。本行 **2026-08-29T18:5xZ 的变动:`fieldsip` 入集**(44 → 45,总监裁定全文 **§CG**,提议是 §CE)—— 搭车、零 AWS 增量、不申请专波。**收割前必读两条**:(i) 它的 (a) **不得**从 `stayfield`/`stayfield2` 的留守率差分读出(那批帧上四个 id 同时动手,§CG.4);(ii) **书面条件 D**(§CG.3):`fieldbuy` 一旦出集/promote,**同一工作单元内**必须一并处置 `fieldsip` —— 这条**故意不写成代码合取**(写成合取会在 `fieldbuy` promote 当天冻结为 FALSE,`pullcad` 原案)。**⚠️ 顺带记一条别的组要用的事实**:本条提议在 `queue.json` 里**没有请求行**,于是开工自检的 `pending_rulings.py` 连续三轮报 `none` 而它一直未裁(§CG.1)⇒ **提入集必须同时开 queue 请求行** —— 这条规矩本身不变,但它**不再只靠自觉**:`ORPHAN_PROPOSAL` 检测器 **2026-08-29T2x:xxZ 已落地**(`tools/agent/pending_rulings.py`,开工自检第 4 条腿),没有请求行的入集提议现在会被点名并把自检退出码抬到 **3**;回放 §CE 那一刻的三份文件,它逐字打出 `ORPHAN_PROPOSAL: 1 / §CE id=fieldsip`。
+**成员串 44**(上一行,**385 字节**)。本行 **2026-08-30T10:09Z 的变动:`fieldcreep` 退集**(45 → 44,总监裁定全文 **§CJ**,起因 GH #325 / #323 / #327)—— gate 与代码**保留、永不 arm**(当前形态),退回协同组。**⚠️ 这个 44 与 08-29T10:xxZ 那个 44 不是同一个串**(那个含 `fieldcreep` 不含 `fieldsip`,388 字节;本串 385)—— 别按 id 数对读。
+**收割前必读三条**:(i) **W29 起的读数不得与 W27/W28 并池** —— 串不同,而差的那一个 id 恰好收窄了 `stayfield`/`stayfield2`/`fieldbuy`/`fieldsip` 四个 id 共用的 `J.IsFieldRegenSituation` 域(§AR.0 当初同波 arm 就是为了这个);(ii) **已收割语料(W25–W28)= 带 `fieldcreep` 的窄版本,W29 起 = 不带**,两侧各自内部自洽,**跨界并池才是错的**;(iii) `fieldsip` 的 (a)(`strategy-23`)读的是**已落地的 W27/W28 语料**,不需要新波次 ⇒ **本次退集不作废它**,但它买到的是窄版本上的读数,写结论时要带这个限定。
+**成员串 45**(历史,2026-08-29T18:5xZ 起至 08-30T10:09Z)。那一行的变动:`fieldsip` 入集**(44 → 45,总监裁定全文 **§CG**,提议是 §CE)—— 搭车、零 AWS 增量、不申请专波。**收割前必读两条**:(i) 它的 (a) **不得**从 `stayfield`/`stayfield2` 的留守率差分读出(那批帧上四个 id 同时动手,§CG.4);(ii) **书面条件 D**(§CG.3):`fieldbuy` 一旦出集/promote,**同一工作单元内**必须一并处置 `fieldsip` —— 这条**故意不写成代码合取**(写成合取会在 `fieldbuy` promote 当天冻结为 FALSE,`pullcad` 原案)。**⚠️ 顺带记一条别的组要用的事实**:本条提议在 `queue.json` 里**没有请求行**,于是开工自检的 `pending_rulings.py` 连续三轮报 `none` 而它一直未裁(§CG.1)⇒ **提入集必须同时开 queue 请求行** —— 这条规矩本身不变,但它**不再只靠自觉**:`ORPHAN_PROPOSAL` 检测器 **2026-08-29T2x:xxZ 已落地**(`tools/agent/pending_rulings.py`,开工自检第 4 条腿),没有请求行的入集提议现在会被点名并把自检退出码抬到 **3**;回放 §CE 那一刻的三份文件,它逐字打出 `ORPHAN_PROPOSAL: 1 / §CE id=fieldsip`。
 
 **成员串 44**(历史,2026-08-29T10:xxZ 起至 18:5xZ)。那一行的变动:`odbuild` 与 `wkqdmg` 双双入集**(42 → 44,总监裁定全文 **§CF**,提议分别是 §CC / §CD)—— 两条都是**搭车、零 AWS 增量、不申请专波**,按铁律 §BB.4「搭车提议的唯一成本就是不被裁」当场放行;两条各自的 **UNINTERPRETABLE 退回门**(`odbuild` 看 `skill_point_stall.py`,`wkqdmg` 看 WK 等级分布)写在 §CF 与 `queue.json` 各自的 `director` 字段里,**收割前必读**。
 
@@ -10165,3 +10167,156 @@ M3 删掉点名 ⇒ 1 红),CONTROL 绿,还原走**文件副本**并以 `sha256su
 
 无新棒子:口径已写进 `queue.json:_protocol`(机器可读的那份)+ 本节(档案)+ GH #317(线程)。
 **验收** = 下一轮自检的 `UNKNOWN STATUS` 行仍在,且 `total open requests` 读 42 而不是 37。
+
+---
+
+## §CJ 2026-08-30T10:09Z 总监裁定:`fieldcreep` **退集**(成员串 45 → 44)+ GH #327 两条传感器路裁「暂不走」
+## —— 而本节最该被读的不是裁词,是**§AR.3(乙) 那条预登记退出条款自己坏在哪里:它把「给不出来」预先单因归给了交付,于是把「量具不可执行」这一档从世界里删掉了**
+
+起因:GH **#325**(录像组请总监重裁 §AR.3(乙))、GH **#323**(域内多数读数)、GH **#327**(传感器不存在)。
+语料:W25 四 run,**121/121 局宽扫,`unparseable 0`,8132 个 situation episode**,深查逐帧 7 局。
+零 AWS 调用、零支出、未发波;`bots/`/`game/` 逐字节零 diff(本裁定**不动一行 Lua**)。
+
+### §CJ.1 裁词(章程 2.5 三处投递)
+
+| 轴 | 裁 |
+|---|---|
+| §AR.3(乙) 的字面条款 | **不触发**(前件从未被观测到 —— 见 §CJ.2) |
+| `fieldcreep` 在 armed 集 | **出集**,成员串 45 → 44;gate 与代码**保留、永不 arm**(当前形态),退回**协同组** |
+| 依据 | **GH #323 的域内多数读数**(可执行、已交付),**不是** §AR.3(乙) |
+| GH #327 路 1(`InstallDamageCallback` 滚动伤害账本) | **暂不走**(带可证伪的复活条款 `readmit_on`) |
+| GH #327 路 2(dumper/fixture 侧补攻击力) | **不为本 id 专排**;搭 GH #305/#306 自己的车 |
+| `state.json:fieldcreep_engine_semantics_20260822T2300Z` | **本轮没有被买到**,显式登记(#325 请求 3) |
+
+机器可读投递:`queue.json:strategy-24`(**总监代建**,先例 strategy-21/22/23)的 `director` /
+`director_resolve` / `director.executor` / `director.readmit_on` 四格;档案 = 本节;线程 = #325/#323/#327 追评。
+
+### §CJ.2 ⭐ 为什么不按 (乙) 的字面出集,哪怕结论恰好也是出集
+
+(乙) 的前件是:「camp 啃人的帧确实出现、而 `fieldcreep` 在其上**一次都没点亮**」。
+**那个前件本轮没有被观测到。** 被观测到的是**量具坏了**:
+
+- 「点没点亮」不可直接观测 —— 这个 id 的效果是一次**释放**(谓词返回 false,帧交还出厂回家逻辑),
+  **屏幕上什么都不发生**;
+- 为它造的、不需要 baseline 腿的判别器(世界甲预测 `camp home_tp ≈ lane home_tp`;世界乙预测
+  `camp home_tp ≈ 0` 而 `lane home_tp > 0`)在聚合表上给出了一个**看起来可读**的答案
+  (两层都像世界甲:camp 5.0%/3.8% vs lane 4.1%/4.1%),而**逐帧一看,它的两个阳性事件 2/2 都是假的**:
+  一个属于 t=641.4 起的**推塔**(`tower` 伤害 85→169→263→282 连续 6 帧),
+  一个属于 t=162.4 起的**团战**(`heroDmg3s` 166→202→213);两个域帧本身 HP 都在**涨**。
+- 最薄的格 26 / 20 个 episode,两个阳性**各只有 1 个事件**。
+
+⇒ 这是 **METHOD-FAILED,不是「测到了世界乙」**。按 **§CH.4 的硬条款**(预登记的识别子在语料里得 0 次
+必须记 `METHOD-FAILED`,**不得**记为预登记结局),**这是那条硬条款的第二次应用,现在它够一般了**。
+拿一个被逐帧证伪的估计量去点燃一条预登记的后果条款,得到的是**在假前提上作出的正确结论** ——
+它这次恰好对,而正确性不来自证据,**下一次就不会对**。
+
+### §CJ.3 ⭐⭐ 立法级:**任何预登记的退出/验收条件必须带 `METHOD-FAILED` 分支**;缺这一支是条款的缺陷,不是交付方的
+
+§AR.3(丙) 的原文把「给不出来」**预先单因**归给了一件事:
+> 这条的判据是**一次**波次就能给出的二值观察,**给不出来说明录像组没按 (甲) 报,那是交付问题不是证据问题**。
+
+本轮的事实**与那个预设正面冲突**:(甲) **交付了**(121/121 宽扫、8132 episode、
+按逐条实体名测出来 —— `ancient_frog` 301 / `ancient_frog_mage` 221 / `prowler_shaman` 138 中立,
+`creep_goodguys_melee` 1128 / `creep_badguys_melee` 1111 小兵),而 (乙) **仍然给不出来**,
+原因是量具不可执行。**「交付齐全 × 判据不可执行」这一档,条款里根本没有格子。**
+
+没有这一格的后果只有两个,**都坏**:
+1. 执行方按后果条款执行 ⇒ **在假前提上出集**(结论可能碰巧对,理由是错的,而档案会把理由传下去);
+2. 执行方不敢执行 ⇒ **条款静默躺着**,而没有任何工具会报「一条预登记条款卡住了」。
+
+录像组走了第三条路:**不自行套用后果条款,升级请裁**(#325 §3.1 逐字写明「录像组不宜自行套用它的后果条款」)。
+**那是对的,而且正因为条款没给它第三档,它才必须来问** —— 换句话说,这一轮的往返**是条款的成本,不是它的收益**。
+
+⇒ **写进 `queue.json:_protocol`(机器可读的那份)**:预登记的退出条件 / `acceptance` / `readmit_on`
+**必须枚举 `METHOD-FAILED` 分支**,并写明该分支的归属(默认:回总监重裁,**不由执行方自行套用后果条款**)。
+与 §CH.4 的关系:§CH.4 管**识别子得 0 次**这一种具体形态,本条管**整类预登记条款**;
+§CH.4 是本条的第一例,#325 是第二例。
+
+### §CJ.4 那么出集的依据是什么:**#323 的域内多数读数**,它是可执行的、已交付的、且**两层逐位重合**
+
+`fieldcreep` **不是 SILENT**(armed 腿 甲-veto 22.0%(ab)/23.0%(ba)、乙-veto 18.1%/16.7%)——
+与 `campvoid` 的 0/160 不是一回事。它坏在**立案句在自己域的两半上各自被多数证伪**:
+
+- **营地那半**:同一个 3 秒窗口反着读(他**打出去**多少),`dealt > taken` 的占比
+  **ab/armed 56.9% · ba/armed 65.3% · ab/baseline 71.7% · ba/baseline 75.0%** ——
+  **四个格同号**(铁律 4(i) 两层 × 两腿),不是分层噪声也不是 arm 串的产物。
+  立案句写的是「a hurt bot **being chewed**」,而营地接触帧的**多数是 bot 在打野**。
+- **小兵那半**:按每帧他包里**真实持有的最强补给**算,带补给的纯小兵 episode 里
+  **72.5%(ab)/ 72.4%(ba)** 落在申请书**自己标注的「过宽角落」**里(创伤 < 补给/3s)——
+  **两层逐位重合**。纯小兵帧 3 秒创伤中位数 **24**,而包里最常见的 faerie_fire 是 **85/3s**。
+  **那不是一个角落,那是它剩下域的多数**,而 gate 在那些帧上的效果(释放 ⇒ 回家逻辑重新掌权)
+  **正是 owner P2「低血不回家」要治的方向的反面**。
+
+⇒ 条件 **(c) 的逻辑依据不成立**(不是 (a) 买不到,也不是 (b) 有负面):按章程 2(b),依据不成立 → **出集退回**。
+**读法边界照抄 #323 的两条自标**:这些是**域内分布**不是 armed−baseline 差分 ⇒ **不吃**「45 个 id 同波,
+差分是三者合力」那条;baseline 腿只是用来显示方向不依赖 arm 串。
+
+### §CJ.5 ⭐ 同一条规则,事实变了,结论翻过来:§AR.0「同波不专波」的理由现在指向出集
+
+§AR.0 当初把 `fieldcreep` 与 `stayfield`/`stayfield2`/`fieldbuy` **同波** arm,理由逐字是:
+> 三个 id 的域**本来就**含着这条谓词,收窄之后那个版本**才是我们打算 promote 的版本**,
+> 先买不带它的 (a) 等于买一份**注定作废**的证据。
+
+#323 + #327 之后,**「收窄之后那个版本」不再是我们打算 promote 的版本**(它的立案句在多数上是假的,
+而修它需要一个不存在的传感器)⇒ **同一条理由现在说:继续带着它买,才是买注定作废的证据。**
+这不是推翻 §AR.0,是**它的前提被测掉了**。
+
+**代价照 §AR.0 的先例接受并记录**(方向相反的同一笔):field 家族四个 id 的域读数
+**在 W28/W29 之间有一道界**,跨界不可并池 —— 已写进第 2 行「收割前必读三条」。
+
+### §CJ.6 GH #327:两条路都不走(现在),而理由是算术
+
+#327 已把「先把 lookback 调短」在**整个取值范围上证伪**:5 帧里重伤组 min-dt 最大 **0.60**、
+轻伤组 min-dt 最小 **0.60**,**平局劈不开**;0.05 网格跑遍 (0, 3.0] 得 `separators == 0`,
+且配了可分桩控制 ⇒ 那个 0 不是「没看」。剩下两条:
+
+- **路 1(`InstallDamageCallback`)= 架构级**:跨帧状态 + 一个全局安装点 + mock 支持,
+  而本仓**没有 bot 侧调试**(`print()` 到不了 console、`error in error handling` 吞掉错误文本)⇒
+  这类跨帧状态出问题只能靠录像和二分定位。**买它是为了救一个同一批证据刚判定要重新设计的 id** ——
+  **不是重新调一个常数**。**暂不走。**
+- **路 2(dumper/fixture 侧补攻击力)**:堵在 GH #306 的两个 `ZERO_TRUE` 站点上,
+  在它落地之前「扫附近野怪按 `GetAttackDamage()` 估 DPS」**在 fixture 上恒真或恒假**。
+  它**本来就该走**(它是 #305/#306 家族的正题),但**不为 `fieldcreep` 专排** —— 搭那条线自己的车。
+
+⚠️ **「暂不走」不写成终局**(铁律 9 的掉棒教训:只写终局,下一个读者读成结案,棒子从所有队列消失)⇒
+写成 `director.readmit_on`,判据可证伪,见 §CJ.7。
+
+### §CJ.7 `readmit_on`(写进 `queue.json:strategy-24.director.readmit_on`,可证伪)
+
+`fieldcreep` **自动回到排期轴**需要**同时**满足:
+
+1. **量级读数存在**:GH #327 路 1 或路 2 任一落地 —— 判据是
+   `tests/test_fieldcreep_magnitude_operand.lua` 的 `[source]` 那条**变红**
+   (它断言的正是「`InstallDamageCallback` 全 `bots/` 零调用」),**那是正确的红**;
+   或 GH #306 的两个 `ZERO_TRUE` 站点不再恒真。
+2. **重窄版本带双侧钉帧**(#323 §4,**两侧都要**,否则只是把阈值搬了个家):
+   正例 `6df84c/20260829_123208_slot1 --t 249.5 --hero obsidian_destroyer`(创伤 36 < faerie_fire 85)
+   上**不否决**;`state.json:fieldcreep_engine_semantics_20260822T2300Z` 的三个重创伤帧
+   (3 秒 109/129/132)上**仍否决**。
+3. **⚠️ 前置,别绕过它**:#327 §4 已量出「轻伤 × 有补给」那一格**在本仓语料里是空的**,
+   剩下三帧里两帧是**空包**(放开只动 `fieldbuy`,HOLD 那半一帧不动)⇒
+   **上面第 2 条的正例帧必须先被 dump 进 `tests/fixtures/`**(#323 已交棒录像组),
+   否则第 2 条**没有可执行形态**。**这一条本身就是 §CJ.3 的应用**:把 `METHOD-FAILED` 那一档
+   写在前面,而不是等它发生。
+
+三条齐 ⇒ 以**新的入集提议**回排期轴,**且必须同时开 queue 请求行**(§CG.5 的规矩)。
+总监在该读数落地后的下一次触发**必须**给实质裁定,不许以「已经裁过了」续命(`_protocol` 原文)。
+
+### §CJ.8 显式登记:引擎语义那个未决问题**本轮没有被买到**(#325 请求 3)
+
+`state.json:fieldcreep_engine_semantics_20260822T2300Z` 记的问题 ——
+**引擎的 `WasRecentlyDamagedByCreep` 算不算中立生物** —— **仍然未决**。
+本轮的判别器**不是它的答案**,是一次 METHOD-FAILED(§CJ.2)。
+⚠️ **不要**把 §CJ.4 §1 的营地域读数误读成语义答案。
+**而出集的理由不依赖它**:§CJ.4 的小兵那半**在两个世界里都归 `fieldcreep` 管**(#323 自标的读法限制 2)。
+新键 `state.json:fieldcreep_EXIT_RULING_20260830` 记本裁定全文要点。
+
+### §CJ.9 本节明说没做的
+
+- **不动一行 Lua**:gate 与子句(`bots/FunLib/jmz_func.lua:5286-5334`)逐字保留。
+  理由与 §CB(`campexit` 退集)同:退集是**不 arm**,不是删代码;代码是重窄的起点。
+- **没有复核** #323 的 8132 个 episode 的原始计数(采纳其自证:`unparseable 0`、
+  `fieldcreep_domain.py --selfcheck` 36 PASS、深查 7 局);本节复核的是**推理**不是**算术**。
+- **没有裁** GH #324(召唤物/守卫/Roshan 第三个盲区)、#326(`pullcad` 通道分离)、
+  #329(ab/ba 反号,批测台 09:28Z 新开)—— 三条各自独立,不在本工作单元内。
+- `fieldcreep` 的 (b) 没有单独读数,**也不需要**:出集依据是 (c),不是 (b)。
