@@ -43,6 +43,14 @@
 -- tests/test_selfcheck_lua_leg.py 2a2) -- and it would be that trap on the very
 -- instrument whose over-wide reading opened #267.
 --
+-- ⚠️ IT MOVED AGAIN, BY THAT SAME RULE (GH #346, hero 2026-08-30).
+-- `strip_line_comment` now lives in tests/lua_source_scan.lua, because a second
+-- source-shape test (tests/test_nil_guard_then_body.lua) needs the same cut and
+-- the paragraph above forbids the copy that would otherwise have been made.
+-- `scan_call_sites` did NOT move -- it is about GetActiveMode and belongs here.
+-- The direct unit checks on the cut at the bottom of this file stayed, and they
+-- got STRONGER by moving: they now exercise the single shared copy.
+--
 -- LIMIT.  Being in the fast leg means a landing that moves these counts goes red
 -- at the NEXT stream's 开工, not at the pusher's own gate: the push gate runs
 -- luacheck, not this. That is the shape #267 §4 names, one round shorter.
@@ -71,26 +79,7 @@ package.path = 'tests/?.lua;' .. package.path
 -- comment, so a real call sitting after such a string is still counted.  The
 -- naive `line:find('--')` would have dropped it -- an over-wide cut is the same
 -- class of defect as the over-wide pattern this fixes.
-local function strip_line_comment(line)
-    local quote = nil
-    local i = 1
-    while i <= #line do
-        local c = line:sub(i, i)
-        if quote then
-            if c == '\\' then
-                i = i + 1
-            elseif c == quote then
-                quote = nil
-            end
-        elseif c == '"' or c == "'" then
-            quote = c
-        elseif c == '-' and line:sub(i + 1, i + 1) == '-' then
-            return line:sub(1, i - 1)
-        end
-        i = i + 1
-    end
-    return line
-end
+local strip_line_comment = require('lua_source_scan').strip_line_comment
 
 --- Shipped call-site counts for the three things this file is about.
 -- Counts EXECUTABLE occurrences only (see strip_line_comment / GH #267).

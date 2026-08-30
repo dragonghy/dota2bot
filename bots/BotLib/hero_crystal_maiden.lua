@@ -637,8 +637,25 @@ function X.ConsiderQImpl()
 	local nCanKillCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCreepSearch, nRadius, 0.5, nDamage )
 	local nCanHurtCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCreepSearch, nRadius, 0.5, 0 )
 
-	if nCanHurtCreepsLocationAoE == nil
-		or nCanHurtCreepsLocationAoE.targetloc == nil
+	-- GH #346.  The `== nil` clause used to route execution INTO `.count = 0`,
+	-- i.e. into indexing the very value it had just found nil -- the one line
+	-- the guard exists to protect.  (`or` short-circuits, so the nil never
+	-- reached J.GetInLocLaneCreepCount; the then-body was the whole defect.)
+	-- The nil leg now substitutes the zero-count stand-in that the other two
+	-- clauses produce by assignment, which is also what the four downstream
+	-- `.count >= N` reads need.
+	--
+	-- EQUIVALENCE, which is why this is not gated: on every frame where the old
+	-- code completed, the new code leaves identical state.  The substitution is
+	-- reachable only when FindAoELocation returns nil, and on that frame the old
+	-- code raised.  The differential is exactly the crashing frame.
+	--
+	-- NOT a nil-safety claim for CM: 350 of this repo's 353 FindAoELocation
+	-- sites index the result unguarded, three of them in this same function.
+	-- See tests/test_nil_guard_then_body.lua for that bound as a pin.
+	if nCanHurtCreepsLocationAoE == nil then
+		nCanHurtCreepsLocationAoE = { count = 0 }
+	elseif nCanHurtCreepsLocationAoE.targetloc == nil
 		or J.GetInLocLaneCreepCount( bot, 1600, nRadius, nCanHurtCreepsLocationAoE.targetloc ) <= 2
 	then
 		nCanHurtCreepsLocationAoE.count = 0

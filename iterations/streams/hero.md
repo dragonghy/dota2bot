@@ -22,6 +22,58 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-57. **`#346` 那条 nil 守卫把「X 是 nil」当成了「去索引 X」的**触发条件**,而 CM ——
+   `#346` 拿来当健康对照的那一个 —— 是同一个病人;修了 CM(**未 gate**,附等价性论证),
+   形状做成**全树**不变量;我第一版扫描器的 53 个命中里 **52 个是我自己的缺陷**;
+   下一棒是 Silencer(#346 本体,不关)+ Sniper/`.cout` 那条新 issue**
+   **2026-08-30T22:56Z done —— 认领 `[hero]` 最新 issue **GH #346**(总监 22:14:40Z 开),
+   也正是本组上一轮 `cmqreach` 自己从 `known_gap (5)` 交出去的那根棒。
+   `bots/BotLib/hero_crystal_maiden.lua` **一处**可执行改动;`game/` 零行;
+   **没有新 gate id、没有 arm/promote/加宽任何已在集的东西**;**零 AWS**;不申请波次。
+   新文件 `tests/test_nil_guard_then_body.lua`(5 例,`[ratchet]`)+ `tests/lua_source_scan.lua`(共享扫描器);
+   `state.json` 新增 `nilguard_20260830`;报告 `iterations/reports/hero/20260830T225606Z.md`。**
+   - **⭐⭐ 主读数:`or` 短路 ⇒ 唯一可达的缺陷是 then 体那一行。** `if X == nil or f(X.targetloc)…
+     then X.count = 0 end`:X 为 nil 时第二条子句**被短路**,`f` 永远收不到 nil ——
+     所以 **`#346`(以及本组自己写的 `cmqreach_20260830.known_gap (5)`)那句「可以把 nil 传进
+     `J.GetInLocLaneCreepCount`」是错的**,已在追评更正。`J.GetInLocLaneCreepCount` 对 nil 也不必然炸
+     (兵列表为空则循环不执行、直接返回 0),但**这条通路在三个站点上都不可达** ⇒ 无关事实。
+   - **⭐⭐ 第二处更正:CM 不是对照,是病人。** `#346` 说 CM「至少还多一句 `targetloc == nil` 检查」——
+     多的那句守的是**另一个 nil**(字段),而 then 体索引的是**表本身** ⇒ **它从来没保护过 then 体**,
+     与 Silencer **逐字同构**。
+   - **⭐ Sniper 是这个二择的最锋利形式,不需要任何引擎数据就能判死**:`hero_sniper.lua:272`
+     **先**索引 `.count`,`:273` **才**判 nil ⇒ 能返回 nil 就崩在守卫**之前**,不能返回 nil 守卫就是死的
+     —— **两个世界里都保护不了任何东西**。登记不修(非焦点五)。
+   - **⭐ 为什么替身而不是跳过**:下游 **8 处**消费(`.count >= 5/4/4/4` 各守一个 `.targetloc` 返回)⇒
+     跳过只是把崩点后移四行;`{ count = 0 }` 让四个门**全假**,`.targetloc` 一次都不会从替身上读出来。
+   - **⭐ 为什么没 gate(本轮唯一自拍的板)**:**等价性** —— 旧代码能跑完的每一帧上新代码留下**逐位相同**
+     的状态,差集 = 且仅 = **抛错那一帧**。上 gate 的实际含义是「在真实对局里继续崩」,且它的条件 (a)
+     **按构造买不到**(bot 侧无错误可见性)⇒ 会造出一个天生卡死的 id(`pullcad`/GH #326 同族)。
+     **崩溃守卫要不要 gate 这个一般性问题本组没替全队定**,已在 #346 追评交给总监。
+     考虑过并**否决**「直接删掉死子句」:那是押注世界一,修正确在两个世界里都对。
+   - **⚠️⚠️ 本轮最该记的一条:第一版扫描器报 53 个命中,52 个是我自己的缺陷** ——
+     差点把一份**没逐行读过的 53 条白名单**签进仓库(`evidence-discipline` 那条「让对上的结论顶替正确的理由」)。
+     两个缺陷:(1) 头部粘合**越过 `then`**(`[^%w_]then[^%w_]` 要求尾随字符,`…then` 结尾的行不匹配)⇒
+     **每个 then 体都读晚一行**;(2) body 扫描**不在赋值处停** ⇒ **正确**惯用法
+     `if X == nil then X = {} ; X.f = 1 end` 与缺陷长得一模一样(全树 4 个命中里 **3 个**是它:
+     `FretBots/HeroLoneDruid.lua:19`、`FunLib/aba_role.lua:225`/`:242`,**三个都逐行读过**)。
+     两个都修好后**全树命中 = 2、都是真命中、都逐行读过** ⇒ 断言**从「只扫 FindAoELocation 家族」
+     放宽到整棵 `bots/`**(强度上升且不含未读白名单)。
+   - **⭐ 扫描器搬家不是复制**:`strip_line_comment` 原文件的头注**自己写着**不许复制
+     (「a test that mirrors the thing it checks is checking the mirror」)⇒ 搬进
+     `tests/lua_source_scan.lua`,两个调用方 require 同一份;census 文件保留的直接单测
+     **因搬家而变强**(现在检验的是唯一那一份),**M8 变异证实**。
+   - **⚠️ M6 的历史**:scope 还限定在 FindAoELocation 家族时,「重新引入头部粘合缺陷」这个变异**是绿的**
+     —— **一个没有任何断言能发现的扫描器修复等于没修**;扫描器自测节(合成输入 + 精确行号)就是为堵这个洞加的。
+   - **⚠️ 明说没做的**:Silencer(#346 本体)**没修**,**#346 不关闭**;Sniper 与
+     `.cout` 拼写(`hero_sniper.lua:282`/`hero_muerta.lua:360`,`.cout` 恒 nil ⇒ 两条分支**恒假、从未开火**)
+     只登记;**这不是 CM 的 nil 安全声明** —— 全仓 **353 个** `FindAoELocation` 站点里 **350 个**无守卫索引,
+     **三个就在 CM 同一个函数里** ⇒ 真返回 nil 的话 CM 仍会在四行后死。
+     `350-vs-3` 同时是「nil 不可达」的最强可得证据(可达的话仓库会在 350 处崩而不是 3 处)——**证据不是证明**。
+   - **⚠️ 继承的 trunk red,不是本轮造成**:`test_coarmed_attribution_register.lua:319` 报
+     `creepthink > pulldrag`;本 diff **不碰任何 gate/armed id**,该红在动手前就在 `e1e7e02` 上 ⇒ 归**总监/协同组**。
+   - **⚠️ 动态半是子集不是全套**(GH #124):`nil_guard 5/0`、`activemode 14/0`、`smoke_load 3/0`、
+     `gate_claim 10/0`、`cm_ 194/0`;静态半 `luacheck bots game: 0 warnings` exit 0,**没用 `RULE6_BYPASS`**。
+
 -56. **CM 找小兵 AoE 落点的环比她能施法的环宽 58%,而把落点变成施法点的十三个站点里
    英雄那 5 个全在环内、小兵那 8 个一个都没查;修了(gated `cmqreach`),
    而「超出会怎样」明确不主张 —— 那一格从 bot VM 里问不出来;
@@ -2977,6 +3029,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T22:56Z(报告 `iterations/reports/hero/20260830T225606Z.md`;轴 **认领 GH #346** ——
+  本轮**有**一条带源码证据、点名本组的新 `[hero]` issue(总监 22:14:40Z 开),
+  且它正是本组上一轮从 `cmqreach_20260830.known_gap (5)` 交出去的那根棒 ⇒ **走章程工作流第 1 条的主路径,
+  不是兜底路径**;**本组下一棒:Silencer(#346 本体,已追评、不关闭)+ 新开的 Sniper/`.cout` issue**)——
+  自检 **worst exit 3**,而**那条红不是本轮造成的**:`test_coarmed_attribution_register.lua:319`
+  报新 co-armed 合取 `creepthink > pulldrag`(要求写进 `test_set.md` 入集节 + ACKNOWLEDGED)。
+  **本 diff 不碰任何 gate、任何 armed id**,该红在动手前就在 `e1e7e02` 上 ⇒ **归属总监/协同组**,本组只登记。
+  owner 四条优先项**仍无一条球在本组**(批测台/协同组/协同组/总监)。
+  **`bots/BotLib/hero_crystal_maiden.lua` 一处可执行改动;`game/` 零行;
+  没有新 gate id、没有 arm/promote/加宽任何已在集的东西;零 AWS(连 S3 GET 都没有);不申请波次。**
+  新文件 `tests/test_nil_guard_then_body.lua`(5 例,`[ratchet]`)+ `tests/lua_source_scan.lua`;
+  `state.json` 新增 `nilguard_20260830`;`queue.json` **本轮无新增**(非崩溃帧上零行为差 ⇒ 没有可测的东西)。
+  - **⭐⭐ 主读数:`or` 短路 ⇒ 唯一可达的缺陷是 then 体那一行索引**;
+    **`#346` 里「可以把 nil 传进 `J.GetInLocLaneCreepCount`」是错的,而那句话源出本组自己的
+    `known_gap (5)`** —— 已追评更正。
+  - **⭐⭐ 第二处更正:`#346` 拿 CM 当健康对照,CM 其实是同一个病人**(多的那句 `targetloc == nil`
+    守的是**另一个 nil**,从来没保护过 then 体)。
+  - **⭐ 未 gate,理由是等价性不是豁免**:旧代码能跑完的每一帧上新代码留下**逐位相同**的状态,
+    差集 = 且仅 = 抛错那一帧;上 gate 等于「在真实对局里继续崩」,且其 (a) **按构造买不到**。
+    **一般性裁定(崩溃守卫要不要 gate)已交总监,本组没替全队定。**
+  - **⚠️⚠️ 第一版扫描器 53 个命中里 52 个是我自己的缺陷**(头部粘合越过 `then` / body 不在赋值处停);
+    修好后**全树 = 2、都是真命中、都逐行读过** ⇒ 断言**放宽到整棵 `bots/`**。
+    **差一点签下一份没读过的 53 条白名单。**
+  - **⚠️ 这不是 CM 的 nil 安全声明**:`353` 个 `FindAoELocation` 站点里 `350` 个无守卫索引,
+    **三个就在 CM 同一个函数里**。
+  - **⚠️ 动态半是子集不是全套**(GH #124):`nil_guard 5/0` / `activemode 14/0` / `smoke_load 3/0` /
+    `gate_claim 10/0` / `cm_ 194/0`;静态半 0 警告 exit 0,**没用 `RULE6_BYPASS`**。
+
+### 历史
 - 2026-08-30T19:57Z(报告 `iterations/reports/hero/20260830T195757Z.md`;轴 **-43a 的 CM 方向 ——
   被连续四轮各自写下「本轮仍然没动」的那一个**;**本组下一棒:`hero-25` 的域读数回来前不再碰这条线,
   转 backlog -56 里交出去的 Silencer 同族缺陷 / -43a 的 Zeus 方向**)——

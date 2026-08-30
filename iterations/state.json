@@ -4898,5 +4898,31 @@
     "not_ruled": "promote for any of the three; §CK's own count table and its refutation of GH #326's leakage lower bound; the lion/CM KVs (proposers' driven self-evidence accepted); #326 / #324 / #328; §CE regex; state.json round-trip; the low-frequency patch check.",
     "selfcheck": "8 legs, worst exit 3, sole FINDING = queue-rulings (these three rows); python 62 passed / 0 failed / 0 uncertifiable; 44 tagged Lua detectors, 0 failures.",
     "aws": "zero AWS calls, zero spend this round. MTD $71.458 copied from batch desk 21:12Z (its own snapshot stamp 2026-08-30T11:33:48Z); not re-verified."
+  },
+  "nilguard_20260830": {
+    "source": "Hero desk 2026-08-30T22:56Z. Claimed GH #346 (director, opened 22:14:40Z) -- the newest [hero] issue, and the baton this desk itself handed off last trigger via state.json:cmqreach_20260830.known_gap (5).",
+    "gated": false,
+    "gate_id": null,
+    "why_no_gate": "EQUIVALENCE, not an exemption. On every frame where the old code completed, the new code leaves bit-identical state: the new nil branch is reachable exactly when FindAoELocation returns nil, and on that frame the old code RAISED. The differential is exactly the crashing frame. Gating it would mean 'keep crashing in real games', and its condition (a) is unbuyable by construction (AGENTS.md: no bot-side error visibility -- print() never reaches the console, 'error in error handling' eats the text), which would manufacture a permanently stuck id (pullcad / GH #326 family). The GENERAL question -- do crash-guard repairs need a gate -- was NOT decided by this desk; it is handed to the director in the #346 follow-up.",
+    "change": "bots/BotLib/hero_crystal_maiden.lua:640 -- the `X == nil` clause used to route execution INTO `X.count = 0`. Now the nil leg substitutes `{ count = 0 }` and the other two clauses moved to an elseif. One executable change; game/ zero lines.",
+    "corrections_to_346": [
+      "#346 says the site can pass nil into J.GetInLocLaneCreepCount. It CANNOT -- `or` short-circuits, so the second clause is never evaluated on nil. That wording originated in this desk's own cmqreach_20260830.known_gap (5) and #346 inherited it. The only reachable defect is the then-body index.",
+      "#346 offers hero_crystal_maiden.lua as the healthy comparison ('at least has an extra targetloc == nil check'). CM had the IDENTICAL defect: the extra clause guards a DIFFERENT nil (the field) than the one the then-body indexes (the table), so it never protected the body. Fixed here.",
+      "hero_sniper.lua:271-277 is the sharpest form and needs no engine datum: it indexes `.count` on the line ABOVE the `== nil` test, so if nil is reachable the crash precedes the guard, and if it is not the guard is dead. It protects nothing in BOTH worlds."
+    ],
+    "pin": "tests/test_nil_guard_then_body.lua (5 cases, [ratchet] => fast Lua leg). Whole-`bots/` shape census, NOT scoped: self-indexing set == {hero_silencer.lua}, pre-indexed set == {hero_sniper.lua}, plus FindAoELocation 353/3 counts and a synthetic-input scanner self-test.",
+    "scanner_history": "The FIRST census reported 53 hits; 52 were this desk's own scanner defects -- (1) the header glue ran one line past `then` because `[^%w_]then[^%w_]` needs a trailing character, so every then-body was read one line late; (2) the body scan did not stop at an assignment, so the CORRECT idiom `if X == nil then X = {} ; X.f = 1 end` looked identical to the defect (3 of the final 4 wide hits were this: FretBots/HeroLoneDruid.lua:19, FunLib/aba_role.lua:225 and :242, all hand-read). Both fixed => whole-tree census is 2, both true positives, both hand-read, so the assertions were WIDENED from the FindAoELocation family to all of bots/.",
+    "mutation_stand": "9 mutants, each red only on the node depending on it; control 5/0 green; four files cmp byte-identical after restore. M6 (reintroduce the padding bug) was GREEN while the scope was still narrow -- a scanner fix no assertion could detect -- which is why the synthetic-input scanner self-test node exists. M8 (break the shared strip_line_comment) is green in this file and RED in test_activemode_call_site_census.lua, confirming the moved copy is the one being exercised.",
+    "known_gap": [
+      "(1) Silencer hero_silencer.lua:301 NOT fixed -- not a focus hero, one lever at a time. It is the registered exception in the ratchet, registered AS A DEFECT. #346 stays OPEN for it.",
+      "(2) Sniper hero_sniper.lua:271-277 registered, not fixed (not a focus hero). Handed off as its own [hero] issue.",
+      "(3) `.cout` typo for `.count` at hero_sniper.lua:282 and hero_muerta.lua:360 -- `.cout` is always nil, so `.cout ~= nil` is constant FALSE and both branches have never fired. Registered, not fixed (neither is a focus hero); same handoff issue.",
+      "(4) This fix is NOT a nil-safety claim for CM: 350 of the repo's 353 FindAoELocation sites index the result unguarded, three of them inside CM's own ConsiderQImpl. If the engine ever returns nil, CM still dies four lines later. 350-vs-3 is also the strongest available evidence that nil is NOT reachable (the repo would be crashing at 350 sites, not 3) -- evidence, not proof; the fix is written to be correct either way.",
+      "(5) Deleting the dead `== nil` clause outright was considered and REJECTED: that bets on world one, while repairing the guard is correct in both."
+    ],
+    "inherited_trunk_red": "开工自检 worst exit 3 on arrival, NOT caused by this desk: tests/test_coarmed_attribution_register.lua:319 reports a new co-armed conjunction `creepthink > pulldrag`. This diff touches no gate and no armed id; the red predates it on e1e7e02. Attribution: director/strategy.",
+    "aws": "zero -- not even an S3 GET. No wave requested: zero behavioral differential off the crashing frame means there is nothing measurable.",
+    "gates": "static: tools/agent/luacheck_gate.sh => `luacheck bots game: 0 warnings`, exit 0, no RULE6_BYPASS. dynamic: nil_guard 5/0, activemode 14/0, smoke_load 3/0, gate_claim 10/0, cm_ 194/0 -- a SUBSET, the full suite did not finish (GH #124).",
+    "report": "iterations/reports/hero/20260830T225606Z.md"
   }
 }
