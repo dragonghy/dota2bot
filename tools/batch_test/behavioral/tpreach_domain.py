@@ -104,6 +104,34 @@ RANGE_PCT = 50
 # Any hero whose estimated range is at or under this is melee for our purpose:
 # reach <= 700 => it can never be in ADDED, so its exact value does not matter.
 MELEE_RANGE_U = 400.0
+# Percentile used to decide MELEE-vs-RANGED, always, whatever RANGE_PCT is.
+#
+# WHY THIS IS NOT JUST RANGE_PCT (replay-check 2026-08-30, W28).  `--reach-mode
+# p90` on W28 handed a blind band to four MELEE heroes -- chaos_knight 980,
+# juggernaut 2821, ember_spirit 2120, dragon_knight 770 -- and 14 of the 45
+# ADDED rows it produced were driven by one of them as the band enemy.  The
+# source's own rule is that a melee hero can NEVER be in ADDED (`reach > 700`
+# needs `GetAttackRange() > 550`), so a third of that domain was impossible by
+# construction.
+#
+# The mechanism is NOT the projectile-flight overshoot the RANGE_PCT comment
+# describes, and the existing `ability-not-an-attack` guard cannot see it:
+# `ATTACK_INFLICTOR` is `dota_unknown`, i.e. the ABSENCE of a named inflictor,
+# so a hero's ILLUSIONS, summons and attack-modifier spells (Phantasm,
+# Exorcism, Omnislash, Sleight of Fist) log under the hero's own actor name
+# with no inflictor to filter on -- while the distance is measured from the
+# REAL hero's interpolated position.  chaos_knight's W28 sample is n=1474,
+# 2-3x every other core, p50 195 (its true 150 melee range) and max 14493 --
+# a map diagonal.  It is a contaminated TAIL, not a shifted distribution, so
+# a robust statistic survives it and a tail percentile does not: on the three
+# ground-truth heroes p50 lands at -55..+6 while p90 lands at +94..+260.
+#
+# So melee-vs-ranged is decided on p50 in every mode, and RANGE_PCT only sizes
+# the band of a hero already established to have one.  Direction of the error
+# is declared: p50 under-reads witch_doctor by 55u and drops it from the band,
+# which SHRINKS ADDED -- the safe direction for a (a) census of a veto, the
+# same choice `reach_table` already makes for thin evidence.
+MELEE_DECISION_PCT = 50
 
 # Ground truth for the estimator: the four ranges the tpreach source comment
 # names, `jmz_func.lua:5860-5863`.  These are ASSERTED against the measured
@@ -212,8 +240,39 @@ def reach_table(dists):
     for h, ds in dists.items():
         if len(ds) < MIN_ATTACKS:
             continue
+        # THE MELEE FLOOR (see MELEE_DECISION_PCT).  This is the source's own
+        # rule -- a blind band needs GetAttackRange() > 550 -- evaluated on the
+        # robust statistic instead of the contaminated one.  Under `p50` it is
+        # a no-op by construction; under `p90` it is what keeps a melee hero's
+        # illusion tail from manufacturing a band it cannot have.
+        if pct(ds, MELEE_DECISION_PCT) + REACH_BUFFER_U <= NARROW_SCAN_U:
+            continue
         out[h] = pct(ds, RANGE_PCT) + REACH_BUFFER_U
     return out
+
+
+def reach_diagnostics(dists, reach):
+    """(floored, degenerate) -- the two ways this table can mislead its reader.
+
+    `floored`   heroes the melee floor removed, with the band the raw
+                percentile would have handed them.  Printed so a shrunken
+                domain is visibly shrunken and not silently smaller.
+    `degenerate` heroes whose reach is at or past WIDE_SCAN_U.  The band test
+                is `d <= min(reach, WIDE_SCAN_U)`, so at that point it stops
+                testing reach at all and ADDED degenerates into "any enemy in
+                (700, 1200]".  On W28 `p90` put five heroes here.
+    """
+    floored, degenerate = [], []
+    for h, ds in sorted(dists.items()):
+        if len(ds) < MIN_ATTACKS:
+            continue
+        raw = pct(ds, RANGE_PCT) + REACH_BUFFER_U
+        if h not in reach:
+            if raw > NARROW_SCAN_U:
+                floored.append((h, raw, pct(ds, MELEE_DECISION_PCT)))
+        elif reach[h] >= WIDE_SCAN_U:
+            degenerate.append((h, reach[h]))
+    return floored, degenerate
 
 
 def evaluate(fr, team, h, t, reach, default_reach):
@@ -392,7 +451,12 @@ def main():
             print('%-24s %6d %6.0f %6.0f %6.0f %6.0f %6.0f   %s'
                   % (h, len(ds), pct(ds, 50), pct(ds, 75), pct(ds, RANGE_PCT),
                      pct(ds, 95), max(ds),
-                     '%6.0f' % reach[h] if h in reach else 'FALLBACK (n<%d)' % MIN_ATTACKS))
+                     '%6.0f' % reach[h] if h in reach
+                     else ('FALLBACK (n<%d)' % MIN_ATTACKS
+                           if len(ds) < MIN_ATTACKS
+                           else 'MELEE FLOOR (p%d %.0f)'
+                                % (MELEE_DECISION_PCT,
+                                   pct(ds, MELEE_DECISION_PCT)))))
         cited = [(h, SOURCE_CITED_RANGE[h], pct(dists[h], RANGE_PCT))
                  for h in SOURCE_CITED_RANGE if h in dists and len(dists[h]) >= MIN_ATTACKS]
         if cited:
@@ -440,6 +504,25 @@ def main():
     print('heroes with a blind band (reach > %d): %s'
           % (NARROW_SCAN_U, ', '.join('%s %.0f' % (h, reach[h]) for h in banded)
              or 'NONE -- ADDED is empty by construction'))
+    # Both lines below are MANDATORY, printed even when empty.  An ADDED count
+    # is only readable next to the table that produced it: W28's `p90` run had
+    # 14 of 45 ADDED rows carrying a melee band enemy, and nothing in the
+    # output said so.  A reader who sees no such line must be able to conclude
+    # the tool did not check, never that the table was clean.
+    if args.reach_mode == 'source':
+        print('melee floor: n/a (source-cited table, not measured)')
+        print('reach >= wide scan %d: n/a (source-cited table)' % WIDE_SCAN_U)
+    else:
+        floored, degenerate = reach_diagnostics(dists, reach)
+        print('melee floor removed (p%d says melee, p%d would have banded): %s'
+              % (MELEE_DECISION_PCT, RANGE_PCT,
+                 ', '.join('%s p%d %.0f vs raw reach %.0f'
+                           % (h, MELEE_DECISION_PCT, p50, raw)
+                           for h, raw, p50 in floored) or 'none'))
+        print('reach >= wide scan %d (band test stops testing reach): %s'
+              % (WIDE_SCAN_U,
+                 ', '.join('%s %.0f' % (h, r) for h, r in degenerate)
+                 or 'none'))
     print('%-8s %-9s %6s %8s %8s %8s %8s %10s %10s'
           % ('side', 'leg', 'games', 'press', 'ADDED', 'A:field', 'A:home',
              'press/g', 'A:field/g'))
@@ -478,6 +561,7 @@ def main():
 
 
 def selfcheck():
+    global RANGE_PCT           # the melee-floor battery below flips it to p90
     fails = []
     ran = []
 
@@ -623,6 +707,60 @@ def selfcheck():
     p = presses(tl(bot, still(720, 0)), reach_table(d3), DEF)[0]
     chk('fallback-shrinks-added', not p['added'],
         'a hero with no reach evidence cannot ENTER the added domain')
+
+    # --- the melee floor (W28: 14 of 45 p90 ADDED rows were melee) -----------
+    # A melee hero whose sample carries an illusion/summon tail.  80% of the
+    # attacks land at 200u (its real range), 20% across the map -- the shape
+    # of chaos_knight's W28 sample (p50 195, p90 830, max 14493), in miniature.
+    # p90 alone calls that a 3150u reach and hands a 150-range hero a blind
+    # band; the floor reads p50 and refuses.
+    saved_pct = RANGE_PCT
+    try:
+        tail = {'chaos_knight': [200.0] * 80 + [3000.0] * 20}
+        RANGE_PCT = 90
+        chk('melee-floor-blocks-a-contaminated-tail',
+            'chaos_knight' not in reach_table(tail),
+            'p90 %.0f would band it; p%d %.0f says melee'
+            % (pct(tail['chaos_knight'], 90), MELEE_DECISION_PCT,
+               pct(tail['chaos_knight'], MELEE_DECISION_PCT)))
+        p = presses(tl(bot, still(720, 0)), reach_table(tail), DEF)[0]
+        chk('melee-floor-keeps-it-out-of-added', not p['added'],
+            'a floored hero cannot be the band enemy of an ADDED press')
+
+        # ...and the floor must not eat a genuinely ranged hero just because
+        # its tail is long.  Same tail, real range 600 -> band survives.
+        ranged = {'lina': [600.0] * 80 + [3000.0] * 20}
+        chk('melee-floor-spares-a-ranged-hero',
+            reach_table(ranged).get('lina') == pct(ranged['lina'], 90) + REACH_BUFFER_U,
+            'p%d %.0f > melee -> the band is still sized by p%d'
+            % (MELEE_DECISION_PCT, pct(ranged['lina'], MELEE_DECISION_PCT), 90))
+
+        # the floor IS the source rule, so it must cut where the source cuts:
+        # a blind band needs GetAttackRange() > 550, i.e. reach > 700.
+        chk('melee-floor-cuts-where-the-source-cuts',
+            'x' not in reach_table({'x': [550.0] * MIN_ATTACKS})
+            and 'x' in reach_table({'x': [551.0] * MIN_ATTACKS}),
+            'range 550 -> reach 700, not > 700; 551 -> 701, banded')
+
+        # the diagnostics the header is required to print
+        d_raw = {'chaos_knight': [200.0] * 80 + [3000.0] * 20,
+                 'sniper': [1200.0] * MIN_ATTACKS}
+        r_raw = reach_table(d_raw)
+        floored, degenerate = reach_diagnostics(d_raw, r_raw)
+        chk('diagnostics-name-the-floored-hero',
+            [h for h, _, _ in floored] == ['chaos_knight'])
+        chk('diagnostics-name-the-degenerate-band',
+            [h for h, _ in degenerate] == ['sniper'],
+            'reach %.0f >= wide scan %.0f -> the band test stops testing reach'
+            % (r_raw['sniper'], WIDE_SCAN_U))
+    finally:
+        RANGE_PCT = saved_pct
+
+    # under p50 -- the default -- the floor is a no-op by construction, and
+    # that has to stay true or the default reading changes silently.
+    chk('melee-floor-is-a-noop-at-p50',
+        reach_table({'lina': [600.0] * MIN_ATTACKS}).get('lina') == 750.0,
+        'p50 mode: the deciding and the sizing statistic are the same one')
 
     # --- the delayed-press witness ------------------------------------------
     # enemy sits in the band until t-1, then leaves; the press lands at t=10.

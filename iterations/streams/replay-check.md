@@ -6959,3 +6959,91 @@
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
     (4) 若 W29 起飞:先跑 `arm_string_census.py`;**W28 是 45-id,可与 W27 并池,不可与 W25/W26 的 44 串并**。
   - 完整报告:`iterations/reports/replay-check/20260830T100103Z.md`
+- **2026-08-30T12:45Z(`tpreach` 条件 (a) = **INDETERMINATE**:域 6/1010 次按下、挤在 3 局、
+  两个物理侧分层**反号**;顺带修掉一个**会制造这个域**的工具缺陷 —— `--reach-mode p90`
+  把**近战英雄**放进了盲带)**:
+  在 **W28**(树 `f015321`,四 run `990f5c/90463d/e706a3/8fffe9`)的 **10 局带戳 `.dem` 语料**上核
+  `tpreach`。**宽扫 10/10 局**(`unparseable 0`),**逐帧深查**落到具体帧。
+  零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  - **`VERIFY id=tpreach verdict=INDETERMINATE episodes=10`**。三条理由缺一不可:
+    (i) 默认 `p50` 表下 **1010 次 TP 按下里 ADDED 只有 6 次**;
+    (ii) 这 6 次**挤在 10 局里的 3 局**,**armed 腿那 4 行全部来自同一局**
+    (`20260830_063340_slot1`)⇒「radiant +0.667/局」**整个来自一局**,
+    **不是 10 局的读数,是一局的读数除以 10**,登记成效应量是错的(铁律 4(iii));
+    (iii) 两个物理侧分层**反号**(radiant **+0.667** / dire **−0.500**),铁律 4(i) 明文:
+    反号 = 噪声。而且这是**否决型**候选,armed 腿本该**更少**,radiant 那层**方向就是反的**。
+  - ⭐⭐ **三张 reach 表三个答案,而这本身是读数**:`p50` **6** / `p90`(修后)**24** / `source` **0**。
+    **`source` 那列的 0 不可读作「域为空」** —— `SOURCE_CITED_RANGE` 只有 8 个英雄,
+    它**不是源码的 reach 表,是源码注释顺手举的例子**,本语料 10 局阵容里**一个都没出场**。
+    (⚠️ 这条不知道会读错:上一版报告差点把它当成「域是空的」。)
+  - ⭐⭐⭐ **工具缺陷(已修 + 已钉测试)**:`--reach-mode p90` 在本语料上给
+    **chaos_knight 980 / juggernaut 2821 / ember_spirit 2120 / dragon_knight 770** 发了盲带,
+    **全是近战**,而源码规则写死「近战永远进不了 ADDED」(`reach>700` 要 `GetAttackRange()>550`);
+    它产出的 **45 行 ADDED 里 14 行(31%)的带内敌人就是这四个之一** ——
+    **近三分之一的域按构造不可能存在,而输出里没有一行说这件事**。
+    **机制**:`ATTACK_INFLICTOR = 'dota_unknown'` 是**「没有具名 inflictor」不是「是普攻」**,
+    于是**幻象/召唤物/攻击型技能**(Phantasm、Exorcism、Omnislash、Sleight of Fist)
+    **以英雄本人的名字入账、没有 inflictor 可过滤**,距离却从**本体插值位置**量
+    ⇒ chaos_knight n=**1474**(其他核心的 2–3 倍)、p50 195、max **14493**(地图对角线)。
+    **既有的 `ability-not-an-attack` 检查看不见它**,因为那条只拦**具名** inflictor。
+    **是被污染的尾巴,不是被平移的分布** ⇒ 稳健统计量活得下来、尾部分位数活不下来。
+  - **修法**:**近战地板** —— 近战/远程一律用 **p50** 判(`MELEE_DECISION_PCT`),
+    `RANGE_PCT` 只给**已确认有带**的英雄定宽度;门槛**不是调参,是源码自己的规则**
+    (`p50+150 <= 700`);`p50` 模式下**按构造是 no-op**(已钉)。
+    加**两行强制表头**(空也打):被地板剔除者、`reach >= 1200` 的**退化**者
+    ——带判据是 `d <= min(reach,1200)`,reach 一旦 ≥1200 **就不再检验 reach**,
+    ADDED 退化成「1200 内有敌人」(本语料 p90 下 DP 6868 / sniper 1277 正在这格)。
+    **看不到这两行的读者必须能断定「工具没查」,而不是「表是干净的」。**
+  - ⭐ **修完结论不变,这一点比修本身重要**:p90 ADDED 45 → 24,**反号照旧**
+    (radiant +2.167 / dire −2.250)⇒ **地板拿掉的是假象,不是把读数救回来**;
+    并且 p90 与 p50 修后**给出同一组有带英雄**(CM/DP/lion/sniper),**两张表收敛**了。
+    **声明的代价**:p50 少读 witch_doctor 55u 把它剔出带外,方向是**让 ADDED 变小**(保守方向)。
+  - ⭐⭐⭐ **一帧交总监(不是判决,是素材)**:`990f5c/20260830_063340_slot1`
+    **armed 腿**(s1850 radiant=armed)**lion t=657.0,hp=0.90** —— 前 6 秒血量恒 0.87–0.90
+    **没有掉血史**,**落点不回家**(d(home) 8720→8479→8183 基本原地),
+    死亡先知在 **d=705**(真实攻距 600 ⇒ reach 750,**盲带正中**);
+    按下 **0.2 秒后** DP Silence 打断,`658.4` SK Hellfire Blast,`658.6` 通道断,`661.7` lion 死。
+    **这就是 `tpreach` 立项时描述的病例,而它发生在 armed 腿上。**
+    **本组不裁 BUGGY**:dump **无 bot mode 字段**(工具头 `CALLER SCOPE` 自己声明过)
+    ⇒「撤退支本来就不问谓词」与「谓词该拦没拦」**在数据上不可分**。
+    对照**帧 A**(同局 chaos_knight t=339.0,血 6 秒内 0.94→0.44、被集火、**落点泉水**)
+    **能**判成撤退 ⇒ 预期残渣;帧 B **两条都不成立**,所以**可疑得多,但可疑不是判决**。
+  - **交付**:`tpreach_domain.py` 四处加法(`MELEE_DECISION_PCT` + 地板 + `reach_diagnostics()`
+    + 两行强制表头 + `--ranges` 区分 `MELEE FLOOR` 与 `FALLBACK`);`--selfcheck` **35 → 42 PASS**。
+    **新增 `tests/test_tpreach_domain.py`**:该工具此前**不在** python 套件里(与 GH #243 同族),
+    现纳入 `run_py_tests.sh`,**按名字钉住 16 个 check** + 把 W28 的 chaos_knight 形状
+    做成**跨 p50/p75/p90/p95 的回归**。⚠️ 顺带修了一个**会静默通过**的写法:
+    `'FAIL' not in stdout` 在干净跑上**也是假的**(汇总行写着 `42 PASS / 0 FAIL`),
+    改成「没有以 `FAIL` 开头的行」——**这个写法在 `tests/test_od_stall_leg.py` 里也有**,
+    本轮**没有替它改**(不越界),登记在此。
+  - ✅ **`sweep_run.sh` 15 个通用检测器:章程欠账里连续六轮未跑,本轮跑了** ——
+    10 局共 **1228 条**,前三:`sandwiched_walk` 330 / `overextend_alone` 284 /
+    `tp_home_wasteful` 90。**只用来选点,不构成结论**(硬规则)。
+  - **波次核对**:`arm_string_census.py` 四个 run **sha1 `2b581faa` 完全一致**(45 id / 396 bytes),
+    相对 `test_set.md` 第 2 行(44 id / `3861df2f`)**多一个 `fieldcreep`**。
+    **不是发波事故**:总监 **10:09Z** 才退集 `fieldcreep`,而 W28 **06:18Z** 起飞;
+    `declared-not-armed` 为 **(none)**。**登记,不开 issue。**
+    ⚠️ **连带**:W29 若在 10:09Z 之后发波会是 **44-id ⇒ 不可与 W28 并池**。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**(自装 `lua-check`);
+    **未使用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `run_py_tests.sh` → **57 passed / 0 failed / 0 uncertifiable**(本轮 +1);
+    `--selfcheck` **42/42**。未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+  - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence`、`UNCERTIFIABLE = none`;
+    trunk 两侧全绿;锚点 2/2 ok;`unlanded_commits` 无;本机无并发会话。
+  - **诚实边界**:n = **10 局带戳 `.dem`**,来自 **224 局**波次 —— **14 局是录制槽决定的,
+    不是我抽的**(GH #308 未裁);**不可逐种子比较,没有一个数字是效应量**;
+    本轮买的是 **(a)**,**(b)/(c) 不归本组**,**不主张** `tpreach` 该 promote **也不主张**它该出集。
+  - **欠账变化**:**真零记录 id 现在只剩 `fieldsip` 一个**
+    (`odbuild` 10:01Z 买到 (a);`tpreach` 本轮 INDETERMINATE —— **INDETERMINATE 也是记录**)。
+    其余继承:W25 只并 2/4 run;W26/W27/W28 与 W25 从未池化;`seed 975` 第十三轮;
+    `wandlimbo` 因 #293 第十一轮不可执行;GH #265 仍被 #272 阻塞;`blinkflee` 仍卡 #304/#305;
+    WK rank-3 冷却全语料复测仍欠;「静止在小兵火力里」检测器仍欠(与 `fieldcreep` 前提检验并案)。
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要抄过期的交棒行。**
+    (1) **`fieldsip`** 是最后一个真零记录 id;注意 **§CG.4**(它的 (a) **不得**从
+    `stayfield`/`stayfield2` 的留守率差分读出)。
+    (2) `tpreach` 的棒已交出,**不掉在本组**;建议里写明它的 (a) 在当前录制槽下
+    (14/224)**靠 `.dem` 语料买不到**,**改走 fixture 路线** —— 帧 B 是现成的钉帧素材。
+    (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
+    (4) 若 W29 起飞:先跑 `arm_string_census.py`,并按上面那条**核对 45 vs 44 不可并池**。
+  - 完整报告:`iterations/reports/replay-check/20260830T124500Z.md`
