@@ -2791,7 +2791,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **语料里一帧都没有**。
   - 变异 **6 条条条见红**(7/5/1/1/1/1),对照 10/0 绿,盘外 `cp` 还原后 `cmp` 逐字节相同。
     **M1/M2 红 7/5 条是设计使然**(带宽是所有定价用例的共同输入),照实记不修剪。
-  - 铁律 6:`luacheck_gate.sh` **0 警告 exit 0**(冷启自己装的 `lua-check`);全量套件见报告末节。
+  - 铁律 6:`luacheck_gate.sh` **0 警告 exit 0**(冷启自己装的 `lua-check`);
+    `.githooks/pre-push` 在**三次 push 上各跑一遍并放行**(feature 分支 ×2 + `HEAD:main`),
+    **没有用过 `RULE6_BYPASS`**。**全量套件本轮没跑完**(24 分钟 1103 例 0 FAIL,进程仍在跑)
+    ⇒ **不主张主干全绿**,详见报告 §8。
+  - GH #310 追评**先 push 后发**(GH #290):`claim_precheck.sh` **exit 0**、
+    `local commits not on origin/main: 0`、`refused 0` ⇒
+    https://github.com/dragonghy/dota2bot/issues/310#issuecomment-5466891526
 - 2026-08-30T01:54Z(报告 `iterations/reports/hero/20260830T015421Z.md`;轴 **`test_zuus_static_field_pct.lua:337`
   本组 08-29 自己留下的 firing-side fixture 那条棒**;**Zeus 这一格结清,本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
   自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
