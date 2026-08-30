@@ -7203,3 +7203,5 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑮#271 的 `c6a` n=1→3 ⑯#204 的 n=8 ⑰`[bug] #283`/`#249` ⑱**GH #140**(第四十轮)
   ⑲#289 顺带 1/2 ⑳给 `claim_precheck.sh` 找自动触发点 ㉑backlog §16/§17/§18
   ㉒**低频 patch 检查**(连续多轮欠)㉓W36 台账开头先核 `HARVEST`/`VERIFY`。
+
+**[同轮追补,发表后]** GH #290 顺序照走(提交 → push → `claim_precheck.sh` → 追评):落地 commit **`8021d47a`**(第二次 push 被拒 ⇒ `git pull --rebase origin main` 干净变基到 `f762b7f0`,**变基后重验**:test_set 第 2 行仍 **44 id / 385 字节**、`§CL` 唯一、新测试 exit 0、`git diff origin/main -- bots game` 空、`luacheck_gate.sh` exit 0 / 0 警告,再推)。草稿 `claim_precheck.sh` **exit 0 / clean**(`local commits not on origin/main: 0`、`refused 0`、`paths cited 5` / `hashes 1/1` / `state.json keys 1` / `charter sections 1` 全解析)⇒ 追评 **#329 `issuecomment-5468881135`,已 closed/completed**。
