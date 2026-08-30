@@ -56,12 +56,24 @@
 --
 -- AND ONE CORRECTION TO A NUMBER THREE FILES REPEAT.  "42 call sites under
 -- bots/" is the output of `grep -c`, i.e. a count of LINES THAT MENTION THE
--- IDENTIFIER.  It is not the number of call sites (40 lines call it; two of the
--- 42 are prose -- the `hero_axe.lua` header comments), and it is not the number
--- of calls (41; `hero_silencer.lua` has two on one line).  §1 derives all three
--- numbers instead of asserting the folklore one.  The direction of the error is
--- the harmless one, but the census below is per-CALL, so the two counts have to
--- be told apart before anything can be checked against them.
+-- IDENTIFIER.  It is not the number of call sites (40 lines call it), and it is
+-- not the number of calls (41; `hero_silencer.lua` has two on one line).  §1
+-- derives all three numbers instead of asserting the folklore one.  The
+-- direction of the error is the harmless one, but the census below is per-CALL,
+-- so the two counts have to be told apart before anything can be checked
+-- against them.
+--
+-- UPDATED 2026-08-30 (hero): the grep count is now **43**, and the whole update
+-- is on the PROSE side -- 3 comment lines now, not 2.  The third is the
+-- correction block `hero_zuus.lua` grew this round, which names the call while
+-- explaining that X.ConsiderW's kill test is that inline comparison and not
+-- `J.WillMagicKillTarget` (see tests/test_zuus_static_field_second_consumer.lua
+-- §1b/§7).  Code lines (40) and calls (41) are UNCHANGED, so no census row below
+-- moves and no class changes.  This is exactly the event §1 exists to force into
+-- the open: the three numbers are updated together, in the three files that
+-- repeat them, rather than one of them drifting quietly.  It is also the reason
+-- the ratchet is worth its noise -- the number moved because somebody wrote a
+-- SENTENCE, and without §1 that would have looked like a new call site.
 --
 -- LIMITS (say them here rather than let a reader infer precision).
 --   * The class of each site is a READING of the enclosing expression, made by
@@ -224,10 +236,12 @@ tests['[detector] the three counts are derived, and "42 call sites" is none of t
         'hero_silencer.lua puts two calls on one line -- that is why calls > lines')
     -- The published figure. Kept as a NAMED comparison so a reader who arrives
     -- from the mock header or from state.json sees which number they were given.
-    local published = 42
+    local published = 43
     assert(r.lines == published,
-        'the published 42 is a grep line count; it now reads ' .. r.lines
-        .. ' -- update the mock header, this file and state.json together')
+        'the published ' .. published .. ' is a grep line count; it now reads ' .. r.lines
+        .. ' -- update the mock header, this file and state.json together. Check FIRST '
+        .. 'whether code_lines (' .. r.code_lines .. ') moved too: if only the prose '
+        .. 'count changed, nothing in the census below moves.')
     assert(r.calls ~= published,
         'the whole point of this section: the call count (' .. r.calls
         .. ') is not the grep count (' .. published .. ')')

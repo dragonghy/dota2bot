@@ -2921,9 +2921,21 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **⚠️ 未答的照实说**:「这条腿多久被**走到**」没答也没试着答(**本语料零 fixture 带线上兵**);
     `m` 阶梯是声明的不是实测的,但**结论不需要 `m`**;**Lion / CM 本轮仍然没动**。
   - 变异 **8 条条条见红且只红在该红的节**,对照 14/0 绿,盘外 `cp` 还原后四份 `cmp` 逐字节相同。
+  - **⚠️⚠️ 本轮自己造了一次 trunk 红并在同一轮修掉,照实记**:第一次 push 后全量套件在
+    `test_incoming_damage_callsite_census.lua:228` 见红 —— §6 的更正块里点名了
+    `GetActualIncomingDamage`,而那个普查数的是 `bots/` 下**提到该标识符的行**(`grep -c`)⇒ 42 → **43**。
+    **移动全在 prose 一侧**(注释行 2→3),**代码行 40、调用数 41 一个没动** ⇒ 普查表零行移动、零 class 改变。
+    按失败文本三处一起更新(`tests/mock/bot_api.lua` 头 + 该测试 published 42→43 + `state.json`
+    `census_20260829_follow_up`),**而不是去删那句正确的话**。修复后 census 6/0、新文件 14/0、
+    `test_zero_true_sites_driven` 6/0、`test_zuus_bolt_kill_cap` 11/0、`test_smoke_load` 3/0。
+    **一句教训:本组近几轮的产出形态是「只改注释、零可执行行」,而注释也会踩静态普查 ——
+    「零可执行行」不等于「零 trunk 风险」。**
   - 铁律 6:`luacheck_gate.sh` **0 警告 exit 0**(冷启自己装的 `lua-check`);
-    `.githooks/pre-push` 在两次 push 上各跑一遍并放行,**没有用过 `RULE6_BYPASS`**。
-    **全量套件本轮没跑完** ⇒ **不主张主干全绿**,详见报告 §10。
+    `.githooks/pre-push` 在本轮**每一次** push 上各跑一遍并放行,**一次都没用过 `RULE6_BYPASS`**。
+    **全量套件本轮没跑完** ⇒ **不主张主干全绿**,详见报告 §10 / §11。
+  - GH #173 追评**先 push 后发**(GH #290):`claim_precheck.sh` **exit 0**、
+    `local commits not on origin/main: 0`、`paths cited 9 / resolved 8 / refused 0` ⇒
+    https://github.com/dragonghy/dota2bot/issues/173#issuecomment-5469107312
 - 2026-08-30T10:55Z(报告 `iterations/reports/hero/20260830T105510Z.md`;轴 **GH #330 —— 录像组把
   `odbuild` 条件 (a)=WORKING 落地并把「更正那句源码注释」明写为英雄组的下一棒**;
   **本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——

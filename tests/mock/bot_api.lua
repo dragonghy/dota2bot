@@ -103,8 +103,13 @@ local function default_for(key, ...)
     -- non-PURE type, so EVERY magical and physical kill-confirm in the tree was
     -- structurally false on EVERY fixture frame, at any damage number. **41 call
     -- expressions on 40 lines** under bots/ route through it -- the "42" this
-    -- comment first carried is a `grep -c` line count, and two of those 42 lines
-    -- are the hero_axe.lua prose that discusses the call without making it.
+    -- comment first carried is a `grep -c` line count, and (as of 2026-08-30)
+    -- THREE of those 43 lines are prose that discusses the call without making
+    -- it: two hero_axe.lua header comments and the hero_zuus.lua correction
+    -- block that names X.ConsiderW's inline kill test. The grep count moved from
+    -- 42 to 43 because somebody wrote a SENTENCE; the code lines (40) and the
+    -- calls (41) did not move. tests/test_incoming_damage_callsite_census.lua §1
+    -- derives all three and is what forced this line to be updated with them.
     --
     -- AND THE ZERO HAD A SECOND POLARITY, unnamed for a day: 2 of the 41 sites
     -- put the call on the SMALL side of a `<`, so the zero made those branches
