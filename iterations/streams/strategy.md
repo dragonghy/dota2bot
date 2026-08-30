@@ -2951,7 +2951,8 @@
   中心到中心是代理、一律取最坏方位;creep 半不在语料里([world W1]);
   **长注释那条 gsub 今天不可证伪**(该文件 `--[[` 块数 0),按 `0CONJ` 自伤乙**登记而非粉饰**;
   **全量单进程套件 ~100min(GH #124)本轮未跑完**。
-  **先 push 再发表**(铁律 6 ⭐GH #290 的顺序),`claim_precheck.sh` 结果见报告 §8 ⇒ 追评 GH #318,
+  **先 push(`9952c21f`)再发表**(铁律 6 ⭐GH #290 的顺序);`claim_precheck.sh` **exit 0**
+  (`local commits not on origin/main: 0`,7 条路径引用 trunk 上解析)⇒ 追评 **GH #318**(`issuecomment-5466003412`),
   球在**录像组**(melee/ranged 拆分)与**总监**(裁主判据甲)。
 - 2026-08-29T22:27Z(自选 backlog,兑现 `0CONJ` 亲手登记「本轮不动」的那一条;
   **无入集提议 —— 本轮零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff**):
