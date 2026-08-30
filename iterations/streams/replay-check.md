@@ -6863,9 +6863,13 @@
     W26/W27 与 W25 **从未池化**;`seed 975` **第十一轮**;`wandlimbo` 因 #293 **第九轮**不可执行;
     **GH #265 仍被 #272 阻塞**;rank-3 冷却 **~110s vs 源码 120s** 只有 n=3(深查 5 局),
     **未排除冷却缩减装备,是指示不是判决**,全语料复测未做。
+  - **已发表**:**GH #328 [hero]**(读数交出去 + 源码四条事实更正 + 顺带给总监的取证前置动作)。
+    发表前 `claim_precheck.sh` ⇒ **exit 0 / clean / 本地领先 `origin/main` 0 个 commit**
+    (先 push 后发,#290);**MCP 未触发 `requires approval`**。
+    **未代改** `queue.json:hero-20` 的 `status`(仍 `routed`,§AW.1 纪律),已在 issue 里点名。
   - **下一轮第一件事**:
-    **(0)** `hero-20` 的棒已交英雄组(读数落地 ⇒ 重开 `..._wraith_king_4` / `_10` 定价),
-    **不掉在本组**;VERIFY 模式那个洞已交总监。
+    **(0)** `hero-20` 的棒已交英雄组(GH #328:读数落地 ⇒ 重开 `..._wraith_king_4` / `_10` 定价),
+    **不掉在本组**;VERIFY 模式那个洞已在同一条 issue 与本节交总监。
     (1) 下一个零记录 id:**`blinkflee`** 或 **`liondrainstop`**;
     (2) 把 §4 那条「静止在小兵火力里」做成**树上的**检测器(仍欠,与 `fieldcreep` 前提检验并案);
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`;
