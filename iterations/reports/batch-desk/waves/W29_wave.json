@@ -1,0 +1,129 @@
+{
+ "wave": "W29",
+ "_note": "First-hand launch record, written 2026-08-30T18:2xZ WHILE all four instances read running/spot in describe-instances. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). Per this desk's W28 self-correction, `machines[].status_code` / `create` / `update` MUST be written as FIELDS by the harvesting round, never as prose in `harvest` -- the SIR that supplies them expires within hours, so a field only consumed next round must still be landed this round.",
+ "tree": "be442fb91e9316ffb16e042a51d73808c35f7466",
+ "tree_note": "The 40-hex pin was written explicitly, never `main`, and `git ls-remote origin main` was re-verified INSIDE the launch shell block. That guard EARNED ITS KEEP this round: a first launch attempt at 18:15:34Z was refused (exit 8) because main had drifted 7e4210c8 -> be442fb9 between prep and launch. The drift was inspected, not waved through: `git diff 7e4210c8..be442fb9 -- bots/ game/` is EMPTY and test_set.md line 2 is byte-identical (the commit is a strategy report followup), so the wiring gate was RE-RUN on be442fb9 anyway and the wave pinned to the re-gated sha. Recorded because the near-miss the charter warns about is exactly this shape, and the interval between prep and launch was under 60 seconds.",
+ "arm_ids": 44,
+ "arm_bytes": 386,
+ "arm_note": "test_set.md line 2 on the pinned tree, 44 ids / 386 bytes (with newline). Down from W27/W28's 45-id, 397-byte string: `fieldcreep` left the set (director f8632eb2). `lionqdmg` (hero 1c331f5, this round's new gated fix) is NOT in the arm string -- hero-24 is still an unruled queue request, so this desk cannot arm it.",
+ "instance_type": "c6i.4xlarge",
+ "market": "spot",
+ "market_note": "Ladder stopped at level 1: c6i.4xlarge spot, all four filled. No InsufficientInstanceCapacity, no re-aiming, no AZ RING EXHAUSTED, no c6a fallback, no --on-demand. Evidence is describe-instances InstanceLifecycle=spot on all four (sir-cmvqht2n / sir-7bx7jtgp / sir-nw1fj8rp / sir-ab2qh3xn), NOT the run_id `spot_` prefix. SEVENTH consecutive wave at zero degradation; owner's Spot-first ruling (GH #158) holds unchanged, and the reclaim-blind gate's own NEXT WAVE line said spot.",
+ "slots": 16,
+ "rec_slots": 1,
+ "rec_slots_note": "Registered branch (A) of GH #308, executed for the SIXTH wave. Pre-launch check at the gate: #308 still carries no director ruling. The charter forbids changing the criterion after the fact => rec_slots stays 1. Frame channel 1/16 for the sixth wave; owner P1/P2 condition (a) keeps waiting on it.",
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "seeds": [
+  1801,
+  1842,
+  1902,
+  2013
+ ],
+ "carrier_terms": [
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "carrier_terms_note": "Derived MECHANICALLY by carrier_terms.py from the 44-id arm string (8 hero-scoped / 36 generic / 0 unresolved => 6 terms). Same six terms as W27/W28: `fieldcreep` was generic, so dropping it moved the hero-scoped count not at all.",
+ "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0; ids=8 seeds=4. Per-term carriers: obsidian_destroyer 3, skeleton_king 3, zuus 3, crystal_maiden 2, lion 2, spirit_breaker 2 => 15 carrier slots. HONEST BOUNDARY (seventh round): the '>=2 per term' rule is this desk's OWN discipline, not the gate; the official gate only requires >=1 (it reports PARTIAL and still exits 0), and GH #285 is still unruled.",
+ "wiring_gate": "tools/batch_test/check_armed_wiring.py --cand <44-id string> --ref be442fb9... exit 0: all 44 armed ids wired on be442fb9. Run TWICE this round -- first on 7e4210c8 (exit 0, 44/44), then again on be442fb9 after the drift guard fired, because the gate is pinned to --ref and a re-pin without a re-run would be a claim about a tree nobody checked. Path note: the script lives at tools/batch_test/check_armed_wiring.py -- the variant several charters print, with an extra directory level between tools/batch_test/ and the script name, does not exist and exits 2, which here looks like a gate that ran (raised with the director on GH #332).",
+ "seed_selection_note": "Four seeds NEVER used in any prior wave: seed_roster_index --seed 1801 1842 1902 2013 reports 'no banked games' for all four, checked against a REFRESHED index (--build run first, per the discipline adopted at W27).",
+ "seed_index_note": "seed_roster_index --build reported '281 run prefixes in S3, 281 already indexed, 0 to scan; nothing new' -- the index was already current because the 09:30Z harvesting round folded W28's four seeds in. Second consecutive wave where the fixed pre-launch --build was a correct no-op.",
+ "seed_search_note": "Mask-exhaustive enumeration (GH #313 method) over the window [1801,2200]: 400 seeds, 8 with banked corpus (W27+W28), 392 unused, all 392 with a resolvable roster; popcount distribution over the six terms {4:7, 3:71, 2:128, 1:142, 0:44}; 45 distinct masks; 715 valid 4-mask combos at '>=2 carriers per term'. Picked the max-carrier-slot combo. NOTE THE TREND W28 PREDICTED: best is now 15 slots, down from W28's 16. Seven pop-4 seeds remain but no four of them combine to satisfy '>=2 per term', so the ceiling has already dropped a notch. The top layer is being shaved one wave at a time exactly as W28's record forecast; the window will need widening (or the discipline relaxing to the gate's own >=1) within a few waves.",
+ "machines": [
+  {
+   "seed": 1801,
+   "az": "us-west-2a",
+   "instance": "i-0737553f30a768e74",
+   "sir": "sir-cmvqht2n",
+   "run_token": "3fcb3d",
+   "launched": "2026-08-30T18:16:05Z",
+   "instance_launch_time": "2026-08-30T18:16:07Z",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2a",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "spirit_breaker"
+   ]
+  },
+  {
+   "seed": 1842,
+   "az": "us-west-2b",
+   "instance": "i-03ef87a195c951c51",
+   "sir": "sir-7bx7jtgp",
+   "run_token": "eb04aa",
+   "launched": "2026-08-30T18:16:11Z",
+   "instance_launch_time": "2026-08-30T18:16:13Z",
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2b",
+   "carriers": [
+    "crystal_maiden",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "zuus"
+   ]
+  },
+  {
+   "seed": 1902,
+   "az": "us-west-2c",
+   "instance": "i-070646d01bc7e30fb",
+   "sir": "sir-nw1fj8rp",
+   "run_token": "60c165",
+   "launched": "2026-08-30T18:16:18Z",
+   "instance_launch_time": "2026-08-30T18:16:20Z",
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2c",
+   "carriers": [
+    "crystal_maiden",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+   ]
+  },
+  {
+   "seed": 2013,
+   "az": "us-west-2d",
+   "instance": "i-0846702c265eaf510",
+   "sir": "sir-ab2qh3xn",
+   "run_token": "134c2f",
+   "launched": "2026-08-30T18:16:24Z",
+   "instance_launch_time": "2026-08-30T18:16:26Z",
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2d",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "zuus"
+   ]
+  }
+ ],
+ "placement": {
+  "topology": "4 x COUNT=1, four separate spot_run.sh calls 6-7s apart",
+  "az_spread": "4 of 4 distinct (2a/2b/2c/2d) -- GH #256 fully satisfied, exposure to one AZ event capped at 1 seed",
+  "mismatch": "0 of 4. All four log lines carry requested=<az> actual=<az> and they are equal (GH #282 criterion, EIGHTH consecutive wave at zero MISMATCH). Confirmed independently against describe-instances Placement.AvailabilityZone, not just the launcher's own line."
+ },
+ "gates": {
+  "i_six_hour": "PASS. W28 took off 2026-08-30T06:18:58Z; +6h = 12:18:58Z. A `date -u` guard was written INTO the launch shell block; it read 18:16:04Z and passed with ~5.95h of margin, so unlike W28 it did not have to refuse anything.",
+  "ii_new_to_test": "PASS by the FIRST branch, and by both of its clauses. (a) New code: git diff f015321 (W28's pin) .. be442fb9 -- bots/ game/ touches 5 files, +230/-27 (hero_lion, hero_obsidian_destroyer, hero_skeleton_king, hero_zuus, mode_roam_generic). (b) New arm string: 45 ids / 397 bytes -> 44 ids / 386 bytes (`fieldcreep` out). The second branch (accumulated seeds < 8) was not needed.",
+  "iii_cost": "PASS. Fence = 71.458 (budgets MTD, snapshot 2026-08-30T11:33:48Z) + W28 0.80 + W29 0.80 = $73.06 <= $80, margin $6.94. Worst case, both waves fully degraded to on-demand at $2.15 each = $75.76, also passes. Brake $90 and owner line $100 not approached; no new alarm tier crossed.",
+  "iv_reclaim_blind": "PASS (exit 0, NOT BLINDED). Run FIRST-HAND this round against W28_wave.json, at the gate, before launching -- this is the first wave where GH #271's gate was actually executed by the launching round rather than backfilled afterwards. Output: changeover 40.0 min (measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min); 4 of 4 machines carry a LOWER BOUND; bracket check SKIPPED OUT LOUD for seed 1850 (39.7 min is a lower bound below the 40.0 flip, so the 'moved earlier' clause is unsound on it); yield 4 paired seed(s) of 4; attribution 0 reclaimed before the flip; VERDICT not blinded; NEXT WAVE spot (GH #158 unchanged). The director's survival_bound=lower work (ea1c6852) is what makes this readable rather than the earlier BRACKET VIOLATED artifact."
+ },
+ "cost": {
+  "estimate_usd": 0.80,
+  "estimate_basis": "Six prior spot waves at 4 x c6i.4xlarge: 0.795 / 0.799 / 0.747 measured, ~0.8 the standing charter figure. Settled next round by the SIR time method if the SIRs are still readable, otherwise from the S3 last-upload proxy with the +2.90 min self-destruct offset measured at 15:15Z (n=8) -- and that offset must NOT be applied to a reclaimed machine (zero measurements exist on that side)."
+ },
+ "skip_not_pass_lines": [
+  "No RULE6_BYPASS was used this round; the push gate ran for real, so there is no 'SKIPPED, not passed' line to quote.",
+  "The dynamic half of iron rule 6 (lua5.1 tests/run_tests.lua, ~100 min, GH #124) was NOT run and is NOT claimed.",
+  "routine_selfcheck.sh: the trunk-health leg did not complete in this session (see the report); that side of trunk was NOT certified by this round."
+ ],
+ "expected_games": "4 seeds x 12 games x 2 sides = 96 scored, plus warm-ups; W28's actual was 224 landed / 200 scored, so the realistic expectation is materially higher than the nominal --games figure.",
+ "pooling_note": "W29 is the SECOND wave on the 44-id arm string (the first was none -- W27/W28 were the 45-id family). It therefore does NOT pool with the W27+W28 8-seed reading that is still awaiting the director's ruling under GH #329/#332. Pool W29 only with future 44-id waves. Per iron rule 4(i-d), NEVER pool by weighting on game counts: swap-average each seed first, then take the arithmetic mean across seeds.",
+ "harvest": null
+}

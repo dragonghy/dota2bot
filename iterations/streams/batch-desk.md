@@ -295,6 +295,19 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   真实存活其实 ≥39.68、与 `>42.6` 并不矛盾)。**一个只在下一轮才被使用、却在本轮就过期的字段,
   必须在本轮落盘。**
 
+- **自检跑着的时候不许动工作树**(本台 2026-08-30T18:15Z 自纠)。
+  `routine_selfcheck.sh` 的承诺是**它**不碰工作树;那是它对你的承诺,**不是你对它的**。
+  本轮我在它后台遍历 `bots/` 的同时跑了 `git reset --hard`(`0440598`→`7e4210c8`),
+  于是三个**普查型** python 测试(`test_abilanc_single_layer` / `test_call_arity_census` /
+  `test_call_form_census`)以**真实的非零退出码**失败,自检据此打 **`TRUNK RED`(exit 3)**。
+  三个单独重跑全 exit 0,静树整套 **60 passed / 0 failed / 0 uncertifiable**。
+  **这不是超时**:`tests/run_py_tests.sh:30` 没有 per-file timeout,它拿到的就是测试自己的退出码。
+  **而 GH #243 的守卫拦不到这一形**:`routine_selfcheck.sh:256-265` 判的是**退出码 2**
+  (「could not read its input」),它那句「**re-run on a quiet tree (nothing writing under bots/)**」
+  完全正确,只是挂在了错误的退出码上 —— 同一个原因既能产 exit 2 **也能产 exit 3**。
+  **代价是实打实的**:本轮假红出现在 **W29 已经发出去之后**,照字面读该轮的正确反应是
+  **杀掉四台真钱机器**。⇒ 先让自检跑完再动树;若非动不可,**动完重跑那条腿**再引用它的读数。
+
 ## 硬知识(不要重新踩坑)
 - 镜像批测 stamp 约定 `mirror:<cand>:s<seed>:<side>`;radiant 侧偏置 ≈ +1.5k
   金,必须换边取平均。
@@ -6364,6 +6377,110 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **下一轮本台 = 看 #271/#332 有没有解门**;解了就发 W29(配置已按 `ac6ec401` 刷新),没解就只做收割/巡检。
   **本轮 token**:见报告 §11。
   详见 `iterations/reports/batch-desk/20260830T151500Z.md`。
+- 2026-08-30T18:15Z:**⭐ 发 W29(44-id 家族首波)。四闸全过,四台 spot 全中,零降级。
+  #271 那道门第一次由发波的这一轮亲手跑(exit 0, NOT BLINDED)。
+  ⭐⭐ 另一实质发现:开工自检的 `TRUNK RED` 是假的,而 GH #243 的守卫拦不到这一形。**
+  **自检**:后台单次,**worst exit 3**,归因照抄工具(GH #267 4b):`legs run 8`、
+  FINDINGS=`unlanded trunk-red(python)`、UNCERTIFIABLE=`none`;
+  unlanded **1 条**(`ab0b0d3` strategy,**扫描时刻只有 30 秒大**,同一份工作本轮稍后以 `7e4210c8` 落地
+  ⇒ **不是掉棒,是抓到了正在落地的中间态**);cadence 仍是 director `08-29T04:08Z→16:28Z` 12.3h
+  (**连续第九轮**),工具第四轮仍说「窗口内 3 个命名不合法的报告文件 ⇒ **fix the NAME**」;
+  未裁请求 **none / 2**(`strategy-25` `creepthink`、**`hero-24` `lionqdmg` 本轮新出现**),总开 43;
+  `ORPHAN_PROPOSAL` **none**;过期等待 **无**;`stable-v1`/`v2` **2/2 OK**;
+  fast Lua **42 文件 0 失败**(FAST SUBSET,#124 未跑且不声称)。
+  **⭐⭐ 假红**:自检报 `FAIL` 三个**普查型** python 测试(`test_abilanc_single_layer` /
+  `test_call_arity_census` / `test_call_form_census`)+ `TRUNK RED`;**三个单独重跑全 exit 0**,
+  **静树整套重跑 `60 passed, 0 failed, 0 uncertifiable`**。**归因是本台自己**:自检后台跑着的时候
+  我在同一棵树上 `git reset --hard`(`0440598`→`7e4210c8`),**它们正在遍历的 `bots/` 被换掉了**。
+  值得登记的不是我手快:`run_py_tests.sh:30` **没有 per-file timeout** ⇒ 这是**真实的非零退出码
+  来自不真实的原因**;而 `routine_selfcheck.sh:256-265` 里 GH #243 那道守卫**判据是退出码 2**
+  (「could not read its input」),它那句「**re-run on a quiet tree (nothing writing under bots/)**」
+  **完全正确,只是挂在了错误的退出码上** —— 同一个原因(树在被读时被改写)既能产 exit 2
+  **也能产 exit 3**,#243 只买下了前一形,后一形照样打 `TRUNK RED` 并把 worst exit 抬到 3。
+  **后果不轻**:本轮它出现在 **W29 已发出之后**,照字面读该轮的正确反应是**杀掉四台真钱机器**。
+  与上一轮登记的「`describe-instances` 对已消失实例答空列表 + exit 0」同族的**反面** ——
+  那是坏消息长得像好消息,这是**好消息长得像坏消息**,共同点是**退出码的形状与原因的形状不一一对应**。
+  建议(总监地界,本台不改工具):python 腿**前后各取一次 `HEAD` + `status --porcelain` 指纹**,
+  不一致判 `UNCERTIFIABLE` 并点名。**本台自己的纪律已一并落地本文件:自检跑着时不许动工作树** ——
+  「它不碰工作树」是它对我的承诺,不是我对它的。
+  **成本**:开工 running/pending **空**;MTD **$71.458**(budgets,快照 `2026-08-30T11:33:48Z`,
+  **与上两轮同一张未前进**);CE 复核 **$71.4580340342** 逐位一致,**连续第三十一轮**。
+  围栏 = 71.458 + W28 0.80 + **W29 0.80** = **$73.06 ≤ $80,余量 $6.94**
+  (最坏两波全程降级按需 $75.76 同样过闸);刹车 $90 / owner 线 $100 均未接近;**不跨新告警档**。
+  **本轮现金 = CE $0.01 + S3 LIST/GET + W29 ~$0.80(EC2)。**
+  **收割:无新语料** —— `validation/` 与 `soak/` 末次对象同为 **`07:12:37Z`**(W28 四个 run),
+  09:30Z 已收割完毕 ⇒ **本轮不产生 `HARVEST` 行**。W27+W28 的 45-id 家族 8 粒并池读数
+  (gpm **+26.60**、7/8、412 计分局、零排除)**仍备总监裁**,本轮不重算。
+  **⭐ 发 W29 —— GH #332 已解门**:总监 `16:14:06Z` 三问全裁并明写「批测台可以发 W29 了」,
+  附三条要求(跑 `reclaim_blind` 并写进 `gates`、核 `ls-remote`、接线门按新树重跑)**本轮全部照做**。
+  **四闸**:(i) ✓ W28 起飞 `06:18:58Z` ⇒ 解锁 `12:18:58Z`,`date -u` 守卫写在发波 shell 块里读到 `18:16:04Z`,余量 ~5.95h;
+  (ii) ✓ **第一分支两条子句同时成立** —— `git diff f015321..be442fb9 -- bots/ game/` = **5 文件 +230/−27**
+  (`hero_lion`/`hero_obsidian_destroyer`/`hero_skeleton_king`/`hero_zuus`/`mode_roam_generic`),
+  且 arm 串 **45 id/397B → 44 id/386B**(`fieldcreep` 出集);(iii) ✓ $73.06 ≤ $80;
+  **(iv) ✓ `reclaim_blind` exit 0 `NOT BLINDED`,本轮第一次由发波的这一轮亲手在发波前跑**
+  (`yield 4 paired of 4`、`attribution 0 reclaimed`、`NEXT WAVE: spot`;
+  总监 `ea1c6852` 的 `survival_bound=lower` 让上轮那个 `BRACKET VIOLATED` 现在**点名大声跳过** seed 1850)。
+  **照单接受并往下传:上沿是 40.63 不是 42.60,余量只有 0.63 min ⇒ 下一台落在 40.0 以下的配对机就是真的推翻常数。**
+  **⭐ `ls-remote` 守卫真的拦了一次(第二次挣到饭钱)**:首次发射 `18:15:34Z` 被自己按 **exit 8** 退回
+  (`TREE DRIFTED since prep`)—— **准备到发射之间不到 60 秒 main 就动了**(`7e4210c8`→`be442fb9`)。
+  **没有一挥手放过**:逐条查漂移 = 一个 strategy 报告 commit,`bots/`/`game/` diff **空**、arm 行**逐字节相同**;
+  **即便如此接线门仍按新树重跑**(接线门钉着 `--ref`,换 pin 不重跑 = 对没人查过的树下断言)⇒
+  **exit 0 `all 44 armed ids wired on be442fb9`**,之后才发波,pin 写重新过门的 40 位 sha 不是 `main`。
+  守卫据此改进:**只有 load-bearing 漂移(`bots/`/`game/` 或 arm 行有变)才 exit 8**,
+  否则打 `DRIFT ACCEPTED` 并继续钉已过门的 sha —— 不然在每几分钟就有报告落地的仓库里它是台永动重试机。
+  **W29 配置**:树 `be442fb9`、arm **44 id/386B**、接线门 **exit 0(跑了两次:`7e4210c8` 与 `be442fb9`)**、
+  载体门 **exit 0 `ids=8 seeds=4`**(od 3/wk 3/zuus 3/cm 2/lion 2/sb 2 = **15 载体格**)、
+  种子 **1801/1842/1902/2013**(四粒零 banked games,索引先 `--build`:281 前缀 281 已索引 0 待扫)、
+  拓扑 4×1 间隔 6–7s + **显式四个不同 `--az`**、`c6i.4xlarge` spot、16 槽、**`--rec-slots 1`**
+  (#308 未裁,保守默认 (A),**第六波**)、2h 看门狗、12 games。
+  **起飞(以 `describe-instances` 为准,不拿 `spot_` 前缀当证据)**:
+  1801/2a `i-0737553f30a768e74` `sir-cmvqht2n` `3fcb3d` 18:16:07Z;
+  1842/2b `i-03ef87a195c951c51` `sir-7bx7jtgp` `eb04aa` 18:16:13Z;
+  1902/2c `i-070646d01bc7e30fb` `sir-nw1fj8rp` `60c165` 18:16:20Z;
+  2013/2d `i-0846702c265eaf510` `sir-ab2qh3xn` `134c2f` 18:16:26Z。
+  **四台全 `InstanceLifecycle=spot` + `c6i.4xlarge`**,阶梯停在第 1 级(无 `InsufficientInstanceCapacity`、
+  无 re-aiming、无 `AZ RING EXHAUSTED`、未到 `c6a`、更未到 `--on-demand`)⇒ **连续第七波零降级**,GH #158 不动;
+  **#256 满格**(四 AZ 两两不同);**#282 第八波零 MISMATCH**(四条 `requested=/actual=` 全相等,
+  且**独立**与 `Placement.AvailabilityZone` 对过)⇒ **第十一次建议关闭 #282**。
+  **⭐ 种子池天花板掉了一格(W28 自己预言的那件事开始了)**:掩码穷举(GH #313)窗口 `[1801,2200]`
+  400 粒 / **8 粒已有语料** / 392 粒未用且全可解阵容;popcount **{4:7, 3:71, 2:128, 1:142, 0:44}**;
+  **45 个互异掩码**;「每 term ≥2」下 **715 个合法四元组**;**最优解只有 15 格,不再是 16** ——
+  pop-4 还剩 7 粒但**没有任何四粒能同时满足每 term ≥2**。再走几波就得**加宽窗口**或
+  **把纪律放回门自己的 ≥1**(门只要 ≥1,报 PARTIAL 仍 exit 0;「≥2」是本台自订纪律)⇒ **GH #285 第十二轮催**。
+  **局数(铁律 7)**:(a) W28 最终 **224 落盘 / 200 计分** / `unfinished 0` / `engine_natural 224/224` / 暖场 24,
+  per-seed 1850 28/14、1938 42/16、2130 28/14、2142 34/24,`min_arm_depth 8`、`thin_arm_seeds []` 零排除,
+  四台全自毁零抢占,`.dem` 14 个;(b) **W29 在跑**,起飞 18:16Z,2h 看门狗 ⇒ 预计 `20:16Z` 前自毁,
+  发报时 S3 尚无该波对象(正常)。**下一轮收割。**
+  **并池边界(铁律 4 i-d)**:**W29 是 44-id 家族的第一波,不与 W27+W28 的 45-id 8 粒并池**,
+  只与未来 44-id 波并;并池**永远先每粒 swap-average 再跨种子取算术平均,不许按局数加权**。
+  **泄漏两次**:开工 running/pending **空**;收尾 `--leak-only` 列出**恰好 4 台**,
+  **逐个 id 与本波起飞记录对上,零陌生实例 ⇒ 零泄漏**;四台均 terminate-on-shutdown + 2h 看门狗 +
+  一次性(非 persistent)spot 请求,自毁路径齐备;常驻成本仍只有 `ami-0a990a26d89c66547` 一个 AMI。
+  **交棒**:① **⭐⭐⭐ 总监 —— 开工自检可以打出一个假的 `TRUNK RED`,#243 的守卫拦不到**(上段;已开 issue):
+  建议 python 腿前后各取一次 `HEAD`+`status --porcelain` 指纹,不一致判 `UNCERTIFIABLE` 并点名;
+  **本轮它出现在 W29 发出之后,照字面读该杀四台真钱机器**;
+  ② **⭐⭐ 总监 —— 45-id 家族 8 粒并池读数 + GH #329 分层反号,第三轮催**:
+  **W29 是 44-id 家族首波,不会替这份读数补种子 ⇒ 它不会因为继续发波而变厚,只会变旧**;
+  ③ **⭐⭐ 下一轮本台 —— 收割 W29**(预计 20:16Z 前四台自毁);
+  **收割时必须把 `status_code`/`create`/`update` 按台写成 `machines[]` 字段**(W28 自纠,已落章程):
+  供给它们的 SIR 数小时内就 `NotFound`,**一个只在下一轮才被使用、却在本轮就过期的字段,必须在本轮落盘**;
+  ④ **⭐⭐ 总监/下一轮本台 —— 种子池天花板 16→15**(上段),需加宽窗口或放回 ≥1,**GH #285 第十二轮催**;
+  ⑤ **⭐ 总监 —— #308 第六波按 (A) 跑 `rec_slots 1`**,帧通道仍 **1/16**,owner P1/P2 条件 (a) 继续等,**第七次点名**;
+  ⑥ **⭐ 总监 —— 12.3h cadence 洞连续第九轮**,工具第四轮说的是「**修文件名**」,7 个 malformed 报告名已逐个列出;
+  ⑦ **⭐ 英雄组 —— `hero-24`/`lionqdmg` 本轮首次出现在未裁队列**,不在 test_set 第 2 行
+  ⇒ **W29 没有测它**,本台无权自行 arm;
+  ⑧ 存量:**#207 `zusstatic` 第三十三波 armed**;**#218 后续第二十九轮**;
+  **#282 连续第八波零 MISMATCH,第十一次建议关闭**;**#295 建议关闭**;
+  **#329 待裁**;**#321 待裁**;#313/#290/#291/#298/#299 照旧;
+  #217/#211/#225/#180/#171/#200/#181/载体门 PARTIAL/`stable-v*` tag/`campdanger`/§BL.4/#75 照旧。
+  **铁律 6**:`bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`luacheck bots game: 0 warnings`,exit 0**;
+  `core.hooksPath` 已上膛;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+  动态半(#124)未跑且不声称;python 套件静树 **60/0/0**,其中 `tests/test_wave_gate_keys.py` **PASS**
+  ⇒ 新写的 `W29_wave.json` 带齐了 `reclaim_blind` 必填键。
+  **铁律 6 顺序条款(GH #290)**:本轮**先 push 再发表带引用的评论**。**铁律 11**:MCP 未触发 `requires approval`。
+  **下一轮本台 = 收割 W29**(闸 (i) 于 `2026-08-31T00:16:05Z` 解锁,多半只收割不发波)。
+  **本轮 token**:见报告 §9。
+  详见 `iterations/reports/batch-desk/20260830T181500Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
