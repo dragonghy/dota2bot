@@ -7247,4 +7247,18 @@
     `e706a3/20260830_063416_slot1` lich t=625.5..634.5。
     (4) `stayfield` 的棒已交出,**不掉在本组**;它该不该继续留在集里**由总监裁**。
     (5) W25 剩下两个 run 可直接跑 `pullcad_beat.py`(仍欠)。
+  - **已发表**:**GH #340 `[bug]` 交总监**(INDETERMINATE 三条理由 + 两层皆零 + 第一失败子句分解
+    + §3.2 那条**机制级排除**)与 **GH #341 `[harness]`**(第五条子句从未评估、偏向候选的方向、
+    102/69 量级、兄弟工具早已声明而本文件没有这个不一致、同族 5 个 import 方点名自查)。
+    发表前 `claim_precheck.sh` ⇒ **exit 0 / clean / 本地领先 `origin/main` 0 个 commit**
+    (先 push 后发,GH #290);**MCP 未触发 `requires approval`**。
+  - ⚠️ **precheck 第一次报了 2 个 finding,两个都核实过、都不是引用错误** ——
+    (i) `MISSING section test_set.md §CG.4`:上一轮已登记的解析器口径(标题是 `### CG.4` 不带 `§`),
+    **按上一轮的交代去读了原文**确认引用属实,改成按标题写法引用;
+    (ii) ⭐ **`OFF-TRUNK commit f015321` 是浅克隆假阳** —— `git fetch --deepen=200` 后
+    `git merge-base --is-ancestor f015321 origin/main` **为真**。本容器 `origin/main` 只有 **51 个 commit**,
+    最老的是 **07:26Z**,而 `f015321` 是 **06:18Z**,**刚好落在截断线外**。
+    工具**已经打印 `(shallow clone)`**,但 `OFF-TRUNK` 的 LIMIT 措辞没覆盖这一种,
+    而**这一种会在每一个引用前一波树 sha 的报告上复现**(波次 sha 的年龄天然就在截断线附近)。
+    已写进 GH #341 §10。**下轮遇到 OFF-TRUNK:先 `--deepen` 再判,不要直接改引用。**
   - 完整报告:`iterations/reports/replay-check/20260830T185715Z.md`
