@@ -3049,7 +3049,7 @@
   那是**延迟**的签名(节流阀只能让 poke 迟到、不可能提前),**域泄漏没有理由是单边的**;
   静止帧的**计数**不反驳也不重推,±6% 是 **44 id 同波的 bundle 界**、#326 自己不主张已排除反向抵消。
   **产出**:`bots/mode_roam_generic.lua` 一条并列旁路子句;`tests/test_creepthink_anim_throttle.lua`
-  (`[ratchet]`,**12/12**,2.6s,快腿 tagged 35 → 36);`state.json:creepthink_20260830`。
+  (`[ratchet]`,**12/12**,2.6s,快腿 tagged **36 → 37**(按自检自己的并集口径:tagged ∪ 四个具名文件;实测));`state.json:creepthink_20260830`。
   **变异 11 条:10 CAUGHT / 1 SURVIVED(M8,promote 过的 `pullbeat` hold,登记而非粉饰 ——
   同一补丁在 `test_replay_pullbeat_attack_cancel.lua` 下红 4 条,覆盖在它该在的地方)。**
   **⚠️ 当轮自伤(抓住并修好)**:`[control C2]` 原本比**两份指令日志**,而**无计划的世界里没有指令可以不同**
