@@ -507,6 +507,56 @@ function X.IsAbilityEChanneling()
 end
 
 
+-- [lionqdmg] The damage Earth Spike's KILL branch is allowed to claim.
+--
+-- WHY THIS EXISTS.  `hAbility:GetAbilityDamage()` reads the ability's TOP-LEVEL
+-- `AbilityDamage` KV field and nothing else, and `lion_impale` declares none in
+-- this patch: its "// Damage." block is literally empty and the per-level
+-- 105/170/235/300 lives in `AbilityValues/damage`.  So the shipped read below is
+-- a hard 0.  Axis `0DMG` (GH #175, tools/agent/ability_damage_census.py): `lion`
+-- is absent from tests/mock/ability_damage.lua's NONZERO table, which proves the
+-- read is 0 whichever of Lion's own abilities the handle points at -- no handle
+-- resolution needed.
+--
+-- DIRECTION, READ AT THIS CALL SITE (a silent zero cuts differently per site --
+-- the whole lesson of hero_zuus.lua's X.GetBoltKillHealthCap, where the same
+-- zero WIDENS).  Here the value's only consumer is J.WillMagicKillTarget in
+-- X.ConsiderQ's kill loop, whose estimate is
+--     EstDamage = nDamage * ( 1 + spellAmp ) - healthRegen * 5.0 / magicResist
+-- so at nDamage = 0 it is <= 0 for every rank, every spell amp, every target,
+-- and the final `nRealDamage >= GetHealth()` is false against anything alive.
+-- That is a CEILING, not a pessimistic margin: the branch cannot fire at all,
+-- and no level, item or amplification revives it.  GH #175 filed this direction
+-- and deliberately did not fix it -- un-deadening a kill branch is a WIDENING
+-- and needs its own evidence and its own id.  This is that id.
+--
+-- SHAPE (the GH #162 house rule, same as X.GetBoltKillHealthCap).  The shipped
+-- expression is this function's LAST statement and the armed branch is the only
+-- detour, so gate-off equivalence is structural; and an armed key answering <= 0
+-- falls through to the shipped expression rather than inventing a default.
+--
+-- ONE LEVER, deliberately.  Spell amp is NOT folded in here (J.WillMagicKillTarget
+-- applies it itself), and the `5.0` second regen delay that call site passes --
+-- the only literal delay among this repo's J.WillMagicKillTarget call sites, all
+-- the others being nCastPoint or a travel-time expression, against an Earth Spike
+-- cast point of 0.3 -- is left exactly as shipped and is NOT part of this id.
+-- Domain, the driven ceiling and the corpus limit: tests/test_lion_q_kill_damage.lua.
+function X.GetImpaleKillDamage( hAbility )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'lionqdmg' )
+	then
+		local nKvDamage = hAbility:GetSpecialValueInt( 'damage' )
+		if nKvDamage > 0
+		then
+			return nKvDamage
+		end
+	end
+
+	return hAbility:GetAbilityDamage()
+
+end
+
+
 function X.ConsiderQ()
 
 
@@ -519,7 +569,7 @@ function X.ConsiderQ()
 	local nRadius	 = abilityQ:GetSpecialValueInt( "width" )
 	local nCastPoint = abilityQ:GetCastPoint()
 	local nManaCost = abilityQ:GetManaCost()
-	local nDamage = abilityQ:GetAbilityDamage()
+	local nDamage = X.GetImpaleKillDamage( abilityQ )
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 	local nInRangeEnemyList = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE )
 	local nInBonusEnemyList = J.GetNearbyHeroes(bot, nCastRange + 200, true, BOT_MODE_NONE )

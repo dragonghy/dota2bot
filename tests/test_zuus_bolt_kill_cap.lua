@@ -281,7 +281,8 @@ tests['[hero] zuus and lion declare no nonzero AbilityDamage in the KV snapshot'
     assert(tNonzero['zuus'] == nil, 'zuus must declare no nonzero AbilityDamage -- if a '
         .. 'patch gives one to a Zeus ability, X.ConsiderW2\'s shipped leg stops being '
         .. 'the unfiltered 0 and this whole reading needs redoing')
-    assert(tNonzero['lion'] == nil, 'same for lion (3 proven-zero reads, filed not fixed)')
+    assert(tNonzero['lion'] == nil, 'same for lion (3 proven-zero reads; the ConsiderQ one '
+        .. 'was picked up 2026-08-30 as gated `lionqdmg`, W/E are still filed not fixed)')
     assert(tNonzero['axe'] == nil and tNonzero['skeleton_king'] == nil
         and tNonzero['crystal_maiden'] == nil, 'and the other three focus heroes')
 
@@ -296,12 +297,27 @@ tests['[hero] zuus and lion declare no nonzero AbilityDamage in the KV snapshot'
 end
 
 tests['[hero] the other proven-zero focus-five reads are still where the census left them'] = function()
-    -- Filed, deliberately NOT fixed (they are widenings; see the header).  This
-    -- is a ratchet, not an endorsement: if somebody routes one of them through a
-    -- helper, this count moves and they must come back and re-read the header.
-    local nLion = select(2, strip_comments(read_file(LION)):gsub('GetAbilityDamage%(%)', ''))
+    -- Filed here, deliberately NOT fixed here (they are widenings; see the
+    -- header).  This is a ratchet, not an endorsement: if somebody routes one of
+    -- them through a helper, they must come back and re-read the header.
+    --
+    -- UPDATED 2026-08-30 (hero, backlog -43a's Lion direction).  The ratchet
+    -- fired as designed and was answered rather than edited away: X.ConsiderQ's
+    -- kill branch -- the "live one" this case used to name -- now takes its
+    -- damage from X.GetImpaleKillDamage, gated `lionqdmg` (turbo-only, unarmed,
+    -- unpromoted).  The COUNT is unchanged at 3 because that helper keeps
+    -- GetAbilityDamage() as its shipped fallthrough, which is exactly the shape
+    -- X.GetBoltKillHealthCap uses here; so the count alone can no longer tell
+    -- the two states apart, and the site check below is what now carries it.
+    -- The Lion domain, the driven ceiling and the corpus limit live in
+    -- tests/test_lion_q_kill_damage.lua.
+    local sLion = strip_comments(read_file(LION))
+    local nLion = select(2, sLion:gsub('GetAbilityDamage%(%)', ''))
     assert(nLion == 3, 'expected 3 GetAbilityDamage() reads in ' .. LION .. ', got ' .. nLion
-        .. ' (X.ConsiderQ\'s kill branch is the live one; W and E assign a local nobody reads)')
+        .. ' (one is now the gated helper\'s fallthrough; W and E assign a local nobody reads)')
+    assert(sLion:match('function X%.GetImpaleKillDamage%(.-%)(.-)\nend\n'),
+        'the ConsiderQ read must stay behind its helper -- if it goes back inline, that is an '
+        .. 'ungated site and this file\'s "filed not fixed" reading is stale again')
 end
 
 -- ---------------------------------------------------------------------------

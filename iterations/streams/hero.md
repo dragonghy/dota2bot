@@ -22,6 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-55. **Lion 的 Q 斩杀分支从来没能开过火 —— 天花板不是余量,而且 `dmg` 只通过一个乘积进入,
+   所以任何法术增强都救不回来;修了(gated `lionqdmg`),代价比「Lion 从不斩杀」窄,
+   窄的那一半写成了验收条款;下一棒是 -43a 剩下的 CM 方向**
+   **2026-08-30T16:51Z done —— 本轮没有带新帧证据、点名本组的新 `[hero]` issue
+   (#173/#328/#330 是本组前三轮自己的活;#309/#314 等语料读数;#54/#287 等 `hero-22` 那批帧)
+   ⇒ 走章程工作流第 1 条的兜底路径,轴是 **-43a 三个方向里连续四轮各自记着「本轮仍然没动」的 Lion**。
+   `bots/BotLib/hero_lion.lua` **一处可执行改动**(新 helper + 一行调用点);`game/` 零行;
+   **新 gate id `lionqdmg`**(turbo-only,**未 arm、未 promote、不是 live**);
+   没有 promote / 加宽任何已在集的东西;**零 AWS(连 S3 GET 都没有)**;不申请波次;不开新 issue。
+   新文件 `tests/test_lion_q_kill_damage.lua`(13 例,`[ratchet]` ⇒ 进快 Lua 腿);
+   `state.json` 新增 `lionqdmg_20260830`(`gated:true`);`queue.json` 新增 `hero-24`;
+   `test_set.md` 新增 §CM(入集提议)。报告 `iterations/reports/hero/20260830T165112Z.md`。**
+   - **⭐⭐ 主读数:这个站点的零是天花板。** `lion_impale` 的 KV 不声明顶层 `AbilityDamage`
+     (`// Damage.` 段是空的;105/170/235/300 住在 `AbilityValues/damage`)⇒ 读数恒 **0**;
+     而 `J.WillMagicKillTarget` 的估值里 **`dmg` 只通过 `dmg*(1+GetSpellAmp())` 这一个乘积进入**
+     (这条前提**从 `jmz_func.lua` 解析出来**,不是重打的:`dmg` 出现且仅出现一次)⇒
+     EstDamage ≤ 0 **在任何增强档下**,对任何活着的目标恒 false。
+     **每个等级、每件装备、每个目标、每一档增强,这条分支从来没能开过火。**
+     两枚真实帧上驱动**真的** `J.WillMagicKillTarget` 复现(档 0 / 0.15 / 0.5 / 4.0)。
+   - **⭐⭐ 代价比「Lion 从不斩杀」窄,而窄的那一半才是第二个产出。** 后面**每一条**分支
+     也返回 `DESIRE_HIGH` ⇒ **丢的是覆盖不是欲望**。斩杀循环是唯一**没有 mode/上下文前置**的分支
+     (AoE 要 3 人、团控要 `IsInTeamFight`、攻击要 `IsGoingOnSomeone`、撤退要 `IsRetreating`、
+     farm/推线要兵数,兜底的「常规」要 **`nLV >= 15`**)⇒ 没被覆盖的集合 =
+     **15 级以下 + 不在任一 mode + 面前站着能被秒掉的敌人** = **Turbo 对线期**。
+     **预先接受否定结果**:`hero-24` 的 (4) 单独要这一格,读到接近 0 ⇒ 本 id 只改目标选择、不改是否开火。
+   - **⭐ 上一轮立的棘轮响了,而且是被答的不是被改掉的。** `test_zuus_bolt_kill_cap.lua` 那条
+     「有人把它挪进 helper 就会响」正是本轮;**但计数没动**(仍是 3,因为新 helper 把
+     `GetAbilityDamage()` 留作出厂落点,而那正是 `GetBoltKillHealthCap` 的形状)⇒
+     **一个只数次数的棘轮,会被一次合规的重构悄悄变成永真**;本轮补了站点断言,没有降低强度。
+   - **⚠️ 开火侧 fixture 仍然欠着,但「欠着」现在是个可复算的数**:全语料穷举
+     (每枚 `f_*_lion_*` × 每个射程内活着的敌人 × 该帧自己的 Q 等级)= **零开火帧**(增强 0);
+     最近差 **45 血**(Luna 345 vs rank-4 的 300 = 大招的 **13.0%**),在**恰好 15%** 增强处越过,
+     而 Lion 天赋技 `lion_to_hell_and_back` 的 KV `spell_amp` 是 **20**
+     ⇒ **语料里唯一一枚近火帧,由一个本 harness 建模为 0 的量决定**(限度不是判决)。
+   - **⚠️ 明说没做的**:那个 `5.0` 秒回血延迟(全仓 39 个 `WillMagicKillTarget` 调用点里
+     **唯一**一个裸数字,而前摇是 0.3)**只登记不修** —— 第二根杆,一次一根;
+     `ConsiderW`/`ConsiderE` 那两个同样恒零、**无人读**的 `nDamage` 局部**不动**,只钉成「无人读」;
+     不主张 promote;**CM 方向本轮仍然没动**。
+   - **变异 8 条条条见红且只红在依赖它的节**(M1 门/M2 落回/M3 内联/M4 尾语句/M5 延迟/
+     M6 消费方/M7 `dmg` 用两次/M8 KV 漂移),对照 13/0 绿,盘外三份文件 `cp` 还原后 `cmp` 逐字节相同。
+   - **⚠️ 动态半是子集不是全套**(GH #124):跑了 `lion_q_kill_damage` 13/0、`lion` 120/0、
+     `gate` 151/0、`smoke` 3/0、`zuus_bolt_kill_cap` 11/0;**全套没跑完**,照实登记。
+
 -54. **连着三轮抄写没动的那条棒量掉了:`X.ConsiderW` 的域是**空的**,而且是**天花板**关的门;
    「宽一个量级」在反事实里也不成立(0.24×–1.38×);下一棒仍然回到 -43a 的 Lion / CM**
    **2026-08-30T13:55Z done —— 取 backlog -50 明写留下、-51/-52/-53 逐轮以 ⚠️ 抄写而没动的那条棒
@@ -2884,6 +2927,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-30T16:51Z(报告 `iterations/reports/hero/20260830T165112Z.md`;轴 **-43a 的 Lion 方向 ——
+  连续四轮各自记着「本轮仍然没动」的那个**;**本组下一棒是 -43a 剩下的 CM 方向**)——
+  自检 **worst exit 0**:`legs run 8`,`FINDINGS: none`,`UNCERTIFIABLE: none`;
+  trunk 两侧全绿(python **60/0/0**;快 Lua 腿 **42** 个 tagged 文件 0 失败,FAST SUBSET
+  —— ⚠️ 这个 42 **跨在本轮新文件上**,**不要跟上一轮的 39/36 做差**,同一个坑上一轮踩过一次;
+  好的一面是那 42 **包含**本轮新文件,是它绿的一次独立确认);stable-v1/v2 锚点 ok。
+  ⚠️ **自检第一次是没跑成的,不是通过**:`timeout 300` 把它掐了(`Terminated`/143),
+  而管道尾巴的 `$?` 让它**看起来像 exit 0**,报告初稿据此写错并已更正 ——
+  铁律 10 那半句在**管道退出码**上的同族形态,记在报告 §7.1。
+  owner 四条优先项**没有一条球在本组**(批测台/协同组/协同组/总监)。
+  本轮**没有带新帧证据、点名本组的新 `[hero]` issue**(#173/#328/#330 是本组前三轮自己的活;
+  #309/#314 等语料读数;#54/#287 等 `hero-22` 那批帧)⇒ 走章程工作流第 1 条的兜底路径。
+  **`bots/BotLib/hero_lion.lua` 一处可执行改动(新 helper `X.GetImpaleKillDamage` + 一行调用点);
+  `game/` 零行;新 gate id `lionqdmg`(turbo-only,未 arm、未 promote、不是 live);
+  没有 promote / 加宽任何已在集的东西;零 AWS(连 S3 GET 都没有);不申请波次;不开新 issue。**
+  新文件 `tests/test_lion_q_kill_damage.lua`(13 例,`[ratchet]`);
+  `state.json` 新增 `lionqdmg_20260830`;`queue.json` 新增 `hero-24`;`test_set.md` 新增 §CM(入集提议)。
+  - **⭐⭐ 主读数:这个站点的零是**天花板**。** `lion_impale` 不声明顶层 `AbilityDamage`
+    (105/170/235/300 在 `AbilityValues/damage`)⇒ 读数恒 0;而 `J.WillMagicKillTarget` 里
+    **`dmg` 只通过 `dmg*(1+GetSpellAmp())` 这一个乘积进入**(前提**从 `jmz_func.lua` 解析出来**,
+    出现且仅出现一次)⇒ EstDamage ≤ 0 **在任何增强档下**,对活着的目标恒 false。
+    **每个等级、每件装备、每个目标、每一档增强,Lion 的 Q 斩杀分支从来没能开过火。**
+    两枚真实帧上驱动**真的** `J.WillMagicKillTarget` 复现(档 0/0.15/0.5/4.0)。
+  - **⭐⭐ 代价比「Lion 从不斩杀」窄**:后面每条分支也返回 `DESIRE_HIGH` ⇒ **丢的是覆盖不是欲望**;
+    斩杀循环是唯一无 mode/上下文前置的分支,兜底的「常规」要 **`nLV >= 15`** ⇒
+    没被覆盖的集合 = **15 级以下 + 不在任一 mode + 面前站着能被秒掉的敌人** = **Turbo 对线期**。
+    **预先接受否定结果**已写进 `hero-24` 的 (4) 与 (丙)。
+  - **⭐ 上一轮的棘轮响了,是被答的不是被改掉的**:计数**没动**(仍 3,新 helper 把
+    `GetAbilityDamage()` 留作出厂落点)⇒ **只数次数的棘轮会被一次合规重构悄悄变成永真**;补了站点断言。
+  - **⚠️ 开火侧 fixture 仍欠着,但「欠着」现在是个数**:全语料穷举 = **零开火帧**(增强 0),
+    最近差 **45 血**(Luna 345 vs 300 = 13.0%),在**恰好 15%** 增强处越过,
+    而天赋技 `lion_to_hell_and_back` 的 KV `spell_amp` = **20**。**限度不是判决。**
+  - **⚠️ 明说没做的**:`5.0` 秒延迟(全仓 39 个调用点里**唯一**的裸数字,前摇 0.3)**只登记不修**;
+    `ConsiderW`/`ConsiderE` 两个无人读的恒零局部**不动**,只钉成「无人读」;不主张 promote;
+    **CM 方向本轮仍然没动**。动态半是**子集不是全套**(GH #124),跑了五个子集,照实登记。
 - 2026-08-30T13:55Z(报告 `iterations/reports/hero/20260830T135500Z.md`;轴 **backlog -50 明写留下、
   -51/-52/-53 逐轮抄写而没动的那条棒 —— `abilityASBonus` 的第二个消费方 `X.ConsiderW`**;
   **本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——

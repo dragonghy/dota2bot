@@ -10567,3 +10567,69 @@ promote 仍然一次一杆,走各自的三条件。
 - **没有**回填历史 `waves/*.json` 的 `strata` 字段(要重跑整套语料,零收益);
   已登记的两份读数的分层**在本节与 #329 正文里各有一份全文**,够引用。
 - **没有**动 `validate_onspot.sh`(理由见 §CL.5),也**没有**动 #269 深度门的任何常数。
+
+---
+
+## §CM 2026-08-30T16:5xZ 英雄组提议入集:`lionqdmg`(GH #175 的 Lion 方向)—— **搭车、零 AWS 增量、不申请专波**;它是**一条天花板**,不是一条余量
+
+**申请方**:英雄组。**裁定方**:总监。**成本**:0(任何带 Lion 载体的波次即可搭车)。
+**登记**:`state.json:lionqdmg_20260830`。**队列**:`queue.json:hero-24`(归档扫描,零 EC2)。
+**验证**:`tests/test_lion_q_kill_damage.lua`(13 例全绿,变异 8/8 见红且只红在依赖它的节)。
+
+### §CM.1 改的是什么(一行)
+
+`bots/BotLib/hero_lion.lua` 新增 `X.GetImpaleKillDamage( hAbility )`,门为
+`J.IsModeTurbo() and J.IsSoakCandidate('lionqdmg')`;`X.ConsiderQ` 那一行由
+`abilityQ:GetAbilityDamage()` 改为调用它。**未 armed 时逐字节等价是结构性的**:
+出厂表达式是该函数的**最后一条语句**,armed 分支是唯一的绕路(与
+`hero_zuus.lua` 的 `X.GetBoltKillHealthCap` 同形);armed 读到 ≤0 的 KV **落回**
+出厂表达式而不是发明默认值(GH #162 家规)⇒ **armed 永远不可能比出厂更窄**,
+方向单一(GH #166 的教训)。
+
+### §CM.2 立案:是**天花板**不是余量,而且这句话是**驱动出来的**
+
+`lion_impale` 在本 patch 的 KV 里**不声明顶层 `AbilityDamage`**(那一块的
+`// Damage.` 段是空的;105/170/235/300 住在 `AbilityValues/damage`)⇒
+`GetAbilityDamage()` 恒 **0**。而 `J.WillMagicKillTarget` 的估值是
+
+> `EstDamage = dmg * ( 1 + bot:GetSpellAmp() ) - HealthBack / MagicResistReduce`
+
+**`dmg` 只通过这一个乘积进入**(这条前提是从 `jmz_func.lua` **解析出来的**,
+不是重打的:`dmg` 在整个估值里出现且仅出现一次,`tests/…:§4b` 钉住)⇒
+dmg=0 时第一项在**任何**法术增强下都是 0,EstDamage ≤ 0,收尾的
+`nRealDamage >= GetHealth()` 对任何活着的目标恒 false。
+⇒ **每个等级、每件装备、每个目标、每一档增强:这条斩杀分支从来没能开过火。**
+两枚真实帧上驱动**真的** `J.WillMagicKillTarget` 复现(增强档 0 / 0.15 / 0.5 / 4.0)。
+
+### §CM.3 代价比「Lion 从不斩杀」**窄**,而窄的那一半才是本节请总监读的
+
+`X.ConsiderQ` 后面**每一条**分支也返回 `BOT_ACTION_DESIRE_HIGH` ⇒ 丢的是
+**覆盖**不是**欲望**。斩杀循环是唯一**没有任何 mode / 上下文前置**的分支:
+AoE 要 3 个英雄、团控要 `J.IsInTeamFight`、攻击要 `J.IsGoingOnSomeone`、
+撤退要 `J.IsRetreating`、farm/推线要兵数,兜底的「常规」要 **`nLV >= 15`**。
+⇒ **没被覆盖的集合 = 15 级以下、不在上述任一 mode、面前站着一个能被秒掉的敌方英雄**,
+即 Turbo 对线期 —— 正是 105–300 魔法伤害相对英雄血量最大的窗口。
+它也是唯一自己伸进 `nInBonusEnemyList`(施法距离 +200)的分支。
+**这个「窄」是入集理由的一部分,也是 `hero-24` 验收条 (4) 单独立一格的原因**:
+本组**预先接受**「(4) 读到接近 0 ⇒ 本 id 只改目标选择不改是否开火」这个否定结果。
+
+### §CM.4 ⚠️ 语料里**没有**开火侧 fixture,而这个「没有」是**穷举量出来的**
+
+每一枚 `f_*_lion_*` fixture × 每一个在斩杀循环射程内**活着**的敌人 ×
+**该帧自己的** Q 等级 ⇒ **零开火帧**(法术增强 = 0)。
+最近的一次差 **45 血**(Luna 345 vs rank-4 的 300,= 大招的 **13.0%**),
+而它在**恰好 15%** 法术增强处越过;Lion 自己的天赋技 `lion_to_hell_and_back`
+在 KV 里声明的 `spell_amp` 是 **20**(该技能的生效条件**本节不主张**)。
+⇒ **语料里唯一一枚接近开火的帧,由一个本 harness 建模为 0 的量决定。**
+这是**限度不是判决**,已按 §BF.2 之后的惯例写进登记而不是留在散文里。
+
+### §CM.5 本节明说**没做**的
+
+- **没有**动那个 `5.0` 秒的回血延迟。它是全仓 39 个 `J.WillMagicKillTarget`
+  调用点里**唯一**一个裸数字延迟(其余全是 `nCastPoint` 或行程时间表达式),
+  而大地之矛的施法前摇是 **0.3** —— 看着不对,但**那是第二根杆**,谁给它定价谁开自己的 id。
+  已用一次驱动普查**登记**(`tests/…:§5`),**没有修**。一次一根杆。
+- **没有**动 `X.ConsiderW` / `X.ConsiderE` 那两个同样恒零的 `nDamage`
+  局部变量 —— 它们**没有任何消费方**,现在被钉成「无人读」,好让后来的人
+  既不会把它们当成活 bug,也不会在没有**在新站点重读方向**之前悄悄给它们加一个消费方。
+- **不主张 promote**,也不主张 arm 的档期;本节只申请**入集**。
