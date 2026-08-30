@@ -7053,3 +7053,82 @@
     (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
     (4) 若 W29 起飞:先跑 `arm_string_census.py`,并按上面那条**核对 45 vs 44 不可并池**。
   - 完整报告:`iterations/reports/replay-check/20260830T124500Z.md`
+- **2026-08-30T15:58Z(`fieldsip` 条件 (a) = **WORKING** —— 最后一个真零记录 id 清空;
+  触发级买下,**没有碰 §CG.4 禁止的留守率差分**)**:
+  在 **W28**(树 `f015321`,45-id 串,四 run `990f5c/90463d/e706a3/8fffe9`)的 **10 局带戳 `.dem`**
+  语料上核 `fieldsip`。**宽扫 10/10 局**(`unparseable 0`),**深查 15 个 armed 腿 AIRTIGHT
+  episode 逐个逐帧**,分布在 **7 局不同对局**。零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  - **`VERIFY id=fieldsip verdict=WORKING episodes=15`**。
+  - ⭐⭐ **买法的核心是「baseline 在这批帧上是结构性的零,不是小数」**:域帧上 bot **身上有
+    accepted source** ⇒ baseline 腿 `J.ShouldFieldBuyRegen = not(TRUE and TRUE)` = **FALSE,
+    按构造不能触发**。读数:**AIRTIGHT 带 armed 5/15 拿到大药、base 0/13**;
+    5 次**全部** >2000u 环外(**野外快递,不是回泉水拿的**)、**全部在野外喝掉**。
+    两个物理侧分层 **AIRTIGHT gain 同号**(radiant 1>0、dire 4>0,base 两层都是 0)⇒ **4(i-b) 不否决**。
+  - ⚠️ **同一张表里有一列必须不读**:`armed-base eps/game` radiant **+1.500** / dire **−5.250**
+    **反号** ⇒ 按 4(i-b) 是噪声,只用来选点。而且这个域**自我消耗**
+    (大药送到就把「有小 sip 没大药」这个入域条件抹掉)⇒ **armed 腿 episode 更少是效果不是坏对照**。
+  - ⭐⭐⭐ **归属限定(§BW.3 的正面应用,必须跟着结论走)**:读数是 **`fieldsip` ∧ `fieldbuy`**
+    的合取 —— `fieldbuy` 是**执行载体不是竞争解释**(没有 `fieldsip` 它在这些帧上恒 FALSE,
+    没有 `fieldbuy` 压根没有购买调用),`fieldsip` 的**边际贡献是全部**。真正的竞争者
+    `fieldregen` 由 `fieldbuy_domain.py` 自己的 EXCL/AIRTIGHT 带排除(**import 复用,没重写**)。
+  - ⭐⭐⭐ **`GetMaxHealth()` 不在 dump 里,而本轮没有估它**:快照只有 `hp_pct`。
+    改按「最大可接受 sip 是哪件道具」分桶(sip 是道具的五值函数):
+    **只记 CERTAIN 类**(faerie_fire 85 / tango 115,要推翻得有 340/460 的血条),
+    `bottle`(135,**充能不可观测**、离线最近)与 `flask`(400,**1600 血条中期太常见**)**一律不判**。
+    ⇒ **域是引擎真实域的严格子集,只会少记不会多记** —— 而 **(a) 是正面主张,子集足以买下它**。
+    边界**精确不近似**:`4×115=460`,tango **恰好压在地板上**,比较必须严格。
+  - **主证据帧**:`e706a3/20260830_064654_slot1`(seed 2130,**armed=dire**)**obsidiandestroyer
+    t=202.4..209.4**,lvl 6、hp 0.475、d(fnt) 9967、1600 内无敌人、身上 tango+faerie_fire **无 flask**
+    ⇒ **t=212.4 flask 出现在 10011u(野外送达)**、**t=219.6 `modifier_flask_healing` 上膛**、
+    t=220.4 消耗、血量回升至 0.613。**t<480 杀死 `fieldregen`,lvl≥6 杀死出厂对线块**
+    ⇒ 树上只剩 `fieldbuy`+`fieldsip` 一条路径。**这正是 owner P2 原话要的形状(买大药、就地喝、不回家)。**
+  - **未命中的 10 个 AIRTIGHT episode 不判 BUGGY**:购买块有**三个离线不可观测子句**
+    (stash/金钱/存货),**三个都只能压制真实购买** ⇒ 缺口不是缺陷证据。
+  - ⭐ **顺带抓到一个会让读数偏小的工具缺陷**:OD `064654` **t0=309.4** 那个 episode,
+    `modifier_flask_healing` **t=359.6 确实上膛**、野外、血量回升,**但 flask 在任何 1Hz 快照栏位里
+    都没出现过** ⇒ **一个采样间隔内买+喝**,基于栏位差分的 `flask_gains()` 看不见它,
+    **是严格下界**。**但两者不可互换,方向相反**:`gain` 可归属却偏小,`drink` 更灵敏却
+    **不要求这瓶药是本窗口买的**(AIRTIGHT base 腿 `DRANK=1` 而 `gain=0`,那次多半是更早买的)
+    ⇒ **结论只用 `gain` 那一列**,`drink` 作灵敏度旁证。已把 `DRANK<=60s` 加进三张带表**让差异可见**。
+    **同族影响 `fieldbuy_domain.py`(共用同一个 `flask_gains`),本轮未越界替它改**,已开 [harness]。
+  - ⭐ **一个否定结果值得记**:**镜像局不是帧级对照**。`e706a3/063416_slot1`(同 seed 2130,
+    OD 在 baseline 腿)逐帧看 t=190..235:OD **lvl 4(不是 6)、身上已有 flask、正在被打** ——
+    **镜像牌只配对英雄池,不配对局面**,两局从开局就发散。⇒ 本报告**不拿它当对照读数**;
+    对照是**结构性的**+**聚合 AIRTIGHT base 0/13**。(工具坑里「同种子⇒天然配对」已被点名一次:
+    控住的是英雄池不是分路,**更不是局面**。)
+  - **交付**:**新增 `tools/batch_test/behavioral/fieldsip_domain.py`**(重用两个兄弟工具的判据,
+    只改 source 反相 + 量级两个子句;`--selfcheck` 拆 `pure_checks()` 15 项 / 带语料共 37 项,
+    **无语料那一路打「corpus checks SKIPPED, not passed」**);
+    **新增 `tests/test_fieldsip_domain.py`**(该工具此前**不在** python 套件里,GH #243 同族;
+    按名字钉 7 个 check,**两侧对钉 `CERTAIN_MAXHP_FLOOR`** —— 全工具唯一承重的数字,
+    **失效时是静默的**:改成 600 瓶子进域、改成 1600 大药也进域,**此时量的是 `fieldregen` 的帧
+    而表格照样干净**;沿用上一轮的写法陷阱登记,**不用 `'FAIL' not in stdout`**)。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED」行**;
+    `run_py_tests.sh` → **59 passed / 0 failed / 0 uncertifiable**(本轮 +1);
+    `--selfcheck` 带语料 **37/37**、无语料 **15/15**。未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+    **MCP 未触发 `requires approval`。**
+  - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence`、`UNCERTIFIABLE = none`;
+    trunk 两侧全绿;锚点 2/2 ok;`unlanded_commits` 无;`ORPHAN_PROPOSAL` none。
+  - **诚实边界**:n = **10 局带戳 `.dem`**,来自 **224 局**波次 —— **14 局是录制槽决定的,不是我抽的**
+    (GH #308 未裁);**不可逐种子比较,没有一个数字是效应量**;本轮买的是 **(a)**(不需要 n),
+    **(b)/(c) 不归本组**,**不主张** `fieldsip` 该 promote **也不主张**它该出集;
+    `bottle`/`flask` 两类**未判**;**§CG.3 书面条件 D 仍挂着**(`fieldbuy` 一旦出集/promote,
+    同一工作单元内必须一并处置 `fieldsip`)。
+  - **欠账变化**:✅ **真零记录 id 清空** —— `fieldsip` 是最后一个,**45 个 armed id 现在全部有核验记录**;
+    ✅ `sweep_run.sh` 15 个通用检测器本轮随宽扫跑了(10 局,只用来选点)。
+    继承未动:W25 只并 2/4 run;W26/W27/W28 与 W25 从未池化;`seed 975` **第十四轮**;
+    `wandlimbo` 因 #293 **第十二轮**不可执行;GH #265 仍被 #272 阻塞;`blinkflee` 仍卡 #304/#305;
+    WK rank-3 冷却全语料复测仍欠;「静止在小兵火力里」检测器仍欠。
+  - **已发表**:**GH #335 `[bug]` 交总监**(WORKING 三条理由 + 主证据帧 + 合取限定 + §CG.3 提醒)
+    与 **GH #336 `[harness]`**(`flask_gains` 一个采样间隔内买+喝的静默漏记,同族影响 `fieldbuy_domain.py`)。
+    **发表前跑 `claim_precheck.sh`,先 push 后发(GH #290)。**
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要抄过期的交棒行。**
+    (1) **零记录 id 已清空** ⇒ 选题改成「**核验记录最少 / 只有 INDETERMINATE 的 id**」补课。
+    最弱的两个:**`tpreach`**(08-30T12:45Z INDETERMINATE,建议走 fixture)与
+    **`stayfield`/`stayfield2`**(否决型,历史 INDETERMINATE;§CG.4 之后留守率差分**仍然不可用**,
+    **本轮 `fieldsip` 的「结构性零对照」是可以照搬的模板**)。
+    (2) `fieldsip` 的棒已交出(#335),不掉在本组。
+    (3) W25 剩下两个 run 可直接跑 `pullcad_beat.py`。
+    (4) 若 W29 起飞:先跑 `arm_string_census.py`;**10:09Z 后发波是 44-id ⇒ 不可与 W27/W28 并池**。
+  - 完整报告:`iterations/reports/replay-check/20260830T155836Z.md`
