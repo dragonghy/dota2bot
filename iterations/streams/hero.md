@@ -2845,7 +2845,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `odbuild` 条件 (a)=WORKING 落地并把「更正那句源码注释」明写为英雄组的下一棒**;
   **本组下一棒仍是 -43a 的 Lion / CM 两个方向**)——
   自检 **worst exit 3**:legs run **8**,`FINDINGS: cadence`,`UNCERTIFIABLE: none`;
-  trunk 两侧全绿(python **56/0/0**;快 Lua 腿 **36** 个 `[ratchet]` 文件 0 失败,FAST SUBSET);
+  trunk 两侧全绿(python **56/0/0**;快 Lua 腿 **36** 个 `[ratchet]` 文件 0 失败,FAST SUBSET
+  —— 这个 36 是**开工那一刻**的读数,跑在本轮新文件之前、也跑在协同组 10:38Z 把计数订正到 **37**
+  的 `943978af` 之前;本轮新增的 `[ratchet]` 文件**不在这 36 里**,下一轮才被读到);
   stable-v1/v2 锚点 ok。owner 四条优先项**没有一条球在本组**(批测台/协同组/协同组/总监)。
   **`hero_obsidian_destroyer.lua` 只改注释块、零可执行行;`game/` 零行;无新 gate id;
   `odbuild` 的门与 armed 状态一字未动(仍 gated、未 arm、未 promote、不是 live);
