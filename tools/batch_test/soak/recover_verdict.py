@@ -296,6 +296,20 @@ for seed in seeds:
             ab = M([sv(a, "radiant", m) for a in AB]) - M([sv(a, "dire", m) for a in AB])
             ba = M([sv(a, "dire", m) for a in BA]) - M([sv(a, "radiant", m) for a in BA])
             row[m] = round((ab + ba) / 2, 2)
+            # [GH #329, rule 4(i)-a] The two STRATUM READINGS, published beside
+            # the swap-average that consumed them.  Before this the row carried
+            # `ab_games`/`ba_games` -- COUNTS -- and rule 4(i) asks for READINGS,
+            # so six rounds satisfied it with the wrong quantity and the seventh
+            # satisfied it by recomputing these numbers BY HAND off the corpus.
+            # The hand step is the hazard, not the omission: the natural way to
+            # pool 275 ab games against 137 ba games by hand is to weight by
+            # game count, and that puts (275-137)/412 = 0.335 of the side term
+            # straight into the answer -- on W27+W28 that is -17.40 gpm on a
+            # +26.60 reading, two thirds of the effect, with nothing out of
+            # place to look at.  A number the tool refuses to print is a number
+            # somebody computes some other way.
+            row[m + "_ab"] = round(ab, 2)
+            row[m + "_ba"] = round(ba, 2)
     # [GH #269] The census is computed for every PAIRED seed, scored or not.
     # Before the depth gate "paired" and "scored" were the same predicate, so
     # leaving it inside the scored branch would silently withdraw the game
@@ -345,6 +359,38 @@ for m in ("gpm", "xpm", "deaths", "last_hits"):
     v["mean"][m] = round(statistics.mean(xs), 2)
     neg = m == "deaths"
     v["comps_better"][m] = "%d/%d" % (sum(1 for x in xs if (x < 0 if neg else x > 0)), len(xs))
+
+# [GH #329, rule 4(i)-a/-c] The wave-level stratum readings and the side term.
+#
+# `side` is the nuisance parameter the swap-average exists to cancel:
+#     arm = (ab + ba)/2      side = (ab - ba)/2
+# so `ab` and `ba` carry opposite signs EXACTLY when |side| > |arm|.  That is an
+# identity, not a diagnosis -- which is the whole content of the #329 ruling.
+# `sign_flip` is therefore published as a DISCLOSURE, never as a verdict: it
+# says the lineups this wave drew favour one physical side harder than the fix
+# moves the metric, and it says nothing whatever about how precisely `arm` is
+# measured (a fix with arm == +26.60 on every single seed would flip here too).
+# The quantity that does speak to precision is the across-seed spread of `arm`
+# itself, which is `mean` + `comps_better` + the #269 depth gate, above.
+v["strata"] = {}
+for m in ("gpm", "xpm", "deaths", "last_hits"):
+    pairs = [(r[m + "_ab"], r[m + "_ba"]) for r in complete
+             if m + "_ab" in r and m + "_ba" in r]
+    if not pairs:
+        continue
+    ab_m = statistics.mean(a for a, _ in pairs)
+    ba_m = statistics.mean(b for _, b in pairs)
+    v["strata"][m] = {
+        "ab": round(ab_m, 2), "ba": round(ba_m, 2),
+        "side": round((ab_m - ba_m) / 2, 2),
+        # `ab*ba < 0` rather than a sign comparison, because that IS the
+        # identity: |side| > |arm|  <=>  (ab-ba)^2 > (ab+ba)^2  <=>  ab*ba < 0.
+        # A stratum reading of exactly 0 is |side| == |arm|, not a flip, and a
+        # `(ab > 0) != (ba > 0)` spelling calls it one.
+        "sign_flip": ab_m * ba_m < 0,
+        "side_gt_arm": "%d/%d" % (sum(1 for a, b in pairs
+                                      if abs(a - b) > abs(a + b)), len(pairs)),
+    }
 
 # winrate is a rate, not a delta: neutral is 0.5, not 0.  Kept out of the loop
 # above so the ">0 is better" convention there stays literally true.
