@@ -6625,3 +6625,59 @@
     (3) 若 W27 起飞,先跑 `arm_string_census.py` —— **它是 45 id 串(`fieldsip` 入集),
     与 W25/W26 的 44 id 串不同,不能并进本轮这份语料**。
   - 完整报告:`iterations/reports/replay-check/20260829T220049Z.md`
+- **2026-08-30T01:20Z(`fieldcreep`:**不是 SILENT**,域已测定;**它的立案前提在自己域的多数上是假的**)**:
+  上一轮点的名(「下一个零记录 id,建议 `fieldcreep`,与 owner P2 野区续航同族」)本轮做完。
+  **宽扫 121/121 局**(W25 四 run,`unparseable 0`,**8132 个 situation episode**;
+  分层 **ab 78 局 5193 / ba 43 局 2939**),**深查逐帧 7 局**。W27 **结构上不可并**(45 id 串)。
+  - ⭐ **裁决措辞先说清楚**:这个 id 的效果是一次**释放**(`IsFieldRegenSituation` 返回 false),
+    **屏幕上什么都不发生** ⇒ 「触发了没有」在本语料上**不可直接观测**,三值标签里
+    **只有「不是 SILENT」买到了**。域读数:armed 腿 **甲 veto 22.0%(ab)/ 23.0%(ba)**、
+    **乙 veto 18.1% / 16.7%**,**两层同号同量级** ⇒ 与 `campvoid` 的 0/160 不是一回事。
+    **§AR.3(甲) 的强制栏位交付了**:打他的是什么,**121 局逐条实体名测出来的,不是按量级推的**。
+  - ⭐⭐⭐ **§3b 那个「不需要 baseline 腿的甲/乙 判别器」被逐帧证伪,两个阳性 2/2 都是假的**:
+    `b1386e/…123225_slot7` emberspirit 的 home_tp 属于 **t=641.4 起的推塔**(tower 伤害连续 6 帧,
+    hp 0.575→0.103),不是 t=635.4 那个营地帧(那 3 秒他**打出 361、承受 53、血在涨**);
+    `6df84c/…124456_slot8` lion 的 home_tp 属于 **t=162.4 起的团战**(`heroDmg3s` 166→213),
+    域帧 t=156.4–159.4 他**边走边回血**。⇒ **`WasRecentlyDamagedByCreep` 算不算中立生物,本轮仍未解决**;
+    **§AR.3(乙) 的退出条件在本语料上不可执行**(camp 帧确实出现 428 个,但「点没点亮」不可观测,
+    唯一为它造的观测器废了)——**这是估计量问题不是交付问题,已交总监重裁**。
+    **「把结果当机制」本轮第四次复现,仍然是帧抓到的、不是表抓到的。**
+  - ⭐⭐ **前提检验(本轮真产出)**:立案句是「被营地啃」,而营地接触帧里
+    **armed dealt>taken = 56.9%(ab)/ 65.3%(ba)**、baseline **71.7% / 75.0%**
+    ——**四个格同号**,多数是**打野**不是被啃,gate 在这些帧上**指向错的方向**。
+    并且申请书自标的「过宽角落」(创伤 < 包里补给)在带补给的纯小兵帧里是
+    **72.5%(ab)/ 72.4%(ba)**,**两层逐位重合** ⇒ **那是它剩下域的多数,不是角落**。
+    钉帧:`6df84c/…123208_slot1` **obsidiandestroyer t=249.5**,hp 0.268,创伤 **36**(纯小兵)
+    vs 包里 **faerie_fire 85**,sniper **1810u 且在拉开**,之后 10 帧 hp **0.268→0.321**。
+  - ⭐ **新问题(已开 issue)**:**召唤物 / 守卫 / Roshan 两个世界都够不着**。
+    只被这类单位打的域帧占 **ab armed 3.9% / ba armed 2.5%**(baseline 2.1% / 3.4%),
+    其 20s 死亡率 **15.1% / 8.1% / 6.9% / 14.3%**,而全体域参照只有 **3.6%(ab)/ 4.4%(ba)**
+    ⇒ **四个格全高,方向不依赖腿也不依赖分层**(是**域的性质**,不吃 §4a 的合力归因)。
+    铁证帧:`6df84c/…124500_slot9` vengefulspirit t=647.5,shadowshaman 上一帧还在 208–518u、
+    这一帧不见了(最近敌方英雄 4552u)⇒ **进域**,而打她的是 `shadow_shaman_ward_1`(3 秒 310),
+    **t=650.0 原地死亡**。
+  - **交付:`fieldcreep_domain.py` 四处入库改动**(未新开 scratchpad 度量脚本),
+    `--selfcheck` **31 → 36 PASS**:(i) `--stratum {all,ab,ba}` + 报告头 `STRATUM:` 行
+    (arm 串 FATAL 排在分层过滤**之前**,否则 `--stratum ab` 会放过 `all` 会拒的语料);
+    (ii) ⭐ **真错一个:攻城兵不带 `creep_` 中缀** —— 引擎发 `npc_dota_goodguys_siege`,
+    原 `LANE_RE` 只认 `npc_dota_creep_*` ⇒ **61 次攻城兵命中掉进 `other`**(既不算甲也不算乙,
+    丢的还是单次伤害最高的小兵);selfcheck 没抓到是因为它断言的是**发明出来的名字**
+    `npc_dota_creep_badguys_siege`(**121 局里 0 次**)——**与 `blink_dagger`/`item_blink` 同族**;
+    (iii) 新增 §3d 召唤物盲区节;(iv) `hits inside (-3.0,0]` 的 FAIL **改对不是改松**
+    (是 `round(dt,2)` 的显示误差,全语料恰好 2 条;容差 0.005,**牙齿挪到新增的
+    `hits_in_window` 未舍入单元断言上**)。**本轮 §3 数字全部是修后重跑的。**
+    **未改任何 `bots/` / `game/` 文件、未动 gate。**
+  - **开工自检**:worst **exit 3**,**8 腿全跑**;`FINDINGS = cadence`、`UNCERTIFIABLE = none`;
+    trunk 两侧全绿(python 53/0/0、fast Lua 32 个 0 失败);锚点 2/2 ok;`unlanded_commits` 无。
+  - **验证**:`luacheck_gate.sh` → **exit 0 / 0 warnings**;**未使用 `RULE6_BYPASS` ⇒ 无
+    「SKIPPED, not passed」行**;`run_py_tests.sh` → **53 passed / 0 failed / 0 uncertifiable**;
+    `fieldcreep_domain.py --selfcheck` → **36/36 PASS**。未改 Lua ⇒ **不声称跑绿过 Lua 全量**(GH #124)。
+    **MCP 未触发 `requires approval`。** AWS:S3 只读、**零 EC2、零 CE 调用**。
+  - **欠账**:`seed 975` **第九轮**;`wandlimbo` 因 **#293 未落地****第七轮**不可执行;
+    15 个通用检测器**连续第三轮**未跑;**GH #265 仍被 #272 阻塞**。侧别倾斜**第五次复现**,不重复立案。
+    最薄的格是 **`ba/armed/camp 带补给` 26 个 episode**(§3.3 两个阳性各只有 1 个事件)。
+  - **下一轮第一件事**:(1) `fieldcreep` 的棒已交出(两条 [strategy] issue + 总监重裁 §AR.3(乙)),
+    不掉在本组;(2) 下一个零记录 id:**`pullcad`**(注意「合取陷阱」)或 `zusstatic`;
+    (3) **W27**(四 run `4ca0c1`/`40db63`/`39656f`/`1f8a55`)先确认是否已停 + 跑 `arm_string_census.py`,
+    **与 W25/W26 不可并池**;(4) `--escape-w 12` 敏感度、「振荡型死锁」跨 episode 合并规则仍欠。
+  - 完整报告:`iterations/reports/replay-check/20260830T012000Z.md`

@@ -98,8 +98,14 @@ stayfield_domain.Game, listed so the inheritance is auditable):
 
 Usage:
     fieldcreep_domain.py <sweep_dir> [<sweep_dir> ...] [--interval 1.0]
+    fieldcreep_domain.py <sweep_dir> ... --stratum {all,ab,ba}
     fieldcreep_domain.py <sweep_dir> ... --frames [--limit N] [--only neutral]
     fieldcreep_domain.py --selfcheck <sweep_dir> [...]
+
+铁律 4(i) (added 2026-08-30): every table below is a per-episode RATE, and a
+pooled rate is not a reading -- run the report once per `--stratum ab` and once
+per `--stratum ba` and only call a direction real when both layers agree in
+sign.  The header line names the layer so a pasted table cannot lose it.
 """
 import argparse
 import collections
@@ -151,7 +157,20 @@ def best_heal_3s(s):
             best = (it, v)
     return best if best[0] else (None, 0)
 
-LANE_RE = re.compile(r"^npc_dota_creep_(goodguys|badguys)_")
+# ⚠️ SIEGE CREEPS DO NOT CARRY THE `creep_` INFIX (measured 2026-08-30 on the
+# W25 corpus, 121 games): the engine emits `npc_dota_goodguys_siege` /
+# `npc_dota_badguys_siege`, while every other lane creep is
+# `npc_dota_creep_<side>_<kind>`.  The first version of this file had only the
+# `creep_` pattern, so 61 siege hits inside domain lookbacks were bucketed
+# `other` -- i.e. counted as neither 甲 nor 乙, on the single hardest-hitting
+# lane creep in the game.  The selfcheck did not catch it because it asserted
+# an INVENTED name, `npc_dota_creep_badguys_siege`, which occurs ZERO times in
+# 121 games; the corpus was never asked.  Same family as the charter's
+# `blink_dagger`/`item_blink` trap: a literal transcribed from the wrong side.
+# Both spellings are matched below -- the real one, and the invented one kept
+# deliberately so an engine that ever does emit it is not silently dropped.
+LANE_RE = re.compile(r"^npc_dota_(creep_)?(goodguys|badguys)_"
+                     r"(melee|ranged|siege|flagbearer)")
 NEUTRAL_RE = re.compile(r"^npc_dota_neutral_")
 TOWER_RE = re.compile(r"_tower\d?")
 
@@ -354,13 +373,30 @@ def scan_game(g, inc, outg, side, run, game):
     return rows
 
 
-def scan(dirs, interval):
+def stratum_of(side):
+    """铁律 4(i): `ab` = the wave leg whose CANDIDATE side is radiant, `ba` =
+    the mirror.  Same convention as lion_drain_census.py:297-301, and it is a
+    partition of the corpus, not a filter on it: every scored game lands in
+    exactly one of the two.  Pooling the two hides a side effect that is bigger
+    than the leg effect on this corpus (W25 came in radiant 115 / dire 57), and
+    on a DOMAIN reading like this one it hides more than on an econ read,
+    because a domain rate does not look side-correlated to the reader."""
+    return "ab" if side == "radiant" else "ba"
+
+
+def scan(dirs, interval, stratum="all"):
     rows = []
     games = 0
     for (run, game, cand, seed, side, tl) in load_sweeps(dirs):
         if CAND_ID not in [c.strip() for c in cand.split(",")]:
             sys.exit("FATAL: '%s' not in the armed string of %s/%s -- refusing "
                      "to score a gate that was never armed" % (CAND_ID, run, game))
+        # The arm-string check runs BEFORE the stratum filter on purpose: a
+        # never-armed game must be fatal whichever layer is being read, or a
+        # `--stratum ab` run could silently pass a corpus `--stratum all`
+        # refuses.
+        if stratum != "all" and stratum_of(side) != stratum:
+            continue
         g = Game(tl, interval)
         inc, outg = load_nonhero_damage(tl)
         rows.extend(scan_game(g, inc, outg, side, run, game))
@@ -376,9 +412,14 @@ def _pct(n, d):
     return "%5.1f%%" % (100.0 * n / d) if d else "    --"
 
 
-def report(rows, games, interval):
+def report(rows, games, interval, stratum="all"):
     print("# fieldcreep (a)-evidence -- source-attributed, %d games, grid %.1fs"
           % (games, interval))
+    print("STRATUM: %s  (%s)  -- 铁律 4(i): a pooled row is not a reading"
+          % (stratum,
+             {"all": "ab + ba pooled",
+              "ab": "candidate side = radiant",
+              "ba": "candidate side = dire"}[stratum]))
     print()
     print("SITUATION episodes (4 upstream clauses, pre-fieldcreep): %d"
           % len(rows))
@@ -555,6 +596,36 @@ def report(rows, games, interval):
     print("charge) is pointed the wrong way.")
     print()
 
+    print("## 3d. ⭐ The half NEITHER world reaches: summons, wards, Roshan")
+    print()
+    print("`fieldcreep` asks WasRecentlyDamagedByCreep.  A shadow shaman ward,")
+    print("a Wraith King skeleton and Roshan are not creeps in either world,")
+    print("and the four upstream clauses read only heroes and towers -- so a")
+    print("domain frame whose ONLY damage comes from those is invisible to")
+    print("every clause in this predicate, armed or not.  This is a property")
+    print("of the DOMAIN, not of a leg: it is reported per leg only so the")
+    print("reader can see it does not depend on the arm string.")
+    print()
+    print("| leg | domain episodes | any 'other' dmg | 'other' ONLY | of those, died <= 20s |")
+    print("|---|---|---|---|---|")
+    for tag, want in (("armed", True), ("baseline", False)):
+        sel = [r for r in rows if r["armed"] is want]
+        if not sel:
+            continue
+        oth = [r for r in sel if r["trauma"].get("other", 0) > 0]
+        only = [r for r in oth
+                if not (set(r["trauma"]) & {"lane", "neutral"})]
+        died = [r for r in only if r["died"]]
+        print("| %s | %d | %d (%s) | %d (%s) | %d (%s) |"
+              % (tag, len(sel), len(oth), _pct(len(oth), len(sel)),
+                 len(only), _pct(len(only), len(sel)),
+                 len(died), _pct(len(died), len(only))))
+    alld = sum(1 for r in rows if r["died"])
+    print()
+    print("  reference: death <= 20s over ALL domain episodes: %s (n=%d)"
+          % (_pct(alld, len(rows)), len(rows)))
+    print()
+
     print("## 4. Which camps / which creeps (literal entity names)")
     print()
     src = collections.Counter()
@@ -619,10 +690,24 @@ def selfcheck(rows, games, interval):
     kinds = set(r["kind"] for r in rows)
     chk("kind vocabulary closed",
         kinds <= {"none", "lane", "neutral", "mixed"}, str(sorted(kinds)))
-    # every hit is inside the 3s lookback, half-open at the low end
-    chk("hits inside (-3.0, 0]",
-        all(-DMG_WINDOW_S < dt <= 0.0
+    # Every hit is inside the 3s lookback, half-open at the low end.  The
+    # STORED dt is rounded to 2 decimals (scan_game), so a hit the raw filter
+    # accepted at -2.997 is displayed as -3.0 and reads, to anyone reading
+    # --frames, as a hit the engine's lookback no longer holds.  Measured on
+    # W25 (121 games, 8132 episodes): exactly 2 such hits, both on
+    # a29ed3/20260829_121928_slot10 luna t=513.8 (lane melee 13 + lane ranged
+    # 12).  The tolerance below is the rounding error and nothing more --
+    # widening it past 0.005 would stop pinning the 3.0 constant, which is the
+    # whole tooth of this check (jmz_func.lua: the clause deliberately reuses
+    # the hero clause's 3.0).  The constant itself is pinned independently by
+    # the hits_in_window unit asserts right below, on unrounded input.
+    chk("hits inside (-3.0, 0] (stored dt, 2-decimal rounding tolerance)",
+        all(-(DMG_WINDOW_S + 0.005) < dt <= 0.0
             for r in rows for (dt, _a, _v, _c) in r["hits"]))
+    _w = [(-3.0, "a", 1, "lane"), (-2.999, "b", 1, "lane"), (0.0, "c", 1, "lane")]
+    _got = hits_in_window([(0.0 + t, a, v, c) for (t, a, v, c) in _w], 0.0)
+    chk("hits_in_window excludes a hit exactly 3.0s old, keeps -2.999 and 0",
+        [r[1] for r in _got] == ["b", "c"], str([r[1] for r in _got]))
     # kind and trauma must agree -- a 'none' episode cannot carry creep trauma
     chk("kind agrees with trauma keys",
         all((r["kind"] == "none") == (not (set(r["trauma"]) & {"lane", "neutral"}))
@@ -636,7 +721,23 @@ def selfcheck(rows, games, interval):
     chk("classifier: lane melee", src_class("npc_dota_creep_badguys_melee") == "lane")
     chk("classifier: lane flagbearer",
         src_class("npc_dota_creep_goodguys_flagbearer") == "lane")
-    chk("classifier: siege", src_class("npc_dota_creep_badguys_siege") == "lane")
+    # The literal the corpus actually emits (2552 + 1763 rows in the first 25
+    # timelines).  The old assert used `npc_dota_creep_badguys_siege`, which
+    # appears ZERO times -- it is kept on the next line as a tolerated spelling,
+    # not as the evidence.
+    chk("classifier: siege, the name the engine really emits",
+        src_class("npc_dota_goodguys_siege") == "lane"
+        and src_class("npc_dota_badguys_siege") == "lane")
+    chk("classifier: siege, the invented spelling still tolerated",
+        src_class("npc_dota_creep_badguys_siege") == "lane")
+    chk("classifier: a tower is still not a siege creep",
+        src_class("npc_dota_goodguys_tower2_mid") == "tower"
+        and src_class("npc_dota_badguys_tower1_top") == "tower")
+    chk("classifier: upgraded lane creeps keep the lane bucket",
+        src_class("npc_dota_creep_goodguys_melee_upgraded") == "lane")
+    chk("classifier: a hero summon is NOT a lane creep",
+        src_class("npc_dota_wraith_king_skeleton_warrior") == "other"
+        and src_class("npc_dota_shadow_shaman_ward_1") == "other")
     chk("classifier: neutral camp",
         src_class("npc_dota_neutral_centaur_khan") == "neutral")
     chk("classifier: neutral split unit",
@@ -686,6 +787,15 @@ def selfcheck(rows, games, interval):
         "%d such" % sum(1 for r in rows
                         if r["kind"] == "none" and r["dealt"] > 0))
     chk("interval recorded", interval > 0, "%.2f" % interval)
+    # --- 铁律 4(i): the ab/ba split must be a PARTITION, not a filter -------
+    chk("stratum_of is closed over the two side literals",
+        {stratum_of("radiant"), stratum_of("dire")} == {"ab", "ba"})
+    lay = collections.Counter(stratum_of(r["side"]) for r in rows)
+    chk("ab + ba == every scored episode (no row falls between the layers)",
+        lay["ab"] + lay["ba"] == len(rows), "ab %d / ba %d" % (lay["ab"], lay["ba"]))
+    chk("both layers carry episodes (a one-layer corpus cannot be read per "
+        "铁律 4(i))", lay["ab"] > 0 and lay["ba"] > 0,
+        "ab %d / ba %d" % (lay["ab"], lay["ba"]))
 
     bad = 0
     for name, ok, detail in checks:
@@ -705,10 +815,14 @@ def main():
     ap.add_argument("--only", default=None,
                     choices=["none", "lane", "neutral", "mixed"])
     ap.add_argument("--selfcheck", action="store_true")
+    ap.add_argument("--stratum", default="all", choices=["all", "ab", "ba"],
+                    help="铁律 4(i) layer: ab = candidate side radiant, "
+                         "ba = its mirror. Default 'all' pools them and says "
+                         "so in the header; a conclusion needs both layers.")
     ap.add_argument("--json", default=None)
     a = ap.parse_args()
 
-    rows, games = scan(a.dirs, a.interval)
+    rows, games = scan(a.dirs, a.interval, a.stratum)
     if a.json:
         with open(a.json, "w") as fh:
             for r in rows:
@@ -720,7 +834,7 @@ def main():
     if a.frames:
         frames_dump(rows, a.limit, a.only)
         return 0
-    report(rows, games, a.interval)
+    report(rows, games, a.interval, a.stratum)
     return 0
 
 
