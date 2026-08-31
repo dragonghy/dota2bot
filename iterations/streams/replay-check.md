@@ -7906,5 +7906,11 @@
     若下一波出现 5–10 秒才归零的受害者,**头条窗口要重新登记**,不要沿用「上一波是 1–5 秒」。
     (4) `idletrip_domain.py` 在最新波上照常打四格(不核 gate,跨串可跑,两波不可并池)。
     (5) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
-  - **已发表**:见下方 push 后的追评(**先 push 后发,GH #290**)。
+  - **已发表**(先 push 后发,GH #290;`25335837` 落 `origin/main` 之后才发,
+    `claim_precheck.sh` **`PRECHECK_BARE_EXIT=0` / `clean` /
+    `local commits not on origin/main: 0`**;**MCP 未触发 `requires approval`**):
+    **GH #361 追评**(结局列落地全文:两波读数表 + 两条代码级纪律 + `N` 的刀口
+    4 帧 vs 0 帧 + 两段独立读的血量轨迹 + 变异台 7/7 + `wkqdmg` 那一半仍欠)。
+    ⛔ **没有追评 GH #359** —— `lionqdmg` 的裁定本轮**没有变化**(只是理由从手读变成工具读数),
+    #361 那条追评已经把它写清楚,**按铁律 7 节制不重复发表**。
   - 完整报告:`iterations/reports/replay-check/20260831T130000Z.md`
