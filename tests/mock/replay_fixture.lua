@@ -59,6 +59,120 @@ local function resolve_slots(unit_name, abilities)
     return by_slot
 end
 
+-- ===================================================================
+-- The engine's AoE search, answered from the fixture's own creep sample.
+--
+-- WHY THIS EXISTS (GH #354 section 5, hero 2026-08-31).  The loader used to
+-- answer `FindAoELocation` with the conservative stand-in `{count = 0}` for
+-- every caller, and every shipped creep-AoE decision sits behind a
+-- `.count >= 2..5` read of that result.  So those branches were not
+-- "unexercised by the corpus", they were UNREACHABLE BY CONSTRUCTION: no
+-- fixture could ever drive one, whatever frame it was cut from.  The generator
+-- now carries the creep sample (position + team, which is all the dump has);
+-- this is the other half -- the loader reading it.
+--
+-- WHAT IS ANSWERED, AND WHAT IS STILL REFUSED.  Each refusal understates
+-- opportunities rather than inventing them, which is the same direction the old
+-- stand-in erred in:
+--   * CREEP search (`bHeroes == false`), no health filter -> answered from the
+--     real sample.
+--   * HERO search (`bHeroes == true`) -> still 0.  Not because it is
+--     unanswerable (every fixture carries heroes with real HP) but because
+--     every fixture carries them: switching that on moves readings in ~two
+--     dozen census tests at once, which is a decision to take on purpose with
+--     the reopen list in hand (tests/frames/README.md), not a side effect of
+--     this one.  The creep side moves nothing: no fixture under
+--     tests/fixtures/ carries a creep sample today.
+--   * KILL search (`nMaxHealth > 0`, e.g. `nCanKillCreepsLocationAoE`) -> still
+--     0.  The dumper writes {t, team, x, y} per creep and no health, so a count
+--     of creeps the cast would KILL cannot be computed from a fixture at all.
+--     Answering the HURT count here would silently promote an upper bound into
+--     a kill claim.
+--   * NEUTRALS (team 4) are excluded from both sides.  Whether the engine folds
+--     them into an `bEnemies = true` search is not readable from the bot VM;
+--     excluding them undercounts.
+--   * `fTimeInFuture` is ignored: the dump has positions, not velocities.  The
+--     world is the sample instant, and the fixture's own `dt` / `creep_interval`
+--     say how stale that is (a test that cares must read them).
+--
+-- THE GEOMETRY IS EXACT, NOT A GRID.  `FindAoELocation` may return any point
+-- within `nMaxDistanceFromBase` of the base, so this maximises coverage over
+-- the finite candidate set the optimum provably sits on (see aoe_search).  The hero
+-- group lost a reading to a hand-rolled candidate set that was missing one
+-- family (tests/test_cm_creep_reach_real_frame.lua header: k=4 read 1157.0,
+-- "a plausible-looking answer", true value 1152.4, caught only by a brute-force
+-- grid), so tests/test_fixture_aoe_creeps.lua calibrates this against a grid.
+local AOE_EPS = 1e-6
+local AOE_NEUTRAL_TEAM = 4
+
+local function aoe_dist(ax, ay, bx, by)
+    local dx, dy = ax - bx, ay - by
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+--- Both intersection points of two circles, appended to `out`. Nothing is
+--- appended when they do not meet (including one strictly inside the other).
+local function aoe_circle_meets(out, ax, ay, ra, bx, by, rb)
+    local d = aoe_dist(ax, ay, bx, by)
+    if d <= AOE_EPS or d > ra + rb + AOE_EPS or d < math.abs(ra - rb) - AOE_EPS then
+        return
+    end
+    local a = (ra * ra - rb * rb + d * d) / (2 * d)
+    local h = math.sqrt(math.max(0.0, ra * ra - a * a))
+    local ux, uy = (bx - ax) / d, (by - ay) / d
+    local mx, my = ax + a * ux, ay + a * uy
+    out[#out + 1] = { x = mx - h * uy, y = my + h * ux }
+    out[#out + 1] = { x = mx + h * uy, y = my - h * ux }
+end
+
+--- The best centre for a radius-`r` disk within `nMax` of (bx, by), over `pts`.
+--- Returns count, x, y. Ties on count go to the centre nearest the base, then
+--- to the first one generated -- deterministic, so a test reads the same point
+--- every run (the ENGINE's tie-break is unreadable; a test that depends on
+--- which of several equal centres comes back is asking an unanswerable
+--- question and should ask about the count instead).
+local function aoe_search(pts, bx, by, nMax, r)
+    -- The three families, and why they are the whole story.  Take the set S of
+    -- creeps an optimal disk covers; every centre covering S is the (convex)
+    -- intersection of their radius-r disks, and among those the one NEAREST the
+    -- base is the one to test, because if even that one is out of range then no
+    -- centre covering S is in range.  That nearest point is the base itself, or
+    -- the base projected onto one creep's circle, or a point where two circles
+    -- cross.  The range ring therefore only ever EXCLUDES candidates, it never
+    -- adds one -- which is why there is no "slide it back onto the ring" family
+    -- here.  Checked, not assumed: tests/test_fixture_aoe_creeps.lua §5
+    -- calibrates the whole search against a brute-force grid.
+    local cands = { { x = bx, y = by } }
+    for _, p in ipairs(pts) do
+        cands[#cands + 1] = { x = p.x, y = p.y }
+        local d = aoe_dist(bx, by, p.x, p.y)
+        if d > AOE_EPS then
+            local s = math.max(0.0, d - r) / d
+            cands[#cands + 1] = { x = bx + (p.x - bx) * s, y = by + (p.y - by) * s }
+        end
+    end
+    for i = 1, #pts do
+        for j = i + 1, #pts do
+            aoe_circle_meets(cands, pts[i].x, pts[i].y, r, pts[j].x, pts[j].y, r)
+        end
+    end
+
+    local best_n, best_d, best_x, best_y = 0, 0, bx, by
+    for _, q in ipairs(cands) do
+        local dq = aoe_dist(bx, by, q.x, q.y)
+        if dq <= nMax + AOE_EPS then
+            local n = 0
+            for _, p in ipairs(pts) do
+                if aoe_dist(q.x, q.y, p.x, p.y) <= r + AOE_EPS then n = n + 1 end
+            end
+            if n > best_n or (n == best_n and n > 0 and dq < best_d - AOE_EPS) then
+                best_n, best_d, best_x, best_y = n, dq, q.x, q.y
+            end
+        end
+    end
+    return best_n, best_x, best_y
+end
+
 --- Load a fixture file. Returns J, bot (the subject), heroes (by full name), fx.
 ---
 --- `sSubject` (optional) drives the frame from ANOTHER hero on it instead of
@@ -237,11 +351,44 @@ function M.load(path, sSubject)
             -- The engine's AoE search. The generic Get* default answers 0, and
             -- every caller indexes `.count` / `.targetloc` on the result, so a
             -- full hero script (SkillsComplement) crashed before reaching the
-            -- decision under test. Answer the CONSERVATIVE shape -- "no AoE
-            -- cluster found" -- which understates opportunities rather than
-            -- inventing them. A test that needs a cluster overrides the spec.
-            FindAoELocation = function(self)
-                return { count = 0, targetloc = self:GetLocation() }
+            -- decision under test. The CREEP search is answered from the
+            -- fixture's own creep sample when it carries one; everything else
+            -- keeps the CONSERVATIVE shape -- "no AoE cluster found" -- which
+            -- understates opportunities rather than inventing them. See the
+            -- aoe_search block above for what is refused and why. A test that
+            -- needs a cluster the fixture does not have still overrides the spec.
+            FindAoELocation = function(self, bEnemies, bHeroes, vBase,
+                                      nMaxDistanceFromBase, nRadius,
+                                      _fTimeInFuture, nMaxHealth)
+                local tCreeps = fx.creeps
+                if tCreeps == nil or #tCreeps == 0        -- no sample in this fixture
+                    or bHeroes ~= false                   -- hero search: not this half
+                    or (tonumber(nMaxHealth) or 0) > 0    -- kill filter: no creep health
+                then
+                    return { count = 0, targetloc = self:GetLocation() }
+                end
+                local base = vBase or self:GetLocation()
+                local nMax = tonumber(nMaxDistanceFromBase) or 0
+                local r = tonumber(nRadius) or 0
+                local pts = {}
+                for _, c in ipairs(tCreeps) do
+                    local bWanted
+                    if bEnemies == false then
+                        bWanted = (c.team == u.team)
+                    else
+                        bWanted = (c.team ~= u.team and c.team ~= AOE_NEUTRAL_TEAM)
+                    end
+                    -- Exact pruning, not a heuristic: a creep farther than
+                    -- nMax + r from the base cannot be covered by ANY legal
+                    -- centre, so dropping it cannot change the answer.
+                    if bWanted
+                        and aoe_dist(base.x, base.y, c.x, c.y) <= nMax + r + AOE_EPS
+                    then
+                        pts[#pts + 1] = { x = c.x, y = c.y }
+                    end
+                end
+                local n, qx, qy = aoe_search(pts, base.x, base.y, nMax, r)
+                return { count = n, targetloc = api.Vector(qx, qy, 0) }
             end,
             -- Ground truth: what this hero actually did to the subject next.
             GetEstimatedDamageToTarget = function() return burst end,

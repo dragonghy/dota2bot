@@ -528,16 +528,58 @@ end
 -- §6  What is NOT settled here, measured where it can be
 -- =====================================================================
 
-tests['§6 LIMIT: the loader still answers count = 0, so no fixture drives the branch'] = function()
-    -- The generator now carries creeps; the LOADER does not read them.  Until
-    -- it does, `X.ConsiderQImpl` in a fixture world still sees an empty AoE
-    -- result, and the eight creep return sites stay unreachable end to end.
-    -- Pinned so the day someone wires it up, this file's honesty section is
-    -- what goes red rather than a claim elsewhere quietly becoming true.
+tests['§6 CLOSED: the loader now answers the creep search, and it agrees with §3'] = function()
+    -- Was a LIMIT ("the loader still answers count = 0, so no fixture drives
+    -- the branch") until hero 2026-08-31 wired tests/mock/replay_fixture.lua to
+    -- the creep sample.  Kept here rather than deleted, because it is the only
+    -- CROSS-CHECK the two halves get: §3's solver answers "how far is the
+    -- nearest centre covering k", the loader answers "what is the largest k
+    -- reachable inside the ring", and they were written for different questions
+    -- by different code.  On this frame they must agree, and the arithmetic
+    -- that ties them is entirely in §3's own table:
+    --      >= 4 sits at 1152.4, inside the shipped 1157 ring
+    --      >= 5 sits at 1312.3, outside it
+    --   => the largest count the shipped search can return here is exactly 4.
+    --      >= 1 sits at 805.9, outside the armed 732 ring  =>  armed returns 0.
     local _, bot, _, fx = load_frame()
-    local r = bot:FindAoELocation(true, false, bot:GetLocation(), 1157, 425, 0.5, 0)
-    assert(r.count == 0, 'loader stand-in still reports no cluster: ' .. tostring(r.count))
-    assert(#fx.creeps > 0, 'even though the fixture now carries ' .. #fx.creeps .. ' creeps')
+    assert(#fx.creeps > 0, 'the fixture carries ' .. #fx.creeps .. ' creep samples')
+
+    local loc = bot:GetLocation()
+    local rShipped = bot:FindAoELocation(true, false, loc, 1157, NOVA_RADIUS, 0.5, 0)
+    local rArmed = bot:FindAoELocation(true, false, loc, N_CAST_RANGE, NOVA_RADIUS, 0.5, 0)
+    assert(rShipped.count == 4,
+        'the shipped ring reaches a 4-creep centre and no 5: ' .. rShipped.count)
+    assert(rArmed.count == 0,
+        'the armed ring reaches nothing at all: ' .. rArmed.count)
+
+    -- And the point it names is really 420.4 beyond her cast range -- the
+    -- overshoot §3 priced, now read off the loader's own answer.
+    local dOver = dist(loc.x, loc.y, rShipped.targetloc.x, rShipped.targetloc.y)
+        - N_CAST_RANGE
+    assert(dOver > 400 and dOver <= 1157 - N_CAST_RANGE + EPS,
+        'the shipped centre is out of cast range by ' .. string.format('%.1f', dOver))
+end
+
+tests['§6 LIMIT: the wave post-filter still zeroes it, so no return site fires'] = function()
+    -- The next blocker, measured rather than argued.  Between the search and
+    -- the eight return sites sits
+    --     J.GetInLocLaneCreepCount( bot, 1600, nRadius, targetloc ) <= 2
+    --         -> nCanHurtCreepsLocationAoE.count = 0
+    -- and that helper reads `bot:GetNearbyLaneCreeps`, which the loader does
+    -- NOT build from the sample: creep UNITS are a second observation surface,
+    -- and building them means answering GetHealth for units the dump gives no
+    -- health for (X.cm_GetWeakestUnit asks every one of them).  A fabricated 0
+    -- there would flow straight into "can I kill this creep" arithmetic, which
+    -- is worse than an absent world.  So the AoE search is live and the wave
+    -- census is not, and this node states which half is which.
+    local J, bot = load_frame()
+    local loc = bot:GetLocation()
+    local r = bot:FindAoELocation(true, false, loc, 1157, NOVA_RADIUS, 0.5, 0)
+    assert(r.count == 4, 'anti-vacuity: the search half is live here')
+    assert(#bot:GetNearbyLaneCreeps(1600, true) == 0,
+        'no creep units in the fixture world')
+    assert(J.GetInLocLaneCreepCount(bot, 1600, NOVA_RADIUS, r.targetloc) == 0,
+        'so the post-filter counts zero and zeroes the hurt count')
 end
 
 tests['§6 LIMIT: the dump carries no creep health, so the KILL search is unpriceable'] = function()
