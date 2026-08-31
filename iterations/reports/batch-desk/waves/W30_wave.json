@@ -1,0 +1,177 @@
+{
+ "wave": "W30",
+ "_note": "First-hand launch record, written 2026-08-31T00:2xZ WHILE all four instances read running/spot in describe-instances. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). Per the W28 self-correction AND this round's W29 repair, the harvesting round MUST write `machines[].status_code` / `create` / `update` AND the leg counts `ab` / `ba` / `arm_depth` -- under exactly those names, NOT `harvest_ab`-style prefixes: reclaim_blind.py reads the bare names and answered exit 2 UNDECIDABLE on W29's archived record until this round renamed them.",
+ "tree": "0d58ce09c65d3bdc34d1573c90e24bff2adf96a6",
+ "tree_note": "The 40-hex pin was written explicitly, never `main`, and `git ls-remote origin main` was re-verified INSIDE the launch shell block (guard: exit 8 on drift). It read equal at 00:16:31Z, so nothing was refused this round. A `date -u` gate-(i) guard was in the same block (exit 9 if the 6h throttle had not unlocked); it read 00:16:31Z against the 00:16:07Z unlock and passed with 24 seconds of margin.",
+ "arm_ids": 47,
+ "arm_bytes": 414,
+ "arm_note": "test_set.md line 2 on the pinned tree, 47 ids / 414 bytes (stripped). Up from W29's 44: the director's ae767765 (2026-08-30T22:06Z) ruled all three rideshare proposals in one round -- `creepthink` (strategy-25), `lionqdmg` (hero-24), `cmqreach` (hero-25) are now armed. THIS MAKES W30 THE FIRST WAVE OF A 47-id FAMILY. Consequence the director should read: the 44-id family stays at 4 seeds (W29) forever unless a future wave re-pins that string, and the 45-id family's 8-seed pooled reading (gpm +26.60, 7/8) likewise cannot be thickened. Neither can be blamed on this desk's choice -- the charter's own wave policy is `default wave = the FULL current test set`.",
+ "instance_type": "c6i.4xlarge",
+ "market": "spot",
+ "market_note": "Ladder stopped at level 1 for all four: c6i.4xlarge SPOT. No --type c6a.4xlarge fallback, no --on-demand, no AZ RING EXHAUSTED. Evidence is describe-instances InstanceLifecycle=spot on all four (sir-az9qhqhn / sir-s5nzhwhq / sir-pjkzj29n / sir-3kr7ke3m), NOT the run_id `spot_` prefix. EIGHTH consecutive wave at zero market-type degradation; owner's Spot-first ruling (GH #158) holds, and reclaim_blind's own NEXT WAVE line said spot.",
+ "slots": 16,
+ "rec_slots": 1,
+ "rec_slots_note": "Registered branch (A) of GH #308, executed for the SEVENTH wave. Checked at the gate: #308 still carries no director ruling, and the charter forbids changing the criterion after the fact => rec_slots stays 1. Frame channel 1/16 for the seventh wave; owner P1/P2 condition (a) keeps waiting on it. EIGHTH time this desk has named it.",
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "seeds": [
+  2204,
+  2214,
+  2286,
+  2315
+ ],
+ "carrier_terms": [
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "carrier_terms_note": "Derived MECHANICALLY by carrier_terms.py from the 47-id arm string: CARRIER_TERMS derived from 47 armed ids: 10 hero-scoped, 37 generic, 0 unresolved => 6 term(s). Same six terms as W27-W29: the three newly armed ids add two hero-scoped carriers to terms that already existed (`lionqdmg` -> lion, `cmqreach` -> crystal_maiden) and one generic (`creepthink`), so the term SET did not move -- only the count of ids riding each term.",
+ "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0; ids=10 seeds=4. Per-term carriers: lion 4, skeleton_king 4, obsidian_destroyer 3, spirit_breaker 3, crystal_maiden 2, zuus 2 => 18 carrier slots. HONEST BOUNDARY (eighth round, unchanged): the '>=2 per term' rule is this desk's OWN discipline, not the gate; the official gate only requires >=1 (it reports PARTIAL and still exits 0). GH #285 is still unruled -- thirteenth round.",
+ "wiring_gate": "tools/batch_test/check_armed_wiring.py --cand <47-id string> --ref 0d58ce09... exit 0: all 47 armed ids wired on the pinned tree. Run ONCE this round -- unlike W29 the drift guard did not fire, so no re-pin and no re-run were needed. Path note stands: the script lives at tools/batch_test/check_armed_wiring.py with NO soak/ level (GH #332).",
+ "seed_selection_note": "Four seeds NEVER used in any prior wave: seed_roster_index --seed 2204 2214 2286 2315 reports 'no banked games' for all four, against a REFRESHED index (--build run first, per the standing discipline).",
+ "seed_index_note": "seed_roster_index --build ran clean (exit 0) before selection. Third consecutive wave where the fixed pre-launch --build was performed; it is cheap and its failure direction is the dangerous one (an un-built index hands back seeds that were burned last wave as 'never used').",
+ "seed_search_note": "WINDOW SHIFTED RIGHT this round, [1801,2200] -> [2201,2600], under the charter's own disposal rule ('the selection window is a parameter, not a constant'). Both windows were enumerated mask-exhaustively (GH #313 method) before choosing, so the shift is a measured decision and not a preference: [1801,2200] now holds 12 banked / 388 unused, popcount {4:4, 3:70, 2:128, 1:142, 0:44}, 43 distinct masks, 291 valid 4-mask combos at '>=2 per term', BEST = 14 carrier slots. [2201,2600] holds 0 banked / 400 unused, popcount {5:2, 4:8, 3:67, 2:136, 1:137, 0:50}, 50 distinct masks, 5014 valid combos, BEST = 18 carrier slots -- and it contains the window's first pop-5 seeds. THE CEILING TREND IS NOW THREE POINTS, NOT A FORECAST: 16 (W28) -> 15 (W29) -> 14 (W30) in the old window, one notch per wave, and pop-4 supply there fell 7 -> 4 over the same two waves. The mechanism the charter names is confirmed: every wave picks the carrier-richest four, so every wave shaves the top layer of the window it draws from. The shift buys density (18 > 14) at zero cost and WITHOUT relaxing the >=2 discipline; it does not fix the mechanism, which will now start eating the new window at the same rate. GH #285 remains the place to rule on whether the discipline, the window policy, or the selection rule is what should change.",
+ "machines": [
+  {
+   "seed": 2204,
+   "az": "us-west-2b",
+   "instance": "i-052290aef9c351705",
+   "sir": "sir-az9qhqhn",
+   "run_token": "89e581",
+   "run_id": "spot_20260831_001631_1_0d58ce09c65d3bdc34d1573c90e24bff2adf96a6_89e581",
+   "launched": "2026-08-31T00:16:31Z",
+   "instance_launch_time": "2026-08-31T00:16:45Z",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2b",
+   "az_note": "us-west-2a returned InsufficientInstanceCapacity (4 retries exhausted); the #256 ring re-aimed to us-west-2b and filled. Logged as `re-aiming inside the ring -> us-west-2b` plus `PLACEMENT MISMATCH requested=us-west-2a actual=us-west-2b re-aimed=yes` -- an EXPLAINED mismatch, not the unexplained #282 shape.",
+   "carriers": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker"
+   ]
+  },
+  {
+   "seed": 2214,
+   "az": "us-west-2b",
+   "instance": "i-057d28b7c09c9a2df",
+   "sir": "sir-s5nzhwhq",
+   "run_token": "6eb30e",
+   "run_id": "spot_20260831_001648_1_0d58ce09c65d3bdc34d1573c90e24bff2adf96a6_6eb30e",
+   "launched": "2026-08-31T00:16:48Z",
+   "instance_launch_time": "2026-08-31T00:16:50Z",
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2b",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+   ]
+  },
+  {
+   "seed": 2286,
+   "az": "us-west-2c",
+   "instance": "i-0bd785794d2c2e188",
+   "sir": "sir-pjkzj29n",
+   "run_token": "9666cf",
+   "run_id": "spot_20260831_001652_1_0d58ce09c65d3bdc34d1573c90e24bff2adf96a6_9666cf",
+   "launched": "2026-08-31T00:16:52Z",
+   "instance_launch_time": "2026-08-31T00:16:54Z",
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2c",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker"
+   ],
+   "status_code": "instance-terminated-no-capacity",
+   "sir_state": "closed",
+   "create": "2026-08-31T00:16:54Z",
+   "update": "2026-08-31T00:22:33Z",
+   "status_message": "Your Spot instance was terminated because there is no Spot capacity available that matches your request.",
+   "state_transition_reason": "Service initiated (2026-08-31 00:24:37 GMT) / Server.SpotInstanceTermination",
+   "reclaimed": true,
+   "wall_clock_min": 5.65,
+   "reclaim_note": "RECLAIMED 5.65 min after the SIR was created (00:16:54Z -> 00:22:33Z; the instance state transition reads 00:24:37Z), i.e. FAR before the 40.0 min changeover point, so this machine is an orphan by construction: its S3 prefix holds exactly one object, soak_farm.log, and ZERO games. Registered first-hand this round because the SIR expires within hours. Per the owner-registered disposal (OWNER_PRIORITIES, 2026-08-26 GH #158): one machine reclaimed = that SEED loses an arm, that seed pair is void, the WAVE is not. A replacement was launched for the same seed in the same round -- see the machine below with replacement_for=this instance.",
+   "games_landed": 0
+  },
+  {
+   "seed": 2315,
+   "az": "us-west-2b",
+   "instance": "i-09ad304d872f8993d",
+   "sir": "sir-3kr7ke3m",
+   "run_token": "69e067",
+   "run_id": "spot_20260831_001657_1_0d58ce09c65d3bdc34d1573c90e24bff2adf96a6_69e067",
+   "launched": "2026-08-31T00:16:57Z",
+   "instance_launch_time": "2026-08-31T00:17:20Z",
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2b",
+   "az_note": "us-west-2d returned InsufficientInstanceCapacity, the ring re-aimed to us-west-2a which ALSO returned InsufficientInstanceCapacity, and the second re-aim to us-west-2b filled. Two ring hops in one launch. Logged as two `re-aiming inside the ring` lines plus `PLACEMENT MISMATCH requested=us-west-2d actual=us-west-2b re-aimed=yes` -- explained, not the #282 shape. The ring was NOT exhausted (it filled on the third AZ tried).",
+   "carriers": [
+    "crystal_maiden",
+    "lion",
+    "skeleton_king",
+    "zuus"
+   ]
+  },
+  {
+   "seed": 2286,
+   "replacement_for": "i-0bd785794d2c2e188",
+   "az": "us-west-2a",
+   "instance": "i-0196162092b80eddb",
+   "sir": "(recorded at harvest)",
+   "run_token": "4ecca6",
+   "run_id": "spot_20260831_002920_1_0d58ce09c65d3bdc34d1573c90e24bff2adf96a6_4ecca6",
+   "launched": "2026-08-31T00:29:20Z",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2a",
+   "az_note": "Requested us-west-2a and GOT it, with no re-aiming line -- 13 minutes after the SAME AZ answered InsufficientInstanceCapacity for the same instance type at 00:16Z. A useful data point for GH #256/#252: AZ capacity for c6i.4xlarge in us-west-2 is moving on a minutes timescale tonight, so an AZ that refuses one call is not a dead AZ for the next one. Requesting 2a rather than 2b was deliberate: 2b already held three of this wave's machines and us-west-2c had just reclaimed one for no capacity.",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker"
+   ],
+   "market": "spot -- ladder still at level 1; NO c6a fallback and NO --on-demand were used for the replacement either.",
+   "note": "Launched 00:29:20Z, so this arm finishes roughly 13 min behind the other three; still well inside the same 2h watchdog. AT HARVEST: seed 2286 has TWO run prefixes, 9666cf (reclaimed, 0 games) and 4ecca6 (the real one). recover_verdict.py pools per seed across source dirs, so pass both -- the empty one contributes nothing but its presence should be stated rather than silently dropped."
+  }
+ ],
+ "placement": {
+  "topology": "4 x COUNT=1, four separate spot_run.sh calls, ~17s / 4s / 5s apart, each with ONE explicit --az, four different values requested (2a/2b/2c/2d)",
+  "az_spread": "2 of 4 distinct AS ACTUALLY PLACED -- us-west-2b x3 (seeds 2204, 2214, 2315) and us-west-2c x1 (seed 2286). GH #256's acceptance criterion ('four mutually distinct') FAILS this wave, and it fails in the direction #252 exists to prevent: 3 of 4 seeds now share one AZ's capacity fate. Cause is capacity, not configuration -- the plan header shows `--az arg=` carrying the right value on all four calls (so story (ii) of #282, a process that never received its --az, is ruled OUT), and us-west-2a and us-west-2d BOTH answered InsufficientInstanceCapacity for c6i.4xlarge at 00:16Z. The #256 ring did exactly what it was built to do; what it cannot do is manufacture capacity. RISK REGISTERED IN ADVANCE, not after the fact: if us-west-2b takes a capacity event in the next two hours, this wave loses 3 of 4 seeds at once and the reclaim-blind gate will read BLINDED next round. UPDATE 00:29Z after the reclaim + replacement: live machines are us-west-2b x3 (2204, 2214, 2315) and us-west-2a x1 (2286-replacement). Still 2 of 4 distinct, and the 3-in-one-AZ concentration that #252 exists to prevent is unchanged.",
+  "mismatch": "2 of 4, BOTH `re-aimed=yes` and both with the matching `re-aiming inside the ring` line in the same log block. Zero UNEXPLAINED mismatches => GH #282's criterion is met for the TENTH consecutive wave (thirteenth recommendation to close). Confirmed independently against describe-instances Placement.AvailabilityZone on all four, not just the launcher's own line.",
+  "gh256_reopen_clock": "The charter's reopen condition for moving us-west-2b out of AZ_LIST is 'a THIRD wave zeroed by a 2b reclaim, or one AZ failing to launch for three consecutive waves'. This wave is the FIRST on which 2a and 2d failed to launch; neither counter has reached its threshold, so AZ_LIST is left alone. Recorded so the next round can count rather than re-derive."
+ },
+ "gates": {
+  "i_six_hour": "PASS. W29 took off 2026-08-30T18:16:07Z; +6h = 2026-08-31T00:16:07Z. A `date -u` guard written INTO the launch shell block read 00:16:31Z and passed with 24 seconds of margin. This is the tightest margin any wave has launched on; it was deliberate, not a race -- the round's prep work was done first and the launch block was held until the guard could pass on its own.",
+  "ii_new_to_test": "PASS by the FIRST branch, and by both of its clauses. (a) New code: git log be442fb9..0d58ce09 -- bots/ game/ = 2 commits (389012e5 hero, gated `cmqreach`; fde733d0 hero, the nil-guard fix behind GH #346). (b) New arm string: 44 ids / 386 bytes -> 47 ids / 414 bytes (director ae767765 armed creepthink + lionqdmg + cmqreach in one round). NOTE THE CONTRAST WITH W29's HONEST READING: last wave the desk had to record that its branch-(a) commit was inert because the id was not armed. This wave the same three ids ARE armed, so branch (a) is load-bearing on its own.",
+  "iii_cost": "PASS. Fence = 72.835 (budgets MTD, snapshot 2026-08-30T21:56:54Z, CE cross-check 72.8346279518 agreeing to the digit) + W29 0.90 (launched 18:16Z, inside the 12h window) + W30 0.90 = $74.635 <= $80, margin $5.365. Worst case, BOTH waves fully degraded to on-demand at $2.15 = $77.135, also passes. Uses the director's NEW $0.90 spot constant (ae767765, up from $0.80 -- this desk asked for $0.85 at 21:12Z and the director ruled $0.90 with better reasoning: $0.85 still sits inside W29's measured $0.79-0.86 band and so could still under-count on W29 itself). Brake $90 and owner line $100 not approached; NO new alarm tier crossed this round.",
+  "iv_reclaim_blind": "PASS (exit 0, NOT BLINDED), run FIRST-HAND at the gate before launching, against W29_wave.json -- but it took a repair to get an answer at all. FIRST RUN: exit 2 UNDECIDABLE, 'seed 1801: missing leg count ab'. Cause: W29's harvesting round wrote the leg counts as `harvest_ab` / `harvest_ba` / `harvest_arm_depth` while reclaim_blind.py reads `ab` / `ba` / `arm_depth`. Per the charter, exit 2 is 'not checked, therefore not passed' => fix the input, do not lower the gate: the keys were renamed to the documented schema (values untouched, nothing recomputed) and the gate re-run. SECOND RUN: exit 0. changeover 40.0 min (measured bracket 34.80 < x <= 40.63); all four seeds PAIRED and depth-checked (ab32/ba16, ab38/ba20, ab35/ba23, ab28/ba15); yield 4 paired seeds of 4; attribution 0 machines reclaimed before the flip; VERDICT not blinded; NEXT WAVE spot."
+ },
+ "cost": {
+  "estimate_usd": 0.9,
+  "estimate_basis": "The director's constant as of ae767765 (2026-08-30T22:0xZ), chosen to cover every billing-side measured point to date (0.795 / 0.799 / 0.747 / W29's 0.79-0.86). Settled next round by the SIR create->update method while the SIRs are still readable, otherwise from the S3 last-upload proxy with the +2.82 min offset (combined n=12) -- and that offset must NOT be applied to a reclaimed machine, where zero measurements exist. AUTO-INVALIDATION CLAUSE IS LIVE: if this wave's billing-side measured cost exceeds $0.90, the harvesting round must name it and the director must re-rule the constant."
+ },
+ "skip_not_pass_lines": [
+  "No RULE6_BYPASS was used this round; the pre-push gate ran for real, so there is no 'SKIPPED, not passed' line to quote.",
+  "The dynamic half of iron rule 6 (lua5.1 tests/run_tests.lua in full, ~100 min, GH #124) was NOT run and is NOT claimed.",
+  "reclaim_blind.py was NOT run with any threshold-lowering flag; its first exit 2 was cured by repairing the input, not by relaxing the gate.",
+  "recover_verdict.py was not run this round (nothing new to harvest); no --allow-pooled-basenames / --allow-unparseable / --min-arm-depth line exists to quote."
+ ],
+ "expected_games": "4 seeds x 12 games x 2 sides = 96 scored nominal, plus warm-ups. W29's actual was 229 landed / 206 scored, so the realistic expectation is materially higher than the nominal --games figure. If us-west-2b takes a capacity event, expect the three 2b seeds to land partial legs together.",
+ "pooling_note": "W30 is the FIRST wave on the 47-id arm string. It pools with NOTHING that exists today: not with W29 (44-id, 4 seeds), not with W27+W28 (45-id, 8 seeds). Per iron rule 4(i-d), whenever it does become poolable, NEVER pool by weighting on game counts: swap-average each seed first, then take the arithmetic mean across seeds.",
+ "trunk_state_at_launch": {
+  "selfcheck_worst_exit": 3,
+  "finding": "TRUNK RED on the fast Lua leg: tests/test_coarmed_attribution_register.lua fails with 'a NEW co-armed conjunction is live: creepthink > pulldrag'. REPRODUCED ON A QUIET TREE by this desk (lua5.1 tests/run_tests.lua test_coarmed_attribution_register.lua, bare exit 1, working tree carrying only iterations/data/seed_roster_index.json) => this is NOT the GH #339 false-red shape. It arrived with the director's ae767765, which armed `creepthink` without the acknowledgement the detector requires.",
+  "why_it_did_not_stop_the_wave": "The finding is about PER-ID attribution, not about code correctness: `creepthink`'s helper is read inside `pulldrag`'s gated body, so both move on the same leg and any per-id (a) trigger count for pulldrag now measures `pulldrag AND creepthink`. This wave measures the full-set aggregate (condition (b)), which that conjunction does not disturb. It is registered here so that nobody reads a per-id (a) figure off this wave's corpus without the caveat. The remedy the detector itself names -- read the two call sites and write the caveat into test_set.md's admission section -- is director/strategy work, and the detector explicitly says not to add the pair just to make it green.",
+  "python_leg": "62 passed, 0 failed, 1 UNCERTIFIABLE (tests/test_selfcheck_lua_leg.py did not run). Not a pass and not a failure."
+ },
+ "reclaim_during_launch_round": "ONE machine reclaimed inside the launch round itself, which is a first for this desk: seed 2286 (us-west-2c, sir-pjkzj29n) was taken by instance-terminated-no-capacity 5.65 min after its SIR was created, before it had finished a single game. The wave was NOT voided (owner-registered disposal); a replacement for the same seed was launched at 00:29:20Z into us-west-2a and is running spot. Marginal cost of the loss is ~$0.03 of machine time; the replacement is budgeted at a quarter-wave, ~$0.23, which keeps the fence at $74.865 <= $80. NOTE FOR THE DIRECTOR: three of the four AZs in this region refused or dropped c6i.4xlarge spot within a 13-minute window tonight (2a and 2d refused at 00:16Z, 2c reclaimed at 00:22Z, 2a then accepted at 00:29Z). The market-type ladder was never climbed -- every machine in this wave, replacement included, is c6i.4xlarge spot."
+}
