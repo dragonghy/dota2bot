@@ -51,7 +51,15 @@
         "lion",
         "obsidian_destroyer",
         "zuus"
-      ]
+      ],
+      "status_code": "instance-terminated-by-user",
+      "create": "2026-08-31T06:17:23Z",
+      "update": "2026-08-31T07:00:35Z",
+      "machine_hours": 0.72,
+      "ab": 28,
+      "ba": 14,
+      "arm_depth": 18.67,
+      "scored_games": 42
     },
     {
       "seed": 2393,
@@ -69,7 +77,15 @@
         "lion",
         "skeleton_king",
         "zuus"
-      ]
+      ],
+      "status_code": "instance-terminated-by-user",
+      "create": "2026-08-31T06:17:28Z",
+      "update": "2026-08-31T07:12:24Z",
+      "machine_hours": 0.9156,
+      "ab": 39,
+      "ba": 16,
+      "arm_depth": 22.69,
+      "scored_games": 55
     },
     {
       "seed": 2403,
@@ -87,7 +103,16 @@
         "obsidian_destroyer",
         "skeleton_king",
         "spirit_breaker"
-      ]
+      ],
+      "status_code": "instance-terminated-no-capacity",
+      "create": "2026-08-31T06:17:33Z",
+      "update": "2026-08-31T07:10:21Z",
+      "machine_hours": 0.88,
+      "ab": 36,
+      "ba": 10,
+      "arm_depth": 15.65,
+      "scored_games": 46,
+      "reclaim_note": "SPOT RECLAIM. EC2 took this machine at 07:10:21Z, before it could self-shutdown (the other three read instance-terminated-by-user). It still PAIRED: ab36/ba10, arm_depth 15.65 -- 1.96x the GH #269 threshold of 8 -- so it scores. The ba leg is the wave's thinnest (10) and this seed carries the wave's largest side term (gpm_ab -152.50 / gpm_ba +242.88), which is what a leg cut short before it drained looks like. Second consecutive wave with a reclaim (W30 lost 2286's first attempt); unlike W30 no refill was sent, because this seed already had both arms above the depth gate."
     },
     {
       "seed": 2444,
@@ -105,7 +130,15 @@
         "lion",
         "skeleton_king",
         "spirit_breaker"
-      ]
+      ],
+      "status_code": "instance-terminated-by-user",
+      "create": "2026-08-31T06:17:37Z",
+      "update": "2026-08-31T07:12:48Z",
+      "machine_hours": 0.9197,
+      "ab": 40,
+      "ba": 15,
+      "arm_depth": 21.82,
+      "scored_games": 55
     }
   ],
   "az_spread": "4 requested / 4 granted / 4 DISTINCT (us-west-2a, 2b, 2c, 2d). GH #252 acceptance (>=2 distinct) and GH #256 acceptance (4 distinct, zero `re-aiming`) BOTH satisfied on this wave -- the first wave since W18 where every AZ filled on its first ask. Contrast W30, where us-west-2a returned InsufficientInstanceCapacity and the #256 ring re-aimed to 2b. Capacity was not tight this round.",
@@ -118,5 +151,116 @@
     "iv_reclaim_blind": "PASS -- tools/batch_test/soak/reclaim_blind.py --wave-json iterations/reports/batch-desk/waves/W30_wave.json, BARE_EXIT=0 (read without a pipe), stderr empty. Verbatim: changeover 40.0 min (measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min), min_arm_depth 8.0; 4 seeds PAIRED [depth-checked] (2204 ab36/ba16, 2214 ab27/ba15, 2315 ab41/ba15, 2286-refill ab37/ba20), 1 NO-PAIR (2286 first attempt, instance-terminated-no-capacity, ab0/ba0); `yield 4 paired seed(s) of 5 machine(s)`; `attribution: 1 machine(s) reclaimed before the flip`; `VERDICT: not blinded -- the wave delivered 4 paired seed(s).`; `NEXT WAVE: spot (the default; GH #158 unchanged).` => this wave launched SPOT on the tool's own recommendation, not on habit. Re-run this round on the harvested W30 record rather than quoted from the 03:25Z round, so the reading and the launch it justified are the same reading."
   },
   "expected_games": "4 seeds x 12 games x 2 arms = 96 mirrored games nominal; recent full-set waves land 200-240 scored games because each leg drains more than its nominal 12 before the flip. W30 scored 207 of 231 loaded.",
-  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2) + one-time (NOT persistent) spot requests. Expected self-termination between 07:12Z and 07:20Z if they follow W30's ~0.92h profile, hard cap 08:17Z."
+  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2) + one-time (NOT persistent) spot requests. Expected self-termination between 07:12Z and 07:20Z if they follow W30's ~0.92h profile, hard cap 08:17Z.",
+  "harvest": {
+    "harvested_at": "2026-08-31T09:2xZ",
+    "method": "tools/batch_test/soak/recover_verdict.py over ./w31 with FOUR per-run subdirectories (731a21 / fde133 / b5b4b9 / c44eb5), one directory per run token so nothing is keyed by basename. BARE_EXIT=0 (read without a pipe), empty stderr. No --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth override: there is NO 'SKIP, not pass' line to quote from this harvest.",
+    "corpus": {
+      "files_seen": 222,
+      "games_loaded": 222,
+      "source_dirs": 4,
+      "unparseable": 0,
+      "pooled_basename_dirs_overridden": 0,
+      "scored_games": 198,
+      "unfinished_games": 0
+    },
+    "depth_gate": {
+      "min_arm_depth": 8,
+      "thin_arm_seeds": [],
+      "excluded": "none",
+      "note": "All four seeds cleared the GH #269 gate: arm_depth 18.67 / 22.69 / 15.65 / 21.82. The thinnest (2403, the reclaimed machine) is 1.96x the threshold -- thinner than any seed in W30 (min 19.29) but still scored, so `mean` and `comps_better` have a real denominator of 4."
+    },
+    "mean": {
+      "gpm": 23.2,
+      "xpm": 8.44,
+      "deaths": 0.04,
+      "last_hits": -1.0,
+      "winrate": 0.503
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "3/4",
+      "deaths": "3/4",
+      "last_hits": "1/4",
+      "winrate": "1/4"
+    },
+    "strata": {
+      "gpm": {
+        "ab": -69.0,
+        "ba": 115.41,
+        "side": -92.21,
+        "sign_flip": true,
+        "side_gt_arm": "4/4"
+      },
+      "xpm": {
+        "ab": -27.85,
+        "ba": 44.73,
+        "side": -36.29,
+        "sign_flip": true,
+        "side_gt_arm": "3/4"
+      },
+      "deaths": {
+        "ab": 0.51,
+        "ba": -0.44,
+        "side": 0.47,
+        "sign_flip": true,
+        "side_gt_arm": "4/4"
+      },
+      "last_hits": {
+        "ab": 0.4,
+        "ba": -2.38,
+        "side": 1.39,
+        "sign_flip": true,
+        "side_gt_arm": "3/4"
+      }
+    },
+    "strata_note": "All FOUR quantities sign-flip this wave, and gpm's side term is -92.21 against an arm of +23.20. Per iron rule 4(i-c) that is an IDENTITY, not a diagnosis: these four are per-seed 50/50 swap-averaged, so sign-flip <=> |side| > |arm| and carries zero information about how well `arm` is measured. Registered here because (i-a) requires registering it, NOT because it argues against the reading. What governs precision is the cross-seed dispersion of `arm` itself (see pooled_47id).",
+    "suggested": "hold_or_reject",
+    "suggested_note": "The tool's own hint. Per director ruling §CO.4 (2026-08-30T22:0xZ) `suggested` is a hint only; promote/reject goes through iron rule 2's three conditions, and this desk does not rule.",
+    "winner_count": {
+      "radiant": 1,
+      "dire": 221,
+      "total": 222,
+      "dire_share": 0.9955,
+      "per_seed": {
+        "2375": "0/48 radiant",
+        "2393": "0/61 radiant",
+        "2403": "0/52 radiant",
+        "2444": "1/61 radiant"
+      },
+      "note": "GH #352 third full-wave point after the inflection, counted at zero extra EC2 cost from the already-downloaded corpus. The sweep has NOT recovered: 08-25 dire 0.566 -> 08-27 1.000 -> 08-29 0.983 -> W29 0.991 -> W30 1.000 -> W31 0.9955. It also explains this wave's winrate readings exactly: three seeds at a pure sweep give exactly 0.500 by identity, and 2444's single radiant win in 61 games gives 0.512 -- the same artifact shape as W29's 0.503. So `winrate 0.503` and `comps_better winrate 1/4` are placeholders, not measurements."
+    },
+    "meter_bug_recurrence": {
+      "field": "winrate_independent_of_gold",
+      "printed": "0/222",
+      "true_value": "222/222",
+      "note": "Known bug, already filed by this desk 2026-08-29T09:13Z report §3.3 (recover_verdict.py:416 reads the pre-GH#108 bucket name `engine`, renamed to `engine_natural`). NOT re-filed; registered as another recurrence. winner_by is {engine_natural: 222} => all 222 games ended with an ancient actually falling."
+    },
+    "cost_settled": {
+      "machine_hours_total": 3.4353,
+      "method": "SIR create->update on all four SIRs, read first-hand this round while still readable (describe-instances had already aged the terminated instances out; describe-spot-instance-requests still had them). No S3 last-upload proxy needed.",
+      "spot_band_usd_per_h": "0.231-0.250",
+      "measured_wave_cost_usd": "0.794-0.859",
+      "auto_invalidation_clause": "NOT TRIGGERED -- upper bound $0.859 <= the $0.90 constant, so the constant does not need re-ruling. Note the margin is thinner than W30's ($0.892 upper bound was closer, but this wave absorbed a reclaim with no refill)."
+    },
+    "pooled_47id": {
+      "seeds": 8,
+      "gpm_mean": 20.77,
+      "gpm_sd": 18.58,
+      "gpm_se": 6.57,
+      "comps_better": "6/8",
+      "per_seed_gpm": [
+        38.03,
+        19.58,
+        20.76,
+        -5.02,
+        30.75,
+        -6.6,
+        45.19,
+        23.48
+      ],
+      "method": "Iron rule 4(i-d): each seed is ALREADY swap-averaged by recover_verdict.py, and the pool is the plain arithmetic mean across the 8 seeds -- NEVER weighted by game count. W30's four (2204/2214/2286/2315) + W31's four (2375/2393/2403/2444), same 47-id arm string, byte-identical, both waves post-cap-25.",
+      "note": "The 47-id family is now the thickest block on the board at 8 seeds. This desk reports the number and does not rule on it."
+    }
+  }
 }
