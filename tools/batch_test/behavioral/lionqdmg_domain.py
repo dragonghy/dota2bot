@@ -39,9 +39,46 @@ WHAT IT REPORTS (queue hero-24's acceptance, cell by cell)
   (3) kill       of (2), frames where SOME enemy in that reach has current hp
                  at or below the armed claim -- reported at spell amp
                  0% / 15% / 20%, each tier its own row (acceptance (3))
+  (3b) outcome   of (3), frames where at least one such victim was NOT observed
+                 to reach hp 0 within the next N seconds anyway (GH #361).  See
+                 THE OUTCOME COLUMN below -- this column is READ ON THE BASELINE
+                 LEG ONLY.
   (4) unique     of (3), frames where Lion is below level 15 and the three mode
                  predicates that guard every LATER branch are false.  Only the
                  level test is observable offline; see LIMITS.
+
+THE OUTCOME COLUMN (GH #361, added 2026-08-31T12:xxZ)
+------------------------------------------------------
+Cell (3) as first shipped had NO outcome clause: "an enemy at 26 hp who escaped
+and healed to full" and "an enemy at 1 hp who is being killed by an ally this
+very second" were the same event to it.  On W31 the second kind was 9 of 10,
+which is why the same tool on the same 47-id arm string read 1 episode on W30
+and 10 on W31 -- a 14x swing whose direction was OPPOSITE to the truth (the W30
+episode was a real missed kill; not one of the W31 baseline-leg episodes was).
+So cell (3) tracks "how many low-hp-about-to-die frames did this corpus sample",
+not "how many extra kills could this lever take".  Adding waves does not fix it.
+
+The column added here is the subtraction that was missing:
+
+    net(3) = cell (3) frames MINUS those whose victims all died anyway
+
+with two disciplines baked in, because both are easy to get backwards:
+
+  * BASELINE LEG ONLY.  On the ARMED leg a victim's death inside the window may
+    be the armed cast itself landing -- subtracting there would delete exactly
+    the effect being measured, i.e. it would kill this id in the four-cell table
+    by construction.  The armed-leg rows are printed (铁律 4(i-a) disclosure:
+    every reading appears in all four cells) and are marked NOT INTERPRETABLE.
+  * SURVIVORSHIP IS THE UPPER BOUND.  A frame counts as `net` when ANY
+    qualifying victim survives the window, and a victim with no further samples
+    at all (game ends, recording stops) counts as SURVIVED.  Both choices
+    INFLATE `net`, which is the safe direction for this stream's standing
+    NEGATIVE finding on this id and the unsafe one for any positive claim.
+
+`N` IS A REGISTERED CHOICE, NOT A CONSTANT OF NATURE.  W31's ten hand-read
+victims died 1 to 5 seconds after the frame, so the headline is N = 5s, and the
+whole ladder (2 / 5 / 10s) is printed so the knife edge is visible rather than
+buried -- the same reason 铁律 4(ii) makes a median carry its share.
 
 Every headline number is printed in all four (stratum x leg) cells (铁律 4(i-a)),
 means and shares only, never a median (4(ii)).
@@ -120,6 +157,12 @@ AMP_TIERS = (0.0, 0.15, 0.20)              # acceptance (3)'s three columns
 CD_EPS = 1e-9                              # `cd` is reported as a float 0.0
 SAMPLE_TOL_S = 1e-6                        # enemy snapshots share the frame's own t
 
+# Outcome window (GH #361).  REGISTERED CHOICE, not a source constant: W31's ten
+# hand-read victims reached hp 0 between 1.0 and 5.0 seconds after the frame, so
+# the headline is 5.0s and the ladder is printed around it.
+OUTCOME_WINDOWS = (2.0, 5.0, 10.0)
+OUTCOME_HEADLINE_S = 5.0
+
 # Spell-amp SOURCES on an item, for the `amp_item` observability row only.  This
 # is NOT a claim about GetSpellAmp()'s value -- it is "was any amp source even
 # in the bag", which is the half of the hero desk's question a replay can answer.
@@ -159,15 +202,21 @@ class Game(object):
         self.primary = dict((h, v[0]) for h, v in primary.items())
 
         self.by_t = collections.defaultdict(list)
+        self.by_hero = collections.defaultdict(list)
         self.lion = []
         for s in d["snapshots"]:
             hero = canon(s["hero"])
             if self.primary.get(hero) != s["idx"]:
                 continue
             self.by_t[s["t"]].append(s)
+            # (t, hp) of REAL samples only -- the outcome column never
+            # interpolates hp (GH #176: interpolated hp is not aliveness).
+            self.by_hero[hero].append((s["t"], s.get("hp") or 0.0))
             if hero == LION:
                 self.lion.append(s)
         self.lion.sort(key=lambda s: s["t"])
+        for h in self.by_hero:
+            self.by_hero[h].sort()
         self.lion_team = self.teams.get("npc_dota_hero_lion")
 
 
@@ -219,6 +268,30 @@ def others_at(game, snap, same_team):
     return out
 
 
+def dies_within(game, hero, t0, window):
+    """Did `hero` reach hp 0 on a REAL sample in (t0, t0 + window]?
+
+    No interpolation and no "hp fell a lot" heuristic: only a sampled hp <= 0
+    counts as death.  A hero with no samples left in the window (game over,
+    recording stopped) returns False -- i.e. counts as SURVIVED, which inflates
+    `net` and is therefore the safe direction for a negative finding.
+    """
+    for t, hp in game.by_hero.get(hero, ()):
+        if t <= t0 + SAMPLE_TOL_S:
+            continue
+        if t > t0 + window + SAMPLE_TOL_S:
+            break
+        if hp <= 0:
+            return True
+    return False
+
+
+def victim_traj(game, hero, t0, window):
+    """The hero's REAL hp samples in (t0, t0 + window], for frame-level reading."""
+    return [hp for t, hp in game.by_hero.get(hero, ())
+            if t0 + SAMPLE_TOL_S < t <= t0 + window + SAMPLE_TOL_S]
+
+
 def scan_game(game):
     """Per-frame rows for one game.  No aggregation happens here."""
     rows = []
@@ -263,8 +336,21 @@ def scan_game(game):
         for amp in AMP_TIERS:
             raw = dmg * (1.0 + amp)
             row["kill_raw_%s" % amp] = any(e["hp"] <= raw for e in enemies)
-            row["kill_mr25_%s" % amp] = any(
-                e["hp"] <= raw * BASE_MAGIC_RESIST_MULT for e in enemies)
+            qual = [e for e in enemies
+                    if e["hp"] <= raw * BASE_MAGIC_RESIST_MULT]
+            row["kill_mr25_%s" % amp] = bool(qual)
+            # (3b) outcome, GH #361: a frame stays `net` while ANY qualifying
+            # victim was not observed to die inside the window.
+            for w in OUTCOME_WINDOWS:
+                row["net_%s_%s" % (amp, w)] = any(
+                    not dies_within(game, canon(e["hero"]), s["t"], w)
+                    for e in qual)
+            if amp == 0.0:
+                row["kill_victims"] = [
+                    (canon(e["hero"]), e["hp"],
+                     dies_within(game, canon(e["hero"]), s["t"],
+                                 OUTCOME_HEADLINE_S))
+                    for e in qual]
         row["victims"] = [(canon(e["hero"]), e["hp"],
                            round(dist(s["x"], s["y"], e["x"], e["y"]), 1))
                           for e in enemies]
@@ -309,6 +395,25 @@ def summarize(cells):
             out.append("| %s/%s | %d%% | %d | %.3f | %d | %.3f |"
                        % (c[0], c[1], int(amp * 100), kr, kr / den, km, km / den))
     out.append("")
+    out.append("## (3b) outcome column: victim NOT observed to die anyway  [GH #361]")
+    out.append("")
+    out.append("**Read the `baseline` rows only.** On the armed leg a death")
+    out.append("inside the window can be the armed cast itself, so subtracting")
+    out.append("there would delete the effect being measured. `net` counts a")
+    out.append("frame while ANY qualifying victim survives, and no-further-")
+    out.append("samples counts as survived: both inflate it (upper bound).")
+    out.append("")
+    out.append("| cell | amp | kill(mr25) | net<=2s | net<=5s | net<=10s | interpretable |")
+    out.append("|---|---|---|---|---|---|---|")
+    for c in CELLS:
+        a = cells[c]
+        note = "yes" if c[1] == "baseline" else "**NO (armed leg)**"
+        for amp in AMP_TIERS:
+            out.append("| %s/%s | %d%% | %d | %d | %d | %d | %s |"
+                       % (c[0], c[1], int(amp * 100), a["kill_mr25_%s" % amp],
+                          a["net_%s_2.0" % amp], a["net_%s_5.0" % amp],
+                          a["net_%s_10.0" % amp], note))
+    out.append("")
     out.append("## (4) coverage unique to this id  [UPPER bounds only, see LIMITS]")
     out.append("| cell | amp | kill(mr25) | u_lvl | u_tf |")
     out.append("|---|---|---|---|---|")
@@ -333,11 +438,14 @@ def summarize(cells):
                       a["near_2.0"], a["near_3.0"]))
     out.append("")
     out.append("## episodes (the stream's standing reading discipline)")
-    out.append("| cell | ready episodes | kill(mr25,0%) episodes |")
-    out.append("|---|---|---|")
+    out.append("| cell | ready episodes | kill(mr25,0%%) episodes | net episodes (<=%gs) |"
+               % OUTCOME_HEADLINE_S)
+    out.append("|---|---|---|---|")
     for c in CELLS:
         a = cells[c]
-        out.append("| %s/%s | %d | %d |" % (c[0], c[1], a["ep_ready"], a["ep_kill"]))
+        out.append("| %s/%s | %d | %d | %d%s |"
+                   % (c[0], c[1], a["ep_ready"], a["ep_kill"], a["ep_net"],
+                      "" if c[1] == "baseline" else " (not interpretable)"))
     out.append("")
     out.append("## observability: spell-amp source in the bag on (2) frames")
     out.append("| cell | ready | with amp item | share |")
@@ -375,14 +483,18 @@ def blank_cell():
         a["kill_mr25_%s" % amp] = 0
         a["u_lvl_%s" % amp] = 0
         a["u_tf_%s" % amp] = 0
+        for w in OUTCOME_WINDOWS:
+            a["net_%s_%s" % (amp, w)] = 0
+    a["ep_net"] = 0
     return a
 
 
-def run(dirs, stratum="all", witness=0):
+def run(dirs, stratum="all", witness=0, kill_witness=0):
     rows = load_sweeps(dirs)
     cells = dict((c, blank_cell()) for c in CELLS)
     arms = set()
     witnesses = []
+    kill_rows = []
     for run_name, game_name, cand, seed, side, tl in rows:
         arms.add(cand)
         game = Game(tl)
@@ -395,7 +507,7 @@ def run(dirs, stratum="all", witness=0):
         a["games"] += 1
         # episodes are counted WITHIN a game and then summed; pooling raw
         # timestamps across games would glue two games' spans into one run.
-        t_ready, t_kill = [], []
+        t_ready, t_kill, t_net = [], [], []
         for r in scan_game(game):
             a["frames"] += 1
             if not r["alive"]:
@@ -410,6 +522,14 @@ def run(dirs, stratum="all", witness=0):
                     a["near_%s" % k] += 1
             if r["kill_mr25_0.0"]:
                 t_kill.append(r["t"])
+                if r["net_0.0_%s" % OUTCOME_HEADLINE_S]:
+                    t_net.append(r["t"])
+                if kill_witness and len(kill_rows) < kill_witness:
+                    kill_rows.append(
+                        (run_name[-6:], game_name, seed, side, cell, r,
+                         [(v[0], v[1], v[2],
+                           victim_traj(game, v[0], r["t"], max(OUTCOME_WINDOWS)))
+                          for v in r["kill_victims"]]))
             if r["amp_item"]:
                 a["amp_item"] += 1
             for amp in AMP_TIERS:
@@ -417,6 +537,9 @@ def run(dirs, stratum="all", witness=0):
                     a["kill_raw_%s" % amp] += 1
                 if r["kill_mr25_%s" % amp]:
                     a["kill_mr25_%s" % amp] += 1
+                    for w in OUTCOME_WINDOWS:
+                        if r["net_%s_%s" % (amp, w)]:
+                            a["net_%s_%s" % (amp, w)] += 1
                     if r["level"] is not None and r["level"] < FALLBACK_LEVEL:
                         a["u_lvl_%s" % amp] += 1
                         if r["allies_1200"] < TEAMFIGHT_ALLIES:
@@ -426,6 +549,7 @@ def run(dirs, stratum="all", witness=0):
                                                   side, cell, r))
         a["ep_ready"] += episodes(t_ready)
         a["ep_kill"] += episodes(t_kill)
+        a["ep_net"] += episodes(t_net)
     # 铁律 4(i-a) disclosure: the arm string is printed whether or not the id is in it.
     armed_ids = set()
     for c in arms:
@@ -451,6 +575,17 @@ def run(dirs, stratum="all", witness=0):
                         % (run_name, game_name, seed, side, cell[0], cell[1],
                            r["t"], r["rank"], r["level"], r["allies_1200"],
                            r["reach"], r["victims"]))
+    if kill_rows:
+        tail += ["", "## cell (3) frames with the outcome column (amp 0%, mr25)",
+                 "", "| run/game | cell | t | victim | hp | died<=%gs | hp samples (%gs) |"
+                 % (OUTCOME_HEADLINE_S, max(OUTCOME_WINDOWS)),
+                 "|---|---|---|---|---|---|---|"]
+        for run_name, game_name, seed, side, cell, r, vs in kill_rows:
+            for hero, hp, died, traj in vs:
+                tail.append("| `%s/%s` | %s/%s | %.1f | %s | %.0f | %s | %s |"
+                            % (run_name, game_name, cell[0], cell[1], r["t"],
+                               hero, hp, "yes" if died else "**no**",
+                               " ".join("%.0f" % h for h in traj)))
     return "\n".join(head) + body + "\n".join(tail)
 
 
@@ -500,7 +635,7 @@ def selfcheck():
 
     # --- one synthetic game, driven end to end --------------------------------
     def build(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
-              allies=0, enemy_alive=True):
+              allies=0, enemy_alive=True, enemy_future=None):
         snaps = [_snap(t=0.0, abilities=_q(q_level, cd), mp=mp, level=lion_level)]
         snaps.append(_snap(t=0.0, hero="npc_dota_hero_lina", idx=2, team=3,
                            hp=enemy_hp if enemy_alive else 0.0, x=enemy_x,
@@ -516,6 +651,12 @@ def selfcheck():
         g.primary = {"lion": 1, "lina": 2, "zuus": 10}
         g.by_t = {0.0: snaps}
         g.lion = [snaps[0]]
+        # `enemy_future` = the victim's REAL hp samples after the frame; default
+        # is "no further samples", which the outcome column reads as SURVIVED.
+        g.by_hero = collections.defaultdict(list)
+        g.by_hero["lion"] = [(0.0, 500.0)]
+        g.by_hero["lina"] = [(0.0, enemy_hp if enemy_alive else 0.0)] + \
+                            sorted(enemy_future or [])
         return scan_game(g)[0]
 
     ok("enemy inside reach makes the frame ready", build(100.0, 800.0)["ready"])
@@ -547,6 +688,41 @@ def selfcheck():
     ok("ratio > 1 means the enemy is out of reach of the claim",
        build(200.0, 800.0)["ratio_mr25"] > 1.0)
 
+    # --- the outcome column (GH #361) -----------------------------------------
+    HL = "net_0.0_%s" % OUTCOME_HEADLINE_S
+    dead_soon = build(50.0, 800.0, enemy_future=[(1.0, 20.0), (2.0, 0.0)])
+    ok("a victim who dies inside the window is NOT net", not dead_soon[HL])
+    ok("that frame still counts in cell (3)", dead_soon["kill_mr25_0.0"])
+    escaped = build(50.0, 800.0,
+                    enemy_future=[(1.0, 90.0), (2.0, 300.0), (6.0, 600.0)])
+    ok("a victim who escapes and heals IS net", escaped[HL])
+    ok("a victim with no further samples counts as SURVIVED (upper bound)",
+       build(50.0, 800.0)[HL])
+    late = build(50.0, 800.0, enemy_future=[(7.0, 0.0)])
+    ok("a death after the 5s window is net at 5s but not at 10s",
+       late[HL] and not late["net_0.0_10.0"])
+    ok("a death after the 2s window is net at 2s", late["net_0.0_2.0"])
+    ok("a frame that never reached cell (3) is not net either",
+       not build(400.0, 800.0)[HL] and not build(400.0, 800.0)["kill_mr25_0.0"])
+    ok("net is never counted where cell (3) is empty, at any tier",
+       all(not build(400.0, 800.0)["net_%s_%s" % (a, w)]
+           for a in AMP_TIERS for w in OUTCOME_WINDOWS))
+    ok("the headline window is one of the printed ladder rungs",
+       OUTCOME_HEADLINE_S in OUTCOME_WINDOWS)
+
+    class _G(object):
+        pass
+    g = _G()
+    g.by_hero = {"lina": [(0.0, 50.0), (1.0, 0.0), (2.0, 400.0)]}
+    ok("dies_within reads only samples AFTER t0",
+       dies_within(g, "lina", 0.0, 5.0))
+    ok("dies_within does not look back before t0",
+       not dies_within(g, "lina", 1.0, 5.0))
+    ok("dies_within on an unknown hero is False (survived)",
+       not dies_within(g, "puck", 0.0, 5.0))
+    ok("victim_traj returns the real samples in the window only",
+       victim_traj(g, "lina", 0.0, 1.5) == [0.0])
+
     ok("episodes: one run of adjacent samples is one episode",
        episodes([1.0, 1.5, 2.0]) == 1)
     ok("episodes: a gap larger than EPISODE_GAP_S splits",
@@ -572,12 +748,15 @@ def main():
     ap.add_argument("--stratum", choices=("all", "ab", "ba"), default="all")
     ap.add_argument("--witness", type=int, default=0,
                     help="print up to N witness frames for frame-level reading")
+    ap.add_argument("--kill-witness", type=int, default=0,
+                    help="print up to N cell-(3) frames with each victim's hp "
+                         "trajectory and the outcome verdict (GH #361)")
     args = ap.parse_args()
     if args.selfcheck:
         return selfcheck()
     if not args.dirs:
         ap.error("need at least one sweep dir (or --selfcheck)")
-    print(run(args.dirs, args.stratum, args.witness))
+    print(run(args.dirs, args.stratum, args.witness, args.kill_witness))
     return 0
 
 

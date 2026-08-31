@@ -168,9 +168,95 @@ def test_reach():
                                          'cd': 0, 'cd_len': 0}])) == 870.0)
 
 
+# ---- 8. the outcome column (GH #361) ---------------------------------------
+def test_outcome_column():
+    HL = 'net_0.0_%s' % L.OUTCOME_HEADLINE_S
+    # The defect this column exists for: "26 hp escaped and healed to full" and
+    # "1 hp being killed by an ally right now" were the SAME event to cell (3),
+    # and on W31 the second kind was 9 of 10.  These two rows must now differ.
+    escaped = _frame(enemy_hp=26.0, enemy_x=800.0,
+                     enemy_future=[(1.0, 30.0), (2.0, 57.0), (5.0, 190.0)])
+    doomed = _frame(enemy_hp=1.0, enemy_x=800.0, enemy_future=[(1.0, 0.0)])
+    check('both are still cell (3) frames -- the column subtracts, it does not '
+          'redefine the domain',
+          escaped['kill_mr25_0.0'] and doomed['kill_mr25_0.0'])
+    check('the enemy who escaped and healed is net', escaped[HL])
+    check('the enemy who died anyway is NOT net', not doomed[HL])
+    check('the headline window is a rung of the printed ladder',
+          L.OUTCOME_HEADLINE_S in L.OUTCOME_WINDOWS)
+    check('the ladder brackets the 1-5s death delays W31 was hand-read at',
+          min(L.OUTCOME_WINDOWS) <= 2.0 and max(L.OUTCOME_WINDOWS) >= 10.0)
+    # the window must actually be a window: a death past it is still net there
+    late = _frame(enemy_hp=50.0, enemy_x=800.0, enemy_future=[(7.0, 0.0)])
+    check('a death at 7s is net inside the 5s window', late[HL])
+    check('a death at 7s is not net inside the 10s window',
+          not late['net_0.0_10.0'])
+    check('the window is not silently unbounded',
+          L.OUTCOME_WINDOWS == tuple(sorted(L.OUTCOME_WINDOWS)))
+    # net must never exceed cell (3): it is a SUBSET, at every tier and window
+    for hp in (1.0, 26.0, 78.0, 79.0, 105.0, 400.0):
+        for fut in ([], [(1.0, 0.0)], [(1.0, 300.0)]):
+            r = _frame(enemy_hp=hp, enemy_x=800.0, enemy_future=fut)
+            for amp in L.AMP_TIERS:
+                for w in L.OUTCOME_WINDOWS:
+                    check('net is a subset of cell (3) (hp=%s amp=%s w=%s)'
+                          % (hp, amp, w),
+                          (not r['net_%s_%s' % (amp, w)])
+                          or r['kill_mr25_%s' % amp])
+
+
+def test_outcome_is_an_upper_bound():
+    """Both survivorship choices must INFLATE net, never deflate it.
+
+    The stream's standing finding on this id is NEGATIVE, and a negative read
+    off an upper bound is safe while a positive one is not.  If either of these
+    flipped, `net` would shrink toward zero on its own and the tool would agree
+    with the standing verdict for the wrong reason.
+    """
+    HL = 'net_0.0_%s' % L.OUTCOME_HEADLINE_S
+    check('a victim with NO further samples counts as survived',
+          _frame(enemy_hp=50.0, enemy_x=800.0)[HL])
+    # ANY qualifying victim surviving keeps the frame: with two victims, one
+    # doomed and one escaping, the frame is still net.
+    snaps = [L._snap(t=0.0, abilities=L._q(1, 0.0), mp=500.0, level=6),
+             L._snap(t=0.0, hero='npc_dota_hero_lina', idx=2, team=3,
+                     hp=1.0, x=200.0, abilities=[]),
+             L._snap(t=0.0, hero='npc_dota_hero_luna', idx=3, team=3,
+                     hp=40.0, x=300.0, abilities=[])]
+    g = L.Game.__new__(L.Game)
+    g.teams = {'npc_dota_hero_lion': 2, 'npc_dota_hero_lina': 3,
+               'npc_dota_hero_luna': 3}
+    g.has_lion = True
+    g.lion_team = 2
+    g.primary = {'lion': 1, 'lina': 2, 'luna': 3}
+    g.by_t = {0.0: snaps}
+    g.lion = [snaps[0]]
+    g.by_hero = {'lion': [(0.0, 500.0)],
+                 'lina': [(0.0, 1.0), (1.0, 0.0)],
+                 'luna': [(0.0, 40.0), (1.0, 200.0)]}
+    row = L.scan_game(g)[0]
+    check('one doomed victim does not cancel a surviving one', row[HL])
+    # and hp is read off REAL samples only: a "died" verdict needs a sampled 0,
+    # never an interpolated dip (GH #176).
+    gg = type('G', (), {})()
+    gg.by_hero = {'lina': [(0.0, 50.0), (4.0, 1.0), (12.0, 0.0)]}
+    check('a victim still at 1 hp inside the window has not died',
+          not L.dies_within(gg, 'lina', 0.0, L.OUTCOME_HEADLINE_S))
+    check('a sampled zero past the window is outside it',
+          not L.dies_within(gg, 'lina', 0.0, 10.0))
+    check('a sampled zero inside a wider window is seen',
+          L.dies_within(gg, 'lina', 0.0, 12.0))
+    check('samples at or before t0 are never read',
+          not L.dies_within(gg, 'lina', 12.0, 5.0))
+
+
 def _frame(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
-           allies=0, enemy_alive=True):
-    """One synthetic frame driven through the real `scan_game`."""
+           allies=0, enemy_alive=True, enemy_future=None):
+    """One synthetic frame driven through the real `scan_game`.
+
+    `enemy_future` is the victim's REAL hp samples after the frame; the default
+    (none at all) is what the outcome column must read as SURVIVED.
+    """
     snaps = [L._snap(t=0.0, abilities=L._q(q_level, cd), mp=mp, level=lion_level)]
     snaps.append(L._snap(t=0.0, hero='npc_dota_hero_lina', idx=2, team=3,
                          hp=enemy_hp if enemy_alive else 0.0, x=enemy_x,
@@ -186,11 +272,15 @@ def _frame(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
     g.primary = {'lion': 1, 'lina': 2, 'zuus': 10}
     g.by_t = {0.0: snaps}
     g.lion = [snaps[0]]
+    g.by_hero = {'lion': [(0.0, 500.0)],
+                 'lina': [(0.0, enemy_hp if enemy_alive else 0.0)]
+                 + sorted(enemy_future or [])}
     return L.scan_game(g)[0]
 
 
 for fn in (test_source_constants, test_mr25_is_tighter, test_upper_bound_direction,
-           test_episodes, test_ready_clauses, test_reach):
+           test_episodes, test_ready_clauses, test_reach, test_outcome_column,
+           test_outcome_is_an_upper_bound):
     fn()
 
 if fails:
