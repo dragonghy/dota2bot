@@ -22,6 +22,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-63. **付 GH #357 第 3 行(三条真判定的第二条):黑黄杖的那个零 —— 物品零没了(0→2),
+   裁定依赖的零没动(魔免仍 0)⇒ `axecull` VERDICT UNCHANGED;而读数说明**那个物品零
+   从来就不是承重的零**,它只是承重那个零的代理**
+   **2026-08-31T16:51Z done —— `bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、
+   零 AWS(连 S3 GET 都没有)、不申请波次、不开新 issue;`state.json` / `queue.json` /
+   `test_set.md` 均无新增。新 `tests/test_axe_bkb_supply_staged_frame.lua`(14 个 `[ratchet]`);
+   `test_axe_cull_immune_veto.lua` **只改注释与文案,四条断言逐字未动**;
+   `tests/frames/README.md` 补三行 reopen 清单状态表。帧**按名字**加载 ⇒ #357 表里
+   **9 个 ratchet 一个都没动**。报告 `iterations/reports/hero/20260831T165102Z.md`。**
+   - **⭐⭐ 主读数**:staged 帧 `f_20260831_004433_cm_creepreach`(t=1190.4)上
+     **黑黄杖物品槽 0 → 2,魔免 hero-instants 仍然 0**,(ready Axe)×(魔免活敌) 对 = 0,
+     domain = 0 ⇒ **SUPPLY-STARVED-IN-CORPUS 不变,定价路径仍是 `hero-9`**。
+     Axe 这帧**够格**(21 级、活、Culling rank 2、cd 0、991 mp;语料最高 14 级)。
+   - **⭐⭐ 最该拿走的**:三条独立地说明物品计数不是那个问题 ——
+     (i) **不充分**:出厂 `IsMagicImmune` 读 **11 个 modifier、零个物品读**,
+     **格子里的物品永远不能让它答 true**(**源码可证,不要 datafeed 不要波次**);
+     (ii) **不必要且不相关**:语料真有的 3 个魔免 instant 全是 `juggernaut_blade_fury`,
+     **3/3 载体零黑黄杖**;(iii) **口径错**:staged 两个黑黄杖**都进不了 domain 且理由不同**
+     —— 一个在 **Axe 自己**格子里(veto 读 `npcEnemy`),一个在**死着的**敌人身上 ⇒
+     **不按 (敌方)×(活着) 拆分就是 2/2 全高估**。第三条 miss:最近的活敌 637.5u(环 375u 外)。
+   - **⭐ 改的是常设指令不是裁定**:那条 ratchet 变红时,新读法是
+     **「先看免疫计数和载体拆分;光看物品计数什么都没重新判定」**。
+   - **⚠️⚠️ 险些登记一个不存在的发现**:第一版断言「魔免 3 → 0 的无声下降」,
+     **那个 0 是我 scratch 里 `src:sub(src:find(pat))` 传了两个返回值造出来的**
+     (截到签名行 ⇒ 免疫名单空集 ⇒ 每帧都不免疫)。**空谓词的 0 和空语料的 0 是同一个整数**,
+     且它**自带机制解释**(单边 ratchet 报不出下降)。⇒ §4 计数**做成双边**,
+     **每条经过 IMMUNE 的读数都同时断言 IMMUNE 是满的**;变异台补 M7(谓词空但体照样解析)。
+     一周内**第四次**同形状。**⚠️ 第二处:子串不是 reader** —— 裸 `black_king_bar` 探针
+     是 `modifier_black_king_bar_immune` 的子串,**在正好证明论点的那行上开火**。
+   - 变异台 **11/11 见红且只红在该红的节**;还原后 5 文件 `cmp` 逐字节相同,零残留。
+   - 门:静态 **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**);动态子集(GH #124)
+     逐个跑了 #357 表点名的每个文件全绿。⚠️ **开工自检第一次被脚本 REFUSED(exit 2,
+     我管道给了 `tail`)= 什么都没检查不是通过**;重跑 exit 3,`test_rc_wrapper.py`
+     TRUNK RED **已由 GH #364 立案 flaky**,本 diff 零行 python。
+   - **下一棒**:(1) **#357 第 2 行(Alchemist 时钟带)是最后一条真判定**,付完三条
+     「把帧搬进 `tests/fixtures/`」才是干净的工作单元;(2) **`-43a` 的 Zeus 方向仍欠**;
+     (3) GH #366 + queue `hero-26` 在等总监/批测台。**#357 追评本轮发表。**
+
 -62. **认领 GH #357 第 6 行(三条真判定之一,连续三轮没人付):Axe t15 第一次在**域内**取数**
    **2026-08-31T13:59Z done —— `bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、
    零 AWS(连 S3 GET 都没有)、不申请波次;`state.json` / `queue.json` / `test_set.md` 均无新增。
@@ -3212,6 +3250,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T16:51Z(报告 `iterations/reports/hero/20260831T165102Z.md`;轴 **付 GH #357 第 3 行**
+  —— 三条真判定的**第二条**,焦点英雄 Axe;上一轮付的是第 6 行)。
+  **`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、
+  不申请波次、不开新 issue;`state.json` / `queue.json` / `test_set.md` 均无新增。**
+  新 `tests/test_axe_bkb_supply_staged_frame.lua`(14 个 `[ratchet]` 节点);
+  `test_axe_cull_immune_veto.lua` **只改注释与文案,四条断言逐字未动**;
+  `tests/frames/README.md` 补三行 reopen 清单状态表。帧**按名字**加载 ⇒
+  #357 表里 **9 个 ratchet 一个都没动**(逐文件跑过)。
+  - **⭐⭐ 主读数**:staged 帧上**物品零没了(0 → 2),裁定依赖的零没动(魔免 instants 仍 0)**
+    ⇒ `axecull` **SUPPLY-STARVED-IN-CORPUS,VERDICT UNCHANGED**,定价路径仍是 `hero-9`。
+    Axe 这帧**是够格载体**(21 级、活、Culling rank 2、cd 0、991 mp;语料最高 14 级),
+    所以那两个零**不是「没有 Axe」**。
+  - **⭐⭐ 最该拿走的:那个物品零从来不是承重的零,只是承重那个零的代理。** 三条独立:
+    (i) **不充分** —— 出厂 `IsMagicImmune` override 读 **modifier、11 个 `HasModifier`、
+    零个物品读**,**格子里的物品永远不能让它答 true**(**从源码证出,不要 datafeed 不要波次**);
+    (ii) **不必要且不相关** —— 语料真有的 3 个魔免 instant 全是 `juggernaut_blade_fury`,
+    **3 个载体全部 0 个黑黄杖**;(iii) **口径错** —— staged 两个黑黄杖**都结构性进不了 domain
+    且理由不同**:一个在 **Axe 自己**格子里(veto 读 `npcEnemy`,施法者免疫**不在谓词里**),
+    一个在**死着的**敌人身上 ⇒ **不按 (敌方)×(活着) 拆分的计数,2/2 全高估**。
+    第三条独立 miss:最近的**活**敌在 **637.5u**(环 375u 外)、1835 hp(阈值 350 之上)。
+  - **⭐ 改变的是常设指令不是裁定**:那条 ratchet 变红时,旧读法「裁定可能已错,回去重读」
+    → 新读法**「先看免疫计数和载体拆分;光看物品计数什么都没重新判定」**(写在 sister
+    ratchet 上方,指向新文件;ratchet 本身保留且仍为真)。
+  - **⚠️⚠️ 险些登记一个根本不存在的发现**:第一版 header 断言「sister 记录的供给数在
+    **无声向下漂移**(魔免 3 → 0)」。**那个 0 是我 scratch 造的** ——
+    `src:sub(src:find(pat))` 传了 `find` 的**两个**返回值 ⇒ 截出的是签名行不是函数体 ⇒
+    **免疫名单是空集** ⇒ 每帧都读作不免疫。**空谓词的 0 和空语料的 0 是同一个整数**,
+    而它**长得像个发现**(还自带机制解释:单边 ratchet 报不出下降)。抓住它的是我自己写的
+    `n ~= 11` 与 §4 计数 ⇒ §4 的免疫计数**故意做成双边**(`~= 3`),
+    **本文件每条经过 IMMUNE 的读数都同时断言 IMMUNE 是满的**;变异台补 **M7**(谓词变空但
+    函数体照样解析)**四节见红**。一周内**第四次**同形状。
+  - **⚠️ 第二处第一版红:子串不是 reader** —— 「不读物品」探针里放了裸的 `black_king_bar`,
+    它是 `modifier_black_king_bar_immune` 的**子串** ⇒ 探针**在正好证明论点的那行上开火**。
+    改成:物品读 API 名单 + 「体内每个 `black_king_bar` 必须整词等于那个 modifier 名」。
+  - 变异台 **11/11 见红且只红在该红的节**;还原后 5 个文件 `cmp` **逐字节相同**,
+    `tests/fixtures/`(109)与 `tests/frames/` **零残留**。**先存副本、从副本恢复,不从 git 恢复。**
+  - 门:静态 **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**);动态**子集不是全套**
+    (GH #124),逐个跑了 #357 表点名的每个文件:`axe` 141/0、新文件 14/0、
+    `alchemist_rage` 10/0、`activemode_world` 12/0、`campfarm_ancient` 16/0、
+    `bbfight_turbo` 20/0、`focus_innate` 13/0、`cm_creep_reach` 19/0、`nil_guard` 6/0、
+    `gate_claim` 10/0、`smoke` 3/0。
+    ⚠️ **开工自检第一次调用被脚本自己 REFUSED(exit 2,我把它管道给了 `tail`)——
+    那次什么都没检查,不是通过**;重跑后 **exit 3**,发现 = cadence 几条 + 
+    `test_rc_wrapper.py` TRUNK RED(**已由 GH #364 立案为 flaky**,本 diff 零行 python)。
+  - **本组下一棒**:(1) **#357 第 2 行(Alchemist 时钟带)是三条真判定的最后一条**,仍欠;
+    付完三条,「把帧搬进 `tests/fixtures/`」才是一个干净的工作单元;
+    (2) **`-43a` 的 Zeus 方向仍欠**;(3) GH #366 + queue `hero-26` 仍在等总监/批测台。
+  owner 四条优先项**仍无一条球在本组**。
+
+### 历史
 - 2026-08-31T13:59Z(报告 `iterations/reports/hero/20260831T135917Z.md`;轴 **付 GH #357 第 6 行**
   —— 章程点名、**连续三轮没人付**的那棒;#357 原文写「英雄组可以按 backlog 顺序接」。
   **第 6 行付清:Axe t15 第一次在域内取数,VERDICT UNCHANGED**(21 级 Axe 的 rank 对

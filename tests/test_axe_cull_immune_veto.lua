@@ -39,6 +39,13 @@
 --     the domain count is 0 for a reason that says nothing about how often this
 --     happens in a game.
 --
+-- The counts above are a SNAPSHOT taken 2026-08-23, and the ratchets on them in
+-- section 2 are one-sided because the corpus is meant to grow. Measured
+-- 2026-08-31: 107 frames, 28 Axe units, immune instants unchanged at 3, Black
+-- King Bars in tests/fixtures/ still 0. Those four are pinned live in
+-- tests/test_axe_bkb_supply_staged_frame.lua section 4, so growth stays
+-- distinguishable from drift without re-deriving them here.
+--
 -- Recorded as SUPPLY-STARVED-IN-CORPUS, not as an empty domain. The distinction
 -- is the stream's Y.2 rule (a desk or fixture read can show EMPTY, never RARE)
 -- with the extra note that here it cannot honestly show EMPTY either: the corpus
@@ -397,9 +404,32 @@ tests['section 2: the zero above is SUPPLY, and here is the supply'] = function(
 end
 
 tests['section 2: zero Black King Bars anywhere in the corpus'] = function()
-    -- The single most load-bearing supply fact, and the one GH #108 (10 -> 25
-    -- game-minute cap) is most likely to overturn. BKB is 4050 gold; the corpus was
-    -- cut from 10-minute-capped turbo games.
+    -- GH #108 (10 -> 25 game-minute cap) did overturn this, on a frame that is
+    -- staged rather than admitted, and the reading was taken 2026-08-31 in
+    -- tests/test_axe_bkb_supply_staged_frame.lua (GH #357 row 3). READ THAT FILE
+    -- BEFORE ACTING ON THIS RATCHET GOING RED. Its finding:
+    --
+    --   THIS ZERO WAS NEVER THE LOAD-BEARING ONE. The sentence that used to
+    --   stand here called it "the single most load-bearing supply fact"; it is a
+    --   PROXY for the fact that is -- the ACTIVE-IMMUNITY zero measured by the
+    --   two cases above -- and the two come apart as soon as the count is not 0:
+    --     * NOT SUFFICIENT. The shipped IsMagicImmune override reads MODIFIERS
+    --       and no items, so an item in a slot cannot make it answer true. The
+    --       staged frame carries 2 Black King Bars and 0 immune instants.
+    --     * NOT NECESSARY. All 3 immune instants in this corpus are
+    --       modifier_juggernaut_blade_fury, and 3 of 3 carry no Black King Bar.
+    --     * WRONG COUNT ANYWAY. Both staged slots are structurally out of the
+    --       domain: one is the CASTER's own (the clause reads npcEnemy), one is
+    --       on a DEAD enemy. A count that does not split by (enemy) x (alive)
+    --       over-reports the supply it claims to measure.
+    --
+    -- The SUPPLY-STARVED-IN-CORPUS verdict in this header is therefore UNCHANGED
+    -- by that frame, and hero-9 is still the way to size this lever. The ratchet
+    -- below stays as it is: it correctly reports that the corpus composition
+    -- changed, and that is worth a look every time. What changed is the standing
+    -- response to it -- no longer "the verdict may now be wrong", but "check the
+    -- immunity count and the carrier split; an item count alone re-decides
+    -- nothing".
     local c = census()
     if c.bkb_items > 0 then
         error(string.format(
