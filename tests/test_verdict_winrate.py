@@ -147,18 +147,28 @@ check(v.get("scored_games") == 4 and v.get("unfinished_games") == 2,
 
 # --- 4. the independence disclosure (test_set.md AS.1b) -------------------
 # Under the 30-min cap `winner` is rewritten to the economic winner, so only
-# `engine` games carry information independent of gold.  The tool must print
-# that split every time -- a winrate without it reads as a second witness
-# when it is a sign-coarsened read of the same gold.
+# naturally-ended games carry information independent of gold.  The tool must
+# print that split every time -- a winrate without it reads as a second
+# witness when it is a sign-coarsened read of the same gold.
+#
+# [GH #108 / #352] The bucket is `engine_natural`.  This case used to build
+# its corpus with the pre-rename name `engine` and assert 2/4, which is why
+# the reader in recover_verdict.py could go on reading `engine` for weeks with
+# a green suite behind it: the test had been renamed nowhere and agreed with
+# the stale reader.  On the real farm corpus (all `engine_natural`) the pair
+# printed 0/222 for a wave that was 222/222 naturally ended.  The stale name
+# is now pinned as NOT counted, in tests/test_verdict_winrate_channel.py.
 RS3, DS3 = "mirror:%s:s003:radiant" % CAND, "mirror:%s:s003:dire" % CAND
-v = run([game(RS3, "radiant", "engine"), game(RS3, "radiant", "economy_30min_cap"),
-         game(DS3, "dire", "economy_forcewin_recovery"), game(DS3, "dire", "engine")])
+v = run([game(RS3, "radiant", "engine_natural"),
+         game(RS3, "radiant", "economy_30min_cap"),
+         game(DS3, "dire", "economy_forcewin_recovery"),
+         game(DS3, "dire", "engine_natural")])
 check_parsed(v, ["003"], "case 4")
-check(v.get("winner_by") == {"engine": 2, "economy_30min_cap": 1,
+check(v.get("winner_by") == {"engine_natural": 2, "economy_30min_cap": 1,
                              "economy_forcewin_recovery": 1},
       "winner_by distribution is tallied, got %r" % (v.get("winner_by"),))
 check(v.get("winrate_independent_of_gold") == "2/4 games",
-      "the independent (engine-decided) fraction is stated outright, got %r"
+      "the independent (naturally-ended) fraction is stated outright, got %r"
       % v.get("winrate_independent_of_gold"))
 
 # --- 5. a seed with only one wave scores no winrate ------------------------

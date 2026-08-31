@@ -4983,5 +4983,55 @@
     ],
     "gates": "luacheck_gate.sh exit 0 / 0 warnings, bare read, no RULE6_BYPASS; test_selfcheck_lua_leg.py 43/0/0 exit 0; full python leg 67 passed / 0 failed / 0 uncertifiable exit 0",
     "report": "iterations/reports/director/20260831T072122Z.md"
+  },
+  "winrate_channel_ruling_20260831": {
+    "ruling": "ADOPT_352_STANCH_AND_RETRACT",
+    "at": "2026-08-31T09:5xZ",
+    "by": "director",
+    "issue": 352,
+    "archive": "iterations/streams/test_set.md §CT",
+    "finding": "mirrored winrate = 0.5 + (r_ab - r_ba)/2, so a one-sided sweep forces winrate == 0.500 as an identity, independent of the arm",
+    "corpus": {
+      "W29": "227:1 dire",
+      "W30": "231:0 dire",
+      "W31": "221:1 dire",
+      "inflection": "between 08-25 and 08-27",
+      "days_unrecovered": 6
+    },
+    "adopted": {
+      "stanch": "while winrate_channel == DEGENERATE, no ruling may cite winrate ~= 0.5 or comps_better winrate as rule 2(b) support",
+      "retract": "the `winrate 0.503` support inside test_set.md CO.4; CO.4's CONCLUSION stands on its other three independent citations (+23.55 gpm / deaths 0.00 / comps_better gpm 3/4), so the 44->47 string change and the three admissions are NOT reopened",
+      "attribution": "NOT ruled this round; the 23-commit clue list in #352 belongs to strategy/replay-check; #352 stays open"
+    },
+    "explicitly_not_ruled": {
+      "condition_b_still_buyable": "rule 2(b) is still satisfiable from the four economy means, as it was for the first fifty rounds before winrate existed; the 45-id (+26.60, 7/8) and 47-id (+20.77, 6/8) families remain blocked on condition (a), not (b). No promote ordering changed.",
+      "AT.8": "its premise (SOAK_CAP_MIN=10, engine bucket identically 0) is no longer true under SOAK_CAP_MIN=25 with engine_natural 222/222; registered for re-ruling once the channel recovers, NOT reopened now"
+    },
+    "mechanized": {
+      "file": "tools/batch_test/soak/recover_verdict.py",
+      "new_fields": [
+        "winrate_side_census (per-seed + wave)",
+        "winrate_headroom (per-seed + mean)",
+        "winrate_minority_side_share",
+        "winrate_channel"
+      ],
+      "headroom_bound": "|winrate - 0.5| <= min(1, min(R,D)/min(ab_n,ba_n)) / 2 -- a bound, not a chosen threshold; 0 means the printed winrate is forced",
+      "recovered_bar": 0.2,
+      "bar_source": "GH #352's own stated acceptance criterion, not a constant invented in this ruling",
+      "winrate_still_printed": true
+    },
+    "also_fixed": {
+      "issue": 108,
+      "bug": "recover_verdict.py read the pre-rename bucket `engine`, printing 0/222 on a corpus that was 222/222 engine_natural",
+      "root_cause": "tests/test_verdict_winrate.py case 4 built its corpus with the same stale name and asserted 2/4, so the suite stayed green over the bug",
+      "filed_by": "batch-desk 2026-08-29T09:13Z; recurrence re-registered every wave since"
+    },
+    "verification": {
+      "new_test": "tests/test_verdict_winrate_channel.py (30 checks, bare exit 0)",
+      "load_bearing_case": "case 1 vs case 2 -- two corpora printing a byte-identical winrate 0.5, separated only by headroom",
+      "mutants": "6/6 red (M1 headroom const 0 / M2 revert engine bucket / M3 disarm the 0.20 bar / M4 max-for-min / M5 pooled denominator / M6 revert reader against the renamed old test); every mutant cmp-confirmed different from source; CONTROL green; restore via out-of-tree cp + sha256sum -c OK; no git checkout",
+      "regression": "test_verdict_arm_depth / test_verdict_pool_lossless / test_verdict_strata / test_wave_gate_keys all bare exit 0 (fields are additive)",
+      "lua_changes": "none (git diff --stat bots game empty)"
+    }
   }
 }

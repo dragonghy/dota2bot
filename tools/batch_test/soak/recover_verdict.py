@@ -333,6 +333,34 @@ for seed in seeds:
         # counts, so winrate_arm_depth <= arm_depth always, and a seed the
         # economy gate rejected can never pass this one.
         row["winrate_arm_depth"] = round(arm_depth(ab_n, ba_n), 2)
+        # [GH #352] The headroom this seed's corpus leaves the estimator.
+        #
+        # Write r_ab for radiant's win share in the ab wave and r_ba for
+        # radiant's win share in the ba wave.  The candidate is radiant in ab
+        # and dire in ba, so
+        #     winrate = (r_ab + (1 - r_ba)) / 2 = 0.5 + (r_ab - r_ba)/2,
+        # i.e. the whole arm signal is the DIFFERENCE in one physical side's
+        # win share between the two waves.  A corpus in which one side sweeps
+        # has r_ab = r_ba = 0 and therefore winrate == 0.500 EXACTLY, whatever
+        # the arm does -- an identity, not a measurement.  W30 read 0.500 on
+        # all four seeds off a 231/231 dire sweep and it was logged as "the arm
+        # is neutral on wins"; W29's 0.503 was cited in a promote ruling.
+        #
+        # The bound is not a threshold anybody chose.  With R radiant wins and
+        # D dire wins over this seed's finished games,
+        #     |r_ab - r_ba| <= min(1, min(R, D) / min(ab_n, ba_n)),
+        # because each share is at most (that side's total wins) / (its leg),
+        # and reading the same difference from the dire side gives the D form.
+        # So `winrate_headroom` is the largest |winrate - 0.5| this corpus can
+        # produce.  0 means the number below is forced.  Printed BESIDE the
+        # winrate rather than replacing it: silencing the reading loses the
+        # 0.500, and the pair is what makes the 0.500 legible as an identity.
+        if ab_n and ba_n:
+            rad = ab_w + (ba_n - ba_w)          # radiant wins, both waves
+            dire = (ab_n - ab_w) + ba_w         # dire wins, both waves
+            row["winrate_side_census"] = {"radiant": rad, "dire": dire}
+            row["winrate_headroom"] = round(
+                min(1.0, float(min(rad, dire)) / min(ab_n, ba_n)) / 2.0, 4)
         if row["winrate_arm_depth"] >= min_arm_depth:
             row["winrate"] = round(((ab_w / ab_n) + (ba_w / ba_n)) / 2, 3)
         elif ab_n and ba_n:
@@ -399,6 +427,14 @@ if wrs:
     v["mean"]["winrate"] = round(statistics.mean(wrs), 3)
     v["comps_better"]["winrate"] = "%d/%d" % (sum(1 for x in wrs if x > 0.5), len(wrs))
     v["winrate_neutral"] = 0.5
+    # [GH #352] The pooled headroom, on the same seeds the pooled mean used.
+    # mean(winrate) - 0.5 == mean(winrate_i - 0.5), so |mean - 0.5| is bounded
+    # by the MEAN of the per-seed headrooms -- exact, not a rule of thumb, and
+    # it is the seeds that actually entered the mean, never all rows.
+    hrs = [r["winrate_headroom"] for r in rows
+           if "winrate" in r and "winrate_headroom" in r]
+    if hrs:
+        v["mean"]["winrate_headroom"] = round(statistics.mean(hrs), 4)
 # [GH #269] The census hangs off "a wave was counted", NOT off "a winrate
 # survived the gate".  Left coupled to `wrs`, a wave of nothing but thin seeds
 # -- the exact shape this gate exists to expose -- would print no game counts
@@ -413,8 +449,40 @@ if any("scored_games" in r for r in rows):
         if a.get("winner") in ("radiant", "dire"):
             by[a.get("winner_by") or "unknown"] = by.get(a.get("winner_by") or "unknown", 0) + 1
     v["winner_by"] = by
-    v["winrate_independent_of_gold"] = "%d/%d games" % (by.get("engine", 0),
+    # [GH #108 / #352] The bucket is `engine_natural`; this line read the
+    # pre-rename `engine` and so printed 0/222 on a corpus that was 222/222
+    # naturally ended.  The header two hundred lines up already says to read
+    # `engine_natural`, and a reader following the header's own advice ("if
+    # the share is small, so is the independence") would have dismissed the
+    # winrate on the one wave where it was fully gold-independent.  The batch
+    # desk filed this 08-29 and re-registered the recurrence every wave since.
+    v["winrate_independent_of_gold"] = "%d/%d games" % (by.get("engine_natural", 0),
                                                         sum(by.values()) or 0)
+
+    # [GH #352] The side census the winrate is read against, published every
+    # run.  A swept corpus is not a property of one seed -- it is the shape of
+    # the whole wave -- and it stayed invisible for six waves precisely because
+    # nothing above the per-seed rows ever counted who won.
+    sides = {"radiant": 0, "dire": 0}
+    for a in games:
+        if a.get("winner") in sides:
+            sides[a["winner"]] += 1
+    tot = sides["radiant"] + sides["dire"]
+    v["winrate_side_census"] = sides
+    if tot:
+        share = round(float(min(sides.values())) / tot, 4)
+        v["winrate_minority_side_share"] = share
+        # The 0.20 bar is #352's own stated acceptance criterion for "the
+        # wins/losses channel has recovered", not a constant invented here.
+        v["winrate_channel"] = "RECOVERED" if share >= 0.20 else "DEGENERATE"
+        if v["winrate_channel"] == "DEGENERATE":
+            sys.stderr.write(
+                "GH #352 winrate channel DEGENERATE: minority side won %d of "
+                "%d finished games (share %.4f < 0.20). The winrate below is "
+                "bounded to 0.5 +/- %s and MUST NOT be cited as rule 2(b) "
+                "support until the channel recovers.\n"
+                % (min(sides.values()), tot, share,
+                   v["mean"].get("winrate_headroom", "n/a")))
 
 # [GH #269] The exclusion is published at the top level, not left for a reader
 # to reconstruct from per-seed rows.  `ba_games` was already the only field
