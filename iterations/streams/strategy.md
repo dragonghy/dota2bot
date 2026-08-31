@@ -29,7 +29,7 @@
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
 0SIB. **【2026-08-31T10:50Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒早已交出、
    P2 上一轮已交棒 ⇒ 取章程 backlog **`0d`** 那一族里明写「还没查的」那条:其余 mode 文件里的连续型命令);
-   **已发 GH #TBD**;一条**顺序即闭式**的主判据 + 一条「同一函数里的同一条合同只被兑现一次」+
+   **已发 GH #362**;一条**顺序即闭式**的主判据 + 一条「同一函数里的同一条合同只被兑现一次」+
    一条**否掉照抄修法**的不变式 + 一次把 UNMEASURABLE 与 EMPTY 分开的三门归因;
    `bots/`/`game/` **逐字节零 diff**,零新 gate id,成员串一字未动,`queue.json` 一字未动,零 AWS、S3 零访问。
    **已交棒,球在录像组与总监。**】**
@@ -3499,7 +3499,7 @@
   (`GetActiveMode()=0` ⇒ **925/925** 过不了 mode 闸,**连带关掉整个 `elseif` 半边**;
   `GetAnimActivity()=0` **993/993**;塔 `GetAttackTarget()=nil` 在有塔的 **264 帧全部**);
   其余三条 reach 子句不是瓶颈(925/847/845)⇒ `gate=0` 是归因不是裸零。**⇒ 本轮不落 gate。**
-  报告:`iterations/reports/strategy/20260831T105005Z.md`;issue:**GH #TBD**;backlog 条目 **`0SIB`**;
+  报告:`iterations/reports/strategy/20260831T105005Z.md`;issue:**GH #362**;backlog 条目 **`0SIB`**;
   测试:`tests/test_towercreep_stale_source.lua`(7/7,`[ratchet]`)+
   `tests/test_towercreep_stale_domain.lua`(5/5,53s)+ `tests/_towerstale_sweep.lua`。
   **两个文件故意拆开,只有便宜那半带标签**(GH #358:不给每流每次触发加 +38%)。
