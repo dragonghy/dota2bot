@@ -6801,7 +6801,7 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   差 **697 金(0.3%)**、25.8 min 自然结束 ⇒ **不是经济碾压导致的横扫**,
   且与仓库长期记录的「Radiant 侧偏 ≈ +1.5k gold」**方向相反**(钱偏 radiant,胜负偏 dire)。
   **边界(不越权)**:章程写明本台**不做判断分析不写 bot 代码** ⇒ **归因不是本台的活**,
-  只交线索:拐点两棵树间 `bots/`+`game/` 共 **22 个 commit**(`aadd9938`→`79f32c92`),
+  只交线索:拐点两棵树间 `bots/`+`game/` 共 **23 个 commit**(`aadd9938`→`79f32c92`),
   多数 gated,但**有若干非门控修复**(`48ff29fe` farm Think 的 live nil、`c48dc11b` `lf_salve`
   少两参调用、`75a88fa3` `GetAbilityDamage()` 静默归零轴)——**非门控修复两条腿一起变**,
   正是「能整体挪动侧别平衡、而 A/B 差分看不见」的形状,**这是线索不是判决**;
@@ -6830,7 +6830,24 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **#282 连续第十一波零 UNEXPLAINED,第十四次建议关闭**;**#256 本轮未发波不计数,两计数器不动**;
   **#207 `zusstatic` 第三十六波 armed**;**#218 后续第三十二轮**;**#295 建议关闭**;
   **#329 / #321 待裁**;#313/#290/#291/#298/#299/#349/#350 照旧;
-  ⑥ **⭐ 总监 —— `UNKNOWN STATUS` 4 条**(GH #317)仍在,建议一次性归一到文档化词表。
+  ⑥ **⭐ 总监 —— `UNKNOWN STATUS` 4 条**(GH #317)仍在,建议一次性归一到文档化词表;
+  ⑦ **⭐⭐ 总监 —— `claim_precheck.sh` 在浅克隆上把「查不了」印成「查出问题了」(报告 §4.7)。**
+  按 GH #290 顺序条款,GH #352 草稿发表前跑它,**BARE_EXIT=3**,对
+  `aadd9938`/`79f32c92`/`48ff29fe` 三个 commit 报 `OFF-TRUNK` 并打 `DO NOT PUBLISH YET`,
+  同一份输出里却写着 `local commits not on origin/main: 0` 且表头自带 **`(shallow clone)`**。
+  照「exit≠0 = 未查」去查了:容器是**浅克隆**(历史仅 **51** 个 commit),
+  `merge-base --is-ancestor` 在这种历史上答不出;`--unshallow` 后(**1610** 个 commit)
+  五个被引 commit **全部 `ANCESTOR of origin/main`,三条 OFF-TRUNK 全部消失**。
+  ⭐ **而且浅克隆还给了一个错的数**:同一条 `git log <A>..<B> -- bots/ game/`
+  **浅克隆上 22、unshallow 后 23**(尾部 `61490fff`/`aabbbefe` 在浅历史里不存在,
+  被悄悄换成一个 `e0687a30`);本轮报告与本状态节的 22 **已就地改为 23**。
+  **与「shallow clone 的空输出被读成无漂移」同族但方向是镜像的**:
+  那条是少报变化 ⇒ 读成安全;这次是**把在 trunk 上的 commit 报成不在 ⇒ 读成危险**
+  (会拦住一次本该发表的发表),**同时**又**少数一个 commit ⇒ 读成安全** ——
+  **同一根因在一次运行里朝两个方向各失效一次**。
+  建议:浅克隆下 OFF-TRUNK 降级为 `UNCERTIFIABLE`(exit 2),或工具自己先 `--unshallow`。
+  **给所有 stream 的操作提示:容器默认浅克隆,任何跨越数日的 `git log` 区间计数
+  在 `--unshallow` 之前都不可信。**
   **铁律 6**:`bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`luacheck bots game: 0 warnings`**,
   **退出码 bare 读取(不经管道)`BARE_EXIT=0`**;容器冷启缺 luacheck,**门自己装上了**
   (`apt package lua-check, bounded`)⇒ GH #205 要防的那条「没 luacheck 就跳过」本轮未发生;
