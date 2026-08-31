@@ -1,0 +1,122 @@
+{
+  "wave": "W31",
+  "_note": "First-hand launch record, written 2026-08-31T06:2xZ WHILE all four instances read running/spot in describe-instances. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). Per the W28 self-correction and the W29/W30 repairs, the harvesting round MUST write `machines[].status_code` / `create` / `update` AND the leg counts `ab` / `ba` / `arm_depth` -- under exactly those bare names, NOT `harvest_ab`-style prefixes: reclaim_blind.py reads the bare names.",
+  "tree": "1dd5705f43a6bb10f1071464db32035199388141",
+  "tree_note": "The 40-hex pin was written explicitly, never `main`, and `git ls-remote origin main` was re-verified INSIDE the launch shell block (guard: exit 8 on drift). It read equal at 06:17:21Z, so nothing was refused. A `date -u` gate-(i) guard was in the same block (exit 9 if the 6h throttle had not unlocked); it read 06:17:21Z against the 06:16:31Z unlock and passed with 50 seconds of margin.",
+  "arm_ids": 47,
+  "arm_bytes": 414,
+  "arm_note": "test_set.md line 2 on the pinned tree, 47 ids / 414 bytes (stripped) -- byte-identical to W30's string. SECOND wave of the 47-id family; that family now has 8 pooled seeds if W31 harvests clean. Family fragmentation for the director (fourth naming): 45-id 8 seeds (gpm +26.60, 7/8, frozen), 44-id 4 seeds (W29, frozen), 47-id 4->8 seeds. The charter's own wave policy is `default wave = the FULL current test set`, so this desk has no other option; thickening a specific string needs an explicit director instruction.",
+  "instance_type": "c6i.4xlarge",
+  "market": "spot",
+  "market_note": "Ladder stopped at level 1 for all four: c6i.4xlarge SPOT. No --type c6a.4xlarge fallback, no --on-demand, no `re-aiming inside the ring`, no `AZ RING EXHAUSTED`. Evidence is describe-instances InstanceLifecycle=spot on all four (sir-kj4zjwkq / sir-p8bfhbgq / sir-2afzgtnn / sir-7sjqh66p), NOT the run_id `spot_` prefix. NINTH consecutive wave at zero market-type degradation; owner's Spot-first ruling (GH #158) holds.",
+  "slots": 16,
+  "rec_slots": 1,
+  "rec_slots_note": "Registered branch (A) of GH #308, executed for the EIGHTH wave. Checked at the gate this round by reading the issue directly: #308 is still `open`, last updated 2026-08-30T06:24:56Z, 5 comments, NO director ruling -- and the charter forbids changing the criterion after the fact => rec_slots stays 1. Frame channel 1/16 for the eighth wave; owner P1/P2 condition (a) keeps waiting on it. NINTH time this desk has named it.",
+  "watchdog_hours": 2,
+  "games_per_seed": 12,
+  "seeds": [
+    2375,
+    2393,
+    2403,
+    2444
+  ],
+  "carrier_terms": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+  ],
+  "carrier_terms_note": "Derived MECHANICALLY by carrier_terms.py from the 47-id arm string: 10 hero-scoped, 37 generic, 0 unresolved => 6 term(s). Same six terms as W27-W30 (the arm string did not move).",
+  "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0 (BARE_EXIT read without a pipe); ids=10 seeds=4. Per-term carriers: crystal_maiden 4, lion 3, skeleton_king 3, obsidian_destroyer 2, spirit_breaker 2, zuus 2 => 16 carrier slots. HONEST BOUNDARY (ninth round, unchanged): the '>=2 per term' rule is this desk's OWN discipline, not the gate; the official gate only requires >=1 (it reports PARTIAL and still exits 0). GH #285 is still unruled -- fourteenth round.",
+  "wiring_gate": "tools/batch_test/check_armed_wiring.py --cand <47-id string> --ref 1dd5705f... exit 0: all 47 armed ids wired on the pinned tree. Run ONCE this round; the drift guard did not fire, so no re-pin and no re-run were needed.",
+  "seed_selection_note": "Four seeds NEVER used in any prior wave: seed_roster_index --seed 2375 2393 2403 2444 reports 'no banked games' for all four, against a REFRESHED index (--build run first, exit 0, per the standing discipline).",
+  "seed_index_note": "seed_roster_index --build ran clean (exit 0) before selection. Fourth consecutive wave where the fixed pre-launch --build was performed.",
+  "seed_search_note": "WINDOW NOT SHIFTED this round: [2201,2600] was kept, and the shift rule was not invoked because the window still clears the discipline comfortably. Mask-exhaustive enumeration (GH #313 method) on the REFRESHED index: [2201,2600] now holds 4 banked / 396 unused, popcount {4:6, 3:67, 2:136, 1:137, 0:50}, 47 distinct masks, 1209 valid 4-mask combos at '>=2 per term', BEST = 16 carrier slots. THE CEILING FELL 18 -> 16 IN ONE WAVE, which is the fastest single-wave drop on record (old-window trend was one notch per wave: 16 -> 15 -> 14). Cause is visible in the supply table: W30 took the window's only two pop-5 seeds and two pop-4 seeds, so pop-5 went 2 -> 0 and pop-4 went 8 -> 6. The mechanism the charter names is confirmed a second time, in a fresh window, at DOUBLE the old rate -- because a fresh window's top layer is thinner in absolute terms than the depth of the cut. Shifting right buys ~2 waves of headroom at a time; it is not a fix. GH #285 remains the place to rule on which of the three moves (relax the discipline back to the gate's own >=1, change the window policy, or change the selection rule so it does not always take the richest four).",
+  "machines": [
+    {
+      "seed": 2375,
+      "az": "us-west-2a",
+      "instance": "i-0efb4f0359b92cb13",
+      "sir": "sir-kj4zjwkq",
+      "run_token": "731a21",
+      "run_id": "spot_20260831_061721_1_1dd5705f43a6bb10f1071464db32035199388141_731a21",
+      "launched": "2026-08-31T06:17:21Z",
+      "instance_launch_time": "2026-08-31T06:17:24Z",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2a",
+      "carriers": [
+        "crystal_maiden",
+        "lion",
+        "obsidian_destroyer",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 2393,
+      "az": "us-west-2b",
+      "instance": "i-04ef0b9835397607f",
+      "sir": "sir-p8bfhbgq",
+      "run_token": "fde133",
+      "run_id": "spot_20260831_061726_1_1dd5705f43a6bb10f1071464db32035199388141_fde133",
+      "launched": "2026-08-31T06:17:26Z",
+      "instance_launch_time": "2026-08-31T06:17:28Z",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "carriers": [
+        "crystal_maiden",
+        "lion",
+        "skeleton_king",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 2403,
+      "az": "us-west-2c",
+      "instance": "i-0e8b937752d64c739",
+      "sir": "sir-2afzgtnn",
+      "run_token": "b5b4b9",
+      "run_id": "spot_20260831_061731_1_1dd5705f43a6bb10f1071464db32035199388141_b5b4b9",
+      "launched": "2026-08-31T06:17:31Z",
+      "instance_launch_time": "2026-08-31T06:17:33Z",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "carriers": [
+        "crystal_maiden",
+        "obsidian_destroyer",
+        "skeleton_king",
+        "spirit_breaker"
+      ]
+    },
+    {
+      "seed": 2444,
+      "az": "us-west-2d",
+      "instance": "i-035ac2979fa03df7c",
+      "sir": "sir-7sjqh66p",
+      "run_token": "c44eb5",
+      "run_id": "spot_20260831_061735_1_1dd5705f43a6bb10f1071464db32035199388141_c44eb5",
+      "launched": "2026-08-31T06:17:35Z",
+      "instance_launch_time": "2026-08-31T06:17:38Z",
+      "requested_az": "us-west-2d",
+      "actual_az": "us-west-2d",
+      "carriers": [
+        "crystal_maiden",
+        "lion",
+        "skeleton_king",
+        "spirit_breaker"
+      ]
+    }
+  ],
+  "az_spread": "4 requested / 4 granted / 4 DISTINCT (us-west-2a, 2b, 2c, 2d). GH #252 acceptance (>=2 distinct) and GH #256 acceptance (4 distinct, zero `re-aiming`) BOTH satisfied on this wave -- the first wave since W18 where every AZ filled on its first ask. Contrast W30, where us-west-2a returned InsufficientInstanceCapacity and the #256 ring re-aimed to 2b. Capacity was not tight this round.",
+  "run_id_uniqueness": "Four distinct `soak-run` tag values confirmed via describe-instances (an evidence source independent of this session's own transcript): ...731a21 / ...fde133 / ...b5b4b9 / ...c44eb5. Launch call spacing 5s / 5s / 4s, all crossing a whole second. GH #98 RUN_TOKEN makes uniqueness independent of wall-clock resolution anyway.",
+  "gates": {
+    "i_throttle_6h": "PASS -- W30 launched 2026-08-31T00:16:31Z, unlock 06:16:31Z, first launch call 06:17:21Z (50s margin). Enforced by an in-block `date -u` guard (exit 9), not by hand.",
+    "ii_new_to_test": "PASS -- two commits touching bots/ since W30's pinned tree 0d58ce09: 074d3e9c (director, GH #346 crash-guard exemption + the Silencer body landing) and 083ad814 (strategy, pullcad comment-only + ratchet). Measured with `git log 0d58ce09..HEAD -- bots/ game/` AFTER `git fetch --unshallow` (the shallow-clone trap this desk logged at 03:25Z: on a shallow tree that range answers wrong, and its failure direction is not stable). test_set.md line 2 is unchanged, so the new thing under test is the tree, not the arm string.",
+    "iii_budget": "PASS -- fence = MTD $73.90 + W30 $0.90 (launched within the last 12h, conservatively assumed NOT yet in the budgets snapshot per clause (乙)) + W31 $0.90 = $75.70 <= $80. Next owner-visible Budget ACTUAL alert tier is $80; NOT crossed this round, so no alert-crossing line is owed. Brake $90 and owner line $100 untouched.",
+    "iv_inputs": "PASS -- no outstanding harvest owed; W30 was harvested clean at 03:25Z (231 games, zero exclusions). No pending queue request carries an APPROVED/APPROVED_CONDITIONAL director ruling scheduled for this wave; every ADMITTED rideshare rides this full-set wave by construction.",
+    "iv_reclaim_blind": "PASS -- tools/batch_test/soak/reclaim_blind.py --wave-json iterations/reports/batch-desk/waves/W30_wave.json, BARE_EXIT=0 (read without a pipe), stderr empty. Verbatim: changeover 40.0 min (measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min), min_arm_depth 8.0; 4 seeds PAIRED [depth-checked] (2204 ab36/ba16, 2214 ab27/ba15, 2315 ab41/ba15, 2286-refill ab37/ba20), 1 NO-PAIR (2286 first attempt, instance-terminated-no-capacity, ab0/ba0); `yield 4 paired seed(s) of 5 machine(s)`; `attribution: 1 machine(s) reclaimed before the flip`; `VERDICT: not blinded -- the wave delivered 4 paired seed(s).`; `NEXT WAVE: spot (the default; GH #158 unchanged).` => this wave launched SPOT on the tool's own recommendation, not on habit. Re-run this round on the harvested W30 record rather than quoted from the 03:25Z round, so the reading and the launch it justified are the same reading."
+  },
+  "expected_games": "4 seeds x 12 games x 2 arms = 96 mirrored games nominal; recent full-set waves land 200-240 scored games because each leg drains more than its nominal 12 before the flip. W30 scored 207 of 231 loaded.",
+  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2) + one-time (NOT persistent) spot requests. Expected self-termination between 07:12Z and 07:20Z if they follow W30's ~0.92h profile, hard cap 08:17Z."
+}

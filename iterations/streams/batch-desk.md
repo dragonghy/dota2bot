@@ -6859,6 +6859,115 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **本轮 token**:见报告 §9。
   详见 `iterations/reports/batch-desk/20260831T032500Z.md`。
 
+
+- 2026-08-31T06:30Z:**发波轮。W31 四台 spot 于 `06:17:21Z`–`06:17:35Z` 起飞**
+  (种子 `2375/2393/2403/2444`,树钉 `1dd5705f`,47-id 串与 W30 逐字节相同 ⇒ **换的是树不是测试集**)。
+  ⭐⭐⭐ **但本轮真正的产物在发波之外:铁律 10 的自检从今晨 `04:23Z` 起会对每一个流的每一次触发
+  返回 exit 3 / `TRUNK RED` —— 而它打得对(已开 GH #358)。**
+  **自检**:后台单次、**裸退出码不经管道**(`EXIT=$?` 直写日志)。归因照抄工具(GH #267 4b):
+  `legs run 8`、**FINDINGS `trunk-red(python)`**、**UNCERTIFIABLE none**、**`selfcheck worst exit: 3`**。
+  python 腿 **66 passed / 1 failed / 0 uncertifiable**(上一轮 65/0/0;分母 65→67 是 05:02Z 落地的
+  两个新 py 测试),唯一红的是 `tests/test_selfcheck_lua_leg.py`;Lua 检测器腿 **50 文件 0 failures**
+  (上一轮 48,新增两个 CM 文件实测 0.36s+0.45s,**便宜**)。unlanded `OK`;cadence `clean`;
+  未裁 queue 请求 **none**;`ORPHAN_PROPOSAL none`;`ROWLESS` 3;**`UNKNOWN STATUS` 4 条**(#317);
+  `stable-v1`/`v2` **2/2 OK**。
+  ⭐⭐⭐ **那条红的归因(§5):不是 bot 逻辑红,也不是测试坏了。** `BUDGET_S=120` 与检查 `5a0`
+  由总监 **`074d3e9c`(04:23:56Z)** 落地,**晚于上一轮自检** ⇒ **本轮是它第一次被跑,立刻就响**。
+  本台实测它断言的那个量(与 leg 同构,逐个 `lua5.1 tests/run_tests.lua <basename>`):
+  **133,340 ms / 50 文件**(第二次独立计时 `2m12.494s`,同阶)⇒ **133.3s > 120s,断言为真**。
+  代价高度集中:**`test_blinkflee_scope_ruling` 39,468 ms + `test_fieldsip_magnitude` 38,970 ms
+  = 78.4s(58.8%)**,两者均 08-29 落地、均 tag `[ratchet]`;**其余 48 个合计 54.9s**,
+  第三名只有 6.3s(断层极大)⇒ **去掉那两个,整条腿 54.9s,预算内还剩一倍余量**。
+  **这正是 `routine_selfcheck.sh` 自己 header 里预言过的那件事**(「None of them is tagged today.
+  **If one ever is, 开工 gets that cost silently and every trigger pays it**」),
+  **而 header 也已经写好修法**:「**move the slow file's sweep behind a function instead of
+  dropping it from the set**」——**不要退集**。开工从 08-29 起就在静静付这笔钱,04:23Z 的断言
+  只是第一次把它变成可见的。
+  ⭐⭐ **顺带在铁律 10 自己的工具上复现了上一轮的浅克隆根因,而且这次不打任何横幅**:
+  同一台容器上 `unlanded_commits.py` 浅克隆读作 `trunk 50 commits / certifiable refs 25 of 602 /
+  **commits examined 0** / 年龄下限被 graft point 顶到 08-30T16:15(`--days 3` 的窗口丢了两天)`,
+  `--unshallow` 后读作 `1621 / 602 of 602 / **16** / 窗口兑现` —— **两次的结论行一字不差**
+  (`OK: no unlanded work in the certifiable window.`)。限定语就写在句子里,但它**承担全部信息量
+  而没有任何视觉重量**:检查 0 个 commit 与检查 16 个,读者拿到同一行 `OK`。
+  **失效方向是安全那一侧**(读成"没漏活")⇒ 不会自己举手;与上一轮 `claim_precheck` 那次
+  (把 trunk 上的 commit 报成不在 trunk)**同根异向**。本轮真值恰好也 clean ——**那是运气不是工具**。
+  **成本**:开工 running/pending **空**;MTD **$73.90**(budgets,快照 `2026-08-31T04:55:37Z`,
+  晚于 W30 自毁约 2.5h ⇒ **按滞后条款 (甲) 仍照记 W30 一波价**);CE 复核 **$73.8997453436**
+  逐位一致,**连续第三十五轮**。**围栏 = 73.90 + 0.90(W30)+ 0.90(W31)= `$75.70` ≤ `$80`**。
+  **明确未用条款 (乙) 那个手法**(MTD 增量 $1.065 ≈ 一波价 ⇒ 已计入)。本轮**不跨任何告警档**
+  ⇒ 不欠跨档解释行;刹车 $90 / owner 线 $100 未接近。**单波成本自动失效条款未触发**
+  (W30 账单侧 $0.824–0.892 ≤ $0.90)。
+  **收割**:本轮**无待收割波次**(W30 已于 03:25Z 收清:231 loaded / 207 scored / 零排除 /
+  gpm +18.34 / `suggested: promote`),**未重复收割未重复计费**。唯一在 W30 记录上新跑的是
+  `reclaim_blind.py`,因为它是本波市场类型的**输入**(#271),按「立论现场必须跟着数据走」
+  **当轮重跑而非引上一轮**:**BARE_EXIT=0**、changeover 40.0 min、四粒 `PAIRED [depth-checked]`、
+  一粒 `NO-PAIR`、`yield 4 paired of 5 machines`、`not blinded`、**`NEXT WAVE: spot`**
+  ⇒ **W31 走 spot 是读数点的,不是习惯**。
+  **四道闸**:(i) W30 起飞 00:16:31Z ⇒ 解锁 06:16:31Z,首次调用 **06:17:21Z,余量 50 秒**,
+  由块内 `date -u` 守卫强制(不满足 exit 9);(ii) `git log 0d58ce09..HEAD -- bots/ game/` ⇒
+  **2 个 commit**(`074d3e9c` 总监裁 #346 + Silencer 本体、`083ad814` 协同组 pullcad 注释-only),
+  **且这条区间是 `git fetch --unshallow` 之后才跑的**(起点恰在 50-commit 浅历史里也能答,
+  **但那是运气**);(iii) 围栏 $75.70 ≤ $80;(iv) 输入无欠账 + `reclaim_blind` 如上。
+  **起飞记录**:2375/`2a`/`i-0efb4f0359b92cb13`/`sir-kj4zjwkq`/`731a21`;
+  2393/`2b`/`i-04ef0b9835397607f`/`sir-p8bfhbgq`/`fde133`;
+  2403/`2c`/`i-0e8b937752d64c739`/`sir-2afzgtnn`/`b5b4b9`;
+  2444/`2d`/`i-035ac2979fa03df7c`/`sir-7sjqh66p`/`c44eb5`。
+  **四台全 `InstanceLifecycle=spot`**(describe-instances 证据,不是 run_id 前缀),阶梯停在第 1 级,
+  **第九波连续零市场类型降级**。**AZ:4 请求 / 4 到位 / 4 互异,stderr 既无 `re-aiming inside the
+  ring` 也无 `AZ RING EXHAUSTED`** ⇒ **GH #252 与 #256 的验收本波双双满足**,且这是 **W18 以来
+  第一波每个 AZ 都一次就给**的波(对照 W30:2a 报 `InsufficientInstanceCapacity` 环内改投 2b)。
+  **结论只到「今晨容量不紧张」为止。** 四个 `soak-run` 标签两两不同;配置
+  `--slots 16 --rec-slots 1 --hours 2 --games 12`,均 terminate-on-shutdown + 2h 看门狗 + 一次性 spot。
+  **`--rec-slots` 仍是 1,第八波按登记分支 (A),第九次点名**:本轮**直接读了 issue** 而非引上一轮——
+  GH #308 仍 `open`、`updated_at 2026-08-30T06:24:56Z`、5 条评论、**无裁定**,章程禁止事后改判据。
+  **帧通道连续第八波 1/16**,owner P1/P2 条件 (a) 卡在这里。
+  ⭐⭐ **选种:窗口 `[2201,2600]` 未右移,但天花板一波掉了两格(18 → 16)。**
+  `--build` 先跑(exit 0,第四波连续),掩码穷举(#313):已用 0→**4**、未用 400→**396**、
+  **popcount-5 `2 → 0`(清零)**、popcount-4 `8 → 6`、互异掩码 50→47、合法四元组 5014→**1209(−76%)**、
+  **最优载体格 18 → 16**。**这是有记录以来单波跌幅最大的一次**:旧窗口三点趋势线是
+  **16→15→14 一波一格**,新窗口**一波两格** —— 因为 **W30 拿走了该窗口仅有的两粒 pop-5 与两粒 pop-4**。
+  ⇒ 章程点名的机制**第二次坐实,在新窗口里以两倍速率**:**新窗口的顶层在绝对数量上比每一刀的深度还薄**,
+  所以右移只买到**约两波余量,不是修复**。四粒逐个 `no banked games`(对已刷新索引)。
+  **两道门**(裸退出码):载体门 **BARE_EXIT=0**、`ids=10 seeds=4`、逐 term cm4/lion3/wk3/od2/sb2/zuus2
+  = **16 格**(**诚实边界第九轮不变:「每 term ≥2」是本台自律不是门,官方门只要 ≥1 且 PARTIAL 仍 exit 0**);
+  接线门 **exit 0**,`all 47 armed ids wired on 1dd5705f…`,只跑一次(漂移守卫未触发)。
+  ⭐ **波次记录门本轮真的拦了一次**:第一版 `W31_wave.json` 漏 `gates.iv_reclaim_blind`,
+  `test_wave_gate_keys.py` **BARE_EXIT=1 / `13 checks, 1 failed`** 点名该键,补上后 **14/0** ——
+  **#350(现 #355)那条 schema 断言第一次真的挡住一次疏漏**。
+  **局数**:(a) W30 最终 `231 loaded / 207 scored / unfinished 0 / source_dirs 4 / 零排除`,
+  逐粒 2204 36/16/52、2214 27/15/42、2286 37/20/57、2315 41/15/56;
+  (b) W31 @ `06:32:12Z`(起飞后 ~15 min,**暖场局不算有效局**)`analysis.json` = 8 / 2 / 0 / 2,
+  **四台全部已在产局**;预期 96 局标称、近波实测 200–240 loaded;预计自毁 **07:12Z–07:20Z**,硬上限 08:17Z。
+  **泄漏**:开工**空**;收尾**恰好 4 台、逐个 id 对上 §4.2 起飞记录、零陌生实例 ⇒ 零泄漏**
+  (沿用纪律:`--leak-only` 只报「多出来的」,「少一台」它不举手,所以是逐个 id 对的不是看条数);
+  常驻成本仍只有一个 AMI。
+  **交棒**:① **⭐⭐⭐ 总监 —— GH #358**(自检 120s 预算 vs 133.3s 实测,78.4s 集中在两个
+  08-29 的 `[ratchet]` 文件;修法 header 已写好 = **挪 sweep 进函数,不要退集**;第 2 节附
+  `unlanded_commits.py` 的浅克隆等价 `OK`);② **⭐⭐⭐ 总监 —— GH #352 仍是最大一件**,
+  重裁前不得再引 `winrate ≈ 0.5` 支撑条件 (b),§CO.4 里 W29 的 `0.503` 待撤回;
+  **W31 收割时本台会照旧数赢家**(零额外支出)给拐点后第三个点;
+  ③ **⭐⭐ 总监 —— W30 的 promote 判断第二轮点名**(上一轮已交,未见裁定);
+  ④ **⭐⭐ 总监 —— GH #285 第十四轮催,趋势线四个点且换了斜率**(旧窗口一波一格 → 新窗口一波两格);
+  ⑤ **⭐⭐ 总监 —— 家族碎片化第四轮点名**:45-id 8 粒(冻结)/ 44-id 4 粒(冻结)/
+  **47-id 4 粒 → W31 收割后 8 粒(三轮点名以来第一块在变厚)**;
+  ⑥ **⭐ 总监 —— #308 第九次点名**;**#271 建议写成必填键第五轮催**(顺带报喜见上);
+  ⑦ **⭐ 总监 —— #256 本波双验收通过,建议连同 #252 一并关闭**;
+  **#282 连续第十二波零 UNEXPLAINED,第十五次建议关闭**;
+  ⑧ **⭐ 存量**:#207 `zusstatic` 第三十七波 armed;#218 后续第三十三轮;#295 建议关闭;
+  #329 / #321 待裁;`UNKNOWN STATUS` 4 条(#317)建议归一到文档化词表;
+  #313/#290/#291/#298/#299/#349/#350(#355)照旧。
+  **铁律 6**:`bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`luacheck bots game: 0 warnings`**,
+  **退出码 bare 读取(不经管道)`BARE_EXIT=0`**;容器冷启缺 luacheck,**门自己装上了**
+  (`apt package lua-check, bounded`)⇒ #205 要防的那条本轮未发生;`core.hooksPath` 已上膛;
+  **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)未跑且不声称。
+  **铁律 6 顺序条款(GH #290)**:本轮**先 push 再发表 GH #358**;草稿先过 `claim_precheck.sh`
+  (容器已 `--unshallow`,不会复现上一轮那个假 OFF-TRUNK)。
+  **铁律 11**:MCP/工具未触发 `requires approval`,无空转等待。
+  **下一轮本台 = 收割 W31**(闸 (i) `2026-08-31T12:17:21Z` 解锁;四台预计 07:12Z–07:20Z 自毁
+  ⇒ **多半是纯收割轮**)。
+  **本轮 token**:见报告 §9。
+  详见 `iterations/reports/batch-desk/20260831T063000Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
