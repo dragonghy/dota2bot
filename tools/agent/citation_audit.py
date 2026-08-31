@@ -128,6 +128,28 @@ FINDING CLASSES
     REFUSED    unresolvable under a shallow clone           -> uncertifiable
     GAP        a hole in a stream's report cadence          -> lost trigger
     PENDING    unresolved, but the comment is inside grace  -> printed, not a finding
+    IGNORED-BY-DESIGN
+               a path trunk's own .gitignore matches        -> printed, not a finding
+
+THE IGNORED-BY-DESIGN CLASS (GH #365 comment, 2026-08-31T13:57Z)
+----------------------------------------------------------------
+A cited path that is gitignored is absent from trunk ON PURPOSE.  Judging it
+MISSING says "you forgot to push" about a file nobody could ever push, and the
+first real case was self-defeating: a comment whose entire subject was that
+`bots/Customize/soak_side.lua` does not exist on trunk was, necessarily, judged
+red by this tool and published over a known exit 3.  A gate that must be
+manually pardoned every time it is right is the gate people stop running.
+
+Two guards keep this from becoming an amnesty:
+  * check-ignore reads the WORKING TREE's ignore files, but the audit speaks
+    about trunk.  The downgrade only applies when every `.gitignore` is
+    byte-identical to trunk and no untracked one adds rules
+    (`ignore_rules_certifiable`).  Otherwise MISSING keeps its old meaning to
+    the letter -- a rule that exists only in this container proves nothing
+    about a reader's checkout.
+  * The class is PRINTED, one line per path, with the reason.  Silent
+    forgiveness and correct forgiveness look identical in the exit code; only
+    the printout separates them.
 
 EXIT CODES
     0  audited, everything resolves
@@ -373,12 +395,47 @@ def load_sources(comment_files, text_files):
     return sources, fetched_at
 
 
-def resolve_path(cwd, path, trunk_ref, refs):
+def ignore_rules_certifiable(cwd, trunk_ref):
+    """Can `git check-ignore` here speak for a READER's checkout of trunk_ref?
+
+    check-ignore reads the WORKING TREE's ignore files; the question this tool
+    answers is about trunk.  Those coincide only when every `.gitignore` is
+    byte-identical to trunk and no untracked one is adding rules.  When they do
+    not coincide we must not downgrade anything -- an ignore rule that exists
+    only in this container says nothing about what a reader would see.
+    """
+    if not git_ok(["diff", "--quiet", trunk_ref, "--", "*.gitignore"], cwd):
+        return False
+    p = subprocess.run(["git", "ls-files", "--others", "--exclude-standard",
+                        "--", "*.gitignore"], cwd=cwd, capture_output=True, text=True)
+    return p.returncode == 0 and p.stdout.strip() == ""
+
+
+def path_ignored_by_design(cwd, path):
+    """True when trunk's own ignore rules match this path.
+
+    `--no-index` is required: without it check-ignore refuses to speak about a
+    path that is tracked, and the paths we ask about are exactly the ones that
+    are not.
+    """
+    return git_ok(["check-ignore", "-q", "--no-index", "--", path], cwd)
+
+
+def resolve_path(cwd, path, trunk_ref, refs, ignore_ok=False):
     if git_ok(["cat-file", "-e", "%s:%s" % (trunk_ref, path)], cwd):
         return "OK", trunk_ref
     for ref in refs:
         if git_ok(["cat-file", "-e", "%s:%s" % (ref, path)], cwd):
             return "OFF-TRUNK", ref
+    # GH #365 comment (strategy, 2026-08-31T13:57Z): a path the repo ignores BY
+    # DESIGN is absent from trunk on purpose, so "a reader cannot follow it" is
+    # not a stranding -- it is the fact being cited.  The live case is
+    # `bots/Customize/soak_side.lua`: a comment whose whole subject is that the
+    # farm-only switch does not exist on trunk was, necessarily, judged red by
+    # this tool.  A detector that cries at correct behaviour gets muted, so this
+    # class exists to keep MISSING meaning "you forgot to push".
+    if ignore_ok and path_ignored_by_design(cwd, path):
+        return "IGNORED", None
     return "MISSING", None
 
 
@@ -440,10 +497,14 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
                     grace_hours=0.0, now=None):
     findings = []
     counts = {"paths": 0, "hashes": 0, "hex_seen": 0, "keys": 0, "sections": 0,
-              "ok": 0, "refused": 0, "pending": 0}
+              "ok": 0, "refused": 0, "pending": 0, "ignored": 0}
     pending = []
+    ignored = []
     cache = {}
     now = now or datetime.now(timezone.utc)
+    # Computed once: whether this container's ignore rules are trunk's rules.
+    # False => no path is downgraded and MISSING keeps its old meaning exactly.
+    ignore_ok = ignore_rules_certifiable(cwd, trunk_ref)
 
     def record(verdict, kind, what, label, where, created):
         """Grace: an unresolved citation from a comment younger than the window
@@ -467,9 +528,12 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
             if key in seen:
                 continue
             seen.add(key)
-            verdict, where = resolve_path(cwd, p, trunk_ref, refs)
+            verdict, where = resolve_path(cwd, p, trunk_ref, refs, ignore_ok)
             if verdict == "OK":
                 counts["ok"] += 1
+            elif verdict == "IGNORED":
+                counts["ignored"] += 1
+                ignored.append((p, label))
             else:
                 record(verdict, "path", p, label, where, created)
         for h in hashes:
@@ -508,7 +572,7 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
             else:
                 record(verdict, "section", "%s §%s" % (os.path.basename(spath), sec),
                        label, note, created)
-    return findings, counts, pending
+    return findings, counts, pending, ignored
 
 
 def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
@@ -665,7 +729,7 @@ def main(argv=None):
         except RuntimeError as exc:
             print("REFUSE  git: %s" % exc)
             return 2
-        f, counts, pending = audit_citations(
+        f, counts, pending, ignored = audit_citations(
             cwd, sources, trunk_ref, refs, shallow, args.hash_mode,
             grace_hours=args.comment_grace_hours)
         findings += f
@@ -679,9 +743,17 @@ def main(argv=None):
               "pending inside %.1fh grace %d" %
               (counts["keys"], counts["sections"], args.comment_grace_hours,
                counts["pending"]))
+        print("           paths absent from trunk BY DESIGN (gitignored) %d" %
+              counts["ignored"])
         for kind, what, label, why in pending:
             print("PENDING   %-7s %s\n          cited by: %s\n          %s"
                   % (kind, what, label, why))
+        # Printed, never counted: the reader must still see which citations were
+        # let through and why, or this class becomes a silent amnesty.
+        for what, label in ignored:
+            print("IGNORED-BY-DESIGN  path    %s\n          cited by: %s\n"
+                  "          matched by trunk's own .gitignore -- absent on purpose, "
+                  "not unpushed" % (what, label))
         if counts["paths"] + counts["hashes"] + counts["keys"] + counts["sections"] == 0:
             # Anti-empty-match: an empty scan must not print as a clean bill.
             print("REFUSE  zero citations extracted from %d source(s) -- 'nothing bad' "

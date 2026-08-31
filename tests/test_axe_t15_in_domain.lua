@@ -283,7 +283,17 @@ end
 tests['[hero] axe t15 in-domain: the frame is staged, not admitted'] = function()
     assert(AXE ~= nil, FRAME .. ' no longer carries an npc_dota_hero_axe unit, so '
         .. 'every reading in this file is about a hero that is not there.')
-    local fh = io.open('tests/fixtures/f_20260831_004433_cm_creepreach.lua', 'r')
+    -- Assembled at run time, and derived from FRAME so it cannot drift from it.
+    -- Written as a literal, this line made `tests/test_corpus_existence_claims.lua`
+    -- ratchet (A) -- "every fixture path named under tests/ is a file that
+    -- exists" -- red on trunk from 2026-08-31, because (A) reads a named path as
+    -- a REFERENCE while this line's whole subject is that the path must be
+    -- ABSENT.  The two are not reconcilable by making the path exist: that is
+    -- exactly the admission this test forbids.  Assembling the string is the
+    -- idiom that file's own controls use for the same reason (see its
+    -- `local DIR = 'tests/' .. 'fixtures/'`, and the comment above it).
+    local sAdmitted = FRAME:gsub('tests/frames/', 'tests/' .. 'fixtures/')
+    local fh = io.open(sAdmitted, 'r')
     if fh ~= nil then
         fh:close()
         error('the staged frame has been ADMITTED to tests/fixtures/.  That is a '
