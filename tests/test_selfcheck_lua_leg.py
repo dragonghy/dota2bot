@@ -364,7 +364,7 @@ else:
                     baseline_red.append(name)
 
         if clean_leg == "__TIMEOUT__":
-            # [director 2026-08-31, GH #350]  Same defect as the reddened call
+            # [director 2026-08-31, GH #355]  Same defect as the reddened call
             # site below, and SHARPER here: on timeout clean_red is False, so
             # 5a ("a clean tree does not report TRUNK RED") would PASS -- and
             # pass because nothing ran.  5a0 above is the one honest reading of
@@ -415,7 +415,7 @@ else:
         open(victim, "w", encoding="utf-8").write(body)
 
         red_leg, red_said, red_rc = run_leg(tree)
-        # [director 2026-08-31, GH #350]  The clean run above is guarded by 5a0;
+        # [director 2026-08-31, GH #355]  The clean run above is guarded by 5a0;
         # THIS call site was not, and the asymmetry is the whole defect.  On
         # timeout run_leg hands back the sentinel triple ("__TIMEOUT__", False,
         # -1), and 5d-5g then read it as four INDEPENDENT logic defects of the
