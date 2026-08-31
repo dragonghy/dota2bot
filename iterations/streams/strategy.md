@@ -3560,6 +3560,11 @@
   普查要不要变常设断言 —— 本轮 55 文件重跑已给出现成读数)。
   **GH #229**:`[source S3]` 是它的进度计,落地当天故意变红;本组建议**序列化(套件级锁)**
   而不是进程唯一路径 —— 后者做不到,`J.IsSoakCandidate` 在出货代码里读的就是那个固定路径。
+  **已发表**:GH #365 追评 `issuecomment-5479411913`(在 `57b0d5b8` push 之后,按 GH #290 的顺序)。
+  **发布前 precheck 裸读 exit 3,唯一 finding 是假阳**(`MISSING path bots/Customize/soak_side.lua`
+  —— 那是 `.gitignore:76` 的 farm-only 开关,**它不存在正是评论的主题**;precheck 不区分
+  gitignored 与 tracked 路径 ⇒ **断言某文件不该存在的评论必然被判红**;与 GH #341 同族不同因),
+  已在追评 §8 照实登记。
   **批测台无请求、零 AWS;录像组无请求。**
 - 2026-08-31T10:50Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒早已交出、
   P2 上一轮已交棒 ⇒ 取 backlog **`0d`** 那一族明写「还没查的」那条(其余 mode 文件的连续型命令);
