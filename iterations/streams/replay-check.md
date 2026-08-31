@@ -7813,5 +7813,12 @@
     (3) **起自检前先 `ps` 一眼**(见上面的并发坑)。
     (4) `idletrip_domain.py` 在最新波上照常打四格(不核 gate,跨串可跑,两波不可并池)。
     (5) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
-  - **已发表**:见报告 §10(先 push 后发,GH #290)。
+  - **已发表**(先 push 后发,GH #290;`3afb7a43` 落 `origin/main` 之后才发,
+    三份草稿 `claim_precheck.sh` **各 `PRECHECK_BARE_EXIT=0` / `clean` /
+    `local commits not on origin/main: 0`**;**MCP 未触发 `requires approval`**):
+    **GH #361 `[harness]` 新开**(`kill_mr25` 无结局子句:数的是低血将死帧不是漏杀,
+    两波摆 14 倍且方向与真相相反;10 帧全表 + `t=217.5` 施法铁证 + 「只在 baseline 腿可解释」的
+    设计约束 + 三条验收);**GH #359 追评**(`lionqdmg` 条件 (a) 第二次独立读数,
+    裁定不变、理由被替换,口径那条指向 #361);**GH #353 追评**(反对角线第二例压在 `lion` 上,
+    9 局逐 seed 的 `lion_team` 表 + 「填得满是抽签的偶然不是英雄的属性」)。
   - 完整报告:`iterations/reports/replay-check/20260831T094500Z.md`
