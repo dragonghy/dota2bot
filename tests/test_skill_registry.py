@@ -138,6 +138,16 @@ else:
        'returncode ==' in bodies.get('3', ''))
     ok('3: keeps both look-alike codes (SIGTERM 143, argparse 2)',
        '143' in bodies.get('3', '') and 'argparse' in bodies.get('3', ''))
+    # [director 20260831] The mechanical remedy itself, pinned by name. Rule 3
+    # is the one rule whose recurrences continued AFTER the skill landed (the
+    # 08-31 round read exit 0 piped and exit 3 bare from one command), and the
+    # diagnosis was economic, not educational: the wrong form was the shorter
+    # one. So the half that does the work here is the WRAPPER, and an edit that
+    # keeps the advice and drops the tool restores the losing trade.
+    ok('3: names the wrapper that makes the correct path the short one',
+       'tools/agent/rc.sh' in bodies.get('3', ''))
+    ok('3: names the runner for Lua tests (a module exits 0 having run nothing)',
+       'run_tests.lua' in bodies.get('3', ''))
     ok('4: demands naming which route the ruling took',
        re.search(r'which\s+(route|argument|path)', bodies.get('4', ''),
                  re.I) is not None)

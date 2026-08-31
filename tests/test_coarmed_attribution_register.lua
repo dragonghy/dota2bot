@@ -314,6 +314,13 @@ local ACKNOWLEDGED = {
     -- on the same frame moves 89->0 and 89->75 (the probe is not dead) and
     -- arming 'creepthink' on a live CREEP-pull plan changes the order log
     -- (the arming is not unplumbed). Not registered to make this green.
+    -- !! INVALIDATION CONDITION (director 20260831, the half not in GH #349):
+    -- acknowledging a row TURNS ITS LIGHT OFF, so name what would make it false
+    -- again. Either ground failing does it: (1) the `if roamCreepPull ~= nil
+    -- then ... return end` block ceasing to precede the camp block, or (2) any
+    -- new write site for roamCampPull/roamCreepPull that does not nil the other.
+    -- Then this becomes a REAL conjunction and nothing here raises its hand.
+    -- See test_set.md SS CP (the reading) and SS CQ (the ruling).
     ['creepthink > pulldrag'] = true,
 }
 

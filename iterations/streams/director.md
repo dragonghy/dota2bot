@@ -7416,3 +7416,56 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ③**backlog §19** ④验收 `iv_reclaim_blind` 那一栏 + 围栏用 `$0.90` ⑤验收英雄组是否为 Silencer 开 issue
   ⑥验收协同组是否处置 `pullcad` 的 (c) 算术 ⑦`#326`/`#324`/`#328` ⑧`state.json` round-trip
   ⑨45-id 家族的 (a)(§3 之后这是**唯一的真瓶颈**)⑩**低频 patch 检查** ⑪backlog §16/§17/§18。
+
+- 2026-08-31T01:14Z:**到岸自检 exit 3,而那条红是本座位 22:0xZ 自己的入集造成的;
+  收尾 exit 0(8 腿,FINDINGS 0,UNCERTIFIABLE 0)。** 报告
+  `iterations/reports/director/20260831T011459Z.md`,裁定全文 `test_set.md` **§CO.9**,
+  登记 `state.json:coarmed_creepthink_pulldrag_20260831`(**350 → 351 键,新增 1 / 删除 0,
+  既有键逐字节相同**;round-trip 仍坏,走文本追加 + **写前**解析核验)。
+  `luacheck_gate.sh` **exit 0 / 0 警告,未用 `RULE6_BYPASS`**;`git diff --stat bots game` **空**
+  (**本轮零 Lua 行为改动**);`run_py_tests.sh` **64 passed / 0 failed / 0 uncertifiable**(此前 62);
+  **46 个 tagged Lua 检测器 0 失败**(到岸是 1/46 红)。**本轮零 AWS 调用、零支出**
+  (读数照抄批测台 21:12Z:MTD **$71.458**、围栏 **$72.26 ≤ $80**、实例空、零泄漏;
+  ⚠️ 其快照自标 `11:33:48Z`,**已连续五轮未前进**,本轮未重复核查)。
+  **① ⭐ 到岸红 = 22:0xZ 入集 `creepthink` 的直接后果,而那一轮结构上不可能看见它。**
+  `test_coarmed_attribution_register.lua` 的输入是 `bots/` **join 成员串**,⇒ **它唯一会变红的
+  时刻就是入集落地那一秒,而那一秒在开工自检之后**。22:0xZ 报的「44 个检测器 0 失败」**当时是真的**
+  —— 不是读数取法错(§CO.6 那种),是**取数时刻**错。已实测到代价:英雄组 22:56Z 报告里
+  「trunk exit 3 on arrival, NOT caused by this desk … Attribution: director/strategy」。
+  ⇒ **立一条:改成员串的那一轮,收尾前必须再跑一次自检。**
+  **② 裁定 WIDE(过包含):`creepthink` 结构上动不了 `pulldrag` 的 (a),按源码核,
+  且结论不依赖任何 id 的 arm 状态**(与 `pullcad > pulldrag` 那条 WIDE 行不同)。
+  `pulldrag` 调用点 `:404` 在**营地**块 `:349`;`creepthink` 的门 `:265` 谓词是
+  `bot.roamCreepPull`(**拉线**侧);**拉线块 `:268` 以 `:282` 的无条件 `return` 收尾**
+  ⇒ 凡 `roamCreepPull ~= nil` 的帧在到 `:349` 前已返回。加不了帧也减不了帧,两字段同时非 nil 亦然。
+  **⚠️ 失效条件两处都写了**(`:282` 一旦条件化就变真合取,而**登记本身已经关掉了那盏灯**)。
+  **③ ⭐⭐ 欠两轮的第 1 优先落地 `tools/agent/rc.sh`,而本轮第一次拿到受控读数**:
+  `selfcheck 2>&1 | tail -60` 报 **exit 0**、`selfcheck >log 2>&1; rc=$?` 报 **3**,
+  **同命令同树同分钟**,而那一分钟 trunk **真的是红的** —— 管道腿把红 trunk 报成了 clean。
+  **归因是经济的不是教育的**:要短尾巴**和**退出码,唯一的一行写法就是管道;
+  **让对的做法更长的规则在足够长的时间线上必输**。⇒ 补法是**把对的那条变短**:
+  `rc.sh` 裸跑命令、打短尾巴、把 `RC_EXIT=<code>` 打成**最后一行**(于是 `rc.sh cmd | tail -5`
+  —— 正是要打败的那个习惯 —— **仍然**在文本里看得见真码),自身也以该码退出。
+  **④ ⭐ 同族第三个假读数,裸读退出码救不了**:`tests/*.lua` 以 `return tests` 收尾是**模块**,
+  `lua5.1 tests/test_x.lua` **什么都没跑就 exit 0**(那个 0 诚实,比 143/argparse 2 更阴)。
+  **我自己先掉进去了**,只因在它上面建了变异台、**M1 存活**才被抓出(纪律 2 逐字命中)。
+  `rc.sh` 拒绝模块形并点名 runner(判据是**文件末行**不是路径,自运行 `.lua` 照跑);
+  已写进 skill 纪律 3,`test_skill_registry.py` 新增两条机械 token 钉住
+  (**留标题掉手法**是这条纪律在 skill 落地后**唯一**仍复发的衰变形态)。
+  **⑤ 验证**:新测试 `tests/test_rc_wrapper.py` **33 检查全绿**;**变异 8/8 红**
+  (register 2/2、`rc.sh` 5/5 —— 含 **M3 在命令与 `rc=$?` 之间插一条 `printf`**、
+  registry 1/1「留建议删工具名」),CONTROL 全绿,**还原一律走树外 `cp` + `sha256sum -c`
+  每次 OK,全程未用 `git checkout`**。
+  **⑥ ⚠️ 本轮抓到两个 no-op 变异体,两个都读作「绿」**(吞掉的 `AssertionError`;
+  `python3 - "$1"` 把程序当 argv 传)——**与本轮头条缺陷同形**:「什么都没跑」穿着「通过」。
+  两次都靠**改动前先跟原文件比 sha256** 抓出,读数已丢弃。
+  ⇒ **「变异体确实不同于原文件」进纪律 1 的标准动作,下一轮落地。**
+  **⑦ 本轮明说没裁的**:**GH #346(crash-guard 修复要不要带 gate)—— 英雄组 22:56Z 明确把球
+  交给总监,本轮未裁,下一轮第一优先**;`#348`/`#326`/`#324`/`#328` 未裁;**§CE 正则已挂九轮**;
+  `state.json` round-trip 未修;45-id 家族 **+26.60 / 7-of-8** 的条件 (a) 仍缺;
+  **低频 patch 检查连续多轮欠**;backlog §16/§17/§18/§19/§20 未动;`DECISIONS_NEEDED.md` 无新增;
+  本周邮件与台账 01:20Z 已做 ⇒ **本轮无邮件、不重做台账**。
+  **下次触发**:①**裁 GH #346** ②「变异体确实改了文件」进纪律 1 ③**§CE 第一步**(已挂九轮)
+  ④backlog §19/§20 ⑤`#326`/`#324`/`#328`/`#348` ⑥`state.json` round-trip ⑦45-id 家族的 (a)
+  ⑧**低频 patch 检查** ⑨**验收:下几轮报告应出现 `rc.sh` 的 `RC_EXIT=` 读法,不再有 `| tail`
+  量退出码** ⑩验收 `iv_reclaim_blind` 那一栏 ⑪盯批测台快照是否还停在 `11:33:48Z`。

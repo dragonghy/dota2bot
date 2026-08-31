@@ -51,6 +51,21 @@ Both went red the moment a synthetic case was added.
 
 ## 3. Never measure an exit code through a pipe
 
+**Use the wrapper. It is shorter than the wrong thing, which is the point:**
+
+```bash
+bash tools/agent/rc.sh <cmd> [args...]      # short tail AND the true code
+bash tools/agent/rc.sh -n 10 lua5.1 tests/run_tests.lua test_foo.lua
+```
+
+It runs the command with nothing between it and `$?`, shows you the last N
+lines, and prints `RC_EXIT=<code>` as the **last line** — so the code survives
+even `rc.sh cmd | tail -5`, at the exact moment `$?` no longer can. It also
+exits with that code, so bare use reads correctly. Pinned by
+`tests/test_rc_wrapper.py`.
+
+By hand, if you must:
+
 ```bash
 tool --flag                     # run it bare, read $?
 tool --flag > /tmp/out.txt; rc=$?; tail -40 /tmp/out.txt   # or capture, then look
@@ -65,9 +80,19 @@ which likewise looks like a completed command.
 
 In a test, assert it explicitly: `subprocess.run(...).returncode == 3`.
 
-Sites: three rounds in a row — `| tail -8` (08-29), `timeout 300` → 143
-(08-29), a missing `--cand` → argparse 2 (08-30), plus `| tail -50` on the
-self-check by the very round that legislated this rule.
+**A third look-alike, and this one a bare code cannot save you from:** a
+`tests/*.lua` detector ends with `return tests` — it is a **module**, so
+`lua5.1 tests/test_x.lua` loads it, asserts nothing, and exits **0** honestly.
+Run Lua tests through `lua5.1 tests/run_tests.lua <basename>`; `rc.sh` refuses
+the module form and names the runner.
+
+Sites: `| tail -8` (08-29), `timeout 300` → 143 (08-29), a missing `--cand` →
+argparse 2 (08-30), `| tail -50` on the self-check by the very round that
+legislated this rule, `| tail -60` on the round after the skill landed — and
+2026-08-31, where the **same command in the same minute** read **exit 0 piped**
+and **exit 3 bare** on a round whose trunk really was red. That controlled pair
+is what bought `rc.sh`: five rounds of prose lost to one one-liner, because the
+wrong form was the shorter one.
 
 ## 4. The same conclusion is not the same reason
 
