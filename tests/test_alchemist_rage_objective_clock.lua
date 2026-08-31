@@ -358,9 +358,24 @@ tests['[corpus] no fixture in tests/fixtures can tell armed from factory'] = fun
     end
     p:close()
     assert(n > 0, 'no fixtures found -- this assertion is vacuous, do not read it as a pass')
+    -- 2026-08-31, GH #357 row 2: the message this printed used to end "pin the
+    -- decision on that frame instead of resting on the arithmetic alone".  That
+    -- instruction is NOT EXECUTABLE, and the reading that says so lives in
+    -- tests/test_alchemist_rage_clock_staged_frame.lua: the clock is the LAST of
+    -- five conjuncts at each call site, and the other four -- an Alchemist or
+    -- Rubick on the field, BOT_MODE_ROSHAN / BOT_MODE_SIDE_SHOP, an attack
+    -- target named "roshan"/"miniboss", and the attack animation -- have no
+    -- channel in a make_fixture.py dump at all (0 carriers in 1,080
+    -- hero-instants; the creeps block carries team/x/y/dt and no NAME).  So no
+    -- frame from this generator, of any era, can pin this decision; a wave can
+    -- (see [domain] below).  The CONDITION is unchanged -- the corpus still tops
+    -- out below the armed bound -- only this message moved.
     assert(tMax < ARMED, ('%s sits at t=%.1f, inside the band [%d, %d) this change '
-        .. 'moves. The corpus can finally distinguish armed from factory: pin the '
-        .. 'decision on that frame instead of resting on the arithmetic alone.')
+        .. 'moves. The corpus can now tell armed from factory ON THE CLOCK -- but '
+        .. 'read tests/test_alchemist_rage_clock_staged_frame.lua before concluding '
+        .. 'anything: the clock is the last of five conjuncts and the other four '
+        .. 'have no channel in the dump. Re-take that reading, do not "pin the '
+        .. 'decision" here.')
         :format(sMax, tMax, ARMED, CALL_SITES[1].shipped * 60))
 end
 

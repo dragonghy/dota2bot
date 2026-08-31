@@ -22,6 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-64. **付 GH #357 第 2 行(三条真判定的**最后一条**):Alchemist 时钟带 —— 帧确实第一次
+   落进带里,但**时钟是五条合取的最后一条**,另外四条的 0 是 mock 默认值不是观测;
+   堵点在**生成器**不在世代 ⇒ `alchrage` VERDICT UNCHANGED,**#357 真判定清单全部付清****
+   **2026-08-31T19:51Z done —— `bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、
+   零 AWS(连 S3 GET 都没有)、不申请波次、不开新 issue;`state.json` / `queue.json` /
+   `test_set.md` 均无新增。新 `tests/test_alchemist_rage_clock_staged_frame.lua`(11 节点);
+   `test_alchemist_rage_objective_clock.lua` **只改注释与文案,`assert(tMax < ARMED, ...)`
+   条件逐字节未动**;`tests/frames/README.md` 第 2 行 OPEN → PAID。帧**按名字**加载 ⇒
+   #357 表里 **9 个 ratchet 一个都没动**。报告 `iterations/reports/hero/20260831T195108Z.md`。**
+   - **⭐⭐ 主读数**:t=1190.4 **确实第一次落进 [900,1800) 与 [960,1920)**(出货说 FIRE、
+     armed 说 HOLD)——**但它是每个调用点五条合取的最后一条**。真实 loader + 出货 helper
+     逐个求值,10 个英雄:载体(Alchemist/Rubick)**0 / 1,080 hero-instant**(108 帧 41 英雄)、
+     `IsDoingRoshan` **0/10**(`GetActiveMode()` 答 0,`BOT_MODE_ROSHAN=1020`)、
+     `IsDoingTormentor` **0/10**、`IsAttacking` **0/10**、`GetAttackTarget` **0/10 (nil)**。
+     **那四个 0 全是 mock 默认值,不是观测** ⇒ **VERDICT UNCHANGED**。
+   - **⭐⭐ 最该拿走的:比第 3 行糟一级 —— 堵点在生成器里。** 第 3 行的承重零(免疫)
+     还在 dumper 已写的 schema 内,后来的帧原则上能动;这一条不是。`make_fixture.py`
+     只发 `units`(**只有英雄**)、`buildings`、`creeps`(**`team,x,y,dt`,连 name 都没有**),
+     而 `J.IsRoshan`/`J.IsTormentor` 判 `GetUnitName()` 含不含 `roshan`/`miniboss`
+     ⇒ **schema 里不存在能命中的记录类型** ⇒ **这个生成器产得出的任何一帧、任何世代,
+     都钉不了这个决定**。买 (a) 只剩**波次**一条路。
+   - **⭐ 改的是常设指令不是裁定**:`[corpus]` ratchet 文案原写「pin the decision on that
+     frame」,**不可执行**,已改指新文件;ratchet 保留且**仍为绿**(语料 tMax 790.4 < 900)。
+   - **⚠️ 变异台上自己翻的车(M11 幸存)**:孪生体 `function X.ConsiderChemicalRage` 改名成
+     `...RageXX`,断言 `src:find('function X%.ConsiderChemicalRage')` **照样命中**(改名后
+     的串**包含**原串)。**`-63` 那条子串教训一周内第五次同形**,且**正好在要证明「载体集合
+     就这两个文件」的那行上**失效。已锚到左括号;重跑见红。另:`[control]` 第一版只戳
+     `GetAnimActivity` 而 `IsAttacking` 仍 false —— 它读**三个**字段
+     (`GetAttackPoint() > GetAnimCycle()*0.99`,默认 0)。**控制组该红时红了,红出来的东西
+     加强了主结论**(缺的通道是三个不是一个)。
+   - 变异台 **14 个,13 个一次见红且只红在该红的节;M11 修后见红**(含 **M13 谓词清空
+     `CARRIERS = {}`**,专为「空谓词的 0 和空语料的 0 是同一个整数」而造);还原后 7 文件
+     `cmp` 逐字节相同,零残留。
+   - 门:静态 **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**);动态子集(GH #124)
+     覆盖 #357 表点名的每个文件,全部 exit 0。⚠️ **开工自检第一次被脚本 REFUSED(exit 2,
+     我管道给了 `tail`)= 什么都没检查不是通过**(evidence-discipline 第 3 条第 5 次复发);
+     重跑 exit 3,`test_rc_wrapper.py` TRUNK RED **已由 GH #364 立案 flaky**,本 diff 零行 python。
+   - **下一棒**:(1) **三条真判定全清 ⇒「把帧搬进 `tests/fixtures/`」现在解锁**,是下一个
+     干净的工作单元,代价是 #357 表里剩下的 **5 条记账行**;(2) `alchrage` 只剩波次一条路,
+     但**要先入测试集**(`test_set.md` 提议 + 总监批准),#357 请裁的两件事仍在总监手上,
+     本轮不越位提 queue;(3) **`-43a` 的 Zeus 方向仍欠**;(4) GH #366 + queue `hero-26`
+     在等总监/批测台。**#357 追评本轮发表。**
+
 -63. **付 GH #357 第 3 行(三条真判定的第二条):黑黄杖的那个零 —— 物品零没了(0→2),
    裁定依赖的零没动(魔免仍 0)⇒ `axecull` VERDICT UNCHANGED;而读数说明**那个物品零
    从来就不是承重的零**,它只是承重那个零的代理**
@@ -3250,6 +3293,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T19:51Z(报告 `iterations/reports/hero/20260831T195108Z.md`;轴 **付 GH #357 第 2 行
+  —— 三条真判定的最后一条,Alchemist 时钟带**。**#357 的真判定清单至此全部付清。**)
+  **`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、
+  不申请波次、不开新 issue;`state.json` / `queue.json` / `test_set.md` 均无新增。**
+  新 `tests/test_alchemist_rage_clock_staged_frame.lua`(11 个节点);
+  `test_alchemist_rage_objective_clock.lua` **只改注释与文案,`assert(tMax < ARMED, ...)`
+  的条件逐字节未动**;`tests/frames/README.md` reopen 清单第 2 行 OPEN → PAID。
+  帧**按名字**加载 ⇒ #357 表里 **9 个 ratchet 一个都没动**。
+  - **⭐⭐ 主读数**:staged 帧 t=1190.4 **确实第一次落进两条带**([900,1800) 与 [960,1920)),
+    **但时钟是每个调用点五条合取里的最后一条**。用真实 loader、出货 helper 逐个求值,10 个英雄:
+    载体(Alchemist/Rubick)**0 / 1,080 hero-instant**(108 帧 41 个英雄)、
+    `IsDoingRoshan` **0/10**(`GetActiveMode()` 答 0,`BOT_MODE_ROSHAN=1020`)、
+    `IsDoingTormentor` **0/10**、`IsAttacking` **0/10**、`GetAttackTarget` **0/10 (nil)**。
+    **那四个 0 全是 mock 默认值不是观测** ⇒ **`alchrage` VERDICT UNCHANGED**。
+  - **⭐⭐ 最该拿走的:堵点在生成器,不在世代 —— 比第 3 行糟一级。** 第 3 行的承重零
+    (免疫)还在 dumper 已写的 schema 里,后来的帧原则上能动;这一条不是。
+    `make_fixture.py` 只发 `units`(**只有英雄**,1,080 个 0 个非英雄)、`buildings`
+    (tower/barracks/watch_tower/ancient)、`creeps`(**`team,x,y,dt`,连 name 都没有**;
+    19 条记录 0 条带 name),而 `J.IsRoshan`/`J.IsTormentor` 判的是 `GetUnitName()` 里
+    有没有 `roshan`/`miniboss` ⇒ **这个 schema 里不存在能命中的记录类型**。
+    ⇒ **`make_fixture.py` 产得出的任何一帧、任何世代,都钉不了这个决定**;
+    买 (a) 只剩**波次**一条路(`[domain]` 节:`SOAK_CAP_MIN=25 > 15`,可买)。
+  - **⭐ 改的是常设指令不是裁定**:`[corpus]` ratchet 的失败文案原写「pin the decision on
+    that frame」,**那条指令不可执行**,已改指新文件;**ratchet 保留且仍为绿**
+    (语料 tMax **790.4** < armed 900),**条件逐字节未动**。
+  - **⚠️ 变异台上自己翻的车(M11 幸存)**:把孪生体 `function X.ConsiderChemicalRage`
+    改名成 `...RageXX`,断言 `src:find('function X%.ConsiderChemicalRage')` **照样命中**
+    ——改名后的串**包含**原串。**这是 `-63` 那条子串教训一周内的第五次同形**,而且**正好在
+    要证明「载体集合就这两个文件」的那行上**失效。已锚到左括号(`%s*%(`),`grep` 同改;
+    重跑见红。另一次:`[control]` 第一版只戳 `GetAnimActivity`,`IsAttacking` 仍 false ——
+    它读**三个**字段(`GetAttackPoint() > GetAnimCycle()*0.99`,默认 0,`0>0` 为假);
+    **控制组该红时红了,而且红出来的东西加强了主结论**(缺的通道是三个不是一个)。
+  - 变异台 **14 个,13 个一次见红且只红在该红的节;M11 修后见红**
+    (含 **M13:谓词本身清空 `CARRIERS = {}`** —— 专为 -63 那条「空谓词的 0 和空语料的 0
+    是同一个整数」造的);还原后 7 个文件 `cmp` **逐字节相同**,零残留。
+    **先存副本、从副本恢复,不从 git 恢复。**
+  - 门:静态 **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**);动态**子集不是全套**
+    (GH #124):`alchemist` 21/0、`activemode` 14/0、`axe_cull` 36/0、`axe_t15` 21/0、
+    `bbfight` 20/0、`campfarm` 16/0、`focus_innate` 13/0、`cm_creep` 19/0、`smoke` 3/0、
+    `gate_claim` 10/0、`fixture` 93/0 —— 覆盖 #357 表点名的每个文件,全部 exit 0。
+    ⚠️ **开工自检第一次 REFUSED(exit 2,我把 stdout 管给了 `tail`)= 什么都没检查不是通过**
+    (脚本自己拦下,并指出这是 evidence-discipline 第 3 条**第 5 次**复发);重跑 **exit 3**,
+    findings = `cadence`/`queue-rulings`/`trunk-red(python)`;那条 python 红是
+    `test_rc_wrapper.py`,**已由 GH #364 立案 flaky**,**本 diff 零行 python**。
+  - **下一棒**:(1) **三条真判定全清 ⇒ 「把帧搬进 `tests/fixtures/`」现在解锁**,
+    是下一个干净的工作单元,代价是 #357 表里剩下的 **5 条记账行**;
+    (2) `alchrage` 只剩波次一条路,但**要先入测试集**(`test_set.md` 提议 + 总监批准),
+    #357 请裁的两件事**仍在总监手上**,本轮不越位提 queue;
+    (3) **`-43a` 的 Zeus 方向仍欠**;(4) GH #366 + queue `hero-26` 在等总监/批测台。
+    **#357 追评本轮发表。**
 - 2026-08-31T16:51Z(报告 `iterations/reports/hero/20260831T165102Z.md`;轴 **付 GH #357 第 3 行**
   —— 三条真判定的**第二条**,焦点英雄 Axe;上一轮付的是第 6 行)。
   **`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、

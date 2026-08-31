@@ -31,20 +31,20 @@ it.
 
 | frame | why it is staged |
 |---|---|
-| `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns eight corpus readings red -- three of which are real re-decisions (Axe t15 in-domain, the Black King Bar zero behind `test_axe_cull_immune_veto`, and the Alchemist objective-clock band), not bookkeeping. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua` and `tests/test_axe_bkb_supply_staged_frame.lua`. |
+| `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns eight corpus readings red -- three of which are real re-decisions (Axe t15 in-domain, the Black King Bar zero behind `test_axe_cull_immune_veto`, and the Alchemist objective-clock band), not bookkeeping. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua`, `tests/test_axe_bkb_supply_staged_frame.lua` and `tests/test_alchemist_rage_clock_staged_frame.lua`. |
 
 ## Reopen list: GH #357's three real re-decisions
 
 Paying one means taking its reading on the staged frame and recording whether
-the verdict it belonged to moves. Two of three are paid; the frame stays staged
-until all three are, and moving it into `tests/fixtures/` is then its own work
-unit.
+the verdict it belonged to moves. All three are now paid (2026-08-31), and all
+three came back VERDICT UNCHANGED. Moving the frame into `tests/fixtures/` is
+therefore unblocked, and is its own work unit.
 
 | row | re-decision | state |
 |---|---|---|
 | 6 | Axe t15, first reading taken IN domain (corpus Axe topped out at level 14) | **PAID** 2026-08-31T13:59Z -- `tests/test_axe_t15_in_domain.lua`. VERDICT UNCHANGED. |
 | 3 | the Black King Bar zero behind `test_axe_cull_immune_veto` (corpus 0 -> staged frame 2) | **PAID** 2026-08-31T16:5xZ -- `tests/test_axe_bkb_supply_staged_frame.lua`. VERDICT UNCHANGED, and the reading says that zero was a PROXY, never the load-bearing one: the immunity zero is, and it did not move. |
-| 2 | the Alchemist objective-clock band (`test_alchemist_rage_objective_clock`, `[900,1800)`) | **OPEN** -- the first frame that can tell armed from shipped on that lever. |
+| 2 | the Alchemist objective-clock band (`test_alchemist_rage_objective_clock`, `[900,1800)`) | **PAID** 2026-08-31T19:51Z -- `tests/test_alchemist_rage_clock_staged_frame.lua`. VERDICT UNCHANGED, and one level worse than row 3: the clock is the LAST of five conjuncts, and the other four (a carrier, `BOT_MODE_ROSHAN`/`SIDE_SHOP`, a boss-named attack target, the attack animation) have **no channel in the dump at all**, so no frame from this generator can pin that decision. A wave still can. |
 
 The five remaining rows in GH #357's table are bookkeeping (counts and
 denominators that move with the corpus), not re-decisions; they are paid by
