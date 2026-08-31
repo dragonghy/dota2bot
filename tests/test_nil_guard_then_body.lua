@@ -150,12 +150,11 @@ end
 tests['[ratchet] no nil guard routes execution into indexing the value it found nil'] = function()
     local self_indexing = census()
 
-    -- The ONE registered exception, and it is registered as a defect, not as
-    -- acceptable: hero_silencer.lua is the site #346 was filed about.  It stays
-    -- because Silencer is not one of the five focus heroes and the hero stream
-    -- moves one lever at a time -- NOT because the shape is tolerable there.
-    -- Whoever takes #346 deletes this exception; do not add a second one.
-    local expected = { 'bots/BotLib/hero_silencer.lua' }
+    -- No exceptions.  hero_silencer.lua was the last one; #346 closed it
+    -- (director 2026-08-31, test_set.md §CR), so the exception was deleted as
+    -- this test's own comment required.  Do not add one back: a new hit means
+    -- someone wrote `if X == nil ... then X.field = ...` again.
+    local expected = {}
 
     local got = {}
     for _, r in ipairs(self_indexing) do got[#got + 1] = r[1] end
@@ -192,6 +191,34 @@ tests['[ratchet] crystal_maiden: the guard no longer indexes what it found nil']
         'CM nil branch must substitute `{ count = 0 }`, not index the nil value')
     assert(src:match('elseif%s+nCanHurtCreepsLocationAoE%s*%.%s*targetloc%s*==%s*nil'),
         'the targetloc check must survive the repair, on the elseif leg')
+end
+
+tests['[ratchet] silencer: repaired, and NOT by copying CM\'s result text'] = function()
+    local self_indexing = census()
+    for _, r in ipairs(self_indexing) do
+        assert(r[1] ~= 'bots/BotLib/hero_silencer.lua',
+            'Silencer regressed to the #346 shape at line ' .. r[2] .. ' (' .. r[3] .. ')')
+    end
+
+    local src = assert(io.open('bots/BotLib/hero_silencer.lua')):read('*a')
+    assert(src:match('if%s+nCanHurtCreepsLocationAoE%s*==%s*nil%s*then%s*' ..
+        'nCanHurtCreepsLocationAoE%s*=%s*{%s*count%s*=%s*0%s*}'),
+        'Silencer nil branch must substitute `{ count = 0 }`, not index the nil value')
+
+    -- The half that is specific to Silencer, and the reason this is its own
+    -- test rather than a second name on CM's.  CM's repaired text carries an
+    -- `elseif ... .targetloc == nil` clause; that clause PRE-EXISTED in CM's
+    -- disjunction.  Silencer's disjunction never had it.  Copying CM's result
+    -- text would therefore add a clause the old code did not have, and on a
+    -- `targetloc == nil` frame with a non-empty lane-creep list the old code
+    -- calls J.GetInLocLaneCreepCount while the copy would short-circuit past
+    -- it -- a behavior change on a frame that never raised, i.e. exactly the
+    -- SUPERSET guard the abort-containment criterion forbids (§CR).
+    -- Port the transformation, not the result text.  This assertion is what
+    -- makes that mechanical instead of a comment nobody re-reads.
+    assert(not src:match('nCanHurtCreepsLocationAoE%s*%.%s*targetloc%s*==%s*nil'),
+        'Silencer must NOT grow a `.targetloc == nil` clause: it is absent from' ..
+        '\n        the shipped disjunction, so adding it changes non-raising frames.')
 end
 
 tests['[ratchet] the guard that cannot fire: indexed before it is tested'] = function()

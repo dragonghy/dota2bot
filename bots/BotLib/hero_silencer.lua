@@ -298,10 +298,36 @@ function X.ConsiderQ()
 	local nCanHurtCreepsLocationAoE = bot:FindAoELocation( true, false, bot:GetLocation(), nCastRange, nRadius, 0, 0 )
 
 
-	if nCanHurtCreepsLocationAoE == nil
-		or J.GetInLocLaneCreepCount( bot, 1600, nRadius, nCanHurtCreepsLocationAoE.targetloc ) <= 2
+	-- GH #346.  The `== nil` clause routed execution INTO `.count = 0`, i.e.
+	-- into indexing the very value it had just found nil -- the one line the
+	-- guard exists to protect.  (`or` short-circuits, so the nil never reached
+	-- J.GetInLocLaneCreepCount; the then-body was the whole defect.)  The nil
+	-- leg now substitutes a zero-count stand-in, which is what the four
+	-- downstream `.count >= 5` reads need: count 0 makes all four false, so
+	-- `.targetloc` is never read off the stand-in.
+	--
+	-- ABORT-CONTAINED, which is why this is not gated (director ruling,
+	-- test_set.md §CR): on every frame where the old code ran to completion the
+	-- new code leaves identical state.  On `X ~= nil` the elseif leg is the old
+	-- disjunction's surviving clause, verbatim.  The stand-in is reachable only
+	-- where FindAoELocation returned nil, and on that frame the old code raised.
+	-- The differential is exactly the raising frame.
+	--
+	-- Deliberately NOT copying CM's `elseif ... .targetloc == nil` clause: that
+	-- clause pre-existed in CM's own disjunction.  Silencer never had it, so
+	-- adding it here would be a SUPERSET guard -- on a `targetloc == nil` frame
+	-- with a non-empty lane-creep list the old code calls
+	-- J.GetInLocLaneCreepCount (which returns 0 on an empty list, so it does
+	-- not raise there) and the new code would not.  Port the transformation,
+	-- not CM's result text.
+	--
+	-- NOT a nil-safety claim for Silencer: the three sibling FindAoELocation
+	-- results above are still indexed unguarded in this same function.
+	if nCanHurtCreepsLocationAoE == nil then
+		nCanHurtCreepsLocationAoE = { count = 0 }
+	elseif J.GetInLocLaneCreepCount( bot, 1600, nRadius, nCanHurtCreepsLocationAoE.targetloc ) <= 2
 	then
-		 nCanHurtCreepsLocationAoE.count = 0
+		nCanHurtCreepsLocationAoE.count = 0
 	end
 
 

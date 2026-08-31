@@ -363,7 +363,21 @@ else:
                 if solo.returncode != 0:
                     baseline_red.append(name)
 
-        if baseline_red:
+        if clean_leg == "__TIMEOUT__":
+            # [director 2026-08-31, GH #350]  Same defect as the reddened call
+            # site below, and SHARPER here: on timeout clean_red is False, so
+            # 5a ("a clean tree does not report TRUNK RED") would PASS -- and
+            # pass because nothing ran.  5a0 above is the one honest reading of
+            # a timeout; 5a2/5b/5c would add three false statements about the
+            # leg, and 5a a false certification.  All four did not run.
+            why = ("the clean run did not finish inside %ds -- these four did "
+                   "NOT run; 5a in particular would pass vacuously" % BUDGET_S)
+            for lbl in ("5a: a clean tree does not report TRUNK RED",
+                        "5a2: a clean tree exits 0 on this leg",
+                        "5b: a clean tree reports the count it actually ran",
+                        "5c: the clean run is not vacuous (ran > 0 files)"):
+                uncert("%s [%s]" % (lbl, why))
+        elif baseline_red:
             # The tree was already red when this test started.  Case 5's fixture
             # precondition ("a tree whose only red is the one I inject") does not
             # hold, so 5a-5c did not run.  Saying FAIL here blames the leg for
@@ -401,12 +415,36 @@ else:
         open(victim, "w", encoding="utf-8").write(body)
 
         red_leg, red_said, red_rc = run_leg(tree)
-        check(red_said, "5d: a reddened detector makes the leg print TRUNK RED")
-        check("test_corpus_scale" in red_leg,
-              "5e: the leg names the failing detector file")
-        check(re.search(r"TRUNK RED -- \d+ of \d+ Lua detector file", red_leg) is not None,
-              "5f: the red line carries the red/ran counts")
-        check(red_rc == 3, "5g: the leg raises the exit code to 3 (got %d)" % red_rc)
+        # [director 2026-08-31, GH #350]  The clean run above is guarded by 5a0;
+        # THIS call site was not, and the asymmetry is the whole defect.  On
+        # timeout run_leg hands back the sentinel triple ("__TIMEOUT__", False,
+        # -1), and 5d-5g then read it as four INDEPENDENT logic defects of the
+        # leg -- "does not print TRUNK RED", "does not name the file", "no
+        # red/ran counts", "exits -1 not 3".  All four are false statements
+        # about the leg: it never finished.  run_py_tests.sh renders any
+        # non-zero as FAIL and 开工自检 escalates that to TRUNK RED, so a slow
+        # container was laundered into "trunk is red" WITH A NAMED INNOCENT
+        # CULPRIT -- measured this round: two runs minutes apart blamed two
+        # different files (test_rc_wrapper.py, then this one), and both pass
+        # standalone.  That is the mirror of GH #171: there "did not run" wore
+        # "pass"; here it wears "FAIL", which is worse, because it accuses.
+        # One honest could-not-run replaces four confident wrong ones.
+        if red_leg == "__TIMEOUT__":
+            why = ("the reddened run did not finish inside %ds -- these four "
+                   "did NOT run, and none of them is a statement about the leg"
+                   % BUDGET_S)
+            for lbl in ("5d: a reddened detector makes the leg print TRUNK RED",
+                        "5e: the leg names the failing detector file",
+                        "5f: the red line carries the red/ran counts",
+                        "5g: the leg raises the exit code to 3"):
+                uncert("%s [%s]" % (lbl, why))
+        else:
+            check(red_said, "5d: a reddened detector makes the leg print TRUNK RED")
+            check("test_corpus_scale" in red_leg,
+                  "5e: the leg names the failing detector file")
+            check(re.search(r"TRUNK RED -- \d+ of \d+ Lua detector file", red_leg) is not None,
+                  "5f: the red line carries the red/ran counts")
+            check(red_rc == 3, "5g: the leg raises the exit code to 3 (got %d)" % red_rc)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
