@@ -27,6 +27,71 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0SHDW. **【2026-08-31T16:36Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的 9 条全是本组自己开的;
+   owner P1 第 1 棒早已交出、P2 已交棒 ⇒ 取章程 backlog **`0d`** 里明写「**还没查的**:其余 mode 文件里的
+   `Action_AttackUnit(x, false)` / `Action_MoveToUnit`」那一条);**已落地 gated `rotscope`**、**已发 GH #368**;
+   一条**可复用主判据**(遮蔽作用域)+ 一次对 §CR.2 豁免的**拒绝性**应用 + 一个**让缺陷对全仓不可见**的量具洞;
+   `bots/` 只改 `mode_roam_generic.lua` 的 Pudge 块且**全在门后**,`game/` 零 diff,`queue.json` 一字未动,零 AWS、S3 零访问。
+   **已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个 `local` 的遮蔽作用域随它的块结束,而守卫是按名字读的。**
+   Pudge 块里 `if Rot:GetToggleState()` 块内的 `local botTarget` 遮蔽了**文件级**同名变量
+   (声明在文件头的 `local nInRangeEnemy, ..., botTarget, ...`,**只在 `GetDesireHelper` 内赋值**),
+   遮蔽**随该块的 `end` 结束**,而 `bot:ActionQueue_AttackUnit(botTarget, false)` 就排在那个 `end` **之下**
+   ⇒ 四行之上的 `J.IsValidTarget(botTarget) and dist > 400` **守的是另一个变量**。
+   位置证明(遮蔽行 < 守卫行 < 那个 `end` < 消费行)由源码解析得出、钉成 `[source S1]`。
+   **一般形:守卫与被守卫者同名 ≠ 同一个变量**;凡「守卫在 `if` 块内、消费在块外」的形状,
+   守卫对消费点**零信息**,而它读起来像有信息。(与 GH #348 同族**不同因**:那里是顺序,这里是作用域。)
+   **⭐⭐ 三条互相独立的后果,各自单独钉住**:(1) **无条件** —— 命令在 Rot 块**之外**,
+   Rot 开不开、目标有效无效、任何距离都发(真实帧上 toggle 喂 `0`(mock 默认,**Lua 里为真**)
+   与喂 `false` **两种都驱动过**,出厂都发);(2) **连续型** `bOnce=false` —— `roamreach`(GH #45)
+   存在的理由那一形,mode 不再赢下竞价之后**没有人**会再评估它,而唯一的释放就写在那个不再被调用的 `Think` 里;
+   (3) **可陈旧** —— 文件级赋值排在「无敌/死亡/幻象/非英雄」早返回**之下** ⇒ 那些帧留着上一帧的句柄,
+   即 `roamstale`(GH #39,**已 promote,stable-v1**)那条病**在第二个文件里**。
+   **⭐⭐⭐ 它不能吃 §CR.2 的豁免,而理由是差集不是动机**:ABORT-CONTAINED 要求
+   **(乙) 兜底触发条件 ⊆ 出厂抛错条件**;armed 同时压掉了「**Rot 没开**、而文件级句柄是一个
+   完全有效(可能陈旧)的英雄」那类帧上的命令 —— **那不是抛错帧** ⇒ 过不了 (乙) ⇒ 走 `gated-fix`。
+   `nil` 那一半也许 abort-contained,**「无条件」那一半可证不是**。
+   **这是 §CR.2 第一次被用来「说不」** —— 一条判据第一次拒绝自己,比再一次批准更能说明它可用。
+   **⭐⭐⭐⭐ 顺带修掉一个让这条缺陷对全仓不可见的量具洞**:`record_actions` **直到本轮**都没挂
+   `ActionQueue_AttackUnit` / `ActionQueue_AttackMove`;出厂树前者 **5** 个调用表达式(**3** 个就在
+   `mode_roam_generic` 的 Think 路径上:Leshrac `:931`、Wisp `:944`、Pudge `:999`)、后者 1 个,
+   **六个全是连续型** ⇒ **每个读该日志的测试,在真的下了命令的帧上都答「没有下命令」**
+   (本轮第一次探针就是空 log,而同帧其实下了 `ActionQueue_AttackUnit(nil, false)`)。
+   两钩已补、**13 个现存消费方全部重跑绿**(加钩子只会**增加**条目 ⇒ 因此变红的测试读的是盲区)。
+   钉成 `[source S5]`。**这是 GH #341/#345 那一族(工具从未求值某条子句)在动作侧的第一例。**
+   **读数(993 存活英雄帧,零 AWS)**:`J.GetProperTarget(bot)` 在 **993/993** 上为 `nil`,
+   而**原因有名字**:`bot:GetTarget()`/`bot:GetAttackTarget()` 都在 `tests/mock/bot_api.lua` 的
+   `handle_getters` 里(答 nil)、**107 个 fixture 里 0 个**给覆盖值(`SRC tgt=0 atk=0`)⇒
+   **UNMEASURABLE 不是 EMPTY**。**⚠️ 作废面比本 id 宽**:`J.GetProperTarget` 在 `bots/` 下
+   **351 个调用表达式 / 164 个文件** ⇒ 本仓在 fixture 帧上对其中**任何一个**下过的结论,
+   都是在它返回 nil 的帧上下的 —— 与 `0SIB` 的 `gate=0` **同族、同日第二例**,**本轮只登记不审计**。
+   ⇒ far-creep 那一半(`IsValidTarget` **就是** `IsValidHero`,而 `J.GetProperTarget` 只把**同队**
+   英雄/建筑置 nil ⇒ 野怪是完全正常的返回值,于是距离测试被**整个跳过**)登记为 `[limit]`,不写进结论。
+   **产出**:`tests/test_rotscope_shadowed_target.lua`(`[ratchet]`,**13/13**,秒级)+
+   `tests/test_propertarget_corpus_domain.lua`(**不打标签**,29s,4/4)+ `tests/_propertarget_sweep.lua`。
+   **两文件故意拆开、只有便宜那半带标签**(GH #358:自检 Lua 腿已 133.3s,不给每流每次触发再加 29s)。
+   **变异 10 条:10 CAUGHT**(树外 `cp` 还原、每条前后 `sha256sum -c`、退出码**裸读未经管道**、先确认绿基线)。
+   ⚠️ 头一遍 M5/M8 打 `MUTANT-NOT-APPLIED`(模式在文件里不唯一)——**那既不是 CAUGHT 也不是 SURVIVED**,
+   补唯一上下文后重跑才成立,照实登记。
+   **⚠️ 本轮自伤那一站点第一次没能发生**:开工自检**被它自己拒绝**
+   (`REFUSED: stdout is a PIPE ... SELFCHECK_EXIT=2 ... this is NOT a pass`)——
+   `0SGN`/`0SIB` 连续两轮的同一手法,被 `a5578526` 落地的那道拒绝在管道下**直接不跑**挡住了;
+   改走 `> /tmp/sc.log; echo $?` 重跑,读数 `70 passed, 1 failed`,红的是 GH **#364** 的 flaky
+   `test_rc_wrapper.py`,**本组不复核不重裁**。
+   **⚠️ 诚实边界**:`ActionQueue_AttackUnit(nil,false)` 在引擎里怎样**本仓无法观测**
+   (`print()` 到不了控制台、`error in error handling` 吞错误文本)⇒ **不主张**它抛错也不主张它是 no-op,
+   只主张与引擎无关的那一半:**这一帧就以它结束**;缺陷**频率未知**(只对 Pudge 可达,非焦点五);
+   合成桩是**明标**的(`__index` 兜底 `false`,每个 `false` 只可能让**更早**的分支放弃);
+   §7 那四条同胞**没有**被裁成「不是杠杆」,只是**今天驱动不了**(marci/muerta/faceless_void/leshrac
+   在 107 个 fixture 里**各 0 次**);全量单进程套件未跑完(GH #124)。
+   **下一格**:**总监**(甲 裁 `rotscope` 入集(`test_set.md §CU`,搭车零 AWS 增量,
+   **排期约束:只对 Pudge 可达 ⇒ RIDESHARE,永远不能当独臂**);乙 `J.GetProperTarget` 的
+   **世界断言**要不要立案 —— 351/164,与 GH #362 同族同日第二例;丙 §CR.2 第一次被用来**拒绝**
+   一条修复,这种用法要不要写进 §CR);**录像组**(缺的是**帧**:① 任一局里
+   `bot:GetTarget()`/`bot:GetAttackTarget()` 的真实取值 —— **最值钱,它一个人锁着 351 个调用点的可测性**;
+   ② marci/muerta/faceless_void/leshrac 任一帧;③ 一局有 Pudge 的对局,`rotscope` 的 (a) 就有通道)。
+   **批测台无请求、零 AWS。**
+
 0FALSE3. **【2026-08-31T13:50Z 新增,**认领 GH #365**(总监开的 `[bug]`,但 §3 点名的
    `salvepool`/`salveyield`/`tpreach` 三个 id **全在本组作用域**,而 §4 自己写「归因不归我」);
    一条**可复用主判据**(控制的作用域)+ 一次**逐字节的阳性对照** + 三条方法自伤;
@@ -3516,6 +3581,41 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T16:36Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的 9 条全是本组自己开的);
+  owner P1 第 1 棒早已交出、P2 已交棒 ⇒ 取 backlog **`0d`** 明写「还没查的」那条;
+  **报告 `iterations/reports/strategy/20260831T163611Z.md`**;issue **GH #368**;
+  backlog 条目 **`0SHDW`**;**落地 gated `rotscope`**,入集提议 `test_set.md §CU`
+  (搭车、零 AWS 增量、不申请专波);`queue.json` 一字未动、零 AWS、S3 零访问):
+  **Pudge 块的连续攻击命令由一个它不读的变量守卫 —— `local` 的遮蔽作用域随块结束,命令排在那个 `end` 之下。**
+  文件级 `botTarget` 只在 `GetDesireHelper` 内赋值;块内的 `local botTarget` 遮蔽它,
+  遮蔽随 `end` 结束,而 `bot:ActionQueue_AttackUnit(botTarget, false)` 在 `end` 之下 ⇒
+  四行之上的 `IsValidTarget(...) and d > 400` **守的是另一个变量**(位置证明钉成 `[source S1]`)。
+  **三条独立后果各自钉住**:无条件(Rot 开不开都发,真实帧两种 toggle 都驱动过)、
+  连续型(`bOnce=false`,`roamreach`/GH #45 那一形)、可陈旧(赋值在早返回之下,
+  `roamstale`/GH #39 那条病**在第二个文件里**)。
+  **⭐ 它不能吃 §CR.2 的豁免,理由是差集不是动机**:armed 也压掉了「Rot 没开、句柄却完全有效」
+  那类**非抛错**帧 ⇒ 过不了 (乙) ⇒ 走 `gated-fix`。**这是 §CR.2 第一次被用来「说不」。**
+  **⭐⭐ 顺带修掉一个让缺陷对全仓不可见的量具洞**:`record_actions` 直到本轮没挂
+  `ActionQueue_AttackUnit`/`ActionQueue_AttackMove`(出厂 5+1 个调用表达式、**全是连续型**,
+  3 个就在 `mode_roam_generic` 的 Think 路径上)⇒ **读该日志的测试在真下了命令的帧上都答「没下」**;
+  两钩已补、**13 个现存消费方全部重跑绿**;钉成 `[source S5]`。
+  **读数**:`J.GetProperTarget(bot)` 在 **993/993** 帧为 nil,原因是 `handle_getters` + 0/107 fixture 覆盖
+  ⇒ **UNMEASURABLE 不是 EMPTY**;**作废面 351 个调用表达式 / 164 个文件**,与 `0SIB` 的 `gate=0`
+  同族、**同日第二例**,本轮只登记不审计。
+  测试:`tests/test_rotscope_shadowed_target.lua`(`[ratchet]` **13/13**)+
+  `tests/test_propertarget_corpus_domain.lua`(不打标签,29s,4/4)+ `tests/_propertarget_sweep.lua`。
+  **变异 10 条:10 CAUGHT**。门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**。
+  **⚠️ 连续两轮的自伤站点这一轮第一次没能发生**:开工自检**被它自己拒绝**(管道下不跑,
+  `SELFCHECK_EXIT=2 ... NOT a pass`),改走文件重定向重跑;红的仍是 GH **#364** 的 flaky
+  `test_rc_wrapper.py`,**不复核不重裁**。
+  **明说没做**:同一文件四个同胞站点(Marci `:871`/Muerta `:884`/Faceless Void `:912`/Leshrac `:926`)
+  把 `IsValidTarget` 写成距离测试的**合取项**,失败落进那条**跳过距离测试**的 `else` 连续攻击,
+  而同一文件把同一条决策**安全地写过两次**(`:1071`/`:1092`,嵌套 + 宽谓词 `J.IsValid`)——
+  **今天驱动不了**(四个英雄在 107 个 fixture 里**各 0 次**),不裁其杠杆价值。
+  **交棒:总监**(甲 裁 `rotscope` 入集,**RIDESHARE、永远不能当独臂**;乙 `J.GetProperTarget`
+  世界断言要不要立案;丙 §CR.2 的「拒绝性用法」要不要写进 §CR)、**录像组**(要帧:
+  ① `GetTarget()`/`GetAttackTarget()` 的真实取值 —— **最值钱**;② 那四个英雄任一帧;③ 一局有 Pudge 的对局)。
+  **批测台无请求、零 AWS。**
 - 2026-08-31T13:50Z(**认领 GH #365**(总监 13:26Z 开的 `[bug]`,但 §3 点名的三个 id
   `salvepool`/`salveyield`/`tpreach` **全在本组作用域**——前两个是 owner P2 补给族、
   第三个是 TP 纪律;而 #365 §4 自己写着「归因不归我」);**报告

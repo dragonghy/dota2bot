@@ -985,6 +985,17 @@ function M.record_actions(bot)
         'ActionPush_UseAbilityOnLocation',
         'Action_AttackUnit', 'Action_MoveToLocation', 'Action_MoveToUnit',
         'Action_ClearActions',
+        -- The QUEUED attack orders were missing from this list until
+        -- 2026-08-31. They are not exotic: bots/ issues ActionQueue_AttackUnit
+        -- at five call expressions (three of them in mode_roam_generic's
+        -- Think path -- the Leshrac, Wisp and Pudge blocks) and
+        -- ActionQueue_AttackMove at one. Every one of them is a CONTINUOUS
+        -- order (bOnce=false at all five), i.e. exactly the shape 'roamreach'
+        -- exists to bound -- so an unrecorded one made a test that reads this
+        -- log answer "no attack was ordered" on a frame where one was.
+        -- Adding them can only ADD entries; a test that went red on this
+        -- change was reading a blind spot, not a behaviour change.
+        'ActionQueue_AttackUnit', 'ActionQueue_AttackMove',
     }) do
         spec[fn] = function(_, ...)
             log[#log + 1] = { fn = fn, args = { ... } }

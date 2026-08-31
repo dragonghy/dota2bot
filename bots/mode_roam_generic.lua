@@ -985,7 +985,42 @@ function ThinkIndividualRoaming()
 		return
 	end
 
+	-- [rotscope, GH #368] The queued attack below reads a DIFFERENT variable
+	-- than the guard four lines above it protects.
+	--
+	-- `local botTarget` inside the Rot block shadows the FILE-LOCAL `botTarget`
+	-- (declared at the top of this file, written only inside GetDesireHelper),
+	-- and the shadow's scope ENDS with that block. So the order is issued on
+	-- the file-local handle, which nothing here validated and nothing here
+	-- measured the distance to -- while `J.IsValidTarget(...) and dist > 400`
+	-- guarded the inner one and then went out of scope.
+	--
+	-- Three consequences, none of them Pudge-specific reasoning:
+	--   * it fires UNCONDITIONALLY for Pudge -- Rot toggled or not, target
+	--     valid or not, at any distance;
+	--   * `bOnce = false` makes it a CONTINUOUS order, the exact shape
+	--     'roamreach' (GH #45) exists to keep out of a Think that stops being
+	--     called the moment another mode wins the auction;
+	--   * the handle can be STALE: GetDesireHelper returns before assigning it
+	--     whenever the bot is invulnerable, dead, an illusion or not a hero,
+	--     so the previous frame's target survives -- the 'roamstale' (GH #39,
+	--     PROMOTED stable-v1) disease in a second file.
+	--
+	-- REAL FRAME (tests/fixtures/f_113203_pudge_homeroute_silent.lua, subject
+	-- pudge): shipped, this line is the ONLY order the whole of
+	-- ThinkIndividualRoaming issues on that frame, and its target is nil.
+	-- Nothing in the repo had ever seen it: tests/mock/replay_fixture.lua's
+	-- record_actions did not hook ActionQueue_AttackUnit until 2026-08-31, so
+	-- every reader of that log answered "no attack was ordered" here.
+	--
+	-- Armed, the order moves INSIDE the Rot block and onto the handle the
+	-- guard actually checked, and is issued only when that handle is a valid
+	-- unit (J.IsValid -- the wide predicate, so a creep still counts; see the
+	-- FUSE RECORD on J.IsValidTarget in jmz_func.lua). Unarmed the shipped
+	-- line runs unchanged, on the same variable, in the same place.
+	-- Gated turbo + 'rotscope'; inert by default.
 	if botName == 'npc_dota_hero_pudge' then
+		local rotscope = J.IsModeTurbo() and J.IsSoakCandidate('rotscope')
 		local Rot = bot:GetAbilityByName('pudge_rot')
 		if Rot:GetToggleState()
 		then
@@ -995,8 +1030,15 @@ function ThinkIndividualRoaming()
 				bot:Action_MoveToLocation(botTarget:GetLocation())
 				return
 			end
+			if rotscope and J.IsValid(botTarget)
+			then
+				bot:ActionQueue_AttackUnit(botTarget, false)
+			end
 		end
-		bot:ActionQueue_AttackUnit(botTarget, false)
+		if not rotscope
+		then
+			bot:ActionQueue_AttackUnit(botTarget, false)
+		end
 	end
 
 	if botName == 'npc_dota_hero_nevermore' then
