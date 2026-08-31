@@ -286,9 +286,43 @@ function Think()
 		-- walks us TOWARD that hero, so an ineffective re-poke drags the
 		-- already-aggroed wave the wrong way. 3.0s clears both the 2.3s aggro
 		-- and the 3s upper reading of the cooldown, and it is the cadence the
-		-- sister camp pull below already uses for the same reason. Armed, the
-		-- drag owns 2.5s of every 3.0s (83%) against 0.7s of every 1.2s (58%),
-		-- and that drag window then matches the 2.3s the creeps actually follow.
+		-- sister camp pull below already uses for the same reason.
+		--
+		-- [DUTY-CYCLE CORRECTION 20260831] This comment used to state the
+		-- effect bare: "the drag owns 2.5s of every 3.0s (83%) against 0.7s of
+		-- every 1.2s (58%)".  That is (nBeat - 0.5)/nBeat, which presupposes
+		-- this branch is asked on EVERY engine frame.  The throttle at the top
+		-- of Think falsifies that presupposition: the branch is asked only on
+		-- frames the throttle reopens, and a hero that just poked sits in
+		-- ACTIVITY_ATTACK for a whole attack cycle R (soak candidate
+		-- 'creepthink', GH #326, test_set.md §CK).  The two numbers are kept
+		-- rather than deleted because they are not wrong: they are the R -> 0
+		-- reading, and R -> 0 is precisely the world where 'creepthink' is
+		-- armed.  Driven on the real zoned-mid frame for 30 s with R swept over
+		-- the only attack-cycle band this corpus has measured (1.4-1.7 s, from
+		-- GH #326's four right-clicks at 252.4 / 254.0 / 255.4 / 257.0), the
+		-- drag's share of frames is:
+		--
+		--     neither armed          0.0%
+		--     'pullcad' only         41.2-50.1%
+		--     'creepthink' only      58.4%
+		--     both armed             83.4%
+		--
+		-- (tests/test_pullcad_throttled_duty.lua drives all four rows.)  So in
+		-- the world that actually ships -- throttle live, 'creepthink' gated --
+		-- this lever does not widen a drag that already owns 58% of the window;
+		-- it lifts the drag OUT OF THE EMPTY SET, by raising nBeat above R.
+		-- That is the same inequality 'creepthink' attacks from the other side
+		-- by driving R to ~0, which is why the two are strongly NON-additive
+		-- (0 -> 50 and 0 -> 58 separately, 0 -> 83 together) and why 'pullcad'
+		-- readings from W30 on may not be pooled with W25-W29 (§CO.1).  The
+		-- 41.2-50.1% row is a LOWER bound: the model leaves the walking hero
+		-- out of ACTIVITY_RUN, which is also a meaningful activity and can only
+		-- defer the NEXT poke.  The 0.0% row leans on neither -- a hero never
+		-- ordered to move is never running -- and holds for every R >= nBeat.
+		--
+		-- Either way the drag window the creeps see is 1.5-2.5 s against the
+		-- 2.3 s they actually follow, which is what this beat was picked for.
 		-- The wind-up hold below IS A STRUCTURAL PRECONDITION of this lever, not
 		-- a recommendation: without it the poke is cancelled 33ms after it is
 		-- ordered, so aggro is drawn only by luck and a LONGER beat would merely
