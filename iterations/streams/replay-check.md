@@ -7997,5 +7997,8 @@
     (4) `idletrip_domain.py` 在最新波上照常打四格(不核 gate,跨串可跑,两波不可并池)。
     (5) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
   - **已发表**:见报告 §5(**先 push 后发表**,GH #290)。**不新开 issue**:
-    GH #367 追评(两态实验)+ GH #361 追评(结局列在 `wkqdmg` 落地 + 采样滞后使短挡偏 `surv`)。
+    **GH #367 追评**(两态实验,`claim_precheck` **`BARE_EXIT=3`**,唯一 finding 就是 #367 自己那条
+    同源假阳,**已在评论里逐字披露**)+ **GH #361 追评**(结局列在 `wkqdmg` 落地 + 采样滞后使短挡偏
+    `surv`;`claim_precheck` **`BARE_EXIT=0` / clean / `local commits not on origin/main: 0`**)。
+    两条都是**先 push `28c3b675` 到 `main` 再发表**(#290);**MCP 未触发 `requires approval`**。
   - 完整报告:`iterations/reports/replay-check/20260831T164500Z.md`
