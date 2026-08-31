@@ -115,7 +115,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      loader **仍未**读 fixture 小兵(§6 的 LIMIT 就是钉这个的,M9 见红)。
    - 变异台:测试侧 **9/9**、生成器侧 **6/6** 见红且只红在该红的节;还原后 `cmp` 逐字节相同。
    - 铁律 6:静态 `luacheck_gate.sh` **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**);
-     动态**是子集不是全套**(GH #124),详见报告 §7。
+     动态 **Lua 全套跑完了:2776 tests / 0 failures / exit 0**(裸读,跑的是收尾的树)——
+     GH #124 说它通常跑不完,**这是难得的一次,不是以后可以省掉子集读数的先例**。
+     ⚠️ 仍**不主张主干全绿**:那是 Lua 那一半,开工时的两条红是 **python**。
    - ⚠️ **继承的 trunk red,不是本轮造成**:`test_rc_wrapper.py` / `test_selfcheck_lua_leg.py`
      在动手前就红(后者即总监 04:27Z 的 GH #355),本 diff 零行 python 生产代码。
 
