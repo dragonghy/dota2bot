@@ -70,6 +70,22 @@
 --   * NO FRAME IN THIS CORPUS IS IN DOMAIN.  The highest level any Axe reaches
 --     in a fixture is 14; a t15 talent exists at 15.  Everything above is a
 --     PROXY measured one level below the talent, and it is pinned as such.
+--     STILL TRUE OF THE CORPUS, NO LONGER THE BINDING BOUND (2026-08-31, GH
+--     #357 row 6).  tests/test_axe_t15_in_domain.lua takes the reading on a
+--     real level-21 Axe, staged in tests/frames/ and loaded by name, so this
+--     corpus statement and its ratchet below are untouched.  What it found:
+--     the observed pair IS Call 3 / Hunger 4 -- the very pair the ceilings
+--     above are computed on -- so the ~5x ratio is corroborated in domain and
+--     the VERDICT DOES NOT MOVE (admitting the frame reads 17.00 > 12.61).
+--     ⚠️ But not for the flattering reason: that Axe has 13 ability points
+--     down at level 21, still standing on the level-15 build, and so do all
+--     ten heroes on the frame.  The row did not hold; nobody spent a point.
+--   * THE t15 PICK ITSELF HAS NEVER BEEN OBSERVED, in domain or out, and that
+--     is now the binding bound.  The dump carries at most ONE special_bonus_*
+--     entry per hero anywhere in the archive -- even on level-22 heroes with
+--     three talents down -- and Axe carries zero on all 29 of his frames.  So
+--     the verdict below rests on reachability arithmetic and the build row, as
+--     it always did; no frame corroborates the CHOICE.
 --   * n = 1 on the Call side.  One frame against a ceiling of ~2.3 frames
 --     carries no statistical weight at all; it corroborates the structural
 --     arithmetic, it does not establish anything by itself.
@@ -461,12 +477,22 @@ tests['[hero] axe t15 is measured OUT OF DOMAIN: no fixture Axe ever reaches lev
         'the highest Axe level in the corpus is now ' .. CORPUS.max_level
         .. ', not 14.  If it is >= 15 the t15 reading can finally be taken IN '
         .. 'domain, which is strictly better than the proxy this file pins -- '
-        .. 're-take it and say so.')
+        .. 're-take it and say so.  NOTE (GH #357 row 6, paid 2026-08-31): the '
+        .. 'in-domain reading already EXISTS, in tests/test_axe_t15_in_domain.lua, '
+        .. 'on a level-21 Axe staged in tests/frames/ and loaded by name.  So a '
+        .. 'red here means the frame was ADMITTED to the corpus -- which is '
+        .. 'allowed, but costs the rest of that issue\'s reopen list (the Black '
+        .. 'King Bar zero and the Alchemist clock band), not just this line.')
     assert(CORPUS.in_domain == 0,
         CORPUS.in_domain .. ' Axe frames are now at level >= ' .. TALENT_LEVEL
-        .. '.  Every number in this file was measured below the level at which '
+        .. '.  Every number in THIS file was measured below the level at which '
         .. 'either talent exists; that caveat is load-bearing and has to be '
-        .. 'restated or retired deliberately.')
+        .. 'restated or retired deliberately -- and it was retired deliberately, '
+        .. 'elsewhere: tests/test_axe_t15_in_domain.lua holds the in-domain '
+        .. 'reading, and it reports the verdict UNCHANGED.  What that file could '
+        .. 'NOT retire is the bound above it: the t15 PICK is unobservable in '
+        .. 'this archive at any level, so a corpus that reaches level 15 still '
+        .. 'does not tell you which talent the bot took.')
 end
 
 -- ---------------------------------------------------------------------------
