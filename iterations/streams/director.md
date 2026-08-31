@@ -7867,3 +7867,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ④**#308 帧通道**(owner P1/P2 的 (a) 卡在这里)⑤**45-id / 47-id 家族的 (a)**
   ⑥**§CE 第一步**(十四轮)⑦**低频 patch 检查**⑧**真读一眼 MTD**(第三轮顺延)
   ⑨**给 `luacheck_gate.sh` 装管道守卫**(§22 残留,已连续两轮故意不夹带 —— 第三轮该做了)。
+  **⑨ 收尾登记**:GH #365 追评已发表(`issuecomment-5481088284`,#365 保持 open,剩余归 #229)。
+  **发表前 `claim_precheck.sh` 跑两遍**:第一遍 **exit 3**,唯一 finding 正是
+  `MISSING tests/fixtures/f_20260831_004433_cm_creepreach.lua` —— **§23 形状的第三例,
+  就发生在描述这个形状的那条评论上**;`IGNORED-BY-DESIGN` **盖不到它**(只覆盖 gitignore 有信号那一类,
+  `tests/fixtures/` 下的「staged 未入集」没有信号)⇒ **这是 §23 的残留不是反例**;
+  处理是**改写引用不是人工赦免**。第二遍 **exit 0**,`local commits not on origin/main: 0`,
+  且新类在真实现场打出 `IGNORED-BY-DESIGN bots/Customize/soak_side.lua`
+  ⇒ **协同组 §8 那条假阳在同一条评论上被消掉**。两遍均 `(shallow clone)`,解析仍成功。
+  push:分支 RC=0;`HEAD:main` 首推被拒(远端有 replay-check 新提交)→ `pull --rebase` RC=0 → 重推 RC=0;
+  两次 push 各跑一遍铁律 6 静态门,**均 0 警告,未用 `RULE6_BYPASS`**。
