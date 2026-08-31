@@ -63,6 +63,69 @@ HERO target:
                WORKING or BUGGY claim may rest on.
   in_rnge      band casts inside the kill-confirm branch's own reach
   HIT          band_pair AND in range -- what exit 3 counts
+  died/surv/unk  the OUTCOME of each band_pair cast: was the target observed to
+               reach hp 0 within N seconds anyway?  See THE OUTCOME COLUMN.
+
+THE OUTCOME COLUMN (added 2026-08-31T15:xxZ, the second half of GH #361)
+------------------------------------------------------------------------
+GH #361 was filed against `lionqdmg_domain.py`'s cell (3), which counted
+"an enemy at 26 hp who escaped and healed" and "an enemy at 1 hp an ally is
+killing this very second" as the same event.  `band` here is NOT that defect --
+it is a straddle of two CLAIMS around one health bar, not a low-hp census, and
+it is bounded above by the shipped claim, so it cannot be inflated by a corpse
+about to happen.  What it shares with cell (3) is the missing half sentence:
+`band` says the two claims disagreed, and says NOTHING about whether the kill
+the shipped claim promised actually arrived.
+
+    band_pair  = the shipped leg would have claimed a kill the armed leg refuses
+    died       = ... and the target reached hp 0 within N s ANYWAY
+    surv       = ... and the target was OBSERVED alive through the whole window
+    unk        = ... and the samples ran out first
+
+WHICH LEG IS INTERPRETABLE, AND WHY IT IS NOT `lionqdmg`'s REASON.
+`lionqdmg` reads its outcome column on the baseline leg because a death on the
+ARMED leg may BE the armed cast landing -- subtracting there deletes the effect.
+That argument does not transfer: `wkqdmg` is a NARROWING, so it never adds a
+cast and never adds a death.  The reason the armed leg is uninterpretable here
+is a different one and it is structural: a band cast is by definition one the
+ARMED claim does not reach, so on the armed leg the kill-confirm branch CANNOT
+have produced it (except through this tool's own measurement error -- a stale
+frame, an estimated resistance).  Those casts came from the other three
+branches of `X.ConsiderQ`, i.e. from a DIFFERENT POPULATION, and their outcome
+rate must not be differenced against the baseline leg's.  Armed rows are
+printed anyway (铁律 4(i-a): every reading appears in all four cells) and
+carry `NO (armed leg)`.
+
+THE TWO COLUMNS ARE ONE-SIDED IN OPPOSITE DIRECTIONS -- do not average them.
+  * `died` counts ANY death, whoever dealt it: an ally's attack, a tower, the
+    dot from an older blast.  It is therefore an UPPER bound on "kills the
+    narrowing could have cost", never an attribution to Wraithfire Blast
+    (LIMIT 1 governs here exactly as it governs `band`).
+  * `surv` requires a real sample at or past the far edge of the window, so it
+    is an OBSERVATION, not an assumption -- a LOWER bound on "claims the
+    narrowing withdraws for free".
+  * Everything else is `unk` and is folded into NEITHER.  Folding `unk` into
+    `surv` (the shape `lionqdmg` uses, where "no further samples" counts as
+    survived) would make exactly one of the two columns soft, and it would be
+    the one this stream's readings lean on.
+
+`N` IS A REGISTERED CHOICE, NOT A CONSTANT OF NATURE -- the same 2/5/10 s
+ladder `lionqdmg_domain.py` prints, and for the same reason: on W31 that file's
+knife edge was 4 frames at N=2 s versus 0 at N=5 s.  The whole ladder is
+printed so this one cannot hide either.
+
+HOW TO RUN IT (added 2026-08-31 with `--sweep`; before that the ONLY way in was
+a hand-written `--legs` tsv that lived nowhere, i.e. no reading this file ever
+printed was reproducible from the tree -- GH #263's exact complaint)
+
+    wkqdmg_domain.py --sweep <sweep_run.sh out dir> [--sweep <another>] [--per-cast]
+
+`--sweep` reads `games_manifest.jsonl` and joins it to each timeline's draft:
+the manifest's `side` is the side the CANDIDATE string was armed on, and a game
+is an ARMED sample for THIS tool only when Wraith King's own team is that side.
+One sweep dir per run; dirs from two different candidate strings are REFUSED
+rather than pooled (two arm strings are two trees).  The per-game assignment is
+printed so a reader can audit the join instead of trusting it.
 
 EXIT CODES (GH #171 vocabulary: "could not run" is not "passed")
     0  clean   -- ran, numbers printed
@@ -122,6 +185,16 @@ LIMITS -- READ BEFORE QUOTING A NUMBER
    the gate's own id) are parsed OUT OF THE LUA at run time inside the function
    body's scope, not re-typed -- GH #207 family, and the scope-first rule that
    `odaoe_domain.py` skipped (GH #296).
+9. **The outcome column inherits LIMIT 4 and LIMIT 5, and adds one of its own.**
+   Death is read ONLY as a sampled `hp <= 0`; nothing is interpolated and no
+   "hp fell a lot" heuristic exists here.  A sampling GAP inside the window
+   could therefore hide a death -- unlikely rather than impossible, because the
+   corpse-freeze of LIMIT 5 keeps a dead hero reading `hp <= 0` for seconds, so
+   a death is normally sampled many times over.  Entity identity is locked to
+   the `idx` of the frame the cast was read on (GH #176) so an illusion's or a
+   clone's samples cannot supply the death; timelines with no `idx` field at all
+   (hand-built fixtures) fall back to hero name and are the only place that lock
+   is absent.
 """
 
 import argparse
@@ -200,6 +273,15 @@ KV_DOT_DUR_BASE = 2.0
 KV_DOT_DUR_TALENT = 4.0
 Q_CAST_RANGE = 550.0
 MR_FALLBACK = 0.25          # LIMIT 2 -- only when the cast landed nothing measurable
+
+# Outcome window (THE OUTCOME COLUMN above).  A REGISTERED CHOICE, not a source
+# constant, and deliberately the same 2/5/10 ladder `lionqdmg_domain.py` prints
+# so the two ids' outcome cells are read on one clock.  Re-register it the day a
+# corpus shows victims taking longer than 5 s to reach hp 0.
+OUTCOME_WINDOWS = (2.0, 5.0, 10.0)
+OUTCOME_HEADLINE_S = 5.0
+OUTCOMES = ("died", "surv", "unk")
+SAMPLE_TOL_S = 0.05         # 1 Hz snapshots; a sample "at t0" is not "after t0"
 
 
 def claims(qlvl, hero_level, anchors):
@@ -282,6 +364,46 @@ def recently_dead(idx, hero, t, window):
                for i in range(lo, hi))
 
 
+def target_series(idx, hero, ident):
+    """REAL (t, hp) samples of ONE entity, identity-locked (LIMIT 9).
+
+    Rows carrying an `idx` different from the frame the cast was read on are
+    dropped, so an illusion or a clone can never supply the death (GH #176).
+    Rows with no `idx` at all -- hand-built fixtures -- keep the old
+    name-only behaviour, which is the only place that lock is absent."""
+    if hero not in idx:
+        return []
+    _, rows = idx[hero]
+    out = []
+    for s in rows:
+        if ident is not None and s.get("idx") is not None and s["idx"] != ident:
+            continue
+        out.append((s["t"], s.get("hp") if s.get("hp") is not None else 0.0))
+    return out
+
+
+def outcome(series, t0, window):
+    """'died' | 'surv' | 'unk' over (t0, t0 + window] -- see THE OUTCOME COLUMN.
+
+    died  a REAL sample reads hp <= 0 inside the window.  Nothing is
+          interpolated and there is no "hp fell a lot" heuristic (LIMIT 9).
+    surv  no such sample AND the entity is still sampled at or past the far
+          edge of the window: survival OBSERVED, not assumed.
+    unk   the samples ran out first (game over, recording stopped).  Folded
+          into NEITHER of the other two -- that is the whole point of having
+          three outcomes instead of two."""
+    lo, hi = t0 + SAMPLE_TOL_S, t0 + window + SAMPLE_TOL_S
+    edge, covered = t0 + window - SAMPLE_TOL_S, False
+    for t, hp in series:
+        if t <= lo:
+            continue
+        if t <= hi and hp <= 0:
+            return "died"
+        if t >= edge:
+            covered = True
+    return "surv" if covered else "unk"
+
+
 def qlevel(snap):
     for a in snap.get("abilities", []):
         if a.get("name") == QNAME:
@@ -321,6 +443,8 @@ def scan(tl, anchors, mr, dead_window):
         dist = ((ws["x"] - tsnap["x"]) ** 2 + (ws["y"] - tsnap["y"]) ** 2) ** 0.5
         in_band = armed < ehp <= shipped
         in_band_after = (ehp_after is not None and armed < ehp_after <= shipped)
+        series = target_series(idx, tgt, tsnap.get("idx"))
+        out = dict(("out_%s" % w, outcome(series, t, w)) for w in OUTCOME_WINDOWS)
         rows.append({
             "t": t, "target": tgt, "hero_level": ws["level"], "qlvl": q,
             "shipped": shipped, "armed": armed, "hp": tsnap["hp"], "ehp": ehp,
@@ -332,7 +456,12 @@ def scan(tl, anchors, mr, dead_window):
             # LIMIT 4 -- the only form allowed to support a verdict
             "band_pair": in_band and in_band_after,
             "in_range": dist <= Q_CAST_RANGE + 80,
+            # the target's own hp samples over the headline window, so a reader
+            # can check the outcome verdict without re-running this tool
+            "traj": [hp for ts_, hp in series
+                     if t + SAMPLE_TOL_S < ts_ <= t + OUTCOME_HEADLINE_S + SAMPLE_TOL_S],
         })
+        rows[-1].update(out)
     return rows, dropped
 
 
@@ -437,6 +566,68 @@ def selfcheck(anchors):
     r = one(160, 158, qlvl=2, wklvl=13, mr=0.25)
     ck("no rank-2 cast can be band_pair either", r and not r["band_pair"])
 
+    # --- the outcome column ------------------------------------------------
+    # Built through scan(), not by calling outcome() on a hand-made list: the
+    # thing that can rot silently is the WIRING (which entity's samples, which
+    # t0), not the three-way arithmetic.
+    def cast_with(after_samples, ident=None, tgt_idx=None):
+        """One rank-1 band cast at t=100 whose target then has `after_samples`
+        as (t, hp) [, idx] rows."""
+        snaps = [
+            {"t": 99.5, "hero": WK, "x": 0, "y": 0, "hp": 900, "hp_pct": 0.9, "level": 5,
+             "abilities": [{"name": QNAME, "level": 1}]},
+            {"t": 99.5, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
+             "hp": 110, "hp_pct": 0.5, "level": 5},          # ehp 146.7 -> band
+            {"t": 100.5, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
+             "hp": 108, "hp_pct": 0.5, "level": 5}]
+        if tgt_idx is not None:
+            snaps[1]["idx"] = snaps[2]["idx"] = tgt_idx
+        for row in after_samples:
+            s = {"t": row[0], "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
+                 "hp": row[1], "hp_pct": 0.1, "level": 5}
+            if len(row) > 2:
+                s["idx"] = row[2]
+            snaps.append(s)
+        tl = {"events": [{"t": 100.0, "type": "ABILITY", "inflictor": QNAME,
+                          "target": "npc_dota_hero_lion", "target_hero": True}],
+              "snapshots": snaps}
+        rr, _ = scan(tl, anchors, 0.25, 6.0)
+        return rr[0] if rr else None
+
+    alive = [(t, 60) for t in (101.5, 102.5, 103.5, 104.5, 105.5, 106.5)]
+    r = cast_with(alive)
+    ck("a target sampled alive past the window edge is surv",
+       r and r["band_pair"] and r["out_5.0"] == "surv")
+    r = cast_with([(101.5, 40), (102.5, 0), (103.5, 0), (104.5, 0), (105.5, 0)])
+    ck("a target sampled at hp 0 inside the window is died",
+       r and r["out_5.0"] == "died")
+    r = cast_with([(101.5, 60), (102.5, 60)])
+    ck("a target whose samples stop before the edge is unk, NOT surv",
+       r and r["out_5.0"] == "unk")
+    r = cast_with([])
+    ck("a target with no samples at all after the cast is unk", r and r["out_5.0"] == "unk")
+    # the knife edge N is registered for: a death at t0+7s
+    r = cast_with([(101.5, 60), (103.5, 60), (105.5, 60), (107.0, 0), (109.5, 0)])
+    ck("a death at +7 s is not died at 2 s or 5 s but is at 10 s",
+       r and r["out_2.0"] != "died" and r["out_5.0"] != "died" and r["out_10.0"] == "died")
+    ck("that same cast is surv (not unk) at the shorter windows",
+       r and r["out_2.0"] == "surv" and r["out_5.0"] == "surv")
+    # identity lock (LIMIT 9): an illusion's corpse is not the target's
+    r = cast_with([(101.5, 60, 7), (102.5, 0, 9), (103.5, 60, 7),
+                   (104.5, 60, 7), (105.5, 60, 7), (106.5, 60, 7)], tgt_idx=7)
+    ck("a hp-0 sample under a DIFFERENT idx does not make the target died",
+       r and r["out_5.0"] == "surv")
+    # a corpse BEFORE the cast is the dead-window's job, never the outcome's
+    ck("the outcome window never looks backwards",
+       outcome([(95.0, 0), (99.0, 0), (101.0, 50), (105.5, 50)], 100.0, 5.0) == "surv")
+    ck("a sample exactly at t0 is not 'after' t0",
+       outcome([(100.0, 0), (101.0, 50), (105.5, 50)], 100.0, 5.0) == "surv")
+    ck("the three outcomes are exhaustive and exclusive",
+       all(outcome(s, 100.0, 5.0) in OUTCOMES
+           for s in ([], [(105.5, 50)], [(101.0, 0)], [(101.0, 50)])))
+    ck("the headline window is on the printed ladder",
+       OUTCOME_HEADLINE_S in OUTCOME_WINDOWS)
+
     # the four ConsiderQ branches must still be in the tree, or this argument
     # silently expires (blinkflee_domain.py's lesson)
     src = open(HERO_LUA).read()
@@ -452,12 +643,90 @@ def selfcheck(anchors):
     return 1 if fails else 0
 
 
+# -------------------------------------------------------------- sweep -> legs
+
+TEAM_OF_SIDE = {"radiant": 2, "dire": 3}
+
+# LAYER CONVENTION, registered here because it is a choice and not a fact:
+# `ab` is the game whose CANDIDATE-armed side is radiant, `ba` the swapped
+# mirror.  It is the physical side of the arming, not of Wraith King, so the
+# radiant-side bias (+1.5k gold; the reason 铁律 4(i-a) exists) lands in a
+# stratum rather than in the difference between the legs.
+LAYER_OF_SIDE = {"radiant": "ab", "dire": "ba"}
+
+GATE_ID = "wkqdmg"
+
+
+class SweepRefused(Exception):
+    """Could not build legs from the sweep dirs -- exit 2, never a silent 0."""
+
+
+def from_sweeps(dirs):
+    """-> (timeline paths, legs map, audit rows) from sweep_run.sh output.
+
+    Which leg a game is on is NOT the manifest's `side` on its own: `side` is
+    the side the CANDIDATE string was armed on, and this tool reads Wraith
+    King's casts, so the game is an ARMED sample only when WK's own team is
+    that side.  A tool that skipped that join would label half the corpus
+    backwards and still print a full table."""
+    paths, legs, rows, arm_strings = [], {}, [], set()
+    for d in dirs:
+        man = os.path.join(d, "games_manifest.jsonl")
+        if not os.path.exists(man):
+            raise SweepRefused("no games_manifest.jsonl under %s" % d)
+        for line in open(man):
+            line = line.strip()
+            if not line:
+                continue
+            m = json.loads(line)
+            game, side = m["game"], m.get("side")
+            if side not in TEAM_OF_SIDE:
+                raise SweepRefused("game %s has no armed side in the manifest" % game)
+            arm_strings.add(m.get("cand") or "")
+            tl_path = os.path.join(d, "timelines", game + ".timeline.json")
+            if not os.path.exists(tl_path):
+                continue                       # swept but undumped: not a zero
+            try:
+                teams = json.load(open(tl_path))["game"]["teams"]
+            except Exception:
+                raise SweepRefused("unreadable timeline %s" % tl_path)
+            wk_team = teams.get(WK)
+            rows.append({"game": game, "seed": m.get("seed", "?"), "side": side,
+                         "wk_team": wk_team if wk_team is not None else "-",
+                         "layer": LAYER_OF_SIDE[side],
+                         "armed": wk_team == TEAM_OF_SIDE[side]})
+            if wk_team is None:
+                continue                       # no Wraith King in this draft
+            paths.append(tl_path)
+            legs[game + ".timeline"] = (rows[-1]["armed"], rows[-1]["layer"])
+    if not arm_strings:
+        raise SweepRefused("the sweep dirs carry no games at all")
+    if len(arm_strings) > 1:
+        raise SweepRefused("the sweep dirs mix %d different candidate strings; "
+                           "pooling them would average two different trees"
+                           % len(arm_strings))
+    arms = list(arm_strings)[0].split(",")
+    if GATE_ID not in arms:
+        raise SweepRefused("'%s' is not in this wave's candidate string (%d ids), "
+                           "so its armed leg does not exist here"
+                           % (GATE_ID, len(arms)))
+    if not paths:
+        raise SweepRefused("no swept game carries a Wraith King")
+    return paths, legs, rows
+
+
 # ------------------------------------------------------------------------ main
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("timelines", nargs="*", help="timeline .json files (dumper output)")
     ap.add_argument("--legs", help="tsv: <basename>\\t<armed 0|1>\\t<layer ab|ba>")
+    ap.add_argument("--sweep", action="append", default=[],
+                    help="a sweep_run.sh output dir: derives the timelines AND "
+                         "the legs from games_manifest.jsonl (repeatable). The "
+                         "hand-written --legs tsv was the only way to run this "
+                         "tool until 2026-08-31, i.e. its readings were not "
+                         "reproducible from the tree (GH #263).")
     ap.add_argument("--mr", default="auto",
                     help="magic resistance: 'auto' measures it off the blast's own "
                          "DAMAGE event per cast (default), or a fixed float (LIMIT 2)")
@@ -472,6 +741,19 @@ def main():
     if anchors is None:
         print("REFUSED: could not parse X.wk_GetBlastKillDamage out of %s" % HERO_LUA)
         return EXIT_REFUSED
+    sweep_rows = []
+    if args.sweep:
+        try:
+            paths, sweep_legs, sweep_rows = from_sweeps(args.sweep)
+        except SweepRefused as exc:
+            print("REFUSED: %s" % exc)
+            return EXIT_REFUSED
+        args.timelines = list(args.timelines) + paths
+        if args.legs:
+            print("REFUSED: --sweep derives the legs; passing --legs too would "
+                  "leave which one won invisible in the output")
+            return EXIT_REFUSED
+
     if not args.timelines:
         print("REFUSED: no timelines")
         return EXIT_REFUSED
@@ -484,6 +766,18 @@ def main():
             p = line.split()
             if len(p) >= 3:
                 legs[p[0]] = (p[1] == "1", p[2])
+    if args.sweep:
+        legs = sweep_legs
+        print("legs derived from %d sweep dir(s) -- one row per game, audit them:"
+              % len(args.sweep))
+        print("  %-28s %-8s %-8s %-8s %s" %
+              ("game", "seed", "armedside", "wk_team", "-> leg"))
+        for r in sweep_rows:
+            print("  %-28s %-8s %-8s %-8s -> %s/%s" %
+                  (r["game"], r["seed"], r["side"], r["wk_team"],
+                   r["layer"], "armed" if r["armed"] else "baseline"))
+        print("  (%d game(s) carry no Wraith King and are excluded, not zeroed)"
+              % sum(1 for r in sweep_rows if r["wk_team"] == "-"))
 
     agg = collections.defaultdict(lambda: collections.Counter())
     dropped_total, games, per_cast = 0, 0, []
@@ -516,6 +810,12 @@ def main():
                     agg[key]["in_range"] += 1
                 if r["band_pair"] and r["in_range"]:
                     agg[key]["hit"] += 1
+                if r["band_pair"]:
+                    # the outcome column is counted on band_pair ONLY: `band`
+                    # alone is a sampling-phase coin flip (LIMIT 4), and an
+                    # outcome hung off a coin flip is still a coin flip
+                    for w in OUTCOME_WINDOWS:
+                        agg[key]["bp_%s_%s" % (r["out_%s" % w], w)] += 1
                 r["game"] = base
                 per_cast.append((key, r))
             elif args.per_cast:
@@ -539,6 +839,24 @@ def main():
                    c["live48"], c["live8"], c["band"], c["band_pair"],
                    c["in_range"], c["hit"]))
 
+    print()
+    print("outcome of the band_pair casts -- did the target reach hp 0 anyway?")
+    print("  died = ANY death, whoever dealt it (UPPER bound on kills the narrowing could cost)")
+    print("  surv = observed alive at the far edge of the window (LOWER bound on free withdrawals)")
+    print("  unk  = samples ran out first; folded into NEITHER column")
+    print("%-6s %-9s %5s %10s %5s %5s %4s  %s" %
+          ("layer", "leg", "N(s)", "band_pair", "died", "surv", "unk", "interpretable"))
+    for layer in ("ab", "ba"):
+        for leg in ("armed", "baseline"):
+            c = agg[(layer, leg)]
+            note = ("yes" if leg == "baseline" else
+                    "NO (armed leg: band_pair cannot come from the kill-confirm branch)")
+            for w in OUTCOME_WINDOWS:
+                print("%-6s %-9s %5.1f %10d %5d %5d %4d  %s" %
+                      (layer, leg, w, c["band_pair"],
+                       c["bp_died_%s" % w], c["bp_surv_%s" % w], c["bp_unk_%s" % w],
+                       note if w == OUTCOME_HEADLINE_S else ""))
+
     if per_cast:
         print("\nper-cast:")
         for key, r in sorted(per_cast, key=lambda kr: (kr[0], kr[1]["t"])):
@@ -550,7 +868,17 @@ def main():
                      r["ehp"],
                      ("%.1f" % r["ehp_after"]) if r["ehp_after"] is not None else "-",
                      r["mr"], r["mr_src"][0], r["shipped"], r["armed"], r["dist"],
-                     "BAND_PAIR" if r["band_pair"] else "band(before only)"))
+                     # --per-cast appends EVERY cast, not just band ones, so
+                     # the third state has to exist: before 2026-08-31 a cast
+                     # at ehp 931 (five times the shipped claim) printed
+                     # "band(before only)", which is a label that lies about
+                     # the one thing this file is counting.
+                     "BAND_PAIR" if r["band_pair"] else
+                     "band(before only)" if r["band"] else "not in band"))
+            print("        outcome %5.1fs=%-4s (2s=%-4s 10s=%-4s)  target hp after: %s"
+                  % (OUTCOME_HEADLINE_S, r["out_%s" % OUTCOME_HEADLINE_S],
+                     r["out_2.0"], r["out_10.0"],
+                     " ".join("%d" % hp for hp in r["traj"]) or "(no samples)"))
 
     armed_hits = agg[("ab", "armed")]["hit"] + agg[("ba", "armed")]["hit"]
     if armed_hits:

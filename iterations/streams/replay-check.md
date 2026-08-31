@@ -7914,3 +7914,88 @@
     ⛔ **没有追评 GH #359** —— `lionqdmg` 的裁定本轮**没有变化**(只是理由从手读变成工具读数),
     #361 那条追评已经把它写清楚,**按铁律 7 节制不重复发表**。
   - 完整报告:`iterations/reports/replay-check/20260831T130000Z.md`
+- **2026-08-31T16:45Z(交棒 (1) 落地:`wkqdmg` 的结局列 —— 并拿到它的**第一份可复现读数**:
+  **W30 唯一那次 `band_pair` 判 `died<=5s`,而逐帧证据显示打死它的是 drow 的 multishot,不是 WK 的 Q**;
+  **W31 的 140 次施法里 `band` 是 0**,最近的 rank-1 未命中还差 **+101 ehp**)**:
+  语料 **W30**(树 `0d58ce09`,四 run `89e581`/`6eb30e`/`69e067`/`4ecca6`,10 局带戳,全部有 WK)
+  **与 W31**(树 `1dd5705f`,四 run `731a21`/`fde133`/`b5b4b9`/`c44eb5`,9 局带戳,7 局有 WK),
+  **两波各跑一遍、绝不并池**(树不同)。**没有 W32** —— 批测台 12:30Z 与 15:15Z 均未发波。
+  零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  ⚠️ **排序提醒**:本节历史条目**不按时间排**,`tail` 读到的不一定最新。**本条追加在文件末尾,是最新的一条。**
+  - **`VERIFY id=wkqdmg verdict=INDETERMINATE episodes=1`** —— **不要数进「本周完成执行核验的 id 数」**:
+    那 1 个 episode **恰恰不能买下条件 (a)**(同一帧上 `IsChanneling()` 分支是独立可见的替代解释)。
+  - ⭐ **交棒 (1) ✅**:`wkqdmg_domain.py` 的结局列**按它自己的结构重写,没有照抄**
+    (两文件不共用 `scan_game`/`by_t`/`CELLS`)。两条与 `lionqdmg` **不同**的纪律是代码级的:
+    (i) **三分而不是二分** —— `died`(任何死亡,**上界**,永不归因)/ `surv`(窗口远端仍有采样,**观测**)/
+    `unk`(采样先没了)**两边都不并**。`lionqdmg` 把 `unk` 并进存活是**它**的安全方向(结论是否定的);
+    这里能承载「收窄什么也没撤回」的正是 `surv`,并进去会让它从观测退化成假设。
+    (ii) **armed 腿不可解释,理由与 `lionqdmg` 完全不同**:不是「死亡可能就是 armed 那一炮」
+    (收窄从不新增施法),而是**结构性**的 —— `band_pair` 按定义是 armed 声称够不着的那一格,
+    ⇒ armed 腿上 kill-confirm 分支**不可能**产出它,那些施法来自另外三条分支,**是另一个总体**。
+  - ⭐⭐ **两波读数(baseline 腿 = 唯一可解释的腿)**:**W30** `ab/baseline` `band_pair` **1**,
+    `died<=5s` **1** / `surv` 0 / `unk` 0;其余三格全 0。**W31** 四格 `band` **全 0**,结局列无内容。
+  - ⭐ **逐帧(硬规则;血量与事件流直接读 `timelines/*.json`,不经过被检工具)**:
+    `89e581/20260831_004434_slot1` `ab/baseline` **t=397.3**,WK 6 级 / Q rank 1,目标 `tidehunter idx=1315`
+    `220→171→127→109 |施法| 116→28→0→0…`;事件流:`395.5 item_magic_wand`(+30,109→116 的来源)、
+    **`395.8 item_tpscroll` + `modifier_teleporting`**、`397.7 DAMAGE hellfire_blast 58`(实测抗性 0.275)、
+    **`398.4 DEATH inflictor=drow_ranger_multishot`**。三条结论:
+    ① 结局列判 `died` 是对的但**打死它的不是这一炮**(`died` 那一列写着「任何死亡都算」的现场);
+    ② 目标**正在 TP** ⇒ `X.ConsiderQ` 的 **channeling-interrupt 分支是独立可见的替代解释**,
+    **LIMIT 1 从一般性告诫变成「就是它」**;③ ⇒ 条件 (a) 在 W30 **仍买不到,而且不是因为样本少**。
+  - ⭐ **`N` 的刀口第二次出现,这次能看清物理来源**:同一次 `band_pair`,`N=2s` 读 `surv`、`N=5s` 读 `died`;
+    原因是**采样滞后** —— `DEATH` 事件在 **+1.1s**,**第一帧 `hp=0` 采样**在 **+2.2s**。
+    ⇒ **基于血量采样的结局列在短挡上系统性偏 `surv`**;这条对 `lionqdmg` 的 `net` **同样成立**
+    (方向是抬高 `net`,即它称为安全的那一侧)。已追评 GH #361。
+  - ⭐ **顺带修好 GH #263 那一半**:此前 `wkqdmg_domain.py` 的**唯一入口是一份不在树里的手写
+    `--legs` tsv** ⇒ 它印的每个数字别人都无法复现。新增 `--sweep <sweep_run.sh 输出目录>`,
+    危险的地方是那个 **join**:manifest 的 `side` 是**候选串 armed 在哪一侧**,而本工具读 WK 的施法
+    ⇒ **只有 WK 自己的队伍 == 那一侧,这一局才是 armed 样本**(标反了照样印满表)。
+    分层按 **armed 侧的物理边**(radiant=`ab`),不按 WK 的边。混串**拒绝并池**、无 WK 的阵容
+    **排除不记零**、arm 串里没有 `wkqdmg` **拒绝(exit 2)**,每局归属**逐行打印供审计**。
+  - **顺带修掉一个会说谎的标签**:`--per-cast` 会打印**每一次**施法,而标签只有两态 ⇒
+    一次 `ehp=931.5`(出厂声称的 5.5 倍)印的是 `band(before only)`。已改三态并钉住。
+  - **验证(退出码全部裸读)**:`luacheck_gate.sh` **exit 0 / 0 warnings**(容器缺 luacheck,gate 自己装的);
+    模块 `--selfcheck` **39/39 exit 0**;`tests/test_wkqdmg_domain.py` **BARE_EXIT=0**;
+    `sweep_run.sh` **八次 exit 0**;`--sweep` 两波各一次 **BARE_EXIT=0**;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+  - **变异台 13/13 全杀**(还原走文件副本 + `sha256sum -c`,每次 `restore OK`):
+    结局列 M1 `unk` 并进 `surv` / M2 去窗口上界 / M3 往回看 / M4 去 idx 身份锁 /
+    M5 `hp<=0`→`hp<=5` / M6 覆盖恒真 / M7 删 armed 腿标注 / M8 头条 5s→2s;
+    join M9 **armed 判定取反** / M10 分层跟 WK 的边 / M11 无 WK 记零 / M12 混串并池 / M13 无 `wkqdmg` 照跑。
+    ⚠️ **M5/M7/M8 只被 wrapper 杀掉,模块自带 battery 是绿的** —— 这三条的看守只在 `tests/` 里。
+  - **开工自检**:**exit 3**;`FINDINGS = trunk-red(lua) + trunk-red(python)`。
+    Lua 那条 = **GH #367**(批测台 15:43Z 已立,**不重开**):`[ratchet][A]` 把
+    `tests/test_axe_t15_in_domain.lua:286` 的**负向存在性探针**读成失败的存在性声称。
+    ⭐ 本组补了 #367 里**没有**的一件事 —— **两态实验证明这对断言在当前树上互斥**:
+    文件**缺席**时 `[ratchet][A]` **exit 1** / 探针 exit 0;把帧拷进 `tests/fixtures/` 后
+    `[ratchet][A]` **exit 0** / 探针 **exit 1**(按设计报错)⇒ **当前树上不存在两者同绿的状态**,
+    故 #367 的**选项 2 是今天唯一能产出绿树的改法**,选项 1 才顺带修掉 `claim_precheck.sh` 那一侧。
+    实验后已删除拷贝,`git status` 干净。python 那条 = `tests/test_rc_wrapper.py`,
+    **单独复跑 exit 0 ⇒ 不可复现,本组不据此声称 trunk python 是红的**。
+    ⚠️ **第八次登记:不是章程写的「约 20s」**,实跑 **~9 分钟**(根因 GH #358 已立案,不重开)。
+    ✅ 执行了上一轮交棒 (3):起自检前 `ps` 过。
+  - **诚实边界**:**没有一个数字是效应量**;计数类量**侧偏未消**(4(i-b))⇒ 四格之间的差不可读成差分;
+    **一切计数是上界**(LIMIT 1);**`died` 永远不是归因**;**结局列在 armed 腿不可解释**;
+    **两波不可并池**;**`unk` 那一列在真语料上两波都是 0 ⇒ 本轮没有检验到它的现场行为**。
+  - **欠账变化**:✅ 交棒 (1);✅ 交棒 (3);✅ 顺带 GH #263(本工具读数首次可复现);
+    ⛔ 交棒 (2)「W32 普查」**不适用**(没有 W32);⛔ 交棒 (4) `idletrip_domain.py` **顺延**;
+    ⛔ 交棒 (5) `stayfield2_whynot.py` 仍待**下一个 44-id 波**;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
+    继承未动:`fieldbuy_silence.py`/`stayfield2_margin.py` 的 ab/ba 分层;
+    「静止在小兵火力里」检测器(素材 `e706a3/20260830_063416_slot1` lich t=625.5..634.5);
+    W25 只并 2/4 run;W26–W28 与 W25 从未池化;`seed 975` **第二十二轮**;
+    `wandlimbo` 因 #293 **第二十轮**不可执行;GH #265 仍被 #272 阻塞;
+    `blinkflee` 仍卡 #304/#305;WK rank-3 冷却全语料复测仍欠。
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要抄过期的交棒行。**
+    (1) ⭐ **结局列改读 `DEATH` 事件而不是血量采样**(物理见上:事件 +1.1s,首帧 `hp=0` +2.2s
+    ⇒ 短挡系统性偏 `surv`)。两个文件都要改,**先在 `wkqdmg` 上做**(只有 1 个 episode,对读最便宜),
+    **保留血量采样那一列做交叉核验**(事件流也会丢;两份读数不许合并成一份)。
+    (2) **W32 若已收割**:先跑 `arm_string_census.py`(**喂 `…/analysis` 子目录** ——
+    喂 sweep 根目录会打 `0 games` 且 `exit 0`,与「全部 MATCH」在退出码上不可区分),
+    **不可与 W30/W31 并池**;若仍是 47-id,`wkqdmg_domain.py --sweep` 可打第三次独立读数。
+    (3) **`unk` 那一列在真语料上还没被检验过** —— 下一波若出现局终附近的 `band_pair`,逐帧核一次。
+    (4) `idletrip_domain.py` 在最新波上照常打四格(不核 gate,跨串可跑,两波不可并池)。
+    (5) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
+  - **已发表**:见报告 §5(**先 push 后发表**,GH #290)。**不新开 issue**:
+    GH #367 追评(两态实验)+ GH #361 追评(结局列在 `wkqdmg` 落地 + 采样滞后使短挡偏 `surv`)。
+  - 完整报告:`iterations/reports/replay-check/20260831T164500Z.md`
