@@ -10888,3 +10888,106 @@ harness 报回的 `exit code 0` 是 **`tail` 的**退出码,不是自检的(自�
 本节三处新引用改写成 `§CG` 的 `CG.1` 节这种可解析形式,precheck 复跑见下。
 **下一轮总监 backlog:§20** —— 给子节标题补 `§`(或让解析器同时认两种写法,**后者更可能是对的修法**:
 它把「已发表的引用」和「未来的标题」一起救,而改标题只救前者),带变异台 + 一次全档 `citation_audit.py`。
+
+---
+
+## §CP 2026-08-31T0x:xxZ 协同组登记(**不是裁定**):`creepthink > pulldrag` 是一条**可证空**的共臂行 —— 而本节最该被读的不是这一行,是**共臂行的空性可以是一条实现推论,不必是一次判断**
+
+**这一节不裁任何人、不动成员串、不提议入集或退集、不申请波次**;
+它是 GH #349(批测台 00:39Z 交棒,原文写「归属:总监 / 协同组」)那条 **trunk RED 的答复**,
+落地物是**一条 ACKNOWLEDGED 登记 + 一个 `[ratchet]` 测试**,`bots/` / `game/` **逐字节零 diff**。
+
+### §CP.1 现象与结论
+
+`creepthink` 于 §CO 入集(44 → 47)之后,`tests/test_coarmed_attribution_register.lua` 报出新共臂对:
+
+```
+creepthink > pulldrag
+```
+
+外层是 `mode_roam_generic.lua` 的 `Think`(它的体内点名 `pullthink` / `creepthink` / `pullcad` 三个 id),
+内层是 `J.GetLanePullDragTarget`(`pulldrag`)。**该登记器刻意过宽**(「内层 helper 出现在外层函数体的任何位置」),
+所以同一个 `Think` 体在册上已经有两行、性质却不同;本轮补上第三行:
+
+| 行 | 性质 | 依据 |
+|---|---|---|
+| `pullthink > pulldrag` | **真合取** | gated 早退**既加帧又减帧**(已登记,本轮不动) |
+| `pullcad > pulldrag` | 空(**判断**) | 「读了,判为不在同一帧相遇」 |
+| `creepthink > pulldrag` | **空(可证)** | 下面两条**各自独立**的蕴含 |
+
+### §CP.2 主判据:两条互相独立的闭式蕴含,零数据
+
+`creepthink` 在 `bots/` 里**只出现一次**,且是一个 `and` 的**右操作数**:
+
+```lua
+if not (bot.roamCampPull  ~= nil and J.IsSoakCandidate('pullthink'))
+and not (bot.roamCreepPull ~= nil and J.IsSoakCandidate('creepthink'))
+and J.Utils.IsBotThinkingMeaningfulAction(...) then return end
+```
+
+Lua 的 `and` **短路**,所以 `bot.roamCreepPull == nil` 的帧上 `IsSoakCandidate` **根本不被调用**,
+整个合取项恒为 `not false = true`,**armed 与否给出同一个值**。记 `R = (roamCreepPull ~= nil)`、
+`C = (roamCampPull ~= nil)`,则到达 `pulldrag` 调用点需要 `C`,而:
+
+1. **控制流(只看 `Think` 自己的函数体)**:`J.GetLanePullDragTarget` 在 `if C then … return end` 块内,
+   而该块**排在** `if R then … return end` 之后 ⇒ 到达即 `¬R`。**不需要知道谁写这两个字段。**
+2. **互斥(只看写入方)**:两个字段在 `GetDesireHelper` 里**恰好三处**被写,每一处都令另一个为 `nil`
+   (`roamCreepPull = pull; roamCampPull = nil`、镜像的一处、以及 `= nil, nil` 的尾巴)
+   ⇒ `C ⇒ ¬R` **在任何时刻、对任何调用方**成立。
+
+任一条单独成立即可得:**在 `pulldrag` 的调用点上,`creepthink` 的字面量是不可达代码;
+arming 它在那里一帧都不动。**
+
+### §CP.3 ⭐⭐ 可复用判别式:共臂行的空性是「内层 id 的字面量在外层调用点上可不可达」,而短路 `and` 把它变成一个纯语法问题
+
+登记器过宽是**设计**(§AZ 同族:宽网不会漏掉要紧的那一对,一条假行只值一次阅读)。
+但「读一遍然后判一句」和「证一条蕴含」不是同一种产物:前者的有效期是读它的那个人的记忆,
+后者**会在实现变形的那一天自己红**。三步,零数据、零 AWS:
+
+1. 取内层 id **唯一出现处**的**左操作数**(短路 `and` 的左边就是它的**必要条件**);
+2. 取外层调用点的**支配条件**(它上面每一个提前 `return` 的守卫);
+3. 问这两者**是否互斥** —— 互斥则该行**可证空**,并把这条蕴含钉成测试。
+
+代价是本轮实测的一个文件;收益是**这一类行不再需要每个读者重新判一次**。
+⚠️ 顺带一条**本节不主张的**:`pullcad > pulldrag` 看上去能走同一条路(它的门也坐在 `R` 那一支里),
+但**本轮没有为它建变异台**,所以本节**不把那一行从「判断」升级为「可证」** —— 留给下一格。
+
+### §CP.4 落地物、控制与诚实边界
+
+**产出**:`tests/test_creepthink_pulldrag_vacuous.lua`(`[ratchet]`,**8/8**;
+`[drive]`2 + `[control]`3 + `[source]`3),真实帧 `f_260819_123012_dp_landed_dead`
+(与 `test_pullthink_anim_throttle.lua` **同一帧**),外加
+`tests/test_coarmed_attribution_register.lua` 的 ACKNOWLEDGED 一行(带读到的东西)。
+
+**「没有差别」不是仪器坏了 —— 同一支驱动在同一帧上给出三个读数**:
+
+| 世界 | 未 armed | armed `creepthink` | armed `pullthink` |
+|---|---|---|---|
+| 营地拉、idle 动画 | drag 调用 **89** | **89**(order log 逐字节相同) | **75**(0.5s 起手保留吃掉 14 帧) |
+| 营地拉、`ACTIVITY_ATTACK` | **0**(节流阀吃掉) | **0** | **75** |
+| **勾线**拉、`ACTIVITY_ATTACK` | order log 全 `.` | **order log 变了**,drag 仍 **0** | — |
+
+第三行是整条主张的一句话形态:**`creepthink` 最活跃的那条腿上,`pulldrag` 的调用点仍然是零。**
+
+**变异台**:7 条真变异 **7 CAUGHT / 0 SURVIVED**;第 8 条(删掉 `pullcad` 门)**SURVIVED,正确**
+——本文件对 `pullcad` 不作主张。还原走**文件副本**(不是 `git checkout`),每条变异**前后各取一次 sha256**
+(把「变异没落地」与「没被抓到」分开报:M3/M4 第一版**确实没落地**,按「不是结果」重跑),
+退出码逐条**裸读、未经管道**。
+
+**⚠️ 诚实边界(三条)**:
+1. **「空」是关于这个调用点的,不是关于这一波的。** 同波两个 armed id 仍共享一局:`creepthink` 改变
+   勾线期间的行为 ⇒ 改变后续是否会规划一次营地拉。那是**动态耦合**,存在于任意两个 armed id 之间,
+   **不是**本登记器测的东西(它测静态调用点嵌套,为的是**让 per-id (a) 的帧计数可归属**)。
+   ⇒ **本节不放宽任何并池许可**:§CO.1 (ii)「W30 起的 `pullcad` 读数不得与 W25–W29 并池」**逐字不变**,
+   而且那一条的主语是 `pullcad` 不是 `pulldrag`。
+2. **`pullthink > pulldrag` 不被重开**:它是真合取,登记照旧;本轮的 `[control]` 是它的第三个独立佐证。
+3. 本节**不主张**任何 id 该不该 promote,也**不碰**成员串;`creepthink` 仍 gated 未 promote。
+
+### §CP.5 交棒
+
+- **总监**:(甲) 确认本条登记(GH #349 可据此关闭);(乙) 一条**方法**问题 —— 登记器的 WIDE 行
+  现在有「判断」与「可证」两个成色,**要不要给可证那一档一条机器可查的标记**(否则两者在册上长得一样,
+  而只有一档会在实现变形时自己红)。
+- **批测台**:无请求,**零 AWS**。W30 不受影响(它买的是全集聚合,条件 (b))。
+- **协同组自己(下一格)**:§CO.1 (三) 那条交棒仍挂着 —— `pullcad` 源码注释里
+  「83% vs 58%」是在**没有节流阀**的模型上算的,§CK 的不等式否掉了那个预设,**需要重推或改写措辞**。

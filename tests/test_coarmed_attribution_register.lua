@@ -300,6 +300,21 @@ local ACKNOWLEDGED = {
     -- listed so the reading is on the record rather than the row being narrowed
     -- away by a rule that decides scope by indentation.
     ['pullcad > pulldrag'] = true,
+    -- WIDE row, and the ONLY one here whose vacuity is an implication rather
+    -- than a judgement call (GH #349, admitted with 'creepthink' 44->47).
+    -- Same `Think`. 'creepthink' occurs exactly once in bots/, as the right
+    -- operand of `bot.roamCreepPull ~= nil and ...`, and `and` short-circuits.
+    -- Reaching `J.GetLanePullDragTarget` needs `bot.roamCampPull ~= nil`, which
+    -- implies `roamCreepPull == nil` TWICE OVER: (1) the `if roamCreepPull ~=
+    -- nil then ... return end` block sits above the camp block in Think, and
+    -- (2) the two fields are written at three sites in GetDesireHelper, each of
+    -- which nils the other. So at pulldrag's call site the id's literal is
+    -- unreachable and arming it moves no frame there -- driven on a real frame
+    -- in tests/test_creepthink_pulldrag_vacuous.lua, where arming 'pullthink'
+    -- on the same frame moves 89->0 and 89->75 (the probe is not dead) and
+    -- arming 'creepthink' on a live CREEP-pull plan changes the order log
+    -- (the arming is not unplumbed). Not registered to make this green.
+    ['creepthink > pulldrag'] = true,
 }
 
 local tests = {}

@@ -27,6 +27,48 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0VAC. **【2026-08-31T01:23Z 新增,**认领 GH #349**(批测台 00:39Z 交棒的 trunk RED,原文写
+   「归属:总监 / 协同组」;两个 id 都在本组地界,且它当时**挡着全队每一轮开工自检**);
+   一条**闭式蕴含**形式的主判据 + 一条可复用判别式 + 一处**当轮抓住的变异台自伤**;
+   `bots/`/`game/` **逐字节零 diff**,零新 gate id,成员串一字未动,`queue.json` 一字未动,
+   零 AWS、S3 零访问。**已交棒,球在总监。**】**
+   **⭐ 主判据:共臂行 `creepthink > pulldrag` 是**空**的,而且空得是一条蕴含不是一次判断。**
+   `creepthink` 在 `bots/` 里只出现一次,是 `and` 的**右操作数**,左操作数
+   `bot.roamCreepPull ~= nil`(`mode_roam_generic.lua:265`);Lua 的 `and` 短路 ⇒
+   `roamCreepPull == nil` 的帧上 `IsSoakCandidate` **根本不被调用**,合取项恒 `not false = true`。
+   记 `R=(roamCreepPull~=nil)`、`C=(roamCampPull~=nil)`;到达 `J.GetLanePullDragTarget`(`:404`)
+   需要 `C`,而 **`C ⇒ ¬R` 有两条彼此独立的理由**:(1) **控制流** —— 该调用在
+   `if C then … return end` 块内,该块排在 `if R then … return end` **之后**,只用 `Think`
+   自己的函数体;(2) **互斥** —— 两字段在 `GetDesireHelper` 恰好三处被写(`:98–99`/`:104–105`/`:108`),
+   每处都令另一个为 `nil`,对**任何**调用方成立。⇒ **在 `pulldrag` 的调用点上,`creepthink`
+   的字面量是不可达代码。**
+   **⭐⭐ 可复用判别式:共臂行的空性 = 「内层 id 的字面量在外层调用点上可不可达」,
+   而短路 `and` 把它变成一个纯语法问题。** 三步零数据:取内层 id 唯一出现处的**左操作数**
+   (短路 `and` 的左边就是它的必要条件)→ 取外层调用点的**支配条件**(其上每一个提前 `return`)
+   → 问二者是否互斥。**「读一遍判一句」的有效期是读它那个人的记忆;一条钉住的蕴含会在
+   实现变形那天自己红**(M3/M4 就是这个)。
+   **产出**:`tests/test_creepthink_pulldrag_vacuous.lua`(`[ratchet]`,**8/8**;
+   `[drive]`2 + `[control]`3 + `[source]`3)+ `test_coarmed_attribution_register.lua`
+   ACKNOWLEDGED **+1 行**(带读到的东西)+ test_set.md **§CP**(登记,**不是裁定**)。
+   **「没有差别」不是仪器坏了 —— 同一帧三个读数**:营地拉 idle 下 drag 调用
+   未 armed **89** / armed `creepthink` **89**(order log 逐字节相同)/ armed `pullthink` **75**;
+   营地拉 `ACTIVITY_ATTACK` 下 **0 / 0 / 75**;**勾线**拉 `ACTIVITY_ATTACK` 下 armed `creepthink`
+   **order log 变了而 drag 仍 0** —— 最活跃的那条腿上调用点仍是零,这是整条主张的一句话形态。
+   **变异 7 条真变异:7 CAUGHT / 0 SURVIVED**;第 8 条(杀 `pullcad` 门)**SURVIVED,正确**。
+   **⚠️ 当轮自伤(哈希买到的)**:M3/M4 第一版 perl 模式写错(`\Q…\E` 里的 `\n` 是字面反斜杠-n),
+   **文件根本没被改**;变异前后各取一次 sha256 把它报成**「DID NOT LAND,不是结果」**而不是
+   SURVIVED —— 这正是 `evidence-discipline` 规则 1 要买的东西。
+   **⚠️ 诚实边界**:「空」是关于**这个调用点**的不是关于**这一波**的(动态耦合存在于任意两个
+   armed id 之间,不是这个登记器测的东西)⇒ **不放宽任何并池许可**,§CO.1 (ii)
+   「W30 起 `pullcad` 读数不得与 W25–W29 并池」**逐字不变**;`pullthink > pulldrag`
+   **不被重开**(真合取,本轮的 `[control]` 是它第三个独立佐证);
+   **本轮不把 `pullcad > pulldrag` 从「判断」升级为「可证」**(没为它建变异台);
+   全量单进程套件未跑完(GH #124)。
+   **下一格**:**总监**(甲:确认登记 ⇒ #349 可关;乙:一条方法问题 —— 登记器的 WIDE 行现在有
+   「判断」与「可证」两个成色,**要不要给可证那档一条机器可查的标记**);
+   **本组自己**:§CO.1 (三) 那条交棒仍挂着 —— `pullcad` 注释里「83% vs 58%」是在**无节流阀**的
+   模型上算的,§CK 的不等式否掉了那个预设,**需重推或改写措辞,不许静默删数字**。
+
 0GAP. **【2026-08-30T22:30Z 新增,**认领 GH #344**(录像组 22:08Z 新开的唯一未认领 `[strategy]`;
    owner 优先项 **P2** 的「步行回泉」那一半,责任链当前球在本组)、**已发 GH #347**;
    一条**闭式的无主带**主判据 + 一条**行程/帧量纲**的可复用判据 + 一条**实测**定价否决;
@@ -3297,6 +3339,17 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T01:23Z(**认领 GH #349**,批测台交棒的 **trunk RED**;**无入集提议 ——
+  零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、成员串一字未改、
+  `queue.json` 一字未动、零 AWS、S3 零访问、`state.json` 未改**):
+  **共臂行 `creepthink > pulldrag` 是可证空的 —— `creepthink` 的字面量在 `pulldrag`
+  的调用点上是不可达代码,有两条彼此独立的闭式理由(`Think` 的控制流;两个 pull 计划字段
+  三处写入两两互斥),所以 arming 它在那里一帧都不动。** 登记落地后 trunk 那条红消失。
+  报告:`iterations/reports/strategy/20260831T012325Z.md`;档案:test_set.md **§CP**;
+  backlog 条目 **`0VAC`**(主判据 / 判别式 / 三个读数的对照表 / 变异台与自伤 / 诚实边界四条
+  全文在那里)。**交棒:总监**(确认登记 ⇒ #349 可关;并裁一条方法问题 ——
+  登记器的 WIDE 行要不要区分「判断」与「可证」两档)。**批测台无请求、零 AWS。**
+  **本组自己下一格**:§CO.1 (三)(`pullcad` 注释「83% vs 58%」建在无节流阀的模型上,需重推)。
 - 2026-08-30T22:30Z(**认领 GH #344**,走**铁律 9 + 工作流 1**;**已发 GH #347**;
   **无入集提议 —— 零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、`queue.json` 一字未动、
   零 AWS、S3 零访问、`state.json` 未改**):
