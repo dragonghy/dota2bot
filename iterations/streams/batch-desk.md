@@ -7418,6 +7418,12 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **收割注意:本波是按需,成本结算不能用 W29–W31 的 SIR `create→update` 法**(没有 spot request),
   改用 `describe-instances` 的 `LaunchTime` → 终止时刻(**趁 terminated 实例还没老化出去,早点读**),
   按 `$0.673/h` 计价;**$0.90 自动失效条款不适用于本波**(那是 spot 常数,本波对应 ~$2.15)。
+  **顺序条款(#290)**:**先 push(`85bcbeb7..86a6f517` → main)再发表**,两份草稿各过一次
+  `claim_precheck.sh`,**均 `BARE_EXIT=0` / `local commits not on origin/main: 0` / `OK to publish`**。
+  **已发表**:**GH #371 新开 `[harness]`**(`spot_run.sh` 失败时 exit 0 且打印 `launched`);
+  **GH #285 追评** `issuecomment-5485007465`(第十五轮 + 迄今最强的数据)。
+  **#364/#308/#363/#358 本轮只登记在报告,未另发评论**(同形重复点,从简)。
+  **发报时(21:39Z)W32 四台全部 `running`**(2a/2b/2c/2d),S3 前缀计数 0(正常,首局需十余分钟)。
   **本轮 token**:见报告 §12。
   详见 `iterations/reports/batch-desk/20260831T213500Z.md`。
 
