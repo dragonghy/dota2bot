@@ -22,6 +22,34 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-60. **交付 GH #359 §5 欠了四轮的那条事实:可达的法术增强梯子是 **{0, 20%, 35%}**,
+   **15% 不对应任何状态**;20% 是 innate 自己给的(1 级起、不用买、引擎应用),35% 是出厂 t15
+   天赋把它加上去的;口径两处更正(多算三件物品 / 少算一整条中立路,后者靠「49 件里恰好 1 件」关掉);
+   **(乙) 裁定在正确的顶档下仍然站得住(2 → 至多 7/665)**;
+   下一棒是 dumper 加 `spell_amp` + 窗口谓词(交回 #359)**
+   **2026-08-31T07:51Z done —— `bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、
+   零 AWS(连 S3 GET 都没有)、不申请波次、不开新 issue;`state.json` / `queue.json` / `test_set.md`
+   均无新增。唯一新增文件 `tests/test_lion_spellamp_ladder.lua`(7 个 `[ratchet]` 节点)。
+   在 **GH #359 追评**交回事实。报告 `iterations/reports/hero/20260831T075118Z.md`。**
+   - **⭐⭐ 主读数**:`bot:GetSpellAmp()` 对一个 bot Lion 只有三个来源——买的 / 捡的 / 自带的,
+     **三者都在源码 + 公开常数里,不需要语料也不需要波次**。结果:
+     **0%**(支援位的默认;`pos_4`/`pos_5` 的每一件、含 outfit 宏展开后的篮子,**逐个属性**对
+     dotaconstants 核过,**没有一件带 `spell_amp`**);**+20%** = innate `lion_to_hell_and_back`
+     的 `spell_amp 20` / `duration 90`(复活后 90s **或到下一个 kill/assist 为止**,datafeed
+     `hero_id=26`);**+35%** = 同一窗口 + 出厂 t15 取的 [4](`special_bonus_unique_lion_11`,
+     +15%,odota)。**15% 两种读法下都不是状态**(加法 ⇒ 35;替换 ⇒ 15 比不点天赋还低,无源支持)。
+   - **⭐ (乙) 站得住,而且是在 #359 自己发表的阶梯上算的**:声明对增强线性 ⇒ 顶档乘 **1.35**,
+     落在 `≤1.5×` 桶(7/665)⇒ 能改变的帧从 **2** 变成**至多 7 / 665(~1.05%)**。**不动它的裁定。**
+   - **⭐ 口径两处更正,方向相反**:`aether_lens`/`ultimate_scepter`/`aghanims_shard`
+     **一点 `spell_amp` 都没有**(这一侧 #359 是超集,它的 0 因此更安全);而**中立是掉的不是买的,
+     任何 buy list 都排除不掉**,#359 的口径里一件中立都没有 —— 本轮用**数**关掉:
+     本仓中立池 **49** 件里**恰好 1 件**给自身增强(`item_harmonizer`,+6%,**tier 5**,够不着)。
+   - **⚠️ 明说没做的**:`GetSpellAmp()` 报不报 innate 窗口 **源码里问不出来**(dumper 根本不 dump
+     增强)——**它只往一个方向咬**:若隐藏,则窗口内是**低估**,杠杆只会更弱;
+     **谓词不是频率**(本轮交的是可从 dump 算的谓词,不是占比);**不碰** `bots/`,**不主张**出不出集。
+   - 变异台 **10/10 见红且只红在该红的节**(含 M7 池尺寸锚、M10 **空真**守卫),还原后 3 份 `cmp` 逐字节相同。
+   - ⚠️ **继承的 trunk red,不是本轮造成**:`tests/test_rc_wrapper.py` 动手前就红,本 diff 零行 python。
+
 -59. **认领 GH #354 §5:把 `cmqreach` 的到达性钉在它点名的那一帧上;§5 原样建不出来,
    因为 `make_fixture.py` 把小兵样本丢在写盘那一刻;顺带量出「一枚晚期帧进语料要付 9 个 ratchet,
    其中 3 个是真判定」并**没有付**(帧 staged 在 `tests/frames/`);
@@ -3106,6 +3134,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T07:51Z(报告 `iterations/reports/hero/20260831T075118Z.md`;轴 **认领 GH #359 §5**
+  —— 录像组 07:12Z 开、点名本组的最新 `[hero]` issue,走章程工作流第 1 条的**主路径**;
+  §5 那条事实自总监 §CO 加注(08-30T16:51Z)起**已欠四轮**,而它**不需要语料也不需要波次**;
+  **本组下一棒:(1) 已在 #359 追评请 dumper 加 `spell_amp` 字段 + `in_thab_window` 谓词
+  ——那才能把「谓词」变成「频率」,并当场判掉「`GetSpellAmp()` 报不报 innate 窗口」;
+  (2) GH #354 §5 的 loader 读 fixture 小兵;(3) **GH #357** 那份 9 ratchet / 3 真判定的清单仍没人付
+  (帧 staged 在 `tests/frames/`);(4) `-43a` 的 Zeus 方向仍欠)——
+  自检 **worst exit 3**,`legs run 8`,`FINDINGS: trunk-red(python)`,`UNCERTIFIABLE: none`;
+  锚点 ok;快 Lua 腿 **50** 个 tagged 文件 0 失败(FAST SUBSET,**开工那一刻**的取集,**不要做差**)。
+  ⚠️ **那条 python 红在动手前就在树上**(`tests/test_rc_wrapper.py`,67 passed / 1 failed),
+  本 diff **零行 python 生产代码** ⇒ **只登记,不替谁下结论**。
+  owner 四条优先项**仍无一条球在本组**(批测台/协同组/协同组/总监)。
+  **`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、
+  不申请波次、不开新 issue;`state.json` / `queue.json` / `test_set.md` 本轮均无新增。**
+  唯一新增文件:`tests/test_lion_spellamp_ladder.lua`(7 个 `[ratchet]` 节点)。
+  - **⭐⭐ 主读数:可达的梯子是 {0, 0.20, 0.35},而 #359 的中间栏(15%)不对应任何状态。**
+    **+20%** = innate `lion_to_hell_and_back` 的 `spell_amp 20` / `duration 90`(复活或重生后 90s,
+    **或到他拿到下一个 kill/assist 为止**;datafeed `hero_id=26`)—— **1 级起、不用买、引擎自己应用**,
+    所以 20% 那栏**可达**,而且它的谓词**能从 dump 算**(复活时刻 + 下一个 kill/assist,
+    或直接读 `modifier_lion_to_hell_and_back_respawn_buff` —— 本仓 fixture 语料已经带着它)。
+    **+35%** = 同一窗口 + 出厂 t15 行取的 [4](`special_bonus_unique_lion_11`,+15%,odota)。
+    **15%** 加法读法下是 35 不是 15,替换读法下**比不点天赋还低**且无源支持 ⇒ **它是定价惯例,不是帧状态。**
+  - **⭐ 这不动摇 (乙),而且是在 #359 自己发表的阶梯上算出来的**:声明对增强线性
+    (`jmz_func.lua:1120`)⇒ 顶档把 `mr25` 声明乘 **1.35**,落在它 `≤1.5×` 的桶里(7/665)⇒
+    能改变的帧 **2 → 至多 7 / 665(~1.05%)**,仍是「十局一个 episode」。**不碰它的裁定。**
+  - **⭐ 口径两处更正(方向相反)**:`aether_lens` / `ultimate_scepter` / `aghanims_shard`
+    在常数里**没有任何 `spell_amp` 属性** ⇒ 这一侧 #359 是**超集**,它的 0 更安全,
+    但**以后不许**从「身上有 Scepter/Shard」读出「有增强」;另一侧**中立物品整条路没被覆盖**
+    (中立是**掉**的,任何 buy list 都排除不掉)—— 本轮**用数关掉**:本仓中立池 **49** 件里
+    **恰好 1 件**给自身增强(`item_harmonizer`,+6%,**tier 5**,~20 分钟的局够不着)。
+  - **⭐ 买的那一半**:`pos_4`/`pos_5` 的每一件(含 `item_priest_outfit`/`item_mage_outfit`
+    **展开后**的篮子)逐个属性核过,**一件带 `spell_amp` 的都没有**;`item_kaya`(10%)与
+    `item_kaya_and_sange`(12%)**只在** `pos_1`/`pos_2`(`pos_3` 别名 `pos_2`)。
+    诚实边界:`GetPositionedPool` 的 `weight > RandomInt(5, THRESHOLD)` + Lion 的
+    `{30,45,10,30,45}` ⇒ **出厂选人路径并不禁止**他进 pos_2 池;**镜像 draft 会不会路由到那里,
+    源码答不了**,语料侧的答案是 #359 自己的 0/665。
+  - **⚠️ 明说没 settle 的**:`bot:GetSpellAmp()` **报不报**那个窗口 buff,源码里问不出来
+    (API 文档只说「fraction」,dumper 根本不 dump 增强)—— **它只往一个方向咬**:若隐藏则
+    窗口内是**低估**,`lionqdmg` 只会**比定价更弱**;**谓词不是频率**;不主张出不出集。
+  - 变异台:**10 个变异 10 个见红且只红在该红的节**(M7 = 池尺寸锚,M10 = **空真**守卫,
+    解析不到表必须红),盘外 `cp` 还原后 3 份 `cmp` 逐字节相同。
+
+### 历史
 - 2026-08-31T05:02Z(报告 `iterations/reports/hero/20260831T050203Z.md`;轴 **认领 GH #354 §5**
   —— 录像组 04:07Z 开、点名本组的新 `[hero]` issue,走章程工作流第 1 条的**主路径**;
   **本组下一棒:(1) 接 loader 读 fixture 小兵,让 `X.ConsiderQImpl` 在 fixture 世界里端到端跑到打兵站点
