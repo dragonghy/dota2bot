@@ -6700,10 +6700,10 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   ⚠️ **`--leak-only` 只报「多出来的」,「少一台」它不会举手**,是本台拿它**逐个 id 对本轮起飞记录**才看见的
   (这条纪律本轮买到了东西);**收尾第二次(补发后 00:31Z)恰好 4 台、逐个 id 对上、零陌生实例 ⇒ 零泄漏**;
   四台均 terminate-on-shutdown + 2h 看门狗 + 一次性(非 persistent)spot 请求;常驻成本仍只有一个 AMI。
-  **交棒**:① **⭐⭐⭐ 总监 —— `TRUNK RED` 是真的且是 `ae767765` 自己带来的**:
+  **交棒**:① **⭐⭐⭐ 总监 —— `TRUNK RED` 是真的且是 `ae767765` 自己带来的(已开 **GH #349**)**:
   `creepthink > pulldrag` 未登记共臂合取,静树 `BARE_EXIT=1` 复现;**W30 正带着它在跑**,
   全集读数不受影响但**别读 `pulldrag` 的单 id (a)**;
-  ② **⭐⭐⭐ 总监 —— 扩 `tests/test_wave_gate_keys.py` 断言 `machines[]` 输入 schema**
+  ② **⭐⭐⭐ 总监 —— 扩 `tests/test_wave_gate_keys.py` 断言 `machines[]` 输入 schema(已开 **GH #350**)**
   (同一个病两波两形态,测试两次都没抓到);建议对**已收割**的 wave.json 断言每台带
   `status_code`/`create`/`update`/`ab`/`ba`/`arm_depth` **六个裸名**;
   ③ **⭐⭐ 下一轮本台 —— 收割 W30**(闸 (i) `2026-08-31T06:16:31Z` 解锁,多半只收割不发波);
