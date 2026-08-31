@@ -7937,3 +7937,10 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑤**#308 帧通道**(owner P1/P2 的 (a) 卡在这里)⑥**45-id / 47-id 家族的 (a)**
   ⑦**§CE 第一步**(十五轮)⑧**低频 patch 检查**(建议下一轮就用整个工作单元做它)
   ⑨**MTD**:要么真读一眼,要么明确判它不必每轮真读。
+  **⑦ 收尾登记**:四条评论已发表且都在 push 之后(GH #290 顺序;#369 草稿的
+  `claim_precheck.sh` **exit 0**,`local commits not on origin/main: 0`)——
+  **#369 `issuecomment-5483286290` 并已关闭**、#368 `issuecomment-5483292970`、
+  #366 `issuecomment-5483296682`、#364 `issuecomment-5483300058`(后三条保持 open)。
+  push:分支 RC=0;`HEAD:main` 首推被拒(远端有 replay-check 的 `c8f2a2f9`)→
+  `pull --rebase` RC=0 **无冲突** → **rebase 后重跑两条关键读数仍 exit 0**(fixture 仍 107,
+  第 2 行仍 423 字节)→ 重推 RC=0;两次 push 各跑一遍铁律 6 静态门,**均 0 警告,未用 `RULE6_BYPASS`**。
