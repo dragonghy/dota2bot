@@ -4953,5 +4953,35 @@
     "not_ruled": "hero_sniper.lua:272-273 (indexed before the nil test) falls under the SAME exemption and needs no second ruling -- but it stays registered in the pre_indexed exception and is the hero desk's to schedule (not a focus-five hero). The other 350 unguarded sites are out of scope.",
     "archive": "iterations/streams/test_set.md SS CR",
     "report": "iterations/reports/director/20260831T04xxZ.md"
+  },
+  "selfcheck_budget_ruling_20260831": {
+    "ruling": "BUDGET_S stays 120; discovery set stays 50; 5a0 changes VERDICT WORD from check() to uncert()",
+    "at": "2026-08-31T07:21Z",
+    "issues": [
+      "#355 (closed by this ruling)",
+      "#358 (prescription in its section 3 rejected; issue stays open)"
+    ],
+    "fix_commit": "53dedc2b",
+    "prior_commit": "074d3e9c",
+    "why": "5a0's message blamed 'a discovery set that outgrows the budget'. Measured on ONE commit with a byte-identical 50-file discovery set: 99.5s on the director container, 133.3s on the batch-desk container (1.34x), with the 120s budget BETWEEN them. The same set passes on one machine and fails on the other, so the leg's wall clock is not evidence about the tree. Four runs on the director container alone spanned 96.0/99.7/108.4/100.3s -- 13% container noise, worst case 11.6s from the budget.",
+    "cost_of_old_word": "run_py_tests.sh renders any non-zero as FAIL; routine_selfcheck.sh escalates that to 'TRUNK RED -- a python test is failing ON THE WORKING TREE'. From 04:23Z that line was served to every stream on every trigger, about a green tree.",
+    "why_not_raise_budget": "Raising the budget lets a genuinely grown set pass SILENTLY. Changing the word removes no alarm; it changes the alarm's subject from 'the tree is red' to 'this round did not certify' (exit 2, the standing 0/2/3 vocabulary of GH #171/#205/#213).",
+    "mutation_stand": {
+      "method": "forced timeout BUDGET_S 120->1; each mutant cmp-verified as actually different from its source; restore by out-of-tree cp + sha256sum -c; git checkout never used",
+      "M1_fixed": "43 checks, 0 failures, 9 uncertified, exit 2",
+      "M2_prefix": "43 checks, 1 failures, 8 uncertified, exit 1 -- the sole FAIL is 5a0",
+      "control": "43 checks, 0 failures, 0 uncertified, exit 0 at the real budget",
+      "check_count_note": "43 both before and after -- uncert() counts like check(), so no check was silently dropped"
+    },
+    "instrument_added": "NOTE 5a0 cost: <N> file(s) in <X>s (budget 120s) -- wall clock AND file count side by side, the acceptance criterion GH #355 section 5 asked for. Deliberately not an assertion.",
+    "gh358_prescription_rejected": "'Move the top-level sweep behind a function' buys this leg NOTHING. Measured: test_fieldsip_magnitude.lua load=27.8s (top-level sweep, matches the header) but test_blinkflee_scope_ruling.lua load=23ms / run=27.9s (its sweep is ALREADY behind a memoized function; the cost is a 28.2s subprocess). The leg RUNS the tests (routine_selfcheck.sh:359); discovery is text-only grep (:350). Moving a sweep into a function only defers it from load-time to first-assertion-time, and the assertions still consume it.",
+    "gh358_readings_accepted": "133.3s/50 files, 78.4s concentrated in two files, 6x gap to third place -- independently reproduced in shape on a second container (99.5s/50, two files 56.7s = 57.0%).",
+    "open_followups": [
+      "price a cheaper shared fixture-corpus load for the two sweeps (NOT measured this round)",
+      "unlanded_commits.py: degrade to UNCERTIFIABLE under a shallow clone (GH #358 section 4)",
+      "run_py_tests.sh names an innocent file under load -- #355 family, third instance, not closed (this round's load was self-inflicted)"
+    ],
+    "gates": "luacheck_gate.sh exit 0 / 0 warnings, bare read, no RULE6_BYPASS; test_selfcheck_lua_leg.py 43/0/0 exit 0; full python leg 67 passed / 0 failed / 0 uncertifiable exit 0",
+    "report": "iterations/reports/director/20260831T072122Z.md"
   }
 }
