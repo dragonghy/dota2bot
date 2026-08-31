@@ -27,7 +27,8 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0SGN. **【2026-08-31T07:55Z 新增,**自驱**(`[strategy]` 未认领 issue 为零 ⇒ 走 owner 优先项 **P2**
+0SGN. **【2026-08-31T07:55Z 新增,**自驱**(`[strategy]` 未认领 issue 为零 ⇒ 走 owner 优先项 **P2**;
+   **已发 GH #360**,并在 **GH #339 追评**一处假 TRUNK RED 的活体
    责任链上本组自己那一格:GH #338 与 #342 都把本族 (a) 交到走路腿,先把走路腿的**可作用域**算清楚);
    一条**闭式的边际域** + 一条**对本组自己 #342 §3 的更正** + 一条**符号**判据;
    `bots/`/`game/` **逐字节零 diff**,零新 gate id,成员串一字未动,`queue.json` 一字未动,零 AWS、S3 零访问。
@@ -3442,7 +3443,8 @@
   声明切片 107 帧上负出价 **56/107 = 52.3% 是多数**;**同一条算术逐字适用于它上面那条发货中的 `tphome` 行。**
   读数(993 存活英雄帧):`S=23 / 已被吃掉 4 / 边际域 19`(**不是空集**,开工假设被自己读数否掉);
   **边际域几乎全由「补给」子句造出(18/1/0)**,而源码注释把**归因危险**写成这个 helper 存在的理由。
-  报告:`iterations/reports/strategy/20260831T075529Z.md`;backlog 条目 **`0SGN`**;
+  报告:`iterations/reports/strategy/20260831T075529Z.md`;issue:**GH #360**(+ #339 追评);
+  backlog 条目 **`0SGN`**;
   测试:`tests/test_stayfield2_marginal_domain.lua`(18/18)+ `tests/_stayfield2_margin_sweep.lua`(90s)。
   **⚠️ 当轮自伤**:开工自检用 `| tail -40` 读到 0,横幅自己写着 `worst exit: 3`
   —— `evidence-discipline` 规则 3 的站点,在它落地当天又发生一次。顺带 **GH #339 的活体**:
