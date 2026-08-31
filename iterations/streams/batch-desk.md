@@ -7326,7 +7326,12 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **不经管道读**;`core.hooksPath` 已上膛;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
   动态半(#124)**未跑且不声称**(python 那套跑了:`71 passed / 0 failed / 1 uncertifiable`,
   **`RC_EXIT=2` 不是通过**,uncertifiable 是 `test_selfcheck_lua_leg.py`/#358)。
-  **顺序条款(#290)**:**先 push 再发表**,每份草稿各过一次 `claim_precheck.sh`,读数见报告 §11。
+  **顺序条款(#290)**:**先 push(`a20d6943..9da1152c` → main)再发表**,三份草稿各过一次
+  `claim_precheck.sh`,**全部 `BARE_EXIT=0` / `local commits not on origin/main: 0` / `OK to publish`**。
+  **已发表**:**GH #363 追评** `issuecomment-5482712357`(第三轮点名 + 带价签的边界 + 读法 (丙));
+  **GH #368 追评** `issuecomment-5482730569`(`rotscope` ORPHAN_PROPOSAL);
+  **GH #369 新开 `[hero]`**(语料尺寸等式);**GH #364 追评** `issuecomment-5482739534`
+  (第三/四个实测点 +「runner 不同」假说被证伪)。**#358 本轮只登记在报告 §6,未另发评论**(第四个同形点,从简)。
   **铁律 11**:未触发 `requires approval`,无空转等待。
   **下一轮本台 = 发 W32**,前提是交棒 ①(#363 裁定)或 ②(`rotscope` 入集)任一落地 ——
   **②落地即闸 (ii) 第一肢因为正确的理由成立**;闸 (i) 届时不构成约束,**围栏翻月后重置**。
