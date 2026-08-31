@@ -445,11 +445,23 @@ end
 -- =====================================================================
 
 tests['§7 LIMIT: no archived CM frame reaches a creep branch, and here is the count'] = function()
-    -- Both CM frames the corpus has carry Nova at rank 1, and every creep
-    -- branch wants nSkillLV >= 3.  So even with the cooldown lifted the branch
-    -- population is empty for a reason that has nothing to do with cooldown --
-    -- which is why §2/§3 are pinned at the SEARCH site and claim nothing about
-    -- firing.  Requested as a corpus reading in queue.json:hero-25.
+    -- REFINED, 2026-08-31 (GH #354): the two frames named below are still the
+    -- only CM frames in the CORPUS, and they are still rank 1.  What changed is
+    -- that a CM frame where the creep branch is live now exists in the repo at
+    -- all -- staged in tests/frames/ rather than admitted to the corpus, for the
+    -- price reason that file's README states.
+    -- tests/frames/f_20260831_004433_cm_creepreach.lua carries Nova at rank 4
+    -- off cooldown, and tests/test_cm_creep_reach_real_frame.lua prices the
+    -- reach question on it.  The limit that survives is narrower and is stated
+    -- there: a fixture world still contains no creeps as far as the LOADER is
+    -- concerned, so the branch is reachable in arithmetic but not end to end.
+    --
+    -- Both CM frames the corpus had when this file was written carry Nova at
+    -- rank 1, and every creep branch wants nSkillLV >= 3.  So even with the
+    -- cooldown lifted the branch population is empty for a reason that has
+    -- nothing to do with cooldown -- which is why §2/§3 are pinned at the
+    -- SEARCH site and claim nothing about firing.  Requested as a corpus
+    -- reading in queue.json:hero-25.
     local nRank1 = 0
     for _, path in ipairs({
         'tests/fixtures/f_260820_102645_cm_laning_release.lua',
@@ -465,6 +477,18 @@ tests['§7 LIMIT: no archived CM frame reaches a creep branch, and here is the c
         end
     end
     assert(nRank1 == 2, 'both archived CM frames hold Nova below rank 3: ' .. nRank1)
+
+    -- ...and the frame that lifted the limit, asserted here so the supersession
+    -- note above cannot rot into prose: rank 4, no cooldown mutation needed.
+    local nLive = 0
+    for _, u in ipairs(dofile('tests/frames/f_20260831_004433_cm_creepreach.lua').units) do
+        if u.name == 'npc_dota_hero_crystal_maiden' then
+            for _, a in ipairs(u.abilities or {}) do
+                if a.name == NOVA and a.level >= 3 and a.cd == 0 then nLive = nLive + 1 end
+            end
+        end
+    end
+    assert(nLive == 1, 'the GH #354 frame holds Nova at rank >= 3 and ready: ' .. nLive)
 
     -- And the shipped threshold really is 3, read off the source rather than
     -- remembered, so a patch that lowers it reopens this limit here.
