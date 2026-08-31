@@ -1,0 +1,132 @@
+{
+  "wave": "W32",
+  "_note": "First-hand launch record, written 2026-08-31T21:3xZ WHILE all four instances read running in describe-instances. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). The harvesting round MUST write `machines[].status_code` / `create` / `update` AND the leg counts `ab` / `ba` / `arm_depth` -- under exactly those bare names, NOT `harvest_ab`-style prefixes: reclaim_blind.py reads the bare names.",
+  "tree": "85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1",
+  "tree_note": "The 40-hex pin was written explicitly, never `main`, and `git ls-remote origin main` was re-verified INSIDE the launch shell block (guard: exit 8 on drift). It read equal at 21:19:16Z, so nothing was refused. A `date -u` gate-(i) guard was in the same block (exit 9 if the 6h throttle had not unlocked); it read 9h of margin against the 12:17:21Z unlock. The same pin was carried unchanged through all three ladder attempts.",
+  "arm_ids": 48,
+  "arm_bytes": 423,
+  "arm_note": "test_set.md line 2 on the pinned tree, 48 ids / 423 bytes (stripped), md5 dce4a1ca605a498d18ae889c69453072. FIRST wave of the 48-id family. The string moved for the first time since W27: the director admitted `rotscope` at 19:0xZ (47 -> 48, ruling §CV, proposal §CU, GH #368, queue strategy-26 opened by the director on the strategy group's behalf). THIS IS THE WHOLE POINT OF THE WAVE -- the previous round refused to launch W32 on the 47-id string precisely because `rotscope` was NOT armed, which would have made W32 a bit-for-bit repeat of W31 (the gated block is unreachable on both legs when its id is in neither armed string). The 47-id family is frozen at 8 pooled seeds (gpm +20.77 / sd 18.58 / SE 6.57 / 6-8).",
+  "instance_type": "c6i.4xlarge",
+  "market": "on-demand",
+  "market_note": "*** TENTH-WAVE STREAK OF ZERO MARKET DEGRADATION IS BROKEN. Full registered ladder walked, all three levels, for the first time since the ladder was written. *** Level (1) c6i.4xlarge SPOT: all four AZs returned InsufficientInstanceCapacity; the ONE machine that did launch (i-0d1f1418d7a66ba67, seed 2604, us-west-2d, sir-ejb7kd7n) was reclaimed by EC2 3 minutes 35 seconds later -- StateReason `Server.SpotInstanceTermination`, SIR status `instance-terminated-no-capacity`, launched 21:20:04Z, service-initiated termination 21:23:39Z. Level (2) c6a.4xlarge SPOT: all four calls walked the entire AZ ring and printed `AZ RING EXHAUSTED`; ZERO instances and ZERO spot-instance-requests were created (verified by describe-spot-instance-requests over the window). Level (3) --on-demand: all four launched on the FIRST ask, four distinct AZs, no re-aiming. Evidence for the market type is describe-instances InstanceLifecycle=None on all four, NOT the run_id `spot_` prefix (which spot_run.sh:155 hardcodes regardless of market). Owner's Spot-first ruling GH #158 is UNVIOLATED: this is exactly its `除非没有spot的机器` branch.",
+  "capacity_note": "The exhaustion is SPOT-POOL-SPECIFIC, not a region-wide capacity event: on-demand c6i.4xlarge filled all four AZs on the first ask at 21:30Z, four minutes after c6a spot had been refused in all four. Both instance families' spot pools were simultaneously empty across us-west-2a/b/c/d for ~11 minutes (21:19Z-21:30Z). AWS's own c6a error text volunteered alternative AZs that then also refused, which is the signature of a pool draining faster than the capacity advisor updates.",
+  "slots": 16,
+  "rec_slots": 1,
+  "rec_slots_note": "Registered branch (A) of GH #308, executed for the NINTH wave. Checked at the gate this round by reading the issue directly: #308 is still `open`, last updated 2026-08-30T06:24:56Z, 5 comments, NO director ruling -- and the charter forbids changing the criterion after the fact => rec_slots stays 1. Frame channel 1/16 for the ninth wave; owner P1/P2 condition (a) keeps waiting on it. TENTH time this desk has named it.",
+  "watchdog_hours": 2,
+  "games_per_seed": 12,
+  "seeds": [
+    2604,
+    2624,
+    2737,
+    2970
+  ],
+  "carrier_terms": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+  ],
+  "carrier_terms_note": "Derived MECHANICALLY by carrier_terms.py from the 48-id arm string: 10 hero-scoped, 38 generic, 0 unresolved => 6 term(s). SAME six terms as W27-W31: the newly admitted `rotscope` resolves generic (bots/mode_roam_generic.lua:1023), so admitting it did not move the carrier requirement.",
+  "carrier_gate": "seed_draft.py --assert-carrier-from-arm exit 0 (BARE_EXIT read via rc.sh, not through a pipe); ids=10 seeds=4. Per-term carriers: crystal_maiden 4, lion 3, obsidian_destroyer 3, skeleton_king 3, zuus 3, spirit_breaker 2 => 18 carrier slots. HONEST BOUNDARY (tenth round, unchanged): the '>=2 per term' rule is this desk's OWN discipline, not the gate; the official gate only requires >=1 (it reports PARTIAL per term and still exits 0). GH #285 is still unruled -- fifteenth round.",
+  "wiring_gate": "tools/batch_test/check_armed_wiring.py --cand <48-id string> --ref 85bcbeb7... BARE_EXIT=0: `all 48 armed ids wired on 85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1`, including the new `rotscope` at bots/mode_roam_generic.lua:1023. Run ONCE this round; the drift guard did not fire across the three ladder attempts, so no re-pin and no re-run were needed.",
+  "seed_selection_note": "Four seeds NEVER used in any prior wave, from a VIRGIN window: the [2601,3000] window holds 0 banked seeds of 400. Checked against a REFRESHED index (--build run first, BARE_EXIT=0, `293 run prefixes in S3, 293 already indexed, 0 to scan`, per the standing discipline).",
+  "seed_index_note": "seed_roster_index --build ran clean (BARE_EXIT=0) before selection. Fifth consecutive wave where the fixed pre-launch --build was performed.",
+  "seed_search_note": "*** WINDOW SHIFTED [2201,2600] -> [2601,3000] this round, and unlike W31 the shift rule WAS invoked. *** Mask-exhaustive enumeration (GH #313 method) on the refreshed index, run on BOTH windows before deciding: OLD [2201,2600] = 8 banked / 392 unused, popcount {4:2, 3:67, 2:136, 1:137, 0:50}, 44 distinct masks, 330 valid 4-mask combos, BEST = 14 carrier slots. NEW [2601,3000] = 0 banked / 400 unused, popcount {5:2, 4:11, 3:56, 2:141, 1:140, 0:50}, 45 distinct masks, 3342 valid combos, BEST = 18. THE CEILING IN THE OLD WINDOW FELL 16 -> 14 IN ONE WAVE, the second consecutive record drop, and the supply table shows exactly why: W31 took four seeds and pop-4 went 6 -> 2 while pop-5 stayed 0. This is the THIRD confirmation of the mechanism the charter names -- every wave picks the richest four, so every wave shaves the window's top layer, and a fresh window's top layer is thinner in absolute terms than the depth of one cut. Shifting right buys ~2 waves of headroom; it is NOT a fix, and the new window's pop-5 supply is 2, i.e. this same note will be written again around W34. GH #285 remains the place to rule on which of the three moves (relax the discipline back to the gate's own >=1, change the window policy, or change the selection rule so it does not always take the richest four) is taken.",
+  "machines": [
+    {
+      "seed": 2604,
+      "az": "us-west-2a",
+      "instance": "i-0378bbb0708e68982",
+      "run_token": "3bf33d",
+      "run_id": "spot_20260831_213048_1_85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1_3bf33d",
+      "launched": "2026-08-31T21:30:48Z",
+      "instance_launch_time": "2026-08-31T21:30:50Z",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2a",
+      "market": "on-demand",
+      "carriers": [
+        "crystal_maiden",
+        "lion",
+        "skeleton_king",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 2624,
+      "az": "us-west-2b",
+      "instance": "i-032d0b5069fd5467e",
+      "run_token": "93546a",
+      "run_id": "spot_20260831_213052_1_85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1_93546a",
+      "launched": "2026-08-31T21:30:52Z",
+      "instance_launch_time": "2026-08-31T21:30:54Z",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "market": "on-demand",
+      "carriers": [
+        "crystal_maiden",
+        "obsidian_destroyer",
+        "skeleton_king",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 2737,
+      "az": "us-west-2c",
+      "instance": "i-09b975056d4d285b4",
+      "run_token": "d72e7e",
+      "run_id": "spot_20260831_213057_1_85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1_d72e7e",
+      "launched": "2026-08-31T21:30:57Z",
+      "instance_launch_time": "2026-08-31T21:30:59Z",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "market": "on-demand",
+      "carriers": [
+        "crystal_maiden",
+        "lion",
+        "obsidian_destroyer",
+        "spirit_breaker",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 2970,
+      "az": "us-west-2d",
+      "instance": "i-08a65f84e78450af5",
+      "run_token": "858e13",
+      "run_id": "spot_20260831_213101_1_85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1_858e13",
+      "launched": "2026-08-31T21:31:01Z",
+      "instance_launch_time": "2026-08-31T21:31:03Z",
+      "requested_az": "us-west-2d",
+      "actual_az": "us-west-2d",
+      "market": "on-demand",
+      "carriers": [
+        "crystal_maiden",
+        "lion",
+        "obsidian_destroyer",
+        "skeleton_king",
+        "spirit_breaker"
+      ]
+    }
+  ],
+  "az_spread": "4 requested / 4 granted / 4 DISTINCT (us-west-2a, 2b, 2c, 2d) on the on-demand attempt, every AZ filled on its FIRST ask with zero `re-aiming` lines. GH #252 acceptance (>=2 distinct) and GH #256 acceptance (4 distinct, zero re-aiming) BOTH satisfied. NOTE the contrast with the two spot attempts minutes earlier, where the same four requests produced one `PLACEMENT MISMATCH` (2a -> 2d), three `AZ RING EXHAUSTED`, and then a full ring walk on both types -- the AZ machinery worked correctly throughout; there was simply no spot capacity anywhere to place into.",
+  "run_id_uniqueness": "Four distinct `soak-run` tag values confirmed via describe-instances (an evidence source independent of this session's own transcript): ...3bf33d / ...93546a / ...d72e7e / ...858e13. Launch call spacing 4s / 5s / 4s, all crossing a whole second. GH #98 RUN_TOKEN makes uniqueness independent of wall-clock resolution anyway.",
+  "vcpu_quota_note": "The 4x16=64 vCPU ceiling was respected between ladder levels: after the reclaimed spot machine was taken at 21:23:39Z, this desk POLLED describe-instances until it left `shutting-down` (terminated at 21:25:35Z, i.e. 1m56s) before issuing the c6a calls. The charter's ~2m40s figure held. No VcpuLimitExceeded was seen on any of the twelve launch calls.",
+  "gates": {
+    "i_throttle_6h": "PASS -- W31 launched 2026-08-31T06:17:21Z, unlock 12:17:21Z, first launch call 21:19:16Z (9h of margin). Enforced by an in-block `date -u` guard (exit 9), not by hand.",
+    "ii_new_to_test": "PASS, AND FOR THE RIGHT REASON THIS TIME -- the arm string itself moved, 47 -> 48 ids, because the director admitted `rotscope` at 19:0xZ. Contrast the 18:13Z round, which measured the first leg of (ii) as literally true (bots/ had moved) and still refused to launch, because the moved code was gated behind an id that was in NEITHER armed leg and therefore unreachable on both -- a bit-identical repeat of W31 for $0.90. That objection is now discharged at its root: `rotscope` is armed, and check_armed_wiring confirms it is wired on the pinned tree. Drift measured with `git log 1dd5705f..HEAD -- bots/ game/` AFTER `git fetch --depth 1 origin <full 40-hex>` (the shallow-clone trap: this container IS shallow, and the abbreviated SHA is not even fetchable -- `couldn't find remote ref`); BARE_EXIT=0 with non-empty output, so the range is comparable, not silently empty. Three commits touch bots/ since W31's pin: 11b7e2e8 (strategy, `roamidle`), 7afb8380 (strategy, `rotscope`), c49d335e (batch-desk, W31 launch round).",
+    "ii_note_roamidle": "REGISTERED, NOT A BLOCKER: 11b7e2e8 lands a second gated fix, `roamidle`, which is NOT in the 48-id string -- so on this wave it is the same shape `rotscope` had last round (unreachable on both legs; the only cost is one side-effect-free predicate evaluation per frame). It is the self-check's ORPHAN_PROPOSAL for §CW. Naming it here so the next round does not have to rediscover it: `roamidle` is the cheapest rideshare available for W33, at $0 incremental AWS cost, exactly as `rotscope` was for this one.",
+    "iii_budget": "PASS -- fence = MTD $75.988 (budgets describe-budgets, free path, snapshot refreshed 2026-08-31T21:01:57Z, CE cross-check $75.9876562835 since the reading is >= the $35 confirm threshold) + $0 for waves launched in the last 12h (W31 launched 06:17Z, 15h ago, i.e. OUTSIDE the measured 4.3-11.3h lag band, so clause (甲) adds nothing) + W32 at the ON-DEMAND price ~$2.15 = $78.14 <= $80. Conservative variant, assuming W31 is somehow still not in the snapshot: $79.04, still <= $80. Next owner-visible Budget ACTUAL alert tier is $80; NOT crossed this round, so no alert-crossing line is owed. Brake $90 and owner line $100 untouched. NOTE the estimate used is the on-demand ~$2.15, not the spot ~$0.90, per the charter's rule that the fence takes the price of the market type the wave ACTUALLY launched on; the ~$0.02 burned by the 3m35s reclaimed spot machine is inside the rounding.",
+    "iii_budget_month_note": "The August month rolls over ~2.5h after take-off. This wave runs ~45 min and settles entirely inside August, so it counts against the August MTD read above; the September MTD starts at zero with this wave already paid for.",
+    "iv_inputs": "PASS -- no outstanding harvest owed; W31 was harvested clean at 09:2xZ (222 loaded / 198 scored / zero exclusions). No pending queue request carries an APPROVED/APPROVED_CONDITIONAL director ruling scheduled for this wave: `strategy-5b` (APPROVED_CONDITIONAL, wave=W6) is the only APPROVED* row and its own condition (3) forbids scheduling a wave before an event-axis magnitude is supplied, which is still missing -- FIFTH round, and this desk does not re-rule it. Every ADMITTED rideshare rides this full-set wave by construction.",
+    "iv_reclaim_blind": "PASS -- tools/batch_test/soak/reclaim_blind.py --wave-json iterations/reports/batch-desk/waves/W31_wave.json, BARE_EXIT=0 (read via rc.sh, not through a pipe). Verbatim: changeover 40.0 min (measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min), min_arm_depth 8.0; 4 seeds PAIRED [depth-checked] (2375 ab28/ba14, 2393 ab39/ba16, 2403 ab36/ba10, 2444 ab40/ba15); `yield 4 paired seed(s) of 4 machine(s)`; `attribution: 0 machine(s) reclaimed before the flip`; `VERDICT: not blinded -- the wave delivered 4 paired seed(s).`; `NEXT WAVE: spot (the default; GH #158 unchanged).` => this wave DID open on spot, on the tool's own recommendation. It ended up on-demand only after the market refused both instance families, which is the ladder working, not the recommendation being ignored."
+  },
+  "expected_games": "4 seeds x 12 games x 2 arms = 96 mirrored games nominal; recent full-set waves land 200-240 scored games because each leg drains more than its nominal 12 before the flip. W31 scored 198 of 222 loaded; W30 scored 207 of 231.",
+  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2). On-demand carries NO reclaim risk, so unlike a spot wave the only exit paths are validate-then-shutdown (expected) and the 2h watchdog (hard cap 23:31Z). Expected self-termination between 22:15Z and 22:30Z on W30/W31's ~0.75-0.92h profile.",
+  "harvest": {
+    "harvested_at": null,
+    "note": "TO BE BACKFILLED by the harvesting round. Because this is an ON-DEMAND wave, the cost settlement CANNOT use the SIR create->update method used for W29-W31 (there are no spot instance requests). Use the instance LaunchTime -> termination time from describe-instances (read it EARLY, before terminated instances age out of describe-instances), and price at the us-west-2 c6i.4xlarge on-demand rate $0.673/h. The auto-invalidation clause on the $0.90 constant does NOT apply to this wave -- that constant is the SPOT single-wave price, and this wave is on-demand, whose registered constant is ~$2.15. If the settled on-demand cost exceeds $2.15, name it in the report so the director re-rules THAT constant."
+  }
+}
