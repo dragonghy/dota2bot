@@ -11556,3 +11556,138 @@ end
   声称枚举了「`bots/` 下每一个 `bOnce=false` / `Action_MoveToUnit` 站点」。
   它**没有覆盖 `ActionQueue_AttackMove`**,而且它**根本没有找过「被抹掉」这个形状** ——
   它问的是一条命令**活多久**,从没问过它**是否活过**。`jmz_func.lua:11998` 在它自述的范围之外。
+
+## §CX 2026-08-31T22:3xZ 协同组提议入集:`outlatch`(GH #372)—— **搭车、零 AWS 增量、不申请专波**;而本节最该被读的不是那次扫描,是**一个闩记录的是「看过了」而不是「找到了」**
+
+### CX.1 缺陷:一次空扫描,整个 mode 对这个 bot 永久死掉
+
+`bots/mode_outpost_generic.lua` 的 `GetDesireHelper`:
+
+```lua
+if not DidWeGetOutpost
+then
+    if botName == 'npc_dota_hero_invoker' then return BOT_ACTION_DESIRE_NONE end
+    for _, unit in pairs(GetUnitList(UNIT_LIST_ALL)) do
+        if unit:GetUnitName() == '#DOTA_OutpostName_North'
+        or unit:GetUnitName() == '#DOTA_OutpostName_South'
+        then table.insert(Outposts, unit) end
+    end
+
+    DidWeGetOutpost = true          -- ← 无条件
+end
+```
+
+`DidWeGetOutpost = true` **无条件**排在扫描之后。而这个块是 `Outposts` 的**唯一写者**,
+`GetClosestOutpost` 是它的**唯一读者**(源码计数已钉:1 声明 / 1 insert / 1 长度测试 / 7 处在 getter 里)。
+⇒ 只要那一次扫描返回空表,`Outposts` **永远**是空表:`GetClosestOutpost` 从此恒答 `nil`,
+`GetDesireHelper` 唯一的非 NONE 出口挂在 `ClosestOutpost ~= nil` 之后,于是这个 mode 的出价
+**这一局剩下的时间恒为 NONE**,`Think`(以及它 `:117` 那条 `Action_AttackUnit(ClosestOutpost, false)`)
+**永远到不了**。没有报错,没有重试,没有任何一条腿会举手。
+
+**它是 backlog `0d`「其余 mode 文件里的连续型 `Action_*`」这一格的最后一站**:
+把 `mode_roam_generic` / `mode_team_roam_generic` 排除之后,`bots/mode_*.lua` 里
+`Action_AttackUnit(x, false)` / `Action_MoveToUnit` / `ActionQueue_*` 的匹配**只剩这一行**。
+读它的时候发现的问题比那条命令**高一层**:那条命令的 mode **根本没机会出价**。
+
+### CX.2 ⭐ 主判据(可复用,超出本主题):**一个闩必须记录它所把守的后置条件,不是那次尝试**
+
+`DidWeGetOutpost` 的名字问的是「我们**拿到**了吗」,代码答的是「我们**看过**了吗」。
+凡是「只做一次」的标志位被写在**本该产出点什么的那个块的出口处**,
+**空结果和满结果就无法区分**——而且这个区分是**永久性**的,因为那个标志位
+**正是唯一还会再跑一次生产者的东西**。
+
+**与三条同族明确区分**(四者都是「守卫/推理与它的消费点对不上」,**因**各不相同):
+- GH #348(sniper)是**顺序**:判 `nil` 的前一行就索引了;
+- GH #368(`rotscope`)是**作用域**:守卫和被守卫者同名但不是同一个变量;
+- GH #370(`roamidle`)是**未汇报的副作用**:被调方下了命令却读起来像查询;
+- 本条**生产者、标志位、消费者三者各自都对** —— 错的是**标志位回答的问题和消费者问的不是同一个**。
+
+### CX.3 ⭐⭐ 第二条互相独立的后果(**本轮不修**,单独钉住)
+
+`GetClosestOutpost` 的合取式是
+
+```lua
+Outposts[i] ~= nil
+and Outposts[i]:GetTeam() ~= GetTeam()
+and GetUnitToUnitDistance(bot, Outposts[i]) < dist
+and not Outposts[i]:IsNull()
+and not Outposts[i]:IsInvulnerable()
+```
+
+Lua 的 `and` 从左到右短路 ⇒ `IsNull()`——**它存在的全部理由就是「这个句柄可能已经没了」**——
+被排在**第四**位求值,**在两次对它所守护的那个句柄的方法调用之后**。
+这是 GH #348 的形状**在第二个文件里**,而它值多少钱**恰好由 CX.1 决定**:
+表只填一次、永不刷新,句柄陈旧化正是那个闩的直接后果。
+**一次一个杠杆** ⇒ 本轮只修 CX.1;这一条由 `[source S6]` 钉住(断言**缺陷仍在**,
+哪天它翻转,本文件必须被重新推导而不是悄悄通过)。
+
+### CX.4 ⭐⭐⭐ 两条互相对冲的语料读数,**都是真的,都登记**
+
+`tests/_outpost_gate_sweep.lua`(107 枚钉住帧,零 AWS,秒级):
+
+- **(A) 这个 mode 在本仓的任何一枚带真实建筑表的帧上都不可达。** 报「敌方二塔已倒」的
+  **43 / 107** 帧,与**根本没有 `buildings` 表**的那 43 枚 fixture 是**同一个集合** ——
+  差集实测 `t2-only=0 / no-buildings-only=0 / both=43`,**是相等不是相似**。
+  没有建筑表时 loader 的 `GetTower` 对每个槽都答 `nil`,于是「二塔倒了」是**harness 事实**。
+  带建筑表的那 64 枚上,敌方三座二塔**全部矗立** ⇒ `IsEnemyTier2Down` 为假,
+  这个文件第 56 行以下的**全部**内容(扫描、闩、`GetClosestOutpost`、整个 `Think`)
+  **结构上不可达**。⇒ **S-A 是一次声明,不是一次发现**。
+- **(B) `GetUnitList(UNIT_LIST_ALL)` 在 107 帧上共 993 条,outpost **0** 条 ——
+  但这个零是 UNMEASURABLE 不是 EMPTY。** 归因有名字且是**工具自己写下的**:
+  `tests/mock/replay_fixture.lua` 的注释白纸黑字说它**故意不**把小兵和建筑注入 `UNIT_LIST_ALL`。
+  与 GH #171/#205 同族,与 GH #368 的 `GetProperTarget` 读数**同形**。
+
+### CX.5 改动(gated,turbo-only,默认逐字节不变)
+
+只动 `bots/mode_outpost_generic.lua`,两处:
+
+1. 闩改为记录后置条件:`DidWeGetOutpost = not bRescan or #Outposts > 0`。
+   **门关时 `not bRescan` 为真,Lua 在测量表之前就短路** ⇒ 出厂那个无条件 `true` **逐字节不变**;
+2. armed 时重试**自带边界**:`if DotaTime() < NextOutpostScanTime then return NONE end`,
+   间隔 `OUTPOST_RESCAN_INTERVAL = 1.0`。节流**写在门内**(位置已钉:门 < 节流 < 扫描 < 闩),
+   出厂路径**从不求值它**。扫描只在表为空时才可能跑 ⇒ **重试不可能造成重复条目**(已钉)。
+
+`bots/` 只此一个文件,`game/` 零 diff,任何地方的出价数值都没有改。
+
+### CX.6 验收与变异
+
+`tests/test_outlatch_scan_postcondition.lua`(`[ratchet]`,**12/12**,秒级),
+真实帧 `tests/fixtures/f_260819_181742_ss_chase_start.lua`(局 `20260819_181742_slot1`,
+shadow_shaman,t=312.5,**带真实建筑表**):
+
+- 5 条 `[source S1..S4, S6]`:闩只有一处赋值且只有门让它有条件、`Outposts` 单写单读、
+  门是 turbo-only 且单点求值、门 < 节流 < 扫描 < 闩 的位置证明、**以及 CX.3 那条缺陷仍在**;
+- `[frame F1]` 真实帧上 `UNIT_LIST_ALL` 10 条 / outpost 0 条,**并把 loader 那句自述钉住**
+  (这是让 (B) 成为 UNMEASURABLE 而非 EMPTY 的归因);
+- `[frame F5]` 真实帧三座敌方二塔**全部矗立** ⇒ S-A 是声明;
+- `[frame F2]` 出厂:一次空扫描之后,**世界后来摆出两座 outpost、又过了 20 帧**,
+  它**再也没扫过第二次**,`GetClosestOutpost()` 恒 `nil`;
+- `[frame F3]` armed:空扫描不闩,节流到期后再扫一次就找到,`dist=1529.7 < 3000`,
+  出价 **0.4186 > NONE**;**并断言这一帧自己的三条否决全部让开**
+  (`dist > 600`、`IsSuitableToCaptureOutpost()` 真、`IsEnemyCloserToOutpostLoc` 假),
+  于是两臂之间**只剩那个闩**;成功一次之后**不再扫描**(⇒ 不可能重复);
+- `[frame F4]` 节流:间隔内 9 帧零重扫,越过间隔立刻重扫;
+- 两条 `[control]`:非 turbo 时 armed **就是**出厂那一臂;世界还没摆出 outpost 之前
+  **两臂逐帧同值**。
+
+**变异 10 条:10 CAUGHT**(文件副本恢复,每条前后 `sha256sum` 核对,退出码**裸读**,
+`FINAL_SHA_OK=yes`):回退闩、`>= 0`、反转出厂臂、去掉 turbo 合取、改候选名、
+反转节流判据、间隔改 100s、删掉节流打戳、把 `IsNull` 提到第一位、打断 North 名字串。
+
+**⚠️ 方法自伤(记下来,因为它安静地通过了一轮)**:
+用 `function GetClosestOutpost%(%).-\nend` 抓函数体,**非贪婪会停在第一个嵌套 `end`**,
+于是返回一个**被截断**的函数体,计数**少报一处**却仍然**匹配上了一个看着合理的期望值** ——
+**一个返回得比它声称的少的扫描器,是靠「同意你」来失败的**。已改为按**两侧邻居**切片。
+与 GH #341/#345(工具从未求值它自称读的那条子句)、GH #370(注释被自己数进去)同族。
+
+### CX.7 门与诚实边界
+
+- 铁律 6 静态半:`bash tools/agent/luacheck_gate.sh` **裸读 exit 0,0 警告**,未用 `RULE6_BYPASS`;
+- **⚠️ 频率未知,而且本条比平时更重**:本轮证明了**形状**(空扫描是永久的)并证明
+  armed 臂能在出厂臂已经瞎掉的地方恢复;它**没有**证明真实对局里「二塔倒后的第一次扫描」
+  多久返回一次空表。真引擎的 `UNIT_LIST_ALL` **很可能**多数时候两座 outpost 都带着;
+  **这个修复的价值上界就是它不带着的频率**,而那个读数**只存在于录像里**。
+- **引擎语义不主张**:`UNIT_LIST_ALL` 是否受视野限制、是否收录 outpost,本仓不可观测,
+  本节任何一句都没有主张它。
+- CX.3 那条**没修**;全量单进程套件未跑完(GH #124),本轮跑的是 luacheck 门 + 全部
+  `[detector]`/`[ratchet]` 文件。

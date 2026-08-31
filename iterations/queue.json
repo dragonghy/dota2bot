@@ -1146,6 +1146,18 @@
       "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— baseline 腿上,某一帧的动作日志出现 `Action_ClearActions → ActionQueue_AttackMove → Action_AttackUnit(bOnce=false)` 三连(恢复命令被同帧抹掉);armed 腿上同类帧**以那条排队的 attack-move 结束**,其后没有 `Action_*`。\\n\\n⚠️ **三条限定,收割前必读**:(甲) **频率未知** —— 本轮证明了**形状**并在真实帧上量到它开火,但**没有**证明真实对局里 bot 多久闩上一次 idle;域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,第二个合取项的真实频率**正是本请求要买的东西**。⇒ 它是 **RIDESHARE**,**不能当独臂**,而且**恒零读数必须报成「域为空」而不是「测过了无效应」**(§AZ / GH #148 那一族)。(乙) **引擎侧不可观测** —— 「同一 tick 内 `Action_ClearActions` 之后再来一条 `Action_*`」引擎实际怎么做,本仓无法看到(`print()` 到不了控制台;`error in error handling` 吞错误文本)⇒ 核验只主张**命令次序**这一半,不许把结论写成「引擎确实丢弃了重定位」。(丙) **它买的是那一帧的排序,不是节流** —— §CW.3 那条独立后果(`return true` 排在锚点刷新两行之上 ⇒ idle 一旦闩上 `>= 3s` 的门再也关不上,`Action_ClearActions(true)` 每帧落在其它系统的队列上)**这个 id 一字未修**,结论不许写成「idle 复位已修好」。",
       "requester": "strategy",
       "status": "pending"
+    },
+    {
+      "id": "strategy-28",
+      "stream": "strategy",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "axis": "OUTLATCH —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5)。",
+      "question": "`outlatch`(GH #372,提议 test_set.md §CX):`bots/mode_outpost_generic.lua` 的 `GetDesireHelper` 把 `DidWeGetOutpost = true` **无条件**写在扫描之后。该块是 `Outposts` 的唯一写者、`GetClosestOutpost` 是唯一读者 ⇒ 一次返回空表的扫描**永久**关死这个 mode:`GetClosestOutpost` 从此恒 `nil`,出价恒 NONE,`Think`(含 `:117` 的 `Action_AttackUnit(ClosestOutpost, false)`)永远到不了。armed 时闩记录后置条件(`#Outposts > 0`),重试自带 1.0s 边界。",
+      "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— 在**敌方二塔已倒之后**,baseline 腿上某个 bot 的 outpost mode 出价**恒为 NONE 且从不 Think**,而同一时刻地图上 outpost 确实存在且未被己方占领;armed 腿上同类局面里该 mode 至少出价一次 / 至少 Think 一次。\\n\\n⚠️ **三条限定,收割前必读**:(甲) **域可能为空,而且这正是本请求要买的东西** —— 本轮证明了**形状**(空扫描是永久的)与 armed 的恢复,但**没有**证明真实对局里那次扫描多久返回一次空表。真引擎的 `UNIT_LIST_ALL` 很可能多数时候两座 outpost 都带着 ⇒ 它是 **RIDESHARE**,**不能当独臂**,且**恒零读数必须报成「域为空」而不是「测过了无效应」**(§AZ / GH #148 那一族)。(乙) **前置条件本身罕见** —— 整个 mode 挂在 `IsEnemyTier2Down` 之下;本仓 64 枚带真实建筑表的钉住帧上敌方二塔**全部矗立**(`tests/_outpost_gate_sweep.lua`),Turbo 10 分钟封顶的批测局能不能推掉一座二塔,收割时**要先答这个**,答不出就报「前置未出现」。(丙) **引擎语义不许主张** —— `UNIT_LIST_ALL` 是否受视野限制、是否收录 outpost,本仓不可观测,核验只主张「该 mode 有没有出过价」这一半。",
+      "requester": "strategy",
+      "status": "pending"
     }
   ],
   "done": [

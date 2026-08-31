@@ -10,6 +10,14 @@ local DidWeGetOutpost = false
 local ClosestOutpost = nil
 local ClosestOutpostDist = 10000
 
+-- Soak candidate 'outlatch'. Shortest possible re-scan spacing, so the retry
+-- the gate adds is bounded by wall clock instead of by frames. Outposts are
+-- map-static, so one attempt per game second finds them within a second of
+-- their becoming enumerable while costing at most one GetUnitList sweep per
+-- second per bot -- and only until the first non-empty scan closes the latch.
+local OUTPOST_RESCAN_INTERVAL = 1.0
+local NextOutpostScanTime = -math.huge
+
 local IsEnemyTier2Down = false
 local hAbilityCapture = bot:GetAbilityByName('ability_capture')
 
@@ -58,6 +66,24 @@ function GetDesireHelper()
 	if not DidWeGetOutpost
 	then
 		if botName == 'npc_dota_hero_invoker' then return BOT_ACTION_DESIRE_NONE end
+
+		-- Gated ('outlatch'). The shipped latch below records that we LOOKED,
+		-- not that we FOUND: `DidWeGetOutpost = true` runs unconditionally
+		-- after the sweep, so a single sweep that returns no outpost closes the
+		-- only door there is. `Outposts` has exactly one writer (this
+		-- table.insert) and exactly one reader (GetClosestOutpost), so an empty
+		-- table is PERMANENT: GetClosestOutpost answers nil for the rest of the
+		-- game, the desire below is BOT_ACTION_DESIRE_NONE forever, and this
+		-- whole mode is dead for this bot -- silently, with no error and no
+		-- retry. Armed, the latch records the postcondition it is meant to gate.
+		local bRescan = J.IsModeTurbo() and J.IsSoakCandidate('outlatch')
+
+		if bRescan
+		then
+			if DotaTime() < NextOutpostScanTime then return BOT_ACTION_DESIRE_NONE end
+			NextOutpostScanTime = DotaTime() + OUTPOST_RESCAN_INTERVAL
+		end
+
 		for _, unit in pairs(GetUnitList(UNIT_LIST_ALL))
 		do
 			if unit:GetUnitName() == '#DOTA_OutpostName_North'
@@ -67,7 +93,10 @@ function GetDesireHelper()
 			end
 		end
 
-		DidWeGetOutpost = true
+		-- Shipped when the gate is shut: `not bRescan` is true, so this is the
+		-- unconditional `true` byte for byte. The sweep can only run while
+		-- Outposts is empty, so the retry cannot duplicate an entry.
+		DidWeGetOutpost = not bRescan or #Outposts > 0
 	end
 
 	ClosestOutpost, ClosestOutpostDist = GetClosestOutpost()
