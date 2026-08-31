@@ -7590,4 +7590,13 @@
     本语料唯一非行军候选);或等 `rec_slots` 变化(GH #308)。
     (3) 若总监采纳反对角线那条:**收割后先打一次四格分布再选深查对象**。
     (4) `idletrip_domain.py` 在 W30 上应照常打出四格(不核 gate,跨串可跑,两波不可并池)。
+  - **已发表**(先 push 后发,GH #290;`2af74f6d` 落 `origin/main` 之后才发,
+    `claim_precheck.sh` 读 **exit 0 / clean / 本地领先 `origin/main` 0 个 commit**;
+    **MCP 未触发 `requires approval`**):
+    **GH #353 `[harness]` 新开**(载体反对角线:逐 seed 机制 + 19 英雄分布表 +
+    `carrier_gate` 数的是载体局数不是每腿每层局数 + 两条改法建议);
+    **GH #354 `[hero]` 新开**(`cmqreach` 条件 (a) INDETERMINATE 不标 done:
+    九帧表 + 两条机制级理由 + 域非空所以 (丁) 不适用 + fixture 路线与建议钉帧);
+    **GH #351 追评**(常数普查覆盖洞**第二例**,本轮新工具的三个源码常数同样静默通过,
+    并给了「显式 `SOURCE_CONSTANTS` 表比放宽正则更便宜,因为缺表本身可判红」这条建议)。
   - 完整报告:`iterations/reports/replay-check/20260831T040033Z.md`
