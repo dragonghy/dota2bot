@@ -27,6 +27,61 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0SIB. **【2026-08-31T10:50Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒早已交出、
+   P2 上一轮已交棒 ⇒ 取章程 backlog **`0d`** 那一族里明写「还没查的」那条:其余 mode 文件里的连续型命令);
+   **已发 GH #TBD**;一条**顺序即闭式**的主判据 + 一条「同一函数里的同一条合同只被兑现一次」+
+   一条**否掉照抄修法**的不变式 + 一次把 UNMEASURABLE 与 EMPTY 分开的三门归因;
+   `bots/`/`game/` **逐字节零 diff**,零新 gate id,成员串一字未动,`queue.json` 一字未动,零 AWS、S3 零访问。
+   **已交棒,球在录像组与总监。**】**
+   **⭐ 主判据:`Think()` 里 `:612`(`towerCreepMode`)排在 `:621`/`:628` 之上并且 `return`,
+   而后两者是 `GetDesireHelper` **每一条**早返回分支(`ConsiderHelpWhenCoreIsTargeted` /
+   `ConsiderHelpAlly` / punish-dive / punish-over-chase / `l1trade` / `l5combo` /
+   `CarryFindTarget` / `SupportFindTarget`)唯一的落点** ⇒ 陈旧的 `towerCreepMode`
+   **不是打错目标,是把赢下竞价的那条分支整个取消**。复位够不到那些帧的理由也是顺序:
+   `GetDesireHelper` 内唯一的复位躺在 **16 条 `return` 之下**(数字从树里数、钉在测试里),
+   另一个复位 `OnEnd()` 只在该 mode **不再赢**时触发 —— 那正是 `Think()` 不会被调用的那一种。
+   **⭐⭐ 这条合同就写在同一个函数的头上,只被兑现了一次**:`GetDesireHelper` 开头的 `[roamstale]`
+   注释把这套机制逐字讲清楚、还把发生它的分支一条条点名,然后修了它覆盖的**两个句柄里的一个**
+   (`hTargetCreep` 修了,`towerCreepMode` 没有),两者相距不到两屏、在同一个函数体内。
+   `0S`/`0S2` 的新形状:**不是两个文件各一份,是同一个函数里的同一条推理只应用到自己列举对象之一。**
+   **⭐⭐⭐ 而且「照抄那条已 promote 的行」是错的**:`towerTime ~= 0` 与 `towerCreepMode` 在出货代码里
+   是同一个比特(三处写入两两成对,已断言),但**「仍在窗口内」那条分支 `return` 前不重新确认 flag**
+   ⇒ 把清除放在 `roamstale` 那一行旁边会关掉一次**正在进行中**的攻击,
+   `roamstale` 自己的安全性论证(「只移除陈旧、绝不新增」)**不覆盖这一步**;正确修法要多一句
+   「仍在窗口内时重新确认」,该句由上述不变式**可证是 no-op**。已写成会自己红的断言。
+   **读数(993 存活英雄帧,零 AWS)**:暴露面 **58/993 = 5.8%**、散在 **29 个 fixture** 上
+   (投递正好走被吃掉的 `:621`/`:628`);而 **setter 在本语料不可达**,理由**不是游戏条件、是三个没接线的
+   引擎量** ⇒ **UNMEASURABLE 不是 EMPTY**(GH #171/#205 分界):`GetActiveMode()=0` 让 **925/925**
+   零出价帧过不了 mode 闸(**连带关掉 `GetDesireHelper` 整个 `elseif` 半边 —— `CarryFindTarget`/
+   `SupportFindTarget` 也在里面**)、`GetAnimActivity()=0`(**993/993**)关掉
+   `ShouldAttackTowerCreep` 前三个 return、塔的 `GetAttackTarget()=nil`(有塔的 **264 帧全为 nil**)
+   关掉第四个;同一 reach 谓词其余三条**不是**瓶颈(alive 925 / count 847 / far 845)⇒ `gate=0` 是归因不是裸零。
+   **⇒ 本轮不落 gate**(没有一帧能驱动它,gate-plumbing 不算本地验证)。
+   **产出**:`tests/test_towercreep_stale_source.lua`(`[ratchet]`,**7/7**)+
+   `tests/test_towercreep_stale_domain.lua`(**5/5**,53s)+ `tests/_towerstale_sweep.lua`(子进程 ~51s)。
+   **两个文件故意拆开,只有便宜那半带标签** —— GH **#358** 刚把自检 Lua 腿量成 133.3s,
+   再加 **+38%** 去重算一个波次之间不变的读数正是那条 issue 的成本;这是预算决定不是疏漏(已写进文件头)。
+   **变异 9 条:8 CAUGHT / 1 SURVIVED**;副本还原 + 每条前后 `sha256sum -c` + 退出码**裸读未经管道**。
+   **SURVIVED 的 M4 是变异形状不对不是断言松**(内嵌 `return` vs 只看行首的计数器),
+   **该幸存者当场变成一条新断言**:同区间除那 16 条外只剩 **3** 处带 `return` 子串的行且**全部是注释**,
+   盲区在这棵树上是空的 —— 写进文件,不留给记忆。
+   **⚠️ 当轮自伤一条,与 `0SGN` 同一站点同一手法、在它登记之后的下一轮又发生**:
+   自检输出接 `| tail -40` 读 `$?` 拿到 `tail` 的 0,而横幅自己写着 `selfcheck worst exit: 3`;
+   这次由横幅拆穿(`FINDINGS: cadence trunk-red(python)`,红的仍是 `0SGN` 登记过的
+   `tests/test_rc_wrapper.py` 假红,**本轮不复核不重裁**)。`evidence-discipline` 规则 3 现有**连续两轮**现场。
+   **⚠️ 诚实边界**:5.8% 是**被吃掉的落点**的暴露面、是频率**上界**,对联合分布零信息(缺陷还需 flag 陈旧为真,
+   而本语料产不出那个状态);`fire587=0` 与 `roamstale` 在工作**相容但不可归因**(`GetLastHitCreep`
+   可能本就每帧 nil,**不要拿它当 roamstale 的佐证**);`X.IsMostAttackDamage` 未求值 ⇒ 第四门归因**充分不排他**;
+   `1502` 是引擎裸字面量而 mock 的 `ACTIVITY_ATTACK` 是哨兵(已断言);语料有偏 ⇒ 百分比是形状与界;
+   **`gate=0` 作废的东西比本主题宽** —— 任何走 `CarryFindTarget`/`SupportFindTarget` 的历史结论都取自
+   这两个函数**一次都没被调用过**的帧,**本轮只登记不审计**;全量单进程套件未跑完(GH #124)。
+   **下一格**:**录像组**(缺的不是判据是**帧** —— 带回 ① `GetActiveMode()`(最值钱,它一个人关着整个
+   `elseif` 半边)/ ② `GetAnimActivity()`(GH #326 的动画模型可能可复用)/ ③ 塔的 `GetAttackTarget()`
+   任一,本组当轮即可按第 4 步钉帧落 gate);**总监**(甲:`gate=0` 这条**世界断言**要不要立案 ——
+   它作废一整类历史结论,与第十条/第十六条同族;乙:「便宜的 source 半边进快腿、贵的驱动半边不进」
+   要不要变通则(GH #358);丙:§CQ.3 的 `PROVABLE` 里是否加一条「凡注释点名了机制适用范围的修复,
+   必须有断言证明该范围内每个对象都被覆盖」)。**批测台无请求、零 AWS。**
+
 0SGN. **【2026-08-31T07:55Z 新增,**自驱**(`[strategy]` 未认领 issue 为零 ⇒ 走 owner 优先项 **P2**;
    **已发 GH #360**,并在 **GH #339 追评**一处假 TRUNK RED 的活体
    责任链上本组自己那一格:GH #338 与 #342 都把本族 (a) 交到走路腿,先把走路腿的**可作用域**算清楚);
@@ -3425,6 +3480,39 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T10:50Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒早已交出、
+  P2 上一轮已交棒 ⇒ 取 backlog **`0d`** 那一族明写「还没查的」那条(其余 mode 文件的连续型命令);
+  **无入集提议 —— 零新 gate id、零行为改动、`bots/`/`game/` 逐字节零 diff、成员串一字未改、
+  `queue.json` 一字未动、零 AWS、S3 零访问、`state.json` 未改**):
+  **`towerCreepMode` 是 `roamstale` 的未复位同胞,而且它的消费点吃掉赢下竞价的那条分支 —— 顺序即闭式。**
+  `Think()` 里 `:612` 排在 `:621`/`:628` 之上并且 `return`,而后两者是 `GetDesireHelper`
+  **每一条**早返回分支唯一的落点 ⇒ 陈旧 flag **不是打错目标,是把赢下竞价的分支整个取消**;
+  复位够不到那些帧同样是顺序:唯一的 in-helper 复位在 **16 条 `return` 之下**,`OnEnd()` 只在
+  该 mode **不再赢**时触发(那正是 `Think()` 不会被调用的那一种)。
+  **⭐⭐ 这条合同就写在同一个函数的头上,只被兑现了一次**:`[roamstale]` 注释把机制讲清、
+  把分支点名,然后修了它覆盖的**两个句柄里的一个** —— `0S`/`0S2` 的新形状(**同一函数内**的同一条推理)。
+  **⭐⭐⭐ 「照抄那条已 promote 的行」是错的**:`towerTime ~= 0` 与 `towerCreepMode` 是同一个比特,
+  但「仍在窗口内」那条分支 `return` 前不重新确认 ⇒ 照抄会关掉**正在进行中**的攻击,
+  `roamstale` 的安全性论证不覆盖这一步;正确修法多一句重新确认,由该不变式**可证是 no-op**(已断言)。
+  **读数(993 存活英雄帧)**:暴露面 **58/993 = 5.8%**、**29 个 fixture**;
+  **setter 在本语料不可达,理由是三个没接线的引擎量而非游戏条件 ⇒ UNMEASURABLE 不是 EMPTY**
+  (`GetActiveMode()=0` ⇒ **925/925** 过不了 mode 闸,**连带关掉整个 `elseif` 半边**;
+  `GetAnimActivity()=0` **993/993**;塔 `GetAttackTarget()=nil` 在有塔的 **264 帧全部**);
+  其余三条 reach 子句不是瓶颈(925/847/845)⇒ `gate=0` 是归因不是裸零。**⇒ 本轮不落 gate。**
+  报告:`iterations/reports/strategy/20260831T105005Z.md`;issue:**GH #TBD**;backlog 条目 **`0SIB`**;
+  测试:`tests/test_towercreep_stale_source.lua`(7/7,`[ratchet]`)+
+  `tests/test_towercreep_stale_domain.lua`(5/5,53s)+ `tests/_towerstale_sweep.lua`。
+  **两个文件故意拆开,只有便宜那半带标签**(GH #358:不给每流每次触发加 +38%)。
+  **变异 9 条:8 CAUGHT / 1 SURVIVED**,幸存者是变异形状不对、当场变成一条新断言(行首 `return`
+  计数器的盲区在这棵树上是空的)。
+  **⚠️ 当轮自伤**:自检接 `| tail -40` 读 `$?` 拿到 `tail` 的 0,而横幅写着 `worst exit: 3`
+  —— 与 `0SGN` **同一站点同一手法、在它登记之后的下一轮又发生一次**;红的仍是 `0SGN` 登记过的
+  `test_rc_wrapper.py` 假红,**本轮不复核不重裁**。
+  **交棒:录像组**(缺的不是判据是**帧**:带回 `GetActiveMode()` / `GetAnimActivity()` /
+  塔 `GetAttackTarget()` 任一,本组当轮即可钉帧落 gate)、**总监**(甲:`gate=0` 世界断言要不要立案
+  —— 它作废一整类走 `CarryFindTarget`/`SupportFindTarget` 的历史结论;乙:「便宜半边进快腿、
+  贵的半边不进」要不要变通则;丙:§CQ.3 加「注释点名了适用范围的修复必须断言范围内每个对象都被覆盖」)。
+  **批测台无请求、零 AWS。**
 - 2026-08-31T07:55Z(**自驱** —— 工作流 1 走完后 `[strategy]` **未认领 issue 为零**
   (#356/#347/#344/#342/#338/#324/#323/#319/#318 九条全是本组此前认领、现等他组裁定),
   backlog 顶 `0DUT` 已交棒完毕 ⇒ 取 **owner 优先项 P2** 责任链上本组自己那一格;
