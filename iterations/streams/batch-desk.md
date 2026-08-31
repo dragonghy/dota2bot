@@ -7226,7 +7226,13 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑且不声称**
   (python 那套跑了:`69 passed / 0 failed / 1 uncertifiable`,**exit 2 不是通过**,
   uncertifiable 是 `test_selfcheck_lua_leg.py`/GH #358)。
-  **顺序条款(#290)**:**先 push 再发表**,草稿各过一次 `claim_precheck.sh`,读数见报告 §11。
+  **顺序条款(#290)**:**先 push(`a11eadea..803d149a` → main)再发表**,三份草稿各过一次
+  `claim_precheck.sh`:#363 追评 **BARE_EXIT=0**、#364 追评 **0**、**#367 正文 3**。
+  **那个 3 显式交代**:`local commits not on origin/main: 0`(#290 要防的形状不成立),
+  唯一 finding 就是 #367 所报的**同源假阳** —— `claim_precheck.sh` 与 (A) 棘轮一样把一条
+  **故意引用的、断言方向为"不存在"的路径**读成失败的存在性声称;删掉它能变绿但会删掉半个 issue
+  ⇒ **在 BARE_EXIT=3 下发表,并把这一节原样写进 issue 正文**,它因此成了 #367 的第二个证据点。
+  已发表:**GH #367 新开**、**#363 追评 `issuecomment-5480758011`**、**#364 追评 `issuecomment-5480761990`**。
   **铁律 11**:未触发 `requires approval`,无空转等待。
   **下一轮本台 = 发 W32**,前提是交棒 ① 的裁定落地(或 `bots/`/armed 串真的动了,
   届时闸 (ii) 第一肢自己成立);闸 (i)(iii) 届时均不构成约束,**围栏翻月后重置**。
