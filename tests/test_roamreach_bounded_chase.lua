@@ -667,8 +667,21 @@ end
 -- is gone -- fail loudly then rather than passing by absence.
 -- ---------------------------------------------------------------------------
 
+-- 2026-08-31 (GH #370): this scan used to read the RAW file, so a comment that
+-- quotes the order it pins counted as a third order and turned the assertion red
+-- without any order having been added -- which is what happened the moment
+-- 'roamidle' documented this very line above its own fix. Whole-line comments
+-- are stripped first; the count is now over code, which is what it always meant.
+local function codeOnly(src)
+    local out = {}
+    for line in (src .. '\n'):gmatch('([^\n]*)\n') do
+        out[#out + 1] = line:match('^%s*%-%-') and '' or line
+    end
+    return table.concat(out, '\n')
+end
+
 tests['REVERSE: the shipped continuous-order path must still exist'] = function()
-    local src = io.open('bots/mode_team_roam_generic.lua'):read('*a')
+    local src = codeOnly(io.open('bots/mode_team_roam_generic.lua'):read('*a'))
     local n = select(2, src:gsub('Action_AttackUnit%(targetUnit, false%)', ''))
     assert(n == 2,
         'expected exactly two continuous hero-attack orders in team_roam Think '

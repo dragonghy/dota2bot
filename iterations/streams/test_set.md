@@ -11451,3 +11451,108 @@ W31 种子 2444 现场核对:`R=1`、薄腿 `ba_n≈15` ⇒ 上界 `1/15/2 = 0.0
 §CU.5 的 `J.GetProperTarget` **993/993 为 nil** 那条作废面(351 个调用表达式 / 164 个文件)
 是**比本 id 宽得多**的量具问题,**不归本裁定**,留在 §CU.5 的原位;它与 GH #362 的 `gate=0`
 世界断言同族,收口应走那条线。
+---
+
+## §CW 2026-08-31T19:5xZ 协同组提议入集:`roamidle`(GH #370)—— **搭车、零 AWS 增量、不申请专波**;而本节最该被读的不是那道 `return`,是**一个调用点无法为一件它不知道发生过的副作用排序**
+
+### CW.1 缺陷:恢复命令在**发出它的那一帧**就被抹掉,而且**恰好在有漫游目标时**被抹掉
+
+`bots/mode_team_roam_generic.lua` 的 `Think` 里:
+
+```lua
+if isInIdleState then
+    isInIdleState = J.CheckBotIdleState()
+end
+```
+
+这个块**对控制流零影响** —— 块以下没有任何地方再读 `isInIdleState`,它的全部作用就是那次重新赋值。
+**但被调方不是一个查询**:`J.CheckBotIdleState` 在它的恢复分支里**下命令** ——
+`bot:Action_ClearActions(true)`(`jmz_func.lua:11994`)、然后
+`bot:ActionQueue_AttackMove(laneFront)`(`:11998`)。
+而这个块**往下十一行**,只要 `targetUnit` 有效,同一个 `Think` 就发
+`bot:Action_AttackUnit(targetUnit, false)` —— 而一条 `Action_*`
+**「CLEARS the entire action queue and sets this as the new (and only) action」**
+(`docs/BOT_API_REFERENCE.md:1715`)。
+
+⇒ **防卡死的重定位命令,在它被发出的同一帧里被销毁**;而且**销毁它的条件正是这个 mode 自己制造的那个情形**
+(有漫游目标)。**反卡死恢复在最需要它的场景里是个 no-op。**
+
+### CW.2 ⭐ 主判据(可复用,超出本主题):**一个调用点无法为一件它不知道发生过的副作用排序**
+
+写成裸语句的「状态刷新」——**返回值被赋值、然后从不被分支读**——**读起来像查询,也就被当查询审计**。
+若这个调用**下了命令**,调用点手里没有任何东西能保护它刚下的命令,
+而同一个函数里**下一条无条件的 `Action_*` 就把它抹掉**。
+**一般形:被调方发出的副作用,不可能由一个不知道它发生过的调用方来排序。**
+
+**与两个同族明确区分**(三者都是「守卫/推理与它的消费点对不上」,但**因**各不相同):
+- GH #368(`rotscope`)是**作用域**:守卫和被守卫者**同名但不是同一个变量**;
+- GH #348(sniper)是**顺序**:判 `nil` 的前一行就索引了;
+- 本条**调用方对任何一个值都没判断错** —— 它缺的是一件**被调方从来没有汇报过的事实**。
+
+### CW.3 ⭐⭐ 第二条互相独立的后果(**本轮不修**,单独钉住)
+
+它**每帧重复一次**,不是每 3 秒一次。`J.CheckBotIdleState` 里那句 `return true`
+**排在刷新采样锚点的两行之上**(`botState.botLocation` / `botState.lastCheckTime`,`:12010-12011`)⇒
+**idle 一旦闩上,那道 `>= 3s` 的门再也关不上**。两个出厂调用点于是各自走每帧路径
+(`:259` 的 `... or isInIdleState`,以及 `Think` 里这个块)。
+被抹掉的那条 `Action_ClearActions(true)` 因此**每帧落在其它所有系统排进队列的动作上一次**,
+只要 bot 还待在一个**已被冻结**的锚点 100u 以内。
+**一次只动一个小杠杆** ⇒ 本轮只修 CW.1,这一条登记为**下一格**。
+
+### CW.4 改动(gated,turbo-only,默认逐字节不变)
+
+1. `jmz_func.lua` 的 `J.CheckBotIdleState` 增加**第二个返回值** `bRelocated`,
+   **只在真的下了重定位命令的那条臂上为真**(`else` 臂什么都没下,却到达同一个 `return true`)。
+   **纯增量**:两个出厂调用点各自只写一个赋值目标 ⇒ Lua 直接丢弃它,默认行为不变(已断言)。
+2. `mode_team_roam_generic.lua` 的 `Think`:
+   `if bRelocated and J.IsModeTurbo() and J.IsSoakCandidate('roamidle') then return end`。
+   **门开在 `bRelocated` 上、不是 `isInIdleState` 上** —— 于是「因不明原因 idle」那条臂
+   (它什么都没下)仍然**逐字节**落到出厂分支里。任何地方的出价都没有改。
+
+### CW.5 验收与变异
+
+`tests/test_roamidle_recovery_clobber.lua`(`[ratchet]`,**11/11**,秒级),
+真实帧 `tests/fixtures/f_260819_181742_ss_chase_start.lua`
+(局 `20260819_181742_slot1`,shadow_shaman,t=312.5),驱动**真的** `GetDesire()` + `Think()`:
+
+- 5 条 `[source S1..S5]`:调用点零控制流后果、被调方**下命令**且 `return true` 在锚点刷新**之上**、
+  API 合同、抹除者在块**之下**、另一个调用点仍是单赋值目标;
+- 出厂读数:一次 `Think` 内的日志是 `Action_ClearActions → ActionQueue_AttackMove →
+  Action_AttackUnit(bOnce=false)`,**帧以追击结束**;
+- armed 读数:**帧以那条排队的 attack-move 结束**,其后没有任何 `Action_*`;
+- **turbo-only 是量出来的不是读出来的**(把世界强制为非 turbo:armed 日志 == unarmed 日志);
+- CW.3 在同一帧上量到:**时钟零推进**下 helper 仍然报 idle 并**又下一次**重定位。
+- **变异 10 条:10 CAUGHT**(树外 `cp` 还原、每条前后 `sha256sum` 核对、退出码**裸读未经管道**、
+  先确认绿基线)。⚠️ M4/M9 头一遍打 **MUTANT-NOT-APPLIED**(制表符深度差一格)——
+  **那既不是 CAUGHT 也不是 SURVIVED**,按精确缩进重跑后才计入,照实登记。
+
+### CW.6 ⚠️ 本轮方法自伤:**扫源码的测试把自己的注释数了进去**
+
+第一遍跑,本文件**自己的四条断言**红了 —— 因为写在修复之上的那段文档注释
+**逐字引用了它要钉的那几行**(`isInIdleState`、`J.CheckBotIdleState()`、
+`bot:Action_AttackUnit(targetUnit, false)`)。于是计数把**自己的解释**数了进去,
+而 `lineOf()` 返回的是**注释的行号**而不是语句的行号,**把一条顺序断言判反了**。
+修法是一个**保留行号的整行注释剥除视图**。**与 GH #341/#345 同族**(工具从未求值它声称在读的那条子句)。
+**顺带修掉同一个盲区的一个既存实例**:`tests/test_roamreach_bounded_chase.lua`
+的 REVERSE 断言此前扫的是**生文件**,于是 `roamidle` 把这行写进注释的那一刻它就红了
+——**没有任何一条命令被加进来**。已改为扫代码,那本来就是它的原意。
+
+### CW.7 请求与明说没做的
+
+- **请求**:入 `test_set.md` 成员串(总监裁)。**搭车、零 AWS 增量、不申请专波、零 EC2**;
+  `queue.json` 新增 **`strategy-27`**(**本行由提议方自己建** —— §CG.5 要求提议必须有行,
+  而上一轮 `strategy-26` 是总监**代建**的 `ORPHAN_PROPOSAL §CU`;本轮不再让那一格掉在总监身上)。
+  ⚠️ **排期约束**:域是「team_roam 赢下竞价 **且** bot 已闩上 idle」——
+  第二个合取项的真实频率**未知**(见下),所以它是 **RIDESHARE**,**不能当独臂**。
+- **明说没做 / `[limit]`**:
+  1. **频率未知**。本轮钉住了**形状**,并证明它在 idle 谓词成立后于真实帧上**确实开火**;
+     **没有**证明真实对局里 bot 多久闩上一次 idle。**那是录像组的一帧**(见 GH #370 交棒)。
+  2. 引擎对「同一 tick 内 `Action_ClearActions` 之后再来一条 `Action_*`」的**真实**反应
+     **本仓无法观测**(`print()` 到不了控制台;`error in error handling` 吞错误文本)⇒
+     只主张与引擎无关的那一半:**源码就是按这个次序下命令的**,而 API 参考写明了最后一条对队列做什么。
+  3. CW.3 的第二条后果**没修**(一次一个杠杆)。
+  4. 全量单进程套件未跑完(GH #124);本轮跑的是 luacheck 门 + 全部 `[detector]`/`[ratchet]` 文件。
+- **前一次普查的边界更正(不是矛盾)**:`state.json:fixture_modifiers_20260819` 的 `survey_result`
+  声称枚举了「`bots/` 下每一个 `bOnce=false` / `Action_MoveToUnit` 站点」。
+  它**没有覆盖 `ActionQueue_AttackMove`**,而且它**根本没有找过「被抹掉」这个形状** ——
+  它问的是一条命令**活多久**,从没问过它**是否活过**。`jmz_func.lua:11998` 在它自述的范围之外。

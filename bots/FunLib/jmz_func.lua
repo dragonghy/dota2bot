@@ -11974,6 +11974,13 @@ function J.CheckBotIdleState()
 			and diffDistance <= deltaIdleDistance -- normally a bot gets stuck if it stopped moving.
 			then
 				botState.idleCount = botState.idleCount + 1
+				-- Second return value, added 2026-08-31 for 'roamidle' (GH #370).
+				-- It reports whether THIS call actually issued the relocation
+				-- order below -- the `else` arm reaches the same `return true`
+				-- having ordered nothing. Purely additive: the two shipped call
+				-- sites (mode_team_roam_generic.lua:260 and :650) each assign a
+				-- single target, so Lua discards it and behaviour is unchanged.
+				local bRelocated = false
 				if bot:GetCurrentActionType() == BOT_ACTION_TYPE_IDLE
 				or botMode == BOT_MODE_ITEM
 				or botMode == BOT_MODE_FARM then
@@ -11989,11 +11996,12 @@ function J.CheckBotIdleState()
 					-- Should send it to most desire farming lane, if in laning or send it to desire push lane.
 					local frontLoc = GetLaneFrontLocation(GetTeam(), bot:GetAssignedLane(), 0);
 					bot:ActionQueue_AttackMove(frontLoc)
+					bRelocated = true
 					print('[ERROR] Relocating the idle bot: '..botName..'. Sending it to the lane# it was originally assigned: '..tostring(bot:GetAssignedLane()))
 				else
 					print('Bot '..botName..' is in idle state for unknown reasons. N/A.')
 				end
-				return true
+				return true, bRelocated
 			else
 				botState.idleCount = 0
 				-- print('Bot '..botName..' is not in idle state.')

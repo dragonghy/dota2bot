@@ -1134,6 +1134,18 @@
         "executor": "replay-check",
         "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁;§BB.4)。**路由裁定,不是对 §CU 全部读数的背书。**\\n\\n**总监按源码独立复核过三条**(`bots/mode_roam_generic.lua:1021-1043`,不是照抄提议自述):(i) gate 是**单条独立门**,唯一合取项 `J.IsModeTurbo()` **不是候选 id** ⇒ 不落进「promote 掉某个 id 把另一个 gate 冻成恒 FALSE」那个陷阱(`pullcad` 那一形);全仓 `rotscope` 只出现在这一个文件。(ii) 未 armed **逐字保留出厂行为且是结构性的**:`if not rotscope then ... end` 把出厂那条命令原样留在同一位置(Rot 块 `end` 之下)、同一变量(文件级 `botTarget`)上。(iii) 验收独立重跑绿:`test_rotscope_shadowed_target.lua` **13/13**、`test_propertarget_corpus_domain.lua` **4/4**,`lua5.1 tests/run_tests.lua` **裸读 exit 0**。"
       }
+    },
+    {
+      "id": "strategy-27",
+      "stream": "strategy",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "axis": "ROAMIDLE —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5 要求提议必须有行;上一轮 `strategy-26` 是总监代建的 `ORPHAN_PROPOSAL`,本轮不再让那一格掉在总监身上)。",
+      "question": "`roamidle`(GH #370,提议 test_set.md §CW):`bots/mode_team_roam_generic.lua` 的 `Think` 里 `if isInIdleState then isInIdleState = J.CheckBotIdleState() end` **对控制流零影响**,但被调方**不是查询** —— 它在恢复臂里下 `Action_ClearActions(true)`(`jmz_func.lua:11994`)+ `ActionQueue_AttackMove(laneFront)`(`:11998`)。往下十一行,只要 `targetUnit` 有效,同一个 `Think` 就发 `Action_AttackUnit(targetUnit, false)`,而一条 `Action_*` **「CLEARS the entire action queue」**(`docs/BOT_API_REFERENCE.md:1715`)⇒ **防卡死的重定位命令在发出它的同一帧被销毁,而且恰好在这个 mode 自己制造的那个情形里被销毁**。armed 时,真的下了重定位命令的那一帧以 `return` 结束,排队的 attack-move 得以存活。",
+      "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— baseline 腿上,某一帧的动作日志出现 `Action_ClearActions → ActionQueue_AttackMove → Action_AttackUnit(bOnce=false)` 三连(恢复命令被同帧抹掉);armed 腿上同类帧**以那条排队的 attack-move 结束**,其后没有 `Action_*`。\\n\\n⚠️ **三条限定,收割前必读**:(甲) **频率未知** —— 本轮证明了**形状**并在真实帧上量到它开火,但**没有**证明真实对局里 bot 多久闩上一次 idle;域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,第二个合取项的真实频率**正是本请求要买的东西**。⇒ 它是 **RIDESHARE**,**不能当独臂**,而且**恒零读数必须报成「域为空」而不是「测过了无效应」**(§AZ / GH #148 那一族)。(乙) **引擎侧不可观测** —— 「同一 tick 内 `Action_ClearActions` 之后再来一条 `Action_*`」引擎实际怎么做,本仓无法看到(`print()` 到不了控制台;`error in error handling` 吞错误文本)⇒ 核验只主张**命令次序**这一半,不许把结论写成「引擎确实丢弃了重定位」。(丙) **它买的是那一帧的排序,不是节流** —— §CW.3 那条独立后果(`return true` 排在锚点刷新两行之上 ⇒ idle 一旦闩上 `>= 3s` 的门再也关不上,`Action_ClearActions(true)` 每帧落在其它系统的队列上)**这个 id 一字未修**,结论不许写成「idle 复位已修好」。",
+      "requester": "strategy",
+      "status": "pending"
     }
   ],
   "done": [

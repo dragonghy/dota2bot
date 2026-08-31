@@ -27,6 +27,58 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0CLOB. **【2026-08-31T19:27Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出 ⇒ 再取章程 backlog **`0d`**,这次是它「还没查的」那行里
+   **`mode_team_roam_generic` 之外**的连续/排队型 `Action_*`);**已落地 gated `roamidle`**、**已发 GH #370**;
+   一条**可复用主判据** + 一条**独立的第二后果**(登记不修)+ 一次方法自伤及其**对既存测试的连带修复**
+   + 一条对前一次普查的**边界更正**;`bots/` 只改两处且**全在门后**,`game/` 零 diff,
+   `queue.json` 新增 `strategy-27`(**提议方自建**,不花钱),零 AWS、S3 零访问。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个调用方不可能为一件它不知道发生过的副作用排序。**
+   `mode_team_roam_generic.lua` 的 `Think` 里 `if isInIdleState then isInIdleState = J.CheckBotIdleState() end`
+   **对控制流零影响**(块以下没有任何地方再读它,全部作用就是那次重新赋值)——
+   **但被调方不是查询**:`J.CheckBotIdleState` 在恢复臂里**下命令**
+   (`Action_ClearActions(true)` `jmz_func.lua:11994` + `ActionQueue_AttackMove(laneFront)` `:11998`)。
+   **往下十一行**,只要 `targetUnit` 有效,同一个 `Think` 就发 `Action_AttackUnit(targetUnit, false)`,
+   而一条 `Action_*` **「CLEARS the entire action queue」**(`docs/BOT_API_REFERENCE.md:1715`)⇒
+   **防卡死的重定位命令在发出它的同一帧被销毁,而且恰好在这个 mode 自己制造的那个情形里被销毁。**
+   **一般形**:写成裸语句的「状态刷新」——返回值被赋值、然后从不被分支读——**读起来像查询,也就被当查询审计**;
+   它若其实下了命令,调用点手里没有任何东西能拦住下一条无条件 `Action_*`。
+   **与两个同族同日区分清楚**:GH #368 是**作用域**(同名不同变量)、GH #348 是**顺序**(判 nil 前一行就索引),
+   **本条调用方对任何一个值都没判断错 —— 缺的是被调方从来没汇报过的一件事实**。
+   **⭐⭐ 第二条互相独立的后果(登记,本轮不修)**:它**每帧重复一次不是每 3 秒一次** ——
+   `return true` 排在刷新采样锚点的两行(`:12010-12011`)**之上** ⇒ **idle 一旦闩上,`>= 3s` 的门再也关不上**;
+   两个出厂调用点各自走每帧路径,被抹掉的 `Action_ClearActions(true)`
+   因此**每帧落在其它所有系统排进队列的动作上一次**。一次一个杠杆 ⇒ 这是下一格。
+   **改动**:(i) `J.CheckBotIdleState` 加第二返回值 `bRelocated`(**只在真下了命令的臂上为真**;
+   两个出厂调用点各自单赋值目标 ⇒ Lua 丢弃它,默认逐字节不变,已断言);
+   (ii) `Think` 里 `if bRelocated and J.IsModeTurbo() and J.IsSoakCandidate('roamidle') then return end`。
+   **门开在 `bRelocated` 上不是 `isInIdleState` 上** —— 「因不明原因 idle」那条臂什么都没下,仍逐字节走出厂分支。
+   **产出**:`tests/test_roamidle_recovery_clobber.lua`(`[ratchet]`,**11/11**,秒级),真实帧
+   `f_260819_181742_ss_chase_start`(**本仓唯一一枚「team_roam 赢下竞价且手上有有效 targetUnit」的钉住帧**,
+   而那正是恢复命令被抹掉的前提)。出厂日志 `Action_ClearActions → ActionQueue_AttackMove →
+   Action_AttackUnit(bOnce=false)`、**帧以追击结束**;armed **帧以那条排队的 attack-move 结束**、其后无任何 `Action_*`;
+   **turbo-only 是量出来的**(强制非 turbo ⇒ 两臂日志逐项相同);第二后果同帧量到(**时钟零推进**下仍报 idle 并又下一次)。
+   **变异 10 条:10 CAUGHT**;⚠️ M4/M9 头一遍打 `MUTANT-NOT-APPLIED`(制表符差一格),
+   **既不是 CAUGHT 也不是 SURVIVED**,按精确缩进重跑后才计入。
+   **⚠️ 方法自伤:扫源码的测试把自己的注释数了进去** —— 写在修复之上的文档注释**逐字引用了它要钉的那几行**,
+   计数把自己的解释数了进去、`lineOf()` 返回注释行号,**把一条顺序断言判反了**;
+   修法是**保留行号的整行注释剥除视图**(与 GH #341/#345 同族)。
+   **连带修好一个既存实例**:`test_roamreach_bounded_chase.lua` 的 REVERSE 断言此前扫**生文件**,
+   于是 `roamidle` 把那行写进注释的一刻它就红了,**而没有任何一条命令被加进来**;已改为扫代码。
+   **边界更正(不是矛盾)**:`state.json:fixture_modifiers_20260819` 的 `survey_result` 自称枚举了
+   「每一个 `bOnce=false` / `Action_MoveToUnit` 站点」,但它**没覆盖 `ActionQueue_AttackMove`**,
+   **也根本没找过「被抹掉」这个形状** —— 它问的是命令**活多久**,从没问过它**是否活过**。
+   **⚠️ 诚实边界**:**频率未知**(形状已证、真实对局里多久闩上一次 idle 未证);
+   引擎对「同一 tick 内 `Action_ClearActions` 之后再来一条 `Action_*`」的真实反应**本仓不可观测**
+   ⇒ 只主张与引擎无关的那一半;第二后果没修;全量单进程套件未跑完(GH #124)。
+   **⚠️ 开工自检同一站点连续第四轮自伤**:`| tail` 读退出码被那道拒绝当场拆穿
+   (`SELFCHECK_EXIT=2 ... NOT a pass`),改文件重定向后 **EXIT=0**;
+   两处 trunk 红是 GH **#364**(flaky)与 GH **#369**(英雄组 18:32Z 开),**本组不复核不重裁**。
+   **下一格**:**总监**(甲 裁 `roamidle` 入集 `test_set.md §CW`,**RIDESHARE、不能当独臂**;
+   乙 第二后果要不要单独立案;丙 主判据要不要写进 §CR);
+   **录像组**(缺的只有一种帧:**真实对局里 bot 多久闩上一次 idle,以及那时 `targetUnit` 是否有效** ——
+   这一枚读数一个人锁着 `roamidle` 的条件 (a))。**批测台:`queue.json` 的 `strategy-27`,搭车、零 AWS 增量、不申请专波。**
+
 0SHDW. **【2026-08-31T16:36Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的 9 条全是本组自己开的;
    owner P1 第 1 棒早已交出、P2 已交棒 ⇒ 取章程 backlog **`0d`** 里明写「**还没查的**:其余 mode 文件里的
    `Action_AttackUnit(x, false)` / `Action_MoveToUnit`」那一条);**已落地 gated `rotscope`**、**已发 GH #368**;
@@ -3581,6 +3633,35 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-08-31T19:27Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
+  ⇒ 再取 backlog **`0d`** 的「还没查的」那行,这次是 `mode_team_roam_generic` **之外**的连续/排队型 `Action_*`;
+  **报告 `iterations/reports/strategy/20260831T192744Z.md`**;issue **GH #370**;
+  backlog 条目 **`0CLOB`**;**落地 gated `roamidle`**,入集提议 `test_set.md §CW`
+  (搭车、零 AWS 增量、不申请专波);`queue.json` 新增 `strategy-27`(提议方自建,不花钱)、零 AWS、S3 零访问):
+  **防卡死的恢复命令在发出它的那一帧就被抹掉,而且恰好在有漫游目标时被抹掉。**
+  `Think` 里 `if isInIdleState then isInIdleState = J.CheckBotIdleState() end` **对控制流零影响**,
+  但被调方**不是查询**:它在恢复臂里下 `Action_ClearActions(true)` + `ActionQueue_AttackMove(laneFront)`
+  (`jmz_func.lua:11994/11998`);往下十一行,只要 `targetUnit` 有效,同一个 `Think` 就发
+  `Action_AttackUnit(targetUnit, false)`,而 `Action_*` **「CLEARS the entire action queue」**
+  (`docs/BOT_API_REFERENCE.md:1715`)⇒ **反卡死恢复在最需要它的场景里是个 no-op。**
+  **⭐ 主判据:一个调用方不可能为一件它不知道发生过的副作用排序**(与 GH #368 的**作用域**、
+  GH #348 的**顺序**同族**不同因** —— 这里调用方对任何一个值都没判断错)。
+  **⭐⭐ 第二条独立后果(登记不修)**:`return true` 排在锚点刷新两行(`:12010-12011`)**之上**
+  ⇒ idle 一旦闩上,`>= 3s` 的门再也关不上,`Action_ClearActions(true)` **每帧**落在其它系统的队列上。
+  **改动**:helper 加第二返回值 `bRelocated`(纯增量,两个出厂调用点单赋值目标 ⇒ 默认逐字节不变);
+  `Think` 里 `bRelocated and J.IsModeTurbo() and J.IsSoakCandidate('roamidle')` 时 `return`。
+  测试 `tests/test_roamidle_recovery_clobber.lua`(`[ratchet]` **11/11**),真实帧
+  `f_260819_181742_ss_chase_start`(**本仓唯一一枚 team_roam 赢下竞价且手上有有效 `targetUnit` 的钉住帧**)。
+  **变异 10 条:10 CAUGHT**。门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**。
+  **⚠️ 方法自伤**:扫源码的测试**把自己的注释数了进去**,`lineOf()` 返回注释行号**把一条顺序断言判反了**;
+  修法是保留行号的注释剥除视图,并**连带修好既存的同一盲区**
+  (`test_roamreach_bounded_chase.lua` 的 REVERSE 断言此前扫生文件)。
+  **⚠️ 开工自检同一站点连续第四轮**:`| tail` 被拒绝横幅当场拆穿,改文件重定向后 EXIT=0;
+  trunk 两处红是 GH **#364** / **#369**,**不复核不重裁**。
+  **明说没做**:第二后果没修(一次一个杠杆);**频率未知**(形状已证,真实对局里多久闩上一次 idle 未证)。
+  **交棒:总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 第二后果立不立案;丙 主判据进不进 §CR)、
+  **录像组**(只缺一种帧:真实对局里 bot 多久闩上一次 idle,以及那时 `targetUnit` 是否有效)。
+  **批测台无请求、零 AWS。**
 - 2026-08-31T16:36Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的 9 条全是本组自己开的);
   owner P1 第 1 棒早已交出、P2 已交棒 ⇒ 取 backlog **`0d`** 明写「还没查的」那条;
   **报告 `iterations/reports/strategy/20260831T163611Z.md`**;issue **GH #368**;

@@ -614,8 +614,43 @@ function Think()
         return
     end
 
+    --- [roamidle, GH #370] Let the stuck-recovery order survive the frame that
+    --- issued it.
+    ---
+    --- Shipped, this block has NO control-flow consequence: it re-assigns
+    --- `isInIdleState` and falls through. But `J.CheckBotIdleState()` is not a
+    --- query -- in its recovery arm it ORDERS, `Action_ClearActions(true)` then
+    --- `ActionQueue_AttackMove(laneFront)` (jmz_func.lua:11994/11998). Eleven
+    --- lines below, whenever `targetUnit` is valid, this Think issues
+    --- `bot:Action_AttackUnit(targetUnit, false)` -- and an `Action_*` order
+    --- "CLEARS the entire action queue and sets this as the new (and only)
+    --- action" (docs/BOT_API_REFERENCE.md:1715). So the relocation is destroyed
+    --- on the same frame it was issued, and it is destroyed exactly when the bot
+    --- has a roam target -- i.e. the anti-stuck recovery is a no-op precisely in
+    --- the situation this mode creates.
+    ---
+    --- It repeats every frame, not every 3s: the `return true` in that helper
+    --- sits ABOVE the two lines that refresh the sampling anchor
+    --- (`botState.botLocation` / `lastCheckTime`, jmz_func.lua:12010-12011), so
+    --- once idle is latched the >= 3s gate never closes again. Both call sites
+    --- then take their per-frame path (`... or isInIdleState` at :259, and this
+    --- block), which makes the wiped `Action_ClearActions(true)` a per-frame
+    --- event over every other system's queued actions too.
+    ---
+    --- Armed, a call that actually relocated ends this frame's Think, so the
+    --- queued attack-move stands. Standard play: a recovery action has to
+    --- outrank routine ordering or it is not a recovery. Narrow by construction
+    --- -- the `else` arm of that helper orders nothing and reaches the same
+    --- `return true`, so `bRelocated` (not `isInIdleState`) is what gates the
+    --- return, and a bot that is idle "for unknown reasons" still falls through
+    --- to the shipped branches byte for byte.
+    --- Gated turbo + 'roamidle'; inert by default.
     if isInIdleState then
-        isInIdleState = J.CheckBotIdleState()
+        local bRelocated
+        isInIdleState, bRelocated = J.CheckBotIdleState()
+        if bRelocated and J.IsModeTurbo() and J.IsSoakCandidate('roamidle') then
+            return
+        end
     end
 
     if ShouldHelpAlly and J.Utils.IsValidUnit(targetUnit) then
