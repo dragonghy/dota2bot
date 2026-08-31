@@ -282,6 +282,17 @@ OUTCOME_WINDOWS = (2.0, 5.0, 10.0)
 OUTCOME_HEADLINE_S = 5.0
 OUTCOMES = ("died", "surv", "unk")
 SAMPLE_TOL_S = 0.05         # 1 Hz snapshots; a sample "at t0" is not "after t0"
+# The DEATH-event column (THE SECOND OUTCOME COLUMN) reads the same instant off
+# the combat log instead of the health bar.  The tolerance is deliberately the
+# SAME number, not an independently tuned one: the two columns exist to be read
+# against each other, and a second knob would make every disagreement
+# ambiguous between "the clocks differ" and "the tolerances differ".
+EVENT_TOL_S = SAMPLE_TOL_S
+# How far past a cast the cross-read looks for BOTH witnesses when measuring
+# their lag.  Wider than the 10 s ladder on purpose: the lag is a property of
+# the recording, and clipping it at the ladder's edge would silently drop
+# exactly the late-event cases that motivate carrying two columns.
+LAG_PROBE_S = 30.0
 
 
 def claims(qlvl, hero_level, anchors):
@@ -404,6 +415,80 @@ def outcome(series, t0, window):
     return "surv" if covered else "unk"
 
 
+def death_index(tl_events):
+    """hero name -> sorted DEATH-event times.
+
+    NOTE THE IDENTITY LOSS, it is the price of this column: a combat-log entry
+    carries names, not entity indices (dumper/main.go's OnCMsgDOTACombatLogEntry
+    emits actor/target/inflictor as names), so the `idx` lock `target_series`
+    applies (GH #176) HAS NO COUNTERPART HERE.  An illusion's death is logged
+    under its hero's own name and this index cannot tell the two apart.  That
+    makes `dout`'s `died` a WEAKER identity claim than `out`'s, which is one of
+    the two reasons the columns are printed side by side instead of merged."""
+    by = collections.defaultdict(list)
+    for e in tl_events:
+        if e.get("type") != "DEATH" or not e.get("target_hero"):
+            continue
+        tgt = e.get("target")
+        if tgt:
+            by[tgt].append(e["t"])
+    for k in by:
+        by[k].sort()
+    return by
+
+
+def event_horizon(tl_events):
+    """The last instant the combat log witnesses anything at all.
+
+    This is the DEATH column's coverage test, and it is deliberately a
+    GAME-level horizon rather than a per-entity one: absence of a DEATH event
+    is not evidence the entity was still being watched, so the only honest
+    question the event stream can answer is "was the recording still running".
+    Reading the horizon off the events alone (not off the snapshots) keeps this
+    column a second, independent witness; it errs toward `unk`, which folds
+    into NEITHER of the other two columns and is therefore the safe side."""
+    ts = [e["t"] for e in tl_events if e.get("t") is not None]
+    return max(ts) if ts else None
+
+
+def outcome_ev(deaths, horizon, t0, window):
+    """'died' | 'surv' | 'unk' over (t0, t0 + window] read off DEATH events.
+
+    Same three states and same ladder as `outcome()` so the two columns can be
+    put next to each other -- but they are NOT interchangeable and must never
+    be averaged or folded into one number:
+
+      * `died` here is a combat-log fact, not a sampled health bar, so it does
+        not wait for the next 1 Hz snapshot; on the W30 band_pair cast the
+        event led the first `hp<=0` sample by 1.1 s.
+      * `died` here is NOT identity-locked (see `death_index`).
+      * The event stream can also LAG the health bar in the other direction:
+        `bbfloor_domain.py` measured a skeleton_king whose position was frozen
+        and hp 0.005 from t=45.4 while the DEATH event landed at t=48.6.  The
+        disagreement therefore has BOTH signs and no column is a strict
+        refinement of the other."""
+    if horizon is None:
+        return "unk"
+    lo, hi = t0 + EVENT_TOL_S, t0 + window + EVENT_TOL_S
+    for t in deaths:
+        if lo < t <= hi:
+            return "died"
+    return "surv" if horizon >= t0 + window - EVENT_TOL_S else "unk"
+
+
+def witness_lag(series, deaths, t0):
+    """(event_t - first hp<=0 sample t) within LAG_PROBE_S, or None.
+
+    Positive = the combat log was LATE relative to the health bar; negative =
+    the health bar was late (the sampling-lag shape).  Returned per cast so a
+    reader can audit the disagreement instead of taking this file's word for
+    which column moved."""
+    hi = t0 + LAG_PROBE_S
+    zero = next((t for t, hp in series if t0 + SAMPLE_TOL_S < t <= hi and hp <= 0), None)
+    ev = next((t for t in deaths if t0 + EVENT_TOL_S < t <= hi), None)
+    return None if zero is None or ev is None else ev - zero
+
+
 def qlevel(snap):
     for a in snap.get("abilities", []):
         if a.get("name") == QNAME:
@@ -414,6 +499,8 @@ def qlevel(snap):
 def scan(tl, anchors, mr, dead_window):
     """-> (rows, dropped).  One row per Wraithfire Blast cast on a hero."""
     idx = snap_index(tl)
+    deaths_by_hero = death_index(tl.get("events", []))
+    horizon = event_horizon(tl.get("events", []))
     rows, dropped = [], 0
     for e in tl.get("events", []):
         if e.get("type") != "ABILITY" or e.get("inflictor") != QNAME:
@@ -444,7 +531,13 @@ def scan(tl, anchors, mr, dead_window):
         in_band = armed < ehp <= shipped
         in_band_after = (ehp_after is not None and armed < ehp_after <= shipped)
         series = target_series(idx, tgt, tsnap.get("idx"))
+        tgt_deaths = deaths_by_hero.get(tgt, [])
         out = dict(("out_%s" % w, outcome(series, t, w)) for w in OUTCOME_WINDOWS)
+        # The SECOND outcome column, read off the combat log.  Kept as its own
+        # set of keys and never reconciled into the first: two readings, not
+        # one improved reading (see `outcome_ev`).
+        out.update(("dout_%s" % w, outcome_ev(tgt_deaths, horizon, t, w))
+                   for w in OUTCOME_WINDOWS)
         rows.append({
             "t": t, "target": tgt, "hero_level": ws["level"], "qlvl": q,
             "shipped": shipped, "armed": armed, "hp": tsnap["hp"], "ehp": ehp,
@@ -460,6 +553,11 @@ def scan(tl, anchors, mr, dead_window):
             # can check the outcome verdict without re-running this tool
             "traj": [hp for ts_, hp in series
                      if t + SAMPLE_TOL_S < ts_ <= t + OUTCOME_HEADLINE_S + SAMPLE_TOL_S],
+            # the raw witnesses behind the two columns, so a disagreement can
+            # be audited without re-running the tool
+            "death_ev": [ts_ for ts_ in tgt_deaths
+                         if t + EVENT_TOL_S < ts_ <= t + LAG_PROBE_S],
+            "lag": witness_lag(series, tgt_deaths, t),
         })
         rows[-1].update(out)
     return rows, dropped
@@ -570,9 +668,11 @@ def selfcheck(anchors):
     # Built through scan(), not by calling outcome() on a hand-made list: the
     # thing that can rot silently is the WIRING (which entity's samples, which
     # t0), not the three-way arithmetic.
-    def cast_with(after_samples, ident=None, tgt_idx=None):
+    def cast_with(after_samples, ident=None, tgt_idx=None, events=()):
         """One rank-1 band cast at t=100 whose target then has `after_samples`
-        as (t, hp) [, idx] rows."""
+        as (t, hp) [, idx] rows.  `events` appends extra combat-log rows, which
+        is the ONLY way to drive the DEATH-event column -- it does not read
+        snapshots at all, and its coverage horizon is the last event."""
         snaps = [
             {"t": 99.5, "hero": WK, "x": 0, "y": 0, "hp": 900, "hp_pct": 0.9, "level": 5,
              "abilities": [{"name": QNAME, "level": 1}]},
@@ -589,10 +689,21 @@ def selfcheck(anchors):
                 s["idx"] = row[2]
             snaps.append(s)
         tl = {"events": [{"t": 100.0, "type": "ABILITY", "inflictor": QNAME,
-                          "target": "npc_dota_hero_lion", "target_hero": True}],
+                          "target": "npc_dota_hero_lion", "target_hero": True}]
+                        + list(events),
               "snapshots": snaps}
         rr, _ = scan(tl, anchors, 0.25, 6.0)
         return rr[0] if rr else None
+
+    def death_ev(t, target="npc_dota_hero_lion", target_hero=True):
+        return {"t": t, "type": "DEATH", "actor": "npc_dota_hero_other",
+                "target": target, "target_hero": target_hero}
+
+    def tick_ev(t):
+        """A non-DEATH combat-log row: it moves the coverage horizon and
+        nothing else, which is how `surv` is separated from `unk` here."""
+        return {"t": t, "type": "DAMAGE", "actor": "npc_dota_hero_other",
+                "target": "npc_dota_hero_lion", "target_hero": True, "value": 1}
 
     alive = [(t, 60) for t in (101.5, 102.5, 103.5, 104.5, 105.5, 106.5)]
     r = cast_with(alive)
@@ -627,6 +738,73 @@ def selfcheck(anchors):
            for s in ([], [(105.5, 50)], [(101.0, 0)], [(101.0, 50)])))
     ck("the headline window is on the printed ladder",
        OUTCOME_HEADLINE_S in OUTCOME_WINDOWS)
+
+    # --- the SECOND outcome column (DEATH events) ---------------------------
+    # Same wiring discipline: driven through scan(), never by calling
+    # outcome_ev() on a hand-made list, because the thing that rots is which
+    # entity's events and which t0 -- not the three-way arithmetic.
+    r = cast_with(alive, events=[tick_ev(106.5)])
+    ck("ev: no DEATH event and the log still running is surv",
+       r and r["band_pair"] and r["dout_5.0"] == "surv")
+    r = cast_with(alive, events=[death_ev(102.5), tick_ev(106.5)])
+    ck("ev: a DEATH event inside the window is died", r and r["dout_5.0"] == "died")
+    r = cast_with(alive, events=[tick_ev(102.0)])
+    ck("ev: a log that stops before the window edge is unk, NOT surv",
+       r and r["dout_5.0"] == "unk")
+    r = cast_with(alive)
+    ck("ev: no events after the cast at all is unk", r and r["dout_5.0"] == "unk")
+    r = cast_with(alive, events=[death_ev(107.0), tick_ev(111.0)])
+    ck("ev: a DEATH at +7 s is died at 10 s only, and surv (not unk) below",
+       r and r["dout_2.0"] == "surv" and r["dout_5.0"] == "surv"
+       and r["dout_10.0"] == "died")
+    r = cast_with(alive, events=[death_ev(95.0), tick_ev(106.5)])
+    ck("ev: the window never looks backwards", r and r["dout_5.0"] == "surv")
+    r = cast_with(alive, events=[death_ev(100.0), tick_ev(106.5)])
+    ck("ev: a DEATH exactly at t0 is not 'after' t0", r and r["dout_5.0"] == "surv")
+    r = cast_with(alive, events=[death_ev(102.5, target="npc_dota_hero_axe"),
+                                 tick_ev(106.5)])
+    ck("ev: another hero's DEATH is not the target's",
+       r and r["dout_5.0"] == "surv")
+    r = cast_with(alive, events=[death_ev(102.5, target_hero=False), tick_ev(106.5)])
+    ck("ev: a non-hero DEATH row is not the target's",
+       r and r["dout_5.0"] == "surv")
+    ck("ev: the three outcomes are exhaustive and exclusive",
+       all(outcome_ev(d, h, 100.0, 5.0) in OUTCOMES
+           for d in ([], [101.0], [107.0]) for h in (None, 100.0, 110.0)))
+    ck("ev: no horizon at all is unk, never surv",
+       outcome_ev([], None, 100.0, 5.0) == "unk")
+
+    # THE TWO COLUMNS DISAGREE IN BOTH DIRECTIONS -- the whole reason they are
+    # printed side by side rather than reconciled into one.  Both shapes are
+    # measured facts: the sampling lag on W30's band_pair cast (event +1.1 s,
+    # first hp<=0 sample +2.2 s) and the late combat-log entry bbfloor_domain
+    # measured (hp 0.005 from t=45.4, DEATH event t=48.6).
+    r = cast_with([(101.5, 60), (102.5, 60), (103.5, 60), (104.5, 60),
+                   (105.5, 60), (106.5, 60)],
+                  events=[death_ev(104.0), tick_ev(106.5)])
+    ck("hp says surv while ev says died (event leads the health bar)",
+       r and r["out_5.0"] == "surv" and r["dout_5.0"] == "died")
+    r = cast_with([(101.5, 0), (102.5, 0), (103.5, 0), (104.5, 0), (105.5, 0)],
+                  events=[death_ev(107.5), tick_ev(111.0)])
+    ck("hp says died while ev says surv (combat log trails the health bar)",
+       r and r["out_5.0"] == "died" and r["dout_5.0"] == "surv")
+    ck("...and that cast's lag is reported positive (ev AFTER hp)",
+       r and r["lag"] is not None and abs(r["lag"] - 6.0) < 1e-9)
+    r = cast_with([(101.5, 60), (102.5, 0), (103.5, 0), (104.5, 0), (105.5, 0)],
+                  events=[death_ev(101.4), tick_ev(106.5)])
+    ck("a lag the other way is reported negative (hp behind the event)",
+       r and r["lag"] is not None and abs(r["lag"] + 1.1) < 1e-9)
+    ck("the two columns are separate keys -- neither overwrites the other",
+       r and r["out_5.0"] == "died" and r["dout_5.0"] == "died"
+       and "out_5.0" in r and "dout_5.0" in r)
+    # the identity loss is REGISTERED, not hidden: the event column cannot do
+    # what the hp column's idx lock does, and a test that pretended otherwise
+    # would be the place that lie would live
+    r = cast_with([(101.5, 60, 7), (102.5, 60, 7), (103.5, 60, 7), (104.5, 60, 7),
+                   (105.5, 60, 7), (106.5, 60, 7)], tgt_idx=7,
+                  events=[death_ev(102.5), tick_ev(106.5)])
+    ck("ev: an illusion's DEATH cannot be excluded (identity loss, registered)",
+       r and r["out_5.0"] == "surv" and r["dout_5.0"] == "died")
 
     # the four ConsiderQ branches must still be in the tree, or this argument
     # silently expires (blinkflee_domain.py's lesson)
@@ -668,8 +846,20 @@ def from_sweeps(dirs):
     the side the CANDIDATE string was armed on, and this tool reads Wraith
     King's casts, so the game is an ARMED sample only when WK's own team is
     that side.  A tool that skipped that join would label half the corpus
-    backwards and still print a full table."""
+    backwards and still print a full table.
+
+    THE LEGS MAP IS KEYED BY PATH, NOT BY GAME NAME, and that is not tidiness.
+    A soak game's name is a wall-clock stamp plus a slot (`20260831_003227_slot1`),
+    so two runs of the SAME wave launched seconds apart produce the SAME name
+    for two DIFFERENT games -- W30 has exactly that: `20260831_003227_slot1`
+    exists under run 89e581 (seed 2204, WK team 3, radiant armed -> BASELINE)
+    and again under run 69e067 (seed 2315, WK team 2, radiant armed -> ARMED),
+    i.e. the same key with OPPOSITE legs.  A name-keyed map silently keeps
+    whichever dir came last and files the other game on the wrong leg; the
+    2026-08-31T16:45Z reading printed `ab/armed 5, ab/baseline 1` against an
+    audit table that says 4 and 2, and nothing raised a hand."""
     paths, legs, rows, arm_strings = [], {}, [], set()
+    seen_names = {}
     for d in dirs:
         man = os.path.join(d, "games_manifest.jsonl")
         if not os.path.exists(man):
@@ -691,14 +881,24 @@ def from_sweeps(dirs):
             except Exception:
                 raise SweepRefused("unreadable timeline %s" % tl_path)
             wk_team = teams.get(WK)
-            rows.append({"game": game, "seed": m.get("seed", "?"), "side": side,
+            rows.append({"game": game, "run": os.path.basename(d.rstrip("/")),
+                         "seed": m.get("seed", "?"), "side": side,
                          "wk_team": wk_team if wk_team is not None else "-",
                          "layer": LAYER_OF_SIDE[side],
                          "armed": wk_team == TEAM_OF_SIDE[side]})
+            leg = (rows[-1]["armed"], rows[-1]["layer"])
+            prev = seen_names.get(game)
+            # A collision is REPORTED, never resolved silently -- and a
+            # same-leg collision is reported too: two distinct games sharing a
+            # name is a fact about the corpus whether or not it changed a cell.
+            rows[-1]["dup"] = prev is not None
+            if prev is not None:
+                rows[-1]["dup_of"] = prev
+            seen_names[game] = os.path.abspath(tl_path)
             if wk_team is None:
                 continue                       # no Wraith King in this draft
             paths.append(tl_path)
-            legs[game + ".timeline"] = (rows[-1]["armed"], rows[-1]["layer"])
+            legs[os.path.abspath(tl_path)] = leg
     if not arm_strings:
         raise SweepRefused("the sweep dirs carry no games at all")
     if len(arm_strings) > 1:
@@ -770,22 +970,42 @@ def main():
         legs = sweep_legs
         print("legs derived from %d sweep dir(s) -- one row per game, audit them:"
               % len(args.sweep))
-        print("  %-28s %-8s %-8s %-8s %s" %
-              ("game", "seed", "armedside", "wk_team", "-> leg"))
+        print("  %-28s %-8s %-8s %-8s %-10s %s" %
+              ("game", "seed", "armedside", "wk_team", "-> leg", "run"))
         for r in sweep_rows:
-            print("  %-28s %-8s %-8s %-8s -> %s/%s" %
+            print("  %-28s %-8s %-8s %-8s -> %-7s %s%s" %
                   (r["game"], r["seed"], r["side"], r["wk_team"],
-                   r["layer"], "armed" if r["armed"] else "baseline"))
+                   "%s/%s" % (r["layer"], "armed" if r["armed"] else "baseline"),
+                   r.get("run", "?"), "   <- DUPLICATE NAME" if r.get("dup") else ""))
         print("  (%d game(s) carry no Wraith King and are excluded, not zeroed)"
               % sum(1 for r in sweep_rows if r["wk_team"] == "-"))
+        dups = sum(1 for r in sweep_rows if r.get("dup"))
+        if dups:
+            # The census table below is keyed by PATH, so these are counted
+            # separately and correctly.  The line exists because the games are
+            # indistinguishable by name in every OTHER artefact (per-cast rows,
+            # the fixture stamps, hand-written --legs tsvs), so a reader
+            # quoting a game name out of this run needs the run tag too.
+            print("  ⚠ %d game name(s) appear in more than one run dir -- a soak "
+                  "game name is a wall-clock stamp, so distinct games COLLIDE.\n"
+                  "    They are kept apart here (the legs map is keyed by path), "
+                  "but quote game names with their run tag." % dups)
 
     agg = collections.defaultdict(lambda: collections.Counter())
-    dropped_total, games, per_cast = 0, 0, []
+    dropped_total, games, per_cast, lags = 0, 0, [], []
     for path in args.timelines:
         base = os.path.basename(path).replace(".json", "")
-        leg = legs.get(base)
+        # PATH first, name second: --sweep keys by path precisely because two
+        # runs of one wave can produce the same game name (see from_sweeps).
+        # The hand-written --legs tsv can only key by name, so it keeps that
+        # lookup -- and inherits the collision it cannot see.
+        leg = legs.get(os.path.abspath(path), legs.get(base))
         if leg is None:
             continue
+        if args.sweep:
+            # so a per-cast line names a game the reader can actually find
+            base = "%s/%s" % (os.path.basename(
+                os.path.dirname(os.path.dirname(os.path.abspath(path))))[-6:], base)
         armed, layer = leg
         key = (layer, "armed" if armed else "baseline")
         try:
@@ -816,11 +1036,21 @@ def main():
                     # outcome hung off a coin flip is still a coin flip
                     for w in OUTCOME_WINDOWS:
                         agg[key]["bp_%s_%s" % (r["out_%s" % w], w)] += 1
+                        agg[key]["bpd_%s_%s" % (r["dout_%s" % w], w)] += 1
+                        if r["out_%s" % w] != r["dout_%s" % w]:
+                            agg[key]["bp_disagree_%s" % w] += 1
                 r["game"] = base
                 per_cast.append((key, r))
             elif args.per_cast:
                 r["game"] = base
                 per_cast.append((key, r))
+            # The lag census is taken over EVERY cast with two witnesses, not
+            # just the band ones: the lag is a property of the RECORDING, not
+            # of the lever, and band_pair is far too thin to characterise it
+            # (W30 has exactly one).  It is therefore NOT a reading about
+            # wkqdmg and must never be differenced armed-vs-baseline.
+            if r["lag"] is not None:
+                lags.append(r["lag"])
 
     print("wkqdmg domain census -- %d game(s), mr=%s, dead-window %.1fs, %d cast(s) dropped"
           % (games, args.mr, args.dead_window, dropped_total))
@@ -843,19 +1073,55 @@ def main():
     print("outcome of the band_pair casts -- did the target reach hp 0 anyway?")
     print("  died = ANY death, whoever dealt it (UPPER bound on kills the narrowing could cost)")
     print("  surv = observed alive at the far edge of the window (LOWER bound on free withdrawals)")
-    print("  unk  = samples ran out first; folded into NEITHER column")
-    print("%-6s %-9s %5s %10s %5s %5s %4s  %s" %
-          ("layer", "leg", "N(s)", "band_pair", "died", "surv", "unk", "interpretable"))
+    print("  unk  = the witness ran out first; folded into NEITHER column")
+    print("  TWO INDEPENDENT WITNESSES, PRINTED SIDE BY SIDE AND NEVER MERGED:")
+    print("    hp.*  sampled hp<=0, identity-locked to the cast frame's idx (1 Hz grid)")
+    print("    ev.*  DEATH combat-log events, NOT identity-locked (names only)")
+    print("    The disagreement has BOTH signs -- the event can lead the health")
+    print("    bar (sampling lag) or trail it (late combat-log entry) -- so")
+    print("    neither column refines the other and 'dis' is a reading, not an error.")
+    print("%-6s %-9s %5s %10s %16s %16s %5s  %s" %
+          ("layer", "leg", "N(s)", "band_pair",
+           "hp: died/surv/unk", "ev: died/surv/unk", "dis", "interpretable"))
     for layer in ("ab", "ba"):
         for leg in ("armed", "baseline"):
             c = agg[(layer, leg)]
             note = ("yes" if leg == "baseline" else
                     "NO (armed leg: band_pair cannot come from the kill-confirm branch)")
             for w in OUTCOME_WINDOWS:
-                print("%-6s %-9s %5.1f %10d %5d %5d %4d  %s" %
+                print("%-6s %-9s %5.1f %10d %16s %16s %5d  %s" %
                       (layer, leg, w, c["band_pair"],
-                       c["bp_died_%s" % w], c["bp_surv_%s" % w], c["bp_unk_%s" % w],
+                       "%d/%d/%d" % (c["bp_died_%s" % w], c["bp_surv_%s" % w],
+                                     c["bp_unk_%s" % w]),
+                       "%d/%d/%d" % (c["bpd_died_%s" % w], c["bpd_surv_%s" % w],
+                                     c["bpd_unk_%s" % w]),
+                       c["bp_disagree_%s" % w],
                        note if w == OUTCOME_HEADLINE_S else ""))
+
+    print()
+    print("witness lag census -- (DEATH event t) minus (first sampled hp<=0 t), over")
+    print("  EVERY cast with both witnesses inside %.0fs, band or not.  This is a" % LAG_PROBE_S)
+    print("  property of the RECORDING, not of the lever: do NOT difference it")
+    print("  armed-vs-baseline, and do not read it as an effect size.")
+    if lags:
+        srt = sorted(lags)
+        neg = sum(1 for v in srt if v < 0)
+        pos = sum(1 for v in srt if v > 0)
+        # 铁律 4(ii): a small-range quantity gets mean + distribution + the
+        # share past the threshold that matters, never a bare median.
+        big = sum(1 for v in srt if abs(v) >= 1.0)
+        print("  n=%d   ev BEFORE hp %d (%.0f%%) | equal %d | ev AFTER hp %d (%.0f%%)"
+              % (len(srt), neg, 100.0 * neg / len(srt), len(srt) - neg - pos,
+                 pos, 100.0 * pos / len(srt)))
+        print("  min %+.1fs  median %+.1fs  mean %+.1fs  max %+.1fs   |lag| >= 1.0s: %d (%.0f%%)"
+              % (srt[0], srt[len(srt) // 2], sum(srt) / len(srt), srt[-1],
+                 big, 100.0 * big / len(srt)))
+        print("  A NEGATIVE lag is the one that bites the hp column's SHORT rungs:")
+        print("  the combat log already said dead while the 1 Hz grid had not")
+        print("  sampled hp<=0 yet, so `out_2.0` can read `surv` -- an OBSERVED-")
+        print("  alive claim -- for a hero the log says was already dead.")
+    else:
+        print("  n=0 -- no cast in this corpus had both witnesses; nothing is claimed.")
 
     if per_cast:
         print("\nper-cast:")
@@ -875,10 +1141,16 @@ def main():
                      # the one thing this file is counting.
                      "BAND_PAIR" if r["band_pair"] else
                      "band(before only)" if r["band"] else "not in band"))
-            print("        outcome %5.1fs=%-4s (2s=%-4s 10s=%-4s)  target hp after: %s"
+            print("        outcome hp %5.1fs=%-4s (2s=%-4s 10s=%-4s)  target hp after: %s"
                   % (OUTCOME_HEADLINE_S, r["out_%s" % OUTCOME_HEADLINE_S],
                      r["out_2.0"], r["out_10.0"],
                      " ".join("%d" % hp for hp in r["traj"]) or "(no samples)"))
+            print("        outcome ev %5.1fs=%-4s (2s=%-4s 10s=%-4s)  DEATH events: %s  lag=%s"
+                  % (OUTCOME_HEADLINE_S, r["dout_%s" % OUTCOME_HEADLINE_S],
+                     r["dout_2.0"], r["dout_10.0"],
+                     " ".join("+%.1f" % (ts_ - r["t"]) for ts_ in r["death_ev"]) or "(none)",
+                     ("%+.1fs (ev %s hp)" % (r["lag"], "AFTER" if r["lag"] > 0 else "before"))
+                     if r["lag"] is not None else "n/a (only one witness)"))
 
     armed_hits = agg[("ab", "armed")]["hit"] + agg[("ba", "armed")]["hit"]
     if armed_hits:

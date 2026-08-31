@@ -267,12 +267,32 @@ def test_printed_table():
           len(rows) == 6)
     armed_rows = [c for c in rows if c[1] == 'armed']
     base_rows = [c for c in rows if c[1] == 'baseline']
-    check('the armed leg reads surv at the headline window',
-          any(c[2] == '5.0' and c[5] == '1' for c in armed_rows))
-    check('the baseline leg reads died at the headline window',
-          any(c[2] == '5.0' and c[4] == '1' for c in base_rows))
-    check('died + surv + unk never exceeds band_pair',
-          all(int(c[4]) + int(c[5]) + int(c[6]) <= int(c[3]) for c in rows))
+    # Since 2026-08-31 each rung prints TWO witnesses side by side -- the hp
+    # column (c[4]) and the DEATH-event column (c[5]) -- each as "d/s/u", with
+    # the disagreement count in c[6].  Parsing them separately is the point:
+    # a test that read one cell would not notice the other going missing.
+    def dsu(cell):
+        return [int(v) for v in cell.split('/')]
+    check('every rung prints BOTH witnesses as d/s/u, not one merged number',
+          all(len(dsu(c[4])) == 3 and len(dsu(c[5])) == 3 for c in rows))
+    check('the armed leg reads surv at the headline window (hp column)',
+          any(c[2] == '5.0' and dsu(c[4])[1] == 1 for c in armed_rows))
+    check('the baseline leg reads died at the headline window (hp column)',
+          any(c[2] == '5.0' and dsu(c[4])[0] == 1 for c in base_rows))
+    check('died + surv + unk never exceeds band_pair, in EITHER witness',
+          all(sum(dsu(c[4])) <= int(c[3]) and sum(dsu(c[5])) <= int(c[3])
+              for c in rows))
+    check('the disagreement count never exceeds band_pair either',
+          all(int(c[6]) <= int(c[3]) for c in rows))
+    # These fixtures carry no combat log past the cast, so the event column is
+    # `unk` throughout -- and that is the correct reading, not a bug: absence
+    # of DEATH events is not evidence of survival.  Asserting it keeps the
+    # cheap wrong fix (folding `unk` into `surv` to make the columns agree)
+    # from ever passing.
+    check('with no combat log after the cast the event column is unk, not surv',
+          all(dsu(c[5])[2] == int(c[3]) for c in rows))
+    check('...and the two witnesses are therefore allowed to disagree',
+          any(int(c[6]) > 0 for c in rows))
     # --per-cast prints EVERY cast, so a cast nowhere near the band must not be
     # labelled as one.  Until 2026-08-31 an ehp-931 cast -- five times the
     # shipped claim -- printed "band(before only)".
@@ -302,7 +322,7 @@ def test_printed_table():
 
 
 # ---- 7. sweep -> legs: the join that could label half the corpus backwards --
-def _sweep_dir(games):
+def _sweep_dir(games, seed='1'):
     """A minimal sweep_run.sh output tree.  `games` is a list of
     (name, armed_side, wk_team_or_None)."""
     d = tempfile.mkdtemp(prefix='wkqdmg_sweep_')
@@ -310,7 +330,7 @@ def _sweep_dir(games):
     with open(os.path.join(d, 'games_manifest.jsonl'), 'w') as man:
         for name, side, wk_team in games:
             man.write(json.dumps({'game': name, 'cand': 'odbuild,wkqdmg,lionqdmg',
-                                  'seed': '1', 'side': side}) + '\n')
+                                  'seed': seed, 'side': side}) + '\n')
             teams = {'npc_dota_hero_lion': 2, 'npc_dota_hero_zuus': 3}
             if wk_team is not None:
                 teams[W.WK] = wk_team
@@ -331,12 +351,55 @@ def test_sweep_leg_join():
                     ('g4', 'dire', 2)])        # WK radiant, dire armed
     paths, legs, rows = W.from_sweeps([d])
     check('all four games are kept', len(paths) == 4 and len(legs) == 4)
+    # keyed by PATH since 2026-08-31 -- see test_sweep_name_collision
+    def leg_of(name):
+        return legs[os.path.abspath(
+            os.path.join(d, 'timelines', name + '.timeline.json'))]
     check('WK on the armed side is an ARMED sample',
-          legs['g1.timeline'] == (True, 'ab') and legs['g3.timeline'] == (True, 'ba'))
+          leg_of('g1') == (True, 'ab') and leg_of('g3') == (True, 'ba'))
     check('WK on the other side is a BASELINE sample',
-          legs['g2.timeline'] == (False, 'ab') and legs['g4.timeline'] == (False, 'ba'))
+          leg_of('g2') == (False, 'ab') and leg_of('g4') == (False, 'ba'))
+    check('the legs map is keyed by path, not by game name',
+          all(os.path.isabs(k) for k in legs))
     check('the layer follows the ARMED side, not Wraith King',
           all(r['layer'] == ('ab' if r['side'] == 'radiant' else 'ba') for r in rows))
+
+
+def test_sweep_name_collision():
+    """A soak game name is a wall-clock stamp plus a slot, so two runs of one
+    wave started seconds apart produce the SAME name for DIFFERENT games.  W30
+    has exactly that pair: `20260831_003227_slot1` under run 89e581 (seed 2204,
+    WK team 3, radiant armed -> BASELINE) and again under run 69e067 (seed
+    2315, WK team 2, radiant armed -> ARMED) -- one name, opposite legs.
+
+    While the legs map was keyed by name, one of the two games was filed on the
+    other's leg and the printed census disagreed with the tool's OWN audit
+    table (`ab/armed 5, ab/baseline 1` against an audit saying 4 and 2) with
+    nothing raising a hand.  That is the shape this test exists to keep dead."""
+    a = _sweep_dir([('20260831_003227_slot1', 'radiant', 3)], seed='2204')  # baseline
+    b = _sweep_dir([('20260831_003227_slot1', 'radiant', 2)], seed='2315')  # armed
+    paths, legs, rows = W.from_sweeps([a, b])
+    check('both colliding games are kept as separate timelines', len(paths) == 2)
+    check('...and they get TWO leg entries, not one', len(legs) == 2)
+    check('each colliding game keeps its OWN leg',
+          sorted(legs.values()) == sorted([(False, 'ab'), (True, 'ab')]))
+    check('the collision is flagged in the audit rows',
+          sum(1 for r in rows if r.get('dup')) == 1)
+    check('the audit rows carry the run dir, the only thing telling them apart',
+          all(r.get('run') for r in rows) and
+          len(set(r['run'] for r in rows)) == 2)
+    # end to end: the printed census must agree with the printed audit table
+    r = subprocess.run([sys.executable, TOOL, '--sweep', a, '--sweep', b],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    text = r.stdout.decode()
+    check('the run does not refuse on a name collision', r.returncode == W.EXIT_CLEAN)
+    check('the collision is announced, not silently resolved',
+          'DUPLICATE NAME' in text)
+    census = [ln.split() for ln in text.splitlines()
+              if ln.startswith('ab     armed') or ln.startswith('ab     baseline')]
+    census = [c for c in census if len(c) > 2 and c[2].isdigit()]
+    check('the census counts ONE game on each leg, matching the audit table',
+          sorted(c[2] for c in census) == ['1', '1'])
 
 
 def test_sweep_refusals():
@@ -385,7 +448,8 @@ def test_sweep_refusals():
 
 for fn in (test_registered_constants, test_narrowing_only, test_outcome_three_way,
            test_unk_is_never_folded, test_outcome_wiring, test_identity_lock,
-           test_printed_table, test_sweep_leg_join, test_sweep_refusals):
+           test_printed_table, test_sweep_leg_join, test_sweep_name_collision,
+           test_sweep_refusals):
     fn()
 
 if fails:
