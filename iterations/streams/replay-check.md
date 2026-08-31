@@ -7471,5 +7471,11 @@
     (4) §5 若仍红:**不要自己动 ACKNOWLEDGED 表**(那张表自己写着「Do NOT add it to make this green」);
     `test_selfcheck_lua_leg.py` 的 `UNCERTIFIABLE` 会跟着一起绿,**别当成第二个问题**。
     (5) `pullcad_beat.py` 在 W25 剩两个 run 上仍欠。
-  - **已发表**:见报告 §7.2。
+  - **已发表**(先 push 后发,GH #290;三份草稿 `claim_precheck.sh` **各 exit 0 / clean /
+    本地领先 origin/main 0 个 commit**;**MCP 未触发 `requires approval`**):
+    **GH #344 追评**(检测器否掉立项数字 + 三档口径 + 四格 + 70 帧铁证);
+    **GH #349 追评**(批测台 00:39Z 已立案,本组**不重开**,只补:静树复现、
+    `test_selfcheck_lua_leg.py` 的 `UNCERTIFIABLE` 是同一个红的连带伤亡、
+    **两个调用点的可达性读数**);**GH #351 `[harness]` 新开**(常数普查只扫血量名字,
+    `MP_FULL` 一声不吭通过,GH #171/#205 同族)。
   - 完整报告:`iterations/reports/replay-check/20260831T005500Z.md`
