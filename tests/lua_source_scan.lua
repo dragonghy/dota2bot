@@ -217,4 +217,63 @@ function M.nil_guard_shapes(path)
 end
 
 
+--- The complete key set of a `FindAoELocation` result table.
+--
+-- docs/BOT_API_REFERENCE.md:1377 -- "Returns: A table with: `count` (int) ...
+-- `targetloc` (vector)".  Two keys, and the doc's own worked example reads
+-- exactly those two.  A read of any OTHER name answers nil, silently: Lua does
+-- not error on a missing table key, `print()` never reaches the server console
+-- and the engine's error handler is broken (AGENTS.md), so a misspelling here
+-- is invisible from inside a game and shows up only as a branch that never
+-- fires.
+M.AOE_RESULT_KEYS = { count = true, targetloc = true }
+
+
+--- Every field read off a `FindAoELocation` result whose name is not one of the
+-- two the API returns.
+--
+-- Returns `(rows, sites)`:
+--   rows  -- `{path, line, var, field}` per offending read, deduplicated per
+--            (line, field) so that `X.cout ~= nil and X.cout >= 2` counts once
+--   sites -- how many `local <var> = ...FindAoELocation(...)` declarations were
+--            tracked in this file.  Returned so a CALLER can assert the scan
+--            actually looked at something: a scanner pointed at nothing reports
+--            zero findings and exits clean, which is the shape GH #345 caught
+--            in arm_string_census.py ("0 games + exit 0").
+--
+-- Conservative in three ways, each of which can only make the census SMALLER:
+--   * only `local X = ...FindAoELocation(...)` declarations are tracked, never
+--     a result passed straight into a call or stored on a table field;
+--   * tracking stops at the next `function` line, so a same-named local in a
+--     later function is not attributed here;
+--   * tracking stops as soon as `var` is assigned again, because from there on
+--     the value need not be an AoE result at all.
+function M.aoe_result_fields(path)
+    local lines = M.stripped_lines(path)
+    local rows, sites = {}, 0
+
+    for i = 1, #lines do
+        local var = lines[i]:match('local%s+([%w_]+)%s*=[^=]*FindAoELocation%s*%(')
+        if var then
+            sites = sites + 1
+            local seen = {}
+            for k = i + 1, #lines do
+                if lines[k]:match('^%s*function%s') or lines[k]:match('^%s*local%s+function%s') then
+                    break
+                end
+                if M.assigns_var(lines[k], var) then break end
+                for f in (' ' .. lines[k]):gmatch('[^%w_]' .. var .. '%s*%.%s*([%w_]+)') do
+                    if not M.AOE_RESULT_KEYS[f] and not seen[k .. ':' .. f] then
+                        seen[k .. ':' .. f] = true
+                        rows[#rows + 1] = { path, k, var, f }
+                    end
+                end
+            end
+        end
+    end
+
+    return rows, sites
+end
+
+
 return M
