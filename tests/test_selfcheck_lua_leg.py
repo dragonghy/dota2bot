@@ -58,6 +58,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -320,15 +321,39 @@ else:
     BUDGET_S = 120
 
     def run_leg(tree):
-        """Run the real leg source in `tree` -> (text, said_red, rc)."""
+        """Run the real leg source in `tree` -> (text, said_red, rc, seconds)."""
         harness = HARNESS_PRE + LEG_SRC + "\nexit \"$worst\"\n"
+        t0 = time.time()
         try:
             p = subprocess.run(["bash", "-c", harness], cwd=tree,
                                capture_output=True, text=True, timeout=BUDGET_S)
         except subprocess.TimeoutExpired:
-            return ("__TIMEOUT__", False, -1)
+            return ("__TIMEOUT__", False, -1, time.time() - t0)
         out = p.stdout + p.stderr
-        return out, ("TRUNK RED" in out), p.returncode
+        return out, ("TRUNK RED" in out), p.returncode, time.time() - t0
+
+    def note_cost(leg_text, seconds):
+        """[director 2026-08-31, GH #355 §5] Print wall clock AND file count.
+
+        GH #355 closed on a question it could not answer: 5a0's message blamed
+        "a discovery set that outgrows the budget", but the leg's wall clock
+        confounds TWO movements -- the set growing and the container slowing --
+        and the failure looks identical either way.  The acceptance criterion
+        #355 asked for is this line: emit both numbers every round so a later
+        reader can see WHICH ONE MOVED instead of re-deriving it by hand.
+        Deliberately not an assertion -- it is the instrument the assertion was
+        missing, and an instrument that fails is not readable across rounds.
+        """
+        # Two count lines exist, and the green one is not the common case here:
+        # the reddened run prints "TRUNK RED -- 1 of 50 Lua detector file(s)".
+        # Matching only the green line made this NOTE print "?" on exactly the
+        # run whose cost is least observable elsewhere -- half an instrument.
+        m = (re.search(r"(\d+) tagged detector file\(s\)", leg_text or "")
+             or re.search(r"\d+ of (\d+) Lua detector file\(s\)", leg_text or ""))
+        n = m.group(1) if m else "?"
+        print("  NOTE  5a0 cost: %s file(s) in %.1fs (budget %ds) -- two numbers "
+              "on purpose: set size and container speed move independently"
+              % (n, seconds, BUDGET_S))
 
     tmp = tempfile.mkdtemp(prefix="selfcheck_leg_")
     try:
@@ -341,11 +366,45 @@ else:
         shutil.copytree(REPO, tree, symlinks=True,
                         ignore=shutil.ignore_patterns(".git"))
 
-        clean_leg, clean_red, clean_rc = run_leg(tree)
-        check(clean_leg != "__TIMEOUT__",
-              "5a0: the leg finishes inside %ds -- it is a 开工 check, and a "
-              "discovery set that outgrows the budget must fail here rather "
-              "than hang" % BUDGET_S)
+        clean_leg, clean_red, clean_rc, clean_s = run_leg(tree)
+        note_cost(clean_leg, clean_s)
+        # [director 2026-08-31, GH #355 / #358]  5a0 was a check(); it is now an
+        # uncert().  The budget still exists and still bounds the run -- what
+        # changed is the WORD, because the old word was measurably false.
+        #
+        # 5a0's message named the discovery set as the culprit.  Measured this
+        # round on ONE commit with a BYTE-IDENTICAL 50-file set: 99.5s on this
+        # container, 133.3s on the batch desk's (GH #358) -- 1.34x apart, the
+        # budget between them.  So the same set passes here and fails there, and
+        # the sentence "a discovery set that outgrows the budget" is a statement
+        # this reading cannot support.  A quantity that flips on which machine
+        # drew the round is not evidence about the tree.
+        #
+        # And the cost of the old word was not theoretical: run_py_tests.sh
+        # renders any non-zero as FAIL, 开工自检 escalates that to "TRUNK RED --
+        # a python test is failing ON THE WORKING TREE", and from 04:23Z that
+        # line was served to EVERY stream on EVERY trigger, about a tree that
+        # was green.  That is the accusation half of GH #355, one layer up: 074d3e9c
+        # fixed the four cascaded false statements and left the one that shouts.
+        #
+        # Why UNCERTIFIABLE keeps the protection the budget was written for (the
+        # header's "a hang reads as still working; a red reads as you broke it"):
+        # uncert() raises this script's exit to 2, run_py_tests.sh prints it as
+        # "did NOT run -- this is not a pass and not a failure", and the selfcheck
+        # reports the leg as UNCERTIFIABLE with worst-exit 2.  The hang is still
+        # converted into a bounded, loud, non-zero answer.  It simply stops
+        # naming the tree for what the container did.  Same doctrine as the
+        # baseline_red branch below (do not blame the leg for someone else's
+        # landing) and the repo's standing 0/2/3 vocabulary (GH #171/#205/#213).
+        if clean_leg == "__TIMEOUT__":
+            uncert("5a0: the leg finishes inside %ds [it did not on THIS "
+                   "container -- and wall clock cannot separate a grown "
+                   "discovery set from a slow container: the same 50 files "
+                   "measured 99.5s here and 133.3s on the batch desk (GH #358). "
+                   "Read the NOTE line above across rounds to see which moved]"
+                   % BUDGET_S)
+        else:
+            check(True, "5a0: the leg finishes inside %ds" % BUDGET_S)
         # THE DISCRIMINATING BIT.  The baseline copy is the live tree, so a red
         # here has two possible authors: the tree (someone's landing reddened a
         # detector) or the leg (it cries red over detectors that are fine).
@@ -367,9 +426,12 @@ else:
             # [director 2026-08-31, GH #355]  Same defect as the reddened call
             # site below, and SHARPER here: on timeout clean_red is False, so
             # 5a ("a clean tree does not report TRUNK RED") would PASS -- and
-            # pass because nothing ran.  5a0 above is the one honest reading of
-            # a timeout; 5a2/5b/5c would add three false statements about the
-            # leg, and 5a a false certification.  All four did not run.
+            # pass because nothing ran.  5a2/5b/5c would add three false
+            # statements about the leg, and 5a a false certification.  All four
+            # did not run.  [2026-08-31, second pass] 5a0 above is now uncert()
+            # too, so a timeout produces NINE uncertified and ZERO failures --
+            # one event, one verdict word.  It used to produce one FAIL here,
+            # and that FAIL was the whole TRUNK RED.
             why = ("the clean run did not finish inside %ds -- these four did "
                    "NOT run; 5a in particular would pass vacuously" % BUDGET_S)
             for lbl in ("5a: a clean tree does not report TRUNK RED",
@@ -414,7 +476,8 @@ else:
                  "    assert(n == %d, 'injected')\nend\n" % (n_fx, n_fx))
         open(victim, "w", encoding="utf-8").write(body)
 
-        red_leg, red_said, red_rc = run_leg(tree)
+        red_leg, red_said, red_rc, red_s = run_leg(tree)
+        note_cost(red_leg, red_s)
         # [director 2026-08-31, GH #355]  The clean run above is guarded by 5a0;
         # THIS call site was not, and the asymmetry is the whole defect.  On
         # timeout run_leg hands back the sentinel triple ("__TIMEOUT__", False,
