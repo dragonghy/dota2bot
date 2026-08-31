@@ -27,6 +27,74 @@
 set -u
 cd "$(dirname "$0")/../.."
 
+# --- refusal: stdout is a PIPE ---------------------------------------------
+# [director 20260831, charter backlog 22] Discipline 3 ("never measure an exit
+# code through a pipe") recurred FIVE times, and every single site is the same
+# command in the same slot -- the FIRST command of the round:
+#
+#     bash tools/agent/routine_selfcheck.sh 2>&1 | tail -60   -> harness says 0
+#
+# That 0 is `tail`'s.  Three consecutive rounds wrote "next trigger: no `| tail`"
+# into the charter and three consecutive rounds broke it, so the charter retired
+# the reminder as a fix: the command is typed BEFORE the charter is read, which
+# is precisely the window a note cannot reach.  rc.sh (built 08-31T04:2xZ) is
+# the shorter correct path, and it did not help for the same reason.
+#
+# So the guard has to live where the defect happens: here, at the moment of the
+# call, in the one process that can still see the shape.
+#
+# THE DISCRIMINANT IS "FIFO", NOT "NOT A TTY".  The charter flagged the risk
+# that a legitimate redirect would be caught; measured, the two are cleanly
+# separable and the naive `[ -t 1 ]` test would indeed have been wrong:
+#
+#     cmd | tail        -> /dev/stdout is a FIFO      <- the defect
+#     cmd > file        -> /dev/stdout is a REGFILE   <- legitimate
+#     bare (harness)    -> /dev/stdout is a REGFILE   <- legitimate
+#     $(cmd)            -> /dev/stdout is a FIFO      <- safe, but not separable
+#
+# KNOWN FALSE POSITIVE, stated rather than papered over: the last row.  Command
+# substitution and `subprocess.run(capture_output=True)` are pipes that DO read
+# the true exit code, and nothing visible from inside this process tells them
+# apart from `| tail`.  They take the env opt-out below.  Measured cost of that
+# today: ZERO call sites -- no test executes this wrapper (the three that touch
+# it run slices, `HARNESS_PRE + LEG_SRC`, or read it as text), and no script in
+# the repo pipes it.
+#
+# WHY REFUSE INSTEAD OF WARN.  A warning is the fourth reminder, and reminders
+# are what the charter just retired.  A refusal costs the round a re-run, which
+# is a consequence rather than a note.  It is placed before any leg runs so the
+# whole message is a handful of lines -- meaning it survives even `| tail -1`,
+# the very habit it exists to defeat.  Exit 2 = could-not-run (rule 10's
+# vocabulary, same as run_py_tests.sh and the push gate): a refusal is NOT a
+# pass, and must never be recorded as a clean self-check.
+if [ -z "${SELFCHECK_PIPE_OK:-}" ] && [ -p /dev/stdout ]; then
+    # ORDER IS LOAD-BEARING, and the acceptance test caught it being wrong.
+    # The stderr copy goes FIRST.  Under `2>&1 | tail -1` both streams land in
+    # one pipe, so whichever is written last is the line the reader sees -- and
+    # the line that must survive is the VERDICT, not this aside.  Emitting the
+    # aside first leaves `SELFCHECK_EXIT=2` as the final line, which is the one
+    # property this whole guard exists to deliver.
+    #
+    # This copy is here for the OTHER shape: `| tail` written WITHOUT `2>&1`,
+    # where stderr bypasses the pipe and reaches the harness directly.
+    printf 'REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.\n' >&2
+    # To stdout: that is the channel inside the pipe, so it reaches the reader
+    # whether or not they wrote `2>&1`.
+    printf 'REFUSED: stdout is a PIPE, so the exit code your harness reports is\n'
+    printf '         the READER'"'"'s (tail/head almost always succeed), not this\n'
+    printf '         script'"'"'s. This is evidence discipline 3; it has recurred 5x,\n'
+    printf '         every time as the first command of the round.\n'
+    printf '\n'
+    printf 'Use either of these instead:\n'
+    printf '  bash tools/agent/rc.sh bash tools/agent/routine_selfcheck.sh\n'
+    printf '  bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"\n'
+    printf '\n'
+    printf 'If your caller really does read the true exit code (command\n'
+    printf 'substitution, subprocess capture), set SELFCHECK_PIPE_OK=1.\n'
+    printf 'SELFCHECK_EXIT=2  REFUSED (nothing was checked; this is NOT a pass)\n'
+    exit 2
+fi
+
 extra=()
 while [ $# -gt 0 ]; do
     case "$1" in
