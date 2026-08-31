@@ -1,5 +1,8 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope
+
+**成员串 48**(上一行,**423 字节**)。本行 **2026-08-31T19:0xZ 的变动:`rotscope` 入集**(47 → 48,总监裁定全文 **§CV**,提议 §CU,GH #368;queue `strategy-26`,**总监代建**——协同组本轮按 §CU.7 明说 `queue.json` 一字未动,而 §CG.5 要求提议必须有行)。**搭车、零 AWS 增量、不申请专波**,按 §BB.4「搭车提议的唯一成本就是不被裁」放行;**到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁)。
+**收割前必读两条**:(i) ⚠️ **`rotscope` 只对 Pudge 可达** ⇒ **没抽到 Pudge 的波次对它读数恒为零**,它**永远不能当独臂**;把「零读数」读成「无效应」是把 §CU.7 的排期约束丢掉,条件 (a) 需要一局有 Pudge 的对局。(ii) **它买的是作用域,不是连续性** —— armed 之后那条命令仍是 `bOnce=false` 的连续命令(§CU.2 第 2 条那一半**没有**被这个 id 修掉),写结论时不要把「命令被收窄到被守卫过的句柄上」读成「`roamreach` 那一族的形状已消除」。
 
 **成员串 47**(上一行,**414 字节**)。本行 **2026-08-30T22:0xZ 的变动:`creepthink` / `lionqdmg` / `cmqreach` **三条同轮入集**(44 → 47,总监裁定全文 **§CO**,提议分别是 §CK / §CM / §CN;queue `strategy-25` / `hero-24` / `hero-25`)—— 三条都是**搭车、零 AWS 增量、不申请专波**,按铁律 §BB.4「搭车提议的唯一成本就是不被裁」放行;`cmqreach` 是**到达那一轮就被裁的第一条**。
 **收割前必读四条**:(i) **W30 起的读数不得与 W29 并池** —— 串不同(44 → 47),W29 那四粒是 44-id 家族的**唯一一波**,不会再被补厚;**这是可接受的,理由写在 §CO.4:owner 2026-08-01 的验证哲学里,条件 (b) 是「无明显负面」的粗粒度读数,不是显著性检验** —— 把 SE 26.56 读成「4 粒不够裁」等于把 08-01 废掉的那个检验又请回来。真正卡住 44/45-id 家族 promote 的是**条件 (a) 的逐 id 帧核验**,不是 (b) 的精度。(ii) ⚠️ **`pullcad` 的读数也在 W30 断了一道界**,而**没有人提议改动 `pullcad`**:`creepthink` 改的是那段代码**多久被问一次**,`pullcad` 的常数就坐在那个频率里(§CO.1)。**W30 起的 `pullcad` 读数不得与 W25–W29 的并池。**(iii) `creepthink` 的 (a) **有波内同域镜像对照**(`J.ShouldCreepPullLane` 无 soak gate,勾线两腿都跑),**不要**把 `pullthink` 的跨波致歉抄过来;但 `pullcad` 同波共 armed ⇒ 归属规则见 §CO.1。(iv) `lionqdmg` / `cmqreach` 是**归档扫描**(零 EC2),`executor` = `replay-check`,与 hero-14 / hero-17 合并成一次扫描;两条各自的 **UNINTERPRETABLE 退回门**写在 `queue.json` 的 `director` 字段里,**收割前必读**。
@@ -11404,3 +11407,47 @@ W31 种子 2444 现场核对:`R=1`、薄腿 `ba_n≈15` ⇒ 上界 `1/15/2 = 0.0
   用的是**宽谓词** `J.IsValid`。本轮**一次只动一个小杠杆**,且那四个英雄
   **在全部 fixture 里各出现 0 次**(marci/muerta/faceless_void/leshrac 均为 0)⇒
   今天在那里上的 gate **一帧也驱动不了**。已交给录像组要帧。
+
+## §CV 2026-08-31T19:0xZ 总监裁定:`rotscope` **ROUTED_RIDESHARE / ADMITTED**(47 → 48)—— 路由裁定,不是对提议前提的背书
+
+### CV.1 裁定
+
+`rotscope`(GH #368,提议 §CU)**入 armed 成员串,47 → 48,423 字节**;`test_set.md` 第 2 行本轮已同步改毕
+(§BM 的规矩:未改第 2 行 = 裁定未完成)。**搭车、零 AWS 增量、不申请专波、零 EC2**;
+`queue.json` 新增 `strategy-26`(**总监代建** —— 提议方按 §CU.7 明说本轮未动 queue,而 §CG.5 要求提议要有行,
+开工自检本轮正是以 `ORPHAN_PROPOSAL §CU` 点了它)。
+
+**这是路由裁定,不是对 §CU 全部读数的背书**(沿 §CF / §CG / §CO 的先例措辞)。
+
+### CV.2 总监在源码独立复核过的三条(不是照抄提议自述)
+
+读的是 `bots/mode_roam_generic.lua:1021-1043`,不是 §CU 的摘要:
+
+1. **gate 是单条独立门,不是合取**:`local rotscope = J.IsModeTurbo() and J.IsSoakCandidate('rotscope')`
+   —— 唯一的合取项是 `J.IsModeTurbo()`,**不是一个候选 id** ⇒ 它不落进「promote 掉某个 id
+   会把另一个 gate 冻成恒 FALSE」那个陷阱(`pullcad` 那次的形状)。全仓 `rotscope` 只出现在这一个文件。
+2. **未 armed 逐字保留出厂行为,而且是结构性的**:`if not rotscope then bot:ActionQueue_AttackUnit(botTarget, false) end`
+   把出厂那条命令原样留在**同一个位置**(Rot 块的 `end` **之下**)、**同一个变量**(文件级 `botTarget`)上;
+   armed 那条在块**内**、在被守卫过的句柄上。两臂的差集就是这一条命令,与 §CU.6 的 `[control]` 同向。
+3. **验收独立重跑绿**:`tests/test_rotscope_shadowed_target.lua` **13/13**、
+   `tests/test_propertarget_corpus_domain.lua` **4/4**,均 `lua5.1 tests/run_tests.lua` 裸读 **exit 0**。
+
+### CV.3 ⭐ 裁定随附的两条限定(写进第 2 行的「收割前必读」,不是脚注)
+
+- **(甲) 只对 Pudge 可达 ⇒ 没抽到 Pudge 的波次读数恒为零。** 它**永远不能当独臂**。
+  这一条是 §CU.7 自己写的排期约束,**它最容易在收割侧丢失**:一个恒零的检测器读数,
+  和一个「测过了没效应」的读数,在 verdict 表里长得一模一样(§AZ / GH #148 那一族的老病)。
+- **(乙) 它买的是作用域,不是连续性。** armed 之后命令仍是 `bOnce=false`
+  ⇒ §CU.2 的第 2 条后果(连续型、mode 输掉竞价后无人释放,`roamreach` GH #45 那一形)
+  **这个 id 没有修**,只把目标收窄到被守卫过的句柄。**不许**把 (a) 的核验结论写成
+  「`roamreach` 那一族在本文件已消除」。总监**不因此扣住入集** —— 一次只动一个小杠杆是章程要的姿态,
+  但这半条必须留在纸面上,否则下一个读者会替它把话说满。
+
+### CV.4 明说没裁的
+
+§CU.7 末尾点名的**四个同胞站点**(Marci `:871` / Muerta `:884` / Faceless Void `:912` / Leshrac `:926`)
+**本裁定一字未及**:提议自己已量到那四个英雄在 107 个 fixture 里**各出现 0 次**
+⇒ 今天在那里上任何 gate 都**一帧也驱动不了**,是 `[limit]` 不是 backlog 项。
+§CU.5 的 `J.GetProperTarget` **993/993 为 nil** 那条作废面(351 个调用表达式 / 164 个文件)
+是**比本 id 宽得多**的量具问题,**不归本裁定**,留在 §CU.5 的原位;它与 GH #362 的 `gate=0`
+世界断言同族,收口应走那条线。

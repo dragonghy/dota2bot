@@ -1105,7 +1105,35 @@
       "question": "GH #366(开自 GH #357 第 6 行的付清,commit `5dcc26b6`,钉在 `tests/test_axe_t15_in_domain.lua`)。\n\n**立案句是 GH #238 的反面第一次有帧证据**:#238 把「turbo 到不了 20 级」定性成 10 分钟 cap 的伪影,owner 优先项 P3(GH #108)把 cap 抬到 25 分钟之后**等级确实够得到了**;于是问题变成「够得到之后,构筑跟上了吗」。在第一枚域内帧上**没有**。\n\n**已量到的(一局、一个瞬间)**:`69e067/20260831_004433_slot1` t=1190.4(19:50)上,**9 个 ≥18 级英雄,9 个大招卡在 2 级**(6/12/18 梯子允许 3),十个不同英雄脚本、两个队伍;**crystal_maiden 17 级、大招 2 级是对的,作为帧内对照组**证明这个读数分得开「短了」和「就该是 2」。Axe **21 级只点了 13/18 个技能点**,而 **13 正是 15 级的构筑状态**。构筑行**没有被违抗**:行把 Hunger 第 4 点放在第 10 个技能点、Call 第 4 点放在第 14 个 ⇒ **13 点恰好预测出观测到的 Call 3 / Hunger 4** —— 一个「按行照做」的检查会全绿而缺陷仍在。\n\n**本请求要买的是频率,不是效应,也不是修复**:上面全部读数来自**一局的十个 hero-slot**,是相关性最强的样本 ⇒ **指针不是频率**。要它变成频率,只需要**第二局(及以上)的晚期帧**。\n\n⚠️ **给接手者的前置**:动 `GetSkillList` 那一侧之前先读 **GH #238 §5** —— 列表下标是**花掉的第 N 个技能点**不是英雄等级(位置 18/19 = 20/25 级),该条已裁为「看着错,其实是对的」。英雄组本轮第一版正是在这里差点把它反向重开(读的是 mock 的天赋列表),节点已删除。",
       "acceptance": "(甲) **主判据 = 跨局复现**:第二局(及以上)晚期帧上,`≥18 级英雄中大招 rank < 3 的占比`。按铁律 4(ii),这是**整数取值 + 小值域的计数量 ⇒ 不报中位数**,报占比 + 分布。(乙) 铁律 4(i-a):若读数来自 armed/baseline 对比波的归档局,**两个分层的读数都要登记**(不是局数);若只是读归档 dump 则不适用,**明写不适用而不是略过**。(丙) **根因二选一必须被分开**:(a) bot 侧真的没花点,(b) dump 侧 `abilities[].level` 在后期是陈旧读数。判据要能分开这两条(例如同一局早期帧与晚期帧同一英雄的 rank 单调性,或 dump 与 `nPointsSpent = botLevel - bot:GetAbilityPoints()` 的一致性)。⚠️ **不许把 (b) 当成 (a) 就动 `bots/`**;两种结论都可接受,**不许因为读不出来就把本项标 done**。(丁) 本项**不要求任何 `bots/` 改动**,也不授权 promote:它买的是频率,修复按章程另走 gated + turbo-only + 真实帧 fixture。",
       "requester": "hero",
-      "status": "pending"
+      "status": "pending",
+      "director": {
+        "ruling": "ROUTED_ARCHIVE_SCAN",
+        "wave": "unscheduled —— **不排波**:本条按申请方自述是**语料请求不是波次请求**,零 EC2 / 零新局 / 零 AWS 增量。若归档里找不到合格局,**仍不单独发波**,改为搭车下一波例行波的归档(见 note 的回落条款)。",
+        "at": "2026-08-31T19:0xZ",
+        "ref": "GH #366(立案帧证据);iterations/reports/director/20260831T191319Z.md §3;**本条不开 test_set.md 节** —— 它不改动 armed 成员串、不申请入集,开节会在档案里造一个没有 id 的提议(§CG.5 的反向噪声)。",
+        "executor": "replay-check",
+        "note": "**ROUTED_ARCHIVE_SCAN —— 路由裁定,不是对 GH #366 归因的背书。** 判据 (丙)(bot 侧没花点 vs dump 侧 `abilities[].level` 陈旧)**本裁定不预判**,两种结论都可接受,按 `acceptance` 原文执行。\\n\\n⚠️ **总监明说没有核过的一条(诚实边界)**:本容器里**没有任何 timeline / dump**(`find` 只出 `tests/fixtures/timeline_synthetic.json`),归档供给**只能由执行方在 S3 侧核**;总监不为一个供给读数去 bootstrap AWS。已知**至少一局**合格(`69e067/20260831_004433_slot1`,t=1190.4 = 19:50,即立案那一局),本条要买的是**第二局及以上**。\\n\\n**回落条款(写在这里,免得它变成第二个 hero-20)**:执行方若在归档里找不到第二局 ≥18 级晚期 dump,**不许**把本条标 done,也**不许**为它单独发波 —— 改为在 `result` 写明「归档供给不足」并把它搭到下一波例行波的收割上(零 EC2 增量),总监下一轮据此重裁。\\n\\n**铁律 4(i-a) 的适用**:若读的是 armed/baseline 对比波的归档局,两个分层的读数都要登记;若只读归档 dump,**明写不适用**(`acceptance` (乙) 已要求,此处只是重申它是机器可读的那一半)。"
+      }
+    },
+    {
+      "id": "strategy-26",
+      "stream": "strategy",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "axis": "ROTSCOPE —— **搭车、零 AWS 增量、不申请专波**。**本行由总监代建**:协同组按 test_set.md §CU.7 明说本轮 `queue.json` 一字未动,而 §CG.5 要求提议必须有行,开工自检本轮正是以 `ORPHAN_PROPOSAL §CU id=rotscope` 点了它。先例:`strategy-23`(总监代建)。",
+      "question": "`rotscope`(GH #368,提议 test_set.md §CU,裁定 §CV):`bots/mode_roam_generic.lua` 的 Pudge 块里,`if Rot:GetToggleState()` 块内的 `local botTarget` **遮蔽**了文件级同名变量,遮蔽作用域随块结束,而 `bot:ActionQueue_AttackUnit(botTarget, false)` 排在那个 `end` **之下** ⇒ 四行之上的 `J.IsValidTarget(...) and dist > 400` **守的是另一个变量**。armed 把命令移进块内、移到被守卫过的句柄上。",
+      "acceptance": "**条件 (a) 的执行判据**:一局**有 Pudge** 的对局的帧核验 —— armed 腿上那条 `ActionQueue_AttackUnit` 只在 `J.IsValid(botTarget)` 为真的帧上发出,baseline 腿上它无条件发出(两臂差集恰好一条命令)。\\n\\n⚠️ **两条限定见 §CV.3,收割前必读**:(甲) **只对 Pudge 可达 ⇒ 没抽到 Pudge 的波次读数恒为零**,**永远不能当独臂**,把恒零读成「无效应」是丢掉排期约束;(乙) **它买的是作用域不是连续性** —— armed 之后命令仍是 `bOnce=false`,§CU.2 第 2 条(`roamreach` GH #45 那一形)**没有**被这个 id 修掉,结论不许写成「那一族在本文件已消除」。",
+      "requester": "strategy (row filed by director)",
+      "status": "pending",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一带 pudge 载体的波次(搭车,零 EC2 增量,零新波次);成员串 47 → 48 自本轮起",
+        "at": "2026-08-31T19:0xZ",
+        "ref": "test_set.md §CV(裁定全文);提议 §CU;GH #368;iterations/reports/director/20260831T191319Z.md §2",
+        "executor": "replay-check",
+        "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁;§BB.4)。**路由裁定,不是对 §CU 全部读数的背书。**\\n\\n**总监按源码独立复核过三条**(`bots/mode_roam_generic.lua:1021-1043`,不是照抄提议自述):(i) gate 是**单条独立门**,唯一合取项 `J.IsModeTurbo()` **不是候选 id** ⇒ 不落进「promote 掉某个 id 把另一个 gate 冻成恒 FALSE」那个陷阱(`pullcad` 那一形);全仓 `rotscope` 只出现在这一个文件。(ii) 未 armed **逐字保留出厂行为且是结构性的**:`if not rotscope then ... end` 把出厂那条命令原样留在同一位置(Rot 块 `end` 之下)、同一变量(文件级 `botTarget`)上。(iii) 验收独立重跑绿:`test_rotscope_shadowed_target.lua` **13/13**、`test_propertarget_corpus_domain.lua` **4/4**,`lua5.1 tests/run_tests.lua` **裸读 exit 0**。"
+      }
     }
   ],
   "done": [

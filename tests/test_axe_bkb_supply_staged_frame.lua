@@ -107,8 +107,10 @@
 --     today over the same glob: 107 frames, 28 Axe units, and the immune count
 --     UNCHANGED at 3.  Its ratchets are one-sided (`frames < 100`, `axe < 26`,
 --     `immune > 3`), which is correct for tripwires on a universal: the corpus
---     is meant to grow.  Section 4 pins today's four numbers beside the snapshot
---     so a later reader can tell growth from drift without re-deriving them.
+--     is meant to grow.  Section 4 records today's four numbers beside the
+--     snapshot so a later reader can tell growth from drift without re-deriving
+--     them -- and, since 2026-08-31, checks the first two of them in the same
+--     one-sided direction the sentence above calls correct (see section 4).
 --   * ONE OF THOSE NUMBERS WAS NEARLY REGISTERED AS A FINDING THAT DOES NOT
 --     EXIST.  The scratch census behind the first draft of this file read the
 --     immune count as ZERO and the draft header called that a silent downward
@@ -141,6 +143,8 @@
 --     matter in general.  A dead Lina respawns; the claim is about the instant.
 
 package.path = 'tests/?.lua;' .. package.path
+
+local cs = require('corpus_scale')
 
 local FRAME = 'tests/frames/f_20260831_004433_cm_creepreach.lua'
 local OVERRIDES = 'bots/FunLib/aba_global_overrides.lua'
@@ -532,6 +536,21 @@ end
 -- later reader can tell GROWTH (expected; the ratchets are one-sided because the
 -- corpus is meant to grow) from DRIFT (not expected) without re-deriving them --
 -- and so that no reading in this file can be produced by an empty predicate.
+--
+-- CORRECTED 2026-08-31T19:xxZ (director, GH #106 / GH #127 family).  The first
+-- draft wrote the first two of these as EQUALITIES -- `c.frames == 107` and
+-- `c.axe == 28` -- which is the defect the paragraph directly above says the
+-- sister ratchets are one-sided to avoid, written two lines under the sentence
+-- saying so.  `c.frames == 107` was RED THE MOMENT IT LANDED: it names the
+-- live corpus size, and tests/test_corpus_scale.lua scans for exactly that
+-- literal.  Both now go through tests/corpus_scale.lua, whose argument is that
+-- both counters are SUMS OVER FIXTURES, so appending a fixture can only raise
+-- them: a rise is the corpus growing (not a finding) and a FALL is a deleted
+-- fixture or moved behaviour (the only thing these pins were ever written to
+-- catch), which cs.corpus and cs.ratchet still report exactly.  The recorded
+-- numbers below are unchanged -- what changed is the DIRECTION they are
+-- checked in.  The other two cases in this test stay two-sided, each for its
+-- own written reason.
 
 tests['[ratchet] section 4: the corpus supply numbers as measured TODAY, against the sister header\'s recorded 104 / 26 / 3'] = function()
     local IMMUNE = immunity_modifiers()
@@ -545,10 +564,17 @@ tests['[ratchet] section 4: the corpus supply numbers as measured TODAY, against
     end
     p:close()
     local c = scan(frames, IMMUNE)
-    assert(c.frames == 107, string.format(
-        'corpus is %d frames; this file measured 107 (sister header snapshot: 104)', c.frames))
-    assert(c.axe == 28, string.format(
-        'corpus carries %d Axe units; this file measured 28 (sister header snapshot: 26)', c.axe))
+    -- 107 measured by this file (sister header snapshot: 104).  BOTH calls, and
+    -- neither is redundant: cs.corpus is the module's idiom for the size itself
+    -- and carries the type check plus the repo-wide anti-vacuum FLOOR (100),
+    -- which alone would let SEVEN fixtures be deleted without a hand going up;
+    -- cs.ratchet keeps TODAY's reading as the fall tripwire, which is the half
+    -- of the original equality that was actually load-bearing here.
+    cs.corpus(c.frames, 'axe/bkb supply sweep over tests/fixtures')
+    cs.ratchet(c.frames, 107, 'corpus fixture frames')
+    -- 28 measured by this file (sister header snapshot: 26).  A per-fixture sum,
+    -- so a fall is the finding and a rise is the corpus.
+    cs.ratchet(c.axe, 28, 'corpus Axe units')
     -- Two-sided ON PURPOSE, unlike the sister ratchet: this is the number every
     -- other reading in this file is taken through, so a FALL to zero here has to
     -- raise a hand rather than read as "no supply".  A zero from an empty
