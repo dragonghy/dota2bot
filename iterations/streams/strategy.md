@@ -32,7 +32,7 @@
    **这是 `0d` 那一格的最后一站** —— 把两个 roam 文件排除后,`bots/mode_*.lua` 全量 grep
    `Action_AttackUnit(x, false)` / `Action_MoveToUnit` / `ActionQueue_*` **只剩一行**
    (`mode_outpost_generic.lua:117`),而读它发现的问题**比那条命令高一层**:那条命令的 mode 根本没机会出价。
-   **已落地 gated `outlatch`**、**已发 GH #372**;一条**可复用主判据** + 一条**独立的第二后果**(登记不修)
+   **已落地 gated `outlatch`**、**已发 GH #373**;一条**可复用主判据** + 一条**独立的第二后果**(登记不修)
    + **两条互相对冲、都是真的语料读数** + 一次**安静地通过了一轮**的方法自伤;
    `bots/` 只改一个文件两处且**全在门后**,`game/` 零 diff,`queue.json` 新增 `strategy-28`
    (**提议方自建**,不花钱),零 AWS、S3 零访问。**已交棒,球在总监与录像组。**】**
@@ -3690,7 +3690,7 @@
 - 2026-08-31T22:28Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的全是本组自己开的);
   owner P1 第 1 棒、P2 均已交出 ⇒ 再取 backlog **`0d`** 的「还没查的」那行,**并且这是那一格的最后一站**:
   两个 roam 文件排除后,`bots/mode_*.lua` 里连续/排队型 `Action_*` **只剩 `mode_outpost_generic.lua:117` 一行**;
-  **报告 `iterations/reports/strategy/20260831T222815Z.md`**;issue **GH #372**;
+  **报告 `iterations/reports/strategy/20260831T222815Z.md`**;issue **GH #373**;
   backlog 条目 **`0OLAT`**;**落地 gated `outlatch`**,入集提议 `test_set.md §CX`
   (搭车、零 AWS 增量、不申请专波);`queue.json` 新增 `strategy-28`(提议方自建,不花钱)、零 AWS、S3 零访问):
   **一次返回空表的扫描,把整个 outpost mode 对这个 bot 永久关死 —— 而读这条命令时发现的问题比命令本身高一层。**

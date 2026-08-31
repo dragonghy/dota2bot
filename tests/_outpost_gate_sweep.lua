@@ -1,4 +1,4 @@
--- Corpus half of the `outlatch` reading (GH #372). NOT a test: the runner only
+-- Corpus half of the `outlatch` reading (GH #373). NOT a test: the runner only
 -- picks up `test_*.lua`, and this file is a measuring instrument, not an
 -- assertion. Run it by hand:
 --

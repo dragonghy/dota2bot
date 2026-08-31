@@ -1,4 +1,4 @@
--- [ratchet] [outlatch, GH #372] mode_outpost_generic latches on the ATTEMPT,
+-- [ratchet] [outlatch, GH #373] mode_outpost_generic latches on the ATTEMPT,
 -- not on the RESULT: one sweep that returns no outpost kills the whole mode
 -- for that bot for the rest of the game, silently and with no retry.
 --
@@ -89,7 +89,7 @@
 --     how often a real game's first post-tier-2 sweep comes back empty. In the
 --     real engine UNIT_LIST_ALL is very likely to carry both outposts most of
 --     the time; the value of the fix is bounded by how often it does not, and
---     THAT reading exists only in a replay (GH #372, baton to 录像组).
+--     THAT reading exists only in a replay (GH #373, baton to 录像组).
 --   * Consequently the fix is GATED and makes no claim to be promotable on
 --     this file alone.
 --   * The engine's own semantics for UNIT_LIST_ALL (vision-limited? does it
@@ -339,7 +339,7 @@ tests['[source S6] REGISTERED, NOT FIXED: IsNull is the 4th conjunct, after two 
     assert(pTeam < pNull and pDist < pNull,
         'this file DOCUMENTS the defect: IsNull() is evaluated after GetTeam() and after '
         .. 'GetUnitToUnitDistance() on the same handle. If this assertion ever flips, the '
-        .. 'sibling defect was fixed and GH #372 must be re-read, not silently passed')
+        .. 'sibling defect was fixed and GH #373 must be re-read, not silently passed')
 end
 
 -- ---------------------------------------------------------------------------
