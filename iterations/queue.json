@@ -1094,6 +1094,18 @@
       "result": "W30+W31 harvested (47-id full-set waves, byte-identical arm string, both post-cap-25). POOLED 47-id family = 8 seeds: gpm mean +20.77, sd 18.58, se 6.57, comps_better 6/8 (per-seed +38.03/+19.58/+20.76/-5.02/+30.75/-6.60/+45.19/+23.48). Pooled per iron rule 4(i-d): each seed already swap-averaged by recover_verdict.py, then a PLAIN arithmetic mean across the 8 -- never weighted by game count. W31 alone: gpm +23.20 (3/4), xpm +8.44 (3/4), deaths +0.04 (3/4), last_hits -1.00 (1/4); zero seeds excluded by the GH #269 depth gate; 222 loaded / 198 scored / 0 unfinished. CAVEAT the director must carry into any ruling: the winrate channel cannot respond to the arm on these waves -- W31 is a 221:1 dire sweep (GH #352), so `winrate 0.503` and `comps_better winrate 1/4` are identities, not measurements. Iron rule 2 condition (b) cannot be evidenced from winrate here. This desk reports and does not rule; the ruling is the director's.",
       "result_wave": "W30+W31",
       "result_at": "2026-08-31T09:3xZ"
+    },
+    {
+      "id": "hero-26",
+      "stream": "hero",
+      "bundle": "",
+      "seeds": [],
+      "priority": 3,
+      "axis": "LVLBUILD —— **语料请求,不是波次请求**:只要**一局 25 分钟自然结束的 turbo 局的晚期 dump**(任一能出 ≥18 级英雄的归档局即可)。**零 EC2、零新局、零 AWS 增量**;若近期已有这样的归档局,**直接指路比新发一波便宜**,本项即可按 ROUTED_ARCHIVE_SCAN 并掉。",
+      "question": "GH #366(开自 GH #357 第 6 行的付清,commit `5dcc26b6`,钉在 `tests/test_axe_t15_in_domain.lua`)。\n\n**立案句是 GH #238 的反面第一次有帧证据**:#238 把「turbo 到不了 20 级」定性成 10 分钟 cap 的伪影,owner 优先项 P3(GH #108)把 cap 抬到 25 分钟之后**等级确实够得到了**;于是问题变成「够得到之后,构筑跟上了吗」。在第一枚域内帧上**没有**。\n\n**已量到的(一局、一个瞬间)**:`69e067/20260831_004433_slot1` t=1190.4(19:50)上,**9 个 ≥18 级英雄,9 个大招卡在 2 级**(6/12/18 梯子允许 3),十个不同英雄脚本、两个队伍;**crystal_maiden 17 级、大招 2 级是对的,作为帧内对照组**证明这个读数分得开「短了」和「就该是 2」。Axe **21 级只点了 13/18 个技能点**,而 **13 正是 15 级的构筑状态**。构筑行**没有被违抗**:行把 Hunger 第 4 点放在第 10 个技能点、Call 第 4 点放在第 14 个 ⇒ **13 点恰好预测出观测到的 Call 3 / Hunger 4** —— 一个「按行照做」的检查会全绿而缺陷仍在。\n\n**本请求要买的是频率,不是效应,也不是修复**:上面全部读数来自**一局的十个 hero-slot**,是相关性最强的样本 ⇒ **指针不是频率**。要它变成频率,只需要**第二局(及以上)的晚期帧**。\n\n⚠️ **给接手者的前置**:动 `GetSkillList` 那一侧之前先读 **GH #238 §5** —— 列表下标是**花掉的第 N 个技能点**不是英雄等级(位置 18/19 = 20/25 级),该条已裁为「看着错,其实是对的」。英雄组本轮第一版正是在这里差点把它反向重开(读的是 mock 的天赋列表),节点已删除。",
+      "acceptance": "(甲) **主判据 = 跨局复现**:第二局(及以上)晚期帧上,`≥18 级英雄中大招 rank < 3 的占比`。按铁律 4(ii),这是**整数取值 + 小值域的计数量 ⇒ 不报中位数**,报占比 + 分布。(乙) 铁律 4(i-a):若读数来自 armed/baseline 对比波的归档局,**两个分层的读数都要登记**(不是局数);若只是读归档 dump 则不适用,**明写不适用而不是略过**。(丙) **根因二选一必须被分开**:(a) bot 侧真的没花点,(b) dump 侧 `abilities[].level` 在后期是陈旧读数。判据要能分开这两条(例如同一局早期帧与晚期帧同一英雄的 rank 单调性,或 dump 与 `nPointsSpent = botLevel - bot:GetAbilityPoints()` 的一致性)。⚠️ **不许把 (b) 当成 (a) 就动 `bots/`**;两种结论都可接受,**不许因为读不出来就把本项标 done**。(丁) 本项**不要求任何 `bots/` 改动**,也不授权 promote:它买的是频率,修复按章程另走 gated + turbo-only + 真实帧 fixture。",
+      "requester": "hero",
+      "status": "pending"
     }
   ],
   "done": [
