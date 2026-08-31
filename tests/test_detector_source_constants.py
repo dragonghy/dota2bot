@@ -317,6 +317,15 @@ HP_CENSUS = {
     # is how the second one gets a free pass.
     'wandlimbo_domain:HP_FRAC':          ('MIRROR', 'J.ShouldDrinkWandInLimbo jmz_func.lua:9348 -- `GetHealth() > GetMaxHealth() * 0.25` is the shipped test this reproduces'),
     'tpdefend_events:HEAT_HP':           ('MIRROR', 'J.ShouldTpSupportTowerFight heat gate; pinned above'),
+    # [replay-check 2026-08-31] `idletrip_domain` scores no gate -- it measures
+    # shipped-default behaviour -- so this cut MUST NOT be read as mirroring
+    # any source predicate.  0.90 is the departure-hp cut the 2026-08-30T21:58Z
+    # reading used to isolate the 127 walk-home trips, kept identical so the
+    # detector's number and that report's number are comparable.  It is
+    # deliberately far from every shipped regen threshold in this table
+    # (0.55 / 0.75 / 0.34): a trip is only called pointless when the hero was
+    # nowhere near needing to go home.
+    'idletrip_domain:HP_FULL':           ('INDEPENDENT', 'departure-hp cut for "did not need to go home"; mirrors no source predicate, chosen to match the 2026-08-30T21:58Z hand reading'),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),

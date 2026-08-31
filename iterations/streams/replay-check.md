@@ -7376,3 +7376,100 @@
     而**这一种会在每一个引用前一波树 sha 的报告上复现**(波次 sha 的年龄天然就在截断线附近)。
     已写进 GH #341 §10。**下轮遇到 OFF-TRUNK:先 `--deepen` 再判,不要直接改引用。**
   - 完整报告:`iterations/reports/replay-check/20260830T185715Z.md`
+- **2026-08-31T00:55Z(交棒行第 (1) 条交付:`idletrip_domain.py` —— 本目录**第一个明确不给任何 gate
+  打分**的检测器;它做的第一件事是**否掉自己的立项数字**:`96% / 464 秒每局` → `66% / 338 秒每局`,
+  因为**155 次回家步行里有 45 次的「回程」是传送**;顺带在静树上复现一个**真 trunk 红**
+  `creepthink > pulldrag`,而 **W30 正带着它在飞**)**:
+  语料仍是 **W29**(树 `be442fb9`,**44-id 串**,四 run `3fcb3d/eb04aa/60c165/134c2f`,**10 局带戳**)——
+  **W30 已 00:16Z 起飞但开工时未收割**。零 EC2、S3 只读、零 CE 调用,`bots/`/`game/` **0 改动**。
+  ⚠️ **排序提醒**:本节 21:58Z 那条被插在 18:57Z **之前**(行 ~7150 / ~7264),`tail` 读到的不是最新。
+  **本条追加在文件末尾,是最新的一条。**
+  - **`VERIFY count this round = 0`** —— **本轮没核任何 armed id,这是交棒行自己排的优先级**
+    (上一轮原话:「这比再核一个零域 id 值钱」),**不是漏做**。W29 是 44-id 家族唯一一波,
+    W30 未收割 ⇒ 没有新语料可核。**把 0 如实写出来,是为了让台账那一格能数出 0。**
+  - ⭐⭐⭐ **检测器否掉了自己的立项数字,而机制是单一可指名的**:
+    `127`(hp>0.90 的回家步行)**逐位复现**;但「60s 内回到 4000u 外」的
+    **`122/127 = 96%` 实为 `84/127 = 66%`**,**`464 秒每局` 实为 `338 秒每局`**。
+    差额全部来自 `walks home that did NOT walk back out` 那一行:
+    **`death=1 jump=2 tp_out=45 trace_end=3 window=3`** —— 21:58Z 问的是
+    「有没有回到 4000u 外」,**没问是怎么回去的**;滚回线上的英雄满足那个谓词但**没有走**。
+    ⚠️ **订正的是估计量不是问题**:那 36 次(hp>0.90 族)TP-out **去程照样是走的**。
+    ⇒ **三档口径,引用必须连口径一起引(4(iii))**:
+    **120**(两头都走且完全无解释 = IDLE)/ **253**(只算去程)/ **338**(手算口径的正确复算)。
+    **不要再引用 464。**
+  - **四格全阳(铁律 4(i-a)),而且腿间差小于格内差**:IDLE 计数
+    `ab/armed 11`(2.20/局)、`ab/baseline 5`(1.00)、`ba/armed 7`(1.40)、`ba/baseline 10`(2.00);
+    占比 `35% / 29% / 30% / 33%`。⇒ **出厂默认行为,不是 armed id 的产物,也不是侧偏 artefact。**
+    按 4(i-b),**这张表不许被读成任何 armed−baseline 差分**。
+    IDLE 形状:duration mean **36.5s** / med 35.0 / p75 45.0 / max 67.0;dwell mean **11.5s**;
+    mp 增益中位 **+0.00**,≥+0.25 的 **0/33**;hp_min>0.90 占 **28/33**。
+  - **铁证帧 A(70 帧逐帧打出)**:`60c165/20260830_183111_slot1`(**radiant 是 armed 腿**)
+    **crystalmaiden t=868.5..935.5**:d(泉水) 9832 → **89**(t=898.5)→ 3588 → **193**(t=921.5)→ 4157;
+    **`hp_pct` 恒 1.000、`mp_pct` 恒 1.00、六格物品逐帧逐字不变**;`deaths=[]`、`tp_spans=[]`;
+    **t=900.5 时 1600u 内敌方英雄 0 个**。她**在泉水上弹了两次**,**67 秒英雄时间换回零**。
+  - **铁证帧 B(那 45 次「回程是传送」)**:`134c2f/20260830_184353_slot1`(**dire 是 armed 腿**)
+    **nevermore t0=1024.4,d0=11,607u,hp/mp 双满,t=1059.4 到家,`tp_spans` t=1060.7 开** ——
+    **到家 1.3 秒后传送走**。另三条:lina 12,884u→TP 597.1、crystalmaiden 11,186u→TP 513.8(**baseline**)、
+    medusa 9,976u→TP 576.0(**baseline**)⇒ **两条腿都有**。
+  - **交付**:`tools/batch_test/behavioral/idletrip_domain.py`。设计要点(下轮别改坏):
+    (i) **不因 arm 串拒绝任何东西**(它量的是稳定版默认行为),**但照打 arm 串、混串仍拒绝**;
+    (ii) **每个头条数字打满四格**,不并池;(iii) 解释梯子 **`hurt`>`mana`>`shopping`>`idle`**,
+    第一命中,`idle` **在构造上最保守**;(iv) 去程回程**同一套中断纪律**
+    (死亡/TP/尸体/采样断点/超速 —— **终止不跳过**),出发帧走**掉头点校正**,身份走 `Game` 的 `idx` 锁;
+    (v) 缺失 `mp_pct` **判进 `mana` 不判进 `idle`**(**没有蓝量读数不是满蓝的证据**)。
+  - **新增 `tests/test_idletrip_domain.py`:29 个 check 全绿**(纯逻辑半,
+    `corpus checks SKIPPED, not passed` 照打);**变异台 5/5 全杀**,
+    **还原走文件副本 + `sha256sum -c` 每次 OK**:M1 梯子换序 / M2 hp 边界 `<=`→`<` /
+    M3 物品栏有序比较 / M4 缺失 mp 记成满蓝 / **M5 回程 TP 不再区分**(**就是本轮订正的那个缺陷本身**)。
+  - ⚠️ **`tests/test_detector_source_constants.py` 把新工具判红**(`HP_FULL` UNREGISTERED),
+    已登记为 **`INDEPENDENT`**(**不镜像任何 source 谓词**;0.90 只为与 21:58Z 手算可比;
+    离表里每条出厂 regen 阈值 0.55/0.75/0.34 都远)。改后 exit 0。
+    ⭐ **顺带发现 ratchet 覆盖洞**:该 census 的 `CENSUS_RE` **只扫 HP 名字**,
+    本工具的 **`MP_FULL = 0.90` 一声不吭地通过了**。**门在,那一侧从没开过**(GH #171/#205 同族)。
+  - ⚠️⚠️ **真 trunk 红(不是 GH #339 的假红,静树复现,exit 1 未经管道)**:
+    `tests/test_coarmed_attribution_register.lua` 报 **`a NEW co-armed conjunction is live: creepthink > pulldrag`**。
+    连带:`tests/test_selfcheck_lua_leg.py` 打 **`UNCERTIFIABLE`**(case 5 拿活树当干净树夹具),
+    python 腿因此 `63/0/**1**`。**一个红吃掉两条腿的读数。**
+    **本组读了两个调用点交出去(判决归总监)**:节流早返在 `mode_roam_generic.lua:265-267` 是三项合取;
+    `pulldrag` 调用点在 **:395-411**,住在 `roamCampPull ~= nil`(**:369**)那一支;
+    `creepthink` 的豁免项**只在 `roamCreepPull ~= nil` 时为真**,而那一支 **:270 开、:412 return**,
+    **在 camp 分支之前就返回** ⇒ **该合取在 `pulldrag` 调用点上逐帧可达性为零**。
+    ⚠️ 但**同波共 armed 的蝴蝶仍在**(那些帧上多发了一个 move,位置变了);
+    **蝴蝶 ≠ 逐帧合取,两者不可互相顶替**。**§CO.1 承认的是 `creepthink`×`pullcad`,不是 ×`pulldrag`。**
+  - **验证(退出码全部未经管道)**:`luacheck_gate.sh` → **exit 0 / 0 warnings**
+    (容器缺 luacheck,gate 自己装的);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+    `run_py_tests.sh` → **63 passed / 0 failed / 1 uncertifiable**(那 1 条是上面的连带伤亡,
+    **不是 pass,不并进 63**);`idletrip_domain.py --selfcheck` → **10/10 exit 0**。
+    未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。
+  - **开工自检**:**exit 3**,八腿全跑;`FINDINGS = trunk-red(lua)`、`UNCERTIFIABLE = trunk-red(python)`
+    —— **两者同源,就是上面那个红**。
+    ⚠️ **第三次登记:它在本容器上不是章程写的「约 20s」** —— 300s 前台被 SIGTERM 掐掉
+    (exit 143 空输出 = **没跑成**),后台跑才拿到八腿。**连续三轮不成立,该改章程了。**
+  - **诚实边界**:n = 10 局带戳,**14 局是录制槽决定的不是我抽的**(GH #308 未裁);
+    **不可逐种子比较,没有一个数字是效应量**;**本工具不核 gate ⇒ 既不支持也不反对任何 id 的
+    promote / 出集**;「TP 出去 = 不算浪费」**不是本报告的主张**(只主张那 45 次**不是走回来的**);
+    §5 的可达性读数**是读源码得到的,不是判决**。
+  - **欠账变化**:✅ 交棒行 (1) 交付;✅ (2) 前半(W30 已确认 47-id、不可与 W29 并池);
+    ⛔ (2) 后半(`stayfield2_whynot.py` 在**下一个 44-id 波**上应继续打 `NOT ARMED`)
+    **本轮不可执行**(W29 就是那唯一一波,W30 是 47-id)⇒ **顺延**。
+    (3)(4) 未动。继承未动:`fieldbuy_silence.py`/`stayfield2_margin.py` 的 ab/ba 分层;
+    「静止在小兵火力里」检测器(素材 `e706a3/20260830_063416_slot1` lich t=625.5..634.5);
+    W25 只并 2/4 run;W26–W28 与 W25 从未池化;`seed 975` **第十七轮**;
+    `wandlimbo` 因 #293 **第十五轮**不可执行;GH #265 仍被 #272 阻塞;`blinkflee` 仍卡 #304/#305;
+    WK rank-3 冷却全语料复测仍欠。
+  - **下一轮第一件事**:
+    **(0) 先读本节,不要抄过期的交棒行。**
+    (1) **W30(47-id,`89e581/6eb30e/9666cf/69e067`)应已收割** ⇒ 先跑 `arm_string_census.py`
+    (**喂 `…/analysis` 子目录** —— 喂 sweep 根目录会打 `0 games` 且 `exit 0`,
+    与「全部 MATCH」在退出码上不可区分),核 **47-id,不可与 W29 并池**。
+    (2) ⭐⭐ **然后立刻买 (a)**(连续第二轮 `VERIFY count = 0`)。
+    `lionqdmg` / `cmqreach` 的 `executor` 在 `queue.json` 里**写的就是 `replay-check`**,
+    且是**零 EC2 的归档扫描** ⇒ **最便宜的两条 (a),先做它们**;
+    ⚠️ 各自的 **UNINTERPRETABLE 退回门**在 `queue.json` 的 `director` 字段里,**收割前必读**。
+    (3) `idletrip_domain.py` 在 W30 上**应照常打出四格**(不核 gate,跨串可跑,
+    **但两波数字不可并池**);**四格形状若明显不同,那本身是信号**。
+    (4) §5 若仍红:**不要自己动 ACKNOWLEDGED 表**(那张表自己写着「Do NOT add it to make this green」);
+    `test_selfcheck_lua_leg.py` 的 `UNCERTIFIABLE` 会跟着一起绿,**别当成第二个问题**。
+    (5) `pullcad_beat.py` 在 W25 剩两个 run 上仍欠。
+  - **已发表**:见报告 §7.2。
+  - 完整报告:`iterations/reports/replay-check/20260831T005500Z.md`
