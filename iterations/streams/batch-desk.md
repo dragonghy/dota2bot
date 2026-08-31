@@ -108,12 +108,29 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
      `均值 +23.55 < SE 26.56` 读成「W29 单独既不支持 promote 也不支持 reject,需要做厚到 8 粒」——
      **四个数、SD、SE 复核全对,尺子用错**:铁律 2(owner 2026-08-01,取代旧的 4-seed 显著性检验)
      逐字是「小改动**不做数据显著性检验**」、条件 (b) = 「对胜负**没有明显负面影响**(**粗粒度,非显著性**)」。
-     `+23.55 gpm / winrate 0.503 / deaths 0.00 / comps_better gpm 3-4` **没有任何负面**
-     ⇒ W29 买到的正是 (b) 要的那个结论。**「均值 < SE ⇒ 不够裁」问的是效应量是否显著异于零,
+     `+23.55 gpm / ~~winrate 0.503~~ / deaths 0.00 / comps_better gpm 3-4` **没有任何负面**
+     ⇒ W29 买到的正是 (b) 要的那个结论。
+     **⚠️ 2026-08-31T09:5xZ 总监按 GH #352 撤回其中 `winrate 0.503`(全文 `test_set.md` §CT.2)**,
+     原文不删:W29 是 **227:1 的 dire 横扫**,而镜像 winrate 在一侧横扫时**按恒等式恒等于 0.500**
+     ⇒ 那个 0.503 是构造产物不是胜负测量。**本条结论保留** —— 并列的另外三条各自独立、方向一致。**「均值 < SE ⇒ 不够裁」问的是效应量是否显著异于零,
      那正是 08-01 废掉的那一步。** 真正卡住 44/45-id 家族 promote 的**从来是条件 (a)**。
      ⚠️ **这不是说 SE 无用**:排序候选、判断**单个 id** 的效应量、以及任何**定量**主张仍以它为前提;
      废掉的只是**「显著才算测过」**。⇒ `suggested` 与 SE **照常打**,
      但**不要**再用它给一整波下「不够裁」的结论 —— 那句话按三条件写,或者交给总监。
+   - **⭐⭐ 2026-08-31T09:5xZ 总监裁定(全文 `test_set.md` §CT,起因 GH #352,本台三轮点名):
+     `winrate` 的读法从本波起由工具自己判,不再由读者判。** `recover_verdict.py` 新增四个字段
+     (**既有键一个都没动,`winrate` 照常打印**):`winrate_side_census`(每粒 + 波级)/
+     `winrate_headroom`(每粒 + `mean`)/ `winrate_minority_side_share` / `winrate_channel`。
+     **`winrate_headroom` = `min(1, min(R,D)/min(ab_n,ba_n))/2`,是 `|winrate − 0.5|` 的上界,不是阈值**;
+     `headroom == 0` ⇒ 那个数**在算术上被逼成 0.500**,与候选做什么无关。
+     ⇒ **本台每份 verdict 报告照抄 `winrate_channel` 与 `mean.winrate_headroom` 两个数**;
+     **`winrate_channel == "DEGENERATE"` 时,不许把 `winrate` / `comps_better winrate` 写成读数**
+     (写成占位符,或直接引 §CT)。通道恢复的判据也是它:`== "RECOVERED"`。
+     ⚠️ **同时不许读反**:这不代表条件 (b) 买不到 —— 经济四量那条路一个字都没坏,
+     两个家族的瓶颈仍是条件 (a),**promote 排队顺序不变**。
+   - **⭐ 同轮修掉 `winrate_independent_of_gold` 的桶名 bug(GH #108 / #352)** ——
+     读者读的是改名前的 `engine`,真桶是 `engine_natural` ⇒ W31 打 `0/222` 而真值 `222/222`。
+     **从下一波起该字段打真值**,本台 08-29T09:13Z 立的那条**逐波复发登记可以停了**。
 4. 决定本轮要不要开新批测(优先级从高到低):
    a. `iterations/queue.json` 里 status=pending 的请求(先进先出,priority 高者先)。
       **(2026-08-23T15:xxZ 总监加一行,起因是一次差点买单的送达失败:先读 `director` 字段。)**
