@@ -234,8 +234,16 @@ def test_outcome_is_an_upper_bound():
     g.by_hero = {'lion': [(0.0, 500.0)],
                  'lina': [(0.0, 1.0), (1.0, 0.0)],
                  'luna': [(0.0, 40.0), (1.0, 200.0)]}
+    # the second witness sees the same pair through the combat log: lina's
+    # death is logged, luna's is not, so the ANY quantifier must survive in
+    # that column too (a per-victim column that lost it would read `netev`
+    # off whichever victim happened to be first)
+    g.deaths = {'lina': [0.5]}
+    g.ev_horizon = max(L.OUTCOME_WINDOWS) + 1.0
     row = L.scan_game(g)[0]
     check('one doomed victim does not cancel a surviving one', row[HL])
+    check('...and the same holds in the combat-log column',
+          row['netev_0.0_%s' % L.OUTCOME_HEADLINE_S])
     # and hp is read off REAL samples only: a "died" verdict needs a sampled 0,
     # never an interpolated dip (GH #176).
     gg = type('G', (), {})()
@@ -250,12 +258,121 @@ def test_outcome_is_an_upper_bound():
           not L.dies_within(gg, 'lina', 12.0, 5.0))
 
 
+def test_two_witnesses_are_never_merged():
+    """The second column (combat-log DEATH) must stay a SECOND READING.
+
+    The failure this pins is not a crash, it is a merge: someone notices the
+    two columns almost always agree and makes one derive from the other (or
+    "improves" `net` by consulting events).  After that the report still
+    prints two columns, they simply stop being independent, and the corpus
+    reading that motivated the second witness -- W31 `ba/baseline`, where the
+    combat log had already declared the victim dead 0.1 s BEFORE the frame --
+    silently becomes unrepresentable.
+    """
+    EHL = 'netev_0.0_%s' % L.OUTCOME_HEADLINE_S
+    HL = 'net_0.0_%s' % L.OUTCOME_HEADLINE_S
+    # same health bar, events swung: only the event column may move
+    quiet = _frame(50.0, 800.0, enemy_future=[(1.0, 90.0), (6.0, 600.0)])
+    logged = _frame(50.0, 800.0, enemy_future=[(1.0, 90.0), (6.0, 600.0)],
+                    deaths={'npc_dota_hero_lina': [2.0]})
+    check('the health-bar column ignores the event stream',
+          quiet[HL] and logged[HL])
+    check('the event column moves when the log does',
+          quiet[EHL] and not logged[EHL])
+    check('a disagreement is reported as such, not reconciled',
+          logged['dis_0.0_%s' % L.OUTCOME_HEADLINE_S])
+    # same events, health bar swung: only the hp column may move
+    bar_dead = _frame(50.0, 800.0, enemy_future=[(1.0, 0.0)])
+    check('the event column ignores the health bar',
+          bar_dead[EHL] and not bar_dead[HL])
+    # coverage is reported, never folded in
+    dark = _frame(50.0, 800.0, ev_horizon=None)
+    check('a stopped log is NOT coverage', not dark['evcov_5.0'])
+    check('...but the frame is still netev -- coverage is a separate count, '
+          'not a filter on the column', dark[EHL])
+    # netev, like net, is a subset of cell (3) at every tier and window
+    for hp in (1.0, 26.0, 78.0, 79.0, 105.0, 400.0):
+        for evs in ({}, {'npc_dota_hero_lina': [2.0]}):
+            r = _frame(hp, 800.0, enemy_future=[(1.0, 300.0)], deaths=evs)
+            for amp in L.AMP_TIERS:
+                for w in L.OUTCOME_WINDOWS:
+                    check('netev is a subset of cell (3) (hp=%s amp=%s w=%s)'
+                          % (hp, amp, w),
+                          r['kill_mr25_%s' % amp]
+                          or not r['netev_%s_%s' % (amp, w)])
+
+
+def test_stale_victims_need_both_halves():
+    """The (3c) column must keep BOTH of its conditions.
+
+    It says: the combat log had already reported this "living" victim dead
+    when the frame was sampled, AND the next hp sample confirms no respawn
+    intervened.  Drop the first half and it degenerates into the ordinary
+    outcome column; drop the second and Turbo's fast respawn makes it lie in
+    the direction of its own conclusion.  Measured instance:
+    `fde133/20260831_065721_slot1` t=217.5, DEATH at t=217.4, snapshot still
+    carrying luna at hp 47 -- 1 of 5 cell-(3) frames on that leg.
+    """
+    SHL = 'stale_0.0_%s' % L.STALE_HEADLINE_S
+    both = _frame(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+                  deaths={'npc_dota_hero_lina': [-0.1]})
+    check('both halves present is stale', both[SHL])
+    check('a stale frame is still counted in cell (3) -- this column measures '
+          'the contamination, it does not remove it', both['kill_mr25_0.0'])
+    check('death AFTER the frame is the ordinary outcome case, not stale',
+          not _frame(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+                     deaths={'npc_dota_hero_lina': [0.5]})[SHL])
+    check('a prior death with the victim ALIVE afterwards is not stale '
+          '(Turbo respawn is fast)',
+          not _frame(50.0, 800.0, enemy_future=[(1.0, 300.0)],
+                     deaths={'npc_dota_hero_lina': [-0.1]})[SHL])
+    check('no further samples at all is NOT stale (lower bound)',
+          not _frame(50.0, 800.0, deaths={'npc_dota_hero_lina': [-0.1]})[SHL])
+    check('the stale window stays near one sampling cell -- a wide one cannot '
+          'tell "already dead" from "died and respawned"',
+          max(L.STALE_WINDOWS) <= 3.0 and L.STALE_HEADLINE_S in L.STALE_WINDOWS)
+    check('stale is a subset of cell (3)',
+          all(_frame(400.0, 800.0, enemy_future=[(1.0, 0.0)],
+                     deaths={'npc_dota_hero_lina': [-0.1]})
+              ['stale_%s_%s' % (amp, sw)] is False
+              for amp in L.AMP_TIERS for sw in L.STALE_WINDOWS))
+
+
+def test_cross_stream_join_is_underscore_insensitive():
+    """GH #303 in this file's own shape.
+
+    Both new columns join the SNAPSHOT stream's hero names against the COMBAT
+    LOG's, and those two spellings differ for every hero whose npc name
+    concatenates two words.  What closes it here is that this file's `canon`
+    (imported from `stayfield_domain`) removes underscores -- it is
+    `entities.hkey` under another name.  Swapping in a canon that keeps them
+    (e.g. `entities.canon`, the obvious "cleanup") would make Vengeful Spirit,
+    Queen of Pain and Anti-Mage read as never dying, silently and in the
+    direction that inflates both columns.
+    """
+    for flat, spaced in (('vengefulspirit', 'vengeful_spirit'),
+                         ('queenofpain', 'queen_of_pain'),
+                         ('antimage', 'anti_mage')):
+        check('canon joins %s / %s' % (flat, spaced),
+              L.canon('npc_dota_hero_' + flat) == L.canon('npc_dota_hero_' + spaced))
+    check('canon still separates two different heroes',
+          L.canon('npc_dota_hero_lion') != L.canon('npc_dota_hero_luna'))
+
+
 def _frame(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
-           allies=0, enemy_alive=True, enemy_future=None):
+           allies=0, enemy_alive=True, enemy_future=None, deaths=None,
+           ev_horizon='cover'):
     """One synthetic frame driven through the real `scan_game`.
 
     `enemy_future` is the victim's REAL hp samples after the frame; the default
     (none at all) is what the outcome column must read as SURVIVED.
+
+    `deaths` / `ev_horizon` drive the SECOND witness (the combat-log column,
+    2026-08-31T21:xxZ) and the stale-victim column, and they are deliberately
+    SEPARATE inputs from `enemy_future`: the whole point of the second column
+    is that it does not read the health bar, so a builder that derived one from
+    the other could not express the disagreements these tests are about.
+    `deaths` is keyed by the name AS THE COMBAT LOG SPELLS IT.
     """
     snaps = [L._snap(t=0.0, abilities=L._q(q_level, cd), mp=mp, level=lion_level)]
     snaps.append(L._snap(t=0.0, hero='npc_dota_hero_lina', idx=2, team=3,
@@ -275,12 +392,19 @@ def _frame(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
     g.by_hero = {'lion': [(0.0, 500.0)],
                  'lina': [(0.0, enemy_hp if enemy_alive else 0.0)]
                  + sorted(enemy_future or [])}
+    g.deaths = {}
+    for nm, ts in sorted((deaths or {}).items()):
+        g.deaths.setdefault(L.canon(nm), []).extend(sorted(ts))
+    g.ev_horizon = (max(L.OUTCOME_WINDOWS) + 1.0 if ev_horizon == 'cover'
+                    else ev_horizon)
     return L.scan_game(g)[0]
 
 
 for fn in (test_source_constants, test_mr25_is_tighter, test_upper_bound_direction,
            test_episodes, test_ready_clauses, test_reach, test_outcome_column,
-           test_outcome_is_an_upper_bound):
+           test_outcome_is_an_upper_bound, test_two_witnesses_are_never_merged,
+           test_stale_victims_need_both_halves,
+           test_cross_stream_join_is_underscore_insensitive):
     fn()
 
 if fails:

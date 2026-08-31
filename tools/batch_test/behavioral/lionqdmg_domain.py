@@ -75,6 +75,32 @@ with two disciplines baked in, because both are easy to get backwards:
     INFLATE `net`, which is the safe direction for this stream's standing
     NEGATIVE finding on this id and the unsafe one for any positive claim.
 
+THE SECOND WITNESS AND THE STALE COLUMN (2026-08-31T21:xxZ, GH #361)
+--------------------------------------------------------------------
+The outcome column above reads ONE witness: the 1 Hz health bar.  Last round
+measured (on this same corpus family, n=137 casts) that the combat log leads
+that health bar in 136 of 137 pairs, median -0.7 s, 27% by >=1.0 s -- so at
+N = 2s the health bar systematically reports SURVIVED for heroes the log has
+already declared dead, which is exactly the side `net` calls safe.  Two columns
+are added here, and they answer DIFFERENT questions:
+
+  (3b-ev) `netev`  the same subtraction read off combat-log DEATH rows, printed
+                   BESIDE `net`, never merged or averaged with it.  Neither
+                   witness refines the other (the disagreement has both signs);
+                   `netev` also loses the `idx` identity lock, which can push it
+                   BELOW the upper bound `net` is defined to be.  `dis` counts
+                   the frames where the two differ.  Coverage ("was the log
+                   still running") is its own count and is NEVER folded in.
+  (3c) `stale`     cell (3) frames whose victim the log had ALREADY reported
+                   dead when the frame was sampled, with the next hp sample
+                   confirming no respawn.  This one is not about the outcome at
+                   all: it is contamination in the DOMAIN, the id's own
+                   opportunity count, and it inflates it.
+
+W31 `ba/baseline` reads 1 of 5 (see `stale_victim` for the frame).  Both legs
+are interpretable in (3c), unlike (3b): nothing the armed leg does can kill a
+hero BEFORE the frame.
+
 `N` IS A REGISTERED CHOICE, NOT A CONSTANT OF NATURE.  W31's ten hand-read
 victims died 1 to 5 seconds after the frame, so the headline is N = 5s, and the
 whole ladder (2 / 5 / 10s) is printed so the knife edge is visible rather than
@@ -163,6 +189,29 @@ SAMPLE_TOL_S = 1e-6                        # enemy snapshots share the frame's o
 OUTCOME_WINDOWS = (2.0, 5.0, 10.0)
 OUTCOME_HEADLINE_S = 5.0
 
+# THE SECOND WITNESS (`netev`, added 2026-08-31T21:xxZ, GH #361) reads the same
+# instant off the combat log instead of the health bar.  Its tolerance is
+# deliberately the SAME number as the health bar's, not an independently tuned
+# one: the two columns exist to be read against each other, and a second knob
+# would make every disagreement ambiguous between "the clocks differ" and "the
+# tolerances differ".  (Same reasoning as `wkqdmg_domain.EVENT_TOL_S`; the
+# constant is duplicated rather than imported because the two files share no
+# scanner and a shared constant would imply they do.)
+EVENT_TOL_S = SAMPLE_TOL_S
+
+# STALE-VICTIM WINDOW.  A REGISTERED CHOICE, and a deliberately SHORT one.
+# Measured on `fde133/20260831_065721_slot1` t=217.5 (see `stale_victim`): the
+# combat log reported luna dead at t=217.4 while the very next snapshot cell
+# still carried her at hp 47, so cell (3) admitted a corpse as "a living enemy
+# whose hp is at or below the armed claim".  The window has to stay near ONE
+# sampling cell (snapshots are 1 Hz here) because Turbo respawn is fast: a
+# DEATH several seconds before the frame is NOT evidence the hero was dead ON
+# the frame.  The 2 s rung is printed beside it so the knife edge is visible
+# (铁律 4(ii)), and the confirming `hp<=0` sample is required on top -- see
+# `stale_victim` for why neither half alone is enough.
+STALE_WINDOWS = (1.0, 2.0)
+STALE_HEADLINE_S = 1.0
+
 # Spell-amp SOURCES on an item, for the `amp_item` observability row only.  This
 # is NOT a claim about GetSpellAmp()'s value -- it is "was any amp source even
 # in the bag", which is the half of the hero desk's question a replay can answer.
@@ -177,6 +226,33 @@ CELLS = [(s, l) for s in ("ab", "ba") for l in ("armed", "baseline")]
 def rank_index(level):
     """KV rows are 1-indexed by ability rank; rank 0 means unlearned."""
     return level - 1
+
+
+def death_index(events):
+    """{hero key: sorted DEATH times} for HERO deaths only.
+
+    A module-level function rather than four lines inside `Game.__init__`
+    because the `target_hero` filter is the clause that decides what "a hero
+    died" MEANS here, and a clause built inside a constructor can only be
+    tested through a whole synthetic timeline -- which is how it went
+    unguarded (mutation stand 2026-08-31T21:xxZ: dropping the filter survived
+    every check).  On the W30+W31 corpora the flag and a `npc_dota_hero_`
+    target name agree on all 33,216 DEATH rows (937 hero / 32,279 not), so
+    dropping it changes no number TODAY; it is pinned because a creep or
+    building death landing in a hero's bucket would be invisible in every
+    reading built on it.
+    """
+    by = collections.defaultdict(list)
+    for e in events:
+        if e.get("type") != "DEATH" or not e.get("target_hero"):
+            continue
+        tgt = canon(e.get("target"))
+        if not tgt or e.get("t") is None:
+            continue
+        by[tgt].append(e["t"])
+    for k in by:
+        by[k].sort()
+    return by
 
 
 class Game(object):
@@ -218,6 +294,33 @@ class Game(object):
         for h in self.by_hero:
             self.by_hero[h].sort()
         self.lion_team = self.teams.get("npc_dota_hero_lion")
+
+        # --- the SECOND WITNESS's raw material (GH #361) ----------------------
+        # THIS index crosses the two dump streams and the one above does not:
+        # victims are named off the SNAPSHOT stream (dumper's `snakeFromClass`)
+        # while deaths are named off the COMBAT LOG, and those two spellings
+        # disagree on every hero whose npc name concatenates two words --
+        # snapshots `vengeful_spirit`, log `vengefulspirit` (GH #303).
+        #
+        # WHAT ACTUALLY CLOSES THAT HERE, and it is worth being exact because
+        # the wrong answer is the plausible one: NOT a `HeroMap`, but the
+        # `canon` this file imports from `stayfield_domain`, which lowercases,
+        # strips the prefix AND removes underscores -- it is `entities.hkey`
+        # under another name, so both spellings arrive at the same key before
+        # any lookup happens.  Both sides of this join go through it, which is
+        # the only reason a plain dict is safe.  `selfcheck` pins that property
+        # directly, so swapping in a canon that keeps underscores (e.g.
+        # `entities.canon`) fails a test rather than silently reporting three
+        # heroes as immortal.
+        events = d.get("events") or ()
+        self.deaths = death_index(events)
+        # GAME-level, deliberately: the absence of a DEATH row is not evidence
+        # that the entity was still being watched, so the only honest question
+        # the event stream can answer about coverage is "was the log still
+        # running".  Read off the events alone (never off the snapshots) so the
+        # two witnesses stay independent.
+        ev_ts = [e["t"] for e in events if e.get("t") is not None]
+        self.ev_horizon = max(ev_ts) if ev_ts else None
 
 
 def impale_of(snap):
@@ -286,10 +389,115 @@ def dies_within(game, hero, t0, window):
     return False
 
 
+def died_ev_within(game, hero, t0, window):
+    """Did the COMBAT LOG report `hero` dead in (t0, t0 + window]?
+
+    The second witness to the same question `dies_within` answers off the
+    health bar.  It is NOT a refinement of that one and the two are never
+    merged or averaged -- three reasons, all of them specific to THIS file:
+
+      * WEAKER IDENTITY, and here it bites the other way round.  A combat-log
+        row carries names, not entity indices, so the `idx` lock this file
+        applies to snapshots (GH #176) has no counterpart: an illusion's death
+        is logged under its hero's own name.  `wkqdmg_domain` records the same
+        loss, but its frame is one cast on one target, whereas cell (3b) here
+        is `ANY qualifying victim survived` -- so a mislabelled illusion death
+        can flip a whole frame OUT of `netev`, i.e. this column can read BELOW
+        the survivorship upper bound `net` is defined to be.  That is the
+        unsafe direction for this stream's standing NEGATIVE finding, which is
+        why `netev` is reported beside `net` and never in place of it.
+      * DIFFERENT CLOCK, BOTH SIGNS.  Measured on the W30/W31 corpora
+        (replay-check 2026-08-31T19:03Z, n=137 casts): the event led the first
+        sampled `hp<=0` in 136 of 137 pairs, median -0.7 s, 27% by >=1.0 s --
+        so the health bar is systematically LATE on short windows, which
+        inflates `net` at N=2s.  But the one positive pair (+7.8 s) and
+        `bbfloor_domain.py:263`'s skeleton_king (hp 0.005 from t=45.4, DEATH
+        event t=48.6) show the log can also lag the bar.  Neither witness
+        refines the other; that is measured, not cautious wording.
+      * COVERAGE IS A DIFFERENT QUESTION.  Absence of a DEATH row is not
+        evidence of survival, so this column cannot ask "is the victim still
+        sampled" -- only "was the log still running" (`ev_covered`), which is
+        a game-level property and is printed as its own count rather than
+        folded in here.
+
+    A hero the log never mentions returns False, i.e. counts as SURVIVED --
+    the same convention `dies_within` uses for a hero with no samples left, so
+    the two columns stay comparable at the frame level.  `ev_covered` is what
+    exposes how much of `netev` that convention bought.
+    """
+    for t in game.deaths.get(hero, ()):
+        if t <= t0 + EVENT_TOL_S:
+            continue
+        if t > t0 + window + EVENT_TOL_S:
+            break
+        return True
+    return False
+
+
+def ev_covered(game, t0, window):
+    """Was the combat log still witnessing anything at the far edge of the
+    window?  The second witness's coverage test -- game-level by necessity
+    (see `died_ev_within`), never per victim, and never folded into `netev`."""
+    if game.ev_horizon is None:
+        return False
+    return game.ev_horizon >= t0 + window - EVENT_TOL_S
+
+
+def stale_victim(game, hero, t0, window):
+    """Was this 'living' victim ALREADY DEAD per the combat log at the frame?
+
+    THE FRAME THIS EXISTS FOR (replay-check 2026-08-31T21:xxZ, read frame by
+    frame off `fde133/20260831_065721_slot1`, W31 `ba/baseline`):
+
+        t=217.4  DEATH  actor chaos_knight  target luna  (Lion takes the
+                 assist: GOLD 106 / XP 233 land on Lion at the same instant)
+        t=217.5  SNAPSHOT still carries luna at hp 47, and cell (3) counts
+                 that frame as "a living enemy at or below the armed claim"
+        t=218.5  first snapshot with luna at hp 0
+
+    So the domain -- cell (3), this id's own numerator -- can be bought by a
+    CORPSE the 1 Hz health bar has not caught up with.  That is the same
+    sampling lag last round measured as a property of the recording (n=137,
+    the log led the health bar in 136 pairs, median -0.7 s), but landing on a
+    different column: not the outcome, the OPPORTUNITY COUNT, and in the
+    direction that FLATTERS this id.
+
+    BOTH HALVES ARE REQUIRED and neither is sufficient:
+
+      * a DEATH event in (t0 - window, t0] alone is not enough -- Turbo
+        respawn is fast (halved timers), so a hero who died a few seconds ago
+        can legitimately be alive again on the frame;
+      * the next hp sample reading <= 0 alone is not enough either -- that is
+        exactly the ordinary "the victim died right after the frame" case,
+        which is what the outcome column already reports.
+
+    Together they say something neither says alone: the log had already
+    declared the death BEFORE the frame, and the next sample confirms no
+    respawn intervened.  Frames with no further samples are NOT stale by this
+    test (nothing confirms them), which keeps this count a LOWER bound -- the
+    safe direction for a finding that says the domain is over-counted.
+    """
+    deaths = [t for t in game.deaths.get(hero, ())
+              if t0 - window - EVENT_TOL_S <= t <= t0 + EVENT_TOL_S]
+    if not deaths:
+        return False
+    nxt = next((hp for t, hp in game.by_hero.get(hero, ())
+                if t > t0 + SAMPLE_TOL_S), None)
+    return nxt is not None and nxt <= 0
+
+
 def victim_traj(game, hero, t0, window):
     """The hero's REAL hp samples in (t0, t0 + window], for frame-level reading."""
     return [hp for t, hp in game.by_hero.get(hero, ())
             if t0 + SAMPLE_TOL_S < t <= t0 + window + SAMPLE_TOL_S]
+
+
+def death_times(game, hero, t0, window):
+    """The hero's DEATH-event times in (t0, t0 + window] -- the second witness's
+    raw material, printed so a disagreement can be audited without re-running
+    this tool."""
+    return [t for t in game.deaths.get(hero, ())
+            if t0 + EVENT_TOL_S < t <= t0 + window + EVENT_TOL_S]
 
 
 def scan_game(game):
@@ -345,11 +553,29 @@ def scan_game(game):
                 row["net_%s_%s" % (amp, w)] = any(
                     not dies_within(game, canon(e["hero"]), s["t"], w)
                     for e in qual)
+                # the SECOND witness, same quantifier and same ladder so the
+                # two are comparable frame by frame -- separate keys, never
+                # reconciled into one column (see `died_ev_within`)
+                row["netev_%s_%s" % (amp, w)] = any(
+                    not died_ev_within(game, canon(e["hero"]), s["t"], w)
+                    for e in qual)
+                row["dis_%s_%s" % (amp, w)] = (
+                    row["net_%s_%s" % (amp, w)] != row["netev_%s_%s" % (amp, w)])
+            # the domain's own contamination check: was a qualifying victim
+            # already dead per the combat log when this frame was sampled?
+            for sw in STALE_WINDOWS:
+                row["stale_%s_%s" % (amp, sw)] = any(
+                    stale_victim(game, canon(e["hero"]), s["t"], sw)
+                    for e in qual)
             if amp == 0.0:
+                for w in OUTCOME_WINDOWS:
+                    row["evcov_%s" % w] = ev_covered(game, s["t"], w)
                 row["kill_victims"] = [
                     (canon(e["hero"]), e["hp"],
                      dies_within(game, canon(e["hero"]), s["t"],
-                                 OUTCOME_HEADLINE_S))
+                                 OUTCOME_HEADLINE_S),
+                     died_ev_within(game, canon(e["hero"]), s["t"],
+                                    OUTCOME_HEADLINE_S))
                     for e in qual]
         row["victims"] = [(canon(e["hero"]), e["hp"],
                            round(dist(s["x"], s["y"], e["x"], e["y"]), 1))
@@ -414,6 +640,72 @@ def summarize(cells):
                           a["net_%s_2.0" % amp], a["net_%s_5.0" % amp],
                           a["net_%s_10.0" % amp], note))
     out.append("")
+    out.append("## (3b-ev) SECOND WITNESS: the same column read off DEATH events")
+    out.append("")
+    out.append("Two witnesses to one question, printed side by side and **never**")
+    out.append("merged or averaged. `net` reads sampled hp, `netev` reads combat-log")
+    out.append("DEATH rows; measured on this corpus family the log leads the health")
+    out.append("bar in 136 of 137 pairs (median -0.7s) but has also been seen to lag")
+    out.append("it, so NEITHER is a refinement of the other. `netev` also LOSES the")
+    out.append("`idx` identity lock (illusion deaths are logged under the hero name),")
+    out.append("which can push it BELOW the upper bound `net` is defined to be.")
+    out.append("`dis` = frames where the two columns disagree, at that window.")
+    out.append("Baseline rows are the interpretable ones, exactly as in (3b).")
+    out.append("")
+    out.append("| cell | amp | kill(mr25) | net/netev <=2s | <=5s | <=10s | dis 2/5/10s | interpretable |")
+    out.append("|---|---|---|---|---|---|---|---|")
+    for c in CELLS:
+        a = cells[c]
+        note = "yes" if c[1] == "baseline" else "**NO (armed leg)**"
+        for amp in AMP_TIERS:
+            out.append("| %s/%s | %d%% | %d | %d/%d | %d/%d | %d/%d | %d/%d/%d | %s |"
+                       % (c[0], c[1], int(amp * 100), a["kill_mr25_%s" % amp],
+                          a["net_%s_2.0" % amp], a["netev_%s_2.0" % amp],
+                          a["net_%s_5.0" % amp], a["netev_%s_5.0" % amp],
+                          a["net_%s_10.0" % amp], a["netev_%s_10.0" % amp],
+                          a["dis_%s_2.0" % amp], a["dis_%s_5.0" % amp],
+                          a["dis_%s_10.0" % amp], note))
+    out.append("")
+    out.append("### second witness coverage (was the combat log still running?)")
+    out.append("")
+    out.append("Absence of a DEATH row is NOT evidence of survival, so this is a")
+    out.append("game-level 'was anything still being logged at the far edge of the")
+    out.append("window' count over cell (3) frames at amp 0%, kept OUT of `netev`.")
+    out.append("A gap between `kill(mr25,0%)` and these is the share of `netev`")
+    out.append("bought by the log having stopped rather than by an observed survival.")
+    out.append("")
+    out.append("| cell | kill(mr25,0%) | log live @2s | @5s | @10s |")
+    out.append("|---|---|---|---|---|")
+    for c in CELLS:
+        a = cells[c]
+        out.append("| %s/%s | %d | %d | %d | %d |"
+                   % (c[0], c[1], a["kill_mr25_0.0"], a["evcov_2.0"],
+                      a["evcov_5.0"], a["evcov_10.0"]))
+    out.append("")
+    out.append("## (3c) STALE VICTIMS: cell (3) frames whose victim was already dead")
+    out.append("")
+    out.append("The combat log had already reported the qualifying victim dead when")
+    out.append("this frame was sampled, AND the next hp sample confirms it (no")
+    out.append("respawn in between). These frames are contamination in cell (3)")
+    out.append("ITSELF -- the id's own opportunity count -- not in the outcome")
+    out.append("column, and they INFLATE it, which is the direction that flatters")
+    out.append("this id. Both legs are interpretable here: unlike (3b), nothing the")
+    out.append("armed leg does can retro-actively kill a hero BEFORE the frame.")
+    out.append("Requiring the confirming sample makes this a LOWER bound.")
+    out.append("")
+    out.append("| cell | amp | kill(mr25) | stale<=%gs | share | stale<=%gs |"
+               % (STALE_WINDOWS[0], STALE_WINDOWS[1]))
+    out.append("|---|---|---|---|---|---|")
+    for c in CELLS:
+        a = cells[c]
+        for amp in AMP_TIERS:
+            den = a["kill_mr25_%s" % amp] or 1
+            out.append("| %s/%s | %d%% | %d | %d | %.3f | %d |"
+                       % (c[0], c[1], int(amp * 100), a["kill_mr25_%s" % amp],
+                          a["stale_%s_%s" % (amp, STALE_WINDOWS[0])],
+                          a["stale_%s_%s" % (amp, STALE_WINDOWS[0])] / den,
+                          a["stale_%s_%s" % (amp, STALE_WINDOWS[1])]))
+    out.append("")
     out.append("## (4) coverage unique to this id  [UPPER bounds only, see LIMITS]")
     out.append("| cell | amp | kill(mr25) | u_lvl | u_tf |")
     out.append("|---|---|---|---|---|")
@@ -438,13 +730,15 @@ def summarize(cells):
                       a["near_2.0"], a["near_3.0"]))
     out.append("")
     out.append("## episodes (the stream's standing reading discipline)")
-    out.append("| cell | ready episodes | kill(mr25,0%%) episodes | net episodes (<=%gs) |"
-               % OUTCOME_HEADLINE_S)
-    out.append("|---|---|---|---|")
+    out.append("| cell | ready episodes | kill(mr25,0%%) episodes | net episodes (<=%gs) "
+               "| netev episodes (<=%gs) |" % (OUTCOME_HEADLINE_S, OUTCOME_HEADLINE_S))
+    out.append("|---|---|---|---|---|")
     for c in CELLS:
         a = cells[c]
-        out.append("| %s/%s | %d | %d | %d%s |"
+        out.append("| %s/%s | %d | %d | %d%s | %d%s |"
                    % (c[0], c[1], a["ep_ready"], a["ep_kill"], a["ep_net"],
+                      "" if c[1] == "baseline" else " (not interpretable)",
+                      a["ep_netev"],
                       "" if c[1] == "baseline" else " (not interpretable)"))
     out.append("")
     out.append("## observability: spell-amp source in the bag on (2) frames")
@@ -485,7 +779,14 @@ def blank_cell():
         a["u_tf_%s" % amp] = 0
         for w in OUTCOME_WINDOWS:
             a["net_%s_%s" % (amp, w)] = 0
+            a["netev_%s_%s" % (amp, w)] = 0
+            a["dis_%s_%s" % (amp, w)] = 0
+        for sw in STALE_WINDOWS:
+            a["stale_%s_%s" % (amp, sw)] = 0
+    for w in OUTCOME_WINDOWS:
+        a["evcov_%s" % w] = 0
     a["ep_net"] = 0
+    a["ep_netev"] = 0
     return a
 
 
@@ -507,7 +808,7 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
         a["games"] += 1
         # episodes are counted WITHIN a game and then summed; pooling raw
         # timestamps across games would glue two games' spans into one run.
-        t_ready, t_kill, t_net = [], [], []
+        t_ready, t_kill, t_net, t_netev = [], [], [], []
         for r in scan_game(game):
             a["frames"] += 1
             if not r["alive"]:
@@ -524,11 +825,17 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
                 t_kill.append(r["t"])
                 if r["net_0.0_%s" % OUTCOME_HEADLINE_S]:
                     t_net.append(r["t"])
+                if r["netev_0.0_%s" % OUTCOME_HEADLINE_S]:
+                    t_netev.append(r["t"])
+                for w in OUTCOME_WINDOWS:
+                    if r["evcov_%s" % w]:
+                        a["evcov_%s" % w] += 1
                 if kill_witness and len(kill_rows) < kill_witness:
                     kill_rows.append(
                         (run_name[-6:], game_name, seed, side, cell, r,
-                         [(v[0], v[1], v[2],
-                           victim_traj(game, v[0], r["t"], max(OUTCOME_WINDOWS)))
+                         [(v[0], v[1], v[2], v[3],
+                           victim_traj(game, v[0], r["t"], max(OUTCOME_WINDOWS)),
+                           death_times(game, v[0], r["t"], max(OUTCOME_WINDOWS)))
                           for v in r["kill_victims"]]))
             if r["amp_item"]:
                 a["amp_item"] += 1
@@ -540,6 +847,13 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
                     for w in OUTCOME_WINDOWS:
                         if r["net_%s_%s" % (amp, w)]:
                             a["net_%s_%s" % (amp, w)] += 1
+                        if r["netev_%s_%s" % (amp, w)]:
+                            a["netev_%s_%s" % (amp, w)] += 1
+                        if r["dis_%s_%s" % (amp, w)]:
+                            a["dis_%s_%s" % (amp, w)] += 1
+                    for sw in STALE_WINDOWS:
+                        if r["stale_%s_%s" % (amp, sw)]:
+                            a["stale_%s_%s" % (amp, sw)] += 1
                     if r["level"] is not None and r["level"] < FALLBACK_LEVEL:
                         a["u_lvl_%s" % amp] += 1
                         if r["allies_1200"] < TEAMFIGHT_ALLIES:
@@ -550,6 +864,7 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
         a["ep_ready"] += episodes(t_ready)
         a["ep_kill"] += episodes(t_kill)
         a["ep_net"] += episodes(t_net)
+        a["ep_netev"] += episodes(t_netev)
     # 铁律 4(i-a) disclosure: the arm string is printed whether or not the id is in it.
     armed_ids = set()
     for c in arms:
@@ -576,16 +891,26 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
                            r["t"], r["rank"], r["level"], r["allies_1200"],
                            r["reach"], r["victims"]))
     if kill_rows:
-        tail += ["", "## cell (3) frames with the outcome column (amp 0%, mr25)",
-                 "", "| run/game | cell | t | victim | hp | died<=%gs | hp samples (%gs) |"
-                 % (OUTCOME_HEADLINE_S, max(OUTCOME_WINDOWS)),
-                 "|---|---|---|---|---|---|---|"]
+        tail += ["", "## cell (3) frames with BOTH outcome columns (amp 0%, mr25)",
+                 "",
+                 "`died(hp)` is the sampled health bar, `died(ev)` the combat log."
+                 " A `!=` row is a disagreement to be read frame by frame, not"
+                 " reconciled by this table.",
+                 "",
+                 "| run/game | cell | t | victim | hp | died(hp)<=%gs | died(ev)<=%gs "
+                 "| agree | hp samples (%gs) | DEATH events (%gs) |"
+                 % (OUTCOME_HEADLINE_S, OUTCOME_HEADLINE_S, max(OUTCOME_WINDOWS),
+                    max(OUTCOME_WINDOWS)),
+                 "|---|---|---|---|---|---|---|---|---|---|"]
         for run_name, game_name, seed, side, cell, r, vs in kill_rows:
-            for hero, hp, died, traj in vs:
-                tail.append("| `%s/%s` | %s/%s | %.1f | %s | %.0f | %s | %s |"
+            for hero, hp, died, died_ev, traj, evs in vs:
+                tail.append("| `%s/%s` | %s/%s | %.1f | %s | %.0f | %s | %s | %s | %s | %s |"
                             % (run_name, game_name, cell[0], cell[1], r["t"],
                                hero, hp, "yes" if died else "**no**",
-                               " ".join("%.0f" % h for h in traj)))
+                               "yes" if died_ev else "**no**",
+                               "" if died == died_ev else "**!=**",
+                               " ".join("%.0f" % h for h in traj),
+                               " ".join("%.1f" % e for e in evs) or "-"))
     return "\n".join(head) + body + "\n".join(tail)
 
 
@@ -635,28 +960,54 @@ def selfcheck():
 
     # --- one synthetic game, driven end to end --------------------------------
     def build(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
-              allies=0, enemy_alive=True, enemy_future=None):
+              allies=0, enemy_alive=True, enemy_future=None, enemy_name="lina",
+              deaths=None, ev_horizon="cover", second=None):
         snaps = [_snap(t=0.0, abilities=_q(q_level, cd), mp=mp, level=lion_level)]
-        snaps.append(_snap(t=0.0, hero="npc_dota_hero_lina", idx=2, team=3,
+        snaps.append(_snap(t=0.0, hero="npc_dota_hero_" + enemy_name, idx=2, team=3,
                            hp=enemy_hp if enemy_alive else 0.0, x=enemy_x,
                            abilities=[]))
+        # `second` = (name, hp, future) for a SECOND reachable victim, which is
+        # the only way to drive cell (3b)'s ANY quantifier with the two victims
+        # disagreeing -- a one-victim frame cannot tell "any" from "the".
+        if second is not None:
+            snaps.append(_snap(t=0.0, hero="npc_dota_hero_" + second[0], idx=3,
+                               team=3, hp=second[1], x=enemy_x, abilities=[]))
         for i in range(allies):
             snaps.append(_snap(t=0.0, hero="npc_dota_hero_zuus", idx=10 + i,
                                team=2, x=100.0 * (i + 1), abilities=[]))
         g = Game.__new__(Game)
-        g.teams = {"npc_dota_hero_lion": 2, "npc_dota_hero_lina": 3,
-                   "npc_dota_hero_zuus": 2}
+        g.teams = {"npc_dota_hero_lion": 2,
+                   "npc_dota_hero_" + enemy_name: 3, "npc_dota_hero_zuus": 2}
         g.has_lion = True
         g.lion_team = 2
-        g.primary = {"lion": 1, "lina": 2, "zuus": 10}
+        g.primary = {"lion": 1, canon(enemy_name): 2, "zuus": 10}
+        if second is not None:
+            g.teams["npc_dota_hero_" + second[0]] = 3
+            g.primary[canon(second[0])] = 3
         g.by_t = {0.0: snaps}
         g.lion = [snaps[0]]
         # `enemy_future` = the victim's REAL hp samples after the frame; default
         # is "no further samples", which the outcome column reads as SURVIVED.
         g.by_hero = collections.defaultdict(list)
         g.by_hero["lion"] = [(0.0, 500.0)]
-        g.by_hero["lina"] = [(0.0, enemy_hp if enemy_alive else 0.0)] + \
-                            sorted(enemy_future or [])
+        g.by_hero[canon(enemy_name)] = [(0.0, enemy_hp if enemy_alive else 0.0)] + \
+                                       sorted(enemy_future or [])
+        if second is not None:
+            g.by_hero[canon(second[0])] = [(0.0, second[1])] + sorted(second[2] or [])
+        # --- the SECOND witness's inputs, driven independently of the hp bar --
+        # `deaths` = {hero name AS THE COMBAT LOG SPELLS IT: [t, ...]}, keyed
+        # through the same `canon` `Game.__init__` uses, so the cross-stream
+        # join these columns depend on (GH #303) is the one under test rather
+        # than a stub that has already been handed matching keys.
+        g.deaths = collections.defaultdict(list)
+        for nm, ts in sorted((deaths or {}).items()):
+            g.deaths[canon(nm)].extend(ts)
+        for k in g.deaths:
+            g.deaths[k].sort()
+        # default "cover": the log outlives every ladder rung, so an absent
+        # DEATH row means OBSERVED survival rather than a stopped recording.
+        g.ev_horizon = (max(OUTCOME_WINDOWS) + 1.0 if ev_horizon == "cover"
+                        else ev_horizon)
         return scan_game(g)[0]
 
     ok("enemy inside reach makes the frame ready", build(100.0, 800.0)["ready"])
@@ -710,8 +1061,171 @@ def selfcheck():
     ok("the headline window is one of the printed ladder rungs",
        OUTCOME_HEADLINE_S in OUTCOME_WINDOWS)
 
+    # --- the SECOND witness: the same column read off DEATH events ------------
+    EHL = "netev_0.0_%s" % OUTCOME_HEADLINE_S
+    DHL = "dis_0.0_%s" % OUTCOME_HEADLINE_S
+    ev_dead = build(50.0, 800.0, deaths={"npc_dota_hero_lina": [2.0]})
+    ok("ev: a DEATH event inside the window is NOT netev", not ev_dead[EHL])
+    ok("ev: no DEATH event while the log runs IS netev", build(50.0, 800.0)[EHL])
+    ok("ev: a DEATH exactly at t0 is not 'after' t0",
+       build(50.0, 800.0, deaths={"npc_dota_hero_lina": [0.0]})[EHL])
+    ok("ev: a DEATH before t0 is not in the window either",
+       build(50.0, 800.0, deaths={"npc_dota_hero_lina": [-3.0]})[EHL])
+    late_ev = build(50.0, 800.0, deaths={"npc_dota_hero_lina": [7.0]})
+    ok("ev: a DEATH at +7s is netev at 5s but not at 10s",
+       late_ev[EHL] and not late_ev["netev_0.0_10.0"])
+    ok("ev: another hero's DEATH is not this victim's",
+       build(50.0, 800.0, deaths={"npc_dota_hero_axe": [2.0]})[EHL])
+    ok("ev: netev is never counted where cell (3) is empty, at any tier",
+       all(not build(400.0, 800.0)["netev_%s_%s" % (a, w)]
+           for a in AMP_TIERS for w in OUTCOME_WINDOWS))
+
+    # THE JOIN THIS COLUMN LIVES OR DIES ON (GH #303).  Snapshots spell the
+    # hero `vengeful_spirit` (dumper's snakeFromClass) while the combat log
+    # spells it `vengefulspirit`; a join that keeps underscores misses every
+    # such hero, the death goes invisible, and the frame is reported as a
+    # SURVIVAL -- silently, and in the direction that inflates this column.
+    # The guard is `canon` itself (it removes underscores), so that is what is
+    # pinned here rather than a wrapper around it.
+    ok("the join key this file imports is underscore-insensitive (GH #303)",
+       canon("npc_dota_hero_vengefulspirit")
+       == canon("npc_dota_hero_vengeful_spirit")
+       and canon("npc_dota_hero_queenofpain") == canon("npc_dota_hero_queen_of_pain")
+       and canon("npc_dota_hero_antimage") == canon("npc_dota_hero_anti_mage"))
+    ok("...and it still separates two genuinely different heroes",
+       canon("npc_dota_hero_lion") != canon("npc_dota_hero_luna"))
+    vs_dead = build(50.0, 800.0, enemy_name="vengeful_spirit",
+                    deaths={"npc_dota_hero_vengefulspirit": [2.0]})
+    ok("ev: the log's `vengefulspirit` joins the snapshot's `vengeful_spirit`",
+       not vs_dead[EHL])
+    ok("ev: that hero still reaches cell (3) at all", vs_dead["kill_mr25_0.0"])
+    qop_dead = build(50.0, 800.0, enemy_name="queen_of_pain",
+                     deaths={"npc_dota_hero_queenofpain": [2.0]})
+    ok("ev: the same join holds for `queenofpain`", not qop_dead[EHL])
+
+    # THE ANY QUANTIFIER, which is what makes this file's frame different from
+    # `wkqdmg_domain`'s one-cast-one-target row.
+    any_row = build(50.0, 800.0, second=("axe", 50.0, None),
+                    deaths={"npc_dota_hero_lina": [2.0]})
+    ok("ev: one victim dying while another lives keeps the frame netev",
+       any_row[EHL])
+    both = build(50.0, 800.0, second=("axe", 50.0, None),
+                 deaths={"npc_dota_hero_lina": [2.0], "npc_dota_hero_axe": [3.0]})
+    ok("ev: both victims dead in the window clears netev", not both[EHL])
+
+    # THE DIRECTION THAT IS UNSAFE FOR THIS STREAM'S NEGATIVE FINDING: an
+    # illusion's death is logged under the hero's own name, so the event column
+    # can report a death for a victim whose own health bar shows survival --
+    # `netev` BELOW the upper bound `net` is defined to be.  Registered, not
+    # repaired: the combat log carries no entity index to repair it with.
+    ill = build(50.0, 800.0, enemy_future=[(1.0, 90.0), (6.0, 600.0)],
+                deaths={"npc_dota_hero_lina": [2.0]})
+    ok("ev: a logged death against a surviving health bar makes netev < net",
+       ill[HL] and not ill[EHL] and ill[DHL])
+
+    # COVERAGE IS ITS OWN COUNT AND IS NEVER FOLDED IN.
+    ok("ev: coverage is true when the log outlives the window",
+       build(50.0, 800.0)["evcov_5.0"])
+    ok("ev: coverage is false when the log stopped inside the window",
+       not build(50.0, 800.0, ev_horizon=3.0)["evcov_5.0"])
+    ok("ev: a log that stopped at the far edge still counts as covered",
+       build(50.0, 800.0, ev_horizon=5.0)["evcov_5.0"])
+    stopped = build(50.0, 800.0, ev_horizon=None)
+    ok("ev: no events at all is NOT coverage", not stopped["evcov_5.0"])
+    ok("ev: but the frame is still netev -- coverage is reported, not folded",
+       stopped[EHL])
+    ok("ev: coverage is read per rung, not once",
+       build(50.0, 800.0, ev_horizon=3.0)["evcov_2.0"]
+       and not build(50.0, 800.0, ev_horizon=3.0)["evcov_10.0"])
+
+    # THE TWO COLUMNS ARE NEVER RECONCILED.
+    agree = build(50.0, 800.0, enemy_future=[(2.0, 0.0)],
+                  deaths={"npc_dota_hero_lina": [2.0]})
+    ok("ev: agreement is reported as no disagreement", not agree[DHL])
+    # The hp column must not consult the event stream AT ALL -- checked in the
+    # direction where a leak would show: same hp samples (a survivor), events
+    # swung from silent to a death.  `net` has to stay True across that swing
+    # while `netev` flips, which no single-column reading could produce.
+    quiet = build(50.0, 800.0, enemy_future=[(1.0, 90.0), (6.0, 600.0)])
+    ok("ev: the health-bar column is untouched by any DEATH event",
+       quiet[HL] and ill[HL] and quiet[EHL] and not ill[EHL])
+
+    # --- (3c) stale victims: a corpse the health bar had not caught up with ---
+    SHL = "stale_0.0_%s" % STALE_HEADLINE_S
+    stale = build(50.0, 800.0, enemy_future=[(1.0, 0.0), (2.0, 0.0)],
+                  deaths={"npc_dota_hero_lina": [-0.1]})
+    ok("stale: a DEATH just before the frame + a confirming sample is stale",
+       stale[SHL])
+    ok("stale: that frame is still counted in cell (3) (the point of the count)",
+       stale["kill_mr25_0.0"])
+    ok("stale: a DEATH just AFTER the frame is the ordinary outcome case",
+       not build(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+                 deaths={"npc_dota_hero_lina": [0.5]})[SHL])
+    ok("stale: a DEATH before the frame with NO confirming sample is not stale "
+       "(Turbo respawn is fast; the log alone cannot say)",
+       not build(50.0, 800.0, enemy_future=[(1.0, 300.0), (2.0, 400.0)],
+                 deaths={"npc_dota_hero_lina": [-0.1]})[SHL])
+    ok("stale: a confirming sample with NO prior DEATH is not stale either",
+       not build(50.0, 800.0, enemy_future=[(1.0, 0.0)])[SHL])
+    ok("stale: no further samples at all is NOT stale (lower bound)",
+       not build(50.0, 800.0, deaths={"npc_dota_hero_lina": [-0.1]})[SHL])
+    ok("stale: a DEATH older than the window is out at 1s and in at 2s",
+       not build(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+                 deaths={"npc_dota_hero_lina": [-1.5]})["stale_0.0_1.0"]
+       and build(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+                 deaths={"npc_dota_hero_lina": [-1.5]})["stale_0.0_2.0"])
+    ok("stale: a DEATH exactly at the frame instant counts (the log won the tie)",
+       build(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+             deaths={"npc_dota_hero_lina": [0.0]})[SHL])
+    ok("stale: another hero's DEATH does not make this victim stale",
+       not build(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+                 deaths={"npc_dota_hero_axe": [-0.1]})[SHL])
+    ok("stale: it uses the same cross-stream join as the second witness",
+       build(50.0, 800.0, enemy_name="vengeful_spirit",
+             enemy_future=[(1.0, 0.0)],
+             deaths={"npc_dota_hero_vengefulspirit": [-0.1]})[SHL])
+    ok("stale: nothing is stale where cell (3) is empty",
+       not build(400.0, 800.0, enemy_future=[(1.0, 0.0)],
+                 deaths={"npc_dota_hero_lina": [-0.1]})[SHL])
+    ok("stale: the headline window is one of the printed rungs",
+       STALE_HEADLINE_S in STALE_WINDOWS)
+
     class _G(object):
         pass
+    g = _G()
+    g.deaths = {"lina": [1.0, 4.0]}
+    g.ev_horizon = 9.0
+    EV = [{"t": 5.0, "type": "DEATH", "target": "npc_dota_hero_luna",
+           "target_hero": True},
+          {"t": 6.0, "type": "DEATH", "target": "npc_dota_creep_badguys_melee",
+           "target_hero": False},
+          {"t": 7.0, "type": "DEATH", "target": "npc_dota_hero_lion",
+           "target_hero": False},
+          {"t": 8.0, "type": "DAMAGE", "target": "npc_dota_hero_luna",
+           "target_hero": True},
+          {"t": 2.0, "type": "DEATH", "target": "npc_dota_hero_luna",
+           "target_hero": True}]
+    di = death_index(EV)
+    ok("death_index keeps hero deaths, sorted", di["luna"] == [2.0, 5.0])
+    ok("death_index drops a non-hero death", "npc_dota_creep_badguys_melee"
+       not in di and "badguysmelee" not in di)
+    ok("death_index drops a hero-NAMED row whose target_hero flag is false "
+       "(the flag decides, not the name)", "lion" not in di)
+    ok("death_index ignores non-DEATH rows", len(di) == 1)
+
+    ok("died_ev_within reads only events AFTER t0",
+       died_ev_within(g, "lina", 0.0, 2.0))
+    ok("died_ev_within does not look back before t0",
+       not died_ev_within(g, "lina", 2.0, 1.0))
+    ok("died_ev_within on a hero the log never names is False (survived)",
+       not died_ev_within(g, "puck", 0.0, 5.0))
+    ok("death_times returns the raw events in the window only",
+       death_times(g, "lina", 0.0, 2.0) == [1.0])
+    ok("ev_covered is False once the horizon is short of the far edge",
+       ev_covered(g, 0.0, 5.0) and not ev_covered(g, 5.0, 5.0))
+    ok("EVENT_TOL_S is deliberately the health bar's own tolerance",
+       EVENT_TOL_S == SAMPLE_TOL_S)
+
     g = _G()
     g.by_hero = {"lina": [(0.0, 50.0), (1.0, 0.0), (2.0, 400.0)]}
     ok("dies_within reads only samples AFTER t0",
