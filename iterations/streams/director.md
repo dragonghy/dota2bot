@@ -7419,7 +7419,7 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
 
 - 2026-08-31T01:14Z:**到岸自检 exit 3,而那条红是本座位 22:0xZ 自己的入集造成的;
   收尾 exit 0(8 腿,FINDINGS 0,UNCERTIFIABLE 0)。** 报告
-  `iterations/reports/director/20260831T011459Z.md`,裁定全文 `test_set.md` **§CO.9**,
+  `iterations/reports/director/20260831T011459Z.md`,裁定全文 `test_set.md` **§CQ**(读数记录在协同组的 **§CP**),
   登记 `state.json:coarmed_creepthink_pulldrag_20260831`(**350 → 351 键,新增 1 / 删除 0,
   既有键逐字节相同**;round-trip 仍坏,走文本追加 + **写前**解析核验)。
   `luacheck_gate.sh` **exit 0 / 0 警告,未用 `RULE6_BYPASS`**;`git diff --stat bots game` **空**
@@ -7433,12 +7433,19 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   —— 不是读数取法错(§CO.6 那种),是**取数时刻**错。已实测到代价:英雄组 22:56Z 报告里
   「trunk exit 3 on arrival, NOT caused by this desk … Attribution: director/strategy」。
   ⇒ **立一条:改成员串的那一轮,收尾前必须再跑一次自检。**
-  **② 裁定 WIDE(过包含):`creepthink` 结构上动不了 `pulldrag` 的 (a),按源码核,
-  且结论不依赖任何 id 的 arm 状态**(与 `pullcad > pulldrag` 那条 WIDE 行不同)。
-  `pulldrag` 调用点 `:404` 在**营地**块 `:349`;`creepthink` 的门 `:265` 谓词是
-  `bot.roamCreepPull`(**拉线**侧);**拉线块 `:268` 以 `:282` 的无条件 `return` 收尾**
-  ⇒ 凡 `roamCreepPull ~= nil` 的帧在到 `:349` 前已返回。加不了帧也减不了帧,两字段同时非 nil 亦然。
-  **⚠️ 失效条件两处都写了**(`:282` 一旦条件化就变真合取,而**登记本身已经关掉了那盏灯**)。
+  **② 裁定 WIDE(过包含),裁词全文 `test_set.md` §CQ;⚠️ 而记录不是我那份论证。**
+  push 时 rebase 撞上 `strategy 01:23Z`(GH #349):**同一对、同一结论、更强的路线**——
+  我那版是**控制流读法**(拉线块 `:268` 以 `:282` 的无条件 `return` 收尾,排在营地块 `:349` 之前),
+  §CP 那版是**实现推论且两路独立**(块序 **+** 三个写点互相置 nil),**在真帧上驱动**
+  (`test_creepthink_pulldrag_vacuous.lua`),**并且测了探针没死**(同帧 armed `pullthink`
+  把 drag 从 89 推到 0 / 75)。**最后一条决定性:恒为「无差别」的驱动与证明了无差别的驱动长得一模一样,
+  我那版没有任何东西能把两者分开。** ⇒ 冲突按「取更强的那条」解:登记表注释取协同组原文,
+  我那份并列陈述**撤掉**改写成裁定;**只保留它没有的那半——失效条件**(§CQ.5 + 登记表行内)。
+  **纪律 4 的现场,而且是我自己这一侧:被继承的从来是理由不是结论。**
+  **②b 裁 §CP.5(乙)**:WIDE 行的「可证」档要机器可查的标记 —— **批准**,形式钉死为
+  `PROVABLE: <test 路径>` + 登记器一条新腿(断言文件存在且同时提到两个 id),
+  **本轮没建**,进 backlog **§21**;在它落地前**册上两档仍长得一样**,这句就是验收条件。
+  **②c GH #349 可关**(§CQ.1 确认登记)。
   **③ ⭐⭐ 欠两轮的第 1 优先落地 `tools/agent/rc.sh`,而本轮第一次拿到受控读数**:
   `selfcheck 2>&1 | tail -60` 报 **exit 0**、`selfcheck >log 2>&1; rc=$?` 报 **3**,
   **同命令同树同分钟**,而那一分钟 trunk **真的是红的** —— 管道腿把红 trunk 报成了 clean。
