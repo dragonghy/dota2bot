@@ -53,7 +53,15 @@
     "obsidian_destroyer",
     "skeleton_king",
     "spirit_breaker"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "create": "2026-08-31T00:16:45Z",
+   "update": "2026-08-31T01:12:22Z",
+   "machine_hours": 0.9269,
+   "ab": 36,
+   "ba": 16,
+   "arm_depth": 22.15,
+   "scored_games": 52
   },
   {
    "seed": 2214,
@@ -72,7 +80,15 @@
     "skeleton_king",
     "spirit_breaker",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "create": "2026-08-31T00:16:49Z",
+   "update": "2026-08-31T00:59:18Z",
+   "machine_hours": 0.7081,
+   "ab": 27,
+   "ba": 15,
+   "arm_depth": 19.29,
+   "scored_games": 42
   },
   {
    "seed": 2286,
@@ -100,7 +116,12 @@
    "reclaimed": true,
    "wall_clock_min": 5.65,
    "reclaim_note": "RECLAIMED 5.65 min after the SIR was created (00:16:54Z -> 00:22:33Z; the instance state transition reads 00:24:37Z), i.e. FAR before the 40.0 min changeover point, so this machine is an orphan by construction: its S3 prefix holds exactly one object, soak_farm.log, and ZERO games. Registered first-hand this round because the SIR expires within hours. Per the owner-registered disposal (OWNER_PRIORITIES, 2026-08-26 GH #158): one machine reclaimed = that SEED loses an arm, that seed pair is void, the WAVE is not. A replacement was launched for the same seed in the same round -- see the machine below with replacement_for=this instance.",
-   "games_landed": 0
+   "games_landed": 0,
+   "machine_hours": 0.0942,
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "harvest_note": "Reclaimed orphan. Its S3 prefix (9666cf) held exactly one object, soak_farm.log, and ZERO analysis.json files -- confirmed at harvest by downloading the prefix, which yielded 0 files. It WAS passed to recover_verdict.py alongside the real prefixes rather than silently dropped; the tool reported source_dirs=4, i.e. it counted the four prefixes that actually held games and this empty one contributed nothing. Leg counts written as bare zeros, not omitted, so reclaim_blind.py can read them."
   },
   {
    "seed": 2315,
@@ -119,14 +140,22 @@
     "lion",
     "skeleton_king",
     "zuus"
-   ]
+   ],
+   "status_code": "instance-terminated-by-user",
+   "create": "2026-08-31T00:17:20Z",
+   "update": "2026-08-31T01:12:22Z",
+   "machine_hours": 0.9172,
+   "ab": 41,
+   "ba": 15,
+   "arm_depth": 21.96,
+   "scored_games": 56
   },
   {
    "seed": 2286,
    "replacement_for": "i-0bd785794d2c2e188",
    "az": "us-west-2a",
    "instance": "i-0196162092b80eddb",
-   "sir": "(recorded at harvest)",
+   "sir": "sir-xhgfk3zq",
    "run_token": "4ecca6",
    "run_id": "spot_20260831_002920_1_0d58ce09c65d3bdc34d1573c90e24bff2adf96a6_4ecca6",
    "launched": "2026-08-31T00:29:20Z",
@@ -140,7 +169,15 @@
     "spirit_breaker"
    ],
    "market": "spot -- ladder still at level 1; NO c6a fallback and NO --on-demand were used for the replacement either.",
-   "note": "Launched 00:29:20Z, so this arm finishes roughly 13 min behind the other three; still well inside the same 2h watchdog. AT HARVEST: seed 2286 has TWO run prefixes, 9666cf (reclaimed, 0 games) and 4ecca6 (the real one). recover_verdict.py pools per seed across source dirs, so pass both -- the empty one contributes nothing but its presence should be stated rather than silently dropped."
+   "note": "Launched 00:29:20Z, so this arm finishes roughly 13 min behind the other three; still well inside the same 2h watchdog. AT HARVEST: seed 2286 has TWO run prefixes, 9666cf (reclaimed, 0 games) and 4ecca6 (the real one). recover_verdict.py pools per seed across source dirs, so pass both -- the empty one contributes nothing but its presence should be stated rather than silently dropped.",
+   "status_code": "instance-terminated-by-user",
+   "create": "2026-08-31T00:29:22Z",
+   "update": "2026-08-31T01:24:33Z",
+   "machine_hours": 0.9197,
+   "ab": 37,
+   "ba": 20,
+   "arm_depth": 25.96,
+   "scored_games": 57
   }
  ],
  "placement": {
@@ -173,5 +210,78 @@
   "why_it_did_not_stop_the_wave": "The finding is about PER-ID attribution, not about code correctness: `creepthink`'s helper is read inside `pulldrag`'s gated body, so both move on the same leg and any per-id (a) trigger count for pulldrag now measures `pulldrag AND creepthink`. This wave measures the full-set aggregate (condition (b)), which that conjunction does not disturb. It is registered here so that nobody reads a per-id (a) figure off this wave's corpus without the caveat. The remedy the detector itself names -- read the two call sites and write the caveat into test_set.md's admission section -- is director/strategy work, and the detector explicitly says not to add the pair just to make it green.",
   "python_leg": "62 passed, 0 failed, 1 UNCERTIFIABLE (tests/test_selfcheck_lua_leg.py did not run). Not a pass and not a failure."
  },
- "reclaim_during_launch_round": "ONE machine reclaimed inside the launch round itself, which is a first for this desk: seed 2286 (us-west-2c, sir-pjkzj29n) was taken by instance-terminated-no-capacity 5.65 min after its SIR was created, before it had finished a single game. The wave was NOT voided (owner-registered disposal); a replacement for the same seed was launched at 00:29:20Z into us-west-2a and is running spot. Marginal cost of the loss is ~$0.03 of machine time; the replacement is budgeted at a quarter-wave, ~$0.23, which keeps the fence at $74.865 <= $80. NOTE FOR THE DIRECTOR: three of the four AZs in this region refused or dropped c6i.4xlarge spot within a 13-minute window tonight (2a and 2d refused at 00:16Z, 2c reclaimed at 00:22Z, 2a then accepted at 00:29Z). The market-type ladder was never climbed -- every machine in this wave, replacement included, is c6i.4xlarge spot."
+ "reclaim_during_launch_round": "ONE machine reclaimed inside the launch round itself, which is a first for this desk: seed 2286 (us-west-2c, sir-pjkzj29n) was taken by instance-terminated-no-capacity 5.65 min after its SIR was created, before it had finished a single game. The wave was NOT voided (owner-registered disposal); a replacement for the same seed was launched at 00:29:20Z into us-west-2a and is running spot. Marginal cost of the loss is ~$0.03 of machine time; the replacement is budgeted at a quarter-wave, ~$0.23, which keeps the fence at $74.865 <= $80. NOTE FOR THE DIRECTOR: three of the four AZs in this region refused or dropped c6i.4xlarge spot within a 13-minute window tonight (2a and 2d refused at 00:16Z, 2c reclaimed at 00:22Z, 2a then accepted at 00:29Z). The market-type ladder was never climbed -- every machine in this wave, replacement included, is c6i.4xlarge spot.",
+ "harvest": {
+  "harvested_at": "2026-08-31T03:2xZ",
+  "method": "tools/batch_test/soak/recover_verdict.py over ./w30pool with FIVE per-run subdirectories (89e581 / 6eb30e / 9666cf / 69e067 / 4ecca6), one directory per run token so nothing is keyed by basename. BARE_EXIT=0, empty stderr. No --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth override: there is no 'SKIP, not pass' line to quote from this harvest.",
+  "corpus": {
+   "files_seen": 231,
+   "games_loaded": 231,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0,
+   "scored_games": 207,
+   "unfinished_games": 0
+  },
+  "depth_gate": {
+   "min_arm_depth": 8,
+   "thin_arm_seeds": [],
+   "excluded": "none",
+   "note": "All four paired seeds cleared the GH #269 gate with room: arm_depth 19.29 / 25.96 / 21.96 / 22.15, the thinnest almost 2.4x the threshold of 8. Zero seeds excluded, so `mean` and `comps_better` have a denominator of 4."
+  },
+  "mean": {
+   "gpm": 18.34,
+   "xpm": 11.14,
+   "deaths": -0.19,
+   "last_hits": 0.19,
+   "winrate": 0.5
+  },
+  "comps_better": {
+   "gpm": "3/4",
+   "xpm": "3/4",
+   "deaths": "4/4",
+   "last_hits": "3/4",
+   "winrate": "0/4"
+  },
+  "strata": {
+   "gpm": {
+    "ab": 17.35,
+    "ba": 19.34,
+    "side": -1.0,
+    "sign_flip": false,
+    "side_gt_arm": "3/4"
+   },
+   "xpm": {
+    "ab": 10.82,
+    "ba": 11.46,
+    "side": -0.32,
+    "sign_flip": false,
+    "side_gt_arm": "4/4"
+   },
+   "deaths": {
+    "ab": -0.46,
+    "ba": 0.08,
+    "side": -0.27,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "last_hits": {
+    "ab": -7.75,
+    "ba": 8.13,
+    "side": -7.94,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   }
+  },
+  "suggested": "promote",
+  "cost_settled": {
+   "machine_hours_total": 3.5661,
+   "method": "SIR create->update on all five SIRs, read first-hand this round while they were still readable (all five now `closed`). No S3 last-upload proxy and no +2.82 min offset were needed, and none was applied to the reclaimed machine.",
+   "spot_band_usd_per_h": "0.231-0.250",
+   "measured_wave_cost_usd": "0.824-0.892",
+   "director_constant_usd": 0.9,
+   "auto_invalidation": "NOT TRIGGERED. The measured cost of this ENTIRE round -- four productive machines plus the reclaimed orphan plus the replacement -- tops out at $0.892 at the high end of the spot band, which is <= the director's $0.90 constant (ae767765). Per the constant's own auto-invalidation clause the desk must name any wave whose billing-side cost EXCEEDS $0.90; this wave does not, so the constant stands and no re-ruling is owed. Worth recording that it held even while absorbing a reclaim and a replacement, which the fence had separately budgeted at $0.23."
+  },
+  "leak_check": "ZERO. describe-instances over running/pending/stopping/shutting-down returned EMPTY at 03:1xZ, and all five spot-instance-requests read `closed`. Four terminated-by-user (the watchdog/self-terminate path) and one terminated-no-capacity (the 00:22Z reclaim). Standing cost remains the single AMI."
+ }
 }
