@@ -7721,5 +7721,10 @@
     (3) `idletrip_domain.py` 在最新波上照常打四格(不核 gate,跨串可跑,两波不可并池)。
     (4) `stayfield2_whynot.py` 等下一个 **44-id** 波。
     (5) `pullcad_beat.py` 在 W25 剩两 run 上仍欠。
-  - **已发表**:见报告 §10(先 push 后发,GH #290)。
+  - **已发表**(先 push 后发,GH #290;`9ed14f35` 落 `origin/main` 之后才发,
+    `claim_precheck.sh` **exit 0 / clean / 本地领先 origin/main 0 个 commit**;
+    **MCP 未触发 `requires approval`**):**GH #359 `[hero]` 新开**(`lionqdmg` 条件 (a)
+    全文裁定)。⛔ **没有为「开工自检超预算」另开 issue** —— 批测台 06:30Z 已开
+    **GH #358** 并给了根因(78.4 秒来自两个文件),本轮 §6.2 的干净树复跑只是
+    同一件事的第三次独立确认,**按铁律 7 节制不重开也不追评**。
   - 完整报告:`iterations/reports/replay-check/20260831T065500Z.md`
