@@ -130,8 +130,17 @@ else:
 # ---------------------------------------------------------------------------
 # 3. the gate raises its exit code, and its un-run banner is not its pass line
 # ---------------------------------------------------------------------------
-check("exit 3" in gate_code, "3a: the warnings path exits 3")
-check("exit 2" in gate_code, "3b: the could-not-run path exits 2")
+# Both spellings are accepted because the gate now leaves through `verdict N`
+# (GH #372), which prints the machine-readable line and then `exit "$1"`.  What
+# must not weaken is the claim itself, so the exit is ALSO asserted end to end
+# below (4b, 4d) -- a source-text claim about an exit code is the weaker half,
+# and this is where the indirection would hide.
+check(re.search(r"^\s*(exit|verdict) 3\b", gate_code, re.M) is not None,
+      "3a: the warnings path exits 3")
+check(re.search(r"^\s*(exit|verdict) 2\b", gate_code, re.M) is not None,
+      "3b: the could-not-run path exits 2")
+check("exit 3" in gate_code or re.search(r'^\s*exit "\$1"', gate_code, re.M) is not None,
+      "3a2: and whatever it leaves through really does exit with that code")
 # Read the CODE, not the header: the header explains the banner, so anchoring
 # on the first occurrence anywhere anchors on the prose about it.
 check("UNCERTIFIABLE" in gate_code, "3c: the could-not-run path says UNCERTIFIABLE")
@@ -178,6 +187,10 @@ try:
           "return what a clean run returns." % g.returncode)
     check("UNCERTIFIABLE" in gout, "4b2: and prints the banner (got %r)" % gout[:200])
     check("0 warnings" not in gout, "4b3: and never emits the pass line")
+    check(g.stdout.strip().splitlines()[-1:] == ["GATE_EXIT=2  UNCERTIFIABLE "
+                                                 "(the gate did NOT run; this is NOT a pass)"],
+          "4b4: and its LAST stdout line is the verdict (got %r)"
+          % g.stdout.strip().splitlines()[-1:])
 finally:
     shutil.rmtree(empty, ignore_errors=True)
 
@@ -213,6 +226,77 @@ else:
         check(d.returncode == 3, "4d: a warning exits 3 (got %d)" % d.returncode)
         check("LUACHECK RED" in dout, "4d2: and says LUACHECK RED")
         check("bad.lua" in dout, "4d3: and names the file (got %r)" % dout[:300])
+
+        # -------------------------------------------------------------------
+        # 5. the verdict line SURVIVES A PIPE (GH #372, charter backlog 22
+        #    residual).  Claim 3 above says the gate raises its exit code; this
+        #    one says the answer still arrives when the caller throws that exit
+        #    code away.  `bash tools/agent/luacheck_gate.sh 2>&1 | tail -N` is
+        #    the measured habit -- discipline 3, seven recurrences -- and `tail`
+        #    exits 0 over a RED gate.
+        #
+        #    Asserted through a REAL pipe, not by reading the source.  The whole
+        #    property is about what a pipe does to the reading, so a stand that
+        #    does not build one is asserting the wrong thing (and, per the file
+        #    header, prose-shaped claims are how this repo already lost a door).
+        # -------------------------------------------------------------------
+        check(c.stdout.strip().splitlines()[-1] ==
+              "GATE_EXIT=0  CLEAN (iron rule 6 static half passed)",
+              "5a: the clean path's LAST stdout line is the verdict (got %r)"
+              % c.stdout.strip().splitlines()[-1:])
+        check(d.stdout.strip().splitlines()[-1] ==
+              "GATE_EXIT=3  RED (warnings above; iron rule 6 static half FAILED)",
+              "5b: the red path's LAST stdout line is the verdict (got %r)"
+              % d.stdout.strip().splitlines()[-1:])
+
+        # 5c: the defect verbatim.  `tail -1` returns 0 over a RED gate, so the
+        # exit code is worthless here BY CONSTRUCTION -- the surviving line is
+        # the only channel left, and it must carry the red.
+        piped = subprocess.run(
+            [BASH, "-c", '%s %s %s 2>&1 | tail -1'
+             % (BASH, GATE, dirty_dir)],
+            cwd=REPO, timeout=180, capture_output=True, text=True)
+        check(piped.returncode == 0,
+              "5c0: (premise) tail's exit code is 0 even over a RED gate -- if "
+              "this ever fails the pipe hazard has changed shape (got %d)"
+              % piped.returncode)
+        check(piped.stdout.strip() ==
+              "GATE_EXIT=3  RED (warnings above; iron rule 6 static half FAILED)",
+              "5c: through `2>&1 | tail -1` the one surviving line says RED "
+              "(got %r)" % piped.stdout.strip()[:200])
+
+        # 5d: and without `2>&1` too -- stderr then bypasses the pipe, so a
+        # verdict written to stderr would vanish for this reader.  That is why
+        # the verdict goes to stdout.
+        piped2 = subprocess.run(
+            [BASH, "-c", '%s %s %s | tail -1' % (BASH, GATE, dirty_dir)],
+            cwd=REPO, timeout=180, capture_output=True, text=True)
+        check(piped2.stdout.strip() ==
+              "GATE_EXIT=3  RED (warnings above; iron rule 6 static half FAILED)",
+              "5d: and through a bare `| tail -1` as well (got %r)"
+              % piped2.stdout.strip()[:200])
+
+        # 5e: THE REASON THIS IS A VERDICT LINE AND NOT §22'S REFUSAL.
+        # tools/agent/routine_selfcheck.sh REFUSES when /dev/stdout is a FIFO.
+        # Measured 2026-08-31: git runs pre-push hooks with stdout as a FIFO,
+        # and .githooks/pre-push calls this gate bare and maps every non-zero to
+        # PUSH REFUSED.  Porting that refusal here would refuse every push in
+        # the repo.  So: a pipe must NOT change this gate's exit code.
+        piped3 = subprocess.run(
+            [BASH, "-c", '%s %s %s > /dev/null 2>&1' % (BASH, GATE, clean_dir)],
+            cwd=REPO, timeout=180, capture_output=True, text=True)
+        check(piped3.returncode == 0,
+              "5e0: (control) a redirect leaves the clean gate at 0 (got %d)"
+              % piped3.returncode)
+        fifo = subprocess.run(
+            [BASH, "-c", 'set -o pipefail; %s %s %s | cat > /dev/null'
+             % (BASH, GATE, clean_dir)],
+            cwd=REPO, timeout=180, capture_output=True, text=True)
+        check(fifo.returncode == 0,
+              "5e: a FIFO stdout must NOT make the clean gate non-zero -- that "
+              "is the pre-push hook's shape, and a refusal there blocks every "
+              "push in the repo (got %d: %r)"
+              % (fifo.returncode, (fifo.stdout + fifo.stderr)[:200]))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

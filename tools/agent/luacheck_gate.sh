@@ -23,6 +23,52 @@
 set -u
 cd "$(dirname "$0")/../.."
 
+# --- pipe hazard: a VERDICT LINE, deliberately NOT §22's refusal -------------
+# [director 20260831T21:xxZ, charter backlog 22 residual, GH #372]
+#
+# Same defect as §22 (evidence discipline 3: `cmd | tail` reports the READER's
+# exit code, not this script's), same reader, one slot later:
+#
+#     bash tools/agent/luacheck_gate.sh 2>&1 | tail -5      -> harness says 0
+#
+# routine_selfcheck.sh answers that shape by REFUSING when /dev/stdout is a
+# FIFO.  Four director rounds carried "port the guard here" and four
+# deliberately did not.  Measured 2026-08-31, that caution was right and the
+# port would have been an outage:
+#
+#     git runs pre-push hooks with stdout as a FIFO  (probed: pipe:[...])
+#
+# and .githooks/pre-push calls this file bare, mapping any non-zero to PUSH
+# REFUSED.  A verbatim port therefore refuses EVERY push in the repo, for every
+# stream, in every container -- turning rule 6's gate into rule 6's blockade,
+# reachable only by the RULE6_BYPASS escape hatch that exists to record a
+# SKIPPED gate.  The two legitimate pipe readers §22 could truthfully call
+# "ZERO call sites" are non-zero here: the hook, plus two python acceptance
+# files that run this gate under capture_output.
+#
+# So the site's shape forbids the refusal form, and the fix is the additive one:
+# ALWAYS end on a machine-readable verdict, on stdout, written LAST.
+#   * `| tail -1`      -> the verdict is the surviving line.
+#   * `2>&1 | tail -1` -> still the verdict: it is written after everything.
+#   * the hook, the tests, `> file`, bare -> one extra line, exit code untouched.
+# Unconditional on purpose: a line that only appears when something looks wrong
+# is a fourth reminder (what §22 retired), and one that fired on every push
+# would train its own readers to skip it.  This one carries the answer rather
+# than a warning about the question.
+#
+# WHAT IT DOES NOT BUY, stated rather than implied: a reader who pipes and looks
+# at neither the exit code nor the last line still learns nothing.  This makes
+# the truth SURVIVE the pipe; it cannot make anyone read it.  §22's refusal is
+# still the stronger form and stays where its call sites allow it.
+verdict() {
+    case "$1" in
+        0) printf 'GATE_EXIT=0  CLEAN (iron rule 6 static half passed)\n' ;;
+        3) printf 'GATE_EXIT=3  RED (warnings above; iron rule 6 static half FAILED)\n' ;;
+        *) printf 'GATE_EXIT=%s  UNCERTIFIABLE (the gate did NOT run; this is NOT a pass)\n' "$1" ;;
+    esac
+    exit "$1"
+}
+
 targets=("$@")
 [ "${#targets[@]}" -gt 0 ] || targets=(bots game)
 
@@ -37,7 +83,7 @@ if ! ensure_lua_tool luacheck; then
     printf '  Iron rule 6 static half is UNCHECKED. This line is NOT a pass.\n'
     printf '  Buy it with: apt-get install -y lua-check   (measured 5.5s, 2026-08-26; the\n'
     printf '  package is lua-check, NOT luacheck -- see tools/agent/ensure_lua_toolchain.sh)\n'
-    exit 2
+    verdict 2
 fi
 
 out=$(luacheck "${targets[@]}" --formatter plain 2>&1)
@@ -46,8 +92,8 @@ if [ "$rc" -ne 0 ]; then
     printf '%s\n' "$out" | head -40
     printf 'LUACHECK RED -- iron rule 6 requires 0 warnings on the WORKING TREE.\n'
     printf '  Whether main is red too is NOT established by this line: re-run after `git stash`.\n'
-    exit 3
+    verdict 3
 fi
 
 printf 'luacheck %s: 0 warnings\n' "${targets[*]}"
-exit 0
+verdict 0
