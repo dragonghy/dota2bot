@@ -52,7 +52,13 @@
         "lion",
         "skeleton_king",
         "zuus"
-      ]
+      ],
+      "ab": 37,
+      "ba": 17,
+      "arm_depth": 23.3,
+      "survival_min": 52.68,
+      "survival_bound": "lower",
+      "status_code_note": "ABSENT ON PURPOSE. This was an ON-DEMAND wave: there is no spot-instance-request, so there is no SIR Status.Code to read, and describe-instances had already aged all four out by the harvesting round (~2h after the wave). Writing one of reclaim_blind.py's two SIR codes here would be putting a guess into a field named for a measurement -- the exact substitution GH #332 was opened about. It is left absent, and reclaim_blind.py therefore exits 2 (Undecidable) on this wave; see the 2026-09-01T03:xxZ report."
     },
     {
       "seed": 2624,
@@ -70,7 +76,13 @@
         "obsidian_destroyer",
         "skeleton_king",
         "zuus"
-      ]
+      ],
+      "ab": 42,
+      "ba": 16,
+      "arm_depth": 23.17,
+      "survival_min": 52.8,
+      "survival_bound": "lower",
+      "status_code_note": "ABSENT ON PURPOSE. This was an ON-DEMAND wave: there is no spot-instance-request, so there is no SIR Status.Code to read, and describe-instances had already aged all four out by the harvesting round (~2h after the wave). Writing one of reclaim_blind.py's two SIR codes here would be putting a guess into a field named for a measurement -- the exact substitution GH #332 was opened about. It is left absent, and reclaim_blind.py therefore exits 2 (Undecidable) on this wave; see the 2026-09-01T03:xxZ report."
     },
     {
       "seed": 2737,
@@ -89,7 +101,13 @@
         "obsidian_destroyer",
         "spirit_breaker",
         "zuus"
-      ]
+      ],
+      "ab": 36,
+      "ba": 17,
+      "arm_depth": 23.09,
+      "survival_min": 52.62,
+      "survival_bound": "lower",
+      "status_code_note": "ABSENT ON PURPOSE. This was an ON-DEMAND wave: there is no spot-instance-request, so there is no SIR Status.Code to read, and describe-instances had already aged all four out by the harvesting round (~2h after the wave). Writing one of reclaim_blind.py's two SIR codes here would be putting a guess into a field named for a measurement -- the exact substitution GH #332 was opened about. It is left absent, and reclaim_blind.py therefore exits 2 (Undecidable) on this wave; see the 2026-09-01T03:xxZ report."
     },
     {
       "seed": 2970,
@@ -108,7 +126,13 @@
         "obsidian_destroyer",
         "skeleton_king",
         "spirit_breaker"
-      ]
+      ],
+      "ab": 30,
+      "ba": 12,
+      "arm_depth": 17.14,
+      "survival_min": 39.9,
+      "survival_bound": "lower",
+      "status_code_note": "ABSENT ON PURPOSE. This was an ON-DEMAND wave: there is no spot-instance-request, so there is no SIR Status.Code to read, and describe-instances had already aged all four out by the harvesting round (~2h after the wave). Writing one of reclaim_blind.py's two SIR codes here would be putting a guess into a field named for a measurement -- the exact substitution GH #332 was opened about. It is left absent, and reclaim_blind.py therefore exits 2 (Undecidable) on this wave; see the 2026-09-01T03:xxZ report."
     }
   ],
   "az_spread": "4 requested / 4 granted / 4 DISTINCT (us-west-2a, 2b, 2c, 2d) on the on-demand attempt, every AZ filled on its FIRST ask with zero `re-aiming` lines. GH #252 acceptance (>=2 distinct) and GH #256 acceptance (4 distinct, zero re-aiming) BOTH satisfied. NOTE the contrast with the two spot attempts minutes earlier, where the same four requests produced one `PLACEMENT MISMATCH` (2a -> 2d), three `AZ RING EXHAUSTED`, and then a full ring walk on both types -- the AZ machinery worked correctly throughout; there was simply no spot capacity anywhere to place into.",
@@ -126,7 +150,32 @@
   "expected_games": "4 seeds x 12 games x 2 arms = 96 mirrored games nominal; recent full-set waves land 200-240 scored games because each leg drains more than its nominal 12 before the flip. W31 scored 198 of 222 loaded; W30 scored 207 of 231.",
   "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2). On-demand carries NO reclaim risk, so unlike a spot wave the only exit paths are validate-then-shutdown (expected) and the 2h watchdog (hard cap 23:31Z). Expected self-termination between 22:15Z and 22:30Z on W30/W31's ~0.75-0.92h profile.",
   "harvest": {
-    "harvested_at": null,
-    "note": "TO BE BACKFILLED by the harvesting round. Because this is an ON-DEMAND wave, the cost settlement CANNOT use the SIR create->update method used for W29-W31 (there are no spot instance requests). Use the instance LaunchTime -> termination time from describe-instances (read it EARLY, before terminated instances age out of describe-instances), and price at the us-west-2 c6i.4xlarge on-demand rate $0.673/h. The auto-invalidation clause on the $0.90 constant does NOT apply to this wave -- that constant is the SPOT single-wave price, and this wave is on-demand, whose registered constant is ~$2.15. If the settled on-demand cost exceeds $2.15, name it in the report so the director re-rules THAT constant."
+    "harvested_at": "2026-09-01T00:35Z",
+    "backfilled_at": "2026-09-01T03:2xZ",
+    "backfill_note": "BACKFILLED ONE ROUND LATE by the 03:xxZ launch round. The 00:35Z harvesting round wrote the reading into its report but never wrote it back into this file (GH #271 requires the harvesting round to do it), so this file read `harvested_at: null` with the wave fully harvested -- a dropped baton, not missing data. Numbers below are copied from iterations/reports/batch-desk/20260901T003500Z.md SS2.1 (legs/arm_depth) and SS3 (machine-hours).",
+    "files_seen": 231,
+    "games_loaded": 231,
+    "unparseable": 0,
+    "unfinished": 0,
+    "scored": 207,
+    "stamp_seed_excluded": 24,
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "mean": {
+      "gpm": 35.12,
+      "xpm": 15.66,
+      "deaths": -0.15,
+      "last_hits": -0.28
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "3/4",
+      "deaths": "3/4",
+      "last_hits": "2/4"
+    },
+    "winrate_channel": "DEGENERATE",
+    "winrate_headroom_mean": 0.0749,
+    "cost_note": "No SIR create->update path (on-demand). Settled from S3 object timestamps: 0.878+0.880+0.877+0.665 = 3.300 machine-hours at the us-west-2 c6i.4xlarge on-demand rate $0.673/h => ~$2.22-2.30, i.e. 0.825 h/machine vs the charter constant's 0.745 (+11%). The 00:35Z round handed the director a request to re-rule the ~$2.15 on-demand constant (suggested $2.30); NOT changed by this desk.",
+    "survival_note": "survival_min on each machine is the S3 first->last object bracket, which can only be TOO SMALL => survival_bound='lower' (reclaim_blind.py's BOUND_LOWER), never 'exact'."
   }
 }

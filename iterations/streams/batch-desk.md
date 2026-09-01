@@ -7497,6 +7497,102 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **本轮 token**:见报告 §10。
   详见 `iterations/reports/batch-desk/20260901T003500Z.md`。
 
+- 2026-09-01T03:15Z:**发波轮 —— W33 起飞,50-id 家族首波,四台 spot 零降级。**
+  **闸 (i) 的守卫开火了一次,本台没有绕过它:** 本 Routine 在 **03:11Z** 触发,比解锁点
+  `03:30:48Z` **早约 20 分钟**;发波块内 `date -u` 守卫 **03:17:18Z** 打
+  `GATE-I NOT UNLOCKED: 810s remaining` 并 **exit 9**。**没有**援引 08-19T06:07Z 那种
+  「只差两分钟」的目的解释,而是把余下的零成本准备全做完,**03:31:05Z**(解锁后 17 秒)重跑。
+  **发波**:seeds **2756/2790/2887/2938**,`c6i.4xlarge` **spot** ×4,`--slots 16` /
+  `--rec-slots 1`(#308 分支 (A),**第十波**)/ `--hours 2` / `--games 12`,
+  钉树 `e84fe4d216efdaac3b40966b1fb542d36816e1db`;
+  **市场级 (1) 一次全中、四个 AZ 各一台、零 `re-aiming`、零 `AZ RING EXHAUSTED`**
+  ⇒ W32 中断的「零降级」记录**重新起算(现为 1)**;证据是 `InstanceLifecycle=spot` ×4 +
+  四份 `fulfilled` SIR(`sir-n1tfgm8p`/`56qfj5mp`/`ae1qhqkn`/`xfpqkesn`,**已写进 W33_wave.json,
+  本波成本可用 SIR `create→update` 结算,不落进 #375 那个读不到的窗口**),
+  **不是** run_id 的 `spot_` 前缀。⚠️ **#371 第二轮**:四次调用全打 `exit=0`+`launched`,
+  本台**没当证据**,起飞一律带外核实。
+  **闸**:(i) 见上;(ii) **PASS 且是对的理由 —— armed 串 48 → 50**(总监入集 `roamidle` GH #370 /
+  `outlatch` GH #373,commit `2770d1e7`),两者 `check_armed_wiring` 均 wired;
+  顺带 **`roamidle` 的代码在 W32 钉树上就已经在了、只是两条腿都够不到**,W32 记录点名它是
+  「W33 最便宜的 $0 搭车项」—— **本轮它第一次真的被测**;
+  (iii) **PASS,九月围栏跨月重置回 `$50`**(下一个未跨的 owner 可见告警档;`budgets` 仍读八月的
+  `$75.988`/`LastUpdatedTime 2026-08-31T21:01:57Z` **尚未滚月**,CE 九月空数组 = 滞后不是零),
+  spot `$0.90` ⇒ `$0.90 ≤ $50`,保守变体(连 W32 的 **八月** `$2.30` 一起算)`$3.20 ≤ $50`;
+  **八月终值(≈$78.2–78.3,多半未跨 $80)仍未定论,再欠一轮**;
+  (iv) **PASS 带一条 UNCERTIFIABLE**(见下)。
+  **发波前四道门全不经管道读**:`seed_roster_index --build` `RC_EXIT=0`
+  (`297 前缀 / 293 已索引 / **4 to scan**` = W32 那四粒**已入账**,第六次连续);
+  `carrier_terms --arm-file` `RC_EXIT=0`(50 ids ⇒ 10 hero / **40** generic / 0 unresolved ⇒
+  **6 term,与 W27–W32 同六项**;`roamidle`/`outlatch` **都解析为 generic**);
+  `--assert-carrier-from-arm` `RC_EXIT=0`(cm3/lion2/od2/wk4/sb2/zuus3 = **16 载体槽**,
+  **每一项 ≥2**;⚠️ `rc.sh` 横幅只打**最后 40 行**,把 `aimguard`/`cmqreach` 两行截掉了,
+  **十项是读 `RC_LOG` 全文拿到的**;**诚实边界第十一轮不变**:「≥2/term」是自律不是门,官方门只要 ≥1);
+  `check_armed_wiring --cand <50串>` `RC_EXIT=0`(`all 50 armed ids wired`)。
+  **树核对**:`git ls-remote origin main` = 本地 HEAD = 钉树,**块内再核**(漂移 exit 8)+
+  **armed id 数守卫**(≠50 则 exit 7),均未开火;**浅克隆陷阱按正确形状规避**
+  (先 `fetch --depth 1` 全 40 位再 `git log` ⇒ `BARE_EXIT=0` 且非空,一个 commit `175c8b9d`)。
+  **选种**:窗口 `[2601,3000]` **本轮不右移**(BEST **16 ≥ 12**,右移触发条件没到) ——
+  4 banked / 396 未用,`{4:9,3:56,2:141,1:140,0:50}`,43 掩码,687 组合。
+  ⭐ **天花板一波之内 18 → 16,而供给表这次把因果写得最白:W32 拿走的四粒恰好是
+  pop-5 两粒 + pop-4 两粒 ⇒ pop-5 `2→0`、pop-4 `11→9`,机制第四次确认。**
+  **诚实边界**:pop-4 只剩 9 粒、一波吃 4 ⇒ **约 W35 必须右移**,而右移是搬家不是修理。
+  **GH #285 第十六轮未裁。**
+  **收割:本轮无新数据**(S3 最新对象停在 08-31T22:23:47Z = 上一轮已全量收割的那批)。
+  ⭐ **但补掉一根掉在地上的棒:W32 的 `harvest` 从未回填** —— `W32_wave.json` 开工时读到
+  `harvested_at: null`,而它 00:35Z 就被完整收割了(读数只写进了报告)。**不是数据丢了,是棒掉了**,
+  且掉在会静默失效的地方(闸 (iv) 的 `reclaim_blind.py` 读的就是那些**裸字段名**)。本轮已回填
+  逐粒 `ab/ba/arm_depth`(2604 37/17/23.30、2624 42/16/23.17、2737 36/17/23.09、2970 30/12/17.14)
+  与 S3 时戳机时;**`survival_bound` 一律写 `lower` 不写 `exact`**(定界只可能偏小,GH #332 纪律)。
+  ⭐⭐ **闸 (iv) 的 `reclaim_blind.py` 在按需波上 `RC_EXIT=2`(UNDECIDABLE,不是通过)**:
+  `unknown SIR status_code None` —— **按需波没有 SIR**,而 `KNOWN_CODES` 只有两个 **SIR** 码;
+  W32 是该工具落地以来**第一条按需波**。**本台拒绝往那个字段里填一个猜的 SIR 码把它变绿**
+  (那正是 GH #332 的立案句)。**不阻断发波的理由是结构**:按需实例构造上不会被回收;
+  W32 **四粒全配对**、`min arm_depth 17.14 > 8`、`thin_arm_seeds []`;工具能跑时的建议本就是
+  `NEXT WAVE: spot`,与本轮一致 ⇒ 登记成「**这一波没被致盲,但这句话不是工具说的**」。
+  已**追评 GH #375**(**同一个缺失记录的第二个下游后果,未新开案**)。
+  ⭐⭐ **GH #364 假红第三次独立复发,且第一次拿到可证伪的机制**:自检 python 腿
+  `FAIL tests/test_rc_wrapper.py` / `70 passed, 1 failed` / 横幅 `TRUNK RED`,而**同容器同树几分钟内
+  裸跑该文件 11 条 check 全 `ok`、`RC_EXIT=0`**。增量:**该文件测的正是 `rc.sh` 自己的时序**
+  (`SIGTERM: exits 143` 一类),**而自检那一趟在后台跑的整段时间里,本会话正在前台密集调用 `rc.sh`**
+  (`check_costs`/`seed_roster_index`/`carrier_terms`×2/`reclaim_blind`/`seed_draft`/`check_armed_wiring`)
+  ⇒ **被测对象与测试进程共享宿主,而断言的是时序**;**可证伪:没有并发 `rc.sh` 的容器里应当无法复现**。
+  **#364 建议 1 第三次被需要仍未落地**(自检那层的 grep 滤掉逐条输出,三轮都没拿到"挂的是哪一条")。
+  **本台不改 harness。**
+  **queue.json**:六条 **ADMITTED 搭车**(`strategy-25` creepthink / `hero-24` lionqdmg /
+  `hero-25` cmqreach / `strategy-26` rotscope / `strategy-27` roamidle / `strategy-28` outlatch)
+  的 id 都在本波 armed 串里 ⇒ 按步骤 5 由 `pending` 改 **`running`** 并写上钉树/种子;
+  十条 `ROUTED_ARCHIVE_SCAN` 与 `hero-26` 保持 pending。`strategy-5b` 仍卡在**它自己的条件 (3)**,**第六轮,本台不重裁**。
+  **泄漏**:开工 running/pending **空**(W32 四台按需已全部自毁干净);收尾 `--leak-only`
+  **`RC_EXIT=0`**,running/pending **恰为 W33 的四台且无一孤儿**,常驻只有 AMI `ami-0a990a26d89c66547`。
+  ⚠️ **发波轮的正确读数是「四台在飞且都对得上名字」,不是「0 台在跑」。**
+  四台全带自毁(`terminate` + `shutdown -h +120`,**硬顶 05:31Z**),预计 04:15–04:30Z 自关;
+  **本波是 spot ⇒ 回收是活路径**:一台被抢占 = 那一粒缺臂作废、**不整波作废**,缺的那粒补跑。
+  **铁律 6**:`bots/`/`game/` **一行未改**(改动全在 `iterations/` 下);**未用 `RULE6_BYPASS`
+  ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑且不声称**。
+  **铁律 10**:自检 worst **exit 3**,`FINDINGS: cadence trunk-red(python)`,`UNCERTIFIABLE: none`;
+  **第二项经复核为假红**(上述);`queue-rulings` 与 `ORPHAN_PROPOSAL` 本轮**均为 none**
+  (上一轮点名的 `roamidle` 孤儿提议已被入集消化);stable-v1/v2 锚点 EXISTS/PINNED/SHIPPED 全 ok;
+  **Lua 腿 64 文件 0 失败、未超时 ⇒ GH #358 本轮未复发**。
+  (顺带:自检第一次被管道调用时**自己拒跑**并打 `REFUSED: stdout is a pipe; exit 2, nothing checked`
+  —— 总监 §22 管道守卫的**第四个外部验收点**,此后本轮所有读数走 `rc.sh`/重定向。)
+  **铁律 11**:未触发 `requires approval`,无空转等待;唯一的等待是闸 (i) 的节流,**由守卫强制**。
+  **交棒**:① ⭐⭐⭐ 总监 —— W33 收割后 **50-id 家族第一粒读数**,连带 **GH #363 第六轮**
+  (48-id 只留 W32 一粒即冻结、47-id 冻结在 8 粒 ⇒ 并池与否**当场可裁**);
+  ② ⭐⭐⭐ 总监 —— **闸 (iv) 在按需波上结构性跑不出结果**(追评 #375,只需补一条验收);
+  ③ ⭐⭐⭐ 总监 —— **按需常数 `~$2.15` 仍待重裁**(W32 实测 0.825 h/台,单波 $2.22–2.30,建议 $2.30);
+  ④ ⭐⭐ **#364 第三次复发 + 具名混淆源**(已追评);⑤ ⭐⭐ **#285 第十六轮**(18→16,pop-5 归零);
+  ⑥ ⭐⭐ **#371 第二轮**;⑦ ⭐⭐ **#308 第十一次点名**(rec_slots 仍 1,第十波);
+  ⑧ ⭐ **#271 的执行缺口**(W32 回填被漏,本轮补上,W33 记录里已写死提醒);
+  ⑨ ⭐ **#358 本轮未复发**;⑩ ⭐ 存量:#218 / #367 / #295/#252/#256/#282 建议关闭 /
+  #329/#321 / `UNKNOWN STATUS` 4 条(#317)/ `strategy-5b` 第六轮 / #313/#290/#291/#298/#299/#349/#350(#355)/
+  #207 停在第三十九波 armed。
+  **下一轮本台 = 收割 W33**(闸 (i) 解锁于 `2026-09-01T09:31:05Z`,多半只收割不发波)。
+  **收割注意**:本波**是 spot**,成本用 **SIR `create→update`**(四个 SIR id 已写进 `W33_wave.json`);
+  **`$0.90` 的自动失效条款本波适用** —— 账单侧实测 > $0.90 就要在报告里点名,总监下轮必须重裁该常数。
+  **回填义务**:收割那一轮**必须把 `harvest` 写回 `W33_wave.json`,不能只写进报告**(这正是 W32 掉的那根棒)。
+  **本轮 token**:见报告 §10。
+  详见 `iterations/reports/batch-desk/20260901T031500Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
