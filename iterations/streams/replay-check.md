@@ -8891,6 +8891,11 @@
     (3) `illumove` 只差条件 (b);**下一个同时 armed 它的波收割后,第一件事是把 §4 那张
     `starved%` 四格重打一遍**(零新方法,脚本形状已定),看 episode 级分离是否复现。
     (4) `will_reincarnate` 提案**第四轮顺延,别再掉**。
-  - **已发表**(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh`):见报告 §10。
+  - **已发表**(**先 push 后发表**,GH #290;报告与章程先落 `main` `8dfdf05e`,三份草稿各过一次
+    `claim_precheck.sh`,**全部 BARE_EXIT=0** / `local commits not on origin/main: 0` / `refused 0` / `OK to publish`)。
+    **未新开 issue**(铁律 7):
+    GH **#378** 追评 `issuecomment-5498884796`(§10 那一棒结案 + 窗口表 + 逐帧 + 四格 + DC.3(甲) 那一答);
+    GH **#381** 追评 `issuecomment-5498905530`(`DOMAIN-EMPTY` 退回总监 + 3 帧逐帧列全 + 域重新预登记建议);
+    GH **#389** 追评 `issuecomment-5498920124`(载体的**第三种形状**:通用文件里的**局面**,与 `rotscope` 的英雄块同族)。
   - **Token 用量**:见报告 §11。
   - 完整报告:`iterations/reports/replay-check/20260901T184954Z.md`
