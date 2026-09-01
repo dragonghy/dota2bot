@@ -81,12 +81,27 @@
 --     warning for the NEXT such frame -- but note how it failed, which is that it
 --     said "a corpus cut after that change" and the frame was already in the tree
 --     under a path this scan does not glob.  Absence from a scan is not absence.
---   * The two mana costs are FRAME-EXTERNAL ANCHORS.  Fixtures carry ability
---     names, levels and cooldowns; they do not carry mana costs, and the mock
---     answers 0 for GetManaCost on every handle (section 4 pins that).  So the
---     costs below are recorded from the game's own KV with a date, and section 2
---     indexes them by each frame's OWN ability rank.  A run that read them off
---     the handles instead would answer 0 and call every frame affordable.
+--   * The two mana costs are FRAME-EXTERNAL ANCHORS -- .dem frames carry ability
+--     names, levels and cooldowns and no prices -- but they are no longer
+--     UNCHECKABLE ones.  RE-DERIVED 2026-09-01 (GH #392): this bullet used to end
+--     "the mock answers 0 for GetManaCost on every handle (section 4 pins that),
+--     so a run that read them off the handles instead would answer 0 and call
+--     every frame affordable".  c386d5f3 gave the loader a KV mana ladder for the
+--     five focus heroes, Wraith King among them, so on this frame the handles now
+--     answer 95 and 220 -- and section 4 pinning the old 0 was one of the two
+--     reds this file stood on.  What changes for the numbers below: nothing, and
+--     section 3 now ASSERTS that nothing did.  What changes for the reader:
+--     * the constants are checkable, so a drifting snapshot cannot silently
+--       re-price section 2's whole reading; and
+--     * the check is CONSISTENCY, NOT CORROBORATION.  Both sides read the same
+--       d2vpkr mirror (this file by hand on 2026-08-26; the loader through
+--       tests/mock/special_value_shapes.lua), so agreeing proves they have not
+--       drifted apart, never that either is right about the live patch.
+--     The old bullet's live half is the OTHER hero's: the ladder covers the five
+--     focus heroes only, so 43 of the 53 ability handles on this very frame still
+--     answer 0 (section 4 measures it, and juggernaut_omnislash -- 200 mana in
+--     game -- is one of them).  Reading a NON-focus hero's mana clause off a
+--     fixture still buys free mana.
 --   * Section 2 says nothing about whether blasting Roshan is a good idea.  That
 --     is the lever's (c) argument and it lives in the doc block above
 --     X.GetRoshanManaFloor, where the cost side is stated too.
@@ -146,10 +161,13 @@ local function read_file(path)
 end
 
 --- Load the real frame and the real hero module, with `wkrosh` armed or not.
---- Optionally force the game out of turbo, and optionally publish mana costs onto
---- the frame's own ability handles (the frame-external anchor -- see HONEST
---- BOUNDS).  Returns the module plus the world.
-local function world(bArmed, bNonTurbo, tCosts)
+--- Optionally force the game out of turbo, optionally OVERRIDE mana costs on the
+--- frame's own ability handles (used to drive rank ladders the frame does not
+--- itself sit at -- since c386d5f3 the un-overridden handles carry the real KV
+--- price, so `tCosts = nil` is now the honest world, not a degenerate one), and
+--- optionally make the Reincarnation handle MISSING.  Returns the module plus the
+--- world.
+local function world(bArmed, bNonTurbo, tCosts, bNilR)
     local J, bot, heroes, fx = rf.load(FIXTURE)
     J.IsSoakCandidate = function(id) return bArmed and id == 'wkrosh' end
     if bNonTurbo then
@@ -160,6 +178,19 @@ local function world(bArmed, bNonTurbo, tCosts)
     for sName, nCost in pairs(tCosts or {}) do
         local h = bot:GetAbilityByName(sName)
         rawget(h, '__spec').GetManaCost = nCost
+    end
+    if bNilR then
+        -- hero_skeleton_king.lua:499 binds `abilityR` ONCE, at load, off the
+        -- global bot.  So the hole has to exist BEFORE rf.load_hero, and it has
+        -- to be installed on the spec table rather than the unit: the mock's
+        -- __index rawsets a dispatch closure on first access, and that closure
+        -- re-reads `__spec[key]` on every call (mock/bot_api.lua unit_mt).
+        local sp = rawget(bot, '__spec')
+        local fPrev = sp.GetAbilityByName
+        sp.GetAbilityByName = function(self, sName)
+            if sName == REINCARN then return nil end
+            return fPrev(self, sName)
+        end
     end
     local X = rf.load_hero('skeleton_king')
     return X, J, bot, heroes, fx
@@ -243,15 +274,70 @@ tests['section 1: one-directional BY CONSTRUCTION, not by today arithmetic'] = f
         'a relative floor equal to 600 must not be reported as a widening')
 end
 
-tests['section 1: a nil Reincarnation handle does not crash the floor'] = function()
-    -- The engine's answer for an UNLEARNED ultimate is not settled at this desk;
-    -- a MISSING handle is, and it must not take the bot's Think down with it (the
-    -- error handler is broken, so it would be silent -- AGENTS.md).
-    local X, _, bot = world(true, false, { [BLAST] = 95 })
-    assert(bot:GetAbilityByName(REINCARN) ~= nil, 'the frame does carry the handle')
-    assert(X.GetRoshanManaFloor(95) == 95,
-        'with the mock answering 0 for an unanchored GetManaCost the floor is the '
-        .. 'blast price; got ' .. tostring(X.GetRoshanManaFloor(95)))
+tests['section 1: the whole lever on one real frame, at the frame own prices'] = function()
+    -- NEW 2026-09-01 (GH #392), and it is the reading this file could not take
+    -- before c386d5f3: with no cost overrides at all the frame's own handles now
+    -- carry the KV ladder, so the helper can be driven exactly as the engine
+    -- would drive it here.  Under the old meter every handle answered 0, the
+    -- armed floor collapsed to the blast price, and the RESERVE -- the half the
+    -- whole lever is about -- was structurally invisible on every frame.
+    local X, _, bot = world(true, false, nil)
+    local abQ = bot:GetAbilityByName(BLAST)
+    local abR = bot:GetAbilityByName(REINCARN)
+    assert(abQ:GetLevel() == 1 and abR:GetLevel() == 1,
+        'this frame is Wraith King at hero level 11 with both of these at rank 1; '
+        .. 'got Q=' .. tostring(abQ:GetLevel()) .. ' R=' .. tostring(abR:GetLevel()))
+    assert(abQ:GetManaCost() == BLAST_MANA[1], 'the loader priced the blast at '
+        .. tostring(abQ:GetManaCost()) .. ', the recorded rank-1 price is '
+        .. BLAST_MANA[1])
+    assert(abR:GetManaCost() == REINCARN_MANA[1], 'the loader priced reincarnation '
+        .. 'at ' .. tostring(abR:GetManaCost()) .. ', recorded rank-1 is '
+        .. REINCARN_MANA[1])
+
+    local nArmed = X.GetRoshanManaFloor(abQ:GetManaCost())
+    assert(nArmed == 315, '95 + 220 is 315; got ' .. tostring(nArmed))
+
+    -- The pool this frame actually holds, between the two floors.  This is the
+    -- lever stated as one frame rather than as a corpus count: the shipped leg
+    -- refuses a Wraith King who can afford the blast AND the reincarnation
+    -- behind it more than four times over.
+    local nMana = bot:GetMana()
+    assert(nMana == 447 and bot:GetMaxMana() == 447,
+        'the frame is at a FULL 447 bar; got ' .. tostring(nMana) .. '/'
+        .. tostring(bot:GetMaxMana()))
+    assert(nMana < SHIPPED_FLOOR, 'the shipped floor must refuse this frame')
+    assert(nMana >= nArmed, 'the armed floor must admit it')
+
+    local XShipped = world(false, false, nil)
+    assert(XShipped.GetRoshanManaFloor(BLAST_MANA[1]) == SHIPPED_FLOOR,
+        'the shipped leg on the same frame must still answer ' .. SHIPPED_FLOOR)
+end
+
+tests['section 1: a MISSING Reincarnation handle does not crash the floor'] = function()
+    -- The `if abilityR ~= nil` guard in X.GetRoshanManaFloor, ACTUALLY DRIVEN.
+    --
+    -- RE-DERIVED 2026-09-01 (GH #392).  This case used to assert that the handle
+    -- EXISTS and then read the floor back as the bare blast price -- so it never
+    -- entered the nil branch at all; the 95 it was reading came from the mana
+    -- meter answering 0 for the reserve, and it went red the day the meter was
+    -- fixed (c386d5f3).  Its assertion text named its own cause: "with the mock
+    -- answering 0 for an unanchored GetManaCost".  A test whose green depended on
+    -- a getter being broken was never testing the guard it is named after.
+    --
+    -- HONEST BOUND: this is a CONSTRUCTION.  GetAbilityByName returns a handle
+    -- for every real hero ability in game, so no engine frame is known to reach
+    -- the nil branch; what is asserted is that the guard holds if one ever does,
+    -- because the bot VM's error handler is broken and a crash here would be
+    -- silent (AGENTS.md).
+    local X, _, bot = world(true, false, nil, true)
+    assert(bot:GetAbilityByName(REINCARN) == nil, 'the hole is not installed')
+    assert(bot:GetAbilityByName(BLAST) ~= nil, 'the hole is too wide -- it must '
+        .. 'take out Reincarnation only')
+    assert(X.GetRoshanManaFloor(BLAST_MANA[1]) == BLAST_MANA[1],
+        'with no reincarnation handle the reserve is 0 and the floor is the blast '
+        .. 'price; got ' .. tostring(X.GetRoshanManaFloor(BLAST_MANA[1])))
+    assert(X.GetRoshanManaFloor(BLAST_MANA[4]) == BLAST_MANA[4],
+        'and at rank 4 likewise; got ' .. tostring(X.GetRoshanManaFloor(BLAST_MANA[4])))
 end
 
 -- ---------------------------------------------------------------- section 2 --
@@ -339,6 +425,44 @@ tests['section 3: the anchored costs are the ones the doc block quotes'] = funct
     end
 end
 
+tests['section 3: the recorded ladders and the loader ladder have not drifted'] = function()
+    -- NEW 2026-09-01 (GH #392).  Section 2's ENTIRE reading is indexed by these
+    -- two constants, and until c386d5f3 nothing in the tree could contradict them
+    -- -- every handle answered 0.  Now the loader carries its own ladder for the
+    -- five focus heroes (tests/mock/special_value_shapes.lua), so a snapshot that
+    -- is widened, corrected or re-cut for a new patch without this file following
+    -- it turns section 2's 24/31 into a stale number instead of a wrong one.
+    --
+    -- WHAT THIS IS NOT: independent confirmation.  Both ladders are the same
+    -- d2vpkr mirror read twice (this file by hand on 2026-08-26, the snapshot by
+    -- tools/agent/special_value_key_census.py), so agreement is CONSISTENCY only
+    -- -- it says the two copies have not drifted apart, never that either matches
+    -- the live patch.  The engine read stays unavailable at this desk.
+    --
+    -- Driven through the handles rather than by requiring the snapshot module, so
+    -- what is checked is the price the fixture world actually charges.
+    local _, _, bot = world(true, false, nil)
+    for nRank, nCost in ipairs(BLAST_MANA) do
+        local h = bot:GetAbilityByName(BLAST)
+        rawget(h, '__spec').GetLevel = nRank
+        assert(h:GetManaCost() == nCost, BLAST .. ' rank ' .. nRank
+            .. ': recorded ' .. nCost .. ', loader ' .. tostring(h:GetManaCost()))
+    end
+    for nRank, nCost in ipairs(REINCARN_MANA) do
+        local h = bot:GetAbilityByName(REINCARN)
+        rawget(h, '__spec').GetLevel = nRank
+        assert(h:GetManaCost() == nCost, REINCARN .. ' rank ' .. nRank
+            .. ': recorded ' .. nCost .. ', loader ' .. tostring(h:GetManaCost()))
+    end
+    -- The clamp the loader documents, pinned here because the armed floor would
+    -- read a nil reserve as an arithmetic error rather than as a refusal: a rank
+    -- past the end of a ladder pays the last step.
+    local h = bot:GetAbilityByName(REINCARN)
+    rawget(h, '__spec').GetLevel = 9
+    assert(h:GetManaCost() == REINCARN_MANA[#REINCARN_MANA],
+        'a rank past the ladder must clamp to the last step, not answer nil')
+end
+
 -- ---------------------------------------------------------------- section 4 --
 -- What this test CANNOT see.  Pinned so nobody reads a fixture-driven zero as
 -- evidence of an empty domain (the axeblink trap, which cost this stream a
@@ -356,13 +480,55 @@ tests['section 4: no frame carries an active mode, so the branch cannot be drive
         .. 'frequency. Size the domain with queue hero-10, never with a scan here')
 end
 
-tests['section 4: the mock answers 0 for GetManaCost on every handle'] = function()
-    -- Why the costs in this file are recorded constants: a version that read them
-    -- off the handles would silently price every spell at zero and call every
-    -- frame affordable -- the same silent-zero shape as GH #162's absent KV key.
-    local _, _, bot = world(true, false, nil)
-    assert(bot:GetAbilityByName(BLAST):GetManaCost() == 0, BLAST)
-    assert(bot:GetAbilityByName(REINCARN):GetManaCost() == 0, REINCARN)
+tests['section 4: the GetManaCost zero is narrowed to non-focus heroes, not closed'] = function()
+    -- RE-DERIVED 2026-09-01 (GH #392).  This case asserted "the mock answers 0 for
+    -- GetManaCost on every handle" -- true when written (4376 of 4376 handles),
+    -- retired by c386d5f3, and red on trunk from that commit until now.  It is
+    -- kept rather than deleted because the shape it was guarding against is still
+    -- HERE, just smaller: an unspecced getter answering a silent 0 is not a small
+    -- number, it is a different predicate (GH #162 family).  So the case now
+    -- measures WHERE the zero still lives, on this frame, in both directions.
+    local _, _, bot, heroes, fx = world(true, false, nil)
+
+    -- The focus half: priced, and priced at this frame's own rank.
+    assert(bot:GetAbilityByName(BLAST):GetManaCost() == BLAST_MANA[1], BLAST)
+    assert(bot:GetAbilityByName(REINCARN):GetManaCost() == REINCARN_MANA[1], REINCARN)
+
+    -- The non-focus half, which is what the old case's warning was really about.
+    -- Juggernaut carries a rank-1 Omnislash on this frame; it costs 200 mana in
+    -- game and the loader has no ladder for him, so the clause
+    -- `owner:GetMana() >= self:GetManaCost()` is still a tautology for it.
+    local jug = heroes['npc_dota_hero_juggernaut']
+    assert(jug ~= nil, 'the frame no longer carries juggernaut; pick another '
+        .. 'NON-focus hero rather than deleting this half')
+    assert(jug:GetAbilityByName('juggernaut_omnislash'):GetManaCost() == 0,
+        'juggernaut is priced now -- if the snapshot was widened, re-read this '
+        .. 'whole section rather than swapping heroes until one still answers 0')
+
+    -- And the size of what is left, so "narrowed, not closed" is a number.
+    local nZero, nPriced = 0, 0
+    for _, tUnit in ipairs((fx or {}).units or {}) do
+        local h = heroes[tUnit.name]
+        if h ~= nil and (tUnit.name or ''):find('^npc_dota_hero_') then
+            for _, tAb in ipairs(tUnit.abilities or {}) do
+                if tAb.name ~= '' then
+                    if h:GetAbilityByName(tAb.name):GetManaCost() == 0 then
+                        nZero = nZero + 1
+                    else
+                        nPriced = nPriced + 1
+                    end
+                end
+            end
+        end
+    end
+    assert(nPriced == 10 and nZero == 43, 'on this frame 10 of 53 hero ability '
+        .. 'handles carry a price and 43 still answer 0; got ' .. nPriced .. '/'
+        .. nZero .. '. A move here is the snapshot widening (re-read, do not '
+        .. 'rebaseline). NOTE the 43 mixes two things this case does NOT '
+        .. 'separate: abilities with genuinely no mana cost (passives such as '
+        .. 'skeleton_king_mortal_strike) and abilities whose price is simply '
+        .. 'absent from the snapshot -- ABSENT IS NOT ZERO, and only the second '
+        .. 'kind is the defect')
 end
 
 -- ---------------------------------------------------------------- section 5 --

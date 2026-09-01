@@ -22,12 +22,24 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--71. **§10 的三个 WK trunk 红**(本轮量到,**先于本轮改动**,已独立复现):
-   `test_wk_roshan_mana_floor`(§1+§4 **断言的是 09-01 修法力之前的世界**,
-   归因由它自己的断言文本给出)、`test_wk_considerq_level7_dominance`(:451)、
-   `test_wk_bone_guard_talent_bypass`(§3,22 录成 19)。**三个各是一个工作单元**
-   (每个都要重新推导正确读数,不是改数字)。**`roshan_mana_floor` 优先** ——
-   它是本组自己那次修复的直接余波,而且它的断言正在声称一个已经不成立的世界。
+-72. **`c386d5f3`(09-01 修法力量具)的余波扫一遍全仓,不要只扫 `skeleton_king`。**
+   16:51Z 那轮坐实的形状是「**某个测试的绿依赖于 `GetManaCost` 答 0**」——
+   `test_wk_roshan_mana_floor` 的两个红各是这一形的一例,而**其中一例的名字里
+   根本没有 mana**(它叫「nil 句柄」,从落地起就没进过自己命名的分支)。
+   ⇒ **不能靠文件名筛**。做法:全仓 grep 测试里的 `GetManaCost`(以及断言里出现
+   `== 0` 的法力读数),逐条看它断言的是哪个世界;`mana_ladder` 对**五个焦点英雄**
+   都生效,而 16:51Z 那轮跑的 71 个文件**只覆盖 `skeleton_king`**,Zeus / CM /
+   Axe / Lion **一个都没扫过**。**这一格是一个工作单元,不是一次顺手。**
+
+-71. **§10 的三个 WK trunk 红**(2026-09-01T13:59Z 量到,**先于那轮改动**,已独立复现)。
+   **三个各是一个工作单元**(每个都要重新推导正确读数,不是改数字)。已开 **GH #392**。
+   - ~~`test_wk_roshan_mana_floor`(§1+§4 **断言的是 09-01 修法力之前的世界**,
+     归因由它自己的断言文本给出)~~ **2026-09-01T16:51Z done ——
+     报告 `iterations/reports/hero/20260901T165100Z.md`;测试文件独一份 +192/−26,
+     `bots/`+`game/` 零行。重新推导之外还买到一个量具坏着时构造性不存在的读数:
+     出货 600 拒绝 / armed 315 准入,在同一帧满蓝的 WK 上。**
+   - **`test_wk_considerq_level7_dominance`(:451)—— 仍红,仍开。**
+   - **`test_wk_bone_guard_talent_bypass`(§3,22 录成 19)—— 仍红,仍开。**
 
 -70. ~~**认领 GH #390(录像组 13:05Z 开,本轮最新的 [hero] issue):
    答它的 rec 2「改问分支到达」与 rec 3「域要重新预登记」**~~
@@ -3596,6 +3608,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T16:51Z(报告 `iterations/reports/hero/20260901T165100Z.md`;轴 **backlog `-71`
+  第一格 —— 三个 WK trunk 红里 `test_wk_roshan_mana_floor` 那一个,GH #392**)
+  **测试文件 1 个(`tests/test_wk_roshan_mana_floor.lua`,+192 / −26);`bots/` 0 行、`game/` 0 行
+  ⇒ 零行为改动、零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、不申请波次;
+  `state.json` / `test_set.md` / `queue.json` 均无新增。**
+  - **⭐⭐ 那个红不是「数字过期」,是一个测试的绿曾经建立在一个 getter 坏着。** §1 那条
+    名字叫「nil 句柄」的用例**从落地起就没进过它自己命名的分支**:它先断言句柄**存在**,
+    再把 floor 读成 95 —— 而 95 只可能来自 `abilityR:GetManaCost()` 答 **0**。归因**由它自己的
+    断言文本给出**(`with the mock answering 0 for an unanchored GetManaCost`),
+    `c386d5f3`(本组 09-01 上一轮修法力量具)落地那天它必然红。
+  - **⭐⭐ 重新推导买到了一个量具坏着时构造性不存在的读数:整条杠杆现在能在一帧上一行说完。**
+    帧 `f_260823_002103_wk_ancient_camp_634`,WK **11 级、447/447 满蓝**、Q/R 都 rank 1
+    ⇒ 出货 floor **600 拒绝**,armed floor **95+220=315 准入**。旧世界里 reserve 答 0、
+    armed floor 塌成 95,而 **reserve 正是这条杠杆的全部内容** ⇒ 旧文件只能用 §2 的语料计数
+    (0/36、24/31)间接论证,**没有任何一帧能把两条腿同时驱动出来**。
+  - **⭐ nil 分支改成真的驱动它**:`abilityR` 是 `:499` **加载期一次性绑定**的 module-local
+    ⇒ 洞必须在 `rf.load_hero` **之前**开,且必须写在 **`__spec` 表**上(mock 的 `__index`
+    首次访问 rawset 一个闭包,那闭包**每次调用重读** `__spec[key]`)。**诚实边界:这是构造**,
+    真实对局 `GetAbilityByName` 对每个真技能都给句柄。
+  - **⭐ §4 的 0 被收窄了没被关掉,于是把剩下的量出来**:同一帧 **53 个句柄 10 个有价 / 43 个仍答 0**;
+    `juggernaut_omnislash`(游戏里 **200 蓝**)仍答 0 ⇒ 非焦点英雄的法力从句**仍是恒真**。
+    断言里写死一句:**那 43 个混了「真的没有法力消耗的被动」和「快照里没这个键」——
+    ABSENT 不是 0**,只有第二种是缺陷。
+  - **⭐ 新增 §3 棘轮**:两条手抄阶梯扛着 §2 的**全部**读数,而 `c386d5f3` 之前**树里没有任何
+    东西能反对它们**;现在逐 rank 对上 loader 阶梯 + clamp。**但这是一致性不是佐证** ——
+    两边是**同一个 d2vpkr 镜像读了两次**,对上只说明两份拷贝没漂开。
+  - 变异台 **5 + 2 控制**,条条一次见红且只红在该红的节(M3 = 把量具打回 c386d5f3 之前,
+    恰好红新增的三节);还原后 **3 份 `cmp` 逐字节相同**,基线重跑 16 tests / 0 failures。
+    **⭐ M2 是「结论对了理由不对」的反面教材**:`<` → `<=` 该被 §1 那条 one-directional
+    **边界**用例抓住(它喂 reserve=460 让相对 floor 恰好 600),**它没抓住** —— `<=` 下
+    armed 腿返回 600,而 600 **就是** `SHIPPED_FLOOR`,断言逐位通过;抓住它的是 §5 读源码的棘轮。
+    **一个用例名字叫「边界」不等于它守着那个边界。**
+  - 门:**静态 `GATE_EXIT=0 CLEAN` / `luacheck bots game` 0 警告**(gate 自己装的 `lua-check`,
+    **裸跑没用 `RULE6_BYPASS`**;本 diff 对 `bots`/`game` 零行)。动态按上一轮同口径跑
+    **引用 `skeleton_king` 的 70 个 + smoke = 71 个 → 69 绿 / 2 红**,两红 = backlog `-71`
+    **剩下的两格,先于本轮改动**(`run_tests.lua <filter>` 只加载匹配文件 ⇒ 那两个文件本轮没被加载过)。
+    同族的 `wk_roshan_mana_ceiling` / `wk_roshan_lategame_reconciliation` 都绿。
+    ⚠️ 开工自检第一条又被 REFUSED(**第十二次**管道给 `tail`)= 什么都没检查不是通过;
+    写文件重跑 **worst exit 3**:`trunk-red(lua)` = **已开的 GH #394**(总监的普查表),
+    `trunk-red(python)` + 2 UNCERTIFIABLE = **GH #383/#384 那一形**(python 腿跑在 :451 装 `lua5.1` 之前)。
+    另 `luacheck tests/…` 单跑报 1 条 `:176 setting read-only global 'GetGameMode'`,
+    **先于本轮改动**(原 `world()` 的 `bNonTurbo` 分支)且不在铁律 6 的门与 CI 范围内,本轮不改。
+  - **下一棒**:(1) **GH #392 三格已结第一格**,`considerq_level7_dominance` /
+    `bone_guard_talent_bypass` **仍开**,各一个工作单元,留在 backlog `-71`;
+    (2) **`c386d5f3` 的余波很可能不止这一个文件** —— 本轮坐实的形状是「**某个测试的绿依赖于
+    `GetManaCost` 答 0**」,而本轮扫的 71 个文件**只覆盖 `skeleton_king`**;Zeus/CM 同样吃
+    `mana_ladder` ⇒ **新 backlog `-72`**;(3) #391 / #386 / #357 / #374 状态不变。
+
 - 2026-09-01T13:59Z(报告 `iterations/reports/hero/20260901T135952Z.md`;轴 **认领 GH #390** ——
   录像组 13:05Z 开的、本轮最新的 [hero] issue,答它的 rec 2 与 rec 3)
   **`bots/BotLib/hero_skeleton_king.lua` 仅注释(+37,`ConsiderQ` 的 `wkqdmg` 域注解尾部);
