@@ -772,6 +772,43 @@ function X.ConsiderQ()
 	-- more heavily weighted population than its own frames describe.  Both ladders
 	-- are derived from the real J.Skill.GetSkillList (never re-typed) in
 	-- tests/test_wk_qdmg_domain.lua §5.
+	--
+	-- ⇒ RE-REGISTERED 2026-09-01 (hero stream, answering GH #390's rec 2 and 3;
+	-- tests/test_wk_q_castrange_meter_domain.lua).  Everything above this line is
+	-- the ARITHMETIC domain -- which hero levels the constant is even wrong on.
+	-- The DECISION domain is a strictly smaller set and has one conjunct nobody
+	-- had written down:
+	--
+	--     ehp0 in (armed claim, shipped claim]      the band -- unchanged
+	--   AND the target is inside nCastRange + 80    the GATE, not the search ring
+	--   AND no downstream firing point returns the same target on that frame
+	--
+	-- The third conjunct is closed form, not a corpus reading.  The kill-confirm
+	-- branch below is firing point 2 of TEN in this function and ALL TEN return
+	-- the same constant, BOT_ACTION_DESIRE_HIGH; they differ only in the target.
+	-- So suppressing point 2 can lower the CAST COUNT only when all eight
+	-- downstream points also decline on that frame.  On every other frame the
+	-- cast still happens and the two legs are indistinguishable by cast count --
+	-- by construction, which is what GH #390's t=243.4 frame ran into (the armed
+	-- leg cast anyway, off the phase-boots chase) and why its armed leg casting
+	-- MORE than baseline (108 vs 97) is not evidence against the lever.
+	-- THE OBSERVABLE OF THIS LEVER IS TARGET IDENTITY, NEVER CAST COUNT.
+	--
+	-- ⚠️ AND THE FIXTURE ARCHIVE CANNOT CORROBORATE ANY OF IT, because
+	-- `nCastRange` below has been ZERO on every frame ever driven through this
+	-- function: GetCastRange is on no spec in tests/mock/, so the generic `^Get`
+	-- default answers 0 -- 36 of 36 live-WK instants.  Fifth of the meter-zero
+	-- family (GetActualIncomingDamage, GetAbilityDamage GH #175, GetManaCost,
+	-- GetAOERadius GH #386), and the only one whose answer is ALREADY IN THE
+	-- TREE: tests/mock/special_value_shapes.lua carries AbilityCastRange = 525
+	-- for this ability, three lines above the mana ladder that got wired up on
+	-- 2026-09-01.  The zero shrinks the search ring 855 -> 330, the tight ring
+	-- 568 -> 43 and the kill gate 605 -> 80, so it UNDERSTATES reach.  Measured:
+	-- of the 18 archive frames that reach this body, the loop below is entered on
+	-- 0 under the zero and on 2 with 525 fed back.  ⇒ a fixture-archive zero on
+	-- this branch is not a second opinion on the replay group's 0/97; it is a
+	-- reading that was never able to disagree.  Repairing the meter is tree-wide
+	-- (433 call sites / 150 files) and is NOT done here.
 	local nDamage = 40 * ( nSkillLV - 1 ) + 100
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 
