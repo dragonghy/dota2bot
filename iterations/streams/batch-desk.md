@@ -8143,7 +8143,7 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
 
 - 2026-09-01T21:14Z(**发 W36 —— 54-id 家族首波;spot 4×1;两条新缺陷,一朝开一朝关**)。
   ⭐⭐⭐ **本轮真正的产物不是那一波,是发波前门打出的两行。**
-  **(甲,朝开失效,GH #400)** `--assert-carrier-from-arm` 打
+  **(甲,朝开失效,GH #402)** `--assert-carrier-from-arm` 打
   `CARRIER_TERMS … 54 armed ids: 12 hero-scoped, 42 generic, 0 unresolved => 128 term(s)`,
   **127 个来自 `immguard` 一条**:它的门在 `bots/FunLib/minion_lib/primal_split.lua:128`,
   `carrier_terms.py` 的 `hero_of()` 只认 `bots/BotLib/hero_<name>.lua` 的**路径形状**,
@@ -8156,15 +8156,15 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   背书「四粒全有载体」。与上一轮的 `rotscope` 同族**但更硬**:`rotscope` 是**漏报**载体,本条是**虚报**。
   ⇒ 这把 `test_set.md` §DF(第 6 小节)的「预期 DOMAIN-EMPTY」从预告变成了**可执行判据**:
   在当前 47 人池下,**任何四粒、任何窗口、任何次数的重抽都买不到这两条的条件 (a)**。
-  **(乙,朝关失效,GH #402)** 发 #400 前跑 `claim_precheck.sh` 得 **`PRECHECK_EXIT=3`** 点名 `§DF.6`;
+  **(乙,朝关失效,GH #404)** 发 #402 前跑 `claim_precheck.sh` 得 **`PRECHECK_EXIT=3`** 点名 `§DF.6`;
   查下去是**标题写法**:`### §CT.2` / `### §BL.4` 带 `§` ⇒ 解析成功,
   `### K.5` / `### DC.3` / `### DF.6` 不带 ⇒ **`MISSING`**。`origin/main` 上
   **带 `§` 的小节标题 180 个,不带的 382 个 ⇒ 68% 的小节引用解析不了**
   (本章程活块引用最多的 `§K.5` 18 次 / `§AF.3` 17 次 / `§AI.4` 16 次全属后者)。
   失效方向朝关是安全侧,**立案理由是二阶代价:假阳性会训练读者把 `MISSING` 读成噪声,
-  而那是这个工具唯一的信号。** 两份草稿处置不同且理由已登记:#400 的引用是顺带的 ⇒ 改写后
+  而那是这个工具唯一的信号。** 两份草稿处置不同且理由已登记:#402 的引用是顺带的 ⇒ 改写后
   **`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0` / `OK to publish`** 才发;
-  #402 的三条 `MISSING` **就是论据本身**(且实测**围栏内代码块也会被解析**)⇒
+  #404 的三条 `MISSING` **就是论据本身**(且实测**围栏内代码块也会被解析**)⇒
   **照 #290 把 exit 3 原样抄进正文并声明这是自证**,绕过登记、不当作修复。
   **W36 发波**:三闸全过 —— (i) 守卫先打 `GATE-I NOT UNLOCKED: 660s remaining … would exit 9`,
   held,再打 `GATE-I UNLOCKED at 2026-09-01T21:31:10Z (>= 21:31:09Z)` 才发第一炮,**未取例外**,
@@ -8177,7 +8177,7 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   索引如实标未用),**本台仍把四粒全排除 —— 抽过就是抽过**,代价 `BEST slots 14 → 13`;
   六项仍全 ≥2、`13 ≥ 12` ⇒ **右移触发条件仍未到,GH #285 第二十轮未裁**。
   同一最优层内零成本次序偏好选中 **2850 带 pudge** ⇒ `strategy-26`(`rotscope`)**连续第二波拿到载体**。
-  ⭐⭐⭐ **AZ 分散塌到 2 个(`2c/2d/2d/2d`,三粒挤在 `us-west-2d`),而 #256 按设计工作了(GH #401)**:
+  ⭐⭐⭐ **AZ 分散塌到 2 个(`2c/2d/2d/2d`,三粒挤在 `us-west-2d`),而 #256 按设计工作了(GH #403)**:
   全程**没有一次** `!! AZ RING EXHAUSTED`、没有退回不点 AZ 的旧调用、市场没降级,
   每次失败都是 `! re-aiming inside the ring -> <az>`。**新形状是:本波撞上区域级容量紧张
   (四次调用共吃 6 次 `InsufficientInstanceCapacity`),而环内改投在这种条件下会「收敛」不是「分散」**
@@ -8202,7 +8202,7 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   ⇒ **零回收**。常驻只有 AMI `ami-0a990a26d89c66547`。**无泄漏。**
   **queue.json**:八条搭车行(`strategy-25/26/27/28/29/30` + `hero-24/25`)`rides_wave` 由
   `W35 (LOST…)` 改记 **W36**;`strategy-31`/`strategy-32`(`tormself`/`immguard`)**首次**登记
-  `rides_wave: W36`,并**在同一格里写明其载体结构性缺席**(#400)⇒ 接力棒显式交出(铁律 9)。
+  `rides_wave: W36`,并**在同一格里写明其载体结构性缺席**(#402)⇒ 接力棒显式交出(铁律 9)。
   **铁律 6**:`bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`GATE_EXIT=0`**
   `luacheck bots game: 0 warnings` `CLEAN`(冷启自装,apt 包名 `lua-check`);
   **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑不声称**。
@@ -8220,10 +8220,10 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   (闸 (i) 的 ~11 分钟由发波块内守卫强制,期间跑满零成本准备)。
   **计量四条**:本轮**零收割 ⇒ 无读数**,(i-a)~(i-d) 无适用面;W36 的分层读数由收割轮按
   `recover_verdict.py` 自打的 `_ab`/`_ba`/`strata` 登记,**不许手算**。
-  **交棒**:① ⭐⭐⭐ 总监 —— **GH #401**(环内改投在容量紧张下收敛,三粒同 AZ);
-  ② ⭐⭐⭐ 总监/harness —— **GH #400**(载体门凭空满足 + 两条 id 结构性域空);
+  **交棒**:① ⭐⭐⭐ 总监 —— **GH #403**(环内改投在容量紧张下收敛,三粒同 AZ);
+  ② ⭐⭐⭐ 总监/harness —— **GH #402**(载体门凭空满足 + 两条 id 结构性域空);
   ③ ⭐⭐⭐ 总监 —— `reclaim_blind` 常数重标定**第二轮拒答**,下一轮仍会撞上;
-  ④ ⭐⭐ 总监/harness —— **GH #402**(68% 小节引用解析不了,而发表门压在它上面);
+  ④ ⭐⭐ 总监/harness —— **GH #404**(68% 小节引用解析不了,而发表门压在它上面);
   ⑤ ⭐⭐ 总监/英雄组 —— **#394 第三次复现未修**;
   ⑥ ⭐⭐ 总监/协同组 —— `test_carrier_terms.py` 红在 main(Axe 无 armed id);
   ⑦ ⭐ 本台自订:`gates` 五键当固定清单(连续两轮各缺一格);
@@ -8237,7 +8237,7 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   ⚠️ **结算读 SIR 不读 `terminated`**:下一轮 `describe-instances` 多半又是空的(#375 ~1h),
   按 W35 已证:`describe-spot-instance-requests` + farm log 的 `SPOT INTERRUPTION` 行都是第一手,
   **不要**先退到 #332 的 S3 最后上传代理。
-  **本轮 token**:见报告 §9.3。
+  **本轮 token**:见报告 §9.4(`TOKENS total_in=16,990,600 out=92,940 turns=99`)。
   详见 `iterations/reports/batch-desk/20260901T211400Z.md`。
 
 
