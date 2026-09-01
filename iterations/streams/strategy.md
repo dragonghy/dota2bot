@@ -27,6 +27,63 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0SLOT. **【2026-09-01T22:37Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0CORP` 逐字交待本组下一轮
+   「先选域再选形状,优先在 SHARED 文件或 43 个在场英雄里挑杠杆」⇒ 本轮就是照这条做的**);
+   **落地 gated `slotarb`**,入集提议 `test_set.md` **§DI**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-34`**(**`bundle` 已填**);`state.json` 新键 `slotarb_20260901`;
+   issue **GH #406**;报告 `iterations/reports/strategy/20260901T223714Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个循环的「域」和它的「访问器」用了两套下标空间时,
+   不匹配不会报错 —— 它静悄悄地缩小域,而且缩得按侧不同。**
+   判别特征可数、不需要帧、不需要跑:一个参数被文档规定为 `1..N` 序数的访问器,被喂进一次**以 id 为值**的迭代。
+   **缺陷**:`bots/FunLib/aba_site.lua`,`IsTheClosestOne`(野区营地仲裁,调用链单线:
+   `mode_farm_generic.ClosestCamp` → `GetClosestNeutralSpwan` → 它)。
+   `GetTeamPlayers` 给 **player id**(radiant 0-4 / dire 5-9),`GetTeamMember` 要 **team slot 1..5**、
+   越界**答 nil**(`docs/BOT_API_REFERENCE.md:223` + 两个 mock)。
+   ⇒ **radiant 扫 4/5(slot 5 从没被问过,且从第 2 步起每一步量的都是另一个英雄);
+   dire 只扫 slot 5 这一个,对 pid-9 那个 bot 而言那就是它自己 ⇒ 仲裁空转、恒答 TRUE。**
+   **47 份带 `player_id` 的真实帧上逐份复现:24 dire(扫 1)+ 23 radiant(扫 4),armed 全部扫满 5。**
+   **失效方向朝「开」**(连着第三条,继 #393 / #397):扫得少只会让「没人比我更近」更容易成立
+   ⇒ 多个 bot 各自认定同一个营地归自己。
+   **⭐⭐ 它是缺陷不是房规**:出厂树全仓 **91 个调用点**里 **80 处当 slot 用、10 处当 player id 用**
+   (**80:10**,与 #397 的 64:6、#385 的 249/227/1 同族),而两种写法坐在同一批文件里、
+   迭代同一个 `GetTeamPlayers(GetTeam())`。
+   **改动**:参数化 + 闸在**全仓唯一那处**解析(和 `campsel` 同一个 wrapper);门关**逐字节等于出厂函数**;
+   **严格子集:armed 扫的是超集,而扫得更宽只可能找到更近的人 ⇒ armed 的 TRUE 集是出厂 TRUE 集的严格子集**
+   —— 只可能让出一个营地,永远不可能多占一个(`[subset]` 实测 **46 次翻转、反方向 0 次**)。
+   **产出** `tests/test_slotarb_camp_arbitration.lua`(`[ratchet]` **12/0**),真实帧两份:
+   `f_260819_182855_lion_drain_jungle`(dire, lion,出厂只看见自己)与
+   `f_260820_043120_viper_defend_paired`(radiant, viper,4/5 且四步全错位)。
+   **`[decision, positive control]` 承重**:armed 仍然认领一个确实没人更近的位置 ⇒
+   「armed 说 false」不能被一个「永远说 false」的修复满足。
+   **变异 14/14 CAUGHT**,**但第一遍两个活口**:**M12 是真洞** ——
+   ts-parity 断言写成 `sel:find('bSlotArb')`,**参数表本身就满足它**
+   (**用错误理由达成的正确结论**,与 #397 的 M2、#400 的 M4b **同形,连着第三轮**);
+   M8 是**等价变异**(注释不是代码,那一半是正确行为),已换真的。
+   **⛔ 本条最该被读的一句(见 `0MOCKHOLE`)**:这条缺陷**只有真实帧看得见**。
+   **下一格**:总监裁 §DI;录像组买条件 (a)(**先看 dire 侧**,两个分层各自登记读数)。
+   **本组下一轮**:继续先选域;候选是 `0SLOT9` 里最像的那个(`J.IsClosestToDustLocation`)。
+
+0MOCKHOLE. **【2026-09-01T22:37Z 新增,登记,**球在总监**(中心件,本组不擅动)】**
+   `tests/mock/bot_api.lua` 的 `GetTeamMember(n)` **对任何 `n` 都造一个英雄出来,永远不答 nil**
+   (`if i == 1 then return bot end; return M.MakeHero('npc_dota_hero_teammate_'..i, …)`)。
+   ⇒ **任何写在那个 mock 上的单元测试,对 `0SLOT` 那条缺陷是结构上失明的 —— 不是没查,是查不到。**
+   **这就是 91 个调用点带着 10 处错误、而整套测试一路绿灯的原因。**
+   只有 `tests/mock/replay_fixture.lua` 的真实 roster(按 `player_id` 排序、按下标取)会答 nil。
+   本轮把这个洞**棘轮化**(`test_slotarb_camp_arbitration.lua` 的 `[instrument]`,
+   断言写成「洞还在」并注明修好后要连同这条一起删)。
+   与 §CL / GH #329 **同族**:那次是**读数不是局数**,这次是**「测试跑了」不是「测试看得见」**。
+
+0SLOT9. **【2026-09-01T22:37Z 新增,登记不修 —— `0SLOT` 之外那九处,**一次一个杠杆**;计数已棘轮】**
+   `bots/FunLib/utils.lua` **8 处**(`:917 :1010 :1028 :1249 :1690 :1758 :2080 :2097`)+
+   `bots/FunLib/jmz_func.lua:11470`(`J.IsClosestToDustLocation` —— **同一个「我是不是最近的那个」仲裁形状**,
+   最像的一个,建议作为下一个杠杆)。`[census]` 把「还剩 9 处」钉成断言,
+   所以再修一处是一次**有意的**动作,而不是漂移。
+   **另有一处形状不同、也登记不修**:`bots/FunLib/advanced_item_strategy.lua:332`
+   写的是 `GetTeamMember(GetOpposingTeam(), i)` —— **两个参数**喂给单参数 API,第一个还是**队伍常量**;
+   它**跨两行**,所以**按行扫的普查根本看不见它**(本轮普查第一版就漏了它,改成整文件读才钉住)。
+
 0CORP. **【2026-09-01T19:21Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监;backlog 最上面三条 `0HPB`(已落地)/ `0HPB5`(登记不修,
    **且明写要等本轮这道读数**)/ `0HPBX`(登记不修)⇒ **本轮兑现的正是上一轮亲手交出去的 §DG.7.1**);
@@ -4184,6 +4241,37 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T22:37Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  **backlog 最上面一条 `0CORP` 逐字交待本组下一轮「先选域再选形状」⇒ 本轮就是照这条做的**;
+  **报告 `iterations/reports/strategy/20260901T223714Z.md`**;issue **GH #406**;
+  backlog 条目 **`0SLOT`**(并新开 `0MOCKHOLE` / `0SLOT9` 两条登记项);
+  **落地 gated `slotarb`**,入集提议 `test_set.md` **§DI**(搭车、零 AWS 增量、不申请专波);
+  `queue.json` 新增 **`strategy-34`**(**`bundle` 已填**);`state.json` 新键 `slotarb_20260901`;
+  零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **一个循环的「域」和它的「访问器」用了两套下标空间时,不匹配不会报错 ——
+  它静悄悄地缩小域,而且缩得按侧不同。**
+  `bots/FunLib/aba_site.lua` 的 `IsTheClosestOne`(野区营地仲裁)迭代 `GetTeamPlayers`(**player id**,
+  radiant 0-4 / dire 5-9)却用 `GetTeamMember`(**team slot 1..5**,越界**答 nil**)去取人 ⇒
+  **radiant 扫 4/5、dire 只扫 1/5**,而 dire 那一个对 pid-9 的 bot **就是它自己** ⇒ **仲裁空转、恒答 TRUE**。
+  **47 份带 `player_id` 的真实帧上逐份复现:24 dire + 23 radiant;armed 全部扫满 5。**
+  **失效方向朝「开」**(连着第三条)。**仓库按多数票回答:91 个调用点里 80 处当 slot、10 处当 id(80:10)。**
+  **严格子集**(`[subset]` 实测 46 次翻转、反方向 0 次)。**闸只在 `ClosestCamp` 一处解析**(和 `campsel` 同 wrapper)。
+  **⭐ 先跑域再选形状,第一次兑现 #400**:`corpus_hero_census.py --file bots/FunLib/aba_site.lua`
+  答 **SHARED / exit 0** ⇒ **没有 `DOMAIN-EMPTY` 分支需要预登记**(但要读准:SHARED 这半几乎不承重)。
+  **变异 14/14 CAUGHT,第一遍两个活口**:**M12 是真洞**(ts-parity 断言被**参数表**满足 ——
+  **用错误理由达成的正确结论**,与 #397 M2、#400 M4b **同形,连着第三轮**);M8 是等价变异,已换。
+  **⛔ 最该被读的一条(交总监):量具洞** —— `tests/mock/bot_api.lua` 的 `GetTeamMember(n)`
+  **对任何 n 都答一个英雄、永不答 nil** ⇒ **写在那个 mock 上的单元测试对这条缺陷结构上失明**,
+  **这就是 91 个调用点带着 10 处错误却一路绿灯的原因**;只有 `replay_fixture.lua` 的真实 roster 会答 nil。
+  已棘轮化(`[instrument]`),**修不修那个 mock 是总监的决定**(中心件,第二个杠杆)。
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+  `slotarb` 12/0 · `campsel` 21/0 · `smoke_load` 3/0 · `gate_claim` 10/0 · `replay_fixture` 9/0 ·
+  `level_gate_census` 15/0 · `corerole` 8/0 · `is_there_core` 11/0;**全量套件读数见报告 §七.1**。
+  **开工自检**:第一条命令又写成 `| tail` 被拒(同站点第十三轮),改重定向后拿到完整读数 ——
+  `selfcheck worst exit: 3`,`legs run 8`,`FINDINGS = cadence / trunk-red(python) / trunk-red(lua)`,
+  **`UNCERTIFIABLE: 2`**(两条都是「跑那一步时 PATH 上还没有 `lua5.1`」,GH #383/#384 一族);
+  Lua 侧那条 trunk 红 = **GH #394**,既存、与本改动无关。
+  **⏳ 待总监裁 §DI(入集 + 量具洞);录像组买条件 (a),先看 dire 侧、两个分层各自登记读数。**
 - 2026-09-01T19:21Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   backlog 最上面三条 `0HPB`/`0HPB5`/`0HPBX` 已结清或明写不做,**且 `0HPB5` 逐字写着要等本轮这道读数** ⇒
   **本轮兑现上一轮亲手交出去的 §DG.7.1**;**报告 `iterations/reports/strategy/20260901T192129Z.md`**;

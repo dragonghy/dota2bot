@@ -509,7 +509,10 @@ end
 -- an effective 10000 by the uniform multiplier), while enemy-side camps keep
 -- the 10000 the 1.5x implies. Reach for own camps therefore WIDENS. See
 -- tests/test_campsel_wrapper_fields.lua, which pins both directions.
-____exports.GetClosestNeutralSpwan = function(bot, availableCampList, bReadCampRecord)
+--
+-- `bSlotArb` is a SECOND, independent soak candidate ('slotarb') threaded the
+-- same way; it belongs to IsTheClosestOne below and is passed straight through.
+____exports.GetClosestNeutralSpwan = function(bot, availableCampList, bReadCampRecord, bSlotArb)
     local minDist = 15000
     local closestCamp = nil
     for ____, camp in ipairs(availableCampList) do
@@ -522,18 +525,49 @@ ____exports.GetClosestNeutralSpwan = function(bot, availableCampList, bReadCampR
         if ____exports.IsEnemyCamp(rec) then
             dist = dist * 1.5
         end
-        if ____exports.IsTheClosestOne(bot, camp.cattr.location) and dist < minDist and (bot:GetLevel() >= 10 or not ____exports.IsAncientCamp(rec)) then
+        if ____exports.IsTheClosestOne(bot, camp.cattr.location, bSlotArb) and dist < minDist and (bot:GetLevel() >= 10 or not ____exports.IsAncientCamp(rec)) then
             minDist = dist
             closestCamp = camp
         end
     end
     return closestCamp
 end
-____exports.IsTheClosestOne = function(bot, loc)
+-- Soak candidate 'slotarb' (turbo-only; resolved in exactly one place, the
+-- ClosestCamp wrapper in bots/mode_farm_generic.lua).
+--
+-- The loop's domain is the team ROSTER and its accessor is GetTeamMember, whose
+-- argument is a team SLOT (1..5 -- docs/BOT_API_REFERENCE.md, and both mocks).
+-- GetTeamPlayers hands back PLAYER IDS (0-4 radiant / 5-9 dire), and the
+-- shipped line feeds one to the other. The two are not the same number, and
+-- out of range GetTeamMember answers nil, so the arbitration silently scans a
+-- SUBSET of the team -- by side:
+--   * dire  (ids 5..9): only slot 5 exists => 1 of 5 teammates ever looked at;
+--   * radiant (ids 0..4): id 0 is out of range and slot 5 is never asked for
+--     => 4 of 5, and from step 2 on each id names a DIFFERENT hero than the
+--     step the loop is actually on.
+-- Measured on every one of the 47 real-frame fixtures that carry player_id
+-- (24 dire, 23 radiant): the shipped scan finds 1 or 4 where armed finds 5.
+-- Missing a teammate can only make "nobody is closer than me" easier to
+-- believe, so the failure direction is OPEN: several bots each conclude they
+-- own the same camp. Repo-wide census of the SHIPPED tree: this argument is a
+-- slot at 80 call sites and a player id at 10 (80 : 10). This fix moves exactly
+-- one of the ten; the other NINE are registered and deliberately untouched
+-- (one lever) -- 8 in bots/FunLib/utils.lua, 1 in bots/FunLib/jmz_func.lua
+-- (J.IsClosestToDustLocation, the same "am I the closest" shape).
+--
+-- Armed, the scanned set is a strict SUPERSET of the shipped one, and the only
+-- thing a wider scan can do is find someone closer => armed's TRUE set is a
+-- strict SUBSET of the shipped TRUE set. It can refuse a camp the shipped code
+-- accepted; it can never accept one the shipped code refused.
+____exports.IsTheClosestOne = function(bot, loc, bSlotArb)
     local minDist = GetUnitToLocationDistance(bot, loc)
     local closestMember = bot
-    for ____, id in ipairs(GetTeamPlayers(GetTeam())) do
-        local member = GetTeamMember(id)
+    for i, id in ipairs(GetTeamPlayers(GetTeam())) do
+        local nSlot = id
+        if bSlotArb then
+            nSlot = i
+        end
+        local member = GetTeamMember(nSlot)
         if member and member:IsAlive() and member:GetActiveMode() == BotMode.Farm then
             local memberDist = GetUnitToLocationDistance(member, loc)
             if memberDist < minDist then

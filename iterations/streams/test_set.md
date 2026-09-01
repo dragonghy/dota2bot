@@ -12803,3 +12803,116 @@ term —— 后者正是 backlog #1 登记的残留。
 `hero_of` 先读 `MINION_OWNER` 就返回了,`MINION_GENERIC` 那行根本没被求值:
 **改了文本没改程序**。把一个空操作记成「测试没盯住」,与把它记成「抓到了」是同一个谎,只是枪口对着测试。
 ⇒ 台子现在**给行为按指纹**(`derive_id` 的判读),指纹没动就打 `INERT` 并**自称是台子的缺陷**,不去赖测试。
+
+---
+
+## §DI 2026-09-01T22:xxZ 协同组提议入集:`slotarb`(GH #406)—— **搭车、零 AWS 增量、不申请专波**;而本节最该被读的不是那个下标,是 **§DI.6:一个只有真实帧才答得出 nil 的量具洞,让 91 个调用点带着 10 处错误一路绿灯 —— 单元测试不是没查,是结构上查不到**
+
+**提议**:`slotarb` 加入 armed 测试集(搭下一波的车,**零 AWS 增量、零 EC2、不申请专波**)。
+`queue.json` 行:**`strategy-34`**(`bundle` 字段已填)。`state.json` 键:`slotarb_20260901`。
+
+### §DI.1 缺陷(共享代码,域 = 语料里的每一个英雄)
+
+`bots/FunLib/aba_site.lua`,`____exports.IsTheClosestOne` —— **野区营地仲裁谓词**。
+调用链是单线的:`mode_farm_generic.lua` 的 `ClosestCamp`(全仓唯一那处)
+→ `GetClosestNeutralSpwan` → `IsTheClosestOne`。出厂写法:
+
+```lua
+for ____, id in ipairs(GetTeamPlayers(GetTeam())) do
+    local member = GetTeamMember(id)
+```
+
+`GetTeamPlayers` 给的是 **player id**(radiant 0-4 / dire 5-9);
+`GetTeamMember` 要的是 **team slot 1..5**,越界**答 nil**
+(`docs/BOT_API_REFERENCE.md:223`,`tests/mock/replay_fixture.lua` 与
+`tests/mock/bot_api.lua` 也都按 1..5 实现)。**两个不是同一个数域。**
+
+### §DI.2 主判据(可复用,超出本主题)
+
+**一个循环的「域」和它的「访问器」用了两套下标空间时,不匹配不会报错 ——
+它静悄悄地缩小域,而且缩得按侧不同。**
+判别特征可数、不需要帧、不需要跑:一个参数被文档规定为 `1..N` 序数的访问器,
+被喂进一次**以 id 为值**的迭代。出厂树全仓普查:**80 处当 slot 用、10 处当 player id 用**
+(**80:10**,与 §DG 的 64:6、§DD 的 249/227/1 同族)。
+**失效方向朝「开」**(连着第三条,继 §DE `immguard` / §DG `hpbool`):
+扫得少只会让「没人比我更近」**更容易成立** ⇒ 多个 bot 各自认定同一个营地归自己。
+
+### §DI.3 ⭐ 按侧不同,而这正是铁律 4(i) 管的那种量
+
+| 侧 | ids | 落到的 slot | 扫到几个 | 备注 |
+|---|---|---|---|---|
+| radiant | {0,1,2,3,4} | {1,2,3,4} | **4 / 5** | slot 5 从没被问过;**从第 2 步起每一步量的都是另一个英雄** |
+| dire | {5,6,7,8,9} | {5} | **1 / 5** | 对 pid-9 那个 bot 而言**那就是它自己** ⇒ 仲裁空转,**恒答 TRUE** |
+
+**47 份带 `player_id` 的真实帧 fixture 上逐份复现**:24 份 dire(扫 1)+ 23 份 radiant(扫 4),
+armed 每一份都扫满 5。⇒ **在这条上「池化读一个撞车率」是结构性错误,不是精度问题**:
+被池化的两层本身就在测不同的东西。
+
+### §DI.4 改动与暗态
+
+参数化,不改出厂操作数:`IsTheClosestOne(bot, loc, bSlotArb)`,
+`GetClosestNeutralSpwan(..., bSlotArb)` 只做透传,
+**闸在全仓唯一那处解析** —— `mode_farm_generic.lua` 的 `ClosestCamp`,
+和 `campsel` 用的是同一个 wrapper,所以**没有任何调用点能漏掉闸**。
+门关 ⇒ `nSlot = id` ⇒ **逐字节等于出厂函数**。
+`typescript/bots/FunLib/aba_site.ts` 同步。`game/` 零 diff。
+
+**严格子集**:armed 扫的是出厂集合的**超集**,而扫得更宽只可能**找到更近的人**
+⇒ **armed 的 TRUE 集是出厂 TRUE 集的严格子集**:只可能让出一个营地,**永远不可能多占一个**。
+`[subset]` 在全语料上实测 **46 次翻转,反方向 0 次**。
+
+### §DI.5 验收(条件 (a))
+
+一个窗口:**同队 ≥2 个 bot 处于 Farm 模式、在几秒内选中同一个野区营地**,
+读出厂腿的撞车次数与 armed 腿的(**预登记预期:armed 少**)。**先看 dire 侧**,那一侧出厂仲裁彻底空转。
+**两个分层各自登记读数**(铁律 4(i-a)),理由见 §DI.3。
+
+**⭐ 域在选杠杆之前就买好了,不是脚注**:
+`tools/agent/corpus_hero_census.py --file bots/FunLib/aba_site.lua` 答 **SHARED / exit 0** ——
+共享代码的域是语料里的**每一个英雄**,因此**没有 `DOMAIN-EMPTY` 分支需要预登记**。
+这正是 §DG.7.1 / GH #400 立那道读数的用处,**本轮是它第一次在选题前被跑**(0CORP 的交待)。
+
+### §DI.6 ⛔ 本节最该被读的一条:量具洞(承重)
+
+`tests/mock/bot_api.lua` 的 `GetTeamMember(n)` 对**任何 `n` 都造一个英雄出来**,
+**永远不答 nil**。于是:
+
+> **任何写在那个 mock 上的单元测试,对这条缺陷是结构上失明的** ——
+> 不是没查,是查不到。这就是 91 个调用点带着 10 处错误、
+> 而整套测试一路绿灯的原因。
+
+只有 `tests/mock/replay_fixture.lua` 的**真实 roster**(按 `player_id` 排序、按下标取)会答 nil。
+本轮把这个洞**棘轮化**了(`[instrument]`,断言写成「洞还在」并注明修好后要连同这条一起删),
+但**修不修这个 mock 是总监的决定**:它是中心件,改它可能牵动别的断言。
+与 §CL / GH #329 同族的教训形状:**读数不是局数**,这里是**「测试跑了」不是「测试看得见」**。
+
+### §DI.7 本地验证
+
+`tests/test_slotarb_camp_arbitration.lua`(`[ratchet]` **12/0**)。真实帧两份:
+- `[frame F1]` `f_260819_182855_lion_drain_jungle`(**dire, lion**)—— 出厂循环只看见一个成员,**而那就是它自己**;
+- `[frame F2]` `f_260820_043120_viper_defend_paired`(**radiant, viper**)—— 4/5,且**剩下四步全部错位**。
+- `[decision]` armed 拒绝一个**有 farming 队友正站在上面**的营地(dragon_knight 在 F1 上的真实坐标),出厂则照收;
+  **阳性对照承重**:armed 仍然认领一个确实没人更近的位置 ⇒
+  「armed 说 false」**不能**被一个「永远说 false」的修复满足。
+- `[off-candidate]` 出厂函数逐字转写,在 **500+ 个真实英雄坐标**上与打过补丁的并排跑。
+- `[corpus]` / `[census]` / `[structure]` / `[ts parity]` / `[instrument]`。
+
+**变异 14/14 CAUGHT**,干净树**开跑前后各证一次绿**,每个变异从**文件拷贝**恢复。
+**⚠️ 诚实注记:第一遍 M12 是活的** —— 「TS selector 收下了 flag 然后把它丢掉」。
+ts-parity 的断言写成 `sel:find('bSlotArb')`,而**参数表本身就满足它**:
+**用错误理由达成的正确结论**(与 §DG 的 M2、GH #400 的 M4b 同形)。
+改成对交接本身求证后 CAUGHT。另一个第一遍的活口 M8 是**等价变异**
+(`bSlotArb or false` 加一句注释,而「注释不是代码」这一半是**正确行为**),已换成真的那一个。
+
+### §DI.8 声明的边界
+
+1. **`GetActiveMode` 是声明过的 harness 输入**:帧 dump 不带 active mode,两处 decision 测试里显式 spec。
+   其余(roster / player id / 坐标 / 存活)**全是帧数据**。已在测试文件抬头逐字声明。
+2. **10 处只修 1 处,一次一个杠杆。** 另外 **9 处登记不修**:`utils.lua` 8 处 +
+   `jmz_func.lua:11470`(`J.IsClosestToDustLocation`,**同一个「我是不是最近的那个」形状**)。
+   计数**棘轮钉死在 9**,所以再修一处是一次**有意的**动作。
+3. **登记不修、且形状不同**:`bots/FunLib/advanced_item_strategy.lua:332`
+   写的是 `GetTeamMember(GetOpposingTeam(), i)` —— **两个参数**喂给一个单参数 API,而且第一个是**队伍常量**。
+   它**跨两行**,所以**按行扫的普查根本看不见它**(本轮的普查第一版就漏了它,是变异台之外的一次自查抓到的)。
+4. **60 份早于 dumper `player_id` 的 fixture 报的是裸下标 1..N**,那里 `id == i`,
+   **这条缺陷不可见** —— 它们算**退化世界,不算「没问题」的证据**。

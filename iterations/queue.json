@@ -1308,6 +1308,18 @@
         "note": "The fix stays on the branch, gated and inert (turbo-only, gate shut = byte-identical shipped decision, strict subset). It is NOT armed and NOT rejected. Reason: condition (a) cannot be bought. Director's own reading, taken with tools/agent/corpus_hero_census.py --file bots/BotLib/hero_tiny.lua: tiny DOMAIN-EMPTY, files=0 games=0, bare exit 3 over 108 frame files / 43 distinct heroes. Arming it would spend a candidate slot to buy a DOMAIN-EMPTY harvest, and per test_set.md §CJ that harvest must NOT be read as 'no effect' -- which is precisely how a lever dies quietly. Conditions (b) and (c) are granted as argued (strict subset; the repo's own 64:6 majority plus the sibling copy 170 lines away in the same file). UNBLOCK PATH, mechanical, no one has to remember it: pending_rulings.py now prints a domain watch for this ruling every round and flips it to UNBLOCKED (exit 3, owes a re-ruling) the day the archive carries a tiny frame. Cheaper alternative the proposer may prefer: move the lever to shared code (bots/mode_*.lua, bots/FunLib/*), which owes no domain price at all. The five unfixed sibling sites stay registered and unfixed (one lever at a time)."
       },
       "status": "pending"
+    },
+    {
+      "id": "strategy-34",
+      "stream": "strategy",
+      "bundle": "slotarb",
+      "seeds": [],
+      "priority": 3,
+      "axis": "SLOTARB —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `slotarb`**(§CY.3 的教训:开工自检按 `bundle` 找提议行,字段为空就被报成 `ORPHAN_PROPOSAL`)。",
+      "question": "`slotarb`(GH #406,提议 test_set.md §DI):`bots/FunLib/aba_site.lua` 的 `IsTheClosestOne` —— 野区营地仲裁谓词(唯一调用者 `GetClosestNeutralSpwan`,再唯一调用者 `mode_farm_generic.lua` 的 `ClosestCamp`)—— 写着 `for _, id in ipairs(GetTeamPlayers(GetTeam())) do local member = GetTeamMember(id)`。**`GetTeamPlayers` 给的是 player id(radiant 0-4 / dire 5-9),`GetTeamMember` 要的是 team slot 1..5,越界答 nil**(`docs/BOT_API_REFERENCE.md:223`,两个 mock 也都这么实现)。⇒ **仲裁静悄悄只扫了队伍的一个子集,而且按侧不同**:radiant 扫到 slot 1-4(5 个里 4 个,slot 5 从没被问过,而且从第 2 步起每一步量的都是**另一个英雄**);**dire 只扫到 slot 5 这一个**,对 pid-9 那个 bot 而言那**就是它自己** ⇒ 整个仲裁是空转,恒答 TRUE。**失效方向朝「开」**(连着第三条,继 #393 / #397):扫得少只会让「没人比我更近」**更容易成立** ⇒ 多个 bot 各自认定同一个营地归自己。**仓库按多数票回答**:出厂树全仓 **80 处**把这个参数当 slot 用、**10 处**当 player id 用(**80:10**,与 #397 的 64:6、#385 的 249/227/1 同族)。armed 时改传 slot;**严格子集:armed 扫的是出厂集合的超集,而扫得更宽只可能「找到更近的人」⇒ armed 的 TRUE 集是出厂 TRUE 集的严格子集**,只可能让出一个营地,永远不可能多占一个。本轮**只修 1 处**(一次一个杠杆),另外 9 处(utils.lua 8 处 + jmz_func.lua:11470 `J.IsClosestToDustLocation`,**同一个「我是不是最近的那个」形状**)**登记不修**并把计数棘轮钉死在 9。",
+      "acceptance": "**条件 (a) 的执行判据**:找「同队 ≥2 个 bot 处于 Farm 模式、在几秒内选中**同一个野区营地**」的窗口,读出厂腿该窗口内的**撞车次数**与 armed 腿的(**预登记预期:armed 少**)。**先看 dire 侧** —— 那一侧出厂仲裁是彻底空转,信号最大。⚠️ **按 README 铁律 4(i) 必须两个分层各自登记读数**:这条缺陷本身**就是一个按侧不同的量**(dire 扫 1 / radiant 扫 4),所以「池化读一个撞车率」在这里是**结构性错误**,不是精度问题。**⭐ 域已在选题前买好,不是脚注**:`tools/agent/corpus_hero_census.py --file bots/FunLib/aba_site.lua` 答 **SHARED / exit 0** —— 共享代码的域是语料里的**每一个英雄**,因此**没有 `DOMAIN-EMPTY` 分支需要预登记**(这正是 §DG.7.1 / GH #400 立那道读数的用处,本轮第一次在选杠杆**之前**跑它)。**⛔ 量具注记(承重)**:`tests/mock/bot_api.lua` 的 `GetTeamMember(n)` 对**任何 n 都答一个英雄**,永不答 nil ⇒ **任何写在那个 mock 上的单元测试对这条缺陷结构性失明**,这就是 91 个调用点带着 10 处错误却一路绿灯的原因;只有 `replay_fixture.lua` 的真实 roster 会答 nil。",
+      "director": "",
+      "status": "open"
     }
   ],
   "done": [

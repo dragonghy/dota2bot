@@ -57,9 +57,14 @@ local runMode = false;
 -- no call site that can silently miss the gate. tests/test_campsel_wrapper_fields.lua
 -- asserts that count (`J.Site.GetClosestNeutralSpwan` appears once outside
 -- aba_site.lua) rather than trusting that all ten call sites were updated.
+--
+-- The same wrapper resolves a SECOND, independent candidate: 'slotarb' (the
+-- team-slot-vs-player-id argument of GetTeamMember inside IsTheClosestOne).
+-- Two ids, one call site, so either can be armed alone.
 local function ClosestCamp(hBot, tCamps)
 	return J.Site.GetClosestNeutralSpwan(hBot, tCamps,
-		J.IsModeTurbo() and J.IsSoakCandidate('campsel'))
+		J.IsModeTurbo() and J.IsSoakCandidate('campsel'),
+		J.IsModeTurbo() and J.IsSoakCandidate('slotarb'))
 end
 
 -- [GH #137 §3 suggestion 2] Every `bot:GetNearbyCreeps` sweep on the farm path

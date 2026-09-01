@@ -425,7 +425,7 @@ export const HasArmorReduction = function (nUnit: Unit): boolean {
 // CONSEQUENCE: own-side camps regain the full 15000 reach they were written to
 // have, while enemy-side camps keep the 10000 the 1.5x implies -- reach for own
 // camps WIDENS. See tests/test_campsel_wrapper_fields.lua.
-export const GetClosestNeutralSpwan = function (bot: Unit, availableCampList: any[], bReadCampRecord?: boolean): any | null {
+export const GetClosestNeutralSpwan = function (bot: Unit, availableCampList: any[], bReadCampRecord?: boolean, bSlotArb?: boolean): any | null {
     let minDist = 15000;
     let closestCamp: any | null = null;
 
@@ -437,7 +437,7 @@ export const GetClosestNeutralSpwan = function (bot: Unit, availableCampList: an
         let dist = GetUnitToLocationDistance(bot, camp.cattr.location);
         if (IsEnemyCamp(rec)) dist *= 1.5;
 
-        if (IsTheClosestOne(bot, camp.cattr.location) && dist < minDist && (bot.GetLevel() >= 10 || !IsAncientCamp(rec))) {
+        if (IsTheClosestOne(bot, camp.cattr.location, bSlotArb) && dist < minDist && (bot.GetLevel() >= 10 || !IsAncientCamp(rec))) {
             minDist = dist;
             closestCamp = camp;
         }
@@ -446,12 +446,20 @@ export const GetClosestNeutralSpwan = function (bot: Unit, availableCampList: an
     return closestCamp;
 };
 
-export const IsTheClosestOne = function (bot: Unit, loc: Vector): boolean {
+// Soak candidate 'slotarb' (turbo-only; resolved in bots/mode_farm_generic.lua).
+// GetTeamMember takes a team SLOT (1..5); GetTeamPlayers hands back PLAYER IDS
+// (0-4 radiant / 5-9 dire). Shipped, the loop feeds one to the other, so the
+// arbitration scans 1 of 5 teammates on dire and 4 of 5 on radiant. Armed, it
+// scans the slot -- a strict superset, so armed's TRUE set is a strict subset.
+// See bots/FunLib/aba_site.lua for the full note and the measured numbers.
+export const IsTheClosestOne = function (bot: Unit, loc: Vector, bSlotArb?: boolean): boolean {
     let minDist = GetUnitToLocationDistance(bot, loc);
     let closestMember = bot;
 
+    let i = 0;
     for (const id of GetTeamPlayers(GetTeam())) {
-        const member = GetTeamMember(id);
+        i += 1;
+        const member = GetTeamMember(bSlotArb ? i : id);
         if (member && member.IsAlive() && member.GetActiveMode() === BotMode.Farm) {
             const memberDist = GetUnitToLocationDistance(member, loc);
             if (memberDist < minDist) {
