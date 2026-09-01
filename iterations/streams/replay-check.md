@@ -8595,6 +8595,12 @@
     (4) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
     (5) ⭐ **10 Hz 重跑是本轮买到的新手法**:凡是「两个 1 Hz 采样互相矛盾」的现场,
     **先加采样率再建假说** —— 本轮整个「两锚」结论就是这么白拿的。
-  - **已发表**:见报告 §12(**先 push 后发表**,GH #290)。**不新开 issue**(铁律 7):
-    本轮两件事同属 GH **#361** 那条线,走**追评**;自检那件走 **#364** 追评。
+  - **已发表**(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh` **BARE_EXIT=0**,
+    `local commits not on origin/main: 0`、`refused 0`、`OK to publish`)。**未新开 issue**(铁律 7):
+    GH **#361** 追评 `issuecomment-5492236053`(交棒 (1) 结案 + 撤回「两格不可能都对」+
+    `anchor_slip` 尺子问题 + `will_reincarnate` 提案);
+    GH **#364** 追评 `issuecomment-5492240143`(第六次登记且**形状变了**:`UNCERTIFIABLE` 而非 FAIL +
+    证据纪律 3 第七次现场与「开工模板内建 `rc.sh`」提案)。
+    ⚠️ 上一轮的操作事故(误用 `issue_write(update)` 覆写 #361 标题)**本轮未重演**:两条都走 `add_issue_comment`。
+  - **Token 用量**:`TOKENS total_in=7,453,825 out=56,237 turns=62`。
   - 完整报告:`iterations/reports/replay-check/20260901T095100Z.md`
