@@ -319,6 +319,43 @@ sc_leg 'trunk-red(python)'
 printf '\n=== trunk health (python test suite) ===\n'
 if command -v python3 >/dev/null 2>&1; then
     suite=$(bash tests/run_py_tests.sh 2>&1); suite_rc=$?
+    # [director 20260901, GH #380] KEEP THE EVIDENCE.  Everything below the
+    # green path used to reach the reader through `grep -E '^(FAIL|...)'`, and
+    # run_py_tests.sh indents each failing test's OWN output by six spaces
+    # (`sed 's/^/      /'`).  An anchored grep drops every one of those lines.
+    # So the runner went to the trouble of capturing $out and printing it, and
+    # this leg threw it away -- leaving the banner and a filename.
+    #   Measured cost, this round: 开工自检 printed `FAIL tests/test_rc_wrapper
+    # .py` + TRUNK RED and nothing else.  The suite was green on the very next
+    # run, and the test was green 30/30 standalone, so that discarded text was
+    # the ONLY copy of the evidence for an intermittent red -- and the leg
+    # deleted it.  Re-running is not a recovery: a flake that does not
+    # reproduce is gone for good.
+    #   This is the same failure family as GH #243/#267 approached from the
+    # other side.  Those two fixed WHICH banner gets printed; the banner has
+    # been right since.  What no round could do is answer "red because of
+    # what?" -- and the leg's own note above says a false TRUNK RED is what
+    # teaches people to ignore the line.  A red you cannot diagnose is
+    # indistinguishable from one, so it costs the same trust.
+    #   The full text now goes to a log OUTSIDE the tree, named on stdout.
+    # Writing under $TMPDIR keeps the "this leg never mutates the working
+    # tree" property that the auto-stash note above turns on; the tail printed
+    # inline is a view, and the log is the data (tools/agent/rc.sh's RC_LOG
+    # idiom, and its test's words: "the tail is a view, not the data").
+    py_log=""
+    if [ "$suite_rc" -ne 0 ]; then
+        py_log=$(mktemp "${TMPDIR:-/tmp}/selfcheck_py_XXXXXX.log" 2>/dev/null) || py_log=""
+        [ -n "$py_log" ] && printf '%s\n' "$suite" > "$py_log" 2>/dev/null
+    fi
+    # The runner's own indent is the detail channel; 40 lines is a view of it.
+    sc_py_detail() {
+        printf '%s\n' "$suite" | grep -E '^      ' | head -40
+        if [ "$(printf '%s\n' "$suite" | grep -cE '^      ')" -gt 40 ]; then
+            printf '      ... (truncated at 40 lines)\n'
+        fi
+        [ -n "$py_log" ] && printf 'PY_LOG: %s  (full output -- the lines above are a view, not the data)\n' "$py_log"
+        return 0
+    }
     if [ "$suite_rc" -eq 0 ]; then
         printf '%s\n' "$suite" | tail -1
     elif [ "$suite_rc" -eq 2 ]; then
@@ -328,11 +365,18 @@ if command -v python3 >/dev/null 2>&1; then
         # measured (one round read 39/2 where two later runs of the same tree
         # read 41/0).  Uncertifiable is not a pass either: it still notes 2.
         printf '%s\n' "$suite" | grep -E '^(UNCERTIFIABLE|uncertifiable:|[0-9]+ passed)' || true
+        sc_py_detail
         printf 'UNCERTIFIABLE -- a python test did NOT run (could not read its input). This line is NOT a pass,\n'
         printf '  and it is NOT evidence that trunk is red: re-run on a quiet tree (nothing writing under bots/).\n'
         note 2
     else
-        printf '%s\n' "$suite" | grep -E '^(FAIL|failed:|[0-9]+ passed)' || true
+        # `uncertifiable:` is in this alternation on purpose.  A run can be BOTH
+        # red and un-run -- this round's was, `71 passed, 1 failed, 1
+        # uncertifiable` -- and only the exit-2 branch used to name the un-run
+        # file.  The exit-1 branch reports the strictly worse tree, so it was
+        # the branch that named LESS of what was wrong.
+        printf '%s\n' "$suite" | grep -E '^(FAIL|failed:|UNCERTIFIABLE|uncertifiable:|[0-9]+ passed)' || true
+        sc_py_detail
         printf 'TRUNK RED -- a python test is failing ON THE WORKING TREE.\n'
         printf '  Whether main is red too is NOT established by this line: re-run after `git stash`.\n'
         note 3
