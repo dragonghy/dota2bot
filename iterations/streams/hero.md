@@ -68,7 +68,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      **没用 `RULE6_BYPASS`**);动态**全部引用 `crystal_maiden` 的 40 个测试文件 exit 0**。
      ⚠️ 开工自检第一条命令又被 REFUSED(**第十次**管道给 `tail`)= **什么都没检查不是通过**;
      裸重跑 exit 3 = cadence(**不是本组**)+ python 腿 UNCERTIFIABLE(**本 diff 零行 python**)。
-   - **下一棒**:(1) **`GetAOERadius` 的零已开 [hero] issue**;**能定案的证据是录像组的** ——
+   - **下一棒**:(1) **`GetAOERadius` 的零已开 GH #386**;**能定案的证据是录像组的** ——
      出货 CM 在真实对局里有没有经 branch 1/2 开过大(非撤退态、身边 ≥3 人的引导):
      有 ⇒ 引擎答非零、量具该修且 `cmrself` domain 为真;普查不到 ⇒ 那两条分支在真实对局里
      **也是死的**,那是**英雄组的行为缺陷**不是量具问题。(2) `cmrself` 维持停放,记法已更新。
@@ -3572,7 +3572,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **没用 `RULE6_BYPASS`**);动态**全部引用 `crystal_maiden` 的 40 个测试文件 exit 0**。
     ⚠️ 开工自检第一条命令又被 REFUSED(**第十次**)= 什么都没检查不是通过;裸重跑 exit 3 =
     cadence(**不是本组**)+ python 腿 UNCERTIFIABLE(**本 diff 零行 python**)。
-  - **下一棒**:(1) `GetAOERadius` 的零已开 [hero] issue,**能定案的证据是录像组的**
+  - **下一棒**:(1) `GetAOERadius` 的零已开 **GH #386**,**能定案的证据是录像组的**
     (出货 CM 有没有经 branch 1/2 开过大);(2) `cmrself` 维持停放、记法已更新;
     (3) margin-0 那一帧是唯一残留的「朝可施放失效」读数;(4) **`-43a` 三个方向全部付清**,
     GH #357 admission 仍阻塞,GH #374 仍在总监手上。
