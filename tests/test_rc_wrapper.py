@@ -34,6 +34,7 @@ run), 1 = ran and the answer was wrong, 0 = clean.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,13 +43,42 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 RC = os.path.join(ROOT, 'tools', 'agent', 'rc.sh')
 
+# GH #384.  Two checks below need rc.sh to PASS THROUGH to `lua5.1`, i.e. they
+# need the interpreter to exist.  It is not a dependency of rc.sh and it is not
+# a dependency of the refusal checks (rc.sh refuses a module .lua at :82, ~20
+# lines ABOVE the `"$@"` at :103, so those checks answer identically on a
+# container with no Lua at all).  It IS a dependency of the two pass-through
+# checks, and when it is missing the wrapper faithfully reports the shell's
+# `command not found` -- 127.
+#
+# That 127 is what routine_selfcheck.sh's python leg has been reading as
+# TRUNK RED.  It is not a flake and it is not concurrency: the selfcheck runs
+# this suite at :321 and installs lua5.1 at :451-452, ~130 lines LATER, so on a
+# fresh container the interpreter is genuinely absent at :321 and present by
+# the time anyone re-runs the file by hand.  Four rounds re-ran it bare, read
+# green, and filed "false red under concurrent load, no new defect" -- the bare
+# re-run is the CONFOUNDED measurement, because the selfcheck's own later leg
+# installed the missing binary in between.
+#
+# So the honest answer for these two is the file's documented exit-2 word:
+# they did NOT run.  A check that cannot run must not report the tree as
+# broken -- that is what teaches readers to ignore the line.
+HAS_LUA = shutil.which('lua5.1') is not None
+
 fails = []
+uncs = []
 
 
 def ok(name, cond, why=''):
     print('%-68s %s' % (name, 'ok' if cond else 'FAIL'))
     if not cond:
         fails.append('%s%s' % (name, ': ' + why if why else ''))
+
+
+def unc(name, why):
+    """The check did not run.  NOT a pass, and NOT a failure of the tree."""
+    print('%-68s %s' % (name, 'UNCERTIFIABLE'))
+    uncs.append('%s: %s' % (name, why))
 
 
 if not os.path.exists(RC):
@@ -152,14 +182,28 @@ with tempfile.TemporaryDirectory() as td:
     script = os.path.join(td, 'selfrunning.lua')
     with open(script, 'w', encoding='utf-8') as fh:
         fh.write('os.exit(6)\n')
-    rc, out, _ = run(['lua5.1', script])
-    ok('self-running .lua: NOT refused, real code passed through', rc == 6,
-       'got %d -- a refusal that fires on everything is not a check' % rc)
+    if HAS_LUA:
+        rc, out, _ = run(['lua5.1', script])
+        ok('self-running .lua: NOT refused, real code passed through', rc == 6,
+           'got %d -- a refusal that fires on everything is not a check' % rc)
+    else:
+        unc('self-running .lua: NOT refused, real code passed through',
+            'no lua5.1 on PATH -- rc.sh would pass through to a missing '
+            'interpreter and report its 127, which says nothing about rc.sh')
 
-ok('run_tests.lua is never refused (it is the runner)',
-   run(['lua5.1', 'tests/run_tests.lua', 'test_rc_wrapper_nonexistent.lua'])[0] != 2
-   or 'REFUSED' not in run(['lua5.1', 'tests/run_tests.lua',
-                            'test_rc_wrapper_nonexistent.lua'])[1])
+if HAS_LUA:
+    ok('run_tests.lua is never refused (it is the runner)',
+       run(['lua5.1', 'tests/run_tests.lua', 'test_rc_wrapper_nonexistent.lua'])[0] != 2
+       or 'REFUSED' not in run(['lua5.1', 'tests/run_tests.lua',
+                                'test_rc_wrapper_nonexistent.lua'])[1])
+else:
+    # Note the failure DIRECTION this one had: written as `rc != 2 or ...`, a
+    # missing interpreter gives 127, `127 != 2` is True, and the check passes
+    # VACUOUSLY -- green for a reason that has nothing to do with the claim.
+    # Its neighbour four lines up went red for the same missing binary. One
+    # absent dependency, two opposite wrong answers, in one file.
+    unc('run_tests.lua is never refused (it is the runner)',
+        'no lua5.1 on PATH -- this check would pass vacuously (127 != 2)')
 
 rc, out, _ = run([])
 ok('no command: refused with 2, not silently 0', rc == 2, 'got %d' % rc)
@@ -191,4 +235,11 @@ if fails:
     for f in fails:
         print('  - %s' % f)
     sys.exit(1)
+if uncs:
+    # Ordered after `fails` on purpose: a real failure outranks a missing
+    # dependency.  Exit 2 is the file's documented "did NOT run" word.
+    print('%d check(s) UNCERTIFIABLE -- this is NOT a pass:' % len(uncs))
+    for u in uncs:
+        print('  - %s' % u)
+    sys.exit(2)
 print('rc.sh wrapper: all checks ok')

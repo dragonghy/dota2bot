@@ -1211,7 +1211,15 @@
       "axis": "ILLUMOVE —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5)。**注意 §CY.3 的教训**:本行 `bundle` 字段**已填 `illumove`**,不是空串 —— 开工自检按 `bundle` 找提议行,`strategy-27`/`strategy-28` 被报成 `ORPHAN_PROPOSAL` 正是因为那两行的 `bundle` 是空的。",
       "question": "`illumove`(GH #378,提议 test_set.md §CZ):`bots/FunLib/minion_lib/illusions.lua` 的 `nNextMoveTime` 是 **module 级**的局部变量,而它节流的决策(「这个单位最近有没有被给过去处」)是 **per-unit** 的。`bots/FunLib/aba_minion.lua` **只 dofile 该模块一次**(`:11`),并把这个 bot 的每一个幻象与每一个 `U.IsMinionWithNoSkill` 单位经**同一个调用表达式**(`:52`)送进 `X.Think` ⇒ 同一帧里第一个走到移动分支的小兵把共享时钟推后 0.2s,**兄弟们直接从 `X.Think` 末尾掉出去,一条命令都没有**;而它们 0.2s 后也不会被补上,因为 `aba_minion.lua:33-35` 自己那道 per-unit 0.5s 闸把它们扣到 0.5s 之后,那时共享时钟又被当帧的赢家推后了。真实帧 20 周期 4 小兵实测 **20/0/0/0**(不是 20/6/6/6)。armed 时时钟改挂 `hMinionUnit.next_move_time`(初值读回 0,与全新 module 时钟同值 ⇒ arming 不可能让出厂会动的小兵反而停下);`0.2` 命名为 `MOVE_THROTTLE`,**arming 是把时钟挪成 per-unit,不是把时钟拆掉**。",
       "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— 找**同一个 bot 同时有 ≥2 个受控小兵/幻象**的窗口(WK 的 `skeleton_king_mortal_strike` 骷髅、Naga/PL/TB/CK 的幻象、术士石傀儡、Lycan 狼、先知树人、Brood 小蜘蛛、被支配的野怪都算),读**每个**小兵在该窗口内收到的移动/攻击移动命令数。**出厂腿的预登记预期:同窗口内只有一个小兵在动,其余为 0**;**armed 腿:每个小兵都有非零命令数**。⚠️ **METHOD-FAILED 分支(按 §CJ 必须枚举)**:若语料里根本没有「同一 bot ≥2 个受控小兵」的窗口(**这完全可能** —— 5 个焦点英雄里只有 WK 产生这种人口,而 `mortal_strike` 的骷髅存活很短),**判 `DOMAIN-EMPTY`,不判无效**,并把这一条**退回总监重裁**;执行方**不得**自行套用「无效应 ⇒ 不 promote」。**条件 (b)**:粗粒度,胜负无明显负面即可。**条件 (c)** 已成立:被卡住的是「小兵跟随主人 / 转场去团战 / 走去线上」这一整类移动,标准打法里召唤物跟随与分推是基本操作。",
-      "status": "pending"
+      "status": "running",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一常规波次(搭车,零 EC2 增量,零新波次);成员串 50 → 52 自本轮起(与 `illureal` 同轮)",
+        "at": "2026-09-01T10:2xZ",
+        "ref": "test_set.md §DC(裁定全文,两条同节;§DC.1 本条 / §DC.3 两条之间的限定);提议 §CZ;GH #378;iterations/reports/director/20260901T102117Z.md",
+        "executor": "replay-check",
+        "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(§BB.4)。**路由裁定,不是对 §CZ 全部读数的背书。**\n\n**总监按源码独立复核四条**(不照抄提议自述):(i) **单条独立门**:`IsPerUnitMoveClock()` 的合取项是 `J.IsModeTurbo()`(运行期值)与 `J.IsSoakCandidate('illumove')`(本 id 自己),**没有第二个候选 id** ⇒ 不落进 `pullcad` 陷阱;全仓 `illumove` 只此一个可执行表达式。(ii) **门关逐字保留,而且是「同一串操作」不只是「同一个返回值」**:剥掉注释后本次改动只有四处替换 + 四个新 local,门关时 `GetNextMoveTime` 逐字 `return nNextMoveTime`、`SetNextMoveTime` 逐字 `nNextMoveTime = nTime`、`MOVE_THROTTLE` 是 `0.2` 的字面量绑定;`DotaTime()` 的求值顺序两种写法相同且实参无副作用。(iii) **门关新增的每帧成本已量,可忽略**:`J.IsModeTurbo()`(`bModeTurboCache` 有缓存)与 `J.IsSoakCandidate()`(`tSoakSideCache` 有缓存,真实对局里该文件不存在 ⇒ 缓存为 false),**两者皆无副作用**。(iv) 验收独立重跑:`lua5.1 tests/run_tests.lua illumove` **9/9 裸读 exit 0**,邻居 `fixture_illusion` **10/10**。\n\n⚠️ **收割前必读 §DC.3(总监加的第 (丁) 条限定,提议里没有)**:本条与 `illureal` 改的是**同一个文件同一条 `X.Think` 路径**,同帧内**不正交** —— `illureal` armed 会让更多幻象在 `illusions.lua:80` 的诱饵分支提前 `return`,那些单位**根本走不到 `:94` 的移动闸** ⇒ `illumove` 的域被 `illureal` 缩小。两条同波 armed 时,**落在「非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势 ∧ 该 bot 同帧 ≥2 受控单位」这个交集上的帧不能分摊归因**。**没有任何测试钉住这一条**(两份验收各自只 arm 自己那一个 id)。\n\n⚠️ §CZ.6 的 `METHOD-FAILED` 分支照旧成立:语料里若没有「同一 bot 同时 ≥2 个受控小兵」的窗口,**判 `DOMAIN-EMPTY` 退回总监重裁**,**不许**自行套用「无效应 ⇒ 不 promote」。**不能当独臂**(单兵时两臂逐位相同)。"
+      }
     },
     {
       "id": "strategy-30",
@@ -1223,7 +1231,15 @@
       "question": "`illureal`(GH #381,提议 test_set.md §DB):`bots/FunLib/minion_lib/illusions.lua:52` 把「低血撤退时用幻象做诱饵」这条分支**闸在手工字段 `hMinionUnit.isIllusion` 上**。全仓写该字段的**恰好 2 个文件**(`hero_naga_siren.lua:91`、`hero_phantom_lancer.lua:92`),而**127 个英雄文件**全部经 `aba_minion.lua:48-53` 把小兵送进本模块,**且驱动器自己是按引擎方法 `hMinionUnit:IsIllusion()` 路由的** ⇒ 幻象**一定到达** `X.Think`,只是里面那条分支看不见它。⇒ 该分支对**除娜迦/PL 外的每一个幻象**结构上不可达(CK 的 Phantasm、TB 的 Conjure Image、幽鬼 Haunt、19 个买 `item_manta` 的英雄的每一把分身斧)。**同一文件往下六十行**的 `X.ConsiderRetreat` 对**同一句柄**用的就是**引擎方法** —— 两种写法在一个文件里同时发货。armed 时谓词改为 `hMinionUnit.isIllusion == true or hMinionUnit:IsIllusion()`(**严格超集**:不会让今天会做诱饵的娜迦/PL 幻象反而不做;**也不外扩到无技能召唤物**)。",
       "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— 找**某个 bot 拥有存活幻象、且该 bot 血量 < 40% 并处于撤退**的窗口(CK Phantasm / TB Conjure Image / 幽鬼 Haunt / 任意分身斧;**娜迦与 PL 的幻象不算**,它们两臂本来就相同)。**出厂腿的预登记预期:该窗口内幻象继续照常攻击/跟随,不出现「与主人反向 800u 的散开移动」**;**armed 腿:同类窗口里幻象出现该反向移动命令**。\n\n⚠️ **三条限定,收割前必读**:(甲) **RIDESHARE,不能当独臂** —— 本轮证明了**形状**(2 个写者 vs 127 个路由者,真实帧上 armed 恢复、出厂不恢复),但**没有**证明真实 Turbo 局里那个四项合取(幻象活着 ∧ 主人 <40% ∧ 主人撤退 ∧ 主人非强势方)多久出现一次。**那就是本修复价值的上界。** (乙) 按 §CJ **预登记 `METHOD-FAILED` 分支**:语料里若根本没有这种窗口,**判 `DOMAIN-EMPTY` 退回总监重裁**,执行方**不得**自行套用「无效应 ⇒ 不 promote」;**恒零读数必须报成「域为空」而不是「测过了无效应」**(§AZ / GH #148 同族)。(丙) **幻象人口本身可能偏少** —— 焦点五英雄(Axe/Zeus/WK/Lion/CM)**没有一个产生幻象**,所以这一条**只可能在非焦点英雄身上买到读数**;收割时**先答「本波语料里有几个 bot 在几分钟内持有过幻象」**,答不出就报「前置未出现」。\n\n**条件 (b)**:粗粒度,胜负无明显负面即可。**条件 (c)** 已成立:低血撤退时把幻象往反方向散开、让对手分不清本体,是标准操作;而本改动**不新增打法**,只是让一条**已发货、已写好、且本文件自己为其写过英雄专属分支**的逻辑对它本来的人口可达。",
       "requester": "strategy",
-      "status": "pending"
+      "status": "running",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一常规波次(搭车,零 EC2 增量,零新波次);成员串 50 → 52 自本轮起(与 `illumove` 同轮)",
+        "at": "2026-09-01T10:2xZ",
+        "ref": "test_set.md §DC(裁定全文,两条同节;§DC.2 本条 / §DC.3 两条之间的限定);提议 §DB;GH #381;iterations/reports/director/20260901T102117Z.md",
+        "executor": "replay-check",
+        "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(§BB.4)。**路由裁定,不是对 §DB 全部读数的背书。**\n\n**总监按源码独立复核五条**:(i) **单条独立门** `J.IsModeTurbo() and J.IsSoakCandidate('illureal')`,全仓只此一个可执行表达式,不落进 `pullcad` 陷阱。(ii) **「严格超集」按源码坐实,理由比提议给的更强**:出厂谓词是 `hMinionUnit.isIllusion` 的**真值测试**,而全仓写该字段的**恰好两处**(`hero_naga_siren.lua:91`、`hero_phantom_lancer.lua:92`)写的**都是字面量 `true`** ⇒ 该字段值域只有 `nil` 与 `true`,`x == true` 与 `if x` 在这个值域上逐帧同判 ⇒ armed 是出厂的严格超集,**不可能**让今天会做诱饵的娜迦/PL 幻象反而不做。(**若那两个写者里有一个写的是非 `true` 的真值,超集性就不成立** —— 这一条必须去数写者,不能只读断言。)(iii) **armed 不引入任何新的引擎 API 面**:曾疑 armed 会对**非英雄**句柄调 `:IsIllusion()`(出厂在 `aba_minion.lua:48` 因 `and` 短路从不这么做),**复核后疑虑不成立** —— 同一文件的 `X.ConsiderRetreat`(`illusions.lua:133`)**第一行就无条件对同一句柄调这个方法**,而 `X.Think` 每条不提前返回的路径都会走到它;仓库 API 参考也把 `IsIllusion()` 列在 Unit Functions / Unit Classification(`hUnit:` 调用)。(iv) **对无技能召唤物零外扩**:WK 骷髅这类单位 `isIllusion` 为 nil 且 `:IsIllusion()` 为假 ⇒ 两臂逐位相同。(v) 验收独立重跑:`lua5.1 tests/run_tests.lua illureal` **12/12 裸读 exit 0**。\n\n⚠️ **收割前必读 §DC.3(总监加的第 (丁) 条限定,提议里没有)**:见 `strategy-29` 的同一段 —— 两条同帧不正交,`illureal` armed 缩小 `illumove` 的域,交集上的帧**不能分摊归因**。\n\n⚠️ §DB.7 的三条限定(甲 RIDESHARE 不能当独臂 / 乙 `METHOD-FAILED` ⇒ `DOMAIN-EMPTY` 退回总监重裁 / 丙 焦点五无一产生幻象,收割时先答「本波语料里有几个 bot 持有过幻象」)**逐条照旧成立**。"
+      }
     }
   ],
   "done": [

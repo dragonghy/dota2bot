@@ -1,7 +1,10 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal
 
-**成员串 50**(上一行,**441 字节**)。本行 **2026-09-01T01:0xZ 的变动:`roamidle` 与 `outlatch` 两条同轮入集**(48 → 50,总监裁定全文 **§CY**,提议分别是 §CW / §CX,GH #370 / #373;queue `strategy-27` / `strategy-28`,**两行都由提议方自己建** —— §CG.5 的上游那半这一轮第一次不用总监代建)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
+**成员串 52**(上一行,**459 字节**)。本行 **2026-09-01T10:2xZ 的变动:`illumove` 与 `illureal` 两条同轮入集**(50 → 52,总监裁定全文 **§DC**,提议分别是 §CZ / §DB,GH #378 / #381;queue `strategy-29` / `strategy-30`,**两行都由提议方自己建且 `bundle` 字段都填了** —— §CY.3 的教训第一次在上游生效)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
+**⚠️ 收割前必读(§DC.3,总监加的第 (丁) 条限定,两份提议里都没有):`illumove` 与 `illureal` 改的是同一个文件里同一条 `X.Think` 路径,同帧内不正交** —— `illureal` armed 会让更多幻象在 `illusions.lua:80` 的诱饵分支里**提前 `return`**,那些单位**根本走不到 `:94` 的移动闸**,于是 `illumove` 的域被 `illureal` 缩小。两条同波 armed 时,**落在「非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势」这个交集上的帧不能分摊归因**;交集之外两条互不影响。**没有任何测试钉住这一条**(两份验收各自只 arm 自己那一个 id),所以它必须靠读这一行才知道。
+
+**2026-09-01T01:0xZ 的变动(历史行):`roamidle` 与 `outlatch` 两条同轮入集**(48 → 50,总监裁定全文 **§CY**,提议分别是 §CW / §CX,GH #370 / #373;queue `strategy-27` / `strategy-28`,**两行都由提议方自己建** —— §CG.5 的上游那半这一轮第一次不用总监代建)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
 **收割前必读三条**:(i) ⚠️ **两条的域都可能为空,而这正是它们要买的东西** —— `roamidle` 的域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,`outlatch` 的域是「敌方二塔已倒 **且** 那次扫描返回空表」;**恒零读数必须报成「域为空」,不许报成「测过了无效应」**(§AZ / GH #148 那一族),两者在 verdict 表里长得一样而含义相反。**两条都不能当独臂。**(ii) ⚠️ **`outlatch` 的 armed 腿有一条出厂腿没有的持续成本(总监加的第 (丁) 条限定,提议里没有)**:出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`,armed 在「二塔已倒且表仍空」期间**每个 bot 每游戏秒扫一次直到本局结束** ⇒ armed 腿若读到帧时间/经济的负向漂移,**这条要先排除,不许先归因到别处**。(iii) **两条买的都不是它们最容易被读成的那件事**:`roamidle` 买的是**那一帧的排序**,§CW.3 的每帧重复(`return true` 排在锚点刷新之上)**一字未修**;`outlatch` 买的是**闩的后置条件**,§CX.3 的 `IsNull()` 排在第四位求值**一字未修**。
 
 **成员串 48**(上一行,**423 字节**)。本行 **2026-08-31T19:0xZ 的变动:`rotscope` 入集**(47 → 48,总监裁定全文 **§CV**,提议 §CU,GH #368;queue `strategy-26`,**总监代建**——协同组本轮按 §CU.7 明说 `queue.json` 一字未动,而 §CG.5 要求提议必须有行)。**搭车、零 AWS 增量、不申请专波**,按 §BB.4「搭车提议的唯一成本就是不被裁」放行;**到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁)。
@@ -12098,3 +12101,90 @@ CK **既是幻象大招英雄、又在 19 个 `item_manta` 买者之列**,而
 **恒零读数必须报成「域为空 / DOMAIN-EMPTY」,不得报成「测过了无效应」**(§AZ / GH #148 同族),
 且按 §CJ **预登记 `METHOD-FAILED` 分支**:语料里若根本没有
 「幻象活着 ∧ 主人低血撤退」的窗口,**判 `DOMAIN-EMPTY` 退回总监重裁**。
+
+## §DC 2026-09-01T10:2xZ 总监裁定:`illumove`(§CZ)与 `illureal`(§DB)**两条同轮入集**(50 → 52)—— 而本节最该被读的不是两条裁词,是 **§DC.3:两条落在同一个文件的同一条 `X.Think` 路径上,`illureal` armed 会缩小 `illumove` 的域,而两份验收各自只 arm 自己那一个 id,所以没有任何测试能看见这件事**
+
+**两条都判 `ROUTED_RIDESHARE / ADMITTED`**,搭任一常规波次,**零 AWS 增量、不申请专波、零 EC2**;
+`queue.json` 的 `strategy-29` / `strategy-30` 两行**都由提议方自己建、且 `bundle` 字段都填了**
+—— §CY.3(GH #376)的教训**第一次在上游生效**,本轮开工自检的 `ORPHAN_PROPOSAL` 桶对这两条**正确地报了 none**,
+只把它们留在 `OTHER (routing/slot ruling still owed)` 里,**这正是它应该报的形状**。
+
+### DC.1 `illumove`(GH #378,queue `strategy-29`)—— ROUTED_RIDESHARE / ADMITTED
+
+按源码独立复核四条(**不照抄提议的验收,自己重跑**):
+
+1. **单条独立门,没有 `pullcad` 陷阱**:`IsPerUnitMoveClock()` 的合取项是
+   `J.IsModeTurbo() and J.IsSoakCandidate('illumove')` —— 第一项是**运行期值**、第二项是**本 id 自己**,
+   **没有第二个候选 id**;全仓 `illumove` 只出现在这一个文件的**这一个表达式**里(已 `grep -rn bots/`,
+   连注释共 2 处、可执行 1 处)。⇒ 未来 promote 任何别的 id **不可能**把这道门冻成恒假。
+2. **未armed 腿逐字保留,而且是「同一串操作」不只是「同一个返回值」**。剥掉注释与空行后
+   本次改动**只有四处替换 + 四个新 local**:`nNextMoveTime` → `GetNextMoveTime(hMinionUnit)`(门关 `return nNextMoveTime`,**逐字**)、
+   两处 `nNextMoveTime = DotaTime() + 0.2` → `SetNextMoveTime(hMinionUnit, DotaTime() + MOVE_THROTTLE)`
+   (门关 `nNextMoveTime = nTime`,`MOVE_THROTTLE` 是 `0.2` 的字面量绑定,**逐字等值**),
+   加上 §DC.2 的那一处。**求值顺序也没动**:`DotaTime()` 在两种写法里都先于赋值/比较求值,且实参无副作用。
+3. **门关新增的每帧成本已量,可忽略**:`GetNextMoveTime` 现在每单位每帧多调一次 `J.IsModeTurbo()`
+   (`bModeTurboCache` **有缓存**,`jmz_func.lua:9566` 第一行就返回)与——仅在 turbo 下——`J.IsSoakCandidate()`
+   (`GetSoakSideConf()` 的 `tSoakSideCache` **有缓存**,`:4898`;真实对局里该文件不存在 ⇒ 缓存为 `false`,一次表查即返回)。
+   **两个 helper 都无副作用** ⇒ 「门关 = 出厂路径不变」在**效果**意义上成立,不只在**返回值**意义上。
+4. **验收独立重跑绿**:`lua5.1 tests/run_tests.lua illumove` **9/9,裸读 exit 0**;
+   邻居 `fixture_illusion` **10/10,裸读 exit 0**。
+   ⚠️ **方法自伤照实登记**:第一次我跑的是 `lua5.1 tests/test_illumove_shared_throttle.lua`,
+   拿到 **exit 0 + 零输出**并差点当成通过 —— 那正是 `run_tests.lua` 头部 GH #200 注释**写明**的那个坑
+   (直接跑测试文件只是 `return` 那张表,**一个测试体都没执行**)。
+   **一个 0 和一个 0 在读者眼里一样,而这次的差别是「有没有跑」**;与 §22/纪律 3 同族,
+   只是那条管的是**管道**,这条管的是**入口**。
+
+### DC.2 `illureal`(GH #381,queue `strategy-30`)—— ROUTED_RIDESHARE / ADMITTED
+
+1. **单条独立门,没有 `pullcad` 陷阱**:`J.IsModeTurbo() and J.IsSoakCandidate('illureal')`,
+   全仓 `illureal` 只此一处可执行表达式。
+2. **「严格超集」这条按源码坐实,而且比提议给的理由更强**:出厂谓词是 `hMinionUnit.isIllusion` 的**真值测试**,
+   而全仓写该字段的**恰好两处**(`hero_naga_siren.lua:91`、`hero_phantom_lancer.lua:92`)写的**都是字面量 `true`**
+   ⇒ 该字段的值域只有 `nil` 与 `true`,`x == true` 与 `if x` 在这个值域上**逐帧同判**
+   ⇒ armed 的 `field == true or :IsIllusion()` 是出厂谓词的**严格超集**,**不可能**让今天会做诱饵的娜迦/PL 幻象反而不做。
+   (提议只说了"严格超集";若那两个写者里有一个写的是非 `true` 的真值,超集性就**不成立** —— 所以这一条必须去数写者,不能只读断言。)
+3. **armed 腿不引入任何新的引擎 API 面**。曾经的疑虑:armed 会对**非英雄**句柄(WK 骷髅等)调 `:IsIllusion()`,
+   而出厂路径在 `aba_minion.lua:48` 因 `and` 短路**从不**对非英雄句柄调它。**复核后疑虑不成立且方向相反**:
+   **同一文件的 `X.ConsiderRetreat`(`illusions.lua:133`)第一行就无条件对同一个句柄调 `hMinionUnit:IsIllusion()`**,
+   而 `X.Think` 的每一条不提前返回的路径都会走到它 ⇒ **出厂路径本来就在这批句柄上调这个方法**,
+   armed 只是把同一次调用**提前到 `:79`**。仓库自己的 API 参考也把 `IsIllusion()` 列在
+   **Unit Functions / Unit Classification**(与 `IsCreep()`/`IsBuilding()`/`IsMinion()` 同表,`hUnit:` 调用)。
+4. **对无技能召唤物零外扩,已按源码验**:WK 骷髅这类单位 `isIllusion` 为 `nil` 且 `:IsIllusion()` 为假
+   ⇒ armed 与出厂**逐位相同**,与提议的「不外扩到无技能召唤物」一致。
+5. **验收独立重跑绿**:`lua5.1 tests/run_tests.lua illureal` **12/12,裸读 exit 0**。
+
+### DC.3 ⭐ 总监加的第 (丁) 条限定(两份提议里都没有):**两条同帧不正交,`illureal` 缩小 `illumove` 的域**
+
+`X.Think` 的顺序是固定的:
+
+```
+:79  if IsIllusionUnit(hMinionUnit) then            ← illureal 在这里放大人口
+:80      if X.ConfuseEnemyWithIllusions(...) > 0 then
+:81          return                                  ← 提前返回,后面一行都不走
+...
+:94  if DotaTime() >= GetNextMoveTime(hMinionUnit)   ← illumove 的全部域在这一行之下
+```
+
+⇒ **`illureal` armed 时,更多幻象在 `:81` 提前返回,它们那一帧根本不进入 `illumove` 的移动闸**。
+反过来也真:`illumove` 只在「同一 bot 同帧有 ≥2 个受控单位走到 `:94`」时与出厂不同,
+而 `illureal` 恰好在**低血撤退**这种局面上把其中一部分单位抽走。
+**交集 = 「非娜迦/PL 幻象 ∧ 主人 HP<40% ∧ 主人撤退 ∧ 主人非强势 ∧ 该 bot 同帧 ≥2 受控单位」。**
+交集**之外**两条互不影响;交集**之内**两条的读数**不可分摊归因**。
+
+**为什么这一条必须写在这里而不是靠测试兜住**:两份验收都用
+`J.IsSoakCandidate = function(id) return armed and id == '<自己>' end` 只 arm 自己那一个 id
+(`test_illumove_shared_throttle.lua` 的 `world()` 就是这么写的),
+⇒ **两条同时 armed 的那种世界,现有测试一帧都没构造过**。
+这不是测试的缺陷(逐 id 隔离正是它该做的),**是「两条独立正确的门,合起来的域不是两个域的并」这件事没有归属**。
+**与 §CY.2 (丁) 同族但更麻烦**:那一条是 armed 腿自己的一项持续成本(单条内部),
+**这一条是两条之间的**,只有同时读两份 verdict 的人才可能发现,而 verdict 表是按 id 分行的。
+
+**收割纪律**:(甲) 若一波同时 armed 两条且读到差异,**先答「差异帧里有几帧落在上面那个交集里」**,答不出就
+**不许把差异归给其中任何一条**;(乙) 两条的 `METHOD-FAILED` 分支(§CZ.6 / §DB.7)**照旧各自成立**,
+恒零读数报 `DOMAIN-EMPTY` 退回总监重裁,**不许自行套用「无效应 ⇒ 不 promote」**;
+(丙) 最省事的走法是**让它们搭不同的波**,但这**不是裁定要求** —— 搭同一波仍然放行,只是收割时欠上面 (甲) 那一答。
+
+### DC.4 本次裁定**没有**改动任何 `bots/` 或 `game/` 文件
+
+两条的 Lua 都已由协同组落地(`741bc7b5` / `712a9eac`),本轮总监**一行未改**,
+`bots/` 与 `game/` **逐字节零 diff**。本节与成员串、`queue.json` 的 `director` 字段是本轮的全部产物。

@@ -3946,6 +3946,11 @@
   改重定向后跑完 8 条腿。**四条 finding 全不是本轮的**(cadence 三洞均在 08-31;
   `test_rc_wrapper.py` = **GH #364**);**`ORPHAN_PROPOSAL` 本轮为零**;
   `strategy-29`(上一轮 `illumove`)仍 `pending` 未裁 —— **交棒未掉,只是还没轮到**。
+  **[总监 2026-09-01T10:2xZ 回填]** 已裁:`illumove`(`strategy-29`)与 `illureal`(`strategy-30`)
+  **两条同轮 `ROUTED_RIDESHARE / ADMITTED`**,成员串 50 → 52,裁定全文 `test_set.md §DC`。
+  **收割前请先读 §DC.3** —— 总监加的第 (丁) 条限定:两条改的是同一条 `X.Think` 路径,
+  `illureal` armed 会让更多幻象在 `:80` 提前 `return` 从而**缩小 `illumove` 的域**,
+  交集上的帧**不能分摊归因**;两份验收各自只 arm 自己那一个 id,**没有测试钉住这一条**。
   **明说没做**:`ConfuseEnemyWithIllusions` **函数体一字未动**(反向 800u 的几何只普查未审计);
   `aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处连续命令**仍只普查未审计**;
   **频率未知且比平时更重** —— 四项合取的出现率未证,**那是本修复价值的上界**,
