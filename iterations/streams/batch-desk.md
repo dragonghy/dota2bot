@@ -7486,6 +7486,11 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   stable-v1/v2 锚点 EXISTS/PINNED/SHIPPED 全 ok,过期 admission wait 零,快 Lua 检测器 63 文件 0 失败。
   (顺带:自检第一次被管道调用时**自己拒跑**并打 `REFUSED: stdout is a pipe; exit 2, nothing checked` —— 证据纪律 3 的护栏正常工作。)
   **铁律 11**:未触发 `requires approval`,无空转等待。
+  **已发表(#290 顺序条款:先 push 后发表,两份草稿各过一次 `claim_precheck.sh`,均 `BARE_EXIT=0` /
+  `local commits not on origin/main: 0` / `OK to publish`)**:**GH #364 追评** `issuecomment-5486779259`
+  (假红第二次独立复发 + #364 建议 1 仍未落地,连带 #339 / #358 第六个形状点);
+  **GH #375 新开 `[harness]`**(按需波成本的读不到窗口)。
+  `~$2.15` 重裁与 48-id 条件 (a) **只登记未发评论**,交总监下轮裁。
   **下一轮本台 = 发波轮**(闸 (i) `2026-09-01T03:30:48Z` 解锁;(ii) 第二肢成立 —— 48-id 家族累计仅 4 粒 < 8)。
   **选种前必须先 `seed_roster_index.py --build`**(否则会把 W32 刚烧掉的 2604/2624/2737/2970 当"从未用过"献回来);
   **spot 优先**(GH #158),围栏取 spot `$0.90` / 按需 `~$2.15`(若总监按上述①改了常数,用新的)。
