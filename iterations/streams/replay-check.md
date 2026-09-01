@@ -681,6 +681,20 @@
   与 #176 同族但**判别子不同**:那条是**实体键**(同名多流),这条是**字段完整性**(同一条流的残帧)。
   一份读数同时中两条时,先修实体键再修残帧,否则第二个修法会被第一个的噪声掩盖。
   ⇒ **写任何「终局态」统计前,先问这个字段在局末会不会残;要拿极值就取 `max`/最后一个非空,不要取最后一个。**
+- **⭐ [2026-09-01 新踩,两条,一条是素材一条是腿标] `rec_slots` 一改,`.dem` 就换前缀;
+  `analysis.json:team_slot` 不是队伍。**
+  ① **`REC_SLOTS>1` 的录像不在 `soak/<run>/`,在 `dem21/<run>/`**
+  (`tools/batch_test/soak/soak_loop.sh:180`:`$DEM_PREFIX == $S3_PREFIX at REC_SLOTS=1`,
+  `at REC_SLOTS>1 it is dem21/<run>/`),而扁平镜像 `replays/` **只给 slot 1**。
+  W34(rec_slots=8,GH #308 裁定 (C) 首波)在 `soak/` 下是 **0 个 `.dem`**、在 `dem21/` 下是 **103 个**
+  (与 103 个 `demclaim.json` 逐一对上)。**上一轮就是在 `soak/` 下看到 0 个,把整个交棒 (2) 顺延掉了。**
+  ⇒ **查素材前先读这一波的 `rec_slots`**(`W<N>_wave.json` 或任一 `demclaim.json`),再决定去哪个前缀。
+  ② **`analysis.json:players[].team_slot` 是「队内 0–4」,不是全局 0–9**
+  (`tools/batch_test/parse_log.py:101`);队伍在**同一个 dict 的 `team` 字段**里,是现成的。
+  用 `team_slot < 5` 推侧别会把**整份语料判成 radiant**(本轮 140/140 全判反),
+  而它**不报错、表照样出满**。已知的 GH #57/#116 说的是「`team_slot%5+1` 不是位置」,
+  **这一条是另一根轴:它连队伍都不是**。⇒ **侧别读 `team`,或读 timeline 的
+  `game.teams[<全名>]`(2=radiant / 3=dire);两者对拍过 12/12。**
 
 
 ## 当前状态(每次触发后更新)
@@ -8604,3 +8618,110 @@
     ⚠️ 上一轮的操作事故(误用 `issue_write(update)` 覆写 #361 标题)**本轮未重演**:两条都走 `add_issue_comment`。
   - **Token 用量**:`TOKENS total_in=7,453,825 out=56,237 turns=62`。
   - 完整报告:`iterations/reports/replay-check/20260901T095100Z.md`
+- **2026-09-01T12:56Z(W34 首检:`wkqdmg` 第八轮,买到了帧,买不到那一格)**:
+  - **⭐ 上一轮「无 `.dem` 素材」是错的,而它是交棒 (2) 顺延的全部理由**:
+    `REC_SLOTS>1` 的录像走 `dem21/<run>/` 不走 `soak/<run>/`(`soak_loop.sh:180`)。
+    W34 在 `soak/` 下 **0 个 `.dem`**、在 `dem21/` 下 **103 个**(与 103 个 `demclaim.json` 逐一对上)。
+    已写进本文件 §工具坑。**下一轮查素材前先读这一波的 `rec_slots`。**
+  - **宽扫 208/208 局**(184 stamped + 24 暖场):`arm_string_census.py` 裸跑 **RC_EXIT=3**,
+    但那是 **LIMIT 5**(它拿 `test_set.md` 的**当下**第 2 行);W34 发波树 `31b2a3ac` 的第 2 行是
+    **50 id / 441 bytes / md5 `11cac15a…`**,与 `W34_wave.json` 三个字段逐字相同,
+    `illumove`/`illureal` 是 **10:30:50Z**(`e699b195`)才入集的,**比起飞晚一小时**。
+    喂 `--declared <50-id>` 重跑 **RC_EXIT=0,四个 run 全 MATCH,arm sha1 `8c5de476`**。
+    ⇒ **W34 的 arm 接线在对局自己身上核过了**;⇒ **`illumove`/`illureal` 不在 W34 里,
+    W34 的任何裁定都不覆盖这两个 id**(交收割轮)。
+  - **⭐ 结构性发现(交总监/批测台,§3):英雄限定 id 的四格里有两格是结构性空的。**
+    seed 钉死「哪 10 个英雄、每个在哪一队」,镜像交换的是 **arm** 不是英雄
+    ⇒ **同一 seed 内载体的物理侧是常数**。W34 三粒载体 seed(2621/2647/2747)**全把 WK 放 dire**
+    ⇒ `ab/armed = 0 局`、`ba/baseline = 0 局`、`ab/baseline = 96`、`ba/armed = 44`。
+    **三方对上**:离线 `seed_draft.py` 3/3 = dire pos3、12 个 timeline 的 `game.teams` **12/12 = 3**。
+    **不是手气差**:扫 `[2601,3000]` 400 粒,`skeleton_king` radiant 55 / dire 62(53.0%),
+    池子层面 radiant 2000 / dire 2000 完全平衡 ⇒ 3/3 同侧 ≈ 15%,**很普通的一次**,
+    **所以这是任何英雄限定 id 的常态风险,不是 W34 的意外**。
+    ⇒ **铁律 4(i-c) 的「每粒 seed swap-average 消掉侧偏」前提在这里不成立**:
+    没有任何一粒 seed 同时有 armed 与 baseline 的同侧读数,`arm=(ab+ba)/2` **没有两个分量**。
+    **建议(不下裁定)**:`--assert-carrier-from-arm` 除了打每 term 的粒数,**再打 radiant/dire 粒数**,
+    全部同侧时打一行「该 term 本波没有 swap-average」。零成本、发波前、只读。
+  - **深查 12 局 / 205 次 hero 目标 Q 施法**(另 103 次被 `--dead-window 6.0` 与缺帧守卫丢弃,308 的 33%):
+    ```
+    layer  leg        games  casts    q1  live48  live8  band band_pair  in_rnge  HIT
+    ab     baseline       6     97    68      59      9     0         0        0    0
+    ba     armed          6    108    81      66     15     1         0        1    0
+    ```
+    工具自己写死**只有 baseline 腿的 `band_pair` 能承载结论**(armed 腿的 band 施法按定义
+    不可能来自击杀确认分支)⇒ **那一格 = 0/97**。
+    **⭐ 第八轮的新东西不是「0」是「离得有多远」**:baseline 腿 68 次 rank-1 施法,
+    **ehp₀ ≤120 的 0 次、band(120,168] 的 0 次、>168 的 68 次**,
+    最近的六次 ehp₀ = **231.6 / 390.3 / 442.8 / 487.1 / 532.9 / 596.0**
+    ⇒ **最低的一次也比出厂 claim 的射程高 63.6 ehp**。
+    ⇒ **WK 的 bot 把 Q 当骚扰/团战/减速用,不是当击杀确认用**;
+    `wkqdmg` 修的那条分支**几乎不是产生这些施法的那条分支**。
+  - **逐帧(唯一那次 band 施法)**:`45ade1/20260901_095944_slot5` t=**243.4**,seed 2647,
+    WK lvl5 Q rank1,目标 jakiro **110 hp**,实测 mr **0.287** ⇒ **ehp₀=154.4**。
+    身份锁定先做:WK 只有 `idx=1498`、jakiro 只有 `idx=1316` ⇒ **无幻象污染**。
+    施法帧定位用 `ABILITY` 事件本体(243.4),**不是** cd 上升沿(244.4,那是施法之后)。
+    **出厂 claim 168.0 ≥ 154.4 会宣称击杀;armed claim 120 < 154.4 拒绝。
+    爆炸实打 57(减抗后)⇒ 原始 ≈80 = rank-1 `damage` 本身,加 dot 20/s×2.0s=40 ⇒ **120 原始,
+    与 armed claim 逐字相同**;jakiro **不是被爆炸打死的**,1.0 秒后死于 **158 暴击普攻**。
+    ⇒ **出厂硬编码的高估第一次在真实帧上被直接量到,误差正好是那 48。**
+    ⚠️ **但这一帧兑现不了条件 (a)**:施法照样发生(来自相位追击/团战分支),**两条腿在这一帧不可区分**;
+    它证的是**算术**,不是**决策被改变**。
+  - **核验结论行**:
+    ```
+    VERIFY id=wkqdmg verdict=INDETERMINATE episodes=205
+    ```
+    接线与到达 **WORKING**(205 次施法 / 149 次 rank1 / 125 次落在 48 点收窄子域;
+    `--selfcheck` **73 PASS / 0 FAIL**);决策效果 **INDETERMINATE**。
+    **不是 SILENT** —— SILENT 是「该触发没触发」,这里是「该分支的输入区间在语料里没出现过」,
+    **下一步完全不同**:SILENT 查代码,这个查**域的预登记**。
+  - **`unk` 那一列第八轮仍未检验,但这次知道为什么**:它的前提是 `band_pair` 施法,
+    而两条腿的 `band_pair` 都是 **0**。**以后按「前提没出现」记,不按「没检验」记。**
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **BARE_EXIT=0**;
+    `get_dumper.sh` **BARE_EXIT=0**(cache HIT `46fe9c6a2b084f9b`);`behav-dump` **12/12 exit 0**;
+    `arm_string_census.py` 裸跑 **RC_EXIT=3** / 带 `--declared` **RC_EXIT=0**;
+    `wkqdmg_domain.py --selfcheck` **RC_EXIT=0**;`wkqdmg_domain.py --legs` **RC_EXIT=0**;
+    `seed_draft.py` **RC_EXIT=0**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    未改 Lua ⇒ **不声称跑绿 Lua 全量**(GH #124)。**本轮无变异台**(读数不经过任何被检工具的判据)。
+  - **开工自检**:⚠️ **第一条命令又踩证据纪律 3**(`… | tail -50`),脚本自打
+    `REFUSED: stdout is a pipe; exit 2, nothing checked` —— **护栏第八次生效,那次不是通过**。
+    上一轮已把「开工模板内建 `rc.sh`」交出去,**本轮第二次登记、形状完全相同**。
+    改重定向后台跑:**第十五次登记「不是章程写的『约 20s』」**(GH #358,不重开),
+    跑满 300s 未结束转后台,最终 **EXIT=3**。已读到的腿:`rc_wrapper` 变异台 **2 项 UNCERTIFIABLE**
+    (`no lua5.1 on PATH` ⇒ 两项会 vacuously 通过,所以打 UNCERTIFIABLE);
+    python trunk-health 腿 **UNCERTIFIABLE**(`the reddened run did not finish inside 120s`)。
+    ⇒ **`EXIT=3` 本轮不可读成「trunk 真红」**:红的判据自己没跑完。
+    **已有 GH #364 / #383 / #358,不新开**;**#358 的「慢」与 #364 的「红」本轮再次合流**。
+  - **诚实边界**:**没有一个数字是效应量**;205 次施法是 **12 局**的计数(140 局 WK 局只深查 12 局);
+    §3 那张 2×2 表是**局数不是读数**(正因两格是 0 局,连读数都不存在);
+    `mr=0.287` 是**这一帧这个目标**的读数不是常数;
+    `illumove`/`illureal` 的入集时刻用的是 **committer 时间**,与 S3 对象时间不同尺(相差一小时,不翻转结论)。
+  - **欠账变化**:✅ **交棒 (2) 解锁**(素材前缀找到,W34 已可深查,本轮做了 12 局);
+    ✅ **`unk` 那一列的性质查清**(不是「没检验」是「前提没出现」),但**列本身仍空,第八轮**;
+    ⛔ 交棒 (1)「`will_reincarnate` 提案跟到底」**本轮未做**(时间给了 W34 首检,顺延一轮);
+    ⛔ 交棒 (4) `idletrip_domain.py` 四格顺延;⛔ 交棒 (5) `stayfield2_whynot.py` 待下一个 44-id 波;
+    `pullcad_beat.py` 在 W25 剩两 run 仍欠。
+    **新欠账**:(a) **`wkqdmg` 的域要重新预登记** —— 现有域是「Q rank 1」(占 149/205),
+    但**决策域**(ehp₀ 落进 band)在 97 次 baseline 施法上是 0,最近的差 63.6 ehp
+    ⇒ 交英雄组:先回答「击杀确认分支到底产不产这些施法」;
+    (b) **载体侧别应进发波门**(§3,交总监/批测台);
+    (c) **W34 深查只做了 12/140 局**,余下 128 局(及另三个 run 的 103−12 个 `.dem`)是现成素材。
+    继承未动:`stayfield_domain.py`/`idletrip_domain.py` 窗口常数只读未量;
+    W33 的 0.748 与 W32 的 0.401 合并成案交总监;`fieldbuy_silence.py`/`stayfield2_margin.py` 的 ab/ba 分层;
+    「静止在小兵火力里」检测器(素材 `e706a3/20260830_063416_slot1` lich t=625.5..634.5);
+    W25 只并 2/4 run;W26–W28 与 W25 从未池化;`seed 975` **第二十九轮**;
+    `wandlimbo` 因 #293 **第二十七轮**不可执行;GH #265 仍被 #272 阻塞;
+    `blinkflee` 仍卡 #304/#305;WK rank-3 冷却全语料复测仍欠。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **W34 还有 91 个没碰过的 `.dem` 在 `dem21/`**(103 − 12),**四个 run 都有**,
+    这是本组几十轮来最厚的一次现成语料 —— 先把深查铺开到 40+ 局再谈别的。
+    **别再去 `soak/` 找 `.dem`**(见 §工具坑新条)。
+    (2) **`wkqdmg` 不要再按「等一个 band_pair」推进**:97 次 baseline 施法一次都没接近,
+    再加 30 局也大概率还是 0。**改问「击杀确认分支产不产 Q 施法」**——
+    那是分支到达计数的问题,与 `campexit` 的 §BW.2 同族解法。
+    (3) ⭐ **载体侧别**(新欠账 b):把 §3 那张表交出去,看批测台/总监接不接;
+    没接就带着「400 粒 seed / 53.0% / 池子完全平衡」那三个数再推一次。
+    (4) 交棒 (1) `will_reincarnate` **第二轮顺延**,别再掉。
+  - **已发表**:见报告 §"已发表"(**先 push 后发表**,GH #290)。
+  - **Token 用量**:见报告 §9。
+  - 完整报告:`iterations/reports/replay-check/20260901T125637Z.md`
