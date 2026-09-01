@@ -88,14 +88,17 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": null,
+   "status_code": "Server.SpotInstanceTermination",
    "create": null,
    "update": null,
    "terminated": null,
    "ab": null,
    "ba": null,
    "arm_depth": null,
-   "reclaimed": false
+   "reclaimed": true,
+   "StateReason.Code": "Server.SpotInstanceTermination -- Service initiated (2026-09-01 21:35:25 GMT), i.e. ~4.25 min after take-off. Read first-hand from describe-instances state census inside the wave lifecycle (the launch-round census the charter mandates).",
+   "lifetime_min": 4.25,
+   "refilled_by": "spot_20260901_214412_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_b44770"
   },
   {
    "seed": 2838,
@@ -171,14 +174,17 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": null,
+   "status_code": "Server.SpotInstanceTermination",
    "create": null,
    "update": null,
    "terminated": null,
    "ab": null,
    "ba": null,
    "arm_depth": null,
-   "reclaimed": false
+   "reclaimed": true,
+   "StateReason.Code": "Server.SpotInstanceTermination -- Service initiated (2026-09-01 21:40:04 GMT), i.e. ~7.5 min after take-off.",
+   "lifetime_min": 7.5,
+   "refilled_by": "spot_20260901_214446_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_29c9a9"
   }
  ],
  "az_spread": {
@@ -198,7 +204,17 @@
   "acceptance": "GH #252 acceptance (>=2 distinct AZs) PASSES, but barely: 2 distinct. GH #256's stricter acceptance (four mutually distinct) FAILS, and this is the WORST spread this desk has recorded -- THREE of four seeds sit in us-west-2d. *** THE MECHANISM IS NEW AND IS WORTH A RULING (GH #403): #256's ring-walk did exactly what it was written to do (walk to the next AZ instead of dropping the AZ constraint, and never once print '!! AZ RING EXHAUSTED'), yet the OUTCOME is the concentration #252 exists to prevent. Under region-wide capacity pressure every ring-walk converges on whichever AZ still has capacity, so the fix trades AZ diversity for launch success -- SILENTLY, because each individual line reads as a success ('re-aiming inside the ring -> X', then 'launched'). This wave took SIX InsufficientInstanceCapacity refusals across 2a/2b/2c before placing four machines. Exposure: one AZ event in us-west-2d now takes THREE seeds, not one -- and W35 was destroyed by exactly a correlated reclaim (GH #398). NOT RULED BY THIS DESK: the charter forbids it from changing market/ladder strategy on its own, and #256's re-open condition is counted by the director, not re-derived here.",
   "capacity_refusals": 6,
   "ring_exhausted": false,
-  "market_degradation": false
+  "market_degradation": false,
+  "after_refill": {
+   "actual": [
+    "us-west-2c",
+    "us-west-2c",
+    "us-west-2d",
+    "us-west-2d"
+   ],
+   "distinct": 2,
+   "note": "2+2 rather than the launch-time 1+3; one AZ event now takes two seeds, not three."
+  }
  },
  "run_id_uniqueness": {
   "soak_run_tags_pairwise_distinct": true,
@@ -217,5 +233,36 @@
  "terminated_capture_obligation": "These four take off 21:31-21:32Z and self-destruct by ~23:3xZ at the latest (2h watchdog; on W34's realised rate expect ~22:1x-22:3xZ). The EC2 `terminated` field survives ~1h (GH #375), so the next round of this stream (~00:1xZ) will again find describe-instances empty -- PRE-REGISTERED HERE, as at W35. The settlement channel is NOT lost: read `describe-spot-instance-requests` (still first-hand 2.6h later at W35) plus the S3 farm log's `SPOT INTERRUPTION` line. Do not fall back to the #332 S3-last-upload proxy before trying those two.",
  "harvest": {
   "status": "PENDING -- next round of this stream"
- }
+ },
+ "refills": [
+  {
+   "seed": 2745,
+   "replaces": "i-0855f32a8187db9c6",
+   "instance": "i-02b40982d2bb555a0",
+   "run_id": "spot_20260901_214412_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_b44770",
+   "run_token": "b44770",
+   "sir": "sir-kwi7gnvq",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2c",
+   "launched": "2026-09-01T21:44:12Z",
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "placement_note": "Re-aimed twice inside the ring: 2a InsufficientInstanceCapacity -> 2b InsufficientInstanceCapacity -> 2c launched. No AZ RING EXHAUSTED, no market degradation."
+  },
+  {
+   "seed": 2922,
+   "replaces": "i-0b6cdde6f6b96267b",
+   "instance": "i-0469e3ea69e73c438",
+   "run_id": "spot_20260901_214446_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_29c9a9",
+   "run_token": "29c9a9",
+   "sir": "sir-wjbqgh9q",
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2c",
+   "launched": "2026-09-01T21:44:46Z",
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "placement_note": "Re-aimed once inside the ring: 2b InsufficientInstanceCapacity -> 2c launched."
+  }
+ ],
+ "refill_note": "TWO OF FOUR MACHINES WERE RECLAIMED WITHIN 8 MINUTES OF TAKE-OFF (2745 at 21:35:25Z after 4.25 min, 2922 at 21:40:04Z after 7.5 min, both Server.SpotInstanceTermination). Both had produced essentially zero games, so nothing was lost but the slot. The charter's PRE-REGISTERED reclaim disposition was executed in the same round: 'a reclaimed machine means that seed lost an arm -- do NOT void the whole wave; re-launch the missing seed down the same ladder'. Both refills pinned to W36's OWN tree 32abbfbb (NOT the session's current HEAD 12259fc0, which had moved on with iterations/ docs) so the wave stays one comparable tree. Ladder: c6i.4xlarge spot both times, ring-walk only, no c6a fallback and no --on-demand -- the ladder was never descended. AZ spread AFTER the refill is 2c x2 + 2d x2 = 2 distinct, which is no worse than the original 2c/2d/2d/2d and spreads the exposure more evenly (2+2 rather than 1+3). *** THIS IS THE SECOND CONSECUTIVE WAVE MAULED BY SPOT RECLAIMS (W35 lost 3 of 4 to a correlated cross-AZ event, GH #398). Combined with this wave's NINE InsufficientInstanceCapacity refusals across launch and refill, us-west-2 c6i.4xlarge spot capacity is under sustained pressure. That is an input to the owner's own GH #158 spot-first ruling, and it is NOT this desk's to re-rule -- filed to the director in GH #403."
 }
