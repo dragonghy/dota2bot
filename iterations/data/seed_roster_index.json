@@ -74,6 +74,7 @@
    2647,
    2887,
    2970,
+   2986,
    333333
   ],
   "centaur": [
@@ -355,6 +356,7 @@
    2887,
    2938,
    2970,
+   2986,
    111111,
    131313,
    222222,
@@ -690,6 +692,7 @@
    2790,
    2938,
    2970,
+   2986,
    131313,
    333333,
    778899
@@ -805,6 +808,7 @@
    2214,
    2315,
    2887,
+   2986,
    444444,
    555555
   ],
@@ -892,6 +896,7 @@
    2756,
    2887,
    2970,
+   2986,
    111111,
    222222,
    424242
@@ -931,6 +936,7 @@
    2286,
    2403,
    2737,
+   2986,
    222222,
    555555,
    777777
@@ -984,6 +990,7 @@
    2375,
    2624,
    2938,
+   2986,
    333333,
    555555
   ],
@@ -1004,6 +1011,7 @@
    1733,
    2375,
    2887,
+   2986,
    444444
   ],
   "queenofpain": [
@@ -1472,6 +1480,7 @@
    2756,
    2790,
    2938,
+   2986,
    111111,
    246802,
    444444,
@@ -1787,6 +1796,7 @@
    2756,
    2790,
    2938,
+   2986,
    222222,
    555001,
    777777,
@@ -2118,7 +2128,8 @@
   "spot_20260901_093107_1_31b2a3acdc1b7460b17255a332aed5c45d6e5dc1_8228bb",
   "spot_20260901_093112_1_31b2a3acdc1b7460b17255a332aed5c45d6e5dc1_a1a0d8",
   "spot_20260901_093116_1_31b2a3acdc1b7460b17255a332aed5c45d6e5dc1_45ade1",
-  "spot_20260901_093121_1_31b2a3acdc1b7460b17255a332aed5c45d6e5dc1_cbb744"
+  "spot_20260901_093121_1_31b2a3acdc1b7460b17255a332aed5c45d6e5dc1_cbb744",
+  "spot_20260901_153142_1_e81ba0ae246f596851330f07cf7d3feea0e628ab_e12d0d"
  ],
  "seeds": {
   "101": {
@@ -5995,6 +6006,73 @@
      ],
      "runs": [
       "spot_20260831_213101_1_85bcbeb76af942ac5d7b9ccc997c42fc7ced02e1_858e13"
+     ]
+    }
+   ]
+  },
+  "2986": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal"
+   ],
+   "dire": [
+    "bristleback",
+    "dragon_knight",
+    "lion",
+    "necrolyte",
+    "zuus"
+   ],
+   "games": 40,
+   "games_by_cand_side": {
+    "dire": 13,
+    "radiant": 27
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "dragon_knight": 2,
+    "lion": 5,
+    "necrolyte": 3,
+    "obsidian_destroyer": 2,
+    "ogre_magi": 4,
+    "phantom_assassin": 1,
+    "pudge": 5,
+    "sven": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "obsidian_destroyer",
+    "ogre_magi",
+    "phantom_assassin",
+    "pudge",
+    "sven"
+   ],
+   "runs": [
+    "spot_20260901_153142_1_e81ba0ae246f596851330f07cf7d3feea0e628ab_e12d0d"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "bristleback",
+      "dragon_knight",
+      "lion",
+      "necrolyte",
+      "zuus"
+     ],
+     "games": 40,
+     "games_by_cand_side": {
+      "dire": 13,
+      "radiant": 27
+     },
+     "radiant": [
+      "obsidian_destroyer",
+      "ogre_magi",
+      "phantom_assassin",
+      "pudge",
+      "sven"
+     ],
+     "runs": [
+      "spot_20260901_153142_1_e81ba0ae246f596851330f07cf7d3feea0e628ab_e12d0d"
      ]
     }
    ]

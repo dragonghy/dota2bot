@@ -1,0 +1,221 @@
+{
+ "wave": "W36",
+ "_note": "First-hand launch record, written 2026-09-01T21:3xZ. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). The harvesting round MUST write machines[].status_code / create / update AND the leg counts ab / ba / arm_depth under exactly those bare names -- reclaim_blind.py reads them. GH #382 was REFUTED for spot waves by the W35 harvest: `describe-instances` does age out, but `describe-spot-instance-requests` still returned all four SIR rows 2.6h after take-off, and the S3 farm log's `SPOT INTERRUPTION` line is a second, permanent channel. READ THE SIR ROWS, not `terminated`.",
+ "tree": "32abbfbb3b796069b01f5e92d59993640d8ce8c9",
+ "tree_verified": "git ls-remote origin main == local HEAD == 32abbfbb…, byte-identical, checked before launch (charter step 5)",
+ "arm_ids": 54,
+ "arm_bytes": 477,
+ "arm_md5": "74273b3ce5f58fcb50de769a700ab074",
+ "arm_source": "iterations/streams/test_set.md:2 (director ruling test_set.md §DF admitted tormself + immguard, 52 -> 54)",
+ "arm_note": "FIRST wave of the 54-id family. W35 was 52 ids / 459 bytes / md5 c5af3b11deb9c024983c22afb90d9a7d. *** HARVEST OBLIGATIONS: (1) test_set.md §DC (3rd subsection) still holds for illumove x illureal -- not orthogonal on the same frame, intersection frames cannot be attributed to either id; W35 could not settle that debt (one seed only) so it rolls forward to W36. (2) test_set.md §DF (6th subsection): tormself and immguard both land on non-focus heroes, so a DOMAIN-EMPTY harvest is EXPECTED and is NOT evidence about either fix -- it must go back to the director, never be read as 'no effect => do not promote'. This round QUANTIFIED why: neither carrier is in hero_pool.txt at all (see carrier_gate below and GH #400).",
+ "seeds": [
+  2745,
+  2838,
+  2850,
+  2922
+ ],
+ "carrier_terms": [
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "instance_type": "c6i.4xlarge",
+ "slots": 16,
+ "rec_slots": 8,
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "market": "spot",
+ "market_note": "SPOT, the owner's GH #158 default. The GH #271 escalation branch (--on-demand) was NOT taken: reclaim_blind.py returned exit 2 UNDECIDABLE again this round (changeover constant contradicted by W35's seed 2986 pairing at 37.2 min), and an UNDECIDABLE is not a satisfied clause. The charter's pre-registered conservative default under a director non-ruling is 'stay on spot per GH #158' -- recorded here with its reason: BECAUSE A REFUSAL IS NOT A VERDICT, not because W35 was judged ok (W35 had n=1 paired seed and its four readings are barred from citation).",
+ "cost_estimate": "~$0.90/wave (charter's spot constant, 2026-08-30 director ruling). Auto-invalidation clause: any wave measuring >$0.90 on the billing side must be named in that round's report and re-ruled by the director. W35 measured ~$0.29 (it died early), so it did not trigger it.",
+ "rec_slots_note": "--rec-slots 8 carried over from W34/W35 unchanged. NOT a ruling on the GH #395 acceptance (rec_slot_cost.py returned exit 1 on W34's corpus, slot 1 net -7.2%); this desk neither executed the charter's 'exit 1 => fall back to 1' nor waived it, because the charter's boundary (3) also holds: do not change the tested id set and the capture config in the same wave -- and W36 changes 52 -> 54.",
+ "carrier_gate": {
+  "hand_typed_6_term": {
+   "tool": "seed_draft.py --assert-carrier",
+   "exit": 0,
+   "satisfied": {
+    "crystal_maiden": "2 (2838,2922)",
+    "lion": "2 (2745,2838)",
+    "obsidian_destroyer": "2 (2850,2922)",
+    "skeleton_king": "3 (2838,2850,2922)",
+    "spirit_breaker": "2 (2745,2850)",
+    "zuus": "2 (2745,2922)"
+   }
+  },
+  "mechanical_from_arm": {
+   "tool": "seed_draft.py --assert-carrier-from-arm",
+   "exit": 1,
+   "why_exit_1": "ENTIRELY from `tormself`: `CARRIER id=tormself term=ringmaster verdict=UNDRAFTABLE (no carrier is in hero_pool.txt) carriers=none`. Ringmaster is not one of hero_pool.txt's 47 heroes, so NO seed set can satisfy it -- this exit 1 is NOT a statement about seed choice and was not treated as one.",
+   "defect_found": "GH #400. carrier_terms.py derived 128 term(s) from the 54-id string, 127 of them from `immguard` alone: its gate sits in bots/FunLib/minion_lib/primal_split.lua:128, which hero_of() cannot map (it only recognises bots/BotLib/hero_<name>.lua), so the tool falls back to reachability and lists every hero file that can reach it. seed_draft.py then evaluates that list as ONE DISJUNCTIVE term (a|b|c|...), which any ten-hero roster satisfies => `verdict=FULL`. The TRUE carrier is brewmaster (primal_split is Brewmaster's ultimate) and brewmaster is NOT in hero_pool.txt, so the correct mechanical verdict was UNDRAFTABLE, identical to tormself. FAILURE DIRECTION IS THE DANGEROUS ONE: the gate does not refuse (a refusal raises its hand, as tormself's did) -- it is vacuously satisfied, and at harvest it will vouch 'all four seeds carry it' for a structurally domain-empty id. Same family as last round's `rotscope` note but harder: rotscope UNDER-reports a carrier, this OVER-reports one."
+  },
+  "terms_derived_by": "carrier_terms.py --arm-file iterations/streams/test_set.md --arm-line 2 => 54 armed ids: 12 hero-scoped, 42 generic, 0 unresolved => 128 term(s)"
+ },
+ "wiring_gate": {
+  "tool": "check_armed_wiring.py --cand <54-id> --ref HEAD",
+  "exit": 0,
+  "result": "all 54 armed ids wired on HEAD (incl. the two new: tormself hero_ringmaster.lua:914, immguard primal_split.lua:128)"
+ },
+ "seed_index_note": "seed_roster_index.py --build ran BEFORE seed selection (charter live rule) => EXIT=0. NOTE on W35's four seeds: only 2986 is banked (it was the wave's one surviving machine, 40 scored games); 2658/2774/2963 were reclaimed at ~11 min having produced ZERO games, so the index legitimately shows them unused. This desk nevertheless EXCLUDED all four from W36's pool -- a drawn seed stays drawn -- and paid for it: BEST slots fell 14 -> 13.",
+ "seed_search_note": "Mask exhaustion (GH #313) on window [2601,3000]: 13 banked / 387 unused, popcount supply {4:3, 3:53, 2:141, 1:140, 0:50}, 39 distinct masks. Including W35's drawn-but-gameless seeds the best is slots=14 (2745/2838/2922/2963); EXCLUDING them the best is slots=13 with 14 mask-combos in that layer, and inside that layer a zero-cost tie-break on pudge carriage (for queue strategy-26 / `rotscope`) selects 2745/2838/2850/2922 -- 2850 carries pudge. All six terms remain >=2. The right-shift trigger still did NOT fire: 13 >= the 12 slots that '>=2 per term' needs. GH #285 unruled for the 20th round.",
+ "gates": {
+  "i_throttle_6h": "SATISFIED -- W35 took off 21:31:09Z minus 6h = unlock 2026-09-01T21:31:09Z. The round fired 21:14:33Z, ~17 min early; the launch block's own guard printed `GATE-I NOT UNLOCKED: 660s remaining ... would exit 9 if this were the launch call`, held, then printed `GATE-I UNLOCKED at 2026-09-01T21:31:10Z (>= 2026-09-01T21:31:09Z)` before issuing any call. No exception taken. The ~11 minutes were spent on zero-cost prep (costs, seed search, both gates, reclaim_blind, luacheck gate, dry-run), not idling.",
+  "ii_new_to_test": "SATISFIED -- member string 52 -> 54 (tormself, immguard admitted by test_set.md §DF); this is the FIRST wave of the 54-id family. The second limb also holds independently: the 52/54 family has ~1 scored seed accumulated (W35 lost three of four machines), far under 8.",
+  "iii_budget": "SATISFIED -- September MTD $3.637 (budgets, free channel, refreshed 17:58:37Z) + this wave ~$0.90 => fence arithmetic ~$4.8 against the $80 fence. No owner-visible Budget tier crossed ($50/$80/$100), so no cross-tier explanation line is owed. Brake $90 and owner line $100 nowhere near.",
+  "iv_inputs": "SATISFIED -- no harvest owed. W35 was harvested in full in the previous round (18:10Z): verdict recovered via recover_verdict.py, queue.json written back, wave record backfilled. At this launch S3 carried no un-harvested validation prefix and describe-instances showed zero pending/running instances.",
+  "iv_reclaim_blind": "GH #271 reclaim-blind check (tools/batch_test/soak/reclaim_blind.py --wave-json W35_wave.json) -- RUN THIS ROUND, RB_EXIT=2 UNDECIDABLE, a verbatim reproduction of the previous round (NOT a pass and NOT a BLINDED). `BRACKET VIOLATED -- the changeover constant no longer separates this input`: seed 2986 paired after only 37.2 min, before the 40.0 min flip (measured bracket 34.80 < x <= 40.63). This desk does NOT convert exit 2 into a verdict and does NOT re-derive the constant (the director's ruling surface). Consequence recorded at launch: the market choice hung on this, and the pre-registered conservative default (stay on spot, GH #158) was taken -- see market_note for why that default is justified by 'a refusal is not a verdict' rather than by any judgement about W35."
+ },
+ "expected_games": "4 seeds x 12 games x 2 legs ~ 96 scored (excl. warm-ups)",
+ "self_destruct": "spot + 2h watchdog, self-terminating; --instance-initiated-shutdown-behavior terminate; one-time (non-persistent) spot requests",
+ "progress_at_launch": "0 games (four machines just took off)",
+ "machines": [
+  {
+   "seed": 2745,
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2c",
+   "instance": "i-0855f32a8187db9c6",
+   "run_token": "039b98",
+   "sir": "sir-ngnfhq3n",
+   "launched": "2026-09-01T21:31:10Z",
+   "carriers": [
+    "lion",
+    "spirit_breaker",
+    "zuus"
+   ],
+   "placement_note": "RE-AIMED TWICE INSIDE THE RING (GH #256). us-west-2a -> InsufficientInstanceCapacity ('There is no Spot capacity available that matches your request', reached max retries: 4) -> ring-walk to us-west-2b -> SAME error -> ring-walk to us-west-2c -> launched. stderr carried two '! re-aiming inside the ring ->' lines and one '! PLACEMENT MISMATCH requested=us-west-2a actual=us-west-2c re-aimed=yes'. NOT a degradation ('!! AZ RING EXHAUSTED' did NOT appear) and NOT a market degradation (still spot).",
+   "run_id": "spot_20260901_213110_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_039b98",
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "status_code": null,
+   "create": null,
+   "update": null,
+   "terminated": null,
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "reclaimed": false
+  },
+  {
+   "seed": 2838,
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2d",
+   "instance": "i-08025db836450f86a",
+   "run_token": "9fb8e2",
+   "sir": "sir-i637gxvn",
+   "launched": "2026-09-01T21:31:47Z",
+   "carriers": [
+    "crystal_maiden",
+    "lion",
+    "skeleton_king"
+   ],
+   "placement_note": "RE-AIMED TWICE INSIDE THE RING (GH #256). us-west-2b -> InsufficientInstanceCapacity -> us-west-2c -> InsufficientInstanceCapacity ('We currently do not have sufficient c6i.4xlarge capacity in the Availability Zone you requested (us-west-2c) ... you can currently get capacity ... choosing us-west-2a, us-west-2b, us-west-2d') -> us-west-2d -> launched. Note the EC2 message named 2a/2b as having capacity at the same moment 2a and 2b had just refused THIS wave -- the advisory text is not a per-request guarantee.",
+   "run_id": "spot_20260901_213147_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_9fb8e2",
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "status_code": null,
+   "create": null,
+   "update": null,
+   "terminated": null,
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "reclaimed": false
+  },
+  {
+   "seed": 2850,
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2d",
+   "instance": "i-047a15b6e787fd7b7",
+   "run_token": "3c7e26",
+   "sir": "sir-abvzjtvn",
+   "launched": "2026-09-01T21:32:19Z",
+   "carriers": [
+    "obsidian_destroyer",
+    "pudge",
+    "skeleton_king",
+    "spirit_breaker"
+   ],
+   "placement_note": "RE-AIMED ONCE INSIDE THE RING (GH #256). us-west-2c -> InsufficientInstanceCapacity -> us-west-2d -> launched.",
+   "run_id": "spot_20260901_213219_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_3c7e26",
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "status_code": null,
+   "create": null,
+   "update": null,
+   "terminated": null,
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "reclaimed": false
+  },
+  {
+   "seed": 2922,
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2d",
+   "instance": "i-0b6cdde6f6b96267b",
+   "run_token": "ac6ac0",
+   "sir": "sir-88afj15n",
+   "launched": "2026-09-01T21:32:36Z",
+   "carriers": [
+    "crystal_maiden",
+    "obsidian_destroyer",
+    "skeleton_king",
+    "zuus"
+   ],
+   "placement_note": "Requested AZ granted first try; no ring-walk, no mismatch line.",
+   "run_id": "spot_20260901_213236_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_ac6ac0",
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "status_code": null,
+   "create": null,
+   "update": null,
+   "terminated": null,
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "reclaimed": false
+  }
+ ],
+ "az_spread": {
+  "requested": [
+   "us-west-2a",
+   "us-west-2b",
+   "us-west-2c",
+   "us-west-2d"
+  ],
+  "actual": [
+   "us-west-2c",
+   "us-west-2d",
+   "us-west-2d",
+   "us-west-2d"
+  ],
+  "distinct": 2,
+  "acceptance": "GH #252 acceptance (>=2 distinct AZs) PASSES, but barely: 2 distinct. GH #256's stricter acceptance (four mutually distinct) FAILS, and this is the WORST spread this desk has recorded -- THREE of four seeds sit in us-west-2d. *** THE MECHANISM IS NEW AND IS WORTH A RULING (GH #401): #256's ring-walk did exactly what it was written to do (walk to the next AZ instead of dropping the AZ constraint, and never once print '!! AZ RING EXHAUSTED'), yet the OUTCOME is the concentration #252 exists to prevent. Under region-wide capacity pressure every ring-walk converges on whichever AZ still has capacity, so the fix trades AZ diversity for launch success -- SILENTLY, because each individual line reads as a success ('re-aiming inside the ring -> X', then 'launched'). This wave took SIX InsufficientInstanceCapacity refusals across 2a/2b/2c before placing four machines. Exposure: one AZ event in us-west-2d now takes THREE seeds, not one -- and W35 was destroyed by exactly a correlated reclaim (GH #398). NOT RULED BY THIS DESK: the charter forbids it from changing market/ladder strategy on its own, and #256's re-open condition is counted by the director, not re-derived here.",
+  "capacity_refusals": 6,
+  "ring_exhausted": false,
+  "market_degradation": false
+ },
+ "run_id_uniqueness": {
+  "soak_run_tags_pairwise_distinct": true,
+  "evidence": "ec2 describe-instances Tags[?Key==`soak-run`] returned exactly four values, pairwise distinct, matching machines[].run_id one-for-one (an evidence source independent of this session's own transcript)",
+  "run_tokens": [
+   "039b98",
+   "9fb8e2",
+   "3c7e26",
+   "ac6ac0"
+  ]
+ },
+ "market_verified": {
+  "method": "describe-instances InstanceLifecycle (the run_id `spot_` prefix is a hard-coded string and is NOT evidence)",
+  "result": "all four `spot`, all four `running`, four distinct SpotInstanceRequestIds (sir-ngnfhq3n / sir-i637gxvn / sir-abvzjtvn / sir-88afj15n)"
+ },
+ "terminated_capture_obligation": "These four take off 21:31-21:32Z and self-destruct by ~23:3xZ at the latest (2h watchdog; on W34's realised rate expect ~22:1x-22:3xZ). The EC2 `terminated` field survives ~1h (GH #375), so the next round of this stream (~00:1xZ) will again find describe-instances empty -- PRE-REGISTERED HERE, as at W35. The settlement channel is NOT lost: read `describe-spot-instance-requests` (still first-hand 2.6h later at W35) plus the S3 farm log's `SPOT INTERRUPTION` line. Do not fall back to the #332 S3-last-upload proxy before trying those two.",
+ "harvest": {
+  "status": "PENDING -- next round of this stream"
+ }
+}

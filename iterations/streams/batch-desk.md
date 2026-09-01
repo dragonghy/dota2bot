@@ -8141,6 +8141,106 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **本轮 token**:见报告 §9.2(`TOKENS total_in=5,070,738 out=40,917 turns=47`)。
   详见 `iterations/reports/batch-desk/20260901T181000Z.md`。
 
+- 2026-09-01T21:14Z(**发 W36 —— 54-id 家族首波;spot 4×1;两条新缺陷,一朝开一朝关**)。
+  ⭐⭐⭐ **本轮真正的产物不是那一波,是发波前门打出的两行。**
+  **(甲,朝开失效,GH #400)** `--assert-carrier-from-arm` 打
+  `CARRIER_TERMS … 54 armed ids: 12 hero-scoped, 42 generic, 0 unresolved => 128 term(s)`,
+  **127 个来自 `immguard` 一条**:它的门在 `bots/FunLib/minion_lib/primal_split.lua:128`,
+  `carrier_terms.py` 的 `hero_of()` 只认 `bots/BotLib/hero_<name>.lua` 的**路径形状**,
+  于是退回可达性反查、把**能走到该文件的英雄文件全列为载体**;`seed_draft.py` 再把它当成
+  **一个 `a|b|c|…` 析取 term** ⇒ 任意十人阵容必然命中 ⇒ **`satisfied=4 verdict=FULL`**。
+  而 `primal_split.lua` 是**酒仙大招的分身**逻辑,**真载体是 `brewmaster` 一个**,
+  且 `brewmaster` **不在 `hero_pool.txt` 的 47 行里** ⇒ 正确判读本应与同轮
+  `tormself`(`term=ringmaster verdict=UNDRAFTABLE`)**逐字一致**。
+  ⚠️ **门不是拒发(拒发会举手),是凭空满足** —— 收割时它会为一条**结构性域空**的 id
+  背书「四粒全有载体」。与上一轮的 `rotscope` 同族**但更硬**:`rotscope` 是**漏报**载体,本条是**虚报**。
+  ⇒ 这把 `test_set.md` §DF(第 6 小节)的「预期 DOMAIN-EMPTY」从预告变成了**可执行判据**:
+  在当前 47 人池下,**任何四粒、任何窗口、任何次数的重抽都买不到这两条的条件 (a)**。
+  **(乙,朝关失效,GH #402)** 发 #400 前跑 `claim_precheck.sh` 得 **`PRECHECK_EXIT=3`** 点名 `§DF.6`;
+  查下去是**标题写法**:`### §CT.2` / `### §BL.4` 带 `§` ⇒ 解析成功,
+  `### K.5` / `### DC.3` / `### DF.6` 不带 ⇒ **`MISSING`**。`origin/main` 上
+  **带 `§` 的小节标题 180 个,不带的 382 个 ⇒ 68% 的小节引用解析不了**
+  (本章程活块引用最多的 `§K.5` 18 次 / `§AF.3` 17 次 / `§AI.4` 16 次全属后者)。
+  失效方向朝关是安全侧,**立案理由是二阶代价:假阳性会训练读者把 `MISSING` 读成噪声,
+  而那是这个工具唯一的信号。** 两份草稿处置不同且理由已登记:#400 的引用是顺带的 ⇒ 改写后
+  **`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0` / `OK to publish`** 才发;
+  #402 的三条 `MISSING` **就是论据本身**(且实测**围栏内代码块也会被解析**)⇒
+  **照 #290 把 exit 3 原样抄进正文并声明这是自证**,绕过登记、不当作修复。
+  **W36 发波**:三闸全过 —— (i) 守卫先打 `GATE-I NOT UNLOCKED: 660s remaining … would exit 9`,
+  held,再打 `GATE-I UNLOCKED at 2026-09-01T21:31:10Z (>= 21:31:09Z)` 才发第一炮,**未取例外**,
+  那 ~11 分钟跑完了成本/选种/两道门/`reclaim_blind`/静态门/dry-run;
+  (ii) 成员串 **52 → 54**(§DF 裁入 `tormself`/`immguard`),且 52/54 家族累计仅 ~1 粒 ≪ 8;
+  (iii) `$3.637 + ~$0.90 ≈ $4.8` ≪ `$80`,**无跨档 ⇒ 不欠解释行**。
+  `tree` = `git ls-remote origin main` = 本地 HEAD = **`32abbfbb…`**;
+  arm **54 ids / 477 字节 / md5 `74273b3ce5f58fcb50de769a700ab074`**;`WIRING_EXIT=0` `all 54 wired`。
+  **选种 `2745/2838/2850/2922`**:W35 四粒里只有 2986 banked(另三粒 ~11 min 被回收、**零局**,
+  索引如实标未用),**本台仍把四粒全排除 —— 抽过就是抽过**,代价 `BEST slots 14 → 13`;
+  六项仍全 ≥2、`13 ≥ 12` ⇒ **右移触发条件仍未到,GH #285 第二十轮未裁**。
+  同一最优层内零成本次序偏好选中 **2850 带 pudge** ⇒ `strategy-26`(`rotscope`)**连续第二波拿到载体**。
+  ⭐⭐⭐ **AZ 分散塌到 2 个(`2c/2d/2d/2d`,三粒挤在 `us-west-2d`),而 #256 按设计工作了(GH #401)**:
+  全程**没有一次** `!! AZ RING EXHAUSTED`、没有退回不点 AZ 的旧调用、市场没降级,
+  每次失败都是 `! re-aiming inside the ring -> <az>`。**新形状是:本波撞上区域级容量紧张
+  (四次调用共吃 6 次 `InsufficientInstanceCapacity`),而环内改投在这种条件下会「收敛」不是「分散」**
+  —— 每次改投都走向当时还有容量的那个 AZ。**这笔「用 AZ 多样性换起飞成功率」的交易是静默的**:
+  每行单独读都是成功,**没有一行说这一波的冗余没了**。暴露面:`2d` 一次事件带走**三粒**不是一粒,
+  而 W35 正是被相关回收打掉的(#398)。⛔ **本台不改市场/阶梯,也不代数 #256 的重开计数。**
+  ⚠️ 留档:2838 那次 EC2 拒 `2c` 的建议文案点名「可以选 **2a、2b**、2d」,
+  **而 2a/2b 刚在同一分钟拒绝过本波** ⇒ 那段建议**不是对单次请求的保证**。
+  **市场按证据核对**:`InstanceLifecycle` 四台全 `spot`、全 `running`、四个 SIR 互不相同;
+  **降级阶梯一级都没下**;`soak-run` 四值两两不同且与 `machines[].run_id` 逐一对上。
+  **GH #271**:`RB_EXIT=2 UNDECIDABLE` **第二轮逐字复现**(`BRACKET VIOLATED`,2986 在 37.2 min
+  就配对、早于 40.0 min 翻转点)。**本台不把 exit 2 洗成判决、不代裁常数**;
+  市场按预登记的保守默认走 spot,**理由是「拒答不是判决」,不是因为 W35 被判了 ok**
+  (W35 只有 n=1 粒,四量读数按章程一律不得引用)。
+  **局数(铁律 7)**:(a) W35 最终 —— 仅 2986 配对 `ab27/ba13`、`arm_depth 17.55`、**40 局计分**,
+  另三粒 `ab0/ba0`;(b) W36 实时 —— **0 局**(刚起飞),预期 **≈96 局计分**。
+  **成本**:本波预估 `~$0.90`;九月 MTD **`$3.637`**(`budgets`,免费通道,快照 `17:58:37Z`,
+  与上一轮**同一张快照** ⇒ 本轮无新围栏信息);MTD `< $35` ⇒ CE 复核**未触发,没花那 `$0.01`**。
+  ⚠️ `forecast 150.867` 仍是开月两天外推,**不构成刹车信号**。
+  **泄漏**:收尾**固定两条**都做了 —— (1) 波次点名:`pending/running` 的四个 `soak-run`
+  与 `W36_wave.json:machines[].run_id` **逐一对上,不多不少**;(2) `terminated/shutting-down` **空**
+  ⇒ **零回收**。常驻只有 AMI `ami-0a990a26d89c66547`。**无泄漏。**
+  **queue.json**:八条搭车行(`strategy-25/26/27/28/29/30` + `hero-24/25`)`rides_wave` 由
+  `W35 (LOST…)` 改记 **W36**;`strategy-31`/`strategy-32`(`tormself`/`immguard`)**首次**登记
+  `rides_wave: W36`,并**在同一格里写明其载体结构性缺席**(#400)⇒ 接力棒显式交出(铁律 9)。
+  **铁律 6**:`bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`GATE_EXIT=0`**
+  `luacheck bots game: 0 warnings` `CLEAN`(冷启自装,apt 包名 `lua-check`);
+  **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑不声称**。
+  **铁律 10**:自检**跑完了** —— `legs run 8`,`FINDINGS (exit 3): cadence trunk-red(python)
+  trunk-red(lua)`,**`UNCERTIFIABLE: none`**,`selfcheck worst exit: 3`。
+  ⭐ **这是连续三轮里第一次真的有「自检总判决」**(前两轮 `EXIT=124` 没跑完 ⇒ 不存在总判决)。
+  python 两红:`test_carrier_terms.py`(`axe is NOT asked about`,**红在 main**,交总监/协同组)
+  与 `test_wave_gate_keys.py`(**本台的,本轮已修**:`W35_wave.json:gates` 缺 `iv_inputs`,
+  补写后 `WGK_EXIT=0`;⚠️ **同一族第二例** —— 上轮缺 `reclaim_blind`,两次都是**闸满足了但没写下来**,
+  W36 记录已按五键写全);Lua 一红 `test_incoming_damage_callsite_census.lua` = **GH #394 第三次复现未修**;
+  `5a0` 腿**第三轮** 72 文件/120s 未跑完 ⇒ `5a` 又没跑(#358 同族)。
+  ⚠️ **管道守卫第 10 个外部验收点**(本轮第一条命令又误用管道,自检自己拒跑并打
+  `REFUSED … stdout is a pipe; exit 2, nothing checked`,**第六次**同一形状)。
+  **铁律 11**:未触发 `requires approval`;GitHub MCP 可用;**无空转等待**
+  (闸 (i) 的 ~11 分钟由发波块内守卫强制,期间跑满零成本准备)。
+  **计量四条**:本轮**零收割 ⇒ 无读数**,(i-a)~(i-d) 无适用面;W36 的分层读数由收割轮按
+  `recover_verdict.py` 自打的 `_ab`/`_ba`/`strata` 登记,**不许手算**。
+  **交棒**:① ⭐⭐⭐ 总监 —— **GH #401**(环内改投在容量紧张下收敛,三粒同 AZ);
+  ② ⭐⭐⭐ 总监/harness —— **GH #400**(载体门凭空满足 + 两条 id 结构性域空);
+  ③ ⭐⭐⭐ 总监 —— `reclaim_blind` 常数重标定**第二轮拒答**,下一轮仍会撞上;
+  ④ ⭐⭐ 总监/harness —— **GH #402**(68% 小节引用解析不了,而发表门压在它上面);
+  ⑤ ⭐⭐ 总监/英雄组 —— **#394 第三次复现未修**;
+  ⑥ ⭐⭐ 总监/协同组 —— `test_carrier_terms.py` 红在 main(Axe 无 armed id);
+  ⑦ ⭐ 本台自订:`gates` 五键当固定清单(连续两轮各缺一格);
+  ⑧ ⭐ 自检 `5a0` 第三轮超时;⑨ ⭐ 管道守卫第 10 次;
+  ⑩ ⭐ 存量:**#388 W34 的 103 份 `.dem` 2026-09-22 到期(距今 21 天)** / #395 三件待裁 /
+  按需常数第四轮重裁 / **#285 第二十轮未裁** / #352 / #317 五条 / `strategy-5b` 第十一轮 /
+  #398 / #399 / #382 / #383 / #290 / #313 / #375 / #207 / #218 / #367 / #295 / #252 / #256 /
+  #282 / #329 / #321。
+  **下一轮本台 = 收割 W36**(四台预计 ~22:1x–22:3xZ 自毁,最迟 23:3xZ 看门狗)。
+  闸 (i) 对下一次发波解锁于 **`2026-09-02T03:31:10Z`**。
+  ⚠️ **结算读 SIR 不读 `terminated`**:下一轮 `describe-instances` 多半又是空的(#375 ~1h),
+  按 W35 已证:`describe-spot-instance-requests` + farm log 的 `SPOT INTERRUPTION` 行都是第一手,
+  **不要**先退到 #332 的 S3 最后上传代理。
+  **本轮 token**:见报告 §9.3。
+  详见 `iterations/reports/batch-desk/20260901T211400Z.md`。
+
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
