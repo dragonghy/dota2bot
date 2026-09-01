@@ -27,6 +27,84 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0FIELD. **【2026-09-01T07:46Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的九条全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;backlog `0d` 上一轮已结案 ⇒ **留在它打开的那个人口里**:
+   **小兵驱动器,不经 mode 竞价** —— 取上一轮修的那条分支**再往上四行**的那一条);
+   **落地 gated `illureal`**,入集提议 `test_set.md` **§DB**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-30`**(提议方自建,**`bundle` 已填**);`state.json` 新键 `illureal_20260901`;
+   issue **GH #381**;报告 `iterations/reports/strategy/20260901T074632Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个关于世界的谓词一旦被存成手工维护的字段,
+   它的真假就不再是世界的事实,而是「每个写者记没记得」的事实。**
+   谓词的可达性于是等于**它最不勤勉的那个调用方**;而且它**朝「关」的方向、以静默的方式**失效 ——
+   **一个没被设过的字段,和一个诚实的 `false`,在任何观察下都一模一样**:
+   分支不发生、不报错、没有计数器动,**没有任何测试能把「这不是幻象」和「没人给这个幻象打标记」分开**。
+   **判别特征可数、且不需要帧**:**同一个文件里一个谓词有两种活着的写法**
+   (一个字段 + 一个回答同一问题的引擎调用),**而不同分支读的是不同的那一个**;
+   见到这种形状就去数 **字段的写者 vs 分支的调用方**。本例 **2 比 127**。
+   **与五个同族划清界限(它们的因各不相同)**:GH #348 **顺序**、#368 **词法作用域**、
+   #370 **未汇报的副作用**、#373 **闩记错后置条件**、#378 **节流器作用域** ——
+   **那五条都是「某一份状态被怎么读/怎么写」的缺陷;本条不是**:
+   `isIllusion` 的**每一次读和每一次写都正确,字段也从不过期**,
+   错的是**这个字段本身是引擎已知之事的副本,而副本有 2 个写者、正本有 127 个读者**。
+   **缺陷**:`bots/FunLib/minion_lib/illusions.lua:52` 把
+   `X.ConfuseEnemyWithIllusions`(低血撤退时让幻象反向散开做诱饵)闸在手工字段
+   `hMinionUnit.isIllusion` 上。全仓**写**该字段的**恰好 2 个文件**
+   (`hero_naga_siren.lua:91`、`hero_phantom_lancer.lua:92`),而**127 个英雄文件**
+   全部经 `aba_minion.lua:48-53` 把小兵送进本模块,**且驱动器自己按引擎方法
+   `hMinionUnit:IsIllusion()` 路由** ⇒ **幻象一定到达 `X.Think`,只是里面那条分支看不见它**
+   ⇒ 该分支对**除娜迦与 PL 之外的每一个幻象**结构上不可达(CK 的 Phantasm、TB 的 Conjure Image、
+   幽鬼 Haunt,以及 **19 个买 `item_manta` 的英雄文件**里的每一把分身斧)。
+   **⭐⭐ 它是缺陷不是取舍,证据在同一个文件里**:**往下六十行**的 `X.ConsiderRetreat`
+   对**同一个句柄**、经**同一次 `X.Think` 调用**、**在下一行**,
+   用**引擎方法**问了**同一个问题** ⇒ 方法在这些句柄上**在今天发货的代码里就可用**,
+   而**这个文件自己并不一致地偏好那个字段**。
+   **⭐⭐⭐ 为什么没人发现 —— 不是「没人想过幻象」**:**12 个**英雄文件在自己的
+   `X.MinionThink` 里**显式判过 `IsIllusion()`** 再路由(12 个明确想着幻象的作者),
+   其中**同时设了字段的 2 个是娜迦和幻影长矛手** —— **两个专职幻象英雄,
+   也就是你要验一个幻象功能时会打开的那两个** ⇒ **功能在演示里是好的,在别处全是死的**。
+   **灵魂守卫在另外那 10 个里,而本文件 `X.ConsiderMove` 里就有一条灵魂守卫专属的幻象带线分支**
+   ⇒ **模块是为一个它自己的闸放不进来的人口写的**。
+   **改动**:新增 `IsIllusionUnit(hMinionUnit)` 按 `J.IsModeTurbo() and J.IsSoakCandidate('illureal')` 分叉;
+   **门关逐字返回那个字段 ⇒ 出厂不变**;门开返回
+   `hMinionUnit.isIllusion == true or hMinionUnit:IsIllusion()` —— **严格超集**
+   (**arming 不可能让今天会做诱饵的娜迦/PL 幻象反而不做**),**且不外扩到无技能召唤物**。
+   `X.Think:52` 改调该 accessor,**发货函数体其余一字未动**。
+   **产出** `tests/test_illureal_field_vs_engine.lua`(`[ratchet]` **12/0**),真实帧
+   `f_231411_ck_zoned`(subject **chaos_knight**,t=192.0,hp **126/1068 = 0.118**;
+   选它因为 CK **既是幻象大招英雄、又在 19 个 `item_manta` 买者之列**,
+   而 `hero_chaos_knight.lua:124-131` **无条件**路由却**从不设字段**)。
+   该帧上分支的两个世界条件**是读出来的不是断言出来的**:`J.GetHP`=0.118<0.4、
+   `J.WeAreStronger(bot,1200)`=false 且 1200 内**确有 2 个活敌**(不是列表为空)。
+   **变异 19 条:16 CAUGHT / 3 存活,三条存活全部在跑之前就写进文件**。
+   门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+   `illureal` 12/0 · `illumove` 9/0 · `smoke_load` 3/0 · `gate_claim` 10/0 ·
+   `pullcamp_trigger_census` 29/0 · `activemode_world_assertion` 12/0;
+   **全量套件本轮没跑完(GH #124),不声称**。
+   **⚠️ 一次方法自伤,被测试自己的断言抓出**:英雄文件普查按
+   `Minion.IllusionThink`(**模块局部变量的拼写**)读出 **126/127** ——
+   漏的是 `hero_wisp.lua`,它从 `typescript/` 转译而来、**小写拼作 `minion.IllusionThink`**
+   ⇒ **一个确实在路由的文件从普查旁边走了过去**;已改为按**调用**取键。
+   **与 GH #377 的 M8 同形**;**登记理由是失效方向 —— 它朝更小的分母偏,
+   也就是朝这个测试想要的答案偏**。
+   **⚠️ 顺带修一条邻居棘轮的假阳性**:`test_illumove_shared_throttle.lua [source S3]`
+   断言 `count(CODE,'IsSoakCandidate(')==1`(「本文件恰好一个门表达式」),
+   在同一文件落下第二个**无关**候选那一刻就红了 —— 该断言本意是
+   「没有第二个 `illumove` 门绕开 accessor」,**不是「这个文件永远不许长出别的候选」**;
+   已按 `IsSoakCandidate('illumove')` 取键并补「那唯一的门必须坐在 `IsPerUnitMoveClock` 里」。
+   **一个禁止文件生长的棘轮,量的是文件不是主张。**
+   **明说没做**:`ConfuseEnemyWithIllusions` **函数体一字未动**(反向 800u 的几何、
+   以 `bot:GetFacing()` 为基准是否最优诱饵方向,**只普查未审计**);
+   `aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处连续命令**仍只普查未审计**;
+   **频率未知且比平时更重** —— 四项合取(幻象活着 ∧ 主人 <40% ∧ 撤退 ∧ 非强势方)
+   在真实 Turbo 局里的出现率**未证,那就是本修复价值的上界**,
+   **加重一条:焦点五英雄没有一个产生幻象 ⇒ 只可能在非焦点英雄身上买到读数**。
+   **下一格**:**总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 主判据进不进 §CR;
+   丙 `strategy-29`/`illumove` 仍待裁);**录像组**(只缺一种读数:**「某 bot 持有存活幻象
+   ∧ 血量 <40% ∧ 正在撤退」的窗口有多少、多长**;`acceptance` 已按 §CJ 预登记
+   **`METHOD-FAILED`** ⇒ 没有这种窗口判 **`DOMAIN-EMPTY` 退回总监**)。
+   **批测台:`strategy-30`,搭车、零 AWS 增量、零 EC2。**
+
 0ILMV. **【2026-09-01T04:29Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
    ⇒ 取 backlog **`0d`** —— **而本轮把 `0d` 结掉了**:它剩下的两行普查**都实测为空**
    (mode 那半止于 `mode_outpost_generic.lua:117`,GH #373;`ability_item_usage_generic.lua` 全量 grep
@@ -3815,6 +3893,67 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T07:46Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的九条全是本组自己开的);
+  owner P1 第 1 棒、P2 均已交出;backlog `0d` 上一轮已结案 ⇒ **留在它打开的人口里**
+  (小兵驱动器,不经 mode 竞价),取上一轮那条分支**再往上四行**的一条;
+  **报告 `iterations/reports/strategy/20260901T074632Z.md`**;issue **GH #381**;
+  backlog 条目 **`0FIELD`**;**落地 gated `illureal`**,入集提议 `test_set.md` **§DB**
+  (搭车、零 AWS 增量、不申请专波);`queue.json` 新增 **`strategy-30`**(**`bundle` 已填**);
+  `state.json` 新键 `illureal_20260901`;零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **一个关于世界的谓词被存成手工字段,于是它只对记得设它的那两个英雄为真 —— 而那两个恰好是你会用来验它的那两个。**
+  `bots/FunLib/minion_lib/illusions.lua:52` 把 `X.ConfuseEnemyWithIllusions`
+  (低血撤退时让幻象反向散开做诱饵)闸在 `hMinionUnit.isIllusion` 上;
+  全仓**写**该字段的**恰好 2 个文件**(naga_siren:91 / phantom_lancer:92),
+  而**127 个英雄文件**全部经 `aba_minion.lua:48-53` 把小兵送进本模块,
+  **且驱动器自己按引擎方法 `hMinionUnit:IsIllusion()` 路由**
+  ⇒ **幻象一定到达 `X.Think`,只是里面那条分支看不见它**
+  ⇒ 对**除娜迦/PL 外的每一个幻象**结构上不可达(CK Phantasm、TB Conjure Image、幽鬼 Haunt、
+  **19 个买 `item_manta` 的英雄**的每一把分身斧)。
+  **⭐ 主判据:一个关于世界的谓词一旦被存成手工维护的字段,它的真假就不再是世界的事实,
+  而是「每个写者记没记得」的事实** —— 可达性等于**最不勤勉的那个调用方**,
+  且**朝「关」的方向静默失效**:**没被设过的字段与诚实的 `false` 在任何观察下都一样**。
+  **判别特征可数、不需要帧**:**同一文件里一个谓词两种活着的写法,不同分支读不同的那一个**;
+  见到就数 **字段的写者 vs 分支的调用方**(本例 **2 比 127**)。
+  **与 #348 顺序 / #368 词法作用域 / #370 未汇报副作用 / #373 闩记错后置条件 / #378 节流器作用域
+  同族不同因**:**那五条是「状态被怎么读写」的缺陷;本条每一次读写都正确、字段也从不过期,
+  错的是这个字段是引擎已知之事的副本,而副本有 2 个写者、正本有 127 个读者。**
+  **⭐⭐ 它是缺陷不是取舍,证据在同一文件**:**往下六十行**的 `X.ConsiderRetreat`
+  对**同一句柄**、经**同一次 `X.Think`**、**在下一行**用**引擎方法**问了**同一个问题**。
+  **⭐⭐⭐ 为什么没人发现**:**12 个**英雄文件在 `X.MinionThink` 里**显式判过 `IsIllusion()`**
+  再路由,其中**设了字段的 2 个是娜迦和幻影长矛手** —— **两个专职幻象英雄,
+  也就是你要验幻象功能时会打开的那两个** ⇒ **演示里是好的,别处全是死的**;
+  **TB 在另外那 10 个里,而本文件 `ConsiderMove` 里就有一条 TB 专属幻象带线分支**
+  ⇒ **模块是为一个它自己的闸放不进来的人口写的**。
+  **改动**:新增 `IsIllusionUnit` 按 `J.IsModeTurbo() and J.IsSoakCandidate('illureal')` 分叉;
+  **门关逐字返回那个字段 ⇒ 出厂不变**;门开返回 `isIllusion == true or :IsIllusion()`,
+  **严格超集**(**arming 不可能让今天会做诱饵的娜迦/PL 幻象反而不做**)**且不外扩到无技能召唤物**。
+  **产出** `tests/test_illureal_field_vs_engine.lua`(`[ratchet]` **12/0**),真实帧
+  `f_231411_ck_zoned`(subject **chaos_knight**,hp **126/1068 = 0.118**;
+  CK **既是幻象大招英雄又在 19 个 manta 买者之列**,而它的英雄文件**无条件路由却从不设字段**);
+  该帧两个世界条件**是读出来的**:hp 0.118<0.4、`WeAreStronger`=false 且 1200 内**确有 2 个活敌**。
+  **变异 19 条:16 CAUGHT / 3 存活,三条存活全部在跑之前就写进文件。**
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+  定点与 5 个邻接文件全绿;**全量套件本轮没跑完(GH #124),不声称**。
+  **⚠️ 一次方法自伤,被测试自己的断言抓出**:普查按 `Minion.IllusionThink`
+  (**模块局部变量的拼写**)读出 **126/127**,漏的是转译自 `typescript/` 、
+  **小写拼作 `minion.IllusionThink`** 的 `hero_wisp.lua` —— **一个确实在路由的文件走了过去**;
+  已改按**调用**取键。**与 #377 的 M8 同形;登记理由是失效方向 —— 朝更小的分母偏,
+  也就是朝这个测试想要的答案偏。**
+  **⚠️ 顺带修一条邻居棘轮的假阳性**:`illumove [source S3]` 的
+  `count(CODE,'IsSoakCandidate(')==1` 在同一文件落下第二个**无关**候选时就红 ——
+  已按 id 取键。**一个禁止文件生长的棘轮,量的是文件不是主张。**
+  **⚠️ 开工自检同一站点连续第八轮**:第一条命令仍是 `| tail`,被拒绝横幅当场拆穿;
+  改重定向后跑完 8 条腿。**四条 finding 全不是本轮的**(cadence 三洞均在 08-31;
+  `test_rc_wrapper.py` = **GH #364**);**`ORPHAN_PROPOSAL` 本轮为零**;
+  `strategy-29`(上一轮 `illumove`)仍 `pending` 未裁 —— **交棒未掉,只是还没轮到**。
+  **明说没做**:`ConfuseEnemyWithIllusions` **函数体一字未动**(反向 800u 的几何只普查未审计);
+  `aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处连续命令**仍只普查未审计**;
+  **频率未知且比平时更重** —— 四项合取的出现率未证,**那是本修复价值的上界**,
+  **且焦点五英雄没有一个产生幻象 ⇒ 只可能在非焦点英雄身上买到读数**。
+  **交棒:总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 主判据进不进 §CR;丙 `strategy-29` 仍待裁)、
+  **录像组**(只缺一种读数:**「持有存活幻象 ∧ 血量 <40% ∧ 正在撤退」的窗口有多少、多长**;
+  `acceptance` 已按 §CJ 预登记 **`METHOD-FAILED`** ⇒ 没有这种窗口判 **`DOMAIN-EMPTY` 退回总监**)。
+  **批测台:`strategy-30`,搭车、零 AWS 增量。**
 - 2026-09-01T04:29Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的全是本组自己开的);
   owner P1 第 1 棒、P2 均已交出 ⇒ 取 backlog **`0d`**,**并把它结掉**;
   **报告 `iterations/reports/strategy/20260901T042904Z.md`**;issue **GH #378**;

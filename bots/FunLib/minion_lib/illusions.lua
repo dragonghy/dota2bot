@@ -44,12 +44,39 @@ local function SetNextMoveTime(hMinionUnit, nTime)
     end
 end
 
+-- Is this unit an illusion? The shipped answer is the hand-written field
+-- `hMinionUnit.isIllusion`, and that field is a claim about whether some hero
+-- file remembered to set it, not a claim about the world. All 127 hero files
+-- route their minions into this module (bots/FunLib/aba_minion.lua:48-53);
+-- exactly TWO of them ever write the field -- hero_naga_siren.lua:91 and
+-- hero_phantom_lancer.lua:92. Twelve hero files gate their own X.MinionThink on
+-- `hMinionUnit:IsIllusion()`, i.e. twelve authors who deliberately sent
+-- illusions down here, and ten of those twelve still never set the field. So
+-- the ConfuseEnemyWithIllusions branch below is unreachable for every illusion
+-- in the game except Naga's and Phantom Lancer's -- Chaos Knight's Phantasm,
+-- Terrorblade's Conjure Image (whose illusions this very file has a dedicated
+-- lane-farm branch for), Spectre's Haunt, and every Manta Style in the 19 hero
+-- files that buy one.
+--
+-- ConsiderRetreat, four lines further down, asks the same handle the same
+-- question with the ENGINE method. Both spellings ship, in one file, on one
+-- handle.
+--
+-- soak candidate 'illureal' (turbo-only). Gate shut, this returns exactly the
+-- field, so the shipped path is unchanged.
+local function IsIllusionUnit(hMinionUnit)
+    if J.IsModeTurbo() and J.IsSoakCandidate('illureal') then
+        return hMinionUnit.isIllusion == true or hMinionUnit:IsIllusion()
+    end
+    return hMinionUnit.isIllusion
+end
+
 function X.Think(ownerBot, hMinionUnit)
     if not U.IsValidUnit(hMinionUnit) then return end
 
     bot = ownerBot
 
-    if hMinionUnit.isIllusion then
+    if IsIllusionUnit(hMinionUnit) then
         if X.ConfuseEnemyWithIllusions(ownerBot, hMinionUnit) > 0 then
             return
         end

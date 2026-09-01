@@ -256,7 +256,18 @@ tests['[source S3] gate shut is the shipped path, proved by evaluation not by re
     -- And the gate itself is the standard conjunction.
     assert(CODE:find("J.IsModeTurbo() and J.IsSoakCandidate('illumove')", 1, true) ~= nil,
         'the gate must be turbo-only and named illumove')
-    assert(count(CODE, 'IsSoakCandidate(') == 1, 'exactly one gate expression in this file')
+    -- Keyed on THIS id, not on `IsSoakCandidate(` file-wide. The point of the
+    -- assertion is that no second illumove gate exists to let a path around the
+    -- accessors -- not that this file may only ever hold one candidate. It was
+    -- written the file-wide way and duly fired the day an unrelated second
+    -- candidate ('illureal', GH #381) landed in the same file, which is a false
+    -- positive: a ratchet that forbids the file from growing is measuring the
+    -- file, not the claim.
+    assert(count(CODE, "IsSoakCandidate('illumove')") == 1,
+        'exactly one illumove gate expression in this file')
+    local clock = slice(CODE, 'local function IsPerUnitMoveClock(', 'local function GetNextMoveTime(')
+    assert(count(clock, "IsSoakCandidate('illumove')") == 1,
+        'and it must be the one inside IsPerUnitMoveClock, which both accessors consult')
 end
 
 -- ---------------------------------------------------------------------------
