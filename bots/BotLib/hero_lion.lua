@@ -379,9 +379,31 @@ function X.SkillsComplement()
 	-- shape the zusult / zusultx audit named on Zeus (hero.md backlog #4);
 	-- the actual fix belongs to a gated turbo lever mirroring
 	-- X.zuus_ShouldSaveManaForUlt, and needs a real Lion frame with Finger
-	-- off cooldown and mp in [cost, cost + spend) before it can ship. None
-	-- of the 6 Lion frames currently in tests/fixtures/ satisfies that
-	-- combination; opening a `[hero]` GH issue to seed the next trigger.
+	-- off cooldown and mp in [cost, cost + spend) before it can ship.
+	--
+	-- SINCE ADJUDICATED -- do not read the paragraph above as work pending a
+	-- dump. That lever is `lionult` in GH #73, and the director STRUCK it on
+	-- 2026-08-20T23:00Z after a corpus pre-flight measured its domain empty
+	-- over 1216 frames. The ruling attached one revival condition: the
+	-- emptiness was to be recorded as holding AT FINGER LEVEL 1 only, because
+	-- the cost ladder is {200, 400, 600} and a 400 line was expected to bite
+	-- against the ~380 mana-pool bottom seen then; if Turbo games ever reached
+	-- hero level 12+, the lever was to be RE-MEASURED rather than quoted.
+	--
+	-- Re-measured 2026-09-01, and it does not revive. The archive now holds a
+	-- Finger at rank 2 (cost 400) on a level-20 Lion -- but that Lion's pool is
+	-- 1551, not 380. Levels move BOTH sides of the ruling's arithmetic, and
+	-- not at the same rate: the band [cost, cost + spend) is only ever as wide
+	-- as the cheapest basic, Impale's ladder ENDS at 150 (rank 4, ~hero level
+	-- 7), and the pool does not end. So the band is frozen at 150 mana while
+	-- its denominator grows -- 21.2% of the pool at hero level 8, 9.7% at
+	-- level 20. Leveling SHRINKS this lever's domain. The reading, its funnel
+	-- (24 live-Lion instants -> 13 trained -> 3 off cooldown -> 3 affordable ->
+	-- 0 in band, i.e. COOLDOWN is the binding clause, not mana), and its honest
+	-- bounds (n=1 at rank 2; rank 3 unmeasured) are pinned in
+	-- tests/test_lion_ult_reserve_domain.lua, which goes red if the domain
+	-- stops being empty. The count "6 Lion frames" above was true when written
+	-- and is now four times out of date; the file is the live number.
 	aetherRange = 0
 	nLV = bot:GetLevel()
 	nMP = bot:GetMana()/bot:GetMaxMana()
