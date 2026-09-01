@@ -90,7 +90,12 @@ reading, **two** files, so GH #357's row 9 was itself one file short) ·
 survives) · `test_propertarget_corpus_domain` and `test_stayfield2_marginal_domain`
 (live-hero denominator 993 -> 1000) · `test_salvepool_missing_floor` and
 `test_salveally_missing_floor` (largest archived pool -> 2812) ·
-`test_wk_bone_guard_talent_bypass` (36 -> 37 WK frames, blind spot 22 -> 23) ·
+`test_wk_bone_guard_talent_bypass` (36 -> 37 WK frames, blind spot **19 -> 20**;
+the base was corrected 22 -> 19 on 2026-09-01 by GH #392 — the mana ladder woke
+`X.ShouldSaveMana`, which now stops 3 frames one disjunct before the modifier
+guard — and the staged frame was re-measured against the real ladder rather than
+carried forward: it IS in the blind spot, at level 21 with 587 mana against a
+100 + rank-2 220/110/0 reserve, so the delta is still +1) ·
 `test_relicguard_siege_gate` (subjects at level >= 15: 1 -> 2).
 
 ### The finding that outlives the census

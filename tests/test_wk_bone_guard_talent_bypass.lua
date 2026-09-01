@@ -46,6 +46,44 @@
 --     CAN answer, which is why that number in section 3 did not move.
 --   * Share of the corpus in the blind spot: 22/36 = 61% (was 20/34 = 59%).
 --
+-- CENSUS RE-READ 2026-09-01 (GH #392), AND THIS TIME A NUMBER MOVED DOWN.
+-- 22 -> 19, on a corpus whose SIZE did not change (36 WK frames, section 2 is
+-- still green at 36/19/19).  A shrinking blind spot on a constant denominator is
+-- the reading that must never be taken on trust, so section 3b now measures the
+-- cause instead of asserting it in prose:
+--   * CAUSE: the mana meter, not the guard.  `X.ConsiderW`'s third disjunct is
+--     `X.ShouldSaveMana(abilityW)`, which asks `GetMana() - W:GetManaCost() <
+--     R:GetManaCost()`.  Until the ladder landed, BOTH costs read 0 (`GetManaCost`
+--     was on no spec, so the generic `^Get` answered 0), and the clause was
+--     `mana < 0` -- false on every frame that has ever existed.  The rule could
+--     not fire; commit ad88ecca is where that was first written down.  With the
+--     ladder wired, the reserve rule is alive, and on exactly 3 of the 22 it
+--     fires and stops the frame one disjunct BEFORE the modifier guard is
+--     reached.  Those 3 leave the blind spot because the corpus can now answer
+--     them, which is the direction this file wants numbers to move.
+--   * THE 3, each with all three operands of the reserve rule true:
+--       f_225947_wk_trade_kite          lv 7, mana 222, 222-100=122 < 220
+--       f_232320_wk_od_burst            lv 6, mana 272, 272- 90=182 < 220
+--       f_260820_103216_cm_es_aftershock lv 8, mana 280, 280-100=180 < 220
+--     All three hold Reincarnation at rank 1 (cost 220) off cooldown, so the
+--     `R cd <= 3.0` and `nLV >= 6` operands are true as well.
+--   * The move is ONE-DIRECTIONAL and that is checked, not assumed: the 19 are a
+--     strict subset of the 22.  No frame ENTERED the blind spot, which is the
+--     alarming direction (it would mean the modifier guard started silencing
+--     frames it used not to) and is why section 3b asserts the empty set both
+--     ways rather than just comparing two counts.
+--   * The complement moves 14 -> 17 and its MEANING is unchanged: 17 frames stop
+--     earlier for reasons the corpus CAN answer (Bone Guard unlearned or on
+--     cooldown, the level 4 floor, and now the mana reserve).
+--   * Share of the corpus in the blind spot: 19/36 = 53% (was 22/36 = 61%).
+--   * Ratchet consequence, measured not predicted: `tests/frames/README.md`
+--     recorded this file's admission delta for the staged frame as
+--     "36 -> 37 WK frames, blind spot 22 -> 23".  The base was stale; the staged
+--     frame itself was re-measured this round and IS in the blind spot under the
+--     real ladder (lv 21, mana 587, 587-100=487 >= R rank-2 cost 110, so the
+--     reserve rule is false there).  The delta is therefore 19 -> 20, and that
+--     line has been corrected in place.
+--
 -- The name is NOT wrong.  X.ConsiderW is the only caster of this ability in the
 -- whole repo -- `grep -rn bone_guard bots/` outside this hero file finds one
 -- weight row in FunLib/spell_list.lua, which only hero_morphling.lua requires --
@@ -98,6 +136,20 @@ local SIBLING_MOD = 'modifier_skeleton_king_vampiric_spirit_aura'
 -- skeleton_king_bone_guard_damage_tracker), used as the near miss: a criterion
 -- loosened to a prefix/substring match swallows it.
 local NEAR_MISS_MOD = 'modifier_skeleton_king_bone_guard_damage_tracker'
+-- Every WK ability by name, priced or not.  Section 3b zeroes GetManaCost on all
+-- of them to reconstruct the pre-ladder meter, and the list is deliberately the
+-- WHOLE set rather than the subset `mana_ladder` happens to cover today: a list
+-- built from "which ones have an AbilityManaCost row" would silently stop being
+-- a reconstruction the day a row is added.  (As of this writing the rows are
+-- bone_guard 70/80/90/100, reincarnation 220/110/0 and wraithfire_blast; mortal
+-- strike and vampiric spirit carry none and zeroing them is a no-op.)
+local WK_ABILITIES = {
+    'skeleton_king_wraithfire_blast',
+    'skeleton_king_vampiric_spirit',
+    'skeleton_king_mortal_strike',
+    'skeleton_king_bone_guard',
+    'skeleton_king_reincarnation',
+}
 
 local tests = {}
 
@@ -408,31 +460,170 @@ function()
     end
 end
 
-tests['[section 3] granting ONLY HasModifier moves 22 frames past the guard'] =
+tests['[section 3] granting ONLY HasModifier moves 19 frames past the guard'] =
 function()
     -- The counterfactual that makes "the modifier guard is what silences it"
     -- a measurement rather than a reading of the source: flip that one field and
-    -- nothing else.  22 frames then run on into X.IsNearLaneFront, where the
+    -- nothing else.  19 frames then run on into X.IsNearLaneFront, where the
     -- loader refuses to invent lane fronts (GH #61) -- i.e. on those frames the
-    -- guard was the ONLY thing between the bot and branch 2.  The other 14 stop
+    -- guard was the ONLY thing between the bot and branch 2.  The other 17 stop
     -- earlier for reasons the corpus CAN answer (Bone Guard unlearned or on
-    -- cooldown, or the level 4 floor).
+    -- cooldown, the level 4 floor, or -- since the mana ladder landed -- the
+    -- reserve rule X.ShouldSaveMana).
     --
     -- 20 -> 22 on 2026-08-28 (GH #274) and the complement did NOT move: both of
     -- b50a7727's frames are in the blind spot, both WK level 11 with Bone Guard
     -- at rank 4.  That is the re-read :269 demands, not a re-baseline -- an
     -- unattributed +2 here would have been indistinguishable from the guard
     -- starting to silence frames it used not to.
+    --
+    -- 22 -> 19 on 2026-09-01 (GH #392) on an UNCHANGED denominator, and the -3
+    -- is attributed by MEASUREMENT in section 3b below, not by this comment:
+    -- three frames now stop at X.ShouldSaveMana, one disjunct before the modifier
+    -- guard.  See the file header for the three and their operands.
     local paths = wk_fixture_paths()
     local moved = 0
     for _, path in ipairs(paths) do
         local before, after = desire_on(path, false), desire_on(path, true)
         if before == 0 and after ~= 0 then moved = moved + 1 end
     end
-    if moved ~= 22 then
+    if moved ~= 19 then
         error('granting HasModifier alone changed the outcome on ' .. moved
-            .. ' frames, recorded 22.  This number is the size of the blind '
-            .. 'spot: re-read it before quoting the corpus about Bone Guard')
+            .. ' frames, recorded 19.  This number is the size of the blind '
+            .. 'spot: re-read it before quoting the corpus about Bone Guard.  '
+            .. 'Section 3b below decomposes it -- run that first, because it '
+            .. 'says WHICH of the two causes moved')
+    end
+end
+
+--- Same drive as `desire_on`, plus the one further counterfactual that
+--- reconstructs the pre-ladder meter: force every WK ability's GetManaCost back
+--- to 0 (and drop the mana term of IsFullyCastable with it, since that term is
+--- derived from the same price).  This is the world in which X.ShouldSaveMana
+--- asks `GetMana() < 0` and can never be true.
+local function desire_on_zero_mana(path, grant)
+    local _, bot = rf.load(path, WK)
+    if grant then
+        local spec = rawget(bot, '__spec')
+        spec.HasModifier = function(_, sName) return sName == BONE_MOD end
+    end
+    for _, sName in ipairs(WK_ABILITIES) do
+        local h = bot:GetAbilityByName(sName)
+        local sp = rawget(h, '__spec')
+        sp.GetManaCost = function() return 0 end
+        sp.IsFullyCastable = function(self)
+            return self:GetLevel() > 0 and self:GetCooldownTimeRemaining() <= 0
+        end
+    end
+    local X = rf.load_hero('skeleton_king')
+    pcall(function() X.SkillsComplement() end)
+    local ok, d = pcall(function() return X.ConsiderW() end)
+    if not ok then return 'REFUSED' end
+    return d
+end
+
+tests['[section 3b] the 22 -> 19 is the mana ladder, and the 19 are a strict subset'] =
+function()
+    -- WHY THIS SECTION EXISTS.  A blind spot that SHRINKS on a denominator that
+    -- did not move is the one shape this file cannot afford to accept on prose.
+    -- Two very different worlds produce it:
+    --   (good) frames left because a meter that used to answer 0 started
+    --          answering, so the corpus can now decide them;
+    --   (bad)  frames left because something upstream started silencing them,
+    --          in which case the guard is no longer "the only thing" for anyone
+    --          and the whole verdict of this file is standing on sand.
+    -- Counting to 19 cannot tell those apart.  This section can: it re-runs the
+    -- same 36 frames against a reconstructed pre-ladder meter, asserts the old
+    -- 22 comes back, and asserts the set difference is one-directional.
+    local paths = wk_fixture_paths()
+    local now, pre = {}, {}
+    for _, path in ipairs(paths) do
+        if desire_on(path, false) == 0 and desire_on(path, true) ~= 0 then
+            now[path] = true
+        end
+        if desire_on_zero_mana(path, false) == 0
+            and desire_on_zero_mana(path, true) ~= 0 then
+            pre[path] = true
+        end
+    end
+
+    local n_now, n_pre = 0, 0
+    for _ in pairs(now) do n_now = n_now + 1 end
+    for _ in pairs(pre) do n_pre = n_pre + 1 end
+
+    if n_pre ~= 22 then
+        error('with GetManaCost forced back to 0 the blind spot is ' .. n_pre
+            .. ', recorded 22.  That number is what this file measured on '
+            .. '2026-08-28 (GH #274); if it no longer reproduces, the 22 -> 19 '
+            .. 'attribution below is measuring something else and the whole '
+            .. 'census owes a re-read')
+    end
+    if n_now ~= 19 then
+        error('with the real mana ladder the blind spot is ' .. n_now
+            .. ', recorded 19 (section 3 says the same thing and fails first)')
+    end
+
+    -- The alarming direction, asserted as an empty set rather than inferred from
+    -- 19 < 22: no frame may ENTER the blind spot.  A frame that entered would
+    -- mean the modifier guard started silencing frames it used not to, and that
+    -- is invisible in any comparison of two counts.
+    local entered = {}
+    for path in pairs(now) do
+        if not pre[path] then entered[#entered + 1] = path end
+    end
+    if #entered > 0 then
+        error(#entered .. ' frame(s) ENTERED the blind spot when the mana '
+            .. 'ladder landed, recorded 0: ' .. table.concat(entered, ', ')
+            .. '.  The mana ladder can only ever ADD a reason to stop early, so '
+            .. 'a frame moving the other way is a second, unattributed change')
+    end
+
+    -- And the three that left, each named, each with the reserve rule's own
+    -- operands read off the frame.  Naming them is the point: an unnamed -3 is
+    -- indistinguishable from three different -1s.
+    local left = {}
+    for path in pairs(pre) do
+        if not now[path] then left[#left + 1] = path end
+    end
+    table.sort(left)
+    local expect = {
+        'tests/fixtures/f_225947_wk_trade_kite.lua',
+        'tests/fixtures/f_232320_wk_od_burst.lua',
+        'tests/fixtures/f_260820_103216_cm_es_aftershock.lua',
+    }
+    if #left ~= #expect then
+        error(#left .. ' frame(s) left the blind spot, recorded ' .. #expect
+            .. ': ' .. table.concat(left, ', '))
+    end
+    for i = 1, #expect do
+        if left[i] ~= expect[i] then
+            error('frame ' .. i .. ' that left the blind spot is ' .. left[i]
+                .. ', recorded ' .. expect[i] .. '.  The COUNT can match while '
+                .. 'the identities do not; that is why this loop exists')
+        end
+    end
+
+    for _, path in ipairs(left) do
+        local _, bot = rf.load(path, WK)
+        local w = bot:GetAbilityByName('skeleton_king_bone_guard')
+        local r = bot:GetAbilityByName('skeleton_king_reincarnation')
+        local nMana, nWCost, nRCost = bot:GetMana(), w:GetManaCost(), r:GetManaCost()
+        if bot:GetLevel() < 6 then
+            error(path .. ': hero level ' .. bot:GetLevel() .. ' is below the '
+                .. 'reserve rule floor of 6, so X.ShouldSaveMana cannot be what '
+                .. 'stopped this frame')
+        end
+        if r:GetCooldownTimeRemaining() > 3.0 then
+            error(path .. ': Reincarnation cd ' .. r:GetCooldownTimeRemaining()
+                .. ' is past the 3.0 window, so X.ShouldSaveMana cannot be what '
+                .. 'stopped this frame')
+        end
+        if not (nMana - nWCost < nRCost) then
+            error(path .. ': mana ' .. nMana .. ' - Bone Guard ' .. nWCost
+                .. ' = ' .. (nMana - nWCost) .. ' is NOT below Reincarnation '
+                .. nRCost .. ', so the reserve rule is false here and this '
+                .. 'frame left the blind spot for some other reason')
+        end
     end
 end
 
