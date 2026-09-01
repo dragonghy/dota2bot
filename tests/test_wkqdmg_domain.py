@@ -260,7 +260,14 @@ def test_printed_table():
               if ' baseline ' in ln))
     check('unk is named in the printed legend, not silently dropped',
           'unk' in text)
-    body = [ln.split() for ln in text.splitlines()
+    # Anchor on the OUTCOME section, not on "column 3 is one of the rungs":
+    # the stale-victim table (2026-09-01) prints its own window ladder and its
+    # 2.0 rung landed in this scrape, where c[5] is a count and `dsu` blew up.
+    # A section slice is the only thing that keeps two ladders apart.
+    ohead = 'outcome of the band_pair casts'
+    check('the outcome section is still headed by its own line', ohead in text)
+    otext = text.split(ohead, 1)[1].split('\n\n', 1)[0] if ohead in text else ''
+    body = [ln.split() for ln in otext.splitlines()
             if ln.startswith('ab ') or ln.startswith('ab' + ' ' * 4)]
     rows = [c for c in body if len(c) >= 7 and c[2] in ('2.0', '5.0', '10.0')]
     check('all three rungs are printed for both legs of the ab stratum',
@@ -395,9 +402,17 @@ def test_sweep_name_collision():
     check('the run does not refuse on a name collision', r.returncode == W.EXIT_CLEAN)
     check('the collision is announced, not silently resolved',
           'DUPLICATE NAME' in text)
-    census = [ln.split() for ln in text.splitlines()
+    # Anchor on the SECTION, not on "column 3 happens to be an int": every
+    # later table in this tool also starts its rows with `ab     armed`, and
+    # the int test only told them apart while none of them led with a count.
+    # (2026-09-01: the stale-victim table did, and this scrape picked up two
+    # rows per leg and read the census as disagreeing with itself.)
+    head = 'games  casts'
+    body = text.split(head, 1)[1] if head in text else ''
+    body = body.split('\n\n', 1)[0]
+    check('the first census table is still the one headed by `games`', bool(body))
+    census = [ln.split() for ln in body.splitlines()
               if ln.startswith('ab     armed') or ln.startswith('ab     baseline')]
-    census = [c for c in census if len(c) > 2 and c[2].isdigit()]
     check('the census counts ONE game on each leg, matching the audit table',
           sorted(c[2] for c in census) == ['1', '1'])
 
@@ -446,10 +461,104 @@ def test_sweep_refusals():
     check('the refusal says REFUSED', 'REFUSED' in r.stdout.decode())
 
 
+# ---- 6b. end to end: the printed STALE table ------------------------------
+def test_printed_stale_table():
+    """The stale column's AGGREGATION and PRINTING, which `--selfcheck` cannot
+    reach: that battery drives `scan()` and reads row keys, so a counter wired
+    to the wrong cell, a `band_stale` fed from every cast instead of the band
+    ones, or a table that silently drops one of the two windows all survive it.
+
+    The fixture is the shape the column exists for (GH #361, ported from
+    `lionqdmg_domain.py` cell (3c) on 2026-09-01): the frame BEFORE the cast
+    reads a live 110 hp (ehp 146.7, inside the 120..168 band) while the combat
+    log has ALREADY logged the death, and the frame AFTER reads 0.
+
+    ⭐ It also pins the prediction the column was built to TEST rather than
+    assert -- that LIMIT 4's `band_pair` rejects a stale victim for free."""
+    tmp = tempfile.mkdtemp(prefix='wkqdmg_stale_')
+    # one stale game and one clean band_pair game, on opposite legs
+    spec = {
+        'g_stale': (0, [(101.5, 0), (102.5, 0), (103.5, 0), (104.5, 0)],
+                    [{"t": 99.7, "type": "DEATH", "actor": "npc_dota_hero_axe",
+                      "target": "npc_dota_hero_lion", "target_hero": True}], '1'),
+        'g_clean': (108, [(t, 60) for t in (101.5, 102.5, 103.5, 104.5,
+                                            105.5, 106.5)], [], '0'),
+    }
+    legs = []
+    for base, (after_hp, after, evs, armed) in spec.items():
+        snaps = [
+            {"t": 99.5, "hero": W.WK, "x": 0, "y": 0, "hp": 900, "hp_pct": 0.9,
+             "level": 5, "abilities": [{"name": W.QNAME, "level": 1}]},
+            {"t": 99.5, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
+             "hp": 110, "hp_pct": 0.5, "level": 5, "idx": 3},
+            {"t": 100.5, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
+             "hp": after_hp, "hp_pct": 0.5, "level": 5, "idx": 3}]
+        snaps += [{"t": t, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
+                   "hp": hp, "hp_pct": 0.1, "level": 5, "idx": 3}
+                  for t, hp in after]
+        json.dump({"events": [{"t": 100.0, "type": "ABILITY",
+                               "inflictor": W.QNAME,
+                               "target": "npc_dota_hero_lion",
+                               "target_hero": True}] + evs,
+                   "snapshots": snaps},
+                  open(os.path.join(tmp, base + '.json'), 'w'))
+        legs.append('%s\t%s\tab' % (base, armed))
+    legs_path = os.path.join(tmp, 'legs.tsv')
+    open(legs_path, 'w').write('\n'.join(legs) + '\n')
+    r = subprocess.run([sys.executable, TOOL,
+                        os.path.join(tmp, 'g_stale.json'),
+                        os.path.join(tmp, 'g_clean.json'),
+                        '--legs', legs_path, '--mr', '0.25'],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    text = r.stdout.decode()
+    head = 'stale victims'
+    check('the stale table is printed at all', head in text)
+    check('it says out loud that it is a LOWER bound', 'LOWER BOUND' in text)
+    stext = text.split(head, 1)[1].split('\n\n', 1)[0] if head in text else ''
+    rows = [ln.split() for ln in stext.splitlines()
+            if ln.startswith('ab ') or ln.startswith('ba ')]
+    rows = [c for c in rows if len(c) >= 9]
+    wins = ['%.1f' % w for w in W.STALE_WINDOWS]
+    check('every window rung is printed for all four cells (铁律 4(i-a))',
+          len(rows) == 4 * len(W.STALE_WINDOWS) and
+          sorted(set(c[2] for c in rows)) == sorted(wins))
+    armed = [c for c in rows if c[1] == 'armed' and c[0] == 'ab']
+    base = [c for c in rows if c[1] == 'baseline' and c[0] == 'ab']
+    # columns: layer leg N casts band band_pair stale_casts band_stale bp_stale
+    check('the armed leg counts its one stale cast at the headline window',
+          any(c[2] == '%.1f' % W.STALE_HEADLINE_S and c[6] == '1' for c in armed))
+    check('...and that cast IS a band cast, so it lands in the band column too',
+          any(c[2] == '%.1f' % W.STALE_HEADLINE_S and c[4] == '1' and c[7] == '1'
+              for c in armed))
+    check('⭐ ...and band_pair rejects it for free -- LIMIT 4 measured, not assumed',
+          all(c[5] == '0' and c[8] == '0' for c in armed))
+    check('the clean band_pair game is NOT counted stale on either window',
+          all(c[6] == '0' and c[7] == '0' for c in base) and
+          any(c[5] == '1' for c in base))
+    check('band_stale never exceeds the stale-cast base rate',
+          all(int(c[7]) <= int(c[6]) for c in rows))
+    check('bp_stale never exceeds band_stale',
+          all(int(c[8]) <= int(c[7]) for c in rows))
+    # A count with no way back to the instant is the thing GH #361 was filed
+    # about, so the per-cast line has to carry the flag -- and it has to carry
+    # it on the RIGHT cast.
+    r2 = subprocess.run([sys.executable, TOOL,
+                         os.path.join(tmp, 'g_stale.json'),
+                         os.path.join(tmp, 'g_clean.json'),
+                         '--legs', legs_path, '--mr', '0.25', '--per-cast'],
+                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    pc = [ln for ln in r2.stdout.decode().splitlines() if 'g_stale' in ln or
+          'g_clean' in ln]
+    check('the stale cast is flagged on its own per-cast line',
+          any('g_stale' in ln and 'STALE<=' in ln for ln in pc))
+    check('...and the clean cast is not',
+          all('STALE<=' not in ln for ln in pc if 'g_clean' in ln))
+
+
 for fn in (test_registered_constants, test_narrowing_only, test_outcome_three_way,
            test_unk_is_never_folded, test_outcome_wiring, test_identity_lock,
-           test_printed_table, test_sweep_leg_join, test_sweep_name_collision,
-           test_sweep_refusals):
+           test_printed_table, test_printed_stale_table, test_sweep_leg_join,
+           test_sweep_name_collision, test_sweep_refusals):
     fn()
 
 if fails:

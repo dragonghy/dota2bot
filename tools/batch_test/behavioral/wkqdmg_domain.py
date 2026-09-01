@@ -65,6 +65,33 @@ HERO target:
   HIT          band_pair AND in range -- what exit 3 counts
   died/surv/unk  the OUTCOME of each band_pair cast: was the target observed to
                reach hp 0 within N seconds anyway?  See THE OUTCOME COLUMN.
+  stale        the frame this cast's band membership was read on had ALREADY
+               been overtaken by the combat log.  See THE STALE COLUMN.
+
+THE STALE COLUMN (added 2026-09-01, the third half of GH #361)
+--------------------------------------------------------------
+`lionqdmg_domain.py` grew a cell (3c) on 2026-08-31 after a frame showed its
+domain being bought by a corpse the 1 Hz health bar had not caught up with.
+The same contamination has to exist here, because `band` is decided by dividing
+a SAMPLED hp by `1 - mr` and comparing the result against two claims -- but it
+lands differently, and worse: there it inflates a count by one, here it decides
+MEMBERSHIP.  A stale frame does not miscount a band cast, it manufactures one.
+
+    stale  a DEATH event for this target in `(t - w, t]`, AND the next
+           identity-locked hp sample reads <= 0 (no respawn intervened)
+
+Both halves are required; neither is sufficient.  Turbo halves respawn timers,
+so a DEATH a second ago is compatible with a live hero -- measured on this very
+corpus, the one stale cast W32 produced had its victim back at 2078 hp six
+seconds later.  A frame with no confirming sample is NOT counted, which makes
+this a LOWER bound.
+
+⭐ THE COLUMN IS A TEST OF LIMIT 4, NOT A SECOND STATEMENT OF IT.  The argument
+says `band_pair` should reject a stale victim for free: the frame AFTER a cast
+is where the health bar catches up to 0, and 0 ehp is below the armed claim.
+The column exists because that is an argument, and an argument is not a
+measurement.  W32's reading: 1 stale cast in 171, 0 of them `band`, 0 `band_pair`
+-- consistent with the immunity and far too thin to be evidence for it.
 
 THE OUTCOME COLUMN (added 2026-08-31T15:xxZ, the second half of GH #361)
 ------------------------------------------------------------------------
@@ -195,6 +222,19 @@ LIMITS -- READ BEFORE QUOTING A NUMBER
    clone's samples cannot supply the death; timelines with no `idx` field at all
    (hand-built fixtures) fall back to hero name and are the only place that lock
    is absent.
+10. ⭐ **A lag is only reported while both witnesses can still be describing the
+    SAME death** (`witness_lag`'s respawn guard, 2026-09-01).  Before that guard
+    a hero who died, respawned and died again inside the 30 s probe had its
+    FIRST corpse paired with its SECOND death.  On W32 that produced the whole
+    of the census's positive tail: "ev AFTER hp 1 (2%), max +11.8s" was one
+    phantom_assassin, and with the guard the same corpus reads 51/51 (100%)
+    negative, max -0.2 s.  Casts with a respawn in between now report no lag at
+    all and drop out of the census; that is deliberate, and it means the census
+    n is a count of CLEAN pairs, not of casts with two witnesses.
+    **This does not retract "the disagreement has both signs"** -- that rests on
+    `bbfloor_domain.py`'s independent measurement (hp 0.005 from t=45.4, DEATH
+    event t=48.6), not on this census.  What it does retract is any reading of
+    a POSITIVE lag off this tool's own output before 2026-09-01.
 """
 
 import argparse
@@ -293,6 +333,13 @@ EVENT_TOL_S = SAMPLE_TOL_S
 # the recording, and clipping it at the ladder's edge would silently drop
 # exactly the late-event cases that motivate carrying two columns.
 LAG_PROBE_S = 30.0
+# STALE-VICTIM WINDOW (2026-09-01, GH #361 -- the third column of that thread,
+# ported here from `lionqdmg_domain.py`'s cell (3c)).  A REGISTERED CHOICE, and
+# deliberately the SAME short ladder that file registered, so the two ids'
+# stale columns are read on one clock.  1.0 s is one sampling interval: the
+# smallest window in which the health bar can be a whole frame behind the log.
+STALE_WINDOWS = (1.0, 2.0)
+STALE_HEADLINE_S = 1.0
 
 
 def claims(qlvl, hero_level, anchors):
@@ -476,17 +523,88 @@ def outcome_ev(deaths, horizon, t0, window):
     return "surv" if horizon >= t0 + window - EVENT_TOL_S else "unk"
 
 
+def stale_cast(deaths, series, t0, window):
+    """Had the combat log ALREADY buried this cast's target at the frame read?
+
+    WHY THIS LANDS HARDER HERE THAN IT DID ON `lionqdmg` (GH #361, 2026-09-01).
+    There, cell (3) is a COUNT of low-hp frames and a stale frame inflates the
+    count by one.  Here the stale hp is divided by `1 - mr` into `ehp` and then
+    compared against two claims, so the contamination decides MEMBERSHIP -- not
+    how many band casts there are, but whether THIS cast is one at all.  A
+    corpse the health bar has not caught up with reads as a live target sitting
+    in the 48-ehp band, which is the exact shape a `band` count is made of.
+
+    ⭐ THE PREDICTION THIS COLUMN EXISTS TO TEST, rather than assert.
+    LIMIT 4 already says a single-frame band read is a coin flip on sampling
+    phase, and `band_pair` (in band on BOTH straddling frames) is the answer.
+    A stale victim should therefore fail `band_pair` for free: the frame AFTER
+    the cast is the one where the health bar catches up to hp 0, and 0 ehp is
+    below the armed claim.  That is an ARGUMENT, and the reason to count this
+    column is that an argument is not a measurement.  Read the `band_pair`
+    column of the stale table before quoting the immunity.
+
+    THE PREDICATE IS NOT `lionqdmg`'s, and the difference is in the second half:
+
+      * first half, identical: a DEATH event for this target in
+        `(t0 - window, t0]`.  Alone it is not enough -- Turbo respawn timers
+        are halved, so a hero who died seconds ago can legitimately be alive.
+      * second half, STRONGER HERE: the next hp sample must read `<= 0`, and
+        `series` is the IDENTITY-LOCKED series (GH #176, `target_series`), not
+        a by-name lookup.  An illusion's samples cannot supply the
+        confirmation.  The DEATH side stays name-only (`death_index` has no
+        counterpart lock), so the two halves are asymmetric -- an illusion's
+        death can still open the first half, and only a real corpse can close
+        the second.
+
+    A frame with no further samples is NOT stale by this test (nothing confirms
+    it), which keeps the count a LOWER bound -- the safe direction for a finding
+    that says a column is over-counted.
+    """
+    if not any(t0 - window - EVENT_TOL_S <= t <= t0 + EVENT_TOL_S for t in deaths):
+        return False
+    nxt = next((hp for t, hp in series if t > t0 + SAMPLE_TOL_S), None)
+    return nxt is not None and nxt <= 0
+
+
 def witness_lag(series, deaths, t0):
     """(event_t - first hp<=0 sample t) within LAG_PROBE_S, or None.
 
     Positive = the combat log was LATE relative to the health bar; negative =
     the health bar was late (the sampling-lag shape).  Returned per cast so a
     reader can audit the disagreement instead of taking this file's word for
-    which column moved."""
+    which column moved.
+
+    ⭐ THE RESPAWN GUARD, and the frame that bought it (replay-check
+    2026-09-01, read off `93546a/20260831_215858_slot1`, W32 `ab/armed`):
+
+        1229.5  DEATH storm_spirit -> phantom_assassin   (the Q cast is at the
+                SAME logged instant, on the same target)
+        1229.5  snapshot still carries PA at hp 90
+        1230.5  first snapshot at hp 0        <- this corpse belongs to 1229.5
+        1235.5  snapshot hp 2078              <- RESPAWNED (Turbo, 6 s)
+        1242.3  DEATH storm_spirit -> phantom_assassin   (a SECOND death)
+
+    Unguarded, this paired the 1230.5 corpse with the 1242.3 death and reported
+    `lag = +11.8 s`, i.e. "the combat log trailed the health bar by 11.8 s".
+    It did not: the log was on time for the death that corpse came from, and a
+    whole life happened in between.  That single reading was the ONLY positive
+    sign in W32's 52-cast census -- the census read "ev AFTER hp 1 (2%), max
+    +11.8s" entirely off a hero who died twice inside the 30 s probe.
+
+    So a lag is only reported while BOTH witnesses can still be describing the
+    same death: the search for the event stops at the first sample that shows
+    the entity alive again.  A cast with a respawn in between yields None and
+    is left out of the census rather than folded in with a fabricated sign.
+    Turbo halves respawn timers, which is exactly why a 30 s probe -- correct
+    for the lag itself -- is long enough to span a full death-respawn-death."""
     hi = t0 + LAG_PROBE_S
     zero = next((t for t, hp in series if t0 + SAMPLE_TOL_S < t <= hi and hp <= 0), None)
-    ev = next((t for t in deaths if t0 + EVENT_TOL_S < t <= hi), None)
-    return None if zero is None or ev is None else ev - zero
+    if zero is None:
+        return None
+    respawn = next((t for t, hp in series if t > zero and hp > 0), None)
+    lim = hi if respawn is None else min(hi, respawn)
+    ev = next((t for t in deaths if t0 + EVENT_TOL_S < t <= lim), None)
+    return None if ev is None else ev - zero
 
 
 def qlevel(snap):
@@ -538,6 +656,11 @@ def scan(tl, anchors, mr, dead_window):
         # one improved reading (see `outcome_ev`).
         out.update(("dout_%s" % w, outcome_ev(tgt_deaths, horizon, t, w))
                    for w in OUTCOME_WINDOWS)
+        # The DOMAIN column, not an outcome one: it asks whether the frame this
+        # cast's band membership was read on had already been overtaken by the
+        # combat log (see `stale_cast`).
+        out.update(("stale_%s" % w, stale_cast(tgt_deaths, series, t, w))
+                   for w in STALE_WINDOWS)
         rows.append({
             "t": t, "target": tgt, "hero_level": ws["level"], "qlvl": q,
             "shipped": shipped, "armed": armed, "hp": tsnap["hp"], "ehp": ehp,
@@ -668,20 +791,37 @@ def selfcheck(anchors):
     # Built through scan(), not by calling outcome() on a hand-made list: the
     # thing that can rot silently is the WIRING (which entity's samples, which
     # t0), not the three-way arithmetic.
-    def cast_with(after_samples, ident=None, tgt_idx=None, events=()):
+    def cast_with(after_samples, ident=None, tgt_idx=None, events=(), after_hp=108,
+                  after_idx=None, after_frame=True):
         """One rank-1 band cast at t=100 whose target then has `after_samples`
         as (t, hp) [, idx] rows.  `events` appends extra combat-log rows, which
         is the ONLY way to drive the DEATH-event column -- it does not read
-        snapshots at all, and its coverage horizon is the last event."""
+        snapshots at all, and its coverage horizon is the last event.
+
+        `after_hp` is the STRADDLING frame (t=100.5), the one `band_pair` and
+        `stale_cast`'s confirming half both read; it defaults to a second band
+        frame so the outcome cases above stay `band_pair` casts."""
         snaps = [
             {"t": 99.5, "hero": WK, "x": 0, "y": 0, "hp": 900, "hp_pct": 0.9, "level": 5,
              "abilities": [{"name": QNAME, "level": 1}]},
             {"t": 99.5, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
              "hp": 110, "hp_pct": 0.5, "level": 5},          # ehp 146.7 -> band
             {"t": 100.5, "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
-             "hp": 108, "hp_pct": 0.5, "level": 5}]
+             "hp": after_hp, "hp_pct": 0.5, "level": 5}]
+        if not after_frame:
+            # NO sample after the cast at all -- the only way to reach the
+            # `nxt is None` branch, which the straddling frame otherwise always
+            # satisfies.  (2026-09-01: the "no further samples is not stale"
+            # check was written without this and asserted nothing; the mutation
+            # stand's M5 survived until the fixture could express the case.)
+            snaps.pop(2)
         if tgt_idx is not None:
-            snaps[1]["idx"] = snaps[2]["idx"] = tgt_idx
+            snaps[1]["idx"] = tgt_idx
+            # `after_idx` exists so the straddling frame can belong to a
+            # DIFFERENT entity than the cast frame -- the only way to put an
+            # illusion's corpse in the slot the identity lock has to reject
+            if after_frame:
+                snaps[2]["idx"] = tgt_idx if after_idx is None else after_idx
         for row in after_samples:
             s = {"t": row[0], "hero": "npc_dota_hero_lion", "x": 100, "y": 0,
                  "hp": row[1], "hp_pct": 0.1, "level": 5}
@@ -759,6 +899,73 @@ def selfcheck(anchors):
        and r["dout_10.0"] == "died")
     r = cast_with(alive, events=[death_ev(95.0), tick_ev(106.5)])
     ck("ev: the window never looks backwards", r and r["dout_5.0"] == "surv")
+
+    # --- the STALE column (a DOMAIN test, not an outcome one) --------------
+    # Same wiring discipline again: driven through scan(), because what rots is
+    # WHICH series and WHICH deaths get handed to stale_cast, not its two-line
+    # arithmetic.  The band frame here is the 99.5 snapshot (hp 110 -> ehp
+    # 146.7, inside 120..168), so a stale hit means that frame was a corpse.
+    SW0, SW1 = STALE_WINDOWS
+    # the real shape: hp 110 on the frame BEFORE (in band), 0 on the frame
+    # AFTER, and the log already carrying the DEATH before the cast instant
+    corpse = dict(after_hp=0,
+                  after_samples=[(101.5, 0), (102.5, 0), (103.5, 0), (104.5, 0)])
+
+    def stale_cast_row(death_t=99.7, **kw):
+        kw = dict(corpse, **kw)
+        evs = kw.pop("events", None)
+        if evs is None:
+            evs = ([] if death_t is None else [death_ev(death_t)]) + [tick_ev(106.5)]
+        return cast_with(kw.pop("after_samples"), events=evs, **kw)
+
+    r = stale_cast_row()
+    ck("stale: a DEATH just before the frame + a confirming sample is stale",
+       r and r["stale_%s" % SW0])
+    ck("stale: that same cast is still counted in `band` (the point of the column)",
+       r and r["band"])
+    ck("stale: and it is NOT band_pair -- LIMIT 4 rejects it for free",
+       r and not r["band_pair"])
+    r = stale_cast_row(death_t=101.4)
+    ck("stale: a DEATH just AFTER the cast is the ordinary outcome case, not stale",
+       r and not r["stale_%s" % SW0] and r["out_5.0"] == "died")
+    r = cast_with([(101.5, 60), (102.5, 60), (103.5, 60), (104.5, 60),
+                   (105.5, 60), (106.5, 60)],
+                  events=[death_ev(99.7), tick_ev(106.5)])
+    ck("stale: a DEATH before the frame with NO confirming sample is not stale "
+       "(Turbo respawn is fast)", r and not r["stale_%s" % SW0])
+    r = stale_cast_row(death_t=None)
+    ck("stale: a confirming sample with NO prior DEATH is not stale either",
+       r and not r["stale_%s" % SW0])
+    r = cast_with([], after_frame=False, events=[death_ev(99.7), tick_ev(106.5)])
+    ck("stale: no samples after the frame at all is NOT stale (lower bound)",
+       r and not r["stale_%s" % SW0])
+    ck("...and that really is the no-sample case, not a live one masking it",
+       r and r["hp_after"] is None)
+    r = stale_cast_row(death_t=98.7)
+    ck("stale: a DEATH older than the window is out at %gs and in at %gs" % (SW0, SW1),
+       r and not r["stale_%s" % SW0] and r["stale_%s" % SW1])
+    r = stale_cast_row(death_t=100.0)
+    ck("stale: a DEATH exactly at the cast instant counts (the log won the tie)",
+       r and r["stale_%s" % SW0])
+    r = stale_cast_row(events=[death_ev(99.7, target="npc_dota_hero_axe"),
+                               tick_ev(106.5)])
+    ck("stale: another hero's DEATH does not make this victim stale",
+       r and not r["stale_%s" % SW0])
+    r = stale_cast_row(events=[death_ev(99.7, target_hero=False), tick_ev(106.5)])
+    ck("stale: a non-hero DEATH row does not make this victim stale",
+       r and not r["stale_%s" % SW0])
+    # the half this file strengthens over lionqdmg's: the confirming sample is
+    # identity-locked, so an illusion's corpse cannot close the predicate.
+    # The straddling frame carries the OTHER idx, so the target's own next
+    # sample is alive and the corpse is never confirmed.
+    r = cast_with([(101.5, 60, 7), (102.5, 60, 7), (103.5, 60, 7),
+                   (104.5, 60, 7), (105.5, 60, 7), (106.5, 60, 7)],
+                  tgt_idx=7, after_idx=9, after_hp=0,
+                  events=[death_ev(99.7), tick_ev(106.5)])
+    ck("stale: a hp-0 sample under a DIFFERENT idx does not confirm the corpse",
+       r and not r["stale_%s" % SW0])
+    ck("stale: the headline window is on the printed ladder",
+       STALE_HEADLINE_S in STALE_WINDOWS)
     r = cast_with(alive, events=[death_ev(100.0), tick_ev(106.5)])
     ck("ev: a DEATH exactly at t0 is not 'after' t0", r and r["dout_5.0"] == "surv")
     r = cast_with(alive, events=[death_ev(102.5, target="npc_dota_hero_axe"),
@@ -794,6 +1001,19 @@ def selfcheck(anchors):
                   events=[death_ev(101.4), tick_ev(106.5)])
     ck("a lag the other way is reported negative (hp behind the event)",
        r and r["lag"] is not None and abs(r["lag"] + 1.1) < 1e-9)
+    # THE RESPAWN GUARD -- W32's only positive lag was this shape (see
+    # `witness_lag`).  Same samples as the "+6.0" case above, plus a respawn
+    # between the corpse and the second death.
+    r = cast_with([(101.5, 0), (102.5, 0), (103.5, 0), (104.5, 900), (105.5, 900)],
+                  events=[death_ev(107.5), tick_ev(111.0)])
+    ck("a DEATH on the far side of a RESPAWN is not this corpse's lag",
+       r and r["lag"] is None)
+    ck("...and that cast is still reported died by BOTH columns (only the lag drops)",
+       r and r["out_5.0"] == "died" and r["dout_10.0"] == "died")
+    r = cast_with([(101.5, 0), (102.5, 0), (103.5, 0), (104.5, 900), (105.5, 900)],
+                  events=[death_ev(103.0), tick_ev(111.0)])
+    ck("a DEATH before the respawn is still measured (the guard is a limit, "
+       "not a veto)", r and r["lag"] is not None and abs(r["lag"] - 1.5) < 1e-9)
     ck("the two columns are separate keys -- neither overwrites the other",
        r and r["out_5.0"] == "died" and r["dout_5.0"] == "died"
        and "out_5.0" in r and "dout_5.0" in r)
@@ -1019,11 +1239,22 @@ def main():
         agg[key]["games"] += 1
         for r in rows:
             agg[key]["casts"] += 1
+            # counted on EVERY cast, not just the band ones: the base rate is
+            # what says whether a zero in the band column is immunity or just
+            # a corpus with no stale frames in it at all
+            for sw in STALE_WINDOWS:
+                if r["stale_%s" % sw]:
+                    agg[key]["cast_stale_%s" % sw] += 1
             if r["qlvl"] == 1:
                 agg[key]["q1"] += 1
                 agg[key]["live48" if r["hero_level"] < 10 else "live8"] += 1
             if r["band"]:
                 agg[key]["band"] += 1
+                for sw in STALE_WINDOWS:
+                    if r["stale_%s" % sw]:
+                        agg[key]["band_stale_%s" % sw] += 1
+                        if r["band_pair"]:
+                            agg[key]["bp_stale_%s" % sw] += 1
                 if r["band_pair"]:
                     agg[key]["band_pair"] += 1
                 if r["in_range"]:
@@ -1099,6 +1330,28 @@ def main():
                        note if w == OUTCOME_HEADLINE_S else ""))
 
     print()
+    print("stale victims -- was the band frame's target ALREADY dead per the combat log?")
+    print("  DOMAIN column, not an outcome one: a corpse the 1 Hz health bar has not")
+    print("  caught up with reads as a live target sitting inside the 48-ehp band, so a")
+    print("  stale frame does not miscount a band cast -- it MANUFACTURES one.")
+    print("  LOWER BOUND: a frame with no confirming sample after it is not counted.")
+    print("  The `bp` column is the test of LIMIT 4's own claim: `band_pair` should")
+    print("  reject a stale victim for free (the frame after is where hp reaches 0).")
+    print("  Headline window %.1fs = one sampling interval (registered choice)."
+          % STALE_HEADLINE_S)
+    print("%-6s %-9s %5s %6s %6s %10s %11s %10s  %s" %
+          ("layer", "leg", "N(s)", "casts", "band", "band_pair",
+           "stale casts", "of them band", "...and band_pair"))
+    for layer in ("ab", "ba"):
+        for leg in ("armed", "baseline"):
+            c = agg[(layer, leg)]
+            for sw in STALE_WINDOWS:
+                print("%-6s %-9s %5.1f %6d %6d %10d %11d %10d  %d" %
+                      (layer, leg, sw, c["casts"], c["band"], c["band_pair"],
+                       c["cast_stale_%s" % sw], c["band_stale_%s" % sw],
+                       c["bp_stale_%s" % sw]))
+
+    print()
     print("witness lag census -- (DEATH event t) minus (first sampled hp<=0 t), over")
     print("  EVERY cast with both witnesses inside %.0fs, band or not.  This is a" % LAG_PROBE_S)
     print("  property of the RECORDING, not of the lever: do NOT difference it")
@@ -1139,8 +1392,16 @@ def main():
                      # at ehp 931 (five times the shipped claim) printed
                      # "band(before only)", which is a label that lies about
                      # the one thing this file is counting.
-                     "BAND_PAIR" if r["band_pair"] else
-                     "band(before only)" if r["band"] else "not in band"))
+                     ("BAND_PAIR" if r["band_pair"] else
+                      "band(before only)" if r["band"] else "not in band")
+                     # the stale flag rides on the cast line because the whole
+                     # point of the column is that the reader can go find the
+                     # frame; a count with no way back to the instant is the
+                     # thing GH #361 was filed about
+                     + ("  STALE<=%gs" % STALE_HEADLINE_S
+                        if r["stale_%s" % STALE_HEADLINE_S] else
+                        "  stale<=%gs" % STALE_WINDOWS[-1]
+                        if r["stale_%s" % STALE_WINDOWS[-1]] else "")))
             print("        outcome hp %5.1fs=%-4s (2s=%-4s 10s=%-4s)  target hp after: %s"
                   % (OUTCOME_HEADLINE_S, r["out_%s" % OUTCOME_HEADLINE_S],
                      r["out_2.0"], r["out_10.0"],
