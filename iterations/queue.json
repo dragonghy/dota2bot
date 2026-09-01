@@ -1052,7 +1052,7 @@
    "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
    "last_wave": "W33",
    "last_wave_outcome": "READING_OBTAINED_NULL_ECON; FRAMES_AVAILABLE",
-   "rides_wave": "W34",
+   "rides_wave": "W35",
    "last_wave_note": "W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton."
   },
   {
@@ -1079,7 +1079,7 @@
    "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
    "last_wave": "W33",
    "last_wave_outcome": "READING_OBTAINED_NULL_ECON; FRAMES_AVAILABLE",
-   "rides_wave": "W34",
+   "rides_wave": "W35",
    "last_wave_note": "W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton."
   },
   {
@@ -1107,7 +1107,7 @@
    "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
    "last_wave": "W33",
    "last_wave_outcome": "READING_OBTAINED_NULL_ECON; FRAMES_AVAILABLE",
-   "rides_wave": "W34",
+   "rides_wave": "W35",
    "last_wave_note": "W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton."
   },
   {
@@ -1150,10 +1150,10 @@
     "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁;§BB.4)。**路由裁定,不是对 §CU 全部读数的背书。**\\n\\n**总监按源码独立复核过三条**(`bots/mode_roam_generic.lua:1021-1043`,不是照抄提议自述):(i) gate 是**单条独立门**,唯一合取项 `J.IsModeTurbo()` **不是候选 id** ⇒ 不落进「promote 掉某个 id 把另一个 gate 冻成恒 FALSE」那个陷阱(`pullcad` 那一形);全仓 `rotscope` 只出现在这一个文件。(ii) 未 armed **逐字保留出厂行为且是结构性的**:`if not rotscope then ... end` 把出厂那条命令原样留在同一位置(Rot 块 `end` 之下)、同一变量(文件级 `botTarget`)上。(iii) 验收独立重跑绿:`test_rotscope_shadowed_target.lua` **13/13**、`test_propertarget_corpus_domain.lua` **4/4**,`lua5.1 tests/run_tests.lua` **裸读 exit 0**。"
    },
    "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
-   "result": "2026-09-01T06:2xZ batch-desk(W33 收割):**这一波没买到读数,不是没测。** W33 五台机器里 **四台被 EC2 回收**(`instance-terminated-no-capacity`,03:32:21Z–04:15:21Z,四个 AZ 全中),每一台都死在**候选腿(radiant)之内** ⇒ 产出 ab 局、零 ba 局 ⇒ 三粒种子 `NO-PAIR`。唯一正常自毁的那台(seed 2887,`instance-terminated-by-user`)是唯一翻腿、也是唯一计分的种子。全波 151 局装载、**仅 49 局计分、1/4 粒种子入 `mean`**。`suggested: promote` 与 `comps_better 1/1` 都是 **n=1 的构造产物,不是 promote 信号**;winrate 通道 `DEGENERATE`(GH #352,少数侧占比 0.1722 < 0.20),**不可作铁律 2(b) 依据**。本 id 仍在 50-id 测试集内、status 保持 `running`;**下一棒 = 重发 W34** (闸 (i) 解锁 2026-09-01T09:31:05Z),三粒作废种子 2756/2790/2938 需要重跑。",
+   "result": "2026-09-01T15:3xZ batch-desk(W35 发波):**本 id 第一次拿到载体。** 上一轮(W34)因 208 局 **零 pudge** 记 `DOMAIN_EMPTY_CARRIER_ABSENT`;本波选种在 `slots=14` 的同一最优层里加了一条 「带 pudge 优先」的次序偏好,选出 `2658/2774/2963/2986`,其中 **2986 带 pudge** ⇒ `CARRIER_PRESENT_1_OF_4`,六项机械载体项仍全部 ≥2 粒、`CARRIER_EXIT=0`,**零 AWS 增量**。⚠️ 诚实边界:`carrier_terms.py` 把 `rotscope` 机械判为 **generic**(`bots/mode_roam_generic.lua:1023`)⇒ **pudge 不在那六项里,carrier 门不会为它举手**;本条载体是本台按本请求限定 (甲) 的**手工加项**,不是那道门买来的(已在报告 §4.6 交给总监)。下一棒 = W35 收割轮按限定 (甲) 读 pudge 局的帧证据。",
    "last_wave": "W33",
    "last_wave_outcome": "DOMAIN_EMPTY_CARRIER_ABSENT",
-   "rides_wave": "W34",
+   "rides_wave": "W35",
    "last_wave_note": "*** rotscope read ZERO on W34 because its carrier was never drawn, not because it had no effect. *** Pudge appears in 0 of 208 games (it is not among W34's carrier terms: crystal_maiden, lion, obsidian_destroyer, skeleton_king, spirit_breaker, zuus). This request's own caveat (jia) requires exactly this registration: a wave that did not draw Pudge reads identically zero and can never serve as a single arm. It needs a wave with a pudge carrier term. W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton."
   },
   {
@@ -1179,7 +1179,7 @@
    "result": "2026-09-01T06:2xZ batch-desk(W33 收割):**这一波没买到读数,不是没测。** W33 五台机器里 **四台被 EC2 回收**(`instance-terminated-no-capacity`,03:32:21Z–04:15:21Z,四个 AZ 全中),每一台都死在**候选腿(radiant)之内** ⇒ 产出 ab 局、零 ba 局 ⇒ 三粒种子 `NO-PAIR`。唯一正常自毁的那台(seed 2887,`instance-terminated-by-user`)是唯一翻腿、也是唯一计分的种子。全波 151 局装载、**仅 49 局计分、1/4 粒种子入 `mean`**。`suggested: promote` 与 `comps_better 1/1` 都是 **n=1 的构造产物,不是 promote 信号**;winrate 通道 `DEGENERATE`(GH #352,少数侧占比 0.1722 < 0.20),**不可作铁律 2(b) 依据**。本 id 仍在 50-id 测试集内、status 保持 `running`;**下一棒 = 重发 W34** (闸 (i) 解锁 2026-09-01T09:31:05Z),三粒作废种子 2756/2790/2938 需要重跑。(本 id 的**首波**就是 W33 ⇒ 首波读数为零,需在 W34 重新计。)",
    "last_wave": "W33",
    "last_wave_outcome": "READING_OBTAINED_NULL_ECON; FRAMES_AVAILABLE",
-   "rides_wave": "W34",
+   "rides_wave": "W35",
    "last_wave_note": "W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton."
   },
   {
@@ -1205,7 +1205,7 @@
    "result": "2026-09-01T06:2xZ batch-desk(W33 收割):**这一波没买到读数,不是没测。** W33 五台机器里 **四台被 EC2 回收**(`instance-terminated-no-capacity`,03:32:21Z–04:15:21Z,四个 AZ 全中),每一台都死在**候选腿(radiant)之内** ⇒ 产出 ab 局、零 ba 局 ⇒ 三粒种子 `NO-PAIR`。唯一正常自毁的那台(seed 2887,`instance-terminated-by-user`)是唯一翻腿、也是唯一计分的种子。全波 151 局装载、**仅 49 局计分、1/4 粒种子入 `mean`**。`suggested: promote` 与 `comps_better 1/1` 都是 **n=1 的构造产物,不是 promote 信号**;winrate 通道 `DEGENERATE`(GH #352,少数侧占比 0.1722 < 0.20),**不可作铁律 2(b) 依据**。本 id 仍在 50-id 测试集内、status 保持 `running`;**下一棒 = 重发 W34** (闸 (i) 解锁 2026-09-01T09:31:05Z),三粒作废种子 2756/2790/2938 需要重跑。(本 id 的**首波**就是 W33 ⇒ 首波读数为零,需在 W34 重新计。)",
    "last_wave": "W33",
    "last_wave_outcome": "READING_OBTAINED_NULL_ECON; FRAMES_AVAILABLE",
-   "rides_wave": "W34",
+   "rides_wave": "W35",
    "last_wave_note": "W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton."
   },
   {
@@ -1225,7 +1225,9 @@
     "ref": "test_set.md §DC(裁定全文,两条同节;§DC.1 本条 / §DC.3 两条之间的限定);提议 §CZ;GH #378;iterations/reports/director/20260901T102117Z.md",
     "executor": "replay-check",
     "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(§BB.4)。**路由裁定,不是对 §CZ 全部读数的背书。**\n\n**总监按源码独立复核四条**(不照抄提议自述):(i) **单条独立门**:`IsPerUnitMoveClock()` 的合取项是 `J.IsModeTurbo()`(运行期值)与 `J.IsSoakCandidate('illumove')`(本 id 自己),**没有第二个候选 id** ⇒ 不落进 `pullcad` 陷阱;全仓 `illumove` 只此一个可执行表达式。(ii) **门关逐字保留,而且是「同一串操作」不只是「同一个返回值」**:剥掉注释后本次改动只有四处替换 + 四个新 local,门关时 `GetNextMoveTime` 逐字 `return nNextMoveTime`、`SetNextMoveTime` 逐字 `nNextMoveTime = nTime`、`MOVE_THROTTLE` 是 `0.2` 的字面量绑定;`DotaTime()` 的求值顺序两种写法相同且实参无副作用。(iii) **门关新增的每帧成本已量,可忽略**:`J.IsModeTurbo()`(`bModeTurboCache` 有缓存)与 `J.IsSoakCandidate()`(`tSoakSideCache` 有缓存,真实对局里该文件不存在 ⇒ 缓存为 false),**两者皆无副作用**。(iv) 验收独立重跑:`lua5.1 tests/run_tests.lua illumove` **9/9 裸读 exit 0**,邻居 `fixture_illusion` **10/10**。\n\n⚠️ **收割前必读 §DC.3(总监加的第 (丁) 条限定,提议里没有)**:本条与 `illureal` 改的是**同一个文件同一条 `X.Think` 路径**,同帧内**不正交** —— `illureal` armed 会让更多幻象在 `illusions.lua:80` 的诱饵分支提前 `return`,那些单位**根本走不到 `:94` 的移动闸** ⇒ `illumove` 的域被 `illureal` 缩小。两条同波 armed 时,**落在「非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势 ∧ 该 bot 同帧 ≥2 受控单位」这个交集上的帧不能分摊归因**。**没有任何测试钉住这一条**(两份验收各自只 arm 自己那一个 id)。\n\n⚠️ §CZ.6 的 `METHOD-FAILED` 分支照旧成立:语料里若没有「同一 bot 同时 ≥2 个受控小兵」的窗口,**判 `DOMAIN-EMPTY` 退回总监重裁**,**不许**自行套用「无效应 ⇒ 不 promote」。**不能当独臂**(单兵时两臂逐位相同)。"
-   }
+   },
+   "rides_wave": "W35",
+   "result": "2026-09-01T15:3xZ batch-desk(W35 发波):本 id 随 §DC 入集,**成员串 50 → 52**,W35 是 52-id 家族第一波(arm md5 `c5af3b11deb9c024983c22afb90d9a7d` / 459 bytes)。⚠️ **收割前必读 §DC.3 (甲)**:`illumove` 与 `illureal` 本波**同时 armed 且同帧不正交** —— `illureal` 让更多幻象在 `illusions.lua:80` 提前 `return`,**缩小 `illumove` 的域**;落在交集(非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势 ∧ 同帧 ≥2 受控单位)上的差异帧**不可分摊归因**,答不出这一问**不许把差异归给其中任何一条**。"
   },
   {
    "id": "strategy-30",
@@ -1245,7 +1247,9 @@
     "ref": "test_set.md §DC(裁定全文,两条同节;§DC.2 本条 / §DC.3 两条之间的限定);提议 §DB;GH #381;iterations/reports/director/20260901T102117Z.md",
     "executor": "replay-check",
     "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(§BB.4)。**路由裁定,不是对 §DB 全部读数的背书。**\n\n**总监按源码独立复核五条**:(i) **单条独立门** `J.IsModeTurbo() and J.IsSoakCandidate('illureal')`,全仓只此一个可执行表达式,不落进 `pullcad` 陷阱。(ii) **「严格超集」按源码坐实,理由比提议给的更强**:出厂谓词是 `hMinionUnit.isIllusion` 的**真值测试**,而全仓写该字段的**恰好两处**(`hero_naga_siren.lua:91`、`hero_phantom_lancer.lua:92`)写的**都是字面量 `true`** ⇒ 该字段值域只有 `nil` 与 `true`,`x == true` 与 `if x` 在这个值域上逐帧同判 ⇒ armed 是出厂的严格超集,**不可能**让今天会做诱饵的娜迦/PL 幻象反而不做。(**若那两个写者里有一个写的是非 `true` 的真值,超集性就不成立** —— 这一条必须去数写者,不能只读断言。)(iii) **armed 不引入任何新的引擎 API 面**:曾疑 armed 会对**非英雄**句柄调 `:IsIllusion()`(出厂在 `aba_minion.lua:48` 因 `and` 短路从不这么做),**复核后疑虑不成立** —— 同一文件的 `X.ConsiderRetreat`(`illusions.lua:133`)**第一行就无条件对同一句柄调这个方法**,而 `X.Think` 每条不提前返回的路径都会走到它;仓库 API 参考也把 `IsIllusion()` 列在 Unit Functions / Unit Classification(`hUnit:` 调用)。(iv) **对无技能召唤物零外扩**:WK 骷髅这类单位 `isIllusion` 为 nil 且 `:IsIllusion()` 为假 ⇒ 两臂逐位相同。(v) 验收独立重跑:`lua5.1 tests/run_tests.lua illureal` **12/12 裸读 exit 0**。\n\n⚠️ **收割前必读 §DC.3(总监加的第 (丁) 条限定,提议里没有)**:见 `strategy-29` 的同一段 —— 两条同帧不正交,`illureal` armed 缩小 `illumove` 的域,交集上的帧**不能分摊归因**。\n\n⚠️ §DB.7 的三条限定(甲 RIDESHARE 不能当独臂 / 乙 `METHOD-FAILED` ⇒ `DOMAIN-EMPTY` 退回总监重裁 / 丙 焦点五无一产生幻象,收割时先答「本波语料里有几个 bot 持有过幻象」)**逐条照旧成立**。"
-   }
+   },
+   "rides_wave": "W35",
+   "result": "2026-09-01T15:3xZ batch-desk(W35 发波):本 id 随 §DC 入集,**成员串 50 → 52**,W35 是 52-id 家族第一波(arm md5 `c5af3b11deb9c024983c22afb90d9a7d` / 459 bytes)。⚠️ **收割前必读 §DC.3 (甲)**:`illumove` 与 `illureal` 本波**同时 armed 且同帧不正交** —— `illureal` 让更多幻象在 `illusions.lua:80` 提前 `return`,**缩小 `illumove` 的域**;落在交集(非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势 ∧ 同帧 ≥2 受控单位)上的差异帧**不可分摊归因**,答不出这一问**不许把差异归给其中任何一条**。"
   },
   {
    "id": "strategy-31",

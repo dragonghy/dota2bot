@@ -7922,6 +7922,125 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **本轮 token**:见报告 §9.2。
   详见 `iterations/reports/batch-desk/20260901T121800Z.md`。
 
+- 2026-09-01T15:15Z(**发 W35 —— 52-id 家族第一波,spot 回归;零收割;实测 ~$0.90**)。
+  ⭐⭐⭐ **W35 起飞,四台全部 `InstanceLifecycle=spot` / `running`**(`run_id` 的 `spot_` 前缀不是证据,
+  这一行才是),四个 SIR 互不相同,`soak-run` 标签**两两不同**。守卫在
+  `GATE-I UNLOCKED at 2026-09-01T15:31:09Z (>= 15:31:07Z)` 打点后发波,四台
+  `15:31:09/31/36/42Z` 依次发出,`ALL FOUR CALLS ISSUED 15:31:46Z`,**四台 `SPOT_RUN_EXIT=0`**。
+  树 `e81ba0ae`(`git ls-remote origin main` == 本地 HEAD,逐位相同);
+  arm 串 **52 ids / 459 bytes / md5 `c5af3b11deb9c024983c22afb90d9a7d`**(读自 `test_set.md:2`;
+  W33/W34 的 50-id 串是 `11cac15a…`)。种子 **2658/2774/2963/2986**,`--slots 16 --rec-slots 8
+  --hours 2 --games 12`。**三条件全满足**:(i) 守卫等到 6h;(ii) 成员串 **50 → 52**(§DC 入集
+  `illumove`/`illureal`);(iii) 九月围栏算术 ≈ **$3.7 ≪ $80**。
+  **本轮 15:15Z 触发、早于解锁 16 分钟**,处置照上一轮预登记:**发波块内守卫 + 零成本准备**,
+  **不取例外、不空转**(那 16 分钟跑完了自检/成本/选种/两道门/dry-run/一条补跑的验收)。
+  ⭐⭐ **市场类型回 spot**:W34 的 `--on-demand` 是 #271 升级分支「**下一波且只下一波**」,
+  本波两条判据都不成立(判据 (1) 被 W34 的 **4/4 粒计分**证伪;判据 (2) 无从谈起)。
+  ⚠️ **一次 AZ 环内改投(GH #256 的第二种行,不是降级)**:`us-west-2a` 报
+  `InsufficientInstanceCapacity`(no Spot capacity,max retries 4)⇒ `re-aiming inside the ring
+  -> us-west-2b`;**`!! AZ RING EXHAUSTED` 没有出现,容量阶梯一级未下**。按 #256 点名:
+  **请求 2a 实得 2b**。实得 AZ **2b/2b/2c/2d = 3 个不同** ⇒ **#252 验收(≥2)通过,
+  #256 的更严验收(四个互不相同)本波不成立**,残余暴露面是 **2658 与 2774 同处 2b**
+  (一次 AZ 事件可带走两粒)。总监 08-27 关于 2b 的重开条件是**第三波被 2b 清零**,
+  **本波不是**(零回收)。
+  ⭐⭐⭐ **补跑了 W34 欠下的 `--rec-slots 8` 事先登记验收:`RECSLOT_EXIT=1`,但三条通道里只有一条反对**
+  (**新开 GH #395**)。通道一(**本波自带对照腿**,选 8 不选 16 的全部理由):八个录制槽对
+  只用对照槽拟合的趋势线残差 **−1.1%~−1.5%,均匀自洽**;通道二:录制槽 13/13/13/13/13/12/13/13
+  vs 对照槽均值 **13.00**,**`.dem` 上传没吃掉任何一局**;通道三(跨波基线)**唯一反对票**:
+  box factor 1.103,**slot 1 net −7.2% 超差**,slot 2–8 全在 ±0.7%。
+  ⭐ **分歧点可解释,解释写在基线自己的数里**:`baseline slot 1 = 1.952` 而 `slot 2–16 = 1.82–1.91`
+  —— 基线是 `REC_SLOTS=1`,**那份语料里 slot 1 自己就是唯一录制槽**(章程原话「录制槽是 12/12 波里
+  最快的那一槽」)⇒ box factor 由**对照槽**拟合,而**基线的 slot 1 不是对照槽**,带着异常高的值
+  进了分母;判决性旁证是**同一语料通道一里 slot 1 残差 −1.5%,与另外七个逐位同量级**。
+  **诚实边界:本台不声称 −7.2% 全部是伪影,也不自行免掉那一格。**
+  **对 W35 的处置:沿用 `--rec-slots 8`,既没执行「exit 1 ⇒ 退回 1」也没免掉它** ——
+  章程边界 ③「不要在同一波里同时改被测 id 集合和采集配置」同时成立,而本波正在改 50→52。
+  **这不是裁定,是一波只改一件事**;退回 1 会把帧通道从 8/16 打回 1/16,而 owner P1/P2 的
+  条件 (a) 卡的就是这份语料 —— **代价方向已摆上桌,三件事请总监裁**。
+  ⚠️ 又一次「没跑成不是通过」:第一次把 `s3://…` 直接喂给该工具,拿到
+  `CANNOT CERTIFY: not a directory` **exit 2**(它只收本地目录),已写进 #395 复现节。
+  ⭐⭐⭐ **trunk 第二条红,而且这次点了名**(**新开 GH #394**):
+  `test_incoming_damage_callsite_census.lua` —— `the published 43 is a grep line count; it now reads 44`。
+  工作树 `bots/`/`game/` 与 `origin/main` **逐字节相同** ⇒ **这条红在 main 上**。
+  归因**逐 commit 数出来**(`git grep -c GetActualIncomingDamage <c> -- bots/`):
+  `8d6fea4c` 43 → `afd8fbf8` 43 → **`98c93310` 44** → `0e6c8242` 44。
+  ⭐ **第 44 处是散文不是调用点**(`hero_skeleton_king.lua` 里一行 `-- family (GetActualIncomingDamage, …`)
+  ⇒ `+1` **全部**来自 `comment_lines`,`code_lines`/`calls`/下面那张普查表**一格不动** ——
+  这正是该断言错误消息**第一句**要求先查的事;修法是**簿记三处同改**(`published`、mock header、
+  `state.json`),不是改普查表或被测代码。**上一轮那条(#387,`test_cm_ult_reach_meter_domain.lua`
+  自跑脚本 `return nil` 打死 runner)本轮 71 个检测器里不再出现 ⇒ 看似已修**;
+  **#387 的第二半(匿名红)本轮没有复发**。
+  ⭐ **选种:`[2601,3000]` 又一次不用右移,而且零成本买到了 pudge**。
+  `seed_roster_index.py --build` 先跑(`305 run prefixes, 301 indexed, 4 to scan`,W34 四粒已 banked)。
+  掩码穷举:`12 banked / 388 unused`,`popcount {4:3, 3:54, 2:141, 1:140, 0:50}`,`40 masks`,
+  `191 valid combos`,**`BEST slots=14`**。**pop-4 供给 5 → 3,与上一轮预告逐字吻合(第六次确认同一机制)**,
+  但**右移触发条件仍未到**(`14 ≥ 12`)⇒ **上一轮「W35 几乎肯定要右移」这个预告被本轮实测证伪**,如实登记。
+  **GH #285 第十九轮未裁。** ⭐ 在 `slots=14` 的**同一最优层**里加一条「带 pudge 优先」的次序偏好,
+  搜出的 `2658/2774/2963/2986` **slots 仍 14、六项仍全 ≥2**,而 **2986 带 pudge**
+  ⇒ **`strategy-26`(`rotscope`)第一次拿到载体**(上一轮它记的是 `DOMAIN_EMPTY_CARRIER_ABSENT`)。
+  ⚠️ **诚实边界**:`carrier_terms.py` 把 `rotscope` 机械判为 **generic**(`mode_roam_generic.lua:1023`)
+  ⇒ **pudge 不在那六项里、carrier 门不会为它举手**;这是本台按限定 (甲) 的**手工加项**。
+  **该分类对「文件内按英雄分支」的 id 偏乐观,交总监看一眼。**
+  **两道启动门**:`check_armed_wiring.py` ⇒ `WIRING_EXIT=0` `all 52 armed ids wired on HEAD`;
+  `seed_draft.py --assert-carrier` ⇒ `CARRIER_EXIT=0`(cm 2 / lion 2 / od 2 / sk 3 / sb 2 / zuus 3)。
+  ⚠️ **两次自伤当场登记**:(甲) 数 id 用 `tr ',' '\n' | wc -l` 得 **51**(那是换行符个数,真值 52),
+  靠 `459 bytes` 与 `all 52 armed ids wired` 两个独立读数救回;(乙) `--assert-carrier` 第一次写成
+  `<hero>:2` 以为是「≥2 粒」,**实际语义是 `hero:pos`(位置)** ⇒ `exit 1 verdict=ABSENT` ——
+  **那是问错了问题,不是选种错了**;「≥2 粒/term」由选种搜索保证,**不由这道门保证**。
+  **⚠️ 收割前必读(§DC.3 第 (丁) 条)**:`illumove` 与 `illureal` **本波同时 armed 且同帧不正交**
+  (`illureal` 让更多幻象在 `illusions.lua:80` 提前 return,**缩小 `illumove` 的域**)⇒
+  落在交集上的差异帧**不可分摊归因**,答不出那一问**不许把差异归给其中任何一条**。
+  **本台已预登记这笔债**(报告 §4.4 + `W35_wave.json:arm_note`)。
+  **收割**:S3 `soak/` 在 `09:31Z` 之后无新前缀 ⇒ **本轮零收割**(不是跳过)。
+  **局数节**:(a) W34 终值 `scored_games 183`(`files_seen/games_loaded 208`),逐粒 ab/ba
+  2621 `31/12`、2647 `27/15`、2747 `38/18`、2750 `31/12`,`min_arm_depth 8`、`thin_arm_seeds []`;
+  (b) W35 发波时刻 **0 局**,预期 4×12×2 ≈ **96 局计分**(W34 收敛率下约 180–210 局落盘)。
+  **成本/围栏**:`budgets` **连续第四轮**仍读**八月**的 **$75.988**(`LastUpdatedTime 2026-08-31T21:01:57Z`),
+  CE 九月**空数组 = 滞后不是零**;那个 `≥$35` 又触发脚本的 CE 复核 ⇒ **第四轮同样的 $0.01**
+  花在确认一个八月的数上(登记,本台不改脚本)。九月 MTD ≈ **$3.7 ≪ $50 第一档**
+  ⇒ **不欠跨档解释行**;$80 围栏 / $90 刹车 / $100 owner 线均未接近。
+  **八月终值(~$78.2–78.3)第五轮顺延。**
+  **泄漏**:收尾**固定两条**都做了 —— (1) 波次点名:running/pending 的四个 `soak-run` 值
+  **与 `W35_wave.json:machines[].run_id` 逐一对上,不多不少**;(2) terminated/shutting-down **空**
+  ⇒ **零回收**。`--leak-only` `LEAK_EXIT=0`,常驻只有 AMI `ami-0a990a26d89c66547`。**无泄漏。**
+  **queue.json**:八条搭车行(`strategy-25`/`hero-24`/`hero-25`/`strategy-26`/`strategy-27`/
+  `strategy-28` + §DC 的 `strategy-29`/`strategy-30`)登记 `rides_wave: W35`,`status` 保持 `running`;
+  `strategy-26` 改记 **`CARRIER_PRESENT_1_OF_4`**;`strategy-29`/`strategy-30` 记 §DC.3 那笔债;
+  `strategy-31`(`tormself`)/ `strategy-32`(`immguard`)是**无 `director` 字段**的新 pending
+  ⇒ 按 4a **不是波次请求**,本波不带、本台不代裁;`strategy-5b` **第十轮**,本台不重裁。
+  **铁律 6**:`bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`LUACHECK_EXIT=0`**
+  `0 warnings` `GATE_EXIT=0 CLEAN`(冷启自装,apt 包名 `lua-check`);**未用 `RULE6_BYPASS`
+  ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑不声称**。
+  **铁律 10**:自检 worst **exit 3**,`FINDINGS: cadence trunk-red(lua)`,
+  `UNCERTIFIABLE: trunk-red(python)`(**GH #383 第三次复现**,腿序);
+  另**新出现**:`5a0` 腿 **71 文件 / 120.0s 预算内未跑完 ⇒ `5a` 这一轮没跑**(GH #358 同族,登记不下结论)。
+  ⚠️ **管道守卫第 8 个外部验收点**(第一条命令又误用管道,自检自己拒跑并打
+  `REFUSED … stdout is a pipe; exit 2, nothing checked`)。
+  **铁律 11**:未触发 `requires approval`;GitHub MCP 可用(#394/#395 均已发出),无空转等待。
+  **计量四条**:本轮**零收割 ⇒ 无读数**,(i-a)~(i-d) 无适用面;W35 的分层读数由收割轮按
+  `recover_verdict.py` 自打的 `_ab`/`_ba`/`strata` 登记,**不许手算**。
+  **已发表(#290 顺序条款:两份草稿各过一次 `claim_precheck.sh` ⇒ `PRECHECK_EXIT=0` /
+  `local commits not on origin/main: 0` / `refused 0` / `OK to publish`)**:
+  **新开 GH #394** `[bug]`(trunk 红,归因到一行注释);
+  **新开 GH #395** `[batch]`(`--rec-slots 8` 验收 exit 1,三条通道 + 三件待裁事)。
+  **交棒**:① ⭐⭐⭐ 总监/英雄组 —— **#394**(簿记三处同改,`98c93310` 作者一手可改);
+  ② ⭐⭐⭐ 总监 —— **#395 三件待裁**(slot 1 那一格算不算超差 / `--rec-slots` 下一档 / 这条验收该钉在哪个时刻);
+  ③ ⭐⭐⭐ **录像组 —— W34 的 103 份 `.dem`(2.29 GB,`dem21/`)2026-09-22 到期**(#388),**距今 21 天**;
+  ④ ⭐⭐ **按需常数第四轮重裁**(建议 $2.30);⑤ ⭐⭐ **#382**(`terminated` 按构造不可达);
+  ⑥ ⭐⭐ **#285 第十九轮未裁**(本轮右移又没触发,但 pop-4 只剩 3);
+  ⑦ ⭐ **`carrier_terms.py` 对「文件内按英雄分支」的 id 偏乐观**(`rotscope`);
+  ⑧ ⭐ **#383 第三次复现**;⑨ ⭐ **自检 `5a0` 腿超时 ⇒ `5a` 没跑**;
+  ⑩ ⭐ 存量:#218/#367/#295/#252/#256/#282 建议关闭/#329/#321/`UNKNOWN STATUS` 4 条(#317)/
+  `strategy-5b` 第十轮/#313/#290/#291/#298/#299/#349/#350(#355)/#207 停在第四十波 armed/
+  #371/#364/#375/#379/#308 后半被工具拒/**#387(看似已修,建议核实后关闭)**/#352。
+  **下一轮本台 = 收割 W35**(预计 **16:1x–16:3xZ** 自毁完毕)。
+  ⚠️ **`terminated` 抓取:本台在发波时刻就预登记了它会再次失败** —— 四台 15:31Z 起飞、
+  ~16:1x–16:3xZ 自毁,#375 的 ~1h 保留期 ⇒ 约 **17:1x–17:3xZ 关窗**,而本 stream 下一轮
+  约 **18:1xZ** 触发。**这正是 #382 的形状**;结算仍退到 S3 最后上传代理(`survival_bound: lower`)。
+  闸 (i) 对下一次发波解锁于 **`2026-09-01T21:31:09Z`**。
+  **本轮 token**:见报告 §9.2(`TOKENS total_in=14,954,935 out=67,566 turns=100`)。
+  详见 `iterations/reports/batch-desk/20260901T151500Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
