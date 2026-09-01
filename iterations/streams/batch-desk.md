@@ -7726,6 +7726,103 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   `W34_wave.json`**。
   **本轮 token**:见报告 §9。
   详见 `iterations/reports/batch-desk/20260901T060900Z.md`。
+- 2026-09-01T09:09Z(**发 W34 —— 按需、`--rec-slots 8` 首波**)。
+  **四台全部起飞**:seed **2750/2621/2647/2747**,AZ **2a/2b/2c/2d**,
+  `i-0cfb84bb8b89f5b83` / `i-03df186386773b380` / `i-096cd17c8fbaee727` / `i-0b3d0a6ebe0a942c0`,
+  发于 `09:31:07–09:31:21Z`(闸 (i) 解锁 `09:31:05Z`,守卫**先退 9 一次**
+  `GATE-I NOT UNLOCKED: 760s remaining`,**未取例外**)。树钉 40 位
+  `31b2a3acdc1b7460b17255a332aed5c45d6e5dc1`,arm 串 **50 ids / 441 bytes /
+  md5 `11cac15a2842374052999a1e5ff9d916`,与 W33 逐位相同**。
+  **⭐⭐⭐ 市场类型 = 按需,走的是 #271 升级分支,不是容量阶梯**(本波从未问过 spot)。
+  起因:`reclaim_blind.py --wave-json W33_wave.json` **BARE_EXIT=2 `UNDECIDABLE`**
+  (2756/2938 的存活是**下界**,而下界在 40.0 换腿点之下说不出它死在换腿点前还是后)。
+  **本台没有把 exit 2 读成通过,而是执行了这道门更严的那一侧**:判据 (1)「≤1 粒配对种子」
+  由 W33 收割**直接满足**(1 粒,零推断);判据 (2) 由 `W33_wave.json:machines[0]` 里
+  **一手精确的 `terminated: 03:34:25Z`**(对 `create 03:31:07Z` ⇒ **3.30 分钟**,
+  `instance-terminated-no-capacity`)满足 —— **那个字段在文件里,只是工具的 schema 不读它**。
+  失效方向算过:猜错朝松是**又一波颗粒无收 + 又一个 6h 闸位**,猜错朝紧是 **+$1.40**;
+  而 #271 自己的立法理由就是「钱不是这条的理由,日历才是」,**50-id 家族至今 0 粒有效读数**。
+  **⭐⭐⭐ 结构性缺陷已上报(本轮新开 issue):这道门要的量比它自己的调用时刻活得短。**
+  唯一的精确存活(`describe-instances` 的 `terminated`)在机器死后**只留 ~1 小时**(GH #375),
+  而这道门在**下一波发波轮**才被调用,距上一波发波 **≥6 小时**(闸 (i))⇒
+  **对任何有回收机的波,它在被调用时必然已经过期**。章程 08-30T12:1xZ 那条自纠方向对,
+  但落的是 `status_code`/`create`/`update`,而 `create→update` 对回收机按 GH #332 只能标
+  `lower` —— **恰恰就是这道门唯一需要精确值的那一类机器**。
+  附带:**seed 2790 的下界 `>=44.1 min` 本身已越过 40.0**,「活过换腿点仍 NO-PAIR」正是
+  header 里 `BRACKET VIOLATED` 的定义,门没开火(疑因 `survival_bound: lower` 一律关掉复核);
+  **诚实边界:也可能是 ~40 min 翻了腿而 4 分钟内一局 ba 没跑完**,本台不自裁。
+  **⭐⭐ 采集配置 `--rec-slots 8` 落地(总监 GH #308 裁 (C),`a8ea5822`,档案 `test_set.md §DA`)**:
+  帧通道 **1/16 → 8/16**,卡了 owner P1/P2 条件 (a) 十波的就是它。合法性来自 arm 串**本波不动**
+  (章程边界 ③)。**⛔ 但 §DA.5 的后半执行不了**:把 W25 的 196 局并进 `rec_slot_baseline.json`
+  被 `rec_slot_cost.py` 按**登记的第三条永久 REFUSAL** 拒绝 ——
+  `CANNOT CERTIFY: claim sidecars disagree about rec_slots: [1, 12]`(exit 2),
+  **而这个"分歧"恰恰就是这次合并的全部内容**(baseline `rec_slots=1`,W25 `rec_slots=12`)。
+  本台**不用 `--assume-rec-slots` 绕过**(那是把假陈述写进以测量命名的字段,GH #332 立案句);
+  **先验证过复现路径**:从 baseline 自己那四个 run 重造 ⇒ **与仓库那份逐位相同**。
+  形状与 2026-08-22 同族(处方在工具上走不通)⇒ **决定归总监**,三条路见报告 §7 ②。
+  **选种**:`--build` 先跑(`301 run prefixes, 297 indexed, 4 to scan`,W33 四粒确认 banked;
+  301 = 297 + **4** 个有产出的 run,首台 2756 零局无前缀)。窗口 `[2601,3000]` **未右移**:
+  8 banked / 392 unused、pop `{4:5, 3:56, 2:141, 1:140, 0:50}`、41 掩码、266 组解,
+  **BEST 14 槽**(cm3/lion2/od2/sk3/sb2/zuus2,每 term ≥2)。
+  ⚠️ **天花板 16 → 14,第五次确认同一机制**(W33 那四粒**全是 pop-4** ⇒ 9→5);
+  本波再吃 2 粒 ⇒ **pop-4 剩 3,W35 几乎必须右移**,**GH #285 第十七轮未裁**。
+  **两道内容门**:载体门 `CARRIER_GATE ids=10 seeds=4 exit=0`(`RC_EXIT=0`);
+  接线门 `all 50 armed ids wired on 31b2a3ac…`(`RC_EXIT=0`)。
+  **#282/#252/#256 验收**:四台 `requested == actual`、`--az arg=` 行四台都在且非空、
+  **4 个互不相同的 AZ**、零 `re-aiming`、零 `AZ RING EXHAUSTED`。
+  **#371 第四轮**:脚本 `exit=0` 不可信 ⇒ 带外核实 `InstanceLifecycle=None`(按需)、四台 `running`。
+  ⚠️ **本波是 `spot_` 前缀陷阱最干净的一次示范:四台按需机的 run_id 全部以 `spot_` 开头。**
+  **成本/围栏**:九月围栏 **$50**(一档未跨);`budgets` 仍读**八月**的 $75.988
+  (`LastUpdatedTime 2026-08-31T21:01:57Z`,月已滚而 budgets 未滚),CE 九月**空数组 = 滞后不是零**。
+  九月 MTD ≈ W33 $0.60–0.65 + W34 **~$2.30** ⇒ **≈$2.95 ≤ $50**,**未跨任何告警档 ⇒ 不欠跨档解释行**。
+  刹车 $90 / owner 线 $100 未接近。**八月终值(~$78.2–78.3)第三轮顺延。**
+  **⭐⭐ 按需常数 `~$2.15` 重裁第三轮欠着 —— 本波自己就是第三个实测点,收割轮欠总监一个实测 h/台。**
+  **泄漏 + 波次点名**:开工 running/pending **空**;收尾 `--leak-only` **`RC_EXIT=0`**,
+  **恰好四台、无多余**;`soak-run` 标签集合与 `W34_wave.json:machines[].run_id` **四对四对上**;
+  `terminated,shutting-down` **空** —— ⚠️ **这个空与上一轮那个空不同**:上一轮是过了 #375 保留期
+  **读不到**,本轮起飞才 6 分钟、**在保留期内**,所以是**真的没死机器**(按需波本无回收路径)。
+  **⭐ 收割轮的硬期限已预写进 `W34_wave.json:terminated_capture_obligation`**:
+  本波**没有 SIR 兜底**(按需无 SIR,那正是 W32 让门读到 `unknown SIR status_code None` 的形),
+  ⇒ 四台的 `terminated` / `StateReason.Code` **必须在收割轮抓下来**,过了 ~1h 就永久取不回。
+  **铁律 6**:`bots/`/`game/` **一行未改**;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+  动态半(#124)**未跑且不声称**。
+  **铁律 10**:自检 worst **exit 3**,`FINDINGS: cadence trunk-red(python)`,`UNCERTIFIABLE: none`;
+  锚点全 ok;Lua 快检 67 文件 0 失败。
+  ⭐⭐⭐ **那个「间歇性假红」这一轮拿到了机制,而且它不是并发。** python 腿 72 passed / 1 failed,
+  失败的是 `tests/test_rc_wrapper.py` 里**唯一真正需要跑 `lua5.1` 的那一条检查**,
+  报的是 **`got 127`(command not found)**;而 `routine_selfcheck.sh` 的腿序是
+  **python 套件在 `:319-321`、`ensure_lua_tool lua5.1` 在 `:451-458`** ⇒
+  **新容器上 python 腿先跑、`lua5.1` 还没买 ⇒ 必红;Lua 腿装完之后第二次跑 ⇒ 必绿。**
+  现场复核:同树单独重跑该文件 **`BARE_EXIT=0`**,那一条 `ok`。
+  **这与总监 08-31(`a8ea5822` 立案句)读到的逐字同形**(同一个文件、单独跑全绿、第二次跑全绿),
+  当时归因写的是「一次间歇性红」,**实为确定性的腿序问题**。
+  ⚠️ **诚实边界(证据纪律 4)**:这**不证伪也不取代** #364 的并发假说 ——
+  那几次红的是**普查型**测试(`abilanc_single_layer`/`call_arity_census`/`call_form_census`),
+  **不是** `test_rc_wrapper.py`,**两个不同的形可能是两件事**;本轮**也不是干净的阴性对照**
+  (前台确有并发 `rc.sh`),本条的力量全在 **127 这个退出码本身**。已开 issue,**本台不改 harness**。
+  顺带:**#380 第一次真实使用就买回了成本** —— 旧的 `^` 锚定过滤器会把缩进六格的
+  `got 127` 整条删掉,本轮就只能和 08-31 一样写「间歇性红」。
+  (另:本轮**第一条命令又误用管道**,自检自己拒跑并打
+  `REFUSED: … stdout is a pipe; exit 2, nothing checked` —— **管道守卫第 6 个外部验收点**。)
+  **铁律 11**:未触发 `requires approval`;闸 (i) 的等待处置是**发波块内守卫 + 做零成本准备**,
+  不是坐等也不是取例外。
+  **queue.json**:六条 ADMITTED 搭车(`strategy-25`/`hero-24`/`hero-25`/`strategy-26`/
+  `strategy-27`/`strategy-28`)按构造搭 W34,`status` 保持 `running`,登记 `rides_wave: W34`;
+  `strategy-5b` 仍卡在它自己的条件 (3),**第八轮,本台不重裁**;
+  `strategy-29`/`strategy-30` 是**无 `director` 字段**的新 pending,不是波次请求。
+  **交棒**:① ⭐⭐⭐ 总监 —— **#271 的输入 schema 与 `terminated` 落盘时刻**(本轮新开 issue);
+  ② ⭐⭐⭐ 总监 —— **#308 处方后半被工具拒**,三条路见报告 §7 ②;
+  ③ ⭐⭐ 总监 —— **自检假红定位到腿序**(本轮新开 issue);
+  ④ ⭐⭐ 总监 —— **bracket 复核对「下界已充分」不开火**(seed 2790);
+  ⑤ ⭐⭐ **按需常数第三轮重裁**;⑥ ⭐⭐ **#285 第十七轮未裁**(pop-4 剩 3,W35 必须右移);
+  ⑦ ⭐ **#352 连续第二波 DEGENERATE**;⑧ ⭐ **#379 未裁**;
+  ⑨ ⭐ 存量:#218/#367/#295/#252/#256/#282 建议关闭/#329/#321/`UNKNOWN STATUS` 4 条(#317)/
+  `strategy-5b` 第八轮/#313/#290/#291/#298/#299/#349/#350(#355)/#207 停在第三十九波 armed/
+  #371 第四轮/#364/#375。
+  **下一轮本台 = 收割 W34**(预计 10:15–10:30Z 自毁完毕),**并且必须在同一轮抓 `terminated`**
+  (见上面的硬期限)。闸 (i) 对下一次发波解锁于 **`2026-09-01T15:31:07Z`**。
+  **本轮 token**:见报告 §9.2。
+  详见 `iterations/reports/batch-desk/20260901T090900Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和

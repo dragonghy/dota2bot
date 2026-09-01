@@ -1051,7 +1051,8 @@
       "result_at": "2026-08-31T09:3xZ",
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
       "last_wave": "W33",
-      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)"
+      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)",
+      "rides_wave": "W34 (2026-09-01T09:31Z, on-demand, --rec-slots 8; tree 31b2a3ac, arm md5 11cac15a2842374052999a1e5ff9d916)"
     },
     {
       "id": "hero-24",
@@ -1076,7 +1077,8 @@
       "result_at": "2026-08-31T09:3xZ",
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
       "last_wave": "W33",
-      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)"
+      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)",
+      "rides_wave": "W34 (2026-09-01T09:31Z, on-demand, --rec-slots 8; tree 31b2a3ac, arm md5 11cac15a2842374052999a1e5ff9d916)"
     },
     {
       "id": "hero-25",
@@ -1102,7 +1104,8 @@
       "result_at": "2026-08-31T09:3xZ",
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
       "last_wave": "W33",
-      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)"
+      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)",
+      "rides_wave": "W34 (2026-09-01T09:31Z, on-demand, --rec-slots 8; tree 31b2a3ac, arm md5 11cac15a2842374052999a1e5ff9d916)"
     },
     {
       "id": "hero-26",
@@ -1146,7 +1149,8 @@
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
       "result": "2026-09-01T06:2xZ batch-desk(W33 收割):**这一波没买到读数,不是没测。** W33 五台机器里 **四台被 EC2 回收**(`instance-terminated-no-capacity`,03:32:21Z–04:15:21Z,四个 AZ 全中),每一台都死在**候选腿(radiant)之内** ⇒ 产出 ab 局、零 ba 局 ⇒ 三粒种子 `NO-PAIR`。唯一正常自毁的那台(seed 2887,`instance-terminated-by-user`)是唯一翻腿、也是唯一计分的种子。全波 151 局装载、**仅 49 局计分、1/4 粒种子入 `mean`**。`suggested: promote` 与 `comps_better 1/1` 都是 **n=1 的构造产物,不是 promote 信号**;winrate 通道 `DEGENERATE`(GH #352,少数侧占比 0.1722 < 0.20),**不可作铁律 2(b) 依据**。本 id 仍在 50-id 测试集内、status 保持 `running`;**下一棒 = 重发 W34** (闸 (i) 解锁 2026-09-01T09:31:05Z),三粒作废种子 2756/2790/2938 需要重跑。",
       "last_wave": "W33",
-      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)"
+      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)",
+      "rides_wave": "W34 (2026-09-01T09:31Z, on-demand, --rec-slots 8; tree 31b2a3ac, arm md5 11cac15a2842374052999a1e5ff9d916)"
     },
     {
       "id": "strategy-27",
@@ -1170,7 +1174,8 @@
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
       "result": "2026-09-01T06:2xZ batch-desk(W33 收割):**这一波没买到读数,不是没测。** W33 五台机器里 **四台被 EC2 回收**(`instance-terminated-no-capacity`,03:32:21Z–04:15:21Z,四个 AZ 全中),每一台都死在**候选腿(radiant)之内** ⇒ 产出 ab 局、零 ba 局 ⇒ 三粒种子 `NO-PAIR`。唯一正常自毁的那台(seed 2887,`instance-terminated-by-user`)是唯一翻腿、也是唯一计分的种子。全波 151 局装载、**仅 49 局计分、1/4 粒种子入 `mean`**。`suggested: promote` 与 `comps_better 1/1` 都是 **n=1 的构造产物,不是 promote 信号**;winrate 通道 `DEGENERATE`(GH #352,少数侧占比 0.1722 < 0.20),**不可作铁律 2(b) 依据**。本 id 仍在 50-id 测试集内、status 保持 `running`;**下一棒 = 重发 W34** (闸 (i) 解锁 2026-09-01T09:31:05Z),三粒作废种子 2756/2790/2938 需要重跑。(本 id 的**首波**就是 W33 ⇒ 首波读数为零,需在 W34 重新计。)",
       "last_wave": "W33",
-      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)"
+      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)",
+      "rides_wave": "W34 (2026-09-01T09:31Z, on-demand, --rec-slots 8; tree 31b2a3ac, arm md5 11cac15a2842374052999a1e5ff9d916)"
     },
     {
       "id": "strategy-28",
@@ -1194,7 +1199,8 @@
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py.",
       "result": "2026-09-01T06:2xZ batch-desk(W33 收割):**这一波没买到读数,不是没测。** W33 五台机器里 **四台被 EC2 回收**(`instance-terminated-no-capacity`,03:32:21Z–04:15:21Z,四个 AZ 全中),每一台都死在**候选腿(radiant)之内** ⇒ 产出 ab 局、零 ba 局 ⇒ 三粒种子 `NO-PAIR`。唯一正常自毁的那台(seed 2887,`instance-terminated-by-user`)是唯一翻腿、也是唯一计分的种子。全波 151 局装载、**仅 49 局计分、1/4 粒种子入 `mean`**。`suggested: promote` 与 `comps_better 1/1` 都是 **n=1 的构造产物,不是 promote 信号**;winrate 通道 `DEGENERATE`(GH #352,少数侧占比 0.1722 < 0.20),**不可作铁律 2(b) 依据**。本 id 仍在 50-id 测试集内、status 保持 `running`;**下一棒 = 重发 W34** (闸 (i) 解锁 2026-09-01T09:31:05Z),三粒作废种子 2756/2790/2938 需要重跑。(本 id 的**首波**就是 W33 ⇒ 首波读数为零,需在 W34 重新计。)",
       "last_wave": "W33",
-      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)"
+      "last_wave_outcome": "NO_READING (1/4 seeds scored; 4/5 machines reclaimed)",
+      "rides_wave": "W34 (2026-09-01T09:31Z, on-demand, --rec-slots 8; tree 31b2a3ac, arm md5 11cac15a2842374052999a1e5ff9d916)"
     },
     {
       "id": "strategy-29",
