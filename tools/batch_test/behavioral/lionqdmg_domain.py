@@ -407,13 +407,21 @@ def died_ev_within(game, hero, t0, window):
         unsafe direction for this stream's standing NEGATIVE finding, which is
         why `netev` is reported beside `net` and never in place of it.
       * DIFFERENT CLOCK, BOTH SIGNS.  Measured on the W30/W31 corpora
-        (replay-check 2026-08-31T19:03Z, n=137 casts): the event led the first
-        sampled `hp<=0` in 136 of 137 pairs, median -0.7 s, 27% by >=1.0 s --
-        so the health bar is systematically LATE on short windows, which
-        inflates `net` at N=2s.  But the one positive pair (+7.8 s) and
-        `bbfloor_domain.py:263`'s skeleton_king (hp 0.005 from t=45.4, DEATH
-        event t=48.6) show the log can also lag the bar.  Neither witness
-        refines the other; that is measured, not cautious wording.
+        (`wkqdmg_domain.witness_lag`): the event led the first sampled `hp<=0`
+        in 136 of 136 clean pairs, median -0.7 s, so the health bar is
+        systematically LATE on short windows, which inflates `net` at N=2s.
+        ⚠️ RETRACTED, 2026-09-01: an earlier version of this paragraph read
+        `n=137` with "the one positive pair (+7.8 s)" and cited that pair as
+        proof the log can also lag the bar.  That 137th pair was an ARTIFACT
+        -- `witness_lag` was pairing a corpse with the hero's SECOND death
+        after a revival, and its respawn guard removed it (replay-check
+        2026-09-01T01:20Z).  All three corpora now read 100% negative.
+        What survives the retraction is the OTHER, independent witness to the
+        same claim: `bbfloor_domain.py:263`'s skeleton_king (hp 0.005 from
+        t=45.4, DEATH event t=48.6).  So "both signs occur" still stands, on
+        one measurement rather than two -- and the reason to keep the columns
+        apart was never the lag's sign anyway, it is the two bullets that
+        bracket this one.  Neither witness refines the other.
       * COVERAGE IS A DIFFERENT QUESTION.  Absence of a DEATH row is not
         evidence of survival, so this column cannot ask "is the victim still
         sampled" -- only "was the log still running" (`ev_covered`), which is
@@ -472,14 +480,54 @@ def stale_victim(game, hero, t0, window):
         which is what the outcome column already reports.
 
     Together they say something neither says alone: the log had already
-    declared the death BEFORE the frame, and the next sample confirms no
-    respawn intervened.  Frames with no further samples are NOT stale by this
+    declared the death BEFORE the frame, and the next sample confirms the
+    victim is still down.  Frames with no further samples are NOT stale by this
     test (nothing confirms them), which keeps this count a LOWER bound -- the
     safe direction for a finding that says the domain is over-counted.
+
+    ⭐ THE REVIVAL GUARD (replay-check 2026-09-01, the same family as
+    `wkqdmg_domain.witness_lag`'s guard one round earlier).  Until this guard
+    existed the docstring claimed the forward sample "confirms no respawn
+    intervened".  It does not and cannot: it looks AFTER the frame, while a
+    revival between the logged death and the frame happens BEFORE it.  The
+    missing half is here -- a `hp<=0` sample strictly between the death and
+    the frame.  The frame's own victim sample is `hp>0` by construction
+    (`others_at` keeps only living heroes), so a zero in between IS the
+    dead->alive transition; and a merely LAGGING health bar never reads 0 and
+    then positive inside one death, which is exactly what makes this the whole
+    test rather than a heuristic.
+
+    HOW MUCH HEADROOM THERE ACTUALLY IS, measured rather than assumed -- and
+    the assumption was wrong in the interesting direction.  Reasoning about
+    "Turbo halves respawn timers, so nothing revives inside 2 s" does not
+    describe this corpus, because the fastest revivals in it are not respawns
+    at all: over W32 (all four runs, 10 games, 498 hero deaths, read frame by
+    frame off the timelines) the shortest death -> sampled-alive-again gap is
+    3.2 s and the five shortest are ALL `skeleton_king` -- Reincarnation, which
+    returns him ON THE SPOT, not at the fountain:
+
+        1312.2  DEATH earthshaker -> skeleton_king
+        1312.4  hp 151     x 1271.2 y 1037.7      <- bar still alive, 0.2 s late
+        1313.4  hp 0       x  616.1 y   64.3      reincarnation cd 0 -> 148.9
+        1315.4  hp 2312    x 1271.2 y 1037.7      <- revived, at the death spot
+
+    So the margin between the widest STALE window (2.0 s) and the observed
+    floor (3.2 s) is 1.2 s, about ONE 1 Hz sample -- thin enough that the
+    guard belongs in code rather than in a constant.  Measured on that same
+    corpus the guard fires on 0 of 318 candidate pairings (a SUPERSET of the
+    frames this file visits: no Lion, reach, mana, cooldown or damage band
+    required), i.e. it changes no number today -- the whole census is
+    byte-identical before and after.  It is pinned so that a widened window, a
+    shorter revival, or a corpus with more Wraith King cannot change one
+    silently.
     """
     deaths = [t for t in game.deaths.get(hero, ())
               if t0 - window - EVENT_TOL_S <= t <= t0 + EVENT_TOL_S]
     if not deaths:
+        return False
+    # The most recent logged death is the one the frame could be stale for.
+    if any(hp <= 0 for t, hp in game.by_hero.get(hero, ())
+           if deaths[-1] < t < t0 - SAMPLE_TOL_S):
         return False
     nxt = next((hp for t, hp in game.by_hero.get(hero, ())
                 if t > t0 + SAMPLE_TOL_S), None)
@@ -685,8 +733,10 @@ def summarize(cells):
     out.append("## (3c) STALE VICTIMS: cell (3) frames whose victim was already dead")
     out.append("")
     out.append("The combat log had already reported the qualifying victim dead when")
-    out.append("this frame was sampled, AND the next hp sample confirms it (no")
-    out.append("respawn in between). These frames are contamination in cell (3)")
+    out.append("this frame was sampled, AND the next hp sample confirms the victim")
+    out.append("is still down, AND no hp sample BETWEEN that death and the frame had")
+    out.append("already shown the corpse (which would make the frame a revival, not")
+    out.append("a lagging bar). These frames are contamination in cell (3)")
     out.append("ITSELF -- the id's own opportunity count -- not in the outcome")
     out.append("column, and they INFLATE it, which is the direction that flatters")
     out.append("this id. Both legs are interpretable here: unlike (3b), nothing the")
@@ -961,7 +1011,7 @@ def selfcheck():
     # --- one synthetic game, driven end to end --------------------------------
     def build(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
               allies=0, enemy_alive=True, enemy_future=None, enemy_name="lina",
-              deaths=None, ev_horizon="cover", second=None):
+              deaths=None, ev_horizon="cover", second=None, enemy_past=None):
         snaps = [_snap(t=0.0, abilities=_q(q_level, cd), mp=mp, level=lion_level)]
         snaps.append(_snap(t=0.0, hero="npc_dota_hero_" + enemy_name, idx=2, team=3,
                            hp=enemy_hp if enemy_alive else 0.0, x=enemy_x,
@@ -990,7 +1040,11 @@ def selfcheck():
         # is "no further samples", which the outcome column reads as SURVIVED.
         g.by_hero = collections.defaultdict(list)
         g.by_hero["lion"] = [(0.0, 500.0)]
-        g.by_hero[canon(enemy_name)] = [(0.0, enemy_hp if enemy_alive else 0.0)] + \
+        # `enemy_past` = the victim's REAL hp samples BEFORE the frame -- the
+        # only way to drive the revival guard, which asks whether the health
+        # bar had already shown this death by the time the frame was sampled.
+        g.by_hero[canon(enemy_name)] = sorted(enemy_past or []) + \
+                                       [(0.0, enemy_hp if enemy_alive else 0.0)] + \
                                        sorted(enemy_future or [])
         if second is not None:
             g.by_hero[canon(second[0])] = [(0.0, second[1])] + sorted(second[2] or [])
@@ -1189,6 +1243,44 @@ def selfcheck():
                  deaths={"npc_dota_hero_lina": [-0.1]})[SHL])
     ok("stale: the headline window is one of the printed rungs",
        STALE_HEADLINE_S in STALE_WINDOWS)
+
+    # --- the REVIVAL GUARD (2026-09-01) ---------------------------------------
+    # Same family as `wkqdmg_domain.witness_lag`'s guard.  These fire on 0 of
+    # 254 candidate pairings in W32, so they change no number today; they exist
+    # so a widened window or a faster revival cannot change one silently.
+    ok("stale/revival: a corpse sample BETWEEN the death and the frame is a "
+       "revival, not a lagging bar -- not stale",
+       not build(50.0, 800.0, enemy_past=[(-1.2, 0.0)],
+                 enemy_future=[(1.0, 0.0)],
+                 deaths={"npc_dota_hero_lina": [-1.8]})["stale_0.0_2.0"])
+    ok("stale/revival: the SAME frame without that corpse sample IS stale "
+       "(the guard is what moved it, not the rest of the setup)",
+       build(50.0, 800.0, enemy_future=[(1.0, 0.0)],
+             deaths={"npc_dota_hero_lina": [-1.8]})["stale_0.0_2.0"])
+    ok("stale/revival: a corpse sample BEFORE the death is not a revival "
+       "(it belongs to an earlier life)",
+       build(50.0, 800.0, enemy_past=[(-2.5, 0.0), (-2.2, 400.0)],
+             enemy_future=[(1.0, 0.0)],
+             deaths={"npc_dota_hero_lina": [-1.8]})["stale_0.0_2.0"])
+    # The discriminating shape for "which death does the guard read": the
+    # corpse must sit BETWEEN the two deaths, otherwise oldest and newest give
+    # the same answer and the assertion tests nothing.  Died at -1.9, bar
+    # showed that corpse at -1.5, revived, died AGAIN at -0.3; the frame is
+    # stale for the SECOND death, and reading the first would wrongly clear it.
+    ok("stale/revival: the guard reads the MOST RECENT qualifying death, so a "
+       "corpse from an earlier life in the same window cannot un-guard it",
+       build(50.0, 800.0, enemy_past=[(-1.5, 0.0)],
+             enemy_future=[(1.0, 0.0)],
+             deaths={"npc_dota_hero_lina": [-1.9, -0.3]})["stale_0.0_2.0"])
+    ok("stale/revival: a LIVING sample between the death and the frame is not "
+       "by itself a revival -- that is the lagging bar the count exists for",
+       build(50.0, 800.0, enemy_past=[(-1.2, 47.0)],
+             enemy_future=[(1.0, 0.0)],
+             deaths={"npc_dota_hero_lina": [-1.8]})["stale_0.0_2.0"])
+    ok("stale/revival: the guard does not reach past the frame -- the "
+       "confirming corpse AFTER it still makes the frame stale",
+       build(50.0, 800.0, enemy_future=[(1.0, 0.0), (2.0, 0.0)],
+             deaths={"npc_dota_hero_lina": [-0.1]})["stale_0.0_2.0"])
 
     class _G(object):
         pass
