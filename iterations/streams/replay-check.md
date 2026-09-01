@@ -8899,3 +8899,79 @@
     GH **#389** 追评 `issuecomment-5498920124`(载体的**第三种形状**:通用文件里的**局面**,与 `rotscope` 的英雄块同族)。
   - **Token 用量**:见报告 §11。
   - 完整报告:`iterations/reports/replay-check/20260901T184954Z.md`
+- **2026-09-01T21:50Z(顺延四轮的 `will_reincarnate` 提案结案:它**从来没上过总线**;而引擎布尔 `true` **不是 WK 专属**)**:
+  - **⭐ 这一棒掉了四轮的机制查清了,不是「没时间」**:提案只写在本组报告 §3 和章程的
+    「新欠账」行里,**从头到尾没写成 GitHub issue**;铁律 5 说协作总线是 issue,
+    所以 harness 那边**从未看见过它**。本轮先核实 harness 未接
+    (`dumper/main.go` 里 `WillReincarnate` 一个字都没有;`bbfloor_domain.py:427-429` 合取式逐字未动;
+    GH 语义检索 0 命中;#386–#401 逐条看过),再补开 issue。
+  - **⭐ 上一轮那句「`true` 全是 skeleton_king」是语料造成的,不是字段的性质。**
+    W35 `e12d0d` 这粒种子**十个英雄里没有 WK**,`WillReincarnate=true` 仍出现 **13 次**,
+    分布在 sven / phantom_assassin / ogre_magi / obsidian_destroyer 上,**全是 aegis 持有者**——
+    16 局非暖场里那 9 次**逐条查了背包**:死前一帧 `aegis` 在包里 **9/9**,尸体那一帧 **9/9 消失**。
+    ⇒ **`WillReincarnate` 读作「这次死后他会原地回来」,不是「他是 WK」**;
+    用英雄名或 `wk=` 那一列去近似它都是错的,而引擎布尔天然覆盖 aegis + Reincarnation 两者。
+  - **逐帧(先逐帧后聚合)**:`e12d0d/20260901_154652_slot3` obsidian_destroyer(dire=baseline 腿,
+    **本节不做腿间断言**),`idx=1353`(另两个 idx 是幻象,已隔离):
+    `aegis` 连续 **138 帧**在包里(t=1334.4→1471.4);**1471.5 combat log DEATH(zuus 弧闪)
+    带 `WillReincarnate=true`**;t=1472.4 起尸体 `hp=0` 在 `(2966.4, 2059.1)` **五帧逐位不动**、
+    `aegis` 在归零那一帧消失;t=1477.4 `hp=3012` 复活,离死点 494u。
+    **三个证人(引擎布尔 / 背包物品串 / 启发式)在同一格上说同一句话。**
+  - **聚合**:引擎布尔 `wr_present` **1077/1077**(21 局,树 `e81ba0ae`);
+    跨轮累计 **1209/1209,三波三树两套阵容**(W32 45 + W33 87 + W35 1077);
+    `LocationX/Y` **0/1077**,第三波复现上一轮的 0/132。
+  - **⭐ 启发式 vs 引擎(824 次死亡,零分歧;而分离度全部来自位置那一半)**:
+    16 局的 `--dump-rows` 给 824 条 span,探针给同样 16 局 824 次死亡,
+    按 `(局,英雄,|Δt|≤3s)` **824/824 全配上、0 落空**(这本身是 `death_spans` 的一次交叉验证)。
+    以引擎布尔为真值:现行合取 **TP=9 FP=0 FN=0 TN=815**;
+    只用时长 `span<8.0` **FP=2**(两次 pudge 买活,`jumped=True`);
+    只用位置 `jumped is False` **FP=0 FN=0**。
+    ⇒ **`REINCARNATION_MAX_S=8.0` 这一轮一次都没改变过任何一行判定,是未被行使的冗余**;
+    `in_place` 的 span 全落在 **[5.4, 6.3]**(aegis 5s + 1 Hz 上估),最近的干净复活 **9.4s**。
+    **不读成「启发式有 bug」**(824 条一条没错),读成「两个常数各自都有已量过的、朝错误方向的边界
+    (1 级真实复活 7.10s<8.0;尸体单步 6401 u/s vs `jumped` 的 1500u 门槛),而引擎已经把答案发过来了」。
+  - **诚实边界**:**没有一个数字是效应量**,本轮**不下 `VERIFY id=…` 裁定、不核任何 gate**;
+    **不做任何 armed−baseline 断言**(824 条里 radiant 590 / dire 234、armed 490 / baseline 334,
+    两层局数与行数都不等 ⇒ 铁律 4(i-d) 不可作差不可按局加权;9 条 `in_place` 的 armed 7 / baseline 2
+    **是 aegis 的分布不是任何 id 的效应**);本波**没有 WK ⇒ 本轮没测到任何一次真正的 Reincarnation**,
+    「true 覆盖 WK」那一半继承自上一轮 13 例;「位置那一半独自够用」是**本语料的读数不是定理**;
+    探针**未入仓**、dumper 与 `bbfloor_domain.py` **0 改动** ⇒ **本轮无变异台**
+    (读数直接读 combat log 与 `snapshots`,不经过任何被检工具的判据);未改 Lua ⇒ 不声称跑绿全量(GH #124)。
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **BARE_EXIT=0**;
+    `go mod init`+`go get manta@v1.5.0` **BARE_EXIT=0**、manta `class.go` `patched`、`go build` **BARE_EXIT=0**;
+    探针 **21/21 exit 0**;`sweep_run.sh` **BARE_EXIT=0**(21 dem / 5 暖场跳过 / **16 局 swept** / `unparseable=0`);
+    `bbfloor_domain.py --dump-rows` **BARE_EXIT=0**(824 行)。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄。**
+  - **开工自检**:⚠️ **第一条命令第十一次踩证据纪律 3**(`… | tail -60`),脚本自打
+    `REFUSED: stdout is a pipe; exit 2, nothing checked` —— **护栏第十一次生效,那次不是通过**;
+    「开工模板内建 `rc.sh`」已交出去四轮,**本轮第五次登记、形状完全相同**。
+    改重定向后台跑,**第十八次登记「不是约 20s」**(GH #358),到收尾**仍未跑完(>30 分钟)**。
+    已跑完的腿:push gate 上膛 ok / `unlanded_commits` ok / cadence+citations 已跑 / queue ok /
+    orphan ok / expired waits ok / **stable 锚点 ok**;
+    python trunk-health **UNCERTIFIABLE ×2** + 一条 working-tree 红(**GH #364 已在**);
+    `rc.sh` 变异台 **2 项 UNCERTIFIABLE**(`no lua5.1 on PATH`,与上一轮逐字相同);
+    **trunk-red(lua)`test_incoming_damage_callsite_census.lua`(43→44)** —— **GH #394 已在,只记复现**。
+  - **欠账变化**:✅ **`will_reincarnate` 那一棒结案**(证据从 132 抬到 1209 + 一条新性质 `true` ⊋ WK);
+    ✅ 新买到 `death_spans` 与引擎死亡表 **824/824 一一对应**的交叉验证;
+    ⛔ `illumove` 条件 (b) 仍欠(**W36 21:31Z 起飞**,本轮无产物);⛔ `illureal` 等 GH #381 回音;
+    ⛔ `wkqdmg` 等 GH #390 回音。
+    **新欠账**:(a) W35 的 16 局 timeline 与 21 个 `.dem` **随容器回收**(重跑 sweep 实测约 4 分钟 + 约 450 MB 下载,
+    **别当成现成资产**);(b) **探针要不要入仓**(本轮是第二次从零重建它;~110 行 Go;属 harness 目录,交总监定);
+    (c) **`REINCARNATION_MAX_S` 的「冗余」结论只在一波上成立**,下一波若语料里有 WK 应把那张 2×2 表原样重打。
+    继承未动:§5 宽扫表按 ab/ba 重打;`tp_out` 那 311 条;`stayfield2_whynot.py` 待下一个 44-id 波;
+    `pullcad_beat.py` 在 W25 剩两 run;`unk` 那一列**第十一轮**;窗口常数只读未量;
+    W33 0.748 与 W32 0.401 合并成案;`fieldbuy_silence.py`/`stayfield2_margin.py` 分层;
+    「静止在小兵火力里」检测器;W25 只并 2/4 run;W26–W28 与 W25 从未池化;`seed 975` **第三十二轮**;
+    `wandlimbo` 因 #293 **第三十轮**;GH #265 被 #272 阻塞;`blinkflee` 卡 #304/#305;
+    WK rank-3 全语料复测;载体侧别提案 GH #389。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **W36 收官后**先宽扫 arm 串(`arm_string_census.py` 喂 `…/analysis`,`--declared` 用发波当时的串);
+    若 `illumove` 再次在集 ⇒ **第一件事是把 18:49Z 那张 `starved%` 四格重打一遍**(条件 (b))。
+    (2) **§4.3 那张 2×2 表在有 WK 的语料上重打一遍**(新欠账 c,零新方法)。
+    (3) **看 harness/总监接不接本轮开的 issue**;没接**不要再顺延第五轮**——直接追评,
+    或按新欠账 (b) 请总监裁定探针入仓。
+    (4) `will_reincarnate` 这一棒**已上总线,不再顺延**。
+  - **已发表**:见报告 §10(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh`)。
+  - **Token 用量**:见报告 §11。
+  - 完整报告:`iterations/reports/replay-check/20260901T215000Z.md`
