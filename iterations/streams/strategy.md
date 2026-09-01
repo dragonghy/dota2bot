@@ -27,6 +27,91 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0IMM. **【2026-09-01T13:55Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监 ⇒ 取**上两轮都逐字写下来的那条遗留**:
+   「`aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处 `Action_AttackUnit(x, false)` 只普查、未审计」;
+   GH #385 已证前者**零引用者** ⇒ **`primal_split.lua` 就是这条遗留的全部活体**,本轮是那次审计);
+   **落地 gated `immguard`**,入集提议 `test_set.md` **§DE**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-32`**(提议方自建,**`bundle` 已填**);`state.json` 新键 `immguard_20260901`;
+   issue **GH #391**;报告 `iterations/reports/strategy/20260901T135500Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个两条臂返回同一个表达式的分支不是过滤器,是一句注释 ——
+   只是它还要付一次函数调用的钱。**
+   **判别特征可数、不需要帧、不需要跑、也不需要理解那个谓词**:
+   `if C then return E end` 紧跟一个 `return E`。**改动前全仓 3 处**(`[source S1]` 把这条 grep 机械化了;
+   改动后 2 处,两个幸存者点名,第三个由**把门抠掉重建**证明曾在册)。
+   **⚠️ 而它与同族七条失效方向相反,这才是它值得单独登记的地方。**
+   #348 顺序 / #368 词法作用域 / #370 未汇报副作用 / #373 闩记错后置条件 / #378 节流器作用域 /
+   #381 手工字段复制引擎事实 / #385 谓词被喂 self —— **七条全朝「关」失效**:
+   一条该发生的分支不发生,而且**七条都不可观测**(「没触发」与「被正确否决」在任何观察下一模一样)。
+   **本条朝「开」失效**:闸放行一切,错误答案是一个**积极动作** —— 一条打在打不动的单位上的攻击命令。
+   **它不是不可观测,只是没人看**:唯一到达这个文件的英雄是**开着大招的酒仙**。
+   **缺陷**:`bots/FunLib/minion_lib/primal_split.lua:109`,`AttackUnits` 出口。
+   `if target ~= nil and not target:IsAttackImmune() and not target:IsInvulnerable() then return target end`
+   之后紧跟一个裸的 `return target` ⇒ **这个免疫过滤器一次都没有筛掉过任何东西**。
+   **⭐⭐ 它是缺陷不是取舍 —— 仓库自己回答了两遍,而第二遍才是关键**:
+   (1) 英雄臂调的 `J.GetWeakestUnit` 就是 `J.GetAttackableWeakestUnitFromList`(`jmz_func.lua:3748`),
+   其选取条件里**逐字**写着这两个否定(`:3764-3765`)⇒ **`return nil` 不是本改动的发明,
+   是仓库自己的 picker 在同一次调用上的做法**;
+   (2) **……而三行之后 `:105` 把 picker 的 `nil` 读成「没有意见」,`target = enemies[1]` 把它刚拒绝的
+   同一个句柄放了回来** ⇒ **手写这道闸不是冗余的第二意见,它是不可攻击单位与攻击命令之间唯一的东西,
+   在每一条臂上,包括英雄臂**(`[frame F6]` 在真实帧上跑出来:picker 答 `nil`,出厂树照样攻击那个句柄)。
+   **⭐⭐⭐ 代价在调用点上收两次**:`X.MinionThink:65-69` 拿到句柄就 `Action_AttackUnit(target, false)`
+   **然后 `return`** ⇒ (a) 一条引擎判定为零伤害的命令;(b) **`ConsiderMove` 整个不跑** ——
+   而对**火熊猫**来说 `ConsiderMove` 就是它行为的全部(自己的技能分支是 `:52-53` 的一个**空 `if`**)。
+   **改动**:**不删那道闸**,把 gated 提前返回**插在两条臂之间**;
+   门关 ⇒ 控制直接落到出厂 `return target`(**出厂路径不变**),门开 ⇒ 否定臂返回 `nil`。
+   **⚠️ 注意方向:armed 不是严格超集**,它**减少**一条攻击命令;
+   可以这么改的理由是**引擎规则本身** —— 对 attack-immune / invulnerable 单位的攻击**恒定零伤害**,
+   **被拿走的那条命令在信息上是空的**,换回来的是一条真的移动命令。
+   **产出** `tests/test_immguard_dead_filter.lua`(`[ratchet]` **14/0**),真实帧
+   `f_260819_142047_zuus_ult_denied`(主体 **zuus,焦点英雄**,t=278.5)。
+   **选它的理由是几何,而几何是 dump ground truth**:中路 (63, 89)、**存活敌方塔 727u**、
+   **1600 内 0 个敌方英雄**(最近 7479u)⇒ 把 `AttackUnits` 一路推进**塔臂**,那条没有任何过滤的
+   `enemies[1]` 路径。**变异 14 条:14 条全部 CAUGHT**(诚实注记:**M11 是加载期语法错,
+   被解释器抓住不是被断言抓住,十四条里最弱**)。
+   门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**,变异台前后各跑一次;
+   `immguard` 14/0 · `smoke_load` 3/0 · `gate_claim` 10/0 · `illureal` 12/0 · `illumove` 9/0 ·
+   `replay_fixture` 9/0;**全量套件本轮没跑完(GH #124),不声称**。
+   **⚠️ 方法自伤被提前挡住(而不是事后发现)**:`[frame FC]` 先立成**承重的阳性对照**
+   (帧按 dump 原样、什么都不声明,**两条臂都必须攻击那座塔**),理由是 §DD 的教训
+   ——「**一道关着的闸,在有东西证明它能开之前,什么都没证明**」。随后 `[frame F1]` 量出
+   `IsInvulnerable`/`IsAttackImmune` 在 fixture 上**全帧全句柄读 false** ⇒
+   **没有 FC,F2/F3 完全可能因为闸根本没被走到而「通过」**。
+   另有两处断言写窄了(已修):`[source S1]` 第一版扫描器**只认单行 `if ... then`**,
+   于是**三处里只看得见一处** —— **一个把自己看到的当成全部的普查**;
+   `[source S3]` 第一版把 `return target` 数成 2,实际 3(`:86` 的 leash 早退也是一条)。
+   **明说没做**:`J.GetBestRetreatTree`(`jmz_func.lua:12109`)—— **同一次普查找到的第二个活实例**,
+   `maxDist > bot:GetAttackRange()` 被同样丢掉,唯一调用方 `hero_shredder.lua:435`,
+   **登记不修,一次一个杠杆**(见 `0TREE`);`hero_earth_spirit.lua:680` **故意不动**
+   (整函数是桩 ⇒ **没有被丢掉的答案,也就没有可恢复的东西**);
+   **armed 不重选目标**(那是严格更大的杠杆,见 `0REPICK`);
+   **⚠️ 频率未知且比平时更重 —— 酒仙不是焦点英雄 ⇒ 五个焦点英雄身上一个读数都买不到**,
+   而且**这个域在 fixture 上根本买不到**(`[frame F1]` 实测),只能在真实录像上验。
+   **下一格**:**总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 主判据 ——
+   **尤其「本条朝开失效」这条与前七条的分界** —— 进不进 §CR;丙 `strategy-31` 仍待裁);
+   **录像组**(只缺一种读数:**「酒仙开着 Primal Split ∧ 某只熊猫的攻击目标是不可攻击单位」的窗口
+   有多少、多长**;`acceptance` 已按 §CJ 预登记 **`METHOD-FAILED`** ⇒ 没有这种窗口、甚至根本没有
+   酒仙出场,判 **`DOMAIN-EMPTY` 退回总监**)。
+   **批测台:`strategy-32`,搭车、零 AWS 增量、零 EC2。**
+
+0TREE. **【2026-09-01T13:55Z 新增,登记不修 —— `0IMM` 那次普查的第二个活实例】**
+   `bots/FunLib/jmz_func.lua:12109`,`J.GetBestRetreatTree`:
+   `if bestRetreatTree ~= nil and maxDist > bot:GetAttackRange() then return bestRetreatTree end`
+   紧跟一个裸的 `return bestRetreatTree` ⇒ **`maxDist > bot:GetAttackRange()` 这个条件被丢掉**,
+   与 `0IMM` **同一形状、同一失效方向(朝开)**。唯一调用方 `bots/BotLib/hero_shredder.lua:435`
+   (伐木机的木锯链撤退)。**它与 `0IMM` 的差别在于「作者想拦什么」不像后者那样有仓库先例佐证**
+   —— 恢复这个条件等于声称「近到攻击距离以内的树不值得拿链子去撤」,
+   **这条得先找到理由(条件 (c)),不能只靠形状**。
+   由 `tests/test_immguard_dead_filter.lua` `[source S1]` **点名并计数**,丢不掉。
+
+0REPICK. **【2026-09-01T13:55Z 新增 —— `0IMM` 明说不做的那一半】**
+   `primal_split.lua` 的 `AttackUnits` armed 时对不可攻击候选返回 `nil`,
+   **不会接着去找下一个可攻击单位**。重选是**严格更大的杠杆**:它改变**打谁**,
+   而 `0IMM` 只改变**要不要下一条空命令**。真要做,得连 `:105` 那条
+   `target = enemies[1]`(**把 picker 刚拒绝的句柄放回来**的那一行)一起重新设计,
+   而那一行同时是四条臂的兜底 ⇒ **不是一个小杠杆,需要自己的帧证据与自己的域读数**。
+
 0TORM. **【2026-09-01T10:30Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监 ⇒ 取 backlog 最上面一条 `0FIELD`
    **明说没做的那两项**之一:「`aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处连续命令仍只普查未审计」。
@@ -3979,6 +4064,54 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T13:55Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  ⇒ 取**上两轮都逐字写下来的那条遗留**(`aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处
+  `Action_AttackUnit(x, false)` **只普查未审计**);GH #385 已证前者**零引用者**
+  ⇒ **`primal_split.lua` 就是这条遗留的全部活体**,本轮是那次审计;
+  **报告 `iterations/reports/strategy/20260901T135500Z.md`**;issue **GH #391**;
+  backlog 条目 **`0IMM`**(并新开 `0TREE` / `0REPICK` 两条登记项);
+  **落地 gated `immguard`**,入集提议 `test_set.md` **§DE**(搭车、零 AWS 增量、不申请专波);
+  `queue.json` 新增 **`strategy-32`**(**`bundle` 已填**);`state.json` 新键 `immguard_20260901`;
+  零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **一个两条臂返回同一个表达式的 `if` 不是过滤器,是一句注释 —— 只是它还要付一次函数调用的钱。**
+  `bots/FunLib/minion_lib/primal_split.lua:109`:
+  `if target ~= nil and not target:IsAttackImmune() and not target:IsInvulnerable() then return target end`
+  之后紧跟一个裸的 `return target` ⇒ **这个免疫过滤器一次都没有筛掉过任何东西**。
+  **⚠️ 它与同族七条(#348/#368/#370/#373/#378/#381/#385)失效方向相反**:
+  那七条全朝**关**失效且**都不可观测**(「没触发」与「被正确否决」在任何观察下一模一样);
+  **本条朝开失效** —— 闸放行一切,错误答案是一个**积极动作**;
+  **它不是不可观测,只是没人看**(唯一到达这个文件的英雄是开着大招的酒仙)。
+  **⭐⭐ 仓库自己回答了两遍**:(1) `J.GetWeakestUnit` → `J.GetAttackableWeakestUnitFromList`
+  (`jmz_func.lua:3764-3765`)**逐字**写着这两个否定 ⇒ **`return nil` 是仓库自己的做法**;
+  (2) **……而 `:105` 把 picker 的 `nil` 读成「没有意见」,`target = enemies[1]` 把它刚拒绝的
+  同一个句柄放了回来** ⇒ 手写这道闸**是不可攻击单位与攻击命令之间唯一的东西,在每一条臂上**。
+  **代价收两次**:`X.MinionThink:65-69` 下命令**然后 `return`** ⇒ 一条零伤害命令 +
+  **`ConsiderMove` 整个不跑**(而对**火熊猫**它就是行为的全部,自己的技能分支是**空 `if`**)。
+  **改动不删闸,把 gated 提前返回插在两条臂之间**(门关 ⇒ 落到出厂 `return target`,出厂路径不变)。
+  **⚠️ armed 不是严格超集**,它**减少**一条命令 —— 理由是引擎规则:打不可攻击单位**恒定零伤害**,
+  **拿走的那条命令在信息上是空的**。
+  **产出** `tests/test_immguard_dead_filter.lua`(`[ratchet]` **14/0**),真实帧
+  `f_260819_142047_zuus_ult_denied`(**zuus,焦点英雄**,t=278.5;**选它是为了几何**:
+  中路、**存活敌塔 727u**、**1600 内 0 敌英雄** ⇒ 走进那条没有过滤的 `enemies[1]` 塔臂)。
+  **变异 14/14 CAUGHT**(**M11 是加载期语法错,被解释器抓不是被断言抓,最弱的一条**)。
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+  `immguard` 14/0 · `smoke_load` 3/0 · `gate_claim` 10/0 · `illureal` 12/0 · `illumove` 9/0 ·
+  `replay_fixture` 9/0;**全量套件没跑完(GH #124),不声称**。
+  **⚠️ 方法自伤被提前挡住**:`[frame FC]` 先立成**承重阳性对照**(帧按 dump 原样,两臂都必须攻击那座塔),
+  随后 `[frame F1]` 量出两个免疫谓词在 fixture 上**全帧全句柄读 false** ⇒
+  **没有 FC,F2/F3 完全可能因为闸没被走到而「通过」**(§DD 的教训:**一道关着的闸,
+  在有东西证明它能开之前,什么都没证明**)。另两处断言写窄了已修:
+  `[source S1]` 第一版**只认单行 `if ... then`**,三处里只看得见一处(**一个把自己看到的当成全部的普查**);
+  `[source S3]` 把 `return target` 数成 2,实际 3。
+  **⚠️ 开工自检**:第一条命令仍写成 `| tail`,**被拒绝横幅当场拆穿**(同一站点连续第十轮);
+  改重定向后**第一次被我自己的 `timeout 400` 杀掉(`EXIT=124` —— 不是通过,是没跑成)**,
+  后台 900s 重跑才跑完。读数 **`TRUNK RED`(python 腿)+ 两条 `UNCERTIFIABLE` + 多条 trunk-health `UNC`**,
+  **没有一条是本轮的**:前者是 GH #383/#364/#384(python 腿跑在 `lua5.1` 自购之前,新容器第一次必红),
+  后者全是 GH #358 的 120s 预算超时(本轮 `69 file(s) in 120.1s`,与 #358 记的 69 一致)。
+  **明说没做**:`J.GetBestRetreatTree`(**同一次普查的第二个活实例,登记不修** ⇒ `0TREE`);
+  `hero_earth_spirit.lua:680` **故意不动**(整函数是桩,**没有被丢掉的答案就没有可恢复的东西**);
+  **armed 不重选目标**(⇒ `0REPICK`);
+  **⚠️ 频率未知且比平时更重 —— 酒仙不是焦点英雄,且这个域在 fixture 上根本买不到**,只能在真实录像上验。
 - 2026-09-01T10:30Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出;
   ⇒ 取 backlog `0FIELD` **明说没做**的两项之一(`aba_hero_sub_units.lua` / `primal_split.lua` 的连续命令**只普查未审计**);
   **报告 `iterations/reports/strategy/20260901T103016Z.md`**;issue **GH #385**;

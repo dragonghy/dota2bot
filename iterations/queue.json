@@ -1257,6 +1257,17 @@
    "question": "`tormself`(GH #385,提议 test_set.md §DD):`bots/BotLib/hero_ringmaster.lua:915` 的闸外层按 bot 的 mode 二路分(`J.IsDoingRoshan(bot) or J.IsDoingTormentor(bot)`),内层本该按 target 做同样的二路判别 —— Roshan 臂写对了(`J.IsRoshan(botTarget)`),**Tormentor 臂问的却是 `bot`**。`J.IsTormentor`(jmz_func.lua:10638)是纯粹的单位身份谓词 `string.find(nTarget:GetUnitName(), 'miniboss') ~= nil`,而我们自己的英雄叫 `npc_dota_hero_ringmaster` ⇒ **那条臂构造上恒假**,于是外层析取的**整个 Tormentor 那一半够不到函数体**(打 Tormentor 时 `J.IsRoshan(botTarget)` 也是假)。全语料实测:真实的 `J.IsTormentor` 跑遍 **107 帧 / 993 个英雄句柄 / 41 个不同英雄名,为真 0 次**。全仓 **249 个存活调用点,227 个(90.8%)喂 `botTarget`,恰好 1 个喂 `bot`** —— 就是这一个;而**本文件自己另外四处(436/622/846/965)都写对了**。armed 时该臂改问 `J.IsTormentor(botTarget)`;**因为关着的那条臂恒假,开的那条是严格超集,arming 不可能让它反而不做今天会做的事**。",
    "acceptance": "**条件 (a) 的执行判据**:找「Ringmaster 处于 `BOT_MODE_SIDE_SHOP`(即 `J.IsDoingTormentor` 为真)且正在攻击 Tormentor」的窗口,读出厂腿该窗口内 `ringmaster_funhouse_mirror` 的施放数(**预登记预期:0**)与 armed 腿的施放数(**预期:非 0**)。⚠️ **METHOD-FAILED 分支(按 §CJ 必须先枚举,而且本条比平时更可能命中)**:**Ringmaster 不是焦点英雄**,镜像抽签下语料里很可能**根本没有 Ringmaster 出场**,更不用说这种窗口 —— 若如此,**判 `DOMAIN-EMPTY`,不判「无效应」**,并把这一条**退回总监重裁**;执行方**不得**自行套用「无效应 ⇒ 不 promote」。**条件 (b)**:粗粒度,胜负无明显负面即可(本改动只在一个非焦点英雄的一条 Souvenir 分支上,预期对总量不可见)。**条件 (c)** 已成立:Tormentor 是 7.35+ 的标准中期目标,打它时使用一个已经写好的技能是标准打法;本改动**不新增任何行为**,只是让一条**已发货、已写好**的臂对它被写来应对的情形可达。",
    "status": "pending"
+  },
+  {
+   "id": "strategy-32",
+   "stream": "strategy",
+   "bundle": "immguard",
+   "seeds": [],
+   "priority": 3,
+   "axis": "IMMGUARD —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `immguard`**(§CY.3 的教训:开工自检按 `bundle` 找提议行,字段为空就被报成 `ORPHAN_PROPOSAL`)。",
+   "question": "`immguard`(GH #391,提议 test_set.md §DE):`bots/FunLib/minion_lib/primal_split.lua:109` 的免疫过滤器**两条臂返回同一个表达式** —— `if target ~= nil and not target:IsAttackImmune() and not target:IsInvulnerable() then return target end` 之后紧跟一个裸的 `return target`。⇒ 作者把问题问对了,**答案被丢掉**,这个过滤器**一次都没有筛掉过任何东西**。代价在调用点上收两次:`X.MinionThink:65-69` 拿到句柄就 `Action_AttackUnit(target, false)` 然后 `return`,于是(a)下达一条引擎判定为零伤害的命令,(b)**`ConsiderMove` 整个不跑** —— 而对**火熊猫**来说 `ConsiderMove` 就是它行为的全部(它自己的技能分支是一个空 `if`)。⚠️ **本条与前七条同族的方向相反**:#348/#368/#370/#373/#378/#381/#385 全都朝**关**失效(一条该发生的分支不发生);**本条朝开失效** —— 闸放行一切,错误答案是一个**积极动作**。**它不是不可观测,只是没人看** —— 唯一到达这个文件的英雄是 Primal Split 中的酒仙。armed 时该臂返回 `nil`,调用点因此落到 `ConsiderMove`。",
+   "acceptance": "**条件 (a) 的执行判据**:找「酒仙处于 Primal Split 且某只熊猫的攻击目标是一个不可攻击单位(无敌建筑 / 攻击免疫英雄)」的窗口,读出厂腿该窗口内熊猫的**攻击命令数**(**预登记预期:非 0**)与 armed 腿的(**预期:0,改为移动命令**)。⚠️ **METHOD-FAILED 分支(按 §CJ 必须先枚举,本条命中概率高)**:**酒仙不是焦点英雄**,镜像抽签下语料里很可能**根本没有酒仙出场**,更不用说开了大招还站在无敌建筑边上的窗口 —— 若如此,**判 `DOMAIN-EMPTY`,不判「无效应」**,并把这一条**退回总监重裁**;执行方**不得**自行套用「无效应 ⇒ 不 promote」。**⚠️ 另一条必须先读的边界:语料本身买不到这个域** —— `IsInvulnerable`/`IsAttackImmune` 在 mock 上没有 spec,fixture 全帧全句柄读 0(本轮 [frame F1] 实测),.dem 也不带这个标志位,所以**帧级验收只能在真实对局的录像上做,不能在 fixture 上做**。**条件 (b)**:粗粒度,胜负无明显负面即可(本改动只影响酒仙大招期间的小兵目标选择,预期对总量不可见)。**条件 (c)** 已成立,而且**是仓库自己给的**:`J.GetWeakestUnit` → `J.GetAttackableWeakestUnitFromList`(jmz_func.lua:3764-3765)对不可攻击单位的处理**就是返回 nil**,本改动只是让手写的那份和它旁边这个共享 picker 的答案一致。",
+   "status": "pending"
   }
  ],
  "done": [

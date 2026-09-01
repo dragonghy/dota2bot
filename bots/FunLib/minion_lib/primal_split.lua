@@ -109,7 +109,26 @@ function AttackUnits(hMinionUnit)
 	if target ~= nil and not target:IsAttackImmune() and not target:IsInvulnerable() then
 		return target
 	end
-	
+
+	-- Reaching this line means exactly one of two things: `target` is nil, or
+	-- the guard directly above just answered "this unit cannot be attacked" --
+	-- it is attack-immune, or it is invulnerable. Shipped hands it back anyway,
+	-- because BOTH arms of that `if` return the same expression: the author
+	-- wrote the right question and then discarded the answer, so the filter has
+	-- never once removed a target.
+	--
+	-- It is not a harmless no-op at the call site. X.MinionThink issues
+	-- `Action_AttackUnit(target, false)` and RETURNS on whatever comes back, so
+	-- an unattackable handle costs the tick twice: the order deals nothing by
+	-- engine rule, and ConsiderMove -- which for the fire panda is the whole
+	-- rest of its behaviour, its own branch above being empty -- never runs.
+	--
+	-- soak candidate 'immguard' (turbo-only). Gate shut, control falls straight
+	-- through to the shipped `return target`, so the shipped path is unchanged.
+	if J.IsModeTurbo() and J.IsSoakCandidate('immguard') then
+		return nil
+	end
+
 	return target
 end
 
