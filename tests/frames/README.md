@@ -31,14 +31,9 @@ it.
 
 | frame | why it is staged |
 |---|---|
-| `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns eight corpus readings red -- three of which are real re-decisions (Axe t15 in-domain, the Black King Bar zero behind `test_axe_cull_immune_veto`, and the Alchemist objective-clock band), not bookkeeping. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua`, `tests/test_axe_bkb_supply_staged_frame.lua` and `tests/test_alchemist_rage_clock_staged_frame.lua`. |
+| `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns **25 test files** red -- see the census below. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua`, `tests/test_axe_bkb_supply_staged_frame.lua`, `tests/test_alchemist_rage_clock_staged_frame.lua`, `tests/test_skill_point_stall_frame.lua` and `tests/test_cm_q_creep_aoe_reach.lua`. |
 
-## Reopen list: GH #357's three real re-decisions
-
-Paying one means taking its reading on the staged frame and recording whether
-the verdict it belonged to moves. All three are now paid (2026-08-31), and all
-three came back VERDICT UNCHANGED. Moving the frame into `tests/fixtures/` is
-therefore unblocked, and is its own work unit.
+## Reopen list: GH #357's three real re-decisions -- all PAID
 
 | row | re-decision | state |
 |---|---|---|
@@ -46,6 +41,64 @@ therefore unblocked, and is its own work unit.
 | 3 | the Black King Bar zero behind `test_axe_cull_immune_veto` (corpus 0 -> staged frame 2) | **PAID** 2026-08-31T16:5xZ -- `tests/test_axe_bkb_supply_staged_frame.lua`. VERDICT UNCHANGED, and the reading says that zero was a PROXY, never the load-bearing one: the immunity zero is, and it did not move. |
 | 2 | the Alchemist objective-clock band (`test_alchemist_rage_objective_clock`, `[900,1800)`) | **PAID** 2026-08-31T19:51Z -- `tests/test_alchemist_rage_clock_staged_frame.lua`. VERDICT UNCHANGED, and one level worse than row 3: the clock is the LAST of five conjuncts, and the other four (a carrier, `BOT_MODE_ROSHAN`/`SIDE_SHOP`, a boss-named attack target, the attack animation) have **no channel in the dump at all**, so no frame from this generator can pin that decision. A wave still can. |
 
-The five remaining rows in GH #357's table are bookkeeping (counts and
-denominators that move with the corpus), not re-decisions; they are paid by
-re-taking the count at the moment the frame is admitted, not before.
+## The admission census (hero 2026-09-01) -- and why admission is still BLOCKED
+
+Paying those three rows did **not** unblock admission, and the sentence that
+said it did (this file, 2026-08-31: "moving the frame into `tests/fixtures/` is
+therefore unblocked") was reasoning from a number GH #357 itself labelled a
+LOWER BOUND: that measurement was cut off mid-run ("跑到 a–f 段时我主动掐断了
+它"). Nine reds was the part of the suite it got through, not the price.
+
+Measured this round by actually moving the file, running, and moving it back:
+
+* **scope** -- the 93 test files that enumerate the corpus directory
+  (`ls tests/fixtures`, `tests/fixtures/*.lua`, or the sightings helper), which
+  is the only way a new fixture can change a reading, plus the 6 files that load
+  this frame by name;
+* **result** -- **25 of the 93 go red**, plus 3 more of the by-name loaders
+  outside that scope. Nine was low by a factor of about three.
+
+Method note, because it cost this round an hour: running a test file directly
+under `lua5.1` returns the test table and calls **nothing** -- exit 0, zero output.
+The first pass of this census was 63 such invocations and read as 63 passes. The
+runner says so in its own header (GH #200); `lua5.1 tests/run_tests.lua <name>`
+is the only entry point that runs a body.
+
+### Still unpaid: six real re-decisions, in five files, and only three are hero's
+
+| reading | what moves | whose |
+|---|---|---|
+| `test_level_gate_census` `[corpus] ... level >= 20 is 0` | 0 -> **6** hero-slots at level 20. Its own text: "the four INERT verdicts above were argued from *that hero does not exist*; re-read them". | level-gate family (GH #84 lineage) |
+| `test_level_gate_census` `[corpus] the archive never reaches turbo late game` | `frames_past_18min` 0 -> **1**, so `J.IsLateGame()` stops being vacuous and the TEETH verdicts on `mode_farm_generic:393` and `:507` must be re-read. | strategy |
+| `test_turbo_ternary_dominance` `[corpus] no real frame ... can tell armed from factory` | t=1190.4 lands inside `[1080, 1500)`. That file argues from **arithmetic alone** *because* no frame could distinguish the two; one can now, so the lever owes a frame pin. | strategy / harness |
+| `test_cm_t10_payoff` `[hero] the death channel has no in-domain samples` | 0 -> **1** CM-subject frame at level >= 10 carrying `observed.burst` + `died_after`. "That is the channel that can price +200 HP, and it was empty when this decision was taken. Read it and re-decide." | **hero** |
+| `test_lion_t15_payoff` `[hero] lion t15: nothing in this corpus is in domain` | 0 -> **1** Lion frame at level 15. Every reading in that file was taken below the tier as a proxy. | **hero** |
+| `test_wk_level_supply_horizon` (4 assertions) + `test_wk_roshan_mana_floor` / `_ceiling` | the WK supply zero, the 900s ceiling, and the 36-frame population all move; `_ceiling` additionally demands an intelligence entry for `blink_dagger` before its crossing levels can be recomputed. Bears directly on queue **`hero-10`**. | **hero** |
+
+One more that is neither: `test_itemdesire_world_assertion` reports that the
+crashes now come from **3 distinct statements, not two** -- the frame reaches a
+third unstubbed engine API. That is a harness reading, and it has to be named
+before anybody touches those numbers.
+
+### Bookkeeping (retake the count at the moment of admission, not before)
+
+`test_activemode_world_assertion` (93 -> 97 of 1000) · `test_campfarm_ancient_target`
+(0 -> 1 fixtures with a `creeps` key) · `test_cm_ability_index_binding` and
+`test_focus_innate_index_anchor` (`zuus_lightning_hands` 1 -> 2 frames -- one
+reading, **two** files, so GH #357's row 9 was itself one file short) ·
+`test_bbfight_turbo_respawn_ceiling` (ceiling 19 -> 22; the `< 25` proposition
+survives) · `test_propertarget_corpus_domain` and `test_stayfield2_marginal_domain`
+(live-hero denominator 993 -> 1000) · `test_salvepool_missing_floor` and
+`test_salveally_missing_floor` (largest archived pool -> 2812) ·
+`test_wk_bone_guard_talent_bypass` (36 -> 37 WK frames, blind spot 22 -> 23) ·
+`test_relicguard_siege_gate` (subjects at level >= 15: 1 -> 2).
+
+### The finding that outlives the census
+
+A frame staged here is **invisible to every corpus scan by design**, and that
+cuts both ways. `test_wk_level_supply_horizon` measured "the whole tree" as the
+glob plus **one named path** -- exhaustive on 2026-08-28, silently short of a
+directory from 2026-08-31, and green the whole time while the tree held a
+level-21 Wraith King it could not see. Fixed this round by enumerating this
+directory (that file's sections 2 and 6). **Any scan that claims to read "the
+tree" rather than "the corpus" has to enumerate `tests/frames/` too.**

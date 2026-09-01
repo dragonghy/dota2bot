@@ -39,9 +39,21 @@
 -- The corpus DOES reach level 13+; 48 slots in 22 games do.  It reaches 19.  So
 -- the WK zero is not the turbo level curve talking -- it is a fact about which
 -- instants somebody chose to freeze, and Wraith King's were all cut early.  The
--- whole repository holds EXACTLY ONE Wraith King frame above level 12, and it is
--- the parked one, one directory outside the glob every corpus scan enumerates
--- (GH #236, and GH #281 for the 53 files sharing that `ls tests/fixtures`).
+-- whole repository holds TWO Wraith King slots above level 12, and neither is in
+-- the glob every corpus scan enumerates (GH #236, and GH #281 for the 53 files
+-- sharing that `ls tests/fixtures`):
+--
+--   * the parked frame, its Wraith King at 26, t = 1382.2, in iterations/pending/;
+--   * a level-21 Wraith King at t = 1190.4, in tests/frames/ since 2026-08-31.
+--
+-- The second one is a CORRECTION, not growth (hero 2026-09-01).  It sat in the
+-- tree for three days while this file's "whole tree" ledger read 1 and stayed
+-- GREEN, because that ledger was the glob plus ONE named path -- an exhaustive
+-- set on the day it was written, silently non-exhaustive the day GH #357 created
+-- a second out-of-glob directory.  The scan now enumerates that directory
+-- (section 6 reads the slot).  The failure direction is what makes it worth
+-- naming: the number feeds the premise of queue `hero-10`, which somebody else
+-- executes, and it UNDER-counted evidence the repository already owned.
 --
 -- That is why the queue ask is "scan the archived timelines for WK at >= 13/18/19
 -- past 13:10", not "re-read GH #84's corpus-wide level curve".  The corpus-wide
@@ -120,9 +132,35 @@ local function fixture_files()
     return files
 end
 
--- One pass, two ledgers: what the glob can see (`fx`) and what the tree holds
--- (`fx` + `parked`).  Keeping them apart IS the finding -- collapsing them is
--- exactly how a horizon gets written down as a frequency.
+-- The OTHER out-of-glob directory, and the reason this file needed a second one
+-- (hero 2026-09-01).  When this file was written on 2026-08-28 there was exactly
+-- one place a frame could sit outside `ls tests/fixtures` -- the parked frame
+-- above -- so "the whole tree" and "the glob plus PARKED" were the same set, and
+-- section 2 said so as a hard equality.  `tests/frames/` was created three days
+-- later (GH #357) for frames whose ADMISSION price is not paid yet, and the
+-- first frame staged in it carries a level-21 Wraith King.  From that moment
+-- this file's "whole tree" ledger was short by one WK slot above 12 and STILL
+-- GREEN, because a set written as a literal cannot notice a directory that did
+-- not exist when it was written.  The fix is to enumerate the staging directory
+-- rather than name its members: a third location must cost an edit here, not a
+-- silent undercount, because the number it feeds is the premise of a queue
+-- request other people execute.
+local STAGED_DIR = 'tests/frames/'
+
+local function staged_files()
+    local files = {}
+    local p = assert(io.popen('ls ' .. STAGED_DIR .. ' 2>/dev/null'))
+    for line in p:lines() do
+        if line:match('^f_.+%.lua$') then files[#files + 1] = STAGED_DIR .. line end
+    end
+    p:close()
+    table.sort(files)
+    return files
+end
+
+-- One pass, three ledgers: what the glob can see (`fx`), and what the tree holds
+-- outside it (`parked` + `staged`).  Keeping them apart IS the finding --
+-- collapsing them is exactly how a horizon gets written down as a frequency.
 --
 -- `parked_ge20` counts the frame's slots at level 20 or better.  It is the
 -- direct counter to the ceiling retired on 2026-08-27 (GH #235), so it is
@@ -136,6 +174,8 @@ local function scan()
         wk_tree = 0, wk_tree_ge13 = 0,
         parked_seen = false, parked_t = 0, parked_slots = 0, parked_ge20 = 0,
         parked_wk_level = 0,
+        staged_frames = 0, staged_wk = 0, staged_wk_ge13 = 0, staged_wk_max_level = 0,
+        staged_wk_rows = {},
     }
     for _, path in ipairs(fixture_files()) do
         local ok, fx = pcall(dofile, path)
@@ -180,6 +220,32 @@ local function scan()
             end
         end
     end
+    -- The staging directory, on the same ledger as the parked frame: outside the
+    -- glob, inside the tree.  The per-slot fields are kept whole (not just the
+    -- level) because what the tree owns and what a reading can USE are different
+    -- questions here -- see section 6.
+    for _, path in ipairs(staged_files()) do
+        local ok, fx = pcall(dofile, path)
+        if ok and type(fx) == 'table' and type(fx.units) == 'table' then
+            c.staged_frames = c.staged_frames + 1
+            for _, u in ipairs(fx.units) do
+                if u.name == WK and type(u.level) == 'number' then
+                    c.staged_wk = c.staged_wk + 1
+                    c.wk_tree = c.wk_tree + 1
+                    if u.level > c.staged_wk_max_level then c.staged_wk_max_level = u.level end
+                    if u.level >= 13 then
+                        c.staged_wk_ge13 = c.staged_wk_ge13 + 1
+                        c.wk_tree_ge13 = c.wk_tree_ge13 + 1
+                    end
+                    c.staged_wk_rows[#c.staged_wk_rows + 1] = {
+                        path = path, t = fx.time or 0, level = u.level,
+                        alive = u.alive, hp = u.hp, max_hp = u.max_hp,
+                        mp = u.mp, max_mp = u.max_mp,
+                    }
+                end
+            end
+        end
+    end
     return c
 end
 
@@ -206,21 +272,29 @@ function()
 end
 
 --------------------------------------------------------------------------------
--- 2. Exactly one WK frame above level 12 exists in this tree, and the glob
---    cannot see it.  Section 1 without this one is a horizon read as a fact.
+-- 2. Two WK slots above level 12 exist in this tree, and the glob can see
+--    neither.  Section 1 without this one is a horizon read as a fact.
 --------------------------------------------------------------------------------
 
-tests['2. the tree holds exactly ONE WK slot above 12 and it is the parked frame'] =
+tests['2. the tree holds TWO WK slots above 12 and the glob can see neither'] =
 function()
     local c = scan()
     assert(c.parked_seen, 'the parked frame is gone from ' .. PARKED .. ' and did '
         .. 'not arrive in tests/fixtures/ under its own basename.  If GH #236 '
         .. 'landed it under a NEW name, re-point PARKED; until then section 1\'s '
         .. 'zero has no witness and must not be quoted as a fact about turbo')
-    assert(c.wk_tree_ge13 == 1, c.wk_tree_ge13 .. ' WK hero-slots above level 12 '
-        .. 'in the whole tree, recorded 1.  More is good news -- the supply this '
-        .. 'file calls missing arrived -- and queue hero-10 should be re-read '
-        .. 'before it is executed')
+    -- 1 -> 2 on 2026-09-01 (hero), and the correction is the finding, not a
+    -- re-baseline: the second slot did not arrive this round.  It has been in
+    -- the tree since 2026-08-31, in tests/frames/, and this equality read 1 and
+    -- stayed GREEN for those days because the scan enumerated one out-of-glob
+    -- location by name.  What "recorded 1" priced was the set this file knew
+    -- about, not the tree.  Section 6 reads the new slot; the number stays a
+    -- hard equality so a THIRD location costs an edit here too.
+    assert(c.wk_tree_ge13 == 2, c.wk_tree_ge13 .. ' WK hero-slots above level 12 '
+        .. 'in the whole tree, recorded 2 (the parked frame at 26, and the frame '
+        .. 'staged in ' .. STAGED_DIR .. ' at 21).  More is good news -- the '
+        .. 'supply this file calls missing arrived -- and queue hero-10 should be '
+        .. 're-read before it is executed')
     assert(c.parked_wk_level == 26, 'the parked frame\'s Wraith King is level '
         .. c.parked_wk_level .. ', recorded 26')
     -- Both levers' domains, on the one frame that can speak to them at all:
@@ -294,6 +368,65 @@ tests['5. both consumers are still in the shipped source and still gated'] = fun
     assert(src:find('X.GetRoshanManaFloor', 1, true),
         'X.GetRoshanManaFloor is gone; wkrosh\'s mana floor is what the level '
         .. 'supply question is downstream of')
+end
+
+--------------------------------------------------------------------------------
+-- 6. What the staged slot answers of queue hero-10, and what it must not be
+--    quoted for (hero 2026-09-01).
+--
+-- hero-10 asks for three numbers.  The slot section 2 just stopped losing speaks
+-- to two of them, and in opposite directions:
+--
+--   (1) LEVEL SUPPLY -- "a zero on (1) IS decisive and retires the lever".  It
+--       is not zero.  The tree holds two Wraith King slots at >= 19 (parked 26,
+--       staged 21), both outside the glob every corpus scan enumerates.  That
+--       does not answer (1) -- two slots are not a distribution, and hero-10
+--       asks for a rate over archived timelines -- but it does remove the one
+--       reading that could have retired `wkrosh` without a scan.
+--   (2) MANA -- hero-10's own `result` records "the LARGEST MAX POOL among those
+--       frames is 459, i.e. below 600 with a full bar", which is what makes the
+--       shipped 600 floor look unreachable rather than merely strict.  The
+--       staged record reads max_mp 711.
+--
+-- And then the reason (2) is a flag and not a refutation: the same record has
+-- `alive = false`, `hp = 0` AND `max_hp = 0`.  A capacity field that reads 0 on
+-- a dead unit is the dump zeroing capacity, not a hero with no health -- so the
+-- OTHER capacity field on the same record cannot be quoted as a live pool
+-- reading either, in either direction.  Both are asserted below, together, so
+-- nobody can quote the 711 without the sentence that limits it.  This is the
+-- shape GH #357 row 3 already paid once: a zero that was a proxy for the
+-- load-bearing zero rather than the thing itself.
+--------------------------------------------------------------------------------
+
+tests['6. the staged slot is level 21 -- and its pool reading is flagged, not usable'] =
+function()
+    local c = scan()
+    assert(c.staged_frames >= 1, 'nothing enumerable in ' .. STAGED_DIR
+        .. ' -- section 2\'s "recorded 2" then has no witness and the whole tree '
+        .. 'ledger is back to being one directory short without saying so')
+    assert(c.staged_wk_ge13 == 1, c.staged_wk_ge13 .. ' staged WK slot(s) at level '
+        .. '>= 13, recorded 1; section 2\'s equality is computed from this')
+    assert(c.staged_wk_max_level == 21, 'the staged Wraith King is level '
+        .. tostring(c.staged_wk_max_level) .. ', recorded 21.  Every statement in '
+        .. 'this section names 21; re-take them')
+
+    local row
+    for _, r in ipairs(c.staged_wk_rows) do
+        if r.level >= 13 then row = r end
+    end
+    assert(row ~= nil, 'the >= 13 staged row vanished between the two scans')
+    assert(row.level >= 19, 'the staged Wraith King fell below 19, so it no longer '
+        .. 'speaks to hero-10 question (1) at the >= 18/19 band it asks about')
+    -- (2), and its limit, as one assertion pair.
+    assert((row.max_mp or 0) > 600, 'the staged max_mp is ' .. tostring(row.max_mp)
+        .. ', recorded 711 -- above the shipped 600 floor, which is the reading '
+        .. 'that puts hero-10\'s "largest max pool 459" in question')
+    assert(row.alive == false and (row.max_hp or -1) == 0,
+        'the staged Wraith King is now alive, or its max_hp is no longer 0.  '
+        .. 'Either way the caveat above changed: the 711 pool was flagged '
+        .. 'UNUSABLE precisely because the same record zeroes a capacity field. '
+        .. 'If this row is a live hero now, the pool IS quotable and hero-10 '
+        .. 'question (2) can be partly answered off a frame the repo owns')
 end
 
 return tests

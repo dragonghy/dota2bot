@@ -298,9 +298,16 @@ tests['[hero] axe t15 in-domain: the frame is staged, not admitted'] = function(
         fh:close()
         error('the staged frame has been ADMITTED to tests/fixtures/.  That is a '
             .. 'legitimate decision, but it is the one GH #357 says costs the '
-            .. 'whole reopen list -- and only row 6 (this file) has been paid. '
-            .. 'Pay the Black King Bar zero (test_axe_cull_immune_veto) and the '
-            .. 'Alchemist objective-clock band before leaving it there.')
+            .. 'whole reopen list.  Its three rows are paid (2026-08-31, all '
+            .. 'VERDICT UNCHANGED) -- and that is NOT the price.  Censused '
+            .. '2026-09-01: 25 of the 93 corpus-enumerating test files go red, '
+            .. 'and SIX real re-decisions are unpaid, only three of them hero\'s '
+            .. '(level_gate_census\'s level-20 zero and its four INERT verdicts; '
+            .. 'the same file\'s IsLateGame vacuity and the mode_farm_generic 393/507 '
+            .. 'TEETH verdicts; turbo_ternary_dominance owing a frame pin; '
+            .. 'cm_t10_payoff\'s first in-domain death sample; lion_t15_payoff\'s '
+            .. 'first in-domain Lion; the Wraith King supply premise under queue '
+            .. 'hero-10).  The list is in tests/frames/README.md.')
     end
 end
 

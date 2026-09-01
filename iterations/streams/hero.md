@@ -22,6 +22,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-66. ~~**认领上一轮交出的棒(GH #357「把帧搬进 `tests/fixtures/`」)—— 执行的第一步把它否掉了:
+   那个「解锁」是从 issue 自己标了是**下界**的数推出来的**~~
+   **2026-09-01T02:21Z done —— 帧**没有搬**,仍 staged。`bots/` 0 行、`game/` 0 行;
+   零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、不申请波次、不开新 issue;
+   `state.json` / `test_set.md` 无新增;`queue.json` **只改本组自己的 `hero-10` 的 `question`**
+   (追加日期块,不动裁定/路由/优先级/status)。改动:`tests/test_wk_level_supply_horizon.lua`
+   (枚举器 + §2 + 新 §6)、`tests/frames/README.md`、`tests/test_axe_t15_in_domain.lua`(§1 过期文案)。
+   报告 `iterations/reports/hero/20260901T022126Z.md`。**
+   - **⭐⭐ 主读数:admission 的价钱是 25 个文件不是 9 个。** 范围 = **93 个**枚举语料目录的测试文件
+     + 6 个按名字加载该帧的文件;`git mv` 进去、跑、再 mv 回来 ⇒ **25/93 见红**,另 3 个在范围外也红。
+     **低了约三倍** —— #357 自己写着「⚠️ 这是下界不是普查:跑到 a–f 段时我主动掐断了它」,
+     而 README 昨天的「therefore unblocked」正是从那个下界推的。已改。
+   - **⭐⭐ 未付的真判定六条,只有三条是本组的**:level-gate 的 level-20 零(四条 INERT 裁定)、
+     同文件 `frames_past_18min` 0→1(`J.IsLateGame()` 不再空洞 ⇒ `mode_farm_generic:393/:507`
+     的 TEETH 要重读)、`turbo_ternary_dominance` 欠一枚帧钉(它**只能靠算术**的理由消失了)——
+     **这三条不是本组的**;`cm_t10_payoff` 的死亡通道 0→1、`lion_t15_payoff` 的域内 Lion 0→1、
+     WK 那族(压在 queue `hero-10` 上)—— **这三条是**。另加一条两边都不算的:
+     `test_itemdesire_world_assertion` 说崩溃现在来自 **3 个语句不是 2 个**(第三个没 stub 的引擎 API)。
+     **#357 第 9 行自己也少了一个文件**:`zuus_lightning_hands` 1→2 是**两个**文件在读。
+   - **⭐⭐ 普查掉出来的真缺陷(本轮唯一代码修复)**:`test_wk_level_supply_horizon` 把「全仓」
+     实现成 **glob + 一条写死的路径**。08-28 写下时穷尽;**08-31 GH #357 建了第二个 glob 外目录,
+     当天起不再穷尽 —— 而断言绿了三天**。漏掉的是一位 **21 级 Wraith King**(t=1190.4)。
+     **失效方向朝危险那侧**:这个数是 queue `hero-10` 的前提,而它**低估了仓库已经拥有的证据**。
+     改成**枚举**那个目录(§2 读数 1→2,新 §6),第三个位置必须付一次编辑。
+   - **⭐ 对 `hero-10` 两条相反影响**(已写进 queue,status 不动):(1) 等级供给的零
+     **不再是零**(全仓 ≥19 的 WK 位有两个,都在 glob 外)⇒ 拿掉了「不扫描就退休 `wkrosh`」那条路;
+     (2) `result` 记的「最大蓝池 459」被 staged 那位的 **max_mp 711** 顶住 —— ⚠️ **但同一条记录
+     `alive=false`/`hp=0`/`max_hp=0`,死单位的容量字段被归零** ⇒ **存疑标记不是反证**,
+     §6 两条断言成对写,谁引用 711 都同时读到限制句(GH #357 第 3 行付过一次的形状)。
+   - **⚠️ 自己翻的车两次,都在方法论上**:(1) 普查第一版**是空的** —— `lua5.1` 直接跑一个测试文件
+     **返回那张表、一个函数体都不调用**(exit 0、零输出,`run_tests.lua` 文件头自己写着,
+     GH #200)。**「空谓词的 0 和空语料的 0 是同一个整数」一周内第七次同形**,这次是**空的运行器**;
+     (2) 开工自检第一次 REFUSED(我又把 stdout 管给 `tail`)= **什么都没检查不是通过**(第 7 次)。
+     重跑 exit 3 —— 两条 trunk-red **是我自己造的**(自检 Lua 腿正好跑在 mv 进 fixtures 的窗口里),
+     **它因此白送了第二来源的普查**(64 个 detector 里 11 红),与 93 文件那份**取并集**才是主表。
+   - 变异台 **8 个,全部一次见红且只红在该红的节**(M1 枚举器恒空、M2 模式不匹配、M3 不按 WK 过滤、
+     M4 池读数改读 `mp`(587)证明它在 600 上真的分辨、M5 `alive` 翻面、M6/M7 计数不累加、M8 等级锚 21→99);
+     **先存副本、从副本恢复**,还原后 `cmp` 逐字节相同。
+   - 门:静态 **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**;容器缺 luacheck,gate 自己装的);
+     动态**子集不是全套**(GH #124)14 组全部 exit 0;queue.json 动了 ⇒ 另跑
+     `python3 tests/test_pending_rulings.py` **84 checks / 0 failed / exit 0**。
+   - **下一棒**:(1) **admission 仍阻塞**,三条本组的各值一个工作单元,**三条不是本组的在 #357
+     追评里点名交出**,球给总监分派;(2) **queue `hero-10` 执行前先读新加的那块**;
+     (3) **`-43a` 的 Zeus 方向仍欠**(连续第四轮);(4) GH #374 仍在总监手上。
+
 -65. ~~**认领 GH #366:把「(a) bot 没花点 / (b) dump 陈旧」这个分叉判掉**~~
    **2026-08-31T23:01Z done —— 判掉了:是 (a),而且不是十条构筑行各自出错,
    是一条共享的队头阻塞。`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、
@@ -3324,6 +3369,28 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T02:21Z(报告 `iterations/reports/hero/20260901T022126Z.md`;轴 **认领上一轮的棒
+  「把 GH #357 的帧搬进 `tests/fixtures/`」—— 执行的第一步把它否掉了**)
+  **帧没有搬,仍 staged。`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、
+  零 AWS(连 S3 GET 都没有)、不申请波次、不开新 issue;`state.json` / `test_set.md` 无新增;
+  `queue.json` 只改本组自己的 `hero-10` 的 `question`(不动裁定/路由/优先级/status)。**
+  - **⭐⭐ admission 的价钱是 25 个文件不是 9 个。** 范围 = 93 个枚举语料目录的测试文件 + 6 个
+    按名字加载该帧的文件;搬进去跑再搬回来 ⇒ **25/93 红**(另 3 个在范围外)。**低了约三倍**;
+    #357 自己标了那是**下界不是普查**,而 README 的「therefore unblocked」是从下界推的。已改。
+  - **⭐⭐ 未付真判定六条,只有三条是本组的**:level-gate 的 level-20 零(四条 INERT)、
+    `frames_past_18min` 0→1(`J.IsLateGame()` 不再空洞 ⇒ `mode_farm_generic:393/:507` TEETH 要重读)、
+    `turbo_ternary_dominance` 欠帧钉 —— **不是本组的**;`cm_t10_payoff` 死亡通道、
+    `lion_t15_payoff` 域内 Lion、WK 那族(压着 queue `hero-10`)—— **是本组的**。
+  - **⭐⭐ 真缺陷**:`test_wk_level_supply_horizon` 的「全仓」= glob + 一条写死路径,
+    08-31 起不再穷尽而**绿了三天**,漏掉一位 **21 级 WK**;**失效方向朝危险那侧**
+    (它低估了 `hero-10` 前提里仓库已有的证据)。已改成枚举 `tests/frames/`(§2 1→2,新 §6)。
+  - **⚠️ 两次自己翻的车**:普查第一版**是空的**(直接跑测试文件只返回表、不调用任何函数体,
+    GH #200 的文件头写着)—— 「空谓词的 0 和空语料的 0 是同一个整数」**第七次**;
+    开工自检第一次 REFUSED(stdout 管给 `tail`)= **什么都没检查不是通过**,**第七次**。
+  - 变异台 8 个全部一次见红且只红在该红的节;还原后 `cmp` 逐字节相同。
+  - 门:静态 exit 0 / 0 warnings(裸读,没用 `RULE6_BYPASS`);动态子集 14 组全 exit 0;
+    `python3 tests/test_pending_rulings.py` 84 checks / 0 failed。
+  owner 四条优先项**仍无一条球在本组**(常设运维=批测台;P1/P2=协同组;P3=总监)。
 - 2026-08-31T23:01Z(报告 `iterations/reports/hero/20260831T230146Z.md`;轴 **认领 GH #366,
   付它「建议的验收方式」第 2 条 —— 根因二选一先判掉**)
   **`bots/` 0 行、`game/` 0 行;零新 gate id、零 arm/promote、零 AWS(连 S3 GET 都没有)、
