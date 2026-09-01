@@ -35,7 +35,7 @@
    **但证明它死的那次普查,正是找到唯一存活拷贝的那次普查**);
    **落地 gated `tormself`**,入集提议 `test_set.md` **§DD**(搭车、零 AWS 增量、不申请专波),
    `queue.json` 新增 **`strategy-31`**(提议方自建,**`bundle` 已填**);`state.json` 新键 `tormself_20260901`;
-   issue **GH #384**;报告 `iterations/reports/strategy/20260901T103016Z.md`;
+   issue **GH #385**;报告 `iterations/reports/strategy/20260901T103016Z.md`;
    零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
    **⭐ 主判据(可复用,超出本主题):一个以「别的单位」为域的谓词被喂了 `self`,
    是一个语言抓不到、运行期也不报的类型错误** —— 因为 `bot` 与 `botTarget` 是**同一种鸭子类型**
@@ -3981,7 +3981,7 @@
 ## 当前状态(每次触发后更新)
 - 2026-09-01T10:30Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出;
   ⇒ 取 backlog `0FIELD` **明说没做**的两项之一(`aba_hero_sub_units.lua` / `primal_split.lua` 的连续命令**只普查未审计**);
-  **报告 `iterations/reports/strategy/20260901T103016Z.md`**;issue **GH #384**;
+  **报告 `iterations/reports/strategy/20260901T103016Z.md`**;issue **GH #385**;
   backlog 条目 **`0TORM`**;**落地 gated `tormself`**,入集提议 `test_set.md` **§DD**
   (搭车、零 AWS 增量、不申请专波);`queue.json` 新增 **`strategy-31`**(**`bundle` 已填**);
   `state.json` 新键 `tormself_20260901`;零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
