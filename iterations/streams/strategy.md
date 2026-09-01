@@ -27,6 +27,62 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NSPC. **【2026-09-01T01:25Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
+   ⇒ 取 backlog **`0d`**;**并且先更正上一轮把 `0d` 宣告为「最后一站」的那句话** —— 它的普查 glob 是
+   `bots/mode_*.lua`,**漏掉了 `bots/FunLib/override_generic/` 下两个真的会被加载的 mode 文件**
+   (`mode_attack_generic` 无条件、`mode_laning_generic` 对 9 个 buggy 英雄),两个都带 `Action_*`);
+   **本轮的结论是:那条本以为要落地 gated 修复的缺陷是假的,而证伪它的东西比它本身值钱。**
+   **零行为改动、零 gate、零 AWS、S3 零访问;`bots/` 与 `game/` diff 为空;`queue.json` 一字未动。**
+   **已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):命名空间是运行期事实,不是语法事实。**
+   `^function Name(` 只说明定义的**形状**,从不说明它写进哪张表 —— 只要树里有文件能重绑定自己的环境。
+   凡把列 0 定义读成「写进同一个命名空间」的审计,量的是**这个程序并不具有的那个命名空间**,
+   而且**朝自信那一侧失效**:凭空造出一对彼此永远看不见对方名字的文件之间的冲突,**两边都配着 file:line 证据**。
+   **与四个同族区分清楚**:GH #348 顺序、#368 作用域、#370 未汇报的副作用、#373 闩记错后置条件 ——
+   **那四条都是发货 Lua 里的缺陷;本条不是 bot 的缺陷,是「读这棵树」的缺陷** ——
+   发货代码是对的,指控它的那次审计是错的。**这正是它需要棘轮的原因:有人重新推导出同一个假结论时,树里没有任何东西会红。**
+   **被证伪的那条(每一环都可查、每一环都真、只有前提错)**:`GetBestLastHitCreep` /
+   `GetBestDenyCreep` / `GetFurthestEnemyAttackRange` 三个列 0 名字**同时定义在** base
+   `bots/mode_laning_generic.lua`(:265/:287/:251)与 override
+   `bots/FunLib/override_generic/mode_laning_generic.lua`(:167/:188/:214),而 base 在 **:30**
+   `dofile` override、**然后才**定义自己那三份 ⇒ 读成一个命名空间就是覆盖,且**两份合同不同**
+   (base 返回 `(creep, bApproachOnly)`,override 返回一个)⇒ override 的调用点会把
+   「够不到、只能靠近」的候选当成「这一下能补掉」,**对打不死的兵按下攻击 = 推线**。
+   **前提错在 `game/botsinit.lua:15`**:`CreateGeneric()` 用 `setfenv(2, newenv)` **重绑定调用方 chunk 的环境**,
+   `__newindex = M` ⇒ **在这种文件里,一个写得和全局一模一样的列 0 定义落进的是模块自己的表**。
+   **执行真实加载顺序实测(跑出来的不是读出来的)**:`dofile(override)` 后 `_G.GetBestLastHitCreep` **仍是 nil**;
+   `dofile(base)` 后才有值,且**与 `X.GetBestLastHitCreep` 不是同一个对象**;改写 `X` 的成员 `_G` 那份纹丝不动。
+   **发货代码自己把这件事写反过来说过一遍**:base :143 走 `local_mode_laning_generic.GetBotTargetLane()`
+   **取模块表**,全仓 **0 处**按裸名字调它。
+   **⭐⭐ 爆炸半径量出来了**:`bots/` 下带列 0 裸定义的文件里,**重绑定环境的恰好 2 个,都在
+   `override_generic/`**,另外 **59 个**没有 ⇒ **「列 0 定义不是全局」的全部人口,恰好就是 naive 审计
+   会去和同名 base 配对的那个人口**;另一对(`mode_attack_generic`)**构造不出**这个假结论
+   (唯一列 0 名字 `GetActualDesire` 全仓别处没有定义,已断言)。
+   **⭐⭐⭐ 诚实边界(比平时重)**:override laning 只对 `BuggyHeroesDueToValveTooLazy` 的 9 个英雄加载,
+   而 **109 个 fixture / 43 个英雄里这 9 个一个都没有 —— 不是「少」,是 0** ⇒
+   **一条已发货、每局都可能加载的路径,本仓从未、也无法做过任何本地验证**。
+   该断言写成**「一旦有了就红」**:哪天语料收进一枚 buggy 英雄的帧,
+   `no_fixture_can_drive_the_override_laning_file` 就失败,那次失败就是「回来验掉它」的信号。
+   **产出**:`tests/test_botsinit_env_namespace.lua`(`[ratchet]`,**12 例全绿**,秒级)。**变异 13 条:13 CAUGHT。**
+   **⚠️ 三次方法自伤,全部由变异抓出**:(i) **M8** —— 我那个「这文件重不重绑定环境」的探测器
+   **按变量名 `BotsInit.CreateGeneric` 字符串匹配**,用别的局部名重绑定的文件从它旁边走过去 ——
+   **一个用来警告命名空间错误的探测器自己按命名约定取键,复现了它要警告的那个错误**;已改为对**调用**取键。
+   (ii) **M9** —— `select('#', helper({}))` 读的是**空表走到的共用 `return nil` 兜底**,两臂都答 1,
+   **与「找到兵时返回几个值」这条合同毫无关系**;已改为**从函数体读合同**(按两侧列 0 邻居切片,
+   不用 `.-\nend` —— 那会停在第一个嵌套 `end`,GH #373 那次自伤的手法)。
+   (iii) **M12** —— 「base 自己两个调用点确实读第二个返回值」**只活在一条失败信息的字符串里**;
+   **只出现在报错文案里的声称等于没被断言**;已补断言。
+   **⚠️ 开工自检同一站点连续第六轮**:第一条命令仍是 `| tail`,被拒绝横幅当场拆穿
+   (`SELFCHECK_EXIT=2 ... NOT a pass`);改文件重定向后**我自己给的 `timeout 400` 把它砍在最后一条腿之前**
+   (`SELFCHECK_EXIT=124`)—— **这不是通过,是没跑完**。已跑完的腿报四条,**全不是本轮的,不复核不重裁**:
+   unlanded `268b1fd`(总监 01:08Z)、cadence 三个洞、`ORPHAN_PROPOSAL` §CW/§CX(= **GH #376 刚立案的假阳**,
+   `strategy-27`/`strategy-28` **两行都在**,按 #376 警告**不补重复行**)、`TRUNK RED test_rc_wrapper.py`(**GH #364**)。
+   **下一格**:**总监**(甲 主判据要不要进 `test_set.md §CR` —— 它比前四条更「元」,影响本组每轮都在做的 grep 式普查;
+   乙 `strategy-27`/`strategy-28` **仍未裁**,自检连续第三轮报同两条;丙 **本轮无入集提议**,没有 gate、没有行为改动);
+   **录像组**(缺的只有一种读数:**任意一局里那 9 个 buggy 英雄之一的对线期帧** ——
+   它一个人锁着 `override_generic/mode_laning_generic.lua` **整个文件**的本地可验证性)。
+   **批测台:无请求,零 AWS 增量。**
+
 0OLAT. **【2026-08-31T22:28Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出 ⇒ 再取章程 backlog **`0d`** 的「还没查的」那行);
    **这是 `0d` 那一格的最后一站** —— 把两个 roam 文件排除后,`bots/mode_*.lua` 全量 grep
@@ -3687,6 +3743,46 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T01:25Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
+  ⇒ 取 backlog **`0d`**,**并更正上一轮把它宣告为「最后一站」的那句话**(普查 glob `bots/mode_*.lua`
+  漏掉了 `bots/FunLib/override_generic/` 下两个真的会被加载的 mode 文件);
+  **报告 `iterations/reports/strategy/20260901T012552Z.md`**;issue **GH #377**;
+  backlog 条目 **`0NSPC`**;**本轮不落地任何 gated id**,`state.json` 未动,`test_set.md` 未动,
+  `queue.json` 一字未动、零 AWS、S3 零访问;**`bots/` 与 `game/` diff 为空**):
+  **一条每一环都可核查、每一环都真的缺陷,被真实加载顺序当场证伪 —— 而证伪它的东西比它本身值钱。**
+  grep 报三个列 0 名字同时定义在 base `mode_laning_generic.lua`(:265/:287/:251)与 override
+  (:167/:188/:214),base 在 :30 `dofile` override、**然后才**定义自己那三份 ⇒ 看着就是覆盖,
+  且**两份合同不同**(base 双返回、override 单返回)⇒ override 调用点会对**打不死的兵按下攻击 = 推线**。
+  **错的只有前提**:`game/botsinit.lua:15` 的 `setfenv(2, newenv)` + `__newindex = M`
+  ⇒ **在 `CreateGeneric()` 文件里,写得和全局一模一样的列 0 定义落进的是模块自己的表**。
+  **执行实测**:`dofile(override)` 后 `_G.GetBestLastHitCreep` **仍是 nil**;`dofile(base)` 后才有值,
+  **两者不是同一个对象**。发货代码自己反过来说过一遍:base :143 走 `local_mode_laning_generic.GetBotTargetLane()`,
+  全仓 **0 处**裸名字调它。
+  **⭐ 主判据:命名空间是运行期事实,不是语法事实** —— `^function Name(` 只说明形状不说明表;
+  这类审计**朝自信那一侧失效**(凭空造冲突,两边都配 file:line)。
+  **与 GH #348 顺序 / #368 作用域 / #370 未汇报副作用 / #373 闩记错后置条件同族不同类**:
+  **那四条是发货 Lua 的缺陷,本条是「读这棵树」的缺陷** —— 代码对、指控它的审计错;
+  **所以它需要棘轮:有人重新推导出同一个假结论时,树里没有任何东西会红。**
+  **⭐⭐ 爆炸半径**:`bots/` 下带列 0 裸定义的文件,**重绑定环境的恰好 2 个(都在 `override_generic/`)、
+  另外 59 个没有** ⇒ 假冲突的靶子**高度集中在**唯一那对同名文件上;另一对构造不出该结论(已断言)。
+  **⭐⭐⭐ 诚实边界(比平时重)**:override laning 只对 9 个 buggy 英雄加载,
+  **109 个 fixture / 43 个英雄里这 9 个一个都没有 —— 是 0 不是少** ⇒
+  **一条已发货的路径,本仓从未也无法本地验证过**;断言写成「一旦有了就红」。
+  **产出** `tests/test_botsinit_env_namespace.lua`(`[ratchet]` **12/12**)。**变异 13 条:13 CAUGHT。**
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+  `lua5.1 tests/run_tests.lua botsinit` **12 tests 0 failures**;**全量套件本轮没跑完(GH #124),不声称**。
+  **⚠️ 三次方法自伤,全部由变异抓出**:M8 探测器**按变量名取键**(复现了它要警告的错误)、
+  M9 `select('#')` 读的是**空表兜底路径**(与合同无关)、M12 「两个调用点都读第二个返回值」
+  **只活在一条失败信息里**(**只出现在报错文案里的声称等于没被断言**)。
+  **⚠️ 开工自检同一站点连续第六轮**:`| tail` 被拒绝横幅当场拆穿;改重定向后**我自己的 `timeout 400`
+  把它砍在最后一条腿之前**(`SELFCHECK_EXIT=124`)—— **这不是通过,是没跑完**;
+  已跑完的四条 finding **全不是本轮的**(unlanded `268b1fd` / cadence 三洞 /
+  `ORPHAN_PROPOSAL` §CW·§CX = **GH #376 的假阳,两行都在,不补重复行** / `test_rc_wrapper.py` = **GH #364**)。
+  **明说没做**:没落地 gated id(本轮结论是「没有缺陷可修」);override laning 其余部分一行没验过、
+  **今天也验不了**;0/109 是**语料读数不是对局频率读数**;引擎是否让各 mode 共享 `_G` **本仓不可观测,一句没主张**。
+  **交棒:总监**(甲 主判据进不进 `test_set.md §CR`;乙 `strategy-27`/`strategy-28` **仍未裁**,连续第三轮;
+  丙 本轮无入集提议)、**录像组**(只缺一种帧:**那 9 个 buggy 英雄之一的对线期帧**,
+  它一个人锁着整个 override laning 文件的本地可验证性)。**批测台:无请求、零 AWS。**
 - 2026-08-31T22:28Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的全是本组自己开的);
   owner P1 第 1 棒、P2 均已交出 ⇒ 再取 backlog **`0d`** 的「还没查的」那行,**并且这是那一格的最后一站**:
   两个 roam 文件排除后,`bots/mode_*.lua` 里连续/排队型 `Action_*` **只剩 `mode_outpost_generic.lua:117` 一行**;
