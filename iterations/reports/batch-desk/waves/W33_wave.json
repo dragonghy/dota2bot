@@ -38,13 +38,20 @@
       "instance_lifecycle": "spot",
       "sir": "sir-n1tfgm8p",
       "sir_create": "2026-09-01T03:31:07.000Z",
-      "sir_status": "fulfilled",
+      "sir_status": "closed",
       "carriers": [
         "crystal_maiden",
         "obsidian_destroyer",
         "skeleton_king",
         "zuus"
-      ]
+      ],
+      "status_code": "instance-terminated-no-capacity",
+      "reclaimed": true,
+      "create": "2026-09-01T03:31:07Z",
+      "update": "2026-09-01T03:32:21Z",
+      "survival_bound": "exact",
+      "terminated": "2026-09-01T03:34:25Z",
+      "reclaim_note": "RECLAIMED BY EC2 3m17s after launch. describe-instances StateReason `Server.SpotInstanceTermination`, StateTransitionReason `Service initiated (2026-09-01 03:34:25 GMT)`; SIR sir-n1tfgm8p closed with `instance-terminated-no-capacity` (`Your Spot instance was terminated because there is no Spot capacity available that matches your request.`). Zero games produced. NOTE the SIR Status.UpdateTime (03:32:21Z) PRECEDES the instance's own termination stamp (03:34:25Z) -- the SIR closes when the reclaim is decided, not when the instance dies, so create->update is NOT the machine's lifetime here. Replaced, see machines_replacement below."
     },
     {
       "seed": 2790,
@@ -139,5 +146,31 @@
     "iv_reclaim_blind": "*** UNCERTIFIABLE -- RC_EXIT=2, NOT A PASS. *** tools/batch_test/soak/reclaim_blind.py --wave-json W32_wave.json, read via rc.sh: `UNDECIDABLE: seed 2604: unknown SIR status_code None (known: instance-terminated-by-user, instance-terminated-no-capacity)`. Cause is structural, not a missing backfill: W32 was an ON-DEMAND wave, so there is no spot-instance-request and no SIR Status.Code, and reclaim_blind.py's KNOWN_CODES contains only SIR codes. This desk REFUSED to write a guessed SIR code into a field named for a measurement (GH #332's founding sentence; the same discipline that made survival_bound 'lower' rather than 'exact'). Reported as a comment on GH #375 -- the SECOND downstream consequence of the same missing lifecycle record, not a new case. WHY THIS DID NOT BLOCK THE LAUNCH, structurally: (1) on-demand instances cannot be reclaimed by EC2 at all, so reclaim-blinding cannot occur on such a wave; (2) W32 delivered 4 of 4 PAIRED seeds with min arm_depth 17.14 > the gate's 8 and thin_arm_seeds [] -- the reading is complete; (3) the tool's own recommendation when it can run is `NEXT WAVE: spot`, which is what this wave did. Registered as `this wave was not blinded, but a tool did not say so`. NOTE this wave is SPOT, so its own settlement CAN use the SIR create->update method; the four SIR ids are recorded on each machine above."
   },
   "expected_games": "4 seeds x 12 games x 2 arms = 96 mirrored games nominal; recent full-set waves land 200-240 SCORED games because each leg drains more than its nominal 12 before the flip. W32 scored 207 of 231 loaded; W31 scored 198 of 222.",
-  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2), hard cap 2026-09-01T05:31Z. This is a SPOT wave, so EC2 reclaim is a live exit path again: per the charter, one reclaimed machine = that seed loses an arm and THAT SEED's paired difference is void -- the wave is NOT voided; re-run the missing seed on the same ladder. Expected self-termination between 04:15Z and 04:30Z on the ~0.75-0.92 h/machine profile."
+  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2), hard cap 2026-09-01T05:31Z. This is a SPOT wave, so EC2 reclaim is a live exit path again: per the charter, one reclaimed machine = that seed loses an arm and THAT SEED's paired difference is void -- the wave is NOT voided; re-run the missing seed on the same ladder. Expected self-termination between 04:15Z and 04:30Z on the ~0.75-0.92 h/machine profile.",
+  "machines_replacement": [
+    {
+      "replaces_seed": 2756,
+      "seed": 2756,
+      "az": "us-west-2a",
+      "instance": "i-029e65db1adae13f0",
+      "run_token": "25b94f",
+      "run_id": "spot_20260901_033745_1_e84fe4d216efdaac3b40966b1fb542d36816e1db_25b94f",
+      "launched": "2026-09-01T03:37:45Z",
+      "instance_lifecycle": "spot",
+      "market": "spot",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2a",
+      "sir": "sir-t85qjqtm",
+      "sir_create": "2026-09-01T03:37:47.000Z",
+      "sir_status": "fulfilled",
+      "carriers": [
+        "crystal_maiden",
+        "obsidian_destroyer",
+        "skeleton_king",
+        "zuus"
+      ],
+      "note": "Charter's registered reclaim handling, executed: one machine reclaimed = THAT SEED loses an arm and its paired difference is void; the WAVE is not voided; re-run the missing seed on the same ladder. Level (1) c6i spot in us-west-2a granted on the FIRST ask, 3m20s after the pool had refused to keep the previous machine -- so this was a momentary pool drain, the same shape W32 hit, not a standing capacity failure in 2a. AZ spread is back to 4 distinct. No VcpuLimitExceeded: the reclaimed machine was already `terminated` (not `shutting-down`) when the replacement was issued, so the 4x16=64 vCPU ceiling was never contended."
+    }
+  ],
+  "reclaim_event": "*** ONE MACHINE RECLAIMED, 3m17s IN, AND REPLACED WITHIN 6 MINUTES. *** Seed 2756 (i-09c6ae0d5b352c701, us-west-2a) was taken by EC2 at 03:34:25Z with `instance-terminated-no-capacity`. This is the first live exercise of the charter's registered reclaim handling since it was written. It was caught NOT by a notification but by a free `describe-instances` on terminated/shutting-down that this desk ran for an unrelated reason (checking, for the GH #375 comment, how long terminated instances stay readable) -- worth registering: the closing `--leak-only` check ran at 03:36Z and read the wave as HEALTHY, because it only lists pending/running and by then three machines were up with a fourth about to be relaunched. A leak check cannot see a MISSING machine; it can only see an EXTRA one."
 }

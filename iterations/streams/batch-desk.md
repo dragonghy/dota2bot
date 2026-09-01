@@ -294,6 +294,28 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    「0 台在跑」,不是 MTD 数字**(证据:22:18Z→06:11Z 连续五轮 MTD 逐位一致,
    同轮第二次读数从来没带过任何信息;CE 至今连当天的行都没有)。`--leak-only`
    完全不查花费,零成本。
+   - **⭐ 2026-09-01T03:3xZ 本台自订(起因:W33 起飞 3 分 17 秒后被回收一台,而收尾
+     `--leak-only` 读成健康)。发波轮的收尾多做一步「波次点名」,零成本。**
+     W29 起本台就在报告里写过「`--leak-only` **只报「多出来的」,「少一台」它不会举手**」——
+     **那句话一直只是一条纪律,没有一个固定动作去执行它**,于是 W33 那台是**偶然**被看见的
+     (本台为了给 GH #375 的评论量一个「terminated 实例还能读多久」,顺手跑了一次
+     `describe-instances --filters state=terminated,shutting-down`,才撞见
+     `Server.SpotInstanceTermination`)。**靠顺手,不是靠门。**
+     ⇒ **发波轮收尾固定跑两条,不是一条**:
+     ```bash
+     awsx ec2 describe-instances --region us-west-2 \
+       --filters Name=instance-state-name,Values=pending,running \
+       --query 'Reservations[].Instances[].Tags[?Key==`soak-run`].Value' --output text
+     awsx ec2 describe-instances --region us-west-2 \
+       --filters Name=instance-state-name,Values=terminated,shutting-down \
+       --query 'Reservations[].Instances[].[InstanceId,StateReason.Code,StateTransitionReason]' --output text
+     ```
+     **第一条的 `soak-run` 值集合必须与 `W<N>_wave.json:machines[].run_id` 逐一对上**
+     (少一个 = 有一台没了,多一个 = 泄漏);**第二条只要出现 `Server.SpotInstanceTermination`
+     且时刻落在本波窗口内,就是本波掉了一臂**,当轮按回收处置补跑那一粒。
+     **失效方向**:不做这一步不会有任何东西举手 —— 波次照跑、收尾照绿,
+     直到**下一轮收割**才在 `thin_arm_seeds` / `arm_depth` 上现形,而那时补跑要多花一整轮。
+     terminated 实例在 API 里只留约 1 小时(GH #375),**这一步必须在发波那一轮做,过期就读不到了**。
 7. **报告必须带局数**(owner 2026-08-19 要求):每份报告固定一节写明
    (a) 上一波次的最终有效局数(per seed、per side,ab/ba 不对称要注明),
    (b) 本轮在跑波次的实时进度(S3 `soak/<run_id>/` 里 analysis.json 计数,
@@ -7562,8 +7584,30 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   `hero-25` cmqreach / `strategy-26` rotscope / `strategy-27` roamidle / `strategy-28` outlatch)
   的 id 都在本波 armed 串里 ⇒ 按步骤 5 由 `pending` 改 **`running`** 并写上钉树/种子;
   十条 `ROUTED_ARCHIVE_SCAN` 与 `hero-26` 保持 pending。`strategy-5b` 仍卡在**它自己的条件 (3)**,**第六轮,本台不重裁**。
+  ⭐⭐⭐ **事先登记的回收处置当轮就被用上了**:`i-09c6ae0d5b352c701`(seed 2756,us-west-2a)
+  起飞 3 分 17 秒后于 **03:34:25Z 被 EC2 收回**(`StateReason=Server.SpotInstanceTermination`,
+  `Service initiated (2026-09-01 03:34:25 GMT)`,`sir-n1tfgm8p` → `instance-terminated-no-capacity`),
+  **零局产出**。照章程:**那一粒缺臂作废、整波不作废**,同一阶梯补发
+  **`i-029e65db1adae13f0`**(`25b94f`,**us-west-2a 级 (1) c6i spot 第一次询问即中**,03:37:45Z,
+  `sir-t85qjqtm` fulfilled)⇒ **AZ 分散回到 4 个互不相同,四台全 running**;
+  补发时被收那台已是 `terminated` 不是 `shutting-down` ⇒ **无 `VcpuLimitExceeded`**。
+  **同一个 AZ 3 分 20 秒后就给了容量 ⇒ 瞬时排空,不是 2a 的常态失败**;按 GH #256 裁 `2b` 的同一条理由,
+  **不把 `2a` 移出 `AZ_LIST`**(移出会把 4 路分散变 3 路,反而抬高相关性)。
+  ⚠️⚠️ **但这台是偶然被看见的,并因此改了本台章程步骤 6。** 收尾 `--leak-only`(03:36Z)读出的是
+  **健康** —— 它没错,`--leak-only` 只列 `pending,running`,**只报「多出来的」,「少一台」它不会举手**。
+  **本台从 W29 起就在报告里写过这句话,但那一直只是一条纪律、没有任何固定动作去执行它**;
+  这台是为了给 #375 的评论量「terminated 还能读多久」而顺手跑
+  `describe-instances --filters state=terminated,shutting-down` 才撞见的。**靠顺手不是靠门。**
+  若没顺手,W33 会**三条臂静静跑完**,到下一轮收割才在 `thin_arm_seeds`/`arm_depth` 上现形,
+  而那时补跑多花一整轮、terminated 记录也早过了 API 的约 1 小时保留期(#375)连归因都做不了。
+  ⇒ **已写进本台章程步骤 6(自订,零成本,不需要总监裁定,不改 harness)**:
+  **发波轮收尾固定跑两条查询** —— (1) `pending,running` 的 `soak-run` 集合**逐一对上
+  `W<N>_wave.json:machines[].run_id`**(少一个=掉臂,多一个=泄漏);
+  (2) `terminated,shutting-down` 里出现落在本波窗口内的 `Server.SpotInstanceTermination` = 掉了一臂。
+  **必须在发波那一轮做,过期读不到。**
   **泄漏**:开工 running/pending **空**(W32 四台按需已全部自毁干净);收尾 `--leak-only`
-  **`RC_EXIT=0`**,running/pending **恰为 W33 的四台且无一孤儿**,常驻只有 AMI `ami-0a990a26d89c66547`。
+  **`RC_EXIT=0`**,补发后 running/pending **恰为 W33 的四台、四个 `soak-run` 与 wave.json 逐一对上、
+  零缺失零多余**,常驻只有 AMI `ami-0a990a26d89c66547`。
   ⚠️ **发波轮的正确读数是「四台在飞且都对得上名字」,不是「0 台在跑」。**
   四台全带自毁(`terminate` + `shutdown -h +120`,**硬顶 05:31Z**),预计 04:15–04:30Z 自关;
   **本波是 spot ⇒ 回收是活路径**:一台被抢占 = 那一粒缺臂作废、**不整波作废**,缺的那粒补跑。
@@ -7587,7 +7631,11 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   #329/#321 / `UNKNOWN STATUS` 4 条(#317)/ `strategy-5b` 第六轮 / #313/#290/#291/#298/#299/#349/#350(#355)/
   #207 停在第三十九波 armed。
   **下一轮本台 = 收割 W33**(闸 (i) 解锁于 `2026-09-01T09:31:05Z`,多半只收割不发波)。
-  **收割注意**:本波**是 spot**,成本用 **SIR `create→update`**(四个 SIR id 已写进 `W33_wave.json`);
+  ⚠️ **收割 W33 时 seed 2756 有两个 run 前缀**(被收那台 `…_e45160` **零局**,补发那台 `…_25b94f`),
+  按「同波次多实例先分 run 下载再带前缀合并」的老坑处理,不要直接 `s3 cp` 进同一目录。
+  **收割注意**:本波**是 spot**,成本用 **SIR `create→update`**(**五个** SIR id 已写进 `W33_wave.json`
+  —— 含被收回那台 `sir-n1tfgm8p`;⚠️ **那一台的 `create→update` 不是它的机时**:SIR 在回收被决定时
+  就关闭(03:32:21Z),而实例实际死于 03:34:25Z,**两个时刻差 2 分 4 秒**,按 `create→update` 记会**少记**);
   **`$0.90` 的自动失效条款本波适用** —— 账单侧实测 > $0.90 就要在报告里点名,总监下轮必须重裁该常数。
   **回填义务**:收割那一轮**必须把 `harvest` 写回 `W33_wave.json`,不能只写进报告**(这正是 W32 掉的那根棒)。
   **本轮 token**:见报告 §10。
