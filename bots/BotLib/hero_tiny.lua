@@ -482,9 +482,26 @@ function X.ConsiderToss()
 		local nInRangeAlly = J.GetNearbyHeroes(bot,nCastRange + 200, false, BOT_MODE_NONE)
 		local nInRangeEnemy = J.GetNearbyHeroes(bot,nCastRange, true, BOT_MODE_NONE)
 
+		-- `J.GetHP(bot)` here is a RATIO, not a predicate: jmz_func.lua:4003 returns
+		-- `nCurHealth / nMaxHealth` (and a bare 0 when dead), so it is truthy for
+		-- every unit on every frame -- 0 is true in Lua. The conjunct therefore
+		-- costs a division and decides nothing, and the disjunction collapses to
+		-- `#enemies > #allies or WasRecentlyDamagedByAnyHero(2)`. Inside a retreat
+		-- the right-hand side is nearly always true, so the outnumbered test on the
+		-- left is dominated too: shipped Tiny tosses while retreating at ANY health,
+		-- full health included.
+		-- The repo answers what the missing half was: 64 sites write this exact
+		-- idiom as `J.GetHP(bot) < X and bot:WasRecentlyDamagedByAnyHero(...)`
+		-- (mode X = 0.65, 11 sites); 6 dropped the `< X`, this being one.
+		-- soak candidate 'hpbool' (turbo-only). Gate shut, the added conjunct is
+		-- `not false` = true and the shipped expression stands unchanged; armed, it
+		-- is the threshold the other 64 copies carry. Strictly fewer casts, never
+		-- more.
 		if nInRangeAlly ~= nil and nInRangeEnemy ~= nil
 		and ((#nInRangeEnemy > #nInRangeAlly)
-			or (J.GetHP(bot) and bot:WasRecentlyDamagedByAnyHero(2)))
+			or (J.GetHP(bot) and bot:WasRecentlyDamagedByAnyHero(2)
+				and (not (J.IsModeTurbo() and J.IsSoakCandidate('hpbool'))
+					or J.GetHP(bot) < 0.65)))
 		and J.IsValidHero(nInRangeEnemy[1])
 		and J.CanCastOnNonMagicImmune(nInRangeEnemy[1])
 		and not J.IsSuspiciousIllusion(nInRangeEnemy[1])
