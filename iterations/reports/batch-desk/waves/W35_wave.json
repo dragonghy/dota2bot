@@ -56,7 +56,8 @@
  "gates": {
   "(i) >=6h since last routine wave": "SATISFIED -- W34 took off 09:31:07Z, unlock 15:31:07Z; the launch script polled and printed GATE-I UNLOCKED before issuing any call. The round fired at 15:15Z, ~16 min early; the disposition was the one pre-registered last round: guard inside the launch block + zero-cost prep, no exception taken.",
   "(ii) something new to test": "SATISFIED -- member string 50 -> 52 (illumove, illureal admitted by §DC)",
-  "(iii) MTD + estimate <= $80": "SATISFIED -- September fence arithmetic ~$3.7 (W33 ~$0.6 + W34 >=$2.15 + this wave ~$0.90); no tier crossed, no explanation line owed"
+  "(iii) MTD + estimate <= $80": "SATISFIED -- September fence arithmetic ~$3.7 (W33 ~$0.6 + W34 >=$2.15 + this wave ~$0.90); no tier crossed, no explanation line owed",
+  "reclaim_blind": "GH #271 reclaim-blind check (tools/batch_test/soak/reclaim_blind.py) -- RUN AT HARVEST 2026-09-01T18:1xZ, RB_EXIT=2 UNDECIDABLE (NOT a pass and NOT a BLINDED). The tool refuses because the 40.0-min changeover constant is contradicted by this input: seed 2986 paired after only 37.2 min, i.e. the flip point moved earlier than the measured bracket (34.80 < x <= 40.63). HONEST BOUNDARY: this desk does NOT convert that exit 2 into a verdict. What can be said without the constant: 3 machines were reclaimed at 10.8-11.0 min with ab0/ba0 (NO-PAIR under any changeover constant above ~11 min) and exactly 1 seed paired, so BOTH #271 clauses' INPUTS are insensitive to the constant anywhere in the contested range -- but the ruling itself is the director's, because re-deriving the constant is. This matters NEXT round, which is a launch round: the market choice (stay spot vs escalate to --on-demand) hangs on it. See the round report and the [batch] issue."
  },
  "expected_games": "4 seeds x 12 games x 2 legs ~ 96 scored (excl. warm-ups); W34's realised rate suggests ~180-210 loaded",
  "self_destruct": "spot + 2h watchdog, self-terminating",
@@ -79,12 +80,17 @@
     "zuus"
    ],
    "placement_note": "RE-AIMED INSIDE THE RING (GH #256). us-west-2a returned InsufficientInstanceCapacity ('There is no Spot capacity available that matches your request', reached max retries: 4); the script walked the AZ_LIST ring to the NEXT AZ and landed in us-west-2b. stderr line: '! dota2bot-soak-spot-1: re-aiming inside the ring -> us-west-2b' -- this is NOT a degradation (that would be the '!! AZ RING EXHAUSTED' line, which did NOT appear) and NOT a market degradation (still spot). Reported per #256's requirement to name 'requested X, got Y'.",
-   "status_code": null,
-   "create": "2026-09-01T15:31:09Z",
-   "update": null,
+   "status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-01T15:31:28Z",
+   "update": "2026-09-01T15:42:25Z",
    "terminated": null,
-   "StateReason.Code": null,
-   "StateTransitionReason": null
+   "StateReason.Code": "Server.SpotInstanceTermination (inferred from the SIR row + the farm log SPOT INTERRUPTION notice; describe-instances returned [] at harvest)",
+   "StateTransitionReason": "describe-instances returned [] 2.6h after take-off (GH #382 shape, predicted at launch). The SIR row IS readable and is the first-hand source for status_code/create/update above.",
+   "lifetime_min": 10.95,
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "reclaimed": true
   },
   {
    "seed": 2774,
@@ -103,12 +109,17 @@
     "spirit_breaker",
     "zuus"
    ],
-   "status_code": null,
-   "create": "2026-09-01T15:31:31Z",
-   "update": null,
+   "status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-01T15:31:33Z",
+   "update": "2026-09-01T15:42:25Z",
    "terminated": null,
-   "StateReason.Code": null,
-   "StateTransitionReason": null
+   "StateReason.Code": "Server.SpotInstanceTermination (inferred from the SIR row + the farm log SPOT INTERRUPTION notice; describe-instances returned [] at harvest)",
+   "StateTransitionReason": "describe-instances returned [] 2.6h after take-off (GH #382 shape, predicted at launch). The SIR row IS readable and is the first-hand source for status_code/create/update above.",
+   "lifetime_min": 10.87,
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "reclaimed": true
   },
   {
    "seed": 2963,
@@ -127,12 +138,17 @@
     "skeleton_king",
     "spirit_breaker"
    ],
-   "status_code": null,
-   "create": "2026-09-01T15:31:36Z",
-   "update": null,
+   "status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-01T15:31:39Z",
+   "update": "2026-09-01T15:42:25Z",
    "terminated": null,
-   "StateReason.Code": null,
-   "StateTransitionReason": null
+   "StateReason.Code": "Server.SpotInstanceTermination (inferred from the SIR row + the farm log SPOT INTERRUPTION notice; describe-instances returned [] at harvest)",
+   "StateTransitionReason": "describe-instances returned [] 2.6h after take-off (GH #382 shape, predicted at launch). The SIR row IS readable and is the first-hand source for status_code/create/update above.",
+   "lifetime_min": 10.77,
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "reclaimed": true
   },
   {
    "seed": 2986,
@@ -152,12 +168,17 @@
     "zuus"
    ],
    "carrier_note": "THE PUDGE MACHINE. queue strategy-26 (rotscope, GH #368) has been waiting for a pudge carrier; W34's 208 games had zero pudge and the request was logged DOMAIN_EMPTY_CARRIER_ABSENT.",
-   "status_code": null,
-   "create": "2026-09-01T15:31:42Z",
-   "update": null,
+   "status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-01T15:31:44Z",
+   "update": "2026-09-01T16:08:54Z",
    "terminated": null,
-   "StateReason.Code": null,
-   "StateTransitionReason": null
+   "StateReason.Code": "Server.SpotInstanceTermination (inferred from the SIR row + the farm log SPOT INTERRUPTION notice; describe-instances returned [] at harvest)",
+   "StateTransitionReason": "describe-instances returned [] 2.6h after take-off (GH #382 shape, predicted at launch). The SIR row IS readable and is the first-hand source for status_code/create/update above.",
+   "lifetime_min": 37.17,
+   "ab": 27,
+   "ba": 13,
+   "arm_depth": 17.55,
+   "reclaimed": true
   }
  ],
  "az_spread": {
@@ -193,6 +214,15 @@
  },
  "terminated_capture_obligation": "GH #382 / #375: the `terminated` field survives ~1h in the EC2 API. These four take off 15:31Z and self-destruct ~16:1x-16:3xZ, so the window shuts ~17:1x-17:3xZ while this stream's next round fires ~18:1xZ. This desk records the prediction AT LAUNCH: the capture will again be structurally unreachable from the harvesting round, which is the whole point of #382. Settlement will fall back to the S3-last-upload survival proxy (survival_bound: lower, GH #332).",
  "harvest": {
-  "status": "PENDING -- backfilled by the harvesting round"
+  "status": "HARVESTED 2026-09-01T18:1xZ -- WAVE LOST TO A CORRELATED SPOT RECLAIM, NOT A VERDICT",
+  "outcome": "3 of 4 machines reclaimed at the SAME INSTANT 15:42:25Z (SIR Status.UpdateTime, first-hand), ~11 min after take-off, across TWO AZs (us-west-2b x2, us-west-2c). All four SIRs read instance-terminated-no-capacity. The fourth (2986, us-west-2d) survived to 16:08:54Z (37.2 min) and is the only paired seed.",
+  "scored": "1 seed / 40 scored games / 0 unfinished (expected 4 seeds, ~96-210). files_seen 45, games_loaded 45, unparseable 0.",
+  "verdict": "NOT A VERDICT. n=1 seed means there is NO cross-seed dispersion, so the charter's own precision instrument (mean + comps_better + the #269 depth gate) has nothing to read. mean gpm -44.65 / xpm -18.50 / deaths +0.42 / last_hits -1.03, comps_better 0/1 on every metric, suggested 'hold_or_reject' -- NONE of which may be cited for or against the 52-id family.",
+  "metrology": "Rule 4(i-a) DISCLOSED: both strata registered from the tool's own _ab/_ba fields, NOT hand-computed (i-d). gpm ab -279.14 / ba +189.83 (side -234.49); xpm ab -105.90 / ba +68.89; deaths ab +2.98 / ba -2.14; last_hits ab -14.56 / ba +12.51. sign_flip TRUE on all four, side_gt_arm 1/1. Per (i-c) that flip is the IDENTITY |side|>|arm|, not a diagnosis, and is NOT a rejection reason -- these are per-seed 50/50 swap-averaged estimators. It is registered because (i-a) requires it, not because it rules anything.",
+  "winrate_channel": "DEGENERATE (GH #352, recurs): side census radiant 0 / dire 45, minority share 0.0000 < 0.20, headroom 0.0. winrate bounded to 0.5 +/- 0.0 and MUST NOT be cited as rule 2(b) support.",
+  "illumove_illureal_debt": "The §DC.3 (D) non-orthogonality debt pre-registered at launch is NOT settled and NOT settleable from this corpus: one seed cannot separate the two ids' intersection frames. The debt carries forward to the next wave that arms both.",
+  "dem_corpus": "e12d0d only; --rec-slots 8 was in force, so slots 1-8 recorded. The other three prefixes hold a soak_farm.log and nothing else.",
+  "cost_measured": "~$0.29 = 1.163 machine-hours (10.95 + 10.87 + 10.77 + 37.17 min, from the SIR create/update rows) x $0.2496/h (describe-spot-price-history, us-west-2d, 16:00Z). WELL UNDER the $0.90 constant => the cost_estimate auto-invalidation clause does NOT trigger.",
+  "gh_382_update": "*** The launch-time prediction was HALF WRONG, in the useful direction. describe-instances DID return [] (the instances aged out, as predicted). But describe-spot-instance-requests STILL RETURNS THE FOUR SIR ROWS 2.6h after take-off, carrying Status.Code, Status.Message, CreateTime and Status.UpdateTime first-hand. So the reclaim instant and cause were NOT lost and did NOT fall back to the S3-last-upload proxy (GH #332 survival_bound: lower). A SECOND independent channel agrees: the farm log's `SPOT INTERRUPTION` line, uploaded to S3 by spot_watch.sh, is permanent and its `time` field (15:44:25Z) sits exactly 2 min after the SIR update (15:42:25Z) -- the spot 2-minute warning, notice vs scheduled-terminate. #382's premise 'structurally unreachable at harvest' is therefore FALSE FOR SPOT WAVES on both channels."
  }
 }

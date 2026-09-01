@@ -8041,6 +8041,103 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   **本轮 token**:见报告 §9.2(`TOKENS total_in=14,954,935 out=67,566 turns=100`)。
   详见 `iterations/reports/batch-desk/20260901T151500Z.md`。
 
+- 2026-09-01T18:10Z(**收割 W35 —— 跨 AZ 同瞬 spot 回收把整波打掉;闸 (i) 未解锁 ⇒ 未发波;零支出**)。
+  ⭐⭐⭐ **W35 四台里三台在同一秒 `15:42:25Z` 被回收**(SIR `Status.UpdateTime` 第一手),
+  起飞后仅 **10.8–11.0 分钟**,`ab0/ba0`,S3 前缀**各只有一个 `soak_farm.log`、零局**;
+  四粒 SIR **全部** `instance-terminated-no-capacity`。**这三粒分处 `us-west-2b`(两粒)与
+  `us-west-2c`(一粒)—— 跨两个 AZ**,而 AZ 分散(#252/#256)的**全部指望**就是让一次 AZ
+  事件只吃掉一粒 ⇒ **该假设对这类相关事件不成立**(**新开 `[batch]`**)。
+  ⚠️ **#256 重开时钟按章程去数不重推**:本波**不是**「被 2b 清零」(2c 也清零一粒、2d 还活着),
+  **两个计数器都不到阈值 ⇒ `AZ_LIST` 不动**;本台**不自行改市场/阶梯策略**。
+  唯一活下来的 **2986(us-west-2d,37.2 min)** 是**唯一配对粒**:`ab27/ba13`、`arm_depth 17.55`、
+  **40 局计分**、`unfinished 0`。
+  ⛔ **不是判读,而且理由不是「数不好看」**:**n=1 粒 ⇒ 没有跨种子离散度**,
+  章程管精度的仪器(`mean`+`comps_better`+#269 深度门)**没有输入** ⇒
+  `gpm −44.65` / `xpm −18.50` / `deaths +0.42` / `last_hits −1.03` / `comps_better 0/1` /
+  `suggested hold_or_reject` **一律不得**被引用来支持或反对 52-id 家族。
+  **计量四条**:(i-a) 两层**读数**(非局数)登记且**全部取自工具自打的 `_ab`/`_ba`/`strata`,未手算**
+  —— gpm `−279.14`/`+189.83`(side `−234.49`)、xpm `−105.90`/`+68.89`、deaths `+2.98`/`−2.14`、
+  last_hits `−14.56`/`+12.51`;(i-c) 四量**全反号**且 `side_gt_arm 1/1`,按条款那是**恒等式
+  `|side|>|arm|` 不是诊断、不构成否决**,登记只因 (i-a);(i-b) 不适用(四量都已消侧偏);
+  (i-d) **未并池**(只有一粒)。**GH #352 复现**:胜负通道 `DEGENERATE`
+  (radiant 0 / dire 45,minority share 0.0000,headroom 0.0)⇒ **不得**作铁律 2(b) 支持。
+  **§DC.3 那笔债(`illumove`×`illureal` 同帧不正交)没结也结不了** —— 一粒分不开交集帧,**原样顺延**。
+  ⭐⭐⭐ **GH #271 `reclaim_blind` 补跑 ⇒ `RB_EXIT=2 UNDECIDABLE`**(上一轮写 wave.json 漏了
+  `gates.reclaim_blind` 这一格,`tests/test_wave_gate_keys.py` 因此是红的;**本轮补跑并写入,
+  重跑 `26 checks, 0 failed` ⇒ 那条红是本台的、已修**)。工具拒答的理由是
+  **changeover 常数被本输入证否**:2986 在 **37.2 min** 就配对了,早于 40.0 min
+  (measured bracket `34.80 < x <= 40.63`)。**本台不把 exit 2 洗成判决** ——
+  能说且不依赖常数的只有:三粒在 ~11 min 被回收 ⇒ **任何 >11 min 的常数下都是 NO-PAIR**,
+  配对恰好 1 粒 ⇒ **#271 两条子句的输入在整个争议区间 `[10.9, 37.2]` 内都不随常数改变**;
+  **但重标定常数是总监的裁定面,本台不代裁**。⚠️ **这件事卡在下一轮**:下一轮是**发波轮**,
+  **市场选择(继续 spot / 升级 `--on-demand`)正挂在它上面**(#271 升级分支原文「下一波且只有下一波」)。
+  ⭐⭐ **GH #382 的前提被本轮证伪(对 spot 波)**:launch 时预登记「`terminated` 会再次结构性不可达」
+  —— **一半对**(`describe-instances` 确实返回 **`[]`**,四台已老化出 API);
+  **一半错而且方向有用**:**`describe-spot-instance-requests` 起飞后 2.6h 仍返回四行 SIR**,
+  带 `Status.Code`/`Message`/`CreateTime`/`UpdateTime` **全部第一手**;
+  **第二条独立通道**是 S3 里 farm log 的 `SPOT INTERRUPTION` 行(`spot_run.sh:263` 写、handler 上传,**永久**)。
+  两条互相印证且差值可解释:SIR `15:42:25Z` vs log `time 15:44:25Z` = **正好 2 分钟 = spot 两分钟预警**
+  (通知时刻 vs 计划终止时刻)⇒ **回收时刻与原因根本没丢,未动用 #332 的 S3 最后上传代理**。
+  ⚠️ **一条本波零损失但形状为真的隐患(新开 `[harness]`)**:回收 handler 冲刷在飞产物用**本地名**
+  `analysis_<ts>_slot<N>.json`,逐局上传用 `<ts>_slot<N>.analysis.json`,而 `recover_verdict.py`
+  的 glob 是 `*.analysis.json` **只匹配后者**。**本波逐 key 比对差集为零**(冲刷 33 / 逐局 45,
+  冲刷⊄逐局 **= 0**,一局没丢),**但冲刷存在的全部意义就是救「已完成未上传」的局,
+  而那种局恰恰只以冲刷名落盘 ⇒ 对恢复工具不可见**。实测零损失,**隐患登记,不下判决**。
+  **成本**:本轮**零支出**;W35 实测 **~$0.29** = **1.163 机时**(10.95+10.87+10.77+37.17 min,
+  取自 SIR `create`/`update`)× **$0.2496/h**(`describe-spot-price-history`,2d,16:00Z)
+  ⇒ **远低于 `$0.90` 常数,`cost_estimate` 自动失效条款不触发**。
+  ⭐ **围栏读数本轮翻月**:`budgets` 打**九月 `$3.637`**(`LastUpdatedTime 17:58:37Z`),
+  **连续四轮读到八月 `$75.988` 的滞后解除**,与上一轮预登记的「≈$3.7」吻合;
+  `$50` 第一档远未接近 ⇒ **不欠跨档解释行**;MTD `< $35` ⇒ 脚本的 CE 复核**未触发**,
+  **四轮来第一次没花那 `$0.01`**。⚠️ `forecast 150.867` 是按开月两天外推,**不构成刹车信号**。
+  **泄漏**:开工 running/pending **空**、收尾 `--leak-only` **`LEAK_EXIT=0`** ——
+  **发波后的收割轮,空才是对的读数**(四台已全部自毁/被回收,逐个 `sir` 对上 wave.json,
+  零陌生实例);常驻只有 AMI `ami-0a990a26d89c66547`。**无泄漏。**
+  **queue.json**:八条搭车行(`strategy-25/26/27/28/29/30` + `hero-24`/`hero-25`)
+  **没拿到 W35 的语料**,`rides_wave` 已改记 `W35 (LOST …) -- rides the NEXT routine wave`
+  并在 `result` 里写明原因,`status` 保持 `running` ⇒ **接力棒已显式交出(铁律 9)**。
+  ⭐ 一条反直觉的好消息:`strategy-26`(`rotscope`)等的那粒 **pudge 恰好在 2986 上,
+  是唯一活下来的** ⇒ **它反而拿到了域**(上一轮它记的还是 `DOMAIN_EMPTY_CARRIER_ABSENT`)。
+  **铁律 6**:`bots/`/`game/` **一行未改**(改动全在 `iterations/` 下);静态半
+  `luacheck_gate.sh` ⇒ **`GATE_EXIT=0` `luacheck bots game: 0 warnings` `CLEAN`**
+  (冷启自装,apt 包名 `lua-check`);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+  动态半(#124)**未跑不声称**。
+  ⛔ **铁律 10**:自检 **`EXIT=124` —— 被它自己的 `timeout 600` 杀掉,没跑完**,
+  **从未打出 worst-exit 横幅 ⇒ 本轮不存在「自检总判决」这个东西**(没跑成不算跑过)。
+  已打出的腿如实登记:stable 锚点 v1/v2 **EXISTS/PINNED/SHIPPED 全 ok**;
+  `ORPHAN_PROPOSAL none`;未裁 queue `RIDESHARE none` / `OTHER 1`(`strategy-33`,非本台)/
+  `UNKNOWN STATUS 5`(#317);**python trunk 两条红** —— `test_wave_gate_keys.py`(**本台的,已修**)
+  与 `test_carrier_terms.py`(**红在 main**:`axe is NOT asked about (no axe-scoped armed id)`,
+  **Axe 是 focus 英雄却在 52-id 串里没有任何 axe-scoped id**,交总监/协同组);
+  **Lua trunk 红 `test_incoming_damage_callsite_census.lua` = GH #394 第二次复现未修**;
+  `5a0` 腿 **72 文件 /120s 未跑完 ⇒ `5a` 又没跑**(#358 同族第二轮);
+  `rc.sh` 两项 `UNCERTIFIABLE` 报 `no lua5.1 on PATH`,而本台随后 `which lua5.1` 拿到
+  **`/usr/bin/lua5.1`** ⇒ **是腿序问题不是缺工具**(**GH #171 的第二种形状**:#171 是
+  「腿从没跑过」,这次是「腿跑了但被排序判死」),登记不下结论。
+  ⚠️ **管道守卫第 9 个外部验收点**(本轮第一条命令又误用管道,自检自己拒跑并打
+  `REFUSED … stdout is a pipe; exit 2, nothing checked`,还逐字点出「已复发 5 次,
+  每次都是本轮第一条命令」)。
+  **铁律 11**:未触发 `requires approval`;GitHub MCP 可用;**无空转等待** ——
+  闸 (i) 的等待处置是**结束会话**不是坐等。
+  **交棒**:① ⭐⭐⭐ 总监 —— **`reclaim_blind` changeover 常数重标定,下一轮就要用**
+  (工具 exit 2,而下一轮是发波轮、市场选择挂在它上面);
+  ② ⭐⭐⭐ 总监 —— **跨 AZ 同瞬回收**(新 `[batch]`),AZ 分散不对冲这类事件;
+  ③ ⭐⭐⭐ 协同组/录像组 —— **W35 语料只剩 2986 一粒**,八条搭车行顺延(棒已交出);
+  ④ ⭐⭐ 总监 —— **GH #382 可按本轮收口**(前提对 spot 波已证伪,两条通道),
+  连带把 `W35_wave.json:_note` 里「terminated 必须在波次生命周期内抓」**改成读 SIR**;
+  ⑤ ⭐⭐ 总监/英雄组 —— **#394 第二次复现未修**;
+  ⑥ ⭐⭐ 总监/协同组 —— **`test_carrier_terms.py` 红在 main(Axe 无 armed id)**;
+  ⑦ ⭐ 新 `[harness]` —— 冲刷 basename 与恢复 glob 不匹配(本波零损失);
+  ⑧ ⭐ 自检 `5a0` 第二轮超时 + `rc.sh` 腿序 `UNCERTIFIABLE`;
+  ⑨ ⭐ 存量:#395 三件待裁 / **#388 W34 的 103 份 `.dem` 2026-09-22 到期(距今 21 天)** /
+  按需常数第四轮重裁 / #285 第二十轮未裁 / #352 复现 / #317 五条 / `strategy-5b` 第十一轮 /
+  #383 / #290 / #313 / #375 / #207 / #218 / #367 / #295 / #252 / #256 / #282 / #329 / #321。
+  **下一轮本台 = 发 W36**(闸 (i) 解锁 **`2026-09-01T21:31:09Z`**)。
+  ⚠️ **发波前需要 §10.1 的市场裁定**;**总监未裁时本台的保守默认是照 GH #158 继续 spot**,
+  并在报告里写明该默认**是因为「拒答不是判决」,不是因为 W35 被判了 ok**。
+  **本轮 token**:见报告 §9.2。
+  详见 `iterations/reports/batch-desk/20260901T181000Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
