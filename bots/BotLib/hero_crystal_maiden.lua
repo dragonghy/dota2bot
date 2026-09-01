@@ -1346,6 +1346,29 @@ X.nRGuardRangeCap = 200
 -- other waiting ids. Re-measure if any of these change: branch 1's
 -- `#nEnemysHeroesInRange >= 3` is lowered, the `aoeCanHurtCount` ring is
 -- widened, or a grouping change makes CM fight alongside her team while low.
+--
+-- ADDENDUM 2026-09-01 (hero, tests/test_cm_ult_reach_meter_domain.lua). Two
+-- things about this id that the pre-flight above could not see, neither of them
+-- a change to its parked status:
+--
+--   * A SECOND domain frame exists, from a game outside the pre-flight's
+--     corpus: 20260820_043039 t=515.5, pinned as
+--     tests/fixtures/f_260820_043039_cm_cask_close.lua (CM at 30.0% health, 0
+--     allies within 1200, dead 0.2s later). It fires branch 1 on
+--     `#nEnemysHeroesInRange >= 3`, which reads NO movespeed -- so the
+--     "at ms >= 330 the domain is 0" fragility above no longer covers the whole
+--     domain. Over the whole fixture archive (48 live-CM instants) those two
+--     frames are the ONLY ones where the ultimate's fire branches are reachable
+--     at all, and arming this id withholds the channel on both.
+--   * CLOSED FORM: this veto can only ever change a branch-1 or branch-2 bid.
+--     It fires strictly BELOW X.nRSelfHpFloor while branch 3 requires strictly
+--     ABOVE the same constant, so the two are disjoint -- and branches 1 and 2
+--     both multiply through `abilityR:GetAOERadius()`. If the engine answers 0
+--     for that getter on Freezing Field (its KV declares `radius` but no
+--     AbilityAOERadius key, and no offline reading of the engine exists here),
+--     this id is a no-op by construction; if it answers the radius, its domain
+--     is exactly the fire set. The fixture world's own GetAOERadius answers 0
+--     today, which is why no test could reach these frames before.
 X.nRSelfHpFloor = 0.38
 X.nRSelfFireWindow = 2.0
 
