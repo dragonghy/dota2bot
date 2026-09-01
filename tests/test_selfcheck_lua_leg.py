@@ -308,6 +308,123 @@ HARNESS_PRE = ("set -u\n"
                "note() { sc_note \"$1\"; }\n"
                "sc_leg 'trunk-red(lua)'\n")
 
+# ---------------------------------------------------------------------------
+# The NOTE's fallback counter (GH #358)
+# ---------------------------------------------------------------------------
+# [director 2026-09-01, GH #358]  note_cost() below reads the file count off one
+# of the leg's two count lines.  BOTH of those lines are printed AFTER the
+# for-loop -- so on the one run where the count matters most, the timeout, the
+# leg never reaches either and the NOTE prints `?`.  That is what four rounds of
+# charter entries have been reading: `? file(s) in 120.1s`, i.e. exactly one of
+# the two numbers GH #358 asked for, on the round the second number was the
+# question.  Same defect the note's own comment records one layer up ("matching
+# only the green line made this NOTE print `?` on ... half an instrument"): that
+# pass added the red line and left the timeout unfixed.
+#
+# The fallback re-runs the leg's OWN discovery expression, sliced out of
+# LEG_SRC -- not a retyped copy of the grep.  Retyping it would be the trap this
+# file already records at test 2a2 ("a test that mirrors the thing it checks is
+# checking the mirror"): a discovery that moved would leave the NOTE reporting
+# the count of a set nobody runs, and it would look like a number.
+#
+# Cost: a grep over tests/test_*.lua plus an ls.  It does not run a single
+# detector, so it is available precisely when the timeout says the detectors are
+# not -- and it needs no lua5.1, which is why its acceptance (5a0i/5a0j) sits
+# out here rather than under case 5's interpreter guard.
+_D_END = "} | sort -u )"
+_d0 = LEG_SRC.find("files=$(")
+_d1 = LEG_SRC.find(_D_END, _d0) if _d0 != -1 else -1
+DISCOVERY_SRC = LEG_SRC[_d0:_d1 + len(_D_END)] if (_d0 != -1 and _d1 != -1) else ""
+
+
+def discover_count(tree):
+    """Files the leg WOULD run in `tree`, or None if that cannot be answered.
+
+    `set -- $files` and not `wc -l`: the leg counts by iterating the same
+    word-split (`for f in $files`), so this counts what `ran` would reach.
+    """
+    if not DISCOVERY_SRC:
+        return None
+    harness = ("set -u\n" + DISCOVERY_SRC
+               + "\nset -- $files\nprintf '%s\\n' \"$#\"\n")
+    try:
+        p = subprocess.run(["bash", "-c", harness], cwd=tree,
+                           capture_output=True, text=True, timeout=30)
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    tail = p.stdout.strip().splitlines()
+    if p.returncode != 0 or not tail or not tail[-1].strip().isdigit():
+        return None
+    return int(tail[-1].strip())
+
+
+def count_for_note(leg_text, tree):
+    """-> (count as text, where the number came from).
+
+    The provenance is returned and printed on purpose: a discovered count and a
+    count the leg actually ran are the same integer only while the leg reaches
+    its count line, and a reader comparing rounds must not have to assume it.
+    """
+    # Two count lines exist, and the green one is not the common case here:
+    # the reddened run prints "TRUNK RED -- 1 of 50 Lua detector file(s)".
+    # Matching only the green line made this NOTE print "?" on exactly the
+    # run whose cost is least observable elsewhere -- half an instrument.
+    m = (re.search(r"(\d+) tagged detector file\(s\)", leg_text or "")
+         or re.search(r"\d+ of (\d+) Lua detector file\(s\)", leg_text or ""))
+    if m:
+        return m.group(1), "ran"
+    n = discover_count(tree)
+    if n is not None:
+        return str(n), "discovered -- the leg never reached its count line"
+    return "?", "unavailable"
+
+
+# Acceptance for the fallback, on a synthetic tree whose answer is known by
+# construction (so the expectation is not a second copy of the discovery rule).
+# Two tagged files + four named files, with ONE file both tagged and named, so a
+# `sort -u` that stopped de-duplicating shows up as 7 instead of 6.
+if not DISCOVERY_SRC:
+    check(False, "5a0i: the leg's discovery expression can be isolated")
+else:
+    _synth = tempfile.mkdtemp(prefix="selfcheck_discovery_")
+    try:
+        os.mkdir(os.path.join(_synth, "tests"))
+
+        def _w(name, body):
+            with open(os.path.join(_synth, "tests", name), "w",
+                      encoding="utf-8") as fh:
+                fh.write(body)
+
+        _w("test_alpha.lua", "-- [detector] tagged\n")
+        _w("test_beta.lua", "-- [ratchet] tagged\n")
+        _w("test_untagged.lua", "-- no tag at all\n")
+        _w("test_gate_claim_consistency.lua", "-- named, untagged\n")
+        _w("test_data_consistency.lua", "-- named AND [detector] tagged\n")
+        _w("test_level_gate_census.lua", "-- named, untagged\n")
+        _w("test_wk_fact_anchor.lua", "-- named, untagged\n")
+
+        _got = discover_count(_synth)
+        check(_got == 6,
+              "5a0i: the fallback runs the leg's own discovery (2 tagged + 4 "
+              "named, 1 overlapping => 6; got %r)" % _got)
+        _n, _how = count_for_note("__TIMEOUT__", _synth)
+        check(_n.isdigit() and _how.startswith("discovered"),
+              "5a0j: a timed-out leg still yields a NUMBER for the NOTE, not "
+              "'?' -- the timeout is the round GH #358 is asking about "
+              "(got %r from %r)" % (_n, _how))
+        # The fallback is a fallback.  A run that DID reach its count line must
+        # be reported by that line, and labelled `ran`: the discovered number is
+        # the set the leg would have run, which is the same integer only while
+        # the leg gets there.  Here the two disagree by construction (50 vs 6),
+        # so a swapped preference cannot hide behind an accidental match.
+        _n2, _how2 = count_for_note("50 tagged detector file(s), 0 failures",
+                                    _synth)
+        check((_n2, _how2) == ("50", "ran"),
+              "5a0k: the leg's own count wins over the fallback, and says so "
+              "(got %r from %r)" % (_n2, _how2))
+    finally:
+        shutil.rmtree(_synth, ignore_errors=True)
+
 if shutil.which("lua5.1") is None:
     print("  SKIP  5: end-to-end needs lua5.1")
 elif not LEG_SRC:
@@ -332,7 +449,7 @@ else:
         out = p.stdout + p.stderr
         return out, ("TRUNK RED" in out), p.returncode, time.time() - t0
 
-    def note_cost(leg_text, seconds):
+    def note_cost(leg_text, seconds, tree):
         """[director 2026-08-31, GH #355 §5] Print wall clock AND file count.
 
         GH #355 closed on a question it could not answer: 5a0's message blamed
@@ -344,16 +461,12 @@ else:
         Deliberately not an assertion -- it is the instrument the assertion was
         missing, and an instrument that fails is not readable across rounds.
         """
-        # Two count lines exist, and the green one is not the common case here:
-        # the reddened run prints "TRUNK RED -- 1 of 50 Lua detector file(s)".
-        # Matching only the green line made this NOTE print "?" on exactly the
-        # run whose cost is least observable elsewhere -- half an instrument.
-        m = (re.search(r"(\d+) tagged detector file\(s\)", leg_text or "")
-             or re.search(r"\d+ of (\d+) Lua detector file\(s\)", leg_text or ""))
-        n = m.group(1) if m else "?"
-        print("  NOTE  5a0 cost: %s file(s) in %.1fs (budget %ds) -- two numbers "
-              "on purpose: set size and container speed move independently"
-              % (n, seconds, BUDGET_S))
+        # [2026-09-01, GH #358] Both count lines are printed AFTER the loop, so
+        # a timeout reached neither and this read `?` -- see count_for_note().
+        n, how = count_for_note(leg_text, tree)
+        print("  NOTE  5a0 cost: %s file(s) [%s] in %.1fs (budget %ds) -- two "
+              "numbers on purpose: set size and container speed move "
+              "independently" % (n, how, seconds, BUDGET_S))
 
     tmp = tempfile.mkdtemp(prefix="selfcheck_leg_")
     try:
@@ -367,7 +480,7 @@ else:
                         ignore=shutil.ignore_patterns(".git"))
 
         clean_leg, clean_red, clean_rc, clean_s = run_leg(tree)
-        note_cost(clean_leg, clean_s)
+        note_cost(clean_leg, clean_s, tree)
         # [director 2026-08-31, GH #355 / #358]  5a0 was a check(); it is now an
         # uncert().  The budget still exists and still bounds the run -- what
         # changed is the WORD, because the old word was measurably false.
@@ -477,7 +590,7 @@ else:
         open(victim, "w", encoding="utf-8").write(body)
 
         red_leg, red_said, red_rc, red_s = run_leg(tree)
-        note_cost(red_leg, red_s)
+        note_cost(red_leg, red_s, tree)
         # [director 2026-08-31, GH #355]  The clean run above is guarded by 5a0;
         # THIS call site was not, and the asymmetry is the whole defect.  On
         # timeout run_leg hands back the sentinel triple ("__TIMEOUT__", False,
@@ -569,6 +682,30 @@ if _pass:
     check("tagged" in _pass[0],
           "7c: the pass line says the subset is chosen BY TAG, which is the "
           "property that decides whether YOUR file is in it")
+
+# ---------------------------------------------------------------------------
+# 8. the RED path names the file (GH #387 §3)
+# ---------------------------------------------------------------------------
+# Source, not behaviour, and for the same reason section 7 is: the line IS the
+# deliverable, and the behavioural case that would cover it is case 5, which on
+# this container does not finish (GH #358).  The defect: the leg extracts detail
+# with `grep -E '^(FAIL:|      )'`, a filter over the RUNNER's failure format --
+# and a file can be red without ever producing one.  On 2026-09-01 exactly that
+# happened (a test file returned nil and killed the runner from outside any test
+# body), the filter matched nothing, and the whole leg said `TRUNK RED -- 1 of
+# 69` WITHOUT THE NAME.  Two readers then each spent a round re-running all 69
+# files to find it.  The name must not be conditional on the filter matching.
+_red = leg_code[leg_code.find("red=$((red + 1))"):] if "red=$((red + 1))" in leg_code else ""
+check(bool(_red), "8-pre: the leg's red branch can be isolated")
+if _red:
+    _red = _red[:_red.find("done")] if "done" in _red else _red
+    check("basename" in _red.split("grep -E")[0],
+          "8a: the red branch prints the file name BEFORE the detail filter -- "
+          "a name that depends on the filter matching is the GH #387 defect "
+          "(branch: %r)" % _red[:200])
+    check("tail -3" in _red or "tail -" in _red,
+          "8b: when the detail filter matches nothing, the runner's last words "
+          "are handed over rather than nothing at all")
 
 print("\n%d checks, %d failures, %d uncertified"
       % (checks, len(failures), len(uncertified)))

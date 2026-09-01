@@ -86,6 +86,29 @@ for _, file in ipairs(list_test_files()) do
                 failed = failed + 1
                 total = total + 1
                 record_failure('E', file, 'setup error: ' .. tostring(tests))
+            elseif type(tests) ~= 'table' then
+                -- [director 2026-09-01, GH #387] A FILE THAT BREAKS THE CONTRACT
+                -- FAILS AS ONE FILE.  `pairs(tests)` below sits OUTSIDE the
+                -- pcall above, so a chunk returning nil did not fail the file --
+                -- it killed the RUNNER, mid-suite, with a traceback and no
+                -- summary line.  Measured: tests/test_cm_ult_reach_meter_domain
+                -- .lua (a self-running script that printed its own `8 run, 0
+                -- failed` and returned nothing) landed on origin/main in
+                -- afd8fbf8 and sorts 48th of 277, so from that commit iron rule
+                -- 6's dynamic half stopped after 48 files and ~229 files (83%)
+                -- went unrun on every stream, every trigger.
+                --
+                -- The blast radius is the defect, not the bad file: one file's
+                -- mistake must never be able to delete the other 229 files'
+                -- results.  Same family as GH #200 (a run that proved nothing
+                -- exiting 0) one turn further -- there the gate was silent about
+                -- proving nothing; here it is loud about the wrong object.
+                failed = failed + 1
+                total = total + 1
+                record_failure('E', file, 'contract error: the file returned '
+                    .. type(tests) .. ', not a table of tests. A test file ends '
+                    .. 'with `return tests`; it does not run itself (the runner '
+                    .. 'prints, counts and reports for every file).')
             else
                 local names = {}
                 for name in pairs(tests) do names[#names + 1] = name end

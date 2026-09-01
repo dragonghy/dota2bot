@@ -611,19 +611,20 @@ tests['8. the archive holds one CAST instant, and only branch 3 explains it'] = 
 end
 
 -- ---------------------------------------------------------------------------
-local nRun, nFail = 0, 0
-local names = {}
-for k in pairs(tests) do names[#names + 1] = k end
-table.sort(names)
-for _, name in ipairs(names) do
-    nRun = nRun + 1
-    local ok, err = pcall(tests[name])
-    if ok then
-        io.write('ok   ' .. name .. '\n')
-    else
-        nFail = nFail + 1
-        io.write('FAIL ' .. name .. '\n     ' .. tostring(err) .. '\n')
-    end
-end
-io.write(string.format('\n%d run, %d failed\n', nRun, nFail))
-if nFail > 0 then os.exit(1) end
+-- [director 2026-09-01, GH #387] This file used to end with a PRIVATE copy of
+-- the runner (its own loop, its own `ok`/`FAIL` lines, its own `os.exit(1)`)
+-- and never returned `tests`.  It was the only one of 277 test files that did.
+--
+-- It passed standalone -- `8 run, 0 failed` -- and that is exactly why it was
+-- expensive: under the supported entry point the chunk returns nil, and
+-- run_tests.lua reached `pairs(nil)` OUTSIDE any pcall, so the file did not
+-- fail, the RUNNER died.  It sorts 48th of 277, so from `afd8fbf8` (this
+-- morning, already on origin/main) iron rule 6's dynamic half stopped after 48
+-- files and ~229 files (83%) went unrun on every stream, every trigger.
+-- Reported by the batch desk 12:18Z.
+--
+-- The private harness was also the more dangerous half of the deviation: its
+-- `os.exit(1)` would have killed the runner mid-suite on a RED file, taking the
+-- summary and every later file with it.  The contract is one line; the runner
+-- prints, counts, sorts and reports for all 277.
+return tests

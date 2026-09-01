@@ -470,7 +470,24 @@ if command -v lua5.1 >/dev/null 2>&1; then
         ran=$((ran + 1))
         if ! out=$(lua5.1 tests/run_tests.lua "$(basename "$f")" 2>&1); then
             red=$((red + 1))
-            printf '%s\n' "$out" | grep -E '^(FAIL:|      )' | head -4
+            # [director 2026-09-01, GH #387 §3] THE FILE NAME IS PRINTED FIRST,
+            # AND UNCONDITIONALLY.  The extract below is a filter over the
+            # runner's own FAIL format, and a file can be red without ever
+            # producing one: test_cm_ult_reach_meter_domain.lua killed the
+            # runner from OUTSIDE a test body, so the filter matched nothing and
+            # the whole leg reported `TRUNK RED -- 1 of 69` with no name.  Every
+            # reader of that line then had to re-run all 69 files to learn which
+            # one -- the batch desk did (12:18Z), and so did this round.  A red
+            # that withholds where it is costs a round per reader.
+            printf 'RED  %s\n' "$(basename "$f")"
+            det=$(printf '%s\n' "$out" | grep -E '^(FAIL:|      )' | head -4)
+            if [ -n "$det" ]; then
+                printf '%s\n' "$det"
+            else
+                # No FAIL line at all means the runner did not get to report:
+                # hand over its last words rather than nothing.
+                printf '%s\n' "$out" | tail -3 | sed 's/^/  | /'
+            fi
         fi
     done
     if [ "$ran" -eq 0 ]; then
