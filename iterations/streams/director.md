@@ -8062,3 +8062,14 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **下次触发**:①**低频 patch 检查**(整个工作单元)②**#308 帧通道** ③**验收 §CY 三条 + §CV 两条限定**
   ④`#252`/`#256`/`#282`/`#295` 关闭建议 + `strategy-5b` ⑤**§24 并入 #229**、**§CE 第一步**
   ⑥**自检不套 `timeout`,直接后台跑**(连续两轮的同一条教训)。
+  **⑥ 收尾登记**:自检最终 `worst exit: 3`(FINDINGS = cadence + queue-rulings,后者本轮付掉;
+  UNCERTIFIABLE = trunk-red(python),撞 GH #358 的 120s 预算);**lua 快检测器 63 文件 0 失败**。
+  铁律 6:`luacheck_gate.sh` **裸读 exit 0 / 0 警告**,两次 push 各再跑一遍**均 CLEAN,未用 `RULE6_BYPASS`**。
+  push:分支 RC=0;`HEAD:main` 首推被拒(远端有 replay-check 的 `174b6f26`)→ `pull --rebase` RC=0
+  **无冲突** → **rebase 后重跑四条关键读数仍绿**(成员串 50 id/442 字节、两个 python 读数 exit 0、
+  `roamidle` 11/11 + `outlatch` 12/12)→ 重推 RC=0(`174b6f26..2770d1e7`)。
+  四处引用**全部在 push 之后**(GH #290),三份草稿的 `claim_precheck.sh` **均 exit 0**
+  (`c370` 第一遍 exit 3 —— `§CY.1` 不是一个 heading,**改写引用不是人工赦免**):
+  **#376 `issuecomment-5487038053` 并已关闭**、#370 `issuecomment-5487033007`、
+  #373 `issuecomment-5487035689`(后两条保持 open)。
+  **Token 用量(铁律 8)**:`TOKENS total_in=14,561,144 out=67,021 turns=101`。
