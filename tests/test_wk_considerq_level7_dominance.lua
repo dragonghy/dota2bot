@@ -43,9 +43,9 @@
 --      nearest hero is the full-health one.  So narrowing the kill check above
 --      level 6 does not save the cooldown -- it spends the same cooldown on a
 --      worse target;
---   5. the same level-7 cliff on a REAL frame (f_232320_wk_od_burst), where
---      moving one integer and nothing else flips shipped ConsiderQ from silent
---      to HIGH against an 86%-health Obsidian Destroyer.
+--   5. the same level-7 cliff on a REAL frame (f_232320_wk_od_burst).  READ THE
+--      2026-09-01 CORRECTION BELOW before quoting section 5: the cliff is still
+--      there, but on this frame it is no longer reachable by moving one integer.
 --
 -- CONSEQUENCE FOR LEVER A (recorded, not acted on here -- this file changes no
 -- behaviour and adds no gate): lever A as GH #104 specified it is confined to
@@ -76,6 +76,46 @@
 --     RESULT is unaffected, because its frame puts the full-health sven at 300u
 --     and the dying lion at 400u, so sven heads the list under either reading;
 --     the reason is what changed, and the assertions below now say "nearest".
+--
+-- CORRECTION (2026-09-01, GH #392): section 5 was measured with a broken meter
+-- ------------------------------------------------------------------------
+-- `c386d5f3` wired tests/mock/special_value_shapes.lua's AbilityManaCost ladder
+-- into the fixture loader.  Until that day every `GetManaCost()` on a fixture
+-- handle answered 0, and X.ShouldSaveMana -- the reserve that guards Wraith
+-- King's Reincarnation and is the FIRST statement of X.ConsiderQ -- read
+--
+--     bot:GetMana() - nAbility:GetManaCost() < abilityR:GetManaCost()
+--
+-- as `272 - 0 < 0`, which is false on every frame that has ever existed.  The
+-- reserve was frozen OFF, so section 5's original read-out never went through
+-- it.  With the ladder awake it fires on this frame, at BOTH hero levels, and
+-- the level-7 case below went red.
+--
+-- The correction is NOT a moved number.  Sections 5b/5c/5d re-derive it:
+--   * 5b rebuilds the pre-ladder meter (every price on this frame forced back
+--     to 0) and gets the recorded reading back EXACTLY -- level 6 silent,
+--     level 7 HIGH at Obsidian Destroyer.  The record was right about its own
+--     world; that world is the one that stopped existing.
+--   * 5c reads the real world: under the ladder both levels are silent and the
+--     decision is made by the reserve, before any branch of ConsiderQ runs.
+--     The boundary is exactly Reincarnation's price plus Wraithfire Blast's,
+--     read off the two handles rather than typed (220 + 95 = 315).
+--   * 5d shows the DOMINANCE result of sections 1-4 survives intact: hand the
+--     frame 315 mana and the level-6/level-7 cliff is back, unchanged, at the
+--     same target.  What died is only the claim that ONE integer flips it.
+--   * 5e is the sharp end: this frame's Wraith King has 272 of 272 mana, so
+--     315 is not a number he can hold at all.  At this hero level, with
+--     Reincarnation rank 1 and ready, shipped ConsiderQ is CONSTRUCTIVELY
+--     unable to cast Wraithfire Blast -- and that consequence has been live in
+--     every real game all along (the engine always priced abilities; only our
+--     fixtures answered 0).  Every archived "ConsiderQ decides X on frame F"
+--     reading taken before c386d5f3 was taken with this reserve switched off.
+--
+-- Note what this does to the section-2 case, which stayed GREEN across the
+-- change: "shipped ConsiderQ is silent at level 6" is still true, but its
+-- stated reason ("every branch correctly declines") became false the same day.
+-- A green assertion with a dead reason is the thing that gets inherited, so
+-- 5c now pins the reason rather than the outcome.
 --
 -- MUTATION RECORD (2026-08-22): nine mutations of hero_skeleton_king.lua, eight
 -- caught -- the 1.68 multiplier to 1.00, `nLV >= 7` to 6 and to 8, both reaches
@@ -410,17 +450,53 @@ end
 
 local FRAME = 'tests/fixtures/f_232320_wk_od_burst.lua'
 
-local function load_frame(nLevelOverride)
+-- opts.mana        : override the hero's mana pool (5c/5d only)
+-- opts.zero_prices : rebuild the PRE-c386d5f3 meter -- every ability handle on
+--                    this frame priced 0, which is what the loader answered
+--                    before the mana ladder was wired in.  Applied by walking
+--                    the engine slots, not a typed name list, so a renamed
+--                    ability cannot quietly keep its price; the rebuild then
+--                    asserts on Q and R that it actually took.
+local function load_frame(nLevelOverride, opts)
+    opts = opts or {}
     local J, bot, heroes, fx = rf.load(FRAME)
     local q = bot:GetAbilityByName(Q_NAME)
     -- The dumper reports no cast ranges (GH #27 family), so anchor it.
     rawget(q, '__spec').GetCastRange = CAST_RANGE
     if nLevelOverride then rawget(bot, '__spec').GetLevel = nLevelOverride end
+    if opts.mana then rawget(bot, '__spec').GetMana = opts.mana end
+    if opts.zero_prices then
+        local zeroed = 0
+        for slot = 0, 5 do
+            local h = bot:GetAbilityInSlot(slot)
+            if h ~= nil then
+                rawget(h, '__spec').GetManaCost = function() return 0 end
+                zeroed = zeroed + 1
+            end
+        end
+        assert(zeroed > 0, 'the pre-ladder rebuild found no abilities in slots '
+            .. '0-5, so it zeroed nothing and every reading under it would be '
+            .. 'the real-ladder reading wearing the rebuild\'s name')
+        assert(q:GetManaCost() == 0
+            and bot:GetAbilityByName(REINC):GetManaCost() == 0,
+            'the pre-ladder rebuild did not reach the two handles the reserve '
+            .. 'reads (Wraithfire Blast and Reincarnation)')
+    end
     J.IsSoakCandidate = function() return false end   -- shipped defaults
     local X = rf.load_hero('skeleton_king')
     X.SkillsComplement()
     return X, J, bot, heroes, fx, q
 end
+
+--- desire and aimed-at name on the real frame, in one call.
+local function frame_decide(nLevelOverride, opts)
+    local X = load_frame(nLevelOverride, opts)
+    local d, t = X.ConsiderQ()
+    local name = (type(t) == 'table' and t.GetUnitName) and t:GetUnitName() or nil
+    return d, name
+end
+
+local OD = 'npc_dota_hero_obsidian_destroyer'
 
 tests['[real frame] ground truth: level 6, rank-1 blast ready, OD 377u at 86%'] = function()
     local _, _, bot, heroes, fx, q = load_frame()
@@ -431,29 +507,142 @@ tests['[real frame] ground truth: level 6, rank-1 blast ready, OD 377u at 86%'] 
         'Wraithfire Blast is rank 1 and off cooldown -- the silence below is a '
         .. 'decision, not a missing precondition')
     assert(bot:GetMana() == 272, 'real mana, got ' .. bot:GetMana())
-    local od = heroes['npc_dota_hero_obsidian_destroyer']
+    local od = heroes[OD]
     assert(od ~= nil and GetUnitToUnitDistance(bot, od) < CAST_RANGE + 43,
         'OD must be inside the catch-all ring for the level flip to mean anything')
     assert(od:GetHealth() / od:GetMaxHealth() > 0.85,
         'OD is at 86% health: no kill check of any rank claims him')
 end
 
-tests['[real frame] shipped ConsiderQ is silent at level 6'] = function()
-    local X = load_frame()
-    assert(X.ConsiderQ() == 0,
-        'at level 6, with no fresh hero damage on the frame and an 86%-health '
-        .. 'target, every branch of ConsiderQ correctly declines')
+-- The reserve's operands are ground truth too, since 2026-09-01 -- everything
+-- in 5b..5e is a statement about them.
+tests['[real frame] ground truth: Reincarnation rank 1 and READY, 272 of 272 mana'] = function()
+    local _, _, bot, _, _, q = load_frame()
+    local r = bot:GetAbilityByName(REINC)
+    assert(r ~= nil and r:GetLevel() == 1,
+        'Reincarnation is rank 1 on this frame, got ' .. tostring(r and r:GetLevel())
+        .. '. If it were unlearned the reserve would still price it (the loader '
+        .. 'clamps rank 0 to the rank-1 step) and 5c would be measuring a '
+        .. 'reserve held for an ability that cannot be cast -- a different bug.')
+    assert(r:GetCooldownTimeRemaining() == 0,
+        'Reincarnation is off cooldown, so the reserve\'s `<= 3.0` term is true '
+        .. 'for the honest reason rather than for a missing dumper field')
+    assert(q:GetManaCost() == 95 and r:GetManaCost() == 220,
+        'the ladder prices this frame at Q=' .. q:GetManaCost() .. ' R='
+        .. r:GetManaCost() .. ', recorded 95/220 (special_value_shapes.lua, '
+        .. 'AbilityManaCost `95 110 125 140` and `220 110 0`)')
+    assert(bot:GetMana() == 272 and bot:GetMaxMana() == 272,
+        'the pool is full at 272; 5e is the observation that 272 < 95 + 220')
 end
 
-tests['[real frame] one integer -- level 6 -> 7 -- and the same frame casts'] = function()
-    local X, _, bot, heroes = load_frame(7)
-    local d, t = X.ConsiderQ()
-    assert(d == BOT_ACTION_DESIRE_HIGH,
-        'nothing about the target changed: same 86% health, same 377u, same rank-1 '
-        .. 'blast. Only the hero level moved, and that is the catch-all opening')
-    assert(t == heroes['npc_dota_hero_obsidian_destroyer'],
-        'and it aims at the only enemy in range, taken off the head of the list rather than chosen by '
-        .. 'by anything the kill check computed')
+tests['[real frame] shipped ConsiderQ is silent at level 6'] = function()
+    local X = load_frame()
+    -- CORRECTED 2026-09-01: this case has never gone red, and until c386d5f3 the
+    -- sentence under it read "every branch of ConsiderQ correctly declines".
+    -- That reason died with the mana ladder; the outcome did not.  Which one is
+    -- doing the work today is 5c's job, not this case's.
+    assert(X.ConsiderQ() == 0,
+        'at level 6 the shipped function is silent. See 5c for WHY -- today the '
+        .. 'reserve answers first, and 5b for the pre-ladder world in which the '
+        .. 'branches were the ones declining.')
+end
+
+----------------------------------------------------------------------
+-- 5b. The recorded reading, rebuilt in the world it was taken in.
+
+tests['[real frame 5b] under the pre-ladder meter the recorded cliff is exact'] = function()
+    local d6 = frame_decide(nil, { zero_prices = true })
+    local d7, aim7 = frame_decide(7, { zero_prices = true })
+    assert(d6 == 0,
+        'with every price forced back to 0 -- the meter section 5 was originally '
+        .. 'read on -- level 6 is silent, got ' .. tostring(d6))
+    assert(d7 == BOT_ACTION_DESIRE_HIGH and aim7 == OD,
+        'and level 7 casts at Obsidian Destroyer, got ' .. tostring(d7) .. '/'
+        .. tostring(aim7) .. '. This is the whole content of the 2026-08-22 '
+        .. 'record and it reproduces exactly, so the record was not wrong -- '
+        .. 'its meter is what changed. If THIS goes red, the catch-all itself '
+        .. 'moved and sections 1-4 are the place to look.')
+end
+
+----------------------------------------------------------------------
+-- 5c. The real world: the reserve answers before any branch does.
+
+tests['[real frame 5c] under the real meter BOTH levels are silent, by the reserve'] = function()
+    local d6 = frame_decide()
+    local d7 = frame_decide(7)
+    assert(d6 == 0 and d7 == 0,
+        'with Reincarnation priced, neither level casts (got ' .. tostring(d6)
+        .. '/' .. tostring(d7) .. ')')
+    for _, lv in ipairs({ 6, 7 }) do
+        local X, _, bot, _, _, q = load_frame(lv)
+        assert(X.ShouldSaveMana(q) == true,
+            'and the silence at level ' .. lv .. ' is X.ShouldSaveMana, the '
+            .. 'FIRST statement of ConsiderQ -- not a branch declining. This is '
+            .. 'the assertion that keeps the level-6 case above from being green '
+            .. 'for a reason that stopped being true on 2026-09-01.')
+    end
+end
+
+tests['[real frame 5c] the reserve boundary is R price + Q price, read off the handles'] = function()
+    local _, _, bot, _, _, q = load_frame(7)
+    local need = bot:GetAbilityByName(REINC):GetManaCost() + q:GetManaCost()
+    assert(need == 315, 'the two handles price the reserve at ' .. need
+        .. ', recorded 315; every mana figure in 5c-5e is derived from them')
+    local dBelow = frame_decide(7, { mana = need - 1 })
+    local dAt    = frame_decide(7, { mana = need })
+    assert(dBelow == 0,
+        'one mana below the reserve the frame is still silent, got ' .. tostring(dBelow))
+    assert(dAt == BOT_ACTION_DESIRE_HIGH,
+        'and at exactly ' .. need .. ' it casts, got ' .. tostring(dAt)
+        .. '. The boundary is `GetMana() - Qcost < Rcost` and nothing else.')
+end
+
+----------------------------------------------------------------------
+-- 5d. The dominance result of sections 1-4 is intact -- pay the reserve and the
+-- level cliff is back, unchanged, on the same real frame at the same target.
+
+tests['[real frame 5d] above the reserve the level-7 cliff returns, unchanged'] = function()
+    local fired, silent = {}, {}
+    for lv = 5, 8 do
+        local d, aim = frame_decide(lv, { mana = 315 })
+        if d > 0 then
+            fired[#fired + 1] = lv
+            assert(aim == OD, 'level ' .. lv .. ' aimed at ' .. tostring(aim)
+                .. ', expected the only enemy in range')
+        else
+            silent[#silent + 1] = lv
+        end
+    end
+    assert(table.concat(silent, ',') == '5,6' and table.concat(fired, ',') == '7,8',
+        'with the reserve paid, levels ' .. table.concat(silent, ',')
+        .. ' are silent and ' .. table.concat(fired, ',') .. ' cast; recorded '
+        .. '5,6 silent / 7,8 casting. The cliff sections 1-4 measured is the '
+        .. 'same cliff, on real frame data -- what 2026-09-01 removed is only '
+        .. 'the claim that ONE integer reaches it from this frame.')
+end
+
+----------------------------------------------------------------------
+-- 5e. On this frame the reserve cannot be paid at all.
+
+tests['[real frame 5e] 315 is more mana than this Wraith King can hold'] = function()
+    local _, _, bot, _, _, q = load_frame()
+    local need = bot:GetAbilityByName(REINC):GetManaCost() + q:GetManaCost()
+    assert(bot:GetMaxMana() < need,
+        'this frame\'s pool is ' .. bot:GetMaxMana() .. ' and the reserve wants '
+        .. need .. '; if the pool ever reaches the reserve this case is the one '
+        .. 'to re-derive, because 5e is the claim that it does not')
+    -- The consequence, stated as the reading it is: at this hero level, with
+    -- Reincarnation rank 1 and off cooldown, no mana state this frame can reach
+    -- lets shipped ConsiderQ cast.  It is not a mock artefact -- the engine has
+    -- always priced abilities, so this has been live in every real game; only
+    -- our fixtures answered 0, and only until c386d5f3.
+    local d = frame_decide(7, { mana = bot:GetMaxMana() })
+    assert(d == 0,
+        'at a FULL pool of ' .. bot:GetMaxMana() .. ' mana the level-7 frame is '
+        .. 'still silent, got ' .. tostring(d) .. '. Wraithfire Blast is '
+        .. 'constructively uncastable here, and every archived "ConsiderQ '
+        .. 'decides X on frame F" reading taken before 2026-09-01 was taken '
+        .. 'with this reserve switched off.')
 end
 
 ----------------------------------------------------------------------
