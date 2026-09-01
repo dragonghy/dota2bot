@@ -8506,5 +8506,5 @@
     **不可与 W30/W31/W32/W33 并池**。
     (4) **`unk` 那一列(`wkqdmg`)第六轮仍未检验**;`idletrip_domain.py` 四格顺延。
     (5) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
-  - **已发表**:见报告 §10(**先 push 后发表**,GH #290)。**不新开 issue**(铁律 7):走 #361 / #364 追评。
+  - **已发表**(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh` **BARE_EXIT=0**):GH **#361** 追评 `issuecomment-5490219964`(撤回 + 常数算术被自家输出推翻 + 两锚不同意 + W33 侧别披露);GH **#364** 追评 `issuecomment-5490223533`(第五次登记 + 「零 `rc.sh` 并发下照样红」的反例)。**未新开 issue**(铁律 7)。
   - 完整报告:`iterations/reports/replay-check/20260901T070000Z.md`
