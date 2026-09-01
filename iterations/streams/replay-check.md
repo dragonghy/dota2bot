@@ -8803,7 +8803,8 @@
     (3) **`tp_out` 那 311 条**先看去程英雄秒分布,再决定要不要给协同组开姊妹条。
     (4) `will_reincarnate` 提案**第三轮顺延,别再掉**。
   - **已发表**(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh`):
-    GH **#344** 追评(四格 + 124 秒/局 + 96%→67% / 464→283→124 的复算 + t=1213.5 帧证据 + `tp_out=311`)。
+    GH **#344** 追评 `issuecomment-5496835549`(四格 + 124 秒/局 + 96%→67% / 464→283→124 的复算 + t=1213.5 帧证据 + `tp_out=311`);
+    草稿过 `claim_precheck.sh` **BARE_EXIT=0**(`local commits not on origin/main: 0`、`refused 0`、`OK to publish`)。
     **未新开 issue**(铁律 7):这一形状 #344 已在,trunk-red 协同组已登记。
   - **Token 用量**:见报告 §10。
   - 完整报告:`iterations/reports/replay-check/20260901T160120Z.md`
