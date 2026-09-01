@@ -254,15 +254,53 @@ local function contains(t, s)
     return false
 end
 
+-- CORRECTED 2026-09-01 (hero).  This case used to assert that shipped Zeus
+-- fires LIGHTNING BOLT here, and it was green -- against this file's own header,
+-- which records the replay's ground truth as "t=225.5 he spends 94 on ARC
+-- LIGHTNING".  The assertion and the observation named different spells for two
+-- weeks and nothing raised a hand, because tests/mock/replay_fixture.lua left
+-- `GetManaCost` off the ability spec: it fell through to bot_api's generic
+-- `^Get` default, answered 0 for every ability, and made the mana term of
+-- IsFullyCastable the tautology `GetMana() >= 0`.  In that world Lightning Bolt
+-- was affordable at any mana and outbid Arc Lightning.
+--
+-- This file was ALSO the one place the price was partly charged -- load_zeus
+-- anchors the ultimate's handle to 246 -- which is precisely why the two
+-- ground-truth cases above have always been honest while this one was not: the
+-- workaround covered the ult and nothing else, so the basic abilities stayed
+-- free and the end-to-end leg drifted off the frame it claims to reproduce.
+--
+-- With the loader charging the KV ladder, the arithmetic on this frame is:
+--   99 mana | Arc Lightning rank 3 = 95  AFFORDABLE (leaves 4)
+--           | Lightning Bolt rank 1 = 120  NOT
+--           | Thundergod's Wrath    = 246  NOT
+-- So the lever's premise is unchanged and SHARPER, not weakened: shipped Zeus
+-- still leaks the ult reserve into a 90.6%-HP target, and it leaks 95 of the 99
+-- mana he is holding.  Lightning Bolt is asserted UNAFFORDABLE rather than
+-- merely unchosen, so this case cannot go green again on a free-mana world.
 tests['end to end: shipped spends the reserve on the healthy target'] = function()
     local log, _, _, bot, _, abilityR = run_skills(LOCK, false)
     local names = ability_names(log)
-    assert(contains(names, 'zuus_lightning_bolt'),
-        'shipped Zeus fires Lightning Bolt into the 90.6%-HP dragon_knight, got {'
-        .. table.concat(names, ',') .. '}')
+
+    local arc  = bot:GetAbilityByName('zuus_arc_lightning')
+    local bolt = bot:GetAbilityByName('zuus_lightning_bolt')
+    assert(arc:GetManaCost() == 95, 'Arc Lightning rank 3 costs 95, got ' .. arc:GetManaCost())
+    assert(bolt:GetManaCost() == 120, 'Lightning Bolt rank 1 costs 120, got ' .. bolt:GetManaCost())
+    assert(not bolt:IsFullyCastable(),
+        'Lightning Bolt is UNAFFORDABLE at 99 mana -- the free-mana world is what '
+        .. 'used to let this case name it')
+
+    assert(contains(names, 'zuus_arc_lightning'),
+        'shipped Zeus fires Arc Lightning into the 90.6%-HP dragon_knight, as the '
+        .. 'replay itself did at t=225.5, got {' .. table.concat(names, ',') .. '}')
     assert(not contains(names, ULT_NAME),
         'and it is NOT the ult: ' .. bot:GetMana() .. ' mana cannot pay '
         .. abilityR:GetManaCost())
+
+    -- The leak, stated as the number the reserve loses.
+    assert(bot:GetMana() - arc:GetManaCost() == 4,
+        'the chip cast leaves 4 of 99 mana against a 246 ult, got '
+        .. (bot:GetMana() - arc:GetManaCost()))
 end
 
 tests['end to end: armed holds it -- the final decision changes, not just the helper'] = function()

@@ -15,8 +15,65 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 local ability_meta = require('mock.ability_meta')
+local special_value_shapes = require('mock.special_value_shapes')
 
 local M = {}
+
+-- ===================================================================
+-- The mana price of an ability, from the game's own KV.
+--
+-- WHY THIS EXISTS (hero 2026-09-01).  The `IsFullyCastable` spec below has
+-- checked `owner:GetMana() >= self:GetManaCost()` since test_set.md §F, and its
+-- comment names the exact case it was written for: "a 246-mana ultimate reading
+-- 'fully castable' while the hero held 190 mana, which is the real reason
+-- X.ConsiderR bails on its first line in game".
+--
+-- That clause has never once been able to fire.  `GetManaCost` was on no spec,
+-- so it fell through to mock/bot_api.lua's generic `^Get` default and answered
+-- 0 -- for every ability, on every frame.  Measured before the fix: 4376 of
+-- 4376 ability handles in the corpus answered 0, none answered anything else,
+-- so `GetMana() >= 0` was a tautology and the mana term of the conjunction was
+-- dead tree-wide.  Restricted to the five focus heroes (the only ones this
+-- repository holds a KV mana ladder for), 40 of 381 trained-and-"castable"
+-- readings -- 10.5% -- are revoked once the real price is charged, and the
+-- loader comment's own worked example is one of them:
+-- f_260819_142047_zuus_ult_denied.lua holds 190 mana against a 250-mana
+-- Thundergod's Wrath and read CASTABLE.  So did a Zeus with 11 mana
+-- (f_260820_103644_necro_pinned_dying.lua), and so did the ultimate on
+-- f_260819_142047_zuus_ult_manalock.lua -- a fixture whose NAME is the mana
+-- lock -- at 99 mana.
+--
+-- The failure direction is the dangerous one: a vacuous clause OVERSTATES how
+-- often a decision branch is reachable, so any fixture-driven claim of the form
+-- "this frame reaches branch X" that passed through IsFullyCastable was resting
+-- on free mana.  Same family as the GetActualIncomingDamage zero (hero
+-- 2026-08-29): a silent 0 out of an unspecced getter is not a small number, it
+-- is a DIFFERENT PREDICATE.
+--
+-- HONEST BOUND, stated because it is the whole reason this is a floor and not a
+-- fix.  tests/mock/special_value_shapes.lua is a snapshot of the FIVE FOCUS
+-- HEROES only (21 abilities carry an AbilityManaCost ladder).  Every other
+-- hero's abilities keep answering 0 and stay unconditionally affordable, so
+-- this narrows the vacuity, it does not close it.  A non-focus hero's mana
+-- clause is still dead, and a reading taken on one must not be quoted as though
+-- the price were charged.  Widening the snapshot is what closes it.
+local function mana_ladder(unit_name, ability_name)
+    local short = unit_name:gsub('^npc_dota_hero_', '')
+    local abils = special_value_shapes.SHAPES[short]
+    if abils == nil then return nil end
+    local entry = abils[ability_name]
+    if entry == nil then return nil end
+    local mc = entry['AbilityManaCost']
+    if mc == nil or mc.base == nil then return nil end
+    local steps = {}
+    for tok in mc.base:gmatch('%S+') do
+        local n = tonumber(tok)
+        if n == nil then return nil end
+        steps[#steps + 1] = n
+    end
+    if #steps == 0 then return nil end
+    return steps
+end
 
 --- Real engine ability slot + IsUltimate for one hero's dumped abilities.
 ---
@@ -416,6 +473,20 @@ function M.load(path, sSubject)
                 -- "fully castable" while the hero held 190 mana, which is the
                 -- real reason X.ConsiderR bails on its first line in game.
                 local owner = heroes[u.name]
+                -- The KV price, so the mana term of IsFullyCastable below is a
+                -- real clause rather than `GetMana() >= 0`.  See mana_ladder's
+                -- header for the measurement and for which heroes it covers.
+                -- Rank-indexed and clamped: a rank past the ladder's end pays
+                -- its last step rather than nil (talent rows and the 3-step
+                -- ultimate ladders both hit this).
+                local steps = mana_ladder(u.name, a.name)
+                if steps ~= nil then
+                    sp.GetManaCost = function(self)
+                        local rank = self:GetLevel()
+                        if rank < 1 then return steps[1] end
+                        return steps[math.min(rank, #steps)]
+                    end
+                end
                 sp.IsTrained = function(self) return self:GetLevel() > 0 end
                 sp.IsCooldownReady = function(self)
                     return self:GetCooldownTimeRemaining() <= 0

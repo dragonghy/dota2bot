@@ -168,15 +168,53 @@ end
 -- mana channel reads "nothing was ever blocked" -- a green, fast, all-zero
 -- agreement with itself. This section is what stands between that and a claim.
 
-tests['[hero] the mana-cost anchors are in force in the fixture world'] = function()
+--- RECONCILED 2026-09-01 (hero).  This case used to assert the loader answers
+--- ZERO here, because when it was written the sweep's datafeed table was the
+--- only source of a mana cost in the tree and the assertion's job was to stop a
+--- second, silent one appearing underneath it.  The tripwire fired as designed
+--- the day tests/mock/replay_fixture.lua started charging the KV price
+--- (mana_ladder, GH-less hero change of the same date), and its failure text
+--- asked for exactly this: reconcile the two before trusting either.
+---
+--- They reconcile CLEANLY, and that is worth more than the silence it replaces.
+--- The datafeed (hero_id=5, read 2026-08-23) and the game's own KV snapshot
+--- (tests/mock/special_value_shapes.lua) are independent reads taken nine days
+--- apart, and they agree digit for digit on all three of CM's costed abilities:
+---     Crystal Nova   115/135/155/175
+---     Frostbite      125/135/145/155
+---     Freezing Field 200/400/600
+--- So this section now asserts AGREEMENT rather than absence.  That is strictly
+--- stronger: the old form could only notice a second source arriving, this one
+--- notices it arriving and DISAGREEING -- which is the case that would actually
+--- corrupt the sweep, since the sweep prices its own slots while the loader
+--- prices IsFullyCastable.  A drift between them would put the CASTABLE channel
+--- and the DECISION channel on different worlds without either going quiet.
+tests['[hero] the mana-cost anchors are in force, and both sources agree'] = function()
     local FIX = 'tests/fixtures/f_260820_103644_necro_pinned_dying.lua'
     local _, bot = rf.load(FIX, 'npc_dota_hero_crystal_maiden')
     local nova = bot:GetAbilityByName('crystal_maiden_crystal_nova')
     assert(nova ~= nil, 'the frame must carry Crystal Nova')
-    assert((nova:GetManaCost() or 0) == 0,
-        'the loader now answers a non-zero GetManaCost by itself. That is an '
-        .. 'improvement, but this sweep anchors costs externally -- reconcile '
-        .. 'the two before trusting either.')
+
+    -- The loader must be charging SOMETHING: a silent 0 here is the world this
+    -- whole section exists to keep out, and it is now reachable from the other
+    -- direction (a mana_ladder that stops resolving).
+    local nLoader = nova:GetManaCost() or 0
+    assert(nLoader > 0,
+        'the loader answers 0 for Crystal Nova, so IsFullyCastable() is mana-blind '
+        .. 'again and the CASTABLE channel silently agrees with itself -- check '
+        .. 'mana_ladder() in tests/mock/replay_fixture.lua')
+
+    -- ... and it must charge the SAME thing this sweep does.
+    local rank = nova:GetLevel()
+    local anchored = ({ 115, 135, 155, 175 })[rank]
+    assert(anchored ~= nil, 'Crystal Nova at an unanchored rank ' .. tostring(rank))
+    assert(nLoader == anchored,
+        'the loader prices Crystal Nova rank ' .. rank .. ' at ' .. nLoader
+        .. ' while this sweep anchors it at ' .. anchored .. ' (datafeed hero_id=5, '
+        .. '2026-08-23). The two cost sources have drifted -- the CASTABLE channel '
+        .. 'below is priced by the sweep and the DECISION channel by the loader, so '
+        .. 'a drift puts them on different worlds. Reconcile before trusting either.')
+
     assert(#SLOTS > 0, 'the sweep reported no ready ability slots at all')
     local nCosted = 0
     for _, s in ipairs(SLOTS) do if s.cost > 0 then nCosted = nCosted + 1 end end
