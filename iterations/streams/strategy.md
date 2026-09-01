@@ -27,6 +27,57 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0CORP. **【2026-09-01T19:21Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监;backlog 最上面三条 `0HPB`(已落地)/ `0HPB5`(登记不修,
+   **且明写要等本轮这道读数**)/ `0HPBX`(登记不修)⇒ **本轮兑现的正是上一轮亲手交出去的 §DG.7.1**);
+   **零行为改动**:无新 gate、无 armed id、无入集提议、无 `queue.json` 请求,`bots/` 与 `game/` **零 diff**;
+   issue **GH #400**;报告 `iterations/reports/strategy/20260901T192129Z.md`;零 AWS、S3 零访问、零 EC2。
+   **已交棒,球在总监(§DG.7.1 进不进流程)。**】**
+   **⭐ 主判据(可复用,超出本主题):一个只能证伪的读数,必须在选杠杆之前跑,不是在裁定之后补。**
+   这道读数两个方向的价钱**完全不对称**:语料出场 **=0** ⇒ fixture 级买到条件 (a) **不可能**(**承重**);
+   **>0** ⇒ 只是**没被排除**(几乎不承重,域还得可达)。**便宜的那半正是能说「别做」的那半** ——
+   而 **#385 / #393 / #397 连着三轮没在选题前跑它**(brewmaster 0、tiny 0,`0HPB5` 的三个各 0)。
+   #397 是总监 §DF.6 点名的**第三条 null**,并第一次把它量成读数 —— 但那读数**长在一个测试文件的
+   `[source S6]` 里**,只在那次修复被跑到时才存在。
+   **⭐⭐ 结构性逃生口(可操作的一半)**:**共享代码里的杠杆不付这笔域价钱** ——
+   `bots/mode_*.lua` / `bots/FunLib/*` / generic override 的域是**语料里的每一个英雄**,
+   `bots/BotLib/hero_<x>.lua` 则全额支付;`--file` 把这条区分做成**工具的答案**而不是读者的推断。
+   **产出** `tools/agent/corpus_hero_census.py`(秒级、只读、零 AWS;退出码沿用 **0/2/3**:
+   0 都在场 / 3 至少一个语料为 0 / **2 语料读不到 ≠「都不在场」**)+
+   `tests/test_corpus_hero_census.py`(`[ratchet]` **32/0**,驱动真脚本不重实现)。
+   **实测**:108 帧文件 / 43 个英雄;CM 54·40、lina 52·38、zuus 52·38、viper 48·37、
+   WK 37·29、axe 29·20、lion 24·…;**五个焦点英雄全部在场** ⇒
+   「域买不到」**不是本仓的普遍处境,只是最近三轮的选题处境**。
+   **变异 14/14 CAUGHT**,但**六个变异活过了第一遍**,逐条记在报告 §二:
+   M4b 被**表头那行 `WeakHeroes list : 18`** 满足(**与 #397 的 M2 一模一样的形状**:
+   用错误理由达成的正确结论);M6b 被另一条独立路径满足;M9/M10/M11/M13 靠补**绝对声称**才钉住,
+   **M13 尤其** —— 原 `--top` 断言拿输出跟同一份输出的前 5 行比,**在任何排序下都自洽**。
+   **⛔ 并登记一次被污染的变异回合**:加完「表格行数 == 表头英雄数」后干净树自己就红了
+   (42 vs 43,行正则没放过 `<- WeakHeroes` 后缀),那一轮 **11 个变异全部报 CAUGHT** ——
+   **它们是被那条本来就红的断言抓的**。修好后整轮重跑。
+   **变异台在开跑之前必须先证明基线是绿的**(与 `mutstand_pipe_guard` 同族)。
+   **下一格**:**总监**裁 §DG.7.1 —— 工具与棘轮都已落地,只剩「进不进流程」;
+   建议落法见报告 §五(README 铁律 4 或 `test_set.md` 入集清单加一行:
+   提议 gated fix 前跑 `--file <改动文件>`,**exit 3 要么换杠杆、要么写明为什么仍然值得**)。
+   **本组下一轮**:**先选域再选形状**,优先在 `SHARED` 文件或 43 个在场英雄里挑杠杆。
+
+0NOTNUM. **【2026-09-01T19:21Z 新增,登记不修 —— `hpbool` 主判据的**取反极性**,#397 的 `[source S2]` 漏掉的那一格】**
+   `bots/FunLib/minion_lib/utils.lua:31`,`U.CantMove`:
+   `or not unit:GetCurrentMovementSpeed() or unit:GetCurrentMovementSpeed() < 100`。
+   `GetCurrentMovementSpeed()` 返回数值,Lua 里 **0 也为真** ⇒ `not <数值>` **恒假**,
+   这条 nil 保护**一次都没保护过**。**全仓这个取反形状只有这 1 处**(本轮扫过,**未棘轮**)。
+   **不改的理由是它拿不到东西**:紧随其后的 `< 100` 完成了作者的全部意图,
+   armed/baseline **逐字节同判决**,可省的只有一次引擎调用 ⇒ **不是杠杆,是注记**。
+   要改就得连「速度真的可能是 nil 吗」一起买到证据(条件 (c))。
+
+0SHAPE0. **【2026-09-01T19:21Z 新增,登记 —— 本轮扫空的两个形状,**未棘轮**,别再重扫】**
+   (甲)**循环体在第一次迭代就无条件 `return`/`break`**(「循环是句谎话」):全仓 **0**。
+   (乙)**同一 `if/elseif` 链里重复的条件**(后一条恒不可达):全仓 **0**。
+   ⚠️ 两条都**踩过自己造的假阳**:初版 (乙) 报 68 条,全部来自
+   ①把字符串字面量抹成 `''` 于是 `char == ''` 互撞;②`elseif` 的链身份记在 `depth` 而 `if` 记在 `depth-1`,
+   于是 radiant/dire 两条**兄弟链**被读成同一条。修完两处才归零。
+   **重扫之前先复现这两个假阳**,否则会第三次得到 68 这个数字。
+
 0HPB. **【2026-09-01T18:55Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监;backlog 最上面三条 `0IMM`(已落地)/ `0TREE`(登记不修)/
    `0REPICK`(严格更大的杠杆)都已结清或明写不做 ⇒ 本轮开一次**新的机械化普查**);
@@ -4133,6 +4184,35 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T19:21Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  backlog 最上面三条 `0HPB`/`0HPB5`/`0HPBX` 已结清或明写不做,**且 `0HPB5` 逐字写着要等本轮这道读数** ⇒
+  **本轮兑现上一轮亲手交出去的 §DG.7.1**;**报告 `iterations/reports/strategy/20260901T192129Z.md`**;
+  issue **GH #400**;backlog 条目 **`0CORP`**(并新开 `0NOTNUM` / `0SHAPE0` 两条登记项);
+  **零行为改动**:无新 gate、无 armed id、无入集提议、无 `queue.json` 请求;
+  零 AWS、S3 零访问、零 EC2;**`bots/` 与 `game/` 零 diff**):
+  **一个只能证伪的读数,必须在选杠杆之前跑,不是在裁定之后补。**
+  语料出场 **=0** ⇒ fixture 级买到条件 (a) **不可能**(**承重**);**>0** ⇒ 只是没被排除(几乎不承重)。
+  **能说「别做」的正是便宜的那半** —— 而 **#385 / #393 / #397 连着三轮没在选题前跑它**。
+  **产出** `tools/agent/corpus_hero_census.py`(秒级、只读、退出码 **0/2/3**,
+  **2 = 语料读不到 ≠「都不在场」**)+ `tests/test_corpus_hero_census.py`(`[ratchet]` **32/0**)。
+  **实测:108 帧文件 / 43 个英雄;五个焦点英雄全部在场**(CM 54·40、zuus 52·38、WK 37·29、
+  axe 29·20、lion 24);**tiny / shredder / kez / dawnbreaker / brewmaster 全部 0 ⇒ exit 3**;
+  `bots/mode_*.lua`、`bots/FunLib/*` ⇒ **SHARED,不付域价钱**(这是可操作的一半)。
+  **变异 14/14 CAUGHT,但六个活过第一遍**:M4b 被**表头那行 `WeakHeroes list : 18`** 满足
+  (**与 #397 的 M2 同形**);M13 尤其 —— 原 `--top` 断言**在任何排序下都自洽**。
+  **⛔ 并登记一次被污染的变异回合**:加完一条新断言后干净树自己就红(42 vs 43),
+  那一轮 **11 个变异全部报 CAUGHT,全是被那条本来就红的断言抓的**;修好后整轮重跑。
+  **变异台开跑前必须先证明基线是绿的。**
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
+  `run_tests.lua`(smoke_load / gate_claim / replay_fixture)**3/0**;
+  `test_corpus_hero_census.py` **32/0**;**全量套件没跑完(GH #124),不声称**。
+  **开工自检:第一条命令又写成 `| tail` 被拒(同站点第十二轮),但这一轮没再自己加 timeout,
+  于是第一次拿到完整读数** —— `selfcheck worst exit: 3`,`legs run 8`,
+  `FINDINGS = cadence / trunk-red(python) / trunk-red(lua)`,**`UNCERTIFIABLE: none`**。
+  两条 trunk 红既存并已立案(`test_carrier_terms.py` = W35 wave,#396 同族;
+  `test_incoming_damage_callsite_census.lua` = **#394**),而且给的是比 `git stash` 更强的理由:
+  `git status --short` **全程只有三行 `??`**,现有文件改动零行。
+  **⏳ 待总监裁 §DG.7.1(进不进流程);本组下一轮先选域再选形状。**
 - 2026-09-01T18:55Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   backlog 最上面三条 `0IMM`/`0TREE`/`0REPICK` 都已结清或明写不做 ⇒ 本轮开一次**新的机械化普查**;
   **报告 `iterations/reports/strategy/20260901T185500Z.md`**;issue **GH #397**;
