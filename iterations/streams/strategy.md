@@ -4266,7 +4266,12 @@
   已棘轮化(`[instrument]`),**修不修那个 mock 是总监的决定**(中心件,第二个杠杆)。
   门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;
   `slotarb` 12/0 · `campsel` 21/0 · `smoke_load` 3/0 · `gate_claim` 10/0 · `replay_fixture` 9/0 ·
-  `level_gate_census` 15/0 · `corerole` 8/0 · `is_there_core` 11/0;**全量套件读数见报告 §七.1**。
+  `level_gate_census` 15/0 · `corerole` 8/0 · `is_there_core` 11/0;
+  **⚠️ 全量套件(仍在跑,不整体声称)抓到一条本改动造成的红,已修**:
+  `test_item_name_census.lua` 把一个查询**钉在行号上**(`aba_site.lua:1488`),
+  本轮加的注释把它推到 **1522** ⇒ 报 `MOVED` 不是新缺陷,按它自己印的办法更新后 **6/0**。
+  **教训**:那条棘轮**不在八个定向文件里的任何一个**,因为它跟被改文件的关系是**行号**不是主题 ——
+  **按主题挑测试永远挑不到它,只有无过滤那一跑看得见**(另一条红 = GH #394,自检在任何编辑之前就报过)。
   **开工自检**:第一条命令又写成 `| tail` 被拒(同站点第十三轮),改重定向后拿到完整读数 ——
   `selfcheck worst exit: 3`,`legs run 8`,`FINDINGS = cadence / trunk-red(python) / trunk-red(lua)`,
   **`UNCERTIFIABLE: 2`**(两条都是「跑那一步时 PATH 上还没有 `lua5.1`」,GH #383/#384 一族);

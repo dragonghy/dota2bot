@@ -13,7 +13,7 @@
 --     branch) into the purchase layer as if it were a basic item.
 --
 -- Items really do get renamed: Gleipnir's internal name is `item_gungir`, and
--- `bots/FunLib/aba_site.lua:1488` asks for `item_gleipnir`.  Nothing in the tree
+-- `bots/FunLib/aba_site.lua:1522` asks for `item_gleipnir`.  Nothing in the tree
 -- said so until this census ran (`print()` never reaches the server console and
 -- the engine error handler is broken -- AGENTS.md).
 --
@@ -180,7 +180,7 @@ end
 -- Frozen 2026-08-25.  Each line is (kind, name, site) plus what it is.
 local tRegistered = {
     -- LOOKUP: an exact-name question the engine answers with silence.
-    ['LOOKUP item_gleipnir bots/FunLib/aba_site.lua:1488'] =
+    ['LOOKUP item_gleipnir bots/FunLib/aba_site.lua:1522'] =
         'Gleipnir ships as item_gungir.  `not HasItem(bot, "item_gleipnir")` is '
         .. 'therefore permanently true, so that branch returns true whenever '
         .. 'net worth < 18000 regardless of the item.  aba_site IS required '
