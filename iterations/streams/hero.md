@@ -63,8 +63,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - 门:静态 **exit 0 / 0 warnings**(裸读,**没用 `RULE6_BYPASS`**;容器缺 luacheck,gate 自己装的);
      动态**子集不是全套**(GH #124)14 组全部 exit 0;queue.json 动了 ⇒ 另跑
      `python3 tests/test_pending_rulings.py` **84 checks / 0 failed / exit 0**。
-   - **下一棒**:(1) **admission 仍阻塞**,三条本组的各值一个工作单元,**三条不是本组的在 #357
-     追评里点名交出**,球给总监分派;(2) **queue `hero-10` 执行前先读新加的那块**;
+   - **下一棒**:(1) **admission 仍阻塞**,三条本组的各值一个工作单元,**三条不是本组的已在 #357
+     追评里点名交出**(https://github.com/dragonghy/dota2bot/issues/357#issuecomment-5487884890),球给总监分派;(2) **queue `hero-10` 执行前先读新加的那块**;
      (3) **`-43a` 的 Zeus 方向仍欠**(连续第四轮);(4) GH #374 仍在总监手上。
 
 -65. ~~**认领 GH #366:把「(a) bot 没花点 / (b) dump 陈旧」这个分叉判掉**~~
