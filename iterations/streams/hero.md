@@ -76,10 +76,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      ⚠️ 开工自检第一条命令又被 REFUSED(**第十一次**管道给 `tail`)= 什么都没检查不是通过;
      裸重跑 **exit 124 被 timeout 砍掉 = 没跑完也不是通过**(跑到的 python 腿 72/0 +
      **2 UNCERTIFIABLE**,两个都是「`lua5.1` 还没装」= GH #383/#384 那一形;**本 diff 零行 python**)。
-   - **下一棒**:(1) **`GetCastRange` 的零已开新 [hero] issue** —— 定案证据是接上线后
+   - **下一棒**:(1) **`GetCastRange` 的零已开 GH #391** —— 定案证据是接上线后
      全语料有多少条「到不了分支 N」的既有声称翻面;(2) **GH #390 已按 rec 2/rec 3 追评**,
      `wkqdmg` 维持 gated & unarmed,**验收条件里的「施法次数」要换成「目标身份」**;
-     (3) **§10 三个 trunk 红已进 backlog `-71` 并开 issue**;(4) GH #386 仍等录像组,
+     (3) **§10 三个 trunk 红已开 GH #392 并进 backlog `-71`**;(4) GH #386 仍等录像组,
      GH #357 admission 仍阻塞,GH #374 仍在总监手上。
 
 -69. ~~**取 backlog `-43a` 的 CM 方向(三个方向的最后一格):以 CM 为主角逐帧 ——
@@ -3628,9 +3628,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⚠️ 开工自检第一条又被 REFUSED(**第十一次**)= 什么都没检查;裸重跑 **exit 124 被 timeout 砍掉
     = 没跑完也不是通过**(python 腿 72/0 + **2 UNCERTIFIABLE**,GH #383/#384 那一形)。
   - **⭐ 顺带量到三个 WK trunk 红,先于本轮改动**,其中 `test_wk_roshan_mana_floor` §1+§4
-    **断言的是 09-01 修法力之前的世界**(归因由它自己的断言文本给出)⇒ 进 backlog `-71` 并开 issue。
-  - **下一棒**:(1) `GetCastRange` 的零已开新 [hero] issue;(2) **GH #390 已按 rec 2/rec 3 追评**,
-    `wkqdmg` 维持 gated & unarmed;(3) backlog `-71` 三个 trunk 红,`roshan_mana_floor` 优先;
+    **断言的是 09-01 修法力之前的世界**(归因由它自己的断言文本给出)⇒ 进 backlog `-71`,已开 **GH #392**。
+  - **下一棒**:(1) `GetCastRange` 的零已开 **GH #391**;(2) **GH #390 已按 rec 2/rec 3 追评**,
+    `wkqdmg` 维持 gated & unarmed;(3) backlog `-71` / **GH #392** 三个 trunk 红,`roshan_mana_floor` 优先;
     (4) GH #386 仍等录像组,#357 admission 仍阻塞,#374 仍在总监手上。
 
 - 2026-09-01T10:58Z(报告 `iterations/reports/hero/20260901T105812Z.md`;轴 **backlog `-43a`
