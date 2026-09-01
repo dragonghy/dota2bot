@@ -1180,6 +1180,17 @@
         "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(22:3xZ 到,01:0xZ 裁;§BB.4)。**路由裁定,不是对 §CX 全部读数的背书。**\\n\\n**总监按源码独立复核过三条**:(i) gate 是**单条独立门**(`mode_outpost_generic.lua:79`,`bRescan = J.IsModeTurbo() and J.IsSoakCandidate('outlatch')`),**没有第二个候选 id**,且**单点求值**(下游两处都读 `bRescan` 这一个局部);全仓 `outlatch` 只出现在这一个文件。(ii) 未 armed **逐字保留出厂行为且是结构性的**:`DidWeGetOutpost = not bRescan or #Outposts > 0` 在门关时由 `not bRescan` **短路**,在测量表之前就取到出厂那个无条件 `true`;节流的 `return NONE` **写在 `if bRescan` 之内**,出厂路径从不求值它。(iii) 验收独立重跑绿:`lua5.1 tests/run_tests.lua outlatch` **12/12 裸读 exit 0**。\\n\\n⚠️ **总监自己加的第 (丁) 条限定 —— 提议里没有,收割前必读**:**armed 腿有一条出厂腿没有的持续成本**。出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`;armed 在「敌方二塔已倒 **且** `Outposts` 仍为空」期间,**每个 bot 每游戏秒扫一次,直到本局结束**。若真引擎的 `UNIT_LIST_ALL` 根本不收录 outpost(§CX.4(B) 明说本仓不可观测),这条成本**全程存在而收益恒为零**。⇒ (甲) armed 腿若读到帧时间/GPM 的负向漂移,**这条要先排除,不许先归因到别处**;(乙) 恒零读数**不是**「测过了无效应」,它是「扫了一整局什么都没找到」,两者在 verdict 表里长得一样而含义相反。\\n\\n**总监顺带核过一条提议没写的行为中性性**:节流的 `return NONE` 只可能在闩仍开的帧上发生,而闩仍开 ⇒ `#Outposts == 0` ⇒ 那一帧 `GetClosestOutpost()` 本来就答 `nil`、出价本来就是 NONE ⇒ **节流没有吞掉任何一个本可以非 NONE 的出价**。"
       },
       "batch_desk": "W33 (2026-09-01T03:31:05Z, 4x c6i.4xlarge spot, seeds 2756/2790/2887/2938, tree e84fe4d216efdaac3b40966b1fb542d36816e1db, 50-id arm string). Rideshare, zero EC2 increment: this id is in the armed leg of this wave, so it is measured by construction. Harvest by recover_verdict.py."
+    },
+    {
+      "id": "strategy-29",
+      "stream": "strategy",
+      "bundle": "illumove",
+      "seeds": [],
+      "priority": 3,
+      "axis": "ILLUMOVE —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5)。**注意 §CY.3 的教训**:本行 `bundle` 字段**已填 `illumove`**,不是空串 —— 开工自检按 `bundle` 找提议行,`strategy-27`/`strategy-28` 被报成 `ORPHAN_PROPOSAL` 正是因为那两行的 `bundle` 是空的。",
+      "question": "`illumove`(GH #378,提议 test_set.md §CZ):`bots/FunLib/minion_lib/illusions.lua` 的 `nNextMoveTime` 是 **module 级**的局部变量,而它节流的决策(「这个单位最近有没有被给过去处」)是 **per-unit** 的。`bots/FunLib/aba_minion.lua` **只 dofile 该模块一次**(`:11`),并把这个 bot 的每一个幻象与每一个 `U.IsMinionWithNoSkill` 单位经**同一个调用表达式**(`:52`)送进 `X.Think` ⇒ 同一帧里第一个走到移动分支的小兵把共享时钟推后 0.2s,**兄弟们直接从 `X.Think` 末尾掉出去,一条命令都没有**;而它们 0.2s 后也不会被补上,因为 `aba_minion.lua:33-35` 自己那道 per-unit 0.5s 闸把它们扣到 0.5s 之后,那时共享时钟又被当帧的赢家推后了。真实帧 20 周期 4 小兵实测 **20/0/0/0**(不是 20/6/6/6)。armed 时时钟改挂 `hMinionUnit.next_move_time`(初值读回 0,与全新 module 时钟同值 ⇒ arming 不可能让出厂会动的小兵反而停下);`0.2` 命名为 `MOVE_THROTTLE`,**arming 是把时钟挪成 per-unit,不是把时钟拆掉**。",
+      "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— 找**同一个 bot 同时有 ≥2 个受控小兵/幻象**的窗口(WK 的 `skeleton_king_mortal_strike` 骷髅、Naga/PL/TB/CK 的幻象、术士石傀儡、Lycan 狼、先知树人、Brood 小蜘蛛、被支配的野怪都算),读**每个**小兵在该窗口内收到的移动/攻击移动命令数。**出厂腿的预登记预期:同窗口内只有一个小兵在动,其余为 0**;**armed 腿:每个小兵都有非零命令数**。⚠️ **METHOD-FAILED 分支(按 §CJ 必须枚举)**:若语料里根本没有「同一 bot ≥2 个受控小兵」的窗口(**这完全可能** —— 5 个焦点英雄里只有 WK 产生这种人口,而 `mortal_strike` 的骷髅存活很短),**判 `DOMAIN-EMPTY`,不判无效**,并把这一条**退回总监重裁**;执行方**不得**自行套用「无效应 ⇒ 不 promote」。**条件 (b)**:粗粒度,胜负无明显负面即可。**条件 (c)** 已成立:被卡住的是「小兵跟随主人 / 转场去团战 / 走去线上」这一整类移动,标准打法里召唤物跟随与分推是基本操作。",
+      "status": "pending"
     }
   ],
   "done": [

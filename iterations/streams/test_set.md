@@ -11791,3 +11791,114 @@ ORPHAN_PROPOSAL (§CG.5: open a queue request row, then rule it): 2
   **「有行,只是没链上:去设 `bundle`,不要开第二行」**并**点名那些行**,而不是「一行都没有」。
   **退出码不变(仍然是 3,仍然是 finding)** —— 改的是**指令**,不是**严重性**:
   一条链接键为空的请求确实还没被机器看见,它该红;它只是不该让人去开重复行。
+
+## §CZ 2026-09-01T04:xxZ 协同组提议入集:`illumove`(GH #378)—— **搭车、零 AWS 增量、不申请专波**;而本节最该被读的不是那条 0.2 秒,是**一个节流器的作用域必须等于它所节流的那个东西的作用域**
+
+### CZ.1 缺陷:一个 module 级的时钟,N 个 per-unit 的消费者
+
+`bots/FunLib/minion_lib/illusions.lua`:
+
+```lua
+local nNextMoveTime = 0            -- ← 一个 module 一个
+
+function X.Think(ownerBot, hMinionUnit)
+    ...
+    if DotaTime() >= nNextMoveTime then
+        ... 下达移动/攻击移动命令 ...
+        nNextMoveTime = DotaTime() + 0.2
+    end
+end                                 -- ← 没赢到的那些,从这里掉出去,零命令
+```
+
+`bots/FunLib/aba_minion.lua` **只 `dofile` 这个模块一次**(`:11`),并且把这个 bot 的
+**每一个幻象**和**每一个 `U.IsMinionWithNoSkill` 单位**都经**同一个调用表达式**(`:52`)
+送进 `X.Think`。于是同一帧里**第一个**走到移动分支的小兵把这个共享时钟推后 0.2s,
+它的**兄弟们**在同一帧 `DotaTime() >= nNextMoveTime` 判假,**直接从 `X.Think` 末尾掉出去**
+—— 不是「延迟下达」,是**一条命令都没有**。
+
+**而且它们 0.2s 之后也不会被补上**:`aba_minion.lua:33-35` 那道**自己的** per-unit 0.5s 闸
+把它们扣到 0.5s 之后,那时共享时钟又已经被当帧的赢家推后了。
+**真实帧实测(20 个周期、4 个小兵)**:`20 / 0 / 0 / 0`。**不是 20/6/6/6。**
+
+**它同时把 backlog `0d` 结掉**:该条剩下的两行普查**都实测为空**——mode 那半止于
+`mode_outpost_generic.lua:117`(GH #373);`bots/ability_item_usage_generic.lua` 全量 grep
+连续/排队型命令族**只有一行**,`ActionQueue_UseAbility(hItem)`(`:1120`),
+是 `SetUseItem` 的 `'twice'` 臂里的一次**物品施放**,不是追击命令。
+把同一条 grep 扩到 `bots/` 里 **`bots/mode_*.lua` 之外**才是本轮的入口:
+**6 处存活的 `Action_AttackUnit(x, false)`,全部在小兵驱动器里** ——
+一个 `0d` 从没点过名的人口,**因为它根本不经过 mode 竞价**。
+
+### CZ.2 ⭐ 主判据(可复用,超出本主题):**一个节流器的作用域必须等于它所节流的那个东西的作用域**
+
+两个作用域一旦不等,节流器就**不再是限速器,而是抽签**:每个窗口里第一个进门的人
+**替所有人**把预算领走,而输的人**不是晚一点拿到**,是**什么都没有**。
+没有任何东西会举手,因为**从模块内部看,每一次调用都长得像一次被正确节流的调用**。
+
+**与前四条同族划清界限**:GH #348 是**顺序**;GH #368 也是作用域,但是**词法**作用域
+(一个 `local` 遮蔽了文件级同名变量,于是守卫和消费者读的是两个变量);
+GH #370 是**未汇报的副作用**;GH #373 是**闩记错了后置条件**。
+**本条里,时钟的每一次读和每一次写都正确且自洽 —— 错的是「有多少东西共用这一个时钟」。**
+**它的判别特征可数、且不需要帧**:生命周期是模块的状态,被写在一条**每单位每帧各跑一次**的路径上。
+
+### CZ.3 ⭐⭐ 它是缺陷而不是设计取舍,理由写在同一个调用者身上
+
+`aba_minion.lua` 在它调用 `Illusion.Think` 的**二十行之上**,对**同一批单位**做了
+**同一件事**并且做对了:0.5s 的节流,存成 `hMinionUnit.lastItemFrameProcessTime`
+—— **一个挂在单位句柄上的字段**(4 处提及,**处处都索引到句柄**,已源码计数)。
+所以 per-unit 字段**不是本修复发明的新机制**:往句柄上写小写状态是**发货代码已有的做法**,
+`illusions.lua` 自己就写了五个(`attack_desire` / `attack_target` / `move_desire` /
+`move_location` / `to_farm_lane`)。
+
+### CZ.4 改动(gated `illumove`,turbo-only)
+
+`nNextMoveTime` 的声明**原样保留**,新增两个 accessor,各自按
+`J.IsModeTurbo() and J.IsSoakCandidate('illumove')` 分叉:
+
+- **门关**:两个 accessor 读写的**就是那个 module local** ⇒ 发货路径不变;
+- **门开**:读写 `hMinionUnit.next_move_time`,初值 `nil` 读回 **0** ——
+  和一个全新的 module 时钟给出的**同一个值** ⇒ **arming 不可能让任何一个
+  出厂会动的小兵反而停下**;
+- `0.2` 命名为 `MOVE_THROTTLE`。**arming 是把时钟挪成 per-unit,不是把时钟拆掉**
+  (`[frame F3]` 专门钉这一条)。
+
+### CZ.5 本地验证
+
+`tests/test_illumove_shared_throttle.lua`(`[ratchet]`,**9 例 0 失败**,秒级)。
+真实帧 `tests/fixtures/f_260823_002103_wk_ancient_camp_634.lua`
+(`tl_002103_slot5_01`,subject **skeleton_king**,t=634.1 / 10:34)——
+选它是因为**主体是焦点英雄,而它自己的召唤物正好落在这条路径上**:
+`npc_dota_wraith_king_skeleton_warrior` 由 `minion_lib/utils.lua` 的
+`U.IsMinionWithNoSkill` 点名;该帧上 `skeleton_king_mortal_strike` **等级 4**
+(`[frame F0]` 钉住)⇒ **一次放出一整队这种小兵的英雄状态在帧上是真的,不是假设的**。
+
+3 个 `[source]` + 6 个 `[frame]`:F1 出厂 **20/0/0/0**;F2 armed **20/20/20/20**;
+F3 armed 仍然节流(同一个单位 0.1s 内不重复下令,0.25s 后恢复);
+F4 **只有一个小兵时两臂逐位相同**;F5 **损失的是移动**——被饿死的兄弟仍然走到
+**完全没有节流**的攻击分支。**变异 14 条:14 CAUGHT。**
+
+### CZ.6 ⚠️ 明说的边界(请总监按这几条裁,不要按 §CZ.1 的力度裁)
+
+1. **小兵句柄是注入的**。`tests/mock/replay_fixture.lua` 明说不注入小兵与建筑,
+   **全部 109 枚 fixture 里没有任何一枚带召唤物或幻象** ⇒ 语料**给不出第二个小兵**。
+   真实帧提供的是**发货 helper 在决定送它们去哪时读的那个世界**
+   (`J.GetTeamFightLocation` / `J.GetClosestTeamLane` / `J.IsInLaningPhase` /
+   `J.GetRandomLocationWithinDist` 全部真跑,**无 `J.*` 打桩**),
+   而被测的命题——**一个时钟、N 个消费者**——是**模块状态的性质,不是帧的性质**,
+   且两臂拿到**逐位相同**的注入。
+2. **频率未知**,而且这里比平时更重:形状已证、armed 臂确实救得回来,
+   但**真实 turbo 局里一个 bot 每局有多少分钟同时有 ≥2 个这种单位,本轮没证**。
+   **那个数字就是本修复价值的上界**,只有录像组能定价。
+3. **`GetLaneFrontLocation` 是声明的不是读出来的**(GH #61),两臂相同,
+   且唯一读者是 Naga/TB 的分线分支,本主体不是它们。
+4. **顺手量到的一个量具洞(登记,不修)**:`GetUnitList(UNIT_LIST_ALL_HEROES)` 在
+   fixture 上恒答 **0**,而同一帧 `UNIT_LIST_ENEMY_HEROES` 答 **4**。
+   那个 0 是 **UNMEASURABLE 不是 EMPTY**(GH #171/#205、GH #373 读数 (B) 同族)。
+   **它值得写下来的原因是失效方向**:一个建在它上面的世界槽会**安静地**答
+   「附近没有人」,而那**恰好就是让 `[frame F5]` 因为错误的理由而通过**的那个答案。
+
+### CZ.7 请裁
+
+**RIDESHARE、零 AWS 增量、不申请专波、零 EC2** —— 请搭任一常规波次。
+**永远不能当独臂**(它只在「同一 bot 同时有 ≥2 个受控小兵」的帧上与出厂不同,
+单兵时两臂逐位相同,见 `[frame F4]`)。
+`queue.json` 行 **`strategy-29`**,由**提议方自己建**(§CG.5)。

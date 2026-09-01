@@ -10,7 +10,39 @@ local nLanes = {
     LANE_BOT,
 }
 
+-- The move-branch throttle. Its SCOPE is the bug: `nNextMoveTime` is a module
+-- local, but every illusion and every skill-less minion of this bot is driven
+-- through this one module instance (bots/FunLib/aba_minion.lua:11 dofiles it
+-- once and dispatches every such unit to X.Think at :52). So the first minion
+-- to reach the move branch in a frame sets the clock 0.2s into the future and
+-- every SIBLING in that same frame falls out of X.Think having been given no
+-- order at all -- not a deferred order, none. The file itself shows the
+-- correct shape one call up: aba_minion.lua:33-35 throttles the same
+-- population at 0.5s with a PER-UNIT field (`lastItemFrameProcessTime`).
+--
+-- soak candidate 'illumove' (turbo-only). Gate shut, both accessors read and
+-- write exactly the module local, so the shipped path is unchanged.
 local nNextMoveTime = 0
+local MOVE_THROTTLE = 0.2
+
+local function IsPerUnitMoveClock()
+    return J.IsModeTurbo() and J.IsSoakCandidate('illumove')
+end
+
+local function GetNextMoveTime(hMinionUnit)
+    if IsPerUnitMoveClock() then
+        return hMinionUnit.next_move_time or 0
+    end
+    return nNextMoveTime
+end
+
+local function SetNextMoveTime(hMinionUnit, nTime)
+    if IsPerUnitMoveClock() then
+        hMinionUnit.next_move_time = nTime
+    else
+        nNextMoveTime = nTime
+    end
+end
 
 function X.Think(ownerBot, hMinionUnit)
     if not U.IsValidUnit(hMinionUnit) then return end
@@ -33,7 +65,7 @@ function X.Think(ownerBot, hMinionUnit)
         end
     end
 
-    if DotaTime() >= nNextMoveTime then
+    if DotaTime() >= GetNextMoveTime(hMinionUnit) then
         hMinionUnit.move_desire, hMinionUnit.move_location = X.ConsiderMove(hMinionUnit)
         if hMinionUnit.move_desire > 0 then
             if GetUnitToLocationDistance(hMinionUnit, hMinionUnit.move_location) > 400 then
@@ -41,7 +73,7 @@ function X.Think(ownerBot, hMinionUnit)
             else
                 hMinionUnit:Action_AttackMove(J.GetRandomLocationWithinDist(hMinionUnit.move_location, 0, 300))
             end
-            nNextMoveTime = DotaTime() + 0.2
+            SetNextMoveTime(hMinionUnit, DotaTime() + MOVE_THROTTLE)
             return
         end
 
@@ -52,7 +84,7 @@ function X.Think(ownerBot, hMinionUnit)
         else
             hMinionUnit:Action_MoveToLocation(J.GetClosestTeamLane(hMinionUnit))
         end
-        nNextMoveTime = DotaTime() + 0.2
+        SetNextMoveTime(hMinionUnit, DotaTime() + MOVE_THROTTLE)
     end
 end
 

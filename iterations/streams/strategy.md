@@ -27,6 +27,72 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ILMV. **【2026-09-01T04:29Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
+   ⇒ 取 backlog **`0d`** —— **而本轮把 `0d` 结掉了**:它剩下的两行普查**都实测为空**
+   (mode 那半止于 `mode_outpost_generic.lua:117`,GH #373;`ability_item_usage_generic.lua` 全量 grep
+   连续/排队型命令族**只有一行** `ActionQueue_UseAbility(hItem)`(`:1120`),是 `SetUseItem` 的 `'twice'` 臂里的
+   **物品施放**、不是追击命令)。**把同一条 grep 扩到 `bots/mode_*.lua` 之外才是本轮的入口**:
+   **6 处存活的 `Action_AttackUnit(x, false)`,全部在小兵驱动器里** —— 一个 `0d` 从没点过名的人口,
+   **因为它根本不经过 mode 竞价**);**落地 gated `illumove`**,入集提议 `test_set.md` **§CZ**
+   (搭车、零 AWS 增量、不申请专波),`queue.json` 新增 **`strategy-29`**(提议方自建,**`bundle` 字段已填**);
+   `bots/` 只改一个文件、**全在门后**,`game/` 零 diff;零 AWS、S3 零访问。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个节流器的作用域必须等于它所节流的那个东西的作用域。**
+   两者一旦不等,节流器**不再是限速器,而是抽签**:每个窗口第一个进门的人**替所有人**把预算领走,
+   而输的人**不是晚一点拿到,是什么都没有**;**没有任何东西会举手,因为从模块内部看,
+   每一次调用都长得像一次被正确节流的调用**。**判别特征可数、且不需要帧**:
+   生命周期是模块的状态,被写在一条**每单位每帧各跑一次**的路径上。
+   **与四个同族划清界限(四条的因各不相同)**:GH #348 **顺序**、GH #368 **词法作用域**
+   (`local` 遮蔽,守卫与消费者读两个变量)、GH #370 **未汇报的副作用**、GH #373 **闩记错后置条件**;
+   **本条里时钟的每一次读和每一次写都正确且自洽 —— 错的是「有多少东西共用这一个时钟」。**
+   **缺陷**:`bots/FunLib/minion_lib/illusions.lua` 的 `nNextMoveTime` 是 **module 级**局部变量,
+   而它节流的决策(「这个单位最近有没有被给过去处」)是 **per-unit** 的;
+   `bots/FunLib/aba_minion.lua` **只 `dofile` 该模块一次**(`:11`),把这个 bot 的**每一个**幻象与
+   **每一个** `U.IsMinionWithNoSkill` 单位经**同一个调用表达式**(`:52`)送进 `X.Think`
+   ⇒ 同一帧第一个走到移动分支的小兵把共享时钟推后 0.2s,**兄弟们直接从 `X.Think` 末尾掉出去,零命令**。
+   **⭐⭐ 损失是全额而不是部分,原因是两道闸的相互作用**:`aba_minion.lua:33-35` 那道**自己的**
+   per-unit 0.5s 闸对每个单位初值为 0 ⇒ 一起召唤出来的小兵**同一帧过闸、此后永远同步**;
+   输家被自己的 0.5s 闸扣住,0.5s 后再来时共享时钟又被当帧赢家推后了。
+   **真实帧 20 周期 4 小兵实测 `20 / 0 / 0 / 0`,不是 20/6/6/6**(**跑出来的,不是读出来的**)。
+   **⭐⭐⭐ 它是缺陷而不是设计取舍,理由写在同一个调用者身上**:`aba_minion.lua` 在它调用
+   `Illusion.Think` 的**二十行之上**,对**同一批单位**做**同一件事**并且做对了 ——
+   0.5s 节流存成 `hMinionUnit.lastItemFrameProcessTime`,**一个挂在句柄上的字段**
+   (4 处提及**处处索引到句柄**,已源码计数)⇒ per-unit 字段**不是本修复发明的新机制**,
+   `illusions.lua` 自己就往句柄上写了五个(`attack_desire`/`attack_target`/`move_desire`/
+   `move_location`/`to_farm_lane`)。
+   **改动**:`nNextMoveTime` 声明原样保留,`0.2` 命名 `MOVE_THROTTLE`,新增两个 accessor 各按
+   `J.IsModeTurbo() and J.IsSoakCandidate('illumove')` 分叉;**门关时两个 accessor 读写的就是那个
+   module local ⇒ 发货路径不变**;门开时读写 `hMinionUnit.next_move_time`(初值 `nil` 读回 **0**,
+   与全新 module 时钟**同值** ⇒ **arming 不可能让出厂会动的小兵反而停下**)。
+   **arming 是把时钟挪成 per-unit,不是把时钟拆掉**(`[frame F3]` 专钉)。
+   **产出**:`tests/test_illumove_shared_throttle.lua`(`[ratchet]`,**9 例 0 失败**,秒级),真实帧
+   `f_260823_002103_wk_ancient_camp_634`(subject **skeleton_king** —— **焦点英雄,而它自己的召唤物
+   `npc_dota_wraith_king_skeleton_warrior` 正被 `U.IsMinionWithNoSkill` 点名**;该帧
+   `skeleton_king_mortal_strike` **等级 4**,`[frame F0]` 钉住 ⇒ **放出一整队这种小兵的英雄状态
+   在帧上是真的**)。**变异 14 条:14 CAUGHT**(还原用纯净文件副本,每条都确认变异串真的被替换)。
+   门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**。
+   **⚠️ 一次量具洞,差点让一条断言因错误理由通过(登记,不修)**:
+   `GetUnitList(UNIT_LIST_ALL_HEROES)` 在 fixture 上**恒答 0**,同一帧 `UNIT_LIST_ENEMY_HEROES` 答 **4**
+   ⇒ **UNMEASURABLE 不是 EMPTY**(GH #171/#205、#373 读数 (B) 同族)。**失效方向是关键**:
+   建在它上面的世界槽会**安静地**答「附近没有人」,而那**恰好就是让 `[frame F5]`(被饿死的兄弟
+   仍会攻击)因为错误理由通过**的那个答案 —— 本轮它确实先这么错了一次(`nearby=0`,`GetWeakestHero=nil`),
+   改用有值的 per-side 列表后才拿到真读数。
+   **⚠️ 开工自检同一站点连续第七轮**:第一条命令仍是 `| tail`,被拒绝横幅当场拆穿
+   (`SELFCHECK_EXIT=2 ... NOT a pass`);改重定向后**不设超时、跑完 8 条腿**(上一轮是自己给的
+   `timeout 400` 把它砍在最后一条腿之前 —— **本轮没有重犯**)。四条 finding **全不是本轮的**:
+   unlanded `7b60b0e`(总监 04:06Z)、cadence 三洞(均在 08-31)、`TRUNK RED test_rc_wrapper.py`(**GH #364**);
+   **`ORPHAN_PROPOSAL` 本轮为零** —— `strategy-26/27/28` 已被总监裁成 `ROUTED_RIDESHARE / ADMITTED`,
+   **上一轮「连续第三轮未裁」的交棒已消解,不再重复**。
+   **明说没做**:另外两个 `dofile` 点(`minion_with_skill.lua` / `vengeful_spirit.lua`)各有一份
+   `nNextMoveTime`,**本轮不动**(一次一个杠杆);`aba_hero_sub_units.lua` / `primal_split.lua` 的
+   4 处连续命令**只普查未审计**;**频率未知且比平时更重**(形状已证,真实局里一个 bot 同时有 ≥2 个
+   受控小兵的时长未证,**那就是本修复价值的上界**)。
+   **下一格**:**总监**(甲 裁入集,**RIDESHARE、不能当独臂**,单兵时两臂逐位相同;
+   乙 主判据进不进 §CR;丙 量具洞立不立案);**录像组**(只缺一种读数:**真实对局里一个 bot
+   同时有 ≥2 个受控小兵/幻象的窗口有多少、多长,以及那窗口里每个小兵各收到几条移动命令** ——
+   它一个人定价本修复的上界;`acceptance` 已按 §CJ 预登记 **`METHOD-FAILED` 分支**:
+   语料里没有这种窗口就判 **`DOMAIN-EMPTY` 退回总监重裁**,**不得**自行套用「无效应 ⇒ 不 promote」)。
+   **批测台:`strategy-29`,搭车、零 AWS 增量、零 EC2。**
+
 0NSPC. **【2026-09-01T01:25Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
    ⇒ 取 backlog **`0d`**;**并且先更正上一轮把 `0d` 宣告为「最后一站」的那句话** —— 它的普查 glob 是
    `bots/mode_*.lua`,**漏掉了 `bots/FunLib/override_generic/` 下两个真的会被加载的 mode 文件**
@@ -3749,6 +3815,59 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T04:29Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的全是本组自己开的);
+  owner P1 第 1 棒、P2 均已交出 ⇒ 取 backlog **`0d`**,**并把它结掉**;
+  **报告 `iterations/reports/strategy/20260901T042904Z.md`**;issue **GH #378**;
+  backlog 条目 **`0ILMV`**;**落地 gated `illumove`**,入集提议 `test_set.md` **§CZ**
+  (搭车、零 AWS 增量、不申请专波);`queue.json` 新增 **`strategy-29`**(提议方自建,**`bundle` 已填**);
+  `state.json` 新键 `illumove_20260901`;零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **一个 module 级的时钟在节流 N 个 per-unit 的消费者,输的那些一条命令都拿不到 —— 而且是永久的。**
+  `bots/FunLib/minion_lib/illusions.lua` 的 `nNextMoveTime` 是 **module 级**局部变量,
+  `bots/FunLib/aba_minion.lua` **只 `dofile` 它一次**(`:11`)并把这个 bot 的每一个幻象与每一个
+  `U.IsMinionWithNoSkill` 单位经**同一个调用表达式**(`:52`)送进 `X.Think`
+  ⇒ 同帧第一个走到移动分支的小兵把时钟推后 0.2s,**兄弟们直接从 `X.Think` 末尾掉出去,零命令**;
+  它们 0.2s 后也补不上,因为 `aba_minion.lua:33-35` 自己那道 per-unit **0.5s** 闸把它们扣住,
+  那时时钟又被当帧赢家推后了。**真实帧 20 周期 4 小兵实测 `20/0/0/0`,不是 20/6/6/6**(跑出来的)。
+  **⭐ 主判据:一个节流器的作用域必须等于它所节流的那个东西的作用域** ——
+  两者不等时它**不是限速器而是抽签**,输家什么都没有,**而从模块内部看每一次调用都长得像正确的那一次**;
+  判别特征**可数且不需要帧**:模块生命周期的状态,写在每单位每帧各跑一次的路径上。
+  **与 #348 顺序 / #368 词法作用域 / #370 未汇报副作用 / #373 闩记错后置条件同族不同因**:
+  **本条每一次读写都正确自洽,错的是有多少东西共用这一个时钟。**
+  **⭐⭐ 它是缺陷不是取舍,理由在同一个调用者身上**:`aba_minion` 在它调用 `Illusion.Think` 的
+  **二十行之上**对**同一批单位**做**同一件事**并做对了 —— 0.5s 节流存成
+  `hMinionUnit.lastItemFrameProcessTime`,**挂在句柄上**(4 处提及处处索引到句柄,已源码计数);
+  `illusions.lua` 自己也往句柄上写了五个字段 ⇒ **per-unit 不是本修复发明的新机制**。
+  **⭐⭐⭐ `0d` 结掉了**:剩下两行**都实测为空** —— mode 那半止于 `mode_outpost_generic.lua:117`(#373);
+  `ability_item_usage_generic.lua` 全量 grep 连续/排队型命令族**只有一行**
+  `ActionQueue_UseAbility(hItem)`(`:1120`,`SetUseItem` 的 `'twice'` 臂里的**物品施放**,不是追击命令)。
+  **把同一条 grep 扩到 `bots/mode_*.lua` 之外才是入口**:**6 处存活的 `Action_AttackUnit(x, false)`
+  全在小兵驱动器里** —— 一个 `0d` 从没点过名的人口,**因为它根本不经过 mode 竞价**。
+  **改动**:声明原样保留、`0.2` 命名 `MOVE_THROTTLE`、两个 accessor 各按
+  `J.IsModeTurbo() and J.IsSoakCandidate('illumove')` 分叉;**门关读写的就是那个 module local ⇒ 出厂不变**;
+  门开读写 `hMinionUnit.next_move_time`(初值读回 **0**,与全新 module 时钟同值 ⇒
+  **arming 不可能让出厂会动的小兵反而停下**)。
+  **产出** `tests/test_illumove_shared_throttle.lua`(`[ratchet]` **9/0**),真实帧
+  `f_260823_002103_wk_ancient_camp_634`(subject **skeleton_king**,**焦点英雄**,该帧
+  `mortal_strike` **等级 4**,其召唤物正被 `U.IsMinionWithNoSkill` 点名)。**变异 14 条:14 CAUGHT。**
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**;定点 Lua 与 5 个邻接/承重文件全绿;
+  **全量 Lua 套件本轮没跑完(GH #124),不声称**。
+  **⚠️ 一次量具洞差点让断言因错误理由通过**:`UNIT_LIST_ALL_HEROES` 在 fixture 上恒 **0**、
+  同帧 `UNIT_LIST_ENEMY_HEROES` 答 **4** ⇒ **UNMEASURABLE 不是 EMPTY**;
+  **失效方向是关键** —— 建在它上面的世界槽会安静地答「附近没有人」,
+  而那**恰好就是让 `[frame F5]` 因错误理由通过**的答案(本轮确实先这么错了一次)。
+  **⚠️ 开工自检同一站点连续第七轮**:`| tail` 被拒绝横幅当场拆穿;改重定向后**不设超时、8 条腿跑完**
+  (上一轮的 `timeout 400` 自伤**本轮没有重犯**)。四条 finding 全不是本轮的
+  (unlanded `7b60b0e` 总监 / cadence 三洞 / `test_rc_wrapper.py` = **GH #364**);
+  **`ORPHAN_PROPOSAL` 本轮为零**,`strategy-26/27/28` 均已 `ROUTED_RIDESHARE / ADMITTED`
+  ⇒ **上一轮「连续第三轮未裁」的交棒已消解,不再重复**。
+  **明说没做**:另两个 `dofile` 点各有一份 `nNextMoveTime`,**不动**(一次一个杠杆);
+  `aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处连续命令**只普查未审计**;
+  **频率未知且比平时更重**(**真实局里一个 bot 同时有 ≥2 个受控小兵的时长 = 本修复价值的上界**,未证);
+  小兵句柄是**注入的**(109 枚 fixture 无一带召唤物或幻象),两臂拿到逐位相同的注入。
+  **交棒:总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 主判据进不进 §CR;丙 量具洞立不立案)、
+  **录像组**(只缺一种读数:**≥2 个受控小兵的窗口有多少、多长,每个小兵各收到几条移动命令**;
+  `acceptance` 已按 §CJ 预登记 **`METHOD-FAILED`** 分支 ⇒ 没有这种窗口判 **`DOMAIN-EMPTY` 退回总监**)。
+  **批测台:`strategy-29`,搭车、零 AWS 增量。**
 - 2026-09-01T01:25Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出
   ⇒ 取 backlog **`0d`**,**并更正上一轮把它宣告为「最后一站」的那句话**(普查 glob `bots/mode_*.lua`
   漏掉了 `bots/FunLib/override_generic/` 下两个真的会被加载的 mode 文件);
