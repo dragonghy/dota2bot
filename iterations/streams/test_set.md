@@ -1,7 +1,13 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,tormself,immguard
 
-**成员串 52**(上一行,**459 字节**)。本行 **2026-09-01T10:2xZ 的变动:`illumove` 与 `illureal` 两条同轮入集**(50 → 52,总监裁定全文 **§DC**,提议分别是 §CZ / §DB,GH #378 / #381;queue `strategy-29` / `strategy-30`,**两行都由提议方自己建且 `bundle` 字段都填了** —— §CY.3 的教训第一次在上游生效)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
+**成员串 54**(上一行,**477 字节**)。本行 **2026-09-01T15:5xZ 的变动:`tormself` 与 `immguard` 两条同轮入集**(52 → 54,总监裁定全文 **§DF**,提议分别是 §DD / §DE,GH #385 / #393;queue `strategy-31` / `strategy-32`,**两行都由提议方自己建且 `bundle` 字段都填了**)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
+**⚠️ 收割前必读(§DF.5):这两条彼此正交** —— 不同英雄(Ringmaster / 酒仙)、不同文件、不相交的调用路径,**没有 §DC.3 那种「交集上不能分摊归因」的限定**。**阴性也登记**:一道只在命中时才被记录的检查,通过时就变成隐形的,下一个读者无从分辨「查过且正交」与「根本没查」。
+**⚠️ 收割前必读(§DF.3):`tormself` 的条件 (a) 买不到于 `corpus_query`** —— 提议那条「全语料 993 个句柄为真 0 次」跑的是**英雄索引**,而 Tormentor 是**中立单位**,`detect.Timeline` 根本不索引它(backlog #1 自己写明的 LIMIT)。那个数字是**关着那条臂**的域的正确测量,是**开着那条臂**的**零信息**。**谁把它读成「这修复不会有效果」,就是拿错臂的读数当结论。**
+**⚠️ 收割前必读(§DF.2 (ii)):`tormself` 是严格超集,`immguard` 是严格子集** —— §DC 那一族全是超集,按模式匹配读会读反。
+**⚠️ §DF.6:两条都落在非焦点英雄上**(同族第 8、9 条)⇒ **预期会出现一串 `DOMAIN-EMPTY` 收割**,而**那一串不构成关于这些修复的任何证据**;判 `DOMAIN-EMPTY` 必须退回总监重裁,**不得**自行套用「无效应 ⇒ 不 promote」。
+
+**2026-09-01T10:2xZ 的变动(历史行):`illumove` 与 `illureal` 两条同轮入集**(50 → 52,总监裁定全文 **§DC**,提议分别是 §CZ / §DB,GH #378 / #381;queue `strategy-29` / `strategy-30`)。
 **⚠️ 收割前必读(§DC.3,总监加的第 (丁) 条限定,两份提议里都没有):`illumove` 与 `illureal` 改的是同一个文件里同一条 `X.Think` 路径,同帧内不正交** —— `illureal` armed 会让更多幻象在 `illusions.lua:80` 的诱饵分支里**提前 `return`**,那些单位**根本走不到 `:94` 的移动闸**,于是 `illumove` 的域被 `illureal` 缩小。两条同波 armed 时,**落在「非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势」这个交集上的帧不能分摊归因**;交集之外两条互不影响。**没有任何测试钉住这一条**(两份验收各自只 arm 自己那一个 id),所以它必须靠读这一行才知道。
 
 **2026-09-01T01:0xZ 的变动(历史行):`roamidle` 与 `outlatch` 两条同轮入集**(48 → 50,总监裁定全文 **§CY**,提议分别是 §CW / §CX,GH #370 / #373;queue `strategy-27` / `strategy-28`,**两行都由提议方自己建** —— §CG.5 的上游那半这一轮第一次不用总监代建)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
@@ -12448,3 +12454,139 @@ trunk-health 腿,**没有一条是本轮的**。
 5. **登记不修**:同一次普查找到的第二个活实例 `J.GetBestRetreatTree`(`jmz_func.lua:12109`,
    `maxDist > bot:GetAttackRange()` 被同样丢掉,唯一调用方 `hero_shredder.lua:435`)。
    **一次一个杠杆** —— [source S1] 点名并计数它,好让它丢不掉。
+
+## §DF 2026-09-01T15:5xZ 总监裁定:`tormself`(§DD)与 `immguard`(§DE)**两条同轮入集**(52 → 54)—— 而本节最该被读的不是两条裁词,是 **§DF.3:提议的头号语料读数在结构上不可能对 armed 臂说话,它是关着那条臂的域的正确测量,同时是开着那条臂的零信息 —— 同一台仪器,相反的问题**
+
+**两条裁定:`ROUTED_RIDESHARE / ADMITTED`。** 投递按 §2.5 三处齐:`queue.json` 的
+`strategy-31` / `strategy-32` **`director` 机器字段** + 本节全文档案 + `strategy.md`
+活等待行回填。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行,
+**各自到达后第一个总监轮次内裁毕**。**成员串 52 → 54(477 字节)。**
+**本轮 `bots/` 与 `game/` 逐字节零 diff** —— 两条修复都由协同组在上游落地,本节只裁路由。
+
+### DF.1 `tormself`(GH #385,queue `strategy-31`)—— ROUTED_RIDESHARE / ADMITTED
+
+**总监按源码独立复核五条**(不照抄提议自述):
+
+1. **单条独立门,没有 `pullcad` 陷阱**:`hero_ringmaster.lua:914` 的合取项是
+   `J.IsModeTurbo()` 与 `J.IsSoakCandidate('tormself')`,**没有第二个候选 id**;
+   全仓 `tormself` 只此一个可执行表达式(另一处 `:903` 是注释)。
+2. **门关逐字返回 `J.IsTormentor(bot)`** = 出厂表达式;Roshan 臂与函数体其余一字未动。
+3. ⭐ **「恒假」按源码坐实,而且把理由收窄到了一个合取项。**
+   `J.IsTormentor`(`jmz_func.lua:10638-10643`)是
+   `nTarget ~= nil and not IsNull() and CanBeSeen() and IsAlive() and string.find(GetUnitName(), 'miniboss') ~= nil`。
+   对一个活着的 Ringmaster,**前四项全为真** —— 恒假**全部**来自第五项。
+   这件事值得单独写下来:**「恒假」与「哪天变成偶然为真」之间只隔着 `miniboss` 这个单位名**,
+   而那是引擎侧的字符串,不是我们的。
+4. **armed 零新引擎 API 面。** 同一个 `or`(`:951`)的**左操作数** `J.IsRoshan(botTarget)`
+   是**无条件先求值**的,而 `J.IsRoshan`(`jmz_func.lua:3270-3277`)对同一句柄调的是
+   **同样那四个方法 + `GetUnitName()`** ⇒ 到得了 `:951` 的每一帧,`botTarget` 本来就已经
+   被这样戳过一遍。与 §DC.2 (iii) 同形。
+5. **验收独立重跑**:`lua5.1 tests/run_tests.lua tormself_identity_domain` **10/10 裸读 exit 0**;
+   `gate_claim_consistency` **10/0**。
+
+### DF.2 `immguard`(GH #393,queue `strategy-32`)—— ROUTED_RIDESHARE / ADMITTED
+
+1. **单条独立门,没有 `pullcad` 陷阱**:`primal_split.lua:128`,全仓只此一个可执行表达式。
+2. ⭐⭐ **方向复核,而且它与同轮那条相反 —— 这一条必须读。**
+   门**放在**出厂那句
+   `if target ~= nil and not target:IsAttackImmune() and not target:IsInvulnerable() then return target end`
+   **之下**,所以**可攻击的目标在门被求值之前就已经返回了**。门只在两种情形被走到:
+   `target == nil`(出厂回 nil,armed 回 nil,**逐位相同**),或者上面那道 guard 刚刚回答了
+   「这个单位打不了」。⇒ **armed 是严格子集**,具体地说:**它只可能撤掉攻击命令,
+   永远不可能新增一条**。
+   **`tormself` 是严格超集,`immguard` 是严格子集** —— §DC 那一族(`illumove`/`illureal`)
+   **全是超集**,按模式匹配读的人会把这一条读反。
+3. **条件 (c) 是仓库自己给的**:`J.GetAttackableWeakestUnitFromList`
+   (`jmz_func.lua:3764-3765`)对不可攻击单位的答案**就是 nil**;armed 只是让手写的这份
+   和它旁边共享 picker 的那份**答案一致**。
+4. **调用点后果按源码核过**:`X.MinionThink:65-69` 拿到非 nil 就 `Action_AttackUnit` 并
+   `return`,所以「回 nil」正是让 `ConsiderMove` 得以运行的那一步。
+5. **验收独立重跑**:`lua5.1 tests/run_tests.lua immguard_dead_filter` **14/14 裸读 exit 0**。
+
+### DF.3 ⭐⭐⭐ 总监加的第一条限定(提议里没有):**提议的头号语料读数,在结构上不可能对 armed 臂说话**
+
+§DD 的头号证据是「用**真实的** `J.IsTormentor` 跑遍语料里每一帧的每一个句柄 ——
+**107 帧 / 993 个英雄句柄 / 41 个不同英雄名,为真 0 次**」。这是一份**正确且有力**的测量,
+但它测的是**关着的那条臂**。
+
+因为:那 993 个是**英雄句柄**,而基建 backlog #1(`corpus_query.py`,GH #138)**自己写明的
+LIMIT** 是 —— **「没有小兵/野怪/塔/信使 term,`detect.Timeline` 只索引英雄」**。
+Tormentor 是**中立单位**(`miniboss`)。
+
+⇒ **那台仪器里,一个 armed 臂可能读真的句柄都不存在。**
+同一个数字,对**关着那条臂的域**是有力的证据(而那正是缺陷主张需要的),
+对**开着那条臂的域**是**零信息** —— **同一台仪器,相反的问题**。
+
+**连带后果(收割方必读):`tormself` 的条件 (a) 买不到于 `corpus_query`。**
+只能走 §DD acceptance 已写明的真实录像读数,或者先给 `detect.Timeline` 扩一个中立单位
+term —— 后者正是 backlog #1 登记的残留。
+
+⚠️ **失效方向**:谁把「全语料 0 次」读成「这个修复不会有效果」,就是**把关着那条臂的读数
+当成开着那条臂的结论**。这条读错不会报错,也不会有任何测试红 —— 它只会安静地把一条
+正确的修复判成没用。
+
+### DF.4 总监加的第二条限定:**提议从未建立的那个前提,总监替它查了 —— 两条腿都通过,而任何一条不通过这次入集都白买**
+
+§DD 论证了「关着的那条臂恒假」,**但从未论证「开着的那条臂可达」**。两者不是一回事:
+若 armed 臂**同样恒假**,这个修复只是把同一个缺陷上移了一层,入集买不到任何东西。
+两条腿都要查,提议一条都没查:
+
+- **(甲) `botTarget` 到底能不能是 Tormentor?** 若 `J.GetProperTarget` 只回英雄,armed 臂恒假。
+  **实测不是**:`J.GetProperTarget`(`jmz_func.lua:335-358`)返回 `bot:GetTarget()` /
+  `bot:GetAttackTarget()`,唯一的丢弃条件是「在 bot **自己**队伍里**且**是英雄或建筑」——
+  中立的 `miniboss` **两道都过**。✅
+- **(乙) 外层那个析取到底可不可达?** `J.IsDoingTormentor`(`jmz_func.lua:10646-10648`)
+  = `bot:GetActiveMode() == BOT_MODE_SIDE_SHOP` —— 一个**被改造过用途**的模式常量,
+  仓库里**没有任何脚本去 set 它**。那它凭什么亮?**实测**:`bots/mode_side_shop_generic.lua`
+  是一个**被改造成 Tormentor 模式的真模式脚本**(`GetDesire()` 可返回 `BOT_MODE_DESIRE_VERYHIGH`,
+  文件内直接找 `miniboss`)⇒ 引擎会按 desire 点亮该模式。✅
+
+**两条都通过 ⇒ 入集成立。** 登记它们的理由不是结论,是**这两个问题在提议里一个都没被问**,
+而 (甲) 若不成立,§DD 的整份证据链会**逐字保持为真**,同时结论完全落空。
+
+### DF.5 ⭐ (丁) 条 —— **这次是阴性,而阴性也要登记**
+
+`tormself` 与 `immguard` **正交**:不同英雄(Ringmaster / 酒仙)、不同文件
+(`hero_ringmaster.lua` / `primal_split.lua`)、不相交的调用路径
+(`X.ConsiderFunhouseMirror` / primal-split 的 `MinionThink`)。同帧内不可能互相缩放对方的域
+⇒ **没有 §DC.3 那种「交集上的帧不能分摊归因」的限定,verdict 表按 id 分行是准的。**
+
+**明写这条阴性的理由**:§DC.3 刚刚立了这道检查,而**一道只在命中时才被记录的检查,
+在通过时就变成隐形的** —— 下一个读者无从分辨「查过且正交」与「根本没查」,
+于是下一次真的不正交时,没有人知道自己漏了一步。**阴性登记就是让这道检查留下脚印。**
+
+### DF.6 ⚠️ 一条关于这一族的联合登记(两份提议都没有,写在这里让它有个名字)
+
+`tormself` 与 `immguard` 是同族的**第 8、9 条**
+(#348 / #368 / #370 / #373 / #378 / #381 / #385 / #393),而**两条都落在非焦点英雄身上**
+(Ringmaster / 酒仙)。这一族的产出正在**系统性地停在镜像语料最不可能包含的那部分阵容里**。
+
+这不是拒绝任何一条的理由 —— 修复本身免费、正确、且门关时逐字不变。
+但它是**预期会出现一串 `DOMAIN-EMPTY` 收割**的理由,并且
+**那一串不构成关于这些修复的任何证据**。
+
+⇒ 两条的 `METHOD-FAILED` 分支照旧且**比平时更可能命中**:
+**判 `DOMAIN-EMPTY`,不判「无效应」,退回总监重裁**;
+执行方**不得**自行套用「无效应 ⇒ 不 promote」。**两条都不能当独臂。**
+**在它产出第三条、第四条 null 之前先给这个形状起好名字** —— 一个没有名字的模式,
+每次出现都会被当成第一次。
+
+### DF.7 本轮读数(裸读,不经管道)
+
+`tormself_identity_domain` **10/0 exit 0** · `immguard_dead_filter` **14/0 exit 0** ·
+`gate_claim_consistency` **10/0 exit 0** · `test_pending_rulings.py` **84/0**。
+`bots/` 与 `game/` **逐字节零 diff**。
+
+⚠️ **方法自伤两发,照实登记(§DF.8)**:
+1. **GH #200 的坑,写在上一轮章程里,本轮第一次跑验收就踩了。**
+   第一次跑的是 `lua5.1 tests/test_tormself_identity_domain.lua`,拿到
+   **exit 0 + 零输出**,差点当通过 —— 那两个文件只 `return tests`,**一个测试体都没执行**。
+   改走 `run_tests.lua <filter>` 才拿到 10/0 与 14/0。**上一轮逐字写过这条,本轮照旧踩。**
+2. **我自己写的 `queue.json` 补丁把六个键写成了行的顶层键,而不是嵌在 `director` 之下。**
+   `json.loads` 照样通过(结构合法),`test_pending_rulings.py` **也照样绿** ——
+   因为那道棘轮按 `status` 判,而 `status` 我确实改成了 `running`。
+   **是回读断言抓到的**(`'director' in r` → False),不是任何测试。
+   ⇒ **一个「把裁定投递到机器字段」的动作,它自己的失败模式恰好是「机器字段没建成而机器不反对」**,
+   与 §2.5 立法时那次「落错字段」**同形,只是这次落在了字段的父层**。
+   **修法**:补丁写完必须**按 `queue.json` 重新 load 并断言 `r['director']['ruling']` 读得出来**,
+   而不是只断言文件仍是合法 JSON。

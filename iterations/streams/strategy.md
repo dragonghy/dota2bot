@@ -4112,6 +4112,16 @@
   `hero_earth_spirit.lua:680` **故意不动**(整函数是桩,**没有被丢掉的答案就没有可恢复的东西**);
   **armed 不重选目标**(⇒ `0REPICK`);
   **⚠️ 频率未知且比平时更重 —— 酒仙不是焦点英雄,且这个域在 fixture 上根本买不到**,只能在真实录像上验。
+  **✅ 总监 2026-09-01T15:5xZ 已裁:`ROUTED_RIDESHARE / ADMITTED`**(与 `tormself` **两条同轮入集**,
+  52 → 54,裁定全文 **`test_set.md §DF`**,本条 §DF.2;`queue.json` `strategy-32` `director` 字段已填,
+  `status` → `running`)。**总监按源码独立复核五条**,其中一条要回读:
+  ⚠️ **§DF.2 (ii) 方向复核 —— 本条是严格子集,不是超集。** 门放在出厂那句 `return target` **之下**,
+  可攻击的目标在门被求值之前就已返回 ⇒ armed **只可能撤掉攻击命令,永远不可能新增一条**。
+  **`tormself` 是严格超集,本条是严格子集;§DC 那一族全是超集,按模式匹配读会读反。**
+  ⚠️ **§DF.5:与 `tormself` 正交** —— **阴性也登记**,否则「查过且正交」与「根本没查」分不开。
+  ⚠️ **§DF.6 联合登记:本条与 `tormself` 是同族第 8、9 条,两条都落在非焦点英雄上** ⇒
+  **预期会出现一串 `DOMAIN-EMPTY` 收割,而那一串不构成关于这些修复的任何证据**;
+  判 `DOMAIN-EMPTY` **必须退回总监重裁**,**不得**自行套用「无效应 ⇒ 不 promote」。**两条都不能当独臂。**
 - 2026-09-01T10:30Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出;
   ⇒ 取 backlog `0FIELD` **明说没做**的两项之一(`aba_hero_sub_units.lua` / `primal_split.lua` 的连续命令**只普查未审计**);
   **报告 `iterations/reports/strategy/20260901T103016Z.md`**;issue **GH #385**;
@@ -4167,6 +4177,19 @@
   `BOT_MODE_SIDE_SHOP` 且正在攻击 Tormentor」的窗口有多少、多长**;已按 §CJ 预登记
   **`METHOD-FAILED`** ⇒ 没有该窗口/根本没出场判 **`DOMAIN-EMPTY` 退回总监**)。
   **批测台:`strategy-31`,搭车、零 AWS 增量。**
+  **✅ 总监 2026-09-01T15:5xZ 已裁:`ROUTED_RIDESHARE / ADMITTED`**(与 `immguard` **两条同轮入集**,
+  52 → 54,裁定全文 **`test_set.md §DF`**,本条 §DF.1;`queue.json` `strategy-31` `director` 字段已填,
+  `status` → `running`)。**总监按源码独立复核五条,并加了两条提议里没有的限定**:
+  ⚠️ **§DF.3:本条那个头号语料读数(993 个句柄为真 0 次)在结构上不可能对 armed 臂说话** ——
+  它跑的是**英雄索引**,而 Tormentor 是**中立单位**,`detect.Timeline` 根本不索引它
+  (backlog #1 自己写明的 LIMIT)⇒ 那是**关着那条臂**的域的正确测量、**开着那条臂**的**零信息**。
+  **条件 (a) 因此买不到于 `corpus_query`**,只能走真实录像。
+  ⚠️ **§DF.4:本条从未论证「armed 臂可达」,总监替它查了两条腿,都通过** ——
+  (甲) `J.GetProperTarget`(`jmz_func.lua:335-358`)**不是英雄限定**,中立 `miniboss` 过得了它唯一那道丢弃条件;
+  (乙) `BOT_MODE_SIDE_SHOP` 有真模式脚本 `mode_side_shop_generic.lua` 撑着(`GetDesire()` 可返回 `VERYHIGH`)。
+  **(甲) 若不成立,本条整份证据链会逐字保持为真而结论完全落空** —— 下次提「恒假 ⇒ 严格超集」时,
+  **把「开着那条臂可达」一起证了**。
+  ⚠️ **§DF.5:与 `immguard` 正交**(不同英雄/文件/调用路径),**没有 §DC.3 那种限定**。
 - 2026-09-01T07:46Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的九条全是本组自己开的);
   owner P1 第 1 棒、P2 均已交出;backlog `0d` 上一轮已结案 ⇒ **留在它打开的人口里**
   (小兵驱动器,不经 mode 竞价),取上一轮那条分支**再往上四行**的一条;
