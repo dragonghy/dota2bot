@@ -73,10 +73,69 @@ LUA_JMZ = 'bots/FunLib/jmz_func.lua'
 LUA_AIU = 'bots/ability_item_usage_generic.lua'
 
 # A span this short is a revive-in-place (WK reincarnation ~3s, aegis ~5s), not
-# a respawn.  The shortest turbo respawn possible is 12 * 0.75 = 9s at level 1,
-# and the ladder itself is shut below level 16, so this threshold cannot eat a
-# real respawn in the domain we read.
+# a respawn.
+#
+# ⚠️ 2026-09-01, MEASURED, and it overturns the arithmetic this constant used to
+# carry.  The old comment here read "the shortest turbo respawn possible is
+# 12 * 0.75 = 9s at level 1 ... so this threshold cannot eat a real respawn".
+# That is FALSE, and this tool's own output is the witness: on W33
+# (`e84fe4d2`, 5 timelines, 234 spans) the realised level-1 turbo respawn table
+# is n=9, min **7.10s**, median 9.70s -- i.e. the shortest real respawn in the
+# corpus sits **BELOW** this 8.0s threshold, not 1s above it.  Frame:
+# `25b94f/20260901_035747_slot1` skeleton_king, DEATH t=56.3, level 1,
+# span 7.10s, `jumped=True`.  (1 Hz sampling makes a span an over-estimate by
+# <= 1 sample and a late DEATH event pushes the other way -- p95 event lag on
+# this corpus is 0.9s -- so the true duration is bounded well under 9s either
+# way.  The 12s figure quoted from the jmz_func header is the part that does
+# not survive; the 0.75 factor does: measured max clean span 76.2s vs the
+# predicted 75.0s ceiling, one sample apart.)
+#
+# ⇒ The duration half of the in-place test is NOT self-sufficient.  What
+# actually keeps a real respawn out of the in-place bucket is the POSITION half
+# (`jumped`), which is why `in_place` is a conjunction.  That makes the corpse
+# ANCHOR load-bearing on its own -- see `WALK_SPEED_MAX_U` below, which measures
+# how much slack the anchor has left.
 REINCARNATION_MAX_S = 8.0
+
+# A hero cannot cover more than this in a second.  Copied from
+# `stayfield_domain.MAX_SPEED_U` (same role, same justification: a physical
+# upper bound on displacement, not a source constant).
+#
+# It is here because "the corpse" is not one sample, it is two, and they do not
+# always agree.  This tool anchors the fountain-jump test on the first sample at
+# or after the death event that is under HALF health -- usually a still-dying
+# frame, taken where the hero fell.  Siblings that anchor on the first TRUE
+# corpse (`hp_pct <= CORPSE_HP_MAX`) pick a later sample.  Measured 2026-09-01
+# over W33's 5 timelines plus `93546a/20260831_221121_slot1`, the two anchors
+# are further apart than a hero could walk in **2 of 237** deaths:
+#   * worst DISPLACEMENT between the two anchors **1173u = 78% of the 1500u jump
+#     threshold**: `93546a/20260831_221121_slot1` skeleton_king, this tool's
+#     anchor t=1312.4 at (1271.2, 1037.7) -- hp 0.065, where he fell -- and the
+#     true corpse t=1313.4 at (616.1, 64.3).  On W33 alone the worst is 640u.
+#   * `anchor_slip`, the field this file records, is the EXCESS of that
+#     displacement over what a hero could have walked in the interval (623u and
+#     90u respectively).  It is the conservative half: ordinary movement cannot
+#     manufacture it.
+# ⇒ **This tool is NOT the one at risk**, and the measurement is what says so
+# rather than an argument: its own anchor is the earlier sample, which sits at
+# the death spot in both cases (the WK death reads `jumped=False`, correctly).
+# The exposure belongs to any sibling anchoring on the true corpse, where a
+# 1173u error against a 1500u threshold leaves 327u of margin -- and it landed
+# on `skeleton_king`, the exact hero corpse anchoring exists to protect.  Which
+# of the two samples is the liar is NOT decidable from the dump: there is no
+# third position witness.
+#
+# ⛔ AND A RETRACTION IT REPLACES.  The 2026-08-31 charter round read those two
+# WK corpse samples as "the corpse frames report FOUNTAIN coordinates".  They do
+# not: (616.1, 64.3) is **9911u** from that hero's own fountain, whose centroid
+# in the same dump is (-6880.0, -6420.0).  Re-measured over 235 deaths, **zero**
+# corpse samples land within 300u of a fountain, and no corpse coordinate
+# repeats -- so there is no fountain sentinel and no shared placeholder either.
+# The in-place conclusion that round drew still stands, but on its other two
+# witnesses (the revive frame is byte-identical to the last live frame, and the
+# Reincarnation cooldown steps up on the corpse frame), NOT on this one.
+WALK_SPEED_MAX_U = 550.0
+ANCHOR_GAP_MAX_S = 2.5           # beyond this the pair is not adjacent samples
 
 # A frame belongs to the CORPSE RUN if health is at the floor and the unit has
 # not moved from where it fell.  `hp_pct` is not exactly 0 on every corpse frame
@@ -256,10 +315,31 @@ def death_spans(tl):
         # teleport, so a 4.2s Reincarnation enters the clean population as a
         # level-19 respawn, and it was this tool's ONLY buyback candidate on the
         # whole W16 corpus.  The corpse anchor removes it and the count is zero.
-        corpse = next(((s['x'], s['y']) for s in ff
-                       if s['t'] >= td and s['hp_pct'] <= 0.5), None)
+        corpse_s = next((s for s in ff
+                         if s['t'] >= td and s['hp_pct'] <= 0.5), None)
+        corpse = (corpse_s['x'], corpse_s['y']) if corpse_s else None
         loc = corpse or next(((s['x'], s['y']) for s in reversed(ff)
                               if s['t'] <= td), None)
+        # DO THE TWO CANDIDATE CORPSE ANCHORS AGREE?  (2026-09-01)
+        # This tool anchors on the first sample at or after the death event that
+        # is under HALF health -- which is usually a still-DYING frame, taken at
+        # the place the hero fell.  A sibling tool that anchors on the first
+        # TRUE corpse instead (`hp_pct <= CORPSE_HP_MAX`) picks a later sample,
+        # and the two do not always agree: if they are adjacent in time and
+        # separated by more than a hero could have walked, one of the two
+        # samples is lying about position and no third witness in the dump says
+        # which.  Measured, never repaired -- the number is what a reader needs
+        # in order to know how much of the 1500u jump budget is at risk.
+        anchor_slip = 0.0
+        if corpse_s is not None:
+            true_corpse = next((s for s in ff if s['t'] >= td
+                                and s['hp_pct'] <= CORPSE_HP_MAX), None)
+            if true_corpse is not None:
+                gap = true_corpse['t'] - corpse_s['t']
+                if 0.0 < gap <= ANCHOR_GAP_MAX_S:
+                    apart = math.hypot(true_corpse['x'] - corpse_s['x'],
+                                       true_corpse['y'] - corpse_s['y'])
+                    anchor_slip = max(0.0, apart - WALK_SPEED_MAX_U * gap)
         # The DEATH EVENT can lag the hero's actual death (measured on
         # 654032/20260827_061825_slot9 skeleton_king: hp is 0.005 and the
         # position frozen from t=45.4, the DEATH event lands at t=48.6).  A late
@@ -303,6 +383,7 @@ def death_spans(tl):
                         event_lag=(td - t_alive),
                         level=level_at(ff, td), jumped=jumped_at,
                         truncated=(not resolved),
+                        anchor_slip=anchor_slip,
                         t_end=t_end))
     return out
 
@@ -336,7 +417,7 @@ def reduce_game(tl, armed_team, seed, side, game, run, facts):
             event_lag=(round(sp['event_lag'], 2)
                        if sp['event_lag'] is not None else None),
             level=sp['level'], truncated=sp['truncated'],
-            jumped=sp['jumped'],
+            jumped=sp['jumped'], anchor_slip=round(sp['anchor_slip'], 1),
             # A revive IN PLACE is short AND does not teleport.  The second
             # half matters: a BUYBACK is also short but returns the hero to the
             # fountain, so folding every short span into this bucket would hide
@@ -401,6 +482,44 @@ def summarise(rows, facts, out=sys.stdout):
              lags[-1]))
     w('   (1 Hz sampling makes every span an OVER-estimate by <=1 sample; a LATE\n'
       '    DEATH event pushes the other way, which is why span_ub is carried.)\n\n')
+
+    # ---- the in-place test, audited against its own two halves (2026-09-01) --
+    w('== the revive-in-place test, audited ==\n')
+    short_clean = sorted(r['span'] for r in clean if r['span'] < REINCARNATION_MAX_S)
+    ip_spans = sorted(r['span'] for r in inplace if r['span'] is not None)
+    w('DURATION half: REINCARNATION_MAX_S = %.1fs\n' % REINCARNATION_MAX_S)
+    w('  in-place spans (kept out of the table)  n=%d  max %s\n'
+      % (len(ip_spans), '%.2fs' % ip_spans[-1] if ip_spans else 'n/a'))
+    w('  CLEAN respawns that are ALSO under it   n=%d  min %s\n'
+      % (len(short_clean), '%.2fs' % short_clean[0] if short_clean else 'n/a'))
+    if short_clean:
+        w('  ⚠️  a REAL respawn sits under the threshold -- the duration half does\n'
+          '      NOT separate the two populations on its own, and only `jumped`\n'
+          '      (the position half) keeps that row in the respawn table.\n')
+        if ip_spans and ip_spans[-1] < short_clean[0]:
+            w('      measured separation on THIS corpus: in-place max %.2fs  <  '
+              'real min %.2fs  (gap %.2fs)\n'
+              % (ip_spans[-1], short_clean[0], short_clean[0] - ip_spans[-1]))
+    else:
+        w('  (no clean respawn under the threshold in this corpus -- the duration\n'
+          '   half is unfalsified HERE, which is not the same as sufficient.)\n')
+    slips = sorted((r['anchor_slip'] for r in rows), reverse=True)
+    nonzero = [s for s in slips if s > 0.0]
+    w('POSITION half: do the two corpse anchors agree? (1500u jump threshold)\n')
+    w('  deaths where THIS tool\'s anchor (hp<=0.5) and the first TRUE corpse\n')
+    w('  (hp<=%.2f) sit further apart than a hero could walk   %d / %d (%.1f%%)\n'
+      % (CORPSE_HP_MAX, len(nonzero), len(slips),
+         100.0 * len(nonzero) / max(len(slips), 1)))
+    w('  worst slip %s  = %s of the 1500u threshold\n'
+      % ('%.0fu' % slips[0] if slips else 'n/a',
+         '%.0f%%' % (100.0 * slips[0] / 1500.0) if slips else 'n/a'))
+    w('  WHO IS EXPOSED: not this tool -- it anchors on the EARLIER sample, which\n'
+      '  in every disagreement measured so far sat where the hero fell.  The risk\n'
+      '  is a sibling anchoring on the true corpse: there a slip pushes a\n'
+      '  revive-in-place toward a false "jumped", i.e. INTO the respawn table --\n'
+      '  the exact failure corpse anchoring exists to prevent.  Which sample is\n'
+      '  the liar is not decidable here (no third position witness), so this is\n'
+      '  reported and never repaired.\n\n')
 
     w('== bbfight domain: the level clause ==\n')
     lad = [r for r in clean if r['ladder']]
@@ -725,6 +844,102 @@ def selfcheck():
               [_death(100, 'sven')]))[0]['span_ub'] - 61.0) < 1e-6)
     check('a truncated span has no upper bound either (never clamped)',
           spt and spt[0]['span_ub'] is None)
+
+    print('-- corpse-anchor disagreement (2026-09-01)')
+    # The shape that motivated this: W32 `93546a/20260831_221121_slot1`
+    # skeleton_king DEATH t=1312.2 -- this tool's anchor is t=1312.4 at
+    # (1271.2, 1037.7) with hp 0.065 (where he fell), while the first TRUE
+    # corpse at t=1313.4 reports (616.1, 64.3), 1173u away in one second.
+    # Rebuilt here at the same magnitudes.
+    slip_frames = ([_snap(-10.0, 'skeleton_king', 21, 2, level=1)]
+                   + [_snap(t, 'skeleton_king', 21, 2, x=1271.2, y=1037.7,
+                            level=20) for t in range(90, 100)]
+                   + [_snap(100.0, 'skeleton_king', 21, 2, x=1271.2, y=1037.7,
+                            hp_pct=0.065, level=20)]
+                   + [_snap(t, 'skeleton_king', 21, 2, x=616.1, y=64.3,
+                            hp_pct=0.0, level=20) for t in (101, 102)]
+                   + [_snap(t, 'skeleton_king', 21, 2, x=1271.2, y=1037.7,
+                            level=20) for t in range(103, 140)])
+    sl = death_spans(_tl(slip_frames, [_death(100.0, 'skeleton_king')]))
+    check('the two corpse anchors disagreeing is measured, not silently accepted',
+          sl and sl[0]['anchor_slip'] > 500.0)
+    check('...and the slip is the EXCESS over what a hero can walk, not the raw '
+          'distance', sl and abs(sl[0]['anchor_slip'] - (1173.0 - 550.0)) < 12.0)
+    check('THIS tool anchors on the earlier sample, so the WK death still reads '
+          'revive-in-place',
+          sl and sl[0]['jumped'] is False and sl[0]['span'] < REINCARNATION_MAX_S)
+    # The slip must be measured between THE TWO ANCHORS, not from the DEATH
+    # EVENT.  Reading from the event instead lengthens the interval and so
+    # inflates the walk budget -- the direction that HIDES a disagreement.
+    lagged = ([_snap(-10.0, 'sven', 24, 2, level=1)]
+              + [_snap(t, 'sven', 24, 2, x=0.0, level=20) for t in (98, 99, 100)]
+              + [_snap(101.0, 'sven', 24, 2, x=0.0, hp_pct=0.30, level=20)]
+              + [_snap(t, 'sven', 24, 2, x=800.0, hp_pct=0.0, level=20)
+                 for t in (102, 103)]
+              + [_snap(t, 'sven', 24, 2, x=9000.0, y=9000.0, level=20)
+                 for t in range(104, 140)])
+    lsl = death_spans(_tl(lagged, [_death(100.0, 'sven')]))
+    check('the walk budget spans anchor->true-corpse, not death-event->corpse',
+          lsl and abs(lsl[0]['anchor_slip'] - (800.0 - 550.0)) < 1e-6)
+    # A true corpse within walking range of the anchor scores ZERO -- otherwise
+    # the measure is a noise generator, not a detector.
+    walked = ([_snap(-10.0, 'lion', 22, 2, level=1)]
+              + [_snap(t, 'lion', 22, 2, x=100.0 * t, level=20)
+                 for t in range(90, 100)]
+              + [_snap(100.0, 'lion', 22, 2, x=10000.0, hp_pct=0.30, level=20)]
+              + [_snap(t, 'lion', 22, 2, x=10300.0, hp_pct=0.0, level=20)
+                 for t in (101, 102)]
+              + [_snap(t, 'lion', 22, 2, x=9000.0, y=9000.0, level=20)
+                 for t in range(103, 140)])
+    wsl = death_spans(_tl(walked, [_death(100.0, 'lion')]))
+    check('a true corpse within walking range of the anchor scores zero slip',
+          wsl and wsl[0]['anchor_slip'] == 0.0)
+    # A long dark gap is NOT a slip: across a sampling hole there is nothing to
+    # compare, and calling that a slip would invent findings out of holes.
+    gapped = ([_snap(-10.0, 'zuus', 23, 2, level=1)]
+              + [_snap(t, 'zuus', 23, 2, x=0.0, level=20) for t in range(90, 100)]
+              + [_snap(100.0, 'zuus', 23, 2, x=0.0, hp_pct=0.30, level=20)]
+              + [_snap(t, 'zuus', 23, 2, x=9000.0, hp_pct=0.0, level=20)
+                 for t in (104, 105)]
+              + [_snap(t, 'zuus', 23, 2, x=-9000.0, y=9000.0, level=20)
+                 for t in range(106, 140)])
+    gsl = death_spans(_tl(gapped, [_death(100.0, 'zuus')]))
+    check('a sampling gap wider than ANCHOR_GAP_MAX_S scores zero, not a slip',
+          gsl and gsl[0]['anchor_slip'] == 0.0)
+
+    # The audit SECTION is a printed claim, and a printed claim with no guard is
+    # exactly the hole the last two rounds fell into (a criterion living inside
+    # a print statement that `--selfcheck` never touches).  So drive `summarise`
+    # itself and read the lines back.
+    import io
+    def audit_text(rows):
+        buf = io.StringIO()
+        summarise(rows, f, out=buf)
+        t = buf.getvalue()
+        return t[t.index('== the revive-in-place test, audited =='):]
+
+    def _row(span, in_place, slip, level=20):
+        return dict(run='r', game='g', seed='1', side='radiant', hero='lina',
+                    team=2, leg='armed', t_death=100.0, span=span,
+                    span_ub=span, event_lag=0.0, level=level, truncated=False,
+                    jumped=(not in_place), anchor_slip=slip, in_place=in_place,
+                    wk=False, ladder=(level > f.ladder_min_level),
+                    fightlevel=(level > f.fight_min_level))
+
+    warn = audit_text([_row(4.0, True, 0.0), _row(7.1, False, 0.0),
+                       _row(30.0, False, 90.0)])
+    check('the audit warns when a REAL respawn sits under the threshold',
+          'a REAL respawn sits under the threshold' in warn)
+    check('...and prints the measured separation between the two populations',
+          'in-place max 4.00s  <  real min 7.10s  (gap 3.10s)' in warn)
+    quiet = audit_text([_row(4.0, True, 0.0), _row(30.0, False, 0.0)])
+    check('no warning when every clean respawn clears the threshold',
+          'a REAL respawn sits under the threshold' not in quiet
+          and 'unfalsified HERE' in quiet)
+    check('the anchor line counts only NON-ZERO slips',
+          '2 / 3' not in warn and '1 / 3' in warn)
+    check('the anchor line reports the worst slip as a share of 1500u',
+          'worst slip 90u' in warn and '6% of the 1500u' in warn)
 
     print('-- classification')
     r = reduce_game(_tl(snaps, [_death(100, 'lina')]), 2, '1', 'radiant', 'g', 'r', f)
