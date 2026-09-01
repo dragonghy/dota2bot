@@ -1118,7 +1118,7 @@
     {
       "id": "strategy-26",
       "stream": "strategy",
-      "bundle": "",
+      "bundle": "rotscope",
       "seeds": [],
       "priority": 3,
       "axis": "ROTSCOPE —— **搭车、零 AWS 增量、不申请专波**。**本行由总监代建**:协同组按 test_set.md §CU.7 明说本轮 `queue.json` 一字未动,而 §CG.5 要求提议必须有行,开工自检本轮正是以 `ORPHAN_PROPOSAL §CU id=rotscope` 点了它。先例:`strategy-23`(总监代建)。",
@@ -1138,26 +1138,42 @@
     {
       "id": "strategy-27",
       "stream": "strategy",
-      "bundle": "",
+      "bundle": "roamidle",
       "seeds": [],
       "priority": 3,
       "axis": "ROAMIDLE —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5 要求提议必须有行;上一轮 `strategy-26` 是总监代建的 `ORPHAN_PROPOSAL`,本轮不再让那一格掉在总监身上)。",
       "question": "`roamidle`(GH #370,提议 test_set.md §CW):`bots/mode_team_roam_generic.lua` 的 `Think` 里 `if isInIdleState then isInIdleState = J.CheckBotIdleState() end` **对控制流零影响**,但被调方**不是查询** —— 它在恢复臂里下 `Action_ClearActions(true)`(`jmz_func.lua:11994`)+ `ActionQueue_AttackMove(laneFront)`(`:11998`)。往下十一行,只要 `targetUnit` 有效,同一个 `Think` 就发 `Action_AttackUnit(targetUnit, false)`,而一条 `Action_*` **「CLEARS the entire action queue」**(`docs/BOT_API_REFERENCE.md:1715`)⇒ **防卡死的重定位命令在发出它的同一帧被销毁,而且恰好在这个 mode 自己制造的那个情形里被销毁**。armed 时,真的下了重定位命令的那一帧以 `return` 结束,排队的 attack-move 得以存活。",
       "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— baseline 腿上,某一帧的动作日志出现 `Action_ClearActions → ActionQueue_AttackMove → Action_AttackUnit(bOnce=false)` 三连(恢复命令被同帧抹掉);armed 腿上同类帧**以那条排队的 attack-move 结束**,其后没有 `Action_*`。\\n\\n⚠️ **三条限定,收割前必读**:(甲) **频率未知** —— 本轮证明了**形状**并在真实帧上量到它开火,但**没有**证明真实对局里 bot 多久闩上一次 idle;域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,第二个合取项的真实频率**正是本请求要买的东西**。⇒ 它是 **RIDESHARE**,**不能当独臂**,而且**恒零读数必须报成「域为空」而不是「测过了无效应」**(§AZ / GH #148 那一族)。(乙) **引擎侧不可观测** —— 「同一 tick 内 `Action_ClearActions` 之后再来一条 `Action_*`」引擎实际怎么做,本仓无法看到(`print()` 到不了控制台;`error in error handling` 吞错误文本)⇒ 核验只主张**命令次序**这一半,不许把结论写成「引擎确实丢弃了重定位」。(丙) **它买的是那一帧的排序,不是节流** —— §CW.3 那条独立后果(`return true` 排在锚点刷新两行之上 ⇒ idle 一旦闩上 `>= 3s` 的门再也关不上,`Action_ClearActions(true)` 每帧落在其它系统的队列上)**这个 id 一字未修**,结论不许写成「idle 复位已修好」。",
       "requester": "strategy",
-      "status": "pending"
+      "status": "pending",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一常规波次(搭车,零 EC2 增量,零新波次);成员串 48 → 50 自本轮起(与 `outlatch` 同轮)",
+        "at": "2026-09-01T01:0xZ",
+        "ref": "test_set.md §CY(裁定全文,两条同节);提议 §CW;GH #370;iterations/reports/director/20260901T010359Z.md §1",
+        "executor": "replay-check",
+        "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(19:5xZ 到,01:0xZ 裁;§BB.4)。**路由裁定,不是对 §CW 全部读数的背书。**\\n\\n**总监按源码独立复核过三条**(不是照抄提议自述):(i) gate 是**单条独立门**(`mode_team_roam_generic.lua:651`),合取项是 `bRelocated`(运行期值)与 `J.IsModeTurbo()`,**没有第二个候选 id** ⇒ 不落进 `pullcad` 那个「promote 掉一个 id 把另一个 gate 冻成恒 FALSE」的陷阱;全仓 `roamidle` 只出现在两个文件(gate 一处、`jmz_func.lua:11977` 的注释一处)。(ii) 未 armed **逐字保留出厂行为且是结构性的**:调用点由 `isInIdleState = J.CheckBotIdleState()` 变为 `isInIdleState, bRelocated = ...`,**第一个赋值目标与出厂逐字相同**;被调方 `return true, bRelocated` 是**纯增量的第二返回值**,另一个出厂调用点(`:260`)仍是单赋值目标 ⇒ Lua 直接丢弃;函数其余出口(`return false` / 末尾 `return false`)第二值为 `nil`,恒 falsy。(iii) 验收独立重跑绿:`lua5.1 tests/run_tests.lua roamidle` **11/11 裸读 exit 0**,邻居 `roamreach` **19/19** 未回归。\\n\\n⚠️ **总监补的一条读法(不是新限定,是把 (甲) 的方向钉死)**:`bRelocated` 只在真下了命令的那条臂为真 ⇒ armed 与 baseline 的差集**恰好是那些帧**;收割时**先答「这一波有多少帧闩上了 idle」**,答不出就按 §CW.7 (甲) 报「域为空」,**不许**报「测过了无效应」。"
+      }
     },
     {
       "id": "strategy-28",
       "stream": "strategy",
-      "bundle": "",
+      "bundle": "outlatch",
       "seeds": [],
       "priority": 3,
       "axis": "OUTLATCH —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5)。",
       "question": "`outlatch`(GH #373,提议 test_set.md §CX):`bots/mode_outpost_generic.lua` 的 `GetDesireHelper` 把 `DidWeGetOutpost = true` **无条件**写在扫描之后。该块是 `Outposts` 的唯一写者、`GetClosestOutpost` 是唯一读者 ⇒ 一次返回空表的扫描**永久**关死这个 mode:`GetClosestOutpost` 从此恒 `nil`,出价恒 NONE,`Think`(含 `:117` 的 `Action_AttackUnit(ClosestOutpost, false)`)永远到不了。armed 时闩记录后置条件(`#Outposts > 0`),重试自带 1.0s 边界。",
       "acceptance": "**条件 (a) 的执行判据**:一局里的帧核验 —— 在**敌方二塔已倒之后**,baseline 腿上某个 bot 的 outpost mode 出价**恒为 NONE 且从不 Think**,而同一时刻地图上 outpost 确实存在且未被己方占领;armed 腿上同类局面里该 mode 至少出价一次 / 至少 Think 一次。\\n\\n⚠️ **三条限定,收割前必读**:(甲) **域可能为空,而且这正是本请求要买的东西** —— 本轮证明了**形状**(空扫描是永久的)与 armed 的恢复,但**没有**证明真实对局里那次扫描多久返回一次空表。真引擎的 `UNIT_LIST_ALL` 很可能多数时候两座 outpost 都带着 ⇒ 它是 **RIDESHARE**,**不能当独臂**,且**恒零读数必须报成「域为空」而不是「测过了无效应」**(§AZ / GH #148 那一族)。(乙) **前置条件本身罕见** —— 整个 mode 挂在 `IsEnemyTier2Down` 之下;本仓 64 枚带真实建筑表的钉住帧上敌方二塔**全部矗立**(`tests/_outpost_gate_sweep.lua`),Turbo 10 分钟封顶的批测局能不能推掉一座二塔,收割时**要先答这个**,答不出就报「前置未出现」。(丙) **引擎语义不许主张** —— `UNIT_LIST_ALL` 是否受视野限制、是否收录 outpost,本仓不可观测,核验只主张「该 mode 有没有出过价」这一半。",
       "requester": "strategy",
-      "status": "pending"
+      "status": "pending",
+      "director": {
+        "ruling": "ROUTED_RIDESHARE / ADMITTED",
+        "wave": "任一常规波次(搭车,零 EC2 增量,零新波次);成员串 48 → 50 自本轮起(与 `roamidle` 同轮)",
+        "at": "2026-09-01T01:0xZ",
+        "ref": "test_set.md §CY(裁定全文,两条同节);提议 §CX;GH #373;iterations/reports/director/20260901T010359Z.md §2",
+        "executor": "replay-check",
+        "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(22:3xZ 到,01:0xZ 裁;§BB.4)。**路由裁定,不是对 §CX 全部读数的背书。**\\n\\n**总监按源码独立复核过三条**:(i) gate 是**单条独立门**(`mode_outpost_generic.lua:79`,`bRescan = J.IsModeTurbo() and J.IsSoakCandidate('outlatch')`),**没有第二个候选 id**,且**单点求值**(下游两处都读 `bRescan` 这一个局部);全仓 `outlatch` 只出现在这一个文件。(ii) 未 armed **逐字保留出厂行为且是结构性的**:`DidWeGetOutpost = not bRescan or #Outposts > 0` 在门关时由 `not bRescan` **短路**,在测量表之前就取到出厂那个无条件 `true`;节流的 `return NONE` **写在 `if bRescan` 之内**,出厂路径从不求值它。(iii) 验收独立重跑绿:`lua5.1 tests/run_tests.lua outlatch` **12/12 裸读 exit 0**。\\n\\n⚠️ **总监自己加的第 (丁) 条限定 —— 提议里没有,收割前必读**:**armed 腿有一条出厂腿没有的持续成本**。出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`;armed 在「敌方二塔已倒 **且** `Outposts` 仍为空」期间,**每个 bot 每游戏秒扫一次,直到本局结束**。若真引擎的 `UNIT_LIST_ALL` 根本不收录 outpost(§CX.4(B) 明说本仓不可观测),这条成本**全程存在而收益恒为零**。⇒ (甲) armed 腿若读到帧时间/GPM 的负向漂移,**这条要先排除,不许先归因到别处**;(乙) 恒零读数**不是**「测过了无效应」,它是「扫了一整局什么都没找到」,两者在 verdict 表里长得一样而含义相反。\\n\\n**总监顺带核过一条提议没写的行为中性性**:节流的 `return NONE` 只可能在闩仍开的帧上发生,而闩仍开 ⇒ `#Outposts == 0` ⇒ 那一帧 `GetClosestOutpost()` 本来就答 `nil`、出价本来就是 NONE ⇒ **节流没有吞掉任何一个本可以非 NONE 的出价**。"
+      }
     }
   ],
   "done": [

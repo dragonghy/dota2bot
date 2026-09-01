@@ -296,6 +296,65 @@ orph5, _rl, _u = pr.classify_proposals(
     pr.find_proposals(FOUNDING_MD), open_row, set(), founding_state)
 check(not orph5, "an open row did not cover the proposal")
 
+# ---------------------------------------------------------------- GH #376
+# A rideshare row has an EMPTY `bundle` by definition (it asks for no wave), so
+# the link key the orphan leg reads is blank on every correctly-filed one.  The
+# leg must then say "there is a row and nothing links it", not "there is no
+# row" -- the second sentence's instruction is `open a queue request row`, and
+# following it produces a SECOND row for one proposal.  Measured 2026-09-01:
+# strategy-27 (`roamidle`) and strategy-28 (`outlatch`) were both filed by the
+# proposing stream, per §CG.5, and both were reported as `no queue request row
+# at all`.  A false positive that CREATES the defect it reports if obeyed.
+unlinked = [{"id": "strategy-27", "bundle": "", "status": "pending",
+             "question": "`fieldsip` (GH #370, proposal §CE): the callee orders."}]
+orph6, _rl, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), unlinked, set(), founding_state)
+check(len(orph6) == 1, "an unlinked row left the orphan bucket (it must stay a "
+                       "finding -- only the instruction changes): %r" % (orph6,))
+# Read through a default rather than orph6[0] directly: when the bucket is
+# empty, the interesting output is the named check above, and an IndexError
+# here would kill the run before the FAIL summary ever prints.
+reason6, rows6 = (orph6[0][2], orph6[0][3]) if orph6 else ("", [])
+check("no queue request row at all" not in reason6,
+      "a row that exists was reported as no row at all: %r" % (reason6,))
+check("LINKS" in reason6 and "bundle" in reason6,
+      "the unlinked finding does not name the link field: %r" % (reason6,))
+check(rows6 == ["strategy-27"],
+      "the unlinked finding did not name the candidate row: %r" % (rows6,))
+# (It stays a finding: the end-to-end exit-code check for this shape is at the
+# bottom of this file, where subprocess is imported.  Severity is unchanged --
+# an unlinked request has not reached the machine-read field either -- and if
+# it ever went quiet, the fix would have retired the leg it was fixing.)
+# A real orphan -- nothing anywhere -- must still say so, or the new branch has
+# swallowed the founding case.
+orph7, _rl, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), [], set(), founding_state)
+check(orph7[0][2] == "no queue request row at all",
+      "the true-orphan wording was lost: %r" % (orph7[0][2],))
+# Whole-token in prose too: `stayfield` must not answer for `stayfield2`.
+check(pr.rows_naming_in_prose(
+    "fieldsip", [{"id": "q", "status": "pending", "axis": "fieldsip2 rides"}]) == [],
+    "a prose substring matched -- token equality is not enforced in prose")
+check(pr.rows_naming_in_prose(
+    "fieldsip", [{"id": "q", "status": "pending", "axis": "FIELDSIP -- `fieldsip` rides"}]),
+    "a prose mention in `axis` was not seen")
+# Only OPEN rows are candidates: a closed row cannot carry a ruling, so pointing
+# at one is the same bad instruction by another route.
+check(pr.rows_naming_in_prose(
+    "fieldsip", [{"id": "q", "status": "done", "question": "`fieldsip` rides"}]) == [],
+    "a closed row was offered as a link candidate")
+closed_prose = [{"id": "q", "bundle": "", "status": "done",
+                 "question": "`fieldsip` rides"}]
+orph8, _rl, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), closed_prose, set(), founding_state)
+check(orph8[0][2] == "no queue request row at all",
+      "a closed prose-only row was treated as a link candidate: %r" % (orph8[0][2],))
+# The link field itself is never a prose field: if it were, this function could
+# never report the case it exists for.
+check(pr.rows_naming_in_prose(
+    "fieldsip", [{"id": "q", "status": "pending", "bundle": "fieldsip"}]) == [],
+    "`bundle` was read as prose -- the two readings must stay separate")
+
 # LIMIT 6: a heading whose id cannot be read is reported, never dropped.
 bad_md = "# t\naaa,bbb\n\n## §ZZ 2026-01-01 协同组提议入集:那个新杠杆\n"
 _o, _rl, unp = pr.classify_proposals(
@@ -350,6 +409,27 @@ run2 = subprocess.run(
     capture_output=True, text=True)
 check(run2.returncode == 2, "a missing test_set.md exited %d, not 2" % run2.returncode)
 check("UNCERTIFIABLE" in run2.stdout, "a leg that could not run did not say so")
+
+# GH #376 end to end: the unlinked-row shape is still exit 3, still an
+# ORPHAN_PROPOSAL, and names the row rather than telling anyone to open one.
+unlinked_queue = os.path.join(tmp, "queue_unlinked.json")
+with open(unlinked_queue, "w", encoding="utf-8") as fh:
+    json.dump({"requests": [{"id": "strategy-27", "stream": "strategy", "bundle": "",
+                             "status": "pending", "priority": 3,
+                             "question": "`fieldsip` (GH #370) rides along.",
+                             "director": {"ruling": "ROUTED", "wave": "any", "at": "x",
+                                          "ref": "y"}}]}, fh)
+run3 = subprocess.run(
+    [sys.executable, os.path.join(REPO, "tools", "agent", "pending_rulings.py"),
+     "--no-age", "--queue", unlinked_queue, "--test-set", paths["md"],
+     "--state", paths["state.json"]],
+    capture_output=True, text=True)
+check(run3.returncode == 3,
+      "an unlinked row stopped reddening the exit code (got %d)" % run3.returncode)
+check("no queue request row at all" not in run3.stdout,
+      "end to end, an existing row was still reported as no row at all")
+check("strategy-27" in run3.stdout.split("orphan admission proposals")[-1],
+      "end to end, the candidate row was not named in the orphan block")
 
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:

@@ -101,6 +101,18 @@ LIMITS FOR THE ORPHAN LEG (in addition to 1-4 below)
    `returned_uninterpretable` (1) -- all five already ruled, so the ruling
    added no findings on the day it landed.
 
+8. The orphan leg's LINK is `bundle`/`bundle_was`, and a rideshare request has
+   an empty `bundle` by definition.  Since GH #376 the leg separates the two
+   cases it used to merge: `no queue request row at all` (nothing exists) vs
+   `no row LINKS it` (a row exists, naming the id only in its prose, and is
+   named on the same line).  Both are orphans and both redden the exit code --
+   an unlinked request has not reached the machine-read field either -- but
+   only the first one means "open a row".  The second was silently telling
+   directors to open a DUPLICATE, which is a defect the report creates rather
+   than finds.  The prose match names CANDIDATE rows: whole-token evidence
+   that somebody wrote this id into that row, never an assertion that it is
+   the proposal's row.
+
 LIMITS (read these before quoting the output)
 ---------------------------------------------
 1. **It reports a problem, not a verdict.**  An un-ruled OTHER request may be
@@ -320,6 +332,48 @@ def queue_rows_for(cand, requests):
     return rows
 
 
+# The free-text fields a request writes its own story into.  Deliberately NOT
+# `bundle`/`bundle_was` -- this function exists to find the rows those two
+# fields MISSED.
+PROSE_FIELDS = ("axis", "question", "acceptance")
+
+
+def rows_naming_in_prose(cand, requests):
+    """Open rows that name this id in free text, whole-token (GH #376).
+
+    `queue_rows_for` is the LINK: it keys on `bundle`/`bundle_was`.  A rideshare
+    request has an empty `bundle` by definition -- it asks for no wave, so there
+    is no bundle to name -- and the convention that made the link work at all
+    (write the candidate id into `bundle` anyway) was never written down.  The
+    day a correctly-filed rideshare row leaves it blank, the orphan leg says
+    `no queue request row at all` about a row that is sitting right there.
+
+    That sentence is not merely wrong, it is ACTIONABLY wrong: the finding's
+    instruction is "open a queue request row", and following it produces a
+    SECOND row for one proposal -- a defect the reporter did not have until it
+    read the report.  So the tool must be able to tell "there is no row" from
+    "there is a row and nothing links it".
+
+    Whole-token, same rule and same reason as `queue_rows_for`: `stayfield` must
+    not answer for `stayfield2`.  Open rows only: a closed row cannot carry a
+    ruling, so pointing at one would be the same bad instruction by another
+    route.  These are CANDIDATES, never an assertion of correspondence -- a
+    prose mention is evidence that somebody wrote this id into this row, not
+    proof that this row is the proposal's row, and the caller says so.
+    """
+    rows = []
+    for req in requests:
+        if not is_open(req):
+            continue
+        tokens = set()
+        for field in PROSE_FIELDS:
+            value = req.get(field) or ""
+            tokens.update(t for t in re.split(r"[^A-Za-z0-9_]+", str(value)) if t)
+        if cand in tokens:
+            rows.append(req)
+    return rows
+
+
 def load_state(path=STATE):
     try:
         with open(path, encoding="utf-8") as fh:
@@ -359,8 +413,24 @@ def classify_proposals(proposals, requests, armed, state):
         ruled = cand in armed or ruled_in_state(cand, state)
         row_ids = [r.get("id") for r in rows]
         if not rows:
-            (rowless_ruled if ruled else orphans).append(
-                (section, cand, "no queue request row at all", row_ids))
+            if ruled:
+                rowless_ruled.append(
+                    (section, cand, "no queue request row at all", row_ids))
+            else:
+                # GH #376: distinguish "no row" from "a row nothing links".
+                # Same severity (still an orphan, still exit 3 -- an unlinked
+                # request has not reached the machine-read field either), a
+                # different INSTRUCTION: link it, do not open a second one.
+                prose = rows_naming_in_prose(cand, requests)
+                if prose:
+                    orphans.append(
+                        (section, cand,
+                         "no row LINKS it (`bundle` empty) -- set `bundle` on the "
+                         "open row(s) below; do NOT open a second row",
+                         [r.get("id") for r in prose]))
+                else:
+                    orphans.append(
+                        (section, cand, "no queue request row at all", row_ids))
         elif not any(is_open(r) for r in rows) and not ruled:
             orphans.append(
                 (section, cand, "only closed rows -- a ruling has nowhere to land", row_ids))

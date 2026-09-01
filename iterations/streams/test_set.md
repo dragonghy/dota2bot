@@ -1,5 +1,8 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch
+
+**成员串 50**(上一行,**441 字节**)。本行 **2026-09-01T01:0xZ 的变动:`roamidle` 与 `outlatch` 两条同轮入集**(48 → 50,总监裁定全文 **§CY**,提议分别是 §CW / §CX,GH #370 / #373;queue `strategy-27` / `strategy-28`,**两行都由提议方自己建** —— §CG.5 的上游那半这一轮第一次不用总监代建)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
+**收割前必读三条**:(i) ⚠️ **两条的域都可能为空,而这正是它们要买的东西** —— `roamidle` 的域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,`outlatch` 的域是「敌方二塔已倒 **且** 那次扫描返回空表」;**恒零读数必须报成「域为空」,不许报成「测过了无效应」**(§AZ / GH #148 那一族),两者在 verdict 表里长得一样而含义相反。**两条都不能当独臂。**(ii) ⚠️ **`outlatch` 的 armed 腿有一条出厂腿没有的持续成本(总监加的第 (丁) 条限定,提议里没有)**:出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`,armed 在「二塔已倒且表仍空」期间**每个 bot 每游戏秒扫一次直到本局结束** ⇒ armed 腿若读到帧时间/经济的负向漂移,**这条要先排除,不许先归因到别处**。(iii) **两条买的都不是它们最容易被读成的那件事**:`roamidle` 买的是**那一帧的排序**,§CW.3 的每帧重复(`return true` 排在锚点刷新之上)**一字未修**;`outlatch` 买的是**闩的后置条件**,§CX.3 的 `IsNull()` 排在第四位求值**一字未修**。
 
 **成员串 48**(上一行,**423 字节**)。本行 **2026-08-31T19:0xZ 的变动:`rotscope` 入集**(47 → 48,总监裁定全文 **§CV**,提议 §CU,GH #368;queue `strategy-26`,**总监代建**——协同组本轮按 §CU.7 明说 `queue.json` 一字未动,而 §CG.5 要求提议必须有行)。**搭车、零 AWS 增量、不申请专波**,按 §BB.4「搭车提议的唯一成本就是不被裁」放行;**到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁)。
 **收割前必读两条**:(i) ⚠️ **`rotscope` 只对 Pudge 可达** ⇒ **没抽到 Pudge 的波次对它读数恒为零**,它**永远不能当独臂**;把「零读数」读成「无效应」是把 §CU.7 的排期约束丢掉,条件 (a) 需要一局有 Pudge 的对局。(ii) **它买的是作用域,不是连续性** —— armed 之后那条命令仍是 `bOnce=false` 的连续命令(§CU.2 第 2 条那一半**没有**被这个 id 修掉),写结论时不要把「命令被收窄到被守卫过的句柄上」读成「`roamreach` 那一族的形状已消除」。
@@ -11691,3 +11694,91 @@ shadow_shaman,t=312.5,**带真实建筑表**):
   本节任何一句都没有主张它。
 - CX.3 那条**没修**;全量单进程套件未跑完(GH #124),本轮跑的是 luacheck 门 + 全部
   `[detector]`/`[ratchet]` 文件。
+
+## §CY 2026-09-01T01:0xZ 总监裁定:`roamidle`(§CW)与 `outlatch`(§CX)**两条同轮入集**(48 → 50)—— 而本节最该被读的不是两条裁词,是 **§CY.3:开工自检说这两条「一行都没有」,而两行都在,是它按 `bundle` 找、而两行的 `bundle` 是空的**
+
+**两条都是路由裁定,不是对提议前提的背书。** 两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,
+按 §BB.4「搭车提议的唯一成本就是不被裁」放行;两条**各自到达后第一个总监轮次内裁毕**
+(§CW 19:5xZ 到、§CX 22:3xZ 到,本轮 01:0xZ 同批裁)。
+
+### CY.1 `roamidle`(GH #370,queue `strategy-27`)—— ROUTED_RIDESHARE / ADMITTED
+
+**总监按源码独立复核三条**(不是照抄提议自述):
+
+1. **gate 是单条独立门**:`mode_team_roam_generic.lua:651` 的
+   `if bRelocated and J.IsModeTurbo() and J.IsSoakCandidate('roamidle') then return end`,
+   合取项是 `bRelocated`(运行期值)与 turbo,**没有第二个候选 id**
+   ⇒ 不落进 `pullcad` 那个「promote 掉一个 id 把另一个 gate 冻成恒 FALSE」的陷阱。
+   全仓 `roamidle` 只出现在两处:这道门,和 `jmz_func.lua:11977` 的注释。
+2. **未 armed 逐字保留出厂行为,而且是结构性的**:调用点由
+   `isInIdleState = J.CheckBotIdleState()` 变成 `isInIdleState, bRelocated = ...`,
+   **第一个赋值目标与出厂逐字相同**;被调方的 `return true, bRelocated` 是**纯增量的第二返回值**,
+   另一个出厂调用点(`:260`)仍是**单赋值目标** ⇒ Lua 直接丢弃;该函数其余出口
+   (顶部 `return false`、末尾 `return false`)第二值为 `nil`,**恒 falsy** ⇒ 门恒关。
+3. **验收独立重跑绿**:`lua5.1 tests/run_tests.lua roamidle` **11/11,裸读 exit 0**;
+   邻居 `roamreach` **19/19** 未回归(§CW.6 改了它的 REVERSE 断言,所以它是必查的邻居)。
+
+⚠️ **总监把 §CW.7 (甲) 的方向钉死(不是新限定,是读法)**:`bRelocated` 只在**真下了命令**的那条臂为真
+⇒ 两臂差集**恰好是那些帧**。收割时**先答「这一波有多少帧闩上了 idle」**;答不出就报「域为空」,
+**不许**报「测过了无效应」。
+
+### CY.2 `outlatch`(GH #373,queue `strategy-28`)—— ROUTED_RIDESHARE / ADMITTED
+
+**总监按源码独立复核三条**:
+
+1. **gate 是单条独立门且单点求值**:`mode_outpost_generic.lua:79` 的
+   `local bRescan = J.IsModeTurbo() and J.IsSoakCandidate('outlatch')`,下游两处都读 `bRescan`
+   这一个局部,**没有第二个候选 id**;全仓 `outlatch` 只出现在这一个文件。
+2. **未 armed 逐字保留出厂行为,而且是结构性的**:`DidWeGetOutpost = not bRescan or #Outposts > 0`
+   在门关时由 `not bRescan` **短路**,在测量表之前就取到出厂那个无条件 `true`;
+   节流的 `return NONE` **写在 `if bRescan` 之内**,出厂路径**从不求值它**。
+3. **验收独立重跑绿**:`lua5.1 tests/run_tests.lua outlatch` **12/12,裸读 exit 0**。
+
+⚠️ **总监自己加的第 (丁) 条限定 —— §CX 里没有,收割前必读**:
+**armed 腿有一条出厂腿没有的持续成本。** 出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`;
+armed 在「敌方二塔已倒 **且** `Outposts` 仍为空」期间,**每个 bot 每游戏秒扫一次,直到本局结束**。
+而 §CX.4(B) 明说本仓**无法**观测真引擎的 `UNIT_LIST_ALL` 收不收录 outpost ⇒
+**若它根本不收录,这条成本全程存在而收益恒为零。**
+⇒ (甲) armed 腿若读到帧时间/经济的负向漂移,**这条要先排除,不许先归因到别处**;
+(乙) 恒零读数**不是**「测过了无效应」,它是「扫了一整局什么都没找到」——
+两者在 verdict 表里长得一样而**含义相反**。
+
+**总监顺带核过一条提议没写的行为中性性**:节流那条 `return NONE` 只可能发生在**闩仍开**的帧上,
+而闩仍开 ⇒ `#Outposts == 0` ⇒ 那一帧 `GetClosestOutpost()` 本来就答 `nil`、出价本来就是 NONE
+⇒ **节流没有吞掉任何一个本可以非 NONE 的出价**。
+
+### CY.3 ⭐⭐⭐ 本节真正该被读的:**自检对这两条各打了一条 `ORPHAN_PROPOSAL ... no queue request row at all`,而两行都在 `queue.json` 里躺着**
+
+本轮开工自检打的是:
+
+```
+ORPHAN_PROPOSAL (§CG.5: open a queue request row, then rule it): 2
+  §CW   id=roamidle       no queue request row at all
+  §CX   id=outlatch       no queue request row at all
+```
+
+**这句话是假的**:`strategy-27` / `strategy-28` 早就在,而且**正是提议方自己按 §CG.5 建的**
+(§CW.7 里白纸黑字写了「本行由提议方自己建」)。
+
+**原因是链接键**:`pending_rulings.py` 的 `queue_rows_for()` **只在 `bundle` / `bundle_was`
+两个字段里按整词找 id**,而**搭车请求的 `bundle` 按定义是空的** —— 它不申请波次,没有 bundle 可填。
+历史上能对上,靠的是 `strategy-23`/`strategy-25`/`hero-24`/`hero-25` 这些行**把候选 id 写进了 `bundle`**;
+而**总监自己代建的 `strategy-26` 把 `bundle` 留空了**,提议方本轮**照着那个先例**建了两行,
+于是这条腿对**每一条格式正确的搭车请求**都会说「一行都没有」。
+
+**为什么这比一条噪声严重**:这条 finding 的**指令**是「开一行,然后裁」。
+照字面执行的下一个总监会**建出重复行** —— 一个提议两行、两条裁定路径、
+而 `queue_rows_for` 对重复行毫无意见。**这是一条会自我实现的假阳**:
+它报的缺陷不存在,而**照它做就会把缺陷造出来**。
+
+**与 §23 同族但方向相反**:§23 是检查器把「断言不存在」读成引用(假阳,照做无害);
+本条是检查器把「行不存在」读成事实,而**照做有害**。
+
+**本轮的处理是两半,缺一不可**:
+- **数据半**:`strategy-26` / `strategy-27` / `strategy-28` 的 `bundle` 回填成
+  `rotscope` / `roamidle` / `outlatch`(全仓只有 `pending_rulings.py` 读这个字段,已 grep 过);
+- **工具半**(GH #376):`classify_proposals` 新增一类 —— 当没有任何行用 `bundle` 链上、
+  但**有 open 行在自由文本里按整词提到这个 id** 时,报的是
+  **「有行,只是没链上:去设 `bundle`,不要开第二行」**并**点名那些行**,而不是「一行都没有」。
+  **退出码不变(仍然是 3,仍然是 finding)** —— 改的是**指令**,不是**严重性**:
+  一条链接键为空的请求确实还没被机器看见,它该红;它只是不该让人去开重复行。
