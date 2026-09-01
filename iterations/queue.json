@@ -1300,8 +1300,14 @@
       "axis": "HPBOOL —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `hpbool`**(§CY.3 的教训:开工自检按 `bundle` 找提议行,字段为空就被报成 `ORPHAN_PROPOSAL`)。",
       "question": "`hpbool`(GH #397,提议 test_set.md §DG):`bots/BotLib/hero_tiny.lua:487` 的 `X.ConsiderToss` 撤退臂写着 `or (J.GetHP(bot) and bot:WasRecentlyDamagedByAnyHero(2))`。`J.GetHP`(jmz_func.lua:4003)返回 `nCurHealth / nMaxHealth`,死亡路径返回裸的 `0` —— **从不返回 nil、从不返回 false**,而 Lua 里 **0 为真** ⇒ 那个操作数**每一帧每个单位恒真**,合取项付了一次除法的钱、什么也没决定。**代价收两次**:(1) 出厂 Tiny 撤退时**任何血量**都 Toss,满血也 Toss;(2) **支配** —— 这道闸是 `(#enemies > #allies) or (<恒真> and recentlyDamaged)`,而撤退中 `WasRecentlyDamagedByAnyHero(2)` 基本恒真,于是**作者亲手写的那个「被压人数」左臂也永远决定不了任何事**,一个死合取项静悄悄杀掉整条竞价。**仓库自己按多数票回答**:全仓 **64 处**写的是带阈值的同一惯用法(众数 **0.65**,11 处),**6 处丢了 `< X`**;而**最窄的一条证据在同一个文件里** —— `hero_tiny.lua:659`,比缺陷低 170 行,写的就是正确版本、用的就是这个 0.65。armed 时补回该阈值;**严格子集:只可能撤掉一次施法,永远不可能新增一次**。全仓这个形状**只有 6 处**,本轮**只修 1 处**(一次一个杠杆),另外 5 处([source S1] 按文件点名:shredder 3 / kez 1 / dawnbreaker 1)登记不修。",
       "acceptance": "**条件 (a) 的执行判据**:找「Tiny 处于撤退 ∧ 2 秒内被英雄打过 ∧ 血量 > 65%」的窗口,读出厂腿该窗口内 `tiny_toss` 的施放数(**预登记预期:非 0**)与 armed 腿的(**预期:0**)。⚠️ **METHOD-FAILED 分支(按 §CJ 必须先枚举,而且本条已经被量出来了、不是猜的)**:**Tiny 不是焦点英雄,且全部 110 份 fixture 里出场 0 次**(`[source S6]`;shredder / dawnbreaker / kez / brewmaster 同样 0 次)—— 若语料里根本没有 Tiny 出场,**判 `DOMAIN-EMPTY`,不判「无效应」**,并把这一条**退回总监重裁**;执行方**不得**自行套用「无效应 ⇒ 不 promote」。**⭐ 一处结构性改善,也是量出来的**:`hero_selection.lua` 的 `WeakHeroes` 节流名单上**有 brewmaster(#393 的主体)、没有 Tiny** ⇒ 本条只跟语料作对,不同时跟抽签作对。**条件 (b)**:粗粒度,胜负无明显负面即可(改动只在一个非焦点英雄的一条撤退 Toss 分支上,且是严格子集,预期对总量不可见)。**条件 (c)** 已成立:满血时把 Toss(唯一的位移/脱离手段,连同冷却与法力)花在一次不需要的撤退上,是标准 Dota 常识里的资源浪费;而**仓库自己的 64 : 6 多数票**是比外部检索更近的佐证。",
-      "director": "",
-      "status": "open"
+      "director": {
+        "ruling": "HOLD-DOMAIN-EMPTY",
+        "wave": "none -- not admitted to the armed set, no wave slot spent",
+        "at": "2026-09-01T22:0xZ",
+        "ref": "iterations/streams/test_set.md §DH; GH #397; queue strategy-33",
+        "note": "The fix stays on the branch, gated and inert (turbo-only, gate shut = byte-identical shipped decision, strict subset). It is NOT armed and NOT rejected. Reason: condition (a) cannot be bought. Director's own reading, taken with tools/agent/corpus_hero_census.py --file bots/BotLib/hero_tiny.lua: tiny DOMAIN-EMPTY, files=0 games=0, bare exit 3 over 108 frame files / 43 distinct heroes. Arming it would spend a candidate slot to buy a DOMAIN-EMPTY harvest, and per test_set.md §CJ that harvest must NOT be read as 'no effect' -- which is precisely how a lever dies quietly. Conditions (b) and (c) are granted as argued (strict subset; the repo's own 64:6 majority plus the sibling copy 170 lines away in the same file). UNBLOCK PATH, mechanical, no one has to remember it: pending_rulings.py now prints a domain watch for this ruling every round and flips it to UNBLOCKED (exit 3, owes a re-ruling) the day the archive carries a tiny frame. Cheaper alternative the proposer may prefer: move the lever to shared code (bots/mode_*.lua, bots/FunLib/*), which owes no domain price at all. The five unfixed sibling sites stay registered and unfixed (one lever at a time)."
+      },
+      "status": "pending"
     }
   ],
   "done": [

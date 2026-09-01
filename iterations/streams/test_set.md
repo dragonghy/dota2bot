@@ -1,7 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,tormself,immguard
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal
 
-**成员串 54**(上一行,**477 字节**)。本行 **2026-09-01T15:5xZ 的变动:`tormself` 与 `immguard` 两条同轮入集**(52 → 54,总监裁定全文 **§DF**,提议分别是 §DD / §DE,GH #385 / #393;queue `strategy-31` / `strategy-32`,**两行都由提议方自己建且 `bundle` 字段都填了**)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
+**成员串 52**(上一行,**459 字节**,md5 `c5af3b11deb9c024983c22afb90d9a7d`)。本行 **2026-09-01T22:xxZ 的变动:`tormself` 与 `immguard` 两条同轮出集**(54 → 52,总监裁定全文 **§DH**,GH #402)。**出集不是 reject** —— gated 代码留在树上、门保持关闭;出的理由是**条件 (a) 在当前 47 人 `hero_pool.txt` 下买不到**:真载体 `ringmaster` / `brewmaster` **都不在池里**,任何种子、任何窗口、任何重抽都改变不了这一点。上一次变动(52 → 54,两条**入**集)全文见 **§DF**,提议 §DD / §DE,GH #385 / #393。
 **⚠️ 收割前必读(§DF.5):这两条彼此正交** —— 不同英雄(Ringmaster / 酒仙)、不同文件、不相交的调用路径,**没有 §DC.3 那种「交集上不能分摊归因」的限定**。**阴性也登记**:一道只在命中时才被记录的检查,通过时就变成隐形的,下一个读者无从分辨「查过且正交」与「根本没查」。
 **⚠️ 收割前必读(§DF.3):`tormself` 的条件 (a) 买不到于 `corpus_query`** —— 提议那条「全语料 993 个句柄为真 0 次」跑的是**英雄索引**,而 Tormentor 是**中立单位**,`detect.Timeline` 根本不索引它(backlog #1 自己写明的 LIMIT)。那个数字是**关着那条臂**的域的正确测量,是**开着那条臂**的**零信息**。**谁把它读成「这修复不会有效果」,就是拿错臂的读数当结论。**
 **⚠️ 收割前必读(§DF.2 (ii)):`tormself` 是严格超集,`immguard` 是严格子集** —— §DC 那一族全是超集,按模式匹配读会读反。
@@ -12708,3 +12708,98 @@ term —— 后者正是 backlog #1 登记的残留。
 4. **`#enemies > #allies` 项用的是合成的表长度**(fixture 带的是位置,不是这个 bot 的 mode 域英雄列表)。
    **血量项与近期受伤项是真实帧数据,基数项不是** —— 已在测试文件里逐字声明。
 5. **`WasRecentlyDamagedByAnyHero(2)` 里的 `2` 不动**:那是本修复没有意见的出厂调参。
+
+---
+
+## §DH 2026-09-01T22:xxZ 总监裁定三件:`hpbool` 入集(HOLD)、GH #402 载体门修复、`tormself`+`immguard` 出集 —— 而三件是**同一件**:一个杠杆的载体买不到时,我们的三条独立通道全都读成了「没事」
+
+**一句话**:`hpbool` 的载体(tiny)不在**帧语料**里,`immguard` / `tormself` 的载体(brewmaster / ringmaster)不在**抽签池**里,
+而**三条通道各自的默认答案都是「通过」** —— 语料那条根本没人问,抽签那条**把 128 个英雄当成一条析取**答了 `FULL`。
+本轮把三条都改成会举手的形状。
+
+### DH.1 `strategy-33` / `hpbool`(GH #397,提议 §DG):**HOLD-DOMAIN-EMPTY,不入集、不 reject**
+
+条件 (b)(c) **按提议方所写成立**(严格子集;仓库自己 64:6 的多数票 + 同文件 170 行外的兄弟拷贝)。
+条件 (a) **买不到**,而这次是**总监自己取的读数**,不是照抄提议:
+`python3 tools/agent/corpus_hero_census.py --file bots/BotLib/hero_tiny.lua`
+⇒ `tiny DOMAIN-EMPTY files=0 games=0`,**裸退出码 3**,走遍 **108 份帧文件 / 43 个英雄**。
+⇒ armed 它只会买到一次 `DOMAIN-EMPTY` 收割,而按 §CJ 那**不得**读成「无效应」—— 那正是一条杠杆无声死掉的方式。
+**gated 代码留在树上、门关着,字节级不改变出厂行为。**
+
+**解锁路径是机械的,没有人需要记住它**(§DH.4):`pending_rulings.py` 每轮为这条裁定打一行 domain watch,
+语料里出现 tiny 帧的那一天自动翻成 `UNBLOCKED`(**抬退出码 3,欠一次重裁**)。
+**更便宜的一条路留给提议方**:把杠杆挪到共享代码(`bots/mode_*.lua`、`bots/FunLib/*`),那里**根本不付域价**。
+另外 5 处同形站点(shredder 3 / kez 1 / dawnbreaker 1)按提议**登记不修**,一次一个杠杆。
+
+### DH.2 GH #402:载体门**恒真通过**,已修(批测台 21:14Z 发波前门抓到,交总监)
+
+`carrier_terms.py` 的 `hero_of()` 只认 `bots/BotLib/hero_<x>.lua` 这个路径形状。
+`immguard` 的门在 `bots/FunLib/minion_lib/primal_split.lua:128`,不匹配 ⇒ 走可达性反查 ⇒
+那些文件全都经由通用派发器 `aba_minion.lua` 被 require ⇒ 答案是**全表 128 个英雄**,
+而 `seed_draft.py` 把它当**一条 `a|b|c|…` 的析取** ⇒ 任意十人阵容必然命中 ⇒
+门读 `verdict=FULL satisfied=4/4`,**为一条结构性域空的 id 背书**。
+**失效方向是危险的那一侧**:不是拒发(拒发会举手,像 `tormself` 那样),是**凭空满足**。
+
+**修法取甲(显式 minion→拥有者映射),并且映射必须由文件自己举证** ——
+`primal_split.lua` 里有 `npc_dota_brewmaster_earth/fire/storm/void`,`familiars.lua` 里有 `visage_summon_familiars`,
+`vengeful_spirit.lua` 里有 `vengefulspirit_nether_swap`。**`jugg.lua` 故意不映射**:
+`X.HealingWardThink` 是不是小娜迦以外只有主宰有,那是**读者的 Dota 知识**,文件里既没有单位名也没有技能名 ——
+而「按文件名认英雄」正是 `rubick_hero/` 那条特例当年立起来警告的读法。未映射的 summon 文件**一律判 `unresolved`(响,退出码 2)**,不再继承那个全表答案。
+
+⭐ **中途改过一次,值得写下来**:第一版把「未映射的 minion 文件」一刀切判 `unresolved`,
+于是 `illumove` / `illureal` **两条正确的 generic id 变成了 `unresolved`**,会让发波门以 exit 2 拒发。
+幻象是**构造上通用**的(任何英雄买玛尔斯之障都有幻象),`generic` 才是对的答案。
+**响只有在同时为真的时候才比静默好** —— 这一版把「拿一个乐观的错答案换一个响亮的错答案」挡在了 `MINION_GENERIC` 里。
+
+**验收(#402 自己写的判据,逐条对上)**:`immguard` 那行不再是 `FULL` ⇒ 现读
+`CARRIER id=immguard term=brewmaster verdict=UNDRAFTABLE (no carrier is in hero_pool.txt)`,
+与同轮 `tormself` **逐字一致**;`128 term(s)` ⇒ **8**(单位数);`0 unresolved` 未变。
+出集后 52-id 串:`10 hero-scoped / 42 generic / 0 unresolved / 6 terms`,
+**`CARRIER_GATE ids=10 seeds=4 exit=0`** —— 机械导出门与批测台手写六项门(`crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus`)**现在给出同一个集合**,这本来就是 GH #276 想要的收敛。
+
+**乙(`seed_draft.py` 侧的 `OVER-BROAD` 闸)未做,总监下轮认领** —— #402 保持 open 当这根接力棒。
+理由是甲修对了这一例,乙才挡得住下一例:同族的 `rotscope`(朝另一侧失效,**漏报**载体)**已登记且未修**。
+
+### DH.3 `tormself` + `immguard` 出集(54 → 52),**退回协同组,不是 reject**
+
+条件 (a) 在**当前 47 人 `hero_pool.txt`** 下**结构上买不到**:`ringmaster` / `brewmaster` 都不在池里。
+不出集的代价不是零 —— 修好载体门之后,**机械发波门会因为这两条的 `UNDRAFTABLE` 永远读 exit 1**,
+批测台就得每一波都用手写门覆盖它。**一道永远说不的门和一道永远说是的门一样没用,而且更贵**(这句是 `carrier_terms.py` 自己的注释)。
+出集后该门 **exit 0**,恢复成一道**能对具体阵容说不**的门。
+
+**⛔ 明确否掉 #402 的丙案第一臂:不把 brewmaster / ringmaster 加进 `hero_pool.txt`。**
+池子是 W1–W36 全部读数共用的**测量基底**,为两条非焦点英雄的杠杆改它,买到的是两条 id 的域、
+付掉的是**所有历史波次的可比性**。这个取舍**不是总监一个人拍**:已写进 `iterations/DECISIONS_NEEDED.md`。
+
+### DH.4 立一条通用的:**域价要打在裁定那一行上,不是打在备忘清单里**
+
+协同组 19:21Z 建了 `tools/agent/corpus_hero_census.py`(秒级、只读、零 AWS,退出码 0/2/3),
+并请总监「把语料出场普查提成入集前的一道读数」。**一道读数就是一条清单**,
+而本章程上一轮刚刚量过一条清单的落实率:**六轮 1/6**(结论原话:**措施是守卫,清单只是记录**)。
+⇒ 因此它被接到 **`tools/agent/pending_rulings.py`** 上,打在**未裁行本身**旁边 ——
+写裁定的人唯一必看的那个视图。总监**不需要想起来去查**,价钱就在被裁的 id 边上。
+
+- `DOMAIN-EMPTY <hero>: corpus 0` ⇒ fixture 级的条件 (a) **不可能**成立(**载重**);
+- `domain <hero>: corpus N` ⇒ 只是**没被排除**(**弱**,域还得在某一帧上可达,普查看不见域);
+- 普查跑不起来 ⇒ 打 `UNCERTIFIABLE`,**不是通过**;
+- 主语从**请求自己写的 `bots/BotLib/hero_<x>.lua` 路径**读,不从 `bundle`/`id` 猜,
+  也不从散文里出现过的英雄名猜(共享代码**不欠域价**,因为语料里每个英雄都是它的域);
+- **域价不抬退出码**(LIMIT 8):它是**裁定要权衡的事实**,不是请求的缺陷;
+  每轮为一个没人能修的事实喊一次,正是 GH #276 警告的那种「喊到没人读」。
+
+**而 `HOLD-DOMAIN-EMPTY` 这条裁定会把自己的行从未裁桶里清掉,活却还欠着** —— 那正是铁律 9
+拉野死分支消失 37 轮的形状。所以配一条 **domain watch**:持有中的行每轮点名,
+`STILL BLOCKED` 安静,语料补上了就翻 **`UNBLOCKED`(退出码 3,欠一次重裁)**,普查跑不起来就说没读过。
+
+**验收**:`tests/test_pending_rulings.py` **84 → 110 checks / 0 failed**;
+变异台 `tools/agent/mutstand_pending_rulings.sh` **9/9 CAUGHT**;
+`tests/test_carrier_terms.py` **40(1 red)→ 52 / 0 failed**;
+变异台 `tools/agent/mutstand_carrier_minion.sh` **5/5 CAUGHT**。
+
+⭐ **两个变异台各自抓到自己的一次说谎,都记在脚本头里**:
+(i) `pending_rulings` 台第一轮把 **M8 报成 caught —— 用的却是 M7 的失败签名**:测试是 `import` 模块的,
+**旧 `.pyc` 让台上的变异体不是解释器里的那个**。⇒ 每个变异体之间 purge `__pycache__`。
+(ii) `carrier_minion` 台第一版的 **N5 报成 SURVIVED,而它其实是 INERT** ——
+`hero_of` 先读 `MINION_OWNER` 就返回了,`MINION_GENERIC` 那行根本没被求值:
+**改了文本没改程序**。把一个空操作记成「测试没盯住」,与把它记成「抓到了」是同一个谎,只是枪口对着测试。
+⇒ 台子现在**给行为按指纹**(`derive_id` 的判读),指纹没动就打 `INERT` 并**自称是台子的缺陷**,不去赖测试。

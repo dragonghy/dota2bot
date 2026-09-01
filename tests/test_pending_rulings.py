@@ -431,6 +431,161 @@ check("no queue request row at all" not in run3.stdout,
 check("strategy-27" in run3.stdout.split("orphan admission proposals")[-1],
       "end to end, the candidate row was not named in the orphan block")
 
+# ---------------------------------------------------------------- invariant 4
+# THE DOMAIN PRICE ON THE UN-RULED ROW (director 2026-09-01, §DG.7.1).
+#
+# Three consecutive rounds armed a lever whose subject hero has corpus 0, so
+# condition (a) could never be bought at the fixture level.  The census that
+# answers this in seconds existed as of 2026-09-01T19:21Z; what did not exist
+# was any path by which a director writing a ruling would SEE it.  These rows
+# pin the wiring, and each of the four failure directions is a shape that
+# looks exactly like working code:
+#
+#   * a price that reads only `question` (a subject declared in `acceptance`
+#     goes silently unpriced),
+#   * a price that fires on any hero NAMED in the prose rather than on the
+#     file the change edits (every request about a fight prices five heroes),
+#   * a census failure that renders as silence instead of UNCERTIFIABLE,
+#   * a price that reddens the exit code (LIMIT 8 -- it is a fact to weigh,
+#     not a defect; a detector that shouts every round stops being read).
+
+import contextlib                                                # noqa: E402
+import io                                                        # noqa: E402
+
+check(pr.subjects_of({"question": "fix `bots/BotLib/hero_tiny.lua:487`"}) == ["tiny"],
+      "subjects_of missed a hero file named in question")
+check(pr.subjects_of({"acceptance": "read bots/BotLib/hero_axe.lua"}) == ["axe"],
+      "subjects_of ignores `acceptance` -- a subject declared there is unpriced")
+check(pr.subjects_of({"axis": "bots/BotLib/hero_lion.lua"}) == ["lion"],
+      "subjects_of ignores `axis`")
+check(pr.subjects_of({"question": "hero_zuus.lua and bots/BotLib/hero_zuus.lua"}) == ["zuus"],
+      "subjects_of did not de-duplicate, or matched a bare filename")
+check(pr.subjects_of({"question": "bots/mode_farm_generic.lua + bots/FunLib/jmz_func.lua"}) == [],
+      "shared code was given a domain price it does not owe")
+check(pr.subjects_of({"question": "npc_dota_hero_tiny got tossed by npc_dota_hero_axe"}) == [],
+      "a hero merely NAMED in prose was priced as the change's subject")
+check(pr.subjects_of({"bundle": "hero_tiny", "id": "hero-9"}) == [],
+      "a subject was guessed from bundle/id instead of read from a path")
+
+_counts, _weak = pr._census()
+check(_counts is not None, "the census could not run from inside pending_rulings")
+check(_counts and _counts.get("crystal_maiden", 0) > 0,
+      "sanity: a focus hero is absent from the corpus, so the census is misreading")
+
+
+# A test_set.md with no proposal sections at all, so the orphan leg cannot
+# contribute to the exit code and the price is the only thing under test.
+# (Pointing these rows at the REAL test_set.md was the first cut, and it reads
+# exit 3 -- from orphans, since the synthetic queue has none of the real rows.
+# That would have made the LIMIT 8 assertion pass for a reason unrelated to
+# the price, in whichever direction: evidence discipline 4.)
+_bare_md = os.path.join(tmp, "test_set_no_proposals.md")
+with open(_bare_md, "w", encoding="utf-8") as fh:
+    fh.write("# member string below\nalpha,beta\n\nno proposal sections here.\n")
+
+
+def _run_main(queue_path, census=None):
+    """Drive the real main() and return (exit code, stdout)."""
+    saved_argv, saved_census = sys.argv, pr._census
+    if census is not None:
+        pr._census = census
+    sys.argv = ["pending_rulings.py", "--no-age", "--queue", queue_path,
+                "--test-set", _bare_md, "--state",
+                os.path.join(REPO, "iterations", "state.json")]
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            rc = pr.main()
+    finally:
+        sys.argv, pr._census = saved_argv, saved_census
+    return rc, buf.getvalue()
+
+
+def _row(qid, path, extra=None):
+    row = {"id": qid, "stream": "strategy", "bundle": "", "status": "pending",
+           "priority": 3, "question": "rides along; edits %s" % path,
+           "director": ""}
+    row.update(extra or {})
+    return row
+
+
+_tmp_queue = os.path.join(tmp, "queue_domain.json")
+with open(_tmp_queue, "w", encoding="utf-8") as fh:
+    json.dump({"requests": [_row("strategy-90", "bots/BotLib/hero_tiny.lua"),
+                            _row("strategy-91", "bots/BotLib/hero_axe.lua"),
+                            _row("strategy-92", "bots/mode_farm_generic.lua")]}, fh)
+
+rc4, out4 = _run_main(_tmp_queue)
+check("DOMAIN-EMPTY  tiny: corpus 0" in out4,
+      "a corpus-0 subject was not priced DOMAIN-EMPTY on its un-ruled row")
+check("domain        axe: corpus" in out4 and "DOMAIN-EMPTY  axe" not in out4,
+      "a present subject was mispriced (census wired wrong, or 0 read as present)")
+check("strategy-92" in out4 and "hero_" not in out4.split("strategy-92")[1].split("total open")[0],
+      "a shared-code row was given a price line")
+# LIMIT 8: the price informs the ruling; it does not fail the round.  All three
+# rows are OTHER-bucket, so the run is a clean 0 even carrying a DOMAIN-EMPTY.
+check(rc4 == 0, "the domain price changed the exit code (got %d, want 0)" % rc4)
+
+rc5, out5 = _run_main(_tmp_queue, census=lambda: (None, None))
+check("DOMAIN price UNCERTIFIABLE" in out5,
+      "a census that could not run rendered as silence instead of UNCERTIFIABLE")
+# Split defensively: the mutation stand caught M2 and M5 by CRASHING here on
+# an absent line rather than by naming the defect, and a stack trace tells the
+# next reader which line blew up, not which invariant broke.
+_unc_tail = out5.split("DOMAIN price UNCERTIFIABLE", 1)
+check(len(_unc_tail) > 1 and "tiny" in _unc_tail[1].split("\n")[0],
+      "the UNCERTIFIABLE line did not name the subjects it failed to price")
+check("DOMAIN-EMPTY" not in out5,
+      "a census that could not run still asserted an emptiness it never read")
+check(rc5 == 0, "the UNCERTIFIABLE price changed the exit code (got %d)" % rc5)
+
+# ------------------------------------------- invariant 5: the hold keeps a baton
+# HOLD-DOMAIN-EMPTY is the one ruling that clears its own row out of the un-ruled
+# buckets while leaving real work owed -- iron rule 9's founding shape, where the
+# creep-pull fix vanished from every queue for 37 rounds because closing its
+# issue was read as finishing it.  The watch is what carries it, so it is pinned:
+# blocked stays quiet, UNBLOCKED reddens (a state change owing a re-ruling), and
+# a census that cannot run says so rather than implying the hold still stands.
+
+
+def _held_row(qid, path):
+    return {"id": qid, "stream": "strategy", "bundle": "", "status": "pending",
+            "priority": 3, "question": "rides along; edits %s" % path,
+            "director": {"ruling": "HOLD-DOMAIN-EMPTY", "wave": "none",
+                         "at": "x", "ref": "y", "note": "z"}}
+
+
+check(len(pr.held_for_domain([_held_row("s-1", "bots/BotLib/hero_tiny.lua")])) == 1,
+      "held_for_domain missed a HOLD-DOMAIN-EMPTY row")
+check(pr.held_for_domain([dict(_held_row("s-1", "x"), status="done")]) == [],
+      "held_for_domain carried a CLOSED row -- a settled hold is not a baton")
+check(pr.held_for_domain([{"id": "s-2", "status": "pending",
+                           "director": {"ruling": "ROUTED"}}]) == [],
+      "held_for_domain claimed a row that carries some other ruling")
+
+_watch_blocked = os.path.join(tmp, "queue_hold_blocked.json")
+with open(_watch_blocked, "w", encoding="utf-8") as fh:
+    json.dump({"requests": [_held_row("strategy-93", "bots/BotLib/hero_tiny.lua")]}, fh)
+rc6, out6 = _run_main(_watch_blocked)
+check("STILL BLOCKED" in out6 and "strategy-93" in out6,
+      "a held row lost its baton: the domain watch did not name it")
+check(rc6 == 0, "a hold that still stands reddened the exit code (got %d)" % rc6)
+
+_watch_open = os.path.join(tmp, "queue_hold_unblocked.json")
+with open(_watch_open, "w", encoding="utf-8") as fh:
+    json.dump({"requests": [_held_row("strategy-94", "bots/BotLib/hero_axe.lua")]}, fh)
+rc7, out7 = _run_main(_watch_open)
+check("UNBLOCKED" in out7 and "RE-RULE" in out7,
+      "the archive gained the subject and the watch did not call for a re-ruling")
+check(rc7 == 3,
+      "an UNBLOCKED hold did not redden the exit code (got %d, want 3)" % rc7)
+
+rc8, out8 = _run_main(_watch_blocked, census=lambda: (None, None))
+check("UNCERTIFIABLE" in out8 and "NOT read this round" in out8,
+      "a census that could not run left the hold looking checked")
+check("STILL BLOCKED" not in out8,
+      "the watch asserted a hold still stands on a reading it never took")
+
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:
     print("FAIL: %s" % f)

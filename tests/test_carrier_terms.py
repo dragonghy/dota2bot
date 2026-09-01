@@ -191,6 +191,58 @@ def main():
     check(rc == 1 and "UNDRAFTABLE" in buf.getvalue(),
           "a carrier outside hero_pool.txt reads UNDRAFTABLE, not ABSENT")
 
+    # --- 10. minion_lib carriers (GH #402) ----------------------------------
+    # `immguard`'s gate lives in bots/FunLib/minion_lib/primal_split.lua, which
+    # every hero reaches through the generic dispatcher aba_minion.lua.  The
+    # reachability walk therefore answered "all 128 heroes", seed_draft.py
+    # evaluated that as ONE disjunction, and the gate read
+    # `verdict=FULL satisfied=4/4` on a wave that drafted no brewmaster -- and
+    # cannot, since brewmaster is not in hero_pool.txt.  Frozen TRUE, failing
+    # toward optimism, on precisely the check GH #276 built to stop this.
+    r_imm = ct.derive_id(tree, "immguard")
+    check(r_imm["kind"] == "hero" and r_imm["heroes"] == {"brewmaster"},
+          "immguard carries brewmaster alone (got %s %s)"
+          % (r_imm["kind"], sorted(r_imm["heroes"])))
+    buf = io.StringIO()
+    rc = ct.assert_carrier_ids([2745, 2838, 2850, 2922], [r_imm], pool, out=buf)
+    check(rc == 1 and "UNDRAFTABLE" in buf.getvalue() and "FULL" not in buf.getvalue(),
+          "immguard reads UNDRAFTABLE, verbatim as its sibling tormself did")
+    # The general statement, not just this instance: no hero-scoped id may claim
+    # a carrier set so wide that a ten-hero draft cannot miss it.  A term wider
+    # than the draft is not a carrier term, it is `generic` wearing one.
+    widest = max(((r["id"], len(r["heroes"])) for r in rows if r["kind"] == "hero"),
+                 key=lambda kv: kv[1], default=("none", 0))
+    check(widest[1] <= 10,
+          "a hero-scoped id claims %d carriers (%s) -- wider than a draft, so its "
+          "gate cannot fail" % (widest[1], widest[0]))
+    # ...and the fix must not have bought loudness with correctness.  Illusions
+    # are genuinely generic (any hero can field one, Manta included), so the two
+    # ids gated in illusions.lua stay `generic`.  Calling them `unresolved`
+    # would have traded a wrong optimistic answer for a wrong loud one and made
+    # two correct ids start refusing launches with exit 2.
+    for cand in ("illumove", "illureal"):
+        check(ct.derive_id(tree, cand)["kind"] == "generic",
+              "%s is generic by construction, not unresolved" % cand)
+    # An UNMAPPED summon file resolves loud, never optimistic: walking on from
+    # there reaches aba_minion.lua and re-answers "every hero".
+    kind, heroes, _trail = ct._resolve_site(
+        tree, "bots/FunLib/minion_lib/jugg.lua", 7, 0, frozenset(), [])
+    check(kind == "unresolved" and not heroes,
+          "an unmapped minion file resolves unresolved (got %s %s)"
+          % (kind, sorted(heroes)))
+    # Every MINION_OWNER entry must be EARNED BY THE FILE -- the owner's units
+    # or ability named in its text.  This is what stops the table being
+    # "finished" from memory: `jugg.lua` is obviously Juggernaut's Healing Ward
+    # to a Dota player and names neither, which is the exact reading the
+    # rubick_hero case exists to warn against.
+    for fname, owner in ct.MINION_OWNER.items():
+        path = os.path.join(ROOT, "bots", "FunLib", "minion_lib", fname)
+        check(os.path.isfile(path), "MINION_OWNER names a missing file: %s" % fname)
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            body = fh.read()
+        check(owner in body,
+              "MINION_OWNER[%s]=%s is not evidenced by the file itself" % (fname, owner))
+
     # --- 9. the old gate still behaves byte-for-byte ------------------------
     buf = io.StringIO()
     rc = seed_draft.assert_carrier([947], [("crystal_maiden", None)], pool, out=buf)

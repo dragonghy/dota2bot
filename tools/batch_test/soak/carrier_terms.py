@@ -58,6 +58,48 @@ REPO_ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 # in `unresolved` (loud) instead of running forever or defaulting to generic.
 MAX_DEPTH = 6
 
+# Summon files under bots/FunLib/minion_lib/ whose owning hero is stated BY THE
+# FILE -- the unit names or the ability the summon comes from -- and not by the
+# filename or by anyone's Dota knowledge (GH #402).  A wrong owner here is worse
+# than no entry: it would hand the carrier gate a confident, checkable-looking
+# answer about a hero who cannot run the code, which is the same class of defect
+# as the all-heroes expansion it replaces.  Files absent from this map resolve
+# `unresolved` (exit 2, loud), never `generic`.
+#
+#   primal_split.lua    npc_dota_brewmaster_earth/fire/storm/void   -> brewmaster
+#   familiars.lua       visage_summon_familiars                     -> visage
+#   vengeful_spirit.lua vengefulspirit_nether_swap                  -> vengefulspirit
+#
+# Summon files that are GENERIC BY CONSTRUCTION: every hero in any draft can
+# field one, so no draft can fail to carry a gate living here and `generic` --
+# the class the carrier gate exempts -- is the correct answer, not a hero term.
+#   illusions.lua   any hero has illusions (Manta and friends grant them to
+#                   whoever buys the item, on top of the heroes whose own
+#                   abilities make them).  `illumove` and `illureal` sit here,
+#                   and calling them `unresolved` would have been this fix
+#                   trading a wrong optimistic answer for a wrong loud one:
+#                   two correctly-generic ids would have started refusing
+#                   launches with exit 2.  Loud is only better when it is also
+#                   true.
+MINION_GENERIC = {"illusions.lua"}
+
+# Deliberately UNMAPPED, with the reason, so the next reader does not "finish"
+# the table from memory:
+#   jugg.lua            X.HealingWardThink -- Healing Ward is Juggernaut's and
+#                       nobody else's, but the file names no unit and no
+#                       ability, so the evidence is the FILENAME. That is the
+#                       exact reading `rubick_hero` exists to warn about. It
+#                       needs one grep of the ward's unit name, not a guess.
+#   attacking_wards.lua generic by construction (serpent wards, plague wards,
+#   illusions.lua       illusions, skilled minions): several owners or any
+#   minion_with_skill.lua hero at all -- a single-hero entry would be false.
+#   utils.lua           shared helpers, no owner.
+MINION_OWNER = {
+    "primal_split.lua": "brewmaster",
+    "familiars.lua": "visage",
+    "vengeful_spirit.lua": "vengefulspirit",
+}
+
 GATE_RE_TMPL = r"IsSoakCandidate\s*\(\s*['\"]%s['\"]"
 LANEFIX_RE_TMPL = r"IsLaneFixOn\s*\(\s*['\"]%s['\"]"
 # Top-level definitions in this codebase all start at column 0, in two shapes.
@@ -149,11 +191,30 @@ class Tree(object):
         `bots/FunLib/rubick_hero/<x>.lua` is Rubick's handler for a STOLEN <x>
         ability, so its carrier is `rubick`, not `<x>`.  Reading the filename the
         obvious way would name a hero that cannot execute the code.
+
+        `bots/FunLib/minion_lib/<x>.lua` is the same shape and is why this
+        function grew a second special case (GH #402, director 2026-09-01):
+        every one of those files is `require`d by the generic dispatcher
+        `bots/FunLib/aba_minion.lua`, so the reachability walk below answered
+        "every hero in the game" for a summon only one hero can field.
+        `immguard` derived **128 carriers**, `seed_draft.py` evaluated them as
+        one disjunction, and the gate that exists to refuse a wave whose draft
+        cannot carry an armed id read `verdict=FULL satisfied=4/4` -- frozen
+        TRUE, on the id whose true carrier (`brewmaster`) is not even in
+        `hero_pool.txt`.  The correct reading was `UNDRAFTABLE`, verbatim as
+        its sibling `tormself`/ringmaster got in the same run.
         """
         base = os.path.basename(rel)
         parent = os.path.dirname(rel)
         if parent.endswith("rubick_hero"):
             return "rubick"
+        if parent.endswith("minion_lib"):
+            # Mapped ONLY where the file itself names the owner's units or
+            # ability -- not from the filename, and not from what a reader
+            # happens to know about Dota.  Everything else is deliberately
+            # absent so it resolves `unresolved` (loud, exit 2) instead of
+            # inheriting the all-heroes answer this fix exists to delete.
+            return MINION_OWNER.get(base)
         if parent.endswith("BotLib") and base.startswith("hero_") and base.endswith(".lua"):
             return base[len("hero_"):-len(".lua")]
         return None
@@ -206,6 +267,19 @@ def _resolve_site(tree, rel, lineno, depth, seen, trail):
     hero = tree.hero_of(rel)
     if hero:
         return "hero", {hero}, trail + ["%s:%d" % (rel, lineno)]
+    if os.path.basename(rel) in MINION_GENERIC:
+        return "generic", set(), trail + ["%s:%d(minion, generic by construction)"
+                                          % (rel, lineno)]
+    if os.path.dirname(rel).endswith("minion_lib"):
+        # An unmapped summon file (GH #402).  Walking on from here reaches the
+        # generic dispatcher `aba_minion.lua` and answers "every hero", which
+        # is the failure this fix removes -- and it fails toward OPTIMISM, so
+        # nothing raises a hand.  `unresolved` is the honest answer: exit 2,
+        # could-not-run, which the launch path already refuses to treat as a
+        # pass.  Adding an entry to MINION_OWNER is how this gets resolved,
+        # and it must be earned by evidence in the file.
+        return "unresolved", set(), trail + [
+            "%s:%d(minion_lib owner not in MINION_OWNER)" % (rel, lineno)]
     if depth >= MAX_DEPTH:
         return "unresolved", set(), trail + ["%s:%d(depth cap)" % (rel, lineno)]
 

@@ -133,8 +133,41 @@ LIMITS (read these before quoting the output)
    that lives only in report prose is not delivered, and to this tool it is
    indistinguishable from no ruling at all -- which is the point.
 
+THE DOMAIN PRICE, PRINTED ON THE ROW (2026-09-01T2x:xxZ, director; §DG.7.1)
+---------------------------------------------------------------------------
+Three consecutive strategy rounds landed a gated fix whose subject hero has
+ZERO appearances in the frame corpus (`tormself`, `immguard`/brewmaster,
+`hpbool`/tiny).  Iron rule 2 condition (a) -- the replay group confirms the
+change really executes -- **cannot be bought at the fixture level for a hero
+who never appears**, so all three were pre-destined to come back DOMAIN-EMPTY.
+
+The strategy stream built the reading that answers this in seconds
+(`tools/agent/corpus_hero_census.py`, 2026-09-01T19:21Z) and asked the
+director to make it a standing pre-admission step.  A step is a checklist
+line, and this file's own charter measured a checklist line's follow-through
+at 1/6.  So it is wired **here** instead: onto the un-ruled row itself, in
+the one view a ruling is written from.  The price is not something the
+director must remember to look up; it is on screen next to the id being
+ruled.
+
+It stays INFORMATIONAL on purpose (LIMIT 8).  A DOMAIN-EMPTY subject is a
+fact the ruling has to weigh -- often the reason to hold a lever rather than
+arm it -- not a defect in the request, and reddening every round on a fact
+nobody can fix is how a detector stops being read (GH #276).
+
 Exit codes: 0 = no un-ruled RIDESHARE request; 3 = at least one (a finding,
-not a failure).  OTHER-bucket entries never change the exit code.
+not a failure).  OTHER-bucket entries and the domain price never change the
+exit code.
+
+8. **The domain price is NECESSARY-only, and it is textual.**  `corpus 0`
+   means a fixture-level acceptance is impossible; `corpus >0` means only
+   that it is not ruled out -- the decision domain still has to be reachable
+   on one of those frames, which no census can see.  Subjects are read as
+   `bots/BotLib/hero_<x>.lua` paths named in the request's own prose, so a
+   request that never names its file gets no price line (silence here is
+   "not asked", never "present"), and a shared-code lever correctly gets
+   none because every hero in the corpus is its domain.  When the census
+   itself cannot run, the row says UNCERTIFIABLE -- which is not a pass.
 """
 
 import argparse
@@ -236,6 +269,74 @@ def is_unruled(req):
 def is_rideshare(req):
     text = req.get("question", "") or ""
     return any(marker in text for marker in RIDESHARE_MARKERS)
+
+
+# ------------------------------------------------------------- domain price
+# A hero file's subject is its filename (AGENTS.md: the engine loads
+# `bots/BotLib/hero_<internal_name>.lua` by fixed path), so the path IS the
+# subject and no name mapping is needed.  Only the BotLib form is read:
+# `bots/mode_*.lua`, `bots/FunLib/*` and the generic overrides have every
+# hero in the corpus as their domain and owe nothing here.
+HERO_FILE_IN_PROSE = re.compile(r"bots/BotLib/hero_([a-z_0-9]+)\.lua")
+
+# The prose fields a request writes its own subject into.  `bundle` and `id`
+# are deliberately NOT read: a bundle name is not a path, and guessing a
+# subject from an id is how a census starts answering questions it was not
+# asked.
+SUBJECT_FIELDS = ("axis", "question", "acceptance")
+
+
+def subjects_of(req):
+    """Hero subjects this request names by file path, sorted, de-duplicated."""
+    text = " ".join(str(req.get(k) or "") for k in SUBJECT_FIELDS)
+    return sorted(set(HERO_FILE_IN_PROSE.findall(text)))
+
+
+def _census():
+    """(counts, weak) from the real census tool, or (None, None) if it cannot run.
+
+    Imports `corpus_hero_census` rather than re-walking the corpus: two
+    implementations of "is this hero present" would drift, and the one that
+    drifts silently is the copy nobody tests.
+    """
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import corpus_hero_census as census
+        seen, counts, _games = census.collect()
+        if seen == 0:
+            return None, None
+        return counts, census.weak_heroes()
+    except Exception:          # noqa: BLE001 -- could-not-run, reported as such
+        return None, None
+
+
+def domain_price(req, counts, weak):
+    """-> list of (hero, count, on_weak_list) for the subjects this row names."""
+    return [(h, counts.get(h, 0), bool(weak) and h in weak)
+            for h in subjects_of(req)]
+
+
+# A ruling that holds a lever for an empty corpus is the one ruling that
+# REMOVES its own row from the un-ruled buckets while leaving real work owed.
+# Iron rule 9's founding case is exactly that shape -- the creep-pull fix
+# vanished from every queue for 37 rounds because closing its issue was
+# mistaken for finishing it.  So the hold is spelled in the machine field, and
+# the watch below carries the baton until the archive answers.
+HOLD_RULING = "HOLD-DOMAIN-EMPTY"
+
+
+def held_for_domain(requests):
+    """Open rows whose ruling holds them until their subject enters the corpus."""
+    out = []
+    for req in requests:
+        if not is_open(req):
+            continue
+        director = req.get("director")
+        if not isinstance(director, dict):
+            continue
+        if str(director.get("ruling") or "").strip().upper().startswith(HOLD_RULING):
+            out.append(req)
+    return out
 
 
 def first_seen(req_id, path=QUEUE):
@@ -467,6 +568,8 @@ def main():
     requests = load_requests(args.queue)
     ride, other = partition(requests)
 
+    counts, weak = _census()
+
     def render(bucket, title):
         if not bucket:
             print("%s: none" % title)
@@ -477,11 +580,48 @@ def main():
             print("  %-12s status=%-9s prio=%s bundle=%-24s first_seen=%s"
                   % (r.get("id"), r.get("status"), r.get("priority"),
                      r.get("bundle") or "-", age))
+            subjects = subjects_of(r)
+            if not subjects:
+                continue                      # LIMIT 8: not asked, not "present"
+            if counts is None:
+                print("      DOMAIN price UNCERTIFIABLE -- the corpus census could "
+                      "not run; this line is NOT a clean read (subjects: %s)"
+                      % ", ".join(subjects))
+                continue
+            for hero, n, on_weak in domain_price(r, counts, weak):
+                if n == 0:
+                    print("      DOMAIN-EMPTY  %s: corpus 0 -- condition (a) CANNOT "
+                          "be bought at the fixture level; hold the lever or "
+                          "expect a DOMAIN-EMPTY harvest" % hero)
+                else:
+                    print("      domain        %s: corpus %d file(s)%s -- present is "
+                          "NECESSARY, not sufficient"
+                          % (hero, n, " [WeakHeroes]" if on_weak else ""))
 
     print("=== un-ruled queue requests (director field empty) ===")
     render(ride, "RIDESHARE (§BB.4: rule this round)")
     render(other, "OTHER (routing/slot ruling still owed)")
     print("total open requests: %d" % sum(1 for r in requests if is_open(r)))
+
+    # ------------------------------------------------------------ domain watch
+    held = held_for_domain(requests)
+    unblocked = []
+    if held:
+        print("\n=== domain watch (rows held until their subject enters the corpus) ===")
+        for r in held:
+            for hero, n, _weak in (domain_price(r, counts, weak) if counts is not None
+                                   else []):
+                if n == 0:
+                    print("  %-12s %-16s corpus 0   STILL BLOCKED -- the hold stands"
+                          % (r.get("id"), hero))
+                else:
+                    unblocked.append((r.get("id"), hero, n))
+                    print("  %-12s %-16s corpus %-3d UNBLOCKED -- the archive now "
+                          "carries this subject; RE-RULE the row"
+                          % (r.get("id"), hero, n))
+            if counts is None:
+                print("  %-12s UNCERTIFIABLE -- the census could not run, so whether "
+                      "the hold still stands was NOT read this round" % r.get("id"))
 
     unknown = unknown_status_rows(requests)
     if unknown:
@@ -531,7 +671,11 @@ def main():
         for section, heading in unparsed:
             print("  §%-4s %s" % (section, heading[:110]))
 
-    return 3 if (ride or orphans) else 0
+    # An UNBLOCKED hold reddens: unlike the price itself (LIMIT 8, a standing
+    # fact), it is a state CHANGE that owes a re-ruling, it is rare, and the
+    # director clears it in-round -- so it cannot become the every-round noise
+    # GH #276 warns about.
+    return 3 if (ride or orphans or unblocked) else 0
 
 
 if __name__ == "__main__":

@@ -8470,3 +8470,80 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `test_stayfield2_marginal_domain.lua` 一个(**修它一个就把 233.9s 拉回 136s**,连续第三轮写)
   ③**patch 缺口 P3** ④`#252`/`#256`/`#282`/`#295` + `strategy-5b`、`§24` 并入 `#229`、`§CE` 第一步
   ⑤⭐**不再把「开工第一条命令」写进本清单**(见 ⓪:六轮零效果,守卫才是措施)。
+
+- 2026-09-01T22:27Z:一个工作单元,三条裁定,而三条是**同一件事**。
+  报告 `iterations/reports/director/20260901T222708Z.md`。
+  **本轮零 AWS 调用、零支出、`bots/` 与 `game/` 逐字节零 diff。**
+  **⓪ 纪律 3 第十五发,§22 守卫第十次上场并第十次拦下**(第一条命令仍是 `| tail`)。
+  按上轮结论**没有**再把「照抄章程那一行」写进清单 —— 守卫是措施,清单只是记录。
+  干净那次裸读:`legs run: 8` / `FINDINGS: cadence trunk-red(python) trunk-red(lua)` /
+  **`UNCERTIFIABLE: none`** / worst exit 3;`ORPHAN_PROPOSAL: none`(第六轮);
+  cadence 一个 5.0h 洞(strategy)**不升级**;`OTHER: 1` = `strategy-33`,**本轮已裁**。
+  **① `strategy-33`/`hpbool`(GH #397):`HOLD-DOMAIN-EMPTY`** —— 不入集、不 reject、不花波次槽。
+  (b)(c) 成立;(a) **买不到**,且读数是**总监自己取的**:`corpus_hero_census.py --file
+  bots/BotLib/hero_tiny.lua` ⇒ `tiny DOMAIN-EMPTY files=0 games=0`,**裸退出码 3**,108 份帧文件 / 43 个英雄。
+  armed 它只买到一次 `DOMAIN-EMPTY`,而按 §CJ 那不得读成「无效应」。裁定按 §2.5 投递到
+  **`queue.json:strategy-33.director` 的叶子键**,并**回读断言到 `r['director']['ruling']`
+  且断言 `'ruling' not in r`** —— 上轮落错层级的那一发,这次会被抓住。
+  **② GH #402(批测台 21:14Z 交办)载体门恒真通过,甲案已修。**
+  `hero_of()` 只认 `BotLib/hero_<x>.lua` 路径形状 ⇒ `minion_lib/primal_split.lua` 走可达性反查 ⇒
+  经通用派发器 `aba_minion.lua` 答出**全表 128 英雄** ⇒ `seed_draft.py` 按**一条析取**求值 ⇒
+  `verdict=FULL satisfied=4/4`。**失效方向是危险那侧:不是拒发,是凭空满足。**
+  修法:显式 minion→拥有者映射,**且映射必须由文件自己举证**(`npc_dota_brewmaster_*` /
+  `visage_summon_familiars` / `vengefulspirit_nether_swap`);**`jugg.lua` 故意不映射** ——
+  `HealingWardThink` 是谁的属于**读者的 Dota 知识**,而「按文件名认英雄」正是 `rubick_hero/`
+  那条特例立起来警告的读法。未映射一律 `unresolved`(响,exit 2)。
+  ⭐ **中途改过一次**:一刀切判 unresolved 会把 `illumove`/`illureal` **两条正确的 generic
+  变成 unresolved**、以 exit 2 拒发 ⇒ 加 `MINION_GENERIC`。**响只有在同时为真时才比静默好。**
+  验收逐条对上:`FULL` ⇒ `term=brewmaster verdict=UNDRAFTABLE`(与 `tormself` 逐字一致);
+  **128 term ⇒ 8**;`test_carrier_terms.py` **40/1red ⇒ 52/0**。
+  **乙案(`OVER-BROAD` 闸)未做,下轮认领,#402 保持 open 当接力棒**(同族 `rotscope` 已登记未修)。
+  **③ `tormself`+`immguard` 出集(54 → 52),退回非 reject。** (a) 在 47 人 `hero_pool.txt` 下
+  **结构上买不到**。**不出集的代价不是零**:修好门之后机械发波门会因 `UNDRAFTABLE`
+  **永远读 exit 1**,批测台每波都得手写门覆盖 —— **一道永远说不的门和一道永远说是的门
+  一样没用,而且更贵**(`carrier_terms.py` 自己的注释)。出集后 `CARRIER_GATE ids=10 exit=0`、
+  `WIRING_EXIT=0 all 52 armed ids wired`,且那 6 个 term 与批测台手写六项门**给出同一集合** ——
+  #276 想要的收敛本轮才第一次真的发生。**⛔ 否掉丙案第一臂(不扩池)**,理由是池子是
+  W1–W36 全部读数的**测量基底**;方向题已写进 `DECISIONS_NEEDED.md`。
+  ⚠️ **W36 正在飞,本轮没动它**:实例已 clone 并记下自己的 54-id arm,成员串改动**只对 W37 起作用**。
+  **④ 立的规矩(比三条裁定更值钱):域价要打在裁定那一行上,不是打在备忘清单里。**
+  协同组建了 `corpus_hero_census.py` 并请总监「提成入集前的一道读数」—— **一道读数就是一条清单**,
+  而上轮刚量过清单落实率 **1/6**。⇒ 接到 **`pending_rulings.py`** 上,打在**未裁行本身**旁边,
+  写裁定的人唯一必看的那个视图。`corpus 0` 载重 / `corpus N` 弱 / 跑不起来打 `UNCERTIFIABLE`;
+  主语只从请求自己写的 `bots/BotLib/hero_<x>.lua` **路径**读(共享代码不欠域价);
+  **域价不抬退出码**(LIMIT 8:它是裁定要权衡的事实,不是请求的缺陷)。
+  又因 **`HOLD-DOMAIN-EMPTY` 会把自己的行从未裁桶里清掉、活却还欠着**(铁律 9 拉野死分支
+  消失 37 轮的形状)⇒ 配 **domain watch**:`STILL BLOCKED` 安静,语料补上翻
+  **`UNBLOCKED`(exit 3,欠一次重裁)**。
+  **⑤ 铁律 6**:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` CLEAN / 0 警告,未用 `RULE6_BYPASS`**;
+  `arm_push_gate.sh` 上膛 exit 0;**`bots/`+`game/` 零 diff ⇒ 全量 Lua 套件未跑也不声称**。
+  裸读:`test_pending_rulings.py` **84 ⇒ 110/0**;`test_carrier_terms.py` **40(1红)⇒ 52/0**;
+  **python 全量 74 文件:74 passed / 0 failed / 1 uncertifiable**(GH #358,非本轮引入)。
+  上轮是 72/1/1 —— **那条 python trunk 红本轮修掉了,而且是为对的理由修的**:
+  断言 `check("axe" not in terms)` **删掉也能变绿**,本轮**没碰它**,`axe` 是被 ② 的修复挤出去的。
+  lua trunk 红(`published 43` 现读 `44`,**GH #394**)未动,归属方不是总监。
+  **⑥ 两个新变异台,各自抓到自己的一次说谎,都写进脚本头**:
+  `mutstand_pending_rulings.sh` **9/9 CAUGHT**(第一轮把 **M8 报成 caught 却用的是 M7 的失败签名** ——
+  测试 `import` 模块,**旧 `.pyc` 让台上的变异体不是解释器里的那个** ⇒ 每个变异体之间 purge);
+  `mutstand_carrier_minion.sh` **5/5 CAUGHT**(第一版 **N5 报成 SURVIVED 其实是 INERT** ——
+  `hero_of` 先读 `MINION_OWNER` 就返回,**改了文本没改程序**;把空操作记成「测试没盯住」
+  与记成「抓到了」是同一个谎,只是枪口对着测试 ⇒ 台子现在**给行为按指纹**,
+  指纹没动就打 `INERT` 并**自称是台子的缺陷**)。两台都走文件副本 + `sha256sum -c` 复原、退出码裸读。
+  ⭐ **自伤登记**:变异台第一版我写成 `out=$(… | tail -6); rc=$?` —— **读的是 `tail` 的状态**,
+  九行 `exit=0` 全是废数。**同一轮里我先被守卫拦一次、又自己复发一次。**
+  **⑦ 成本**:零 AWS/S3/EC2/CE;MTD **照抄**批测台 21:14Z 自报 **`$3.637 + ~$0.90 ≈ $4.8`**
+  (九月已跨月重置)。**不写「顺延」。** 批测台**已停**上轮登记的那条「连续四轮为八月的数付 CE」。
+  `DECISIONS_NEEDED.md` **新增一条**(扩池方向题);本周邮件 08-31T01:20Z 已发 ⇒ **本轮无邮件**;
+  今日周二,台账(仅周日)跳过。四组均有产出无空转。
+  **⑧ 本轮明说没做的**:**#402 乙案**;`rotscope` 同族未修;**patch 缺口 P1/P2/P3(P3 优先)**;
+  `strategy-5b` 未裁;**GH #395 三问未裁**;**按需常数第四轮重裁未做**;
+  `#252`/`#256`/`#282`/`#295` 关闭建议未发;**`§24` 未并入 `#229`**;**`§CE` 已挂二十四轮**;
+  `state.json` round-trip 未修;backlog §19/§20/§21 未动;
+  `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#285`/`#271` 未处理;§CY 三条 + §CV 两条限定待收割;
+  **GH #384 的自检腿序那半**;**§3.3 那四个重文件连续第四轮没看有没有人接**;GH #394(非总监归属)。
+  **下次触发**:①**#402 乙案(`OVER-BROAD` 闸)—— 它挡的是下一个同形 id,`rotscope` 已经在等**
+  ②**把 `hero_pool.txt` 成员资格接进 §DH.4 的域价**,让「池外英雄」在**提议**时举手而不是在
+  **发波门**上举手(#385/#393 走完入集、armed、发了一波才被看见)
+  ③**§3.3 四个重文件有没有人接**,没接就自己修 `test_stayfield2_marginal_domain.lua` 一个
+  (**233.9s ⇒ 136s**,连续第四轮写)④**patch 缺口 P3**
+  ⑤`#252`/`#256`/`#282`/`#295` + `strategy-5b`、`§24` 并入 `#229`、`§CE` 第一步。
