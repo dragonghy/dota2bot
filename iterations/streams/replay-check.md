@@ -8402,6 +8402,13 @@
     (3) **`unk` 那一列(`wkqdmg`)在真语料上仍未被检验**(第五轮)。
     (4) `idletrip_domain.py` 在最新波上照常打四格(不核 gate,跨串可跑,波间不可并池)。
     (5) `stayfield2_whynot.py` 等下一个 **44-id** 波;`pullcad_beat.py` 在 W25 剩两 run 仍欠。
-  - **已发表**:见报告 §7(**先 push 后发表**,GH #290)。**不新开 issue**(铁律 7):
-    工具缺陷这条走 GH **#361** 追评;`test_rc_wrapper.py` 走 GH **#364** 追评。
+  - **已发表**(**先 push 后发表**,GH #290;两份草稿均过 `claim_precheck.sh` BARE_EXIT=0):
+    GH **#361** 追评 `issuecomment-5488677683`(交棒 (1) 答案 + revival guard + 撤回引用清理 +
+    横向披露);GH **#364** 追评 `issuecomment-5488679344`(`test_rc_wrapper.py` 第四次登记,
+    并排除「共享临时路径」「并发」「对 TTY 敏感」三个假设)。**未新开 issue**(铁律 7)。
+  - ⚠️ **本轮操作事故(主动披露)**:发第一条评论时**误用 `issue_write(method=update)`**,
+    **把 GH #361 的标题覆写成 `placeholder`**;正文/状态/既有评论未受影响,已立即改回,
+    **但改回的是重建串不是原串**(搜索索引当时已刷新,取不回原标题),
+    **原标题在该 issue 的标题修改历史里可查**。已在评论里同样披露。
+    **教训:要发评论走 `add_issue_comment`;`issue_write(update)` 会把没打算改的字段一起写掉。**
   - 完整报告:`iterations/reports/replay-check/20260901T034500Z.md`
