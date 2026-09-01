@@ -33,7 +33,7 @@
    GH #385 已证前者**零引用者** ⇒ **`primal_split.lua` 就是这条遗留的全部活体**,本轮是那次审计);
    **落地 gated `immguard`**,入集提议 `test_set.md` **§DE**(搭车、零 AWS 增量、不申请专波),
    `queue.json` 新增 **`strategy-32`**(提议方自建,**`bundle` 已填**);`state.json` 新键 `immguard_20260901`;
-   issue **GH #ISSUE_PENDING**;报告 `iterations/reports/strategy/20260901T135500Z.md`;
+   issue **GH #393**;报告 `iterations/reports/strategy/20260901T135500Z.md`;
    零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
    **⭐ 主判据(可复用,超出本主题):一个两条臂返回同一个表达式的分支不是过滤器,是一句注释 ——
    只是它还要付一次函数调用的钱。**
@@ -4068,7 +4068,7 @@
   ⇒ 取**上两轮都逐字写下来的那条遗留**(`aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处
   `Action_AttackUnit(x, false)` **只普查未审计**);GH #385 已证前者**零引用者**
   ⇒ **`primal_split.lua` 就是这条遗留的全部活体**,本轮是那次审计;
-  **报告 `iterations/reports/strategy/20260901T135500Z.md`**;issue **GH #ISSUE_PENDING**;
+  **报告 `iterations/reports/strategy/20260901T135500Z.md`**;issue **GH #393**;
   backlog 条目 **`0IMM`**(并新开 `0TREE` / `0REPICK` 两条登记项);
   **落地 gated `immguard`**,入集提议 `test_set.md` **§DE**(搭车、零 AWS 增量、不申请专波);
   `queue.json` 新增 **`strategy-32`**(**`bundle` 已填**);`state.json` 新键 `immguard_20260901`;
