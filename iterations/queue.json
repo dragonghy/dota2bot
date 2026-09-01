@@ -1240,6 +1240,17 @@
         "executor": "replay-check",
         "note": "**ROUTED_RIDESHARE / ADMITTED,到达后第一个总监轮次内裁毕**(§BB.4)。**路由裁定,不是对 §DB 全部读数的背书。**\n\n**总监按源码独立复核五条**:(i) **单条独立门** `J.IsModeTurbo() and J.IsSoakCandidate('illureal')`,全仓只此一个可执行表达式,不落进 `pullcad` 陷阱。(ii) **「严格超集」按源码坐实,理由比提议给的更强**:出厂谓词是 `hMinionUnit.isIllusion` 的**真值测试**,而全仓写该字段的**恰好两处**(`hero_naga_siren.lua:91`、`hero_phantom_lancer.lua:92`)写的**都是字面量 `true`** ⇒ 该字段值域只有 `nil` 与 `true`,`x == true` 与 `if x` 在这个值域上逐帧同判 ⇒ armed 是出厂的严格超集,**不可能**让今天会做诱饵的娜迦/PL 幻象反而不做。(**若那两个写者里有一个写的是非 `true` 的真值,超集性就不成立** —— 这一条必须去数写者,不能只读断言。)(iii) **armed 不引入任何新的引擎 API 面**:曾疑 armed 会对**非英雄**句柄调 `:IsIllusion()`(出厂在 `aba_minion.lua:48` 因 `and` 短路从不这么做),**复核后疑虑不成立** —— 同一文件的 `X.ConsiderRetreat`(`illusions.lua:133`)**第一行就无条件对同一句柄调这个方法**,而 `X.Think` 每条不提前返回的路径都会走到它;仓库 API 参考也把 `IsIllusion()` 列在 Unit Functions / Unit Classification(`hUnit:` 调用)。(iv) **对无技能召唤物零外扩**:WK 骷髅这类单位 `isIllusion` 为 nil 且 `:IsIllusion()` 为假 ⇒ 两臂逐位相同。(v) 验收独立重跑:`lua5.1 tests/run_tests.lua illureal` **12/12 裸读 exit 0**。\n\n⚠️ **收割前必读 §DC.3(总监加的第 (丁) 条限定,提议里没有)**:见 `strategy-29` 的同一段 —— 两条同帧不正交,`illureal` armed 缩小 `illumove` 的域,交集上的帧**不能分摊归因**。\n\n⚠️ §DB.7 的三条限定(甲 RIDESHARE 不能当独臂 / 乙 `METHOD-FAILED` ⇒ `DOMAIN-EMPTY` 退回总监重裁 / 丙 焦点五无一产生幻象,收割时先答「本波语料里有几个 bot 持有过幻象」)**逐条照旧成立**。"
       }
+    },
+    {
+      "id": "strategy-31",
+      "stream": "strategy",
+      "bundle": "tormself",
+      "seeds": [],
+      "priority": 3,
+      "axis": "TORMSELF —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `tormself`**(§CY.3 的教训:开工自检按 `bundle` 找提议行,字段为空就被报成 `ORPHAN_PROPOSAL`)。",
+      "question": "`tormself`(GH #384,提议 test_set.md §DD):`bots/BotLib/hero_ringmaster.lua:915` 的闸外层按 bot 的 mode 二路分(`J.IsDoingRoshan(bot) or J.IsDoingTormentor(bot)`),内层本该按 target 做同样的二路判别 —— Roshan 臂写对了(`J.IsRoshan(botTarget)`),**Tormentor 臂问的却是 `bot`**。`J.IsTormentor`(jmz_func.lua:10638)是纯粹的单位身份谓词 `string.find(nTarget:GetUnitName(), 'miniboss') ~= nil`,而我们自己的英雄叫 `npc_dota_hero_ringmaster` ⇒ **那条臂构造上恒假**,于是外层析取的**整个 Tormentor 那一半够不到函数体**(打 Tormentor 时 `J.IsRoshan(botTarget)` 也是假)。全语料实测:真实的 `J.IsTormentor` 跑遍 **107 帧 / 993 个英雄句柄 / 41 个不同英雄名,为真 0 次**。全仓 **249 个存活调用点,227 个(90.8%)喂 `botTarget`,恰好 1 个喂 `bot`** —— 就是这一个;而**本文件自己另外四处(436/622/846/965)都写对了**。armed 时该臂改问 `J.IsTormentor(botTarget)`;**因为关着的那条臂恒假,开的那条是严格超集,arming 不可能让它反而不做今天会做的事**。",
+      "acceptance": "**条件 (a) 的执行判据**:找「Ringmaster 处于 `BOT_MODE_SIDE_SHOP`(即 `J.IsDoingTormentor` 为真)且正在攻击 Tormentor」的窗口,读出厂腿该窗口内 `ringmaster_funhouse_mirror` 的施放数(**预登记预期:0**)与 armed 腿的施放数(**预期:非 0**)。⚠️ **METHOD-FAILED 分支(按 §CJ 必须先枚举,而且本条比平时更可能命中)**:**Ringmaster 不是焦点英雄**,镜像抽签下语料里很可能**根本没有 Ringmaster 出场**,更不用说这种窗口 —— 若如此,**判 `DOMAIN-EMPTY`,不判「无效应」**,并把这一条**退回总监重裁**;执行方**不得**自行套用「无效应 ⇒ 不 promote」。**条件 (b)**:粗粒度,胜负无明显负面即可(本改动只在一个非焦点英雄的一条 Souvenir 分支上,预期对总量不可见)。**条件 (c)** 已成立:Tormentor 是 7.35+ 的标准中期目标,打它时使用一个已经写好的技能是标准打法;本改动**不新增任何行为**,只是让一条**已发货、已写好**的臂对它被写来应对的情形可达。",
+      "status": "pending"
     }
   ],
   "done": [

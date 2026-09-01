@@ -881,6 +881,42 @@ end
 
 -- Souvenirs
 
+-- Is the miniboss we are meant to be hitting actually the thing in front of us?
+--
+-- The guard below (X.ConsiderFunhouseMirror) opens on a two-way disjunction --
+-- `J.IsDoingRoshan(bot) or J.IsDoingTormentor(bot)` -- and its inner condition
+-- is supposed to discriminate the same two ways on the TARGET. The Roshan arm
+-- does: `J.IsRoshan(botTarget)`. The Tormentor arm asks about `bot`.
+--
+-- J.IsTormentor (jmz_func.lua:10638) is a pure unit-IDENTITY predicate: it is
+-- `string.find(nTarget:GetUnitName(), 'miniboss') ~= nil`. Our own hero is
+-- `npc_dota_hero_ringmaster`, so that arm is not "rarely true", it is FALSE BY
+-- CONSTRUCTION on every frame of every game. The whole Tormentor half of the
+-- outer disjunction therefore cannot reach the body: when the bot is in
+-- BOT_MODE_SIDE_SHOP hitting the Tormentor, `J.IsRoshan(botTarget)` is false
+-- (the target is a miniboss, not Roshan) and this arm is false too.
+--
+-- It is one line out of 246 live J.IsTormentor call sites in the tree; 227 of
+-- them are fed `botTarget` and the rest are fed some other unit handle. THIS
+-- FILE gets it right four other times (lines 436, 622, 846, 965).
+--
+-- soak candidate 'tormself' (turbo-only). Gate shut, this returns exactly
+-- `J.IsTormentor(bot)` -- i.e. exactly what ships today -- so the default
+-- behaviour is unchanged. Gate open it asks the same question about the target.
+-- Because the shut arm is identically false, the open arm is a STRICT SUPERSET:
+-- arming this cannot stop Ringmaster doing anything it does today.
+--
+-- Defined here, below `local botTarget` (line 156), on purpose: a copy placed
+-- above that declaration would capture a different, forever-nil upvalue and
+-- read false forever. That is GH #368, and it is the reason this is not a
+-- one-word edit at the call site.
+local function IsTormentorSubject()
+    if J.IsModeTurbo() and J.IsSoakCandidate('tormself') then
+        return J.IsTormentor(botTarget)
+    end
+    return J.IsTormentor(bot)
+end
+
 function X.ConsiderFunhouseMirror()
     if not J.CanCastAbility(FunhouseMirror)
     or J.IsRealInvisible(bot)
@@ -912,7 +948,7 @@ function X.ConsiderFunhouseMirror()
 
     if (J.IsDoingRoshan(bot) or J.IsDoingTormentor(bot))
     then
-        if (J.IsRoshan(botTarget) or J.IsTormentor(bot))
+        if (J.IsRoshan(botTarget) or IsTormentorSubject())
         and J.IsInRange(bot, botTarget, 900)
         and J.IsAttacking(bot)
         then

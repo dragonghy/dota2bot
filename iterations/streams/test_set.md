@@ -12188,3 +12188,150 @@ CK **既是幻象大招英雄、又在 19 个 `item_manta` 买者之列**,而
 
 两条的 Lua 都已由协同组落地(`741bc7b5` / `712a9eac`),本轮总监**一行未改**,
 `bots/` 与 `game/` **逐字节零 diff**。本节与成员串、`queue.json` 的 `director` 字段是本轮的全部产物。
+---
+
+## §DD 2026-09-01T10:3xZ 协同组提议入集:`tormself`(GH #384)—— **搭车、零 AWS 增量、不申请专波**;而本节最该被读的不是那半个析取,是**一个以「别的单位」为域的谓词被喂了 `self`,语言抓不到、运行期也不报,因为它对 self 是全函数:不抛错,只是恒假**
+
+**提议方**:协同组。**类型**:gated soak candidate,turbo-only,**搭车**(零 AWS 增量、零 EC2、不申请专波)。
+**queue 行**:`strategy-31`(提议方自建,**`bundle` 字段已填 `tormself`**,§CY.3 的教训)。
+**state.json 键**:`tormself_20260901`。
+
+### DD.1 缺陷
+
+`bots/BotLib/hero_ringmaster.lua:915`,`X.ConsiderFunhouseMirror`:
+
+```lua
+if (J.IsDoingRoshan(bot) or J.IsDoingTormentor(bot))     -- 外层:按 bot 的 mode 二路分
+then
+    if (J.IsRoshan(botTarget) or J.IsTormentor(bot))     -- 内层:本该按 target 同样二路判别
+    and J.IsInRange(bot, botTarget, 900)
+    and J.IsAttacking(bot)
+```
+
+`J.IsTormentor`(`jmz_func.lua:10638`)是一个**纯粹的单位身份谓词**:
+`string.find(nTarget:GetUnitName(), 'miniboss') ~= nil`。我们自己的英雄叫
+`npc_dota_hero_ringmaster` ⇒ 这条臂**不是很少为真,是构造上恒假**。
+于是外层析取的**整个 Tormentor 那一半够不到函数体**:bot 在
+`BOT_MODE_SIDE_SHOP` 打 Tormentor 时,`J.IsRoshan(botTarget)` 也是假(目标是
+miniboss 不是 roshan),两条臂同时假。**Roshan 那一半是好的** —— 它写的是
+`J.IsRoshan(botTarget)`。
+
+### DD.2 主判据(可复用,超出本主题)
+
+**一个以「别的单位」为域的谓词被喂了 `self`,是一个语言抓不到、运行期也不报的类型错误** ——
+因为 `bot` 与 `botTarget` 是**同一种鸭子类型**(单位句柄),而这个谓词是**全函数**:
+对 self **不抛错**,只是**恒假,永远**。失效方向朝**关**,而且它的静默是本档案里**最强的一种**:
+**没有任何一帧、任何一局、任何一份录像上,这个错答案与一个正确的 `false` 有区别** ——
+因为对 `self` 而言,正确答案**就是** false。**只有调用点知道这个问题是问别人的。**
+
+**判别特征可数、不需要帧**:拿一个身份谓词,枚举它的调用点,看**每个调用点被喂了什么**。
+本轮实测(code-only、剔除死文件):**249 个存活的 `J.IsTormentor` 调用点,227 个(90.8%)喂 `botTarget`**,
+其余喂别的单位句柄,**恰好 1 个喂 `bot`** —— 那一个就是缺陷。
+
+**⭐ 更锋利的一条,也是本节要求登记的边界**:「self-fed」**本身不是判据**。
+`J.IsMeepoClone(bot)` 就是**合法的** self-fed(一个 Meepo bot 真的可能是分身)。
+判据是 **self-fed ∧ self 不可满足**。本轮的类棘轮([source S5])正是按这条写的:
+它管 `J.IsRoshan` 与 `J.IsTormentor` 两个,**故意不管 `J.IsMeepoClone`**。
+
+**与同族划清界限(六条,因各不同)**:#348 **拼错**(标识符根本不存在)、
+#368 **词法作用域**(名字对、绑定错)、#370 **未汇报的副作用**、
+#373 **闩记错后置条件**、#378 **节流器作用域**、#381 **手工字段复制引擎事实**。
+**本条里每个标识符都存在、拼写正确、在作用域内、不持有状态、永不过期,调用的函数也是对的那一个 ——
+错的完全是「它被问的是哪个对象」。**
+
+### DD.3 它是缺陷不是取舍(同一行上就能判)
+
+外层是按 bot 的 mode 二路分,内层是对 target 的同样二路判别 —— Roshan 臂证明了这就是本意。
+**若把 Tormentor 臂读成一个 mode 测试,结论更糟不是更好**:真正对 `bot` 有意义的那个 mode 测试
+`J.IsDoingTormentor(bot)` **已经是外层析取的第二条臂**,那样读的话作者是在一个真判别旁边
+写了一次**恒真的重复检查**。两种读法都错;只有 target 读法有用,而 target 读法正是另外
+227 个调用点的写法 —— **包括本文件自己另外四处(436 / 622 / 846 / 965 行)**。
+
+### DD.4 为什么没人发现
+
+这个表达式是**复制粘贴的一脉**而非孤例:另有两份拷贝 ——
+`aba_hero_sub_units.lua:370`,以及 `minion_lib/familiars.lua:358` 那段被注释掉的。
+但 **`aba_hero_sub_units.lua` 被任何文件 require —— 零个**(对 `bots/` 下每个 `.lua` 源码计数得 0 个引用者);
+它是被 `minion_lib/` 取代的遗留文件。**于是这一脉三分之二是死代码**,
+一个 grep 这句话的读者看到的绝大多数命中都在跑不起来的文件里,
+**这就让唯一存活的那份看起来也像是同一堆死东西**。由 [source S4] 钉住 ——
+**将来若有人把那个死文件重新接线,这条断言就会红**。
+
+### DD.5 改动(严格超集,出厂零变化)
+
+新增文件内局部 `IsTormentorSubject()`,按 `J.IsModeTurbo() and J.IsSoakCandidate('tormself')` 分叉:
+**门关逐字返回 `J.IsTormentor(bot)`**(出厂表达式一字不差 ⇒ 默认行为字节级不变);
+**门开返回 `J.IsTormentor(botTarget)`**。因为**关的那条臂恒假**,开的那条是**严格超集** ——
+**arming 不可能让 Ringmaster 反而不做今天会做的事**。915 行只把 `J.IsTormentor(bot)` 换成
+`IsTormentorSubject()`;**Roshan 臂一字未动,发货函数体其余一字未动**。
+访问器**放在 `local botTarget`(156 行)之下**是有意的:放在其上会闭包到另一个**永远 nil** 的
+upvalue,armed 臂会和 shut 臂一样死(GH #368 的形状;**变异 M11 实测确认**)。
+
+### DD.6 本地验证
+
+`tests/test_tormself_identity_domain.lua`(`[ratchet]`,**10/0**)。真实帧
+`tests/fixtures/f_20260828_004757_venomancer_785.lua`(t=785.4,主体存活 1219/1219,完整十人阵容)。
+
+- **[frame F0] 把这条发现「量出来」而不是「论证出来」**:用**真实的** `J.IsTormentor`
+  跑遍语料里每一帧的每一个英雄句柄 —— **107 帧 / 993 个句柄 / 41 个不同英雄名,为真 0 次**。
+  **这不是一个罕见条件,是一个空条件。**
+- **⭐ [frame FC] 阳性对照,而它是让其余读数有意义的那一条**:**同一个 `if` 的兄弟臂**,
+  **不开门**,bot 在 Roshan mode、Roshan 在面前 ⇒ 返回 `DESIRE_HIGH`。
+- **[frame F1]** 出厂 + Tormentor 在 300u 外 + 每个世界条件都断言为真 ⇒ **NONE**。
+- **[frame F2]** 同一帧、同一个注入的 Tormentor,armed ⇒ **HIGH**。
+- **[frame F3]** armed 但目标是普通英雄 ⇒ **NONE**(所以这是「把问题问对」,不是「一律放开」)。
+
+**变异 11 条,11 条全部 CAUGHT**;每次都从文件副本还原,还原前后基线各验一次绿。
+
+### DD.7 明说的边界(⚠️ 本条的频率负担比平时重)
+
+1. **语料里没有 Ringmaster,也没有 miniboss** —— dumper 只出英雄和建筑。
+   所以 F1/F2 的 Tormentor 句柄是**注入**,两条臂拿到的是**同一份字节**;
+   受测的主张(「这道闸问的是哪个对象」)是**文件的性质,不是这一帧的性质**。
+   与 #368/#373/#378/#381 同样的 **UNMEASURABLE ≠ EMPTY**。
+2. **主体是 venomancer 不是 ringmaster,这是刻意的不是将就**:出厂那条臂对**每一个英雄名**都是假,
+   这正是本发现本身,而 F0 是在整个语料上**量**这件事,不是对一个英雄**断言**这件事。
+3. **⚠️ 频率未知,而且这一条比平时更重**:**Ringmaster 不是焦点英雄**,
+   ⇒ **五个焦点英雄身上一个读数都买不到**;而且分支还要 `BOT_MODE_SIDE_SHOP` ∧
+   大镜子不在 CD ∧ Tormentor 在 900u 内 ∧ bot 正在攻击。**本工作单元没有给这个合取定价 —— 那就是本修复价值的上界。**
+4. **没做的事,明说**:`primal_split.lua` 的连续命令位点(`0FIELD` 留下的另一半)
+   **仍然只普查未审计**;`aba_hero_sub_units.lua` 自己那份拷贝**故意不修** ——
+   修死代码只会制造一个量不到的 diff,改用 [source S4] 钉住它的「死」。
+
+### DD.8 ⚠️ 一次方法自伤,被本文件自己的阳性对照抓出
+
+**[frame F1] 一开始读出 NONE 并「通过」了** —— 而真实原因是:主体是 venomancer,
+fixture 里没有 `ringmaster_funhouse_mirror`,mock 返回一个**未学习**的技能桩,
+`J.CanCastAbility` 在 `X.ConsiderFunhouseMirror` 的**第一行**就 bail 掉了,
+**距离受测的那条臂还有四个条件**。**一道关着的闸,在有东西证明它能开之前,什么都没证明。**
+已补世界槽 S-D(把技能置为可施放)并新增 **[frame FC]**。
+**登记理由是失效方向**:一个提前 bail 的闸,长得和一个正确判别后关上的闸**一模一样**,
+而且它 bail 的方向**恰好是这个测试想要的答案**。与 #377 的 M8、#381 的普查拼写同族 ——
+**读数是对的,理由不是。**
+
+**另附一条断言自审**:[source S2] 起初只断言 `accessor > declaration`(读者那一半),
+而变异 **M11**(把 `local botTarget, botLevel` 下移到访问器正上方)**保持该式为真却仍然打断了修复** ——
+因为 `X.SkillsComplement` 于是赋值给一个**全局** `botTarget`,而访问器读的是那个 nil 的文件局部。
+**M11 是被帧测试抓到的,S2 没抓到。** S2 现已加断 `writer > declaration`,重跑 M11 确认 S2 会红。
+**一条守得比自己名字少的断言,登记在此。**
+
+### DD.9 门
+
+`bash tools/agent/luacheck_gate.sh` **裸读**(不经管道):**exit 0 / 0 警告,未用 `RULE6_BYPASS`**,
+在变异台前后**各跑一次**。定点与邻居全绿:`tormself` **10/0** · `smoke_load` **3/0** ·
+`gate_claim_consistency` **10/0** · `illureal` **12/0** · `illumove` **9/0**。
+**全量 Lua 套件本轮没跑完(GH #124),不声称。**
+**开工自检**:第一次被我自己的 400s timeout 杀掉(**EXIT=124 —— 那不是通过**);
+改后台重跑得 **43 checks / 0 failures / 9 UNCERTIFIED**,9 条全是 GH #358 那个 120s 预算超时的
+trunk-health 腿,**没有一条是本轮的**。
+
+### DD.10 预登记的验收(按 §CJ 枚举 METHOD-FAILED 分支)
+
+**条件 (a)**:录像组在真实对局里找「Ringmaster 处于 `BOT_MODE_SIDE_SHOP` 且正在攻击 Tormentor」的窗口,
+读出厂腿该窗口内 `ringmaster_funhouse_mirror` 的施放数(**预登记预期:0**)与 armed 腿的施放数(**预期:非 0**)。
+**⚠️ METHOD-FAILED 分支(必须先枚举)**:Ringmaster 不是焦点英雄,
+**语料里很可能根本没有这样的窗口,甚至根本没有 Ringmaster 出场** —— 若如此,
+**判 `DOMAIN-EMPTY`,不判「无效应」**,并把这一条**退回总监重裁**;执行方**不得**自行套用
+「无效应 ⇒ 不 promote」。**条件 (b)**:粗粒度,胜负无明显负面即可。
+**条件 (c)** 已成立:Tormentor 是 7.35+ 的标准中期目标,打它时对它用一个已经写好的减伤/干扰技能,
+是标准打法;本改动**没有新增任何行为**,只是让一条**已经发货、已经写好**的臂对它被写来应对的情形可达。

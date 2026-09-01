@@ -27,6 +27,92 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TORM. **【2026-09-01T10:30Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监 ⇒ 取 backlog 最上面一条 `0FIELD`
+   **明说没做的那两项**之一:「`aba_hero_sub_units.lua` / `primal_split.lua` 的 4 处连续命令仍只普查未审计」。
+   **审计它先证明了一件反直觉的事:`aba_hero_sub_units.lua` 被任何文件 require —— 零个**,
+   它是被 `minion_lib/` 取代的遗留文件,**它里面的缺陷不值一个 diff**;
+   **但证明它死的那次普查,正是找到唯一存活拷贝的那次普查**);
+   **落地 gated `tormself`**,入集提议 `test_set.md` **§DD**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-31`**(提议方自建,**`bundle` 已填**);`state.json` 新键 `tormself_20260901`;
+   issue **GH #384**;报告 `iterations/reports/strategy/20260901T103016Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个以「别的单位」为域的谓词被喂了 `self`,
+   是一个语言抓不到、运行期也不报的类型错误** —— 因为 `bot` 与 `botTarget` 是**同一种鸭子类型**
+   (单位句柄),而这个谓词是**全函数**:对 self **不抛错,只是恒假,永远**。
+   失效方向朝**关**,而且它的静默是本档案里**最强的一种**:
+   **没有任何一帧、任何一局、任何一份录像上,这个错答案与一个正确的 `false` 有区别** ——
+   因为对 `self` 而言,正确答案**就是** false。**只有调用点知道这个问题是问别人的。**
+   **判别特征可数、不需要帧**:枚举身份谓词的调用点,看每个被喂了什么。
+   实测(code-only、剔除死文件):**249 个存活 `J.IsTormentor` 调用点,227 个(90.8%)喂 `botTarget`,
+   恰好 1 个喂 `bot`** —— 那一个就是缺陷。
+   **⭐ 必须一并记住的边界:「self-fed」本身不是判据。`J.IsMeepoClone(bot)` 是合法的 self-fed**
+   (一个 Meepo bot 真的可能是分身)**;判据是 self-fed ∧ self 不可满足。**
+   本轮的类棘轮 `[source S5]` 正是按这条写的:管 `IsRoshan`/`IsTormentor`,**故意不管 `IsMeepoClone`**。
+   **与同族六条划界**:#348 **拼错**(标识符不存在)、#368 **词法作用域**(名字对绑定错)、
+   #370 **未汇报的副作用**、#373 **闩记错后置条件**、#378 **节流器作用域**、#381 **手工字段复制引擎事实** ——
+   **本条里每个标识符都存在、拼对、在作用域内、不持状态、永不过期,调用的函数也是对的那一个;
+   错的完全是「它被问的是哪个对象」。**
+   **缺陷**:`bots/BotLib/hero_ringmaster.lua:915`,`X.ConsiderFunhouseMirror`。
+   闸的外层按 bot 的 mode 二路分(`J.IsDoingRoshan(bot) or J.IsDoingTormentor(bot)`),
+   内层本该按 target 做同样的二路判别 —— **Roshan 臂写对了**(`J.IsRoshan(botTarget)`),
+   **Tormentor 臂问的却是 `bot`**。`J.IsTormentor`(`jmz_func.lua:10638`)是纯粹的单位身份谓词
+   `string.find(nTarget:GetUnitName(), 'miniboss') ~= nil`,我们自己的英雄叫 `npc_dota_hero_ringmaster`
+   ⇒ **那条臂构造上恒假**,于是**外层析取的整个 Tormentor 那一半够不到函数体**
+   (打 Tormentor 时 `J.IsRoshan(botTarget)` 也假)。
+   **⭐⭐ 它是缺陷不是取舍,同一行上就能判**:把 Tormentor 臂读成 mode 测试**更糟不是更好** ——
+   真正对 `bot` 有意义的那个 `J.IsDoingTormentor(bot)` **已经是外层的第二条臂**,
+   那样读作者就是在一个真判别旁边写了一次**恒真的重复检查**。两种读法都错;
+   **只有 target 读法有用,而那正是另外 227 个调用点的写法,包括本文件自己另外四处(436/622/846/965)**。
+   **⭐⭐⭐ 为什么没人发现**:这是**复制粘贴的一脉**而非孤例 —— 另有 `aba_hero_sub_units.lua:370`
+   与 `familiars.lua:358`(被注释掉的)。**但那个文件零引用者,这一脉三分之二是死代码**
+   ⇒ grep 这句话的人看到的命中绝大多数在跑不起来的文件里,**唯一存活的那份因此也像是同一堆死东西**。
+   由 `[source S4]` 钉住(将来谁把死文件接回来,这条断言就红)。
+   **改动**:新增文件内局部 `IsTormentorSubject()`,按 `J.IsModeTurbo() and J.IsSoakCandidate('tormself')` 分叉;
+   **门关逐字返回 `J.IsTormentor(bot)` ⇒ 出厂字节级不变**;门开返回 `J.IsTormentor(botTarget)`。
+   **因为关着的那条臂恒假,开的那条是严格超集 —— arming 不可能让 Ringmaster 反而不做今天会做的事。**
+   **Roshan 臂与发货函数体其余一字未动。** 访问器**放在 `local botTarget`(156 行)之下**是有意的
+   (放其上会闭包到另一个**永远 nil** 的 upvalue,armed 臂会和 shut 臂一样死;GH #368 形状,**变异 M11 实证**)。
+   **产出** `tests/test_tormself_identity_domain.lua`(`[ratchet]` **10/0**),真实帧
+   `f_20260828_004757_venomancer_785`(t=785.4,主体存活 1219/1219,完整十人阵容)。
+   **`[frame F0]` 把这条发现量出来而不是论证出来**:用**真实的** `J.IsTormentor` 跑遍语料里每一帧的每一个英雄句柄 ——
+   **107 帧 / 993 个句柄 / 41 个不同英雄名,为真 0 次。不是罕见条件,是空条件。**
+   **⭐ `[frame FC]` 是阳性对照,也是让其余读数有意义的那一条**:**同一个 `if` 的兄弟臂**,**不开门**,
+   bot 在 Roshan mode、Roshan 在面前 ⇒ **HIGH**。**变异 11 条:11 条全部 CAUGHT。**
+   门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**,变异台前后各跑一次;
+   `tormself` 10/0 · `smoke_load` 3/0 · `gate_claim` 10/0 · `illureal` 12/0 · `illumove` 9/0;
+   **全量套件本轮没跑完(GH #124),不声称**。
+   **⚠️ 一次方法自伤,被本文件自己的阳性对照抓出**:`[frame F1]` 一开始读出 NONE 并**「通过」**了 ——
+   真实原因是主体是 venomancer、fixture 里没有 `ringmaster_funhouse_mirror`、mock 返回**未学习**的技能桩,
+   `J.CanCastAbility` 在函数**第一行**就 bail,**距离受测那条臂还有四个条件**。
+   **一道关着的闸,在有东西证明它能开之前,什么都没证明。** 已补世界槽 S-D 并新增 `[frame FC]`。
+   **登记理由是失效方向:提前 bail 的闸长得和正确判别后关上的闸一模一样,而它 bail 的方向恰好是这个测试想要的答案。**
+   与 #377 的 M8、#381 的普查拼写同族 —— **读数是对的,理由不是。**
+   **⚠️ 另一条断言自审**:`[source S2]` 起初只断 `accessor > declaration`(读者那一半),
+   变异 **M11**(把 `local botTarget` 下移到访问器正上方)**保持该式为真却仍打断了修复** ——
+   `X.SkillsComplement` 于是赋值给一个**全局** `botTarget`,访问器读的是那个 nil 的文件局部。
+   **M11 是被帧测试抓到的,S2 没抓到。** S2 现已加断 `writer > declaration`,重跑确认 S2 会红。
+   **一条守得比自己名字少的断言。**
+   **⚠️ 开工自检**:第一条命令仍写成 `| tail`,**被拒绝横幅当场拆穿**(同一站点连续第九轮);
+   改重定向后**第一次被我自己的 `timeout 400` 杀掉(`EXIT=124` —— 那不是通过,是没跑成)**;
+   后台重跑得 **43 checks / 0 failures / 9 UNCERTIFIED**,**9 条全是 GH #358 那个 120s 预算超时的
+   trunk-health 腿,没有一条是本轮的**;另有一条 python 腿 UNCERTIFIABLE。
+   **明说没做**:`primal_split.lua` 的连续命令位点(`0FIELD` 留下的另一半)**仍只普查未审计**;
+   `aba_hero_sub_units.lua` 自己那份拷贝**故意不修**(修死代码只会制造一个量不到的 diff);
+   **⚠️ 频率未知且比平时更重 —— Ringmaster 不是焦点英雄 ⇒ 五个焦点英雄身上一个读数都买不到**,
+   而分支还要 `BOT_MODE_SIDE_SHOP` ∧ 大镜子不在 CD ∧ Tormentor 在 900u 内 ∧ 正在攻击;
+   **这个合取的出现率未证,那就是本修复价值的上界。**
+   **下一格**:**总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 主判据 —— 含
+   **「self-fed 不是判据,self-fed ∧ self 不可满足才是」**这条边界 —— 进不进 §CR;
+   **丙已消** —— rebase 时发现总监在本轮落地的**同一小时**(10:2xZ)把 `illumove`(§CZ)与
+   `illureal`(§DB)**两条同轮入集**(§DC,成员串 50 → 52),`strategy-29`/`strategy-30` **已裁**;
+   我的入集提议因此**顺延为 §DD**。⚠️ **总监在 §DC.3 加了一条提议里没有的限定,收割时必读**:
+   那两条**同帧不正交** —— `illureal` armed 会**缩小** `illumove` 的域,而两份验收各自只 arm
+   自己那一个 id,**所以没有任何测试能看见这件事**,交集上的帧**不能分摊归因**);**录像组**(只缺一种读数:**「Ringmaster 处于
+   `BOT_MODE_SIDE_SHOP` 且正在攻击 Tormentor」的窗口有多少、多长**;`acceptance` 已按 §CJ 预登记
+   **`METHOD-FAILED`** ⇒ 没有这种窗口、甚至根本没有 Ringmaster 出场,判 **`DOMAIN-EMPTY` 退回总监**)。
+   **批测台:`strategy-31`,搭车、零 AWS 增量、零 EC2。**
+
 0FIELD. **【2026-09-01T07:46Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的九条全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;backlog `0d` 上一轮已结案 ⇒ **留在它打开的那个人口里**:
    **小兵驱动器,不经 mode 竞价** —— 取上一轮修的那条分支**再往上四行**的那一条);
@@ -3893,6 +3979,61 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-01T10:30Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出;
+  ⇒ 取 backlog `0FIELD` **明说没做**的两项之一(`aba_hero_sub_units.lua` / `primal_split.lua` 的连续命令**只普查未审计**);
+  **报告 `iterations/reports/strategy/20260901T103016Z.md`**;issue **GH #384**;
+  backlog 条目 **`0TORM`**;**落地 gated `tormself`**,入集提议 `test_set.md` **§DD**
+  (搭车、零 AWS 增量、不申请专波);`queue.json` 新增 **`strategy-31`**(**`bundle` 已填**);
+  `state.json` 新键 `tormself_20260901`;零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **一个以「别的单位」为域的谓词被喂了 `self` —— 语言抓不到,因为两者是同一种鸭子类型;
+  运行期也不报,因为这个谓词是全函数:对 self 不抛错,只是恒假。**
+  `bots/BotLib/hero_ringmaster.lua:915` 的闸外层按 bot 的 mode 二路分,内层本该按 target 同样二路判别 ——
+  **Roshan 臂写对了**(`J.IsRoshan(botTarget)`),**Tormentor 臂问的却是 `bot`**;
+  而 `J.IsTormentor` 是纯身份谓词(`GetUnitName()` 里找 `'miniboss'`),
+  我们自己叫 `npc_dota_hero_ringmaster` ⇒ **那条臂构造上恒假,外层析取的整个 Tormentor 那一半够不到函数体**。
+  **⭐ 主判据:失效方向朝「关」,而它的静默是本档案里最强的一种 —— 没有任何一帧、任何一局、
+  任何一份录像上,这个错答案与一个正确的 `false` 有区别,因为对 `self` 而言正确答案就是 false;
+  只有调用点知道这个问题是问别人的。**
+  **判别特征可数、不需要帧**:枚举调用点看实参 —— **249 个存活 `J.IsTormentor` 调用点,
+  227 个(90.8%)喂 `botTarget`,恰好 1 个喂 `bot`**;**本文件自己另外四处(436/622/846/965)都写对了**。
+  **⭐ 边界必须一并记住:「self-fed」本身不是判据 —— `J.IsMeepoClone(bot)` 是合法的 self-fed;
+  判据是 self-fed ∧ self 不可满足。** 类棘轮 `[source S5]` 按这条写,**故意不管 `IsMeepoClone`**。
+  **与 #348 拼错 / #368 词法作用域 / #370 未汇报副作用 / #373 闩记错后置条件 / #378 节流器作用域 /
+  #381 手工字段复制引擎事实同族不同因**:**本条每个标识符都存在、拼对、在作用域内、不持状态、
+  永不过期,函数也是对的那个;错的完全是「问的是哪个对象」。**
+  **⭐⭐⭐ 为什么没人发现**:这是**复制粘贴的一脉**(另有 `aba_hero_sub_units.lua:370` 与被注释的
+  `familiars.lua:358`),**但那个文件零引用者 ⇒ 这一脉三分之二是死代码**,
+  **唯一存活的那份因此也像是同一堆死东西**;`[source S4]` 钉住它的「死」。
+  **改动**:新增 `IsTormentorSubject()` 按 `J.IsModeTurbo() and J.IsSoakCandidate('tormself')` 分叉;
+  **门关逐字返回 `J.IsTormentor(bot)` ⇒ 出厂不变**;门开返回 `J.IsTormentor(botTarget)`,
+  **严格超集**(关的那条恒假 ⇒ **arming 不可能让它反而不做今天会做的事**)。
+  **产出** `tests/test_tormself_identity_domain.lua`(`[ratchet]` **10/0**),真实帧
+  `f_20260828_004757_venomancer_785`。**`[frame F0]` 把发现量出来**:真实 `J.IsTormentor` 跑遍
+  **107 帧 / 993 个英雄句柄 / 41 个不同英雄名 → 为真 0 次;不是罕见条件,是空条件**。
+  **⭐ `[frame FC]` 阳性对照**:**同一个 `if` 的兄弟臂**、**不开门** ⇒ HIGH。**变异 11 条:11 条全 CAUGHT。**
+  门:`luacheck_gate.sh` **裸读 exit 0 / 0 警告,未用 `RULE6_BYPASS`**(变异台前后各一次);
+  `tormself` 10/0 · `smoke_load` 3/0 · `gate_claim` 10/0 · `illureal` 12/0 · `illumove` 9/0;
+  **全量套件本轮没跑完(GH #124),不声称**。
+  **⚠️ 一次方法自伤,被本文件自己的阳性对照抓出**:`[frame F1]` 一开始读出 NONE 并**「通过」** ——
+  真因是 mock 给了**未学习**的技能桩,`J.CanCastAbility` 在**第一行**就 bail,**距受测那条臂还有四个条件**。
+  **一道关着的闸,在有东西证明它能开之前,什么都没证明。** 已补 S-D 并新增 `[frame FC]`;
+  **登记理由是失效方向 —— 它 bail 的方向恰好是这个测试想要的答案**(与 #377 M8、#381 普查拼写同族)。
+  **⚠️ 另一条断言自审**:`[source S2]` 起初只断读者那一半,**变异 M11 保持它为真却仍打断修复**
+  (`SkillsComplement` 转而赋值全局);**M11 是帧测试抓到的,S2 没抓到**,已加断 `writer > declaration`。
+  **⚠️ 开工自检**:第一条命令仍是 `| tail`(同一站点连续第九轮,被拒绝横幅当场拆穿);
+  改重定向后**被我自己的 `timeout 400` 杀掉,`EXIT=124` —— 那不是通过**;后台重跑得
+  **43 checks / 0 failures / 9 UNCERTIFIED**,**9 条全是 GH #358 的 120s 预算超时,没有一条是本轮的**。
+  **明说没做**:`primal_split.lua` 的连续命令**仍只普查未审计**;`aba_hero_sub_units.lua` 那份拷贝**故意不修**;
+  **频率未知且比平时更重 —— Ringmaster 不是焦点英雄 ⇒ 焦点五英雄身上一个读数都买不到**,
+  **那是本修复价值的上界**。
+  **交棒:总监**(甲 裁入集,**RIDESHARE、不能当独臂**;乙 主判据含那条边界进不进 §CR;
+  **丙已消**:总监在同一小时把 `illumove`/`illureal` **两条同轮入集**(§DC,50 → 52),
+  `strategy-29`/`strategy-30` **已裁**,我的提议顺延为 **§DD**;⚠️ **§DC.3 是总监新加的限定**:
+  那两条**同帧不正交**,`illureal` armed 缩小 `illumove` 的域,**交集上的帧不能分摊归因**)、
+  **录像组**(只缺一种读数:**「Ringmaster 在
+  `BOT_MODE_SIDE_SHOP` 且正在攻击 Tormentor」的窗口有多少、多长**;已按 §CJ 预登记
+  **`METHOD-FAILED`** ⇒ 没有该窗口/根本没出场判 **`DOMAIN-EMPTY` 退回总监**)。
+  **批测台:`strategy-31`,搭车、零 AWS 增量。**
 - 2026-09-01T07:46Z(**自驱** —— `[strategy]` 未认领 issue 仍为零(open 的九条全是本组自己开的);
   owner P1 第 1 棒、P2 均已交出;backlog `0d` 上一轮已结案 ⇒ **留在它打开的人口里**
   (小兵驱动器,不经 mode 竞价),取上一轮那条分支**再往上四行**的一条;
