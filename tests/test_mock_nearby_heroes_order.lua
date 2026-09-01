@@ -359,11 +359,37 @@ end
 local FRAME = 'tests/fixtures/f_225947_wk_trade_kite.lua'
 local CAST_RANGE = 525          -- datafeed hero_id 42, read 2026-08-22
 
+--- DECLARED MUTATION, added 2026-09-01 (hero) -- the mana that keeps this
+--- ordering probe alive.
+---
+--- This frame's real mana is 222, Hellfire Blast costs 95 and Reincarnation 220,
+--- so X.ShouldSaveMana's reserve clause -- `GetMana() - Q:GetManaCost() <
+--- R:GetManaCost()`, i.e. 222 - 95 = 127 < 220 -- is TRUE and shipped
+--- X.ConsiderQ correctly declines to cast anything at all.
+---
+--- It did not decline before, and the reason is not this file's: until
+--- 2026-09-01 tests/mock/replay_fixture.lua left `GetManaCost` off the ability
+--- spec, so it answered 0 for every ability and the reserve clause read
+--- `222 - 0 < 0` -- FALSE on every frame, for every hero, forever.  That is the
+--- SECOND consumer of that defect found (the first is X.ConsiderR's first line,
+--- tests/test_fixture_mana_price.lua): a shipped, heavily-argued reserve rule
+--- that has never once been able to fire in the fixture world.
+---
+--- This probe is about GetNearbyHeroes ORDER deciding WHO gets hit, not about
+--- Wraith King's mana, so the reserve is lifted rather than argued with: mana is
+--- raised to exactly 315 = 95 + 220, the least value that clears the clause, so
+--- the cast happens and the ordering defect stays visible.  Anything larger would
+--- hide how tight the margin is.  This joins the cast range and cooldown this
+--- function already fabricates; the ground-truth case below reads the frame's own
+--- distances, healths and burst and is untouched by it.
+local RESERVE_CLEARING_MANA = 315       -- Hellfire Blast 95 + Reincarnation 220
+
 local function wk_decision(reverse)
     local J, bot, heroes, fx = rf.load(FRAME)
     local q = bot:GetAbilityByName('skeleton_king_hellfire_blast')
     rawget(q, '__spec').GetCastRange = CAST_RANGE
     rawget(q, '__spec').GetCooldownTimeRemaining = 0
+    rawget(bot, '__spec').GetMana = RESERVE_CLEARING_MANA   -- MUTATION, see above
     if reverse then
         local spec = rawget(bot, '__spec')
         local sorted_impl = spec.GetNearbyHeroes
@@ -397,6 +423,43 @@ tests['[real frame] ground truth: two enemies inside 568u, the nearer one dying'
     assert(fx.observed.burst['npc_dota_hero_lich'] == 750 and fx.observed.died_after == 4.6,
         'ground truth: the nearer, weaker enemy is the one that went on to deal '
         .. '750 damage, and WK died 4.6s later')
+end
+
+--- The other half of the mutation above, asserted rather than described.
+---
+--- Without the lift, shipped Wraith King on this frame casts NOTHING, and that
+--- is correct behaviour: he cannot pay for the blast and still hold his
+--- Reincarnation mana, which is the rule X.ShouldSaveMana exists to enforce and
+--- which bots/BotLib/hero_skeleton_king.lua argues for at length above
+--- X.GetRoshanManaFloor.  Pinning it here does two things: it keeps the lift
+--- above honest (a reader can see exactly what was suppressed and why), and it
+--- guards the reserve clause itself, which spent its whole life reading
+--- `GetMana() - 0 < 0` and is live for the first time as of 2026-09-01.
+tests['[real frame] the reserve rule is live: at the frame\'s real 222 mana, WK holds'] = function()
+    local J, bot, heroes = rf.load(FRAME)
+    local q = bot:GetAbilityByName('skeleton_king_hellfire_blast')
+    rawget(q, '__spec').GetCastRange = CAST_RANGE
+    rawget(q, '__spec').GetCooldownTimeRemaining = 0
+    -- deliberately NO mana lift here
+    local r = bot:GetAbilityByName('skeleton_king_reincarnation')
+
+    assert(bot:GetMana() == 222, 'the frame\'s real mana, got ' .. bot:GetMana())
+    assert(q:GetManaCost() == 95, 'Hellfire Blast rank 1 costs 95, got ' .. q:GetManaCost())
+    assert(r:GetManaCost() == 220, 'Reincarnation rank 1 costs 220, got ' .. r:GetManaCost())
+    assert(r:GetCooldownTimeRemaining() <= 3.0, 'Reincarnation is within the 3s window')
+    assert(bot:GetMana() - q:GetManaCost() < r:GetManaCost(),
+        'the reserve clause must BIND on this frame: 222 - 95 = 127 < 220. If this '
+        .. 'is false the mana prices went back to 0 and the clause is dead again '
+        .. '-- check mana_ladder() in tests/mock/replay_fixture.lua')
+    assert(RESERVE_CLEARING_MANA == q:GetManaCost() + r:GetManaCost(),
+        'the lift above must stay the LEAST value that clears the clause')
+
+    J.IsSoakCandidate = function() return false end
+    local X = rf.load_hero('skeleton_king')
+    X.SkillsComplement()
+    local d = X.ConsiderQ()
+    assert(d == 0,
+        'shipped WK must decline at 222 mana (reserve rule), got desire ' .. tostring(d))
 end
 
 tests['[real frame] shipped ConsiderQ aims at whoever the list puts first'] = function()
