@@ -5,7 +5,12 @@
  "arm_ids": 50,
  "arm_bytes": 441,
  "arm_md5": "11cac15a2842374052999a1e5ff9d916",
- "seeds": [2750, 2621, 2647, 2747],
+ "seeds": [
+  2750,
+  2621,
+  2647,
+  2747
+ ],
  "carrier_terms": [
   "crystal_maiden",
   "lion",
@@ -33,7 +38,26 @@
    "market": "on-demand",
    "instance_lifecycle": null,
    "sir": null,
-   "carriers": ["crystal_maiden", "lion", "obsidian_destroyer"]
+   "carriers": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer"
+   ],
+   "ab": 31,
+   "ba": 12,
+   "arm_depth": 17.3,
+   "status_code": null,
+   "create": "2026-09-01T09:31:07Z",
+   "update": null,
+   "terminated": null,
+   "StateReason.Code": null,
+   "StateTransitionReason": null,
+   "terminated_capture": "MISSED_UNRECOVERABLE",
+   "terminated_capture_note": "describe-instances --instance-ids returned Reservations: [] (RC_EXIT=0) at 2026-09-01T12:20Z. The GH #375 ~1h retention window had already closed. NOT a desk omission: see wave-level terminated_capture_outcome -- the window shuts ~1.5h BEFORE the harvesting round can fire on this stream's ~3h cadence.",
+   "last_s3_upload": "2026-09-01T10:23:42Z",
+   "survival_h": 0.876,
+   "survival_bound": "lower",
+   "dem_uploaded": 24
   },
   {
    "seed": 2621,
@@ -47,7 +71,26 @@
    "market": "on-demand",
    "instance_lifecycle": null,
    "sir": null,
-   "carriers": ["lion", "obsidian_destroyer", "skeleton_king"]
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king"
+   ],
+   "ab": 31,
+   "ba": 12,
+   "arm_depth": 17.3,
+   "status_code": null,
+   "create": "2026-09-01T09:31:12Z",
+   "update": null,
+   "terminated": null,
+   "StateReason.Code": null,
+   "StateTransitionReason": null,
+   "terminated_capture": "MISSED_UNRECOVERABLE",
+   "terminated_capture_note": "describe-instances --instance-ids returned Reservations: [] (RC_EXIT=0) at 2026-09-01T12:20Z. The GH #375 ~1h retention window had already closed. NOT a desk omission: see wave-level terminated_capture_outcome -- the window shuts ~1.5h BEFORE the harvesting round can fire on this stream's ~3h cadence.",
+   "last_s3_upload": "2026-09-01T10:16:34Z",
+   "survival_h": 0.756,
+   "survival_bound": "lower",
+   "dem_uploaded": 24
   },
   {
    "seed": 2647,
@@ -61,7 +104,27 @@
    "market": "on-demand",
    "instance_lifecycle": null,
    "sir": null,
-   "carriers": ["crystal_maiden", "skeleton_king", "spirit_breaker", "zuus"]
+   "carriers": [
+    "crystal_maiden",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+   ],
+   "ab": 27,
+   "ba": 15,
+   "arm_depth": 19.29,
+   "status_code": null,
+   "create": "2026-09-01T09:31:16Z",
+   "update": null,
+   "terminated": null,
+   "StateReason.Code": null,
+   "StateTransitionReason": null,
+   "terminated_capture": "MISSED_UNRECOVERABLE",
+   "terminated_capture_note": "describe-instances --instance-ids returned Reservations: [] (RC_EXIT=0) at 2026-09-01T12:20Z. The GH #375 ~1h retention window had already closed. NOT a desk omission: see wave-level terminated_capture_outcome -- the window shuts ~1.5h BEFORE the harvesting round can fire on this stream's ~3h cadence.",
+   "last_s3_upload": "2026-09-01T10:13:20Z",
+   "survival_h": 0.701,
+   "survival_bound": "lower",
+   "dem_uploaded": 24
   },
   {
    "seed": 2747,
@@ -75,7 +138,27 @@
    "market": "on-demand",
    "instance_lifecycle": null,
    "sir": null,
-   "carriers": ["crystal_maiden", "skeleton_king", "spirit_breaker", "zuus"]
+   "carriers": [
+    "crystal_maiden",
+    "skeleton_king",
+    "spirit_breaker",
+    "zuus"
+   ],
+   "ab": 38,
+   "ba": 18,
+   "arm_depth": 24.43,
+   "status_code": null,
+   "create": "2026-09-01T09:31:21Z",
+   "update": null,
+   "terminated": null,
+   "StateReason.Code": null,
+   "StateTransitionReason": null,
+   "terminated_capture": "MISSED_UNRECOVERABLE",
+   "terminated_capture_note": "describe-instances --instance-ids returned Reservations: [] (RC_EXIT=0) at 2026-09-01T12:20Z. The GH #375 ~1h retention window had already closed. NOT a desk omission: see wave-level terminated_capture_outcome -- the window shuts ~1.5h BEFORE the harvesting round can fire on this stream's ~3h cadence.",
+   "last_s3_upload": "2026-09-01T10:23:22Z",
+   "survival_h": 0.867,
+   "survival_bound": "lower",
+   "dem_uploaded": 31
   }
  ],
  "market_note": "ON-DEMAND on the #271 escalation branch, NOT on the capacity ladder -- level (1) spot was never asked for this wave. Reason and the honest boundary are in the round report §4.3: reclaim_blind.py returned exit 2 (UNDECIDABLE) on W33, and this desk executed the gate's STRICTER branch rather than reading exit 2 as a pass. Clause (1) (<=1 paired seed) is satisfied by W33's harvest with no inference at all; clause (2) (a machine reclaimed by no-capacity BEFORE the changeover) is satisfied by a first-hand EXACT stamp already in W33_wave.json:machines[0] -- seed 2756 create 03:31:07Z -> terminated 03:34:25Z = 3.30 min, `Server.SpotInstanceTermination` / `instance-terminated-no-capacity` -- a field the tool's schema does not read. Evidence of the market type is describe-instances `InstanceLifecycle` = None on all four (NOT the run_id `spot_` prefix, which spot_run.sh:155 hardcodes regardless of market -- this wave is the cleanest illustration of that trap yet: four on-demand machines whose run_ids all start with `spot_`).",
@@ -100,5 +183,157 @@
  "terminated_capture_obligation": "*** THE HARVESTING ROUND MUST DO THIS, AND IT EXPIRES. *** For each of the four machines, capture from describe-instances (filters state=terminated,shutting-down) the `terminated` stamp, StateReason.Code and StateTransitionReason, and write them onto machines[] under those names. This is an ON-DEMAND wave, so there is no SIR fallback the way W33 had one -- once the ~1h GH #375 retention window passes, the survival of these machines is unrecoverable and the wave's cost settlement has to fall back to the S3 last-upload proxy (a LOWER bound, which per GH #332 discipline cannot be labelled exact). W32 lost exactly this and its reclaim_blind read `unknown SIR status_code None` => exit 2.",
  "expected_games": "4 seeds x 12 games x 2 arms = 96 mirrored games nominal; recent full-set waves land 200-240 SCORED games because each leg drains more than its nominal 12 before the flip. W32 scored 207 of 231 loaded; W31 scored 198 of 222. W33 is NOT a usable precedent (49 scored: it died).",
  "self_destruct": "All four: --instance-initiated-shutdown-behavior terminate + `shutdown -h +120` watchdog (--hours 2), hard cap 2026-09-01T11:31Z. This is an ON-DEMAND wave, so EC2 reclaim is NOT a live exit path -- which is the whole point of the #271 escalation. Expected self-termination between 10:15Z and 10:30Z on the ~0.75-0.92 h/machine profile.",
- "progress_at_launch": "Zero games at 09:3xZ by construction (instances were `running` for seconds). The harvesting round reads counts from s3://dota2bot-batch-results-4924/soak/<run_id>/; warm-up games do not count as effective games."
+ "progress_at_launch": "Zero games at 09:3xZ by construction (instances were `running` for seconds). The harvesting round reads counts from s3://dota2bot-batch-results-4924/soak/<run_id>/; warm-up games do not count as effective games.",
+ "harvest": {
+  "harvested_at": "2026-09-01T12:2xZ",
+  "harvester": "batch-desk",
+  "rc_exit": 0,
+  "tool": "recover_verdict.py",
+  "arm_string_readback": {
+   "ids": 50,
+   "bytes": 441,
+   "md5": "11cac15a2842374052999a1e5ff9d916",
+   "note": "read back out of the corpus stamps; byte-identical to the launch record AND to W33"
+  },
+  "input": {
+   "files_seen": 208,
+   "games_loaded": 208,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0,
+   "download": "per-run subdirectories, never flattened (GH #225)"
+  },
+  "seeds_scored": "4/4",
+  "thin_arm_seeds": [],
+  "thin_arm_winrate_seeds": [],
+  "min_arm_depth": 8,
+  "mean": {
+   "gpm": 13.32,
+   "xpm": 0.86,
+   "deaths": -0.02,
+   "last_hits": -1.21,
+   "winrate": 0.484,
+   "winrate_headroom": 0.0267
+  },
+  "comps_better": {
+   "gpm": "2/4",
+   "xpm": "2/4",
+   "deaths": "2/4",
+   "last_hits": "2/4",
+   "winrate": "1/4"
+  },
+  "scored_games": 183,
+  "unfinished_games": 1,
+  "strata": {
+   "gpm": {
+    "ab": -12.11,
+    "ba": 38.75,
+    "side": -25.43,
+    "sign_flip": true,
+    "side_gt_arm": "1/4"
+   },
+   "xpm": {
+    "ab": 6.47,
+    "ba": -4.74,
+    "side": 5.6,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "deaths": {
+    "ab": -0.31,
+    "ba": 0.25,
+    "side": -0.28,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "last_hits": {
+    "ab": 13.57,
+    "ba": -15.98,
+    "side": 14.77,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   }
+  },
+  "suggested": "hold_or_reject",
+  "reading_discipline": "*** The mean gpm +13.32 is NOT a positive signal. *** Per-seed gpm = {+69.72, -38.79, -37.24, +59.60}: cross-seed SD 59.4, SE ~29.7, so +13.32 sits well inside its own dispersion, and comps_better is 2/4 on every econ metric -- the coin-flip pattern. The charter's own noise floor (single-seed gpm +/-30 is pure noise, established on the 855-858 mirror zero-point) is EXCEEDED by this wave's per-seed spread. Reading: a valid NULL, not an improvement. sign_flip is true on all four metrics; per rule (i-c) that is the identity |side|>|arm| for a swap-averaged estimator and is NOT a rejection reason -- it is registered under (i-a), not concluded from. Pooling was NOT game-count weighted (i-d): the tool's own per-seed swap-average then arithmetic cross-seed mean; nothing here was hand-computed.",
+  "winrate_channel": {
+   "status": "DEGENERATE",
+   "minority_share": 0.0145,
+   "side_census": {
+    "radiant": 3,
+    "dire": 204
+   },
+   "finished": 207,
+   "bound": "0.5 +/- 0.0267",
+   "note": "GH #352, THIRD CONSECUTIVE degenerate wave, and the share COLLAPSED by an order of magnitude: W33 0.1722 -> W34 0.0145. Dire won 204 of 207. All 207 are winner_by engine_natural against cap_min 25.0 with mean duration 25.8 min. MUST NOT be cited as iron-rule-2(b) support."
+  },
+  "family_status": "*** This is the 50-id family's FIRST valid multi-seed reading. *** W33 bought 1 scored seed of 4 (four machines reclaimed); W34 buys 4 of 4. GH #363 has a reading to rule on at last -- and the reading is a null."
+ },
+ "terminated_capture_outcome": {
+  "result": "MISSED -- PERMANENTLY UNRECOVERABLE",
+  "probe": "awsx ec2 describe-instances --instance-ids <all four>  =>  Reservations: []  (RC_EXIT=0)",
+  "probed_at": "2026-09-01T12:20Z",
+  "structural_finding": "*** The obligation was not merely missed, it was UNMEETABLE BY CONSTRUCTION, and no harvesting round on this cadence could ever have met it. *** Machines launched 09:31:07-09:31:21Z; last S3 uploads 10:13:20-10:23:42Z, so they self-destructed ~10:15-10:30Z; the GH #375 retention window (~1h) therefore shut ~11:15-11:30Z. This stream fires roughly every 3h, and the harvesting round after the launch round fired at 12:18Z -- about 1.5h AFTER the record had already expired. This is first-hand confirmation of GH #382 and it WIDENS it: the defect is not only that reclaim_blind.py's schema does not read the field, it is that on an on-demand wave the field is GONE before any harvesting round exists to read it. A fix has to capture `terminated` from inside the wave's own lifetime (the watchdog/instance side), not from the next round.",
+  "fallback_used": "S3 last-upload proxy, exactly as this file's terminated_capture_obligation predicted in writing. LOWER bound per GH #332; never labelled exact.",
+  "measured": {
+   "total_machine_hours": 3.201,
+   "per_machine_h": 0.8,
+   "bound": "lower",
+   "on_demand_rate_usd_h": 0.673,
+   "wave_cost_usd": 2.154,
+   "cost_bound": "lower"
+  },
+  "constant_challenge": "*** The charter's on-demand constant ~$2.15 is now UNDER a measured LOWER bound ($2.154). *** Third measurement point (W32 0.825 h/machine; W34 >=0.800 h/machine). The failure direction is the dangerous one the charter names itself: every on-demand wave is under-recorded in the fence arithmetic. Director owes the third re-ruling; this desk recommends $2.30, matching W32's suggestion."
+ },
+ "rec_slots_outcome": {
+  "ruling": "GH #308 (C) -- LANDED AND WORKING, first wave",
+  "verified": "rec_slots: 8 present in every demclaim sidecar. 103 demclaim records across slots 1-8 only (13/13/13/13/13/12/13/13); zero in slots 9-16, which is the intended natural control leg.",
+  "replays": {
+   "count": 103,
+   "per_run": {
+    "8228bb": 24,
+    "a1a0d8": 24,
+    "45ade1": 24,
+    "cbb744": 31
+   },
+   "bytes": 2291459907,
+   "prefix": "s3://dota2bot-batch-results-4924/dem21/<run>/",
+   "claim_method": "logname, hostname_hits 1"
+  },
+  "expiry": {
+   "rule": "dem21-expire-21d",
+   "days": 21,
+   "expires_approx": "2026-09-22",
+   "warning": "*** HANDOFF DEADLINE. *** dem21/ carries a 21-day prefix lifecycle rule. These 103 replays are the first bulk frame corpus in eleven waves and they DELETE THEMSELVES on ~2026-09-22. Owner P1/P2 condition (a) has been blocked on exactly this corpus; the replay stream must claim what it needs before then."
+  },
+  "note": "The .dem files are NOT under soak/<run>/ -- at REC_SLOTS>1 dem_bulk_prefix() routes them to dem21/<run>/ so a plain prefix lifecycle rule can expire them without the s3:PutObjectTagging the runner profile lacks. A soak/ listing shows dem=0 and that is BY DESIGN, not a lost upload."
+ },
+ "corpus_census": {
+  "games": 208,
+  "duration_min": {
+   "mean": 25.8,
+   "min": 23.6,
+   "max": 27.5
+  },
+  "cap_min": 25.0,
+  "natural_end": {
+   "true": 207,
+   "false": 1
+  },
+  "pudge_games": 0,
+  "pudge_note": "*** strategy-26 (rotscope) has an EMPTY DOMAIN on this wave. *** Pudge is in 0 of 208 games (it is not among W34's carrier terms). Per that request's own caveat (jia), a wave that did not draw Pudge reads identically zero and MUST be registered as 'carrier absent / domain empty', never as 'tested, no effect'.",
+  "top_heroes": {
+   "venomancer": 159,
+   "crystal_maiden": 159,
+   "skeleton_king": 158,
+   "luna": 110,
+   "spirit_breaker": 110,
+   "zuus": 110,
+   "jakiro": 110,
+   "obsidian_destroyer": 97,
+   "skywrath_mage": 97,
+   "lion": 97,
+   "slardar": 96
+  }
+ }
 }
