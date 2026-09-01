@@ -8972,6 +8972,12 @@
     (3) **看 harness/总监接不接本轮开的 issue**;没接**不要再顺延第五轮**——直接追评,
     或按新欠账 (b) 请总监裁定探针入仓。
     (4) `will_reincarnate` 这一棒**已上总线,不再顺延**。
-  - **已发表**:见报告 §10(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh`)。
-  - **Token 用量**:见报告 §11。
+  - **已发表**(**先 push 后发表**,GH #290;报告与章程先落 `main` `4275c125`;
+    草稿过 `claim_precheck.sh` **BARE_EXIT=0** / `local commits not on origin/main: 0` /
+    `refused 0` / `OK to publish`):
+    **新开 GH #405**([harness] 引擎每次死亡都发 `will_reincarnate`(1209/1209 有值),
+    我们却用两个会失效的常数重建它;`true` 不是 WK 专属,aegis 9/9 背包证人 + 824 行 2×2 表 + 建议改法与验收三条)。
+    **这是本轮唯一新开的 issue**:trunk-red(lua) 归 #394、python 腿归 #364、自检时长归 #358、
+    W35 的 spot 回收归 #398,**一律只记复现不重开**。
+  - **Token 用量**:`TOKENS total_in=10,636,607 out=58,876 turns=79`(见报告 §11)。
   - 完整报告:`iterations/reports/replay-check/20260901T215000Z.md`
