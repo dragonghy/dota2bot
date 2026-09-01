@@ -8808,3 +8808,89 @@
     **未新开 issue**(铁律 7):这一形状 #344 已在,trunk-red 协同组已登记。
   - **Token 用量**:见报告 §10。
   - 完整报告:`iterations/reports/replay-check/20260901T160120Z.md`
+- **2026-09-01T18:49Z(`illumove` 判 **WORKING**;而买到这条读数的前提是「载体是幻象符,不是英雄」)**:
+  - **⭐ GH #378 §10 那一棒本轮结掉了,而且它自己预登记的 `DOMAIN-EMPTY` 分支不触发、其理由被证伪。**
+    #378 说「5 个焦点英雄里只有 WK 产生这种人口,语料里很可能根本没有 ≥2 受控单位的窗口」。
+    实测:**16/16 深查局都有**,合计 **24 个幻象符 episode**、**781 秒**窗口
+    (均值 32.5 s / 中位 27.5 s / 最长 75 s / ≥10 s 的 20 个),**每局中位 49 秒**。
+    seed 2986 的十个英雄**没有一个有召唤技能**,`hero_*.lua` 里 **10/10 不买**
+    manta / helm_of_the_dominator / helm_of_the_overlord / necronomicon ——
+    **载体是幻象符**(`modifier_illusion` ADD ×2,无伴随 ABILITY/ITEM 事件)。
+    ⇒ **新词汇表条目:核 `minion_lib/` 下的任何 id,先查 `modifier_illusion` 事件,
+    不要先查英雄有没有召唤技能。**
+  - **逐帧(先逐帧后聚合)**:`e12d0d/20260901_153327_slot7` necrolyte(dire = **baseline** 腿),
+    **t=721.1..732.1 整整 12 秒 `idx2248` 坐标逐帧逐位不变**,兄弟 `idx2213` 以 250–380 u/s 连续走;
+    733 交接、739 反过来、743 再反过来 ⇒ **两只轮流独占那一个 module local**,
+    比 #378 预期的「一个饿死」更尖锐。armed 腿对照 `20260901_154601_slot5` ogre_magi:
+    **26 个连续帧两只都在动**,唯一例外是 t=426.5 的单帧。
+  - **普查(在逐帧之后)**:`starved%`(一只 ≥100u/s、另一只 <20u/s)
+    **ab/armed 5.6% · ba/armed 5.6% · ab/baseline 52.0% · ba/baseline 56.8%**
+    ⇒ **两分层同号、无反号**(铁律 4(i-b) 的判据);**读数跟着 arm 走不跟着物理侧走**。
+    **episode 级完全分离**:armed **15/15** 最长饿死连跑 ≤3 s,baseline **8/8** ≥4 s(最长 15 s)。
+    同英雄跨腿对照:`obsidian_destroyer` armed 0/12、3/55 vs baseline 31/66、23/29。
+  - **§DC.3(甲) 那一答给出来了:交集帧 0/435**(armed 腿两只都活着的 435 帧里,
+    主人 HP<40% 的 **0** 帧;`撤退`/`非强势` 不可观测所以**故意放松**,得到的是**上界**)
+    ⇒ §4 的读数可干净归给 `illumove` 一条。批测台 18:10Z 说的 "not settleable" 指的是
+    **分离两条的效应量**(那确实要更多种子),**(甲) 问的是归因,归因这一答买到了**。
+  - **`illureal` 判 `DOMAIN-EMPTY`**(§DC.3(乙)):armed 腿全语料只有 **3 帧**满足
+    「主人活着且 HP<40%」(幻象存活帧 757+349=1,106),那 3 帧里两帧 `step=0`,
+    **无一帧呈现诱饵形状**;再叠不可观测的两个合取项 ⇒ 真实域 ≤3 帧。
+    **明确不做**:不把它读成「测过了没效应 ⇒ 不 promote」。
+    ⚠️ `ba/baseline` 那 50 帧全部来自**一局一个英雄的一次 episode**(`155845_slot2` OD),不构成腿断言。
+  - **核验结论行**:
+    ```
+    VERIFY id=illumove verdict=WORKING episodes=15
+    VERIFY id=illureal verdict=INDETERMINATE episodes=3
+    ```
+    (`illureal` 那行按本章程词表写 `INDETERMINATE`;它在 §DC.3(乙) 的词表里叫 `DOMAIN-EMPTY`
+    —— 与 `wkqdmg` 同族:**不是「该触发没触发」,是「前提没出现」**。)
+  - **覆盖**:宽扫 **40/40** 局(`arm_string_census.py --declared <52-id>` **RC_EXIT=0**、
+    45 局 MATCH、arm sha1 `93a1da17`,与 `W35_wave.json` 的 52 id / 459 bytes 逐字相同);
+    **深查 16 局**(21 个 `.dem` − 5 暖场;`bad=24` 全是 `NODEM`,即 `--rec-slots 8` 下 slot9..16 本就没录,
+    **不是解析失败**,`UNPARSEABLE 0`)。W35 只有 **e12d0d 一粒**可用(另三台 15:42:25Z 同瞬被 spot 回收)。
+  - **顺带登记(不新开 issue)**:`carrier_terms.py` 按**文件路径**判英雄/generic,
+    `illumove`/`illureal` 因此判 `generic`;**本波没吃亏是运气**(载体是符,与阵容无关),
+    与 `rotscope`/pudge 的手工 term 同族。写进 GH #389 追评。
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **BARE_EXIT=0**;
+    `get_dumper.sh` **BARE_EXIT=0**(cache HIT `46fe9c6a2b084f9b`);`behav-dump` **16/16 exit 0**;
+    `arm_string_census.py` **RC_EXIT=0**;`carrier_terms.py` **RC_EXIT=0**。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;**未改 `bots/`/`game/` 任何一行、
+    未改任何既有工具** ⇒ 不声称跑绿 Lua 全量(GH #124)。**本轮无变异台**(读数直接读 `snapshots`/`events`;
+    §4.1/§4.2 两张现场不依赖任何阈值)。
+  - **开工自检**:⚠️ **第一条命令第十次踩证据纪律 3**(`… | tail -40`),脚本自打
+    `REFUSED: stdout is a pipe; exit 2, nothing checked` —— **护栏第十次生效,那次不是通过**;
+    「开工模板内建 `rc.sh`」已交出去三轮,**本轮第四次登记、形状完全相同**。
+    改重定向后台跑 **~55 分钟**跑完(**第十七次登记「不是约 20s」**,GH #358),
+    **`SELFCHECK_BARE_EXIT=3`**,自带 GH #267 4b 归因横幅:
+    `FINDINGS: cadence trunk-red(python) trunk-red(lua)` / `UNCERTIFIABLE: none`
+    ⇒ **这一轮的 exit 3 可以读成「真有发现」**(上一轮不行:红的判据自己没跑完)。
+    python 红是**新形状** `tests/test_carrier_terms.py`(`axe is NOT asked about`);
+    Lua 红是 `test_incoming_damage_callsite_census.lua`(43→44),**GH #394 已在,只记复现**。
+    ⚠️ `rc.sh` 变异台腿内部 **2 项 `UNCERTIFIABLE`**(`no lua5.1 on PATH`)却**没把腿级退出码抬到 2**
+    —— 登记这处不一致,不下裁定。**已有 #358/#364/#383/#394,不新开。**
+  - **诚实边界**:**没有一个数字是效应量**,本轮不碰胜负/经济,买的只是条件 (a);
+    **16 局不是 40 局**(其余 24 局没有录像,不是没看);**一粒种子一个阵容,不可与 W29–W34 并池**;
+    armed 腿 = **52 个 id 全 armed**,不是隔离实验(靠「这条路径上只有这两个 id」+「交集为空」两条论证);
+    **armed 臂是「per-unit 0.2s 时钟」还是「等于没有时钟」本轮分不出来**(若句柄每帧新建则门恒开,
+    1 Hz 下同判);幻象符的密集程度是**本语料的观察**,别的补丁/模式未证。
+  - **欠账变化**:✅ **GH #378 §10 那一棒结案**(窗口读数 + 上界定价的输入);
+    ✅ **§DC.3(甲) 归因那一答结案**(交集 0/435);
+    ✅ `illumove` 条件 (a) **买到**;⛔ `illureal` 退回总监(`DOMAIN-EMPTY`);
+    ⛔ `illumove` 条件 (b) 仍欠(W35 n=1 给不出),等下一个同时 armed 它的波;
+    ⛔ `will_reincarnate` 提案**第四轮顺延**。
+    继承未动:`wkqdmg` 的「击杀确认分支产不产 Q 施法」等 GH #390 回音;§5 宽扫表按 ab/ba 重打;
+    `tp_out` 那 311 条;`stayfield2_whynot.py` 待下一个 44-id 波;`pullcad_beat.py` 在 W25 剩两 run;
+    `unk` 那一列**第十轮**(记作「前提没出现」);窗口常数只读未量;W33 0.748 与 W32 0.401 合并成案;
+    `fieldbuy_silence.py`/`stayfield2_margin.py` 分层;「静止在小兵火力里」检测器;W25 只并 2/4 run;
+    W26–W28 与 W25 从未池化;`seed 975` **第三十一轮**;`wandlimbo` 因 #293 **第二十九轮**;
+    GH #265 被 #272 阻塞;`blinkflee` 卡 #304/#305;WK rank-3 全语料复测;载体侧别提案 GH #389。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **W35 那 16 局幻象语料随容器回收了**,要复用得重跑 sweep(约 12 分钟)。**别当成现成资产。**
+    (2) ⭐ **把幻象符写进载体词汇表**:核 `minion_lib/` 下的 id 先查 `modifier_illusion` 事件。
+    (3) `illumove` 只差条件 (b);**下一个同时 armed 它的波收割后,第一件事是把 §4 那张
+    `starved%` 四格重打一遍**(零新方法,脚本形状已定),看 episode 级分离是否复现。
+    (4) `will_reincarnate` 提案**第四轮顺延,别再掉**。
+  - **已发表**(**先 push 后发表**,GH #290;草稿过 `claim_precheck.sh`):见报告 §10。
+  - **Token 用量**:见报告 §11。
+  - 完整报告:`iterations/reports/replay-check/20260901T184954Z.md`
