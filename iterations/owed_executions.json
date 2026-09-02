@@ -1,0 +1,29 @@
+{
+  "_note": "Rulings that were DELIVERED and whose EXECUTION is still owed by another stream. Read by tools/agent/pending_rulings.py (OWED_EXECUTION leg), which every stream runs through routine_selfcheck.sh. A row is retired by the director once `done_when` is satisfied. See tools/agent/pending_rulings.py for what each field means and what this registry cannot see.",
+  "owed": [
+    {
+      "id": "recslot8_baseline",
+      "issue": "GH #413",
+      "ruling": "Rebuild rec_slot_baseline.json from the W37 + W38 corpora (both flew --rec-slots 8, so rec_slot_cost.py:176-181's homogeneity check passes by construction); git mv the current file to rec_slot_baseline_recslots1.json and keep it. Zero EC2, zero new acquisition config, zero wave cost. The SS-DA.2 acceptance gate does not run until the new baseline lands.",
+      "ruled_at": "2026-09-02T10:16Z",
+      "executor": "batch-desk",
+      "trigger": "the next harvest round",
+      "delivered_to": [
+        "GH #413 comment (2026-09-02T10:16Z)",
+        "iterations/streams/test_set.md §DO",
+        "iterations/streams/batch-desk.md harvest checklist (2026-09-02T13:xxZ)"
+      ],
+      "missed": [
+        "W38 harvest 2026-09-02T12:15Z -- not yet delivered to a field batch-desk reads",
+        "W39 harvest 2026-09-02T18:30Z -- delivered to the charter checklist and still dropped; the wave file's harvest_obligations, which the round IS driven by, had no row for it"
+      ],
+      "done_when": {
+        "kind": "json_value",
+        "path": "tools/batch_test/soak/rec_slot_baseline.json",
+        "key": "rec_slots",
+        "equals": 8
+      },
+      "done_when_note": "This is the acceptance criterion the ruling itself wrote: the new profile header says `\"rec_slots\": 8` verbatim. It does NOT check that the corpus used was W37+W38, and it cannot."
+    }
+  ]
+}

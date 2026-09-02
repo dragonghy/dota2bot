@@ -113,6 +113,68 @@ LIMITS FOR THE ORPHAN LEG (in addition to 1-4 below)
    that somebody wrote this id into that row, never an assertion that it is
    the proposal's row.
 
+...and, since 2026-09-02 (director, §DR), the THIRD end of the same path,
+reachable only with `--owed-only`:
+
+  OWED_EXECUTION -- a ruling that WAS delivered, into the very field the
+                ruled party reads, and whose EXECUTION is still owed.
+
+WHY THE OWED LEG EXISTS (2026-09-02T19:xxZ, director; test_set.md §DR)
+----------------------------------------------------------------------
+GH #413's ruling (rebuild `rec_slot_baseline.json` on `--rec-slots 8`; zero
+EC2, zero wave cost) was made at 10:16Z on 2026-09-02 and dropped TWICE the
+same day.
+
+  * W38's harvest round (12:15Z) dropped it, and the director's diagnosis was
+    charter 2.5's: the ruling had gone into a GitHub comment and into the
+    `test_set.md` archive, not into a field the batch desk reads.  The
+    remedy applied that round was to write it into `batch-desk.md`'s harvest
+    checklist, immediately below the GH #412 ruling that the SAME ROUND had
+    obeyed.
+  * W39's harvest round (18:30Z) dropped it AGAIN -- out of the field it had
+    just been delivered into.
+
+So the 2.5 remedy is not sufficient, and W39 says why in its own report.  A
+harvest round is driven by `W<N>_wave.json:harvest_obligations`, a per-wave
+machine-read list; the desk's report walks it item by item ("十二条").  GH
+#412 is item 10 of that list.  GH #413 is charter prose, because the list is
+authored AT LAUNCH and a STANDING obligation -- one that belongs to no
+particular wave -- has no row to be authored into.  The desk then audited
+itself against the list, found twelve of twelve, and was right.
+
+    A complete-looking checklist is what a dropped standing baton looks
+    like, for the same reason `W28_wave.json`'s `skip_not_pass_lines`
+    enumerated seven absences without room for the eighth (GH #332): the
+    missing item has nowhere to be missing FROM.
+
+Hence: not a fourth copy of the ruling, but a home that is machine-read, not
+wave-scoped, and run by every stream in every round.  There is exactly one
+such surface -- `routine_selfcheck.sh` -- so the registry lives at
+`iterations/owed_executions.json` and is read here, under its own selfcheck
+leg (`owed-executions`) so that GH #267's attribution names it rather than
+folding it into `queue-rulings`.
+
+Each row carries a `done_when` the ruling itself can state as an acceptance
+criterion, and the three states are DONE / OWED / UNCERTIFIABLE.  The
+asymmetry is deliberate and is the whole point of the file: a condition that
+could not be READ is never reported as executed.
+
+LIMITS FOR THE OWED LEG (in addition to 1-8 below)
+---------------------------------------------------
+9.  **It cannot see a ruling nobody registered.**  Same shape as
+    `test_wave_gate_keys.py`'s own last limit -- the list is maintained by
+    hand, from the director's rulings, and is not derived from anything.
+    Registering the row IS the act being asked for; the leg only makes
+    forgetting it visible afterwards.
+10. **A row is only as good as its `done_when`.**  `kind: manual` is
+    honestly available and buys nothing but a recurring reminder, so it is
+    reported as OWED with that said in as many words.  A `done_when` that
+    checks the wrong artefact reads DONE while the baton is still on the
+    floor, and no test in this repo can tell.
+11. **It grades the artefact, never the work.**  §DO's row asks whether the
+    committed profile says `rec_slots: 8`; it cannot ask whether the corpus
+    behind it was W37+W38.
+
 LIMITS (read these before quoting the output)
 ---------------------------------------------
 1. **It reports a problem, not a verdict.**  An un-ruled OTHER request may be
@@ -181,6 +243,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 QUEUE = os.path.join(REPO, "iterations", "queue.json")
 TEST_SET = os.path.join(REPO, "iterations", "streams", "test_set.md")
 STATE = os.path.join(REPO, "iterations", "state.json")
+OWED = os.path.join(REPO, "iterations", "owed_executions.json")
 
 # The vocabulary, after the GH #317 ruling (director 2026-08-30).  CLOSED is
 # the authoritative half: a row is open unless it says one of these.  OPEN
@@ -543,6 +606,90 @@ def unknown_status_rows(requests):
     return [r for r in requests if r.get("status") not in known]
 
 
+# ------------------------------------------------------------- OWED_EXECUTION
+
+def load_owed(path=OWED):
+    """Read the owed-execution registry.  A missing file is an EMPTY registry.
+
+    That asymmetry is deliberate.  The registry is written by hand, so "no
+    file" is the honest state of a tree in which no ruling has been
+    registered -- there is nothing to be silent ABOUT.  A file that exists
+    and cannot be parsed is a different animal and is reported (main()).
+    """
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh).get("owed", [])
+
+
+def owed_status(row, repo=REPO):
+    """Evaluate one row's `done_when`.  Returns (state, detail).
+
+    state is DONE / OWED / UNCERTIFIABLE.  A condition that could not be READ
+    yields UNCERTIFIABLE, never DONE (GH #171's rule, and here the failure
+    direction is what matters: a vanished artefact must not read as
+    "executed").
+    """
+    cond = row.get("done_when") or {}
+    kind = cond.get("kind")
+    if kind == "manual":
+        return ("OWED",
+                "no machine check (kind=manual) -- this row is a reminder, not a gate")
+    if kind not in ("json_value", "path_exists", "path_absent"):
+        return "UNCERTIFIABLE", "done_when kind %r is not one this tool can read" % (kind,)
+    rel = cond.get("path") or ""
+    full = os.path.join(repo, rel)
+    if kind == "path_exists":
+        there = os.path.exists(full)
+        return ("DONE" if there else "OWED",
+                "%s %s" % (rel, "exists" if there else "does not exist yet"))
+    if kind == "path_absent":
+        there = os.path.exists(full)
+        return ("DONE" if not there else "OWED",
+                "%s %s" % (rel, "is still there" if there else "is gone"))
+    try:
+        with open(full, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError) as exc:
+        return "UNCERTIFIABLE", "could not read %s (%s)" % (rel, exc)
+    key = cond.get("key")
+    if not isinstance(doc, dict) or key not in doc:
+        return "UNCERTIFIABLE", "%s carries no key %r" % (rel, key)
+    got, want = doc[key], cond.get("equals")
+    return ("DONE" if got == want else "OWED",
+            "%s:%s = %r (the ruling's acceptance criterion is %r)" % (rel, key, got, want))
+
+
+def render_owed(rows):
+    """Print the OWED_EXECUTION section.  Returns the exit level (0 or 3)."""
+    print("=== owed executions (rulings delivered; execution still owed) ===")
+    print("registry rows: %d" % len(rows))
+    finding = False
+    for row in rows:
+        state, detail = owed_status(row)
+        head = "  %-9s %-22s %-10s executor=%s" % (
+            state, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))
+        print(head)
+        print("      trigger: %s   ruled_at: %s"
+              % (row.get("trigger", "?"), row.get("ruled_at", "?")))
+        print("      done_when: %s" % detail)
+        missed = row.get("missed") or []
+        if missed:
+            print("      already missed %d round(s):" % len(missed))
+            for m in missed:
+                print("        - %s" % m)
+        if state == "DONE":
+            # The baton arrived.  Say so and ask for the row to be retired --
+            # a registry nobody prunes becomes wallpaper, which is the GH #276
+            # failure this file keeps being warned about.
+            print("      -> executed; the director should retire this row")
+        else:
+            finding = True
+    if not rows:
+        print("OWED_EXECUTION: none")
+    return 3 if finding else 0
+
+
 def partition(requests):
     """Open+un-ruled requests, split into (rideshare, other).
 
@@ -563,7 +710,26 @@ def main():
     ap.add_argument("--state", default=STATE)
     ap.add_argument("--no-age", action="store_true",
                     help="skip the git first-appearance lookup (faster)")
+    ap.add_argument("--owed", default=OWED)
+    ap.add_argument("--owed-only", action="store_true",
+                    help="print ONLY the OWED_EXECUTION section (its own "
+                         "selfcheck leg, so GH #267 attribution names it)")
     args = ap.parse_args()
+
+    if args.owed_only:
+        # Deliberately the only mode in which this section prints.  A section
+        # that appeared in the default run too would either lie in the exit
+        # attribution (`queue-rulings` blamed for an owed baton) or print
+        # without counting -- and "printed but does not count" is the exact
+        # family of defect this file exists to stop.
+        try:
+            rows = load_owed(args.owed)
+        except (OSError, ValueError) as exc:
+            print("=== owed executions (rulings delivered; execution still owed) ===")
+            print("UNCERTIFIABLE -- could not read %s (%s). This line is NOT a pass."
+                  % (args.owed, exc))
+            return 2
+        return render_owed(rows)
 
     requests = load_requests(args.queue)
     ride, other = partition(requests)

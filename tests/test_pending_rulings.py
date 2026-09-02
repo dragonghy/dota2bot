@@ -501,6 +501,19 @@ def _run_main(queue_path, census=None):
     return rc, buf.getvalue()
 
 
+def _run_owed(owed_path):
+    """Drive the real main() in --owed-only mode and return (exit code, stdout)."""
+    saved_argv = sys.argv
+    sys.argv = ["pending_rulings.py", "--owed-only", "--owed", owed_path]
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            rc = pr.main()
+    finally:
+        sys.argv = saved_argv
+    return rc, buf.getvalue()
+
+
 def _row(qid, path, extra=None):
     row = {"id": qid, "stream": "strategy", "bundle": "", "status": "pending",
            "priority": 3, "question": "rides along; edits %s" % path,
@@ -585,6 +598,108 @@ check("UNCERTIFIABLE" in out8 and "NOT read this round" in out8,
       "a census that could not run left the hold looking checked")
 check("STILL BLOCKED" not in out8,
       "the watch asserted a hold still stands on a reading it never took")
+
+# ---------------------------------------------------------------- INVARIANT 4
+# (§DR, director 2026-09-02T19:xxZ.)  The OWED_EXECUTION leg must fire on ITS
+# OWN FOUNDING CASE: GH #413's ruling, delivered into the field the batch desk
+# reads and STILL not executed a round later.  The row below rebuilds exactly
+# that state -- the acceptance criterion the ruling itself wrote (`rec_slots:
+# 8`), evaluated against a profile that still says 1 -- and requires an OWED
+# with the executor named, because a finding nobody can route is a finding
+# nobody acts on.
+#
+# What invariant 4 does NOT assert: that the real registry is currently empty.
+# An owed baton is what the registry is FOR, and reddening every stream's test
+# run over the director's outbox is how a detector stops being read -- the
+# invariant-3 reasoning, one leg over.  The exit-3 selfcheck leg reports it.
+# What IS pinned on the real tree is row health: every row carries the fields a
+# reader needs to route it, and a `done_when` this tool can actually evaluate.
+
+_owed_dir = os.path.join(tmp, "owed")
+os.makedirs(_owed_dir, exist_ok=True)
+
+
+def _profile(name, rec_slots):
+    path = os.path.join(_owed_dir, name)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"rec_slots": rec_slots, "games": 305}, fh)
+    return path
+
+
+def _owed_registry(name, rows):
+    path = os.path.join(_owed_dir, name)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"owed": rows}, fh)
+    return path
+
+
+def _row_413(done_when):
+    # Absolute paths on purpose: os.path.join(REPO, abs) == abs, so the row
+    # drives the real main() against a temp artefact without a repo write.
+    return {"id": "recslot8_baseline", "issue": "GH #413",
+            "executor": "batch-desk", "trigger": "the next harvest round",
+            "ruled_at": "2026-09-02T10:16Z", "ruling": "rebuild the baseline",
+            "done_when": done_when}
+
+
+def _jv(path):
+    return {"kind": "json_value", "path": path, "key": "rec_slots", "equals": 8}
+
+
+rc9, out9 = _run_owed(_owed_registry(
+    "owed_open.json", [_row_413(_jv(_profile("still_1.json", 1)))]))
+check("OWED" in out9 and "recslot8_baseline" in out9,
+      "the founding case did not produce an OWED row")
+check("batch-desk" in out9 and "GH #413" in out9,
+      "an owed baton was reported without naming its executor and its issue")
+check(rc9 == 3, "an owed execution did not redden the exit code (got %d, want 3)" % rc9)
+
+rc10, out10 = _run_owed(_owed_registry(
+    "owed_done.json", [_row_413(_jv(_profile("rebuilt_8.json", 8)))]))
+check("DONE" in out10 and "retire" in out10,
+      "an executed ruling was not reported DONE with a call to retire the row")
+check(rc10 == 0,
+      "a satisfied done_when still reddened the exit code (got %d, want 0)" % rc10)
+
+rc11, out11 = _run_owed(_owed_registry(
+    "owed_gone.json", [_row_413(_jv(os.path.join(_owed_dir, "no_such.json")))]))
+check("UNCERTIFIABLE" in out11,
+      "a done_when whose artefact vanished was not reported UNCERTIFIABLE")
+check("DONE" not in out11,
+      "a condition that could not be READ was reported as executed")
+check(rc11 == 3, "an unreadable done_when read as a pass (got %d, want 3)" % rc11)
+
+rc12, out12 = _run_owed(_owed_registry(
+    "owed_manual.json", [_row_413({"kind": "manual"})]))
+check("no machine check" in out12 and rc12 == 3,
+      "a manual row pretended to be a gate, or stopped reddening")
+
+rc13, out13 = _run_owed(_owed_registry(
+    "owed_bogus.json", [_row_413({"kind": "vibes"})]))
+check("UNCERTIFIABLE" in out13 and rc13 == 3,
+      "an unknown done_when kind was silently accepted")
+
+rc14, out14 = _run_owed(_owed_registry("owed_empty.json", []))
+check("OWED_EXECUTION: none" in out14 and rc14 == 0,
+      "an empty registry did not read clean")
+
+_broken = os.path.join(_owed_dir, "owed_broken.json")
+with open(_broken, "w", encoding="utf-8") as fh:
+    fh.write("{not json")
+rc15, out15 = _run_owed(_broken)
+check("UNCERTIFIABLE" in out15 and rc15 == 2,
+      "a registry that could not be parsed read as a clean registry "
+      "(got %d, want 2)" % rc15)
+
+check(pr.load_owed(os.path.join(_owed_dir, "no_registry_here.json")) == [],
+      "a missing registry raised instead of reading as empty")
+
+for _r in pr.load_owed():
+    for _f in ("id", "issue", "executor", "trigger", "done_when"):
+        check(_r.get(_f), "real owed row %r is missing %s" % (_r.get("id"), _f))
+    _st, _ = pr.owed_status(_r)
+    check(_st in ("DONE", "OWED", "UNCERTIFIABLE"),
+          "real owed row %r produced an unknown state" % _r.get("id"))
 
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:

@@ -239,6 +239,37 @@ else
     unchecked 'the un-ruled-queue check'
 fi
 
+# [director 2026-09-02T19:xxZ, test_set.md §DR] The THIRD end of the same path,
+# and the one the other two legs are blind to: a ruling that WAS delivered into
+# the field the ruled party reads, and was still not executed.
+#
+# Founding case, measured twice in one day.  GH #413's ruling (rebuild the
+# rec-slot baseline on `--rec-slots 8`; zero EC2, zero wave cost) was dropped by
+# W38's harvest round, re-delivered that afternoon into `batch-desk.md`'s
+# harvest checklist -- one line below the GH #412 ruling that the same round HAD
+# obeyed -- and dropped again by W39's harvest round.  Charter 2.5's remedy
+# ("land it in the machine-read field") had been applied and was not enough: a
+# harvest round is driven by `W<N>_wave.json:harvest_obligations`, which is
+# written AT LAUNCH, so a STANDING obligation has no row to be written into.
+# The desk then audited twelve of twelve obligations, correctly, and the
+# thirteenth had nowhere to be missing from (GH #332's shape).
+#
+# So the fix is not a fourth copy of the ruling.  It is a home that is
+# machine-read, not wave-scoped, and run by every stream every round -- and this
+# wrapper is the only such surface.  Cheap: it reads one JSON file.
+#
+# Its OWN leg on purpose: GH #267 4b's whole point is that the summary channel
+# must say WHICH leg found something, and "queue-rulings" would have been a
+# quiet lie about a different end of the path.
+sc_leg 'owed-executions'
+printf '\n=== owed executions (delivered rulings, execution still owed) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/pending_rulings.py --owed-only
+    note $?
+else
+    unchecked 'the owed-execution check'
+fi
+
 # Added 2026-08-28T19:xxZ (strategy).  The leg above watches ONE end of the
 # delivery path -- a request nobody ruled.  The other end had nothing on it:
 # a stream still recording "等总监裁 `X` 入集(仍挂着)" after that ruling

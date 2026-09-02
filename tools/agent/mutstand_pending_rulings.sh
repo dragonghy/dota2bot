@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Mutation stand for the domain-price and domain-watch legs of
-# tools/agent/pending_rulings.py (director 2026-09-01, test_set.md §DH).
+# Mutation stand for the domain-price, domain-watch and owed-execution legs of
+# tools/agent/pending_rulings.py (director 2026-09-01 §DH; owed leg 2026-09-02 §DR).
 # Not part of any suite -- run by hand when either leg or
 # tests/test_pending_rulings.py is edited.
 #
@@ -73,6 +73,20 @@ PAIRS = {
     "M9": ('''for hero, n, _weak in (domain_price(r, counts, weak) if counts is not None
                                    else []):''',
            "for hero, n, _weak in domain_price(r, counts or {}, weak):"),
+    # -- the owed-execution leg (§DR, 2026-09-02) ---------------------------
+    # M10 is the one that matters most: it is the failure DIRECTION the leg
+    # was built around -- an artefact that cannot be read must never read as
+    # "the ruling was executed".
+    "M10": ('        return "UNCERTIFIABLE", "could not read %s (%s)" % (rel, exc)',
+            '        return "DONE", "could not read %s (%s)" % (rel, exc)'),
+    "M11": ("    return 3 if finding else 0", "    return 0"),
+    "M12": ('''        head = "  %-9s %-22s %-10s executor=%s" % (
+            state, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))''',
+            '''        head = "  %-9s %-22s" % (state, row.get("id", "?"))'''),
+    "M13": ('''    if kind == "manual":
+        return ("OWED",''',
+            '''    if kind == "manual":
+        return ("DONE",'''),
 }
 if mut == "M4":
     # the price reddens -- LIMIT 8's inverse, and the shape that turns a fact
@@ -91,7 +105,7 @@ PY
 
 echo "== mutation stand: $SRC / $TEST"
 worst=0
-for m in M1 M2 M3 M4 M5 M6 M7 M8 M9; do
+for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12 M13; do
     purge_pyc
     if ! apply_mutant "$m"; then
         echo "$m  APPLY-FAILED -- stand aborted rather than score a no-op as caught"

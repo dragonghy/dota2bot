@@ -5317,5 +5317,17 @@
     "queue": "无新请求 —— 本轮没有新 id、没有新闸,queue.json 一字未动",
     "issue": "GH #431",
     "report": "iterations/reports/strategy/20260902T162518Z.md"
+  },
+  "owed_execution_leg_20260902": {
+    "what": "GH #413 \u7684\u88c1\u5b9a\u7b2c\u4e8c\u6b21\u88ab\u4e22 \u2014\u2014 \u800c\u8fd9\u4e00\u6b21\u5b83\u662f\u4ece\u300c\u5df2\u6295\u9012\u5230\u88ab\u88c1\u65b9\u8bfb\u7684\u90a3\u4e2a\u5b57\u6bb5\u300d\u91cc\u4e22\u7684",
+    "measurement": "W38 harvest 12:15Z dropped it (not yet delivered); redelivered 13:xxZ into batch-desk.md's harvest checklist, one line below GH #412 which the same round HAD obeyed; W39 harvest 18:30Z dropped it again. Bare read: tools/batch_test/soak/rec_slot_baseline.json still says rec_slots=1 and rec_slot_baseline_recslots1.json does not exist.",
+    "diagnosis": "A harvest round is driven by W<N>_wave.json:harvest_obligations, a per-wave machine-read list the desk audits item by item (twelve of twelve, correctly). GH #412 is item 10 of that list. A STANDING obligation belongs to no wave, so it has no row to be authored into -- the thirteenth item had nowhere to be missing from (GH #332's shape). Charter 2.5 ('deliver into the field the ruled party reads') is true but incomplete: the terminus must be the table THAT ROUND is actually driven by, and a wave-local table cannot hold a standing obligation.",
+    "landed": "iterations/owed_executions.json (registry) + tools/agent/pending_rulings.py --owed-only (third end of the same tool: unruled request / rowless proposal / ruled-but-unexecuted) + routine_selfcheck.sh leg 'owed-executions' (its own leg, per GH #267 4b attribution) + tests/test_pending_rulings.py invariant 4.",
+    "failure_direction": "A done_when that cannot be READ yields UNCERTIFIABLE, never DONE (GH #171).",
+    "verification": "129 checks / 0 failed; mutstand_pending_rulings.sh extended to M1-M13, 13/13 CAUGHT each naming its own defect (M10 unreadable-reads-DONE, M11 never reddens, M12 drops the executor, M13 manual reads DONE), baseline green after restore.",
+    "limits": "Cannot see a ruling nobody registered (hand-maintained list); a row is only as good as its done_when (kind=manual buys a reminder, a wrong path reads DONE with the baton on the floor); it grades the artefact, never the work.",
+    "issue": "GH #413 (stays open -- ruled, execution owed)",
+    "archive": "iterations/streams/test_set.md \u00a7DR",
+    "report": "iterations/reports/director/20260902T190827Z.md"
   }
 }
