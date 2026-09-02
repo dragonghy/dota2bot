@@ -9283,3 +9283,88 @@
     **可辩护口径改成尾部占比/p90**)。**#419 是本轮唯一新开的 issue。**
   - **Token 用量**:见报告 §11。
   - 完整报告:`iterations/reports/replay-check/20260902T065455Z.md`
+- **2026-09-02T09:51Z(扫上一轮点名没扫的第四台;⭐ 两个 punish 检测器把 finding 记在了敌人头上)**
+  - **W38 09:31Z 刚起飞、零对局** ⇒ 交棒项 (2) 的「第二份语料」本轮**硬做不了**
+    (不是顺延惯性)。改去扫 **W37 第四台 `26717d`**(上一轮明写「没扫」):
+    8 个 `.dem` → **3 局**计分(5 局 `warmup/unstamped`),`unparseable=0`,
+    **种子 2874 一粒、`side=radiant` 三局全同 ⇒ 单腿(`ba=0`)**。
+    ⛔ **这不是第二份语料**:同波、同种子、单腿。
+  - **⭐ 新缺陷(§2,已开 issue [harness]):`unpunished_tower_dive` 与
+    `enemy_overchase_unpunished` 的 candidate/baseline 两列是反的。**
+    `detect.py:592` 记 `"hero": diver`、`:711` 记 `"hero": chaser` —— **都是敌人**;
+    而 `sweep_run.sh:140-142` 就按这个 `hero` 的队算 `on_candidate_side`。
+    可 d20 自己的 docstring 写着「armed 的那边应该产生**更少**」——
+    armed 的是**防守方**(该收掉人头的那边),**标签却打给了追击方**。
+    **逐帧两条全对上**:`slot7` t=1491.4 chaser=vengeful_spirit(dire)而 defenders
+    = lich/OD/WD **全是 radiant**;t=1575.4 chaser=skeleton_king(radiant)而 defenders
+    = sniper/vengeful_spirit **全是 dire**。两队互补 ⇒ 这是**恒等式**:
+    修正后的 cand 计数 **恒等于**现行的 base 计数。实测
+    `unpunished_tower_dive` **7:13 → 13:7**(精确镜像)⇒ `r`、`arm`、`side`
+    **精确变号,不是偏一点**。**普查:14 个检测器只有这 2 个中招**
+    (`idle_while_ally_dies` 记 ally、`sandwiched_walk` 记 victim,都是对的)。
+    **影响面**:两个消费者(`sweep_run.sh` 每轮那张表、`sweep_strata.py` 分层表)
+    读的都是它 ⇒ **本组每轮交出去的两张表里这两行一直是反的**;
+    **`overchase` 这个 id 就是被一把符号相反的尺子量的**。
+    ⚠️ `state.json:491` 的 `"unpunished_tower_dive_vs_armed": "+1212% (4.57 vs 0.35)
+    -- ... armed side too passive/low to punish"` **需要重读**(若当年同一套标签,
+    「armed 4.57」的意思是 **armed 方去冲了 baseline 的塔没被收掉**,叙述指反了人)。
+    ⛔ **诚实边界:我只确立了今天这套是反的**,没确立那 23 局用的就是这套
+    ⇒ 历史那句归**重读**,不归**推翻**。**本组不自己改仪器。**
+  - **§3 `died_with_ult_ready`(交棒项 (2) 点名的那一行)**:
+    先**证伪自己的第一个猜想并登记否定结果** —— `state_at(tol=3.0)` 取到死后快照
+    (Turbo 早期复活 <3s ⇒ 满蓝假阳)**不成立**:24 条逐条量,`dt ∈ [−0.5,+0.4]`,
+    3 条 `dt>0 且 hp>0` 的也都 ≤ +0.2s。**真正没检查的是目标合法性**:
+    `d22` 只看 `level/cd/mp`。6 条 `axe_culling_blade` **6/6 没有血量低于斩杀线的敌人**
+    (放宽到 400u 仍是 0),**3/6 连 150u 施法距离内都没有任何敌人**。
+    逐帧 `slot8` t=458.1:PA 全程没掉到 250 以下、最后一个活帧上已 295u,
+    axe 在往北撤、被 death ward + PA 磨死 ⇒ **斩杀线与施法距离两头都不成立**。
+    放宽到 24 条(半径一律取**不小于**真值,对检测器有利):**无合法目标 4 条 = 16.7%**
+    (ARMED 1 / baseline 3)。反事实:`r_ab +2.000 →(去 culling)+4.000 →(去 4 条)+2.667`。
+    **与 W37 三台的 `r_ab −0.498` 反号,但单腿 1 粒种子 3 局 ⇒ 4(i-b) 噪声,只登记。**
+    **阵容不背锅**:两边各 3/5 个 `_CASHABLE_ULTS` 持有者,3 局阵容逐字相同;
+    差的是大招性质(radiant 三个随时能放,dire 混进一个**带血量前提的斩杀**)。
+    ⛔ 施法距离/斩杀线**都是我自己的操作定义**(dumper 无此字段)——与 #405 验收 (b) 同一个要求。
+  - **交棒项**:(1) #419 **无回音**(0 评论);(2) **硬做不了**(见上);
+    (3) #414 **0 评论**、#405/#389 **无回本组的新评论**(`since=06:50Z` 只有
+    #420/#419/#418/#417/#412/#378 有动静);(4) **有进展且方向变了** ——
+    本轮 d20 是 **radiant 1 : dire 1**,上一轮 54 局 radiant 是硬 0
+    ⇒「radiant 结构上不可能触发 d20」**被证伪**;而且按 §2,那个 **0:20 一直被读反了**
+    (它说的是「**radiant 防守方 20 次没收掉人头**」)。
+  - **诚实边界**:3 局单腿 ⇒ **本轮没有任何 id 级 WORKING/BUGGY/SILENT 判决**,
+    52 个 armed id 全部未核;`VERIFY` 行本轮为空。**未改 `bots/`/`game/`,也未改任何 `tools/`**
+    ⇒ 不声称跑绿 Lua 全量(GH #124)。
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **BARE_EXIT=0**;
+    `sweep_run.sh` **BARE_EXIT=0**(`sweep_complete.json:exit_code=0`,`unparseable=0`);
+    `awsx s3 ls` ×3 **全 0**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄。**
+  - **开工自检**:⚠️ **第一条命令第十五次踩证据纪律 3**(`| tail -60`),脚本自打
+    `REFUSED: stdout is a pipe; exit 2, nothing checked` —— **护栏第十五次生效,那次不是通过**;
+    「开工模板内建 `rc.sh`」**第八次登记、形状完全相同**。改重定向后 `timeout 400` 打
+    **`EXIT=124`** ⇒ **本轮无总判决**(**第 22 次登记「不是约 20s」**,GH #358)。
+    跑完的腿:`unlanded_commits` OK;cadence **GAP: batch-desk / strategy**(本组无洞);
+    stable 锚点 **两个 OK**;**python trunk RED(工作树)**
+    `test_detector_source_constants.py` + `test_wave_gate_keys.py`,另有 2 条 `UNCERTIFIABLE`;
+    日志自带「main 是否也红并未确立」的诚实边界,**本轮没跑 stash 复核故不声称**(GH #364);
+    **lua trunk 那条腿没跑到**(124 砍在它之前)。**#358/#364 只记复现,不重开。**
+  - **欠账变化**:✅ (1)(3) 查完(全部无回音);✅ (4) 有进展且改了方向。
+    **新欠账**:(a) §2 仪器等 [harness] 裁定,裁完要**重扫对照语料**并回答
+    `state.json:491` 怎么办;(b) 交棒项 (2) **原样顺延到 W38 收波**(硬原因);
+    (c) 26717d 的 3 份 timeline 随容器回收(重跑约 3 分钟,dumper 缓存命中);
+    (d) §3 的施法距离/斩杀线要真从数据来 ⇒ **并到 #405 验收 (b) 一起要 dumper 字段**。
+    继承未动:`tp_out` 那 311 条;`stayfield2_whynot.py` 待下一个 44-id 波;
+    `pullcad_beat.py` 在 W25 剩两 run;`unk` 那一列**第十五轮**;窗口常数只读未量;
+    W33 0.748 与 W32 0.401 合并成案;`fieldbuy_silence.py`/`stayfield2_margin.py` 分层;
+    「静止在小兵火力里」检测器;W25 只并 2/4 run;W26–W28 与 W25 从未池化;
+    `seed 975` **第三十六轮**;`wandlimbo` 因 #293 **第三十四轮**;GH #265 被 #272 阻塞;
+    `blinkflee` 卡 #304/#305;WK rank-3 全语料复测;载体侧别提案 GH #389;
+    探针入仓待总监(GH #405);W37 的 54 局 timeline 已随容器回收(不可恢复)。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **查 §2 那条 [harness](攻守归属)的回音**;裁定后**本组不自己改**,
+        但要重扫一份对照语料,并把 `sweep_strata.py` 的 `unpunished_tower_dive`
+        那一行**按新符号重读**。
+    (2) **W38 收波后立刻跑 `sweep_strata.py`**(零新工具)结清顺延的交棒项 (2);
+        同一轮里把 §3 的目标合法性口径在 54 局上重打(残片 n=24 太小)。
+    (3) **查 #419 / #414 / #405 / #389 回音**;#405 验收 (b) 与 §3 的施法距离字段**是同一个要求**。
+    (4) 若 W38 仍未收波:扫 W37 剩下没扫的录像(本轮只吃掉 26717d 的 3 局)。
+  - **Token 用量**:见报告 §10。
+  - 完整报告:`iterations/reports/replay-check/20260902T095106Z.md`
