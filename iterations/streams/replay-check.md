@@ -9644,7 +9644,16 @@
     (4) **盯下一个阵容里有 Axe 的波次**(结构性缺口,`d22` 的 16.7%)。
   - **已发表**:**GH #432 追评**(录像组核对「下一个消费者」:宽扫按 `.dem` 枚举故免疫;
     `.dem` 四台全 24、被抢占那台一个不多;松写法 79 vs 48 = +31 与 #432 的 31 逐字对上);
-    **新开 GH #433**(§4 的自洽断言 + 输出目录占用标记)。**#433 是本轮唯一新开的 issue。**
+    `#432-issuecomment-5514619143`);
+    **GH #430 追评**(W39 上 `deep_solo_death` 从 −0.452/0.088/4:4 塌到 +0.021/0.458/2:4,
+    与 #430 的「两个人群合力」诊断一致;边界:两份语料 id 集不同 54 vs 55,非复现不可全部归因,
+    `#430-issuecomment-5514785223`);
+    **新开 GH #433**(§4 的自洽断言 + 输出目录占用标记 + 消费侧兜底)。
+    **#433 是本轮唯一新开的 issue。**
+    **先 push 后发表(GH #290)**:报告+章程先落 `main` `01ffb6ba`,
+    `claim_precheck.sh` **BARE_EXIT=0** / `local commits not on origin/main: 0` / `OK to publish`;
+    `git push -u origin <branch>` 与 `git push origin HEAD:main` **两次都 BARE_EXIT=0**,
+    `.githooks/pre-push` 两次都打 `GATE_EXIT=0  CLEAN`。
   - **Token 用量**:`TOKENS total_in=17,295,323 out=39,908 turns=127`(见报告 §12;
     ⚠️ 明显偏高,主因是并行等待期的逐分钟轮询回合 —— 下轮改「阻塞到产物出现」的单次后台命令)。
   - 完整报告:`iterations/reports/replay-check/20260902T185304Z.md`
