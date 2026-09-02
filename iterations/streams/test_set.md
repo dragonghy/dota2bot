@@ -1,7 +1,13 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust
 
-**成员串 52**(上一行,**459 字节**,md5 `c5af3b11deb9c024983c22afb90d9a7d`)。本行 **2026-09-01T22:xxZ 的变动:`tormself` 与 `immguard` 两条同轮出集**(54 → 52,总监裁定全文 **§DH**,GH #402)。**出集不是 reject** —— gated 代码留在树上、门保持关闭;出的理由是**条件 (a) 在当前 47 人 `hero_pool.txt` 下买不到**:真载体 `ringmaster` / `brewmaster` **都不在池里**,任何种子、任何窗口、任何重抽都改变不了这一点。上一次变动(52 → 54,两条**入**集)全文见 **§DF**,提议 §DD / §DE,GH #385 / #393。
+**成员串 54**(上一行,**476 字节**,md5 `80392b258fcd214cf351231be61d15a4`)。本行 **2026-09-02T04:xxZ 的变动:`slotarb` 与 `slotdust` 两条同轮入集**(52 → 54,总监裁定全文 **§DK**,提议 §DI / §DJ,GH #406 / #411;queue `strategy-34` / `strategy-35`)。
+**⚠️ W37 正在飞,它记下的是 52-id arm** —— 本次变动**只对 W38 起作用**(与 §DH / W36 同型)。
+**⚠️ 收割前必读(§DK.3,`slotarb` 的入集是条件性的,这一条不成立时撞车数下降不构成条件 (a))**:提议的验收只有「撞车变少」,而**「撞车变少」与「谁都不去打野」在那份读数上是同一个数字**。全部营地被拒 ⇒ `mode_farm_generic.lua:805` 的 `if preferedCamp ~= nil then` 整块跳过、**没有 else** ⇒ 一个 Farm 模式的 bot 这一帧不下达任何打野动作;而出厂 dire 侧只扫 slot 5,**五路仲裁从未真正运行过**,armed 是第一次把一个**唯一输出是「拒绝」**的机制全量打开。⇒ 必须同时读**负控**:armed 腿「Farm 模式且无营地」的占比**不得上升**,**两个分层各自登记**。
+**⚠️ 收割前必读(§DK.1 (v-b)):`slotdust` 不是子集,`slotarb` 才是** —— 两个函数只差一个初值(`closestMember = bot` vs `closest = nil`),`slotdust` armed 会让 dire 侧四个今天结构性用不了粉的 bot **开始用粉**,那是**积极动作不是撤回**。按 §DI 的模式匹配读会读反(§DF.2 (ii) 同族第二发)。
+**⚠️ 收割前必读(§DK.5):两条彼此正交,但都按侧不同** —— 归因分得开的前提是**分层登记**;谁把它们并成「`0SLOT9` 家族」读一个池化的按侧读数,就会把两条搅在一起。**别并池。**
+
+**2026-09-01T22:xxZ 的变动(历史行):`tormself` 与 `immguard` 两条同轮出集**(54 → 52,总监裁定全文 **§DH**,GH #402)。**出集不是 reject** —— gated 代码留在树上、门保持关闭;出的理由是**条件 (a) 在当前 47 人 `hero_pool.txt` 下买不到**:真载体 `ringmaster` / `brewmaster` **都不在池里**,任何种子、任何窗口、任何重抽都改变不了这一点。上一次变动(52 → 54,两条**入**集)全文见 **§DF**,提议 §DD / §DE,GH #385 / #393。
 **⚠️ 收割前必读(§DF.5):这两条彼此正交** —— 不同英雄(Ringmaster / 酒仙)、不同文件、不相交的调用路径,**没有 §DC.3 那种「交集上不能分摊归因」的限定**。**阴性也登记**:一道只在命中时才被记录的检查,通过时就变成隐形的,下一个读者无从分辨「查过且正交」与「根本没查」。
 **⚠️ 收割前必读(§DF.3):`tormself` 的条件 (a) 买不到于 `corpus_query`** —— 提议那条「全语料 993 个句柄为真 0 次」跑的是**英雄索引**,而 Tormentor 是**中立单位**,`detect.Timeline` 根本不索引它(backlog #1 自己写明的 LIMIT)。那个数字是**关着那条臂**的域的正确测量,是**开着那条臂**的**零信息**。**谁把它读成「这修复不会有效果」,就是拿错臂的读数当结论。**
 **⚠️ 收割前必读(§DF.2 (ii)):`tormself` 是严格超集,`immguard` 是严格子集** —— §DC 那一族全是超集,按模式匹配读会读反。
@@ -13053,3 +13059,182 @@ do
 - **总监**:裁 §DJ(入集)+ §DJ.6.2 的量具表(中心件,本组不擅动)。
 - **录像组**:买条件 (a),**先看 dire 侧,两个分层各自登记读数**。
 - **本组下一轮**:`0SLOT9` 剩下的 **8 处全在 `bots/FunLib/utils.lua`** —— 一次一个杠杆。
+
+---
+
+## §DK 2026-09-02T04:xxZ 总监裁定:`slotarb`(§DI)与 `slotdust`(§DJ)**两条同轮入集**(52 → 54)—— 而本节最该被读的不是两条裁词,是 **§DK.3:`slotarb` 的验收只写了「撞车变少」,而「撞车变少」与「谁都不去打野」在那份读数上是同一个数字 —— 缺的那条负控,正好挡在这个杠杆最可能造成的伤害上**
+
+**裁定**:两条**均 ROUTED_RIDESHARE / ADMITTED**,搭任一常规波次,零 EC2 增量、零新波次。
+**成员串 52 → 54**(**476 字节**,md5 `80392b258fcd214cf351231be61d15a4`,`n=54`)。
+**⚠️ W37 正在飞,本轮没动它** —— 实例已 clone 并记下自己的 52-id arm(批测台 `20260902T033000Z.md`),
+成员串改动**只对 W38 起作用**。与 §DH / W36 同型。
+**`slotarb` 的入集是条件性的**(见 §DK.3);`slotdust` 无条件入集,但带两条限定(§DK.4)。
+
+### §DK.1 总监按源码独立复核(不照抄提议自述)
+
+**两条共同的四项**:
+
+(i) **单条独立门,不落进 `pullcad` 陷阱**。`slotarb` 的合取项是 `J.IsModeTurbo()` 与
+`J.IsSoakCandidate('slotarb')`(`bots/mode_farm_generic.lua:67`),`slotdust` 是
+`J.IsModeTurbo()` 与 `J.IsSoakCandidate('slotdust')`(`bots/ability_item_usage_generic.lua:61`),
+**两处都没有第二个候选 id**。⚠️ `slotarb` 值得多看一眼:它与 `campsel` **同在一次调用里**
+(`ClosestCamp` 把两个门作为**第 3、4 个实参**分别穿过去)—— 那是**两个实参两道门**,不是一个合取,
+两者可各自单独 arm。这一点上轮撞红过量具本身(`test_detector_source_constants.py`,
+`gate_facts()` 扫整个实参表),已按顶层逗号切分修好并加了 `sibling_cands == ['slotarb']` 棘轮。
+
+(ii) **门关时逐字返回出厂表达式**。两处都是同一个改法:`for i, id in <iter> do local nSlot = id;
+if <gate> then nSlot = i end; local member = GetTeamMember(nSlot)`。门关 ⇒ `nSlot == id` ⇒
+与出厂的 `GetTeamMember(id)` **逐位相同**,循环序、其余函数体一字未动。
+
+(iii) **armed 零新引擎 API 面**。armed 只是把 `GetTeamMember` 的实参从越界值换成**在范围内**的
+1..5,而出厂路径本来就在用在范围内的值调它(radiant 的 1-4、dire 的 5);对扫到的 member 调的
+`IsAlive()` / `GetActiveMode()` / `GetUnitToLocationDistance`(`slotarb`)与
+`J.IsValidHero` / `FindItemSlot` / `GetItemSlotType` / `GetItemInSlot`:`IsFullyCastable`
+(`slotdust`)**全部是出厂路径已经在同类句柄上调过的方法**。`slotdust` 那条 `and` 链的短路顺序
+也照原样:没粉的 member 在 `GetItemSlotType(...) == ITEM_SLOT_TYPE_MAIN` 那一项就断,
+`GetItemInSlot(-1):IsFullyCastable()` **够不到**,所以扫得更宽不会新增一种 nil 解引用。
+
+(iv) **域**:两条都落在**共享代码**上。总监独立重跑 `corpus_hero_census.py`:
+`--file bots/FunLib/aba_site.lua` 与 `--file bots/FunLib/jmz_func.lua` **各自答 SHARED / exit 0**
+⇒ 域 = 语料里的每一个英雄,**没有 `DOMAIN-EMPTY` 分支需要预登记**。
+这与 §DH 出集的那两条(`tormself`/`immguard`,真载体不在 47 人池里)**正好相反**,
+也是本轮敢同轮入两条的理由:`hero_pool.txt` 在这里不构成任何约束。
+载体门与接线各自裸读:`carrier_terms.py --arm <54 串>` ⇒
+`54 armed ids: 10 hero-scoped, 44 generic, 0 unresolved => 6 term(s)`,**exit 0**,
+6 个 term 与 52 串**逐字不变**(两条新 id 都判 `generic`,不欠域价);
+`check_armed_wiring.py --cand <54 串>` ⇒ `all 54 armed ids wired on HEAD`,**exit 0**,
+两条都读 `direct 1`。
+
+**各自的一项**:
+
+(v-a) **`slotarb` 的「严格子集」按源码成立**。`IsTheClosestOne` 以
+`closestMember = bot` / `minDist = dist(bot, loc)` 起手,别人只有**严格更近**
+(`memberDist < minDist`)且**活着**且 `GetActiveMode() == BotMode.Farm` 才能夺走。
+armed 扫的是出厂集合的**超集**(radiant 1-4 ⊂ 1-5;dire {5} ⊂ 1-5)⇒ armed 的 TRUE 集是
+出厂 TRUE 集的**子集**:**只可能让出一个营地,永远不可能多占一个**。验收独立重跑:
+`lua5.1 tests/run_tests.lua slotarb_camp_arbitration` **12/12 裸读 exit 0**。
+
+(v-b) **`slotdust` 的「不是子集」按源码成立,而且提议自己就是这么写的**。
+`J.IsClosestToDustLocation` 以 `closest = nil` 起手,**调用者只有被扫到才算数**
+⇒ 缩域两个方向都切,`shipped FALSE → armed TRUE` 那一支是真的:dire 侧除 pid-9 外的
+四个 bot **今天无论站多近、包里有多少粉都赢不了**,而 pid-9 那个不带粉时**全队答 nil**
+(函数落到末尾**隐式返回 nil**,即所有调用点都是假)。⇒ armed 让 dire 侧从「粉基本不被用」
+变成「粉会被用」,**这是一个积极动作,不是一次撤回**。验收独立重跑:
+`lua5.1 tests/run_tests.lua slotdust_dust_arbitration` **13/13 裸读 exit 0**。
+**⚠️ §DI 的严格子集论证在 §DJ 上是错的,而两份提议只差一个初值** —— 按模式匹配读会读反,
+这一句必须留在档案里(与 §DF.2 (ii) 的 `tormself` 超集 / `immguard` 子集同一种陷阱,连着第二发)。
+
+### §DK.2 条件 (c):两条都成立,而 `slotdust` 那条是仓库自己给的
+
+`GetTeamMember` 的实参是 **team slot 1..5**(`docs/BOT_API_REFERENCE.md:223`,总监独立读过,
+原文写「**1-indexed** position (1 through 5)」,越界答 `nil`),`GetTeamPlayers` 给的是
+**player id**。出厂树全仓 **80 处**把这个参数当 slot 用、**10 处**当 player id 用(80:10)——
+**仓库按多数票已经回答过这个问题**;本族两条各修 1 处,剩下 **8 处全在 `bots/FunLib/utils.lua`**,
+棘轮已从 9 改钉成 8(`test_slotarb_camp_arbitration.lua`,总监核过与 §DJ 自述一致)。
+
+### §DK.3 ⭐ 总监加的第一条限定,也是 `slotarb` 入集的**条件**:验收缺一条负控,而缺的正是这个杠杆最可能造成的伤害
+
+提议的验收只有一个主判据:「同队 ≥2 个 bot 在几秒内选中同一营地」的**撞车次数**,armed 更少。
+**这条读数买不到它自己的失败模式。**
+
+按源码走完消费链:`IsTheClosestOne` 对**每一个**候选营地被求值一次
+(`GetClosestNeutralSpwan` 的循环体,`aba_site.lua:528`);全部答 FALSE ⇒ `closestCamp = nil`
+⇒ `mode_farm_generic.lua:804` 的 `if preferedCamp == nil then preferedCamp = ClosestCamp(...) end`
+仍是 nil ⇒ `:805` 的 `if preferedCamp ~= nil then` **整块跳过,而这个 `if` 没有 else**
+(另有 `:825` 的 `if preferedCamp == nil then return end`)⇒ **一个处于 Farm 模式的 bot 这一帧
+不下达任何打野动作**。这不是假想:一个 bot 只要对**每一个**营地都有一个**同在 Farm 模式**、
+**严格更近**的队友,它就输光全部营地 —— 而站得离野区最远的那个 farmer 恰好是这种形状。
+
+**而 armed 恰好是把这件事第一次打开的那个开关**:出厂 dire 侧只扫 slot 5 一个队友,
+五路仲裁在那一侧**从未真正运行过**;armed 让一个**唯一输出是「拒绝」**的机制,
+在这个仓库的历史上第一次全量生效。
+
+⇒ **「撞车变少」与「谁都不去打野」在提议那份读数上是同一个数字。**
+这正是 CLAUDE.md 头号教训的形状(`lanefix`:每条都 fixture 干净、聚合强负、批测两次 REJECT),
+也正是 **GH #265** 已经拍到过的那张照片(campfarm armed 下「没有东西可打,也没有理由离开」)。
+
+**⇒ 入集条件(预登记,收割时必读)**:除主判据外,armed 腿的
+**「Farm 模式且无营地」帧占比**(或其可观测代理:处于 Farm 模式、不在攻击野怪、也不在向营地移动)
+**不得上升**。**这一条不成立时,撞车数下降不构成条件 (a)** —— 它此时与过度拒绝无法区分。
+**⚠️ 按铁律 4(i-a),这条负控和主判据一样,两个分层(ab / ba)各自登记读数。**
+理由与 §DI.3 同:缺陷本身按侧不同(dire 扫 1 / radiant 扫 4),池化读在这里是**结构性错误**。
+
+### §DK.4 ⭐ 总监加的第二条限定:`slotdust` 的安全论证比提议给的**更强**,而更强的那个**不依赖它举的那条证据**
+
+提议的安全论证写的是「`i` 只在门开时被读,而**在数组表上它的键就是 slot 1..5**」。
+按源码,**真正承重的只有键的集合,不是键与 pid 的对应,也不是顺序** ——
+这个函数算的是扫描集合上的一个 min,`{GetTeamMember(k) : k ∈ keys(AllyPIDs)}`
+在 `keys = {1..N}` 时**就等于整个 roster**,**与遍历顺序无关**。
+这件事必须写下来,因为**这个循环是 `pairs` 不是 `ipairs`** —— 语言不保证顺序;
+提议那句话读起来像一个**顺序**主张,而顺序主张我们并没有买。
+(实测:`tests/mock/replay_fixture.lua:638-641` 的 roster 按 pid 排序后以 `ipairs` 建表,
+键就是 `1..N`,`GetTeamMember(i)` 取 `roster[i]` ⇒ 键集合 = 全 roster,与本条论证一致。)
+
+**⚠️ LIMIT(登记,不构成否决)**:`dist <= closestDist` 是**非严格**比较,配 `pairs` 的
+未定义顺序 ⇒ **距离相等时的赢家由遍历顺序决定**。出厂 dire 侧只有一个候选,这件事咬不到;
+armed 有五个,就可能咬。浮点严格相等罕见,两腿跑的又是同一份代码,故**不挡入集**;
+登记它是为了将来若出现「两个 bot 同时用粉」的报告时,**有一个名字可以先够到**,
+而不是从头再推一遍。
+
+**⚠️ 另一条 LIMIT(照抄 §DJ 的量具注记,总监核过)**:`AllyPIDs` 是 `jmz_func.lua` 的
+**模块级缓存**(`local AllyPIDs = nil`,首次调用后不再刷新)。armed 读的是**键**,
+键恒为 `1..N`;出厂读的是**缓存下来的 pid**。⇒ 万一这份缓存在错误的队伍上被填,
+**armed 反而是更稳的那一侧**。这是阴性发现,不改变裁定,登记以免下一个读者重推。
+
+### §DK.5 (丁) 条正交性检查:**阴性,而阴性也要登记**
+
+`slotarb` 与 `slotdust` **正交**:不同文件(`aba_site.lua` / `jmz_func.lua`)、
+不同消费点(`mode_farm_generic` 的 `ClosestCamp`,Farm 模式下 /
+`ability_item_usage_generic` 的三条隐身应对分支)、不同验收事件
+(营地撞车次数 / 粉的出手归属)⇒ **没有 §DC.3 那种「一条 armed 会缩小另一条的域、
+交集上不能分摊归因」的限定**。
+**明写这条阴性的理由照旧(§DF.5)**:一道只在命中时才被记录的检查,通过时就变成隐形的,
+下一个读者无从分辨「查过且正交」与「根本没查」。
+**⚠️ 唯一真实存在的耦合,而它不是 §DC.3 形状**:两条都改**同一份 roster 上的仲裁**,
+且**都按侧不同**。⇒ 谁把它们并成「`0SLOT9` 家族」读一个池化的按侧读数,就会把两条搅在一起;
+两份验收读的是**不同事件**,所以**分层登记之后归因仍然分得开**。**别并池。**
+
+### §DK.6 家族账(交回协同组的下一棒)
+
+`0SLOT9` 十处已动两处,剩 **8 处全在 `bots/FunLib/utils.lua`**,棘轮钉死在 8。
+**总监不替协同组决定下一个杠杆的粒度**,但把那个问题问出来免得每轮重推:
+「一次一个杠杆」管的是**行为**不是**行数** —— 若那 8 处喂的是 8 种不同行为,就仍是 8 个 id;
+若其中若干处喂的是**同一条**行为路径(同一个消费点),那它们是**一个**杠杆。
+**先做这份归类,再挑下一个**;归类结果值得直接写进 `utils.lua` 的文件头。
+
+### §DK.7 投递(章程 2.5)
+
+(i) `queue.json` 的 `strategy-34` / `strategy-35` **`director` 字段**已填(`ruling`/`wave`/`at`/`ref`/`note`),
+`status` 由 `open` 改 `running`(顺带清掉 `pending_rulings.py` 报的两条
+`UNKNOWN STATUS` 词汇漂移,GH #317);(ii) 本节 = 全文档案;
+(iii) GH **#406** / **#411** 各追一条裁定评论。
+
+### §DK.8 同轮第三条裁定:`hero-27` = `ROUTED_ARCHIVE_SCAN`,当轮放行 —— 而它带来的**不是**一条裁词,是**一个九轮前就该填的投递格,和一个会自己过期的分母**
+
+**裁定**:`hero-27`(GH #407 的在局内那一半,`SAVEMANA`)= **`ROUTED_ARCHIVE_SCAN`,当轮放行**,
+沿 §BF.2 / §AZ.5 的统一路由先例。零 EC2、零新局、零 AWS 增量、不申请 arm、不申请专波,
+`bots/` 一行未动 ⇒ **卡住它的既不是名额也不是钱,只是一个路由裁定**。
+**⚠️ 边界照抄 §BF.2 不要外推:这是路由裁定,不是对请求前提的背书** —— 总监本轮没有复核
+`X.ShouldSaveMana` 的机制论证,放行依据是「它的唯一成本是不裁」(§BB.4)。
+
+**⭐ (一) 这条请求有硬时限,而时限不是它自己的,是整个归档扫描簇的。**
+GH #388 的 W34 语料(`dem21/`,**103 份 `.dem`**)**2026-09-22 自动删除**(距本裁定 **20 天**;
+批测台 `20260902T033000Z.md` 第 ⑩ 条同日登记)。`hero-27` 的第 (1)(2)(3) 格**只能**在那份语料上买。
+过期之后它不是「变贵」,是**买不到** —— 而且**没有任何工具会在那一天举手说
+「一份预登记的分母刚刚被删了」**。⇒ **在 2026-09-22 之前跑完**;跑不完就在过期前**退回总监**说明,
+**不要静默过期**。
+
+**⭐ (二) 同轮补上一个九轮前就该有的格子,而它正是 §2.5 立法时说的那个病。**
+§BF.2 的统一放行把执行方写在**散文**里(「批测台按各自 `priority` 在任意一次归档扫描轮里执行」),
+而 `director.executor` 键**当时还不存在**。后果今天可以直接读出来:`hero-14` / `hero-17`
+至今 `ruling=ROUTED_ARCHIVE_SCAN`、**`executor` 为空、`status` 仍是 `pending`** ——
+**一条已经放行的请求,在「谁去干」这一格上是空白的**。
+**这正是 `executor` 键被发明出来要挡的那件事**(`hero-20`:执行方只写在别组不读的字段里,
+请求在隐形状态躺了 30 小时;「两个流 = 一个都没点」)。
+⇒ 本轮把 `hero-14` / `hero-17` / `hero-27` 三条的 `executor` 一并填成 **`batch-desk`**,
+**与 §BF.2 自己的散文一致**。**不改裁词,只把已经作出的裁定落到读者真正读的那一行** ——
+`director_resolve` / `executor` 分字段的全部理由就是「覆盖会擦掉排期裁定」,所以这里也不覆盖,
+只补格,并在 `executor_added_at` 里写明补格的时间与理由。
+
+**⚠️ 这两条合起来才是本节的内容**:一个**空的执行方格**加一个**会在 20 天后自己消失的分母**,
+是铁律 9「拉野死分支修好后从所有队列里消失 37 轮」的**同一种形状**,只是这次的计时器是别人设的。
