@@ -3740,6 +3740,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - 门:静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(容器无 luacheck,
     gate 自己装的 `lua-check`;**没用 `RULE6_BYPASS`**)。动态:受影响文件全量 **19/0**
     (变异台全部还原后复跑)。**全量套件本轮未跑完,报告 §7 只登记已完成的部分,不冒充全绿。**
+    另单独买了「装载时守卫会不会在套件序里被别人的残留弄红」这条:**排在本文件之前
+    且会写 `SIDE_PATH` 的 8 个文件 + 本文件,同一进程按序跑 ⇒ `DRIVER_FAILURES=0`**,
+    跑完 `soak_side.lua` 不存在。**⚠️ 这条读数第一次是空的**(driver 零输出 exit 0,
+    GH #200 那个形状)——**mock 把全局 `print` 吞了**,改 `io.stderr:write` 才拿到数字。
     自检 `SELFCHECK_EXIT=3`,八条腿全跑、`UNCERTIFIABLE: none`;两条 trunk 红
     **都先于本轮**且都有 issue(GH **#394** / GH **#410**),与本轮改动无交集。
   - **交出去的棒**:GH **#417** 追评(树不是变量 + 验收 3 已落地并有变异台),**不关**;
