@@ -4402,7 +4402,16 @@
   `test_detector_source_constants.py`(`illumove_pairs:HP_CUT` UNREGISTERED)。
   **⚠️ 并登记一次读法**:开工自检**开跑于编辑之前、收尾于编辑之后**,
   所以它那条 lua 红**不能当成 trunk 的读数** —— `0MUTPAR`(并行污染)的**同族但更钝的形态:
-  不是并发,是次序**;已在最终树上重跑。
+  不是并发,是次序**;已重跑,lua 那侧只剩既存的 `test_incoming_damage_callsite_census`。
+  **⚠️⚠️ 本轮自己犯的两条(报告 §八)**:(1) **issue #415 发在 `git push` 之前**,
+  窗口约 20 分钟 —— **铁律 6 ⭐2026-08-29 条(GH #290)的复发**;落地后补跑
+  `claim_precheck.sh` 得 **exit 0 / refused 0** 并在 issue 正文顶部写了订正块,
+  **但窗口没造成损失不等于顺序没被违反**。(2) **节号撞车**:本轮提议原编号 §DK,
+  与总监同日的 §DK 撞号(`citation_audit.py` 的 `AMBIGUOUS`,这次发生在发表之后),
+  rebase 时改成 **§DL** 并回填六处。**可复用的一条:节号是先到先得且没有分配器的共享命名空间,
+  写节号之前先 `git fetch origin main` 看一眼尾部,比事后改六处便宜。**
+  顺带:那次 rebase 也带回了总监 04:xxZ 的裁定 —— **`slotarb` 与 `slotdust` 两条同轮入集(52 → 54)**,
+  本组上两轮交出去的棒都接上了。
 - 2026-09-02T01:37Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **backlog 最上面一条 `0SLOT` 逐字交待本组下一轮「候选是 `0SLOT9` 里最像的那个
   (`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**;
