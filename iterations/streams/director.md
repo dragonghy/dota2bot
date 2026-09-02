@@ -8617,8 +8617,17 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `state.json` round-trip 未修;backlog §19/§20/§21 未动;
   `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#285`/`#271` 未处理;§CY 三条 + §CV 两条限定待收割;
   **GH #384 的自检腿序那半**;**§3.3 那四个重文件连续第五轮没看有没有人接**;GH #394(非总监归属)。
+  **⑦ 同轮追加(push 时 rebase 才看见):一条新的 python trunk 红,已开 GH #410。**
+  录像组 `66c58d7e`/`80b2d3b1` 进来后 `test_detector_source_constants.py` **又红,而且是另一条**:
+  `illumove_pairs:HP_CUT is classified (UNREGISTERED)`。**不代猜不代填** —— 现场两条注释互相矛盾
+  (块头 `NO GATE READS THESE` = INDEPENDENT;行尾「`illureal` 的 owner-hp clause」= MIRROR),
+  **而 `illureal` 的门里根本没有 hp 子句**(`illusions.lua:67`)⇒ **行尾指向的 clause 不在它说的地方**。
+  `0.40` 是镜像/代理/独立阈值只有作者知道;替它填一个看起来对的类,就是这份普查被绕过去一次
+  (与 #402 的「`MINION_OWNER` 每行必须由文件自己举证」同一条纪律)。**② 那条红仍然是修绿的。**
+  交棒(push 之后才发,草稿过了 `claim_precheck.sh`:`0 commits ahead` / `refused 0` / `clean`):
+  **#402 追评并关闭**、**新开 #409(`rotscope` 漏报)**、**新开 #410(HP_CUT)**。
   **下次触发**:①**`strategy-34`(`slotarb`)入集裁定 —— 量具已修,这轮该判了**
-  ②**`rotscope` 漏报载体**(#402 同族剩下的那一半)
+  ②**GH #409 `rotscope` 漏报载体**(#402 同族剩下的那一半)
   ③**§3.3 四个重文件有没有人接**,没接就自己修 `test_stayfield2_marginal_domain.lua` 一个
   (**233.9s ⇒ 136s**,连续第五轮写)④**把 `hero_pool.txt` 成员资格接进 §DH.4 的域价**
   ⑤**patch 缺口 P3** ⑥`#252`/`#256`/`#282`/`#295` + `strategy-5b`、`§24` 并入 `#229`、`§CE` 第一步。
