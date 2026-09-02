@@ -148,6 +148,15 @@
   `.demclaim.json` 侧车文件**声称录像存在** ⇒ **「有 claim 无 dem」看起来像丢录像,其实只是找错前缀**。
   `sweep_run.sh:53-57` 已经处理了这个降级(archive 旁找不到就去 `dem21/`),**手工列桶时要自己降级**。
   另:桶名是 `dota2bot-batch-results-4924`(见 `tools/batch_test/aws/aws.env` 的 `S3_BUCKET`),**不是** `dota2bot-batch-results`。
+- **⭐ [2026-09-02 新踩,22.6 倍,GH #176 的第三个判别子] 幻象死后,它的快照流不停 ——
+  坐标冻在死亡那一格、`hp_pct` 归 0、一路发到本局最后一帧。**
+  W36 全语料(44 局)实测:幻象流 `hp>0` 的真实帧 **18,496**,`hp<=0` 的死后冻结帧 **417,678**(**22.6 倍**);
+  最坏的单条流 `20260901_213429_slot8` obsidian_destroyer `idx=1602` **存活 19 帧 / 死后 1,206 帧**。
+  ⇒ **任何按 idx 建幻象帧表而不先过 `hp_pct > 0` 的检测器,95.8% 的「帧」是一只冻死的单位**,
+  而冻结坐标**恰好制造 `starved` / `idle` 那个形状**,即**朝着结论的方向**污染。
+  与 GH #176 ①(名字不是实体键)②(插值 hp 不是生死)同族,但**判别子是第三个**:
+  **不是名字、不是插值,是「实体流在它死后仍然被发」**。参考实现:`illumove_pairs.py` 的
+  `episodes()` 先过 `hp_pct>0`(它的 `--selfcheck` 第 7 项还钉了「copy 流不得早于开门出现」的 idx 锁)。
 - **[2026-08-30 新踩,三条,GH `hero-20` 那轮] `snapshots[].abilities` 是 JSON `null` 不是缺键。**
   开门前(以及技能书还没建起来)的帧上它是 `null` ⇒ **`s.get('abilities', ())` 的第二参数
   永远不会生效**,`for a in s.get('abilities', ())` 当场 `TypeError`。必须写
@@ -8981,3 +8990,94 @@
     W35 的 spot 回收归 #398,**一律只记复现不重开**。
   - **Token 用量**:`TOKENS total_in=10,636,607 out=58,876 turns=79`(见报告 §11)。
   - 完整报告:`iterations/reports/replay-check/20260901T215000Z.md`
+- **2026-09-02T00:50Z(W36 首检:`illumove` 条件 (a) **方向复现**;而 W35 那句「完全分离」**收回**)**:
+  - **⭐ 章程「下一轮第一件事 (1)」结案,而且这次工具入了仓。** 18:49Z 那轮的 `starved%` 普查是
+    **临时脚本、随容器蒸发**,于是本轮本该「按报告重建」。改为把它写成
+    **`tools/batch_test/behavioral/illumove_pairs.py`** —— **以后复现是重跑不是重推导**
+    (`--selfcheck` **BARE_EXIT=0 / 9 of 9 / 8456 rows**;主表 **BARE_EXIT=0**)。
+  - **逐帧(先逐帧后聚合)**:`9fb8e2/20260901_213402_slot7` seed 2838,`side=radiant`,
+    `skeleton_king` team 2 ⇒ **armed 腿**;`modifier_illusion` ADD ×2 在 t=1108,两条幻象流
+    `idx1805`/`idx2574` 同在 t=1108.8 出现(owner `idx1351` 从 **t=−63.2** 就在 ⇒ 出生时刻判别子干净)。
+    65 个配对帧里**最长「一只走一只钉死」只有 2 秒**,且**方向来回换**(1120.8 A 停 / 1138.8 B 停 / 1148.8 A 停)——
+    **不是 #378 §1 那种「一只长期独占句柄」**;对照 18:49Z baseline 腿现场的**整整 12 秒逐位不变**。
+  - **四格(铁律 4(i-a),读数不是局数)**:
+    ```
+    stratum/leg     eps  frames   both%  starved%  neither%  longest_starve
+    ab/armed        238    3607   43.8%     11.9%     44.2%          11 s
+    ab/baseline      92    1390   27.8%     20.5%     51.7%          14 s
+    ba/armed         67    1216   41.4%      8.7%     49.9%          14 s
+    ba/baseline     119    1720   26.0%     30.2%     43.8%          19 s
+    ```
+    **两层同号**(4(i-b) 的判据),**读数跟着 arm 腿走不跟着物理侧走**;⛔ 四格之间一次差也没作。
+    排除项都登记:`unknown dx` **523 帧一律不打分**(填 0 会**制造** `starved`);`>2 只存活` 104 帧按 max/min。
+  - **⭐ 混杂控制比池化百分比硬**:两条腿各 ≥30 帧的英雄 **10/10 armed `starved%` < baseline**
+    (drow 6.6/1160 vs 26.6/685;jugg 14.5/1722 vs 25.3/740;medusa 5.7/739 vs 18.7/900;lich 3.3/30 vs 70.4/115;…)。
+  - **⭐ 归因换了买法**:W35 靠「交集帧 0/435」,**W36 上交集不再是 0**,所以改证「删掉重叠后结论还在」——
+    `--exclude-lowhp`(两条腿都删 owner hp<0.40 的全部帧 = `illureal` 域的**整个上界**)后四格
+    **每格移动 ≤0.4pp**、方向与大小不变 ⇒ §3 读数**可归给 `illumove` 一条**。
+  - **⛔ 更正一:W35 的「episode 级完全分离」不复现。** 18:49Z 报 armed **15/15** ≤3s、baseline **8/8** ≥4s;
+    W36 的 **516 个 episode**(W35 是 23 个)上两腿分布**大幅重叠**:ab/armed 238 个里 **19 个 ≥4s(最大 11s)**、
+    ba/armed 67 个里 3 个(最大 14s),而 baseline 两格有大量 0s。
+    **「15/15 vs 8/8」是 n=23、单粒种子、单套阵容的小样本形状,不是这条 id 的性质**
+    —— 与上一轮「96%→67%」「464→283→124」同族:**形状是真的,分离度不是**。
+    ⇒ **可引用口径收窄为:分层百分比 + 同英雄跨腿 10/10,不再引用「完全分离」。**
+  - **⛔ 更正二:`illureal` 的 `DOMAIN-EMPTY` 必须绑定语料。** W35 armed 腿 **3/1,106 = 0.27%**;
+    W36 **152/5,133 = 3.0%**(约 11 倍,而语料只大 4.6 倍)。`撤退`/`非强势` 仍不可观测 ⇒ 152 是**上界不是域**。
+    **本轮不下新裁定**(不撤销也不改判),只买到这句边界更正。
+  - **核验结论行**:
+    ```
+    VERIFY id=illumove verdict=WORKING episodes=305
+    VERIFY id=illureal verdict=INDETERMINATE episodes=0
+    ```
+    (`episodes=305` = armed 腿 238+67;`illureal` 本轮**没有逐帧核过任何一帧**,故 0 而不是 152。)
+  - **覆盖 / 语料同一性**:宽扫 **44/44 局**(56−12 暖场,`unparseable=0`),
+    `arm_string_census.py --declared <54-id>` **BARE_EXIT=0**、两目录 **MATCH**、arm sha1 `3143409a`;
+    交给工具的串 md5 **`74273b3ce5f58fcb50de769a700ab074` / 477 字节**与 `W36_wave.json` 起飞记录**逐字节相同**;
+    分层 9fb8e2 `radiant:18/dire:8`、3c7e26 `radiant:10/dire:8` ⇒ **ab、ba 都非空**。`.dem` 在 **`dem21/`**。
+  - **条件 (b) 本波买不到(不是没查)**:批测台 00:45Z 已把 W36 胜负通道判 **DEGENERATE**(GH #352,
+    `minority side won 2 of 113`),经济四量 **n=2 且两粒符号相反**;且 **54-id 家族已被 §DH 解散**,
+    这一波再没有下一波可加深。
+  - **⭐ 新工具坑(已写进 §工具坑):幻象死后快照流不停,冻结坐标一路发到局末** ——
+    44 局全语料 `hp>0` **18,496** 帧 vs `hp<=0` **417,678** 帧(**22.6 倍**);
+    不先过 `hp_pct>0` 的检测器,**95.8% 的「帧」是一只冻死的单位**,而冻结**恰好制造 starved/idle**。
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **BARE_EXIT=0**;`get_dumper.sh` **BARE_EXIT=0**
+    (cache HIT `46fe9c6a2b084f9b`);`sweep_run.sh` ×2 **BARE_EXIT=0**;`arm_string_census.py` **BARE_EXIT=0**;
+    `illumove_pairs.py` 主表 / `--exclude-lowhp` / `--selfcheck` 全 **BARE_EXIT=0**。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;**未改 `bots/`/`game/` 任何一行** ⇒
+    不声称跑绿 Lua 全量(GH #124)。**本轮无变异台**(读数直接读 `snapshots` 的坐标与 `hp_pct`;§2 现场不依赖阈值)。
+  - **开工自检**:⚠️ **第一条命令第十二次踩证据纪律 3**(`… | tail -40`),脚本自打
+    `REFUSED: stdout is a pipe; exit 2, nothing checked` —— **护栏第十二次生效,那次不是通过**;
+    「开工模板内建 `rc.sh`」已交出去五轮,**本轮第六次登记、形状完全相同**。改重定向后台跑,
+    **到收尾仍未跑完(>55 分钟)——第十九次登记「不是约 20s」**(GH #358)⇒ **本轮无自检总判决**。
+    已跑完的腿:**stable 锚点 ok**(2 anchors,`bots/ game/` byte-identical);**cadence GAP: batch-desk / strategy**(本组无洞);
+    `rc_wrapper` 变异台 **2 项 UNCERTIFIABLE**(与前两轮逐字相同);**python trunk-red(working tree)**,
+    日志自带「main 是否也红并未确立」的诚实边界,**本轮没跑 stash 复核故不声称**,**GH #364 已在只记复现**。
+    **已有 #358/#364/#383/#394,不新开。**
+  - **诚实边界**:**没有一个数字是效应量**;armed 腿 = **54 个 id 全 armed**,不是隔离实验
+    (归因靠路径唯一性 + 删域不敏感两条论证);**44 局 / 2 粒种子 / 2 套阵容**,⛔ **不可与 W29–W35 并池**;
+    三个阈值(100u/20u/1Hz)是**本工具自己的操作定义,没有 gate 读它们**;
+    两层 episode 数不等(ab 238/92、ba 67/119)⇒ **4(i-d) 不可作差不可加权**;
+    顺带登记物理侧形状 radiant 357 vs dire 159 个 episode ——**那是符的分布不是任何 id 的效应**。
+  - **欠账变化**:✅「下一轮第一件事 (1)」结案 + **工具入仓**;✅ `illumove` 条件 (a) **独立波复现**;
+    ⛔ **收回**「episode 级完全分离」口径;⛔ **更正** `illureal` 的 `DOMAIN-EMPTY` 需绑定语料;
+    ⛔ `illumove` 条件 (b) 仍欠且家族已解散;⛔「第一件事 (2)」WK 语料上重打 `will_reincarnate` 2×2 表**顺延一轮**;
+    ⛔「第一件事 (3)」查 GH #405 回音**顺延一轮**。
+    **新欠账**:(a) W36 的 44 局 timeline **随容器回收**(重跑约 30 分钟 + 约 900 MB,**别当成现成资产**);
+    (b) 收回「完全分离」后 **episode 级还有没有可辩护的口径**(候选:分位数而非最大值);
+    (c) §5 那条 22.6 倍污染**只写进本组章程**,别组检测器若也按 idx 读幻象要主动点名。
+    继承未动:§5 宽扫表按 ab/ba 重打(**第三轮**);`tp_out` 那 311 条;`stayfield2_whynot.py` 待下一个 44-id 波;
+    `pullcad_beat.py` 在 W25 剩两 run;`unk` 那一列**第十二轮**;窗口常数只读未量;
+    W33 0.748 与 W32 0.401 合并成案;`fieldbuy_silence.py`/`stayfield2_margin.py` 分层;
+    「静止在小兵火力里」检测器;W25 只并 2/4 run;W26–W28 与 W25 从未池化;`seed 975` **第三十三轮**;
+    `wandlimbo` 因 #293 **第三十一轮**;GH #265 被 #272 阻塞;`blinkflee` 卡 #304/#305;
+    WK rank-3 全语料复测;载体侧别提案 GH #389;探针入仓待总监(GH #405)。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **`will_reincarnate` 的 §4.3 2×2 表在有 WK 的语料上重打**(顺延一轮,**别再掉**)——
+    W36 语料有 `skeleton_king`,但 timeline 已随容器回收,要重跑 sweep(约 30 分钟)。
+    (2) **查 GH #405 / #390 / #381 / #389 回音**;没接就追评,不要再顺延。
+    (3) **§5 宽扫表按 ab/ba 重打**(零新素材)—— 已连续两轮顺延。
+    (4) 下一个同时 armed `illumove` 的波:**重跑 `illumove_pairs.py`**(不是重建),并回答新欠账 (b)。
+  - **已发表**:见报告 §11(**先 push 后发表**,GH #290)。
+  - **Token 用量**:见报告 §12。
+  - 完整报告:`iterations/reports/replay-check/20260902T005006Z.md`
