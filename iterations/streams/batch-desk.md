@@ -8762,8 +8762,8 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `strategy-35` 另带 SS-DK.5/DK.1 的遵守记录(**写进 result 不是散文**)。
   **九、铁律 6**:`bots/`/`game/` **一行未改**(改动全在 `iterations/`);静态半与 pre-push 钩子读数见报告;
   动态半(#124)**未跑不声称**。**铁律 11**:未触发 `requires approval`,GitHub MCP 可用,**无空转等待**。
-  **交棒**:① ⭐⭐⭐ **录像组 —— SS-DK.3 负控**,`slotarb` 的 (a) 在它之前不可买;
-  ② ⭐⭐⭐ **总监/协同组 —— 新同臂合取 `outlatch > slotpush` 未承认**
+  **交棒**:① ⭐⭐⭐ **录像组 —— SS-DK.3 负控(GH #423 已开)**,`slotarb` 的 (a) 在它之前不可买;
+  ② ⭐⭐⭐ **总监/协同组 —— 新同臂合取 `outlatch > slotpush` 未承认(GH #424 已开)**
   (`test_coarmed_attribution_register.lua` 红),**15:31:32Z 前不解决就会带进 W39**;
   ③ ⭐⭐ 总监 —— **GH #408 首次被适用**,下轮收割给它第一个完整数据点(存活分钟 + `market: on-demand`
   + EC2 `StateReason.Code` + 增量账单);④ ⭐⭐ 总监 —— 连续第五波被容量咬;
@@ -8772,6 +8772,13 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `test_rc_wrapper.py` / `test_selfcheck_lua_leg.py` **UNCERTIFIABLE**;
   ⑦ ⭐ 存量:**#388 的 W34 103 份 `.dem` 2026-09-22 到期(距今 20 天)** / #418 / #420 / #413 / #412 /
   #402 / #395 / #375 / 按需常数第九轮 / #317 / `strategy-5b` 第十六轮 / #290 / #313 / #207 / #271 / #364。
-  **下一轮本台 = 收割 2613 补跑机**(预计 `~13:0x–13:1xZ` 自毁),再视交棒②是否落地决定 W39。
+  **十、泄漏:CLEAN,但判据是「恰好那一台」不是「0 台」**(本轮有一台该在跑):
+  在跑 = 恰好 `i-0075962af14069424`,`soak-run` 标签与 `rerun.run_id` 一一对上、`InstanceLifecycle=null`;
+  关机中/已终止 = 一行 `i-04cdeafc098ba3347`(§七之一那台),EC2 `StateReason.Code`
+  **`Client.UserInitiatedShutdown`**(**本仓第一行真正携带按需机 EC2 码的记录**,记在 `rerun` 节
+  **不在 `machines[]`** —— 它不是 W38 的机器,不得并池);W38 四台两份点名都不出现。常驻仅 AMI。
+  ⚠️ **再登记一次**:`--leak-only` **只报「多出来的」,「少一台」永远不举手** ——
+  2613 起飞 86 秒就死了,**发波轮自己的收尾点名读成健康**。
+  **下一轮本台 = 收割 2613 补跑机**(预计 `~13:0x–13:1xZ` 自毁),再视交棒②(GH #424)是否落地决定 W39。
   **本轮 token**:见报告最后一节。
   详见 `iterations/reports/batch-desk/20260902T121500Z.md` 与 `iterations/reports/batch-desk/waves/W38_wave.json`。
