@@ -322,6 +322,58 @@ local ACKNOWLEDGED = {
     -- Then this becomes a REAL conjunction and nothing here raises its hand.
     -- See test_set.md SS CP (the reading) and SS CQ (the ruling).
     ['creepthink > pulldrag'] = true,
+    -- REAL conjunction, by the gated EARLY RETURN mechanism (same shape as
+    -- `pullthink > pulldrag`), and it is the FIRST row here whose confound is
+    -- SIDE-ASYMMETRIC. mode_outpost_generic.lua `GetDesireHelper`: outlatch's
+    -- gate is the `local bRescan = ...` at :79, and :45 -- above it -- is
+    -- `if J.IsTeamPushingHighGround(bot) then return BOT_MODE_DESIRE_NONE end`,
+    -- which IS slotpush's one gate-resolution wrapper (jmz_func.lua:12263).
+    -- Every frame that predicate answers TRUE on is a frame that never reaches
+    -- :79 => outlatch's armed-leg trigger count is `outlatch AND NOT
+    -- slotpush-veto`, and a pre-admission outlatch (a) is a different quantity.
+    -- DIRECTION, and it is not symmetric between the sides: armed slotpush
+    -- scans 5 of 5 team slots where shipped scans 4 of 5 (radiant, pids 0..4)
+    -- or 1 of 5 (dire, pids 5..9). A wider scan can only make "the team is
+    -- pushing" EASIER to answer TRUE => the veto fires more often armed =>
+    -- frames are REMOVED from outlatch's call site, ~5x more of them on dire
+    -- than on radiant. (Not strictly one-way: utils.lua's own header records
+    -- that shipped can answer TRUE off a hero whose liveness was never checked,
+    -- which armed refuses.) => outlatch's (a) must be registered per stratum;
+    -- a two-stratum sign flip on that count is iron rule 4(i-b) noise, because
+    -- the estimator has a side-correlated confound, not merely side-correlated
+    -- draw. This is the first row here that needs 4(i-b) to be READ, not cited.
+    -- THE OVERLAP IS NOT MARGINAL, which is why this row is not a formality:
+    -- :79 is unreachable until `IsEnemyTier2Down` (:63), and slotpush's
+    -- predicate is TRUE exactly in the late-game state that FOLLOWS tier-2
+    -- falling (a teammate near an enemy second-tier or high-ground tower, or
+    -- within 3000 of the enemy ancient). The veto therefore lands preferentially
+    -- INSIDE outlatch's own domain, not uniformly across the game.
+    -- AND IT IS BEHAVIOURAL, not only a measurement artefact: armed outlatch
+    -- re-scans at most once per game second (OUTPOST_RESCAN_INTERVAL = 1.0) and
+    -- IsTeamPushingSecondTierOrHighGround is memoised for 1 second -- the same
+    -- time scale -- so one veto that lands eats one whole rescan slot. Armed
+    -- slotpush makes armed outlatch slower to close its latch, in precisely the
+    -- phase outlatch exists for.
+    -- WHY §DL.3'S READING DOES NOT ALREADY COVER THIS: the strategy desk read
+    -- these same three nestings (c3 / outlatch / roshgate outer, slotpush inner)
+    -- for test_gated_helper_nesting_census.lua and classified all three as
+    -- (P) parameter gates. That is correct and it answers the FREEZE question --
+    -- "arm the OUTER alone and the inner is still the shipped answer, so the
+    -- lever is not frozen". This file asks the ATTRIBUTION question, which is
+    -- about the all-on wave where BOTH are armed, and (P) says nothing there.
+    -- !! INVALIDATION CONDITION: acknowledging a row turns its light off.
+    -- (1) the :45 early return ceasing to precede the :79 gate in
+    --     GetDesireHelper (either moving);
+    -- (2) `c3` or `roshgate` entering the arm string -- the other two outer ids
+    --     of the same nesting are ALREADY in the census's (P) list, so those two
+    --     pairs go live the day either id is admitted and NOTHING here raises
+    --     its hand;
+    -- (3) `slotpush` being PROMOTED -- then both legs carry the veto and the
+    --     confound leaves the differential, but outlatch (a) readings from
+    --     before and after that day stay incomparable. Retire this row then,
+    --     do not delete it to make anything green.
+    -- See test_set.md SS DN.6 (the reading) and GH #424.
+    ['outlatch > slotpush'] = true,
 }
 
 local tests = {}

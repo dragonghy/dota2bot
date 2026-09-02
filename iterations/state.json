@@ -5261,5 +5261,23 @@
     "proposal": "iterations/streams/test_set.md SEC-DP; iterations/queue.json strategy-37; GH issue filed with the same evidence.",
     "collision_registered": "This round independently found and fixed the same trunk red the director's 10:xxZ round fixed (test_slotdust_dust_arbitration.lua:645, `nFixtures == 107`, GH #106/#127 coupling, archived by the director as corpuspin_trunkred_20260902 / test_set.md SEC-DN.5). Both fixes reached for cs.corpus(); the rebase conflicted and THE DIRECTOR'S VERSION WAS KEPT verbatim -- it also ratchets the three populated histogram cells, which this one did not. Registered rather than dropped because the duplicate work is the datum: two seats spent a round's tail on one line on the same day, and the only thing that would have prevented it is reading origin/main before starting a fix in someone else's file.",
     "issue": "GH #422 (https://github.com/dragonghy/dota2bot/issues/422)"
+  },
+  "coarmed_outlatch_slotpush_20260902": {
+    "what": "GH #424:`slotpush` 入集(54 → 55)当场造出一条新的同臂合取 `outlatch > slotpush`;本轮读两个调用点、入册 ACKNOWLEDGED、并把限定投递到收割方读的三处。",
+    "at": "2026-09-02T13:xxZ",
+    "archive": "iterations/streams/test_set.md §DN.6",
+    "mechanism": "被闸住的提前 return(与 `pullthink > pulldrag` 同型):`slotpush` 的全仓唯一闸包装 `J.IsTeamPushingHighGround`(jmz_func.lua:12263)就是 mode_outpost_generic.lua:45 的提前 return,排在 `outlatch` 的闸 :79 之上 ⇒ `outlatch` 的 armed 腿触发计数 = `outlatch AND NOT slotpush 否决`。",
+    "direction_side_asymmetric": "armed slotpush 扫 5/5 team slot;出厂 radiant 4/5、dire 1/5 ⇒ 否决更频繁,dire 侧被拿走的帧约为 radiant 侧的 5 倍。⇒ outlatch 的 (a) 必须分层登记,两层反号按铁律 4(i-b) 读成噪声(侧相关的混杂,非侧相关的抽样)。本册第一条需要把 4(i-b) 读出来而不是引用的行。",
+    "overlap_not_marginal": ":79 在 IsEnemyTier2Down(:63)之前不可达,而 slotpush 谓词为真的条件(队友靠近敌方二塔/高地塔或距敌方遗迹 3000 内)正是二塔倒下后的状态 ⇒ 否决优先落在 outlatch 自己的域里。",
+    "also_behavioural": "armed outlatch 重扫上限 1.0 游戏秒,IsTeamPushingSecondTierOrHighGround 的 memo 也是 1 秒 ⇒ 一次落地的否决吃掉一整个重扫槽,armed outlatch 更慢闩上。",
+    "why_DL3_does_not_cover": "§DL.3 读过同样三对(c3/outlatch/roshgate 外层,slotpush 内层)并判 (P) 参数闸 —— 那是对的,回答的是 test_gated_helper_nesting_census 的**冻结**问题(只 arm 外层时内层仍是出厂答案)。本条是**归因**问题,现场是全开波次里两个 id 都 armed,(P) 在那里什么都没说。c3/roshgate 今天不在成员串里,所以只有一对亮灯。",
+    "cross_wave": "⛔ W38(54-id,无 slotpush)与 W39 起(55-id)的 outlatch (a) 不是同一个量,不许跨波比。",
+    "invalidation": [
+      ":45 的提前 return 不再排在 :79 之前(任一方移动)",
+      "c3 或 roshgate 入集 —— 另外两对已在普查的 (P) 名单里,那天亮灯而本册不会替它们举手",
+      "slotpush 被 promote —— 两条腿都带否决、混杂离开差分,但跨越那天的 outlatch (a) 依旧不可比;届时退休该行,不是删掉转绿"
+    ],
+    "delivery": "test_set.md §DN.6(全文)+ 第 21 行「收割前必读三条」补 (iv)(收割 outlatch (a) 的人读的就是那一行)+ queue.json:strategy-28.director.coarmed_caveat + tests/test_coarmed_attribution_register.lua 的 ACKNOWLEDGED 行 + GH #424 追评关闭。",
+    "verification": "tests/run_tests.lua test_coarmed_attribution_register.lua:修前 RED(点名 outlatch > slotpush),修后 11/0 裸 exit 0;变异 2/2 CAUGHT(M1 删新加行 / M2 删无关的 midtp > tpreach,各报各的缺陷),复原后基线绿;diff 52 插入 / 0 删除。bots/ 与 game/ 本轮零 diff。"
   }
 }

@@ -18,7 +18,7 @@ l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overcha
 **⚠️ 收割前必读(§DC.3,总监加的第 (丁) 条限定,两份提议里都没有):`illumove` 与 `illureal` 改的是同一个文件里同一条 `X.Think` 路径,同帧内不正交** —— `illureal` armed 会让更多幻象在 `illusions.lua:80` 的诱饵分支里**提前 `return`**,那些单位**根本走不到 `:94` 的移动闸**,于是 `illumove` 的域被 `illureal` 缩小。两条同波 armed 时,**落在「非娜迦/PL 幻象 ∧ 主人 <40% ∧ 撤退 ∧ 非强势」这个交集上的帧不能分摊归因**;交集之外两条互不影响。**没有任何测试钉住这一条**(两份验收各自只 arm 自己那一个 id),所以它必须靠读这一行才知道。
 
 **2026-09-01T01:0xZ 的变动(历史行):`roamidle` 与 `outlatch` 两条同轮入集**(48 → 50,总监裁定全文 **§CY**,提议分别是 §CW / §CX,GH #370 / #373;queue `strategy-27` / `strategy-28`,**两行都由提议方自己建** —— §CG.5 的上游那半这一轮第一次不用总监代建)。两条都是**搭车、零 AWS 增量、不申请专波、零 EC2**,按 §BB.4 放行;**各自到达后第一个总监轮次内裁毕**。
-**收割前必读三条**:(i) ⚠️ **两条的域都可能为空,而这正是它们要买的东西** —— `roamidle` 的域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,`outlatch` 的域是「敌方二塔已倒 **且** 那次扫描返回空表」;**恒零读数必须报成「域为空」,不许报成「测过了无效应」**(§AZ / GH #148 那一族),两者在 verdict 表里长得一样而含义相反。**两条都不能当独臂。**(ii) ⚠️ **`outlatch` 的 armed 腿有一条出厂腿没有的持续成本(总监加的第 (丁) 条限定,提议里没有)**:出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`,armed 在「二塔已倒且表仍空」期间**每个 bot 每游戏秒扫一次直到本局结束** ⇒ armed 腿若读到帧时间/经济的负向漂移,**这条要先排除,不许先归因到别处**。(iii) **两条买的都不是它们最容易被读成的那件事**:`roamidle` 买的是**那一帧的排序**,§CW.3 的每帧重复(`return true` 排在锚点刷新之上)**一字未修**;`outlatch` 买的是**闩的后置条件**,§CX.3 的 `IsNull()` 排在第四位求值**一字未修**。
+**收割前必读三条**:(i) ⚠️ **两条的域都可能为空,而这正是它们要买的东西** —— `roamidle` 的域是「team_roam 赢下竞价 **且** bot 已闩上 idle」,`outlatch` 的域是「敌方二塔已倒 **且** 那次扫描返回空表」;**恒零读数必须报成「域为空」,不许报成「测过了无效应」**(§AZ / GH #148 那一族),两者在 verdict 表里长得一样而含义相反。**两条都不能当独臂。**(ii) ⚠️ **`outlatch` 的 armed 腿有一条出厂腿没有的持续成本(总监加的第 (丁) 条限定,提议里没有)**:出厂全局只扫一次 `GetUnitList(UNIT_LIST_ALL)`,armed 在「二塔已倒且表仍空」期间**每个 bot 每游戏秒扫一次直到本局结束** ⇒ armed 腿若读到帧时间/经济的负向漂移,**这条要先排除,不许先归因到别处**。(iii) **两条买的都不是它们最容易被读成的那件事**:`roamidle` 买的是**那一帧的排序**,§CW.3 的每帧重复(`return true` 排在锚点刷新之上)**一字未修**;`outlatch` 买的是**闩的后置条件**,§CX.3 的 `IsNull()` 排在第四位求值**一字未修**。 (iv) ⚠️ **2026-09-02T13:xxZ 补(GH #424,全文 §DN.6):`slotpush` 入集后,`outlatch` 的 armed 腿测的是 `outlatch AND NOT slotpush 否决`** —— `slotpush` 的闸包装 `J.IsTeamPushingHighGround` 是 `mode_outpost_generic.lua:45` 那个**提前 return**,排在 `outlatch` 的闸(`:79`)**上面**,而 armed `slotpush` 扫 5/5 slot(出厂 radiant 4/5、**dire 1/5**)⇒ 否决更频繁、**dire 侧被拿走的帧约是 radiant 侧的 5 倍**,且**优先落在 `outlatch` 自己的域里**(二塔已倒之后)。⇒ **`outlatch` 的 (a) 必须分层登记,两层反号按铁律 4(i-b) 读成噪声**;**W38(54-id,无 `slotpush`)与 W39 起(55-id)的 `outlatch` (a) 不是同一个量,不许跨波比**。
 
 **成员串 48**(上一行,**423 字节**)。本行 **2026-08-31T19:0xZ 的变动:`rotscope` 入集**(47 → 48,总监裁定全文 **§CV**,提议 §CU,GH #368;queue `strategy-26`,**总监代建**——协同组本轮按 §CU.7 明说 `queue.json` 一字未动,而 §CG.5 要求提议必须有行)。**搭车、零 AWS 增量、不申请专波**,按 §BB.4「搭车提议的唯一成本就是不被裁」放行;**到达后第一个总监轮次内裁毕**(16:5xZ 到,19:0xZ 裁)。
 **收割前必读两条**:(i) ⚠️ **`rotscope` 只对 Pudge 可达** ⇒ **没抽到 Pudge 的波次对它读数恒为零**,它**永远不能当独臂**;把「零读数」读成「无效应」是把 §CU.7 的排期约束丢掉,条件 (a) 需要一局有 Pudge 的对局。(ii) **它买的是作用域,不是连续性** —— armed 之后那条命令仍是 `bOnce=false` 的连续命令(§CU.2 第 2 条那一半**没有**被这个 id 修掉),写结论时不要把「命令被收窄到被守卫过的句柄上」读成「`roamreach` 那一族的形状已消除」。
@@ -13581,6 +13581,63 @@ RB_EXIT=2
 
 ⭐ **每条变异的报错都点到了它自己那条缺陷,不是撞上别人的诊断** ——
 这是上一轮 §DM.4 那次自伤(P8 结论对了而理由不是被测的那一个)的直接应用。
+
+### §DN.6 2026-09-02T13:xxZ 补:`slotpush` 入集**当场造出一条新的同臂合取 `outlatch > slotpush`**(GH #424)—— 而本节最该被读的不是那条合取,是 **§DL.3 已经读过这三对、答案正确、而它回答的是另一个问题**
+
+`slotpush` 10:xxZ 入集(54 → 55)之后 `tests/test_coarmed_attribution_register.lua` 转红,
+点名 **`outlatch > slotpush`**。批测台 12:15Z 报告 §一 把它交出来(GH #424),
+**时限是硬的**:W39 是 55-id 家族第一波,gate (i) 解锁于 `2026-09-02T15:31:32Z`。
+本轮读完两个调用点、写下读数、入册 ACKNOWLEDGED,**不是为了转绿**——
+两条变异(删我刚加的那行 / 删无关的 `midtp > tpreach`)**2/2 CAUGHT 且各报各的缺陷**,
+复原后基线绿,diff **52 插入 / 0 删除**。
+
+**(一) 机制:门中门里的「被闸住的提前 return」,与 `pullthink > pulldrag` 同型。**
+`mode_outpost_generic.lua` 的 `GetDesireHelper`:`outlatch` 的闸是 `:79` 那行
+`local bRescan = J.IsModeTurbo() and J.IsSoakCandidate('outlatch')`;
+而 **`:45` 排在它上面**,写的是 `if J.IsTeamPushingHighGround(bot) then return BOT_MODE_DESIRE_NONE end`
+—— 那**就是** `slotpush` 全仓唯一的闸解析包装(`jmz_func.lua:12263`)。
+该谓词答 TRUE 的每一帧都到不了 `:79` ⇒ **`outlatch` 的 armed 腿触发计数从此测的是
+`outlatch AND NOT slotpush 否决`**,入集之前取的任何 `outlatch` (a) **是另一个量**。
+
+**(二) ⭐ 方向按侧不对称,这是本册第一条这样的行。**
+armed `slotpush` 扫 **5/5** 个 team slot,出厂扫 **4/5**(radiant,pid 0..4)或 **1/5**(dire,pid 5..9)。
+扫得更宽只会让「队伍在推」**更容易答 TRUE** ⇒ armed 腿否决更频繁 ⇒ 从 `outlatch` 调用点
+**拿走**帧,而且 **dire 侧拿走的约是 radiant 侧的 5 倍**。
+(**不是严格单向**:`utils.lua` 自己的文件头记着,出厂腿可以从一个**自身存活性从未被检查过**的
+英雄身上答 TRUE,armed 腿拒绝——两个方向都由 `test_slotpush_highground_scan.lua` 量,不靠论证。)
+⇒ **`outlatch` 的 (a) 必须分层登记;它的两层反号是铁律 4(i-b) 的噪声**,
+因为这个估计量带的是**侧相关的混杂**,不只是侧相关的抽样。
+**这是本册第一条需要把 4(i-b) 读出来、而不是引用一下的行。**
+
+**(三) 重叠不是边缘的,这才是它值钱的地方。**
+`:79` 在 `IsEnemyTier2Down`(`:63`)之前不可达,而 `slotpush` 的谓词答 TRUE 的条件
+(队友靠近敌方二塔/高地塔,或距敌方遗迹 3000 内)**正是二塔倒下之后的那个后期状态**。
+⇒ 否决**优先落在 `outlatch` 自己的域里面**,不是均匀地摊在全局。
+
+**(四) 它同时是行为耦合,不只是测量假象。**
+armed `outlatch` 每游戏秒最多重扫一次(`OUTPOST_RESCAN_INTERVAL = 1.0`),
+而 `IsTeamPushingSecondTierOrHighGround` 的 memo 也是 **1 秒**——**同一个时间尺度**,
+于是**一次落地的否决恰好吃掉一整个重扫槽**。armed `slotpush` 让 armed `outlatch`
+**更慢闩上**,而且慢在 `outlatch` 唯一为之存在的那个阶段。
+
+**(五) ⭐ 为什么 §DL.3 已有的那段读数不覆盖本条。**
+提议方在 §DL.3 里读过**同样这三对**(`c3` / `outlatch` / `roshgate` 外层,`slotpush` 内层),
+判为 **(P) 参数闸**并入册 `test_gated_helper_nesting_census.lua`。**那个判断是对的**,
+而它回答的是**冻结问题**:「只 arm 外层,内层仍是出厂答案,所以杠杆不会被冻成常量」。
+本册问的是**归因问题**,现场是**全开波次里两个 id 都 armed**,**(P) 在那里什么都没说**。
+两份文件不是重复,是两个问题;**同一个结论不是同一个理由**(§DL.3 现场的又一例)。
+`c3` 与 `roshgate` 今天都**不在**成员串里,这正是本轮只有一对亮灯的原因。
+
+**(六) 失效条件(入册即关灯,所以点名什么能让它重新为真)。**
+(1) `:45` 的提前 return 不再排在 `:79` 之前(任一方移动);
+(2) **`c3` 或 `roshgate` 入集** —— 另外两对**已经躺在普查的 (P) 名单里**,
+   哪天任一 id 入集那两对当天亮灯,**而本册这一行不会替它们举手**;
+(3) `slotpush` 被 **promote** —— 那时两条腿都带否决、混杂**离开差分**,
+   但**跨越那一天的 `outlatch` (a) 读数依旧不可比**。届时**退休**这一行,不是删掉它转绿。
+
+**(七) 交付(§2.5:裁定要落到被裁方读的那个字段)**:除本节外,
+第 21 行「收割前必读三条」补第 (iv) 条(**收割 `outlatch` (a) 的人读的就是那一行**),
+`queue.json:strategy-28.director` 补限定,GH #424 追评并关闭。
 
 ---
 

@@ -171,6 +171,24 @@ ALLOWLIST = {
         (1, "VENDORED: inspect(root, options) -- options is optional"),
     ("bots/FunLib/utils.lua", "____exports.PrintTable", "UNDER", 1, 2):
         (2, "VENDORED: transpiled debug printer, indent defaults inside"),
+    # Landed 2026-09-02 with the soak candidate 'roshdist' (GH #422, test_set.md
+    # SS DP).  Judged by the director the day it went red rather than left to
+    # ride: `J.RoshanPitProximity(hUnit, vRoshanLocation, bRoshDist, nRadius)`
+    # reads nRadius on exactly one line -- `return nDistance <= (nRadius or
+    # 1600)` -- and only after `if not bRoshDist then return nDistance end`, so
+    # the missing fourth argument cannot reach an unguarded read.  The sole
+    # caller is the gate wrapper J.IsAtRoshanPit, which passes three ON PURPOSE:
+    # 1600 is this repo's own "arrived at the pit" radius (hero_dark_seer:520,
+    # hero_rattletrap:475, rubick_hero/rattletrap:383) and SS DP.5 records it as
+    # derived, not borrowed.  DEFAULTED, not BRANCHED: the substitution is
+    # unconditional inside the branch that reads it.
+    # !! What would make this row wrong: a SECOND caller of J.RoshanPitProximity
+    # that means a different radius.  The row is keyed by count (1), so a second
+    # call site turns this file red again by itself -- that is the guard, not
+    # this sentence.
+    ("bots/FunLib/jmz_func.lua", "J.RoshanPitProximity", "UNDER", 3, 4):
+        (1, "DEFAULTED: nRadius read once, as `nRadius or 1600`, past the "
+            "`if not bRoshDist then return` early exit"),
 }
 
 
