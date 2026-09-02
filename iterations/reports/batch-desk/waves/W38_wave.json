@@ -55,16 +55,16 @@
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
    "capacity_refusals": 0,
-   "status_code": null,
-   "sir_status_code": null,
-   "create": null,
-   "update": null,
+   "status_code": "instance-terminated-no-capacity",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-02T09:31:48Z",
+   "update": "2026-09-02T09:32:58Z",
    "ec2_state_reason_code": null,
-   "ab": null,
-   "ba": null,
+   "ab": 0,
+   "ba": 0,
    "arm_depth": null,
-   "lifetime_min": null,
-   "scored": null
+   "lifetime_min": 1.17,
+   "scored": false
   },
   {
    "seed": 2665,
@@ -84,16 +84,16 @@
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
    "capacity_refusals": 0,
-   "status_code": null,
-   "sir_status_code": null,
-   "create": null,
-   "update": null,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "create": "2026-09-02T09:31:52Z",
+   "update": "2026-09-02T10:26:19Z",
    "ec2_state_reason_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "lifetime_min": null,
-   "scored": null
+   "ab": 38,
+   "ba": 20,
+   "arm_depth": 26.21,
+   "lifetime_min": 54.45,
+   "scored": true
   },
   {
    "seed": 2761,
@@ -113,16 +113,16 @@
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
    "capacity_refusals": 0,
-   "status_code": null,
-   "sir_status_code": null,
-   "create": null,
-   "update": null,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "create": "2026-09-02T09:31:57Z",
+   "update": "2026-09-02T10:26:14Z",
    "ec2_state_reason_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "lifetime_min": null,
-   "scored": null
+   "ab": 37,
+   "ba": 21,
+   "arm_depth": 26.79,
+   "lifetime_min": 54.28,
+   "scored": true
   },
   {
    "seed": 2840,
@@ -142,22 +142,24 @@
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
    "capacity_refusals": 0,
-   "status_code": null,
-   "sir_status_code": null,
-   "create": null,
-   "update": null,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "create": "2026-09-02T09:32:01Z",
+   "update": "2026-09-02T10:16:39Z",
    "ec2_state_reason_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "lifetime_min": null,
-   "scored": null
+   "ab": 29,
+   "ba": 13,
+   "arm_depth": 17.95,
+   "lifetime_min": 44.63,
+   "scored": true
   }
  ],
  "gates": {
   "(i) >=6h since previous wave": "PASS by guard. W37 took off 2026-09-02T03:31:28Z => unlock 2026-09-02T09:31:28Z. This round triggered ~09:12Z; the launch block's own GATE-I guard held the call and fired at the unlock instant. The ~19 minutes before it went to zero-cost preparation (cost read, four gates, seed search, wave record), not idling. No exception taken.",
   "(ii) something new to test": "PASS on the FIRST branch, not the third. test_set.md changed since W37: `slotarb` and `slotdust` were admitted 2026-09-02T04:xxZ (52 -> 54, director SS-DK, GH #406/#411). The armed configuration is therefore genuinely different from W37's, which is also why this wave does NOT pool with W35/W37. Cumulative seeds for this tree+test-set = 0 before launch, so the third branch would have carried it too.",
-  "(iii) cost fence": "PASS. MTD $3.637 (budgets free channel, snapshot 2026-09-01T17:58:37Z -- the SAME snapshot as the last two rounds, so it carries no new fence information). Fence arithmetic per charter 2(甲) uses MTD + the last 12h of waves at their own market price: 3.637 + W37 measured ~0.60 + W38 estimated spot 0.90 = $5.14 <= $80. Worst case (full downgrade to on-demand at $2.15): $6.39, also <= $80. No owner-visible Budget alert tier ($50/$80/$100) is crossed, so no explanation line is owed."
+  "(iii) cost fence": "PASS. MTD $3.637 (budgets free channel, snapshot 2026-09-01T17:58:37Z -- the SAME snapshot as the last two rounds, so it carries no new fence information). Fence arithmetic per charter 2(甲) uses MTD + the last 12h of waves at their own market price: 3.637 + W37 measured ~0.60 + W38 estimated spot 0.90 = $5.14 <= $80. Worst case (full downgrade to on-demand at $2.15): $6.39, also <= $80. No owner-visible Budget alert tier ($50/$80/$100) is crossed, so no explanation line is owed.",
+  "(iv) inputs -- no harvest owed": "*** WRITTEN AT HARVEST, NOT AT LAUNCH -- the launch round omitted both halves of gate (iv) entirely, and tests/test_wave_gate_keys.py caught it this round (2 FAILs, owner named as the batch desk). Honest reconstruction, not invention: the launch round's own record and the charter tail both show W37 had already been harvested before W38 took off (the record cites 'the 52-id family stays where W37's harvest left it: 4 seeds / 166 games'), so no harvest was owed at launch. What CANNOT be reconstructed is whether the launch round evaluated this as a gate or simply never asked -- the absence of the key is the evidence that it never asked. Recorded as PASS-ON-RECONSTRUCTION, which is weaker than a gate that ran.",
+  "(iv) reclaim_blind (GH #271)": "RAN THIS ROUND (harvest), exit 0: `python3 tools/batch_test/soak/reclaim_blind.py --wave-json iterations/reports/batch-desk/waves/W38_wave.json` => VERDICT 'not blinded -- the wave delivered 3 paired seed(s)'. changeover 40.0 min (measured bracket 34.80 < x <= 40.63, margin 0.63 above the constant); min_arm_depth 8.0. attribution: 1 machine reclaimed BEFORE the flip (seed 2613, 1.2 min, instance-terminated-no-capacity, ab0/ba0 NO-PAIR). NEXT WAVE: spot (GH #158 unchanged). *** Same provenance caveat as the first half: this is the harvest round running a gate the LAUNCH round was supposed to have run. It could only ever have been partial at launch (the wave was 30 seconds old), which is an argument for the launch round to record UNCERTIFIABLE, not for it to record nothing."
  },
  "carrier_gate": "seed_draft.py --assert-carrier-from-arm => CARRIER_GATE ids=10 seeds=4 exit=0; all six terms satisfied=2 (crystal_maiden 2665/2840, lion 2665/2761, obsidian_destroyer 2613/2840, skeleton_king 2613/2761, spirit_breaker 2761/2840, zuus 2613/2665). *** Honest boundary, same as W37: every term is at EXACTLY 2, so losing any single machine drops that term to 1. W33/W35/W36/W37 lost 3/3/4/2 machines respectively.",
  "wiring_gate": "check_armed_wiring.py --cand <54-id string> => exit 0, 'all 54 armed ids wired on HEAD'. *** The first call this round was MY OWN error (positional arg instead of --cand) and returned exit 2 'the following arguments are required: --cand'. exit 2 is not a pass; naming it here because GH #412's founding sentence is exactly 'a self-inflicted refusal read as a real one'. The charter's remembered path bug (a spurious `soak/` segment) is NOT what bit this time -- the real path tools/batch_test/check_armed_wiring.py was used from the first call.",
@@ -181,5 +183,107 @@
   "SS-DK.1 (v-b): slotdust is not a subset -- armed it makes four dire bots START using dust. Reading it as a withdrawal reads it backwards.",
   "SS-DK.5: slotarb and slotdust are orthogonal but both differ by side. Do not pool them into one '0SLOT9' by-side number.",
   "Do NOT pool this wave with W35/W37 (different armed configuration). And per GH #418 any pooling claim now requires a line-by-line read of the gates-closed diff, not an id-set difference."
- ]
+ ],
+ "harvest": {
+  "harvested_at": "2026-09-02T12:1xZ",
+  "path": "standard: recover_verdict.py recomputed from S3 per-game data, four run dirs under one parent (GH #225 layout), NOT the farm's self-produced verdict.",
+  "verdict_exit": 0,
+  "files": "176 seen / 176 loaded / 0 unparseable / 3 source dirs / 0 pooled-basename overrides. The 4th dir (4a60ad, seed 2613) is EMPTY -- 0 files -- which is the machine that died at 86s.",
+  "scored_games": 158,
+  "warmups": "18 (6 per surviving run); 176 loaded - 18 warm-ups = 158 scored.",
+  "unfinished_games": 0,
+  "mean": {
+   "gpm": 7.82,
+   "xpm": -8.55,
+   "deaths": 0.39,
+   "last_hits": -1.72,
+   "winrate": 0.488,
+   "winrate_headroom": 0.025
+  },
+  "comps_better": {
+   "gpm": "2/3",
+   "xpm": "1/3",
+   "deaths": "0/3",
+   "last_hits": "1/3",
+   "winrate": "0/3"
+  },
+  "strata": {
+   "gpm": {
+    "ab": 56.64,
+    "ba": -40.99,
+    "side": 48.81,
+    "sign_flip": true,
+    "side_gt_arm": "3/3"
+   },
+   "xpm": {
+    "ab": 73.31,
+    "ba": -90.42,
+    "side": 81.87,
+    "sign_flip": true,
+    "side_gt_arm": "3/3"
+   },
+   "deaths": {
+    "ab": -1.0,
+    "ba": 1.78,
+    "side": -1.39,
+    "sign_flip": true,
+    "side_gt_arm": "2/3"
+   },
+   "last_hits": {
+    "ab": 14.13,
+    "ba": -17.58,
+    "side": 15.85,
+    "sign_flip": true,
+    "side_gt_arm": "3/3"
+   }
+  },
+  "per_seed_depth": {
+   "2665": 26.21,
+   "2761": 26.79,
+   "2840": 17.95,
+   "2613": null
+  },
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "suggested": "hold_or_reject",
+  "winrate_channel": "DEGENERATE",
+  "winrate_headroom_mean": 0.025,
+  "winrate_note": "DEGENERATE (minority side won 3 of 176 finished games, share 0.0170 < 0.20). Per SS-CT the winrate 0.488 and comps_better winrate 0/3 are NOT readings and must not be cited as rule 2(b) support. Placeholder only.",
+  "script_version_assertion": "PASS -- the 18 warm-up games carry script_version `7196468d`, the 8-char prefix of the pinned SHA 7196468dad960813fa36a90eeaab1f138eab3bc2. This is the FIRST wave launched with --ref <40-char SHA> and this is its acceptance evidence: the instances measured the pinned tree, not main's tip. Load-bearing here, not ceremonial -- origin/main has since moved to d45776868a…, and `git diff 7196468dad..d4577686 -- bots/ game/` is NOT empty (bots/FunLib/jmz_func.lua +44, bots/mode_retreat_generic.lua 1 line).",
+  "arm_assertion": "PASS -- every scored game's script_version carries the full 54-id mirror string ending `…,slotarb,slotdust`, with the s<SEED>:<side> stamp. The armed string used for the recompute was reconstructed from test_set.md line 2 minus `slotpush` and verified by md5: 80392b258fcd214cf351231be61d15a4 / 476 bytes, byte-identical to this record's arm_md5.",
+  "test_set_moved": "*** test_set.md moved from 54 to 55 ids (slotpush admitted, md5 now bfe60fcdfbe466440213541c8f37a254 / 485 bytes) AFTER this wave took off. The harvest therefore used the 54-id string this wave actually flew, not the current file. Reading the current file would have recomputed against a candidate set the corpus never carried.",
+  "corpus_health": "mode=turbo 176/176; natural_end=True 176/176; anomaly_count sum 274 (registered, not interpreted -- the batch desk does not diagnose).",
+  "winrate_bucket_bugfix": "CONFIRMED FIXED: `winrate_independent_of_gold` prints `176/176 games` and winner_by reads {engine_natural: 176}. The GH #108/#352 bucket-name bug (reader read the pre-rename `engine`, printing 0/222 where the truth was 222/222) is gone, exactly as the charter predicted for this wave. The per-wave recurrence log the desk opened 08-29T09:13Z can stop.",
+  "obligations": {
+   "4(i-a) both strata registered": "DONE -- tool-emitted per_seed[].<m>_ab/_ba and strata.<m>; NOT hand-computed (4(i-d)).",
+   "4(i-d) no game-count pooling": "DONE -- per-seed swap-average first, arithmetic mean across the 3 scored seeds.",
+   "SS-CT winrate": "DONE -- channel DEGENERATE, headroom 0.025, winrate written as placeholder only.",
+   "SS-DK.3 slotarb negative control": "NOT DELIVERABLE FROM THIS CORPUS -- see below.",
+   "SS-DK.1 (v-b) slotdust direction": "Registered, no reading taken: slotdust armed makes four dire bots START using dust (an active action, not a withdrawal). Nothing in this harvest reads it either way.",
+   "SS-DK.5 no 0SLOT9 pooling": "HONOURED -- slotarb and slotdust are not pooled into any by-side family number anywhere in this record.",
+   "no pooling with W35/W37": "HONOURED -- W38 stands alone as the 54-id family's first wave, 3 scored seeds."
+  },
+  "dk3_negative_control": "*** CANNOT BE ANSWERED BY THE BATCH DESK'S CORPUS, and this is a structural limit, not a skipped step. SS-DK.3 asks for the armed leg's frame share of 'Farm mode with no camp' (or its observable proxy), registered in BOTH strata. The per-game analysis.json schema carries only log/script_version/winner/winner_by/team_gold/econ_winner/duration/cap/wall/timescale/mode/avg_gpm/players/towers/anomaly_count/anomalies -- there is no mode-state or camp-decision field anywhere in it. The reading needs frame-level behavioural detector output over the .dem files, which is the replay group's tooling, not this desk's. Handed off as a GitHub issue this round. *** Consequence, stated so nobody reads past it: until that negative control exists, `slotarb`'s condition (a) is NOT buyable, because SS-DK.3 makes its admission conditional and 'fewer collisions' and 'nobody jungles at all' are the same number without it.",
+  "cost_estimate_from_hours": "SIR-derived machine time: 54.45 + 54.28 + 44.63 + 1.17 = 154.53 min = 2.576 machine-hours. At the spot band $0.231-0.250/h that is $0.60-0.64 for the wave. *** This is an HOURS-DERIVED ESTIMATE, not a billing-side reading (budgets lags EC2 by 4.3-11.3h and the charter forbids the 'MTD increment matches wave price' trick). It is BELOW the $0.90 charter constant, so the auto-invalidation clause ('any wave whose billing-side cost exceeds $0.90 => name it, director re-adjudicates') is NOT triggered. Registered as an hours reading so a later billing-side check has something to land against."
+ },
+ "rerun": {
+  "seed": 2613,
+  "why": "W38's seed-2613 machine was reclaimed 86 seconds after launch with SIR Status.Code `instance-terminated-no-capacity` (create 09:31:48Z, update 09:32:58Z) and produced ZERO games. Charter step 5 registers the handling in advance: one machine reclaimed = that seed lacks an arm, the seed's paired difference is void, the wave is NOT void, and the missing seed gets one re-run machine.",
+  "market": "on-demand",
+  "market_basis": "GH #408 (director, 2026-09-02) -- the ONE exception to the spot-first ladder, and it applies on the SIR code, not on an impression that the market looks tight. This machine's code IS `instance-terminated-no-capacity`, so the re-run goes straight to --on-demand without walking (1)(2)(3). This is the first application of that ruling.",
+  "instance": "i-0075962af14069424",
+  "run_id": "spot_20260902_121840_1_7196468dad960813fa36a90eeaab1f138eab3bc2_f65fb4",
+  "run_token": "f65fb4",
+  "az": "us-west-2a",
+  "launched": "2026-09-02T12:18:43Z",
+  "instance_lifecycle": "None (null in describe-instances) -- this is the GH #408 registration evidence that the machine really is on-demand. The run_id's `spot_` prefix is a hardcoded string in spot_run.sh and is NOT evidence.",
+  "sir": "none -- an on-demand machine has no spot instance request. Per GH #408's second half its status_code at harvest must carry the EC2 StateReason.Code vocabulary (e.g. Client.UserInitiatedShutdown), NOT SIR vocabulary, and this row already carries \"market\":\"on-demand\" so reclaim_blind.py can tell the two channels apart.",
+  "status_code": null,
+  "ec2_state_reason_code": null,
+  "config": "--count 1 --on-demand --az us-west-2a --ref 7196468dad960813fa36a90eeaab1f138eab3bc2 --slots 16 --hours 2 --rec-slots 8 --validate \"<54-id> 2613 --games 12\"",
+  "ref_pin_is_load_bearing": "The --ref pin is what makes this re-run poolable with the other three seeds. origin/main has moved to d45776868a… and bots/ HAS drifted (jmz_func.lua +44 lines, mode_retreat_generic.lua 1 line). An unpinned re-run would have measured a DIFFERENT TREE than seeds 2665/2761/2840 and the pooled reading would have been corrupted with nothing raising a hand. W37 could not have done this; W38's ref_pin change is what buys it.",
+  "misfire": "*** SELF-INFLICTED, REGISTERED. The first launch attempt (i-04cdeafc098ba3347, run_id spot_20260902_121752_1_7196468dad…_23b452, 12:17:54Z) took spot_run.sh's DEFAULTS -- slots=14, watchdog=3h -- because I passed neither --slots nor --hours, while W38's four machines ran slots=16 / watchdog 2h. Caught by checking the corpus (all four runs show slots 1..16, 4 games each) rather than by trusting the wave record's prose. Terminated at ~1 min old and relaunched matched. Cost of the misfire ~1 machine-minute (~$0.01). The charter's rule 'never change the id set and the acquisition config in the same wave' is exactly what this would have violated, one machine deep inside an already-flown wave. *** HARVEST EXCLUSION: run_id ..._23b452 must NOT be pooled into W38 -- it lived under 2 minutes (W38's machines needed ~10 min to produce a first game, so it is almost certainly empty), but if its S3 prefix holds anything at all, those games ran a 14-slot config.",
+  "fence": "Charter step 5 fences honoured: one re-run per seed (this is 2613's first and only), at most 2 on-demand re-runs per wave (this is 1). *** Gate (i)'s 6h throttle is NOT consumed: it governs ROUTINE waves, and this is a registered repair of an already-flown wave. Gate (i) stays unlocked for W39 at 2026-09-02T15:31:32Z as the previous round recorded.",
+  "expected_self_destruct": "~13:0x-13:1xZ (watchdog cap 2h, historical completion ~0.75h)."
+ }
 }
