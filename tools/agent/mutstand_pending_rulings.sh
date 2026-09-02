@@ -38,6 +38,15 @@ restore() {
         echo "RESTORE FAILED -- $SRC does not match its pre-mutation checksum"; exit 2; }
 }
 
+# A stand that is interrupted between `apply_mutant` and `restore` leaves the
+# MUTANT in the working tree, where the next `git add -A` commits it. That is
+# not hypothetical: see GH #418 and iterations/state.json:slotdust_gh418_20260902
+# -- an un-gated `<` -> `<=` reached main as part of a gated fix, and the round's
+# own mutation log names that exact edit as a mutant it had applied. The trap
+# makes the restore unconditional; the loop still calls restore explicitly, which
+# is harmless because restore is idempotent.
+trap restore EXIT
+
 apply_mutant() {   # $1 = mutant id; writes the mutated source or exits non-zero
     MUT="$1" python3 - "$SRC" <<'PY'
 import os, sys

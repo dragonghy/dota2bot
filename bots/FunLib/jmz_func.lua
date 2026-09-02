@@ -11498,6 +11498,23 @@ local AllyPIDs = nil
 -- Unarmed this is byte-for-byte the shipped function: `nSlot` is `id` and the
 -- loop still walks `pairs(AllyPIDs)` in the shipped order. `i` is read only
 -- when the gate is on, and on an array table its keys ARE the slots 1..5.
+--
+-- THAT SENTENCE WAS FALSE FOR SIX HOURS (GH #418, filed by the batch desk off a
+-- pooling cross-check, not off a code read). The commit that landed the gate
+-- also flipped `dist < closestDist` to `dist <= closestDist` on the line below
+-- -- OUTSIDE the gate, so unarmed games got it too. `<` lets the FIRST-walked
+-- carrier hold a tie, `<=` hands it to the LAST. Restored to `<` here; the tie
+-- is now pinned on a real frame ([tie] in tests/test_slotdust_dust_arbitration.lua)
+-- and the "byte-for-byte" claim is checked against the transcription LINE BY
+-- LINE ([source-parity] in the same file) instead of being taken on trust.
+--
+-- Why the parity battery that was supposed to catch this stayed green: its
+-- reference body was transcribed correctly, but `<` and `<=` can only disagree
+-- when the scan reaches TWO carriers at an equal distance, and unarmed the scan
+-- reaches at most ONE on every fixture in the corpus (histogram in
+-- [domain price]: 101 frames with 0 carriers, 6 with 1, 0 with 2+). A result
+-- comparison run over inputs that cannot separate two bodies is not evidence
+-- that they are the same body.
 function J.IsClosestToDustLocation(bot, loc, bSlotDust)
 	if AllyPIDs == nil then AllyPIDs = GetTeamPlayers(GetTeam()) end
 
@@ -11517,7 +11534,7 @@ function J.IsClosestToDustLocation(bot, loc, bSlotDust)
 		then
 			local dist = GetUnitToLocationDistance(member, loc)
 
-			if dist <= closestDist
+			if dist < closestDist
 			then
 				closest = member
 				closestDist = dist

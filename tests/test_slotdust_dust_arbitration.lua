@@ -542,4 +542,230 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
         ' -- either a fixture arrived with new items, or the namespace hole widened')
 end
 
+--============================================================================
+-- GH #418: the one line in this commit that was never behind the gate.
+--
+-- The batch desk found it while cross-checking whether two waves could be
+-- pooled, NOT by reading the code -- their pooling criterion was "every id that
+-- landed since W35 is absent from the armed string", and this line belongs to
+-- no id at all, so that criterion was structurally unable to see it. The line
+-- was `dist < closestDist` -> `dist <= closestDist`, sitting in the loop body
+-- outside `if bSlotDust then`, i.e. live in shipped games, while the comment
+-- eight lines above it said "unarmed this is byte-for-byte the shipped
+-- function".
+--
+-- The three tests below are the answer in the order the evidence arrived:
+-- what the flip actually decides ([tie]), why the parity battery that was
+-- supposed to catch it could not ([domain price]), and the check that does not
+-- depend on the corpus containing a discriminating input ([source-parity]).
+--============================================================================
+
+-- WHAT `<` vs `<=` DECIDES. Both keep exactly one winner -- this is not the
+-- "several bots each think they own the dust" shape -- but they hand a tie to
+-- opposite ends of the walk: `<` to the FIRST carrier reached, `<=` to the
+-- LAST. Asserted here on a real frame, armed, with the tie built out of the
+-- frame's own geometry rather than asserted to exist.
+tests['[tie] equal distances go to the first carrier walked, not the last'] = function()
+    local J = rf.load(DIRE_FX)
+    local es = assert(member_named('earthshaker'), '[tie] lost earthshaker')
+    local ja = assert(member_named('jakiro'), '[tie] lost jakiro')
+
+    -- Slot order is the walk order (the loop keys an array table), so ES at
+    -- slot 4 is reached before jakiro at slot 5.
+    local _, iES = member_named('earthshaker')
+    local _, iJA = member_named('jakiro')
+    assert(iES == 4 and iJA == 5, '[tie] the two carriers changed slots: ' .. iES .. '/' .. iJA)
+
+    -- The tie itself. The midpoint of the two carriers is equidistant from both
+    -- in exact arithmetic; that it also comes back BIT-equal from the engine
+    -- call is a measurement, so it is asserted rather than assumed. If this
+    -- ever goes red the frame or the distance call moved and the two decision
+    -- assertions below stop being about a tie -- re-measure, do not relax it.
+    local pa, pb = es:GetLocation(), ja:GetLocation()
+    local mid = Vector((pa.x + pb.x) / 2, (pa.y + pb.y) / 2, (pa.z + pb.z) / 2)
+    local dES = GetUnitToLocationDistance(es, mid)
+    local dJA = GetUnitToLocationDistance(ja, mid)
+    assert(dES == dJA, '[tie] the midpoint is no longer an exact tie: ' ..
+        string.format('%.17g vs %.17g', dES, dJA))
+
+    -- Armed, both carriers are in the scan, so the operator decides. `<` gives
+    -- it to ES (walked first). Under the `<=` that GH #418 found live, both of
+    -- these assertions invert.
+    assert(J.IsClosestToDustLocation(es, mid, true) == true,
+        '[tie] the first-walked carrier lost a tie -- `<` became `<=`')
+    assert(J.IsClosestToDustLocation(ja, mid, true) == false,
+        '[tie] the last-walked carrier won a tie -- `<` became `<=`')
+
+    -- The unarmed control, and the whole reason the flip went unnoticed: on
+    -- dire the shipped scan reaches only the pid-5 member, so it sees ONE
+    -- carrier here and the comparison never runs twice. Same frame, same
+    -- location, no tie to break.
+    assert(J.IsClosestToDustLocation(ja, mid, false) == true,
+        '[tie] the shipped scan lost its one reachable carrier')
+    assert(J.IsClosestToDustLocation(es, mid, false) == false,
+        '[tie] the shipped scan reached a carrier it cannot address')
+end
+
+-- WHY THE PARITY BATTERY STAYED GREEN. [off-candidate] compares this helper
+-- against a FAITHFUL transcription of the pre-fix body (its reference says
+-- `dist < closestDist`, and always did) over 60 real cases -- and passed on
+-- every one of them while the tree carried `<=`. Nothing was wrong with the
+-- reference. The inputs were wrong: `<` and `<=` can only disagree where the
+-- scan reaches TWO carriers at an equal distance, and unarmed the scan reaches
+-- at most ONE anywhere in the corpus.
+--
+-- REUSABLE, AND THE POINT OF THE WHOLE SECTION: a result-parity harness run
+-- over inputs that cannot separate two bodies does not report "the bodies
+-- agree", it reports nothing -- in the same green as a harness that checked.
+-- Before trusting one, price the discriminating input.
+tests['[domain price] unarmed, the corpus cannot separate `<` from `<=` at all'] = function()
+    local shipped, armed = {}, {}
+    local nFixtures = 0
+    local p = assert(io.popen('ls tests/fixtures/*.lua'))
+    for path in p:lines() do
+        nFixtures = nFixtures + 1
+        local J = rf.load(path)
+        for _, byPid in ipairs({ true, false }) do
+            local n = 0
+            for i, id in pairs(GetTeamPlayers(GetTeam())) do
+                local member = GetTeamMember(byPid and id or i)
+                if J.IsValidHero(member)
+                and member:GetItemSlotType(member:FindItemSlot('item_dust')) == ITEM_SLOT_TYPE_MAIN
+                and member:GetItemInSlot(member:FindItemSlot('item_dust')):IsFullyCastable()
+                and not J.IsSuspiciousIllusion(member) then
+                    n = n + 1
+                end
+            end
+            local into = byPid and shipped or armed
+            into[n] = (into[n] or 0) + 1
+        end
+    end
+    p:close()
+
+    assert(nFixtures == 107, 'the fixture corpus changed size: ' .. nFixtures ..
+        ' -- re-measure the two histograms below before touching them')
+
+    -- Measured 2026-09-02. The load-bearing cell is shipped[2]: it is absent,
+    -- and while it is absent NO result comparison on this corpus can see the
+    -- unarmed tie-break at all.
+    assert(shipped[0] == 101 and shipped[1] == 6 and shipped[2] == nil,
+        '[domain price] the unarmed carrier histogram moved (0:' .. tostring(shipped[0]) ..
+        ' 1:' .. tostring(shipped[1]) .. ' 2:' .. tostring(shipped[2]) .. '). If a frame ' ..
+        'with two reachable carriers has arrived, the unarmed tie IS now buyable -- ' ..
+        'assert it directly in [tie] instead of leaning on [source-parity].')
+    -- Armed the domain exists, but only just: one frame in 107. That single
+    -- frame is DIRE_FX, and it is what [tie] spends.
+    assert(armed[2] == 1, '[domain price] the armed two-carrier frame is gone (' ..
+        tostring(armed[2]) .. ') -- [tie] has nothing left to stand on')
+end
+
+-- THE CHECK THAT DOES NOT NEED A DISCRIMINATING INPUT. "Unarmed this is the
+-- shipped function" is a claim about SOURCE, so check it against source: diff
+-- the live body against the pre-fix body line by line and require every
+-- difference to be one of the gate's own lines, enumerated here. A line like
+-- the `<=` -- attributable to no gate -- fails this immediately and on an
+-- empty corpus, which is exactly what [off-candidate] cannot do.
+--
+-- Not a replacement for [off-candidate]: that one still answers "does the
+-- unarmed path BEHAVE like the shipped one on real frames", which source
+-- equality of two differing texts cannot. They fail on different mistakes.
+local SHIPPED_SRC = [[
+function J.IsClosestToDustLocation(bot, loc)
+	if AllyPIDs == nil then AllyPIDs = GetTeamPlayers(GetTeam()) end
+
+	local closest = nil
+	local closestDist = 100000
+
+	for _, id in pairs(AllyPIDs)
+	do
+		local member = GetTeamMember(id)
+
+		if J.IsValidHero(member)
+		and member:GetItemSlotType(member:FindItemSlot('item_dust')) == ITEM_SLOT_TYPE_MAIN
+		and member:GetItemInSlot(member:FindItemSlot('item_dust')):IsFullyCastable()
+		and not J.IsSuspiciousIllusion(member)
+		then
+			local dist = GetUnitToLocationDistance(member, loc)
+
+			if dist < closestDist
+			then
+				closest = member
+				closestDist = dist
+			end
+		end
+	end
+
+	if closest ~= nil
+	then
+		return closest == bot
+	end
+end
+]]
+
+-- Every line the gate is allowed to add, and every line it is allowed to
+-- remove. Both lists are exhaustive: an extra difference in either direction
+-- is a finding, not a rounding error.
+local GATE_ADDS = {
+    'function J.IsClosestToDustLocation(bot, loc, bSlotDust)',
+    'for i, id in pairs(AllyPIDs)',
+    'local nSlot = id',
+    'if bSlotDust then nSlot = i end',
+    'local member = GetTeamMember(nSlot)',
+}
+local GATE_DROPS = {
+    'function J.IsClosestToDustLocation(bot, loc)',
+    'for _, id in pairs(AllyPIDs)',
+    'local member = GetTeamMember(id)',
+}
+
+tests['[source-parity] the live body differs from shipped ONLY in the gate lines'] = function()
+    -- Trailing whitespace is not a behaviour difference and the shipped body
+    -- carries some (two tabs after `if J.IsValidHero(member)`), so lines are
+    -- compared trimmed. Everything else -- operators included -- is compared
+    -- as written.
+    local function lines(src)
+        local out = {}
+        for line in strip_comments(src):gmatch('[^\n]+') do
+            local t = line:gsub('^%s+', ''):gsub('%s+$', '')
+            if t ~= '' then out[#out + 1] = t end
+        end
+        return out
+    end
+
+    local whole = read('bots/FunLib/jmz_func.lua')
+    local live = whole:match('\n(function J%.IsClosestToDustLocation%(.-\nend)\n')
+    assert(live ~= nil, '[source-parity] cannot find J.IsClosestToDustLocation in jmz_func.lua')
+
+    local function bag(t)
+        local b = {}
+        for _, v in ipairs(t) do b[v] = (b[v] or 0) + 1 end
+        return b
+    end
+    local a, b = bag(lines(live)), bag(lines(SHIPPED_SRC))
+    local function subtract(x, y)
+        local out = {}
+        for k, n in pairs(x) do
+            local left = n - (y[k] or 0)
+            for _ = 1, left do out[#out + 1] = k end
+        end
+        table.sort(out)
+        return out
+    end
+    local added, dropped = subtract(a, b), subtract(b, a)
+
+    local function expect(got, want, label)
+        local w = {}
+        for _, v in ipairs(want) do w[#w + 1] = v end
+        table.sort(w)
+        assert(#got == #w, '[source-parity] ' .. label .. ': expected ' .. #w ..
+            ' line(s), found ' .. #got .. ' --\n  ' .. table.concat(got, '\n  '))
+        for i = 1, #w do
+            assert(got[i] == w[i], '[source-parity] ' .. label .. ' line ' .. i ..
+                ' is not gate-attributable:\n  got  ' .. got[i] .. '\n  want ' .. w[i])
+        end
+    end
+    expect(added, GATE_ADDS, 'lines the live body adds')
+    expect(dropped, GATE_DROPS, 'lines the live body drops')
+end
+
 return tests
