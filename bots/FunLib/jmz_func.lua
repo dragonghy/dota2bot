@@ -11466,15 +11466,49 @@ function J.GetTormentorWaitingLocation(team)
 end
 
 local AllyPIDs = nil
-function J.IsClosestToDustLocation(bot, loc)
+-- Soak candidate 'slotdust' (turbo-only; resolved in exactly one place, the
+-- ClosestDustCarrier wrapper in bots/ability_item_usage_generic.lua).
+--
+-- SAME DEFECT SHAPE AS 'slotarb' (GH #406), second of the ten pid-shaped call
+-- sites: the loop's DOMAIN is GetTeamPlayers, which hands back PLAYER IDS
+-- (0-4 radiant / 5-9 dire), and its ACCESSOR is GetTeamMember, whose argument
+-- is a team SLOT (1..5 -- docs/BOT_API_REFERENCE.md:223, and both mocks answer
+-- nil out of range). Feeding one to the other does not raise; it silently
+-- shrinks the scanned roster, and the shrink is SIDE-DEPENDENT:
+--   * dire  (ids 5..9): only slot 5 exists  => 1 of 5 teammates ever looked at;
+--   * radiant (ids 0..4): id 0 is out of range and slot 5 is never asked for
+--     => 4 of 5.
+--
+-- WHERE IT DIFFERS FROM 'slotarb', AND WHY THAT MATTERS. IsTheClosestOne seeds
+-- its search with `bot` itself, so the caller is always a candidate there and
+-- armed's TRUE set is a strict SUBSET. This function seeds with `nil`: the
+-- caller wins only by being FOUND in the scan. So the shrink cuts BOTH ways
+-- and armed is NOT a subset of shipped:
+--   * a bot INSIDE the shipped scan can lose to a nearer ally armed reaches
+--     (shipped TRUE -> armed FALSE), and
+--   * a bot OUTSIDE it -- every dire hero but the pid-9 one, and the radiant
+--     slot-5 hero -- can never win today no matter how close it stands or how
+--     much dust it carries (shipped FALSE -> armed TRUE).
+-- On dire that second case is the whole team minus one: the dust/gungir
+-- arbitration is reserved to the pid-9 bot, and answers nil for everybody when
+-- that one bot is not carrying dust. Both directions are asserted on real
+-- frames in tests/test_slotdust_dust_arbitration.lua ([decision D3]/[decision
+-- D4]); no strict-subset claim is made here, because there is not one.
+--
+-- Unarmed this is byte-for-byte the shipped function: `nSlot` is `id` and the
+-- loop still walks `pairs(AllyPIDs)` in the shipped order. `i` is read only
+-- when the gate is on, and on an array table its keys ARE the slots 1..5.
+function J.IsClosestToDustLocation(bot, loc, bSlotDust)
 	if AllyPIDs == nil then AllyPIDs = GetTeamPlayers(GetTeam()) end
 
 	local closest = nil
 	local closestDist = 100000
 
-	for _, id in pairs(AllyPIDs)
+	for i, id in pairs(AllyPIDs)
 	do
-		local member = GetTeamMember(id)
+		local nSlot = id
+		if bSlotDust then nSlot = i end
+		local member = GetTeamMember(nSlot)
 
 		if J.IsValidHero(member)		
 		and member:GetItemSlotType(member:FindItemSlot('item_dust')) == ITEM_SLOT_TYPE_MAIN
@@ -11483,7 +11517,7 @@ function J.IsClosestToDustLocation(bot, loc)
 		then
 			local dist = GetUnitToLocationDistance(member, loc)
 
-			if dist < closestDist
+			if dist <= closestDist
 			then
 				closest = member
 				closestDist = dist

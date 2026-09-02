@@ -19,6 +19,14 @@ local special_value_shapes = require('mock.special_value_shapes')
 
 local M = {}
 
+-- Entity-class name (what the dumper writes) -> engine ITEM name (what bots/
+-- passes to FindItemSlot). See the long note at the inventory construction
+-- below for why these are two different namespaces and why this map is only
+-- as long as the evidence is.
+M.CLASS_TO_ITEM = {
+    dustof_appearance = 'item_dust',
+}
+
 -- ===================================================================
 -- The mana price of an ability, from the game's own KV.
 --
@@ -285,10 +293,32 @@ function M.load(path, sSubject)
         end
         -- Real inventory: slot-ordered item handles ('' = empty slot). The TP
         -- scroll's real cooldown state rides on tp_cd from the dump.
+        --
+        -- ⚠ NAMESPACE (strategy 2026-09-02). The dump does NOT carry the item's
+        -- engine name. The dumper writes `snakeFromClass(GetClassName(),
+        -- "CDOTA_Item_")` -- an ENTITY CLASS name -- and this loader has always
+        -- prefixed it with `item_` and presented the result as if it were the
+        -- name `FindItemSlot`/`GetItemName` take. For most items the two
+        -- coincide ('power_treads' -> item_power_treads) and nothing noticed.
+        -- For the ones where they do not, every inventory predicate in bots/
+        -- that names the item silently finds NOTHING on every fixture, and the
+        -- test reads as a clean pass.
+        -- Measured: 24 of the 114 distinct item names in tests/fixtures/ never
+        -- appear as `item_<name>` anywhere in bots/. That set mixes true
+        -- divergences with items the bot code simply never mentions, so it is a
+        -- CEILING on the damage, not a list of bugs -- see
+        -- tests/test_slotdust_dust_arbitration.lua [instrument I2], which pins
+        -- the count so the hole cannot quietly widen.
+        -- CLASS_TO_ITEM below is the VERIFIED half, and it is deliberately one
+        -- entry: Dust of Appearance is class CDOTA_Item_DustofAppearance (hence
+        -- the modifier spelling `modifier_item_dustofappearance` used in twelve
+        -- places under bots/) but item `item_dust` (bots/item_purchase_generic.lua
+        -- buys that name; bots/FunLib/aba_item.lua:141 lists it). Add an entry
+        -- only with that kind of in-repo evidence for BOTH spellings.
         local slots = {}
         for i, itname in ipairs(u.items or {}) do
             if itname ~= '' then
-                slots[i - 1] = api.MakeAbility('item_' .. itname, {
+                slots[i - 1] = api.MakeAbility(M.CLASS_TO_ITEM[itname] or ('item_' .. itname), {
                     IsFullyCastable = true,
                 })
             end
@@ -377,6 +407,18 @@ function M.load(path, sSubject)
         end
         heroes[u.name] = api.MakeHero(u.name, {
             GetItemInSlot = function(_, i) return slots[i] end,
+            -- docs/BOT_API_REFERENCE.md:1524 -- MAIN / BACKPACK / STASH. The
+            -- dump lists exactly the nine carried slots, 0-5 active and 6-8
+            -- backpack, so this is real frame data and not a modelling choice.
+            -- An index that is not a carried slot (FindItemSlot's -1 miss, the
+            -- synthesized TP slot 15) answers nil, which is not MAIN -- the
+            -- same shape the engine's out-of-range reads have.
+            GetItemSlotType = function(_, i)
+                if i == nil then return nil end
+                if i >= 0 and i <= 5 then return ITEM_SLOT_TYPE_MAIN end
+                if i >= 6 and i <= 8 then return ITEM_SLOT_TYPE_BACKPACK end
+                return nil
+            end,
             HasModifier = function(_, sName) return by_name[sName] ~= nil end,
             NumModifiers = #mods,
             -- Engine indices are 0-based; jmz's own readers scan
@@ -515,6 +557,23 @@ function M.load(path, sSubject)
 
     local bot = heroes[subj_name]
     api.install({ bot = bot, team = subj_team })
+
+    -- NOTE (strategy 2026-09-02), on the slot-type constants, because the
+    -- obvious repair here is the wrong one. ITEM_SLOT_TYPE_* are NOT nil in a
+    -- fixture world: api.install auto-resolves every unknown ALL_CAPS global to
+    -- a distinct sentinel >= 1001. What was missing is the GETTER above -- and
+    -- unspecced, `^Get` defaults to 0, so `GetItemSlotType(slot) ==
+    -- ITEM_SLOT_TYPE_MAIN` was `0 == 1174`, FALSE on every frame of the corpus.
+    -- Every branch behind one was constructively unreachable, failing CLOSED
+    -- and silently: the same trap tests/test_fieldbuy_backpack_rescuer.lua:50
+    -- documents at a sibling site (GH #89's thirteenth world assertion).
+    -- So do NOT pin the constants to 0/1/2 here. Pinning MAIN to 0 would make
+    -- every unit WITHOUT the spec above -- creeps, anything the loader does not
+    -- build as a fixture hero -- answer "main inventory" by default, turning a
+    -- silent fail-closed into a silent fail-OPEN. The sentinels are already
+    -- distinct and already non-zero; the getter is the only thing that was
+    -- missing, and tests/test_slotdust_dust_arbitration.lua [decision D3]
+    -- asserts non-nil, mutually distinct AND non-zero so this stays true.
 
     -- GH #61: refuse to answer GetLaneFrontLocation from the loader.
     -- The 125 shipped call sites read a per-team, per-lane point that the .dem

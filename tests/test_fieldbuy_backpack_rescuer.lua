@@ -175,17 +175,38 @@ tests['[premise] the pinned frame really is one the proposed fix would silence']
         'the backpack is full too, so the old clause is FALSE and nothing is at stake')
 end
 
-tests['[premise] without the slot-type declaration the rescuer is structurally dead'] = function()
-    -- The thirteenth world assertion at a new site. This is the assertion that
-    -- keeps a future naive isolation run from reading zero and calling it a
-    -- confirmation of GH #123.
+-- SUPERSEDED 2026-09-02 (strategy, the 'slotdust' round), and superseded the
+-- way a ratchet is supposed to be: this assertion USED to read
+-- `bot:GetItemSlotType(6) ~= ITEM_SLOT_TYPE_BACKPACK` and then that the rescuer
+-- fired ZERO times without declare_slot_types -- the thirteenth world assertion
+-- at a new site, kept so a naive isolation run could not read zero and call it a
+-- confirmation of GH #123. It went red the moment tests/mock/replay_fixture.lua
+-- started answering GetItemSlotType off the dump's real 0-5 / 6-8 layout, said
+-- "re-measure", and the re-measurement is below.
+--
+-- The mechanism, now that it is known: the CONSTANTS were never missing --
+-- api.install auto-resolves ALL_CAPS globals to distinct sentinels (BACKPACK
+-- measured at 1174 on this very frame, which is the number the header above
+-- quotes). What was missing was the GETTER, and an unspecced `^Get` answers 0,
+-- so `GetItemSlotType(6) == ITEM_SLOT_TYPE_BACKPACK` was `0 == 1174`.
+--
+-- So the branch is reachable now, and declare_slot_types is redundant rather
+-- than load-bearing. Both halves are asserted, because "redundant" is a
+-- measurement too: the undeclared world must produce the SAME swap the declared
+-- world does, or the loader's layout and the declaration disagree.
+tests['[premise] the loader now supplies the slot types the declaration used to'] = function()
     local _, bot = roam_world('fieldbuy')
-    assert(bot:GetItemSlotType(6) ~= ITEM_SLOT_TYPE_BACKPACK,
-        'the mock now answers GetItemSlotType; this premise is stale, re-measure')
+    assert(bot:GetItemSlotType(6) == ITEM_SLOT_TYPE_BACKPACK,
+        'the loader stopped answering GetItemSlotType -- the rescuer is structurally ' ..
+        'dead again and a zero reading here means nothing')
+    assert(bot:GetItemSlotType(0) == ITEM_SLOT_TYPE_MAIN,
+        'the loader answers for the backpack but not the main inventory')
     local swaps = deliver_flask(bot, 6)
     TrySwapInvItemForFlask()                              -- luacheck: ignore
-    assert(#swaps == 0,
-        'the rescuer fired without the declaration; the premise is not load-bearing')
+    assert(#swaps == 1, 'the rescuer no longer fires without the declaration: ' .. #swaps)
+    assert(swaps[1][1] == 6 and swaps[1][2] >= 0 and swaps[1][2] <= 5,
+        'the undeclared world produced a different swap than the declared one: ' ..
+        tostring(swaps[1][1]) .. ' <-> ' .. tostring(swaps[1][2]))
 end
 
 tests['[premise] item choice is NOT measurable here, only item existence'] = function()

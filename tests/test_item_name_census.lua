@@ -268,7 +268,16 @@ local tRegistered = {
     -- leg was run at the START of the work unit (clean) and NOT re-run after the
     -- comment was written.  A start-of-unit selfcheck certifies the tree you
     -- arrived on, never the tree you push.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6863'] =
+    -- 6863 -> 6876 (strategy 2026-09-02T00:xxZ, GH #406 follow-up): the
+    -- 13-line ClosestDustCarrier wrapper -- the single gate-resolution site for
+    -- soak candidate 'slotdust' -- landed at :51, 6,800 lines above this pin.
+    -- TWELFTH instance of the shape at :198, and the second in a row produced
+    -- by a strategy round that had no reason to read this file: the fix's own
+    -- eight targeted test families were all green, and only the unfiltered run
+    -- found this.  Picking tests by SUBJECT can never pick this one, because
+    -- its relationship to the edited file is a line number, not a topic.
+    -- Re-anchored, not relaxed; the probe and the lookup are textually unchanged.
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6876'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
@@ -305,7 +314,9 @@ local tRegistered = {
     -- picked it up (GH #216).
     -- 813 -> 854 (director 2026-08-28T22:xxZ, GH #286): same +41 as the lookup
     -- pin above; see that note.
-    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:854'] =
+    -- 854 -> 867 (strategy 2026-09-02T00:xxZ): same +13 as the lookup pin
+    -- above; see that note.
+    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:867'] =
         'matches every recipe by prefix.',
 }
 

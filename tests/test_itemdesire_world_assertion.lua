@@ -336,7 +336,16 @@ tests['[reverse] the loader wires IsFullyCastable and only IsFullyCastable'] = f
     local src = read_file('tests/mock/replay_fixture.lua')
     assert(src:find('IsFullyCastable = u.tp_cd <= 0', 1, true),
         'the loader no longer models the dumped TP cooldown')
-    assert(src:find("api.MakeAbility('item_' .. itname", 1, true),
+    -- 2026-09-02 (strategy, the 'slotdust' round): this used to pin the literal
+    -- `api.MakeAbility('item_' .. itname`. The loader now resolves the name
+    -- through M.CLASS_TO_ITEM first, because the dump carries an ENTITY CLASS
+    -- name, not an engine item name, and for the entries where the two spellings
+    -- differ every `FindItemSlot('item_x')` in bots/ found nothing on every
+    -- fixture while the tests read as clean passes. Re-anchored on the two parts
+    -- that carry this file's meaning -- the handles are still built from the
+    -- dump's own per-slot names, and IsFullyCastable is still the only mask on
+    -- them -- rather than on the exact expression.
+    assert(src:find('api.MakeAbility(M.CLASS_TO_ITEM[itname] or (\'item_\' .. itname)', 1, true),
         'the carried-item handles moved')
     -- If either of the two masking clauses is ever wired by the loader, this
     -- file's counts change wholesale and it must be re-measured, not patched.

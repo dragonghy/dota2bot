@@ -12916,3 +12916,140 @@ ts-parity 的断言写成 `sel:find('bSlotArb')`,而**参数表本身就满足�
    它**跨两行**,所以**按行扫的普查根本看不见它**(本轮的普查第一版就漏了它,是变异台之外的一次自查抓到的)。
 4. **60 份早于 dumper `player_id` 的 fixture 报的是裸下标 1..N**,那里 `id == i`,
    **这条缺陷不可见** —— 它们算**退化世界,不算「没问题」的证据**。
+
+---
+
+## §DJ 2026-09-02T00:xxZ 协同组提议入集:`slotdust`(GH 见本轮 issue)—— **搭车、零 AWS 增量、不申请专波**;而本节最该被读的不是那个下标(那是 §DI 已经立过的),是 **§DJ.3:同一条缺陷、同一个改法,**安全论证却不成立** —— 两个函数只差一个初值,`slotarb` 的「严格子集」在这里是错的**
+
+**提议**:`slotdust` 加入 armed 测试集(搭下一波的车,**零 AWS 增量、零 EC2、不申请专波**)。
+`queue.json` 行:**`strategy-35`**(`bundle` 字段已填)。`state.json` 键:`slotdust_20260902`。
+
+### §DJ.1 缺陷(共享代码,域 = 语料里的每一个英雄)
+
+`bots/FunLib/jmz_func.lua`,`J.IsClosestToDustLocation` —— **粉/缚灵索仲裁谓词**
+(「拿着粉的队友里,离这个位置最近的是不是我」)。全仓三个调用点**都在**
+`bots/ability_item_usage_generic.lua`(gungir 一处 + 两条反隐分支)。出厂写法:
+
+```lua
+for _, id in pairs(AllyPIDs)   -- AllyPIDs = GetTeamPlayers(GetTeam())
+do
+    local member = GetTeamMember(id)
+```
+
+**主判据与 §DI 逐字相同**(域与访问器两套下标空间;`GetTeamPlayers` 给 player id,
+`GetTeamMember` 要 team slot 1..5、越界答 nil)。这是 §DI 数出来的 **10 处**里的
+**第 2 处**,也是 §DI 亲手点名的「下一个杠杆」。
+
+### §DJ.2 按侧不同(与 §DI 同族,但后果更硬)
+
+| 侧 | ids | 落到的 slot | 扫到几个 | 后果 |
+|---|---|---|---|---|
+| radiant | {0,1,2,3,4} | {1,2,3,4} | **4 / 5** | slot 5 那个英雄**永远认领不了自己包里的粉** |
+| dire | {5,6,7,8,9} | {5} | **1 / 5** | 仲裁**专属于 pid-9 那个 bot**;它不带粉时**全队答 nil** |
+
+真实帧读数(`[frame D1]` / `[frame D2]`):
+- dire `f_260820_162859_es_blink_flee_615`:**两个主背包粉持有者**(ES pid 8 = slot 4、
+  jakiro pid 9 = slot 5),出厂只够到后者;
+- radiant `f_260820_043140_luna_ring_bid`:**全队唯一的粉在 vengeful_spirit(pid 4 = slot 5)身上**,
+  正好是出厂从不询问的那个 slot ⇒ **出厂对全队答 nil**,armed 才让持有者认领自己的粉。
+
+### §DJ.3 ⭐⭐ 本节的正题:同一个改法,`slotarb` 的安全论证在这里**是错的**
+
+`IsTheClosestOne` 的第一行是 `local closestMember = bot` —— **调用者天然在候选集里**,
+于是「扫得更宽只可能找到更近的人」⇒ **armed 的 TRUE 集是出厂 TRUE 集的严格子集**。
+那是 §DI.4 的全部安全论证。
+
+`J.IsClosestToDustLocation` 的第一行是 `local closest = nil` —— **调用者只有被扫到才算数**。
+**两个函数只差这一个初值**,而它把结论翻了过来:缩域**两个方向都切**,
+**armed 不是出厂的子集**:
+
+- 出厂 FALSE → armed TRUE:**站在原地、包里有粉**的那个 bot,今天仅仅因为
+  「它的 player id 不是一个 slot 号」而被拒;
+- 出厂 TRUE → armed FALSE:**3,938 码之外**的那个持有者今天拥有决定权,扫得到更近的人之后让出。
+
+**两个方向都在真实帧上量到了**(`[not-subset]`,一帧 35 个格子,两个方向计数各 > 0)。
+⇒ **本节不主张严格子集**。把 §DI 那句话抄过来会是一个**形状正确、对象错误**的声称。
+**这也正是它必须 gated 上路的理由**:armed 让 dire 侧**四个原本结构性用不了粉的 bot**
+开始用粉,涌现效果是真问题,归批测答(「局部正确 ≠ 集体涌现好」)。
+
+### §DJ.4 改动与暗态
+
+参数化,不改出厂操作数:`J.IsClosestToDustLocation(bot, loc, bSlotDust)`,
+`local nSlot = id; if bSlotDust then nSlot = i end`,`GetTeamMember(nSlot)`。
+循环仍按出厂顺序走 `pairs(AllyPIDs)`;`i` 只在 armed 时被读,而数组表的键**就是** slot 1..5。
+**闸在全仓唯一那处解析** —— `bots/ability_item_usage_generic.lua` 新增的文件内
+`ClosestDustCarrier` wrapper(`J.IsModeTurbo() and J.IsSoakCandidate('slotdust')`),
+三条分支都改走它;`[structure]` 用普查钉死「jmz_func 之外只被点名一次」。
+门关 ⇒ **逐字节等于出厂函数**(`[off-candidate]` 拿转录的出厂函数体在两帧 60 个
+(成员, 位置) 组合上逐个比)。`typescript/` 无需同步(jmz_func 只有 `.d.ts`,且没声明这个 helper)。
+`game/` 零 diff。
+
+### §DJ.5 验收(条件 (a))
+
+一个窗口:**同队 ≥2 个带粉的队友对同一个隐身敌人做出反应**,读出厂腿与 armed 腿的
+「谁出手 / 出手几次」。**两个分层各自登记读数**(铁律 4(i-a)):这条缺陷**本身就是一个按侧不同的量**
+(dire 扫 1 / radiant 扫 4),池化读在这里是**结构性错误**,不是精度问题。
+**先看 dire 侧** —— 那一侧出厂仲裁专属于一个 bot,信号最大。
+**域已在选题之前买好**:`corpus_hero_census.py --file bots/FunLib/jmz_func.lua` 答
+**SHARED / exit 0** ⇒ 没有 `DOMAIN-EMPTY` 分支需要预登记(§DG.7.1 / GH #400 立的那道读数)。
+
+### §DJ.6 ⛔ 量具:这条谓词在本轮之前**在任何 fixture 上都跑不动**,而它跑不动的方式不报错
+
+两个洞,都属于「未 spec 的量具答 0/nil」那一族(GH #386 / #391),但**都是新形状**:
+
+1. **`GetItemSlotType` 在 fixture 英雄上没被 spec**。
+   ⚠️ **本轮的第一版诊断写的是「三个常量不在 `_G` 里」,那是错的,而拆穿它的是变异台**
+   (见 §DJ.7):`api.install` 会把**任何未知的全大写全局**解析成一个 **≥1001 的互异哨兵**,
+   常量从来就不是 nil。真正的机制是**那个 getter**:没 spec 时 `^Get` 默认答 **0**,
+   于是 `GetItemSlotType(slot) == ITEM_SLOT_TYPE_MAIN` 是 **`0 == 1174`** ——
+   **在全语料每一帧上都是 FALSE**,闸后面的分支**构造性不可达**,**朝「关」静默失效**。
+   同一个陷阱 `tests/test_fieldbuy_backpack_rescuer.lua:50` 已经在**另一个站点**记过
+   (GH #89 的第十三号世界断言),这是它的复发。
+   ⇒ 修的是 **getter 一个**,按 dump 真实的 0-5 主背包 / 6-8 副背包布局作答;
+   **三个常量故意不钉成 0/1/2** —— 把 MAIN 钉成 0,会让**每一个不是由 loader 造出来的单位**
+   (小兵,以及任何非 fixture 英雄)默认答「主背包」,
+   **把一次静默的 fail-closed 换成一次静默的 fail-OPEN**。
+   `[decision D3]` 因此断言三个常量**非 nil、互异、且非 0**。
+2. **⭐ fixture 的物品名不是引擎的物品名**。dumper 写的是
+   `snakeFromClass(GetClassName(), "CDOTA_Item_")` —— **实体类名**;
+   `replay_fixture.lua` 一直给它加个 `item_` 前缀就当作 `FindItemSlot` 要的那个名字用。
+   两者**大多数时候恰好相同**(`power_treads`),**不同的那些则一声不响**:
+   粉的类名是 `CDOTA_Item_DustofAppearance`(所以仓库里有 12 处 `modifier_item_dustofappearance`),
+   物品名却是 **`item_dust`**(`item_purchase_generic.lua` 就是拿这个名字买的)。
+   ⇒ **凡是按名字查背包的谓词,在每一份 fixture 上都查不到东西,而测试读起来是干净通过。**
+   本轮只加**有仓库双向证据的那一条**映射(`CLASS_TO_ITEM`,**只有 1 条**),
+   并把**未核验的天花板棘轮化**:114 个 fixture 物品名里 **23 个**在 bots/ 里解析不到
+   (`[instrument I2]`)。那 23 个**混着真分歧和「bot 代码本来就没提过的物品」**,
+   所以它是**上界不是缺陷清单** —— 但它不许再悄悄变大。
+   **这一条是留给总监的**:补全那张表是中心件动作,不是本组的一次工作单元。
+
+### §DJ.7 变异台(16/16 CAUGHT,换掉两个变异,其中一个是本轮最尖的发现)
+
+- **⭐ M15 第一遍活着,而那个活口不是断言弱,是诊断错**:被删掉的那行
+  (`_G.ITEM_SLOT_TYPE_MAIN = 0`)正是本轮**基于「常量缺失」这个错判**刚加上去的;
+  它活下来,是因为**常量从来没缺过**(哨兵机制)——
+  也就是说,**节里那句话是假的,而它周围每一条测试都是绿的**。
+  **变异台抓到的是一个假声称,不是一个假决策。**
+  改法:撤掉那个「修复」,重写诊断,并把 M15 换成
+  **M15b**(把 MAIN 钉成 0,即未 spec 的 `Get*` 的返回值)与 **M16**(再次删掉 getter),
+  两个都 CAUGHT。
+- **M12 第一遍活着**:把 mock 的 slot-type 读数改成「0-8 全答 MAIN」(副背包当主背包)后
+  全绿 —— 因为文件里每一处「这份粉在主背包」的断言**都只在答案确实是 MAIN 的地方问**,
+  一个「到处都答 MAIN」的读数**同时满足它们全部**。
+  补 `[decision D5]` 钉死:`f_260820_043120_viper_defend_paired` 以 dire 为主体载入,
+  **两个持有者的粉都在副背包**,出厂腿与 armed 腿**都必须答 nil**。
+  ——**决策级的杀,不是又一条量具断言。**
+- **`[instrument I2]` 的词表计数第一版读成 115(真值 114)**:Lua 侧扫描写的是
+  `'([^']+)'`,而「一个或多个」会**跳过空槽 `''` 的开引号**,然后把**两个真名字之间的分隔符
+  `', '` 当成一个名字**。一个没人会多看一眼的假名字,**恰好出现在那条以数名字为唯一职责的断言里**。
+  改成 `[^']*` 并显式跳过空串。
+- **M14**(`dist < closestDist` → `<=`)是**等价变异**:本语料上没有任何两个合格持有者
+  与任一测试位置**恰好等距**;而且它坐在**本修复根本不碰的出厂行**上。
+  换成 **M14b**(副背包槽答 STASH 而非 BACKPACK)与 **M14c**(粉映射到一个**看着很合理的错名**
+  `item_dust_of_appearance`),两个都 CAUGHT。
+
+### §DJ.8 交棒
+
+- **总监**:裁 §DJ(入集)+ §DJ.6.2 的量具表(中心件,本组不擅动)。
+- **录像组**:买条件 (a),**先看 dire 侧,两个分层各自登记读数**。
+- **本组下一轮**:`0SLOT9` 剩下的 **8 处全在 `bots/FunLib/utils.lua`** —— 一次一个杠杆。

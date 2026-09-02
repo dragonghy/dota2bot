@@ -27,6 +27,70 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0DUST. **【2026-09-02T01:37Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0SLOT` 逐字交待本组下一轮
+   「继续先选域;候选是 `0SLOT9` 里最像的那个(`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**);
+   **落地 gated `slotdust`**,入集提议 `test_set.md` **§DJ**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-35`**(**`bundle` 已填**);`state.json` 新键 `slotdust_20260902`;
+   报告 `iterations/reports/strategy/20260902T013726Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个「同形缺陷」不等于一个「同形论证」——
+   安全性属于函数体,不属于缺陷形状。**
+   `slotarb`(§DI)与本条是**逐字同一条缺陷**(域给 player id、访问器要 team slot 1..5、越界答 nil),
+   **改法也逐字相同**;但 §DI 的兜底论证是「严格子集」,而它成立**只因为**
+   `IsTheClosestOne` 第一行是 `local closestMember = bot`(调用者天然在候选集里)。
+   `J.IsClosestToDustLocation` 第一行是 `local closest = nil`(**调用者只有被扫到才算数**)——
+   **两个函数只差这一个初值,而它把结论翻了过来**:缩域**两个方向都切**,**armed 不是出厂的子集**。
+   **两个方向都在真实帧上量到了**(`[not-subset]`,一帧 35 格,两向计数各 > 0)。
+   **缺陷**:`bots/FunLib/jmz_func.lua`,`J.IsClosestToDustLocation`(粉/缚灵索仲裁;
+   全仓三个调用点都在 `bots/ability_item_usage_generic.lua`)。
+   **dire 只扫 slot 5 一个**(仲裁专属 pid-9 那个 bot;它不带粉时**全队答 nil**);
+   **radiant 扫 slot 1-4**(slot 5 那个英雄**永远认领不了自己包里的粉**)。
+   **⭐⭐ 一帧给出 2×2 四个格子**:`f_260820_162859_es_blink_flee_615`(dire,
+   ES pid8 与 jakiro pid9 **都在主背包带粉**)—— 两个翻转方向 + 阴性对照 +
+   **承重的阳性对照**;并且**出厂的答案由身份决定不由几何决定**
+   (同一个 bot 在相距 **3,938 码**的两个位置上答案相同)。
+   **改动**:参数化 + 闸在**新增的唯一 wrapper** `ClosestDustCarrier` 解析;门关**逐字节等于出厂函数**。
+   **产出** `tests/test_slotdust_dust_arbitration.lua`(`[ratchet]` **13/0**),真实帧三份。
+   **变异 16/16 CAUGHT,换掉两个**(M15 = 诊断错见 `0SLOTINSTR`;M14 = 等价变异,坐在不被碰的出厂行上)。
+   **`0SLOT9` 计数棘轮 9 → 8**,`test_slotarb_camp_arbitration.lua` 同步改。
+   **下一格**:总监裁 §DJ;录像组买条件 (a)(**先看 dire 侧**,两个分层各自登记读数)。
+   **本组下一轮**:`0SLOT9` 剩下的 **8 处全在 `bots/FunLib/utils.lua`** —— 一次一个杠杆。
+
+0SLOTINSTR. **【2026-09-02T01:37Z 新增,登记,**球在总监**(中心件,本组只补了最窄的一格)】**
+   **⭐ 本轮最该被读的一条,比杠杆本身值钱:一个诊断可以是错的,而它周围每一条测试都是绿的。**
+   本轮第一版把「`J.IsClosestToDustLocation` 在 fixture 上跑不动」诊断成
+   **「三个 `ITEM_SLOT_TYPE_*` 常量不在 `_G` 里」**,并据此加了三行 `_G.ITEM_SLOT_TYPE_* = 0/1/2`。
+   **变异台的 M15(删掉刚加的那一行)活了下来,而它活下来的理由就是那句话是假的**:
+   `api.install` 把**任何未知全大写全局**解析成 **≥1001 的互异哨兵**
+   (真实帧上量到 `ITEM_SLOT_TYPE_BACKPACK == 1174`,正好是
+   `tests/test_fieldbuy_backpack_rescuer.lua:50` 注释里引的那个数)。
+   **真机制是 getter**:没 spec 时 `^Get` 答 **0** ⇒ `0 == 1174` ⇒
+   **全语料每一帧 FALSE,分支构造性不可达,朝「关」静默失效**(GH #89 第十三号世界断言的复发)。
+   ⇒ 修法换成**只补 getter**;**常量故意不钉成 0/1/2**(钉 MAIN=0 会让每个非 fixture 英雄的单位
+   默认答「主背包」,把静默 fail-closed 换成静默 **fail-OPEN**)。
+   **连带**:`test_fieldbuy_backpack_rescuer.lua` 那条「mock 答不了 `GetItemSlotType`」的
+   `[premise]` **当场变红并写着 re-measure** —— **一条设计得很好的棘轮**。已重新测量并重写
+   (洞堵上后救援分支会触发,`SWAP 6 <-> 0`,与声明后的世界逐位相同 ⇒ 那条声明现在是**冗余**)。
+   **第二个洞(本组不擅动,交总监)**:**fixture 的物品名是实体类名不是引擎物品名** ——
+   dumper 写 `snakeFromClass(GetClassName(), "CDOTA_Item_")`,`replay_fixture` 加个 `item_` 前缀就当物品名用。
+   粉:类名 `CDOTA_Item_DustofAppearance` vs 物品名 **`item_dust`**;
+   同族还有 `sentry_ward`/`item_ward_sentry`、`empty_bottle`/`item_bottle`、`boots_of_elven`/`item_boots_of_elves`。
+   ⇒ **凡按名字查背包的谓词在每一份 fixture 上都查不到东西,而测试读起来是干净通过。**
+   本轮只加**有双向证据的 1 条**映射(`CLASS_TO_ITEM`),并把**未核验的天花板棘轮化**:
+   **114 个 fixture 物品名里 23 个**在 `bots/` 里解析不到(**上界,不是缺陷清单**)。
+
+0MUTPAR. **【2026-09-02T01:37Z 新增,登记 —— 一条方法,不是一条缺陷】**
+   **变异台会污染任何与它并行的读数,两者不要并行。**
+   本轮开工自检与变异台同时在跑,而变异台**每次迭代都在重写 `tests/mock/replay_fixture.lua`**;
+   自检报的三条 Lua trunk 红里**两条是并发假红**
+   (`test_lion_ult_reserve_domain` 报 `replay_fixture.lua:1087: attempt to index local 'J'
+   (a boolean value)`;`test_propertarget_corpus_domain` 报帧数 990 ≠ 993),**串行重跑全绿**。
+   第三条 `test_incoming_damage_callsite_census`(published 43,现读 **44**)
+   **在 `git stash` 干净树上复现** ⇒ 既存,**GH #394 同族**。
+   与 `0CORP` 的「变异台开跑前必须先证明基线是绿的」**同族但方向相反**:
+   那条管**基线**,这条管**旁观者**。
+
 0SLOT. **【2026-09-01T22:37Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0CORP` 逐字交待本组下一轮
    「先选域再选形状,优先在 SHARED 文件或 43 个在场英雄里挑杠杆」⇒ 本轮就是照这条做的**);
@@ -4241,6 +4305,58 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T01:37Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  **backlog 最上面一条 `0SLOT` 逐字交待本组下一轮「候选是 `0SLOT9` 里最像的那个
+  (`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**;
+  **报告 `iterations/reports/strategy/20260902T013726Z.md`**;
+  backlog 条目 **`0DUST`**(并新开 `0SLOTINSTR` / `0MUTPAR` 两条登记项);
+  **落地 gated `slotdust`**,入集提议 `test_set.md` **§DJ**(搭车、零 AWS 增量、不申请专波);
+  `queue.json` 新增 **`strategy-35`**(**`bundle` 已填**);`state.json` 新键 `slotdust_20260902`;
+  零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **⭐ 一个「同形缺陷」不等于一个「同形论证」—— 安全性属于函数体,不属于缺陷形状。**
+  `slotarb`(§DI)的兜底是「严格子集」,它成立只因为 `IsTheClosestOne` 第一行是
+  `local closestMember = bot`;`J.IsClosestToDustLocation` 第一行是 `local closest = nil`,
+  **两个函数只差这一个初值,而它把结论翻了过来** —— 缩域**两个方向都切**,**armed 不是出厂的子集**,
+  两向都在真实帧上量到(`[not-subset]` 一帧 35 格)。**因此必须 gated**:
+  armed 让 dire 侧**四个原本结构性用不了粉的 bot** 开始用粉。
+  **dire 只扫 slot 5 一个 / radiant 扫 slot 1-4**;
+  **一帧给出 2×2 四格**(`f_260820_162859_es_blink_flee_615`:ES pid8 + jakiro pid9 都主背包带粉)——
+  两个翻转方向 + 阴性对照 + **承重的阳性对照**;
+  且**出厂答案由身份决定不由几何决定**(同一 bot 在相距 **3,938 码**两处答案相同)。
+  **先跑域再选形状(连续第二轮兑现 #400)**:`corpus_hero_census.py --file bots/FunLib/jmz_func.lua`
+  答 **SHARED / exit 0**。**`0SLOT9` 计数棘轮 9 → 8**(slotarb 的普查同步改)。
+  **⛔ 最该被读的一条(交总监,见 `0SLOTINSTR`):一个诊断可以是错的,而它周围每一条测试都是绿的。**
+  第一版把量具洞诊断成「常量缺失」并据此加了三行 `_G.ITEM_SLOT_TYPE_* = 0/1/2`;
+  **变异 M15 活了下来,因为那句话是假的** —— 常量是 **≥1001 的自动哨兵**(实测 BACKPACK == 1174),
+  真机制是 **getter 未 spec 时 `^Get` 答 0** ⇒ `0 == 1174` ⇒ 全语料每帧 FALSE、分支构造性不可达。
+  修法改成**只补 getter,常量故意不钉**(钉 MAIN=0 会把静默 fail-closed 换成静默 **fail-OPEN**)。
+  第二个洞:**fixture 物品名是实体类名不是引擎物品名**(`dustof_appearance` vs `item_dust`),
+  只加 1 条有双向证据的映射,天花板棘轮成 **114 里 23**。
+  **连带**:`test_fieldbuy_backpack_rescuer.lua` 那条「mock 答不了 GetItemSlotType」的 `[premise]`
+  **当场变红并写着 re-measure**(设计得很好的棘轮),已重新测量并重写。
+  **变异 16/16 CAUGHT,换掉两个**(M15 诊断错;M14 等价变异)。**M12 第一遍活着**
+  (每处「在主背包」断言都只在答案是 MAIN 的地方问)⇒ 补 `[decision D5]` **决策级的杀**。
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  `slotdust` 13/0 · `slotarb` 12/0 · `campsel` 21/0 · `smoke_load` 3/0 · `gate_claim` 10/0 ·
+  `replay_fixture` 9/0 · `fixture_roles` 10/0 · `level_gate_census` 15/0 ·
+  `item_name_census` **6/0**(先红:13 行 wrapper 把两条**钉在行号上**的普查条目推走
+  `:854→867`、`:6863→6876`,**同形第十二例、本组连着第二轮**,按其自身办法重锚) ·
+  `fieldbuy_backpack_rescuer` **12/0**。
+  **开工自检**:第一条又写成 `| tail` 被拒(**同站点第十四轮**);改重定向后**自己加了 `timeout 400`
+  被砍在 python 腿,`EXIT=124` —— 那一跑是 `UNCERTIFIABLE` 不是通过**;
+  不加 timeout 重跑拿到完整读数:`worst exit 3`、`legs run 8`、
+  `FINDINGS = cadence / trunk-red(python) / trunk-red(lua)`、**`UNCERTIFIABLE: none`**。
+  **三条 Lua trunk 红里两条是并发假红**(自检与变异台并行,后者在重写 `replay_fixture.lua`),
+  **串行重跑全绿**;第三条 `test_incoming_damage_callsite_census`(43 → 44)
+  **在 `git stash` 干净树上复现** ⇒ 既存,GH #394 同族(本轮 diff 里 `GetActualIncomingDamage` 出现 0 次)。
+  **全量套件:跑了 73 分钟 / 约 1,930 个测试后仍在跑(不整体声称)**,期间报 **2 条** ——
+  `test_incoming_damage_callsite_census`(43→44)**干净树复现,既存 GH #394**;
+  `test_itemdesire_world_assertion` 的 `[reverse]` **是本改动造成的,已修**
+  (它把 `api.MakeAbility('item_' .. itname` 这个**源码字面量**钉成断言,而本轮把它换成走
+  `CLASS_TO_ITEM` 的解析),按其意图重锚后**单跑 25/0**,**且它的世界计数(928 可驱动帧等)一格没动**。
+  **⭐ 方法收获:改中心件 mock 就必须跑无过滤那一跑** —— 本轮三条红与被改文件的关系分别是
+  **行号 / 源码字面量 / 「mock 做不到什么」**,**没有一条在本轮八个定向文件里**。
+  **⏳ 待总监裁 §DJ(入集 + `0SLOTINSTR` 的物品名映射表);录像组买条件 (a),先看 dire 侧、两个分层各自登记读数。**
 - 2026-09-01T22:37Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **backlog 最上面一条 `0CORP` 逐字交待本组下一轮「先选域再选形状」⇒ 本轮就是照这条做的**;
   **报告 `iterations/reports/strategy/20260901T223714Z.md`**;issue **GH #406**;

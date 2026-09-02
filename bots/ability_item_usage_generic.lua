@@ -48,6 +48,19 @@ local nLastKnownPosition = nil  -- tracks bot's position for !pos swap detection
 -- So compact by key order rather than relying on `#`, and do not return: an
 -- unbroken list leaves this a single table index, and a truly empty one is left
 -- alone so the existing fallbacks still see it.
+-- The ONE gate-resolution site for the soak candidate 'slotdust'. All three
+-- call sites of J.IsClosestToDustLocation in bots/ live in this file (gungir,
+-- and the two invis-response branches further down), so routing them through a
+-- single wrapper is the same discipline ClosestCamp uses in mode_farm_generic
+-- for 'campsel'/'slotarb': one place to arm, and no call site that can silently
+-- miss the gate. tests/test_slotdust_dust_arbitration.lua asserts BOTH halves
+-- of that claim by census -- that the helper is named exactly once outside
+-- jmz_func.lua, and that this wrapper is the name the branches call.
+local function ClosestDustCarrier( hBot, vLoc )
+	return J.IsClosestToDustLocation( hBot, vLoc,
+		J.IsModeTurbo() and J.IsSoakCandidate( 'slotdust' ) )
+end
+
 local function CompactSkillList( tList )
 	local nMaxKey = 0
 	for k in pairs( tList ) do
@@ -6658,7 +6671,7 @@ X.ConsiderItemDesire["item_gungir"] = function( hItem )
 	do
 		if J.IsValidTarget(enemyHero)
 		and J.IsUnitWillGoInvisible(enemyHero)
-		and J.IsClosestToDustLocation(bot, enemyHero:GetLocation())
+		and ClosestDustCarrier(bot, enemyHero:GetLocation())
 		and not J.HasInvisCounterBuff(enemyHero)
 		and not J.IsSuspiciousIllusion(enemyHero)
 		then
@@ -7273,7 +7286,7 @@ X.ConsiderItemDesire['item_dust'] = function(item)
 				and dInfo.time_since_seen > 0.2
 				and dInfo.time_since_seen < 0.5
 				and GetUnitToLocationDistance(bot, dInfo.location) < nRadius - 450
-				and J.IsClosestToDustLocation(bot, dInfo.location)
+				and ClosestDustCarrier(bot, dInfo.location)
 				then
 					local loc = J.GetXUnitsTowardsLocation2(dInfo.location, DireFountain, 200)
 					if team == TEAM_DIRE
@@ -7328,7 +7341,7 @@ X.ConsiderItemDesire['item_dust'] = function(item)
 		do
 			if J.IsValidTarget(enemyHero)
 			and J.IsUnitWillGoInvisible(enemyHero)
-			and J.IsClosestToDustLocation(bot, enemyHero:GetLocation())
+			and ClosestDustCarrier(bot, enemyHero:GetLocation())
 			and not J.HasInvisCounterBuff(enemyHero)
 			and not J.IsSuspiciousIllusion(enemyHero)
 			then
