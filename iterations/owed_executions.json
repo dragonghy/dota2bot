@@ -1,6 +1,7 @@
 {
   "_note": "Rulings that were DELIVERED and whose EXECUTION is still owed by another stream. Read by tools/agent/pending_rulings.py (OWED_EXECUTION leg), which every stream runs through routine_selfcheck.sh. A row is retired by the director once `done_when` is satisfied. See tools/agent/pending_rulings.py for what each field means and what this registry cannot see.",
-  "owed": [
+  "owed": [],
+  "retired": [
     {
       "id": "recslot8_baseline",
       "issue": "GH #413",
@@ -23,7 +24,11 @@
         "key": "rec_slots",
         "equals": 8
       },
-      "done_when_note": "This is the acceptance criterion the ruling itself wrote: the new profile header says `\"rec_slots\": 8` verbatim. It does NOT check that the corpus used was W37+W38, and it cannot."
+      "done_when_note": "This is the acceptance criterion the ruling itself wrote: the new profile header says `\"rec_slots\": 8` verbatim. It does NOT check that the corpus used was W37+W38, and it cannot.",
+      "retired_at": "2026-09-02T21:5xZ",
+      "retired_by": "director",
+      "outcome": "EXECUTED by batch-desk in its 2026-09-02T21:20Z round -- the round AFTER this registry landed, and a LAUNCH round, i.e. one trigger point EARLIER than the ruling's own 'next harvest round'. Bare read at retirement: tools/batch_test/soak/rec_slot_baseline.json rec_slots=8, rec_set=[1..8], games=395; the old profile is preserved as rec_slot_baseline_recslots1.json; the leg read DONE with exit 0.",
+      "note_for_readers": "The desk's own report says the leg 'first rang on the batch desk's own round and named this desk'. That is one data point, not a proof the channel works in general -- a first firing is also the loudest a detector will ever be."
     }
   ]
 }

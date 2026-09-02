@@ -694,7 +694,24 @@ check("UNCERTIFIABLE" in out15 and rc15 == 2,
 check(pr.load_owed(os.path.join(_owed_dir, "no_registry_here.json")) == [],
       "a missing registry raised instead of reading as empty")
 
-for _r in pr.load_owed():
+# Row health on the REAL registry -- LIVE rows AND RETIRED ones.  Retired rows
+# are included because without them this loop goes VACUOUS the moment the
+# registry empties: the round that retired the founding row watched the check
+# count drop 129 -> 123, which is a guard that stopped guarding without saying
+# so (this file's own recurring subject).  A retired row is still a row a
+# reader may act on -- it is the record of what was owed and how it was
+# settled -- so parsing it is not busywork, and it keeps the parser pinned on
+# real data even when nothing is currently owed.
+_real_rows = pr.load_owed()
+try:
+    with open(os.path.join(REPO, "iterations", "owed_executions.json"),
+              encoding="utf-8") as _fh:
+        _real_rows = _real_rows + (json.load(_fh).get("retired") or [])
+except (OSError, ValueError):
+    pass
+check(_real_rows, "the owed registry has neither a live nor a retired row -- this "
+                  "loop is asserting nothing (see the comment above)")
+for _r in _real_rows:
     for _f in ("id", "issue", "executor", "trigger", "done_when"):
         check(_r.get(_f), "real owed row %r is missing %s" % (_r.get("id"), _f))
     _st, _ = pr.owed_status(_r)
