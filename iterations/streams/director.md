@@ -8547,3 +8547,78 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ③**§3.3 四个重文件有没有人接**,没接就自己修 `test_stayfield2_marginal_domain.lua` 一个
   (**233.9s ⇒ 136s**,连续第四轮写)④**patch 缺口 P3**
   ⑤`#252`/`#256`/`#282`/`#295` + `strategy-5b`、`§24` 并入 `#229`、`§CE` 第一步。
+
+- 2026-09-02T01:05Z:一个工作单元,一条接力棒付清、一条 trunk 红修绿、一句我自己写的
+  期待被当场作废。报告 `iterations/reports/director/20260902T010509Z.md`。
+  **本轮零 AWS 调用、零支出、`bots/` 与 `game/` 逐字节零 diff。**
+  **⓪ 纪律 3 第十六发,§22 守卫第十一次上场并第十一次拦下**(第一条命令仍是 `| tail`)。
+  按上上轮的结论**继续没有**把「照抄章程那一行」写进清单 —— 守卫是措施,清单只是记录。
+  干净那次裸读:`legs run: 8` / `FINDINGS: cadence trunk-red(python) trunk-red(lua)` /
+  **`UNCERTIFIABLE: none`** / worst exit 3;`ORPHAN_PROPOSAL: none`(第七轮);
+  cadence 无升级;`OTHER: 1` = `strategy-34`,**本轮不裁**(理由见 ②)。
+  ⚠️ **自检的 python 腿读数本轮被我自己污染**(它跑的时候我在同一棵树上编辑 + 跑 rc.sh,
+  报 `72/1/2`,其中 `test_rc_wrapper.py` 的 UNCERTIFIABLE 是并发抢 `/tmp/rc.*`)⇒
+  收尾单独重跑干净的那一遍才是读数。**并发跑套件会把「未核验」制造成「红」,两者横幅一样。**
+  **① GH #402 乙案落地:`OVER-BROAD` 闸,而且一个常数都不需要。**
+  **issue 提的是「term 超过 N 个英雄就打 OVER-BROAD」;我没按它做,因为宽度不是那个性质** ——
+  决定 term 能不能被漏掉的是**位置覆盖**:池里 12 个英雄有 pos-2 资格,把这 12 个全算载体
+  **每局两个中单位都是载体 ⇒ 12 个就冻死了**;而 docstring 明确承诺放行 `abilanc` 那种
+  正当的十来个载体的宽 term。**任何抓得住前者的宽度阈值都会拒掉后者。**
+  换成问抽签器自己的问题(**存不存在一份合法 draft 一个载体都不含**)= 补集上的 Hall 条件,
+  每位置需求 2(天辉夜魇各一),`S={1..5}` 顺带覆盖「剩不到 10 人」。
+  **这是 `UNDRAFTABLE` 的镜像**:没 draft 能带上 = exit 1 早就大声拒;没 draft 能漏掉 =
+  此前静悄悄通过,而那是 `immguard` 读出 `satisfied=4/4` 的那一侧 ⇒ 现在 exit 2(「什么都没查」)。
+  **判决是对推导的不是对波次的**:要么该 id 本是 generic 被误判 hero-scoped,要么消费点游走
+  过度展开 —— 两种都在这个文件里修,**永不靠重抽种子**。
+  **LIMIT 被执行而非被假设**:`draft()` 的死胡同回退在当前池取不空(`{1:13,2:12,3:12,4:15,5:14}`
+  对 10 坑),但任一位置薄到 `<= DRAFT_SLOTS` 就返回 `None` 判 `UNCHECKED`、exit 2。
+  裸读:`test_carrier_terms.py` **52 ⇒ 66 checks / 0 failed**;
+  **现役 52-id + W36 四粒种子 `CARRIER_GATE ids=10 exit=0` 逐字不变**(测试 L 是刻意的验收项:
+  一道从今天起就拒发的门正是本文件警告的「永远说不的门」)。
+  **变异台 12/12 CAUGHT**(`mutstand_carrier_minion.sh`,N1–N5 + 新增 **O1–O7**)。
+  **O2 = issue 提的那个纯宽度设计,它在「一整个位置被覆盖」上活不下来 ⇒ 台子同时是选型证据**;
+  **O4 = 判决照打、退出码不动**(纪律 2:不可能失败的检查和通过的检查长得一样)。
+  ⚠️ **fingerprint 必须先扩**:原台只探 `derive_id`,不碰 `draft_can_miss` ⇒ 所有 O 变异体
+  会被报成 `INERT`;**够不到被改代码的指纹分不清空操作和改动**(上轮 N5 教训同族)。
+  **② trunk 红(python)修绿,而且不是上轮那条。** 上轮红的是 `test_carrier_terms.py`(已修);
+  **本轮是 `test_detector_source_constants.py`,第一次出现在自检里**,起因是 `slotarb`(GH #406)。
+  **断言的名字和它量的东西不是一回事**:`gate_facts()` 自己的注释防的是 #207 的
+  **同一合取里的第二个 id**(`A and B`,B 被 promote 那天整条冻 FALSE,而 `check_armed_wiring.py`
+  仍叫它 WIRED),实现却是**扫整个实参表**;而 `slotarb` 是穿成**第二个独立实参**,
+  **两个实参是两道门、各自可单独 arm**(wrapper 头注释就这么写) ⇒ 这条红报在一棵
+  **什么都没跟什么合取**的树上。**修法是瞄准不是放宽**:按顶层逗号切分、逐实参判 ——
+  `cands` 只取 campsel 自己那个实参(断言原文一字不改,现在名副其实)、新增 `conjoined`
+  (#207 保护被保留而不是删掉)、新增 `sibling_cands` 棘轮断言 `== ['slotarb']`
+  (**第三个 id 出现仍要被指名承认一次**)。**放宽成「一次调用两个 id 也行」会把 #207 删掉。**
+  **并且新检查不空**:现役树已无合取 ⇒ `conjoined == []` 可被一个**产不出非空答案**的扫描满足
+  ⇒ 加**三个合成 wrapper 每次都跑**(`gate_facts(farm_src=...)` 本就支持注源)。
+  裸读 exit 1 ⇒ **exit 0**,新增 6 项断言全 ok;`campsel_domain.py --selfcheck` exit 0。
+  **`strategy-34` 本轮不裁**:本轮动的是**它撞红的那个量具**,同轮既改量具又用它裁自己碰过的
+  请求是把两个判断绑在一起。留下轮 ①。
+  **③ ⭐ 更正我自己上轮写下的期待:`rotscope` 不在乙案射程内。** 上轮「下次触发 ①」写的是
+  「乙案挡的是下一个同形 id,`rotscope` 已经在等」——**不准确**。裸读
+  `CARRIER_DERIVE id=rotscope kind=generic`,而 **generic 的 id 根本不产出 term**,
+  `OVER-BROAD` 是对 hero-scoped term 的判据 ⇒ **永远碰不到它**。两条同族(都朝乐观失效)
+  但**方向相反**:`immguard` **虚报**载体,`rotscope` **漏报**。
+  **「同一个结论不是同一个理由,而错的理由会被下一个读者继承」——上轮在 #396 现场登记过,
+  本轮登记的是我自己写的那个理由错了。** ⇒ `rotscope` 另开 issue 交棒,不随 #402 一起关。
+  **④ 铁律 6**:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` CLEAN / 0 警告,未用 `RULE6_BYPASS`**
+  (容器初始无 luacheck,gate 自己装);`arm_push_gate.sh` exit 0;
+  **`bots/`+`game/` 零 diff ⇒ 全量 Lua 套件未跑也不声称**;
+  python 全量**收尾无并发重跑**:**74 passed / 0 failed / 1 uncertifiable,裸退出码 2**
+  (GH #358,不折进通过数)。lua trunk 红 `published 43` 现读 `44`(**GH #394**)未动,非总监归属。
+  **⑤ 成本**:零 AWS/S3/EC2/CE;MTD **照抄**批测台 21:14Z 自报 **`$3.637 + ~$0.90 ≈ $4.8`**。
+  **不写「顺延」。** `DECISIONS_NEEDED.md` 无新增;本周邮件 08-31T01:20Z 已发 ⇒ **本轮无邮件**;
+  今日周三,台账(仅周日)跳过。四组均有产出无空转。
+  **⑥ 本轮明说没做的**:`strategy-34` 未裁;`rotscope` 未修(仅交棒);
+  **patch 缺口 P1/P2/P3(P3 优先)**;**`hero_pool.txt` 成员资格未接进 §DH.4 域价**;
+  `strategy-5b` 未裁;**GH #395 三问未裁**;**按需常数第四轮重裁未做**;
+  `#252`/`#256`/`#282`/`#295` 关闭建议未发;**`§24` 未并入 `#229`**;**`§CE` 已挂二十五轮**;
+  `state.json` round-trip 未修;backlog §19/§20/§21 未动;
+  `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#285`/`#271` 未处理;§CY 三条 + §CV 两条限定待收割;
+  **GH #384 的自检腿序那半**;**§3.3 那四个重文件连续第五轮没看有没有人接**;GH #394(非总监归属)。
+  **下次触发**:①**`strategy-34`(`slotarb`)入集裁定 —— 量具已修,这轮该判了**
+  ②**`rotscope` 漏报载体**(#402 同族剩下的那一半)
+  ③**§3.3 四个重文件有没有人接**,没接就自己修 `test_stayfield2_marginal_domain.lua` 一个
+  (**233.9s ⇒ 136s**,连续第五轮写)④**把 `hero_pool.txt` 成员资格接进 §DH.4 的域价**
+  ⑤**patch 缺口 P3** ⑥`#252`/`#256`/`#282`/`#295` + `strategy-5b`、`§24` 并入 `#229`、`§CE` 第一步。

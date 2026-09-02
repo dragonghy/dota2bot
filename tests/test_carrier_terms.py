@@ -249,6 +249,105 @@ def main():
     check(rc == 0 and "CARRIER_GATE terms=1 seeds=1 exit=0" in buf.getvalue(),
           "--assert-carrier's own output is unchanged")
 
+    # --- 10. the OVER-BROAD gate (GH #402 (b)) ------------------------------
+    # `UNDRAFTABLE` refuses a term no draft can carry.  Its mirror -- a term no
+    # draft can MISS -- was passing silently, and that is the direction that
+    # cost a wave: `immguard`'s 128-hero disjunction read `satisfied=4/4`.  Test
+    # 5 above pins the one id; these pin the SHAPE, because the next id with it
+    # will not be immguard.  Synthetic rows, on the real pool: the live tree
+    # offers no over-broad id (check L below is exactly that), so a test that
+    # only ran against the tree would be green whether or not the gate exists.
+    def gate(cand_id, heroes, seeds=(2745, 2838, 2850, 2922), the_pool=None):
+        row = {"id": cand_id, "kind": "hero", "heroes": set(heroes),
+               "sites": [], "why": "synthetic"}
+        b = io.StringIO()
+        rc = ct.assert_carrier_ids(list(seeds), [row],
+                                   pool if the_pool is None else the_pool, out=b)
+        return rc, b.getvalue()
+
+    pool_by_pos = {p: [n for n, ps in pool if p in ps] for p in range(1, 6)}
+    every_hero = sorted({h for rel in ct.lua_files(ROOT) if (h := tree.hero_of(rel))})
+
+    # A. the whole pool: the degenerate case a `len(heroes) > N` threshold does
+    #    catch, kept so the cheap half of the gate is pinned too.
+    rc, text = gate("synth_wholepool", [n for n, _ in pool])
+    check(rc == 2 and "verdict=OVER-BROAD" in text and "verdict=FULL" not in text,
+          "a term covering the whole pool reads OVER-BROAD, exit 2 (got %d)" % rc)
+
+    # B. the W36 line itself, reconstructed: the 128-hero disjunction that read
+    #    `verdict=FULL satisfied=4/4` on the seeds that actually flew.
+    check(len(every_hero) > 100,
+          "the hero table really is ~128 wide (got %d)" % len(every_hero))
+    rc, text = gate("synth_immguard_1", every_hero)
+    check(rc == 2 and "verdict=OVER-BROAD" in text and "satisfied=4" not in text,
+          "the 128-hero shape reads OVER-BROAD, not FULL satisfied=4/4 (got %d)" % rc)
+
+    # C. THE case a width threshold cannot see, and the reason this gate asks
+    #    Hall's question instead of counting: every hero eligible for mid is a
+    #    carrier, so both mid slots are carriers in every draft.  Twelve heroes
+    #    -- narrower than the `abilanc`-shaped terms the docstring promises to
+    #    keep passing -- and still frozen TRUE.
+    mids = pool_by_pos[2]
+    check(len(mids) < 20,
+          "the position-2 set is narrow enough to slip a width threshold (%d)" % len(mids))
+    rc, text = gate("synth_allmid", mids)
+    check(rc == 2 and "verdict=OVER-BROAD" in text,
+          "covering one whole position reads OVER-BROAD at %d heroes (got %d)"
+          % (len(mids), rc))
+
+    # D. one hero short of that: the draft still cannot miss it, because each
+    #    position is filled TWICE (radiant and dire) and only one free mid
+    #    exists.  This is what pins PER_POSITION=2 -- a per-position demand of 1
+    #    calls this missable and the gate goes quiet on it.
+    rc, text = gate("synth_allmid_but_one", mids[1:])
+    check(rc == 2 and "verdict=OVER-BROAD" in text,
+          "one free mid is not enough for two mid slots (got %d)" % rc)
+
+    # E. ...and two free mids IS enough, so the gate is not simply saying yes to
+    #    anything position-shaped.
+    check(ct.draft_can_miss(set(mids[2:]), pool) is True,
+          "two free mids make the term missable again")
+
+    # F. grounded in the drafter, not in my model of it: the real `draft()` over
+    #    a seed scan must never produce a carrier-free roster for C or D, and
+    #    must sometimes produce one for a single-hero term.
+    scan = [seed_draft.heroes_of(s, pool) for s in range(1, 401)]
+    for label, carriers in [("all mids", set(mids)), ("all mids but one", set(mids[1:]))]:
+        missed = [i for i, hs in enumerate(scan) if not (hs & carriers)]
+        check(not missed,
+              "400 real drafts, %s: none is carrier-free (%d were)" % (label, len(missed)))
+    cm_missed = [i for i, hs in enumerate(scan) if "crystal_maiden" not in hs]
+    check(cm_missed,
+          "control: a single-hero term IS missable in the real drafter")
+
+    # G. a narrow real term must be unaffected -- the gate buys loudness only
+    #    where loudness is also true.
+    rc, text = gate("synth_cm", ["crystal_maiden"], seeds=(2838,))
+    check(rc == 0 and "OVER-BROAD" not in text and "verdict=FULL" in text,
+          "a one-hero term still reads FULL, exit 0 (got %d)" % rc)
+
+    # H. positions missing => `UNCHECKED`, exit 2.  Not `OVER-BROAD` (that would
+    #    name a defect this run cannot see) and not silence.
+    rc, text = gate("synth_nopos", ["crystal_maiden"],
+                    the_pool=[n for n, _ in pool])
+    check(rc == 2 and "verdict=UNCHECKED" in text,
+          "a pool with no positions reads UNCHECKED, exit 2 (got %d)" % rc)
+
+    # I. the LIMIT is enforced, not assumed: thin a position below the draft's
+    #    slot count and the model stops answering instead of guessing.
+    thin = [(n, ps) for n, ps in pool if 2 not in ps] + [(n, ps) for n, ps in pool
+                                                         if 2 in ps][:4]
+    check(ct.draft_can_miss({"crystal_maiden"}, thin) is None,
+          "a position thinner than the draft makes draft_can_miss say None")
+
+    # L. and the live arm string must NOT trip any of this.  A gate that starts
+    #    refusing today's waves would be the "always says no" failure the
+    #    docstring warns about, paid for in hand-written overrides every wave.
+    buf = io.StringIO()
+    rc = ct.assert_carrier_ids([2745, 2838, 2850, 2922], rows, pool, out=buf)
+    check("OVER-BROAD" not in buf.getvalue() and "UNCHECKED" not in buf.getvalue(),
+          "no id on the live arm string is over-broad (gate is prospective)")
+
     failed = [lbl for ok, lbl in CHECKS if not ok]
     for ok, lbl in CHECKS:
         if not ok:

@@ -387,6 +387,59 @@ def print_derivation(rows, summary, out=sys.stdout):
              summary["unresolved"], summary["terms"]), file=out)
 
 
+# The soak drafter fills five positions with two heroes each (radiant + dire).
+DRAFT_SLOTS = 10
+PER_POSITION = 2
+
+
+def draft_can_miss(carriers, pool):
+    """Can SOME legal soak draft contain none of `carriers`?  None = cannot say.
+
+    This is the mirror of `UNDRAFTABLE` and the other half of GH #402.  A term no
+    draft can HIT is already refused loudly; a term no draft can MISS was passing
+    silently, and that is the more dangerous direction -- `immguard`'s 128-hero
+    disjunction read `verdict=FULL satisfied=4/4` for an id whose real carrier
+    (`brewmaster`) is not in `hero_pool.txt` at all.  A gate row that cannot fail
+    is not evidence that the wave carries the id; it is a row nobody checked.
+
+    Why a structural test and not a `len(heroes) > N` threshold, which is what the
+    issue proposed: **width is not the property that matters, position coverage
+    is.**  The 12-odd heroes eligible for position 2 are, together, unmissable --
+    every draft fills mid twice out of exactly that set -- so a 12-hero term can be
+    frozen TRUE while a 20-hero term spread across five positions is perfectly
+    informative.  Any threshold that catches the first would refuse the second.
+    Asking the drafter's own question instead needs no constant at all.
+
+    The question is Hall's condition on the complement: a carrier-free draft
+    exists iff, for every subset S of positions, the non-carriers eligible for
+    some position in S number at least `PER_POSITION * |S|`.  S = {1..5} subsumes
+    the trivial `fewer than 10 heroes left` case.
+
+    LIMIT -- the drafter's dead-end fallback.  `draft()` picks from the unused
+    heroes eligible for the position, and only if that list is EMPTY does it fall
+    back to any unused hero at all.  The reasoning above assumes the fallback does
+    not fire; it cannot on a pool where every position has more eligible heroes
+    than the draft has slots (currently {1:13, 2:12, 3:12, 4:15, 5:14} against 10
+    slots).  Rather than assume it, this returns None -- "cannot say", exit 2 --
+    the moment a position gets that thin, because a firing fallback lets a draft
+    reach a hero the position-respecting model says it cannot.
+    """
+    try:
+        rows = [(name, list(positions)) for name, positions in pool]
+    except (TypeError, ValueError):
+        return None                      # a bare name list carries no positions
+    by_pos = {p: [n for n, ps in rows if p in ps] for p in range(1, 6)}
+    if any(len(by_pos[p]) <= DRAFT_SLOTS for p in range(1, 6)):
+        return None                      # fallback reachable; model not exact
+    free = [ps for name, ps in rows if name not in carriers]
+    for mask in range(1, 1 << 5):
+        subset = [p for p in range(1, 6) if mask >> (p - 1) & 1]
+        avail = sum(1 for ps in free if any(p in ps for p in subset))
+        if avail < PER_POSITION * len(subset):
+            return False
+    return True
+
+
 def assert_carrier_ids(seeds, rows, pool, out=sys.stdout):
     """Per-id carrier gate.  0 ok / 1 an id has no carrier / 2 nothing checked.
 
@@ -396,6 +449,14 @@ def assert_carrier_ids(seeds, rows, pool, out=sys.stdout):
     independent `--assert-carrier` terms would demand all twelve in a 4-seed wave
     (40 hero slots) and refuse every launch forever -- a gate that always says no
     is as useless as one that always says yes, and costs more to discover.
+
+    Both ends of that sentence are now enforced.  A term no draft can carry is
+    `UNDRAFTABLE` (exit 1); a term no draft can miss is `OVER-BROAD` (exit 2,
+    "nothing checked" -- see `draft_can_miss`).  An OVER-BROAD row is a claim
+    about the DERIVATION, not about the wave: either the id really is generic and
+    was mis-classified hero-scoped, or the consumption walk over-expanded the way
+    it did through `minion_lib`.  Both are fixed in this file, never by re-rolling
+    seeds.
     """
     from seed_draft import position_map  # local: keeps this importable standalone
 
@@ -417,6 +478,17 @@ def assert_carrier_ids(seeds, rows, pool, out=sys.stdout):
             print("CARRIER id=%s term=%s verdict=UNDRAFTABLE (no carrier is in "
                   "hero_pool.txt) carriers=none" % (row["id"], label), file=out)
             worst = max(worst, 1)
+            continue
+        missable = draft_can_miss(set(draftable), pool)
+        if missable is not True:
+            verdict = "OVER-BROAD" if missable is False else "UNCHECKED"
+            why = ("no legal draft can miss it" if missable is False
+                   else "pool shape outside draft_can_miss's model")
+            print("CARRIER id=%s term=%s verdict=%s (%s; %d of %d pool heroes "
+                  "carry it) carriers=every-draft"
+                  % (row["id"], label, verdict, why, len(draftable), len(names)),
+                  file=out)
+            worst = max(worst, 2)
             continue
         satisfied = []
         for seed in seeds:

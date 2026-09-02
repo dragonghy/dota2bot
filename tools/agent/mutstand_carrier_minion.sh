@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Mutation stand for the minion_lib carrier resolution in
-# tools/batch_test/soak/carrier_terms.py (GH #402, director 2026-09-01).
-# Run by hand when that resolution or tests/test_carrier_terms.py is edited.
+# Mutation stand for tools/batch_test/soak/carrier_terms.py: the minion_lib
+# carrier resolution (N1-N5, GH #402 (a), director 2026-09-01) and the
+# OVER-BROAD draft gate (O1-O6, GH #402 (b), director 2026-09-02).
+# Run by hand when either of those or tests/test_carrier_terms.py is edited.
+#
+# The filename still says "minion" because reports and issue comments already
+# cite it by that name; the stand covers the whole file, not one half of it.
 #
 # DISCIPLINE: out-of-tree `cp` restore verified with `sha256sum -c`; bare exit
 # codes (the test writes a log, `$?` is read with no pipe in between); a mutant
@@ -57,6 +61,34 @@ PAIRS = {
     #     edited string is an edited program.
     "N5": ('MINION_OWNER = {\n    "primal_split.lua": "brewmaster",',
            'MINION_GENERIC.add("primal_split.lua")\nMINION_OWNER = {'),
+    # --- the OVER-BROAD gate (GH #402 (b)) --------------------------------
+    # O1: the gate never fires -- every term is called missable, which is the
+    #     pre-fix world where a 128-hero disjunction read satisfied=4/4.
+    "O1": ("    try:\n        rows = [(name, list(positions)) for name, positions in pool]",
+           "    return True\n    try:\n        rows = [(name, list(positions)) for name, positions in pool]"),
+    # O2: Hall degrades to a bare width count (only the all-positions subset).
+    #     This is the `len(heroes) > N` design the issue proposed, and the
+    #     stand exists partly to show what it stops seeing: a term covering one
+    #     whole position is frozen TRUE at twelve heroes.
+    "O2": ("    for mask in range(1, 1 << 5):", "    for mask in (31,):"),
+    # O3: each position demanded once instead of twice.  Every position is
+    #     filled for BOTH teams, so this quietly forgives a term that leaves a
+    #     single free hero for two slots.
+    "O3": ("PER_POSITION = 2", "PER_POSITION = 1"),
+    # O4: the verdict still prints, the exit code no longer moves -- the gate
+    #     becomes a comment.  A check that cannot fail looks exactly like a
+    #     check that passes.
+    "O4": ("            worst = max(worst, 2)", "            worst = max(worst, 0)"),
+    # O5: only the "cannot say" branch survives; OVER-BROAD itself is dead.
+    "O5": ("        if missable is not True:", "        if missable is None:"),
+    # O6: the LIMIT guard is disabled -- a pool thin enough for the drafter's
+    #     dead-end fallback to fire gets a confident answer from a model that
+    #     no longer describes it.
+    "O6": ("    if any(len(by_pos[p]) <= DRAFT_SLOTS for p in range(1, 6)):",
+           "    if False:"),
+    # O7: the unusable-pool branch turns optimistic instead of loud.
+    "O7": ("    except (TypeError, ValueError):\n        return None",
+           "    except (TypeError, ValueError):\n        return True"),
 }
 old, new = PAIRS[mut]
 if old not in src:
@@ -79,6 +111,34 @@ for cand in ("immguard", "tormself", "illumove", "illureal", "aimguard"):
     print("%s=%s:%s" % (cand, r["kind"], ",".join(sorted(r["heroes"]))))
 k, h, _t = ct._resolve_site(tree, "bots/FunLib/minion_lib/jugg.lua", 7, 0, frozenset(), [])
 print("jugg=%s:%s" % (k, ",".join(sorted(h))))
+
+# The OVER-BROAD half.  Without these probes every O-mutant would fingerprint
+# identically to the baseline and be scored INERT -- a fingerprint that does not
+# reach the mutated code cannot tell a no-op from a change.
+sys.path.insert(0, os.path.join(os.getcwd(), "tools", "batch_test", "soak"))
+import io
+import seed_draft
+pool = seed_draft.load_pool()
+mids = [n for n, ps in pool if 2 in ps]
+thin = [(n, ps) for n, ps in pool if 2 not in ps] + [(n, ps) for n, ps in pool if 2 in ps][:4]
+probes = [
+    ("wholepool", [n for n, _ in pool], pool),
+    ("allmid", mids, pool),
+    ("allmid_but_one", mids[1:], pool),
+    ("allmid_but_two", mids[2:], pool),
+    ("one_hero", ["crystal_maiden"], pool),
+    ("nopos", ["crystal_maiden"], [n for n, _ in pool]),
+    ("thinpool", ["crystal_maiden"], thin),
+]
+for label, carriers, p in probes:
+    print("dcm_%s=%s" % (label, ct.draft_can_miss(set(carriers), p)))
+    buf = io.StringIO()
+    rc = ct.assert_carrier_ids([2745, 2838], [{"id": label, "kind": "hero",
+                                               "heroes": set(carriers), "sites": [],
+                                               "why": "fp"}], p, out=buf)
+    text = buf.getvalue()
+    print("gate_%s=rc%d:%s" % (label, rc, "OVER-BROAD" if "OVER-BROAD" in text
+                               else ("UNCHECKED" if "UNCHECKED" in text else "-")))
 PY
 }
 
@@ -87,7 +147,7 @@ fingerprint > "$WORK/fp.base" 2>&1
 
 echo "== mutation stand: $SRC / $TEST"
 worst=0
-for m in N1 N2 N3 N4 N5; do
+for m in N1 N2 N3 N4 N5 O1 O2 O3 O4 O5 O6 O7; do
     purge_pyc
     if ! apply_mutant "$m"; then
         echo "$m  APPLY-FAILED -- stand aborted rather than score a no-op as caught"

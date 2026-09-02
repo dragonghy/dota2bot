@@ -995,6 +995,38 @@ import campsel_domain as CS                            # noqa: E402
 
 CS_GATE = CS.gate_facts()
 eq('campsel is gated by exactly one soak id', CS_GATE['cands'], ['campsel'])
+# The #207 hazard is `A and B` inside ONE argument: promote B and the whole
+# gate freezes FALSE while `check_armed_wiring.py` still calls it WIRED.  A
+# second argument is a second gate, not a conjunction -- so the check is aimed
+# per argument, and the siblings are ratcheted by name instead.  `slotarb`
+# (GH #406, 2026-09-01) is the first of those and turned this file red for a
+# tree where nothing was conjoined with anything.
+eq('no gate argument of ClosestCamp conjoins two candidate ids',
+   CS_GATE['conjoined'], [])
+eq('the wrapper\'s independent siblings are exactly the acknowledged ones',
+   CS_GATE['sibling_cands'], ['slotarb'])
+# ...and the split must still be able to SEE a conjunction, which the live tree
+# no longer contains.  Three synthetic wrappers, run every time: without them
+# `conjoined == []` is satisfied by a scan that cannot produce a non-empty
+# answer, and an aimed check and a disabled one read identically.
+_SYNTH = ('local function ClosestCamp(hBot, tCamps)\n'
+          '\treturn J.Site.GetClosestNeutralSpwan(hBot, tCamps,\n\t\t%s)\n'
+          'end\n')
+_conj = CS.gate_facts(farm_src=_SYNTH % (
+    "J.IsModeTurbo() and J.IsSoakCandidate('campsel') "
+    "and J.IsSoakCandidate('other')"))
+eq('a conjoined gate (the #207 shape) is still detected',
+   _conj['conjoined'], [('campsel', 'other')])
+_two = CS.gate_facts(farm_src=_SYNTH % (
+    "J.IsModeTurbo() and J.IsSoakCandidate('campsel'),\n"
+    "\t\tJ.IsModeTurbo() and J.IsSoakCandidate('other')"))
+eq('two arguments are two gates, not a conjunction', _two['conjoined'], [])
+eq('...and the second one is reported as a sibling, by name',
+   _two['sibling_cands'], ['other'])
+_nested = CS.gate_facts(farm_src=_SYNTH % (
+    "J.Between(a, b) and J.IsSoakCandidate('campsel')"))
+eq('a comma nested inside an argument does not split it',
+   _nested['cands'], ['campsel'])
 check('campsel is still resolved at exactly ONE call site -- a second one '
       'would be a path this detector has never looked at',
       CS_GATE['call_sites'] == 1, str(CS_GATE['call_sites']))

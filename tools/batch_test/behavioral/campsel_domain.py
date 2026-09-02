@@ -149,6 +149,29 @@ def _strip_lua_comments(src):
     return re.sub(r'^\s*--.*$', '', src, flags=re.M)
 
 
+def _split_top_level(arglist):
+    """Split a Lua argument list on its TOP-LEVEL commas.
+
+    `a and f('x'), b and f('y')` -> two arguments.  Depth-aware because the
+    whole point is to keep a nested `f(a, b)` from reading as two gates; a
+    plain `.split(',')` would put every comma at top level and make the
+    conjunction check below unable to see a conjunction at all.
+    """
+    out, depth, cur = [], 0, []
+    for ch in arglist:
+        if ch in '([{':
+            depth += 1
+        elif ch in ')]}':
+            depth -= 1
+        if ch == ',' and depth == 0:
+            out.append(''.join(cur))
+            cur = []
+            continue
+        cur.append(ch)
+    out.append(''.join(cur))
+    return [a.strip() for a in out if a.strip()]
+
+
 def _selector_body(src=None):
     """Source text of `____exports.GetClosestNeutralSpwan = function(...)`."""
     src = _strip_lua_comments(src if src is not None else _read(ABA_SITE))
@@ -169,13 +192,31 @@ def gate_facts(farm_src=None, aba_src=None):
     # (1) exactly ONE gate, and it names this candidate.  A second
     # IsSoakCandidate in the same conjunction is the GH-#207 shape: the day the
     # other id is promoted the whole gate freezes FALSE.
+    #
+    # READ PER ARGUMENT, not over the whole argument list (director 2026-09-02).
+    # The two are the same number only while the wrapper carries one gate.  On
+    # 2026-09-01 `slotarb` (GH #406) was threaded through the SAME call as a
+    # second, INDEPENDENT argument -- `f(hBot, tCamps, <campsel gate>, <slotarb
+    # gate>)` -- and this scan, which spanned the whole list, reported
+    # `cands=['campsel','slotarb']` and turned trunk red on a tree where nothing
+    # was conjoined with anything.  The hazard named in the paragraph above is a
+    # property of ONE argument (`A and B` freezes when B is promoted); two
+    # arguments are two gates, each armable alone, which is what the wrapper's
+    # own header claims.  Widening the check to "two ids anywhere in the call is
+    # fine" would have deleted the #207 protection instead of aiming it, so the
+    # split is the fix and `sibling_cands` below is the ratchet: a THIRD id
+    # appearing still has to be acknowledged once, in the test, by name.
     m = re.search(
         r'GetClosestNeutralSpwan\s*\(\s*hBot\s*,\s*tCamps\s*,'
         r'(?P<arg>.*?)\)\s*\n', farm, re.S)
     if not m:
         raise RuntimeError('mode_farm_generic.lua: ClosestCamp call not found')
     arg = m.group('arg')
-    cands = re.findall(r"IsSoakCandidate\(\s*'([^']+)'\s*\)", arg)
+    per_arg = [re.findall(r"IsSoakCandidate\(\s*'([^']+)'\s*\)", a)
+               for a in _split_top_level(arg)]
+    cands = next((ids for ids in per_arg if 'campsel' in ids), [])
+    sibling_cands = sorted({i for ids in per_arg for i in ids} - {'campsel'})
+    conjoined = sorted(tuple(ids) for ids in per_arg if len(ids) > 1)
 
     # (2) the ONE call site.  If a second appears, the gate is resolved in a
     # place this file has never looked at.
@@ -195,6 +236,8 @@ def gate_facts(farm_src=None, aba_src=None):
     on_camp = len(re.findall(r'Is(?:Enemy|Ancient)Camp\(camp\)', body))
     return {
         'cands': cands,
+        'sibling_cands': sibling_cands,
+        'conjoined': conjoined,
         'call_sites': call_sites,
         'penalty': float(pen.group(1)) if pen else None,
         'cutoff': float(cut.group(1)) if cut else None,
