@@ -289,6 +289,12 @@ local tRegistered = {
     -- (77e18be9 -> the commit carrying this line); the unfiltered run that found
     -- it was started before the push and only reported after it.
     -- Re-anchored, not relaxed; the probe and the lookup are textually unchanged.
+    -- [hero 2026-09-02T22:54Z] Independent witness for the same sentence,
+    -- from the other side: this pin was GREEN in the hero container before
+    -- that round rebased onto main and RED after, with that round touching
+    -- neither file.  Two streams re-anchored it within minutes of each
+    -- other; the strategy note above is kept because it names the exact
+    -- ten lines (:3405) and this one only adds the second observation.
     ['LOOKUP item_new bots/ability_item_usage_generic.lua:6886'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
