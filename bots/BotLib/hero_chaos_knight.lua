@@ -438,6 +438,44 @@ function X.ConsiderW()
 
 end
 
+-- [ckpush, 20260902] SECONDS-PER-MINUTE, and why the shape does NOT settle the
+-- repair.
+--
+-- WHAT THE DEFECT IS. The push branch of X.ConsiderR below is gated on
+-- `DotaTime() > 8 * 30`, and `* 30` is the only seconds-per-minute constant in
+-- bots/ that is not 60: the census is 138 sites written `DotaTime() <op> N * 60`
+-- against exactly 2 written `N * 30`, and those 2 are THE SAME expression --
+-- this one and its rubick twin at FunLib/rubick_hero/chaos_knight.lua:280.
+-- Inherited verbatim from the upstream OHA snapshot (74727e4:485), so it has
+-- never read otherwise in this repo's history. The shape says "typo": 8 * 30 =
+-- 240s is 8 minutes written with the wrong constant, and the correct twin here
+-- is not one site but twelve -- every other BotLib `and DotaTime() > N * 60`.
+--
+-- WHY THE SHAPE IS NOT THE RULING, AND WHAT THE CORPUS SAYS INSTEAD. Over the
+-- 24 fixture frames carrying a chaos_knight, Phantasm is first LEARNED at
+-- t = 306.0s and NO frame at or below 240s carries it at all. So the shipped
+-- 240 never binds in turbo -- by the time the ultimate exists the clause is
+-- already true -- while the idiomatic 480 binds hard: 10 frames sit in the
+-- disagreement band 240 < t < 480 and 5 of them hold a learned Phantasm.
+-- Repairing the typo is therefore a REAL turbo behaviour change that REMOVES
+-- push-Phantasm across the stretch where CK's ultimate first comes online, and
+-- that sign is a batch question, not a reading question.
+--
+-- So the repair ships GATED (turbo + 'ckpush') rather than as a correction, and
+-- as a SELECTION rather than a disjunction, so gate-off is the shipped VALUE.
+-- tests/test_ckpush_minute_unit.lua pins that as an equality on real frames --
+-- and pins the 138:2 census -- rather than as a claim in this comment.
+function X.GetPushCommitTime()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'ckpush' )
+	then
+		return 8 * 60
+	end
+
+	return 8 * 30
+
+end
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable() or bot:DistanceFromFountain() < 500 then return BOT_ACTION_DESIRE_NONE end
@@ -481,8 +519,9 @@ function X.ConsiderR()
 	end
 
 
+	-- [ckpush] threshold resolves in X.GetPushCommitTime -- see its header.
 	if J.IsPushing( bot )
-		and DotaTime() > 8 * 30
+		and DotaTime() > X.GetPushCommitTime()
 	then
 		if ( #nNearbyEnemyTowers >= 1 or #nNearbyEnemyBarracks >= 1 )
 			and #nNearbyAlliedCreeps >= 2

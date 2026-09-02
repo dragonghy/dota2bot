@@ -5279,5 +5279,23 @@
     ],
     "delivery": "test_set.md §DN.6(全文)+ 第 21 行「收割前必读三条」补 (iv)(收割 outlatch (a) 的人读的就是那一行)+ queue.json:strategy-28.director.coarmed_caveat + tests/test_coarmed_attribution_register.lua 的 ACKNOWLEDGED 行 + GH #424 追评关闭。",
     "verification": "tests/run_tests.lua test_coarmed_attribution_register.lua:修前 RED(点名 outlatch > slotpush),修后 11/0 裸 exit 0;变异 2/2 CAUGHT(M1 删新加行 / M2 删无关的 midtp > tpreach,各报各的缺陷),复原后基线绿;diff 52 插入 / 0 删除。bots/ 与 game/ 本轮零 diff。"
+  },
+  "ckpush_20260902": {
+    "what": "落地 gated `ckpush`(GH #426):bots/BotLib/hero_chaos_knight.lua X.ConsiderR 的推进分支闸在 `DotaTime() > 8 * 30`,而 `* 30` 是全仓唯一不是 60 的每分钟秒数常数(去注释计数,提交前 127 : 2,那 2 处是同一个表达式 —— 这一处与它的 rubick 孪生体)。逐字继承自 upstream OHA 快照 74727e4:485。",
+    "at": "2026-09-02T13:5xZ",
+    "archive": "iterations/streams/test_set.md §DQ",
+    "main_criterion": "⭐ 形状能判定「这是缺陷」,判定不了「修哪个方向」;判方向的是域价钱。本档案第一条形状与域价钱指向相反的杠杆。",
+    "shape": "127 : 2 —— 去注释、bots/**/*.lua、模式 `DotaTime() <op> N * <mult>`。正确孪生不是一处是十二处(BotLib 里其余每一条 `and DotaTime() > N * 60`)。",
+    "domain_price_flips_the_direction": "27 份带 chaos_knight 的 fixture(24 份存活;死亡单位 dumper 不写技能表):Phantasm 最早 t = 306.0s 被点出来,t ≤ 240 的帧一份都没有 ⇒ 出厂的 240 在 Turbo 里从不咬合(等大招存在时该合取项早已为真 —— 一个**量出来的**占位符,不是 hpbool/roshdist 那种看类型看出来的);而按惯例的 480 咬得很紧 —— 分歧带 240<t<480 里 12 帧,其中 5 帧大招已点。⇒ 「把笔误修好」是 Turbo 里的真实行为改变,方向是把 CK 大招刚上线那一段推进期整段拿掉。",
+    "direction": "NARROWING(拿掉出厂树会做的施法)。本组以往每一条杠杆都是出厂谓词的子集或加约束;这一条的期望符号与它们相反,验收要按这个方向读。",
+    "decision_domain_not_buyable": "全仓仅两份 chaos_knight 为主体的 fixture 坐在 t = 37.3 / 192.0,都在 240 以下,两个常数在那里答案相同(且 X.ConsiderR 在第一行就因大招未点 bail)⇒ 条件 (a) 在决策层面按构造买不到。这是 0EQUIV(§DJ.9)那条正着读:语料无法让两条腿分歧时,台子报的是「什么都没报」,用的是同一种绿。本文件断言它真看得见的那个「相同」,再在 ANNOTATED 时钟上做分离并标注。",
+    "twin_registered_not_fixed": "bots/FunLib/rubick_hero/chaos_knight.lua:280 逐字同一表达式;corpus_hero_census.py --hero rubick 答 DOMAIN-EMPTY(files=0, games=0, exit 3)⇒ 条件 (a) 按构造买不到。一次一个杠杆(0ROSHTWIN 先例),[census] 把「还剩 1 处内联」钉成双侧断言。",
+    "artifacts": "tests/test_ckpush_minute_unit.lua(12/0)+ tools/agent/mutstand_ckpush.sh(12/12 CAUGHT,自带 trap restore EXIT)",
+    "mutants_replaced": "⭐⭐ M9/M10 第一版削弱的是两条语料下限本身(>=5 → >=0,==0 → <=99),两个都活了 —— 不是缺断言:一个文件抓不到自己的断言被放松,按构造不可见。按 0EQUIV 这不构成判等价的许可。处置是换方向打同一个事实(M9 清空分歧带、M10 把「大招已点」放宽成「活着」),两个都被抓住。残余缺口据实点名:本仓没有任何东西会注意到未来有人只是把这两个数字放松。",
+    "gates": "luacheck_gate.sh 裸读 GATE_EXIT=0 / 0 警告,未用 RULE6_BYPASS;test_ckpush_minute_unit 12/0",
+    "cost": "零 AWS、S3 零访问、零 EC2;game/ 零 diff",
+    "queue": "iterations/queue.json strategy-38(bundle 已填 ckpush)",
+    "issue": "GH #426",
+    "report": "iterations/reports/strategy/20260902T135739Z.md"
   }
 }

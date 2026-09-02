@@ -1409,6 +1409,19 @@
    "acceptance": "**条件 (a) 的执行判据**:找**出厂腿抬起撤退欲望、而主体离当前坑口很远**的窗口 —— 具体读法:肉山已死、bot 处于 `BOT_MODE_ROSHAN`、坑口位置对本队可见,而 bot 自己距 `J.GetCurrentRoshanLocation()` **> 1600**;armed 腿上这一格应当不再抬起该欲望,而**主体真的站在坑口(≤1600)时仍然抬起**(承重的阴性/阳性两面都要读,否则「armed 少抬了」与「armed 永远不抬」在同一个数字上不可分)。⚠️ **按 README 铁律 4(i-a) 必须 dire / radiant 两个分层各自登记读数**。⛔ 本地买不到的部分已在 §DP.8 明说:fixture 不记录 active mode。",
    "director": "",
    "status": "open"
+  },
+  {
+   "id": "strategy-38",
+   "stream": "strategy",
+   "bundle": "ckpush",
+   "seeds": [],
+   "priority": 3,
+   "axis": "CKPUSH —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `ckpush`**(§CY.3)。⚠️ **这条与本组此前每一条都不同:它是 NARROWING**(拿掉出厂树会做的施法),而且**形状与域价钱指向相反** —— 入集与否本身是一个判断,见 test_set.md §DQ.2。",
+   "question": "`ckpush`(GH #426,提议 test_set.md §DQ):`bots/BotLib/hero_chaos_knight.lua` `X.ConsiderR` 的推进分支闸在 `DotaTime() > 8 * 30`。**`* 30` 是全仓唯一不是 60 的每分钟秒数常数** —— 去注释计数(`bots/**/*.lua`,模式 `DotaTime() <op> N * <mult>`)在本次提交前读作 **127 : 2**,而那 2 处是**同一个表达式**(这一处 + rubick 孪生体);正确孪生**不是一处是十二处**(BotLib 里其余每一条 `and DotaTime() > N * 60`)。逐字继承自 upstream OHA 快照 `74727e4:485`。**但形状不判方向**:在 27 份带 chaos_knight 的 fixture 上,**Phantasm 最早 t = 306.0s 才被点出来,t ≤ 240 的帧一份都没有** ⇒ **出厂的 240 在 Turbo 里从不咬合**(等大招存在时该合取项早已为真,是一个**量出来的**占位符,不是 `hpbool`/`roshdist` 那种**看类型看出来的**);**而按惯例的 480 咬得很紧** —— 分歧带 `240 < t < 480` 里 **12 帧,其中 5 帧大招已点**。⇒ 修法方向在 Turbo 里是真实行为改变,**符号只有批测答得了**,所以落地为闸而不是更正。本轮**只动 1 处**(一次一个杠杆);rubick 孪生体的 `corpus_hero_census.py --hero rubick` 答 **DOMAIN-EMPTY(files=0, games=0, exit 3)**,登记不修,`[census]` 把「还剩 1 处内联」钉成**双侧**断言。",
+   "acceptance": "**条件 (a) 的执行判据**:找 **chaos_knight 在 `240 < t < 480`、Phantasm 已点(rank ≥ 1)、`J.IsPushing` 为真、敌方塔或兵营在扫描半径内且己方小兵 ≥ 2** 的窗口 —— 出厂腿在这一格上应当**给出 BOT_ACTION_DESIRE_HIGH**,armed 腿应当**不给**;并且**承重的阴性面也要读**:`t > 480` 的同型窗口上**两条腿必须一致**,否则「armed 少施法了」与「armed 干脆不施法」在同一个数字上不可分。⚠️ **按 README 铁律 4(i-a),dire / radiant 两个分层各自登记读数**;该量**未消侧偏**(是计数),两层反号按 4(i-b) 读成噪声,不写进结论。⚠️ **方向提醒**:本条是 NARROWING,期望方向与本组以往每一条杠杆相反 —— 「Phantasm 施法次数下降」本身**不是**证据,要读的是**掉的那些施法是不是本来就该掉**。",
+   "director": "",
+   "status": "open",
+   "ruled": false
   }
  ],
  "done": [
