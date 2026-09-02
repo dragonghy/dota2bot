@@ -215,10 +215,32 @@ local function load_cm(bTurbo, nRole)
     return dofile(HERO)
 end
 
+--- Arm one candidate for the duration of `fn`, and PROVE the arming landed
+--- before running it.  [GH #417] The write used to be unchecked in all three
+--- of its steps -- `f:write` and `f:close` return values dropped, the file
+--- never read back -- and every one of those failures presents as the SAME
+--- observation: a gate that does not fire.  That is the wrong direction for a
+--- gate harness to fail in, because "the gate did not fire" is exactly what
+--- four of the five cases in this file EXPECT, so a harness fault reads as a
+--- pass in four places and as a mystery mismatch on the fifth (the report on
+--- #417 pointed at line 302, the assertion, when nothing there was in doubt).
+--- Reading the bytes back turns the whole class -- a short write, a full disk,
+--- a read-only tree, a leftover file another test file is holding -- into one
+--- named failure at the moment it happens.  Twenty-five test files copy this
+--- helper's unchecked shape today; this is the one that had a red to explain.
 local function with_candidate(sId, fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = '" .. sId .. "' }\n")
-    f:close()
+    local sWant = "return { side = 'radiant', cand = '" .. sId .. "' }\n"
+    local f = assert(io.open(SIDE_PATH, 'w'), 'cannot open ' .. SIDE_PATH
+        .. ' for writing -- the gate cannot be armed at all')
+    local okw, errw = f:write(sWant)
+    local okc, errc = f:close()
+    assert(okw, 'writing ' .. SIDE_PATH .. ' failed: ' .. tostring(errw))
+    assert(okc, 'closing ' .. SIDE_PATH .. ' failed: ' .. tostring(errc))
+    assert(read_file(SIDE_PATH) == sWant,
+        SIDE_PATH .. ' does not hold what we just wrote -- the candidate is '
+        .. 'NOT armed, so anything measured under it is measuring the unarmed '
+        .. 'tree. Every gate below would read "did not fire" for this reason '
+        .. 'and four of the five cases would call that a pass.')
     local ok, err = pcall(fn)
     os.remove(SIDE_PATH)
     if not ok then error(err, 0) end
@@ -260,8 +282,36 @@ local tests = {}
 --    thing holding that line (the 2026-08-22 21:48Z lesson), and a build gate
 --    is cheap to actually execute, so these load the hero file both ways.
 
+--- The unarmed cases below claim "gate off"; what they can actually observe is
+--- "shipped list".  [GH #417] Those are the same observation only while no
+--- soak_side file exists, and twenty-five test files write that one path with
+--- no shared helper and no owner, so a case that died between its write and
+--- its os.remove leaves this file's premise false for every case after it --
+--- in THIS process and, since the path is on disk rather than in memory, in
+--- the next one too.  Naming the premise costs one stat call and turns that
+--- into a sentence instead of a list mismatch.
+local function assert_unarmed()
+    local fh = io.open(SIDE_PATH, 'r')
+    if fh == nil then return end
+    local s = fh:read('*a'); fh:close()
+    error(SIDE_PATH .. ' already exists, so "gate off" is not what this case is '
+        .. 'measuring. Some other case (here or in another test file -- 25 of '
+        .. 'them write this path) armed a candidate and did not remove it. '
+        .. 'Contents: ' .. tostring(s), 0)
+end
+
+-- ...and once HERE, at file-load time, which is the only moment that sees the
+-- state this process STARTED in.  The per-case calls below cannot: `with_
+-- candidate` ends in os.remove, the armed cases sort before the unarmed ones,
+-- so an inherited leftover is deleted by a sibling case before any guard looks
+-- at it.  That is not a hypothesis -- a leftover planted before the run
+-- survived the per-case guard 19/19 green, and only this call turned it into a
+-- named failure.  A guard whose subject is destroyed before it runs is prose.
+assert_unarmed()
+
 tests['[hero] gate off: pos_5 is the shipped tranquil list byte for byte'] = function()
     -- No soak_side file exists -> IsSoakCandidate('cmboots') is false.
+    assert_unarmed()
     local X = load_cm(true, 5)
     assert_same_list(X.sBuyList, SHIPPED_POS5, 'pos_5 gate off, turbo')
 end
@@ -270,6 +320,7 @@ tests['[hero] gate off: the other two CM roles are untouched'] = function()
     -- Acceptance criterion 1 of GH #144 covers all three role lists, not just
     -- the one the candidate edits.  pos_1/pos_2/pos_4 alias or stand alone;
     -- the transform must not have leaked into any of them.
+    assert_unarmed()
     local tPos3 = load_cm(true, 3).sBuyList
     local tPos4 = load_cm(true, 4).sBuyList
     assert(tPos3[1] == 'item_mage_outfit',
@@ -291,6 +342,27 @@ tests['[hero] a different armed candidate leaves the shipped list'] = function()
     with_candidate('wkbuild', function()
         assert_same_list(load_cm(true, 5).sBuyList, SHIPPED_POS5,
             'pos_5 with another candidate armed')
+    end)
+    -- POSITIVE CONTROL, same process, immediately after the negative one.
+    -- [GH #417 acceptance 3] Without this, the assertion above cannot tell
+    -- "the gate is correctly closed because wkbuild is not cmboots" from "the
+    -- gate is stuck closed for the rest of this process, whatever is armed" --
+    -- and under the second reading it is green for the wrong reason, which is
+    -- the failure this file actually shipped: on the round that opened #417 the
+    -- turbo case one entry down went red while THIS case stayed green, and a
+    -- reader had no way to see they were the same event.  A control belongs
+    -- inside the case whose reason it certifies, not in a separate case that a
+    -- filter or an ordering can drop independently of it.
+    with_candidate(CAND, function()
+        local t = load_cm(true, 5).sBuyList
+        assert(t[2] == 'item_mage_arcane_outfit',
+            'the gate is STUCK CLOSED in this process: with ' .. CAND .. ' armed '
+            .. 'in turbo the opener is still ' .. tostring(t[2]) .. '. The '
+            .. 'wkbuild assertion above therefore proved nothing about wkbuild '
+            .. '-- it would hold for every candidate id, including this one. '
+            .. 'Look for what keeps the gate closed across cases (a stale '
+            .. 'GetSoakSideConf cache, a module that reset_modules did not '
+            .. 'clear, an unarmed soak_side write), not at the list contents.')
     end)
 end
 
