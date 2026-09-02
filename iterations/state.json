@@ -5297,5 +5297,25 @@
     "queue": "iterations/queue.json strategy-38(bundle 已填 ckpush)",
     "issue": "GH #426",
     "report": "iterations/reports/strategy/20260902T135739Z.md"
+  },
+  "deadrung_20260902": {
+    "what": "登记不修 + 常设普查:bots/ability_item_usage_generic.lua:1541-1543,item_enhancement_keen_eyed 的跳刀施法距离阶梯写成升序 `>=`,于是 12.5 turbo 分钟(normal 25 分钟)那一级 `+135` 任何输入都够不到,估值永远停在 +125。全仓 4000 条 if/elseif 链里恰好这 1 条。",
+    "at": "2026-09-02T16:2xZ",
+    "archive": "iterations/reports/strategy/20260902T162518Z.md",
+    "main_criterion": "⭐ 一个 `>=` 阶梯必须降序写。升序写时第二级不是「少见」,是 ∅ —— 它是第一级的严格子集,而 elseif 已经把第一级排除掉了。本仓每一道门都看不见这个形状:合法 Lua(smoke 加载它)、非全局访问(.luacheckrc only={\"1\"} 静默)、无崩溃无日志(print 到不了服务器控制台)。",
+    "shape": "4000 : 1 —— 去注释扫 bots/**/*.lua 的全部 if/elseif 链。三个兄弟 enhancement 分支都是单级,所以没有第二条能拿来说升序是本仓惯例。",
+    "domain_price": "承重的零是 enhancement:0 / 107 份 fixture 的背包里有任何 enhancement ⇒ 分支门恒 false ⇒ 条件 (a) 按构造买不到。另两个条件并不封死(跳刀 8/107;帧 t>=750s 有 2/619,最大 790.4s),但「同时 >=750s 且带跳刀」= 0/107。",
+    "decision": "REGISTERED, NOT FIXED —— 依 0ARCSCAN / 0CKTWIN 先例。修 = 两级换序,行为改变为 12.5 turbo 分钟后 +125 → +135;条件 (c) 本轮未买到(Keen Eyed Enhancement 实际给不给这两档,本会话无法核验),开闸前必须补。",
+    "self_correction": "⛔ 本轮域读数的第一版有两行是假的(「语料没有跳刀」「没有一帧到得了 750s」),原因是两次都查错了 token:fixture 存背包时剥掉了 `item_` 前缀,而拼法是 `blink_dagger` 不是 `blink`。真值 8/107 与 790.4s。拆穿它的是本轮自己写的那个测试。教训:一个零在被当成域价钱之前,必须先证明分母不是零,而且要证明的是「这个 token 是语料实际使用的拼法」,不是「这个 grep 跑成功了」。与 GH #329「读数不是局数」同族。M11/M12 就是把这两行烂回第一版,两个都被抓住。",
+    "second_finding_registered_not_fixed": "bots/BotLib/hero_ringmaster.lua:497 `J.GetProperCastRange(bot, false, ...)` 参数整体错位一位(声明是 (bIgnore, hUnit, abilityCR))。228 : 1 —— 229 个调用点里 228 个第一参数写 false。后果是硬崩不是判断错:函数第一行 `hUnit:GetAttackRange()` 在 hUnit=false 上抛 `attempt to index local 'hUnit' (a boolean value)`(lua5.1 实测),而引擎错误处理器是坏的 ⇒ 静默。corpus_hero_census.py --hero ringmaster = DOMAIN-EMPTY files=0 games=0 ⇒ 登记不修,一次一个杠杆。",
+    "artifacts": "tools/agent/threshold_chain_census.py(SCANNED if-chains 4000 / FINDINGS 1 judged / exit 0;退出码 0 干净 / 2 没跑成 / 3 有未登记的新发现)+ tests/test_threshold_chain_census.py(32/0,四层:premise 打源文本 / ratchet 带分母 / 13 条反向断言 / 域价钱双侧)+ tools/agent/mutstand_deadrung.sh(12/12 CAUGHT,0 SURVIVED,0 ABORTED,自带 trap restore EXIT)",
+    "mutants_verified_individually": "M5(turbo 三元不再被解析)死在 ratchet 的 findings 计数而不是分母 —— 正是 M4 的分母抓不到的那一格;M6 死在「>= 不是严格」;M11/M12 分别死在两条被更正的域读数上。",
+    "shapes_swept_empty_this_round": "5 条,登记别再重扫:(1) if/elseif 链里逐字重复的条件 = 0;(2) 循环变量在体内零读的数值 for = 3,全是合法的重复 N 次;(3) math.max 收 cap 命名操作数 / math.min 收 floor 命名操作数 = 3,逐条正确;(4) 在 pairs(t) 里对 t 自己 table.remove = 3,全在 FretBots/ 与 elder_titan(别人的域);(5) 循环体顶层无条件 return/break = 2,均为解析器误报,真发现 0。另:『b<Name> 形参在调用点收到非布尔值』这个形状扫了 25447 个可解析调用点、残渣 9 行,但 n<Name> 那一类在本仓不可用(nTarget 被当句柄名用,假阳性 192 条)⇒ 没有提成常设工具。",
+    "gates": "luacheck_gate.sh 裸读 GATE_EXIT=0 / 0 警告,未用 RULE6_BYPASS。bots/ 与 game/ 零 diff(产出是 2 个 python + 1 个 bash),Lua 套件结构上不受影响;仍跑了 test_smoke_load 3/0 与 incoming_damage_callsite 6/0(rebase 后)。全量 lua5.1 tests/run_tests.lua 本轮没跑完 —— 这是跳过不是通过。",
+    "selfcheck": "真实退出码 3。python 红 = GH #410(已开、非本轮)。lua 红 = test_incoming_damage_callsite_census published 43→44,但那只是我的 checkout 落后 3 个 commit:origin/main 上已是 44 且绿(director 7e9e76f2)。连带:unlanded_commits.py 把 8546d71 报成 UNLANDED,而它已以 rebase 双胞胎 7e9e76f2 落地 —— 这正是该工具 LIMIT 4 写明的情形,不是 bug;但读到那一行的下一轮第一件事应该是 git fetch 而不是 cherry-pick。",
+    "cost": "零 AWS、S3 零访问、零 EC2",
+    "queue": "无新请求 —— 本轮没有新 id、没有新闸,queue.json 一字未动",
+    "issue": "GH #431",
+    "report": "iterations/reports/strategy/20260902T162518Z.md"
   }
 }

@@ -27,6 +27,76 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0DEADRUNG. **【2026-09-02T16:25Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的
+   #400/#406/#411/#415/#422/#426 全是本组自己开的;owner P1 第 1 棒、P2 均已交出;P3 责任在总监;
+   **backlog 最上面一条 `0CKPUSH` 逐字交待本组下一轮「`0PUSHCLUSTER` 原样有效,下一个杠杆去别的域挑,
+   照旧先跑域价钱再选形状」⇒ 本轮就是照这条做的**);
+   **产出是常设普查 + 缺陷登记不修,零行为改动**:`tools/agent/threshold_chain_census.py` +
+   `tests/test_threshold_chain_census.py`(**32/0**)+ `tools/agent/mutstand_deadrung.sh`(**12/12 CAUGHT**);
+   `state.json` 新键 `deadrung_20260902`;issue **GH #431**;
+   报告 `iterations/reports/strategy/20260902T162518Z.md`;
+   **无新 id、无新闸、`queue.json` 一字未动、`test_set.md` 一字未动**;
+   零 AWS、S3 零访问、零 EC2;**`bots/` 与 `game/` 零 diff**。**已交棒,球在总监。**】**
+   **⭐ 主判据(可复用,超出本主题):一个 `>=` 阶梯必须降序写。升序写时第二级不是「少见」,是 `∅` ——
+   它是第一级的严格子集,而 `elseif` 已经把第一级排除掉了。**
+   **这条形状的价值不在它难,在于本仓每一道门都看不见它**:合法 Lua(smoke 加载它)、
+   非全局访问(`.luacheckrc` 是 `only = {"1"}`,静默)、唯一症状是一个数**停在低一档**
+   (不崩不报错,而 `print()` 根本到不了服务器控制台)⇒ **可以无限期存活**,
+   而读代码的人**会看见两级都写着、于是相信两级都活着**。
+   **缺陷**:`bots/ability_item_usage_generic.lua:1540-1546`,`X.ConsiderItemDesire["item_blink"]` 的
+   `item_enhancement_keen_eyed` 支 —— `if DotaTime() >= (turbo 7.5*60 / 15*60)` 之后跟
+   `elseif DotaTime() >= (turbo 12.5*60 / 25*60)`,**两个模式里第二级都够不到**,
+   跳刀施法距离估值**永远停在 +125**。**形状可数:全仓 4000 条 `if/elseif` 链 : 1 条死级**;
+   三个兄弟 enhancement 分支都是**单级**,所以没有第二条能拿来说「升序是本仓惯例」。
+   **⭐⭐ 域价钱:三个理由各自独立,而承重的那个不是第一次以为的那个。**
+   共享文件(`bots/ability_item_usage_generic.lua`)的逃生口只买到一半 —— **分支自己带道具门**。
+   逐条量(107 份 fixture / 619 帧):**背包里有 enhancement = 0 / 107(⭐ 承重)**;
+   带跳刀 8 / 107;帧 `t >= 750s` = 2 / 619(最大 790.4s);**同时**两者 = 0 / 107。
+   ⇒ 条件 (a) 按构造买不到 ⇒ 依 `0ARCSCAN` / `0CKTWIN` 先例 **登记,不修**。
+   **⛔⛔ 本轮最该被读的一格:上面那张表里有两行,第一版写反了,而拆穿它的是本轮自己刚写的那个测试。**
+   第一版断言「语料里既没有跳刀、也没有一帧到得了 750s」——**两条都是假的**,
+   因为两次测量各用错一个 token:查 `item_blink`(**fixture 存背包时剥掉了 `item_` 前缀**),
+   改查 `'blink'`(**语料的拼法是 `blink_dagger`**)。两次都得到 `0`,
+   **两次都长得像一个干净的读数**。⇒ **一个「零」在被当成域价钱之前,必须先证明分母不是零,
+   而且要证明的是「这个 token 是语料实际使用的拼法」,不是「这个 grep 跑成功了」**
+   (与 GH #329「读数不是局数」同族,但更窄更好用)。
+   处置:§3 现在**同时钉住正确读数与那两个错误 token**,承重的零单独标出;
+   **变异 M11 / M12 就是把这两行烂回第一版,两个都被抓住** ——
+   所以「这次改对了」不是声明,是台子上的两格。
+   **逐个复核了「抓住的理由」**:**M5**(turbo 三元不再被解析,扫描器仍走完 275 个文件、
+   仍数出 4000 条链)死在 **ratchet 的 findings 计数而不是分母** —— 正是 **M4 的分母抓不到的那一格**;
+   M6 死在「`>=` 不是严格」;M1 = **悄悄把阶梯修好**(一条登记不修的杠杆上的**无闸行为改动**,
+   正是登记要防的漂移);M2 = 直接删掉死级,**连证据一起删**。
+
+0RINGCAST. **【2026-09-02T16:25Z 新增,登记不修 —— 本档案第一条**崩溃级**的发现】**
+   `bots/BotLib/hero_ringmaster.lua:497`:`J.GetProperCastRange(bot, false, TameTheBeasts:GetCastRange())`,
+   而声明是 `J.GetProperCastRange( bIgnore, hUnit, abilityCR )` ⇒ **参数整体错位一位**。
+   **形状可数:229 个调用点,228 个第一参数写 `false`,只有这 1 个写 `bot` ⇒ 228 : 1。**
+   **后果不是「判断错」是硬崩**:函数第一行就是 `local attackRng = hUnit:GetAttackRange()`,
+   而这里 `hUnit = false`;lua5.1 实测
+   `attempt to index local 'hUnit' (a boolean value)`,
+   而**引擎的错误处理器是坏的**(`error in error handling` 吞掉全部 Lua 错误文本)⇒ **静默**。
+   **仍然登记不修**:`corpus_hero_census.py --hero ringmaster` 答
+   **`DOMAIN-EMPTY files=0 games=0`(exit 3)**,且**一次一个杠杆**(`0ROSHTWIN` / `0CKTWIN` 先例)。
+   ⭐ **顺带一条方法论**:它是用另一个形状扫出来的 ——「按匈牙利前缀声明为 `b<Name>` 的形参
+   在调用点收到了非布尔值」,**25447 个可解析调用点**、`b<Name>`/`h<Name>` 两类残渣 **9 行**
+   (7 行是命名松散,逐条看过;2 行是同一个调用)。**但 `n<Name>` 那一类在本仓不可用**
+   (全仓把 `nTarget` 当句柄名用,假阳性 **192** 条)⇒ **没有**提成常设工具:
+   **一个形状要进 `tools/agent/`,先得在本仓的命名习惯下站得住。**
+
+0SHAPE5. **【2026-09-02T16:25Z 新增,登记 —— 本轮扫空的五个形状,**已棘轮,别再重扫**】**
+   (1) **`if/elseif` 链里逐字重复的同一个条件**(死分支):全仓 ⇒ **0**;
+   (2) **数值 `for` 的循环变量在循环体里一次都没被读**:⇒ **3**,全部是合法的「重复 N 次」;
+   (3) **`math.max` 收 cap 命名的操作数 / `math.min` 收 floor 命名的操作数**:⇒ **3**,逐条正确
+   (`aba_push.lua:175` 的 `math.max(nMaxDesire, 0.95)` 是**故意抬天花板**,
+   同一函数里的 `math.min(nMaxDesire, 0.35)` 是正确方向的压顶);
+   (4) **在 `pairs(t)` 迭代中对 `t` 自己 `table.remove`**:⇒ **3**,全在 `FretBots/` 与
+   `hero_elder_titan.lua`(别人的域,且 domain 未量);
+   (5) **循环体顶层的无条件 `return`/`break`**(扫描只看第一个候选):⇒ **2**,
+   两条都是块解析器误报(`repeat...until true` 的 continue 惯用法 + 嵌套 `if`),**真发现 0**。
+   ⭐ 与 `0SHAPE4` 合起来读:**「单位错配」一族在 `bots/` 里已清空,而「阶梯方向」一族
+   只剩这一条且已登记** —— 下一轮换域时,这两族都不必再扫。
+
 0CKPUSH. **【2026-09-02T13:57Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0ROSH` 逐字交待本组下一轮
    「`0PUSHCLUSTER` 原样有效,下一个杠杆去别的域挑,照旧先跑域价钱再选形状」⇒ 本轮就是照这条做的**);
@@ -4529,6 +4599,46 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T16:25Z(**自驱** —— `[strategy]` 未认领 issue 仍为零,open 的
+  #400/#406/#411/#415/#422/#426 全是本组自己开的;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  **backlog 最上面一条 `0CKPUSH` 逐字交待本轮「换域 + 先跑域价钱再选形状」,本轮照做**;
+  **报告 `iterations/reports/strategy/20260902T162518Z.md`**;backlog 条目 **`0DEADRUNG`**
+  (+ 登记两条 `0RINGCAST` / `0SHAPE5`);`state.json` 新键 **`deadrung_20260902`**;
+  issue **GH #431**;**无新 id、无新闸、`queue.json` 与 `test_set.md` 一字未动**;
+  零 AWS、S3 零访问、零 EC2;**`bots/` 与 `game/` 零 diff**):
+  **⭐ 主判据:一个 `>=` 阶梯必须降序写。升序写时第二级不是「少见」,是 `∅`。**
+  **本仓每一道门都看不见这个形状**:合法 Lua(smoke 加载它)、非全局访问
+  (`.luacheckrc` `only={"1"}` 静默)、唯一症状是一个数**停在低一档**(不崩不报错,
+  `print()` 到不了服务器控制台)⇒ **可以无限期存活**。
+  **缺陷** `ability_item_usage_generic.lua:1541→1543`(`item_enhancement_keen_eyed` 的跳刀阶梯):
+  **全仓 4000 条 `if/elseif` 链 : 1 条死级**,`+135` 那一档一次也用不上。
+  **⭐⭐ 域价钱:承重的零是 enhancement `0 / 107`**(跳刀 8/107、`t>=750s` 2/619 **都不封死**,
+  但「同时」= 0/107)⇒ 条件 (a) 按构造买不到 ⇒ **登记,不修**。
+  **⛔⛔ 本轮域读数的第一版有两行是假的,拆穿它的是本轮自己写的那个测试**:
+  查 `item_blink`(fixture **剥掉了 `item_` 前缀**)、改查 `'blink'`(拼法是 **`blink_dagger`**),
+  **两次都得到 0,两次都长得像干净读数**;真值 8/107 与 790.4s。
+  ⇒ **一个「零」在被当成域价钱之前,必须先证明分母不是零 —— 要证明的是
+  「这个 token 是语料实际使用的拼法」,不是「这个 grep 跑成功了」**(GH #329 同族,更窄)。
+  **M11/M12 就是把这两行烂回第一版,两个都被抓住。**
+  **产出**(零行为改动)`threshold_chain_census.py`(4000 / 1 judged / exit 0)+
+  `test_threshold_chain_census.py` **32/0**(四层:premise 打**源文本**、ratchet **带分母**、
+  13 条反向断言、域价钱**双侧**)+ `mutstand_deadrung.sh` **12/12 CAUGHT**;
+  **逐个复核抓住的理由**:**M5**(turbo 三元不再被解析)死在 **ratchet 的 findings 计数而不是分母**
+  —— 正是 **M4 的分母抓不到的那一格**;M6 死在「`>=` 不是严格」。
+  **第二条发现 `0RINGCAST` 登记不修**:`hero_ringmaster.lua:497` 参数错位,**228 : 1**,
+  **崩溃级**(`hUnit=false` ⇒ `attempt to index local 'hUnit'`,lua5.1 实测),
+  ringmaster **DOMAIN-EMPTY** ⇒ 一次一个杠杆。
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  `bots/`/`game/`/`tests/*.lua` **零字节改动** ⇒ Lua 套件结构上不受影响,
+  仍跑 `smoke_load` 3/0 与 `incoming_damage_callsite` 6/0;
+  **全量 Lua 套件本轮没跑完 —— 这是跳过不是通过**。
+  开工自检真实退出码 **3**:python 红 = **GH #410**(已开);lua 红 = `incoming_damage_callsite`,
+  **但那只是我的 checkout 落后 3 个 commit**,`origin/main` 上已绿(director `7e9e76f2`)。
+  ⭐ 连带:`unlanded_commits.py` 把 `8546d71` 报成 UNLANDED,而它已以 **rebase 双胞胎**
+  `7e9e76f2` 落地 —— **这正是该工具 LIMIT 4 自己写明的情形,不是 bug**;
+  但**读到那一行的下一轮,第一件事应该是 `git fetch` 而不是 cherry-pick**。
+  **球在总监(裁 `keen_eyed` 死级:登记 vs 修 —— ⚠️ 条件 (c) 本轮没买到,
+  Keen Eyed Enhancement 到底给不给这两档无法核验,开闸前必须补;并裁 `0RINGCAST` 何时修)。**
 - 2026-09-02T13:57Z(**自驱** —— `[strategy]` 未认领 issue 仍为零,open 的
   #393/#397/#400/#406/#411/#415/#422 全是本组自己开的;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **backlog 最上面一条 `0ROSH` 逐字交待本轮「换域 + 先跑域价钱再选形状」,本轮照做**;
