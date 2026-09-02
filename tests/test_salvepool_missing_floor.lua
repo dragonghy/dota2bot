@@ -53,7 +53,8 @@ local cs = require('corpus_scale')
 local FIX  = 'tests/fixtures/f_260819_004858_cm_centaur_far.lua'
 local JMZ  = 'bots/FunLib/jmz_func.lua'
 local AIUG = 'bots/ability_item_usage_generic.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')
+local SIDE_PATH = ss.PATH                          -- gitignored, farm-only
 
 local SUBJECT  = 'npc_dota_hero_crystal_maiden'
 local FRAME_T  = 423.4
@@ -78,13 +79,17 @@ local function read_file(path)
     return s
 end
 
+-- [GH #365 §3 / GH #229] Arming goes through tests/mock/soak_side.lua, the
+-- switch's one owner: the write is read back, the unarmed leg ASSERTS the
+-- switch is absent instead of deleting whatever it finds (that unconditional
+-- `os.remove` was itself a deleter of other processes' switches), and the
+-- switch is re-read after each case body so a concurrent removal is reported
+-- as itself rather than as the unarmed floor this file publishes elsewhere.
 local function load_with(sCand, sSide)
     if sCand == nil then
-        os.remove(SIDE_PATH)
+        ss.assert_clean('test_salvepool_missing_floor unarmed leg')
     else
-        local f = assert(io.open(SIDE_PATH, 'w'))
-        f:write("return { side = '" .. (sSide or 'dire') .. "', cand = '" .. sCand .. "' }\n")
-        f:close()
+        ss.arm(sCand, sSide or 'dire')
     end
     local J, bot = rf.load(FIX, SUBJECT)
     assert(bot ~= nil, 'fixture no longer carries ' .. SUBJECT)
@@ -94,8 +99,7 @@ end
 local function armed(sCand, fn, sSide)
     local J, bot = load_with(sCand, sSide)
     local ok, err = pcall(fn, J, bot)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.finish(ok, err)
 end
 
 ----------------------------------------------------------------------
@@ -419,8 +423,7 @@ tests['[gate] the wrong side does not arm it either'] = function()
         assert(not J.IsSoakCandidate('salvepool'), 'radiant side must not arm a dire subject')
         assert(J.SalveSelfMissingFloor(SUBJ_MAXHP) == FLOOR, 'and the floor stays shipped')
     end)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.finish(ok, err)
 end
 
 ----------------------------------------------------------------------

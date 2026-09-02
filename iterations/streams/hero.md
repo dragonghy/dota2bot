@@ -22,7 +22,27 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--77. **25 个测试文件各自抄了一份无检查的 `soak_side.lua` 写盘,没有共享 helper、没有属主。**
+-78. **把剩下 18 个 raw 文件迁到属主上(`-77` 的第二半),按「有没有红要解释」排序。**
+   属主 `tests/mock/soak_side.lua` 与所有权语义已经定死(见 `-77`),迁移现在是**机械的**:
+   `local ss = require('mock.soak_side')` + `SIDE_PATH = ss.PATH`,自己那份 `with_candidate` /
+   `arm` / `disarm` 改成转调,**unarmed 腿的无条件 `os.remove` 改成 `ss.assert_clean`**
+   (那个删除动作正是危害本身)。`test_soakside_shared_switch.lua` 的 `RAW_CEILING`
+   **每迁一个就往下调一个**,S2 会自己核对。⚠️ **别一次全迁**:5 个文件仍靠
+   `if sCand == nil then os.remove(SIDE_PATH)` 支撑 S2 的「unarmed 腿是删除者」这条读数
+   (`bbfight` / `bbrespawn` / `bbshort` / `pollyhp` / `salveally`),它们**最后迁**,
+   迁完要把 S2 那一节改成引用档案而不是引用活文件。
+
+-77. ~~**25 个测试文件各自抄了一份无检查的 `soak_side.lua` 写盘,没有共享 helper、没有属主。**~~
+   **2026-09-02T10:50Z 主体 done —— 报告 `iterations/reports/hero/20260902T105033Z.md`;
+   新 `tests/mock/soak_side.lua`(属主)+ 迁移 4 个有观测到过红的文件 + 普查棘轮按设计更新;
+   `bots/`+`game/` 零行。25 → 18 个 raw。剩下的迁移 ⇒ 新 backlog `-78`。**
+   - **⭐⭐ 主产物是 GH #417 的根因**:把 #417 的文件放进协同组那台并发 `rm` 机器,
+     **前对照在 `HEAD` 上逐字复现了它的红** ⇒ **#417 与 GH #365 §3 是同一个事件**
+     (共享 inode + 每个 unarmed 腿都是删除者),**不是顺序依赖**。
+   - **⭐ 所有权语义(`-77` 挂起的那个设计问题)定死了**:属主**只删自己写的、
+     且此刻仍是自己那份字节**的文件;`arm` 拒绝覆盖别人的开关;
+     **`assert_still_armed` 在用例体之后、断言重抛之前再读一次开关,开关的因压过果**。
+   - 以下是原正文,保留作档案:
    09-02T07:47Z 那轮只在 `test_cm_pos5_boots.lua`(唯一有一条红要解释的那个)落地了
    写回读比对 + 装载时残留守卫。**其余 24 个仍是原样**:`f:write` / `f:close` 返回值丢弃、
    写完不读回、结尾 `os.remove` 谁都能删谁的。危险方向是固定的 ——
@@ -3712,6 +3732,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T10:50Z(报告 `iterations/reports/hero/20260902T105033Z.md`;轴 **backlog `-77`**
+  = 25 个测试文件各抄一份无检查的 `soak_side.lua` 写盘、没有属主)
+  **新文件独一份 `tests/mock/soak_side.lua` + 迁移 4 个测试文件 + 按设计更新普查棘轮;
+  `bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、零新 gate id、零 arm/promote、零 AWS、不申请波次;
+  `state.json` / `test_set.md` / `queue.json` 本轮无新增。**
+  - **⭐⭐ 主产物:GH #417 的红有根因了,而且它和 GH #365 §3 是同一个事件。**
+    把 #417 的文件放进协同组 08-31 建的那台并发机器(并发 `rm -f SIDE_PATH` + 单文件跑),
+    **前对照在 `HEAD` 上逐字复现** `the opener must become the arcane variant; got
+    item_mage_outfit`(#417 复现块那一句;行号从 `:302` 漂到 `:374` 只是 07:47Z 加了注释)。
+    ⇒ **#417 的「顺序依赖」不是顺序依赖,是并发**:一个全局 inode,每个 gate 测试文件的
+    unarmed 腿本身就是删除者,而**开工自检自己会 spawn `lua5.1` 跑同一批文件**。
+    07:47Z 那轮的三条读数(单跑绿 / trunk 8/8 绿 / 报告者的树也绿)**全部与这个解释相容**。
+  - **⭐ 落地:开关有属主了**(`tests/mock/soak_side.lua`)。`arm` 读回比对字节**且拒绝
+    覆盖不是自己写的开关**;`disarm` **只删自己写的、且此刻仍是自己那份字节**的文件
+    (删掉陌生人的开关正是让**对方**那次失败不可归因的动作);**`assert_still_armed` 在
+    用例体之后、断言错误重抛之前再读一次开关**,顺序只写在 `M.finish` 一处 ——
+    **开关的因压过它造成的果**,这正是 #365 §3 缺的那一半。
+    后对照:同一台并发机器上,三个迁移文件的 **12 条失败 12/12 全是**那条点名诊断,
+    **零条数值不匹配**。**不修争用本身**(GH #229 仍开,它得动读侧的 `GetScriptDirectory`)。
+  - **⭐ 棘轮的第一条红是假信号,记下来**:S1 打 `only 18 files name … the census lost
+    its population` —— **没丢**,迁移后的文件不再含那个字面量,**只 grep 字面量的普查会把
+    自己的对象数落**。现在 `switch_files()` 同时认「字面量」和「require 属主」,总体切成
+    RAW/MIGRATED;**S2 变单调棘轮 `RAW_CEILING = 18`,只许降不许升**(再抄一遍那三行就红)。
+  - **⭐⭐ 变异台两个先漏后杀**:**M4**(`disarm` 无条件删除)对第一版 S5 **12/12 全绿存活** ——
+    那个用例先让 `arm` **失败**,于是 `sOwned` 没设上,`disarm` 在**第一行**就返回,
+    **变异体那几行从没被执行**;一个用例把「拒绝覆盖 + 拒绝删除」写在一起,**读起来像两条,
+    实际只覆盖一条**。**M5**(去掉读回比对)存活是因为**全仓没有任何东西会让写盘失败** ——
+    补法是在用例里临时替换 `io.open`,返回一个 `write`/`close` 都答成功、一个字节也不写的
+    句柄(**短写在丢返回值的代码眼里就长这样**)。补完 M1–M6 六个变异体全死。
+  - 门:静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用
+    `RULE6_BYPASS`**)。定向:**22 个写开关的文件 + 普查 + 2 个 gate 一致性文件 = 25 个全绿**。
+    动态全量读数见报告 §7。开工自检第一次调用**又被拒答**(`SELFCHECK_EXIT=2 REFUSED`,
+    我把 stdout 接进了 `tail`)—— 证据纪律 3 的**第 6 次**现场,仍然是当轮第一条命令。
+  - **本轮之前就红的**(不是我的):`test_coarmed_attribution_register.lua:341`
+    (`outlatch > slotpush` 未登记,来自 `04d3db8`,**总监的活**)、
+    `test_incoming_damage_callsite_census.lua:240`(**GH #394**)、python 腿三红两 UNCERTIFIABLE。
+  - **交出去的棒**:GH **#417** 追评(根因 = #365 §3 同源,**建议关**,裁由总监);
+    GH **#229** 立案加强(它的受害者里有一条是以「顺序依赖的神秘红」立成 #417 的);
+    backlog `-77` 从 25 → **18 个 raw 文件**,且**有棘轮守着只降不升**。
 - 2026-09-02T07:47Z(报告 `iterations/reports/hero/20260902T074742Z.md`;轴 **GH #417**
   = 最新的 [hero] issue,`test_cm_pos5_boots.lua:302` trunk 红、单独跑绿)
   **只动 `tests/test_cm_pos5_boots.lua` 一个文件(+75/−3);`bots/` 0 行、`game/` 0 行

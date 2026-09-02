@@ -56,7 +56,8 @@ local cs = require('corpus_scale')
 
 local JMZ  = 'bots/FunLib/jmz_func.lua'
 local AIUG = 'bots/ability_item_usage_generic.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')
+local SIDE_PATH = ss.PATH                          -- gitignored, farm-only
 
 local CAND = 'salveyield'
 
@@ -122,13 +123,16 @@ do
     for sMod in fn:gmatch('HasModifier%(%s*"([%w_]+)"%s*%)') do HEAL_MODS[sMod] = true end
 end
 
+-- [GH #365 §3 / GH #229] Arming goes through tests/mock/soak_side.lua, the
+-- switch's one owner: the write is read back, the unarmed leg ASSERTS the
+-- switch is absent instead of deleting whatever it finds, and the switch is
+-- re-read after each case body so a concurrent removal is reported as itself
+-- rather than as this file's own unarmed `== false`.
 local function load_with(sCand, sSide)
     if sCand == nil then
-        os.remove(SIDE_PATH)
+        ss.assert_clean('test_salveyield_arbitration unarmed leg')
     else
-        local f = assert(io.open(SIDE_PATH, 'w'))
-        f:write("return { side = '" .. (sSide or 'dire') .. "', cand = '" .. sCand .. "' }\n")
-        f:close()
+        ss.arm(sCand, sSide or 'dire')
     end
     local J, bot, heroes = rf.load(FIX, HOLDER)
     assert(bot ~= nil, 'fixture no longer carries ' .. HOLDER)
@@ -139,8 +143,7 @@ end
 local function with(sCand, fn, sSide)
     local J, bot, ally = load_with(sCand, sSide)
     local ok, err = pcall(fn, J, bot, ally)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.finish(ok, err)
 end
 
 ----------------------------------------------------------------------

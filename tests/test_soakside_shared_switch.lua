@@ -99,20 +99,50 @@ end
 -- the searcher instead of the searched.
 local SELF = 'tests/test_soakside_shared_switch.lua'
 
---- Every tests/test_*.lua that names the shared switch path.
+--- The owner module that four of these files now delegate to (2026-09-02,
+--- hero backlog `-77`).  A migrated file no longer contains the literal path,
+--- so a census that only greps the literal would silently LOSE it from its own
+--- population -- which is how S1 first went red on this change: 22 -> 18, read
+--- as "the census lost its population" when nothing had been lost at all.
+local OWNER = 'tests/mock/soak_side.lua'
+
+--- Every tests/test_*.lua that reaches the shared switch -- by naming the
+--- literal path (a RAW copy) or by requiring the owner module (MIGRATED).
 local function switch_files()
     local out = {}
     local p = assert(io.popen('ls tests/test_*.lua 2>/dev/null'))
     for path in p:lines() do
         local body = read_file(path)
-        if path ~= SELF and body:find(SIDE_PATH, 1, true) then
-            out[#out + 1] = { path = path, body = body }
+        local bMigrated = body:find("require('mock.soak_side')", 1, true) ~= nil
+        if path ~= SELF and (body:find(SIDE_PATH, 1, true) or bMigrated) then
+            out[#out + 1] = { path = path, body = body, migrated = bMigrated }
         end
     end
     p:close()
     table.sort(out, function(a, b) return a.path < b.path end)
     return out
 end
+
+--- Split the population.  A migrated file is one that requires the owner AND
+--- has stopped opening the path itself; a file that does both is still raw
+--- (it kept a copy), and saying so is the point of the count.
+local function partition()
+    local raw, migrated = {}, {}
+    for _, f in ipairs(switch_files()) do
+        local bWrites = f.body:find('io%.open%(%s*SIDE_PATH%s*,%s*[\'"]w[\'"]%s*%)') ~= nil
+        if f.migrated and not bWrites then
+            migrated[#migrated + 1] = f
+        else
+            raw[#raw + 1] = f
+        end
+    end
+    return raw, migrated
+end
+
+--- The hazard the census measures, as a number that must never grow.  Four
+--- files delegate today (test_cm_pos5_boots -- GH #417's subject -- and the
+--- three GH #365 §3 subjects); the rest still carry their own unchecked copy.
+local RAW_CEILING = 18
 
 -- ---------------------------------------------------------------------------
 -- [source S1] one literal path, shared by every gate test in the tree
@@ -123,17 +153,25 @@ tests['[ratchet] [source S1] the switch is ONE global path, declared identically
     assert(#files >= 20, 'only ' .. #files .. ' files name ' .. SIDE_PATH ..
         ' -- the census lost its population, re-derive before trusting S2/S3')
 
-    -- Every one of them spells the SAME literal. No file derives a
+    -- Every one of them ends up on the SAME inode. No file derives a
     -- process-unique path, so two concurrent lua5.1 processes running any two
-    -- of these files contend for one inode.
-    local nDeclared = 0
+    -- of these files contend for one path -- which is still true after the
+    -- 2026-09-02 migration, because the owner module holds that same literal
+    -- and the migrated files take it from there (`SIDE_PATH = ss.PATH`).
+    assert(read_file(OWNER):find("local PATH = '" .. SIDE_PATH .. "'", 1, true) ~= nil,
+        OWNER .. ' no longer declares the shared literal -- if it now derives a '
+        .. 'per-process path, GH #229 landed and this whole census is stale')
+
+    local nReaches = 0
     for _, f in ipairs(files) do
-        if f.body:find("local SIDE_PATH = '" .. SIDE_PATH .. "'", 1, true) then
-            nDeclared = nDeclared + 1
+        if f.body:find("local SIDE_PATH = '" .. SIDE_PATH .. "'", 1, true)
+            or f.body:find('SIDE_PATH = ss%.PATH')
+            or f.migrated then
+            nReaches = nReaches + 1
         end
     end
-    assert(nDeclared >= 20, 'only ' .. nDeclared .. ' of ' .. #files ..
-        ' declare the shared literal; the rest reach it some other way')
+    assert(nReaches >= 20, 'only ' .. nReaches .. ' of ' .. #files ..
+        ' reach the shared literal; the rest reach it some other way')
 end
 
 -- ---------------------------------------------------------------------------
@@ -141,32 +179,51 @@ end
 -- ---------------------------------------------------------------------------
 
 tests['[ratchet] [source S2] the unarmed leg is itself a deleter -- the hazard is the suite, not a rogue process'] = function()
-    local files = switch_files()
-    local nBoth, missing = 0, {}
-    for _, f in ipairs(files) do
+    local raw, migrated = partition()
+
+    local nBoth = 0
+    for _, f in ipairs(raw) do
         local bWrites  = f.body:find('io%.open%(%s*SIDE_PATH%s*,%s*[\'"]w[\'"]%s*%)') ~= nil
         local bDeletes = f.body:find('os%.remove%(%s*SIDE_PATH%s*%)') ~= nil
-        if bWrites and bDeletes then
-            nBoth = nBoth + 1
-        elseif bWrites or bDeletes then
-            missing[#missing + 1] = f.path
-        end
+        if bWrites and bDeletes then nBoth = nBoth + 1 end
     end
-    assert(nBoth >= 20, 'only ' .. nBoth .. ' files both write and delete the shared switch')
+
+    -- MONOTONIC, and this is the whole point of keeping the number: a new gate
+    -- test must delegate to the owner rather than copy the three unchecked
+    -- lines a twenty-third time. Going DOWN is the work landing; going UP is a
+    -- regression that no other test in the tree would notice.
+    assert(nBoth <= RAW_CEILING, nBoth .. ' files carry their own unchecked '
+        .. 'write+delete of the shared switch, up from ' .. RAW_CEILING
+        .. '. A new one copied the shape instead of requiring ' .. OWNER
+        .. ' -- migrate it, do not raise this ceiling.')
+    assert(#migrated >= 4, 'only ' .. #migrated .. ' files delegate to ' .. OWNER
+        .. '; the four with an observed red (GH #417 and the three GH #365 §3 '
+        .. 'subjects) were migrated on 2026-09-02 and must stay migrated')
 
     -- The load-bearing half: the DELETE is not confined to a cleanup that runs
     -- after the armed leg. Arming with `nil` (the unarmed leg) removes the file
     -- outright, so a file's own unarmed case is a deleter that can strip the
     -- armed leg of a DIFFERENT file running in a DIFFERENT process at the same
-    -- instant. Pinned on the three #365 §3 subjects by name.
-    for _, path in ipairs({
-        'tests/test_salvepool_missing_floor.lua',
-        'tests/test_salveyield_arbitration.lua',
-    }) do
-        local body = read_file(path)
-        assert(body:find('if sCand == nil then\n%s*os%.remove%(SIDE_PATH%)') ~= nil,
-            path .. ': the unarmed leg no longer deletes the shared switch -- ' ..
-            'the #365 mechanism moved, re-measure it')
+    -- instant. The two #365 §3 subjects that used to be pinned here are
+    -- migrated now (their unarmed leg ASSERTS the switch is absent instead of
+    -- deleting it), so the shape is pinned on files that still carry it.
+    local nDeleters = 0
+    for _, f in ipairs(raw) do
+        if f.body:find('if sCand == nil then\n%s*os%.remove%(SIDE_PATH%)') ~= nil then
+            nDeleters = nDeleters + 1
+        end
+    end
+    assert(nDeleters >= 1, 'no unarmed leg deletes the shared switch outright '
+        .. 'any more -- the #365 mechanism moved, re-measure it before trusting '
+        .. 'anything above')
+
+    -- ...and the migrated ones no longer do. A migration that kept the delete
+    -- would leave the hazard in place while reading as progress.
+    for _, f in ipairs(migrated) do
+        assert(f.body:find('os%.remove%(%s*SIDE_PATH%s*%)') == nil,
+            f.path .. ' delegates to ' .. OWNER .. ' but still deletes the '
+            .. 'shared switch itself, so it is still a deleter for every other '
+            .. 'process')
     end
 end
 
@@ -176,14 +233,111 @@ end
 
 tests['[ratchet] [source S3] no lock and no process-unique path exists anywhere in the suite'] = function()
     local files = switch_files()
+    files[#files + 1] = { path = OWNER, body = read_file(OWNER) }
     for _, f in ipairs(files) do
         assert(f.body:find('LOCK_EX', 1, true) == nil and f.body:find('flock', 1, true) == nil,
             f.path .. ' now takes a lock -- GH #229 landed; update this census on purpose')
         -- A process-unique switch would have to interpolate something into the
         -- path. The literal is a plain constant in every file today.
-        assert(f.body:find("SIDE_PATH = '" .. SIDE_PATH .. "' %.%.") == nil,
+        assert(f.body:find("PATH = '" .. SIDE_PATH .. "' %.%.") == nil,
             f.path .. ' now derives a per-process switch path -- GH #229 landed')
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- [source S5] the owner turns the race into a NAMED failure -- run, not read
+-- ---------------------------------------------------------------------------
+--
+-- S1-S3 are a source census: they say the contention is still there. S5 is the
+-- part that has to be executed, because the claim is about which of two errors
+-- comes out when both are true at once. Under a concurrent `rm`, the armed leg
+-- produces the unarmed value AND the switch is gone; #365 §3 spent a round
+-- arguing about the first because nothing reported the second.
+
+tests['[owner] a switch removed under the case body outranks the assertion it caused'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    local ok, err = pcall(ss.with_candidate, 'censuscand', function()
+        os.remove(ss.PATH)                       -- the concurrent process, inlined
+        error('THE UNARMED VALUE WOULD BE REPORTED HERE', 0)
+    end)
+    assert(not ok, 'the owner swallowed a failing case body')
+    assert(tostring(err):find('was REMOVED under this case', 1, true) ~= nil,
+        'the owner reported the assertion instead of the removed switch, so the '
+        .. '#365 §3 reading is back: ' .. tostring(err))
+    assert(ss.read() == nil, 'the owner left a switch behind after the race')
+end
+
+tests['[owner] it refuses to clobber a switch it did not write'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    local f = assert(io.open(ss.PATH, 'w'))
+    f:write("return { side = 'radiant', cand = 'stranger' }\n")
+    f:close()
+
+    local okArm, errArm = pcall(ss.arm, 'censuscand')
+    local sStill = ss.read()
+    os.remove(ss.PATH)
+
+    assert(not okArm, 'the owner overwrote a switch another process was holding')
+    assert(tostring(errArm):find('did not write it', 1, true) ~= nil,
+        'the refusal does not say whose switch it is: ' .. tostring(errArm))
+    assert(sStill ~= nil and sStill:find('stranger', 1, true) ~= nil,
+        "the stranger's switch was clobbered anyway")
+end
+
+--- [why this is a separate case] The clobber case above cannot cover disarm at
+--- all: its `arm` FAILS, so nothing is owned, and `disarm` returns at its first
+--- line without reaching the ownership check. A mutation that made disarm
+--- delete unconditionally survived that case 10/10 green. The subject has to be
+--- a span this process really did arm.
+tests['[owner] disarm stands down on bytes that changed under it'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    ss.arm('censuscand')
+    local f = assert(io.open(ss.PATH, 'w'))     -- another process, between our
+    f:write("return { side = 'dire', cand = 'stranger' }\n")  -- write and our
+    f:close()                                                 -- cleanup
+    local okDis, errDis = pcall(ss.disarm)
+    local sLeft = ss.read()
+    os.remove(ss.PATH)
+
+    assert(okDis, 'disarm raised instead of standing down: ' .. tostring(errDis))
+    assert(sLeft ~= nil and sLeft:find('stranger', 1, true) ~= nil,
+        "disarm deleted a switch this process did not write -- that is exactly "
+        .. "how the other process's failure becomes unattributable, and it is "
+        .. 'the defect this whole census exists to describe')
+end
+
+--- [why this is a separate case] Nothing else in the suite makes the WRITE
+--- fail, and a write that silently does not land is the third member of the
+--- family (short write, full disk, read-only tree). A mutation that dropped the
+--- read-back survived every other case here.
+tests['[owner] a write that does not land is a named failure, not an unarmed reading'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    local fnRealOpen = io.open
+    io.open = function(sPath, sMode)
+        if sPath == ss.PATH and sMode == 'w' then
+            -- succeeds at every step and writes nothing: exactly what a short
+            -- write looks like to code that drops the return values.
+            return { write = function() return true end,
+                     close = function() return true end }
+        end
+        return fnRealOpen(sPath, sMode)
+    end
+    local ok, err = pcall(ss.arm, 'censuscand')
+    io.open = fnRealOpen
+    os.remove(ss.PATH)
+
+    assert(not ok, 'the owner called the candidate armed without checking the '
+        .. 'bytes, so every gate below it would read "did not fire"')
+    assert(tostring(err):find('does not hold what we just wrote', 1, true) ~= nil,
+        'the failure does not name the unlanded write: ' .. tostring(err))
 end
 
 -- ---------------------------------------------------------------------------

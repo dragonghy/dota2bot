@@ -119,7 +119,8 @@ package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
 local SRC = 'bots/ability_item_usage_generic.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')
+local SIDE_PATH = ss.PATH                          -- gitignored, farm-only
 
 -- #333's published frame, cited verbatim. Named so a reader can see which
 -- numbers are the issue's and which are the tree's.
@@ -356,13 +357,13 @@ local function fresh_jmz(enemyDist, atkRange)
     return J, bot
 end
 
+-- [GH #365 §3 / GH #229] tests/mock/soak_side.lua owns the switch: it reads
+-- the write back, refuses to clobber a file it did not create, and re-reads
+-- the switch after the case body -- so a concurrent `rm` is reported as itself
+-- instead of as the unarmed `CanEnemyInterruptTpChannel == false` this file
+-- asserts three lines above the published failure.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'tpreach' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('tpreach', fn)
 end
 
 tests['[drive D1] GH #333 frame: blind unarmed, FIRES armed -- so it should have vetoed'] = function()

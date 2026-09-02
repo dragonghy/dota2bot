@@ -106,10 +106,11 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 local cs  = require('corpus_scale')
+local ss  = require('mock.soak_side')
 
 local HERO   = 'bots/BotLib/hero_crystal_maiden.lua'
 local ITEMS  = 'bots/FunLib/aba_item.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local SIDE_PATH = ss.PATH                          -- gitignored, farm-only
 local CAND   = 'cmboots'
 
 local function read_file(path)
@@ -226,24 +227,15 @@ end
 --- #417 pointed at line 302, the assertion, when nothing there was in doubt).
 --- Reading the bytes back turns the whole class -- a short write, a full disk,
 --- a read-only tree, a leftover file another test file is holding -- into one
---- named failure at the moment it happens.  Twenty-five test files copy this
---- helper's unchecked shape today; this is the one that had a red to explain.
+--- named failure at the moment it happens.
+---
+--- 2026-09-02: those checks moved into tests/mock/soak_side.lua, which is now
+--- the switch's one owner, and gained the half this copy never had -- the
+--- switch is re-read AFTER the case body, so a concurrent process removing it
+--- mid-case is reported as itself instead of as a value mismatch (GH #365 §3,
+--- GH #229).  Twenty-one test files still carry the unchecked copy.
 local function with_candidate(sId, fn)
-    local sWant = "return { side = 'radiant', cand = '" .. sId .. "' }\n"
-    local f = assert(io.open(SIDE_PATH, 'w'), 'cannot open ' .. SIDE_PATH
-        .. ' for writing -- the gate cannot be armed at all')
-    local okw, errw = f:write(sWant)
-    local okc, errc = f:close()
-    assert(okw, 'writing ' .. SIDE_PATH .. ' failed: ' .. tostring(errw))
-    assert(okc, 'closing ' .. SIDE_PATH .. ' failed: ' .. tostring(errc))
-    assert(read_file(SIDE_PATH) == sWant,
-        SIDE_PATH .. ' does not hold what we just wrote -- the candidate is '
-        .. 'NOT armed, so anything measured under it is measuring the unarmed '
-        .. 'tree. Every gate below would read "did not fire" for this reason '
-        .. 'and four of the five cases would call that a pass.')
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate(sId, fn)
 end
 
 --- The SHIPPED pos_5 list, transcribed byte-for-byte from the hero file as it
@@ -291,13 +283,7 @@ local tests = {}
 --- the next one too.  Naming the premise costs one stat call and turns that
 --- into a sentence instead of a list mismatch.
 local function assert_unarmed()
-    local fh = io.open(SIDE_PATH, 'r')
-    if fh == nil then return end
-    local s = fh:read('*a'); fh:close()
-    error(SIDE_PATH .. ' already exists, so "gate off" is not what this case is '
-        .. 'measuring. Some other case (here or in another test file -- 25 of '
-        .. 'them write this path) armed a candidate and did not remove it. '
-        .. 'Contents: ' .. tostring(s), 0)
+    ss.assert_clean('test_cm_pos5_boots')
 end
 
 -- ...and once HERE, at file-load time, which is the only moment that sees the
