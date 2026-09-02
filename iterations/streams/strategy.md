@@ -32,7 +32,7 @@
    「继续先选域;候选是 `0SLOT9` 里最像的那个(`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**);
    **落地 gated `slotdust`**,入集提议 `test_set.md` **§DJ**(搭车、零 AWS 增量、不申请专波),
    `queue.json` 新增 **`strategy-35`**(**`bundle` 已填**);`state.json` 新键 `slotdust_20260902`;
-   报告 `iterations/reports/strategy/20260902T013726Z.md`;
+   issue **GH #411**;报告 `iterations/reports/strategy/20260902T013726Z.md`;
    零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
    **⭐ 主判据(可复用,超出本主题):一个「同形缺陷」不等于一个「同形论证」——
    安全性属于函数体,不属于缺陷形状。**
@@ -4308,7 +4308,7 @@
 - 2026-09-02T01:37Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **backlog 最上面一条 `0SLOT` 逐字交待本组下一轮「候选是 `0SLOT9` 里最像的那个
   (`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**;
-  **报告 `iterations/reports/strategy/20260902T013726Z.md`**;
+  **报告 `iterations/reports/strategy/20260902T013726Z.md`**;issue **GH #411**;
   backlog 条目 **`0DUST`**(并新开 `0SLOTINSTR` / `0MUTPAR` 两条登记项);
   **落地 gated `slotdust`**,入集提议 `test_set.md` **§DJ**(搭车、零 AWS 增量、不申请专波);
   `queue.json` 新增 **`strategy-35`**(**`bundle` 已填**);`state.json` 新键 `slotdust_20260902`;
