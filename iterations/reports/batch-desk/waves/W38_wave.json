@@ -278,18 +278,153 @@
   "launched": "2026-09-02T12:18:43Z",
   "instance_lifecycle": "None (null in describe-instances) -- this is the GH #408 registration evidence that the machine really is on-demand. The run_id's `spot_` prefix is a hardcoded string in spot_run.sh and is NOT evidence.",
   "sir": "none -- an on-demand machine has no spot instance request. Per GH #408's second half its status_code at harvest must carry the EC2 StateReason.Code vocabulary (e.g. Client.UserInitiatedShutdown), NOT SIR vocabulary, and this row already carries \"market\":\"on-demand\" so reclaim_blind.py can tell the two channels apart.",
-  "status_code": null,
+  "status_code": "UNRECOVERABLE -- see status_code_note. NOT null-because-clean; null-because-the-window-closed.",
   "ec2_state_reason_code": null,
   "config": "--count 1 --on-demand --az us-west-2a --ref 7196468dad960813fa36a90eeaab1f138eab3bc2 --slots 16 --hours 2 --rec-slots 8 --validate \"<54-id> 2613 --games 12\"",
   "ref_pin_is_load_bearing": "The --ref pin is what makes this re-run poolable with the other three seeds. origin/main has moved to d45776868a… and bots/ HAS drifted (jmz_func.lua +44 lines, mode_retreat_generic.lua 1 line). An unpinned re-run would have measured a DIFFERENT TREE than seeds 2665/2761/2840 and the pooled reading would have been corrupted with nothing raising a hand. W37 could not have done this; W38's ref_pin change is what buys it.",
   "misfire": "*** SELF-INFLICTED, REGISTERED. The first launch attempt (i-04cdeafc098ba3347, run_id spot_20260902_121752_1_7196468dad…_23b452, 12:17:54Z) took spot_run.sh's DEFAULTS -- slots=14, watchdog=3h -- because I passed neither --slots nor --hours, while W38's four machines ran slots=16 / watchdog 2h. Caught by checking the corpus (all four runs show slots 1..16, 4 games each) rather than by trusting the wave record's prose. Terminated at ~1 min old and relaunched matched. Cost of the misfire ~1 machine-minute (~$0.01). The charter's rule 'never change the id set and the acquisition config in the same wave' is exactly what this would have violated, one machine deep inside an already-flown wave. *** HARVEST EXCLUSION: run_id ..._23b452 must NOT be pooled into W38 -- it lived under 2 minutes (W38's machines needed ~10 min to produce a first game, so it is almost certainly empty), but if its S3 prefix holds anything at all, those games ran a 14-slot config.",
   "fence": "Charter step 5 fences honoured: one re-run per seed (this is 2613's first and only), at most 2 on-demand re-runs per wave (this is 1). *** Gate (i)'s 6h throttle is NOT consumed: it governs ROUTINE waves, and this is a registered repair of an already-flown wave. Gate (i) stays unlocked for W39 at 2026-09-02T15:31:32Z as the previous round recorded.",
   "expected_self_destruct": "~13:0x-13:1xZ (watchdog cap 2h, historical completion ~0.75h).",
-  "misfire_ec2_state_reason_code": "Client.UserInitiatedShutdown (i-04cdeafc098ba3347, terminated). Recorded because GH #408's second half is explicit that an on-demand machine's only available code is the EC2 StateReason.Code vocabulary, never SIR -- the misfired machine is the first row in this repo to actually carry one, and it is here rather than in machines[] because it is NOT a W38 machine and must not be pooled."
+  "misfire_ec2_state_reason_code": "Client.UserInitiatedShutdown (i-04cdeafc098ba3347, terminated). Recorded because GH #408's second half is explicit that an on-demand machine's only available code is the EC2 StateReason.Code vocabulary, never SIR -- the misfired machine is the first row in this repo to actually carry one, and it is here rather than in machines[] because it is NOT a W38 machine and must not be pooled.",
+  "ab": 37,
+  "ba": 16,
+  "arm_depth": 22.34,
+  "scored": true,
+  "status_code_note": [
+   "*** THE GH #408 DATA POINT WAS LOST, AND THE LOSS IS STRUCTURAL, NOT A SKIPPED STEP. An on-demand machine has NO spot instance request, so the SIR channel that carries a spot machine's Status.Code past the describe-instances window does not exist for it. Its ONLY evidence channel is EC2 describe-instances, which keeps a terminated instance ~1h (GH #375). This machine launched 12:18:43Z, shipped its last game at 13:10:53Z and self-terminated shortly after; the harvesting round ran at 15:2xZ (the 14:xxZ trigger produced no report), i.e. ~2h later, and BOTH censuses came back EMPTY (pending/running: 0 rows; terminated,shutting-down: 0 rows, exit 0 on each). So ec2_state_reason_code cannot be recovered for this machine, ever. *** Consequence worth naming: GH #408's on-demand re-run path has a STRICTLY SHORTER evidence half-life than the spot path it replaces -- spot keeps SIR, on-demand keeps nothing -- so its status_code must be captured within ~1h of termination or it is gone. The desk did not have a round inside that window."
+  ],
+  "lifetime_evidence": "S3-derived, not API-derived: launched 12:18:43Z (first-hand, launch round), first analysis.json uploaded 12:33:58Z, last uploaded 13:10:53Z. 59 analysis.json in the run prefix (6 warm-ups + 53 scored). Termination timestamp NOT observable any more; on the wave's own completion pattern (validate_onspot.sh terminates immediately after the verdict upload) it ended within a few minutes of 13:10:53Z => lifetime ~0.87-0.92 h. At the on-demand rate $0.673/h that is ~$0.59-0.62. HOURS-DERIVED ESTIMATE, not a billing-side reading.",
+  "config_verified_at_harvest": "The misfire lesson checked against the corpus, not against prose: the re-run's 59 games span slots 1..16 (counts 3-4 per slot), i.e. the same 16-slot config as W38's other three machines. The 14-slot misfire (run token 23b452) does NOT appear in S3 at all -- `s3 ls soak/` shows no such prefix -- so there was nothing to exclude from the pool.",
+  "script_version_assertion": "PASS -- all 6 warm-ups carry `7196468d`, the 8-char prefix of the pinned SHA 7196468dad960813fa36a90eeaab1f138eab3bc2. LOAD-BEARING: origin/main is now 1a13b9df15… and `bots/` HAS drifted since the pin, so an unpinned re-run would have measured a different tree from seeds 2665/2761/2840 and the pooled 4-seed reading below would have been silently corrupt.",
+  "arm_assertion": "PASS -- all 53 scored games stamp `mirror:<54-id>:s2613:<side>`; 0 arm mismatches; stamps split radiant 37 / dire 16, which is exactly the ab/ba the tool scored."
  },
  "harvest_round_roll_call": "Charter step 6 harvest-round close-out, run 2026-09-02T12:3xZ. *** The criterion this round is NOT '0 machines running' -- one machine SHOULD be running (the 2613 on-demand re-run), so the check is 'exactly that one'. (1) pending/running census = EXACTLY ONE instance, i-0075962af14069424, soak-run tag spot_20260902_121840_1_7196468dad…_f65fb4 matching rerun.run_id one-for-one, InstanceLifecycle null (on-demand, as intended). (2) shutting-down/terminated census = one row, i-04cdeafc098ba3347 (the misfire I terminated), StateReason.Code Client.UserInitiatedShutdown -- expected, not a leak. (3) No W38 machine appears in either census: all four left cleanly. Standing cost remains only the AMI ami-0a990a26d89c66547. check_costs.sh --leak-only exit 0. *** Registering the shape the desk named on 2026-09-01 and that bit again this wave: `--leak-only` only ever reports the EXTRA machine; it never raises a hand for a MISSING one. W38's seed-2613 machine was already dead 86 seconds after take-off and the launch round's own close-out read healthy.",
  "issues_filed": {
   "GH #423": "[batch] SS-DK.3 の negative control needs a frame-level detector -- the batch corpus structurally cannot answer it, so slotarb's condition (a) is unbuyable until it exists. Handed to the replay group. https://github.com/dragonghy/dota2bot/issues/423",
   "GH #424": "[strategy] the new co-armed conjunction `outlatch > slotpush` is unacknowledged and blocks W39 (gate (i) unlocks 2026-09-02T15:31:32Z). Handed to strategy/director. https://github.com/dragonghy/dota2bot/issues/424"
+ },
+ "harvest_full_wave": {
+  "harvested_at": "2026-09-02T15:2xZ",
+  "supersedes": "the `harvest` node above, which is the 3-seed reading taken before the 2613 re-run existed. That node is kept verbatim, not edited: it is what the desk actually knew at 12:1xZ.",
+  "path": "standard: recover_verdict.py recomputed from S3 per-game data over ONE parent holding all five run prefixes (the three W38 spot runs, the empty 4a60ad prefix, and the 2613 on-demand re-run). GH #225 layout, not flattened.",
+  "verdict_exit": 0,
+  "arm_provenance": "the 54-id string this wave actually flew, recovered from git at the pinned tree (`git show 7196468dad…:iterations/streams/test_set.md | sed -n 2p`), NOT from the working tree -- test_set.md has since moved to 55 ids. md5 80392b258fcd214cf351231be61d15a4 / 476 bytes, byte-identical to this record's arm_md5.",
+  "files": "235 seen / 235 loaded / 0 unparseable / 4 source dirs / 0 pooled-basename overrides",
+  "scored_games": 211,
+  "warmups": "24 (6 per producing run x 4 producing runs); 235 - 24 = 211 scored.",
+  "unfinished_games": 0,
+  "mean": {
+   "gpm": 18.1,
+   "xpm": 0.11,
+   "deaths": 0.2,
+   "last_hits": -0.57,
+   "winrate": 0.495,
+   "winrate_headroom": 0.0813
+  },
+  "comps_better": {
+   "gpm": "3/4",
+   "xpm": "2/4",
+   "deaths": "1/4",
+   "last_hits": "2/4",
+   "winrate": "1/4"
+  },
+  "strata": {
+   "gpm": {
+    "ab": 124.47,
+    "ba": -88.27,
+    "side": 106.37,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "xpm": {
+    "ab": 106.27,
+    "ba": -106.04,
+    "side": 106.15,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "deaths": {
+    "ab": -1.63,
+    "ba": 2.04,
+    "side": -1.84,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   },
+   "last_hits": {
+    "ab": 18.22,
+    "ba": -19.37,
+    "side": 18.8,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   }
+  },
+  "per_seed": {
+   "2613": {
+    "ab_games": 37,
+    "ba_games": 16,
+    "arm_depth": 22.34,
+    "gpm": 48.93,
+    "xpm": 26.11,
+    "deaths": -0.34,
+    "last_hits": 2.88,
+    "scored_games": 53,
+    "winrate_headroom": 0.25
+   },
+   "2665": {
+    "ab_games": 38,
+    "ba_games": 20,
+    "arm_depth": 26.21,
+    "gpm": -6.41,
+    "xpm": -13.74,
+    "deaths": 0.24,
+    "last_hits": -3.06,
+    "scored_games": 58,
+    "winrate_headroom": 0.075
+   },
+   "2761": {
+    "ab_games": 37,
+    "ba_games": 21,
+    "arm_depth": 26.79,
+    "gpm": 12.91,
+    "xpm": -18.88,
+    "deaths": 0.48,
+    "last_hits": -2.85,
+    "scored_games": 58,
+    "winrate_headroom": 0.0
+   },
+   "2840": {
+    "ab_games": 29,
+    "ba_games": 13,
+    "arm_depth": 17.95,
+    "gpm": 16.97,
+    "xpm": 6.97,
+    "deaths": 0.44,
+    "last_hits": 0.74,
+    "scored_games": 42,
+    "winrate_headroom": 0.0
+   }
+  },
+  "gpm_dispersion": "across the 4 scored seeds: 48.93 / -6.41 / 12.91 / 16.97; mean 18.10, sample sd 22.94, se 11.47. Registered as an effect-size reading (SS-CO.4 keeps SE for ordering and quantitative claims); NOT used to say the wave is 'too thin to adjudicate' -- that sentence belongs to the three conditions, not to SE.",
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "exclusions": "NONE -- all four seeds clear the GH #269 arm_depth>=8 hard gate (17.95 / 22.34 / 26.21 / 26.79).",
+  "overrides_used": "none -- no --min-arm-depth, no --allow-pooled-basenames, no --allow-unparseable => this node contains no 'this is a SKIP, not a pass' line.",
+  "suggested": "hold_or_reject",
+  "winrate_channel": "DEGENERATE",
+  "winrate_headroom_mean": 0.0813,
+  "winrate_note": "DEGENERATE (minority side won 11 of 235 finished games, share 0.0468 < 0.20; side census radiant 11 / dire 224). Per SS-CT the winrate 0.495 and comps_better winrate 1/4 are NOT readings and must not be cited as rule 2(b) support. The re-run seed 2613 is the only one with real headroom (0.25); 2761 and 2840 sit at 0.0, i.e. their 0.500 is forced by arithmetic and says nothing about the candidate.",
+  "winrate_bucket_bugfix": "still fixed: winrate_independent_of_gold prints 235/235, winner_by {engine_natural: 235}.",
+  "corpus_health": "the re-run's own 59 games: mode=turbo 59/59, natural_end=True 59/59, anomaly_count sum 135 (registered, not interpreted).",
+  "pooling_note": "This is W38 pooling with ITSELF (the registered repair of its own missing arm), not with another wave. The --ref pin is what makes it legitimate: all four seeds measured 7196468dad…, proven per-seed by the warm-up script_version stamps. Still NOT poolable with W35/W37 (52-id arm) and NOT poolable with W39 onward (55-id arm).",
+  "obligations": {
+   "4(i-a) both strata registered": "DONE -- tool-emitted per_seed[].<m>_ab/_ba and strata.<m>, not hand-computed.",
+   "4(i-d) no game-count pooling": "DONE -- per-seed swap-average first, then arithmetic mean across the 4 scored seeds.",
+   "4(i-c) sign flips": "REGISTERED, not treated as a veto: all four quantities still flip (side_gt_arm 4/4, deaths 3/4). Identity restatement of |side|>|arm|.",
+   "SS-CT winrate": "DONE -- channel DEGENERATE, headroom 0.0813, winrate written as placeholder only.",
+   "SS-DK.3 slotarb negative control": "STILL NOT DELIVERABLE -- unchanged by the re-run; the per-game analysis.json schema has no mode-state or camp-decision field. GH #423 stands.",
+   "SS-DK.1 (v-b) slotdust direction": "Registered, no reading taken.",
+   "SS-DK.5 no 0SLOT9 pooling": "HONOURED.",
+   "no pooling with W35/W37": "HONOURED."
+  }
  }
 }
