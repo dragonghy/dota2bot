@@ -234,14 +234,39 @@ tests['[detector] the three counts are derived, and "42 call sites" is none of t
         'a line cannot hold fewer than one call')
     assert(r.calls > r.code_lines,
         'hero_silencer.lua puts two calls on one line -- that is why calls > lines')
-    -- The published figure. Kept as a NAMED comparison so a reader who arrives
+    -- The published figures. Kept as NAMED comparisons so a reader who arrives
     -- from the mock header or from state.json sees which number they were given.
-    local published = 43
+    --
+    -- ALL THREE are pinned, and the two LOAD-BEARING ones are pinned FIRST, on
+    -- purpose (GH #394, the 43 -> 44 move).  Only `code_lines` and `calls` are
+    -- what the census below classifies; `lines` also counts PROSE, so any comment
+    -- anywhere under bots/ that merely mentions the identifier moves it while the
+    -- census does not move at all.  That happened twice (42 -> 43 on 2026-08-30,
+    -- 43 -> 44 via hero_skeleton_king.lua:801) and both times the only thing
+    -- saying "the census did not move" was a HINT inside the failure message,
+    -- so every reader re-derived it by hand.  With the order below, WHICH
+    -- assertion fires is itself the answer: `lines` alone red = prose only.
+    local published_code_lines = 40
+    local published_calls      = 41
+    local published            = 44   -- grep line count = code + prose
+    assert(r.code_lines == published_code_lines,
+        'the published code-line count ' .. published_code_lines .. ' now reads '
+        .. r.code_lines .. ' -- a call site was ADDED OR REMOVED under bots/. '
+        .. 'The per-site census below moves with this number: classify the new '
+        .. 'site (or drop the retired row) in CENSUS, then update the mock header, '
+        .. 'this file and state.json together.')
+    assert(r.calls == published_calls,
+        'the published call-expression count ' .. published_calls .. ' now reads '
+        .. r.calls .. ' -- the number of call EXPRESSIONS moved even if the line '
+        .. 'count did not (two calls can share a line, as hero_silencer.lua does). '
+        .. 'Same three-file update as above.')
     assert(r.lines == published,
         'the published ' .. published .. ' is a grep line count; it now reads ' .. r.lines
-        .. ' -- update the mock header, this file and state.json together. Check FIRST '
-        .. 'whether code_lines (' .. r.code_lines .. ') moved too: if only the prose '
-        .. 'count changed, nothing in the census below moves.')
+        .. ' -- update the mock header, this file and state.json together. '
+        .. 'The two load-bearing counts are pinned ABOVE this line: if they are '
+        .. 'green and only this one is red, the move is PURE PROSE and nothing in '
+        .. 'the census below moves. (code_lines=' .. r.code_lines .. ', calls='
+        .. r.calls .. ')')
     assert(r.calls ~= published,
         'the whole point of this section: the call count (' .. r.calls
         .. ') is not the grep count (' .. published .. ')')
