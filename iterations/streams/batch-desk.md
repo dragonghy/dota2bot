@@ -8881,6 +8881,44 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **本轮 token**:见报告最后一节。
   详见 `iterations/reports/batch-desk/20260902T183000Z.md` 与 `iterations/reports/batch-desk/waves/W39_wave.json`(`harvest` / `reclaim_outcome` / `duplicate_upload_anomaly` / `machine_hours` / `leak_at_harvest` 五节本轮回填)。
 
+- 2026-09-02T21:20Z(**执行 GH #413 那根掉了两轮的棒 + 发 W40 = 55-id 家族第二波。本轮真正的产出是「重建的 baseline 落地当场就量出:把验收门跑在它自己的语料上会打出一张零信息的满分表」,不是那四台**)。
+  **一、自检** 第一条命令**又误用管道**,自检自拒(**同形第十三次,每次都是当轮第一条命令**);工具自报仍是 `it has recurred 5x`,与报告序列对不上,照上轮据实并列。
+  改走重定向后日志自打 **`selfcheck worst exit: 3`**:`legs 9`,`FINDINGS = cadence owed-executions trunk-red(python)`。
+  ⭐⭐ **新腿 `owed-executions` 第一次在本台轮次上响,点名的就是本台**(见三)。
+  ⭐ **GH #420 第四轮原样复发**(python 腿自打 `2 uncertifiable` 并点名 `test_rc_wrapper.py`/`test_selfcheck_lua_leg.py`,汇总块打 `none`);python 红仍是 `test_detector_source_constants.py`(**未 stash 重跑,不声称 main 也红**);Lua 腿 73 文件 0 failures。
+  **二、成本** 九月 MTD **`$5.612`**(免费 `budgets` 通道)—— ⭐ **快照六轮来第一次翻新**(`refreshed 2026-09-02T20:31:27Z`,`$3.637 → $5.612`,**+$1.975**)。
+  ⚠️ **增量只登记不对账**:章程 2(乙)禁用「MTD 增量对得上波费 ⇒ 该波已计入」,它已两次给出错误结论。进场在跑实例**为空**。MTD `< $35` ⇒ **CE 未触发,那 `$0.01` 没花**。
+  围栏(2 甲,逐波按自己的市场取价)= `5.612 + W38 spot 0.90 + 2613 按需 0.65 + W39 spot 0.90 + W40 spot 0.90 = **$8.96**` ≤ **$80** ⇒ **不跨任何 owner 可见告警档,不欠解释行**。`forecast 156.484` 是 budgets 自己的外推,**不是读数,不进围栏**。
+  **三、⭐⭐⭐ GH #413 执行完毕(掉了两轮的那一棒)。** 语料 = **W37 四 run + W38 四 run + 2613 补跑机**,全 `--rec-slots 8`,共 **395 局**(零 EC2,只有几分之一美分 S3 GET)。
+  `--emit-baseline` ⇒ **`EMIT_EXIT=0`**;新 profile 头逐字 **`rec_slots: 8`**、`rec_set [1..8]`、`games 395`、`recorder_source "read from 8 claim sidecar slot(s)"`(**纯读、无推定**)。
+  旧 profile `git mv` 成 `rec_slot_baseline_recslots1.json` **保留不删**。自检腿复跑 ⇒ **`DONE recslot8_baseline` / `OWED_EXIT=0`**,请总监按 `done_when` 退役那一行。落地 commit **`7b4c922e`**(已在 `origin/main`)。
+  ⚠️ **一处自造瑕疵,自己收掉**:第一次 emit 把**产局为零**的 `…_4a60ad`(W38 里 86 秒被咬的 2613 原机)也放进语料目录,profile 头于是写成 `+ ASSUMED identical for 1 sidecar-free run(s)`。**395 局一局不差**,但那个 `ASSUMED` 恰好损伤这个工具 header 自陈最看重的性质(*WHO RECORDED IS READ, NOT INFERRED*)⇒ 剔掉空目录重发,落地的是第二份。
+  **三之一、⭐⭐ 而验收门本轮仍不跑,这一次有读数不是谨慎。** 把它跑在 W37+W38 上是循环论证,本台没停在断言上,**把它量了出来**:`--baseline` 判自己的语料 ⇒ **十六格全 `raw +0.0% / net +0.0%`、`0 recording slot(s) beyond tolerance`、裸退出码 0** —— **一张满分表,信息量为零**,按构造必然如此。
+  ⇒ 该门写进 **`W40_wave.json:harvest_obligations`**(W40 = 新语料、同配置 8、同判据)。**这一条是波次局部的,所以它进得去那张表**;而本条棒子本身是**常驻**的,它这次被捡起来**恰恰因为开工自检是每轮都跑的那张表** —— 总监 19:15Z 追评 §2 的归因在本轮拿到正例。
+  **四、收割:本轮无**(W39 已于 18:30Z 收完 4 粒 / 168 局,不欠补跑;进场在跑实例为空,S3 无未收割前缀)。
+  **五、发 W40(55-id 家族第二波)。三条节流条件**:(i) 守卫在 **`21:31:51Z`** 打 `GATE-I OPEN`,第一台同秒发出,**扣住的 ~6 分钟全用在零成本工作上**;(ii) **第一支明确不成立**(`bots/`+`game/` 自 W39 起一行未动)、**第三支成立**(累计种子 4 < 8);(iii) 过。
+  **五之一、⭐ 并池依据这次是对象哈希不是散文。** `git rev-parse <ref>^{tree}:bots` 在 W39 的 `1a13b9df15…` 与 W40 的 `8a5f8f31b7…` 上**同一个值** `15844690e8…`,`game` 同为 `f13b532c00…`,`git diff --stat … -- bots/ game/` **exit 0 / 0 字节**,armed 串 md5 也逐字节相同(**55 ids / 485 字节 / `bfe60fcd…`**)。**GH #418 要的「逐行读关闸后的 diff」被一个更强的读数取代:没有 diff 可读,因为没有 diff。** 期间落 main 的提交只碰 `iterations/` 与一个新离线检测器 `d24_wipe_tail.py`,**soak 循环一行未动**。
+  ⚠️ **`git log <SHA>..HEAD` 那条陷阱本轮踩到一次、当场收掉**:用 12 位短 SHA 调 `git fetch --depth 1` ⇒ `couldn't find remote ref`(章程要**全 40 位**),而同一条命令行里的 `git log` 打了 `DRIFT_EXIT=0` **加空输出** —— **正是「空输出被读成无漂移」的形状**。改用 `git cat-file -t <全40位>`(⇒ `commit`)先证对象在本地,再读,最后用 tree 对象哈希收口。**空输出这次是真的无漂移,但那是被证明的不是被默认的。**
+  **五之二、五道门全过**:`tree_verified` = `git ls-remote origin main` == 本地 HEAD == **`8a5f8f31b7…`**;`carrier_terms.py` exit 0(10 hero / 45 generic / 0 unresolved ⇒ 6 terms);`check_armed_wiring.py --cand` exit 0(`all 55 armed ids wired`);`seed_roster_index.py --build` exit 0(**在选种之前**);`CARRIER_GATE ids=10 seeds=4 exit=0`,**六项全 `satisfied=2`**;⭐ `reclaim_blind.py --wave-json W39` **在发波当轮跑**(W38 那次是收割轮补的)⇒ exit 0、`not blinded — 4 paired seeds`、`NEXT WAVE: spot`。**W40 的四道闸键起飞当轮就是齐的**(`test_wave_gate_keys.py` ⇒ **162 checks, 0 failed**)。
+  ⚠️ **两处自造 exit 2 逐条点名**(GH #412 立案句):自检误用管道;`check_armed_wiring.py` 写成 `tools/batch_test/soak/…` 而**它不在 `soak/` 下**(真实路径 `tools/batch_test/check_armed_wiring.py`)—— **与上一轮 `carrier_terms.py` 的路径错同族、方向相反**(那次漏了 `soak/`,这次多了 `soak/`)。**两次都是我的调用错误,不是工具对这棵树的拒答。**
+  **五之三、选种** 窗口 `[2601,3000]` 保留(右移条件是「搜出 0」,本轮搜出 **2**);`368 available / 32 banked-or-drawn`;`popcount {0:50, 1:140, 2:141, 3:37}`;**32 个 mask**;**`BEST slots = 12`,该层只剩 `2` 个组合**。
+  ⭐⭐ **削减在加速**:最优层 **20 → 5 → 2**,popcount-3 **45 → 41 → 37**,**连续第四波卡在下限** ⇒ **按同一斜率下一波很可能就是「搜出 0」**,那正是预登记的右移条件(→ `[3001,3400]`)。GH #285 **第二十七轮未裁**。
+  选 **2641 / 2710 / 2921 / 2941**,四粒全 `no banked games`;排除集从 W30–W39 波次文件**读出来**不是手打。⚠️ **零成本 pudge 偏好连续第二波拿到 `0`** ⇒ `strategy-26` / `rotscope` 本波仍拿不到 pudge 证据,**收割时不许写成负向读数**。
+  **五之四、采集配置一个字未动**(`--slots 16 --hours 2 --rec-slots 8 --games 12`,4×1)。id 集这波也没动(55→55),所以「不许同时改」不构成约束 —— **不动是主动选择**:刚落地的 baseline 是 `rec_slots=8` 的,W40 必须同配置那道门才成立;此刻抬到 16 会当场作废它,**并撞上 16-of-16 那条永久拒答**(全录制 ⇒ 无对照腿)。起飞前 `--dry-run` 核过参数,**波次预算闸未拒发**。
+  **六、⛔⛔ 起飞:四台全 `SPOT_RUN_EXIT=0`,但 AZ 环走连续第二波塌回同一个 AZ,形状与 W39 逐字相同。** 三次 `InsufficientInstanceCapacity`(2a 一次、2b 两次)⇒ 两行 `re-aiming inside the ring`,**两次改投都收敛到 `2c`** ⇒ **`2c`×3 / `2d`×1**。#252 验收(≥2)过,**#256 严格验收(4 不同、无 re-aiming)连续第二波不过**;零 `AZ RING EXHAUSTED`、零市场/机型降级;四台全 `InstanceLifecycle=spot`、四个 SIR 与四个 RUN_TOKEN 互不相同、四次调用全跨整秒。**连续第七波被容量咬**(GH #408 仍零评论未裁)。
+  **六之一、⭐⭐⭐ 本轮真正该升级的:载体冗余与 AZ 塌缩相乘(GH #430 已开)。** `CARRIER_GATE` 打 `六项全 satisfied=2`,**为真且有误导性**:削到最优层只剩 2 个组合后,那 2 个组合是**两对相同掩码** —— **A 对 2641+2710** 各扛 `crystal_maiden`/`obsidian_destroyer`/`skeleton_king`,**B 对 2921+2941** 各扛 `lion`/`spirit_breaker`/`zuus` ⇒ **每项的「两个载体」是同一对的两个成员,不是两次独立抽取**。而环走把 **A 对整对放进 `2c`** ⇒ **一次 `2c` 事件把那三项打到 `0` 而不是 1**(W39 六项散在四台、无此配对结构)。
+  **两个机制各自都已立案(#285 / #428),相乘这件事此前没被指出,而且没有任何一道门会举手**:`CARRIER_GATE` 数种子不看放置,`az_spread` 看 AZ 不看谁扛哪项。**已在起飞当轮写进 `carrier_exposure_note` 与收割义务:真掉一台,先看它属于哪一对。**
+  **七、局数(铁律 7)** (a) W39 最终 **4 粒 / 168 计分局**(ab:ba = 123:45)+ 24 暖场;(b) W40 起飞时 **0 局**,预期 **~96 计分局**,预计 `~22:1x–22:3xZ` 自毁。
+  **八、queue.json** 十一行(`strategy-25/26/27/28/29/30/34/35/36` + `hero-24/25`)`rides_wave` 改记 **W40** 并写入 tree-对象-哈希的并池依据;`status` → `running`。**`strategy-31/32` 连续第五轮不搭波** —— 它们的 id(`tormself`/`immguard`)**不在 55-id 串里,是按构造搭不上不是没排上**,按铁律 9 第五次交回总监。
+  **九、铁律 6** `bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`GATE_EXIT=0 CLEAN`**(0 warnings;容器冷启,脚本自己装 luacheck,apt 包名 `lua-check`),`arm_push_gate.sh` 已上膛,**每次 `git push` 各自又跑一次同一道门**;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑不声称**。另跑 `test_coarmed_attribution_register.lua` ⇒ **exit 0** —— ⭐ **上一轮交棒②点名的 GH #424 那条红已经不在了,W40 不带着它起飞。**
+  **铁律 11** 未触发 `requires approval`,**无空转等待**。⚠️ **登记一次会话中断**:`21:36Z` worker 进程重启(harness 事件),其间 GitHub MCP 断开又重连;**四台已在 21:32Z 起飞并自带 2h 看门狗,与会话生命周期无关**,且当时 #413 已 commit+push 到 main、波次文件已落盘 ⇒ **中断没丢任何东西**。这是「把 #413 提前单独 commit 而不是攒到收尾」的实际回报。
+  **十、泄漏:CLEAN,判据是「恰好那四台」不是「0 台」**:`LEAK_EXIT=0`;发波轮点名两条都做了 —— `soak-run` **恰好四个值**与 `machines[].run_id` 一一对上,`terminated,shutting-down` **返回空**(无 `Server.SpotInstanceTermination` ⇒ 未掉臂);`describe-volumes` **四卷全 `in-use`** 无孤儿。常驻仅 AMI。⚠️ 再登记:`--leak-only` **只报「多出来的」,「少一台」永远不举手**。
+  **交棒**:① ⭐⭐⭐ 总监 —— **GH #430(新开)**载体冗余 × AZ 塌缩相乘;② ⭐⭐⭐ 总监 —— **GH #413 执行完毕,请退役 `owed_executions.json` 那一行**;③ ⭐⭐ 总监 —— **GH #428 连续第二波兑现**、#256 严格验收连续第二波不过;④ ⭐⭐ 总监 —— **GH #408 连续第七波,仍零评论未裁**;⑤ ⭐⭐ 总监 —— **GH #285 第二十七轮未裁,削减在加速(20→5→2)**;⑥ ⭐⭐ 总监/英雄组 —— **GH #420 第四轮原样复发**、`test_detector_source_constants.py` 仍红(**#424 已绿**);⑦ ⭐ 录像组 —— **GH #423** 仍挂着;⑧ ⭐ 总监/协同组 —— `strategy-31/32` 第五轮、`strategy-37/38` 路由未裁;⑨ ⭐ 存量:**#388 的 W34 103 份 `.dem` 2026-09-22 到期(距今 20 天)** / #432 / #429 / #427 / #418 / #412 / #402 / #395 / #375 / 按需常数第十二轮 / #317 五条 / `strategy-5b` 第十八轮 / #290 / #313 / #207 / #271 / #364 / #398 / #399 / #382 / #383 / #218 / #367 / #295 / #329 / #321。
+  **下一轮本台 = 收割 W40**(四台预计 `~22:1x–22:3xZ` 自毁);闸 (i) 对下一次例行发波解锁于 **`2026-09-03T03:31:51Z`**。
+  **收割三件本波特有**:(a) ⭐ **§DA.2 验收门第一次能给出非零信息** —— `rec_slot_cost.py <本波四个 run 目录> --baseline tools/batch_test/soak/rec_slot_baseline.json`,**判据单边**(`:307` 是 `rel < -tolerance`,只有赤字报警,**正值不是代价**),`exit 1` ⇒ 贴逐槽表交总监,**`exit 2` 是答不了不是通过**,⛔ **不许拿本波重发 baseline**;(b) 真掉一台**先看它属于哪一对**;(c) **可与 W39 并池且仅与 W39**(依据是 tree 对象哈希)。
+  **本轮 token**:见报告最后一节。
+  详见 `iterations/reports/batch-desk/20260902T212000Z.md` 与 `iterations/reports/batch-desk/waves/W40_wave.json`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
