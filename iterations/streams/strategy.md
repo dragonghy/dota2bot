@@ -27,6 +27,48 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0WANDSRC. **【2026-09-02T22:38Z 新增,**认领 issue**(本轮 `[strategy]` 未认领 issue **不再是零** ——
+   录像组 22:03Z 开出 **GH #437** 并带帧证据,按工作流第 1 条优先于 backlog;
+   形状普查轨本轮**没有使用**);
+   **产出是一条 gated 收窄 + 真实帧两面 + 语料 ratchet**:`J.IsWandBleedSourcePresent`
+   (`bots/FunLib/jmz_func.lua`,turbo + `wandbleed2`,**未 armed 答 `true`**)+
+   `wandbleed` 分支末尾一个合取项;`tests/test_replay_437_wandbleed_source.lua`(**10/0**)+
+   `tools/agent/mutstand_wandbleed2.sh`(**12/12 CAUGHT**);`state.json` 新键 `wandbleed2_20260902`;
+   `test_set.md` **§DS**(入集提议 55 → 56);`queue.json` **`strategy-39`**(`bundle` 已填);
+   报告 `iterations/reports/strategy/20260902T223823Z.md`;
+   零 AWS、S3 零访问、零 EC2;**`game/` 零 diff**。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个「域是空的」读数,先要分清它说的是
+   「游戏里没有这个形状」还是「我的普查看不见这个形状」—— 两者都长成 `0/N`,
+   而只有前者能授权登记不修。**
+   本轮第一版域价钱是 **python 正则**扫 `tests/fixtures/`,读作 **563 / 6 / 攻击者全在 900 内**
+   ⇒ 结论「本地没有这个形状,只能等录像组冻帧」。改用 **`dofile` 读 fixture 表**,
+   同一份语料读作 **993 / 80 / 101**:**正则漏掉 43% 的单位行,而漏掉的那批里装着本轮全部的证人**。
+   拆穿它的是**把同一份普查写成断言**的那一步。与 GH #431 同族,**但那次错的是查询词,这次错的是解析器**;
+   两次的症状同为**一个偏小的、自洽的、带分母的零**。⇒ **语料普查默认读结构,正则要配正对照。**
+   **⭐⭐ 域价钱这次买到的不是「能不能做」,是那个常数。** 两个观测帧只把阈值夹在 **(1497, 8381)**,
+   区间里每个值都能分开它们 ⇒ **帧不选常数,语料才选**:101 个受害者-攻击者对里
+   **攻击者仍活着时的最大距离 3011.7**(CM **4.9% HP** 挂 `modifier_maledict`,巫医在 3011 外)
+   ⇒ **issue 建议的 2000 会把那一帧的魔杖拿走**;同一格也否掉最便宜的版本(「要求攻击者还活着」——
+   **巫医活着,毒龙也活着**)。取 **4000**:高出实测最大值约 1000,挡掉 **0/101**,
+   而在册残留距离(8381 / 8195 / 8382)都比它大一倍以上。
+   **⭐⭐⭐ promote 这个 id 的动作不是把它从 armed 串里删掉。** 闸**朝「无操作」失效**,
+   而被 promote 的 id 不出现在任何 armed 串里 ⇒ **只删串不删代码,收窄会在 promote 当天静悄悄取消,
+   且没有任何东西变红**。这是 `pullcad` 的**倒像**(那次冻成 FALSE = 杠杆死了;这次冻成 TRUE =
+   **收窄没了,而它看起来像 promote 成功了**)。同族另有两条:`J.IsFieldSipEnough`(`fieldsip`)、
+   `J.ShouldAllowDefendTp`(`teambrain`)——**155 个 `IsSoakCandidate` 调用点里的 3 个**;
+   变异 **M7** 守着这一条。
+   **⚠️ 变异台自己的一条**:M3 第一版**活了下来,而与缺断言无关** —— 目标串
+   `if not J.IsModeTurbo() then return true end` **不唯一**(`teambrain` 那条排在文件前面),
+   `replace(...,1)` 改的是**另一个函数**。⇒ **目标串有歧义的变异台,测的是别的函数,
+   却把结果报成你的测试有洞。**
+   **本地买不到的那一格(引用时照抄)**:录像组那帧的残留来自**走开的**施法者,
+   本地两帧来自**死掉的**施法者(dead ember spirit,最近活敌人 8195 / 8382)⇒
+   条件 (a) 仍缺「冻 CM `t=473.5`」那一棒,**在录像组手上**。
+   另:`bots/` 里**没有任何 `ConsiderItemDesire` 分支有端到端路径** —— 真实帧上给足 6 层充能、
+   并按 `_itemdesire_sweep` 的做法补 `IsTrained`/`IsActivated`,`ItemUsageThink` 在四种 arm 组合下
+   **都记 0 个动作**(不补则 `J.CanCastAbility` 直接为 false)⇒ 调用点接线只能靠源码断言钉,
+   **M1 是唯一一个由 pin 而非行为抓住的变异,这一条是明说不是隐瞒**。
+
 0CHAINMEM. **【2026-09-02T20:25Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的
    #400/#406/#411/#415/#422/#426/#431 全是本组自己开的;owner P1 第 1 棒、P2 均已交出;P3 责任在总监;
    **backlog 最上面一条 `0DEADRUNG` 沿用 `0CKPUSH` 的逐字交待「下一个杠杆去别的域挑,照旧先跑域价钱再选形状」
@@ -4640,6 +4682,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T22:38Z(**认领 issue,不是自驱** —— 录像组 22:03Z 开出 **GH #437** 并带帧证据,
+  按工作流第 1 条优先于 backlog,形状普查轨本轮**没有使用**;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  **报告 `iterations/reports/strategy/20260902T223823Z.md`**;backlog 条目 **`0WANDSRC`**;
+  `state.json` 新键 **`wandbleed2_20260902`**;`test_set.md` **§DS**(入集提议 55 → 56);
+  `queue.json` **`strategy-39`**(`bundle` 已填,`pending_rulings.py` 读到 `ORPHAN_PROPOSAL: none`);
+  零 AWS、S3 零访问、零 EC2;**`game/` 零 diff**):
+  **⭐ 主判据:一个「域是空的」读数,先要分清它说的是「游戏里没有这个形状」还是
+  「我的普查看不见这个形状」—— 两者都长成 `0/N`,只有前者能授权登记不修。**
+  第一版域价钱(python 正则)读作 **563 / 6 / 全在 900 内**,改用 `dofile` 读表读作 **993 / 80 / 101**
+  —— **漏掉的 43% 里装着本轮全部的证人**;拆穿它的是把同一份普查写成断言的那一步。
+  与 GH #431 同族,**那次错的是查询词,这次错的是解析器**。
+  **⭐⭐ 域价钱买到的是那个常数**:两帧只把阈值夹在 (1497, 8381) ⇒ **帧不选常数**;
+  语料里**攻击者仍活着时的最大距离 3011.7**(CM 4.9% HP 挂 maledict,巫医在 3011 外)
+  ⇒ **issue 建议的 2000 会把那一帧的魔杖拿走**,取 **4000**(挡掉 0/101,残留距离都 > 8000)。
+  **⭐⭐⭐ promote 它 ≠ 把它从 armed 串里删掉**:闸朝「无操作」失效 ⇒ 只删串不删代码,
+  **收窄在 promote 当天静悄悄取消且没有任何东西变红**(`pullcad` 的倒像);
+  同族还有 `fieldsip` / `teambrain`,**155 个调用点里的 3 个**。
+  落地:`J.IsWandBleedSourcePresent`(turbo + `wandbleed2`,未 armed 答 `true`)+ 分支末尾一个合取项;
+  `tests/test_replay_437_wandbleed_source.lua` **10/0**;`mutstand_wandbleed2.sh` **12/12 CAUGHT**
+  (⚠️ M3 第一版活下来是**目标串不唯一**改到了 `teambrain` 那个函数,与缺断言无关)。
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  邻近四个测试文件各自裸退出码 0(9/0、12/0、10/0、11/0),`test_smoke_load` 3/0;
+  **全量 Lua 套件的读数见报告 §10 —— 没跑完的部分是跳过不是通过**。
+  开工自检真实退出码 **3**(第一次调用被按证据纪律 3 拒绝,stdout 是管道 —— **第 7 次复发**):
+  python 腿三行 FAIL = **GH #410** + 录像组 21:55Z 新落地的
+  `wandbleed_trigger:HP_MAX` / `HP_MIN_EXCLUSIVE` 未登记 `HP_CENSUS`(**非本轮改动、非本组的域**)。
+  **球在总监(裁 §DS / `strategy-39`,⚠️ 先读 §DS.7:严格子集 ⇒ `wandbleed` 触发计数下降不是负面信号)
+  与录像组(冻 CM `t=473.5`,买条件 (a) 缺的那一面)。**
 - 2026-09-02T20:25Z(**自驱** —— `[strategy]` 未认领 issue 仍为零,open 的
   #400/#406/#411/#415/#422/#426/#431 全是本组自己开的;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **backlog 最上面一条 `0DEADRUNG` 交待本轮「换域 + 先跑域价钱再选形状」,本轮把域从

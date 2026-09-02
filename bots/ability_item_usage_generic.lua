@@ -3406,9 +3406,19 @@ X.ConsiderItemDesire["item_magic_wand"] = function( hItem )
 	-- Under fresh hero damage the charge is worth more now than later:
 	-- drink at <45% HP regardless of attacker distance. Gated turbo +
 	-- 'wandbleed'; inert by default.
+	-- [wandbleed2 / GH #437] The domain of `WasRecentlyDamagedByAnyHero(2.0)`
+	-- is WIDER than the motive above: a DoT tick left behind by a hero who has
+	-- already left the fight is indistinguishable here from live fire, and 1 of
+	-- the 2 attributable triggers the desk reconstructed in W39 was exactly
+	-- that (CM t=474.4, HP rising, nearest enemy 8381 away, 6 charges spent for
+	-- nothing). J.IsWandBleedSourcePresent asks for a live enemy inside 4000 --
+	-- a measured ring, ~1000 past the furthest a live attacker sits in the
+	-- fixture corpus; it answers TRUE -- blocking nothing -- unless
+	-- 'wandbleed2' is armed.
 	if J.IsModeTurbo() and J.IsSoakCandidate('wandbleed')
 	and nHPrate < 0.45 and nCharges >= 5
 	and bot:WasRecentlyDamagedByAnyHero(2.0)
+	and J.IsWandBleedSourcePresent( bot )
 	then
 		hEffectTarget = bot
 		sCastMotive = '放血自救'

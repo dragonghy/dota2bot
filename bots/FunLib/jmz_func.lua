@@ -9515,6 +9515,79 @@ function J.ShouldDrinkWandInLimbo( bot, hItem )
 	return true
 end
 
+-- [wandbleed2 / GH #437] Narrowing for the 'wandbleed' branch of
+-- X.ConsiderItemDesire['item_magic_wand']: require the source of the beating to
+-- still be ON THE FIELD.
+--
+-- WHAT THE REPLAY DESK SAW (GH #437, W39, frame-by-frame). `wandbleed` uses
+-- bot:WasRecentlyDamagedByAnyHero(2.0) as its proxy for "a hero is shelling me
+-- from beyond the shipped 1000 ring", and that predicate knows NOTHING about
+-- where the damage came from or whether it is still coming. A damage-over-time
+-- tick left behind by a hero who has already walked away reads exactly like
+-- live fire. Real frame, spot_20260902_153226 / 20260902_154755_slot4, seed
+-- 2877, crystal_maiden t=474.40: HP RISING (30.7% -> 41.0% over the previous
+-- 3s, plus a +225 heal on the same tick), mana 97.9%, nearest visible enemy
+-- 8381 away -- and a 6-charge wand spent, because a departed venomancer's
+-- poison sting was still ticking 13 a second. 1 of the 2 attributable
+-- `wandbleed` triggers in that wave was this shape; the other (slardar, an
+-- enemy at 1497, five charges, survived) is the case the id exists for.
+--
+-- The domain is worse than "rare": every persistent DoT in the game keeps
+-- ticking AFTER its caster disengages, so the frames where this predicate is
+-- true for a stale reason are POSITIVELY CORRELATED with the threat being
+-- over.
+--
+-- WHY 4000, MEASURED. The desk's two frames only bracket the threshold at
+-- (1497, 8381) -- every value in that interval separates them, so they cannot
+-- pick one. The local corpus can, because it holds the question this constant
+-- actually asks: HOW FAR CAN A HERO BE AND STILL BE HITTING ME? Over the 107
+-- fixtures, 101 victim/attacker pairs carry fresh (<=2.0s) hero damage, and
+-- the largest distance at which the attacker is STILL ALIVE is 3011.7 --
+-- crystal_maiden at 4.9% HP (60/1224) carrying modifier_maledict from a witch
+-- doctor 3011 away. That frame is the whole reason this constant is not the
+-- 2000 the issue suggested: at 2000 the narrowing would take the wand away
+-- from a bot at sixty hit points who is genuinely being killed at range.
+-- Maledict is also the counter-example to the tempting cheap version of this
+-- fix ("the attacker must still be alive"): the CM one is alive, and the
+-- venomancer in the motivating frame was alive too.
+-- 4000 sits ~1000 past that measured maximum, blocks 0 of the 101 pairs, and
+-- is less than half of every residue distance on record (8381 desk; 8195 /
+-- 8382 in the corpus). Deliberately NOT the 1600 J.ShouldDrinkWandInLimbo
+-- uses: that constant means "quiet drift", and 7 of the 101 pairs are beyond
+-- it.
+--
+-- Fails OPEN by construction: when the narrowing is not in force (not turbo,
+-- or 'wandbleed2' not armed) this answers TRUE and blocks nothing, so
+-- `wandbleed` behaves exactly as it does today.
+--
+-- **PROMOTING 'wandbleed2' MEANS DELETING THE GATE LINE, NOT JUST THE ID.**
+-- A promoted id appears in no armed string, so leaving the line in place would
+-- freeze this at TRUE forever -- i.e. the narrowing would silently un-narrow
+-- on the very day it is promoted, with nothing red. This is the 'pullcad'
+-- lesson (a promoted id freezes any gate that names it) in its inverted form:
+-- a fail-open gate freezes at "no effect" while LOOKING promoted. Two other
+-- gates in bots/ fail open the same way -- J.IsFieldSipEnough ('fieldsip') and
+-- J.ShouldAllowDefendTp ('teambrain') -- out of 155 IsSoakCandidate sites.
+--
+-- The local corpus witnesses BOTH answers on real frames, and the split is
+-- exactly the intended one: of the 80 alive hero-frames (out of 993) carrying
+-- fresh hero damage, this predicate keeps 78 and blocks 2 -- and the 2 are
+-- viper and zuus in f_260820_043120_viper_defend_paired at t=599.5, both still
+-- taking damage from an ember spirit who is DEAD, with no live enemy inside
+-- 8195 / 8382. That is the motivating shape reproduced locally: fresh hero
+-- damage that no live enemy is behind. Honest bound: those two frames are
+-- residue from a dead caster, while the desk's frame is residue from a caster
+-- who walked away, and no local frame carries the second kind -- freezing that
+-- one into tests/fixtures/ is the outstanding baton on GH #437.
+-- tests/test_replay_437_wandbleed_source.lua pins every number above.
+function J.IsWandBleedSourcePresent( bot )
+	if not J.IsModeTurbo() then return true end
+	if not J.IsSoakCandidate( 'wandbleed2' ) then return true end
+	if bot == nil then return true end
+
+	return #J.GetNearbyHeroes( bot, 4000, true, BOT_MODE_NONE ) >= 1
+end
+
 -- [GH #16] Turbo core farm-desire preservation. Aggregated over ~790 turbo
 -- games, our CORES under-farm at support level (~1.4 CS/min; a competent core
 -- does 5-8+). One driver: after the laning phase, farm desire is hard-capped
