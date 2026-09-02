@@ -3806,7 +3806,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     句柄(**短写在丢返回值的代码眼里就长这样**)。补完 M1–M6 六个变异体全死。
   - 门:静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用
     `RULE6_BYPASS`**)。定向:**22 个写开关的文件 + 普查 + 2 个 gate 一致性文件 = 25 个全绿**。
-    动态全量读数见报告 §7。开工自检第一次调用**又被拒答**(`SELFCHECK_EXIT=2 REFUSED`,
+    **动态全量:没跑完,不冒充全绿** —— 墙钟 ≈3h15m / CPU ≥150min 仍未收尾,
+    **没有 `N tests, M failures`、没有 `FULL_EXIT`**;过程中执行到 **3708 个用例、失败 2 个**,
+    **两个都先于本轮**(`coarmed` / `incoming_damage`),迁移面零失败。
+    ⭐ **这与 GH #401「全量在 routine 容器里跑完了(3000/6)」对不上**,留给总监。
+    开工自检第一次调用**又被拒答**(`SELFCHECK_EXIT=2 REFUSED`,
     我把 stdout 接进了 `tail`)—— 证据纪律 3 的**第 6 次**现场,仍然是当轮第一条命令。
   - **本轮之前就红的**(不是我的):`test_coarmed_attribution_register.lua:341`
     (`outlatch > slotpush` 未登记,来自 `04d3db8`,**总监的活**)、
