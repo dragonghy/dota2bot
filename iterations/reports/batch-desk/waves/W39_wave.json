@@ -190,5 +190,10 @@
  "run_id_uniqueness": "Four run_ids, four distinct RUN_TOKENs (724bad / 85aa25 / 39b063 / fa631e) -- uniqueness rests on the token (GH #98). Belt-and-braces held too: the four calls landed at 15:31:51 / 15:32:26 / 15:32:48 / 15:32:52Z, all crossing whole seconds.",
  "capacity_note": "*** SIXTH CONSECUTIVE WAVE BITTEN BY CAPACITY, and the first where it bit at TAKE-OFF rather than as a mid-flight reclaim: W33/W35/W36/W37/W38 lost 4/3/4/2/1 machines to reclaims; W39 lost none yet but paid three InsufficientInstanceCapacity refusals to get airborne. Registered for GH #408 (open, zero comments, unadjudicated). The desk does not re-adjudicate owner's GH #158 spot-first.",
  "launch_round_roll_call": "Charter step 6 launch-round pair, both run at 15:33Z: (1) pending/running `soak-run` tags = EXACTLY FOUR values, matching machines[].run_id one-for-one (no missing machine, no leak); (2) terminated/shutting-down census = EMPTY -- no Server.SpotInstanceTermination in this wave's window, so no arm was lost at take-off. describe-volumes: 4 volumes, all `in-use`, no orphans. check_costs.sh --leak-only exit 0, showing exactly these four. Standing cost remains only the AMI ami-0a990a26d89c66547.",
- "expected_self_destruct": "~16:1x-16:3xZ (watchdog cap 2h, historical completion ~0.75h)."
+ "expected_self_destruct": "~16:1x-16:3xZ (watchdog cap 2h, historical completion ~0.75h).",
+ "issues_filed": {
+  "GH #427": "[batch] GH #408 的按需补跑路径:证据半衰期比它取代的 spot 路径严格更短(第一个数据点已永久丢失)。https://github.com/dragonghy/dota2bot/issues/427",
+  "GH #428": "[harness] spot_run.sh 的 AZ 环走是确定性单向的:容量紧张时把整波挤回同一个 AZ(GH #256 的多跳版本)。这一波的 az_spread 就是它的第一手证据。https://github.com/dragonghy/dota2bot/issues/428",
+  "GH #429": "[harness] reclaim_blind.py 的 yield 只数 machines[],数不到住在 rerun 里的补跑机。https://github.com/dragonghy/dota2bot/issues/429"
+ }
 }
