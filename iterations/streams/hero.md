@@ -45,6 +45,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      (`kill $!` 杀的是子 shell,包着它的 `bash -c` 还活着),接下来三次「干净」复跑
      全被污染(23 文件同进程 driver 报 77/76 条失败)。**归因只花了一次 `ps`,
      因为失败本身是点名的**。下次跑并发台用 `pkill -f` 收尾。
+   - **2026-09-02T19:48Z:第三批顺延一轮**(那一轮的轴是 GH #416 的验收三条,
+     报告 `iterations/reports/hero/20260902T194820Z.md`)。**点名未变,棒未掉。**
    - **下一批取 `aegis_grouping` / `tpreach_band`**(它们不支撑 S2 的删除者读数)。
      **`-78` 点名最后迁的 5 个仍然不动**(`bbfight` / `bbrespawn` / `bbshort` /
      `pollyhp` / `salveally`)。
@@ -3778,6 +3780,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T19:48Z(报告 `iterations/reports/hero/20260902T194820Z.md`;轴 **GH #416 的验收三条**)
+  **改 1 个文件,在 `tests/`**(新 `test_zusult_pre_ladder_claim_retake.lua`,9 节);
+  **`bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、零新 gate id、零 arm/promote、零 AWS、不申请波次;
+  `state.json` / `test_set.md` / `queue.json` 本轮无新增。**
+  - 选题:OWNER_PRIORITIES 无本组项;#407 球在 batch-desk(`hero-27`)、#417 判定权在总监
+    ⇒ 取 **#416**,因为它**自己写了三条验收而一条都没执行过**。
+    ⚠️ **前两轮的本节把 #416 记成「已结论」** —— **「诊断写完」被当成了「验收做完」**,
+    与铁律 9 那条「修好 ≠ 做完」同型,只是掉的是结论自己的验收。本轮执行掉。
+  - **验收 (1) 域是扫出来的:5 个 arm 了 `zusult`/`zusultx` 的测试文件**(不是 4 个 ——
+    扫描扫出了阶梯之后出生的 `test_focus_mana_cost_consumer_census.lua`,**留在断言里
+    并注明它无须重取**,而不是按名字滤掉)。M5(临时加一个 arm 的文件)**只红 §1**。
+  - **验收 (3):五帧裁决全部不变**(CROSS `zusult` false / `zusultx` true、SAFE 放行、
+    LOCK 扣住、DENIED 放行、W2LEAK 扣住),理由不是运气 —— **三个文件都手钉了 ult 价**,
+    第四个(towerfear)**消费方够不到**(helper 3 个调用点全在 `hero_zuus.lua`)。
+  - **⭐ SAFE 那格的余量塌成 0**:文件锚给 `380−129=251 ≥ 225`(余量 26),
+    阶梯给 `380−130=250 ≥ 250`(**余量 0**)⇒ 裁决现在由 `>=` 的等号扛着。
+    M2(`>=`→`>`)**只红 §4c**。六个手钉锚 **全部 ≤ 阶梯价,符号唯一**,与
+    「两次 0.5s 快照间的回蓝只能让实测花费显得更小」同向;**不主张阶梯更对**。
+  - **⭐⭐ 新形状:阶梯之前 `zusultx` 就是 `zusult`。** `nSpellCost > 0` 那句让一个 0
+    **不结束调用、而是把增量静默置零**,于是出货子句去回答 ⇒ 阶梯前 arm `zusultx` 的
+    fixture **测到的是 `zusult`,还看起来像测到了加宽**。驱动:CROSS 上 spend 价=0 ⇒
+    true→false 且**等于窄 id 的答案**,而 spend 价**读了 1 次**(证明体真跑了);
+    窄 id 那条**读 0 次**(证明那次读取就是加宽的全部)。**仓库里无受害者**
+    (唯一消费方两个操作数都钉了)⇒ 登记不新开 issue。
+  - 门:开工自检第一次调用**又被拒答**(`SELFCHECK_EXIT=2 REFUSED`,stdout 接进 `tail`)——
+    证据纪律 3 的**第 8 次**现场;改对后 **`worst exit: 3`**(`legs run 9`、
+    `UNCERTIFIABLE: none`,findings = cadence + owed-executions + trunk-red(python),
+    那条 python 红 = **GH #410** `illumove_pairs:HP_CUT`,先于本轮且本轮无 `.py` 改动)。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
+    动态定向 `zusult_pre_ladder` **9/0**、`zuus` **139/0**;变异台 **5 变异 + 1 负控**,
+    还原 `cmp` 逐字节相同。
+  - **交出去的棒**:GH **#416** 已追评三条验收的读数,**本组认为可关**(关不关是总监的裁定权);
+    backlog `-78` 第三批(`aegis_grouping` / `tpreach_band`)**顺延一轮,未丢**。
 - 2026-09-02T17:04Z(报告 `iterations/reports/hero/20260902T170446Z.md`;轴 **backlog `-78`**
   第二批 = 上一轮点名的 5 个「带直接读点」的 gate 测试)
   **改 7 个文件全在 `tests/`(5 个迁移 + 属主 + 棘轮);`bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、
