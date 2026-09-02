@@ -89,16 +89,17 @@
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
    "status_code": "Server.SpotInstanceTermination",
-   "create": null,
-   "update": null,
-   "terminated": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
+   "create": "2026-09-01T21:31:44Z",
+   "update": "2026-09-01T21:33:22Z",
+   "terminated": "2026-09-01T21:33:22Z",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
    "reclaimed": true,
    "StateReason.Code": "Server.SpotInstanceTermination -- Service initiated (2026-09-01 21:35:25 GMT), i.e. ~4.25 min after take-off. Read first-hand from describe-instances state census inside the wave lifecycle (the launch-round census the charter mandates).",
-   "lifetime_min": 4.25,
-   "refilled_by": "spot_20260901_214412_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_b44770"
+   "lifetime_min": 1.63,
+   "refilled_by": "spot_20260901_214412_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_b44770",
+   "sir_status_code": "instance-terminated-no-capacity"
   },
   {
    "seed": 2838,
@@ -118,14 +119,16 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": null,
-   "create": null,
-   "update": null,
-   "terminated": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "reclaimed": false
+   "status_code": "Client.UserInitiatedShutdown",
+   "create": "2026-09-01T21:32:16Z",
+   "update": "2026-09-01T22:29:47Z",
+   "terminated": "2026-09-01T22:29:47Z",
+   "ab": 42,
+   "ba": 16,
+   "arm_depth": 23.17,
+   "reclaimed": false,
+   "sir_status_code": "instance-terminated-by-user",
+   "lifetime_min": 57.52
   },
   {
    "seed": 2850,
@@ -146,14 +149,16 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": null,
-   "create": null,
-   "update": null,
-   "terminated": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "reclaimed": false
+   "status_code": "Client.UserInitiatedShutdown",
+   "create": "2026-09-01T21:32:33Z",
+   "update": "2026-09-01T22:26:48Z",
+   "terminated": "2026-09-01T22:26:48Z",
+   "ab": 31,
+   "ba": 12,
+   "arm_depth": 17.3,
+   "reclaimed": false,
+   "sir_status_code": "instance-terminated-by-user",
+   "lifetime_min": 54.25
   },
   {
    "seed": 2922,
@@ -175,16 +180,17 @@
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
    "status_code": "Server.SpotInstanceTermination",
-   "create": null,
-   "update": null,
-   "terminated": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
+   "create": "2026-09-01T21:32:38Z",
+   "update": "2026-09-01T21:38:01Z",
+   "terminated": "2026-09-01T21:38:01Z",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
    "reclaimed": true,
    "StateReason.Code": "Server.SpotInstanceTermination -- Service initiated (2026-09-01 21:40:04 GMT), i.e. ~7.5 min after take-off.",
-   "lifetime_min": 7.5,
-   "refilled_by": "spot_20260901_214446_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_29c9a9"
+   "lifetime_min": 5.38,
+   "refilled_by": "spot_20260901_214446_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_29c9a9",
+   "sir_status_code": "instance-terminated-no-capacity"
   }
  ],
  "az_spread": {
@@ -213,7 +219,8 @@
     "us-west-2d"
    ],
    "distinct": 2,
-   "note": "2+2 rather than the launch-time 1+3; one AZ event now takes two seeds, not three."
+   "note": "2+2 rather than the launch-time 1+3; one AZ event now takes two seeds, not three.",
+   "outcome": "Both 2c machines died to one event at 21:50:21Z. The 2+2 re-spread this desk recorded last round as 'one AZ event now takes two seeds, not three' was tested within six minutes and cost exactly the two it predicted. This is GH #403's mechanism (ring-walk converges on whichever AZ still has capacity under regional pressure) delivering its predicted exposure -- the concentration, not the ring-walk, is what killed the refills."
   }
  },
  "run_id_uniqueness": {
@@ -232,7 +239,54 @@
  },
  "terminated_capture_obligation": "These four take off 21:31-21:32Z and self-destruct by ~23:3xZ at the latest (2h watchdog; on W34's realised rate expect ~22:1x-22:3xZ). The EC2 `terminated` field survives ~1h (GH #375), so the next round of this stream (~00:1xZ) will again find describe-instances empty -- PRE-REGISTERED HERE, as at W35. The settlement channel is NOT lost: read `describe-spot-instance-requests` (still first-hand 2.6h later at W35) plus the S3 farm log's `SPOT INTERRUPTION` line. Do not fall back to the #332 S3-last-upload proxy before trying those two.",
  "harvest": {
-  "status": "PENDING -- next round of this stream"
+  "status": "DONE 2026-09-02T00:2x-00:5xZ",
+  "round": "batch-desk, this stream, next round after launch",
+  "tool": "tools/batch_test/soak/recover_verdict.py ./pool <54-id string>",
+  "RV_EXIT": 0,
+  "arm_string_verified": "The 54-id string handed to recover_verdict.py hashes to md5 74273b3ce5f58fcb50de769a700ab074 / 477 bytes, BYTE-IDENTICAL to this record's arm_md5/arm_bytes written at take-off. The corpus scored is the string that was launched. NOTE test_set.md:2 has since moved to 52 ids (director ruling §DH removed tormself+immguard, GH #402) -- W36 is therefore the FIRST AND LAST wave of the 54-id family.",
+  "machines_banked": "2 of 6 (4 of 6 reclaimed: 2 originals + BOTH refills)",
+  "seeds_banked": "2 of 4 -- 2838 (ab=42/ba=16, arm_depth 23.17) and 2850 (ab=31/ba=12, arm_depth 17.30). Seeds 2745 and 2922 produced ZERO games across two machines each.",
+  "input_census": {
+   "files_seen": 113,
+   "games_loaded": 113,
+   "source_dirs": 2,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0
+  },
+  "s3_reconciliation": "113 .analysis.json downloaded == 113 loaded == 64 (9fb8e2) + 49 (3c7e26), and the two S3 prefixes hold 160 and 122 objects total (analysis + demclaim + log.gz, 3 per game, plus per-slot extras). Zero R1/R2/R3 refusals, zero overrides.",
+  "depth_gate": "GH #269: ZERO seeds excluded as THIN-ARM. Both banked seeds clear MIN_ARM_DEPTH=8 with margin (23.17, 17.30). The gate was not lowered and no override flag was passed.",
+  "readings": {
+   "mean": {
+    "gpm": -26.63,
+    "xpm": -13.28,
+    "deaths": 0.07,
+    "last_hits": -1.1,
+    "winrate": 0.464,
+    "winrate_headroom": 0.0364
+   },
+   "comps_better": {
+    "gpm": "1/2",
+    "xpm": "1/2",
+    "deaths": "1/2",
+    "last_hits": "1/2",
+    "winrate": "0/2"
+   },
+   "suggested": "hold_or_reject",
+   "scored_games": 101,
+   "unfinished_games": 0,
+   "winner_by": {
+    "engine_natural": 113
+   }
+  },
+  "n_is_2_caveat": "*** THE MEAN IS AN n=2 READING AND THIS DESK DOES NOT PUT IT FORWARD AS A VERDICT. The two seeds disagree in sign on every economy metric (2838 gpm -64.22, 2850 gpm +10.95; comps_better 1/2 on all four), so the cross-seed dispersion -- the quantity rule 4(i-c) names as the one that speaks to precision -- is larger than the mean. n=2 has no usable dispersion estimate. The 54-id family now has 2 banked seeds total and W36 was its only wave (the family was dissolved by §DH), so this reading can never be deepened. Report, do not rule.",
+  "rule_4i_a_disclosure": "Both stratum readings registered for all four economy metrics, taken from recover_verdict.py's own per_seed[].<m>_ab/_ba and strata.<m> (NOT hand-computed -- rule 4(i-d)). Wave-level strata: gpm ab=114.47 ba=-167.74 side=141.11; xpm ab=95.37 ba=-121.93 side=108.65; deaths ab=-1.75 ba=1.88 side=-1.81; last_hits ab=-1.82 ba=-0.39 side=-0.72.",
+  "rule_4i_c_disclosure": "sign_flip TRUE on gpm, xpm and deaths (side_gt_arm 2/2 on each); FALSE on last_hits (1/2). These are SIDE-BIAS-CANCELLED estimators (each seed 50/50 swap-averaged by the tool), so per rule 4(i-c) the flip is a DISCLOSURE and NOT a veto reason: |side| > |arm| is the identity ab*ba<0, and it says this wave's drafted lineups favour one physical side harder than the arm moves the metric. It says nothing about how precisely arm is measured. Registered here because (i-a) requires it, not because it decides anything.",
+  "winrate_channel": "DEGENERATE (GH #352). Minority side won 2 of 113 finished games, share 0.0177 << 0.20; the tool printed its stderr refusal banner. winrate 0.464 is bounded to 0.5 +/- 0.0364 by the corpus and MUST NOT be cited as iron-rule-2 condition (b) support. Fourth consecutive wave with a swept corpus (W30 231:1, W31 221:1, W35 45:0 dire, W36 111:2 dire).",
+  "gh_108_datapoint": "winner_by is engine_natural 113/113 -- 100% of finished games ended with an ancient falling, i.e. the winrate here is fully gold-INDEPENDENT even though it is side-degenerate. Under SOAK_CAP_MIN=25 the natural-end rate is now 1.00 on this corpus. That is the quantity GH #108's acceptance names, offered to the director as a datapoint; the #108 ruling is not this desk's.",
+  "test_set_DC_debt": "test_set.md §DC.3 (甲) -- illumove x illureal non-orthogonality -- is STILL unsettled and now UNSETTLEABLE on this family: W35 could not settle it (n=1) and rolled it to W36; W36 banks n=2 with sign-disagreeing seeds and the 54-id family is dissolved. The debt does not vanish; it rolls to whatever wave the director next admits these two ids into. Handed back, not closed.",
+  "test_set_DF_obligation": "test_set.md §DF.6 -- tormself and immguard were DOMAIN-EMPTY by construction (carriers ringmaster and brewmaster are not in hero_pool.txt's 47 heroes, GH #402). This harvest is NOT evidence about either fix and is not read as one. The director has since removed both from the member string (§DH). Obligation discharged by that ruling, recorded here.",
+  "cost": "~2.2 machine-hours total: 2 survivors at 0.96h and 0.90h, 4 reclaimed at 1.63 + 5.38 + 5.63 + 5.38 minutes (~0.30h combined). At c6i.4xlarge spot rates this is well under the $0.90/wave constant -- the auto-invalidation clause (any wave measuring >$0.90 must be named and re-ruled) is NOT triggered.",
+  "leak": "CLEAN. (1) describe-instances over ALL states returned EMPTY -- zero instances, so the wave roll-call by soak-run tag has nothing left to reconcile and no stranger exists. (2) describe-volumes returned EMPTY -- no orphan EBS. (3) Reclaim census: all six SIRs are `closed`, four instance-terminated-no-capacity and two instance-terminated-by-user, every one inside this wave's window; no seventh request. Standing cost remains AMI ami-0a990a26d89c66547 alone."
  },
  "refills": [
   {
@@ -247,7 +301,19 @@
    "launched": "2026-09-01T21:44:12Z",
    "market": "spot",
    "instance_lifecycle": "spot",
-   "placement_note": "Re-aimed twice inside the ring: 2a InsufficientInstanceCapacity -> 2b InsufficientInstanceCapacity -> 2c launched. No AZ RING EXHAUSTED, no market degradation."
+   "placement_note": "Re-aimed twice inside the ring: 2a InsufficientInstanceCapacity -> 2b InsufficientInstanceCapacity -> 2c launched. No AZ RING EXHAUSTED, no market degradation.",
+   "status_code": "Server.SpotInstanceTermination",
+   "create": "2026-09-01T21:44:43Z",
+   "update": "2026-09-01T21:50:21Z",
+   "terminated": "2026-09-01T21:50:21Z",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "lifetime_min": 5.63,
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "reclaimed": true,
+   "games_produced": 0,
+   "spot_interruption_notice": "2026-09-01T21:52:21Z (farm log `SPOT INTERRUPTION {\"action\":\"terminate\"}`, the 2-minute deadline; SIR Status.UpdateTime 21:50:21Z is the same event seen on the other channel)"
   },
   {
    "seed": 2922,
@@ -261,8 +327,25 @@
    "launched": "2026-09-01T21:44:46Z",
    "market": "spot",
    "instance_lifecycle": "spot",
-   "placement_note": "Re-aimed once inside the ring: 2b InsufficientInstanceCapacity -> 2c launched."
+   "placement_note": "Re-aimed once inside the ring: 2b InsufficientInstanceCapacity -> 2c launched.",
+   "status_code": "Server.SpotInstanceTermination",
+   "create": "2026-09-01T21:44:58Z",
+   "update": "2026-09-01T21:50:21Z",
+   "terminated": "2026-09-01T21:50:21Z",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "lifetime_min": 5.38,
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "reclaimed": true,
+   "games_produced": 0,
+   "spot_interruption_notice": "2026-09-01T21:52:21Z (farm log `SPOT INTERRUPTION {\"action\":\"terminate\"}`, the 2-minute deadline; SIR Status.UpdateTime 21:50:21Z is the same event seen on the other channel)"
   }
  ],
- "refill_note": "TWO OF FOUR MACHINES WERE RECLAIMED WITHIN 8 MINUTES OF TAKE-OFF (2745 at 21:35:25Z after 4.25 min, 2922 at 21:40:04Z after 7.5 min, both Server.SpotInstanceTermination). Both had produced essentially zero games, so nothing was lost but the slot. The charter's PRE-REGISTERED reclaim disposition was executed in the same round: 'a reclaimed machine means that seed lost an arm -- do NOT void the whole wave; re-launch the missing seed down the same ladder'. Both refills pinned to W36's OWN tree 32abbfbb (NOT the session's current HEAD 12259fc0, which had moved on with iterations/ docs) so the wave stays one comparable tree. Ladder: c6i.4xlarge spot both times, ring-walk only, no c6a fallback and no --on-demand -- the ladder was never descended. AZ spread AFTER the refill is 2c x2 + 2d x2 = 2 distinct, which is no worse than the original 2c/2d/2d/2d and spreads the exposure more evenly (2+2 rather than 1+3). *** THIS IS THE SECOND CONSECUTIVE WAVE MAULED BY SPOT RECLAIMS (W35 lost 3 of 4 to a correlated cross-AZ event, GH #398). Combined with this wave's NINE InsufficientInstanceCapacity refusals across launch and refill, us-west-2 c6i.4xlarge spot capacity is under sustained pressure. That is an input to the owner's own GH #158 spot-first ruling, and it is NOT this desk's to re-rule -- filed to the director in GH #403."
+ "refill_note": "TWO OF FOUR MACHINES WERE RECLAIMED WITHIN 8 MINUTES OF TAKE-OFF (2745 at 21:35:25Z after 4.25 min, 2922 at 21:40:04Z after 7.5 min, both Server.SpotInstanceTermination). Both had produced essentially zero games, so nothing was lost but the slot. The charter's PRE-REGISTERED reclaim disposition was executed in the same round: 'a reclaimed machine means that seed lost an arm -- do NOT void the whole wave; re-launch the missing seed down the same ladder'. Both refills pinned to W36's OWN tree 32abbfbb (NOT the session's current HEAD 12259fc0, which had moved on with iterations/ docs) so the wave stays one comparable tree. Ladder: c6i.4xlarge spot both times, ring-walk only, no c6a fallback and no --on-demand -- the ladder was never descended. AZ spread AFTER the refill is 2c x2 + 2d x2 = 2 distinct, which is no worse than the original 2c/2d/2d/2d and spreads the exposure more evenly (2+2 rather than 1+3). *** THIS IS THE SECOND CONSECUTIVE WAVE MAULED BY SPOT RECLAIMS (W35 lost 3 of 4 to a correlated cross-AZ event, GH #398). Combined with this wave's NINE InsufficientInstanceCapacity refusals across launch and refill, us-west-2 c6i.4xlarge spot capacity is under sustained pressure. That is an input to the owner's own GH #158 spot-first ruling, and it is NOT this desk's to re-rule -- filed to the director in GH #403.",
+ "refill_outcome": {
+  "verdict": "BOTH REFILLS DIED, TO THE SAME EVENT, IN THE SAME SECOND. SIR Status.UpdateTime is 2026-09-01T21:50:21Z for sir-kwi7gnvq AND sir-wjbqgh9q -- identical to the second -- both instance-terminated-no-capacity, both in us-west-2c, after 5.63 and 5.38 minutes. Their farm logs each end on `SPOT INTERRUPTION {\"action\":\"terminate\",\"time\":\"2026-09-01T21:52:21Z\"}`, the 2-minute notice for that same flip: two independent first-hand channels, consistent.",
+  "games_produced": "ZERO. Each refill prefix in S3 holds exactly ONE object, soak_farm.log (3.6 KiB), uploaded 21:50:2xZ by the interrupt handler. No .analysis.json at all -- the farm was up (`soak farm up: ... (16 slots)`) and validate_onspot.sh had just been invoked when the notice landed.",
+  "what_this_means": "The charter's pre-registered reclaim disposition ('a reclaimed machine means that seed lost an arm -- re-launch the missing seed down the same ladder') EXECUTED CORRECTLY and still bought nothing. Seeds 2745 and 2922 each lost BOTH their original machine AND their refill to instance-terminated-no-capacity. Re-launching into a window that is refusing capacity re-draws the same losing ticket; the disposition has no back-off, no market escalation and no second refill, so it terminates after one try with the seed still empty. Filed to the director as GH #408 -- NOT re-ruled here (market/ladder strategy is not this desk's surface)."
+ }
 }
