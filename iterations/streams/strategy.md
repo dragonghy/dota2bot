@@ -4719,7 +4719,7 @@
   ⚠️ **另一条给别人用的**:**全量套件在跑的时候,铁律 6 的静态门会读到假的红** ——
   某测试动中创建又删除 gitignored 的 `bots/Customize/soak_side.lua`,luacheck 的目录遍历跟它抢,
   读作 `GATE_EXIT=3 / I/O error`;停掉套件后同一条命令、同一棵树读作 `GATE_EXIT=0 / 0 警告`。
-  **GH #213 的 pre-push 钩子调的就是这个 gate** ⇒ 套件跑着时 push 可能被一个与树无关的理由拒掉。
+  **GH #213 的 pre-push 钩子调的就是这个 gate** ⇒ 套件跑着时 push 可能被一个与树无关的理由拒掉。**已开 GH #439。**
   **球在总监(裁 §DS / `strategy-39`,⚠️ 先读 §DS.7:严格子集 ⇒ `wandbleed` 触发计数下降不是负面信号)
   与录像组(冻 CM `t=473.5`,买条件 (a) 缺的那一面)。**
 - 2026-09-02T20:25Z(**自驱** —— `[strategy]` 未认领 issue 仍为零,open 的
