@@ -47,12 +47,12 @@
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 local api = require('mock.bot_api')
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local FIX  = 'tests/fixtures/f_212636_tide_ancient.lua'
 local JMZ  = 'bots/FunLib/jmz_func.lua'
 local SITE = 'bots/FunLib/aba_site.lua'
 local DOOM = 'bots/BotLib/hero_doom_bringer.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
 
 -- Three subjects on ONE frame, with the level the dump gave them. L10 and L11
 -- are below J.Site.ANCIENT_MIN_LEVEL, L14 is above it, so the ladder is walked
@@ -73,14 +73,29 @@ end
 --- Arm the REAL gate by writing the (gitignored) soak_side file the farm writes
 --- per wave. No J.* function is stubbed anywhere in this file: IsSoakCandidate
 --- and IsModeTurbo both run their shipped bodies on the real frame.
+---
+--- [GH #365 §3 / GH #229, hero backlog `-78`] The three lines this used to
+--- inline are now in tests/mock/soak_side.lua, the switch's one owner: the
+--- write is read back (a short write, a full disk or a read-only tree used to
+--- present as "the gate did not fire", which is what the unarmed cases below
+--- EXPECT), arming refuses to clobber a switch this process did not write, and
+--- the switch is re-read after the case body so a concurrent removal is
+--- reported as itself rather than as the pick mismatch it causes.
+---
+--- `sCand == nil` is the unarmed leg, and it is no longer an unconditional
+--- `os.remove`: it ASSERTS the switch is absent. "Gate off" and "the shipped
+--- answer" are the same observation only while no soak_side file exists, and
+--- that path is one global inode shared with every concurrent lua5.1 process.
 local function with_armed(sCand, fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = '" .. sCand .. "' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate(sCand, fn)
 end
+
+-- ...and once HERE, at file-load time, the only moment that sees the state this
+-- process STARTED in: every armed span ends by removing the switch, and the
+-- armed cases can sort before the unarmed ones, so an INHERITED leftover is
+-- deleted by a sibling case before any per-case guard looks at it (GH #417:
+-- such a leftover survived a per-case guard 19/19 green).
+ss.assert_clean('test_abilanc_ancient_selector')
 
 local function subject(spec)
     local J, _, heroes = rf.load(FIX, spec[1])
@@ -173,7 +188,9 @@ local function pick(spec, sArmed, bAnyTier)
             answer = J.GetMostHpUnit(camp_units())
         end
     end
-    if sArmed then with_armed(sArmed, run) else run() end
+    -- Both legs go through the owner now: the unarmed one asserts a clean
+    -- switch instead of trusting that nobody else armed one.
+    with_armed(sArmed, run)
     assert(bot ~= nil)
     return answer and answer:GetUnitName() or nil
 end
@@ -215,9 +232,12 @@ tests['[lever] armed, ancients only: nil, which every call site already handles'
     end)
     assert(answer == nil, 'an all-ancient sweep answers nil below the tier')
     -- nil is NOT a new outcome class: the shipped selector already answers nil
-    -- for an empty list, so no call site learns a new failure mode here.
-    local shipped = J.GetMostHpUnit({})
-    assert(shipped == nil, 'the shipped selector already answers nil for {}')
+    -- for an empty list, so no call site learns a new failure mode here. This
+    -- half is an UNARMED reading, so it runs on a switch asserted absent.
+    with_armed(nil, function()
+        local shipped = J.GetMostHpUnit({})
+        assert(shipped == nil, 'the shipped selector already answers nil for {}')
+    end)
 end
 
 tests['[lever] the AnyTier entry point restores the shipped answer exactly'] = function()
@@ -238,8 +258,10 @@ tests['[lever] the two shipped exclusions still hold, armed and unarmed'] = func
             GetMaxHealth = 9000,
             GetLocation = api.Vector(CAMP.x, CAMP.y, 0) }),
     }
-    assert(J.GetMostHpUnit(list):GetUnitName() == 'npc_dota_neutral_mud_golem',
-        'Roshan is excluded unarmed, as before')
+    with_armed(nil, function()
+        assert(J.GetMostHpUnit(list):GetUnitName() == 'npc_dota_neutral_mud_golem',
+            'Roshan is excluded unarmed, as before')
+    end)
     with_armed('abilanc', function()
         assert(J.GetMostHpUnit(list):GetUnitName() == 'npc_dota_neutral_mud_golem',
             'and armed -- the new conjunct is added to that list, not put in its place')

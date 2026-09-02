@@ -48,6 +48,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local rf  = require('mock.replay_fixture')
 local api = require('mock.bot_api')
+local ss  = require('mock.soak_side')              -- owns bots/Customize/soak_side.lua
 
 local FIX_Z = 'tests/fixtures/f_212636_tide_ancient.lua'
 local FIX_C = 'tests/fixtures/f_260819_181742_ss_chase_stalled.lua'
@@ -55,7 +56,6 @@ local JMZ   = 'bots/FunLib/jmz_func.lua'
 local SITE  = 'bots/FunLib/aba_site.lua'
 local ZUUS  = 'bots/BotLib/hero_zuus.lua'
 local CENT  = 'bots/BotLib/hero_centaur.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
 local CAND  = 'abil1st'
 
 -- Subjects as the dump gave them: name, level. L10/L11 are below
@@ -78,20 +78,30 @@ end
 --- Write the (gitignored) soak_side file the farm writes per wave. The gate
 --- is read through its SHIPPED body -- no J.* function is stubbed in this
 --- file. GetSoakSideConf caches on first read, so the file must exist BEFORE
---- the frame is loaded, not merely before the call.
+--- the frame is loaded, not merely before the call -- which is why this file
+--- arms by hand around a fixture load instead of wrapping a closure.
+---
+--- [GH #365 §3 / GH #229, hero backlog `-78`] The three lines this used to
+--- inline are now in tests/mock/soak_side.lua, the switch's one owner: the
+--- write is read back (a short write, a full disk or a read-only tree used to
+--- present as "the gate did not fire", which is what the unarmed cases below
+--- EXPECT), arming refuses to clobber a switch this process did not write, and
+--- `disarm` removes only bytes this process wrote and still owns.
 local function arm(sCand)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = '" .. sCand .. "' }\n")
-    f:close()
+    ss.arm(sCand)
 end
 
 local function disarm()
-    os.remove(SIDE_PATH)
+    ss.disarm()
 end
 
 --- Load a frame with the gate already in whatever state the caller wants.
+--- `sCand == nil` is the unarmed leg, and it now ASSERTS the switch is absent:
+--- "the shipped answer" and "the gate is off" are the same observation only
+--- while no soak_side file exists, and that path is one global inode shared
+--- with every concurrent lua5.1 process.
 local function subject(fix, spec, sCand)
-    if sCand then arm(sCand) end
+    if sCand then arm(sCand) else ss.assert_clean('unarmed leg') end
     local ok, J, bot = pcall(rf.load, fix, spec[1])
     if not ok then disarm(); error(J, 0) end
     if not (bot ~= nil) then disarm(); error('fixture no longer carries ' .. spec[1], 0) end
@@ -102,6 +112,13 @@ local function subject(fix, spec, sCand)
     end
     return J, bot
 end
+
+-- ...and once HERE, at file-load time, the only moment that sees the state this
+-- process STARTED in: every armed span ends by removing the switch, and the
+-- armed cases can sort before the unarmed ones, so an INHERITED leftover is
+-- deleted by a sibling case before any per-case guard looks at it (GH #417:
+-- such a leftover survived a per-case guard 19/19 green).
+ss.assert_clean('test_abil1st_first_unit_reader')
 
 -- The camp as a declared stand-in -- see [W1]. Coordinates are the ones the
 -- timeline sampled for the tide/zuus frame's ancient camp; only the fields the
@@ -195,11 +212,22 @@ end
 -- [lever] the behaviour change, through the shipped helper on real frames
 ----------------------------------------------------------------------
 
+--- Close a span `subject` opened. The two orderings the owner insists on, in
+--- the one place this file can put them: on the armed leg the switch cause
+--- OUTRANKS the value the body produced (a switch removed mid-span yields the
+--- UNARMED value, which #365 §3 spent a round arguing about as an expectation
+--- bug); on the unarmed leg the switch must still be absent afterwards, or the
+--- "shipped answer" reading was taken under somebody else's candidate.
+local function close_span(sCand, ok, err)
+    if sCand ~= nil then return ss.finish(ok, err) end
+    if ok then ss.assert_clean('unarmed leg, after the case body') end
+    if not ok then error(err, 0) end
+end
+
 local function first(fix, spec, sCand, tList)
     local J = subject(fix, spec, sCand)
     local ok, answer = pcall(J.GetFirstUnit, tList)
-    disarm()
-    if not ok then error(answer, 0) end
+    close_span(sCand, ok, answer)
     return answer
 end
 
@@ -229,8 +257,8 @@ tests['[lever] armed below the tier: the first NON-ancient, by ORDER not by heal
     assert(first(FIX_Z, S_ZUUS, CAND, ordered) == ordered[2],
         'the first non-ancient in ENGINE ORDER (300 hp), not the healthiest one (800 hp)')
     local J = subject(FIX_Z, S_ZUUS, 'abilanc')
-    local other = J.GetMostHpUnit(order_camp())
-    disarm()
+    local okOther, other = pcall(J.GetMostHpUnit, order_camp())
+    close_span('abilanc', okOther, other)
     assert(name_of(other) == 'npc_dota_neutral_dark_troll_warlord',
         "'abilanc' on the same list answers by health; this lever answers by order -- "
         .. 'two different measurements, which is why they are two ids')
@@ -258,10 +286,13 @@ tests['[inert] a DIFFERENT armed id, and non-turbo, both leave the shipped answe
         == 'npc_dota_neutral_granite_golem', 'nor any other wave')
     -- Turbo-only, driven by flipping the engine mode the shipped predicate reads.
     arm(CAND)
-    local J = rf.load(FIX_Z, S_ZUUS[1])
-    GetGameMode = function() return 1 end   -- luacheck: ignore
-    local answer = J.GetFirstUnit(camp)
-    disarm()
+    local J, answer
+    local okTurbo, errTurbo = pcall(function()
+        J = rf.load(FIX_Z, S_ZUUS[1])
+        GetGameMode = function() return 1 end   -- luacheck: ignore
+        answer = J.GetFirstUnit(camp)
+    end)
+    close_span(CAND, okTurbo, errTurbo)
     assert(J.IsModeTurbo() == false, 'the mode override took')
     assert(answer == camp[1], 'armed but not turbo is the shipped answer')
 end
@@ -277,7 +308,7 @@ end
 --- clause is false there; the pinned GH #259 frame had mana 1.00, which is the
 --- state being reproduced.
 local function drive_zuus(sCand, tCamp)
-    if sCand then arm(sCand) end
+    if sCand then arm(sCand) else ss.assert_clean('unarmed leg') end
     local J, bot = rf.load(FIX_Z, S_ZUUS[1])
     assert(bot:GetLevel() == 11 and bot:GetMana() == 268,
         'the frame moved: zuus was L11 with 268 mana here')
@@ -287,8 +318,7 @@ local function drive_zuus(sCand, tCamp)
     local X = rf.load_hero('zuus')
     local desire, target
     local ok, err = pcall(function() desire, target = X.ConsiderQ() end)
-    if sCand then disarm() end
-    if not ok then error(err, 0) end
+    close_span(sCand, ok, err)
     assert(J ~= nil)
     return desire, target
 end

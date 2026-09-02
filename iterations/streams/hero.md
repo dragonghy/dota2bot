@@ -22,8 +22,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--78. **把剩下 12 个 raw 文件迁到属主上(`-77` 的第二半),按「有没有红要解释」排序。**
-   **2026-09-02T13:48Z 第一批 done(18 → 12)—— 报告 `iterations/reports/hero/20260902T134838Z.md`;
+-78. **把剩下 7 个 raw 文件迁到属主上(`-77` 的第二半),按「有没有红要解释」排序。**
+   **2026-09-02T17:04Z 第二批 done(12 → 7)—— 报告 `iterations/reports/hero/20260902T170446Z.md`;
+   点名的那 5 个带直接读点的文件(`abil1st` / `abilanc` / `aimguard` / `replay_212636` /
+   `soak_cand_ref`)+ 属主长出第二个入口 `arm_body`/`with_body`,棘轮 `RAW_CEILING` 12 → **7**、
+   `MIGRATED_FLOOR` 10 → **15**。`bots/`+`game/` 零行。**
+   - **⭐⭐ 本轮最锋利的读数是构造性的,不是统计的**:同一条并发 `rm` 竞争下,
+     `soak_cand_ref` 在 HEAD 上红 **7** 条、迁移后红 **9** 条,多出来的**恰好是断言
+     全部为 `== false` 的那两条**(`a closed gate file arms nothing anywhere` /
+     `an id in neither string is dark on both legs`)。开关被删 ⇒ 读到未武装的树 ⇒
+     每一句 `== false` **照样成立** ⇒ **谐波故障与正确答案在这两条上是同一个观测**,
+     竞争对它们**结构上不可见**。这比 GH #229 立案时说的「会造假红」严重一格:**是假绿**。
+   - **⭐ 属主的第二个入口是刻意从同一个私有 `arm_bytes` 走的**,理由是变异读数不是论证:
+     **M7**(`arm_body` 自己写三行无检查的 `io.open/write/close`)**只红 2 条新用例**,
+     **驱动 `arm` 的原有 4 条 owner 用例全绿存活** ⇒ **第二个入口正是一个已检查的
+     helper 长回无检查副本的方式**。**M8**(`with_body` 用无条件 `os.remove` 取代
+     `M.finish`)只红 1 条。四条新用例各覆盖一件事(照 M4 的教训拆开写)。
+   - **⭐ 两个变异台的前后对照**:M-A(继承残留)迁移前 **5/5 静默 EXIT=0、0 条点名**,
+     迁移后 **5/5 点名失败**;M-B(并发 `rm`)迁移前 **16 条失败 0 条点名**,
+     迁移后 **25 条失败 25/25 全点名、0 条数值不匹配**。
+   - **⚠️ 自伤,而它自己就是旁证**:M-B 的 `rm` 循环**泄漏了两个孤儿 shell**
+     (`kill $!` 杀的是子 shell,包着它的 `bash -c` 还活着),接下来三次「干净」复跑
+     全被污染(23 文件同进程 driver 报 77/76 条失败)。**归因只花了一次 `ps`,
+     因为失败本身是点名的**。下次跑并发台用 `pkill -f` 收尾。
+   - **下一批取 `aegis_grouping` / `tpreach_band`**(它们不支撑 S2 的删除者读数)。
+     **`-78` 点名最后迁的 5 个仍然不动**(`bbfight` / `bbrespawn` / `bbshort` /
+     `pollyhp` / `salveally`)。
+   - **2026-09-02T13:48Z 第一批 done(18 → 12)—— 报告 `iterations/reports/hero/20260902T134838Z.md`;
    迁移形状完全统一的 6 个(`axe_blink_build` / `corefarm_gate` / `deathzone_gate` /
    `nopush_gate` / `tpsafe_gate` / `slardar_tp`),棘轮 `RAW_CEILING` 18 → **12**,
    新增 `MIGRATED_FLOOR = 10`(一个文件只能靠加入 migrated 集离开 raw 集,
@@ -3753,6 +3778,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T17:04Z(报告 `iterations/reports/hero/20260902T170446Z.md`;轴 **backlog `-78`**
+  第二批 = 上一轮点名的 5 个「带直接读点」的 gate 测试)
+  **改 7 个文件全在 `tests/`(5 个迁移 + 属主 + 棘轮);`bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、
+  零新 gate id、零 arm/promote、零 AWS、不申请波次;`state.json` / `test_set.md` /
+  `queue.json` 本轮无新增。12 → 7 个 raw。**
+  - 选题:OWNER_PRIORITIES 无本组项;三条 open `[hero]` issue 与上一轮同因,**没有一条
+    本轮能推进**(#417 判定权在总监、#416 已结论、#407 被「拿到读数之前不许改 `bots/`」挡住)
+    ⇒ 取 backlog 最上面的 `-78`,并按它自己点名的顺序取第二批。
+  - **⭐⭐ 主产物:一个构造性读数 —— 竞争在「断言全为 `== false`」的用例上结构性不可见。**
+    同一条并发 `rm` 下 `soak_cand_ref` HEAD 红 7 条、迁移后红 9 条,**多出的两条恰好是
+    全 `== false` 的那两条**。开关被删 ⇒ 读到未武装的树 ⇒ 每一句 `== false` 照样成立。
+    **GH #229 说的是「会造假红」;这里量到的是假绿**(材料留在报告 §5,MCP 评论未发)。
+  - **⭐ M7 / M8**:`arm_body` 绕过 `arm_bytes` **只红 2 条新用例、原有 4 条全绿存活**;
+    `with_body` 丢掉 `M.finish` 只红 1 条。⇒ 第二个入口确实是无检查副本长回来的路。
+  - **⭐ 前后对照**:M-A 迁移前 **5/5 静默 EXIT=0**、迁移后 **5/5 点名失败**;
+    M-B 迁移前 **16 失败 0 点名**、迁移后 **25 失败 25/25 点名 0 数值不匹配**。
+  - 门:开工自检第一次调用**又被拒答**(`SELFCHECK_EXIT=2 REFUSED`,stdout 接进了 `tail`)——
+    证据纪律 3 的**第 7 次**现场;改对后 **`EXIT=3`**(`legs run 8`、`UNCERTIFIABLE: none`、
+    findings = cadence + trunk-red(python),那条红先于本轮且本轮无 `.py` 改动)。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings` / `RC_EXIT=0`**(冷启自装,
+    **没用 `RULE6_BYPASS`**)。动态定向:5 个迁移文件 + 棘轮 **6/6 全绿**;
+    **同进程按套件序跑完 23 个碰开关的文件 `DRIVER_FILES=23 DRIVER_TESTS=302
+    DRIVER_FAILURES=0`**,跑完开关文件不存在。全量套件未跑,不声称。
+  - **⚠️ 自伤**:M-B 的 `rm` 循环泄漏两个孤儿 shell,污染了随后三次复跑(77/76 条失败);
+    **归因只花一次 `ps`,因为失败本身是点名的**。下次并发台用 `pkill -f` 收尾。
+  - **交出去的棒**:GH **#229** 追评材料(假绿那条,下轮补发);backlog `-78` 剩 **7 个 raw**,
+    下一批点名 `aegis_grouping` / `tpreach_band`。
 - 2026-09-02T13:48Z(报告 `iterations/reports/hero/20260902T134838Z.md`;轴 **backlog `-78`**
   = `-77` 的第二半,把剩下的 raw 文件迁到属主 `tests/mock/soak_side.lua` 上)
   **改 7 个文件全在 `tests/`(6 个迁移 + 棘轮);`bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、

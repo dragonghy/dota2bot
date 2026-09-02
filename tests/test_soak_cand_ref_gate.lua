@@ -33,8 +33,8 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 local fixture = require('mock.replay_fixture')
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
 local FIXTURE = 'tests/fixtures/f_080225_wk_lane.lua'
 -- Two heroes on that frame, one per team (team 2 = radiant, team 3 = dire).
 local RADIANT_HERO = 'npc_dota_hero_zuus'
@@ -45,14 +45,26 @@ local tests = {}
 -- Write the (gitignored) gate file, run fn, always clean up. reset_modules
 -- inside the loaders re-requires jmz_func, so its cached GetSoakSideConf
 -- re-reads the file rather than answering from the previous test's cache.
+--
+-- [GH #365 §3 / GH #229, hero backlog `-78`] The three lines this used to
+-- inline are now in tests/mock/soak_side.lua, the switch's one owner. This
+-- file is the one that goes through `arm_body` rather than `arm`, because its
+-- subject IS the gate resolver and it must write two shapes `ss.body` cannot
+-- express: the closed gate (`side = false, cand = false`) and the two-leg
+-- `cand_ref` of GH #141. It is also the file with the most to lose from an
+-- unchecked write: EVERY case here has an assertion whose expected value is
+-- `false`, so a write that did not land, or a switch a concurrent process
+-- removed, reads as the contract holding.
 local function with_gate(sBody, fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write(sBody .. '\n')
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_body(sBody, fn)
 end
+
+-- ...and once HERE, at file-load time, the only moment that sees the state this
+-- process STARTED in: every armed span ends by removing the switch, and the
+-- armed cases can sort before the unarmed one, so an INHERITED leftover is
+-- deleted by a sibling case before any per-case guard looks at it (GH #417:
+-- such a leftover survived a per-case guard 19/19 green).
+ss.assert_clean('test_soak_cand_ref_gate')
 
 -- jmz on a mock hero pinned to `team`, used only by the single-arm contract
 -- (which is about the string matcher, not about which team is which).
@@ -122,15 +134,20 @@ tests['single-arm: a closed gate file arms nothing anywhere'] = function()
 end
 
 tests['single-arm: no gate file at all (the shipped default) arms nothing'] = function()
-    -- Not wrapped in with_gate on purpose: this is the state every real game is
-    -- in, and it is the one state the file must NOT exist for.
-    local f = io.open(SIDE_PATH, 'r')
-    assert(f == nil, 'a leftover soak_side.lua would invalidate this test')
-    for _, team in ipairs({ 2, 3 }) do
-        local J = jmz_on(team)
-        assert(J.IsSoakCandidate('tpsafe') == false,
-            'shipped default must be false on team ' .. team)
-    end
+    -- Not armed on purpose: this is the state every real game is in, and it is
+    -- the one state the file must NOT exist for. `with_candidate(nil, ...)`
+    -- asserts that absence before AND after the body -- before, because a
+    -- leftover would make this whole case measure somebody else's candidate;
+    -- after, because the path is one global inode and a concurrent lua5.1
+    -- process can arm it mid-case. The `io.open` handle this used to take was
+    -- also never closed on the branch it was testing for.
+    ss.with_candidate(nil, function()
+        for _, team in ipairs({ 2, 3 }) do
+            local J = jmz_on(team)
+            assert(J.IsSoakCandidate('tpsafe') == false,
+                'shipped default must be false on team ' .. team)
+        end
+    end)
 end
 
 ----------------------------------------------------------------------------

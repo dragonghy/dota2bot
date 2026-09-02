@@ -52,10 +52,10 @@
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 local api = require('mock.bot_api')
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local FIX = 'tests/fixtures/f_212636_tide_ancient.lua'
 local SUBJ = 'npc_dota_hero_tidehunter'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
 
 local SITE = 'bots/FunLib/aba_site.lua'
 local FARM = 'bots/mode_farm_generic.lua'
@@ -75,20 +75,30 @@ local function read_file(path)
 end
 
 --- Arm the REAL gate by writing the (gitignored) soak_side file the farm
---- writes per wave, exactly as tests/test_aegis_grouping.lua does. No J.*
---- function is stubbed anywhere in this file: `IsSoakCandidate` and
---- `IsModeTurbo` both run their shipped bodies.
+--- writes per wave. No J.* function is stubbed anywhere in this file:
+--- `IsSoakCandidate` and `IsModeTurbo` both run their shipped bodies.
 --- The wave really did arm this: the game's analysis.json carries
 --- `script_version = mirror:...,campfarm:s896:radiant`, and the subject is on
 --- team 2 = radiant, i.e. the armed leg.
-local function with_campfarm_armed(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'campfarm' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+---
+--- [GH #365 §3 / GH #229, hero backlog `-78`] The three lines this used to
+--- inline are now in tests/mock/soak_side.lua, the switch's one owner: the
+--- write is read back (a short write, a full disk or a read-only tree used to
+--- present as "the gate did not fire", which is what the two [control] cases
+--- below EXPECT), arming refuses to clobber a switch this process did not
+--- write, and the switch is re-read after the case body so a concurrent
+--- removal is reported as itself rather than as the "the ancients stayed in
+--- the list" mismatch it causes.
+local function with_campfarm_armed(fn, sSide)
+    ss.with_candidate('campfarm', fn, sSide)
 end
+
+-- ...and once HERE, at file-load time, the only moment that sees the state this
+-- process STARTED in: every armed span ends by removing the switch, and the
+-- armed cases can sort before the unarmed ones, so an INHERITED leftover is
+-- deleted by a sibling case before any per-case guard looks at it (GH #417:
+-- such a leftover survived a per-case guard 19/19 green).
+ss.assert_clean('test_replay_212636_tide_ancient')
 
 --- The camp as three unit handles. `IsAncientCreep` is the only predicate
 --- FilterFarmNeutrals reads, and the mud golem is the negative control: a
@@ -173,26 +183,27 @@ end
 tests['[control] armed on the OTHER side, the same frame is untouched'] = function()
     -- Falsification for the test above: if the drop came from the level alone
     -- the list would shrink here too. It must not -- this bot is radiant.
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'dire', cand = 'campfarm' }\n")
-    f:close()
-    local ok, err = pcall(function()
+    with_campfarm_armed(function()
         local J, bot = rf.load(FIX, SUBJ)
         assert(J.IsSoakCandidate('campfarm') == false, 'wrong leg, gate shut')
         local tIn = camp_units()
         assert(neutral_farm_list(J, bot, tIn) == tIn, 'the ancients stay in the list')
-    end)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    end, 'dire')
 end
 
 tests['[control] with no soak_side file the gate is shut and the list is untouched'] = function()
-    assert(io.open(SIDE_PATH, 'r') == nil, 'no soak_side file exists here')
-    local J, bot = rf.load(FIX, SUBJ)
-    assert(J.IsSoakCandidate('campfarm') == false, 'unarmed off the farm')
-    local tIn = camp_units()
-    local tOut = neutral_farm_list(J, bot, tIn)
-    assert(tOut == tIn, 'shipped path unchanged down to the object the caller holds')
+    -- The whole case is an UNARMED reading, so the absence of the switch is
+    -- asserted by the owner rather than by an `io.open` whose handle this file
+    -- used to leak on the (never taken) failing branch -- and asserted AGAIN
+    -- after the body, because the path is one global inode and a concurrent
+    -- process can arm it mid-case.
+    ss.with_candidate(nil, function()
+        local J, bot = rf.load(FIX, SUBJ)
+        assert(J.IsSoakCandidate('campfarm') == false, 'unarmed off the farm')
+        local tIn = camp_units()
+        local tOut = neutral_farm_list(J, bot, tIn)
+        assert(tOut == tIn, 'shipped path unchanged down to the object the caller holds')
+    end)
 end
 
 tests['[frame] the camp had been on the subject for 5+ seconds before the attack'] = function()

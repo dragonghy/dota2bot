@@ -92,11 +92,11 @@ function M.assert_clean(sWhere)
         .. 'it. Contents: ' .. tostring(s), 0)
 end
 
---- Write the switch and PROVE the bytes landed.  Returns the bytes written.
-function M.arm(sCand, sSide)
-    assert(type(sCand) == 'string' and sCand ~= '',
-        'arm() needs a candidate id; pass nil to with_candidate for the '
-        .. 'unarmed leg instead of arming an empty string')
+--- The whole write, once: refuse a stranger's switch, write, PROVE the bytes
+--- landed, take ownership.  `sWhat` names the subject in the failure text.
+--- Both public entry points go through here, so a second entry point cannot
+--- quietly become a fourth unchecked copy of the three lines.
+local function arm_bytes(sWant, sWhat)
     local sPrior = slurp()
     if sPrior ~= nil and sPrior ~= sOwned then
         error(PATH .. ' is already there and this process did not write it, so '
@@ -105,7 +105,6 @@ function M.arm(sCand, sSide)
             .. 'Contents: ' .. tostring(sPrior), 0)
     end
 
-    local sWant = M.body(sCand, sSide)
     local f, eOpen = io.open(PATH, 'w')
     if f == nil then
         error('cannot open ' .. PATH .. ' for writing, so the gate cannot be '
@@ -121,13 +120,34 @@ function M.arm(sCand, sSide)
     end
     local sGot = slurp()
     if sGot ~= sWant then
-        error(PATH .. ' does not hold what we just wrote, so `' .. sCand
-            .. '` is NOT armed and anything measured under it is measuring the '
+        error(PATH .. ' does not hold what we just wrote, so ' .. sWhat
+            .. ' is NOT armed and anything measured under it is measuring the '
             .. 'unarmed tree. Wanted ' .. string.format('%q', sWant)
             .. ', read back ' .. string.format('%q', tostring(sGot)) .. '.', 0)
     end
     sOwned = sWant
     return sWant
+end
+
+--- Write the switch and PROVE the bytes landed.  Returns the bytes written.
+function M.arm(sCand, sSide)
+    assert(type(sCand) == 'string' and sCand ~= '',
+        'arm() needs a candidate id; pass nil to with_candidate for the '
+        .. 'unarmed leg instead of arming an empty string')
+    return arm_bytes(M.body(sCand, sSide), '`' .. sCand .. '`')
+end
+
+--- Arm EXACT bytes, for the one file whose subject is the gate resolver itself
+--- (tests/test_soak_cand_ref_gate.lua).  It must write shapes `M.body` cannot
+--- express -- a closed gate (`side = false, cand = false`) and the two-leg
+--- `cand_ref` of GH #141 -- and it is the file that would suffer most from
+--- reading an unarmed tree, since "the gate is shut" is what four of its cases
+--- assert.  Everything else should use `arm`/`with_candidate`.
+function M.arm_body(sBody)
+    assert(type(sBody) == 'string' and sBody ~= '',
+        'arm_body() needs the exact bytes of a gate file')
+    if sBody:sub(-1) ~= '\n' then sBody = sBody .. '\n' end
+    return arm_bytes(sBody, 'that gate file')
 end
 
 --- Still ours, byte for byte?  Raise the switch cause rather than let the
@@ -189,6 +209,13 @@ function M.with_candidate(sCand, fn, sSide)
     M.arm(sCand, sSide)
     local ok, err = pcall(fn)
     -- Order matters: the switch cause OUTRANKS the assertion it caused.
+    M.finish(ok, err)
+end
+
+--- `with_candidate` for exact bytes (see `arm_body`).  Same ordering.
+function M.with_body(sBody, fn)
+    M.arm_body(sBody)
+    local ok, err = pcall(fn)
     M.finish(ok, err)
 end
 

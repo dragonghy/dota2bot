@@ -60,12 +60,12 @@
 package.path = 'tests/?.lua;' .. package.path
 local rf  = require('mock.replay_fixture')
 local api = require('mock.bot_api')
+local ss  = require('mock.soak_side')              -- owns bots/Customize/soak_side.lua
 
 local FIX_A = 'tests/fixtures/f_260822_182012_sb_backpack_rescue_372.lua'
 local FIX_B = 'tests/fixtures/f_260822_182012_sb_fieldbuy_gate_307.lua'
 local JMZ   = 'bots/FunLib/jmz_func.lua'
 local SB    = 'bots/BotLib/hero_spirit_breaker.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
 local CAND  = 'aimguard'
 
 -- Subjects as the dumps gave them: name, level.
@@ -84,20 +84,30 @@ end
 --- Write the (gitignored) soak_side file the farm writes per wave. The gate is
 --- read through its SHIPPED body -- no J.* function is stubbed in this file.
 --- GetSoakSideConf caches on first read, so the file must exist BEFORE the
---- frame is loaded, not merely before the call.
+--- frame is loaded, not merely before the call -- which is why this file arms
+--- by hand around a fixture load instead of wrapping a closure.
+---
+--- [GH #365 §3 / GH #229, hero backlog `-78`] The three lines this used to
+--- inline are now in tests/mock/soak_side.lua, the switch's one owner: the
+--- write is read back (a short write, a full disk or a read-only tree used to
+--- present as "the gate did not fire", which is what the unarmed half of the
+--- grid below EXPECTS), arming refuses to clobber a switch this process did
+--- not write, and `disarm` removes only bytes this process wrote and still owns.
 local function arm(sCand)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = '" .. sCand .. "' }\n")
-    f:close()
+    ss.arm(sCand)
 end
 
 local function disarm()
-    os.remove(SIDE_PATH)
+    ss.disarm()
 end
 
 --- Load a frame with the gate already in whatever state the caller wants.
+--- `sCand == nil` is the unarmed leg, and it now ASSERTS the switch is absent:
+--- "the shipped answer" and "the gate is off" are the same observation only
+--- while no soak_side file exists, and that path is one global inode shared
+--- with every concurrent lua5.1 process.
 local function subject(fix, spec, sCand)
-    if sCand then arm(sCand) end
+    if sCand then arm(sCand) else ss.assert_clean('unarmed leg') end
     local ok, J, bot = pcall(rf.load, fix, spec[1])
     if not ok then disarm(); error(J, 0) end
     if not (bot ~= nil) then disarm(); error('fixture no longer carries ' .. spec[1], 0) end
@@ -107,6 +117,23 @@ local function subject(fix, spec, sCand)
             spec[1], spec[2], bot:GetLevel()), 0)
     end
     return J, bot
+end
+
+-- ...and once HERE, at file-load time, the only moment that sees the state this
+-- process STARTED in: every armed span ends by removing the switch, and the
+-- armed cases can sort before the unarmed ones, so an INHERITED leftover is
+-- deleted by a sibling case before any per-case guard looks at it (GH #417:
+-- such a leftover survived a per-case guard 19/19 green).
+ss.assert_clean('test_aimguard_target_axis')
+
+--- Close a span `subject` opened. On the armed leg the switch cause OUTRANKS
+--- the value the body produced (a switch removed mid-span yields the UNARMED
+--- value, which #365 §3 spent a round arguing about as an expectation bug); on
+--- the unarmed leg the switch must still be absent afterwards.
+local function close_span(sCand, ok, err)
+    if sCand ~= nil then return ss.finish(ok, err) end
+    if ok then ss.assert_clean('unarmed leg, after the case body') end
+    if not ok then error(err, 0) end
 end
 
 -- The camp as a declared stand-in -- see [W1]. Only the fields
@@ -141,8 +168,7 @@ end
 local function pair_ok(fix, spec, sCand, hGuard, hTarget)
     local J = subject(fix, spec, sCand)
     local ok, answer = pcall(J.CanBeAttackedPair, hGuard, hTarget)
-    disarm()
-    if not ok then error(answer, 0) end
+    close_span(sCand, ok, answer)
     return answer
 end
 
@@ -327,7 +353,7 @@ tests['[lever] turbo-only, and only under its own id'] = function()
     GetGameMode = function() return 1 end  -- luacheck: ignore
     local ok, answer = pcall(J.CanBeAttackedPair, neutral('a', true), neutral('b', false))
     GetGameMode = function() return GAMEMODE_TURBO end  -- luacheck: ignore
-    disarm()
+    close_span(CAND, ok, answer)
     assert(ok, answer)
     assert(answer == true, 'outside turbo the gate is off even when armed')
 end

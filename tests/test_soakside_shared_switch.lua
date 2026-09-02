@@ -139,18 +139,20 @@ local function partition()
     return raw, migrated
 end
 
---- The hazard the census measures, as a number that must never grow.  Ten
+--- The hazard the census measures, as a number that must never grow.  Fifteen
 --- files delegate today: the four with an observed red (test_cm_pos5_boots --
---- GH #417's subject -- and the three GH #365 §3 subjects), plus the six
+--- GH #417's subject -- and the three GH #365 §3 subjects), the six
 --- uniform-shape gate tests migrated for hero backlog `-78` (axe_blink_build,
---- corefarm, deathzone, nopush, tpsafe, slardar_tp).  The rest still carry
---- their own unchecked copy.
-local RAW_CEILING = 12
+--- corefarm, deathzone, nopush, tpsafe, slardar_tp), and the five that carried
+--- a direct read of the switch as well (abil1st, abilanc, aimguard,
+--- replay_212636, soak_cand_ref -- the last of these is why the owner grew
+--- `arm_body`).  The rest still carry their own unchecked copy.
+local RAW_CEILING = 7
 
 --- ...and the same number from the other side.  A file may leave the RAW set
 --- only by joining this one, so a "migration" that merely deletes the copy
 --- without delegating cannot pass both.
-local MIGRATED_FLOOR = 10
+local MIGRATED_FLOOR = 15
 
 -- ---------------------------------------------------------------------------
 -- [source S1] one literal path, shared by every gate test in the tree
@@ -207,8 +209,9 @@ tests['[ratchet] [source S2] the unarmed leg is itself a deleter -- the hazard i
     assert(#migrated >= MIGRATED_FLOOR, 'only ' .. #migrated
         .. ' files delegate to ' .. OWNER .. ', down from ' .. MIGRATED_FLOOR
         .. '; the four with an observed red (GH #417 and the three GH #365 §3 '
-        .. 'subjects) and the six uniform gate tests migrated for hero backlog '
-        .. '`-78` were migrated on 2026-09-02 and must stay migrated')
+        .. 'subjects), the six uniform gate tests and the five direct-reader '
+        .. 'gate tests migrated for hero backlog `-78` were migrated on '
+        .. '2026-09-02 and must stay migrated')
 
     -- The load-bearing half: the DELETE is not confined to a cleanup that runs
     -- after the armed leg. Arming with `nil` (the unarmed leg) removes the file
@@ -348,6 +351,91 @@ tests['[owner] a write that does not land is a named failure, not an unarmed rea
         .. 'bytes, so every gate below it would read "did not fire"')
     assert(tostring(err):find('does not hold what we just wrote', 1, true) ~= nil,
         'the failure does not name the unlanded write: ' .. tostring(err))
+end
+
+--- [why these exist] `arm_body` is a SECOND way into the write (hero backlog
+--- `-78`, for test_soak_cand_ref_gate.lua, whose subject is the gate resolver
+--- itself and which must write shapes `M.body` cannot express).  A second
+--- entry point is exactly how a checked helper grows an unchecked copy back:
+--- the four cases above all drive `arm`, so a mutation that gave `arm_body`
+--- its own three unchecked lines would leave every one of them green.  These
+--- are separate cases on purpose -- a single case asserting "refuses AND reads
+--- back AND orders the removal first" would fail at its first assertion and
+--- cover one of the three, which is the M4 lesson from 2026-09-02.
+
+tests['[owner] arm_body writes the bytes VERBATIM -- that is the whole reason it exists'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    -- The shape `M.body` cannot express: a closed gate. If arm_body quietly
+    -- routed through `body()` the file would say `cand = 'return {...}'`.
+    local sBody = 'return { side = false, cand = false }'
+    ss.arm_body(sBody)
+    local sGot = ss.read()
+    ss.disarm()
+
+    assert(sGot == sBody .. '\n', 'arm_body did not put its own bytes on disk; '
+        .. 'got ' .. string.format('%q', tostring(sGot)))
+end
+
+tests['[owner] arm_body proves its bytes landed, exactly as arm does'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    local fnRealOpen = io.open
+    io.open = function(sPath, sMode)
+        if sPath == ss.PATH and sMode == 'w' then
+            -- Succeeds at every step and writes nothing: a short write, as it
+            -- looks to code that drops the return values.
+            return { write = function() return true end,
+                     close = function() return true end }
+        end
+        return fnRealOpen(sPath, sMode)
+    end
+    local ok, err = pcall(ss.arm_body, "return { side = 'radiant', cand = 'x' }")
+    io.open = fnRealOpen
+    os.remove(ss.PATH)
+
+    assert(not ok, 'arm_body called the gate armed without checking the bytes, '
+        .. 'so every "the gate is shut" case in test_soak_cand_ref_gate.lua '
+        .. 'would pass on an unarmed tree -- which is what they all assert')
+    assert(tostring(err):find('does not hold what we just wrote', 1, true) ~= nil,
+        'the failure does not name the unlanded write: ' .. tostring(err))
+end
+
+tests['[owner] arm_body refuses to clobber a switch it did not write'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    local f = assert(io.open(ss.PATH, 'w'))
+    f:write("return { side = 'radiant', cand = 'stranger' }\n")
+    f:close()
+
+    local okArm, errArm = pcall(ss.arm_body, 'return { side = false, cand = false }')
+    local sStill = ss.read()
+    os.remove(ss.PATH)
+
+    assert(not okArm, 'arm_body overwrote a switch another process was holding')
+    assert(tostring(errArm):find('did not write it', 1, true) ~= nil,
+        'the refusal does not say whose switch it is: ' .. tostring(errArm))
+    assert(sStill ~= nil and sStill:find('stranger', 1, true) ~= nil,
+        "the stranger's switch was clobbered anyway")
+end
+
+tests['[owner] with_body puts the removed switch ahead of the assertion it caused'] = function()
+    local ss = require('mock.soak_side')
+    ss.assert_clean('S5 precondition')
+
+    local ok, err = pcall(ss.with_body, "return { side = 'radiant', cand = 'x' }",
+        function()
+            os.remove(ss.PATH)                   -- the concurrent process, inlined
+            error('THE UNARMED VALUE WOULD BE REPORTED HERE', 0)
+        end)
+    assert(not ok, 'with_body swallowed a failing case body')
+    assert(tostring(err):find('was REMOVED under this case', 1, true) ~= nil,
+        'with_body reported the assertion instead of the removed switch, so a '
+        .. 'second entry point re-opened the #365 §3 reading: ' .. tostring(err))
+    assert(ss.read() == nil, 'with_body left a switch behind after the race')
 end
 
 -- ---------------------------------------------------------------------------
