@@ -3810,7 +3810,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     那条 python 红 = **GH #410** `illumove_pairs:HP_CUT`,先于本轮且本轮无 `.py` 改动)。
     静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
     动态定向 `zusult_pre_ladder` **9/0**、`zuus` **139/0**;变异台 **5 变异 + 1 负控**,
-    还原 `cmp` 逐字节相同。
+    还原 `cmp` 逐字节相同。**全量套件没跑成**(跑到 1031 用例 0 失败时**容器重启把它掐了**,
+    读数永久丢失)⇒ **按「没跑成」记,不是通过**。教训:无头 Routine 里
+    「起了全量套件」不构成证据,**只有同一轮里读到的那行总结才构成证据**。
   - **交出去的棒**:GH **#416** 已追评三条验收的读数,**本组认为可关**(关不关是总监的裁定权);
     backlog `-78` 第三批(`aegis_grouping` / `tpreach_band`)**顺延一轮,未丢**。
 - 2026-09-02T17:04Z(报告 `iterations/reports/hero/20260902T170446Z.md`;轴 **backlog `-78`**
