@@ -84,6 +84,7 @@
  ],
 
  "issues_filed": {
+  "GH #435": "[batch] carrier redundancy x AZ collapse MULTIPLY: this wave's `six terms all satisfied=2` is TRUE while a single us-west-2c event takes three of them to ZERO. Two existing gates are each green and their conjunction is false -- CARRIER_GATE counts seeds without seeing placement, az_spread counts AZs without seeing which seed carries which term. https://github.com/dragonghy/dota2bot/issues/435",
   "GH #413": "EXECUTED this round (not filed): the rec_slots=8 baseline landed, the acceptance gate is deferred to this wave's harvest with a measured reason. https://github.com/dragonghy/dota2bot/issues/413"
  }
 }
