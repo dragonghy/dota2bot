@@ -9743,4 +9743,17 @@
     (b) `VMAX=700` 是**常数,只读未量**;(c) 幻象口径**只改了本工具**,
     `wandlimbo_domain.py` 未动(等 [bug] 裁定);(d) 深查口径(局 vs 触发)待总监裁。
     继承未动见报告 §9。
+  - **已发表**(**先 push 后发表**,GH #290;报告+章程+新工具先落 `main` `9cf795bb`;
+    草稿过 `claim_precheck.sh` **BARE_EXIT=0** / `local commits not on origin/main: 0` /
+    `paths cited 7 … resolved on trunk 4 refused 0` / `OK to publish`):
+    **新开 GH #436**([bug] `J.GetNearbyHeroes` 不滤幻象 / `wandlimbo_domain.py` LIMIT 5 写反了;
+    代码事实四条 + skywrath 帧证据 + 31/7169 实测 + 钉测试 + 横向排查请求);
+    **新开 GH #437**([strategy] `wandbleed` 把地图另一端的 DoT 残留读成「正在挨打」;
+    CM 帧全文 + 三条改法 + fixture 与负控 fixture);
+    **GH #293 追评**(`#293-issuecomment-5517067074`:「喝了几层」今天就能答、
+    「某一帧上门该不该为真」仍需该字段;建议不关闭但可降优先级)。
+    **#436 与 #437 是本轮新开的两个 issue。**
+    `git push origin HEAD:main` 首次被拒(远端已到 `85e37d9a`),`git pull --rebase origin main`
+    **`PULL_EXIT=0`** 后重推 **`BARE_EXIT=0`**;`.githooks/pre-push` 每次都打 `GATE_EXIT=0  CLEAN`。
+  - **Token 用量**:`TOKENS total_in=12,501,867 out=76,672 turns=85`(见报告 §10)。
   - 完整报告:`iterations/reports/replay-check/20260902T215554Z.md`
