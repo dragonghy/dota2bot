@@ -32,7 +32,7 @@
    「`0PUSHCLUSTER` 原样有效,下一个杠杆去别的域挑,照旧先跑域价钱再选形状」⇒ 本轮就是照这条做的**);
    **落地 gated `roshdist`**,入集提议 `test_set.md` **§DP**(搭车、零 AWS 增量、不申请专波),
    `queue.json` 新增 **`strategy-37`**(**`bundle` 已填**);`state.json` 新键 `roshdist_20260902`;
-   issue **GH #TBD**;报告 `iterations/reports/strategy/20260902T102745Z.md`;
+   issue **GH #422**;报告 `iterations/reports/strategy/20260902T102745Z.md`;
    零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
    **⭐ 主判据(可复用,超出本主题):一个合取项的操作数是「量出来的数」而不是「比出来的真假」时,
    它不是条件,是一个长得像条件的占位符。**
