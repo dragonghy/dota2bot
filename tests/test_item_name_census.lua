@@ -277,7 +277,19 @@ local tRegistered = {
     -- found this.  Picking tests by SUBJECT can never pick this one, because
     -- its relationship to the edited file is a line number, not a topic.
     -- Re-anchored, not relaxed; the probe and the lookup are textually unchanged.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6876'] =
+    -- 6876 -> 6886 (strategy 2026-09-02T22:xxZ, GH #437): ten lines of COMMENT
+    -- above the 'wandbleed' branch (the wandbleed2 narrowing's call-site note)
+    -- at :3405, 3,500 lines above this pin.  THIRTEENTH instance, and the THIRD
+    -- IN A ROW from a strategy round -- which makes the note at :265 above the
+    -- finding rather than the anecdote: the start-of-unit selfcheck certified
+    -- the tree this round ARRIVED on, and every test run afterwards was picked
+    -- by SUBJECT (the wand branch, the fixture mock, the gate-claim detector),
+    -- and no subject-picked set can contain this file, because its relationship
+    -- to the edit is a line number.  main was red for the length of one commit
+    -- (77e18be9 -> the commit carrying this line); the unfiltered run that found
+    -- it was started before the push and only reported after it.
+    -- Re-anchored, not relaxed; the probe and the lookup are textually unchanged.
+    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6886'] =
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
         .. 'the handler is unreachable -- by design, not by accident.',
