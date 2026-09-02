@@ -8,7 +8,7 @@
  "arm_bytes": 459,
  "arm_md5": "c5af3b11deb9c024983c22afb90d9a7d",
  "arm_source": "iterations/streams/test_set.md:2 (54 -> 52 after test_set.md §DH.3 took tormself + immguard out)",
- "arm_note": "SECOND wave of the 52-id family, and BYTE-IDENTICAL to W35's arm string (52 ids / 459 bytes / md5 c5af3b11deb9c024983c22afb90d9a7d). The three commits that landed on bots/ since W35 (da63008e hpbool, 0b468372 slotarb, 87bc6b33 slotdust) all gate ids that are NOT in the armed string, so this configuration is behaviourally equivalent to W35's => W37's four seeds POOL with W35's one banked seed 2986 (5 of the 8 the depth gate wants). Gate (ii) was therefore taken on its THIRD limb (accumulated seeds < 8), NOT on 'bots/ changed' -- the naive reading would have made this a new configuration and thrown away the pooling.",
+ "arm_note": "SECOND wave of the 52-id family, and BYTE-IDENTICAL to W35's arm string (52 ids / 459 bytes / md5 c5af3b11deb9c024983c22afb90d9a7d). The three commits that landed on bots/ since W35 (da63008e hpbool, 0b468372 slotarb, 87bc6b33 slotdust) all gate ids that are NOT in the armed string, so this configuration is behaviourally equivalent to W35's => W37's four seeds POOL with W35's one banked seed 2986 (5 of the 8 the depth gate wants). Gate (ii) was therefore taken on its THIRD limb (accumulated seeds < 8), NOT on 'bots/ changed' -- the naive reading would have made this a new configuration and thrown away the pooling.  *** REVISED AT HARVEST: see GH418_pooling_caveat -- the 'landed ids are not armed' criterion used here is NOT sufficient to establish inertness, and one real exception was found (GH #418). Pooling stands, as an explicit reservation.",
  "seeds": [
   2673,
   2735,
@@ -75,7 +75,17 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "capacity_refusals": 0
+   "capacity_refusals": 0,
+   "status_code": "instance-terminated-no-capacity",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-02T03:31:30.000Z",
+   "update": "2026-09-02T04:13:26.000Z",
+   "ec2_state_reason_code": null,
+   "ab": 31,
+   "ba": 11,
+   "arm_depth": 16.24,
+   "lifetime_min": 41.93,
+   "scored": true
   },
   {
    "seed": 2735,
@@ -95,7 +105,17 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "capacity_refusals": 0
+   "capacity_refusals": 0,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "create": "2026-09-02T03:31:34.000Z",
+   "update": "2026-09-02T04:14:22.000Z",
+   "ec2_state_reason_code": null,
+   "ab": 28,
+   "ba": 14,
+   "arm_depth": 18.67,
+   "lifetime_min": 42.8,
+   "scored": true
   },
   {
    "seed": 2752,
@@ -114,7 +134,17 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "capacity_refusals": 0
+   "capacity_refusals": 0,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "create": "2026-09-02T03:31:38.000Z",
+   "update": "2026-09-02T04:16:15.000Z",
+   "ec2_state_reason_code": null,
+   "ab": 29,
+   "ba": 13,
+   "arm_depth": 17.95,
+   "lifetime_min": 44.62,
+   "scored": true
   },
   {
    "seed": 2874,
@@ -133,7 +163,17 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "capacity_refusals": 0
+   "capacity_refusals": 0,
+   "status_code": "instance-terminated-no-capacity",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-02T03:31:43.000Z",
+   "update": "2026-09-02T03:47:17.000Z",
+   "ec2_state_reason_code": null,
+   "ab": 11,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "lifetime_min": 15.57,
+   "scored": false
   }
  ],
  "az_spread": {
@@ -182,5 +222,117 @@
   "volumes": "four, all in-use (the four instances' roots); no orphans",
   "note": "charter step 6's two-command roll-call for a launch round. Its whole point is that --leak-only only reports what is EXTRA; it never raises a hand for a machine that is MISSING. Terminated instances survive ~1h in the API (GH #375), so a reclaim after ~04:3xZ will not be readable by the next round -- the settlement channel is then describe-spot-instance-requests, and per GH #412 its Status.Code is what goes into machines[].status_code."
  },
- "terminated_capture_obligation": "These four take off 03:31:2x-03:31:4xZ and self-destruct by ~05:3xZ at the latest (2h watchdog); on W36's realised rate expect ~04:2x-04:3xZ. The next round of this stream (~05:1xZ) will probably find describe-instances empty -- PRE-REGISTERED HERE, as at W35/W36."
+ "terminated_capture_obligation": "These four take off 03:31:2x-03:31:4xZ and self-destruct by ~05:3xZ at the latest (2h watchdog); on W36's realised rate expect ~04:2x-04:3xZ. The next round of this stream (~05:1xZ) will probably find describe-instances empty -- PRE-REGISTERED HERE, as at W35/W36.",
+ "harvest": {
+  "status": "HARVESTED 2026-09-02T06:xxZ, RV_EXIT=0. 3 of 4 seeds scored; seed 2874 excluded NO-PAIR.",
+  "market_outcome": "2 of the 4 machines were reclaimed (SIR Status.Code instance-terminated-no-capacity): 2874 at 03:47:17Z (15.6 min after take-off, before the 40.0 min changeover => ba=0 => NO-PAIR) and 2673 at 04:13:26Z (41.9 min, AFTER the changeover => it still paired, ab31/ba11). The other two closed instance-terminated-by-user at 42.8 / 44.6 min (normal self-destruct on completion). This is the FOURTH consecutive wave hit by us-west-2 c6i.4xlarge spot no-capacity reclaims (W33 4, W35 3, W36 4, W37 2) -- a reading for GH #408, which is still unruled.",
+  "sir_capture": "First-hand, captured 06:1xZ this round -- ~2h40m after the last termination, i.e. INSIDE the SIR window but well past the ~1h describe-instances window. `describe-instances --filters state=terminated,shutting-down` came back EMPTY (GH #375 confirmed again), so the SIR channel was the only source and the charter's 'capture it in the harvesting round' rule is what saved these four values.",
+  "warmup_script_version_assertion": "DISCHARGED (the obligation ref_pin_deviation registered at launch). All 23 warm-up games across all four runs carry script_version = `ada4717f` -- 6/6/6/5 per run, unanimous. NOT 0a930645 and no third SHA => the instances all cloned the verified tree, and the --ref pin omission cost nothing measurable this wave. NEXT LAUNCH MUST STILL PASS `--ref <full sha>`.",
+  "arm_identity": "The 52-id string handed to recover_verdict.py was recovered from git (`git show ada4717f:iterations/streams/test_set.md | sed -n 2p`), NOT from the working tree: test_set.md:2 has since become 54 ids / 476 bytes / md5 80392b258fcd214cf351231be61d15a4. The recovered string is 52 ids / 459 bytes / md5 c5af3b11deb9c024983c22afb90d9a7d == this file's arm_md5, byte-identical => the tool scored the string that was actually shipped to the machines.",
+  "w37_alone": {
+   "scored_seeds": 3,
+   "scored_games": 126,
+   "files_seen": 160,
+   "games_loaded": 160,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0,
+   "mean": {
+    "gpm": 1.24,
+    "xpm": 3.77,
+    "deaths": -0.17,
+    "last_hits": -1.78
+   },
+   "comps_better": {
+    "gpm": "1/3",
+    "xpm": "1/3",
+    "deaths": "2/3",
+    "last_hits": "0/3"
+   },
+   "min_arm_depth": 8,
+   "thin_arm_seeds": [],
+   "suggested": "hold_or_reject"
+  },
+  "pooled_w35_w37": {
+   "scored_seeds": 4,
+   "scored_games": 166,
+   "files_seen": 205,
+   "games_loaded": 205,
+   "source_dirs": 5,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0,
+   "seeds": [
+    2673,
+    2735,
+    2752,
+    2986
+   ],
+   "mean": {
+    "gpm": -10.23,
+    "xpm": -1.8,
+    "deaths": -0.02,
+    "last_hits": -1.59
+   },
+   "comps_better": {
+    "gpm": "1/4",
+    "xpm": "1/4",
+    "deaths": "2/4",
+    "last_hits": "0/4"
+   },
+   "per_seed_gpm": {
+    "2673": -2.32,
+    "2735": -24.49,
+    "2752": 30.52,
+    "2986": -44.65
+   },
+   "cross_seed_sd_gpm": 32.2,
+   "se_gpm": 16.1,
+   "min_arm_depth": 8,
+   "thin_arm_seeds": [],
+   "depths": {
+    "2673": 16.24,
+    "2735": 18.67,
+    "2752": 17.95,
+    "2986": 17.55
+   },
+   "suggested": "hold_or_reject",
+   "note": "n=4 for the 52-id family. NOT a ruling -- this desk reports, the director rules. Per test_set.md SS-CO.4 the 'mean < SE' test is NOT the yardstick (rule 2 retired significance testing on 2026-08-01); rule 2(b) asks coarsely whether there is an OBVIOUS negative effect on win/loss."
+  },
+  "winrate_channel_GH352": {
+   "channel": "DEGENERATE",
+   "mean_winrate_headroom": 0.1071,
+   "minority_side_share": 0.0683,
+   "side_census": {
+    "radiant": 14,
+    "dire": 191
+   },
+   "ruling": "winrate and comps_better winrate MUST NOT be cited as readings this wave (test_set.md SS-CT). Recorded as placeholders only. Pooled channel is MORE degenerate than W37 alone (0.0683 vs 0.0875).",
+   "winrate_independent_of_gold": "205/205 games -- the GH #108/#352 bucket-name bug (reader read `engine`, real bucket `engine_natural`) is FIXED and printing the true value; last wave's per-wave recurrence register can stay closed."
+  },
+  "GH418_pooling_caveat": "*** REGISTERED, and it revises this file's own arm_note. The launch record justified pooling with 'the three commits land gated ids that are NOT in the armed string'. That criterion is NOT sufficient, and this round's read-the-source check found a real exception: 87bc6b33 (slotdust) also changed an UNGATED line in J.IsClosestToDustLocation -- `if dist < closestDist` became `if dist <= closestDist` (jmz_func.lua:11520), outside every bSlotDust branch, while the comment 20 lines above claims 'Unarmed this is byte-for-byte the shipped function'. Filed as GH #418. Impact is small and one-directional-neutral (it flips WHICH of two exactly-equidistant dust carriers wins a tie; exactly one bot still wins, and the shipped pid/slot bug makes ties structurally impossible on dire), so the pooling STANDS -- but it stands as an explicit reservation, not as the byte-equivalence the launch record claimed. Separately checked and found genuinely inert: 0b468372 (slotarb) edits IsTheClosestOne, the wrapper that ALSO resolves the ARMED id campsel; with bSlotArb false, nSlot = id and the body reduces to the shipped one. That negative is registered here precisely because a check recorded only when it fires is invisible when it passes.",
+  "DC3_illumove_illureal": "REGISTERED per test_set.md SS-DC.3 (this wave's harvest obligation). Both `illumove` and `illureal` are armed in the 52-id string, and they are NOT orthogonal within a frame: illureal armed makes more illusions return early at illusions.lua:80, so those units never reach the :94 movement gate and illumove's domain SHRINKS. Consequence for any downstream reader of this corpus: frames in the intersection (non-Naga/PL illusion AND owner <40% HP AND retreating AND not strong) CANNOT have their attribution split between the two ids. Outside that intersection the two do not interact. Nothing in the test suite pins this -- both acceptance tests arm only their own id -- so it is only knowable by reading that line. The readings above are WHOLE-BUNDLE (52-id) readings and make no per-id claim, so nothing recorded here violates the limitation; it binds whoever next tries per-id attribution on this corpus.",
+  "cost": {
+   "machine_hours": 2.4153,
+   "per_machine_min": {
+    "2673": 41.93,
+    "2735": 42.8,
+    "2752": 44.62,
+    "2874": 15.57
+   },
+   "spot_price_band_usd_per_hour": "0.231-0.250",
+   "measured_wave_cost_usd": "0.558-0.604",
+   "auto_invalidation_clause": "NOT triggered -- the charter's $0.90 spot constant auto-invalidates only on a wave measuring ABOVE $0.90. This wave came in well under, partly because two machines died early. No re-ruling owed."
+  },
+  "carrier_thinness_outcome": "The pre-registered risk MATERIALISED. Every one of the six carrier terms was satisfied by exactly 2 of the 4 seeds (12 slots = the bare floor). Losing 2874 (lion/obsidian_destroyer/skeleton_king) and pairing-but-shortening 2673 (crystal_maiden/spirit_breaker/zuus/pudge) drops each of the six terms to a single scoring seed in the worst case. The cause is the seed pool exhausting its popcount-4 layer, not the market -- see seed_search_note and GH #285 (twenty-second round unruled).",
+  "reclaim_blind_GH271": {
+   "exit": 0,
+   "verdict": "not blinded -- the wave delivered 3 paired seed(s)",
+   "next_wave": "spot (the default; GH #158 unchanged)",
+   "yield": "3 paired of 4 machines",
+   "attribution": "1 machine reclaimed before the flip",
+   "changeover_min": 40.0,
+   "note": "First call returned exit 2 -- MY invocation error (positional arg instead of --wave-json), NOT a market UNDECIDABLE. Named here rather than left out, because GH #412 was exactly the failure of confusing a self-inflicted refusal with a real one. Re-run with the correct flag gave exit 0. Seed 2673 is the interesting row: reclaimed at 41.9 min, i.e. 1.9 min AFTER the 40.0 changeover, so it still delivered both legs.",
+   "schema_note": "machines[].status_code carries the SIR Status.Code vocabulary this round (GH #412 honoured). ec2_state_reason_code is null for all four: describe-instances had already aged them out (GH #375), so the EC2 value is permanently unavailable for this wave. That is a loss of a redundant field only -- the field reclaim_blind.py actually reads was captured first-hand."
+  }
+ }
 }
