@@ -51,6 +51,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 -- dire: two main-inventory dust carriers, in slot 4 (ES, pid 8) and slot 5
 -- (jakiro, pid 9). The shipped scan reaches only the second.
@@ -642,21 +643,31 @@ tests['[domain price] unarmed, the corpus cannot separate `<` from `<=` at all']
     end
     p:close()
 
-    assert(nFixtures == 107, 'the fixture corpus changed size: ' .. nFixtures ..
-        ' -- re-measure the two histograms below before touching them')
+    -- The corpus may grow (this test's own acceptance asks the replay group for
+    -- new footage); it must never shrink. Pinning the size with an equality is
+    -- the GH #106 / #127 defect, and `test_corpus_scale.lua` caught this line
+    -- the round after it landed. Every cell below is a SUM OVER FIXTURES, so
+    -- append can only raise it -- which is exactly what ratchet says and what
+    -- the equality mis-reported as a regression.
+    cs.corpus(nFixtures, '[domain price] live fixture corpus')
 
-    -- Measured 2026-09-02. The load-bearing cell is shipped[2]: it is absent,
-    -- and while it is absent NO result comparison on this corpus can see the
-    -- unarmed tie-break at all.
-    assert(shipped[0] == 101 and shipped[1] == 6 and shipped[2] == nil,
-        '[domain price] the unarmed carrier histogram moved (0:' .. tostring(shipped[0]) ..
-        ' 1:' .. tostring(shipped[1]) .. ' 2:' .. tostring(shipped[2]) .. '). If a frame ' ..
-        'with two reachable carriers has arrived, the unarmed tie IS now buyable -- ' ..
-        'assert it directly in [tie] instead of leaning on [source-parity].')
+    -- Measured 2026-09-02 over 107 fixtures. The load-bearing cell is
+    -- shipped[2]: it is absent, and while it is absent NO result comparison on
+    -- this corpus can see the unarmed tie-break at all. That absence stays an
+    -- EQUALITY on purpose (corpus_scale.lua: "a claim whose whole content is a
+    -- zero stays an equality") -- the day a two-carrier unarmed frame lands,
+    -- this MUST go red, because the verdict it carries is about a domain being
+    -- empty. The two populated cells are only context and ratchet instead.
+    cs.ratchet(shipped[0], 101, '[domain price] unarmed 0-carrier frames')
+    cs.ratchet(shipped[1], 6, '[domain price] unarmed 1-carrier frames')
+    assert(shipped[2] == nil,
+        '[domain price] a frame with two reachable UNARMED carriers has arrived (' ..
+        tostring(shipped[2]) .. '). The unarmed tie IS now buyable -- assert it ' ..
+        'directly in [tie] instead of leaning on [source-parity].')
     -- Armed the domain exists, but only just: one frame in 107. That single
-    -- frame is DIRE_FX, and it is what [tie] spends.
-    assert(armed[2] == 1, '[domain price] the armed two-carrier frame is gone (' ..
-        tostring(armed[2]) .. ') -- [tie] has nothing left to stand on')
+    -- frame is DIRE_FX, and it is what [tie] spends. A floor, not a count: a
+    -- second such frame arriving is good news and must not read as a failure.
+    cs.ratchet(armed[2] or 0, 1, '[domain price] armed two-carrier frames')
 end
 
 -- THE CHECK THAT DOES NOT NEED A DISCRIMINATING INPUT. "Unarmed this is the

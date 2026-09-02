@@ -1,8 +1,9 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush
 
-**成员串 54**(上一行,**476 字节**,md5 `80392b258fcd214cf351231be61d15a4`)。本行 **2026-09-02T04:xxZ 的变动:`slotarb` 与 `slotdust` 两条同轮入集**(52 → 54,总监裁定全文 **§DK**,提议 §DI / §DJ,GH #406 / #411;queue `strategy-34` / `strategy-35`)。
-**⚠️ W37 正在飞,它记下的是 52-id arm** —— 本次变动**只对 W38 起作用**(与 §DH / W36 同型)。
+**成员串 55**(上一行,**485 字节**,md5 `bfe60fcdfbe466440213541c8f37a254`)。本行 **2026-09-02T10:xxZ 的变动:`slotpush` 入集**(54 → 55,总监裁定全文 **§DN**,提议 §DL,GH #415;queue `strategy-36`)。
+**⚠️ W38 已于 09:31Z 起飞,它记下的是 54-id arm** —— 本次变动**只对 W39 起作用**(与 §DK / W37、§DH / W36 连着第三次同型)。
+**上一次变动**(2026-09-02T04:xxZ,52 → 54,`slotarb`+`slotdust`,md5 `80392b258fcd214cf351231be61d15a4`,476 字节)裁定全文 **§DK**,提议 §DI / §DJ,GH #406 / #411。
 **⚠️ 收割前必读(§DK.3,`slotarb` 的入集是条件性的,这一条不成立时撞车数下降不构成条件 (a))**:提议的验收只有「撞车变少」,而**「撞车变少」与「谁都不去打野」在那份读数上是同一个数字**。全部营地被拒 ⇒ `mode_farm_generic.lua:805` 的 `if preferedCamp ~= nil then` 整块跳过、**没有 else** ⇒ 一个 Farm 模式的 bot 这一帧不下达任何打野动作;而出厂 dire 侧只扫 slot 5,**五路仲裁从未真正运行过**,armed 是第一次把一个**唯一输出是「拒绝」**的机制全量打开。⇒ 必须同时读**负控**:armed 腿「Farm 模式且无营地」的占比**不得上升**,**两个分层各自登记**。
 **⚠️ 收割前必读(§DK.1 (v-b)):`slotdust` 不是子集,`slotarb` 才是** —— 两个函数只差一个初值(`closestMember = bot` vs `closest = nil`),`slotdust` armed 会让 dire 侧四个今天结构性用不了粉的 bot **开始用粉**,那是**积极动作不是撤回**。按 §DI 的模式匹配读会读反(§DF.2 (ii) 同族第二发)。
 **⚠️ 收割前必读(§DK.5):两条彼此正交,但都按侧不同** —— 归因分得开的前提是**分层登记**;谁把它们并成「`0SLOT9` 家族」读一个池化的按侧读数,就会把两条搅在一起。**别并池。**
@@ -13482,3 +13483,161 @@ RB_EXIT=2
   **填完字段当轮跑 `reclaim_blind.py`**,读到 `WRITE-SIDE` 那行**当自己的 bug 修**;
   ③ W36 已回填的 `status_code` 不必再动。
 - **总监下一轮**:GH #413(§DA.2 的 baseline 重建按工具设计不可执行)仍未裁 —— 本轮明说没做。
+
+---
+
+## §DN 2026-09-02T10:xxZ 总监裁定:`slotpush`(§DL)入集(54 → 55)+ 修一条**本轮自检抓到的 trunk 红** —— 而本节最该被读的不是那条裁词,是 **§DN.4:同一个提议组、同一天、同一族改动里,「关闸即出厂」这句话连着两次不是被论证塌掉的,是被一行**顺手写下的、谁都没在看的**代码塌掉的 —— 第一次是行为(GH #418),第二次是量具(本节)**
+
+**本轮零 AWS 调用、零支出、`bots/` 与 `game/` 逐字节零 diff**(改动只在 `tests/`)。
+
+### §DN.1 裁定:`slotpush` **ADMITTED / ROUTED_RIDESHARE**,搭 **W39**(不是 W38)
+
+`test_set.md` 成员串 **54 → 55**(485 字节,md5 `bfe60fcdfbe466440213541c8f37a254`)。
+**⚠️ W38 已于 09:31Z 起飞并记下 54-id arm ⇒ 本次入集只对 W39 起作用。**
+这是**连着第三次**「裁定落在一波起飞之后」(§DH/W36、§DK/W37、本节/W38)——
+登记它是因为**三次同型就不再是巧合,而是排期节奏与裁定节奏的相位差**;它不构成任何一方的过错,
+但下一次总监若想让入集赶上某一波,**必须在批测台的发波窗口之前裁**,而不是指望波次等裁定。
+
+**路由裁定,不是对提议全部读数的背书。** 总监按源码独立复核六条,全部裸退出码:
+
+| # | 检查 | 读数 |
+|---|---|---|
+| (i) | **单条独立门**,不落进 `pullcad` 陷阱 | 合取项只有 `J.IsModeTurbo()` 与 `J.IsSoakCandidate('slotpush')` 两个(`jmz_func.lua:12264-12265`),**没有第二个候选 id** ✅ |
+| (ii) | **门关时逐字返回出厂表达式** | 读 `fcdaf53a` 全 diff:`for ____, playerdId` → `for i, playerdId`(未用变量改为已用,Lua 语义零变化)、`nSlot = playerdId` 除非 armed、cacheKey 后缀**仅** armed 时追加 ✅ |
+| (iii) | **armed 零新引擎 API 面** | 同一个 `GetTeamMember`,实参从越界值换成 1..5;对 member 调的方法全在出厂路径上 ✅ |
+| (iv) | **域 = 共享代码** | 总监独立重跑 `corpus_hero_census.py --file bots/FunLib/utils.lua` ⇒ **SHARED / exit 0**(108 帧文件 / 43 英雄);`hero_pool.txt` 在这里不构成约束 ✅ |
+| (v) | **载体门 + 接线** | `carrier_terms.py --arm <55 串>` ⇒ `10 hero-scoped / 45 generic / 0 unresolved => 6 term(s)`,**exit 0**,6 个 term 与 54 串**逐字不变**;`check_armed_wiring.py --cand <55 串>` ⇒ `all 55 armed ids wired on HEAD`,**exit 0** ✅ |
+| (vi) | **提议自己的验收** | `lua5.1 tests/run_tests.lua slotpush_highground_scan` 总监独立重跑 ⇒ **16 tests, 0 failures, 裸 exit 0** ✅ |
+
+**第七条是本轮新加的,起因是 GH #418**(见 §DN.4):**逐行读整份 `bots/` diff 找闸外改动**。
+`fcdaf53a` 动了 9 个 `bots/` 文件(`jmz_func` 新增包装、`utils.lua` 参数化、7 个 mode 换调用点),
+**逐行读过,闸外零行为改动**。七个 mode 的调用点从 `J.Utils.IsTeamPushingSecondTierOrHighGround(bot)`
+换成 `J.IsTeamPushingHighGround(bot)`,**不引入新的作用域要求** —— 旧调用本来就走 `J.Utils`,
+`J` 在七个文件里早就在作用域内。memo key 全仓**只有一处**定义(`utils.lua:1709`),无第二个消费者。
+
+### §DN.2 条件 (a) 的限定**逐字继承提议自己写的那条**,总监不放宽
+
+提议的域价钱是**在选杠杆之前**跑的(连续第三轮兑现 GH #400 的次序),而它答的是**「fixture 级买不到」**:
+107 份 fixture / 517 个 member-frame 上每个合取项都会亮(量具不瞎),但两半同时为真只有 **4 个 member-frame
+且全在一份 fixture 里**;那一帧上出厂腿够得到的唯一队友**自己恰好就是推进者**,于是双侧 94 次载入
+**两条腿一次都没分歧**。⇒ **fixture 只买到扫描集与方向,决策级只有一条明确标注 COUNTERFACTUAL 的读数。**
+**条件 (a) 必须从新局录像取,语料里没有攻坚镜头。**
+
+⚠️ **按 README 铁律 4(i-a),dire / radiant 两个分层必须各自登记读数** ——
+这条缺陷**本身就是按侧不同的量**(dire 够到 1 个 / radiant 够到 4 个),
+池化读在这里是**结构性错误,不是精度问题**。这一条与 §DK.5 是同一句话的第二次适用。
+
+### §DN.3 顺带收下的阴性产物:**下一个杠杆不该继续从这个簇里选**
+
+提议同一份读数答了这个问题(省下下一轮的一次发现):`utils.lua` 剩下七处里 —— **四处**在 `bots/` 里
+没有任何调用点(修它们**按构造无法证伪**)、**两处**在同一份语料上一次 TRUE 都没有、
+**第七处**是死码且**正确孪生已在树上**(`jmz_func.lua:11342` 的 `J.GetHumanPing` 写的就是 `GetTeamMember(i)`)。
+那对孪生同时是「**这是缺陷不是房规**」的最短证明。⇒ `0SLOT9` 棘轮 8 → 7,但**协同组下一轮换域**。
+
+### §DN.4 ⭐ 本轮主要价值:**两次「关闸即出厂」塌掉,塌的都不是论证**
+
+- **第一次(GH #418,批测台 06:21Z 抓,协同组 07:42Z 修)**:`slotdust` 落地时把
+  `dist < closestDist` 顺手写成了 `<=`,**而那一行在闸外**;它上方八行的注释
+  「Unarmed this is byte-for-byte the shipped function」**从 01:41Z 起假了六个小时**,
+  而那句话正是下游(含批测台并池判据)用来判「关闸即惰性」的那一句。
+- **第二次(本轮自检抓,总监本轮修)**:同一个提议组、**同一天**、修 #418 的**那一次提交**
+  (`77d6c795`)在 `tests/test_slotdust_dust_arbitration.lua:645` 写下
+  `assert(nFixtures == 107, ...)` —— **GH #106 / #127 的原样复发**:
+  下一份 fixture 落地就把它变红,**而它测的东西一点没动**。
+  `test_corpus_scale.lua` 那个检测器**当轮就点名点到了行号**。
+
+**两次的形状是同一个:承重的那句话("关闸逐字节等于出厂" / "这个计数说明域是空的")
+是对的,而**让它继续为真的那行代码**没有人在看。** 第一次伤的是**行为**,第二次伤的是**量具**。
+⇒ **§DN.4 立为法(总监,适用全队)**:凡在注释或提议里写下
+「**unarmed / 关闸时这里逐字节等于出厂**」的改动,**验收必须包含一次逐行读整份 `bots/` diff**,
+并在报告里写出「**闸外零行为改动**」这句话及其依据 —— 那正是本节 (vii) 做的事,
+它这次没抓到东西,**而它上一次运行的那个位置抓到了 GH #418**。
+
+### §DN.5 修复:那条 trunk 红,以及**为什么零不能改成棘轮**
+
+改 `tests/test_slotdust_dust_arbitration.lua`(**只动 `tests/`**):
+
+- `assert(nFixtures == 107, ...)` ⇒ `cs.corpus(nFixtures, ...)`(可长不可缩,`FLOOR = 100`);
+- `shipped[0] == 101` / `shipped[1] == 6` ⇒ `cs.ratchet(..., 101)` / `cs.ratchet(..., 6)`
+  —— 两者都是**对 fixture 的求和**,append 只能让它变大;
+- `armed[2] == 1` ⇒ `cs.ratchet(armed[2] or 0, 1, ...)` —— 它的内容是**下界不是计数**,
+  第二份两载体帧到货是**好消息**,不该读成失败;
+- ⛔ **`shipped[2] == nil` 保持等号,故意的** —— 按 `corpus_scale.lua` 自己的教义
+  「**内容就是一个零的断言保持等号**」:它承载的裁定是**一个域是空的**
+  (「关闸腿上这份语料在构造上无法把 `<` 与 `<=` 分开」),
+  **两载体的关闸帧一到货,它必须变红**,那正是它存在的理由。**把它一起棘轮掉会删掉本轮的发现本身。**
+
+**验收(裸退出码,不经管道)**:`slotdust_dust_arbitration` **16/0 exit 0**、
+`corpus_scale` **8/0 exit 0**(修前该检测器为 **RED**,自检原文见本轮报告)。
+**变异台 4/4 CAUGHT + 一条负控**,基线先证绿、复原后仍绿:
+
+| 变异 | 读数 |
+|---|---|
+| M1 `shipped[0]` 掉 1 | **CAUGHT**,报 `unarmed 0-carrier frames FELL to 100 (registered 101)` |
+| M2 `armed[2] = nil` | **CAUGHT**,报 `armed two-carrier frames FELL to 0 (registered 1)` |
+| M3 `shipped[2] = 1` | **CAUGHT**,报 `a frame with two reachable UNARMED carriers has arrived (1)` |
+| M4 `nFixtures = 3` | **CAUGHT**,报 `corpus SHRANK to 3 fixtures (floor 100)` |
+| **负控** 语料长 5 份、三个计数同步变大 | **绿** —— 这正是修它的目的:**增长免费** |
+
+⭐ **每条变异的报错都点到了它自己那条缺陷,不是撞上别人的诊断** ——
+这是上一轮 §DM.4 那次自伤(P8 结论对了而理由不是被测的那一个)的直接应用。
+
+---
+
+## §DO 2026-09-02T10:xxZ 总监重裁 GH #413(§DA.2 的 baseline 重建按工具设计不可执行)—— 而本节最该被读的不是三选一,是 **§DO.2:批测台给的三个选项都要「去取一份新语料」,而那份语料**已经在收了** —— W37 与 W38 本来就跑在 `--rec-slots 8`**
+
+### §DO.1 先确认批测台的事实描述,逐条成立
+
+总监独立读 `tools/batch_test/soak/rec_slot_cost.py:176-181` 与 `rec_slot_baseline.json` 的头:
+`:180` 的 `die('claim sidecars disagree about rec_slots: ...')` 是一条**语料同质性检查** ——
+一份语料只许申报**一个** `rec_slots` 值;而 baseline 文件自己写着 `"rec_slots": 1, "rec_set": [1]`。
+⇒ §DA.2 要求的「把 W25(`rec_slots = 12`)并进这份 profile」**按构造不可能**,
+**不是语料不够,是设计**。批测台**没有把 exit 2 转成裁定、没有绕过它、没有生产一个假读数** ——
+**这三件事都做对了,总监明确背书**;§DA.2 的第一半(`--rec-slots` 保持 8)不依赖重建,继续有效。
+
+### §DO.2 ⭐ 裁定:采纳**建议 2 的形状**,但**改掉它的参数,并且不必新开一波**
+
+批测台写的建议 2 是「让下一波(或某一波)**整波跑 `--rec-slots 12`**,单独 `--emit-baseline`」。
+**采纳「用一份同质的新语料重建」这个形状,否掉「12」这个参数**,理由是算术不是偏好:
+
+- profile 自己带 `rec_slots` 字段 ⇒ **一份 12 录制者的 baseline 拿去判 8 录制者的波,
+  就是把 `:180` 拒绝的那种不同质性挪到了比较的两端之间** —— 与今天
+  `rec_slots=1` 的 baseline 判 8 录制者的波**是同一个毛病**,而那个毛病正是 §DA.3 诊断出的
+  「slot 1 的 −7.4% 不是代价,是 baseline 里 slot 1 独占带宽跑太快」。
+  ⇒ **重建语料必须跑在被判的那个配置上,也就是 8,不是 12。**
+- **而跑在 8 上的语料不需要去commission:它已经在收了。** W37(`--rec-slots 8`,已收 3/4 粒 / 126 局)
+  与 W38(09:31Z 起飞,报告 `20260902T093000Z.md:98` 逐字写着 `--rec-slots 8`)**都是**。
+  ⇒ **零额外 EC2、零新采集配置、零波次代价**;批测台三个选项里最便宜的那个(建议 3)要花的是**发现本身**,
+  而这条**一分钱都不花**。
+
+**执行**:W38 收割后,用 **W37 + W38 的 `.analysis.json`**(同为 `rec_slots = 8`,`:180` 的同质性检查按构造通过)
+跑 `--emit-baseline`,产出**新的 `rec_slot_baseline.json`(`rec_slots: 8`)**;
+`git mv` 旧文件为 `rec_slot_baseline_recslots1.json` **保留不删**(它是 305 局的真实测量,
+只是回答了另一个配置的问题)。**验收 = `--emit-baseline` 对该语料 exit 0,且新 profile 头逐字写着
+`"rec_slots": 8`;随后用原判据跑 §DA.2 的验收门。**
+
+### §DO.3 否掉的两条,理由值钱过裁词
+
+- **建议 1(baseline 按「这个槽当时是不是录制者」分格)**:**否,但不是「永不」。**
+  它造的是**承载混合语料的机器**,而 `:180` 的拒答**已经正确地执行了同一条不变量**;
+  代价是**每一份未来的 profile 都多一个必须填对的字段**,而 §DM.3 昨天刚量过
+  「一条裁定在落地当天默默作废另一条裁定的仪器」的成本。
+  **更硬的一条**:混合语料比较器**没法在一份同质 baseline 存在之前被验证** ——
+  你拿什么判它分对了格?⇒ **顺序上它必须排在 §DO.2 之后**,那时它多半也不再需要。
+- **建议 3(承认验收门对 slot 1 无效,只判 slot 2+)**:**否。**
+  批测台自己就不推荐,总监同意并给出理由的名字:它**把 §DA.3 发现的缺陷改成了「不看」**。
+  §DA.3 的整个内容就是 slot 1 那一格;删掉那一格之后,验收门**恰好不再测量它唯一测出过东西的地方**。
+
+### §DO.4 在新 baseline 落地之前,验收门**不跑**,而这不是拖延
+
+**总监明令**:在 `rec_slots: 8` 的 baseline 存在之前,**不要**用现行 `rec_slots: 1` 的 profile
+跑 §DA.2 的验收门 —— 那等于**拿另一个物理配置的 baseline 冒充这个配置的 baseline**,
+是「事后改判据」的镜像。批测台本轮**主动拒绝生产这种读数**,那是**对的**,继续保持。
+
+**W25 的 196 局不作废、不合并**:它是 `rec_slots = 12` 这个配置的**天然同质 baseline**,
+将来若真去跑 12,它就是现成的。**登记它,别并它。**
+
+### §DO.5 GH #413 的处置
+
+**不关闭** —— 它的交付物(新 baseline)要等 W38 收割。**状态改为「已裁,待执行」**,
+执行方 = 批测台,触发点 = W38 收割当轮。**总监下一轮核对这一棒有没有掉**(铁律 9 的连带规则)。
