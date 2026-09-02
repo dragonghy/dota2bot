@@ -1674,20 +1674,55 @@ function ____exports.IsNearEnemyHighGroundTower(unit, range)
     return false
 end
 --- Check if the team is pushing second tier or high ground.
--- 
+--
 -- @param bot - The bot to check.
+-- @param bSlotPush - Soak candidate 'slotpush'. Resolved in exactly ONE place,
+--                    J.IsTeamPushingHighGround in bots/FunLib/jmz_func.lua;
+--                    this file must never name the id (utils.ts may not import
+--                    jmz_func -- that is the circular dependency its own header
+--                    forbids -- so the wrapper lives one level up).
 -- @returns True if the team is pushing second tier or high ground, false otherwise.
-function ____exports.IsTeamPushingSecondTierOrHighGround(bot)
+--
+-- The loop's domain is the team ROSTER and its accessor is GetTeamMember, whose
+-- argument is a team SLOT (1..5 -- docs/BOT_API_REFERENCE.md:223 and both
+-- mocks). GetTeamPlayers hands back PLAYER IDS (0-4 radiant / 5-9 dire), and
+-- the shipped line feeds one to the other; out of range GetTeamMember answers
+-- nil, so the scan silently shrinks, by side:
+--   * radiant (ids 0..4): id 0 reads nil and slot 5 is never asked for => 4 of
+--     5, and from step 2 on the guard IsHeroAlive(playerdId) is asked about a
+--     DIFFERENT hero than the one teamMember names;
+--   * dire (ids 5..9): only slot 5 is in range => 1 of 5, and that one member
+--     is the pid-9 hero while the guard asks about pid 5.
+-- Armed, index i, player id list[i] and team slot i are the same hero, so the
+-- guard and its subject agree by construction and all five are scanned.
+--
+-- FAILURE DIRECTION IS CLOSED, and that is the whole reason this is a strategy
+-- lever: seeing fewer teammates can only make "the team is pushing" HARDER to
+-- believe, and every one of the seven call sites uses TRUE to suppress a
+-- distraction (BOT_MODE_DESIRE_NONE for ward / rune / outpost / side shop /
+-- secret shop / roshan / going back to lane). Under-scanning therefore peels
+-- bots off a high-ground siege to go shopping. Not a strict subset in the other
+-- direction though: shipped can answer TRUE off a hero whose OWN liveness was
+-- never checked, which armed refuses -- both directions are measured in
+-- tests/test_slotpush_highground_scan.lua rather than argued.
+function ____exports.IsTeamPushingSecondTierOrHighGround(bot, bSlotPush)
     local cacheKey = "IsTeamPushingSecondTierOrHighGround" .. tostring(bot:GetTeam())
+    if bSlotPush then
+        cacheKey = cacheKey .. "byslot"
+    end
     local cachedRes = ____exports.GetCachedVars(cacheKey, 1)
     if cachedRes ~= nil then
         return cachedRes
     end
     local enemyAncient = GetAncient(GetOpposingTeam())
     if enemyAncient ~= nil then
-        for ____, playerdId in ipairs(GetTeamPlayers(bot:GetTeam())) do
+        for i, playerdId in ipairs(GetTeamPlayers(bot:GetTeam())) do
             if IsHeroAlive(playerdId) then
-                local teamMember = GetTeamMember(playerdId)
+                local nSlot = playerdId
+                if bSlotPush then
+                    nSlot = i
+                end
+                local teamMember = GetTeamMember(nSlot)
                 if teamMember ~= nil and #teamMember:GetNearbyHeroes(2000, false, BotMode.None) >= 2 and (____exports.IsNearEnemySecondTierTower(teamMember, 2000) or ____exports.IsNearEnemyHighGroundTower(teamMember, 3000) or GetUnitToUnitDistance(teamMember, enemyAncient) < 3000) then
                     ____exports.SetCachedVars(cacheKey, true)
                     return true

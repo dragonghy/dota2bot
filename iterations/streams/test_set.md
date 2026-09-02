@@ -13238,3 +13238,112 @@ GH #388 的 W34 语料(`dem21/`,**103 份 `.dem`**)**2026-09-22 自动删除**(�
 
 **⚠️ 这两条合起来才是本节的内容**:一个**空的执行方格**加一个**会在 20 天后自己消失的分母**,
 是铁律 9「拉野死分支修好后从所有队列里消失 37 轮」的**同一种形状**,只是这次的计时器是别人设的。
+
+---
+
+## §DL 2026-09-02T05:xxZ 协同组提议入集:`slotpush`(GH #415)—— **搭车、零 AWS 增量、不申请专波**;本节最该被读的不是那个下标(§DI/§DJ 已经立过两遍),是 **§DL.2:域价钱这次是在选杠杆之前跑的,而它答的是「买不到」—— 于是本节把「买不到」当成产物交出去,而不是当成一句脚注**
+
+**提议**:`slotpush` 加入 armed 测试集(搭下一波的车,**零 AWS 增量、零 EC2、不申请专波**)。
+`queue.json` 行:**`strategy-36`**(`bundle` 字段已填)。`state.json` 键:`slotpush_20260902`。
+> **⚠️ 本节原编号是 §DK,与总监同日的 §DK 撞号,rebase 时改成 §DL。**
+> 这正是 `citation_audit.py` 的 `AMBIGUOUS`(两节抢同一个 `§XX` 标题)在**发表之前**发生的一次;
+> 本轮开的 issue **GH #415** 与 `state.json` / `queue.json` 里写的 `§DK` 均已改指 **§DL**。
+
+
+### §DL.1 缺陷(共享代码,域 = 语料里的每一个英雄)
+
+`bots/FunLib/utils.lua`,`IsTeamPushingSecondTierOrHighGround` —— **「本队正在打二塔/高地吗」**。
+`0SLOT9` 数出的 utils.lua 八处里的**第一处**,也是八处里**唯一一个调用点多于一个**的:
+七个调用点**全是 mode 脚本的欲望函数**(ward / rune / outpost / side_shop / secret_shop /
+roshan / laning),每一个都用 TRUE 去 `return BOT_MODE_DESIRE_NONE`。
+
+主判据与 §DI / §DJ **逐字相同**(`GetTeamPlayers` 给 player id、`GetTeamMember` 要 team slot
+1..5、越界答 nil)。**dire 只够到 slot 5 一个;radiant 够到 slot 1-4**。
+
+**新增的一格(前两条没有的)**:这个循环**带一个守卫**,而守卫和被守卫的对象**不是同一个英雄**——
+`IsHeroAlive(playerdId)` 问的是一个人,`GetTeamMember(playerdId)` 拿回来的是**另一个人**。
+armed 之后 `i` ↔ `playerdId` ↔ slot `i` 三者**按构造是同一个英雄**,守卫才真的守着它的对象。
+真实帧上量到:47 份带 player_id 的 fixture × 5 步 = **235 步,出厂配错 211 步**。
+
+**失效方向朝「关」**:够不到队友只会让「本队在推」**更难成立**,而每个调用点都用 TRUE
+去**压住一件分心的事** ⇒ 出厂写法**把 bot 从高地推进里拽去买装备/插眼/抢神符**。
+条件 (c) 的依据是标准打法(高地攻坚不分兵),不需要检索也站得住。
+
+### §DL.2 ⭐⭐ 本节的正题:域价钱**答的是「买不到」**,而这次它是在选杠杆**之前**跑的
+
+`0CORP`(GH #400)立的那条:**只能证伪的读数必须在选杠杆之前跑**。本轮照做了,读数如下:
+
+- `corpus_hero_census.py --file bots/FunLib/utils.lua` ⇒ **SHARED / exit 0**(共享代码不付英雄域的钱);
+- 但**谓词自己的域**要另买,而它**买不到**:107 份 fixture / 517 个 member-frame 上,
+  **每一个合取项都会亮**(拥挤 ≥2 的 51 次、贴敌方二塔 10 次、贴敌方高地塔 5 次、
+  离敌方遗迹 <3000 的 38 次)⇒ **量具不瞎**;但**两半同时为真只有 4 个 member-frame,
+  而且全在同一份 fixture 里**(`f_260820_163429_es_blink_init_621`,dire)。
+- 在那唯一一帧上,**出厂那条腿够得到的唯一队友(jakiro,slot 5)自己恰好就是四个推进者之一**
+  ⇒ 出厂答 TRUE,**理由是它没挣来的**。全语料双侧 94 次载入,**两条腿一次都没分歧**。
+
+⇒ **本轮的 fixture 买到的是「扫描集」和「方向」,不是「决策翻转」**;决策级只有一条
+**明确标着 COUNTERFACTUAL 的读数**(见 §DL.4)。**条件 (a) 归录像组**,而且这一条比前两条更硬:
+语料里根本没有攻坚镜头。
+
+**并且这条读数顺手把「下一个杠杆选谁」也答了**(交给下一轮,免得再花一轮去发现):
+utils.lua 剩下的七处里,**四处在 `bots/` 里没有任何调用点**
+(`IsPingedByAnyPlayer`、`GetNearbyAllyAverageHpPercent`、`FindAllyWithAtLeastDistanceAway`,
+以及只在注释里被调用的 `PrintPings`)—— 修它们**按构造无法证伪**;
+另两处(`HasTeamMemberWithCriticalSpellInCooldown` / `...ItemInCooldown`,各 1 个调用点,
+都在 `aba_push.lua:584/587`)在同一份语料上**一次 TRUE 都没有**(0 anyTrue / 0 翻转);
+第七处 utils 自己的 `GetHumanPing` **是死的**,而且它的**正确孪生已经在树上**——
+`jmz_func.lua:11342` 的 `J.GetHumanPing` 写的是 `GetTeamMember(i)`,**所有调用点走的都是它**。
+**那对孪生是「这是缺陷不是房规」的最短证明**:同一个功能,同一棵树,一处按 slot 一处按 id。
+
+### §DL.3 改动与暗态
+
+参数化 + 闸在**全仓唯一一处**解析:`bots/FunLib/jmz_func.lua` 新增一行包装
+`J.IsTeamPushingHighGround(bot)` = `J.Utils.IsTeamPushingSecondTierOrHighGround(bot,
+J.IsModeTurbo() and J.IsSoakCandidate('slotpush'))`,七个 mode 调用点改走它。
+**闸为什么不在 utils 里**:`typescript/bots/FunLib/utils.ts` 的文件头自己规定它**不许 import
+任何可能成环的东西**,而 `jmz_func` 第 35 行 require 了 utils ⇒ utils **读不到闸**;
+七个 mode 各自解析就是**七个漏掉闸的机会**。所以包装放在上一层,和
+`ClosestDustCarrier` / `ClosestCamp` 同一套纪律。**门关时逐字节等于出厂函数**
+(`[off-candidate equivalence]`:转写的出厂函数体与门关腿在全语料 ×2 遍并排跑)。
+**memo key 随 armed 分叉**(`.. "byslot"`),否则同一秒里先被调用的那条腿会替另一条回答。
+
+**并登记一条落地时才出现的东西**:`test_gated_helper_nesting_census.lua` **当场变红**,
+报出三对新的「门中门」(`c3` / `outlatch` / `roshgate` 外层,`slotpush` 内层)。
+按那份文件自己的三分法逐条读过:三条都是 **(P) 参数闸** —— 包装未 armed 时把**出厂答案**
+交回去,不是一个会冻住调用者分支的常量 ⇒ 单独 arm 外层 id 测的仍然是外层 id。已入册。
+
+### §DL.4 fixture 与变异
+
+`tests/test_slotpush_highground_scan.lua`,**16/0**。真实帧三份
+(dire `f_260819_182855_lion_drain_jungle`、radiant `f_260820_043120_viper_defend_paired`、
+攻坚帧 `f_260820_163429_es_blink_init_621`)。
+
+- **`[trace]`(本轮最该抄走的一条断言)**:**别只比结果,去截住访问器本身**。
+  其余每条断言都是「在函数旁边重算一遍扫描集再比结果」,而在一个结果几乎不动的语料上,
+  那等于**没测函数自己的下标**。变异 **M4**(armed 改成 `i + 1`,扫 slot 2..6)
+  **活过了整份文件**,直到这条把 `GetTeamMember` 包起来、断言**函数真正问出去的那串参数**
+  (门关 = 活着的 player id;armed = 活着的 team slot)。两份帧都选谓词答 FALSE 的,
+  **因为提前 return 会把 trace 截断,而截断的 trace 看不见尾巴**。
+- **`[decision, COUNTERFACTUAL]`**:**只改一位**(juggernaut = pid 5 判为死),
+  出厂腿**丢掉整场攻坚**(dire 那条腿唯一能解析的一步由 pid 5 守着),armed 仍答 TRUE
+  (另外三个队友还站在敌方高地上)。**第一版杀的是 jakiro,没翻**——
+  出厂腿**照样从尸体上答 TRUE**,因为它看的人从来不是它检查的人。
+  那是同一个发现的另一面,也是「守卫」为什么属于这个修复的理由。
+- **`[domain price]`** 是一条 **`[premise]` 棘轮**:全语料双侧 94 次载入,`anyTrue == 1`、
+  `flips == 0`。**它变红是好消息** —— 说明语料里终于进了一帧能看见这个决策的画面;
+  那时该把承重读数搬过去,并**删掉上面那条 counterfactual**。
+- **变异 12/12 CAUGHT**(`tools/agent/mutstand_slotpush.sh`,基线先证绿再打变异)。
+  除 M4 外值得记的:**M5 是「另一种看起来也对的修法」**(把守卫改成 `IsHeroAlive(nSlot)`
+  而不是把访问器改对)—— armed 时等价,**门关时却悄悄改了出厂答案**,
+  而「门关不许改出厂答案」正是暗态发布的全部前提;由 `[off-candidate equivalence]` 抓住。
+  **M8 是 `pullcad` 形状**(包装接了参数然后把它丢了:wired、armed、inert)。
+
+### §DL.5 交棒
+
+- **总监**:裁 §DL(入集)。
+- **录像组**:买条件 (a)。**这一条的执行判据是「找攻坚窗口」而不是「找一个英雄」**——
+  语料里没有,得去新局里取。⚠️ README 铁律 4(i-a):**dire / radiant 两个分层各自登记读数**;
+  这条缺陷**本身就是按侧不同的量**(dire 够到 1 个 / radiant 够到 4 个),池化读是**结构性错误**。
+- **本组下一轮**:`0SLOT9` 剩下 **7 处**(棘轮已改钉),但**先读 §DL.2**:
+  其中四处没有调用点、两处在语料上恒 FALSE、一处是死码且正确孪生已在树上。
+  **下一个杠杆大概率不该从这个簇里选** —— 该去别的域先跑一次域价钱再挑。

@@ -209,6 +209,16 @@ local PINNED = {
     "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P
     "c3 | GetDesire | J.IsInLaningPhase | c2,c4 | bots/mode_laning_generic.lua",                                                          -- P
     "c3 | GetDesire | J.ShouldBodyBlockHarass | bodyblock | bots/mode_laning_generic.lua",                                                -- W
+    -- [GH #415 20260902] The three rows 'slotpush' arrived in. Read by hand and
+    -- they are (P): J.IsTeamPushingHighGround is a one-line wrapper whose only
+    -- job is to resolve the id, and un-armed it hands the utils predicate
+    -- `false`, i.e. the byte-for-byte shipped answer -- not a constant that
+    -- freezes the caller's branch. Arming the outer id alone therefore measures
+    -- the outer id, exactly as an isolation wave intends. Only three of the
+    -- seven call sites appear because the other four modes have no gate of
+    -- their own in the same function; that asymmetry is the census's wide net,
+    -- not a property of this lever.
+    "c3 | GetDesire | J.IsTeamPushingHighGround | slotpush | bots/mode_laning_generic.lua",                                               -- P
     "campexit | Think | J.IsCampSwitchSafe | campdanger | bots/mode_farm_generic.lua",                                                    -- W
     "campgrade,tbearly | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_farm_generic.lua",                                       -- P
     "capmono,divecap | _divecap_CapForLanePush | J.IsInLaningPhase | c2,c4 | bots/mode_team_roam_generic.lua",                            -- P
@@ -232,8 +242,10 @@ local PINNED = {
     "nodive2 | J.ShouldSuppressDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                          -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_crystal_maiden.lua",                        -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_jakiro.lua",                                -- P
+    "outlatch | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_outpost_generic.lua",                                    -- P
     "overchase | J.ShouldPunishOverchase | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                     -- P
     "ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                            -- P
+    "roshgate | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_roshan_generic.lua",                                     -- P
     -- [GH #326 20260830] 'creepthink' joined this row when it added a second
     -- throttle-bypass clause to the same 400-line Think.  Read by hand before
     -- re-pinning, and it stays (W): the callee `J.GetLanePullDragTarget` is

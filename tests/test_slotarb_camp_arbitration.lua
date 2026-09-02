@@ -415,20 +415,26 @@ tests['[census] one lever: eight pid-shaped call sites stay untouched'] = functi
 
     assert(slotShaped >= 75, 'the slot-shaped majority collapsed: ' .. slotShaped ..
         ' -- if this fell, the house idiom changed and the 80:10 claim needs redoing')
-    -- 2026-09-02: was nine. The ninth -- J.IsClosestToDustLocation in
-    -- jmz_func.lua, the same "am I the closest" shape this test named as the
-    -- next lever -- is now soak candidate 'slotdust'
-    -- (tests/test_slotdust_dust_arbitration.lua). The eight that remain are all
+    -- 2026-09-02: was nine, then eight. The ninth -- J.IsClosestToDustLocation
+    -- in jmz_func.lua, the same "am I the closest" shape this test named as the
+    -- next lever -- became soak candidate 'slotdust'
+    -- (tests/test_slotdust_dust_arbitration.lua); the eighth --
+    -- IsTeamPushingSecondTierOrHighGround, the only one of the utils.lua
+    -- cluster with more than one live caller -- became 'slotpush'
+    -- (tests/test_slotpush_highground_scan.lua). The seven that remain are all
     -- in one file, so the count and the cluster below say the same thing twice
     -- on purpose: if they ever disagree, a site moved somewhere unexpected.
-    assert(pidShaped == 8, 'expected exactly eight pid-shaped call sites left after ' ..
-        'the slotarb and slotdust levers, found ' .. pidShaped .. ':\n  ' ..
+    -- Read that file's header before picking the next one: four of the seven
+    -- have NO caller in bots/ at all, and the two that do (aba_push.lua:584 and
+    -- :587) never answer TRUE once on the whole fixture corpus.
+    assert(pidShaped == 7, 'expected exactly seven pid-shaped call sites left after ' ..
+        'the slotarb, slotdust and slotpush levers, found ' .. pidShaped .. ':\n  ' ..
         table.concat(pidSites, '\n  '))
     local nUtils = 0
     for _, s in ipairs(pidSites) do
         if s:match('bots/FunLib/utils%.lua') then nUtils = nUtils + 1 end
     end
-    assert(nUtils == 8, 'the utils.lua cluster moved: ' .. nUtils .. ' of 8')
+    assert(nUtils == 7, 'the utils.lua cluster moved: ' .. nUtils .. ' of 7')
     -- Registered, not fixed: a two-argument call whose first argument is a TEAM
     -- constant, not a slot. It spans two source lines, so the line-oriented
     -- census above cannot see it at all -- read it whole, or the count silently

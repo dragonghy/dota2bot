@@ -12227,5 +12227,26 @@ function J.GetUltLoc(bot, target, nManaCost, nCastRange, s)
 	return dest
 end
 
+-- The ONE gate-resolution site for the soak candidate 'slotpush' (turbo-only).
+--
+-- Third of the pid-shaped GetTeamMember call sites (after 'slotarb' GH #406 and
+-- 'slotdust' GH #411), and the first one in bots/FunLib/utils.lua. The defect
+-- and its measurement live next to the function itself; what lives HERE is only
+-- the arming, and it lives here for a structural reason: utils.ts declares in
+-- its own header that it must not import anything that can close a dependency
+-- cycle, and jmz_func requires utils (J.Utils, line 35). So utils cannot read
+-- the gate, and each of the seven mode scripts resolving it for itself would be
+-- seven places to miss. One wrapper one level up is the same discipline
+-- ClosestDustCarrier uses in ability_item_usage_generic.lua and ClosestCamp
+-- uses in mode_farm_generic.lua: one place to arm, no call site that can
+-- silently skip the gate. tests/test_slotpush_highground_scan.lua asserts both
+-- halves by census -- that J.Utils.IsTeamPushingSecondTierOrHighGround is named
+-- exactly once outside utils.lua (right here), and that this wrapper is what
+-- all seven mode scripts call.
+function J.IsTeamPushingHighGround( bot )
+	return J.Utils.IsTeamPushingSecondTierOrHighGround( bot,
+		J.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' ) )
+end
+
 
 return J

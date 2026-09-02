@@ -132,7 +132,7 @@ function GetDesire()
 	end
 
 	-- Don't leave high ground push or ancient defense for runes (local addition)
-	if J.Utils.IsTeamPushingSecondTierOrHighGround(bot) then
+	if J.IsTeamPushingHighGround(bot) then
 		return BOT_MODE_DESIRE_NONE
 	end
 	local enemiesAtAncient = J.Utils.CountEnemyHeroesNear(GetAncient(GetTeam()):GetLocation(), 3200)

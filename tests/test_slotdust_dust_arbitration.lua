@@ -463,13 +463,18 @@ tests['[census] one lever: eight pid-shaped call sites stay untouched'] = functi
     end
     p:close()
     assert(slotShaped >= 75, 'the slot-shaped majority collapsed: ' .. slotShaped)
-    assert(pidShaped == 8, 'expected exactly eight pid-shaped call sites left after this ' ..
-        'second lever, found ' .. pidShaped .. ':\n  ' .. table.concat(pidSites, '\n  '))
+    -- 2026-09-02: was eight. The third lever, 'slotpush', took
+    -- IsTeamPushingSecondTierOrHighGround out of the utils.lua cluster
+    -- (tests/test_slotpush_highground_scan.lua). This assertion and the one in
+    -- test_slotarb_camp_arbitration.lua are deliberate duplicates: two files
+    -- carrying the same count cannot drift apart quietly.
+    assert(pidShaped == 7, 'expected exactly seven pid-shaped call sites left after the ' ..
+        'third lever, found ' .. pidShaped .. ':\n  ' .. table.concat(pidSites, '\n  '))
     local nUtils = 0
     for _, s in ipairs(pidSites) do
         if s:match('bots/FunLib/utils%.lua') then nUtils = nUtils + 1 end
     end
-    assert(nUtils == 8, 'the remaining eight are no longer the utils.lua cluster: ' .. nUtils)
+    assert(nUtils == 7, 'the remaining seven are no longer the utils.lua cluster: ' .. nUtils)
     assert(#other == 0, 'a new one-line GetTeamMember argument shape appeared:\n  ' ..
         table.concat(other, '\n  '))
 end

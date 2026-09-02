@@ -1232,20 +1232,37 @@ export function IsNearEnemyHighGroundTower(unit: Unit, range: number): boolean {
 
 /**
  * Check if the team is pushing second tier or high ground.
+ *
+ * GetTeamPlayers hands back PLAYER IDS (0-4 radiant / 5-9 dire); GetTeamMember
+ * takes a team SLOT (1..5) and answers null out of range. The shipped line
+ * feeds one to the other, so the scan shrinks by side (radiant 4 of 5, dire 1
+ * of 5) and the IsHeroAlive guard is asked about a different hero than the one
+ * teamMember names. Failure direction is CLOSED: every caller uses TRUE to
+ * suppress a distraction, so under-scanning peels bots off a high-ground siege.
+ *
  * @param bot - The bot to check.
+ * @param bSlotPush - Soak candidate 'slotpush', resolved in exactly one place,
+ *                    J.IsTeamPushingHighGround in bots/FunLib/jmz_func.lua.
+ *                    This file may not import jmz_func (circular dependency),
+ *                    which is why the gate is threaded in rather than read here.
  * @returns True if the team is pushing second tier or high ground, false otherwise.
  */
-export function IsTeamPushingSecondTierOrHighGround(bot: Unit): boolean {
-    const cacheKey = "IsTeamPushingSecondTierOrHighGround" + bot.GetTeam();
+export function IsTeamPushingSecondTierOrHighGround(bot: Unit, bSlotPush?: boolean): boolean {
+    let cacheKey = "IsTeamPushingSecondTierOrHighGround" + bot.GetTeam();
+    if (bSlotPush) {
+        cacheKey = cacheKey + "byslot";
+    }
     const cachedRes = GetCachedVars(cacheKey, 1);
     if (cachedRes !== null) {
         return cachedRes;
     }
     const enemyAncient = GetAncient(GetOpposingTeam());
     if (enemyAncient !== null) {
+        let i = 0;
         for (let playerdId of GetTeamPlayers(bot.GetTeam())) {
+            i++;
             if (IsHeroAlive(playerdId)) {
-                const teamMember = GetTeamMember(playerdId);
+                const teamMember = GetTeamMember(bSlotPush ? i : playerdId);
                 if (
                     teamMember !== null &&
                     teamMember.GetNearbyHeroes(2000, false, BotMode.None).length >= 2 &&

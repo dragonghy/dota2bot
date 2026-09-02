@@ -42,7 +42,7 @@ function GetDesireHelper()
 		end
 	end
 
-	if J.Utils.IsTeamPushingSecondTierOrHighGround(bot) then
+	if J.IsTeamPushingHighGround(bot) then
 		return BOT_MODE_DESIRE_NONE;
 	end
 

@@ -27,6 +27,62 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0PUSH. **【2026-09-02T04:49Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0DUST` 逐字交待本组下一轮
+   「`0SLOT9` 剩下的 8 处全在 `bots/FunLib/utils.lua` —— 一次一个杠杆」⇒ 本轮就是照这条做的**);
+   **落地 gated `slotpush`**,入集提议 `test_set.md` **§DL**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-36`**(**`bundle` 已填**);`state.json` 新键 `slotpush_20260902`;
+   issue **GH #415**;报告 `iterations/reports/strategy/20260902T044930Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个只能证伪的读数,这次在选杠杆之前跑了 —— 而它答的是「买不到」;
+   于是本轮把「买不到」当成产物交出去,而不是当成一句脚注。**
+   `corpus_hero_census.py --file bots/FunLib/utils.lua` 答 **SHARED / exit 0**(文件级),
+   但**谓词自己的域要另买,而它买不到**:107 份 fixture / **517 个 member-frame** 上
+   **每个合取项都会亮**(拥挤 51 / 贴二塔 10 / 贴高地塔 5 / 离敌方遗迹 <3000 三十八次)⇒ **量具不瞎**;
+   但**两半同时为真只有 4 个 member-frame,全在同一份 fixture 里**
+   (`f_260820_163429_es_blink_init_621`,dire),而在那一帧上**出厂腿够得到的唯一队友
+   (jakiro,slot 5)自己恰好就是四个推进者之一** ⇒ 出厂答 TRUE,**理由是它没挣来的**。
+   全语料**双侧 94 次载入,两条腿一次都没分歧**(`[domain price]` 钉成 `[premise]`,**变红是好消息**)。
+   **缺陷**:`bots/FunLib/utils.lua`,`IsTeamPushingSecondTierOrHighGround`;
+   **七个调用点全是 mode 欲望函数**(ward/rune/outpost/side_shop/secret_shop/roshan/laning),
+   每个都用 TRUE 去 `BOT_MODE_DESIRE_NONE` ⇒ **失效方向朝「关」:把 bot 从高地攻坚里拽去插眼/抢神符/买装**。
+   **⭐⭐ 新增的一格(两个兄弟都没有):这个循环带守卫,而守卫问的不是它接下来要看的那个人** ——
+   `IsHeroAlive(playerdId)` 问一个玩家,`GetTeamMember(playerdId)` 拿回另一个;
+   真实帧 **235 步里出厂配错 211 步**。armed 后三者按构造同一个英雄,**所以守卫那一行不用改**。
+   **改动**:参数化 + 闸在**全仓唯一一处**解析 —— 新增包装 `J.IsTeamPushingHighGround`(jmz_func);
+   **闸不能放在 utils 里是结构性的**:`utils.ts` 文件头自己禁止成环 import,而 jmz_func:35 require 了 utils。
+   **产出** `tests/test_slotpush_highground_scan.lua`(**16/0**)+ `tools/agent/mutstand_slotpush.sh`(**12/12 CAUGHT**)。
+   **`0SLOT9` 计数棘轮 8 → 7**(`slotarb` 与 `slotdust` **两份普查同步改**)。
+   **下一格**:总监裁 §DL;录像组买条件 (a)(**判据是「找攻坚窗口」不是「找一个英雄」**,
+   语料里没有必须从新局取;两个分层各自登记读数)。
+   **本组下一轮**:**先读 `0PUSHCLUSTER`,下一个杠杆大概率不该从这个簇里选。**
+
+0PUSHTRACE. **【2026-09-02T04:49Z 新增,登记 —— 一条断言写法,不是一条缺陷】**
+   **⭐ 别只比结果,去截住访问器本身。**
+   本轮其余每条断言都是「在函数旁边重算一遍扫描集,再比两条腿的结果」。
+   在一个**结果几乎不动**的语料上(见 `0PUSH`:94 次载入 0 次翻转),那**等于没测函数自己的下标**:
+   变异 **M4**(armed 改成 `i + 1`,扫 slot 2..6 —— 漏一个真队友、多读一个 nil)
+   **活过了整份文件的第一版**,因为在那唯一一帧上 slot 2..6 里**仍然有一个推进者**。
+   修法是 `[trace]`:把 `GetTeamMember` 包起来,断言**函数真正问出去的那串参数**
+   (门关 = 活着的 player id;armed = 活着的 team slot)。
+   **配套的一条**:trace 用的帧必须选谓词答 **FALSE** 的 —— **提前 `return` 会截断 trace,
+   而截断的 trace 看不见尾巴**。
+   与 `0CORP` 的关系:那条管**选杠杆之前**该跑什么;这条管**域买不到之后**断言该怎么写。
+
+0PUSHCLUSTER. **【2026-09-02T04:49Z 新增,登记不修 —— `0SLOT9` 剩下 7 处的**逐处**域读数】**
+   **⭐ 「一次一个杠杆」不等于「按顺序把簇修完」:先问这个簇里还有没有能证伪的杠杆。**
+   utils.lua 剩下 7 处:**4 处在 `bots/` 里没有任何调用点**
+   (`IsPingedByAnyPlayer` / `GetNearbyAllyAverageHpPercent` / `FindAllyWithAtLeastDistanceAway`,
+   以及只在注释里被调用的 `PrintPings`)—— 修它们**按构造无法证伪**;
+   **2 处**(`HasTeamMemberWithCriticalSpellInCooldown` / `...ItemInCooldown`,各 1 个调用点,
+   都在 `aba_push.lua:584/587`)在同一份 107 份语料上**一次 TRUE 都没有**(0 anyTrue / 0 翻转);
+   **第 7 处**是 utils 自己的 `GetHumanPing`,**死码**。
+   **⭐⭐ 而那第 7 处顺手给出了「这是缺陷不是房规」的最短证明**:它的**正确孪生已经在树上** ——
+   `bots/FunLib/jmz_func.lua:11342` 的 `J.GetHumanPing` 写的是 `GetTeamMember(i)`,
+   **所有调用点走的都是它**。同一个功能、同一棵树、两套下标空间;
+   比 §DI 的 **80:10** 比例更短、更硬。
+   ⇒ **下一个杠杆去别的域挑**,并且照旧**先跑域价钱再选形状**。
+
 0DUST. **【2026-09-02T01:37Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0SLOT` 逐字交待本组下一轮
    「继续先选域;候选是 `0SLOT9` 里最像的那个(`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**);
@@ -147,6 +203,10 @@
    **另有一处形状不同、也登记不修**:`bots/FunLib/advanced_item_strategy.lua:332`
    写的是 `GetTeamMember(GetOpposingTeam(), i)` —— **两个参数**喂给单参数 API,第一个还是**队伍常量**;
    它**跨两行**,所以**按行扫的普查根本看不见它**(本轮普查第一版就漏了它,改成整文件读才钉住)。
+   **【2026-09-02T04:49Z 更新】** 计数棘轮 **8 → 7**(`slotpush` 拿走了
+   `IsTeamPushingSecondTierOrHighGround`;`slotarb` 与 `slotdust` 两份普查同步改)。
+   **剩下 7 处的逐处域读数见 `0PUSHCLUSTER`:四处无调用点、两处在语料上恒 FALSE、
+   一处是死码且正确孪生已在树上 ⇒ 下一个杠杆大概率不该从这个簇里选。**
 
 0CORP. **【2026-09-01T19:21Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
    owner P1 第 1 棒、P2 均已交出;P3 责任在总监;backlog 最上面三条 `0HPB`(已落地)/ `0HPB5`(登记不修,
@@ -4305,6 +4365,44 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T04:49Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  **backlog 最上面一条 `0DUST` 逐字交待本组下一轮「`0SLOT9` 剩下的 8 处全在 `bots/FunLib/utils.lua`
+  —— 一次一个杠杆」⇒ 本轮就是照这条做的**;
+  **报告 `iterations/reports/strategy/20260902T044930Z.md`**;issue **GH #415**;
+  backlog 条目 **`0PUSH`**(并新开 `0PUSHTRACE` / `0PUSHCLUSTER` 两条登记项);
+  **落地 gated `slotpush`**,入集提议 `test_set.md` **§DL**(搭车、零 AWS 增量、不申请专波);
+  `queue.json` 新增 **`strategy-36`**(**`bundle` 已填**);`state.json` 新键 `slotpush_20260902`;
+  零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **⭐ 本轮真正的产物不是杠杆,是那道在选杠杆之前跑、并且答「买不到」的域价钱读数。**
+  `corpus_hero_census.py --file bots/FunLib/utils.lua` 答 **SHARED / exit 0**(文件级),
+  但**谓词自己的域买不到**:107 份 fixture / **517 个 member-frame**,
+  **每个合取项都会亮**(51 / 10 / 5 / 38)⇒ **量具不瞎**,
+  但**两半同时为真只有 4 个 member-frame 且全在一份 fixture 里**;
+  那一帧上**出厂腿够得到的唯一队友自己恰好就是推进者** ⇒ 出厂答 TRUE,**理由是它没挣来的**;
+  **双侧 94 次载入,两条腿一次都没分歧**。⇒ **fixture 只买到扫描集与方向,
+  决策级只有一条明确标注 COUNTERFACTUAL 的读数**,条件 (a) 必须从新局录像取。
+  **缺陷**:`IsTeamPushingSecondTierOrHighGround`,七个调用点全是 mode 欲望函数,
+  每个都用 TRUE 去 `BOT_MODE_DESIRE_NONE` ⇒ **失效方向朝「关」**:把 bot 从高地攻坚里拽走。
+  **⭐⭐ 新增一格**:这个循环带守卫,而**守卫问的不是它接下来要看的那个人**
+  (真实帧 **235 步里配错 211 步**);armed 后 `i` ↔ pid ↔ slot 按构造同一个英雄,**守卫那行不用改**。
+  counterfactual 只改一位就能看见两面:杀 pid 5(它**检查**的人)⇒ 出厂丢掉整场攻坚;
+  杀 slot 5(它**看**的人)⇒ **出厂照样从尸体上答 TRUE**。
+  **⭐ `[trace]`(可复用):别只比结果,去截住访问器本身** —— 变异 **M4**(armed 改成 `i + 1`)
+  **活过了整份文件第一版**,直到断言「函数真正问出去的那串参数」;trace 帧必须选谓词答 FALSE 的。
+  **变异 12/12 CAUGHT**(`tools/agent/mutstand_slotpush.sh`,基线先证绿);
+  M5 是**「另一种看起来也对的修法」**(改守卫不改访问器:armed 等价、**门关时悄悄改了出厂答案**);
+  M8 是 `pullcad` 形状。**`0SLOT9` 计数棘轮 8 → 7**(`slotarb` 与 `slotdust` **两份普查同步改**)。
+  **落地时 `test_gated_helper_nesting_census.lua` 当场变红**(三对新门中门),
+  按该文件自己的三分法逐条读过 ⇒ 三条都是 **(P) 参数闸**,已入册。
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  `slotpush` 16/0 · `slotarb` 12/0 · `slotdust` 13/0 · `gated_helper_nesting` 10/0 ·
+  `gate_claim` 10/0 · `smoke_load` 3/0 · `item_name_census` 6/0 · `replay_fixture` 9/0;
+  **全套不声称**(GH #124)。**既存 trunk 红、与本改动无关也没被本改动修**:
+  `test_incoming_damage_callsite_census.lua`(43 → 44,GH #394 同族)与
+  `test_detector_source_constants.py`(`illumove_pairs:HP_CUT` UNREGISTERED)。
+  **⚠️ 并登记一次读法**:开工自检**开跑于编辑之前、收尾于编辑之后**,
+  所以它那条 lua 红**不能当成 trunk 的读数** —— `0MUTPAR`(并行污染)的**同族但更钝的形态:
+  不是并发,是次序**;已在最终树上重跑。
 - 2026-09-02T01:37Z(**自驱** —— `[strategy]` 未认领 issue 仍为零;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **backlog 最上面一条 `0SLOT` 逐字交待本组下一轮「候选是 `0SLOT9` 里最像的那个
   (`J.IsClosestToDustLocation`)」⇒ 本轮就是照这条做的**;

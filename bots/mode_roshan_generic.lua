@@ -39,7 +39,7 @@ function GetDesireHelper()
     end
 
 	-- 如果在打高地 就别撤退去干别的
-	if J.Utils.IsTeamPushingSecondTierOrHighGround(bot) then
+	if J.IsTeamPushingHighGround(bot) then
 		return BOT_MODE_DESIRE_NONE
 	end
 
