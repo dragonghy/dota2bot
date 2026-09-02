@@ -9157,3 +9157,124 @@
     3/1220 普查 + 三条改法 + 三条验收)。**#414 是本轮唯一新开的 issue。**
   - **Token 用量**:见报告 §11。
   - 完整报告:`iterations/reports/replay-check/20260902T035300Z.md`
+- **2026-09-02T06:54Z(W37 收波;`illumove` 第三波 WORKING;⭐ 宽扫表的池化列实测在读侧偏)**
+  - **⭐ 章程欠了三轮的「§5 宽扫表按 ab/ba 重打」结清,而且它不是排版问题。**
+    `sweep_run.sh` 每轮那张表的 `candidate-side / baseline-side` 两列**是按局加权的池化量**
+    (铁律 4(i-d) 明文禁止的那种)。同一份 `all_findings.jsonl` 按 stamp 的腿拆开
+    (`mirror:…:radiant` = ab、`:dire` = ba;出处 `recover_verdict.py:279-281`),run `84f4fc`:
+    `sandwiched_walk` 池化 **237 vs 236(净 +1)** = **ab +23 与 ba −22 相消**
+    (+2.091/局 与 −3.143/局),swap-average **arm −0.526/局**、**side +2.617/局**;
+    `overextend_alone` 池化 −25 = **−148 与 +123**;`tp_home_wasteful` 池化 +17 = **+46 与 −29**。
+    ⇒ **读起来最像「无效应」的格子,恰是侧偏最大的格子之一**(#296/#297 族,发生在全队公用仪器上)。
+  - **三粒种子分层表(54 局)**:**14 个检测器 12 个 FLIP**(`|side|>|arm|`)。按 4(i-b) 那 12 行
+    的 `r_ab/r_ba` 是噪声只登记;按 4(i-c) FLIP **不是**对 `arm` 的否决。
+    **唯一「两层同号 + 读数跟着 arm 腿走」的行是 `died_with_ult_ready`**
+    (r_ab −0.498 / r_ba −2.552,**arm −1.525/局**,3/3 粒为负,sd 0.823)——
+    ⛔ 仍是 **52-id 整包**读数,**不归任何单 id**,也不是条件 (b)。
+  - **工具入仓**:`tools/batch_test/behavioral/sweep_strata.py`(`--selfcheck` **9 PASS / 0 FAIL**)。
+    **变异台真杀得死**:按局加权 → M1 红;忽略 `on_candidate_side` → M1/M6 红;
+    去掉「未配对种子不计入」的门 → **当场 ZeroDivisionError**。下一轮是重跑不是重 derive。
+  - **⭐ 新缺陷(§3,已开 issue [harness]):`detect.py` 把地图镜轴写死成 `x+y == 0`。**
+    从**建筑**坐标量这张图自己的镜轴:`ancient` −11272 / +10528 ⇒ 轴 **−372.0**;
+    六座 `barracks` 内外配对中点 −328…−366.5(均值 −347.5);**18/18 局逐位相同**(地图常数)。
+    ⇒ 判定门槛差 **744u**:天辉真实纵深要 ≥3372 才报,夜魇 ≥**2628** 就报。
+    **逐帧**:`84f4fc/20260902_033318_slot7` `luna`(dire)t=407.5 xy=(−6316.5,2948.8),
+    出厂纵深 **3367.7 ≥ 3000 ⇒ 报**,真实纵深 **2995.7 < 3000 ⇒ 不该报**;
+    把该帧沿真轴镜像到天辉侧得 `x+y=+2623.7`,**不会被报** ⇒ **严格镜像的两点判定不同**。
+    **两个口径都登记**(不是一个量):逐帧 **96/351 = 27.4%** 的夜魇发现坐在错带上;
+    换轴用同一份 timeline 重跑 detect.py(去重后)`overextend_alone` **80:351(4.39)→105:315(3.00)**、
+    `return_to_death_spot` 50:92(1.84)→**62:80(1.29)**。
+    ⛔ **诚实边界:修正镜轴没有抹平侧别差**(4.39→3.00 不是 1.00);
+    `enemy_overchase_unpunished` 的 **0:20 完全不是这条**(修正后 0:18)。受影响的是三个用
+    `_enemy_half_depth` 的检测器,**以及所有读过它们计数的历史结论**(如 `state.json:488` 的
+    `overextend_alone −85%`)。**本组不自己改仪器**——改了会动摇全部历史计数的可比性。
+  - **`illumove` 条件 (a):第三份独立语料复现 WORKING**(`illumove_pairs.py` **重跑不是重建**,
+    `--selfcheck` 9/9,54 局 / 6494 配对帧 / 336 episode)。四格(4(i-a)):
+    ```
+    stratum/leg     eps  frames   both%  starved%  neither%  longest_starve
+    ab/armed        108    1918   50.7%      8.5%     40.8%           8 s
+    ab/baseline     116    2090   27.6%     33.8%     38.6%          20 s
+    ba/armed         72    1397   50.9%      7.9%     41.2%           7 s
+    ba/baseline      40     750   22.8%     31.9%     45.3%          13 s
+    ```
+    **两层同号,读数跟着 arm 腿走不跟着物理侧走**;⛔ 四格之间一次差也没作。
+    排除项:`unknown dx` **339 帧**不打分;`>2 只存活` **46 帧**按 max/min。
+  - **逐帧(先逐帧后聚合)**:`83e4fa/20260902_034653_slot5` `sniper` **baseline 腿**,
+    `idx=1757` **连续 20 秒 dx=0**(t=996.4..1015.4)而兄弟 `2307` 走 146–395 u/s;
+    t=1017.4 **句柄翻面**,换 `2307` 钉死 9 秒 —— GH #378 §1 的单句柄形状,在**未装 gate 的腿**上。
+    对照 armed 腿最长一段(`84f4fc/20260902_034635_slot2` `luna` t=1209.5..1216.5,`2185` 钉死 8s)
+    ⇒ **armed 腿并没有干净到零,只是尾巴薄得多。**
+  - **⭐ 上一轮新欠账 (b) 结清:可辩护的 episode 级口径是尾部占比 + p90,不是最大值。**
+    ```
+    leg            n    median p75 p90 p95 max |  >=4s          >=8s
+    ab/armed      108     0     1   3   6   8  |  7 ( 6.5%)    3 ( 2.8%)
+    ab/baseline   116     2     4  10  14  20  | 38 (32.8%)   20 (17.2%)
+    ba/armed       72     0     1   2   3   7  |  4 ( 5.6%)    0 ( 0.0%)
+    ba/baseline    40     3     4   8   8  13  | 14 (35.0%)    5 (12.5%)
+    ```
+    (4(ii):整数小值域计数量 ⇒ 中位数与占比同时给。)**最大值三波没稳过**
+    (W35「15/15 vs 8/8 完全分离」已收回;W36 armed 11s/14s;本轮 8s/7s),**p90 与尾部占比稳**。
+  - **`illureal` 交集上界**(DC.3(甲),仍不下裁定):ab/armed 98/2027=4.8%、ab/baseline 105/2206=4.8%、
+    ba/armed 19/1471=1.3%、ba/baseline 39/790=4.9%。**W35 0.27% / W36 3.0% / 本轮 1.3–4.9%
+    ⇒「`DOMAIN-EMPTY` 必须绑定语料」在第三份语料上再次成立。** 载体普查:有两单位 episode 的
+    owner **104/104 都带 `modifier_illusion`**(GH #389 那条形状第三次复现)。
+  - **核验结论行**:
+    ```
+    VERIFY id=illumove verdict=WORKING episodes=180
+    VERIFY id=illureal verdict=INDETERMINATE episodes=0
+    ```
+    (180 = armed 两腿 108+72。**其余 50 个 armed id 本轮未核**。)
+  - **覆盖 / 语料同一性**:宽扫 **54/54 局**(三台计分 run 各 18,`unparseable=0`);
+    ⚠️ 本波 `--rec-slots 8` ⇒ 42 局里只有 24 局留 `.dem`,**「54/54」是留了录像的那些全扫了,
+    不是 126 计分局全看过**;第四台 `26717d`(`ba=0`)**没扫**。`.dem` 在 **`dem21/`**。
+    `arm_string_census.py --declared <52-id>` **BARE_EXIT=0**,**四个 run 全 MATCH**,
+    arm sha1 `93a1da17` / md5 `c5af3b11deb9c024983c22afb90d9a7d` / 459 字节,
+    与 `W37_wave.json:arm_md5` **逐字节相同**;declared 串**取自 git**
+    (`git show ada4717f:…test_set.md | sed -n 2p`)而非工作树(工作树已是 54 id / 476 字节);
+    四台 sides 与 `machines[].ab/ba` 逐位对上(31/11、28/14、29/13、11/0)。
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **BARE_EXIT=0**;`sweep_run.sh` ×3 **全 0**;
+    `arm_string_census.py` **0**;`sweep_strata.py` 主表/`--selfcheck` **全 0**;
+    `illumove_pairs.py` `--selfcheck`/主表/`--episodes`/`--frames` **全 0**;
+    `arm_push_gate.sh` **0**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **未改 `bots/`/`game/` 任何一行**(只新增一个 `tools/` 下的 python 工具)⇒ 不声称跑绿 Lua 全量(GH #124)。
+  - **开工自检**:⚠️ **第一条命令第十四次踩证据纪律 3**(`| tail -40`),脚本自打
+    `REFUSED: stdout is a pipe; exit 2, nothing checked` —— **护栏第十四次生效,那次不是通过**;
+    「开工模板内建 `rc.sh`」已交出去六轮,本轮**第七次登记、形状完全相同**。
+    改重定向后台跑,`timeout 600` 打 **`EXIT=124`** ⇒ **本轮无总判决**(**第 21 次登记「不是约 20s」**,GH #358)。
+    已跑完的腿:`unlanded_commits` OK;cadence **GAP: batch-desk / strategy**(本组无洞);
+    stable 锚点 **两个 OK**;**python trunk RED(工作树)**,日志自带「main 是否也红并未确立」的
+    诚实边界,**本轮没跑 stash 复核故不声称**(GH #364);**lua trunk RED**
+    `test_incoming_damage_callsite_census.lua`(published 43 现读 44)= **GH #394 第六次复现**。
+    **#358/#364/#394 一律只记复现,不重开。**
+  - **诚实边界**:没有一个数字是效应量;armed 腿 = **52 个 id 全 armed**,不是隔离实验;
+    **54 局 / 3 粒种子 / 2 套阵容**,⛔ **不可与 W35/W36 并池**;
+    §3 的 −372 是**这张图**的常数不是所有版本的常数;三个仪器阈值(3000u / 100u/20u / 1Hz)
+    **都是工具自己的操作定义,没有 gate 读它们**;`longest_starve` 是 1 Hz 上估
+    ⇒ **p90 差(3 vs 10 秒)够大、最大值不够**;两层 episode 数不等(ab 108/116、ba 72/40)
+    ⇒ 4(i-d) 不可作差不可加权;顺带登记物理侧 radiant owner **148** vs dire **188** 个 episode
+    ——**那是符的分布不是任何 id 的效应**。
+  - **欠账变化**:✅「第一件事 (1)」W37 收波结清;✅「第一件事 (3)」**顺延三轮后结清且工具入仓**;
+    ✅「第一件事 (4)」`illumove_pairs.py` 重跑结清 + **上一轮新欠账 (b) 结清**;
+    ✅ 上一轮新欠账 (c) 部分结清(改在 W37 上重打;W36 `3c7e26` 语料已随容器回收,**列为不可恢复**)。
+    **新欠账**:(a) §3 镜轴**只做了反事实没改仪器**,等 issue 裁定(改了会动摇全部历史计数的可比性);
+    (b) `enemy_overchase_unpunished` 的 **0:20** 换轴后仍 0:18,**第二条侧别机制未找到**;
+    (c) W37 的 54 局 timeline **随容器回收**(重跑约 20 分钟 + 约 1.1 GB,别当成现成资产)。
+    继承未动:`tp_out` 那 311 条;`stayfield2_whynot.py` 待下一个 44-id 波;
+    `pullcad_beat.py` 在 W25 剩两 run;`unk` 那一列**第十四轮**(`sweep_strata.py` 已把它变成会举手的
+    FINDING,本波恰好 0 条);窗口常数只读未量;W33 0.748 与 W32 0.401 合并成案;
+    `fieldbuy_silence.py`/`stayfield2_margin.py` 分层;「静止在小兵火力里」检测器;
+    W25 只并 2/4 run;W26–W28 与 W25 从未池化;`seed 975` **第三十五轮**;
+    `wandlimbo` 因 #293 **第三十三轮**;GH #265 被 #272 阻塞;`blinkflee` 卡 #304/#305;
+    WK rank-3 全语料复测;载体侧别提案 GH #389;探针入仓待总监(GH #405)。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **查 §3 那条 [harness] 的回音**。裁定改 `detect.py` 的话**本组不自己改**——
+        改完要重扫一份对照语料,才知道历史结论要不要重读。
+    (2) **下一波直接跑 `sweep_strata.py`**(零新工具),看 `died_with_ult_ready` 那一行
+        (唯一两层同号且跟着 arm 腿的行)**在第二份语料上还在不在**。
+    (3) **查 #414 / #405 / #389 回音**;#405 验收 (b) 仍等 dumper 字段。
+    (4) `enemy_overchase_unpunished` 的 **0:20** 找第二条侧别机制(新欠账 (b))——零新素材,
+        但 timeline 随容器回收,**必须在下一波宽扫的同一轮里做完**。
+  - **已发表**:见下一段回填。
+  - **Token 用量**:见报告 §11。
+  - 完整报告:`iterations/reports/replay-check/20260902T065455Z.md`
