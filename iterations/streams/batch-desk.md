@@ -8662,6 +8662,87 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   (b) 暖场 `script_version` 断言 = `7196468dad…`。
   **本轮 token**:见报告最后一节。
   详见 `iterations/reports/batch-desk/20260902T093000Z.md` 与 `iterations/reports/batch-desk/waves/W38_wave.json`。
+- **2026-09-02T12:15Z(收割 W38 + 补跑 2613;本轮零发波、一台补跑)。**
+  **一、开工自检 `SELFCHECK_EXIT=3`(有发现,不是没跑成)。** 首跑是**我自己的错**:
+  `... | tail -40` 被工具拒答(`stdout is a pipe; exit 2, nothing checked`,它自陈**已复发 5 次、
+  每次都是当轮第一条命令**)—— **exit 2 不是通过**,改 `> 文件; echo $?` 才拿到真读数。
+  **二、成本:MTD `$3.637`**(免费 budgets 通道,快照 09-01T17:58:37Z;**九月新月份,当月首读**),
+  在跑实例**为空**。围栏(2 甲,逐波按自己的市场取价):`3.637 + W37 spot 0.90 + W38 spot 0.90
+  + 2613 按需补跑 0.60 = $6.04 ≤ $80` ⇒ **未跨 $50/$80/$100 任一告警档,不欠解释行**。
+  **W38 单波机时反解 2.576 机时 ⇒ $0.60–0.64,低于 $0.90 常数 ⇒ 自动失效条款未触发**
+  (⚠️ **这是机时推算不是账单侧读数**,禁用的增量对账手法一次都没用)。
+  **三、W38 收割(标准路径,S3 逐局全量重算,四 run 各自子目录未拍平)**:`exit 0`,
+  `176 seen / 176 loaded / 0 unparseable / 3 source dirs`,**第四个目录空(0 文件)**,`scored 158`(176 − 18 暖场)、`unfinished 0`。
+  **gpm +7.82 / xpm −8.55 / deaths +0.39 / last_hits −1.72**;comps_better `2/3 · 1/3 · 0/3 · 1/3`;
+  逐粒 arm_depth **26.21 / 26.79 / 17.95**,`min_arm_depth 8`、**`thin_arm_seeds` 空**;
+  **三个 SKIP 开关一个都没用** ⇒ 本波无「这是 SKIP 不是 pass」行。`suggested hold_or_reject`。
+  两分层由工具自打(**未手算**):gpm ab +56.64 / ba −40.99、xpm +73.31 / −90.42、
+  deaths −1.00 / +1.78、last_hits +14.13 / −17.58,**四量全 sign_flip、side_gt_arm 3/3(deaths 2/3)**
+  —— 按 **4(i-c) 这是恒等式不是诊断**,登记但不据此下结论。
+  **⛔ `winrate_channel = DEGENERATE`**(少数侧 **3/176**,share 0.0170;`mean.winrate_headroom` **0.025**;
+  2761/2840 逐粒 headroom **恰为 0.0**)⇒ 按 SS-CT **winrate 0.488 与 comps_better winrate 0/3 写成占位符,不得引作 (b)**。
+  **⭐ `winrate_independent_of_gold` 桶名 bug 确认已修**:本波打 `176/176`、`winner_by {engine_natural:176}`
+  ⇒ **08-29T09:13Z 立的逐波复发登记可以停了**。
+  **四、两条断言均 PASS**:暖场 `script_version = 7196468d` —— **`--ref <40 位 sha>` 的首次验收,且是承重的**
+  (`origin/main` 已到 `d45776868a…`,`git diff … -- bots/ game/` **非空**:jmz_func +44 行、mode_retreat 1 行);
+  armed 串 md5 `80392b258fcd214cf351231be61d15a4`/476B 与本波记录逐字节相同。
+  ⚠️ **test_set.md 起飞后已动(54→55,`slotpush` 入集,新 md5 `bfe60fcd…`)** ——
+  **收割一律用这一波实际飞的串**,读当前文件会算进语料从未携带的候选。
+  **五、⛔ SS-DK.3 负控:本台语料结构上答不了(不是漏做)。** 逐局 `analysis.json` **没有任何 mode 状态/营地决策字段**;
+  该读数要 `.dem` 帧级检测器 = 录像组量具。**后果:在它做出来之前 `slotarb` 的条件 (a) 不可买,再发波也买不到** ——
+  缺的是量具不是波次(W38 的 158 局 / 8 槽录制已经买好)。已开 issue。
+  其余义务:SS-DK.1 (v-b) 登记且**本轮未取读数**(不会读反)、SS-DK.5 **全程未并 `0SLOT9`**、**未与 W35/W37 并池**。
+  **六、⭐ 本台自己的红,已修且不是靠编值转绿。** `test_wave_gate_keys.py` **2 FAIL**:
+  **W38 记录缺 gate (iv) 两半**((i)(ii)(iii) 都在),工具点名属主就是批测台。
+  上半记 **PASS-ON-RECONSTRUCTION(比跑过的门弱)** —— 可重建的是「W37 已收割故无欠收割」,
+  **不可重建的是发波轮到底判过没有,而键的缺席本身就是「没问」的证据**;
+  下半 **本轮真跑** `reclaim_blind.py --wave-json` ⇒ exit 0、`not blinded — 3 paired seeds`、
+  changeover 40.0(实测 34.80 < x ≤ 40.63)、`1 machine reclaimed before the flip`、`NEXT WAVE: spot`。
+  补完 ⇒ **`140 checks, 0 failed`**。**provenance 警告**:这是收割轮在跑发波轮该跑的门;
+  发波时它只可能是部分的,**那是「该记 UNCERTIFIABLE」的理由,不是「什么都不记」的理由**。
+  **七、⭐ 补跑 2613 = GH #408 的第一次实际适用。** 该台 `09:31:48Z→09:32:58Z`、**存活 86 秒**、
+  SIR **`instance-terminated-no-capacity`**、S3 **0 文件**;另三台全 `instance-terminated-by-user`(54.5/54.3/44.6 分钟)。
+  **连续第五波被容量咬(W33/W35/W36/W37/W38 = 4/3/4/2/1 台)** —— 发波轮那句「干净起飞」说的是起飞那一刻,
+  **这一台是起飞后 86 秒被咬的,而收尾点名跑在它之前;`--leak-only` 只报「多出来的」,「少一台」它不会举手**。
+  按 #408 **取那一台的 SIR 码**(不取「市场看起来紧张」的印象)⇒ **补跑机直接按需,不走阶梯**:
+  `i-0075962af14069424` / `spot_20260902_121840_1_7196468dad…_f65fb4` / us-west-2a / 12:18:43Z /
+  **`InstanceLifecycle=None` 已核**(`run_id` 的 `spot_` 前缀不是证据)。
+  围栏:该粒**只补跑一次**、**每波最多 2 台**(本波 1 台)。
+  **gate (i) 的 6h 闸未被消耗**(它管例行波次,这是对已飞波次的登记过的修复)⇒ **W39 仍解锁于 `2026-09-02T15:31:32Z`**。
+  **七之一、⚠️ 一次自造失误,在它产出任何数据前被抓住。** 第一台补跑机拿了脚本默认 **`slots=14 / watchdog 3h`**
+  (我既没传 `--slots` 也没传 `--hours`),而 W38 四台是 **16 槽 / 2h**。
+  **抓住它的是语料不是散文**(`ls w38pool/*/` 显示槽号 1..16、每槽 4 局)⇒ 终止 `i-04cdeafc098ba3347`
+  (`…_23b452`,活约 1 分钟,**~$0.01**)按 W38 配置重发。**这会违反章程「不要在同一波里同时改 id 集合和采集配置」**。
+  **收割排除项:run_id `…_23b452` 不得并入 W38**(几乎必然是空的,但万一有东西那都是 14 槽下的局)。
+  **七之二、`--ref` 在这里承重**:补跑机能与另三粒并池全靠钉住 `7196468dad…`;
+  不钉树就会测一棵**不同的树**而**没有任何门会举手**。**W37 做不到,W38 的 `ref_pin` 买到的就是它。**
+  **八、queue.json** 10 行(`strategy-25/26/27/28/29/30/34/35` + `hero-24/25`)
+  status → `harvested_pending_verification` 并写入完整读数;`strategy-34` 另带 SS-DK.3 的不可买结论,
+  `strategy-35` 另带 SS-DK.5/DK.1 的遵守记录(**写进 result 不是散文**)。
+  **九、铁律 6**:`bots/`/`game/` **一行未改**(改动全在 `iterations/`);静态半与 pre-push 钩子读数见报告;
+  动态半(#124)**未跑不声称**。**铁律 11**:未触发 `requires approval`,GitHub MCP 可用,**无空转等待**。
+  **交棒**:① ⭐⭐⭐ **录像组 —— SS-DK.3 负控(GH #423 已开)**,`slotarb` 的 (a) 在它之前不可买;
+  ② ⭐⭐⭐ **总监/协同组 —— 新同臂合取 `outlatch > slotpush` 未承认(GH #424 已开)**
+  (`test_coarmed_attribution_register.lua` 红),**15:31:32Z 前不解决就会带进 W39**;
+  ③ ⭐⭐ 总监 —— **GH #408 首次被适用**,下轮收割给它第一个完整数据点(存活分钟 + `market: on-demand`
+  + EC2 `StateReason.Code` + 增量账单);④ ⭐⭐ 总监 —— 连续第五波被容量咬;
+  ⑤ ⭐ 总监 —— GH #285 第二十五轮未裁;⑥ ⭐ 总监/英雄组 —— `test_incoming_damage_callsite_census.lua` 43→44、
+  `test_call_arity_census.py` / `test_detector_source_constants.py` 红、
+  `test_rc_wrapper.py` / `test_selfcheck_lua_leg.py` **UNCERTIFIABLE**;
+  ⑦ ⭐ 存量:**#388 的 W34 103 份 `.dem` 2026-09-22 到期(距今 20 天)** / #418 / #420 / #413 / #412 /
+  #402 / #395 / #375 / 按需常数第九轮 / #317 / `strategy-5b` 第十六轮 / #290 / #313 / #207 / #271 / #364。
+  **十、泄漏:CLEAN,但判据是「恰好那一台」不是「0 台」**(本轮有一台该在跑):
+  在跑 = 恰好 `i-0075962af14069424`,`soak-run` 标签与 `rerun.run_id` 一一对上、`InstanceLifecycle=null`;
+  关机中/已终止 = 一行 `i-04cdeafc098ba3347`(§七之一那台),EC2 `StateReason.Code`
+  **`Client.UserInitiatedShutdown`**(**本仓第一行真正携带按需机 EC2 码的记录**,记在 `rerun` 节
+  **不在 `machines[]`** —— 它不是 W38 的机器,不得并池);W38 四台两份点名都不出现。常驻仅 AMI。
+  ⚠️ **再登记一次**:`--leak-only` **只报「多出来的」,「少一台」永远不举手** ——
+  2613 起飞 86 秒就死了,**发波轮自己的收尾点名读成健康**。
+  **下一轮本台 = 收割 2613 补跑机**(预计 `~13:0x–13:1xZ` 自毁),再视交棒②(GH #424)是否落地决定 W39。
+  **本轮 token**:见报告最后一节。
+  详见 `iterations/reports/batch-desk/20260902T121500Z.md` 与 `iterations/reports/batch-desk/waves/W38_wave.json`。
+
+
 - 2026-09-02T15:15Z(**收 2613 补跑把 W38 补成 4 粒;发 W39 = 55-id 家族第一波。本轮真正的产出是「GH #408 的按需补跑路径把自己的证据窗口丢了」,不是那四个数**)。
   **一、自检** 第一条命令**又误用管道**,自检自拒(**同形第十一次,每次都是当轮第一条命令**);
   工具自报仍是 `it has recurred 5x`,与报告序列的计数**依旧对不上**,照上一轮据实并列。
@@ -8876,83 +8957,3 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
 
 **这条裁定服务的是 owner 优先项 P1/P2**:两项都卡在条件 (a)「真实对局里核验到,
 带帧证据」,而帧通道长期只有 1/16。8 槽把它**一次提到 8/16**,零额外 EC2 支出。
-
-- **2026-09-02T12:15Z(收割 W38 + 补跑 2613;本轮零发波、一台补跑)。**
-  **一、开工自检 `SELFCHECK_EXIT=3`(有发现,不是没跑成)。** 首跑是**我自己的错**:
-  `... | tail -40` 被工具拒答(`stdout is a pipe; exit 2, nothing checked`,它自陈**已复发 5 次、
-  每次都是当轮第一条命令**)—— **exit 2 不是通过**,改 `> 文件; echo $?` 才拿到真读数。
-  **二、成本:MTD `$3.637`**(免费 budgets 通道,快照 09-01T17:58:37Z;**九月新月份,当月首读**),
-  在跑实例**为空**。围栏(2 甲,逐波按自己的市场取价):`3.637 + W37 spot 0.90 + W38 spot 0.90
-  + 2613 按需补跑 0.60 = $6.04 ≤ $80` ⇒ **未跨 $50/$80/$100 任一告警档,不欠解释行**。
-  **W38 单波机时反解 2.576 机时 ⇒ $0.60–0.64,低于 $0.90 常数 ⇒ 自动失效条款未触发**
-  (⚠️ **这是机时推算不是账单侧读数**,禁用的增量对账手法一次都没用)。
-  **三、W38 收割(标准路径,S3 逐局全量重算,四 run 各自子目录未拍平)**:`exit 0`,
-  `176 seen / 176 loaded / 0 unparseable / 3 source dirs`,**第四个目录空(0 文件)**,`scored 158`(176 − 18 暖场)、`unfinished 0`。
-  **gpm +7.82 / xpm −8.55 / deaths +0.39 / last_hits −1.72**;comps_better `2/3 · 1/3 · 0/3 · 1/3`;
-  逐粒 arm_depth **26.21 / 26.79 / 17.95**,`min_arm_depth 8`、**`thin_arm_seeds` 空**;
-  **三个 SKIP 开关一个都没用** ⇒ 本波无「这是 SKIP 不是 pass」行。`suggested hold_or_reject`。
-  两分层由工具自打(**未手算**):gpm ab +56.64 / ba −40.99、xpm +73.31 / −90.42、
-  deaths −1.00 / +1.78、last_hits +14.13 / −17.58,**四量全 sign_flip、side_gt_arm 3/3(deaths 2/3)**
-  —— 按 **4(i-c) 这是恒等式不是诊断**,登记但不据此下结论。
-  **⛔ `winrate_channel = DEGENERATE`**(少数侧 **3/176**,share 0.0170;`mean.winrate_headroom` **0.025**;
-  2761/2840 逐粒 headroom **恰为 0.0**)⇒ 按 SS-CT **winrate 0.488 与 comps_better winrate 0/3 写成占位符,不得引作 (b)**。
-  **⭐ `winrate_independent_of_gold` 桶名 bug 确认已修**:本波打 `176/176`、`winner_by {engine_natural:176}`
-  ⇒ **08-29T09:13Z 立的逐波复发登记可以停了**。
-  **四、两条断言均 PASS**:暖场 `script_version = 7196468d` —— **`--ref <40 位 sha>` 的首次验收,且是承重的**
-  (`origin/main` 已到 `d45776868a…`,`git diff … -- bots/ game/` **非空**:jmz_func +44 行、mode_retreat 1 行);
-  armed 串 md5 `80392b258fcd214cf351231be61d15a4`/476B 与本波记录逐字节相同。
-  ⚠️ **test_set.md 起飞后已动(54→55,`slotpush` 入集,新 md5 `bfe60fcd…`)** ——
-  **收割一律用这一波实际飞的串**,读当前文件会算进语料从未携带的候选。
-  **五、⛔ SS-DK.3 负控:本台语料结构上答不了(不是漏做)。** 逐局 `analysis.json` **没有任何 mode 状态/营地决策字段**;
-  该读数要 `.dem` 帧级检测器 = 录像组量具。**后果:在它做出来之前 `slotarb` 的条件 (a) 不可买,再发波也买不到** ——
-  缺的是量具不是波次(W38 的 158 局 / 8 槽录制已经买好)。已开 issue。
-  其余义务:SS-DK.1 (v-b) 登记且**本轮未取读数**(不会读反)、SS-DK.5 **全程未并 `0SLOT9`**、**未与 W35/W37 并池**。
-  **六、⭐ 本台自己的红,已修且不是靠编值转绿。** `test_wave_gate_keys.py` **2 FAIL**:
-  **W38 记录缺 gate (iv) 两半**((i)(ii)(iii) 都在),工具点名属主就是批测台。
-  上半记 **PASS-ON-RECONSTRUCTION(比跑过的门弱)** —— 可重建的是「W37 已收割故无欠收割」,
-  **不可重建的是发波轮到底判过没有,而键的缺席本身就是「没问」的证据**;
-  下半 **本轮真跑** `reclaim_blind.py --wave-json` ⇒ exit 0、`not blinded — 3 paired seeds`、
-  changeover 40.0(实测 34.80 < x ≤ 40.63)、`1 machine reclaimed before the flip`、`NEXT WAVE: spot`。
-  补完 ⇒ **`140 checks, 0 failed`**。**provenance 警告**:这是收割轮在跑发波轮该跑的门;
-  发波时它只可能是部分的,**那是「该记 UNCERTIFIABLE」的理由,不是「什么都不记」的理由**。
-  **七、⭐ 补跑 2613 = GH #408 的第一次实际适用。** 该台 `09:31:48Z→09:32:58Z`、**存活 86 秒**、
-  SIR **`instance-terminated-no-capacity`**、S3 **0 文件**;另三台全 `instance-terminated-by-user`(54.5/54.3/44.6 分钟)。
-  **连续第五波被容量咬(W33/W35/W36/W37/W38 = 4/3/4/2/1 台)** —— 发波轮那句「干净起飞」说的是起飞那一刻,
-  **这一台是起飞后 86 秒被咬的,而收尾点名跑在它之前;`--leak-only` 只报「多出来的」,「少一台」它不会举手**。
-  按 #408 **取那一台的 SIR 码**(不取「市场看起来紧张」的印象)⇒ **补跑机直接按需,不走阶梯**:
-  `i-0075962af14069424` / `spot_20260902_121840_1_7196468dad…_f65fb4` / us-west-2a / 12:18:43Z /
-  **`InstanceLifecycle=None` 已核**(`run_id` 的 `spot_` 前缀不是证据)。
-  围栏:该粒**只补跑一次**、**每波最多 2 台**(本波 1 台)。
-  **gate (i) 的 6h 闸未被消耗**(它管例行波次,这是对已飞波次的登记过的修复)⇒ **W39 仍解锁于 `2026-09-02T15:31:32Z`**。
-  **七之一、⚠️ 一次自造失误,在它产出任何数据前被抓住。** 第一台补跑机拿了脚本默认 **`slots=14 / watchdog 3h`**
-  (我既没传 `--slots` 也没传 `--hours`),而 W38 四台是 **16 槽 / 2h**。
-  **抓住它的是语料不是散文**(`ls w38pool/*/` 显示槽号 1..16、每槽 4 局)⇒ 终止 `i-04cdeafc098ba3347`
-  (`…_23b452`,活约 1 分钟,**~$0.01**)按 W38 配置重发。**这会违反章程「不要在同一波里同时改 id 集合和采集配置」**。
-  **收割排除项:run_id `…_23b452` 不得并入 W38**(几乎必然是空的,但万一有东西那都是 14 槽下的局)。
-  **七之二、`--ref` 在这里承重**:补跑机能与另三粒并池全靠钉住 `7196468dad…`;
-  不钉树就会测一棵**不同的树**而**没有任何门会举手**。**W37 做不到,W38 的 `ref_pin` 买到的就是它。**
-  **八、queue.json** 10 行(`strategy-25/26/27/28/29/30/34/35` + `hero-24/25`)
-  status → `harvested_pending_verification` 并写入完整读数;`strategy-34` 另带 SS-DK.3 的不可买结论,
-  `strategy-35` 另带 SS-DK.5/DK.1 的遵守记录(**写进 result 不是散文**)。
-  **九、铁律 6**:`bots/`/`game/` **一行未改**(改动全在 `iterations/`);静态半与 pre-push 钩子读数见报告;
-  动态半(#124)**未跑不声称**。**铁律 11**:未触发 `requires approval`,GitHub MCP 可用,**无空转等待**。
-  **交棒**:① ⭐⭐⭐ **录像组 —— SS-DK.3 负控(GH #423 已开)**,`slotarb` 的 (a) 在它之前不可买;
-  ② ⭐⭐⭐ **总监/协同组 —— 新同臂合取 `outlatch > slotpush` 未承认(GH #424 已开)**
-  (`test_coarmed_attribution_register.lua` 红),**15:31:32Z 前不解决就会带进 W39**;
-  ③ ⭐⭐ 总监 —— **GH #408 首次被适用**,下轮收割给它第一个完整数据点(存活分钟 + `market: on-demand`
-  + EC2 `StateReason.Code` + 增量账单);④ ⭐⭐ 总监 —— 连续第五波被容量咬;
-  ⑤ ⭐ 总监 —— GH #285 第二十五轮未裁;⑥ ⭐ 总监/英雄组 —— `test_incoming_damage_callsite_census.lua` 43→44、
-  `test_call_arity_census.py` / `test_detector_source_constants.py` 红、
-  `test_rc_wrapper.py` / `test_selfcheck_lua_leg.py` **UNCERTIFIABLE**;
-  ⑦ ⭐ 存量:**#388 的 W34 103 份 `.dem` 2026-09-22 到期(距今 20 天)** / #418 / #420 / #413 / #412 /
-  #402 / #395 / #375 / 按需常数第九轮 / #317 / `strategy-5b` 第十六轮 / #290 / #313 / #207 / #271 / #364。
-  **十、泄漏:CLEAN,但判据是「恰好那一台」不是「0 台」**(本轮有一台该在跑):
-  在跑 = 恰好 `i-0075962af14069424`,`soak-run` 标签与 `rerun.run_id` 一一对上、`InstanceLifecycle=null`;
-  关机中/已终止 = 一行 `i-04cdeafc098ba3347`(§七之一那台),EC2 `StateReason.Code`
-  **`Client.UserInitiatedShutdown`**(**本仓第一行真正携带按需机 EC2 码的记录**,记在 `rerun` 节
-  **不在 `machines[]`** —— 它不是 W38 的机器,不得并池);W38 四台两份点名都不出现。常驻仅 AMI。
-  ⚠️ **再登记一次**:`--leak-only` **只报「多出来的」,「少一台」永远不举手** ——
-  2613 起飞 86 秒就死了,**发波轮自己的收尾点名读成健康**。
-  **下一轮本台 = 收割 2613 补跑机**(预计 `~13:0x–13:1xZ` 自毁),再视交棒②(GH #424)是否落地决定 W39。
-  **本轮 token**:见报告最后一节。
-  详见 `iterations/reports/batch-desk/20260902T121500Z.md` 与 `iterations/reports/batch-desk/waves/W38_wave.json`。
