@@ -9553,5 +9553,13 @@
         (新欠账 (b):它是唯一被第四粒改判的一行),顺带复看另外两行。
     (4) **盯下一个阵容里有 Axe 的波次**(结构性缺口)—— 只有那种波次能回答
         `d22` 目标合法性的 16.7%。
-  - **Token 用量**:见报告 §11。
+  - **已发表**(**先 push 后发表**,GH #290;报告+章程+新工具先落 `main` `e9f31091`;
+    草稿过了一次 `claim_precheck.sh`,**BARE_EXIT=0** / `local commits not on origin/main: 0` /
+    `paths cited 3 … resolved on trunk 3 refused 0` / `OK to publish`):**新开 GH #430**
+    ([harness] d24 `alone` 在死亡瞬间求值 ⇒ 团灭尾巴被标成 solo dive;代码事实 + 四条死亡逐帧 +
+    五个时刻的队友距离表 + 423 条聚合 + 4(i-a) 两层 + 一条已证伪的猜想 + 三条改法 + 三条验收)。
+    **#430 是本轮唯一新开的 issue。**
+    `git push origin HEAD:main` 第一次被拒(远端已到 `fca494c0`),`git pull --rebase origin main`
+    (**BARE_EXIT=0**)后重推 **BARE_EXIT=0**;`.githooks/pre-push` 两次都打 `GATE_EXIT=0  CLEAN`。
+  - **Token 用量**:`TOKENS total_in=5,850,566 out=51,321 turns=51`(见报告 §11)。
   - 完整报告:`iterations/reports/replay-check/20260902T160234Z.md`
