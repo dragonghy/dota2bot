@@ -139,10 +139,18 @@ local function partition()
     return raw, migrated
 end
 
---- The hazard the census measures, as a number that must never grow.  Four
---- files delegate today (test_cm_pos5_boots -- GH #417's subject -- and the
---- three GH #365 §3 subjects); the rest still carry their own unchecked copy.
-local RAW_CEILING = 18
+--- The hazard the census measures, as a number that must never grow.  Ten
+--- files delegate today: the four with an observed red (test_cm_pos5_boots --
+--- GH #417's subject -- and the three GH #365 §3 subjects), plus the six
+--- uniform-shape gate tests migrated for hero backlog `-78` (axe_blink_build,
+--- corefarm, deathzone, nopush, tpsafe, slardar_tp).  The rest still carry
+--- their own unchecked copy.
+local RAW_CEILING = 12
+
+--- ...and the same number from the other side.  A file may leave the RAW set
+--- only by joining this one, so a "migration" that merely deletes the copy
+--- without delegating cannot pass both.
+local MIGRATED_FLOOR = 10
 
 -- ---------------------------------------------------------------------------
 -- [source S1] one literal path, shared by every gate test in the tree
@@ -196,9 +204,11 @@ tests['[ratchet] [source S2] the unarmed leg is itself a deleter -- the hazard i
         .. 'write+delete of the shared switch, up from ' .. RAW_CEILING
         .. '. A new one copied the shape instead of requiring ' .. OWNER
         .. ' -- migrate it, do not raise this ceiling.')
-    assert(#migrated >= 4, 'only ' .. #migrated .. ' files delegate to ' .. OWNER
+    assert(#migrated >= MIGRATED_FLOOR, 'only ' .. #migrated
+        .. ' files delegate to ' .. OWNER .. ', down from ' .. MIGRATED_FLOOR
         .. '; the four with an observed red (GH #417 and the three GH #365 §3 '
-        .. 'subjects) were migrated on 2026-09-02 and must stay migrated')
+        .. 'subjects) and the six uniform gate tests migrated for hero backlog '
+        .. '`-78` were migrated on 2026-09-02 and must stay migrated')
 
     -- The load-bearing half: the DELETE is not confined to a cleanup that runs
     -- after the armed leg. Arming with `nil` (the unarmed leg) removes the file

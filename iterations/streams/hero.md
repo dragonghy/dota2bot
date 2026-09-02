@@ -22,7 +22,28 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--78. **把剩下 18 个 raw 文件迁到属主上(`-77` 的第二半),按「有没有红要解释」排序。**
+-78. **把剩下 12 个 raw 文件迁到属主上(`-77` 的第二半),按「有没有红要解释」排序。**
+   **2026-09-02T13:48Z 第一批 done(18 → 12)—— 报告 `iterations/reports/hero/20260902T134838Z.md`;
+   迁移形状完全统一的 6 个(`axe_blink_build` / `corefarm_gate` / `deathzone_gate` /
+   `nopush_gate` / `tpsafe_gate` / `slardar_tp`),棘轮 `RAW_CEILING` 18 → **12**,
+   新增 `MIGRATED_FLOOR = 10`(一个文件只能靠加入 migrated 集离开 raw 集,
+   「删了 copy 但不转调」的假迁移两条都过不了)。`bots/`+`game/` 零行。**
+   - **⭐⭐ #417 的机制在第二个文件上复现,而且是两格对照不是论证**:HEAD 代码 + 预先种下
+     `cand='axebuyblink'` 的残留开关,**整个 `test_axe_blink_build` 10/10 全绿**;
+     把同一份文件**只留 3 个 `gate off` 用例**,**3/3 全红**(`entry 2 is item_blink,
+     expected item_crimson_guard`);不种残留则 3/3 绿。⇒ 残留**确实**改变了 gate-off 用例
+     读到的买装表,整文件全绿**只因为用例名字母序**:`a...`(armed)排在 `g...`(gate off)前,
+     第一个 armed 用例结尾的无条件 `os.remove` **把陌生人的开关删了**。
+     **一个文件在继承残留下的答案取决于用例名的字母序。**
+   - **⭐ 两个变异台的前后对照**:M-A(继承残留)迁移前 **6/6 静默通过 EXIT=0**,迁移后
+     **6/6 点名失败**;M-B(并发 `rm` 循环)迁移前 **6 条失败 0 条点名,且 3/6 个文件
+     EXIT=0 全绿**(并发删除对它们完全不可见),迁移后 **26 条失败 26/26 全是点名诊断、
+     0 条数值不匹配**。失败变多不是回归:「期待 false」的用例现在**拒绝在开关已被删掉时
+     给自己发证**。
+   - **下一批取带额外直接读点的 5 个**(`abil1st` / `abilanc` / `aimguard` /
+     `replay_212636` / `soak_cand_ref`):它们各有一两处直接 `io.open(SIDE_PATH,'r')` 的
+     控制用例,要改成 `ss.assert_clean`(不是纯机械转调)。**`-78` 点名最后迁的 5 个不动。**
+   - 以下是原正文(仍然适用于剩下的 12 个):
    属主 `tests/mock/soak_side.lua` 与所有权语义已经定死(见 `-77`),迁移现在是**机械的**:
    `local ss = require('mock.soak_side')` + `SIDE_PATH = ss.PATH`,自己那份 `with_candidate` /
    `arm` / `disarm` 改成转调,**unarmed 腿的无条件 `os.remove` 改成 `ss.assert_clean`**
@@ -3732,6 +3753,28 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T13:48Z(报告 `iterations/reports/hero/20260902T134838Z.md`;轴 **backlog `-78`**
+  = `-77` 的第二半,把剩下的 raw 文件迁到属主 `tests/mock/soak_side.lua` 上)
+  **改 7 个文件全在 `tests/`(6 个迁移 + 棘轮);`bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、
+  零新 gate id、零 arm/promote、零 AWS、不申请波次;`state.json` / `test_set.md` /
+  `queue.json` 本轮无新增。18 → 12 个 raw。**
+  - 选题:OWNER_PRIORITIES 无本组项;三条 open `[hero]` issue **没有一条是本轮能推进的**
+    (#417 判定权在总监、#416 已结论、#407 被 `-73`/`-74` 的「拿到读数之前不许改 `bots/`」挡住,
+    读数在 `queue.json:hero-27`)⇒ 取 backlog 最上面的 `-78`。
+  - **⭐⭐ 主产物:GH #417 的机制在第二个文件上复现,而且是两格对照。** 详见 backlog `-78`:
+    HEAD + 种下残留开关时,`test_axe_blink_build` **整文件 10/10 绿**、
+    **只留 gate-off 用例则 3/3 红**(读到的是 armed 的买装表)⇒ 全绿是**用例名字母序**
+    造出来的,armed 用例结尾那句无条件 `os.remove` 替 gate-off 用例把前提"修好"了。
+  - **⭐ M-A 继承残留:迁移前 6/6 静默通过(EXIT=0),迁移后 6/6 点名失败。**
+    **⭐ M-B 并发 `rm`:迁移前 6 条失败 0 条点名、其中 3 个文件 EXIT=0 全绿(并发删除
+    完全不可见);迁移后 26 条失败 26/26 全点名、0 条数值不匹配。**
+  - 门:开工自检 **worst exit 3**(`legs run 8`、`UNCERTIFIABLE: none`;红是**本轮之前就红的**
+    `test_incoming_damage_callsite_census.lua:240` = **GH #394** + python 腿)。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings` / `RC_EXIT=0`**(冷启自装,
+    **没用 `RULE6_BYPASS`**)。动态定向:**23 个碰开关的文件 23/23 全绿**,
+    另有同进程 `run_tests.lua gate` **151 tests / 0 failures**。全量套件未跑,不声称。
+  - **交出去的棒**:GH **#229** 追评(M-B 的两格读数是它的严重性证据);
+    backlog `-78` 剩 **12 个 raw**,下一批点名 5 个带直接读点的文件。
 - 2026-09-02T10:50Z(报告 `iterations/reports/hero/20260902T105033Z.md`;轴 **backlog `-77`**
   = 25 个测试文件各抄一份无检查的 `soak_side.lua` 写盘、没有属主)
   **新文件独一份 `tests/mock/soak_side.lua` + 迁移 4 个测试文件 + 按设计更新普查棘轮;

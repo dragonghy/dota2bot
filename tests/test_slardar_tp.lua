@@ -22,7 +22,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local tests = {}
 
@@ -42,14 +42,20 @@ end
 -- Activate the 'tpsafe2' soak candidate on radiant by writing the (gitignored)
 -- soak_side file, running fn, then cleaning up. reset_modules re-requires
 -- jmz_func so its cached GetSoakSideConf re-reads the file.
+-- [GH #365 §3 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: the bytes are read back
+-- (an unchecked write presents as "the guard did not fire", which three of
+-- these cases EXPECT), an existing switch is reported instead of clobbered,
+-- and the switch is re-read after the case body so a concurrent removal is
+-- named rather than argued about as an interrupt-domain bug.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'tpsafe2' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('tpsafe2', fn)
 end
+
+-- The state this process STARTED in, taken at file-load time -- the only
+-- moment that sees it, since the first armed case removes any inherited
+-- leftover before a per-case guard could name it (GH #417).
+ss.assert_clean('test_slardar_tp')
 
 -- An enemy hero handle at `loc`, extrapolating to `futureLoc` in 0.5s, with a
 -- given attack range. Visible + alive so J.IsValidHero accepts it.

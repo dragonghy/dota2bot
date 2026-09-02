@@ -10,7 +10,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local tests = {}
 
@@ -38,14 +38,19 @@ end
 -- Activate the 'deathzone' soak candidate on radiant by writing the
 -- (gitignored) soak_side file, running fn, then cleaning up. reset_modules
 -- re-requires jmz_func so its cached GetSoakSideConf re-reads the file.
+-- [GH #365 §3 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: the bytes are read back,
+-- an existing switch this process did not write is reported instead of
+-- clobbered, and the switch is re-read after the case body so a concurrent
+-- removal is reported as itself rather than as the unarmed false it produces.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'deathzone' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('deathzone', fn)
 end
+
+-- The state this process STARTED in, taken at file-load time -- the only
+-- moment that sees it, since the first armed case removes any inherited
+-- leftover before a per-case guard could name it (GH #417).
+ss.assert_clean('test_deathzone_gate')
 
 -- Record a death at vSpot: one dead frame at the spot (the helper records
 -- location+time on dead frames and must return false there), then respawn.

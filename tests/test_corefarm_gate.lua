@@ -9,7 +9,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local tests = {}
 
@@ -31,14 +31,27 @@ end
 -- Activate the 'corefarm' soak candidate on radiant by writing the (gitignored)
 -- soak_side file, running fn, then cleaning up. reset_modules re-requires
 -- jmz_func so its cached GetSoakSideConf re-reads the file.
+-- [GH #365 §3 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: it reads the bytes back
+-- (an unchecked write presents as "the gate did not fire", which is what most
+-- cases here EXPECT), it refuses to clobber a switch this process did not
+-- write, and it re-reads the switch after the case body so a concurrent
+-- removal is reported as itself rather than as the false the gate then returns.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'corefarm' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('corefarm', fn)
 end
+
+--- "No candidate armed" is this file's premise for the off-candidate cases,
+--- and it is observable: one stat call on the one global path every gate test
+--- in the tree writes.
+local function assert_unarmed()
+    ss.assert_clean('test_corefarm_gate')
+end
+
+-- ...and once at file-load time, the only moment that sees the state this
+-- process STARTED in -- a leftover inherited from a crashed case elsewhere is
+-- removed by the first armed case here before any per-case guard sees it.
+assert_unarmed()
 
 tests['ShouldCoreKeepFarming is inert in normal (non-turbo) mode'] = function()
     local J, bot = fresh_jmz()
@@ -48,6 +61,7 @@ tests['ShouldCoreKeepFarming is inert in normal (non-turbo) mode'] = function()
 end
 
 tests['ShouldCoreKeepFarming is inert in turbo without an active corefarm candidate'] = function()
+    assert_unarmed()
     local J, bot = fresh_jmz()
     -- No soak_side file => IsSoakCandidate('corefarm') false => gate off,
     -- shipped baseline farm desire untouched even in turbo.

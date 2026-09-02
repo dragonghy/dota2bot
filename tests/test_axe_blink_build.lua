@@ -41,7 +41,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 local CAND = 'axebuyblink'
 local BLINK_COST = 2250                            -- out-of-frame anchor (shop)
 
@@ -111,16 +111,32 @@ local function load_axe(bTurbo, nRole)
     return dofile('bots/BotLib/hero_axe.lua')
 end
 
--- Arm a soak candidate by writing the (gitignored) side file, as the other
--- gate tests do. sId defaults to the candidate under test.
+-- Arm a soak candidate by writing the (gitignored) side file. [GH #365 §3 /
+-- GH #229, hero backlog `-78`] The three lines this used to inline are now in
+-- tests/mock/soak_side.lua, the switch's one owner: the write is read back
+-- (a short write, a full disk or a read-only tree used to present as "the gate
+-- did not fire", which is what most cases in a gated file EXPECT), arming
+-- refuses to clobber a switch this process did not write, and the switch is
+-- re-read after the case body so a concurrent removal is reported as itself
+-- rather than as the buy-list mismatch it causes.
 local function with_candidate(sId, fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = '" .. sId .. "' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate(sId, fn)
 end
+
+--- The "gate off" cases below claim the gate is shut; what they can actually
+--- observe is "the shipped list". Those are the same observation only while no
+--- soak_side file exists, and that path is one global inode written by every
+--- gate test in the tree and by every concurrent lua5.1 process.
+local function assert_unarmed()
+    ss.assert_clean('test_axe_blink_build')
+end
+
+-- ...and once HERE, at file-load time, the only moment that sees the state this
+-- process STARTED in: `with_candidate` ends by removing the switch, and the
+-- armed cases can sort before the unarmed ones, so an INHERITED leftover is
+-- deleted by a sibling case before any per-case guard looks at it (GH #417:
+-- such a leftover survived a per-case guard 19/19 green).
+assert_unarmed()
 
 local function assert_same_list(tGot, tWant, sWhat)
     assert(type(tGot) == 'table', sWhat .. ': buy list is not a table')
@@ -161,11 +177,13 @@ local function assert_order_preserved_except_blink(tGot, tWant, sWhat)
 end
 
 tests['gate off: pos_3 is the shipped order byte for byte'] = function()
+    assert_unarmed()
     local X = load_axe(true, 3)   -- turbo, but no soak_side file exists
     assert_same_list(X.sBuyList, SHIPPED_POS3, 'pos_3 gate off')
 end
 
 tests['gate off: pos_1 is the shipped order byte for byte'] = function()
+    assert_unarmed()
     local X = load_axe(true, 1)
     assert_same_list(X.sBuyList, SHIPPED_POS1, 'pos_1 gate off')
 end
@@ -233,6 +251,7 @@ tests['armed in turbo: the aliased positions follow their base list'] = function
 end
 
 tests['gate off: the aliased positions stay on the shipped order'] = function()
+    assert_unarmed()
     local X2 = load_axe(true, 2)
     assert_same_list(X2.sBuyList, SHIPPED_POS1, 'pos_2 gate off')
     local X4 = load_axe(true, 4)
@@ -267,6 +286,7 @@ end
 -- The shipped prefix is what the measurement says it is: three items before
 -- blink, two of them big. This is the fact the change is aimed at, so pin it.
 tests['shipped pos_3 puts two big items ahead of blink'] = function()
+    assert_unarmed()
     local X = load_axe(true, 3)
     assert(index_of(X.sBuyList, 'item_blink') == 4,
         'shipped pos_3 blink index moved; the motivating measurement is stale')

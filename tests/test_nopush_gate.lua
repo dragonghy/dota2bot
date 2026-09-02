@@ -11,7 +11,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 local RADIUS = 400
 
 local tests = {}
@@ -33,14 +33,25 @@ end
 
 -- Activate the 'nopush' soak candidate on radiant by writing the (gitignored)
 -- soak_side file, running fn, then cleaning up. Mirrors the other gate tests.
+-- [GH #365 §3 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: the bytes are read back
+-- (an unchecked write presents as "the guard did not suppress", which four of
+-- the six cases here EXPECT), an existing switch is reported instead of
+-- clobbered, and the switch is re-read after the case body so a concurrent
+-- removal is named instead of being argued about as a suppression bug.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'nopush' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('nopush', fn)
 end
+
+--- The off-candidate case's premise, made observable.
+local function assert_unarmed()
+    ss.assert_clean('test_nopush_gate')
+end
+
+-- ...and once at file-load time, the only moment that sees the state this
+-- process STARTED in (an inherited leftover is deleted by the first armed
+-- case, before any per-case guard runs -- GH #417).
+assert_unarmed()
 
 local function make_creep(x, y)
     return api.MakeUnit({ GetLocation = api.Vector(x, y, 0) })
@@ -111,6 +122,7 @@ tests['allows the cast while explicitly pushing a tower'] = function()
 end
 
 tests['is inert off the soak candidate side (shipped default)'] = function()
+    assert_unarmed()
     local X = load_cm(true)   -- no soak_side file written
     local hbot = make_hbot({ make_creep(1000, 0), make_creep(1050, 0) }, {})
     assert(X._nopush_ShouldSuppressWaveShove(hbot, TARGET, RADIUS) == false,

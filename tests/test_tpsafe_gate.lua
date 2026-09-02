@@ -12,7 +12,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local tests = {}
 
@@ -32,14 +32,25 @@ end
 -- Activate the 'tpsafe' soak candidate on radiant by writing the (gitignored)
 -- soak_side file, running fn, then cleaning up. reset_modules re-requires
 -- jmz_func so its cached GetSoakSideConf re-reads the file.
+-- [GH #365 §3 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: the bytes are read back
+-- (an unchecked write presents as "the guard did not fire", which four of the
+-- five armed cases here EXPECT), an existing switch is reported instead of
+-- clobbered, and the switch is re-read after the case body so a concurrent
+-- removal is named rather than argued about as a firing-domain bug.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'tpsafe' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('tpsafe', fn)
 end
+
+--- The off-candidate case's premise, made observable.
+local function assert_unarmed()
+    ss.assert_clean('test_tpsafe_gate')
+end
+
+-- ...and once at file-load time, the only moment that sees the state this
+-- process STARTED in (GH #417: an inherited leftover is deleted by the first
+-- armed case before any per-case guard can name it).
+assert_unarmed()
 
 -- An enemy hero handle at `loc` that either closes on origin or holds still.
 local function make_enemy(loc, futureLoc)
@@ -59,6 +70,7 @@ tests['ShouldWalkNotTp is inert in normal (non-turbo) mode'] = function()
 end
 
 tests['ShouldWalkNotTp is inert in turbo without an active tpsafe candidate'] = function()
+    assert_unarmed()
     local J, bot = fresh_jmz()
     -- No soak_side file => IsSoakCandidate('tpsafe') false => guard off.
     assert(J.ShouldWalkNotTp(bot) == false, 'off-candidate must never fire')
