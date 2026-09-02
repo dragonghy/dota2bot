@@ -8932,7 +8932,7 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   独立重数(不采信 issue 的数):`git grep -c` **44 行**,自写扫描 **lines 44 / code 40 / comment 4 / calls 41**
   ⇒ **只有 `lines` 动了**,第四条散文行是 `hero_skeleton_king.lua:801`(`98c93310` 的 GH #390 枚举)。
   按该文件自己点名的**三处同改**修:测试 `published 43→44`、mock 头部普查块(THREE/43 → FOUR/44 并点名第四条)、
-  `state.json:census_20260829_follow_up`。⚠️ `state.json` 走**定向字符串编辑**而非程序化重写
+  `state.json:mockdmg_ZERO_20260829` 的 `census_20260829_follow_up` 字段(⚠️ 它是**嵌套**字段,不是顶层键 —— 本轮 `claim_precheck.sh` 正是拿这条 refuse 了草稿,exit 3)。⚠️ `state.json` 走**定向字符串编辑**而非程序化重写
   (上一轮 `indent=1` 打出四位数 diff 行的教训)⇒ 该文件 diff **2 行**,零格式漂移,`json.load` 通过。
   **② ⭐ 本轮更值钱的那半:棘轮钉住的是三个数里唯一不承重的那个。**
   **同一条红第二次由纯散文触发**(42→43 于 08-30,43→44 于 09-01),两次 `code_lines`/`calls` 都没动、
