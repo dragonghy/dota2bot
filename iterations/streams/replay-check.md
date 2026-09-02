@@ -9275,6 +9275,11 @@
     (3) **查 #414 / #405 / #389 回音**;#405 验收 (b) 仍等 dumper 字段。
     (4) `enemy_overchase_unpunished` 的 **0:20** 找第二条侧别机制(新欠账 (b))——零新素材,
         但 timeline 随容器回收,**必须在下一波宽扫的同一轮里做完**。
-  - **已发表**:见下一段回填。
+  - **已发表**(**先 push 后发表**,GH #290;报告与章程先落 `main` `98263ad6`;
+    两份草稿各过一次 `claim_precheck.sh`,**全部 BARE_EXIT=0** / `local commits not on origin/main: 0` /
+    `OK to publish`):**新开 GH #419**([harness] `detect.py` 镜轴写死 `x+y==0`,
+    实测轴 −372 ⇒ 两侧门槛差 744u;逐帧 + 27.4% + 换轴反事实 + 三条改法 + 三条验收);
+    GH **#378** 追评 `issuecomment-5505790744`(条件 (a) 第三份语料复现 + 四格 + 20s 逐帧 +
+    **可辩护口径改成尾部占比/p90**)。**#419 是本轮唯一新开的 issue。**
   - **Token 用量**:见报告 §11。
   - 完整报告:`iterations/reports/replay-check/20260902T065455Z.md`
