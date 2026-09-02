@@ -1,0 +1,52 @@
+{
+ "wave": "W38",
+ "_note": "First-hand launch record, written 2026-09-02T09:3xZ. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). The harvesting round MUST write machines[].status_code / create / update AND the leg counts ab / ba / arm_depth under exactly those bare names -- reclaim_blind.py reads them. *** GH #412: machines[].status_code takes the SIR `Status.Code` vocabulary (instance-terminated-by-user / instance-terminated-no-capacity), NOT the EC2 `StateReason.Code` vocabulary. Put the EC2 value under ec2_state_reason_code. *** GH #408 second half: an on-demand re-run machine must carry \"market\":\"on-demand\" and its EC2 StateReason.Code in status_code.",
+ "tree": "7196468dad960813fa36a90eeaab1f138eab3bc2",
+ "tree_verified": "git ls-remote origin main == local HEAD == 7196468dad… , byte-identical, checked BEFORE launch (charter step 5).",
+ "ref_pin": "*** THE W37 DEVIATION IS CLOSED: this wave passes --ref 7196468dad960813fa36a90eeaab1f138eab3bc2 (40-char SHA), so every run_id reads spot_<ts>_1_7196468dad…_<token> and the archived run_id records which tree was tested. W37's run_ids carry the literal `main` instead; that gap stays in W37's record.",
+ "arm_ids": 54,
+ "arm_bytes": 476,
+ "arm_md5": "80392b258fcd214cf351231be61d15a4",
+ "arm_source": "iterations/streams/test_set.md line 2, read from the working tree at HEAD=7196468dad… which is byte-identical to origin/main; 54 ids / 476 bytes / md5 80392b258fcd214cf351231be61d15a4, matching the prose on line 4 of that file exactly.",
+ "arm_note": "*** NOT POOLABLE WITH W35/W37. Those two carry the 52-id arm (md5 c5af3b11…); this wave adds `slotarb` and `slotdust` (test_set.md SS-DK, GH #406/#411, queue strategy-34/35), so the armed configuration is genuinely different -- these two ids are armed here and were not armed there. This is a NEW family (54-id), first wave, 4 seeds. The 52-id family stays where W37's harvest left it: 4 seeds / 166 games, still short of 8. *** And per GH #418 (opened by the previous round) the pooling criterion itself is under revision: 'the landed ids are not in the armed string' is NOT sufficient for byte-for-byte equivalence -- 87bc6b33 carried an out-of-gate line. Any future pooling claim must read the diff line by line with the gates closed.",
+ "arm_family_note": "W38 is the 54-id family's FIRST wave => cumulative seeds for this tree+test-set = 4 (this wave alone).",
+ "seeds": [
+  2613,
+  2665,
+  2761,
+  2840
+ ],
+ "carrier_terms": [
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "instance_type": "c6i.4xlarge",
+ "slots": 16,
+ "rec_slots": 8,
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "market": "spot",
+ "market_note": "owner GH #158: spot first, on-demand only when spot has no capacity. Downgrade ladder (1) c6i.4xlarge spot (2) c6a.4xlarge spot (3) --on-demand. GH #408 exception applies only to a RE-RUN machine whose SIR Status.Code is instance-terminated-no-capacity.",
+ "cost_estimate": "spot ~$0.90 for the wave (charter constant, 2026-08-30 director); worst case full downgrade to on-demand ~$2.15.",
+ "rec_slots_note": "held at 8. The acceptance gate for stepping to 16 is NOT run: GH #413 established that rebuilding the REC_SLOTS=1 baseline is unexecutable by design (rec_slot_cost.py:180 refuses when claim sidecars disagree about rec_slots), and reusing the old baseline as a new one would be moving the criterion after the fact.",
+ "expected_games": "4 seeds x 12 games x 2 legs ~ 96 scored (excl. warm-ups)",
+ "self_destruct": "spot + 2h watchdog, self-terminating; --instance-initiated-shutdown-behavior terminate; one-time (non-persistent) spot requests",
+ "machines": [],
+ "gates": {
+  "(i) >=6h since previous wave": "PASS by guard. W37 took off 2026-09-02T03:31:28Z => unlock 2026-09-02T09:31:28Z. This round triggered ~09:12Z; the launch block's own GATE-I guard held the call and fired at the unlock instant. The ~19 minutes before it went to zero-cost preparation (cost read, four gates, seed search, wave record), not idling. No exception taken.",
+  "(ii) something new to test": "PASS on the FIRST branch, not the third. test_set.md changed since W37: `slotarb` and `slotdust` were admitted 2026-09-02T04:xxZ (52 -> 54, director SS-DK, GH #406/#411). The armed configuration is therefore genuinely different from W37's, which is also why this wave does NOT pool with W35/W37. Cumulative seeds for this tree+test-set = 0 before launch, so the third branch would have carried it too.",
+  "(iii) cost fence": "PASS. MTD $3.637 (budgets free channel, snapshot 2026-09-01T17:58:37Z -- the SAME snapshot as the last two rounds, so it carries no new fence information). Fence arithmetic per charter 2(甲) uses MTD + the last 12h of waves at their own market price: 3.637 + W37 measured ~0.60 + W38 estimated spot 0.90 = $5.14 <= $80. Worst case (full downgrade to on-demand at $2.15): $6.39, also <= $80. No owner-visible Budget alert tier ($50/$80/$100) is crossed, so no explanation line is owed."
+ },
+ "carrier_gate": "seed_draft.py --assert-carrier-from-arm => CARRIER_GATE ids=10 seeds=4 exit=0; all six terms satisfied=2 (crystal_maiden 2665/2840, lion 2665/2761, obsidian_destroyer 2613/2840, skeleton_king 2613/2761, spirit_breaker 2761/2840, zuus 2613/2665). *** Honest boundary, same as W37: every term is at EXACTLY 2, so losing any single machine drops that term to 1. W33/W35/W36/W37 lost 3/3/4/2 machines respectively.",
+ "wiring_gate": "check_armed_wiring.py --cand <54-id string> => exit 0, 'all 54 armed ids wired on HEAD'. *** The first call this round was MY OWN error (positional arg instead of --cand) and returned exit 2 'the following arguments are required: --cand'. exit 2 is not a pass; naming it here because GH #412's founding sentence is exactly 'a self-inflicted refusal read as a real one'. The charter's remembered path bug (a spurious `soak/` segment) is NOT what bit this time -- the real path tools/batch_test/check_armed_wiring.py was used from the first call.",
+ "carrier_terms_gate": "carrier_terms.py --arm => exit 0, 10 hero-scoped / 44 generic / 0 unresolved => 6 terms, identical to the six hand-written ones.",
+ "seed_index_note": "seed_roster_index.py --build run BEFORE seed selection (charter step 5, live rule): exit 0. Without it the index hands back seeds the previous wave already burned, and nothing raises a hand.",
+ "seed_search_note": "Window [2601,3000] KEPT -- the pre-registered right-shift to [3001,3400] did NOT trigger, because its condition is 'the search returns 0' and it returned 12. Reading: 24 banked-or-drawn / 376 unused; popcount supply {0:50, 1:140, 2:141, 3:45}; 36 distinct masks; BEST slots = 12 with 20 mask-combos in that layer. The popcount-4 layer is still empty (it was emptied by W37) and the popcount-3 layer shrank 49 -> 45, i.e. the periodic mechanism the charter named on 08-30 is still running: every wave shaves the richest layer. BEST slots = 12 is exactly the floor (6 terms x 2), so once again only a perfect partition works. GH #285 is unadjudicated for the 24th round; the pre-registration stands unchanged for the next wave.",
+ "seed_exclusions": "index-banked seeds UNION the twelve drawn by W35/W36/W37 (2658/2774/2963/2986 + 2745/2838/2850/2922 + 2673/2735/2752/2874) -- drawn is drawn, even where a machine produced zero games and the index honestly records the seed as unused.",
+ "zero_cost_tiebreak": "Among the 20 combos in the best layer, the zero-cost ordering preference (a pudge carrier, serving queue strategy-26 / rotscope) yields only 1 pudge seed this time (2613), against 2 in W37. The preference is a tiebreak inside an already-optimal layer, never a relaxation of the >=2/term discipline.",
+ "seed_freshness": "seed_roster_index.py --seed 2613 2665 2761 2840 => all four \"no banked games\" (exit 0), confirmed AFTER the --build. The exclusion set additionally carries the twelve seeds W35/W36/W37 drew, because drawn is drawn even where the index honestly shows no games."
+}
