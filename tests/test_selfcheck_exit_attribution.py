@@ -146,6 +146,139 @@ for name in ('cadence', 'unlanded'):
 check(any('trunk-red' in ln for ln in declared),
       '#267 §4b names trunk-red explicitly; it must be a declared leg')
 
+# ---------------------------------------------------------------------------
+# 9. GH #420 -- the third bucket.  The two buckets above are keyed on a LEG'S
+#    NOTE LEVEL, and a leg has exactly one.  A python leg that is both red and
+#    partly un-run notes 3, lands in FINDINGS whole, and the tests inside it
+#    that never ran have nowhere to be -- so the block printed
+#    `UNCERTIFIABLE (exit 2): none` on a run whose own leg body read
+#    `75 passed, 1 failed, 2 uncertifiable` (director 09-02, live).
+#
+#    THE LOAD-BEARING ASSERTIONS HERE ARE 9.3 AND 9.5.  9.1/9.2/9.7 would pass
+#    for any implementation that prints a third line at all.  9.3 pins the shape
+#    that motivated the issue (red AND un-run in one output), and 9.5 pins the
+#    reason the extractor reads the per-file lines instead of the runner's
+#    machine-readable roll-up: that roll-up is printed ONLY when nothing failed
+#    (tests/run_py_tests.sh:48-55), i.e. it is absent exactly on the strictly
+#    worse tree -- reading it would have rebuilt the defect inside the fix.
+# ---------------------------------------------------------------------------
+
+# The verbatim leg body from GH #420's 現場 (and from this round's own tree).
+# Note what is NOT in it: no `uncertifiable: ...` roll-up line.
+PY_RED_AND_UNRUN = '\n'.join([
+    'PASS  tests/test_a.py',
+    'FAIL  tests/test_detector_source_constants.py',
+    '      some failure detail',
+    'UNCERTIFIABLE  tests/test_rc_wrapper.py  (did NOT run -- this is not a pass and not a failure)',
+    '      could not read its input',
+    'UNCERTIFIABLE  tests/test_selfcheck_lua_leg.py  (did NOT run -- this is not a pass and not a failure)',
+    '',
+    '75 passed, 1 failed, 2 uncertifiable',
+    'failed: tests/test_detector_source_constants.py',
+])
+
+PY_UNRUN_ONLY = '\n'.join([
+    'PASS  tests/test_a.py',
+    'UNCERTIFIABLE  tests/test_rc_wrapper.py  (did NOT run -- this is not a pass and not a failure)',
+    '',
+    '76 passed, 0 failed, 1 uncertifiable',
+    'uncertifiable: tests/test_rc_wrapper.py',
+])
+
+
+def drive_py(body_output, note_level):
+    """Feed the python leg's captured output through the extractor.
+
+    Shaped like the wrapper: capture the runner output into `suite`, hand it to
+    the extractor, then let the branch note its level.
+    """
+    quoted = "'" + body_output.replace("'", "'\\''") + "'"
+    return drive("sc_leg 'trunk-red(python)'\n"
+                 "suite=%s\n"
+                 "sc_unrun_from_py_output \"$suite\"\n"
+                 "sc_note %d" % (quoted, note_level))
+
+
+# 9.1 ⭐ THE 09-02 SHAPE.  Red and un-run in one leg: FINDINGS names the leg,
+#     the new line names the FILES, and both are readable in the same block.
+out, rc = drive_py(PY_RED_AND_UNRUN, 3)
+notrun = (field(out, 'NOT RUN (inside a leg)') or '').split()
+check(field(out, 'FINDINGS (exit 3)') == 'trunk-red(python)',
+      'the red leg is still attributed, got %r' % field(out, 'FINDINGS (exit 3)'))
+check('tests/test_rc_wrapper.py' in notrun and 'tests/test_selfcheck_lua_leg.py' in notrun,
+      'BOTH un-run files must be named on the #420 shape, got %r' % notrun)
+check(len(notrun) == 2, 'exactly the two un-run files expected, got %r' % notrun)
+check('tests/test_detector_source_constants.py' not in notrun,
+      'the FAILING file is not an un-run file; it must not leak into this bucket')
+check('ATTRIBUTION BROKEN' not in out,
+      'declared count (2) matches the names found (2); no drift banner expected:\n%s' % out)
+
+# 9.2 The exit code moves by zero words -- #420's own acceptance sentence.  A
+#     run whose ONLY finding is un-run files still exits what its legs said.
+check(rc == 3, 'the #420 shape must still exit 3, got %d' % rc)
+out0, rc0 = drive("sc_leg 'a'\nsc_note 0\nsc_unrun 'tests/test_x.py'")
+check(rc0 == 0, 'sc_unrun must not raise the exit code, got %d' % rc0)
+check(field(out0, 'NOT RUN (inside a leg)') == 'tests/test_x.py',
+      'a clean run still reports what did not run, got %r'
+      % field(out0, 'NOT RUN (inside a leg)'))
+
+# 9.3 ⭐ The extractor reads the runner's PER-FILE lines.  Neither the count
+#     line, the `failed:` line, nor the indented detail may be mistaken for a
+#     file name.
+check(all(not n.startswith('uncertifiable') and n.startswith('tests/') for n in notrun),
+      'only tests/ paths may enter the bucket, got %r' % notrun)
+
+# 9.4 The exit-2-only shape (nothing failed) still works -- and the leg's own
+#     level-2 attribution is untouched by the new bucket.
+out, rc = drive_py(PY_UNRUN_ONLY, 2)
+check(rc == 2, 'un-run only should still exit 2, got %d' % rc)
+check(field(out, 'UNCERTIFIABLE (exit 2)') == 'trunk-red(python)',
+      'the leg-level bucket is unchanged, got %r' % field(out, 'UNCERTIFIABLE (exit 2)'))
+check(field(out, 'NOT RUN (inside a leg)') == 'tests/test_rc_wrapper.py',
+      'the file-level bucket names the file, got %r' % field(out, 'NOT RUN (inside a leg)'))
+
+# 9.5 ⭐ THE REASON THE EXTRACTOR IS SHAPED THIS WAY.  run_py_tests.sh prints
+#     its machine-readable `uncertifiable:` roll-up only when fail == 0, so on
+#     the red tree there is none -- and 9.1 above passed on output that has no
+#     such line.  Assert that absence explicitly so a future "simplification"
+#     to grep the roll-up fails here instead of in a Routine round.
+check('uncertifiable:' not in PY_RED_AND_UNRUN,
+      'the #420 fixture must NOT contain the roll-up line -- that is the point')
+runner = open(os.path.join(ROOT, 'tests', 'run_py_tests.sh')).read()
+check(runner.index("printf 'failed:%s\\n'") < runner.index("printf 'uncertifiable:%s\\n'"),
+      'the runner still exits on `failed:` before printing `uncertifiable:`; '
+      'if that changed, revisit the extractor comment in selfcheck_tally.sh')
+
+# 9.6 ⭐ The new bucket cannot lie quietly either (this file's header rule).
+#     Declare two, hand it output where the per-file lines have drifted, and it
+#     must say so rather than print a confident short list.
+drifted = PY_RED_AND_UNRUN.replace('UNCERTIFIABLE  tests/', 'NOTRUN  tests/')
+out, rc = drive_py(drifted, 3)
+check('ATTRIBUTION BROKEN' in out,
+      'a declared count the extractor cannot match must print ATTRIBUTION BROKEN, got:\n%s' % out)
+check(rc == 3, 'the drift banner must not change the exit code, got %d' % rc)
+
+# 9.7 The field always prints, like the two above it: an absent line reads as
+#     "not measured", which is the defect being replaced (test 1's rationale).
+out, rc = drive("sc_leg 'cadence'\nsc_note 0")
+check(field(out, 'NOT RUN (inside a leg)') == 'none',
+      'a clean run must print the field with `none`, got %r'
+      % field(out, 'NOT RUN (inside a leg)'))
+
+# 9.8 The wrapper actually feeds the extractor, and does so BEFORE the branch on
+#     `suite_rc` -- so the exit-1 branch (red AND un-run) is covered, not just
+#     the exit-2 one.  Putting the call inside a branch is precisely how the leg
+#     body acquired this bug in the first place.
+check('sc_unrun_from_py_output "$suite"' in wrapper,
+      'the wrapper must feed the python leg output to the extractor')
+check(wrapper.index('sc_unrun_from_py_output "$suite"')
+      < wrapper.index('if [ "$suite_rc" -eq 0 ]; then'),
+      'the extractor call must precede the suite_rc branch, so BOTH non-zero '
+      'branches carry the un-run names')
+check(wrapper.index('suite=$(bash tests/run_py_tests.sh 2>&1)')
+      < wrapper.index('sc_unrun_from_py_output "$suite"'),
+      'the extractor must run after the suite is captured')
+
 if failures:
     print('FAIL  %d of %d checks' % (len(failures), checks))
     for f in failures:

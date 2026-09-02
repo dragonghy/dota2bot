@@ -373,6 +373,16 @@ if command -v python3 >/dev/null 2>&1; then
     # tree" property that the auto-stash note above turns on; the tail printed
     # inline is a view, and the log is the data (tools/agent/rc.sh's RC_LOG
     # idiom, and its test's words: "the tail is a view, not the data").
+    # [director 20260902, GH #420] Hand the un-run FILE NAMES to the summary
+    # block, unconditionally -- before the branch, because both non-zero
+    # branches can carry them and the exit-1 one (red AND un-run) is the branch
+    # that used to name less of what was wrong.  Doing it here rather than
+    # inside a branch also means a runner that ever reports uncertifiable files
+    # while exiting 0 surfaces them instead of hiding them; today it cannot
+    # (run_py_tests.sh exits 2 on any un-run file), and that is the safe
+    # direction to be wrong in.  No `note` here: the exit code is the branch's
+    # to set and #420 moves it by zero words.
+    sc_unrun_from_py_output "$suite"
     py_log=""
     if [ "$suite_rc" -ne 0 ]; then
         py_log=$(mktemp "${TMPDIR:-/tmp}/selfcheck_py_XXXXXX.log" 2>/dev/null) || py_log=""
