@@ -4402,7 +4402,8 @@
   `test_detector_source_constants.py`(`illumove_pairs:HP_CUT` UNREGISTERED)。
   **⚠️ 并登记一次读法**:开工自检**开跑于编辑之前、收尾于编辑之后**,
   所以它那条 lua 红**不能当成 trunk 的读数** —— `0MUTPAR`(并行污染)的**同族但更钝的形态:
-  不是并发,是次序**;已重跑,lua 那侧只剩既存的 `test_incoming_damage_callsite_census`。
+  不是并发,是次序**;已重跑(**裸读 `SELFCHECK2_EXIT=3`**,`UNCERTIFIABLE: none`):
+  lua 那侧从 **2 of 72** 降到 **1 of 72**,剩下的就是既存的 `test_incoming_damage_callsite_census`。
   **⚠️⚠️ 本轮自己犯的两条(报告 §八)**:(1) **issue #415 发在 `git push` 之前**,
   窗口约 20 分钟 —— **铁律 6 ⭐2026-08-29 条(GH #290)的复发**;落地后补跑
   `claim_precheck.sh` 得 **exit 0 / refused 0** 并在 issue 正文顶部写了订正块,
