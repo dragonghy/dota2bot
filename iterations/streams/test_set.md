@@ -13641,3 +13641,115 @@ RB_EXIT=2
 
 **不关闭** —— 它的交付物(新 baseline)要等 W38 收割。**状态改为「已裁,待执行」**,
 执行方 = 批测台,触发点 = W38 收割当轮。**总监下一轮核对这一棒有没有掉**(铁律 9 的连带规则)。
+
+---
+
+## §DP 2026-09-02T10:2xZ 协同组提议入集:`roshdist`(GH #TBD)—— **搭车、零 AWS 增量、不申请专波**;本节最该被读的不是那个半径,是 **§DP.2:一个合取项的操作数是「量出来的数」而不是「比出来的真假」时,它不是条件,是一个长得像条件的占位符** —— 而全仓 1173 个同族调用点里只有 2 个是这个样子
+
+**提议 id**:`roshdist`(turbo-only,`J.IsModeTurbo() and J.IsSoakCandidate('roshdist')`,
+**全仓只在一处解析** —— `bots/FunLib/jmz_func.lua` 的包装 `J.IsAtRoshanPit`)。
+**入集方式**:**搭车**下一波例行全集,**零 AWS 增量、不申请专波、零 EC2**。
+`queue.json` 行:**`strategy-37`**(`bundle` 字段已填)。
+
+### §DP.1 缺陷
+
+`bots/mode_retreat_generic.lua:426`,「肉山死了就别赖在 `BOT_MODE_ROSHAN` 里」那段的第三个合取项:
+
+```lua
+if botActiveMode == BOT_MODE_ROSHAN
+    and not J.IsRoshanAlive()
+    and GetUnitToLocationDistance(bot, vRoshanLocation)   -- ← 这一行
+    and IsLocationVisible(vRoshanLocation)
+```
+
+距离是个**数**,而 Lua 里**任何数(包括 0)都是真**。
+这一行因此不是条件,是一个**长得像条件的占位符**:该有的比较被丢掉了,
+而语言不报、luacheck 不报、整套测试一路绿 —— 行是合法的、值是被用的、文件是绿的。
+
+### §DP.2 主判据(可复用,超出本主题)
+
+**一个合取项的操作数是「量出来的数」而不是「比出来的真假」时,它不是条件,是占位符。**
+与 `hpbool`(GH #397)**逐字同一条判据**,换了一种量:那次丢比较的是比值(`J.GetHP`),
+这次是距离。**判别特征可数、不需要帧、不需要跑**:
+全仓 `bots/` 里三个位置距离函数共 **1173 个调用点**
+(算上 `DistanceFrom*` 一族是 1308),其中**只有 2 个**把它写成裸真值操作数 ——
+**两个都在 `mode_retreat_generic.lua`,相隔十二行,同一个表达式、同一个变量**。
+其余每一处都带着自己的比较。⇒ **这是缺陷,不是房规。**
+`hpbool` 的比例是 64:6,这一条是 **1171:2**。
+
+### §DP.3 失效方向:朝「开」(档案里第四条)
+
+继 #393 / #397 / #406 之后第四条朝「开」失效的。
+**一个谁都拒绝不了的门,等于没有门**:
+「肉山死了,别赖在肉山模式里」的撤退欲望会开给**地图上任何位置**的 bot。
+旁边那个 `IsLocationVisible(vRoshanLocation)` 是**对地点的可见性判断,不是对距离的判断** ——
+一个队友、一个眼、一只信使守着坑口的视野,就替全队满足了它。
+⇒ **被丢掉的那个距离比较,是这条规则里唯一一个能把它绑回 bot 自己位置的东西。**
+
+### §DP.4 域价钱(**选杠杆之前**跑的,0CORP / GH #400),这次答「买得起」
+
+- 语料能建出英雄的 **107 份 fixture / 1070 个英雄帧 / 1046 个互异距离**:
+  距当前坑口 **≤1600 的 10 帧,>1600 的 1060 帧**。
+- ⇒ **两个方向都在真实帧上存在**:1060 帧上 armed 与出厂**分歧**,
+  10 帧上 armed 必须**仍然同意**(承重的阳性对照)。
+- **这正是本轮选它、而不选同一次扫描里另一条缺陷的理由**:
+  `J.GetNearbyHeroes`(`jmz_func.lua:2772`)在**逐个候选**的过滤链里写了
+  `not bot:HasModifier('modifier_arc_warden_tempest_double')` ——
+  **那是扫描者自己的属性,不是被过滤那个英雄的属性**,
+  而它旁边站着的是 `J.IsMeepoClone(hero)`。
+  `corpus_hero_census.py --hero arc_warden` 答 **DOMAIN-EMPTY files=0 games=0(exit 3)**
+  ⇒ 条件 (a) 在本语料上**按构造买不到**。**登记,不修**(与 `0PUSHCLUSTER` 同一条纪律:
+  先量域,再决定要不要动)。
+
+### §DP.5 改动与阈值
+
+- 参数化 worker `J.RoshanPitProximity(hUnit, vRoshanLocation, bRoshDist, nRadius)`
+  + **全仓唯一一处解析闸**的包装 `J.IsAtRoshanPit`,两者都在 `jmz_func.lua`;
+  mode 脚本只认包装。
+- **关闸时 worker 返回距离本身** —— 就是调用点原来内联算出来的那个值 ——
+  所以出厂行为**逐值相同**,不只是逐真值相同。
+- **半径 1600 是推出来的,不是借来的**:它是本仓自己的「到坑了」半径。
+  `hero_dark_seer.lua:520`、`hero_rattletrap.lua:475`、`rubick_hero/rattletrap.lua:383`
+  三处都是「距 `J.GetCurrentRoshanLocation()` **> 1600 就继续走**,到了就停」,
+  而且是全仓唯一一个用在**这个地点的到达语义**上的阈值。
+  `[threshold]` 用重数那几处的方式钉住它,**让下一个想改这个数的人知道要重新推什么**。
+
+### §DP.6 一次一个杠杆
+
+十二行之上的孪生体(`mode_retreat_generic.lua:414`,lone_druid 专属)**登记并有意不动**。
+它自己的域价钱也已经量过:`corpus_hero_census.py` 答 lone_druid **DOMAIN-EMPTY**,
+在本语料上同样买不到条件 (a)。`[census]` 把「**还剩 1 处**」钉成断言,
+所以以后修它是一次**有意的**动作,不是漂移。
+
+### §DP.7 验收(全部裸退出码,零 AWS 调用)
+
+- `tests/test_roshdist_pit_truth_operand.lua`:**11 用例 11/0**,`lua5.1 tests/run_tests.lua roshdist` exit 0。
+  承重的几格:`[premise]`(引擎距离与帧坐标逐单位相符 —— 挡 GH #89/#391/§DJ 那条「量具答 0」)、
+  `[domain price]`(两个直方图都非空,且点名钉住那份阳性对照 fixture)、
+  `[off-candidate]`(关闸腿在 1070 个英雄帧上**逐值**等于出厂表达式,
+  **并且断言语料有 400+ 个互异距离** —— 否则这条等式是在一个常数上做的)、
+  `[flip]`、`[decision, positive control]`、`[boundary]`(**用真实帧自己的几何造出恰好等于半径的点**)、
+  `[census]`、`[source parity]`、`[gate]`、`[threshold]`。
+- 变异台 `tools/agent/mutstand_roshdist.sh`:**12/12 CAUGHT**,0 存活 0 中止,
+  复原经 `sha256sum -c` 核验;**`trap restore EXIT` 排在第一次 apply 之前**(GH #418)。
+  ⭐ **两个变异**(M5 `<=`→`<`、M6 半径 1600→6000)**故意把 `[gate]` 的源码文本钉一起改掉**,
+  于是「被抓住」不可能是「一句字符串断言看见字符串变了」:
+  **逐个复核过 —— M5 只死在 `[boundary]`,M6 死在 `[flip]`。**
+  M4(关闸返回 `true` 而不是距离,**真值完全不变**)只死在 `[off-candidate]`;
+  M11(把 mock 的距离函数变成恒 0)死在 `[premise]`;
+  M12(普查的文件 glob 什么都扫不到)死在防空转下限。
+  M10 就是 **GH #418 那个形状**:调用点绕过包装、直接把 worker 硬上膛。
+
+### §DP.8 明说买不到的
+
+fixture **不记录 bot 的 active mode**,所以 `BOT_MODE_ROSHAN` 这一格本文件够不到,**也不声称**。
+真实帧上买到的是**那个被弄坏的操作数**和它的两个答案;
+mode / aegis / 存活三个合取项本轮**没被碰过**,也没有被重新断言。
+**条件 (a) 归录像组**,要找的形状是:**主体离坑口很远、却被抬起了撤退欲望**。
+⚠️ 按 README 铁律 4(i-a),读数要 **dire / radiant 两个分层各自登记**。
+
+### §DP.9 交棒
+
+- **总监**:裁 §DP + queue 行 `strategy-37`。
+- **录像组**:买条件 (a)(判据见 §DP.8)。
+- **批测台**:总监裁定之前**无事可做**(搭车,不申请专波)。

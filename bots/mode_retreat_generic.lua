@@ -423,7 +423,7 @@ function GetDesireHelper()
     -- when roshan dies, every desire sometimes drops to 0 somehow and it lingers in Roshan mode (which is also 0)
     if botActiveMode == BOT_MODE_ROSHAN
         and not J.IsRoshanAlive()
-        and GetUnitToLocationDistance(bot, vRoshanLocation)
+        and J.IsAtRoshanPit(bot, vRoshanLocation)
         and IsLocationVisible(vRoshanLocation)
     then
         if not C.aegisNearby1200 then

@@ -197,6 +197,17 @@ local PINNED = {
     "bodyblock | J.ShouldBodyBlockHarass | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                    -- P
     "c1,c10r | GetDesire | J.ShouldCoreKeepFarming | corefarm | bots/mode_farm_generic.lua",                                              -- W
     "c1,c10r | GetDesire | J.ShouldGroupWithAegis | aegisgroup | bots/mode_farm_generic.lua",                                             -- W
+    -- [roshdist 20260902] Read by hand before pinning, and it is (W): the three
+    -- outer ids are SIBLING statements inside the same 500-line GetDesireHelper
+    -- (c12 at :396/:397, retnear at :528, towerreach at :634), not a block that
+    -- encloses the BOT_MODE_ROSHAN paragraph at :424 -- that paragraph runs on
+    -- every frame regardless of any of them, so arming 'roshdist' alone is not
+    -- arming a no-op. This is the census's wide net doing what its header says.
+    -- Un-armed the inner helper is the identity element anyway: J.IsAtRoshanPit
+    -- hands back the DISTANCE, the same value the call site used to compute
+    -- inline, so with roshdist off the conjunction is byte-for-byte what
+    -- shipped.
+    "c12,retnear,towerreach | GetDesireHelper | J.IsAtRoshanPit | roshdist | bots/mode_retreat_generic.lua",                              -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_retreat_generic.lua",                               -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsWkReincarnationArmed | wkreincarnmp | bots/mode_retreat_generic.lua",                 -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldAbandonTpChannel | tpwatch | bots/mode_retreat_generic.lua",                      -- W

@@ -1393,6 +1393,18 @@
    },
    "status": "pending",
    "rides_wave": "W39 (the 55-id family, FIRST wave). *** NOT W38: W38 launched 2026-09-02T09:31Z with the 54-id arm (md5 80392b25...), so this id is NOT in it. *** NOT POOLABLE with the 52-id (W35/W37) or 54-id (W38) families. *** Third ruling running to land after a wave took off (SS-DH/W36, SS-DK/W37, SS-DN/W38): that is a phase lag between the launch cadence and the ruling cadence, nobody's fault, but a director who wants an admission to catch a specific wave must rule BEFORE the batch desk's launch window rather than expect the wave to wait."
+  },
+  {
+   "id": "strategy-37",
+   "stream": "strategy",
+   "bundle": "roshdist",
+   "seeds": [],
+   "priority": 3,
+   "axis": "ROSHDIST —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `roshdist`**(§CY.3 的教训:开工自检按 `bundle` 找提议行,字段为空就被报成 `ORPHAN_PROPOSAL`)。",
+   "question": "`roshdist`(提议 test_set.md §DP):`bots/mode_retreat_generic.lua:426`,「肉山死了别赖在 BOT_MODE_ROSHAN 里」那段的第三个合取项写成了 `and GetUnitToLocationDistance(bot, vRoshanLocation)` —— **距离是个数,Lua 里任何数(含 0)都是真**,所以那不是条件,是占位符:比较被丢了。主判据与 `hpbool`(GH #397)逐字相同,换了一种量(那次是比值,这次是距离)。**判别特征可数、不需要帧**:全仓三个位置距离函数 **1173 个调用点**(算上 DistanceFrom* 一族 1308),**只有 2 个**写成裸真值操作数,两个都在同一个文件、相隔十二行、同一个表达式 —— **1171:2**。**失效方向朝「开」**(档案第四条):一个谁都拒绝不了的门等于没有门,撤退欲望会开给地图上任何位置的 bot;旁边的 `IsLocationVisible` 是**对地点**的可见性判断,一个队友/眼/信使守着坑口视野就替全队满足了它 ⇒ 被丢掉的距离比较是唯一能把这条规则绑回 bot 自己位置的东西。本轮**只修 1 处**(一次一个杠杆);十二行之上的 lone_druid 孪生体登记不动,`[census]` 把「还剩 1 处」钉成断言。",
+   "acceptance": "**条件 (a) 的执行判据**:找**出厂腿抬起撤退欲望、而主体离当前坑口很远**的窗口 —— 具体读法:肉山已死、bot 处于 `BOT_MODE_ROSHAN`、坑口位置对本队可见,而 bot 自己距 `J.GetCurrentRoshanLocation()` **> 1600**;armed 腿上这一格应当不再抬起该欲望,而**主体真的站在坑口(≤1600)时仍然抬起**(承重的阴性/阳性两面都要读,否则「armed 少抬了」与「armed 永远不抬」在同一个数字上不可分)。⚠️ **按 README 铁律 4(i-a) 必须 dire / radiant 两个分层各自登记读数**。⛔ 本地买不到的部分已在 §DP.8 明说:fixture 不记录 active mode。",
+   "director": "",
+   "status": "open"
   }
  ],
  "done": [

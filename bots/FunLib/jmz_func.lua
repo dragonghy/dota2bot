@@ -12266,4 +12266,48 @@ function J.IsTeamPushingHighGround( bot )
 end
 
 
+-- Soak candidate 'roshdist' (turbo-only; the gate is resolved in exactly one
+-- place, the J.IsAtRoshanPit wrapper below, which has exactly one caller).
+--
+-- THE DEFECT: mode_retreat_generic.lua:426 spelled the conjunct
+--     and GetUnitToLocationDistance(bot, vRoshanLocation)
+-- A distance is a NUMBER, and in Lua every number -- 0 included -- is truthy,
+-- so that conjunct is not a condition, it is a spacer. The comparison that
+-- makes it one was dropped. Repo-wide census: 1308 distance-function call
+-- sites in bots/, and exactly two spell it as a bare truth operand -- both in
+-- mode_retreat_generic.lua, both this same expression. Same family as
+-- 'hpbool' (GH #397, 64:6 on J.GetHP).
+--
+-- FAILURE DIRECTION IS OPEN: the guard cannot refuse anybody, so the
+-- "roshan is dead, stop lingering in BOT_MODE_ROSHAN" retreat desire is
+-- offered to a bot standing anywhere on the map that happens to have line of
+-- sight to the pit.
+--
+-- Unarmed this returns the distance itself -- the very value the call site
+-- used to compute inline -- so the shipped truth value is unchanged for every
+-- position, not merely for the ones a test happened to look at.
+--
+-- THE RADIUS IS DERIVED, NOT BORROWED: 1600 is this repo's own "arrived at the
+-- pit" radius. hero_dark_seer.lua:520, hero_rattletrap.lua:475 and
+-- rubick_hero/rattletrap.lua:383 all walk toward J.GetCurrentRoshanLocation()
+-- while the distance is > 1600 and stop below it; it is the only threshold in
+-- bots/ used in the arrival sense against this location.
+function J.RoshanPitProximity( hUnit, vRoshanLocation, bRoshDist, nRadius )
+	local nDistance = GetUnitToLocationDistance( hUnit, vRoshanLocation )
+
+	if not bRoshDist
+	then
+		return nDistance
+	end
+
+	return nDistance <= ( nRadius or 1600 )
+end
+
+
+function J.IsAtRoshanPit( hUnit, vRoshanLocation )
+	return J.RoshanPitProximity( hUnit, vRoshanLocation,
+		J.IsModeTurbo() and J.IsSoakCandidate( 'roshdist' ) )
+end
+
+
 return J

@@ -27,6 +27,64 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ROSH. **【2026-09-02T10:27Z 新增,**自驱**(`[strategy]` 未认领 issue 仍为零 —— open 的全是本组自己开的;
+   owner P1 第 1 棒、P2 均已交出;P3 责任在总监;**backlog 最上面一条 `0EQUIV` 逐字交待本组下一轮
+   「`0PUSHCLUSTER` 原样有效,下一个杠杆去别的域挑,照旧先跑域价钱再选形状」⇒ 本轮就是照这条做的**);
+   **落地 gated `roshdist`**,入集提议 `test_set.md` **§DP**(搭车、零 AWS 增量、不申请专波),
+   `queue.json` 新增 **`strategy-37`**(**`bundle` 已填**);`state.json` 新键 `roshdist_20260902`;
+   issue **GH #TBD**;报告 `iterations/reports/strategy/20260902T102745Z.md`;
+   零 AWS、S3 零访问、零 EC2;`game/` 零 diff。**已交棒,球在总监与录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个合取项的操作数是「量出来的数」而不是「比出来的真假」时,
+   它不是条件,是一个长得像条件的占位符。**
+   与 `hpbool`(GH #397)**逐字同一条判据**,换了一种量:那次丢比较的是比值,这次是距离。
+   **判别特征可数、不需要帧、不需要跑**:全仓三个位置距离函数 **1173 个调用点**
+   (算上 `DistanceFrom*` 一族 1308),**只有 2 个**写成裸真值操作数,
+   **两个都在 `bots/mode_retreat_generic.lua`、相隔十二行、同一个表达式同一个变量** ⇒ **1171:2**。
+   **缺陷**:`:426`,「肉山死了别赖在 `BOT_MODE_ROSHAN` 里」那段的第三个合取项
+   `and GetUnitToLocationDistance(bot, vRoshanLocation)` —— **Lua 里任何数(含 0)都是真**。
+   **失效方向朝「开」**(档案第四条,继 #393/#397/#406):一个谁都拒绝不了的门等于没有门;
+   而旁边的 `IsLocationVisible` 是**对地点**的可见性判断,**一个队友/眼/信使守着坑口视野就替全队满足它**
+   ⇒ **被丢掉的那个距离比较是唯一能把这条规则绑回 bot 自己位置的东西**。
+   **改动**:参数化 worker `J.RoshanPitProximity` + **全仓唯一解析闸**的包装 `J.IsAtRoshanPit`;
+   **关闸返回距离本身** ⇒ 出厂**逐值相同**(由 `[off-candidate]` 量出来,不是注释声称)。
+   **半径 1600 是推出来的**:全仓唯一一个用在这个地点「到达语义」上的阈值(三处 `> 1600 就继续走`)。
+   **⭐⭐ 本轮最该被读的第二格:「先量域」这次直接换掉了要修的那个函数。**
+   同一次扫描**先**找到的是 `J.GetNearbyHeroes`(`jmz_func.lua:2772`)——
+   逐候选过滤链里第三项 `not bot:HasModifier('modifier_arc_warden_tempest_double')`
+   **问的是扫描者自己的属性**,而旁边站着的 `J.IsMeepoClone(hero)` 正好是同一件事的正确写法;
+   后果双向(扫描者是分身 ⇒ **整张表清空**;表里真有分身 ⇒ **一个也滤不掉**),
+   且它是全仓最中心的邻近扫描 helper。**但 `corpus_hero_census.py --hero arc_warden` 答
+   `DOMAIN-EMPTY files=0 games=0`** ⇒ 条件 (a) 按构造买不到 ⇒ **登记,不修**。
+   **产出** `tests/test_roshdist_pit_truth_operand.lua`(**11/0**)+
+   `tools/agent/mutstand_roshdist.sh`(**12/12 CAUGHT**,自带 `trap restore EXIT`);
+   **逐个复核了「抓住的理由」**:M5(贿赂文本钉后)**只死在 `[boundary]`**、M6 死在 `[flip]`、
+   M4 死在 `[off-candidate]`、M11 死在 `[premise]`。
+   **⛔ 撞车登记**:本轮也独立发现并修了同一条 trunk 红
+   (`test_slotdust_dust_arbitration.lua:645` 的 `nFixtures == 107`,GH #106/#127 耦合,本组 07:42Z 留下的),
+   但**总监同一轮修得更全**(还把三个直方图格子换成 `cs.ratchet`,并有意保留 `shipped[2] == nil` 那条等式)
+   ⇒ rebase 冲突,**保留总监版本、丢弃本轮那份**。**教训不是关于这一行的**:
+   **动别人文件里的 trunk 红之前,先看一眼 `origin/main` 有没有人已经在修。**
+   **本组下一轮**:`0PUSHCLUSTER` 仍原样有效;**继续去别的域挑,照旧先跑域价钱再选形状** ——
+   本轮给这条添的新论据是:**域价钱不只决定「买不买得到」,它能直接换掉要修的那个函数。**
+
+0ROSHTWIN. **【2026-09-02T10:27Z 新增,登记不修 —— 裸真值距离操作数的另一处】**
+   `bots/mode_retreat_generic.lua:414`(lone_druid 专属,`botActiveMode == BOT_MODE_ITEM` 那段)
+   与 `0ROSH` 修的那处**逐字同一个表达式**,相隔十二行。**一次一个杠杆**,本轮不动;
+   它自己的域价钱也已量过:`corpus_hero_census.py` 答 **lone_druid DOMAIN-EMPTY**,
+   在本语料上同样买不到条件 (a)。`[census]` 把「**还剩 1 处**」钉成断言,
+   所以以后修它是一次**有意的**动作,不是漂移。
+
+0ARCSCAN. **【2026-09-02T10:27Z 新增,登记不修 —— 域为零,但缺陷形状值得钉住】**
+   `bots/FunLib/jmz_func.lua:2772`,`J.GetNearbyHeroes` 的逐候选过滤链:
+   `if J.IsValidHero(hero) and not J.IsMeepoClone(hero) and not bot:HasModifier('modifier_arc_warden_tempest_double')`
+   —— **第三项的主语是扫描者,不是被过滤的那个英雄**,而**第二项就是同一件事的正确写法**,
+   两者并排坐在同一个合取链里(比 §DI 的 80:10 更短的「这是缺陷不是房规」证明:
+   **正确孪生就在它左边一格**)。**后果双向**:扫描者是 arc warden 分身 ⇒ 这个全仓最中心的
+   邻近扫描**返回空表**(朝关,极端);表里真有分身 ⇒ **一个也滤不掉**(朝开)。
+   **不修的理由是域,不是难度**:`corpus_hero_census.py --hero arc_warden` 答
+   **DOMAIN-EMPTY files=0 games=0(exit 3)** ⇒ 条件 (a) 在本语料上按构造买不到。
+   **⇒ 语料里一旦出现 arc_warden,这条应当立刻被提为下一个杠杆。**
+
 0EQUIV. **【2026-09-02T07:42Z 新增,**不是自驱** —— 本轮认领的是 **GH #418**(批测台 06:21Z 开立,
    指名本组自己 6 小时前的提交 `87bc6b33`,处置建议逐字写「交协同组/总监」);
    **⇒ `0PUSHCLUSTER` 本轮没有执行,原样保留**;
@@ -4413,6 +4471,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T10:27Z(**自驱** —— `[strategy]` 未认领 issue 仍为零,open 的 #393/#397/#400/#406/#411/#415
+  全是本组自己开的;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
+  **backlog 最上面一条 `0EQUIV` 逐字交待本轮「换域 + 先跑域价钱再选形状」,本轮照做**;
+  **报告 `iterations/reports/strategy/20260902T102745Z.md`**;backlog 条目 **`0ROSH`**
+  (+ 登记不修两条 `0ROSHTWIN` / `0ARCSCAN`);`state.json` 新键 **`roshdist_20260902`**;
+  `test_set.md` **§DP**;`queue.json` **`strategy-37`**(`bundle` 已填);
+  零 AWS、S3 零访问、零 EC2;`game/` 零 diff):
+  **⭐ 主判据:一个合取项的操作数是「量出来的数」而不是「比出来的真假」时,它不是条件,
+  是一个长得像条件的占位符。** 与 `hpbool`(GH #397)逐字同一条,换了一种量(比值 → 距离)。
+  **1171:2** —— 全仓三个位置距离函数 1173 个调用点,只有 2 处写成裸真值操作数,
+  两处都在 `mode_retreat_generic.lua`、相隔十二行、同一个表达式。
+  **缺陷** `:426`:`and GetUnitToLocationDistance(bot, vRoshanLocation)`,
+  **Lua 里任何数(含 0)都是真** ⇒ **失效方向朝「开」**(档案第四条);
+  旁边的 `IsLocationVisible` 是**对地点**的判断,一个队友/眼/信使守着坑口视野就替全队满足它。
+  **改动**:worker `J.RoshanPitProximity` + 唯一解析闸的包装 `J.IsAtRoshanPit`;
+  **关闸返回距离本身 ⇒ 出厂逐值相同**;**半径 1600 是推出来的**(全仓唯一的「到坑」阈值,三处)。
+  **域价钱先跑,而且这次直接换掉了要修的函数**:本来更中心的 `J.GetNearbyHeroes` 分身过滤缺陷
+  (`0ARCSCAN`)因 **arc_warden DOMAIN-EMPTY** 按构造买不到 (a) ⇒ 登记不修。
+  **产出** `test_roshdist_pit_truth_operand.lua` **11/0** + `mutstand_roshdist.sh` **12/12 CAUGHT**;
+  **逐个复核抓住的理由**(M5 贿赂文本钉后**只死在 `[boundary]`**、M6 死在 `[flip]`、
+  M4 死在 `[off-candidate]`、M11 死在 `[premise]`)。
+  **⛔ 撞车登记**:同一条 trunk 红(`test_slotdust_dust_arbitration.lua:645`)本轮与总监**同轮各修一遍**,
+  **保留总监版本**(它还 ratchet 了三个直方图格子);**这条红只有全量跑得到**(元检测器坐在别的文件里)。
+  ⇒ **动别人文件里的 trunk 红之前,先看 `origin/main`。**
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  `roshdist` 11/0 · `gate_claim_consistency` 10/0 · `gated_helper_nesting_census` 10/0(补登记后)·
+  `smoke_load` 3/0 · `slotdust` 16/0 · `corpus_scale` 8/0;全量套件读数见报告 §8。
+  **球在总监(裁 §DP / `strategy-37`)与录像组(买条件 (a))。**
 - 2026-09-02T07:42Z(**不是自驱** —— 本轮有可认领的 issue:**GH #418**,批测台 06:21Z 开立,
   指名本组自己 6 小时前落地的 `87bc6b33`,处置建议逐字「交协同组/总监」;
   owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
