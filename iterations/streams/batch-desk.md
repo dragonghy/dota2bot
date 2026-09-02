@@ -8327,6 +8327,88 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
 (理由是「拒答不是判决」,**不是**因为当前市场被判 ok)。
 **本轮 token**:`TOKENS total_in=3,072,435 out=30,721 turns=28`。
 详见 `iterations/reports/batch-desk/20260902T004500Z.md`。
+- 2026-09-02T03:30Z(**发 W37 —— 52-id 家族第二波;spot 4×1;`RB_EXIT=0` 三轮来第一次拿到裁定,而上一轮的 `exit 2` 是我们自己写的**)。
+  **一、自检** 第一条命令**又误用管道**,自检自拒并打 `REFUSED … stdout is a pipe; exit 2, nothing checked`
+  (**管道守卫第 12 个外部验收点、同形第八次**);改走 `rc.sh` 后拿到**真判决 `RC_EXIT=3`**,
+  **连续两轮「无自检总判决」到此中断**。`exit sources`:`legs 8`,`FINDINGS = cadence + trunk-red(python) + trunk-red(lua)`,
+  `UNCERTIFIABLE = none`。lua 红 = `test_incoming_damage_callsite_census.lua`(**GH #394 第五次复现**);
+  python 红 = `illumove_pairs:HP_CUT is classified (UNREGISTERED)`,**而 `illumove` 正是本波 armed 的 52 个之一**。
+  **两条都照抄工具自己那句边界:未 `git stash` 重跑,故不声称 main 也红。**
+  **二、成本** 九月 MTD **`$3.637`**(`budgets` 免费通道,快照 `2026-09-01T17:58:37Z`,**与上一轮同一张 ⇒ 无新围栏信息**);
+  forecast/limit 150.867/100(开月外推,**不是刹车信号**);MTD `< $35` ⇒ **CE 复核未触发,那 `$0.01` 没花**。
+  围栏 = `3.637 + W36 实测 ~0.5 + W37 预估 spot 0.90` = **`$5.04`** ≤ **$80** ⇒ **闸 (iii) 过**;
+  最坏(全程降级按需 $2.15)`$6.29` **同样过**;**不跨任何 owner 可见告警档 ⇒ 不欠解释行**。
+  **三、⭐⭐⭐ `reclaim_blind.py` 的 `exit 2` 这一轮是我们自己造的(GH #412,本轮新立)。**
+  第一次调用打 `UNDECIDABLE: seed 2745: unknown SIR status_code 'Server.SpotInstanceTermination'` ——
+  W36 的收割轮把 `machines[].status_code` 写成了 **EC2 `StateReason.Code`** 词汇,而工具读的是 **SIR `Status.Code`**
+  (W33/W35 写的都是 SIR 词汇,W34 四台全 `null` ⇒ **这条写入约定没有守卫,已漂过两种形态**)。
+  从该记录**自己的第一手 `sir_status_code`** 回填(EC2 值移入新键 `ec2_state_reason_code`)后,
+  **同一份输入、同一个工具** ⇒ **`RB_EXIT=0` / `not blinded` / `NEXT WAVE: spot`**。
+  ⚠️ **诚实边界**:这**不是新测量** —— 本轮 `describe-spot-instance-requests` **返回空**(SIR 已过期),
+  正因如此更正只能取自记录。**失效方向才是要点**:工具**响了**,但那句话把归因指向外面,
+  于是**两轮的报告行长得一模一样**(上一轮是真的 `BRACKET VIOLATED`,这一轮不是),
+  而 **GH #408 要的那条裁定,输入之一今天本来就读得出来**。
+  **四、⭐⭐ §DA.2 的 baseline 重建按设计不可执行(GH #413,本轮新立)。** 语料下齐(305 + 196 = **501** 局,
+  165 个 sidecar,零 EC2)后 `--emit-baseline` 打 **`CANNOT CERTIFY: claim sidecars disagree about rec_slots: [1, 12]`**
+  (`rec_slot_cost.py:180`,**五条永久 REFUSALS 之一**):baseline 契约是 **REC_SLOTS=1 profile**,而 **W25 是 12**。
+  **裁定目的正确,唯一能实现它的动作被 profile 契约挡住** —— 而 §DA.3 证明有毛病的恰恰就是那一种 profile。
+  ⇒ `--rec-slots` **保持 8**,**验收门不跑**(拿旧 baseline 冒充新 baseline 是「事后改判据」的镜像)。
+  **五、发波前四道门** `tree_verified` = `git ls-remote origin main` = 本地 HEAD = **`ada4717f…`**(逐字节);
+  `arm` = **52 ids / 459 字节 / md5 `c5af3b11deb9c024983c22afb90d9a7d`**(**与 W35 逐字节相同**);
+  `carrier_terms.py --arm` **exit 0**(10 hero / 42 generic / 0 unresolved ⇒ 6 terms,与手写六项同一集合);
+  `seed_draft.py --assert-carrier-from-arm` ⇒ **`CARRIER_GATE ids=10 seeds=4 exit=0`,六项全 `satisfied=2`**;
+  `seed_roster_index.py --build` **exit 0**(选种之前)。⚠️ `check_armed_wiring.py` **第一次调用 `EXIT=2 No such file`** ——
+  章程与上一轮写的 `tools/batch_test/soak/…` **路径没有 `soak/` 这一段**;按真实路径重跑才得 **`exit 0` all 52 wired**。
+  **`exit 2` 不是通过。**
+  **六、⭐⭐ 闸 (ii) 走的是第三支不是第一支。** `bots/` 自 W35 树确有 3 个 commit(两步核法:
+  `fetch --depth 1` **exit 0** → `git log` **exit 0**,**认退出码不认空输出**),但它们落地的 `hpbool`/`slotarb`/`slotdust`
+  **一个都不在 armed 串里 ⇒ 行为上惰性**。**朴素读法「`bots/` 变了 ⇒ 第一支过」错在危险的一侧**:
+  那会把本波当新配置,于是 **W35 的 2986 不能并池,四粒新种子白买**。实际走第三支「累计种子 < 8」(**约 1 粒**),
+  **而这一支同时是并池的许可证**:W37 四粒 + W35 的 2986 = **5 粒**(仍 < 8,家族还要再买)。
+  **七、选种 `[2601,3000]`:popcount-4 层已空,`BEST slots = 12` 恰好等于下限。**
+  `20 banked-or-drawn / 380 unused`,`popcount {3:49, 2:141, 1:140, 0:50}`,36 个 mask,最优层 17 个组合。
+  排除集 = 索引 banked ∪ **W35+W36 抽过的八粒**(**抽过就是抽过**)。**GH #285 的右移触发条件(搜出 0)仍未到
+  ⇒ 不右移、不放松 ≥2/term(第二十二轮未裁)**;但 **下一波极可能直接搜出 0**(是算术不是预言),
+  **预登记处置:右移 `[3001,3400]`,自律不动**。同层零成本次序偏好(pudge,服务 `strategy-26`/`rotscope`)⇒
+  选中 **2673 / 2735 / 2752 / 2874**,**其中两粒带 pudge**(W36 只有一粒)。
+  ⚠️ **六项各恰好 2 ⇒ 任何一台被回收该项就掉到 1**,而 W33/W35/W36 分别丢了 3/3/4 台 ——
+  **本波载体冗余是本台记录里最薄的一次,归因是选种池不是市场**。
+  **八、起飞:四台全 `SPOT_RUN_EXIT=0`,本台记录里最好的一次放置。**
+  `2673→2a` / `2735→2b` / `2752→2c` / `2874→2d`,**请求即实得,4/4 互不相同**,
+  **`InsufficientInstanceCapacity` 零次**,**一行 `re-aiming` 都没有**,`AZ RING EXHAUSTED` 没有,
+  **市场降级阶梯一级都没下** ⇒ **GH #252 与 GH #256 的严格验收双双通过**。
+  `InstanceLifecycle` 四台全 `spot`、全 `running`、四个 SIR 互不相同;`soak-run` 标签四值两两不同并与 run_id 逐一对上。
+  ⚠️ **这是关于此刻 us-west-2 容量的读数,不是对 GH #408 的反驳** —— 连续三波被 `no-capacity` 打掉 3/3/4 台,
+  **一次干净起飞不注销那条**。
+  **九、⚠️⚠️ 一条本台自己造成的偏离:`--ref` 没钉。** 本波未传 `--ref <sha>` ⇒ `REF` 取默认字面量 `main`,
+  run_id 成了 `spot_<ts>_1_**main**_<token>`(W35/W36 带的是 40 位 SHA)。**测量不受影响**
+  (`git ls-remote origin main` 在发波前、`03:32:04Z`、`03:32:30Z` **三次**都等于 `ada4717f…`),
+  **但归档 run_id 从此不再记录测的是哪棵树 —— 审计链静默变弱,没有任何东西举手**。
+  权威通道仍在并登记为收割义务:**读一局暖场的 `script_version` 断言 = `ada4717f…` 再并池**;
+  **下一次发波必须传 `--ref <40 位 sha>`**。未为此杀波重发(树已三次核对一致,重发买不到测量上的改善)。
+  **十、泄漏:CLEAN** —— 发波轮收尾固定两条都做了:(1) 波次点名:`soak-run` **恰好四个值**,与
+  `W37_wave.json:machines[].run_id` **一一对上**;(2) 回收普查:`terminated,shutting-down` **空**,
+  截至 `03:32:30Z` **本波窗口内无 `Server.SpotInstanceTermination`**。`describe-volumes` 四卷全 `in-use`(无孤儿),
+  常驻仅 AMI `ami-0a990a26d89c66547`。
+  **十一、queue.json** 八行(`strategy-25/26/27/28/29/30` + `hero-24/25`)`rides_wave` 改记 **W37**
+  并写明**与 W35 的 2986 可并池**的理由;`strategy-31/32`(`tormself`/`immguard`)改记
+  **「不搭 W37,§DH.3 出集,退回不是 reject」** —— **它们现在不搭任何波,按铁律 9 显式交回总监**。
+  **十二、铁律 6** `bots/`/`game/` **一行未改**;静态半 `luacheck_gate.sh` ⇒ **`GATE_EXIT=0 CLEAN`**
+  (冷启自装 `lua-check`,`bots game: 0 警告`);`arm_push_gate.sh` 已上膛;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;
+  动态半(#124)**未跑不声称**。**铁律 11**:未触发 `requires approval`;GitHub MCP 可用;**无空转等待**
+  (闸 (i) 前那 ~14 分钟全用在零成本准备上,守卫按 **exit 9** 拦了第一次调用)。
+  **交棒**:① ⭐⭐⭐ 总监 —— **GH #412**(新立);② ⭐⭐⭐ 总监 —— **GH #408 仍零评论未裁**;
+  ③ ⭐⭐⭐ 总监 —— **GH #413**(新立);④ ⭐⭐ 总监 —— **GH #285 第二十二轮未裁,离咬人只剩一波**;
+  ⑤ ⭐⭐ 本台下一轮收割 W37 两件必做(暖场 `script_version` 断言 + SIR 词汇回填);
+  ⑥ ⭐⭐ 总监/协同组 —— 自检 python 红坐在本波语料通道上(`illumove`);⑦ ⭐ 总监/英雄组 —— **#394 第五次复现**;
+  ⑧ ⭐ 总监 —— **§DC.3 (甲) 的债本轮找到家了**(`illumove`×`illureal` 都在本波 armed 串里 ⇒ **登记为 W37 收割义务**);
+  ⑨ ⭐ 总监/协同组 —— `strategy-31/32` 不搭任何波,需一条载体路径;
+  ⑩ ⭐ 存量:**#388 的 W34 103 份 `.dem` 2026-09-22 到期(距今 20 天)** / #402 / #395 / #375 / 按需常数第六轮 /
+  #317 五条 / `strategy-5b` 第十三轮 / #398 / #399 / #382 / #383 / #290 / #313 / #207 / #218 / #367 / #295 /
+  #252 / #256 / #282 / #329 / #321 / #271。
+  **下一轮本台 = 收割 W37**(闸 (i) 于 **`2026-09-02T09:31:28Z`** 解锁;四台预计 `~04:2x-05:3xZ` 自毁)。
+  **本轮 token**:见报告最后一节。
+  详见 `iterations/reports/batch-desk/20260902T033000Z.md` 与 `iterations/reports/batch-desk/waves/W37_wave.json`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和

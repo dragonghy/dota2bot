@@ -1,0 +1,186 @@
+{
+ "wave": "W37",
+ "_note": "First-hand launch record, written 2026-09-02T03:3xZ. Fields under `harvest` are backfilled by the harvesting round (GH #271: write at take-off, backfill at harvest). The harvesting round MUST write machines[].status_code / create / update AND the leg counts ab / ba / arm_depth under exactly those bare names -- reclaim_blind.py reads them. *** GH #412, READ THIS BEFORE BACKFILLING: machines[].status_code takes the SIR `Status.Code` vocabulary (instance-terminated-by-user / instance-terminated-no-capacity), NOT the EC2 `StateReason.Code` vocabulary (Server.SpotInstanceTermination / Client.UserInitiatedShutdown). W36's harvest round wrote the EC2 vocabulary and reclaim_blind.py answered `exit 2 UNDECIDABLE: unknown SIR status_code` -- a refusal caused by our own record that read exactly like a genuine market UNDECIDABLE. Put the EC2 value under ec2_state_reason_code.",
+ "tree": "ada4717f3b99eaed25e80d746f07d66ca13ea174",
+ "tree_verified": "git ls-remote origin main == local HEAD == ada4717f… , byte-identical, checked BEFORE launch (charter step 5) and re-checked at 03:32:04Z and 03:32:30Z (still ada4717f…) -- i.e. the tip did not move across the whole launch window, so the instances' `--ref main` clone resolves to the verified tree.",
+ "ref_pin_deviation": "*** DEVIATION FROM W36, NAMED HERE RATHER THAN LEFT IN THE LOGS: this wave was launched WITHOUT `--ref <sha>`, so spot_run.sh's REF defaulted to the literal string `main` and the run_id reads `spot_<ts>_1_main_<token>` instead of carrying the 40-char SHA the way W35/W36's do. The measurement is not affected (the tip was verified identical before and after launch), but THE ARCHIVED run_id NO LONGER RECORDS WHICH TREE WAS TESTED -- the audit trail got weaker, silently, and nothing raised a hand. The authoritative channel survives: every per-game analysis.json carries `script_version` = `mirror:<cand>:s<seed>:<side>` for a validation game and the bare tree SHA for a warm-up game. HARVEST OBLIGATION: read a warm-up game's script_version and assert it equals ada4717f… before pooling. NEXT LAUNCH MUST PASS `--ref <full sha>`.",
+ "arm_ids": 52,
+ "arm_bytes": 459,
+ "arm_md5": "c5af3b11deb9c024983c22afb90d9a7d",
+ "arm_source": "iterations/streams/test_set.md:2 (54 -> 52 after test_set.md §DH.3 took tormself + immguard out)",
+ "arm_note": "SECOND wave of the 52-id family, and BYTE-IDENTICAL to W35's arm string (52 ids / 459 bytes / md5 c5af3b11deb9c024983c22afb90d9a7d). The three commits that landed on bots/ since W35 (da63008e hpbool, 0b468372 slotarb, 87bc6b33 slotdust) all gate ids that are NOT in the armed string, so this configuration is behaviourally equivalent to W35's => W37's four seeds POOL with W35's one banked seed 2986 (5 of the 8 the depth gate wants). Gate (ii) was therefore taken on its THIRD limb (accumulated seeds < 8), NOT on 'bots/ changed' -- the naive reading would have made this a new configuration and thrown away the pooling.",
+ "seeds": [
+  2673,
+  2735,
+  2752,
+  2874
+ ],
+ "carrier_terms": [
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "instance_type": "c6i.4xlarge",
+ "slots": 16,
+ "rec_slots": 8,
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "market": "spot",
+ "market_note": "SPOT, the owner's GH #158 default. Unlike the previous two rounds this was NOT taken as a 'refusal is not a verdict' fallback: reclaim_blind.py returned RB_EXIT=0 this round (after the GH #412 status_code correction) and its own last line reads `NEXT WAVE: spot (the default; GH #158 unchanged)`.",
+ "cost_estimate": "~$0.90/wave (charter's spot constant, 2026-08-30 director ruling). Auto-invalidation clause: any wave measuring >$0.90 on the billing side must be named in that round's report and re-ruled.",
+ "rec_slots_note": "--rec-slots 8 unchanged. The §DA.2 obligation to REBUILD rec_slot_baseline.json before re-running the acceptance gate was ATTEMPTED this round and hit a permanent refusal: --emit-baseline over the 2026-08-22 baseline corpus (305 games, rec_slots 1) + W25 (196 games, rec_slots 12) dies at rec_slot_cost.py:180 `CANNOT CERTIFY: claim sidecars disagree about rec_slots: [1, 12]`. Design, not corpus. Filed as GH #413; the acceptance gate was NOT run, because running it against the old baseline would be the mirror image of changing the criterion after the fact.",
+ "carrier_gate": {
+  "hand_typed_6_term": "crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus",
+  "mechanical_from_arm": "carrier_terms.py --arm <52-id> => CARRIER_EXIT=0, 10 hero-scoped / 42 generic / 0 unresolved => 6 term(s), SAME SET as the hand-typed six",
+  "seed_gate": "seed_draft.py --assert-carrier-from-arm <52-id> 2673 2735 2752 2874 => CARRIER_GATE ids=10 seeds=4 exit=0, all six terms satisfied=2",
+  "thinness_caveat": "every term is satisfied by EXACTLY 2 of the 4 seeds (12 slots = the bare minimum). One reclaimed machine drops that term to 1. W33/W35/W36 lost 3/3/4 machines. This is the thinnest carrier redundancy on this desk's record, and the cause is the seed pool, not the market -- see seed_search_note."
+ },
+ "wiring_gate": {
+  "tool": "tools/batch_test/check_armed_wiring.py --cand <52-id> --ref HEAD",
+  "exit": 0,
+  "result": "all 52 armed ids wired on HEAD",
+  "path_correction": "the charter and the previous round both cite tools/batch_test/soak/check_armed_wiring.py; the real path has no soak/ segment. The first call returned exit 2 `No such file or directory` -- and exit 2 is not a pass."
+ },
+ "seed_index_note": "seed_roster_index.py --build ran BEFORE seed selection (charter live rule) => EXIT=0.",
+ "seed_search_note": "Mask exhaustion (GH #313) on window [2601,3000]: 20 banked-or-drawn / 380 unused, popcount supply {3:49, 2:141, 1:140, 0:50}, 36 distinct masks, BEST slots = 12 in 17 mask-combos. *** THE popcount-4 LAYER IS NOW EMPTY (it was {4:3} last wave, and W36 drew two of those three). That is the periodic mechanism the charter named on 08-30: every wave picks the carrier-richest four, so every wave shaves the window's top popcount layer. Consequence: BEST slots = 12 is EXACTLY the floor (6 terms x 2), i.e. only a perfect partition works and this is the last layer that admits one. GH #285's right-shift trigger (search returns 0) has still not fired -- twenty-second round unruled -- so this desk did NOT shift the window and did NOT relax the >=2/term discipline. PRE-REGISTERED: if the next wave's search returns 0 in [2601,3000], shift to [3001,3400] per the charter's disposition, without relaxing >=2/term. Exclusion set = index-banked seeds UNION the eight drawn by W35+W36 (2658/2774/2963/2986 + 2745/2838/2850/2922) -- drawn is drawn, even where the index honestly shows W35's three as unused because they produced zero games. Zero-cost tie-break inside the optimal layer: pudge carriage for queue strategy-26 / rotscope -- 2673 AND 2735 both carry pudge (W36 got one such seed).",
+ "gates": {
+  "i_throttle_6h": "SATISFIED, and the guard fired for real. W36 took off 2026-09-01T21:31:10Z => unlock 2026-09-02T03:31:10Z. The round fired 03:12:55Z; the launch block's first call was refused by its own guard at 03:17:18Z with `GATE-I NOT OPEN: now=2026-09-02T03:17:18Z unlock=2026-09-02T03:31:10Z` and exit 9. It then held, printed `GATE-I UNLOCKED at 2026-09-02T03:31:28Z (>= 2026-09-02T03:31:10Z)` and only then issued the first call. No exception taken. The ~14 minutes went to zero-cost prep (costs, harvest reconciliation, the GH #412 correction, the GH #413 attempt, four gates, seed search), not idling.",
+  "ii_new_to_test": "SATISFIED ON THE THIRD LIMB (accumulated seeds < 8), NOT on the first. bots/ did change since W35's tree (3 commits, two-step check: `git fetch --depth 1 origin e81ba0ae…` exit 0, then `git log e81ba0ae..HEAD -- bots/ game/` exit 0 with 3 commits -- exit code read, not empty output), but all three land gated ids that are NOT armed => behaviourally inert. Reading that as 'new configuration' fails on the DANGEROUS side: it would forbid pooling W35's banked seed 2986 and burn four seeds for nothing. The 52-id configuration has ~1 scored seed accumulated, far under 8.",
+  "iii_budget": "SATISFIED -- September MTD $3.637 (budgets, free channel, snapshot 2026-09-01T17:58:37Z, the same snapshot as last round => no new fence information) + W36 measured ~$0.5 + this wave ~$0.90 => fence ~$5.04 against the $80 fence; worst case (full degradation to on-demand $2.15) $6.29, also passing. No owner-visible Budget tier ($50/$80/$100) crossed, so no cross-tier explanation line is owed. Brake $90 and owner line $100 nowhere near. CE re-check NOT triggered (MTD < $35) => that $0.01 was not spent.",
+  "iv_inputs": "SATISFIED -- no harvest owed. W36 was harvested in full last round (RV_EXIT=0). At launch s3://…/soak/ carried only W35's and W36's already-harvested prefixes, validation/ no new verdict, and describe-instances showed zero pending/running instances.",
+  "iv_reclaim_blind": "RUN THIS ROUND, and for the first time in three rounds it returned a VERDICT: RB_EXIT=0, `VERDICT: not blinded -- the wave delivered 2 paired seed(s)`, `NEXT WAVE: spot`. The first call returned exit 2 `unknown SIR status_code 'Server.SpotInstanceTermination'` -- caused by W36's own record writing the EC2 vocabulary into machines[].status_code. See GH #412 and the report §2.1."
+ },
+ "expected_games": "4 seeds x 12 games x 2 legs ~ 96 scored (excl. warm-ups)",
+ "self_destruct": "spot + 2h watchdog, self-terminating; --instance-initiated-shutdown-behavior terminate; one-time (non-persistent) spot requests",
+ "progress_at_launch": "0 games (four machines just took off)",
+ "machines": [
+  {
+   "seed": 2673,
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2a",
+   "instance": "i-0c24d6881c00d9f61",
+   "run_id": "spot_20260902_033128_1_main_84f4fc",
+   "run_token": "84f4fc",
+   "sir": "sir-3kffjbbm",
+   "launched": "2026-09-02T03:31:28Z",
+   "carriers": [
+    "crystal_maiden",
+    "spirit_breaker",
+    "zuus",
+    "pudge"
+   ],
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "capacity_refusals": 0
+  },
+  {
+   "seed": 2735,
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2b",
+   "instance": "i-0f3c1ebca2ff89df0",
+   "run_id": "spot_20260902_033132_1_main_a57e1e",
+   "run_token": "a57e1e",
+   "sir": "sir-w4ifkkvn",
+   "launched": "2026-09-02T03:31:32Z",
+   "carriers": [
+    "crystal_maiden",
+    "spirit_breaker",
+    "zuus",
+    "pudge"
+   ],
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "capacity_refusals": 0
+  },
+  {
+   "seed": 2752,
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2c",
+   "instance": "i-05aafd271394099ad",
+   "run_id": "spot_20260902_033137_1_main_83e4fa",
+   "run_token": "83e4fa",
+   "sir": "sir-txsfj22m",
+   "launched": "2026-09-02T03:31:37Z",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king"
+   ],
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "capacity_refusals": 0
+  },
+  {
+   "seed": 2874,
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2d",
+   "instance": "i-0c5437a9fa7c44e73",
+   "run_id": "spot_20260902_033141_1_main_26717d",
+   "run_token": "26717d",
+   "sir": "sir-niqfg18m",
+   "launched": "2026-09-02T03:31:41Z",
+   "carriers": [
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king"
+   ],
+   "market": "spot",
+   "instance_lifecycle": "spot",
+   "state_at_verify": "running",
+   "capacity_refusals": 0
+  }
+ ],
+ "az_spread": {
+  "requested": [
+   "us-west-2a",
+   "us-west-2b",
+   "us-west-2c",
+   "us-west-2d"
+  ],
+  "actual": [
+   "us-west-2a",
+   "us-west-2b",
+   "us-west-2c",
+   "us-west-2d"
+  ],
+  "distinct": 4,
+  "capacity_refusals": 0,
+  "re_aiming": "NONE -- not a single `! <name>: re-aiming inside the ring -> <az>` line in any of the four logs.",
+  "ring_exhausted": "NONE -- `!! AZ RING EXHAUSTED` did not appear.",
+  "market_degradation": "NONE -- no c6a fallback, no --on-demand; all four InstanceLifecycle=spot.",
+  "acceptance": "GH #252 (>=2 distinct) PASSES and GH #256's STRICT acceptance (four mutually distinct) PASSES -- requested == actual on all four, with zero InsufficientInstanceCapacity. This is the exact opposite of W36, which collapsed to 2 distinct AZs after 6 capacity refusals, and it is a reading about THIS MOMENT'S us-west-2 capacity, not a refutation of GH #408: three consecutive waves were mauled by no-capacity reclaims and one clean take-off does not retire that."
+ },
+ "run_id_uniqueness": {
+  "soak_run_tags_pairwise_distinct": true,
+  "evidence": "ec2 describe-instances Tags[?Key==`soak-run`] returned exactly four values, pairwise distinct, and each matches a machines[].run_id: …033128_1_main_84f4fc / …033132_1_main_a57e1e / …033137_1_main_83e4fa / …033141_1_main_26717d (an evidence source independent of this session's own transcript).",
+  "run_tokens": [
+   "84f4fc",
+   "a57e1e",
+   "83e4fa",
+   "26717d"
+  ]
+ },
+ "market_verified": {
+  "method": "describe-instances InstanceLifecycle (the run_id `spot_` prefix is a hard-coded string and is NOT evidence)",
+  "result": "all four `spot`, all four `running`, four distinct SpotInstanceRequestIds (sir-3kffjbbm / sir-w4ifkkvn / sir-txsfj22m / sir-niqfg18m)"
+ },
+ "launch_round_roll_call": {
+  "pending_running_soak_run_values": [
+   "spot_20260902_033128_1_main_84f4fc",
+   "spot_20260902_033132_1_main_a57e1e",
+   "spot_20260902_033137_1_main_83e4fa",
+   "spot_20260902_033141_1_main_26717d"
+  ],
+  "matches_machines_run_id": "yes, one-to-one, none missing and none extra",
+  "terminated_shutting_down": "EMPTY -- no Server.SpotInstanceTermination inside this wave's window as of 03:32:30Z",
+  "volumes": "four, all in-use (the four instances' roots); no orphans",
+  "note": "charter step 6's two-command roll-call for a launch round. Its whole point is that --leak-only only reports what is EXTRA; it never raises a hand for a machine that is MISSING. Terminated instances survive ~1h in the API (GH #375), so a reclaim after ~04:3xZ will not be readable by the next round -- the settlement channel is then describe-spot-instance-requests, and per GH #412 its Status.Code is what goes into machines[].status_code."
+ },
+ "terminated_capture_obligation": "These four take off 03:31:2x-03:31:4xZ and self-destruct by ~05:3xZ at the latest (2h watchdog); on W36's realised rate expect ~04:2x-04:3xZ. The next round of this stream (~05:1xZ) will probably find describe-instances empty -- PRE-REGISTERED HERE, as at W35/W36."
+}

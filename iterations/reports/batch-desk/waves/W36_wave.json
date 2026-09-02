@@ -88,7 +88,7 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": "Server.SpotInstanceTermination",
+   "status_code": "instance-terminated-no-capacity",
    "create": "2026-09-01T21:31:44Z",
    "update": "2026-09-01T21:33:22Z",
    "terminated": "2026-09-01T21:33:22Z",
@@ -99,7 +99,8 @@
    "StateReason.Code": "Server.SpotInstanceTermination -- Service initiated (2026-09-01 21:35:25 GMT), i.e. ~4.25 min after take-off. Read first-hand from describe-instances state census inside the wave lifecycle (the launch-round census the charter mandates).",
    "lifetime_min": 1.63,
    "refilled_by": "spot_20260901_214412_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_b44770",
-   "sir_status_code": "instance-terminated-no-capacity"
+   "sir_status_code": "instance-terminated-no-capacity",
+   "ec2_state_reason_code": "Server.SpotInstanceTermination"
   },
   {
    "seed": 2838,
@@ -119,7 +120,7 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": "Client.UserInitiatedShutdown",
+   "status_code": "instance-terminated-by-user",
    "create": "2026-09-01T21:32:16Z",
    "update": "2026-09-01T22:29:47Z",
    "terminated": "2026-09-01T22:29:47Z",
@@ -128,7 +129,8 @@
    "arm_depth": 23.17,
    "reclaimed": false,
    "sir_status_code": "instance-terminated-by-user",
-   "lifetime_min": 57.52
+   "lifetime_min": 57.52,
+   "ec2_state_reason_code": "Client.UserInitiatedShutdown"
   },
   {
    "seed": 2850,
@@ -149,7 +151,7 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": "Client.UserInitiatedShutdown",
+   "status_code": "instance-terminated-by-user",
    "create": "2026-09-01T21:32:33Z",
    "update": "2026-09-01T22:26:48Z",
    "terminated": "2026-09-01T22:26:48Z",
@@ -158,7 +160,8 @@
    "arm_depth": 17.3,
    "reclaimed": false,
    "sir_status_code": "instance-terminated-by-user",
-   "lifetime_min": 54.25
+   "lifetime_min": 54.25,
+   "ec2_state_reason_code": "Client.UserInitiatedShutdown"
   },
   {
    "seed": 2922,
@@ -179,7 +182,7 @@
    "market": "spot",
    "instance_lifecycle": "spot",
    "state_at_verify": "running",
-   "status_code": "Server.SpotInstanceTermination",
+   "status_code": "instance-terminated-no-capacity",
    "create": "2026-09-01T21:32:38Z",
    "update": "2026-09-01T21:38:01Z",
    "terminated": "2026-09-01T21:38:01Z",
@@ -190,7 +193,8 @@
    "StateReason.Code": "Server.SpotInstanceTermination -- Service initiated (2026-09-01 21:40:04 GMT), i.e. ~7.5 min after take-off.",
    "lifetime_min": 5.38,
    "refilled_by": "spot_20260901_214446_1_32abbfbb3b796069b01f5e92d59993640d8ce8c9_29c9a9",
-   "sir_status_code": "instance-terminated-no-capacity"
+   "sir_status_code": "instance-terminated-no-capacity",
+   "ec2_state_reason_code": "Server.SpotInstanceTermination"
   }
  ],
  "az_spread": {
@@ -347,5 +351,6 @@
   "verdict": "BOTH REFILLS DIED, TO THE SAME EVENT, IN THE SAME SECOND. SIR Status.UpdateTime is 2026-09-01T21:50:21Z for sir-kwi7gnvq AND sir-wjbqgh9q -- identical to the second -- both instance-terminated-no-capacity, both in us-west-2c, after 5.63 and 5.38 minutes. Their farm logs each end on `SPOT INTERRUPTION {\"action\":\"terminate\",\"time\":\"2026-09-01T21:52:21Z\"}`, the 2-minute notice for that same flip: two independent first-hand channels, consistent.",
   "games_produced": "ZERO. Each refill prefix in S3 holds exactly ONE object, soak_farm.log (3.6 KiB), uploaded 21:50:2xZ by the interrupt handler. No .analysis.json at all -- the farm was up (`soak farm up: ... (16 slots)`) and validate_onspot.sh had just been invoked when the notice landed.",
   "what_this_means": "The charter's pre-registered reclaim disposition ('a reclaimed machine means that seed lost an arm -- re-launch the missing seed down the same ladder') EXECUTED CORRECTLY and still bought nothing. Seeds 2745 and 2922 each lost BOTH their original machine AND their refill to instance-terminated-no-capacity. Re-launching into a window that is refusing capacity re-draws the same losing ticket; the disposition has no back-off, no market escalation and no second refill, so it terminates after one try with the seed still empty. Filed to the director as GH #408 -- NOT re-ruled here (market/ladder strategy is not this desk's surface)."
- }
+ },
+ "status_code_correction_note": "2026-09-02T03:2xZ batch-desk correction. The harvesting round wrote machines[].status_code with the EC2 StateReason vocabulary (Server.SpotInstanceTermination / Client.UserInitiatedShutdown) while reclaim_blind.py (GH #271) reads that bare name expecting the SIR Status.Code vocabulary (instance-terminated-no-capacity / instance-terminated-by-user) -- W33 and W35 wrote the SIR vocabulary, W36 did not. Consequence: reclaim_blind.py returned exit 2 UNDECIDABLE 'unknown SIR status_code' -- a REFUSAL CAUSED BY OUR OWN RECORD, not by the market. status_code is now set from this record's own first-hand sir_status_code field (read from describe-spot-instance-requests last round and reproduced in GH #408's table); the EC2 value is preserved under ec2_state_reason_code. NOT a new measurement: the SIRs have already aged out of the API (describe-spot-instance-requests returned EMPTY at 03:2xZ this round), which is exactly why the correction had to come from the record rather than from AWS."
 }
