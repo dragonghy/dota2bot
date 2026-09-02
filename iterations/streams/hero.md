@@ -22,7 +22,57 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--78. **把剩下 7 个 raw 文件迁到属主上(`-77` 的第二半),按「有没有红要解释」排序。**
+-79. **仍有一批(至少 17 处调用点)走 `bots/` 全树的测试文件把 gitignored 的 farm-only
+   开关当「shipped 源码」扫,列目录与打开之间有 TOCTOU 窗口。**
+   2026-09-02T22:54Z 那轮修了**共享扫描器** `tests/lua_source_scan.lua:M.bots_files()`
+   加**五个观测到过红的载体**(`test_gate_claim_consistency` / `test_gated_helper_nesting_census` /
+   `test_item_name_census` = GH **#365 §2** 公布的三个,加本轮两次自检各新加的
+   `test_coarmed_attribution_register:95` 与 `test_activemode_call_site_census:94`
+   —— 后者是同一个窗口的 `io.lines` 变体),报告 `iterations/reports/hero/20260902T225428Z.md` §5。
+   修法一行:`find ... ! -path "bots/Customize/soak_*.lua"`(`.gitignore:75-76` 的两个文件)。
+   - **⭐⭐ 这是 GH #365 §2 的根因,而且它从来不需要等 GH #229**:#365 把那三条红归因给
+     #229 的「两个 gate 测试抢同一个开关」并把修复路由进 #229(至今 open 且卡在读侧的
+     `GetScriptDirectory`)。但**这些文件不是 gate 测试,一行都不写开关,只是走过它** ⇒
+     修法在它们自己的 walk 里。**代价不是它骗了谁,是一件一行能修的事在一个卡住的 issue 里
+     躺了两天又复发一次。**
+   - **⚠️ 域没量准,这是 `-79` 的第一件事**:第一版 `grep "io.popen('find "` 数出 18 个,
+     **太窄**;放宽后 `io.popen` + `find` 的调用点有 **23 处**,其中**至少 17 处**仍走 `bots/`
+     (或一个可能等于 `bots` 的 `dir` 变量)且无排除。`test_talent_value_read_anchor`
+     只走 `bots/BotLib` ⇒ **结构上碰不到**;`botsinit_env_namespace` / `ckpush_minute_unit` /
+     `tormself_identity_domain` / `tpclaim_stamp_on_commit` 用 `dir` 变量,**要逐个读才能定**。
+     ⇒ **`-79` 先把域量准再动手**,别再从一个窄 grep 出发。
+   - 本轮修的 5 个都是**观测到过红的**(`-77`/`-78` 的同一条排序原则:先修有红要解释的);
+     剩下的**没有观测到过的红**,排在后面。
+   - **⭐ 排除是严格 no-op,这一点是量出来的不是推出来的**:开关在场 vs 不在场 vs 修完,
+     18 个文件的读数三次逐位相同(`tests=158 failures=0`)⇒ 只有**窗口**被拿掉,没有读数被改。
+   - **失效方向是假红**(吵而不骗),但吵的形状正是**不可归因的红**,且文本指着一个跟这些
+     普查主题无关的文件。⇒ 不紧急,但**别再让下一个人从零归因一遍**。
+   - 已追评 #365 并开 issue 交总监裁剩下 11 个怎么修(一个个改 vs 都收到共享扫描器上)。
+
+-78. **把剩下 5 个 raw 文件迁到属主上(`-77` 的第二半)—— 这 5 个是**故意留到最后**的。**
+   **2026-09-02T22:54Z 第三批 done(7 → 5)—— 报告 `iterations/reports/hero/20260902T225428Z.md`;
+   点名的 `aegis_grouping` + `tpreach_band`,棘轮 `RAW_CEILING` 7 → **5**、
+   `MIGRATED_FLOOR` 15 → **17**。`bots/`+`game/` 零行。**
+   - **⭐⭐ #417 的机制在第三、第四个文件上复现,两边的刀口都是用例名的字母序**:种下继承残留时
+     两个文件**各自整文件全绿 EXIT=0 且把残留删掉**(6/6、7/7),而**只跑 unarmed 用例**则**红**。
+     `tpreach_band` 那一格最难看:红掉的正是**钉住缺陷本身**的 case 1 ⇒ 继承残留会让这个文件
+     **把自己要证明的缺陷读成已经修好了**,还打 EXIT=0。
+   - **⭐ 并发 `rm` 台的逐断言前后对照**:两个文件都是 HEAD **8 条失败 / 0 条点名** →
+     迁移后 **40 条失败 / 40 条全部点名**。`8 → 40 不是回归`:HEAD 上另外 4 条 armed 用例
+     **在开关已被删掉时照样通过**(读到的未武装值恰好等于它们期待的值之一)。
+     ⚠️ 口径:`run_tests.lua` 按 GH #216 每条失败打两遍,原始 grep 计 80 行 = **40 条**。
+   - **⭐ M-D(假迁移)必须看普查读数,不能看棘轮的绿**:给一个 raw 文件加 `require` 但保留
+     私有 `io.open`,读数纹丝不动 `RAW(5)/MIGRATED(17)`;但**即使**它被误算成 migrated
+     (4/18),`4<=5` 与 `18>=17` **也全都通过** ⇒ **棘轮在这一格上零信息量**。
+     M-C(还原一个文件到 HEAD)则**红且数字对得上**(`6 ... up from 5`)。
+   - **⛔ 剩下的 5 个(`bbfight` / `bbrespawn` / `bbshort` / `pollyhp` / `salveally`)不是余数,
+     是 S2 那条读数的活载体**:它们的 `if sCand == nil then os.remove` 才是「unarmed 腿本身
+     就是删除者」的证据。迁走它们的那一次,**必须在同一个 change 里**把
+     `test_soakside_shared_switch.lua` 的 S2 一节改成引用档案而不是引用活文件,
+     并把 `RAW_CEILING` 归 0 / `MIGRATED_FLOOR` 抬到 22。这一条已写进棘轮的注释里。
+   - 以下是原正文(仍然适用于剩下的 5 个):
+
+-78-archive. **原 `-78` 正文(7 → 5 之前),按「有没有红要解释」排序。**
    **2026-09-02T17:04Z 第二批 done(12 → 7)—— 报告 `iterations/reports/hero/20260902T170446Z.md`;
    点名的那 5 个带直接读点的文件(`abil1st` / `abilanc` / `aimguard` / `replay_212636` /
    `soak_cand_ref`)+ 属主长出第二个入口 `arm_body`/`with_body`,棘轮 `RAW_CEILING` 12 → **7**、
@@ -3780,6 +3830,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-02T22:54Z(报告 `iterations/reports/hero/20260902T225428Z.md`;轴 **backlog `-78` 第三批**)
+  **改 6 个文件全在 `tests/`(2 个迁移 + 棘轮 + 共享扫描器 + 2 个普查);`bots/` 0 行、`game/` 0 行
+  ⇒ 零行为改动、零新 gate id、零 arm/promote、零 AWS、不申请波次;`state.json` / `test_set.md` /
+  `queue.json` 本轮无新增。raw 7 → 5,migrated 15 → 17。**
+  - 选题:OWNER_PRIORITIES 无本组项(三条常设项的球在批测台 / 协同组 / 协同组);三条 open
+    `[hero]` issue 与前三轮同因(#417 判定权在总监、#416 上一轮已执行完它自己的三条验收、
+    #407 被「拿到读数之前不许改 `bots/`」挡住,读数在 `queue.json:hero-27`)⇒ 取 `-78`,
+    执行**上一轮顺延的**第三批,棒没掉。
+  - **⭐⭐ #417 的机制在第三、第四个文件上复现,刀口两边都是用例名字母序**:种下继承残留时
+    `aegis_grouping` **6/6 绿**、`tpreach_band` **7/7 绿**且**都把残留删掉**;
+    **只跑 unarmed 用例**则两边都**红**。`tpreach_band` 那格最难看 —— 红掉的是钉住缺陷本身的
+    case 1 ⇒ **文件把自己要证明的缺陷读成已修好,还打 EXIT=0**。
+  - **⭐ 并发 `rm` 台逐断言对照**:两文件均 HEAD **8 失败 / 0 点名** → 迁移后 **40 失败 / 40 全点名**。
+    HEAD 上另外 4 条 armed 用例**在开关已被删时照样通过**。⚠️ 口径:GH #216 每条失败打两遍。
+  - **⭐ M-D 的教训:棘轮的绿在「假迁移」这一格上零信息量**(4/18 与 5/17 都过两条断言)——
+    只有普查读数本身能答;M-C(还原一个文件)则红且数字对得上。
+  - **⭐⭐ 计划外主产物:这是 GH #365 §2 的根因,而且它从来不需要等 GH #229。**
+    走 `bots/` 全树的普查把 **gitignored、farm-only、被每个 gate 测试创建又删除**的开关文件
+    当「shipped 源码」读,`find` 与 `assert(io.open)` 之间是 **TOCTOU 窗口**。#365 公布的三个
+    载体(`gate_claim_consistency:42` / `gated_helper_nesting_census:72` / `item_name_census:60`)
+    被归因给 #229 的「两个 gate 测试抢开关」并路由进 #229(至今卡在读侧 `GetScriptDirectory`)——
+    但**这些文件不是 gate 测试,一行都不写开关,只是走过它**。本轮两次自检又各加一个载体
+    (`coarmed_attribution_register:95`;`activemode_call_site_census:94`,同一窗口的
+    `io.lines` 变体)。**五个全修 + 共享扫描器**,修法一行
+    `! -path "bots/Customize/soak_*.lua"`;**排除是 no-op(量出来的)**:开关在场/不在场/修完,
+    我量到的那 18 个走全树的文件读数三次逐位相同 `tests=158 failures=0`。churn 台四个载体全
+    **0/6**(`coarmed` 修前 2/6 红),第五个定向 2/0 绿。
+    **⚠️ 域没量准**:放宽 grep 后 `io.popen`+`find` 有 **23 处**、**至少 17 处**仍无排除,
+    且几个用 `dir` 变量的要逐个读 ⇒ 新 backlog `-79`(第一件事是把域量准)+ 追评 #365 + issue。
+    **⚠️ 修的时候差点踩同族的坑**:注释里逐字写开关路径 ⇒ 那四个文件被开关普查收编成 RAW,
+    `RAW(5) → RAW(9)`,而**棘轮照样 16/16 绿**(S2 数的是 write+delete 都有的);
+    改成 `<that switch>` 后回到 5/17。这正是该普查为 `SELF` 写下的理由,**对第二个文件同样成立
+    而没人写下来**;抓到它的是**重跑探针**,不是门。
+  - **⚠️ 自伤两笔**:(1) 我的变异台**污染了并发跑着的开工自检**,那次 `TRUNK RED -- 6 of 73`
+    **六条全部**是我造成的(三条 TOCTOU,三条文本里直接印着我 churn 写的 `cand = 'x'`)⇒
+    那次 Lua 腿读数作废,已在安静树上重跑;**自检的免责句只挡「main 可能是绿的」,
+    不挡「同容器兄弟进程就是原因」**(这一格交总监)。(2) `pkill -f <标记>` 把我自己的 shell
+    杀了两次(EXIT=144),因为**标记同时出现在调用方命令行里**;且 `setsid ... & $!` 拿到的是
+    立刻退出的 setsid pid ⇒ 留下 2 个孤儿,按 pid 点杀才收干净。**下次让循环脚本自己写 pid 文件。**
+  - 门:开工自检第一次调用**又被拒答**(`SELFCHECK_EXIT=2 REFUSED`,stdout 接进 `tail`)——
+    证据纪律 3 的**第 9 次**现场;改对后 **`worst exit: 3`**(`legs run 9`、`UNCERTIFIABLE: none`,
+    findings = cadence + trunk-red(python) + trunk-red(lua),后者见自伤 (1))。
+    python 那 3 条**全部先于本轮且本轮零 `.py` 改动**:`illumove_pairs:HP_CUT`(GH #410)
+    **加两条新的** `wandbleed_trigger:HP_MAX` / `HP_MIN_EXCLUSIVE`(来自录像组 21:55Z 的
+    `9cf795bb`,同一个 `HP_CENSUS` 未登记类)⇒ 追评 #410,不新开。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings` / `RC_EXIT=0`**(冷启自装,
+    **没用 `RULE6_BYPASS`**)。⚠️ 但 `ensure_lua_toolchain.sh` 本容器**先失败一次**
+    (`could not provide lua5.1/luacheck`),紧接着裸 `apt-get install -y lua5.1 lua-check`
+    **成功**(~2s)—— 疑似 dpkg 锁被并发自检占住,**是假设不是结论**(脚本 `>/dev/null` 吞了 apt 报错)。
+    动态定向:迁移文件 **6/0**、**7/0**,棘轮 **16/0**;同进程按套件序 **`DRIVER_FILES=23
+    DRIVER_TESTS=302 DRIVER_FAILURES=0`**,跑完开关文件不存在。**全量套件没跑成,不声称**
+    (起过一次但与 churn 循环时间重叠 ⇒ 污染,主动掐掉)。
+  - **交出去的棒**:新开 `[harness]` issue(剩 12 个私有 `find` 怎么修 + 自检横幅不区分
+    「trunk 红」与「同容器兄弟进程红」);GH **#410** 追评两个新载体;
+    backlog `-78` 只剩最后 5 个(**要连 S2 改写一起做**),新增 `-79`。
 - 2026-09-02T19:48Z(报告 `iterations/reports/hero/20260902T194820Z.md`;轴 **GH #416 的验收三条**)
   **改 1 个文件,在 `tests/`**(新 `test_zusult_pre_ladder_claim_retake.lua`,9 节);
   **`bots/` 0 行、`game/` 0 行 ⇒ 零行为改动、零新 gate id、零 arm/promote、零 AWS、不申请波次;

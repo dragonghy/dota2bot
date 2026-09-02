@@ -139,20 +139,28 @@ local function partition()
     return raw, migrated
 end
 
---- The hazard the census measures, as a number that must never grow.  Fifteen
---- files delegate today: the four with an observed red (test_cm_pos5_boots --
---- GH #417's subject -- and the three GH #365 §3 subjects), the six
---- uniform-shape gate tests migrated for hero backlog `-78` (axe_blink_build,
---- corefarm, deathzone, nopush, tpsafe, slardar_tp), and the five that carried
---- a direct read of the switch as well (abil1st, abilanc, aimguard,
---- replay_212636, soak_cand_ref -- the last of these is why the owner grew
---- `arm_body`).  The rest still carry their own unchecked copy.
-local RAW_CEILING = 7
+--- The hazard the census measures, as a number that must never grow.
+--- Seventeen files delegate today: the four with an observed red
+--- (test_cm_pos5_boots -- GH #417's subject -- and the three GH #365 §3
+--- subjects), the six uniform-shape gate tests migrated for hero backlog `-78`
+--- (axe_blink_build, corefarm, deathzone, nopush, tpsafe, slardar_tp), the
+--- five that carried a direct read of the switch as well (abil1st, abilanc,
+--- aimguard, replay_212636, soak_cand_ref -- the last of these is why the
+--- owner grew `arm_body`), and the two of 2026-09-02T22:54Z (aegis_grouping,
+--- tpreach_band).
+---
+--- The FIVE left are left ON PURPOSE and are not a backlog remainder: their
+--- `if sCand == nil then os.remove(SIDE_PATH)` unarmed leg is the live carrier
+--- of S2's own reading ("every such process is BOTH a writer and a deleter"),
+--- so migrating them silently would delete the evidence this file cites.  When
+--- they go, S2 must be rewritten to cite the archive instead of the tree, in
+--- the same change (hero backlog `-78`).
+local RAW_CEILING = 5
 
 --- ...and the same number from the other side.  A file may leave the RAW set
 --- only by joining this one, so a "migration" that merely deletes the copy
 --- without delegating cannot pass both.
-local MIGRATED_FLOOR = 15
+local MIGRATED_FLOOR = 17
 
 -- ---------------------------------------------------------------------------
 -- [source S1] one literal path, shared by every gate test in the tree
@@ -209,9 +217,10 @@ tests['[ratchet] [source S2] the unarmed leg is itself a deleter -- the hazard i
     assert(#migrated >= MIGRATED_FLOOR, 'only ' .. #migrated
         .. ' files delegate to ' .. OWNER .. ', down from ' .. MIGRATED_FLOOR
         .. '; the four with an observed red (GH #417 and the three GH #365 §3 '
-        .. 'subjects), the six uniform gate tests and the five direct-reader '
-        .. 'gate tests migrated for hero backlog `-78` were migrated on '
-        .. '2026-09-02 and must stay migrated')
+        .. 'subjects), the six uniform gate tests, the five direct-reader gate '
+        .. 'tests and the two of 2026-09-02T22:54Z (aegis_grouping, '
+        .. 'tpreach_band) were migrated for hero backlog `-78` and must stay '
+        .. 'migrated')
 
     -- The load-bearing half: the DELETE is not confined to a cleanup that runs
     -- after the armed leg. Arming with `nil` (the unarmed leg) removes the file

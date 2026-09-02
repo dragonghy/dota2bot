@@ -321,7 +321,18 @@ local tRegistered = {
 }
 
 local function lua_files()
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
+    -- Skip the two gitignored, farm-only files under bots/Customize/. The gate
+    -- switch `soak_side.lua` is created and deleted by every gate test in this
+    -- suite, so listing it and then `read_file`-ing it (which asserts) is a
+    -- race whose red -- `cannot open <that switch>` -- names
+    -- neither this file's subject nor a real defect. THIS FILE IS ONE OF THE
+    -- THREE CARRIERS GH #365 §2 PUBLISHED (`:60`), and that issue routed the
+    -- remediation into GH #229's scope (a per-process switch path, still
+    -- blocked). It never needed to wait on #229: these census files never
+    -- write the switch, they only walk over it, and the walk is theirs to fix.
+    -- Neither farm-only file carries an item name.
+    local p = assert(io.popen(
+        'find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
     local t = {}
     for sLine in p:lines() do t[#t + 1] = sLine end
     p:close()

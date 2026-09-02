@@ -48,9 +48,41 @@ function M.strip_line_comment(line)
 end
 
 --- Every shipped Lua file under `bots/`, sorted, as a list of paths.
+---
+--- SHIPPED is the load-bearing word, and until 2026-09-02 the walk did not
+--- honour it.  Two files under `bots/Customize/` are gitignored, farm-only and
+--- TRANSIENT -- `soak_side.lua` (the gate switch) and `soak_pool.lua` -- and
+--- every gate test in this suite creates and deletes the first of them.  A
+--- scanner that lists it and then opens it has a window between the two, and
+--- the caller's `assert(io.open(path))` turns that window into a red whose
+--- text names a file the caller has no business reading:
+---
+---   tests/test_coarmed_attribution_register.lua:95: cannot open
+---   bots/Customize/soak_side.lua
+---
+--- THIS IS THE ROOT CAUSE OF GH #365 §2, not a new defect.  That issue
+--- published exactly this red on three files (gate_claim_consistency:42,
+--- gated_helper_nesting_census:72, item_name_census:60), read it as GH #229's
+--- contention between gate tests, and routed the remediation into #229's scope
+--- -- where it is still blocked, because #229 needs a change on the READER
+--- side (`jmz_func` resolves the switch through `GetScriptDirectory`, which
+--- also loads every module).  It never needed to wait on #229: NONE of the
+--- three is a gate test, none of them writes the switch, they only walk over
+--- it, and the walk is theirs.
+---
+--- Measured 2026-09-02 (hero): 2 of 6 runs red under a churn loop on the
+--- switch, and once more for real, incidentally, when a mutation stand ran
+--- beside 开工自检's Lua-detector leg.  The failure direction is a FALSE RED
+--- rather than a false green, so it is loud -- but it is loud in the
+--- unattributable way GH #365 spent a round on, and it points at the wrong
+--- subject; #365 §2 is the measured cost of that.
+--- Skipping the two farm-only files changes no reading (all 18 bots/-walking
+--- test files give byte-identical counts with the switch present and absent);
+--- it only removes the window.
 function M.bots_files()
     local out = {}
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
+    local p = assert(io.popen(
+        'find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
     for file in p:lines() do
         out[#out + 1] = file
     end

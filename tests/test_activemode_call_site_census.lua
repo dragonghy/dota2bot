@@ -89,7 +89,19 @@ local strip_line_comment = require('lua_source_scan').strip_line_comment
 local function scan_call_sites()
     local out = { get_active_mode = 0, compare_lines = 0, teamfight_consumers = 0,
                   commented_out = 0 }
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
+    -- Skip the two gitignored, farm-only files under bots/Customize/. The gate
+    -- switch is created and deleted by every gate test in this suite, so
+    -- listing it and then `io.lines`-ing it is a race -- observed here on
+    -- 2026-09-02 as `bad argument #1 to 'lines' (... No such file or
+    -- directory)`, which names neither this file's subject nor a real defect.
+    -- Same family as GH #365 §2 (three sibling censuses, same window), and it
+    -- never needed GH #229: this file is not a gate test and never writes the
+    -- switch, it only walks over it. Neither farm-only file calls GetActiveMode.
+    -- (The literal path is deliberately not spelled out here: prose alone would
+    -- enrol this file in test_soakside_shared_switch.lua's census of files that
+    -- reach the switch -- the reason that census excludes itself.)
+    local p = assert(io.popen(
+        'find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
     for file in p:lines() do
         for raw in io.lines(file) do
             local line = strip_line_comment(raw)

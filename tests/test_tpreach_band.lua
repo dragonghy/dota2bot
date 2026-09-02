@@ -40,7 +40,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local tests = {}
 
@@ -63,14 +63,25 @@ local function fresh_jmz(enemy, enemyDist)
     return J, bot
 end
 
+-- [GH #365 §3 / GH #417 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: the bytes are read back
+-- (an unarmed reading can no longer masquerade as an armed one), a switch this
+-- process did not write is reported instead of clobbered, and the switch is
+-- re-read after the case body so a concurrent removal is reported as itself.
+-- That last part matters most HERE: cases 1 and 4 assert `== false` and
+-- `== true` about the SHIPPED behaviour, and a switch deleted under case 2
+-- turns its armed reading into exactly the value case 1 expects.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'tpreach' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('tpreach', fn)
 end
+
+-- The state this process STARTED in, taken at file-load time -- the only
+-- moment that sees it. Measured on this file (hero 20260902T225428Z): with a
+-- leftover `cand = 'tpreach'` planted before the run, the whole file is 7/7
+-- GREEN, while the unarmed cases run ALONE under the same leftover go RED --
+-- the `armed:` cases sort ahead of the `unarmed:` ones and their unconditional
+-- `os.remove` threw the stranger's switch away first.
+ss.assert_clean('test_tpreach_band')
 
 local function make_enemy(loc, futureLoc, atkRange)
     return api.MakeHero('npc_dota_hero_viper', {
@@ -88,11 +99,13 @@ end
 --    not see it. This is the bug, pinned. If this case ever starts returning
 --    true with the candidate OFF, the fix stopped being gated.
 tests['unarmed: an enemy inside its own reach but past 700 is INVISIBLE (the defect)'] = function()
-    local J, bot = fresh_jmz(make_enemy(api.Vector(900, 0, 0), api.Vector(900, 0, 0), 800), 900)
-    assert(J.CanEnemyInterruptTpChannel(bot) == false,
-        'shipped default scans only 700 -- the [700, reach] band is unreachable')
-    assert(J.ShouldNotStartInterruptibleTp(bot) == false,
-        'the promoted wrapper inherits the same blind band')
+    ss.with_candidate(nil, function()
+        local J, bot = fresh_jmz(make_enemy(api.Vector(900, 0, 0), api.Vector(900, 0, 0), 800), 900)
+        assert(J.CanEnemyInterruptTpChannel(bot) == false,
+            'shipped default scans only 700 -- the [700, reach] band is unreachable')
+        assert(J.ShouldNotStartInterruptibleTp(bot) == false,
+            'the promoted wrapper inherits the same blind band')
+    end)
 end
 
 -- 2. Armed, the same frame is seen: 900 <= reach 950 -> do not start the TP.
@@ -119,9 +132,11 @@ end
 -- 4/5. The original 700 domain is untouched by arming: an out-of-reach chaser
 --      inside 700 still fires, armed or not.
 tests['unarmed: a chaser inside 700 but out of reach still fires (old domain intact)'] = function()
-    local J, bot = fresh_jmz(make_enemy(api.Vector(650, 0, 0), api.Vector(500, 0, 0), 150), 650)
-    assert(J.CanEnemyInterruptTpChannel(bot) == true,
-        'the promoted behaviour inside 700 must not change')
+    ss.with_candidate(nil, function()
+        local J, bot = fresh_jmz(make_enemy(api.Vector(650, 0, 0), api.Vector(500, 0, 0), 150), 650)
+        assert(J.CanEnemyInterruptTpChannel(bot) == true,
+            'the promoted behaviour inside 700 must not change')
+    end)
 end
 
 tests['armed: a chaser inside 700 but out of reach still fires (old domain intact)'] = function()
@@ -147,8 +162,10 @@ end
 --    that started firing on an empty world would be the obvious way to get
 --    case 2 green for the wrong reason.
 tests['no enemy at all: quiet armed and unarmed'] = function()
-    local J, bot = fresh_jmz(nil, 0)
-    assert(J.CanEnemyInterruptTpChannel(bot) == false, 'unarmed, empty world -> quiet')
+    ss.with_candidate(nil, function()
+        local J, bot = fresh_jmz(nil, 0)
+        assert(J.CanEnemyInterruptTpChannel(bot) == false, 'unarmed, empty world -> quiet')
+    end)
     with_candidate(function()
         local J2, bot2 = fresh_jmz(nil, 0)
         assert(J2.CanEnemyInterruptTpChannel(bot2) == false, 'armed, empty world -> quiet')

@@ -15,7 +15,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local api = require('mock.bot_api')
 
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local ss = require('mock.soak_side')               -- owns bots/Customize/soak_side.lua
 
 local tests = {}
 
@@ -53,14 +53,22 @@ end
 -- Activate the 'aegisgroup' soak candidate on radiant by writing the
 -- (gitignored) soak_side file, running fn, then cleaning up. reset_modules
 -- re-requires jmz_func so its cached GetSoakSideConf re-reads the file.
+-- [GH #365 §3 / GH #417 / GH #229, hero backlog `-78`] The write goes through
+-- tests/mock/soak_side.lua, the switch's one owner: the bytes are read back,
+-- an existing switch this process did not write is reported instead of
+-- clobbered, and the switch is re-read after the case body so a concurrent
+-- removal is reported as itself rather than as the unarmed false it produces.
 local function with_candidate(fn)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'radiant', cand = 'aegisgroup' }\n")
-    f:close()
-    local ok, err = pcall(fn)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    ss.with_candidate('aegisgroup', fn)
 end
+
+-- The state this process STARTED in, taken at file-load time -- the only
+-- moment that sees it. Measured on this file (hero 20260902T225428Z): with a
+-- leftover `cand = 'aegisgroup'` planted before the run, the whole file is
+-- 6/6 GREEN, while the one unarmed case run ALONE under the same leftover is
+-- RED -- the armed cases sort first and their unconditional `os.remove` threw
+-- the stranger's switch away before the unarmed case could be told about it.
+ss.assert_clean('test_aegis_grouping')
 
 -- Stand a real allied hero at vLoc so "alone" is broken (grouped press).
 local function with_ally_at(vLoc, fn)
@@ -124,9 +132,15 @@ end
 
 tests['OFF: inert off the soak candidate (shipped default)'] = function()
     -- No soak_side file written -> IsSoakCandidate('aegisgroup') is false.
-    local J, bot = fresh_jmz()
-    assert(J.ShouldGroupWithAegis(bot) == false,
-        'off the candidate side the guard must stay inert (shipped default)')
+    -- The nil leg of the owner PROVES that rather than assuming it: it checks
+    -- the switch is absent before the body and again after, so an inherited or
+    -- concurrently-written switch is named here instead of quietly turning
+    -- this case into a second armed one.
+    ss.with_candidate(nil, function()
+        local J, bot = fresh_jmz()
+        assert(J.ShouldGroupWithAegis(bot) == false,
+            'off the candidate side the guard must stay inert (shipped default)')
+    end)
 end
 
 return tests

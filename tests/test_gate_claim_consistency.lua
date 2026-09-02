@@ -32,7 +32,19 @@ local BOTS_ROOT = 'bots'
 
 local function list_lua_files()
     local files = {}
-    local p = assert(io.popen('find ' .. BOTS_ROOT .. ' -name "*.lua" | sort'))
+    -- Skip the two gitignored, farm-only files under bots/Customize/. The gate
+    -- switch `soak_side.lua` is created and deleted by every gate test in this
+    -- suite, so listing it and then `read_file`-ing it (which asserts) is a
+    -- race whose red -- `cannot open <that switch>` -- names
+    -- neither this file's subject nor a real defect. THIS FILE IS ONE OF THE
+    -- THREE CARRIERS GH #365 §2 PUBLISHED (`:42`), seen again here on
+    -- 2026-09-02 in 开工自检's Lua-detector leg. #365 read those reds as GH
+    -- #229's contention and routed the fix into #229's scope (a per-process
+    -- switch path, still blocked) -- but this file is not a gate test and
+    -- never writes the switch: it only walks over it, and the walk is its own
+    -- to fix. Neither farm-only file is bot logic or carries a gate claim.
+    local p = assert(io.popen('find ' .. BOTS_ROOT
+        .. ' -name "*.lua" ! -path "' .. BOTS_ROOT .. '/Customize/soak_*.lua" | sort'))
     for line in p:lines() do files[#files + 1] = line end
     p:close()
     return files
