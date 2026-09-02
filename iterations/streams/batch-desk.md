@@ -218,7 +218,37 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
      错误码、试过的机型、最终市场类型。
    - **回收处置(事先登记)**:一台被抢占 = 该种子缺臂,这一粒的配对差作废,
      **不要整波作废**。已落盘局 `recover_verdict.py` 从 S3 重算;缺的那粒种子
-     再发一台(仍走上面的阶梯)补跑。
+     再发一台补跑。
+   - **⭐ 补跑机的市场(2026-09-02 总监裁定 GH #408;这是上面那条阶梯的一个例外,
+     只对补跑机成立)**:被抢占那台的 SIR `Status.Code` **是
+     `instance-terminated-no-capacity`** 时,**补跑机直接 `spot_run.sh --on-demand`**,
+     不再走 (1)(2)(3) 阶梯。
+     **这不是改 owner 的 #158,是 #158 自己那句「除非没有 spot 的机器」的一次兑现**:
+     补跑机按构造是往**一个刚刚拒绝过容量的窗口**里发的,而 W36 把这件事量成了读数 ——
+     两台补跑机起飞 5.4 / 5.6 分钟后**同一秒**被同一次 AZ 事件带走,产局为零,
+     发波+补跑共吃 **9 次 `InsufficientInstanceCapacity`**。
+     判据取**那一台的 SIR 码**,不取「市场看起来紧张」的印象:
+     * `instance-terminated-no-capacity` ⇒ 补跑 `--on-demand`;
+     * `instance-terminated-by-user`(或任何非容量原因)⇒ 补跑**仍走原阶梯**。
+       一台早死却自称 by-user 的机器是 **harness bug,按需机治不了它**
+       (与 `reclaim_blind.py` 的 clause (2) 同一条理由,别丢);
+     * SIR 已过期 / 读不到码 ⇒ **保守默认走 spot**,并在报告里**明写这一行是默认不是判据**。
+     **围栏**:每粒种子**只补跑一次**(与 #271 的 one-shot 同型),**每波最多 2 台按需补跑**;
+     超过就是这一波买不到,**留给下一波,不要连发**。
+     **登记**(验收就是这三样,搭当轮报告的车,零额外调用):该台的 `InstanceLifecycle`
+     (要 `None`,不是 `spot`)、存活分钟、**该台的增量账单**。
+     ⛔ **否掉的三条**(理由写在 GH #408 的裁定评论里,别重开):补跑退避、补跑打散 AZ、
+     以及**降低 4 粒 promote 门槛** —— 最后这条是把 W1–W37 全部读数的测量基底改掉。
+   - **⭐ 补跑机怎么记进 `<W>_wave.json`(同一条裁定的第二半,不记就等于没裁)**:
+     按需机**没有 SIR**,它唯一能有的码是 EC2 的 `StateReason.Code`。因此补跑那一行必须写
+     **`"market": "on-demand"` + `"status_code": "<EC2 StateReason.Code>"`**
+     (例如 `Client.UserInitiatedShutdown`)。
+     `market` 缺省是 `spot`,所以**今天以前的所有波次逐字不变**;
+     忘了写 `market` 不会静默通过 —— `reclaim_blind.py` 会按 GH #412 那条新诊断
+     指着收割轮说「这是 EC2 词汇写进了 SIR 字段」。
+     **反过来更要紧**:一台 spot 机被错标成 `on-demand`,它的抢占会从 attribution 子句里消失、
+     **把一个 BLINDED 波藏掉** ⇒ 工具见到「`market: on-demand` 却带 SIR 码」直接 exit 2,
+     **不替你猜哪一半是对的**。
    - **⭐(2026-08-27T15:5xZ 总监落地,GH #252)发波必须显式点 AZ:每次调用一个,四次调用四个不同。**
      上面那条「一台被抢占 ≠ 整波作废」**默认回收是独立事件**,而 W17 证伪了这个默认:
      四台全被 EC2 放进 `us-west-2b`,一次 AZ 容量事件 **同一秒**带走四台,
@@ -354,6 +384,20 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
   而下界会**制造出并不存在的 `BRACKET VIOLATED`**(W28 seed 1850:39.68 min 的下界撞破 40.0 的换腿点,
   真实存活其实 ≥39.68、与 `>42.6` 并不矛盾)。**一个只在下一轮才被使用、却在本轮就过期的字段,
   必须在本轮落盘。**
+  **⭐ 2026-09-02 总监补(GH #412,裁定见该 issue):`status_code` 写的是 SIR `Status.Code`,
+  不是 `describe-instances` 的 `StateReason.Code`。** 两套词汇长得都像「码」,W36 写错了一套,
+  于是 `reclaim_blind.py` 打 `UNDECIDABLE: unknown SIR status_code
+  'Server.SpotInstanceTermination'` —— **它响了,但那句话把归因指向了市场**,
+  而上一轮 exit 2 的理由(`BRACKET VIOLATED`)是真的答不了 ⇒ **两轮在报告里长得一模一样**。
+  **落实的三件,按便宜到贵**:
+  (1) **工具侧已修**(总监本轮):`Server.*` / `Client.*` 形状的码现在打
+  **`WRITE-SIDE error in the harvesting round`**,并在该行存在 `sir_status_code` 时点名它是正确来源;
+  **仍然 exit 2,不自动回落** —— 回落会把一条漂移的写入约定变成被容忍的约定,正是 #412 反对的方向。
+  (2) **写入侧的断言就是「同一轮跑那道门」**:填完三个字段**当轮**跑
+  `reclaim_blind.py`(本文件下面那条命令),**读到 `WRITE-SIDE` 那行就当自己的 bug 修**,
+  别记成市场未定。SIR 几小时后就 `NotFound`,**下一轮再看等于永远看不到**。
+  (3) EC2 的那个值不必丢:**另存进 `ec2_state_reason_code`**(W36 已这么做),
+  它是第二条独立通道,但**不是** `status_code`。
 
 - **自检跑着的时候不许动工作树**(本台 2026-08-30T18:15Z 自纠)。
   `routine_selfcheck.sh` 的承诺是**它**不碰工作树;那是它对你的承诺,**不是你对它的**。
@@ -425,6 +469,9 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
 
   `wave.json` = `{"wave":"W21","machines":[{"seed":983,"status_code":"instance-terminated-by-user",
   "create":"…Z","update":"…Z","ab":28,"ba":14,"arm_depth":18.67}, …]}`;
+  **GH #408 的按需补跑机多两个字段**:`"market":"on-demand"` + `"status_code"` 写 EC2 的
+  `StateReason.Code`(按需机没有 SIR)。`market` 缺省 `spot` ⇒ 今天以前的波次逐字不变;
+  **`on-demand` 却带 SIR 码 = exit 2**(那会把一台 spot 机的抢占从归因里抹掉,藏掉一个 BLINDED)。
   这些字段你收割时**已经在读了**(SIR 的 `status_code`/`CreateTime`/`UpdateTime` + `recover_verdict.py`
   的 ab/ba/arm_depth),本工具**不新增任何 AWS 调用**。
   **exit 0 = 下一波照常 spot**(默认,owner GH #158 不动);

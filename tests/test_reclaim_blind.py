@@ -246,7 +246,7 @@ def main():
     hi = rb.survival_minutes(W24_1633, "W24 seed 1633")
     check(abs(hi - rb.BRACKET_HI) < 0.005,
           "18a BRACKET_HI is W24 seed 1633's own survival (%.2f min)" % hi)
-    _, _, hi_paired, _, _ = rb.classify_machine(W24_1633, 40.0, 8.0, "W24 seed 1633")
+    _, _, hi_paired, _, _, _ = rb.classify_machine(W24_1633, 40.0, 8.0, "W24 seed 1633")
     check(hi_paired, "18b ... and that machine is PAIRED -- an unpaired row cannot set the upper edge")
     lo = rb.survival_minutes(m(930, 34.8, GONE, 10, 0, 0.0), "W19-R seed 930")
     check(abs(lo - rb.BRACKET_LO) < 0.005,
@@ -319,6 +319,109 @@ def main():
           "22b ... and it names the value it could not read")
     check(rb.evaluate(W21)[0] == 0 and rb.survival_bound(W21["machines"][0], "x") == "exact",
           "22c an absent survival_bound means exact -- every pre-existing wave reads unchanged")
+
+    # --- 23: the GH #408 refill is on-demand, and this file has to be able to
+    # read the wave that ruling produces.  Before `market` existed, an
+    # on-demand row hit `unknown SIR status_code` and took the WHOLE wave to
+    # exit 2 -- the ruling would have disabled the gate the same ruling reads.
+    EC2_SELF = "Client.UserInitiatedShutdown"
+    refilled = {"wave": "refilled", "machines": [
+        m(1, 55.0, SELF, 30, 15, depth=18.0),
+        m(2, 54.0, SELF, 28, 14, depth=17.0),
+        m(3, 5.4, GONE, 0, 0),                       # the seed that was lost
+        dict(m(3, 50.0, EC2_SELF, 26, 13, depth=16.0), market="on-demand")]}
+    code, lines = rb.evaluate(refilled)
+    text = "\n".join(lines)
+    check(code == 0, "23a a wave carrying an on-demand refill is READABLE (exit 0), "
+                     "not exit 2 -- GH #408 does not blind GH #271's gate")
+    check("3 paired seed(s)" in text,
+          "23b ... and the refilled seed counts toward yield like any other machine")
+    check("attribution: 1 machine(s) reclaimed before the flip" in text,
+          "23c ... while the reclaim that CAUSED the refill still counts for attribution")
+    check("on-demand" in text and "never satisfy the attribution clause" in text,
+          "23d ... and the on-demand rows are named in the output, not folded in silently")
+
+    # 23e is the load-bearing one: without the refill row this wave is BLINDED
+    # (1 paired seed + an early reclaim).  So the on-demand row is not decorative
+    # -- it is the difference between escalating the next wave and not.
+    without = {"wave": "no-refill", "machines": refilled["machines"][1:3]}
+    check(rb.evaluate(without)[0] == 1,
+          "23e the same wave minus the refill IS blinded -- so 23a is a real answer, "
+          "not a check that cannot fail")
+
+    # 23f/g: the dangerous direction is a SPOT machine mislabelled on-demand --
+    # its reclaim would drop out of the attribution clause and hide a BLINDED.
+    # The row is refused by name instead.
+    mislabelled = {"wave": "mislabelled", "machines": [
+        m(1, 55.0, SELF, 30, 15, depth=18.0),
+        dict(m(2, 5.4, GONE, 0, 0), market="on-demand")]}
+    code, text2 = rb.evaluate(mislabelled)
+    text2 = "\n".join(text2)
+    check(code == 2, "23f a row claiming on-demand while carrying a SIR code -> exit 2")
+    check("contradicts itself" in text2,
+          "23g ... and says which two halves disagree, rather than picking one")
+    # 23h: a typo'd market must be refused BY NAME.  Checking only the exit code
+    # here is not enough and the mutation stand proved it: with the market
+    # vocabulary check deleted, "ondemand" falls through to the spot path, the
+    # EC2-shaped code trips the GH #412 diagnosis, and the wave still exits 2 --
+    # the right conclusion reached by a reason that is not the one under test.
+    # The second row below is the one that separates them: a typo'd market
+    # carrying a perfectly good SIR code has nothing else to trip on.
+    typo = {"wave": "x", "machines": [
+        m(1, 55.0, SELF, 30, 15, depth=18.0),
+        dict(m(2, 50.0, EC2_SELF, 20, 10, depth=12.0), market="ondemand")]}
+    code, tlines = rb.evaluate(typo)
+    check(code == 2, "23h an unknown market value -> exit 2, same stance as an unknown status code")
+    check("unknown market 'ondemand'" in "\n".join(tlines),
+          "23h2 ... and it is refused for BEING an unknown market, naming the value")
+    check(rb.evaluate({"wave": "x", "machines": [
+        m(1, 55.0, SELF, 30, 15, depth=18.0),
+        dict(m(2, 5.4, GONE, 0, 0), market="ondemand")]})[0] == 2,
+          "23h3 ... including when the row is otherwise perfectly readable as spot, "
+          "which is the case where a dropped vocabulary check goes silent")
+    check(rb.evaluate({"wave": "x", "machines": [
+        {"seed": 1, "market": "on-demand", "survival_min": 50.0, "ab": 20, "ba": 10}]})[0] == 2,
+          "23i an on-demand row with no status_code at all -> exit 2: the record still "
+          "has to say how the machine ended")
+    check(rb.evaluate(W21)[0] == 0 and rb.market_of(W21["machines"][0], "x") == "spot",
+          "23j an absent market means spot -- every wave recorded before today is unchanged")
+
+    # --- 24: GH #412.  W36's harvest wrote EC2 `StateReason.Code` into the SIR
+    # field.  The tool refused (good) with a sentence that pointed at the market
+    # (bad), and the round recorded it beside a genuine `BRACKET VIOLATED` as
+    # the same thing.  A loud wrong answer costs what a quiet one costs.
+    drift = {"wave": "W36-as-written", "machines": [
+        {"seed": 2745, "status_code": "Server.SpotInstanceTermination",
+         "sir_status_code": "instance-terminated-no-capacity",
+         "survival_min": 1.6, "ab": 0, "ba": 0},
+        m(2838, 57.5, SELF, 42, 16, depth=18.0)]}
+    code, dlines = rb.evaluate(drift)
+    dtext = "\n".join(dlines)
+    check(code == 2, "24a an EC2-shaped code on a spot row is still exit 2 (no fallback)")
+    check("WRITE-SIDE error" in dtext,
+          "24b ... and it now points at the harvesting round, not at the market")
+    check("sir_status_code='instance-terminated-no-capacity'" in dtext,
+          "24c ... naming the sibling key that already holds the right value")
+    check('"market": "on-demand"' in dtext,
+          "24d ... and offering the other reading (a real on-demand row) explicitly")
+    # 24e: the fallback GH #412 asked us NOT to build.  Reading the sibling key
+    # automatically would turn a drifting write convention into a tolerated one.
+    check("not blinded" not in dtext and "BLINDED" not in dtext,
+          "24e ... and it does NOT quietly answer from sir_status_code")
+    # 24f: the no-sibling case still diagnoses, and says where to re-read from.
+    nosib = {"wave": "x", "machines": [
+        {"seed": 1, "status_code": "Server.SpotInstanceTermination",
+         "survival_min": 1.6, "ab": 0, "ba": 0}]}
+    ntext = "\n".join(rb.evaluate(nosib)[1])
+    check("describe-spot-instance-requests" in ntext,
+          "24f without the sibling key it names where to re-read Status.Code from")
+    # 24g: a code that is neither SIR nor EC2-shaped keeps the ORIGINAL message.
+    other = {"wave": "x", "machines": [
+        {"seed": 1, "status_code": "banana", "survival_min": 1.6, "ab": 0, "ba": 0}]}
+    otext = "\n".join(rb.evaluate(other)[1])
+    check("unknown SIR status_code" in otext and "WRITE-SIDE" not in otext,
+          "24g a code of neither shape still reads 'unknown SIR status_code' -- the new "
+          "diagnosis is aimed, not a blanket rewording")
 
     # --- 17: end to end through the CLI ------------------------------------
     code, out = run_cli(W21)

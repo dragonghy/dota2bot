@@ -104,6 +104,12 @@ Input JSON:
       "ab": 28, "ba": 14, "arm_depth": 18.67},
      ...]}
 
+A refill machine bought under GH #408 carries its market and its EC2 code:
+
+     {"seed": 2745, "market": "on-demand",
+      "status_code": "Client.UserInitiatedShutdown",
+      "survival_min": 52.0, "ab": 27, "ba": 13, "arm_depth": 17.1},
+
 `survival_min` may be given directly instead of create/update.  `arm_depth`
 is optional: when present it is held to --min-arm-depth (default 8, matching
 GH #269's MIN_ARM_DEPTH), when absent pairing falls back to ab>0 and ba>0 and
@@ -135,6 +141,48 @@ ways:
 GH #332 is the wave that forced this: W28's BRACKET VIOLATED was entirely an
 artifact of substituting the proxy, and the substitution was invisible because
 the field it was written into is named for a measurement.
+
+A machine that is not on the spot market at all: `market`
+---------------------------------------------------------
+Added 2026-09-02 by the director ruling GH #408 (refill escalation).  That
+ruling sends the REFILL machine -- and only it -- to `--on-demand` when the
+seed it is replacing was lost to `instance-terminated-no-capacity`.  Such a
+machine has no spot instance request, so it has no SIR `Status.Code` at all;
+the only code its record can carry is EC2's `StateReason.Code`
+(`Client.UserInitiatedShutdown` for a clean self-terminate).
+
+Before this key existed, that row hit `unknown SIR status_code` and took the
+WHOLE wave to exit 2 -- i.e. the ruling would have silently disabled the gate
+that the same ruling reads.  Machines therefore declare their market:
+
+  * `"market": "spot"` (the default, so every wave written before today reads
+    unchanged): the code must be SIR vocabulary.
+  * `"market": "on-demand"`: the code must NOT be SIR vocabulary -- an
+    on-demand instance cannot be reclaimed for capacity, so a row claiming
+    both is a record that contradicts itself, and that is exit 2 rather than
+    a guess about which half is true.  It counts for YIELD like any other
+    machine and can never satisfy the ATTRIBUTION clause.
+
+The dangerous direction here is mislabelling a spot machine `on-demand`: its
+reclaim would drop out of the attribution clause and hide a BLINDED wave.
+The contradiction check above is what closes that direction -- a mislabelled
+spot machine still carries `instance-terminated-*` and is refused by name.
+
+Telling an EC2 code apart from a MIS-WRITTEN one (GH #412)
+-----------------------------------------------------------
+W36's harvest wrote `machines[].status_code` from `describe-instances`'
+`StateReason.Code` instead of the SIR `Status.Code`, and this file answered
+`UNDECIDABLE: unknown SIR status_code 'Server.SpotInstanceTermination'`.  It
+did refuse -- but the sentence points at the market, and the round read it as
+"the market could not be classified" when the truth was "we wrote the wrong
+field".  A loud wrong answer costs what a quiet one costs.
+
+So a `Server.*` / `Client.*` shaped code on a SPOT machine now names its own
+cause and its own remedy, including the `sir_status_code` sibling key when
+the record already carries it.  It stays exit 2: the fallback ("just read
+`sir_status_code` when `status_code` is unreadable") is refused on purpose --
+it converts a drifting write convention into a tolerated one, which is the
+direction GH #412 was opened to prevent.
 """
 import argparse
 import datetime as _dt
@@ -158,6 +206,17 @@ DEFAULT_MIN_ARM_DEPTH = 8.0
 BOUND_EXACT = "exact"
 BOUND_LOWER = "lower"
 KNOWN_BOUNDS = (BOUND_EXACT, BOUND_LOWER)
+
+# Which market a machine was bought on (GH #408).  Absent means spot, so every
+# wave recorded before 2026-09-02 reads exactly as it did.
+MARKET_SPOT = "spot"
+MARKET_ON_DEMAND = "on-demand"
+KNOWN_MARKETS = (MARKET_SPOT, MARKET_ON_DEMAND)
+
+# The shape of an EC2 `StateReason.Code` (`Server.SpotInstanceTermination`,
+# `Client.UserInitiatedShutdown`).  On a spot row this is the GH #412 write-side
+# drift, not an unknown market state -- see this file's header.
+EC2_CODE_PREFIXES = ("Server.", "Client.")
 
 # The measured bracket the default constant sits inside.  Printed every run so
 # the next person can see what would narrow it.  Narrowed 2026-08-30 (GH #332):
@@ -207,12 +266,66 @@ def survival_bound(machine, where):
     return bound
 
 
-def classify_machine(machine, changeover_min, min_arm_depth, where):
-    """One machine -> (survival, code, paired, depth_checked, bound)."""
+def market_of(machine, where):
+    """Which market the machine was bought on.  Absent means spot (GH #408)."""
+    market = machine.get("market", MARKET_SPOT)
+    if market not in KNOWN_MARKETS:
+        raise Undecidable("%s: unknown market %r (known: %s)"
+                          % (where, market, ", ".join(KNOWN_MARKETS)))
+    return market
+
+
+def read_status_code(machine, market, where):
+    """The termination code, checked against the vocabulary its market uses.
+
+    Spot rows speak SIR (`Status.Code`); on-demand rows have no SIR at all and
+    can only speak EC2 (`StateReason.Code`).  Each vocabulary is refused in the
+    other's row, and the EC2-shaped refusal on a spot row names the write site
+    rather than the market (GH #412).
+    """
     code = machine.get("status_code")
-    if code not in KNOWN_CODES:
-        raise Undecidable("%s: unknown SIR status_code %r (known: %s)"
-                          % (where, code, ", ".join(KNOWN_CODES)))
+
+    if market == MARKET_ON_DEMAND:
+        if code is None:
+            raise Undecidable(
+                "%s: market is on-demand and status_code is missing -- an "
+                "on-demand row still has to say how the machine ended "
+                "(EC2 StateReason.Code, e.g. Client.UserInitiatedShutdown)"
+                % where)
+        if code in KNOWN_CODES:
+            raise Undecidable(
+                "%s: market says on-demand but status_code %r is SIR "
+                "vocabulary -- an on-demand instance has no spot request, so "
+                "this record contradicts itself.  One of the two is wrong and "
+                "this file will not pick: a mislabelled spot machine would "
+                "drop its reclaim out of the attribution clause"
+                % (where, code))
+        return code
+
+    if code in KNOWN_CODES:
+        return code
+    if isinstance(code, str) and code.startswith(EC2_CODE_PREFIXES):
+        hint = ("; this row already carries sir_status_code=%r, which is the "
+                "correct source" % machine["sir_status_code"]
+                if isinstance(machine.get("sir_status_code"), str)
+                else "; re-read Status.Code from "
+                     "describe-spot-instance-requests, or, if the request has "
+                     "expired, from this record's own sir_status_code")
+
+        raise Undecidable(
+            "%s: status_code %r is an EC2 StateReason.Code, not a SIR "
+            "Status.Code -- this is a WRITE-SIDE error in the harvesting "
+            "round, not an unclassifiable market%s.  (If this machine really "
+            "was on-demand, the row is missing \"market\": \"on-demand\".)"
+            % (where, code, hint))
+    raise Undecidable("%s: unknown SIR status_code %r (known: %s)"
+                      % (where, code, ", ".join(KNOWN_CODES)))
+
+
+def classify_machine(machine, changeover_min, min_arm_depth, where):
+    """One machine -> (survival, code, paired, depth_checked, bound, market)."""
+    market = market_of(machine, where)
+    code = read_status_code(machine, market, where)
     bound = survival_bound(machine, where)
     survival = survival_minutes(machine, where)
 
@@ -235,7 +348,7 @@ def classify_machine(machine, changeover_min, min_arm_depth, where):
         depth_checked = True
         if depth < min_arm_depth:
             paired = False
-    return survival, code, paired, depth_checked, bound
+    return survival, code, paired, depth_checked, bound, market
 
 
 def check_bracket(rows, changeover_min):
@@ -320,11 +433,11 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
                 raise Undecidable("machine[%d]: not an object" % i)
             seed = machine.get("seed", "?")
             where = "seed %s" % seed
-            survival, code, paired, depth_checked, bound = classify_machine(
+            survival, code, paired, depth_checked, bound, market = classify_machine(
                 machine, changeover_min, min_arm_depth, where)
             rows.append({"seed": seed, "survival": survival, "code": code,
                          "paired": paired, "depth_checked": depth_checked,
-                         "bound": bound,
+                         "bound": bound, "market": market,
                          "ab": int(machine["ab"]), "ba": int(machine["ba"])})
     except Undecidable as exc:
         lines.append("UNDECIDABLE: %s" % exc)
@@ -333,10 +446,19 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
     for row in rows:
         how = "depth-checked" if row["depth_checked"] else "ab/ba only (no arm_depth given)"
         mark = ">=" if row["bound"] == BOUND_LOWER else "  "
+        if row["market"] == MARKET_ON_DEMAND:
+            how = "on-demand, %s" % how
         lines.append("  seed %-8s %s%6.1f min  %-34s ab%-3d/ba%-3d  %s  [%s]"
                      % (row["seed"], mark, row["survival"], row["code"],
                         row["ab"], row["ba"],
                         "PAIRED " if row["paired"] else "NO-PAIR", how))
+    n_od = sum(1 for r in rows if r["market"] == MARKET_ON_DEMAND)
+    if n_od:
+        lines.append("market     : %d of %d machine(s) on-demand (GH #408 refill) -- "
+                     "they count for yield and can never satisfy the attribution "
+                     "clause, because an on-demand row is refused if it carries a "
+                     "SIR code at all"
+                     % (n_od, len(rows)))
     n_lower = sum(1 for r in rows if r["bound"] == BOUND_LOWER)
     if n_lower:
         lines.append("survival   : %d of %d machine(s) carry a LOWER BOUND (>=), not a "
