@@ -77,7 +77,14 @@
     "spirit_breaker",
     "lion"
    ],
-   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+   "status_code": "LOST -- GH #427 window shut before the next round fired (0-for-3); on-demand machine, no SIR exists",
+   "survival_min": 52.38,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object LastModified under soak/<run_id>/ (2026-09-03T04:24:19Z) minus launched_at; LOWER BOUND per the reclaim_blind.py survival_bound contract -- the machine still had to finish shutting down. Backfilled 2026-09-03T09:2xZ because the exact reading (EC2 StateReason + termination time) died with the GH #427 1h window.",
+   "ab": 37,
+   "ba": 19,
+   "arm_depth": 25.11,
+   "depth_source": "recover_verdict.py per_seed, W41 harvest 2026-09-03T06:15Z report section 4"
   },
   {
    "seed": 3030,
@@ -94,7 +101,14 @@
     "obsidian_destroyer",
     "skeleton_king"
    ],
-   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+   "status_code": "LOST -- GH #427 window shut before the next round fired (0-for-3); on-demand machine, no SIR exists",
+   "survival_min": 52.38,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object LastModified under soak/<run_id>/ (2026-09-03T04:24:23Z) minus launched_at; LOWER BOUND per the reclaim_blind.py survival_bound contract -- the machine still had to finish shutting down. Backfilled 2026-09-03T09:2xZ because the exact reading (EC2 StateReason + termination time) died with the GH #427 1h window.",
+   "ab": 31,
+   "ba": 17,
+   "arm_depth": 21.96,
+   "depth_source": "recover_verdict.py per_seed, W41 harvest 2026-09-03T06:15Z report section 4"
   },
   {
    "seed": 3161,
@@ -111,7 +125,14 @@
     "spirit_breaker",
     "obsidian_destroyer"
    ],
-   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+   "status_code": "LOST -- GH #427 window shut before the next round fired (0-for-3); on-demand machine, no SIR exists",
+   "survival_min": 52.47,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object LastModified under soak/<run_id>/ (2026-09-03T04:24:32Z) minus launched_at; LOWER BOUND per the reclaim_blind.py survival_bound contract -- the machine still had to finish shutting down. Backfilled 2026-09-03T09:2xZ because the exact reading (EC2 StateReason + termination time) died with the GH #427 1h window.",
+   "ab": 37,
+   "ba": 16,
+   "arm_depth": 22.34,
+   "depth_source": "recover_verdict.py per_seed, W41 harvest 2026-09-03T06:15Z report section 4"
   },
   {
    "seed": 3329,
@@ -128,7 +149,14 @@
     "lion",
     "skeleton_king"
    ],
-   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+   "status_code": "LOST -- GH #427 window shut before the next round fired (0-for-3); on-demand machine, no SIR exists",
+   "survival_min": 41.63,
+   "survival_bound": "lower",
+   "survival_source": "last S3 object LastModified under soak/<run_id>/ (2026-09-03T04:13:46Z) minus launched_at; LOWER BOUND per the reclaim_blind.py survival_bound contract -- the machine still had to finish shutting down. Backfilled 2026-09-03T09:2xZ because the exact reading (EC2 StateReason + termination time) died with the GH #427 1h window.",
+   "ab": 29,
+   "ba": 13,
+   "arm_depth": 17.95,
+   "depth_source": "recover_verdict.py per_seed, W41 harvest 2026-09-03T06:15Z report section 4"
   }
  ],
  "harvest_obligations": [

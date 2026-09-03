@@ -1,0 +1,146 @@
+{
+ "wave": "W42",
+ "_note": "57-id family SECOND wave. Same armed string as W41 (md5 identical, recomputed not copied). The bots/ tree object hash DIFFERS from W41's, but the difference is comment-only and that was measured with a compiler-level oracle, not with prose or a comment-stripping heuristic -- see tree_drift_since_W41 and pooling_claim.",
+ "tree": "1baa449b6829dc8ce768d891e1ed661dec987555",
+ "tree_verified": "git ls-remote origin main == local HEAD == 1baa449b6829dc8ce768d891e1ed661dec987555 (checked 09:1xZ, before launch)",
+ "ref_pin": "1baa449b6829dc8ce768d891e1ed661dec987555",
+ "arm_ids": 57,
+ "arm_bytes": 501,
+ "arm_md5": "38423b791c05d96e0e16ed0b51bd132d",
+ "arm_source": "iterations/streams/test_set.md line 2, read at launch time; md5 recomputed here, not copied from prose. Byte-identical to W41's armed string.",
+ "seeds": [
+  3040,
+  3101,
+  3117,
+  3204
+ ],
+ "carrier_terms": [
+  "chaos_knight",
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "instance_type": "c6i.4xlarge",
+ "slots": 16,
+ "rec_slots": 8,
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "market": "spot",
+ "market_note": "reclaim_blind.py --wave-json W41_wave.json => RB_EXIT=0, 'VERDICT: not blinded -- the wave delivered 4 paired seed(s). NEXT WAVE: spot (the default; GH #158 unchanged).' The one-wave on-demand escalation GH #271 ordered after W40 was CONSUMED by W41; owner GH #158's spot-first default resumes.",
+ "reclaim_blind_note": "FIRST RUN THIS ROUND EXITED 2 (UNDECIDABLE: seed 3017 needs survival_min, or both create and update). The W41 harvest never wrote per-machine survival/ab/ba, and the exact survival reading (EC2 launch+termination) had already died with the GH #427 1h window. Recovered by the route the tool's own header documents for exactly this case: last S3 object LastModified under soak/<run_id>/ minus launched_at, entered as survival_bound='lower'. S3 uploads do not expire, so this route is immune to the #427 window. Backfilled into W41_wave.json (measured, with provenance per machine), after which RB_EXIT=0.",
+ "cost_estimate": "~$0.90 (spot constant, director 2026-08-30T22:0xZ; auto-invalidation clause: any wave whose billing-side measured cost exceeds $0.90 must be named in that round's report)",
+ "acquisition_config_note": "identical to W39/W40/W41 (--slots 16 --hours 2 --rec-slots 8 --games 12, 4x1). Held fixed on purpose: rec_slots=8 matches the rec_slot_baseline.json profile, and changing it would void the SS-DA.2 gate that W41 passed non-circularly.",
+ "expected_games": "~96 scored (4 seeds x 12 x 2 legs), plus warm-ups",
+ "self_destruct": "spot_run.sh self-terminate + 2h watchdog",
+ "gates": {
+  "(i) throttle -- >=6h since the previous routine wave": "W41 launched 2026-09-03T03:31:51Z => unlocks 2026-09-03T09:31:51Z. The inline guard REFUSED the first launch call at 09:19:14Z with 'GATE-I NOT OPEN ... remaining=757s' (exit 9); the held ~12 min went to zero-cost work (this file, the report, the reclaim-blind recovery).",
+  "(ii) new to be tested": "FIRST limb does NOT hold, and that is measured, not assumed. (1) test_set.md armed string byte-identical to W41 (57 ids / 501 bytes / md5 38423b79..., recomputed). (2) bots/ tree object hash DID change (3eeb4974 -> 783dc234, commit 9053d199, GH #447) but the change is comment-only: `luac5.1 -l -l` listings of the old and new hero_chaos_knight.lua, normalised for pointer addresses and line numbers, differ in ZERO lines. game/ tree f13b532c byte-identical. => THIRD limb carries this wave: the 57-id family has 4 seeds / 199 scored games, below the 8-seed floor.",
+  "(iii) budget/cost fence": "MTD $7.056 (budgets, free, snapshot refreshed 2026-09-03T04:41:39Z -- LATER than both W40's and W41's launches, so both are already inside it) + fence rule 2-jia (re-count waves launched in the last 12h regardless): W41 on-demand $2.15 + this wave spot $0.90 = ~$10.11 <= $80. No owner-visible alarm tier crossed; no explanation line owed.",
+  "(iv) inputs -- no harvest owed": "W41 harvested 2026-09-03T06:15Z (4 seeds / 199 scored / RV_EXIT=0). Entry instance census empty; no un-harvested S3 prefix.",
+  "(iv) reclaim_blind (GH #271)": "run on W41 BEFORE launch. First run exit 2 (undecidable, missing survival) -> recovered via the documented lower-bound route -> RB_EXIT=0, not blinded, NEXT WAVE spot. See reclaim_blind_note."
+ },
+ "carrier_gate": "seed_draft.py --assert-carrier-from-arm <57-id> 3040 3101 3117 3204 => CARRIER_GATE ids=11 seeds=4 exit=0. Per-term carriers: zuus 4, crystal_maiden 3, chaos_knight 2, lion 2, obsidian_destroyer 2, skeleton_king 2, spirit_breaker 2 (all >= 2).",
+ "carrier_terms_gate": "carrier_terms.py --arm <57-id> => CT_EXIT=0, 11 hero-scoped / 46 generic / 0 unresolved => 7 terms.",
+ "wiring_gate": "check_armed_wiring.py --cand <57-id> => CAW_EXIT=0, all 57 armed ids wired on HEAD. (Note the path is tools/batch_test/check_armed_wiring.py, NOT tools/batch_test/soak/ as the charter's next-round line said; the wrong path exits 2 with a file-not-found, which is not a pass.)",
+ "wave_gate_keys": "tests/test_wave_gate_keys.py => WGK_EXIT=0, 173 checks, 0 failed.",
+ "seed_index_note": "seed_roster_index.py --build run BEFORE seed selection (charter live rule), SRI_EXIT=0.",
+ "seed_search_note": "window [3001,3400] (right-shifted one wave ago), avail=396, excluded-in-window=4 (exactly W41's four). masks=71, popcount {0:34,1:103,2:161,3:76,4:21,5:1}. BEST min-per-term = 2, 787 mask-combos, 25 at the maximum 17 slots. Discipline NOT relaxed. HONEST BOUND: the search enumerated mask-combos exhaustively but took only ONE seed assignment per mask-combo, so the pair-diversity tiebreak below is a best-of-25, not a global optimum.",
+ "seed_exclusions": "union of every machines[].seed and seeds[] read out of every W*_wave.json (70 seeds, read not hand-typed) with the banked-seed index. NOTE: the search script looked for the index at tools/batch_test/soak/seed_roster_index.json and found nothing (real path iterations/data/seed_roster_index.json), so it contributed 0 exclusions -- checked afterwards and harmless: the index's 193 banked seeds intersect [3001,3400] in exactly {3017,3030,3161,3329}, all four already excluded via the wave files.",
+ "seed_freshness": "seed_roster_index.py --seed 3040 3101 3117 3204 => all four 'no banked games'.",
+ "carrier_exposure_note": "GH #435 tiebreak, and this wave beats W41 on it. FIVE 2-carrier terms sit on FIVE DISTINCT pairs: spirit_breaker {3040,3101}, chaos_knight {3101,3117}, lion {3040,3117}, obsidian_destroyer {3117,3204}, skeleton_king {3040,3204}; crystal_maiden rides {3101,3117,3204} and zuus all four. => losing ANY ONE machine leaves every term with >= 1 carrier (checked seat by seat), and no single loss can zero a term. Pre-registered so harvest can check it against what actually landed. W41 had four distinct pairs; this is five. VERIFIED IN CODE, not by eye: for each of the four possible single-machine losses the minimum carriers-per-term is 1 (never 0). HONEST BOUND, also computed: 5 of the 6 possible TWO-machine losses do zero at least one term, so this protection is exactly one deep -- it answers GH #435's 'one AZ event took three terms to 0' only for a single loss.",
+ "zero_cost_tiebreak": "ZERO PUDGE again -- none of the four rosters contains pudge (grep over the printed rosters: 0 hits) => queue strategy-26 / rotscope gets no pudge evidence for a SIXTH consecutive wave; at harvest this must be written as 'no carrier', NOT as a negative reading. Pudge preference is a tiebreak only and never relaxes >=2/term.",
+ "pooling_claim": "PRE-REGISTERED, and it is the reason this wave matters beyond its own four seeds. The 57-id family needs 8 seeds; W41 gave 4 and this wave gives 4. Pooling W41+W42 has so far been decided by TREE OBJECT HASH, and by that criterion these two waves are different trees and may not be pooled. The hash criterion is wrong here, and the demonstration is a compiler, not prose: the only file that changed (bots/BotLib/hero_chaos_knight.lua, commit 9053d199) compiles under lua5.1 to a bytecode listing that, once pointer addresses and line numbers are normalised away, differs in ZERO lines from W41's. Note two weaker checks that would NOT have settled it: `luac -s` md5 differed (so a naive bytecode-hash oracle says 'different tree'), and the repo's own strip_lua_comments heuristic left an 18-byte residue (trailing whitespace) before line-wise comparison agreed. => Batch desk's reading: W41 and W42 measure the SAME tree under the SAME arm and ARE poolable, which would take the 57-id family to 8 seeds in one step. The pooling decision is the director's, not this desk's; this key exists so the claim is on the record BEFORE the numbers land, and cannot be reverse-fitted to them.",
+ "winrate_prereg": "W41 came back winrate_channel DEGENERATE with minority_side_share 0.0045 (a 227:1 dire sweep), an order of magnitude worse than W40's 0.0417, on three simultaneously-fresh axes (new id family, new seeds, new tree). This wave changes NONE of those three axes on purpose -- same arm, same tree, only the seeds are new. => It is a clean replication test of the batch desk's own claim that the degeneracy is the CORPUS (physical-side sweeps, winner_by engine_natural), not the id set or the seed count. Pre-registered: (a) if winrate_channel is DEGENERATE again, the 'change the method AND fix the sweep' escalation on GH #352 stands on two independent seed sets and the seed-count route is dead by construction; (b) if it comes back RECOVERED on fresh seeds alone, the batch desk's 4.3 reading from W41 was too strong and must be corrected in the same round. Either way copy winrate_channel, winrate_side_census, minority_side_share and mean.winrate_headroom VERBATIM, and do not read winrate / comps_better winrate as readings while the channel is DEGENERATE.",
+ "harvest_obligations": [
+  "GH #427: spot machines DO have a SIR, so this wave's death codes are readable from describe-spot-instance-requests, which outlives describe-instances. Read them. AND: write survival_min (or create+update) plus ab/ba/arm_depth into machines[] AT HARVEST -- this round had to reconstruct W41's from S3 because the harvest round never wrote them, and that omission silently disabled the GH #271 gate for a full round.",
+  "rec_slot_cost.py <run dirs> --baseline tools/batch_test/soak/rec_slot_baseline.json (same rec_slots=8 config; SS-DA.2 gate, third non-circular run). Download .demclaim.json sidecars too, not just *.analysis.json -- omitting them exits 2, and exit 2 is not a pass.",
+  "pooling_claim: report the four seeds BOTH standalone and pooled with W41, label which is which, and hand the pooling decision to the director. Per 4(i-d) any pooling is per-seed swap-average then arithmetic mean across seeds -- never games-weighted.",
+  "SS-DT.4 (ckpush) / SS-DP.8 (roshdist): W41 established that this corpus's analysis.json carries NO frame-level detector fields, so both return UNINTERPRETABLE with the carrier distribution, NOT 'tested, no effect'. Check whether that is still true before spending the round on it.",
+  "carrier_exposure_note: check the five distinct pairs against what actually delivered.",
+  "zero pudge: strategy-26 / rotscope must be written as 'no carrier', not as a negative reading.",
+  "winrate_prereg: the two branches above are pre-registered; report against them without reverse-fitting."
+ ],
+ "tree_drift_since_W41": "bots/BotLib/hero_chaos_knight.lua only, commit 9053d199 (hero group 07:53Z, GH #447): +18 comment lines correcting a universal-negative claim about ckpush's 240s guard. COMMENT-ONLY, measured three ways with the disagreement registered: (1) `git diff` filtered for non-comment changed lines => zero lines; (2) repo strip_lua_comments then line-wise compare => 395/395 non-blank lines identical (an 18-byte raw residue is trailing whitespace from the naive stripper); (3) DECISIVE: `luac5.1 -l -l` listings normalised for pointer addresses and line numbers => 0 differing lines. Note (4) `luac5.1 -s` md5 DID differ; that oracle was not relied on and the disagreement is registered rather than dropped.",
+ "issues_filed": [],
+ "machines": [
+  {
+   "seed": 3040,
+   "run_id": "spot_20260903_093203_1_1baa449b6829dc8ce768d891e1ed661dec987555_1db27d",
+   "instance_id": "i-08f6554de561a016b",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2a",
+   "reaimed": false,
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T09:32:05Z",
+   "spot_run_exit": "NOT RECORDED -- the launch loop read $? through a `| tail -12` pipe, so the number it printed is tail's, not spot_run.sh's (evidence discipline 3). Launch success is taken from describe-instances instead: all four are running, spot, in the requested AZ, with four pairwise-distinct soak-run tags.",
+   "carrier_pair_terms": [
+    "spirit_breaker",
+    "lion",
+    "skeleton_king"
+   ],
+   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+  },
+  {
+   "seed": 3101,
+   "run_id": "spot_20260903_093207_1_1baa449b6829dc8ce768d891e1ed661dec987555_13d27c",
+   "instance_id": "i-0371d22b2345adff0",
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2b",
+   "reaimed": false,
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T09:32:10Z",
+   "spot_run_exit": "NOT RECORDED -- the launch loop read $? through a `| tail -12` pipe, so the number it printed is tail's, not spot_run.sh's (evidence discipline 3). Launch success is taken from describe-instances instead: all four are running, spot, in the requested AZ, with four pairwise-distinct soak-run tags.",
+   "carrier_pair_terms": [
+    "spirit_breaker",
+    "chaos_knight"
+   ],
+   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+  },
+  {
+   "seed": 3117,
+   "run_id": "spot_20260903_093212_1_1baa449b6829dc8ce768d891e1ed661dec987555_1f4265",
+   "instance_id": "i-0d24250f341351b93",
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2c",
+   "reaimed": false,
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T09:32:14Z",
+   "spot_run_exit": "NOT RECORDED -- the launch loop read $? through a `| tail -12` pipe, so the number it printed is tail's, not spot_run.sh's (evidence discipline 3). Launch success is taken from describe-instances instead: all four are running, spot, in the requested AZ, with four pairwise-distinct soak-run tags.",
+   "carrier_pair_terms": [
+    "chaos_knight",
+    "lion",
+    "obsidian_destroyer"
+   ],
+   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+  },
+  {
+   "seed": 3204,
+   "run_id": "spot_20260903_093216_1_1baa449b6829dc8ce768d891e1ed661dec987555_93ca3e",
+   "instance_id": "i-036f2c0ccba66ba56",
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2d",
+   "reaimed": false,
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T09:32:18Z",
+   "spot_run_exit": "NOT RECORDED -- the launch loop read $? through a `| tail -12` pipe, so the number it printed is tail's, not spot_run.sh's (evidence discipline 3). Launch success is taken from describe-instances instead: all four are running, spot, in the requested AZ, with four pairwise-distinct soak-run tags.",
+   "carrier_pair_terms": [
+    "obsidian_destroyer",
+    "skeleton_king"
+   ],
+   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+  }
+ ],
+ "market_verified": "all four InstanceLifecycle = spot at 09:32:3xZ, read off describe-instances (an evidence source independent of this session's transcript). Four pairwise-distinct soak-run tag values; four distinct RUN_TOKENs (1db27d/13d27c/1f4265/93ca3e); the four calls are 09:32:03/07/12/16 => every pair crosses an integer second.",
+ "az_spread": "*** 4 requested / 4 actual / 4 DISTINCT (2a/2b/2c/2d), requested == actual on every machine (GH #282 triple printed on the success path), zero re-aiming inside the ring, zero AZ RING EXHAUSTED, zero market or instance-type degradation. GH #252 passes; GH #256 STRICT acceptance passes -- and unlike W41 this is a SPOT wave, which is the evidence W41 explicitly could not provide ('on-demand placement is far easier; do not close #256 on it'). Registering it as such: this is the first strict pass under spot capacity pressure since W36. One wave is not a fix; W36-W40 were bitten seven waves running.",
+ "capacity_note": "Zero capacity degradation at launch: all four c6i.4xlarge spot requests filled in their requested AZ on the first attempt, no fallback to c6a and no --on-demand escalation.",
+ "launch_round_roll_call": "09:32:3xZ fixed action (not --leak-only): pending+running = EXACTLY the four intended instances, one-to-one with machines[].run_id; four volumes all in-use with no orphans; standing cost is the AMI (ami-0a990a26d89c66547) only.",
+ "progress_at_launch": "0 games; expected ~96 scored",
+ "expected_self_destruct": "~10:1x-10:3xZ at the measured spot/cap-25 constant (0.745 h/machine); watchdog hard stop 11:32Z"
+}
