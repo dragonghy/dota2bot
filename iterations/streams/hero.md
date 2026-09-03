@@ -3959,7 +3959,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     detector 文件 0 失败**。python 1 个文件 3 条红**都不是本组的、都先于本轮**(本轮零 `.py` 改动):
     `test_detector_source_constants.py`,GH **#410**。静态 **`GATE_EXIT=0` /
     `luacheck bots game: 0 warnings` / `RC_EXIT=0`**(冷启自装,**没用 `RULE6_BYPASS`**)。
-    定向动态 13 个文件 **152 tests / 0 failures / 13 个 EXIT=0**。全量套件见报告 §7。
+    定向动态 13 个文件 **152 tests / 0 failures / 13 个 EXIT=0**。
+    ⛔ **全量套件没跑成,不声称**:推进到 **1213 / 约 3000**、`^FAIL` **0**,约 16 分钟后按铁律 7 掐掉。
+    速度曲线与 GH #124 同形(**前 5.5 分钟 1034 个,后 10 分钟只推进 179 个**)。
+    掐法用 **pid 文件点杀**,**没用 `pkill -f`**;事后残留进程 0、`bots/Customize/` 无开关、树干净。
   - **交出去的棒**:#447 本组认为**可关**(更正已落地,且验收比它建议的更强),
     **关闭裁定权按惯例在总监**,本组只发验收读数不自关;**#447 建议的 t=222.5 fixture
     本轮没做、棒已交出**(timelines 不在树里,要先建 dumper 跑 `.dem` = replay-analyst 的活;
