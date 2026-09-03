@@ -158,6 +158,20 @@ MUTANTS = {
              "    return sum(1 for b in blobs if token in b)",
              "    return sum(1 for b in blobs\n"
              "               if token.replace(\"vengefulspirit\", \"vengeful_spirit\") in b)")],
+    # ---- the walk goes HALF blind (GH #457) -----------------------------
+    # M13: the walk drops ONE file -- the last one in corpus order.  This is
+    #      the mutant the denominators were never able to catch and the reason
+    #      turning them into floors costs nothing: an exact `== 10946` and a
+    #      floor of 7000 are equally blind to it (10945 fails both the pin and
+    #      nothing else), and the findings ratchet only sees it on the days the
+    #      dropped file happens to hold one of the twelve.  Only the coverage
+    #      relation -- `visited == bots_lua_relpaths()` -- says so every time.
+    #      If M13 ever survives, the sweep can quietly stop covering shipped
+    #      code one file at a time, which is the failure `lua_corpus.py`'s own
+    #      header warns an easy exclusion mechanism would buy.
+    "M13": [(TOOL,
+             "    for path in lua_corpus.bots_lua_files(root):",
+             "    for path in lua_corpus.bots_lua_files(root)[:-1]:")],
     # M12: THE HOLE IS CLOSED -- write_only_local_census stops counting a self
     #      nil-guard as a read, so it reports nEnemyTowers too and section 4's
     #      claim becomes false.  If this survives, section 4 is not actually
@@ -197,7 +211,7 @@ fi
 echo "baseline GREEN"
 
 CAUGHT=0; SURVIVED=0; ABORTED=0
-for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12; do
+for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12 M13; do
     restore
     apply_mutant "$m"
     rc=$?
@@ -218,5 +232,5 @@ for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12; do
 done
 restore
 
-echo "=== $CAUGHT caught / $SURVIVED survived / $ABORTED aborted (of 12) ==="
+echo "=== $CAUGHT caught / $SURVIVED survived / $ABORTED aborted (of 13) ==="
 [ "$SURVIVED" -eq 0 ] && [ "$ABORTED" -eq 0 ]

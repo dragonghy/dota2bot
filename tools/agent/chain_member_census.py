@@ -444,11 +444,25 @@ def scan_parity(rel, lines, conds):
     return found, guard_only, declared
 
 
-def scan(root=None):
+def scan(root=None, visited=None):
+    """Scan the corpus.  Pass a list as `visited` to receive the relpath of
+    every file actually read, in walk order.
+
+    ⭐ WHY THE OUT-PARAM AND NOT A SIXTH RETURN VALUE (GH #457).  Coverage is
+    the one property of this walk that does NOT move when bots/ grows: the
+    denominators it produces move on every landing, so they can only ever be
+    floors, and a floor cannot tell a complete sweep from one that dropped a
+    file or two.  The caller that wants that guarantee compares this list
+    against `lua_corpus.bots_lua_relpaths()` -- a relation, not a count.  An
+    out-param keeps the ten existing 5-tuple call sites untouched, so the
+    assertion is added without editing what it is meant to certify.
+    """
     dup, parity = [], []
     chains = locals_seen = guard_only = 0
     for path in lua_corpus.bots_lua_files(root):
         rel = os.path.relpath(path, root or REPO).replace(os.sep, "/")
+        if visited is not None:
+            visited.append(rel)
         lines = strip_comments(lua_corpus.read_lua(path, errors="replace"))
         conds = conditions(lines)
         d, c = scan_dup(rel, conds)

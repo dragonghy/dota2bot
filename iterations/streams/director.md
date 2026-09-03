@@ -9515,3 +9515,68 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `TOKENS total_in=11,545,860 out=65,028 turns=77`(较上轮翻倍,归因见报告 §7.6:
   七项读数的裁定 + 三份大档案按节读 + 四份草稿过引用门;**唯一纯浪费**是纪律 3 第二十八发
   让自检整个重跑了一次)。
+
+- **2026-09-03T19:27Z:一个工作单元,做完上一轮列为「不许再顺延」的第 ① 项 ——
+  两个 census 的 trunk 红修好,改的是断言的形状不是数字。** 报告
+  `iterations/reports/director/20260903T192705Z.md`。**零 AWS 调用;`bots/` 与
+  `game/` 逐字节零 diff**(改动只在两个 python 测试、census 工具的一个出参、
+  一个变异台、报告与本章程)。
+  **① 五条红是同一个缺陷的五个实例,不是五件事**:一条 check 的**名字**说的是一个
+  不动的性质,而**断言**钉的是一个每次落地都会动的数。最干净的两条证据是
+  `the fixture archive is NON-EMPTY` 断言 `== 107`、
+  `…is non-zero, so the zeros above are not an artefact` 断言 `== 53` ——
+  **名字里逐字写着正确的性质,多余的那一半就是唯一会响的那一半**。
+  ⇒ §DU.3 的判据在测试里第二次被买到:**一个分母只有在「它不该动」的时候才配被冻住**;
+  这一队每周都在往 `tests/fixtures/` 加帧(铁律 4 要求的),所以这些断言
+  **是被本队自己的正确工作推红的**。
+  **② 修法逐条**:三个分母 → floor(名字里写明「collapse detector, NOT a pinned count」,
+  取当日读数约 2/3);fixture 档案 → `>= 90`(**与隔壁 `test_threshold_chain_census.py:311`
+  对同一个档案已经在用的形状逐字一致 —— 不是发明,是把仓库里已有的正确形状搬到剩下那半边**);
+  CM 对照 → `> 0`;两种拼写 → **关系** `vs_a > 0 and vs_b > 0 and vs_a != vs_b`
+  (**当天还绿,同族,同一轮一起改** —— 留着就是留一个下次归档 vengeful spirit 帧时会响的闹钟);
+  750s → `len(late) >= 1`(「语料够不到 750s」是档案自己记着的、错过的第一稿,继续钉)
+  `and len(late)*100 <= len(times)`(「只是刚够到」= 晚帧 <1%,写时 3/620=0.48%,约 2 倍余量)。
+  **③ ⭐ floor 买不到的那一半单独买了**:`== 10946` → `>= 7000` 是**净损失一项** ——
+  两者对「走查掉了一两个文件」同样是瞎的(10945 不等于 10946 只是因为它对**任何**变化都响)。
+  ⇒ `scan()` 加 `visited=None` **出参**(**不改返回元组**,十个既有 5-tuple 调用点逐字不动 ——
+  让新断言不必编辑它要认证的东西),断言一条**关系**:`visited == lua_corpus.bots_lua_relpaths()`。
+  **bots/ 长大它不会响,掉一个文件它一定响**。新增变异 **M13**(`bots_lua_files(root)[:-1]`)
+  专证它承重:M13 对 floor 和对旧的 `== 10946` **都不可见**。
+  **④ 两个变异台裸读**:`mutstand_chainmember.sh`(12 → **13** 只)`baseline GREEN` /
+  **`13 caught / 0 survived / 0 aborted`**,`RC_EXIT=0`;`mutstand_deadrung.sh`(12 只未改)
+  `baseline GREEN` / **`12 caught / 0 survived / 0 aborted`**,`RC_EXIT=0`。
+  M9/M10/M11/M12 四只正是打向本轮被放松的那四条断言的,**四只全被新形状抓住**
+  ⇒ **放松的是数,不是捕获力**。⚠️ 台子的已知性质照抄:**断言抓不住它自己的削弱**
+  (oracle 就是被改的那个文件)⇒「floor 会不会太松」变异台**结构上答不了**,
+  答它的是 ③ 那条关系断言与 floor 取值理由,两者都写在代码注释里。
+  **⑤ ⚠️ 撞见第二条 trunk 红,不是我的改动:`tests/test_wave_gate_keys.py`** ——
+  `W43_wave.json:gates` 里**只有三个键**(`throttle_i_six_hours` / `_ii_new_content` /
+  `_iii_fence`),**闸 (iv) 两半(inputs 没有欠着的收割 + GH #271 reclaim-blind)
+  一个键都没有**;批测台报告自己写的也是「三条闸」⇒ **不是改名,是这一波没登记那条闸**,
+  而波 18:21:58Z 已起飞。改名那一面**同时也真实存在且更隐蔽**:统一加 `throttle_` 前缀后
+  (i) 仍靠别名 `throttle` 命中、(iii) 仍靠 `fence` 命中,**只有 (ii) 掉了** ——
+  **一次统一重命名只在四条里的一条上举了手**(GH #332 / §DR 同型)。
+  **本轮不代改**(那是批测台的记录,且「闸 (iv) 跑没跑」只有他们答得出),开 `[batch]` issue;
+  **不加 `owed_executions.json` 行** —— 这条已经有一个每轮替它举手的探测器(那条红测试本身),
+  再登记一行是重复的铃不是第二重保险。
+  **⑥ 铁律 6**:`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`,未用 `RULE6_BYPASS`;
+  零 Lua diff ⇒ 全量 Lua 套件未跑**也不声称**。本次改动自己的门在 python 侧,裸读:
+  两个 census **各 `RC_EXIT=0`**(修前各 1),全套 `bash tests/run_py_tests.sh` ⇒
+  **`83 passed, 1 failed, 1 uncertifiable`**(对照批测台 09:15Z 的 `80 passed, 1 failed`
+  ⇒ **净 +3 绿、老红清零、新红一条**,即 ⑤)。
+  **⑦ 自检 `EXIT=124`**(600s 超时打断在 python trunk 腿上)⇒ **整体退出码不声称**,
+  那一侧由 ⑥ 的独立全套补上;已跑完的腿:unlanded OK / anchors 三条不变量全 ok /
+  owed `registry rows: 1`(**上一轮交出去的棒还在录像组手上,未掉**)/ expired+orphan 均 none /
+  未裁 `OTHER: 1` = **`strategy-40`(`arbheart`)** / cadence 2 条(hero 3.8h、strategy 4.0h,
+  越线 ≤0.5h,**不升级**)。
+  **⑧ 工作流第 0 步本轮遵守了一半**:开工第一条命令走了 `rc.sh`,但**同回合并发的第二条**
+  仍是 `… | tail -60`,被 §22 守卫当场拒(**纪律 3 第二十九发,守卫第二十三次拦下**)。
+  ⇒ 给该条款自己的措辞第二种形状的背书:**门确实开了,而门旁边那条并发的路上没有门。**
+  **⑨ 成本**:零 AWS 调用;围栏读数照抄批测台 18:15Z 自报 **`$11.66` ≤ `$80`**,
+  刹车 `$90` / 批准线 `$100` 均远。无邮件(本周 08-31 已发)、`DECISIONS_NEEDED` 无新增、
+  周四跳过效率台账、四组均有产出无空转。
+  **⑩ 下次触发**:①**裁 `strategy-40`(`arbheart`)**,前置是 GH #456 那条嵌套闸的答案
+  ②**GH #457 的第二半:全仓扫还有哪些测试在钉会动的数**(`grep -n "== [0-9]\{2,\}" tests/*.py`
+  起手,**一次扫完比再红三轮便宜**)③W43 闸 (iv) 看批测台收割轮怎么答,仍红则写进
+  `DECISIONS_NEEDED` ④自检 `RIDESHARE` 分类腿(**第六轮顺延**)⑤GH #410 / #436 / #285 /
+  patch 缺口 P3。

@@ -236,13 +236,48 @@ check("snapfire: the missing member is declared just above and guarded "
 # ---------------------------------------------------------------- section 1
 print("=== 1. ratchet: exact findings AND their denominators ===")
 
-dup, parity, chains, guard_only, locals_seen = cmc.scan()
+visited = []
+dup, parity, chains, guard_only, locals_seen = cmc.scan(visited=visited)
 
-check("denominator: and/or chains scanned == 10946 (all depths)",
-      chains == 10946, str(chains))
-check("denominator: locals with an initializer == 16088",
-      locals_seen == 16088, str(locals_seen))
-check("denominator: guard-only locals == 45", guard_only == 45, str(guard_only))
+# ⛔ THE DENOMINATORS ARE FLOORS, NOT PINS (GH #457).  They were `== 10946`,
+# `== 16088` and `== 45` until 09-03, when two gated landings and one new
+# fixture moved two of them within fourteen hours -- three reds that said
+# nothing about this census.  A denominator deserves freezing only when it
+# should not move; pinned to a corpus that grows every round, an exact count is
+# not a ratchet but an alarm clock set to a date, and the ratchet it looks like
+# is the FINDINGS ratchet below (`dup`/`parity`, keyed by content), which does
+# go red the day a new site lands and must not be diluted by neighbours that
+# ring on the calendar.
+#
+# What the exact counts actually bought is M4 in the mutation stand: a corpus
+# walk pointed at nothing reports FINDINGS 0, which is indistinguishable from a
+# clean tree.  A floor buys that, and buys it permanently.  What a floor does
+# NOT buy is a walk that drops a FILE OR TWO -- so that half is bought below by
+# `visited`, as a relation against the corpus listing, which stays true however
+# large bots/ becomes.  Floors are set at ~2/3 of the reading on the day this
+# shape was written (chains 10950, locals 16094, guard-only 45), low enough
+# that ordinary growth and ordinary deletion never reach them and high enough
+# that a half-blind sweep does.
+check("denominator floor: and/or chains scanned (all depths) -- collapse "
+      "detector, NOT a pinned count",
+      chains >= 7000, str(chains))
+check("denominator floor: locals with an initializer", locals_seen >= 10000,
+      str(locals_seen))
+check("denominator floor: guard-only locals", guard_only >= 30, str(guard_only))
+# ⭐ THE PART OF THE OLD PIN THAT WAS WORTH KEEPING, IN THE SHAPE THAT KEEPS IT.
+# Not "the walk read 275 files" (a count, which moves) but "the walk read
+# exactly the corpus, in order, no more and no fewer" (a relation, which does
+# not).  This is what catches a walk that goes half-blind rather than fully
+# blind -- the direction the floors above cannot see and the findings ratchet
+# only sees when the dropped file happened to hold a finding.
+check("coverage: the walk read EVERY corpus file and nothing else "
+      "(the invariant a floor cannot buy)",
+      visited == cmc.lua_corpus.bots_lua_relpaths(),
+      "read %d, corpus %d, first difference: %s"
+      % (len(visited), len(cmc.lua_corpus.bots_lua_relpaths()),
+         next((a for a, b in zip(visited + [None],
+                                 cmc.lua_corpus.bots_lua_relpaths() + [None])
+               if a != b), "none")))
 check("duplicate operands == 12", len(dup) == 12, str(len(dup)))
 check("parity breaks == 1", len(parity) == 1, str(len(parity)))
 
@@ -487,8 +522,14 @@ check("build_judged keeps the recorded line beside the key, out of it",
 print("=== 3. domain price: measured, double-sided, and token-checked ===")
 
 fixtures = sorted(glob.glob(os.path.join(REPO, "tests", "fixtures", "*.lua")))
+# ⛔ The label says NON-EMPTY and the assertion said `== 107` (GH #457): the
+# name stated the load-bearing property and the number stated a date.  What
+# this control is for is M9 -- a glob that matches nothing turns every zero
+# below into a statement about the empty set.  A floor buys exactly that, and
+# it is the shape `tests/test_threshold_chain_census.py` already uses for the
+# same archive one file over.
 check("the fixture archive is NON-EMPTY (this is the denominator)",
-      len(fixtures) == 107, str(len(fixtures)))
+      len(fixtures) >= 90, "%d fixture(s)" % len(fixtures))
 
 blobs = []
 for f in fixtures:
@@ -508,19 +549,29 @@ for hero in ("dark_seer", "kunkka", "hoodwink", "snapfire"):
           str(files_with("npc_dota_hero_" + hero)))
     check("corpus holds 0 files with the bare token '%s' either" % hero,
           files_with(hero) == 0, str(files_with(hero)))
+# Non-zero, not `== 53` (GH #457): this control's whole job is to separate a
+# real absence from a broken reader (M10, which answers 0 for everything), and
+# "non-zero" is that job stated exactly.  The 53 was a fixture count -- it moved
+# the next time anyone archived a CM frame, which is a thing this team does on
+# purpose, every week.
 check("...and the SAME grep on a hero the corpus DOES hold is non-zero, "
       "so the zeros above are not an artefact of the token",
-      files_with("npc_dota_hero_crystal_maiden") == 53,
+      files_with("npc_dota_hero_crystal_maiden") > 0,
       str(files_with("npc_dota_hero_crystal_maiden")))
 # ⛔ The two-spelling rule is not hypothetical on THIS corpus.  One hero is
 # present under two spellings with different counts, so a reading taken off the
-# wrong one is off by a factor of six while looking like a clean number.
-check("the spelling really does move the number: vengeful spirit reads 3 "
-      "under one spelling and 19 under the other, same corpus, same hero",
-      files_with("npc_dota_hero_vengefulspirit") == 3
-      and files_with("npc_dota_hero_vengeful_spirit") == 19,
-      "%d vs %d" % (files_with("npc_dota_hero_vengefulspirit"),
-                    files_with("npc_dota_hero_vengeful_spirit")))
+# wrong one is off by a large factor while looking like a clean number.  The
+# claim is that the two spellings DISAGREE and that neither is the empty
+# reading -- a relation between two readings of the same corpus, which is what
+# catches M11 (a reader that collapses the spellings) and which no landing can
+# falsify.  The counts themselves (3 vs 19 when this was written) are fixture
+# counts and were pinned exactly until GH #457.
+vs_a = files_with("npc_dota_hero_vengefulspirit")
+vs_b = files_with("npc_dota_hero_vengeful_spirit")
+check("the spelling really does move the number: vengeful spirit reads "
+      "differently under its two spellings, same corpus, same hero, and "
+      "neither reading is zero",
+      vs_a > 0 and vs_b > 0 and vs_a != vs_b, "%d vs %d" % (vs_a, vs_b))
 check("neither hero's abilities appear either (a second, independent token)",
       files_with("dark_seer_ion_shell") == 0
       and files_with("kunkka_torrent") == 0)

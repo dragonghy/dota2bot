@@ -352,14 +352,31 @@ check("the wrong-token grep reads zero for BOTH spellings, and neither is "
       "item_blink" not in blob and "item_enhancement" not in blob)
 
 # The ladder's own gate is a TIME as well as an item, and the archive DOES
-# reach past 750 s -- barely.  Pinned as the exact numbers rather than as a
-# comfortable "the corpus is early", because the comfortable version was the
-# round's first draft and it was false.
+# reach past 750 s -- barely.  Both halves are load-bearing and neither may be
+# a frozen count: the comfortable "the corpus is early" was this round's first
+# draft and it was FALSE, so the reach is asserted non-zero; and "barely" is a
+# statement about the archive's SHAPE, so it is asserted as a share of the
+# archive, not as `== 2`.
+#
+# ⛔ WHY NOT `len(late) == 2` (GH #457).  That was the assertion until a single
+# new fixture past 750 s landed and turned it red -- a red that says nothing
+# about this census, this ladder, or this corpus's domain price.  A denominator
+# (or a numerator riding on one) deserves freezing only when it should not
+# move; pinned to a corpus every round adds fixtures to, an exact count is not
+# a ratchet but an alarm clock set to a date.  The share below rings on the day
+# the archive genuinely stops being late-thin -- i.e. on the day "only just"
+# stops being true -- and stays quiet for the ordinary landing that moves the
+# count by one.  Recorded reading when this shape was written: 3 of 620
+# (0.48%); the ceiling is 1%, a ~2x margin.
 times = [float(m.group(1)) for m in re.finditer(r"\bt\s*=\s*([\d.]+)", blob)]
 late = [t for t in times if t >= 750.0]
-check("the archive does reach the 750 s rung, but only just: 2 frames of 619",
-      len(times) >= 600 and len(late) == 2,
-      "frames=%d late=%d max=%.1f" % (len(times), len(late), max(times)))
+check("the archive does reach the 750 s rung (not one frame -- the reading "
+      "the round's first draft got backwards), but only just: late frames are "
+      "under 1% of the archive",
+      len(times) >= 600 and len(late) >= 1 and len(late) * 100 <= len(times),
+      "frames=%d late=%d (%.2f%%) max=%.1f"
+      % (len(times), len(late), 100.0 * len(late) / max(1, len(times)),
+         max(times)))
 
 # The three conditions are independent, and the fix is unbuyable unless ALL
 # THREE land on one frame.  That conjunction is the actual domain price.
