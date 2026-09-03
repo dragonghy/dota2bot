@@ -199,8 +199,14 @@ end
 --- (those are thresholds, not modes, and the mock gives them real values).
 local function scan_mode_names()
     local names, ordered = {}, {}
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
-    for file in p:lines() do
+-- Farm-only files are skipped: `bots/Customize/` holds two gitignored,
+-- TRANSIENT switch files that every gate test in this suite creates and
+-- deletes, so listing one and then reading it is a race whose red names a
+-- file this test has no business reading (GH #365 §2 / #438; hero backlog
+-- -79 measured the population at 18 walks in 18 files).  The rule lives in
+-- tests/lua_source_scan.lua and is referenced, never copied -- the path
+-- literal is load-bearing text and a second copy is the defect.
+    for _, file in ipairs(require('lua_source_scan').bots_files()) do
         for line in io.lines(file) do
             for m in line:gmatch('BOT_MODE_[A-Z0-9_]+') do
                 if not m:match('^BOT_MODE_DESIRE') and not names[m] then
@@ -210,7 +216,6 @@ local function scan_mode_names()
             end
         end
     end
-    p:close()
     table.sort(ordered)
     return ordered
 end

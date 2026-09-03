@@ -369,8 +369,14 @@ local function trim(s) return (s:gsub('^%s+', ''):gsub('%s+$', '')) end
 -- visible (and red) rather than silently collapsing two gates into one row.
 local function scan_source()
     local found = {}
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
-    for file in p:lines() do
+-- Farm-only files are skipped: `bots/Customize/` holds two gitignored,
+-- TRANSIENT switch files that every gate test in this suite creates and
+-- deletes, so listing one and then reading it is a race whose red names a
+-- file this test has no business reading (GH #365 §2 / #438; hero backlog
+-- -79 measured the population at 18 walks in 18 files).  The rule lives in
+-- tests/lua_source_scan.lua and is referenced, never copied -- the path
+-- literal is load-bearing text and a second copy is the defect.
+    for _, file in ipairs(require('lua_source_scan').bots_files()) do
         local n = 0
         for line in io.lines(file) do
             n = n + 1
@@ -391,7 +397,6 @@ local function scan_source()
             end
         end
     end
-    p:close()
     return found
 end
 

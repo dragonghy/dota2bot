@@ -260,15 +260,20 @@ end
 --- Every .lua under bots/, as {path, line, text}.
 local function bot_lua_lines()
     local out = {}
-    local p = io.popen('find bots -name "*.lua" | sort')
-    for path in p:lines() do
+-- Farm-only files are skipped: `bots/Customize/` holds two gitignored,
+-- TRANSIENT switch files that every gate test in this suite creates and
+-- deletes, so listing one and then reading it is a race whose red names a
+-- file this test has no business reading (GH #365 §2 / #438; hero backlog
+-- -79 measured the population at 18 walks in 18 files).  The rule lives in
+-- tests/lua_source_scan.lua and is referenced, never copied -- the path
+-- literal is load-bearing text and a second copy is the defect.
+    for _, path in ipairs(require('lua_source_scan').bots_files()) do
         local n = 0
         for line in io.lines(path) do
             n = n + 1
             out[#out + 1] = { path = path, n = n, text = line }
         end
     end
-    p:close()
     return out
 end
 

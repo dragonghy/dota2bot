@@ -79,10 +79,36 @@ end
 --- Skipping the two farm-only files changes no reading (all 18 bots/-walking
 --- test files give byte-identical counts with the switch present and absent);
 --- it only removes the window.
+---
+--- DOMAIN, MEASURED (hero 2026-09-03, backlog -79).  The population this rule
+--- has to cover is 18 `io.popen` walks in 18 test files, and that number came
+--- out of an instrument, not a grep: every `io.popen(...)` argument in
+--- `tests/*.lua` was extracted with a paren/quote-balanced scan, its file-local
+--- string constants resolved, and each resolved command then EXECUTED inside a
+--- throwaway copy of the tree that had both switch files -- the domain is the
+--- set of commands whose real output contained one.  The two earlier greps
+--- ("18 call sites", then "at least 17") were both counting something else.
+--- 10 of the 18 issue this function's command byte-for-byte and now call it;
+--- the other 8 differ (`-type f`, no `sort`, an `ls` glob, or a parameterised
+--- root) and carry the clause or the predicate below instead.
+M.FARM_ONLY_FIND_CLAUSE = '! -path "bots/Customize/soak_*.lua"'
+
+--- Is `path` one of the gitignored, farm-only files rather than shipped source?
+---
+--- The predicate exists so that a walk which cannot use `find`'s `! -path`
+--- (an `ls` glob, say) still does not have to SPELL THE SWITCH PATH OUT.  That
+--- is not tidiness: on 2026-09-02 four files that named the path in a *comment*
+--- were swept into the switch-writer census as RAW (`RAW(5) -> RAW(9)`) while
+--- its ratchet stayed 16/16 green -- the literal is load-bearing text, so it
+--- lives here and is referenced, never copied.
+function M.is_farm_only(path)
+    return path:match('^bots/Customize/soak_[^/]*%.lua$') ~= nil
+end
+
 function M.bots_files()
     local out = {}
     local p = assert(io.popen(
-        'find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
+        'find bots -name "*.lua" ' .. M.FARM_ONLY_FIND_CLAUSE .. ' | sort'))
     for file in p:lines() do
         out[#out + 1] = file
     end

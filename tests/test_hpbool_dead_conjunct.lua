@@ -119,9 +119,16 @@ local CODE = codeOnly(read(TARGET))
 --- not any in-tree list that could drift.
 local BOTS = (function()
     local out = {}
-    local p = assert(io.popen("find bots -name '*.lua' | sort"), 'cannot walk bots/')
-    for path in p:lines() do out[#out + 1] = { path = path, src = codeOnly(read(path)) } end
-    p:close()
+-- Farm-only files are skipped: `bots/Customize/` holds two gitignored,
+-- TRANSIENT switch files that every gate test in this suite creates and
+-- deletes, so listing one and then reading it is a race whose red names a
+-- file this test has no business reading (GH #365 §2 / #438; hero backlog
+-- -79 measured the population at 18 walks in 18 files).  The rule lives in
+-- tests/lua_source_scan.lua and is referenced, never copied -- the path
+-- literal is load-bearing text and a second copy is the defect.
+    for _, path in ipairs(require('lua_source_scan').bots_files()) do
+        out[#out + 1] = { path = path, src = codeOnly(read(path)) }
+    end
     assert(#out > 100, 'the walk must find the shipped tree; got ' .. #out)
     return out
 end)()
