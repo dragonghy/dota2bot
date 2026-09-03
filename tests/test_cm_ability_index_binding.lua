@@ -441,7 +441,7 @@ tests['[corpus] the pipeline DOES show innates -- WK 33/33 and Lion 23/23'] = fu
     cs.universal(r.lion.names.lion_innate_to_hell_and_back or 0,
         r.lion.with, "Lion's innate", 23)
     -- and a grant, so a grant's zero is readable too
-    assert(r.zuus.names.zuus_lightning_hands == 1,
+    assert(r.zuus.names.zuus_lightning_hands == 2,
         'zuus_lightning_hands is on ' .. tostring(r.zuus.names.zuus_lightning_hands)
             .. ' frames, recorded 1. It is the only proof this corpus can show a granted '
             .. 'ability at all; without it the Crystal Clone zero below is UNMEASURABLE '

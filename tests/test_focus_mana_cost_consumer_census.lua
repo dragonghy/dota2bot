@@ -376,9 +376,9 @@ tests['[4] 16 of 88 live-Q focus-hero frames sit where the ladder flips a gate']
     -- Measured 2026-09-02 over tests/fixtures/*.lua.
     local EXPECT = {
         axe            = { n = 26, farm = 5, spam = 3, either = 6 },
-        zuus           = { n = 39, farm = 4, spam = 3, either = 6 },
+        zuus           = { n = 40, farm = 4, spam = 3, either = 6 },
         lion           = { n = 23, farm = 3, spam = 2, either = 4 },
-        crystal_maiden = { n = 47, farm = 9, spam = 10, either = 14 },
+        crystal_maiden = { n = 48, farm = 9, spam = 10, either = 14 },
         skeleton_king  = { n = 31, farm = 4, spam = 5, either = 5 },
     }
     for sHero, want in pairs(EXPECT) do
@@ -395,8 +395,8 @@ tests['[4] 16 of 88 live-Q focus-hero frames sit where the ladder flips a gate']
     for sHero, s in pairs(per) do
         if LIVE_Q[sHero] then nLive = nLive + s.n nEither = nEither + s.either end
     end
-    assert(nLive == 88 and nEither == 16,
-        'live-Q total: expected 16 flips over 88 frames, got ' .. nEither
+    assert(nLive == 89 and nEither == 16,
+        'live-Q total: expected 16 flips over 89 frames, got ' .. nEither
             .. ' over ' .. nLive)
     -- The CM half of the same table is the §2 point in numbers: fourteen frames
     -- whose arithmetic says "flip" and whose code says "nobody reads this".
@@ -416,7 +416,7 @@ tests['[5] negative control: with the pre-ladder price of 0 the flip band is emp
     -- an empty loop
     local nSeen = 0
     for _, s in pairs(per) do nSeen = nSeen + s.n end
-    assert(nSeen == 166, 'the control must sweep the same 166 frames, saw ' .. nSeen)
+    assert(nSeen == 168, 'the control must sweep the same 168 frames, saw ' .. nSeen)
 end
 
 -- ---------------------------------------------------------------------------
@@ -487,8 +487,8 @@ tests['[6b] corpus: 16 Zeus frames hold a ready ult, and the old gate died on al
         end
     end
     p:close()
-    assert(nAlive == 42 and nReady == 16 and nDeny == 7,
-        'zusult corpus domain moved -- expected 42 alive Zeus frames, 16 with a '
+    assert(nAlive == 43 and nReady == 16 and nDeny == 7,
+        'zusult corpus domain moved -- expected 43 alive Zeus frames, 16 with a '
             .. 'ready ult, 7 of those unaffordable; got ' .. nAlive .. ' / '
             .. nReady .. ' / ' .. nDeny)
     -- The pre-ladder domain is 0 by construction, not by measurement: the gate's

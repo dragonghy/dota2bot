@@ -4904,6 +4904,54 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T13:30Z(**认领 issue** —— owner 13:08Z 开出 **GH #455**(本组认领 —— 录像组 13:02Z
+  报告 `iterations/reports/replay-check/20260903T130225Z.md`);按工作流第 1 条优先于 backlog;
+  **产出是一处 gated 行为修复 + 一台新真实帧 + 一份新测试 + 四处棘轮回滚**:
+  `bots/mode_farm_generic.lua` 在 Think() 的 1s `_farm_repick_at` 心跳块里新增 gated `arbheart`
+  (turbo-only)条件释放 `preferedCamp`;`tests/fixtures/f_260903_101254_cm_farm_stealcamp.lua`
+  (真实帧,从 s3 拉 `.dem` 现场跑 `get_dumper.sh` 建;冷启缓存命中,零 EC2);
+  `tests/test_arbheart_farm_camp_heartbeat.lua` **9/0**(含 2 变异);
+  `state.json` 新键 `arbheart_20260903`;报告 `iterations/reports/strategy/20260903T133000Z.md`;
+  **未提批测请求**(等 batch-desk 下一波按 `test_set.md` 入集节奏)。**已交棒 batch-desk / 总监(入集)**。
+  **⭐ 主判据(可复用,超出本主题):一个闩上后不再被追问的仲裁,会丢掉闩上之后到达的所有证据 —— 三道守卫都在文件里,只是都跑在 ally 到达之前**。
+  #455 §3 的机制:`preferedCamp` 六个调用点一律 `if preferedCamp == nil then preferedCamp = ClosestCamp(...) end`
+  ⇒ 仲裁**只在 preferedCamp 为 nil 那一 tick 进入行为**,此后英雄走多久都不再问;
+  两道防抢闸(:589/:811)要求 `IsFarming AND IsAttacking` 同时为真,而 SB 的
+  「走-到-位-开-火」过渡窗口里两个信号会漂;`slotarb` 修的是仲裁**闩上时**的读盘 bug、不修
+  「闩上后不追问」这一段。改动:1s 心跳块里,若 `for i = 1, #GetTeamPlayers` +
+  `GetTeamMember(i)`(**slot-correct**,不是 `id`)里任一活着的队友到闩点 ≤ 800u 且
+  `J.IsFarming`,则 `preferedCamp = nil; old = nil`,落到 fall-through
+  `elseif preferedCamp == nil then ... ClosestCamp(...)` 重新经过 shipped 包装器(armed 时 slotarb
+  自动接管)选新营。**STRICT SUBSET**:armed 只能释放闩上的营,**不能出价、不能新闩**;
+  未 armed 该块是 no-op,外层 if/elseif 与 shipped 「switch-to-nearer」分支逐字节相同。
+  **⭐⭐ 观测的选择本身是被证据纪律 3 逼出来的**:第一稿测试用 `J.Site.GetClosestNeutralSpwan`
+  的调用次数当观测量 —— shipped 和 armed 都是 delta=1(shipped 走 nearest-compare,armed 走
+  release+re-pick),**观测量结构上分不开**。改成拦截 `J.GetAlliesNearLoc` 的最后一次
+  `vLoc`(shipped 811-block 无条件调,首参就是 `preferedCamp.cattr.location`)+ 把 CAMP_Y
+  放到比 CAMP_X 更远的地方(shipped 的 `newDist + 200 < oldDist` 门失效)⇒ shipped 保 CAMP_X、
+  armed 走到 CAMP_Y,观测量可读。**「看不到的差别不是差别」**。
+  **⭐⭐⭐ 「主判据 vs 主判据的第一稿」教的:写下的机制描述可能比实际机制更强**。第一稿断言
+  `J.GetAlliesNearLoc` 本身也带 slot-vs-id 缺陷(#455 §2 的 4:1 侧比数字看起来支持这条),
+  跑测试(W2)才发现:该 reader 的循环用 `i`(slot 1..N,**正确**),而 `IsTheClosestOne` 用
+  `id`(**错**)——**4:1 是仲裁闩上时的侧偏,不是防抢守卫的侧偏**。改写机制描述、保留修复
+  本身(修复对根因即「不再追问」仍然对症),W2 从「reader 结构上空」改成「slot-correct scan
+  能看到 SB」的正面断言。
+  **⭐⭐⭐⭐ 域价钱**:新加一个 10-hero 真实帧让四条棘轮同时移位 —— 全部按各自方法**再测再钉,
+  不是放宽**:`test_propertarget_corpus_domain` 993→1003(+10)、`test_stayfield2_marginal_domain`
+  LIVE_FRAMES 993→1003 + BAG_FRAMES 14→15(necrolyte 带 flask)+ SIGN_SUBSAMPLE 107→108、
+  `test_salvepool_missing_floor` POOL_MAX 2566→2646(Dragon Knight max_hp)、
+  `test_focus_mana_cost_consumer_census` CM n 47→48 + zuus n 39→40 + nSeen 166→168 + nLive
+  88→89 + zusult alive 42→43。**加一个 fixture 的域价钱首次以「四文件同时开红,一次改完」的
+  形状显性化**;下次加 fixture 前值得再看一眼这五个测试。
+  **⭐⭐⭐⭐⭐ 变异台**:M1 删除 arbheart 整块(源码 regex 变异 + `loadstring` 在同一环境里跑)
+  → armed 回落到 shipped(观测量 X 而非 Y)**CAUGHT**;M2 断言 `IsModeTurbo() and
+  IsSoakCandidate('arbheart')` 逐字模式在源码里 —— 删掉 `IsSoakCandidate` 一半会被抓 **CAUGHT**。
+  ⛔ **撞车登记不重诊**(沿用 `0DUSTFIT`):开工自检 3 条 Lua trunk red、1 条 python trunk red、
+  1 条 cadence,**全部先于本轮存在、不在本组文件里、不受本轮影响**;`state.json:arbheart_20260903:gates` 记录。
+  门:`luacheck_gate.sh` 裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`;所有被影响的
+  测试文件 + 4 个 camp-* 邻居 + `test_slotarb_camp_arbitration` + `test_smoke_load` 单独跑全部
+  绿(见 `tests` 字段)。Lua 全量套件在后台起跑,报告写完时可能未跑完(GH #124/#401)。
+  未花 AWS 钱(session_setup + get_dumper.sh 的 S3 fast-path + 1 个 `.dem`,均为只读,零 EC2)。
 - 2026-09-03T10:55Z(**自驱** —— `[strategy]` 未认领 issue 为零:GH #445 已于 04:39Z 认领并交回
   录像组,07:03Z 之后新开的 #446/#447/#448/#449/#450 分属 harness / hero / batch / bug;
   owner P1 第 1 棒、P2 均已交出,P3 责任在总监 ⇒ 走**形状普查轨**;

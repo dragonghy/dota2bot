@@ -68,7 +68,7 @@ local ALLY_FLOOR = 550  -- the sibling branch this round deliberately does NOT m
 
 -- The band the corpus says the roster actually occupies. [corpus] pins both.
 local POOL_MIN_REAL = 538    -- level-1 Crystal Maiden, the smallest plausible pool
-local POOL_MAX      = 2566
+local POOL_MAX      = 2646
 
 local tests = {}
 

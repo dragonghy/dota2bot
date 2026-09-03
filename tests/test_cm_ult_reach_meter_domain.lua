@@ -319,11 +319,11 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
         .. 'regressed to the pre-2026-09-01 world and every number in this file '
         .. 'would be an artifact of that, not a reading')
 
-    assert(t.instants == 48, 'live-CM instants: expected 48, got ' .. t.instants)
-    assert(t.handles == 209, 'CM ability handles: expected 209, got ' .. t.handles)
-    assert(t.trained == 195, 'trained handles: expected 195, got ' .. t.trained)
-    assert(t.pre  == 157, 'castable before the price: expected 157, got ' .. t.pre)
-    assert(t.post == 141, 'castable after the price: expected 141, got ' .. t.post)
+    assert(t.instants == 49, 'live-CM instants: expected 48, got ' .. t.instants)
+    assert(t.handles == 214, 'CM ability handles: expected 214, got ' .. t.handles)
+    assert(t.trained == 200, 'trained handles: expected 200, got ' .. t.trained)
+    assert(t.pre  == 162, 'castable before the price: expected 162, got ' .. t.pre)
+    assert(t.post == 146, 'castable after the price: expected 146, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -438,14 +438,14 @@ tests['4. the 240 zero desires come with the five constants that cause them'] = 
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 48, 'instants moved: ' .. nInstants)
-    assert(nZeroBids == 240, 'expected all 5 x 48 bids to be zero, got ' .. nZeroBids)
+    assert(nInstants == 49, 'instants moved: ' .. nInstants)
+    assert(nZeroBids == 245, 'expected all 5 x 49 bids to be zero, got ' .. nZeroBids)
     -- ... and here is why that is not a null result.
-    assert(nMode == 48, 'GetActiveMode is the mock default on every instant')
-    assert(nGoing == 48, 'J.IsGoingOnSomeone is false on every instant')
-    assert(nRetreat == 48, 'J.IsRetreating is false on every instant')
-    assert(nAoE == 48, 'FindAoELocation is the count=0 loader stand-in everywhere')
-    assert(nRadius0 == 48, 'GetAOERadius answers 0 on every instant (section 5)')
+    assert(nMode == 49, 'GetActiveMode is the mock default on every instant')
+    assert(nGoing == 49, 'J.IsGoingOnSomeone is false on every instant')
+    assert(nRetreat == 49, 'J.IsRetreating is false on every instant')
+    assert(nAoE == 49, 'FindAoELocation is the count=0 loader stand-in everywhere')
+    assert(nRadius0 == 49, 'GetAOERadius answers 0 on every instant (section 5)')
 end
 
 -- ===========================================================================

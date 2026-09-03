@@ -38,11 +38,11 @@ local function sweep()
     return r
 end
 
-tests['[recorded] the corpus is 993 live-hero frames'] = function()
+tests['[recorded] the corpus is 1003 live-hero frames'] = function()
     -- Pinned so a corpus that GREW is visible as a red line here rather than
     -- silently changing every percentage in the report that cites this file.
     local r = sweep()
-    assert(r.frames == 993, 'the live-hero frame count moved: ' .. r.frames .. ' (was 993)')
+    assert(r.frames == 1003, 'the live-hero frame count moved: ' .. r.frames .. ' (was 1003)')
 end
 
 tests['[recorded] J.GetProperTarget is nil on every frame of the corpus'] = function()

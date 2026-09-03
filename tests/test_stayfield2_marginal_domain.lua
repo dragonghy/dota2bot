@@ -88,7 +88,7 @@ local LINA = 'tests/fixtures/f_260822_063722_lina_tp_home.lua'
 -- in the failure message instead of appearing as a bare literal in a compare.
 -- 铁律 4(ii): these are integer counts over a small range, so they are reported
 -- as counts with their denominators, never as a median.
-local LIVE_FRAMES     = 993   -- live hero frames, every hero of every fixture
+local LIVE_FRAMES     = 1003  -- live hero frames, every hero of every fixture
 local S_FIRES         = 23    -- J.ShouldRegenNotGoHome true
 local ABSORBED        = 4     -- ... and J.ShouldStayAndRegen already true
 local MARGIN          = 19    -- ... and NOT already true: what stayfield2 owns
@@ -96,8 +96,8 @@ local MARGIN_DMG_ONLY = 0     -- of MARGIN: only T3 (unattributed damage) failed
 local MARGIN_SUPPLY   = 18    -- of MARGIN: only T5 (supply) failed
 local MARGIN_BOTH     = 1     -- of MARGIN: both failed
 local T_ONLY_HP_BAND  = 6     -- T true with hp in (0.55, 0.75] -- S cannot speak
-local BAG_FRAMES      = 14    -- frames carrying a backpacked salve
-local SIGN_SUBSAMPLE  = 107   -- fixture.self on every fixture (declared slice)
+local BAG_FRAMES      = 15    -- frames carrying a backpacked salve
+local SIGN_SUBSAMPLE  = 108   -- fixture.self on every fixture (declared slice)
 local SIGN_NATURAL_NEG = 56   -- ... whose natural retreat bid is NEGATIVE
 local SIGN_MARGIN_NEG = 14    -- of MARGIN: the guard RAISES the bid
 local SIGN_MARGIN_POS = 5     -- of MARGIN: the guard LOWERS the bid

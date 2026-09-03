@@ -783,11 +783,57 @@ function Think()
 
 		local old = preferedCamp
 		if old then
+			-- Soak candidate 'arbheart' (turbo-only) -- GH #455.
+			-- #455 §3 photographed the tail: at t=850 crystal_maiden was
+			-- 5744u from a camp and spirit_breaker was 340u into farming it,
+			-- walking straight through the anti-steal window. `preferedCamp`
+			-- had latched at t=816 (SB then 5003u away) and none of the
+			-- three shipped guards fired again -- the initial arbitration
+			-- `IsTheClosestOne` is only queried the tick the latch closes
+			-- (six call sites all read `if preferedCamp == nil then
+			-- preferedCamp = ClosestCamp(...) end`), and the two anti-steal
+			-- guards at :589 / :811 need `IsFarming AND IsAttacking` true at
+			-- the CM tick -- signals that lag during the SB "walk-then-open-
+			-- fire" transition and can miss the whole window while CM
+			-- crosses the map.
+			-- arbheart inserts the re-ask into the 1s heartbeat: any alive
+			-- team member (scanned via the slot-correct pattern
+			-- `for i = 1, #GetTeamPlayers` + `GetTeamMember(i)`) sitting
+			-- within 800u of the latched camp AND reading J.IsFarming
+			-- releases the latch, so the fall-through `elseif preferedCamp
+			-- == nil` below re-picks through the same ClosestCamp wrapper
+			-- (which already threads slotarb when that gate is armed).
+			-- STRICT SUBSET: armed can only ever RELEASE a latched camp,
+			-- never create a bid or a latch. Unarmed the block below is a
+			-- no-op and the outer if/elseif is byte-for-byte the shipped
+			-- switch-to-nearer branch. #455 §5 pins the validation frame:
+			-- tests/test_arbheart_farm_camp_heartbeat.lua and
+			-- tests/fixtures/f_260903_101254_cm_farm_stealcamp.lua.
+			if J.IsModeTurbo() and J.IsSoakCandidate('arbheart') then
+				local vCamp = old.cattr.location
+				local tPlayers = GetTeamPlayers(GetTeam())
+				for i = 1, #tPlayers do
+					local member = GetTeamMember(i)
+					if member ~= nil
+						and member ~= bot
+						and J.IsValidHero(member)
+						and not member:IsIllusion()
+						and GetUnitToLocationDistance(member, vCamp) <= 800
+						and J.IsFarming(member)
+					then
+						preferedCamp = nil
+						old = nil
+						break
+					end
+				end
+			end
+		end
+		if old then
 			local oldDist = old and GetUnitToLocationDistance(bot, old.cattr.location) or 9e9
-	
+
 			local avail = J.Role['availableCampTable']
 			local nearest = ClosestCamp(bot, avail)
-	
+
 			if nearest then
 				local newDist = GetUnitToLocationDistance(bot, nearest.cattr.location)
 				-- switch if we save >800 units or ETA improves a lot and danger isn’t worse
@@ -795,7 +841,7 @@ function Think()
 					preferedCamp = nearest
 				end
 			end
-		else
+		elseif preferedCamp == nil then
 			preferedCamp = ClosestCamp(bot, availableCamp);
 		end
 	end
