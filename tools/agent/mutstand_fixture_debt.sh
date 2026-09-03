@@ -27,18 +27,45 @@ CAMPFARM=tests/test_campfarm_ancient_target.lua
 ROLES=tests/test_fixture_roles.lua
 
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
 
 nrun=0; ncaught=0
 
-save() { cp "$1" "$TMP/$(basename "$1").orig"; sha256sum "$1" > "$TMP/$(basename "$1").sha"; }
+# INFLIGHT names the file that is mutated RIGHT NOW, or is empty when the tree
+# is clean.  It is the whole state the EXIT trap needs: `restore` here takes an
+# argument (unlike the sibling stands, which restore a fixed FILES list), so a
+# bare `trap restore EXIT` would fire with $1 unbound under `set -u`.
+INFLIGHT=""
+
+save() {
+    cp "$1" "$TMP/$(basename "$1").orig"
+    sha256sum "$1" > "$TMP/$(basename "$1").sha"
+    INFLIGHT="$1"
+}
 restore() {
     cp "$TMP/$(basename "$1").orig" "$1"
     if ! sha256sum -c "$TMP/$(basename "$1").sha" >/dev/null; then
         echo "FATAL: restore of $1 did not verify -- stopping before anything else runs"
         exit 2
     fi
+    INFLIGHT=""
 }
+
+# GH #418's trap, which this stand was missing (caught by
+# tests/test_mutstand_restore_trap.py, reported by batch-desk 2026-09-03T21:15Z).
+# The old line was `trap 'rm -rf "$TMP"' EXIT`, which is WORSE than no trap at
+# all on this stand: on an interrupt it left the mutant in the working tree AND
+# deleted $TMP -- the only copy of the original -- so the recovery the other
+# stands leave lying around was destroyed by the very handler meant to clean up.
+# Order matters inside the handler for the same reason: restore first, remove
+# the copies second.
+on_exit() {
+    if [ -n "$INFLIGHT" ]; then
+        echo "INTERRUPTED with $INFLIGHT mutated -- restoring before exit"
+        restore "$INFLIGHT"
+    fi
+    rm -rf "$TMP"
+}
+trap on_exit EXIT
 
 # Run one test file and report its BARE exit code (rule 3: never through a pipe).
 run_test() {

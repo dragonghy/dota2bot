@@ -1,26 +1,6 @@
 {
   "_note": "Rulings that were DELIVERED and whose EXECUTION is still owed by another stream. Read by tools/agent/pending_rulings.py (OWED_EXECUTION leg), which every stream runs through routine_selfcheck.sh. A row is retired by the director once `done_when` is satisfied. See tools/agent/pending_rulings.py for what each field means and what this registry cannot see.",
-  "owed": [
-    {
-      "id": "wandbleed2_cond_a_frame",
-      "issue": "GH #437",
-      "ruling": "把 GH #437 那一帧冻成 fixture:spot_20260902_154755_slot4,seed 2877,crystal_maiden t≈473.5-474.4(血在涨 30.7%→41.0%、蓝 97.9%、最近敌人 8381、6 层充能换来零)。这是 `wandbleed2` 条件 (a) 唯一还缺的那一面 —— 本地语料的两个阳性证人(f_260820_043120_viper_defend_paired t=599.5,viper/zuus)吃的是**死掉的** ember spirit 的残留,而立案帧的残留来自**走开的**施法者;同一个谓词、同一个答案,但**本地没有第一种**。零 EC2、零新波次、零 AWS 调用:时间线已在录像组手上(W39 归档)。",
-      "ruled_at": "2026-09-03T16:0xZ",
-      "executor": "replay-check",
-      "trigger": "下一轮 replay-check 触发(不依赖任何波次:语料已归档)",
-      "delivered_to": [
-        "iterations/queue.json:strategy-39.director(executor=replay-check)",
-        "iterations/streams/test_set.md §DU.7(裁定全文的交棒节)",
-        "GH #437 追评(总监 2026-09-03T16:0xZ)"
-      ],
-      "why_registered_here": "§DR:这条义务**不属于任何一波、任何一个波次局部清单** —— 语料是 W39 的归档,不是某一波的收割义务 ⇒ `W<N>_wave.json:harvest_obligations` 里**没有行可以让它缺席**,这正是 GH #413 两次掉棒的形状。",
-      "done_when": {
-        "kind": "path_exists",
-        "path": "tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua"
-      },
-      "done_when_note": "⚠️ 这是裁定**指定**的文件名(录像组请照此命名;`make_fixture.py` 的输出名可按 §DU.7 重命名)。本键**只判产物存在,不判内容** —— 它读不出那一帧是不是 t≈473.5、是不是 CM、残留是不是来自走开的施法者(LIMIT 11:它 grade 产物不 grade 工作)。内容那一面由 `tests/test_replay_437_wandbleed_source.lua` 新增的断言买(录像组落地时一并加:该帧上 `J.IsWandBleedSourcePresent` 必须答 false,且 4000 环内活敌人数为 0)。"
-    }
-  ],
+  "owed": [],
   "retired": [
     {
       "id": "recslot8_baseline",
@@ -49,6 +29,29 @@
       "retired_by": "director",
       "outcome": "EXECUTED by batch-desk in its 2026-09-02T21:20Z round -- the round AFTER this registry landed, and a LAUNCH round, i.e. one trigger point EARLIER than the ruling's own 'next harvest round'. Bare read at retirement: tools/batch_test/soak/rec_slot_baseline.json rec_slots=8, rec_set=[1..8], games=395; the old profile is preserved as rec_slot_baseline_recslots1.json; the leg read DONE with exit 0.",
       "note_for_readers": "The desk's own report says the leg 'first rang on the batch desk's own round and named this desk'. That is one data point, not a proof the channel works in general -- a first firing is also the loudest a detector will ever be."
+    },
+    {
+      "id": "wandbleed2_cond_a_frame",
+      "issue": "GH #437",
+      "ruling": "把 GH #437 那一帧冻成 fixture:spot_20260902_154755_slot4,seed 2877,crystal_maiden t≈473.5-474.4(血在涨 30.7%→41.0%、蓝 97.9%、最近敌人 8381、6 层充能换来零)。这是 `wandbleed2` 条件 (a) 唯一还缺的那一面 —— 本地语料的两个阳性证人(f_260820_043120_viper_defend_paired t=599.5,viper/zuus)吃的是**死掉的** ember spirit 的残留,而立案帧的残留来自**走开的**施法者;同一个谓词、同一个答案,但**本地没有第一种**。零 EC2、零新波次、零 AWS 调用:时间线已在录像组手上(W39 归档)。",
+      "ruled_at": "2026-09-03T16:0xZ",
+      "executor": "replay-check",
+      "trigger": "下一轮 replay-check 触发(不依赖任何波次:语料已归档)",
+      "delivered_to": [
+        "iterations/queue.json:strategy-39.director(executor=replay-check)",
+        "iterations/streams/test_set.md §DU.7(裁定全文的交棒节)",
+        "GH #437 追评(总监 2026-09-03T16:0xZ)"
+      ],
+      "why_registered_here": "§DR:这条义务**不属于任何一波、任何一个波次局部清单** —— 语料是 W39 的归档,不是某一波的收割义务 ⇒ `W<N>_wave.json:harvest_obligations` 里**没有行可以让它缺席**,这正是 GH #413 两次掉棒的形状。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua"
+      },
+      "done_when_note": "⚠️ 这是裁定**指定**的文件名(录像组请照此命名;`make_fixture.py` 的输出名可按 §DU.7 重命名)。本键**只判产物存在,不判内容** —— 它读不出那一帧是不是 t≈473.5、是不是 CM、残留是不是来自走开的施法者(LIMIT 11:它 grade 产物不 grade 工作)。内容那一面由 `tests/test_replay_437_wandbleed_source.lua` 新增的断言买(录像组落地时一并加:该帧上 `J.IsWandBleedSourcePresent` 必须答 false,且 4000 环内活敌人数为 0)。",
+      "retired_at": "2026-09-03T22:1xZ",
+      "retired_by": "director",
+      "outcome": "EXECUTED by replay-check in its 2026-09-03T18:40Z round (commit 923c4330). Bare reads at retirement: the artifact key is satisfied (tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua exists), AND the content side the done_when_note says the key cannot see was read directly -- tests/test_replay_437_wandbleed_source.lua carries the frame under the name GONE_CASTER with fx.self=crystal_maiden, fx.time=473.5, a LIVE venomancer at ~10138, and both readings the ruling ordered: #J.GetNearbyHeroes(bot,4000,...)==0 and J.IsWandBleedSourcePresent(bot)==false. lua5.1 tests/run_tests.lua test_replay_437_wandbleed_source.lua => 11 tests, 0 failures, RC_EXIT=0.",
+      "note_for_readers": "Retiring on the done_when key ALONE would have been the shape evidence-discipline 4 names (a matching conclusion standing in for a correct reason): path_exists is satisfied by an empty file with the right name. The row's own done_when_note said so; the director read the assertions before retiring. The leg fired correctly and named the right executor -- this is the SECOND row to retire through it, after recslot8_baseline."
     }
   ]
 }

@@ -99,13 +99,54 @@ for path in STANDS:
     # whole content of the guarantee, so it is checked by position, not by
     # presence.  A stand that inlines its mutations has nothing to order
     # against and is skipped rather than passed silently.
-    first_apply = src.find("apply_mutant ")
-    if first_apply == -1:
-        print("  --   %s has no apply_mutant call site; ordering not applicable" % name)
+    #
+    # THE APPLIER IS NOT ALWAYS CALLED `apply_mutant` (director 2026-09-03).
+    # The first version of this check keyed on the literal string
+    # `apply_mutant `, so `mutstand_fixture_debt.sh` -- which has an applier,
+    # named `mutant`, and therefore does have a window to order against -- was
+    # printed as `--  ordering not applicable` and its order went unchecked.
+    # That is this repo's recurring shape: a detector that sees one spelling of
+    # the thing and calls the other spellings absent.  So the applier is found
+    # by DEFINITION first (a function in this file whose name is `mutant` or
+    # `apply_mutant`), and only a stand that defines neither is skipped.
+    applier = None
+    for cand in ("apply_mutant", "mutant"):
+        if re.search(r"^%s\s*\(\)\s*\{" % cand, src, re.M):
+            applier = cand
+            break
+
+    # Call sites are found by walking lines rather than anchoring the name to
+    # the start of one: the real call sites in this tree include
+    # `if ! apply_mutant "$m"; then`.  Anchoring cost four stands their ordering
+    # check on the first attempt at this widening -- they went from a green
+    # check to a `--`, which is the failure this file's own docstring is about
+    # (a green that means "nothing ran"), one level up.
+    first_apply = -1
+    if applier is not None:
+        call = re.compile(r"\b%s[ \t]+[\"'$A-Za-z0-9]" % applier)
+        pos = 0
+        for line in src.splitlines(keepends=True):
+            stripped = line.lstrip()
+            if not stripped.startswith("#"):
+                hit = call.search(line)
+                if hit:
+                    first_apply = pos + hit.start()
+                    break
+            pos += len(line)
+
+    if applier is None:
+        print("  --   %s defines no mutant applier; ordering not applicable" % name)
     else:
-        ok("%s arms the trap before the first apply_mutant" % name,
-           m.start() < first_apply,
-           "the window the trap exists to close is exactly the one before it")
+        # A stand that DEFINES an applier and appears to call it nowhere means
+        # the detector lost the call shape, not that the stand has no window.
+        # Could-not-run is not a pass here either.
+        ok("%s ordering check found a %s call site" % (name, applier),
+           first_apply != -1,
+           "the ordering check below cannot run; widen the call-site pattern")
+        if first_apply != -1:
+            ok("%s arms the trap before the first %s" % (name, applier),
+               m.start() < first_apply,
+               "the window the trap exists to close is exactly the one before it")
 
 print()
 if fails:

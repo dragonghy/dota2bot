@@ -9590,3 +9590,69 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   按铁律 5 新开而不是挂上去。
   `TOKENS total_in=6,250,518 out=34,180 turns=53`(较上轮**减半**:本轮是代码级工作单元,
   没有上一轮那种七项独立读数的裁定成本;**纯浪费一项**是纪律 3 第二十九发。)
+
+- 2026-09-03T22:25Z:**清掉两条 trunk 红 + 退休一条 owed execution;零 AWS、零发波、零 Lua 改动。**
+  报告:`iterations/reports/director/20260903T222500Z.md`。
+  **① 批测台点名交过来的红修掉了** —— `tools/agent/mutstand_fixture_debt.sh` 的 EXIT trap 陷的是
+  `rm` 不是一个存在的函数(`test_mutstand_restore_trap.py` / GH #418)。**裸读源码后发现缺陷比测试
+  说的更重**:那条 `trap 'rm -rf "$TMP"' EXIT` 里的 `$TMP` 装的正是每个 mutant 唯一的原件副本 ⇒
+  一次中断**同时**把 mutant 留在工作树里**并删掉唯一能还原它的副本**,**比没有 trap 更坏**。
+  修法:`INFLIGHT` 记住此刻被改的文件(`restore` 在本台带参数,`trap restore EXIT` 在 `set -u`
+  下会因 `$1` 未绑定而炸,这大概率就是当初写成 `rm -rf` 的原因),trap `on_exit()` **先还原再删副本**。
+  **证据是裸读不是断言**:修后起真台子、轮询到 mutant 真的出现在树里、当场 `kill -TERM` ⇒
+  `stand wait rc=143`、两个文件 `sha256sum -c` 全 `OK`;**反事实**(把修好的存树外、`git checkout --`
+  拿回旧版、同一个实验)⇒ `SHA_CHECK_EXIT=1`,**M1 的 mutant 被留在 fixture 里**。
+  另外**先量了机制再依赖它**:`trap ... EXIT` 在 SIGTERM/SIGINT 下**确实会跑**(独立 probe,两次
+  `TRAP RAN`)⇒ 不需要给六个台子加 `INT TERM`;`SIGKILL`/容器回收任何 trap 都救不了,不声称。
+  **顺带修掉测试自己的盲点**:顺序检查靠字面量 `apply_mutant ` 找施加点,而本台的施加函数叫
+  `mutant` ⇒ **有窗口可排序却被打成 `--` 跳过**。⛔ **我的第一版加宽当场把四个台子从绿打成跳过**
+  (调用点锚到行首,而真实调用点是 `if ! apply_mutant "$m"; then`),**退出码仍是 0** ⇒ 这次回归
+  差点静悄悄落地;第二版按**定义**找施加函数、按**行内**找调用点,并**新增一条断言**:定义了施加
+  函数却找不到调用点 = **检测器丢了形状**,判失败不许再打 `--`。该断言有牙(把正则改回第一版
+  那个行首锚定 ⇒ `M_A_EXIT=1`,11 个台子逐一点名)。修后 `91 ok / 0 FAIL`,20 个台子,
+  另 5 个仍 `--` 的**逐一核过在旧检测器下也是 `--`** ⇒ 没有台子在加宽里丢了检查。
+  **② 第二条红查明是上一轮自己 GH #457 修复的漏网之鱼** —— `test_chain_member_census.py:620`
+  的 `len(all_rows) == 306`。上一轮把 §1 三个分母改成地板,**§4 这第四个数隔着 350 行没扫到**,
+  而它 pin 的数**根本不是被测普查产出的**,是 `write_only_local_census.py --all` 在**每个组都被
+  鼓励去缩小**的语料上的 population ⇒ 四小时后**因为英雄组做了一件对的事**(`0aa7dca3` 删掉没人
+  读的常量)变红。**归因是量出来的**:把那两个 hero 文件换成 `0aa7dca3^` 的样子、其余树不动 ⇒
+  population `305 → 306`,**这条 commit 恰好就是那个 1**。修法同 §1:地板 `>= 200` + 把数字原本
+  代表的**关系**写成断言(`--all` 报出的英雄文件发现数 `> 0`,且 `--all` 是默认作用域的真超集)。
+  承重证明两条:既有变异台 `13 caught / 0 survived / 0 aborted` **与上一轮同读数**(放松的是数不是
+  捕获力);隔离变异(`--all` 跳过 `bots/BotLib/hero_*`,population 仍有 86)⇒ `MUTANT_TRUE_EXIT=1`
+  且新断言**打出病因** `hero files under --all: 0`。⚠️ **诚实边界**:这只变异**也被地板抓住了**
+  (86 < 200),所以它不证明「关系抓得到地板抓不到的东西」;那样一只本轮没构造出来,**不声称**。
+  **③ GH #457 的第二半(上一轮列的下次触发 ②)本轮做完** —— 但**换了判据**:「两位数」不是缺陷
+  的形状,「**这个数是不是从每轮都在长的活语料上算出来的**」才是。全仓 71 处 `== <两位数以上>`,
+  绝大多数 pin 的是**冻结输入**(fixture / 合成语料 / 归档 verdict JSON,正当用法);真正在活
+  `bots/` 语料上算数的测试只有 6 个文件,逐个裸读 ⇒ **只有本轮修的这一处是活语料 population 的
+  精确 pin**。`duplicate operands == 12` / `parity breaks == 1` 是**发现数不是分母**,保持精确是对的。
+  ⚠️ 边界:检索键是 `==` 字面量 + 六个活语料检索词,写成 `>= n and <= n` 或存进变量的 pin 扫不到。
+  **④ 退休 `wandbleed2_cond_a_frame`(GH #437)** —— 但**没有按自检那一行退**:该 row 的
+  `done_when` 是 `path_exists`,而它**自己的 `done_when_note` 就写着**这个键只判产物不判内容 ⇒
+  只凭它退休就是**纪律 4 的形状**(一个同名空文件同样满足它)。裸读了内容那一面才退:
+  `tests/test_replay_437_wandbleed_source.lua` 的 `GONE_CASTER` 断言 CM / `fx.time == 473.5` /
+  venomancer **活着**且 ~10138 外 / 裁定点名的那两条读数,`11 tests, 0 failures`,`RC_EXIT=0`。
+  `pending_rulings.py` 退休后 `RC_EXIT=0`(退休前该腿 exit 3)。⚠️ **第一版编辑写错并登记**:
+  我一度新造了 `retired_20260903T22` 这个**工具不读的**键 —— **§DR 的同型错误出在我自己手上**,
+  当场撤回改用既有 `retired` 数组。
+  **⑤ 成本**:零 AWS 调用;围栏读数照抄批测台 21:15Z 自报 MTD **`$7.056`**、围栏 **`$10.95`** ≤ `$80`。
+  **W43 整波报废**(4 台同一瞬间 `instance-terminated-no-capacity`,同一个 AZ),批测台已按 GH #271
+  **既有裁定**判 `BLINDED ⇒ NEXT WAVE: --on-demand`(一波,然后回 spot)——**这条不需要总监再裁**,
+  本轮不裁,认可其推理(按需按构造不会因容量被回收,且**不碰机型** ⇒ 测量基底不赔)。
+  **⑥ 巡检**:四组本轮均有产出;`hero` 报告间隔 3.8h 越线 0.3h,**不升级**。无邮件(本周 08-31 已发)、
+  `DECISIONS_NEEDED` 无新增、周四跳过效率台账。
+  **⑦ 铁律 6**:`GATE_EXIT=0  CLEAN` / `luacheck bots game: 0 warnings` / `RC_EXIT=0`,未用
+  `RULE6_BYPASS`(冷容器,gate 自己先装的 luacheck)。**`bots/`+`game/` 零改动 ⇒ 全量 Lua 套件
+  未跑也不声称**。python 侧全套 **`84 passed, 0 failed, 1 uncertifiable`**,`PY_FINAL_TRUE_EXIT=`**`2`**
+  —— ⛔ **那个 2 要连着读:runner 词表里 2 = 有一条没跑成,不是干净的 0**
+  (`test_selfcheck_lua_leg.py`,与本轮改动无关)。
+  **⑧ 工作流第 0 步连续第二轮同型失效**:第一条命令走了 `rc.sh`,**同回合并发的另一条**仍是
+  `… | tail -60`,被 §22 守卫当场拒(**纪律 3 第三十发,守卫第二十二次拦下**)⇒ 条款措辞该从
+  「本轮第一条命令走 `rc.sh`」改成「**本轮任何要读退出码的命令都走 `rc.sh`**」,已进下次触发清单。
+  **⑨ 下次触发**:①裁 `strategy-40`(`arbheart`,自检 `OTHER: 1` 已挂第二轮,前置 GH #456)
+  ②改工作流第 0 步措辞(见 ⑧)③W43 闸 (iv) / GH #462 看批测台怎么答;按需那一波落地后
+  GH #454 的单波成本常数才买得到 ④自检 `RIDESHARE` 分类腿(**第七轮顺延** —— 连续顺延本身
+  该进 `DECISIONS_NEEDED` 了)⑤GH #410 / #436 / #285 / patch 缺口 P3
+  ⑥自检两条 `UNCERTIFIABLE` 的理由句说 `no lua5.1 on PATH`,而 `which lua5.1` 在同一容器里答
+  `/usr/bin/lua5.1` —— 理由句可能是硬编码默认文案,值得裸读一次。

@@ -615,9 +615,30 @@ check("layer 1 -- its DEFAULT scope is the nine decision files, so no "
       str(sorted(f for _n, f in default_rows))[:200])
 
 all_out, all_rows = write_only_rows("--all")
+# ⛔ A FLOOR, NOT A PIN -- the same repair as the denominators in section 1, and
+# this is the site GH #457's second half was opened to go find (director
+# 2026-09-03T22:xxZ).  It was `== 306` for four hours: the hero stream's 19:51Z
+# landing removed five write-only constants from the focus five, the population
+# fell to 305, and this file went red FOR A CLEANUP GOING THE RIGHT WAY.  That
+# is the failure mode section 1 already names -- an alarm clock set to a date --
+# and it is worse here, because the number it pins is not even produced by the
+# census under test; it is another tool's population over a corpus every stream
+# is expected to shrink.
+#
+# What the number was standing in for is a RELATION: `--all` widens the scope to
+# the hero files, so the silence on dark_seer below is about that site's guard
+# and not about scope.  So the relation is asserted directly, and the count keeps
+# only the job a floor can hold -- a scan pointed at nothing reports zero, which
+# reads exactly like a clean tree.
 check("...so the claim has to be made under --all, where hero files ARE "
-      "scanned (306 findings)",
-      len(all_rows) == 306, str(len(all_rows)))
+      "scanned (population floor, NOT a pinned count)",
+      len(all_rows) >= 200, str(len(all_rows)))
+hero_rows = {f for _n, f in all_rows if f.startswith("bots/BotLib/hero_")}
+check("...and the widening is asserted as a relation: --all reports findings in "
+      "hero files, which the default scope has none of",
+      len(hero_rows) > 0 and all_rows > default_rows,
+      "hero files under --all: %d; --all a strict superset of default: %s"
+      % (len(hero_rows), all_rows > default_rows))
 # Positive control, and it is the strongest one available: the SAME identifier
 # in three sibling files IS reported.  So the silence on dark_seer is about
 # that site's guard, not about the name, the file type, or the scan.
