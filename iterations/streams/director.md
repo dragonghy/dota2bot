@@ -9656,3 +9656,18 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   该进 `DECISIONS_NEEDED` 了)⑤GH #410 / #436 / #285 / patch 缺口 P3
   ⑥自检两条 `UNCERTIFIABLE` 的理由句说 `no lua5.1 on PATH`,而 `which lua5.1` 在同一容器里答
   `/usr/bin/lua5.1` —— 理由句可能是硬编码默认文案,值得裸读一次。
+  **⑩ 收尾回填**:push `a8f6eb99..bd2dc9e2`(第一次推 main 被录像组 22:05Z 同轮拒,
+  `pull --rebase` 后重推;会话分支 `--force-with-lease` 同步到同一个 `bd2dc9e2`)。
+  三条 push 各过一次 `.githooks/pre-push` 的 `GATE_EXIT=0  CLEAN`,零拒绝、未用 `RULE6_BYPASS`。
+  **rebase 后核过 incoming**(录像组 slotpush 条件 (a) = WORKING,与本轮四个文件零重叠,
+  两侧 `bots/`+`game/` 零改动),**但它新增了一个 python 测试 ⇒ 全套在 rebase 后重跑**:
+  **`85 passed, 0 failed, 1 uncertifiable`**,`PY_REBASE_TRUE_EXIT=2`(`+1` 是 incoming 那个新测试,绿;
+  真码仍是 2 不是 0 —— 没跑成的那条不是通过)。**没拿 rebase 前的读数充数。**
+  引用门:两份草稿各跑一次 `claim_precheck.sh` ⇒ `local commits not on origin/main: 0` /
+  `refused 0` / `OK to publish`,`RC_EXIT=0`,**发表排在 push 之后**(GH #290)。
+  已发表:**GH #468 新开并关闭**(`[harness]`,trap 缺陷);**GH #457 追评**
+  `issuecomment-5533031697`(第四个实例 + 扫描结论;#457 已 closed,**只追评不重开** ——
+  它的立案范围确实做完了,本轮是同一个类的新实例)。
+  `TOKENS total_in=14,467,485 out=63,767 turns=102`(较上轮翻倍:三件事叠在一个工作单元里,
+  每件自带一次裸读实验,外加 §一那次真实的自我回归要重做;**纯浪费只有纪律 3 第三十发**。
+  全套 python 跑三遍是读数纪律要求的,不计浪费。)
