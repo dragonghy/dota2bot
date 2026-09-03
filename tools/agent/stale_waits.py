@@ -80,6 +80,23 @@ LIMITS (read these before quoting the output)
    that id, which is what makes the tool survivable -- and it is equally an
    escape hatch for a block that writes 已入集 next to a wait it has not
    actually resolved.  The words are ones a reader sees; judge the block.
+7. **The report exemption (REPORTS_ELSEWHERE) is a text heuristic, and it is
+   deliberately a CONJUNCTION** -- a clause is read as a report about text
+   somewhere else only when it BOTH cites an `<x>.md:<line>` location AND
+   carries a reporting verb.  Either half alone leaves the clause a finding.
+   That under-exempts on purpose (LIMIT 4's direction): a round that quotes an
+   expired wait without citing where it lives still reddens, and the repair is
+   to cite it or to say it is over, not to widen this pattern.
+8. **An exit 0 from this tool reads identically whether the defect was fixed
+   or merely scrolled out of the live block.**  Written down because it
+   already happened: on 2026-09-03T07:0xZ the single STALE was the director's
+   own sentence describing the previous round's finding (GH #448); the next
+   status entry pushed that sentence into history and the tool printed a clean
+   `no expired admission wait in any live 当前状态 block` -- the same line a
+   real repair prints.  The three genuinely expired waits it had found were
+   fixed by two other streams in between, so the clean read was *also* true.
+   Both were true at once, and the output cannot tell them apart.  Ask which
+   lines moved, not just what the exit code was.
 
 Exit codes: 0 = no expired wait in any live block; 3 = at least one (a
 finding, not a failure); 2 = an input could not be read (NOT a pass).
@@ -186,6 +203,43 @@ RE_RULING = re.compile(r"[重再复]新?裁")
 # clause before it.  Commas are deliberately NOT boundaries: the founding shape
 # ("① `campexit` 入集裁定**仍欠**,只提醒") separates its halves with one.
 CLAUSE_SPLIT = re.compile(r"[;;。]")
+
+# A REPORT of a wait is not a wait (director 2026-09-03, GH #448).
+#
+# The tool finds waits by their text, and the text that RECORDS this tool's own
+# finding is shaped exactly like the finding.  Measured: the 07:0xZ self-check's
+# only STALE was
+#
+#   `replay-check.md:9827`/`:9838` 三行仍写着「等 `slotarb`/`slotdust` 裁定」,而两个 id …
+#
+# -- the director's sentence describing the PREVIOUS round's finding, on a tree
+# where the three real expired waits had already been fixed by the two streams
+# that owned them.  The round's attention went to an object that no longer
+# existed.  Same family as the census ratchet's `grep -l '\[detector\]'`, which
+# registered a file for saying the word: a detector that cannot tell IS from
+# MENTIONS.
+#
+# The discriminator is a CONJUNCTION of two lexical halves, and both matter:
+#
+#   RE_LOCATION    the clause cites `<file>.md:<line>` (or the `:<line>`
+#                  continuation form the streams write for a second line in
+#                  the same file).  A wait made HERE does not carry the
+#                  address of the line that makes it.
+#   RE_REPORT_VERB the clause attributes the wait to that address -- 写着 /
+#                  点名 / 指着 / 读到 / 引用 ...
+#
+# Neither half is sufficient, and that is the whole safety argument.  A genuine
+# wait may well cite a file and line ("等总监裁 `campvoid` 入集,申请在
+# `test_set.md:412`"), so RE_LOCATION alone would silence real waits; and a
+# genuine wait may use a reporting verb about its own reasons ("理由已写着在
+# §CE 里"), so RE_REPORT_VERB alone would too.  Both together describe a
+# sentence whose subject is text elsewhere.
+#
+# Clause-scoped, like RE_RULING: block scope would let one report silence a
+# live expired wait recorded in the next sentence -- and a round that reports
+# an expired wait is exactly the kind of round that also carries one.
+RE_LOCATION = re.compile(r"`[A-Za-z0-9_./-]*\.md:\d+`|`:\d+`")
+RE_REPORT_VERB = re.compile(r"写着|写下|写的|记着|记录|点名|指着|读到|引用|原文")
 
 
 class InputError(Exception):
@@ -329,6 +383,19 @@ def wait_scopes(text):
     return scopes
 
 
+def reports_elsewhere(scope):
+    """True when *scope* reports a wait that lives somewhere else (GH #448).
+
+    One expression on purpose: it is the line the mutation stand
+    (`tools/agent/mutstand_stale_waits_report.sh`) rewrites, and each rewrite
+    -- `True`, `False`, either half alone, `or` instead of `and` -- has to be
+    caught by a named fixture in `tests/test_stale_waits.py`.  A discriminator
+    that always says "this is only a record" is not a fix, it is deafness with
+    a clean exit code.
+    """
+    return bool(RE_LOCATION.search(scope)) and bool(RE_REPORT_VERB.search(scope))
+
+
 def stale_hits(block, settled):
     """Lines in *block* that wait on an admission ruling for a settled id."""
     already_reported = resolved_in_block(block)
@@ -339,6 +406,8 @@ def stale_hits(block, settled):
             if not any(m in scope for m in ADMISSION_MARKERS):
                 continue
             if RE_RULING.search(scope):  # a second ruling, not an expired first
+                continue
+            if reports_elsewhere(scope):  # a record OF a wait, not a wait
                 continue
             ids.update(i for i in BACKTICKED.findall(scope)
                        if i in settled and i not in already_reported)

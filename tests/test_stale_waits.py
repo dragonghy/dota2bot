@@ -345,6 +345,80 @@ check([i for _n, _t, ids in sw.stale_hits(live16, SETTLED) for i in ids] == ["ca
       "-- CLAUSE_SPLIT was widened past sentence punctuation: %s"
       % sw.stale_hits(live16, SETTLED))
 
+# --- INVARIANT 9 (director 2026-09-03, GH #448): a REPORT of a wait is not a
+# wait.  The founding line is verbatim the only STALE the 07:0xZ self-check
+# printed -- the director's own sentence describing the PREVIOUS round's
+# finding, on a tree where the three real expired waits had already been fixed.
+# The detector could not tell IS from MENTIONS, so a round's attention went to
+# an object that no longer existed.
+#
+# The exemption is a CONJUNCTION (a cited `.md:<line>` AND a reporting verb),
+# and the four fixtures below are the four ways it must not be loosened.  They
+# are what the mutation stand rewrites the predicate to break: constant-true
+# (a deaf detector with a clean exit code), constant-false (no exemption at
+# all), and each half on its own.
+REPORT_OF_A_WAIT = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-09-03T07:09Z:开工自检 `EXIT=3`。stale-waits 只剩一条,
+  `replay-check.md:9827`/`:9838` 三行仍写着「等 `campexit`/`campvoid` 裁定」,而两个 id 早已入串。
+"""
+p17 = charter(REPORT_OF_A_WAIT)
+live17, _rest17 = sw.split_charter(p17)
+check(sw.stale_hits(live17, SETTLED) == [],
+      "a report ABOUT an expired wait (cited line + reporting verb) was read as "
+      "a wait: %s" % sw.stale_hits(live17, SETTLED))
+
+# (a) A genuine wait that happens to CITE a file and line is still a finding.
+# Citation alone must not be the exemption: streams routinely point at where a
+# request lives while making it.
+WAIT_THAT_CITES = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-09-03T07:09Z:**交棒**:**总监**(① `campvoid` 入集裁定**仍欠**,申请全文在 `test_set.md:412`)。
+"""
+p18 = charter(WAIT_THAT_CITES)
+live18, _rest18 = sw.split_charter(p18)
+check([i for _n, _t, ids in sw.stale_hits(live18, SETTLED) for i in ids] == ["campvoid"],
+      "a genuine expired wait went silent because it cited a file and line -- "
+      "the location half became sufficient on its own: %s"
+      % sw.stale_hits(live18, SETTLED))
+
+# (b) ...and a genuine wait that happens to use a reporting VERB about its own
+# reasons is still a finding.  The verb half must not be sufficient either.
+WAIT_WITH_VERB = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-09-03T07:09Z:**下一格**:等总监裁 `campvoid` 入集(理由已写着在 §CE 里,不重复)。
+"""
+p19 = charter(WAIT_WITH_VERB)
+live19, _rest19 = sw.split_charter(p19)
+check([i for _n, _t, ids in sw.stale_hits(live19, SETTLED) for i in ids] == ["campvoid"],
+      "a genuine expired wait went silent because it used a reporting verb -- "
+      "the verb half became sufficient on its own: %s"
+      % sw.stale_hits(live19, SETTLED))
+
+# (c) Clause scope, not block scope: the round that REPORTS an expired wait is
+# exactly the round that may also be carrying one.  Block scope would make the
+# report a silencer for the whole entry.
+REPORT_PLUS_OWN_STALE_WAIT = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-09-03T07:09Z:`replay-check.md:9827` 那行仍写着「等 `campexit` 裁定」,已进历史。
+  **交棒**:**总监**(① `campvoid` 入集裁定**仍欠**)。
+"""
+p20 = charter(REPORT_PLUS_OWN_STALE_WAIT)
+live20, _rest20 = sw.split_charter(p20)
+check([i for _n, _t, ids in sw.stale_hits(live20, SETTLED) for i in ids] == ["campvoid"],
+      "the report exemption leaked past its own clause and silenced a live "
+      "expired wait in the same entry: %s" % sw.stale_hits(live20, SETTLED))
+
+# (d) Belt-and-braces: the exemption must not swallow the founding shape, which
+# carries neither half.  A constant-true discriminator passes every check above
+# except this one and INVARIANT 1's.
+check(len(sw.stale_hits(sw.split_charter(charter(LIVE_STALE))[0], SETTLED)) == 1,
+      "the report exemption swallowed the founding expired admission wait")
+
 # --- INVARIANT 7: "live" is the newest entry, in either charter convention ---
 # Both halves were measured on the real tree on 2026-08-29, not imagined.
 #
