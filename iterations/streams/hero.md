@@ -22,6 +22,18 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-83. **`zeusaghs5` 落地了,盯着入集裁定** —— 本轮加的 pos_5 Zeus **Aghs 提前到 slot 5**
+   的 gated 候选(`bots/BotLib/hero_zuus.lua` + `tests/test_zeus_aghs_build.lua`,
+   报告 `iterations/reports/hero/20260903T134500Z.md`,`state.json:zeusaghs5_20260903T`)。
+   路径与 `axebuyblink` 同形:纯排列、gate-off 逐字节相同、3 变异全杀。
+   球在**总监**(入 `test_set.md` 前无法上批测);wave 到时按 known_gap (3)
+   量 Aghs 获取时间 + Nimbus 施法数,不要单看 GPM/XPM。
+   - **⚠️ 没有测量语料**:域论证走 GPM+光谱推理,不是逐帧读数(axebuyblink 那种)。
+     `known_gap (1)(2)` 已经把这条**写进 state.json**,别在下游把它读成「测过了」。
+   - **SCOPE = pos_5 独木**:pos_2(中)/pos_1/pos_3/pos_4 各自的
+     phylactery / kaya_and_sange / soul_ring 优先是合法的对线节奏选择,**不由这一闸管**。
+     测试文件里带 SCOPE 断言,试图扩大就红。
+
 -82. **把 tinker 的 combo 层 + 物品层接进 `SkillsComplement` —— 这是 GH #451 底下
    那个真正的缺陷,而它需要上闸 + fixture,所以不是 #451 那一轮能做的。**
    2026-09-03T10:48Z 那轮修了 #451 的 8 处参数(报告
@@ -3937,6 +3949,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T13:45Z(报告 `iterations/reports/hero/20260903T134500Z.md`;轴 **`zeusaghs5`**)
+  **改 2 个文件:`bots/BotLib/hero_zuus.lua`(+ 一个 helper + 一个 gated 分派 + 注释块)
+  + 新增 `tests/test_zeus_aghs_build.lua`(10 用例,3 变异全杀)。1 新 gated id
+  (`zeusaghs5`,`state.json:zeusaghs5_20260903T`)、零 arm/promote、零 AWS、
+  不申请波次;`queue.json` / `test_set.md` 本轮无新增。charter backlog 新增 `-83` 登记棒交出去。**
+  - 选题:OWNER_PRIORITIES 无本组项(四条常设项的球在批测台 / 协同组 / 协同组 / 总监);
+    open `[hero]` 五条全部处于「本组认为可关,等总监裁定」或「优先级低于焦点五英雄」的状态
+    (#447/#417/#416/#451 已交出裁定,#453 是 tinker,不在焦点五英雄);
+    backlog 前三条(`-80`/`-81`/`-82`)都在等别的组或裁定。⇒ **按工作流步骤 1 的
+    「backlog 也空 → 挑一个焦点英雄找个体问题」**兜底,选了 Zeus pos_5 的 Aghs 时序。
+  - **⭐ 论证形状是理论,不是逐帧**:Zeus pos_5 出货 shipped 顺序把
+    `item_ultimate_scepter` 埋到 slot 8,前面 6 件包括 `boots_of_bearing`(4225g 总价);
+    累计到 Aghs ~11.2k 金,pos_5 支援 ~350 GPM 需要 ~32 min ⇒ Turbo(~20 min 结束)
+    结构上够不到。Nimbus(Aghs 解锁)是 Zeus 团战最大的单件收益。修法就是把 Aghs 挪到
+    `item_aether_lens` 后一格(slot 5),其他 item 相对顺序不变(与 `axebuyblink` 同形)。
+    **⚠️ 本仓没有 Zeus pos_5 语料**(不像 axebuyblink 有 4 局逐帧读数),所以
+    「reachability」是 GPM+推理,不是测量 —— `state.json:known_gap` (1)(2) 明写。
+  - **⭐⭐ 门是 gated 的理由是 lanefix/cmboots 教训**:局部正确的支援构筑改动必须先赚到
+    condition (b) 才 ship(GH #144);turbo-only + soak candidate 就是这条纪律。
+    gate-off 是**纯排列**、byte-for-byte identical(测试文件 tripwire 断言了)。
+  - **⭐ SCOPE 严格限制在 pos_5**:pos_2(中)phylactery-first 是合法的对线节奏,
+    pos_1/pos_3/pos_4 的 kaya_and_sange / soul_ring 同理 —— 这一闸不管它们。
+    测试文件里两条 SCOPE 断言(`pos_2 Aghs index == 12`、`pos_1 Aghs > 5`)会红,
+    如果有人后续想扩,得自己开新闸 + 新理由。
+  - 变异台(手工,3 变异 + 隐含还原逐字节比对):
+    | # | 改动 | 抓到 |
+    |---|---|---|
+    | M1 | `if false and J.IsModeTurbo() and ...`(禁 gate) | 只红「armed in turbo」1 条 |
+    | M2 | gate id → `zeusaghs5x`(不存在) | 只红「armed in turbo」1 条 |
+    | M3 | 去掉 `J.IsModeTurbo()`(泄漏到 normal) | 只红「armed in NORMAL mode」1 条 |
+    还原后 `cmp` 逐字节相同(手工 cp 回原始)。
+  - 门:开工自检 stdout 又被 tail 吃了 ⇒ REFUSED(证据纪律 3,连续第 N 次都是本组当轮第一条命令,
+    但这次我识别得早,立刻改成 `>/tmp/sc.log 2>&1; echo EXIT=$?`),真跑完 `worst exit: 3`,
+    findings = cadence + trunk-red(python) = GH #410(先于本轮、本轮无 `.py` 改动)+ 2 条
+    UNCERTIFIABLE(`test_rc_wrapper.py` / `test_selfcheck_lua_leg.py`,腿内被跳过)。
+    静态 `bash tools/agent/luacheck_gate.sh` → **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**
+    (冷启自装 lua-check,**没用 `RULE6_BYPASS`**)。定向动态:
+    `test_zeus_aghs_build` **10/0**、`zuus` **139/0**、`axe_blink` **53/0**(未回归)、
+    `cm_pos5` **19/0**、`smoke_load` **3/0**、`gate_claim` **16/0**、`soakside` **16/0**。
+    动态全量套件本轮未跑(~100min,GH #124),这一格照 CLAUDE.md 是可以跳的。
+  - **交出去的棒**:`zeusaghs5` 入 `test_set.md` 的裁定在**总监**;波次时机与
+    behavioral detector(Aghs 获取时间 + Nimbus 施法数)的写作在**协同组 / 录像组**。
+    charter backlog `-83` 登记。open `[hero]` 五条球都还在**总监**(#447/#417/#416/#451)或
+    优先级下(#453 tinker 不在焦点)。
+
 - 2026-09-03T10:48Z(报告 `iterations/reports/hero/20260903T104812Z.md`;轴 **GH #451**)
   **改 3 个文件:`bots/BotLib/hero_tinker.lua`(8 处修参 + 一段注释)+ 新增
   `tests/test_utils_getitem_arity.lua` + 新增 `tests/test_hero_export_reachability.py`。

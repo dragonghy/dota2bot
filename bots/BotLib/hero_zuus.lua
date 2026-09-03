@@ -227,6 +227,68 @@ sRoleItemsBuyList['pos_5'] = {
 	"item_ultimate_scepter_2",
 }
 
+-- [TURBO BUILD, gated 'zeusaghs5'] Support Zeus's Aghanim's Scepter unlocks Nimbus
+-- (a stationary lightning cloud that pulses ~150 damage every 1.4s for 15s over a
+-- 425-radius zone AND grants that patch of vision), which is the single largest
+-- power spike this hero owns and the reason a support pick this fragile pays back
+-- in a teamfight. The shipped pos_5 order buries item_ultimate_scepter at index 8,
+-- behind item_ancient_janggo + item_aether_lens + item_glimmer_cape + item_pipe +
+-- item_boots_of_bearing. Only mage_outfit (tranquils, ~1755g) and aether_lens
+-- (2275g) are core-caster items; the rest is an aura-support stack that suits
+-- Chen/Beastmaster better than a nuking int with 40 base armor and Zeus's mana pool.
+--
+-- Cumulative gold before Aghs, shipped:
+--     blood_grenade(25) + mage_outfit(~1755) + janggo(985) + aether(2275)
+--   + glimmer(2050) + pipe(3200) + boots_of_bearing(recipe 900,
+--                                                     consumes tranquils+janggo)
+--   ≈ 11.2k gold, i.e. ~32 min for a pos_5 running at ~350 GPM.
+-- Turbo games end around 20 min, so the shipped index leaves Nimbus unreachable
+-- in the vast majority of games this hero exists to help win.
+--
+-- The reorder moves item_ultimate_scepter to right after item_aether_lens
+-- (i.e. slot 5), reaching Aghs at ~5.0k gold ≈ 14 min at the same GPM assumption.
+-- Every other item keeps its relative order, so glimmer/pipe/boots_of_bearing are
+-- deferred but still purchased on any curve that reaches them, and the utility
+-- roles (invis, magic resist, aura upgrade) simply arrive after the power spike.
+--
+-- CONDITION (c): standard meta places Aghanim's Scepter as Zeus's first or second
+-- item after boots (Liquipedia / DotaBuff for both mid and pos-5 supports); the
+-- shipped pos_5 order is the outlier here, not the reorder.
+--
+-- GATED because a build reorder is a design decision, and (per the lanefix lesson)
+-- locally-defensible caster-support build changes have to earn condition (b) before
+-- they ship (cf. `cmboots`/GH #144). The reorder is a PURE PERMUTATION of the
+-- shipped list, so gate-off is byte-for-byte identical (asserted in
+-- tests/test_zeus_aghs_build.lua), and turbo-only guards it against affecting
+-- normal-mode play until an A/B validation wave decides.
+--
+-- SCOPE: pos_5 only. pos_2 (mid) and pos_1/pos_3/pos_4 buy phylactery / kaya_and_sange
+-- / soul_ring first as legitimate laning/tempo items and are not addressed here.
+-- If a subsequent round wants to widen this to the mid/offlane rows, it needs
+-- separate frames and its own gate.
+local function ZeusSupportAghsFirst( tList )
+	if tList == nil then return tList end
+	local nAetherIndex = nil
+	local nAghsIndex = nil
+	for i, sItem in ipairs( tList ) do
+		if sItem == 'item_aether_lens' then nAetherIndex = i end
+		if sItem == 'item_ultimate_scepter' then nAghsIndex = i end
+	end
+	if nAetherIndex == nil or nAghsIndex == nil then return tList end
+	if nAghsIndex == nAetherIndex + 1 then return tList end
+	local tOut = {}
+	for i = 1, nAetherIndex do tOut[#tOut+1] = tList[i] end
+	tOut[#tOut+1] = 'item_ultimate_scepter'
+	for i = nAetherIndex + 1, #tList do
+		if tList[i] ~= 'item_ultimate_scepter' then tOut[#tOut+1] = tList[i] end
+	end
+	return tOut
+end
+
+if J.IsModeTurbo() and J.IsSoakCandidate( 'zeusaghs5' ) then
+	sRoleItemsBuyList['pos_5'] = ZeusSupportAghsFirst( sRoleItemsBuyList['pos_5'] )
+end
+
 X['sBuyList'] = sRoleItemsBuyList[sRole]
 
 X['sSellList'] = {
