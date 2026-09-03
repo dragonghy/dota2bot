@@ -150,6 +150,27 @@ local function equality_literals(line)
     return out
 end
 
+-- Literals this detector may NOT read as a corpus pin, each with the reason it
+-- is something else. Keyed by the trimmed CODE of the line, not by a line
+-- number: a line that moves keeps its exemption, and a line whose code CHANGES
+-- loses it and comes back as a finding.
+--
+-- ⭐ WHY THIS LIST EXISTS AT ALL (2026-09-03, replay-check). The detector's rule
+-- is "a literal equal to TODAY'S fixture count", so its precision is a function
+-- of the corpus size: every fixture landing re-aims it at whatever unrelated
+-- `== N` the new count happens to hit. Landing the 109th fixture (GH #437's
+-- frame) aimed it at a DAMAGE TOTAL -- three creep hits summing to 109 HP --
+-- and reported it in the same words it reports a real corpus pin. That is a
+-- false positive by construction, not a mistake in the entry below, and the
+-- next fixture will produce a different one. The exemption is deliberately
+-- narrow and fails CLOSED so nobody can widen it by accident.
+local NOT_A_CORPUS_PIN = {
+    ['assert(hits == 3 and total == 109,'] =
+        'tests/test_fieldcreep_veto.lua: `total` is summed DAMAGE from three '
+        .. 'creep hits (109 HP), not a fixture count -- the next line asserts '
+        .. 'the biggest of them is >= 25',
+}
+
 tests['[detector] no test pins the live corpus size with an equality'] = function()
     local n = fixture_count()
     cs.corpus(n, 'live fixture corpus')
@@ -166,7 +187,7 @@ tests['[detector] no test pins the live corpus size with an equality'] = functio
         for line in fh:lines() do
             lineno = lineno + 1
             for _, v in ipairs(equality_literals(line)) do
-                if v == n then
+                if v == n and NOT_A_CORPUS_PIN[line:gsub('^%s+', '')] == nil then
                     hits[#hits + 1] = path .. ':' .. lineno .. ': ' .. line:gsub('^%s+', '')
                 end
             end
@@ -180,6 +201,26 @@ tests['[detector] no test pins the live corpus size with an equality'] = functio
         .. 'anything they measure having changed. Use tests/corpus_scale.lua -- ratchet() '
         .. 'for a per-fixture sum, universal() for an "all of them" claim, corpus() for '
         .. 'the size itself.\n  %s', #hits, n, table.concat(hits, '\n  ')))
+end
+
+tests['[detector] every declared exemption still names a live line'] = function()
+    -- An exemption that stops matching anything is not harmless: it is a
+    -- standing licence nobody can see the target of, and the next reader has to
+    -- take it on faith that it was ever justified. So a dead entry goes red and
+    -- gets deleted rather than accumulating.
+    for code in pairs(NOT_A_CORPUS_PIN) do
+        local found = false
+        for _, path in ipairs(test_files()) do
+            local fh = assert(io.open(path, 'r'))
+            for line in fh:lines() do
+                if line:gsub('^%s+', '') == code then found = true break end
+            end
+            fh:close()
+            if found then break end
+        end
+        assert(found, 'a declared exemption matches no line in tests/ any more -- '
+            .. 'delete it instead of leaving a licence with no target: ' .. code)
+    end
 end
 
 tests['[detector] the detector reads code and not prose'] = function()

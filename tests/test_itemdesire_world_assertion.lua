@@ -549,7 +549,10 @@ tests['[recorded] of the two actions the corpus can produce, the first is an ori
     -- and it is NOT a phantom -- see the next test, which measures it. The
     -- claim here was re-measured, not renumbered: "the ONE action is a
     -- phantom" is simply no longer true of the corpus.
-    assert(#c.casts == 2, 'exactly two recorded actions; got ' .. #c.casts)
+    -- 2026-09-03 (replay-check): a THIRD action landed with
+    -- f_260902_154755_cm_wandbleed_residue.lua (GH #437's frame) and it is the
+    -- second honest one -- measured, not renumbered; see the test below it.
+    assert(#c.casts == 3, 'exactly three recorded actions; got ' .. #c.casts)
     local e
     for _, x in ipairs(c.casts) do
         if x.fixture == 'f_260819_222559_od_eclipse_solo.lua' then e = x end
@@ -597,6 +600,35 @@ tests['[recorded] the SECOND action is honest: 8% HP, 8232u out, aimed at the fo
     assert(bot:GetHealth() == 75 and bot:GetMaxHealth() == 938,
         'the frame moved: ' .. bot:GetHealth() .. '/' .. bot:GetMaxHealth())
     assert(bot:DistanceFromFountain() > 8000,
+        'the subject is no longer far from home: ' .. bot:DistanceFromFountain())
+end
+
+tests['[recorded] the THIRD action is honest too: 16% HP, 9505u out, no origin phantom'] = function()
+    -- Registered 2026-09-03 by replay-check, landing GH #437's frame under the
+    -- director's ruling. Same shape as the second action and a second witness
+    -- for the same correction: the corpus is no longer a phantom factory. The
+    -- subject is not the fixture's own subject -- the frame was cut for its
+    -- crystal_maiden, and it is the enemy obsidian_destroyer on it who wants a
+    -- TP, at 225 of 1398 HP and 9,505u from his own fountain.
+    local c = pass(true)
+    local e
+    for _, x in ipairs(c.casts) do
+        if x.fixture == 'f_260902_154755_cm_wandbleed_residue.lua' then e = x end
+    end
+    assert(e ~= nil, 'the third action is gone from the recorded set')
+    assert(e.hero == 'npc_dota_hero_obsidian_destroyer', 'hero: ' .. e.hero)
+    assert(e.fn == 'Action_UseAbilityOnLocation', 'cast type: ' .. e.fn)
+    assert(e.item == 'item_tpscroll', 'item: ' .. tostring(e.item))
+
+    local J, bot = rf.load('tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua',
+        'npc_dota_hero_obsidian_destroyer')
+    local v = J.GetTeamFightLocation(bot)
+    assert(v == nil or v.x ~= 0 or v.y ~= 0,
+        'this one must NOT be the origin phantom either, or the section 13 '
+        .. 'world assertion is the cause of every action this corpus produces')
+    assert(bot:GetHealth() == 225 and bot:GetMaxHealth() == 1398,
+        'the frame moved: ' .. bot:GetHealth() .. '/' .. bot:GetMaxHealth())
+    assert(bot:DistanceFromFountain() > 9000,
         'the subject is no longer far from home: ' .. bot:DistanceFromFountain())
 end
 

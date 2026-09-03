@@ -29,10 +29,35 @@
 --     (49.9%) at t=599.5, both taking fresh damage from an ember spirit who is
 --     DEAD, with no live enemy inside 8195 / 8382.
 --
--- What it CANNOT buy: the desk's residue comes from a caster who walked away,
--- the corpus's comes from a caster who died. Same predicate, same answer, but
--- no local frame carries the first kind -- so this file does not witness the
--- frame that motivated the change. Do not read it as if it did.
+--   * BLOCK, the frame the issue was written from, frozen 2026-09-03 by the
+--     replay desk under the director's ruling on GH #437 (owed_executions.json
+--     :wandbleed2_cond_a_frame): f_260902_154755_cm_wandbleed_residue.lua,
+--     crystal_maiden t=473.5, HP 41.0% and RISING at her own fountain, mana
+--     97.9%, nearest enemy 8381 -- and one second later she spends six charges,
+--     because a venomancer 10138 away is still ticking poison sting on her.
+--
+-- That last one closes what the paragraph here used to say could not be bought:
+-- the desk's residue comes from a caster who WALKED AWAY, the corpus's from a
+-- caster who DIED. Both are now in the corpus, and the difference between them
+-- is not cosmetic -- it falsified an invariant this file used to assert.
+--
+-- WHAT THE NEW FRAME BROKE, and why the replacement is stronger rather than
+-- looser. The census below used to assert two things that were true only
+-- because every residue frame it had came from a DEAD caster:
+--
+--   (1) `blocked => the bot had no live attacker at all`, and
+--   (2) `the furthest LIVE attacker in the corpus (3011.7) sits inside the
+--        shipped 4000 ring`, read as "the ring cuts nothing real".
+--
+-- A departed caster is alive. Both went red on the new fixture, and (2) is the
+-- one that matters: "live attacker" was standing in for "live threat", and a
+-- venomancer who left is the counter-example. What the corpus actually shows is
+-- a GAP -- live attackers on frames the narrowing KEEPS reach 3011.7; the one
+-- live attacker on a frame it BLOCKS is 10138.1 away; nothing lies between, and
+-- the shipped 4000 sits in that empty band. That is the argument for the
+-- constant, and it is now stated as two assertions with the band between them
+-- (a ceiling on the kept side, a floor on the blocked side) instead of one
+-- assertion that happened to hold while every residue caster was a corpse.
 --
 -- ONE MORE CAVEAT, inherited from tests/test_replay_181441_wand_limbo.lua: the
 -- dumper does not record item charges, so a charge count is the one number
@@ -53,6 +78,7 @@ local LIVE_FIRE = 'tests/fixtures/f_260819_222030_jugg_tp_eaten.lua'
 local EMPTY_RING = 'tests/fixtures/f_260819_142047_zuus_ult_denied.lua'
 local RANGED_KILL = 'tests/fixtures/f_260820_043524_wd_defend_alone.lua'
 local DEAD_CASTER = 'tests/fixtures/f_260820_043120_viper_defend_paired.lua'
+local GONE_CASTER = 'tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua'
 
 local tests = {}
 
@@ -107,6 +133,7 @@ local function corpus()
             if u.alive and (u.max_hp or 0) > 0 then
                 out.alive_frames = out.alive_frames + 1
                 local fresh, seen, live_attackers = false, {}, 0
+                local live_dists = {}
                 for _, d in ipairs(u.recent_damage or {}) do
                     if d.kind == 'hero' and d.dt <= 2.0 then
                         fresh = true
@@ -114,7 +141,10 @@ local function corpus()
                             seen[d.actor] = true
                             local a = by[d.actor]
                             if a ~= nil then
-                                if a.alive then live_attackers = live_attackers + 1 end
+                                if a.alive then
+                                    live_attackers = live_attackers + 1
+                                    live_dists[#live_dists + 1] = dist(u, a)
+                                end
                                 out.pairs[#out.pairs + 1] = {
                                     d = dist(u, a), alive = a.alive,
                                     path = path, victim = u.name, actor = d.actor,
@@ -126,6 +156,7 @@ local function corpus()
                 if fresh then
                     out.fresh_frames[#out.fresh_frames + 1] = {
                         path = path, name = u.name, live_attackers = live_attackers,
+                        live_dists = live_dists,
                     }
                 end
             end
@@ -210,6 +241,39 @@ tests['gate ON: fresh damage from a DEAD ember spirit is residue (both frames)']
     end
 end
 
+-- The frame GH #437 was written from, and the one the ruling ordered frozen.
+-- Everything here is read off the real frame; the charge count is the one number
+-- that is not (the dumper does not record charges), so it is not asserted -- the
+-- +90 magic_wand heal one second later, in the same combat log, is what says six.
+tests['gate ON: the desk frame -- a LIVE venomancer 10138 away is still residue'] = function()
+    local J, bot, heroes, fx = rf.load(GONE_CASTER)
+    assert(fx.self == 'npc_dota_hero_crystal_maiden', 'subject')
+    assert(fx.time == 473.5, 'frame time: the last frame before the wand goes off at 474.4')
+    assert(bot:GetHealth() == 347 and bot:GetMaxHealth() == 846, 'real HP: 41.0%')
+    assert(bot:GetHealth() / bot:GetMaxHealth() < 0.45,
+        'the shipped wandbleed HP leg holds -- 41.0% is under 45%, which is why it fires')
+    assert(bot:GetMana() / bot:GetMaxMana() > 0.97, 'and she is at 97.9% mana: nothing to burn it on')
+    assert(bot:FindItemSlot('item_magic_wand') >= 0, 'wand in the inventory')
+    -- The leg that misfires: fresh HERO damage, from a hero who is not there.
+    assert(bot:WasRecentlyDamagedByAnyHero(2.0) == true,
+        'the shipped wandbleed damage leg is TRUE here -- this is the whole issue')
+    assert(bot:HasModifier('modifier_venomancer_poison_sting'), 'and this is what is doing it')
+    assert(bot:HasModifier('modifier_fountain_aura_buff'),
+        'she is standing in her own fountain while it ticks')
+    local veno = heroes['npc_dota_hero_venomancer']
+    assert(veno:IsAlive(), 'the caster is ALIVE -- this is the case the dead-ember frames cannot make')
+    local dv = GetUnitToUnitDistance(bot, veno)
+    assert(dv > 10100 and dv < 10175, 'and he is ~10138 away, got ' .. tostring(dv))
+    local d = nearest_enemy(bot, heroes)
+    assert(d > 8350 and d < 8410, 'nearest enemy of any kind is ~8381, got ' .. tostring(d))
+    -- The two readings the ruling names (owed_executions.json:wandbleed2_cond_a_frame).
+    armed(J, { 'wandbleed', 'wandbleed2' })
+    assert(#J.GetNearbyHeroes(bot, 4000, true, BOT_MODE_NONE) == 0,
+        'zero live enemies inside the shipped 4000 ring')
+    assert(J.IsWandBleedSourcePresent(bot) == false,
+        'nobody alive is within reach of her -- the wand must not fire on a departed DoT')
+end
+
 tests['ground truth: the empty-ring frame is zuus at 40.5% HP with nobody inside 7478'] = function()
     local J, bot, heroes, fx = rf.load(EMPTY_RING)
     assert(fx.self == 'npc_dota_hero_zuus', 'subject')
@@ -228,51 +292,84 @@ end
 
 -- The corpus census, with its denominators. This is the local answer to "what
 -- does the narrowing take away".
-tests['corpus: 78 of the 80 fresh-damage frames keep their answer, and the 2 blocked have no live attacker'] = function()
+tests['corpus: 78 of the 81 fresh-damage frames keep their answer, and the shipped ring sits in the gap'] = function()
     local c = corpus()
     cs.corpus(c.files, 'live fixture corpus')
-    cs.ratchet(c.alive_frames, 993, 'alive hero-frames')
-    cs.ratchet(#c.fresh_frames, 80, 'frames with fresh hero damage')
-    cs.ratchet(#c.pairs, 101, 'victim/attacker pairs with fresh hero damage')
+    -- Re-measured 2026-09-03, after f_260902_154755_cm_wandbleed_residue.lua:
+    -- 1012 alive hero-frames, 81 with fresh hero damage, 102 victim/attacker
+    -- pairs (was 993 / 80 / 101).
+    cs.ratchet(c.alive_frames, 1012, 'alive hero-frames')
+    cs.ratchet(#c.fresh_frames, 81, 'frames with fresh hero damage')
+    cs.ratchet(#c.pairs, 102, 'victim/attacker pairs with fresh hero damage')
 
-    -- The ruler the constant is read off: how far away a LIVE attacker gets.
-    local max_live, n_dead = 0, 0
+    local n_dead = 0
     for _, pr in ipairs(c.pairs) do
-        if pr.alive then
-            if pr.d > max_live then max_live = pr.d end
-        else
-            n_dead = n_dead + 1
-        end
+        if not pr.alive then n_dead = n_dead + 1 end
     end
-    -- Registered at 3011.7 (crystal_maiden under maledict from 3011 away). It
-    -- may rise with the corpus -- but not past the shipped ring, because the
-    -- ring's whole justification is that it clears this number.
-    cs.ratchet(math.floor(max_live), 3011, 'furthest LIVE attacker')
-    cs.ceiling(math.floor(max_live), 3999, 'furthest LIVE attacker vs the shipped 4000 ring')
     cs.ratchet(n_dead, 2, 'pairs whose attacker is dead')
 
-    -- Every one of those 80 real frames, through the shipped predicate.
-    local blocked = {}
+    -- Every one of those real frames, through the shipped predicate. The two
+    -- populations are read SEPARATELY, because that is the correction the desk
+    -- frame forced: a live attacker is not the same thing as a live threat, so
+    -- "the furthest live attacker anywhere" is not a ruler for the ring.
+    local blocked, kept_live_max, blocked_live_min = {}, 0, math.huge
     for _, hit in ipairs(c.fresh_frames) do
         local J, bot = rf.load(hit.path, hit.name)
         armed(J, { 'wandbleed', 'wandbleed2' })
-        if J.IsWandBleedSourcePresent(bot) ~= true then
-            blocked[#blocked + 1] = hit
-            -- The only frames it may take are frames where NOTHING ALIVE hit
-            -- the bot. A blocked frame with a live attacker would mean the ring
-            -- is cutting into real fire, which is the failure this file exists
-            -- to catch.
-            assert(hit.live_attackers == 0,
-                'blocked a frame with a LIVE attacker: ' .. hit.path .. ' / ' .. hit.name)
+        local keep = J.IsWandBleedSourcePresent(bot)
+        if keep ~= true then blocked[#blocked + 1] = hit end
+        for _, d in ipairs(hit.live_dists) do
+            if keep then
+                if d > kept_live_max then kept_live_max = d end
+            else
+                if d < blocked_live_min then blocked_live_min = d end
+                -- The failure this file exists to catch: the ring cutting into
+                -- real fire. A live attacker INSIDE the ring on a frame the
+                -- narrowing takes would be exactly that, and it is also an
+                -- independent cross-check -- this distance comes from the
+                -- fixture table, the verdict from the shipped helper's own
+                -- GetNearbyHeroes read.
+                assert(d >= 4000, string.format(
+                    'blocked a frame with a LIVE attacker %.1f INSIDE the 4000 ring: %s / %s',
+                    d, hit.path, hit.name))
+            end
         end
     end
-    cs.ratchet(#blocked, 2, 'frames the narrowing blocks')
-    -- The zero stays an equality on purpose (corpus_scale's own carve-out): a
-    -- blocked frame with a live attacker MUST turn this red the day the corpus
-    -- grows one, because that is the finding this file is arguing from.
+    -- Was 2 (both dead-ember residue); 3 since the desk frame, whose attacker is
+    -- alive and 10138.1 away.
+    cs.ratchet(#blocked, 3, 'frames the narrowing blocks')
+
+    -- The two KINDS of residue, counted separately, because "the attacker is
+    -- dead" and "the attacker left" are the two ways a frame gets here and the
+    -- distance floor above can only see the second. Without this split, a census
+    -- that stopped asking whether an attacker is alive would keep passing: the
+    -- dead ember spirit is 8195/8382 away, i.e. outside the ring as well.
+    local dead_only, live_far = 0, 0
     for _, hit in ipairs(blocked) do
-        assert(hit.live_attackers == 0, 'blocked with a live attacker: ' .. hit.name)
+        if hit.live_attackers == 0 then dead_only = dead_only + 1 else live_far = live_far + 1 end
     end
+    cs.ratchet(dead_only, 2, 'blocked frames whose attackers are all DEAD')
+    cs.ratchet(live_far, 1, 'blocked frames with a LIVE attacker outside the ring')
+
+    -- The two halves of the argument for 4000, with the empty band between them:
+    --   kept side, registered 3011.7 -- crystal_maiden under maledict from a
+    --     witch doctor 3011 away, the furthest a live attacker gets on a frame
+    --     the narrowing keeps. It may rise with the corpus, but not past the
+    --     ring: that would mean the ring is about to cut real fire.
+    --   blocked side, registered 10138.1 -- the nearest live attacker on any
+    --     blocked frame, i.e. the margin the narrowing actually enjoys today
+    --     (2.5x the ring). Asserted as a floor rather than a ratchet on purpose:
+    --     a min over a growing corpus may legitimately FALL, and a residue
+    --     caster who only walked 4200 away is a real frame this file should
+    --     accept. What it may never do is fall inside the ring.
+    cs.ceiling(math.floor(kept_live_max), 3999, 'furthest LIVE attacker on a KEPT frame')
+    assert(math.floor(kept_live_max) >= 3011, string.format(
+        'furthest LIVE attacker on a KEPT frame FELL to %.1f (registered 3011.7) -- the '
+        .. 'maledict frame is the reason the ring is 4000 and not 2000; re-read the finding',
+        kept_live_max))
+    assert(blocked_live_min >= 4000, string.format(
+        'nearest LIVE attacker on a BLOCKED frame is %.1f, inside the shipped 4000 ring',
+        blocked_live_min))
 end
 
 local GEN = (function()

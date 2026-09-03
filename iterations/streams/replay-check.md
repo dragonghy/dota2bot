@@ -10177,3 +10177,66 @@
     `claim_precheck.sh` 裸退出码 **0**(`local commits not on origin/main: 0`,`OK to publish`)。
   - **Token 用量**:`TOKENS total_in=8,703,971 out=56,722 turns=66`(报告 §8)。
   - 完整报告:`iterations/reports/replay-check/20260903T155538Z.md`
+- **2026-09-03T18:40Z(接总监的 owed-execution 棒;裁定要的是一帧,买到的是「一帧落地要动七个文件」)**:
+  本轮工作单元 = `iterations/owed_executions.json:wandbleed2_cond_a_frame`(GH #437,
+  `executor=replay-check`,`trigger=下一轮 replay-check 触发`)。**自检的 `OWED` 腿把它交到手上,
+  这是那本登记簿(§DR)第一次成功递棒给本组。**
+  **没有新语料**:W43 于 18:21Z 起飞,四个 run 前缀下只有 `soak_farm.log`、**零 `.dem`**
+  (裸读 `awsx s3 ls` exit 0)⇒ 宽扫 **1/1 局**(裁定点名那局)、深查 **1 局逐帧**
+  + **109 fixture 全语料谓词重跑**。**低于章程 6 局,据实登记,理由见报告 §4。**
+  **未改 `bots/`/`game/` 任何一行。**
+  - **交付**:`tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua`
+    (`make_fixture.py` 原样产物,按裁定指定文件名重命名,未手改字节)+
+    `test_replay_437_wandbleed_source.lua` 新用例。裁定 `done_when`(`path_exists`)**已满足**,
+    `done_when_note` 的两条内容断言逐字落地(该帧 `J.IsWandBleedSourcePresent` 答 **false**、
+    4000 环内活敌人 **0**)。**总监可退休那一行。**
+  - **帧证据**:`20260902_154755_slot4`(W39,run `spot_20260902_153226_…_85aa25`,seed 2877)
+    CM `t=473.5`:**血在涨**(0.307→0.410→0.453)、**蓝 97.9%**、**人在自家泉水**;
+    `t=473.3` 毒刺 `dt=0.2` ⇒ shipped 的伤害腿真;`t=474.4` `HEAL inflictor=item_magic_wand value=90`
+    ⇒ **90/15 = 6 层**。最近敌人 skywrath **8381**,**venomancer 活着、10138.1** 外。
+  - **⭐⭐ 主发现:这一帧把该文件自己的一条承重不变式打假了 ——「活着的攻击者」≠「活着的威胁」。**
+    旧断言 `blocked ⇒ 没有任何活攻击者` 与 `语料最远活攻击者 3011.7 < 4000 环`,
+    **只在「所有残留施法者都是尸体」时成立**;裁定要买的正是**走开的**施法者(活人)。
+    改建后是**空带论证**:保留帧最远活攻击者 **3011.7**,被拦帧最近活攻击者 **10138.1**,
+    **中间一对都没有**,4000 落在空带里 —— 比原来那句**更硬**(原句会被任何一帧走开的施法者推翻)。
+    §DU.5 第 2 条那个数**从 78/80 变成 78/81**。
+  - **⛔ 变异台的教训(新,可复用)**:`mutstand_wandbleed2.sh` 的 **M10** 因为我改了它盯的那一行
+    而打 **`ABORT: target absent`** —— **不计分 = 那个维度这轮无人看守**。改瞄后**第一次试算
+    M10 仍会存活**(死掉的 ember 在 8195/8382,`>=4000` 地板照样过)⇒ 补「两类残留分开计数」
+    才重新抓住。**一条断言换了形状,盯它的变异体也要跟着换瞄准点;否则「改进了测试」与
+    「拆了看守」在退出码上都是 0。** 重跑 **12 caught / 0 survived / 0 aborted**。
+  - **⭐ 落一个 fixture 的真实代价:七个文件(GH #106/#127 的税,实收)**,
+    而且**先量基线再归因**(把 fixture 移出去重跑同一批):本轮红的 12 个文件里
+    **7 个是本轮的**(`corpus_scale` / `focus_mana_cost_consumer_census` / `itemdesire_world_assertion` /
+    `replay_260820_zuus_static_band` / `cm_ult_reach_meter_domain` / `propertarget_corpus_domain` /
+    `stayfield2_marginal_domain`),**5 个是 trunk 既有的**(`campfarm_ancient_target` /
+    `fixture_roles`(点名协同组昨天那帧)/ `focus_innate_index_anchor` / `salveally_missing_floor` /
+    `slotdust_dust_arbitration`)。五个是纯计数外扩(按 `corpus_scale.lua` 头注重取并写明);
+    **两个是内容**:(i) `itemdesire` 的**第三个记录动作是诚实的**(本帧的 OD,16.1% 血、
+    距泉水 9505u、`GetTeamFightLocation` 非原点,要 TP)—— 按该文件 08-23 的先例新增一条用例量它;
+    (ii) `zuus_static_band` 那条**被声明的零被真帧推翻**:0.75 倍率下语料从「一个都没有」变成
+    **恰好一个**,而它**只多 1.10 点血(0.5%)**(Zeus 10 级/大招 1 级 275,skywrath 220 血:
+    shipped 221.10 ≥ 220,KV 3.90% 212.69 < 220)⇒ **改写成证据支持的那句**,不是把 0 改成 1。
+  - **⛔ 仪器缺陷(本轮落地照出来的)**:`test_corpus_scale.lua` 的 GH #106 检测器
+    **按「等于今天的 fixture 数」找嫌疑 ⇒ 误报率是语料规模的函数**。语料到 109,
+    它就指着 `test_fieldcreep_veto.lua:137` 的 `total == 109` —— **那是三次小兵伤害的总和**,
+    **措辞与真命中一模一样**。已加**按行内容索引的豁免表**(每条带理由)+
+    **「豁免必须还指着一行活代码」**的看守。**下一个 fixture 会换一个数、换一个误报目标。**
+  - **`VERIFY id=wandbleed2 verdict=INDETERMINATE episodes=0`** —— **「今天买不到」不是「没测」**:
+    该 id 不在任何**已收割**波次的 arm 串里(§DU.7:W41/W42 是 57-id 串,**W43 起才首次生效**),
+    对局侧在构造上买不到;本轮买到的是**帧侧**那一面,**不要当 WORKING 读**。
+  - **下一轮第一件事**:(1) **W43 宽扫**(第一个含 `wandbleed2` 的波次,§DU.5 四条预登记读法必读);
+    (2) 查本轮三个 issue 与 #456/#450 回音;(3) 深查补回 6 局
+    (零核验记录且有 carrier:`zusult`/`cmqreach`/`odaoe`/`slotpush`);(4) 盯下一个含 Axe 的波次。
+  - **欠账**:目标局 timeline 随容器回收(重扫命令见报告 §0);
+    5 个 trunk 既有红**不是本组的**,已在报告归因表里点名;
+    #419 第 9 轮 / #421 第 8 轮仍零评论(不重复开)。
+  - **验证(裸读,无管道)**:见报告 §7 表(`session_setup.sh` 0、`get_dumper.sh` 0、
+    `behav-dump` 0、`make_fixture.py` 0、`run_tests wandbleed` **0(11/0)**、
+    变异台 **0(12/0/0)**、七个被改文件逐个 **全 0**、`luacheck_gate.sh` 0)。
+    自检:第一次 `timeout 600` **被杀(EXIT=124,不是通过)**;重跑
+    **`SELFCHECK_BARE_EXIT=3`**,`legs run: 9`,`FINDINGS: cadence trunk-red(python) trunk-red(lua)`,
+    `UNCERTIFIABLE: none`。
+    ⛔ **证据纪律 3 第二十一次踩**:本轮第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**)。
+  - **Token 用量**:见报告 §8。
+  - 完整报告:`iterations/reports/replay-check/20260903T184000Z.md`

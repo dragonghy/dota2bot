@@ -88,16 +88,24 @@ local LINA = 'tests/fixtures/f_260822_063722_lina_tp_home.lua'
 -- in the failure message instead of appearing as a bare literal in a compare.
 -- 铁律 4(ii): these are integer counts over a small range, so they are reported
 -- as counts with their denominators, never as a median.
-local LIVE_FRAMES     = 1003  -- live hero frames, every hero of every fixture
-local S_FIRES         = 23    -- J.ShouldRegenNotGoHome true
-local ABSORBED        = 4     -- ... and J.ShouldStayAndRegen already true
+-- 2026-09-03 (replay-check): re-measured on the corpus grown by
+-- f_260902_154755_cm_wandbleed_residue.lua (GH #437's frame, landed under the
+-- director's ruling in owed_executions.json). The four numbers that moved are
+-- the ones the new fixture adds to directly -- 1003+9 live frames, one more S
+-- frame, and that S frame is ABSORBED, not marginal: it is its zuus at 18.5% HP
+-- with S=1 T=1 supply=1. MARGIN and every MARGIN_* / SIGN_MARGIN_* count below
+-- are unchanged, i.e. what stayfield2 OWNS did not move -- which is the reading
+-- this file exists for, and it is now stated over a larger denominator.
+local LIVE_FRAMES     = 1012  -- live hero frames, every hero of every fixture
+local S_FIRES         = 24    -- J.ShouldRegenNotGoHome true
+local ABSORBED        = 5     -- ... and J.ShouldStayAndRegen already true
 local MARGIN          = 19    -- ... and NOT already true: what stayfield2 owns
 local MARGIN_DMG_ONLY = 0     -- of MARGIN: only T3 (unattributed damage) failed
 local MARGIN_SUPPLY   = 18    -- of MARGIN: only T5 (supply) failed
 local MARGIN_BOTH     = 1     -- of MARGIN: both failed
 local T_ONLY_HP_BAND  = 6     -- T true with hp in (0.55, 0.75] -- S cannot speak
 local BAG_FRAMES      = 15    -- frames carrying a backpacked salve
-local SIGN_SUBSAMPLE  = 108   -- fixture.self on every fixture (declared slice)
+local SIGN_SUBSAMPLE  = 109   -- fixture.self on every fixture (declared slice)
 local SIGN_NATURAL_NEG = 56   -- ... whose natural retreat bid is NEGATIVE
 local SIGN_MARGIN_NEG = 14    -- of MARGIN: the guard RAISES the bid
 local SIGN_MARGIN_POS = 5     -- of MARGIN: the guard LOWERS the bid
@@ -377,7 +385,7 @@ local function sweep()
     return out
 end
 
-tests['[recorded] the margin is SMALLER than the predicate: 4 of 23 S frames are already absorbed'] = function()
+tests['[recorded] the margin is SMALLER than the predicate: 5 of 24 S frames are already absorbed'] = function()
     local out = sweep()
     local nF, nS, nT, nST, nM =
         out:match('COUNT frames=(%d+) S=(%d+) T=(%d+) ST=(%d+) margin=(%d+)')
@@ -507,7 +515,7 @@ end
 --============================================================================
 
 tests['[limit] the corpus is biased, so these are shapes and floors, not rates'] = function()
-    -- The fixtures were cut to pin OTHER decisions. 993 live hero frames is a
+    -- The fixtures were cut to pin OTHER decisions. 1012 live hero frames is a
     -- large denominator but not a random sample of turbo play, so nothing here
     -- is a frequency for a real game. What IS transportable is the closed form
     -- (source-parsed) and the SIGN of the effect, neither of which depends on

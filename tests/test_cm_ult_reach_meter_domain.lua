@@ -319,11 +319,19 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
         .. 'regressed to the pre-2026-09-01 world and every number in this file '
         .. 'would be an artifact of that, not a reading')
 
-    assert(t.instants == 49, 'live-CM instants: expected 48, got ' .. t.instants)
-    assert(t.handles == 214, 'CM ability handles: expected 214, got ' .. t.handles)
-    assert(t.trained == 200, 'trained handles: expected 200, got ' .. t.trained)
-    assert(t.pre  == 162, 'castable before the price: expected 162, got ' .. t.pre)
-    assert(t.post == 146, 'castable after the price: expected 146, got ' .. t.post)
+    -- 2026-09-03 (replay-check): re-measured after
+    -- f_260902_154755_cm_wandbleed_residue.lua (GH #437's frame) added the
+    -- corpus's 50th live-CM instant. Every count on the way IN grew by one
+    -- instant's worth (49->50 instants, 214->218 handles, 200->204 trained,
+    -- 162->165 pre, 146->149 post) and NOTHING on the way OUT moved: 16
+    -- revocations, 7/4/5 by ability, exactly as before. The new instant is a CM
+    -- at 41.0% HP with 97.9% mana, so she can afford everything she owns --
+    -- which is why she enters the funnel and leaves it whole.
+    assert(t.instants == 50, 'live-CM instants: expected 50, got ' .. t.instants)
+    assert(t.handles == 218, 'CM ability handles: expected 218, got ' .. t.handles)
+    assert(t.trained == 204, 'trained handles: expected 204, got ' .. t.trained)
+    assert(t.pre  == 165, 'castable before the price: expected 165, got ' .. t.pre)
+    assert(t.post == 149, 'castable after the price: expected 149, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -414,7 +422,7 @@ tests['3. mana can never decide the two NEGATED castable sites -- closed form'] 
 end
 
 -- ===========================================================================
-tests['4. the 240 zero desires come with the five constants that cause them'] = function()
+tests['4. the 250 zero desires come with the five constants that cause them'] = function()
     local nInstants, nZeroBids = 0, 0
     local nMode, nGoing, nRetreat, nAoE, nRadius0 = 0, 0, 0, 0, 0
     for _, path in ipairs(corpus_paths()) do
@@ -438,14 +446,14 @@ tests['4. the 240 zero desires come with the five constants that cause them'] = 
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 49, 'instants moved: ' .. nInstants)
-    assert(nZeroBids == 245, 'expected all 5 x 49 bids to be zero, got ' .. nZeroBids)
+    assert(nInstants == 50, 'instants moved: ' .. nInstants)
+    assert(nZeroBids == 250, 'expected all 5 x 50 bids to be zero, got ' .. nZeroBids)
     -- ... and here is why that is not a null result.
-    assert(nMode == 49, 'GetActiveMode is the mock default on every instant')
-    assert(nGoing == 49, 'J.IsGoingOnSomeone is false on every instant')
-    assert(nRetreat == 49, 'J.IsRetreating is false on every instant')
-    assert(nAoE == 49, 'FindAoELocation is the count=0 loader stand-in everywhere')
-    assert(nRadius0 == 49, 'GetAOERadius answers 0 on every instant (section 5)')
+    assert(nMode == 50, 'GetActiveMode is the mock default on every instant')
+    assert(nGoing == 50, 'J.IsGoingOnSomeone is false on every instant')
+    assert(nRetreat == 50, 'J.IsRetreating is false on every instant')
+    assert(nAoE == 50, 'FindAoELocation is the count=0 loader stand-in everywhere')
+    assert(nRadius0 == 50, 'GetAOERadius answers 0 on every instant (section 5)')
 end
 
 -- ===========================================================================

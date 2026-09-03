@@ -371,14 +371,18 @@ local function corpus_flips(nCostOverride)
     return per
 end
 
-tests['[4] 16 of 88 live-Q focus-hero frames sit where the ladder flips a gate'] = function()
+tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate'] = function()
     local per = corpus_flips(nil)
-    -- Measured 2026-09-02 over tests/fixtures/*.lua.
+    -- Measured 2026-09-02 over tests/fixtures/*.lua; re-derived 2026-09-03
+    -- (replay-check) after f_260902_154755_cm_wandbleed_residue.lua (GH #437's
+    -- frame) added one live-Q crystal_maiden frame and one zuus frame. Only the
+    -- two `n` denominators moved (48->49, 40->41): neither hero gained a FLIP,
+    -- so every flip count below -- and the ratio §4 is about -- is unchanged.
     local EXPECT = {
         axe            = { n = 26, farm = 5, spam = 3, either = 6 },
-        zuus           = { n = 40, farm = 4, spam = 3, either = 6 },
+        zuus           = { n = 41, farm = 4, spam = 3, either = 6 },
         lion           = { n = 23, farm = 3, spam = 2, either = 4 },
-        crystal_maiden = { n = 48, farm = 9, spam = 10, either = 14 },
+        crystal_maiden = { n = 49, farm = 9, spam = 10, either = 14 },
         skeleton_king  = { n = 31, farm = 4, spam = 5, either = 5 },
     }
     for sHero, want in pairs(EXPECT) do
@@ -395,8 +399,9 @@ tests['[4] 16 of 88 live-Q focus-hero frames sit where the ladder flips a gate']
     for sHero, s in pairs(per) do
         if LIVE_Q[sHero] then nLive = nLive + s.n nEither = nEither + s.either end
     end
-    assert(nLive == 89 and nEither == 16,
-        'live-Q total: expected 16 flips over 89 frames, got ' .. nEither
+    -- 89 -> 90 with the GH #437 fixture's CM frame; the 16 flips are unchanged.
+    assert(nLive == 90 and nEither == 16,
+        'live-Q total: expected 16 flips over 90 frames, got ' .. nEither
             .. ' over ' .. nLive)
     -- The CM half of the same table is the §2 point in numbers: fourteen frames
     -- whose arithmetic says "flip" and whose code says "nobody reads this".
@@ -416,7 +421,7 @@ tests['[5] negative control: with the pre-ladder price of 0 the flip band is emp
     -- an empty loop
     local nSeen = 0
     for _, s in pairs(per) do nSeen = nSeen + s.n end
-    assert(nSeen == 168, 'the control must sweep the same 168 frames, saw ' .. nSeen)
+    assert(nSeen == 170, 'the control must sweep the same 170 frames, saw ' .. nSeen)
 end
 
 -- ---------------------------------------------------------------------------
@@ -487,8 +492,11 @@ tests['[6b] corpus: 16 Zeus frames hold a ready ult, and the old gate died on al
         end
     end
     p:close()
-    assert(nAlive == 43 and nReady == 16 and nDeny == 7,
-        'zusult corpus domain moved -- expected 43 alive Zeus frames, 16 with a '
+    -- 2026-09-03 (replay-check): 43 -> 44 alive Zeus frames with the GH #437
+    -- fixture; its zuus holds a rank-1 ult on 37.8s cooldown, so READY and DENY
+    -- are untouched and the domain this section is about did not move.
+    assert(nAlive == 44 and nReady == 16 and nDeny == 7,
+        'zusult corpus domain moved -- expected 44 alive Zeus frames, 16 with a '
             .. 'ready ult, 7 of those unaffordable; got ' .. nAlive .. ' / '
             .. nReady .. ' / ' .. nDeny)
     -- The pre-ladder domain is 0 by construction, not by measurement: the gate's

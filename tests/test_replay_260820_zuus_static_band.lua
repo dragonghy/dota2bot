@@ -423,14 +423,30 @@ tests['[hero] LIMIT: the corpus offers exactly ONE in-band pair, and it is this 
         'and it must be the frame this file pins, got ' .. tostring(sWhere))
 end
 
-tests['[hero] LIMIT: under 25% base magic resist the corpus offers NONE'] = function()
+tests['[hero] LIMIT: under 25% base magic resist the corpus offers exactly ONE, by 1.1 HP'] = function()
     -- NOT "the band is never reached": the band moves down (~[212, 221] HP at
     -- rank 1) and 51 Zeus-carrying frames is not a frequency estimate. What this
     -- pins is that the flip above lives in the mock's declared no-reduction
     -- model, so nobody may quote it as an in-game count.
-    local nBand, nDomain = corpus_band_count(0.75)
-    assert(nDomain > 150, 'same domain (167 measured 2026-08-30), got ' .. nDomain)
-    assert(nBand == 0, 'expected no in-band pair at multiplier 0.75, got ' .. nBand)
+    --
+    -- ⭐ 2026-09-03 (replay-check): this case read `nBand == 0` and said the
+    -- corpus offers NONE at 0.75. Landing f_260902_154755_cm_wandbleed_residue
+    -- .lua (GH #437's frame) made it ONE, and the zero is re-stated rather than
+    -- re-baselined because a declared zero going red is the finding, not the
+    -- accident. The arithmetic of the new pair, so the next reader can see how
+    -- thin it is: Zeus level 10, ult rank 1 (275 damage), enemy skywrath_mage on
+    -- 220 HP. Shipped 0.09: (275 + 220*0.09) * 0.75 = 221.10 >= 220 -- it kills,
+    -- by 1.10 HP, 0.5% of the target's health. KV 3.90% (level 10): (275 +
+    -- 220*0.0390) * 0.75 = 212.69 < 220 -- it does not. So the band IS reachable
+    -- under magic resist; what the corpus says is that reaching it takes a
+    -- coincidence half a percent wide, which is a weaker claim than "none" and
+    -- the one the evidence actually supports.
+    local nBand, nDomain, sWhere = corpus_band_count(0.75)
+    assert(nDomain > 150, 'domain (177 measured 2026-09-03), got ' .. nDomain)
+    assert(nBand == 1, 'expected exactly one in-band pair at multiplier 0.75, got ' .. nBand)
+    assert(sWhere:find('154755_cm_wandbleed_residue', 1, true)
+        and sWhere:find('skywrath_mage', 1, true),
+        'and it must be the pair this case describes, got ' .. tostring(sWhere))
 end
 
 -- ---------------------------------------------------------------------------

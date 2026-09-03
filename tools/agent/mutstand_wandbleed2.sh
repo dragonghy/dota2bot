@@ -145,11 +145,23 @@ MUTANTS = {
     #     here.
     "M9": [(TEST, "io.popen('ls tests/fixtures')", "io.popen('ls tests/fixturesX 2>/dev/null')")],
     # M10: the census stops asking whether the attacker is alive and calls every
-    #      attacker live.  The corpus assertion that the ONLY blocked frames are
-    #      ones nothing alive hit then has nothing behind it -- the measurement
-    #      half of this file's claim, attacked from the data side.
-    "M10": [(TEST, "                            if a.alive then live_attackers = live_attackers + 1 end",
-             "                            live_attackers = live_attackers + 1")],
+    #      attacker live.  The measurement half of this file's claim, attacked
+    #      from the data side.
+    #      RE-AIMED 2026-09-03 (replay-check): the target line moved when the
+    #      census started recording live-attacker DISTANCES, and an out-of-date
+    #      target ABORTS rather than scoring, i.e. leaves this dimension
+    #      unguarded.  The catcher moved too: the old `blocked => no live
+    #      attacker` assertion is false since the departed-caster frame, so what
+    #      catches this now is the dead-only/live-far split -- the dead ember
+    #      spirit is 8195/8382 away, so the distance floor alone would NOT.
+    "M10": [(TEST, """                                if a.alive then
+                                    live_attackers = live_attackers + 1
+                                    live_dists[#live_dists + 1] = dist(u, a)
+                                end""",
+             """                                do
+                                    live_attackers = live_attackers + 1
+                                    live_dists[#live_dists + 1] = dist(u, a)
+                                end""")],
     # M11: the census's freshness window stops matching the shipped predicate's
     #      2.0s.  The corpus would then be measuring a different question than
     #      the one bot:WasRecentlyDamagedByAnyHero(2.0) asks, and every
