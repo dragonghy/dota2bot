@@ -34,9 +34,11 @@
 --    whole names, and any criterion that stopped separating them would report
 --    them as defects.  So both directions have live counterexamples here; the
 --    synthetic pair is still fed, because one filter edit removes them.
--- 3. A RATCHET.  The registered sites are frozen by (kind, name, site).  A new
---    unknown name turns this red instead of joining the silence.  Repairs are
---    welcome -- they edit the baseline DOWN.
+-- 3. A RATCHET.  The registered sites are frozen by (kind, name, file, ANCHOR),
+--    the anchor being a digest of the pinned line's own normalized code text.
+--    A new unknown name turns this red instead of joining the silence.  Repairs
+--    are welcome -- they edit the baseline DOWN.  An edit ABOVE a pin does
+--    nothing, which is the 2026-09-03 change and the reason for section 2'.
 --
 -- WHAT IS NOT CLAIMED
 -- -------------------
@@ -112,9 +114,84 @@ local function is_known(sName, tMacro)
     return false
 end
 
---- THE REPORT.  Returns a list of { kind, name, site }.  `kind` separates a
---- LOOKUP (an exact-name question the engine will answer) from a PROBE (a
---- `string.find` substring, which is not a name at all).
+--------------------------------------------------------------------------------
+-- 2'. THE CONTENT ANCHOR (GH #442 item 4, 2026-09-03)
+--------------------------------------------------------------------------------
+-- The ratchet below used to key its registrations by `KIND name path:LINE`.
+-- A line number is not a property of the pinned site, it is a property of
+-- everything ABOVE the pinned site, so any edit anywhere earlier in the file
+-- -- a pure comment will do -- pushed a pin out and turned this file red with
+-- nothing wrong in `bots/`.  That is not a hypothetical: this file records
+-- FOURTEEN re-anchorings between 2026-08-26 and 2026-09-02 (six of them from a
+-- round that had no reason to read `bots/` at all), against ELEVEN pins.  The
+-- sibling defect in `tools/agent/chain_member_census.py` was repaired the same
+-- way on 2026-09-03 (GH #442 items 1-3); this is that repair's second half.
+--
+-- The key is now `KIND name path @anchor`, where the anchor digests the
+-- NORMALIZED CODE TEXT of the line the name sits on.
+--
+--   * an edit ABOVE the site does not move the key            (the 14 events)
+--   * an edit TO the site DOES move the key, and that is right -- the note
+--     attached to a registration argues about a specific line of code, and a
+--     line that changed is a line nobody has judged.  It should land on NEW.
+--
+-- The line number is KEPT, out of the key, as `line_last_seen`: it is "where to
+-- look", and when it drifts the ratchet prints a LINE NOTE and stays green.
+--
+-- WHAT A CONTENT KEY CAN SELL IN EXCHANGE, and why it does not here: two
+-- distinct findings collapsing onto one key would be a real finding absorbed
+-- into an old judgement and never printed -- swapping a false alarm for a
+-- silent miss.  So BOTH collision directions are hard failures below
+-- (two registered rows under one key; two live findings under one key), and
+-- the registration table is a LIST, not a dict literal -- a dict literal
+-- answers a duplicate key by keeping the last one and saying nothing, which is
+-- exactly that silent miss walking in through the front door.
+
+--- Whitespace is not part of a line's identity (a re-indent is not a re-write).
+local function norm_code(sCode)
+    return (sCode:gsub('%s+', ' '):gsub('^ +', ''):gsub(' +$', ''))
+end
+
+--- A 32-bit polynomial digest in pure Lua 5.1 arithmetic -- the bot VM has no
+--- bit library and no `sha1`, and shelling out would make the ratchet depend on
+--- a binary the container may not carry.  Both accumulators stay below 2^31 and
+--- the largest intermediate is h*131 < 2^38, so every step is EXACT in a
+--- double: an anchor that silently lost precision would be machine-dependent,
+--- and machine-dependence is the one property a frozen key may not have.
+local function anchor_of(sText)
+    local h1, h2 = 5381, 52711
+    for i = 1, #sText do
+        local b = sText:byte(i)
+        h1 = (h1 * 131 + b) % 2147483647
+        h2 = (h2 * 37 + b) % 2147483629
+    end
+    return string.format('%04x%04x', h1 % 65536, h2 % 65536)
+end
+
+--- The key a registration and a live finding must agree on.
+local function key_of(tHit)
+    return tHit.kind .. ' ' .. tHit.name .. ' ' .. tHit.path .. ' @' .. tHit.anchor
+end
+
+--- Turn the registration ROWS into the lookup map, collecting -- never eating
+--- -- rows that share a key.  Returns (map, list of duplicated keys).
+local function build_registered(tRows)
+    local tMap, tDupe = {}, {}
+    for _, tRow in ipairs(tRows) do
+        local sKey = key_of({ kind = tRow[1], name = tRow[2],
+                              path = tRow[3], anchor = tRow[4] })
+        if tMap[sKey] ~= nil then
+            tDupe[#tDupe + 1] = sKey
+        else
+            tMap[sKey] = { line = tRow[5], why = tRow[6] }
+        end
+    end
+    return tMap, tDupe
+end
+
+--- THE REPORT.  Returns a list of { kind, name, path, line, anchor }.  `kind`
+--- separates a LOOKUP (an exact-name question the engine will answer) from a
+--- PROBE (a `string.find` substring, which is not a name at all).
 local function offences_in(sPath, sSrc, tMacro)
     local tOut = {}
     local nLine = 0
@@ -124,10 +201,14 @@ local function offences_in(sPath, sSrc, tMacro)
         local bProbe = sCode:match('string%.[fmg]%a*%s*%(') ~= nil
                     or sCode:match('[:%.]find%s*%(') ~= nil
                     or sCode:match('[:%.]match%s*%(') ~= nil
+        -- The anchor digests the SAME `sCode` the criterion reads, comments
+        -- already stripped.  Anchoring on the raw line instead would let a
+        -- trailing comment edit move the key without moving the code.
+        local sAnchor = anchor_of(norm_code(sCode))
         for sName in sCode:gmatch("['\"](item_[a-z0-9_]+)['\"]") do
             if not is_known(sName, tMacro) then
-                tOut[#tOut + 1] = {
-                    bProbe and 'PROBE' or 'LOOKUP', sName, sPath .. ':' .. nLine }
+                tOut[#tOut + 1] = { kind = bProbe and 'PROBE' or 'LOOKUP',
+                    name = sName, path = sPath, line = nLine, anchor = sAnchor }
             end
         end
     end
@@ -166,11 +247,75 @@ local tGot = offences_in('synthetic.lua',
     "if string.find(n, 'item_gleipnir') then end\n", tSynthMacro)
 check(#tGot == 2, 'report returned ' .. #tGot .. ' offence(s), expected 2')
 if #tGot == 2 then
-    check(tGot[1][1] == 'LOOKUP' and tGot[1][3] == 'synthetic.lua:3',
-        'first offence was ' .. tGot[1][1] .. ' at ' .. tGot[1][3])
-    check(tGot[2][1] == 'PROBE' and tGot[2][3] == 'synthetic.lua:4',
-        'second offence was ' .. tGot[2][1] .. ' at ' .. tGot[2][3])
+    check(tGot[1].kind == 'LOOKUP' and tGot[1].line == 3,
+        'first offence was ' .. tGot[1].kind .. ' at line ' .. tGot[1].line)
+    check(tGot[2].kind == 'PROBE' and tGot[2].line == 4,
+        'second offence was ' .. tGot[2].kind .. ' at line ' .. tGot[2].line)
 end
+end
+
+--------------------------------------------------------------------------------
+-- 2d. The anchor's two directions, and both collision doors
+--------------------------------------------------------------------------------
+-- These four are the whole argument for the key change, stated as assertions
+-- rather than as the comment above.  2d.1 is what the 14 re-anchorings were;
+-- 2d.2 is the price paid for it; 2d.3/2d.4 are the two ways a content key could
+-- turn a false alarm into a silent miss, and neither is allowed to be quiet.
+
+tests['2d.1. an edit ABOVE a site does not move its key'] = function()
+local sBody = "local c = HasItem(bot, 'item_gleipnir')\n"
+local tBefore = offences_in('synthetic.lua', sBody, tSynthMacro)
+local tAfter  = offences_in('synthetic.lua',
+    ('-- a pure comment, exactly like the ten of 77e18be9\n'):rep(10) .. sBody,
+    tSynthMacro)
+check(#tBefore == 1 and #tAfter == 1, 'the synthetic site was not found once on each side')
+check(key_of(tBefore[1]) == key_of(tAfter[1]),
+    'ten inserted comment lines moved the key: ' .. key_of(tBefore[1])
+    .. '  ->  ' .. key_of(tAfter[1]) .. ' -- this is the defect GH #442 is about')
+check(tBefore[1].line == 1 and tAfter[1].line == 11,
+    'the line number is supposed to still MOVE (it is `where to look`); got '
+    .. tBefore[1].line .. ' and ' .. tAfter[1].line)
+end
+
+tests['2d.2. an edit TO the site DOES move its key'] = function()
+-- The other direction, and it is not a regrettable side effect: a registration
+-- argues about one line of code, so a changed line is an unjudged line and
+-- belongs on NEW.  Without this the anchor could be a constant and 2d.1 would
+-- still pass -- a key that never moves is not insertion-proof, it is deaf.
+local tA = offences_in('synthetic.lua', "local c = HasItem(bot, 'item_gleipnir')\n", tSynthMacro)
+local tB = offences_in('synthetic.lua', "local c = HasItem(hAlly, 'item_gleipnir')\n", tSynthMacro)
+check(#tA == 1 and #tB == 1, 'the synthetic site was not found once on each side')
+check(key_of(tA[1]) ~= key_of(tB[1]),
+    'rewriting the line left the key unchanged (' .. key_of(tA[1])
+    .. ') -- the anchor is not reading the text')
+-- ... while a re-indent is NOT a rewrite.
+local tC = offences_in('synthetic.lua', "\tlocal  c =  HasItem(bot,   'item_gleipnir')\n", tSynthMacro)
+check(key_of(tA[1]) == key_of(tC[1]), 'a re-indent moved the key')
+end
+
+tests['2d.3. two live findings under one key are reported, not absorbed'] = function()
+local sTwin = "local c = HasItem(bot, 'item_gleipnir')\n"
+local tGot = offences_in('synthetic.lua', sTwin .. sTwin, tSynthMacro)
+check(#tGot == 2, 'expected 2 findings, got ' .. #tGot)
+check(key_of(tGot[1]) == key_of(tGot[2]),
+    'the twin lines did not collide -- this test is no longer testing anything')
+-- The ratchet body (3b) is what must turn this into a red; that half is pinned
+-- by the mutation stand cell M4, which feeds the twin into the real tree.
+end
+
+tests['2d.4. a duplicated registration row is collected, not silently eaten'] = function()
+-- THE REASON THE TABLE IS A LIST.  A Lua dict literal with two identical keys
+-- keeps the last value and says nothing -- the same silent absorption the
+-- content key is supposed to be protected against, arriving through the table
+-- instead of through the tree.
+local tMap, tDupe = build_registered({
+    { 'LOOKUP', 'item_x', 'a.lua', 'dead0000', 1, 'first' },
+    { 'LOOKUP', 'item_x', 'a.lua', 'dead0000', 9, 'a second row, same key' },
+    { 'PROBE',  'item_y', 'a.lua', 'beef0000', 2, 'unrelated' },
+})
+check(#tDupe == 1, 'expected 1 duplicate registration, got ' .. #tDupe)
+check(tMap['LOOKUP item_x a.lua @dead0000'] ~= nil, 'the surviving row lost its key')
+check(tMap['PROBE item_y a.lua @beef0000'] ~= nil, 'an unrelated row was dropped')
 end
 
 --------------------------------------------------------------------------------
@@ -178,22 +323,22 @@ end
 --------------------------------------------------------------------------------
 
 -- Frozen 2026-08-25.  Each line is (kind, name, site) plus what it is.
-local tRegistered = {
+local tRegisteredRows = {
     -- LOOKUP: an exact-name question the engine answers with silence.
-    ['LOOKUP item_gleipnir bots/FunLib/aba_site.lua:1522'] =
+    { 'LOOKUP', 'item_gleipnir', 'bots/FunLib/aba_site.lua', '9adc7c0c', 1522,
         'Gleipnir ships as item_gungir.  `not HasItem(bot, "item_gleipnir")` is '
         .. 'therefore permanently true, so that branch returns true whenever '
         .. 'net worth < 18000 regardless of the item.  aba_site IS required '
-        .. '(jmz_func.lua:29), so this one is live.',
-    ['LOOKUP item_drum_of_endurance bots/FunLib/aba_item.lua:449'] =
+        .. '(jmz_func.lua:29), so this one is live.' },
+    { 'LOOKUP', 'item_drum_of_endurance', 'bots/FunLib/aba_item.lua', '8d9282f5', 449,
         'Drums ship as item_ancient_janggo (already registered by '
         .. 'tools/agent/sell_pair_census.py as Q1-NOT-AN-ITEM); the '
         .. '(item_boots_of_bearing, item_drum_of_endurance) sell pair can never '
-        .. 'fire.  Costless in practice: boots_of_bearing CONSUMES the drums.',
-    ['LOOKUP item_great_scepter bots/BotLib/hero_tidehunter.lua:91'] =
+        .. 'fire.  Costless in practice: boots_of_bearing CONSUMES the drums.' },
+    { 'LOOKUP', 'item_great_scepter', 'bots/BotLib/hero_tidehunter.lua', '2c0337c4', 91,
         'a buy-list entry no item answers to; Item.GetBasicItems forwards it '
         .. 'verbatim to the purchase layer.  Non-focus hero -- reported, not '
-        .. 'fixed, per the GH #168 convention.',
+        .. 'fixed, per the GH #168 convention.' },
     -- [strategy 20260825T23:xxZ] Re-keyed 6774 -> 6781, and :1013 -> :1020 in
     -- the note.  NOT a repair of this census and NOT a loosening: same kind,
     -- same name, same site -- only the line number moved, by exactly the +7
@@ -295,31 +440,31 @@ local tRegistered = {
     -- neither file.  Two streams re-anchored it within minutes of each
     -- other; the strategy note above is kept because it names the exact
     -- ten lines (:3405) and this one only adds the second observation.
-    ['LOOKUP item_new bots/ability_item_usage_generic.lua:6886'] =
+    { 'LOOKUP', 'item_new', 'bots/ability_item_usage_generic.lua', '1d9dda7a', 6886,
         'the upstream template stub (its comment is literally "--新物品").  '
         .. 'X.ConsiderItemDesire is indexed by the exact item name at :1020, so '
-        .. 'the handler is unreachable -- by design, not by accident.',
-    ['LOOKUP item_pipe_of_insight bots/FunLib/advanced_item_strategy.lua:314'] =
+        .. 'the handler is unreachable -- by design, not by accident.' },
+    { 'LOOKUP', 'item_pipe_of_insight', 'bots/FunLib/advanced_item_strategy.lua', 'fcb8a3cb', 314,
         'Pipe ships as item_pipe.  No file in the tree requires '
-        .. 'advanced_item_strategy.lua, so the cost today is zero.',
-    ['LOOKUP item_battlefury bots/FunLib/advanced_item_strategy.lua:315'] =
-        'Battle Fury ships as item_bfury.  Same dead file as the line above.',
+        .. 'advanced_item_strategy.lua, so the cost today is zero.' },
+    { 'LOOKUP', 'item_battlefury', 'bots/FunLib/advanced_item_strategy.lua', '6bb0f6cb', 315,
+        'Battle Fury ships as item_bfury.  Same dead file as the line above.' },
     -- PROBE: a string.find substring, not a name.  Registered so that a future
     -- edit turning one into a real lookup shows up as a NEW site.
-    ['PROBE item_enhancement bots/Buff/NeutralItems.lua:345'] =
+    { 'PROBE', 'item_enhancement', 'bots/Buff/NeutralItems.lua', '48fe4bdc', 345,
         'neutral-item tier probe; neutral items live in their own KV, which the '
-        .. 'snapshot deliberately does not carry.',
-    ['PROBE item_enhancement bots/FretBots/NeutralItems.lua:106'] =
-        'the FretBots copy of the line above (AGENTS.md: always both files).',
-    ['PROBE item_double bots/FunLib/aba_item.lua:1239'] =
-        'matches the item_double_* macro family by prefix.',
+        .. 'snapshot deliberately does not carry.' },
+    { 'PROBE', 'item_enhancement', 'bots/FretBots/NeutralItems.lua', '48fe4bdc', 106,
+        'the FretBots copy of the line above (AGENTS.md: always both files).' },
+    { 'PROBE', 'item_double', 'bots/FunLib/aba_item.lua', 'a11a9143', 1239,
+        'matches the item_double_* macro family by prefix.' },
     -- 1049 -> 1053 (director 2026-08-26T15:5xZ): 1039cad8 (strategy 10:34Z,
     -- gated `bbrespawn`, GH #208).  A DIFFERENT commit from the two pins below,
     -- five hours earlier -- so this file was already red on 224fa713, the tree
     -- GH #216 measured, and stayed red across four more landings without any
     -- gate saying so.  Three pins, two commits, one afternoon.
-    ['PROBE item_recipe bots/mode_retreat_generic.lua:1053'] =
-        'matches every recipe by prefix.',
+    { 'PROBE', 'item_recipe', 'bots/mode_retreat_generic.lua', 'b0f17d70', 1053,
+        'matches every recipe by prefix.' },
     -- 807 -> 813 (strategy 2026-08-26T1x:xxZ, gated `bbshort`, GH #222): same
     -- 6-line comment as the lookup pin above; see that note.
     -- 803 -> 807 (director 2026-08-26T15:5xZ).  FIFTH instance of the shape the
@@ -334,8 +479,8 @@ local tRegistered = {
     -- pin above; see that note.
     -- 854 -> 867 (strategy 2026-09-02T00:xxZ): same +13 as the lookup pin
     -- above; see that note.
-    ['PROBE item_recipe_ bots/ability_item_usage_generic.lua:867'] =
-        'matches every recipe by prefix.',
+    { 'PROBE', 'item_recipe_', 'bots/ability_item_usage_generic.lua', '4f2eec73', 867,
+        'matches every recipe by prefix.' },
 }
 
 local function lua_files()
@@ -377,11 +522,18 @@ end
 -- this round fixed in the runner (a failure you cannot see until the slow thing
 -- ahead of it finishes), one level down.
 --
--- Reporting the two halves TOGETHER is the other half of the fix, and it is what
--- turns the message into a diagnosis.  A pin whose line moved shows up twice --
--- once as a NEW key at the new line, once as a VANISHED key at the old one --
--- and neither half says "this moved" on its own.  Side by side they do, so the
--- MOVED section below pairs them up and prints the two line numbers.
+-- Reporting the two halves TOGETHER used to be the other half of the fix: while
+-- the key carried a line number, a pin whose line moved showed up twice -- once
+-- as a NEW key at the new line, once as a VANISHED key at the old one -- and the
+-- MOVED section paired them up so the message read as a diagnosis rather than as
+-- two unrelated alarms.
+--   [director 2026-09-03, GH #442 item 4] THAT SECTION IS GONE, because the
+-- thing it diagnosed cannot happen any more: the key is content-anchored, so a
+-- pin whose line moved is now the SAME key, matched, and the drift is a LINE
+-- NOTE on a GREEN run.  Pairing NEW with GONE would today be a guess -- the only
+-- way one key becomes two is that the LINE ITSELF was rewritten, and a rewritten
+-- line is not the judged line.  Keeping the pairing would re-introduce, as a
+-- heuristic, exactly the silent absorption the anchor exists to prevent.
 -- TAGGED `[ratchet]` 2026-08-26 (director, GH #216) so the 开工 selfcheck's Lua
 -- leg discovers it.  It costs 0.64s and it is the file that sat red on main for
 -- ~3h on 08-25 and >5h on 08-26 with no gate saying so; the leg exists for
@@ -397,57 +549,94 @@ end
 -- tell a tag from a mention is a separate defect and is handed off, not patched
 -- here.
 tests['[ratchet] 3b. the tree\'s unknown item names are exactly the registered ones'] = function()
-local tSeen, tNew, tGone = {}, {}, {}
-for _, sPath in ipairs(tFiles) do
-    for _, tHit in ipairs(offences_in(sPath, read_file(sPath), tMacro)) do
-        local sKey = tHit[1] .. ' ' .. tHit[2] .. ' ' .. tHit[3]
-        tSeen[sKey] = true
-        if tRegistered[sKey] == nil then tNew[#tNew + 1] = sKey end
-    end
-end
+    local tReg, tRegDupe = build_registered(tRegisteredRows)
+    local tSeen, tTwin, tNew, tGone, tDrift = {}, {}, {}, {}, {}
 
-    for sKey in pairs(tRegistered) do
-        if tSeen[sKey] ~= true then tGone[#tGone + 1] = sKey end
-    end
-    table.sort(tNew)
-    table.sort(tGone)
-
-    -- `KIND name path:line` -> `KIND name path` (the part a line shift leaves
-    -- alone), so the two halves of one moved pin can find each other.
-    local function stem(sKey) return (sKey:gsub(':%d+$', '')) end
-    local tMoved, tNewOnly, tGoneOnly, tStem = {}, {}, {}, {}
-    for _, sKey in ipairs(tGone) do tStem[stem(sKey)] = sKey end
-    for _, sKey in ipairs(tNew) do
-        local sOld = tStem[stem(sKey)]
-        if sOld then
-            tMoved[#tMoved + 1] = sOld .. '  ->  ' .. sKey:match(':(%d+)$')
-            tStem[stem(sKey)] = nil
-        else
-            tNewOnly[#tNewOnly + 1] = sKey
+    for _, sPath in ipairs(tFiles) do
+        for _, tHit in ipairs(offences_in(sPath, read_file(sPath), tMacro)) do
+            local sKey = key_of(tHit)
+            if tSeen[sKey] ~= nil then
+                -- Two findings, one key.  NOT quietly folded into one: that is
+                -- the exact trade a content key must not make.
+                tTwin[#tTwin + 1] = sKey .. '   (lines ' .. tSeen[sKey].line
+                    .. ' and ' .. tHit.line .. ')'
+            else
+                tSeen[sKey] = tHit
+                if tReg[sKey] == nil then
+                    tNew[#tNew + 1] = sKey .. '   at ' .. tHit.path .. ':' .. tHit.line
+                end
+            end
         end
     end
-    for _, sKey in ipairs(tGone) do
-        if tStem[stem(sKey)] == sKey then tGoneOnly[#tGoneOnly + 1] = sKey end
+
+    for sKey, tRow in pairs(tReg) do
+        local tHit = tSeen[sKey]
+        if tHit == nil then
+            tGone[#tGone + 1] = sKey .. '   (last seen at :' .. tostring(tRow.line) .. ')'
+        elseif tHit.line ~= tRow.line then
+            tDrift[#tDrift + 1] = sKey .. '   :' .. tostring(tRow.line)
+                .. ' -> :' .. tHit.line
+        end
+    end
+    table.sort(tNew); table.sort(tGone); table.sort(tTwin); table.sort(tDrift)
+
+    -- LINE NOTE is INFORMATIONAL and prints on a GREEN run.  It is the whole
+    -- point of the change: `line_last_seen` is "where to look", so a drifted
+    -- one is a stale directory entry, not a broken judgement.  Printed rather
+    -- than swallowed because a number nobody ever refreshes rots into a lie --
+    -- refresh it at leisure, in any round, without the tree being red.
+    if #tDrift > 0 then
+        io.stdout:write('\nLINE NOTE (', #tDrift, ' registered site(s) drifted; ',
+            'the key still matches, nothing is wrong -- refresh line_last_seen ',
+            'when convenient):\n  ', table.concat(tDrift, '\n  '), '\n')
+        io.stdout:flush()
     end
 
     local tMsg = {}
-    if #tMoved > 0 then
-        tMsg[#tMsg + 1] = #tMoved .. ' MOVED (same kind+name+file, new line -- '
-            .. 'an edit above the site pushed the pin out; update the line '
-            .. 'number here):\n  ' .. table.concat(tMoved, '\n  ')
+    if #tRegDupe > 0 then
+        tMsg[#tMsg + 1] = #tRegDupe .. ' AMBIGUOUS ANCHOR: judged row written '
+            .. 'twice (two registration rows share one key, so the note that '
+            .. 'applies cannot be named):\n  ' .. table.concat(tRegDupe, '\n  ')
     end
-    if #tNewOnly > 0 then
-        tMsg[#tMsg + 1] = #tNewOnly .. ' NEW unknown item name(s).  Either the '
-            .. 'name is a typo (fix it) or the patch renamed the item (fix the '
-            .. 'name and regenerate tests/mock/item_names.lua):\n  '
-            .. table.concat(tNewOnly, '\n  ')
+    if #tTwin > 0 then
+        tMsg[#tMsg + 1] = #tTwin .. ' AMBIGUOUS ANCHOR: two findings, one key '
+            .. '(the same normalized line appears twice in one file, so a single '
+            .. 'registration cannot say which one it judged):\n  '
+            .. table.concat(tTwin, '\n  ')
     end
-    if #tGoneOnly > 0 then
-        tMsg[#tMsg + 1] = #tGoneOnly .. ' registered site(s) no longer present.  '
-            .. 'If repaired, delete the line here:\n  '
-            .. table.concat(tGoneOnly, '\n  ')
+    if #tNew > 0 then
+        tMsg[#tMsg + 1] = #tNew .. ' NEW unknown item name(s).  Either the '
+            .. 'name is a typo (fix it), the patch renamed the item (fix the '
+            .. 'name and regenerate tests/mock/item_names.lua), or the LINE was '
+            .. 'rewritten -- a rewritten line is an unjudged line, so re-read the '
+            .. 'note, then paste the key below into tRegisteredRows:\n  '
+            .. table.concat(tNew, '\n  ')
+    end
+    if #tGone > 0 then
+        tMsg[#tMsg + 1] = #tGone .. ' registered site(s) no longer present.  '
+            .. 'If repaired, delete the row here:\n  ' .. table.concat(tGone, '\n  ')
     end
     check(#tMsg == 0, table.concat(tMsg, '\n'))
+end
+
+-- RE-ANCHORING AID.  `ITEM_CENSUS_ANCHORS=1 lua5.1 tests/run_tests.lua item_name_census`
+-- prints every live finding as a ready-to-paste row.  It exists because the one
+-- honest cost of a content key is that a human cannot compute it by looking:
+-- when a pinned LINE really is rewritten, the repair must not be "guess the
+-- digest".  It reports, it never edits, and it changes no exit code.
+if os.getenv('ITEM_CENSUS_ANCHORS') then
+    local tRows = {}
+    for _, sPath in ipairs(tFiles) do
+        for _, tHit in ipairs(offences_in(sPath, read_file(sPath), tMacro)) do
+            tRows[#tRows + 1] = string.format(
+                "    { '%s', '%s', '%s', '%s', %d,\n        '...' },",
+                tHit.kind, tHit.name, tHit.path, tHit.anchor, tHit.line)
+        end
+    end
+    table.sort(tRows)
+    io.stdout:write('\n-- ITEM_CENSUS_ANCHORS: ', #tRows,
+        ' live finding(s) on this tree --\n', table.concat(tRows, '\n'), '\n')
+    io.stdout:flush()
 end
 
 return tests
