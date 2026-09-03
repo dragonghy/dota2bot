@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--85. **全树还有 46 个「声明了没人读」的数字常量,而它们不是 46 笔杂账,是**一个模板的残留**(GH #ISSUE_DEADCONST)。**
+-85. **全树还有 46 个「声明了没人读」的数字常量,而它们不是 46 笔杂账,是**一个模板的残留**(GH #463)。**
    2026-09-03T19:51Z 那轮把焦点五英雄的 5 个删干净(**5 → 0**,可证 no-op),并把这一类
    做成常设普查 `tests/test_dead_numeric_local_census.lua`(焦点五强制 0,全树 `<= 46` 单调棘轮)。
    报告 `iterations/reports/hero/20260903T195122Z.md`。
@@ -4011,7 +4011,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     那条策略本身不错(1xx 抓 typo 和漏写 local),但这一类因此**一次都没被数过**。
   - **⭐ 全树 46 个不是 46 笔杂账,是一个模板的残留**:**18 个 `local nRadius = 600` +
     17 个 `local nDamage = 0` = 35/46(76%)**,分布在 17 个英雄文件的 `ConsiderQ/W/E/R`。
-    **登记不修**(GH #ISSUE_DEADCONST):那 128 个文件不是本组作用域,与 `-84` 的 27 站点同理。
+    **登记不修**(GH #463):那 128 个文件不是本组作用域,与 `-84` 的 27 站点同理。
   - **⚠️ 进场假设被 KV 快照翻过来了,记一笔**:我原以为 `X.ConsiderE` 的
     `600 + nSkillLV * 100` 是编的、`nJumpDistance = 450` 才是真几何。**正好相反** ——
     前者与 `zuus_heavenly_jump/range` 的 700/800/900/1000 **逐字相同**(落地冲击波搜敌半径,
@@ -4029,7 +4029,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (`test_wave_gate_keys.py` = GH #462;`test_mutstand_restore_trap.py` 唯一一条
     `mutstand_fixture_debt.sh traps a function that exists (rm)`,**没有 issue**)。
     静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
-  - **交出去的棒**:(1) 全树 46 站点 + 模板根因 → GH #ISSUE_DEADCONST,球在**总监**
+  - **交出去的棒**:(1) 全树 46 站点 + 模板根因 → GH #463,球在**总监**
     (要不要授权本组或别人按「模板残留」一次性接);(2) `mutstand_fixture_debt.sh` 的
     trap 陷了 `rm` 而不是函数 → 球在**总监 / 该变异台作者**;(3) `hero_zuus.lua:596` 的
     `aetherRange = 250` 是同族但在本普查域外(赋值不是声明),归 GH #459 / backlog `-84`。
