@@ -369,16 +369,185 @@
     "market": "on-demand",
     "lifecycle": "InstanceLifecycle = None, read off describe-instances (an evidence source independent of this session's transcript). None = on-demand; the run_id's spot_ prefix is a hard-coded string and is not evidence.",
     "launched_at": "2026-09-03T12:19:25Z",
-    "status_code": "PENDING -- an on-demand machine has NO SIR, so its only code is EC2 StateReason.Code, readable for ~1h after termination (GH #427). Expected self-destruct ~13:1x-13:2xZ; the next round MUST read it inside that window.",
+    "status_code": "LOST -- NOT READ. The GH #427 1h StateReason window closed before this round could open. Measured, not assumed: describe-instances on i-07d6358854ccda217 at 15:15:5xZ returned [] (exit 0), and a full pending/running/shutting-down/terminated/stopping/stopped census also returned []. An on-demand machine has NO SIR, so unlike W42's four spot machines there is no second source: this code is gone permanently. STRUCTURAL, not a miss: the machine self-destructed ~13:15Z, so the window shut ~14:15Z, and this Routine's own cadence put the next session at 15:15Z. A 2h-cadence Routine can NEVER read a 1h window on a machine that self-destructs mid-cycle -- this is the previous round's handoff item (5) coming true one round later, and it upgrades GH #427/#271 from 'easy to miss' to 'unreadable by construction for on-demand re-runs'.",
     "expected_self_destruct": "~13:1x-13:2xZ at the measured survivor rate (0.932 h/machine); watchdog hard stop 14:19Z",
-    "cost_estimate": "~1 machine x ~0.93 h x $0.673/h = ~$0.63"
+    "cost_estimate": "~1 machine x ~0.93 h x $0.673/h = ~$0.63",
+    "survival_min": 52.25,
+    "survival_bound": "lower",
+    "survival_provenance": "last S3 object LastModified under soak/<run_id>/ (2026-09-03 13:11:40Z) minus launched_at (2026-09-03T12:19:25Z) = 52.25 min. This is the route W41's harvest documented. Previous round measured this route's tightness on W42's three normal self-destructs: short by 3.19/3.28/3.65 min => true survival here is ~55.4-55.9 min, consistent with a normal watchdog-free self-destruct (NOT a reclaim). Note the same round also measured that on a RECLAIMED machine this route flips sign (+1.17 min vs SIR); that caveat does not apply here because this machine was on-demand and was not reclaimed.",
+    "ab": 44,
+    "ba": 18,
+    "ab_games": 44,
+    "ba_games": 18,
+    "arm_depth": 25.55,
+    "games_uploaded": 58,
+    "upload_window": "2026-09-03 12:35:28Z .. 13:11:40Z (143 objects, 58 analysis.json)",
+    "outcome": "SUCCESS. Seed 3040 went from ab10/ba0 arm_depth 0.00 NO-PAIR (excluded) to ab44/ba18 arm_depth 25.55 SCORED. The 10 banked games from the reclaimed machine merged automatically via the seed stamp, exactly as pre-registered in banked_games_note.",
+    "cost_estimate_actual": "~0.87 h x $0.673/h = ~$0.59 (machine-hour side, from the 52.25 min lower bound + the 3.19-3.65 min measured tightness). NOT a billing-side reading: MTD $7.056 < $35 so CE was not called and this round did not spend that $0.01."
    }
   ],
-  "roll_call_after_launch": "12:2xZ: pending+running soak-run tags = EXACTLY one value, equal to rerun.machines[0].run_id; describe-volumes = 1 volume in-use, zero orphans; standing cost is the AMI only."
+  "roll_call_after_launch": "12:2xZ: pending+running soak-run tags = EXACTLY one value, equal to rerun.machines[0].run_id; describe-volumes = 1 volume in-use, zero orphans; standing cost is the AMI only.",
+  "harvest": {
+   "at": "2026-09-03T15:2x-15:4xZ",
+   "rv_exit": 0,
+   "note": "W42 is now a COMPLETE 4-seed wave. This supersedes the 3-seed reading in harvest above."
+  }
  },
  "_harvest_key_note": "machines[] carry BOTH ab_games/ba_games (human-readable, matching the report table) and ab/ba (the exact key names reclaim_blind.py reads). The first attempt this round wrote only the _games spelling and reclaim_blind answered `UNDECIDABLE: seed 3040: missing leg count 'ab'` -> RB_EXIT=2. Registered because it is the same shape as the omission it was meant to fix: the GH #271 gate does not fail loudly, it fails as exit 2, and exit 2 is the code most easily misread as a pass.",
  "comments_filed": [
   "GH #449 pooling: the four numbers landed, decision still the director's -- issuecomment-5525795242",
   "GH #352 winrate: pre-registered branch (a) fired on a clean seed-only replication -- issuecomment-5525801097"
- ]
+ ],
+ "harvest_4seed_after_rerun": {
+  "at": "2026-09-03T15:3xZ",
+  "rv_exit": 0,
+  "input": {
+   "files_seen": 264,
+   "games_loaded": 264,
+   "source_dirs": 5,
+   "unparseable": 0,
+   "source_dirs_note": "W42's four run dirs plus the re-run's own dir, each in its OWN subdirectory (GH #225 pooling form). 3040 and 3040r are separate dirs, so neither R1 nor R2 could fire; both exits were clean."
+  },
+  "scored_games": 234,
+  "unfinished": 0,
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "seeds_scored": 4,
+  "seeds_delivered_of_launched": "4 of 4 (after the GH #408 re-run)",
+  "mean": {
+   "gpm": -29.66,
+   "xpm": -16.15,
+   "deaths": 0.21,
+   "last_hits": -1.44
+  },
+  "comps_better": {
+   "gpm": "1/4",
+   "xpm": "1/4",
+   "deaths": "1/4",
+   "last_hits": "2/4"
+  },
+  "per_seed_gpm": {
+   "3040": -61.18,
+   "3101": -69.45,
+   "3117": -8.42,
+   "3204": 20.41
+  },
+  "per_seed_depth": {
+   "3040": 25.55,
+   "3101": 27.43,
+   "3117": 24.03,
+   "3204": 26.79
+  },
+  "strata": {
+   "gpm": {
+    "ab": 11.44,
+    "ba": -70.77,
+    "side": 41.11,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   },
+   "xpm": {
+    "ab": -2.71,
+    "ba": -29.59,
+    "side": 13.44,
+    "sign_flip": false,
+    "side_gt_arm": "3/4"
+   },
+   "deaths": {
+    "ab": -0.99,
+    "ba": 1.4,
+    "side": -1.19,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   },
+   "last_hits": {
+    "ab": 5.42,
+    "ba": -8.29,
+    "side": 6.86,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   }
+  },
+  "strata_note": "Tool-printed, NOT hand-computed (rule 4(i-d)). gpm sign_flip flipped from false (3-seed) to true (4-seed) when 3040 landed. Per 4(i-c) that is an IDENTITY on a side-bias-cancelled estimator (|side| > |arm|), registered but NOT a diagnosis and NOT a reason to discount the reading.",
+  "seed_3040_leg_asymmetry": "REGISTERED, and it is the one number in this wave that is an artefact of the repair: 3040's gpm_ab is +153.75 and gpm_ba is -276.11. Its ab leg is a MIXTURE of 10 games from the reclaimed machine and the re-run's games, whereas the other three seeds' legs each come from one machine. arm_depth 25.55 clears the #269 gate honestly, but a per-seed reading assembled from two machines is not the same object as one assembled from one. Handed to the director, not ruled here.",
+  "winrate_channel": "DEGENERATE",
+  "winrate_minority_side_share": 0.0265,
+  "winrate_placeholder_note": "Tool banner copied verbatim: 'GH #352 winrate channel DEGENERATE: minority side won 7 of 264 finished games (share 0.0265 < 0.20). The winrate below is bounded to 0.5 +/- 0.0399 and MUST NOT be cited as rule 2(b) support until the channel recovers.' The re-run's 58 fresh games did NOT rescue the channel (0.0243 -> 0.0265).",
+  "winrate_independent_of_gold": "264/264 games",
+  "suggested": "hold_or_reject"
+ },
+ "pooled_W41_W42_8seed": {
+  "at": "2026-09-03T15:4xZ",
+  "rv_exit": 0,
+  "status": "REPORTED, NOT RULED. The pooling criterion itself is GH #449, in the director's hands. This is the 8th seed the previous round said was 'being bought by this round's re-run machine' -- it landed.",
+  "input": {
+   "files_seen": 487,
+   "games_loaded": 487,
+   "source_dirs": 9,
+   "unparseable": 0
+  },
+  "scored_games": 433,
+  "seeds_scored": 8,
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "method": "per-seed swap-average FIRST, then arithmetic mean across seeds. NEVER weighted by game count (rule 4(i-d)).",
+  "mean": {
+   "gpm": -24.75,
+   "xpm": -15.73,
+   "deaths": 0.24,
+   "last_hits": -1.49
+  },
+  "comps_better": {
+   "gpm": "2/8",
+   "xpm": "2/8",
+   "deaths": "2/8",
+   "last_hits": "3/8"
+  },
+  "per_seed_gpm": {
+   "3017": -7.18,
+   "3030": 75.21,
+   "3040": -61.18,
+   "3101": -69.45,
+   "3117": -8.42,
+   "3161": -32.6,
+   "3204": 20.41,
+   "3329": -114.77
+  },
+  "spread_note": "range 190 gpm (-114.77 .. +75.21), far above the sigma~30 single-seed noise floor. The desk does NOT read an effect size off this.",
+  "strata": {
+   "gpm": {
+    "ab": -24.02,
+    "ba": -25.47,
+    "side": 0.72,
+    "sign_flip": false,
+    "side_gt_arm": "7/8"
+   },
+   "xpm": {
+    "ab": -29.18,
+    "ba": -2.28,
+    "side": -13.45,
+    "sign_flip": false,
+    "side_gt_arm": "7/8"
+   },
+   "deaths": {
+    "ab": -0.16,
+    "ba": 0.65,
+    "side": -0.4,
+    "sign_flip": true,
+    "side_gt_arm": "7/8"
+   },
+   "last_hits": {
+    "ab": -2.76,
+    "ba": -0.21,
+    "side": -1.27,
+    "sign_flip": false,
+    "side_gt_arm": "6/8"
+   }
+  },
+  "supersedes": "the previous round's 7-seed pooled reading (gpm -19.54 / xpm -12.09 / deaths +0.21 / last_hits -1.14, 371 scored games). The 8th seed moved pooled gpm from -19.54 to -24.75.",
+  "winrate_channel": "DEGENERATE",
+  "winrate_minority_side_share": 0.0164,
+  "winrate_note": "Tool banner verbatim: 'minority side won 8 of 487 finished games (share 0.0164 < 0.20) ... bounded to 0.5 +/- 0.0237 and MUST NOT be cited as rule 2(b) support until the channel recovers.' POOLING MAKES IT WORSE, not better (0.0243 W42 / 0.0265 W42+rerun / 0.0164 pooled): more games of the same lopsided corpus deepens the sweep. Independent second confirmation of GH #352 branch (a) -- the seed-count axis is dead too, not just the seed-set axis.",
+  "suggested": "hold_or_reject"
+ }
 }
