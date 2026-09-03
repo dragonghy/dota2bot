@@ -10063,3 +10063,54 @@
     (`illumove_pairs:HP_CUT`、`wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`)⇒ 与本轮无关。
   - **Token 用量**:见报告 §9。
   - 完整报告:`iterations/reports/replay-check/20260903T095922Z.md`
+- **2026-09-03T13:02Z(接回 `slotarb` 的棒:域非空且侧别 4:1 对上,但腿间不可读——原因这次能指名)**:
+  W42 是新波次(57-id 家族第二波,树 `1baa449b…`,arm 串与 W41 逐字节相同,
+  **本轮自己重算 md5 `38423b79…` 与 `W42_wave.json` 逐位相同**,`slotarb` 在第 53 位)。
+  四 run 全宽扫 **78/78 局**(`sweep_run.sh` ×4 退出码全 0,`unparseable` 合计 0,
+  四路各自独立输出目录 + `--run <dir>:<manifest>` 绑定 ⇒ GH #444 构造上不可能发生)。
+  **宽扫 78/78;深查 1 局全帧还原 + 6 局钉帧核对。**
+  ⚠️ 3040 只有 2 局(被容量回收的那一粒,批测台按 `NO-PAIR` 排除计分);它的局
+  **进域读数、不进任何腿间比较**。12:19Z 的按需补跑机本轮未收(棒在批测台)。
+  - **交付**:新增 `tools/batch_test/behavioral/slotarb_domain.py`(只读离线;11 条源码事实
+    **运行时从树上读**,不转录;`--manifest` 按 run 绑定)+ `tests/test_slotarb_domain.py`。
+    `--selfcheck` **26 PASS / 0 FAIL**,测试 **12 checks / 0 failures**。
+  - **`VERIFY id=slotarb verdict=INDETERMINATE episodes=493`**。
+    **这不是「没测」**(上一轮 `roshdist` 的 `episodes=0` 才是),**是测了而分不开**。
+  - **⭐ 真正买到的那件东西:出厂缺陷的域非空,且侧别形状与源码算术预测吻合。**
+    STRICT 口径 lead=20s:**夜魇 41.1%**(1513 个 shipYES 决策里 622 个存在一个出厂扫描
+    **看不见**的更近队友)vs **天辉 12.4%** ≈ 3.3×;最紧的 `div_farm` 列(那个队友当场正在
+    与中立小兵互相造成伤害)**11.8% vs 2.3% ≈ 5.1×**。夜魇丢 4 槽 / 天辉丢 1 槽 ⇒ 预测 4:1。
+    **这条不依赖任何腿间比较**,因此不受下面那条闩问题影响。
+  - **⛔ 腿间读数不可用,原因可指名:`preferedCamp` 是文件级 local(`mode_farm_generic.lua:18`),
+    六个调用点一律 `if preferedCamp == nil then … ClosestCamp(…) end`** ⇒
+    **仲裁只在锁闩那一 tick 进入行为**,此后走多久都不再问。离线在 `t0−lead` 上重建的
+    瞬间**大概率不是被问的那一瞬间** ⇒ 「闸没咬」与「闸咬对了但闩早锁死」在 `.dem` 上是同一张表。
+    实测也正是这个形状:armed 的 `div_farm` 在**两侧都不低于** baseline(夜魇 12.3% vs 11.8%,
+    天辉 2.4% vs 2.3%),而 armed 按构造**只能拒绝**。
+  - **钉住的帧**:`20260903_101254_slot5` **t=850.1**(夜魇 = armed 腿):蛙营 `(−592.9, 4840.6)`,
+    SB(pid 5 = **槽 1,出厂扫描不到**)从 t=850.4 起持续清该营、血 1.00→0.40;
+    同一瞬间夜魇五人距该营 `SB 340 / DK 7730 / necro 2999 / luna 10500 / **CM(槽 5,出厂唯一可见)5590**`;
+    CM 从 t=844(7993u)一路走到 t=868(861u),**t=870.1 打出第一下,871.4 与 SB 同时打同一只怪**。
+  - **⛔ 本轮自己抓到一个仪器缺陷并登记**:第一版按 12s 交火间隔分组,把「蛙营 870–876 +
+    狼营 879.6 起」并成一个 episode(相距 ~3000u),营地取第一个 ⇒ 会对着一个「路过的营」评估决策。
+    **是看帧看出来的,不是聚合看出来的。** 修法 `split_by_camp`(900u)已双向钉进 selfcheck 与测试;
+    修前/修后两套数都写进报告(夜魇 44.1%→41.1%、armed 42.7%→40.0%,**结论形状一字未变**)。
+  - **下一棒(§7/§8)**:**协同组** —— 让仲裁周期性重问(可挂在 `:784` 那条 1s `_farm_repick_at`
+    心跳上),**既修行为**(§3 那种「走 5744u 抢队友清到一半的营」)**又顺带把这个 id 变成可观测的**,
+    修完本轮检测器一条命令即可重新买 (a);**总监** —— 在此之前 `slotarb` 按 INDETERMINATE 登记,
+    **不按「已核验」推 promote,也不按 SILENT 退回**。
+  - **下一轮第一件事**:(1) 查本轮 [strategy] issue 的回音,若仲裁改成周期重评则**立刻重跑
+    `slotarb_domain.py` 重新买 (a)**;(2) 查 #450 回音(圆心若已修,`roshdist` 同样立刻重测);
+    (3) 查 #444/#445/#440/#436/#433/#430 回音;(4) 盯下一个阵容里有 Axe 的波次。
+  - **欠账**:78 局 timeline 随容器回收(重扫命令见报告 §0);`div_wide/div_tight/div_farm`
+    三列都是**上界**(LIMIT 1,Farm 模式不可观测);3040 补跑机的局未进本轮语料。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×4 **全 0**;
+    `slotarb_domain.py --selfcheck` **0**(26/0);`tests/test_slotarb_domain.py` **0**(12/0);
+    真语料 **0**。**未改 `bots/`/`game/` 任何一行 ⇒ 不声称 Lua 全量(GH #124)。**
+    自检 **`SELFCHECK_BARE_EXIT=3`**,`legs run: 9`,`FINDINGS: cadence trunk-red(python)`,
+    `UNCERTIFIABLE: none`(但 `sc.log:106-107` 又点名两条 ⇒ **GH #420 原样复发第九轮**);
+    python trunk red 的失败集**与前两轮逐字相同**(`illumove_pairs:HP_CUT`、
+    `wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`),且**自检早于本轮任何新文件存在**⇒ 与本轮无关。
+    ⛔ **证据纪律 3 第十九次踩**:本轮第一条命令又写了管道,脚本当场自拒(exit 2 不是通过)。
+  - **Token 用量**:见报告 §11。
+  - 完整报告:`iterations/reports/replay-check/20260903T130225Z.md`
