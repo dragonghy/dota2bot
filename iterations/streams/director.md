@@ -9200,7 +9200,24 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `#252`/`#256`/`#282`/`#295`;**`§24` 未并入 `#229`**;**`§CE` 已挂三十三轮**;backlog §19/§20/§21;
   `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#271`;§CY 三条 + §CV 两条待收割;**GH #384 的自检腿序那半**;
   **GH #412 仍只做一半**;`#433`/`#432`/`#430`/`#429`/`#428`;**#408 第九次被容量咬仍零评论未裁**;**GH #420 的关闭**。
-  **下次触发**:①**`chain_member_census` 的键形状**(内容锚 + 冲突必红断言 + 变异台,一个完整单元)
+  **⑦ 收尾回填**:push 路径第一次 `HEAD:main` 被拒(录像组 00:52Z 先落地),
+  `git pull --rebase origin main` 后重推成功 **`e641cee4..846fb455`**;⚠️ **rebase 之后重跑了一次
+  `test_chain_member_census.py`(`RC_EXIT=0`)再推** —— 理由正是 ③ 的缺陷本身(incoming 若碰
+  `bots/` 或 `test_set.md`,行锚与 `§DT` 编号可能又被推走;**本次 incoming 只动 `iterations/`,没碰**)。
+  两次 push 的 pre-push 门各跑一次,均 **`GATE_EXIT=0 CLEAN`,未用 `RULE6_BYPASS`**。
+  **引用门(GH #290)**:push 前 `claim_precheck.sh` 裸读 **`RC_EXIT=3`** / `MISSING section test_set.md §DT`
+  (⭐ **它是对的**,那一节当时只在容器里);push 后重跑裸读 **`RC_EXIT=0`** / `refused 0` / `OK to publish`,
+  **发表动作全部排在这一读之后**。已发表:GH #422 追评 `issuecomment-5518929319`、
+  GH #426 追评 `issuecomment-5518935105`、**新开 `[harness] GH #442`**(行号做键的设计缺陷 ——
+  本轮修的是症状,病因原样留着;issue 带四条要求与一条裸读验收:**把那 10 行注释再插一遍,
+  工具裸读 exit 0**;LIMITS 里据实写了「`item_name_census.py` 的键是不是同一形状,我没有去核」)。
+  **本轮不改的两处**:`state.json` 未加新键(无 verdict / 无 promote / 无 reject);
+  `owed_executions.json` 未加行(GH #442 是**总监自己的**下一单元第一项,不是投递给别组的跨组常驻义务)。
+  **⑧ token(铁律 8)**:`TOKENS total_in=13,483,554 out=74,224 turns=91`。
+  归因据实:量级主要来自 `director.md`(931KB,只能分段读)与 `test_set.md` 的分段检索;
+  ⚠️ **与上一轮的自我批评相反,本轮没有重复跑自检**(只跑一次,后台等待不轮询),
+  `turns` 的大头是裁定所需的独立读数(wiring / carrier_terms / 两次 test 重跑 / 载体项离线计算 / 三格变异台)。
+  **下次触发**:①**`chain_member_census` 的键形状(GH #442)**(内容锚 + 冲突必红断言 + 变异台,一个完整单元)
   ②**自检 `RIDESHARE` 分类腿**(自陈搭车件不许落进 `OTHER`)③**裁 `strategy-39`**
   ④**GH #410 的带期限保守默认** ⑤**关闭 GH #420** / **`[bug] #436`** / GH #423 / #409
   ⑥**GH #285 第三十轮** / **patch 缺口 P3**。
