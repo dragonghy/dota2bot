@@ -62,10 +62,41 @@ KNOWN LIMITS (do not launder these away)
 * A duplicate operand is not automatically a BUG -- `CaptBot ~= nil and
   CaptBot ~= nil` in TypeScript-generated Lua is noise.  The tool reports; the
   reader judges, and the judgement is stored here.
+* ⭐ A judgement is anchored to the CHAIN TEXT (GH #442), so editing that chain
+  -- even in a way that leaves the duplicate standing -- retires the anchor and
+  the finding goes `*NEW*` again.  That is the intended direction: the sentence
+  the judgement argues about is the chain, so a changed chain is an unjudged
+  chain.  It is NOT insertion-proofing gone wrong; insertions elsewhere in the
+  file do not touch it.
+* One residual line-number dependence remains and is deliberate: `conditions()`
+  joins at most MAX_JOIN_LINES lines, so inserting enough lines INSIDE a
+  multi-line condition can move the `then` out of reach and change the joined
+  text.  That is a changed chain by this tool's definition, and it goes red.
+
+WHY THE KEY IS NOT A LINE NUMBER (GH #442)
+------------------------------------------
+It used to be `(relpath, condition_start_line, operand)`.  On 2026-09-02 commit
+`77e18be9` inserted TEN COMMENT LINES at `ability_item_usage_generic.lua:3406`;
+the judged polliwog duplicate slid from :8246 to :8256, stopped matching its
+key, printed `*NEW*`, and took four assertions red -- with nothing in `bots/`
+changed.  The same +10 re-anchored `item_name_census`'s pin the same night
+(`f00226b`).  Two tools, one insertion: that is the shape of the key, not bad
+luck.  The cost is worse than the noise: a ratchet whose whole purpose is "a
+NEW duplicate goes red the day it lands" teaches its readers to skip its red.
+
+The replacement key is `(relpath, operand, anchor)` where `anchor` is a short
+hash of the NORMALIZED CHAIN TEXT the duplicate sits in.  Insertions above it
+do not move it.  The failure mode a content key introduces -- a genuinely new
+duplicate silently absorbed into an existing judgement -- is closed by making
+ambiguity LOUD rather than by preferring the first match: two live findings
+under one key, or two judged rows under one key, print `AMBIGUOUS ANCHOR` and
+exit 3.  The line number is still recorded, but only as a place to look; when
+it drifts the tool prints `LINE NOTE` and stays green.
 """
 
 import argparse
 import collections
+import hashlib
 import os
 import re
 import sys
@@ -79,17 +110,20 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 #: like `i` or `n ~= 0`, and the chain is not an enumeration of members.
 MIN_OPERAND_CHARS = 7
 
-#: Detector A findings, keyed by (relpath, condition_start_line, operand_text).
-JUDGED_DUP = {
-    ("bots/BotLib/hero_dark_seer.lua", 417, "#nInRangeEnemy==0"):
+#: Detector A judgements.  One row is
+#: `(relpath, operand_text, chain_anchor, line_last_seen, why)`; the KEY is the
+#: first three (GH #442) and `line_last_seen` is navigation only.  Recompute an
+#: anchor with `--anchors`.
+_JUDGED_DUP_ROWS = [
+    ("bots/BotLib/hero_dark_seer.lua", "#nInRangeEnemy==0", "91a07320", 417,
         "GH #434 DROPPED-MEMBER.  The third guard in the chain reads "
         "`nEnemyTowers ~= nil and #nInRangeEnemy == 0`; its two siblings each "
         "pair their own guard with their own count, so the intended operand is "
         "`#nEnemyTowers == 0` and the enemy-tower check is absent.  Detector B "
         "names the same line from the other side.  REGISTERED, NOT REPAIRED: "
         "dark_seer has corpus 0 (corpus_hero_census.py --hero dark_seer => "
-        "DOMAIN-EMPTY, exit 3), so condition (a) cannot be bought.",
-    ("bots/BotLib/hero_kunkka.lua", 277, "Combo2Time~=0"):
+        "DOMAIN-EMPTY, exit 3), so condition (a) cannot be bought."),
+    ("bots/BotLib/hero_kunkka.lua", "Combo2Time~=0", "226746e3", 277,
         "GH #434 DROPPED-MEMBER.  The combo-in-progress guard tests "
         "Combo1/Combo2/Combo2.  The same file enumerates all THREE combo "
         "timers COMPLETE four times over -- declarations :226-228, the cast "
@@ -98,8 +132,9 @@ JUDGED_DUP = {
         "operand is `Combo3Time ~= 0`.  A running combo 3 therefore does not "
         "stop a new combo from being queued on top of it.  REGISTERED, NOT "
         "REPAIRED: kunkka has corpus 0 (DOMAIN-EMPTY), so condition (a) cannot "
-        "be bought.",
-    ("bots/BotLib/hero_hoodwink.lua", 278, "J.HasItem(bot,'item_mjollnir')"):
+        "be bought."),
+    ("bots/BotLib/hero_hoodwink.lua", "J.HasItem(bot,'item_mjollnir')",
+     "54e8cad0", 278,
         "GH #434 DROPPED-MEMBER, repair direction UNDETERMINED.  The acorn-shot "
         "push gate reads `(HasItem(maelstrom) or HasItem(mjollnir) or "
         "HasItem(mjollnir))`; a literal repeat inside a disjunction of "
@@ -110,8 +145,8 @@ JUDGED_DUP = {
         "maelstrom upgrade path itself offers item_gungir (which this repo does "
         "buy).  Three witnesses, three different completions.  REGISTERED, NOT "
         "REPAIRED, and it would stay unrepaired even with a corpus: hoodwink "
-        "has corpus 0 AND sits on the WeakHeroes throttle list.",
-    ("bots/BotLib/hero_snapfire.lua", 672, "#nTargetInRangeAlly>=1"):
+        "has corpus 0 AND sits on the WeakHeroes throttle list."),
+    ("bots/BotLib/hero_snapfire.lua", "#nTargetInRangeAlly>=1", "8de0a0c7", 672,
         "GH #434 DROPPED-MEMBER, and its witness is the chain itself.  The "
         "guard reads `(#nTargetInRangeAlly >= 1 and #nTargetInRangeAlly >= 1) "
         "or #nTargetInRangeAlly == 0`, which over a table length is `x >= 1 or "
@@ -120,33 +155,37 @@ JUDGED_DUP = {
         "named one line up: :666-667 declare `nInRangeAlly` beside "
         "`nTargetInRangeAlly` and :669 guards BOTH, so the intended first "
         "operand is `#nInRangeAlly >= 1`.  REGISTERED, NOT REPAIRED: snapfire "
-        "has corpus 0 (DOMAIN-EMPTY).",
-    ("bots/BotLib/hero_disruptor.lua", 378, "J.CanCastOnNonMagicImmune(enemyHero)"):
+        "has corpus 0 (DOMAIN-EMPTY)."),
+    ("bots/BotLib/hero_disruptor.lua", "J.CanCastOnNonMagicImmune(enemyHero)",
+     "3e0318d4", 378,
         "IDEMPOTENT.  Same predicate, same argument, no sibling enumeration in "
-        "the chain -- re-testing it changes nothing.",
-    ("bots/BotLib/hero_ember_spirit.lua", 529, "nInRangeAlly~=nil"):
+        "the chain -- re-testing it changes nothing."),
+    ("bots/BotLib/hero_ember_spirit.lua", "nInRangeAlly~=nil", "287cfad0", 529,
         "IDEMPOTENT.  `nInRangeAlly` IS substantively read later in the same "
-        "chain, so this is a repeated guard, not a lost member.",
-    ("bots/BotLib/hero_tiny.lua", 729, "J.IsValidTarget(botTarget)"):
-        "IDEMPOTENT.  Same predicate, same argument.",
-    ("bots/FunLib/captain_mode.lua", 97, "CaptBot~=nil"):
+        "chain, so this is a repeated guard, not a lost member."),
+    ("bots/BotLib/hero_tiny.lua", "J.IsValidTarget(botTarget)", "02aa798f", 729,
+        "IDEMPOTENT.  Same predicate, same argument."),
+    ("bots/FunLib/captain_mode.lua", "CaptBot~=nil", "86d2bd7e", 97,
         "IDEMPOTENT.  TypeScript-generated Lua (`typescript/` is dev-only and "
-        "not the Workshop deliverable); the emitter doubled the null check.",
-    ("bots/FunLib/rubick_hero/crystal_maiden.lua", 735, "notJ.IsRealInvisible(bot)"):
+        "not the Workshop deliverable); the emitter doubled the null check."),
+    ("bots/FunLib/rubick_hero/crystal_maiden.lua", "notJ.IsRealInvisible(bot)",
+     "c5cb9de1", 735,
         "IDEMPOTENT.  The rubick twin of CM's clone logic; the shipped "
         "`hero_crystal_maiden.lua` was rewritten by this project and does not "
-        "share this chain, so there is no sibling that names a lost member.",
-    ("bots/ability_item_usage_generic.lua", 3189, "J.CanCastOnNonMagicImmune(npcEnemy)"):
+        "share this chain, so there is no sibling that names a lost member."),
+    ("bots/ability_item_usage_generic.lua",
+     "J.CanCastOnNonMagicImmune(npcEnemy)", "b6e7e7da", 3189,
         "IDEMPOTENT.  Same predicate, same argument, inside the hurricane-pike "
-        "loop.",
-    ("bots/mode_team_roam_generic.lua", 1058, "notJ.IsRoshan(nEnemysCreeps[1])"):
-        "IDEMPOTENT.  Same predicate, same subscript.",
-    # LINE ANCHOR, 2026-09-03 (director): re-anchored 8246 -> 8256 after
-    # commit 77e18be9 inserted 10 comment lines at :3406.  See the
-    # LINE-ANCHOR DRIFT hint below -- the key shape is the open defect, this
-    # number is only the symptom.
-    ("bots/ability_item_usage_generic.lua", 8256,
-     'notallyHero:HasModifier("modifier_juggernaut_healing_ward_heal")'):
+        "loop."),
+    ("bots/mode_team_roam_generic.lua", "notJ.IsRoshan(nEnemysCreeps[1])",
+     "c16e3513", 1058,
+        "IDEMPOTENT.  Same predicate, same subscript."),
+    # ⭐ THE ROW GH #442 WAS OPENED FOR.  `line_last_seen` moved 8246 -> 8256 on
+    # 2026-09-02 (ten COMMENT lines inserted at :3406) and the row is now keyed
+    # by the chain text instead, so that shift is a `LINE NOTE`, not a red.
+    ("bots/ability_item_usage_generic.lua",
+     'notallyHero:HasModifier("modifier_juggernaut_healing_ward_heal")',
+     "1585a9b8", 8256,
         "IDEMPOTENT.  The polliwog-charm heal filter repeats one member of the "
         "already-being-healed set.  It LOOKS like the dropped-member shape and "
         "is not: the repo's only sibling enumeration of that set "
@@ -155,40 +194,43 @@ JUDGED_DUP = {
         "juggernaut_healing_ward_heal} and this chain already carries all four "
         "plus two more.  No sibling names a missing member, so nothing here "
         "says WHICH modifier the second copy should have been -- and inventing "
-        "one would be an ungated behaviour change on a guess.",
-}
+        "one would be an ungated behaviour change on a guess."),
+]
 
-def drift_hint(relpath, line, tail, judged):
-    """Print LINE-ANCHOR DRIFT when a *NEW* finding is a judged one that moved.
-
-    A judged entry is keyed (relpath, line, tail).  If this repo's only judged
-    entry with the SAME (relpath, tail) sits at a DIFFERENT line, then no new
-    duplicate was written -- somebody inserted lines above an old one, and the
-    anchor is stale.  Requiring uniqueness is what keeps this a hint and not a
-    second, weaker judgement: with two same-(file, tail) entries the tool
-    cannot say which one moved, so it says nothing.
-
-    This prints; it never changes `known`, `novel` or the exit code.  A stale
-    anchor stays red on purpose -- the anchor is what needs fixing.
-    """
-    same = [k for k in judged if k[0] == relpath and k[2] == tail]
-    if len(same) == 1 and same[0][1] != line:
-        print("               LINE-ANCHOR DRIFT?  a judged entry with this "
-              "exact (file, operand) is anchored at :%d, this finding is at "
-              ":%d.  If nothing was written here, an insertion ABOVE moved it "
-              "-- re-anchor the JUDGED_* key rather than judging it anew."
-              % (same[0][1], line))
-
-
-#: Detector B findings, keyed by (relpath, local_declaration_line, name).
-JUDGED_PARITY = {
-    ("bots/BotLib/hero_dark_seer.lua", 415, "nEnemyTowers"):
+#: Detector B judgements, same row shape: the key is
+#: `(relpath, local_name, init+chain anchor)`.
+_JUDGED_PARITY_ROWS = [
+    ("bots/BotLib/hero_dark_seer.lua", "nEnemyTowers", "db87fc39", 415,
         "GH #434 DROPPED-READ.  `bot:GetNearbyTowers(700, true)` is fetched, "
         "guarded at :419, and its count is never consulted; the two siblings "
         "in the same chain each carry their own count.  Invisible to "
         "write_only_local_census.py because the guard counts as a read.  "
-        "REGISTERED, NOT REPAIRED: dark_seer corpus 0.",
-}
+        "REGISTERED, NOT REPAIRED: dark_seer corpus 0."),
+]
+
+
+def build_judged(rows):
+    """`rows` -> ({key: why}, {key: line_last_seen}, [keys written twice]).
+
+    ⛔ The third return value is the whole point of not writing these tables as
+    dict literals.  A dict literal with two identical keys keeps the LAST one
+    and says nothing; that is exactly the silent-absorption failure a content
+    key could introduce, arriving through the front door.  Here it is collected
+    and printed as AMBIGUOUS ANCHOR, and it makes the tool exit 3.
+    """
+    table, lines, collisions = {}, {}, []
+    for relpath, tail, anchor_hex, line, why in rows:
+        key = (relpath, tail, anchor_hex)
+        if key in table:
+            collisions.append(key)
+        table[key] = why
+        lines[key] = line
+    return table, lines, collisions
+
+
+JUDGED_DUP, JUDGED_DUP_LINES, JUDGED_DUP_COLLISIONS = build_judged(_JUDGED_DUP_ROWS)
+JUDGED_PARITY, JUDGED_PARITY_LINES, JUDGED_PARITY_COLLISIONS = build_judged(
+    _JUDGED_PARITY_ROWS)
 
 COND_KW = re.compile(r"\b(if|elseif|while)\b")
 CUT_KW = re.compile(r"\b(then|do)\b")
@@ -250,6 +292,32 @@ def conditions(lines):
 
 def norm(text):
     return re.sub(r"\s+", "", text)
+
+
+def anchor(text):
+    """Short content anchor over normalized text (GH #442).
+
+    Eight hex digits, which is plenty: it is not a security hash and it is
+    scoped by (file, operand) already.  A collision inside one scope does not
+    silently pass either -- it lands in the AMBIGUOUS ANCHOR path with every
+    other two-findings-one-key case.
+    """
+    return hashlib.sha1(norm(text).encode("utf-8")).hexdigest()[:8]
+
+
+def dup_key(f):
+    """Detector A key: file + duplicated operand + the chain it sits in."""
+    return (f["file"], f["operand"], anchor(f["cond"]))
+
+
+def parity_key(f):
+    """Detector B key: file + local name + its initializer AND its chain.
+
+    The initializer alone is too weak (`bot:GetNearbyTowers(700, true)` is
+    written in several files and could be written twice in one), and the chain
+    alone would ignore which local the judgement is about.
+    """
+    return (f["file"], f["name"], anchor(f["init"] + "|" + f["cond"]))
 
 
 def guard_of(operand):
@@ -397,6 +465,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=None, help="corpus root (default: repo)")
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--anchors", action="store_true",
+                    help="print every finding's content key and exit 0 "
+                         "(how you re-anchor a row after editing a chain)")
     args = ap.parse_args()
 
     try:
@@ -405,16 +476,38 @@ def main():
         lua_corpus.uncertifiable(exc, "chain_member_census")
         return 2
 
-    # (director 2026-09-03, GH: line-anchor drift) A *NEW* finding and a
-    # judged finding whose anchor MOVED print the same `*NEW*`, and on
-    # 2026-09-02 that cost four red assertions with nothing wrong in bots/:
-    # commit 77e18be9 inserted 10 comment lines at :3406 of
-    # ability_item_usage_generic.lua, which pushed the judged polliwog
-    # duplicate from :8246 to :8256.  The same +10 shift re-anchored
-    # item_name_census the same night (f00226b) -- two tools, one insertion.
-    # This hint does NOT change the key or the exit code; it only lets the
-    # reader tell "somebody wrote a new duplicate" from "somebody wrote a
-    # comment above an old one".  The key shape itself is the open defect.
+    if args.anchors:
+        for f in sorted(dup, key=lambda x: (x["file"], x["line"])):
+            print("DUP     %s  %-14s  line %d  %s"
+                  % (dup_key(f) + (f["line"], f["operand"])))
+        for f in sorted(parity, key=lambda x: (x["file"], x["line"])):
+            print("PARITY  %s  %-14s  line %d  %s"
+                  % (parity_key(f) + (f["line"], f["name"])))
+        return 0
+
+    # AMBIGUOUS ANCHOR (GH #442).  Two findings under one key, or two judged
+    # rows under one key, mean a judgement cannot say WHICH site it judges.
+    # Preferring the first match here is the silent-absorption failure that a
+    # content key would otherwise buy in exchange for insertion-proofing: a
+    # genuinely new duplicate would inherit an old verdict and never print
+    # `*NEW*`.  So it is loud instead, and it is red.
+    ambiguous = []
+    for label, keys, collisions in (
+            ("judged row written twice (dup)", [], JUDGED_DUP_COLLISIONS),
+            ("judged row written twice (parity)", [], JUDGED_PARITY_COLLISIONS),
+            ("two findings, one key (dup)",
+             [dup_key(f) for f in dup], []),
+            ("two findings, one key (parity)",
+             [parity_key(f) for f in parity], [])):
+        for key, n in sorted(collections.Counter(keys).items()):
+            if n > 1:
+                ambiguous.append((label, key, n))
+        for key in collisions:
+            ambiguous.append((label, key, 2))
+    for label, key, n in ambiguous:
+        print("AMBIGUOUS ANCHOR  %s:%s [%s]  %s x%d  -- a judgement cannot "
+              "name WHICH site it judges; split the anchor (edit one chain or "
+              "widen the key), do not pick one." % (key + (label, n)))
 
     # Denominators first.  A zero reading and a scanner that reached nothing
     # print the same FINDINGS 0 unless the denominator is beside it (GH #329:
@@ -423,39 +516,75 @@ def main():
     print("SCANNED   locals with an initializer %d  (guard-only %d)"
           % (locals_seen, guard_only))
 
+    def line_note(key, line, lines_table):
+        """A judged row whose recorded line moved.  Navigation, never a red.
+
+        This is where the old key shape's four red assertions used to come
+        from.  It prints because a reader looking the site up wants the new
+        number; the row itself is still matched, because the key is the chain.
+        """
+        was = lines_table.get(key)
+        if was is not None and was != line:
+            print("               LINE NOTE  judged row records :%d, this "
+                  "finding is at :%d (insertion above; the key is the chain "
+                  "text, so this is not a finding)." % (was, line))
+
     novel = 0
     for f in sorted(dup, key=lambda x: (x["file"], x["line"], x["operand"])):
-        key = (f["file"], f["line"], f["operand"])
+        key = dup_key(f)
         known = key in JUDGED_DUP
         novel += 0 if known else 1
         print("DUP-OPERAND    %s:%d  [%s x%d]  %s%s" % (
             f["file"], f["line"], f["sep"], f["times"], f["operand"],
             "" if known else "   *NEW*"))
+        # LINE NOTE prints even under --quiet: it is a FACT about this run (a
+        # recorded line no longer matches), not the judgement prose --quiet is
+        # there to suppress, and it is the one line that tells a reader why a
+        # number they wrote down moved.
+        if known:
+            line_note(key, f["line"], JUDGED_DUP_LINES)
         if not args.quiet:
             print("               cond   %s" % f["cond"][:150])
             if known:
                 print("               judged: %s" % JUDGED_DUP[key])
             else:
-                drift_hint(f["file"], f["line"], f["operand"], JUDGED_DUP)
+                print("               anchor %s  (re-anchor a judged row with "
+                      "--anchors; a CHANGED CHAIN is meant to land here)"
+                      % key[2])
 
     for f in sorted(parity, key=lambda x: (x["file"], x["line"])):
-        key = (f["file"], f["line"], f["name"])
+        key = parity_key(f)
         known = key in JUDGED_PARITY
         novel += 0 if known else 1
-        if not known and not args.quiet:
-            drift_hint(f["file"], f["line"], f["name"], JUDGED_PARITY)
         print("PARITY-BREAK   %s:%d  %s = %s%s" % (
             f["file"], f["line"], f["name"], f["init"][:60],
             "" if known else "   *NEW*"))
+        if known:
+            line_note(key, f["line"], JUDGED_PARITY_LINES)
         if not args.quiet:
             print("               guarded at :%d, never read; siblings that DO "
                   "pair guard+read: %s" % (f["guard_line"], ", ".join(f["siblings"])))
             if known:
                 print("               judged: %s" % JUDGED_PARITY[key])
+            else:
+                print("               anchor %s  (--anchors)" % key[2])
+
+    # A judged row that matches nothing.  Informational on purpose: the honest
+    # reasons (the site was repaired, the chain was rewritten) are ordinary,
+    # and the dishonest one -- a rewrite that kept the duplicate -- already
+    # goes red from the *NEW* side in the same run.
+    for label, table, live in (("dup", JUDGED_DUP, {dup_key(f) for f in dup}),
+                               ("parity", JUDGED_PARITY,
+                                {parity_key(f) for f in parity})):
+        for key in sorted(set(table) - live):
+            print("STALE JUDGEMENT  %s  %s:%s [%s]  matches no finding today "
+                  "(informational; retire the row)" % ((label,) + key))
 
     total = len(dup) + len(parity)
-    print("FINDINGS  %d  (dup %d, parity %d; judged %d, new %d)"
-          % (total, len(dup), len(parity), total - novel, novel))
+    print("FINDINGS  %d  (dup %d, parity %d; judged %d, new %d; ambiguous %d)"
+          % (total, len(dup), len(parity), total - novel, novel, len(ambiguous)))
+    if ambiguous:
+        return 3
     if not total:
         return 0
     return 3 if novel else 0

@@ -112,6 +112,21 @@ def source_lines(rel):
         return fh.read().split("\n")
 
 
+def sole(indices, what):
+    """The ONE index a locator found, asserted unique (GH #442).
+
+    Section 0 used to name literal line numbers.  On 2026-09-02 ten inserted
+    COMMENT lines moved two of them and took this file red with nothing in
+    `bots/` changed.  A content locator says the same thing without the drift,
+    and requiring UNIQUENESS keeps it an assertion rather than a search: if a
+    second site with this shape ever lands, this goes red and names both,
+    instead of silently pinning whichever came first.
+    """
+    check("locator is unique -- %s" % what, len(indices) == 1,
+          "%d match(es) at line(s) %s" % (len(indices), [i + 1 for i in indices]))
+    return indices[0] if indices else 0
+
+
 def synthetic(body, name="probe.lua"):
     """Write `body` into a throwaway corpus root and scan it."""
     root = tempfile.mkdtemp(prefix="chainmember_")
@@ -128,78 +143,94 @@ cmc = load_tool()
 print("=== 0. premise: the shipped sites are written as claimed (source text) ===")
 
 ds = source_lines("bots/BotLib/hero_dark_seer.lua")
-check("dark_seer:415 fetches the enemy towers into a local",
-      "local nEnemyTowers = bot:GetNearbyTowers(700, true)" in ds[414],
-      ds[414].strip())
-check("dark_seer:417 pairs its OWN guard with its OWN count",
-      "nEnemyLaneCreeps ~= nil and #nEnemyLaneCreeps >= 3" in ds[416],
-      ds[416].strip())
-check("dark_seer:418 pairs its OWN guard with its OWN count",
-      "nInRangeEnemy ~= nil and #nInRangeEnemy == 0" in ds[417],
-      ds[417].strip())
-check("dark_seer:419 guards nEnemyTowers but counts nInRangeEnemy again",
-      "nEnemyTowers ~= nil and #nInRangeEnemy == 0" in ds[418],
-      ds[418].strip())
+dsi = sole([i for i, l in enumerate(ds)
+            if "local nEnemyTowers = bot:GetNearbyTowers(700, true)" in l],
+           "dark_seer fetches the enemy towers into a local")
+check("dark_seer:%d pairs its OWN guard with its OWN count" % (dsi + 3),
+      "nEnemyLaneCreeps ~= nil and #nEnemyLaneCreeps >= 3" in ds[dsi + 2],
+      ds[dsi + 2].strip())
+check("dark_seer:%d pairs its OWN guard with its OWN count" % (dsi + 4),
+      "nInRangeEnemy ~= nil and #nInRangeEnemy == 0" in ds[dsi + 3],
+      ds[dsi + 3].strip())
+check("dark_seer:%d guards nEnemyTowers but counts nInRangeEnemy again"
+      % (dsi + 5),
+      "nEnemyTowers ~= nil and #nInRangeEnemy == 0" in ds[dsi + 4],
+      ds[dsi + 4].strip())
 check("dark_seer: nEnemyTowers appears exactly twice in the whole file",
       sum(len(re.findall(r"(?<![\w.:])nEnemyTowers(?![\w])", l)) for l in ds) == 2,
       "declaration + its own guard, and nothing else")
 
 kk = source_lines("bots/BotLib/hero_kunkka.lua")
-check("kunkka:277-279 tests Combo1/Combo2/Combo2",
-      "Combo1Time ~= 0" in kk[276]
-      and "Combo2Time ~= 0" in kk[277]
-      and "Combo2Time ~= 0" in kk[278],
-      " | ".join(x.strip() for x in kk[276:279]))
-check("kunkka: the WITNESS -- :257-259 enumerates all three timers",
-      "Combo3Time ~= 0" in kk[256]
-      and "Combo1Time ~= 0" in kk[257]
-      and "Combo2Time ~= 0" in kk[258])
-for first in (238, 261, 271):
-    trio = kk[first - 1:first + 2]
-    check("kunkka: the WITNESS -- reset block at :%d clears all three" % first,
-          "Combo1Time = 0" in trio[0] and "Combo2Time = 0" in trio[1]
-          and "Combo3Time = 0" in trio[2],
-          " | ".join(x.strip() for x in trio))
+kki = sole([i for i in range(len(kk) - 2)
+            if "Combo1Time ~= 0" in kk[i] and "Combo2Time ~= 0" in kk[i + 1]
+            and "Combo2Time ~= 0" in kk[i + 2]],
+           "kunkka tests Combo1/Combo2/Combo2 exactly once")
+check("kunkka:%d-%d tests Combo1/Combo2/Combo2" % (kki + 1, kki + 3),
+      True, " | ".join(x.strip() for x in kk[kki:kki + 3]))
+kkw = sole([i for i in range(len(kk) - 2)
+            if "Combo3Time ~= 0" in kk[i] and "Combo1Time ~= 0" in kk[i + 1]
+            and "Combo2Time ~= 0" in kk[i + 2]],
+           "kunkka enumerates all three timers exactly once")
+check("kunkka: the WITNESS at :%d-%d enumerates all three timers"
+      % (kkw + 1, kkw + 3), kkw < kki,
+      "the complete enumeration sits ABOVE the defective one")
+trios = [i for i in range(len(kk) - 2)
+         if "Combo1Time = 0" in kk[i] and "Combo2Time = 0" in kk[i + 1]
+         and "Combo3Time = 0" in kk[i + 2]]
+check("kunkka: the WITNESS -- FOUR complete three-timer blocks (one "
+      "declaration, three resets)", len(trios) == 4,
+      str([i + 1 for i in trios]))
+check("kunkka: the first of them is the DECLARATION, the rest are resets",
+      trios and "local Combo1Time" in kk[trios[0]]
+      and all("local" not in kk[i] for i in trios[1:]),
+      " | ".join(kk[i].strip() for i in trios))
 check("kunkka: Combo3Time IS armed, so the missing member is reachable state",
-      "Combo3Time = DotaTime()" in kk[310], kk[310].strip())
+      any("Combo3Time = DotaTime()" in l for l in kk))
 
 HEALS = ("modifier_filler_heal", "modifier_elixer_healing",
          "modifier_flask_healing", "modifier_juggernaut_healing_ward_heal")
 aiug = source_lines("bots/ability_item_usage_generic.lua")
-check("aiug:8263-8264 really does repeat one heal modifier",
-      aiug[8262].strip() == aiug[8263].strip()
-      and "modifier_juggernaut_healing_ward_heal" in aiug[8262],
-      aiug[8262].strip())
-sibling = "\n".join(aiug[2362:2366])
-check("aiug: the sibling heal set at :2363-2366 is the FOUR-member one",
-      all(m in sibling for m in HEALS), sibling)
-polliwog = "\n".join(aiug[8255:8266])
+pw = sole([i for i in range(len(aiug) - 1)
+           if aiug[i].strip() == aiug[i + 1].strip()
+           and "modifier_juggernaut_healing_ward_heal" in aiug[i]],
+          "aiug repeats a heal modifier on two adjacent lines exactly once")
+check("aiug:%d-%d really does repeat one heal modifier" % (pw + 1, pw + 2),
+      True, aiug[pw].strip())
+four = [i for i in range(len(aiug) - 3)
+        if all(any(m in l for l in aiug[i:i + 4]) for m in HEALS)]
+check("aiug: a FOUR-member sibling heal set exists above the repeating chain",
+      four and four[0] < pw, str([i + 1 for i in four]))
+polliwog = "\n".join(aiug[pw - 7:pw + 4])
 check("aiug: the repeating chain ALREADY carries all four of them "
       "(so no sibling names a missing member)",
       all(m in polliwog for m in HEALS))
 
 hw = source_lines("bots/BotLib/hero_hoodwink.lua")
-check("hoodwink:279 repeats item_mjollnir inside a parenthesised or-chain",
-      hw[278].count("item_mjollnir") == 2 and "item_maelstrom" in hw[278],
-      hw[278].strip())
+hwi = sole([i for i, l in enumerate(hw) if l.count("item_mjollnir") == 2],
+           "hoodwink repeats item_mjollnir on exactly one line")
+check("hoodwink:%d repeats item_mjollnir inside a parenthesised or-chain"
+      % (hwi + 1), "item_maelstrom" in hw[hwi], hw[hwi].strip())
+aba = source_lines("bots/FunLib/aba_site.lua")
+adv = source_lines("bots/FunLib/advanced_item_strategy.lua")
 check("hoodwink: THREE sibling enumerations name THREE different completions, "
       "so the repair direction is undetermined",
-      "item_bfury" in source_lines("bots/FunLib/aba_site.lua")[681]
-      and "item_radiance" in source_lines("bots/FunLib/aba_site.lua")[681]
-      and "item_battlefury" in
-      source_lines("bots/FunLib/advanced_item_strategy.lua")[314])
+      any("item_bfury" in l and "item_radiance" in l for l in aba)
+      and any("item_battlefury" in l for l in adv))
 
 sf = source_lines("bots/BotLib/hero_snapfire.lua")
-check("snapfire:672 repeats #nTargetInRangeAlly >= 1 inside brackets",
-      sf[671].count("#nTargetInRangeAlly >= 1") == 2, sf[671].strip())
+sfi = sole([i for i, l in enumerate(sf)
+            if l.count("#nTargetInRangeAlly >= 1") == 2],
+           "snapfire repeats #nTargetInRangeAlly >= 1 on exactly one line")
 check("snapfire: the repeat makes the guard a TAUTOLOGY (x>=1 or x==0)",
-      "#nTargetInRangeAlly == 0" in sf[672], sf[672].strip())
-check("snapfire: the missing member is declared one line up and guarded "
+      "#nTargetInRangeAlly == 0" in sf[sfi + 1], sf[sfi + 1].strip())
+decl = [i for i in range(len(sf) - 1) if "local nInRangeAlly" in sf[i]
+        and "local nTargetInRangeAlly" in sf[i + 1]]
+near = [i for i in decl if i < sfi]
+check("snapfire: the missing member is declared just above and guarded "
       "beside its twin",
-      "local nInRangeAlly" in sf[665]
-      and "local nTargetInRangeAlly" in sf[666]
-      and "nInRangeAlly ~= nil and nTargetInRangeAlly ~= nil" in sf[668],
-      " | ".join(x.strip() for x in sf[665:669]))
+      near and any("nInRangeAlly ~= nil and nTargetInRangeAlly ~= nil" in l
+                   for l in sf[near[-1]:sfi]),
+      " | ".join(x.strip() for x in sf[near[-1]:near[-1] + 4]) if near else "")
 
 
 # ---------------------------------------------------------------- section 1
@@ -215,30 +246,59 @@ check("denominator: guard-only locals == 45", guard_only == 45, str(guard_only))
 check("duplicate operands == 12", len(dup) == 12, str(len(dup)))
 check("parity breaks == 1", len(parity) == 1, str(len(parity)))
 
-dup_keys = {(d["file"], d["line"], d["operand"]) for d in dup}
-par_keys = {(p["file"], p["line"], p["name"]) for p in parity}
+dup_keys = {cmc.dup_key(d) for d in dup}
+par_keys = {cmc.parity_key(p) for p in parity}
 check("every duplicate is judged (a NEW one goes red the day it lands)",
       dup_keys == set(cmc.JUDGED_DUP),
       str(dup_keys ^ set(cmc.JUDGED_DUP)))
 check("every parity break is judged", par_keys == set(cmc.JUDGED_PARITY),
       str(par_keys ^ set(cmc.JUDGED_PARITY)))
+# ⭐ GH #442: the key must not BE a line number, and every judged row must
+# still resolve to exactly one live finding -- that is the pair of properties
+# the old shape had one of.
+check("no judged key carries a line number (the anchor is 8 hex of the chain)",
+      all(isinstance(k[2], str) and re.fullmatch(r"[0-9a-f]{8}", k[2])
+          for k in list(cmc.JUDGED_DUP) + list(cmc.JUDGED_PARITY)),
+      str([k for k in cmc.JUDGED_DUP if not isinstance(k[2], str)]))
+check("no two judged rows share a key (a dict literal would have eaten one)",
+      cmc.JUDGED_DUP_COLLISIONS == [] and cmc.JUDGED_PARITY_COLLISIONS == [],
+      str(cmc.JUDGED_DUP_COLLISIONS + cmc.JUDGED_PARITY_COLLISIONS))
+check("no two live findings share a key either (each judgement names ONE site)",
+      len(dup_keys) == len(dup) and len(par_keys) == len(parity),
+      "%d keys for %d findings" % (len(dup_keys) + len(par_keys),
+                                   len(dup) + len(parity)))
+# The line numbers are still recorded, and they are still correct today.  They
+# are navigation: when one drifts the tool prints LINE NOTE and stays green.
+check("every judged row's recorded line matches the finding it names TODAY",
+      all(cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] == d["line"] for d in dup)
+      and all(cmc.JUDGED_PARITY_LINES[cmc.parity_key(p)] == p["line"]
+              for p in parity),
+      str([(cmc.dup_key(d), cmc.JUDGED_DUP_LINES[cmc.dup_key(d)], d["line"])
+           for d in dup if cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] != d["line"]]))
 
 dropped = [k for k, v in cmc.JUDGED_DUP.items() if v.startswith("GH #434 DROPPED")]
 check("exactly FOUR duplicates are judged dropped-member, eight idempotent",
       len(dropped) == 4 and len(cmc.JUDGED_DUP) - len(dropped) == 8,
       str(sorted(dropped)))
 check("the four dropped-member sites are dark_seer / hoodwink / kunkka / snapfire",
-      sorted(f for f, _l, _o in dropped) == [
+      sorted(f for f, _o, _a in dropped) == [
           "bots/BotLib/hero_dark_seer.lua", "bots/BotLib/hero_hoodwink.lua",
           "bots/BotLib/hero_kunkka.lua", "bots/BotLib/hero_snapfire.lua"],
       str(sorted(dropped)))
 # HALF the class hides one bracket down.  Assert it on the two real conditions:
 # splitting only the outermost level finds nothing there.
-for rel, line in (("bots/BotLib/hero_hoodwink.lua", 278),
-                  ("bots/BotLib/hero_snapfire.lua", 672)):
+for rel, operand in (("bots/BotLib/hero_hoodwink.lua",
+                      "J.HasItem(bot,'item_mjollnir')"),
+                     ("bots/BotLib/hero_snapfire.lua",
+                      "#nTargetInRangeAlly>=1")):
     body = "\n".join(source_lines(rel))
-    cond = next(c for s, _e, c in cmc.conditions(cmc.strip_comments(body))
-                if s == line)
+    # Located by the duplicate itself, not by a line number (GH #442).
+    hits = [(s, c) for s, _e, c in cmc.conditions(cmc.strip_comments(body))
+            if cmc.norm(c).count(operand) >= 2]
+    line, cond = hits[sole(list(range(len(hits))),
+                           "%s holds %s twice in one condition"
+                           % (os.path.basename(rel), operand))] if hits \
+        else (0, "")
     top = {sep: [cmc.norm(p) for p in cmc.split_top(cond, sep)]
            for sep in ("and", "or")}
     check("%s:%d has NO duplicate at the outermost level..." % (rel, line),
@@ -370,6 +430,59 @@ check("...and a bracket group with DISTINCT operands is still not reported",
       d == [], str(d))
 
 
+# ------------------------------------------------------- section 2b (GH #442)
+print("=== 2b. the KEY: insertion-proof, chain-sensitive, ambiguity-loud ===")
+
+dupey = """
+local X = {}
+function X.f(bot)
+    local nAlpha = bot:GetNearbyTowers(700, true)
+    if nAlpha ~= nil and #nAlpha == 0 and #nAlpha == 0 then return 1 end
+end
+return X
+"""
+d_before, _, _, _, _ = cmc.scan(synthetic(dupey))
+# The literal 2026-09-02 event: ten COMMENT lines above the site.
+shifted = ("-- c\n" * 10) + dupey
+d_after, _, _, _, _ = cmc.scan(synthetic(shifted))
+check("one duplicate before and after ten inserted comment lines",
+      len(d_before) == 1 and len(d_after) == 1,
+      "%d / %d" % (len(d_before), len(d_after)))
+check("⭐ the LINE moved by exactly ten -- this is the 2026-09-02 event",
+      d_after[0]["line"] - d_before[0]["line"] == 10,
+      "%d -> %d" % (d_before[0]["line"], d_after[0]["line"]))
+check("...and the KEY did not move (the old key shape lost the row here)",
+      cmc.dup_key(d_before[0]) == cmc.dup_key(d_after[0]),
+      "%s vs %s" % (cmc.dup_key(d_before[0]), cmc.dup_key(d_after[0])))
+
+# The other direction, and it is the one a content key must not get wrong: an
+# EDITED chain is an unjudged chain, so the anchor has to move with the text.
+edited = dupey.replace("nAlpha ~= nil and", "nAlpha ~= nil and bot:IsAlive() and")
+d_edit, _, _, _, _ = cmc.scan(synthetic(edited))
+check("editing the chain DOES move the anchor (a changed chain is unjudged)",
+      len(d_edit) == 1 and cmc.dup_key(d_edit[0]) != cmc.dup_key(d_before[0]),
+      str(cmc.dup_key(d_edit[0])))
+check("...and the operand and file components are unchanged, so only the "
+      "anchor carries the difference",
+      cmc.dup_key(d_edit[0])[:2] == cmc.dup_key(d_before[0])[:2])
+
+# Ambiguity, both sources.  Preferring the first match is the silent
+# absorption a content key would otherwise buy; the tool refuses instead.
+twin = dupey + dupey.replace("local X = {}", "").replace("return X", "")
+d_twin, _, _, _, _ = cmc.scan(synthetic(twin))
+check("two IDENTICAL chains in one file are two findings under ONE key",
+      len(d_twin) == 2
+      and len({cmc.dup_key(x) for x in d_twin}) == 1,
+      str([cmc.dup_key(x) for x in d_twin]))
+row = ("bots/probe.lua", "#nAlpha==0", "deadbeef", 4, "IDEMPOTENT.  probe.")
+table, lines_, collisions = cmc.build_judged([row, row])
+check("...and two judged rows under one key are COLLECTED, not silently "
+      "collapsed the way a dict literal would",
+      len(table) == 1 and collisions == [row[:3]], str(collisions))
+check("build_judged keeps the recorded line beside the key, out of it",
+      lines_[row[:3]] == 4 and len(list(table)[0]) == 3)
+
+
 # ---------------------------------------------------------------- section 3
 print("=== 3. domain price: measured, double-sided, and token-checked ===")
 
@@ -423,7 +536,7 @@ check("corpus_hero_census agrees: exit 3 == at least one DOMAIN-EMPTY subject",
 
 for key, why in list(cmc.JUDGED_DUP.items()) + list(cmc.JUDGED_PARITY.items()):
     if why.startswith("GH #434 DROPPED"):
-        check("%s:%d carries the not-repaired reason in its judgement"
+        check("%s [%s] carries the not-repaired reason in its judgement"
               % (key[0], key[1]), "NOT REPAIRED" in why)
 
 

@@ -9221,3 +9221,73 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②**自检 `RIDESHARE` 分类腿**(自陈搭车件不许落进 `OTHER`)③**裁 `strategy-39`**
   ④**GH #410 的带期限保守默认** ⑤**关闭 GH #420** / **`[bug] #436`** / GH #423 / #409
   ⑥**GH #285 第三十轮** / **patch 缺口 P3**。
+
+- 2026-09-03T04:12Z:一个工作单元,**把行号从判决表的键上摘掉(GH #442 第 1–3 条)**。
+  报告 `iterations/reports/director/20260903T041253Z.md`。
+  **本轮零 AWS 调用、零支出、零 S3、零 EC2;`bots/` 与 `game/` 逐字节零 diff**
+  (改动只在 `tools/agent/` 与 `tests/`)。
+  **⓪ 纪律 3 第二十五发,§22 守卫第二十次上场并第二十次拦下**(第一条命令仍是 `| tail`,
+  harness 同一行回报的 `EXIT=0` 正是守卫拒绝的那个东西)。干净重跑裸读:`EXIT=3` /
+  `legs run: 9` / `FINDINGS: cadence stale-waits trunk-red(python)` /
+  `UNCERTIFIABLE (exit 2): none` /
+  `NOT RUN (inside a leg): tests/test_rc_wrapper.py tests/test_selfcheck_lua_leg.py`;
+  两个锚点三条不变量全 OK;`unlanded` 无;`owed-executions` `registry rows: 0`;
+  Lua 快检 73 文件 0 failures。cadence 是两个**单发**的洞(hero 3.8h / strategy 4.0h,
+  阈值 3.5h),不升级。⭐ **本轮新出现的是 `stale-waits`**:`batch-desk.md:8991` 与
+  `replay-check.md:9827`/`:9838` 三行仍写着「等 `slotarb`/`slotdust` 裁定」,而两个 id
+  **已经 armed 在 `test_set.md` 第 2 行** ⇒ `test_stale_waits.py` 红。**没有为它建新机制**:
+  两个组每轮跑同一个自检,`STALE` 打的就是它们自己的文件名;**下轮若仍在,才是「腿在响没人动」并升级**。
+  python 红的另一条 `test_detector_source_constants.py` 是协同组 09-02T21:55Z 自己登记的,非本轮引入。
+  **① 主件:`chain_member_census.py` 的键 `(relpath, line, operand)` → `(relpath, operand, anchor)`**,
+  `anchor = sha1(norm(链文本))[:8]`。上方插入不动它;**改链会动它,而那是对的**——
+  判决论证的那句话就是那条链。判决表由 dict 字面量改成**行列表 + `build_judged()`**:
+  ⛔ 这不是风格,**dict 字面量遇同键会留下最后一个并且什么都不说**,那正是内容键可能引进来的
+  「静默吸收」从正门走进来的样子。`line_last_seen` 留在行里但**不在键里**,漂了打 `LINE NOTE`
+  (**连 `--quiet` 也打** —— 它是关于这次运行的事实,不是 `--quiet` 要压掉的判决散文),
+  不改 known/novel/退出码;新增 `--anchors` 用来重算锚。
+  **② 冲突必红**:两条判决行同键、或两条**活的发现**同键,都打 `AMBIGUOUS ANCHOR` 并 exit 3,
+  **不许静默取第一条** —— 这是把第 ① 条的残余漏报口子换成一次响亮的失败。
+  **③ 变异台 `tools/agent/mutstand_chain_key.sh` 六格**(要求三格),裸读 `RC_EXIT=0`,
+  `RESTORE ok (all 3 files byte-identical to the start)`,`trap restore EXIT` 排在首次 apply 之前、
+  退出 `sha256sum -c` 核验、**不用 `git checkout` 复原**:
+  M0 未变异 exit 0 / `judged 13, new 0; ambiguous 0`;**M1 逐字复现 09-02(在 `aiug:3406` 插 10 行注释)
+  ⇒ exit 0 + `LINE NOTE`、无 `*NEW*` —— 这就是 issue 的验收句**;
+  **M1b 同一棵变异树交给 `git show HEAD:` 的修复前工具 ⇒ exit 3**;
+  M2 货真价实的新重复 ⇒ exit 3 + `*NEW*` + **0 条 ambiguous**;
+  M3 两条判决行同键 ⇒ `AMBIGUOUS ANCHOR … judged row written twice` + exit 3;
+  M4 两条活发现同键 ⇒ `AMBIGUOUS ANCHOR … two findings, one key` + exit 3。
+  ⭐ **M2 是值钱的那格**:M1/M1b 只证明「能不红」,**M2 证明该红时还红** —— 只做第 ① 条
+  等于把误报换成漏报,**而漏报在贵的那一侧**。⭐ **M1b 是这台的自证**;本次落地后 HEAD 就是修复版,
+  它会自己打 `SKIPPED (…) — this is a SKIP, not a pass` 并说明该跟哪个 commit 比。
+  **④ 测试的行锚一并摘掉**(09-02 那四条红里**有两条是测试自己的行锚**):
+  `tests/test_chain_member_census.py` section 0 全改成**内容定位 + 相对偏移**,新增 `sole()` ——
+  **定位器必须唯一**,否则自己红并打出全部命中行号(把「只有一个这种站点」也变成断言,
+  而不是把断言放松成搜索);新增 section 2b 四组钉新语义。裸读 `RC_EXIT=0` / `all checks passed`。
+  **⑤ GH #442 第 4 条:据实登记为未做,并带回一条比 issue 假设更硬的事实。**
+  issue 的 LIMITS 说「没去核 `item_name_census.py` 的键是不是同一形状」——**本轮去核了**:
+  ⛔ **根本不在那个 .py 里**(它没有行号键),在 **`tests/test_item_name_census.lua` 的 `tRegistered`**,
+  键是字符串 `'<KIND> <name> <path>:<line>'`(生成处 `:130`)。⭐ **而且它贵得多、还是可数的:
+  11 个 pin、文件里逐条记着 14 次重锚(08-26 → 09-02)。本轮修的这个工具被这个形状咬过一次;
+  那个文件被咬了十四次。** 没顺手做的理由是它要的是同规格的完整第二份(改键的生成处 + 冲突必红 +
+  变异台),不是尾巴 ⇒ **GH #442 不关闭,收窄到第 4 条,列为下一单元第一项**,并在 issue 追评交棒。
+  **⑥ 铁律 6**:`luacheck_gate.sh` **裸读 `GATE_EXIT=0 CLEAN` / 0 警告,未用 `RULE6_BYPASS`**;
+  **`bots/`+`game/` 零 diff ⇒ 全量 Lua 套件未跑也不声称**(GH #124)。
+  python 套件**整跑**裸读 `RC_EXIT=1` / **`78 passed, 2 failed, 1 uncertifiable`**,
+  红的两个 `test_detector_source_constants.py` + `test_stale_waits.py` **与开工自检改动前读到的是同一对,
+  都不是本轮引入**(自检那次 `77/2/2`,差额是有界腿的抖动)。
+  **⑦ 成本**:零调用;九月 MTD **照抄**批测台 09-02T21:20Z 自报 **$5.612**(无更新自报可抄)。
+  围栏/刹车/批准线未触及未动。`DECISIONS_NEEDED.md` 无新增;本周邮件 08-31 已发 ⇒ **本轮无邮件**;
+  今日周四,台账(仅周日)跳过。四组均有产出无空转。
+  **⑧ 本轮明说没做的**:**(a) GH #442 第 4 条**(下一单元第一项)、
+  **(b) 自检 `RIDESHARE` 分类腿**(上一轮生出来的,第二轮顺延)。其余顺延:
+  裁 `strategy-39`(`wandbleed2`);GH #410 的带期限保守默认;`[bug] #436`;GH #423 / #409;
+  **§3.3 四个重文件连续第十四轮**;`hero_pool.txt` 未接进 §DH.4 域价;**patch 缺口 P1/P2/P3(P3 优先)**;
+  `strategy-5b` 第二十二轮;GH #395 三问;**GH #285 第三十一轮**;`#252`/`#256`/`#282`/`#295`;
+  `§24` 未并入 `#229`;**`§CE` 已挂三十四轮**;backlog §19/§20/§21;
+  `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#271`;§CY 三条 + §CV 两条待收割;
+  GH #384 的自检腿序那半;GH #412 仍只做一半;`#433`/`#432`/`#430`/`#429`/`#428`;
+  **#408 第十次被容量咬仍零评论未裁**;**GH #420 的关闭**。
+  **⑨ 下次触发**:①**GH #442 第 4 条**(`test_item_name_census.lua` 的键形状:改生成处 +
+  冲突必红 + 变异台,一个完整单元) ②**自检 `RIDESHARE` 分类腿** ③**裁 `strategy-39`**
+  ④**GH #410 的带期限保守默认** ⑤**关闭 GH #420** / **`[bug] #436`** ⑥**GH #285 第三十一轮** /
+  **patch 缺口 P3**。
