@@ -57,11 +57,119 @@ local function read_file(path)
     return text
 end
 
+--- Blank every COMMENT byte in a Lua source, keeping offsets and newlines.
+--
+-- WHY THIS EXISTS (2026-09-03). `wired_ids_in` used to run its patterns over
+-- the raw file, so an id that appears in `IsSoakCandidate('id')` form ONLY
+-- INSIDE A COMMENT was collected as wired -- and this file's whole verdict is
+-- `not claim.promoted and not wired[claim.id]`. The register and the thing
+-- being registered were the same text: an over-claim is masked by any comment
+-- that quotes the id in call form, which is precisely what a comment ABOUT a
+-- gate does.
+--
+-- It is not hypothetical, and the two live carriers are self-referential:
+--
+--   * 'pullbeat' -- PROMOTED 2026-08-23, wired by nothing. It sat in the wired
+--     set because THREE comment blocks in mode_roam_generic.lua (:253, :331,
+--     :416) teach the `pullcad` trap by quoting the conjunction that would
+--     freeze FALSE. The prose explaining "a promoted id is in no armed string"
+--     was what put that promoted id back into the armed-string census.
+--   * 'X' -- jmz_func.lua:1909, the METAVARIABLE in `IsSoakCandidate('X') and
+--     IsSoakCandidate('abilanc')`. A placeholder was minted into a gate id.
+--
+-- So a comment reading `-- Gated (turbo + 'pullbeat')` -- the likeliest
+-- over-claim on this tree, because the name is still all over the roam
+-- comments a month after promotion -- passed the census clean. Arming
+-- 'pullbeat' arms nothing; the wave reads "tested, neutral". That is verbatim
+-- the `nochaselow` failure in the header, reached by a different door.
+--
+-- Strings are KEPT, deliberately: `IsSoakCandidate('pullcad')` IS a string
+-- literal. This only has to know where a string ENDS so that a `--` inside one
+-- is not read as a comment. Long forms (`--[[`, `--[=[`, `[[`, `[=[`) are
+-- handled because bots/ has 80 of the first and 204 of the second.
+--
+-- Comment bytes become spaces and newlines survive. Of those two, only the
+-- NEWLINES have a reader: `SoakStrArms%b()(.-)\nend` below is anchored on one.
+-- Byte offsets are preserved as well, but every extractor here is a
+-- position-independent `gmatch`, so that half is a defensive property and not a
+-- tested claim -- two mutants had to survive before that distinction was drawn
+-- (tools/agent/mutstand_gatecomment.sh, header).
+local function strip_lua_comments(src)
+    local out, i, n = {}, 1, #src
+    local NONE = n + 1
+    local cs, qs, bs, beq
+    while i <= n do
+        if cs == nil or cs < i then cs = src:find('--', i, true) or NONE end
+        if qs == nil or qs < i then qs = src:find("['\"]", i) or NONE end
+        if bs == nil or bs < i then
+            local s, _, eq = src:find('%[(=*)%[', i)
+            bs, beq = s or NONE, eq
+        end
+        local first = math.min(cs, qs, bs)
+        if first == NONE then
+            out[#out + 1] = src:sub(i)
+            break
+        end
+        out[#out + 1] = src:sub(i, first - 1)
+        if first == cs then
+            -- A comment: long-bracket form, else to end of line.
+            local _, le, leq = src:find('^%-%-%[(=*)%[', first)
+            local stop
+            if le then
+                local close = ']' .. leq .. ']'
+                local j = src:find(close, le + 1, true)
+                stop = j and (j + #close - 1) or n
+            else
+                local j = src:find('\n', first, true)
+                stop = j and (j - 1) or n
+            end
+            out[#out + 1] = (src:sub(first, stop):gsub('[^\n]', ' '))
+            i = stop + 1
+        elseif first == qs then
+            -- A short string: copied through verbatim, only skipped over.
+            local q = src:sub(first, first)
+            local j, stop = first + 1, nil
+            while j <= n do
+                local c = src:sub(j, j)
+                if c == '\\' then
+                    j = j + 2
+                elseif c == q or c == '\n' then
+                    stop = j
+                    break
+                else
+                    j = j + 1
+                end
+            end
+            stop = stop or n
+            out[#out + 1] = src:sub(first, stop)
+            i = stop + 1
+        else
+            -- A long string: also copied through verbatim.
+            local close = ']' .. beq .. ']'
+            local j = src:find(close, first + #beq + 2, true)
+            local stop = j and (j + #close - 1) or n
+            out[#out + 1] = src:sub(first, stop)
+            i = stop + 1
+        end
+    end
+    return table.concat(out)
+end
+
 --- Gate ids this source actually wires, by the three forms the tree uses.
 -- Returns a set. Exposed (not inlined) so the synthetic controls below run
 -- through the SAME extractor the census does -- a control that exercises a
 -- different code path proves nothing about the census.
-local function wired_ids_in(src, into)
+--
+-- Comments are stripped FIRST (see strip_lua_comments): what a comment says
+-- about a gate is the claim under audit, never evidence for it.
+--
+-- SPLIT IN TWO on purpose. `wired_ids_in_text` holds every pattern and is the
+-- ONLY place they live; `wired_ids_in` is that same extractor with the
+-- comment strip in front. The domain-price ratchet below reads the tree BOTH
+-- ways, and it may only do so through one code path -- a "before" figure
+-- produced by a second copy of the patterns would agree with any drift in
+-- either copy, which is the shape GH #67 names.
+local function wired_ids_in_text(src, into)
     local set = into or {}
     for id in src:gmatch("IsSoakCandidate%s*%(%s*'([%w_]+)'") do set[id] = true end
     for id in src:gmatch('IsSoakCandidate%s*%(%s*"([%w_]+)"') do set[id] = true end
@@ -85,6 +193,10 @@ local function wired_ids_in(src, into)
         for id in sMatcher:gmatch("==%s*'([%w_]+)'") do set[id] = true end
     end
     return set
+end
+
+local function wired_ids_in(src, into)
+    return wired_ids_in_text(strip_lua_comments(src), into)
 end
 
 --- Every comment line that CLAIMS a gate, with the ids it names.
@@ -153,14 +265,30 @@ local function offences_in(claims, wired)
     return bad
 end
 
+--- One walk of bots/, memoised: the wired set, the claims, and -- third return
+--- value, added 2026-09-03 -- what the SAME extractor collects from the RAW
+--- text, which is what this file collected before the comment strip existed.
+--
+-- MEMOISED because five tests below want it and the strip is the expensive part:
+-- unmemoised, adding the raw side took this file from 2.4s to 4.6s, and the fast
+-- Lua detector leg it runs inside is already hitting a 120s budget in Routine
+-- containers. One walk, one strip per file: 1.1s, faster than before the strip
+-- existed. Safe because the tree does not change inside a process -- the
+-- mutation stand mutates BETWEEN processes.
+local cached_census
 local function census()
-    local wired, claims = {}, {}
+    if cached_census then
+        return cached_census[1], cached_census[2], cached_census[3]
+    end
+    local wired, claims, raw = {}, {}, {}
     for _, path in ipairs(list_lua_files()) do
         local src = read_file(path)
-        wired_ids_in(src, wired)
+        wired_ids_in(src, wired)      -- comments stripped (today)
+        wired_ids_in_text(src, raw)   -- comments included (before the fix)
         for _, c in ipairs(claims_in(src, path)) do claims[#claims + 1] = c end
     end
-    return wired, claims
+    cached_census = { wired, claims, raw }
+    return wired, claims, raw
 end
 
 local function count(set)
@@ -297,6 +425,112 @@ tests['the report names the offender, and stays silent on the clean ones'] = fun
         'the report does not point at the offending line: ' .. bad[1])
     assert(not bad[1]:find('realid', 1, true), 'the report names a wired id too')
     assert(#offences_in({}, wired) == 0, 'an empty claim set reports something')
+end
+
+-- === The comment strip (2026-09-03) ====================================
+--
+-- Five synthetic controls for the mechanism, then one reading of the real tree.
+-- The mechanism controls are what survive a reworded comment; the tree reading
+-- is what proves the strip is not a no-op HERE, which no synthetic can say.
+tests['a call form that exists only inside a comment is not wired'] = function()
+    local wired = wired_ids_in("-- see J.IsSoakCandidate('ghostid') for why\n")
+    assert(not wired['ghostid'],
+        "a comment that QUOTES a call minted a gate id -- this is the defect: "
+        .. 'the register and the thing being registered were the same text')
+    local claims = claims_in("-- Gated (turbo + 'ghostid'); inert by default.",
+        'synthetic')
+    assert(is_violation(claims[1], wired),
+        'and with the id no longer falsely wired, the over-claim it was '
+        .. 'masking must now be a violation')
+end
+
+tests['a real call next to a comment about a different id is still wired'] = function()
+    local wired = wired_ids_in(
+        "-- the 'pullcad' trap: IsSoakCandidate('ghostid') would freeze FALSE\n"
+        .. "if J.IsSoakCandidate('realid') then return true end\n")
+    assert(wired['realid'], 'the strip ate a real call site')
+    assert(not wired['ghostid'], 'the strip left the commented call site behind')
+end
+
+tests['a -- inside a string literal does not blank the rest of the line'] = function()
+    local wired = wired_ids_in(
+        "local s = '-- not a comment' ; J.IsSoakCandidate('realid')\n")
+    assert(wired['realid'],
+        "a `--` inside a STRING was read as a comment start, so everything "
+        .. 'after it on that line stopped being code -- strings are why this '
+        .. 'cannot be a `gsub` on `--.-\\n`')
+end
+
+-- The long comment here spans LINES on purpose. A strip that has lost its
+-- long-comment branch degrades to the line-comment branch, which blanks a
+-- one-line `--[==[ ... ]==]` correctly and hides the regression completely --
+-- and bots/ has 80 long comments, most of them multi-line.
+tests['long comments are stripped and long strings are kept'] = function()
+    local wired = wired_ids_in(
+        "--[==[ a long comment\n"
+        .. "   J.IsSoakCandidate('ghostid')\n"
+        .. "]==]\n"
+        .. "local s = [[ J.IsSoakCandidate('stringid') ]]\n"
+        .. "J.IsSoakCandidate('realid')\n")
+    assert(not wired['ghostid'], 'a multi-line --[==[ ]==] comment was not stripped')
+    assert(wired['stringid'],
+        'a long STRING was stripped; strings are code and hold the ids')
+    assert(wired['realid'], 'the strip lost the call after a long bracket')
+end
+
+-- What the wildcard rule downstream actually depends on is that stripping a
+-- comment does not change the LINE STRUCTURE around it: its pattern is anchored
+-- on `\nend`. So the comment below sits between the matcher body and its `end`,
+-- which is where a strip that swallows one newline too many shows up.
+--
+-- (Byte offsets are preserved as well, but nothing in this file reads one, so
+-- that half is a property rather than a tested claim -- see the note in
+-- tools/agent/mutstand_gatecomment.sh about the mutant that was dropped for it.)
+tests['stripping a comment does not disturb the lines around it'] = function()
+    local src = [[
+-- a comment ahead of the matcher
+local function SoakStrArms( sStr, sId )
+	if sStr == sId or sStr == 'all' then return true end
+	-- a comment between the body and its end
+end
+]]
+    assert(wired_ids_in(src)['all'],
+        "the wildcard id 'all' was lost -- the strip changed the newline "
+        .. 'structure, and `SoakStrArms%b()(.-)\\nend` no longer matches')
+end
+
+-- The domain price, read on the real tree through the one extractor, both ways.
+-- Double-sided on purpose (0CKTWIN's rule): MORE means somebody wrote a new
+-- comment that quotes a call form -- fine to do, but the census must know;
+-- FEWER means the two demonstrations below were reworded away, and this file
+-- then rests on synthetic evidence alone. Either way it is a deliberate edit
+-- to this list, never drift.
+--
+-- Anchored by ID, not by line number: 0B3FRAME's rule after one commit moved
+-- two separate censuses' line anchors in the same afternoon.
+tests['the comment strip removes exactly the two known comment-only ids'] = function()
+    local code, _, raw = census()
+    local only, n = {}, 0
+    for id in pairs(raw) do
+        if not code[id] then only[#only + 1] = id; n = n + 1 end
+    end
+    table.sort(only)
+    local got = table.concat(only, ',')
+    assert(got == 'X,pullbeat', string.format(
+        "comment-only wired ids are now {%s}; expected {X,pullbeat}.\n"
+        .. "  'pullbeat' was PROMOTED 2026-08-23 and is wired by nothing -- it "
+        .. 'sat in the wired set because mode_roam_generic.lua teaches the '
+        .. "`pullcad` trap by quoting the frozen conjunction.\n"
+        .. "  'X' is the METAVARIABLE in jmz_func.lua's statement of that same "
+        .. 'trap.\n'
+        .. '  Both are the register being built out of the text it audits. If '
+        .. 'you meant to change this, change this list too.', got))
+    assert(n == 2, 'count and set disagree: ' .. n)
+    -- And the half that matters: without the strip, a claim on either of these
+    -- is invisible. With it, it is a violation.
+    assert(not code['pullbeat'] and raw['pullbeat'],
+        "'pullbeat' must be raw-wired and code-unwired, or this file's reason "
+        .. 'for the strip no longer holds on this tree')
 end
 
 -- The over-claim direction has a second, sharper failure mode than a stale
