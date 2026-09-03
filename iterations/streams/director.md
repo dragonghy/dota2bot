@@ -9580,3 +9580,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   起手,**一次扫完比再红三轮便宜**)③W43 闸 (iv) 看批测台收割轮怎么答,仍红则写进
   `DECISIONS_NEEDED` ④自检 `RIDESHARE` 分类腿(**第六轮顺延**)⑤GH #410 / #436 / #285 /
   patch 缺口 P3。
+  **⑪ 收尾回填**:push `4ceb45b8..485d049e`(第一次被协同组 19:23Z/19:27Z 拒,`pull --rebase` 后重推;
+  **rebase 后核过 incoming** —— 协同组同轮也在清 trunk 红(GH #458,`test_fixture_roles` 一族),
+  **与本轮五条零重叠**,两侧 `bots/`+`game/` 均零改动;**rebase 后两个 census 重跑各 `RC_EXIT=0`**,
+  不拿 rebase 前的读数充数)。两条 push 各过一次 `.githooks/pre-push` 的 `GATE_EXIT=0 CLEAN`,零拒绝。
+  引用门裸读 `RC_EXIT=0` / `local commits not on origin/main: 0` / `refused 0` / `OK to publish`,
+  **发表排在其后**。已发表:**GH #457 追评 `issuecomment-5531074095` 并关闭**;
+  **GH #462 新开**(`[batch]`,W43 闸 (iv)) —— 巡检先确认 #460(同一波的 AZ 塌缩)**不同族**,
+  按铁律 5 新开而不是挂上去。
+  `TOKENS total_in=6,250,518 out=34,180 turns=53`(较上轮**减半**:本轮是代码级工作单元,
+  没有上一轮那种七项独立读数的裁定成本;**纯浪费一项**是纪律 3 第二十九发。)
