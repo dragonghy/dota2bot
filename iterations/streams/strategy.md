@@ -27,6 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0DUSTFIT. **【2026-09-03T01:35Z 新增,**认领 issue**(录像组 00:59Z 开出 **GH #441** 并带帧证据、
+   两条候选、以及一句「请裁一下第三条路径在哪」,按工作流第 1 条优先于 backlog;
+   连续第二轮由录像组的 issue 定题);
+   **产出是一次裁定 + 让被裁的模型第一次可被语料证伪的读数,零行为改动**:
+   `slotdust_arbitration.py` 新增 REACHABILITY FIT(`HYPOTHESES` / `team_of` / `refutations`
+   + 新列 `fit_casts_s1..5`、`fit_survive_s1..5` + 报告一节 + **LIMIT 12**);
+   `tests/test_slotdust_reachability_fit.py`(**34/0**)+ `tools/agent/mutstand_slotdustfit.sh`
+   (**12/12 CAUGHT**);`state.json` 新键 `slotdustfit_20260903`;
+   报告 `iterations/reports/strategy/20260903T013514Z.md`;
+   **无新 id、无新闸、`queue.json` 与 `test_set.md` 一字未动**;
+   零 AWS、S3 零访问、零 EC2;**`bots/` 与 `game/` 零 diff**。**已交棒,球在录像组。**】**
+   **⭐ 主判据(可复用,超出本主题):一个模型只能被它自己没有定义的读数纠正。**
+   `slotdust` 的排他列**由 `reachable_unarmed` 定义** —— 来自「够得到」的槽位的扔尘在
+   `continue` 处出局,**B2/B3/B4 根本没被问** ⇒ 能分开三个假设的那个数
+   (「够得到的槽位上熬过全部三条排除的扔尘有几条」)**不是小、不是有噪声,是不存在**,
+   任何一次重跑都不可能纠正它。与 GH #400 同族,**但那次是没跑,这次是跑了、跑得很干净、
+   而结构上答不了**;两次的症状同为**一个自洽的、带分母的、看起来完成了的表**。
+   **⭐⭐ 这个缺陷只可能打坏对照,打不坏被测的 fix**:armed 腿读的是 `pairs` 的**下标 `i`**
+   (`if bSlotDust then nSlot = i end`,`jmz_func.lua:11600`),**对 `AllyPIDs` 跨队泄漏免疫**
+   ⇒ 「结构性零对照塌了」= **这一波没有对照**,不等于 `slotdust` 有问题。
+   **⭐⭐⭐ 候选 1 已独立复核判死**:13 个提到 `item_dust` 的文件里唯一的施法出口是
+   `X.ConsiderItemDesire['item_dust']`(`aiug:7279`),`aba_*`/`advanced_item_strategy` 那条链
+   **`Action_UseAbility` 零命中**;`X.ItemUsageThink` 没有「表里没有条目就兜底」的分支
+   ⇒ **五条分支划分完整**(恰好五处 `BOT_ACTION_DESIRE_HIGH`)。
+   **决定性的那一格(交给录像组,一条命令)**:同一份 W40 64 局语料重跑,读
+   **`ab / baseline / dire / slot5`** —— **0 ⇒ H1 站住**(`AllyPIDs` 跨队泄漏,下一棒是在线核
+   或按队伍键控缓存);**>0 ⇒ H1 也死**,问题在**那三条排除**而不在可达性(先查 B4:
+   唯一依赖战斗日志词表的一条,GH #440 刚证明这一族**恒假 + 静默**)。
+   **⚠️ LIMIT 12 要连着引用:这个检验只能证伪** —— 全可达的假设不可证伪;没被证伪 ≠ 被证实;
+   某槽位零幸存也可能只是没人从那扔过尘(读旁边的 `fit_casts`)。
+   **⛔ 撞车登记(要读的是撞车,不是修复)**:本组自己弄出来的 trunk 红
+   (`77e18be9` 插十行,polliwog 链 **:8246 → :8256**,`test_chain_member_census.py` 失锚)
+   本轮独立诊断并修好,**而总监早五分钟落地了同一修复(`846fb455`,GH #442)** ⇒
+   rebase 冲突,**采用总监那一版**,数字完全一致只有注释不同。
+   **两个座位在同一个 2 小时窗口里各付了一遍诊断的钱,而任何一方动手前都看不见对方**
+   —— `unlanded_commits.py` 只看已 push 的 commit。**认领没有落点**:
+   自检报 `trunk-red` 时先往对应 issue 追一行「我在修」或写进 `queue.json`,成本近零。
+   **同一个 commit 用同一种方式打断了两个锚点,那一轮找到了 Lua 的、漏掉了 python 的,
+   理由和它自己写下的教训一字不差** ⇒ **那条教训的作用域是「一切行号锚点」,不是「Lua 全量套件」**;
+   python 那半住在开工自检里,所以安静了三小时。已**重锚不放松**(键/操作数/理由一字未动)。
+
 0WANDSRC. **【2026-09-02T22:38Z 新增,**认领 issue**(本轮 `[strategy]` 未认领 issue **不再是零** ——
    录像组 22:03Z 开出 **GH #437** 并带帧证据,按工作流第 1 条优先于 backlog;
    形状普查轨本轮**没有使用**);
@@ -4682,6 +4723,38 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T01:35Z(**认领 issue,不是自驱** —— 录像组 00:59Z 开出 **GH #441** 并带帧证据
+  与一句「请裁一下第三条路径在哪」,按工作流第 1 条优先于 backlog;owner P1 第 1 棒、P2 均已交出,
+  P3 责任在总监;**报告 `iterations/reports/strategy/20260903T013514Z.md`**;
+  backlog 条目 **`0DUSTFIT`**;`state.json` 新键 **`slotdustfit_20260903`**;
+  **无新 id、无新闸、`queue.json` 与 `test_set.md` 一字未动**;
+  零 AWS、S3 零访问、零 EC2;**`bots/` 与 `game/` 零 diff**):
+  **⭐ 主判据:一个模型只能被它自己没有定义的读数纠正。** `slotdust` 的排他列由
+  `reachable_unarmed` 定义,「够得到」的槽位在 `continue` 处出局、**B2/B3/B4 没人问** ⇒
+  能分开三个假设的那个数**不存在**(不是小、不是有噪声)。与 GH #400 同族,
+  **那次是没跑,这次是跑了、干净、而结构上答不了**。
+  **⭐⭐ 缺陷只打坏对照,打不坏 fix**:armed 腿读**下标 `i`**,对 `AllyPIDs` 跨队泄漏免疫
+  ⇒ 零对照塌掉 = **这一波没有对照**。
+  **⭐⭐⭐ 候选 1 独立复核判死**(唯一施法出口 `aiug:7279`;`aba_*` 链 `Action_UseAbility` 零命中;
+  `ItemUsageThink` 无兜底 ⇒ 五分支划分完整);**候选 2 活着**,观测形状证伪 `H0-shipped` 与
+  `H2-leak-dire-cached`,留下 `H1-leak-radiant-cached`。
+  落地:REACHABILITY FIT(每条扔尘都跑 B2/B3/B4,按槽位登记幸存者;基线腿 {有幸存者的槽位} ⊆ 假设)
+  + **LIMIT 12「只能证伪」**;两层读数都登记(4(i-a)),**4(i-b) 明说不适用**——读数是**支持集合**
+  不是量级,且每队基线腿只住一个层、没有并池。
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  新 ratchet **34/0**;工具自检 **24/0**(原 15 条全部仍 PASS);变异台 **12/12 CAUGHT**
+  (**全部改工具、一个都不改测试**);python 全套 **77 passed / 3 failed**(三条全部非本轮);
+  **Lua 全量套件没跑完 —— 这是跳过不是通过**(`bots`/`game`/`tests/*.lua` 零字节改动,
+  四个锚点敏感 Lua 文件各自裸 0)。
+  开工自检真实退出码 **3**(第一次调用又被证据纪律 3 拒绝,stdout 是管道 —— **第 8 次复发**)。
+  ⛔ **本组自己的 trunk 红:本轮独立修了一遍,总监早五分钟落地同一修复(`846fb455`,GH #442),
+  rebase 采用总监那一版** —— `77e18be9` 把 polliwog 链 **:8246 → :8256**,
+  `test_chain_member_census.py` 失锚。**同一 commit 同一种方式打断两个锚点,那轮找到 Lua 的、
+  漏掉 python 的,理由和它自己写下的教训一字不差** ⇒ **作用域是「一切行号锚点」**;已重锚不放松。
+  **球在录像组:同一份 W40 语料重跑,读 `ab / baseline / dire / slot5` 那一格**
+  (0 ⇒ H1 站住,下一棒在线核;>0 ⇒ H1 也死,去查 B2/B3/B4,先查 B4)。
+  顺带:`test_stale_waits.py` 唯一的红点名 `replay-check.md:9827/9838`「等第三条扔尘路径的裁定」——
+  **这轮就是那条裁定**。
 - 2026-09-02T22:38Z(**认领 issue,不是自驱** —— 录像组 22:03Z 开出 **GH #437** 并带帧证据,
   按工作流第 1 条优先于 backlog,形状普查轨本轮**没有使用**;owner P1 第 1 棒、P2 均已交出,P3 责任在总监;
   **报告 `iterations/reports/strategy/20260902T223823Z.md`**;backlog 条目 **`0WANDSRC`**;

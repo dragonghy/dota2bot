@@ -141,6 +141,19 @@ LIMITS -- read before quoting a number.
     shipped scan can LOSE to a nearer ally the armed scan reaches.  This script
     can only see the direction that produces a cast; the suppression direction
     is invisible to it and is not claimed either way.
+12. *** THE EXCLUSIVE COLUMN CANNOT CORRECT THE MODEL IT IS DEFINED BY (GH
+    #441).  `reachable_unarmed` is a hypothesis, and a cast from a slot it calls
+    reachable `continue`s out BEFORE B2/B3/B4 are consulted -- so the one number
+    that would discriminate the hypotheses, "how many casts from a REACHABLE
+    slot survive all three exclusions", was never computed by any run.  The
+    REACHABILITY FIT table (added 2026-09-03) computes the cascade for every
+    slot and prints survivors/casts, which makes the model refutable: on the
+    BASELINE leg, {slots with survivors} must be a subset of the hypothesis.
+    It REFUTES ONLY.  A hypothesis calling every slot reachable is unrefutable
+    here, an unrefuted hypothesis is not confirmed, and a slot with no survivors
+    may simply be a slot nobody cast dust from -- read fit_casts beside it.  If
+    every baseline slot carries survivors the reading is about B2/B3/B4, not
+    about reachability.
 """
 import argparse
 import collections
@@ -221,6 +234,57 @@ def reachable_unarmed(team, slot):
     if team == RADIANT:
         return slot in (1, 2, 3, 4)   # id 0 is out of range, id 5 never asked
     return slot == 5                  # ids 6..9 are out of range
+
+
+# --- REACHABILITY FIT (GH #441) ---------------------------------------------
+# `reachable_unarmed` is a HYPOTHESIS about what the unarmed scan reaches, and
+# the exclusive column is DEFINED by it, so no reading the script produced could
+# ever correct it: a cast from a slot the hypothesis calls reachable `continue`s
+# out before the three ungated exclusions are consulted.  The fit table asks the
+# same corpus the reachability-agnostic question -- for EVERY slot, how many
+# casts survive B2/B3/B4 -- which turns the model into something the data can
+# refute.  The rule is one line: on the BASELINE leg, a slot with a surviving
+# cast MUST be reachable, because the surviving cast has no ungated explanation
+# left.  So {slots with baseline survivors} must be a SUBSET of the hypothesis.
+#
+# The three hypotheses on the table.  `AllyPIDs` (jmz_func.lua:11541) is a
+# MODULE-LEVEL local filled on the first call with `GetTeamPlayers(GetTeam())`.
+# If a Lua VM is per-team, the shipped model holds; if one VM serves both teams,
+# whichever team calls first freezes the list for BOTH, and the unarmed scan of
+# the other team walks the wrong numeric values.  Note that the ARMED leg is
+# immune either way -- it reads the loop INDEX `i` (1..5 on an array table), not
+# the values -- so this defect can only break the control, never the fix.
+HYPOTHESES = {
+    # own pids: radiant 0..4 -> slots 1..4 ; dire 5..9 -> slot 5 only
+    "H0-shipped":             {RADIANT: (1, 2, 3, 4), DIRE: (5,)},
+    # a radiant bot called first: both teams walk 0..4
+    "H1-leak-radiant-cached": {RADIANT: (1, 2, 3, 4), DIRE: (1, 2, 3, 4)},
+    # a dire bot called first: both teams walk 5..9
+    "H2-leak-dire-cached":    {RADIANT: (5,), DIRE: (5,)},
+}
+
+
+def team_of(layer, leg):
+    """Which team a (layer, leg) pair is.  ab == radiant armed, by definition."""
+    if layer == "ab":
+        return RADIANT if leg == "armed" else DIRE
+    return DIRE if leg == "armed" else RADIANT
+
+
+def refutations(baseline_survivors, hypothesis):
+    """(team, slot, n) triples a hypothesis cannot explain.  Empty == survives.
+
+    LIMIT 12: this test can only REFUTE.  A hypothesis that calls every slot
+    reachable is unrefutable by it, and a hypothesis surviving here is not
+    thereby confirmed -- absence of a surviving cast in a slot is also what a
+    slot nobody cast dust from looks like (read the fit_casts row next to it).
+    """
+    out = []
+    for team, per_slot in sorted(baseline_survivors.items()):
+        for slot, n in sorted(per_slot.items()):
+            if n > 0 and slot not in hypothesis[team]:
+                out.append((team, slot, n))
+    return out
 
 
 def last_frame_before(frames, t):
@@ -335,17 +399,29 @@ def scan_game(tl, armed_side):
         dmg = [t for t in dmg_by_target.get(k[0], ())
                if e["t"] - B4_DAMAGE_WINDOW <= t < e["t"]]
 
+        # REACHABILITY FIT (GH #441).  The three ungated exclusions are decided
+        # here, for EVERY cast, BEFORE the reachability model gets a vote.  The
+        # cascade below is left byte-for-byte as it was and simply reads this
+        # answer, so every pre-existing column keeps its exact value
+        # ([column-parity] in tests/test_slotdust_reachability_fit.py).
+        blocked = ("b2" if sandking else
+                   "b3" if enemy_team in radiance_teams else
+                   "b4" if dmg else None)
+        out[leg]["fit_casts_s%d" % slot] += 1
+        if blocked is None:
+            out[leg]["fit_survive_s%d" % slot] += 1
+
         if reachable_unarmed(team, slot):
             out[leg]["reachable_slot"] += 1
             continue
         out[leg]["unreachable_slot"] += 1
-        if sandking:
+        if blocked == "b2":
             out[leg]["blocked_b2_sandking"] += 1
             continue
-        if enemy_team in radiance_teams:
+        if blocked == "b3":
             out[leg]["blocked_b3_radiance"] += 1
             continue
-        if dmg:
+        if blocked == "b4":
             out[leg]["blocked_b4_recent_damage"] += 1
             continue
 
@@ -499,6 +575,45 @@ def selfcheck():
     check("a distant enemy leaves ring_nonempty false",
           res["armed"]["ring_nonempty"] == 0 and rows[0]["ring_nonempty"] is False)
 
+    # --- REACHABILITY FIT (GH #441, LIMIT 12) -------------------------------
+    # The number the exclusive column structurally cannot produce: a cast from a
+    # slot the hypothesis calls REACHABLE, carried through the same three
+    # exclusions.  dire pid 9 == slot 5 is that slot on the dire leg.
+    res, _, _ = scan_game(build(DIRE, 9, events=cast9), "dire")
+    check("a REACHABLE-slot cast is put through B2/B3/B4 all the same",
+          res["armed"]["fit_casts_s5"] == 1
+          and res["armed"]["fit_survive_s5"] == 1
+          and res["armed"]["exclusive"] == 0)
+    dmg9 = [dict(dmg[0], target="npc_dota_hero_h9")]
+    res, _, _ = scan_game(build(DIRE, 9, events=dmg9 + cast9), "dire")
+    check("...and a blocked one is a cast but not a survivor",
+          res["armed"]["fit_casts_s5"] == 1
+          and res["armed"]["fit_survive_s5"] == 0)
+    res, _, _ = scan_game(build(DIRE, 5, events=cast), "dire")
+    check("the fit counts the UNREACHABLE slot too (same cast, both columns)",
+          res["armed"]["fit_survive_s1"] == 1 and res["armed"]["exclusive"] == 1)
+
+    check("team_of: ab is radiant-armed, so ab/baseline is dire",
+          team_of("ab", "armed") == RADIANT and team_of("ab", "baseline") == DIRE
+          and team_of("ba", "armed") == DIRE
+          and team_of("ba", "baseline") == RADIANT)
+    # The observed shape of GH #441: dire baseline survivors on slots 2/3/4.
+    obs = {DIRE: {1: 0, 2: 5, 3: 2, 4: 9, 5: 0}, RADIANT: {s: 0 for s in SLOTS}}
+    check("that shape REFUTES the shipped model",
+          len(refutations(obs, HYPOTHESES["H0-shipped"])) == 3)
+    check("...and H2 (dire-cached) with it",
+          len(refutations(obs, HYPOTHESES["H2-leak-dire-cached"])) == 3)
+    check("...while H1 (radiant-cached) survives it",
+          refutations(obs, HYPOTHESES["H1-leak-radiant-cached"]) == [])
+    # H1's own falsifier is the number no run has ever printed: dire slot 5.
+    obs5 = {DIRE: dict(obs[DIRE]), RADIANT: obs[RADIANT]}
+    obs5[DIRE][5] = 1
+    check("a single dire slot-5 survivor would refute H1 as well",
+          len(refutations(obs5, HYPOTHESES["H1-leak-radiant-cached"])) == 1)
+    check("zero survivors everywhere refutes nothing (LIMIT 12: only refutes)",
+          all(refutations({t: {s: 0 for s in SLOTS} for t in (RADIANT, DIRE)}, h)
+              == [] for h in HYPOTHESES.values()))
+
     print("selfcheck: %d pass, %d fail" % tuple(ok))
     return 0 if ok[1] == 0 else 1
 
@@ -506,6 +621,10 @@ def selfcheck():
 KEYS = ("dust_casts", "gungir_casts", "reachable_slot", "unreachable_slot",
         "blocked_b2_sandking", "blocked_b3_radiance", "blocked_b4_recent_damage",
         "ring_nonempty", "exclusive")
+
+SLOTS = (1, 2, 3, 4, 5)
+FIT_KEYS = tuple("fit_%s_s%d" % (w, s) for w in ("casts", "survive")
+                 for s in SLOTS)
 
 
 def main():
@@ -561,7 +680,7 @@ def main():
         layer = "ab" if m.group("side") == "radiant" else "ba"
         layers[layer]["games"] += 1
         for leg in ("armed", "baseline"):
-            for k in KEYS:
+            for k in KEYS + FIT_KEYS:
                 layers[layer]["%s_%s" % (leg, k)] += res[leg][k]
         for r in rows + bugs:
             r["game"] = base
@@ -589,6 +708,51 @@ def main():
     print("NOT the fix (LIMIT 6) -- %d such row(s) below." % len(all_bugs))
     print("Both layers are printed because this estimator does NOT cancel side")
     print("bias (铁律 4(i-b)): a count that flips sign between them is noise.")
+
+    # --- REACHABILITY FIT (GH #441) -----------------------------------------
+    # Both layers are registered per 铁律 4(i-a).  4(i-b) does NOT apply: the
+    # reading here is a SUPPORT SET, not a magnitude -- one surviving cast
+    # refutes and a thousand refute no harder -- and each team's baseline leg
+    # lives in exactly one layer (dire baseline only in ab, radiant only in ba),
+    # so there is no pooling step in which a side term could hide.
+    print()
+    print("REACHABILITY FIT -- casts / survivors of B2+B3+B4, by team slot")
+    hdr2 = "%6s %9s %8s" % ("layer", "leg", "team") + "".join(
+        "%10s" % ("slot%d" % s) for s in SLOTS)
+    print(hdr2)
+    print("-" * len(hdr2))
+    baseline_survivors = {}
+    for layer in ("ab", "ba"):
+        c = layers[layer]
+        for leg in ("armed", "baseline"):
+            team = team_of(layer, leg)
+            cells = []
+            for s in SLOTS:
+                cells.append("%10s" % ("%d/%d" % (
+                    c["%s_fit_survive_s%d" % (leg, s)],
+                    c["%s_fit_casts_s%d" % (leg, s)])))
+            print("%6s %9s %8s" % (layer, leg,
+                                   "radiant" if team == RADIANT else "dire")
+                  + "".join(cells))
+            if leg == "baseline":
+                baseline_survivors.setdefault(team, {}).update(
+                    {s: c["%s_fit_survive_s%d" % (leg, s)] for s in SLOTS})
+    print()
+    print("The ARMED leg reads the loop INDEX, so every slot is reachable there")
+    print("under all three hypotheses; only the BASELINE rows discriminate.")
+    for name in sorted(HYPOTHESES):
+        bad = refutations(baseline_survivors, HYPOTHESES[name])
+        if bad:
+            print("  %-24s REFUTED by %s" % (name, ", ".join(
+                "%s slot%d (%d survivor%s)"
+                % ("radiant" if t == RADIANT else "dire", s, n,
+                   "" if n == 1 else "s") for t, s, n in bad)))
+        else:
+            print("  %-24s not refuted by this corpus (LIMIT 12: not confirmed)"
+                  % name)
+    print("If EVERY baseline slot carries survivors, the reading is about the")
+    print("three exclusions, not about reachability -- suspect B2/B3/B4 first.")
+
     if a.rows:
         for tag, rs in (("EXCLUSIVE", all_rows), ("INSTRUMENT-FAILURE", all_bugs)):
             if not rs:
