@@ -9956,3 +9956,64 @@
     **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄。**
   - **Token 用量**:`TOKENS total_in=8,565,765 out=73,520 turns=64`(见报告 §12)。
   - 完整报告:`iterations/reports/replay-check/20260903T035141Z.md`
+- **2026-09-03T07:20Z(收批测台 06:15Z 的 ⭐⭐ 交棒:`ckpush` 的条件 (a))**:
+  批测台收 W41 时按 SS-DT.4 义务返回 `UNINTERPRETABLE`,并逐字写了
+  「**缺的是检测器,不是载体**」。本轮把那个检测器建出来并交付读数。
+  - **语料**:W41 四个 run 全宽扫,**82/82 局**(`.dem` 侧分母,**不是**批测台的 223/199 ——
+    `rec_slots=8` 只录一半槽位,两个分母不要互相校验),`sweep_run.sh` ×4 **退出码全 0**,
+    `unparseable 0` ×4,四路**各自独立输出目录**(GH #433)。
+    **宽扫 82/82;深查 4 局全帧还原 + 15 局域帧级核对。**
+  - **交付**:新增 `tools/batch_test/behavioral/ckpush_domain.py`(只读离线;六合取域逐字取自
+    `hero_chaos_knight.lua:468/:521`;`--manifest` 按 run 绑定,**GH #444 在构造上不可能发生**)
+    + `tests/test_ckpush_domain.py`。`--selfcheck` **12 PASS / 0 FAIL**,测试 **20 PASS / 0 FAIL**,
+    **变异台 6/6 全杀、还原干净**(M6 钉的是 GH #176 —— CK 的大招就是造他自己的幻象,
+    按名字建帧表会在本检测器要数的那些时刻凭空多出 `chaos_knight` 流)。
+  - **`VERIFY id=ckpush verdict=WORKING episodes=40`**。**域非空 ⇒ SS-DT.4 的
+    `UNINTERPRETABLE` 解除,SILENT 被否决**:40 个域帧 / 15 局 / 82 局。
+    钉帧 `20260903_040014_slot4` **t=335.5**(seed 3030,armed 侧 dire ⇒ CK 在 **baseline** 腿):
+    1600 内只有 `sven 1384` 一名敌人 ⇒ **B1(≤1200)/B2(需 ≥2 敌人 ≤1600)/B4(≤700)逐条排除**,
+    只剩推塔分支;塔 ≤700、己方兵 5 个 ≤1000;t=334.0/335.3 **CK 正在挨一塔的塔伤**(`IsPushing` 的旁证);
+    **t=335.8 放出 Phantasm**,t=336.3 三个 `modifier_illusion`。
+    ⇒ **shipped 的 240 确实在放行这一段的推塔大招,改成 480 是真的行为改变,不是 no-op。**
+  - **⛔ 引用必须连引的三条边界**:(i) 这是**抑制型 gate**,armed 侧没有正面可观测量,
+    本轮买到的是**反事实**,不是「看见 armed 挡住了」;(ii) **效应量极小** ——
+    可归因施法 **1 次 / 82 局**,段内总施法率 **1.292 vs 1.294 每局(死平)**;
+    (iii) `J.IsPushing()` **不可观测**(LIMIT 1),`IsFullyCastable()` 含蓝而快照只有
+    `mp_pct`(LIMIT 3)⇒ 40 帧是**超集/上界**。
+  - **⭐ 结构事实(新登记,与上一轮「辉耀 100% 夜魇」同族)**:`chaos_knight` 在 **82/82 局都是天辉**
+    ⇒ `ab` 层 CK 恒 armed、`ba` 层 CK 恒 baseline。**armed/baseline 的对比就是 `ab 层 vs ba 层`,
+    而两层里 CK 对手的 armed 状态同时翻转** ⇒ **跨腿差值不构成读数**(铁律 4(i-b));
+    本轮结论**只建立在帧证据上**。
+  - **⭐ 源码注释被证伪(交英雄组)**:`hero_chaos_knight.lua:455` 那句
+    「Phantasm 首次学会 t=306.0s,**no frame at or below 240s carries it at all**」——
+    实测 82 局 **min=220.5s**、**2/82 局**在 ≤240 就学会、**38 个携带帧(存活 20)**。
+    **但两局在 ≤240 都没有施法** ⇒ 被证伪的是**它引用的证据**,**不是它的判断**
+    (「shipped 240 基本不咬」在效果上仍成立)。**这是注释更正,不是对 `ckpush` 的翻案。**
+  - **⛔ GH #444 在 W41 原样复发 4 例**(独立第二个波次,不同种子/不同字节数的同名局)。
+    本轮工具免疫(manifest 按 run 绑定)。**其中 `20260903_040032_slot7` 两份恰好都是 baseline 腿
+    ⇒ 旧口径这次也不会串号 —— 「这次没打到」不是「这条缺陷无害」。** 已追评 #444。
+  - **⛔ GH #443 的棒不在本组了(归属更正)**:实测 `stale_waits.py` **裸退出码 3**,
+    唯一的 `STALE` 在 **`director.md:9237`**;`replay-check.md` 那两行**上一轮已改**,
+    现在是历史区 `INFO` **不是 finding**。而 `director.md:9237` 那行的内容**正是「引用
+    replay-check.md:9827/:9838」** ⇒ **它引用的 stale 已经不 stale,于是引用本身成了那条 stale。**
+    两轮的报告都按**文件名**记棒而**行换了文件**,这就是「修了还在」的原因。
+    **本组不改别组章程**,已交批测台/总监。
+  - **⛔ `roshdist`(同一次交棒的另一半,SS-DP.8)本轮未动** ——
+    `VERIFY id=roshdist verdict=INDETERMINATE episodes=0`,**这不是判读,是没测**。
+  - **下一轮第一件事**:**(1) ⭐ `roshdist`**(棒在本组,语料口径与本轮同,可整段复用);
+    (2) `slotarb`(零记录,槽位映射模板可复用);(3) 查 #444/#445/#440/#436/#433/#430 回音;
+    (4) 盯下一个阵容里有 Axe 的波次(`d22` 的 16.7% 已挂三波)。
+  - **欠账**:本轮 82 局 timeline 随容器回收(从 S3 重扫约 12 分钟,四路并行);
+    `ckpush` 的 LIMIT 3(绝对蓝量)要买断需 dumper 改输出,**先记着未开 issue**;
+    #419 第 6 轮 / #421 第 5 轮仍零评论(轮次 +1,上一轮已进 DECISIONS_NEEDED,不重复开)。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×4 **全 0**;
+    `ckpush_domain.py --selfcheck` **0**(12/0);`tests/test_ckpush_domain.py` **0**(20/0);
+    真语料 **0**;辅助只读脚本 ×3 **全 0**;`stale_waits.py` **3**(有发现);
+    `luacheck_gate.sh` **0**(0 警告)。**未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    自检 **`SELFCHECK_BARE_EXIT=3`**,`legs run: 9`;**GH #420 原样复发第八轮**
+    (`sc.log:96-97` 点名两个 `UNCERTIFIABLE`,`:153` 汇总却打 `none`);
+    **证据纪律 3 第二十一次踩**(第一条命令写了管道,脚本当场拒答,那次不是通过)。
+    ⭐ **trunk red 用「移出本轮新文件重跑」证明与本轮无关**:失败集逐字相同
+    (`illumove_pairs:HP_CUT`、`wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`)。
+  - **Token 用量**:`TOKENS total_in=6,077,077 out=48,426 turns=48`(见报告 §12)。
+  - 完整报告:`iterations/reports/replay-check/20260903T072000Z.md`
