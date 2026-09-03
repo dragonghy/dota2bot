@@ -168,6 +168,8 @@
    2761,
    3017,
    3030,
+   3101,
+   3117,
    3161,
    3329,
    111111,
@@ -259,7 +261,10 @@
    2970,
    3017,
    3030,
+   3101,
+   3117,
    3161,
+   3204,
    3329,
    111111,
    222222,
@@ -321,6 +326,8 @@
    2850,
    2914,
    2941,
+   3040,
+   3117,
    333333
   ],
   "dragon_knight": [
@@ -402,6 +409,8 @@
    2970,
    2986,
    3017,
+   3040,
+   3101,
    3329,
    111111,
    131313,
@@ -596,6 +605,7 @@
    2838,
    2941,
    3017,
+   3101,
    111111
   ],
   "lich": [
@@ -644,6 +654,7 @@
    2710,
    2850,
    2874,
+   3204,
    246802,
    424242,
    555001,
@@ -699,6 +710,7 @@
    2752,
    2761,
    2941,
+   3117,
    424242,
    555001,
    555555,
@@ -769,6 +781,8 @@
    2970,
    2986,
    3017,
+   3040,
+   3117,
    3329,
    131313,
    333333,
@@ -815,6 +829,7 @@
    2747,
    2790,
    2877,
+   3101,
    246802,
    555001,
    778899
@@ -843,6 +858,7 @@
    2710,
    2850,
    3161,
+   3204,
    246802,
    444444,
    777777
@@ -896,6 +912,8 @@
    2887,
    2896,
    2986,
+   3040,
+   3101,
    3329,
    444444,
    555555
@@ -998,7 +1016,9 @@
    2970,
    2986,
    3030,
+   3117,
    3161,
+   3204,
    111111,
    222222,
    424242
@@ -1043,6 +1063,7 @@
    2896,
    2941,
    2986,
+   3040,
    222222,
    555555,
    777777
@@ -1070,6 +1091,7 @@
    2838,
    2877,
    3030,
+   3117,
    131313
   ],
   "phantom_assassin": [
@@ -1156,6 +1178,7 @@
    2838,
    2938,
    2970,
+   3204,
    111111,
    131313,
    246802,
@@ -1224,6 +1247,7 @@
    2740,
    2840,
    2970,
+   3101,
    111111,
    246802,
    778899
@@ -1312,6 +1336,8 @@
    2938,
    2970,
    3030,
+   3040,
+   3204,
    3329,
    333333,
    424242,
@@ -1423,6 +1449,7 @@
    2877,
    2896,
    3030,
+   3117,
    3161,
    222222,
    246802,
@@ -1505,6 +1532,7 @@
    2874,
    2896,
    3030,
+   3204,
    3329,
    131313,
    222222,
@@ -1567,6 +1595,8 @@
    2941,
    2970,
    3017,
+   3040,
+   3101,
    3161,
    555001
   ],
@@ -1658,6 +1688,7 @@
    2941,
    2986,
    3030,
+   3117,
    3329,
    111111,
    246802,
@@ -1749,6 +1780,7 @@
    2874,
    2887,
    2970,
+   3040,
    3161,
    131313,
    222222,
@@ -1799,6 +1831,8 @@
    2838,
    2877,
    3030,
+   3040,
+   3204,
    3329,
    222222,
    333333,
@@ -1851,6 +1885,7 @@
    2604,
    2665,
    2874,
+   3204,
    424242
   ],
   "warlock": [
@@ -1870,6 +1905,7 @@
    2013,
    2375,
    2756,
+   3101,
    111111,
    333333
   ],
@@ -2005,7 +2041,11 @@
    2941,
    2986,
    3030,
+   3040,
+   3101,
+   3117,
    3161,
+   3204,
    3329,
    222222,
    555001,
@@ -2360,7 +2400,12 @@
   "spot_20260903_033154_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_15a2fe",
   "spot_20260903_033158_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_0af9fd",
   "spot_20260903_033202_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_1197cd",
-  "spot_20260903_033207_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_d87d45"
+  "spot_20260903_033207_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_d87d45",
+  "spot_20260903_093203_1_1baa449b6829dc8ce768d891e1ed661dec987555_1db27d",
+  "spot_20260903_093207_1_1baa449b6829dc8ce768d891e1ed661dec987555_13d27c",
+  "spot_20260903_093212_1_1baa449b6829dc8ce768d891e1ed661dec987555_1f4265",
+  "spot_20260903_093216_1_1baa449b6829dc8ce768d891e1ed661dec987555_93ca3e",
+  "spot_20260903_121922_1_1baa449b6829dc8ce768d891e1ed661dec987555_57c85a"
  ],
  "seeds": {
   "101": {
@@ -7849,6 +7894,209 @@
     }
    ]
   },
+  "3040": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush"
+   ],
+   "dire": [
+    "ogre_magi",
+    "skeleton_king",
+    "spirit_breaker",
+    "vengefulspirit",
+    "zuus"
+   ],
+   "games": 62,
+   "games_by_cand_side": {
+    "dire": 18,
+    "radiant": 44
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 2,
+    "dragon_knight": 1,
+    "lion": 4,
+    "necrolyte": 3,
+    "ogre_magi": 5,
+    "skeleton_king": 3,
+    "spirit_breaker": 4,
+    "vengefulspirit": 1,
+    "venomancer": 5,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "dragon_knight",
+    "lion",
+    "necrolyte",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260903_093203_1_1baa449b6829dc8ce768d891e1ed661dec987555_1db27d",
+    "spot_20260903_121922_1_1baa449b6829dc8ce768d891e1ed661dec987555_57c85a"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "ogre_magi",
+      "skeleton_king",
+      "spirit_breaker",
+      "vengefulspirit",
+      "zuus"
+     ],
+     "games": 62,
+     "games_by_cand_side": {
+      "dire": 18,
+      "radiant": 44
+     },
+     "radiant": [
+      "death_prophet",
+      "dragon_knight",
+      "lion",
+      "necrolyte",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260903_093203_1_1baa449b6829dc8ce768d891e1ed661dec987555_1db27d",
+      "spot_20260903_121922_1_1baa449b6829dc8ce768d891e1ed661dec987555_57c85a"
+     ]
+    }
+   ]
+  },
+  "3101": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "dragon_knight",
+    "luna",
+    "necrolyte",
+    "spirit_breaker"
+   ],
+   "games": 56,
+   "games_by_cand_side": {
+    "dire": 24,
+    "radiant": 32
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 2,
+    "juggernaut": 1,
+    "luna": 1,
+    "necrolyte": 3,
+    "silencer": 5,
+    "spirit_breaker": 4,
+    "warlock": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "juggernaut",
+    "silencer",
+    "warlock",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260903_093207_1_1baa449b6829dc8ce768d891e1ed661dec987555_13d27c"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "dragon_knight",
+      "luna",
+      "necrolyte",
+      "spirit_breaker"
+     ],
+     "games": 56,
+     "games_by_cand_side": {
+      "dire": 24,
+      "radiant": 32
+     },
+     "radiant": [
+      "chaos_knight",
+      "juggernaut",
+      "silencer",
+      "warlock",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260903_093207_1_1baa449b6829dc8ce768d891e1ed661dec987555_13d27c"
+     ]
+    }
+   ]
+  },
+  "3117": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "death_prophet",
+    "lina",
+    "oracle",
+    "sven"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 41
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 1,
+    "crystal_maiden": 4,
+    "death_prophet": 3,
+    "lina": 2,
+    "lion": 4,
+    "obsidian_destroyer": 2,
+    "oracle": 5,
+    "slardar": 3,
+    "sven": 1,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "lion",
+    "obsidian_destroyer",
+    "slardar",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260903_093212_1_1baa449b6829dc8ce768d891e1ed661dec987555_1f4265"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "death_prophet",
+      "lina",
+      "oracle",
+      "sven"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 41
+     },
+     "radiant": [
+      "chaos_knight",
+      "lion",
+      "obsidian_destroyer",
+      "slardar",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260903_093212_1_1baa449b6829dc8ce768d891e1ed661dec987555_1f4265"
+     ]
+    }
+   ]
+  },
   "3161": {
    "cands": [
     "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush"
@@ -7912,6 +8160,73 @@
      ],
      "runs": [
       "spot_20260903_033202_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_1197cd"
+     ]
+    }
+   ]
+  },
+  "3204": {
+   "cands": [
+    "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush"
+   ],
+   "dire": [
+    "lich",
+    "medusa",
+    "queenofpain",
+    "skeleton_king",
+    "venomancer"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 21,
+    "radiant": 37
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 5,
+    "lich": 4,
+    "medusa": 1,
+    "obsidian_destroyer": 2,
+    "queenofpain": 2,
+    "skeleton_king": 3,
+    "sniper": 1,
+    "venomancer": 5,
+    "viper": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "obsidian_destroyer",
+    "sniper",
+    "viper",
+    "zuus"
+   ],
+   "runs": [
+    "spot_20260903_093216_1_1baa449b6829dc8ce768d891e1ed661dec987555_93ca3e"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lich",
+      "medusa",
+      "queenofpain",
+      "skeleton_king",
+      "venomancer"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 21,
+      "radiant": 37
+     },
+     "radiant": [
+      "crystal_maiden",
+      "obsidian_destroyer",
+      "sniper",
+      "viper",
+      "zuus"
+     ],
+     "runs": [
+      "spot_20260903_093216_1_1baa449b6829dc8ce768d891e1ed661dec987555_93ca3e"
      ]
     }
    ]

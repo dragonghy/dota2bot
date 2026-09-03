@@ -1,0 +1,142 @@
+{
+  "wave": "W43",
+  "_note": "Launch-round record. Harvest fields are filled by the next batch-desk round.",
+  "launched_at": "2026-09-03T18:21:58Z .. 2026-09-03T18:23:04Z",
+
+  "tree": "859e7ab34e89a8384863cb83b1d6e8cf7e9dec24",
+  "tree_verified": "git ls-remote origin main == 859e7ab34e89a8384863cb83b1d6e8cf7e9dec24 at launch time (charter step 5, the 2026-07-23 near-miss). Pinned explicitly with --ref rather than --ref main so that a push landing mid-launch cannot give four instances four different trees.",
+  "ref_pin": "859e7ab34e89a8384863cb83b1d6e8cf7e9dec24",
+
+  "arm_ids": 58,
+  "arm_bytes": 512,
+  "arm_md5": "7009f6c512e1b6bdf514401f20178eca",
+  "arm_source": "iterations/streams/test_set.md line 2 read off origin/main at launch time; byte count and md5 RECOMPUTED here, not copied from the prose. Matches the director's registration in test_set.md SS-DU.",
+  "arm_delta_since_W42": "57 -> 58 ids: wandbleed2 ADMITTED by the director at 2026-09-03T16:0xZ (commit 3f32c6c1, ruling test_set.md SS-DU, GH #437, queue strategy-39). W41 and W42 both flew the 57-id string (md5 38423b79...); W43 is the first wave carrying wandbleed2.",
+
+  "seeds": [3426, 3713, 3749, 3508],
+  "seed_index_note": "seed_roster_index.py --build run BEFORE selection (charter step 5, 2026-08-30). ROSTER_EXIT=0; 332 run prefixes in S3, 5 newly scanned, index now holds 197 seeds. Skipping the build would have offered W42's just-burned seeds back as 'never used' -- it fails toward giving MORE, not fewer, and nothing downstream would raise a hand.",
+  "seed_search_note": "Window [3301,3800], 499 seeds unused per the freshly built index. Mask exhaustion over the 7 carrier terms: popcount distribution {0:53, 1:126, 2:186, 3:101, 4:30, 5:3}; 3904 four-subsets satisfy 'every term >= 2'. The window is NOT exhausted -- contrast the 2026-08-30 finding where [1600,1800] returned 0 solutions because max popcount was 3 (combinatorial exhaustion, not carrier shortage). Window was moved up because every wave strips the highest-popcount layer out of its window.",
+  "seed_freshness": "All four absent from seed_roster_index.json (197 indexed seeds) => zero banked games, no pooling with prior waves through a shared seed.",
+  "seed_carrier_coverage": {
+    "chaos_knight": 3, "crystal_maiden": 2, "lion": 2,
+    "obsidian_destroyer": 2, "skeleton_king": 4, "spirit_breaker": 2, "zuus": 4
+  },
+
+  "carrier_terms": ["chaos_knight", "crystal_maiden", "lion", "obsidian_destroyer", "skeleton_king", "spirit_breaker", "zuus"],
+  "carrier_terms_gate": "carrier_terms.py --arm-file test_set.md --arm-line 2 => CT_EXIT=0, 'derived from 58 armed ids: 11 hero-scoped, 47 generic, 0 unresolved => 7 term(s)'. 7 -> 7 unchanged from W42: wandbleed2 is kind=generic (structurally zero carrier price, not 'zero on the tight edge'), so BEST min-per-term did not need recomputing -- the director said the same in SS-DU and this run confirms it mechanically.",
+  "carrier_gate": "seed_draft.py 3426 3713 3749 3508 --assert-carrier-from-arm <58-id string> => CARRIER_GATE ids=11 seeds=4 exit=0, read WITHOUT a pipe. Every hero-scoped id has >= 2 carriers; odbuild/odaoe are PARTIAL at 2/4 (carriers 3749,3508), which meets the >= 2 bar.",
+
+  "instance_type": "c6i.4xlarge",
+  "slots": 16,
+  "rec_slots": 8,
+  "watchdog_hours": 2,
+  "games_per_seed": 12,
+  "acquisition_config_note": "IDENTICAL to W39/W40/W41/W42 (--slots 16 --hours 2 --rec-slots 8 --games 12, 4x1). Held fixed on purpose: rec_slots=8 matches rec_slot_baseline.json, and changing it -- or changing the instance type -- would void the SS-DA.2 gate. This is also the reason W43 was NOT relaunched onto c6a.4xlarge to recover AZ spread (see az_spread).",
+  "market": "spot",
+  "market_note": "owner ruling GH #158: spot first, on-demand only when there is no spot capacity. No --on-demand passed. Verified per machine by describe-instances InstanceLifecycle == 'spot' -- the run_id 'spot_' prefix is a hard-coded string in spot_run.sh and is NOT evidence.",
+  "market_verified": "all four InstanceLifecycle=spot (describe-instances, 18:2xZ)",
+  "self_destruct": "spot_run.sh self-terminate + 2h watchdog",
+  "expected_self_destruct": "~19:1x-19:2xZ (W42 measured 0.9319 h/machine on the survivors)",
+  "expected_games": "~96 scored (4 seeds x 12 x 2 legs), plus warm-ups",
+  "cost_estimate": "~$0.90 (spot constant, director 2026-08-30T22:0xZ). AUTO-INVALIDATION CLAUSE ACTIVE: GH #454 is open because W42's surviving machines measured 0.9319 h/machine against the charter constant 0.745 -- a full four-machine wave at that rate is $0.861-$0.932, whose upper end crosses $0.90. If W43's billing-side cost exceeds $0.90 the harvest round must name it and the director must re-rule the constant.",
+
+  "gates": {
+    "throttle_i_six_hours": "PASS -- unlock was 2026-09-03T15:32:03Z (6h after W42's 09:32:03Z launch); launched 18:21:58Z.",
+    "throttle_ii_new_content": "PASS -- and this is the branch that was DEAD last round. On 2026-09-03T15:15Z all three sub-branches failed (armed string byte-identical, family freshly at 8 seeds, tree changes provably inert on the tested configuration) and W43 was correctly NOT launched. The director's 16:0xZ admission of wandbleed2 changed the armed string 57->58 (md5 38423b79 -> 7009f6c5, recomputed here), which is sub-branch (one) satisfied outright. NOTE: this also retires the GH #363/#449 'armed-string family vs tree-object-hash' fork FOR THIS WAVE -- both readings now agree that there is something to buy.",
+    "throttle_iii_fence": "PASS -- fence = MTD 7.056 + W41 on-demand 2.15 + W42 spot 0.90 + W42 rerun on-demand 0.65 + W43 spot 0.90 = $11.66, well under the $80 fence. (W41 at 03:31Z is outside the 12h window but was included anyway, conservatively.) Brake line $90 and owner line $100 both far away; no Budget alert threshold crossed this round."
+  },
+
+  "cost_at_launch": {
+    "mtd": 7.056,
+    "mtd_source": "budgets describe-budgets (free), snapshot refreshed 2026-09-03T04:41:39Z",
+    "mtd_lag_warning": "The snapshot PREDATES W42 (09:32Z), the W42 rerun machine (12:19Z) and W43 (18:21Z). Per charter 2-jia the fence arithmetic must therefore be MTD + recent waves at their own market price, never bare MTD.",
+    "ce_called": false,
+    "ce_note": "MTD 7.056 < COST_CONFIRM_AT 35 => Cost Explorer not called, the $0.01 not spent."
+  },
+
+  "machines": [
+    {
+      "seed": 3426,
+      "run_id": "spot_20260903_182114_1_859e7ab34e89a8384863cb83b1d6e8cf7e9dec24_0b9171",
+      "instance_id": "i-03e4376022c97706c",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2d",
+      "reaimed": true,
+      "reaim_path": "2a (InsufficientInstanceCapacity, c6i.4xlarge) -> 2b (no spot capacity) -> 2c (no spot capacity) -> 2d",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-03T18:21:58Z",
+      "spot_run_exit": 0,
+      "spot_run_exit_note": "Read directly as $? on the spot_run.sh call with output redirected to a file -- NOT through a pipe. W42 could not record this number because its launch loop read $? through `| tail -12` and got tail's code (evidence discipline 3)."
+    },
+    {
+      "seed": 3713,
+      "run_id": "spot_20260903_182201_1_859e7ab34e89a8384863cb83b1d6e8cf7e9dec24_f1dcc0",
+      "instance_id": "i-006d5c9185041b14b",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2d",
+      "reaimed": true,
+      "reaim_path": "2b (no spot capacity) -> 2c (no spot capacity) -> 2d",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-03T18:22:40Z",
+      "spot_run_exit": 0
+    },
+    {
+      "seed": 3749,
+      "run_id": "spot_20260903_182242_1_859e7ab34e89a8384863cb83b1d6e8cf7e9dec24_c2ce24",
+      "instance_id": "i-038bf5aa88d620f98",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2d",
+      "reaimed": true,
+      "reaim_path": "2c (no spot capacity) -> 2d",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-03T18:22:59Z",
+      "spot_run_exit": 0
+    },
+    {
+      "seed": 3508,
+      "run_id": "spot_20260903_182301_1_859e7ab34e89a8384863cb83b1d6e8cf7e9dec24_d3ea90",
+      "instance_id": "i-0b89c580e16a45fe7",
+      "requested_az": "us-west-2d",
+      "actual_az": "us-west-2d",
+      "reaimed": false,
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-03T18:23:04Z",
+      "spot_run_exit": 0
+    }
+  ],
+
+  "run_id_uniqueness": "Four pairwise-distinct soak-run tag values, confirmed against describe-instances (an evidence source independent of this session's own transcript). Uniqueness rests on the RUN_TOKEN suffix (GH #98), not on wall-clock second resolution.",
+
+  "az_spread": {
+    "requested": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"],
+    "actual": ["us-west-2d", "us-west-2d", "us-west-2d", "us-west-2d"],
+    "distinct_actual_azs": 1,
+    "verdict": "FAIL -- GH #252's acceptance criterion is four pairwise-distinct AZs. This wave is 4x1, the W17 topology #252 exists to prevent.",
+    "ring_classification": "Every one of the three re-aimed machines printed `re-aiming inside the ring`, which #256 classifies as 'NOT a degradation'. NO machine printed `AZ RING EXHAUSTED`. So by the letter of #256 this wave raised no wave-level alarm at all -- that gap is the substance of GH #460.",
+    "capacity_errors": "6 x InsufficientInstanceCapacity across the wave (2a x1 for c6i.4xlarge, then 2b x2 and 2c x2 for spot capacity, plus the initial 2a).",
+    "mechanism": "The --az ring stops as soon as THAT machine launches, so it optimizes for 'a machine took off', not for 'the wave is decorrelated'. Under loose capacity the two objectives agree; under tight capacity every call walks the ring to the single surviving AZ and spread collapses to 1. They diverge exactly when decorrelation matters most, since the surviving AZ is the one whose conditional probability of the next capacity event is elevated.",
+    "not_killed_reason": "Not relaunched. The degradation ladder's step (2) is a switch to c6a.4xlarge, but the instance type is part of this family's measurement basis: rec_slot_cost.py --baseline rec_slot_baseline.json is calibrated on c6i.4xlarge with rec_slots=8, and W39-W42 held the config byte-identical on purpose. Buying decorrelation by changing machine type would spend the SS-DA.2 gate and four waves of comparability; the batch desk does not authorize that spend on its own. Filed to the director instead.",
+    "PRE_REGISTERED_EXPOSURE": "ONE us-west-2d capacity event kills ALL FOUR seeds, not one. The charter default ('a reclaimed machine = that seed loses an arm, re-run that seed, do NOT void the wave') DOES NOT APPLY to a 4x1 topology. GH #408's rerun fence (at most 2 on-demand rerun machines per wave) is by construction insufficient for a total loss, which needs 4. If the harvest round finds this shape, the batch desk voids the wave and hands it to the director rather than chain-launching reruns."
+  },
+
+  "launch_round_roll_call": "18:2xZ fixed action (NOT --leak-only, per the 2026-09-01 self-imposed rule after W33): pending+running == EXACTLY the four intended instances, one-to-one with machines[].run_id, none missing and none extra. describe-volumes: four volumes all in-use, zero orphans. terminated,shutting-down: empty (expected -- nothing of ours has terminated yet this round). Standing cost is the AMI ami-0a990a26d89c66547 only.",
+  "progress_at_launch": "0 games; expected ~96 scored",
+
+  "harvest_obligations": [
+    "Read the death codes from describe-spot-instance-requests, NOT describe-instances: these are spot machines so they have SIRs, which outlive the 1h describe-instances window (GH #427). W42 proved this path works after the window closed.",
+    "Write survival_min AND ab/ba AND arm_depth back into machines[] -- and write BOTH key spellings (ab/ba and ab_games/ba_games): reclaim_blind.py reads ab/ba, and getting it wrong yields exit 2 'UNDECIDABLE', which is the same shape as the bug it exists to catch (exit 2 reads like a pass).",
+    "CHECK AZ COLLAPSE FIRST: if any us-west-2d capacity event hit this wave, expect correlated loss across all four seeds. Void the wave per az_spread.PRE_REGISTERED_EXPOSURE; do NOT chain-launch reruns past the #408 fence.",
+    "Billing-side cost check against the $0.90 constant -- GH #454 is open and this is the wave that can settle it.",
+    "rec_slot_cost.py --baseline rec_slot_baseline.json, and download the .demclaim.json sidecars alongside the *.analysis.json or it exits 2.",
+    "Report winrate_channel and mean.winrate_headroom verbatim; if DEGENERATE, winrate is NOT a reading (SS-CT). GH #352's branch (a) already fired on W42, so a fourth degenerate channel here is confirmation, not news.",
+    "This is wandbleed2's FIRST wave. Read it per SS-DU.5: it is a NARROWING, so a FALLING wandbleed trigger count is the intended effect and not a negative signal. The load-bearing negative face -- of the triggers that REMAIN, a live attacker within 4000 must be present -- is co-equally mandatory, else 'armed sips the wand less' and 'armed stopped sipping the wand at all' are the same number. Zero domain => DOMAIN-NOT-REACHED, never 'no effect'.",
+    "Update queue.json in the SAME work unit as the harvest -- the 2026-09-03T12:15Z round found thirteen rows still carrying W40 numbers under W41's name because that step is a discipline, not a gate."
+  ],
+
+  "issues_filed": ["GH #460 (AZ spread collapse; three questions for the director)"],
+  "carries_forward_open": ["#454", "#449", "#427", "#420", "#432", "#446", "#429", "#418", "#412", "#408", "#402", "#395", "#388 (W34's 103 .dem expire 2026-09-22, 19 days)", "#375", "#352", "#313", "#290", "#271", "#329"]
+}
