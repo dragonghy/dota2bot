@@ -27,6 +27,27 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0SLOTWAIT. **【2026-09-03T22:45Z 新增,**认领 issue**(GH #467,录像组 22:11Z 开,未认领,
+   带帧证据 + 验收标准 + 落地形状建议);按工作流第 1 条优先于 backlog;**产出是一处 gated 行为修复
+   (一个 id 盖两个函数)+ 一份真帧测试 15/15 + 一台新变异台 9/9 + 入集提议 §DW + queue `strategy-41`**:
+   `bots/FunLib/utils.lua` 的 `HasTeamMemberWithCriticalItemInCooldown` / `...SpellInCooldown`
+   各加 `bSlotWait`;唯一闸点 `J.ShouldWaitForTeamCooldowns`(`jmz_func.lua:12436`);
+   `state.json:slotwait_20260903`;报告 `iterations/reports/strategy/20260903T224500Z.md`;
+   零 AWS、零 S3、零 EC2。**已交棒总监(入集)+ 录像组(条件 (a))。**】**
+   **⭐ 主判据(可复用):一个干净的零可以是一个语料事实和一台瞎仪器叠在同一张脸上 ——
+   而只要其中一个解释是良性的,就没有人会去问第二个。**
+   98 次求值 0 TRUE:item 腿是**语料事实**(0/223 成员持有 BKB/refresher);
+   spell 腿是**仪器事实**(`IsValidAbility` 末项 `not IsActivated()`,`IsActivated` 不在任何 spec 上
+   ⇒ 通用 `^Is` 默认 false ⇒ 每一帧每一个技能都结构上为假;149/181 死在这里,0 存活)。
+   ⚠️ 那个洞**已知**(`test_lf_rescue_final_action.lua:57` 逐字点名)但**从没被写在读数旁边**。
+   **⭐⭐ 符号与 `slotpush` 相反且单调**:TRUE = 先别推 ⇒ 漏扫**只会多推**,
+   出厂 TRUE 集 ⊆ armed TRUE 集,**没有 over 方向**;守卫问的是成员自己 ⇒ **无 guard/subject 撕裂**。
+   **⭐⭐⭐ 变异台自己踩的一脚**:M2 第一稿 SURVIVED 是**变异打偏**不是断言弱
+   (`nSlot = i` 在三个函数里,没锚定的正则先命中 `slotpush` 那处,改的是本文件不覆盖的函数)
+   ⇒ **打偏的 mutant 与瞎的断言输出同一个字符串,只有读 diff 能分开**(规则 2 的逆命题)。
+   **下一格(本组下一轮第一项)**:等总监裁 §DW(与 §DV)入集;条件 (a) 在录像组手上。
+   若 §DW 被退回,先补 §DW.3 的决定层归因方案。
+
 0FIXDEBT. **【2026-09-03T19:00Z 新增,**认领 issue**(GH #458 —— 本组 16:30Z 自己开出并置顶,
    工作流第 1 条与 backlog 在这里指向同一件事);**产出是三条 trunk red 清掉 + 一处真正重新生成的
    真实帧 + 一台新变异台(6/6 CAUGHT)+ 一处第二份拷贝的修正 + 一句数字的更正,零行为改动**:
@@ -5002,6 +5023,55 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T22:45Z(**认领 issue** —— **GH #467**(录像组 22:11Z 在买 `slotpush` 条件 (a) 时顺手开出,
+  未认领,带帧证据 + 验收标准),工作流第 1 条优先于 backlog;
+  **产出是一处 gated 行为修复(一个 id 盖两个函数)+ 一份真帧测试 + 一台新变异台 + 入集提议 + queue 行**:
+  `bots/FunLib/utils.lua` 的 `HasTeamMemberWithCriticalItemInCooldown` / `...SpellInCooldown`
+  两个函数各加 `bSlotWait` 形参(修的是**实参**);唯一闸点 `J.ShouldWaitForTeamCooldowns`
+  (`jmz_func.lua:12436`,`check_armed_wiring --cand slotwait` 提交后 **exit 0 / direct / 1 site**);
+  消费者 `aba_push.ShouldWaitForImportantItemsSpells` 改走 wrapper;`typescript/` 三文件同步;
+  `tests/test_slotwait_cooldown_scan.lua` **15/15**;`tools/agent/mutstand_slotwait.sh` **9/9 CAUGHT**;
+  `state.json` 新键 `slotwait_20260903`;**test_set.md §DW + queue `strategy-41`**(**只申请入集,不申请波次**);
+  报告 `iterations/reports/strategy/20260903T224500Z.md`;零 AWS、零 S3、零 EC2。**已交棒总监(入集)+ 录像组(条件 (a))**。
+  **⭐ 主判据(可复用,超出本主题):一个干净的零可以是一个语料事实和一台瞎仪器叠在同一张脸上,
+  而只要其中一个解释是良性的,就没有人会去问第二个。**
+  未动语料上两个谓词 **98 次求值 0 次 TRUE、0 次 flip**,armed 与出厂逐位相同 ——
+  照抄进结论就等于说「出厂没问题」。逐条拆开是**两件独立的事**:
+  **item 腿 = 语料事实**(`ImportantItems` 只有 BKB/refresher,**223 个存活成员帧里 0 个**持有);
+  **spell 腿 = 仪器事实**(181/223 个成员**在** 88 英雄的 `ImportantSpells` 表里、等级与冷却**真从帧上加载**
+  ——1050 个句柄里 216 个 cd>0——但 `IsValidAbility` 末项是 `not ability:IsActivated()`,
+  而 `IsActivated` **不在 `mock/bot_api.lua` 任何 spec 上** ⇒ 落到通用 `^Is` 默认 **false**
+  ⇒ **每一帧每一个技能都结构上为假**;实测 181 个里 **149 死在 `IsActivated`、32 死在 `IsTrained`、0 存活**)。
+  与 `replay_fixture.lua` 已登记的 `GetManaCost` / `GetActualIncomingDamage` 两个零同族。
+  ⚠️ **这台仪器的洞不是本轮新发现**(`test_lf_rescue_final_action.lua:57` 已逐字点名,
+  两份测试已按单位覆写绕过)——**已知 ≠ 已被想起**:它从没出现在任何一处
+  「本语料上这个谓词从不为真」的登记旁边,而那是它唯一改变读数含义的位置。**本轮不修仪器**
+  (改默认值的爆炸半径属于另一个单元),但在测试里加了断言:哪天它被 spec、或哪天语料出现 TRUE,
+  **文件会自己说话**而不是悄悄换意思。
+  **⭐⭐ 符号与 `slotpush` 相反,而且单调**:唯一消费者里 **TRUE = 先别推** ⇒ 漏扫只能让 TRUE 更难成立
+  ⇒ **系统性提前开推、只会多推**,且出厂 TRUE 集 **⊆** armed TRUE 集(**没有 over 方向**);
+  又因为守卫是 `teamMember:IsAlive()`(问取回来的成员自己),**没有 `slotpush` 那种 guard/subject 撕裂**。
+  真帧买到的是**扫描**:49 份带 player_id 的 fixture 上按侧缩水**是全称的**
+  (夜魇 25/25 各够到 1/5、天辉 24/24 各够到 4/5,armed 恒 5/5),
+  且夜魇够到的那一个**还不是名义上的那一个**(步骤 1 问 pid 5,拿回 slot 5)。
+  **⭐⭐⭐ 变异台自己踩的一脚,要登记**:M2 第一稿 **SURVIVED,而原因不是断言弱,是变异打错了地方** ——
+  `nSlot = i` 在 `utils.lua` 里出现在**三个**函数中(本轮两个 + `slotpush` 那个),
+  没锚定的正则**先命中 slotpush 那一处**(行号更靠前 1723;12 空格模式匹配得进 20 空格的行内)
+  ⇒ 改的是**本测试文件不覆盖的函数**,当然全绿。
+  ⇒ **一个打偏的 mutant 和一个瞎的断言,输出是同一个字符串;只有读 diff 能分开**
+  (evidence-discipline 规则 2 的**逆命题**:规则 2 说 mutant 活下来先怀疑断言,
+  这一例说**先确认 mutant 真的存在于你以为的地方**)。锚到 `bSlotWait` 后 CAUGHT;
+  台子另加 `cmp -s` 的 **NO-OP** 分支,让「sed 什么也没匹配上」不再伪装成一次真跑。
+  门:`luacheck_gate.sh` **exit 0 / 0 警告**(容器无 luacheck,gate 自己装的),
+  点名重跑 5 个 Lua 文件全 0,变异台 exit 0。
+  ⚠️ **登记的 LIMIT**:决定层**未在真帧上买到**(条件 (a) 欠录像组,GH #467 §验收(2) 已点名离线检测器);
+  GH #467 §边界 两条**原样继承未放宽**(五个零消费者函数只查过 `utils.lua` 之外;
+  `ImportantItems`/`ImportantSpells` **名单本身**没核过 —— 本轮说的是**扫谁**不是**扫什么**);
+  Lua 全量套件(~100min,GH #124)未跑完 ⇒ 「没让别的文件开红」只覆盖点名的 5 个文件。
+  ⛔ **撞车登记不重诊**:开工自检真实退出码 **3**(第一次用管道跑被工具按 evidence-discipline
+  规则 3 **拒绝**并打 `SELFCHECK_EXIT=2 REFUSED`,已改直读);FINDINGS = `cadence` + `trunk-red(python)`,
+  python 两条红 `test_chain_member_census.py` / `test_mutstand_restore_trap.py` **先于本轮、本轮零 python 改动**;
+  另两条腿 `test_rc_wrapper.py` / `test_selfcheck_lua_leg.py` 读 **UNCERTIFIABLE(不是通过)**。
 - 2026-09-03T19:00Z(**认领 issue** —— **GH #458**,本组 16:30Z 那轮自己开出并置于 backlog 顶部,
   写明「本组下一轮第一项」;工作流第 1 条与 backlog 在这里指向同一件事。
   **产出是三条 trunk red 清掉 + 一处真正重新生成的真实帧 + 一台新变异台 + 一处第二份拷贝的修正 +
