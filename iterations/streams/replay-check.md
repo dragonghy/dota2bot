@@ -10117,3 +10117,61 @@
     ⛔ **证据纪律 3 第十九次踩**:本轮第一条命令又写了管道,脚本当场自拒(exit 2 不是通过)。
   - **Token 用量**:见报告 §11。
   - 完整报告:`iterations/reports/replay-check/20260903T130225Z.md`
+- **2026-09-03T15:55Z(交出去的棒回来了,而它自带的测试把被测对象打了桩)**:
+  新语料 = W42 的**按需补跑机**(seed 3040,S3 前缀 `spot_20260903_121922_..._57c85a`,
+  批测台 15:15Z 刚收,上一轮明确记为「未进本轮语料」)。**宽扫 21/21 局**
+  (`dem_found 27`/`swept 21`/`skipped 6` 暖场/**`unparseable 0`**,`sweep_run.sh` 裸退出码 **0**)。
+  **深查 1 帧全帧还原(真引擎谓词)+ 21 局域帧级核对 —— 低于章程 6 局的吞吐要求,据实登记,理由见报告 §4。**
+  **未改 `bots/`/`game/` 任何一行。**
+  - **⭐ 自检把本轮领到了发现上**:`SELFCHECK_BARE_EXIT=3` 里**新出现** `trunk-red(lua)`,
+    内容是 `test_gated_helper_nesting_census.lua:299` 点名协同组 13:30Z 的 `arbheart` commit
+    (`ea4efee`,回应本组上一轮 GH #455)。「自检报出来的是问题不是判决」——**这次确实是问题**。
+  - **⭐⭐⭐ 主发现,已开 GH #456([strategy]):`arbheart` 的释放被它自己的回填撤销,
+    除非 `slotarb` 同时 armed。** 释放只写 `preferedCamp = nil`,**从不调用
+    `J.Site.UpdateAvailableCamp`**(出厂反抢营护栏 `:868` 走的退役路径)⇒ 刚放掉的营地仍在表里,
+    唯一能挡住它的是 `GetClosestNeutralSpwan` 里的 `IsTheClosestOne` —— **而那正是 `slotarb` 修的东西**。
+    同一帧(`f_260903_101254_cm_farm_stealcamp.lua` = `20260903_101254_slot5` **t=850.1**,
+    即 #455 §3 与 `arbheart` 自己钉的那一帧)跑**真函数**:
+    出厂扫描只读到**一个**花名册成员**而它就是 bot 本人**(CM pid 9 → 槽 5;SB 574.8u 读不到);
+    `IsTheClosestOne(CM, 蛙营, slotarb=false) = **true**` / `= true 时 **false**`;
+    端到端 `GetClosestNeutralSpwan` 出厂**原样还回蛙营**,armed 返回 **nil**(第三种结局,登记)。
+  - **⛔ 它自带的测试看不见,因为把重选函数打了桩**:
+    `test_arbheart_farm_camp_heartbeat.lua` 用 `ccCalls` 计数器让第二次调用**就是**另一个营,
+    且只 arm `arbheart`(`slotarb` 关着)⇒ 真过滤器与真距离排序**一次都没跑**,
+    「armed 落到另一个营」**由桩的构造保证**。它证明了释放发生,**没有**证明回填给出不同的营。
+    与 08-20 踩的「`IsFullyCastable()` 含蓝」同族:**替身谓词比真谓词宽,结论就往一个方向偏**。
+  - **⛔ 必须连引的三条边界**:(i) **不是「`arbheart` 恒为 no-op」** —— t=850.1 CM 距营 5991.9u,
+    回填多半给出别的营;受打击的是**偷营收尾段**(CM 走到 861u 之后蛙营成为最近营),
+    而**没有 `availableCampTable` 的离线快照 ⇒ 「哪一刻它变成最近营」买不到读数**;
+    (ii) `J.IsCampSwitchSafe` **目前恒假**(要 `campdanger`,**不在 57-id 串里**,当场核过计数 0)
+    ⇒「回填绕过安全谓词」**今天是空的**,但 `campdanger` 一旦入集/promote 就不空 —— **按前瞻风险登记**;
+    (iii) `GetActiveMode` **不在 dumper 输出**里,全员设 Farm 是**最有利于排除**的设定 ⇒
+    出厂那条读数是**安全方向的下界**,armed 那条**条件依赖 SB 实战真读 Farm**。
+  - **交付**:`tests/test_arbheart_repick_relatch.lua`(只读 `bots/`)**5 checks / 0 failures**,
+    官方 runner 裸退出码 **0**。
+  - **⭐ `slotarb` 在全新子语料上独立复现**(21 局、另一个 run/另一台机器,不并池):
+    §A lead=20s 夜魇 **42.1%(base)/ 40.8%(armed)** vs 天辉 **12.5% / 9.8%** ⇒ **3.4–4.3×**;
+    STRICT `div_farm` 夜魇 9.4%/11.0% vs 天辉 1.7%/2.9% ⇒ **4–5.5×**。
+    上一轮 78 局是 3.3× 与 5.1× ⇒ **两份语料同一个形状**,源码算术预测 4:1。**不依赖任何腿间比较。**
+    腿间读数**仍不可用**(闩只问一次),现在还多了第二个理由(回填不排除刚放掉的营)。
+    `VERIFY id=slotarb verdict=INDETERMINATE episodes=2649`。
+  - **`VERIFY id=arbheart verdict=INDETERMINATE episodes=0` —— 这是「没法测」不是「没测」**:
+    它**不在 armed 串里**,条件 (a) 在构造上买不到;本轮买到的是**落地形态的结构缺陷**,属找新问题。
+  - **交总监**:`arbheart`↔`slotarb` 是**未声明的跨闸依赖** —— `AGENTS.md`「promote 一个 id
+    会悄悄杀死点名它的门」那一族的**新形状**:不是合取写死为 false,而是**一个 id 的效果沉默地
+    依赖另一个 id 是否 armed**;若 `arbheart` 先于 `slotarb` promote,夜魇侧收尾段退化成 1s 一次的 no-op。
+  - **下一轮第一件事**:(1) 查 #456 回音;(2) 查 #450 回音(圆心若已修,`roshdist` 立刻重测,
+    检测器整段复用);(3) **把深查补回 6 局**(零核验记录且有 carrier:`zusult`/`cmqreach`/`odaoe`/`slotpush`);
+    (4) 盯下一个阵容里有 Axe 的波次。
+  - **欠账**:21 局 timeline 随容器回收(重扫命令见报告 §0);#419 第 8 轮 / #421 第 7 轮仍零评论。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`get_dumper.sh` **0**(cache HIT);
+    `sweep_run.sh` **0**;`slotarb_domain.py` 真语料 **0**;
+    `lua5.1 tests/run_tests.lua arbheart_repick` **0**(5/0);
+    `luacheck_gate.sh` **0**(`0 warnings`,`GATE_EXIT=0 CLEAN`);`arm_push_gate.sh` **0**;
+    自检裸读 **3**(`legs run: 9`,`UNCERTIFIABLE: none` 但 `sc.log:106-107` 又点名两条
+    ⇒ **GH #420 原样复发第十轮**);`trunk-red(python)` 失败集与前三轮**逐字相同**
+    (`illumove_pairs:HP_CUT`、`wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`)⇒ 与本轮无关。
+    ⛔ **证据纪律 3 第二十次踩**:本轮第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**)。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+  - **Token 用量**:见报告 §8。
+  - 完整报告:`iterations/reports/replay-check/20260903T155538Z.md`
