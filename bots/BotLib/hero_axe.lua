@@ -479,7 +479,6 @@ function X.ConsiderQ()
 	
 	local nCastPoint = abilityQ:GetCastPoint()
 	local nManaCost = abilityQ:GetManaCost()
-	local nDamage = 0
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 	local nInRangeEnemyList = J.GetAroundEnemyHeroList( nRadius - 50 )
 --	local nInBonusEnemyList = J.GetAroundEnemyHeroList( nRadius + 200 )
@@ -682,7 +681,10 @@ function X.ConsiderW()
 
 	local nSkillLV = abilityW:GetLevel()
 	local nCastRange = abilityW:GetCastRange() + aetherRange
-	local nRadius = 600
+	-- No radius term here on purpose: Battle Hunger is single-target and its KV
+	-- carries no radius key at all (tests/mock/special_value_shapes.lua).  A
+	-- `local nRadius = 600` stood here, unread, until 2026-09-03; see
+	-- tests/test_dead_numeric_local_census.lua.
 	local nCastPoint = abilityW:GetCastPoint()
 	local nManaCost = abilityW:GetManaCost()
 	
@@ -896,7 +898,13 @@ function X.ConsiderR()
 
 	local nSkillLV = abilityR:GetLevel()
 	local nCastRange = abilityR:GetCastRange()
-	local nRadius = 600
+	-- No radius term here on purpose: Culling Blade is single-target at
+	-- AbilityCastRange 175, and its only *_aoe key is `speed_aoe` 900 -- the
+	-- radius of the ALLY movespeed buff on a kill, not a targeting radius.  A
+	-- `local nRadius = 600` stood here, unread, until 2026-09-03, eight lines
+	-- above the most heavily annotated lever in this file and through every one
+	-- of the four rounds that wrote those annotations; see
+	-- tests/test_dead_numeric_local_census.lua.
 	local nCastPoint = abilityR:GetCastPoint()
 	local nManaCost = abilityR:GetManaCost()
 	

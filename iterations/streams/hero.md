@@ -22,6 +22,24 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-85. **全树还有 46 个「声明了没人读」的数字常量,而它们不是 46 笔杂账,是**一个模板的残留**(GH #ISSUE_DEADCONST)。**
+   2026-09-03T19:51Z 那轮把焦点五英雄的 5 个删干净(**5 → 0**,可证 no-op),并把这一类
+   做成常设普查 `tests/test_dead_numeric_local_census.lua`(焦点五强制 0,全树 `<= 46` 单调棘轮)。
+   报告 `iterations/reports/hero/20260903T195122Z.md`。
+   - **⭐ 形状分布才是这条的价值**:46 个里 **18 个是 `local nRadius = 600`、17 个是
+     `local nDamage = 0`** ⇒ **35/46 = 76% 是同两行**,分布在 **17 个英雄文件**的
+     `ConsiderQ/W/E/R` 里 —— BotLib 英雄模板的 boilerplate,在没接线的英雄身上留了下来。
+     ⇒ **要接就按「模板残留」一次性接,不要按站点一个个论证**;但那 128 个英雄文件
+     **不是本组的作用域**(与 `-84` 的 27 站点同理),先问总监。
+   - **⛔ 不要把棘轮改成 `==`** —— GH #457 刚修过那个形状。**也不要动供给量 floor
+     而不重测**:天花板单独**分不清「没坏」和「一个都没扫到」**(`aetherlens` 那轮
+     第一版解析器全树读到 0 而 `<=` 静默通过)。实测 floor 依据:全树 2590 spans /
+     643 live,焦点五 65 spans / 22 live。
+   - **⚠️ 定义域只有 NUMBER 字面量**:`local sFoo = 'bar'` / `local t = {}` 按构造在域外。
+     想扩到字符串/表的人**必须重测天花板**,不能沿用 46。
+   - **同族但故意在域外的一个**:`hero_zuus.lua:596` 的 `aetherRange = 250`(赋值,不是
+     `local x = <数字>` 声明)—— 归 GH #459 / backlog `-84` 的「一次一小撮」管。
+
 -84. **`aetherlens` 只接了 2 个站点,剩下 **27 个 + 那个 42 消费者的共享文件** 还写着 250(GH #459)。**
    2026-09-03T17:05Z 那轮量清:`item_aether_lens/AbilityValues/cast_range_bonus` 活 KV 是
    **225**,而 `bots/` 下 31 个手写常量里 **29 个写 250**;`hero_axe.lua` / `hero_dazzle.lua`
@@ -3970,6 +3988,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T19:51Z(报告 `iterations/reports/hero/20260903T195122Z.md`;轴 **`deadconst`**)
+  **改 2 个文件:`bots/BotLib/hero_axe.lua`(删 3 个死常量 + 2 段注释)、
+  `bots/BotLib/hero_zuus.lua`(删 2 个 + 2 段注释)、新增
+  `tests/test_dead_numeric_local_census.lua`(6 用例,5 变异全杀)。
+  零新 gate id、零 arm/promote、零 AWS、不申请波次;`state.json` / `queue.json` /
+  `test_set.md` 本轮无新增(没有行为改动 ⇒ 没有可登记的 id)。charter backlog 新增 `-85`。**
+  - 选题:OWNER_PRIORITIES 无本组项(球在批测台 / 协同组 ×2 / 总监);open `[hero]` 五条
+    (#459/#453/#451/#447/#416)球都在总监或在焦点五英雄之下;backlog `-84`…`-80` 分别
+    在等总监 / 排在焦点之后 / 等录像组 / 等 GH #438 ⇒ 走工作流步骤 1 的兜底。
+  - **⭐⭐ 缺陷:焦点五的 `Consider*` 里有 5 个「声明了、从来没被读过」的数字常量,
+    其中两个直接误述了技能。** `hero_axe.lua X.ConsiderR` 的 `nRadius = 600`:
+    Culling Blade 是单体、`AbilityCastRange 175`,唯一的 `*_aoe` 键是击杀后友军移速 buff 的
+    `speed_aoe 900` —— **技能里没有任何 600**;而它**坐在全仓注释最密的杠杆(`hero-2`)
+    上方第 8 行,四个轮次写的 ~20 行注释从它上面走过去了**。
+    `hero_zuus.lua X.ConsiderR` 的 `nCastRange = 1600` 更坏:Thundergod's Wrath 是**全球**的
+    (`zuus_thundergods_wrath` **完全没有 `AbilityCastRange` 键**)⇒ 来审「Zeus 是不是隔太远
+    就开大」的读者被展示了**一道从来不存在的闸门**。这是**假前提**,不是无害残留
+    (同族:GH #447 的 `ckpush` 证据句、GH #235 收回的 `nodive` 那句)。
+  - **⭐ 为什么从来没有计数器:不是漏跑,是按策略关掉的。** `.luacheckrc` 配置成
+    `only = { "1" }` —— **只启用全局相关的 1xx**,unused-local 家族(2xx)**全树关闭**。
+    那条策略本身不错(1xx 抓 typo 和漏写 local),但这一类因此**一次都没被数过**。
+  - **⭐ 全树 46 个不是 46 笔杂账,是一个模板的残留**:**18 个 `local nRadius = 600` +
+    17 个 `local nDamage = 0` = 35/46(76%)**,分布在 17 个英雄文件的 `ConsiderQ/W/E/R`。
+    **登记不修**(GH #ISSUE_DEADCONST):那 128 个文件不是本组作用域,与 `-84` 的 27 站点同理。
+  - **⚠️ 进场假设被 KV 快照翻过来了,记一笔**:我原以为 `X.ConsiderE` 的
+    `600 + nSkillLV * 100` 是编的、`nJumpDistance = 450` 才是真几何。**正好相反** ——
+    前者与 `zuus_heavenly_jump/range` 的 700/800/900/1000 **逐字相同**(落地冲击波搜敌半径,
+    技能无目标),后者是 `hop_distance` **375/450/525/600 的第 2 级那一档**被当成常数。
+    已把「它是对的」写进代码注释,免得下一位来「修」。
+  - 变异台 **5/5 全杀**(M1 加回 axe 那个死站点 → `[scope]`+`[ratchet]` 两条,**正确**;
+    M4 解析器致盲 → 6 条全红),trap 打印 `RESTORE verified byte-identical`。
+  - **⚠️ 第一次的定向动态基线作废并重取**:它在后台跑,而我同时在改同一棵树 ——
+    与昨轮报告里那条「变异台 + 后台自检共享 inode」同族(GH #365 §3 / #229)。
+    **按那条报告自己给的处置重跑:干净 HEAD 放进 `git worktree`。**
+  - 门:开工自检第一条命令**又被证据纪律 3 拒答**(stdout 接进 `tail` ⇒ `REFUSED`,
+    **不是通过**);改对后跑满 **600s 被我给的 `timeout` 杀掉**,`EXIT=124` ——
+    **最后那条 fast Lua detectors 腿一次都没跑,这一侧本轮没人看过**。
+    跑完的腿:unlanded 0、版本锚点 2/2 OK、**2 条 python TRUNK RED 先于本轮**
+    (`test_wave_gate_keys.py` = GH #462;`test_mutstand_restore_trap.py` 唯一一条
+    `mutstand_fixture_debt.sh traps a function that exists (rm)`,**没有 issue**)。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
+  - **交出去的棒**:(1) 全树 46 站点 + 模板根因 → GH #ISSUE_DEADCONST,球在**总监**
+    (要不要授权本组或别人按「模板残留」一次性接);(2) `mutstand_fixture_debt.sh` 的
+    trap 陷了 `rm` 而不是函数 → 球在**总监 / 该变异台作者**;(3) `hero_zuus.lua:596` 的
+    `aetherRange = 250` 是同族但在本普查域外(赋值不是声明),归 GH #459 / backlog `-84`。
+
 - 2026-09-03T17:05Z(报告 `iterations/reports/hero/20260903T170500Z.md`;轴 **`aetherlens`**)
   **改 4 个文件:`bots/FunLib/jmz_func.lua`(新 helper `J.GetAetherLensRangeBonus` + 论证块)、
   `bots/BotLib/hero_crystal_maiden.lua` 与 `bots/BotLib/hero_lion.lua`(各 1 行接线 + 注释)、

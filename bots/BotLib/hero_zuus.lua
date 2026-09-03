@@ -1088,7 +1088,13 @@ function X.ConsiderR()
 		return BOT_ACTION_DESIRE_NONE
 	end
 
-	local nCastRange = 1600
+	-- No range term here on purpose, and this one was ACTIVELY MISLEADING: a
+	-- `local nCastRange = 1600` stood here, unread, until 2026-09-03.
+	-- Thundergod's Wrath is GLOBAL -- zuus_thundergods_wrath carries no
+	-- AbilityCastRange key whatsoever (tests/mock/special_value_shapes.lua) --
+	-- so a reader auditing "does Zeus ult from too far away" was shown a
+	-- 1600-unit gate that has never existed.  See
+	-- tests/test_dead_numeric_local_census.lua.
 	local nCastPoint = abilityR:GetCastPoint()
 	local manaCost = abilityR:GetManaCost()
 	local nDamage = abilityR:GetSpecialValueInt( 'damage' )
@@ -1271,8 +1277,16 @@ function X.ConsiderE()
 		return BOT_ACTION_DESIRE_NONE
 	end
 
-	local nJumpDistance = 450
 	local nSkillLV = abilityE:GetLevel()
+	-- `600 + nSkillLV * 100` is 700/800/900/1000, which is zuus_heavenly_jump's
+	-- own `range` ladder verbatim (tests/mock/special_value_shapes.lua) -- the
+	-- radius the landing shockwave searches, NOT a cast range (the ability is
+	-- no-target; X.ConsiderE's only executor is ActionQueue_UseAbility).  It is
+	-- correct, and it is checked here so the next reader does not "fix" it.
+	-- What did NOT survive: a `local nJumpDistance = 450` above this line,
+	-- unread, holding the LEVEL-2 rung of `hop_distance` 375/450/525/600 as
+	-- though the hop were a constant.  See
+	-- tests/test_dead_numeric_local_census.lua.
 	local nCastRange = 600 + nSkillLV * 100
 	local nCastPoint = abilityE:GetCastPoint()
 	local nManaCost = abilityE:GetManaCost()
