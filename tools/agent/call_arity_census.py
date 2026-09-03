@@ -248,16 +248,20 @@ ALLOWLIST = {
 # the call is fine, ROUTED means the call is broken and someone else's to fix.
 # A row may only leave this table by being FIXED (or refuted in its issue).
 ROUTED = {
-    # ____exports.GetItem(bot, itemName) -> GetItemFromCountedInventory(bot,
-    # itemName, 6) -> `bot:GetItemInSlot(0)`.  With one argument bot is the
-    # STRING 'item_shivas_guard', and a string has no GetItemInSlot: measured
-    # under lua5.1, `("x"):GetItemInSlot(0)` raises "attempt to call method
-    # ... (a nil value)".  Live: CanDoCombo2 reaches the first of these
-    # whenever tinker has blink + Laser + WarpFlare castable.  The engine's
-    # error handler is broken ("error in error handling" masks the text), so
-    # this has been failing without a message.
-    ("bots/BotLib/hero_tinker.lua", "J.Utils.GetItem", "UNDER", 1, 2):
-        (8, "TEETH: runtime error, hero group -- GH #451"),
+    # FIXED 2026-09-03 (hero group, GH #451): the eight one-argument
+    # `J.Utils.GetItem` calls in hero_tinker.lua now pass the bot, so this row
+    # left the table the only way a ROUTED row may -- by being repaired.
+    #
+    # One correction worth carrying forward, because the row's own sibling got
+    # it right: this table read the tinker row as "Live: CanDoCombo2 reaches
+    # the first of these whenever tinker has blink + Laser + WarpFlare
+    # castable", while the `mode_roam_generic.lua` row below reads "LATENT, not
+    # live: GeneralReactToStackedDebuff has no caller in bots/".  The tinker
+    # calls were latent too, and for a stronger reason -- ALL SEVEN of their
+    # enclosing functions are unreachable from the three members the engine
+    # dispatches on a BotLib module.  An enclosing `if` is not reachability.
+    # Counted, and kept: tests/test_hero_export_reachability.py.
+    #
     # `not J.Utils.NumActionTypeInQueue(BOT_ACTION_TYPE_ATTACK) <= 2` carries
     # TWO independent errors, either of which raises on its own: the missing
     # `bot` (the enum becomes the receiver) and the precedence -- `not` binds
