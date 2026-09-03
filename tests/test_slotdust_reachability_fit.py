@@ -81,8 +81,13 @@ def snap(hero, idx, team, pid, t, x=0.0, items=None):
 
 
 def game(caster_team, caster_pid, sandking_pid=None, radiance_team=None,
-         damage_at=None, t_cast=10.0):
-    """Ten pre-horn bodies, one dust cast, and the three exclusions dialled."""
+         burn_at=None, damage_at=None, t_cast=10.0):
+    """Ten pre-horn bodies, one dust cast, and the three exclusions dialled.
+
+    `radiance_team` is the RETIRED draft census (GH #445 / LIMIT 13) and no
+    longer blocks anything; `burn_at` is the carrier that does -- an
+    `item_radiance` DAMAGE tick landing on the caster's own body.
+    """
     snaps = []
     for pid in range(10):
         team = RAD if pid < 5 else DIRE
@@ -94,7 +99,12 @@ def game(caster_team, caster_pid, sandking_pid=None, radiance_team=None,
             snaps.append(snap(name, 100 + pid, team, pid, t,
                               x=0.0 if is_caster else 9000.0, items=items))
     caster = "npc_dota_hero_h%d" % caster_pid
+    attacker = "npc_dota_hero_h%d" % (9 if caster_team == RAD else 0)
     events = []
+    if burn_at is not None:
+        events.append({"t": burn_at, "type": "DAMAGE", "actor": attacker,
+                       "target": caster, "inflictor": sd.RADIANCE_BURN,
+                       "value": 60, "actor_hero": True, "target_hero": True})
     if damage_at is not None:
         events.append({"t": damage_at, "type": "DAMAGE",
                        "actor": "npc_dota_hero_h0", "target": caster,
@@ -131,12 +141,15 @@ def reference(tl, armed_side):
     key_of = {k[0]: (k, first[k]["team"], first[k]["player_id"]) for k in first}
     armed_team = RAD if armed_side == "radiant" else DIRE
     sandking = any(k[0] == sd.SANDKING for k in bodies)
-    radiance_teams = {s["team"] for s in snaps
-                      if sd.RADIANCE in (s.get("items") or ())}
     dmg = collections.defaultdict(list)
+    burn = collections.defaultdict(list)
     for e in events:
-        if e.get("type") == "DAMAGE" and e.get("target_hero"):
+        if e.get("type") != "DAMAGE":
+            continue
+        if e.get("target_hero"):
             dmg[e["target"]].append(e["t"])
+        if e.get("inflictor") == sd.RADIANCE_BURN:
+            burn[e["target"]].append(e["t"])
 
     out = {leg: collections.Counter() for leg in ("armed", "baseline")}
     for e in events:
@@ -150,7 +163,6 @@ def reference(tl, armed_side):
             continue
         out[leg]["dust_casts"] += 1
         slot = pid + 1 if team == RAD else pid - 4
-        enemy_team = DIRE if team == RAD else RAD
         reach = slot in ((1, 2, 3, 4) if team == RAD else (5,))
         if reach:
             out[leg]["reachable_slot"] += 1
@@ -159,7 +171,8 @@ def reference(tl, armed_side):
         if sandking:
             out[leg]["blocked_b2_sandking"] += 1
             continue
-        if enemy_team in radiance_teams:
+        if any(abs(bt - e["t"]) <= sd.B3_BURN_WINDOW
+               for bt in burn.get(e["actor"], ())):
             out[leg]["blocked_b3_radiance"] += 1
             continue
         if [t for t in dmg.get(e["actor"], ())
@@ -177,7 +190,11 @@ for team, pids in ((RAD, range(5)), (DIRE, range(5, 10))):
             BATTERY.append(("plain", team, pid, armed, {}))
             BATTERY.append(("b2", team, pid, armed,
                             {"sandking_pid": 9 if team == RAD else 0}))
-            BATTERY.append(("b3", team, pid, armed,
+            BATTERY.append(("b3", team, pid, armed, {"burn_at": 9.8}))
+            # The RETIRED census (GH #445): an enemy radiance in the draft with
+            # no burn on this caster.  Kept in the battery on purpose -- it is
+            # the case whose answer the tightening changes.
+            BATTERY.append(("b3-census-only", team, pid, armed,
                             {"radiance_team": DIRE if team == RAD else RAD}))
             BATTERY.append(("b4", team, pid, armed, {"damage_at": 9.6}))
             BATTERY.append(("stale-dmg", team, pid, armed, {"damage_at": 8.9}))
@@ -197,7 +214,7 @@ for tag, team, pid, armed, kw in BATTERY:
                 mismatch.append((tag, team, pid, armed, leg, col,
                                  got[0][leg][col], ref[leg][col]))
 check("the battery really exercised every slot, leg and exclusion",
-      len(BATTERY) == 100, "%d cases" % len(BATTERY))
+      len(BATTERY) == 120, "%d cases" % len(BATTERY))
 check("every pre-existing column matches an independently written cascade",
       not mismatch, str(mismatch[:3]))
 
@@ -225,7 +242,7 @@ check("a REACHABLE-slot cast is never exclusive (that is the old behaviour)",
 check("...yet the fit records it as a cast AND as a B2/B3/B4 survivor",
       res["armed"]["fit_casts_s5"] == 1 and res["armed"]["fit_survive_s5"] == 1)
 
-for kw, why in (({"sandking_pid": 0}, "b2"), ({"radiance_team": RAD}, "b3"),
+for kw, why in (({"sandking_pid": 0}, "b2"), ({"burn_at": 9.8}, "b3"),
                 ({"damage_at": 9.6}, "b4")):
     res = sd.scan_game(game(DIRE, 9, **kw), "dire")[0]
     check("a reachable-slot cast blocked by %s is a cast, not a survivor" % why,

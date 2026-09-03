@@ -24,6 +24,13 @@ The second cause is pinned too: `WasRecentlyDamagedByPlayer` is per-PLAYER, so a
 summon's or illusion's damage counts for the engine while its combat-log actor
 is not a hero.  Filtering the B4 exclusion on `actor_hero` leaves B4 reachable
 on exactly those frames.
+
+NOTE (GH #445): B3 no longer EXCLUDES on `items[]` at all -- the shipped clause
+is a per-frame test on the caster and the exclusion now reads the caster's own
+`item_radiance` burn tick (probe LIMIT 13, ratcheted in
+tests/test_slotdust_b3_perframe.py).  The `items[]` census survives as the
+`b3_census_only` contrast column, which is what keeps the vocabulary trap above
+pinned from both sides; the assertion below is about that column.
 """
 import os
 import subprocess

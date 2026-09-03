@@ -64,8 +64,11 @@ they cannot invent one):
   B2 -> the game carries no Sand King on either side (draft census).  The
         modifier can only come from an enemy Sand King; excluding on EITHER
         side is slack on purpose.
-  B3 -> no hero on the caster's ENEMY side ever holds a radiance in this game
-        (snapshot `items[]`).  "Ever", not "by now": slack again.
+  B3 -> no `item_radiance` DAMAGE tick lands on THE CASTER in [t-1.5, t+1.5].
+        The shipped clause is `bot:HasModifier('modifier_item_radiance_debuff')`
+        -- a per-frame test on the caster's own body -- so the carrier is the
+        burn tick, not the draft (LIMIT 13; this used to be a whole-game team
+        census and that census whitewashed one whole side, GH #445).
   B4 -> no DAMAGE event of any kind lands on the caster in [t-0.8, t).  The
         engine clause is 0.5 s; 0.8 s is a 60% margin over the 0.1 s event grid.
 
@@ -131,7 +134,10 @@ LIMITS -- read before quoting a number.
     it is ALWAYS false, and it fails SILENTLY in the permissive direction for
     any "the enemy does not carry X" exclusion.  That is exactly how this
     script's B3 clause read "no radiance in this game" for 64 straight games
-    while the combat log carried 20,167 `item_radiance` damage events.
+    while the combat log carried 20,167 `item_radiance` damage events.  The
+    B3 exclusion no longer reads `items[]` at all (LIMIT 13), but the census it
+    used to read is still computed, as the `b3_census_only` contrast column, so
+    the two spellings stay pinned from both sides in the selfcheck.
 10. `WasRecentlyDamagedByPlayer(id, 0.5)` IS PER-PLAYER, NOT PER-HERO-BODY: a
     player's summons and illusions carry their damage too, and those actors are
     not heroes in the combat log.  The B4 exclusion therefore takes ANY damage
@@ -154,6 +160,40 @@ LIMITS -- read before quoting a number.
     may simply be a slot nobody cast dust from -- read fit_casts beside it.  If
     every baseline slot carries survivors the reading is about B2/B3/B4, not
     about reachability.
+13. *** B3 IS A PER-FRAME TEST ON THE CASTER, AND MODELLING IT AS A DRAFT
+    CENSUS DELETED ONE WHOLE SIDE OF THE TABLE (GH #445).  The shipped clause
+    is `bot:HasModifier('modifier_item_radiance_debuff')`
+    (ability_item_usage_generic.lua:7326).  The first version asked instead
+    whether the caster's ENEMY side EVER held a radiance -- a necessary
+    condition, so the direction was safe, but on a MIRRORED-DRAFT corpus the
+    radiance carrier is pinned to one physical team by construction (W40: all
+    20,167 burn events from dire's own skeleton_king, radiant 0), which made
+    the clause TRUE for every radiant caster in 46/64 games and FALSE for every
+    dire one.  Result: `ba/baseline/radiant` read 0/11 and was quoted as
+    "radiant is unreachable" when it was an erased row.  A census whose truth
+    value is decided by the draft rather than by the frame is not a
+    conservative version of a per-frame predicate -- it is a per-SIDE filter
+    wearing one.
+    The carrier now is the burn tick itself (`item_radiance` DAMAGE on the
+    caster), which is the only radiance evidence this corpus is KNOWN to carry.
+    Two consequences to read before quoting the new number:
+      (a) THE WINDOW IS THE SLACK.  Radiance burns on a 1.0 s tick; B3_BURN_
+          WINDOW is 1.5 s each way, a 50% margin, so a debuff applied just
+          before the cast (first tick still pending) or lingering just after it
+          is still caught.  Wider = more blocking = fewer survivors, which is
+          the safe direction for LIMIT 6.  A debuff carried with NO tick inside
+          3 s would invent a survivor; nothing in this corpus is known to
+          produce one, and that is a stated assumption, not a measurement.
+      (b) THE BETTER CARRIER IS NOT ASSUMED TO EXIST.  If the combat log emits
+          MODIFIER_ADD/MODIFIER_REMOVE for `modifier_item_radiance_debuff`, the
+          interval is exact and the window becomes unnecessary.  Whether it does
+          is a corpus fact nobody here has bought, so this script COUNTS those
+          events (`radiance_debuff_add` / `_remove`) and blocks on neither.
+          The next run reads the count and decides; it does not guess.
+      (c) `radiance_burn_ticks` IS THE DOMAIN PRICE OF THIS WHOLE CLAUSE.  If it
+          is 0 over a corpus, B3 blocked nothing there and the table cannot tell
+          "B3 never fired" from "the carrier is missing" -- the report says so
+          in one loud line rather than printing a clean-looking zero.
 """
 import argparse
 import collections
@@ -176,6 +216,12 @@ SANDKING = "npc_dota_hero_sand_king"
 # is not a rare miss -- it is ALWAYS false.  This constant is the snapshot
 # spelling on purpose.
 RADIANCE = "radiance"
+# B3's carrier (LIMIT 13).  These two ARE combat-log spellings on purpose: the
+# burn tick is a DAMAGE event's inflictor and the debuff is a MODIFIER_ADD's,
+# neither is ever compared against snapshot `items[]`.
+RADIANCE_BURN = "item_radiance"
+RADIANCE_DEBUFF = "modifier_item_radiance_debuff"
+B3_BURN_WINDOW = 1.5     # burn ticks at 1.0 s; 50% margin on each side
 RADIANT, DIRE = 2, 3
 
 STAMP = re.compile(r"^mirror:(?P<cand>.*):s(?P<seed>\d+):(?P<side>radiant|dire)$")
@@ -346,16 +392,47 @@ def scan_game(tl, armed_side):
         for pid, k in pids.items():
             key_of.setdefault(k[0], (k, team, pid))
     armed_team = RADIANT if armed_side == "radiant" else DIRE
+    out = {leg: collections.Counter() for leg in ("armed", "baseline")}
 
     # B2 census: a Sand King anywhere in the draft disarms the exclusive column.
     sandking = any(k[0] == SANDKING for k in by_ent)
-    # B3 census: which side ever holds a radiance.
+    # B3 census: which side ever holds a radiance.  NO LONGER AN EXCLUSION
+    # (LIMIT 13) -- kept as the `b3_census_only` contrast column, which is what
+    # measures how much of the table the old draft-wide rule was erasing.
     radiance_teams = set()
     for k, frames in by_ent.items():
         for s in frames:
             if RADIANCE in (s.get("items") or ()):
                 radiance_teams.add(s["team"])
                 break
+
+    # B3 carrier: `item_radiance` burn ticks landing on each body, plus the
+    # MODIFIER_ADD/REMOVE counts that would be the exact carrier if this corpus
+    # turns out to emit them (LIMIT 13(b) -- counted, never blocked on).
+    burn = collections.defaultdict(list)
+    mod_events = collections.Counter()
+    for e in events:
+        et, inf = e.get("type"), e.get("inflictor")
+        if et == "DAMAGE" and inf == RADIANCE_BURN:
+            burn[e.get("target")].append(e["t"])
+        elif inf == RADIANCE_DEBUFF and et in ("MODIFIER_ADD", "MODIFIER_REMOVE"):
+            mod_events[(e.get("target"), et)] += 1
+    for v in burn.values():
+        v.sort()
+    for (name, et), n in mod_events.items():
+        got = key_of.get(name)
+        if got is None:
+            continue
+        leg = "armed" if got[1] == armed_team else "baseline"
+        out_key = ("radiance_debuff_add" if et == "MODIFIER_ADD"
+                   else "radiance_debuff_remove")
+        out[leg][out_key] += n
+    for name, ticks in burn.items():
+        got = key_of.get(name)
+        if got is None:
+            continue
+        leg = "armed" if got[1] == armed_team else "baseline"
+        out[leg]["radiance_burn_ticks"] += len(ticks)
 
     # LIMIT 10: `WasRecentlyDamagedByPlayer` counts a PLAYER's damage, which
     # includes that player's summons and illusions -- entities whose combat-log
@@ -371,7 +448,6 @@ def scan_game(tl, armed_side):
     for v in dmg_by_target.values():
         v.sort()
 
-    out = {leg: collections.Counter() for leg in ("armed", "baseline")}
     rows, bugs = [], []
     for e in events:
         inf = e.get("inflictor")
@@ -404,8 +480,18 @@ def scan_game(tl, armed_side):
         # cascade below is left byte-for-byte as it was and simply reads this
         # answer, so every pre-existing column keeps its exact value
         # ([column-parity] in tests/test_slotdust_reachability_fit.py).
+        # LIMIT 13: the CASTER's own burn decides B3, not the draft.  The old
+        # draft census is still evaluated, but only as the contrast column that
+        # says how many casts it was erasing.
+        burning = any(abs(bt - e["t"]) <= B3_BURN_WINDOW
+                      for bt in burn.get(e.get("actor"), ()))
+        census = enemy_team in radiance_teams
+        if census and not burning:
+            out[leg]["b3_census_only"] += 1
+        if burning and not census:
+            out[leg]["b3_tick_no_census"] += 1
         blocked = ("b2" if sandking else
-                   "b3" if enemy_team in radiance_teams else
+                   "b3" if burning else
                    "b4" if dmg else None)
         out[leg]["fit_casts_s%d" % slot] += 1
         if blocked is None:
@@ -529,17 +615,63 @@ def selfcheck():
     check("a Sand King in the draft blocks the cast (B2 is reachable)",
           res["armed"]["blocked_b2_sandking"] == 1)
 
-    # B3: an enemy radiance disarms it.  Spelled the SNAPSHOT way (LIMIT 9).
+    # --- B3, TIGHTENED TO THE CASTER'S OWN BURN (GH #445, LIMIT 13) ---------
+    burn_tick = [{"t": 9.8, "type": "DAMAGE", "actor": "npc_dota_hero_h0",
+                  "target": "npc_dota_hero_h5", "inflictor": RADIANCE_BURN,
+                  "value": 60, "actor_hero": True, "target_hero": True}]
+    res, _, _ = scan_game(build(DIRE, 5, events=burn_tick + cast), "dire")
+    check("a burn tick ON THE CASTER blocks the cast (B3 is reachable)",
+          res["armed"]["blocked_b3_radiance"] == 1
+          and res["armed"]["exclusive"] == 0)
+    # *** THE WHITEWASH (GH #445).  An enemy radiance in the DRAFT, with no burn
+    # landing on this caster, used to block every cast that side threw for the
+    # rest of the game -- which is how `ba/baseline/radiant` read 0/11 and got
+    # quoted as "radiant is unreachable".
     res, _, _ = scan_game(build(DIRE, 5, events=cast,
                                 enemy_items=["radiance"] + [""] * 8), "dire")
-    check("an enemy radiance blocks the cast (B3 is reachable)",
-          res["armed"]["blocked_b3_radiance"] == 1)
-    # LIMIT 9 pinned: the combat-log spelling must NOT be what items[] is read
-    # for.  This is the real defect that put 10 casts on the baseline leg.
+    check("an enemy radiance the caster is NOT burning from no longer blocks",
+          res["armed"]["blocked_b3_radiance"] == 0
+          and res["armed"]["exclusive"] == 1
+          and res["armed"]["b3_census_only"] == 1)
+    # The retired census is still computed, so LIMIT 9 stays pinned from both
+    # sides: the snapshot spelling must reach the contrast column and the
+    # combat-log spelling must NOT.
     res, _, _ = scan_game(build(DIRE, 5, events=cast,
                                 enemy_items=["item_radiance"] + [""] * 8), "dire")
     check("the combat-log spelling is not the items[] spelling (LIMIT 9)",
+          res["armed"]["b3_census_only"] == 0
+          and res["armed"]["exclusive"] == 1)
+    # The window is the slack (LIMIT 13(a)): a tick 1.5 s out still blocks, one
+    # further out does not, and a tick AFTER the cast counts too (the debuff was
+    # already on when the cast went out).
+    late = [dict(burn_tick[0], t=11.5)]
+    res, _, _ = scan_game(build(DIRE, 5, events=late + cast), "dire")
+    check("a burn tick %.1f s AFTER the cast still blocks" % B3_BURN_WINDOW,
+          res["armed"]["blocked_b3_radiance"] == 1)
+    far = [dict(burn_tick[0], t=11.6)]
+    res, _, _ = scan_game(build(DIRE, 5, events=far + cast), "dire")
+    check("a tick outside the window does not block",
           res["armed"]["blocked_b3_radiance"] == 0
+          and res["armed"]["exclusive"] == 1)
+    # A burn on SOMEONE ELSE is not this caster's debuff.
+    other = [dict(burn_tick[0], target="npc_dota_hero_h6")]
+    res, _, _ = scan_game(build(DIRE, 5, events=other + cast), "dire")
+    check("a burn tick on another hero does not block this caster",
+          res["armed"]["blocked_b3_radiance"] == 0
+          and res["armed"]["exclusive"] == 1)
+    # LIMIT 13(c): the carrier's own domain price is counted, per leg.
+    res, _, _ = scan_game(build(DIRE, 5, events=burn_tick + cast), "dire")
+    check("the burn ticks are counted as the carrier's domain price",
+          res["armed"]["radiance_burn_ticks"] == 1)
+    # LIMIT 13(b): the exact carrier is COUNTED and never blocked on, so a
+    # corpus that emits it says so instead of silently changing the answer.
+    mod = [{"t": 9.0, "type": "MODIFIER_ADD", "actor": "npc_dota_hero_h0",
+            "target": "npc_dota_hero_h5", "inflictor": RADIANCE_DEBUFF,
+            "value": 0, "actor_hero": True, "target_hero": True}]
+    res, _, _ = scan_game(build(DIRE, 5, events=mod + cast), "dire")
+    check("a MODIFIER_ADD is counted but does NOT block (LIMIT 13(b))",
+          res["armed"]["radiance_debuff_add"] == 1
+          and res["armed"]["blocked_b3_radiance"] == 0
           and res["armed"]["exclusive"] == 1)
     # LIMIT 10 pinned: damage from a NON-hero actor still disarms B4, because
     # WasRecentlyDamagedByPlayer counts a player's summons and illusions.
@@ -626,6 +758,14 @@ SLOTS = (1, 2, 3, 4, 5)
 FIT_KEYS = tuple("fit_%s_s%d" % (w, s) for w in ("casts", "survive")
                  for s in SLOTS)
 
+# LIMIT 13.  Deliberately NOT part of KEYS: those nine columns are the cascade,
+# and `tests/test_slotdust_reachability_fit.py` compares every one of them
+# against an independently transcribed oracle.  These five are diagnostics ABOUT
+# the B3 clause -- what its carrier looks like in this corpus, and what the
+# retired draft census would have blocked -- so they are reported separately.
+B3_KEYS = ("radiance_burn_ticks", "radiance_debuff_add",
+           "radiance_debuff_remove", "b3_census_only", "b3_tick_no_census")
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -680,7 +820,7 @@ def main():
         layer = "ab" if m.group("side") == "radiant" else "ba"
         layers[layer]["games"] += 1
         for leg in ("armed", "baseline"):
-            for k in KEYS + FIT_KEYS:
+            for k in KEYS + FIT_KEYS + B3_KEYS:
                 layers[layer]["%s_%s" % (leg, k)] += res[leg][k]
         for r in rows + bugs:
             r["game"] = base
@@ -708,6 +848,38 @@ def main():
     print("NOT the fix (LIMIT 6) -- %d such row(s) below." % len(all_bugs))
     print("Both layers are printed because this estimator does NOT cancel side")
     print("bias (铁律 4(i-b)): a count that flips sign between them is noise.")
+
+    # --- B3 CARRIER (GH #445, LIMIT 13) --------------------------------------
+    # Printed BEFORE the fit table, because a zero here disqualifies every B3
+    # reading below it and a reader who meets that fact afterwards has already
+    # quoted the wrong number.
+    print()
+    print("B3 CARRIER -- the tightened clause reads the CASTER's own burn tick,")
+    print("not a draft census.  `b3_census_only` is what the retired census was")
+    print("blocking and this one is not (LIMIT 13).")
+    hdr3 = "%6s %9s" % ("layer", "leg") + "".join(
+        "%*s" % (max(len(k) + 2, 12), k) for k in B3_KEYS)
+    print(hdr3)
+    print("-" * len(hdr3))
+    for layer in ("ab", "ba"):
+        for leg in ("armed", "baseline"):
+            print("%6s %9s" % (layer, leg) + "".join(
+                "%*d" % (max(len(k) + 2, 12),
+                         layers[layer]["%s_%s" % (leg, k)]) for k in B3_KEYS))
+    ticks = sum(layers[l]["%s_radiance_burn_ticks" % leg]
+                for l in ("ab", "ba") for leg in ("armed", "baseline"))
+    adds = sum(layers[l]["%s_radiance_debuff_add" % leg]
+               for l in ("ab", "ba") for leg in ("armed", "baseline"))
+    if ticks == 0:
+        print("*** CARRIER ABSENT: zero `item_radiance` DAMAGE ticks in this")
+        print("*** corpus, so B3 blocked NOTHING here and this table cannot")
+        print("*** tell that apart from a game with no radiance in it.  Do not")
+        print("*** read the fit rows below as a B3 result (LIMIT 13(c)).")
+    if adds:
+        print("MODIFIER_ADD for %s is present (%d): the exact interval carrier"
+              % (RADIANCE_DEBUFF, adds))
+        print("exists in this corpus and the +/-%.1fs window can be retired."
+              % B3_BURN_WINDOW)
 
     # --- REACHABILITY FIT (GH #441) -----------------------------------------
     # Both layers are registered per 铁律 4(i-a).  4(i-b) does NOT apply: the

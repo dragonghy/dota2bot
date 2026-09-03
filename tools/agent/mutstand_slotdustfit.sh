@@ -96,7 +96,8 @@ MUTANTS = {
     # M11: main aggregates the old columns only, so the fit counters never
     #      leave scan_game.  Every cell reads 0/0 and nothing is ever refuted:
     #      the report looks like a corpus that agrees with the shipped model.
-    "M11": [(T, "            for k in KEYS + FIT_KEYS:", "            for k in KEYS:")],
+    "M11": [(T, "            for k in KEYS + FIT_KEYS + B3_KEYS:",
+             "            for k in KEYS + B3_KEYS:")],
     # ---- the pre-existing columns move ----------------------------------
     # M3: B4 drops out of the shared cascade.  This is the mutant the parity
     #     oracle in section 0 exists for: if it survives, that section is
