@@ -10173,5 +10173,7 @@
     (`illumove_pairs:HP_CUT`、`wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`)⇒ 与本轮无关。
     ⛔ **证据纪律 3 第二十次踩**:本轮第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**)。
     **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
-  - **Token 用量**:见报告 §8。
+  - **发表顺序(GH #290)**:GH #456 **发表在两次 push 之后**,
+    `claim_precheck.sh` 裸退出码 **0**(`local commits not on origin/main: 0`,`OK to publish`)。
+  - **Token 用量**:`TOKENS total_in=8,703,971 out=56,722 turns=66`(报告 §8)。
   - 完整报告:`iterations/reports/replay-check/20260903T155538Z.md`
