@@ -75,8 +75,17 @@ from stayfield_domain import SIDE_TEAM, canon, load_sweeps      # noqa: E402
 # frame).  Exposed as flags so a reader can see how sensitive the headline is.
 BOTH_U = 100.0      # moved this far in one frame => it is walking
 STARVE_U = 20.0     # moved less than this => it is standing still
-HP_CUT = 0.40       # `illureal`'s owner-hp clause, for the intersection bound
 EPS = 1e-6
+
+# --- MIRROR, not this tool's own.  ---------------------------------------
+# The one number above the line that is NOT chosen here: it reproduces the
+# owner-hp clause of the branch `illureal` opens
+# (bots/FunLib/minion_lib/illusions.lua, X.ConfuseEnemyWithIllusions:
+# `J.GetHP(bot) < 0.4`).  It is the intersection bound -- below it the shipped
+# confuse branch is also steering the unit, so a starvation reading there is
+# not attributable to the gate.  Move the Lua and this must move with it;
+# tests/test_detector_source_constants.py pins the pair (HP_CENSUS: MIRROR).
+HP_CUT = 0.40
 
 
 def dist(ax, ay, bx, by):

@@ -326,6 +326,14 @@ HP_CENSUS = {
     # (0.55 / 0.75 / 0.34): a trip is only called pointless when the hero was
     # nowhere near needing to go home.
     'idletrip_domain:HP_FULL':           ('INDEPENDENT', 'departure-hp cut for "did not need to go home"; mirrors no source predicate, chosen to match the 2026-08-30T21:58Z hand reading'),
+    # [director 2026-09-03] Three rows that landed unregistered with their
+    # modules and turned trunk red on a clean tree.  Same shape as the
+    # 2026-08-29 note above, so the fix is the same: classify, and PIN --
+    # each of the three named a source clause in its own comment, which is a
+    # mirror claim, and a mirror claim that is only prose is a comment.
+    'illumove_pairs:HP_CUT':             ('MIRROR', 'illusions.lua X.ConfuseEnemyWithIllusions `J.GetHP(bot) < 0.4` -- the branch `illureal` opens; pinned below'),
+    'wandbleed_trigger:HP_MAX':          ('MIRROR', "the 'wandbleed' branch ceiling `nHPrate < 0.45` in ability_item_usage_generic.lua item_magic_wand; pinned below"),
+    'wandbleed_trigger:HP_MIN_EXCLUSIVE': ('MIRROR', "J.ShouldDrinkWandInLimbo's 25% floor -- the SAME shipped literal wandlimbo_domain:HP_FRAC mirrors; pinned below"),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
@@ -1113,6 +1121,58 @@ WL_SHIPPED_HP = literal(
     r'GetHealth\(\)\s*>\s*bot:GetMaxHealth\(\)\s*\*\s*(?P<n>[0-9.]+)')
 eq('wandlimbo HP_FRAC mirrors the shipped 25% floor', WL.HP_FRAC, WL_SHIPPED_HP)
 eq('wandlimbo MIN_DRAUGHT mirrors charges * 15', WL.MIN_DRAUGHT, 90)
+
+# --------------------------------------------------------------------------
+# [director 2026-09-03] The three constants registered MIRROR above.  Same
+# reason as the wandlimbo block: the row is the claim, this is the check.
+import illumove_pairs as IMP                            # noqa: E402
+import wandbleed_trigger as WBT                         # noqa: E402
+
+ILLUSIONS_LUA = os.path.join(ROOT, 'bots', 'FunLib', 'minion_lib',
+                             'illusions.lua')
+ILLU_CONFUSE_HP = literal(
+    'X.ConfuseEnemyWithIllusions',
+    r'J\.GetHP\(\s*bot\s*\)\s*<\s*(?P<n>[\d.]+)',
+    path=ILLUSIONS_LUA)
+eq('illumove_pairs.HP_CUT mirrors the confuse-branch owner-hp clause',
+   float(IMP.HP_CUT), ILLU_CONFUSE_HP)
+
+# `X.ConsiderItemDesire["item_magic_wand"] = function( hItem )` is an
+# ASSIGNMENT, not a `^function`, so function_body() cannot reach it -- anchor
+# on the gate id over the comment-stripped file (the TD_GATE idiom above).
+# Anchoring on the ID rather than on position is the point: `nHPrate <`
+# appears in several branches of this one function and "the first match" is
+# exactly the reading `where=` exists to prevent.
+AIUG_SRC = '\n'.join(
+    l for l in open(os.path.join(ROOT, 'bots',
+                                 'ability_item_usage_generic.lua'),
+                    encoding='utf-8').read().splitlines()
+    if not l.strip().startswith('--'))
+check("'wandbleed' has exactly one gate site in ability_item_usage_generic.lua",
+      AIUG_SRC.count("IsSoakCandidate('wandbleed')") == 1,
+      str(AIUG_SRC.count("IsSoakCandidate('wandbleed')")))
+WB_CEILING = re.search(
+    r"IsSoakCandidate\('wandbleed'\)[\s\S]{0,400}?nHPrate\s*<\s*([\d.]+)",
+    AIUG_SRC)
+check("the 'wandbleed' branch still carries an nHPrate ceiling",
+      WB_CEILING is not None,
+      '-- the gate moved or the clause left the branch, so '
+      'wandbleed_trigger.HP_MAX now bounds a domain that does not exist')
+if WB_CEILING:
+    eq('wandbleed_trigger.HP_MAX mirrors that ceiling',
+       float(WBT.HP_MAX), float(WB_CEILING.group(1)))
+
+# NOT equality by coincidence, unlike detect.LIMBO_HP two rows down in the
+# census: this script's `shared_with_wandlimbo` bucket IS the wandlimbo
+# domain, so the two numbers are the same one by construction.  If the shipped
+# floor moves and this does not, casts get filed under the wrong explanation
+# and the "exclusive" count stops being exclusive.
+eq('wandbleed_trigger.HP_MIN_EXCLUSIVE mirrors the wandlimbo 25% floor',
+   float(WBT.HP_MIN_EXCLUSIVE), WL_SHIPPED_HP)
+check('the exclusive band is non-empty (min < max)',
+      WBT.HP_MIN_EXCLUSIVE < WBT.HP_MAX,
+      '(min=%r max=%r -- an inverted band files every cast as shared)'
+      % (WBT.HP_MIN_EXCLUSIVE, WBT.HP_MAX))
 
 OA_SRC = OA.read_source_constants()
 eq('odaoe is gated by exactly one soak id', OA_SRC['gate_ids'], ['odaoe'])

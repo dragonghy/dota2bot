@@ -178,8 +178,19 @@ import sys
 # Exactly the item names whose ConsiderItemDesire reaches the gated branch:
 # item_holy_locket delegates to the wand function, item_magic_stick does not.
 WAND_ITEMS = ("item_magic_wand", "item_holy_locket")
-HP_MAX = 0.45          # the gate's own ceiling
-HP_MIN_EXCLUSIVE = 0.25  # below this, wandlimbo could also explain the cast
+# Both HP numbers below are MIRRORs of shipped clauses, not cuts chosen here --
+# registered as such in tests/test_detector_source_constants.py (HP_CENSUS) and
+# pinned against their source sites there, so moving either Lua clause without
+# moving these turns that test red instead of silently redefining this reading.
+HP_MAX = 0.45          # the gate's own ceiling: `nHPrate < 0.45` in the
+                       # 'wandbleed' branch of
+                       # bots/ability_item_usage_generic.lua
+                       # X.ConsiderItemDesire["item_magic_wand"]
+HP_MIN_EXCLUSIVE = 0.25  # below this, wandlimbo could also explain the cast --
+                       # J.ShouldDrinkWandInLimbo's `GetMaxHealth() * 0.25`
+                       # floor (bots/FunLib/jmz_func.lua).  The exclusivity
+                       # claim of this script IS that floor; if it moves and
+                       # this does not, "shared_with_wandlimbo" mislabels casts.
 ENEMY_RING = 1000.0    # 用途1 / 用途2 / 用途4 all need an enemy inside this
 VMAX = 700.0           # u/s closing-speed bound for the ring margin (LIMIT 2);
                        # above the 550 u/s move cap on purpose -- slack here

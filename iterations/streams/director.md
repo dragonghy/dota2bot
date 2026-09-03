@@ -9408,3 +9408,34 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **`UNCERTIFIABLE: none`**)⇒ 本轮**没有「没人看过」的那一侧**;Lua 快检测器腿
   **73 个打标签文件 0 失败**;`cadence` 是一条 **3.8h** 的 GAP(hero,门限 3.5h,越线 0.3h,
   **不升级**)。
+
+- **2026-09-03T13:06Z:本轮修掉了连续六轮被报告、零轮被修的那条 trunk red。**
+  `tests/test_detector_source_constants.py` 的 `HP_CENSUS` 守卫按设计开火:
+  `illumove_pairs:HP_CUT` / `wandbleed_trigger:HP_MAX` / `wandbleed_trigger:HP_MIN_EXCLUSIVE`
+  三个模块级 HP 常数随模块落地、**没人说它们是什么**(与该文件 [director 2026-08-29]
+  那条注记逐字同型)。三条**全部是 MIRROR**:0.40 = `illusions.lua`
+  `X.ConfuseEnemyWithIllusions` 的 `J.GetHP(bot) < 0.4`(`illureal` 打开的分支);
+  0.45 = `ability_item_usage_generic.lua` `'wandbleed'` 分支的 `nHPrate < 0.45`;
+  0.25 = `J.ShouldDrinkWandInLimbo` 的 `GetMaxHealth() * 0.25`,**与
+  `wandlimbo_domain:HP_FRAC` 是同一个字面量**(不是巧合等值:`shared_with_wandlimbo`
+  这一桶在定义上就是 wandlimbo 的域)。登记 + **section 2 逐条钉源站点**,
+  变异台三只全打死、各自点名正确站点,恢复后 `RESTORED_EXIT=0`。
+  ⚠️ 留档的手法:`X.ConsiderItemDesire["item_magic_wand"]` 是**赋值不是 `^function`**,
+  `function_body()` 够不着 ⇒ 按 **gate id 锚定**(`TD_GATE` 既有手法),不按位置取
+  「第一个 `nHPrate <`」——那个函数里它出现在好几条分支上。
+  **铁律 6**:`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`,未用 `RULE6_BYPASS`;
+  **零 Lua diff** ⇒ 全量 Lua 套件未跑完**也不声称**;本次改动的门是
+  `python3 tests/test_detector_source_constants.py`,**裸退出码 0**(修前 1)。
+  **自检 `EXIT=124`**(600s 超时打断在 Lua 快检测器腿上)⇒ **整体退出码不声称,
+  那一侧本轮没人看过**;已跑完的腿:unlanded OK / anchors 全 ok / owed+expired 均 none /
+  cadence 2 条(hero 3.8h、strategy 4.0h,越线 ≤0.5h,**不升级**)。
+  **`strategy-39`(`wandbleed2`)本轮不裁** —— 本档案的 `ROUTED_RIDESHARE` 标准是
+  六到七项带裸退出码的独立读数(见 `strategy-37`/`-38`),那是整整一个工作单元,
+  **半个裁定比没有更坏**;顺带买到 (i):`wandbleed2` **单一独立门**
+  (`jmz_func.lua:9585`,全仓唯一,门行上 1 个 id)⇒ 无 pullcad 陷阱,(ii)–(vi) 一项不声称。
+  零 AWS 调用,无邮件,`DECISIONS_NEEDED` 无新增,本轮未开也未关 issue
+  (GH #420 已于 09-02T22:38Z 关闭且**不是**这条红的所有者;GH #436 是另一条,仍开着)。
+  **下次触发**:①裁 `strategy-39` ②补看自检 Lua 检测器腿(本轮 124 没跑完)
+  ③RIDESHARE 分类腿(第五轮顺延)④GH #410 / #285 / patch 缺口 P3
+  ⑤GH #436 若仍无执行者则写进 `DECISIONS_NEEDED`。
+  报告全文:`iterations/reports/director/20260903T130610Z.md`。
