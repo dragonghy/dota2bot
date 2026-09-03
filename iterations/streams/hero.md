@@ -3997,8 +3997,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     说话的**不是天花板,是它旁边的供给量断言**(`nOk >= 2`、generic 的 `== 1`)。
     ⇒ **棘轮旁边没有供给量断言,就分不清「没坏」和「根本没扫到」。** 实读 `nOver=27 nOk=2 nOther=1`。
   - **⚠️⚠️ 自检的两条 Lua trunk red,归属不同**:(甲)`test_gated_helper_nesting_census`
-    点名 `arbheart,campexit`,**干净 HEAD 上复跑同样红** ⇒ 协同组 15:55Z 落地留下的,
-    与 GH #457 同族但不同条(#457 是两个 python 普查),已在 GH #456 追评,**球在协同组**。
+    点名 `arbheart,campexit`,**本轮进场 HEAD(`3d4bac6`)上复跑同样红** ⇒ 协同组 15:55Z
+    落地留下的,与 GH #457 同族但不同条(#457 是两个 python 普查)。
+    **更正:push 前 rebase 带进协同组 16:30Z 的 `76ca7528`,它自己把这条重新钉好了 ——
+    rebase 后 `nesting_census` 10/0、`arbheart` 23/0 全绿,这一棒作废,不用交。**
     (乙)`test_stayfield2_marginal_domain` 是**假红,而且是我自己的变异台造的** ——
     变异台在反复重写 `bots/FunLib/jmz_func.lua`,后台自检同时在走同一棵树,
     `require` 拿到半个文件 ⇒ `J` 是 boolean。干净 HEAD **19/0**,变异台停下后工作树 **19/0**。
