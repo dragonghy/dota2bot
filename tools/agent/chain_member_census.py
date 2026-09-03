@@ -141,7 +141,11 @@ JUDGED_DUP = {
         "loop.",
     ("bots/mode_team_roam_generic.lua", 1058, "notJ.IsRoshan(nEnemysCreeps[1])"):
         "IDEMPOTENT.  Same predicate, same subscript.",
-    ("bots/ability_item_usage_generic.lua", 8246,
+    # LINE ANCHOR, 2026-09-03 (director): re-anchored 8246 -> 8256 after
+    # commit 77e18be9 inserted 10 comment lines at :3406.  See the
+    # LINE-ANCHOR DRIFT hint below -- the key shape is the open defect, this
+    # number is only the symptom.
+    ("bots/ability_item_usage_generic.lua", 8256,
      'notallyHero:HasModifier("modifier_juggernaut_healing_ward_heal")'):
         "IDEMPOTENT.  The polliwog-charm heal filter repeats one member of the "
         "already-being-healed set.  It LOOKS like the dropped-member shape and "
@@ -153,6 +157,28 @@ JUDGED_DUP = {
         "says WHICH modifier the second copy should have been -- and inventing "
         "one would be an ungated behaviour change on a guess.",
 }
+
+def drift_hint(relpath, line, tail, judged):
+    """Print LINE-ANCHOR DRIFT when a *NEW* finding is a judged one that moved.
+
+    A judged entry is keyed (relpath, line, tail).  If this repo's only judged
+    entry with the SAME (relpath, tail) sits at a DIFFERENT line, then no new
+    duplicate was written -- somebody inserted lines above an old one, and the
+    anchor is stale.  Requiring uniqueness is what keeps this a hint and not a
+    second, weaker judgement: with two same-(file, tail) entries the tool
+    cannot say which one moved, so it says nothing.
+
+    This prints; it never changes `known`, `novel` or the exit code.  A stale
+    anchor stays red on purpose -- the anchor is what needs fixing.
+    """
+    same = [k for k in judged if k[0] == relpath and k[2] == tail]
+    if len(same) == 1 and same[0][1] != line:
+        print("               LINE-ANCHOR DRIFT?  a judged entry with this "
+              "exact (file, operand) is anchored at :%d, this finding is at "
+              ":%d.  If nothing was written here, an insertion ABOVE moved it "
+              "-- re-anchor the JUDGED_* key rather than judging it anew."
+              % (same[0][1], line))
+
 
 #: Detector B findings, keyed by (relpath, local_declaration_line, name).
 JUDGED_PARITY = {
@@ -379,6 +405,17 @@ def main():
         lua_corpus.uncertifiable(exc, "chain_member_census")
         return 2
 
+    # (director 2026-09-03, GH: line-anchor drift) A *NEW* finding and a
+    # judged finding whose anchor MOVED print the same `*NEW*`, and on
+    # 2026-09-02 that cost four red assertions with nothing wrong in bots/:
+    # commit 77e18be9 inserted 10 comment lines at :3406 of
+    # ability_item_usage_generic.lua, which pushed the judged polliwog
+    # duplicate from :8246 to :8256.  The same +10 shift re-anchored
+    # item_name_census the same night (f00226b) -- two tools, one insertion.
+    # This hint does NOT change the key or the exit code; it only lets the
+    # reader tell "somebody wrote a new duplicate" from "somebody wrote a
+    # comment above an old one".  The key shape itself is the open defect.
+
     # Denominators first.  A zero reading and a scanner that reached nothing
     # print the same FINDINGS 0 unless the denominator is beside it (GH #329:
     # the quantity you report has to be the quantity you measured).
@@ -398,11 +435,15 @@ def main():
             print("               cond   %s" % f["cond"][:150])
             if known:
                 print("               judged: %s" % JUDGED_DUP[key])
+            else:
+                drift_hint(f["file"], f["line"], f["operand"], JUDGED_DUP)
 
     for f in sorted(parity, key=lambda x: (x["file"], x["line"])):
         key = (f["file"], f["line"], f["name"])
         known = key in JUDGED_PARITY
         novel += 0 if known else 1
+        if not known and not args.quiet:
+            drift_hint(f["file"], f["line"], f["name"], JUDGED_PARITY)
         print("PARITY-BREAK   %s:%d  %s = %s%s" % (
             f["file"], f["line"], f["name"], f["init"][:60],
             "" if known else "   *NEW*"))

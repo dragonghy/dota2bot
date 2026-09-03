@@ -9131,3 +9131,76 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   PROXY 要求 import,现场是模块级字面量 ⇒ 也被排除;**同轮删掉那句指向不存在 clause 的行尾注释**
   (那是事实更正,不是归类)。④**`[bug] #436`** ⑤GH #423 / #409 ⑥**§3.3 四个重文件**(第十二轮)
   ⑦**GH #285 第二十九轮** ⑧**patch 缺口 P3**。
+
+- 2026-09-03T01:30Z:一个工作单元,**裁掉那两根掉在地上的棒(`roshdist` / `ckpush`),
+  而本轮真正的收获是顺手拿到了它们掉下去的机制**。报告
+  `iterations/reports/director/20260903T013000Z.md`。
+  **本轮零 AWS 调用、零支出、零 S3、零 EC2;`bots/` 与 `game/` 逐字节零 diff**
+  (改动只在 `tools/agent/` / `tests/` / `iterations/`)。
+  **⓪ 纪律 3 第二十四发,§22 守卫第十九次上场并第十九次拦下**(第一条命令仍是 `| tail`,
+  harness 同一行回报的 `SELFCHECK_EXIT=0` 正是守卫拒绝的那个东西)。干净重跑裸读:
+  `EXIT=3` / `legs run: 9` / `FINDINGS: cadence trunk-red(python)` / `UNCERTIFIABLE (exit 2): none` /
+  **`NOT RUN (inside a leg): tests/test_rc_wrapper.py tests/test_selfcheck_lua_leg.py`**;
+  lua 快检 73 文件 0 failures;两个锚点三条不变量全 OK。⭐ `owed-executions` **不在** FINDINGS 里
+  ⇒ 上一轮 GH #413 的登记行确已退役。⭐ 上一轮落地的 **`NOT RUN` 桶本轮第一次在别人的树上被读**。
+  **① 主件:`strategy-37`(`roshdist`)+ `strategy-38`(`ckpush`)同轮 ADMITTED,串 55 → 57,
+  自 W41 起生效**(⛔ 不是 W40 —— 它 21:31:51Z 起飞时 clone 的是 55-id/md5 `bfe60fc…`)。
+  裁定全文 **`test_set.md §DT`**(⚠️ **不是 §DS** —— 落笔前发现 `§DS` 已被协同组
+  22:3xZ 的 `wandbleed2` 提议占用,**当场改号**;这正是 `citation_audit.py` 的 `AMBIGUOUS`
+  要挡的东西,而这次是在**发表前**挡住的)。投递按章程 2.5 三处齐:`queue.json` 两行的
+  `director` 字段(含 `executor=replay-check`,`status` open → `admitted`,`ruled=true`)、
+  `test_set.md` 全文档案、GH #422/#426 追评。**七项/六项独立读数全部裸退出码**:单一独立门
+  (无 `pullcad` 陷阱)/ 关闸**逐值**等于出厂 / armed 零新增引擎 API 面 / 孪生体原样未动 /
+  `check_armed_wiring.py --cand <57>` ⇒ `all 57 armed ids wired on HEAD` 裸读 exit 0 /
+  `carrier_terms.py --arm <57>` ⇒ 0 unresolved、**7 term(s)** 裸读 exit 0 /
+  独立重跑 `roshdist` **11/0**、`ckpush` **12/0**,两次 `RC_EXIT=0`。
+  **⭐ 总监加的那一格是「载体项的价」,提议没给,而这一轮正是最该给的一轮**:`ckpush` 把载体项
+  **6 → 7**(新增 `chaos_knight`),而批测台连着两波在登记载体冗余崩塌 ⇒ 加约束必须先付钱。
+  离线量出来(`seed_draft.py`,窗口 [2601,3000] 去 index 已存与 W30–W40 抽过的,`available=364`,
+  零 AWS):`chaos_knight` 载体率 **119/364 = 32.7%**(七项第三高,远高于卡脖子的
+  `spirit_breaker` 13.0% / `obsidian_destroyer` 15.0%);4 粒种子 **BEST min-per-term:6 项 = 1,
+  7 项 = 1,逐位相同** ⇒ **在起作用的那条边上零价**。⚠️ 但 `BEST=1`(不是 W40 报的 2)说明
+  **供给本身又薄了一层**,那是 GH #408 的账;**W41 起草必须自己重算,不许照抄**。
+  **② ⭐ 本轮真正的发现:棒是怎么掉下去的。** 自检那条腿写着
+  `RIDESHARE (§BB.4: rule this round): none` / `OTHER … 3`,而这两行的 `axis` 里**逐字**写着
+  「搭车、零 AWS 增量、不申请专波」⇒ **「本轮必裁」对它们从未响过一次**。三轮顺延**不只是**
+  总监选了别的项,**替它们举手的那条腿把它们分错了桶**(与 GH #332 / §DR 立案句同型)。
+  **③ 顺手修一处 trunk 红,而它红的原因与 `bots/` 无关。** `77e18be9`(协同组 22:38Z,
+  `wandbleed2`)在 `ability_item_usage_generic.lua:3406` **插了 10 行注释**,把 3406 行以下全推 **+10**;
+  `chain_member_census.py` 的 `JUDGED_DUP` 键是 `(relpath, line, operand)` ⇒ polliwog 那条判决
+  从 `:8246` 变 `:8256`、**被报成 `*NEW*`** ⇒ **4 条红,而 `bots/` 里没有任何东西是错的**(那 10 行是注释)。
+  ⭐ **同一个 +10、同一晚上、第二个工具**:`f00226b` 的原话是「重新锚定 `item_name_census` 的
+  行号锚(本轮注释把它推了 10 行)」。**两个工具,一次插入 —— 这是「行号做键」这个形状本身。**
+  本轮:(1) 重锚(键 + 测试三处行锚)⇒ `test_chain_member_census.py` **all checks passed**、裸读 `RC_EXIT=0`;
+  (2) 新增 `drift_hint()`,同 (file, operand) 异行且**唯一**时打 `LINE-ANCHOR DRIFT?`,
+  **只打印,不改 `known`/`novel`/退出码**(陈旧的锚照旧是红的);
+  (3) **⛔ 没动键的形状** —— 改内容锚会**悄悄削弱棘轮**,要配冲突必红断言 + 变异台,
+  **那是一个完整单元不是顺手**,列为下一单元第一项。
+  变异台(每次从文件副本复原、退出 `sha256sum -c` 核验、`trap restore EXIT` 在首次 apply 之前):
+  **M0 基线 exit 0 / 13 findings 全判决 / 0 条提示;M1 复现 09-02 现场 ⇒ exit 3 + 提示打出
+  `:8246 → :8256` 且 `judged 12, new 1`(退出码没被软化);M2 货真价实的新重复 ⇒ exit 3 + **0 条提示**。**
+  ⭐ **M2 是值钱的那个**:M1 只证明提示会响,**M2 证明它不会乱响** —— 一个只会响的提示
+  等于把每条真·新发现都染成「大概是锚动了」,**比没有提示更糟**。
+  **④ 铁律 6**:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` CLEAN / 0 警告,未用 `RULE6_BYPASS`**;
+  `arm_push_gate.sh` exit 0;**`bots/`+`game/` 零 diff ⇒ 全量 Lua 套件未跑也不声称**(GH #124);
+  python 套件整跑 **76 passed, 1 failed, 1 uncertifiable** —— ⭐ **本轮之前是 74/2/2**,差额就是 ③ 修掉的那个;
+  唯一剩下的红 `test_detector_source_constants.py` 是协同组 21:55Z 自己登记的,**非本轮引入**。
+  **⑤ 成本**:零调用;九月 MTD **照抄**批测台 21:20Z 自报 **$5.612**(本轮没有更新的自报可抄,
+  **不写「顺延」**)。围栏/刹车/批准线未触及未动。`DECISIONS_NEEDED.md` **新增一条**
+  (filler 英雄的 promote 资格:`chaos_knight` 在池里但是 `filler`,**域买得到、入集零价**,
+  争议在**要不要为它建 `stable-vN` 锚点**;总监倾向「可 promote 但不单独建锚,搭下一次焦点英雄的车」)
+  ——**攒着不单发**;本周邮件 08-31 已发 ⇒ 本轮无邮件;今日周四,台账(仅周日)跳过。
+  四组均有产出无空转;`cadence` 唯一的洞是 strategy 16:25Z→20:25Z 的 4.0h,单发不升级。
+  **⑥ 本轮明说没做的**:⚠️ 前两项**是本轮自己生出来的,不是存量** ——
+  **(a) `chain_member_census` 键的形状**、**(b) 自检 `RIDESHARE` 分类腿**。
+  其余顺延:`strategy-39`(`wandbleed2`,22:38Z 新到,**首次上榜不算掉棒**);GH #410 的带期限保守默认
+  (**不发第四份相同的催**);`[bug] #436`;GH #423 / #409;**§3.3 四个重文件连续第十三轮**;
+  `hero_pool.txt` 成员资格未接进 §DH.4 域价(**本轮第二次被咬,已进 DECISIONS_NEEDED**);
+  **patch 缺口 P1/P2/P3(P3 优先)**;`strategy-5b` 第二十一轮;**GH #395 三问**;**GH #285 第三十轮**;
+  `#252`/`#256`/`#282`/`#295`;**`§24` 未并入 `#229`**;**`§CE` 已挂三十三轮**;backlog §19/§20/§21;
+  `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#271`;§CY 三条 + §CV 两条待收割;**GH #384 的自检腿序那半**;
+  **GH #412 仍只做一半**;`#433`/`#432`/`#430`/`#429`/`#428`;**#408 第九次被容量咬仍零评论未裁**;**GH #420 的关闭**。
+  **下次触发**:①**`chain_member_census` 的键形状**(内容锚 + 冲突必红断言 + 变异台,一个完整单元)
+  ②**自检 `RIDESHARE` 分类腿**(自陈搭车件不许落进 `OTHER`)③**裁 `strategy-39`**
+  ④**GH #410 的带期限保守默认** ⑤**关闭 GH #420** / **`[bug] #436`** / GH #423 / #409
+  ⑥**GH #285 第三十轮** / **patch 缺口 P3**。

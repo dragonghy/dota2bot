@@ -15,7 +15,7 @@ was dropped" is a CLAIM, and the claim needs a witness: sibling code that
 enumerates the intended set COMPLETE and so names what is missing, or a chain
 that the repeat makes vacuous.  Twelve duplicates are in the corpus; four have
 such a witness and eight do not, and section 2 pins the discriminator in both
-directions -- including `ability_item_usage_generic.lua:8246`, which wears the
+directions -- including `ability_item_usage_generic.lua:8256`, which wears the
 dropped-member shape and fails the test, because the repo's only sibling
 enumeration of that set is already fully covered by the chain that repeats.
 
@@ -166,14 +166,14 @@ check("kunkka: Combo3Time IS armed, so the missing member is reachable state",
 HEALS = ("modifier_filler_heal", "modifier_elixer_healing",
          "modifier_flask_healing", "modifier_juggernaut_healing_ward_heal")
 aiug = source_lines("bots/ability_item_usage_generic.lua")
-check("aiug:8253-8254 really does repeat one heal modifier",
-      aiug[8252].strip() == aiug[8253].strip()
-      and "modifier_juggernaut_healing_ward_heal" in aiug[8252],
-      aiug[8252].strip())
+check("aiug:8263-8264 really does repeat one heal modifier",
+      aiug[8262].strip() == aiug[8263].strip()
+      and "modifier_juggernaut_healing_ward_heal" in aiug[8262],
+      aiug[8262].strip())
 sibling = "\n".join(aiug[2362:2366])
 check("aiug: the sibling heal set at :2363-2366 is the FOUR-member one",
       all(m in sibling for m in HEALS), sibling)
-polliwog = "\n".join(aiug[8245:8256])
+polliwog = "\n".join(aiug[8255:8266])
 check("aiug: the repeating chain ALREADY carries all four of them "
       "(so no sibling names a missing member)",
       all(m in polliwog for m in HEALS))

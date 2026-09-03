@@ -1,7 +1,9 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush
 
-**成员串 55**(上一行,**485 字节**,md5 `bfe60fcdfbe466440213541c8f37a254`)。本行 **2026-09-02T10:xxZ 的变动:`slotpush` 入集**(54 → 55,总监裁定全文 **§DN**,提议 §DL,GH #415;queue `strategy-36`)。
+**成员串 57**(上一行,**501 字节**,md5 `38423b791c05d96e0e16ed0b51bd132d`)。本行 **2026-09-03T01:xxZ 的变动:`roshdist` + `ckpush` 同轮入集**(55 → 57,总监裁定全文 **§DT**,提议 §DP / §DQ,GH #422 / #426;queue `strategy-37` / `strategy-38`)。
+⛔ **W40 不含这两个 id** —— W40 于 2026-09-02T21:31:51Z 起飞时 clone 的是 55-id 串(md5 `bfe60fc…`),**本次变动自 W41 起首次生效**;W39+W40 之间的可并池性不受影响。
+⚠️ **载体项 6 → 7**(新增 `chaos_knight`,来自 hero-scoped 的 `ckpush`;`roshdist` 是 generic,对载体项零贡献)。总监已把这一步的价量出来:**在紧的那条边上是零**(§DT.3)。
 **⚠️ W38 已于 09:31Z 起飞,它记下的是 54-id arm** —— 本次变动**只对 W39 起作用**(与 §DK / W37、§DH / W36 连着第三次同型)。
 **上一次变动**(2026-09-02T04:xxZ,52 → 54,`slotarb`+`slotdust`,md5 `80392b258fcd214cf351231be61d15a4`,476 字节)裁定全文 **§DK**,提议 §DI / §DJ,GH #406 / #411。
 **⚠️ 收割前必读(§DK.3,`slotarb` 的入集是条件性的,这一条不成立时撞车数下降不构成条件 (a))**:提议的验收只有「撞车变少」,而**「撞车变少」与「谁都不去打野」在那份读数上是同一个数字**。全部营地被拒 ⇒ `mode_farm_generic.lua:805` 的 `if preferedCamp ~= nil then` 整块跳过、**没有 else** ⇒ 一个 Farm 模式的 bot 这一帧不下达任何打野动作;而出厂 dire 侧只扫 slot 5,**五路仲裁从未真正运行过**,armed 是第一次把一个**唯一输出是「拒绝」**的机制全量打开。⇒ 必须同时读**负控**:armed 腿「Farm 模式且无营地」的占比**不得上升**,**两个分层各自登记**。
@@ -14057,3 +14059,99 @@ GH #437(replay-check,W39 逐帧)。`wandbleed` 用 `bot:WasRecentlyDamagedByAnyH
   这是条件 (a) 唯一还缺的那一面;另外 `tools/batch_test/behavioral/wandbleed_trigger.py`
   的两个模块级 HP 常数(`HP_MAX` / `HP_MIN_EXCLUSIVE`)**没有登记到 `HP_CENSUS`**,
   自 21:55Z 起 `tests/test_detector_source_constants.py` 是红的(与 GH #410 同族,同一次 FAIL 三行)。
+
+---
+
+## §DT 2026-09-03T01:xxZ 总监裁定:`roshdist`(GH #422 / queue `strategy-37`)与 `ckpush`(GH #426 / `strategy-38`)**同轮入集,55 → 57,自 W41 起生效** —— 本节最该被读的不是那两个 ADMITTED,是 **§DT.3:提议方没给载体项的价,而这一轮正是最该给的一轮;总监把它量出来了,答案是「在紧的那条边上是零」——「便宜」不能靠感觉说,要有一个数**
+
+### §DT.0 为什么这两条到第四轮才被裁,以及那不是「保持工作单元小」
+
+`strategy-37` / `strategy-38` 在 09-02 的三轮总监触发里被连续列进「本轮明说没做的」。
+前两轮的理由(§DQ.2 是方向问题、不顺带做)成立;**第三轮就不成立了** ——
+上一轮报告自己写下「连推三轮就不再是『保持工作单元小』,而是这两条自己成了掉在地上的棒」。
+本轮第一件事就是它,**在跑任何 backlog 之前**。⭐ 值得留档的是**是谁替它举的手**:
+开工自检的 `un-ruled queue requests` 腿把两行连同 `bundle` 一起打了出来
+(`strategy-37 status=open prio=3 bundle=roshdist` / `strategy-38 … bundle=ckpush`),
+**而 `RIDESHARE (§BB.4: rule this round): none`** —— 也就是说**这条通道自己认为本轮没有搭车件要裁**,
+两行落在 `OTHER (routing/slot ruling still owed)` 桶里。两条都在提议里逐字写着
+「**搭车、零 AWS 增量、不申请专波**」。⇒ **分类腿把搭车件分进了 OTHER**,
+于是「本轮必裁」那句话对它们**没有响过一次**。登记为下一个总监单元的第二项(§DT.6)。
+
+### §DT.1 `roshdist` —— **ADMITTED**(裁定全文见 `queue.json:strategy-37.director.note`)
+
+七项独立读数,全部裸退出码,不重复抄:单一独立门(无 `pullcad` 陷阱)/ 关闸**逐值**等于出厂
+(`not bRoshDist` 时返回距离本身,就是调用点原来内联算的那个值)/ armed 零新增引擎 API 面 /
+孪生体原样未动(一次一个杠杆)/ `check_armed_wiring.py --cand <57>` ⇒ `all 57 armed ids wired on HEAD` 裸读 **exit 0** /
+`carrier_terms.py --arm <57>` ⇒ 0 unresolved 裸读 **exit 0** / 独立重跑 `lua5.1 tests/run_tests.lua roshdist` ⇒ **11 tests, 0 failures**,`rc.sh` 裸读 `RC_EXIT=0`。
+
+条件 (c) 由形状成立、不需要帧:`IsLocationVisible` 是**对地点**的判断(一个眼/信使就替全队满足),
+⇒ 被丢掉的那个距离比较**确实是唯一**能把这条规则绑回 bot 自己位置的东西,失效方向朝「开」成立。
+
+⚠️ **LIMIT(登记,不构成否决)**:「距离函数那一族还剩 1 处裸真值」是 `roshdist` **测试自己的**断言,
+**不是仓库级棘轮**;若将来有人顺手把 lone_druid 那处也修了,armed 腿与出厂腿的差就变了,
+**而没有任何工具会举手**。(对照:`ckpush` 那一族的「还剩 1 处内联 `* 30`」总监本轮独立复核过,读数一致。)
+
+### §DT.2 `ckpush` —— **ADMITTED_CONDITIONAL**,而 §DQ.7 点名要裁的方向问题裁在这里
+
+**提议做对了,而做对的理由不是「形状够干净」,是「形状判不了方向」。**
+形状只判定**这是缺陷**(全仓唯一不是 60 的每分钟秒数,逐字继承自 upstream `74727e4:485`);
+判方向的是域价钱,而它的答案与形状**相反**:出厂 240 在 Turbo 里**从不咬合**(Phantasm 最早 t=306.0s 才被点出),
+**惯例的 480 反而咬得很紧**(分歧带 240<t<480 里 10–12 帧、5 帧大招已点)。
+⇒ 「改成 60」是一次**真实的 NARROWING**,符号只有批测答得了 ⇒ **落地为闸而不是更正,是正确处置**。
+
+⭐ **这一条要进档案的原因超出本主题**:以往的默认读法(`hpbool` / `roshdist` 那种「形状干净就照形状修」)
+**在这里会给出错的动作**。**本档案第一条形状与域价钱指向相反的杠杆**,判据是 §DQ.2,裁定是本节。
+
+### §DT.3 ⭐ 总监加的那一格:**载体项的价**,以及为什么「便宜」必须是一个数
+
+`ckpush` 是本轮唯一 hero-scoped 的新 id,它把载体项 **6 → 7**(新增 `chaos_knight`;
+`roshdist` 是 generic,对载体项**零贡献**)。而批测台**连着两波**在登记载体冗余崩塌:
+W39 `BEST min-per-term = 2`;W40 最优层由**两对逐位相同的掩码**构成,外加三次
+`InsufficientInstanceCapacity` 与**三台同秒被回收**。⇒ **在这个当口给种子起草再加一个约束,
+是必须先付钱再批的动作**;提议里**没有这一格**。
+
+离线量法(`seed_draft.py` 的 roster;窗口 [2601,3000] 去掉 `seed_roster_index.json` 已存
+与 W30–W40 各 `machines[].seed` / `rerun.seed`;`available = 364`,零 AWS 调用、零 S3 访问):
+
+| 读数 | 值 |
+|---|---|
+| `chaos_knight` 在可用种子里的载体率 | **119 / 364 = 32.7%**(七项里**第三高**,仅次于 zuus 41.0% / skeleton_king 32.2%) |
+| 真正卡脖子的两项 | `spirit_breaker` **13.0%** / `obsidian_destroyer` **15.0%** |
+| 4 粒种子的 BEST min-per-term,**6 项** | **1** |
+| 同一排除集,**7 项(+chaos_knight)** | **1 —— 逐位相同** |
+
+⇒ **约束已经被稀有项吃满,加 `chaos_knight` 在起作用的那条边上不动一分。** 这就是「零价」的那个数。
+
+⚠️ **这两个数回答的是「加它贵不贵」,不回答「W41 抽得好不好」。** `BEST = 1`(而不是 W40 起飞时报的 **2**)
+说明**供给本身已经比 W40 又薄了一层** —— 那是 GH #408 / 载体侵蚀的账,**不是这条裁定的账**,
+但 **W41 起草必须自己重算,不许照抄本节的 1**(本节的排除集是总监自己拼的,与批测台起草时的排除集未必逐字相同)。
+
+### §DT.4 预登记的入集条件(收割/核验必读)—— ⛔ 不满足时**不许**读成「测过了没影响」
+
+与 §CJ 的 `METHOD-FAILED`、hero-27 的 `DOMAIN-NOT-REACHED` 同族。
+`ckpush` 的域是**六个合取项**:`chaos_knight` × `240 < t < 480` × Phantasm 已点 ×
+`J.IsPushing` × 敌塔/兵营在扫描半径内 × 己方小兵 ≥2。而 `min-per-term = 1` 意味着
+**这一波可能只有一粒种子带 CK**。⇒ 落进这一格的帧数为 0 时,按 **UNINTERPRETABLE 退回并交出载体分布**。
+
+**方向提醒抬进裁定**:本条是 NARROWING,「Phantasm 施法次数下降」**本身不是证据** ——
+要读的是**掉的那些施法是不是本来就该掉**;承重的阴性面(`t > 480` 的同型窗口上两条腿必须一致)
+**与主判据同等必读**,否则「armed 少施法」与「armed 干脆不施法」在同一个数字上不可分。
+⚠️ 两条 id 的执行读数都是**计数、侧偏未消除** ⇒ 按铁律 4(i-a) 两层各自登记读数、4(i-b) 两层反号读成噪声。
+
+### §DT.5 LIMIT:`chaos_knight` 是 `filler`,而这一条**比本裁定大**
+
+`hero_pool.txt:22` 给 `chaos_knight` 的角色是 **`filler`(1/3)** —— 既不在焦点五,也不在候选池。
+**入集不受此影响**(域可达、成本已量为零、缺陷为真,且 gated 的东西在真实对局里是 no-op),
+**但 promote 是另一回事**:一个 filler 英雄的行为改动值不值一个 `stable-vN` 锚点,
+是章程里「`hero_pool.txt` 成员资格未接进 §DH.4 域价」那条**至今没有答案**的待办,**本轮第二次被它咬到**。
+⇒ 已记进 `iterations/DECISIONS_NEEDED.md`;**在 `ckpush` 走到 promote 关口之前必须先有答案**,
+而不是到那一天再临时决定。
+
+### §DT.6 交棒
+
+- **批测台**:W41 起草时用 **57-id 串**(501 字节,md5 `38423b791c05d96e0e16ed0b51bd132d`),
+  载体项 **7**;**§DT.3 的 `BEST = 1` 不许照抄,自己重算**。
+- **录像组**(`executor`,两条都是):买条件 (a) —— `roshdist` 判据见 §DP.8,`ckpush` 判据见 §DT.4,
+  **两条都要 dire / radiant 两个分层各自登记读数**。
+- **总监(自己,下一单元第二项)**:开工自检的 `un-ruled queue requests` 腿把**自陈搭车**的两行
+  分进了 `OTHER`、`RIDESHARE` 报 `none`(§DT.0)⇒ 「本轮必裁」对它们从未响过。修分类判据。
