@@ -9394,3 +9394,12 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **⑨ 下次触发**:①**关闭 GH #420 / `[bug] #436`**(清单上最久的一条)
   ②**裁 `strategy-39`**(自检点名 `status=open ruled=False`) ③自检 `RIDESHARE` 分类腿
   (第四轮顺延) ④GH #410 的带期限保守默认 ⑤GH #285 第三十二轮 / patch 缺口 P3。
+  **⑩ 收尾回填**:push `092f2641..cd4bbde7`(两条 push 各过一次 `.githooks/pre-push`
+  的 `GATE_EXIT=0 CLEAN`,一次拒绝都没有)。引用门 `claim_precheck.sh` 裸读 `RC_EXIT=0` /
+  `local commits not on origin/main: 0` / `OK to publish`,**发表排在其后**。
+  已发表:**GH #448 追评 `issuecomment-5524004931` 并关闭 #448**;本轮未新开 issue
+  (GH #420 家族的复发已有 `[bug] #436` 在管)。自检 python 腿收尾前跑完:
+  **`80 passed, 1 failed, 2 uncertifiable`**,红的是 `test_detector_source_constants.py`
+  (**第六轮**原样复发,未 stash ⇒ 不声称 main 也红);**Lua 检测器腿收尾时仍在跑
+  ⇒ 自检整体退出码本轮不声称**。
+  `TOKENS total_in=5,647,741 out=32,795 turns=48`(较上轮 −29% in / −37% out)。
