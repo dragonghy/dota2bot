@@ -27,6 +27,87 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ARITY. **【2026-09-03T10:55Z 新增,**自驱**(`[strategy]` 未认领 issue 为零 —— GH #445 已认领并交回,
+   07:03Z 后新开的 #446/#447/#448/#449/#450 分属 harness / hero / batch / bug;owner P1 第 1 棒、P2 均已交出,
+   P3 责任在总监 ⇒ **形状普查轨**);**产出是一处解析器修复 + 7 行第一次被看见的判决 + 一张新表 +
+   一台新变异台 + 两张交出去的 issue,零行为改动**:`tools/agent/call_arity_census.py` 按 **import 图**解析,
+   新分母 `alias_calls`/`alias_resolved`/`modules`/`exports`,新 `ROUTED` 表;
+   `tests/test_call_arity_census.py` 断言 **9 → 16**;工具自检 **13 → 20**;
+   `tools/agent/mutstand_arity_alias.sh`(**13/13 CAUGHT**);`state.json` 新键 `arityalias_20260903`;
+   **GH #451**(英雄组)、**GH #452**(本组);报告 `iterations/reports/strategy/20260903T105500Z.md`;
+   **无新 id、无新闸、`queue.json` 与 `test_set.md` 一字未动**;
+   零 AWS、S3 零访问、零 EC2;**`bots/`、`game/` 逐字节未变**。**已交棒。**】**
+   **⭐ 主判据(可复用,超出本主题):一个不被计数的 skip 不是 limit,是一个旁边摆着分母的谎。**
+   工具按声明里**字面写的**点名建表。`bots/` 下 **24 个转译自 TypeScript 的模块**的 **256 个导出**
+   一律声明成 `function ____exports.Foo(...)`,而每个引用方写 `local Alias = require(...)` 再调 `Alias.Foo(`
+   ⇒ 两个名字**从不相等**,调用在 `if name not in decls: continue` 处掉出去。
+   **那条 continue 不增加任何计数器** —— 工具有两个具名 skip 桶(`ambiguous_skipped`/`vararg_skipped`)
+   和**一个静默的**,而静默那个**有 665 个调用宽**。于是分母行**一直很健康**
+   (files 275 / declarations 1700 / dotted_calls 28511),**披露行结构上披露不了这个洞**,
+   工具**一直报 `OVER (0)`**,而棘轮从 2026-08-25 起断言的 `the OVER half is still empty`
+   **对那个解析器为真、对这棵树为假**:这棵树**唯一**的 OVER 成员就住在这样一个调用点上
+   (`hero_selection:1040`),**在那句断言一路绿灯的整段时间里没被看过一眼**。
+   ⇒ 与 GH #431(查询词错)/ #437(解析器错)/ #445(近似里的隐藏自变量)同族,
+   四次症状逐字相同(**一个偏小的、自洽的、带分母的读数**);
+   **新意在于这次错的不是查询词也不是解析器本身,而是「跳过」与「没找到」共用了一条静默分支**。
+   ⚠️ **选题当天自己也造了一个同族的假零**:手写普查第一次跑在 scratchpad 里,`os.walk('bots')`
+   什么也没走到,打印 `lua files: 0 / call sites: 0 / TOO-MANY-ARGS: 0` —— 三个分母的干净零,
+   自变量是 **cwd**。它没进产物,但它是这条判据的预演;**仓库里那个假零已经绿了九天**。
+   **⭐⭐ 域价钱**:resolved **25344 → 26009**,跨模块 alias 解析 **0 → 665**,
+   OVER **0 → 1**,UNDER **33 → 40** —— **新出的 7 行一行都不是新落地的代码**。
+   **⭐⭐⭐ 「被使用」和「被读」不是一回事。** 唯一的 OVER 里那个 `userSwitchedRole`
+   全文只有三处(`local`、人类打 `!pick` 时 `= true`、以及传给声明**一个**形参的 `CMLaneAssignment`),
+   Lua 丢掉它 ⇒ **只写的 flag,它背后那个功能从来没被实现过**。
+   **luacheck 抓不到,而且抓不到是对的**:它**被「使用」了**(作为实参出现)——
+   **一个实参走到一个不收它的形参表,对 linter 是使用,对程序是丢弃。**
+   判 **COSMETIC 不判 TEETH**(CM-only 分支 Turbo 永远进不去;OVER 实参本就不改行为),
+   并钉了作废条件:`CMLaneAssignment` 长出第二个形参。
+   **⭐⭐⭐⭐ 新表 `ROUTED`:「判过了」和「良性」从今天起是两个词。** 原来只有 ALLOWLIST,
+   于是一条有牙的发现要么被写成良性、要么让棘轮变红没人能推 —— **两条路都是坏的**。
+   约束写进测试:**每行必须 TEETH 且必须带 GH 号**,否则就是「注意到了然后放着」
+   (铁律 9 那条掉了 37 轮的接力棒的形状)。
+   ROUTED 四行:**#451**(英雄组,tinker 8 处 `J.Utils.GetItem('item_x')` ⇒ 物品**名字**成了接收者,
+   `("x"):GetItemInSlot(0)` lua5.1 实测抛错;**活的**,且引擎错误处理器坏掉 ⇒ **一直无声地炸**);
+   **#452**(本组)(a) `mode_team_roam_generic` 的 `Utils.SetContains(itemName)` ×3 ⇒
+   `("item_aegis")[nil]` 是**合法的读**(只有以 nil 为键**赋值**才报错)取到 nil ⇒ **闸恒假**、
+   `ignorePickupList` **只写**、对已放弃的掉落物**三帧一轮无限重试**;
+   ⚠️ **同三行里还有第二个独立缺陷**:`AddToSet` 存**句柄**、三处读问**名字**
+   ⇒ **光补一个实参仍然永远不命中** —— `0SLOT`/`slotarb` **两套下标空间**族**第三次**出现,
+   **正确修法是两处一起改**;(b) `mode_roam_generic:1251` **一行上两个各自都能抛的错**
+   (少 `bot` ⇒ 枚举成接收者;`not` 比 `<=` 结合更紧 ⇒ `(not <boolean>) <= 2`,
+   lua5.1 实测 `attempt to compare boolean with number`),但 `GeneralReactToStackedDebuff`
+   **在 `bots/` 里零调用者 ⇒ 潜伏,不是今天的火**。
+   ⚠️ **本轮零行为改动,理由是域**:`SetContains` 那三处**真的活着**,但判定实例**买不到** ——
+   `tests/mock/bot_api.lua:374` 的 `GetDroppedItemList` 返回 `{}`,**语料结构上答不了捡取决定**
+   (与 GH #423 同形)⇒ 本组规矩第 2 条要求真实帧 fixture、gate-plumbing 不算,**路由不落地**。
+   给 mock 加非空实现只能钉 **helper 契约**、**钉不了决定**,两者别混。
+   **⭐⭐⭐⭐⭐ 变异台教的:两个活下来的 mutant 是两种不同的意思。**
+   **M8**(段数上界)活在**空域**上 —— 树上今天没有四段点名调用,那条界**从来没被走过**
+   ⇒ 补一个合成自检用例;**「活下来」在这里说的是域是空的,不是断言弱**。
+   **M13** 第一稿**连同测试自己的断言一起放松**(`== 3` → `>= 3`)才活下来,**那什么也没证明**:
+   **一个文件抓不到自己的断言被放松**(`0EQUIV`)⇒ **一个去改自己被打分的那个测试的 mutant,不是 mutant**。
+   另:**M1 是把 09-03 之前的状态用一行原样复原**,它**必须被分母抓到而不是被发现抓到** ——
+   **一个已经消失的发现举不了手**。
+   ⚠️ 变异台的 M13 会改 `bots/hero_selection.lua`,第一稿**漏把它列进 `FILES[]`** ⇒ 一次中断会把
+   mutant 留在工作树里(**GH #418 的形状,本轮自己踩了一次**);落地前已修,`sha256sum -c` 每轮校验。
+   ⛔ **撞车登记不重诊**(沿用 `0DUSTFIT`):python 唯一的红是 `test_detector_source_constants.py`
+   = **GH #410**,先于本轮存在、不在本组文件里;**81/1/1 与本轮改动前的基线逐位相同**。
+   **下一格**:#452 §(b) 两套下标空间一起修(上闸 + 先要一帧,掉落物那一帧本地给不了)。
+
+0SHAPE7. **【2026-09-03T10:55Z 新增,登记 —— 本轮扫空的一个形状,**已棘轮,别再重扫**】**
+   **时钟刻度混用**:一个时间戳被 `DotaTime()` 写下、被 `GameTime()` 读走(或反过来),
+   差值会被开赛前的偏移整段带偏 —— **静默,且永远朝一个方向**。
+   全仓 **62** 处 `GameTime()` / **650** 处 `DotaTime()`;`GameTime()` 的用法**几乎全是差值**
+   (`GameTime() - t0 < W`,**与刻度无关因而正确**),仅有的两处绝对比较在 `hero_selection.lua`
+   (开赛前,`GameTime()` 正是那里该用的钟)。
+   65 个「被当作时间戳读」的叶名里**混用 1 个**,而那 1 个是**叶名撞车的假阳**:
+   `ping.time` 三处读全是 `GameTime()`,`ping` 来自引擎的 `GetMostRecentPing()`;
+   写它的 `wisdom.time = DotaTime()`(`mode_rune_generic:282/294`)**是另一张表**。
+   ⇒ **真命中 0**。
+   ⭐ 与 `0CKPUSH` / `0CKTWIN` 的「每分钟秒数常数」合起来读:**「时间刻度」这一族在 `bots/` 里已经清空**
+   —— 差值写法把刻度问题**结构性地**消掉了,而绝对比较只剩开赛前那两处。
+   **下一轮换域时不必再扫它。**
+
 0GATECMT. **【2026-09-03T07:53Z 新增,**自驱**(`[strategy]` 未认领 issue 为零 —— GH #445 已于 04:39Z
    认领并交回录像组,07:03Z 之后新开的 #446/#447/#448 分属 harness / hero;owner P1 第 1 棒、P2 均已交出,
    P3 责任在总监 ⇒ 走**形状普查轨**,先量域价钱再选形状);
@@ -4823,6 +4904,61 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T10:55Z(**自驱** —— `[strategy]` 未认领 issue 为零:GH #445 已于 04:39Z 认领并交回
+  录像组,07:03Z 之后新开的 #446/#447/#448/#449/#450 分属 harness / hero / batch / bug;
+  owner P1 第 1 棒、P2 均已交出,P3 责任在总监 ⇒ 走**形状普查轨**;
+  **报告 `iterations/reports/strategy/20260903T105500Z.md`**;backlog 条目 **`0ARITY`** + **`0SHAPE7`**;
+  `state.json` 新键 **`arityalias_20260903`**;**已发 GH #451(英雄组)/ GH #452(本组)**;
+  **无新 id、无新闸、`queue.json` 与 `test_set.md` 一字未动**;
+  零 AWS、S3 零访问、零 EC2;**`bots/`、`game/` 逐字节未变**):
+  **⭐ 主判据:一个不被计数的 skip 不是 limit,是一个旁边摆着分母的谎。**
+  `call_arity_census.py` 按声明里字面写的点名建表;`bots/` 下 **24 个转译模块**的 **256 个导出**
+  一律写作 `____exports.Foo`,而引用方写 `local Alias = require(...)` 再调 `Alias.Foo`
+  ⇒ 两个名字从不相等,调用在 `if name not in decls: continue` 处掉出去,
+  **而那条 continue 不增加任何计数器**(工具有两个具名 skip 桶和**一个静默的**,静默那个 **665 个调用宽**)。
+  于是分母行一直健康(275 / 1700 / 28511),**披露行结构上披露不了这个洞**,
+  工具一直报 `OVER (0)`,而棘轮从 08-25 起断言的 `the OVER half is still empty`
+  **对那个解析器为真、对这棵树为假** —— 这棵树**唯一**的 OVER 成员就住在这样一个调用点上
+  (`hero_selection:1040`),**在断言一路绿灯的整段时间里没被看过一眼**。
+  与 #431(查询词)/#437(解析器)/#445(隐藏自变量)同族,**这次错的是「跳过」与「没找到」共用一条静默分支**。
+  域价钱:resolved **25344 → 26009**,跨模块 alias 解析 **0 → 665**,OVER **0 → 1**,UNDER **33 → 40**
+  —— **新出的 7 行一行都不是新代码**。
+  **⭐⭐ 「被使用」和「被读」不是一回事。** `userSwitchedRole` 全文只有三处
+  (`local`、人类打 `!pick` 时 `= true`、以及传给声明**一个**形参的 `CMLaneAssignment`),
+  Lua 丢掉它 ⇒ **只写的 flag,它背后那个功能从来没被实现过**;
+  **luacheck 抓不到而且抓不到是对的** —— 它作为实参出现,**对 linter 是使用,对程序是丢弃**。
+  判 COSMETIC 不判 TEETH:CM-only 分支 Turbo 永远进不去,且 OVER 实参本就不改行为。
+  落地:按 **import 图**解析(每文件 `require` 绑定 + 被引模块自己的字段绑定 `J.Utils = require(...)`,
+  两段深)、新分母 `alias_calls`/`alias_resolved`/`modules`/`exports` + 全树零解析时的横幅、
+  新 **`ROUTED`** 表(**「判过了」和「良性」从今天起是两个词**:ALLOWLIST = 调用没问题,
+  ROUTED = 调用坏了归别人,**每行必须 TEETH 且必须带 GH 号**);自检 **13 → 20**,棘轮断言 **9 → 16**。
+  ROUTED 四行:**GH #451**(英雄组,tinker 8 处 `J.Utils.GetItem('item_x')` ⇒ 名字成了接收者,
+  lua5.1 实测抛错,**活的**,且引擎错误处理器坏掉所以一直无声地炸);
+  **GH #452**(本组)(a) `Utils.SetContains(itemName)` ×3 ⇒ `("item_aegis")[nil]` 是**合法的读**取到 nil
+  ⇒ **闸恒假**、`ignorePickupList` **只写**、对放弃过的掉落物**三帧一轮无限重试**,
+  ⚠️ **同三行里还有第二个独立缺陷**:`AddToSet` 存**句柄**、三处读问**名字**
+  ⇒ **光补一个实参仍然永远不命中**(`0SLOT`/`slotarb` 两套下标空间族**第三次**);
+  (b) `mode_roam_generic:1251` 一行两个各自都能抛的错(少 `bot` + `not f() <= 2` 读作
+  `(not <boolean>) <= 2`),但 `GeneralReactToStackedDebuff` **零调用者 ⇒ 潜伏不是活的**。
+  ⚠️ **本轮零行为改动**:`SetContains` 那三处虽活,判定实例**买不到** ——
+  `tests/mock/bot_api.lua:374` 的 `GetDroppedItemList` 返回 `{}`,**语料结构上答不了捡取决定**
+  (与 GH #423 同形)⇒ 按本组规矩第 2 条**路由不落地**。
+  **⭐⭐⭐ 变异台教的:两个活下来的 mutant 是两种不同的意思。** M8(段数上界)活在**空域**上
+  (树上没有四段点名调用,那条界从没被走过)⇒ 补合成用例;
+  M13 第一稿**连同测试自己的断言一起放松**(`== 3` → `>= 3`)才活下来,**那什么也没证明** ——
+  **一个去改自己被打分的那个测试的 mutant 不是 mutant**(`0EQUIV`)。改成只改被测对象后 CAUGHT。
+  门:`luacheck_gate.sh` **裸读 `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`**;
+  棘轮绿;工具自检 **20/20**;新变异台 `mutstand_arity_alias.sh` **13/13 CAUGHT**;
+  python 全套 **81 passed / 1 failed / 1 uncertifiable**,**与本轮改动前的基线逐位相同**;
+  **Lua 全量套件没跑完 —— 这是跳过不是通过**(`bots`/`game` 零字节改动)。
+  开工自检真实退出码 **3**(cadence + trunk-red);唯一的红是 **GH #410**,
+  **不是本轮的、也不在本组文件里**,按 `0DUSTFIT` **登记不重诊**。
+  第一次调用**又被证据纪律 3 拒绝**(stdout 是管道)—— **第 10 次复发**。
+  ⚠️ 变异台的 M13 会改 `bots/hero_selection.lua`,第一稿**漏把它列进 `FILES[]`**
+  ⇒ 一次中断会把 mutant 留在树里;落地前已修(GH #418 的形状,自己踩了一次)。
+  **球:英雄组(#451)/ 本组下一轮(#452 §(b),上闸 + 先要一帧)/ 总监(`ROUTED` 要不要推广)。**
+  侧记(不越界):本判据对 `tools/agent/` 里**任何按名字建表再跨文件比对**的普查都成立 ——
+  问一句「没找到和跳过是不是共用一条静默分支」;**本组没有量过那个域**。
 - 2026-09-03T07:53Z(**自驱** —— `[strategy]` 未认领 issue 为零:GH #445 已于 04:39Z 认领并交回
   录像组,07:03Z 之后新开的 #446/#447/#448 分属 harness / hero;owner P1 第 1 棒、P2 均已交出,
   P3 责任在总监 ⇒ 走**形状普查轨**;**报告 `iterations/reports/strategy/20260903T075317Z.md`**;

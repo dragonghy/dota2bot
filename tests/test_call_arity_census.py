@@ -88,33 +88,63 @@ ok("the scan resolved most of the calls it saw",
    "resolved %d of %d dotted calls (was 25194 of 28364)"
    % (STATS["resolved_calls"], STATS["dotted_calls"]))
 
-_new = sorted(k for k in GROUPED if k not in C.ALLOWLIST)
+# The denominator that did not exist before 2026-09-03, and whose absence is
+# the whole reason this file once asserted an empty OVER half over a tree that
+# had a member.  Declarations in the 24 transpiled modules are written
+# `____exports.Foo`; callers write `Alias.Foo`.  Those never matched, the call
+# fell out of an uncounted `continue`, and the printed denominators looked
+# healthy the whole time.  Assert the crossing itself, not just the total: a
+# resolver that stops crossing the boundary goes red here instead of going
+# quiet everywhere.
+ok("the scan still crosses module boundaries",
+   STATS["alias_resolved"] >= 500 and STATS["exports"] >= 200,
+   "resolved %d alias-qualified call(s) against %d export(s) in %d module(s) "
+   "-- was 665/256/24.  A collapse here reads as 'no findings' downstream; it "
+   "is the blind spot returning, not the tree getting cleaner"
+   % (STATS["alias_resolved"], STATS["exports"], STATS["modules"]))
+ok("every alias call that reached a declaration was parsed",
+   STATS["alias_resolved"] == STATS["alias_calls"],
+   "%d alias call(s) resolved to a declaration but only %d parsed"
+   % (STATS["alias_calls"], STATS["alias_resolved"]))
+
+# JUDGED means one of two different things, and the tool keeps them apart:
+# ALLOWLIST = the call is fine, ROUTED = the call is broken and owned elsewhere.
+_judged = dict(C.ALLOWLIST)
+_judged.update(C.ROUTED)
+
+_overlap = sorted(set(C.ALLOWLIST) & set(C.ROUTED))
+ok("no row is both benign and routed",
+   not _overlap,
+   "a key appears in ALLOWLIST and ROUTED; those words contradict each "
+   "other:\n        " + "\n        ".join(str(k) for k in _overlap))
+
+_new = sorted(k for k in GROUPED if k not in _judged)
 ok("no unjudged mismatch",
    not _new,
    "new arity mismatch(es), each needs a verdict in the tool's ALLOWLIST "
-   "before it can ride:\n        "
+   "(benign) or ROUTED (broken, owned elsewhere) before it can ride:\n        "
    + "\n        ".join("%s  %s  %s passed %d declares %d" % k for k in _new))
 
-_gone = sorted(k for k in C.ALLOWLIST if k not in GROUPED)
-ok("no allowlist row without a finding",
+_gone = sorted(k for k in _judged if k not in GROUPED)
+ok("no judged row without a finding",
    not _gone,
-   "these allowlist rows no longer match anything -- if the call was fixed, "
-   "DELETE the row in the same commit (the list may only shrink):\n        "
+   "these rows no longer match anything -- if the call was fixed, DELETE the "
+   "row in the same commit (both lists may only shrink):\n        "
    + "\n        ".join("%s  %s  %s passed %d declares %d" % k for k in _gone))
 
 _count_drift = sorted(
-    "%s %s %s: %d now, %d allowlisted" % (k[0], k[1], k[2], GROUPED[k],
-                                          C.ALLOWLIST[k][0])
-    for k in GROUPED if k in C.ALLOWLIST and GROUPED[k] != C.ALLOWLIST[k][0])
+    "%s %s %s: %d now, %d judged" % (k[0], k[1], k[2], GROUPED[k],
+                                     _judged[k][0])
+    for k in GROUPED if k in _judged and GROUPED[k] != _judged[k][0])
 ok("no row grew a new instance",
    not _count_drift,
-   "an allowlisted row changed count; a NEW call site of an already-judged "
-   "shape still needs judging:\n        " + "\n        ".join(_count_drift))
+   "a judged row changed count; a NEW call site of an already-judged shape "
+   "still needs judging:\n        " + "\n        ".join(_count_drift))
 
-ok("every allowlist row carries a verdict word",
+ok("every judged row carries a verdict word",
    all(any(v[1].startswith(w) for w in
            ("DEFAULTED", "UNREAD", "BRANCHED", "VENDORED", "COSMETIC", "TEETH"))
-       for v in C.ALLOWLIST.values()),
+       for v in _judged.values()),
    "a row's reason does not begin with one of the six verdicts the tool "
    "header defines")
 
@@ -132,24 +162,58 @@ print("\n3. the OVER half, swept (GH #189)")
 # The row that had teeth was hero_bristleback:620 -- an 8.0 handed to a helper
 # with a hardcoded 5-second window.  It was swept together with the other seven
 # OVER sites (hero group, 2026-08-25); every one passed a literal constant, so
-# every removal is byte-for-byte the same behaviour.  What this section defends
-# is the swept state, not the defect: an OVER can never crash, so holding the
-# half at zero costs nothing and makes the next one red on arrival.
-_teeth = [k for k, v in C.ALLOWLIST.items() if v[1].startswith("TEETH")]
-ok("no behaviour-bearing row is being tolerated",
-   not _teeth,
-   "a TEETH row is back in the allowlist (%d): a behaviour-bearing arity "
-   "mismatch is routed to its owner and fixed, not judged and kept" % len(_teeth))
+# every removal is byte-for-byte the same behaviour.
+#
+# !! This section used to assert "the OVER half is still empty", and that
+# assertion was TRUE OF THE TOOL rather than of the tree.  The sweep cleared
+# every OVER the resolver could see, and the resolver could not see across a
+# transpiled-module boundary at all; the tree's only remaining OVER member sat
+# at exactly such a call site (hero_selection:1040) for the whole time the
+# assertion was green.  What is defensible is the narrower claim the sweep
+# actually earned -- no OVER member is behaviour-bearing -- so that is what is
+# asserted now.  An OVER can never crash, which is what makes COSMETIC an
+# honest verdict for the survivor and TEETH the only word that must not appear.
+ok("no behaviour-bearing row is being tolerated as benign",
+   not [k for k, v in C.ALLOWLIST.items() if v[1].startswith("TEETH")],
+   "a TEETH row is in ALLOWLIST: a behaviour-bearing arity mismatch is routed "
+   "to its owner (ROUTED, with an issue) and fixed, not judged benign and kept")
 
-_over = [k for k in C.ALLOWLIST if k[2] == "OVER"]
-ok("the OVER half is still empty",
-   not _over,
-   "an OVER row is back in the allowlist:\n        "
-   + "\n        ".join("%s  %s  passed %d declares %d"
-                       % (k[0], k[1], k[3], k[4]) for k in _over)
-   + "\n        The extra argument is silently dropped; the fix is to delete "
-     "it at the call site (recording the intent in a comment if it had one), "
-     "not to allowlist it.")
+ok("every routed row is behaviour-bearing and carries its issue",
+   all(v[1].startswith("TEETH") and "GH #" in v[1] for v in C.ROUTED.values()),
+   "ROUTED is for real defects handed to an owner; every row must be TEETH "
+   "and must name the issue that carries it, or it is untracked:\n        "
+   + "\n        ".join("%s  %s  %s" % (k[0], k[1], v[1])
+                       for k, v in C.ROUTED.items()
+                       if not (v[1].startswith("TEETH") and "GH #" in v[1])))
+
+_over_teeth = [k for k, v in list(C.ALLOWLIST.items()) + list(C.ROUTED.items())
+               if k[2] == "OVER" and v[1].startswith("TEETH")]
+ok("no OVER row claims teeth",
+   not _over_teeth,
+   "an OVER row is marked TEETH.  Lua drops the extra argument, so an OVER "
+   "cannot change behaviour; if it looks behaviour-bearing, the declaration "
+   "grew a parameter and the row needs re-judging, not re-labelling:\n        "
+   + "\n        ".join("%s  %s" % (k[0], k[1]) for k in _over_teeth))
+
+# The survivor, pinned by the thing that makes it harmless.  If
+# CMLaneAssignment ever declares a second parameter, the dropped flag starts
+# being read and COSMETIC stops being true.
+_cm = open(os.path.join(REPO, "bots", "FunLib", "captain_mode.lua"),
+           encoding="utf-8").read()
+ok("CMLaneAssignment still declares exactly one parameter",
+   "function ____exports.CMLaneAssignment(roleAssign)" in _cm,
+   "CMLaneAssignment's signature changed.  hero_selection:1040 passes it two "
+   "arguments; while it declares one, the second is dropped and the row is "
+   "COSMETIC -- if it now declares two, `userSwitchedRole` just became live "
+   "and the row must be re-judged")
+
+_hs = open(os.path.join(REPO, "bots", "hero_selection.lua"),
+           encoding="utf-8").read()
+ok("userSwitchedRole still has exactly one reader",
+   _hs.count("userSwitchedRole") == 3,
+   "the write-only flag grew or lost a mention (expected 3: the `local`, the "
+   "one `= true`, and the argument Lua drops).  A new reader means the "
+   "feature was implemented and this row should be gone")
 
 _jmz = open(os.path.join(REPO, "bots", "FunLib", "jmz_func.lua"),
             encoding="utf-8").read()

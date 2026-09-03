@@ -47,11 +47,33 @@ LIMITS -- read these before quoting the count:
     entirely (`X.` tables are per-file, so this happens a lot and there is no
     way to tell which declaration a given call site meant).
   * Declarations taking `...` are skipped.
+  * MODULE BOUNDARIES are crossed by name, not by import graph -- see the next
+    paragraph for what that cost.
   * `--[[ ]]` blocks and `--` line comments are stripped before scanning; the
     stripper is naive about `--` inside strings on a line that already has an
     odd quote count.  The self-check asserts the scan reached its expected
     scale, so a stripper regression shows up as a collapsed denominator rather
     than as a quiet zero (charter 0IMPL judgement two).
+
+THE TRANSPILED-MODULE BLIND SPOT, and why `OVER (0)` was not a reading
+(strategy 2026-09-03).  Declarations are keyed by the dotted name AS WRITTEN.
+Thirteen modules under `bots/` are transpiled TypeScript, and every one of
+their 256 exports is declared `function ____exports.Foo(...)` while every
+importer writes `local Alias = require(GetScriptDirectory()..'/FunLib/utils')`
+and calls `Alias.Foo(...)`.  Those two names never match, so the call fell out
+at `if name not in decls: continue` -- and that branch incremented NO counter.
+The denominator line therefore could not disclose the gap: 161 resolvable
+cross-module call sites were invisible, and the tool printed `OVER (0)` over a
+tree whose ONLY OVER member lives at exactly such a call site
+(`hero_selection:1040`).  A skip that is not counted is not a limit, it is a
+lie with a denominator next to it.  Resolution now follows the import graph:
+
+  * per-file `local Alias = require('/path')` bindings, plus
+  * field bindings written in the imported module itself (`J.Utils =
+    require('/FunLib/utils')` in jmz_func), so `J.Utils.SetContains(` resolves
+    two segments deep;
+  * `alias_calls` / `alias_resolved` are now denominators in their own right,
+    so the blind spot cannot come back as a silent zero.
 
 Usage:
     python3 tools/agent/call_arity_census.py            # the nine decision files
@@ -189,6 +211,73 @@ ALLOWLIST = {
     ("bots/FunLib/jmz_func.lua", "J.RoshanPitProximity", "UNDER", 3, 4):
         (1, "DEFAULTED: nRadius read once, as `nRadius or 1600`, past the "
             "`if not bRoshDist then return` early exit"),
+
+    # ---- first seen 2026-09-03, when the resolver learned to cross a module
+    # ---- boundary.  These were never new; they were unreachable by the tool.
+    ("bots/hero_selection.lua", "Utils.PrintTable", "UNDER", 1, 2):
+        (1, "VENDORED: transpiled debug printer, indent defaults inside"),
+    # ____exports.MoveBotSafely(bot, targetPos) hands targetPos straight to
+    # GetSafeDestination, whose first line is `targetPos or add(
+    # bot:GetLocation(), RandomVector(260))`.  The one-argument call is the
+    # documented way to ask for "somewhere safe near me".
+    ("bots/mode_roam_generic.lua", "J.Utils.MoveBotSafely", "UNDER", 1, 2):
+        (1, "DEFAULTED: targetPos nil -> bot location + RandomVector(260), "
+            "substituted on GetSafeDestination's first line"),
+    # The tree's only OVER member, and it was invisible for as long as the
+    # resolver keyed on `____exports.CMLaneAssignment` while the call site
+    # writes `CaptainMode.CMLaneAssignment`.  `userSwitchedRole` is a
+    # file-scope flag in hero_selection.lua set at one place (a human typing
+    # `!pick` in chat) and passed at one place -- here -- to a function that
+    # declares one parameter.  Lua drops it, so the flag is write-only and the
+    # feature behind it was never implemented.
+    # COSMETIC and not TEETH on two counts, both structural: the branch is
+    # `GetGameMode() == GAMEMODE_CM or GAMEMODE_REVERSE_CM`, and this repo
+    # optimises Turbo (GAMEMODE 23), which never enters it; and an OVER
+    # argument cannot change behaviour even when the branch is entered.
+    # !! What would make this row wrong: CMLaneAssignment growing a second
+    # parameter.  Then the argument stops being dropped and starts being read,
+    # and the row must be re-judged rather than re-counted.
+    ("bots/hero_selection.lua", "CaptainMode.CMLaneAssignment", "OVER", 2, 1):
+        (1, "COSMETIC: `userSwitchedRole` is dropped by Lua; the flag has no "
+            "other reader, and the branch is CM-only (Turbo never enters it)"),
+}
+
+# Real, behaviour-bearing, and deliberately NOT swept here: each row is routed
+# to the group that owns the file, with the issue that carries it.  This table
+# exists so that "judged" and "benign" stay different words -- ALLOWLIST means
+# the call is fine, ROUTED means the call is broken and someone else's to fix.
+# A row may only leave this table by being FIXED (or refuted in its issue).
+ROUTED = {
+    # ____exports.GetItem(bot, itemName) -> GetItemFromCountedInventory(bot,
+    # itemName, 6) -> `bot:GetItemInSlot(0)`.  With one argument bot is the
+    # STRING 'item_shivas_guard', and a string has no GetItemInSlot: measured
+    # under lua5.1, `("x"):GetItemInSlot(0)` raises "attempt to call method
+    # ... (a nil value)".  Live: CanDoCombo2 reaches the first of these
+    # whenever tinker has blink + Laser + WarpFlare castable.  The engine's
+    # error handler is broken ("error in error handling" masks the text), so
+    # this has been failing without a message.
+    ("bots/BotLib/hero_tinker.lua", "J.Utils.GetItem", "UNDER", 1, 2):
+        (8, "TEETH: runtime error, hero group -- GH #451"),
+    # `not J.Utils.NumActionTypeInQueue(BOT_ACTION_TYPE_ATTACK) <= 2` carries
+    # TWO independent errors, either of which raises on its own: the missing
+    # `bot` (the enum becomes the receiver) and the precedence -- `not` binds
+    # tighter than `<=`, so this is `(not <boolean>) <= 2`, measured under
+    # lua5.1 as "attempt to compare boolean with number".
+    # LATENT, not live: GeneralReactToStackedDebuff has no caller in bots/.
+    ("bots/mode_roam_generic.lua", "J.Utils.NumActionTypeInQueue", "UNDER", 1, 2):
+        (1, "TEETH: latent runtime error (dead function), strategy -- GH #452"),
+    # ____exports.SetContains(set, key) is `not not set[key]`.  With one
+    # argument set is the item NAME and key is nil; `("item_aegis")[nil]` is a
+    # legal read that yields nil, so the guard is CONSTANT FALSE rather than a
+    # crash, and `not SetContains(...)` is constant true.  ignorePickupList is
+    # therefore write-only: added to at :1821, never consulted.  Second,
+    # independent defect in the same three lines -- AddToSet stores the item
+    # HANDLE while the reads ask about the item NAME, so passing the set would
+    # still never match (the 0SLOT / slotarb index-space family).
+    ("bots/mode_team_roam_generic.lua", "Utils.SetContains", "UNDER", 1, 2):
+        (2, "TEETH: constant-false guard, strategy -- GH #452"),
+    ("bots/mode_team_roam_generic.lua", "J.Utils.SetContains", "UNDER", 1, 2):
+        (1, "TEETH: constant-false guard, strategy -- GH #452"),
 }
 
 
@@ -250,9 +339,73 @@ CALL_RE = re.compile(
     r"(?<![\w.:])((?:[A-Za-z_][A-Za-z0-9_]*\.)+[A-Za-z_][A-Za-z0-9_]*)\s*\(")
 
 
+REQUIRE_RE = re.compile(
+    r"require\s*\(\s*GetScriptDirectory\(\)\s*\.\.\s*['\"]/?([^'\"]+)['\"]\s*\)")
+LOCAL_ALIAS_RE = re.compile(
+    r"local\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*" + REQUIRE_RE.pattern)
+FIELD_ALIAS_RE = re.compile(
+    r"^[ \t]*([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"
+    + REQUIRE_RE.pattern, re.M)
+EXPORT_DECL_RE = re.compile(
+    r"^[ \t]*(?:function\s+____exports\.([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)"
+    r"|____exports\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*function\s*\(([^)]*)\))",
+    re.M)
+
+
 def all_lua_files(root=None):
     root = root or os.path.join(REPO, "bots")
     return sorted(glob.glob(os.path.join(root, "**", "*.lua"), recursive=True))
+
+
+def module_key(path):
+    """'<repo>/bots/FunLib/utils.lua' -> 'FunLib/utils' (what require() names)."""
+    rel = os.path.relpath(path, os.path.join(REPO, "bots"))
+    return rel[:-4].replace(os.sep, "/") if rel.endswith(".lua") else rel
+
+
+def collect_module_exports(files):
+    """module key -> {export name: (arity, vararg, defining file)}.
+
+    Transpiled modules declare `function ____exports.Foo(a, b)`; importers only
+    ever see the name they bound `require` to.  This table is the other half of
+    that mapping.
+    """
+    mods = {}
+    for path in files:
+        src = strip_comments(open(path, encoding="utf-8", errors="replace").read())
+        if "____exports" not in src:
+            continue
+        rel = os.path.relpath(path, REPO)
+        table = mods.setdefault(module_key(path), {})
+        for m in EXPORT_DECL_RE.finditer(src):
+            name = m.group(1) or m.group(3)
+            raw = (m.group(2) if m.group(1) else m.group(4)).strip()
+            params = [p.strip() for p in raw.split(",")] if raw else []
+            if name in table and table[name][0] != len(params):
+                table[name] = (table[name][0], table[name][1], True)
+                continue
+            table[name] = (len(params), "..." in params, rel)
+    return mods
+
+
+def collect_field_aliases(files):
+    """(module key of the file, field) -> module key it was bound to.
+
+    jmz_func writes `J.Utils = require('/FunLib/utils')`, so a caller holding
+    `J` can reach utils' exports two segments deep as `J.Utils.Foo(`.
+    """
+    out = {}
+    for path in files:
+        src = strip_comments(open(path, encoding="utf-8", errors="replace").read())
+        for m in FIELD_ALIAS_RE.finditer(src):
+            out[(module_key(path), m.group(2))] = m.group(3).strip("/")
+    return out
+
+
+def local_aliases(src):
+    """alias -> module key, for one file's `local X = require(...)` lines."""
+    return {m.group(1): m.group(2).strip("/")
+            for m in LOCAL_ALIAS_RE.finditer(src)}
 
 
 def collect_declarations(files):
@@ -287,19 +440,56 @@ def census(scan_files, decl_files=None):
     """
     decl_files = decl_files or all_lua_files()
     decls = collect_declarations(decl_files)
+    mods = collect_module_exports(decl_files)
+    fields = collect_field_aliases(decl_files)
     findings = []
     stats = {"declarations": len(decls), "files": 0, "dotted_calls": 0,
-             "resolved_calls": 0, "ambiguous_skipped": 0, "vararg_skipped": 0}
+             "resolved_calls": 0, "ambiguous_skipped": 0, "vararg_skipped": 0,
+             "modules": len(mods), "exports": sum(len(v) for v in mods.values()),
+             "alias_calls": 0, "alias_resolved": 0}
+
+    def resolve_alias(name, aliases):
+        """`Utils.SetContains` / `J.Utils.SetContains` -> the ____exports decl.
+
+        Returns (arity, defining file, ambiguous, vararg) or None.  Only the
+        LAST segment can be the export name; everything before it must resolve
+        to a module through the import graph.
+        """
+        segs = name.split(".")
+        if len(segs) < 2 or len(segs) > 3:
+            return None
+        head, fname = segs[:-1], segs[-1]
+        mod = aliases.get(head[0])
+        if mod is None:
+            return None
+        if len(head) == 2:
+            mod = fields.get((mod, head[1]))
+            if mod is None:
+                return None
+        entry = mods.get(mod, {}).get(fname)
+        if entry is None:
+            return None
+        if entry[2] is True:          # two arities inside the module
+            return (entry[0], mod, True, entry[1])
+        return (entry[0], entry[2], False, entry[1])
+
     for path in scan_files:
         stats["files"] += 1
         src = strip_comments(open(path, encoding="utf-8", errors="replace").read())
         rel = os.path.relpath(path, REPO)
+        aliases = local_aliases(src)
         for m in CALL_RE.finditer(src):
             stats["dotted_calls"] += 1
             name = m.group(1)
-            if name not in decls:
-                continue
-            declared, dfile, ambiguous, vararg = decls[name]
+            entry = decls.get(name)
+            via_alias = False
+            if entry is None:
+                entry = resolve_alias(name, aliases)
+                if entry is None:
+                    continue
+                via_alias = True
+                stats["alias_calls"] += 1
+            declared, dfile, ambiguous, vararg = entry
             if ambiguous:
                 stats["ambiguous_skipped"] += 1
                 continue
@@ -310,6 +500,8 @@ def census(scan_files, decl_files=None):
             if args is None:
                 continue
             stats["resolved_calls"] += 1
+            if via_alias:
+                stats["alias_resolved"] += 1
             passed = len([a for a in args if a.strip() != ""])
             if passed == declared:
                 continue
@@ -375,7 +567,70 @@ def selfcheck():
                 print("  FAIL case %d: want %r got %r" % (i, sorted(want), got))
             else:
                 print("  ok   case %d" % i)
-    print("%d/%d selfcheck cases pass" % (len(cases) - failures, len(cases)))
+
+    # Cross-module cases need two files inside a fake `bots/` tree, because
+    # module keys are computed relative to it.  Each pins one half of the
+    # import-graph resolution that 2026-09-03 added.
+    xcases = [
+        # (module source, caller source, expected)
+        # the plain alias: local U = require('/m'); U.f(1) against ____exports
+        ("function ____exports.f(a, b) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.f(1)\n",
+         [("U.f", "UNDER", 1, 2)]),
+        # an OVER across the same boundary -- the half that used to read 0
+        ("function ____exports.f(a) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.f(1, 2)\n",
+         [("U.f", "OVER", 2, 1)]),
+        # a correct call stays silent
+        ("function ____exports.f(a, b) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.f(1, 2)\n", []),
+        # an alias that was never require()d must NOT resolve -- resolving by
+        # bare leaf name is exactly the false positive this tool must not make
+        ("function ____exports.f(a, b) end\n",
+         "Nope.f(1)\n", []),
+        # the export name must be the LAST segment; a module used as a value
+        # does not make every deeper field an export
+        ("function ____exports.f(a, b) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.x.f(1)\n", []),
+        # ...and the chain must be at most alias.field.export.  A four-segment
+        # name resolving against the alias's OWN module would be a confident
+        # mismatch reported on the wrong declaration entirely -- the false
+        # positive this tool must never make.  No such call exists in bots/
+        # today, which is exactly why the bound needs a synthetic case: the
+        # mutation stand's M8 survived on an empty domain until this line.
+        ("function ____exports.f(a, b) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.a.b.f(1)\n", []),
+        # a module declaring the same export twice with different arities is
+        # ambiguous and skipped, exactly as same-file declarations are
+        ("function ____exports.f(a) end\nfunction ____exports.f(a, b) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.f(1)\n", []),
+        # varargs are skipped across the boundary too
+        ("function ____exports.f(a, ...) end\n",
+         "local U = require(GetScriptDirectory()..'/m')\nU.f(1)\n", []),
+    ]
+    for i, (mod_src, call_src, want) in enumerate(xcases, len(cases) + 1):
+        with tempfile.TemporaryDirectory() as d:
+            bots = os.path.join(d, "bots")
+            os.makedirs(bots)
+            mp = os.path.join(bots, "m.lua")
+            cp = os.path.join(bots, "caller.lua")
+            open(mp, "w").write(mod_src)
+            open(cp, "w").write(call_src)
+            global REPO
+            saved, REPO = REPO, d
+            try:
+                found, _ = census([cp], [mp, cp])
+            finally:
+                REPO = saved
+            got = sorted((f["name"], f["kind"], f["passed"], f["declared"])
+                         for f in found)
+            if got != sorted(want):
+                failures += 1
+                print("  FAIL case %d: want %r got %r" % (i, sorted(want), got))
+            else:
+                print("  ok   case %d" % i)
+    total = len(cases) + len(xcases)
+    print("%d/%d selfcheck cases pass" % (total - failures, total))
     return 0 if failures == 0 else 1
 
 
@@ -400,12 +655,21 @@ def main(argv=None):
           % (stats["files"], stats["declarations"], stats["dotted_calls"],
              stats["resolved_calls"], stats["ambiguous_skipped"],
              stats["vararg_skipped"]))
+    print("cross-module: %d transpiled module(s), %d export(s); %d alias call(s) "
+          "reached a declaration, %d of them parsed"
+          % (stats["modules"], stats["exports"], stats["alias_calls"],
+             stats["alias_resolved"]))
+    if stats["alias_resolved"] == 0 and stats["files"] > 50:
+        print("  !! ZERO alias calls resolved over a full-tree scan.  Before "
+              "2026-09-03 that was this tool's normal state and it printed "
+              "OVER (0) anyway -- treat any count below as unread.")
     for kind in ("OVER", "UNDER"):
         rows = [f for f in findings if f["kind"] == kind]
         print("\n== %s (%d)" % (kind, len(rows)))
         for f in sorted(rows, key=lambda r: (r["file"], r["line"])):
             key = (f["file"], f["name"], f["kind"], f["passed"], f["declared"])
-            verdict = ALLOWLIST.get(key, (0, "*** NOT IN ALLOWLIST ***"))[1]
+            verdict = ALLOWLIST.get(
+                key, ROUTED.get(key, (0, "*** NOT IN ALLOWLIST ***")))[1]
             print("  %s:%d  %s  passed %d, declares %d  [%s]\n      %s"
                   % (f["file"], f["line"], f["name"], f["passed"],
                      f["declared"], f["declared_in"], verdict))
