@@ -1,0 +1,147 @@
+{
+ "wave": "W41",
+ "_note": "57-id family FIRST wave (roshdist+ckpush admitted 2026-09-03T01:xxZ, director test_set.md SS-DT, GH #422/#426). NOT poolable with W39/W40 (55-id family): the armed string changed, so the two families measure different trees-under-arm.",
+ "tree": "694c31fe16b782091c7ea2d21be7160b1b2b0ebf",
+ "tree_verified": "git ls-remote origin main == local HEAD == 694c31fe16b782091c7ea2d21be7160b1b2b0ebf (checked 03:11Z, before launch)",
+ "ref_pin": "694c31fe16b782091c7ea2d21be7160b1b2b0ebf",
+ "arm_ids": 57,
+ "arm_bytes": 501,
+ "arm_md5": "38423b791c05d96e0e16ed0b51bd132d",
+ "arm_string": "l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush",
+ "arm_source": "iterations/streams/test_set.md line 2, read at launch time; md5 recomputed here, not copied from prose",
+ "arm_note": "55 -> 57: roshdist (queue strategy-37, GH #422) + ckpush (strategy-38, GH #426) admitted together, effective from W41 per SS-DT",
+ "arm_family_note": "FIRST wave of the 57-id family. Pooling with W39/W40 is forbidden by construction (different armed string). Two independent reasons this wave cannot be pooled with W39/W40: the armed string changed AND the bots/ tree changed.",
+ "seeds": [
+  3017,
+  3030,
+  3161,
+  3329
+ ],
+ "carrier_terms": [
+  "chaos_knight",
+  "crystal_maiden",
+  "lion",
+  "obsidian_destroyer",
+  "skeleton_king",
+  "spirit_breaker",
+  "zuus"
+ ],
+ "instance_type": "c6i.4xlarge",
+ "slots": 16,
+ "rec_slots": 8,
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "market": "on-demand",
+ "market_note": "reclaim_blind.py --wave-json W40 => exit 1, VERDICT BLINDED (yield 1 paired seed of 4 spot machines, loss is capacity), NEXT WAVE: launch --on-demand (ONE wave), then revert to spot. This is GH #271's encoded ruling and rides #158's own 'unless there is no spot machine' clause; it is NOT a standing switch away from spot.",
+ "cost_estimate": "~$2.15 (on-demand measured constant, W10-W14 0.745 h/machine x 4 x $0.673/h)",
+ "acquisition_config_note": "identical to W39/W40 (--slots 16 --hours 2 --rec-slots 8 --games 12, 4x1). The id set changed this wave, so the charter's 'never change the id set and the acquisition config in the same wave' now BINDS: config held fixed on purpose.",
+ "rec_slots_note": "8, same as the rec_slot_baseline.json profile; changing it would void the SS-DA.2 gate that W40 passed with real (non-circular) numbers.",
+ "expected_games": "~96 scored (4 seeds x 12 x 2 legs), plus warm-ups",
+ "self_destruct": "spot_run.sh self-terminate + 2h watchdog",
+ "gates": {
+  "(i) throttle -- >=6h since the previous routine wave": "W40 launched 2026-09-02T21:31:51Z => unlocks 2026-09-03T03:31:51Z. NOTE: the previous round's charter entry attributed this unlock time to W39's 15:31:51Z launch; the number is right but the antecedent is W40. The two on-demand reruns do not consume gate (i).",
+  "(ii) new to be tested": "BOTH first-branch limbs hold. (1) test_set.md changed 55 -> 57 ids at 2026-09-03T01:xxZ (md5 38423b79... != W40's bfe60fcd...). (2) bots/ ALSO changed since W40 -- checked by tree object hash, not by prose: bots tree 15844690e8... (W40 ref 8a5f8f31b7...) -> 3eeb4974f6... (HEAD 694c31fe16...), one commit 77e18be9 'strategy 22:38Z gated wandbleed2 (GH #437)', 2 files / +83 lines; game/ tree f13b532c00... byte-identical. The previous round's charter entry said 'bots/ unchanged since W39' and that was true THEN; it is NOT true now, and it was re-measured rather than copied.",
+  "(iii) budget/cost fence": "MTD $5.612 (budgets, free, snapshot refreshed 2026-09-02T20:31:27Z -- THIRD round on the same snapshot, so W40 and its two on-demand reruns are still not in it) + W38 spot 0.90 + 2613 on-demand 0.65 + W39 spot 0.90 + W40 spot 0.90 + W40 two on-demand reruns ~1.35 + W41 on-demand ~2.15 = ~$12.46 <= $80. No owner-visible alarm tier crossed, so no explanation line is owed.",
+  "(iv) inputs -- no harvest owed": "W40 harvested 2026-09-03T00:15Z (3 seeds / 149 scored). S3 shows no un-harvested prefix; validation/ tail is July. Entry instance census empty.",
+  "(iv) reclaim_blind (GH #271)": "run on W40 BEFORE launch, exit 1 / BLINDED / NEXT WAVE on-demand -- see market_note and the reading registered in the round report."
+ },
+ "carrier_gate": "seed_draft.py --assert-carrier-from-arm <57-id> 3017 3030 3161 3329 => CARRIER_GATE ids=11 seeds=4 exit=0. Per-term carriers: chaos_knight 4, crystal_maiden 4, zuus 3, spirit_breaker 2, lion 2, obsidian_destroyer 2, skeleton_king 2 (all >= 2).",
+ "carrier_terms_gate": "carrier_terms.py --arm <57-id> => exit 0, 11 hero-scoped / 46 generic / 0 unresolved => 7 terms (was 6; ckpush adds chaos_knight).",
+ "wiring_gate": "check_armed_wiring.py --cand <57-id> => exit 0, all 57 armed ids wired on HEAD.",
+ "seed_index_note": "seed_roster_index.py --build run BEFORE seed selection (charter live rule), exit 0.",
+ "seed_search_note": "WINDOW RIGHT-SHIFTED [2601,3000] -> [3001,3400]: the pre-registered trigger ('the >=2/term search returns 0') fired exactly as predicted one wave ago. Measured this round: in [2601,3000] the >=2/term level has 0 combos (BEST min-per-term = 1). Cause separated, and it is NOT the 7th term: recomputed with the pre-ckpush 6 terms the same window also yields 0 (popcount-3 supply 37 -> 33 after W40 drew its four). In [3001,3400]: 400 available / 0 excluded, popcount {0:34,1:103,2:161,3:76,4:22,5:4}, 75 masks, BEST min-per-term = 2 with 2598 combos, 5 at the max 19 slots. Discipline NOT relaxed.",
+ "seed_exclusions": "index banked seeds UNION every machines[].seed and rerun seed read out of W*_wave.json (read, not hand-typed); 66 seeds from wave files.",
+ "seed_freshness": "seed_roster_index.py --seed 3017 3030 3161 3329 => all four 'no banked games'.",
+ "zero_cost_tiebreak": "among the 5 max-slot (19) combos, chose the one maximising carrier-pair diversity (see carrier_exposure_note). ZERO PUDGE in all five max-slot combos => queue strategy-26 / rotscope gets no pudge evidence for a FOURTH consecutive wave; at harvest this must NOT be written as a negative reading. Pudge preference is a tiebreak only and never relaxes >=2/term.",
+ "carrier_exposure_note": "Directly aimed at GH #435 (W40: three terms all riding the SAME seed pair, so one AZ event took all three to 0). This wave's four 2-carrier terms sit on FOUR DISTINCT pairs: spirit_breaker {3017,3161}, lion {3017,3329}, obsidian_destroyer {3030,3161}, skeleton_king {3030,3329}; chaos_knight and crystal_maiden are on all four seats, zuus on three. => losing any ONE machine leaves every term with >= 1 carrier, and no single loss can zero a term. Pre-registered so harvest can check it against what actually landed.",
+ "az_spread": "*** 4 requested / 4 actual / 4 DISTINCT (2a/2b/2c/2d), zero `re-aiming inside the ring`, zero `AZ RING EXHAUSTED`, zero market or instance-type degradation. GH #252 acceptance (>=2 distinct) passes; GH #256 STRICT acceptance (4 distinct, no re-aiming) passes for the first time in three waves. *** HONEST BOUND: this is an ON-DEMAND wave, and placement is far easier to get on-demand than on spot -- W39 and W40 both collapsed to one AZ under spot capacity pressure. This passes the letter of #256 but is WEAK evidence that the spot AZ problem is fixed; do not close #256 on it.",
+ "market_verified": "all four InstanceLifecycle = None (on-demand, as intended) at 03:32:29Z. Four distinct soak-run tag values, pairwise different; four distinct RUN_TOKENs (15a2fe/0af9fd/1197cd/d87d45); the four calls are 03:31:54/58, 03:32:02/07 => every pair crosses an integer second.",
+ "run_id_uniqueness": "four soak-run tag values pairwise distinct (read off describe-instances, an evidence source independent of this session's own transcript)",
+ "capacity_note": "W36-W40 were bitten by capacity seven waves running; this wave is on-demand precisely because of that.",
+ "launch_round_roll_call": "03:32:29Z fixed action (not --leak-only): pending+running = EXACTLY the four intended instances, one-to-one with machines[].run_id; terminated/shutting-down empty (GH #375: that empty proves nothing about history); four volumes all in-use with no orphans; standing cost is the AMI only.",
+ "progress_at_launch": "0 games; expected ~96 scored",
+ "expected_self_destruct": "~04:1x-04:3xZ at the measured on-demand constant (0.745 h/machine); watchdog hard stop 05:32Z",
+ "machines": [
+  {
+   "seed": 3017,
+   "run_id": "spot_20260903_033154_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_15a2fe",
+   "instance_id": "i-042f71fab58503952",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2a",
+   "reaimed": false,
+   "market": "on-demand",
+   "lifecycle": "None (verified by describe-instances; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T03:31:56Z",
+   "spot_run_exit": 0,
+   "carrier_pair_terms": [
+    "spirit_breaker",
+    "lion"
+   ],
+   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+  },
+  {
+   "seed": 3030,
+   "run_id": "spot_20260903_033158_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_0af9fd",
+   "instance_id": "i-08cfde9292e00e69b",
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2b",
+   "reaimed": false,
+   "market": "on-demand",
+   "lifecycle": "None (verified by describe-instances; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T03:32:00Z",
+   "spot_run_exit": 0,
+   "carrier_pair_terms": [
+    "obsidian_destroyer",
+    "skeleton_king"
+   ],
+   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+  },
+  {
+   "seed": 3161,
+   "run_id": "spot_20260903_033202_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_1197cd",
+   "instance_id": "i-0d3541c3301aee36c",
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2c",
+   "reaimed": false,
+   "market": "on-demand",
+   "lifecycle": "None (verified by describe-instances; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T03:32:04Z",
+   "spot_run_exit": 0,
+   "carrier_pair_terms": [
+    "spirit_breaker",
+    "obsidian_destroyer"
+   ],
+   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+  },
+  {
+   "seed": 3329,
+   "run_id": "spot_20260903_033207_1_694c31fe16b782091c7ea2d21be7160b1b2b0ebf_d87d45",
+   "instance_id": "i-01d972deb207fcd84",
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2d",
+   "reaimed": false,
+   "market": "on-demand",
+   "lifecycle": "None (verified by describe-instances; the run_id spot_ prefix is a hard-coded string, not evidence)",
+   "launched_at": "2026-09-03T03:32:08Z",
+   "spot_run_exit": 0,
+   "carrier_pair_terms": [
+    "lion",
+    "skeleton_king"
+   ],
+   "status_code": "PENDING -- EC2 StateReason.Code, to be read at harvest (on-demand machines have no SIR; see GH #427 obligation)"
+  }
+ ],
+ "harvest_obligations": [
+  "GH #427 (FOUR machines this wave, not two): on-demand instances have no SIR, so the only death code is EC2 StateReason.Code, and describe-instances keeps a terminated instance for only ~1h. Expected self-destruct ~04:1x-04:3xZ => the window shuts ~05:1x-05:3xZ. FIRST action of the next round, if it fires inside that window: describe-instances on all four ids and record StateReason.Code. This is structural (a 1h window inside a 2-3h cron beat, already 0-for-2 on W38/W40), not a discipline failure.",
+  "rec_slot_cost.py <run dirs> --baseline tools/batch_test/soak/rec_slot_baseline.json (same rec_slots=8 config; SS-DA.2 gate, second non-circular run)",
+  "SS-DT.4: ckpush domain is six conjuncts (chaos_knight x 240<t<480 x Phantasm levelled x IsPushing x enemy tower/barracks in scan radius x >=2 allied creeps). If the frame count in that cell is 0, return UNINTERPRETABLE with the carrier distribution -- do NOT read it as 'tested, no effect'. 'Fewer Phantasm casts' is not by itself evidence; the t>480 negative face must agree across both legs.",
+  "SS-DP.8: roshdist reading; both readings are counts with side bias NOT removed => register both strata separately (4(i-a)) and read a two-leg sign flip as noise (4(i-b)).",
+  "winrate_channel + mean.winrate_headroom must be copied verbatim; if DEGENERATE (three waves running on the 55-id family) the winrate and comps_better winrate are placeholders, not readings.",
+  "carrier_exposure_note: check the four distinct pairs against what actually delivered.",
+  "zero pudge: strategy-26 / rotscope must be written as 'no carrier', not as a negative reading.",
+  "Per GH #408's second half: each on-demand machine's row must carry \"market\": \"on-demand\" + \"status_code\": <EC2 StateReason.Code>. reclaim_blind.py exits 2 on a row that claims on-demand while carrying a SIR code."
+ ],
+ "issues_filed": [],
+ "tree_drift_since_W40": "bots/FunLib/jmz_func.lua +73, bots/ability_item_usage_generic.lua +10 (commit 77e18be9, gated wandbleed2, GH #437). INERT in this wave: the gate reads `if not J.IsSoakCandidate('wandbleed2') then return true end` and 'wandbleed2' is NOT in the 57-id armed string (only 'wandbleed' is), so it answers TRUE and blocks nothing. Registered anyway because the tree under test is not W40's tree.",
+ "winrate_prereg": "PRE-REGISTERED, because W41 is a brand-new family and therefore the cleanest test of last round's handoff (2). The 55-id family closed at 7 seeds / 317 scored games with winrate_channel DEGENERATE three waves running, and the director was told 'condition (b) cannot be bought on this test set -- change the method, not the seed count'. The test set HAS now changed (55 -> 57), but the suspected cause is the METHOD (mirrored draft: when one physical side sweeps, the mirrored winrate is forced to 0.500 by identity), not the id set. => If W41's winrate_channel comes back DEGENERATE on a fresh family with fresh seeds, that is evidence FOR the method explanation and the handoff must be escalated, not repeated. If it comes back RECOVERED, the degeneracy was corpus-specific. Either way: copy winrate_channel and mean.winrate_headroom verbatim, and do not read winrate / comps_better winrate as readings while the channel is DEGENERATE."
+}
