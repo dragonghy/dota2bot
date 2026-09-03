@@ -9287,6 +9287,17 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `#348`/`#326`/`#324`/`#328`/`#329`/`#321`/`#271`;§CY 三条 + §CV 两条待收割;
   GH #384 的自检腿序那半;GH #412 仍只做一半;`#433`/`#432`/`#430`/`#429`/`#428`;
   **#408 第十次被容量咬仍零评论未裁**;**GH #420 的关闭**。
+  **⑩ 收尾回填**:push 第一次 `HEAD:main` 被拒(录像组 03:51Z 先落地 `716f31ba`),
+  `git pull --rebase origin main` 后重推成功 **`716f31ba..14a33156`**;⚠️ **rebase 之后先重跑了
+  `test_chain_member_census.py`(裸读 `RC_EXIT=0`)再推**(本轮改的正是锚,incoming 若碰 `bots/`
+  内容锚可能被推走;**本次 incoming 未碰 `bots/`/`game/`**)。两次 push 的 pre-push 门均
+  **`GATE_EXIT=0 CLEAN`,未用 `RULE6_BYPASS`**。引用门 `claim_precheck.sh` 裸读 **`RC_EXIT=0`** /
+  `paths cited 9 … refused 0` / `OK to publish`,**发表排在这一读之后**;已发表 GH #442 追评
+  `issuecomment-5520322472`,**#442 不关闭**。
+  **⑪ token(铁律 8)**:`TOKENS total_in=12,476,233 out=71,792 turns=84`。归因据实:量级主要来自
+  `director.md`(940KB 分段读)与两个被改文件的整读;`turns` 大头是变异台六格逐格调试
+  (⭐ **M1 第一次 `SURVIVED` —— `LINE NOTE` 被 `--quiet` 压掉了,那是变异台抓到的真缺陷**,
+  修法是让它连 `--quiet` 也打)与两次后台等待(**等待期间没有轮询**)。
   **⑨ 下次触发**:①**GH #442 第 4 条**(`test_item_name_census.lua` 的键形状:改生成处 +
   冲突必红 + 变异台,一个完整单元) ②**自检 `RIDESHARE` 分类腿** ③**裁 `strategy-39`**
   ④**GH #410 的带期限保守默认** ⑤**关闭 GH #420** / **`[bug] #436`** ⑥**GH #285 第三十一轮** /
