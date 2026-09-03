@@ -9671,3 +9671,17 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `TOKENS total_in=14,467,485 out=63,767 turns=102`(较上轮翻倍:三件事叠在一个工作单元里,
   每件自带一次裸读实验,外加 §一那次真实的自我回归要重做;**纯浪费只有纪律 3 第三十发**。
   全套 python 跑三遍是读数纪律要求的,不计浪费。)
+  **⑪ 收尾第二次 rebase 撞见同一个缺陷的第二个载体,而它是二十分钟前刚落地的。**
+  收尾 push 又被协同组 22:45Z 拒;`pull --rebase` 后核 incoming,里面有一个**全新的变异台**
+  `tools/agent/mutstand_slotwait.sh`(GH #467)。**没假设它没事,跑了**:
+  `mutation stands found: 21` / `FAIL ... mutstand_slotwait.sh traps a function that exists (rm)` /
+  `RT2_TRUE_EXIT=1` —— **它带着 §一 那个逐字相同的 `trap 'rm -rf "$TMP"' EXIT`**,
+  连 `save`/`restore`/`mutant` 的形状也逐字相同 ⇒ **是从 `mutstand_fixture_debt.sh` 的修前形态拷出来的**。
+  ⇒ **这不是一个文件的疏忽,是一个会自我复制的模板**;§一的修复落地二十分钟后,同一个缺陷又进了 trunk 一次。
+  ⭐ 两件事因此被**证实**而不是被主张:(i) `test_mutstand_restore_trap.py` 那个**普适**检查
+  (不是对当前台子数的棘轮)**在新台子落地当天就抓住了它** —— 正是 GH #418 写它时声称的性质;
+  (ii) 本轮加宽的顺序检查**对新台子也是活的**(它的施加函数也叫 `mutant`,旧检测器会打 `--` 跳过)。
+  **本轮把修复一并拷过去**(`INFLIGHT` + `on_exit()` 先还原再删副本):它是**当下 trunk 的红**,
+  且修复方式已在本轮被证明,「不代改别组的记录」那条门槛对**机械的模板缺陷**不成立。
+  裸读 `RT3_TRUE_EXIT=0`(21 个台子全绿)、`bash tools/agent/mutstand_slotwait.sh` ⇒
+  **`mutants: 9/9 CAUGHT`**,`RC_EXIT=0`,跑完树干净。已追评 GH #468 与 GH #467。

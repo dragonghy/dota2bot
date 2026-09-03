@@ -31,18 +31,46 @@ TS=typescript/bots/FunLib/utils.ts
 TEST=test_slotwait_cooldown_scan.lua
 
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
 
 nrun=0; ncaught=0
 
-save() { cp "$1" "$TMP/$(basename "$1").orig"; sha256sum "$1" > "$TMP/$(basename "$1").sha"; }
+# INFLIGHT names the file that is mutated RIGHT NOW, or is empty when the tree
+# is clean.  See the EXIT trap below for why this stand needs it and the sibling
+# stands do not.
+INFLIGHT=""
+
+save() {
+    cp "$1" "$TMP/$(basename "$1").orig"
+    sha256sum "$1" > "$TMP/$(basename "$1").sha"
+    INFLIGHT="$1"
+}
 restore() {
     cp "$TMP/$(basename "$1").orig" "$1"
     if ! sha256sum -c "$TMP/$(basename "$1").sha" >/dev/null; then
         echo "FATAL: restore of $1 did not verify -- stopping before anything else runs"
         exit 2
     fi
+    INFLIGHT=""
 }
+
+# GH #418's trap.  This stand landed at 22:45Z carrying the defect GH #468 had
+# fixed in mutstand_fixture_debt.sh twenty minutes earlier, because it was
+# copied from that stand's pre-fix shape -- so the repair is copied forward too,
+# and tests/test_mutstand_restore_trap.py is what caught it on the day it landed.
+# The old line was `trap 'rm -rf "$TMP"' EXIT`, which is WORSE than no trap at
+# all here: on an interrupt it left the mutant in the working tree AND deleted
+# $TMP, the only copy of the original.  `trap restore EXIT` is not available
+# because this stand's `restore` takes an argument and would die on $1 under
+# `set -u`; that is what INFLIGHT above is for.  Order inside the handler is
+# content, not style: restore first, remove the copies second.
+on_exit() {
+    if [ -n "$INFLIGHT" ]; then
+        echo "INTERRUPTED with $INFLIGHT mutated -- restoring before exit"
+        restore "$INFLIGHT"
+    fi
+    rm -rf "$TMP"
+}
+trap on_exit EXIT
 
 # Run the test file and report its BARE exit code (rule 3: never through a pipe).
 run_test() {
