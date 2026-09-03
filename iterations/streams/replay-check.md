@@ -10017,3 +10017,49 @@
     (`illumove_pairs:HP_CUT`、`wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`)。
   - **Token 用量**:`TOKENS total_in=6,077,077 out=48,426 turns=48`(见报告 §12)。
   - 完整报告:`iterations/reports/replay-check/20260903T072000Z.md`
+- **2026-09-03T09:59Z(接回 `roshdist` 的棒;结论是圆心错了,不是半径错了)**:
+  W41 仍是最新波次(`awsx s3 ls soak/` 尾部无新前缀),从 S3 **重扫全部 82 局**
+  (四路并行,各自独立输出目录;四个 `sweep_complete.json` 齐全,`unparseable` **合计 0**)。
+  新增只读检测器 `tools/batch_test/behavioral/roshdist_domain.py`(`--selfcheck` **12/0**,
+  裸退出码 **0**)。**未改 `bots/`/`game/` 任何一行。**
+  - **`VERIFY id=roshdist verdict=BUGGY episodes=77`**(上一轮是 `INDETERMINATE episodes=0`,
+    那是**没测**;本轮测了)。域**非空** ⇒ `SILENT` 被否决:armed 腿 **414,379 + 67,339**
+    个分歧域帧(Roshan 已死 ∧ 距公式坑 > 1600)。
+  - **⭐ 主发现,已开 GH #450([bug]):`J.GetCurrentRoshanLocation()` 的昼夜映射反了。**
+    82 局里 **77 次 Roshan 死亡,77/77 与实测坑口不一致,0 agree,0 unresolved**
+    (白天实际死在 Radiant 坑而公式返回 Dire,夜里互换)。判据是「死亡前 20s 真的
+    打过 Roshan 的英雄在 `t_death±2s` 的最小距离中位数」,> 900 就报 UNRESOLVED 不猜。
+    **竞争假设「每次死后换坑」被同一份语料 6:0 证伪**:同一昼夜相位内的 6 对相邻死亡
+    **全部同坑**,换坑的 3 对**全部跨越昼夜切换**。
+    钉住的那一帧:`20260903_033347_slot7` `t=1099` Roshan DEATH,五个刚打完的英雄站在
+    Dire 坑内 **131/131/294/385/398**,到公式坑(Radiant)**7501–7765**。
+    armed 腿的同形帧:`20260903_034655_slot1` `t=1326.9`,storm_spirit **101 vs 7812**。
+    全语料 armed 腿「死亡瞬间站在实测坑内」的 **167 个(局,英雄)对 / 274 帧**,**全部会被 armed 拒绝**。
+  - **⭐ 这条缺陷不是 `roshdist` 引入的,但 `roshdist` 把它从无害变成有害**:出厂树那个
+    合取项是裸距离(Lua 里恒真)⇒ **圆心从来不进入行为**;修复把占位符改回真条件,
+    于是**一个此前从不被读的坐标第一次决定行为,而它是反的**。这是
+    「locally-correct ≠ emergently-good」的**新形状:一个正确的修复叫醒了一个沉睡的缺陷**。
+    ⇒ **`roshdist` 在 #450 修好前不得 promote**;`strategy-37` **不要按「已核验」关闭**;
+    修好后**重新买条件 (a)**(本轮检测器整段复用,一条命令出 §A/§B/§B2/§C)。
+  - **影响面远超一个 id**:`GetCurrentRoshanLocation` 有 **25 个调用点 / 20 个文件**,
+    含 `mode_roshan_generic.lua` 本身、`mode_farm_generic.lua`、`aba_push/aba_defend`,
+    以及十来个英雄「> 1600 就往坑口走」的到达判据 ⇒ **整个 Roshan 子系统在往空坑走**。
+  - **⛔ 本轮踩了铁律 6 的 GH #290(顺序不是速度)**:**#450 在 `git push` 之前发表**,
+    它引用的报告与检测器当时只在容器里;草稿也没跑 `claim_precheck.sh`。发现后立刻推送。
+    **登记,不掩饰。**
+  - **下一轮第一件事**:(1) **`slotarb`**(零记录,棒仍在本组,槽位映射模板可复用);
+    (2) 查 #450 回音 —— 若圆心已修,**立刻重跑本轮检测器**给 `roshdist` 重新买 (a);
+    (3) 查 #444/#445/#440/#436/#433/#430 回音;(4) 盯下一个阵容里有 Axe 的波次。
+  - **欠账**:82 局 timeline 随容器回收(重扫命令见报告 §0);
+    §3 的 `dead_fr` 列**含幻象**(LIMIT 4),不要当行为量读;
+    #419 第 7 轮 / #421 第 6 轮仍零评论(不重复开)。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×4 **全 0**;
+    `roshdist_domain.py --selfcheck` **0**(12/0);真语料 **0**;
+    `luacheck_gate.sh` **0**(0 警告,`GATE_EXIT=0 CLEAN`,`RC_EXIT=0`)。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    自检:第一次 `timeout 600` **被杀(EXIT=124,不是通过)**;重跑
+    **`SELFCHECK_BARE_EXIT=3`**,`legs run: 9`,`FINDINGS: cadence trunk-red(python)`,
+    `UNCERTIFIABLE: none`。trunk red 的失败集**与上一轮逐字相同**
+    (`illumove_pairs:HP_CUT`、`wandbleed_trigger:HP_MAX/HP_MIN_EXCLUSIVE`)⇒ 与本轮无关。
+  - **Token 用量**:见报告 §9。
+  - 完整报告:`iterations/reports/replay-check/20260903T095922Z.md`
