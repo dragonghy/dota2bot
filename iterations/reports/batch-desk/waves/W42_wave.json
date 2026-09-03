@@ -328,6 +328,24 @@
     "3204 56.5min instance-terminated-by-user ab37/ba21 PAIRED (depth-checked)"
    ],
    "note": "Answerable on FIRST-HAND EXACT survival this round, unlike W41 which had to be reconstructed from S3 lower bounds -- because this was a spot wave and spot machines have a SIR that outlives the GH #427 window."
+  },
+  "s3_lower_bound_calibration": {
+   "why": "The route used LAST round to rescue the GH #271 gate on W41 (last S3 object LastModified minus launched_at, entered as a survival LOWER BOUND) had never had its error measured, because measuring it needs the bound AND the truth on the same machine -- and W41 was on-demand, so it had no SIR. W42 has both.",
+   "normal_termination_error_min": {
+    "3101": 3.19,
+    "3117": 3.28,
+    "3204": 3.65
+   },
+   "reclaimed_machine": {
+    "seed": 3040,
+    "s3_last_upload": "2026-09-03T09:47:41Z",
+    "sir_status_update": "2026-09-03T09:46:31Z",
+    "error_min": -1.17,
+    "note": "SIGN REVERSED. The last upload is 1.17 min AFTER the SIR Status.UpdateTime: that timestamp marks when the reclaim was SIGNALLED, and the machine kept flushing during shutdown. So on a RECLAIMED machine the 'lower bound' is not a lower bound -- it can overshoot. Feeding an overshooting value into reclaim_blind's 40-min changeover test fails in the direction that reads a seed which should be voided as successfully paired."
+   },
+   "consequence_for_W41": "W41's four recorded bounds (>=52.4 / >=52.4 / >=52.5 / >=41.6 min) are all from normally-terminating machines, so their true values are roughly 55.6 / 55.6 / 55.7 / 45.3. The bound was tight and pointed the right way: last round's recovery did NOT bias the gate.",
+   "honest_bound": "n=3 normal + n=1 reclaimed, ONE wave. Registered only; this desk changes no constant and no tool on it.",
+   "upload_cadence": "Uploads are flushed in batches roughly every ~12 min (3101's unique upload minutes: 09:47, 09:59, 10:00, 10:11, 10:12, 10:23, 10:24, 10:25), with the FIRST object landing ~14.5 min after launch. This is the number that makes 'the re-run has 0 objects at 14.1 min' the expected reading rather than a symptom -- and this desk briefly misread it as a symptom by misreading the clock, not the data."
   }
  },
  "rerun": {
