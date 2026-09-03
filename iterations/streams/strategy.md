@@ -36,6 +36,7 @@
    `tests/test_slotdust_reachability_fit.py`(**34/0**)+ `tools/agent/mutstand_slotdustfit.sh`
    (**12/12 CAUGHT**);`state.json` 新键 `slotdustfit_20260903`;
    报告 `iterations/reports/strategy/20260903T013514Z.md`;
+   GH #441 追评 `#issuecomment-5519047891`(`claim_precheck.sh` 裸读 **exit 0**,push 之后才发);
    **无新 id、无新闸、`queue.json` 与 `test_set.md` 一字未动**;
    零 AWS、S3 零访问、零 EC2;**`bots/` 与 `game/` 零 diff**。**已交棒,球在录像组。**】**
    **⭐ 主判据(可复用,超出本主题):一个模型只能被它自己没有定义的读数纠正。**
