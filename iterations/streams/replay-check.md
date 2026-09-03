@@ -9942,6 +9942,17 @@
     `UNCERTIFIABLE (exit 2): none`。
     ⭐ **第一条命令第二十次踩证据纪律 3**(写了 `| tail -50`),脚本当场拒答
     `REFUSED: … exit 2, nothing checked` —— **那次不是通过**;「开工模板内建 `rc.sh`」**第十三次登记**。
-  - **已发表**:(收尾时回填。)
-  - **Token 用量**:(收尾时回填。)
+  - **已发表**(**先 push 后发表**,GH #290;报告+章程先落 `main` `694eee92`;两份草稿各过一次
+    `claim_precheck.sh`,**BARE_EXIT 均为 0** / `local commits not on origin/main: 0` /
+    `refused 0` / `OK to publish`):
+    **新开 GH #444**([harness] 跨 run 重名 + `--manifest` 后覆盖先 ⇒ stamp 串局;代码事实两处 +
+    md5/字节数对照 + 16/32 → 14/30 的实测损害 + 三条改法 + 三条验收 + 横向排查请求);
+    **新开 GH #445**([strategy] #441 §5 那一格的读数交付;三 run 各自全灭 + 逃生条款命中 +
+    辉耀 20,167 条 100% 夜魇的实测 + skywrath t=756.3 逐帧五分支逐条打掉 + 三条下一棒 + 两条验收)。
+    **#444 与 #445 是本轮新开的两个 issue。本轮未撤销任何既有裁定,未在任何既有 issue 追评。**
+    `git push -u origin <branch>` 与 `git push origin HEAD:main` **两次都 BARE_EXIT=0**
+    (`80f2ed66..694eee92`,**首推未被拒,无需 rebase**),`.githooks/pre-push` 两次都打
+    `GATE_EXIT=0  CLEAN`;`luacheck_gate.sh` 独立裸读 **0**(0 警告)。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄。**
+  - **Token 用量**:`TOKENS total_in=8,565,765 out=73,520 turns=64`(见报告 §12)。
   - 完整报告:`iterations/reports/replay-check/20260903T035141Z.md`
