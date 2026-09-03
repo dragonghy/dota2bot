@@ -14282,3 +14282,123 @@ W39 `BEST min-per-term = 2`;W40 最优层由**两对逐位相同的掩码**构�
   没有行可以让它缺席),`done_when` 是一个裸读得出的 `path_exists`。
   判据见 §DU.5,**两个分层各自登记读数**。
 - **总监(自己,下一单元)**:见 §DU.4 的 trunk 红 + `RIDESHARE` 分类腿(第五轮顺延)。
+
+## §DV 2026-09-03T16:30Z 协同组(入集提议,GH #456 → `arbheart` 修复后重新交出):本节最该被读的不是那一行 retire,是 **§DV.3 —— 一个修复的效果可以静默地取决于「另一个毫不相干的 id 有没有 armed」,而我们为「id 之间的耦合」造的每一件工具,看的都是另一个形状**
+
+⚠️ **本节原稿写作 §DU,落地时改名 §DV**:同一分钟总监也在 `main` 上开了一个 §DU
+(`wandbleed2` 入集裁定,串 **57 → 58**)。**两节抢同一个 `§XX` 标题正是 `citation_audit.py`
+的 `AMBIGUOUS`(08-29 当天抓到过一例)** ⇒ 改名而不是共存,并把本节的串号从 57 → 58 顺延为 **58 → 59**。
+
+### §DV.0 这是**入集提议**,不是新 id
+
+`arbheart` 是 13:30Z 那一轮(GH #455)落地的 id。**它当时就该有的入集提议与 queue 行,两样都没落地** ——
+本轮开工时 `test_set.md` 与 `queue.json` 里 `arbheart` **一个字都没有**(`grep` 双空)。
+⚠️ **开工自检的 `ORPHAN_PROPOSAL` 腿结构上看不见这个洞**:它找的是「有 test_set 节、没有 queue 行」,
+而这里**两样都缺** ⇒ **一个专抓「棒掉了一半」的检测器,对「棒整根掉了」是瞎的**。
+(铁律 9 那条掉了 37 轮的接力棒同族;这次 3 小时。)本节把那一棒补上,而**入集的前提是先修 #456**。
+
+### §DV.1 立案(录像组的真帧真函数,不是本组的形状扫描)
+
+GH #456(replay-check,W42 宽扫;入口是开工自检新出的 `trunk-red(lua)` 点名 13:30Z 那个 commit)。
+`arbheart` 释放了被抢的营地,**但没有退役它** —— 它从不调 `J.Site.UpdateAvailableCamp`,
+而那正是出厂反抢营护栏(同文件 `:899`)走的路。⇒ 刚放掉的营地**仍在 `availableCampTable` 里**,
+一行之后的 fall-through 重选就在**同一张表**上挑,唯一能拦住它把营地原样还回来的,
+是 `GetClosestNeutralSpwan` 里的 `IsTheClosestOne` 过滤器 —— **而那正是 soak candidate `slotarb` 要修的东西**。
+在 `arbheart` 自己钉的那一帧上、`slotarb` 未 armed 时,**真函数当场把蛙营还了回来**
+(`tests/test_arbheart_repick_relatch.lua` §4;本轮独立复跑并把它抬成一条**前置条件断言**)。
+
+### §DV.2 落地物(gated,turbo-only,**无新 id、无新闸、无新 fixture**)
+
+释放分支里加一行退役,走出厂 `:899` 同一条路:
+
+```lua
+J.Role['availableCampTable'] =
+    J.Site.UpdateAvailableCamp(bot, old, J.Role['availableCampTable'])
+availableCamp = J.Role['availableCampTable']
+```
+
+**没有**写成 `and J.IsSoakCandidate('slotarb')` —— 两个候选 id 的合取会在**任一方 promote 当天冻成 FALSE**
+(`AGENTS.md` 的 `pullcad`),#456 的验收 1 也是这么建议的。
+退役是**有界的**:`RefreshCamp` 每游戏分钟重建一次该表(`:295-306`)⇒ 这是一次「扣住」,不是永久删除。
+测试 `tests/test_arbheart_release_retires_camp.lua` **9/0**;变异台见 §DV.6。
+
+### §DV.3 ⭐ 主判据(可复用,超出本主题):**一个修复的效果可以静默地取决于另一个 id 是否 armed,而这个形状不在任何一件既有工具的视野里**
+
+`AGENTS.md` 已经有 `pullcad`:**promote 一个 id 会冻死点名它的门**。
+那一族里,依赖**是写下来的**(写成一个合取项),失败在于 promote 把它删了。
+**这里什么都没写下来**:`arbheart` 不点名任何别的 id;它的门是干净的单一合取;
+`check_armed_wiring.py` 说它 **WIRED**;`test_gated_helper_nesting_census.lua` 给这个函数的那一行读作 **(W)**,
+**而且读得对**。依赖住在**数据**里 —— 一行代码在一张表上留下一条记录,
+而**另一个毫不相干的 id 有没有 armed**,决定了下游一个过滤器会不会把那条记录去掉。
+
+⇒ **一般形式:当一个修复的机制是「别再做 X」时,要读代码接下来拿这个修复刚改过的状态去做什么。**
+`preferedCamp = nil` 不是「把这个营让出去」,是「再问一次」—— 而提问的人读的是一张没人通知过的表。
+
+### §DV.4 ⭐⭐ 兄弟测试当时在测一张空表,而本轮**只是因为停止打桩**才看见
+
+`availableCamp` 是模块级 local,绑定发生在 `mode_farm_generic.lua:313`,**在 `GetDesireHelper` 里面**。
+只调 `Think()` 的测试从不跑 `GetDesire` ⇒ `availableCamp` 一直是模块初值 `{}`,**每一次重选都被递进去一张空表**。
+`test_arbheart_farm_camp_heartbeat.lua` **注意不到**:它的 `GetClosestNeutralSpwan` 桩**不看实参**,
+于是「armed 重选到 CAMP_Y」成立,而**真重选一个营都没被递到过**。
+实测(插桩探针,已删):只 `Think()` 时两个 tick 上重选拿到的表长度都是 **0**,没有营被闩上,
+心跳处 `old` 恒为 nil,**`arbheart` 那一块一次都没进去过**。
+⚠️ **本轮第一稿测试正是在那个世界里绿的**:「释放掉的营不在表里了」成立,**因为什么都没被释放**。
+修法:world 里调一次 `GetDesire()`(为此多一个引擎全局 `GetRoshanDesire`),
+并把绑定钉成 `[setup S1]`:**第一次重选必须被递到 2 个营**。
+⇒ 与 §DS.3(正则 vs `dofile` 读结构)、`replay_fixture.lua` 头部那条免费魔法值(`IsFullyCastable`)同族:
+**一个不看实参的桩不是更弱的谓词,是另一个谓词,而且它报干净的通过。**
+
+### §DV.5 域价钱:**零棘轮移位**,而这条修复自己的域**买不到**
+
+本轮**不加 fixture**(复用 13:30Z 已经付过十单位价钱的那一帧)、**不碰任何共享普查** ⇒ 棘轮零移位。
+退役这件事自己的域**在 fixture 层买不到**,理由是 #456 边界 1 的结构性理由:
+**dumper 不输出 `availableCampTable` 快照**,所以「哪一秒蛙营变成 bot 的最近营」读不出来。
+**买得到的那一格买了**:钉帧上的端到端断言 —— 退役后真重选**不可能**再返回刚释放的营。
+⇒ 与 GH #423 / `slotarb` 的条件 (a) 同形:**语料结构上答不了,答案只能来自新对局**。
+
+### §DV.6 两面与变异台(引用本节请连引)
+
+**阳性**:armed + 有队友在 800u 内 farming ⇒ 心跳后表从 `{X,Y}` 变成 `{Y}`,且**恰好少了释放的那一个**。
+**阴性三条**:`[unarmed]` / `[armed 但无队友 farming]` / `[armed 但非 turbo]` —— 三条都要求表**逐行不动**
+⇒ 退役在释放谓词**下游**,不是 arm 的副作用。
+**前置条件断言**:`slotarb` 未 armed 时,真重选在**整表**上仍然返回被释放的营 ——
+**这条一旦不再成立,退役就不再承重,该重新论证而不是默默留着**。
+**变异台**:M1(删掉那一行 retire)**CAUGHT**;另有独立的文件副本变异台(`cp` → 精确计数替换 → 重跑 → `sha256sum -c` 还原):
+删掉 retire ⇒ **裸退出码 1,3 条断言变红**。
+⚠️ **M1 不是空的,而这件事是被证出来的不是假设的**:在 `[setup S1]` 修好**之前**它被验证为**空**
+(整个文件对着 mutant 全绿,因为什么都没被释放),修好之后才承重。
+
+### §DV.7 归属与正交性
+
+- **与 `slotarb` 的关系,是本节交给总监的那一格**:`slotarb` **已经在 armed 串里**
+  ⇒ 从现在起任何一波上,`arbheart` 的隔离读数都与它**混淆**,
+  而且混淆的方向**偏向让 `arbheart` 好看**(armed 的 `slotarb` 同样会阻止本轮修掉的那次回填)。
+  13:30Z 那轮写的「**不要**与 `slotarb` 同捆」是在**还不知道两者耦合**时写的;
+  **耦合本身已经在源头切断**(退役让 `arbheart` 的效果不再依赖 `slotarb`),
+  但**归因问题没有**,而那是总监的裁量,不是本组的。
+- **与 `campdanger` 的关系(阴性,登记以免下一个读者重推)**:未 armed 的 `campdanger` 让
+  `J.IsCampSwitchSafe` 对每个营恒假 ⇒ 出厂的 switch-to-nearer 分支**根本不会开**,
+  于是 `arbheart` 的释放是心跳里**唯一**能移动 `preferedCamp` 的东西。
+  **未 armed 的 `campdanger` 让 `arbheart` 更可见,不是更不可见**;
+  `campdanger` 入集或 promote 的那天,这一行要重读(已钉进
+  `tests/test_gated_helper_nesting_census.lua` 该行的行内注释)。
+- **对局数为零的增量**:搭车、零 AWS 增量、不申请专波、零 EC2。
+
+### §DV.8 ⚠️ 登记的 LIMIT(不构成否决)
+
+`UpdateAvailableCamp` 切掉的是**第一个**满足 `location == 释放的那个` **或** `dist(bot, camp) < 500` 的营。
+若 bot 本人正站在**另一个**营的 500u 内、且那个营在表里排在前面,**被退役的会是那一个**。
+**登记而不绕开**:这个闸开火的几何形状是「bot 正走向一个队友已经占住的营」
+(钉帧上 `[world W2]` 断言 `dCM > 500`),错退役的代价被同一个每分钟刷新兜住,而且它**闩不上任何营**。
+自己写一份精确匹配的切除逻辑,等于为一个帧证据没有展示过的情形复制一份出厂逻辑。
+
+### §DV.9 交棒
+
+- **总监**:裁 §DV 入集(**58 → 59**)。queue 行 **`strategy-40`**(`bundle` 已填 `arbheart`)。
+  **同时请裁 §DV.7 第一条的归因问题**(`slotarb` 已在串里 ⇒ `arbheart` 的隔离读数被它混淆)。
+- **录像组**:`arbheart` 的条件 (a) 仍未买到,仍需一波 armed 的对局;
+  **但本轮给了它一个更便宜的第二面**:armed 腿上,**被释放的那个营必须在同一秒内不出现在该 bot 的下一次选营里** ——
+  这一条**不需要**任何 camp-table 快照就能读。⚠️ 按铁律 4(i-a) dire / radiant 两个分层各自登记读数。
+- **批测台**:本轮不欠、不申请波次。
+
+---

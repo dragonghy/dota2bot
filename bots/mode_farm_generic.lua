@@ -800,14 +800,19 @@ function Think()
 			-- team member (scanned via the slot-correct pattern
 			-- `for i = 1, #GetTeamPlayers` + `GetTeamMember(i)`) sitting
 			-- within 800u of the latched camp AND reading J.IsFarming
-			-- releases the latch, so the fall-through `elseif preferedCamp
+			-- releases the latch AND retires the camp (GH #456 -- see the
+			-- note on the retire call below for why the release alone was
+			-- self-cancelling), so the fall-through `elseif preferedCamp
 			-- == nil` below re-picks through the same ClosestCamp wrapper
-			-- (which already threads slotarb when that gate is armed).
+			-- (which already threads slotarb when that gate is armed) over a
+			-- table the released camp is no longer in.
 			-- STRICT SUBSET: armed can only ever RELEASE a latched camp,
 			-- never create a bid or a latch. Unarmed the block below is a
 			-- no-op and the outer if/elseif is byte-for-byte the shipped
-			-- switch-to-nearer branch. #455 §5 pins the validation frame:
-			-- tests/test_arbheart_farm_camp_heartbeat.lua and
+			-- switch-to-nearer branch. #455 §5 and #456 pin the validation
+			-- frame: tests/test_arbheart_farm_camp_heartbeat.lua,
+			-- tests/test_arbheart_repick_relatch.lua,
+			-- tests/test_arbheart_release_retires_camp.lua and
 			-- tests/fixtures/f_260903_101254_cm_farm_stealcamp.lua.
 			if J.IsModeTurbo() and J.IsSoakCandidate('arbheart') then
 				local vCamp = old.cattr.location
@@ -821,6 +826,37 @@ function Think()
 						and GetUnitToLocationDistance(member, vCamp) <= 800
 						and J.IsFarming(member)
 					then
+						-- GH #456: releasing WITHOUT retiring is undone by the
+						-- very re-pick it falls through to. The released camp
+						-- stays in `availableCampTable`, so the only thing that
+						-- could keep `ClosestCamp` from handing it straight back
+						-- is the `IsTheClosestOne` filter inside
+						-- GetClosestNeutralSpwan -- and that filter is exactly
+						-- what soak candidate 'slotarb' fixes. On this gate's own
+						-- pinned frame, with 'slotarb' unarmed, the real function
+						-- returns the just-released camp
+						-- (tests/test_arbheart_repick_relatch.lua §4). Retire it
+						-- through the same path the shipped anti-steal guard at
+						-- :899 uses, rather than writing the dependency as
+						-- `and J.IsSoakCandidate('slotarb')` -- a conjunction of
+						-- ids freezes FALSE the day the other id is promoted
+						-- (AGENTS.md, the 'pullcad' lesson).
+						-- Retirement is bounded: RefreshCamp rebuilds the table
+						-- once a game-minute (:295-306), so this is a hold, not a
+						-- permanent removal.
+						-- LIMIT (declared, not engineered around):
+						-- UpdateAvailableCamp splices the FIRST camp that either
+						-- matches the released location OR sits within 500u of the
+						-- bot. When the bot is itself standing inside 500u of a
+						-- DIFFERENT camp that precedes the released one in the
+						-- table, that other camp is the one retired. The geometry
+						-- this gate fires in is the bot walking TOWARD the camp an
+						-- ally already holds, so the disjunct's usual match is the
+						-- released camp itself; the wrong-camp case costs at most
+						-- one refresh cycle and cannot latch a camp.
+						J.Role['availableCampTable'] =
+							J.Site.UpdateAvailableCamp(bot, old, J.Role['availableCampTable'])
+						availableCamp = J.Role['availableCampTable']
 						preferedCamp = nil
 						old = nil
 						break

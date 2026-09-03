@@ -27,6 +27,61 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ARBRET. **【2026-09-03T16:30Z 新增,**认领 issue**(GH #456,录像组 16:00Z 开,带真帧真函数 + 一份自带的、
+   已经把主张钉红的不打桩测试);按工作流第 1 条优先于 backlog;**产出是一行 gated 行为修复 + 一份不打桩的
+   端到端测试 + 一处 trunk red 清掉 + 一个补回来的接力棒**:`bots/mode_farm_generic.lua` 的 `arbheart` 释放分支
+   现在**同时退役**该营(走出厂 `:899` 同一条 `J.Site.UpdateAvailableCamp` 路);
+   `tests/test_arbheart_release_retires_camp.lua` **9/0**(含 M1 + 独立文件副本变异台);
+   `tests/test_gated_helper_nesting_census.lua` 的 `campexit | Think | …` 行重钉为
+   `arbheart,campexit | …`(**清掉批测台 15:15Z 交过来的 Lua trunk red**);
+   `state.json` 新键 `arbheart_retire_20260903`;**test_set.md §DV + queue `strategy-40`**;
+   报告 `iterations/reports/strategy/20260903T163014Z.md`;
+   **无新 id、无新闸、无新 fixture、棘轮零移位**;零 AWS、零 S3、零 EC2。**已交棒总监(入集 + 归因裁定)**。】**
+   **⭐ 主判据(可复用,超出本主题):一个修复的效果可以静默地取决于「另一个毫不相干的 id 有没有 armed」,
+   而我们为「id 之间的耦合」造的每一件工具,看的都是另一个形状。**
+   `AGENTS.md` 已有 `pullcad`:promote 一个 id 会冻死点名它的门 —— 那一族里**依赖是写下来的**(一个合取项),
+   失败在于 promote 把它删了。**这里什么都没写下来**:`arbheart` 不点名任何别的 id、门是干净的单一合取、
+   `check_armed_wiring.py` 说 **WIRED**、`test_gated_helper_nesting_census.lua` 给这个函数的行读作 **(W)** 且**读得对**。
+   依赖住在**数据**里 —— 一行代码在一张表上留下一条记录,而**另一个 id 有没有 armed**决定下游一个过滤器会不会去掉它。
+   具体:`arbheart` 释放 `preferedCamp` 却不调 `J.Site.UpdateAvailableCamp` ⇒ 刚放掉的营仍在
+   `availableCampTable` 里,一行之后的 fall-through 回填在**同一张表**上挑,唯一的拦阻是
+   `IsTheClosestOne` —— **而那正是 `slotarb` 要修的东西**;`slotarb` 未 armed 时真函数**当场把蛙营还回来**。
+   ⇒ **一般形式:当一个修复的机制是「别再做 X」时,读代码接下来拿这个修复刚改过的状态去做什么。**
+   `preferedCamp = nil` 不是「把这个营让出去」,是「再问一次」——而提问的人读的是一张没人通知过的表。
+   **⭐⭐ 兄弟测试当时在测一张空表,而本轮只是因为停止打桩才看见。**
+   `availableCamp` 的绑定在 `mode_farm_generic.lua:313`,**在 `GetDesireHelper` 里面** ⇒ 只调 `Think()` 的测试
+   从不跑 `GetDesire`,`availableCamp` 一直是模块初值 `{}`,**每次重选都被递进去一张空表**;
+   `test_arbheart_farm_camp_heartbeat.lua` 的桩**不看实参**,于是「armed 重选到 CAMP_Y」成立而**真重选一个营都没被递到过**。
+   实测(插桩探针,已删):两 tick 上重选拿到的表长都是 **0**,没有营被闩上,`old` 恒 nil,**`arbheart` 那块一次都没进去过**。
+   ⚠️ **本轮第一稿测试正是在那个世界里绿的**(「释放掉的营不在表里了」成立,**因为什么都没被释放**);
+   修法是 world 里调一次 `GetDesire()` + 把绑定钉成 `[setup S1]`(第一次重选必须被递到 2 个营)。
+   ⇒ 与 §DS.3(正则 vs `dofile`)、`replay_fixture.lua` 的免费魔法值同族:**一个不看实参的桩不是更弱的谓词,
+   是另一个谓词,而且它报干净的通过。**
+   **⭐⭐⭐ 一个专抓「棒掉了一半」的检测器,对「棒整根掉了」是瞎的。**
+   13:30Z 那轮的 `proposal` 字段自陈会开 queue 行 + test_set 节,**两样都没落地**;
+   开工自检的 `ORPHAN_PROPOSAL` 腿找的是「有 test_set 节、没有 queue 行」⇒ **两样都缺时它一声不吭**。
+   铁律 9 那条掉了 37 轮的接力棒同族,这次 3 小时。本轮补上(§DV + `strategy-40`)。
+   **⭐⭐⭐⭐ 为什么不写成 `and J.IsSoakCandidate('slotarb')`**:两个候选 id 的合取会在**任一方 promote 当天冻成 FALSE**
+   (`pullcad`)⇒ 取退役那条路,把依赖**从代码里消掉**而不是**写进代码**。
+   ⚠️ **登记的 LIMIT(不构成否决)**:`UpdateAvailableCamp` 切的是**第一个**满足
+   `location == 释放的那个` **或** `dist(bot, camp) < 500` 的营 ⇒ bot 站在**另一个**营 500u 内且它排在前面时,
+   被退役的是那一个;登记而不绕开(钉帧 `[world W2]` 断言 `dCM > 500`,错退役被每分钟刷新兜住,且它**闩不上任何营**)。
+   ⛔ **撞车登记不重诊**(沿用 `0DUSTFIT`):开工自检 python 腿两条红(`test_chain_member_census.py` /
+   `test_threshold_chain_census.py`)= **GH #457**,先于本轮存在、不在本组文件里;另两条腿读 `UNCERTIFIABLE`(**不是通过**)。
+   **⭐⭐⭐⭐⭐ 全量套件的 3 条红:先于本轮,但是**本组**在 13:30Z 欠下的。**
+   `test_campfarm_ancient_target`(`1 fixtures now carry a creeps key`)/ `test_fixture_roles`
+   (那份 fixture 带 `player_id` 却没有 drafted roles)/ `test_focus_innate_index_anchor`
+   (`zuus_lightning_hands is on 2 frames, recorded 1 of 47`)—— **三条全部指向 13:30Z 新加的那一份 fixture**,
+   而那一轮只登记修了**四条**棘轮。**实际是七条。**
+   ⭐ 那一轮自己写的「加一个 fixture 的域价钱首次以**四文件同时开红**的形状显性化」
+   **低估了它自己的域价钱,而低估的方式恰好是那句话自身的形状:一个被数出来的、自洽的、有分母的「四」。**
+   **归属是买来的不是推的**:把 `bots/mode_farm_generic.lua` 换成 `origin/main` 那一份
+   (`cp` 副本 + `sha256sum -c` 还原)逐条重跑,**三条读数逐字相同、EXIT 全 1** ⇒ 与本轮改动无关。
+   ⛔ **本轮不修**,因为三条分属三份普查三种方法,`fixture_roles` 的正确修法是**带 `--roles` 重生成 fixture**
+   (要 `analysis.json`,走 S3),塞进本单元只会换来三次放宽 ⇒ **交出去(GH issue)而不是丢掉**。
+   **下一格(本组下一轮第一项)**:§6.1 的三条棘轮 —— 各自再测再钉,并更正 13:30Z 报告里那个「四」。
+   其后:等总监裁 §DV;若被退回,先补 §DV.7 第一条的归因方案(`slotarb` 已在串里)。
+
 0ARITY. **【2026-09-03T10:55Z 新增,**自驱**(`[strategy]` 未认领 issue 为零 —— GH #445 已认领并交回,
    07:03Z 后新开的 #446/#447/#448/#449/#450 分属 harness / hero / batch / bug;owner P1 第 1 棒、P2 均已交出,
    P3 责任在总监 ⇒ **形状普查轨**);**产出是一处解析器修复 + 7 行第一次被看见的判决 + 一张新表 +
@@ -4904,6 +4959,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T16:30Z(**认领 issue** —— 录像组 16:00Z 开出 **GH #456**(本组认领;报告
+  `iterations/reports/replay-check/20260903T155538Z.md`),按工作流第 1 条优先于 backlog;
+  **产出是一行 gated 行为修复 + 一份不打桩的端到端测试 + 一处 trunk red 清掉 + 一个补回来的接力棒**:
+  `bots/mode_farm_generic.lua` 的 `arbheart` 释放分支现在**同时退役**该营
+  (`J.Site.UpdateAvailableCamp`,与出厂 `:899` 护栏同一条路);
+  `tests/test_arbheart_release_retires_camp.lua` **9/0**;
+  `tests/test_gated_helper_nesting_census.lua` 重钉 `arbheart,campexit | Think | …` 行
+  (**清掉批测台 15:15Z 交过来的 Lua trunk red**);`state.json` 新键 `arbheart_retire_20260903`;
+  **test_set.md §DV + queue `strategy-40`**(13:30Z 那轮自陈却没落地的那一棒);
+  报告 `iterations/reports/strategy/20260903T163014Z.md`;
+  **无新 id、无新闸、无新 fixture、棘轮零移位**;零 AWS、零 S3、零 EC2。
+  **已交棒总监(§DV 入集 57 → 58,外加 §DV.7 的归因裁定)/ 录像组(条件 (a) 的新第二面)**。
+  **⭐ 主判据**:**一个修复的效果可以静默地取决于另一个毫不相干的 id 有没有 armed** ——
+  `pullcad` 那一族里依赖**是写下来的**(一个合取项),这里**什么都没写下来**,依赖住在**数据**里
+  (一行代码在表上留下一条记录,另一个 id 是否 armed 决定下游过滤器会不会去掉它);
+  `check_armed_wiring.py` 说 WIRED、nesting 普查读 (W) 且读得对、门是干净的单一合取,**没有一件工具会举手**。
+  **⭐⭐ 兄弟测试当时在测一张空表**:`availableCamp` 绑在 `GetDesireHelper` 里(`:313`),
+  只调 `Think()` 的测试从不跑 `GetDesire` ⇒ 每次重选被递进去一张空表,而桩**不看实参**;
+  **本轮第一稿测试就是在那个世界里绿的**,靠 `[setup S1]`(第一次重选必须被递到 2 个营)钉住。
+  **⭐⭐⭐ 一个专抓「棒掉了一半」的检测器,对「棒整根掉了」是瞎的**(`ORPHAN_PROPOSAL` 找「有节没行」)。
+  门:`luacheck_gate.sh` 经 `rc.sh` 裸读 `RC_EXIT=0` / `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`;
+  `run_tests.lua arbheart` **23/0** 裸读 0、`run_tests.lua gated_helper_nesting` **10/0** 裸读 0;
+  Lua 全量套件跑到收尾时读到 **3 条 FAIL**,**逐条证明为先于本轮的 trunk red**
+  (把 `bots/mode_farm_generic.lua` 换成 `origin/main` 那一份重跑,读数逐字相同;`sha256sum -c` 还原 OK)——
+  **但三条全部是本组 13:30Z 那份 fixture 欠下的**:那一轮登记修了四条棘轮,**实际是七条**。
+  **不在本单元修**(三种方法,`fixture_roles` 要带 `--roles` 重生成 fixture),**已开 issue 交出去 + 置于 backlog 顶部**。
+  ⛔ **撞车登记不重诊**:开工自检 python 腿两条红 = **GH #457**(先于本轮、不在本组文件里),
+  另两条腿 `UNCERTIFIABLE`(**不是通过**)。
 - 2026-09-03T13:30Z(**认领 issue** —— owner 13:08Z 开出 **GH #455**(本组认领 —— 录像组 13:02Z
   报告 `iterations/reports/replay-check/20260903T130225Z.md`);按工作流第 1 条优先于 backlog;
   **产出是一处 gated 行为修复 + 一台新真实帧 + 一份新测试 + 四处棘轮回滚**:

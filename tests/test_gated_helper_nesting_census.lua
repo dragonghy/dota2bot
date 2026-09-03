@@ -242,7 +242,25 @@ local PINNED = {
     -- their own in the same function; that asymmetry is the census's wide net,
     -- not a property of this lever.
     "c3 | GetDesire | J.IsTeamPushingHighGround | slotpush | bots/mode_laning_generic.lua",                                               -- P
-    "campexit | Think | J.IsCampSwitchSafe | campdanger | bots/mode_farm_generic.lua",                                                    -- W
+    -- [GH #455/#456 20260903] 'arbheart' joined this row when it added a second
+    -- gate to the same Think.  Read by hand before re-pinning, and it stays
+    -- (W): the callee `J.IsCampSwitchSafe` is reached ONLY from the shipped
+    -- switch-to-nearer block, which is the `if old then` arm of the heartbeat.
+    -- Arming 'arbheart' is what sets `old = nil`, so on any tick where arbheart
+    -- actually fires that block is SKIPPED -- the two are mutually exclusive by
+    -- construction, and arming 'arbheart' alone measures 'arbheart', not
+    -- `arbheart AND campdanger`.  Not a conjunction: this is the census's wide
+    -- net doing what the header says.
+    -- ⭐ The real interaction runs the OTHER way, and its direction is the safe
+    -- one, so it is registered rather than fixed: un-armed 'campdanger' freezes
+    -- `J.IsCampSwitchSafe` to false for every camp
+    -- (tests/test_arbheart_repick_relatch.lua §5), which means the shipped
+    -- switch-to-nearer branch can never fire and arbheart's release is the ONLY
+    -- thing in the heartbeat that can move `preferedCamp`.  Un-armed
+    -- 'campdanger' makes arbheart MORE visible, not less.  The day 'campdanger'
+    -- is armed or promoted, the two heartbeat arms both become live and this
+    -- row must be re-read.
+    "arbheart,campexit | Think | J.IsCampSwitchSafe | campdanger | bots/mode_farm_generic.lua",                                           -- W
     "campgrade,tbearly | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_farm_generic.lua",                                       -- P
     "capmono,divecap | _divecap_CapForLanePush | J.IsInLaningPhase | c2,c4 | bots/mode_team_roam_generic.lua",                            -- P
     "ccburst,lanehyst | J.ShouldRetreatLaneBurst | J.GetReadyHardCc | esaftershock | bots/FunLib/jmz_func.lua",                           -- P

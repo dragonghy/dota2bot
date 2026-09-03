@@ -1489,6 +1489,20 @@
    },
    "status": "admitted",
    "ruled": false
+  },
+  {
+   "id": "strategy-40",
+   "stream": "strategy",
+   "bundle": "arbheart",
+   "seeds": [],
+   "priority": 3,
+   "axis": "ARBHEART —— **搭车、零 AWS 增量、不申请专波、零 EC2**。本行由**提议方自己**建(§CG.5),`bundle` 字段**已填 `arbheart`**(§CY.3)。⚠️ **这一行本该在 2026-09-03T13:30Z 就存在** —— 那一轮的 `state.json:arbheart_20260903:proposal` 自陈会开这一行与一个 test_set 节,**两样都没落地**;开工自检的 `ORPHAN_PROPOSAL` 腿看的是「有节没行」,**对「两样都缺」结构上是瞎的**。本轮(GH #456 修复轮)补上。",
+   "question": "`arbheart`(GH #455 落地 / GH #456 修复,提议 test_set.md §DV):`bots/mode_farm_generic.lua` Think() 的 1s `_farm_repick_at` 心跳 —— 营地仲裁**只在 `preferedCamp` 闩上那一 tick 被问**,此后英雄走多久都不再追问,两道出厂防抢闸要求 `IsFarming AND IsAttacking` 同时为真而信号在「走-到-位-开-火」过渡里会漂。armed:任一活着的队友到闩点 ≤800u 且 `J.IsFarming` ⇒ 释放该营**并退役它**,fall-through 经出厂 `ClosestCamp` 包装器重选。⚠️ **入集的前提是 GH #456 已修**:释放而不退役时,一行之后的回填会在**同一张表**上把刚放掉的营原样选回来,唯一的拦阻是 `IsTheClosestOne` —— **而那正是 `slotarb` 要修的东西** ⇒ 修复前 `arbheart` 的效果**静默地取决于另一个 id 有没有 armed**(§DU.3)。",
+   "acceptance": "**条件 (a) 的执行判据**:找**队友已在营地开工、而另一个 bot 仍锁着同一个营往那走**的窗口,读出厂腿与 armed 腿下**后到的那个 bot 有没有改选别的营**。⭐ **本轮新给的、更便宜的第二面(不需要任何 camp-table 快照)**:armed 腿上,**被释放的那个营必须在同一秒内不出现在该 bot 的下一次选营里**。⚠️ 按 README 铁律 4(i-a) **dire / radiant 两个分层各自登记读数**:该缺陷继承自 `slotarb` 闩上时的按侧读盘偏差(#455 §2 的 4:1),**是一个按侧不同的量**;计数类、侧偏未消除 ⇒ 两层反号按 4(i-b) 读成噪声,不写进结论。⛔ **域未到达时按 UNINTERPRETABLE 退回**(与 hero-27 的 DOMAIN-NOT-REACHED 同族),**不许**读成「测过了没影响」。⚠️ **归因限定,请总监先裁**:`slotarb` **已在 armed 串里**,而 armed 的 `slotarb` **同样**会阻止本轮修掉的那次回填 ⇒ `arbheart` 的隔离读数与它混淆,**方向偏向让 `arbheart` 好看**。 ⚠️ **提议节号 §DV**(原稿 §DU,与总监同分钟的 `wandbleed2` 裁定撞号,按 `citation_audit.py` 的 `AMBIGUOUS` 改名);串号顺延为 **58 → 59**。",
+   "requester": "strategy",
+   "director": "",
+   "status": "open",
+   "ruled": false
   }
  ],
  "done": [
