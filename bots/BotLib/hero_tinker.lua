@@ -1145,6 +1145,20 @@ end
 ---------
 -- Combos
 ---------
+-- UNREACHABLE FROM THE ENGINE.  Everything from here to the end of the file is
+-- orphaned: the generic dispatcher calls only `SkillsComplement`, `MinionThink`
+-- and `CanUseRefresherShard` on a BotLib module (bot_generic.lua:20,
+-- ability_item_usage_generic.lua:4215/8667), and this file's `SkillsComplement`
+-- reaches none of the functions below -- its one call into the combo layer is
+-- the commented-out block above `X.ConsiderRearm`.  Counted, not asserted:
+-- `tests/test_hero_export_reachability.py`.
+--
+-- That is WHY GH #451's eight one-argument `J.Utils.GetItem` calls survived --
+-- a call that raises on every execution cannot survive in code that executes.
+-- Repairing the arity here (GH #451) is therefore NOT gated: an unreachable
+-- statement has no behaviour to hold dark.  Wiring this layer INTO
+-- `SkillsComplement` is the real change, it is not this one, and it does need a
+-- soak candidate + a real-frame fixture.
 function X.ConsiderCombos()
     local ComboFlag = 0
 
@@ -1227,7 +1241,7 @@ function CanDoCombo2()
     and Laser:IsFullyCastable()
     and WarpFlare:IsFullyCastable()
     then
-        ShivasGuard = J.Utils.GetItem('item_shivas_guard')
+        ShivasGuard = J.Utils.GetItem(bot, 'item_shivas_guard')
         if ShivasGuard ~= nil and ShivasGuard:IsFullyCastable()
         then
             local nManaCost = Laser:GetManaCost()
@@ -1252,7 +1266,7 @@ function CanDoCombo3()
     and Laser:IsFullyCastable()
     and WarpFlare:IsFullyCastable()
     then
-        ScytheOfVyse = J.Utils.GetItem('item_sheepstick')
+        ScytheOfVyse = J.Utils.GetItem(bot, 'item_sheepstick')
         if ScytheOfVyse ~= nil and ScytheOfVyse:IsFullyCastable()
         then
             local nManaCost = Laser:GetManaCost()
@@ -1277,7 +1291,7 @@ function CanDoCombo4()
     and Laser:IsFullyCastable()
     and WarpFlare:IsFullyCastable()
     then
-        EtherealBlade = J.Utils.GetItem('item_ethereal_blade')
+        EtherealBlade = J.Utils.GetItem(bot, 'item_ethereal_blade')
         if EtherealBlade ~= nil and EtherealBlade:IsFullyCastable()
         then
             local nManaCost = Laser:GetManaCost()
@@ -1302,8 +1316,8 @@ function CanDoCombo5()
     and Laser:IsFullyCastable()
     and WarpFlare:IsFullyCastable()
     then
-        ScytheOfVyse = J.Utils.GetItem('item_sheepstick')
-        EtherealBlade = J.Utils.GetItem('item_ethereal_blade')
+        ScytheOfVyse = J.Utils.GetItem(bot, 'item_sheepstick')
+        EtherealBlade = J.Utils.GetItem(bot, 'item_ethereal_blade')
         if EtherealBlade ~= nil and EtherealBlade:IsFullyCastable()
         and ScytheOfVyse ~= nil and ScytheOfVyse:IsFullyCastable()
         then
@@ -1455,7 +1469,7 @@ function CanClearCreeps2()
     if HasBlink()
     and Laser:IsFullyCastable()
     then
-        ShivasGuard = J.Utils.GetItem('item_shivas_guard')
+        ShivasGuard = J.Utils.GetItem(bot, 'item_shivas_guard')
         local nManaCost = Laser:GetManaCost()
                         + Rearm:GetManaCost()
                         + 75
@@ -1520,7 +1534,7 @@ function X.ConsiderSoulRing()
         return BOT_ACTION_DESIRE_NONE
     end
 
-    SoulRing = J.Utils.GetItem('item_soul_ring')
+    SoulRing = J.Utils.GetItem(bot, 'item_soul_ring')
     if SoulRing ~= nil and SoulRing:IsFullyCastable()
     then
         if J.GetHP(bot) > 0.3
@@ -1540,7 +1554,7 @@ function X.ConsiderShivasGuard()
         return BOT_ACTION_DESIRE_NONE
     end
 
-    ShivasGuard = J.Utils.GetItem('item_shivas_guard')
+    ShivasGuard = J.Utils.GetItem(bot, 'item_shivas_guard')
     if ShivasGuard ~= nil and ShivasGuard:IsFullyCastable()
     then
         if J.IsGoingOnSomeone(bot)

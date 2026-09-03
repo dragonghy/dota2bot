@@ -22,6 +22,26 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-82. **把 tinker 的 combo 层 + 物品层接进 `SkillsComplement` —— 这是 GH #451 底下
+   那个真正的缺陷,而它需要上闸 + fixture,所以不是 #451 那一轮能做的。**
+   2026-09-03T10:48Z 那轮修了 #451 的 8 处参数(报告
+   `iterations/reports/hero/20260903T104812Z.md`),并量清了它们**为什么能活这么久**:
+   **全部结构性不可达**。引擎对一个 BotLib 模块只调三个函数成员
+   (`MinionThink` / `CanUseRefresherShard` / `SkillsComplement`),而 tinker 的
+   `SkillsComplement` 通往 combo 层的唯一调用**是注释掉的**(`:338-342`)。
+   - **域价钱是孤例级的,这是选它的理由**:`hero_tinker.lua` **13/21 孤儿**,
+     占全仓 34 个孤儿的 **38%**,**排名 1/128**;**113/128 个英雄文件零孤儿**;
+     第二名 `hero_medusa.lua` 只有 4 个。「英雄文件里有孤儿」**不是本仓常态**。
+   - **⛔ 接线是行为改动,必须 gated(turbo-only soak candidate)+ 真实帧 fixture**,
+     不许当成「顺手接上」。接上的那一刻,`tests/test_hero_export_reachability.py`
+     的 `GH451_UNREACHABLE` 会**红 7 条并点名**,那条红**是提示不是障碍**:
+     按它头上写的方向把读数挪进归档行,**不要删断言求绿**
+     (N2 台已验:接线后孤儿 34 → 22,而 `ORPHAN_CEILING` **照样全绿** ⇒
+     棘轮在这一格零信息量,唯一捕手是那组登记读数)。
+   - **⚠️ 接线之前先想清楚要不要接**:这层没接线的时间以「月」计,
+     而 tinker 不在焦点五英雄里 ⇒ 优先级低于任何焦点英雄的活。
+     已开 `[hero]` issue 登记,球在本组但排在焦点英雄之后。
+
 -81. **GH #447 建议的那个真实帧 fixture(`20260903_034737_slot4`,t=222.5,CK 已学会 Phantasm)
    仍然欠着 —— 球不在本组,登记在这里是为了它别掉。**
    2026-09-03T07:53Z 那轮把 #447 的注释更正 + 守卫做完了(报告
@@ -3917,6 +3937,57 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T10:48Z(报告 `iterations/reports/hero/20260903T104812Z.md`;轴 **GH #451**)
+  **改 3 个文件:`bots/BotLib/hero_tinker.lua`(8 处修参 + 一段注释)+ 新增
+  `tests/test_utils_getitem_arity.lua` + 新增 `tests/test_hero_export_reachability.py`。
+  零新 gate id、零 arm/promote、零 AWS、不申请波次;`state.json` / `test_set.md` /
+  `queue.json` 本轮无新增。**
+  - 选题:OWNER_PRIORITIES 无本组项(四条常设项的球在批测台 / 协同组 / 协同组 / 总监);
+    open `[hero]` 五条里 **#451 是唯一球在本组且本轮能做完的**(#447 本组已认为可关、
+    #417/#416 只差总监关闭裁定,#407 被自己那句「拿到语料读数之前不改 `bots/` 一行」挡住)。
+    backlog `-81`(球在录像组)/ `-80`(GH #438 裁定前只量不改)顺延。
+  - **⭐⭐ 本轮的主发现是 issue 本身错了一节,而它反转了修法**:#451 的
+    「活的,不是死代码」依据是读了外层的 `if`,**而外层 `if` 不是可达性**。
+    引擎对一个 BotLib 模块只调**三个**函数成员(`bot_generic.lua:20` 的 `MinionThink`、
+    `ability_item_usage_generic.lua:4215/8667` 的 `CanUseRefresherShard`/`SkillsComplement`),
+    从这三个做传递闭包:`hero_tinker.lua` 21 个函数**可达 8 个**,
+    **#451 那 8 处的外层函数全部不可达**(`SkillsComplement` 唯一一处通往 combo 层的
+    调用**是注释掉的**,`:338-342`)。⇒ **不上闸**:上闸是让**行为**在验证前保持 dark,
+    **不可达的语句没有行为可以 hold dark**;#451 验收 2 那句「修完之后下游第一次可达」
+    **修完之后仍然不可达,因为函数不可达**。真正的改动是**接线**,它需要 soak candidate
+    + fixture,已登记为 backlog `-82` + 新 `[hero]` issue。**裁断权在总监,回退成上闸版
+    是一次 `perl -0pi` 的事,读数已在报告 §2 备好。**
+  - **⚠️ 第一版根集漏了 `MinionThink`,读数是 14 而不是 13 —— 是自己起疑复查抓到的,
+    不是门抓的**(「`X.MinionThink` 怎么会是孤儿」)。**根集不全 ⇒ 整个结论作废**,
+    所以新普查里根集是**从三个 dispatcher 解析出来的**再跟登记值比对:
+    上游多出第四个 dispatch 会**点名报红**(N1 台已验),而不是悄悄把 128 个
+    英雄文件的可达集一起放宽。
+  - **⭐ 域价钱说 tinker 是孤例不是常态**:全仓 **128 文件 / 1061 函数 / 34 孤儿(3.2%)**,
+    **113 个文件零孤儿**;`hero_tinker.lua` **13/21**,占全仓孤儿的 **38%**,**1/128**,
+    第二名 `hero_medusa.lua` 才 4 个。
+  - **⭐⭐ N2 台是本轮最锋利的一格,构造性不是统计**:把 combo 层**接上**之后
+    孤儿 `34 → 22`,而 `ORPHAN_CEILING` 那条断言**照样全绿**(22 ≤ 34)⇒
+    **棘轮在这一格零信息量**,唯一捕手是 `GH451_UNREACHABLE` 那组登记读数。
+    ⇒ **属性只实现一次就必须钉一次**(`-78` 的教训):只写棘轮的话,
+    「修参不上闸」这个裁断会在被推翻的当天**无声地**继续成立。
+  - **⚠️ GH #442(行号当键)第四轮复现,这次在我自己的变异台上**:M1 按行号
+    `sed -i "1523s/..."` 打补丁,而本轮新加的注释已把那行挤到 1537 ⇒ **补丁没打上,
+    而台子打的是 `EXIT=0`**(看起来像「测试没抓到」)。**是读 `sed -n` 的回显发现的,
+    不是靠退出码 —— 没打上的补丁和抓不到的缺陷在退出码上同形。**
+  - 变异台 **6/6 全杀**(arity 4 台含 M3 假阳性控制;可达性 4 台),
+    每台恰好被一条点名断言杀掉;还原后 `cmp` 逐字节相同。
+  - 门:开工自检**第一次调用又被拒答**(stdout 接进 `tail`)—— **证据纪律 3 的第 13 次
+    现场,连续第五轮是本组当轮第一条命令**;改对后 **`EXIT=3`**(`legs run 9`、
+    **`UNCERTIFIABLE: none`**,findings = cadence + trunk-red(python))。
+    Lua 腿 **73 个 detector 文件 0 失败**。python 腿唯一红文件
+    `test_detector_source_constants.py`(3 条)**不是本组的、先于本轮**(零 detector
+    `.py` 改动)= GH **#410**;`test_detect_overchase.py` 单跑 **EXIT=0**(不是红)。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用
+    `RULE6_BYPASS`**)。定向动态全绿。全量套件读数见报告 §7。
+  - **交出去的棒**:#451 已追评更正 + 说明不上闸理由,本组认为**可关**,
+    关闭裁定在**总监**;`-82` / 新 `[hero]` issue 登记 tinker 接线(球在本组,
+    但 tinker 不在焦点五英雄,排在焦点英雄之后)。
+    `#447`/`#417`/`#416`/`#438` 仍在**总监**;`#407` 仍在**批测台**。
 - 2026-09-03T07:53Z(报告 `iterations/reports/hero/20260903T075335Z.md`;轴 **GH #447**)
   **改 2 个文件:`bots/BotLib/hero_chaos_knight.lua`(纯注释,量出来的纯)+
   `tests/test_ckpush_minute_unit.lua`。零行为改动、零新 gate id、零 arm/promote、零 AWS、
