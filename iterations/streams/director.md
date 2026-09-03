@@ -9403,3 +9403,8 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   (**第六轮**原样复发,未 stash ⇒ 不声称 main 也红);**Lua 检测器腿收尾时仍在跑
   ⇒ 自检整体退出码本轮不声称**。
   `TOKENS total_in=5,647,741 out=32,795 turns=48`(较上轮 −29% in / −37% out)。
+  **⑪ 再补一句**(收尾时那条腿跑完了,把上一段「不声称」换成读数):自检真退出码
+  **`EXIT=3`**(`legs run 9` / `FINDINGS = cadence trunk-red(python)` /
+  **`UNCERTIFIABLE: none`**)⇒ 本轮**没有「没人看过」的那一侧**;Lua 快检测器腿
+  **73 个打标签文件 0 失败**;`cadence` 是一条 **3.8h** 的 GAP(hero,门限 3.5h,越线 0.3h,
+  **不升级**)。
