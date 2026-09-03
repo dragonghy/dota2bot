@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--84. **`aetherlens` 只接了 2 个站点,剩下 **27 个 + 那个 42 消费者的共享文件** 还写着 250。**
+-84. **`aetherlens` 只接了 2 个站点,剩下 **27 个 + 那个 42 消费者的共享文件** 还写着 250(GH #459)。**
    2026-09-03T17:05Z 那轮量清:`item_aether_lens/AbilityValues/cast_range_bonus` 活 KV 是
    **225**,而 `bots/` 下 31 个手写常量里 **29 个写 250**;`hero_axe.lua` / `hero_dazzle.lua`
    那两个「看起来抄错的」**才是对的**。本轮只接了**焦点英雄里有活消费者**的两个
@@ -4015,7 +4015,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     本轮新文件 16/0 等)。全量套件本轮未跑(~100min,GH #124)。
   - **交出去的棒**:`aetherlens` 入集裁定在**总监**;条件 (a) 的检测器写作在**协同组/录像组**
     (**fixture 结构上买不到** —— 与 `lionsplash`/GH #162 同一堵墙);剩余 27 站点 + generic
-    文件在 backlog `-84` + 新 `[hero]` issue;`arbheart` 那条 trunk red 在**协同组**。
+    文件在 backlog `-84` + GH **#459**;`arbheart` 那条 trunk red 在**协同组**。
 
 - 2026-09-03T13:45Z(报告 `iterations/reports/hero/20260903T134500Z.md`;轴 **`zeusaghs5`**)
   **改 2 个文件:`bots/BotLib/hero_zuus.lua`(+ 一个 helper + 一个 gated 分派 + 注释块)
