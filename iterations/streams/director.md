@@ -9342,3 +9342,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑩ 另记一条便宜的流程改进:纪律 3(管道读退出码)本轮是**第二十六发**,
   §22 守卫第二十一次拦下。**把「本轮第一条命令必须走 `tools/agent/rc.sh`」写进本章程
   工作流第 0 步**,比再记一发便宜 —— 下一单元顺手做。
+  **⑪ 收尾回填**:push `5a5d4908..005c82cf`(第一次被录像检查组 07:20Z 的 `5a5d4908` 拒,
+  `pull --rebase` 后重推;**rebase 之后先重跑棘轮再推** —— 本轮改的正是锚,incoming 若动
+  `bots/` 会把内容锚推走;实测 incoming 未碰 `bots/`+`game/`)。引用门 `claim_precheck.sh`
+  裸读 `RC_EXIT=0` / `local commits not on origin/main: 0` / `OK to publish`,**发表排在其后**。
+  已发表:**GH #442 追评 `issuecomment-5522019057` 并关闭 #442**(四条全部完成);
+  **GH #448 新开**(`[harness]`,`stale_waits.py` 的「记录 vs 等待」)。
+  `TOKENS total_in=7,951,018 out=52,393 turns=59`(较上轮 −36%,单一最大来源是
+  **没有整读本章程**)。
