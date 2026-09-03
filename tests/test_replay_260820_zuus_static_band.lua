@@ -373,10 +373,33 @@ end
 -- 6. The measured LIMIT.  Read the header before quoting any number here.
 
 --- Every (fixture, live enemy hero) pair the corpus offers with a Zeus who owns
---- a trained ultimate, scored under a declared damage multiplier.
-local function corpus_band_count(nMult)
+--- a trained ultimate, scored under a declared damage multiplier -- returned as
+--- a LIST OF NAMED READINGS, not a count.
+---
+--- WHY A LIST AND NOT A COUNT (hero 2026-09-04, GH #465 acceptance 2).  This
+--- section used to return `nBand, nDomain, sWhere` and assert `nBand == 1`.
+--- Two things were wrong with that shape, and the second is the reason the
+--- issue asked this stream to look at all:
+---
+---   * `sWhere` was ASSIGNED ON EVERY HIT, so it named whichever pair the `ls`
+---     order happened to yield last.  While the count is 1 that is invisible;
+---     the moment it is not, the identity assertion checks one arbitrary member
+---     and the other in-band pairs are named nowhere.
+---   * `expected exactly one, got 2` is A NUMBER TO BUMP.  GH #465 closes by
+---     asking that the next reader "re-read rather than re-baseline" -- and
+---     says it as prose, in an issue, which is the one place a future round is
+---     under no obligation to look.  The registry below moves that instruction
+---     into the failure itself: a pair that ENTERS the band fails BY NAME with
+---     its whole arithmetic printed, and there is no number to bump.
+---
+--- Same lesson as the guard that was destroyed before its own subject could be
+--- observed (GH #417, 2026-09-02): an instruction that exists only as prose is
+--- prose.  Note this is NOT a ratchet -- a ratchet would silently accept the
+--- band shrinking to zero, and a declared zero going red is exactly the finding
+--- that produced GH #465 in the first place.
+local function corpus_band_pairs(nMult)
     local fh = assert(io.popen('ls tests/fixtures/f_*.lua 2>/dev/null'))
-    local nBand, nDomain, sWhere = 0, 0, nil
+    local tHits, nDomain, nZeus, nTrained = {}, 0, 0, 0
     for sPath in fh:lines() do
         local ok, fx = pcall(dofile, sPath)
         if ok and type(fx) == 'table' and type(fx.units) == 'table' then
@@ -384,22 +407,27 @@ local function corpus_band_count(nMult)
             for _, u in ipairs(fx.units) do
                 if u.name == SUBJECT then z = u end
             end
+            if z then nZeus = nZeus + 1 end
             local nRank = 0
             for _, a in ipairs((z or {}).abilities or {}) do
                 if a.name == ULT then nRank = a.level end
             end
             if z and nRank > 0 then
+                nTrained = nTrained + 1
                 local nDmg = per_level(kv(ULT, 'damage').base, nRank)
                 local nKV = (SF_BASE + SF_PER_LEVEL * (z.level - 1)) / 100
                 for _, u in ipairs(fx.units) do
                     if u.team ~= z.team and u.alive
                         and u.name:find('^npc_dota_hero_') then
                         nDomain = nDomain + 1
-                        local bShip = (nDmg + u.hp * SHIPPED_PCT) * nMult >= u.hp
-                        local bArm  = (nDmg + u.hp * nKV) * nMult >= u.hp
-                        if bShip and not bArm then
-                            nBand = nBand + 1
-                            sWhere = sPath .. ' / ' .. u.name
+                        local nShip = (nDmg + u.hp * SHIPPED_PCT) * nMult
+                        local nArm  = (nDmg + u.hp * nKV) * nMult
+                        if nShip >= u.hp and nArm < u.hp then
+                            tHits[#tHits + 1] = {
+                                key  = sPath:gsub('^tests/fixtures/', '') .. ' / ' .. u.name,
+                                lvl  = z.level, rank = nRank, dmg = nDmg,
+                                hp   = u.hp,    ship = nShip, kv   = nArm,
+                            }
                         end
                     end
                 end
@@ -407,25 +435,75 @@ local function corpus_band_count(nMult)
         end
     end
     fh:close()
-    return nBand, nDomain, sWhere
+    return tHits, nDomain, nZeus, nTrained
 end
 
+--- The one line that says WHY a pair is in the band.  Registered verbatim, so a
+--- pair whose arithmetic moves (a KV edit, a changed shipped constant) is red
+--- even though its membership did not change.
+local function band_line(r)
+    return string.format(
+        'zeus lv%d ultR%d dmg%d | target hp=%d | shipped %.2f >= hp > kv %.2f',
+        r.lvl, r.rank, r.dmg, r.hp, r.ship, r.kv)
+end
+
+local function assert_band(nMult, tRegistry, sLabel)
+    local tHits, nDomain, nZeus, nTrained = corpus_band_pairs(nMult)
+
+    -- THE SUPPLY ASSERTION THAT SITS BESIDE THE MEMBERSHIP CHECK.  A parser that
+    -- scanned nothing returns an empty hit list too, and an empty hit list would
+    -- agree with an empty registry -- the shape that let a whole-tree read of 0
+    -- pass a `<=` ceiling in silence (hero 2026-09-03, GH #459).  Measured
+    -- 2026-09-04 by an independent recomputation off the KV snapshot: 177 pairs,
+    -- from the 39 of 53 Zeus-carrying fixtures whose Zeus owns a trained
+    -- ultimate.  Bounds, not equalities (GH #273's shape) -- the corpus grows.
+    assert(nDomain > 150, sLabel .. ': the domain must be non-trivial, got '
+        .. nDomain .. ' pairs')
+    assert(nTrained > 30 and nZeus > 45, sLabel
+        .. ': the supply behind that domain must be real, got ' .. nTrained
+        .. ' trained-ult fixtures out of ' .. nZeus .. ' carrying Zeus')
+
+    local tSeen = {}
+    for _, r in ipairs(tHits) do
+        tSeen[r.key] = true
+        assert(tRegistry[r.key] ~= nil, sLabel
+            .. ': a NEW in-band pair appeared -- RE-READ IT, do not re-baseline a count.\n'
+            .. '        ' .. r.key .. '\n'
+            .. '        ' .. band_line(r) .. '\n'
+            .. '        Register it above with that line once you have read what'
+            .. ' it means; the count is not the claim.')
+        assert(tRegistry[r.key] == band_line(r), sLabel
+            .. ': the arithmetic of a REGISTERED pair moved.\n'
+            .. '        ' .. r.key .. '\n'
+            .. '        registered: ' .. tRegistry[r.key] .. '\n'
+            .. '        measured:   ' .. band_line(r))
+    end
+    for sKey in pairs(tRegistry) do
+        assert(tSeen[sKey], sLabel .. ': a REGISTERED in-band pair LEFT the band -- '
+            .. sKey .. '.  That is evidence moving, not a stale expectation.')
+    end
+end
+
+--- At full damage (the mock's own no-reduction model) the band holds exactly
+--- this pair -- the frame the rest of this file pins.
+local BAND_AT_1_00 = {
+    ['f_260820_103216_cm_es_aftershock.lua / npc_dota_hero_crystal_maiden'] =
+        'zeus lv9 ultR1 dmg275 | target hp=292 | shipped 301.28 >= hp > kv 286.24',
+}
+
+--- And under 25% base magic resist, exactly this one -- by 1.10 HP.
+local BAND_AT_0_75 = {
+    ['f_260902_154755_cm_wandbleed_residue.lua / npc_dota_hero_skywrath_mage'] =
+        'zeus lv10 ultR1 dmg275 | target hp=220 | shipped 221.10 >= hp > kv 212.69',
+}
+
 tests['[hero] LIMIT: the corpus offers exactly ONE in-band pair, and it is this frame'] = function()
-    local nBand, nDomain, sWhere = corpus_band_count(1.0)
-    -- A LOWER BOUND, not an equality (GH #273's shape): the corpus grows, and a
-    -- new fixture must not turn this into a failure that says nothing. Measured
-    -- 2026-08-30: 167 pairs across the 37 fixtures whose Zeus owns a trained
-    -- ultimate (51 carry Zeus at all).
-    assert(nDomain > 150, 'the domain must be non-trivial, got ' .. nDomain .. ' pairs')
-    assert(nBand == 1, 'expected exactly one in-band pair at multiplier 1.00, got ' .. nBand)
-    assert(sWhere:find('103216_cm_es_aftershock', 1, true)
-        and sWhere:find('crystal_maiden', 1, true),
-        'and it must be the frame this file pins, got ' .. tostring(sWhere))
+    assert_band(1.0, BAND_AT_1_00, 'mult 1.00')
 end
 
 tests['[hero] LIMIT: under 25% base magic resist the corpus offers exactly ONE, by 1.1 HP'] = function()
     -- NOT "the band is never reached": the band moves down (~[212, 221] HP at
-    -- rank 1) and 51 Zeus-carrying frames is not a frequency estimate. What this
+    -- rank 1) and 53 Zeus-carrying frames is not a frequency estimate. What this
     -- pins is that the flip above lives in the mock's declared no-reduction
     -- model, so nobody may quote it as an in-game count.
     --
@@ -441,12 +519,18 @@ tests['[hero] LIMIT: under 25% base magic resist the corpus offers exactly ONE, 
     -- under magic resist; what the corpus says is that reaching it takes a
     -- coincidence half a percent wide, which is a weaker claim than "none" and
     -- the one the evidence actually supports.
-    local nBand, nDomain, sWhere = corpus_band_count(0.75)
-    assert(nDomain > 150, 'domain (177 measured 2026-09-03), got ' .. nDomain)
-    assert(nBand == 1, 'expected exactly one in-band pair at multiplier 0.75, got ' .. nBand)
-    assert(sWhere:find('154755_cm_wandbleed_residue', 1, true)
-        and sWhere:find('skywrath_mage', 1, true),
-        'and it must be the pair this case describes, got ' .. tostring(sWhere))
+    --
+    -- ⭐ 2026-09-04 (hero, GH #465 acceptance 1): re-derived independently of
+    -- this file -- constants pulled straight from tests/mock/special_value_
+    -- shapes.lua, corpus re-walked by a separate script -- and every figure
+    -- above reproduces to the digit (221.10 / 212.69, margin 1.10 = 0.50% of
+    -- 220). The wording is what the evidence supports; the SHAPE was not, which
+    -- is what this round changed (see corpus_band_pairs above). Acceptance 1's
+    -- other half -- "should this assertion live in the 1.00 case's section" --
+    -- answered NO: they are two different claims (is the band reachable at all
+    -- vs. is it reachable once resistance is charged) and the registry now
+    -- keeps each one's membership separately.
+    assert_band(0.75, BAND_AT_0_75, 'mult 0.75')
 end
 
 -- ---------------------------------------------------------------------------
