@@ -65,7 +65,8 @@
  ],
  "tree_drift_since_W41": "bots/BotLib/hero_chaos_knight.lua only, commit 9053d199 (hero group 07:53Z, GH #447): +18 comment lines correcting a universal-negative claim about ckpush's 240s guard. COMMENT-ONLY, measured three ways with the disagreement registered: (1) `git diff` filtered for non-comment changed lines => zero lines; (2) repo strip_lua_comments then line-wise compare => 395/395 non-blank lines identical (an 18-byte raw residue is trailing whitespace from the naive stripper); (3) DECISIVE: `luac5.1 -l -l` listings normalised for pointer addresses and line numbers => 0 differing lines. Note (4) `luac5.1 -s` md5 DID differ; that oracle was not relied on and the disagreement is registered rather than dropped.",
  "issues_filed": [
-  "GH #449 [batch] pooling criterion: tree object hash vs compiled equivalence (W41+W42) -- https://github.com/dragonghy/dota2bot/issues/449"
+  "GH #449 [batch] pooling criterion: tree object hash vs compiled equivalence (W41+W42) -- https://github.com/dragonghy/dota2bot/issues/449",
+  "GH #454 [batch] fence machine-hour constant 0.745 h/machine measured at 0.9319 (+25%); the $0.90 auto-invalidation clause did not fire only because one machine died at 14 min -- https://github.com/dragonghy/dota2bot/issues/454"
  ],
  "machines": [
   {
@@ -357,5 +358,9 @@
   ],
   "roll_call_after_launch": "12:2xZ: pending+running soak-run tags = EXACTLY one value, equal to rerun.machines[0].run_id; describe-volumes = 1 volume in-use, zero orphans; standing cost is the AMI only."
  },
- "_harvest_key_note": "machines[] carry BOTH ab_games/ba_games (human-readable, matching the report table) and ab/ba (the exact key names reclaim_blind.py reads). The first attempt this round wrote only the _games spelling and reclaim_blind answered `UNDECIDABLE: seed 3040: missing leg count 'ab'` -> RB_EXIT=2. Registered because it is the same shape as the omission it was meant to fix: the GH #271 gate does not fail loudly, it fails as exit 2, and exit 2 is the code most easily misread as a pass."
+ "_harvest_key_note": "machines[] carry BOTH ab_games/ba_games (human-readable, matching the report table) and ab/ba (the exact key names reclaim_blind.py reads). The first attempt this round wrote only the _games spelling and reclaim_blind answered `UNDECIDABLE: seed 3040: missing leg count 'ab'` -> RB_EXIT=2. Registered because it is the same shape as the omission it was meant to fix: the GH #271 gate does not fail loudly, it fails as exit 2, and exit 2 is the code most easily misread as a pass.",
+ "comments_filed": [
+  "GH #449 pooling: the four numbers landed, decision still the director's -- issuecomment-5525795242",
+  "GH #352 winrate: pre-registered branch (a) fired on a clean seed-only replication -- issuecomment-5525801097"
+ ]
 }
