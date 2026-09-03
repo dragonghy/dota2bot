@@ -1,11 +1,14 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2
 
-**成员串 57**(上一行,**501 字节**,md5 `38423b791c05d96e0e16ed0b51bd132d`)。本行 **2026-09-03T01:xxZ 的变动:`roshdist` + `ckpush` 同轮入集**(55 → 57,总监裁定全文 **§DT**,提议 §DP / §DQ,GH #422 / #426;queue `strategy-37` / `strategy-38`)。
-⛔ **W40 不含这两个 id** —— W40 于 2026-09-02T21:31:51Z 起飞时 clone 的是 55-id 串(md5 `bfe60fc…`),**本次变动自 W41 起首次生效**;W39+W40 之间的可并池性不受影响。
-⚠️ **载体项 6 → 7**(新增 `chaos_knight`,来自 hero-scoped 的 `ckpush`;`roshdist` 是 generic,对载体项零贡献)。总监已把这一步的价量出来:**在紧的那条边上是零**(§DT.3)。
-**⚠️ W38 已于 09:31Z 起飞,它记下的是 54-id arm** —— 本次变动**只对 W39 起作用**(与 §DK / W37、§DH / W36 连着第三次同型)。
-**上一次变动**(2026-09-02T04:xxZ,52 → 54,`slotarb`+`slotdust`,md5 `80392b258fcd214cf351231be61d15a4`,476 字节)裁定全文 **§DK**,提议 §DI / §DJ,GH #406 / #411。
+**成员串 58**(上一行,**512 字节**,md5 `7009f6c512e1b6bdf514401f20178eca`)。本行 **2026-09-03T16:0xZ 的变动:`wandbleed2` 入集**(57 → 58,总监裁定全文 **§DU**,提议 §DS,GH #437;queue `strategy-39`)。
+⛔ **W41 与 W42 都不含这个 id** —— 两波分别于 2026-09-03T03:31:51Z / 09:32Z 起飞,clone 的都是 57-id 串(md5 `38423b79…`),**本次变动自 W43(或其后第一波)起首次生效**;W41+W42 之间的可并池性不受影响。
+⚠️ **载体项 7 → 7 逐字不变** —— `wandbleed2` 是 generic(`carrier_terms.py` 自判 `kind=generic`),对载体项**零贡献**。⇒ **不必重算 `BEST min-per-term`**(§DT.3 那一格对本条不适用);但载体供给自己的账仍要每波重算(W41 起飞时 `[2601,3000]` 上 `>=2/term` 已搜出 0)。
+**⚠️ 收割前必读(§DU.5):本条是 NARROWING** —— **`wandbleed` 触发计数下降本身不是负面信号**,那正是本 id 要买的;要读的是**掉的那些帧里有没有活着的攻击者**。承重的阴性面(保留下来的触发,4000 环内活敌人数必须 ≥1)**与主判据同等必读**,否则「armed 少喝魔杖」与「armed 干脆不喝魔杖」在同一个数字上不可分。域为零按 `DOMAIN-NOT-REACHED` 退回,**不得**读成「无效应」(六个合取项,最后一项本地命中率只有 2/101)。
+**⛔⛔ promote 关口红线(§DU.6):promote `wandbleed2` 的动作不是把它从 armed 串里删掉,是删掉 `jmz_func.lua:9585` 那一行。** 闸朝「无操作」失效 ⇒ 只删串不删代码,这条收窄会在 promote 当天静悄悄取消**而没有任何东西变红**(`pullcad` 的倒像)。同族另有 `fieldsip` / `teambrain`。
+
+**上一次变动**(2026-09-03T01:xxZ,55 → 57,`roshdist`+`ckpush`,md5 `38423b791c05d96e0e16ed0b51bd132d`,501 字节)裁定全文 **§DT**,提议 §DP / §DQ,GH #422 / #426;queue `strategy-37` / `strategy-38`。⚠️ 那次载体项 6 → 7(新增 `chaos_knight`),价已量为**在紧的那条边上是零**(§DT.3)。
+**再上一次变动**(2026-09-02T04:xxZ,52 → 54,`slotarb`+`slotdust`,md5 `80392b258fcd214cf351231be61d15a4`,476 字节)裁定全文 **§DK**,提议 §DI / §DJ,GH #406 / #411。
 **⚠️ 收割前必读(§DK.3,`slotarb` 的入集是条件性的,这一条不成立时撞车数下降不构成条件 (a))**:提议的验收只有「撞车变少」,而**「撞车变少」与「谁都不去打野」在那份读数上是同一个数字**。全部营地被拒 ⇒ `mode_farm_generic.lua:805` 的 `if preferedCamp ~= nil then` 整块跳过、**没有 else** ⇒ 一个 Farm 模式的 bot 这一帧不下达任何打野动作;而出厂 dire 侧只扫 slot 5,**五路仲裁从未真正运行过**,armed 是第一次把一个**唯一输出是「拒绝」**的机制全量打开。⇒ 必须同时读**负控**:armed 腿「Farm 模式且无营地」的占比**不得上升**,**两个分层各自登记**。
 **⚠️ 收割前必读(§DK.1 (v-b)):`slotdust` 不是子集,`slotarb` 才是** —— 两个函数只差一个初值(`closestMember = bot` vs `closest = nil`),`slotdust` armed 会让 dire 侧四个今天结构性用不了粉的 bot **开始用粉**,那是**积极动作不是撤回**。按 §DI 的模式匹配读会读反(§DF.2 (ii) 同族第二发)。
 **⚠️ 收割前必读(§DK.5):两条彼此正交,但都按侧不同** —— 归因分得开的前提是**分层登记**;谁把它们并成「`0SLOT9` 家族」读一个池化的按侧读数,就会把两条搅在一起。**别并池。**
@@ -14155,3 +14158,127 @@ W39 `BEST min-per-term = 2`;W40 最优层由**两对逐位相同的掩码**构�
   **两条都要 dire / radiant 两个分层各自登记读数**。
 - **总监(自己,下一单元第二项)**:开工自检的 `un-ruled queue requests` 腿把**自陈搭车**的两行
   分进了 `OTHER`、`RIDESHARE` 报 `none`(§DT.0)⇒ 「本轮必裁」对它们从未响过。修分类判据。
+
+---
+
+## §DU 2026-09-03T16:0xZ 总监裁定:`wandbleed2`(GH #437 / queue `strategy-39`)**ADMITTED,57 → 58,自 W43 起生效** —— 本节最该被读的不是那个 ADMITTED,是 **§DU.4:提议里那个「155 个调用点里的 3 个」在它自己落地的那棵树上就复现不出来(实测 157 / 146),而同一轮的 trunk 红是三条冻死的分母 —— 一个没人能重新导出的分母,是本仓本轮同时踩到的两处同一个形状**
+
+### §DU.0 为什么这条到第五轮才被裁,以及上一轮**明说**了不裁的理由
+
+`strategy-39` 在 09-03 的前四轮总监触发里被连续列进「下次触发第一项」。
+上一轮(13:06Z)**没有含糊地跳过**,而是写下了理由并**买到了七项里的第一项**:
+「本档案的 `ROUTED_RIDESHARE` 标准是六到七项带裸退出码的独立读数(见 §DT),
+那是整整一个工作单元,**半个裁定比没有更坏**;顺带买到 (i):`wandbleed2` 单一独立门
+(`jmz_func.lua:9585`,全仓唯一,门行上 1 个 id)⇒ 无 `pullcad` 陷阱。」
+**本轮把余下六项买齐**,并加了总监自己的两格(§DU.3 载体价、§DU.4 分母复核)。
+⭐ 与 §DT.0 同型的那件事**本轮复发**:开工自检仍把这条**自陈搭车**的行分进
+`OTHER (routing/slot ruling still owed)`,`RIDESHARE (§BB.4: rule this round): none` ——
+**`RIDESHARE` 分类腿已是第五轮顺延**(§DT.6 交给总监自己),这一轮它**第二次**对该裁的行没响。
+
+### §DU.1 七项独立读数(全部裸退出码,不重复抄提议里的数)
+
+| # | 读数 | 结果 |
+|---|---|---|
+| (i) | 单一独立门,全仓唯一,门行上 1 个 id | `bots/FunLib/jmz_func.lua:9585`,**无 `pullcad` 陷阱**(上一轮买到,本轮由 (v) 复核) |
+| (ii) | 关闸**逐值**等于出厂 | 落地 commit `77e18be9` 的 `bots/` 侧 **删除行数 = 0**(`git show … \| grep -cE '^-[^-]'` ⇒ **0**);调用点唯一的可执行新增是链尾一个 `and J.IsWandBleedSourcePresent( bot )`,而该 helper 未 armed 一律答 `true` ⇒ `X and true ≡ X` |
+| (iii) | armed 后**零新增引擎 API 面** | armed 分支只调 `J.GetNearbyHeroes`(定义 `jmz_func.lua:2755`,全仓 **1932** 个调用点),该 commit 未动它的定义;无任何新的 `bot:` 引擎调用 |
+| (iv) | 孪生体原样未动(一次一个杠杆) | 同族两条**朝「无操作」失效**的闸 `fieldsip`(`jmz_func.lua:5198`)/ `teambrain`(`:6773`)本轮与该 commit 均**零改动**(删除行数 0 蕴含);`wandbleed` 自己的三条腿逐字未动 |
+| (v) | `check_armed_wiring.py --cand <58>` | `all 58 armed ids wired on HEAD`,`wandbleed2 direct 1 bots/FunLib/jmz_func.lua:9585`,`rc.sh` 裸读 **`RC_EXIT=0`** |
+| (vi) | `carrier_terms.py --arm <58>` | `58 armed ids: 11 hero-scoped, 47 generic, **0 unresolved** => **7 term(s)**`,裸读 **`RC_EXIT=0`** |
+| (vii) | 独立重跑 `lua5.1 tests/run_tests.lua wandbleed` | **10 tests, 0 failures**,裸读 **`RC_EXIT=0`** |
+
+条件 (c) 由形状成立、不需要帧:`WasRecentlyDamagedByAnyHero(2.0)` **在语义上**对伤害来源的
+位置与存续无知,而 `wandbleed` 用它当「有人在 1000 环外轰我」的代理量 ——
+两者之间的缺口**不是经验问题**,是谓词签名里就没有的那两个量。失效方向朝「无操作」成立(见 (ii))。
+
+### §DU.2 为什么是 ADMITTED 而不是 ADMITTED_CONDITIONAL
+
+与 `ckpush`(§DT.2)不同:那一条的形状与域价钱**指向相反**,所以裁定必须把方向问题一起裁。
+本条**形状与域价钱同向**,而且域价钱**买到的比形状多**——它把要写进代码的那个常数
+从 issue 建议的 2000 抬到 4000(§DS.4),依据是语料里「攻击者仍活着时的最大距离 **3011.7**」
+那一帧(CM 4.9% HP、挂着 `modifier_maledict`、巫医在 3011 外)。
+**取 2000 会拿走那一帧的魔杖**,而取 4000 挡掉 **0/101** 对。⇒ 提议自己把最贵的那格买了,
+没有留给总监一个方向问题。**这是本档案第一条「域价钱改写了常数」的入集**(§DS.3 是它的方法论)。
+
+### §DU.3 总监加的第一格:**载体项的价,这次是结构性的零**
+
+§DT.3 立的规矩是「便宜不能靠感觉说,要有一个数」。本条的数比 `ckpush` 那次更硬:
+`wandbleed2` 是 **generic**(`carrier_terms.py` 自己判的 `kind=generic`,不是我说的),
+⇒ 载体项 **7 → 7 逐字相同**,`TERMS chaos_knight,crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus` 不变。
+**不是「在紧的那条边上是零」,是「在任何边上都是零」** —— 它对种子起草的约束**一个字都不加**。
+⇒ 本条入集**不需要**重算 `BEST min-per-term`(§DT.3 那一格对它不适用)。
+⚠️ 但**载体供给自己的账不因此变好**:批测台 W41 起飞时报的 `[2601,3000]` 上 `>=2/term` 搜出 **0**、
+窗口被迫右移到 `[3001,3400]`。那是 GH #408 / 载体侵蚀的账,**与本裁定无关但下一波仍要自己重算**。
+
+### §DU.4 ⭐⭐ 总监加的第二格,也是本节的主判据:**一个没人能重新导出的分母,在档案里和在测试里是同一种缺陷**
+
+§DS.6 那句承重的话是「`bots/` 里另有两条同样朝『无操作』失效的闸 —— **全仓 155 个
+`IsSoakCandidate` 调用点里的 3 个**」。本轮独立复核:
+
+| 树 | 原始 grep 命中(含定义行与注释行) | 去掉定义行与纯注释行 |
+|---|---|---|
+| 提议自己落地的那棵树 `77e18be9` | **157** | **146** |
+| 本轮 HEAD `d0874472` | **159** | **148** |
+
+**四个数里没有一个是 155**,而**分子 3 在两棵树上都逐字复现**
+(`fieldsip:5198` / `teambrain:6773` / `wandbleed2:9585`,grep 表达式
+`if not J.IsSoakCandidate( '…' ) then return true end`,全仓恰好三行)。
+⇒ **承重的那一半是对的,装饰的那一半复现不出来。** 入集不受影响(那个比值不参与任何判定),
+**但它必须被登记**,理由是本轮 trunk 红恰好是同一个形状的三发:
+`test_chain_member_census.py` 的 `and/or chains scanned == 10946`(实读 **10950**)与
+`locals with an initializer == 16088`(实读 **16094**),
+`test_threshold_chain_census.py` 的 `2 frames of 619`(实读 `frames=620 late=3`)。
+那三个数**在 09-03T01:30Z 被钉住**,**14 小时内被本队自己的例行工作推红**
+(两条 gated 落地 `zeusaghs5` / `arbheart` 动了 `bots/`,一份新 fixture 动了语料),
+**而它们钉的都是保证会长大的东西**。
+
+⇒ **判据(可复用,超出本主题):一个分母只有在「它不该动」的时候才配被冻住;
+钉一个每次落地都会变的分母,买到的不是棘轮,是一个按日程变红的闹钟 ——
+而闹钟响的时候,没有人能从红色里读出「是不是真出事了」。**
+档案里的形式(§DS.6 那个 155)更钝:它连红都不会变,**只是永远没人能重新导出**。
+两处的修法方向相同:**要么钉住不该动的那个量(比值 / 集合 / 分子),要么把分母写成
+「≥ 且解释增量」而不是「==」。** trunk 红的落地留给下一单元(§DU.7 第 ① 项),
+本节只把两处**是同一个形状**这件事钉在档案里。
+
+### §DU.5 ⛔ 预登记的入集条件(收割/核验必读)—— 不满足时**不许**读成「测过了没影响」
+
+**本条是 NARROWING(严格子集,源码断言:它是 `wandbleed` 链末尾的一个 `and`)。**
+
+1. **`wandbleed` 触发计数下降本身不是负面信号,那正是本 id 要买的**(§DS.7)。
+   要读的是**下降的那些帧里有没有「活着的攻击者」**:掉的应当**全部**是残留帧。
+2. **承重的阴性面与主判据同等必读**:armed 腿里**保留**的 `wandbleed` 触发,其 4000 环内
+   活敌人数必须 ≥1(本地已逐帧钉住 78/80)。没有这一面,「armed 少喝魔杖」与
+   「armed 干脆不喝魔杖」在同一个数字上不可分 —— 与 §DT.4 同族。
+3. **域为零时按 `DOMAIN-NOT-REACHED` 退回**,不得读成「无效应」:域是
+   turbo × 持魔杖 × HP<45% × 充能≥5 × 2 秒内英雄伤害 × **4000 环内无活敌人** 六个合取项,
+   最后一项按语料只有 **2/101** 的命中率(本地),一波抽不到是完全可能的。
+4. ⚠️ 两条腿的执行读数都是**计数、侧偏未消除** ⇒ 按铁律 4(i-a) **两个分层各自登记读数**、
+   4(i-b) **两层反号读成噪声**。
+
+### §DU.6 ⛔⛔ promote 关口的红线(§DS.6 抬进裁定,因为它在 promote 那天没有任何东西会举手)
+
+**promote `wandbleed2` 的动作不是把它从 armed 串里删掉,是删掉 `jmz_func.lua:9585` 那一行。**
+闸朝「无操作」失效 ⇒ 一个被 promote 的 id 不出现在任何 armed 串里 ⇒
+只删串、不删那行代码,**这条收窄会在 promote 当天静悄悄取消,而没有任何东西变红**。
+这是 `pullcad` 的**倒像**(那次冻成 FALSE,杠杆死了、读数是「测过无效应」;
+这次冻成 TRUE,**收窄没了、而它看起来像 promote 成功了**)。
+`mutstand_wandbleed2.sh` 的 **M7** 守着「朝哪边失效」这一条,
+**但没有任何仓库级棘轮守着「promote 时删了那一行」** —— 同族另外两条(`fieldsip` / `teambrain`)
+到那一天会踩同一个坑。⇒ **写进 `iterations/DECISIONS_NEEDED.md` 之前先做**:
+这三条的 promote 步骤必须在各自的源码注释里写死(`wandbleed2` 已写,另两条未查),
+且总监在任何一条走到 promote 关口时**必须先读本节**。
+
+### §DU.7 交棒
+
+- **批测台**:下一波(**W43 或其后第一波**)起草时用 **58-id 串**(**512 字节**,
+  md5 `7009f6c512e1b6bdf514401f20178eca`),**载体项仍是 7**(§DU.3,不必重算 `BEST`,
+  但**载体供给自己要重算**)。⛔ **W41 / W42 都不含本 id** —— 两波分别于 09-03T03:31Z / 09:32Z
+  起飞,clone 的是 57-id 串;**本次变动自 W43 起首次生效**,W41+W42 的可并池性不受影响。
+- **录像组**(`executor`):买条件 (a) 的**唯一还缺的那一面** —— 把 GH #437 那帧
+  (`spot_20260902_154755_slot4`,seed 2877,crystal_maiden **t≈473.5–474.4**)冻成
+  `tests/fixtures/`。本地语料的两个阳性证人都是**死掉的**施法者留下的残留,
+  录像组那帧是**走开的**施法者 —— **同一个谓词、同一个答案,但本地没有第一种**。
+  这条已按 §DR 登记进 `iterations/owed_executions.json`(不属于任何一波 ⇒ 波次局部清单里
+  没有行可以让它缺席),`done_when` 是一个裸读得出的 `path_exists`。
+  判据见 §DU.5,**两个分层各自登记读数**。
+- **总监(自己,下一单元)**:见 §DU.4 的 trunk 红 + `RIDESHARE` 分类腿(第五轮顺延)。

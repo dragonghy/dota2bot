@@ -9439,3 +9439,55 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ③RIDESHARE 分类腿(第五轮顺延)④GH #410 / #285 / patch 缺口 P3
   ⑤GH #436 若仍无执行者则写进 `DECISIONS_NEEDED`。
   报告全文:`iterations/reports/director/20260903T130610Z.md`。
+
+- **2026-09-03T16:05Z:一个工作单元,裁 `strategy-39` / `wandbleed2`(GH #437)—— ADMITTED,
+  测试集 57 → 58,自 W43 起生效。** 报告 `iterations/reports/director/20260903T160500Z.md`,
+  裁定全文 `test_set.md §DU`。**零 AWS 调用;`bots/` 与 `game/` 逐字节零 diff**
+  (改动只在 `test_set.md`、`queue.json`、`owed_executions.json`、报告与本章程)。
+  **① 这条顺延了四轮,而上一轮不是懈怠** —— 13:06Z 那轮**明说**不裁并给了理由
+  (六到七项带裸退出码的独立读数是整整一个工作单元,「半个裁定比没有更坏」),同时买到了 (i)。
+  本轮把余下六项买齐:(ii) 关闸逐值等于出厂 —— 落地 commit `77e18be9` 的 `bots/` 侧
+  **删除行数 = 0**,调用点唯一的可执行新增是链尾一个 `and`,而 helper 未 armed 一律答 `true`
+  ⇒ `X and true ≡ X`;(iii) armed 只调 `J.GetNearbyHeroes`(全仓 1932 个调用点)⇒ 零新增引擎 API 面;
+  (iv) 同族两条朝「无操作」失效的闸 `fieldsip` / `teambrain` 零改动;
+  (v) `check_armed_wiring.py --cand <58>` ⇒ `all 58 armed ids wired on HEAD`,裸读 `RC_EXIT=0`;
+  (vi) `carrier_terms.py --arm <58>` ⇒ `0 unresolved => 7 term(s)`,裸读 `RC_EXIT=0`;
+  (vii) `lua5.1 tests/run_tests.lua wandbleed` ⇒ **10 tests, 0 failures**,裸读 `RC_EXIT=0`。
+  **② 载体价这次是结构性的零** —— `carrier_terms.py` 自判 `kind=generic` ⇒ 载体项 **7 → 7 逐字不变**,
+  **不是「在紧的那条边上是零」,是「在任何边上都是零」** ⇒ 本条入集**不必重算 `BEST min-per-term`**
+  (§DT.3 那一格对它不适用)。
+  **③ ⭐⭐ 主判据(§DU.4):一个没人能重新导出的分母,在档案里和在测试里是同一种缺陷。**
+  §DS.6 承重的那句「全仓 **155** 个 `IsSoakCandidate` 调用点里的 3 个」**在它自己落地的那棵树上
+  就复现不出来**:`77e18be9` 上原始 grep 命中 **157** / 去掉定义行与纯注释行 **146**;
+  本轮 HEAD **159** / **148** —— **四个数里没有一个是 155**。**分子 3 两棵树上逐字复现**
+  (`fieldsip:5198` / `teambrain:6773` / `wandbleed2:9585`,全仓恰好三行)⇒ 承重的一半对、
+  装饰的一半复现不出来;那个比值不参与任何判定 ⇒ **入集不受影响**。登记它的理由是
+  **本轮 trunk 红恰好是同一形状的三发**(见 ④)。⇒ 判据:**一个分母只有在「它不该动」的时候
+  才配被冻住;钉一个每次落地都会变的分母,买到的不是棘轮,是一个按日程变红的闹钟。**
+  **④ trunk 红三条,分两族,本轮明说不修。** 第一族两条 python(`test_chain_member_census.py`
+  的 `10946`→实读 **10950**、`16088`→**16094`;`test_threshold_chain_census.py` 的 `619`→
+  `frames=620 late=3`)——三个数 **09-03T01:30Z(`846fb455`,总监自己那轮)才钉住**,
+  此后 `zeusaghs5` / `arbheart` 两条 gated 落地动了 `bots/`、一份新 fixture 动了语料,
+  **14 小时内被本队自己的例行工作推红**。正确修法是**改断言的形状**不是改数字
+  (后者保证明天再红并把判据自己埋掉)⇒ **下一单元第 ① 项,不许再顺延**。
+  第二族一条 Lua(`test_gated_helper_nesting_census.lua`)**不同族,而且它是对的**:
+  `arbheart,campexit | J.IsCampSwitchSafe | campdanger` 是一个**正确开火**的检测器,
+  问的是 `pullcad` 家族的问题(未 armed 时内层是不是单位元;不是的话单独 arm 外层测到的是 no-op,
+  而 `check_armed_wiring.py` 仍叫它 WIRED)。`arbheart` 尚未提请入集 ⇒ **本轮无从裁**,
+  但**入集之前必须先有这个答案**。
+  **⑤ §DR 登记**:录像组那一棒(把 GH #437 的 CM t≈473.5 冻成 fixture)**不属于任何一波**
+  ⇒ 除投递进 `queue.json:strategy-39.director.executor` 与 §DU.7,**加了
+  `owed_executions.json` 一行**(`done_when` = `path_exists`,裸读得出);落地即验:
+  `pending_rulings.py --owed-only` ⇒ `registry rows: 1` / 一行 `OWED`,裸读 `RC_EXIT=3`。
+  同时 `pending_rulings.py` 的未裁腿从进场 `OTHER: 1` 变成 **`OTHER: none`**。
+  **⑥ 工作流第 0 步(上一轮刚立)本轮自己没遵守** —— 开工第一条命令仍写成 `… | tail -60`,
+  §22 守卫当场自拒(**纪律 3 第二十八发,守卫第二十二次拦下**)。⇒ 这直接给那条条款自己的
+  措辞背书:**它是习惯不是门**。
+  **⑦ 自检 `EXIT=3`**(`legs run 9` / `FINDINGS = cadence trunk-red(python) trunk-red(lua)` /
+  **`UNCERTIFIABLE: none`**)⇒ 本轮没有「没人看过」的那一侧;cadence 两条 GAP
+  (hero 3.8h、strategy 4.0h,越线 ≤0.5h,**不升级**);stable anchors 三条不变量全 ok。
+  **⑧ 成本**:零 AWS 调用;九月 MTD 照抄批测台 15:15Z 自报 **$7.056**,围栏 / 刹车 / 批准线均未触及。
+  无邮件(本周 08-31 已发)、`DECISIONS_NEEDED.md` 无新增、周四跳过效率台账、四组均有产出。
+  **⑨ 下次触发**:①**两条 python trunk 红(冻死的分母),改形状不改数字,带变异台 —— 不许再顺延**
+  ②**自检 `RIDESHARE` 分类腿**(第五轮顺延,本轮第二次对该裁的行没响)
+  ③`arbheart` 嵌套闸的答案落地后裁它的入集 ④GH #410 / #436 ⑤GH #285 / patch 缺口 P3。
