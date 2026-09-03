@@ -438,33 +438,51 @@ function X.ConsiderW()
 
 end
 
--- [ckpush, 20260902] SECONDS-PER-MINUTE, and why the shape does NOT settle the
--- repair.
+-- [ckpush, 20260902; evidence sentence corrected 20260903, GH #447]
+-- SECONDS-PER-MINUTE, and why the shape does NOT settle the repair.
 --
--- WHAT THE DEFECT IS. The push branch of X.ConsiderR below is gated on
--- `DotaTime() > 8 * 30`, and `* 30` is the only seconds-per-minute constant in
--- bots/ that is not 60: the census is 138 sites written `DotaTime() <op> N * 60`
--- against exactly 2 written `N * 30`, and those 2 are THE SAME expression --
--- this one and its rubick twin at FunLib/rubick_hero/chaos_knight.lua:280.
--- Inherited verbatim from the upstream OHA snapshot (74727e4:485), so it has
--- never read otherwise in this repo's history. The shape says "typo": 8 * 30 =
--- 240s is 8 minutes written with the wrong constant, and the correct twin here
--- is not one site but twelve -- every other BotLib `and DotaTime() > N * 60`.
+-- WHAT THE DEFECT IS. The push branch of X.ConsiderR below is gated on the
+-- value this resolver hands back, and unarmed that value is `8 * 30`. `* 30` is
+-- the only seconds-per-minute constant in bots/ that is not 60; the one other
+-- site that carries it is THE SAME expression, the rubick twin at
+-- FunLib/rubick_hero/chaos_knight.lua (left registered-not-fixed on purpose --
+-- its domain is empty, so condition (a) is unbuyable for it here). Inherited
+-- verbatim from the upstream OHA snapshot (74727e4:485), so it has never read
+-- otherwise in this repo's history. The shape says "typo": 8 * 30 = 240s is
+-- 8 minutes written with the wrong constant.
 --
--- WHY THE SHAPE IS NOT THE RULING, AND WHAT THE CORPUS SAYS INSTEAD. Over the
--- 24 fixture frames carrying a chaos_knight, Phantasm is first LEARNED at
--- t = 306.0s and NO frame at or below 240s carries it at all. So the shipped
--- 240 never binds in turbo -- by the time the ultimate exists the clause is
--- already true -- while the idiomatic 480 binds hard: 10 frames sit in the
--- disagreement band 240 < t < 480 and 5 of them hold a learned Phantasm.
--- Repairing the typo is therefore a REAL turbo behaviour change that REMOVES
--- push-Phantasm across the stretch where CK's ultimate first comes online, and
--- that sign is a batch question, not a reading question.
+-- ⚠ THIS COMMENT DELIBERATELY RESTATES NO COUNTS. Section 1 of
+-- tests/test_ckpush_minute_unit.lua COUNTS the census over the shipped tree and
+-- section 4 counts the fixture-archive readings, so both self-update into a
+-- failure when the tree moves. The three counts this paragraph used to restate
+-- had ALL drifted from the tree by the time GH #447 read them (`138` sites when
+-- the tree held 127, `10` band frames when it held 12, `24` chaos_knight frames
+-- when 27 carry one and 24 are alive). Prose that restates a measured number
+-- acquires a second, unpinned copy of it; point at the pinned reading instead.
+--
+-- WHY THE SHAPE IS NOT THE RULING. Repairing the typo REMOVES push-Phantasm
+-- from the band 240 < t < 480 -- the stretch where CK's ultimate first comes
+-- online -- so it is a REAL turbo behaviour change and its sign is a batch
+-- question, not a reading question. That the band is non-empty on real frames,
+-- AND non-empty on frames holding a learned Phantasm, is what makes this a
+-- lever rather than a registered-not-fixed entry; section 4 counts both.
+--
+-- ⚠ WHAT THIS COMMENT USED TO CLAIM, AND WHY IT WAS WRONG (GH #447). It said,
+-- off the fixture archive, that "no frame at or below 240s carries it at all",
+-- and concluded that the shipped 240 NEVER BINDS in turbo. That is a UNIVERSAL
+-- drawn from about one game's worth of frames, and 82 games of W41 falsify it:
+-- Phantasm is first learned 85.5s earlier than the archive's earliest, i.e.
+-- BELOW the shipped 240. What survives is the weaker -- and genuinely
+-- different -- claim the ruling actually needs: over those same 82 games there
+-- is ZERO push-Phantasm casting at or below 240s, so the shipped 240 does not
+-- bind IN EFFECT. Both readings are registered as constants in the test
+-- (ARCHIVE / CORPUS_W41) with their domains named, because what failed here was
+-- a DOMAIN confusion -- an archive reading worn as a corpus universal -- and
+-- not an arithmetic slip.
 --
 -- So the repair ships GATED (turbo + 'ckpush') rather than as a correction, and
 -- as a SELECTION rather than a disjunction, so gate-off is the shipped VALUE.
--- tests/test_ckpush_minute_unit.lua pins that as an equality on real frames --
--- and pins the 138:2 census -- rather than as a claim in this comment.
+-- The test pins that as an equality on real frames rather than as a claim here.
 function X.GetPushCommitTime()
 
 	if J.IsModeTurbo() and J.IsSoakCandidate( 'ckpush' )

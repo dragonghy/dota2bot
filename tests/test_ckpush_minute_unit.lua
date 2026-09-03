@@ -28,14 +28,37 @@
 -- Here the domain price says otherwise, and it says so with a number. Over the
 -- 27 fixture frames that carry a chaos_knight (24 of them alive; the dumper
 -- omits the ability table for the 3 dead ones), Phantasm is first LEARNED at
--- t = 306.0s and NO frame at or below 240s carries it at all (section 4). So:
+-- t = 306.0s and no frame at or below 240s carries it (section 4). So:
 --
---   * the SHIPPED 240 never binds in turbo -- by the time the ultimate exists,
---     the clause is already true. It is a placeholder-shaped condition, in the
---     measured sense rather than the type-shaped sense the archive's
---     `hpbool` / `roshdist` entries used;
+--   * the SHIPPED 240 does not bind IN EFFECT in turbo -- by the time a
+--     Phantasm is there to be spent, the clause is already true. It is a
+--     placeholder-shaped condition, in the measured sense rather than the
+--     type-shaped sense the archive's `hpbool` / `roshdist` entries used;
 --   * the IDIOMATIC 480 binds hard -- 12 frames sit in the disagreement band
 --     240 < t < 480 and 5 of them hold a learned Phantasm.
+--
+-- ⚠ CORRECTED 2026-09-03 (GH #447) -- AND THE CORRECTION IS ABOUT DOMAIN, NOT
+-- ARITHMETIC. The bullet above used to read "the SHIPPED 240 NEVER BINDS",
+-- because section 4 saw no chaos_knight frame at or below 240 holding a learned
+-- Phantasm. That is a UNIVERSAL, and its domain was the fixture archive -- about
+-- one game's worth of frames. Replay-check re-asked it on all 82 games of W41
+-- and it is FALSE there: 2 of 82 games learn Phantasm at or below 240s, the
+-- earliest at t = 220.5s, which is 85.5s before this archive's earliest, and 38
+-- snapshot frames at or below 240 carry a learned Phantasm (20 of them alive).
+--
+-- What SURVIVES is the weaker and genuinely different claim the ruling needs:
+-- across those 82 games there is ZERO push-Phantasm casting at or below 240s.
+-- "Does not bind in effect" is buyable from that corpus; "never binds" never was
+-- buyable from this one. Both readings are now registered below as ARCHIVE and
+-- CORPUS_W41, each carrying the name of the domain it was read on, and section 4
+-- asserts the archive one AS AN ARCHIVE READING.
+--
+-- ⚠ AND SO THE SHAPE OF THIS ROUND'S REPAIR IS A GUARD, NOT A NUMBER. The
+-- assertion that carried the universal was GREEN the whole time it was wrong,
+-- and it would have stayed green forever: its domain structurally cannot contain
+-- the frames that falsify it. A green whose domain cannot hold the counterexample
+-- is not evidence, and the fix is not a better number -- it is section 4a, which
+-- makes the two domains impossible to write as one sentence again.
 --
 -- So "repairing the typo" is a real turbo behaviour change that REMOVES
 -- push-Phantasm across the stretch where CK's ultimate first comes online. That
@@ -68,6 +91,45 @@ local tests = {}
 
 local SRC = 'bots/BotLib/hero_chaos_knight.lua'
 local TWIN = 'bots/FunLib/rubick_hero/chaos_knight.lua'
+
+-- ---------------------------------------------------------------------------
+-- THE TWO REGISTERED READINGS. They are kept apart on purpose: GH #447 was
+-- caused by one of them being worn as the other, and nothing in the suite
+-- stopped it, because a reading of the archive and a claim about the game are
+-- the same English sentence with the domain left off.
+
+-- (1) ARCHIVE -- tests/fixtures/*.lua. RECOMPUTED live in section 4; the numbers
+-- here are last-measured values, not the authority. `first_learn` and
+-- `at_or_below_240_with_ult` are the two the corpus predicts WILL move: W41
+-- holds frames this archive does not, so an archive that grows toward
+-- CORPUS_W41 is CONFIRMING it, not contradicting it. Section 4 is written so
+-- that direction is not a red.
+local ARCHIVE = {
+    ck_frames                = 27,     -- records carrying a chaos_knight
+    dead                     = 3,      -- no ability table (dumper omits for dead units)
+    first_learn              = 306.0,  -- earliest frame holding a learned Phantasm
+    at_or_below_240_with_ult = 0,      -- the reading that used to be a universal
+    band                     = 12,     -- frames in 240 < t < 480
+    band_with_ult            = 5,      -- of those, holding a learned Phantasm
+}
+
+-- (2) CORPUS_W41 -- all 82 games of W41, read frame-by-frame off the `.dem`
+-- side by tools/batch_test/behavioral/ckpush_domain.py --learn-census.
+-- Source: GH #447, iterations/reports/replay-check/20260903T072000Z.md §4.4.
+--
+-- ⚠ NOT RECOMPUTABLE FROM THIS SUITE, AND THAT IS THE POINT. The timelines live
+-- in the batch corpus, not in the tree; this file cannot re-derive these numbers
+-- and does not pretend to. They are registered here so the ruling's evidence is
+-- IN the tree with its provenance attached, rather than restated from memory in
+-- a comment -- which is exactly how the falsified universal survived.
+local CORPUS_W41 = {
+    games                       = 82,
+    learn_at_or_below_240       = 2,      -- games, not frames
+    earliest_learn              = 220.5,  -- 85.5s before ARCHIVE.first_learn
+    carrying_frames_le_240      = 38,
+    carrying_frames_le_240_alive = 20,
+    casts_at_or_below_240       = 0,      -- the claim the ruling actually rests on
+}
 
 -- The two chaos_knight-SUBJECT frames in the archive. Both below 240.
 local CK_SUBJECT_FRAMES = {
@@ -260,17 +322,18 @@ local function ck_frames()
     return rows
 end
 
-tests['[domain price] no frame at or below the shipped 240 has Phantasm at all'] = function()
+tests['[domain price, ARCHIVE] the fixture-archive reading, and the domain it is a reading OF'] = function()
     local rows = ck_frames()
-    assert(#rows >= 27, string.format(
-        'chaos_knight frames fell to %d (recorded 27); the census below is '
-        .. 'computed, but a shrinking corpus means re-reading it', #rows))
+    assert(#rows >= ARCHIVE.ck_frames, string.format(
+        'chaos_knight frames fell to %d (registered %d); the census below is '
+        .. 'computed, but a shrinking archive means re-reading it',
+        #rows, ARCHIVE.ck_frames))
     local dead = 0
     for _, r in ipairs(rows) do if r.dead then dead = dead + 1 end end
-    assert(dead <= 3, string.format(
-        '%d chaos_knight records now carry no ability table (recorded 3, all '
+    assert(dead <= ARCHIVE.dead, string.format(
+        '%d chaos_knight records now carry no ability table (registered %d, all '
         .. 'dead units). More of them means the rank read below is answering '
-        .. 'about absence, not about rank.', dead))
+        .. 'about absence, not about rank.', dead, ARCHIVE.dead))
 
     local early_with_ult, earliest = 0, nil
     for _, r in ipairs(rows) do
@@ -281,14 +344,38 @@ tests['[domain price] no frame at or below the shipped 240 has Phantasm at all']
     end
 
     assert(earliest ~= nil, 'no chaos_knight frame carries a learned Phantasm '
-        .. 'any more -- the domain price cannot be read, so do not arm this id')
-    assert(early_with_ult == 0, string.format(
-        '%d frame(s) at or below 240s now carry a learned Phantasm. The ruling '
-        .. '"the shipped 240 never binds" is measured, not assumed: re-read it.',
-        early_with_ult))
-    assert(earliest > 8 * 30, string.format(
-        'Phantasm is now first learned at t=%.1f, which is at or below the '
-        .. 'shipped 240 -- the shipped clause binds after all', earliest))
+        .. 'any more -- the archive reading cannot be taken, so do not arm this id')
+
+    -- Pinned as an EQUALITY so any drift is a conscious update rather than a
+    -- silent re-reading. Read the message before touching either number: the two
+    -- directions mean opposite things, and only one of them is about the ruling.
+    if early_with_ult ~= ARCHIVE.at_or_below_240_with_ult
+        or earliest ~= ARCHIVE.first_learn then
+        error(string.format(
+            'ARCHIVE reading moved: at_or_below_240_with_ult %d -> %d, '
+            .. 'first_learn %.1f -> %.1f.\n'
+            .. '  This is a reading of tests/fixtures/*.lua ONLY. It is NOT a '
+            .. 'statement about turbo games.\n'
+            .. '  * MOVED TOWARD CORPUS_W41 (earlier first_learn, more frames at '
+            .. 'or below 240 holding Phantasm)?\n'
+            .. '    Then the archive just gained frames of a kind W41 already '
+            .. 'showed exists (%d of %d games learn at or below 240, earliest '
+            .. 't=%.1f). That CONFIRMS the corpus. Update ARCHIVE above and move '
+            .. 'on -- the ruling is untouched, because the ruling rests on '
+            .. 'casts_at_or_below_240 = %d, not on this number.\n'
+            .. '  * MOVED THE OTHER WAY (archive lost its early frames)?\n'
+            .. '    Same action, but say so in the report: the archive is drifting '
+            .. 'AWAY from the corpus it is supposed to sample.\n'
+            .. '  What must NOT happen either way is the old sentence coming back: '
+            .. 'this reading was once written as the universal "no frame at or '
+            .. 'below 240s carries it at all", 82 games falsified it (GH #447), '
+            .. 'and it stayed GREEN the whole time because this domain cannot '
+            .. 'hold the counterexample.',
+            ARCHIVE.at_or_below_240_with_ult, early_with_ult,
+            ARCHIVE.first_learn, earliest,
+            CORPUS_W41.learn_at_or_below_240, CORPUS_W41.games,
+            CORPUS_W41.earliest_learn, CORPUS_W41.casts_at_or_below_240))
+    end
 end
 
 tests['[domain price] the band the lever actually changes is not empty'] = function()
@@ -303,12 +390,130 @@ tests['[domain price] the band the lever actually changes is not empty'] = funct
     -- These two are the whole reason this ships as a lever rather than as a
     -- registered-not-fixed entry: the two constants are SEPARABLE on real
     -- frames, and separable on frames where the ultimate exists to be spent.
-    assert(in_band >= 12, string.format(
-        'the 240<t<480 band fell to %d chaos_knight frames (recorded 12)', in_band))
-    assert(in_band_with_ult >= 5, string.format(
-        'only %d band frame(s) carry a learned Phantasm (recorded 5). Below 1 '
+    assert(in_band >= ARCHIVE.band, string.format(
+        'the 240<t<480 band fell to %d chaos_knight frames (registered %d)',
+        in_band, ARCHIVE.band))
+    assert(in_band_with_ult >= ARCHIVE.band_with_ult, string.format(
+        'only %d band frame(s) carry a learned Phantasm (registered %d). Below 1 '
         .. 'this lever stops being separable and becomes registered-not-fixed.',
-        in_band_with_ult))
+        in_band_with_ult, ARCHIVE.band_with_ult))
+end
+
+-- ---------------------------------------------------------------------------
+-- 4a. [claim scope] THE GUARD THIS ROUND EXISTS FOR (GH #447).
+--
+-- Section 4's reading was green for as long as it was wrong, and it could not
+-- have been anything else: its domain is the fixture archive, and the frames
+-- that falsify a claim about turbo games are not in it. So the repair cannot be
+-- another assertion over the same domain -- it has to be over the PROSE, which
+-- is where the domain got dropped.
+--
+-- The rule: a sentence about frames at or below 240 must not be written as an
+-- unqualified universal in either place that carries this ruling. The banned
+-- phrasing is pinned literally because it is the exact sentence that shipped;
+-- the required anchor is the corpus citation, so the next reader lands on the
+-- 82-game reading instead of re-deriving a universal from 27 fixture frames.
+
+local function assert_no_universal(path, src)
+    -- The literal that shipped, and the near-misses of it. Matched on
+    -- comment-stripped-insensitive whole text on purpose: the sentence is bad
+    -- wherever it appears in the file, prose or assertion message.
+    --
+    -- ⚠ SPLIT ON PURPOSE, and the split is not cosmetic. Written whole, this
+    -- table IS a carrier of the sentence it bans, in the one file that scans
+    -- itself -- and the guard duly failed on its own pattern list, one edit
+    -- after failing on its own correcting prose. Concatenation keeps the phrases
+    -- readable and greppable while leaving no literal occurrence to match.
+    local banned = {
+        'carries it' .. ' at all',
+        'never binds' .. ' in turbo',
+        'NEVER BINDS' .. ' in turbo',
+    }
+    -- The correction itself has to be allowed to QUOTE the bad sentence,
+    -- otherwise this guard forbids explaining what it guards against. A
+    -- quotation is an occurrence that sits inside the CORRECTION REGION: within
+    -- WINDOW characters of a citation anchor.
+    --
+    -- ⚠ The first version keyed the exemption on the LINE the phrase sat on, and
+    -- it red-flagged this round's own correcting sentence -- a sentence whose
+    -- next line named the issue. That is GH #442's defect (a key made of
+    -- incidental layout) in different clothes, caught here by the guard failing
+    -- on its author. Anchors are CONTENT.
+    --
+    -- ⚠ LIMIT, stated rather than discovered later: a genuinely new universal
+    -- written INSIDE the correction paragraph passes this guard. The window buys
+    -- "the banned sentence cannot reappear far from its own correction"; it does
+    -- not buy "no universal is ever written again". Nothing textual buys that.
+    local WINDOW = 600
+    local anchors = { '#447', 'used to', 'falsif', 'UNIVERSAL' }
+    local function in_correction_region(at)
+        local lo = math.max(1, at - WINDOW)
+        local hi = math.min(#src, at + WINDOW)
+        local region = src:sub(lo, hi)
+        for _, anchor in ipairs(anchors) do
+            if region:find(anchor, 1, true) ~= nil then return true end
+        end
+        return false
+    end
+
+    for _, phrase in ipairs(banned) do
+        local at = src:find(phrase, 1, true)
+        if at ~= nil and not in_correction_region(at) then
+            local line_start = (src:sub(1, at):find('\n[^\n]*$') or 0) + 1
+            local line_end = (src:find('\n', at) or (#src + 1)) - 1
+            local line = src:sub(line_start, line_end)
+            assert(false, string.format(
+                '%s states "%s" as its own claim, not as a quotation.\n'
+                .. '  That is a UNIVERSAL over turbo games, and its evidence is '
+                .. '%d fixture frames -- about one game. GH #447 falsified it on '
+                .. '%d games (earliest learn t=%.1f, %d of them at or below 240).\n'
+                .. '  Write the claim the corpus actually buys instead: at or '
+                .. 'below 240s there are %d push-Phantasm CASTS, so the shipped '
+                .. '240 does not bind IN EFFECT.\n'
+                .. '  Offending line: %s',
+                path, phrase, ARCHIVE.ck_frames, CORPUS_W41.games,
+                CORPUS_W41.earliest_learn, CORPUS_W41.learn_at_or_below_240,
+                CORPUS_W41.casts_at_or_below_240, line))
+        end
+    end
+end
+
+tests['[claim scope] neither carrier states the falsified universal as its own claim'] = function()
+    for _, path in ipairs({ SRC, 'tests/test_ckpush_minute_unit.lua' }) do
+        assert_no_universal(path, read_file(path))
+    end
+end
+
+tests['[claim scope] the source comment routes the reader to the corpus reading'] = function()
+    local src = read_file(SRC)
+    -- Content anchors, never line numbers: GH #442 is the standing ruling that a
+    -- line-number key is a ratchet that breaks on its own next edit, and hero
+    -- backlog -79 reproduced it inside a day.
+    assert(src:find('GH #447', 1, true),
+        SRC .. ' no longer cites GH #447, so a reader who hits the 240 has no '
+        .. 'route to the 82-game reading that corrected it')
+    assert(src:find('CORPUS_W41', 1, true) and src:find('ARCHIVE', 1, true),
+        SRC .. ' no longer names the two registered readings; the domain '
+        .. 'distinction they carry is the whole content of GH #447')
+    assert(src:find('does not bind IN EFFECT', 1, true) or src:find('IN EFFECT', 1, true),
+        SRC .. ' no longer states the surviving claim in its corrected form. The '
+        .. 'ruling rests on ZERO casts at or below 240, not on the ultimate being '
+        .. 'unlearned there -- those are different claims and only one is true.')
+end
+
+tests['[claim scope] the two readings are registered with different domains'] = function()
+    -- A guard against the cheapest way to "simplify" this file later: folding
+    -- ARCHIVE and CORPUS_W41 into one table. They disagree on purpose -- that
+    -- disagreement IS the finding -- and one table cannot carry two domains.
+    assert(CORPUS_W41.earliest_learn < 8 * 30, 'CORPUS_W41 no longer records a '
+        .. 'learn at or below the shipped 240; if the corpus reading really '
+        .. 'changed, re-open GH #447 rather than editing it here')
+    assert(ARCHIVE.first_learn > 8 * 30, 'ARCHIVE now records a learn at or '
+        .. 'below 240 -- update it in section 4 (that is a CONFIRMATION of '
+        .. 'CORPUS_W41), and keep the two tables separate')
+    assert(CORPUS_W41.earliest_learn < ARCHIVE.first_learn,
+        'the corpus no longer reaches earlier than the archive; the sampling '
+        .. 'claim this file rests on has inverted, so re-read both')
 end
 
 -- ---------------------------------------------------------------------------
