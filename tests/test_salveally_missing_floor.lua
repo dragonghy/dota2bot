@@ -53,11 +53,18 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local ss = require('mock.soak_side')               -- owns the shared switch
 
 local FIX  = 'tests/fixtures/f_260819_122930_lich_rescue_doomed.lua'
 local JMZ  = 'bots/FunLib/jmz_func.lua'
 local AIUG = 'bots/ability_item_usage_generic.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local SIDE_PATH = ss.PATH                          -- gitignored, farm-only
+
+-- Nothing may be armed when this file LOADS -- the only moment that sees the
+-- state the process started in. The armed cases sort before the gate-off ones
+-- and each used to end in an unconditional remove, so an inherited leftover was
+-- deleted before any per-case guard could name it (GH #417).
+ss.assert_clean('test_salveally_missing_floor')
 
 -- The anchor: a Chaos Knight holding a salve, and a Lich 491u away at a third
 -- of her health that the shipped floor will not let him touch.
@@ -115,13 +122,17 @@ do
         tostring(PAIR_DIST_MAX), tostring(SELF_QUIET_RADIUS), tostring(QUIET_RADIUS)))
 end
 
+-- The switch has to be written BEFORE the fixture load, so the unarmed leg
+-- CANNOT be a remove: an unconditional remove here deletes whatever another
+-- process armed a millisecond ago, and that process then reads the unarmed
+-- value out of an assertion that says nothing about the switch (GH #365 §3).
+-- `ss.assert_clean` states what the remove was standing in for -- "this leg
+-- measures the shipped tree" -- as a claim instead of an act.
 local function load_with(sCand, sSide)
     if sCand == nil then
-        os.remove(SIDE_PATH)
+        ss.assert_clean('unarmed leg')
     else
-        local f = assert(io.open(SIDE_PATH, 'w'))
-        f:write("return { side = '" .. (sSide or 'dire') .. "', cand = '" .. sCand .. "' }\n")
-        f:close()
+        ss.arm(sCand, sSide or 'dire')
     end
     local J, bot, heroes = rf.load(FIX, HOLDER)
     assert(bot ~= nil, 'fixture no longer carries ' .. HOLDER)
@@ -132,8 +143,10 @@ end
 local function armed(sCand, fn, sSide)
     local J, bot, ally = load_with(sCand, sSide)
     local ok, err = pcall(fn, J, bot, ally)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    if sCand == nil and ok then ss.assert_clean('unarmed leg, after the case body') end
+    -- The switch cause OUTRANKS the assertion it caused; `finish` owns that
+    -- ordering, and is a no-op on the leg that armed nothing.
+    ss.finish(ok, err)
 end
 
 ----------------------------------------------------------------------
@@ -556,14 +569,11 @@ tests['[gate] no other id in the tree arms this one'] = function()
 end
 
 tests['[gate] the wrong side does not arm it either'] = function()
-    local ok, err = pcall(function()
-        local J, bot = load_with('salveally', 'radiant')
+    armed('salveally', function(J, bot)
         assert(bot:GetTeam() == 3, 'the anchor holder used to be dire here')
         assert(not J.IsSoakCandidate('salveally'), 'radiant side must not arm a dire subject')
         assert(J.SalveAllyMissingFloor(ALLY_MAXHP) == FLOOR, 'and the floor stays shipped')
-    end)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    end, 'radiant')
 end
 
 ----------------------------------------------------------------------

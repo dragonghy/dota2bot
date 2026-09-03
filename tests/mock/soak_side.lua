@@ -1,9 +1,11 @@
 --- The one owner of `bots/Customize/soak_side.lua` inside the test suite.
 --
--- WHAT THIS IS FOR.  Twenty-two test files arm gates by writing that one path
+-- WHAT THIS IS FOR.  Twenty-two test files armed gates by writing that one path
 -- and then `os.remove`ing it, each with its own copy-pasted three lines and no
--- owner (hero backlog `-77`).  The copies share three defects, and all three
--- fail in the SAME direction -- "the gate did not fire":
+-- owner (hero backlog `-77`).  All twenty-two delegate here as of 2026-09-03
+-- (`-78` closed; `tests/test_soakside_shared_switch.lua` ratchets the count at
+-- RAW 0 / MIGRATED 22).  The copies shared three defects, and all three failed
+-- in the SAME direction -- "the gate did not fire":
 --
 --   1. `f:write` / `f:close` return values dropped, the bytes never read back.
 --      A short write, a full disk, a read-only tree, or another test file

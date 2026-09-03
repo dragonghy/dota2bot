@@ -28,11 +28,18 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local ss = require('mock.soak_side')               -- owns the shared switch
 
 local FIX  = 'tests/fixtures/f_080225_wk_revive.lua'
 local JMZ  = 'bots/FunLib/jmz_func.lua'
 local AIUG = 'bots/ability_item_usage_generic.lua'
-local SIDE_PATH = 'bots/Customize/soak_side.lua'   -- gitignored, farm-only
+local SIDE_PATH = ss.PATH                          -- gitignored, farm-only
+
+-- Nothing may be armed when this file LOADS -- the only moment that sees the
+-- state the process started in. The armed cases sort before the gate-off ones
+-- and each used to end in an unconditional remove, so an inherited leftover was
+-- deleted before any per-case guard could name it (GH #417).
+ss.assert_clean('test_bbrespawn_double_subtract')
 
 -- The one hero this frame recorded as dead. Level is asserted too, so a
 -- regenerated fixture that quietly swaps the subject fails here instead of
@@ -53,13 +60,17 @@ end
 -- in a jmz_func upvalue on first read, and rf.load resets the module table, so
 -- the file has to be written BEFORE the load -- writing it afterwards would
 -- leave every "armed" row silently running the shipped leg.
-local function load_with(sCand)
+-- ...and for the same reason the unarmed leg CANNOT be a remove: an
+-- unconditional remove here deletes whatever another process armed a
+-- millisecond ago, and that process then reads the unarmed value out of an
+-- assertion that says nothing about the switch (GH #365 §3). `ss.assert_clean`
+-- states what the remove was standing in for -- "this leg measures the shipped
+-- tree" -- as a claim instead of an act.
+local function load_with(sCand, sSide)
     if sCand == nil then
-        os.remove(SIDE_PATH)
+        ss.assert_clean('unarmed leg')
     else
-        local f = assert(io.open(SIDE_PATH, 'w'))
-        f:write("return { side = 'radiant', cand = '" .. sCand .. "' }\n")
-        f:close()
+        ss.arm(sCand, sSide or 'radiant')
     end
     local J, _, heroes = rf.load(FIX, DEAD[1])
     local bot = heroes[DEAD[1]]
@@ -68,11 +79,13 @@ local function load_with(sCand)
 end
 
 -- Run fn(J, bot) with the gate file armed for sCand, and always clean up.
-local function armed(sCand, fn)
-    local J, bot = load_with(sCand)
+local function armed(sCand, fn, sSide)
+    local J, bot = load_with(sCand, sSide)
     local ok, err = pcall(fn, J, bot)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    if sCand == nil and ok then ss.assert_clean('unarmed leg, after the case body') end
+    -- The switch cause OUTRANKS the assertion it caused; `finish` owns that
+    -- ordering, and is a no-op on the leg that armed nothing.
+    ss.finish(ok, err)
 end
 
 -- Declare the one field the dump lacks, on the real handle, at the value the
@@ -260,21 +273,13 @@ tests['[gate] the wrong side does not arm it either'] = function()
         assert(bot:GetTeam() == 2, 'the subject used to be radiant here')
         assert(J.IsSoakCandidate('bbrespawn'), 'radiant side arms it')
     end)
-    local f = assert(io.open(SIDE_PATH, 'w'))
-    f:write("return { side = 'dire', cand = 'bbrespawn' }\n")
-    f:close()
-    local J, bot = nil, nil
-    local ok, err = pcall(function()
-        local j, _, heroes = rf.load(FIX, DEAD[1])
-        J, bot = j, heroes[DEAD[1]]
+    armed('bbrespawn', function(J, bot)
         declare_respawn(bot, 40, 10)
         local fDeath = DotaTime() - 10
         assert(not J.IsSoakCandidate('bbrespawn'), 'dire side must not arm a radiant subject')
         assert(J.RespawnRemaining(bot, fDeath) == shipped(bot, fDeath),
             'and the helper stays on the shipped body')
-    end)
-    os.remove(SIDE_PATH)
-    if not ok then error(err, 0) end
+    end, 'dire')
 end
 
 ----------------------------------------------------------------------

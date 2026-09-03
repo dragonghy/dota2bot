@@ -99,11 +99,13 @@ end
 -- the searcher instead of the searched.
 local SELF = 'tests/test_soakside_shared_switch.lua'
 
---- The owner module that four of these files now delegate to (2026-09-02,
---- hero backlog `-77`).  A migrated file no longer contains the literal path,
---- so a census that only greps the literal would silently LOSE it from its own
---- population -- which is how S1 first went red on this change: 22 -> 18, read
---- as "the census lost its population" when nothing had been lost at all.
+--- The owner module that ALL of these files delegate to as of 2026-09-03
+--- (hero backlog `-77` + `-78`).  A migrated file no longer contains the
+--- literal path, so a census that only greps the literal would silently LOSE it
+--- from its own population -- which is how S1 first went red on this change:
+--- 22 -> 18, read as "the census lost its population" when nothing had been
+--- lost at all.  That trap is now total rather than partial: grepping the
+--- literal alone would find ZERO of the twenty-two.
 local OWNER = 'tests/mock/soak_side.lua'
 
 --- Every tests/test_*.lua that reaches the shared switch -- by naming the
@@ -139,28 +141,48 @@ local function partition()
     return raw, migrated
 end
 
---- The hazard the census measures, as a number that must never grow.
---- Seventeen files delegate today: the four with an observed red
---- (test_cm_pos5_boots -- GH #417's subject -- and the three GH #365 §3
---- subjects), the six uniform-shape gate tests migrated for hero backlog `-78`
---- (axe_blink_build, corefarm, deathzone, nopush, tpsafe, slardar_tp), the
---- five that carried a direct read of the switch as well (abil1st, abilanc,
---- aimguard, replay_212636, soak_cand_ref -- the last of these is why the
---- owner grew `arm_body`), and the two of 2026-09-02T22:54Z (aegis_grouping,
---- tpreach_band).
+--- The hazard the census measures, as a number that must never grow.  It is
+--- ZERO as of 2026-09-03 (hero backlog `-78` closed): every test file that
+--- reaches the shared switch now goes through the owner.  The migration ran in
+--- four batches -- the four with an observed red (test_cm_pos5_boots, GH #417's
+--- subject, and the three GH #365 §3 subjects), the six uniform-shape gate
+--- tests (axe_blink_build, corefarm, deathzone, nopush, tpsafe, slardar_tp),
+--- the five that carried a direct read of the switch as well (abil1st,
+--- abilanc, aimguard, replay_212636, soak_cand_ref -- the last of these is why
+--- the owner grew `arm_body`), the two of 2026-09-02T22:54Z (aegis_grouping,
+--- tpreach_band), and finally the five that were held back ON PURPOSE because
+--- they were the live carriers of S2's own reading (bbfight, bbrespawn,
+--- bbshort, pollyhp, salveally).
 ---
---- The FIVE left are left ON PURPOSE and are not a backlog remainder: their
---- `if sCand == nil then os.remove(SIDE_PATH)` unarmed leg is the live carrier
---- of S2's own reading ("every such process is BOTH a writer and a deleter"),
---- so migrating them silently would delete the evidence this file cites.  When
---- they go, S2 must be rewritten to cite the archive instead of the tree, in
---- the same change (hero backlog `-78`).
-local RAW_CEILING = 5
+--- Zero is a real ceiling, not a placeholder: a twenty-third gate test that
+--- copies the three unchecked lines instead of requiring the owner reds here,
+--- and there is no longer a "but some files still do it that way" to point at.
+local RAW_CEILING = 0
 
 --- ...and the same number from the other side.  A file may leave the RAW set
 --- only by joining this one, so a "migration" that merely deletes the copy
 --- without delegating cannot pass both.
-local MIGRATED_FLOOR = 17
+local MIGRATED_FLOOR = 22
+
+--- [archive] The reading S2 used to take off the live tree, taken one last time
+--- on `cd56e50` (== origin/main when the last five were migrated) and frozen
+--- here because migrating the carriers is what makes it unrepeatable.  This is
+--- the mechanism of GH #365 §3 stated as a measurement: five test files whose
+--- UNARMED leg was itself an unconditional `os.remove` of the one global path,
+--- i.e. five processes that delete other processes' switches while claiming
+--- only to be measuring the shipped tree.
+---
+--- Kept as data rather than prose so the identity below (`raw + migrated` is
+--- conserved across the change) is checkable rather than assertable.
+local ARCHIVED_DELETERS = {
+    at_commit = 'cd56e50',
+    raw = 5, migrated = 17, deleters = 5,
+    files = { 'tests/test_bbfight_turbo_respawn_ceiling.lua',
+              'tests/test_bbrespawn_double_subtract.lua',
+              'tests/test_bbshort_turbo_respawn_floor.lua',
+              'tests/test_pollyhp_getter_axis.lua',
+              'tests/test_salveally_missing_floor.lua' },
+}
 
 -- ---------------------------------------------------------------------------
 -- [source S1] one literal path, shared by every gate test in the tree
@@ -193,10 +215,15 @@ tests['[ratchet] [source S1] the switch is ONE global path, declared identically
 end
 
 -- ---------------------------------------------------------------------------
--- [source S2] every such process is BOTH a writer and a deleter
+-- [source S2] every such process WAS both a writer and a deleter -- archived
 -- ---------------------------------------------------------------------------
+--
+-- The hazard was the suite, not a rogue process: each of these files wrote the
+-- one global path and, on its unarmed leg, deleted it unconditionally. As of
+-- 2026-09-03 none of them does, so this section holds the archived reading and
+-- ratchets the shape at zero in both directions.
 
-tests['[ratchet] [source S2] the unarmed leg is itself a deleter -- the hazard is the suite, not a rogue process'] = function()
+tests['[ratchet] [source S2] the unarmed leg was itself a deleter -- archived at zero, and the shape may not come back'] = function()
     local raw, migrated = partition()
 
     local nBoth = 0
@@ -216,37 +243,84 @@ tests['[ratchet] [source S2] the unarmed leg is itself a deleter -- the hazard i
         .. ' -- migrate it, do not raise this ceiling.')
     assert(#migrated >= MIGRATED_FLOOR, 'only ' .. #migrated
         .. ' files delegate to ' .. OWNER .. ', down from ' .. MIGRATED_FLOOR
-        .. '; the four with an observed red (GH #417 and the three GH #365 §3 '
-        .. 'subjects), the six uniform gate tests, the five direct-reader gate '
-        .. 'tests and the two of 2026-09-02T22:54Z (aegis_grouping, '
-        .. 'tpreach_band) were migrated for hero backlog `-78` and must stay '
-        .. 'migrated')
+        .. '; all twenty-two were migrated for hero backlog `-77`/`-78` and '
+        .. 'must stay migrated')
 
-    -- The load-bearing half: the DELETE is not confined to a cleanup that runs
-    -- after the armed leg. Arming with `nil` (the unarmed leg) removes the file
-    -- outright, so a file's own unarmed case is a deleter that can strip the
-    -- armed leg of a DIFFERENT file running in a DIFFERENT process at the same
-    -- instant. The two #365 §3 subjects that used to be pinned here are
-    -- migrated now (their unarmed leg ASSERTS the switch is absent instead of
-    -- deleting it), so the shape is pinned on files that still carry it.
+    -- The load-bearing half, and the ONE place its wording changed on
+    -- 2026-09-03. Until then this asserted `nDeleters >= 1` off the live tree:
+    -- the DELETE is not confined to a cleanup after the armed leg -- arming
+    -- with `nil` (the unarmed leg) removed the file outright, so a file's own
+    -- unarmed case was a deleter that could strip the armed leg of a DIFFERENT
+    -- file in a DIFFERENT process at the same instant.
+    --
+    -- ⭐ That assertion was a hostage. It could only stay green while at least
+    -- one carrier of the defect survived, so the last migration would have made
+    -- this census red BY FIXING THE THING IT DESCRIBES -- and the cheap way out
+    -- of that red is to delete the assertion, i.e. to lose the reading. So the
+    -- reading is archived above (measured, not recalled) and the live half is
+    -- flipped to the other direction: the shape must now be GONE, everywhere.
     local nDeleters = 0
     for _, f in ipairs(raw) do
         if f.body:find('if sCand == nil then\n%s*os%.remove%(SIDE_PATH%)') ~= nil then
             nDeleters = nDeleters + 1
         end
     end
-    assert(nDeleters >= 1, 'no unarmed leg deletes the shared switch outright '
-        .. 'any more -- the #365 mechanism moved, re-measure it before trusting '
-        .. 'anything above')
+    assert(#ARCHIVED_DELETERS.files == ARCHIVED_DELETERS.deleters,
+        'the archived deleter list and its count disagree')
+    -- The carriers did not vanish, they crossed from one side of the partition
+    -- to the other, so the population may GROW but never SHRINK below what the
+    -- archive counted.
+    --
+    -- ⚠️ This was written as an equality first, and the equality was WRONG in
+    -- the one direction that matters: a new gate test that delegates to the
+    -- owner -- the exact behaviour this whole census exists to push people
+    -- towards -- moved the population 22 -> 23 and reded it (measured, M5). The
+    -- cheap way out of THAT red is to bump the archived number, which corrupts
+    -- an archive whose only job is to be unbumpable. A floor is what was meant.
+    local nArchived = ARCHIVED_DELETERS.raw + ARCHIVED_DELETERS.migrated
+    assert(#raw + #migrated >= nArchived,
+        'the population shrank from ' .. nArchived .. ' to ' .. (#raw + #migrated)
+        .. ' files -- subjects were deleted rather than migrated, so neither '
+        .. 'ratchet above means what it says')
+    for _, sPath in ipairs(ARCHIVED_DELETERS.files) do
+        local bStillThere = false
+        for _, f in ipairs(migrated) do
+            if f.path == sPath then bStillThere = true end
+        end
+        assert(bStillThere, sPath .. ' was one of the five archived deleters '
+            .. 'and is no longer in the migrated set -- it was deleted or '
+            .. 'renamed rather than migrated, and the archive above now cites a '
+            .. 'file nobody can check')
+    end
 
-    -- ...and the migrated ones no longer do. A migration that kept the delete
-    -- would leave the hazard in place while reading as progress.
+    -- ...and NO file, on either side, still carries the shape. The migrated
+    -- ones must not delete the switch themselves at all: a migration that kept
+    -- the delete would leave the hazard in place while reading as progress.
+    assert(nDeleters == 0, nDeleters .. ' file(s) still delete the shared '
+        .. 'switch on their unarmed leg. That shape is the GH #365 §3 mechanism '
+        .. 'and it was measured to zero on ' .. ARCHIVED_DELETERS.at_commit
+        .. '; route the unarmed leg through ' .. OWNER .. "'s assert_clean "
+        .. 'instead of re-introducing it')
     for _, f in ipairs(migrated) do
         assert(f.body:find('os%.remove%(%s*SIDE_PATH%s*%)') == nil,
             f.path .. ' delegates to ' .. OWNER .. ' but still deletes the '
             .. 'shared switch itself, so it is still a deleter for every other '
             .. 'process')
     end
+
+    -- Where the property lives now. It used to be distributed across twenty-two
+    -- copies and countable; it is implemented once, so it has to be PINNED once
+    -- -- otherwise "no test file deletes the switch" stays true while the owner
+    -- every one of them calls does it on their behalf.
+    local sOwner = read_file(OWNER)
+    local sUnarmed = sOwner:match('function M%.with_candidate.-\nend\n')
+    assert(sUnarmed ~= nil, OWNER .. ' no longer defines with_candidate')
+    assert(sUnarmed:find('M%.assert_clean') ~= nil,
+        OWNER .. "'s unarmed leg no longer asserts the switch is absent")
+    assert(sUnarmed:find('os%.remove') == nil,
+        OWNER .. "'s unarmed leg deletes the switch again -- the hazard moved "
+        .. 'from twenty-two copies into the one place they all call, which is '
+        .. 'strictly worse than where it started')
 end
 
 -- ---------------------------------------------------------------------------
