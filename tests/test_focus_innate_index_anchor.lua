@@ -150,10 +150,14 @@ local CORPUS = {
         skeleton_king_mortal_strike = 33,
         skeleton_king_innate_vampiric_spirit = 33,
         skeleton_king_reincarnation = 33 } },
+-- RE-TAKEN 2026-09-03 (GH #458): zuus_lightning_hands 1 -> 2. The numbers here
+-- are ratchet floors (section 1), so the grant count did not go red on its own
+-- -- the equality in section 2 did. Raised so the two readings of the same fact
+-- in this file agree.
     zuus = { frames = 51, with = 48, names = {
         zuus_arc_lightning = 48, zuus_lightning_bolt = 48,
         zuus_heavenly_jump = 48, zuus_thundergods_wrath = 48,
-        zuus_lightning_hands = 1 } },
+        zuus_lightning_hands = 2 } },
 }
 
 -- Each focus hero's ultimate, and where it sits in the DUMPED array.  Used by
@@ -358,16 +362,28 @@ end
 
 tests['[2] a granted ability CAN appear here -- so the zeros above are real zeros'] = function()
     local r = scan()
-    -- zuus_lightning_hands is an Aghanim's Shard grant.  It is in the corpus on
-    -- exactly one frame.  Without this denominator, "the innate is absent" and
-    -- "the pipeline cannot show optional abilities" look identical -- which is
-    -- the axeblink trap, and the reason this control exists.
-    assert(r.zuus.names.zuus_lightning_hands == 1,
-        'zuus_lightning_hands is on ' .. tostring(r.zuus.names.zuus_lightning_hands)
-        .. ' frames, recorded 1 of 47. This single frame is the only proof this '
-        .. 'corpus can show a granted ability at all; if it goes, every "absent" '
-        .. 'reading in section 2 loses its denominator and must be re-stated as '
-        .. 'UNMEASURABLE rather than zero.')
+    -- zuus_lightning_hands is an Aghanim's Shard grant.  RE-MEASURED
+    -- 2026-09-03 (GH #458): 2 of 48 Zeus entries carrying an ability array,
+    -- was 1 of 47.  f_260903_101254_cm_farm_stealcamp.lua is the second frame.
+    --
+    -- HELD AS A RATCHET, NOT AN EQUALITY (GH #457's family, and this file's own
+    -- section-1 rule).  What this control has to establish is that the corpus
+    -- CAN show a granted ability at all -- i.e. the count is non-zero -- so that
+    -- "the innate is absent" and "the pipeline cannot show optional abilities"
+    -- stay distinguishable (the axeblink trap).  `== 1` also pinned how many
+    -- such frames we happened to own, which is a re-statement of the corpus
+    -- size and nothing this file rests on; the sibling pin of the SAME fact in
+    -- tests/test_cm_ability_index_binding.lua:444 was re-baselined to 2 on
+    -- 2026-09-03T13:30Z and this one was not, which is precisely how one corpus
+    -- fact pinned twice produced a red in only one of the two files.
+    -- A count going DOWN still fails: that is a deleted fixture or a behaviour
+    -- change, and it would take the denominator with it.
+    cs.ratchet(r.zuus.names.zuus_lightning_hands or 0, 2,
+        'zuus_lightning_hands frames (of ' .. r.zuus.with .. ' Zeus entries with '
+        .. 'an ability array). These frames are the only proof this corpus can '
+        .. 'show a granted ability at all; if they go, every "absent" reading in '
+        .. 'section 2 loses its denominator and must be re-stated as UNMEASURABLE '
+        .. 'rather than zero.')
 end
 
 -- ---------------------------------------------------------------------------

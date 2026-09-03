@@ -440,12 +440,17 @@ tests['[corpus] the pipeline DOES show innates -- WK 33/33 and Lion 23/23'] = fu
         r.skeleton_king.with, "Wraith King's innate", 33)
     cs.universal(r.lion.names.lion_innate_to_hell_and_back or 0,
         r.lion.with, "Lion's innate", 23)
-    -- and a grant, so a grant's zero is readable too
-    assert(r.zuus.names.zuus_lightning_hands == 2,
-        'zuus_lightning_hands is on ' .. tostring(r.zuus.names.zuus_lightning_hands)
-            .. ' frames, recorded 1. It is the only proof this corpus can show a granted '
-            .. 'ability at all; without it the Crystal Clone zero below is UNMEASURABLE '
-            .. 'rather than zero.')
+    -- and a grant, so a grant's zero is readable too.  RE-MEASURED 2026-09-03
+    -- (GH #458): 2 frames, raised from 1 on 2026-09-03T13:30Z when
+    -- f_260903_101254_cm_farm_stealcamp.lua landed -- the message still said
+    -- "recorded 1" after that bump, so it is restated here.  Held as a ratchet
+    -- for the same reason as its twin in
+    -- tests/test_focus_innate_index_anchor.lua: the readable content is that
+    -- the count is NON-ZERO, and `==` additionally pinned the corpus size.
+    cs.ratchet(r.zuus.names.zuus_lightning_hands or 0, 2,
+        'zuus_lightning_hands frames. These are the only proof this corpus can '
+            .. 'show a granted ability at all; without them the Crystal Clone zero '
+            .. 'below is UNMEASURABLE rather than zero.')
 end
 
 tests['[corpus] Crystal Maiden carries neither optional ability on any frame'] = function()

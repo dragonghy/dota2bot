@@ -56,6 +56,7 @@
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 local api = require('mock.bot_api')
+local cs = require('corpus_scale')
 
 local tests = {}
 
@@ -162,7 +163,31 @@ end
 -- World facts this file rests on. Asserted, not described.
 --============================================================================
 
-tests['[world W1] the corpus carries no creeps, so every creep here is declared'] = function()
+-- RE-READ 2026-09-03 (GH #458).  The antecedent of this assertion's own promise
+-- fired: f_260903_101254_cm_farm_stealcamp.lua is the first fixture in the
+-- corpus to carry a `creeps` key, so `nCreepKeys == 0` was falsified.  Bumping
+-- that zero to 1 would have been the wrong repair in both directions -- it is a
+-- corpus-size restatement, AND it drops the fact this file actually rests on.
+--
+-- What was re-measured (108 fixtures, 1 with a creeps key, 48 creep rows): the
+-- rows carry EXACTLY {team, x, y, dt} and nothing else.  make_fixture.py says so
+-- in the comment it emits above the block -- "no id, no name, no health" -- and
+-- the loader consumes them in exactly one place, FindAoELocation, as a
+-- positional sample.  GetNearbyCreeps is not answered from them at all.
+--
+-- So the promise ("this file should drive the real sweep and every claim below
+-- gets stronger") does NOT come due: this file is about IsAncientCreep() on the
+-- units GetNearbyCreeps hands back, and a row with no name and no ancient flag
+-- cannot answer that predicate.  Every creep below is still declared by this
+-- test, for the same reason as before.  The load-bearing zero is therefore not
+-- "no fixture has a creeps key" but "no creep row in the corpus carries a creep
+-- IDENTITY", and that is what is asserted now.  It is still a zero, so per
+-- tests/corpus_scale.lua it stays an equality rather than becoming a ratchet:
+-- the day the dumper starts emitting a name, this goes red and the promise
+-- above really is due.
+local CREEP_ROW_KEYS = { team = true, x = true, y = true, dt = true }
+
+tests['[world W1] no fixture creep carries an identity, so every creep here is declared'] = function()
     local J, bot = subject(VIPER_L10)
     assert(J ~= nil)
     for _, r in ipairs({ 900, 1000 }) do
@@ -174,17 +199,37 @@ tests['[world W1] the corpus carries no creeps, so every creep here is declared'
     end
     -- and the same fact read off the fixture tables, corpus-wide
     local p = assert(io.popen('ls tests/fixtures/*.lua'))
-    local nFiles, nCreepKeys = 0, 0
+    local nFiles, nCreepKeys, nRows = 0, 0, 0
+    local extra = {}
     for path in p:lines() do
         local ok, fx = pcall(dofile, path)
         if ok and type(fx) == 'table' then
             nFiles = nFiles + 1
-            if fx.creeps ~= nil then nCreepKeys = nCreepKeys + 1 end
+            if fx.creeps ~= nil then
+                nCreepKeys = nCreepKeys + 1
+                for _, c in ipairs(fx.creeps) do
+                    nRows = nRows + 1
+                    for k in pairs(c) do
+                        if not CREEP_ROW_KEYS[k] then extra[k] = (extra[k] or 0) + 1 end
+                    end
+                end
+            end
         end
     end
     p:close()
     assert(nFiles >= 100, 'corpus shrank: ' .. nFiles .. ' fixtures')
-    assert(nCreepKeys == 0, nCreepKeys .. ' fixtures now carry a creeps key')
+    -- Ratchets, not equalities: both are sums over fixtures with nothing here
+    -- resting on their exact value (tests/corpus_scale.lua).
+    cs.ratchet(nCreepKeys, 1, 'fixtures carrying a creeps key')
+    cs.ratchet(nRows, 48, 'creep rows in tests/fixtures/')
+    local names = {}
+    for k in pairs(extra) do names[#names + 1] = k end
+    table.sort(names)
+    assert(#names == 0, 'creep rows grew ' .. #names .. ' key(s) beyond '
+        .. '{team,x,y,dt}: ' .. table.concat(names, ', ') .. '. If one of them '
+        .. 'identifies the creep, GetNearbyCreeps can be answered from the '
+        .. 'fixture and this file should drive the real sweep instead of '
+        .. 'declaring its own creeps -- every claim below gets stronger.')
 end
 
 tests['[world W2] the shipped farm family bounds ancients at 10, the ladder at 12'] = function()

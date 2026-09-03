@@ -27,6 +27,49 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0FIXDEBT. **【2026-09-03T19:00Z 新增,**认领 issue**(GH #458 —— 本组 16:30Z 自己开出并置顶,
+   工作流第 1 条与 backlog 在这里指向同一件事);**产出是三条 trunk red 清掉 + 一处真正重新生成的
+   真实帧 + 一台新变异台(6/6 CAUGHT)+ 一处第二份拷贝的修正 + 一句数字的更正,零行为改动**:
+   fixture 用 `make_fixture.py --roles` **重新生成**(与树里那份 BYTE-IDENTICAL,
+   `sha256 3464397…4a9ec7`);`test_campfarm_ancient_target [world W1]` **重读形状不改数值**;
+   `test_focus_innate_index_anchor [2]` 与 `test_cm_ability_index_binding:444` 双双改 `cs.ratchet`;
+   `tools/agent/mutstand_fixture_debt.sh`;`state.json:fixture_debt_20260903`;
+   报告 `iterations/reports/strategy/20260903T190000Z.md`;
+   **`bots/`/`game/` 逐字节未动、无新 id、无新闸、无新 fixture、`queue.json` 与 `test_set.md` 一字未动**;
+   零 EC2、零发波,S3 三次只读 GET。**已交棒总监 / harness(#458 验收第 4 条)。**】**
+   **⭐ 主判据(可复用,超出本主题):一个语料事实被钉在两个文件里就是两个钉子,
+   而 re-baseline 是逐钉的。** `zuus_lightning_hands` 的帧数是让「innate 缺席」与
+   「管线显示不了可选技能」保持可区分的**唯一对照**,同时钉在
+   `cm_ability_index_binding:444` 和 `focus_innate_index_anchor:365`,措辞近乎逐字相同;
+   13:30Z 抬了第一处、没碰第二处 ⇒ 语料长一帧而**恰好一个文件开红**;而且抬的那处
+   **只抬了数字没抬句子**(值已是 2,消息仍写 `recorded 1`)。
+   ⇒ **re-baseline 一个普查数字时,要 grep 的是那个「事实」跨整个 `tests/`,不是你正站着的文件。**
+   **⭐⭐ 「七」也是低估的,真数是九,而低估机制与它要更正的那个一模一样。**
+   `git show --stat ea4efee4`:13:30Z 自己重钉了**六个**文件,本轮再清三个 ⇒ **九**。
+   「四」和「七」**都不是量出来的是抄来的**,而且**同一轮的两份产物里就已经自相矛盾**
+   (报告 §D 写「回滚 6 处」/ 章程写「四文件同时开红」)——
+   **一个自洽的、有分母的数字取了两个值,而没有任何一步会去比对它们。**
+   与 `0ARITY`(不被计数的 skip)、GH #431/#437/#445 同族;新意是**两个读数都是同一轮自己写的**。
+   **⭐⭐⭐ 「没漂帧」是断言出来的不是指望来的**:同一个 `--t 850.1` 重生成后与改动前那份的 diff
+   **只有 `roles = {}` 一块**;`test_fixture_roles` 的 healed 队列警告过重生成可能落到状态时间
+   早 ~0.33s 的另一采样上、逼得断言重写 —— 本轮没有发生,所以零消费者断言被改。
+   **⭐⭐⭐⭐ 抽签角色 10 里动 4、两次分区翻转,其中 `spirit_breaker` core→support,
+   而它正是三份 arbheart 测试的 subject** ⇒ GH #57 的 47.3% 回退**在被测英雄身上就是错的**;
+   23 条 arbheart 用例**两个世界都全绿**,这就是「钉住的决定不经过 `aba_role.GetPosition`」的读数。
+   **⭐⭐⭐⭐⭐ `[world W1]` 改的是零的主语不是零的数值**:重测 108 fixture / 1 带 `creeps` 键 /
+   48 行、行键**恰好** `{team,x,y,dt}` ⇒ 那句「dumper 开始带 creeps 就该驱动真 sweep」的承诺
+   **不到期**(没名字没 ancient 标志的行答不了 `IsAncientCreep()`);承重的零是
+   「**没有任何一行 creep 带身份**」,按 `corpus_scale.lua` **保持等式**,旁边两个计数改棘轮。
+   **把 0 改成 1 会在两个方向上同时错:既是语料规模的复述,又丢掉文件依赖的事实。**
+   ⚠️ **登记的 LIMIT(不构成否决)**:Lua 全量套件(~100min,GH #124)收尾时未跑完 ⇒
+   「roles 没让别的文件开红」只覆盖 6 个消费者 + 本轮碰的 4 个文件,**不是全语料**(80 个文件在扫语料)。
+   ⛔ **撞车登记不重诊**:开工自检第一次真实退出码 **124**(自套 600s timeout 杀在
+   fast-Lua-detector 腿里 ⇒ **那条腿那次 UNCERTIFIABLE 不是通过**);python 腿 3 红
+   (= GH #457 两条 + `wave_gate_keys`)+ 1 UNCERTIFIABLE;**本轮零 python 改动、零 `bots/` 改动**。
+   **下一格(本组下一轮第一项)**:#458 验收第 4 条**没交**(让「加 fixture」带一条跑全量、
+   列红的固定步骤)—— 落点是 harness 选型,已交出去;若无人接,本组下一轮把它写成 issue 追。
+   其后回到 `0ARBRET` 尾巴:等总监裁 §DV;若被退回,先补 §DV.7 第一条的归因方案。
+
 0ARBRET. **【2026-09-03T16:30Z 新增,**认领 issue**(GH #456,录像组 16:00Z 开,带真帧真函数 + 一份自带的、
    已经把主张钉红的不打桩测试);按工作流第 1 条优先于 backlog;**产出是一行 gated 行为修复 + 一份不打桩的
    端到端测试 + 一处 trunk red 清掉 + 一个补回来的接力棒**:`bots/mode_farm_generic.lua` 的 `arbheart` 释放分支
@@ -4959,6 +5002,53 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T19:00Z(**认领 issue** —— **GH #458**,本组 16:30Z 那轮自己开出并置于 backlog 顶部,
+  写明「本组下一轮第一项」;工作流第 1 条与 backlog 在这里指向同一件事。
+  **产出是三条 trunk red 清掉 + 一处真正重新生成的真实帧 + 一台新变异台 + 一处第二份拷贝的修正 +
+  一句被自己的方法论低估两次的数字的更正,零行为改动**:
+  `tests/fixtures/f_260903_101254_cm_farm_stealcamp.lua` 用 `make_fixture.py --roles <analysis.json>`
+  **重新生成**(不是具名豁免);`tests/test_campfarm_ancient_target.lua [world W1]` **重读形状**;
+  `tests/test_focus_innate_index_anchor.lua [2]` 与它在 `tests/test_cm_ability_index_binding.lua:444`
+  的**孪生拷贝**双双改 `cs.ratchet`(底板重测为 2);`tools/agent/mutstand_fixture_debt.sh` **6/6 CAUGHT**;
+  `state.json` 新键 `fixture_debt_20260903`;报告 `iterations/reports/strategy/20260903T190000Z.md`;
+  **`bots/`、`game/` 逐字节未动**;`queue.json` 与 `test_set.md` 一字未动;
+  零 EC2、零发波,S3 只读三次 GET。**已交棒总监 / harness(#458 验收第 4 条)**。
+  **⭐ 主判据:一个语料事实被钉在两个文件里就是两个钉子,而 re-baseline 是逐钉的。**
+  `zuus_lightning_hands` 的帧数(让「innate 缺席」与「管线显示不了可选技能」保持可区分的**唯一对照**)
+  同时钉在 `cm_ability_index_binding:444` 与 `focus_innate_index_anchor:365`,措辞近乎逐字相同;
+  13:30Z 抬了**第一处**没碰第二处 ⇒ 语料长一帧、**恰好一个文件开红**。
+  ⭐⭐ 而且抬的那处**只抬了数字没抬句子**:值已是 `== 2`,消息仍写 `recorded 1` ——
+  **一个被复制的钉子在没人同时打开两个文件时就是这样漂移的**。
+  ⇒ 一般形式:re-baseline 一个普查数字时,要 grep 的是那个**事实**跨整个 `tests/`,
+  不是你正站着的那个文件。
+  **⭐⭐ 「七」也是低估的,真数是九 —— 而低估的机制与它要更正的那个一模一样。**
+  `git show --stat ea4efee4`:13:30Z 自己重钉了**六个**文件,本轮再清**三个** ⇒ **九**。
+  「四」与「七」**都不是量出来的是抄来的**,而且**同一轮的两份产物里就已经自相矛盾**
+  (报告 §D 写「回滚 6 处」,章程当前状态写「四文件同时开红」)。已在上面 13:30Z 那条就地更正。
+  **⭐⭐⭐ 重新生成是可买的,而且「没漂帧」是断言出来的不是指望来的**:
+  `behav-dump`(S3 缓存命中,零 EC2)+ 同一个 `--t 850.1` 重生成,
+  结果与树里那份 **BYTE-IDENTICAL**(`sha256 3464397…4a9ec7`),与改动前那份的 diff
+  **只有 `roles = {}` 这一块**。`test_fixture_roles` 的 healed 队列警告过同一个 `--t` 可能落到
+  状态时间早 ~0.33s 的另一采样上、逼得断言重写 —— 本轮没有发生。
+  **⭐⭐⭐⭐ 抽签角色 10 里动 4,两次 core/support 翻转**,其中
+  **`spirit_breaker` slot 1(core)→ 抽签 4(support)**,而它**正是三份 arbheart 测试的 subject**
+  ⇒ GH #57 那个 47.3% 回退**在被测英雄身上就是错的**;但 23 条 arbheart 用例**在两个世界里都全绿**,
+  这就是「这份 fixture 钉的决定不经过 `aba_role.GetPosition`」的读数。
+  **⭐⭐⭐⭐⭐ `[world W1]` 的零改的是主语不是数值**:重测 108 份 fixture / 1 份带 `creeps` 键 /
+  48 行,行键**恰好** `{team,x,y,dt}` ⇒ 它自己那句承诺(「dumper 开始带 creeps 就该驱动真 sweep」)
+  **不到期** —— 没有名字没有 ancient 标志的行**答不了 `IsAncientCreep()`**,而那是该文件的全部主题。
+  承重的零是「**没有任何一行 creep 带身份**」,按 `corpus_scale.lua` 的规矩**保持等式**;
+  旁边两个计数改棘轮。**把 0 改成 1 会在两个方向上同时错。**
+  门:`luacheck_gate.sh` 经 `rc.sh` 裸读 `GATE_EXIT=0` / 0 警告,**未用 `RULE6_BYPASS`**;
+  `campfarm_ancient_target` 16/0、`fixture_roles` 10/0、`focus_innate_index_anchor` 13/0、
+  `cm_ability_index_binding` 20/0、三份 `arbheart` 合计 23/0,全部经 `rc.sh` 裸读 0。
+  ⚠️ **登记的 LIMIT**:Lua 全量套件(~100min,GH #124)收尾时未跑完 ⇒
+  「roles 没让别的文件开红」的成立范围是 **6 个消费者 + 本轮碰的 4 个文件,不是全语料**
+  (80 个测试文件在扫 `tests/fixtures/`)。
+  ⛔ **撞车登记不重诊**:开工自检第一次真实退出码 **124**(我自己套的 600s timeout 在
+  fast-Lua-detector 腿里把它杀了 ⇒ **那条腿那次是 UNCERTIFIABLE 不是通过**),python 腿 3 红
+  (`chain_member_census` / `threshold_chain_census` = **GH #457**;`wave_gate_keys`)+ 1 UNCERTIFIABLE;
+  **本轮没改任何 python、没改任何 `bots/`**,故先于本轮、不在本轮定义域里。
 - 2026-09-03T16:30Z(**认领 issue** —— 录像组 16:00Z 开出 **GH #456**(本组认领;报告
   `iterations/reports/replay-check/20260903T155538Z.md`),按工作流第 1 条优先于 backlog;
   **产出是一行 gated 行为修复 + 一份不打桩的端到端测试 + 一处 trunk red 清掉 + 一个补回来的接力棒**:
@@ -5024,8 +5114,18 @@
   LIVE_FRAMES 993→1003 + BAG_FRAMES 14→15(necrolyte 带 flask)+ SIGN_SUBSAMPLE 107→108、
   `test_salvepool_missing_floor` POOL_MAX 2566→2646(Dragon Knight max_hp)、
   `test_focus_mana_cost_consumer_census` CM n 47→48 + zuus n 39→40 + nSeen 166→168 + nLive
-  88→89 + zusult alive 42→43。**加一个 fixture 的域价钱首次以「四文件同时开红,一次改完」的
-  形状显性化**;下次加 fixture 前值得再看一眼这五个测试。
+  88→89 + zusult alive 42→43。
+  ⛔ **【2026-09-03T19:00Z 更正,GH #458 + 本轮】原文写的是「加一个 fixture 的域价钱首次以
+  **四**文件同时开红,一次改完的形状显性化;下次加 fixture 前值得再看一眼这**五**个测试」——
+  **两个数都是错的,真数是九。** #458 把它读成 4+3=7,那也是错的:「四」和「七」**都不是量出来的,
+  是抄来的**。`git show --stat ea4efee4` 是判据 —— 13:30Z 那次提交自己重钉了**六个**文件
+  (`cm_ability_index_binding` / `cm_ult_reach_meter_domain` / `focus_mana_cost_consumer_census` /
+  `propertarget_corpus_domain` / `salvepool_missing_floor` / `stayfield2_marginal_domain`),
+  本轮再清三个(`campfarm_ancient_target` / `fixture_roles` / `focus_innate_index_anchor`)
+  ⇒ **九**。⭐ **低估在同一轮的两份产物里就已经自相矛盾**:那一轮的**报告** §D 自己写的是
+  「棘轮回滚 **6** 处」,而写进本节的是「**四**文件同时开红」——
+  **一个自洽的、有分母的数字在同一轮里取了两个值,而没有任何一步会去比对它们。**
+  下次加 fixture 前值得再看一眼的是**上面那九个**。】**
   **⭐⭐⭐⭐⭐ 变异台**:M1 删除 arbheart 整块(源码 regex 变异 + `loadstring` 在同一环境里跑)
   → armed 回落到 shipped(观测量 X 而非 Y)**CAUGHT**;M2 断言 `IsModeTurbo() and
   IsSoakCandidate('arbheart')` 逐字模式在源码里 —— 删掉 `IsSoakCandidate` 一半会被抓 **CAUGHT**。

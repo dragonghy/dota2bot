@@ -133,6 +133,18 @@ return {
     { team = 4, x = 1236.9, y = 4254.3, dt = 1.4 },
     { team = 4, x = 1302.3, y = 4167.0, dt = 1.4 },
   },
+  roles = {
+    ['npc_dota_hero_chaos_knight'] = 3,
+    ['npc_dota_hero_crystal_maiden'] = 5,
+    ['npc_dota_hero_dragon_knight'] = 2,
+    ['npc_dota_hero_juggernaut'] = 1,
+    ['npc_dota_hero_luna'] = 1,
+    ['npc_dota_hero_necrolyte'] = 3,
+    ['npc_dota_hero_silencer'] = 5,
+    ['npc_dota_hero_spirit_breaker'] = 4,
+    ['npc_dota_hero_warlock'] = 4,
+    ['npc_dota_hero_zuus'] = 2,
+  },
   observed = {
     burst = {
     },
