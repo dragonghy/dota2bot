@@ -1763,6 +1763,79 @@ function J.IsItemAvailable( sItemName )
 end
 
 
+--- Aether Lens's cast-range bonus, in units, for a bot that holds one.
+---
+--- THE SHIPPED NUMBER AND WHY IT IS A CLAIM.  Thirty-one sites under `bots/`
+--- write this constant by hand -- `if aether ~= nil then aetherRange = N end`
+--- -- and they do not agree: 29 say 250, two (hero_axe.lua, hero_dazzle.lua)
+--- say 225.  The live KV says the SMALLER one:
+---
+---     items.txt / item_aether_lens / AbilityValues / cast_range_bonus  =  225
+---     (dotabuff/d2vpkr master, the same mirror tools/agent/item_name_census.py
+---      already takes item names from; steam.inf VersionDate Sep 02 2026, read
+---      2026-09-03)
+---
+--- So the 29 majority sites over-state this hero's own reach by 25 units, and
+--- the two that look like the outliers are the ones that are right.  Nothing in
+--- the tree pinned the number before now: tools/agent/special_value_key_census.py
+--- proves reads against HERO KV only, and `cast_range_bonus` lives in the ITEM
+--- file, so no census this repo owns could ever have seen it.
+---
+--- WHAT THE OVER-STATEMENT COSTS, stated rather than assumed.  Every consumer is
+--- `abilityX:GetCastRange() + aetherRange`, handed to an in-range test or to
+--- J.GetCastLocation.  Twenty-five units too many does not waste a cast -- an
+--- out-of-range unit-target order makes the engine WALK the hero into range
+--- first -- so the cost is an unplanned approach toward the target, plus the
+--- travel time, on exactly the frames the decision layer believed it could act
+--- from where it stood.  For a 5-armour support that step is the whole point of
+--- having the cast range.  This is a NARROWING: armed, the bot acts from where
+--- it can actually act, or not at all.
+---
+--- ONE-DIRECTIONAL BY CONSTRUCTION, not by today's arithmetic: the KV read is
+--- returned only when it is strictly BELOW the caller's shipped constant, so no
+--- future patch can make the armed leg claim MORE reach than the shipped leg.
+--- The lever's whole claim is "this constant is too big"; a leg that could raise
+--- it would be testing something nobody argued for.  A key that answers <= 0
+--- (a rename -- the GH #162 family) falls through to the shipped constant rather
+--- than inventing a 0-range default.
+---
+--- The caller passes its own shipped constant instead of this function owning
+--- one, so the two 225 sites can route through here later and be no-ops by
+--- arithmetic rather than by exemption.
+---
+--- SCOPE THIS ROUND: two call sites, both focus heroes with live consumers --
+--- hero_crystal_maiden.lua (2) and hero_lion.lua (4).  hero_axe.lua already
+--- carries 225; hero_zuus.lua and hero_skeleton_king.lua have no live consumer
+--- at all (zuus assigns aetherRange and never reads it).  The other 26 hero
+--- files and ability_item_usage_generic.lua's 42 consumers are NOT touched here
+--- -- a 31-site simultaneous behaviour change is the `lanefix` bundle shape, and
+--- that bundle was rejected twice.  tests/test_aether_lens_range_bonus.lua holds
+--- the whole census as a registered reading so the untouched remainder cannot go
+--- quiet.
+---
+--- LIMIT, and it is structural: no replay fixture can watch this fire.  The
+--- offline frame world answers 0 for every GetSpecialValue key, so the armed leg
+--- falls through to shipped on every pinned frame -- the same wall
+--- tests/test_lion_r_splash_radius_key.lua records for `lionsplash`.  The test
+--- drives the armed leg through a declared item stub and says so.
+function J.GetAetherLensRangeBonus( hItem, nShipped )
+
+	if hItem ~= nil
+		and J.IsModeTurbo()
+		and J.IsSoakCandidate( 'aetherlens' )
+	then
+		local nKv = hItem:GetSpecialValueInt( 'cast_range_bonus' )
+		if type( nKv ) == 'number' and nKv > 0 and nKv < nShipped
+		then
+			return nKv
+		end
+	end
+
+	return nShipped
+
+end
+
+
 -- [GH #196] Soak candidate 'abilanc' (turbo-only). The gate is resolved HERE,
 -- once, inside the selector -- not at the 19 call sites -- because that is the
 -- only placement a future call site cannot silently miss.

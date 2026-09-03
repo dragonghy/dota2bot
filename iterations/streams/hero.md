@@ -22,6 +22,27 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-84. **`aetherlens` 只接了 2 个站点,剩下 **27 个 + 那个 42 消费者的共享文件** 还写着 250。**
+   2026-09-03T17:05Z 那轮量清:`item_aether_lens/AbilityValues/cast_range_bonus` 活 KV 是
+   **225**,而 `bots/` 下 31 个手写常量里 **29 个写 250**;`hero_axe.lua` / `hero_dazzle.lua`
+   那两个「看起来抄错的」**才是对的**。本轮只接了**焦点英雄里有活消费者**的两个
+   (`hero_crystal_maiden.lua` 2 个消费者、`hero_lion.lua` 4 个),报告
+   `iterations/reports/hero/20260903T170500Z.md`,`state.json:aetherlens_20260903T`。
+   - **⛔ 不许一次接完**:31 个站点同时改行为**就是 `lanefix` bundle 的形状**,那个 bundle
+     在终局门上被拒了两次。要接就一次一小撮,而且每一撮自己说清楚消费者在哪。
+   - **计数器已经替你留着**:`tests/test_aether_lens_range_bonus.lua` 的
+     `OVERSTATED_CEILING = 27` 是**单调棘轮**(降 = 好,升 = 有人抄了新的 250 → 红并点名)。
+     **不要把它改成 `==`** —— GH #457 就是那个形状。
+   - **最大的一块是 `bots/ability_item_usage_generic.lua`**:1 个字面量、**42 个消费者**、
+     下游是全部 128 个英雄。它**不是英雄组一个人的作用域**,接之前先问总监。
+   - **⭐ 比这条缺陷更值钱的是它暴露的盲区(报告 §3)**:`special_value_key_census.py`
+     的判据是「key 在**拥有该技能的英雄**的 KV 里存不存在」,而它取的每一份 KV 都是
+     `npc_dota_hero_*.txt` ⇒ **住在 `items.txt` 里的常量从来不在本仓任何普查的定义域内**。
+     「英雄文件里手写的**物品**数值」是一整类没人扫过的东西,`aetherRange` 只是第一个。
+   - **⚠️ 条件 (a) 买不到 fixture**:离线帧世界对每个 `GetSpecialValue` key 都答 0
+     (与 `lionsplash`/GH #162 同一堵墙),armed 腿在每一帧都回落 shipped。
+     要买 (a) 只能靠波次上的检测器(25 单位圆环 + 先贴近再施法)。
+
 -83. **`zeusaghs5` 落地了,盯着入集裁定** —— 本轮加的 pos_5 Zeus **Aghs 提前到 slot 5**
    的 gated 候选(`bots/BotLib/hero_zuus.lua` + `tests/test_zeus_aghs_build.lua`,
    报告 `iterations/reports/hero/20260903T134500Z.md`,`state.json:zeusaghs5_20260903T`)。
@@ -3949,6 +3970,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-03T17:05Z(报告 `iterations/reports/hero/20260903T170500Z.md`;轴 **`aetherlens`**)
+  **改 4 个文件:`bots/FunLib/jmz_func.lua`(新 helper `J.GetAetherLensRangeBonus` + 论证块)、
+  `bots/BotLib/hero_crystal_maiden.lua` 与 `bots/BotLib/hero_lion.lua`(各 1 行接线 + 注释)、
+  新增 `tests/test_aether_lens_range_bonus.lua`(16 用例,6 变异全杀)。1 新 gated id
+  (`aetherlens`,`state.json:aetherlens_20260903T`)、零 arm/promote、零 AWS、不申请波次;
+  `queue.json` / `test_set.md` 本轮无新增。charter backlog 新增 `-84`。**
+  - 选题:OWNER_PRIORITIES 无本组项;open `[hero]` 五条球都在总监或优先级下(#453 是 tinker);
+    backlog `-83`/`-82`/`-81`/`-80` 分别在等总监 / 排在焦点英雄之后 / 等录像组 / 等 GH #438 裁定
+    ⇒ 走工作流步骤 1 的兜底,挑焦点英雄找个体问题。
+  - **⭐⭐ 缺陷:`item_aether_lens/AbilityValues/cast_range_bonus` 活 KV = **225**,
+    而 `bots/` 下 31 个手写常量里 **29 个写 250**。** 少数派(`hero_axe.lua`、`hero_dazzle.lua`)
+    才是对的。**形状说「两个抄错了」,域价钱说「另外 29 个是缺陷」。**
+    代价不是浪费施法(超射程的单位目标指令会让引擎**先把英雄走进射程**),
+    是**一次没计划的贴近**,发生在决策层以为可以原地出手的帧上 ⇒ 修法是**收窄**。
+  - **⭐ 为什么从来没人抓到:不是漏跑,是够不着。** `special_value_key_census.py` 的判据是
+    「key 在**拥有该技能的英雄** KV 里存不存在」,它取的每份 KV 都是 `npc_dota_hero_*.txt`,
+    而 `cast_range_bonus` 住在 `items.txt`。⇒ **「英雄文件里手写的物品数值」是一整类
+    从来不在本仓任何普查定义域内的东西**(backlog `-84`)。
+  - **SCOPE 只接 2 个站点**:CM(2 消费者)+ Lion(4)。Axe 已经是 225;
+    **zuus / skeleton_king 一个活消费者都没有**(zuus 给 `aetherRange` 赋值然后从不读)——
+    §6 用例把这条豁免钉住,将来只能被证伪不能被当疏忽。剩下 27 个 + generic 文件
+    (1 字面量 / **42 消费者** / 128 英雄下游)**故意不动**:31 站点齐改就是 `lanefix` bundle 形状。
+  - **⚠️ 负控值得单独记:空普查会静默通过 `<=` 天花板。** 第一版解析器锚在 `%s*$`,
+    全树读到 **0** 个加成(树里每处都写成 `... then aetherRange = 250 end`,字面量在行中间)。
+    说话的**不是天花板,是它旁边的供给量断言**(`nOk >= 2`、generic 的 `== 1`)。
+    ⇒ **棘轮旁边没有供给量断言,就分不清「没坏」和「根本没扫到」。** 实读 `nOver=27 nOk=2 nOther=1`。
+  - **⚠️⚠️ 自检的两条 Lua trunk red,归属不同**:(甲)`test_gated_helper_nesting_census`
+    点名 `arbheart,campexit`,**干净 HEAD 上复跑同样红** ⇒ 协同组 15:55Z 落地留下的,
+    与 GH #457 同族但不同条(#457 是两个 python 普查),已在 GH #456 追评,**球在协同组**。
+    (乙)`test_stayfield2_marginal_domain` 是**假红,而且是我自己的变异台造的** ——
+    变异台在反复重写 `bots/FunLib/jmz_func.lua`,后台自检同时在走同一棵树,
+    `require` 拿到半个文件 ⇒ `J` 是 boolean。干净 HEAD **19/0**,变异台停下后工作树 **19/0**。
+    ⇒ **GH #365 §3 / #229 那个「全局 inode + 并发写者」家族的新载体:变异台本身**,
+    而且它的失效方向最坏 —— 红打在一个你根本没碰过的文件上。**处置:变异台与后台自检不重叠,
+    要重叠就跑在 `git worktree` 里。本轮没据此改任何共享文件,交总监决定要不要立案。**
+  - 变异台 **6/6 全杀**,每台恰好被一条点名断言杀掉;还原 `cmp` 逐字节相同。
+  - 门:开工自检第一条命令**又被拒答**(stdout 接进 `tail`,`SELFCHECK_EXIT=2 REFUSED` ——
+    **不是通过**);改对后 `worst exit: 3`(`legs run 9`、**`UNCERTIFIABLE: none`**)。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
+    定向动态 14 个过滤器全绿(CM 119/0、Axe 98/0、WK 185/0、zuus 53/0、lion 84/0、
+    本轮新文件 16/0 等)。全量套件本轮未跑(~100min,GH #124)。
+  - **交出去的棒**:`aetherlens` 入集裁定在**总监**;条件 (a) 的检测器写作在**协同组/录像组**
+    (**fixture 结构上买不到** —— 与 `lionsplash`/GH #162 同一堵墙);剩余 27 站点 + generic
+    文件在 backlog `-84` + 新 `[hero]` issue;`arbheart` 那条 trunk red 在**协同组**。
+
 - 2026-09-03T13:45Z(报告 `iterations/reports/hero/20260903T134500Z.md`;轴 **`zeusaghs5`**)
   **改 2 个文件:`bots/BotLib/hero_zuus.lua`(+ 一个 helper + 一个 gated 分派 + 注释块)
   + 新增 `tests/test_zeus_aghs_build.lua`(10 用例,3 变异全杀)。1 新 gated id

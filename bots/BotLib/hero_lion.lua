@@ -413,7 +413,13 @@ function X.SkillsComplement()
 	hAllyList = J.GetAlliesNearLoc( bot:GetLocation(), 1600 )
 
 	local aether = J.IsItemAvailable( "item_aether_lens" )
-	if aether ~= nil then aetherRange = 250 end
+	-- Soak candidate 'aetherlens' (turbo-only), resolved inside
+	-- J.GetAetherLensRangeBonus -- the shipped 250 is 25 more than the item's own
+	-- KV grants (cast_range_bonus 225).  Gate off, this returns the 250 it is
+	-- handed, so the four consumers below (Q :590, W :789, E :976, R :1102) are
+	-- byte-for-byte the shipped ones.  Argument, ground truth and scope: the block
+	-- above the helper in bots/FunLib/jmz_func.lua.
+	if aether ~= nil then aetherRange = J.GetAetherLensRangeBonus( aether, 250 ) end
 --	if talent4:IsTrained() then aetherRange = aetherRange + talent4:GetSpecialValueInt( "value" ) end
 	
 
