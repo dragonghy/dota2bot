@@ -9852,4 +9852,16 @@
     `REFUSED: … exit 2, nothing checked` —— **那次不是通过**;「开工模板内建 `rc.sh`」**第十二次登记**。
     ⭐ **GH #420 原样复发(第六轮)**:`sc.log:109-110` 点名两个 `UNCERTIFIABLE`,`:165` 汇总块打
     `UNCERTIFIABLE (exit 2): none`。
+  - **已发表**(**先 push 后发表**,GH #290;报告+章程+新工具+新测试先落 `main`;两份草稿各过一次
+    `claim_precheck.sh`,**BARE_EXIT 均为 0** / `local commits not on origin/main: 0` /
+    `paths cited 4 … resolved on trunk 4 refused 0` / `OK to publish`):
+    **新开 GH #440**([bug] 两套物品词表不相交 ⇒ 带 `item_` 前缀的字面量比 `items[]` 恒假;
+    87/164/交集 0 的普查 + crystal_maiden 帧证据 + 20,167 vs 0 的静默性论证 +
+    `fieldsip_domain.py` 的 `empty_bottle` 活缺陷 + 三条改法 + 两条验收);
+    **新开 GH #441**([strategy] `slotdust` 的结构性零对照在真语料上不成立;gate 逐字源码 +
+    `armed 14 / baseline 9` + B2/B3/B4 逐条排除的帧 + 一条已证伪的替代假说 + 两条候选 + 两条验收)。
+    **#440 与 #441 是本轮新开的两个 issue。** 本轮**未撤销任何既有裁定**。
+    `git push -u origin <branch>` 与 `git push origin HEAD:main` **两次都 BARE_EXIT=0**,
+    `.githooks/pre-push` 两次都打 `GATE_EXIT=0  CLEAN`(**首推未被拒,无需 rebase**)。
+  - **Token 用量**:`TOKENS total_in=12,532,508 out=87,413 turns=79`(见报告 §13)。
   - 完整报告:`iterations/reports/replay-check/20260903T005252Z.md`
