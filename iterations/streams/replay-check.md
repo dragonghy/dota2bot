@@ -9757,3 +9757,99 @@
     **`PULL_EXIT=0`** 后重推 **`BARE_EXIT=0`**;`.githooks/pre-push` 每次都打 `GATE_EXIT=0  CLEAN`。
   - **Token 用量**:`TOKENS total_in=12,501,867 out=76,672 turns=85`(见报告 §10)。
   - 完整报告:`iterations/reports/replay-check/20260902T215554Z.md`
+- **2026-09-03T00:52Z(`slotdust` 首次核验 = INDETERMINATE;⭐⭐ 零基线控制抓到两个「永远为假」的仪器缺陷;⭐ 一个现役工具的活缺陷)**
+  - **语料**:W40 三粒交货种子(2941/2641/2710),树 `8a5f8f31`、**55-id 家族第二波**。
+    **宽扫 64/64 局**(`.dem` 81,暖场跳 17),三个 `sweep_complete.json` 全 `unparseable: 0`,
+    `sweep_run.sh` ×3 **退出码全 0**。按 GH #433:三路并行**各自独立输出目录** +
+    **逐 run 核对 `manifest 行数 == swept` 与重名 0**(18/18、20/20、26/26,重名全 0)。
+    分层 **ab=40 / ba=24**。⚠️ **64 是 `.dem` 侧分母,不是批测台的 149**(`analysis.json` 级计分局)。
+  - **⭐ 为什么不做上一轮交棒指定的 `fieldsip`/`fieldregen`**:普查后发现**这两个 id 都已有 WORKING**
+    (`fieldregen` 08-22,`fieldsip` 08-30 §7084)。而**55 个 armed id 里有 5 个在本章程全文出现 0 次**:
+    **`slotarb` / `slotdust` / `slotpush` / `outlatch` / `roamidle`**。§7152 那句「45 个 armed id
+    全部有核验记录」写于 45-id 时代,**id 集长到 55 之后新进来的这五个没有任何一轮碰过**。
+    本轮做其中触发级最可读的 `slotdust`(它有 `fieldsip` §7105 那种**结构性零对照**)。
+  - **核验结论**:
+    ```
+    VERIFY id=slotdust verdict=INDETERMINATE episodes=0
+    ```
+    **这是 `slotdust` 的第一条核验记录**,内容是「量具还不够格」,**不是 id 有问题**;
+    **不要数进「本周完成执行核验的 id 数」**,**未对 `slotdust` 作任何 WORKING/BUGGY 主张**。
+    理由只有一条,由本工具自己的证伪门给出:**排他列的基线腿不是 0**(修完下面两个缺陷仍
+    `armed 14 / baseline 9`)⇒ 按 LIMIT 6,**证伪的是本脚本的分支划分或槽位映射,不是 fix** ⇒ 买不到 (a)。
+  - **gate 形状(逐字取自源码)**:`J.IsClosestToDustLocation`(`jmz_func.lua:11591`),唯一解析点
+    `ClosestDustCarrier`(`ability_item_usage_generic.lua:59`)。`GetTeamMember` 收 **1..5 槽位**、越界答 nil ⇒
+    **未 armed 时被扫到的名单由 player id 的数值决定且分侧**:radiant(0..4)够到槽 1-4、**槽 5=pid 4 够不到**;
+    dire(5..9)**只够到槽 5=pid 9**、槽 1-4=pid 5..8 够不到。`X.ConsiderItemDesire['item_dust']`(`:7279`)
+    是 `bots/` 里**唯一**扔尘点,五条返回路径 **B1/B5 gated,B2(沙王)/B3(辉耀 debuff)/B4(近期被玩家伤害)未 gated**。
+  - **⭐⭐ 主要产出:两个方向偏宽松的仪器缺陷,都是零基线控制自己抓的**(第一次真跑 `armed 23 / baseline 10`):
+    - **(甲)⭐⭐⭐ 战斗日志与快照 `items[]` 的物品词表完全不相交(新 LIMIT 9)。**
+      抓到它的帧:`20260902_221349_slot1` ba 层 **baseline**,`crystal_maiden` t=1468.6,hp 0.291,
+      最近敌人 **7191u**,前 2 秒两条伤害 `infl=item_radiance`(skeleton_king)——**教科书式 B3**,
+      却进了排他列,因为本工具对同局 `items[]` 的辉耀普查答 `none`。
+      **全语料实测(64 局)**:`events[].inflictor` 的 `item_*` **87 个名字**,`snapshots[].items[]` **164 个名字**,
+      **交集 0**。`items[]` 是**去前缀**的(`item_radiance`→`radiance`),而且对若干物品**根本不是去前缀**:
+      `item_dust`→**`dustof_appearance`**、`item_ward_observer`→`observer_ward`、`item_bottle`→**`empty_bottle`**。
+      ⇒ **带 `item_` 前缀的字面量拿去比 `items[]` 不是偶尔漏,是恒假**;对「敌人**没有**带 X」形式的排除条件
+      **恒假 = 恒不排除 = 恒放宽**。`item_radiance` 在本语料战斗日志有 **20,167 条**伤害事件、`items[]` **0 次**
+      ⇒ 该缺陷**连一次可疑读数都不会产生**(与 #429/#432/#433/#436 同一失效方向)。
+    - **(乙)`WasRecentlyDamagedByPlayer` 是按玩家不是按英雄(新 LIMIT 10)**:它含该玩家的**召唤物与幻象**,
+      而那些 actor 在战斗日志里不是英雄 ⇒ 只看 `actor_hero` 的 B4 排除**恰好在这些帧上留着 B4 可达**。
+      已改为**任何**落在施法者身上的伤害都解除排他列。
+    - **两修的效果(同语料逐位对照)**:`armed 23→14`、`baseline 10→9`;`ab armed` 那栏 **8→0**(全是敌方有辉耀的局)。
+  - **⭐ 副产品:一个现役工具的活缺陷(同一个词表)**。全目录普查后其余 `item_*` 字面量都是比 **events**,是对的;
+    `fieldregen_supply.py` 比 `items[]` 用裸名,也是对的。**唯一踩中的是 `fieldsip_domain.py:496`**
+    (`out[name[len("item_"):]]`,假定「去前缀」就是快照拼法):对 `flask`/`tango`/`tango_single`/`faerie_fire` 对,
+    **对 `item_bottle`→`bottle` 错** —— 本语料 64 局瓶子的快照拼法**只有 `empty_bottle`(86,023 次),
+    `bottle` 出现 0 次** ⇒ **它从来没认出过任何一个瓶子**。瓶子属 `AMBIGUOUS_ITEMS`,故带瓶子的帧不是被误判成
+    CERTAIN,而是**被当成根本没有补给源**,会改变 `IsFieldRegenSituation ∧ HasFieldRegenSource` 的域。
+    **`fieldsip` 的 WORKING 裁定(§7079,15 episodes)就是这个工具给的** ⇒ **本组不撤销该裁定**
+    (方向未量、不在本轮范围),**登记为待复算**,已开 issue。
+  - **残留:9 条 dire 基线泄漏,没有解释,据实登记**。全部在 `ab` 层 baseline(pid 6/7/8),`ba` 层已归零。
+    B2 出局(64 局无沙王)、B3 出局(无一方持辉耀)、B4 出局(如 skywrath t=954.1、shadow_shaman t=741.1,
+    **[t−2,t) 内伤害事件数为 0**;dumper 保留一切「碰到英雄」的行,故不是采样缺失)。
+    **已排除的替代假说**:「dire 的 `GetTeamPlayers` 其实也回 0..4,槽位映射整体错了」——
+    若如此则 dire 不可达槽位是 pid 9,而 pid 9 在 dire 基线腿有 **30 次**扔尘 ⇒ 未解释泄漏会从 9 涨到 30+,
+    **该假说使情况更糟,不予采纳**。⇒ 归因为**分支划分不完整**,已开 issue 请裁。
+  - **聚合上下文(4(i-a) 两层读数都登记;不是结论)**:扔尘施法者按 pid ——
+    radiant armed(ab) n=38 {1:2,2:6,3:13,**4:17**};radiant baseline(ba) n=13 {2:2,3:5,**4:6**};
+    dire armed(ba) n=46 {5:1,6:7,7:10,8:9,**9:19**};dire baseline(ab) n=47 {6:5,7:2,8:10,**9:30**}。
+    **朝模型的一半**:dire 基线腿把 **63.8%(30/47)** 集中在唯一被出厂扫到的槽位(pid 9),armed 腿只 **41.3%**。
+    **反方向的一半**:radiant 基线腿槽-5(pid 4)占 **46.2%(6/13)**,而模型预言它的 gated 扔尘**不可能发生**,
+    armed 腿 44.7%,**两者几乎相同**。⚠️ **两层反向且该估计量没有消掉侧偏**(每格是一个 (层,队伍) 组合,
+    不存在固定队伍的层内 armed/baseline 对比)⇒ **按 4(i-b) 是噪声,不写进结论**;登记是因为 4(i-a) 要求登记。
+    **没有一个数字是效应量。**
+  - **交付**:**新增 `tools/batch_test/behavioral/slotdust_arbitration.py`**(只读离线;分支划分逐字取自源码;
+    槽位映射写成 LIMIT 1 并对「花名册不是 {0..4}/{5..9}」的局**拒收而不猜**;`item_gungir` 因有 `item_rod_of_atos`
+    这条未 gated 回落路径,**只计上下文永不进排他列**,LIMIT 7)。`--selfcheck` **15 PASS / 0 FAIL**,
+    其中 **3 条是本轮真实假阳直接钉成的用例**(LIMIT 9 两侧 + LIMIT 10)。
+    **新增 `tests/test_slotdust_arbitration.py`**(GH #243 同族):把**词表陷阱从两侧钉住** ——
+    快照拼法必须拦截、战斗日志拼法必须**不是**工具查的那个;并钉住 B4 不许退回 `actor_hero` 过滤。
+  - **欠账变化**:**新欠账** (a) `slotdust` 排他列尚未排他,等第三条扔尘路径的裁定;
+    (b) `fieldsip_domain.py` 的 `empty_bottle` 缺陷**只登记未修**,`fieldsip` 的 WORKING **待复算**(不撤销);
+    (c) 另外四个零记录 id(`slotarb`/`slotpush`/`outlatch`/`roamidle`)**仍然零记录**,
+    其中 `slotarb` 与本轮同族(GH #406),槽位映射与零基线模板**可整段复用**;
+    (d) 本轮 64 局 timeline 随容器回收(从 S3 重扫约 15 分钟,三路并行)。
+    **继承未动**:`deep_solo_death` 待 #430;`tp_home_wasteful` 的 `|arm|/sd` 待第三份语料;
+    `VMAX=700` 只读未量;幻象口径只改了 `wandbleed_trigger.py`,`wandlimbo_domain.py` 未动(等 #436);
+    深查口径(局 vs 触发)待总监裁;⛔ **W40 阵容仍然没有 Axe**(`axe_culling_blade` n=0,`d22` 的 16.7% 继续挂着);
+    其余见报告 §9。
+  - **下一轮第一件事**:
+    **(0) 先读本节最末一条,不要抄过期的交棒行。**
+    (1) ⭐ **`slotarb`**(同族、零记录、模板可整段复用),或等 §6 裁定后回来收 `slotdust`;
+    (2) 查 **GH #440 / #441**(本轮新开)与 **#436 / #433 / #430** 回音;
+    (3) **#419 第 5 轮 / #421 第 4 轮若仍零评论**,写进给总监的 DECISIONS_NEEDED;
+    (4) **盯下一个阵容里有 Axe 的波次**。
+  - **验证(退出码全部裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×3 **全 0**;
+    `slotdust_arbitration.py --selfcheck` **0**(15 PASS / 0 FAIL);真语料 ×2 轮 **全 0**;
+    `tests/test_slotdust_arbitration.py` **0**;`tools/agent/luacheck_gate.sh` **0**
+    (`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN`)。
+    **未改 `bots/`/`game/` 任何一行** ⇒ **不声称**跑绿 Lua 全量(GH #124)。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄。**
+    本组**不花 AWS 的钱**:只读 S3 取件,未启动任何计费资源。
+  - **开工自检**:**`SELFCHECK_BARE_EXIT=3`**(有发现,**不是没跑成**;重定向到文件后 `echo $?` 裸读);
+    `FINDINGS = cadence trunk-red(python)`;Lua 腿 **73 文件 0 failures**。
+    ⚠️ **第一条命令第十九次踩证据纪律 3**(写了 `| tail -60`),脚本当场拒答
+    `REFUSED: … exit 2, nothing checked` —— **那次不是通过**;「开工模板内建 `rc.sh`」**第十二次登记**。
+    ⭐ **GH #420 原样复发(第六轮)**:`sc.log:109-110` 点名两个 `UNCERTIFIABLE`,`:165` 汇总块打
+    `UNCERTIFIABLE (exit 2): none`。
+  - 完整报告:`iterations/reports/replay-check/20260903T005252Z.md`
