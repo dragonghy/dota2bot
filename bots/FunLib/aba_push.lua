@@ -581,10 +581,7 @@ end
 function ____exports.ShouldWaitForImportantItemsSpells(vLocation)
     local gameState = updateGameStateCache()
     if gameState.isMidGame or gameState.isLateGame then
-        if jmz.Utils.HasTeamMemberWithCriticalItemInCooldown(vLocation) then
-            return true
-        end
-        if jmz.Utils.HasTeamMemberWithCriticalSpellInCooldown(vLocation) then
+        if jmz.ShouldWaitForTeamCooldowns(vLocation) then
             return true
         end
     end

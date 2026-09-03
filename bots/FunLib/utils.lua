@@ -2106,13 +2106,45 @@ function ____exports.GetItemFromFullInventory(bot, itemName)
     return ____exports.GetItemFromCountedInventory(bot, itemName, 16)
 end
 --- Check if the team has a member with a critical spell in cooldown when the bot walks & arrives to the location.
--- 
--- @param bot - The bot to check.
+--
 -- @param targetLoc - The location to check.
+-- @param bSlotWait - Soak candidate 'slotwait'. Resolved in exactly ONE place,
+--                    J.ShouldWaitForTeamCooldowns in bots/FunLib/jmz_func.lua;
+--                    this file must never name the id (utils.ts may not import
+--                    jmz_func -- the circular dependency its own header forbids
+--                    -- so the wrapper lives one level up, as with 'slotpush').
 -- @returns True if the team has a member with a critical spell in cooldown, false otherwise.
-function ____exports.HasTeamMemberWithCriticalSpellInCooldown(targetLoc)
-    for ____, playerId in ipairs(GetTeamPlayers(GetTeam())) do
-        local teamMember = GetTeamMember(playerId)
+--
+-- Sixth and seventh of the pid-shaped GetTeamMember call sites (after 'slotarb'
+-- GH #406, 'slotdust' GH #411, 'slotpush' GH #415), and the last two LIVE ones
+-- of the eight-strong bots/FunLib/utils.lua cluster -- GH #467 censused the
+-- other five as having no caller in bots/ at all. GetTeamPlayers hands back
+-- PLAYER IDS (0-4 radiant / 5-9 dire); GetTeamMember takes a team SLOT (1..5)
+-- and answers nil out of range, so the shipped scan silently shrinks by side:
+-- radiant reaches 4 of 5 (id 0 reads nil, slot 5 is never asked for), dire
+-- reaches 1 of 5 (only id 5 is in range).
+--
+-- WHAT IS DIFFERENT FROM 'slotpush', AND WHY THIS PAIR IS THE EASIER ONE TO
+-- REASON ABOUT: the guard here is teamMember:IsAlive(), asked about the member
+-- the accessor just handed back, so there is no guard/subject split to measure
+-- -- this is pure under-scanning. And the return is monotone in the scan: the
+-- loop can only turn a member into TRUE, never into FALSE, so the shipped TRUE
+-- set is a strict SUBSET of the armed one. No `over` direction exists.
+--
+-- FAILURE DIRECTION: the sole consumer is aba_push.ShouldWaitForImportantItemsSpells,
+-- where TRUE means "hold the push, a teammate's key spell/item is still on
+-- cooldown". Under-scanning can only make that TRUE harder to reach, so the
+-- shipped behaviour is to open a mid/late-game push while the teammates whose
+-- cooldowns were never looked at are not ready -- systematically pushing EARLY,
+-- and only early. That is the opposite sign from 'slotpush', whose callers use
+-- TRUE to suppress a distraction.
+function ____exports.HasTeamMemberWithCriticalSpellInCooldown(targetLoc, bSlotWait)
+    for i, playerId in ipairs(GetTeamPlayers(GetTeam())) do
+        local nSlot = playerId
+        if bSlotWait then
+            nSlot = i
+        end
+        local teamMember = GetTeamMember(nSlot)
         if teamMember ~= nil and teamMember:IsAlive() then
             local nDuration = GetUnitToLocationDistance(teamMember, targetLoc) / teamMember:GetCurrentMovementSpeed()
             if ____exports.HasCriticalSpellWithCooldown(teamMember, nDuration) then
@@ -2123,13 +2155,23 @@ function ____exports.HasTeamMemberWithCriticalSpellInCooldown(targetLoc)
     return false
 end
 --- Check if the team has a member with a critical item in cooldown when the bot walks & arrives to the location.
--- 
--- @param bot - The bot to check.
+--
 -- @param targetLoc - The location to check.
+-- @param bSlotWait - Soak candidate 'slotwait'; see the sibling
+--                    HasTeamMemberWithCriticalSpellInCooldown above for the
+--                    defect, the direction and why the gate is threaded in
+--                    rather than read here. Same id on purpose: the two are
+--                    same-origin, same-consumer and sit one line apart inside
+--                    the same `if`, so splitting them into two ids would only
+--                    manufacture another same-arm conjunction (GH #424).
 -- @returns True if the team has a member with a critical item in cooldown, false otherwise.
-function ____exports.HasTeamMemberWithCriticalItemInCooldown(targetLoc)
-    for ____, playerId in ipairs(GetTeamPlayers(GetTeam())) do
-        local teamMember = GetTeamMember(playerId)
+function ____exports.HasTeamMemberWithCriticalItemInCooldown(targetLoc, bSlotWait)
+    for i, playerId in ipairs(GetTeamPlayers(GetTeam())) do
+        local nSlot = playerId
+        if bSlotWait then
+            nSlot = i
+        end
+        local teamMember = GetTeamMember(nSlot)
         if teamMember ~= nil and teamMember:IsAlive() then
             local nDuration = GetUnitToLocationDistance(teamMember, targetLoc) / teamMember:GetCurrentMovementSpeed()
             for ____, itemName in ipairs(____exports.ImportantItems) do

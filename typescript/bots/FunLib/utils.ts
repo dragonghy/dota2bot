@@ -1813,18 +1813,33 @@ export function GetItemFromCountedInventory(bot: Unit, itemName: string, count: 
 
 /**
  * Check if the team has a member with a critical spell in cooldown when the bot walks & arrives to the location.
- * @param bot - The bot to check.
+ *
+ * GetTeamPlayers hands back PLAYER IDS (0-4 radiant / 5-9 dire); GetTeamMember
+ * takes a team SLOT (1..5) and answers null out of range, so the shipped scan
+ * shrinks by side (radiant 4 of 5, dire 1 of 5). Unlike 'slotpush' the guard
+ * here is teamMember.IsAlive(), asked about the member the accessor handed
+ * back, so there is no guard/subject split: this is pure under-scanning, and
+ * the shipped TRUE set is a strict subset of the armed one. Failure direction:
+ * the sole consumer holds a mid/late push on TRUE, so under-scanning can only
+ * push EARLY. GH #467.
+ *
  * @param targetLoc - The location to check.
+ * @param bSlotWait - Soak candidate 'slotwait', resolved in exactly one place,
+ *                    J.ShouldWaitForTeamCooldowns in bots/FunLib/jmz_func.lua.
+ *                    This file may not import jmz_func (circular dependency),
+ *                    which is why the gate is threaded in rather than read here.
  * @returns True if the team has a member with a critical spell in cooldown, false otherwise.
  */
-export function HasTeamMemberWithCriticalSpellInCooldown(targetLoc: Vector): boolean {
+export function HasTeamMemberWithCriticalSpellInCooldown(targetLoc: Vector, bSlotWait?: boolean): boolean {
     // const cacheKey = "HasTeamMemberWithCriticalSpellInCooldown" + GetTeam();
     // const cachedRes = GetCachedVars(cacheKey, 2);
     // if (cachedRes !== null) {
     //     return cachedRes;
     // }
+    let i = 0;
     for (const playerId of GetTeamPlayers(GetTeam())) {
-        const teamMember = GetTeamMember(playerId);
+        i++;
+        const teamMember = GetTeamMember(bSlotWait ? i : playerId);
         if (teamMember !== null && teamMember.IsAlive()) {
             const nDuration = GetUnitToLocationDistance(teamMember, targetLoc) / teamMember.GetCurrentMovementSpeed();
             if (HasCriticalSpellWithCooldown(teamMember, nDuration)) {
@@ -1840,18 +1855,24 @@ export function HasTeamMemberWithCriticalSpellInCooldown(targetLoc: Vector): boo
 
 /**
  * Check if the team has a member with a critical item in cooldown when the bot walks & arrives to the location.
- * @param bot - The bot to check.
  * @param targetLoc - The location to check.
+ * @param bSlotWait - Soak candidate 'slotwait'; see the sibling
+ *                    HasTeamMemberWithCriticalSpellInCooldown above. Same id on
+ *                    purpose: same origin, same consumer, one line apart inside
+ *                    the same `if` -- two ids would only build another same-arm
+ *                    conjunction (GH #424).
  * @returns True if the team has a member with a critical item in cooldown, false otherwise.
  */
-export function HasTeamMemberWithCriticalItemInCooldown(targetLoc: Vector): boolean {
+export function HasTeamMemberWithCriticalItemInCooldown(targetLoc: Vector, bSlotWait?: boolean): boolean {
     // const cacheKey = "HasTeamMemberWithCriticalItemInCooldown" + GetTeam();
     // const cachedRes = GetCachedVars(cacheKey, 2);
     // if (cachedRes !== null) {
     //     return cachedRes;
     // }
+    let i = 0;
     for (const playerId of GetTeamPlayers(GetTeam())) {
-        const teamMember = GetTeamMember(playerId);
+        i++;
+        const teamMember = GetTeamMember(bSlotWait ? i : playerId);
         if (teamMember !== null && teamMember.IsAlive()) {
             const nDuration = GetUnitToLocationDistance(teamMember, targetLoc) / teamMember.GetCurrentMovementSpeed();
             for (const itemName of ImportantItems) {

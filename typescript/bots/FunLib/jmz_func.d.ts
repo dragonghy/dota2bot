@@ -74,6 +74,9 @@ declare function IsPingCloseToValidTower(team: Team, ping: Ping, radius: number,
 
 declare function GetNumOfAliveHeroes(isEnemy: boolean): number;
 
+/** The one gate-resolution site for soak candidate 'slotwait' (GH #467). */
+declare function ShouldWaitForTeamCooldowns(vLocation: Vector): boolean;
+
 declare function IsValid(target: Unit): boolean;
 
 declare function GetHeroesNearLocation(enemy: boolean, location: Vector, radius: number): Unit[];

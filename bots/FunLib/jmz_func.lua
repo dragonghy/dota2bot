@@ -12412,6 +12412,33 @@ function J.IsTeamPushingHighGround( bot )
 end
 
 
+-- The ONE gate-resolution site for the soak candidate 'slotwait' (turbo-only).
+--
+-- GH #467. The same pid-for-slot defect as 'slotpush', on the last two LIVE
+-- members of the bots/FunLib/utils.lua cluster:
+-- HasTeamMemberWithCriticalItemInCooldown / ...SpellInCooldown. The defect and
+-- its direction are documented next to the functions themselves; what lives
+-- HERE is only the arming, and for the same structural reason as 'slotpush':
+-- utils.ts may not import jmz_func, so utils cannot read the gate.
+--
+-- ONE wrapper for TWO functions, not two wrappers. The gate is read once and
+-- threaded into both legs, so 'slotwait' can never be half-armed, and the id
+-- appears exactly once in bots/. The two functions are same-origin,
+-- same-consumer and adjacent inside one `if` in
+-- aba_push.ShouldWaitForImportantItemsSpells; a separate id each would only
+-- build another same-arm conjunction (GH #424, 'outlatch' > 'slotpush').
+--
+-- The `or` preserves the shipped evaluation ORDER (item first, then spell) and
+-- its short circuit, so un-armed this wrapper is byte-for-byte the shipped
+-- decision. tests/test_slotwait_cooldown_scan.lua asserts that, and asserts the
+-- scan in both directions on real frames.
+function J.ShouldWaitForTeamCooldowns( vLocation )
+	local bSlotWait = J.IsModeTurbo() and J.IsSoakCandidate( 'slotwait' )
+	return J.Utils.HasTeamMemberWithCriticalItemInCooldown( vLocation, bSlotWait )
+		or J.Utils.HasTeamMemberWithCriticalSpellInCooldown( vLocation, bSlotWait )
+end
+
+
 -- Soak candidate 'roshdist' (turbo-only; the gate is resolved in exactly one
 -- place, the J.IsAtRoshanPit wrapper below, which has exactly one caller).
 --

@@ -14402,3 +14402,97 @@ availableCamp = J.Role['availableCampTable']
 - **批测台**:本轮不欠、不申请波次。
 
 ---
+
+## §DW 2026-09-03T22:4xZ 协同组(**入集提议,新 id `slotwait`**,认领 GH #467):pid→slot 家族的第六、七处,**符号与 `slotpush` 相反 —— 它只会让 bot 多推**;而本节最该被读的是 **§DW.4:语料上那个「98 次求值 0 次 TRUE」的干净零,是一个语料事实和一台瞎仪器长着同一张脸**
+
+### §DW.0 一句话
+
+`bots/FunLib/utils.lua` 的 `HasTeamMemberWithCriticalItemInCooldown` /
+`...SpellInCooldown` 两个函数,把 `GetTeamPlayers` 给的**玩家 id** 喂给收**队伍槽位**的
+`GetTeamMember` ⇒ 出厂扫描按侧缩水(天辉 4/5、**夜魇 1/5**)。两者的唯一消费者是
+`aba_push.ShouldWaitForImportantItemsSpells` ——「先别推,等队友的关键技能/装备转好」。
+**TRUE = 等** ⇒ 漏扫只能让 TRUE 更难成立 ⇒ **系统性提前开推,而且只会多推、不会少推**。
+
+### §DW.1 为什么是**一个** id 盖两个函数
+
+两者同源、同消费者、在同一个 `if` 里前后脚。拆成两个 id 只会造出**又一对同臂合取**
+(GH #424 `outlatch > slotpush` 的教训)。落地形状:闸在 `jmz_func.lua` 的
+`J.ShouldWaitForTeamCooldowns` 里**读一次**、穿给两条腿 ⇒ **`slotwait` 结构上不可能半臂 armed**,
+且 `slotwait` 这个串在 `bots/` 里**只出现一次**。`utils.lua` 不许读闸(它自己的头注禁止 import
+`jmz_func`),与 `slotpush` 同一条纪律。未 armed 时 wrapper 的 `or` **逐字保留出厂求值顺序**
+(先 item 后 spell)与短路 ⇒ 出厂决定按字节不变。
+
+### §DW.2 落地物
+
+- `bots/FunLib/utils.lua` 两个函数各加 `bSlotWait` 形参(修的是**实参**,不是在调用外面加子句);
+- `bots/FunLib/jmz_func.lua` 新增唯一闸点 `J.ShouldWaitForTeamCooldowns`;
+- `bots/FunLib/aba_push.lua` 消费者改走 wrapper(中后期守卫原样保留,**闸不许拓宽定义域**);
+- `typescript/` 三个文件同步(`utils.ts` / `aba_push.ts` / `jmz_func.d.ts`);
+- `tests/test_slotwait_cooldown_scan.lua` **15/15**;
+- `tools/agent/mutstand_slotwait.sh` **9/9 CAUGHT**;
+- `state.json` 新键 `slotwait_20260903`。
+
+### §DW.3 两面各自买到了什么
+
+**买到了(真帧,无反事实)**:扫描本身与**两个谓词自己传给 `GetTeamMember` 的实参**。
+49 份带 player_id 的 fixture 上,**按侧的缩水是全称的** —— 25 份夜魇**每一份**只够到 1 个成员、
+24 份天辉**每一份**只够到 4 个,armed 恒为 5。夜魇那唯一被够到的成员**还不是名义上的那一个**:
+步骤 1 名义上问 player id 5(slot 1 的 death_prophet),拿回来的是 **slot 5 的 lion**。
+
+**没买到**:决定。见 §DW.4。决定层的读数**全部**写在带 `counterfactual` 字样的用例里,
+恢复的是**加载器从来没接线的两个子句**(`IsTrained` / `IsActivated`)——
+既有做法(`test_itemdesire_world_assertion.lua`、`test_lf_salve_cast_type.lua`),不是新自由。
+条件 (a) 仍是录像组的,GH #467 §验收 已点名检测器。
+
+### §DW.4 ⭐ 主判据(可复用,超出本主题):**一个干净的零,可以是一个语料事实和一台瞎仪器叠在一起 —— 而它们从外面看一模一样**
+
+未动的语料上,两个谓词在 **98 次求值(49 fixture × 2 函数)里 0 次 TRUE、0 次 flip**,
+armed 与出厂**逐位相同**。把这一行照抄进结论,就等于说「出厂没问题」。**逐条拆开量之后是两件事**:
+
+- **item 腿 = 语料事实**。`ImportantItems` 只有两项(BKB / refresher),
+  **223 个存活成员帧里 0 个**持有其一。仪器好的,帧上就是没有 BKB。
+- **spell 腿 = 仪器事实,而且是危险的那一个**。181/223 个成员**在** 88 英雄的 `ImportantSpells`
+  表里,技能等级与冷却**是从帧上真加载的**(1050 个技能句柄里 216 个 cd > 0)。它依然不可能为真:
+  `J.Utils.IsValidAbility` 最后一个合取项是 `not ability:IsActivated()`,而 `IsActivated`
+  **不在 `tests/mock/bot_api.lua` 的任何 spec 上** ⇒ 落到通用 `^Is` 默认值 **false**
+  ⇒ **`IsValidAbility` 在每一帧、对每一个技能都结构上为假**。实测 181 个里
+  **149 个死在 `IsActivated`、32 个死在 `IsTrained`、0 个存活**。
+
+⇒ 与 `mock/replay_fixture.lua` 里已登记的 `GetManaCost` / `GetActualIncomingDamage` 两个零同族:
+**一个静默默认值不是一个小数字,是另一个谓词**。新意在于**这一次两个原因叠在同一个读数上**,
+而其中一个是良性的 —— 只要有一个良性解释在手,就**不会有人去问第二个**。
+⚠️ 这台仪器的洞**不是本轮新发现**:`test_lf_rescue_final_action.lua:57` 已经点名
+「clauses the loader never wires (IsTrained/IsActivated)」。**已知 ≠ 已被想起** ——
+它没有出现在任何一处「本语料上这个谓词从不为真」的登记旁边。本节把它钉在读数旁边。
+
+### §DW.5 变异台(9/9 CAUGHT)与它自己踩的一脚
+
+`tools/agent/mutstand_slotwait.sh`。⚠️ **M2 第一稿 SURVIVED,而原因不是断言弱,是变异打错了地方**:
+`nSlot = i` 在 `utils.lua` 里出现在**三个**函数中(本轮两个 + `slotpush` 的
+`IsTeamPushingSecondTierOrHighGround`),没锚定的正则**先命中 slotpush 那一处**(行号更靠前,
+且短缩进匹配得进长缩进)⇒ 改的是**本测试文件根本不覆盖的函数**,跑出来当然全绿。
+⇒ **一个打偏的 mutant 和一个瞎的断言,输出是同一个字符串;只有读 diff 能分开。**
+(evidence-discipline 规则 2 的逆命题。)锚到 `bSlotWait` 后 CAUGHT。
+
+### §DW.6 ⚠️ 登记的 LIMIT(不构成否决)
+
+- 决定层未在真帧上买到(§DW.3 / §DW.4),条件 (a) 欠录像组;
+- GH #467 §边界 的两条**原样继承,未放宽**:那五个「零消费者」函数**只查过 `utils.lua` 之外**
+  有没有引用;`ImportantItems` / `ImportantSpells` 的**名单本身**没核过 —— 本节说的缺陷是
+  **扫谁**,不是**扫什么**;
+- Lua 全量套件(~100min,GH #124)收尾时未跑完 ⇒ 「没让别的文件开红」只覆盖本轮点名重跑的
+  5 个文件(新文件 + 嵌套普查 + slotpush + smoke + gate_claim),**不是全语料**。
+
+### §DW.7 交棒
+
+- **总监**:裁 §DW 入集(**59 → 60**)。queue 行 **`strategy-41`**(`bundle` 已填 `slotwait`)。
+- **录像组**:条件 (a)。GH #467 §验收(2) 已给出最便宜的一面:
+  `slotpush_domain.py` 的槽位映射与地图推导整段可复用,只需换掉「成员条件」那一个函数
+  (改成「该成员的关键技能/装备冷却 > 走到目标点的时间」)。**冷却在 dumper 里是有的**
+  (`snapshots[].abilities[].cd`)⇒ **离线可判**,比 `slotpush` 的 `IsPushing` 还干净。
+  ⚠️ 按铁律 4(i-a) dire / radiant 两个分层各自登记读数 —— 这个缺陷**按构造就是按侧不同的量**
+  (夜魇 1/5、天辉 4/5),池化在这里是**结构性错误**而不是精度问题;计数类、侧偏未消除
+  ⇒ 两层反号按 4(i-b) 读成噪声。
+- **批测台**:本轮不欠、不申请波次(入集后才随波)。
+
+---

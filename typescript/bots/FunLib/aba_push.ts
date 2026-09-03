@@ -1143,8 +1143,11 @@ export function GetLaneBuildingTier(nLane: Lane): number {
 export function ShouldWaitForImportantItemsSpells(vLocation: Vector): boolean {
     const gameState = updateGameStateCache();
     if (gameState.isMidGame || gameState.isLateGame) {
-        if (jmz.Utils.HasTeamMemberWithCriticalItemInCooldown(vLocation)) return true;
-        if (jmz.Utils.HasTeamMemberWithCriticalSpellInCooldown(vLocation)) return true;
+        // Soak candidate 'slotwait' (GH #467) is resolved inside this wrapper,
+        // in bots/FunLib/jmz_func.lua -- one read for both legs so the id can
+        // never be half-armed. The wrapper's `or` keeps the shipped order
+        // (item, then spell) and its short circuit.
+        if (jmz.ShouldWaitForTeamCooldowns(vLocation)) return true;
     }
     return false;
 }
