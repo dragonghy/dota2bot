@@ -84,7 +84,20 @@
     "lion",
     "skeleton_king"
    ],
-   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+   "status_code": "instance-terminated-no-capacity",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR outlives the describe-instances 1h window of GH #427; read at 12:2xZ, ~2h after termination, when the EC2 terminated census was ALREADY EMPTY -- this is the first wave where the SIR route was exercised against a window that had already shut).",
+   "terminated_at": "2026-09-03T09:46:31Z",
+   "survival_min": 14.43,
+   "survival_hours": 0.2406,
+   "survival_source": "EXACT (SIR Status.UpdateTime minus machines[].launched_at), not an S3 lower bound",
+   "ab_games": 10,
+   "ba_games": 0,
+   "arm_depth": 0.0,
+   "depth_source": "recover_verdict.py ./w42 <57-id>, RV_EXIT=0, this round",
+   "scored": false,
+   "excluded": "NO-PAIR",
+   "ab": 10,
+   "ba": 0
   },
   {
    "seed": 3101,
@@ -101,7 +114,19 @@
     "spirit_breaker",
     "chaos_knight"
    ],
-   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR outlives the describe-instances 1h window of GH #427; read at 12:2xZ, ~2h after termination, when the EC2 terminated census was ALREADY EMPTY -- this is the first wave where the SIR route was exercised against a window that had already shut).",
+   "terminated_at": "2026-09-03T10:28:22Z",
+   "survival_min": 56.2,
+   "survival_hours": 0.9367,
+   "survival_source": "EXACT (SIR Status.UpdateTime minus machines[].launched_at), not an S3 lower bound",
+   "ab_games": 32,
+   "ba_games": 24,
+   "arm_depth": 27.43,
+   "depth_source": "recover_verdict.py ./w42 <57-id>, RV_EXIT=0, this round",
+   "scored": true,
+   "ab": 32,
+   "ba": 24
   },
   {
    "seed": 3117,
@@ -119,7 +144,19 @@
     "lion",
     "obsidian_destroyer"
    ],
-   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR outlives the describe-instances 1h window of GH #427; read at 12:2xZ, ~2h after termination, when the EC2 terminated census was ALREADY EMPTY -- this is the first wave where the SIR route was exercised against a window that had already shut).",
+   "terminated_at": "2026-09-03T10:27:17Z",
+   "survival_min": 55.05,
+   "survival_hours": 0.9175,
+   "survival_source": "EXACT (SIR Status.UpdateTime minus machines[].launched_at), not an S3 lower bound",
+   "ab_games": 41,
+   "ba_games": 17,
+   "arm_depth": 24.03,
+   "depth_source": "recover_verdict.py ./w42 <57-id>, RV_EXIT=0, this round",
+   "scored": true,
+   "ab": 41,
+   "ba": 17
   },
   {
    "seed": 3204,
@@ -136,7 +173,19 @@
     "obsidian_destroyer",
     "skeleton_king"
    ],
-   "status_code": "PENDING -- spot machines DO have a SIR, so read Status.Code from describe-spot-instance-requests at harvest (it outlives describe-instances). ALSO write survival_min (or create+update) and ab/ba/arm_depth: omitting them is what disabled the GH #271 gate for a round after W41."
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR outlives the describe-instances 1h window of GH #427; read at 12:2xZ, ~2h after termination, when the EC2 terminated census was ALREADY EMPTY -- this is the first wave where the SIR route was exercised against a window that had already shut).",
+   "terminated_at": "2026-09-03T10:28:47Z",
+   "survival_min": 56.48,
+   "survival_hours": 0.9414,
+   "survival_source": "EXACT (SIR Status.UpdateTime minus machines[].launched_at), not an S3 lower bound",
+   "ab_games": 37,
+   "ba_games": 21,
+   "arm_depth": 26.79,
+   "depth_source": "recover_verdict.py ./w42 <57-id>, RV_EXIT=0, this round",
+   "scored": true,
+   "ab": 37,
+   "ba": 21
   }
  ],
  "market_verified": "all four InstanceLifecycle = spot at 09:32:3xZ, read off describe-instances (an evidence source independent of this session's transcript). Four pairwise-distinct soak-run tag values; four distinct RUN_TOKENs (1db27d/13d27c/1f4265/93ca3e); the four calls are 09:32:03/07/12/16 => every pair crosses an integer second.",
@@ -144,5 +193,169 @@
  "capacity_note": "Zero capacity degradation at launch: all four c6i.4xlarge spot requests filled in their requested AZ on the first attempt, no fallback to c6a and no --on-demand escalation.",
  "launch_round_roll_call": "09:32:3xZ fixed action (not --leak-only): pending+running = EXACTLY the four intended instances, one-to-one with machines[].run_id; four volumes all in-use with no orphans; standing cost is the AMI (ami-0a990a26d89c66547) only.",
  "progress_at_launch": "0 games; expected ~96 scored",
- "expected_self_destruct": "~10:1x-10:3xZ at the measured spot/cap-25 constant (0.745 h/machine); watchdog hard stop 11:32Z"
+ "expected_self_destruct": "~10:1x-10:3xZ at the measured spot/cap-25 constant (0.745 h/machine); watchdog hard stop 11:32Z",
+ "harvest": {
+  "at": "2026-09-03T12:2x-12:5xZ",
+  "rv_exit": 0,
+  "input": {
+   "files_seen": 206,
+   "games_loaded": 206,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0
+  },
+  "scored_games": 172,
+  "unfinished_games": 0,
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "seeds_scored": 3,
+  "seeds_delivered_of_launched": "3 of 4",
+  "mean": {
+   "gpm": -19.15,
+   "xpm": -7.8,
+   "deaths": 0.12,
+   "last_hits": -0.6
+  },
+  "comps_better": {
+   "gpm": "1/3",
+   "xpm": "1/3",
+   "deaths": "1/3",
+   "last_hits": "2/3"
+  },
+  "strata": {
+   "gpm": {
+    "ab": -35.99,
+    "ba": -2.32,
+    "side": -16.84,
+    "sign_flip": false
+   },
+   "xpm": {
+    "ab": -17.65,
+    "ba": 2.06,
+    "side": -9.86,
+    "sign_flip": true
+   },
+   "deaths": {
+    "ab": -0.69,
+    "ba": 0.92,
+    "side": -0.8,
+    "sign_flip": true
+   },
+   "last_hits": {
+    "ab": 0.88,
+    "ba": -2.07,
+    "side": 1.48,
+    "sign_flip": true
+   }
+  },
+  "winrate_channel": "DEGENERATE",
+  "winrate_side_census": {
+   "radiant": 5,
+   "dire": 201
+  },
+  "winrate_minority_side_share": 0.0243,
+  "mean_winrate_headroom": 0.0347,
+  "winrate_placeholder_note": "winrate 0.49 and comps_better.winrate 0/3 are PLACEHOLDERS, not readings, per GH #352 / test_set.md CT. Tool's own banner copied verbatim into the report.",
+  "suggested": "hold_or_reject",
+  "winner_by": {
+   "engine_natural": 206
+  },
+  "winrate_independent_of_gold": "206/206 games (the GH #108/#352 bucket-name bug is fixed: this prints the true value, not 0/206)",
+  "preregistration_outcomes": {
+   "winrate_prereg": "BRANCH (a) FIRED. Same arm, same compiled tree, ONLY the seeds are new, and the channel came back DEGENERATE again (0.0243 vs W41's 0.0045). The seed-set axis is therefore eliminated by construction: the degeneracy is the CORPUS, not the id set and not the seed count. Branch (b) (RECOVERED on fresh seeds alone) did NOT fire, so the W41 4.3 reading needs no correction.",
+   "carrier_exposure_note": "HELD, and this is the first time it was tested by a REAL loss rather than asserted. Seed 3040 was reclaimed; the surviving three seeds leave EVERY term with >= 1 carrier (zuus 3, crystal_maiden 3, chaos_knight 2, obsidian_destroyer 2, spirit_breaker 1, lion 1, skeleton_king 1). ZERO terms zeroed -- computed, not eyeballed. Contrast W40, where one 2c event took three terms to 0. The honest bound stands unchanged: this protection is exactly one deep.",
+   "zero_pudge": "SEVENTH consecutive wave with zero pudge (0 of 206 games carry npc_dota_hero_pudge, counted over the players field, not over printed rosters). queue strategy-26 / rotscope: NO CARRIER, which is NOT a negative reading.",
+   "rec_slot_cost": "RSC_EXIT=0, third non-circular run. 206 games, 8 control slots, box factor 0.993; 0 recording slots beyond tolerance vs rec_slot_baseline.json. .demclaim.json sidecars were downloaded alongside the analysis files, so the exit-2 trap of the earlier round did not fire.",
+   "detector_fields": "SS-DT.4 (ckpush) / SS-DP.8 (roshdist) remain UNINTERPRETABLE from this corpus. Re-checked this round rather than assumed: the analysis.json top-level key set is [anomalies, anomaly_count, avg_gpm, cap_min, duration_min, duration_s, econ_winner, effective_timescale, log, mode, natural_end, players, script_version, team_gold, towers, wall_s, winner, winner_by] -- no frame-level detector fields. Same as W41. This is 'no instrument', NOT 'tested, no effect'."
+  },
+  "pooled_W41_W42": {
+   "status": "REPORTED, NOT RULED. The pooling decision is the director's (GH #449); this is the number that decision is about.",
+   "method": "recover_verdict.py over a parent dir holding all EIGHT run subdirs -> per-seed swap-average, then arithmetic mean across scored seeds. NEVER games-weighted (iron rule 4(i-d)).",
+   "rv_exit": 0,
+   "seeds_scored": 7,
+   "scored_games": 371,
+   "games_loaded": 429,
+   "unfinished": 0,
+   "excluded": "3040 (NO-PAIR, ab=10 ba=0, arm_depth 0.0)",
+   "mean": {
+    "gpm": -19.54,
+    "xpm": -12.09,
+    "deaths": 0.21,
+    "last_hits": -1.14
+   },
+   "comps_better": {
+    "gpm": "2/7",
+    "xpm": "2/7",
+    "deaths": "2/7",
+    "last_hits": "3/7"
+   },
+   "per_seed_gpm": {
+    "3017": -7.18,
+    "3030": 75.21,
+    "3101": -69.45,
+    "3117": -8.42,
+    "3161": -32.6,
+    "3204": 20.41,
+    "3329": -114.77
+   },
+   "winrate_channel": "DEGENERATE",
+   "winrate_minority_side_share": 0.014,
+   "mean_winrate_headroom": 0.0191,
+   "shortfall": "SEVEN scored seeds, not eight. The 57-id family's 8-seed floor is NOT reached even if the director approves pooling, because 3040 was reclaimed. That is exactly what the on-demand re-run launched this round is for."
+  },
+  "cost": {
+   "machine_hours": 3.0361,
+   "per_machine_hours": {
+    "3040": 0.2406,
+    "3101": 0.9367,
+    "3117": 0.9175,
+    "3204": 0.9414
+   },
+   "spot_price_band": "$0.231-0.250/h",
+   "measured_wave_cost": "$0.701-0.759 (machine-hours x price band; this is an hours-side computation, NOT a billing-side read)",
+   "auto_invalidation_clause": "DOES NOT FORMALLY FIRE ($0.70-0.76 <= $0.90) -- and the reason it does not is that one machine died at 14 minutes. The three SURVIVORS averaged 0.9319 h/machine against the charter's 0.745 h/machine constant (+25%). A full four-machine wave at the measured survivor rate is 3.7274 machine-hours = $0.861-0.932, whose upper end EXCEEDS the $0.90 constant. Registered as a fails-toward-danger drift: the constant under-counts the fence, and a preemption is what kept this wave's number under it. Handed to the director."
+  },
+  "reclaim_blind_GH271": {
+   "rb_exit": 0,
+   "verdict": "not blinded -- the wave delivered 3 paired seed(s). NEXT WAVE: spot (the default; GH #158 unchanged).",
+   "changeover": "40.0 min (measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min); min_arm_depth 8.0",
+   "attribution": "1 machine reclaimed BEFORE the flip -> seed 3040 is a single-leg orphan (ab10/ba0, arm_depth 0.0), which is exactly the shape the tool's own header describes.",
+   "rows": [
+    "3040 14.4min instance-terminated-no-capacity ab10/ba0 NO-PAIR",
+    "3101 56.2min instance-terminated-by-user ab32/ba24 PAIRED (depth-checked)",
+    "3117 55.0min instance-terminated-by-user ab41/ba17 PAIRED (depth-checked)",
+    "3204 56.5min instance-terminated-by-user ab37/ba21 PAIRED (depth-checked)"
+   ],
+   "note": "Answerable on FIRST-HAND EXACT survival this round, unlike W41 which had to be reconstructed from S3 lower bounds -- because this was a spot wave and spot machines have a SIR that outlives the GH #427 window."
+  }
+ },
+ "rerun": {
+  "why": "Seed 3040's machine was reclaimed 14.4 min after launch with SIR Status.Code instance-terminated-no-capacity. Charter recovery disposition (OWNER_PRIORITIES standing ops item): one reclaimed machine = that seed loses an arm, the pair diff for that seed is void, DO NOT void the wave; re-launch one machine for the missing seed.",
+  "market_ruling": "GH #408: the SIR code IS instance-terminated-no-capacity, so the re-run goes straight to --on-demand and does NOT walk the (1) c6i spot / (2) c6a spot / (3) on-demand ladder. This is not a change to owner GH #158, it is #158's own 'unless there is no spot machine' clause: the re-run is by construction aimed at a window that just refused capacity.",
+  "fences": "GH #408: one re-run per seed (3040 has never been re-run) and at most 2 on-demand re-runs per wave (this is 1). Both satisfied.",
+  "gate_i_note": "NOT consumed. Gate (i) throttles ROUTINE waves; this is a registered repair of an already-flown wave. W43's routine unlock stays 2026-09-03T15:32:03Z.",
+  "config": "--count 1 --az us-west-2c --on-demand --ref 1baa449b... --slots 16 --hours 2 --rec-slots 8 --validate '<57-id> 3040 --games 12'. Every acquisition arg passed EXPLICITLY (the W38 lesson: a re-run that silently inherits slots=14 / watchdog 3h has to be killed and re-sent).",
+  "az_choice": "us-west-2c, deliberately NOT 2a (the AZ that just refused capacity). On-demand does not eat capacity reclaims, so this is belt-and-braces.",
+  "ref_verified": "git fetch --depth 1 origin 1baa449b6829dc8ce768d891e1ed661dec987555 => exit 0, the ref is reachable on the remote. Note origin/main has since moved to c47925b9; the re-run is pinned to W42's tree ON PURPOSE so its games pool with W41/W42.",
+  "banked_games_note": "3040 already has 10 ab-leg games banked from the dead machine. recover_verdict keys games by the seed stamp, so the re-run's games merge with them automatically; expect a deeper ab leg and a correspondingly asymmetric ab:ba.",
+  "launch_exit": "RERUN_EXIT=0, read WITHOUT a pipe (redirected to a file). This is the exact trap the previous round fell into -- reading spot_run.sh's $? through `| tail` returns tail's code, and tail almost always succeeds.",
+  "machines": [
+   {
+    "seed": 3040,
+    "run_id": "spot_20260903_121922_1_1baa449b6829dc8ce768d891e1ed661dec987555_57c85a",
+    "instance_id": "i-07d6358854ccda217",
+    "requested_az": "us-west-2c",
+    "actual_az": "us-west-2c",
+    "reaimed": false,
+    "market": "on-demand",
+    "lifecycle": "InstanceLifecycle = None, read off describe-instances (an evidence source independent of this session's transcript). None = on-demand; the run_id's spot_ prefix is a hard-coded string and is not evidence.",
+    "launched_at": "2026-09-03T12:19:25Z",
+    "status_code": "PENDING -- an on-demand machine has NO SIR, so its only code is EC2 StateReason.Code, readable for ~1h after termination (GH #427). Expected self-destruct ~13:1x-13:2xZ; the next round MUST read it inside that window.",
+    "expected_self_destruct": "~13:1x-13:2xZ at the measured survivor rate (0.932 h/machine); watchdog hard stop 14:19Z",
+    "cost_estimate": "~1 machine x ~0.93 h x $0.673/h = ~$0.63"
+   }
+  ],
+  "roll_call_after_launch": "12:2xZ: pending+running soak-run tags = EXACTLY one value, equal to rerun.machines[0].run_id; describe-volumes = 1 volume in-use, zero orphans; standing cost is the AMI only."
+ },
+ "_harvest_key_note": "machines[] carry BOTH ab_games/ba_games (human-readable, matching the report table) and ab/ba (the exact key names reclaim_blind.py reads). The first attempt this round wrote only the _games spelling and reclaim_blind answered `UNDECIDABLE: seed 3040: missing leg count 'ab'` -> RB_EXIT=2. Registered because it is the same shape as the omission it was meant to fix: the GH #271 gate does not fail loudly, it fails as exit 2, and exit 2 is the code most easily misread as a pass."
 }
