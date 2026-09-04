@@ -339,6 +339,57 @@ local nKeepMana, nMP, nHP, nLV, hEnemyHeroList
 local aetherRange = 0
 
 
+-- [zusaether] Soak candidate 'zusaether' (turbo-only).
+--
+-- THE DEFECT.  This file is a HALF-WIRED copy of the BotLib Aether Lens
+-- template.  The producer is here (`aetherRange = 250` under an
+-- `IsItemAvailable('item_aether_lens')` test, :586/:595 below), but all three
+-- cast-range consumers dropped the `+ aetherRange` term the template carries:
+-- X.ConsiderQ, X.ConsiderW and X.ConsiderW2 each read a bare
+-- `abilityX:GetCastRange()`.  Measured 2026-09-04 over the 33 hero files that
+-- declare `aetherRange`: 22 wire it into at least one cast-range read; Zeus is
+-- one of 8 that compute it and read it NOWHERE.
+--
+-- THE DOMAIN IS LIVE, not a dead branch: `sRoleItemsBuyList` buys
+-- item_aether_lens on BOTH support rows this hero actually plays (pos_4 :199,
+-- pos_5 :216), and `zeusaghs5` reasons about that very purchase.
+--
+-- WHY IT COSTS SOMETHING, and note the direction is the OPPOSITE of GH #459's.
+-- In all three consumers `nCastRange` is the radius of the hero's own SEARCH
+-- ring -- J.GetNearbyHeroes(bot, nCastRange, ...) in ConsiderQ/ConsiderW2,
+-- J.IsInRange(target, bot, nCastRange) in ConsiderW, and the reach handed to
+-- bot:FindAoELocation / J.GetCastLocation.  UNDER-stating it does not make the
+-- bot walk anywhere; it makes an enemy who is genuinely inside the item's
+-- extended cast range INVISIBLE to the decision.  Concretely: with the lens
+-- bought, ConsiderQ's `J.GetHP(npcEnemy) <= 0.2` execute loop cannot see a
+-- killable target sitting between 900 and 1150 units, and ConsiderW refuses to
+-- Bolt a target it could in fact hit.  Restoring the term can only ever ADD a
+-- cast the hero was already paying for; it cannot invent reach the item does
+-- not grant, and it cannot order an approach.
+--
+-- GATED anyway, because it is a behaviour change on a focus hero and the
+-- lanefix lesson is that locally-correct is not emergently-good.  Gate off,
+-- AetherReach() returns 0 and every consumer is arithmetically the shipped
+-- `GetCastRange()`.
+--
+-- INDEPENDENT of 'aetherlens' ON PURPOSE.  The producer below is routed through
+-- J.GetAetherLensRangeBonus so that lever can correct 250 -> the live KV 225,
+-- but the two gates are never conjoined.  A gate whose condition names a SECOND
+-- candidate id freezes FALSE the day either id is promoted, because a promoted
+-- id appears in no armed string -- the `pullcad` trap recorded in AGENTS.md.
+-- Each id is isolable here, and the test drives all four combinations.
+local function AetherReach()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusaether' )
+	then
+		return aetherRange
+	end
+
+	return 0
+
+end
+
+
 local abilityASBonus = 0
 
 -- [zusult] A healthy enemy is worth less than a ready global execute.
@@ -593,7 +644,11 @@ function X.SkillsComplement()
 	hEnemyHeroList = J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE )
 
 	local aether = J.IsItemAvailable( "item_aether_lens" )
-	if aether ~= nil then aetherRange = 250 end
+	-- Routed through the 'aetherlens' helper (GH #459): the live KV
+	-- item_aether_lens/AbilityValues/cast_range_bonus is 225, not the 250 this
+	-- file inherited.  Unarmed the helper hands back the shipped 250, so this
+	-- line alone is a no-op; it only ever narrows.
+	if aether ~= nil then aetherRange = J.GetAetherLensRangeBonus( aether, 250 ) end
 	abilityASBonus = X.GetStaticFieldBonus( X.GetBoundAbility( abilityAS, 'zuus_static_field' ) )
 	-- DELETED 2026-08-22: `talentDamage` was assigned here and at its declaration and
 	-- read NOWHERE in the repo (the same shape GH #104 removed from Wraith King and
@@ -699,7 +754,7 @@ function X.ConsiderQ()
 	-- and no kill is on the table (the helper exempts a killable enemy in range).
 	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, nil end
 
-	local nCastRange = abilityQ:GetCastRange()
+	local nCastRange = abilityQ:GetCastRange() + AetherReach()
 	local nCastPoint = abilityQ:GetCastPoint()
 	local manaCost = abilityQ:GetManaCost()
 	local nRadius = abilityQ:GetSpecialValueInt( "radius" )
@@ -827,7 +882,7 @@ function X.ConsiderW()
 	-- and no kill is available (helper exempts a killable enemy in range).
 	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, nil end
 
-	local nCastRange = abilityW:GetCastRange()
+	local nCastRange = abilityW:GetCastRange() + AetherReach()
 	local nCastPoint = abilityW:GetCastPoint()
 	local manaCost = abilityW:GetManaCost()
 	local nDamage = abilityW:GetAbilityDamage() * ( 1 + bot:GetSpellAmp() )
@@ -938,7 +993,7 @@ function X.ConsiderW2()
 		return BOT_ACTION_DESIRE_NONE, nil
 	end
 
-	local nCastRange = abilityW:GetCastRange()
+	local nCastRange = abilityW:GetCastRange() + AetherReach()
 	local nCastPoint = abilityW:GetCastPoint()
 	local manaCost = abilityW:GetManaCost()
 	local nDamage = X.GetBoltKillHealthCap( abilityW )

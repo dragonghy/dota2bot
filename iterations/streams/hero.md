@@ -22,6 +22,25 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-86. **「算了不读」的 `aetherRange` 还剩 7 个文件,而它们和 `-85` 是同一种病的另一个器官。**
+   2026-09-04T01:58Z 那轮把焦点英雄那一个(Zeus)接了(候选 `zusaether`,报告
+   `iterations/reports/hero/20260904T015833Z.md`)。全树 **33 声明 / 26 接了 / 7 算了不读**:
+   `hero_bane.lua`(2 个生产者)、`hero_juggernaut.lua`、`hero_legion_commander.lua`、
+   `hero_mirana.lua`、`hero_queenofpain.lua` 各 1 个,`hero_slardar.lua` / `hero_slark.lua`
+   **连生产者都没有**(纯声明)。
+   - **⛔ 不要照着 Zeus 一次接完** —— 7 个文件同时改行为**就是 `lanefix` bundle 的形状**,
+     那个 bundle 在终局门上被拒了两次。而且这 7 个**全都不是焦点英雄**
+     ⇒ 与 `-84` / `-85` 同理,**作用域先问总监**。
+   - **计数器已经替你留着**:`tests/test_zeus_aether_cast_range.lua` 的
+     `DEAD_PRODUCER_CEILING = 7` 是**单调棘轮**(降 = 好,升 = 又有人只抄了生产者 → 红并点名)。
+     **不要把它改成 `==`** —— GH #457 刚修过那个形状;旁边的供给量断言
+     (`nDecl >= 30` 且 `nWired >= 26`)是 `aetherlens` 那轮用一次空普查换来的教训。
+   - **⚠️ 接线前先问「这个英雄的买表买不买透镜」**:Zeus 值得接是因为
+     `pos_4`/`pos_5` **都买**。买表不买的英雄,接线是纯粹的无效改动 + 一份新的闸债。
+   - **⭐ 真正的下一棒不是接线,是 `hero-28` 的第 (3) 格**:如果带透镜的真实对局里
+     落在刀口带((900,1125] / (700,925])的施法占比接近 0,那么**这一整类都不值得接**,
+     包括已经接了的 Zeus。**先买那个读数,再谈剩下 7 个。**
+
 -85. **全树还有 46 个「声明了没人读」的数字常量,而它们不是 46 笔杂账,是**一个模板的残留**(GH #463)。**
    2026-09-03T19:51Z 那轮把焦点五英雄的 5 个删干净(**5 → 0**,可证 no-op),并把这一类
    做成常设普查 `tests/test_dead_numeric_local_census.lua`(焦点五强制 0,全树 `<= 46` 单调棘轮)。
@@ -39,8 +58,19 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      想扩到字符串/表的人**必须重测天花板**,不能沿用 46。
    - **同族但故意在域外的一个**:`hero_zuus.lua:596` 的 `aetherRange = 250`(赋值,不是
      `local x = <数字>` 声明)—— 归 GH #459 / backlog `-84` 的「一次一小撮」管。
+     **2026-09-04 DONE,而结论与这条登记相反**:它不是陈旧常数,是**没人读的**常数
+     ⇒ 按新候选 `zusaether` 处理(接线,不是改数),见 `-86` 与报告
+     `iterations/reports/hero/20260904T015833Z.md`。**这条记着,是因为它是本条
+     「登记不修」清单第一次被证明分类错了** —— 分类是按**形状**做的(一个手写的 250),
+     而域价钱答的是**另一个问题**(有没有人读它)。
 
 -84. **`aetherlens` 只接了 2 个站点,剩下 **27 个 + 那个 42 消费者的共享文件** 还写着 250(GH #459)。**
+   **2026-09-04 收窄**:本条点名的最后那个**焦点英雄**站点(`hero_zuus.lua:596`)已处理,
+   但**结论与本条的登记相反** —— 它不是陈旧常数,是**无人读**的常数,已按新候选
+   `zusaether` 接线处理(报告 `iterations/reports/hero/20260904T015833Z.md`);
+   顺带把 Zeus 的生产者接进了 helper,于是**这根杠杆现在够得到第三个焦点英雄**。
+   棘轮 `OVERSTATED_CEILING` 随之 **27 → 26**(收紧,不是记账)。
+   **剩下的 27 个站点 + `ability_item_usage_generic.lua` 仍在总监手里,本条其余部分不变。**
    2026-09-03T17:05Z 那轮量清:`item_aether_lens/AbilityValues/cast_range_bonus` 活 KV 是
    **225**,而 `bots/` 下 31 个手写常量里 **29 个写 250**;`hero_axe.lua` / `hero_dazzle.lua`
    那两个「看起来抄错的」**才是对的**。本轮只接了**焦点英雄里有活消费者**的两个
@@ -3988,6 +4018,55 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T01:58Z(报告 `iterations/reports/hero/20260904T015833Z.md`;轴 **新候选 `zusaether`**)
+  **改 2 个 + 新增 2 个:`bots/BotLib/hero_zuus.lua`(三处施法距离消费者上闸 +
+  生产者接进 `aetherlens` helper)、`tests/test_aether_lens_range_bonus.lua`
+  (§6 改指向 + 棘轮 27→26)、新增 `tests/test_zeus_aether_cast_range.lua`(18 用例)
+  与 `tools/agent/mutstand_zusaether.sh`(7 变异全杀)。
+  `state.json:zusaether_20260904T`、`queue.json:hero-28` 已登记;
+  零 arm/promote、零 AWS、不申请波次;`game/` 零行。**
+  - 选题:OWNER_PRIORITIES 无本组项;open `[hero]` 九条逐条过了一遍(#465 待关、
+    #463/#459 全量作用域在总监、#453/#451 待关、#417 待关、#447 等录像组、
+    #407 剩下的半在 `hero-27`/批测台)⇒ 走 backlog `-84` 自己写的「一次一小撮」放行,
+    它点名了最后那个焦点英雄站点 `hero_zuus.lua:596`。
+  - **⭐⭐ 而那个站点不是登记时以为的那种站点。** `-84` 把它归类为「陈旧常数」
+    (写 250、活 KV 225);真去看,**这个常数根本没人读**。`hero_zuus.lua` 是
+    BotLib Aether Lens 模板的**半接线拷贝**:声明在、`SkillsComplement` 里的赋值在,
+    **三个消费者全部丢了 `+ aetherRange`**。全树 **33 声明 / 26 接了 / 7 算了不读**,
+    本轮之前 Zeus 是第 8 个、**也是其中唯一的焦点英雄**。域是**活的**:
+    `pos_4`/`pos_5` 买表**都买** `item_aether_lens`(`zeusaghs5` 的论证就架在那次购买上)。
+  - **⭐ 方向与 GH #459 相反,这才是它值一个闸的理由**:三处 `nCastRange` 都是
+    **自己的搜索环**半径。高估的代价是**一次计划外的贴近**;**低估不下达任何移动**,
+    而是让一个**确实在延长射程内**的敌人**对决策不可见**(带透镜时 `ConsiderQ` 的
+    `<=0.2` 处决循环看不到 900–1150 的残血目标)。恢复这一项**只能加上一次已经花钱
+    买下的施法**,不能造出道具没给的射程(已断言)。
+  - 证据:两帧真实几何 + **声明式道具锚**(锚是**量出来的必需品**:
+    109 份 fixture **0 份带 Aether Lens**,已写成断言;被顶掉的道具按名字钉住)。
+    `ConsiderQ` 环 **900 → 1150**、`ConsiderW2` 环 **1025 → 1275**,
+    `reserve_safe` 上 armed 腿**执行到严格更多的代码**。量具自带阳性对照(半径 spy,M7 致盲)。
+  - **⚠️ 诚实边界:抓到的是域翻转,不是决策翻转** —— 两帧最终 desire 两条腿都是 0。
+    连同「`ConsiderW` 两帧都够不到」「0/109」一起**写成断言而不是脚注**。
+    ⇒ 条件 (a) **只能靠波次买**,不能再造一份 fixture。
+  - **⛔ 两个 id 故意不合取**(`pullcad` 陷阱),四种组合全跑,M5 就是那个合取形状。
+  - **⭐ 兄弟测试按名字举了手**:`test_aether_lens_range_bonus.lua` §6 断言的
+    「Zeus 赋值而从不读」被本轮落地**红了并报出原文**。按 `-81` 先例
+    **改指向不删断言**(改断言「恰好读一处」),并把棘轮 **27→26 收紧** ——
+    留着昨天的余量就会静默接受一份新抄的 250。
+  - 门:开工自检 **worst exit 3**(FINDINGS=`cadence`;**UNCERTIFIABLE=`trunk-red(python)`
+    ⇒ trunk 的 python 那一侧本轮没人看过**;两条腿 NOT RUN;第一条命令又被证据纪律 3
+    拒答,改对后才有读数)。静态 **`GATE_EXIT=0` / 0 warnings**(冷启自装,**没用 `RULE6_BYPASS`**)。
+    动态:新文件 **18/0**、`zuus` **139/0**、`aether` **34/0**、
+    `test_gate_claim_consistency` **16/0**、`test_pending_rulings.py` **142/0**;
+    **全量套件未跑**(~100min,GH #124)—— **限定不是通过**。
+  - **⚠️ 中途被 `test_gate_claim_consistency` 抓了两次,两次都是我的注释**:
+    标题写成 `-- [hero] …` 而 `[xxx]` **就是 gate-id 语法**;注释里逐字引用
+    `IsSoakCandidate('A') and IsSoakCandidate('B')` 凭空注册了两个只存在于注释里的 id。
+    **没有去扩白名单**,改成不引用代码的散文。两条都是审计器按设计工作。
+  - **交出去的棒**:`queue.json:hero-28`(只读归档、零 EC2、**不申请 arm**,
+    可与 `hero-27` 并成同一次遍历),验收里**预先写死判读方向** ——
+    刀口占比接近 0 ⇒ **不入集,即使桌面证据完好**;带 `DOMAIN-NOT-REACHED` 退回门。
+    **球在总监**(路由)→ 批测台(执行)。**未提议进 `test_set.md`**。
+
 - 2026-09-03T22:49Z(报告 `iterations/reports/hero/20260903T224943Z.md`;轴 **GH #465 复核**)
   **改 1 个 + 新增 1 个:`tests/test_replay_260820_zuus_static_band.lua` §6 重写
   (count → 具名注册表)、新增 `tools/agent/mutstand_zusband.sh`(5 变异全杀)。

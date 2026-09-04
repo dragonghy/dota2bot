@@ -36,13 +36,21 @@
 -- frame and is labelled as such; what it is NOT weaker than is a fixture that
 -- structurally cannot reach the branch.
 --
--- SCOPE THIS ROUND: two call sites, both focus heroes with live consumers --
--- hero_crystal_maiden.lua (2 consumers) and hero_lion.lua (4).  hero_axe.lua is
--- already 225; hero_zuus.lua and hero_skeleton_king.lua have no live consumer
--- (zuus assigns aetherRange and never reads it -- section 6 pins that, because
--- it is the reason Zeus is exempt, not an oversight).  Turning all 31 sites at
--- once is the `lanefix` bundle shape and that bundle was rejected twice; the
--- remainder rides section 7's registered reading instead of a promise.
+-- SCOPE AS FIRST LANDED (2026-09-03): two call sites, both focus heroes with
+-- live consumers -- hero_crystal_maiden.lua (2 consumers) and hero_lion.lua (4).
+-- hero_axe.lua is already 225; hero_zuus.lua and hero_skeleton_king.lua had no
+-- live consumer.  Turning all 31 sites at once is the `lanefix` bundle shape and
+-- that bundle was rejected twice; the remainder rides section 7's registered
+-- reading instead of a promise.
+--
+-- UPDATED 2026-09-04: Zeus is no longer exempt.  It was exempt because it
+-- assigned aetherRange and read it nowhere -- and that turned out to be the
+-- DEFECT, not a property: hero_zuus.lua was a half-wired copy of the template,
+-- computing the bonus and discarding it in all three Consider sites.  The
+-- `zusaether` round wired those consumers and routed the producer through this
+-- file's helper, so this lever now reaches a third focus hero.  Section 6
+-- carries the retargeted reading; it tripped by name when the wiring landed,
+-- which is the whole reason it was written as an assertion.
 
 package.path = 'tests/?.lua;' .. package.path
 local api  = require('mock.bot_api')
@@ -328,7 +336,16 @@ tests['[scope] Axe already carries the KV number and is left alone'] = function(
 	assert(routes_through_helper(AXE) == 0, 'Axe is deliberately not routed')
 end
 
-tests['[scope] Zeus assigns the aether bonus and never reads it'] = function()
+-- ARCHIVE, 2026-09-04.  This case used to assert `nConsumers == 0` and to carry
+-- the reason Zeus was exempt from the 09-03 routing: it assigned aetherRange and
+-- read it nowhere, so correcting 250 -> 225 there could not change a decision.
+-- That exemption is now SPENT, and the assertion is what spent it: the hero
+-- round that wired Zeus's three cast-range consumers (candidate `zusaether`,
+-- tests/test_zeus_aether_cast_range.lua) tripped this case by name instead of
+-- letting the stale reading sit green.  Kept, retargeted, NOT deleted -- the
+-- point of the case is that Zeus's consumer count is watched, and that is now
+-- worth more than before, because the number finally has an effect.
+tests['[scope] Zeus now READS the aether bonus, so aetherlens reaches it too'] = function()
 	local nConsumers = 0
 	for _, line in ipairs(scan.stripped_lines(ZUUS)) do
 		if line:find('aetherRange', 1, true)
@@ -336,9 +353,17 @@ tests['[scope] Zeus assigns the aether bonus and never reads it'] = function()
 			nConsumers = nConsumers + 1
 		end
 	end
-	assert(nConsumers == 0,
-		'hero_zuus.lua grew a consumer of aetherRange (' .. nConsumers
-		.. '); the "no live consumer" exemption this round took is now stale')
+	assert(nConsumers == 1, string.format(
+		'hero_zuus.lua should read aetherRange in exactly one place -- the '
+		.. '`zusaether` reach helper, which the three Consider sites share -- '
+		.. 'found %d. Growth means a Consider site started reading the file-local '
+		.. 'directly, which would bypass that gate.', nConsumers))
+	-- And the producer is routed, which is what makes THIS file's lever reach
+	-- Zeus at all now.  Pinned here rather than only in the sibling file,
+	-- because it is this candidate's domain that grew.
+	assert(routes_through_helper(ZUUS) == 1,
+		'hero_zuus.lua must route its producer through the helper; the '
+		.. '`aetherlens` lever is otherwise still blind to this hero')
 end
 
 ----------------------------------------------------------------------
@@ -370,7 +395,11 @@ end
 -- that was always going to move, and the team's own routine landings pushed
 -- trunk red inside 14 hours).  Growth IS a finding: a new hero file copying the
 -- 250 is precisely what this reading exists to catch.
-local OVERSTATED_CEILING = 27
+-- 2026-09-04: 27 -> 26.  hero_zuus.lua's literal became a routed call in the
+-- `zusaether` round.  Tightened deliberately rather than left slack: a ratchet
+-- that keeps yesterday's headroom silently accepts one new copy of the stale
+-- constant, which is the exact event this reading exists to catch.
+local OVERSTATED_CEILING = 26
 
 tests['[census] no NEW site may over-state the Aether Lens bonus'] = function()
 	local nOver, nOk, nOther, files = census()
