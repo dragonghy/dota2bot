@@ -29,7 +29,7 @@
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
 0P1CAMPBIND. **【2026-09-04T04:50Z 新增,**OWNER_PRIORITIES P1 开工**(章程「下一格」写死的那一项;
    `[strategy]` open issue 本轮扫过,球都不在本组);**产出是一处 gated 行为修复 + 一份真帧测试 15/15 +
-   一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42`**:
+   一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42` + **GH #475****:
    `bots/FunLib/jmz_func.lua` 的 `PULL_CAMP_NEUTRAL_RANGE = 1200` + `J.GetCampPullPokeTarget`(唯一闸点,
    turbo + `campbind`,**独立门不与 `pullcamp` 合取**);`bots/mode_roam_generic.lua` 只改戳的那一行 +
    `hPoke ~= nil` 守卫;`tests/test_campbind_poke_target.lua`;`tools/agent/mutstand_campbind.sh`;
@@ -5090,7 +5090,7 @@
 - 2026-09-04T04:50Z(**OWNER_PRIORITIES P1 开工** —— 章程「下一格」写死的那一项;
   `[strategy]` open issue 扫过一遍:#467 / #464 / #456 / #455 / #445 / #441 都是本组上几轮已认领并交棒的,
   #452 / #434 / #431 是已落地的常设普查(登记不修)⇒ 铁律 9 与「下一格」同时指向 P1);
-  **产出是一处 gated 行为修复 + 一份真帧测试 15/15 + 一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42`**:
+  **产出是一处 gated 行为修复 + 一份真帧测试 15/15 + 一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42` + **GH #475****:
   `bots/FunLib/jmz_func.lua` 新增 `PULL_CAMP_NEUTRAL_RANGE = 1200` + `J.GetCampPullPokeTarget`(**唯一闸点**);
   `bots/mode_roam_generic.lua` 营地拉野 cadence 只改戳的那一行 + 一个 `hPoke ~= nil` 守卫;
   `tests/test_campbind_poke_target.lua`;`tools/agent/mutstand_campbind.sh`;
