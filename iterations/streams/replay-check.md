@@ -10388,3 +10388,71 @@
     ⛔ **证据纪律 3 第二十三次踩**:第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**)。
   - **Token 用量**:`TOKENS total_in=16,963,848 out=80,391 turns=105`(报告 §9)。
   - 完整报告:`iterations/reports/replay-check/20260904T010500Z.md`
+- **2026-09-04T04:25Z(接批测台 03:15Z 的 `rotscope` 交棒;**载体到了,而载体从来不是那个堵点** ——
+  本轮最该被读的是「条件 (a) 买不到的原因」,不是任何一个读数)**:
+  **⭐⭐ `rotscope` 的条件 (a) 不是「缺一局有 Pudge 的对局」。** 九波以来
+  `queue strategy-26` 与 §CU.7 的限定都写着「条件 (a) 需要一局有 Pudge 的对局」;
+  W44 一次给了 **96 局带 Pudge / 48 局带录像**,吃完语料之后条件 (a) **仍然买不到**,
+  **原因是有名字的**:这个 id 的**整个差集**就是 `bot:ActionQueue_AttackUnit(botTarget,false)`
+  **发不发**,而 combat log **不记录 bot 命令**、`.dem` 里也没有 mode 竞价结果;
+  它唯一的下游可观测量(一次普通攻击)**每个 mode 都产生**。
+  **宽扫 36/36(两台带 Pudge 的 run 的全部非暖场局);深查 2 局完整逐帧 +
+  38 个 episode 逐帧钉点。未改 `bots/`/`game/` 任何一行。**
+  - **`VERIFY id=rotscope verdict=INDETERMINATE episodes=0`** —— 三条理由缺一不可:
+    (1) 命令不可观测(上一段);(2) **机制直接预测的量**(打英雄的 `rate_OFF`)
+    **两个分层反号**(radiant −0.0020 / dire +0.0003)⇒ 铁律 4(i-b) 判噪声;
+    (3) 就算不反号也**不能记到这个 id 名下** —— armed 腿带 **58 个 id**,按章程 4a(§BW.3)
+    条件 (a) **只能按触发级逐帧买**,而 (1) 说明触发在本量具下不可见。
+    ⛔ **不是 `DOMAIN-NOT-REACHED`**(域每局被走到 **87–114 次**,Rot ON 约 100 s/局)、
+    **不是 SILENT**(SILENT 要能说「域到了它没动」,而这里「动没动」本身不可观测)、
+    **不是 BUGGY**(深查那两帧两条腿**逐帧相同且都正确**)。
+  - **⭐ 深查那两帧买到的是量具的 LIMIT 6,不是 id 的读数**:armed 腿
+    `20260904_003516_slot8` **t=1016.2 blink → 1016.7/1017.8/1018.8/1019.9/1021.0 五次纯右键**,
+    站在 219u 上 6.3 秒,**meat_hook/rot/flesh_heap/dismember 全部 `cd=0.0`、蓝 1002/1002**
+    —— 看着像「armed 把 Rot 关着还在打」的反例,**实际上他被 `modifier_skywrath_mage_ancient_seal`
+    沉默了**(1015.7→1021.7),`t=1023.5` 快照上三个技能的 cd 证明沉默一解除就放了连招。
+    baseline 孪生帧 `20260904_004848_slot6` **t=977.8–983.8 同一个 modifier、同一个恢复顺序**
+    (983.8 摘沉默 → 984.3 hook → 984.4 开 Rot → 985.2 dismember)。
+    ⇒ **「Rot OFF」不总是一个决策**,沉默期**根本不能 toggle**。
+  - **⭐⭐ 由此抓到的量具形状(新,可复用):分子污染 50%,分母污染 1%,读出来像一个干净的速率。**
+    按**时间**,沉默只占 OFF 桶 **~1%**(四格 0.8–1.0%);按 **episode**,那 38 个
+    「独行 + Rot OFF + 打英雄」里 **19 个(50.0%)**落在 Pudge 自己的沉默窗口内,
+    **且两条腿的污染率差 2.7 倍**(armed 7/23 = 30% vs baseline **12/15 = 80%**)
+    ⇒ 那个 episode 率**在量沉默的分布,不在量 gate**。
+  - **⭐ 顺带订正一处对差集的读法**:文件级 `botTarget` 在 `mode_roam_generic.lua:66`
+    (`GetDesireHelper` 内)**每帧**被赋成 `J.GetProperTarget(bot)`,而出价路径**每个 mode
+    每帧都会被问一次** ⇒ **大多数帧上它并不陈旧**。§CU.2 第 3 条(可陈旧)仍成立,
+    但那是**早返回帧上的例外**;把「差集 = 陈旧句柄」当主项会**高估**这个 id 的域。
+  - **交付**:`tools/batch_test/behavioral/rotscope_domain.py`(只读离线,`--selfcheck`
+    **33 checks / 0 failures**)+ `tests/test_rotscope_domain.py`(**21 checks / 0 failures**)。
+    **变异台 10/10 全 CAUGHT / 0 SURVIVED**,树外 `cp` 还原 `sha256sum -c` OK,**还原后基线 GREEN**
+    (每次运行前后清 `__pycache__`,09-03 教训照办)。
+  - **⛔ 本轮开的 issue([harness],号见报告 §5)**:**真正的堵点在 mock,不在语料。**
+    `tests/mock/bot_api.lua:87-91` 的 `handle_getters` 对 `GetAttackTarget`/`GetTarget`/
+    `GetCurrentActionTarget` 一律答 `nil`(`:165`,而且**这是正确的默认**),
+    `make_fixture.py` **不产出任何攻击目标字段**,**109 个 fixture 里 0 个**带这类数据
+    ⇒ `J.GetProperTarget` 在**每个 fixture 帧上结构性为 nil**,而它在 `bots/` 下被
+    **165 个文件**引用。§CU.5 登记过「993/993 帧为 nil」,**但当时只记成本 id 的一条
+    `[limit]`,没记成「fixture 路线整条堵死」**。可修:dump 里有材料 ——
+    一条 `DAMAGE / inflictor=dota_unknown / actor=X→target=Y` 就说明 X 那一刻的攻击目标是 Y。
+  - **下一轮第一件事**:(1) **W44 另外两台(3426/3713,~111 局)的宽扫本轮未做**
+    (对 `rotscope` 恒零,对其余 57 个 id 不是);(2) 查本轮 [harness] issue 回音;
+    (3) 接 **GH #467** 的 `slotwait` 条件 (a)(⚠️ 冷却读 dumper 的
+    `snapshots[].abilities[].cd`,**不要读 mock**);(4) 深查补 `zusult`/`cmqreach`/`odaoe`
+    (**连续第四轮零 `VERIFY` 行**);(5) 查 **GH #470** 回音。
+  - **欠账**:36 局 timeline 随容器回收(重扫命令见报告 §0);§2.2 那一帧的 fixture
+    **未做,而且按 §5 现在做不出有用的那一半**(`GetProperTarget` 仍为 nil),已并入本轮 issue;
+    W44 另两台未扫;#419 第 12 轮 / #421 第 11 轮仍零评论。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×2 **全 0**
+    (`unparseable` 0);`--selfcheck` **0**(33/0);`tests/test_rotscope_domain.py` **0**(21/0);
+    变异台 **10/10/0**;`--sweep` 真语料 **0**;`luacheck_gate.sh` **0**
+    (`0 warnings`,`GATE_EXIT=0 CLEAN`,**本容器冷启、脚本自己装了 `lua-check`**);
+    `arm_push_gate.sh` **0**。**未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    自检 **`selfcheck worst exit: 3`**,`FINDINGS (exit 3): cadence owed-executions`,
+    `UNCERTIFIABLE (exit 2): trunk-red(python)`(`test_rc_wrapper.py`/`test_selfcheck_lua_leg.py`
+    **NOT RUN**,容器无 `lua5.1` ⇒ 不是通过也不是失败);`OWED` 那行 executor=**batch-desk**,不归本组。
+    ⛔ **证据纪律 3 第二十四次踩**:第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**)。
+    ⚠️ **读码陷阱同轮第二次**:重定向那次超时被移到后台,harness 完成通知报 `exit code 0`
+    —— **那是末尾 `echo` 的码**,真码是脚本自打的 `selfcheck worst exit: 3`。
+  - **Token 用量**:`TOKENS total_in=6,608,997 out=61,315 turns=53`(报告 §9)。
+  - 完整报告:`iterations/reports/replay-check/20260904T042500Z.md`
