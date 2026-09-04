@@ -98,11 +98,20 @@
 --
 -- WARNING -- LIMIT, MEASURED IN §4, NOT ASSERTED
 --
---   * tests/mock/bot_api.lua answers 0 for every `Get*` it does not know, so
---     offline BOTH legs read 0: GetAbilityDamage() because the mock has no such
---     field, GetSpecialValueInt('damage') because the mock has no KV at all.
---     Same class as GH #162/#133/#145/#154.  The armed leg is therefore driven
---     here on FABRICATED handles, declared as such.
+--   * SUPERSEDED IN HALF, 2026-09-04 (backlog -88 (甲)).  It read: the mock
+--     answers 0 for every `Get*` it does not know, so offline BOTH legs read 0
+--     -- GetAbilityDamage() because the mock has no such field,
+--     GetSpecialValueInt('damage') because the mock has no KV at all -- and the
+--     armed leg is therefore driven here on FABRICATED handles.  The
+--     `kvgetters` round put GetSpecialValue* on the KV snapshot, so the armed
+--     leg IS now readable on a frame and §2b drives it there: 10 Zeus fixtures,
+--     3 of the 4 rungs, the real ladder on every ranked one.  §2 keeps its
+--     fabrications because they cover what no frame supplies -- a NONZERO
+--     shipped reading, for the fallthrough and the gate-off equality.
+--     What survives unchanged is the shipped half: GetAbilityDamage() still
+--     answers 0 on every Zeus handle offline, and a key nobody ever wrote still
+--     reads 0, so absence and zero stay indistinguishable.  Same class as
+--     GH #162/#133/#145/#154, and NOT repaired by the KV getters.
 --   * FindAoELocation is not in the mock either, so "does the branch fire on
 --     this frame" is not a question a fixture can settle -- there is no
 --     firing-side fixture and its absence is measured, not assumed.
@@ -160,8 +169,8 @@ end
 --- Load Zeus on the real frame, set the mode and the gate, return (X, J, bot).
 --- GetGameMode is set BEFORE the hero file loads because J.IsModeTurbo memoises
 --- its answer on the first call.
-local function load_zuus(bArmed, bTurbo)
-    local J, bot = rf.load(FRAME)
+local function load_zuus(bArmed, bTurbo, sFrame)
+    local J, bot = rf.load(sFrame or FRAME)
 
     if bTurbo == false then
         GetGameMode = function() return GAMEMODE_ALLPICK end
@@ -246,6 +255,79 @@ tests['gate on: the answer is the KV damage'] = function()
     local X = load_zuus(true, true)
     assert(X.GetBoltKillHealthCap(make_bolt(0, 140)) == 140, 'level 1 bolt')
     assert(X.GetBoltKillHealthCap(make_bolt(0, 380)) == 380, 'level 4 bolt')
+end
+
+-- ---------------------------------------------------------------------------
+-- 2b. The same helper, on REAL handles -- the -88 (甲) re-take (2026-09-04).
+--
+-- §2 above fabricates the KV reading because, when this file was written, the
+-- mock answered 0 for GetSpecialValue* and no frame could supply one.  The
+-- `kvgetters` round changed that, so the pair 140/380 that §2 DECLARES is now
+-- something the corpus can be asked for instead.  It was, exhaustively, and it
+-- answered: on all 10 Zeus fixtures the armed helper reads the real ladder at
+-- the frame's own rank while the shipped leg reads 0 on every one of them.
+--
+-- Why this earns a case rather than a footnote: §2's fabrications are only
+-- evidence about the SELECTION (does the helper pick the KV over the shipped
+-- read).  They say nothing about whether the thing selected exists on a frame,
+-- and "140" typed into this file looked exactly the same in the world where the
+-- getter could not answer at all.  This case is what makes the difference
+-- visible, so a regression in the loader shows up here as a named failure
+-- instead of leaving §2 green on numbers it supplies to itself.
+tests['[hero] the armed helper reads the real ladder on every Zeus frame; shipped reads 0'] = function()
+    local W_KV = { 140, 220, 300, 380 }   -- AbilityValues/damage, the same ladder §2 declares
+    local p = assert(io.popen('ls tests/fixtures/f_*.lua 2>/dev/null'))
+    local tPaths = {}
+    for sLine in p:lines() do tPaths[#tPaths + 1] = sLine end
+    p:close()
+    assert(#tPaths > 20, 'fixture glob came back short: ' .. #tPaths)
+
+    local nFrames, nRanked, nNoAbilities = 0, 0, 0
+    local tRanksSeen = {}
+    for _, sPath in ipairs(tPaths) do
+        local fx = dofile(sPath)
+        if fx and fx.self == 'npc_dota_hero_zuus' then
+            nFrames = nFrames + 1
+            local X, _, bot = load_zuus(true, true, sPath)
+            local hW = bot:GetAbilityByName('zuus_lightning_bolt')
+            assert(hW, sPath .. ' resolves no Lightning Bolt handle at all')
+            local nRank = hW:GetLevel()
+
+            assert(hW:GetAbilityDamage() == 0, sPath .. ': the shipped leg must still read 0 '
+                .. '-- if it stops, the KV grew a top-level AbilityDamage field and this '
+                .. 'candidate is on its way to being a no-op (backlog -89 (乙)), which is a '
+                .. 'disposition to write down, not a number to edit')
+
+            if nRank >= 1 then
+                nRanked = nRanked + 1
+                tRanksSeen[nRank] = true
+                assert(X.GetBoltKillHealthCap(hW) == W_KV[nRank], sPath .. ': armed helper '
+                    .. 'reads ' .. X.GetBoltKillHealthCap(hW) .. ' at rank ' .. nRank
+                    .. ', KV ladder says ' .. W_KV[nRank] .. '. A 0 means the loader stopped '
+                    .. 'serving GetSpecialValue* and this case is back in the world §2\'s '
+                    .. 'fabrications were written for; anything else means the KV moved.')
+            else
+                -- NOT a pass by omission: rank 0 here is a BROKEN FIXTURE, and
+                -- it is named so nobody reads the skip as a frame that had
+                -- nothing to say.  f_073148_zuus_lina carries no `abilities`
+                -- array at all (backlog -88 (乙), owed re-dump on replay-check),
+                -- so GetAbilityByName hands back a bare handle answering 0.
+                nNoAbilities = nNoAbilities + 1
+                assert(X.GetBoltKillHealthCap(hW) == 0, sPath .. ' has no ability data, so '
+                    .. 'both legs must degenerate to 0 here')
+            end
+        end
+    end
+
+    assert(nFrames >= 10, 'expected the Zeus fixture corpus, got ' .. nFrames .. ' frames')
+    assert(nRanked >= 9, 'expected at least 9 frames carrying a ranked Bolt, got ' .. nRanked)
+    assert(nNoAbilities == 1, 'expected exactly the one abilities-less v1 fixture, got '
+        .. nNoAbilities .. '; if this grew, more fixtures need the re-dump backlog -88 (乙) '
+        .. 'is owed, and if it went to 0 that re-dump landed and this count should say so')
+    -- Rank coverage, so "the ladder is read correctly" is not carried by one rung.
+    local nRungs = 0
+    for _ in pairs(tRanksSeen) do nRungs = nRungs + 1 end
+    assert(nRungs >= 3, 'the corpus must exercise at least 3 of the 4 rungs, got ' .. nRungs)
 end
 
 tests['gate on: a dead KV key falls through to shipped, it never invents a default'] = function()

@@ -22,6 +22,27 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-90. **`campbind` 入集把 `test_coarmed_attribution_register.lua` 打红了,**球在总监**(GH #484);
+   本组只做了差分把它定位成 trunk 自带。**
+   - 三对同腿共 armed:`creepthink` / `pullcad` / `pullthink` **×** `campbind`。
+     闸点 `jmz_func.lua:8993`(在 `J.GetCampPullPokeTarget` 内),唯一消费者
+     `mode_roam_generic.lua:404`,而到达它的每条路径都在那三个门里面。
+   - **⭐ 可迁移的,而且本组以后会再撞上**:「**门写得独立**」与「**归因是否被污染**」
+     是**两件事**。GH #475 裁定里那句「`campbind` 不与 `pullcamp` 合取(`pullcad` 陷阱)」
+     说的是**门的写法**(不会被 promote 冻死);登记器说的是**同腿 armed ⇒ 每-id (a)
+     量的是 `outer AND inner`**。**别把其中一个当成对另一个的答复** ——
+     入集前后的 (a) 读数不是同一个量,并成一条曲线就是 §AZ (iii) 那类错误。
+   - ⚠️ **不许为了求绿把三对直接加进 `ACKNOWLEDGED`**(横幅最后一句就是这么写的)。
+
+-89a. **✅ 已兑现 2026-09-04T10:46Z(原 `-88 (甲)`)**:`tests/test_lion_q_kill_damage.lua` §4
+   与 `tests/test_zuus_bolt_kill_cap.lua` 的重取做完了,登记
+   `state.json:kvretake_20260904T`,报告 `iterations/reports/hero/20260904T104618Z.md`。
+   **数字一个没变;变的是它们能不能被证伪**(Zeus 旧文件在被挪过的 KV 上 `11 tests,
+   0 failures`)。留在这里是因为它带走了一条**给下一次仪器修复用**的教训:
+   **仪器修好的那天,围着坏仪器写的测试不会红** —— 它们继续用当初的替代品跑绿,
+   而替代品之所以看不见,正是因为它**和现实一致**。
+   ⇒ **顺着那次修复自己的 `owed` 列表去找,不要等红。**
+
 -89. **`zusboltdom` 落地了,但它头上的两件事本轮**故意没做**,因为各自是别人的题
    (报告 `iterations/reports/hero/20260904T075131Z.md`)。**
    - **(甲) 条件 (a) 在 `hero-29` 里,球在总监(入集)→ 批测台(搭车发波)→ 录像组(重扫)。**
@@ -41,8 +62,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 -88. **`kvgetters` 落地时打红的两个文件各欠一件后续,本轮**故意没做**,
    因为它们各自是别人的工作单元(报告 `iterations/reports/hero/20260904T045632Z.md` §7)。**
-   - **(甲) `tests/test_lion_q_kill_damage.lua` §4 与 `tests/test_zuus_bolt_kill_cap.lua`
-     上面几节的数字各欠一次重取(**两个文件同形**,同一句 LIMIT 抄了两遍)。** 那些读数是在
+   - **(甲) ✅ 已兑现 2026-09-04T10:46Z,见 `-89a`。** 以下为立案时的原文,保留是因为
+     `-89a` 的教训要靠它才读得懂。
+     ~~`tests/test_lion_q_kill_damage.lua` §4 与 `tests/test_zuus_bolt_kill_cap.lua`
+     上面几节的数字各欠一次重取(**两个文件同形**,同一句 LIMIT 抄了两遍)。~~ 那些读数是在
      「两条腿离线都读 0」的旧世界里、用**声明式伪造**驱动 armed 腿取的;现在 armed 腿
      能直接读到 `lion_impale/damage` 的真梯(105/170/235/300),而 shipped 腿走
      `GetAbilityDamage()`(**还没上规格的另一个 getter**)仍读 0。
@@ -4086,6 +4109,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T10:46Z(报告 `iterations/reports/hero/20260904T104618Z.md`;轴 **backlog `-88 (甲)`
+  兑现:两个 KV 读数的重取**;登记 `state.json:kvretake_20260904T`)
+  **改 2 个测试文件,`bots/` 与 `game/` 零行;零新候选、零 arm、零 promote、零 AWS、
+  `queue.json` 不加行。**
+  - 选题:OWNER_PRIORITIES 无本组项(P1/P2 球在协同组、P3 在总监);**开着的 8 条
+    `[hero]` issue 逐条看过,没有一条可动**(#451/#447/#465 已落地待关或已由别组落地;
+    #459/#471 剩余站点球在总监且 `-86` 明写「先买 `hero-28` 那格读数」;#463/#453 是
+    非焦点英雄的作用域题;#416 已随 `zusboltdom` 处理)⇒ 取 backlog 最上面一条**可动的**。
+  - **缺陷是「一个断言不能证伪它自己的驱动源」**:两个文件的 armed 腿一直被
+    **抄在测试里的那把梯子**驱动(Lion 的 `Q_KV = {105,170,235,300}`;Zeus 的
+    `make_bolt(0,140)` / `make_bolt(0,380)`),然后又拿同一把梯子当真值。
+    `kvgetters` 上周把「离线 getter 恒答 0」那堵墙拆了,**梯子没跟着换**。
+  - **重取后一个数都没变**(Lion 8 帧 / 11 对 / 0 命中 / 最近差 **45** 血;Zeus 10 帧、
+    9 个有级别的全部读到真梯子、四级里的三级)。**而「没变」本身是本轮唯一买不到的读数**:
+    在 getter 答 0 的世界里,**没有任何东西能核对伪造得对不对**。
+  - **⭐ 对照做在旧文件上,这是本轮最硬的一格**:把快照里的梯子挪一格,同一棵被污染的树上
+    跑新旧两版 —— **Zeus 旧文件 `EXIT=0`,`11 tests, 0 failures`**(**整个文件对「KV 动了」
+    完全瞎**),新文件点名报红;Lion 旧文件只红 1 条,而那条是 `:226` 上早就有的快照检查
+    ⇒ **§4 自己的贡献是 0 → 2**。还原用文件副本,`cmp` 逐字节、快照 `git diff --stat` 空。
+  - **`-88 (乙)` 从散文变成断言**:Zeus §2b 断言 `nNoAbilities == 1` 并点名
+    `f_073148_zuus_lina`(`grep -c abilities` = **0**),两个方向都写进消息里
+    (涨 = 又有 fixture 要重 dump;归零 = 录像组重 dump 落地了,**改指向不许删断言**)。
+    球仍在录像组,但现在被一条会响的断言拿着。
+  - **⚠️ 顺手量到一条 trunk 红并已立案(GH #484)**:`test_coarmed_attribution_register.lua`
+    因今天 10:xxZ `campbind` 入集而红(`creepthink`/`pullcad`/`pullthink` × `campbind`
+    三对同腿共 armed)。**做过差分**:`origin/main`(`b161d6af`)worktree 上失败正文
+    **逐字节相同** ⇒ 基线自带。总监 10:xxZ 报告 §3 的「两条 trunk 红」数的是 **python 腿**,
+    **这条是 Lua 腿的**,而且正是那一轮入集本身触发的(登记器按设计响)。球在总监。
+  - **⚠️ 并发禁忌清单上少了一项,本轮踩到了(第三个 GH #229 现场)**:
+    静态门**不能与全量并发**(GH #439 假红,而 GH #213 的 pre-push 钩子调的就是它);
+    变异台**也不能**(上一轮 §6)。本轮这两条都遵守了,**却把开工自检与全量并发起了**
+    —— `ps` 里同时两个 `lua5.1 tests/run_tests.lua`,因为
+    **开工自检自己就跑一条「fast Lua detectors」腿**,两边共用同一个物理
+    `soak_side.lua`,而分片脚本每格还 `rm -f` 它。
+    **⇒ 清单要写成:全量套件跑的时候,别的什么都不许跑,开工自检也算。**
+    失效方向**单向指向假红**(残留 ⇒ 守卫点名;被抢走开关 ⇒ 门读到未 armed),
+    构造不出假绿 ⇒ **绿可信,红必须单独重跑才能引用**(本轮按这条处置了)。
 - 2026-09-04T07:51Z(报告 `iterations/reports/hero/20260904T075131Z.md`;轴 **GH #477 选项 2,
   新 gated 候选 `zusboltdom`**)
   **改 4 个 + 新增 2 个:`bots/BotLib/hero_zuus.lua`(新 `X.BoltAoEKillTarget` + 击杀-AoE

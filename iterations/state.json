@@ -5673,5 +5673,28 @@
     "artifacts": "tests/_fieldsrc_ff_sweep.lua (corpus sweep, subprocess); tests/test_fieldsrc_ff_premise.lua (8/8); tools/agent/mutstand_fieldsrc_ff.sh (11/11 CAUGHT, zero NO-OP, baseline green). Every consumer constant is PARSED OUT OF bots/ability_item_usage_generic.lua (including the ~=/== operator on the slot read), so moving a shipped gate moves the census -- M1/M2/M3/M4/M5/M6/M11 all prove it.",
     "baton": "DIRECTOR: (i) record the co-promotion constraint above against stayfield/stayfield2/fieldsip before any of the three is ruled on; (ii) rule whether the presence test should be narrowed (a gated `ffeat`-style conjunct mirroring the consumer) or whether fieldsip's promote is accepted as the standing answer -- the strategy desk deliberately did NOT land a redundant id, because on this corpus its armed effect is identical to fieldsip's and two ids with the same effect are unreadable in one wave. GH issue filed same round: **GH #485** (claim_precheck.sh exit 0 before publishing).",
     "source": "strategy round 2026-09-04T10:45Z; report iterations/reports/strategy/20260904T104500Z.md; ruling proposal test_set.md §ED"
+  },
+  "kvretake_20260904T": {
+    "owner": "hero stream",
+    "axis": "kvretake -- instrument/evidence repair, NOT a behavior change. bots/ and game/ zero lines; no gate id; no new candidate.",
+    "discharges": "charter backlog -88 (甲); state.json:kvgetters_20260904T:owed item (1).",
+    "defect": "Both files drove their ARMED leg on numbers typed into the test -- Q_KV = {105,170,235,300} in the Lion file, make_bolt(0,140)/make_bolt(0,380) in the Zeus file -- because when they were written the mock answered 0 for GetSpecialValue* and no frame could supply the reading. `kvgetters` (2026-09-04T04:56Z) removed that wall, but the numbers stayed where they were. A test that asserts against the same ladder it is driven by cannot fail when the tree moves under it: it IS the tree, as far as the test can see.",
+    "fix": "Lion §4 and its corpus scan now drive X.GetImpaleKillDamage on each frame's own handle (the exact call X.ConsiderQ makes) and Q_KV is demoted to a per-frame CROSS-CHECK. Zeus gains §2b, which drives X.GetBoltKillHealthCap on every Zeus fixture's real handle. Both file headers' 'the armed leg is driven here on FABRICATED handles' claim corrected to name which half survives.",
+    "readings": {
+      "lion": "8 Lion frames, ranks 2 and 4, 11 enemy-in-reach pairs. helper vs ladder: 8 agree / 0 disagree. firing at amp 0: 0. nearest miss: 45 hp (Luna, f_260820_182906_lion_drain_survived). EVERY §4 number unchanged by the re-drive.",
+      "zuus": "10 Zeus frames. armed helper reads the real ladder on all 9 ranked ones (rank 1 x4, rank 3 x1, rank 4 x4 -- 3 of 4 rungs); shipped GetAbilityDamage() reads 0 on all 10."
+    },
+    "evidence": "Mutation stand = move the KV ladder in tests/mock/special_value_shapes.lua and run the NEW file against the OLD file (git show HEAD) on the SAME mutated tree. Restore verified with cmp (byte-identical) and git diff --stat (empty). LION (105 170 235 300 -> 290): new 3 failures incl. the named 'armed helper reads 300 at rank 4, got 290'; old 1 failure -- and that one is the pre-existing snapshot check at :226, so §4 itself contributed 0 -> 2. ZUUS (140 220 300 380 -> 375): new 1 failure, named; old EXIT=0, 11 tests 0 failures -- the file was ENTIRELY blind to the KV moving.",
+    "what_this_does_not_claim": "(1) That the fabrications were wrong -- they agreed with the KV on every frame, which is precisely what nobody could check while the getter answered 0. (2) That either candidate got better; lionqdmg and zusboltcap are untouched, unarmed and unpromoted, and bots/ has zero lines changed. (3) Anything about facets/talents: the snapshot serves only the `base` per-level string (kvgetters:refusals).",
+    "still_fabricated_correctly": "Lion §2/§3 and Zeus §2 keep make_impale/make_bolt because they need a NONZERO shipped reading -- the fallthrough, the negative-KV guard, the gate-off equality -- and GetAbilityDamage() answers 0 on every Lion and Zeus handle offline. A declared fabrication for a case a frame structurally cannot make is not a leftover.",
+    "baton": "Zeus §2b asserts nNoAbilities == 1 and names f_073148_zuus_lina as the abilities-less v1 fixture, so charter -88 (乙)'s owed re-dump (ball with replay-check) is now held by an assertion instead of by prose. When that re-dump lands the count goes to 0 and the case goes red with a message saying exactly that -- answer it, do not edit it.",
+    "trunk_red_found": "tests/test_coarmed_attribution_register.lua is RED on trunk, filed as GH #484: campbind's admission this round (10:xxZ) makes three co-armed conjunctions live (creepthink/pullcad/pullthink x campbind). Proven baseline-carried by running the file in a git worktree of origin/main (b161d6af) -- failure text byte-identical. The director's own 10:xxZ report counted the python leg's three; this one is the Lua leg's.",
+    "tests": [
+      "tests/test_lion_q_kill_damage.lua (13 cases, §4 + corpus scan re-driven, §6 LIMIT corrected)",
+      "tests/test_zuus_bolt_kill_cap.lua (12 cases, new §2b, header LIMIT corrected)"
+    ],
+    "report": "iterations/reports/hero/20260904T104618Z.md",
+    "at": "2026-09-04T10:46Z",
+    "transferable_lesson": "When an instrument repair lands, the tests that were written AROUND the broken instrument do not fail -- they keep passing on the workarounds they were built with, and the workaround is invisible because it agrees with reality. The Zeus control is the shape of it: 11 tests, 0 failures, on a tree whose KV had moved. Grep the repair's own `owed` list rather than waiting for red."
   }
 }

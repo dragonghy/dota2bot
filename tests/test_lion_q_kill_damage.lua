@@ -292,8 +292,24 @@ end
 -- ---------------------------------------------------------------------------
 -- 4. The counterfactual, and the corpus limit -- MEASURED, not assumed.
 
+-- RE-DRIVEN 2026-09-04 (hero, backlog -88 (甲)).  Every number below is the
+-- same number it was, and that is a reading rather than a reassurance: what
+-- changed is WHERE it comes from.  Until `kvgetters` landed, this section fed
+-- J.WillMagicKillTarget out of Q_KV -- a four-entry ladder TYPED INTO THIS FILE
+-- -- because the mock answered 0 for GetSpecialValue* and no frame could supply
+-- the armed leg's reading.  The loader now serves that getter out of the KV
+-- snapshot, so the section drives X.GetImpaleKillDamage on the frame's own
+-- handle instead: the exact call X.ConsiderQ makes, at the frame's own rank.
+--
+-- Q_KV stays, demoted from driver to CROSS-CHECK.  A typed ladder that drives
+-- the assertions cannot fail when the tree moves under it -- it IS the tree, as
+-- far as the test can see.  Compared against the getter it becomes a witness:
+-- 8 Lion frames, ranks 2 and 4, helper vs ladder agreed on every one, which is
+-- why re-driving changed no number here.  If the KV moves, the cross-check
+-- names it rather than this file quietly re-baselining onto the new value.
+
 tests['[hero] armed, the branch stops being dead: the frame decides on Q rank and amp'] = function()
-    local _, J, bot = load_lion(true, true, FRAME_L4)
+    local X, J, bot = load_lion(true, true, FRAME_L4)
     local tEnemies = J.GetNearbyHeroes(bot, 850, true, BOT_MODE_NONE)
 
     local hLuna
@@ -307,20 +323,35 @@ tests['[hero] armed, the branch stops being dead: the frame decides on Q rank an
     assert(hQ and hQ:GetLevel() == 4, 'and Lion must be at Q rank 4 here, got '
         .. tostring(hQ and hQ:GetLevel()))
 
+    -- The damage the armed leg actually claims on this frame, taken from the
+    -- helper rather than from Q_KV, so the driver below is the shipped call
+    -- path.  The ladder is the cross-check, not the source.
+    local nDmg = X.GetImpaleKillDamage(hQ)
+    assert(nDmg == 300, 'the armed helper reads 300 at rank 4 on this frame, got ' .. nDmg)
+    assert(nDmg == Q_KV[4], 'and the getter agrees with the ladder this file used to be '
+        .. 'driven by; a disagreement means the KV moved and every number in this section '
+        .. 'needs re-reading rather than the ladder needing an edit. Got ' .. nDmg
+        .. ' vs ' .. Q_KV[4])
+    assert(hQ:GetAbilityDamage() == 0, 'while the shipped leg still reads 0 on the same '
+        .. 'handle -- the whole point of the gate, now visible on a frame instead of on a '
+        .. 'fabrication')
+
     -- THE CORPUS LIMIT, stated as a number rather than as "no firing frame
     -- exists": at rank 4 the armed leg reads 300, and 300 is 45 hp -- 13.0% of
     -- the nuke -- short of Luna's 345.  So even armed this frame does NOT fire
     -- at zero spell amp.  It is the closest the corpus gets (§5).
-    assert(J.WillMagicKillTarget(bot, hLuna, Q_KV[4], Q_DELAY) == false,
+    assert(hLuna:GetHealth() - nDmg == 45, 'the miss is 45 hp, computed from the helper '
+        .. 'reading rather than restated, got ' .. (hLuna:GetHealth() - nDmg))
+    assert(J.WillMagicKillTarget(bot, hLuna, nDmg, Q_DELAY) == false,
         'armed at rank 4 and zero amp, this frame is still 45 hp short')
-    assert(J.WillMagicKillTarget(bot, hLuna, Q_KV[4] * 1.14, Q_DELAY) == false,
+    assert(J.WillMagicKillTarget(bot, hLuna, nDmg * 1.14, Q_DELAY) == false,
         'and at 14% spell amp')
     -- ...and it clears at exactly 15%, which matters because Lion's own innate
     -- `lion_to_hell_and_back` declares a `spell_amp` of 20 in the KV (its
     -- conditions are the engine's business and are NOT claimed here).  What the
     -- corpus's one near-firing frame turns on is therefore a quantity this
     -- harness models as 0 -- that is the limit, not a verdict.
-    assert(J.WillMagicKillTarget(bot, hLuna, Q_KV[4] * 1.15, Q_DELAY) == true,
+    assert(J.WillMagicKillTarget(bot, hLuna, nDmg * 1.15, Q_DELAY) == true,
         'at 15% spell amp the un-deadened branch fires on a real frame')
 
     local tShapes = dofile(SHAPES)
@@ -332,7 +363,7 @@ tests['[hero] armed, the branch stops being dead: the frame decides on Q rank an
     -- any Earth Spike rank at any plausible amp, so the branch stays selective.
     for _, e in ipairs(tEnemies) do
         if e:GetUnitName() ~= 'npc_dota_hero_luna' then
-            assert(J.WillMagicKillTarget(bot, e, Q_KV[4] * 2, Q_DELAY) == false,
+            assert(J.WillMagicKillTarget(bot, e, nDmg * 2, Q_DELAY) == false,
                 'armed must not confirm a kill on ' .. e:GetUnitName()
                 .. ' at ' .. e:GetHealth() .. ' hp')
         end
@@ -342,8 +373,10 @@ end
 tests['[hero] LIMIT: the whole Lion corpus, scanned, holds no firing frame at amp 0'] = function()
     -- Exhaustive, so the "no firing frame" claim is a measurement.  Every Lion
     -- fixture, every living enemy within the kill loop's reach, at that frame's
-    -- own Q rank.
+    -- own Q rank -- and, since the -88 (甲) re-drive, at the damage the frame's
+    -- own handle hands the helper rather than at Q_KV[nRank].
     local nFrames, nPairs, nFiring, nNearest = 0, 0, 0, math.huge
+    local nAgree, nDisagree = 0, 0
     local p = assert(io.popen('ls tests/fixtures/f_*.lua 2>/dev/null'))
     local tPaths = {}
     for sLine in p:lines() do tPaths[#tPaths + 1] = sLine end
@@ -354,15 +387,19 @@ tests['[hero] LIMIT: the whole Lion corpus, scanned, holds no firing frame at am
         local fx = dofile(sPath)
         if fx and fx.self == 'npc_dota_hero_lion' then
             nFrames = nFrames + 1
-            local _, J, bot = load_lion(true, true, sPath)
+            local X, J, bot = load_lion(true, true, sPath)
             local hQ = bot:GetAbilityByName(Q_NAME)
             local nRank = (hQ and hQ:GetLevel()) or 0
             if nRank >= 1 then
+                local nDmg = X.GetImpaleKillDamage(hQ)
+                -- The cross-check runs per frame, so a KV move shows up as a
+                -- named disagreement instead of as a silently shifted ceiling.
+                if nDmg == Q_KV[nRank] then nAgree = nAgree + 1 else nDisagree = nDisagree + 1 end
                 for _, e in ipairs(J.GetNearbyHeroes(bot, 850, true, BOT_MODE_NONE)) do
                     nPairs = nPairs + 1
-                    local nShort = e:GetHealth() - Q_KV[nRank]
+                    local nShort = e:GetHealth() - nDmg
                     if nShort < nNearest then nNearest = nShort end
-                    if J.WillMagicKillTarget(bot, e, Q_KV[nRank], Q_DELAY) then
+                    if J.WillMagicKillTarget(bot, e, nDmg, Q_DELAY) then
                         nFiring = nFiring + 1
                     end
                 end
@@ -372,6 +409,11 @@ tests['[hero] LIMIT: the whole Lion corpus, scanned, holds no firing frame at am
 
     assert(nFrames >= 7, 'expected the Lion fixture corpus, got ' .. nFrames .. ' frames')
     assert(nPairs >= 10, 'expected enemy-in-reach pairs to scan, got ' .. nPairs)
+    assert(nAgree >= 7, 'the helper must be readable on the frames themselves; only '
+        .. nAgree .. ' frames produced a getter reading, which means the loader stopped '
+        .. 'serving GetSpecialValue* and this scan is driven by nothing')
+    assert(nDisagree == 0, 'getter and ladder disagreed on ' .. nDisagree .. ' frame(s); the '
+        .. 'KV moved, so re-read this section rather than editing Q_KV to match')
     assert(nFiring == 0, 'the corpus has no armed-leg firing frame at zero spell amp; if one '
         .. 'appears, this file has become able to assert the fire and should. Got ' .. nFiring)
     assert(nNearest == 45, 'and the nearest miss is 45 hp (Luna, ' .. FRAME_L4 .. '), got '
@@ -439,13 +481,29 @@ end
 -- batch -- so the shipped leg still reads 0.
 --
 -- ⇒ The two legs are now DIFFERENT offline, which is exactly what "no fixture
--- can separate them" said was impossible.  What this case must NOT do is
--- quietly re-baseline the sections above: every number in §4 was taken in the
--- archived world, on fabricated declarations.  Whoever picks that lever up
--- re-drives it through the getter and re-reads §4 first.  This case now pins
--- the new asymmetry, and pins the one piece of the old limit that survives --
--- a key nobody ever wrote still reads 0, so absence and zero remain
--- indistinguishable, which is GH #162 and is not repaired.
+-- can separate them" said was impossible.
+--
+-- THE RE-DRIVE THIS PARAGRAPH ASKED FOR HAS HAPPENED (2026-09-04, backlog
+-- -88 (甲)).  It used to end "whoever picks that lever up re-drives it through
+-- the getter and re-reads §4 first"; §4 is now driven by X.GetImpaleKillDamage
+-- on each frame's own handle, and Q_KV is a cross-check rather than the driver.
+-- The re-read changed no number -- 8 frames, 11 pairs, 0 firing, nearest miss
+-- 45 -- and that agreement is itself the reading: the fabrications the archived
+-- world forced were faithful to the KV, which is a thing nobody could check
+-- while the getter answered 0.  What did change is falsifiability: the old
+-- section could not fail when the KV moved, because the ladder it asserted
+-- against was the same ladder it was driven by.
+--
+-- WHAT IS STILL FABRICATED, AND CORRECTLY SO: §2 and §3 drive the helper on
+-- make_impale handles because they need a NONZERO shipped reading (the
+-- fallthrough, the negative-KV guard, the gate-off equality), and no frame in
+-- this corpus supplies one -- GetAbilityDamage answers 0 on every Lion handle
+-- offline.  That is a declared fabrication for a case a frame structurally
+-- cannot make, not a leftover from the archived world.
+--
+-- This case pins the new asymmetry, and pins the one piece of the old limit
+-- that survives -- a key nobody ever wrote still reads 0, so absence and zero
+-- remain indistinguishable, which is GH #162 and is not repaired.
 tests['LIMIT: the armed leg is readable offline now; the shipped leg is not, and absence still reads 0'] = function()
     local _, _, bot = load_lion(true, true)
     local h = bot:GetAbilityByName(Q_NAME)
