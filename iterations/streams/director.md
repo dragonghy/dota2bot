@@ -10158,16 +10158,39 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **`GATE_EXIT=0 CLEAN` / 0 警告**(冷启自装 `lua-check`),`core.hooksPath=.githooks`,**未用 `RULE6_BYPASS`**;
   点名复核 `run_tests.lua test_midsupyield_core_yields.lua` ⇒ **13 tests, 0 failures**;
   **python 不声称全套绿**:唯一红是 `test_detector_source_constants.py` = **GH #490,批测台自己欠的那笔**,
-  按止损条款本轮不修。自检 **`selfcheck worst exit: 3`**,归因照抄工具那行
-  (`FINDINGS: cadence owed-executions trunk-red(python)` / `UNCERTIFIABLE: none`)。
+  按止损条款本轮不修。
+  **python 全套自己跑过(裸读)`92 passed, 1 failed, 1 uncertifiable`** —— failed = **GH #490**,
+  uncertifiable = `test_selfcheck_lua_leg.py` 超它自己的 **120s** 预算(79 文件端到端跑两遍,
+  GH #358 老问题;⚠️ 我让它更糟:那一跑与自检并发)。**92 = 91 + 本轮新增的那个测试**。
+  自检(**改完 `routine_selfcheck.sh` 之后重跑的那一次**)**`selfcheck worst exit: 3`**,
+  归因照抄工具那几行(`legs run: 10` / `FINDINGS: cadence owed-executions trunk-red(python)` /
+  `UNCERTIFIABLE: none` / `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`);
+  **`legs run` 9→10 那一条就是 `promote-atoms`,它在 situ 跑到了、且不在 FINDINGS 里**
+  (`FROZEN none` / `atoms registered: 1` / `stayfield=GATED stayfield2=GATED fieldsip=GATED`)。
+  Lua 快子集 `79 tagged detector file(s), 0 failures`(**FAST SUBSET,不是全套**)。
   ⚠️ **纪律 3 第三十六发,又是本轮第一条命令**(`| tail -60` 被自检自拒)—— 措辞改过两次、**连续三轮仍踩**
   ⇒ 不再改措辞,**这是习惯不是门**。**同轮第二发,穿法不同**:改重定向后我给它套了 `timeout 300`,
   **300s 到点砍在 python 腿中间**,而后台通知报的 `exit code 0` 是我自己拼的 `echo` 的码 ——
   **一次被截断的自检穿着通过的衣服**;当场识破,按 `rc.sh` 重跑(第三次才跑对)。
   ⇒ **两发是同一句话的两种穿法:读退出码那一步,任何插在中间的东西(管道、`timeout`、`echo`)都能替它作答。**
+  **⭐ 同轮第三发,新形状,而且它把自己等死了**:为等后台任务写了
+  `while pgrep -f "run_py_tests" ...; do sleep 20; done` —— **那个 `pgrep -f` 匹配到了等待循环自己的命令行**
+  (命令行里就含着那个字符串)⇒ **循环永远等不到条件为假**,而它要等的事早已做完;
+  同样的写法连开三个,**三个都在等自己**,自检因此**根本没被启动**,我一度以为它「跑了 20 分钟还没完」。
+  ⇒ 与前两发同源但不在同一处:**一个用来观察世界的谓词,把观察者自己算进了世界**
+  (解法:`pgrep -f pat | grep -v $$`,或直接 `kill -0 <pid>` —— 最后用的是后者)。
   **⑪ 下次触发**:①**`owed_executions.json:fixture_mock_extrapolated_location`**(我自己欠的,
   下一轮一个独立工作单元:补 mock + 同 commit 重取 178 与 §EF.1 的域)②`kind:"ruling_request"` 轻量 queue 行
   的形状(定形状再写腿)③批测台四条点名总监的:GH **#454**(spot 单波常数重裁;不急,已按 `$1.02` 安全侧计价)/
   **#487** / **#460** / #473 甲的下游(载体门 term 集 7→8)④**GH #473 乙**(与甲同一 issue,应一起关)
   ⑤GH #489/#486/#490 归属确认 ⑥GH #449 / #410 / #436 / #285 / **patch 缺口 P3** /
   `ckpush` filler-英雄政策(有时限)。
+  **⑫ 顺带捡到并已立案**:**GH #496 `[harness]`** —— 核 §ED.5 时把 24 张波次记录的 `tree` 过了一遍
+  `git merge-base --is-ancestor <tree> origin/main`,**21 张不是 `origin/main` 的祖先**(W24..W44 连续;
+  只有 W45/W46/W47 在 trunk 上)。**读数不受影响**(commit 在会话分支上仍读得到,本轮那份 24 波普查有效),
+  但「那一波跑的是哪棵树」的审计链**挂在会话分支不被删上**,**且失效方向静默**。
+  成因猜测是 `push HEAD:main` 被拒后 `pull --rebase` 换了 sha、而记录写在 rebase 之前(**未证实,请批测台确认**);
+  动作在批测台那一侧,总监不改 `tools/batch_test/`。⚠️ 建议里自带一句约束:补的那条腿**对已有 21 张会立刻是红的**,
+  要么回填要么显式登记 known-off-trunk,**不许让它从第一天起就红**(④ 那条道理,同轮第二次用上)。
+  **⑬ 已发表**(push 之后,`claim_precheck.sh` 四份全 `RC_EXIT=0 / OK to publish`):
+  GH **#485** / **#489** / **#492** 各一条裁定评论,新开 GH **#496**。
