@@ -10662,10 +10662,10 @@
     ((0,±400),中点恰是 (0,0))才逼出来 —— **一个假圆心只有在「只有它罩得住全部受害者」
     的形状上才可见**。据实登记这次返工。
   - **本轮开的 issue**:**GH #478 追评**([harness],第 7 个文件 + 普查机制);
-    **新 issue([hero])** —— `X.ConsiderSanitysEclipse` 的录像可见行为与源码不符。
+    **GH #488([hero])** —— `X.ConsiderSanitysEclipse` 的录像可见行为与源码不符。
     自检读到的两条 trunk 红(`test_bots_walk_farm_only.py` GH #476;
     `test_coarmed_attribution_register.lua` 批测台 12:15Z 已立案)**均不重复认领**。
-  - **下一轮第一件事**:(1) **`odaoe` 不要再扫同类语料**,等 [hero] issue 回音
+  - **下一轮第一件事**:(1) **`odaoe` 不要再扫同类语料**,等 **GH #488** 回音
     (和上一轮 `cmqreach` 的处置同形);(2) **W45 的 `d3d158`(种子 3927,52 局)未扫**
     (`8e7e5e` 银行 0 局无录像);(3) 接 **GH #467** 的 `slotwait` 条件 (a)
     (⚠️ 读 `abilities[].cd`,**注意会是 `None`** —— 本轮又添一个受害者);
