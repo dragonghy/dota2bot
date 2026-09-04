@@ -67,7 +67,17 @@
       "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read directly as $? on the spot_run.sh call with output redirected to a file, not through a pipe",
-      "carriers": "chaos_knight, crystal_maiden, obsidian_destroyer, pudge"
+      "carriers": "chaos_knight, crystal_maiden, obsidian_destroyer, pudge",
+      "sir": "sir-973fjk2p",
+      "status_code": "instance-terminated-no-capacity",
+      "create": "2026-09-04T06:30:37.000Z",
+      "update": "2026-09-04T07:06:27.000Z",
+      "games_banked_at_0712Z": 35,
+      "terminated_at": "2026-09-04T07:08:30Z",
+      "survival_min": "37.87",
+      "survival_bound": "exact",
+      "survival_source": "EC2 StateTransitionReason \"Service initiated (<t>)\" minus describe-instances LaunchTime -- EXACT, not a lower bound, because the record was read inside the ~1h window (GH #375) rather than reconstructed from the last S3 upload",
+      "outcome": "RECLAIMED by spot capacity"
     },
     {
       "seed": "3892",
@@ -82,7 +92,13 @@
       "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe",
-      "carriers": "chaos_knight, crystal_maiden, lion, spirit_breaker"
+      "carriers": "chaos_knight, crystal_maiden, lion, spirit_breaker",
+      "sir": "sir-ifw7ktxq",
+      "status_code": "fulfilled",
+      "create": "2026-09-04T06:30:42.000Z",
+      "update": "2026-09-04T07:11:33.000Z",
+      "games_banked_at_0712Z": 48,
+      "outcome": "alive at 07:12Z, SIR still active/fulfilled"
     },
     {
       "seed": "3954",
@@ -97,7 +113,13 @@
       "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe",
-      "carriers": "lion, obsidian_destroyer, skeleton_king, zuus, pudge"
+      "carriers": "lion, obsidian_destroyer, skeleton_king, zuus, pudge",
+      "sir": "sir-kg7fkc9q",
+      "status_code": "fulfilled",
+      "create": "2026-09-04T06:30:47.000Z",
+      "update": "2026-09-04T07:11:33.000Z",
+      "games_banked_at_0712Z": 42,
+      "outcome": "alive at 07:12Z, SIR still active/fulfilled"
     },
     {
       "seed": "3927",
@@ -112,8 +134,54 @@
       "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe",
-      "carriers": "skeleton_king, spirit_breaker, zuus, pudge"
+      "carriers": "skeleton_king, spirit_breaker, zuus, pudge",
+      "sir": "sir-4jqzjtjm",
+      "status_code": "instance-terminated-no-capacity",
+      "create": "2026-09-04T06:30:51.000Z",
+      "update": "2026-09-04T06:42:20.000Z",
+      "games_banked_at_0712Z": 0,
+      "terminated_at": "2026-09-04T06:44:23Z",
+      "survival_min": "13.52",
+      "survival_bound": "exact",
+      "survival_source": "EC2 StateTransitionReason \"Service initiated (<t>)\" minus describe-instances LaunchTime -- EXACT, not a lower bound, because the record was read inside the ~1h window (GH #375) rather than reconstructed from the last S3 upload",
+      "outcome": "RECLAIMED by spot capacity"
     }
   ],
-  "seed_selection_crosscheck": "INDEPENDENT CONFIRMATION, free (a brute-force search started before the mask-level one and left running in the background). It enumerates ALL C(n,4) seed quadruples in the window rather than the distinct-mask classes the launch decision used, and it landed on the SAME set: {3892, 3927, 3954, 3968}, min-per-term 2, pudge carriers 3, total coverage 14 -- digit-for-digit identical. This matters because the mask-class reduction is a shortcut: it assumes two seeds with the same carrier mask are interchangeable for the gate, which is true for the gate but was never checked against the pudge tie-break riding on top of it. The exhaustive run checks both at once. So the 'min-per-term = 2 is the arithmetic CEILING of this window' claim in seed_selection_note now rests on TWO independent sources -- the popcount arithmetic AND an exhaustive search -- not on the derivation alone. No action follows: the wave was already flying with this exact set, and the cross-check confirms rather than revises it."
+  "seed_selection_crosscheck": "INDEPENDENT CONFIRMATION, free (a brute-force search started before the mask-level one and left running in the background). It enumerates ALL C(n,4) seed quadruples in the window rather than the distinct-mask classes the launch decision used, and it landed on the SAME set: {3892, 3927, 3954, 3968}, min-per-term 2, pudge carriers 3, total coverage 14 -- digit-for-digit identical. This matters because the mask-class reduction is a shortcut: it assumes two seeds with the same carrier mask are interchangeable for the gate, which is true for the gate but was never checked against the pudge tie-break riding on top of it. The exhaustive run checks both at once. So the 'min-per-term = 2 is the arithmetic CEILING of this window' claim in seed_selection_note now rests on TWO independent sources -- the popcount arithmetic AND an exhaustive search -- not on the derivation alone. No action follows: the wave was already flying with this exact set, and the cross-check confirms rather than revises it.",
+  "reclaim_event": "HALF THE WAVE WAS RECLAIMED WITHIN 40 MINUTES, and this was caught by the charter's launch-round roll call rather than by luck. The launch-instant roll call (06:32Z) was clean; a re-check at 07:10Z found only TWO `soak-run` tags where four had been, and describe-instances on terminated,shutting-down returned two `Server.SpotInstanceTermination`. TWO INDEPENDENT EVENTS, NOT ONE AZ EVENT: i-0b35efd7006aa95fc (seed 3927, us-west-2d) died 06:44:23Z at 13.52 min; i-029b1e130a155b0f1 (seed 3968, us-west-2a) died 07:08:30Z at 37.87 min -- different AZs, 24 minutes apart. This is the OPPOSITE shape from W17 (four machines, one AZ, same second) and from W43 (all four in us-west-2d). GH #252's 4-AZ spread did not prevent the losses, but it did buy what it was designed to buy: the losses were uncorrelated, so the wave lost 2 of 4 rather than 4 of 4.",
+  "reclaim_carrier_impact": "NO TERM WENT TO ZERO -- the >=2-carriers-per-term gate did exactly the job it exists for. Survivors 3892 + 3954 still cover all 7 terms, though six of them drop to a single carrier: chaos_knight 1 (3892), crystal_maiden 1 (3892), lion 2 (3892+3954), obsidian_destroyer 1 (3954), skeleton_king 1 (3954), spirit_breaker 1 (3892), zuus 1 (3954). The pudge tie-break also survived: of the three pudge carriers (3968, 3954, 3927) the reclaim took two, but 3954 lives, so `rotscope`'s condition-(a) frame evidence is still reachable in this wave.",
+  "rerun": [
+    {
+      "seed": "3927",
+      "reason": "reclaimed at 13.52 min having banked ZERO analysis.json -- this seed was entirely lost without a re-run",
+      "run_id": "spot_20260904_071250_1_27165f8c67bb14fcef5eb04e424054f0551eb1e6_d3d158",
+      "instance_id": "i-00700698b87d534db",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "reaimed": "False",
+      "market": "on-demand",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle)",
+      "status_code": "pending -- on-demand machines have NO SIR, so the only code this row can ever carry is the EC2 StateReason.Code, to be read at harvest",
+      "launched_at": "2026-09-04T07:12:53Z",
+      "rerun_exit": "0"
+    },
+    {
+      "seed": "3968",
+      "reason": "reclaimed at 37.87 min having banked 35 analysis.json -- not lost, but the leg split is unknown and more depth is cheap",
+      "run_id": "spot_20260904_071255_1_27165f8c67bb14fcef5eb04e424054f0551eb1e6_d5b1b8",
+      "instance_id": "i-07f4edd42cb80ed41",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "reaimed": "False",
+      "market": "on-demand",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle)",
+      "status_code": "pending -- on-demand machines have NO SIR, see the sibling row",
+      "launched_at": "2026-09-04T07:12:58Z",
+      "rerun_exit": "0"
+    }
+  ],
+  "rerun_ruling": "GH #408 executed on its stated criterion, which is the SIR `Status.Code` and NOT the EC2 `StateReason.Code`. Both dead machines read `instance-terminated-no-capacity` (sir-973fjk2p and sir-4jqzjtjm), which is the exact code the ruling names => re-runs go DIRECTLY --on-demand, skipping the (1)(2)(3) spot ladder. This is not a deviation from owner GH #158: it is #158's own 'unless there is no spot machine' clause, and a re-run is by construction aimed at a window that just refused capacity. Both fence conditions hold: one re-run per seed (each seed re-run exactly once) and at most TWO on-demand re-runs per wave (exactly two). Both verified InstanceLifecycle=None. AZs deliberately aimed at us-west-2b/2c, i.e. AWAY from the two AZs (2a, 2d) that just refused capacity.",
+  "rerun_gate_i_note": "Registered re-run machines do NOT open a new gate-(i) window (W40/W42 precedent). This holds STRUCTURALLY, not on anyone's honesty: wave_throttle.py reads `machines[]` only and never reads `rerun`, so the next wave's anchor stays W45's original slate at 06:30:52Z.",
+  "rerun_cost_note": "Fence re-checked BEFORE the paid re-runs: 12.647 (MTD) + 2.15 (W44 on-demand) + 0.90 (W43 spot) + 0.90 (W45 spot) = 16.60, plus two on-demand re-run machines at ~$0.55 each = ~$17.70, against the $80 fence / $90 brake / $100 owner line. No tier crossed, no owner approval triggered, and the disposition itself was PRE-REGISTERED in the charter ('the missing seed gets a re-run machine'), so this is a standing authorization executed, not a new spending decision.",
+  "gh454_correction": "CORRECTION to this record's own cost_estimate field and to the round's report: W45 can no longer cleanly settle GH #454. That issue needs a spot wave that actually FINISHES, and W45 is now a mixed wave -- two spot machines reclaimed part-way (13.52 and 37.87 min) plus two on-demand re-runs. Its billing-side total will not be a clean read of the $0.90 spot per-wave constant. Do not report it as one at harvest; GH #454 still waits for a spot wave that runs to completion."
 }
