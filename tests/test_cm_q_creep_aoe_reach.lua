@@ -114,8 +114,25 @@ local function source()
     return s
 end
 
---- Load the frame, anchor the two KV numbers the dumper cannot give us, arm
---- `tArmed`, and run the real X.ConsiderQImpl with a spy on FindAoELocation.
+--- Load the frame, pin the KV numbers, arm `tArmed`, and run the real
+--- X.ConsiderQImpl with a spy on FindAoELocation.
+---
+--- ⭐ 2026-09-04 (`-76`, the reason-sentence read): this used to say "anchor the
+--- two KV numbers THE DUMPER CANNOT GIVE US". That stopped being true on
+--- 2026-09-04, when tests/mock/replay_fixture.lua started serving GetCastRange
+--- and GetSpecialValue* off the fixture's own KV block for the five focus
+--- heroes. The dumper gives them, and this frame answers 700 / 425 / 110 --
+--- the same three numbers written below. So these lines are no longer a
+--- stand-in for a silent getter; they are a pin ON TOP of a live one, and
+--- section 'KV' asserts the two agree. (In the sibling file
+--- test_replay_072738_zuus_script.lua the same unnoticed promotion from
+--- stand-in to overwrite had four numbers disagreeing.)
+---
+--- The pin is KEPT rather than deleted, on purpose: GetSpecialValueInt is
+--- overridden here as a whole function that answers 0 for every key but the two
+--- named, which is what keeps this file's reading about `radius` alone. Handing
+--- it to the loader would widen the world under a REACH measurement for no
+--- gain. What was missing was the cross-check, not the pin.
 ---
 --- Returns the call log (one entry per engine search, in source order) plus the
 --- world, so a caller can assert on the frame itself as well as on the calls.
@@ -505,6 +522,31 @@ tests['§7 LIMIT: the count the armed side gives up is real and is not measured 
     assert(doc:find('STRICTLY no\n--- more often', 1, true)
         or doc:find('STRICTLY no', 1, true),
         'the direction of the cost is written down in the helper\'s own doc block')
+end
+
+-- KV -- the three pinned numbers, cross-checked against the fixture's own KV
+-- block through the 2026-09-04 loader (`-76`; see the doc block on run()).
+--
+-- Red here means the pin and the shipped data have parted company, and the
+-- whole REACH reading (732 vs 1157, the 58% overshoot) is computed from the
+-- pin. Re-derive the overshoot before touching anything; do not sync the pin
+-- to the KV and move on.
+tests['KV: the pinned Nova numbers match the fixture KV'] = function()
+    local _, bot = rf.load(FRAME)
+    local h = bot:GetAbilityByName(NOVA)
+    assert(h ~= nil, 'no ' .. NOVA .. ' handle on the frame')
+    local sp = rawget(h, '__spec')
+    assert(sp ~= nil and sp.GetSpecialValueFloat ~= nil,
+        'the loader installed no KV spec on ' .. NOVA .. ' -- this section is vacuous, '
+        .. 'not passing')
+    assert(h:GetLevel() == 1, 'the frame no longer has Nova at rank 1; the pinned values '
+        .. 'are rank-1 rows, so re-derive them')
+    assert(h:GetCastRange() == NOVA_CAST_RANGE, ('cast range: pinned %d, fixture KV %s')
+        :format(NOVA_CAST_RANGE, tostring(h:GetCastRange())))
+    assert(h:GetSpecialValueInt('radius') == NOVA_RADIUS, ('radius: pinned %d, fixture KV %s')
+        :format(NOVA_RADIUS, tostring(h:GetSpecialValueInt('radius'))))
+    assert(h:GetSpecialValueInt('nova_damage') == 110, 'nova_damage: pinned 110, fixture KV '
+        .. tostring(h:GetSpecialValueInt('nova_damage')))
 end
 
 return tests

@@ -21,8 +21,37 @@
 -- Both are pinned here together, deliberately: this is the `lanefix` lesson --
 -- a narrowing that is locally right must not silently undo the original catch.
 --
--- EXTERNAL ANCHORS (numbers that do NOT come from the dump -- make_fixture.py
--- extracts no ability specs, same caveat as wkreincarnmp's GetManaCost):
+-- EXTERNAL ANCHORS -- ⭐ RE-READ 2026-09-04 (`-76`), AND THE ONE-SENTENCE
+-- REASON BELOW IS NOW THREE DIFFERENT REASONS.
+--
+-- It used to read: "numbers that do NOT come from the dump -- make_fixture.py
+-- extracts no ability specs, same caveat as wkreincarnmp's GetManaCost".  The
+-- fixtures DO carry ability KV, and tests/mock/replay_fixture.lua has served it
+-- since 2026-09-04.  The three anchors below are still anchors, but each for a
+-- reason the others do not share, and the file must not be quoted as if one
+-- sentence covered them:
+--
+--   * hoof_stomp / ice_path cast range -- centaur and jakiro are NON-FOCUS
+--     heroes, and the loader refuses them BY DESIGN (a declared bound, not a
+--     gap).  Both handles answer GetCastRange() == 0 with no spec installed.
+--     These two anchors are load-bearing and will stay so until the loader's
+--     focus-five restriction is lifted.
+--   * Freezing Field AoE radius -- CM is a focus hero and her KV block IS
+--     served, but GetAOERadius is not one of the seven getters the loader
+--     specs (GetManaCost / GetSpecialValueInt / GetSpecialValueFloat /
+--     GetCastRange / GetCastPoint / GetCooldown / GetAbilityDamage).  It
+--     answers 0 through the generic bot_api `^Get` default.  Different reason,
+--     same conclusion: still load-bearing.
+--
+-- ⚠️ AND ONE DISAGREEMENT, REGISTERED NOT RESOLVED.  On both fixtures the
+-- served KV answers `GetSpecialValueInt('radius') == 810` for
+-- crystal_maiden_freezing_field, while this file anchors 835 from Liquipedia.
+-- Whether the AbilityValues key named `radius` is the same quantity the engine
+-- returns from GetAOERadius is NOT established here, so 835 is left in place
+-- and nothing is re-derived off 810; the section below pins both numbers so the
+-- gap cannot close silently.  Filed for the key-to-getter mapping owner.
+--
+-- The anchors themselves:
 --   * hoof_stomp cast range: 0 (no-target self-radius ability). Tested at 0 AND
 --     at 325 (its stomp radius, a generous upper bound) so the conclusion holds
 --     whichever the engine reports.
@@ -254,6 +283,66 @@ tests['wiring: nothing calls the range-blind boolean wrapper any more'] = functi
     assert(src:find('J.GetReadyHardCc', 1, true), 'the gate must take the handle')
     assert(src:match('J%.HasReadyHardCc%s*%(') == nil,
         'the boolean wrapper discards the handle -- that IS the GH #34 defect')
+end
+
+-- ANCHORS -- why each of the three is still load-bearing after the 2026-09-04
+-- loader repair, pinned so the reason cannot rot again (`-76`).
+--
+-- Every assertion here is written to go RED when an anchor stops being needed.
+-- That is the good outcome, and each message says what to do: replace the
+-- anchor with the served value and re-derive, never loosen the assertion.
+tests['anchors: the non-focus cast ranges are still unserved (by design)'] = function()
+    local cases = {
+        { FAR,   'npc_dota_hero_centaur', 'centaur_hoof_stomp' },
+        { CLOSE, 'npc_dota_hero_jakiro',  'jakiro_ice_path' },
+    }
+    for _, c in ipairs(cases) do
+        local _, _, heroes = rf.load(c[1])
+        local u = heroes[c[2]]
+        assert(u ~= nil, c[2] .. ' is no longer on ' .. c[1])
+        local a = u:GetAbilityByName(c[3])
+        assert(a ~= nil, c[3] .. ': no handle')
+        assert(rawget(a, '__spec').GetCastRange == nil,
+            c[3] .. ': the loader now specs GetCastRange on a NON-FOCUS hero -- the '
+            .. 'focus-five bound moved. Drop the hand anchor for this ability and '
+            .. 're-derive the two end-to-end cases off the served value.')
+        assert(a:GetCastRange() == 0,
+            c[3] .. ': unserved handles used to answer 0, this one answers '
+            .. tostring(a:GetCastRange()))
+    end
+end
+
+tests['anchors: GetAOERadius is still not one of the served getters'] = function()
+    for _, fx in ipairs({ FAR, CLOSE }) do
+        local _, bot = rf.load(fx)
+        local r = bot:GetAbilityByName('crystal_maiden_freezing_field')
+        assert(r ~= nil, fx .. ': no freezing_field handle')
+        local sp = rawget(r, '__spec')
+        assert(sp ~= nil and sp.GetSpecialValueFloat ~= nil,
+            fx .. ': CM is a focus hero but got no KV spec -- this section is vacuous')
+        assert(sp.GetAOERadius == nil,
+            fx .. ': the loader now serves GetAOERadius. Delete FIELD_RADIUS, take the '
+            .. 'served value, and re-derive -- and settle the 810/835 question below '
+            .. 'while you are there.')
+    end
+end
+
+-- The registered disagreement.  810 is what the fixture's own KV answers under
+-- the key named `radius`; 835 is the Liquipedia number this file runs on.  This
+-- section resolves nothing -- it makes the gap impossible to close by accident.
+tests['anchors: the 810 (KV `radius`) vs 835 (anchor) gap is still open'] = function()
+    for _, fx in ipairs({ FAR, CLOSE }) do
+        local _, bot = rf.load(fx)
+        local r = bot:GetAbilityByName('crystal_maiden_freezing_field')
+        assert(r:GetLevel() == 1, fx .. ': freezing_field is no longer rank 1; the KV '
+            .. 'ladder is rank-indexed, so re-read before comparing')
+        assert(r:GetSpecialValueInt('radius') == 810,
+            ('%s: KV `radius` now answers %s, registered 810 -- if it moved to %d the '
+            .. 'gap is closed and FIELD_RADIUS can be sourced from the KV')
+            :format(fx, tostring(r:GetSpecialValueInt('radius')), FIELD_RADIUS))
+    end
+    assert(FIELD_RADIUS == 835, 'FIELD_RADIUS moved off the Liquipedia anchor; if it was '
+        .. 'sourced from the KV, delete this section and say so in the header')
 end
 
 return tests

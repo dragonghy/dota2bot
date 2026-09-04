@@ -94,6 +94,17 @@
 --     drift apart silently.
 --   * The datafeed anchor (bkbpierce, Pure, cast range 175, damage 275/375/475)
 --     is RECORDED. This test cannot reach the network.
+--     ⭐ 2026-09-04 (`-76`, the reason-sentence read): the recorded half is no
+--     longer the ONLY source. tests/mock/replay_fixture.lua serves GetCastRange
+--     and GetSpecialValue* off the fixture's own KV block for the five focus
+--     heroes since 2026-09-04, so this frame can now corroborate the anchor
+--     from inside the repo -- and it does, on all five numbers, all three
+--     ranks: cast range 175, damage 275/375/475, mana 100/125/150. Section
+--     'KV' below is that cross-check. It does NOT make the anchor
+--     network-verified; it makes a silent drift between the recalled number
+--     and the shipped data impossible. Kept as a separate section on purpose:
+--     the rest of the file still runs on the anchors, so if the two ever part
+--     company the cross-check names which one moved.
 --   * Corpus counts come from `dofile` on each fixture, never from a regex over
 --     the files -- the threshold pre-flight's first pass under-counted the Axe
 --     frames 10 to 26 exactly that way.
@@ -562,6 +573,41 @@ tests['section 3: ConsiderR is still the FIRST consumer in X.SkillsComplement'] 
     assert(iW and iR < iW, 'ConsiderW now runs before ConsiderR')
     assert(body:find('ActionQueue_UseAbilityOnEntity%( abilityR, castRTarget %)'),
         'the R bid no longer turns into a cast order on the target it names')
+end
+
+-- KV -- the recorded datafeed anchor, cross-checked against the fixture's own
+-- KV block through the 2026-09-04 loader (`-76`, see HONEST BOUNDS).
+--
+-- The ladder is rank-indexed off GetLevel and clamped at the top rank, so
+-- reading rank 2 and 3 means moving GetLevel on the handle; that is a read, not
+-- a world mutation -- nothing else in this file runs under it.
+--
+-- If this ever goes red, do NOT edit the anchor to match. One of two things
+-- happened and they need different answers: a patch moved Culling Blade (update
+-- the anchor AND the header, and re-read every claim that quotes the number),
+-- or the loader/snapshot drifted (fix that, the anchor is fine).
+tests['KV: the recorded Culling anchor matches the fixture KV on all three ranks'] = function()
+    local _, bot = rf.load(FIXTURE)
+    local h = bot:GetAbilityByName(CULLING)
+    assert(h ~= nil, 'no ' .. CULLING .. ' handle on the frame')
+    local sp = rawget(h, '__spec')
+    assert(sp ~= nil and sp.GetSpecialValueFloat ~= nil,
+        'the loader installed no KV spec on ' .. CULLING .. ' -- the cross-check is '
+        .. 'vacuous, not passing; find out why before quoting this section')
+    local lv0 = sp.GetLevel
+    for rank = 1, 3 do
+        sp.GetLevel = rank
+        assert(h:GetSpecialValueInt('damage') == R_DAMAGE[rank],
+            ('rank %d damage: anchor %d, fixture KV %s'):format(
+                rank, R_DAMAGE[rank], tostring(h:GetSpecialValueInt('damage'))))
+        assert(h:GetManaCost() == R_MANA[rank],
+            ('rank %d mana: anchor %d, fixture KV %s'):format(
+                rank, R_MANA[rank], tostring(h:GetManaCost())))
+    end
+    sp.GetLevel = lv0
+    assert(h:GetCastRange() == 175,
+        'cast range: anchor 175, fixture KV ' .. tostring(h:GetCastRange())
+        .. ' -- RING (' .. RING .. ') is built from it')
 end
 
 return tests

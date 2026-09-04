@@ -22,6 +22,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-94. **`-76` 的四个文件读完了,而立案句「这个数 dump 给不了」今天**不是一个理由是四个**
+   (报告 `iterations/reports/hero/20260904T225049Z.md`,GH **#502**)。**
+   - **⭐ 形状**:09-01/09-04 的 `kvgetters` 让 loader 按 fixture 自带 KV 逐 rank 服务
+     七个 getter(**只对焦点五**)。在那之前测试里的手写常量是**代替一个哑掉的 getter**;
+     在那之后同一行变成**覆盖一个活着的 getter**,而**没有任何东西举手** ——
+     读数不动、不红、grep 搜不到,正是 `-72` 立的那一类。
+   - **⭐ 四个文件给出四个互不能推广的结论**:`zuus_script` **四个手写数与 KV 全不符**
+     (arc 850/80 vs rank2 **800/90**;bolt 825/125 vs rank1 **700/120**);
+     `cm_q` 三个全符;`axe_cull` 五个数三个 rank 全符;`cm_r_range` 三个锚
+     **各因不同理由**仍承重(两个是**非焦点被按设计拒绝**,一个是 **`GetAOERadius`
+     根本不在被服务的七个 getter 里**)。⇒ **同 `-93` 的「残量不是队列」**:
+     看着像一条待办的四分之四,**它是四个不同的处置**。
+   - **⭐⭐ 最硬的一格是 `zuus_script` 的第二句立案句,被阴性对照打掉**:
+     它说不放技能是「lf_mana 闸 + Zeus 自己的 nKeepMana 储备」。实测
+     `SkillsComplement` 这一帧 **queue 零个 action**(两个 `assert_no_harass`
+     **一次都没比较过名字**,空域);把它点名的两个杠杆都给满(**满蓝 + Q/W 冷却清零**)
+     **仍然是零**,五个 `Consider*` **全部 desire 0**;arc lightning 按 KV 价
+     `IsFullyCastable()==true`,`J.CanNotUseAbility` 为 false,量具 sanity 捕得到。
+     ⇒ **法力可证不是这一帧的判别式。**哨兵留着,空域登记成**会响**的断言。
+   - **⛔ 唯一没判的一格已交出去(GH #502)**:`crystal_maiden_freezing_field` 的
+     KV `radius` 答 **810**,而 `cm_r_range` 按 Liquipedia 跑 **835**。
+     键→getter 的映射没确立之前**不许**拿 810 重新推导(= 用没定价的量换有出处的量);
+     两个数都钉住,M9 证明那节会响。是同一个量 ⇒ `FIELD_RADIUS` 从 KV 取并重推两个
+     end-to-end case;不是 ⇒ `GetAOERadius` 该不该上规格,**GH #495 同族**。
+   - **⭐ 可迁移(变异台量出来的,两条)**:
+     (甲) **`-91` 那道锚唯一性守卫本身有一个失效开放的形状**:`grep -F` 把多行 pattern
+     拆成独立行 pattern 并按「匹配任一行」计数,**一个恰好出现一次的两行锚被报成 3 次**
+     ⇒ 守卫在它唯一存在的理由上失效开放。改成在 python 里对**全文**计数;
+     **别的 stand 还是 grep 版。**
+     (乙) **M3 曾经 SURVIVED,而那是变异体写错了不是断言睡着**(注入的 action 排在
+     `record_actions` 装钩子**之前**)。evidence-discipline 第 2 条**先怀疑变异体**。
+   - **明写的 LIMIT**:§D 的满蓝对照**无法**用「删掉驱动」打红 —— 两个世界都答 0,
+     **那正是发现本身**。M4 只证明计数器接在 log 上,**不证明对照今天在做功**。
+   - **下一棒**:本组这条线到此为止(`-76` 清空)。#502 的裁定球在**总监 / #495 那条线**。
+
 -93. **`kvgetters` 第三撮已发(`-92` 的「⭐ 下一撮」DONE),而它的结论是**残量不是队列**
    (报告 `iterations/reports/hero/20260904T195041Z.md`)。**
    - **⭐ 六个残余 `Ability*` 键里五个发不了,理由分三类、互相不能推广**
@@ -527,7 +562,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    于是**一次谐波故障在多数用例里读成通过**。要不要收成一个共享 helper 是**跨 25 个文件**的改动
    (且 `os.remove` 的所有权语义要一起定),**不是顺手做**;先想清楚 helper 的形状再动。
 
--76. **`-72` 剩下的「逐句读理由」那一半,现在只剩 6 个文件要读。**
+-76. ~~**`-72` 剩下的「逐句读理由」那一半,现在只剩 6 个文件要读。**~~
+   **2026-09-04T22:50Z DONE —— 报告 `iterations/reports/hero/20260904T225049Z.md`;
+   四个文件读完,结论进 `-94`,GH #502。**
    09-02T04:58Z 那轮用**结构**替代了逐句读:一个价钱只能经**两条路**进决策(可施法性 / 绑定),
    而五个焦点英雄的 17 个绑定里 **9 个是死局部变量**。⇒ 「理由句可能变假」的文件收敛成
    **带真消费方的那 6 个**(探针实测:`test_axe_cull_immune_veto` / `test_cm_q_creep_aoe_reach` /
@@ -4209,6 +4246,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T22:50Z(报告 `iterations/reports/hero/20260904T225049Z.md`;轴 **backlog `-76`
+  兑现:四个文件的「理由句」逐句读**;新开 GH **#502**)
+  **改 4 个测试文件(`test_replay_072738_zuus_script` / `test_axe_cull_immune_veto` /
+  `test_cm_q_creep_aoe_reach` / `test_replay_260819_cm_r_range`)+ 新
+  `tools/agent/mutstand_reason_read_76.sh`;`bots/` 与 `game/` 零行;零新候选 id、
+  零 arm、零 promote、零 AWS、`queue.json` 不加行。**
+  - 选题:OWNER_PRIORITIES 无本组项(P1/P2 在协同组、P3 在总监、常设运维在批测台);
+    开着的 `[hero]` issue 逐条看过没有一条可动(#488 球在录像组;#471/#459/#463
+    等总监裁作用域且 `-86` 明写先买 `hero-28` 语料;#465 待关;#447 的 fixture 在录像组;
+    #453/#451 是 tinker,`-82` 明写低于任何焦点英雄的活)⇒ 取 backlog 最上面一条可动的 `-76`。
+  - **⭐ 结论:立案句「这个数 dump 给不了」今天不是一个理由,是四个,互相不能推广。**
+    09-01/09-04 的 `kvgetters` 让 loader 按 fixture KV 逐 rank 服务七个 getter(只对焦点五)
+    ⇒ 手写常量从**代替哑 getter**变成**覆盖活 getter**,而**没有任何东西举手**。
+    读数:`zuus_script` **四个手写数与 KV 全不符**(arc 850/80 vs rank2 **800/90**;
+    bolt 825/125 vs rank1 **700/120**);`cm_q` 三个全符;`axe_cull` **五个数三个 rank 全符**;
+    `cm_r_range` 三个锚**各因不同理由**仍承重(两个**非焦点被按设计拒绝**、一个是
+    **`GetAOERadius` 不在被服务的七个 getter 里**)。**同 `-93` 的「残量不是队列」。**
+  - **⭐⭐ 本轮最硬的一格:`zuus_script` 第二句立案句被阴性对照打掉。**
+    它说沉默是「lf_mana 闸 + nKeepMana 储备」。实测 `SkillsComplement` 这一帧
+    **queue 零个 action**(两个 `assert_no_harass` **一次都没比较过名字**,空域);
+    **满蓝 + Q/W 冷却清零仍然是零**,五个 `Consider*` **全部 desire 0**;
+    arc lightning 按 KV 价 `IsFullyCastable()==true`;`J.CanNotUseAbility` 为 false;
+    量具 sanity 捕得到 ⇒ **法力可证不是这一帧的判别式**。空域登记成会响的断言。
+  - **⛔ 唯一没判的交出去了(GH #502)**:CM `freezing_field` 的 KV `radius` 答 **810**,
+    文件按 Liquipedia 跑 **835**。键→getter 映射未确立前**不许**拿 810 重推;两个数都钉住。
+  - 验证:被改 4 个文件 **8/19/17/18 全绿**;**邻接 12 个 + 护栏 3 个全绿**;
+    变异台 **9/9**(含 **M6 白盒**:摘掉 KV spec,交叉核验必须自称 **vacuous** 而不是通过
+    —— `-93` 的 M14 教训在一次「值没动的落地」上的兑现)。
+    **⭐ 变异台顺手修了 `-91` 那道锚守卫的一个失效开放形状**:`grep -F` 对多行锚
+    按「匹配任一行」计数,**恰好出现一次的两行锚被报成 3 次**;改成 python 全文计数。
+    **M3 曾 SURVIVED,而那是变异体写错(注入排在装钩子之前),不是断言睡着。**
+  - 铁律 6:静态 `GATE_EXIT=0 CLEAN`(0 warnings,gate 自己装的 `lua-check`),**没用 BYPASS**;
+    **动态那半只有部分覆盖**(单进程全量后台发起,收尾时仍在跑、没拿到 `FULL_EXIT`,
+    **GH #124**)⇒ **本轮不声称全量绿**。
+  - ⚠️ 开工自检 `EXIT=0`,worst finding 是 **`TRUNK RED (python)`** = 已知 **#490/#497**,
+    **非本轮引入**(零 `.py` 改动);**「main 是否也红」本轮没做 stash 差分,未确立**。
+    **第一次调用写成 `| tail -40`,自检打 `SELFCHECK_EXIT=2 REFUSED`「第 5 次复发,
+    每次都是当轮第一条命令」——那不是通过;这是第 6 次。**
+    **污染披露**:自检后台跑期间本轮编辑已在工作树上,它的 trunk 腿读的是 mod 树。
+  - 下一棒:**本组这条线到此为止**(`-76` 清空)。#502 的裁定球在**总监 / GH #495 那条线**。
 - 2026-09-04T19:50Z(报告 `iterations/reports/hero/20260904T195041Z.md`;轴 **backlog `-92`
   的「⭐ 下一撮」兑现:`kvgetters` 第三撮 —— 而结论是**残量不是队列**)
   **改 3 个文件(`tests/mock/replay_fixture.lua`、`tests/test_fixture_kv_getters.lua`、
