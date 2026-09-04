@@ -10551,7 +10551,10 @@
     而 gap 判据只看**兵线**小兵 ⇒ 巧合不是证据;`064551_slot1` t=1372.8 那发新星
     **零 DAMAGE 零 modifier,什么都没打到**,over 仅 136u 而采样滞后 0.6s 值 ±195u ⇒ 不可判。
     ⇒ **35 局、318 个 gap 帧、137 个带新星的候选,清白帧 0 个。**
-  - **⭐ 本轮第一件新东西(已开 issue):这台仪器的受害者信号漏检英雄。**
+  - **本轮开的 issue:GH #482([bug],trunk 第三条红 + 真空通过的邻居)、
+    GH #483([harness],新星受害者漏检英雄)。** 两条都在 `9ebf78ac` 落 `origin/main`
+    之后才发,`claim_precheck.sh` 各读 **exit 0 / clean / 本地领先 0 个 commit**。
+  - **⭐ 本轮第一件新东西(GH #483):这台仪器的受害者信号漏检英雄。**
     `cmqreach_domain.py:225` 只认 `DAMAGE.inflictor == crystal_maiden_crystal_nova`,
     而引擎同 tick 还发 `MODIFIER_ADD … modifier_crystal_maiden_crystal_nova`,
     **有时只有后者带得到英雄**:35 局里 **23/649 = 3.5%** 的命中英雄的新星对 `nova_dmg` 隐身。
@@ -10560,7 +10563,7 @@
     `065843_slot7` t=1179.9(over 301u)`nova_dmg` 答「零英雄受害者」⇒ **看起来是唯一清白帧**,
     逐帧一看同 tick `MODIFIER_ADD → npc_dota_hero_lion`,而且前后是一场 1v1
     (Lion 1176.6 放 voodoo、1178.1 撒粉)。**与 GH #176 同族:那次污染读数,这次造出不存在的候选。**
-  - **⭐⭐ 本轮第二件(已开 issue):trunk 第三条红,今天 07:48Z 引入,没人立案 ——
+  - **⭐⭐ 本轮第二件(GH #482):trunk 第三条红,今天 07:48Z 引入,没人立案 ——
     而它红的那一刻,旁边那条 check 变成真空通过。**
     `tests/test_detector_source_constants.py:1074` 的
     「API 文档还写着 `GetNeutralSpawners().team/.type`」失败,因为
