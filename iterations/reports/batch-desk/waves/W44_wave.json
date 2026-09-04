@@ -1,0 +1,144 @@
+{
+  "wave": "W44",
+  "_note": "58-id family, second carrier wave. This is the RE-SEND of W43, which flew at 2026-09-03T18:21:58Z and was VOIDED with zero games when a us-west-2d capacity event reclaimed all four machines ~10 min after launch. Market is on-demand by the standing GH #271 ruling (reclaim_blind VERDICT: BLINDED => NEXT WAVE --on-demand, ONE wave, then revert to spot), re-run this round rather than inherited from the prose of the previous round.",
+
+  "tree": "67f9c41ee92480b3aa8b478fea0fd94db30c1e00",
+  "ref_pin": "67f9c41ee92480b3aa8b478fea0fd94db30c1e00",
+  "tree_verified": "git ls-remote origin main == local HEAD == 67f9c41e at launch time; `git diff --stat origin/main -- bots game tests tools .github .claude` empty. Pinned as an explicit 40-char SHA rather than --ref main because the four calls span ~13s and any push inside that window would clone four different trees with nothing raising a hand.",
+  "tree_drift_since_W43": "NOT byte-identical to W43's tree. `git log 859e7ab3..HEAD -- bots/ game/` returns TWO commits: dc63d791 (strategy: slotwait pid->slot on the last two live utils.lua sites, GH #467) and 0aa7dca3 (hero: dead numeric constants in decision functions, focus-five 5 -> 0). Corroborated independently by carrier_terms line numbers moving (ckpush hero_chaos_knight.lua:470 at W43 -> :488 here). Therefore W44 is a NEW wave on a NEW tree, not a byte-identical re-send, and it does NOT pool with W43 (which has zero games anyway).",
+
+  "arm_ids": 58,
+  "arm_bytes": 512,
+  "arm_md5": "7009f6c512e1b6bdf514401f20178eca",
+  "arm_source": "iterations/streams/test_set.md line 2 read off the launch tree; ids/bytes/md5 RECOMPUTED here, not copied from prose. BYTE-IDENTICAL to W43 (58 / 512 / 7009f6c5...), so the id-set axis did not move even though the tree did.",
+  "arm_fork_note": "This is the FOURTH visit of the unruled gate-(ii) fork the desk has flagged three times: 'armed-string family' vs 'tree object hash' disagree about what counts as a new thing to test. Here the string is byte-identical and the tree moved. BOTH readings nevertheless say PASS this round (string family: the 58-id family has ZERO scored seeds because W43 banked nothing; tree hash: two bots/ commits), so the fork did not bite and again was not forced to a ruling. Still owed to the director.",
+
+  "seeds": [3426, 3713, 3749, 3508],
+  "seed_reuse_note": "These are W43's four seeds, REUSED deliberately. They are legitimately unused: W43 banked zero analysis.json objects, so `seed_roster_index.py --build` (ROSTER_EXIT=0, 332 prefixes, 0 new to scan, index unchanged at 197 seeds) does not contain any of them -- verified per-seed, 0 matches each. Reusing them preserves W43's already-validated carrier coverage and makes W44 the cleanest possible re-send of W43's intent; the only axes that moved are the tree and the market.",
+  "carrier_terms": "chaos_knight,crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus",
+  "carrier_gate": "CARRIER_GATE ids=11 seeds=4 exit=0. Per-term: skeleton_king 4 (FULL), zuus 4 (FULL), chaos_knight 3, crystal_maiden 2, lion 2, obsidian_destroyer 2, spirit_breaker 2. min-per-term = 2, all 7 terms satisfied.",
+  "carrier_terms_gate": "CT_EXIT=0 -- 58 armed ids: 11 hero-scoped, 47 generic, 0 unresolved => 7 term(s). Identical term set to W43.",
+  "carrier_exposure_note": "Four distinct carrier PAIRS on the two-carrier terms: spirit_breaker {3713,3508}, crystal_maiden {3426,3749}, lion {3426,3713}, obsidian_destroyer {3749,3508}; skeleton_king and zuus full-house, chaos_knight 3. Losing any ONE machine drops no term to zero. (Unchanged from W43 -- same seeds.)",
+  "wiring_gate": "ARM_EXIT=0 -- all 58 armed ids wired on HEAD.",
+
+  "instance_type": "c6i.4xlarge",
+  "slots": 16,
+  "rec_slots": 8,
+  "watchdog_hours": 2,
+  "games_per_seed": 12,
+  "acquisition_config_note": "--slots 16 --hours 2 --rec-slots 8 --games 12, 4x1 topology -- BYTE-IDENTICAL to W39-W43. The id set did not move this wave either, so the 'never change the id set and the acquisition config in the same wave' constraint is not binding; holding the config is nevertheless deliberate, because rec_slot_baseline.json is calibrated on c6i.4xlarge + rec_slots=8 and SS-DA.2's gate depends on it.",
+
+  "market": "on-demand",
+  "market_note": "ALL FOUR machines verified InstanceLifecycle=None (on-demand) via describe-instances. NOT spot. This is the standing GH #271 ruling executed, not a new decision, and not a deviation from owner GH #158: #158's own 'unless there is no spot machine' clause is what BLINDED means here. ONE wave only -- W45 reverts to spot unless it too comes back BLINDED.",
+  "reclaim_blind_note": "RB_EXIT=1 on W43_wave.json, RUN THIS ROUND rather than inherited: 'yield 0 paired of 4', 'attribution 4 machine(s) reclaimed before the flip', 'VERDICT: BLINDED -- yield <= 1 AND the loss is capacity', 'NEXT WAVE: launch --on-demand (ONE wave), then revert to spot'. The previous round's own lesson was that inheriting a ruling is not the same as running the gate; this round ran it.",
+
+  "cost_estimate": "~$2.15 (on-demand charter constant, director 2026-08-26T19:xxZ, measured over W10-W14 at 0.745 h/machine). GH #454's auto-invalidation clause is attached to the SPOT constant ($0.90) and therefore does NOT apply to this wave; W44 cannot settle #454, which still needs a spot wave that actually finishes. The on-demand constant carries no such clause -- worth noting that asymmetry.",
+
+  "gates": {
+    "(i) >=6h throttle since the last routine wave": "*** BREACHED BY 3m00s-3m13s -- THIS IS NOT A PASS. *** W43 launched 2026-09-03T18:21:58Z => unlock 2026-09-04T00:21:58Z. W44's four machines launched 00:18:45 / 00:18:50 / 00:18:54 / 00:18:58Z, read off AWS's own describe-instances LaunchTime (an evidence source independent of this session's transcript), NOT off the run_id stamp. Every machine is early; the earliest by 3m13s. MECHANISM: the desk read the wall clock ONCE at 00:13:47Z, computed 'unlock is 8 minutes out', did ~5 minutes of gate work, and launched without ever re-reading the clock against the deadline. NOTHING RAISED A HAND, and structurally nothing could: gate (i) is the only one of the five launch gates with no executable check (see gate_i_gap below). DISPOSITION: wave NOT killed -- see disposition_note. Filed as a GH issue and handed to the director.",
+    "(ii) something new to be tested": "PASS on BOTH readings of the unruled fork, which is why the fork again escaped a ruling. Armed-string-family reading: the 58-id family has ZERO scored seeds (W43 banked nothing), so cumulative seeds 0 < 8. Tree-hash reading: two commits touched bots/ since W43's pinned SHA (dc63d791, 0aa7dca3). Both say GO.",
+    "(iii) MTD + estimate under the fence": "PASS. September MTD $12.519 (free `budgets describe-budgets`, snapshot refreshed 2026-09-03T22:56:31Z). MTD < $35 => CE not consulted, the $0.01 not spent. Fence arithmetic per charter 2-jia, each wave priced at its OWN market: 12.519 + W43 spot 0.90 + W44 on-demand 2.15 = $15.57 <= $80. No Budget ACTUAL alert band crossed ($50 not reached in September). NOTE the snapshot at 22:56:31Z post-dates W43's 18:32Z death by 4.4h, right at the low edge of the charter's 4.3-11.3h EC2 lag band, so W43 is priced in conservatively as if NOT yet counted.",
+    "(iv) inputs -- no harvest owed": "PASS. Entry `pending,running` was EMPTY; W42 and its on-demand re-run machine were fully harvested by the 15:15Z round; W43 was voided with zero games and its disposition (whole-wave void, no re-run chain) was settled by the 21:15Z round. Nothing was owed into this launch.",
+    "(iv) reclaim_blind": "PASS -- and RUN, not inherited. RB_EXIT=1 => BLINDED => NEXT WAVE --on-demand (ONE wave), then revert to spot. Executed exactly: this wave is on-demand, W45 reverts to spot."
+  },
+
+  "gate_i_gap": "THE FINDING OF THIS ROUND. Gate (i) is the ONLY one of the five launch gates enforced by prose plus an agent's mental arithmetic. Every other gate has an executable check that ran this round and printed a bare exit code: (ii) has seed_roster_index.py + the tree diff, (iii) has check_costs.sh, (iv) has reclaim_blind.py, plus carrier_terms.py / seed_draft.py --assert-carrier-from-arm / check_armed_wiring.py / luacheck_gate.sh around them. Gate (i) has a timestamp written in the previous round's charter entry and a human expected to remember it. On its first contested contact -- a round where the unlock fell INSIDE the working window rather than hours behind it -- it failed, and it failed in the direction of SPENDING MONEY. The launch roll call was otherwise green in every respect, so no existing artifact records the breach; this key and the issue are the only places it exists. Proposed fix (zero cost, purely local, no AWS call): a preflight that reads the newest W*_wave.json's machines[].launched_at, adds 6h, and refuses or loudly warns if now < unlock -- either as a standalone tools/batch_test/soak/gate_i_check.py or as a guard inside spot_run.sh alongside the existing watchdog budget gate. The desk did not write it this round because the charter forbids the batch desk changing the harness itself; handed to the director.",
+
+  "disposition_note": "Wave NOT killed, and the reasoning is arithmetic rather than preference. (1) Gate (i)'s protected quantity is MONTHLY SPEND -- its stated origin is 'prevent budget burn-through: a wave every 2h is $180+/month'. The fence stands at $15.57 against an $80 fence, a $90 brake and a $100 owner line; the 3-minute shortfall moves no protected quantity at all. (2) The identical wave launched 3 minutes later would have been fully compliant on every gate, so killing buys back nothing and forfeits the ~$2.15 already committed. (3) A kill-and-resend is itself an operation the charter flags: 4 x 16 vCPU exactly fills the 64-vCPU quota, so `shutting-down` blocks the re-send for ~2m40s (VcpuLimitExceeded), meaning the 'corrected' wave would land later than simply letting this one run. (4) Against that, the charter's most-feared failure mode is a breach nothing raises a hand about -- so the cost of NOT killing is paid in registration: this key, the report, the charter entry, and a GH issue. What is explicitly NOT claimed: that the breach was harmless in principle, or that a future desk may repeat it because this one was forgiven.",
+
+  "expected_games": "~96 scored (4 seeds x 12 games x 2 legs), plus warm-ups which do not count as scored games.",
+  "self_destruct": "spot_run.sh self-terminate + 2h watchdog. Expected self-destruct ~01:0x-01:2xZ based on W42's measured 0.9319 h/machine; on-demand machines are not subject to capacity reclaim.",
+  "progress_at_launch": "0 games. This is a LAUNCH record, so the games figure is the EXPECTED one above; W42 measured the first analysis.json landing ~14.5 min after launch.",
+
+  "az_spread": {
+    "requested": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"],
+    "actual": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"],
+    "distinct_actual_az": 4,
+    "reaimed": 0,
+    "ring_exhausted": 0,
+    "verdict": "GH #252 acceptance PASSES cleanly: four requested, four distinct actual, every machine landed in the AZ it asked for. No `re-aiming inside the ring` line and no `AZ RING EXHAUSTED` line on any of the four launches.",
+    "note": "This does NOT retire GH #460 and must not be read as evidence against it. On-demand capacity is a different pool from spot, so four-for-four here says nothing about whether the spot `--az` ring still collapses to one surviving AZ under pressure -- which is exactly what W43 measured. #460's three-plus-one open questions (ring spread floor / does changing instance type change the measurement base / an AZ SPREAD COLLAPSED classification / the re-run fence vs a total loss) are all still live, and the next SPOT wave is where they get tested again."
+  },
+  "capacity_note": "ZERO InsufficientInstanceCapacity errors across all four launches -- against SIX on W43's spot launches and NINE across W43's wave plus its re-runs. Consistent with on-demand being a separate pool, and the single clearest signal that the #271 BLINDED ruling bought what it was supposed to buy.",
+  "market_verified": "describe-instances InstanceLifecycle = None on all four (on-demand). The `spot_` prefix in every run_id is a hardcoded string in spot_run.sh and is NOT evidence of market type; the lifecycle field is.",
+  "launch_round_roll_call": "pending,running `soak-run` tag values = exactly four, pairwise distinct, each matching machines[].run_id: dbb452 / 3a74c4 / b164c8 / 28bec0. No extra (leak) and none missing.",
+
+  "machines": [
+    {
+      "seed": 3426,
+      "run_id": "spot_20260904_001843_1_67f9c41ee92480b3aa8b478fea0fd94db30c1e00_b164c8",
+      "instance_id": "i-067a6d1811d8bb8be",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2a",
+      "reaimed": false,
+      "market": "on-demand",
+      "status_code": "PENDING -- on-demand machines have no SIR; the only code they can carry is the EC2 StateReason.Code, to be filled at harvest.",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-04T00:18:45Z",
+      "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
+      "spot_run_exit": 0,
+      "spot_run_exit_note": "Read directly as $? on the spot_run.sh call with output redirected to a file -- NOT through a pipe (evidence discipline 3)."
+    },
+    {
+      "seed": 3713,
+      "run_id": "spot_20260904_001847_1_67f9c41ee92480b3aa8b478fea0fd94db30c1e00_28bec0",
+      "instance_id": "i-0efa049ca2551ee6d",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "reaimed": false,
+      "market": "on-demand",
+      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code.",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-04T00:18:50Z",
+      "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
+      "spot_run_exit": 0,
+      "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe."
+    },
+    {
+      "seed": 3749,
+      "run_id": "spot_20260904_001852_1_67f9c41ee92480b3aa8b478fea0fd94db30c1e00_dbb452",
+      "instance_id": "i-01deeb78b97cf54b5",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "reaimed": false,
+      "market": "on-demand",
+      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code.",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-04T00:18:54Z",
+      "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
+      "spot_run_exit": 0,
+      "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe."
+    },
+    {
+      "seed": 3508,
+      "run_id": "spot_20260904_001856_1_67f9c41ee92480b3aa8b478fea0fd94db30c1e00_3a74c4",
+      "instance_id": "i-09631b11b4dc9151c",
+      "requested_az": "us-west-2d",
+      "actual_az": "us-west-2d",
+      "reaimed": false,
+      "market": "on-demand",
+      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code.",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle)",
+      "launched_at": "2026-09-04T00:18:58Z",
+      "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
+      "spot_run_exit": 0,
+      "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe."
+    }
+  ],
+
+  "harvest_obligations": [
+    "Recover with recover_verdict.py from S3 per-game data (the standard path); record min_arm_depth, thin_arm_seeds, and NAME any seed excluded by the GH #269 arm_depth>=8 gate -- its games cost real money.",
+    "Copy winrate_channel and mean.winrate_headroom verbatim. If winrate_channel == DEGENERATE, winrate and comps_better winrate must NOT be written as readings (SS-CT).",
+    "Register ab/ba readings for all four economic quantities in BOTH strata (metrology (i-a): READINGS, not game counts). Never pool by game-count weighting (i-d) -- recover_verdict.py emits per_seed[].<m>_ab/_ba and strata.<m> itself; do not hand-compute.",
+    "wandbleed2 (strategy-39) FIRST WAVE: read it BOTH ways per SS-DU.5 -- the narrowing main criterion AND the load-bearing negative face (surviving triggers must have a live enemy within 4000). Domain-zero reports as DOMAIN-NOT-REACHED, never as 'no effect'.",
+    "Fill machines[].status_code from EC2 StateReason.Code (on-demand: NO SIR exists), plus survival_min, ab/ba key pairs, and arm_depth.",
+    "Settle the on-demand billing-side single-wave cost against the ~$2.15 constant. GH #454's auto-invalidation clause is attached to the $0.90 SPOT constant and does NOT apply here -- do not claim #454 settled by this wave.",
+    "rec_slot_cost.py must download the .demclaim.json sidecars alongside *.analysis.json, or it exits 2 (no sidecars => refuses the corpus).",
+    "Zero-pudge census: 9th consecutive wave if this one produces games (W43 was silent, not a 9th confirmation -- the count still stands at 8)."
+  ],
+
+  "issues_filed": ["GH issue for the gate (i) breach and the missing executable check -- see gate_i_gap"],
+  "pooling_claim": "W44 does NOT pool with W43 (zero games there) and does NOT pool with W41-W42 (that pool is the 57-id family; this is 58-id). W44 stands alone as the 58-id family's first wave with any data, pending the director's ruling on GH #449 for the 57-id pool.",
+  "winrate_prereg": "Pre-registered before any data lands: read winrate_channel first. W41 and W42 both came back DEGENERATE. If W44 is DEGENERATE too, that is a THIRD consecutive wave whose winrate channel is structurally unreadable, and the desk reports it as such rather than as a winrate reading.",
+  "seed_index_note": "seed_roster_index.py --build run BEFORE seed selection (ROSTER_EXIT=0): 332 run prefixes in S3, 332 already indexed, 0 to scan, index unchanged at 197 seeds. No mask enumeration was needed this wave because the seeds were reused from W43 rather than drafted fresh; the carrier gate was nevertheless re-run against them from scratch on this tree."
+}
