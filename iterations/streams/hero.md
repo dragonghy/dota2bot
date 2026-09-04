@@ -22,6 +22,25 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-88. **`kvgetters` 落地时打红的两个文件各欠一件后续,本轮**故意没做**,
+   因为它们各自是别人的工作单元(报告 `iterations/reports/hero/20260904T045632Z.md` §7)。**
+   - **(甲) `tests/test_lion_q_kill_damage.lua` §4 的数字欠一次重取。** 那些读数是在
+     「两条腿离线都读 0」的旧世界里、用**声明式伪造**驱动 armed 腿取的;现在 armed 腿
+     能直接读到 `lion_impale/damage` 的真梯(105/170/235/300),而 shipped 腿走
+     `GetAbilityDamage()`(**还没上规格的另一个 getter**)仍读 0。
+     ⇒ **重新用 getter 驱动一遍再读 §4**,不要在别的改动里顺手重定基线。
+     §6 的 LIMIT 已经改指向并把这一条写在它头上。
+   - **(乙) 三个 v1 fixture 欠一次重 dump,球在录像组。**
+     `f_073148_zuus_lina` / `f_080225_wk_lane` / `f_080225_wk_revive` **整个 `abilities`
+     数组都没有** ⇒ `GetAbilityByName` 给回裸句柄,`GetCastRange` 在它们身上仍答 0。
+     这就是 `test_wk_q_castrange_meter_domain.lua` §1 里那个 **3**。
+     **本仓这边关不掉它**,只能重新 dump。
+   - **⚠️ 顺带记一笔可迁移的教训**(`wk_bone_guard` 那格):
+     `max_skeleton_charges` 答 0 时 `nStack == maxStack` 是 **`0 == 0` 恒真**,
+     于是那个文件的 **19 / 22** 两个数**测的从来不是它们自称的那个量**。
+     ⇒ **一个「盲区大小」的读数,如果它下游还有一个恒真的检查,它测的是两者的合取**;
+     在第二个停止恒真之前,**该文件内部没有任何东西能把两者分开**。
+
 -87. **`AbilityCastPoint` + `AbilityCooldown` 还停在 `^Get` 默认值上 —— 它们是
    `kvgetters` 那一撮**故意没发**的下一小撮(报告 `iterations/reports/hero/20260904T045632Z.md`,
    `state.json:kvgetters_20260904T`)。**
@@ -4050,7 +4069,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-04T04:56Z(报告 `iterations/reports/hero/20260904T045632Z.md`;轴 **`kvgetters`,仪器修复**)
-  **改 4 个 + 新增 2 个:`tests/mock/replay_fixture.lua`(`value_ladder`/`rank_step`/`has_kv`
+  **改 7 个 + 新增 2 个:`tests/mock/replay_fixture.lua`(`value_ladder`/`rank_step`/`has_kv`
   + `GetSpecialValueInt`/`Float`/`GetCastRange` 上规格)、`tests/test_cm_ult_reach_meter_domain.lua` §4、
   `tests/test_cm_t10_payoff.lua` §4、`tests/test_replay_260820_axe_blink_kill.lua` caveat 2 + 一条用例
   (三处都是**改指向不删断言**);新增 `tests/test_fixture_kv_getters.lua`(17 用例)与
@@ -4080,7 +4099,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     再折是双算;M5 钉这一格)、NO-BASE key 答 0、不存在的 key 答 0
     (后两条**就是引擎的答案**,**没有**顺手「修好」`lionsplash`)、非焦点英雄一律不动。
     `AbilityCastPoint`(758 句柄)/ `AbilityCooldown` **故意留到下一撮**(backlog `-87`)。
-  - **打红三条,全是兄弟测试按设计举手,全部改指向**:
+  - **打红六个文件九条,全是兄弟测试按设计举手,全部改指向/归档,一条没删**
+    (其中**三个文件的失败文本里就写着这次修复落地时该怎么做**):
     (甲) `axe_blink_kill` —— `axe_berserkers_call/radius` 的 KV base **恰好 315 = 守卫的 fallback**
     ⇒ **数字逐字不变**,变的只是两条等价路径里哪条供的;断言改成钉**等式**。
     (乙) `cm_ult_reach_meter` §4 —— 250 条零出价变 **249**:`X.ConsiderQImpl` 前四行读
@@ -4091,6 +4111,19 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (丙) `cm_t10_payoff` §4 —— 决策通道从全哑变成**一帧活着**,而它的失败文本自己
     写着下一步(「re-run both worlds against it」)⇒ **就地做完**:三个世界
     (baseline / +200HP / +144MP)在那一帧**下同一个决策** ⇒ **t10 裁定不受影响**。
+    (丁) `wk_q_castrange_meter_domain` §1/§5 —— **这个文件就是来要这次修复的**
+    (「this file has been overtaken by the repair it asked for」)。零归档,
+    新读数 **36 里 33 读到 KV 的 525**;剩下 **3** 是**结构性残余** ——
+    三个 **v1 dump 整个 `abilities` 数组都没有**,只能重 dump(见 `-88`)。
+    (戊) `wk_bone_guard_talent_bypass` §3/§3b/§4 —— **19 和 22 从来不是它们自称的那个量**:
+    `max_skeleton_charges` 答 0 时 `nStack == maxStack` 是 **`0 == 0` 恒真**,
+    分支 2 的弹药检查**白送**;真值 rank4 = **8** ⇒ 恒假 ⇒ 授予 modifier **不再移动任何一帧**。
+    两个数**归档不重定基线**(§3b 整节改成档案 + 一条守档案的活检查),
+    §4 按它自己预登记的方向重做:**天花板真了、当前层数没真** ⇒
+    算术从**平凡为真**变成**平凡为假**,**没有变成可驱动**。
+    (己) `lion_q_kill_damage` §6 —— LIMIT 掉了一半(armed 腿读到真梯,shipped 腿走
+    `GetAbilityDamage()` 仍 0)。**没有顺手重定基线它的 §4**(旧世界 + 伪造声明取的数),
+    交给 `-88`;**活下来的那半照旧钉住:不存在的 key 仍读 0 ⇒ 缺席与零仍分不开,GH #162 没被修好**。
   - **`hero-2` 的障碍减半,没有清空**:用修好的仪器端到端重量(`tests/fixtures` 口径)
     28 帧带 Axe / **22 ready**(rank1×20, rank2×2)/ 环内敌方英雄帧 **200u→2、375u→3** /
     **带内 0**。那个 **3 与兄弟文件 `test_axe_culling_band_power.lua` 登记的 3 逐位相同**,
@@ -4105,7 +4138,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `trunk-red(lua)` 已定位 = `test_towercreep_stale_domain.lua`,**两棵树同红,不是本轮的**。
     静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
     动态:新文件 **17/0**、`cm_ult_reach_meter` **8/0**、`cm_t10_payoff` **11/0**、
-    `axe_blink_kill` **19/0**、变异台 **8/8**;
+    `axe_blink_kill` **19/0**、`wk_q_castrange` **8/0**、`wk_bone_guard` **25/0**、
+    `lion_q_kill_damage` **13/0**、`smoke` **3/0**、变异台 **8/8**;
     **全量套件按首字母分片、两棵树并跑做 mod-vs-base 差分,未跑完 —— 限定不是通过**(GH #124)。
   - **⚠️ 变异台 M7 存活并如实记下**:去掉 `has_kv` 守卫**不改变任何答案**
     (快照里没有非焦点英雄的块,`value_ladder` 照样返回 nil)⇒ §2c **看不见它**;

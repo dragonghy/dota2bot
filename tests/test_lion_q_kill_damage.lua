@@ -423,7 +423,30 @@ end
 -- ---------------------------------------------------------------------------
 -- 6. LIMITS -- measured here, not asserted in prose.
 
-tests['LIMIT: offline both legs read 0, so no fixture can separate them'] = function()
+-- RE-ANCHORED 2026-09-04 (hero, `kvgetters`).  THE LIMIT THIS CASE RECORDED IS
+-- HALF GONE, and the half that went is the one that mattered.
+--
+-- ARCHIVED READING (until 2026-09-03): both legs read 0 offline -- the shipped
+-- one because the mock has no AbilityDamage field, the armed one because
+-- GetSpecialValue* was on the generic Get* default -- and the mock could not
+-- even tell a real key from a fabricated one.  That is why the armed leg in the
+-- sections above is driven on DECLARED fabrications rather than on the getter.
+--
+-- What changed: tests/mock/replay_fixture.lua now serves GetSpecialValue* out of
+-- the KV snapshot (tests/test_fixture_kv_getters.lua), so `damage` answers the
+-- real lion_impale ladder (105/170/235/300).  GetAbilityDamage was NOT served --
+-- it is a different unspecced getter and this round deliberately took one small
+-- batch -- so the shipped leg still reads 0.
+--
+-- ⇒ The two legs are now DIFFERENT offline, which is exactly what "no fixture
+-- can separate them" said was impossible.  What this case must NOT do is
+-- quietly re-baseline the sections above: every number in §4 was taken in the
+-- archived world, on fabricated declarations.  Whoever picks that lever up
+-- re-drives it through the getter and re-reads §4 first.  This case now pins
+-- the new asymmetry, and pins the one piece of the old limit that survives --
+-- a key nobody ever wrote still reads 0, so absence and zero remain
+-- indistinguishable, which is GH #162 and is not repaired.
+tests['LIMIT: the armed leg is readable offline now; the shipped leg is not, and absence still reads 0'] = function()
     local _, _, bot = load_lion(true, true)
     local h = bot:GetAbilityByName(Q_NAME)
     assert(h, 'the frame must resolve an Earth Spike handle')
@@ -431,10 +454,31 @@ tests['LIMIT: offline both legs read 0, so no fixture can separate them'] = func
         'the mock has no AbilityDamage field, so the shipped leg reads 0 offline for a reason '
         .. 'unrelated to the KV -- the agreement with the real engine is a coincidence and '
         .. 'must not be cited as confirmation')
-    assert(h:GetSpecialValueInt(KEY) == 0, KEY .. ' reads 0 under the mock too')
+
+    local shapes = require('mock.special_value_shapes')
+    local entry = shapes.SHAPES['lion'][Q_NAME] and shapes.SHAPES['lion'][Q_NAME][KEY]
+    assert(entry ~= nil and entry.base ~= nil,
+        'the KV snapshot no longer carries lion_impale/' .. KEY .. '; without it '
+        .. 'this case is back to the archived world and cannot say so')
+    local steps = {}
+    for tok in entry.base:gmatch('%S+') do steps[#steps + 1] = tonumber(tok) end
+    local rank = h:GetLevel()
+    local want = steps[math.min(math.max(rank, 1), #steps)]
+    local got = h:GetSpecialValueInt(KEY)
+    assert(got == want, KEY .. ' reads ' .. tostring(got) .. ' at rank ' .. rank
+        .. ', KV ladder says ' .. tostring(want) .. '. A 0 means the loader '
+        .. 'stopped serving GetSpecialValue* and this file is back in the world '
+        .. 'its section 4 numbers were taken in.')
+    assert(got ~= h:GetAbilityDamage(),
+        'the two legs read the same number offline again, so the separation this '
+        .. 'case records has been lost')
+
     assert(h:GetSpecialValueInt('a_key_nobody_ever_wrote') == 0,
-        'and so does a key that never existed -- the mock cannot tell them apart, which is '
-        .. 'why the armed leg above is driven on declared fabrications')
+        'a key that never existed still reads 0, so ABSENCE and ZERO remain '
+        .. 'indistinguishable -- GH #162 is not repaired by the KV getters, and '
+        .. 'the armed leg above is still driven on declared fabrications for that '
+        .. 'reason. If this ever answers non-zero the loader started inventing '
+        .. 'values, which is worse than the zero it replaced.')
 end
 
 tests['LIMIT: the frames carry no regen and no resist, so the delay costs nothing here'] = function()

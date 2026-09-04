@@ -359,11 +359,41 @@ tests['1. GetCastRange answers 0 on every live-WK instant, and the KV knows 525'
     local t = sweep()
     assert(t.live > 0, 'no living Wraith King in the corpus at all -- an empty '
         .. 'sweep and a zero reading are the same integer')
-    assert(t.raw_ranges['0'] == t.live, 'expected GetCastRange to answer 0 on all '
-        .. tostring(t.live) .. ' live-WK instants; got ' .. tostring(t.raw_ranges['0'])
-        .. '. If the mock now specs it, this file has been overtaken by the repair '
-        .. 'it asked for -- retire the zero and re-measure §3.')
-    assert(t.live == 36, 'live-WK instant count moved from 36 to ' .. t.live
+
+    -- RE-ANCHORED 2026-09-04 (hero).  THE REPAIR THIS FILE ASKED FOR LANDED.
+    -- The assertion here used to be `t.raw_ranges['0'] == t.live` with the text
+    -- "If the mock now specs it, this file has been overtaken by the repair it
+    -- asked for -- retire the zero and re-measure §3."  That is what happened:
+    -- tests/mock/replay_fixture.lua now serves GetCastRange out of
+    -- tests/mock/special_value_shapes.lua (tests/test_fixture_kv_getters.lua),
+    -- and the meter answers 525.  The zero is ARCHIVED below rather than
+    -- deleted -- every number in §3 and §5 was taken under it.
+    --
+    -- ARCHIVED READING (2026-08-31, the world this file was written in):
+    --     GetCastRange() == 0 on 36 of 36 live-WK instants.
+    --
+    -- The residue is 3 instants, and it is structural, not a leftover: those
+    -- three fixtures are v1 dumps that carry NO `abilities` array at all
+    -- (f_073148_zuus_lina, f_080225_wk_lane, f_080225_wk_revive), so
+    -- GetAbilityByName hands back a bare handle the loader never specced.  A
+    -- re-dump of those three is what closes it; nothing here can.
+    local ARCHIVED_ZERO_ON_ALL = 36
+    local NO_ABILITY_ARRAY     = 3
+    local nFed  = t.raw_ranges[tostring(KV_CAST_RANGE)] or 0
+    local nZero = t.raw_ranges['0'] or 0
+    assert(nFed + nZero == t.live,
+        'the meter now answers something other than ' .. KV_CAST_RANGE .. ' or 0 on '
+        .. tostring(t.live - nFed - nZero) .. ' instants -- report the distribution '
+        .. 'before quoting any number below')
+    assert(nZero == NO_ABILITY_ARRAY,
+        'instants still reading 0 moved from ' .. NO_ABILITY_ARRAY .. ' to ' .. nZero
+        .. '. Fewer means those v1 fixtures were re-dumped (good -- record it); '
+        .. 'more means the loader stopped serving the KV, and §5 is back in the '
+        .. 'world this file was written in.')
+    assert(nFed == t.live - NO_ABILITY_ARRAY,
+        'instants reading the KV ' .. KV_CAST_RANGE .. ': ' .. nFed)
+    assert(t.live == ARCHIVED_ZERO_ON_ALL, 'live-WK instant count moved from '
+        .. ARCHIVED_ZERO_ON_ALL .. ' to ' .. t.live
         .. ' -- re-read the sections below before quoting their numbers')
 end
 
@@ -415,10 +445,25 @@ tests['4. the castable funnel over the archive, buckets exhaustive'] = function(
 end
 
 -- ===========================================================================
-tests['5. the corpus zero was vacuous on 16 of 18 frames'] = function()
+-- RE-ANCHORED 2026-09-04 (hero), same repair as §1.  `loop_zero` is no longer a
+-- SEPARATE world: the loader serves the cast range, so the "meter zero" drive
+-- and the "fed back" drive now see the same 525 on every body frame that has an
+-- ability array, and the two readings have CONVERGED rather than one of them
+-- regressing.  The old assertion `loop_fed > loop_zero` was the file's guard
+-- against "feeding the range changed nothing"; it cannot be evaluated any more,
+-- because there is nothing left to feed.  What replaces it is the archived pair
+-- plus the convergence, so a loader that stopped serving the KV shows up here as
+-- loop_zero falling back to 0.
+--
+-- ARCHIVED READING (2026-08-31, under the meter zero):
+--     loop entered on 0 of 18 body frames; with 525 fed back, 2.
+--     That difference is the whole "the corpus zero was vacuous" claim, and it
+--     is what §3's "understates reach" rests on. It is history now, not a
+--     live measurement -- do not re-derive it from a green run of this file.
+local ARCHIVED_LOOP_UNDER_ZERO = 0
+
+tests['5. the corpus zero was vacuous on 16 of 18 frames (archived; the worlds have converged)'] = function()
     local t = sweep()
-    assert(t.loop_zero == 0, 'under the meter zero the kill/interrupt loop was '
-        .. 'entered on ' .. t.loop_zero .. ' body frames; the header says 0')
     assert(t.loop_fed == 2, 'with ' .. KV_CAST_RANGE .. ' fed back the loop is '
         .. 'entered on ' .. t.loop_fed .. ' body frames; the header says 2')
     assert(t.gate_fed == 2, 'the distance gate was evaluated on ' .. t.gate_fed
@@ -427,8 +472,14 @@ tests['5. the corpus zero was vacuous on 16 of 18 frames'] = function()
     assert(t.fire_fed == 0, 'the kill-confirm branch FIRED on ' .. t.fire_fed
         .. ' frames with the range fed back. The header says 0 and rests on it; '
         .. 'a firing frame is a real finding and must be written up, not asserted away.')
-    assert(t.loop_fed > t.loop_zero, 'feeding the true cast range changed nothing, '
-        .. 'so §3\'s "understates reach" claim has no corpus behind it')
+    assert(t.loop_zero == t.loop_fed,
+        'the unfed drive entered the loop on ' .. t.loop_zero .. ' body frames '
+        .. 'against ' .. t.loop_fed .. ' fed -- they must agree now that the '
+        .. 'loader serves GetCastRange. A drop back toward '
+        .. ARCHIVED_LOOP_UNDER_ZERO .. ' means the meter went blind again.')
+    assert(ARCHIVED_LOOP_UNDER_ZERO < t.loop_fed,
+        'the archived pair no longer shows the vacuity this file was written '
+        .. 'about; §3 needs re-deriving, not this line relaxing')
 end
 
 -- ===========================================================================

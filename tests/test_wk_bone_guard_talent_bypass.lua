@@ -481,18 +481,36 @@ function()
     -- is attributed by MEASUREMENT in section 3b below, not by this comment:
     -- three frames now stop at X.ShouldSaveMana, one disjunct before the modifier
     -- guard.  See the file header for the three and their operands.
+    -- 19 -> 0 on 2026-09-04 (hero, `kvgetters`), and the cause is section 4's
+    -- own prediction coming true rather than anything about Bone Guard.  The
+    -- loader now serves GetSpecialValue* from the KV snapshot
+    -- (tests/test_fixture_kv_getters.lua), so max_skeleton_charges answers 8 at
+    -- rank 4 where it used to answer 0.  Section 4 recorded exactly what that
+    -- zero was doing: `nStack == maxStack` was `0 == 0`, i.e. branch 2 passed
+    -- its AMMUNITION test for free.  Every one of the 19 "moved" frames was
+    -- moving past the modifier guard and then being waved through by that free
+    -- pass.  With the real ceiling in place a WK holding no charges correctly
+    -- declines, so granting HasModifier alone moves nobody.
+    --
+    -- ⚠ THE 19 IS ARCHIVED, NOT REBASELINED TO 0.  It was never a measurement
+    -- of the modifier guard's blind spot on its own -- it was that guard AND a
+    -- vacuous ammunition test, and nothing in this file could separate them
+    -- until the second one stopped being vacuous.  Do not quote it as "the
+    -- corpus says 19 frames are hidden behind the modifier".
+    local ARCHIVED_MOVED_20260901 = 19
     local paths = wk_fixture_paths()
     local moved = 0
     for _, path in ipairs(paths) do
         local before, after = desire_on(path, false), desire_on(path, true)
         if before == 0 and after ~= 0 then moved = moved + 1 end
     end
-    if moved ~= 19 then
+    if moved ~= 0 then
         error('granting HasModifier alone changed the outcome on ' .. moved
-            .. ' frames, recorded 19.  This number is the size of the blind '
-            .. 'spot: re-read it before quoting the corpus about Bone Guard.  '
-            .. 'Section 3b below decomposes it -- run that first, because it '
-            .. 'says WHICH of the two causes moved')
+            .. ' frames, recorded 0 (archived: ' .. ARCHIVED_MOVED_20260901
+            .. ' under the vacuous ammunition test).  A non-zero here means the '
+            .. 'modifier guard is hiding frames on its own merits -- that is a '
+            .. 'FINDING and it needs section 4 re-read first, because section 4 '
+            .. 'is what stopped being vacuous')
     end
 end
 
@@ -522,19 +540,44 @@ local function desire_on_zero_mana(path, grant)
     return d
 end
 
-tests['[section 3b] the 22 -> 19 is the mana ladder, and the 19 are a strict subset'] =
+-- RE-ANCHORED 2026-09-04 (hero, `kvgetters`).  THIS SECTION IS NOW AN ARCHIVE,
+-- and it is archived rather than deleted because the numbers in it are the only
+-- record of what the pre-repair world measured.
+--
+-- What changed: the loader serves GetSpecialValue* from the KV snapshot
+-- (tests/test_fixture_kv_getters.lua), so max_skeleton_charges answers its real
+-- ladder (8 at rank 4) where it used to answer the mock's Get* default 0.
+-- Section 4 already wrote down what that 0 was doing -- `nStack == maxStack`
+-- was `0 == 0`, so branch 2 passed its AMMUNITION test for free -- and it
+-- pre-registered this exact consequence: "If the fixture world learned special
+-- values, branch 1's ratio test became meaningful and this section needs
+-- redoing."
+--
+-- So BOTH counts this section decomposed are 0 today, on both legs, and the
+-- decomposition has no population left to run on.  That is not a regression and
+-- it is not a null result: it is the discovery that the 22 and the 19 were never
+-- measuring the modifier guard alone.  They were measuring the guard AND a
+-- vacuous ammunition test, and nothing in this file could separate the two until
+-- the second one stopped being vacuous.
+--
+-- ARCHIVED READINGS (do NOT re-derive them from a green run of this file):
+--     2026-08-28 (GH #274), GetManaCost forced to 0 ... blind spot 22
+--     2026-09-01 (GH #392), real mana ladder ......... blind spot 19
+--     the three that left, named:
+--         tests/fixtures/f_225947_wk_trade_kite.lua
+--         tests/fixtures/f_232320_wk_od_burst.lua
+--         tests/fixtures/f_260820_103216_cm_es_aftershock.lua
+--     entered the blind spot ......................... 0
+local ARCHIVED_PRE_LADDER_20260828 = 22
+local ARCHIVED_POST_LADDER_20260901 = 19
+local ARCHIVED_LEFT_20260901 = {
+    'tests/fixtures/f_225947_wk_trade_kite.lua',
+    'tests/fixtures/f_232320_wk_od_burst.lua',
+    'tests/fixtures/f_260820_103216_cm_es_aftershock.lua',
+}
+
+tests['[section 3b] ARCHIVED: the 22 -> 19 attribution, and why it has no population left'] =
 function()
-    -- WHY THIS SECTION EXISTS.  A blind spot that SHRINKS on a denominator that
-    -- did not move is the one shape this file cannot afford to accept on prose.
-    -- Two very different worlds produce it:
-    --   (good) frames left because a meter that used to answer 0 started
-    --          answering, so the corpus can now decide them;
-    --   (bad)  frames left because something upstream started silencing them,
-    --          in which case the guard is no longer "the only thing" for anyone
-    --          and the whole verdict of this file is standing on sand.
-    -- Counting to 19 cannot tell those apart.  This section can: it re-runs the
-    -- same 36 frames against a reconstructed pre-ladder meter, asserts the old
-    -- 22 comes back, and asserts the set difference is one-directional.
     local paths = wk_fixture_paths()
     local now, pre = {}, {}
     for _, path in ipairs(paths) do
@@ -546,86 +589,44 @@ function()
             pre[path] = true
         end
     end
-
     local n_now, n_pre = 0, 0
     for _ in pairs(now) do n_now = n_now + 1 end
     for _ in pairs(pre) do n_pre = n_pre + 1 end
 
-    if n_pre ~= 22 then
-        error('with GetManaCost forced back to 0 the blind spot is ' .. n_pre
-            .. ', recorded 22.  That number is what this file measured on '
-            .. '2026-08-28 (GH #274); if it no longer reproduces, the 22 -> 19 '
-            .. 'attribution below is measuring something else and the whole '
-            .. 'census owes a re-read')
-    end
-    if n_now ~= 19 then
-        error('with the real mana ladder the blind spot is ' .. n_now
-            .. ', recorded 19 (section 3 says the same thing and fails first)')
-    end
-
-    -- The alarming direction, asserted as an empty set rather than inferred from
-    -- 19 < 22: no frame may ENTER the blind spot.  A frame that entered would
-    -- mean the modifier guard started silencing frames it used not to, and that
-    -- is invisible in any comparison of two counts.
-    local entered = {}
-    for path in pairs(now) do
-        if not pre[path] then entered[#entered + 1] = path end
-    end
-    if #entered > 0 then
-        error(#entered .. ' frame(s) ENTERED the blind spot when the mana '
-            .. 'ladder landed, recorded 0: ' .. table.concat(entered, ', ')
-            .. '.  The mana ladder can only ever ADD a reason to stop early, so '
-            .. 'a frame moving the other way is a second, unattributed change')
+    if n_now ~= 0 or n_pre ~= 0 then
+        error('the blind spot is ' .. n_now .. ' with the real mana ladder and '
+            .. n_pre .. ' with GetManaCost forced to 0; both are recorded 0 '
+            .. 'since the KV getters landed (archived: '
+            .. ARCHIVED_POST_LADDER_20260901 .. ' and '
+            .. ARCHIVED_PRE_LADDER_20260828 .. ').  A NON-ZERO IS A FINDING, not '
+            .. 'a regression: it means the modifier guard hides frames on its '
+            .. 'own merits, which nothing has ever shown.  Read section 4 first '
+            .. '-- it is the half that stopped being vacuous.')
     end
 
-    -- And the three that left, each named, each with the reserve rule's own
-    -- operands read off the frame.  Naming them is the point: an unnamed -3 is
-    -- indistinguishable from three different -1s.
-    local left = {}
-    for path in pairs(pre) do
-        if not now[path] then left[#left + 1] = path end
+    -- The archived pair still has to point the way its attribution says it did.
+    -- This is the one live check left here: it guards the ARCHIVE against being
+    -- quietly edited, which is the only way these numbers can now go wrong.
+    if not (ARCHIVED_PRE_LADDER_20260828 > ARCHIVED_POST_LADDER_20260901) then
+        error('the archived pair no longer shows the 22 -> 19 direction this '
+            .. 'section was written to attribute')
     end
-    table.sort(left)
-    local expect = {
-        'tests/fixtures/f_225947_wk_trade_kite.lua',
-        'tests/fixtures/f_232320_wk_od_burst.lua',
-        'tests/fixtures/f_260820_103216_cm_es_aftershock.lua',
-    }
-    if #left ~= #expect then
-        error(#left .. ' frame(s) left the blind spot, recorded ' .. #expect
-            .. ': ' .. table.concat(left, ', '))
+    if ARCHIVED_PRE_LADDER_20260828 - ARCHIVED_POST_LADDER_20260901
+        ~= #ARCHIVED_LEFT_20260901 then
+        error('the archived -3 no longer matches the three frames named for it; '
+            .. 'the archive has been edited on one side only')
     end
-    for i = 1, #expect do
-        if left[i] ~= expect[i] then
-            error('frame ' .. i .. ' that left the blind spot is ' .. left[i]
-                .. ', recorded ' .. expect[i] .. '.  The COUNT can match while '
-                .. 'the identities do not; that is why this loop exists')
+    for _, path in ipairs(ARCHIVED_LEFT_20260901) do
+        local fh = io.open(path, 'r')
+        if fh == nil then
+            error('the archive names a fixture that is gone: ' .. path
+                .. ' -- an archive whose members cannot be looked at is a number, '
+                .. 'not a record')
         end
-    end
-
-    for _, path in ipairs(left) do
-        local _, bot = rf.load(path, WK)
-        local w = bot:GetAbilityByName('skeleton_king_bone_guard')
-        local r = bot:GetAbilityByName('skeleton_king_reincarnation')
-        local nMana, nWCost, nRCost = bot:GetMana(), w:GetManaCost(), r:GetManaCost()
-        if bot:GetLevel() < 6 then
-            error(path .. ': hero level ' .. bot:GetLevel() .. ' is below the '
-                .. 'reserve rule floor of 6, so X.ShouldSaveMana cannot be what '
-                .. 'stopped this frame')
-        end
-        if r:GetCooldownTimeRemaining() > 3.0 then
-            error(path .. ': Reincarnation cd ' .. r:GetCooldownTimeRemaining()
-                .. ' is past the 3.0 window, so X.ShouldSaveMana cannot be what '
-                .. 'stopped this frame')
-        end
-        if not (nMana - nWCost < nRCost) then
-            error(path .. ': mana ' .. nMana .. ' - Bone Guard ' .. nWCost
-                .. ' = ' .. (nMana - nWCost) .. ' is NOT below Reincarnation '
-                .. nRCost .. ', so the reserve rule is false here and this '
-                .. 'frame left the blind spot for some other reason')
-        end
+        fh:close()
     end
 end
+
 
 -- ---------------------------------------------------------------------------
 -- 4. Two further reasons the release ARITHMETIC is meaningless offline.
@@ -633,29 +634,76 @@ end
 -- Even a corpus that carried the modifier would not make X.ConsiderW drivable:
 -- both operands of both thresholds are unanswered in the fixture world.
 
-tests['[section 4] maxStack reads 0 offline -- the ratio is 0/0, the equality trivial'] =
+-- REDONE 2026-09-04 (hero, `kvgetters`), exactly as the old version of this case
+-- asked to be: "If the fixture world learned special values, branch 1's ratio
+-- test became meaningful and this section needs redoing."  It did, and this is
+-- the redo.
+--
+-- ARCHIVED READING (2026-08-28 .. 2026-09-03): max_skeleton_charges answered 0
+-- offline, the mock Get* default.  Its consequences on the shipped rule were
+-- the ratio being a NaN comparison (false) and the equality being `0 == 0`
+-- (TRUE), so branch 2 passed its AMMUNITION test FOR FREE.  That free pass is
+-- what sections 3 and 3b were really measuring; see the archive there.
+--
+-- WHAT IS STILL UNANSWERABLE, which is the half this section keeps.  The
+-- threshold has TWO operands and only one of them was ever a KV constant.  The
+-- CEILING (max_skeleton_charges) is now real.  The CURRENT charge count is a
+-- modifier stack count, which no snapshot carries and this repair does not
+-- touch -- so `nStack` is still 0-by-absence and the branch now reads
+-- `0 == 8` (false) instead of `0 == 0` (true).  The arithmetic went from
+-- trivially TRUE to trivially FALSE; it did not become drivable.  Both failure
+-- directions are asserted below so neither can drift silently.
+tests['[section 4] the ceiling is real now; the CURRENT stack count still is not'] =
 function()
+    local shapes = require('mock.special_value_shapes')
     local _, bot = rf.load('tests/fixtures/f_260820_102030_wk_tower_in_reach.lua', WK)
     local w = bot:GetAbilityByName('skeleton_king_bone_guard')
     if w:GetLevel() < 1 then
         error('this frame no longer has Bone Guard trained, so it cannot carry '
             .. 'the point about the special value')
     end
-    local maxStack = w:GetSpecialValueInt('max_skeleton_charges')
-    if maxStack ~= 0 then
-        error('GetSpecialValueInt now answers ' .. tostring(maxStack)
-            .. ' offline (recorded 0, the mock Get* default).  If the fixture '
-            .. 'world learned special values, branch 1\'s ratio test became '
-            .. 'meaningful and this section needs redoing')
+
+    -- The ceiling, against the ladder in the snapshot -- parsed, not retyped.
+    local kv = shapes.SHAPES['skeleton_king']['skeleton_king_bone_guard']
+    local entry = kv and kv['max_skeleton_charges']
+    if entry == nil or entry.base == nil then
+        error('the KV snapshot no longer carries max_skeleton_charges for Bone '
+            .. 'Guard; without it this case is not making its claim')
     end
-    -- What that zero does to the shipped rule, spelled out so nobody has to
-    -- re-derive it: the ratio is a NaN comparison (false) and the equality is
-    -- 0 == 0 (true).  Branch 2 therefore passes its ammunition test for free.
-    local nan = 0 / 0
-    if nan >= 0.6 then error('0/0 >= 0.6 answered true; the note below is wrong') end
-    if not (0 == maxStack) then
-        error('the recorded consequence "nStack == maxStack is 0 == 0" does not '
-            .. 'hold with maxStack = ' .. tostring(maxStack))
+    local steps = {}
+    for tok in entry.base:gmatch('%S+') do steps[#steps + 1] = tonumber(tok) end
+    local rank = w:GetLevel()
+    local want = steps[math.min(rank, #steps)]
+    local maxStack = w:GetSpecialValueInt('max_skeleton_charges')
+    if maxStack ~= want then
+        error('max_skeleton_charges answers ' .. tostring(maxStack) .. ' at rank '
+            .. rank .. ', KV ladder says ' .. tostring(want)
+            .. '.  A 0 here means the loader stopped serving GetSpecialValue* and '
+            .. 'sections 3 and 3b are back in their archived world')
+    end
+    if maxStack <= 0 then
+        error('the ceiling must be positive for the equality below to be the '
+            .. 'FALSE it is claimed to be')
+    end
+
+    -- The operand that did NOT become answerable.  A modifier stack count is not
+    -- KV; nothing in this repo carries it, and the branch reads it as 0.
+    local nStack = bot:GetModifierStackCount(0, bot)
+    if nStack ~= 0 then
+        error('GetModifierStackCount answers ' .. tostring(nStack)
+            .. ' now, recorded 0 (unimplemented in the mock).  If the loader '
+            .. 'learned stack counts, X.ConsiderW branch 2 became drivable and '
+            .. 'the unmeasurability verdict in this file is stale -- that is a '
+            .. 'FINDING, write it up')
+    end
+    if nStack == maxStack then
+        error('the ammunition equality is TRUE again (' .. nStack .. ' == '
+            .. maxStack .. '), i.e. branch 2 is back to passing for free')
+    end
+    -- And the ratio, which is now an ordinary false rather than a NaN one.
+    local ratio = nStack / maxStack
+    if ratio >= 0.6 then
+        error('0 / ' .. maxStack .. ' >= 0.6 answered true; the note above is wrong')
     end
 end
 
