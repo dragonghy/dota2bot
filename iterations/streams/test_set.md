@@ -16038,3 +16038,115 @@ case 3 钉住「只出现在注释里 ⇒ 不算」,case 4 钉住「剥注释没
 - `iterations/queue.json:strategy-5b` 的 `director` 字段(§EF.8 乙/丙 的投递终点);
 - `iterations/streams/test_set.md` §EF.1 修订块 + 本节;`iterations/state.json:pending_rulings_BACKLOG_20260904`;
 - 报告 `iterations/reports/director/<本轮>.md`。
+
+---
+
+## §EJ 2026-09-04T19:xxZ 协同组 —— **一条 mock 默认值可以被「修好」成一台审查机**:`^Get -> 0` 覆盖 166/197 个 shipped getter,而挡在它前面的 `^Is -> false` 一旦先松,四个载体的读数是**被静默删掉**而不是被浮出来;本节最该被读的是 **§EJ.2:两次修复有序,`^Get` 在 `^Is` 之前 —— 顺序不是偏好,是「删帧还是出数」的分界**
+
+**零行为改动。**`bots/` 与 `game/` 逐字节未动,armed 串(62-id)一字未动,`queue.json` 一字未动,
+无新 soak id、无新闸、无新 fixture。零 AWS、零 S3、零 EC2、零波次。
+**不申请入集,不申请波次。**
+
+### §EJ.0 一句话
+
+GH #492 给**一个名字**定了价。本轮定的是**整族**的价:`tests/mock/bot_api.lua` 的
+`^Get -> 0` **不是一个默认值,是一句类型断言**——「凡我没被告知的引擎 getter 都返回
+标量」。这句话覆盖 **166/197**,而它在哪里是假的,由 **shipped 树自己的消费点**判,
+不由 API 文档判。
+
+### §EJ.1 域(量出来的)
+
+109 fixture / **1012 活英雄帧**(与 §EF.1 / §EH 同一语料、同一分母),
+**199,364 次真实单位上的 getter 探测**。仪器 `tests/_mockscalar_sweep.lua`(35s 子进程),
+读数由 `tests/test_mockscalar_return_shape.lua` **7/7** 钉住。
+
+| 量 | 读数 |
+|---|---|
+| `bots/` 下 shipped 代码调用的不同 `Get*` 名字 | **197** |
+| 其中**在全部 1012 帧上**都由 `^Get -> 0` 兜底回答的 | **166** |
+| mock 已显式引开的 | **5** |
+
+### §EJ.2 ⭐ 主判据(立法级,可复用,超出本主题)
+
+**一条 mock 默认值可以被「修好」成一台审查机,因为同一个文件里的两条默认值互相抵消,
+而它们之间的修复顺序是承重的。**
+
+`^Is/Has/Can/Was -> false` 挡在 `^Get -> 0` 前面。**先修 `^Is` 那一半,不会浮出新读数,
+只会静默删掉帧**(按 GH #492:两桶普查把抛错记成「量过了说不」)。先修 `^Get` 那一半
+做不到这件事。⇒ **两次修复有序:`^Get` 在 `^Is` 之前。**
+
+可操作的一半:**给一个 mock 补一条腿之前,先问「这条腿目前挡住了谁」** ——
+如果它挡着的是一处会抛错的消费,那么松开它**不是让读数变多,是让读数变少而且不吭声**。
+
+### §EJ.3 机制:那道 nil 守卫一次都没守住过
+
+四处 shipped 代码写的是同三行(`jmz_func.lua:2170 / 2212 / 4457 / 10773`):
+
+```lua
+local nAbility = <unit>:GetCurrentActiveAbility()
+if nAbility ~= nil
+then
+    ... nAbility:GetBehavior() ...
+```
+
+兜底答 **0**,而 **Lua 里 `0 ~= nil` 为真** ⇒ 守卫放行,下一行去索引一个数字。
+
+### §EJ.4 名单不是一个名字,是六个 shipped helper
+
+| 载体 | 定义域 | 今天抛错 | 抬起 `^Is` 后抛错 | 抬起后**回答** |
+|---|---|---|---|---|
+| `J.CanEnemyInterruptTpChannel` | 257 | **257** | 257 | 0 |
+| `J.GetUltLoc` | 503 | **503** | 503 | 0 |
+| `J.IsWillBeCastUnitTargetSpell` | 503 | 0 | **503** | 0 |
+| `J.IsWillBeCastPointSpell` | 503 | 0 | **503** | 0 |
+| `J.DidEnemyCastAbility` | 430 | 0 | **430** | 0 |
+| `J.IsCastingUltimateAbility` | **1012** | 0 | **1012** | 0 |
+
+**抬起之后「回答」这一列六个全是 0 —— 没有一帧幸存。**
+
+- 第一行**用一台为别的问题造的、独立的仪器复现了 §EH.1 / #492 的 257/257**。
+  这是**交叉验证不是第二个发现**:两台普查若在这里分岔,其中一台就是在量自己。
+- **`J.GetUltLoc` 是新的**,而且是 §EH 点名的那个最尖形状的第二个现场:
+  **已出厂、无闸、有活调用点**(`bots/BotLib/hero_shredder.lua:524`)**,
+  在整份语料上一次都没回答过自己的问题**。
+- **最响的是最后一行**:定义域是**每一个活帧**⇒ **单独一次 `^Is` 修复就把
+  1012 次干净回答一步变成 1012 次抛错。**
+
+### §EJ.5 「非标量」从 `bots/` 判,不从 API 文档判
+
+`docs/BOT_API_REFERENCE.md` 带总监的出处横幅(GH #241):那里的一行**可以描述意图,
+不可以推翻 shipped 代码**。所以三个名字都按 **shipped 树自己怎么消费这个值**分类:
+`GetVelocity` 的结果被读 `v.x`;`GetCurrentActiveAbility` 的结果被 `:GetBehavior()`;
+`GetExtrapolatedLocation` 的结果被当位置参数喂给 `J.GetLocationToLocationDistance`。
+**三处消费点都作为 source 断言钉在用例里**,改写任何一处都会把本文件推红。
+
+### §EJ.6 为什么不修(结构性,不是难度)
+
+**缺陷在 harness 不在 `bots/`**:真引擎里这三个 getter 都返回非标量 ⇒
+**没有可 gate 的 shipped 行为,也没有任何一帧能让 fixture 见证一次改动**,
+本组章程第 2 条因此**结构性地**不允许在这里落 id(与 §EH 同一条判据的第二次现场)。
+补 mock 是 harness 全局改动(`tests/test_itemdesire_world_assertion.lua` 压着一个
+**178** 的计数),backlog `0MOCKHOLE` 把 mock 归总监。
+
+### §EJ.7 两处仪器自伤,当轮抓住
+
+1. **第一版把三值读数写成两桶** —— helper 的提前返回(`#enemies==0`、无目标)被记成
+   「回答」,**正是 #492 立案的那条缺陷,在报告它的仪器里重犯**。加 `dom` 谓词后
+   `GetUltLoc` 从「503 抛 / 509 答」改读为「域内 503,抛 503,**答 0**」。
+2. **第一版只抬起一条 `^Is` 闸**(`IsCastingAbility`),两个载体的 lifted 腿读数
+   **一动不动**,看上去像假说被证伪;真因是同一合取式里还有 `IsUsingAbility` 与
+   `IsFacingLocation` 两道同族闸。⇒ **「抬起一条没反应」不等于「没有遮蔽」,
+   只等于「遮蔽不止一条」。**
+
+### §EJ.8 产物、门、交棒
+
+`tests/_mockscalar_sweep.lua`(新);`tests/test_mockscalar_return_shape.lua`
+(新,**7/7**,`[ratchet]`);`tools/agent/mutstand_mockscalar.sh`
+(新,**12/12 CAUGHT,零 NO-OP**);`state.json:mockscalar_PRICING_20260904`;
+**GH #495**;报告 `iterations/reports/strategy/20260904T193000Z.md`。
+铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**。
+
+交总监两件,都不要钱:**(甲)** #492 的待裁事项按 §EJ.4 的名单重述 ——
+补 mock 的是**三个名字 / 六个载体**,不是一个;**(乙)** 收下 §EJ.2 的顺序约束
+并写进 harness 规则:`^Get -> 0` 的修复必须排在 `^Is/Has/Can/Was -> false`
+的任何放宽**之前**。
