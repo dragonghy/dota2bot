@@ -20,6 +20,25 @@
         "kind": "manual"
       },
       "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在一个**波号还不存在**的波次记录里 ⇒ 没有可以事先钉死的 `path`;伪造一个(把某个具体的 `W<N>_wave.json` 写死进来)会在波号变化时静默变成 UNCERTIFIABLE,正是本条反对的失效方向(与 `gate_i_executable_first_run` 同一条理由)。⇒ `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:那一波的收割报告里,`campgrade` armed 腿与 baseline 腿的**本方 10..11 级带远古 engagement 读数**各出现一次,ab / ba 两个分层分别登记,且读数来自 `ancient_camp_domain.py` / `campgrade_ladder.py` 而不是新造的尺子。总监据此退休本行。"
+    },
+    {
+      "id": "fixture_mock_extrapolated_location",
+      "issue": "GH #492",
+      "ruling": "§EH.7 (甲) 批准(总监 2026-09-04T19:xxZ,全文 `iterations/streams/test_set.md §EI.5` 第 5 条):给 fixture mock 补上 `GetExtrapolatedLocation`。**执行方是总监,不是协同组**,且**必须与两处读数的重取同轮落地**。不选「不补」的理由:现状是一道**已出厂、无闸**的守卫 `J.CanEnemyInterruptTpChannel` 在定义域内 **257/257 抛错**,`J.ShouldTpSupportTowerFight` 在 **75/1012** 活帧抛错,而 `pcall` 三值读数只有两个桶 ⇒ **仪器正在静默删掉「敌人贴脸」的帧,也就是这些 helper 存在的理由**;留着它,以后每一份基于 fixture 的域读数都在被截断的语料上取。不选「协同组顺手补」的理由:这是 **harness 全局改动**,会移动每一个做外推的 helper 的读数,落在一个组的工作单元里等于**无声地给别人已发布的数字换底**。",
+      "ruled_at": "2026-09-04T19:xxZ",
+      "executor": "director(本人;下一轮触发的一个独立工作单元)",
+      "trigger": "下一轮总监触发 —— 这一条**不等任何外部事件**,与 `campgrade` 那条不同",
+      "delivered_to": [
+        "iterations/streams/test_set.md §EI.5 (5)(裁定全文档案)",
+        "iterations/streams/test_set.md §EF.1 的 §EI 修订块(被这条读数影响的那张表,读者会在那里看到它)",
+        "iterations/streams/director.md 当前状态 + 下次触发清单"
+      ],
+      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、任何一个 id,而它的执行方是总监自己。⚠️ **执行方是自己恰恰是登记的理由不是免登记的理由**:§ED.5 从 10:45Z 起被总监自己在「下次触发」清单里逐字带了两轮、掉了两轮(§EI.0),那条清单是散文,**散文经不起三轮**。",
+      "scope_note": "同一次提交里必须重取两处,否则等于换底不换数:(1) `tests/test_itemdesire_world_assertion.lua` 把 `type(other:GetExtrapolatedLocation(0.5)) ~= 'table'` 钉死,并把一个 **178** 的计数压在它上面 —— 补 mock 之后那条断言按设计会转红(协同组的 M1 变异就是这一天的预演),**转红是正确的**,要做的是重取 178 并改写断言,不是把 mock 改回去;(2) §EF.1 的域(109 fixture / 1012 活帧上 helper 触发 **8**),重取后 8 应当只增不减 —— **若重取后仍是 8,那是一个要解释的读数,不是一次确认**(75 帧里本该有战斗帧)。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的**:验收的一半是「两个数被**重取**了」,而一个数被重取与它恰好没变,在文件里长得一模一样 ⇒ 伪造一个 `path` 检查会把「没做」读成「做了且没变」,正是本条反对的失效方向。⇒ `kind: manual`,**它每轮都报 OWED 并声明自己不是一道门**。**裸读得出的验收句**:某一轮总监报告里同时出现 —— fixture mock 里 `GetExtrapolatedLocation` 的实现、`test_itemdesire_world_assertion.lua` 重取后的新计数(旧值 178)、以及 §EF.1 域的重取读数(旧值 8,分母 1012/937),三者在**同一个 commit** 里。总监据此退休本行。"
     }
   ],
   "retired": [

@@ -10102,3 +10102,72 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ④把 python 那半接进 pre-push 的承重(**§EA.6 本轮又付一次款:#490 同样结构上拦不住**)
   ⑤自检腿序 / `OPEN_STATES` 学 `admitted`(要有自己的承重)
   ⑥GH #449 / #460 四件 / #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` filler-英雄政策(有时限)。
+
+- 2026-09-04T19:0x–19:2xZ:**协同组积压的七条「提请总监」一次裁完;而本轮最该被读的不是任何一条裁定,
+  是它们为什么一条都没被裁 —— 三道现成的门按构造全都看不见它们**。裁定全文 `test_set.md §EI`,
+  报告 `iterations/reports/director/20260904T191008Z.md`。零 AWS、零发波、`bots/`+`game/` **零 diff**,
+  **没有 promote/reject 任何 id**。
+  **① ⭐ 主判据(§EI.0)**:七条(§ED.5/§ED.6、§EF.8 三件、§EH.7 两件)**既不是入集申请也不是波次申请**,
+  于是 `pending_rulings.py` 的 RIDESHARE/OTHER 腿(只扫 `queue.json` 请求行)、ORPHAN_PROPOSAL 腿
+  (只认**入集提议**)、`owed_executions.json`(只认**已裁**待执行)**三道门零命中**;
+  唯一载体是我自己「下次触发」清单里的一行散文,而 `§ED.5` 在那行里跨了 **10:45Z→13:11Z→16:19Z→本轮,三轮触发**。
+  与 §CG.1 同族,**区别是承重的那一半**:补 ORPHAN 腿的人按当时看见的形状把类型定义成「入集提议」,
+  **而缺陷的形状是「提请总监的事」**(与铁律 0 措辞按**位置**写而失效同型,第三次现场)。
+  **② ⭐⭐ §ED.5 收下,但前提被量翻了一半**:它写「至今每一波都同时 armed 了 `fieldsip`」;
+  按每一波自己钉的树读 armed 串(W24..W47 **24 波全覆盖**),**W24/W25/W26 armed 了持有侧而 `fieldsip` 不在串里**,
+  且 W24 那棵树(`2d1024ee`)`bots/` 里 `IsSoakCandidate('fieldsip')` **0 sites**(`b51bac77` 起 1 site)。
+  **未 armed 的 `fieldsip` 让 `J.IsFieldSipEnough` 早退返回 `true`,与被 REJECT 的它会 ship 的行为逐字节相同**
+  ⇒ **那三波真的跑过「持有侧无量级」**。⇒ 约束照收、理由降级为「跑过三次,而那三次是旧的 42–44 id bundle 波,
+  **没有已知的持有侧逐 id (a) 读数**」,退休条件写进登记行。**⚠️ 这条本身就是 ① 的例证**:
+  §ED.5 把约束写在裁定**之前**(比 `pullcad` 强),但载体是散文 —— **散文里没有任何东西会去量它的前提**。
+  **③ ⭐⭐⭐ 于是做成机器检查**:`iterations/promote_atoms.json` + `tools/agent/promote_atoms.py` + 自检新腿
+  **`promote-atoms`**,管两个形状一个根(**只在某人 promote 那天生效的约束,写成没人会在那天重读的散文**):
+  (A) `pullcad` 陷阱(活闸点名已 promote 的 id ⇒ 谓词永假,而 `check_armed_wiring.py` 照旧判 WIRED;
+  AGENTS.md 今天用**一句给人的指令**回答它,**那条指令已失效过一次**);(B) 共同 promote 原子(`no_promote_without`,单向)。
+  trunk 裸读 `141 live gate id / 13 PROMOTED 注记 / FROZEN none / atoms 1 / exit 0`,**绿到真有人违反为止,不是提醒行**。
+  **④ ⭐⭐⭐⭐ 本轮最该被读的实现细节**:**不剥注释的版本从落地第一天就是红的** ——
+  朴素 143 个 id、剥后 **141**,差的两个(`pullbeat` / 占位符 `X`)**五处出现全是警告这条陷阱本身的注释**
+  (`mode_roam_generic.lua:253/331/432`、`jmz_func.lua:1982/8483`)⇒ **从第一天就红的检查会被关掉**,
+  那正是「手不再举起来」的机制。所以测试的**承重用例是诱饵用例不是违规用例**;
+  **case 3b 是变异台逼出来的**(单行 `--[[...]]` 自己就以 `--` 开头,证明不了块剥离;M3 在它存在之前**存活**)。
+  **同族第二处**:行号最初拿**剥后偏移**数**原文**换行,指向的正是活调用点**上方那条警告注释** ——
+  即这个工具存在的理由所要分辨的那个诱饵本身。
+  **⑤ 七条裁定**:§ED.6 取 **(甲)**(不落 `ffeat`,它与 `fieldsip` 逐帧同效、同串分不开;(乙) 条件分支写进
+  `promote_atoms.json` 的 note,**故意不进 `owed_executions`** —— 触发器可能永不发生、无机器键,进去是永久噪声);
+  §EF.8 **(甲) 批准维持理由更换**(界由 §EF.4 的**合取项 ⇒ 严格子集**给,不再由「镜像完备」的自述给)、
+  **(乙) 照收且不新造机器**(`test_midsupyield_core_yields.lua` 已钉死,**本轮自己裸读复核 13/0**)、
+  **(丙) 照收**(判读改成「镜像接受且**接得住**的那一半」);§EH.7 **(甲) 批准补 `GetExtrapolatedLocation`
+  但执行方=总监、必须与 178 和 §EF.1 的域同轮重取**(已进 `owed_executions.json`),**(乙) 本轮已做**
+  (§EF.1 加 §EI 修订块:分母 **937 不是 1012**,**8 是下界**)。投递:(3)(4)(5) → `queue.json:strategy-5b`
+  的 `director_revision_20260904`;(6) → `owed_executions.json`;(1)(2) → `promote_atoms.json` + §EI。
+  **⑥ 产物**:`promote_atoms.py`(新)、`promote_atoms.json`(新)、`tests/test_promote_atoms.py`(**新 19/0**,
+  自动进套件)、`mutstand_promote_atoms.sh`(**新,9 真发 9 CAUGHT + 2 量程对照 SURVIVED 正确,零 NO-OP,
+  还原后基线 19/0**)、`routine_selfcheck.sh` 新腿、`state.json:pending_rulings_BACKLOG_20260904`。
+  **⑦ 不越界**:三个 field id **本轮仍全是 GATED**(工具自己打的那行为证);
+  **没有新造第四道门** —— 做它之前要先有答得出「已裁」的机器键,最省的形状是给这类项一个轻量
+  `queue.json` 行(`kind: "ruling_request"`),**两条现成的腿立刻看得见,不必发明第四条**;
+  直接扫散文意图正是**最容易做成每轮喊、没人读的腿**的形状(④ 那条道理第三次现场)。
+  **⑧ 成本**:零 AWS 调用(连 `budgets` 都没读);MTD **照抄**批测台 18:15Z 自报 `$14.981`
+  (快照 `refreshed 11:29:50Z`),围栏 `$60`/刹车 `$90`/批准线 `$100` 均远未及,九月未到 $50 档;
+  ⚠️ 快照仍在计费滞后带内,**不据增量反推任何一波**。
+  **⑨ 巡检**:四组均有产出(批测台 18:15Z 发 W47 / hero 17:02Z / strategy 16:30Z / replay-check 16:01Z);
+  **OWNER_PRIORITIES P2 本轮解除阻塞**(协同组章程明写「裁定回来前不要在 field 一族上再落 id」);
+  `cadence` 与 `owed-executions` 照旧;无邮件(本周 08-31 已发);**`DECISIONS_NEEDED` +0**
+  (七条全在自主授权内);周五跳过效率台账;**patch 检查未做**。
+  **⑩ 铁律 6**:`bots/`+`game/` **零 diff** ⇒ 全量 Lua 套件未跑也不声称;静态门裸读
+  **`GATE_EXIT=0 CLEAN` / 0 警告**(冷启自装 `lua-check`),`core.hooksPath=.githooks`,**未用 `RULE6_BYPASS`**;
+  点名复核 `run_tests.lua test_midsupyield_core_yields.lua` ⇒ **13 tests, 0 failures**;
+  **python 不声称全套绿**:唯一红是 `test_detector_source_constants.py` = **GH #490,批测台自己欠的那笔**,
+  按止损条款本轮不修。自检 **`selfcheck worst exit: 3`**,归因照抄工具那行
+  (`FINDINGS: cadence owed-executions trunk-red(python)` / `UNCERTIFIABLE: none`)。
+  ⚠️ **纪律 3 第三十六发,又是本轮第一条命令**(`| tail -60` 被自检自拒)—— 措辞改过两次、**连续三轮仍踩**
+  ⇒ 不再改措辞,**这是习惯不是门**。**同轮第二发,穿法不同**:改重定向后我给它套了 `timeout 300`,
+  **300s 到点砍在 python 腿中间**,而后台通知报的 `exit code 0` 是我自己拼的 `echo` 的码 ——
+  **一次被截断的自检穿着通过的衣服**;当场识破,按 `rc.sh` 重跑(第三次才跑对)。
+  ⇒ **两发是同一句话的两种穿法:读退出码那一步,任何插在中间的东西(管道、`timeout`、`echo`)都能替它作答。**
+  **⑪ 下次触发**:①**`owed_executions.json:fixture_mock_extrapolated_location`**(我自己欠的,
+  下一轮一个独立工作单元:补 mock + 同 commit 重取 178 与 §EF.1 的域)②`kind:"ruling_request"` 轻量 queue 行
+  的形状(定形状再写腿)③批测台四条点名总监的:GH **#454**(spot 单波常数重裁;不急,已按 `$1.02` 安全侧计价)/
+  **#487** / **#460** / #473 甲的下游(载体门 term 集 7→8)④**GH #473 乙**(与甲同一 issue,应一起关)
+  ⑤GH #489/#486/#490 归属确认 ⑥GH #449 / #410 / #436 / #285 / **patch 缺口 P3** /
+  `ckpush` filler-英雄政策(有时限)。

@@ -1,0 +1,42 @@
+{
+  "_readme": [
+    "Promote-time constraints that must bite ON THE DAY SOMEBODY PROMOTES, not in prose.",
+    "Checked by tools/agent/promote_atoms.py (selfcheck leg 'promote-atoms'); exit 3 on violation.",
+    "rule 'no_promote_without': if any `subject` id is PROMOTED (no live gate site left) while any",
+    "`prereq` id is still GATED, the tree ships a configuration no wave has run -> RED.",
+    "An id named here that is neither gated nor marked promoted anywhere in the tree is also RED:",
+    "a typo in this file must never make a constraint quietly vacuous.",
+    "ADD A ROW the moment a constraint is ruled, not when it is about to be violated."
+  ],
+  "atoms": [
+    {
+      "name": "field_hold_needs_magnitude",
+      "rule": "no_promote_without",
+      "subject": ["stayfield", "stayfield2"],
+      "prereq": ["fieldsip"],
+      "ruled_at": "2026-09-04T19:xxZ",
+      "ruled_by": "director",
+      "ref": "iterations/streams/test_set.md §ED.5 (proposed) / §EI.1 (ruled); GH #485",
+      "direction": "one-way: promoting fieldsip while the holding side stays gated is NOT constrained by this row.",
+      "note": [
+        "ACCEPTED, with the premise re-founded on a bare reading rather than on the proposing",
+        "section's sentence. §ED.5 wrote '至今每一波给 stayfield/stayfield2 买 (a) 的波都同时 armed 了",
+        "fieldsip'. Measured this round by replaying each wave's own pinned tree",
+        "(`git show <W*_wave.json:tree>:iterations/streams/test_set.md` line 2, W24..W47):",
+        "W27..W47 co-arm all three, as claimed -- but W24, W25 and W26 armed stayfield+stayfield2",
+        "with fieldsip ABSENT from the armed string, and at W24's tree (2d1024ee) the",
+        "`IsSoakCandidate('fieldsip')` gate did not exist in bots/ at all (0 sites; 1 site from",
+        "b51bac77 on). An unarmed fieldsip makes J.IsFieldSipEnough return true early, which is",
+        "byte-identically the behaviour a REJECTED fieldsip would ship -> those three waves did run",
+        "the configuration §ED.5 calls untested. So the constraint stands on the narrower, true",
+        "footing: 21 of the last 24 waves co-armed them, and the only three that did not are old,",
+        "bundle-wide (42-44 armed ids), and not known to carry a per-id condition-(a) reading for",
+        "the holding side.",
+        "RELEASE CONDITION (what would retire this row): a condition-(a) reading for stayfield /",
+        "stayfield2 taken on W24, W25 or W26 -- or on any future leg where fieldsip is unarmed.",
+        "If such a reading exists and is usable, this row is over-strict and should be dropped;",
+        "until someone looks, promoting the holding side alone ships an unmeasured configuration."
+      ]
+    }
+  ]
+}

@@ -326,6 +326,30 @@ else
     unchecked 'the stable-anchor invariants'
 fi
 
+# [director 20260904, test_set.md §EI] Promote-time constraints.
+#
+# Everything else in this script watches work that is owed NOW.  This leg
+# watches a constraint that binds only on the day somebody promotes an id --
+# which is exactly the day nobody re-reads the prose.  Two shapes, one root:
+# the `pullcad` trap (a gate naming an id that has since been promoted is
+# frozen FALSE, and `check_armed_wiring.py` still calls it WIRED), and the
+# co-promote atom (test_set.md §ED.5: promoting `stayfield`/`stayfield2`
+# while `fieldsip` is rejected ships a configuration only three of the last
+# 24 waves have ever run).  AGENTS.md answers the first with an instruction
+# to a human -- "before promoting anything, grep the id for appearances in
+# OTHER gates' conditions" -- and that instruction has already failed once.
+#
+# Cheap and quiet by design: green on trunk, and it stays green until a
+# promote actually violates something.  It is NOT a reminder row.
+sc_leg 'promote-atoms'
+printf '\n=== promote-time constraints (pullcad trap + co-promote atoms) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/promote_atoms.py
+    note $?
+else
+    unchecked 'the promote-time constraints'
+fi
+
 # [director 20260826, GH #198 §3] Both TRUNK RED banners below used to end
 # "failing before you changed anything".  That was a canned string, not a
 # finding: BOTH legs run the WORKING TREE, so the clause asserted something the
