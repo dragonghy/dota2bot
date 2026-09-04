@@ -10427,7 +10427,7 @@
     **33 checks / 0 failures**)+ `tests/test_rotscope_domain.py`(**21 checks / 0 failures**)。
     **变异台 10/10 全 CAUGHT / 0 SURVIVED**,树外 `cp` 还原 `sha256sum -c` OK,**还原后基线 GREEN**
     (每次运行前后清 `__pycache__`,09-03 教训照办)。
-  - **⛔ 本轮开的 issue([harness],号见报告 §5)**:**真正的堵点在 mock,不在语料。**
+  - **⛔ 本轮开的 issue —— GH #474([harness])**:**真正的堵点在 mock,不在语料。**
     `tests/mock/bot_api.lua:87-91` 的 `handle_getters` 对 `GetAttackTarget`/`GetTarget`/
     `GetCurrentActionTarget` 一律答 `nil`(`:165`,而且**这是正确的默认**),
     `make_fixture.py` **不产出任何攻击目标字段**,**109 个 fixture 里 0 个**带这类数据
@@ -10436,12 +10436,12 @@
     `[limit]`,没记成「fixture 路线整条堵死」**。可修:dump 里有材料 ——
     一条 `DAMAGE / inflictor=dota_unknown / actor=X→target=Y` 就说明 X 那一刻的攻击目标是 Y。
   - **下一轮第一件事**:(1) **W44 另外两台(3426/3713,~111 局)的宽扫本轮未做**
-    (对 `rotscope` 恒零,对其余 57 个 id 不是);(2) 查本轮 [harness] issue 回音;
+    (对 `rotscope` 恒零,对其余 57 个 id 不是);(2) 查 **GH #474** 回音;
     (3) 接 **GH #467** 的 `slotwait` 条件 (a)(⚠️ 冷却读 dumper 的
     `snapshots[].abilities[].cd`,**不要读 mock**);(4) 深查补 `zusult`/`cmqreach`/`odaoe`
     (**连续第四轮零 `VERIFY` 行**);(5) 查 **GH #470** 回音。
   - **欠账**:36 局 timeline 随容器回收(重扫命令见报告 §0);§2.2 那一帧的 fixture
-    **未做,而且按 §5 现在做不出有用的那一半**(`GetProperTarget` 仍为 nil),已并入本轮 issue;
+    **未做,而且按 §5 现在做不出有用的那一半**(`GetProperTarget` 仍为 nil),已并入 **GH #474**;
     W44 另两台未扫;#419 第 12 轮 / #421 第 11 轮仍零评论。
   - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×2 **全 0**
     (`unparseable` 0);`--selfcheck` **0**(33/0);`tests/test_rotscope_domain.py` **0**(21/0);
