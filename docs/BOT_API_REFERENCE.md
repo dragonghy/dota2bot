@@ -677,10 +677,35 @@ documented engine truth. See GH #241.
   **Boundary, do not over-read:** this settles that own-side camps carry our
   team id. Whether enemy-side camps carry the *enemy* id (the thing that makes
   `campsel`'s 1.5x non-uniform) is a separate question and is still open.
-- `type` (unverified): camp tier. Six shipped comparisons test it against the
-  **strings** `"small"` / `"medium"` / `"large"` / `"ancient"`
-  (`aba_site.lua` `IsAncientCamp` / `IsSmallCamp` / `IsMediumCamp` /
-  `IsLargeCamp`, and two clauses in `hero_templar_assassin.lua`).
+- `type` (unverified -- **and the method that settled `.team` provably cannot
+  settle it**): camp tier. **Seven** shipped reads test it against the
+  **strings** `"small"` / `"medium"` / `"large"` / `"ancient"`: four in
+  `aba_site.lua` (`IsAncientCamp` / `IsSmallCamp` / `IsMediumCamp` /
+  `IsLargeCamp`) and **three** in `hero_templar_assassin.lua` (`camp.type ~=
+  "small"` and `~= "medium"` filtering a camp list, plus `loc.type ~=
+  'ancient'` gating a Psionic Trap *cast* -- **this row said "two clauses"
+  until 2026-09-04 and missed the cast**). Two of the four helpers,
+  `IsSmallCamp` and `IsMediumCamp`, have **zero callers**.
+  **Why §BN.4 is silent here (strategy desk 2026-09-04, measured not argued).**
+  `.team` was settled for free because it sits on an **admission door**: the
+  refuting hypothesis predicts the observed behaviour is *impossible*, so 283
+  games of it happening refuted the hypothesis. Every `.type` read has the
+  opposite polarity -- each is an exclusion clause, so the refuting hypothesis
+  ("`.type` is not one of those strings") makes it **vacuously permissive**,
+  and a permissive filter emits the same games an absent one does. Driven on
+  real frames in `tests/test_camp_type_premise_polarity.lua`: of the three
+  driven site groups, **two fail open and one (RefreshCamp's fall-through
+  chain, whose every branch appends the same value) is structurally invariant
+  -- zero fail closed**, and that count is an assertion, not prose.
+  ⇒ **§BN.4 carries a polarity precondition**: it settles a premise only where
+  the predicate fails *closed*. Ask which way it fails before concluding a
+  probe can be skipped.
+  **The cheap paid route, pre-registered:** `campgrade`'s exclusive admission
+  wave already owes a reading of own-side ancient engagements in the level
+  10..11 band. Under the refuter that reading *cannot* move -- `campgrade`'s
+  ancient and large tiers are both dead and only its `.team` tier survives --
+  so a fall settles `.type` as a string at zero extra AWS. See
+  `iterations/queue.json` (`strategy-43`).
 - `speed` (unverified): creep movement speed. `aba_site.lua`'s
   `GetCampStackTime` compares it against the **strings** `"fast"` / `"slow"`.
 - `location` (vector): camp spawn location. The one field with a

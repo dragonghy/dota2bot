@@ -27,6 +27,39 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TYPEPOL. **【2026-09-04T07:45Z 新增,**OWNER_PRIORITIES P1 续**(章程「下一格」写死的 (甲));
+   **产出是一份真帧分类用例 13/13 + 一台新变异台 9/9 CAUGHT(零 NO-OP)+ 一处文档行改写 +
+   一条零增量美元的预登记买法,零行为改动**:
+   `tests/test_camp_type_premise_polarity.lua`;`tools/agent/mutstand_camptype.sh`;
+   `docs/BOT_API_REFERENCE.md` 的 `.type` 行;`state.json:camptype_POLARITY_20260904`;
+   `test_set.md §EB`;`queue.json:strategy-43`;报告 `iterations/reports/strategy/20260904T074500Z.md`;
+   **`bots/`/`game/` 逐字节未动、armed 串一字未动、无新 id/闸/fixture**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(裁预登记 + 确认文档行 + boundary 那句不要动)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):§BN.4 有一条从没写出来的极性前提 ——
+   它只能结掉「朝关失效」的谓词;「朝开失效」的那一半它连一句话都说不出,
+   而伸手去够它看起来跟尽职调查一模一样。**
+   `.team` 压在一道**准入门**上(`ShouldPullNeutralCamp` 不满足就 `return nil`,下游行为只能穿过非 nil)
+   ⇒ 反驳假设预言那个行为**不可能发生**,283 局「它发生了」免费证伪。
+   `.type` 的**七处读法全是排除式过滤子句** ⇒ 反驳假设让它们**恒真放行**,
+   而**一条恒真的过滤器和一条不存在的过滤器产出同样的对局** ⇒ 「行为发生了」两边都预言,分不开。
+   ⇒ 决定「能不能省掉一次在线探针」之前,**先问它朝哪边失效**。
+   **⭐⭐ 分类是驱动出来的不是论证的**:三个站点组各跑两遍(`.type` = 字符串 / = 被退役文档行声称的 int),
+   「朝开」写成 `admitted(string) ⊆ admitted(int)`。**2 个 FAILS OPEN + 1 个 INVARIANT,零个 FAILS CLOSED**,
+   而这个 **0 是用例里算出来的计数不是散文** —— M8 变异体**造得出一个真的朝关站点**,用例当场转红。
+   **⭐⭐⭐ 用例第一次跑就买到的一条:argmin 不是单调量,于是「更宽」在选点器上读成「更窄」。**
+   结论第一稿按**赢家**分类,读出 1 个 FAILS CLOSED —— **那正是唯一能反转全部结论的发现**,而它是假的:
+   放宽候选集会把 argmin **挪到新准入的候选上** ⇒ 字符串腿的赢家从 int 腿的赢家集合里消失,
+   **与「朝关失效」逐字同形**。修法是**换成对的量**(逐个营地问「它单独在名单里时准不准入」),
+   并**留成一条用例**:凡是把「更宽/更窄」写成对一个 argmin/argmax/「最近者」的比较,
+   极性读数就可能反号,**而反号那一侧恰好是「有大发现」的那一侧**。
+   与 §DZ.4 是**同一个「最近者」两天内咬的第二口**,这次咬的是**观测者**。
+   **⭐⭐⭐⭐ 顺带补掉三个分类逃逸入口**:文档行写「TA 两处」实为**三处**(漏的第三处 :712 门的是
+   一次**施法**不是一张名单);`IsSmallCamp`/`IsMediumCamp` **零调用点**(登记不删,它们是将来
+   `.type` 守卫最自然的落点);`.speed` **不需要一轮** —— 全树一个读者,而**那个读者本身零调用点**。
+   三条都钉成断言,普查对全 `bots/` 树做棘轮(今天 6 行 16 处)。
+   **下一格(本组下一轮第一项)**:P1 的 **(乙)决策侧 id**。
+   (甲) 卡在 `strategy-43`(总监未裁前不动),`.speed` 已判定不需要一轮。
+
 0P1CAMPBIND. **【2026-09-04T04:50Z 新增,**OWNER_PRIORITIES P1 开工**(章程「下一格」写死的那一项;
    `[strategy]` open issue 本轮扫过,球都不在本组);**产出是一处 gated 行为修复 + 一份真帧测试 15/15 +
    一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42` + **GH #475****:
@@ -5087,6 +5120,32 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T07:45Z(**OWNER_PRIORITIES P1 续 —— 章程「下一格」写死的 (甲);
+  `[strategy]` open issue 扫过一遍,都是本组上几轮已认领并交棒的或已落地的常设普查
+  ⇒ 铁律 9 与「下一格」同时指向它);**产出是一份真帧分类用例 13/13 + 一台新变异台 9/9 CAUGHT
+  (零 NO-OP)+ 一处文档行改写 + 一条零增量美元的预登记买法,零行为改动**:
+  `tests/test_camp_type_premise_polarity.lua`;`tools/agent/mutstand_camptype.sh`;
+  `docs/BOT_API_REFERENCE.md` 的 `.type` 行;`state.json:camptype_POLARITY_20260904`;
+  `test_set.md §EB`;`queue.json:strategy-43`;报告 `iterations/reports/strategy/20260904T074500Z.md`;
+  **`bots/`/`game/` 逐字节未动、armed 串一字未动、无新 id/闸/fixture**;零 AWS、零 S3、零 EC2、零波次。
+  **已交棒总监(裁 §EB.6 的预登记 + 确认文档行改写 + `campteam_SETTLED_20260827` 的 boundary 那句不要动)。**
+  **⭐ 主判据:§BN.4 有一条从没写出来的极性前提** —— 它从**已被观测到的行为**倒推前提,
+  于是**只能结掉「朝关失效」的谓词**(反驳假设 ⇒ 行为不可能发生)。`.team` 压在准入门上,所以结得掉;
+  `.type` 的**七处读法全是排除式过滤子句**,反驳假设让它们**恒真放行**,
+  而**恒真的过滤器与不存在的过滤器产出同样的对局** ⇒ 「行为发生了」是两边共同的预言。
+  **⇒ 省探针之前先问「它朝哪边失效」。** 与 §BL.4 / §BN.4 同族的第三问。
+  **⭐⭐ 分类驱动出来的**:`campgrade` 阶梯 FAILS OPEN(9 级/60 伤 2 : 4)、
+  `RefreshCamp` 落穿链 **INVARIANT**(每条分支 append 同一个值 + 无条件 `else`)、
+  `campsel` 选点 armed FAILS OPEN / 未 armed INVARIANT(读的是 wrapper)、TA 三处 FAILS OPEN(Lua 语义)。
+  **零个 FAILS CLOSED,而这个 0 是计数不是散文**(M8 造得出反例)。
+  **⭐⭐⭐ argmin 不是单调量**:第一稿按赢家分类读出 1 个 FAILS CLOSED —— 唯一能反转全部结论的发现,
+  且是假的(放宽候选集把 argmin 挪走 ⇒ 与「朝关」逐字同形)。已换成逐营地准入,并**留成一条用例**。
+  **⭐⭐⭐⭐ 三个分类逃逸入口**:文档行漏数 TA 第三处(:712 门的是**施法**);
+  `IsSmallCamp`/`IsMediumCamp` 零调用点;`.speed` 全树一个读者且那个读者零调用点 ⇒ **不需要一轮**。
+  **买法已预登记(零增量美元)**:`campgrade` 独占波本来就欠「本方远古 engagement 在 10..11 带」的读数,
+  而反驳假设下 armed `campgrade` **动不了那个数**(远古档与大营档都靠 `.type`、两条都死,
+  只剩 `.team` 那档,按定义碰不到本方营)⇒ **降 = 结案;不降 = 不确定,不是通过**;域为零按 `DOMAIN-NOT-REACHED` 退回。
+  **下一格(本组下一轮第一项)**:P1 的 **(乙)决策侧 id**((甲) 卡在 `strategy-43`,`.speed` 已判定不需要一轮)。
 - 2026-09-04T04:50Z(**OWNER_PRIORITIES P1 开工** —— 章程「下一格」写死的那一项;
   `[strategy]` open issue 扫过一遍:#467 / #464 / #456 / #455 / #445 / #441 都是本组上几轮已认领并交棒的,
   #452 / #434 / #431 是已落地的常设普查(登记不修)⇒ 铁律 9 与「下一格」同时指向 P1);

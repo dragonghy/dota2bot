@@ -1610,6 +1610,19 @@
    "requester": "strategy",
    "status": "pending",
    "ruled": false
+  },
+  {
+   "id": "strategy-43",
+   "stream": "strategy",
+   "bundle": "campgrade (rider -- no new wave)",
+   "seeds": [],
+   "priority": 3,
+   "axis": "GH #241 `.type` 前提:§BN.4 结不掉它(极性不匹配,test_set.md §EB),唯一便宜的买法是搭 `campgrade` 独占波",
+   "question": "**不申请波次、零增量美元。**预登记一条读数,挂在 `campgrade` 未来那条独占入集波(§AU.2 裁的形状)上。`GetNeutralSpawners()` 的 `.type` 至今 unverified(`campteam_SETTLED_20260827` 的 `boundary` 逐字:「the `.type` / `.speed` halves stay OPEN」),而结掉 `.team` 的那个方法(§BN.4:先问有没有已被测量的行为压着这个谓词)**结构上结不掉它** —— `.team` 压在一道准入门上(反驳假设 ⇒ 那个行为不可能发生),而 `.type` 的**七处读法全是排除式过滤子句**(反驳假设 ⇒ 恒真放行),**一条恒真的过滤器和一条不存在的过滤器产出同样的对局**。真帧驱动的分类见 `tests/test_camp_type_premise_polarity.lua`(13/13,变异台 `tools/agent/mutstand_camptype.sh` 9/9 CAUGHT):三个被驱动的站点组 **2 个 FAILS OPEN + 1 个 INVARIANT,零个 FAILS CLOSED**,而这个 0 是用例里算出来的一个计数(M8 造得出反例)。⇒ 要结案只能靠一条**阴性读数带分母**,而 `campgrade` 的独占波本来就欠这条读数。",
+   "acceptance": "读数:**本方(own-side)远古 engagement 在 10..11 级带**,`campgrade` armed 腿 vs baseline 腿(工具已存在:`tools/batch_test/behavioral/ancient_camp_domain.py` + 录像组 `campgrade_ladder.py`,与 `campfarm` 入集验收逐字同一把尺,**不要另发明一把**)。**判据的算术**:反驳假设下 `campgrade` armed **动不了这个数** —— 它的远古档与大营档**都靠 `.type`、两条都死**,活着的只有 `.team` 那一档(敌方营 ∧ `botLevel < 15`),**按定义碰不到本方营**。⇒ 本方 10..11 带远古 engagement **下降 ⇒ `.type` 是字符串,前提结案**;**不降 ⇒ 不确定,不是通过**(通路可能走的是 `campfarm` 管的那条野怪扫描而不是营地名单)。⛔ 域(该带上的 engagement 总数)为零 ⇒ `DOMAIN-NOT-REACHED` 退回,**不许**读成「测过了,`.type` 不是字符串」。⚠️ 铁律 4(i-a):ab / ba 两个分层各自登记**读数**(不是局数);计数类且侧偏未消除 ⇒ 两层反号按 4(i-b) 读成噪声。⚠️ **排波前置,与已有两条并列**(§AO 的 `pullcamp`/`campfarm` 侧、§BG 的 `campsel` 侧):`campfarm` 与 `campgrade` **不得同腿 arm**,否则本方远古 engagement 的下降在两个 id 之间不可归因。⚠️ METHOD-FAILED 分支:若 engagement 的「本方/敌方」归类在 dumper 里取不到 ⇒ **回总监重裁**,执行方不得自行套用后果条款。",
+   "requester": "strategy",
+   "status": "pending",
+   "ruled": false
   }
  ],
  "done": [
