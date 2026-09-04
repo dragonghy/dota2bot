@@ -323,16 +323,53 @@ end
 -- ---------------------------------------------------------------------------
 -- 4. LIMITS -- measured on the real frame, not asserted.
 
-tests['LIMIT: offline BOTH legs read 0, so no fixture can separate them'] = function()
+-- RE-ANCHORED 2026-09-04 (hero, `kvgetters`).  Same repair, same shape, as
+-- tests/test_lion_q_kill_damage.lua's section 6: this LIMIT is HALF gone.
+--
+-- ARCHIVED READING (until 2026-09-03): both legs read 0 offline, and the mock
+-- could not tell a real key from a fabricated one, so no fixture could separate
+-- them.  tests/mock/replay_fixture.lua now serves GetSpecialValue* from the KV
+-- snapshot (tests/test_fixture_kv_getters.lua), so the armed leg reads the real
+-- zuus_lightning_bolt ladder.  GetAbilityDamage was NOT served -- a different
+-- unspecced getter, deliberately left for the next batch -- so the shipped leg
+-- still reads 0, and the two legs are now DIFFERENT offline.
+--
+-- ⛔ The sections above are NOT rebaselined here.  Their numbers were taken in
+-- the archived world with the armed leg driven on declared fabrications;
+-- re-driving them through the getter is this lever's own work unit (charter
+-- backlog -88).  What survives of the limit is pinned below: a key nobody ever
+-- wrote still reads 0, so ABSENCE and ZERO stay indistinguishable -- GH #162 is
+-- not repaired by this.
+tests['LIMIT: the armed leg is readable offline now; the shipped leg is not, and absence still reads 0'] = function()
     local _, _, bot = load_zuus(true, true)
     local h = bot:GetAbilityByName('zuus_lightning_bolt')
     assert(h:GetAbilityDamage() == 0,
         'the mock has no AbilityDamage field, so the shipped leg reads 0 offline for a '
         .. 'reason unrelated to the KV -- the agreement with the real engine here is a '
         .. 'coincidence and must not be cited as confirmation')
-    assert(h:GetSpecialValueInt(KEY) == 0, KEY .. ' reads 0 under the mock')
+
+    local shapes = require('mock.special_value_shapes')
+    local blk = shapes.SHAPES['zuus'] and shapes.SHAPES['zuus']['zuus_lightning_bolt']
+    local entry = blk and blk[KEY]
+    assert(entry ~= nil and entry.base ~= nil,
+        'the KV snapshot no longer carries zuus_lightning_bolt/' .. KEY
+        .. '; without it this case is back in the archived world and cannot say so')
+    local steps = {}
+    for tok in entry.base:gmatch('%S+') do steps[#steps + 1] = tonumber(tok) end
+    local rank = h:GetLevel()
+    local want = steps[math.min(math.max(rank, 1), #steps)]
+    local got = h:GetSpecialValueInt(KEY)
+    assert(got == want, KEY .. ' reads ' .. tostring(got) .. ' at rank ' .. rank
+        .. ', KV ladder says ' .. tostring(want) .. '. A 0 means the loader stopped '
+        .. 'serving GetSpecialValue* and the sections above are back in the world '
+        .. 'their numbers were taken in.')
+    assert(got ~= h:GetAbilityDamage(),
+        'the two legs read the same number offline again, so the separation this '
+        .. 'case records has been lost')
+
     assert(h:GetSpecialValueInt('a_key_nobody_ever_wrote') == 0,
-        'and so does a key that never existed -- the mock cannot tell them apart')
+        'a key that never existed still reads 0 -- the loader must not invent a '
+        .. 'value for one, which would be worse than the zero it replaced')
 end
 
 tests['LIMIT: FindAoELocation is not in the mock, so the branch cannot be fired'] = function()
