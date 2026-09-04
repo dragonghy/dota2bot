@@ -168,6 +168,16 @@ tests['[census] the yield domain, and how much of it was a drop'] = function()
     -- The helper fires on few frames and the yield touches fewer; the finding is
     -- a RATIO over a small domain, so the domain is stated with it (rule 4 (ii):
     -- a small-valued count is reported with its distribution, not a median).
+    --
+    -- [midsupmirror 2026-09-04] READ `fires` AS A FLOOR, NOT AS A COUNT. The
+    -- sweep reads the trigger through pcall and has two buckets for a
+    -- three-valued read, so a RAISE lands in "did not fire". 75 of the 1012 live
+    -- frames raise inside J.ShouldTpSupportTowerFight -- one shared cause, the
+    -- fixture mock not stubbing GetExtrapolatedLocation -- and they are exactly
+    -- the frames with an enemy in the bot's face, i.e. the fight condition this
+    -- helper exists to answer. The assertions below are already floors (`>=`),
+    -- which is the right shape; test_set.md §EF.1's prose was not.
+    -- Measured and ratcheted in tests/test_midsupmirror_checkability.lua.
     assert(C('fires') >= 8, 'the helper fires on ' .. C('fires')
         .. ' corpus frames; registered 8')
     assert(C('fires_core') >= 3, 'core frames (the only ones midsupyield can '

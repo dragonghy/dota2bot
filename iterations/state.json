@@ -5717,5 +5717,22 @@
     "owner": "strategy",
     "issue": "GH #489(本轮自开);牵动 state.json `AX.5_strategy5b_midsupyield` 的方向性论证与 `queue.json:strategy-5b`",
     "status": "LOCALLY VALIDATED, gated, **NOT armed**(`midsupyield` 不在 62-id 串里)。**交棒总监**:(甲) `AX.5` 那条「bounded by construction」的批准理由**已被证伪**,条件性批准要重裁;(乙) `test_set.md §EF` 提议 —— `midsupyield` 若要入集,**必须带修复后的这棵树**;(丙) `queue.json:strategy-5b` 的 bundle/验收随之要改。"
+  },
+  "midsupmirror_PRICING_20260904": {
+    "id": "**没有新 id,零行为改动**。本轮只产出普查 + 用例 + 变异台,`bots/` 与 `game/` 逐字节未动,armed 串一字未动。",
+    "question": "test_set.md §EF.7 把四条镜像成员登记为「**问得出而没问**」并交给下一轮「一次修一条」。本轮先跑域价钱:**这四条,语料里有没有任何一帧能让它们说话?**",
+    "finding": "**§EF.7 的排序键用错了。**它按「引擎问不问得出」排,四条同在一格(4-0)。而决定本组能不能**落地**的是另一条轴 ——「**语料能不能作证**」(本组章程第 2 条:行为改动必须带真实帧 fixture,gate-plumbing 不算本地验证)。在这条轴上四条是 **0-4:一条都落不了**。落其中任何一条 = 交出一个「唯一证据是它能编译」的合取项。",
+    "domain": "109 fixture / **1012 活英雄帧**(与 §EF.1 同一语料同一分母)。",
+    "legs_by_absence": "三条。(1) `J.IsGoingOnSomeone` 只读 `bot:GetActiveMode()`,那是 bot VM 自己的状态、dumper 不携带 ⇒ **1012/1012 帧读到 mock 默认值 0**,该腿在语料上恒真放行,`mode_would_veto = 0/1012`。(2)(3) 15s 新复活窗口与 45s `bRepeatFront` 记忆读的是**跨帧写入的每-bot 会话记忆**(`lastDeadFrameTime`/`lastRespawnTime`/`lastFrontAnswerT`);单帧 fixture 按构造是一个**没有历史的世界** ⇒ `respawn_field = 0/1012`、`front_field = 0/1012`。",
+    "leg_by_raise": "一条,而且更糟。`J.CanEnemyInterruptTpChannel` 对每个近敌调 `GetExtrapolatedLocation(0.5)`,**fixture mock 没有这个方法**,返回一个数字,`J.GetLocationToLocationDistance` 去索引它 ⇒ 抛错。在它**自己的定义域**里(700 扫描内有敌方英雄)**257/257 帧全抛**,`int_raised_sloc == int_raised` 一个成因。它那 755 个 `false` **全部是 `#enemies==0` 的提前返回,即这道闸在弃权而不是在回答**。⇒ **在整份语料上,这道已出厂、无闸的 TP 闸门一次都没有回答过自己的问题(`int_true = 0/1012`)。**",
+    "censoring": "**⭐ 而这条腿把上一轮公布的域也删掉了一块。**`tests/_midsupfar_sweep.lua` 用 `pcall` 读扳机,**三值读数只有两个桶**,于是「抛错」被记成「没触发」。**75/1012 活帧在 `J.ShouldTpSupportTowerFight` 里抛错**(`trigger_raised_sloc == trigger_raised == 75`,同一个成因)。⇒ §EF.1 的「1012 活帧 ⇒ helper 触发 8」实际是在 **937 帧**上量的,**75 帧被仪器删掉**,而且删得**不随机**:被删的正是「敌人贴脸」的帧,也就是**这个 helper 存在的理由**那个条件。**8 是下界不是计数。**",
+    "decision_domain": "修完配对项后,让路的决定域是**一帧一个被接受的支援**(`f_260819_182855_lion_drain_midchannel`,core death_prophet → dragon_knight)。**四条腿在这一帧上全部沉默**(mode=0、interrupt=false 弃权、respawn=nil、front=nil)⇒ **即使手写一份这一帧的 fixture,也分不开修好的镜像和现在的镜像。**",
+    "why_not_repaired": "堵点是**一个缺失的 mock 方法**,而补它是**harness 全局改动**:它会移动每一个做外推的 helper 的读数,并且 `tests/test_itemdesire_world_assertion.lua` 已经把 `type(other:GetExtrapolatedLocation(0.5)) ~= 'table'` 钉死、并把一个 **178** 的计数压在它上面。⇒ **这个决定属于总监,不属于协同组**;本轮只把「它变了的那天」做成会转红的棘轮。",
+    "artifacts": "`tests/_midsupmirror_sweep.lua`(新);`tests/test_midsupmirror_checkability.lua`(新,**10/10**,`[ratchet]`);`tools/agent/mutstand_midsupmirror.sh`(新,**12/12 CAUGHT,零 NO-OP**);`tests/_midsupfar_sweep.lua` 与 `tests/test_midsupfar_yield_target.lua` 各加一段「`fires` 读作下界」的注释(**断言一字未改**,它们本来就写的 `>=`)。",
+    "instrument_self_bite": "**变异台自己咬了自己两次,两次同一个形状。**M7(15s 阈值漂移)两度打出 SURVIVED,不是断言弱,是**编辑落错了函数**:15.0 这个阈值在 `J.GetRescueTpTarget` 和 `J.ShouldTpSupportTowerFight` 里**逐字相同各写一次**,`perl -0pi -e 's///'` 不带 `/g` 只替换**第一处**;而第一版锚点 `watched 230652` **两处上方都写着**,非贪婪 `.*?` 从第一次出现伸手,照样落到 rescue 那一份。改用只属于响应者循环那份的 `see GetRescueTpTarget` 才落对。⇒ **一个 SURVIVED 只有在证明了编辑落在你以为的地方之后,才是关于断言的论断**(evidence-discipline 规则 2 的逆命题,现场两连)。",
+    "handoff": "交总监两件,都不要钱:(甲) 裁 fixture mock 要不要补 `GetExtrapolatedLocation`,以及补了之后谁去重取 178 那个计数与 §EF.1 的域;(乙) §EF.1 的「helper 触发 8」在档案里改写成**下界**并注明分母是 937 不是 1012。**不申请入集,不申请波次。**",
+    "gates": "`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。相关用例 6 个文件全绿(10/13/13/16/12/26)。零 AWS、零 S3、零 EC2、零波次。",
+    "issue": "GH #492",
+    "report": "iterations/reports/strategy/20260904T163000Z.md"
   }
 }

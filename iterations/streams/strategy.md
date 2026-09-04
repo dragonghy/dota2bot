@@ -27,6 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0PRICE4. **【2026-09-04T16:30Z 新增,**自驱**(P1 (甲) 卡 `strategy-43`、P2 球在总监;`[strategy]` open issue
+   本轮扫过全是本组已交棒的);取章程「下一格」写死的候选 —— §EF.7 那四条未修镜像成员 ——
+   按 `0CORP` **先跑域价钱再选形状**,而**域价钱直接回答了「选哪条」这个问题本身:一条都不该修**;
+   **产出是一份真帧普查 + 一份真帧用例 10/10 + 一台新变异台 12/12 CAUGHT(零 NO-OP)+ 两处注释更正
+   + 两条交总监的档案/harness 裁定,零行为改动**:
+   `tests/_midsupmirror_sweep.lua`;`tests/test_midsupmirror_checkability.lua`;
+   `tools/agent/mutstand_midsupmirror.sh`;`tests/_midsupfar_sweep.lua` 与
+   `tests/test_midsupfar_yield_target.lua`(**各加注释,断言一字未改**);
+   `state.json:midsupmirror_PRICING_20260904`;`test_set.md §EH`;**GH #492**;
+   报告 `iterations/reports/strategy/20260904T163000Z.md`;
+   `bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸/fixture;
+   零 AWS、零 S3、零 EC2、零波次。**已交棒总监(甲 裁 mock 补不补 `GetExtrapolatedLocation` + 谁重取 178;
+   乙 把 §EF.1 的「触发 8」在档案里改写成下界)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):「引擎问不问得出」和「语料能不能作证」是两条不同的轴,
+   而只有后一条决定本组能不能落地。**§EF.7 按前一条排,四条同在一格(**4-0**),读上去像四个等价的后续动作;
+   按后一条排,同样四条是 **0-4**。章程第 2 条要求行为改动**必须带真实帧 fixture** ⇒
+   **落其中任何一条,唯一的证据是它能编译。** 可操作:决定「下一个修哪条」之前先问
+   **「哪一条有帧能让它说话」** —— 答案可能是「一条都没有」,**那本身就是一轮的产出,不是一轮的失败**。
+   **⭐⭐ 不作证的理由分两种**(这正是「四个等价物」错在哪):**按缺席**三条
+   (`GetActiveMode` 是 **bot VM 状态不是世界状态**,`mode_default` **1012/1012**;
+   两个记忆字段是**跨帧写入的会话记忆**,而**单帧 fixture 按构造是一个没有历史的世界**,
+   `respawn_field`/`front_field` 各 **0/1012**);**按抛错**一条。
+   **⭐⭐⭐ 那一条:一道已出厂、无闸的守卫,在整份语料上一次都没回答过自己的问题。**
+   `J.CanEnemyInterruptTpChannel` 调 `GetExtrapolatedLocation( 0.5 )`,**mock 没有这个方法** ⇒
+   答一个数字、被 `J.GetLocationToLocationDistance` 索引 ⇒ 抛错;**定义域内 257/257 全抛,一个成因**;
+   它那 **755 个 `false` 全是 `#enemies==0` 的提前返回 —— 弃权,不是回答** ⇒ **`int_true` = 0/1012**。
+   **⭐⭐⭐⭐ 而它把上一轮公布的域也删掉了一块。**`_midsupfar_sweep.lua` 用 `pcall` 读扳机,
+   **三值读数只有两个桶**,「抛错」与「量过了说不」记成同一个东西 ⇒ **75/1012 活帧抛错**,
+   §EF.1 的「1012 活帧 ⇒ 触发 **8**」实际量在 **937 帧**上,**删掉的 75 帧正是「敌人贴脸」的帧**,
+   也就是**一场战斗** —— 这个 helper 存在的理由。**8 是下界不是计数。**
+   处置是**改散文不改断言**(那两处本来就写 `>=`)。
+   **⭐⭐⭐⭐⭐ 决定域上四条腿同时沉默**:让路的决定域是**一帧一个支援**,
+   mode=0 / interrupt=false(弃权)/ respawn=nil / front=nil ⇒ **手写这一帧的 fixture 也分不开两个镜像**。
+   **⭐⭐⭐⭐⭐⭐ 变异台自己咬了自己两次、同一个形状**:M7 两度 SURVIVED,**都不是断言弱,是编辑落错函数** ——
+   `15.0` 在两个函数里逐字相同各写一次,`perl -0pi -e 's///'` 不带 `/g` **只替换第一处**;
+   第一版锚点 `watched 230652` **两处上方都写着**,非贪婪 `.*?` 照样落到 rescue 那份。
+   ⇒ **一个 SURVIVED,只有在证明了编辑落在你以为的地方之后,才是关于断言的论断**
+   (evidence-discipline 规则 2 的**逆命题**,一轮之内两连)。
+   **下一格**:两件都在总监手上;**在 (甲) 裁定回来之前不要再去修 §EF.7 那四条中的任何一条**
+   —— 修了也没有帧能验。**本组下一轮**:取未认领 `[strategy]` issue,否则**换域**,照旧先跑域价钱。
+
 0MIRROR. **【2026-09-04T13:55Z 新增,**自驱**(P1 (甲) 卡 `strategy-43`、P2 球在总监;`[strategy]` open issue
    本轮扫过全是本组已交棒的;**没从 `0SLOT9` 剩下 7 处里选**,因为 `0PUSHCLUSTER` 自己写着「下一个杠杆去别的域挑」);
    **产出是一处 gated 行为修复(既有 `midsupyield` 体内,**不开新 id**)+ 真帧普查 + 13/13 + 13/13 +
@@ -5188,6 +5229,38 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T16:30Z(**自驱** —— P1 (甲) 卡 `strategy-43`、P2 球在总监;`[strategy]` open issue 扫过一遍
+  (#489/#485/#480/#475/#467/#464/#456/#455/#415)**全是本组已交棒的**;取章程「下一格」写死的候选
+  §EF.7 四条未修镜像成员,按 `0CORP` **先跑域价钱再选形状**);
+  **产出是一份真帧普查 + 一份真帧用例 10/10 + 一台新变异台 12/12 CAUGHT(零 NO-OP)+ 两处注释更正,
+  零行为改动**:`tests/_midsupmirror_sweep.lua`;`tests/test_midsupmirror_checkability.lua`;
+  `tools/agent/mutstand_midsupmirror.sh`;`tests/_midsupfar_sweep.lua` 与
+  `tests/test_midsupfar_yield_target.lua`(**各加注释,断言一字未改**);
+  `state.json:midsupmirror_PRICING_20260904`;`test_set.md §EH`;**GH #492**;
+  报告 `iterations/reports/strategy/20260904T163000Z.md`;
+  **`bots/`/`game/` 逐字节未动、armed 串(62-id)一字未动、`queue.json` 一字未动、无新 id/闸/fixture**;
+  零 AWS、零 S3、零 EC2、零波次。**已交棒总监(甲/乙)。**
+  **⭐ 主判据(立法级):「引擎问不问得出」和「语料能不能作证」是两条不同的轴,只有后一条决定能不能落地。**
+  §EF.7 按前一条排是 **4-0**(四条等价的后续动作),按后一条排是 **0-4:一条都作不了证**;
+  章程第 2 条要求真实帧 fixture ⇒ **落任何一条,唯一证据是它能编译**。
+  ⇒ 决定「下一个修哪条」前先问「**哪一条有帧能让它说话**」;答案可以是「一条都没有」,
+  **那本身是产出不是失败**。
+  **⭐⭐ 理由分两种**:**按缺席**三条(`GetActiveMode` 是 bot VM 状态不是世界状态,`mode_default` 1012/1012;
+  两个记忆字段跨帧写入,单帧 fixture **按构造没有历史**,各 0/1012);**按抛错**一条。
+  **⭐⭐⭐ `J.CanEnemyInterruptTpChannel`(已出厂、无闸)在整份语料上一次都没回答过自己的问题**:
+  `GetExtrapolatedLocation( 0.5 )` mock 里没有 ⇒ 抛错,**定义域内 257/257,一个成因**;
+  755 个 `false` **全是 `#enemies==0` 的提前返回 —— 弃权不是回答** ⇒ `int_true` **0/1012**。
+  **⭐⭐⭐⭐ 它把上一轮的域也删了一块**:`_midsupfar_sweep.lua` **三值读数两个桶**,
+  **75/1012 活帧抛错**被记成「没触发」⇒ §EF.1 的「触发 8」量在 **937 帧**上,
+  删掉的 75 帧**正是敌人贴脸那些帧**(与问题不独立)⇒ **8 是下界**。**改散文不改断言。**
+  **⭐⭐⭐⭐⭐ 决定域一帧一支援,四条腿同时沉默** ⇒ 手写那帧的 fixture 也分不开两个镜像。
+  **⭐⭐⭐⭐⭐⭐ 变异台 M7 两度 SURVIVED,都是编辑落错函数**(`15.0` 两处逐字相同 + `perl s///` 不带 `/g`;
+  第一版锚点两处上方都有)⇒ **SURVIVED 只有在证明编辑落对之后才是关于断言的论断**(规则 2 的逆命题)。
+  ⚠️ 开工自检 **EXIT=3**:`cadence`/`owed-executions`/`trunk-red(python)`;python 那条是
+  `test_detector_source_constants.py`,**批测台的**(GH #490,已 open),不是本轮引入。
+  ⚠️ 第一次调自检用了 `| tail`,脚本**自己拒绝执行并打 EXIT=2**(REFUSED 不是通过),改重定向重跑。
+  **下一格**:(甲)(乙) 都在总监手上;**在 (甲) 回来前不要再修 §EF.7 四条中的任何一条**(修了没帧能验)。
+  本组下一轮:取未认领 `[strategy]` issue,否则**换域**,照旧先跑域价钱。
 - 2026-09-04T13:55Z(**自驱** —— OWNER_PRIORITIES P1 (甲) 卡在 `strategy-43`、P2 球在总监(§ED),
   章程明写「裁定回来前不要在 field 一族上再落 id」;`[strategy]` open issue 扫过一遍
   (#485/#480/#475/#467/#464/#456/#415)**全是本组已交棒的**;**没从 `0SLOT9` 剩下 7 处里选** ——

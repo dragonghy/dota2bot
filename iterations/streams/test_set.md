@@ -15721,3 +15721,123 @@ death_prophet 帧必须**仍然让路**;否则一个「永远答 false」的谓�
   (`J.ShouldTpSupportTowerFight` 的距离锚点找不到,`expected exactly 1 match, found 0`),
   **批测台 15:15Z 已立为 GH #490 并交棒**,按总监上一轮自己写下的止损条款(载体门这轮是整个工作单元,
   别的红先登记交棒),**本轮不修**。
+---
+
+## §EH 2026-09-04T16:3xZ 协同组 —— **域价钱的答案是「一条都买不起」**:§EF.7 登记的四条镜像成员在语料上**一条都作不了证**,而其中一条**连上一轮公布的那个域也删掉了一块**;本节最该被读的是 **§EH.2:排序键用错了 —— 「引擎问不问得出」把四条排成 4-0,「语料能不能作证」把同样四条排成 0-4**
+
+**零行为改动。**`bots/` 与 `game/` 逐字节未动,armed 串(62-id)一字未动,`queue.json` 一字未动,
+无新 soak id、无新闸、无新 fixture。零 AWS、零 S3、零 EC2、零波次。
+**不申请入集,不申请波次。**
+
+### §EH.0 一句话
+
+§EF.7 把四条「问得出而没问」的镜像成员交给下一轮「一次修一条」。本轮按 `0CORP`
+**先跑域价钱再选形状**,结果是**四条都不该修** —— 不是因为它们错,是因为**这份语料
+一帧都作不了它们的证**,而本组章程第 2 条要求行为改动必须带真实帧 fixture。
+
+### §EH.1 域(量出来的)
+
+109 fixture / **1012 活英雄帧**(与 §EF.1 同一语料、同一分母)。仪器:
+`tests/_midsupmirror_sweep.lua`(31s 子进程),读数由
+`tests/test_midsupmirror_checkability.lua` **10/10** 钉住。
+
+| 腿 | 语料读数 | 结论 |
+|---|---|---|
+| `J.IsGoingOnSomeone` | `mode_default` **1012/1012**(mock 默认 0)、`mode_would_veto` **0/1012** | 恒真放行 |
+| 15s 新复活窗口 | `respawn_field` **0/1012** | 无历史可读 |
+| 45s `bRepeatFront` | `front_field` **0/1012** | 无历史可读 |
+| `J.CanEnemyInterruptTpChannel` | `int_true` **0/1012**;定义域内 **257/257 全抛错** | **从没回答过** |
+
+### §EH.2 ⭐ 主判据(立法级,可复用,超出本主题)
+
+**「引擎问不问得出」和「语料能不能作证」是两条不同的轴,而只有后一条决定本组能不能落地。**
+
+§EF.7 用前一条轴给四条排序,于是它们同在一格(**4-0:四条都问得出**),读上去像
+四个等价的后续动作,「一次一个」就是全部的调度问题。按后一条轴排,同样四条是
+**0-4:一条都作不了证**。本组章程第 2 条写着「必须带真实帧 fixture,
+gate-plumbing 测试不算本地验证」⇒ **落其中任何一条,唯一的证据是它能编译。**
+
+而且它们**不作证的理由分两种**,这正是「四个等价物」这个形状错在哪:
+
+- **按缺席**(三条):`GetActiveMode` 是 **bot VM 自己的状态**、不是世界状态,dumper
+  不携带;`lastDeadFrameTime`/`lastRespawnTime`/`lastFrontAnswerT` 是**跨帧写入的
+  会话记忆**,而**单帧 fixture 按构造是一个没有历史的世界**。
+- **按抛错**(一条,更糟):见 §EH.3。
+
+可操作的一句:**决定「下一个修哪条」之前,先问「哪一条有帧能让它说话」** ——
+这个问题的答案可能是「一条都没有」,而那**本身就是一轮的产出**,不是一轮的失败。
+
+### §EH.3 ⭐⭐ 一道已出厂的闸,在整份语料上一次都没有回答过自己的问题
+
+`J.CanEnemyInterruptTpChannel` 是 `[TP audit fix D]` 那道**无闸、已出厂**的守卫。
+它对每个近敌调 `GetExtrapolatedLocation( 0.5 )`,而 **fixture mock 没有这个方法** ——
+它答一个数字,`J.GetLocationToLocationDistance` 去索引它 ⇒ 抛错。
+
+- 它**自己的定义域**是「700 扫描内有敌方英雄」(圈外它提前返回 false)。
+  定义域内 **257/1012 帧,抛错 257/257**,`int_raised_sloc == int_raised` **一个成因**。
+- 它那 **755 个 `false` 全部是 `#enemies==0` 的提前返回** —— **那是弃权,不是回答**。
+- ⇒ **`int_true = 0/1012`。** 把 755 次弃权读成 755 次「不会被打断」,正是
+  「一道从没跑过的闸」长得像「一道从没触发的闸」的机制。
+
+### §EH.4 ⭐⭐⭐ 而它把上一轮公布的那个域也删掉了一块
+
+`tests/_midsupfar_sweep.lua` 用 `pcall` 读扳机,**三值读数只有两个桶**:
+「抛错」与「量过了说不」**记成同一个东西**。
+
+**75/1012 活帧在 `J.ShouldTpSupportTowerFight` 里抛错**
+(`trigger_raised_sloc == trigger_raised == 75`,同一个成因)。
+
+⇒ §EF.1 的「1012 活帧 ⇒ helper 触发 **8**」,实际是在 **937 帧**上量的,
+**75 帧被仪器删掉了**。而且**删得不随机**:被删的正是「敌人贴脸」的帧 ——
+也就是**一场战斗**,正是这个 helper 存在的理由。**8 是下界不是计数。**
+
+已在两处读到这个数的地方各写下一段注释(`_midsupfar_sweep.lua` 头、
+`test_midsupfar_yield_target.lua` 的 `[census]` 腿);**那两个文件的断言一字未改**,
+因为它们本来写的就是 `>=`。**要改的是散文,不是断言** —— 提请总监按 §EH.7 (乙) 改档案。
+
+### §EH.5 ⭐⭐⭐⭐ 决定域上,四条腿同时沉默
+
+修完配对项后,让路的决定域是**一帧、一个被接受的支援**:
+`f_260819_182855_lion_drain_midchannel`,core `death_prophet` → `dragon_knight`。
+那一帧上 mode=**0**、interrupt=**false(弃权)**、respawn=**nil**、front=**nil**。
+⇒ **即使专门手写一份这一帧的 fixture,也分不开修好的镜像和现在的镜像。**
+
+### §EH.6 ⭐⭐⭐⭐⭐ 变异台自己咬了自己两次,两次同一个形状
+
+M7(15s 阈值漂移)**两度打出 SURVIVED**,而两次都不是断言弱,是**编辑落错了函数**:
+
+1. `15.0` 这个阈值在 `J.GetRescueTpTarget` 与 `J.ShouldTpSupportTowerFight` 里
+   **逐字相同各写一次**,`perl -0pi -e 's///'` 不带 `/g` **只替换第一处** ——
+   落在本文件根本不测的那个函数上。
+2. 第一版锚点 `watched 230652` **两处上方都写着**,非贪婪 `.*?` 从**第一次出现**
+   伸手,**照样落到 rescue 那一份**。
+
+只属于响应者循环那一份的文本是 `see GetRescueTpTarget`,换上才落对,12/12。
+⇒ **一个 SURVIVED,只有在证明了编辑落在你以为的地方之后,才是关于断言的论断。**
+(evidence-discipline 规则 2 的**逆命题**,一轮之内现场两连;变异台头注已写下。)
+
+### §EH.7 验收(提请总监两件,都不要钱)
+
+1. **(甲) 裁 fixture mock 补不补 `GetExtrapolatedLocation`。** 堵点只有这一个方法,
+   但补它是 **harness 全局改动**:它会移动每一个做外推的 helper 的读数,而
+   `tests/test_itemdesire_world_assertion.lua` 已经把
+   `type(other:GetExtrapolatedLocation(0.5)) ~= 'table'` 钉死,并把一个 **178**
+   的计数压在它上面。补了之后**谁去重取 178 和 §EF.1 的域**,请一并指定。
+   **这不是协同组能单方面做的动作**,所以本轮没做。
+2. **(乙) §EF.1 的「helper 触发 8」在档案里改写成下界**,并注明分母是 **937 不是 1012**、
+   被删的 75 帧与问题**不独立**。
+
+**§EF.7 的那条计数断言(「还少四条」)本轮不动**:一条都没修,4 仍然是 4。
+它现在有**两个**看守(`test_midsupfar_yield_target.lua` 与本轮新文件),两处都写了
+「修掉一条要同时降另一处」。
+
+### §EH.8 产物与门
+
+`tests/_midsupmirror_sweep.lua`(新);`tests/test_midsupmirror_checkability.lua`
+(新,**10/10**,`[ratchet]`);`tools/agent/mutstand_midsupmirror.sh`
+(新,**12/12 CAUGHT,零 NO-OP**);`tests/_midsupfar_sweep.lua` +
+`tests/test_midsupfar_yield_target.lua`(**各加注释,断言一字未改**);
+`state.json:midsupmirror_PRICING_20260904`;**GH #492**;
+报告 `iterations/reports/strategy/20260904T163000Z.md`。
+铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。
+相关用例六个文件全绿:10 / 13 / 13 / 16 / 12 / 26。

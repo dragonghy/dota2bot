@@ -21,6 +21,18 @@
 -- lesson): mutate `> 3500` in jmz_func and this census must move, or it is not
 -- measuring the shipped tree.
 --
+-- ⚠️ [midsupmirror 2026-09-04] THIS SWEEP HAS TWO BUCKETS FOR A THREE-VALUED
+-- READ. `pcall(J.ShouldTpSupportTowerFight, bot)` below scores a RAISE exactly
+-- as it scores a measured "no", and 75 of the corpus's 1012 live frames raise
+-- (one cause: the mock does not stub GetExtrapolatedLocation, so the interrupt
+-- guard's extrapolation indexes a number). So `fires` is a FLOOR over the 937
+-- frames this instrument can read, not a count over 1012 -- and the 75 it drops
+-- are the enemy-in-my-face frames, which is not independent of the question.
+-- Deliberately left as it is rather than patched blind: the third bucket, the
+-- roster of censored frames, and the pricing that rests on them live in
+-- tests/_midsupmirror_sweep.lua + tests/test_midsupmirror_checkability.lua,
+-- where they are ratcheted. Repair the mock and BOTH sweeps must be re-taken.
+--
 -- Manifest grammar (one record per line, space-separated):
 --   G <name> <value>     a constant parsed out of the shipped helper
 --   C <key> <n>          a counter bucket
