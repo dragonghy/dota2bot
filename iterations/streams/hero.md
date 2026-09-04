@@ -22,6 +22,24 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-87. **`AbilityCastPoint` + `AbilityCooldown` 还停在 `^Get` 默认值上 —— 它们是
+   `kvgetters` 那一撮**故意没发**的下一小撮(报告 `iterations/reports/hero/20260904T045632Z.md`,
+   `state.json:kvgetters_20260904T`)。**
+   2026-09-04 那轮把 `GetSpecialValueInt`/`GetSpecialValueFloat`/`GetCastRange` 从
+   `tests/mock/special_value_shapes.lua` 接了出来(**402 个句柄的 `GetCastRange` 之前答 0,
+   5306 个 (句柄,key) 对之前答 0**),`AbilityCastPoint`(**758 个句柄**)与
+   `AbilityCooldown` 留着没发。
+   - **做法照抄那一轮,不要一次全发**:先用干净 HEAD 的 `git worktree` 建对照台,
+     两棵树分片并跑做 mod-vs-base 差分 —— **基线自己带一条红**
+     (`test_towercreep_stale_domain.lua`,两棵树逐字相同),不做差分就会把它记成自己的。
+   - **⚠️ 这两个的失效方向可能与上一撮相反**:`GetCastPoint` 答 0 会让
+     「施法前摇够不够」类的守卫**过于乐观**(高估可达性,mana 那一族的方向),
+     而不是像半径那样**低估**。发之前先想清楚哪一类读数会翻,不要沿用上一撮的判读。
+   - **⛔ 不要顺手把条件项(`special_bonus_*`)折进 base**:引擎在句柄作答前就折了,
+     再折一次是双算。变异台 `tools/agent/mutstand_kvgetters.sh` 的 **M5** 就钉这一格。
+   - **⚠️ 上一撮的全量套件没跑完**(分片 `r c t f a s l …` 有读数,其余没有)⇒
+     这一撮开工前先把上一撮没跑完的片补齐,否则两轮的红会混在一起。
+
 -86. **「算了不读」的 `aetherRange` 还剩 7 个文件,而它们和 `-85` 是同一种病的另一个器官(GH #471)。**
    2026-09-04T01:58Z 那轮把焦点英雄那一个(Zeus)接了(候选 `zusaether`,报告
    `iterations/reports/hero/20260904T015833Z.md`)。全树 **33 声明 / 26 接了 / 7 算了不读**:
@@ -40,6 +58,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - **⭐ 真正的下一棒不是接线,是 `hero-28` 的第 (3) 格**:如果带透镜的真实对局里
      落在刀口带((900,1125] / (700,925])的施法占比接近 0,那么**这一整类都不值得接**,
      包括已经接了的 Zeus。**先买那个读数,再谈剩下 7 个。**
+   - **⚠️ 2026-09-04 就地更正一处前提**:本条(以及 `zusaether` 的登记)里那句
+     「离线帧世界对每个 `GetSpecialValue` key 都答 0」**只对 `items.txt` 里的常量成立**。
+     对**英雄自己 KV 里的 key** 它已经不成立了 —— `tests/mock/replay_fixture.lua`
+     现在从 `special_value_shapes.lua` 发这些读数(`kvgetters`,
+     报告 `iterations/reports/hero/20260904T045632Z.md`)。
+     `aetherRange` 仍然答不了(**Aether Lens 住在 `items.txt`,不在任何快照的定义域里**),
+     所以 `zusaether` 的 (a) 仍然只能靠波次买;**但不要再把这句话当成一条通用的墙去引用**。
 
 -85. **全树还有 46 个「声明了没人读」的数字常量,而它们不是 46 笔杂账,是**一个模板的残留**(GH #463)。**
    2026-09-03T19:51Z 那轮把焦点五英雄的 5 个删干净(**5 → 0**,可证 no-op),并把这一类
@@ -87,9 +112,15 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      的判据是「key 在**拥有该技能的英雄**的 KV 里存不存在」,而它取的每一份 KV 都是
      `npc_dota_hero_*.txt` ⇒ **住在 `items.txt` 里的常量从来不在本仓任何普查的定义域内**。
      「英雄文件里手写的**物品**数值」是一整类没人扫过的东西,`aetherRange` 只是第一个。
-   - **⚠️ 条件 (a) 买不到 fixture**:离线帧世界对每个 `GetSpecialValue` key 都答 0
-     (与 `lionsplash`/GH #162 同一堵墙),armed 腿在每一帧都回落 shipped。
+   - **⚠️ 条件 (a) 买不到 fixture**:armed 腿在每一帧都回落 shipped,
      要买 (a) 只能靠波次上的检测器(25 单位圆环 + 先贴近再施法)。
+     **2026-09-04 更正这条的理由**:原文写的是「离线帧世界对每个 `GetSpecialValue` key
+     都答 0(与 `lionsplash`/GH #162 同一堵墙)」—— **那堵墙已经不是通用的了**
+     (`kvgetters`,报告 `iterations/reports/hero/20260904T045632Z.md`)。
+     本条仍然买不到 fixture,但**理由收窄成一条具体的**:
+     `item_aether_lens/cast_range_bonus` 住在 **`items.txt`**,而本仓所有 KV 快照
+     取的都是 `npc_dota_hero_*.txt` ⇒ **它不在任何普查/快照的定义域里**
+     —— 也就是本条 §3 自己发现的那个盲区。
 
 -83. **`zeusaghs5` 落地了,盯着入集裁定** —— 本轮加的 pos_5 Zeus **Aghs 提前到 slot 5**
    的 gated 候选(`bots/BotLib/hero_zuus.lua` + `tests/test_zeus_aghs_build.lua`,
@@ -4018,6 +4049,71 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T04:56Z(报告 `iterations/reports/hero/20260904T045632Z.md`;轴 **`kvgetters`,仪器修复**)
+  **改 4 个 + 新增 2 个:`tests/mock/replay_fixture.lua`(`value_ladder`/`rank_step`/`has_kv`
+  + `GetSpecialValueInt`/`Float`/`GetCastRange` 上规格)、`tests/test_cm_ult_reach_meter_domain.lua` §4、
+  `tests/test_cm_t10_payoff.lua` §4、`tests/test_replay_260820_axe_blink_kill.lua` caveat 2 + 一条用例
+  (三处都是**改指向不删断言**);新增 `tests/test_fixture_kv_getters.lua`(17 用例)与
+  `tools/agent/mutstand_kvgetters.sh`(**8 变异 8 中**,含 1 正对照)。
+  `state.json:kvgetters_20260904T` 已登记;**`bots/` + `game/` 零行、零新 gate id、
+  零 arm/promote、零 AWS、不申请波次**;`queue.json` / `test_set.md` 本轮无新增。
+  charter backlog 新增 `-87`,并就地更正 `-86` / `-84` 各一处前提。**
+  - 选题:OWNER_PRIORITIES 无本组项;open `[hero]` 七条(#471/#463/#459 作用域在总监、
+    #465 待裁、#453/#451 是 tinker 非焦点、#447 等录像组)+ backlog 顶上五条**全部在等别人**
+    ⇒ 走工作流步骤 1 的兜底,入口选 Axe(`hero-2` 是本仓**登记最久的未取杠杆**,13 天)。
+  - **⭐⭐ 去看那道墙,墙不在。** 「离线帧世界对每个 `GetSpecialValue` key 都答 0」——
+    被 **三条**独立杠杆当成**结构性**的墙写进档案(GH #162 `lionsplash`、`zusaether`、
+    `hero-2` 预检)——**从来不是结构性的**:`GetSpecialValueInt`/`Float`/`GetCastRange`
+    只是停在 `mock/bot_api.lua` 的通用 `^Get` 默认值上,而喂它们的 KV **就躺在
+    `tests/mock/special_value_shapes.lua` 里**(2026-09-01 那轮给 `GetManaCost` 接的同一份)。
+    那一轮把结论写成了通用的(「一个没上规格的 getter 答 0 是**另一个谓词**」),
+    **然后只上了一个 getter**。
+  - **域价钱**(`tests/fixtures` + `tests/frames`):110 文件 / **4811 句柄**;
+    焦点五 **872**,其中有 KV 块 **779**(缺的 93 = 内在 58 + **通用**天赋行 35,
+    住在 `npc_abilities.txt`,**按构造在域外**);**402** 个句柄的 `GetCastRange` 答 0;
+    **5306** 个 (句柄,key) 对的 `GetSpecialValue*` 答 0。
+  - **⭐ 失效方向与上一次相反,所以更难看见**:卡住的 `GetManaCost` **高估**可达性(免费魔法);
+    卡住的这两个让**半径更小、阈值更低** ⇒ **制造「这条分支到不了」的读数**,
+    正是悄悄退掉杠杆的那个方向。现场:`X.ConsiderR` 走 `GetCastRange()+200`,
+    Culling 射程 175 ⇒ 引擎 **375u**,而每一次 fixture 驱动的运行走 **200u**,短 47%。
+  - **拒绝做的四件事各自写成断言**:条件项(`special_bonus_*`)**不折叠**(引擎已折,
+    再折是双算;M5 钉这一格)、NO-BASE key 答 0、不存在的 key 答 0
+    (后两条**就是引擎的答案**,**没有**顺手「修好」`lionsplash`)、非焦点英雄一律不动。
+    `AbilityCastPoint`(758 句柄)/ `AbilityCooldown` **故意留到下一撮**(backlog `-87`)。
+  - **打红三条,全是兄弟测试按设计举手,全部改指向**:
+    (甲) `axe_blink_kill` —— `axe_berserkers_call/radius` 的 KV base **恰好 315 = 守卫的 fallback**
+    ⇒ **数字逐字不变**,变的只是两条等价路径里哪条供的;断言改成钉**等式**。
+    (乙) `cm_ult_reach_meter` §4 —— 250 条零出价变 **249**:`X.ConsiderQImpl` 前四行读
+    `radius`/`nova_damage`/`GetCastRange`,三个全 0 ⇒ 它在 **32 单位圈**里搜一个
+    **半径 0、伤害 0** 的 AoE,**在任何一帧都不可能返回东西** —— **那份沉默是仪器的**。
+    活的那一条**按名字登记不按数字计数**(GH #465 的刀口):
+    `f_260820_182906_lion_drain_survived.lua :: ConsiderQ = 0.75`。
+    (丙) `cm_t10_payoff` §4 —— 决策通道从全哑变成**一帧活着**,而它的失败文本自己
+    写着下一步(「re-run both worlds against it」)⇒ **就地做完**:三个世界
+    (baseline / +200HP / +144MP)在那一帧**下同一个决策** ⇒ **t10 裁定不受影响**。
+  - **`hero-2` 的障碍减半,没有清空**:用修好的仪器端到端重量(`tests/fixtures` 口径)
+    28 帧带 Axe / **22 ready**(rank1×20, rank2×2)/ 环内敌方英雄帧 **200u→2、375u→3** /
+    **带内 0**。那个 **3 与兄弟文件 `test_axe_culling_band_power.lua` 登记的 3 逐位相同**,
+    而那个文件是**绕开 loader** 直接解析 KV 算的 ⇒ **仪器与一份没用它的手算对上了**。
+    带内仍是 0(与预登记功率计算一致,期望 ~0.07)⇒ **修仪器没有凭空造出那一帧**,
+    §5c 已预写判读方向:**哪天非零就是它等的帧,去切 fixture,不许放松断言**。
+    退休的是**解释**,不是障碍:第一顺位障碍仍是**归档 306 局里 Axe 出现 0 局**
+    (批测台 2026-08-23),GH #46 现成答案 `--find axe → 899/910/911`。**球仍在批测台。**
+  - 门:开工自检第一条命令**又**被证据纪律 3 拒答(`REFUSED`,`SELFCHECK_EXIT=2`,**不是通过**);
+    改对后 **worst exit 3**(`FINDINGS = cadence owed-executions trunk-red(lua)`;
+    **`UNCERTIFIABLE = trunk-red(python)` ⇒ trunk 的 python 那一侧本轮没人看过**)。
+    `trunk-red(lua)` 已定位 = `test_towercreep_stale_domain.lua`,**两棵树同红,不是本轮的**。
+    静态 **`GATE_EXIT=0` / `luacheck bots game: 0 warnings`**(冷启自装,**没用 `RULE6_BYPASS`**)。
+    动态:新文件 **17/0**、`cm_ult_reach_meter` **8/0**、`cm_t10_payoff` **11/0**、
+    `axe_blink_kill` **19/0**、变异台 **8/8**;
+    **全量套件按首字母分片、两棵树并跑做 mod-vs-base 差分,未跑完 —— 限定不是通过**(GH #124)。
+  - **⚠️ 变异台 M7 存活并如实记下**:去掉 `has_kv` 守卫**不改变任何答案**
+    (快照里没有非焦点英雄的块,`value_ladder` 照样返回 nil)⇒ §2c **看不见它**;
+    改由 §6a 的**源码 tripwire** 抓 —— 一个**不改变任何读数**的东西,那是唯一诚实的抓法。
+  - **交出去的棒**:无新开 issue / 无 queue 请求 / 未提议入 `test_set.md`(没有行为改动)。
+    `queue.json:hero-2` 的 acceptance 里那句被反复引用的「离线世界答不了 `GetSpecialValue`」
+    **已不成立**,已写进报告 §7 与本条,**下一位不要再拿它当不做 fixture 的理由**。
+
 - 2026-09-04T01:58Z(报告 `iterations/reports/hero/20260904T015833Z.md`;轴 **新候选 `zusaether`**)
   **改 2 个 + 新增 2 个:`bots/BotLib/hero_zuus.lua`(三处施法距离消费者上闸 +
   生产者接进 `aetherlens` helper)、`tests/test_aether_lens_range_bonus.lua`
@@ -4055,7 +4151,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - 门:开工自检 **worst exit 3**(FINDINGS=`cadence`;**UNCERTIFIABLE=`trunk-red(python)`
     ⇒ trunk 的 python 那一侧本轮没人看过**;两条腿 NOT RUN;第一条命令又被证据纪律 3
     拒答,改对后才有读数)。静态 **`GATE_EXIT=0` / 0 warnings**(冷启自装,**没用 `RULE6_BYPASS`**)。
-    动态:新文件 **18/0**、`zuus` **139/0**、`aether` **34/0**、
+    动态:新文件 **17/0**、`zuus` **139/0**、`aether` **34/0**、
     `test_gate_claim_consistency` **16/0**、`test_pending_rulings.py` **142/0**;
     **全量套件未跑**(~100min,GH #124)—— **限定不是通过**。
   - **⚠️ 中途被 `test_gate_claim_consistency` 抓了两次,两次都是我的注释**:

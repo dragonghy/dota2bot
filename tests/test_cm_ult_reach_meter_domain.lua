@@ -422,9 +422,34 @@ tests['3. mana can never decide the two NEGATED castable sites -- closed form'] 
 end
 
 -- ===========================================================================
-tests['4. the 250 zero desires come with the five constants that cause them'] = function()
+-- RE-ANCHORED 2026-09-04 (hero).  This case used to assert a flat
+-- `nZeroBids == 250` -- all five decisions silent on all fifty instants -- and
+-- section 5 next door already wrote down the condition under which that would
+-- stop being true: "every count in sections 4 and 5 was taken with the getter
+-- answering 0, so re-measure them before editing this case".
+--
+-- It came true for a DIFFERENT getter than section 5 guards.
+-- tests/mock/replay_fixture.lua now serves GetSpecialValue*/GetCastRange out of
+-- the KV snapshot it already held (tests/test_fixture_kv_getters.lua), and
+-- X.ConsiderQImpl reads three of them on its first four lines --
+-- `radius`, `nova_damage`, and `GetCastRange() + aetherRange + 32`.  With all
+-- three at 0 the function ran a 32-unit search for a 0-damage nuke of radius 0,
+-- so its silence was the instrument's, not the hero's.
+--
+-- ONE bid came alive, and it is named rather than counted.  A bare `== 249`
+-- would hide WHICH decision woke up, and the cheapest way out of the next red
+-- would be to edit the number -- the failure mode GH #465 wrote up.  Three
+-- separate reds are wanted here: a new member (some other decision reached),
+-- a lost member (this one stopped reaching), and a changed desire.
+local LIVE_BIDS = {
+    -- path :: function = the desire it returns
+    ['tests/fixtures/f_260820_182906_lion_drain_survived.lua :: ConsiderQ'] = 0.75,
+}
+
+tests['4. the zero desires come with the constants that cause them -- and the one that no longer does'] = function()
     local nInstants, nZeroBids = 0, 0
     local nMode, nGoing, nRetreat, nAoE, nRadius0 = 0, 0, 0, 0, 0
+    local live = {}
     for _, path in ipairs(corpus_paths()) do
         if cm_record(path) ~= nil then
             nInstants = nInstants + 1
@@ -435,7 +460,11 @@ tests['4. the 250 zero desires come with the five constants that cause them'] = 
                                   'ConsiderArcaneAura', 'ConsiderCrystalClone' }) do
                 local ok, d = pcall(function() return (X[fn]()) end)
                 assert(ok, fn .. ' raised on ' .. path .. ': ' .. tostring(d))
-                if d == 0 then nZeroBids = nZeroBids + 1 end
+                if d == 0 then
+                    nZeroBids = nZeroBids + 1
+                else
+                    live[path .. ' :: ' .. fn] = d
+                end
             end
             if (bot:GetActiveMode() or 0) == 0 then nMode = nMode + 1 end
             if not J.IsGoingOnSomeone(bot) then nGoing = nGoing + 1 end
@@ -447,8 +476,28 @@ tests['4. the 250 zero desires come with the five constants that cause them'] = 
         end
     end
     assert(nInstants == 50, 'instants moved: ' .. nInstants)
-    assert(nZeroBids == 250, 'expected all 5 x 50 bids to be zero, got ' .. nZeroBids)
-    -- ... and here is why that is not a null result.
+
+    -- The registry, both directions, each red naming its own member.
+    for key, want in pairs(LIVE_BIDS) do
+        assert(live[key] ~= nil,
+            'a decision this file records as LIVE went silent: ' .. key
+            .. ' -- do not delete the row, find out what silenced it')
+        assert(live[key] == want,
+            key .. ' bid ' .. tostring(live[key]) .. ', recorded ' .. tostring(want))
+    end
+    local nLive = 0
+    for key, d in pairs(live) do
+        nLive = nLive + 1
+        assert(LIVE_BIDS[key] ~= nil,
+            'a NEW live decision on the corpus: ' .. key .. ' bid ' .. tostring(d)
+            .. ' -- that is a finding, not a regression. Record it here with the '
+            .. 'reason it woke up, the way the ConsiderQ row is recorded')
+    end
+    assert(nZeroBids + nLive == 5 * nInstants,
+        'the split must be exhaustive: ' .. nZeroBids .. ' + ' .. nLive
+        .. ' ~= ' .. (5 * nInstants))
+
+    -- ... and here is why the remaining silence is still not a null result.
     assert(nMode == 50, 'GetActiveMode is the mock default on every instant')
     assert(nGoing == 50, 'J.IsGoingOnSomeone is false on every instant')
     assert(nRetreat == 50, 'J.IsRetreating is false on every instant')

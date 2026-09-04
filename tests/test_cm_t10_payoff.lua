@@ -311,18 +311,56 @@ end
 -- ---------------------------------------------------------------------------
 -- 4. The channels that came back empty, and WHY -- so nobody spends the zeros.
 
-tests['[hero] the decision channel is silent for BOTH worlds, and says so'] = function()
-    assert((C.baseline_acted or 0) == 0,
-        'the shipped file now queues an ability on some in-domain frame ('
-        .. tostring(C.baseline_acted) .. '). The decision channel just came alive '
-        .. '-- re-run both worlds against it, it outranks every other channel here.')
+-- RE-ANCHORED 2026-09-04 (hero).  This case used to require
+-- `C.baseline_acted == 0` -- the shipped file queues nothing on any in-domain
+-- frame -- and its own failure text named the follow-up: "the decision channel
+-- just came alive -- re-run both worlds against it, it outranks every other
+-- channel here".  It came alive, and the follow-up is done here rather than in
+-- an issue, because that is what the sentence asked for.
+--
+-- WHAT WOKE IT.  Not this hero and not this sweep: tests/mock/replay_fixture.lua
+-- now serves GetSpecialValue*/GetCastRange from the KV snapshot it already held
+-- (tests/test_fixture_kv_getters.lua).  X.ConsiderQImpl reads `radius`,
+-- `nova_damage` and `GetCastRange()` on its first four lines, so with all three
+-- at 0 it searched a 32-unit circle for a 0-damage nuke of radius 0 and could
+-- not return anything on ANY frame.  The old zero was the instrument's.
+--
+-- WHAT IT CHANGES FOR THE t10 VERDICT: nothing, and that is a measurement, not
+-- a hope.  Exactly one in-domain frame acts, and all THREE worlds queue the
+-- same action on it, so the channel is alive and still cannot separate the
+-- pair.  The per-frame `r.d0 == r.dH and r.d0 == r.dI` loop below is now doing
+-- real work on that frame instead of comparing three dashes -- which is the M4
+-- escape the next case is about, closed by the world coming alive rather than
+-- by an assertion.
+local ACTED_FRAME  = 'tests/fixtures/f_260820_182906_lion_drain_survived.lua'
+local ACTED_ACTION = 'ActionQueue_UseAbilityOnLocation:crystal_maiden_crystal_nova'
+
+tests['[hero] the decision channel is alive on ONE frame, and all three worlds agree there'] = function()
+    assert((C.baseline_acted or 0) == 1,
+        'in-domain frames on which the shipped file queues an ability: '
+        .. tostring(C.baseline_acted) .. ', recorded 1. More is a FINDING -- '
+        .. 'name the new frames here with what they queue; fewer means something '
+        .. 'silenced the channel again, and the instrument is the first suspect.')
+    local nActed = 0
+    for _, r in ipairs(ROWS) do
+        if r.d0 ~= '-' and r.d0 ~= 'ERROR' then
+            nActed = nActed + 1
+            assert(r.fix == ACTED_FRAME,
+                'the acting frame moved to ' .. r.fix .. '; record it rather than '
+                .. 'widening this assertion')
+            assert(r.d0:find(ACTED_ACTION, 1, true) ~= nil,
+                'the acting frame queues ' .. r.d0 .. ', recorded ' .. ACTED_ACTION)
+        end
+    end
+    assert(nActed == 1, 'rows that acted: ' .. nActed)
     assert((C.hp_world_changed or 0) == 0 and (C.int_world_changed or 0) == 0,
         'a talent world changed the queued decision; that is exactly the evidence '
         .. 'this decision lacked')
     assert((C.errors or 0) == 0,
         tostring(C.errors) .. ' world(s) raised instead of deciding; a silent '
         .. 'channel that is silent because it crashed proves nothing')
-    -- Why it is silent, measured: this is what makes the zero UNDERPOWERED.
+    -- Why the OTHER frames are silent, measured: this is what makes the
+    -- remaining zeros UNDERPOWERED (49 in-domain frames, 1 of them acting).
     assert((C.channel_no_enemy_1600 or 0) >= 1,
         'no in-domain frame is enemy-free any more; the "the corpus is mostly '
         .. 'quiet frames" half of the explanation no longer holds')

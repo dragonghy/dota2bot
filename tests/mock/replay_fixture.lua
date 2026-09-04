@@ -65,22 +65,83 @@ M.CLASS_TO_ITEM = {
 -- this narrows the vacuity, it does not close it.  A non-focus hero's mana
 -- clause is still dead, and a reading taken on one must not be quoted as though
 -- the price were charged.  Widening the snapshot is what closes it.
-local function mana_ladder(unit_name, ability_name)
+--
+-- 2026-09-04 (hero).  The clause above was the FIRST of these getters to be
+-- specced, and it was specced alone.  Three more were left on the generic `^Get`
+-- default, answering 0 for every ability on every frame, and the KV that answers
+-- them was already in the same snapshot this function reads:
+--
+--     GetSpecialValueInt / GetSpecialValueFloat   AbilityValues/<key>/value
+--     GetCastRange                                AbilityCastRange
+--
+-- Measured over the corpus (tests/test_fixture_kv_getters.lua): 109 fixtures,
+-- 4759 ability handles, of which 845 belong to a focus hero and 758 carry a KV
+-- block here.  391 of those 758 carry an AbilityCastRange base -- 391 handles
+-- whose GetCastRange() answered 0 -- and the value keys with a base value come
+-- to 5169 (handle, key) pairs, every one of which read 0.
+--
+-- The consequence is the same one the mana clause had, and it is not "a small
+-- number": a silent 0 out of an unspecced getter is a DIFFERENT PREDICATE.  The
+-- worked example is the registered `hero-2` lever's own branch.  X.ConsiderR in
+-- hero_axe.lua reads `nCastRange = abilityR:GetCastRange()` and then iterates
+-- `J.GetAroundEnemyHeroList( nCastRange + 200 )`.  Culling Blade's cast range is
+-- 175, so the ring the engine walks is 375 -- and the ring every fixture-driven
+-- run of that branch has walked is 200.  Any reading of the form "no fixture
+-- reaches ConsiderR's kill loop" was taken through a ring 47% short.
+--
+-- WHAT IS SERVED, AND IN WHICH DIRECTION IT IS WRONG
+--   * Only the `base` (per-level "a b c") string, rank-indexed and clamped.
+--   * The conditional half -- special_bonus_*, LinkedSpecialBonus, scepter and
+--     shard rows -- is NOT applied.  In game the engine FOLDS a trained talent
+--     into the base before the handle answers, so this UNDERSTATES a read taken
+--     on a hero who trained the row.  Understating is the safe direction for
+--     every claim of the shape "this branch is not reached"; it is the unsafe
+--     direction for "this branch fires", so a test that needs the fold must say
+--     so and drive it explicitly.
+--   * A key with no base at all (NO-BASE in the snapshot's vocabulary, e.g.
+--     lion_finger_of_death/splash_radius) answers 0 -- which is what the engine
+--     answers too, and is the whole content of GH #162.  A key absent from the
+--     ability answers 0 for the same reason.  Neither is a stub; both are the
+--     truthful read.
+--   * Non-focus heroes are untouched: no block here, no spec installed, still 0.
+--     A reading taken on one must not be quoted as though the KV were charged.
+--   * AbilityCastPoint (also on the generic default, 758 handles) and
+--     AbilityCooldown are deliberately NOT served this round -- one small batch
+--     at a time, each with its own measurement of what it turns red.
+local function value_ladder(unit_name, ability_name, sKey)
     local short = unit_name:gsub('^npc_dota_hero_', '')
     local abils = special_value_shapes.SHAPES[short]
     if abils == nil then return nil end
     local entry = abils[ability_name]
     if entry == nil then return nil end
-    local mc = entry['AbilityManaCost']
-    if mc == nil or mc.base == nil then return nil end
+    local kv = entry[sKey]
+    if kv == nil or kv.base == nil then return nil end
     local steps = {}
-    for tok in mc.base:gmatch('%S+') do
+    for tok in kv.base:gmatch('%S+') do
         local n = tonumber(tok)
         if n == nil then return nil end
         steps[#steps + 1] = n
     end
     if #steps == 0 then return nil end
     return steps
+end
+
+--- Which per-level step a rank reads.  Rank 0 (untrained) reads step 1 and a
+--- rank past the ladder's end pays its last step rather than nil -- talent rows
+--- and the 3-step ultimate ladders both hit that clamp.
+local function rank_step(steps, nRank)
+    if nRank == nil or nRank < 1 then return steps[1] end
+    return steps[math.min(nRank, #steps)]
+end
+
+--- Does this hero have a KV block here at all?  Nothing is specced when not:
+--- see the non-focus bound above.
+local function has_kv(unit_name)
+    return special_value_shapes.SHAPES[unit_name:gsub('^npc_dota_hero_', '')] ~= nil
+end
+
+local function mana_ladder(unit_name, ability_name)
+    return value_ladder(unit_name, ability_name, 'AbilityManaCost')
 end
 
 --- Real engine ability slot + IsUltimate for one hero's dumped abilities.
@@ -527,6 +588,30 @@ function M.load(path, sSubject)
                         local rank = self:GetLevel()
                         if rank < 1 then return steps[1] end
                         return steps[math.min(rank, #steps)]
+                    end
+                end
+                -- The rest of the KV this loader holds, on the same ladder and
+                -- the same clamp.  See value_ladder's header for what is served,
+                -- what is refused, and which way each refusal is wrong.
+                if has_kv(u.name) then
+                    sp.GetSpecialValueFloat = function(self, sKey)
+                        local steps = value_ladder(u.name, a.name, sKey)
+                        if steps == nil then return 0 end
+                        return rank_step(steps, self:GetLevel())
+                    end
+                    -- The engine truncates toward zero on an Int read; the one
+                    -- fractional focus-five base this tree reads is pinned by
+                    -- tests/test_special_value_shape.lua.
+                    sp.GetSpecialValueInt = function(self, sKey)
+                        local v = self:GetSpecialValueFloat(sKey)
+                        if v >= 0 then return math.floor(v) end
+                        return -math.floor(-v)
+                    end
+                    local cast_range = value_ladder(u.name, a.name, 'AbilityCastRange')
+                    if cast_range ~= nil then
+                        sp.GetCastRange = function(self)
+                            return rank_step(cast_range, self:GetLevel())
+                        end
                     end
                 end
                 sp.IsTrained = function(self) return self:GetLevel() > 0 end

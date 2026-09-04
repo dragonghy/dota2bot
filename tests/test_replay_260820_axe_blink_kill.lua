@@ -47,10 +47,18 @@
 --      specs. The conclusion does not depend on the value: any cost <= 137
 --      leaves the cooldown as the sole reason Call is unavailable.
 --   2. The Call radius likewise is not in the dump. The guard reads
---      GetSpecialValueInt('radius') and falls back to 315; the fixture world
---      answers 0 for that reader, so the 315 fallback is the branch under test
---      and a test below asserts exactly that (if the dumper ever starts
---      carrying specials, this test says so instead of silently drifting).
+--      GetSpecialValueInt('radius') and falls back to 315.
+--      RE-ANCHORED 2026-09-04 (hero), which is what the sentence that used to
+--      close this caveat asked for: "if the dumper ever starts carrying
+--      specials, this test says so instead of silently drifting". It is not the
+--      dumper that changed -- tests/mock/replay_fixture.lua now serves
+--      GetSpecialValue* out of the KV snapshot it already held
+--      (tests/test_fixture_kv_getters.lua), so the reader answers 315 from KV
+--      instead of 0-and-fallback. The VALUE is unchanged, so every number below
+--      is unchanged; what changed is which of the two equal paths produced it,
+--      and the branch under test is now the KV path. The test below asserts the
+--      equality rather than either constant, so a rebalance of Berserker's Call
+--      turns this file red instead of leaving the caveat quietly false.
 --   3. The consumer adds RandomVector(150) to the landing point. The tests use
 --      the un-jittered point and separately assert that no jitter of that size
 --      can bring a second enemy inside the radius on this frame.
@@ -126,11 +134,15 @@ tests['ground truth: Call is unavailable by COOLDOWN only, so the guard reaches 
         'but he could pay for it -- the cooldown is the whole reason')
 end
 
-tests['ground truth: the crowd clause runs on the 315 fallback, not on a dumped special'] = function()
+tests['ground truth: the crowd clause reads 315, whichever of its two paths supplies it'] = function()
     local _, _, call = load_axe()
-    assert(call:GetSpecialValueInt('radius') == 0,
-        'the fixture world does not carry ability specials, so the guard uses '
-        .. 'its 315 fallback; if this ever changes, re-anchor caveat 2')
+    local nRead = call:GetSpecialValueInt('radius')
+    assert(nRead == CALL_RADIUS_FALLBACK,
+        'the guard reads GetSpecialValueInt(\'radius\') and falls back to '
+        .. CALL_RADIUS_FALLBACK .. '; the fixture world now serves the KV, and '
+        .. 'the KV says the same number, so the arithmetic below is untouched. '
+        .. 'Got ' .. tostring(nRead) .. ' -- if Berserker\'s Call was rebalanced, '
+        .. 're-anchor caveat 2 and the fallback in hero_axe.lua with it')
 end
 
 tests['ground truth: exactly ONE enemy on the landing point'] = function()
