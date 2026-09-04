@@ -10325,3 +10325,66 @@
     (**exit 2 不是通过**)。
   - **Token 用量**:`TOKENS total_in=16,605,844 out=101,087 turns=96`(见报告 §10)。
   - 完整报告:`iterations/reports/replay-check/20260903T220500Z.md`
+- **2026-09-04T01:05Z(W44 首次宽扫;买到 `wandbleed2` 条件 (a) 的**承重那一面**,
+  而同一次扫描抓到一个**会造触发**的量具缺陷 —— 本轮最该被读的是后者)**:
+  **⭐⭐ `hp_pct == 0` 不是死亡。** dumper 把 `hp_pct` 过 `round3` 四舍五入到三位小数
+  (`dumper/main.go`),站在 **1 HP** 上的英雄于是读作 `0.0`,而同一行的 `hp` **仍如实写着 1**。
+  本目录整个家族拿 `hp_pct <= 0` 当尸体过滤器 —— 它**把活人删掉**,
+  而删掉一个环内敌人的方向**正是凭空造出触发的那个方向**(LIMIT 3 的危险方向,从新的一侧走进来)。
+  **宽扫 42/42(波仍在飞,不是整波分母);深查 2 局完整逐帧 + 34 局 96 个 episode 逐帧钉点。
+  未改 `bots/`/`game/` 任何一行。**
+  - **抓现行的那一行**:`20260904_003457_slot3`(seed 3749)pudge `t=1064.20`,
+    `wandbleed_trigger.py` 用**自己的 LIMIT 6** 在 **armed 腿**上多报了一次独占域触发,
+    而它**自相矛盾**:只喝了 **1 层**,闸的地板是 **5**。
+  - **逐帧**:`skeleton_king` 就在 **299.6 u** 外,`hp=1 / hp_pct=0`,**活着** ——
+    `modifier_skeleton_king_reincarnation_scepter_active`(`t=1062.8` 挂 / `1068.8` 随 DEATH 摘)、
+    **在走**(`(-2736,4044)→(-2197,4159)`)、`t=1065.4` 开相位鞋、radiance 每 1.0 s 烧 pudge;
+    `entities.alive_at` 答 **ALIVE**。删掉他环读 **5464.8**(下一个敌人)⇒ 提升进独占域;
+    留下他环读 **299.6** ⇒ 这是 **用途1**,与「1 层」逐字自洽。
+    **第二个独立帧证人**:`20260904_003503_slot1` WK `t=920.5–925.5` 六帧 `hp=1`、**走了 1437 u**、
+    `t=921.1` **主动开相位鞋**(物品激活 = 可操控的活人),`t=926.5` 才真躺下。
+  - **普查(42 局,先帧后聚合)**:1,473,014 行里 **175 行**「`hp>0` 而 `hp_pct<=0`」,**34/42 局**;
+    **175 行全部 `hp == 1`**(尖峰不是分布);WK **125**、shadow_shaman 16。
+    聚成 **96 episode**:`alive_at` 判活 **90/96**、打出过伤害 **77/96**、
+    **91/96 的 episode 里 1000 u 内有敌方英雄** ⇐ 这 91 个就是「一次环读数会丢掉一个正在打架的身体」。
+    另 **6/96** 被判死(多半是死亡瞬间 `hp` 还写 1),**据实登记**。
+  - **⛔ 方向是新的**:GH #78/#176 那一族量的是**尸体漏过 `hp_pct>0` 当活人**
+    (`entity_key_audit.py` 整个文件都是那个方向);**「活人被当尸体删掉」此前没有任何工具量过。**
+    核过两处、都**不是**「全错」:`entities.alive_at`(有 DEATH 事件时)**答对了**,
+    错的是兜底 `_bracket_alive`(同帧 `alive_at=True` / `_bracket_alive=False`);
+    `wk_reincarn_trigger_domain.py:241` 的 `hp_pct > 0.5` 是**健康度不是生死** ⇒ 不受影响。
+  - **交付**:`wandbleed_trigger.py` 的 **LIMIT 7**(`is_live = hp>0 or hp_pct>0`,真尸体照旧丢 ——
+    吞掉 LIMIT 3 的「修复」是拿假触发换漏触发,**两边都不会红**)+ **LIMIT 8**
+    (`SOURCE_RING=4000`、新列 `wandbleed2_source_absent`,**只有一个方向硬**:
+    `GetNearbyHeroes` 只看得见本方视野 ⇒ 本读数是引擎的**上界** ⇒ **0 才证明引擎也是 0**);
+    `--selfcheck` **26/0**;新 `tests/test_wandbleed_trigger_liveness.py` **23/0**
+    (`round3`/层数地板 5/`hp<0.45`/4000 **全部从树上读**,并在同一文件里把旧过滤器打回去,
+    证明同一帧会长出那一行、且修复**只减不增**);变异台 **5/5 CAUGHT / 0 SURVIVED**,
+    还原后基线 0/0(**每次运行前后清 `__pycache__`**,上一轮教训照办)。
+  - **`VERIFY id=wandbleed2 verdict=WORKING episodes=1`** —— 理由**只有**§DU.5.2 那一面:
+    唯一存活的独占触发(`20260904_003441_slot5` CM `t=502.30`,zuus 大招 211+15 打到 0.317,
+    zuus **1707.7 u**、1000 外、7 层)**4000 内有活来源** ⇒ 该留的留下了,`source_absent = 0/1`。
+    ⛔ **拦截那一面 `DOMAIN-NOT-REACHED`**(baseline 独占域 **0** ⇒ 这波没有残留触发可拦),
+    按 §DU.5.3 **不得读成「测过没影响」**;**本轮买到的是不矛盾,不是效果**。
+  - **`VERIFY id=wandbleed verdict=WORKING episodes=1`**(同一帧四个合取项逐帧核齐)。
+  - ⛔ **分层(铁律 4(i-a)):42 局全部 `side=radiant`,`ba` 分层 0 局** ⇒
+    **本轮任何腿间比较都不构成结论**;条件 (a) 是**触发级逐帧**买的(章程 4a/§BW.3),不是差分买的。
+  - **本轮开的 issue**:**GH #470([bug])** —— 帧证据 + 机制 + 96 episode 普查 + 已修的那一件 +
+    **其余 26 文件 / 50 个裸 `hp_pct` 生死判据的待审清单**(明写「这是 grep 清单不是 26 份判决」),
+    建议验收是一个**普适检测器**(与 `test_mutstand_restore_trap.py` 同族)。
+  - **下一轮第一件事**:(1) **W44 整波(~96 局)重扫** —— 本轮只扫到飞行途中的 42 局,
+    且 `ba` 分层一局没有,§DU.5 四条预登记读法必读;(2) 接 **GH #467** 交回来的 `slotwait` 条件 (a)
+    (协同组点名可复用 `slotpush_domain.py` 的槽位映射;⚠️ 冷却要读 dumper 的
+    `snapshots[].abilities[].cd`,**不要读 mock** —— `IsActivated` 不在 spec 上,结构性为假);
+    (3) 深查补 `zusult`/`cmqreach`/`odaoe`(连续第三轮零 `VERIFY` 行);(4) 查 #470 回音。
+  - **欠账**:42 局 timeline 随容器回收(重扫命令见报告 §0);§2.2 那一帧的 fixture **未做**;
+    #419 第 11 轮 / #421 第 10 轮仍零评论。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`awsx s3 ls` **0**(`.dem` 39→66);
+    `sweep_run.sh` ×4 **全 0**(`unparseable` 合计 0);`--selfcheck` **0**(26/0);
+    新测试 **0**(23/0);变异台 **5/5/0**;42 局真语料 **0**;`luacheck_gate.sh` **0**。
+    自检 **`SELFCHECK_BARE_EXIT=3`**,`legs run: 9`,`FINDINGS: cadence`,
+    `UNCERTIFIABLE: trunk-red(python)`(`test_rc_wrapper.py`/`test_selfcheck_lua_leg.py`,
+    **容器无 `lua5.1`** ⇒ 不是通过也不是失败),`OWED_EXECUTION: none`。
+    ⛔ **证据纪律 3 第二十三次踩**:第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**)。
+  - **Token 用量**:`TOKENS total_in=16,963,848 out=80,391 turns=105`(报告 §9)。
+  - 完整报告:`iterations/reports/replay-check/20260904T010500Z.md`

@@ -166,6 +166,41 @@ LIMITS -- read before quoting a number.
     the exclusive domain is impossible there.  Baseline > 0 in the exclusive
     domain falsifies this script's branch partition, not the fix -- treat it as
     an instrument bug and report it as one.
+ 7. ⭐ `hp_pct == 0` IS NOT DEATH (replay-check 2026-09-04, W44, caught by
+    LIMIT 6 firing on the ARMED leg).  The dumper rounds `hp_pct` to three
+    decimals, so a hero standing at 1 HP with a four-figure max pool reads
+    exactly 0.0 while `hp` still reads 1.  The old corpse filter
+    (`hp_pct <= 0`) therefore DELETED a living, moving, damage-dealing enemy
+    from the ring, and an emptier ring promotes casts INTO the exclusive
+    column -- LIMIT 3's dangerous direction, arrived at from a new side.
+
+    Measured on the frame that caught it: 20260904_003457_slot3
+    (run ...3a74c4, seed 3749), pudge t=1064.20, hp_pct 0.388, 1 charge
+    drunk.  npc_dota_hero_skeleton_king sat 299.6 u away with hp=1 /
+    hp_pct=0 under `modifier_skeleton_king_reincarnation_scepter_active`
+    (added t=1062.8, removed t=1068.8 with his DEATH) -- moving
+    (-2736,4044 -> -2197,4159), phase-booting at t=1065.4, and burning pudge
+    with radiance every 1.0 s throughout.  `entities.alive_at`, the repo's
+    death-EVENT-anchored liveness, answers ALIVE on that frame.  With him
+    dropped the ring read 5464.8 u and the cast was promoted to "exclusive
+    wandbleed firing"; with him kept it reads 299.6 u and the cast is 用途1
+    (hp < 0.40, an enemy inside 1000) -- which its ONE charge already proved
+    independently, the gate needing five.
+    ⇒ Liveness here is `hp > 0 OR hp_pct > 0`, never `hp_pct` alone.  Census
+    over the 25 W44 games swept that round: 87 snapshot rows are alive-but-
+    zero-`hp_pct`, in 19 of 25 games, EVERY ONE of them at hp == 1, 57 of
+    them Wraith King.  This is the OPPOSITE direction to GH #78 / #176
+    (a corpse leaking through as alive); nothing in the family was measuring
+    a living hero deleted as a corpse.
+ 8. THE 4000 RING (`--source-ring`) is `J.IsWandBleedSourcePresent`, i.e. the
+    `wandbleed2` narrowing, read on the same pre-cast sample as LIMIT 2's
+    1000 ring and with the same liveness as LIMIT 7.  It is bounded in ONE
+    direction only, and the useful one: `bot:GetNearbyHeroes` sees only what
+    the bot's team can see, so this reader's count is an UPPER bound on the
+    engine's.  Count 0 therefore proves the engine also had 0 (the gate said
+    FALSE and blocked); count >= 1 does not prove the engine had >= 1.
+    ⇒ An armed-leg exclusive firing whose 4000 ring is EMPTY is a genuine
+    falsifier of the narrowing (§DU.5.2); a full ring is only consistency.
 """
 import argparse
 import collections
@@ -192,6 +227,8 @@ HP_MIN_EXCLUSIVE = 0.25  # below this, wandlimbo could also explain the cast --
                        # claim of this script IS that floor; if it moves and
                        # this does not, "shared_with_wandlimbo" mislabels casts.
 ENEMY_RING = 1000.0    # 用途1 / 用途2 / 用途4 all need an enemy inside this
+SOURCE_RING = 4000.0   # J.IsWandBleedSourcePresent's ring -- the 'wandbleed2'
+                       # narrowing (bots/FunLib/jmz_func.lua).  LIMIT 8.
 VMAX = 700.0           # u/s closing-speed bound for the ring margin (LIMIT 2);
                        # above the 550 u/s move cap on purpose -- slack here
                        # throws away real firings, tightness invents fake ones
@@ -215,6 +252,16 @@ def real_bodies(snaps):
     return {k for k, t0 in born.items() if t0 < 0.0}
 
 
+def is_live(s):
+    """LIMIT 7: `hp_pct` is rounded to 3 decimals, so 1 HP reads as 0.0.
+
+    A row counts as a living body when EITHER field is positive.  Using
+    `hp_pct` alone deletes a hero standing at 1 HP -- and an emptier ring is
+    the direction that INVENTS exclusive-domain firings.
+    """
+    return (s.get("hp") or 0) > 0 or (s.get("hp_pct") or 0) > 0
+
+
 def index(snaps, bodies):
     """by_ent: pre-horn bodies only (a CASTER cannot be an illusion).
 
@@ -224,8 +271,8 @@ def index(snaps, bodies):
     by_ent = collections.defaultdict(list)
     by_t = collections.defaultdict(list)
     for s in snaps:
-        if (s.get("hp_pct") or 0) <= 0:
-            continue          # LIMIT 3: corpses and frozen illusion streams
+        if not is_live(s):
+            continue          # LIMIT 3/7: corpses and frozen illusion streams
         by_t[round(s["t"], 3)].append(s)
         k = (s["hero"], s["idx"])
         if k in bodies:
@@ -353,6 +400,13 @@ def scan_game(tl, armed_side):
             continue
 
         out[leg]["exclusive"] += 1
+        # LIMIT 8: the 'wandbleed2' narrowing read on this same pre-cast
+        # sample.  An EMPTY 4000 ring on the ARMED leg is the one reading that
+        # falsifies the narrowing (§DU.5.2); on the baseline leg it is the
+        # population the narrowing exists to remove.
+        src_absent = d_pre == math.inf or d_pre > SOURCE_RING
+        if src_absent:
+            out[leg]["wandbleed2_source_absent"] += 1
         # The draught's own HEAL line, same 0.1 s stamp.  value = min(charges*15,
         # missing HP), so the count is EXACT only when the draught was not
         # overheal-capped -- see the docstring's warning.
@@ -369,6 +423,7 @@ def scan_game(tl, armed_side):
         if exact and charges < MIN_SHIPPED_CHARGES:
             out[leg]["charges_below_shipped_floor"] += 1
         rows.append({
+            "src4000_absent": src_absent,
             "heal": heal, "charges": charges, "charges_exact": exact,
             "missing_hp": round(missing, 1),
             "leg": leg, "hero": k[0], "idx": k[1], "t_cast": round(e["t"], 2),
@@ -564,6 +619,62 @@ def selfcheck():
     check("a draught with under one spare charge of headroom is not exact",
           not row_c["charges_exact"])
 
+    # --- LIMIT 7, pinned on the real W44 row that forced it -----------------
+    # 20260904_003457_slot3 (run ...3a74c4, seed 3749) pudge t=1064.20:
+    # skeleton_king 299.6 u away, hp=1, hp_pct=0 (rounded), ALIVE -- moving,
+    # phase-booting and burning pudge with radiance.  Dropping him read the
+    # ring as 5464.8 u and manufactured an exclusive firing on the ARMED leg.
+    one_hp = json.loads(json.dumps(tl))
+    for s in one_hp["snapshots"]:
+        if s["hero"] == "lina":
+            s["x"], s["hp"], s["hp_pct"] = 299.6, 1, 0.0
+    res10, _ = scan_game(one_hp, "radiant")
+    check("a 1-HP enemy (hp_pct rounds to 0.0) is ALIVE and blocks the cast",
+          res10["armed"]["exclusive"] == 0
+          and res10["armed"]["blocked_enemy_in_1000"] == 1)
+    # ... and the same row with a true corpse (hp AND hp_pct both 0) must
+    # still be dropped, or the fix would have swallowed LIMIT 3 with it.
+    corpse = json.loads(json.dumps(tl))
+    for s in corpse["snapshots"]:
+        if s["hero"] == "lina":
+            s["x"], s["hp"], s["hp_pct"] = 299.6, 0, 0.0
+    res11, _ = scan_game(corpse, "radiant")
+    check("a real corpse (hp==0 AND hp_pct==0) is still dropped from the ring",
+          res11["armed"]["exclusive"] == 1)
+    check("is_live splits the two by hp, not by hp_pct alone",
+          is_live({"hp": 1, "hp_pct": 0.0})
+          and not is_live({"hp": 0, "hp_pct": 0.0})
+          and is_live({"hp": 0, "hp_pct": 0.4}))
+
+    # --- LIMIT 8: the 'wandbleed2' 4000 ring on the exclusive rows -----------
+    # The baseline tl has lina at 4000.0 exactly, i.e. NOT outside the ring.
+    res12, row12 = scan_game(tl, "radiant")
+    check("an exclusive cast with a live enemy at 4000 u has its source PRESENT",
+          res12["armed"]["wandbleed2_source_absent"] == 0
+          and row12[0]["src4000_absent"] is False)
+    residue = json.loads(json.dumps(tl))
+    for s in residue["snapshots"]:
+        if s["hero"] == "lina":
+            s["x"] = 8381.0        # the GH #437 desk frame's residue distance
+    res13, row13 = scan_game(residue, "radiant")
+    check("an exclusive cast with the nearest live enemy at 8381 u is SOURCE-ABSENT",
+          res13["armed"]["exclusive"] == 1
+          and res13["armed"]["wandbleed2_source_absent"] == 1
+          and row13[0]["src4000_absent"] is True)
+    # LIMIT 7 and LIMIT 8 interact: the deleted 1-HP body is what turns a
+    # source-PRESENT frame into a source-ABSENT one, which on the armed leg
+    # reads as a falsification of the narrowing (§DU.5.2) that never happened.
+    residue_1hp = json.loads(json.dumps(residue))
+    residue_1hp["snapshots"] += [body("sk", 7, 3, t, 0.0, x=299.6)
+                                 for t in (-30.0, 9.0, 10.0, 11.0)]
+    for s in residue_1hp["snapshots"]:
+        if s["hero"] == "sk":
+            s["hp"], s["hp_pct"] = 1, 0.0
+    res14, _ = scan_game(residue_1hp, "radiant")
+    check("the 1-HP body keeps a source-absent armed row from being invented",
+          res14["armed"]["exclusive"] == 0
+          and res14["armed"]["wandbleed2_source_absent"] == 0)
+
     print("selfcheck: %d pass, %d fail" % tuple(ok))
     return 0 if ok[1] == 0 else 1
 
@@ -597,7 +708,8 @@ def main():
 
     keys = ("all_casts", "hp_below_45", "blocked_enemy_in_1000",
             "shared_with_wandlimbo", "blocked_slot6_occupied",
-            "no_hero_damage_2s", "exclusive", "charges_below_shipped_floor")
+            "no_hero_damage_2s", "exclusive", "charges_below_shipped_floor",
+            "wandbleed2_source_absent")
     layers = {"ab": collections.Counter(), "ba": collections.Counter()}
     all_rows, seen, skipped = [], 0, 0
     for path in sorted(a.timelines):
