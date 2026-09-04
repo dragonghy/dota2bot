@@ -128,5 +128,9 @@
     "GH #454: if this wave ran to completion on pure spot, settle billing-side single-wave cost against $0.90 and state explicitly whether the auto-invalidation clause fires.",
     "Report winrate_channel and mean.winrate_headroom verbatim (GH #352 / CT).",
     "W44 billing reconciliation has now been deferred FOUR rounds; it becomes readable once a budgets snapshot sits >11.3h past W44's shutdown."
+  ],
+  "issues_filed": [
+    "GH #486 [bug] co-armed register red on trunk, on campbind -- the id W46 is the first wave to pay for. Nesting, not conjunction; not a repeat of the pullcad trap.",
+    "GH #487 [batch] gate (iv) exit 2 on W45: the harvest round that wrote the nulls read clean, so an input-side gate can only be caught by the next LAUNCHING round, by blocking a launch."
   ]
 }
