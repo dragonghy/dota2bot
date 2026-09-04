@@ -427,14 +427,23 @@ tests['[census] one lever: eight pid-shaped call sites stay untouched'] = functi
     -- Read that file's header before picking the next one: four of the seven
     -- have NO caller in bots/ at all, and the two that do (aba_push.lua:584 and
     -- :587) never answer TRUE once on the whole fixture corpus.
-    assert(pidShaped == 7, 'expected exactly seven pid-shaped call sites left after ' ..
-        'the slotarb, slotdust and slotpush levers, found ' .. pidShaped .. ':\n  ' ..
+    -- 2026-09-03: seven -> FIVE. The fourth lever, 'slotwait' (commit dc63d791,
+    -- GH #467), converted the last two LIVE utils.lua sites --
+    -- HasTeamMemberWithCriticalItemInCooldown and ...SpellInCooldown. That
+    -- commit moved neither this pin nor its deliberate duplicate in
+    -- tests/test_slotdust_dust_arbitration.lua, so both went red together --
+    -- the duplication doing exactly the job its comment claims. The five that
+    -- remain are the DEAD half of the utils.lua cluster: no caller in bots/ at
+    -- all, which is why picking a next lever here now needs a caller first.
+    -- Re-derived from the scan, not relaxed.
+    assert(pidShaped == 5, 'expected exactly five pid-shaped call sites left after ' ..
+        'the slotarb, slotdust, slotpush and slotwait levers, found ' .. pidShaped .. ':\n  ' ..
         table.concat(pidSites, '\n  '))
     local nUtils = 0
     for _, s in ipairs(pidSites) do
         if s:match('bots/FunLib/utils%.lua') then nUtils = nUtils + 1 end
     end
-    assert(nUtils == 7, 'the utils.lua cluster moved: ' .. nUtils .. ' of 7')
+    assert(nUtils == 5, 'the utils.lua cluster moved: ' .. nUtils .. ' of 5')
     -- Registered, not fixed: a two-argument call whose first argument is a TEAM
     -- constant, not a slot. It spans two source lines, so the line-oriented
     -- census above cannot see it at all -- read it whole, or the count silently

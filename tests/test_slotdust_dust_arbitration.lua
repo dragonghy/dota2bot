@@ -469,13 +469,20 @@ tests['[census] one lever: eight pid-shaped call sites stay untouched'] = functi
     -- (tests/test_slotpush_highground_scan.lua). This assertion and the one in
     -- test_slotarb_camp_arbitration.lua are deliberate duplicates: two files
     -- carrying the same count cannot drift apart quietly.
-    assert(pidShaped == 7, 'expected exactly seven pid-shaped call sites left after the ' ..
-        'third lever, found ' .. pidShaped .. ':\n  ' .. table.concat(pidSites, '\n  '))
+    -- 2026-09-03: seven -> FIVE. The fourth lever, 'slotwait' (commit dc63d791,
+    -- GH #467), converted the last two LIVE utils.lua sites --
+    -- HasTeamMemberWithCriticalItemInCooldown and ...SpellInCooldown. That
+    -- commit did not move either pin, so both duplicates went red together,
+    -- which is the duplication working as designed rather than drifting. The
+    -- five that remain are still the utils.lua cluster and are the DEAD half:
+    -- no caller in bots/ at all. Re-derived from the scan, not relaxed.
+    assert(pidShaped == 5, 'expected exactly five pid-shaped call sites left after the ' ..
+        'fourth lever, found ' .. pidShaped .. ':\n  ' .. table.concat(pidSites, '\n  '))
     local nUtils = 0
     for _, s in ipairs(pidSites) do
         if s:match('bots/FunLib/utils%.lua') then nUtils = nUtils + 1 end
     end
-    assert(nUtils == 7, 'the remaining seven are no longer the utils.lua cluster: ' .. nUtils)
+    assert(nUtils == 5, 'the remaining five are no longer the utils.lua cluster: ' .. nUtils)
     assert(#other == 0, 'a new one-line GetTeamMember argument shape appeared:\n  ' ..
         table.concat(other, '\n  '))
 end
