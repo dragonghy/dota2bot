@@ -243,6 +243,64 @@ sub "$TEST" '                                if rem >= cd / 2 then s.orb_now = s
 score "M13" "serving the cooldown must REMOVE Orb passes"
 
 # ---------------------------------------------------------------------------
+# THE THIRD BATCH (2026-09-04): GetAbilityDamage, plus the two scans section 9
+# uses to say the OTHER five keys cannot be served.  The hard part here is that
+# the landing moves no value -- every focus read was 0 before and is 0 after --
+# so a mutant that removes the reader entirely leaves every NUMBER in the file
+# intact.  M14 exists to prove section 9b is not asserting a tautology.
+
+# M14: GetAbilityDamage is never installed.  Reads unchanged (0 either way); the
+#      only thing that changes is WHERE the 0 comes from, which is the whole
+#      claim `lionqdmg` and `zusboltcap` rest on.
+echo
+echo "=== M14: GetAbilityDamage is never installed (reads do not move) ==="
+sub "$LOADER" '                    sp.GetAbilityDamage = function(self)' \
+              '                    sp.GetAbilityDamageNOTINSTALLED = function(self)'
+score "M14" "has no GetAbilityDamage installed"
+
+# ---------------------------------------------------------------------------
+# M15: the plausible "repair" -- an ability that declares no AbilityDamage stops
+#      answering 0 and invents a number.  Same shape as M6, different key, and
+#      the consequence is larger: it would make the fixture world disagree with
+#      the engine in exactly the dimension two live candidates measure.
+echo
+echo "=== M15: an ability with NO AbilityDamage field invents a number ==="
+sub "$LOADER" '                        if ability_damage == nil then return 0 end' \
+              '                        if ability_damage == nil then return 275 end'
+score "M15" "Culling Blade, got"
+
+# ---------------------------------------------------------------------------
+# M16: the copy-paste, same shape as M11 -- the damage reader is wired to the
+#      cooldown ladder.  Both keys sit on the same abilities, so the read stays
+#      rank-shaped and plausible; only pinning the VALUE separates them.
+echo
+echo "=== M16: GetAbilityDamage reads AbilityCooldown (the copy-paste) ==="
+sub "$LOADER" "                    local ability_damage = value_ladder(u.name, a.name, 'AbilityDamage')" \
+              "                    local ability_damage = value_ladder(u.name, a.name, 'AbilityCooldown')"
+score "M16" "Culling Blade, got"
+
+# ---------------------------------------------------------------------------
+# M17 (control): section 9d says GetChannelTime / GetDuration have callers in
+#      shipped Lua but NONE among the focus five.  The load-bearing half of that
+#      is the negative, and a negative taken with a broken scanner is free.  Kill
+#      the scanner: the supply assertion must red BEFORE the negative passes.
+echo
+echo "=== M17 (control): the shipped-source scan matches nothing ==="
+sub "$TEST" "            if code:find(':' .. sGetter .. '%(') then" \
+            '            if false then'
+score "M17" "call sites outside the focus five, got"
+
+# ---------------------------------------------------------------------------
+# M18 (control): the same question for section 9a's population table.  A corpus
+#      walk that counts nothing would leave every floor unmet -- which is what
+#      makes those floors a measurement rather than a caption.
+echo
+echo "=== M18 (control): the residual-key corpus walk counts nothing ==="
+sub "$TEST" '                            if ladder(short, a.name, row[1]) then' \
+            '                            if false then'
+score "M18" "handles fell to"
+
+# ---------------------------------------------------------------------------
 # M8 (positive control): a comment-only edit must leave the file green.  A stand
 #     where everything reds is a stand that proves nothing.
 echo

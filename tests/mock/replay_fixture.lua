@@ -146,6 +146,63 @@ M.CLASS_TO_ITEM = {
 -- sign from the value keys, where not folding a `+N` talent understates.  A
 -- test that needs the trained/scepter cooldown must drive it explicitly.
 -- Nothing here models the in-game cooldown-reduction sources at all.
+--
+-- 2026-09-04 (hero), the THIRD batch -- and the finding is that the residue is
+-- not a queue waiting to be worked off, it is EMPTY but for one key.  Every
+-- `Ability*` key still on the generic `^Get` default was priced for BOTH halves
+-- it needs before it can serve anything: a getter in the bot API, and a caller
+-- inside the five heroes this loader specs.  Same corpus as the second batch
+-- (110 files, 4811 handles, 779 focus handles with a KV block):
+--
+--   key                          handles  API getter                 focus caller
+--   AbilityModifierSupportValue    308    none                       --
+--   AbilityChannelTime              80    GetChannelTime             none (5 sites, all non-focus)
+--   AbilityDuration                 56    GetDuration                none (4 sites, all non-focus)
+--   AbilityCharges                  51    GetCurrentCharges, item-only   none
+--   AbilityChargeRestoreTime        51    none                       --
+--   AbilityDamage                   29    GetAbilityDamage           YES -- served below
+--
+-- THREE DISJOINT REASONS, not one rule.  Two keys have no getter to be read
+-- through at all; three have a getter that no focus hero calls; one has both.
+-- "What is left unserved" was never a single number with a single cause, and a
+-- round that read it as one would have wired five dead readers to close a count.
+--
+-- GetAbilityDamage                            AbilityDamage
+--
+-- Serving it moves NO read.  The one focus ability that DECLARES the key is
+-- axe_berserkers_call at `0 0 0 0`, and the focus files that CALL the getter --
+-- hero_lion.lua X.GetImpaleKillDamage, hero_zuus.lua X.GetBoltKillHealthCap and
+-- X.ConsiderW -- call it on abilities that declare no such field.  Both roads
+-- end at 0, which is what makes this landing provably inert.
+--
+-- It is still worth doing, because it changes the REASON and that reason is
+-- load-bearing.  `lionqdmg` and `zusboltcap` are both built on "the shipped read
+-- is a hard 0"; until now a fixture-driven test of either got its 0 from
+-- mock/bot_api.lua's generic `^Get` -- the right answer from the wrong source,
+-- which is exactly the failure the evidence-discipline skill's fourth rule
+-- names.  After this the 0 is this loader's own answer off the game's KV.  It is
+-- cross-checked by a SECOND census built from different input:
+-- tests/mock/ability_damage.lua (tools/agent/ability_damage_census.py, all 128
+-- shipped heroes) carries no focus hero in its NONZERO table.
+--
+-- DISPOSITION FOR `zusboltdom`, written here because backlog -92 requires it to
+-- be written the day AbilityDamage is registered.  `zusboltdom` switches on the
+-- VALUE of X.GetBoltKillHealthCap, so a change that made that value non-zero
+-- would turn the candidate into a no-op BY DESIGN, not by regression.  This
+-- change does not make it non-zero: the cap stays 0 because zuus_lightning_bolt
+-- genuinely declares no top-level AbilityDamage field, and the engine answers 0
+-- there too.  `zusboltdom` is untouched, in the fixture world and in game.
+-- Section 9c of tests/test_fixture_kv_getters.lua goes red the day any focus
+-- hero gains a non-zero AbilityDamage, and it names the ids to re-read then.
+--
+-- STILL REFUSED, deliberately: ChannelTime, Duration, Charges.  Each has a
+-- getter and zero callers among the five heroes specced here, so wiring one adds
+-- a reader nothing reads -- GH #471's "接线是纯粹的无效改动" applied to the mock
+-- instead of to bots/.  AbilityCharges carries a second and harder problem:
+-- GetCurrentCharges is per-frame runtime state, not KV (hero_sniper.lua:244
+-- records it as item-only), so this snapshot's `0` base plus a `+3` talent row
+-- could not answer it even if a focus hero asked.  Section 9d pins all four, so
+-- the next round does not spend a work unit re-deriving them.
 local function value_ladder(unit_name, ability_name, sKey)
     local short = unit_name:gsub('^npc_dota_hero_', '')
     local abils = special_value_shapes.SHAPES[short]
@@ -674,6 +731,24 @@ function M.load(path, sSubject)
                         sp.GetCooldown = function(self)
                             return rank_step(cooldown, self:GetLevel())
                         end
+                    end
+                    -- Third batch.  Installed for EVERY ability of a hero with
+                    -- a block, not only the ones declaring the key, because the
+                    -- point of this one is the reason rather than the value: an
+                    -- ability with no `AbilityDamage` field must answer 0
+                    -- BECAUSE this loader read the KV and found none -- which is
+                    -- also the engine's answer -- rather than because nothing
+                    -- was installed and the generic `^Get` default replied.  The
+                    -- two are indistinguishable from the read and are not
+                    -- indistinguishable as evidence: `lionqdmg` and `zusboltcap`
+                    -- both rest on that 0.  Truncated toward zero like the Int
+                    -- read above, since the engine types this one `int`.
+                    local ability_damage = value_ladder(u.name, a.name, 'AbilityDamage')
+                    sp.GetAbilityDamage = function(self)
+                        if ability_damage == nil then return 0 end
+                        local v = rank_step(ability_damage, self:GetLevel())
+                        if v >= 0 then return math.floor(v) end
+                        return -math.floor(-v)
                     end
                 end
                 sp.IsTrained = function(self) return self:GetLevel() > 0 end

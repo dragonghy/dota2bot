@@ -825,4 +825,215 @@ tests['8f: the unfolded conditional half OVERSTATES a cooldown'] = function()
         'the served read is the unfolded base, got ' .. tostring(arc:GetCooldown()))
 end
 
+-- ===================================================================
+-- 9.  The THIRD batch -- and the residue turns out to be empty but for one.
+--
+-- Sections 4, 7 and 8 each closed a key and left "what is still unserved" as a
+-- number.  A number invites the reading "a queue, work it off".  It is not one:
+-- the six `Ability*` keys still on the generic `^Get` default fail for THREE
+-- disjoint reasons, and five of the six cannot be served at all.
+--
+--   AbilityModifierSupportValue  308 handles  no getter exists in the bot API
+--   AbilityChargeRestoreTime      51 handles  no getter exists in the bot API
+--   AbilityChannelTime            80 handles  GetChannelTime, 0 focus callers
+--   AbilityDuration               56 handles  GetDuration, 0 focus callers
+--   AbilityCharges                51 handles  GetCurrentCharges is item-only
+--   AbilityDamage                 29 handles  GetAbilityDamage -- BOTH halves
+--
+-- Only the last one has both a getter and a caller among the five heroes the
+-- loader specs, and serving it moves no read at all: the one focus ability that
+-- declares the key is axe_berserkers_call at `0 0 0 0`, and the focus files that
+-- call the getter call it on abilities that declare nothing.  What changes is
+-- the REASON the 0 comes back, which is load-bearing for `lionqdmg` and
+-- `zusboltcap` -- both of them are built on "the shipped read is a hard 0", and
+-- until now a fixture-driven reading of that 0 came out of mock/bot_api.lua's
+-- generic default rather than out of the game's KV.
+--
+-- 9c is the ratchet that matters: it fires the day a focus hero gains a non-zero
+-- AbilityDamage, and it names the three ids that must be re-read then.
+
+local RESIDUE = {
+    -- key, corpus handles floor, which of the three reasons
+    { 'AbilityModifierSupportValue', 308, 'no-getter' },
+    { 'AbilityChannelTime',           80, 'no-focus-caller' },
+    { 'AbilityDuration',              56, 'no-focus-caller' },
+    { 'AbilityCharges',               51, 'no-focus-caller' },
+    { 'AbilityChargeRestoreTime',     51, 'no-getter' },
+    { 'AbilityDamage',                29, 'served' },
+}
+
+local FOCUS = { 'axe', 'zuus', 'skeleton_king', 'lion', 'crystal_maiden' }
+
+--- One pass over the corpus counting the residual keys, so the table above is a
+--- measurement rather than a caption.  Same corpus and same shape as section 4.
+local cached_residue
+local function residue()
+    if cached_residue ~= nil then return cached_residue end
+    local c = {}
+    for _, row in ipairs(RESIDUE) do c[row[1]] = 0 end
+    for _, f in ipairs(corpus_files()) do
+        local ok, fx = pcall(dofile, f)
+        if ok and type(fx) == 'table' and fx.units then
+            for _, u in ipairs(fx.units) do
+                local short = tostring(u.name):gsub('^npc_dota_hero_', '')
+                if shapes.SHAPES[short] ~= nil then
+                    for _, a in ipairs(u.abilities or {}) do
+                        for _, row in ipairs(RESIDUE) do
+                            if ladder(short, a.name, row[1]) then
+                                c[row[1]] = c[row[1]] + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    cached_residue = c
+    return c
+end
+
+local cached_bots_src
+local function bots_src()
+    if cached_bots_src ~= nil then return cached_bots_src end
+    local out = {}
+    local p = assert(io.popen('ls bots/BotLib/hero_*.lua bots/FunLib/*.lua bots/*.lua 2>/dev/null'))
+    for l in p:lines() do
+        local fh = io.open(l, 'r')
+        if fh then out[l] = fh:read('*a'); fh:close() end
+    end
+    p:close()
+    cached_bots_src = out
+    return out
+end
+
+--- Call sites of one getter across shipped Lua, split into focus-hero files and
+--- the rest.  Comment lines are dropped: hero_sniper.lua:244 documents
+--- GetCurrentCharges' item-only rule in prose and would otherwise be counted as
+--- a caller of the thing it says nobody can call.
+local function call_sites(sGetter)
+    local focus, other = {}, {}
+    for path, src in pairs(bots_src()) do
+        local isfocus = false
+        for _, h in ipairs(FOCUS) do
+            if path == 'bots/BotLib/hero_' .. h .. '.lua' then isfocus = true end
+        end
+        for line in src:gmatch('[^\n]+') do
+            local code = line:match('^(.-)%-%-') or line
+            if code:find(':' .. sGetter .. '%(') then
+                if isfocus then focus[#focus + 1] = path else other[#other + 1] = path end
+            end
+        end
+    end
+    return focus, other
+end
+
+tests['9a: the residual key population is measured, not asserted'] = function()
+    local c = residue()
+    for _, row in ipairs(RESIDUE) do
+        -- A floor, never `==`: the corpus grows every time a fixture lands, and
+        -- a ceiling written as equality is the GH #457 shape.  A count that
+        -- FELL means a key left the snapshot -- re-derive, do not lower this.
+        assert(c[row[1]] >= row[2], row[1] .. ' handles fell to ' .. c[row[1]]
+            .. ', floor is ' .. row[2] .. ' -- a residual key left the snapshot, '
+            .. 'which changes section 9 rather than this number')
+    end
+    -- And the scan is not vacuous: a broken ladder reader would zero every row
+    -- above and each floor would then fail, but a broken CORPUS walk would zero
+    -- them silently before any floor was reached.
+    assert(#corpus_files() >= 100, 'corpus files, got ' .. #corpus_files())
+end
+
+tests['9b: GetAbilityDamage is served off the KV, and reads 0 for two reasons'] = function()
+    local _, _, cull, heroes = axe_cull()
+    -- (i) declared, and declared ZERO: axe_berserkers_call carries the field at
+    -- `0 0 0 0`.  Culling Blade carries none.  Both answer 0.
+    assert(ladder('axe', 'axe_berserkers_call', 'AbilityDamage') ~= nil,
+        'axe_berserkers_call must still declare AbilityDamage -- if it stopped, '
+        .. 'this section lost the only served handle in the corpus')
+    assert(ladder('axe', 'axe_culling_blade', 'AbilityDamage') == nil,
+        'Culling Blade must still declare no AbilityDamage')
+    assert(cull:GetAbilityDamage() == 0,
+        'Culling Blade, got ' .. tostring(cull:GetAbilityDamage()))
+    local call = heroes['npc_dota_hero_axe']:GetAbilityByName('axe_berserkers_call')
+    assert(call:GetAbilityDamage() == 0,
+        "Berserker's Call, got " .. tostring(call:GetAbilityDamage()))
+    -- (ii) And the 0 is now this loader's answer rather than
+    -- mock/bot_api.lua's generic `^Get` -- which is the entire content of this
+    -- landing, since the VALUE did not move.  The two are indistinguishable from
+    -- the read, so the check is deliberately white-box: a reader must actually
+    -- be installed on the handle.  Without this the section would pass on a
+    -- loader that never learned the key.
+    for _, pair in ipairs({ { cull, CULL }, { call, 'axe_berserkers_call' } }) do
+        local spec = rawget(pair[1], '__spec')
+        assert(type(spec) == 'table' and type(spec.GetAbilityDamage) == 'function',
+            pair[2] .. ' has no GetAbilityDamage installed -- its 0 is the '
+            .. 'generic default again, which is the state this section ended')
+    end
+end
+
+tests['9c: RATCHET -- no focus hero declares a non-zero AbilityDamage'] = function()
+    -- Two independently generated sources have to agree here, and they are built
+    -- from different input: this snapshot covers the five focus heroes'
+    -- abilities, tests/mock/ability_damage.lua covers all 128 shipped heroes and
+    -- lists only the NON-zero declarations.
+    local nonzero = assert(dofile('tests/mock/ability_damage.lua').NONZERO,
+        'ability_damage.lua has no NONZERO table')
+    local n = 0
+    for _ in pairs(nonzero) do n = n + 1 end
+    assert(n >= 16, 'the independent census must be populated, got ' .. n
+        .. ' heroes -- an empty one would agree with anything')
+    for _, h in ipairs(FOCUS) do
+        assert(nonzero[h] == nil, h .. ' now declares a NON-ZERO AbilityDamage. '
+            .. 'This is not a test bug and must not be relaxed: X.GetImpaleKillDamage '
+            .. '(`lionqdmg`) and X.GetBoltKillHealthCap (`zusboltcap`) are both '
+            .. 'built on that read being a hard 0, and `zusboltdom` switches on '
+            .. "the CAP'S VALUE -- a non-zero cap makes it a no-op BY DESIGN. "
+            .. 'Re-read all three before touching this line.')
+    end
+    -- The same statement taken off this snapshot rather than off that census.
+    for _, h in ipairs(FOCUS) do
+        for ab in pairs(shapes.SHAPES[h]) do
+            local steps = ladder(h, ab, 'AbilityDamage')
+            if steps ~= nil then
+                for i, v in ipairs(steps) do
+                    assert(v == 0, h .. '/' .. ab .. ' step ' .. i .. ' = ' .. v
+                        .. ' -- see the message above')
+                end
+            end
+        end
+    end
+end
+
+tests['9d: the four refused keys are refused for a REASON, and it is checked'] = function()
+    local api = io.open('docs/BOT_API_REFERENCE.md', 'r')
+    local doc = assert(api, 'docs/BOT_API_REFERENCE.md'):read('*a')
+    api:close()
+    -- Two of them have no reader at all.  Named negatively on purpose: the day
+    -- the engine grows one, this line is what says "now it can be served".
+    assert(doc:find('GetAbilityDamage', 1, true),
+        'the API reference must still document the getter this section serves '
+        .. '-- otherwise the two negatives below prove nothing about the doc')
+    for _, g in ipairs({ 'GetChargeRestoreTime', 'GetModifierSupportValue' }) do
+        assert(not doc:find(g, 1, true), g .. ' now appears in the API reference '
+            .. '-- AbilityChargeRestoreTime / AbilityModifierSupportValue became '
+            .. 'reachable, re-price them')
+    end
+    -- Two have a getter and no caller among the five heroes this loader specs.
+    for _, g in ipairs({ 'GetChannelTime', 'GetDuration' }) do
+        local focus, other = call_sites(g)
+        assert(#other >= 4, g .. ' call sites outside the focus five, got '
+            .. #other .. ' -- an empty scan would satisfy the next assert for '
+            .. 'the wrong reason')
+        assert(#focus == 0, g .. ' now has a focus-hero caller (' ..
+            table.concat(focus, ', ') .. ') -- wiring it stopped being a dead '
+            .. 'reader, serve it off the snapshot')
+    end
+    -- And the charge getter is item-only, which is a harder wall than "no
+    -- caller": AbilityCharges is KV, GetCurrentCharges is per-frame state, so
+    -- the snapshot could not answer it even for a hero that asked.
+    local focus_ch = call_sites('GetCurrentCharges')
+    assert(#focus_ch == 0, 'a focus hero now calls GetCurrentCharges on a handle '
+        .. '-- check whether it is an item or an ability before serving anything')
+end
+
 return tests

@@ -22,6 +22,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-93. **`kvgetters` 第三撮已发(`-92` 的「⭐ 下一撮」DONE),而它的结论是**残量不是队列**
+   (报告 `iterations/reports/hero/20260904T195041Z.md`)。**
+   - **⭐ 六个残余 `Ability*` 键里五个发不了,理由分三类、互相不能推广**
+     (语料句柄数,不是快照条目数 —— 两个都对,量的不是同一个东西):
+     **(甲) API 里根本没有 getter**:`AbilityModifierSupportValue`(308)、
+     `AbilityChargeRestoreTime`(51)。
+     **(乙) 有 getter,焦点五零消费者**:`AbilityChannelTime`(80,5 处全非焦点)、
+     `AbilityDuration`(56,4 处全非焦点)、`AbilityCharges`(51;`GetCurrentCharges`
+     14 处里 13 处是物品句柄,唯一技能句柄是 techies)。
+     **(丙) 两半齐全**:`AbilityDamage`(29)—— 已发。
+     ⇒ **「还没上规格的键」看上去是一条待办队列(一个数,做完少一个),它不是。**
+     按「把残量清零」推进会**接五个没人读的 reader** —— GH #471 那句
+     「接线是纯粹的无效改动**加**一份新的闸债」发生在 mock 里的形状。
+   - **⚠️ 而且 `-92` 让我问的那个问题在这一撮上问不出来**:「那个 0 落在比较式哪一边」
+     **预设了存在一个比较式**;这五个键连读它的那一步都不存在。
+     **⇒ 每一撮先问「这个键有没有 getter、有没有消费者」,再问方向。**
+   - **`AbilityDamage` 发了,而它一位读数都不动**:快照里**声明**该键的焦点技能只有
+     `axe_berserkers_call`(`0 0 0 0`),而焦点文件里**调用**该 getter 的三处
+     (`X.GetImpaleKillDamage`/`X.GetBoltKillHealthCap`/`X.ConsiderW`)调在**不声明该键**的
+     技能上 —— **交集是空的,两条路都到 0**。发它换的是**理由**:`lionqdmg` 与
+     `zusboltcap` 的立案句都是「出货那次读是硬 0」,而此前那个 0 来自 `bot_api.lua` 的
+     通用 `^Get`(**对的答案错的来源**)。第二个独立见证:`tests/mock/ability_damage.lua`
+     的 `NONZERO`(全 128 英雄)**焦点五一个都不在**。
+   - **✅ `zusboltdom` 的处置已写清(`-92` 的 ⛔ 已兑现)**:本次落地**不会**让
+     `X.GetBoltKillHealthCap` 变非 0(`zuus_lightning_bolt` 真的没有该字段,**引擎也答 0**)
+     ⇒ **`zusboltdom` 未被触碰,不需要重裁**。真正会触发那条处置的是
+     **GH #175 / `zusboltcap` 自己域内的 KV 修复**。`§9c` 是那道门:任一焦点英雄拿到
+     非 0 `AbilityDamage` 就红,并点名 `lionqdmg`/`zusboltcap`/`zusboltdom`。
+   - **⭐ 可迁移(变异台量出来的)**:**值没动的落地必须自带一发「装没装」的白盒变异**。
+     M14(不装 `GetAbilityDamage`)**让每一个读数原封不动**,只有 §9b 的白盒断言抓得住;
+     没有它,§9b 就是同义反复。M17/M18 是同族的另一半:**先打死扫描器/遍历,
+     看供给量断言会不会先红** —— 否则负结论(「零焦点消费者」)是免费拿到的。
+   - **下一撮没有了**。要再动这台仪器,球在别人:per-unit health regen(**GH #493**,录像组)。
+   - 顺手记一格(**零行为影响,不是本组这轮的活**):`tests/mock/ability_damage.lua`
+     的生成头注释引用 `tests/test_ability_damage_reads.lua`,**该文件在树上不存在**。
+     生成器 `tools/agent/ability_damage_census.py` 里的陈旧引用,`citation_audit.py` 管的那一类。
+
 -92. **`kvgetters` 第二撮已发(`-87` DONE),而它交出的两条结论**互相矛盾到不能合并成一句话**
    (报告 `iterations/reports/hero/20260904T170247Z.md`,`state.json:kvgetters2_20260904T`)。**
    - **⛔ 不要把第一撮的方向规则搬到第二撮**。第一撮(cast range)是「读 0 ⇒ 环变小 ⇒
@@ -4172,6 +4209,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T19:50Z(报告 `iterations/reports/hero/20260904T195041Z.md`;轴 **backlog `-92`
+  的「⭐ 下一撮」兑现:`kvgetters` 第三撮 —— 而结论是**残量不是队列**)
+  **改 3 个文件(`tests/mock/replay_fixture.lua`、`tests/test_fixture_kv_getters.lua`、
+  `tools/agent/mutstand_kvgetters.sh`),`bots/` 与 `game/` 零行;零新候选 id、零 arm、
+  零 promote、零 AWS、`queue.json` 不加行。**
+  - 选题:OWNER_PRIORITIES 无本组项;开着的 `[hero]` issue 逐条看过没有一条可动
+    (#488 下一棒在录像组;**#471/#459 两条 issue 自己明写**「先买 `hero-28` 那格语料,
+    回来之前不动 `bots/`」与「generic 那块作用域先请总监裁」;#463 在总监;#465 待关;
+    #453/#451/#447 非焦点或只更正证据句)⇒ 取 backlog 最上面一条可动的 `-92`。
+  - **人口(同一语料 110 文件 / 4811 句柄 / 779 焦点 KV 句柄):六个残余键共 575 句柄** ——
+    `ModifierSupportValue` **308** / `ChannelTime` **80** / `Duration` **56** /
+    `Charges` **51** / `ChargeRestoreTime` **51** / `Damage` **29**。
+    (`-92` 立案写的 9/2/1/1/1/1 是**快照条目数**,上面是**语料句柄数**;两个都对,
+    不是同一个量 —— 别并成一列。)
+  - **⭐ 结论:六个里五个发不了,理由分三类互不相交**:(甲) **API 里没有 getter**
+    (`ModifierSupportValue`+`ChargeRestoreTime`,359 句柄);(乙) **有 getter、
+    焦点五零消费者**(`ChannelTime`/`Duration`/`Charges`,187 句柄;`GetCurrentCharges`
+    14 处里 13 处是物品句柄,与 `hero_sniper.lua:244` 那句 item-only 一致);
+    (丙) **两半齐全**(`AbilityDamage`,29)。
+    ⇒ **「未上规格的键」不是一条待办队列**;按清零推进会接五个没人读的 reader。
+    **而且 `-92` 让我问的「0 落在比较式哪一边」在这一撮上问不出来** —— 它预设了存在比较式。
+  - **`AbilityDamage` 已发,读数一位不动**(声明该键的焦点技能只有 `axe_berserkers_call`
+    = `0 0 0 0`;调用该 getter 的三处调在不声明该键的技能上,**交集为空**)。
+    发它换的是**理由**:`lionqdmg`/`zusboltcap` 的立案句是「出货那次读是硬 0」,
+    此前那个 0 来自 `bot_api.lua` 的通用 `^Get` —— **对的答案错的来源**。
+    第二个独立见证:`tests/mock/ability_damage.lua` 的 `NONZERO`(全 128 英雄)**焦点五全不在**。
+  - **✅ `zusboltdom` 处置(`-92` 的 ⛔)已写清**:本次**不会**让上限变非 0
+    (`zuus_lightning_bolt` 真的没有该字段,引擎也答 0)⇒ **`zusboltdom` 未被触碰、不需重裁**;
+    真正触发那条处置的是 GH #175 / `zusboltcap` 自己域内的 KV 修复。`§9c` 是那道门。
+  - 验证:`test_fixture_kv_getters` **31 tests / 0 failures**;变异台 **18/18**(新增 M14–M18)。
+    **⭐ M14 是本轮方法上最硬的一格**:值没动的落地,**必须自带一发「装没装」的白盒变异** ——
+    它让每个读数原封不动,只有 §9b 的白盒断言抓得住;M17/M18 同族(先打死扫描器/遍历,
+    看**供给量**断言会不会先红,否则负结论是免费的)。
+    邻接 8 个测试未改一行全绿(确认 no-op)。
+  - 铁律 6:静态 `GATE_EXIT=0 CLEAN`(`0 warnings`,gate 自己装的 `lua-check`),**没用 BYPASS**;
+    **动态那半只有部分覆盖,报告 §7 写清楚了**:单进程全量发起后 ~3 小时未结束
+    (进程一直活着、断言点长到 ~3018,**没拿到 `FULL_EXIT`**;**GH #124** 那件事),
+    ⇒ **本轮不声称全量绿**。能作证的是被改文件 31/0 + 8 个邻接文件全绿 + 变异台 18/18。
+    补齐走上一轮验证过的**逐文件**路线(单文件 300s,`test_itemdesire_world_assertion` 抬到 900s)。
+  - ⚠️ 开工自检 worst exit **3**(`cadence`/`owed-executions`/**`trunk-red(python)`**)。
+    python 那条 = **GH #490**(`test_detector_source_constants.py` 掉锚点),**非本轮引入**
+    (零 `.py` 改动),**但「main 是否也红」未由自检确立**(没做 stash 差分)。
+    **并且第一次调用写成 `| tail -40`,自检拒绝执行打 `SELFCHECK_EXIT=2 REFUSED`
+    ——「第 5 次复发,每次都是当轮第一条命令」;那不是通过。**
+    **污染披露(与上一轮同形)**:自检后台跑期间本轮改动已落在工作树上,
+    末尾「fast Lua detectors 79 文件 0 失败」**是 mod 树读数,不能引用为 trunk 干净**。
+  - 下一棒:**本组这条线到此为止**(第三撮之后没有第四撮)。要再推进这台仪器,
+    球在**录像组**:dumper 出 per-unit health regen(**GH #493**)。
 - 2026-09-04T17:02Z(报告 `iterations/reports/hero/20260904T170247Z.md`;轴 **backlog `-87`
   兑现:`kvgetters` 第二撮 `AbilityCastPoint` + `AbilityCooldown`**;登记
   `state.json:kvgetters2_20260904T`)
