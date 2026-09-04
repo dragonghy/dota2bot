@@ -15349,7 +15349,7 @@ nothing」**。09-04T07:45Z 协同组(GH #480)把 `.type` 那一行的注解从�
 - `tools/agent/mutstand_fieldsrc_ff.sh` **11/11 CAUGHT**(零 NO-OP,baseline 绿;
   **M4 是把结论整个反过来的那一发** —— 时间门开 + 槽门取反 ⇒ 7 帧全部变得吃得着);
 - `iterations/state.json:fieldsrc_ff_PREMISE_20260904`;
-- 报告 `iterations/reports/strategy/20260904T104500Z.md`;GH issue(`[strategy]`)。
+- 报告 `iterations/reports/strategy/20260904T104500Z.md`;GH issue **#485**(发表前 `claim_precheck.sh` exit 0)。
 
 **球在总监**:收下 §ED.5 的共同 promote 约束(在 `stayfield`/`stayfield2`/`fieldsip` 任何一个被裁定
 之前),并裁 §ED.6 的 (甲)/(乙)。**本节不需要任何新波次数据**。

@@ -34,7 +34,7 @@
    `[strategy]` open issue 本轮扫过(#480/#475/#467/#464/#456/#455/#452),都是本组已交棒的;
    **产出是一份真帧普查 8/8 + 一台新变异台 11/11 CAUGHT(零 NO-OP)+ 一条交给总监的共同 promote 约束,零行为改动**:
    `tests/_fieldsrc_ff_sweep.lua`;`tests/test_fieldsrc_ff_premise.lua`;`tools/agent/mutstand_fieldsrc_ff.sh`;
-   `state.json:fieldsrc_ff_PREMISE_20260904`;`test_set.md §ED`;报告 `iterations/reports/strategy/20260904T104500Z.md`;
+   `state.json:fieldsrc_ff_PREMISE_20260904`;`test_set.md §ED`;**GH #485**;报告 `iterations/reports/strategy/20260904T104500Z.md`;
    **`bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸/fixture**;
    零 AWS、零 S3、零 EC2、零波次。**已交棒总监(收下 §ED.5 的共同 promote 约束 + 裁 §ED.6 甲/乙)。**】**
    **⭐ 主判据(立法级,可复用,超出本主题):一个分区可以在谓词上完备,而在世界里两边同时是错的 ——
@@ -5164,7 +5164,7 @@
   ⇒ 改买它们脚下的前提;`[strategy]` open issue 扫过一遍,都是本组已交棒的);
   **产出是一份真帧普查 8/8 + 一台新变异台 11/11 CAUGHT(零 NO-OP)+ 一条共同 promote 约束,零行为改动**:
   `tests/_fieldsrc_ff_sweep.lua`;`tests/test_fieldsrc_ff_premise.lua`;`tools/agent/mutstand_fieldsrc_ff.sh`;
-  `state.json:fieldsrc_ff_PREMISE_20260904`;`test_set.md §ED`;报告 `iterations/reports/strategy/20260904T104500Z.md`;
+  `state.json:fieldsrc_ff_PREMISE_20260904`;`test_set.md §ED`;**GH #485**;报告 `iterations/reports/strategy/20260904T104500Z.md`;
   **`bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸/fixture**;
   零 AWS、零 S3、零 EC2、零波次。**已交棒总监(收下 §ED.5 共同 promote 约束 + 裁 §ED.6 甲/乙)。**
   **⭐ 主判据:一个分区可以在谓词上完备,而在世界里两边同时是错的** —— `fieldbuy` 与持有侧读同一合取式取反,
