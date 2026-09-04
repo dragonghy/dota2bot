@@ -10,7 +10,12 @@
   "arm_md5": "eef5fb2ef553d96a50960988d482ca4e",
   "arm_source": "iterations/streams/test_set.md line 2 read off the launch tree; ids/bytes/md5 RECOMPUTED here, not copied from prose and not copied from the charter's plan sentence. Set-diff against W44's string: +arbheart, +slotwait, nothing removed.",
   "arm_fork_note": "The gate-(ii) fork the desk has now flagged four times ('armed-string family' vs 'tree object hash') does not bind this round: BOTH readings say PASS. The string moved (58 -> 60 ids) AND the tree moved (two bots/ commits). This is the first wave in the run of waves where the string axis moved at all.",
-  "seeds": [3968, 3892, 3954, 3927],
+  "seeds": [
+    3968,
+    3892,
+    3954,
+    3927
+  ],
   "seed_index_note": "seed_roster_index.py --build run BEFORE selection (charter step 5, live rule). ROSTER_EXIT=0; 336 run prefixes in S3, 332 already indexed, 4 newly scanned (exactly W44's four), index now holds 201 seeds / 41 heroes. Skipping the build would have offered W44's just-burned 3426/3508/3713/3749 back as 'never used'.",
   "seed_selection_note": "Fresh draft, window [3801,4200] (W43/W44 sat at 3426-3749, so the window was right-shifted rather than the self-discipline relaxed). 400 unused seeds in the window; popcount distribution over the 7 carrier terms {0:40, 1:107, 2:145, 3:84, 4:23, 5:1} => NO combinatorial exhaustion this wave (contrast the [1600,1800] window, where max popcount 3 made the 12 required carrier slots exactly tight and unsolvable). 1057 distinct-mask quadruples satisfy >=2 carriers per term. min-per-term = 2 is the arithmetic CEILING here, not a settled-for value: min 3 would need 21 carrier slots across 4 seeds and the maximum popcount in the window is 5.",
   "seed_tiebreak_pudge": "Among the 1057 LEGAL solutions the desk broke the tie on pudge: 3 of the 4 seeds (3968, 3954, 3927) draft Pudge. This is a tie-break INSIDE the carrier gate's own solution space, at zero cost -- NOT a change to the gate and NOT a new term. Reason: W44 was the first wave in eight to draft a pudge carrier, which is the only thing that makes `rotscope`'s condition-(a) frame check executable (queue strategy-26; GH #472), and the carrier gate is structurally blind to that id because `carrier_terms.py` classifies by FILE (`bots/mode_roam_generic.lua` => generic) while the id's DOMAIN is one hero (GH #473 甲, still unruled). Until that is ruled, keeping a pudge carrier is a desk choice, not a guarantee -- and it must not be read as one.",
@@ -47,7 +52,7 @@
   "pooling_claim": "W45 stands ALONE as the 60-id family's first wave. It does NOT pool with W44 (58-id family) and does NOT pool with W41-W42 (57-id family, whose pooling legality is still GH #449, unruled). Pre-registered here, before any data lands, so the pooling question cannot be settled by whatever the numbers turn out to look like.",
   "winrate_prereg": "Pre-registered before any data lands: read `winrate_channel` FIRST. W41, W42 and W44 all came back DEGENERATE (W44 the most extreme yet -- minority side won 0 of 207, side census radiant 0 / dire 207, headroom 0.0). If W45 is DEGENERATE too, that is a FOURTH wave with any data whose winrate channel is structurally unreadable, and the desk reports it as such rather than as a winrate reading (GH #352, test_set.md §CT). If it comes back RECOVERED, that is itself the news.",
   "harvest_obligations": "Next harvest must write per machine into machines[]: `status_code` (SIR Status.Code -- these are spot machines, so a SIR exists, unlike W44), `create` (launch), `update` (SIR Status.UpdateTime), plus ab/ba/arm_depth. That is reclaim_blind.py's input schema and costs zero extra AWS calls at harvest time. Also owed: the billing-side reconciliation of W44 (deferred last round because the 4.3-11.3h lag band had not run out) and, per GH #454, the billing-side per-wave cost of THIS wave against the $0.90 spot constant.",
-  "issues_filed": "[bug] trunk red on origin/main: tests/test_bots_walk_farm_only.py fails on a new tests/ io.popen introduced by be232487 -- filed this round after the push, per GH #290 ordering.",
+  "issues_filed": "GH #476 [bug] trunk red on origin/main: tests/test_bots_walk_farm_only.py fails on a new tests/ io.popen introduced by be232487. Filed AFTER the push, per GH #290 ordering; the draft passed claim_precheck.sh with PRECHECK_EXIT=0, 'local commits not on origin/main: 0', 'clean'.",
   "machines": [
     {
       "seed": "3968",
