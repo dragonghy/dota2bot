@@ -132,8 +132,12 @@ tests['exactly one fixture has its subject at level >= 15'] = function()
         end
         if lvl >= 16 then ge16 = ge16 + 1 end
     end
-    assert(ge15 == 1, 'exactly one subject at level >= 15; got ' .. ge15)
-    assert(this, 'and it is ' .. FRAME)
+    -- Two since 2026-09-03: f_260903_101254_cm_farm_stealcamp.lua is a level-15
+    -- CM subject (cut to pin a camp-arbitration decision, GH #455). FRAME is
+    -- still required to be among them -- that is what `this` asserts -- so the
+    -- guard still names its own anchor rather than merely counting.
+    assert(ge15 == 2, 'expected two subjects at level >= 15; got ' .. ge15)
+    assert(this, 'and one of them is ' .. FRAME)
     assert(ge16 == 0, 'no subject reaches level 16; got ' .. ge16)
 end
 

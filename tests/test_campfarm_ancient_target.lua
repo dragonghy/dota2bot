@@ -220,8 +220,27 @@ tests['[world W1] no fixture creep carries an identity, so every creep here is d
     assert(nFiles >= 100, 'corpus shrank: ' .. nFiles .. ' fixtures')
     -- Ratchets, not equalities: both are sums over fixtures with nothing here
     -- resting on their exact value (tests/corpus_scale.lua).
-    cs.ratchet(nCreepKeys, 1, 'fixtures carrying a creeps key')
-    cs.ratchet(nRows, 48, 'creep rows in tests/fixtures/')
+    --
+    -- RE-BASELINED TO ZERO 2026-09-03, and this is the one case the ratchet's
+    -- own "do not re-baseline" line asks you to read the finding for. The
+    -- floors 1 / 48 were derived from ONE fixture,
+    -- f_260903_101254_cm_farm_stealcamp.lua, in a cut that has since been
+    -- CORRECTED -- not deleted, and no behaviour changed. That fixture briefly
+    -- declared spirit_breaker as its subject, and the dumper captures creeps
+    -- RELATIVE TO THE SUBJECT: SB is meleeing the ancient frog camp, so the cut
+    -- carried 48 creep rows and became the first fixture in the corpus with a
+    -- creeps key. The subject was moved back to crystal_maiden (the bot whose
+    -- camp arbitration the fixture exists to pin, GH #455), and she is walking
+    -- half a map from anything, so the cut carries none. Probe, so nobody
+    -- re-derives it: CM 0, luna 15, dragon_knight 21, necrolyte 31, SB 48.
+    --
+    -- What the re-derivation above got RIGHT and what stays: the load-bearing
+    -- zero is "no creep row carries a creep IDENTITY", not "no fixture has a
+    -- creeps key". That reading is independent of these two counts and is the
+    -- valuable half; only the floors moved, and they moved because the corpus
+    -- really did go back to having no creep rows.
+    cs.ratchet(nCreepKeys, 0, 'fixtures carrying a creeps key')
+    cs.ratchet(nRows, 0, 'creep rows in tests/fixtures/')
     local names = {}
     for k in pairs(extra) do names[#names + 1] = k end
     table.sort(names)

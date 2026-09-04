@@ -72,12 +72,17 @@ local DESIRE = {
 --                         false; the release must not fire without a farmer)
 local function world(opts)
     opts = opts or {}
-    -- Subject-override: the fixture's declared `self` is spirit_breaker (the
-    -- ACTOR stealing the camp), which keeps this fixture out of the hero-
-    -- group CM-decision ratchets (test_cm_t10_payoff.lua's "cm_subject_frames
-    -- == 0" gate is a hero-group standing decision, deliberately narrow). We
-    -- still need CM as bot -- the arbitration this gate fixes is CM's -- so
-    -- load with an explicit subject.
+    -- Subject named explicitly even though it matches the fixture's own
+    -- `self`. It briefly did NOT: an earlier cut of this fixture declared
+    -- spirit_breaker as subject to keep it out of a hero-group CM ratchet,
+    -- and that turned out to be the wrong trade -- the dumper captures creeps
+    -- RELATIVE TO THE SUBJECT, so an SB-subject cut carried 48 neutral creeps
+    -- (SB is meleeing the camp) and became the first fixture in the corpus
+    -- with a creeps key, breaking the cross-group "the corpus carries no
+    -- creeps" world assertion at test_campfarm_ancient_target.lua:187. Only a
+    -- CM subject reads 0 (she is walking half a map from anything). Naming the
+    -- subject here keeps this test pinned to CM regardless of what the
+    -- fixture header says, so that trade can never silently move it again.
     local J, bot, heroes = rf.load(FIXTURE, 'npc_dota_hero_crystal_maiden')
     for k, v in pairs(DESIRE) do _G[k] = v end
 

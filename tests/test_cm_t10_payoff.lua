@@ -357,11 +357,45 @@ tests['[hero] the three worlds the silent channel was asked in are really differ
 end
 
 tests['[hero] the death channel has no in-domain samples, so it prices nothing'] = function()
-    assert((C.cm_subject_frames or 0) == 0 and #DEATHS == 0,
-        'the corpus now has ' .. tostring(C.cm_subject_frames) .. ' CM-SUBJECT '
-        .. 'frame(s) at level >= 10, i.e. frames carrying observed.burst and '
-        .. 'died_after. That is the channel that can price +200 HP, and it was '
-        .. 'empty when this decision was taken. Read it and re-decide.')
+    -- 2026-09-03 (strategy, GH #455 work unit): the corpus gained its first
+    -- CM-SUBJECT frame at level >= 10 --
+    -- f_260903_101254_cm_farm_stealcamp.lua, cut to pin a camp-arbitration
+    -- decision, not a fight. READ AND RE-DECIDED, per this assertion's own
+    -- instruction, and the decision below is UNCHANGED. Why the frame prices
+    -- nothing:
+    --
+    --   CM level 15, hp 1684/1684 (FULL), observed.burst = {} (nothing dealt
+    --   her any damage in the 5s window), observed.died_after = 94.0s -- i.e.
+    --   18.8 windows later, an unrelated event.
+    --
+    -- The sweep's own verdict on such a row is `bSaved = (nBurst < hp +
+    -- HP_BONUS)` = `0 < 1884`, which is TRUE for every conceivable talent and
+    -- therefore says nothing about this one. That is exactly the shape §2 of
+    -- this file's header refuses to spend: a zero out of an underpowered
+    -- channel is UNDERPOWERED, not EMPTY.
+    --
+    -- So the guard is TIGHTENED rather than merely re-pinned: what should
+    -- reopen the +200 HP decision is a frame that can actually price it --
+    -- one where CM took NONZERO burst -- not any CM-subject frame at all.
+    -- A frame with burst > 0 still fails this assertion and still demands a
+    -- re-read. Raising the count without this refinement would have been a
+    -- pure loosening, which is what the header forbids.
+    local nInformative = 0
+    for _, d in ipairs(DEATHS) do
+        if (d.burst or 0) > 0 then nInformative = nInformative + 1 end
+    end
+    assert(nInformative == 0,
+        'the corpus now has ' .. nInformative .. ' CM-SUBJECT frame(s) at '
+        .. 'level >= 10 carrying NONZERO observed.burst -- the channel that '
+        .. 'can actually price +200 HP, and it was empty when this decision '
+        .. 'was taken. Read it and re-decide.')
+    -- The vacuous rows are still counted, so the denominator cannot go quiet.
+    assert((C.cm_subject_frames or 0) == 1 and #DEATHS == 1,
+        'CM-subject frames at level >= 10 moved to '
+        .. tostring(C.cm_subject_frames) .. ' (' .. #DEATHS .. ' with a '
+        .. 'died_after). Recorded 1 / 1 on 2026-09-03, both vacuous (zero '
+        .. 'burst). If this grew, check whether the new rows are informative '
+        .. 'via the assertion above before touching this number.')
 end
 
 -- ---------------------------------------------------------------------------

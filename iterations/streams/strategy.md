@@ -5241,6 +5241,41 @@
   **不在本单元修**(三种方法,`fixture_roles` 要带 `--roles` 重生成 fixture),**已开 GH #458 交出去 + 置于 backlog 顶部**。
   ⛔ **撞车登记不重诊**:开工自检 python 腿两条红 = **GH #457**(先于本轮、不在本组文件里),
   另两条腿 `UNCERTIFIABLE`(**不是通过**)。
+- 2026-09-03T14:4xZ(**同一工作单元的追补 —— 两处自己造的 trunk red,已修**;
+  报告同一份 `iterations/reports/strategy/20260903T133000Z.md` **§J**;
+  `state.json:arbheart_20260903` 新增 `fixture_subject_incident` /
+  `hero_group_ratchet`,并**更正** `domain_price` 与 `gates`):
+  **⚠️ 先前那次 push(`ea4efee4`)确实把一条坏掉的跨组世界断言送上了 trunk**,如实登记。
+  **⭐ 主判据:「加一个 fixture 的域价钱」不是一个可以估的数,而且它对 subject 的选择敏感。**
+  13:30Z 那轮把它写成「六个文件」并当作已知量收尾;真实数字是 **11 个文件**,
+  而且其中一条**只由 subject 的选择触发**。
+  **事故本身**:为了躲开 hero-group 的 `test_cm_t10_payoff` 棘轮,13:30Z 把 fixture 的
+  subject 从 `crystal_maiden` 改成 `spirit_breaker` —— 而 **dumper 抓的 creeps 是跟着
+  subject 走的**:SB 正在跟上古蛙营互殴 ⇒ `creeps` 从 **0 变 48**,这份 fixture 成了
+  **全语料第一个带 `creeps` 键的**,推翻 `test_campfarm_ancient_target.lua:187` 那条
+  **多个测试据以把分支标成不可达的跨组世界断言**。探针(省得重查):CM **0** /
+  luna 15 / dragon_knight 21 / necrolyte 31 / SB 48 —— **只有 CM 是 0**(她走在半张
+  地图外)。⇒ subject 换回 CM:**跨组语料不变量 > 单组棘轮**,13:30Z 把两者量级判反了。
+  **于是 hero-group 棘轮正面处理**:`test_cm_t10_payoff` 的失败信息原文是
+  「Read it and re-decide」—— 读了:CM level 15、**满血 1684/1684**、`burst = {}`
+  (5s 窗口内没有任何东西打到她)、`died_after 94.0s`(**18.8 个窗口之后**的无关事件);
+  sweep 自己对这种行的判定是 `0 < 1884`,**对任何天赋都为真因而对这一个什么也没说**
+  —— 正是该文件 §2 拒绝花用的「欠功率通道的零」。**+200 HP 决定不变**,并把闸
+  **收紧而不是放宽**:主断言改成 `nInformative == 0`(burst>0 的行数),原计数保留成
+  第二条(1/1,均为空转行)让分母不消失。**只把 0 改成 1 会是纯放宽,那是该文件头自己禁止的。**
+  ⚠️ **这条动的是英雄组的立法**,读法写进测试注释可逐条复核;不同意就改回并告诉本组。
+  **第二轮又找出 5 个**(全部再测再钉):`test_fixture_roles`(**不是改断言而是补数据**
+  —— fixture 缺 drafted roles,从 S3 取 `analysis.json` 用 `--roles` 重生成,现在自带
+  `roles`、**CM = pos 5**,与 #455 §1「pid 9 = 槽 5」逐位吻合,顺带成了第二个独立证人)、
+  `test_focus_innate_index_anchor`(zuus_lightning_hands 1/47→2/48,**方向是向下守的**,
+  多一个见证是加强)、`test_relicguard_siege_gate`(level≥15 subjects 1→2,`this` 保留)、
+  `test_salveally_missing_floor`(POOL_MAX 2566→2646)、`test_slotdust_dust_arbitration`
+  (item vocabulary 114→117,**`nMissing` 仍是 23 ⇒ 命名空间的洞没变宽,实测非假设**)。
+  **可复用做法(比数字值钱)**:加 fixture 之后**不要挑几个「相关」的测试跑**,而是
+  `grep` 出所有扫 `tests/fixtures/` 的测试**全跑** —— 本轮 **89 个**,单轮约 12 分钟,
+  比全量套件(~100 分钟)便宜一个数量级,且**覆盖的正是这类改动能碰到的全部东西**。
+  门:`luacheck_gate.sh` `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`;89 个语料测试
+  两轮全绿。**Lua 全量套件仍未跑完 —— 这是跳过不是通过**(容器两次重启把后台跑丢)。
 - 2026-09-03T13:30Z(**认领 issue** —— owner 13:08Z 开出 **GH #455**(本组认领 —— 录像组 13:02Z
   报告 `iterations/reports/replay-check/20260903T130225Z.md`);按工作流第 1 条优先于 backlog;
   **产出是一处 gated 行为修复 + 一台新真实帧 + 一份新测试 + 四处棘轮回滚**:

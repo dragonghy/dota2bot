@@ -83,7 +83,7 @@ local CALIB_POOL = 1000 -- the mid-laning pool both floors are read against
 
 -- Pools, from the archive. [corpus] pins them.
 local POOL_MIN_REAL = 538    -- level-1 Crystal Maiden, the smallest plausible pool
-local POOL_MAX      = 2566
+local POOL_MAX      = 2646
 
 local tests = {}
 

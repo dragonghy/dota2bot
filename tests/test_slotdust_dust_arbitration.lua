@@ -521,7 +521,10 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
         -- `[^']*`, not `[^']+`: an empty slot is written '' and a one-or-more
         -- pattern skips past its opening quote, then matches the SEPARATOR
         -- between two real names as if it were one (', '). That mis-parse read
-        -- 115 where there are 114 -- a fake name nobody would look at twice.
+        -- 115 where there were 114 -- a fake name nobody would look at twice.
+        -- (Vocabulary is 117 since 2026-09-03: f_260903_101254_cm_farm_stealcamp
+        -- added three names, all of which RESOLVE in bots/, so nMissing held
+        -- at 23 -- the namespace hole did not widen.)
         for it in line:gmatch("'([^']*)'") do
             if it ~= '' then names[it] = true end
         end
@@ -538,7 +541,7 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
             nMissing = nMissing + 1
         end
     end
-    assert(nNames == 114, 'the fixture item vocabulary changed size: ' .. nNames)
+    assert(nNames == 117, 'the fixture item vocabulary changed size: ' .. nNames)
     assert(nMissing == 23, 'unresolvable fixture item names moved from 23 to ' .. nMissing ..
         ' -- either a fixture arrived with new items, or the namespace hole widened')
 end
