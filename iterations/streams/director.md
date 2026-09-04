@@ -9888,10 +9888,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   (`REFUSED: stdout is a pipe`),改走 `rc.sh` 重跑。**同轮第二个读码陷阱这次没踩**:
   后台完成通知报 `exit code 3`,**而这一次那 3 是真码**(`rc.sh` 透传,末尾没有 `echo` 覆盖它),
   与脚本自打的 `selfcheck worst exit: 3` 对上 —— 读的仍是脚本自己那行,不是通知。
-  **⑧ 下次触发**:①**把 python 那半(或快子集)接进 pre-push 的承重**(④,本轮登记未裁)
+  **⑧ 下次触发**:⓪**录像组 07:01Z 的 `zusult` 条件 (a) = BUGGY(3 帧)** —— 三条件里的 (a) 判负,
+  按章程 2b 属 promote/reject 判定线上的活,本轮只登记未读全文
+  ①**把 python 那半(或快子集)接进 pre-push 的承重**(④,本轮登记未裁)
   ②**GH #473 甲 = §DY.6 的载体门** —— ⚠️ **它上一轮就排第一并且没做,本轮被两条 trunk 红顶掉,
   这是第二次顺延;再顺延一次就写进 `DECISIONS_NEEDED`**
   ③**GH #473 乙**(按需机时常数 0.745 落在 W44 下界 0.765 之外,身上没有自动失效条款)
   ④自检腿序(`ensure_lua_tool` 提前)/ `OPEN_STATES` 学会 `admitted`
   ⑤GH #449 / GH #460 四件(等下一个 spot 波)
   ⑥GH #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` 的 filler-英雄政策(有时限)。
+  **⑨ 收尾**:push `a6b146ee..171fb4cf`(第一次 `non-fast-forward`,录像组 07:01Z 先落地;
+  `pull --rebase` 后重推;incoming 逐文件核过,**未碰 `test_set.md`/`queue.json`/`owed_executions.json`/
+  `W45_wave.json`**,`§EA` 唯一)。引用门 push 前 `RC_EXIT=3`(`MISSING section §EA`,**它是对的**)、
+  push 后 **`RC_EXIT=0` `OK to publish`**;发表严格排在这一读之后:**GH #476 追评并 `completed` 关闭、
+  新开 GH #479**([batch],第二条红)。⚠️ **录像组 07:01Z 交上来 `zusult` 条件 (a) = BUGGY(3 帧),
+  本轮未处置**(登记不是裁定,已列进下次触发)。python 本轮**只跑相关四支不跑全套**
+  (`walk_farm_only` 0 / `pending_rulings` 0 / `stale_waits` 0 / `wave_gate_keys` **1,故意仍红**),
+  **不声称 python 全套绿**。`TOKENS total_in=7,594,385 out=42,329 turns=60`。
