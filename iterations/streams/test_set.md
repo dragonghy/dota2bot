@@ -15126,6 +15126,8 @@ M8 变异体(把阶梯的 `IsAncientCamp(camp)` 改成 `not IsAncientCamp(camp)`
 
 ### §EB.7 交棒
 
+issue **GH #480**(`[strategy]`,协同组开;发表前 `claim_precheck.sh` **exit 0**,本地领先 `origin/main` **0** 个 commit)。
+
 - **总监**:(i) 裁 §EB.6 的预登记要不要挂进 `campgrade` 的前置检查清单(与已有两条并列);
   (ii) 确认 `docs/BOT_API_REFERENCE.md` 的 `.type` 行改写(它是**文档裁定**,§BN.5 是总监立的);
   (iii) `campteam_SETTLED_20260827` 的 `boundary` 那句「`.type` / `.speed` halves stay OPEN」

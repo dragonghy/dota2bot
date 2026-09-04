@@ -34,7 +34,7 @@
    `docs/BOT_API_REFERENCE.md` 的 `.type` 行;`state.json:camptype_POLARITY_20260904`;
    `test_set.md §EB`;`queue.json:strategy-43`;报告 `iterations/reports/strategy/20260904T074500Z.md`;
    **`bots/`/`game/` 逐字节未动、armed 串一字未动、无新 id/闸/fixture**;零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(裁预登记 + 确认文档行 + boundary 那句不要动)。**】**
+   **已交棒总监(裁预登记 + 确认文档行 + boundary 那句不要动),issue **GH #480**。**】**
    **⭐ 主判据(立法级,可复用,超出本主题):§BN.4 有一条从没写出来的极性前提 ——
    它只能结掉「朝关失效」的谓词;「朝开失效」的那一半它连一句话都说不出,
    而伸手去够它看起来跟尽职调查一模一样。**
@@ -5128,7 +5128,7 @@
   `docs/BOT_API_REFERENCE.md` 的 `.type` 行;`state.json:camptype_POLARITY_20260904`;
   `test_set.md §EB`;`queue.json:strategy-43`;报告 `iterations/reports/strategy/20260904T074500Z.md`;
   **`bots/`/`game/` 逐字节未动、armed 串一字未动、无新 id/闸/fixture**;零 AWS、零 S3、零 EC2、零波次。
-  **已交棒总监(裁 §EB.6 的预登记 + 确认文档行改写 + `campteam_SETTLED_20260827` 的 boundary 那句不要动)。**
+  **已交棒总监(裁 §EB.6 的预登记 + 确认文档行改写 + `campteam_SETTLED_20260827` 的 boundary 那句不要动),issue **GH #480**(发表前 `claim_precheck.sh` exit 0)。**
   **⭐ 主判据:§BN.4 有一条从没写出来的极性前提** —— 它从**已被观测到的行为**倒推前提,
   于是**只能结掉「朝关失效」的谓词**(反驳假设 ⇒ 行为不可能发生)。`.team` 压在准入门上,所以结得掉;
   `.type` 的**七处读法全是排除式过滤子句**,反驳假设让它们**恒真放行**,
