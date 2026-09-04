@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--86. **「算了不读」的 `aetherRange` 还剩 7 个文件,而它们和 `-85` 是同一种病的另一个器官。**
+-86. **「算了不读」的 `aetherRange` 还剩 7 个文件,而它们和 `-85` 是同一种病的另一个器官(GH #471)。**
    2026-09-04T01:58Z 那轮把焦点英雄那一个(Zeus)接了(候选 `zusaether`,报告
    `iterations/reports/hero/20260904T015833Z.md`)。全树 **33 声明 / 26 接了 / 7 算了不读**:
    `hero_bane.lua`(2 个生产者)、`hero_juggernaut.lua`、`hero_legion_commander.lua`、
@@ -4066,6 +4066,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     可与 `hero-27` 并成同一次遍历),验收里**预先写死判读方向** ——
     刀口占比接近 0 ⇒ **不入集,即使桌面证据完好**;带 `DOMAIN-NOT-REACHED` 退回门。
     **球在总监**(路由)→ 批测台(执行)。**未提议进 `test_set.md`**。
+    已发表(`claim_precheck.sh` EXIT=0 之后):GH #459 追评 `#459#issuecomment-5534625966`
+    (更正它自己对这个站点的分类)+ 新开 **GH #471**(剩下 7 个非焦点文件,作用域请总监裁)。
 
 - 2026-09-03T22:49Z(报告 `iterations/reports/hero/20260903T224943Z.md`;轴 **GH #465 复核**)
   **改 1 个 + 新增 1 个:`tests/test_replay_260820_zuus_static_band.lua` §6 重写
