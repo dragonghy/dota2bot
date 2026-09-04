@@ -47,15 +47,18 @@
       "sir": "sir-ivtqk2fq",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? immediately after the spot_run.sh call inside the launch script, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "leg_counts_note": "TO BE FILLED AT HARVEST with THIS MACHINE'S OWN integer legs (0/0 if it banks nothing). No nulls left behind, no pooled values -- nulls here are exactly what blinded gate (iv) on W45. arm_depth is added as a key this wave because W46 omitted it and gate (iv) then ran without its depth-checked path.",
-      "status_code": null,
-      "status_code_source": "TO BE FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375).",
+      "ab": 10,
+      "ba": 0,
+      "arm_depth": 0.0,
+      "leg_counts_note": "FILLED AT HARVEST 2026-09-04T21:2xZ with THIS MACHINE'S OWN integers. Two independent paths agree bit-for-bit: (1) recover_verdict.py per_seed ab_games/ba_games; (2) direct re-derivation from this prefix's banked analysis files via the script_version stamp `<arm>:s<seed>:<radiant|dire>` (one seed per prefix, one leg per game, 6 unstamped warm-ups per machine). No nulls, no pooled values.",
+      "status_code": "instance-terminated-no-capacity",
+      "status_code_source": "FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375). All four SIRs read State=closed.",
       "create": "2026-09-04T18:31:48.000Z",
-      "update": null,
-      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) is filled at harvest. At launch all four SIRs read State=active / Status.Code=fulfilled with UpdateTime 2026-09-04T18:32:57Z."
+      "update": "2026-09-04T18:53:23.000Z",
+      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) read at harvest from describe-spot-instance-requests -- the EC2 records had already aged out (GH #375).",
+      "runtime_h": 0.3597,
+      "spot_rate_usd_h": 0.2959,
+      "bill_side_cost_usd": 0.1064
     },
     {
       "seed": 4678,
@@ -71,15 +74,18 @@
       "sir": "sir-97qfgvrm",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? immediately after the spot_run.sh call inside the launch script, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "leg_counts_note": "TO BE FILLED AT HARVEST with THIS MACHINE'S OWN integer legs (0/0 if it banks nothing). No nulls left behind, no pooled values -- nulls here are exactly what blinded gate (iv) on W45. arm_depth is added as a key this wave because W46 omitted it and gate (iv) then ran without its depth-checked path.",
-      "status_code": null,
-      "status_code_source": "TO BE FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375).",
+      "ab": 28,
+      "ba": 14,
+      "arm_depth": 18.67,
+      "leg_counts_note": "FILLED AT HARVEST 2026-09-04T21:2xZ with THIS MACHINE'S OWN integers. Two independent paths agree bit-for-bit: (1) recover_verdict.py per_seed ab_games/ba_games; (2) direct re-derivation from this prefix's banked analysis files via the script_version stamp `<arm>:s<seed>:<radiant|dire>` (one seed per prefix, one leg per game, 6 unstamped warm-ups per machine). No nulls, no pooled values.",
+      "status_code": "instance-terminated-by-user",
+      "status_code_source": "FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375). All four SIRs read State=closed.",
       "create": "2026-09-04T18:31:50.000Z",
-      "update": null,
-      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) is filled at harvest. At launch all four SIRs read State=active / Status.Code=fulfilled with UpdateTime 2026-09-04T18:32:57Z."
+      "update": "2026-09-04T19:16:26.000Z",
+      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) read at harvest from describe-spot-instance-requests -- the EC2 records had already aged out (GH #375).",
+      "runtime_h": 0.7433,
+      "spot_rate_usd_h": 0.2741,
+      "bill_side_cost_usd": 0.2037
     },
     {
       "seed": 4763,
@@ -95,15 +101,18 @@
       "sir": "sir-zh3zjean",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? immediately after the spot_run.sh call inside the launch script, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "leg_counts_note": "TO BE FILLED AT HARVEST with THIS MACHINE'S OWN integer legs (0/0 if it banks nothing). No nulls left behind, no pooled values -- nulls here are exactly what blinded gate (iv) on W45. arm_depth is added as a key this wave because W46 omitted it and gate (iv) then ran without its depth-checked path.",
-      "status_code": null,
-      "status_code_source": "TO BE FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375).",
+      "ab": 29,
+      "ba": 1,
+      "arm_depth": 1.93,
+      "leg_counts_note": "FILLED AT HARVEST 2026-09-04T21:2xZ with THIS MACHINE'S OWN integers. Two independent paths agree bit-for-bit: (1) recover_verdict.py per_seed ab_games/ba_games; (2) direct re-derivation from this prefix's banked analysis files via the script_version stamp `<arm>:s<seed>:<radiant|dire>` (one seed per prefix, one leg per game, 6 unstamped warm-ups per machine). No nulls, no pooled values.",
+      "status_code": "instance-terminated-no-capacity",
+      "status_code_source": "FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375). All four SIRs read State=closed.",
       "create": "2026-09-04T18:31:53.000Z",
-      "update": null,
-      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) is filled at harvest. At launch all four SIRs read State=active / Status.Code=fulfilled with UpdateTime 2026-09-04T18:32:57Z."
+      "update": "2026-09-04T19:07:34.000Z",
+      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) read at harvest from describe-spot-instance-requests -- the EC2 records had already aged out (GH #375).",
+      "runtime_h": 0.5947,
+      "spot_rate_usd_h": 0.2963,
+      "bill_side_cost_usd": 0.1762
     },
     {
       "seed": 4950,
@@ -119,15 +128,18 @@
       "sir": "sir-5fczhafq",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? immediately after the spot_run.sh call inside the launch script, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "leg_counts_note": "TO BE FILLED AT HARVEST with THIS MACHINE'S OWN integer legs (0/0 if it banks nothing). No nulls left behind, no pooled values -- nulls here are exactly what blinded gate (iv) on W45. arm_depth is added as a key this wave because W46 omitted it and gate (iv) then ran without its depth-checked path.",
-      "status_code": null,
-      "status_code_source": "TO BE FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375).",
+      "ab": 33,
+      "ba": 23,
+      "arm_depth": 27.11,
+      "leg_counts_note": "FILLED AT HARVEST 2026-09-04T21:2xZ with THIS MACHINE'S OWN integers. Two independent paths agree bit-for-bit: (1) recover_verdict.py per_seed ab_games/ba_games; (2) direct re-derivation from this prefix's banked analysis files via the script_version stamp `<arm>:s<seed>:<radiant|dire>` (one seed per prefix, one leg per game, 6 unstamped warm-ups per machine). No nulls, no pooled values.",
+      "status_code": "instance-terminated-by-user",
+      "status_code_source": "FILLED AT HARVEST from describe-spot-instance-requests Status.Code (the SIR outlives the EC2 record's ~1h window, GH #375). All four SIRs read State=closed.",
       "create": "2026-09-04T18:32:27.000Z",
-      "update": null,
-      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) is filled at harvest. At launch all four SIRs read State=active / Status.Code=fulfilled with UpdateTime 2026-09-04T18:32:57Z."
+      "update": "2026-09-04T19:28:15.000Z",
+      "create_update_source": "SIR CreateTime read at launch; Status.UpdateTime (`update`) read at harvest from describe-spot-instance-requests -- the EC2 records had already aged out (GH #375).",
+      "runtime_h": 0.93,
+      "spot_rate_usd_h": 0.2741,
+      "bill_side_cost_usd": 0.2549
     }
   ],
   "gates": {
@@ -160,5 +172,107 @@
   ],
   "launch_round_roll_call": "Both halves of the charter's step-6 launch-round roll call, zero cost. (1) pending,running instances = EXACTLY FOUR, and their `soak-run` tags map one-to-one onto machines[].run_id (b8fa5b / 1bfa3d / b30fe4 / 9782b8) -- no fifth machine (no leak), none missing (no dropped arm). Immediately BEFORE the launch the same query returned empty, so all four are this round's. (2) terminated,shutting-down returned EMPTY. That empty means `nothing has died yet` (the wave is ~1 minute old), NOT `the record expired` (GH #375's ~1h window). (3) describe-volumes: four volumes, each attached in-use to one of these four instances -- no orphan root volume. (4) All four SIRs State=active / Status.Code=fulfilled. Standing cost remains the AMI alone.",
   "progress_at_launch": "Zero scored games at launch. Expect the first S3 objects ~14.5 minutes after take-off (the W42-measured upload cadence), so OBJ_COUNT=0 inside the first 14 minutes is the expected value, not a symptom.",
-  "gate_iv_self_verification": "RAN THIS ROUND against W47's own freshly written record, per last round's lesson (GH #487): RB_SELFCHECK_EXIT=2, `UNDECIDABLE: seed 4723: unknown SIR status_code None`. ** THIS EXIT 2 IS STRUCTURAL, NOT A DEFECT IN THE RECORD, AND IT BOUNDS THE RULE THIS DESK PROPOSED LAST ROUND. ** Gate (iv) asks whether a wave's COLLECTION was blinded by reclaims; its inputs (status_code, the terminal SIR UpdateTime, per-machine leg counts) do not exist until the wave ends. A launching round therefore CANNOT self-verify its own wave through this gate -- at launch every one of those fields is honestly null, and the tool correctly refuses to answer rather than guessing. So last round's proposal ('the round that WRITES the record must run the gate against it') is right for the HARVEST round and vacuous for the LAUNCH round. What the launch round can and did do is run the gate against the PREVIOUS wave (RB_EXIT=0 on W46) -- which is exactly what gate (iv) is for -- plus tests/test_wave_gate_keys.py against this new record (WGK_EXIT=0, 241 checks, 0 failed) so the record's SHAPE is verified at write time even though its CONTENT cannot be. Registered on GH #487 so the rule the director rules on is the one that can actually be executed."
+  "gate_iv_self_verification": "RAN THIS ROUND against W47's own freshly written record, per last round's lesson (GH #487): RB_SELFCHECK_EXIT=2, `UNDECIDABLE: seed 4723: unknown SIR status_code None`. ** THIS EXIT 2 IS STRUCTURAL, NOT A DEFECT IN THE RECORD, AND IT BOUNDS THE RULE THIS DESK PROPOSED LAST ROUND. ** Gate (iv) asks whether a wave's COLLECTION was blinded by reclaims; its inputs (status_code, the terminal SIR UpdateTime, per-machine leg counts) do not exist until the wave ends. A launching round therefore CANNOT self-verify its own wave through this gate -- at launch every one of those fields is honestly null, and the tool correctly refuses to answer rather than guessing. So last round's proposal ('the round that WRITES the record must run the gate against it') is right for the HARVEST round and vacuous for the LAUNCH round. What the launch round can and did do is run the gate against the PREVIOUS wave (RB_EXIT=0 on W46) -- which is exactly what gate (iv) is for -- plus tests/test_wave_gate_keys.py against this new record (WGK_EXIT=0, 241 checks, 0 failed) so the record's SHAPE is verified at write time even though its CONTENT cannot be. Registered on GH #487 so the rule the director rules on is the one that can actually be executed.",
+  "harvest": {
+    "harvested_at": "2026-09-04T21:2xZ",
+    "rv_exit": "0 (read as $? after redirection, not through a pipe)",
+    "prefix": "s3://dota2bot-batch-results-4924/soak/<run_id>/ -- soak/, NOT validation/ (obligation 5)",
+    "corpus": "162 *.analysis.json banked (16/48/36/62). files_seen 162 / games_loaded 162 / unparseable 0 / pooled_basename_dirs_overridden 0. No --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth override => NO 'this is a SKIP not a pass' line to quote.",
+    "warm_ups": "exactly 6 unstamped games per machine, all four machines, same as W46. 162 banked - 24 warm-ups = 138 stamped; 128 scored (the 10 games of the NO-PAIR seed 4723 are stamped but unscored).",
+    "arm_string_recheck": "RECOMPUTED THIS ROUND off the LAUNCH TREE 15b0d9fd (git show <tree>:iterations/streams/test_set.md, line 2) => 62 ids / 550 bytes / md5 c7e1f92c739f8f8dc0ee0c9484288628 -- byte-identical to the registered value and to W46's. Obligation 4 discharged.",
+    "HEADLINE": "HALF THE WAVE WAS RECLAIMED. 2 of 4 machines died `instance-terminated-no-capacity` (seeds 4723 @21.6min, 4763 @35.7min). Only 2 seeds scored. The wave was launched to take the 62-id family from 4 grains to 8; IT DELIVERED 6.",
+    "per_seed_outcome": {
+      "4723": "RECLAIMED at 18:53:23Z after 21.6 min. ab10/ba0 => NO-PAIR, excluded from the mean. Its 10 games are paid-for and unusable as a paired diff (OWNER_PRIORITIES reclaim disposition: the grain is void, the WAVE is not).",
+      "4763": "RECLAIMED at 19:07:34Z after 35.7 min. ab29/ba1 => arm_depth 1.93 < 8, EXCLUDED by the GH #269 depth gate as THIN-ARM. NAMED here per obligation 6: its 30 scored games were paid for and do not enter the mean.",
+      "4678": "clean self-destruct 19:16:26Z. ab28/ba14, arm_depth 18.67, PAIRED, scored.",
+      "4950": "clean self-destruct 19:28:15Z. ab33/ba23, arm_depth 27.11, PAIRED, scored."
+    },
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [
+      {
+        "seed": "4763",
+        "ab_games": 29,
+        "ba_games": 1,
+        "arm_depth": 1.93
+      }
+    ],
+    "four_metrics_note": "n=2 SCORED SEEDS ONLY. Each grain swap-averaged first, then the arithmetic mean across grains -- NEVER pooled by game count (rule 4(i-d)). comps_better denominators are 2, not 4.",
+    "mean": {
+      "gpm": -5.95,
+      "xpm": -8.68,
+      "deaths": 0.25,
+      "last_hits": -2.15,
+      "winrate": 0.489,
+      "winrate_headroom": 0.0109
+    },
+    "comps_better": {
+      "gpm": "1/2",
+      "xpm": "1/2",
+      "deaths": "1/2",
+      "last_hits": "1/2",
+      "winrate": "0/2"
+    },
+    "per_seed_gpm": "4678 -24.54 / 4950 +12.63 (the two scored grains disagree in sign; spread 37.2)",
+    "strata": {
+      "gpm": {
+        "ab": -45.27,
+        "ba": 33.37,
+        "side": -39.32,
+        "sign_flip": true,
+        "side_gt_arm": "2/2"
+      },
+      "xpm": {
+        "ab": -21.18,
+        "ba": 3.83,
+        "side": -12.5,
+        "sign_flip": true,
+        "side_gt_arm": "2/2"
+      },
+      "deaths": {
+        "ab": 0.96,
+        "ba": -0.46,
+        "side": 0.71,
+        "sign_flip": true,
+        "side_gt_arm": "2/2"
+      },
+      "last_hits": {
+        "ab": -18.55,
+        "ba": 14.27,
+        "side": -16.41,
+        "sign_flip": true,
+        "side_gt_arm": "2/2"
+      }
+    },
+    "strata_reading": "Registered per rule 4(i-a) straight from the tool's own `strata` -- NOT hand-computed. All four metrics print sign_flip=true with side_gt_arm 2/2. Per rule 4(i-c) that is an IDENTITY on a swap-averaged estimator (|side| > |arm|), NOT a veto and NOT a diagnosis: it says this draw's side bias exceeded the effect, and says nothing about how precisely arm was measured. It is registered because (i-a) requires registering it, not because it rules anything.",
+    "winrate_channel": "DEGENERATE",
+    "winrate_side_census": {
+      "radiant": 16,
+      "dire": 146
+    },
+    "winrate_minority_side_share": 0.0988,
+    "winrate_prereg_branch_taken": "DEGENERATE, the SIXTH consecutive wave with data (W41/W42/W44/W45/W46/W47). The pre-registered branch fires: `winrate` (0.489) and the winrate row of comps_better (0/2) ARE NOT WRITTEN AS READINGS and must not be cited as rule 2(b) support. Per-seed side census printed as required: s4678 radiant 0 / dire 42; s4950 radiant 1 / dire 55; s4763 (excluded) radiant 10 / dire 20. The two SCORED grains are a near-total dire sweep (1 radiant win in 98 games); minority share 16/162 = 0.0988, WORSE than W46's 0.1217. As pre-registered, this sixth DEGENERATE is expected and not informative -- the standing conclusion (fix the sweep, not the estimator) stands.",
+    "suggested": "hold_or_reject",
+    "suggested_note": "`hold_or_reject` is the tool's hint ONLY. promote/reject runs the three conditions and belongs to the director. This is a FAMILY-level reading and is NEVER a per-id reading. With n=2 grains it is weaker than W46's n=4.",
+    "pooling_status": "UNCHANGED AND STILL THE DIRECTOR'S. The arm string is byte-identical to W46's (verified above), so this desk's pre-registered reading (pool into a 62-id family) survives contact with the data. But the family is now 4+2 = 6 grains, NOT the 8 this wave was launched to reach. The GH #363/#449 fork is on its SIXTH appearance and still unruled."
+  },
+  "cost_settlement_gh454": {
+    "method": "per-machine runtime (SIR CreateTime -> Status.UpdateTime) x that AZ's spot rate from describe-spot-price-history over the wave window, as W46 did.",
+    "rates_observed": {
+      "us-west-2a": 0.2959,
+      "us-west-2b": 0.2741,
+      "us-west-2c": 0.2963,
+      "us-west-2d": 0.2473
+    },
+    "machine_hours": 2.6277,
+    "bill_side_cost_usd": 0.7413,
+    "vs_constant": "$0.7413 < the charter constant $0.90 => the AUTO-INVALIDATION CLAUSE DOES NOT FIRE ON W47.",
+    "BUT": "IT PASSED FOR THE WRONG REASON, AND THIS IS THE POINT. W47 came in cheap ONLY because two machines were killed at 21.6 and 35.7 minutes. The price band this wave actually paid is $0.274-0.296/h; the $0.90 constant was derived from a $0.231-0.250/h band, so the band is ~18% stale at its top -- exactly the `price band is stale` root cause GH #454 already names, now with a second independent measurement. Counterfactual with four machines at seed 4950's full 0.93h: 4 x 0.93 x ~0.285 = ~$1.06, i.e. the constant WOULD have blown again. A constant that only stays inside its bound when the wave gets preempted is not inside its bound.",
+    "cost_per_scored_seed": "$0.371 (0.7413 / 2 scored) vs W46's $0.255 (1.02 / 4 scored) -- reclaim made the data ~45% more expensive per grain even though the wave total fell."
+  },
+  "gate_iv_self_verification_harvest": {
+    "rb_exit": "0",
+    "verdict": "not blinded -- 2 paired seed(s) of 4 machines; 2 machine(s) reclaimed before the flip; NEXT WAVE: spot (GH #158 unchanged).",
+    "obligation_2_discharged": "YES, partially and worth stating precisely. W46's omission of arm_depth left the depth-checked path unexercised on all four rows; this wave filled it and the path RAN on 3 of 4 rows (4678/4763/4950 print `[depth-checked]`), and on 4763 it did real work -- it is what downgraded ab29/ba1 to NO-PAIR.",
+    "residual_defect_found": "The 4th row (seed 4723) still prints `[ab/ba only (no arm_depth given)]` even though arm_depth IS given (0.0). Read the source before believing the label: reclaim_blind.py:343 guards the depth branch on `paired and machine.get('arm_depth') is not None` -- the None-test is correct, but the branch is skipped because the machine is UNPAIRED, and the printed reason then misreports WHY. The classification is right; the label is false. An auditor reconciling log against record would go fill a field that is already filled. Filed as a issue this round."
+  }
 }
