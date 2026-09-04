@@ -222,6 +222,64 @@ doc['events'].append({'t': 99.8, 'type': 'ITEM', 'actor': FOE,
 r = run(doc)
 check(len(r['dom']) == 1, "4h: another hero's mana item does not excuse the cast")
 
+# --- 5. consumer attribution (replay-check, W45, 2026-09-04) ---------------
+# An in-domain COUNT reads as a gate miss by default, and on the W45 Zeus
+# corpus that default was wrong for 7 casts out of 7: `zusult` armed measured
+# 8.0 in-domain casts per 100 opportunity frames against a baseline of 8.6 --
+# "the gate does nothing" -- and every one of the armed casts turned out to be
+# a ConsiderW2 POINT cast at hero level 7-9, i.e. the nil-target exemption
+# working as written, on a path the gate is inert on BY CONSTRUCTION.
+# The split must therefore be reported, and it must stay EXACT below level 10
+# and honest at or above it.
+def lvl_doc(zlvl, entity=False):
+    doc = build(100.0, 0, 6, mp=100)
+    for s in doc['snapshots']:
+        if s['hero'] == ZEUS:
+            s['level'] = zlvl
+    if entity:
+        for e in doc['events']:
+            if e['type'] == 'ABILITY':
+                e['target'] = FOE
+                e['target_hero'] = True
+    return doc
+
+
+def via(r):
+    """The consumer of the single in-domain row, or None if the domain is empty.
+
+    Deliberately not `r['dom'][0]['consumer']`. A mutant that makes the
+    attribution NARROW the domain (M5 on the stand) empties `dom`, and the
+    unguarded index raised IndexError mid-file -- so the run died before
+    printing which check failed, and the stand scored it "red with the wrong
+    message". The assertion was the weak part, not the mutant.
+    """
+    return r['dom'][0]['consumer'] if r['dom'] else None
+
+
+r = run(lvl_doc(7))
+check(len(r['dom']) == 1, '5a: the level-7 point cast is still in-domain')
+check(via(r) == 'considerW2',
+      '5b: below level 10 a point cast cannot be ConsiderW -- no talent exists')
+
+r = run(lvl_doc(7, entity=True))
+check(via(r) == 'considerW',
+      '5c: an ENTITY cast is ConsiderW, whose target reaches a live gate')
+
+# The honest half. At level 10 `talent7:IsTrained()` MAY be true, so ConsiderW
+# also point-casts and the two consumers are no longer separable from the dump.
+# Reporting that as `considerW2` would launder an unknown into an exoneration
+# -- the same direction of error the stale-mana guard was built to stop.
+r = run(lvl_doc(10))
+check(via(r) == 'ambiguous',
+      '5d: at level 10 a point cast is AMBIGUOUS, not assigned to ConsiderW2')
+r = run(lvl_doc(25))
+check(via(r) == 'ambiguous',
+      '5e: and stays ambiguous at max level')
+
+# The attribution must not move the domain: it explains the SAME casts.
+check([c['t'] for c in run(lvl_doc(7))['dom']] == [c['t'] for c in run(lvl_doc(10))['dom']],
+      '5f: consumer attribution does not add or drop a single in-domain cast')
+
 print(f'zusult_gate liveness: {checks} checks, {len(failures)} failures')
 for f in failures:
     print('  FAIL', f)

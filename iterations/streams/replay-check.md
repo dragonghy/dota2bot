@@ -77,6 +77,20 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **[2026-09-04 新踩,W45] 一个「域内计数」在没有归属的时候,默认被读成「门漏了」——
+  而这个默认在本轮语料上 7/7 全错。** `zusult` armed 腿测得 **8.0 每百机会帧**、
+  baseline **8.6**,逐种子同号均值 **+1.86**,一张写着「门什么也没干」的干净表;
+  逐帧查下去,**7 发全是 hero level 7-9 的点施法**,而 `ConsiderW` 的实体路径在 10 级以下
+  **结构上不可能**(天赋最早 10 级)⇒ 全部走 `ConsiderW2`,**那条路上的门按设计 inert**
+  (三条分支故意不报目标,GH #47 豁免)。**不是门漏了,是量具把「门管不着的施法」记在了门头上。**
+  判别子**极便宜且精确**:原始 `ABILITY` 事件的 `target` 是不是英雄(实体 vs 点施法)
+  × 门帧的**英雄等级**是否 < 10。已落进 `zusult_gate.py:consumer()`(`in_domain via:` 那一行),
+  钉在 `tests/test_zusult_gate_liveness.py` §5 + `tools/agent/mutstand_zusvia.sh`。
+  ⚠️ **level ≥ 10 时两个消费者从 dump 上分不开,必须报 `ambiguous`** ——
+  记成 `considerW2` 就是**把「不知道」洗成「无罪」**。
+  与 stale-mana(GH #491)**同族**:**量具自己制造了它随后报出来的那个结论**,方向都只有一边。
+  **可迁移的那一句:凡是"某个门的域内计数"类检测器,先问"这一发是哪个消费者发的",
+  再问"它是不是漏"** —— 一个门有两个调用点时,前一个问题不问,后一个问题的答案就是编的。
 - **[2026-08-21 更正,以当前 dumper 为准]** `events[].actor/target` 现在是**全名带下划线**
   (`npc_dota_hero_skeleton_king`),`snapshots[].hero` 同样是全名。旧记录说事件里没有下划线
   (`skeletonking`)—— 那是老版本 dumper 的行为。**两边一律 canon 化再比**,否则会读出
@@ -10771,3 +10785,85 @@
     **脚本的自拒机制是有效的 —— 是调用者第 28 次没长记性。**
   - **Token 用量**:见报告 §9。
   - 完整报告:`iterations/reports/replay-check/20260904T160124Z.md`
+- **2026-09-04T18:54Z(W45 zuus 载体机隔离扫;上一轮 §6 的第 1 与第 3 条并成一件事)**:
+  语料 **W45** 两台 zuus 载体机 —— `…_d3d158`(种子 3927,rerun 机,**连续三轮登记「仍未扫」**)
+  + `…_fdfe8d`(种子 3954)。**宽扫 37/37 局**(19+18,`unparseable` **0/0**),
+  **逐帧 9 局**(12 发标记施法逐发定性,2 发完整还原)。零 EC2、零发波、S3 只读、零 CE 调用。
+  **未改 `bots/`/`game/` 任何一行。**
+  ```
+  VERIFY id=zusboltdom verdict=INDETERMINATE episodes=7
+  VERIFY id=zusult     verdict=INDETERMINATE episodes=0
+  ```
+  - **选这两台的依据是 armed 串本身**:`git show 27165f8c:iterations/streams/test_set.md` 逐字读,
+    W45 的 60-id 串**含 `zusult`、不含 `zusboltdom`** ⇒ **正是上一轮 §3 要的那条隔离腿**;
+    载体由 `W45_wave.json:machines[].carriers` 点名(zuus 只在 3954/3927 两台)。
+  - **⭐ 主发现:`zusult` 那个「门什么也没干」的读数是量具制造的。**
+    聚合:armed(`zusult`-only)**7 域内 / 87 机会帧 = 8.0 每百**,baseline **5 / 58 = 8.6**;
+    逐粒种子再算术平均(铁律 4(i-d))**+1.86**,两粒同号,**方向甚至更差** ⇒ 单看表该判 BUGGY。
+    **逐帧推翻了它,推翻它的是英雄等级**:`hero_zuus.lua` 里 W 有两个消费者,
+    `ConsiderW`(:673)走**实体施法**(:687)**除非** `talent7:IsTrained()`(:685),
+    `ConsiderW2`(:700)**永远点施法**(:709)且其打断/撤退/(未 armed `zusboltdom` 时)
+    击杀-AoE 三条分支**故意不报目标**,门在 nil 目标上 **inert**(GH #47 豁免,写在源码里)。
+    **天赋最早 10 级** ⇒ **level < 10 的点施法,`ConsiderW` 结构上不可能**。
+    armed 腿 **7 发等级 7/7/7/7/8/8/9,全部点施法 ⇒ 全部 `ConsiderW2`**;
+    **语料里唯一一发实体施法在 baseline 腿**(`074335_slot3` t=398.9 Arc Lightning)。
+    ⇒ **armed 腿经由活路径的域内施法 = 0;那 7 发不是漏过门,是门按设计不管。**
+    两发完整还原,算术闭合:`073013_slot3` t=490.1(蓝 **133→2,−131 逐位相同**,gap 内零回蓝,
+    W cd 0→5.7,pudge 的钩子落在 **491.1 即施法之后** ⇒ 撤退代理成立)、
+    `064714_slot7` t=360.1(**147→17,−130**,**背包里有秘法鞋而没有用它** ——
+    正是上一轮 4d/4e 那对两半对照要区分的「持有≠使用」)。
+  - **`zusult` 判 INDETERMINATE 不判 BUGGY**:活路径上 armed **0** 发 vs baseline **1** 发,
+    **`0 vs 1` 与上一轮 `zusboltdom` 是同一个问题**,不构成结论。
+  - **⭐ `zusboltdom` 的隔离棒买到了,而它买到的是「这个对比跨波买不到」**:
+    控制腿泄漏率**逐种子跨一个数量级** —— 3927 armed **14.0** / base **12.5**,
+    3954 armed **2.3** / base **0.0**。W46 那条 armed 腿 `0/120` 只有两粒种子 ⇒
+    **在 3954 这种率的种子上读到 0 一点也不奇怪**。池化的 8.0 × 120 ≈ 期望 9.6 发
+    **看着像强证据,逐种子读完就不像了** —— 池化把这个事实藏住了。
+    ⇒ **堵点从「对照域只有 1 帧」(样本量)换成「跨波不可比」(种子效应 > 效应量)**,
+    **唯一能关掉它的是同波隔离**(一波里同时有 `zusult`-only 与 `zusult`+`zusboltdom` 两条腿)
+    —— **已不是录像组能自己买的东西,是排波的题。**
+  - **⛔ 铁律 4(i-a) 同形第四次,但形状不同,必须分辨**:zuus 37 局**全在 radiant**,
+    四格 **armed 22/0、base 15/0**。**这一次臂与侧不共线,是侧别为常数** ——
+    W46 是 armed≡radiant/base≡dire(**混淆**),本轮**两条腿都在 radiant**
+    (**侧偏对臂的对比精确抵消**)。**同样一格空着,一个是缺陷,一个反而是最干净的情形**;
+    dire 两格 n=0 照登,但**不要**读成 W46 那种不可执行。
+    继 `cmqreach`、GH #353、W46 之后第四次:**载体门只保证「这一波有这个英雄」,
+    不保证「这个英雄两边都站过」。**
+  - **交付**(全部只读离线,零 AWS,未碰 `bots/`):`zusult_gate.py` 加 `consumer()` + `TALENT_LEVEL`,
+    按**实体/点施法 × 英雄等级**把域内施法拆成 `considerW2`/`considerW`/**`ambiguous`**,
+    totals 下多打 `in_domain via:` 一行;**不改变任何既有读数**(`dom` 改前改后 37 局 `diff` 全等)。
+    **`ambiguous` 是故意留的洞**:level ≥ 10 时 `talent7` 可能已学,两个消费者从 dump 上分不开,
+    **记成 `considerW2` 就是把「不知道」洗成「无罪」**。
+    + `tests/test_zusult_gate_liveness.py` §5 **6 用例**(含两半对照 5b / 5d-5e,及 5f
+    「归属不许增删一发域内施法」),全文件 **29 检查 / 0 失败**
+    + `tools/agent/mutstand_zusvia.sh` **5 变异 5 CAUGHT / 0 SURVIVED**,还原 `sha256sum -c` OK。
+    ⚠️ **据实登记本台返工**:M5 第一次是**「RED 但消息不对」,原因不在变异体在断言** ——
+    §5 写的 `r['dom'][0]['consumer']` 在域被清空时 `IndexError`,
+    **整个文件在打印哪一条失败之前就死了**;改成 `via(r)`(域空返 `None`)后被 5a 正常抓住。
+  - **下一轮第一件事**:(1) **`zusboltdom` 不要再买任何跨波对照**(§3 已证该方向买不到),
+    等排波给同波双腿,否则 (a) 就停在 INDETERMINATE;
+    (2) **`campbind`** —— W46 新入集、**连续两轮零核验**,载体 generic,
+    W46 的 `…_d7082b`/`…_b77771` **仍未扫**,**这是下一轮最该做的一件事**;
+    (3) 接 **GH #467** 的 `slotwait` (a)(⚠️ `abilities[].cd` **会是 `None`**);
+    (4) 查 #477 追评 / 本轮新 [harness] issue / #491 / #488 / #470 / #474 / #482 / #483 回音,
+    #477 的重 dump 仍是本组的球(**W44 录像约 09-25 过期**)。
+  - **欠账**:37 局 timeline 随容器回收;**W46 两台非 zuus 载体机未扫**(继承,`campbind` 卡在它后面);
+    `cmqreach` 建议钉帧 fixture 仍未做;上一轮 §2.1 那一帧 fixture 未做;
+    本轮 §2.2 的等级判据未做成 Lua fixture(量具归属非 bot 决策,同上);
+    #419 第 17 轮 / #421 第 16 轮仍零评论。**W45 `d3d158` 未扫 —— ✅ 本轮清掉。**
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×2 **全 0**
+    (`swept=19 skipped=6 unparseable=0` / `swept=18 skipped=6 unparseable=0`);
+    `zusult_gate.py` 改前/改后**均 `GATE_EXIT=0`** 且 37 局 `IN-DOMAIN` 计数 **`diff` 全等**;
+    `tests/test_zusult_gate_liveness.py` **0**(**29/0**);
+    `mutstand_zusvia.sh` **`MUT_EXIT=0`**(**5/5 CAUGHT**,还原后基线 EXIT=0)。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    ⛔ **开工自检 `EXIT=3`(FINDINGS,不是干净)**:`cadence` / `owed-executions` /
+    **`trunk-red(python)`**;python 那条 = `test_detector_source_constants.py` 在
+    `J.ShouldTpSupportTowerFight` 上的**未捕获异常**,**= GH #490(批测台 15:30Z 已开),
+    不重复认领**,且**与本轮改动无关**(本轮不碰 `bots/`,该锚点解析的是 `bots/` 源码)。
+    ⚠️ **第八次登记:自检在本容器不是章程写的「约 20s」** —— 本轮实测 **~40 分钟**跑完(未超时)。
+    ✅ **证据纪律 3 第二十九次踩**:第一条命令又写了管道,`routine_selfcheck.sh` **当场自拒**
+    (`SELFCHECK_EXIT=2 REFUSED`,harness 报的 `EXIT=0` 是 `tail` 的码);
+    改文件重定向后拿到真码 **3**。**脚本的自拒机制又一次是唯一挡住它的东西。**
+  - **Token 用量**:见报告 §9。
+  - 完整报告:`iterations/reports/replay-check/20260904T185409Z.md`

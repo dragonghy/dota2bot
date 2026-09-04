@@ -30,6 +30,9 @@ RCOST = {1: 225, 2: 375, 3: 525}
 HEALTHY = 0.60
 HPFLOOR = 0.55
 RECENT = 3.0
+# First hero level at which any talent can be trained. Below it,
+# `talent7:IsTrained()` in ConsiderW is necessarily false -- see consumer().
+TALENT_LEVEL = 10
 
 # Items that hand Zeus mana. The gate's FIRST clause is
 # `if hBot:GetMana() >= nCost then return false end`, and it reads the mana the
@@ -102,6 +105,41 @@ def analyze(path):
 
     def calm(t, zs_snap):
         return zs_snap['hp_pct'] >= HPFLOOR and not any(t - RECENT <= h <= t for h in hurt)
+
+    def consumer(ev, zlvl):
+        """WHICH of W's two consumers issued this bolt -- the question an
+        in-domain COUNT cannot answer, and the one that decides whether the
+        cast is a gate miss at all.
+
+        `bots/BotLib/hero_zuus.lua` dispatches W twice.  `ConsiderW` (:673)
+        casts on the ENTITY (:687) unless `talent7:IsTrained()` (:685);
+        `ConsiderW2` (:700) always casts on a LOCATION (:709).  Both call the
+        same reserve gate, but ConsiderW2's channel-interrupt / retreat /
+        (unless `zusboltdom` is armed) kill-AoE branches report NO target on
+        purpose, and the gate is inert on a nil target -- so a bolt from those
+        branches is the exemption WORKING AS WRITTEN, not a leak past the gate.
+
+        Talents are learnable only from hero level 10, so below that
+        `talent7:IsTrained()` is necessarily false and a POINT cast cannot have
+        come from ConsiderW.  That makes the split exact on the frames that
+        matter here; at level >= 10 a point cast is genuinely AMBIGUOUS between
+        the two, and is reported as such rather than assigned.
+
+        This does NOT narrow the domain and does not move a single existing
+        reading -- `dom` is byte-identical with or without this function.  It
+        adds the attribution WITHOUT which an in-domain count reads as a gate
+        miss by default, which is the direction that flatters nobody: it
+        manufactured the reading `zusult` armed 8.0 vs baseline 8.6 per 100
+        opportunity frames on the W45 Zeus corpus (37 games), a "the gate does
+        nothing" shape that dissolves once all 7 armed casts turn out to be
+        ConsiderW2 point casts at hero level 7-9.
+        """
+        point = not str(ev.get('target', '')).startswith('npc_dota_hero_')
+        if not point:
+            return 'considerW'          # entity cast -- ConsiderW, gate was live
+        if zlvl is not None and zlvl < TALENT_LEVEL:
+            return 'considerW2'         # no talent possible -> ConsiderW excluded
+        return 'ambiguous'
 
     # gate state timeline
     #
@@ -201,7 +239,9 @@ def analyze(path):
         rows.append(dict(t=e['t'], spell=inf, tgt=tgt, hp=hv, unaff=g['unaff'],
                          mp=g['s']['mp'], rlvl=g['rlvl'], zhp=g['s']['hp_pct'],
                          calm=calm(e['t'], g['s']), healthy=hh, have=g['have'],
-                         stale=stale_mana(e['t']),
+                         stale=stale_mana(e['t']), zlvl=g['s'].get('level'),
+                         consumer=(consumer(e, g['s'].get('level'))
+                                   if inf == 'zuus_lightning_bolt' else 'considerQ'),
                          spent=spent(e['t'], inf)))
     flagged = [r for r in rows if r['have'] and r['unaff'] and r['healthy'] and r['calm']]
     # Order matters and is deliberate: the stale-mana split comes FIRST, because
@@ -236,7 +276,7 @@ if __name__ == '__main__':
         for c in r['dom']:
             print(f"    t={c['t']:7.1f} {c['spell']:20s} -> {c['tgt'].replace('npc_dota_hero_',''):16s} "
                   f"tgt_hp={c['hp']:.2f} zeus_hp={c['zhp']:.2f} mp={c['mp']} Rlvl={c['rlvl']} "
-                  f"paid={c['spent']}")
+                  f"paid={c['spent']} zlvl={c['zlvl']} via={c['consumer']}")
         for c in r['notcast']:
             print(f"    [dropped: not a cast] t={c['t']:7.1f} {c['spell']} -> "
                   f"{c['tgt'].replace('npc_dota_hero_','')}")
@@ -245,6 +285,8 @@ if __name__ == '__main__':
         tot[k + '_casts'] += len(r['rows']); tot[k + '_games'] += 1
         tot[k + '_unknown'] += len(r['unknown']); tot[k + '_notcast'] += len(r['notcast'])
         tot[k + '_stale'] += len(r['stale'])
+        for c in r['dom']:
+            tot[k + '_via_' + c['consumer']] += 1
     print("\n=== totals ===")
     for k in ('armed', 'base'):
         o, dm, c, g = tot[k+'_opp'], tot[k+'_dom'], tot[k+'_casts'], tot[k+'_games']
@@ -253,3 +295,11 @@ if __name__ == '__main__':
               f"unknown_gate_frame_casts={tot[k+'_unknown']} "
               f"dropped_not_a_cast={tot[k+'_notcast']} "
               f"dropped_stale_mana={tot[k+'_stale']}")
+        # The attribution split of the SAME in_domain_casts above -- not a
+        # second domain. A count that is all `considerW2` is the nil-target
+        # exemption working as written; only `considerW` (and, pending a frame,
+        # `ambiguous`) can be a miss past a live gate.
+        print(f"       in_domain via: considerW2={tot[k+'_via_considerW2']} "
+              f"considerW={tot[k+'_via_considerW']} "
+              f"ambiguous={tot[k+'_via_ambiguous']} "
+              f"Q={tot[k+'_via_considerQ']}")
