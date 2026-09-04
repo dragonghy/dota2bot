@@ -22,19 +22,32 @@
 -- Gated turbo (inherited from the helper) + 'midsupyield' + core-only; supports
 -- never yield. Inert until armed.
 --
--- Real-frame validation (NOT gate-plumbing). Two corpus frames where a CORE's
--- helper actually fires (a whole-corpus census over tests/fixtures/ found only
--- three such frames; two carry a viable support responder):
---   YIELD    f_260820_042612_axe_blink_init_573  luna (roles-VERIFIED pos 1)
---            t=573.0, with vengeful_spirit (roles-VERIFIED pos 5) alive/lvl10/TP
+-- ⛔ [midsupfar 2026-09-04] THE SENTENCE ABOVE WAS FALSE WHEN IT WAS WRITTEN, AND
+-- THE FRAME THIS FILE USED TO CALL "YIELD" IS THE COUNTER-EXAMPLE.  The mirror
+-- was short the one clause that is a property of the PAIRING rather than of the
+-- support alone: the responder must be farther than J.TP_RESPONSE_FAR_FLOOR from
+-- the tower it answers.  On f_260820_042612_axe_blink_init_573 the yielded-to
+-- vengeful_spirit stands 655 from that tower -- already at the fight, with no
+-- response to make -- so armed DROPPED the response instead of reallocating it.
+-- The predicate now takes the answered building; that frame moved to
+-- tests/test_midsupfar_yield_target.lua as its drop case, and the YIELD case
+-- here moved to a frame where the hand-over is real.  Two of these assertions
+-- went red on the repair, and they were the two that encoded the false claim.
+--
+-- Real-frame validation (NOT gate-plumbing). Corpus frames where a CORE's helper
+-- actually fires (a whole-corpus census over tests/fixtures/ finds three; two
+-- carry a support the mirror accepts, and only ONE of those two can take it):
+--   YIELD    f_260819_182855_lion_drain_midchannel  death_prophet (pos 1, core)
+--            answers a tower 4,160 away; dragon_knight (pos >= 4, lvl 6+, TP) is
+--            15,832 from that tower -- 4.5x past the floor, a real alternative.
 --   NODROP   f_260819_183613_storm_collapse_parity  storm_spirit (core) t=378.9,
 --            NO support with a ready TP on the team -> the core must still fire.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 
-local YIELD  = 'tests/fixtures/f_260820_042612_axe_blink_init_573.lua'
-local YSUBJ  = 'npc_dota_hero_luna'
+local YIELD  = 'tests/fixtures/f_260819_182855_lion_drain_midchannel.lua'
+local YSUBJ  = 'npc_dota_hero_death_prophet'
 local NODROP = 'tests/fixtures/f_260819_183613_storm_collapse_parity.lua'
 local NSUBJ  = 'npc_dota_hero_storm_spirit'
 
@@ -58,11 +71,11 @@ local tests = {}
 
 -- ---- frame facts every outcome below rests on -------------------------------
 
-tests['[frame] YIELD frame: a core responder, a pos-5 support alternative'] = function()
+tests['[frame] YIELD frame: a core responder, a pos-4/5 support alternative'] = function()
     local J, bot = run(YIELD, YSUBJ, { 'midtp' })
     assert(J.IsModeTurbo(), 'the candidate is turbo-only')
     assert(J.GetPosition(bot) == 1 and J.IsCore(bot),
-        'subject luna must be a roles-verified core, got pos ' .. tostring(J.GetPosition(bot)))
+        'subject death_prophet must be a core, got pos ' .. tostring(J.GetPosition(bot)))
     assert(bot:IsAlive() and bot:GetLevel() >= 6, 'live level-6+ responder')
     local tp = J.GetItem2(bot, 'item_tpscroll')
     assert(tp ~= nil and tp:IsFullyCastable(), 'the TP must be ready')
@@ -72,17 +85,25 @@ end
 
 tests['[frame] YIELD frame carries a viable support responder, pos >= 4'] = function()
     local J, bot = run(YIELD, YSUBJ, { 'midtp' })
-    assert(J.HasAvailableSupportResponder(bot) == true,
-        'a pos-4/5 support with a ready TP must be present, or the yield has no target')
+    -- [midsupfar] The predicate is asked ABOUT A TOWER, so the tower this bot
+    -- actually answers is what it must be handed. Asking it in the abstract is
+    -- the defect, not a shortcut: with nil it now answers false by construction.
+    local building = J.ShouldTpSupportTowerFight(bot)
+    assert(building ~= nil, 'midtp alone must answer a front here')
+    local J2, bot2 = run(YIELD, YSUBJ, { 'midtp' })
+    assert(J2.HasAvailableSupportResponder(bot2, building) == true,
+        'a pos-4/5 support with a ready TP AND beyond the far floor for this '
+        .. 'tower must be present, or the yield has no target')
     -- name it: the predicate must be reading a real pos>=4 teammate, not the bot.
     local found = nil
     for i = 1, #(GetTeamPlayers(GetTeam()) or {}) do
         local m = GetTeamMember(i)
-        if m ~= nil and m ~= bot and J.IsValidHero(m) and m:IsAlive()
-        and J.GetPosition(m) >= 4 and m:GetLevel() >= 6
-        and not J.IsInTeamFight(m, 1600) and not J.IsRetreating(m) then
-            local it = J.GetItem2(m, 'item_tpscroll')
-            local bt = J.GetItem2(m, 'item_travel_boots')
+        if m ~= nil and m ~= bot2 and J2.IsValidHero(m) and m:IsAlive()
+        and J2.GetPosition(m) >= 4 and m:GetLevel() >= 6
+        and not J2.IsInTeamFight(m, 1600) and not J2.IsRetreating(m)
+        and GetUnitToUnitDistance(m, building) > J2.TP_RESPONSE_FAR_FLOOR then
+            local it = J2.GetItem2(m, 'item_tpscroll')
+            local bt = J2.GetItem2(m, 'item_travel_boots')
             if (it ~= nil and it:IsFullyCastable())
             or (bt ~= nil and bt:IsFullyCastable()) then found = m:GetUnitName() end
         end
@@ -93,7 +114,13 @@ end
 tests['[frame] NODROP frame: a core fires but NO support has a ready TP'] = function()
     local J, bot = run(NODROP, NSUBJ, { 'midtp' })
     assert(J.IsCore(bot), 'subject must reach the core-only yield clause')
-    assert(J.HasAvailableSupportResponder(bot) == false,
+    -- Ask it about the tower this bot answers -- NOT about nil. A nil building
+    -- answers false for a reason that has nothing to do with this frame, which
+    -- would make the negative control pass without ever looking at the roster.
+    local building = J.ShouldTpSupportTowerFight(bot)
+    assert(building ~= nil, 'midtp alone must answer a front here')
+    local J2, bot2 = run(NODROP, NSUBJ, { 'midtp' })
+    assert(J2.HasAvailableSupportResponder(bot2, building) == false,
         'this frame must have no viable support, or it is not a negative control')
 end
 
@@ -107,6 +134,20 @@ end
 tests['[YIELD] armed (midtp+midsupyield) the core YIELDS the slot to the support'] = function()
     assert(fires(YIELD, YSUBJ, { 'midtp', 'midsupyield' }) == false,
         'with a viable support present, the core must defer (return nil)')
+end
+
+tests['[midsupfar] the frame this file used to call YIELD is a DROP, not a yield'] = function()
+    -- Kept here, at the scene, so the false claim in this file's own header
+    -- cannot be re-derived from a green suite. Full treatment (census, the
+    -- pairing clause, the positive control) is in
+    -- tests/test_midsupfar_yield_target.lua.
+    local DROP, DSUBJ = 'tests/fixtures/f_260820_042612_axe_blink_init_573.lua',
+        'npc_dota_hero_luna'
+    assert(fires(DROP, DSUBJ, { 'midtp' }) == true, 'the core answers this front')
+    assert(fires(DROP, DSUBJ, { 'midtp', 'midsupyield' }) == true,
+        'armed must NOT yield here: the only support the mirror accepts stands '
+        .. '655 from the answered tower, inside the floor, so it can take '
+        .. 'nothing and the yield would drop the response outright')
 end
 
 tests['[NODROP] armed the core still fires -- a response is never DROPPED'] = function()

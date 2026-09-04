@@ -15461,3 +15461,160 @@ M5 与 M7 **第一版就被抓住了**,退出码 1,报告写「CAUGHT」——**
    按这个形状读,而不是只数 poke 次数。
 2. **谁下一个碰 `pullcad > pulldrag` 那一行的人** —— 它还停在「读过并判断」;§EE.1 证明驱动它
    只要多调一次现成的 harness。
+
+---
+
+## §EF 2026-09-04T13:5xZ 协同组 —— **一面镜子只在它照得到的地方是完备的**:`midsupyield` 的让路把名额交给一个**结构上接不住的人**,而「只重分配、绝不丢弃」这句保证同时写在源码、它自己的测试头和总监的批准理由里;本节最该被读的是 **§EF.3:漏掉的那一条不是五条里的一条,它是唯一一条说出「交出去的是什么」的**
+
+**本节不改 armed 串(62-id 逐字不动),不申请新 id,不要新波次,零 AWS / 零 S3 / 零 EC2。**
+产出是**一处 gated 行为修复(在既有 `midsupyield` 体内,不开第二个 id)+ 一份真帧普查 + 两份真帧测试 13/13 + 13/13
++ 一台新变异台 11/11 CAUGHT(零 NO-OP)+ 一条要总监重裁的方向性前提**。
+`game/` 零 diff;`bots/` 只动 `jmz_func.lua` 一个函数与它唯一的调用点。
+
+### §EF.0 一句话
+
+`J.HasAvailableSupportResponder` 把自己的合同写成「**逐条镜像**支援自己要过的门」,
+而镜像**少了一条**:响应者必须距**它要答的那座塔** > 3500。
+少的这一条**问不出来** —— 谓词不收 building 参数。
+于是核心把队伍唯一的塔防 TP 名额,让给一个**站在那座塔边上、根本接不住它**的支援。
+真帧上量:让路的定义域 **2 帧**,其中 **1 帧是这个 DROP**,
+**而那正是该 id 自己测试文件里的阳性对照帧**。
+
+### §EF.1 域(量出来的,不是论出来的)
+
+`tests/_midsupfar_sweep.lua`,109 fixture / **1012 个活着的英雄帧**,只 arm `midtp`:
+
+| 量 | 读数 |
+|---|---|
+| `J.ShouldTpSupportTowerFight` 开火的帧 | **8** |
+| 其中主体是**核心**(`midsupyield` 唯一能碰的集合) | **3** |
+| 3 帧里全队**无**可用支援(阴性对照,armed 照旧开火) | **1** |
+| **让路的定义域**(镜像接受了至少一个支援) | **2** |
+| 其中**接得住**这座塔的(真让路) | **1** |
+| 其中**接不住**(DROP) | **1** |
+
+两个具体帧:
+
+- **DROP** `f_260820_042612_axe_blink_init_573`:核心 luna 答一座 **11,876** 外的塔,
+  唯一被镜像接受的支援是 pos-5 复仇之魂,**距那座塔 655** —— **3500 的 1/5.3**,
+  也就是**它本来就站在那场仗里**,没有任何 TP 可打。
+- **REALLOC** `f_260819_182855_lion_drain_midchannel`:核心 death_prophet 答 4,160 外的塔,
+  dragon_knight 距该塔 **15,832** ⇒ 这是一次货真价实的交接。
+
+**分母是 2,已连同分布一起登记**(铁律 4 (ii):小值域计数不许只报比率)。两个数都是**下界**。
+
+### §EF.2 被证伪的那句话,以及它出现过的三个地方
+
+> "this can only REALLOCATE a response to a support, never DROP one"
+
+1. **源码注释**(`jmz_func.lua`,`J.HasAvailableSupportResponder` 头注);
+2. **它自己测试文件的文件头**(`tests/test_midsupyield_core_yields.lua`);
+3. **总监的条件性批准**(`state.json:AX.5_strategy5b_midsupyield`:
+   "Direction is bounded by construction (can only REALLOCATE a tower-defense response
+   from core to support, never drop one) … => approved")。
+
+**它在写下的那天就是假的。** 三处都不是抄错,三处是**同一个论证**被复述了三遍 ——
+而那个论证的唯一支点是「镜像是完备的」这句自述。
+
+### §EF.3 ⭐ 主判据(立法级,可复用,超出本主题)
+
+> **一个「逐条镜像」的安全论证,强度等于镜像的完备性;
+> 而它唯一漏得掉的那一条,恰恰是唯一说出「交出去的是什么」的那一条。**
+
+镜像里每一条(活着 / 有效英雄 / pos ≥ 4 / lvl ≥ 6 / TP 就绪 / 不在团战 / 不在撤退)
+都是**支援单独一个人的性质**;响应者循环还有一条,是**配对的性质**——
+`GetUnitToUnitDistance( bot, building ) > 3500`。
+**一个不收 building 的谓词按构造问不出配对的性质。**
+而这次仲裁**本身就是一句关于交接的断言** ⇒ 漏掉的不是「五条里的一条」,
+是**唯一一条与被断言的那件事同构的**。
+
+⇒ **可操作的一半**:凡是「A 让位给 B」型的仲裁,先问
+**「决定 B 合格的那个谓词,看得见 A 让出去的那个东西吗?」**
+看不见 ⇒ 安全论证到此为止,不管剩下几条对得多齐。
+
+与 `campbind`(GH #475)是同一枚硬币:那次**下游一个「最近者」撤销了上游四条否决**,
+这次**上游一次「谁合格」的判断从没被告知下游在交接什么**。
+
+### §EF.4 修法(一次一个杠杆,**故意不开第二个 id**)
+
+- `J.HasAvailableSupportResponder( bot, hBuilding )` 新增合取项
+  `GetUnitToUnitDistance( hAlly, hBuilding ) > J.TP_RESPONSE_FAR_FLOOR`;唯一调用点传 `building`。
+- 响应者循环里那个字面量 `3500` 与谓词**共用一个新常数** `J.TP_RESPONSE_FAR_FLOOR = 3500`
+  (**值逐字节沿用,不是新推导**)。理由是**两份拷贝就是两个会再次走散的东西**,
+  而本条修的缺陷正是一面走散了的镜子。普查把「循环读的是常数名而不是重新内联的字面量」钉成断言。
+- `hBuilding == nil` ⇒ `return false`:**说不出塔名的调用者朝「不让路」失效**,而不让路就是出厂答案。
+- ⛔ **没有新 soak id**,这是有意的:`IsSoakCandidate('midsupyield') and IsSoakCandidate('midsupfar')`
+  会在任一 id promote 当天冻结为 FALSE(`pullcad` 陷阱,AGENTS.md)。
+  `midsupyield` **从未在任何一波里 armed 过**(不在 62-id 串,历史串也没有)⇒
+  改它的函数体**不作废任何一波的读数**,是本轮能不开 id 的**前提条件**,不是偏好。
+
+**方向**:新增的是**合取项** ⇒ 被接受的支援集合是**严格子集** ⇒ armed 让路的帧**严格变少**
+⇒ 只可能把行为推向出厂。**正因如此,本文件承重的那一半是阳性对照** ——
+death_prophet 帧必须**仍然让路**;否则一个「永远答 false」的谓词就能满足全部否定断言,
+而那是把 id 弄死,不是修好。
+
+### §EF.5 ⭐⭐ 波次级负控写对了,却回答不了它自己命名的那个问题
+
+`queue.json:strategy-5b` 的 acceptance 里早就写着:
+
+> NEGATIVE control … total tower-defense TP responses must NOT collapse toward 0
+> (that would mean cores yield but supports do not pick up = **a DROPPED response**,
+> the emergent risk this gated read exists to catch)
+
+**那句话命名的正是本节的缺陷**,而且写在一年前。两件事同时为真:
+
+1. **它从未被买过** —— `midsupyield` 至今不在任何一波的 armed 串里(W6 从没按这条发过);
+2. **更要紧的**:它命名的风险**根本不需要一次波次** —— fixture 级就答得出,
+   而且答案不是「有没有风险」,是**「定义域的一半」**。
+
+⇒ **一道波次级负控不该花在一个 fixture 已经能回答的问题上。**
+把「会不会丢」排进 (b) 的读数里,等于**用最贵的那一级去问最便宜的那一级的问题**,
+而且这一等就是十二天。与 `0CORP` 的「只能证伪的读数必须在选杠杆之前跑」同族,
+**方向相反**:那条管**别做**,这条管**别等**。
+
+### §EF.6 ⭐⭐⭐ 仪器自己踩了两脚,两脚都是自己抓住的
+
+- **(i) 普查把每一个支援读成 near。** 常数提取之后,普查的正则还在匹配**已经不存在的字面量**
+  (`> (%d+)`),`G.FAR_FLOOR` 变 nil,`far` 恒假 ⇒ `sup_far 0 / sup_near 2`,
+  **长得像一个更大的发现**,方向恰好是「本轮成果更漂亮」那一边。
+  抓住它的是普查里那一列:**每一条让路记录都再问一次 SHIPPED 谓词,两者必须一致**(`shipped_disagrees`)。
+  ⇒ **一台不能与树意见相左的普查,测的是它自己。**
+- **(ii) `[premise]` 那条腿第一版在测空气。** 它只断言 `HasAvailableSupportResponder(bot, nil) == false`,
+  而**把 nil 守卫删掉它照样绿**(变异台 M6 存活):没有守卫时循环照跑,
+  `GetUnitToUnitDistance(hAlly, nil)` 在 mock 下答一个垃圾数,`垃圾 > 3500` 为假,
+  于是**用错误的理由得到正确的答案** —— 而那个理由**引擎不认**
+  (nil 句柄在一个吞掉报错文本的错误处理器里抛;AGENTS.md「无 bot 侧调试」)。
+  改法**不是加断言,是驱动守卫**:换掉距离读数器让它拒绝 nil,守卫必须让它**一次都不被调用**。
+  与 `#397` 的 M2 / `#400` 的 M4b / `slotarb` 的 M12 **同形,连着第四次**:
+  **「用错误理由达成的正确结论」在这套测试里是一个常客,而唯一发现它的办法是变异台。**
+
+### §EF.7 登记不修:镜像还少四条(**问得出而没问**的那四条)
+
+`J.IsGoingOnSomeone` / `J.CanEnemyInterruptTpChannel` / 15s 新复活窗口 / 45s `bRepeatFront` 记忆。
+四条都是响应者循环对自己用、镜像没抄的门,每一条都还能把名额交给一个**会自己 bail 的**支援。
+**本轮故意不修**(一次一个杠杆,lanefix 教训),四条钉成**计数断言**
+(`[census] the mirror is still short four SUPPORT-ONLY members`)⇒ 将来修掉一条是**有意动作不是漂移**。
+与本轮修掉的那一条的**区别是可问性**:那一条**问不出来**(没有 building),这四条**问得出来而没问**。
+
+### §EF.8 验收(本节提请总监的三件,都不要钱)
+
+1. **(甲) 重裁 `AX.5` 的批准理由** —— "bounded by construction" 那句的支点已被证伪;
+   批准本身可以留,**理由必须换**(现在的界由**合取项 ⇒ 严格子集**给,不由镜像的完备性给)。
+2. **(乙) `midsupyield` 若要入集,必须带修复后的这棵树** —— 修复前的树上,
+   让路定义域的**一半是 DROP**,任何一波在那棵树上读到的「核心占比下降」都**分不开
+   「交给了支援」与「谁也没接」**。
+3. **(丙) `strategy-5b` 的 NEGATIVE control 保留、改判读** —— 它现在测的是**剩下那一半**
+   (镜像接受、且确实接得住的那些),不是全部;把它继续读成「全部丢弃风险」会**高估波次买到的东西**。
+
+**不申请入集,不申请波次。** 本节唯一的下游依赖是 (乙):在总监按 (乙) 表态之前,
+任何把 `midsupyield` 排进串的动作都会把上面那个二义性一起排进去。
+
+### §EF.9 产物与门
+
+`bots/FunLib/jmz_func.lua`(一个函数 + 唯一调用点 + 一个新常数);
+`tests/_midsupfar_sweep.lua`;`tests/test_midsupfar_yield_target.lua`(**新,13/13**,`[ratchet]`);
+`tests/test_midsupyield_core_yields.lua`(**改写,13/13** —— 旧文件**正好两条断言变红,
+就是把那句假话编码进去的那两条**);`tools/agent/mutstand_midsupfar.sh`(**11/11 CAUGHT,零 NO-OP**);
+`state.json:midsupfar_20260904`;`queue.json:strategy-5b.revision_20260904_midsupfar`;**GH #489**;
+报告 `iterations/reports/strategy/20260904T135500Z.md`。
+铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。

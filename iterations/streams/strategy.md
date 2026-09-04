@@ -27,6 +27,35 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0MIRROR. **【2026-09-04T13:55Z 新增,**自驱**(P1 (甲) 卡 `strategy-43`、P2 球在总监;`[strategy]` open issue
+   本轮扫过全是本组已交棒的;**没从 `0SLOT9` 剩下 7 处里选**,因为 `0PUSHCLUSTER` 自己写着「下一个杠杆去别的域挑」);
+   **产出是一处 gated 行为修复(既有 `midsupyield` 体内,**不开新 id**)+ 真帧普查 + 13/13 + 13/13 +
+   变异台 11/11 CAUGHT(零 NO-OP)+ 三条交总监的方向性重裁**:
+   `bots/FunLib/jmz_func.lua`;`tests/_midsupfar_sweep.lua`;`tests/test_midsupfar_yield_target.lua`;
+   `tests/test_midsupyield_core_yields.lua`(改写);`tools/agent/mutstand_midsupfar.sh`;
+   `state.json:midsupfar_20260904`;`queue.json:strategy-5b.revision_20260904_midsupfar`;`test_set.md §EF`;
+   **GH #489**;报告 `iterations/reports/strategy/20260904T135500Z.md`;
+   `game/` 零 diff、armed 串一字未动、零 AWS/S3/EC2/波次。**已交棒总监。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):一个「逐条镜像」的安全论证,强度等于镜像的完备性;
+   而它唯一漏得掉的那一条,恰恰是唯一说出「交出去的是什么」的那一条。**
+   `J.HasAvailableSupportResponder` 抄了 7 条**支援单独一个人的性质**,漏掉那条**配对的性质**
+   (`> 3500` 距它要答的那座塔)——**它不收 building 参数,按构造问不出来**。
+   ⇒ 站在塔边的支援满足其余全部子句却接不住 ⇒ 让路 = **DROP**。
+   可操作:凡「A 让位给 B」型仲裁,先问「**决定 B 合格的那个谓词,看得见 A 让出去的那个东西吗?**」。
+   与 `campbind`(#475)同一枚硬币的反面。
+   **⭐⭐ 那句假话写在三处**:源码注释、**它自己测试文件的文件头**、**总监的条件性批准**(`AX.5`)。
+   **⭐⭐⭐ 域**:109 fixture / **1012 活帧** ⇒ 开火 8 / 核心 3 / **让路定义域 2**,其中 **1 帧是 DROP** ——
+   **那正是该 id 自己的阳性对照帧**(luna 答 11,876 外的塔,让给距该塔 **655** 的复仇之魂)。分母是 2,连分布登记。
+   **⭐⭐⭐⭐ `strategy-5b` 的波次级负控逐字命名了这条缺陷,却从未被买过 —— 而且它根本不需要一次波次。**
+   ⇒ **一道波次级负控不该花在 fixture 已能回答的问题上**(`0CORP` 同族,方向相反:那条管「别做」,这条管「别等」)。
+   **⭐⭐⭐⭐⭐ 仪器两脚、两脚自抓**:普查正则匹配已不存在的字面量 ⇒ 全判 near、长得像更大的发现
+   (抓住它的是「每条记录再问一次 SHIPPED 谓词」这一列);`[premise]` 第一版**删掉 nil 守卫照样绿**
+   ⇒ **用错误理由得到正确答案**,改法是**驱动守卫**而不是加断言。
+   **⭐⭐⭐⭐⭐⭐ 不开第二个 id 是前提条件不是偏好**:`midsupyield` 从未在任何一波 armed 过
+   ⇒ 改它的函数体不作废任何读数;开新 id 反而会写出 `pullcad` 陷阱(变异台 M8 就是那个形状)。
+   **下一格**:总监裁甲/乙/丙;**(乙) 表态前不要把 `midsupyield` 排进任何串**。
+   **本组下一轮**:未认领 `[strategy]` issue,否则自驱 —— 候选是 §EF.7 那四条未修镜像成员之一(一次一个)。
+
 0FFPREM. **【2026-09-04T10:45Z 新增,**OWNER_PRIORITIES P2**(责任链当前球写着「协同组(决策侧 id + fixture)」;
    章程「下一格」写的也是 (乙) P2 决策侧 id。**先核 DoD 1 是不是还欠 —— 不欠了**:`stayfield`(TP 腿)与
    `stayfield2`(走路腿)2026-08-22 就落了地,**两个都在 62-id armed 串里**,owner 点名那帧已是 fixture
@@ -5159,6 +5188,56 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T13:55Z(**自驱** —— OWNER_PRIORITIES P1 (甲) 卡在 `strategy-43`、P2 球在总监(§ED),
+  章程明写「裁定回来前不要在 field 一族上再落 id」;`[strategy]` open issue 扫过一遍
+  (#485/#480/#475/#467/#464/#456/#415)**全是本组已交棒的**;**没从 `0SLOT9` 剩下 7 处里选** ——
+  `0PUSHCLUSTER` 自己写着「下一个杠杆去别的域挑」,本轮照办并按 `0CORP` **先跑域价钱再选形状**);
+  **产出是一处 gated 行为修复(既有 id 体内,不开新 id)+ 一份真帧普查 + 两份真帧测试 13/13 + 13/13
+  + 一台新变异台 11/11 CAUGHT(零 NO-OP)+ 三条要总监重裁的方向性前提**:
+  `bots/FunLib/jmz_func.lua`(`J.HasAvailableSupportResponder` 加 building 参数 + 配对合取项 +
+  新常数 `J.TP_RESPONSE_FAR_FLOOR = 3500` 供两站点共读);`tests/_midsupfar_sweep.lua`;
+  `tests/test_midsupfar_yield_target.lua`(新);`tests/test_midsupyield_core_yields.lua`(改写);
+  `tools/agent/mutstand_midsupfar.sh`;`state.json:midsupfar_20260904`;
+  `queue.json:strategy-5b.revision_20260904_midsupfar`;`test_set.md §EF`;**GH #489**;
+  报告 `iterations/reports/strategy/20260904T135500Z.md`;
+  `game/` 零 diff、**armed 串(62-id)一字未动、无新 soak id**;零 AWS、零 S3、零 EC2、零波次。
+  **已交棒总监(甲 重裁 AX.5 的批准理由 / 乙 入集必须带修复后的树 / 丙 strategy-5b 负控改判读)。**
+  **⭐ 主判据(立法级,可复用,超出本主题):一个「逐条镜像」的安全论证,强度等于镜像的完备性;
+  而它唯一漏得掉的那一条,恰恰是唯一说出「交出去的是什么」的那一条。**
+  `J.HasAvailableSupportResponder` 抄了 7 条**支援单独一个人的性质**,漏掉响应者循环里那条
+  **配对的性质**(`> 3500` 距**它要答的那座塔**)—— 而它**不收 building 参数,按构造问不出来**。
+  ⇒ 一个站在塔边的支援满足其余全部子句却接不住,核心让路 = **DROP 不是 REALLOCATE**。
+  可操作的一半:凡「A 让位给 B」型仲裁,先问「**决定 B 合格的那个谓词,看得见 A 让出去的那个东西吗?**」。
+  与 `campbind`(#475)是同一枚硬币:那次**下游一个「最近者」撤销上游四条否决**,
+  这次**上游一次「谁合格」的判断从没被告知下游在交接什么**。
+  **⭐⭐ 那句假话写在三个地方**:源码注释、**它自己测试文件的文件头**、
+  以及**总监的条件性批准**(`state.json:AX.5_strategy5b_midsupyield` 的 "bounded by construction")。
+  **⭐⭐⭐ 域是量出来的**:109 fixture / **1012 活帧** ⇒ helper 开火 8 帧 / 核心 3 帧 /
+  **让路定义域 2 帧**,其中 **1 帧是 DROP** —— **而那正是该 id 自己测试文件的阳性对照帧**
+  (luna 答 11,876 外的塔,让给距该塔 **655** 的复仇之魂,是 3500 的 1/5.3)。分母是 2,已连分布登记。
+  **⭐⭐⭐⭐ 波次级负控写对了却回答不了它自己命名的问题**:`strategy-5b` 的 acceptance
+  逐字写着 "cores yield but supports do not pick up = a DROPPED response" —— **它从未被买过**
+  (`midsupyield` 至今不在任何一波 armed 串里),**更要紧的是它根本不需要一次波次**:
+  fixture 级就答得出,答案是**「定义域的一半」**。⇒ **一道波次级负控不该花在 fixture 已能回答的问题上**
+  (与 `0CORP` 同族,方向相反:那条管「别做」,这条管「别等」)。
+  **⭐⭐⭐⭐⭐ 仪器踩了两脚、两脚都自己抓住**:(i) 常数提取后普查正则还在匹配已不存在的字面量,
+  `FAR_FLOOR` 变 nil ⇒ **每个支援读成 near**、长得像更大的发现 —— 抓住它的是那列
+  「每条记录再问一次 SHIPPED 谓词、必须一致」(**一台不能与树意见相左的普查测的是它自己**);
+  (ii) `[premise]` 第一版只断言 `(bot,nil)==false`,**删掉 nil 守卫照样绿**(M6 存活)——
+  垃圾距离 `> 3500` 为假 ⇒ **用错误理由得到正确答案**,而那个理由**引擎不认**;
+  改法是**驱动守卫**(换掉距离读数器让它拒绝 nil)。与 #397 M2 / #400 M4b / `slotarb` M12 **连着第四次**。
+  **⭐⭐⭐⭐⭐⭐ 登记不修**:镜像**还少四条「问得出而没问」的**(`IsGoingOnSomeone` /
+  `CanEnemyInterruptTpChannel` / 15s 新复活 / 45s `bRepeatFront`),钉成计数断言 ⇒ 将来修是有意动作。
+  ⚠️ 顺带被常设棘轮 `test_gate_claim_consistency` 拦下一次:注释里照字面引了一个不存在的 id
+  ⇒ `comment-only wired ids` 多出一个。**改注释(改用本仓既有元变量 `'X'`)而不是扩白名单** ——
+  不为一句散文永久放宽一条棘轮。
+  ⚠️ 开工自检 EXIT=3,三条 `cadence`/`owed-executions`/`trunk-red(python)`;python 那条是
+  `test_wave_gate_keys.py`,**批测台的**(GH #479,已 open),不是本轮引入。
+  收尾串行重跑 tagged detector 子集 **RAN=78 RED=0**;**77 → 78 是本轮自己加的**
+  (新文件带 `[ratchet]` 标签就进了发现集)—— 记一笔,免得下一轮把这个 +1 读成漂移。
+  **下一格**:三件都在总监手上(甲/乙/丙);**在 (乙) 表态之前不要把 `midsupyield` 排进任何串**。
+  本组下一轮:取未认领 `[strategy]` issue,否则自驱 —— **候选是 §EF.7 那四条未修镜像成员里的一条**
+  (一次一个),或换域,照旧先跑域价钱。
 - 2026-09-04T10:45Z(**OWNER_PRIORITIES P2** —— 铁律 9 与章程「下一格」同指 P2;
   **先核了 DoD 1 不欠**(决策侧 `stayfield`/`stayfield2` 2026-08-22 已落地并在 62-id armed 串里)
   ⇒ 改买它们脚下的前提;`[strategy]` open issue 扫过一遍,都是本组已交棒的);

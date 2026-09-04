@@ -8299,15 +8299,40 @@ end
 -- TP-response slot (J.TryTakeTpResponseSlot) to a support that is ALSO a viable
 -- responder, rather than racing it first-come-first-served.
 --
--- "Viable responder" mirrors, member by member, the exact gates the support would
+-- "Viable responder" mirrors, member by member, the gates the support would
 -- itself have to clear inside J.ShouldTpSupportTowerFight: alive, a valid hero,
 -- pos >= 4, level >= 6, a castable TP or Boots of Travel, and NOT already in its
 -- own team fight or retreating. If no such support exists the core does NOT yield
--- (it is the only responder available), so this can only REALLOCATE a response to
--- a support, never DROP one. Pure predicate -- the soak gate lives at the call
--- site (mirrors the [tparrive] gate right below it).
-function J.HasAvailableSupportResponder( bot )
+-- (it is the only responder available). Pure predicate -- the soak gate lives at
+-- the call site (mirrors the [tparrive] gate right below it).
+--
+-- [midsupfar 20260904] THE MIRROR WAS SHORT ONE MEMBER, AND IT IS THE ONE THAT
+-- NAMES WHAT IS BEING HANDED OVER.  Every clause above is a property of the
+-- support ALONE; the responder loop below has one more that is a property of the
+-- PAIRING -- the responder must be farther than TP_RESPONSE_FAR_FLOOR from the
+-- very tower it answers ("far enough that only a TP arrives in time").  This
+-- predicate took no building argument, so it could not ask it, and the safety
+-- claim built on the mirror ("can only REALLOCATE a response, never DROP one" --
+-- source, test header, and the conditional approval in state.json AX.5) was
+-- false: a support standing AT the tower passes every clause above and cannot
+-- take that response at all, so the yield drops it.
+-- Measured on the corpus (tests/_midsupfar_sweep.lua, 109 fixtures / 1012 live
+-- hero frames): the yield's domain is 2 frames and 1 of the 2 is a drop --
+-- f_260820_042612_axe_blink_init_573, where core luna answers a tower 11,876
+-- away and yields to a pos-5 vengeful_spirit sitting 655 from it.  That frame is
+-- the POSITIVE CONTROL of the id's own test.
+-- Same coin as campbind (GH #475): there a selector's four vetoes were undone by
+-- a downstream "nearest one"; here an arbitration hands a slot to a recipient it
+-- never asked could accept it.
+-- Direction: the new clause is a CONJUNCT, so the accepted-support set is a
+-- strict subset -- armed yields on strictly fewer frames than before, i.e. this
+-- can only move behavior TOWARD shipped, never away.  A nil hBuilding (a caller
+-- that cannot name the tower) answers false for the same reason: no yield is the
+-- shipped answer, so the unaskable case fails toward shipped, not away from it.
+J.TP_RESPONSE_FAR_FLOOR = 3500
+function J.HasAvailableSupportResponder( bot, hBuilding )
 	if bot == nil then return false end
+	if hBuilding == nil then return false end
 	local tPlayers = GetTeamPlayers( GetTeam() )
 	if tPlayers == nil then return false end
 	for i = 1, #tPlayers do
@@ -8319,6 +8344,7 @@ function J.HasAvailableSupportResponder( bot )
 		and hAlly:GetLevel() >= 6
 		and not J.IsInTeamFight( hAlly, 1600 )
 		and not J.IsRetreating( hAlly )
+		and GetUnitToUnitDistance( hAlly, hBuilding ) > J.TP_RESPONSE_FAR_FLOOR
 		then
 			local tp = J.GetItem2( hAlly, 'item_tpscroll' )
 			if tp ~= nil and tp:IsFullyCastable() then return true end
@@ -8392,7 +8418,11 @@ function J.ShouldTpSupportTowerFight( bot )
 		and string.find( building:GetUnitName(), 'tower' ) ~= nil
 		-- Far enough that only a TP arrives in time; a close fight the bot can
 		-- just walk to is not this fix (avoids wasting a TP on a nearby scrap).
-		and GetUnitToUnitDistance( bot, building ) > 3500
+		-- [midsupfar 20260904] ONE constant, read by both this clause and the
+		-- yield's alternative test (J.HasAvailableSupportResponder). Two copies
+		-- of this number are two things to keep equal, and the whole defect that
+		-- id repairs is a mirror that drifted out of sync with this loop.
+		and GetUnitToUnitDistance( bot, building ) > J.TP_RESPONSE_FAR_FLOOR
 		then
 			local vTower   = building:GetLocation()
 			local tEnemies = J.GetEnemiesNearLoc( vTower, 1200 )
@@ -8442,12 +8472,21 @@ function J.ShouldTpSupportTowerFight( bot )
 				-- [midsupyield / backlog #4] A core yields the team's single
 				-- TP-response slot to a viable support (see the helper above).
 				-- Gated + turbo (inherited) + core-only: supports never yield,
-				-- and with no viable support this is a no-op, so armed can only
-				-- REALLOCATE a response, never drop one. Placed BEFORE the quota
-				-- take so a yield never consumes the slot (Lua and short-circuit).
+				-- and with no viable support this is a no-op. Placed BEFORE the
+				-- quota take so a yield never consumes the slot (Lua and
+				-- short-circuit).
+				-- [midsupfar 20260904] `building` is passed: the alternative has
+				-- to be viable FOR THIS TOWER, not viable in the abstract. Only
+				-- with it does "REALLOCATE, never DROP" become true -- see the
+				-- long note on the predicate. No new soak id (the repair lives
+				-- inside 'midsupyield', which has never been armed in any wave),
+				-- deliberately: a gate written as IsSoakCandidate('X') and
+				-- IsSoakCandidate('midsupyield') freezes FALSE the day either is
+				-- promoted -- the pullcad lesson (AGENTS.md, and the same
+				-- metavariable 'X' this file already uses to state it).
 				and not ( J.IsSoakCandidate( 'midsupyield' )
 					and J.IsCore( bot )
-					and J.HasAvailableSupportResponder( bot ) )
+					and J.HasAvailableSupportResponder( bot, building ) )
 				-- Team quota: one gated TP responder per window (fix B).
 				and J.TryTakeTpResponseSlot() then
 					bot.lastFrontAnswerT = DotaTime()
