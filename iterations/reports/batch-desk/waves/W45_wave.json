@@ -114,5 +114,6 @@
       "spot_run_exit_note": "Read directly as $? with output redirected to a file, not through a pipe",
       "carriers": "skeleton_king, spirit_breaker, zuus, pudge"
     }
-  ]
+  ],
+  "seed_selection_crosscheck": "INDEPENDENT CONFIRMATION, free (a brute-force search started before the mask-level one and left running in the background). It enumerates ALL C(n,4) seed quadruples in the window rather than the distinct-mask classes the launch decision used, and it landed on the SAME set: {3892, 3927, 3954, 3968}, min-per-term 2, pudge carriers 3, total coverage 14 -- digit-for-digit identical. This matters because the mask-class reduction is a shortcut: it assumes two seeds with the same carrier mask are interchangeable for the gate, which is true for the gate but was never checked against the pudge tie-break riding on top of it. The exhaustive run checks both at once. So the 'min-per-term = 2 is the arithmetic CEILING of this window' claim in seed_selection_note now rests on TWO independent sources -- the popcount arithmetic AND an exhaustive search -- not on the derivation alone. No action follows: the wave was already flying with this exact set, and the cross-check confirms rather than revises it."
 }
