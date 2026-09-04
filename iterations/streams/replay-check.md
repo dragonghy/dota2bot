@@ -10620,3 +10620,73 @@
     —— **那是末尾 `echo` 的码**,真码是文件里的 `EXIT=124`。
   - **Token 用量**:见报告 §9。
   - 完整报告:`iterations/reports/replay-check/20260904T095500Z.md`
+- **2026-09-04T13:02Z(交棒第 (4) 件事 `odaoe` 终于排上;但买回来的不是 WORKING,是**一次证伪** ——
+  我为它造的三个判别子里唯一不含模型的那个,在「gate 可证明失效」的 baseline 腿上读数**更高**)**:
+  语料 **W45** 剩下的两台 OD 载体机(`fdfe8d` 种子 3954 / `d5b1b8` 种子 3968 补跑),
+  **宽扫 36/36 局**(24+24 份 `.dem`,跳过 12 局暖场,`unparseable` **0/0**);
+  **深查 6 局逐帧 + 137 发大招逐发判定 + 5 帧完整还原**。**36 局全部有 OD,0 局缺 side 戳。**
+  零 EC2、零发波、S3 只读、零 CE 调用。**未改 `bots/`/`game/` 任何一行。**
+  - **`VERIFY id=odaoe verdict=INDETERMINATE episodes=0`** —— 结束连续六轮零 `VERIFY`,
+    并把堵点从上一轮的诊断(「语料里没有 OD」)**换成一个可执行的**:出厂谓词不可重建。
+  - **⭐⭐ 证伪的形状(可复用):三个判别子,越硬的越把差异抹平,最硬的那个反超。**
+    出厂分支 `return … enemyHero:GetLocation()`(`hero_obsidian_destroyer.lua:561`)
+    **圆心永远压在某个敌方英雄身上**,gated 分支可返回**两人中点**(`:687`)⇒
+    「≥2 个英雄受害者 + 任何以敌方英雄为圆心的圆都罩不住」是**出厂分支做不到的事**,
+    而且魔抗 / `GetSpecialValue*` / 迷雾 / 幻象 / 蓝量滞后**一个都不进这个判据**。
+    读数 **armed 5/28 = 17.9% vs baseline 5/14 = 35.7%,baseline 更高**。
+    另两个含假设的判别子分别读 10:1(队友环)和 17:4(裸伤上界)——
+    **只看第一个会写出一个 WORKING**。
+  - **⭐ 帧证据(两帧,一正一反)**:(甲)`…_fdfe8d/20260904_065937_slot8` **t=353.5**
+    (armed,**dt=0.0** 无滞后)—— 700 内 4 个敌方英雄,**裸伤上界 376/412/427/383
+    对血量 1077/980/698/1075 全杀不掉(余量近 3 倍)**,队友环 **2 >= 4 为假**,
+    实际命中 **4 个英雄**;看着就是 `odaoe`。(乙)`…_fdfe8d/20260904_065910_slot5`
+    **t=1211.8**(**baseline**,gate 可证明失效)—— OD **1200 内零队友**(最近活队友 2455u),
+    **全场任意距离零可杀目标**(裸伤上界 803 对最低血量 1858),1300 内零幻象,
+    `X.SkillsComplement` 逐条查过是唯一施法路径 ⇒ **两个合取项都假,可是大招放了**。
+    ⇒ (甲) 的全部说服力来自那个**已被 (乙) 证明不完整**的重建,**不能签字**。
+  - **⛔ 本轮第二件(GH #478 的第 7 个文件,而漏掉它的机制本身是发现)**:
+    `od_eclipse_aoe_domain.py:321,:419`(+ `od_ult_gate.py:117`)对
+    `snapshots[].abilities` 无保护迭代 —— **它正是被逐字抄进
+    `hero_obsidian_destroyer.lua:620-636` 的那份入集前核验的产出者**,
+    在本轮语料上第一帧就 `TypeError`、**整轮零输出**。
+    实测 **1/36 局(2.8%)的语料把 36 局的读数全部清零**。
+    #478 的普查 grep 的是**单引号 + 直接迭代**,这里是**双引号 + `next(<生成器>)`**
+    ⇒ **「按形状找形状」的普查漏掉了它没想到的形状,而漏掉的恰好是扛着 `odaoe` 条件 (a) 的那个**
+    ⇒ #478 建议的验收方式**必须是解析不能是 grep**(已追评)。
+    修法**不是 `or []`**:缺失帧显式记账、从分子分母同时移出,**绝不读成「大招没准备好」**。
+  - **交付**:`tools/batch_test/behavioral/odaoe_liveness.py`(只读离线,零 AWS;
+    `--selfcheck` **21/0**)+ `tests/test_odaoe_liveness.py` **30/0**;
+    **变异台 7 变异 7 CAUGHT / 0 SURVIVED**,树外 `cp` 还原 `sha256sum -c` OK,还原后基线 GREEN。
+    ⭐ **M5 第一版 SURVIVED 是断言的问题不是护栏的问题**:变异体往圆心表里塞一个字面量 `(0,0)`,
+    而用例**全长在原点附近** ⇒ 假圆心与真圆心重合、看不见;补一对**跨原点**的受害者
+    ((0,±400),中点恰是 (0,0))才逼出来 —— **一个假圆心只有在「只有它罩得住全部受害者」
+    的形状上才可见**。据实登记这次返工。
+  - **本轮开的 issue**:**GH #478 追评**([harness],第 7 个文件 + 普查机制);
+    **新 issue([hero])** —— `X.ConsiderSanitysEclipse` 的录像可见行为与源码不符。
+    自检读到的两条 trunk 红(`test_bots_walk_farm_only.py` GH #476;
+    `test_coarmed_attribution_register.lua` 批测台 12:15Z 已立案)**均不重复认领**。
+  - **下一轮第一件事**:(1) **`odaoe` 不要再扫同类语料**,等 [hero] issue 回音
+    (和上一轮 `cmqreach` 的处置同形);(2) **W45 的 `d3d158`(种子 3927,52 局)未扫**
+    (`8e7e5e` 银行 0 局无录像);(3) 接 **GH #467** 的 `slotwait` 条件 (a)
+    (⚠️ 读 `abilities[].cd`,**注意会是 `None`** —— 本轮又添一个受害者);
+    (4) 查 #477/#470/#474/#482/#483 回音,#477 点名的重 dump 仍是本组的球
+    (**W44 录像约 09-25 过期**);(5) `cmqreach` 的建议钉帧 fixture 仍未做。
+  - **欠账**:36 局 timeline 随容器回收(重扫命令见报告 §0);§3.1/§3.2 两帧的 fixture **未做**;
+    `d3d158` 未扫;#419 第 15 轮 / #421 第 14 轮仍零评论;继承未动那批不变。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×2 **全 0**(`unparseable` 0/0);
+    `odaoe_liveness.py --selfcheck` **0**(21/0),真语料 36 局 **0**;
+    `tests/test_odaoe_liveness.py` **0**(30/0);变异台 **7/7/0**;
+    `od_eclipse_aoe_domain.py` 单局 **0** / 全语料 **1(`TypeError`)**;
+    `luacheck_gate.sh` **0**(`0 warnings`,`GATE_EXIT=0 CLEAN`,**冷启、脚本自己装了 `lua-check`**,
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**);`arm_push_gate.sh` **0**。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    自检 **`selfcheck worst exit: 3`**,`legs run: 9`,
+    `FINDINGS (exit 3): cadence owed-executions trunk-red(python) trunk-red(lua)`,
+    `UNCERTIFIABLE (exit 2): none`;`OWED` 那行的读数腿**这一轮无处可买**
+    (`campgrade` 尚不存在、W46 不是它的波),登记不认领。
+    ⛔ **证据纪律 3 第二十七次踩**:本轮第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**);
+    ⚠️ **同轮第二次读码陷阱**:改重定向那条被移到后台,harness 完成通知报 `exit code 0`
+    —— **那是末尾 `echo` 的码**,真码是文件里的 `selfcheck worst exit: 3`。
+    ⚠️ **第六次登记:自检在本容器不是章程写的「约 20s」**(120s 预算的 5a0 腿未跑完)。
+  - **Token 用量**:见报告 §10。
+  - 完整报告:`iterations/reports/replay-check/20260904T130242Z.md`
