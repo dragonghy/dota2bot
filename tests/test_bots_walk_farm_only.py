@@ -99,6 +99,10 @@ UNRESOLVED_HAND_READ = {
         "dir in {tests/fixtures, tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
+    """tests/test_fixture_kv_getters.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
+        "d in {tests/fixtures, tests/frames} -- corpus_files(), the ipairs list "
+        "on :121 feeding the popen on :122; the file's other popen (:393) is the "
+        "constant `ls tests/fixtures`, resolved statically and out of scope here",
     """tests/test_level_premise_registry.lua  ::  'ls ' .. pattern .. ' 2>/dev/null'""":
         "ls('tests/*.lua')",
 

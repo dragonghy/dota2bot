@@ -1,25 +1,6 @@
 {
   "_note": "Rulings that were DELIVERED and whose EXECUTION is still owed by another stream. Read by tools/agent/pending_rulings.py (OWED_EXECUTION leg), which every stream runs through routine_selfcheck.sh. A row is retired by the director once `done_when` is satisfied. See tools/agent/pending_rulings.py for what each field means and what this registry cannot see.",
-  "owed": [
-    {
-      "id": "gate_i_executable_first_run",
-      "issue": "GH #469",
-      "ruling": "GH #469 (乙):闸 (i) 从散文 + 人脑算术改成一个程序。`tools/batch_test/soak/wave_throttle.py` 已落地(0 解锁 / 3 未解锁不许发 / 2 没跑成不是通过),batch-desk 章程 §4b(i) 已改成读它而不是读章程里手打的解锁时刻。同时钉死两个原本漂移的定义:锚点取那一波的**末台**(W13–W16 用末台、W17 起悄悄改用首台,从未有人裁过;末台是保守侧),以及**一整套新 `machines[]` 开窗、登记在案的 `rerun` 补跑机不开窗**(工具只读 `machines[]`,所以这条按 schema 结构性成立,不依赖谁诚实填字段)。",
-      "ruled_at": "2026-09-04T01:xxZ",
-      "executor": "batch-desk",
-      "trigger": "下一次发波轮(不依赖任何收割:工具纯本地、零 AWS 调用、冷跑 <1s)",
-      "delivered_to": [
-        "iterations/streams/batch-desk.md §4b(i)(被裁方每轮真正驱动发波的那张表)",
-        "iterations/streams/test_set.md §DX(裁定全文档案)",
-        "GH #469 追评(总监 2026-09-04)"
-      ],
-      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、任何一个 id,所以 `W<N>_wave.json:harvest_obligations`(发波当时写的**波次局部**清单)里**没有行可以让它缺席**。GH #413 两次掉棒就是这个形状。",
-      "done_when": {
-        "kind": "manual"
-      },
-      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在**下一个波次记录**里,而它的波号此刻还不存在 ⇒ 没有可以事先钉死的 `path`。伪造一个(比如把 `W45_wave.json` 写死进来)会在波号跳号时静默变成 UNCERTIFIABLE,而那正是本条自己反对的失效方向。⇒ 按 registry 规则 10 用 `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:下一个波次记录的 `gates` 里,闸 (i) 那一格带的是 `wave_throttle.py` 自己打的那一行(`WAVE_THROTTLE: UNLOCKED (exit 0)` / `THROTTLED (exit 3)`)**加上跑它的时刻**,而不是一个手打的解锁时刻。总监下一轮据此退休本行。"
-    }
-  ],
+  "owed": [],
   "retired": [
     {
       "id": "recslot8_baseline",
@@ -71,6 +52,28 @@
       "retired_by": "director",
       "outcome": "EXECUTED by replay-check in its 2026-09-03T18:40Z round (commit 923c4330). Bare reads at retirement: the artifact key is satisfied (tests/fixtures/f_260902_154755_cm_wandbleed_residue.lua exists), AND the content side the done_when_note says the key cannot see was read directly -- tests/test_replay_437_wandbleed_source.lua carries the frame under the name GONE_CASTER with fx.self=crystal_maiden, fx.time=473.5, a LIVE venomancer at ~10138, and both readings the ruling ordered: #J.GetNearbyHeroes(bot,4000,...)==0 and J.IsWandBleedSourcePresent(bot)==false. lua5.1 tests/run_tests.lua test_replay_437_wandbleed_source.lua => 11 tests, 0 failures, RC_EXIT=0.",
       "note_for_readers": "Retiring on the done_when key ALONE would have been the shape evidence-discipline 4 names (a matching conclusion standing in for a correct reason): path_exists is satisfied by an empty file with the right name. The row's own done_when_note said so; the director read the assertions before retiring. The leg fired correctly and named the right executor -- this is the SECOND row to retire through it, after recslot8_baseline."
+    },
+    {
+      "id": "gate_i_executable_first_run",
+      "issue": "GH #469",
+      "ruling": "GH #469 (乙):闸 (i) 从散文 + 人脑算术改成一个程序。`tools/batch_test/soak/wave_throttle.py` 已落地(0 解锁 / 3 未解锁不许发 / 2 没跑成不是通过),batch-desk 章程 §4b(i) 已改成读它而不是读章程里手打的解锁时刻。同时钉死两个原本漂移的定义:锚点取那一波的**末台**(W13–W16 用末台、W17 起悄悄改用首台,从未有人裁过;末台是保守侧),以及**一整套新 `machines[]` 开窗、登记在案的 `rerun` 补跑机不开窗**(工具只读 `machines[]`,所以这条按 schema 结构性成立,不依赖谁诚实填字段)。",
+      "ruled_at": "2026-09-04T01:xxZ",
+      "executor": "batch-desk",
+      "trigger": "下一次发波轮(不依赖任何收割:工具纯本地、零 AWS 调用、冷跑 <1s)",
+      "delivered_to": [
+        "iterations/streams/batch-desk.md §4b(i)(被裁方每轮真正驱动发波的那张表)",
+        "iterations/streams/test_set.md §DX(裁定全文档案)",
+        "GH #469 追评(总监 2026-09-04)"
+      ],
+      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、任何一个 id,所以 `W<N>_wave.json:harvest_obligations`(发波当时写的**波次局部**清单)里**没有行可以让它缺席**。GH #413 两次掉棒就是这个形状。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在**下一个波次记录**里,而它的波号此刻还不存在 ⇒ 没有可以事先钉死的 `path`。伪造一个(比如把 `W45_wave.json` 写死进来)会在波号跳号时静默变成 UNCERTIFIABLE,而那正是本条自己反对的失效方向。⇒ 按 registry 规则 10 用 `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:下一个波次记录的 `gates` 里,闸 (i) 那一格带的是 `wave_throttle.py` 自己打的那一行(`WAVE_THROTTLE: UNLOCKED (exit 0)` / `THROTTLED (exit 3)`)**加上跑它的时刻**,而不是一个手打的解锁时刻。总监下一轮据此退休本行。",
+      "retired_at": "2026-09-04T07:xxZ",
+      "retired_by": "director",
+      "outcome": "EXECUTED by batch-desk in its 2026-09-04T06:30Z round -- a LAUNCHING round, which is exactly the trigger this row named. Bare reads at retirement, taken from iterations/reports/batch-desk/waves/W45_wave.json: gates['(i) >=6h routine-wave throttle'] carries wave_throttle.py's OWN line `WAVE_THROTTLE: UNLOCKED (exit 0)` together with the instant it was run (2026-09-04T06:30:34Z) and both anchor readings (`first machine up` / `last machine up <- the anchor`), i.e. the tool's output, not a hand-typed unlock time -- which is verbatim the acceptance sentence in done_when_note. A second key, `(i) owed-execution discharge`, names this row explicitly.",
+      "note_for_readers": "Retired on the acceptance SENTENCE, not on the presence of the key: `kind: manual` buys no machine check, so the director read the substance the ruling was about -- that the tool ran AT THE ACTION POINT rather than at the decision point, the mechanism behind all three past breaches (W12/W20/W44). Bare read: the tool ran at 06:30:34Z; machines[0].launched_at is 2026-09-04T06:30:38Z from AWS describe-instances LaunchTime, i.e. 4s AFTER the reading. NOTE a small discrepancy that changes nothing here and is recorded so nobody re-derives it: the desk's own gate cell and report say the first machine went up at 06:30:35Z, which is the run_id stamp (spot_20260904_063035_...), while machines[].launched_at_source pins LaunchTime as the authoritative source and reads 06:30:38Z. Both orderings put the tool before the launch. This is the THIRD row to retire through this leg, after recslot8_baseline and wandbleed2_cond_a_frame, and the first whose done_when had no machine key at all."
     }
   ]
 }

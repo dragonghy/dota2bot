@@ -9828,3 +9828,70 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ③自检腿序(`ensure_lua_tool` 提前,实测装 4s,能把两条 `UNCERTIFIABLE` 变成真读数)
   ④`OPEN_STATES` 学会 `admitted` ⑤GH #449 / GH #460 四件(等下一个 spot 波)
   ⑥GH #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` 的 filler-英雄政策(有时限)。
+
+- 2026-09-04T07:00–07:4xZ:开工自检报 `trunk-red(python)`,而 **`origin/main`(`b42f0d30`)上是两条红,
+  不是批测台 06:30Z 报的那一条**;本轮**一条修、一条明确退回**,外加退休一行当轮到期的 owed。
+  零 AWS、零发波、`bots/`+`game/` 零改动。裁定全文 `test_set.md §EA`,报告
+  `iterations/reports/director/20260904T070000Z.md`。
+  **① 修:`test_bots_walk_farm_only`(GH #476)**。`tests/test_fixture_kv_getters.lua:122` 的
+  `io.popen('ls ' .. d .. ' 2>/dev/null')` 静态解析不了而未登记;**手读** `:121`
+  `ipairs({'tests/fixtures','tests/frames'})` 穷尽了 `d` ⇒ 属**从不进入 `bots/` 的语料遍历**类,
+  与在册四条逐字同形(另一处 popen `:393` 是常量,不在本类)。修前裸读 `RC_EXIT=1`
+  (`8 checks, 1 failed [170, 15]`)→ 修后 `RC_EXIT=0`(`8 checks, 0 failed [170, 15]`),
+  **`170/15` 逐位相同 ⇒ 动的是登记不是扫描面**(排除 GH #345 那个失效方向)。
+  ⭐ **自带承重不用另搭台**:同文件下一条检查是
+  `stale = [u for u in UNRESOLVED_HAND_READ if u not in unresolved]` ——
+  **键打错一个字符就以 `stale` 红回来**,所以「加完变绿」同时买到了「键匹配到真实调用点」。
+  **② 不修,退回批测台:`test_wave_gate_keys`(`217 checks, 2 failed`)**。
+  `W45_wave.json:gates` 少了 `inputs`/`harvest` 与 `reclaim_blind` 两把闸的键 ——
+  W44 两条都在,W45 把 `(iv)` 换成载体门、加 `(v)` 接线门,**而这两门在 W44/W45 里本就各有顶层键**
+  (`carrier_gate`/`wiring_gate`)⇒ **换进来的没丢读数,掉出去的那两把才是唯一读数无处可寻的**。
+  ⭐ **这是那个测试文件立案时逐字写下的剧本的重演**:W35「三把闸改名 + 第四把消失,同一 commit,全程静默」,
+  W45 是「两把闸消失,同一 commit」——**唯一差别就是这个文件存在的全部理由:这一次红了**。
+  ⛔ **别名那条路不开**(它是**丢**不是**改名**:载体门/接线门与被替掉的两条**同时**存在于 W44 记录里,
+  走别名 = 用一行注销两把闸的记录义务)。
+  ⛔ **也不由总监代填** —— 失败横幅逐字写 `Owner: the batch desk (it is the only seat that knows whether the gate ran)`;
+  两把闸的读数**确实在批测台自己 06:30Z 报告的散文里**(收割义务第三节 `pending,running` 为空 +
+  `seed_roster_index --build` 的 `4 to scan`;`reclaim_blind` 第七节:本轮没重跑,是上一轮预登记的兑现),
+  **我买得起转抄,不转抄的理由是失效方向**:转抄错一处,产物就是
+  **一份看起来完整、内容二手且错的 `gates`** —— 与 `W28_wave.json` 同形,正是该文件立案要防的。
+  **红着比二手绿着便宜。** 投递按 §DR 进 **`W45_wave.json:harvest_obligations`**(下一轮就是 W45 收割轮,
+  那是真正被自审的那张表;不是常驻义务所以不进 `owed_executions.json`),`done_when` 裸读得出:
+  `python3 tests/test_wave_gate_keys.py` 退出码 0。
+  ⭐ **投递后重跑仍 `RC_EXIT=1`** —— 故意验的:裁词写在**另一个键**,若它把红洗绿了,
+  就说明这条检查认的是「文件里出现过这几个词」而非「`gates` 里有这个键」。**它没有。**
+  **③ 退休 `owed_executions:gate_i_executable_first_run`(GH #469)**:该行 `kind: manual` 无机器键,
+  其 `done_when_note` 自己写了裸读验收句并指定「总监下一轮据此退休」,**06:30Z 正是它点名的发波轮**。
+  裸读 `W45_wave.json`:`(i)` 那格带 `wave_throttle.py` **自己打的** `WAVE_THROTTLE: UNLOCKED (exit 0)`
+  **加跑它的时刻 06:30:34Z** 与两个锚点读数,另有 `(i) owed-execution discharge` 键点名本行。
+  ⭐ **没停在「键在不在」**(evidence-discipline 4):裁定的实质是「在动作时点跑」,
+  裸读 `machines[0].launched_at = 06:30:38Z`(字段自带 `launched_at_source: AWS LaunchTime, not the run_id stamp`)
+  ⇒ **工具在起飞前 4 秒**。⚠️ 口径差记一笔(不影响结论):报告与那一格写「06:30:35Z 起飞」,那是 **run_id 戳**;
+  权威字段读 **06:30:38Z**,**同一份文件里同一件事两个数**。退休后 `pending_rulings.py` 裸读 **`RC_EXIT=0`**
+  (退休前该腿使它 exit 3),`test_pending_rulings.py` **148/0**。这是第三行经此腿退休、**第一行完全没有机器键的**。
+  **④ ⚠️ 结构观察(§EA.6,登记不裁)**:铁律 6 的静态门在 `.githooks/pre-push`(GH #213)跑的是
+  `luacheck_gate.sh`,**python 那半不在钩子里**(GH #124 豁免的是 ~100min 的 **Lua** 全套,没说 python)⇒
+  本轮两条红**结构上都不可能被 push 时刻的任何东西拦住**,唯一发现渠道是落地之后某一轮的开工自检;
+  两条分别由英雄组(`be232487`)与批测台(`W45_wave.json`)在**各自自检之后**推出,**同一形状**。
+  是否把 python 那半(或快子集)接进 pre-push 需要自己的承重(冷启耗时 + 假阳性面),**列下一单元第一项**。
+  不外推:两条红都没坏到 `bots/`,实例 clone 的是 `bots/`,**W45 不受影响**。
+  **⑤ 成本**:零 AWS 调用/零发波/零计费资源;MTD **照抄**批测台 06:30Z 自报 `$12.647`
+  (快照 `refreshed 04:11:48Z`),围栏 `$16.60`(备选全按需 `$17.85`)≤ `$80`;九月未到 $50 档,
+  刹车 $90 / 批准线 $100 未触及未动。⚠️ 该快照落在 W44 的 4.3–11.3h 滞后带内,**不据 MTD 增量反推任何一波**。
+  **⑥ 巡检**:四组均有产出;`cadence` 仍是 strategy **那同一条** 3.8h(**不是新增的一发**),不升级;
+  `UNKNOWN STATUS` 仍 20 行(**失效方向安全**),本轮不改工具。无邮件(本周 08-31 已发)、
+  `DECISIONS_NEEDED` 无新增(三个动作全在自主授权内)、周四跳过效率台账、patch 检查本轮未做。
+  **⑦ 铁律 6**:`bots/`+`game/` **零 diff ⇒ 全量 Lua 套件未跑也不声称**;静态门与引用门裸读数见报告 §9;
+  **未用 `RULE6_BYPASS`**。自检 **exit 3**,归因**照抄工具自己那行**
+  (`FINDINGS: cadence owed-executions trunk-red(python)` / `UNCERTIFIABLE: none`)。
+  ⚠️ **第三十三发,还是本轮第一条命令**:`routine_selfcheck.sh … | tail -60` 被脚本自拒
+  (`REFUSED: stdout is a pipe`),改走 `rc.sh` 重跑。**同轮第二个读码陷阱这次没踩**:
+  后台完成通知报 `exit code 3`,**而这一次那 3 是真码**(`rc.sh` 透传,末尾没有 `echo` 覆盖它),
+  与脚本自打的 `selfcheck worst exit: 3` 对上 —— 读的仍是脚本自己那行,不是通知。
+  **⑧ 下次触发**:①**把 python 那半(或快子集)接进 pre-push 的承重**(④,本轮登记未裁)
+  ②**GH #473 甲 = §DY.6 的载体门** —— ⚠️ **它上一轮就排第一并且没做,本轮被两条 trunk 红顶掉,
+  这是第二次顺延;再顺延一次就写进 `DECISIONS_NEEDED`**
+  ③**GH #473 乙**(按需机时常数 0.745 落在 W44 下界 0.765 之外,身上没有自动失效条款)
+  ④自检腿序(`ensure_lua_tool` 提前)/ `OPEN_STATES` 学会 `admitted`
+  ⑤GH #449 / GH #460 四件(等下一个 spot 波)
+  ⑥GH #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` 的 filler-英雄政策(有时限)。

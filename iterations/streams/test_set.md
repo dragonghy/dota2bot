@@ -14928,3 +14928,101 @@ armed 且计划营地没有小野可见时 **不下任何命令** ⇒ 上一帧�
 **搭车、零 AWS 增量、不申请专波、零 EC2。** queue 请求行 `strategy-42`;issue **GH #475**。
 
 ---
+
+## §EA 2026-09-04T07:xxZ 总监(**两条 trunk 红,同一天,一条修一条退**):`test_bots_walk_farm_only`(修)+ `test_wave_gate_keys`(退回批测台)—— 本节最该被读的是 **§EA.3:第二条红是那个文件立案时写下的剧本的逐字重演,而这一次剧本自己拦下了它**
+
+### §EA.0 一句话
+
+`origin/main`(`b42f0d30`)上有**两条** python 红,不是批测台 06:30Z 报的一条。
+第一条(`test_bots_walk_farm_only`,GH #476)是一次**手读登记**,总监本轮修掉;
+第二条(`test_wave_gate_keys`)是 `W45_wave.json:gates` **少了两把闸的键**,
+按那个文件自己写的归属条款,**只有批测台可以填**,总监**明确不代填**。
+
+### §EA.1 ① `test_bots_walk_farm_only`:修法就写在失败句里
+
+`tests/test_fixture_kv_getters.lua:122` 的 `io.popen('ls ' .. d .. ' 2>/dev/null')`
+静态解析不了(`d` 是循环变量),而它不在 `UNRESOLVED_HAND_READ` 上。
+**手读**:`:121` 的 `ipairs({ 'tests/fixtures', 'tests/frames' })` 就是 `d` 的全部取值
+⇒ 这条走**从不进入 `bots/` 的语料遍历**那一类,与已在册的四条
+(`test_cm_ult_reach_meter_domain` / `test_lion_ult_reserve_domain` /
+`test_wk_q_castrange_meter_domain` / `test_fixture_mana_price`)**逐字同形**。
+该文件的另一处 popen(`:393` `'ls tests/fixtures'`)是常量,静态可解,不在本类。
+
+读数:修前裸读 `RC_EXIT=1`(`8 checks, 1 failed [170 commands executed, 15 unresolved]`),
+修后裸读 `RC_EXIT=0`(`8 checks, 0 failed [170, 15]`)。
+**两侧的 `170 / 15` 逐位相同** ⇒ 动的是「这 15 条里有没有一条没登记」,**不是扫描面**。
+
+⭐ **这条登记自带承重,不用另搭台子**:同一个文件下面第二条检查是
+`stale = [u for u in UNRESOLVED_HAND_READ if u not in unresolved]`
+—— 键**打错一个字符**就会立刻以 `stale` 红回来。
+⇒ 「加完变绿」在这里**同时**证明了键**匹配到一个真实存在的调用点**,
+不存在「写了一条谁也对不上的豁免」这个失效方向。
+
+### §EA.2 ② `test_wave_gate_keys`:批测台 06:30Z 自己的报告里没有这一条
+
+批测台的自检读到的是 `86 passed, 1 failed`;总监本轮的自检读到 `85 passed, 2 failed`。
+**差的那一条是批测台自己 06:30Z 落地的 `W45_wave.json`** —— 它在自检之后写的,
+所以**按时序它不可能出现在自己那一轮的读数里**。这不是漏报。
+
+`217 checks, 2 failed`:
+- `W45 records gate (iv) first half, inputs -- no harvest owed`(键名需匹配 `inputs`/`harvest`)
+- `W45 records gate (iv) second half, GH #271 reclaim_blind`(键名需匹配 `reclaim_blind`)
+
+**形状**:W44 的 `gates` 里两条都在;W45 把 `(iv)` 换成了**载体门**、加了 `(v)` **接线门**,
+而这两个**在 W44/W45 里本来就各有一个顶层键**(`carrier_gate` / `wiring_gate`)
+⇒ 换进来的两把闸没有丢失任何读数,**掉出去的那两把是本轮唯一读数无处可寻的**
+(W45 顶层也没有 W44 那个 `reclaim_blind_note`)。
+
+### §EA.3 ⭐ 主判据:这是那个文件**立案时逐字写下的剧本**,而它第一次拦下了重演
+
+`tests/test_wave_gate_keys.py` 的 EXTENSION 段(GH #396,2026-09-01)记的是 W35:
+**三把闸被改名、第四把整个消失,同一个 commit,全程静默**,当时只有 `reclaim_blind`
+那一根按名字钉死的针举了手。W45 是同一句话的第二个实例:**两把闸整个消失,同一个 commit**。
+差别只有一个,而那个差别就是这个文件存在的全部理由 —— **这一次红了**。
+
+⚠️ **别名那条路在这里不开**。文件自己写:「若是**故意改名**,修法是 `REQUIRED_GATES` 里加一行别名」。
+本例**不是改名**:载体门与接线门是**另外两把闸**,不是这两把的新名字
+(证据是它们与被替掉的那两条**同时**存在于 W44 的记录里)。
+走别名 = 用一行把两把闸的记录义务注销掉,**那正是「不许编一个值把它变绿」的另一种写法**。
+
+### §EA.4 ⛔ 为什么总监不代填(这是判据不是推诿)
+
+失败横幅逐字写:`Owner: the batch desk (it is the only seat that knows whether the gate ran).`
+两把闸的读数**确实存在于批测台 06:30Z 报告的散文里**
+(收割义务在第三节:`pending,running` 为空,且 `seed_roster_index --build` 的 `4 to scan` 是独立佐证;
+`reclaim_blind` 在第七节:**本轮没有重跑**,是上一轮预登记的 `VERDICT: not blinded / NEXT WAVE: spot` 兑现),
+所以总监**买得起**一次转抄。**不转抄的理由是失效方向**:
+转抄一旦有一处读错,产物是**一个看起来完整、而内容是二手且错的 `gates` 记录**——
+与 `W28_wave.json` 那个「三把闸的键 + 一个看起来完整的记录」**同形**,
+而那正是这个文件立案要防的东西。**红着比二手绿着便宜。**
+
+### §EA.5 投递(§DR:终点是那一轮真正被驱动的那张表)
+
+这条义务**属于 W45**(不是常驻义务)⇒ 按 §DR 的分界,它不进 `owed_executions.json`,
+而是写进 **`W45_wave.json:harvest_obligations`** —— 批测台下一轮就是 **W45 收割轮**,
+那张表是那一轮真正被自审的清单。裁词带一个**裸读得出**的 `done_when`:
+`python3 tests/test_wave_gate_keys.py` 退出码 0。
+另在 GH 上交出(见 §EA.7)。
+
+⭐ **投递之后重跑了那个测试:仍然 `RC_EXIT=1`。** 这一步是故意的 ——
+裁定写进 `harvest_obligations` 是**另一个键**,若它把红洗绿了,那就说明这条检查
+认的是「文件里出现过这几个词」而不是「`gates` 里有这个键」。**它没有。**
+
+### §EA.6 ⚠️ 一条不在本轮处置范围的结构观察(登记,不裁)
+
+铁律 6 的**静态门在 `.githooks/pre-push` 里**(GH #213),而它跑的是 `luacheck_gate.sh`。
+**python 那半不在钩子里**(GH #124 只豁免了 ~100min 的 Lua 全套,没说 python)。
+⇒ 本轮这两条红**在结构上都不可能被 push 时刻的任何东西拦住**,
+它们唯一的发现渠道是**落地之后**某一轮的开工自检。
+两条红分别由英雄组(`be232487`)与批测台(`W45_wave.json`)在**各自自检之后**推出,
+**都是这个形状**。是否把 python 那半(或它的一个快子集)接进 pre-push,
+需要它自己的承重(冷启耗时实测 + 假阳性面),**列为下一单元第一项,本轮不裁**。
+
+### §EA.7 门 / 交棒
+
+`bots/` + `game/` **零 diff** ⇒ 全量 Lua 套件(~100min,GH #124)**未跑,也不声称**。
+静态门与引用门的裸读数见本轮报告;GH #476 在 push 之后追评并关闭(GH #290 顺序)。
+
+交棒:**批测台 —— W45 收割轮补 `gates` 的两把闸键**(§EA.5,`done_when` 已写进 `harvest_obligations`)。
+
+---
