@@ -5809,5 +5809,22 @@
     "iron_rule_6": "static half bash tools/agent/luacheck_gate.sh -> GATE_EXIT=0 CLEAN, luacheck bots game 0 warnings, luacheck installed by the gate itself (apt package lua-check). No RULE6_BYPASS. Dynamic half: lua5.1 tests/run_tests.lua, reading in the report.",
     "selfcheck": "worst exit 3 -- cadence, owed-executions, trunk-red(python). The python leg is tests/test_detector_source_constants.py losing its anchor on J.ShouldTpSupportTowerFight = GH #490, NOT introduced this round (zero .py changes), and whether main is red too was NOT established (no stash differential). FIRST CALL WAS REFUSED: written as `... | tail -40`, the script refused and printed SELFCHECK_EXIT=2 REFUSED, recording it as the 5th recurrence and always the round's first command (evidence discipline 3). That REFUSED is not a pass. CONTAMINATION DISCLOSED, same shape as the 17:02Z round: the selfcheck ran in the background while this round's edits were already on the working tree, so its closing 'fast Lua detectors, 79 files, 0 failures' is a MOD-TREE reading and must not be quoted as trunk being clean on the Lua side.",
     "report": "iterations/reports/hero/20260904T195041Z.md"
+  },
+  "droppick_PRICING_20260904": {
+    "id": "**没有新 id,零行为改动**。`bots/` 与 `game/` 逐字节未动,armed 串一字未动,`queue.json` 一字未动。本轮只产出普查 + 用例 + 变异台。",
+    "question": "GH #452 把一条路由给本组、并明写「下一轮或谁先拿到」:`bots/mode_team_roam_generic.lua` 的掉落物放弃机制(`ignorePickupList`)。本轮按 `0PRICE4` 的主判据先跑域价钱:**这条修得起吗,修的形状是什么?**",
+    "domain": "109 fixture / **1012 活英雄帧**(与 §EF.1/§EH/§EJ 同一语料同一分母)。集合探测的分母是**真实物品句柄 5932 个 / 117 个不同物品名**,取自 fixture 的库存。掉落物本身:**0/1012** —— mock 的 `GetDroppedItemList` 答 `{}`,dumper 不写掉落物记录。",
+    "finding": "**⭐ 当一个缺陷有两半而只有一半看得见时,看得见的那一半不是更便宜的那一半 —— 它是诱饵。**单独落地它会产出一个**读上去像修复**的 diff:改了源码、过得了评审、什么也没动。实测 **0/5932,与未修树的数字逐位相同**。",
+    "mechanism": "四行跑整个机制:`:1771`/`:1819`/`:1823` 三处读 + `:1821` 一处写,对着 `utils.lua:1260` 的 `SetContains(set, key)`。**(1) 元数(看得见的一半)**:三处读都只传一个实参 ⇒ `set` 绑到物品**名字**、`key` 绑到 nil;`(\"item_aegis\")[nil]` 经字符串元表是一次**合法的读**、答 nil ⇒ 闸恒假。**它不抛错**,这正是它一直没人指的原因(实测 `shipped_raise` = 0/5932)。**(2) 两套下标空间(看不见的一半)**:写存 `PickedItem.item`(**句柄**)当键,三处读全按**名字**问 ⇒ 补上那个缺失的实参(也就是缺陷 (1) 看上去在要的东西)**仍然一次都不命中**。`0SLOT`/`slotarb` 之后同族第三次。",
+    "three_columns": "真实 shipped `AddToSet`/`SetContains`,同一批 5932 个真实句柄,三条腿:`shipped` = `SetContains(name)` ⇒ **0/5932**;`argfix` = `AddToSet(ig, handle)` 后 `SetContains(ig, name)`(**一行修法**)⇒ **0/5932**;`bothfix` = 两边都按名字 ⇒ **5932/5932**。`bothfix` 同时是本文件的**反真空对照**:三条腿是同一对 shipped 函数,而它**能**说「已忽略」—— 在每一个句柄上。⇒ 两个 0 是读数不是卡死的探针。**修法是两半一起,否则等于没修。**",
+    "new_finding": "**⭐⭐ 重试循环算出来的那个 desire 谁也收不到(#452 没有这条)。** `ItemOpsDesire` 在掉落物循环里 `return RemapValClamped(...)`,而它**唯一**的调用点 `GetDesireHelper:271` 把它当**裸语句**调用、把值扔掉。⇒ 在出厂树里那个 `return` 根本不是 desire,**纯粹是一次 skip**;它跳过的是下面**八个家务调用**(`TrySellOrDropItem`、`SwapSmokeSupport` 与六个 `TrySwapInvItemFor*`)**外加 `ConsiderDroppedTime = DotaTime()`** —— 也就是这个函数自己那道 2 秒节流的重新上膛。又因为 `PickedItem` 是模块级、只在 `OnEnd` 清空,而上面那套放弃机制是死的,**触发这次 skip 的条件是黏住的**。",
+    "why_not_repaired": "**结构性的,不是胆小。**章程第 2 条要求行为改动必须带真实帧 fixture,而这段代码做的**决定**在本语料上**任何价钱都买不到**:`GetDroppedItemList()` 在 mock 里是 `{}`,dumper 不写掉落物记录 ⇒ **0/1012 活帧**。语料**带得起**的是其余每一条前提 —— `ItemOpsThink` 自己那道库存余位闸在 **983/1012** 帧上成立 ⇒ 价钱指名了**恰好一个**缺失成分(dumper 的掉落物字段),而不是一个含糊的缺口。",
+    "honest_boundary": "被驱动的 5932 个句柄来自 fixture 的**库存**,不是 `GetDroppedItemList()`。它们作证的是**集合管路**(句柄 vs 名字,对库存句柄与掉落句柄逐字同形),**不是那个决定**。这就是为什么这里用替身合法、而给那个决定用替身不合法 —— 两处都写进了普查文件头与测试头。",
+    "artifacts": "`tests/_droppick_sweep.lua`(真帧普查,38s,三值分桶);`tests/test_droppick_domain.lua`(**7/7**,含把四个调用点/声明元数/写键索引空间/裸语句调用点/八个家务尾调都钉成 `[source]` 断言);`tools/agent/mutstand_droppick.sh`(**12/12 CAUGHT,零 NO-OP**)。",
+    "instrument_notes": "变异台里两发是本文件存在的理由:**M8** 让 `argfix` 腿偷偷改按名字建键 —— 它**照常跑、照常出数,而那个数是对照组的**,于是「一行修法没用」这句话会拿**不是一行修法**的腿去量,且会**反方向**报出来而不吭声;**M9** 让对照腿按谁也不问的键建 ⇒ 三条腿全读 0,**内部自洽**,与真读数不可分辨,只有反真空断言挡在它和一份已发表的发现之间。另 **M12** 钉的是最危险的方向:`drop_frames == 0` 是「不许落地」的依据,如果这个 0 能由**没去问**产生,那条裁定就是不可证伪而非被测量的 —— 于是普查文件本身也被 `[source]` 断言钉住必须真的 `pcall(GetDroppedItemList)`。",
+    "gates": "无新 id、无新闸、无 fixture 新增。armed 串一字未动。",
+    "issue": "GH #452(本组认领的那条路由);本轮开 GH #500。",
+    "report": "iterations/reports/strategy/20260904T223000Z.md",
+    "ref": "test_set.md §EK"
   }
 }
