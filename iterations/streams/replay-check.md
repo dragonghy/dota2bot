@@ -10456,3 +10456,70 @@
     —— **那是末尾 `echo` 的码**,真码是脚本自打的 `selfcheck worst exit: 3`。
   - **Token 用量**:`TOKENS total_in=6,608,997 out=61,315 turns=53`(报告 §9)。
   - 完整报告:`iterations/reports/replay-check/20260904T042500Z.md`
+- **2026-09-04T07:01Z(补上一轮欠的 W44 另外两台;**而本轮真正买到的不是那 43 局,是「`zusult`
+  为什么连续多轮零 `VERIFY`」的答案 —— 它的量具一次都没跑起来**)**:
+  **宽扫 43/43 局**(`b164c8` 17 + `28bec0` 26,跳过 12 局暖场,`unparseable` **0**);
+  **深查 1 局完整逐帧 + 12 条 in-domain 命中逐条判真伪 + 5 帧完整还原**。
+  **未改 `bots/`/`game/` 任何一行。**
+  - **`VERIFY id=zusult verdict=BUGGY episodes=3`** —— armed 腿 3 次**逐帧确认花了钱**的域内
+    Lightning Bolt,全在 `20260904_003453_slot8`(种子 3426,radiant armed):
+    `t=383.8` shadow_shaman 1.00 血 / 蓝 174、`t=404.4` chaos_knight 1.00 血 / 蓝 72、
+    `t=489.8` bristleback 0.82 血 / 蓝 134,三帧 R 都是 lvl1 cd0(1 级蓝耗 **225**
+    由本波 27 次干净大招读数钉住,中位 226)。**三条设计内豁免逐帧排除**:
+    射程内无血量 ≤ 弹伤的敌人(击杀 AoE)、目标身上零引导 modifier(打断)、
+    前 3 秒零英雄伤害且 800u 内活队友 1/1/0(撤退分支的两个析取项都假)。
+    剩下的 `J.IsRetreating` 结构性不可观测,但它成立时 `ConsiderW2` 整轮不出价 ⇒ 弹只能来自
+    `ConsiderW`;#2 帧满血主动开火,读成撤退需要额外理由。
+  - **⭐⭐ 机制不是 gate 有 bug,是它被绕过,而仓库里早写着**:3 次泄漏**全是 W、Q 是 0**
+    (GH #47 的签名),但两个 W 消费点都已上 gate ⇒ 泄漏在**上游谓词**。
+    `hero_zuus.lua:920-981`(GH #175,`zusboltcap`)记着 `GetAbilityDamage()` 对
+    `zuus_lightning_bolt` **恒 0**,而 `FindAoELocation` 末位参数 0 = **无 HP 过滤**
+    ⇒ `:1008` 的 `nCanKillHeroLocationAoE` 实际在问「射程内有没有敌方英雄」,
+    那条分支 `return` 只给两个值 ⇒ `castW2Target` 为 `nil` ⇒ gate 第一时间 `return false`。
+    ⇒ **`zusult` 的条件 (a) 在 `zusboltcap` 未 armed 时买不干净**,而它不在 58-id 串也不在
+    60-id 串里。这是「promote 一个 id 会掐死点它名字的 gate」的**镜像**:
+    **一个没 armed 的 id 让一个 armed 的 id 持续漏气**,`check_armed_wiring.py` 两边都不报警。
+  - **⭐ 两件量具事实(都不产生错数,都产生「不存在的读数」)**:
+    (i) `snapshots[].abilities` **12.9% 的帧是 `None`**(43 局 Zeus 帧 10271/79735,**735 帧活着**),
+    `zusult_gate.py:68` 无保护 ⇒ **第一帧就 `TypeError`,整轮零输出**。修法**不是 `or []`**:
+    静默归零会把缺失帧记成真阴性,而那个方向**偏向让 armed 腿好看**;实测 4830 次 Q/W 里
+    **179 次(3.7%)**的 gate 帧正是缺失帧,且缺失按腿**不均匀**(unknown 计数 9/39/11/0)。
+    全族另有 5 个文件同样无保护 ⇒ **GH #478**。
+    (ii) **一个 `ABILITY` 事件不是一次施法**:Nimbus 雷击也记 `actor=zuus / inflictor=zuus_lightning_bolt`,
+    不花蓝不动冷却 —— **12 条原始命中里 6 条(50%)不是施法**,最刺眼的一条被打的英雄在 **8300u** 外。
+    判别子是**技能自己的冷却跨过那一瞬**(`pre_cd > 0` 反向决定性),冷却短于 1Hz 时用蓝量兜底。
+  - **交付**:`zusult_gate.py`(缺失能力表显式记账 + `spent()` 施法确认,只读离线零 AWS)
+    + `tests/test_zusult_gate_liveness.py` **15/0**;**变异台 6 变异 5 CAUGHT / 1 SURVIVED**,
+    树外 `cp` 还原 `sha256sum -c` OK,还原后基线 GREEN。
+    ⭐ **第一版 M2 SURVIVED 是断言的问题不是护栏的问题**(`pre_cd=0.9/post_cd=0` 那一例
+    被平掉的蓝量替它答了「不是」),补 `pre_cd=3.0/post_cd=2.0` 才把两条规则分开;
+    **M6 SURVIVED 且不修**(那行 `if not g['have']: continue` 可证明冗余,已在源码注明是绊线),
+    **据实登记**。
+  - **⚠️ 订正上游一处读法**:批测台 03:15Z §3.2 的「48 局有录像」是**带 Pudge 的 96 局里**的数;
+    W44 四台**全部**有录像,另外两台合计 **55 份 `.dem`**,对 `rotscope` 恒零但对其余 57 个 id 不是。
+  - ⛔ **不构成结论的那一半**:两腿速率**两个分层反号**(ab armed 4.8 / base 2.9;
+    ba armed 0.0 / base 4.6 每百机会帧)⇒ 铁律 4(i-b) 判噪声,**登记但不写进结论**。
+    **两个分层这轮都非空**(ab 26 局 / ba 17 局,armed 腿各 11 局),不再受上一轮「`ba` 零局」的限制。
+  - **本轮开的 issue**:**GH #477([bug])**、**GH #478([harness])**。
+    自检读到的 `TRUNK RED`(`test_bots_walk_farm_only.py`)**批测台已立案 GH #476,不重复认领**。
+  - **下一轮第一件事**:(1) **`cmqreach` 的条件 (a)** —— 本轮两个种子阵容**都含 CM**,
+    `cmqreach_domain.py` 已在树上,**先确认它在当前 dumper 上跑得起来**(和 `zusult` 同形状);
+    (2) 查 **#477/#478** 回音,`zusult` 重扫要等 `zusboltcap` 的处置;
+    (3) 接 **GH #467** 的 `slotwait` 条件 (a)(⚠️ 读 dumper 的 `abilities[].cd`,**注意它会是 `None`**);
+    (4) **W45 06:30Z 已起飞**(spot 四台,60-id 家族第一波)⇒ 下轮大概率有新语料;
+    (5) 查 **#470/#474** 回音。
+  - **欠账**:43 局 timeline 随容器回收(重扫命令见报告 §0);§2.3 三帧的 fixture **未做**
+    (建议帧 t=404.4 已写进 #477);**`odaoe` 连续第五轮零 `VERIFY`,而这轮查清了原因的一半 ——
+    W44 两个种子的阵容都不含 OD,它不是排不上队,是语料里没有这个英雄**,下轮应把它写成
+    对批测台的**选阵请求**而不是继续挂在深查队列;#419 第 13 轮 / #421 第 12 轮仍零评论。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×2 **全 0**(`unparseable` 0);
+    `zusult_gate.py` 分层各一次 **全 0**(**修前 `ZUS_EXIT=1` `TypeError`**);
+    新测试 **0**(15/0),rebase 到 `origin/main` 后再跑一次仍 **0**;变异台 **5/6 + 1 具名 SURVIVED**;
+    `luacheck_gate.sh` **0**。**未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    自检 **`selfcheck worst exit: 3`**,`legs run: 9`,
+    `FINDINGS (exit 3): cadence owed-executions trunk-red(python)`,
+    `UNCERTIFIABLE (exit 2): none`;`OWED` 那行 executor=**batch-desk**,不归本组。
+    ⛔ **证据纪律 3 第二十五次踩**:第一条命令又写了管道,脚本当场自拒(**exit 2 不是通过**);
+    这次它自己把两条正确写法印了出来,损失只有一次往返。
+  - **Token 用量**:见报告 §9。
+  - 完整报告:`iterations/reports/replay-check/20260904T070132Z.md`

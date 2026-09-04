@@ -63,21 +63,74 @@ def analyze(path):
         return zs_snap['hp_pct'] >= HPFLOOR and not any(t - RECENT <= h <= t for h in hurt)
 
     # gate state timeline
+    #
+    # `snapshots[].abilities` is None on a large minority of frames (measured on
+    # the W44 corpus: 10271 / 79735 Zeus frames = 12.9%, of which 735 are frames
+    # where Zeus is ALIVE).  Reading it unguarded is what this scanner used to do
+    # and it raised TypeError on the first such frame, i.e. the instrument could
+    # not run at all on a current-dumper corpus.
+    #
+    # The guard is deliberately NOT a silent `or []`: with the ability list
+    # missing, `ready` would evaluate False and the frame would be filed as
+    # "ult not ready" -- indistinguishable from a real negative, and the
+    # direction of that error flatters the armed leg (a suppressed-cast
+    # violation on a missing-ability frame would silently leave the domain).
+    # Missing frames are therefore carried as their own state (`have=False`) and
+    # reported as UNKNOWN, never as in-domain and never as out-of-domain.
     gate = []
     for s in zs:
-        ab = {a['name']: a for a in s['abilities']}
+        raw = s.get('abilities')
+        have = raw is not None
+        ab = {a['name']: a for a in (raw or [])}
         r = ab.get('zuus_thundergods_wrath', {'level': 0, 'cd': 0})
-        ready = r['level'] >= 1 and r['cd'] == 0
+        ready = have and r['level'] >= 1 and r['cd'] == 0
         unaff = ready and s['mp'] < RCOST.get(r['level'], 225)
-        gate.append(dict(t=s['t'], ready=ready, unaff=unaff, s=s, rlvl=r['level']))
+        gate.append(dict(t=s['t'], ready=ready, unaff=unaff, s=s,
+                         rlvl=r['level'], have=have))
 
     def gate_at(t):
         g = [x for x in gate if x['t'] <= t]
         return g[-1] if g else None
 
+    def spent(t, spell):
+        """Did Zeus HIMSELF pay for this spell at t?
+
+        An `ABILITY` event naming `zuus_lightning_bolt` is NOT proof that Zeus
+        cast it: Nimbus (`zuus_cloud`) strikes are logged under the same
+        inflictor with Zeus as the actor, and they cost nothing and touch no
+        cooldown.  Measured on the W44 corpus, 2 of the 5 armed-leg in-domain
+        flags were exactly that -- one of them a `zuus_lightning_bolt` whose
+        only damaged hero stood 8300 units away, i.e. an order of magnitude
+        outside the bolt's own cast range.  40% of the flags were not casts.
+
+        The discriminator is the ability's own cooldown across the instant:
+        a real cast takes it from 0 to cd_len.  `pre_cd > 0` is decisive the
+        other way -- the spell was already on cooldown, so this event cannot be
+        a fresh cast of it.  When the cooldown is shorter than the 1 Hz
+        snapshot spacing it can elapse unseen, so a mana drop is accepted as
+        the fallback witness.
+        """
+        arr = [s for s in zs if s['t'] <= t]
+        nxt = [s for s in zs if s['t'] > t]
+        if not arr or not nxt: return None            # unknown, not "no"
+        a, b = arr[-1], nxt[0]
+        if b['t'] - a['t'] > 1.5: return None
+        pa = {q['name']: q for q in (a.get('abilities') or [])}.get(spell)
+        pb = {q['name']: q for q in (b.get('abilities') or [])}.get(spell)
+        if pa is None or pb is None: return None
+        if pa['cd'] > 0: return False                 # already on cooldown
+        if pb['cd'] > 0: return True                  # 0 -> running = cast
+        return (a['mp'] - b['mp']) >= 50              # cd elapsed inside the gap
+
     # clean opportunity frames
     opp = 0
     for g in gate:
+        # Redundant today and deliberately kept: `ready` already carries
+        # `have`, so a missing-ability frame cannot reach here with unaff set.
+        # Mutating this line away leaves the test suite green (measured), which
+        # is a statement about the line, not about the suite -- it is a
+        # tripwire for the day `ready` stops depending on `have`.
+        if not g['have']: continue
         if not g['unaff'] or g['s']['hp_pct'] <= 0: continue
         if not calm(g['t'], g['s']): continue
         me = g['s']
@@ -106,10 +159,17 @@ def analyze(path):
         hh, hv = healthy(tgt, e['t'])
         rows.append(dict(t=e['t'], spell=inf, tgt=tgt, hp=hv, unaff=g['unaff'],
                          mp=g['s']['mp'], rlvl=g['rlvl'], zhp=g['s']['hp_pct'],
-                         calm=calm(e['t'], g['s']), healthy=hh))
-    dom = [r for r in rows if r['unaff'] and r['healthy'] and r['calm']]
-    return dict(opp=opp, rows=rows, dom=dom,
-                unaff_frames=sum(1 for g in gate if g['unaff']))
+                         calm=calm(e['t'], g['s']), healthy=hh, have=g['have'],
+                         spent=spent(e['t'], inf)))
+    flagged = [r for r in rows if r['have'] and r['unaff'] and r['healthy'] and r['calm']]
+    dom = [r for r in flagged if r['spent'] is not False]
+    notcast = [r for r in flagged if r['spent'] is False]
+    unknown = [r for r in rows if not r['have']]
+    return dict(opp=opp, rows=rows, dom=dom, notcast=notcast, unknown=unknown,
+                unaff_frames=sum(1 for g in gate if g['unaff']),
+                noab_frames=sum(1 for g in gate if not g['have']),
+                noab_alive_frames=sum(1 for g in gate
+                                      if not g['have'] and g['s']['hp'] > 0))
 
 if __name__ == '__main__':
     tot = collections.Counter()
@@ -119,15 +179,25 @@ if __name__ == '__main__':
         tag = 'ARMED ' if armed else 'BASE  '
         print(f"\n=== {tag} {path.split('/')[-1]} ===")
         print(f"  R-ready&unaffordable frames {r['unaff_frames']} | clean opportunity frames {r['opp']} "
-              f"| Q/W casts w/ hero target {len(r['rows'])} | IN-DOMAIN (should be suppressed) {len(r['dom'])}")
+              f"| Q/W casts w/ hero target {len(r['rows'])} | IN-DOMAIN (should be suppressed) {len(r['dom'])}"
+              f" | NOT-A-CAST (dropped) {len(r['notcast'])}"
+              f" | UNKNOWN (gate frame had no ability list) {len(r['unknown'])}"
+              f" | no-ability frames {r['noab_frames']} (alive {r['noab_alive_frames']})")
         for c in r['dom']:
             print(f"    t={c['t']:7.1f} {c['spell']:20s} -> {c['tgt'].replace('npc_dota_hero_',''):16s} "
-                  f"tgt_hp={c['hp']:.2f} zeus_hp={c['zhp']:.2f} mp={c['mp']} Rlvl={c['rlvl']}")
+                  f"tgt_hp={c['hp']:.2f} zeus_hp={c['zhp']:.2f} mp={c['mp']} Rlvl={c['rlvl']} "
+                  f"paid={c['spent']}")
+        for c in r['notcast']:
+            print(f"    [dropped: not a cast] t={c['t']:7.1f} {c['spell']} -> "
+                  f"{c['tgt'].replace('npc_dota_hero_','')}")
         k = 'armed' if armed else 'base'
         tot[k + '_opp'] += r['opp']; tot[k + '_dom'] += len(r['dom'])
         tot[k + '_casts'] += len(r['rows']); tot[k + '_games'] += 1
+        tot[k + '_unknown'] += len(r['unknown']); tot[k + '_notcast'] += len(r['notcast'])
     print("\n=== totals ===")
     for k in ('armed', 'base'):
         o, dm, c, g = tot[k+'_opp'], tot[k+'_dom'], tot[k+'_casts'], tot[k+'_games']
         print(f"{k:6s} games={g} clean_opp_frames={o} in_domain_casts={dm} "
-              f"({dm/o*100 if o else 0:.1f} per 100 opp frames) allcasts={c}")
+              f"({dm/o*100 if o else 0:.1f} per 100 opp frames) allcasts={c} "
+              f"unknown_gate_frame_casts={tot[k+'_unknown']} "
+              f"dropped_not_a_cast={tot[k+'_notcast']}")
