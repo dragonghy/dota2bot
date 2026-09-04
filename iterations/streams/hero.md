@@ -4219,7 +4219,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     期间本轮对 loader 的改动**已经落在工作树上**,所以它那条「fast Lua detectors 78 文件 0 失败」
     **是 mod 树读数不是 trunk 读数**,且分不清哪些在改动前后跑 ⇒ **不能引用为 trunk 干净**;
     trunk 侧的 Lua 读数在 mod-vs-base 差分的 base 那一半。
-  - 下一棒:(1) **录像组** —— dumper 出 per-unit health regen(已开 issue);
+  - 下一棒:(1) **录像组** —— dumper 出 per-unit health regen(**GH #493**);
     (2) 本组第三小撮(`AbilityModifierSupportValue` 9 / `ChannelTime` 2 / `Duration` 1 /
     `Charges` 1 / `ChargeRestoreTime` 1),**但 `AbilityDamage` 那一个不许顺手发**
     (`-89 (乙)`:它会让 `zusboltdom` 自动 no-op,登记那天要一并写清处置)。
