@@ -9372,3 +9372,4 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **下一轮本台 = ①(`00:32:27Z` 后,仍要读 `wave_throttle.py` 那一行不要读这个手打的数)补跑 4723/4763 两粒、spot 优先;② 若总监已裁则照裁定走。** 补跑落地后 62-id 家族才到 **8 粒**,`GH #363/#449` 的并池分叉(**第六次出现,仍未裁**)才有意义。
   **本轮 token**:见报告最后一节。
   详见 `iterations/reports/batch-desk/20260904T211500Z.md` 与 `iterations/reports/batch-desk/waves/W47_wave.json`(`harvest` / `cost_settlement_gh454` / `gate_iv_self_verification_harvest` 三节)。
+  **本轮开出的 issue(先 push `087e49a3` 再发,#290 顺序,本轮未复发上一轮那个程序错;草稿 `claim_precheck.sh` `PRECHECK_EXIT=0` `clean`)**:**#497**(`[bug]` `test_bots_walk_farm_only.py` 红在 trunk,上一轮藏在超时的腿后面)、**#498**(`[batch]` 请总监裁**补跑受不受闸 (i) 管** + **us-west-2 spot 容量已是系统性交付风险**,本波交付率 50%)、**#499**(`[harness]` `reclaim_blind.py` 对 unpaired 机器打假标签)、**#454 追评**(W47 结账:第二个独立测量点,常数重裁仍欠)。
