@@ -9974,3 +9974,68 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `DECISIONS_NEEDED`** ②把 python 那半接进 pre-push 的承重(⑦ 是它第三次付款)
   ③GH #473 乙 ④自检腿序 / `OPEN_STATES` 要不要学 `admitted`(要有自己的承重)
   ⑤GH #449 / GH #460 四件 ⑥GH #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` filler-英雄政策。
+
+- 2026-09-04T12:5x–13:1xZ:批测台 12:15Z 交上来的 **GH #486(`[bug]`)抢占了 GH #473 甲**——
+  co-armed 登记册在 trunk 上红,**红在 W46 本波刚 armed 的 `campbind` 上**,而那是**我上一轮 §EC.1 自己裁进去的**,
+  且 `test_set.md` 入集节**只有总监能碰**(批测台自己写了「本台不改入集节也不撤 id」)。
+  零 AWS、零发波、`bots/`+`game/` **逐字节零 diff**。裁定全文 `test_set.md §EE`,报告
+  `iterations/reports/director/20260904T131104Z.md`。
+  **① 三行共臂,三个不同的答案**(一次入集同时点亮,同一个 caller `mode_roam_generic.Think`,登记器按构造分不开):
+  `creepthink > campbind` **空**(与在册的 `creepthink > pulldrag` 同一条闭式蕴含,调用点在同一个 camp-pull 分支;
+  **本轮在 campbind 自己的调用点上驱动,不是继承**);`pullcad > campbind` **空,且是一次升级** ——
+  兄弟行 `pullcad > pulldrag` 在册状态是 WIDE**「读过并判断」**,本轮**驱动**了它,
+  代价是多调一次现成 harness ⇒ 那条兄弟行下次被碰到时不该继续停在「判断」;
+  `pullthink > campbind` **真,且是本登记器第一条「真且单调」** —— 只有 :264 的门控提前 return 够得着(只加不减),
+  0.5s 起手保持够不着,因为 `local hPoke = …` 坐在 `if bCampHere` 分派**之上**。同 90 帧并排量:
+  drag 点 **89→75**,poke 点 **90→90**。
+  **② ⭐⭐ 最尖的一条合流反着跑,而登记器的键(`outer > inner`)按构造印不出它**:armed `campbind` 答 nil ⇒
+  不发 `Action_AttackUnit` ⇒ **`bot.campPullAttackTime` 不被写** ⇒ poke 臂自己的 `== nil` **永远认领每一帧** ⇒
+  pullthink 的起手臂**和它下面的 drag 臂再也走不到**。裸读:两 id 同 armed、野怪在计划营地 1500u 外,
+  **drag 75→0**,90 帧**一条指令未发**。⇒ **`pullthink` 自己的 (a) 被「campbind armed 在旁边」压低**。
+  ⚠️ 那个「站着不动」**有界、非卡死、且 §EC.1 已裁过**(选点器窗口 ⇒ 上界 15s、只在 1:00–6:00);
+  本轮把形状**钉进测试**,**不是重开裁定**。nil 算术这一问也问了:`campbind` 之前该不变量是**免费**的,
+  之后**变成承重** —— 它仍成立(poke 臂条件自己认领 nil),`[source S3]` 钉形状 + `[drive D3]` 在会报错的状态里跑满 90 帧。
+  **③ ⭐ 本轮最该被读的一段(§EE.5,主判据,可复用)**:**一台变异台可以「全绿变全红」而仍然什么都没证明**。
+  M5/M7 **第一版就报 CAUGHT、退出码 1**,而抓住它们的是 `[source S3]`/`[source S2]` 两条**源码形状**检查;
+  **本文件头部广告为承载这两个 claim 的那两条驱动,在变异过的树上双双通过**
+  (D3 断言「poke 消失了」而 M5 下 poke 本来就已消失;C2 断言「两计数**相等**」而 M7 下它们仍相等 ——
+  起手保持偷的是 **drag 臂**的帧)。改写到变异真的会动的量上(drag 归零 / poke **90 of 90** 而非每 3s 一次)之后才抓得住。
+  **「变异台全 CAUGHT」是关于集合的话,不是关于每一条检查的话** ⇒ 读成后者就是**让源码检查替驱动站岗**。
+  族谱:#205 丢门 / #171 丢读数 / §EC.8 丢一条检查的内容 / **本条丢的是一条 claim 的承重方,外观是一台干净的台**。
+  **④ 产物裸读**:`tests/test_campbind_coarm_vacuous.lua` **12/0**(4 drive+4 control+4 source);
+  登记册 `ACKNOWLEDGED` **+3 行**、修前 exit 1 修后 **11/0**;变异台 **7 真发 7 CAUGHT**,
+  M8 范围对照 **SURVIVED 正确**,树外 `cp` 还原 + `sha256sum -c` OK;
+  **M9 = 绿不是洗出来的**:抽掉 `['pullthink > campbind']` ⇒ **exit 1 并点名那一行**,还原 exit 0。
+  对上了 #486 自己写的验收(「绿要因为先落地 caveat,不是直接加三行」)。
+  **⑤ ⚠️ 更正批测台一处读数(不影响其结论)**:它写 helper「被读在 `:264/265/343/412` **四个 armed 门内**」——
+  **调用点只有一个(`:404`)**,那四个是 caller 函数体里的四处 id 字面量。差别承重:**`:412` 在调用点下面**,
+  这正是该行**单调**的原因;读成「四个门内」就会把它写成和 `pullthink > pulldrag` 一样的双向行。
+  **⑥ ⚠️ 第二处更正,交回批测台**:它写 python 红「仍是 `test_bots_walk_farm_only`,第三轮点名,本台不声称已修」。
+  本轮**两条都裸读了**:`walk_farm_only` **exit 0**(`8 checks, 0 failed [175, 15]`,10:00Z 修的没回退);
+  自检 python 腿逐字 `1 failed: tests/test_wave_gate_keys.py` ⇒ **唯一那条红是 GH #479,批测台自己欠的那笔**。
+  **这正是 GH #267 的形状**:读了 `FINDINGS` 桶的**名字**,当成桶里的**同一个成员** ——
+  而它上一轮报告自己写着「不写『exit 3,全是 cadence』」。**同一台在同一处付了一次同族的钱。**
+  **⑦ GH #473 甲第四次顺延,已按我上一轮自己写下的条款止损**:写进 `iterations/DECISIONS_NEEDED.md`
+  (**不是请 owner 裁**,是让顺延有一个 owner 看得见的地方)。**下一轮它就是整个工作单元** ——
+  自检若又报红,**先登记交棒不当轮修**,理由:trunk 红有别的门会在下一轮再举一次手,
+  **载体门这条按定义没有任何东西会举手**。
+  **⑧ 成本**:零 AWS 调用(连 `budgets` 都没读)/零发波/零计费资源;MTD **照抄**批测台 12:15Z 自报 `$14.981`
+  (快照 `refreshed 11:29:50Z`),围栏 `$20.03` ≤ `$80`;九月未到 $50 档。
+  ⚠️ 快照落在 W45 关机后 ~3.5h,**仍在 4.3–11.3h 滞后带内** ⇒ 不据 MTD 增量反推任何一波;W44 对账**第四次顺延**,确认不追。
+  **⑨ 巡检**:四组均有产出;`cadence` 仍是 strategy **那同一条** 3.8h(不升级);`UNKNOWN STATUS` 桶仍在,
+  **失效方向安全**,⛔ **本轮仍故意不教 `OPEN_STATES` 认 `admitted`**(在一条裁定里顺手教漂移检测器接受这次漂移,
+  正是那个检测器死掉的方式);**OWNER_PRIORITIES P1 又推进一格**(`campbind` 共臂账结清,W46 逐 id (a) 解释权不再悬着);
+  无邮件(本周 08-31 已发)、`DECISIONS_NEEDED` +1 条(⑦,止损非待决)、周四跳过效率台账、**patch 检查未做**。
+  **⑩ 铁律 6**:`bots/`+`game/` 零 diff ⇒ **全量 Lua 套件未跑也不声称**;静态门裸读 **`GATE_EXIT=0 CLEAN` / 0 警告**
+  (冷启,门自己装的 `lua-check`),`luacheck` 新测试文件 0 警告,**未用 `RULE6_BYPASS`**;
+  相关支八支裸读见报告 §9,**python 全套不声称全绿**(`test_wave_gate_keys` 故意仍红)。
+  自检 **`SELFCHECK_EXIT=3`**,归因**照抄工具自己那行**
+  (`FINDINGS: cadence owed-executions trunk-red(python) trunk-red(lua)` / `UNCERTIFIABLE: none`)。
+  ⚠️ **纪律 3 第三十四发,又是本轮第一条命令**(`| tail -60` 被自拒)—— 上一轮是改完措辞后第一轮没踩,
+  **本轮又踩**⇒ 措辞改了两次都没改掉它,**这是习惯不是门**。同轮第二个陷阱没踩:
+  后台通知报 `exit code 0`,那是我拼的 `echo` 的码,真码读脚本自打的 `selfcheck worst exit: 3`。
+  **⑪ 下次触发**:①**GH #473 甲 —— 第五次排第一,这一轮就是整个工作单元**
+  ②**协同组 §ED.5 的共同 promote 约束**(10:45Z 散文交棒无 queue 行;在 `stayfield`/`stayfield2`/`fieldsip`
+  任何一个被裁定之前必须收下)+ 裁 §ED.6 (甲)/(乙) ③**GH #487**(闸 (iv) 结构缺口三选一 + `yield` 定名)
+  ④GH #473 乙 ⑤自检腿序 / `OPEN_STATES` 要不要学 `admitted`(要有自己的承重)
+  ⑥GH #449 / #460 四件 / #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` filler-英雄政策(有时限)。

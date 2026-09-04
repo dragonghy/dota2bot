@@ -388,6 +388,71 @@ local ACKNOWLEDGED = {
     --     do not delete it to make anything green.
     -- See test_set.md SS DN.6 (the reading) and GH #424.
     ['outlatch > slotpush'] = true,
+    -- The three rows 'campbind' lit at once when it was admitted (60 -> 61,
+    -- test_set.md SS EC.1), all from the SAME caller -- mode_roam_generic
+    -- `Think`, whose body names all three outer ids. They are NOT the same
+    -- row three times, and none of the three is registered on a judgement
+    -- call: every one is driven on a real frame in
+    -- tests/test_campbind_coarm_vacuous.lua (12 checks, 7/7 mutations caught).
+    -- Full reading: test_set.md SS EE.
+    --
+    -- VACUOUS, by the same closed-form implication as `creepthink > pulldrag`
+    -- above -- campbind's call site is in the SAME camp-pull branch, so both
+    -- grounds carry over verbatim: (1) reaching it needs the creep-pull block
+    -- above to have not run, and (2) the two plan fields are written at
+    -- exactly three sites, all in GetDesireHelper, each nilling the other.
+    -- Driven at campbind's own call site rather than inherited: [drive D1]
+    -- arms 'creepthink' in both animation regimes and the poke-target call
+    -- count does not move, while [control C3] shows the same arming DOES
+    -- change the order log on a live CREEP-pull frame.
+    -- !! INVALIDATION CONDITION: the same two as `creepthink > pulldrag`.
+    ['creepthink > campbind'] = true,
+    -- VACUOUS, and this row is an UPGRADE on its own sibling. `pullcad >
+    -- pulldrag` above is WIDE, "read and judged not to meet on a frame".
+    -- Judged. Same geometry here -- pullcad's gate sits inside the
+    -- `bot.roamCreepPull ~= nil` block, which returns before the camp branch
+    -- -- but [drive D2] DRIVES it: arming 'pullcad' moves the poke-target
+    -- count by zero in both regimes, and [control C4] shows the id is a live
+    -- lever on its own branch. Driving it cost one more call of a harness
+    -- that already existed, which is the reason the sibling row should not
+    -- stay "judged" the next time anything touches it.
+    ['pullcad > campbind'] = true,
+    -- REAL, and NOT the same shape as `pullthink > pulldrag` -- this is the
+    -- first row here that is REAL and MONOTONE. Only pullthink's part one
+    -- reaches this call site: the :264 gated early return stops eating
+    -- camp-pull frames, so armed pullthink ADDS frames ([control C1]: 0 ->
+    -- 90 under the throttle). Part two -- the 0.5 s wind-up `elseif` -- cannot
+    -- remove any, because `local hPoke = J.GetCampPullPokeTarget(...)` sits
+    -- ABOVE the `if bCampHere` dispatch and runs on every frame that reaches
+    -- the camp branch at all. Measured side by side on the same 90 frames
+    -- ([control C2]): the drag site drops 89 -> 75 while the poke site holds
+    -- 90 -> 90.
+    -- ⭐ AND THE SHARPER CONFOUND RUNS BACKWARD, which no key in this file can
+    -- spell. Armed 'campbind' answers nil when no visible neutral belongs to
+    -- the planned camp; then no Action_AttackUnit fires, `bot.campPullAttackTime`
+    -- is never written, and the poke arm's own `campPullAttackTime == nil`
+    -- keeps claiming every frame -- so pullthink's wind-up arm AND the drag
+    -- arm below it are never reached again. [drive D3] measures it: with both
+    -- armed, 75 of 75 downstream frames are gone (drag count 75 -> 0) and the
+    -- bot issues no order on any of the 90 frames. => 'pullthink''s OWN (a),
+    -- the wind-up-hold trigger count, is depressed by 'campbind' being armed
+    -- beside it, on exactly the frames 'campbind' acts on. Pre- and
+    -- post-admission 'pullthink' (a) are not the same measurement, in the
+    -- direction this register does not print.
+    -- (The standing-still that implies is bounded, not a hang, and was ruled
+    -- on at admission: SS EC.1 -- the selector's window caps the plan at 15 s
+    -- and only between DotaTime 60 and 360. Pinned in [drive D3].)
+    -- !! INVALIDATION CONDITION: acknowledging a row turns its light off.
+    -- (1) campbind's call site moving INSIDE the `if bCampHere` dispatch --
+    --     then part two reaches it too and the row stops being monotone;
+    -- (2) `bot.campPullAttackTime = now` moving out of the `if hPoke ~= nil`
+    --     block -- then the backward coupling above is gone and the row is an
+    --     ordinary one-way REAL row;
+    -- (3) 'pullthink' or 'campbind' being PROMOTED -- then both legs carry it
+    --     and the confound leaves the differential, but readings from before
+    --     and after that day stay incomparable. Retire the row then; do not
+    --     delete it to make anything green.
+    ['pullthink > campbind'] = true,
 }
 
 local tests = {}

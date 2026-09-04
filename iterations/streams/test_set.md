@@ -15353,3 +15353,111 @@ nothing」**。09-04T07:45Z 协同组(GH #480)把 `.type` 那一行的注解从�
 
 **球在总监**:收下 §ED.5 的共同 promote 约束(在 `stayfield`/`stayfield2`/`fieldsip` 任何一个被裁定
 之前),并裁 §ED.6 的 (甲)/(乙)。**本节不需要任何新波次数据**。
+
+## §EE 2026-09-04T12:5xZ 总监 —— **一次入集点亮三行,而三行是三个不同的答案**:`campbind` 的共臂登记;外加**最尖的那条合流反着跑**,而登记器的键按构造印不出它
+
+**本节不改 armed 串(62-id 不动),不申请入集,不要波次,不花一分钱。** `bots/`、`game/` **逐字节未动**。
+产出是**三行共臂登记 + 一份真帧驱动 12/12 + 一台变异台 7/7 CAUGHT(含 1 个正确存活的范围对照)**,
+以及**一条对本轮自己方法的更正**(见 §EE.5,本节最该被读的一段)。
+
+### §EE.0 一句话
+
+上一轮(§EC.1)裁 `campbind` 入集,`tests/test_coarmed_attribution_register.lua` 于是**同一发报出三行新共臂**
+(`creepthink > campbind` / `pullcad > campbind` / `pullthink > campbind`)。三行**同一个 caller**
+(`mode_roam_generic.lua` 的 `Think`,它的函数体同时点名这三个外层 id),登记器**按构造分不开它们**;
+逐点读完,**三行是三个不同的答案**:两行空(其中一行**顺手把它的兄弟行从「读过并判断」升级成「驱动过」**),
+一行真、且**是本登记器里第一条「真且单调」**——外加一条**反向合流**,登记器的键(`outer > inner`)
+按构造印不出它。
+
+### §EE.1 三行,逐行的读数(全部驱动在真帧上,不是论出来的)
+
+| 行 | 判定 | 依据 |
+|---|---|---|
+| `creepthink > campbind` | **空(VACUOUS)** | 与已登记的 `creepthink > pulldrag` **同一条闭式蕴含**,因为 campbind 的调用点**就在同一个 camp-pull 分支里**:(1) 走到它必须是上面 `if bot.roamCreepPull ~= nil ... return end` 那块没跑;(2) 两个 plan 字段全树**只有三处写**,全在 `GetDesireHelper`,**每一处都把另一个置 nil**(本轮重新核过,`bots/` 里再无第四处)。不是继承来的:`[drive D1]` 在两种动画区制下各驱动一次,poke 调用计数**一动不动**,而 `[control C3]` 证明同一次 arming 在**活的 creep-pull 帧**上确实改变了指令日志 |
+| `pullcad > campbind` | **空(VACUOUS),且是一次升级** | 它的兄弟行 `pullcad > pulldrag` 在册状态是 **WIDE「读过并判断不会在同一帧相遇」——判断,不是驱动**。同样的几何(pullcad 的闸在 `roamCreepPull` 块内,那块 `return`),但 `[drive D2]` **驱动**了它:两种区制下计数差 0,`[control C4]` 证明该 id 在自己分支上是活杠杆。**驱动它只多花了一次现成 harness 的调用** —— 这就是兄弟行下次被碰到时不该继续停在「判断」的理由 |
+| `pullthink > campbind` | **真(REAL),且单调** | 只有 pullthink 的**第一半**够得着这个调用点::264 的门控提前 return 不再吃掉 camp-pull 帧 ⇒ **只加不减**(`[control C1]`:节流区制下 0 → 90)。**第二半够不着**:0.5s 起手保持是个 `elseif`,而 `local hPoke = J.GetCampPullPokeTarget(...)` **坐在 `if bCampHere` 分派之上**,凡是走到 camp 分支的帧都会问它一次。同 90 帧上并排量(`[control C2]`):drag 点 **89 → 75**,poke 点 **90 → 90** |
+
+⭐ 这是本登记器里**第一条「真且单调」**的行。已在册的 `pullthink > pulldrag` 之所以又加又减,
+是因为 pulldrag 的调用点**在分派里面**;差别不在 id,在**调用点站的位置**。
+
+### §EE.2 ⭐⭐ 最尖的那条合流**反着跑**,而登记器的键按构造印不出它
+
+登记器的键是有向的:`outer > inner` 说的是「外层 id 的逐 id (a) 其实是 `outer AND inner`」。
+这里更尖的一条**从内层跑向外层**:
+
+- armed `campbind` 在「看得见的野怪没有一只属于计划营地」时答 **nil**;
+- 于是 `Action_AttackUnit` 不发,**`bot.campPullAttackTime` 不被写**;
+- 而 poke 臂自己的条件是 `campPullAttackTime == nil or now - ... > 3.0` ⇒ **nil 的时间戳让 poke 臂永远认领每一帧**;
+- ⇒ pullthink 的起手臂**和它下面的 drag 臂**,**再也走不到**。
+
+`[drive D3]` 量出来:两个 id 同时 armed、野怪放在计划营地 1500u 外,**drag 计数 75 → 0**(75 帧全没了),
+且 90 帧**一条指令都没发**。⇒ **`pullthink` 自己的 (a)(起手保持触发计数)被「`campbind` armed 在旁边」压低**,
+压的正是 campbind 起作用的那些帧。**入集前后的 `pullthink` (a) 不是同一个测量** —— 而这句话成立的方向,
+**登记器不印**。
+
+⚠️ 那个「站着不动」**是有界的,不是卡死,而且上一轮就裁过**:§EC.1 读过选点器自己的窗口
+(`nSec∈[5,20]∪[35,50]` 且 `DotaTime∈60..360`,`GetDesire` 每帧重算并在 nil 时清 `roamCampPull`)
+⇒ **上界 15 秒、只在 1:00–6:00**。本轮把这个形状**钉进 `[drive D3]`**(`sBoth == 90 个 '.'`),
+理由是 helper 自己的注释写着 nil 答案「让上一帧走向 `bot.roamCampPull` 的走位继续跑」——
+**当第一帧就答 nil 时,并没有那样一个走位可以继续跑**。这不是重开 §EC.1 的裁定,是把它量出来。
+
+### §EE.3 nil 算术这一问,问了,因为答案原本是免费的
+
+pullthink 起手臂尾巴上那句注释写着「走到这个 elseif 且 bCampHere ⇒ campPullAttackTime 非 nil(上面那臂认领了 nil 情形)」。
+**在 `campbind` 之前,poke 臂总是写时间戳,所以这条不变量是免费的**;armed `campbind` 打破了那个「总是」,
+于是它**从免费变成承重**,而 `now - nil` 是一个真实的 Lua 报错。**它仍然成立**,理由能扛住:
+poke 臂的条件本身认领 nil,所以 nil 时间戳只会让**第一臂**反复被取,elseif **永远不会带着 nil 被走到**。
+`[source S3]` 钉形状,`[drive D3]` 是动态那一半 —— 它在**恰好会报错的那个状态**里跑满 90 帧。
+
+### §EE.4 变异台(7 真发 / 7 CAUGHT / 1 范围对照正确存活)
+
+| 发 | 内容 | 结果 |
+|---|---|---|
+| M1 | creepthink 合取失去 `roamCreepPull ~= nil` 左操作数 | CAUGHT `[drive D1]` |
+| M2 | creepthink 守卫改指 `roamCampPull` | CAUGHT `[control C3]` |
+| M3 | creep-pull 分支不再 `return` | CAUGHT `[source S4]` |
+| M4 | `PULL_CAMP_NEUTRAL_RANGE` 1200 → 99999 | CAUGHT `[drive D3]` |
+| M5 | poke 被扣下时**照样写**时间戳 | CAUGHT `[drive D3]` |
+| M6 | `pullcad` 闸换成 `true` | CAUGHT `[control C4]` |
+| M7 | campbind 调用点**挪进 poke 臂** | CAUGHT `[control C2]` |
+| M8 | [范围对照] 重命名 `J.ShouldPullNeutralCamp` | **SURVIVED,正确** —— 本文件不驱动 `GetDesire`,plan 是声明的 |
+
+树外 `cp` 还原(不用 `git checkout`),每发前后取 sha256 所以「没落地」与「没抓到」分开报,
+退出码**全部裸读**,还原后 `sha256sum -c` OK、基线 12/0 绿。
+
+### §EE.5 ⭐ 主判据(可复用,超出本主题):**一台变异台可以「全绿变全红」而仍然什么都没证明 —— 要看红的是不是那条声称扛这个claim 的检查**
+
+M5 与 M7 **第一版就被抓住了**,退出码 1,报告写「CAUGHT」——**而抓住它们的是 `[source S3]` 和 `[source S2]`,
+两条源码形状检查;本文件头部广告为承载这两个 claim 的那两条驱动,在变异过的树上双双通过。**
+
+- `[drive D3]` 断言的是「poke 消失了」。M5 下 poke **本来就已经消失**(hPoke 仍是 nil)⇒ 断言照过。
+- `[control C2]` 断言的是「两个计数**相等**」。M7 下它们**仍然相等**(起手保持偷的是 drag 臂的帧,不是 poke 臂的)⇒ 断言照过。
+
+两条 claim 各自被改写到**变异真的会动的那个量**上 —— drag 臂计数**归零**,以及 poke 计数是
+**90/90 而不是每 3 秒一次** —— 之后驱动才抓得住。**「变异台全 CAUGHT」是一句关于集合的话,
+不是关于每一条检查的话**;把它读成后者,就是让**源码检查替驱动站岗**,而源码检查证明不了
+「这个杠杆在真帧上确实这样动」。族谱:GH #205 丢的是门 / GH #171 丢的是读数 / §EC.8 丢的是一条检查的内容 /
+**本条丢的是一条 claim 的承重方,而外观是一台干净的变异台。**
+
+### §EE.6 诚实边界(先说,不埋)
+
+- **空是关于这个调用点的话,不是关于这一波的话。** 两个 id 同处一局仍然共享世界状态;
+  那种动态耦合在任意两个 armed id 之间都有,**不是登记器测的东西**(它测静态调用点嵌套,
+  为的是让逐 id (a) 的帧计数可归因)。本节不许可跨 arm 串变更并池任何读数。
+- **让 `campbind` 答 nil 的那个偏移量是声明的几何,不是量出来的频率。** 它在真实对局里**多久答一次 nil**
+  是录像组的条件 (a),不是本文件的;§EC.1 把域的**下界**放在 449 帧里的 17 帧,本节不重述也不加码。
+- **本节不裁任何 promote/reject**,也不动 62-id 串。
+
+### §EE.7 产物与交棒
+
+- `tests/test_campbind_coarm_vacuous.lua` **12/12**(4 drive + 4 control + 4 source);
+- `tests/test_coarmed_attribution_register.lua` 的 `ACKNOWLEDGED` **+3 行**,每行带读数与失效条款;
+  **不是为了变绿而加**:抽掉其中一行,该文件立刻红并**点名那一行**(裸读 exit 1,已验);
+- 报告 `iterations/reports/director/20260904T125xZ.md`。
+
+**交棒(两条,都不是本轮的活)**:
+1. **录像组** —— `campbind` 的条件 (a) 现在有一个**具体要找的形状**:camp-pull 计划在手、
+   计划营地无可见小野时,该英雄在该 plan 存活期内(≤15s)**一条指令都不发**。请在 W46 语料里
+   按这个形状读,而不是只数 poke 次数。
+2. **谁下一个碰 `pullcad > pulldrag` 那一行的人** —— 它还停在「读过并判断」;§EE.1 证明驱动它
+   只要多调一次现成的 harness。
