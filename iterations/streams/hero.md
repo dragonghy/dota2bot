@@ -22,6 +22,23 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-89. **`zusboltdom` 落地了,但它头上的两件事本轮**故意没做**,因为各自是别人的题
+   (报告 `iterations/reports/hero/20260904T075131Z.md`)。**
+   - **(甲) 条件 (a) 在 `hero-29` 里,球在总监(入集)→ 批测台(搭车发波)→ 录像组(重扫)。**
+     **不要在它回来之前再动这条分支** —— 本候选与 `zusboltcap` 是**故意可组合、可分离**的
+     两根杠杆,而**哪一根该入集是总监的题**;同腿 armed 时域内计数归零**不可归因给其中任何一个**。
+   - **(乙) `zuus_lightning_bolt` 的 KV 缺 `AbilityDamage` 顶层字段这件事本身没修**,
+     `X.GetBoltKillHealthCap` 的出货表达式**一个字没动**。那是 `zusboltcap`(GH #175)自己的域,
+     顺手改就是在一个未裁的杠杆上再叠一个。⚠️ 真要修时注意:**修好 KV / 上规格那个 getter
+     会让 `zusboltdom` 自动变成 no-op**(它按上限的**值**开关)—— 那是设计,不是回归,
+     但**登记它的那一天要一起把 `zusboltdom` 的处置写清楚**,否则它会以「armed 了没效果」
+     的形状躺在串里(AGENTS.md 那条教训的第三种形态)。
+   - **⭐ 一条可迁移的**:`hero_zuus.lua` 里**每一个自称击杀/斩杀的判据都值得问一次
+     「它的上限是从哪来的」** —— 本轮这一处的上限是一个**恒 0 的 getter**,而 0 在
+     `FindAoELocation` 里不是小数字,是**另一个谓词**。`X.ConsiderW`(`:795`)那处
+     `GetActualIncomingDamage` 已由 `zusstatic` 那轮量过(那里同一个 0 是**杀死**分支,
+     方向相反);**没有量过的是别的英雄文件里同形的站点**,而那不是本组的作用域,先问总监。
+
 -88. **`kvgetters` 落地时打红的两个文件各欠一件后续,本轮**故意没做**,
    因为它们各自是别人的工作单元(报告 `iterations/reports/hero/20260904T045632Z.md` §7)。**
    - **(甲) `tests/test_lion_q_kill_damage.lua` §4 与 `tests/test_zuus_bolt_kill_cap.lua`
@@ -4069,6 +4086,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T07:51Z(报告 `iterations/reports/hero/20260904T075131Z.md`;轴 **GH #477 选项 2,
+  新 gated 候选 `zusboltdom`**)
+  **改 4 个 + 新增 2 个:`bots/BotLib/hero_zuus.lua`(新 `X.BoltAoEKillTarget` + 击杀-AoE
+  return 带出第三个值)、三个兄弟测试重新对准(`test_replay_260819_zuus_w2_leak` 的元数断言、
+  `test_zuus_bolt_kill_cap` 的 `nDamage` 消费者计数、`test_zusult_pre_ladder_claim_retake`
+  的 arming 集);新增 `tests/test_replay_260819_zuus_boltdom.lua`(15 用例 7 节)与
+  `tools/agent/mutstand_zusboltdom.sh`(**7 变异 7 中**,含 1 对仪器的对照)。
+  `state.json:zusboltdom_20260904T` 已登记;`queue.json` 新行 **`hero-29`**(买条件 (a),
+  **不申请专波/专机/新增机时**);**零 arm、零 promote、零 AWS**。**
+  - 选题:OWNER_PRIORITIES 无本组项(P1/P2 球在协同组、P3 在总监)⇒ 走 issue 流。
+    GH #477 标题带 `[bug]`,但它的建议验收第 2 条**点名给英雄组 / 总监**,落点在
+    `hero_zuus.lua`,焦点英雄 Zeus ⇒ 认领。
+  - **`zusult` 没有失效,它是被绕过。** `X.ConsiderW2` 的击杀-AoE 分支按 GH #47 **故意不报目标**
+    (击杀豁免,门在 nil 上恒 false)—— 而那条分支**不是击杀分支**:它交给 `FindAoELocation`
+    的上限 = `GetAbilityDamage()`,而 `zuus_lightning_bolt` **没有顶层 `AbilityDamage` 字段**
+    ⇒ **恒 0**,而引擎把 0 读成「**没有过滤器**」(`docs/BOT_API_REFERENCE.md:1288`)。
+    ⇒ 它问的是「射程内有没有敌方英雄」,并**把击杀豁免一起带走**。
+  - **⛔ 依赖写成了值,不是 id**:helper **不读** `IsSoakCandidate('zusboltcap')` ——
+    点名兄弟候选的门会在那个兄弟被 promote 的当天冻成 FALSE(`pullcad` 陷阱)。
+    变异台 **M4** 就是那个 id 版本:**今天行为逐字相同,明天冻死**,只有源码级用例看得见。
+  - **⭐ M7(把测试供给的英雄 AoE 读数弄瞎)交出了第二半证据**:回到 loader 的结构性
+    `{count = 0}` 之后,这一帧的出价来自一条 **poke 分支**(它是报目标的)⇒ **`zusult`
+    自己就已经扣住了它,一个技能都没放**。所以漏的**不是这一帧,是击杀-AoE 那条分支**。
+  - **两条必须一起引用的限制**:(i) fixture **不是** #477 点名的 t=404.4
+    (那一帧没 dump,重 dump 是录像组的球、卡在 GH #478 后面),用的是**同形**的 GH #47 帧;
+    (ii) **英雄侧 AoE 读数是测试供给的** —— `replay_fixture.lua` 对一切 HERO 搜索
+    结构性答 `{count = 0}`,本文件按它自己文件头的指示覆写,用**引擎写在文档里的
+    `nMaxHealth` 规则**算**帧自己的**英雄/位置/血量(count 不是编的,是算的;与 loader 同向,
+    而每格只问 `>= 1` 还是 `== 0`,在这个问题上下界精确)。**M7 是对这台仪器的对照。**
+  - **⚠️ 踩到并清掉一个 GH #229 现场(可迁移)**:我误把变异台与全量套件并发起了 ——
+    **变异台按定义会把工作树里的 `hero_zuus.lua` 换成变异体**。杀掉那次全量后,
+    树上**留下一份上膛的 `bots/Customize/soak_side.lua`**(`cand = 'aimguard'`),
+    于是下一次全量在 **12 个文件**上打红。**红的内容正是 09-02 那轮为这件事造的守卫**
+    (装载时点名残留并打印内容,而不是产出像期望值写错的数值不匹配)。
+    ⇒ (i) **变异台与全量套件永远不许并发**;(ii) **被中断的全量会留下上膛的开关**,
+    下一轮第一件事看一眼那个路径。
+  - **下一棒已经交出去**(铁律 9):`hero-29` 的 `acceptance` 里预登记了判读方向、
+    两条退回门((甲) 没降 = BUGGY 退回;(丁) 必须与 `zusult` 同腿 armed 否则 UNINTERPRETABLE)
+    与**反向刹车 (乙)**(Zeus 击杀数下降 ⇒ 即使域内计数归零也 REJECT ——
+    本改动唯一可能的坏处就是扣住真击杀,而那是 GH #47 明令禁止的方向)。
+    GH #477 **不关**(条件 (a) 未买),已追评说明落的是选项 2、与选项 1 的**不可归因性**
+    (两者都会把域内计数打到 0,机制不同)。
 - 2026-09-04T04:56Z(报告 `iterations/reports/hero/20260904T045632Z.md`;轴 **`kvgetters`,仪器修复**)
   **改 8 个 + 新增 2 个:`tests/mock/replay_fixture.lua`(`value_ladder`/`rank_step`/`has_kv`
   + `GetSpecialValueInt`/`Float`/`GetCastRange` 上规格)、`tests/test_cm_ult_reach_meter_domain.lua` §4、

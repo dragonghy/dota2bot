@@ -352,11 +352,30 @@ tests['wiring: only ConsiderW2\'s poke branches report a target'] = function()
         'ConsiderW2 has 6 bidding returns; a new one must declare whether it '
         .. 'reports a target, found ' .. #tArity)
     -- Source order: kill-AoE, channel-interrupt, retreat-AoE, then the three
-    -- poke branches. Only the last three may hand the gate something to hold.
-    for i = 1, 3 do
+    -- poke branches.
+    --
+    -- GH #477 (2026-09-04) took the FIRST of these out of the arity check, and
+    -- the reason is that this loop was pinning the wrong half of the invariant.
+    -- What GH #47 established is "a kill is never held". Arity 2 was how that
+    -- was spelled -- correct only while the branch really is a kill branch, and
+    -- it is not: the filter it hands FindAoELocation is 0 while `zusboltcap` is
+    -- unarmed, and the engine reads 0 as "no HP filter". So the branch fires on
+    -- any enemy hero in range and carries the kill exemption with it; the
+    -- replay group measured 3 such casts inside `zusult`'s own domain on W44.
+    -- The third value it now returns is X.BoltAoEKillTarget(...), which is nil
+    -- on every frame where the cap is a real kill filter -- i.e. the invariant
+    -- is unchanged and has simply stopped being expressible as a value count.
+    -- It is pinned behaviourally, on a real frame, in
+    -- tests/test_replay_260819_zuus_boltdom.lua ("armed: a REAL kill window
+    -- still fires", "armed: with zusboltcap the filter is real"), and against
+    -- 7/7 mutants in tools/agent/mutstand_zusboltdom.sh.
+    assert(tArity[1] == 3,
+        'the kill-AoE return reports X.BoltAoEKillTarget(nDamage, ...) as its '
+        .. 'third value (GH #477) -- it returns ' .. tArity[1] .. ' values')
+    for i = 2, 3 do
         assert(tArity[i] == 2,
-            'return #' .. i .. ' (kill-AoE / channel-interrupt / retreat) must stay '
-            .. 'targetless, so the gate can never hold a kill, an interrupt or an '
+            'return #' .. i .. ' (channel-interrupt / retreat) must stay '
+            .. 'targetless, so the gate can never hold an interrupt or an '
             .. 'escape -- it returns ' .. tArity[i] .. ' values')
     end
     for i = 4, 6 do

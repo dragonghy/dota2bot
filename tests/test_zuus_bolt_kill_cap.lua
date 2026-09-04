@@ -188,13 +188,22 @@ tests['[hero] ConsiderW2 takes its HP filter from the helper and nowhere else'] 
     assert(not sBody:find('GetAbilityDamage', 1, true),
         'and the raw call must not survive inside ConsiderW2 -- that would be an ungated site')
 
-    -- nDamage has exactly one consumer in this function: the FindAoELocation
-    -- HP filter.  A second one would be a leg nothing here is watching.
+    -- nDamage has exactly TWO consumers in this function, and both are named
+    -- here, because a third would be a leg nothing is watching.
+    --   (1) FindAoELocation's nMaxHealth -- the filter itself;
+    --   (2) X.BoltAoEKillTarget -- GH #477, which asks whether that filter is a
+    --       filter at all before the branch may claim GH #47's kill exemption.
+    -- (2) is deliberately a READ of the same local rather than a second call to
+    -- the helper: two calls could drift apart mid-frame if the cap ever stops
+    -- being pure, and then the branch would exempt itself on one value while
+    -- searching on another.
     local nReads = select(2, sBody:gsub('nDamage', ''))
-    assert(nReads == 2, 'expected the assignment plus exactly one read of nDamage in '
+    assert(nReads == 3, 'expected the assignment plus exactly two reads of nDamage in '
         .. 'ConsiderW2, got ' .. nReads)
     assert(sBody:find('0.3, nDamage )', 1, true),
-        'and that read must be FindAoELocation\'s last argument (nMaxHealth)')
+        'the first read must be FindAoELocation\'s last argument (nMaxHealth)')
+    assert(sBody:find('X.BoltAoEKillTarget( nDamage,', 1, true),
+        'the second must be the GH #477 exemption test, on the same local')
 end
 
 tests['[hero] the helper is gated, turbo-only, and ends on the shipped expression'] = function()

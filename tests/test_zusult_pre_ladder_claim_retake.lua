@@ -112,9 +112,16 @@ local T_TOWERFEAR = 'tests/test_towerfear_clock_leg.lua'
 -- is in the arming set but has nothing to re-take. Listed rather than filtered
 -- out, because "the scan found a file I did not expect" is the signal §1 is for.
 local T_CENSUS = 'tests/test_focus_mana_cost_consumer_census.lua'
+-- Born 2026-09-04 (GH #477, candidate `zusboltdom`), i.e. also after c386d5f3
+-- and also with nothing to re-take. It arms `zusult` because the leak it pins
+-- is only observable while the reserve gate is armed -- an unarmed run cannot
+-- tell "the branch reported no target" from "there was nothing to report to".
+-- It hand-anchors the ult price on the handle exactly as §2 requires, and is
+-- asserted to do so there.
+local T_BOLTDOM = 'tests/test_replay_260819_zuus_boltdom.lua'
 
 local ARMING_FILES = {
-    T_CENSUS, T_MANALOCK, T_W2LEAK, T_CROSS, T_TOWERFEAR,
+    T_CENSUS, T_MANALOCK, T_W2LEAK, T_CROSS, T_TOWERFEAR, T_BOLTDOM,
 }
 table.sort(ARMING_FILES)
 
@@ -167,7 +174,10 @@ end
 local ANCHOR = "rawget(abilityR, '__spec').GetManaCost"
 
 tests['[2] the three hero-gate files each anchor the ult price themselves'] = function()
-    for _, sPath in ipairs({ T_MANALOCK, T_W2LEAK, T_CROSS }) do
+    -- T_BOLTDOM is post-ladder and has nothing to re-take, but it is held to
+    -- the same standard: without the anchor its readings would ride the
+    -- ladder's price silently.
+    for _, sPath in ipairs({ T_MANALOCK, T_W2LEAK, T_CROSS, T_BOLTDOM }) do
         local src = read_file(sPath)
         assert(src:find(ANCHOR, 1, true) ~= nil,
             sPath .. ' must anchor the ult price on the handle -- without it '

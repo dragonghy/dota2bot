@@ -982,11 +982,73 @@ function X.GetBoltKillHealthCap( hAbility )
 
 end
 
+--- [zusboltdom] The kill-AoE branch may only claim the KILL EXEMPTION while its
+--- HP filter is actually a kill filter.
+---
+--- WHY (GH #477, replay group, W44, 3 frame-by-frame confirmed leaks).  The
+--- three bidding branches at the top of X.ConsiderW2 report NO target on
+--- purpose, so that X.zuus_ShouldSaveManaForUlt -- inert on a nil target --
+--- can never stand between Zeus and a kill, an interrupt or his own escape
+--- (GH #47).  That exemption is sound for what the first branch was WRITTEN to
+--- be.  It is not sound for what that branch currently IS.
+---
+--- The filter it hands FindAoELocation is X.GetBoltKillHealthCap, which is
+--- `GetAbilityDamage()` while `zusboltcap` is unarmed -- and that call reads a
+--- top-level `AbilityDamage` KV field zuus_lightning_bolt does not declare, so
+--- it answers 0 on every level of the bolt.  docs/BOT_API_REFERENCE.md:1288
+--- records the engine's rule for the last argument: "Pass 0 for no HP filter
+--- (target any HP)".  So the branch whose local is named
+--- `nCanKillHeroLocationAoE` asks "is there an enemy hero in cast range", says
+--- yes at BOT_ACTION_DESIRE_HIGH, and carries the kill exemption with it.
+--- Measured downstream cost, game 20260904_003453_slot8 (seed 3426, radiant,
+--- `zusult` armed): 3 Lightning Bolts inside `zusult`'s own domain, all three
+--- paid for (mana -131 / -131, W cooldown 0 -> 6.0), all three into targets at
+--- 1.00 / 1.00 / 0.82 HP, with the ult level 1 and cooldown 0 each time.  The
+--- replay group excluded the other two exempt branches frame by frame.
+---
+--- WHAT THIS CHANGES.  Nothing about whether the branch FIRES, and nothing
+--- about its cast location.  Only whether it hands the reserve gate something
+--- to look at.  Armed, the branch reports its target -- and therefore drops
+--- the exemption -- EXACTLY WHEN the filter degenerated to "any HP", i.e. when
+--- the branch is not a kill branch at all.  The moment the cap is a real
+--- number (today: `zusboltcap` armed; tomorrow: a KV that declares the field,
+--- or an engine that stops reading zero as "no filter") this answers nil again
+--- and the exemption comes back untouched.
+---
+--- THE DEPENDENCY IS THE VALUE, NOT THE ID.  This deliberately does NOT read
+--- `J.IsSoakCandidate( 'zusboltcap' )`.  A gate whose condition names a SIBLING
+--- candidate freezes the day that sibling is promoted, because a promoted id is
+--- in no armed string -- the `pullcad` trap, stated in full in jmz_func.lua and
+--- in AGENTS.md.  Keying on the cap's own VALUE survives `zusboltcap` being
+--- promoted, rejected, or replaced by a KV fix, which is the whole of GH #477's
+--- option 2: write the dependency as code instead of prose.
+---
+--- DIRECTION.  Strictly TIGHTENING, and only on top of an already-armed
+--- `zusult`/`zusultx`: gate off, and on every frame the reserve gate would pass
+--- anyway, this is byte-equivalent to shipped.  It can hold a bid, never issue
+--- one.
+function X.BoltAoEKillTarget( nHealthCap, hWeakest )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusboltdom' )
+		and type( nHealthCap ) == 'number' and nHealthCap <= 0
+	then
+		return hWeakest
+	end
+
+	return nil
+
+end
+
 -- Returns desire, cast location and -- third, added for GH #47 -- the enemy hero
 -- the location was aimed at, but ONLY for the poke branches at the bottom. The
--- kill-AoE, channel-interrupt and retreat branches deliberately report no target
--- so that X.zuus_ShouldSaveManaForUlt (which is inert on a nil target) can never
--- stand between Zeus and a kill, an interrupt, or his own escape.
+-- channel-interrupt and retreat branches deliberately report no target so that
+-- X.zuus_ShouldSaveManaForUlt (which is inert on a nil target) can never stand
+-- between Zeus and an interrupt or his own escape.
+-- The kill-AoE branch holds the same exemption CONDITIONALLY since GH #477: it
+-- reports no target while its HP filter is a real kill filter, and reports the
+-- weakest enemy once that filter has degenerated to "any HP" -- because then it
+-- is not a kill branch and has no kill to be exempted for. See
+-- X.BoltAoEKillTarget; the switch is the cap's value, not a candidate id.
 function X.ConsiderW2()
 
 	if not abilityW:IsFullyCastable() then
@@ -1014,7 +1076,11 @@ function X.ConsiderW2()
 			local nTargetLocation = J.GetCastLocation( bot, nWeakestEnemyHeroInSkillRange, nCastRange, nRadius )
 			if nTargetLocation ~= nil
 			then
-				return BOT_ACTION_DESIRE_HIGH, nTargetLocation
+				-- GH #477: the third value is nil on every frame where nDamage
+				-- is a real kill filter, so a genuine kill keeps the exemption
+				-- GH #47 gave it. See X.BoltAoEKillTarget.
+				return BOT_ACTION_DESIRE_HIGH, nTargetLocation,
+					X.BoltAoEKillTarget( nDamage, nWeakestEnemyHeroInSkillRange )
 			end
 		end
 	end

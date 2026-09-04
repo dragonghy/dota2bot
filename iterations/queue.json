@@ -1623,6 +1623,18 @@
    "requester": "strategy",
    "status": "pending",
    "ruled": false
+  },
+  {
+   "id": "hero-29",
+   "stream": "hero",
+   "bundle": "zusboltdom",
+   "seeds": [],
+   "priority": 2,
+   "axis": "ZUSBOLTDOM —— 新 gated 候选的条件 (a) 取证。**需要 armed 腿**(不是归档扫描):要看的读数只在 `zusboltdom` 与 `zusult` 同时 armed 的腿上存在,已有语料里没有这条腿。请求的是**搭车入集**(加进现有全集串,不申请专波、不申请专机、不申请新增机时)。",
+   "question": "GH #477 的选项 2 已落地(gated `zusboltdom`,报告 `iterations/reports/hero/20260904T081500Z.md`,`state.json:zusboltdom_20260904T`)。本请求买它的条件 (a)。\n\n**它修的是什么**:`zusult` 没有失效,它是**被绕过**。`X.ConsiderW2` 的击杀-AoE 分支按 GH #47 的设计**故意不报目标**(击杀豁免),而储备门在 nil 目标上恒 false ⇒ 豁免生效。但那条分支**不是击杀分支**:它交给 `FindAoELocation` 的血量上限是 `X.GetBoltKillHealthCap`,在 `zusboltcap` 未 armed 时等于 `GetAbilityDamage()`,而 `zuus_lightning_bolt` 的 KV **没有顶层 `AbilityDamage` 字段** ⇒ 读数恒 0,而 `docs/BOT_API_REFERENCE.md:1288` 记着引擎规则「Pass 0 for no HP filter」。⇒ 它问的是「射程内有没有敌方英雄」,以 `BOT_ACTION_DESIRE_HIGH` 作答,**并把击杀豁免一起带走**。GH #477 在 W44 逐帧确认了 3 次后果(同一局 `20260904_003453_slot8`,目标 1.00 / 1.00 / 0.82 血,大招 1 级 cd 0,花费经蓝量与 W 冷却双证)。\n\n**改动形状**:新 `X.BoltAoEKillTarget(nHealthCap, hWeakest)` —— armed 且**上限退化**(number 且 <= 0)时报告目标,否则 nil。**分支是否开火、往哪里打,一个字都没改**;改的只是储备门有没有东西可看。上限一旦是真数(今天 = `zusboltcap` armed;将来 = KV 补上字段),它立刻回答 nil,GH #47 的豁免原样回来。\n\n**⛔ 依赖写成了值,不是 id**:helper **不读** `J.IsSoakCandidate('zusboltcap')` —— 条件里点名兄弟候选的门会在那个兄弟被 promote 的当天冻成 FALSE(`pullcad` 陷阱,AGENTS.md)。变异台 `tools/agent/mutstand_zusboltdom.sh` 的 **M4** 就是那个 id 版本:今天行为逐字相同,明天冻死,只有源码级用例看得见。\n\n**具体要买的三格**:\n(1) **armed 腿上 `zusult` 的域内触发计数**,量具用 GH #478 修好后的 `zusult_gate.py`,与 #477 同一支;\n(2) 同一批里 **Zeus 的击杀落地数,以及击杀窗口(目标血 < 本次弹伤)里的实际开火次数**;\n(3) **(1) 与 (2) 分层登记**(ab / ba 两层的读数,不是局数)。",
+   "acceptance": "(甲) **判读方向预先写死**:(1) 的域内计数在 armed 腿上**降到 0 或接近 0** ⇒ 条件 (a) 成立;**没降** ⇒ 说明还有第四条泄漏路径,按 BUGGY 退回英雄组,**不许**读成「测过了没影响」。\n(乙) **(2) 是这条的反向刹车,必须同时给**:本改动唯一可能的坏处是**扣住真正的击杀**(GH #47 明令禁止的方向)。若 (2) 相对 baseline 明显下降,即使 (1) 归零也**按 REJECT 退回**。桌面这一半已钉在 `tests/test_replay_260819_zuus_boltdom.lua` 第 4 节(真实帧 + 100 血目标的击杀窗口仍开火,`zusboltcap` armed 与不 armed 两种上限都测),但那是**离线的**。\n(丙) 铁律 4(i-a):(1)(2) 两个分层的**读数**都要登记(不是局数);计数类量按 4(ii) **不报中位数**。\n(丁) **必须与 `zusult` 同腿 armed**。单独 arm `zusboltdom` 的读数**结构上是空的** —— 它只决定储备门能不能看见目标,而储备门自己未 armed 时对任何目标都答 false。这条是 DOMAIN-NOT-REACHED 退回门:若发波串里没有 `zusult`,按 UNINTERPRETABLE 退回,**不许**读成「测过了没影响」。\n(戊) **不要拿它和 GH #477 的选项 1(arm `zusboltcap`)对冲**:两者都会把 (1) 打到 0,但机制不同(选项 1 让分支根本不开火,本候选让它开火但交出目标)。两个 id 同腿 armed 也可以(离线两种组合都测过),但那时 (1) 归零**不能归因给其中任何一个**;要分因就分两腿,或先只 arm 本候选。\n(己) 本请求**不申请专波、不申请专机、不申请新增机时**:只申请把 `zusboltdom` 加进下一波已经要发的全集串。入集裁定归总监(`test_set.md`)。",
+   "requester": "hero",
+   "status": "pending"
   }
  ],
  "done": [
