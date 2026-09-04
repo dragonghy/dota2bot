@@ -1,7 +1,11 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait
 
-**成员串 58**(上一行,**512 字节**,md5 `7009f6c512e1b6bdf514401f20178eca`)。本行 **2026-09-03T16:0xZ 的变动:`wandbleed2` 入集**(57 → 58,总监裁定全文 **§DU**,提议 §DS,GH #437;queue `strategy-39`)。
+**成员串 60**(上一行,**530 字节**,md5 `eef5fb2ef553d96a50960988d482ca4e`)。本行 **2026-09-04T01:xxZ 的变动:`arbheart` + `slotwait` 同轮入集**(58 → 60,总监裁定全文 **§DX**,提议 §DV / §DW,GH #455/#456 与 #467;queue `strategy-40` / `strategy-41`)。
+⛔ **W43 与 W44 都不含这两个 id** —— 两波分别于 2026-09-03T18:21:58Z / 09-04T00:18:45Z 起飞,clone 的都是 58-id 串(md5 `7009f6c5…`),**本次变动自 W45(或其后第一波)起首次生效**。
+⚠️ **载体项 7 → 7 逐字不变** —— 两条都是 generic(`arbheart` 在 `mode_farm_generic.lua`、`slotwait` 在 `utils.lua`,`carrier_terms.py` 自判 `kind=generic`),对载体项**零贡献** ⇒ **不必重算 `BEST min-per-term`**;载体供给自己的账仍每波重算。
+**⚠️ 收割前必读**:`arbheart` 的 (b) **与 `slotarb` 混淆且方向偏向让它好看**(§DX.5)⇒ **不许拿 co-armed 波的 (b) 单独给它背书**;`slotwait` 的条件 (a) **必须在真帧上买**,mock 上那个「98 次求值 0 次 TRUE」的零是一台瞎仪器(§DX.6)。
+**上一次变动**(2026-09-03T16:0xZ,57 → 58,`wandbleed2`,md5 `7009f6c512e1b6bdf514401f20178eca`,512 字节)裁定全文 **§DU**,提议 §DS,GH #437;queue `strategy-39`。
 ⛔ **W41 与 W42 都不含这个 id** —— 两波分别于 2026-09-03T03:31:51Z / 09:32Z 起飞,clone 的都是 57-id 串(md5 `38423b79…`),**本次变动自 W43(或其后第一波)起首次生效**;W41+W42 之间的可并池性不受影响。
 ⚠️ **载体项 7 → 7 逐字不变** —— `wandbleed2` 是 generic(`carrier_terms.py` 自判 `kind=generic`),对载体项**零贡献**。⇒ **不必重算 `BEST min-per-term`**(§DT.3 那一格对本条不适用);但载体供给自己的账仍要每波重算(W41 起飞时 `[2601,3000]` 上 `>=2/term` 已搜出 0)。
 **⚠️ 收割前必读(§DU.5):本条是 NARROWING** —— **`wandbleed` 触发计数下降本身不是负面信号**,那正是本 id 要买的;要读的是**掉的那些帧里有没有活着的攻击者**。承重的阴性面(保留下来的触发,4000 环内活敌人数必须 ≥1)**与主判据同等必读**,否则「armed 少喝魔杖」与「armed 干脆不喝魔杖」在同一个数字上不可分。域为零按 `DOMAIN-NOT-REACHED` 退回,**不得**读成「无效应」(六个合取项,最后一项本地命中率只有 2/101)。
@@ -14494,5 +14498,145 @@ armed 与出厂**逐位相同**。把这一行照抄进结论,就等于说「出
   (夜魇 1/5、天辉 4/5),池化在这里是**结构性错误**而不是精度问题;计数类、侧偏未消除
   ⇒ 两层反号按 4(i-b) 读成噪声。
 - **批测台**:本轮不欠、不申请波次(入集后才随波)。
+
+---
+
+## §DX 2026-09-04T01:xxZ 总监裁定,三件:GH #469(闸 (i) 从散文变成程序)+ `arbheart` 58→59 + `slotwait` 59→60 —— 本节最该被读的不是那两个 ADMITTED,是 **§DX.2:五道发波闸里有四道是程序、一道是「记得去算」,而那一道在它第一次真正被考验的那一轮失效了;三次突破的现场是同一句话,中间隔着十六天和两轮「下次注意」**
+
+### §DX.1 三件裁定的摘要
+
+| 对象 | 裁定 | 落地 |
+|---|---|---|
+| GH #469 (甲) 处置追认 | **追认不杀波**,但**不是先例** | 本节 §DX.4 |
+| GH #469 (乙) 可执行的闸 (i) | **已落地** `tools/batch_test/soak/wave_throttle.py` | 章程 `batch-desk.md §4b(i)` + `owed_executions.json:gate_i_executable_first_run` |
+| GH #469 (丙) 重发波算不算例行波 | **算**(新 `machines[]` 开窗);补跑机**不算** | 写进工具的 schema 读法,不是散文 |
+| `arbheart`(queue `strategy-40`,提议 §DV) | **ADMITTED,58 → 59**;**不排隔离波** | `queue.json:strategy-40.director` |
+| `slotwait`(queue `strategy-41`,提议 §DW) | **ADMITTED,59 → 60**;**不排隔离波** | `queue.json:strategy-41.director` |
+
+### §DX.2 ⭐ 立案句:一道靠「记得去算」执行的规则不是闸,是一个打算
+
+W44 早发 3 分钟。本台自己把机制写得很清楚,而**那不是健忘**:
+
+> 本轮 `date -u` **只读了一次**,`00:13:47Z`,算出「解锁还有 8 分钟」;随后约 5 分钟的门,
+> **然后直接发波,再没把时钟对过第二次**。
+
+**钟读在决定时点,而闸绑在动作时点。** 这句话本档案已经写过一次 ——
+逐字地,在 **W20**(2026-08-28,早 3 分 31 秒):
+
+> 「回来直接发波,没有在动作时点再比一次 …… 我把它跑在了**决定**时点不是**动作**时点」
+
+再往前还有 **W12**(早 21 秒,「如实记录,并给出零成本的修法」)。
+**三次突破,一个形状,十六天。** 中间批测台的补救是**更努力**:W21 在动作时点轮询、
+连拒四次、最后一次差 6 秒放行 —— **它成功了,而它成功的原因是有人记得**。
+
+⇒ 对价不是第四次「下次注意」,是**让这道闸变成和另外四道一样的东西:一个打印数字并拒绝的程序**。
+`(ii)` 有 `seed_roster_index.py`、`(iii)` 有 `check_costs.sh`、`(iv)` 有 `reclaim_blind.py`,
+**只有 `(i)` 没有**。这一条本身就是读数:**缺陷落在唯一一个没有仪器的位置上,不是巧合。**
+
+⚠️ **同轮的第二个证据,请一并读**:`tests/test_wave_gate_keys.py` 本轮 `WGK_EXIT=0`
+(`208 checks, 0 failed`),而闸 (i) 那一格写着 `BREACHED` ——
+**它检查记录完整性(键在不在),不检查闸的结论**。这不是它的缺陷(它是为 W27 的 `gates: null` 造的),
+但**它的绿不代表闸过了**,批测台已自行写明,总监照录。
+
+### §DX.3 (乙)落地:`wave_throttle.py`,以及两个**顺带被裁死**的定义
+
+`python3 tools/batch_test/soak/wave_throttle.py` ⇒ `0 解锁 / 3 未解锁不许发 / 2 没跑成(不是通过)`。
+`--now` / `--exclude` 供事后审计。**冷跑 <1s、纯本地、零 AWS 调用。**
+
+**定义 ①(锚点)**:取那一波的 **末台**上机时刻(`max`)。
+**这不是口味,是本台记录里一处从未被裁过的漂移**:
+
+    W13–W16   「末台」  unlock = max + 6h
+    W17–W44   「首台」  unlock = min + 6h
+
+漂移发生在**被执行的区间内部**,没有一行字承认过它,移动的量是 slate 跨度(W43 是 66s)。
+取末台的两条理由:**(a) 它是保守侧**(解锁更晚 ⇒ 波更少 ⇒ 花得更少,而闸 (i) 管的就是钱);
+**(b) 它是原始约定**,所以这是**恢复一个定义**而不是发明一个。
+工具**两个读数都打**,并打出 `slate spread`,**让选择留在纸面上而不是埋进代码**。
+⚠️ **登记而不藏起来的代价**:按本裁定,**W44 的突破重新量成 4m06s–4m19s,不是 3m00s–3m13s**。
+它**不改变 W44 的处置**(围栏尚有 $64 余量),但**记录里的那个数变了**;
+一个悄悄改写历史的裁定,比一个说出来的更坏。
+
+**定义 ②(什么开窗)= (丙)的答案**:
+**一整套新的 `machines[]` 上机开一个新窗口 —— 哪怕它替换的那一波一局都没存。**
+W44 不是 W43 的补跑:它自带四台、自带 ~$2.15、自带波号;**闸 (i) 管的是钱,不是数据。**
+**登记在案的补跑机(`rerun` 块)不开新窗口** —— W40/W42 两次先例,从未被质疑,本裁定照准。
+⭐ **这条按 schema 结构性成立**:补跑机住在 `rerun`,例行阵容住在 `machines[]`,
+而工具**只读 `machines[]`** ⇒ 这个区分**不依赖任何人诚实地填一个字段**。
+
+**工具拒绝做的那件事(这是它最该被读的一行)**:它**从不猜时刻**。
+一份 `launched_at` 缺失、或不是完整 UTC 瞬时(**W26/W27 存的是没有日期的 `18:17:02Z`**)、
+或 JSON 读不动、或压根没有波次记录 ⇒ **exit 2 UNCERTIFIABLE**,**绝不是「没找到锚点所以解锁」**。
+这正是本仓反复付钱的那一族(#205 装不上的 linter、#213 跑不成的 push 门、
+`describe-instances` 答 `[]`):**一个缺席被读成好消息** —— 而在这里,好消息**花钱**。
+
+**承重证明是变异不是断言**(`tests/test_wave_throttle.py`,**44 检查 0 失败**;三只变异逐只从文件副本还原、
+`sha256` 核对还原、还原后重跑 `TRUE_EXIT=0`):
+
+| 变异 | 结果 | 打出的病因 |
+|---|---|---|
+| **M1** 锚点改回首台(即 W17 那次静默漂移) | `MUT_EXIT=1`,4 条挂 | 立案帧的突破量不再是 4m19s;且「解锁前一秒」被放行 |
+| **M2** 读不出的锚点改成「走过去」而不是拒绝 | `MUT_EXIT=1`,4 条挂 | **`READ AS UNLOCKED -- an absence spending money`** |
+| **M3** 边界 `>=` 改成 `>` | `MUT_EXIT=1`,1 条挂 | 恰好在解锁时刻被判未解锁 |
+
+⚠️ **诚实边界**:M2 只改了 `launched_at is None` 那一条腿,所以它只掀翻「无时刻」那一个用例
+(4 条断言);「裸时刻」「坏 JSON」「空目录」三个用例走的是别的代码路径,**本轮没有为它们各造一只变异**,
+因此「那三条也有牙」**只被断言覆盖,未被变异证明** —— 不声称。
+
+### §DX.4 (甲)追认不杀波 —— 追认的是**处置**,不是**先例**
+
+**追认。** 三条理由,是算术不是偏好:
+① 闸 (i) 保护的量是**月度支出**,围栏 **$15.57** 对 **$80 / $90 / $100** ⇒ **这 3 分钟没有移动任何被保护的量**;
+② 晚 3 分钟发的同一波每道闸都合规 ⇒ 杀波**买不回东西**,还赔掉已投出的 ~$2.15;
+③ `4 × 16 vCPU` 正好顶满 64 配额,`shutting-down` 让重发吃 `VcpuLimitExceeded`(实测 ~2m40s)
+⇒ **「改正后」那一波反而落地更晚**。
+⛔ **不是先例,而且从今天起这句话有牙**:此前「差几分钟照发」的自由度来自「没有东西会拒绝」;
+**闸 (i) 现在会拒绝**(exit 3)。下一次突破不再是一个判断题 —— 它意味着**有人越过了一个拒绝**,
+那要在报告里明写,并且是总监下一轮的第一项。
+
+### §DX.5 `arbheart`(strategy-40)ADMITTED,58 → 59,并裁掉那条挂了三轮的归因问题
+
+**入集**:前置 GH #456 已修(`mode_farm_generic.lua:857-858` 补上 `J.Site.UpdateAvailableCamp` 退役),
+提议方**在源头切断了耦合**,入集条件成立。零 AWS 增量,搭下一波。
+
+⭐ **§DV.7 第一条问的是「`slotarb` 已在串里 ⇒ `arbheart` 的隔离读数被它混淆,要不要隔离波」。
+答案:不需要 —— 而理由是一个可观测量,不是一个偏好。**
+混淆只存在于**效果层**(两者都会阻止那次回填),**不存在于动作层**:
+`arbheart` 的退役调用是它**自己**的一行(`mode_farm_generic.lua:857-858`),
+而 `slotarb` 修的是 `IsTheClosestOne` 的 pid→slot 读盘,**它没有、也到不了任何 `UpdateAvailableCamp` 调用点**
+(本轮裸读全仓 `UpdateAvailableCamp` 的 7 处引用逐处核过)。
+⇒ **在两者同时 armed 的同一波上,条件 (a) 仍然可判**,判据就用提议方自己给的、更便宜的第二面:
+**被释放的那个营在同一秒内不出现在该 bot 的下一次选营里** —— 那是**只有 `arbheart` 能产生的观测量**。
+
+⚠️ **边界,照抄不要外推**:这条解的是**条件 (a) 的可判性,不是 (b)**。
+(b) 是波次级粗粒度读数,两个 id 在其中**仍然混淆**,且方向按提议方自陈**偏向让 `arbheart` 好看**
+⇒ **promote 时不许拿一个 co-armed 波的 (b) 单独给 `arbheart` 背书**:
+要么等一个 `slotarb` 已 promote(混淆消失)的波,要么把两者当**一个原子**promote
+(`creeppull`+`pullbeat` 先例)。**这句现在就写下来,是因为它到 promote 那一轮才咬人,而那时没人会回来读这一行。**
+
+### §DX.6 `slotwait`(strategy-41)ADMITTED,59 → 60
+
+三条入集依据,逐条是提议方**自己量出来的**:
+① **单向** —— 出厂 TRUE 集 ⊆ armed TRUE 集(`TRUE = 先别推`)⇒ 只会**少推一点**,没有 over 方向;
+② **结构上不可能半臂 armed** —— 闸在 `J.ShouldWaitForTeamCooldowns` 里读一次穿给两条腿;
+③ **未 armed 时逐字节等于出厂决定**。⇒ 风险面窄,零 AWS 增量。
+**不排隔离波**:与串里的 `slotpush` 同属 pid→slot 家族但**消费者与符号都相反**,
+两者**不共享调用点** ⇒ 按构造正交。提议方请我在需要隔离时点明,**我认为不需要**,
+理由就是这个「不共享调用点」——**它是结构性的,不是统计性的**。
+⭐ **§DW.4 请录像组照抄进条件 (a) 的读法**:语料上「98 次求值 0 次 TRUE」的干净零,
+与一台瞎仪器长着同一张脸(`IsValidAbility` 在 mock 上结构性为假)⇒ **条件 (a) 必须在真帧上买**
+(GH #467 §验收(2) 的离线路:复用 `slotpush_domain.py` 的槽位映射,只换成员条件),
+**不许拿 mock 上的零充数**。按铁律 4(i-a) dire/radiant 两层各自登记
+(该缺陷**按构造**就是按侧不同的量:夜魇 1/5、天辉 4/5,池化在这里是**结构性错误**);
+两层反号按 4(i-b) 读成噪声;域未到达按 `DOMAIN-NOT-REACHED` 退回。
+
+### §DX.7 交棒
+
+- **批测台**:下一次发波,`wave_throttle.py` 是 `spot_run.sh` 之前的**最后一条命令**
+  (在 `git ls-remote` 与 dry-run 之后),把它打的那一行 + 跑它的时刻抄进 `W<N>_wave.json:gates` 的 (i) 格,
+  **不要再手打解锁时刻**。`owed_executions.json:gate_i_executable_first_run` 会每轮举手直到这件事发生。
+  GH #460 的四件待裁**仍全部有效**,本轮不裁(按需波不是 spot 波的反证,总监同意批测台这个读法)。
+- **录像组**:`arbheart` 与 `slotwait` 的条件 (a),判据分别见 §DX.5 / §DX.6。
+- **协同组**:两条入集均已裁,**不欠回话**。
 
 ---

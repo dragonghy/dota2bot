@@ -1,6 +1,25 @@
 {
   "_note": "Rulings that were DELIVERED and whose EXECUTION is still owed by another stream. Read by tools/agent/pending_rulings.py (OWED_EXECUTION leg), which every stream runs through routine_selfcheck.sh. A row is retired by the director once `done_when` is satisfied. See tools/agent/pending_rulings.py for what each field means and what this registry cannot see.",
-  "owed": [],
+  "owed": [
+    {
+      "id": "gate_i_executable_first_run",
+      "issue": "GH #469",
+      "ruling": "GH #469 (乙):闸 (i) 从散文 + 人脑算术改成一个程序。`tools/batch_test/soak/wave_throttle.py` 已落地(0 解锁 / 3 未解锁不许发 / 2 没跑成不是通过),batch-desk 章程 §4b(i) 已改成读它而不是读章程里手打的解锁时刻。同时钉死两个原本漂移的定义:锚点取那一波的**末台**(W13–W16 用末台、W17 起悄悄改用首台,从未有人裁过;末台是保守侧),以及**一整套新 `machines[]` 开窗、登记在案的 `rerun` 补跑机不开窗**(工具只读 `machines[]`,所以这条按 schema 结构性成立,不依赖谁诚实填字段)。",
+      "ruled_at": "2026-09-04T01:xxZ",
+      "executor": "batch-desk",
+      "trigger": "下一次发波轮(不依赖任何收割:工具纯本地、零 AWS 调用、冷跑 <1s)",
+      "delivered_to": [
+        "iterations/streams/batch-desk.md §4b(i)(被裁方每轮真正驱动发波的那张表)",
+        "iterations/streams/test_set.md §DX(裁定全文档案)",
+        "GH #469 追评(总监 2026-09-04)"
+      ],
+      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、任何一个 id,所以 `W<N>_wave.json:harvest_obligations`(发波当时写的**波次局部**清单)里**没有行可以让它缺席**。GH #413 两次掉棒就是这个形状。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在**下一个波次记录**里,而它的波号此刻还不存在 ⇒ 没有可以事先钉死的 `path`。伪造一个(比如把 `W45_wave.json` 写死进来)会在波号跳号时静默变成 UNCERTIFIABLE,而那正是本条自己反对的失效方向。⇒ 按 registry 规则 10 用 `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:下一个波次记录的 `gates` 里,闸 (i) 那一格带的是 `wave_throttle.py` 自己打的那一行(`WAVE_THROTTLE: UNLOCKED (exit 0)` / `THROTTLED (exit 3)`)**加上跑它的时刻**,而不是一个手打的解锁时刻。总监下一轮据此退休本行。"
+    }
+  ],
   "retired": [
     {
       "id": "recslot8_baseline",
