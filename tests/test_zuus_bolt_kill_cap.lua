@@ -37,7 +37,7 @@
 --     if nCanKillHeroLocationAoE.count >= 1 then ... DESIRE_HIGH ...
 --
 -- FindAoELocation's last argument is `nMaxHealth`, and the engine's rule is
--- recorded at docs/BOT_API_REFERENCE.md:1288: "Only target units below this HP.
+-- recorded at docs/BOT_API_REFERENCE.md § `FindAoELocation` (:1400 today, :1288 when first cited -- find it by heading, the line number drifts): "Only target units below this HP.
 -- Pass 0 for no HP filter (target any HP)."  So the branch whose own local is
 -- named `nCanKillHeroLocationAoE` -- written to ask "is there a spot where one
 -- bolt FINISHES somebody" -- has, since the upstream snapshot, been asking "is

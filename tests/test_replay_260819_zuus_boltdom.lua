@@ -8,7 +8,7 @@
 -- confirmed (mana -131 / -131, W cooldown 0 -> 6.0).  The other two exempt
 -- branches of X.ConsiderW2 were excluded frame by frame.  What is left is the
 -- kill-AoE branch: it hands FindAoELocation a filter of 0, the engine reads 0
--- as "no HP filter" (docs/BOT_API_REFERENCE.md:1288), so the branch fires on
+-- as "no HP filter" (docs/BOT_API_REFERENCE.md § `FindAoELocation` (:1400 today, :1288 when first cited -- find it by heading, the line number drifts)), so the branch fires on
 -- "there is an enemy hero in range" while still claiming GH #47's KILL
 -- EXEMPTION -- it returns no target, and the reserve gate is inert on nil.
 --
@@ -73,7 +73,7 @@ local BOLT_NAME = 'zuus_lightning_bolt'
 local ARC_NAME  = 'zuus_arc_lightning'
 local BOLT_SPREAD = 325            -- zuus_lightning_bolt/AbilityValues/spread_aoe
 
---- The engine's hero AoE search, per docs/BOT_API_REFERENCE.md:1288, computed
+--- The engine's hero AoE search, per docs/BOT_API_REFERENCE.md § `FindAoELocation` (:1400 today, :1288 when first cited -- find it by heading, the line number drifts), computed
 --- over the frame's real heroes. Returns the same shape the engine does.
 --- `nMaxHealth <= 0` means NO HP filter; anything else keeps only heroes at or
 --- under it.

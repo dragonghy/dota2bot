@@ -927,7 +927,7 @@ end
 --- 380).  So the read is 0, silently, on every level of the bolt.
 ---
 --- Zero is not a small number HERE, it is a DIFFERENT PREDICATE.  FindAoELocation's
---- last argument is `nMaxHealth`, and docs/BOT_API_REFERENCE.md:1288 records the
+--- last argument is `nMaxHealth`, and docs/BOT_API_REFERENCE.md § `FindAoELocation` (:1400 today, :1288 when first cited -- find it by heading, the line number drifts) records the
 --- engine's rule: "Pass 0 for no HP filter (target any HP)".  So the branch whose
 --- own local is named `nCanKillHeroLocationAoE` -- written to ask "is there a spot
 --- where one bolt FINISHES somebody" -- has been asking "is there an enemy hero
@@ -995,7 +995,7 @@ end
 --- The filter it hands FindAoELocation is X.GetBoltKillHealthCap, which is
 --- `GetAbilityDamage()` while `zusboltcap` is unarmed -- and that call reads a
 --- top-level `AbilityDamage` KV field zuus_lightning_bolt does not declare, so
---- it answers 0 on every level of the bolt.  docs/BOT_API_REFERENCE.md:1288
+--- it answers 0 on every level of the bolt.  docs/BOT_API_REFERENCE.md § `FindAoELocation` (:1400 today, :1288 when first cited -- find it by heading, the line number drifts)
 --- records the engine's rule for the last argument: "Pass 0 for no HP filter
 --- (target any HP)".  So the branch whose local is named
 --- `nCanKillHeroLocationAoE` asks "is there an enemy hero in cast range", says

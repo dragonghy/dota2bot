@@ -4101,7 +4101,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **`zusult` 没有失效,它是被绕过。** `X.ConsiderW2` 的击杀-AoE 分支按 GH #47 **故意不报目标**
     (击杀豁免,门在 nil 上恒 false)—— 而那条分支**不是击杀分支**:它交给 `FindAoELocation`
     的上限 = `GetAbilityDamage()`,而 `zuus_lightning_bolt` **没有顶层 `AbilityDamage` 字段**
-    ⇒ **恒 0**,而引擎把 0 读成「**没有过滤器**」(`docs/BOT_API_REFERENCE.md:1288`)。
+    ⇒ **恒 0**,而引擎把 0 读成「**没有过滤器**」(`docs/BOT_API_REFERENCE.md` § `FindAoELocation`（今天 :1400，第一次被引时 :1288 —— **按标题找，行号会漂**）)。
     ⇒ 它问的是「射程内有没有敌方英雄」,并**把击杀豁免一起带走**。
   - **⛔ 依赖写成了值,不是 id**:helper **不读** `IsSoakCandidate('zusboltcap')` ——
     点名兄弟候选的门会在那个兄弟被 promote 的当天冻成 FALSE(`pullcad` 陷阱)。
