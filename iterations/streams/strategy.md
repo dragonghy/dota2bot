@@ -27,6 +27,45 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0FFPREM. **【2026-09-04T10:45Z 新增,**OWNER_PRIORITIES P2**(责任链当前球写着「协同组(决策侧 id + fixture)」;
+   章程「下一格」写的也是 (乙) P2 决策侧 id。**先核 DoD 1 是不是还欠 —— 不欠了**:`stayfield`(TP 腿)与
+   `stayfield2`(走路腿)2026-08-22 就落了地,**两个都在 62-id armed 串里**,owner 点名那帧已是 fixture
+   ⇒ 再落第三个「决策侧 id」是重复劳动,本轮改问**它们站在什么前提上**);
+   `[strategy]` open issue 本轮扫过(#480/#475/#467/#464/#456/#455/#452),都是本组已交棒的;
+   **产出是一份真帧普查 8/8 + 一台新变异台 11/11 CAUGHT(零 NO-OP)+ 一条交给总监的共同 promote 约束,零行为改动**:
+   `tests/_fieldsrc_ff_sweep.lua`;`tests/test_fieldsrc_ff_premise.lua`;`tools/agent/mutstand_fieldsrc_ff.sh`;
+   `state.json:fieldsrc_ff_PREMISE_20260904`;`test_set.md §ED`;报告 `iterations/reports/strategy/20260904T104500Z.md`;
+   **`bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸/fixture**;
+   零 AWS、零 S3、零 EC2、零波次。**已交棒总监(收下 §ED.5 的共同 promote 约束 + 裁 §ED.6 甲/乙)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):一个分区可以在谓词上完备,而在世界里两边同时是错的 ——
+   因为它分区所用的那个字段,两边都没问下游认不认。**
+   `fieldbuy` 读的是 `not ( HasFieldRegenSource and IsFieldSipEnough )`,与持有侧**同一合取式取反**
+   ⇒ 「无帧属于双方、无帧无人认领」是**构造出来的真**(落地时还写成 campvoid 教训的「先于事实」应用)。
+   **那份完备性是谓词的性质。** 而 `J.HasFieldRegenSource` 的头注把自己的合同写成「**一出现在槽里就证明用得上**」,
+   对 `item_faerie_fire` 这条腿**是假的**:全树唯一能吃它的 `X.ConsiderItemDesire["item_faerie_fire"]`
+   三条分支,在这一族自己的域里 **7/7 关闭**(`自己吃` 要 `DotaTime()>10*60` **且**背包槽 6 有东西;
+   `撤退` 要**绝对** `OriginalGetHealth()<90`)。⇒ 同一个 TRUE 被花两次、方向相反:
+   `hold=TRUE` = 「被一件吃不动的东西留住」,`buy=FALSE` = 「他已经有补给了」,**两句同时错**。
+   与 `campbind`(GH #475)是同一枚硬币:那次**下游一个「最近者」撤销四条否决**,这次**上游一次存在性判断没有消费者兑现**。
+   **⭐⭐ 域是量出来的**:109 fixture / **1012 活英雄帧** ⇒ 57 处境 / 24 带源 / **7 帧唯一源是仙灵之火**;
+   7/7 吃不动。**两个零不是盲区,这一条也是量出来的**:**203/1012** 活帧背包槽 6 有东西、**173/1012** 已过 10 分钟。
+   结构性的一句:**24 个带源帧里只有 1 帧**在 t=600 之后。**咬在 owner P2 自己钉的那帧上**
+   (`f_260822_063722_lina_tp_home`,t=349.0,251 秒后才吃得动;同帧 armed `fieldbuy` 被同一颗仙灵之火挡住不买大药)。
+   **⭐⭐⭐ 为什么至今没人看见:被同族的 `fieldsip` 精确遮住(7/7),而遮它的理由与它无关**
+   (`fieldsip` 问「够不够值得留下」,本轮问「吃不吃得着」)⇒ **每一波给持有侧买 (a) 的波都同串 armed 了 `fieldsip`**
+   ⇒ **promote 持有侧而 reject `fieldsip` = ship 一个没有任何一波测过的配置**。
+   「有持有、无量级」这个方向上三者**是一个原子**;反方向不受影响。`pullcad` / `creeppull`+`pullbeat` 同族,
+   **区别是写在裁定之前**。
+   **⭐⭐⭐⭐ 本组故意没落新 id,理由是读数不是偏好**:收窄腿 armed 的效果在本语料上与 `fieldsip` **逐帧相同**
+   ⇒ 一根串里两个同效 id,波次读数分不开它们。
+   **⭐⭐⭐⭐⭐ 仪器自己踩的一脚**:普查第一版把背包槽读数 **100% 读反** ——
+   `(op=='occupied') and bOcc or not bOcc`,Lua 的 `and/or` 三元**中项为 false 时返回错的那一支**,
+   于是 7 帧全报「槽门开着」,**长得像一个普通计数**,方向恰好是「本轮没有发现」那一边。
+   ⇒ **凡把布尔读数写成 `cond and X or Y`,「X 可以是 false」就是它的失效方向。**
+   **下一格(本组下一轮第一项)**:P1 的 (甲) 仍卡在 `strategy-43`(总监未裁前不动);
+   P2 这一格的球已交总监(§ED.5/§ED.6),**在总监裁定回来之前不要在 field 一族上再落 id**;
+   ⇒ 取 `[strategy]` 未认领 issue,没有则自驱(候选:`0SLOT9` 剩下的 7 处,一次一个)。
+
 0TYPEPOL. **【2026-09-04T07:45Z 新增,**OWNER_PRIORITIES P1 续**(章程「下一格」写死的 (甲));
    **产出是一份真帧分类用例 13/13 + 一台新变异台 9/9 CAUGHT(零 NO-OP)+ 一处文档行改写 +
    一条零增量美元的预登记买法,零行为改动**:
@@ -5120,6 +5159,29 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T10:45Z(**OWNER_PRIORITIES P2** —— 铁律 9 与章程「下一格」同指 P2;
+  **先核了 DoD 1 不欠**(决策侧 `stayfield`/`stayfield2` 2026-08-22 已落地并在 62-id armed 串里)
+  ⇒ 改买它们脚下的前提;`[strategy]` open issue 扫过一遍,都是本组已交棒的);
+  **产出是一份真帧普查 8/8 + 一台新变异台 11/11 CAUGHT(零 NO-OP)+ 一条共同 promote 约束,零行为改动**:
+  `tests/_fieldsrc_ff_sweep.lua`;`tests/test_fieldsrc_ff_premise.lua`;`tools/agent/mutstand_fieldsrc_ff.sh`;
+  `state.json:fieldsrc_ff_PREMISE_20260904`;`test_set.md §ED`;报告 `iterations/reports/strategy/20260904T104500Z.md`;
+  **`bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸/fixture**;
+  零 AWS、零 S3、零 EC2、零波次。**已交棒总监(收下 §ED.5 共同 promote 约束 + 裁 §ED.6 甲/乙)。**
+  **⭐ 主判据:一个分区可以在谓词上完备,而在世界里两边同时是错的** —— `fieldbuy` 与持有侧读同一合取式取反,
+  完备性是**构造出来的**;两边都没问「被分区的那个字段下游认不认」。
+  `J.HasFieldRegenSource` 自称「一出现在槽里就证明用得上」,对 `item_faerie_fire` **是假的**:
+  能吃它的三条分支在本族域里 **7/7 关闭**(`自己吃` 要 `DotaTime()>10*60` 且背包槽 6 有东西;`撤退` 要绝对 `<90` 血)。
+  ⇒ `hold=TRUE`(被吃不动的东西留住)与 `buy=FALSE`(他有补给了)**同时错**。
+  **⭐⭐ 109 fixture / 1012 活帧 ⇒ 57 / 24 / 7,7/7 吃不动;两个零非盲区(203 帧槽 6 有物、173 帧过 10 分钟)**;
+  咬在 owner P2 自己钉的 `f_260822_063722_lina_tp_home`(t=349.0)上。
+  **⭐⭐⭐ 被 `fieldsip` 精确遮住(7/7)且理由无关** ⇒ **promote 持有侧而拒 `fieldsip` = ship 没测过的配置**;
+  三者在「有持有、无量级」方向上**是一个原子**(写在裁定之前,不是之后)。
+  **⭐⭐⭐⭐ 故意没落新 id**(armed 效果与 `fieldsip` 逐帧相同 ⇒ 一波里分不开)。
+  **⭐⭐⭐⭐⭐ 仪器踩的一脚**:`cond and X or Y` 在 X 为 false 时返回错支,把槽位读数 100% 读反,
+  且**长得像普通计数**、方向恰好偏向「没有发现」。
+  ⚠️ 一条 **trunk 红不是本轮的**:`test_coarmed_attribution_register`(campbind 三对),
+  **开工自检 10:19Z(早于本轮第一次编辑)已打出同一条**;它要求的 caveat 写在**入集节 §EC**,是总监的活。
+  **下一格**:P2 球在总监,裁回来之前不要在 field 一族上再落 id;取未认领 `[strategy]` issue,否则自驱。
 - 2026-09-04T07:45Z(**OWNER_PRIORITIES P1 续 —— 章程「下一格」写死的 (甲);
   `[strategy]` open issue 扫过一遍,都是本组上几轮已认领并交棒的或已落地的常设普查
   ⇒ 铁律 9 与「下一格」同时指向它);**产出是一份真帧分类用例 13/13 + 一台新变异台 9/9 CAUGHT
