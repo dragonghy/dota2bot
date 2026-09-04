@@ -181,9 +181,14 @@ LIMITS (read these before quoting the output)
    legitimately parked behind a wave slot that does not exist yet
    (`RECEIVED_NOT_SCHEDULED` is a real ruling, and this tool cannot tell an
    un-ruled request from one whose ruling belongs to a future round).
-2. **The RIDESHARE test is a text match** on the request's own declaration.
+2. **The RIDESHARE test is a text match** on the request's own declaration,
+   read across `axis` + `question` + `acceptance` (see `DECLARATION_FIELDS`).
    A proposal that rides a wave without saying so reads as OTHER; a proposal
-   that says so falsely reads as RIDESHARE.  Judge the quoted line.
+   that says so falsely reads as RIDESHARE.  Judge the quoted line.  It does
+   NOT read `director` / `result` / `notes`: a marker there is somebody else's
+   sentence about the request (a cost note, a ruling), not the requester's
+   declaration, and reading it would classify a dedicated-wave ask as a
+   rideshare on the strength of the batch desk's own bookkeeping.
 3. **Age is best-effort and often unavailable.**  Routine containers clone
    shallow (50 commits at the time of writing), so a request introduced
    before the graft point has no first-appearance commit in this checkout.
@@ -329,8 +334,40 @@ def is_unruled(req):
     return False
 
 
+# The prose fields a rideshare declaration is actually written into.  Same
+# triple as SUBJECT_FIELDS below and for the same reason -- a stream writes the
+# framing of its request wherever it fits, not into a field this tool named --
+# but kept as a separate constant on purpose: the two answer different
+# questions, and narrowing one later must not silently narrow the other.
+#
+# `director` / `result` / `notes` are deliberately absent; see LIMIT 2.
+DECLARATION_FIELDS = ("axis", "question", "acceptance")
+
+
 def is_rideshare(req):
-    text = req.get("question", "") or ""
+    """Does the request declare, in its own prose, that it rides a wave?
+
+    Reads all three prose fields.  It used to read `question` alone, and that
+    is how §BB.4's "rule it this round" obligation went eight rounds without
+    firing once for the requests it was written for.
+
+    MEASURED on the real queue the day this was fixed (2026-09-04, 71 rows):
+    59 rows declare a rideshare in their prose, and **23 of them declare it
+    nowhere but `axis` or `acceptance`** -- so the bucket answered `none` while
+    they sat in OTHER.  The founding observation (director, 2026-09-02) was
+    three such rows whose `axis` read, verbatim, the phrase this predicate
+    matches on: 搭车、零 AWS 增量、不申请专波.  Every one of the 23 was checked
+    by hand for a negated or quoted use before this widened; there were none,
+    and none of them asks for a wave.
+
+    Same family as GH #317 on `is_open` and GH #332 / §DR: the leg that exists
+    to raise a hand for a class of row was reading a place that class does not
+    write to, and its `none` was indistinguishable from a clean queue.  The
+    failure direction is the argument for widening rather than the tidiness of
+    it: an over-inclusive RIDESHARE bucket costs one extra look in some round,
+    where the under-inclusive one cost the obligation its entire visibility.
+    """
+    text = " ".join(str(req.get(field) or "") for field in DECLARATION_FIELDS)
     return any(marker in text for marker in RIDESHARE_MARKERS)
 
 

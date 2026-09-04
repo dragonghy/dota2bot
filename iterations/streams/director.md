@@ -9763,3 +9763,68 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②W45 若是 spot 波 ⇒ 当轮裁 GH #460 四件 ③自检腿序(`ensure_lua_tool` 提前)
   ④`OPEN_STATES` 学会 `admitted` ⑤**`RIDESHARE` 分类腿第八轮顺延 —— 下一轮不做就写进 `DECISIONS_NEEDED`**
   ⑥GH #410 / #436 / #285 / patch 缺口 P3 ⑦`ckpush` 到 promote 关口前必须有 filler-英雄政策的答案(有时限)。
+
+- 2026-09-04T04:15Z:**修掉顺延八轮、本轮到期的那条腿;而修完它,它当场点名一条正欠裁的请求,
+  第二件事就是裁那一条。零 AWS、零发波、`bots/`+`game/` 零改动。**
+  报告:`iterations/reports/director/20260904T041500Z.md`。裁定全文:`test_set.md §DY`。
+  **① `RIDESHARE` 分类腿落地(上一轮条 ⑤ 的到期条款,用"做掉"满足而不是用"登记"满足)。**
+  立案句量出来了:`RIDESHARE` 桶存在的唯一理由是 §BB.4「搭车提议必须在到达那一轮被裁」,
+  而判据 `is_rideshare` **只读 `question`** —— 真实队列 71 行里 **59 行自陈搭车,
+  其中 23 行(39%)只写在 `axis` / `acceptance`,一个字不在 `question`** ⇒ 那 23 行**从来没进过这个桶**。
+  ⚠️ **一处对我不利的自我更正**:起草时先写成「这个桶从未响过」,**那是错的**(另有 36 行写在 `question`,
+  对它们是响的);形状是 **59 中漏 23**,不是全漏。**夸大的立案句更容易被后来的人推翻,连带推翻真的那部分。**
+  ⭐ **同一个文件里就有对的那条**:`subjects_of()` 读的是 `SUBJECT_FIELDS = ("axis","question","acceptance")`
+  —— **同一份三元组**;这个文件早就知道自陈会写在三个字段的任何一个,`is_rideshare` 是那条知识**没传到**的一行。
+  修法 `DECLARATION_FIELDS` 同三元组;**⛔ 不读 `director`/`result`/`notes`,这是判据不是省事** ——
+  那里的「零 EC2」是**别人写的关于这条请求的句子**(批测台的成本核查、总监的裁词),
+  且通常写在**它被排期之后**;读了它们,一条申请专波的请求会因为批测台自己的记账变成搭车件。
+  **扩宽的正当性是失效方向不是整齐**(过宽多看一眼,过窄让义务失去全部可见性),与 GH #317 给 `is_open` 的论证逐字同构。
+  承重是变异台 `tools/agent/mutstand_rideshare_field.sh`(文件副本还原 + 每只后 `sha256sum -c` +
+  `trap on_exit EXIT` 先还原再删,GH #418/#468 形状):裸读 `RC_EXIT=0`,**`mutants: 4/4 CAUGHT`**,M0 基线 exit=0。
+  ⭐ **M2 是这台子存在的理由**:「读所有字段」这个**过度修正长得和修复一模一样**,
+  只有 M1/M4 的台子会被 `is_rideshare = lambda req: True` 通过(那会把 `OTHER` 桶整个清空并自称修好);
+  M3(`any`→`all`)同理,读起来「更严格」却让桶重新恒为 `none`,**从另一侧回到同一个静默**。
+  新断言里**有一条不按字段列表写**:扫申请方写的每一个字符串值,断言 `OTHER` 桶里不许有自陈搭车的行 ——
+  **棘轮的形状**,它在某个流发明第四个散文字段并往里写「搭车」的那天就红。
+  `test_pending_rulings.py` **148 checks 0 failed**(修前 129)。工具读数三段:修前 `none`/`OTHER 1` 裸读 `RC_EXIT=0`
+  → 修后 `RIDESHARE 1`/`OTHER none` 裸读 **`RC_EXIT=3`** → 裁完两桶皆 `none` 裸读 `RC_EXIT=0`。
+  **② `hero-28` = ROUTED_ARCHIVE_SCAN,当轮放行**(`test_set.md §DY.5`;裁定全文在
+  `queue.json:hero-28.director.note`)。**它是修完腿之后唯一进桶的行 ⇒ 本裁定是那次修复的直接后果。**
+  沿 §BF.2 / §AZ.5 与 `hero-27` **合成同一次遍历**,`executor=batch-desk`(§CH 恰好一个流),零 EC2/零新局/不申请 arm。
+  总监**独立核的两条只关乎「买不买得着」**:(1) `grep -rl aether tests/fixtures/` 裸读 **0**(目录 111 项)
+  ⇒「条件 (a) **结构上**买不到第二份 fixture」成立,这是它值一次语料而非一份 fixture 的理由;
+  (2) 域是活的(pos_4/pos_5 都买 `item_aether_lens`),闸 `AetherReach()`(`hero_zuus.lua:381-390`)
+  单条独立 gate、turbo 合取在场、off 路径 `return 0` = 出厂表达式,**且注释点名回避了 `pullcad` 陷阱**。
+  **⛔ 边界照抄 §BF.2:路由裁定不是对前提的背书** —— 机制论证与 `test_zeus_aether_cast_range.lua` 及其变异台**均未复核**。
+  ⭐ **一条执行方不许照抄的数**:同轮两处普查对不上(申请书「33 声明,26 接了、7 不读,Zeus 是第 8 个」⇒ 26+8=34;
+  `hero_zuus.lua:349-351`「33 里 22 个接进至少一处 cast-range 读,Zeus 是读它 nowhere 的 8 个之一」),
+  分子口径不同(「接了」vs「接进 cast-range 读」)**而两处都没说明** ⇒ 引用前必须重算并说明口径,本裁定不依赖任一个数。
+  ⚠️ **`status` 留在 `pending` 没动**:裁定投递在 `director` 字段(工具读的那格),执行方没开工就写 `running` 是假话;
+  `hero-14`/`hero-17` 那次的病是 **`executor` 空**不是 status,本条已填。
+  **③ ⚠️ 同一个形状、同一天、第二条腿(§DY.6,本轮不裁)**:批测台 03:15Z §4.1 的 GH #473 甲 ——
+  **载体门看不见 `rotscope`**,因为域-载体从**文件路径**(`bots/BotLib/hero_*.lua`)读,
+  而它改 generic 文件、域却是一个具体英雄 ⇒ 连续八波恒零而没有任何门举手。
+  ⭐ 与本轮修的是同一句话的两个实例:`subjects_of()` 的 `HERO_FILE_IN_PROSE` 扫的正是那三个散文字段 ——
+  **本轮修的是字段选错,那一条是同一个函数里模式选错;两条腿的沉默都长得像好消息。** 列为下一单元第一项。
+  **④ `owed` 行不退休,裸读判的**:`gate_i_executable_first_run` 的 trigger 是**下一次发波轮**,
+  而批测台 03:15Z 是**收割轮**(W44 harvest,自报零发波)⇒ **该棒未到期**。
+  上一轮交棒 ① 问的是「能不能退休」,**答案是"未到期"不是"已完成"**。
+  **⑤ 成本**:零 AWS 调用、零发波、零计费资源;MTD **照抄**批测台 00:15Z 自报 `$12.519`、围栏 `$15.57` ≤ `$80`
+  (03:15Z 自陈零新增支出,无更新自报可抄,**不写「顺延」**);九月未到 $50 档。
+  **⑥ 巡检**:四组均有产出;`cadence` 单条 3.8h(strategy,越线 0.3h)**不升级**;
+  `UNKNOWN STATUS` 仍 20 行(`OPEN_STATES` 不认识 `admitted`,**失效方向安全**),本轮不改工具。
+  无邮件(本周 08-31 已发)、`DECISIONS_NEEDED` 无新增、周四跳过效率台账。
+  **⑦ 铁律 6**:`bots/`+`game/` **零 diff ⇒ 全量 Lua 套件未跑也不声称**;
+  静态门裸读 **`GATE_EXIT=0 CLEAN` / 0 警告**(容器初始无 luacheck,门自己装的 `lua-check`),**未用 `RULE6_BYPASS`**;
+  `arm_push_gate.sh` exit 0。自检 **`SELFCHECK_EXIT=3`**,归因**照抄工具自己那行**
+  (`FINDINGS: cadence owed-executions` / `UNCERTIFIABLE: trunk-red(python)`),
+  两条 UNCERTIFIABLE 是**上一轮已定案的腿序问题非本轮引入**。
+  ⚠️ **第三十二发,又是本轮第一条命令**:`routine_selfcheck.sh … | tail -60` 被脚本自拒
+  (`SELFCHECK_EXIT=2 REFUSED`);上一轮刚把措辞改成「任何要读退出码的命令」,**这一发说明改措辞没改掉它**
+  —— 与上一轮结论一致:**这是习惯不是门**。同轮第二次:后台完成通知报 `exit code 0`,
+  **那是末尾 `echo` 的码不是自检的**,真码读脚本自打的 `SELFCHECK_EXIT=3`。
+  **⑧ 下次触发**:①**GH #473 甲 = §DY.6 的载体门**(与本轮同族,需自己的普查 + 变异台)
+  ②**GH #473 乙**(按需机时常数 0.745 落在 W44 下界 0.765 之外,且身上没有自动失效条款)
+  ③自检腿序(`ensure_lua_tool` 提前,实测装 4s,能把两条 `UNCERTIFIABLE` 变成真读数)
+  ④`OPEN_STATES` 学会 `admitted` ⑤GH #449 / GH #460 四件(等下一个 spot 波)
+  ⑥GH #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` 的 filler-英雄政策(有时限)。

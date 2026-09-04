@@ -100,6 +100,35 @@ for mid in members:
 check(not undelivered,
       "armed ids whose queue request carries no delivered ruling: %r" % (undelivered,))
 
+# On the REAL queue: nothing that declares itself a rideshare may be sitting in
+# the OTHER bucket.  This is deliberately NOT written against DECLARATION_FIELDS
+# -- it sweeps every string the requester wrote, minus the fields LIMIT 2
+# excludes because they are somebody else's sentence about the request.  A
+# field-list-shaped assertion would only ratchet on the list the fix happened
+# to pick; this one still fires the day a stream invents a fourth prose field
+# and writes 搭车 into it, and the repair is then to widen DECLARATION_FIELDS
+# rather than to discover the miss by eye eight rounds later.
+NOT_THE_REQUESTERS_PROSE = ("director", "result", "notes")
+
+
+def declares_rideshare_anywhere(req):
+    parts = []
+    for key, value in req.items():
+        if key in NOT_THE_REQUESTERS_PROSE:
+            continue
+        if isinstance(value, str):
+            parts.append(value)
+    text = " ".join(parts)
+    return [m for m in pr.RIDESHARE_MARKERS if m in text]
+
+
+_ride, _other = pr.partition(requests)
+misfiled = [(r.get("id"), declares_rideshare_anywhere(r))
+            for r in _other if declares_rideshare_anywhere(r)]
+check(not misfiled,
+      "rows in the OTHER bucket that declare a rideshare in their own prose -- "
+      "§BB.4's 'rule it this round' cannot fire for these: %r" % (misfiled,))
+
 # ---------------------------------------------------------------- invariant 2
 ride, other = pr.partition(requests)
 open_unruled = [r for r in requests if pr.is_open(r) and pr.is_unruled(r)]
@@ -169,6 +198,42 @@ check(pr.is_rideshare({"question": "搭车,不申请专波,零 AWS 增量。"}),
 check(pr.is_rideshare({"question": "NO NEW WAVE NEEDED -- archive scan"}), "en rideshare missed")
 check(not pr.is_rideshare({"question": "请开一条独占波,4 台 4 种子。"}), "dedicated wave misread")
 check(not pr.is_rideshare({}), "missing question field misread as rideshare")
+
+# ...and the declaration is read WHEREVER the stream wrote it.  Every row above
+# puts the phrase in `question`; that is exactly the assumption that made this
+# leg answer `none` for eight rounds while self-declared rideshares sat in
+# OTHER.  Measured on the real queue 2026-09-04: 59 rows declare a rideshare,
+# 23 of them nowhere but `axis`/`acceptance`.  The two shapes below are those
+# 23, in their two real spellings.
+check(pr.is_rideshare({"axis": "soak candidate 'wkqdmg' 的条件 (a)。搭车、零 AWS 增量、"
+                               "不申请专波 —— 任一带 skeleton_king 载体的波次即可。",
+                       "question": "条件 (a) 取证。"}),
+      "a declaration written into `axis` read as OTHER (hero-23's real shape)")
+check(pr.is_rideshare({"question": "回城取货次数差。",
+                       "acceptance": "**零 AWS 增量**:本条不申请专波,搭任意已排定波次顺路即可。"}),
+      "a declaration written into `acceptance` read as OTHER (strategy-6's real shape)")
+
+# The converse the widening must NOT break: a marker in somebody ELSE's field.
+# `result` and `director` carry the batch desk's cost bookkeeping and the
+# director's rulings, where "零 EC2" is a statement ABOUT the wave, not the
+# requester's declaration.  Reading those would turn a dedicated-wave ask into
+# a rideshare on the strength of a note written after it was scheduled --
+# an over-inclusion that would arrive looking exactly like the fix.
+check(not pr.is_rideshare({"question": "请开一条独占波,4 台 4 种子。",
+                           "result": "批测的收尾核查:零 EC2 泄漏,实例已自毁。",
+                           "director": {"ruling": "APPROVED -- 搭 W45"}}),
+      "a marker in `result`/`director` (not the requester's prose) read as a "
+      "rideshare declaration")
+
+# End to end: the bucket, not just the predicate.  A `none` printed above a row
+# that belongs in the bucket is the whole defect, so assert where the row LANDS.
+axis_only = {"id": "hero-28", "status": "pending",
+             "axis": "归档 .dem 扫描;**零 EC2、零新局、零 AWS 增量、不申请专波**。",
+             "question": "新 gated 候选 `zusaether` 的条件 (a) 取证。"}
+aride, aother = pr.partition([axis_only])
+check([r["id"] for r in aride] == ["hero-28"],
+      "an axis-only rideshare declaration did not reach the RIDESHARE bucket")
+check(aother == [], "the same row also leaked into OTHER")
 
 # The exit contract: RIDESHARE non-empty => 3, and OTHER alone never reddens.
 check(pr.partition([{"id": "a", "status": "done", "director": None}]) == ([], []),
