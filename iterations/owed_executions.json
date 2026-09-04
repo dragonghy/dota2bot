@@ -1,6 +1,27 @@
 {
   "_note": "Rulings that were DELIVERED and whose EXECUTION is still owed by another stream. Read by tools/agent/pending_rulings.py (OWED_EXECUTION leg), which every stream runs through routine_selfcheck.sh. A row is retired by the director once `done_when` is satisfied. See tools/agent/pending_rulings.py for what each field means and what this registry cannot see.",
-  "owed": [],
+  "owed": [
+    {
+      "id": "campgrade_wave_type_premise_reading",
+      "issue": "GH #480 / GH #241",
+      "ruling": "`strategy-43` REGISTERED_AS_STANDING_OBLIGATION(总监 2026-09-04T10:xxZ,全文 `iterations/streams/test_set.md §EC.5`)。当 `campgrade` 拿到它的独占入集波时,那一波**必须**顺带买下 GH #241 `.type` 前提的阴性读数:**本方(own-side)远古 engagement 在 10..11 级带,`campgrade` armed 腿 vs baseline 腿**。尺子已存在,**不要另发明一把**:`tools/batch_test/behavioral/ancient_camp_domain.py` + 录像组 `campgrade_ladder.py`(与 `campfarm` 入集验收逐字同一把)。判据的算术:反驳假设(`.type` 不是字符串)下 `campgrade` armed **动不了这个数** —— 它的远古档与大营档都靠 `.type`、两条都死,活着的只有 `.team` 那一档(敌方营 ∧ botLevel < 15),按定义碰不到本方营。⇒ **下降 ⇒ `.type` 是字符串,前提结案;不降 ⇒ 不确定,不是通过**(通路可能走的是 `campfarm` 管的野怪扫描而不是营地名单)。",
+      "ruled_at": "2026-09-04T10:xxZ",
+      "executor": "batch-desk(排 `campgrade` 独占波的那一轮)+ 录像组(读数)",
+      "trigger": "`campgrade` 的独占入集波 —— 它此刻**还不存在**,而这正是本行进 registry 而不是进某张 `W<N>_wave.json:harvest_obligations` 的理由",
+      "delivered_to": [
+        "iterations/queue.json:strategy-43 的 `director` 字段(被裁方读的那一格)",
+        "iterations/streams/test_set.md §EC.5(裁定全文档案)"
+      ],
+      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、任何一个 id(它挂在一条尚不存在的波上),所以现存的任何一张 `harvest_obligations` 里**没有行可以让它缺席**。GH #413 两次掉棒是同一个形状,而这一条比它更极端:连波号都还没有。",
+      "blocking_precondition": "⛔ **`campfarm` 与 `campgrade` 不得同腿 arm** —— 否则本方远古 engagement 的下降在两个 id 之间不可归因。⚠️ **这条在今天就是活的约束,不是将来时**:`campfarm` **现在就在 armed 串里**(62-id 串第 35 位),所以 `campgrade` 入集那一刻必须先把 `campfarm` 从该腿摘掉,或分两腿。",
+      "method_failed_branch": "若 engagement 的「本方/敌方」归类在 dumper 里取不到 ⇒ **回总监重裁**,执行方**不得**自行套用后果条款(§CJ 常设要求)。域(该带上的 engagement 总数)为零 ⇒ `DOMAIN-NOT-REACHED` 退回,**不许**读成「测过了,`.type` 不是字符串」。",
+      "strata_requirement": "铁律 4(i-a):ab / ba 两个分层各自登记**读数**(不是局数);计数类且侧偏未消除 ⇒ 两层反号按 4(i-b) 读成噪声,不写进结论。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在一个**波号还不存在**的波次记录里 ⇒ 没有可以事先钉死的 `path`;伪造一个(把某个具体的 `W<N>_wave.json` 写死进来)会在波号变化时静默变成 UNCERTIFIABLE,正是本条反对的失效方向(与 `gate_i_executable_first_run` 同一条理由)。⇒ `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:那一波的收割报告里,`campgrade` armed 腿与 baseline 腿的**本方 10..11 级带远古 engagement 读数**各出现一次,ab / ba 两个分层分别登记,且读数来自 `ancient_camp_domain.py` / `campgrade_ladder.py` 而不是新造的尺子。总监据此退休本行。"
+    }
+  ],
   "retired": [
     {
       "id": "recslot8_baseline",

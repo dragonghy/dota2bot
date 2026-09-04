@@ -299,7 +299,27 @@ def premise_sites(srcs=None):
         doc = _read(API_DOC) if os.path.exists(API_DOC) else ''
     m = re.search(r'###\s*`GetNeutralSpawners\(\)`(.*?)(?=\n###\s)', doc, re.S)
     section = m.group(1) if m else ''
-    doc_fields = dict(re.findall(r'^-\s*`(\w+)`\s*\((\w+)\)', section, re.M))
+    # [director 2026-09-04, trunk red] The annotation is read as the FIRST WORD
+    # inside the parenthesis, and the closing `)` is deliberately NOT required.
+    #
+    # The old form was `\((\w+)\)` -- the whole parenthetical had to be one bare
+    # word.  2026-09-04T07:45Z (strategy, GH #480) rewrote the `.type` row's
+    # annotation into a sentence that wraps a line (`(unverified -- **and the
+    # method that settled `.team` provably cannot settle it**)`), and the row
+    # then matched NOTHING: `type` left `doc_fields` entirely.  Two consumers,
+    # two different fates, and that asymmetry is the whole reason this comment
+    # exists -- `set(doc_fields) >= {'team','type'}` went RED and said so, while
+    # its sibling `doc_fields.get('type') != 'int'` went quietly TRUE BY
+    # ABSENCE.  A refuter-detector that passes because it is looking at nothing
+    # is the failure this section's own check names out loud ("if this section
+    # stops parsing, the audit above is reading nothing").
+    #
+    # Failure direction is preserved by taking the LEADING token: an annotation
+    # that re-asserts a scalar type still reads `int` as its first word, so
+    # `(int, but see ...)` re-arms the refuter check exactly as `(int)` did.
+    # Widening to the closing paren (`\(([^)]*)\)`) would NOT have been the same
+    # fix -- a value of `'int, but see ...'` is `!= 'int'`, i.e. green.
+    doc_fields = dict(re.findall(r'^-\s*`(\w+)`\s*\(\s*(\w+)', section, re.M))
     return {'team_readers': team_readers,
             'type_readers': type_readers,
             'speed_readers': speed_readers,

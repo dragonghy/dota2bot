@@ -1,7 +1,12 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom
 
-**成员串 60**(上一行,**530 字节**,md5 `eef5fb2ef553d96a50960988d482ca4e`)。本行 **2026-09-04T01:xxZ 的变动:`arbheart` + `slotwait` 同轮入集**(58 → 60,总监裁定全文 **§DX**,提议 §DV / §DW,GH #455/#456 与 #467;queue `strategy-40` / `strategy-41`)。
+**成员串 62**(上一行,**550 字节**,md5 `c7e1f92c739f8f8dc0ee0c9484288628`)。本行 **2026-09-04T10:xxZ 的变动:`campbind` + `zusboltdom` 同轮入集**(60 → 62,总监裁定全文 **§EC**,提议 §DZ / 英雄组 07:51Z 报告,GH #475 / #477;queue `strategy-42` / `hero-29`)。
+⛔ **W45 不含这两个 id** —— 它于 2026-09-04T06:30:38Z 起飞(`machines[0].launched_at`,权威字段),clone 的是 60-id 串(md5 `eef5fb2e…`),**本次变动自 W46(或其后第一波)起首次生效**。⇒ **W45 仍是 60-id 家族的唯一一波,W46 起是 62-id 家族** —— 两波不并池(`W45_wave.json:pooling_claim` 已预登记它单独站着,本裁定不改它)。
+⚠️ **载体项 7 → 7 逐字不变,而且这次是量出来的**:`carrier_terms.py` 对 60-id 与 62-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus`),`0 unresolved`。分类:`campbind` = **generic**(唯一闸点 `jmz_func.lua:8993`,唯一消费者 `mode_roam_generic.lua`),`zusboltdom` = **hero `zuus`**(`hero_zuus.lua:1032`)—— 而 `zuus` 已由 `zusult`/`zusstatic` 供在项里 ⇒ **两条对载体项零贡献**,不必重算 `BEST min-per-term`;载体供给自己的账仍每波重算。
+⚠️ **`campbind` 不是 GH #473 甲(载体门看不见「域=一个英雄、文件=generic」)的又一例**:它的域确实是 generic —— 上游 `pullcamp` 只把 `J.IsCore(bot)` 排除掉,要求的是**队伍里有辅助**,不是某个具名英雄。`rotscope`(域=pudge)那条腿的失效在这里不成立,已逐点核过,**不是照抄提议方的话**。
+**⚠️ 收割前必读**:`campbind` 的 (a) 判据是**戳的是哪个营地**不是**戳了几次**(§EC.3;戳次下降正是它要买的),且**与 `pulldrag` 不正交** ⇒ `pulldrag` 的 connect 读数换了定义域,**不许与 W45 及更早的波并池**;`zusboltdom` **必须与 `zusult` 同腿 armed**(否则储备门对任何目标都答 false,读数结构上是空的),而 `zusboltcap` **不在本串里**,所以本波的 (1) 归零可以归因(§EC.4)。
+**上一次变动**(60-id 串,**530 字节**,md5 `eef5fb2ef553d96a50960988d482ca4e`):**2026-09-04T01:xxZ 的变动:`arbheart` + `slotwait` 同轮入集**(58 → 60,总监裁定全文 **§DX**,提议 §DV / §DW,GH #455/#456 与 #467;queue `strategy-40` / `strategy-41`)。
 ⛔ **W43 与 W44 都不含这两个 id** —— 两波分别于 2026-09-03T18:21:58Z / 09-04T00:18:45Z 起飞,clone 的都是 58-id 串(md5 `7009f6c5…`),**本次变动自 W45(或其后第一波)起首次生效**。
 ⚠️ **载体项 7 → 7 逐字不变** —— 两条都是 generic(`arbheart` 在 `mode_farm_generic.lua`、`slotwait` 在 `utils.lua`,`carrier_terms.py` 自判 `kind=generic`),对载体项**零贡献** ⇒ **不必重算 `BEST min-per-term`**;载体供给自己的账仍每波重算。
 **⚠️ 收割前必读**:`arbheart` 的 (b) **与 `slotarb` 混淆且方向偏向让它好看**(§DX.5)⇒ **不许拿 co-armed 波的 (b) 单独给它背书**;`slotwait` 的条件 (a) **必须在真帧上买**,mock 上那个「98 次求值 0 次 TRUE」的零是一台瞎仪器(§DX.6)。
@@ -15140,3 +15145,97 @@ issue **GH #480**(`[strategy]`,协同组开;发表前 `claim_precheck.sh` **exit
   已钉成用例(`[census] .speed`)与一条 `IsSmallCamp`/`IsMediumCamp` 同型的零调用点断言:
   **哪天有人调它,前提就重新有价格,用例当场举手。**
   ⇒ 直接进 P1 的(乙)决策侧 id。
+
+---
+
+## §EC 2026-09-04T10:xxZ 总监裁定,三件:`campbind` 60→61 + `zusboltdom` 61→62 **同轮入集**,`campgrade` 搭车读数(`strategy-43`)登记为常驻义务 —— 而本节最该被读的不是那两个 ADMITTED,是 **§EC.6:同一轮的第二条 trunk 红里,一个「因为读不到而变绿」的检查就站在一个「因为读不到而变红」的检查旁边,两条读的是同一个字典;红的那条是设计好的,绿的那条谁也没设计**
+
+### §EC.0 一句话
+
+两条候选**都不花新钱、都不加载体项、都在自己的机制族里单独可归因**,所以**同轮入集**——
+把两次「串一变、家族一断」压成一次;`strategy-43` 不是入集请求(它挂在一条**还不存在的**
+`campgrade` 独占波上),按 §DR **进 `owed_executions.json`,不进任何一张波次表**。
+
+### §EC.1 `campbind`(queue `strategy-42`,提议 §DZ,GH #475)—— **ADMITTED**,OWNER_PRIORITIES P1
+
+三条件里本裁定只买**入集**,不买 (a)/(b)。逐条核过的是**入集本身要看的那几格**:
+
+- **闸的形状**(自己读的源码,不是照抄):`J.GetCampPullPokeTarget` 唯一闸点 `jmz_func.lua:8993`,
+  写作 `if not J.IsSoakCandidate('campbind') then return hFirst end` —— **独立门,没有点名 `pullcamp`**
+  ⇒ 不踩 `pullcad` 陷阱(那条陷阱在本串里是活的:`pullcamp` 仍 gated,promote 它的那天任何
+  合取写法会冻死)。
+- **符号**:armed 的戳集 ⊆ 出厂戳集,**没有 over 方向**。
+- **载体**:`carrier_terms.py` 判 `kind=generic`,`TERMS` 逐字节不变(见头部)。
+- **⭐ 本裁定自己量的一格,提议方没给**:armed 且计划营地无可见小野时**不下任何命令**,
+  提议方说「上一帧的 `Action_MoveToLocation` 继续跑」。**这句话是对的,但它的价没被写出来** ——
+  真正的界在 `J.ShouldPullNeutralCamp` 自己身上:拉野窗口是 `nSec ∈ [5,20] ∪ [35,50]` 且
+  `DotaTime()` 必须落在 60..360s,而 `GetDesire` **每帧重算** `ShouldPullNeutralCamp` 并在它
+  返回 nil 时把 `bot.roamCampPull` 清掉。⇒ 「站着不动」的最坏时长**上界 15 秒、且只发生在
+  1:00–6:00**,不是无界。**这不是提议方的疏漏级别的问题,是入集前应当有人去读一遍的那一格**,
+  读完的答案是:换来的是「不去戳一个四条子句都否掉的营地」,**这笔交换划算**。
+  ⚠️ 顺带记一笔:该选点器**故意不问营地占用**(源码里逐字写着 occupancy is deliberately NOT
+  asked),所以「计划营地是空的」是一个**结构上可达**的状态,不是边角。
+
+### §EC.2 `zusboltdom`(queue `hero-29`,提议=英雄组 07:51Z 报告,GH #477)—— **ADMITTED**
+
+- **闸的形状**:`X.BoltAoEKillTarget` 唯一闸点 `hero_zuus.lua:1032`,条件是
+  `IsModeTurbo() and IsSoakCandidate('zusboltdom') and type(nHealthCap)=='number' and nHealthCap<=0`
+  —— **依赖写成了值不是 id**(不读 `IsSoakCandidate('zusboltcap')`)⇒ 不踩 `pullcad`。
+- **方向**:严格收紧,只能扣住一次出价、不能发出一次。
+- **前提在本串里成立**:`zusult` **在** armed 串里(丁 满足),`zusboltcap`/`zusultx` **都不在**
+  (戊 满足,(1) 归零可归因)。
+- **载体**:`kind=hero zuus`,而 `zuus` 已由 `zusult`/`zusstatic` 供着 ⇒ 项数不动。
+
+### §EC.3 为什么**同轮**入,而不是一轮一个
+
+每改一次 armed 串就断一次可并池家族(`W45_wave.json:pooling_claim` 是这条规矩的现行写法)。
+两条候选**分属完全不相交的机制**(拉野选点 / Zeus 弹的储备门),同腿 armed **不产生归因耦合**,
+所以「分两轮各入一条」买不到任何归因精度,只多断一次家族。**批一次比批两次便宜,而且是同一个价。**
+
+### §EC.4 收割前的两条限定(本裁定的一部分,不是备注)
+
+- (i) `campbind` 的 (a) 读**戳的是哪个营地**;戳次下降**不是**负面信号。域为零按
+  `DOMAIN-NOT-REACHED` 退回,**不得**读成「测过了无效应」。**`pulldrag` 的 connect 读数在
+  `campbind` 同腿 armed 之后换了定义域** ⇒ 不许与 W45 及更早的波并池。
+- (ii) `zusboltdom` 的 (a) 读 `zusult` 域内触发计数(量具 = GH #478 修好后的 `zusult_gate.py`),
+  **必须同时给击杀落地数**(反向刹车 乙):扣住真击杀是 GH #47 明令禁止的方向,
+  (1) 归零 + (2) 明显下降 ⇒ REJECT,不是 promote。
+- 两条都按铁律 4(i-a) 登记 ab / ba **两个分层的读数**(不是局数);计数类、侧偏未消除 ⇒
+  两层反号按 4(i-b) 读成噪声。
+
+### §EC.5 `strategy-43`(`campgrade` 搭车读数)—— **REGISTERED_AS_STANDING_OBLIGATION,不排波**
+
+它**不申请入集也不申请波次**:它预登记一条读数,挂在**尚不存在**的 `campgrade` 独占入集波上。
+按 §DR 的教训,这类**不属于任何一波、任何一个 id** 的义务写进哪张波次表都会在那一轮
+「没有行可以缺席」⇒ 进 `iterations/owed_executions.json`,`done_when` 裸读得出。
+⚠️ 一并把它自己的排波前置抄进那一行:**`campfarm` 与 `campgrade` 不得同腿 arm**
+(否则本方远古 engagement 的下降在两个 id 之间不可归因)——而 `campfarm` **现在就在 armed 串里**,
+所以这条前置在 `campgrade` 入集那一刻是**活的约束**,不是将来时。
+
+### §EC.6 ⭐ 主判据(可复用,超出本主题):**一个字典里,「读不到」在一条检查上是红、在它旁边那条上是绿,而只有红的那一条是有人设计出来的**
+
+`tests/test_detector_source_constants.py` 对 `GetNeutralSpawners()` 那一节问两句话,读的是**同一个
+`doc_fields` 字典**:
+
+    (A)  set(doc_fields) >= {'team','type'}     —— 「这一节还解析得开」
+    (B)  doc_fields.get('type') != 'int'        —— 「退休掉的那个反驳者没回来」
+
+(A) 的失败横幅是它自己写下的立案句:**「if this section stops parsing, the audit above is reading
+nothing」**。09-04T07:45Z 协同组(GH #480)把 `.type` 那一行的注解从一个裸词改写成一句**跨行的话**
+(`(unverified -- **and the method that settled \`.team\` provably cannot settle it**)`),
+而解析式是 `\((\w+)\)` —— **整个括号必须是一个词**。于是 `type` **整条离开了字典**:
+
+- (A) **红**,而且指名道姓 —— 它就是为这一天写的;
+- (B) **绿**,而且是**因为空**而绿 —— 一个反驳者检测器在一个**不存在的键**上永远查不出 `int`。
+
+⇒ **同一个缺陷,在两条相邻的检查上一红一绿,而绿的那条没有任何人设计过它的这个行为。**
+与本仓已有的两条同族:GH #205「apt 包名不是 `luacheck`」丢的是**门**、GH #171 丢的是**读数**,
+这一条丢的是**一条检查的内容,而它的外观仍是通过**。
+
+**⛔ 修法的选择是承重的,不是风格**:把解析式放宽到闭括号(`\(([^)]*)\)`)**也能让树变绿**,
+但那时 `(int, but see ...)` 会被读成字符串 `'int, but see ...'`,它 `!= 'int'` ⇒ **(B) 在一份
+把反驳者放回来的文档上照样通过**。**变绿有两条路,只有一条是修**。落地的是**取括号内的首词、
+不要求闭括号**,失效方向因此保住。钉在 `tests/test_campsel_premise_doc_parse.py`(11/11,三层),
+变异台两发**全杀**,而**证据不是「变红了」**:M2(闭括号写法)下
+`tests/test_detector_source_constants.py` **实测 exit 0 全绿** —— 这一句才是 §EC.6 的价。
+

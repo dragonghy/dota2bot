@@ -192,7 +192,7 @@ tests['[census] every `.type` read under bots/ is enumerated and classified'] = 
         ['bots/mode_rune_generic.lua|rune']            = { 2, 'unrelated' },
     }
     local seen = {}
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
+    local p = assert(io.popen('find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
     for path in p:lines() do
         local src = strip_comments(read(path))
         for id in src:gmatch('([%w_]+)%.type') do
@@ -251,7 +251,7 @@ tests['[census] all four Is*Camp helpers compare .type to a string literal'] = f
             sName .. ' is gone or reshaped -- the dead-helper row below is then stale')
     end
     local nSmall, nMedium = 0, 0
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
+    local p = assert(io.popen('find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
     for path in p:lines() do
         local s = strip_comments(read(path))
         local _, a = s:gsub('IsSmallCamp%s*%(', '')
@@ -275,7 +275,7 @@ tests['[census] .speed is a premise with no price: one reader, and that reader h
     -- happen.) Pinned so that the day someone calls it, the premise regains a
     -- price and this raises its hand.
     local nReads, nCallers = 0, 0
-    local p = assert(io.popen('find bots -name "*.lua" | sort'))
+    local p = assert(io.popen('find bots -name "*.lua" ! -path "bots/Customize/soak_*.lua" | sort'))
     for path in p:lines() do
         local s = strip_comments(read(path))
         local _, a = s:gsub('[%w_]+%.speed', '')

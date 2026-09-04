@@ -9905,3 +9905,72 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   本轮未处置**(登记不是裁定,已列进下次触发)。python 本轮**只跑相关四支不跑全套**
   (`walk_farm_only` 0 / `pending_rulings` 0 / `stale_waits` 0 / `wave_gate_keys` **1,故意仍红**),
   **不声称 python 全套绿**。`TOKENS total_in=7,594,385 out=42,329 turns=60`。
+
+- 2026-09-04T10:00–10:4xZ:开工自检的 `queue-rulings` 腿点名**三行欠裁**(`strategy-42` /
+  `strategy-43` / `hero-29`,其中 `hero-29` 打的是 `RIDESHARE(rule this round)`),本轮全部结清;
+  外加自检 python 腿报的**三条 trunk 红**里修掉两条(第三条是 GH #479,上一轮已退回批测台,故意仍红)。
+  零 AWS、零发波、`bots/`+`game/` **零改动**。裁定全文 `test_set.md §EC`,报告
+  `iterations/reports/director/20260904T100000Z.md`。
+  **① `campbind` ADMITTED(60→61,`strategy-42`,GH #475,提议 §DZ)—— OWNER_PRIORITIES P1 拉野,
+  球本来就在总监**。自己读源码核过四格(独立门不与 `pullcamp` 合取 / 符号单调 armed⊆出厂 /
+  `kind=generic` / 域 17-449 帧)。⭐ **本裁定自己量的一格,提议方没给**:「armed 且计划营地无小野时
+  不下令」这句话是对的**但没有价** —— 界不在调用点,在 `J.ShouldPullNeutralCamp` 自己身上
+  (窗口 `nSec∈[5,20]∪[35,50]` 且 `DotaTime∈60..360s`,`GetDesire` **每帧重算**并在 nil 时清
+  `roamCampPull`)⇒ **「站着不动」上界 15 秒、只在 1:00–6:00**,不是无界。⚠️ 该选点器
+  **源码逐字写着故意不问营地占用** ⇒「计划营地是空的」结构上可达,不是边角。
+  **② `zusboltdom` ADMITTED(61→62,`hero-29`,GH #477)** —— 上一轮登记未处置的 ⓪
+  (录像组 `zusult` 条件 (a) = BUGGY 3 帧)的下一棒。闸 `hero_zuus.lua:1032` 的**依赖写成值不是 id**
+  (`type(nHealthCap)=='number' and nHealthCap<=0`)⇒ 不踩 `pullcad`;申请书的 (丁)(戊) 两条前提
+  **我去串里核过**:`zusult` 在、`zusboltcap` 与 `zusultx` 都不在 ⇒ (1) 归零可归因。
+  **③ 为什么同轮入**:每改一次串就断一次可并池家族,而两条分属**完全不相交**的机制、同腿 armed
+  **不产生归因耦合** ⇒ 分两轮买不到任何归因精度,只多断一次家族。**批一次和批两次同价。**
+  **④ 载体是量出来的**(§DT.3):`carrier_terms.py` 对 60-id 与 62-id 各跑一次,`TERMS` 行
+  **逐字节相同**、两次 `0 unresolved` ⇒ 7→7,不重算 `BEST min-per-term`。
+  ⚠️ **`campbind` 不是 GH #473 甲的又一例** —— 它的域**确实**是 generic(上游只排除 `J.IsCore`,
+  要的是「队里有辅助」不是具名英雄),逐点核过才这么写。
+  **⑤ `strategy-43` REGISTERED_AS_STANDING_OBLIGATION**:挂在一条**尚不存在**的 `campgrade`
+  独占波上 ⇒ 按 §DR 进 `owed_executions.json`(`campgrade_wave_type_premise_reading`,`kind: manual`,
+  理由同 `gate_i_executable_first_run`:波号还不存在,伪造 `path` 会静默变 UNCERTIFIABLE);
+  `--owed-only` 落地后裸读 `RC_EXIT=3`,按设计每轮举手。⚠️ 排波前置一并抄进那行:
+  **`campfarm` 与 `campgrade` 不得同腿 arm**,而 `campfarm` **现在就在串里** ⇒ 活的约束不是将来时。
+  **⑥ ⚠️ `status` 写 `admitted`/`registered` 不写 `running`**(执行方没开工,`running` 是假话,§EA)。
+  代价:`UNKNOWN STATUS` 桶 **18→21**,**失效方向安全**(`is_open` 键的是 `CLOSED_STATES`)。
+  ⛔ **故意没顺手把 `admitted` 加进 `OPEN_STATES`** —— 上一轮把它列进了清单,但
+  **在一条裁定里顺手教漂移检测器接受这次漂移,正是那个检测器死掉的方式**;要加要有自己的承重。
+  **⑦ 修 trunk 红之一 `test_bots_walk_farm_only`** —— **上一轮 07:00Z 刚修绿的那一条,三小时后被
+  协同组 07:45Z 的新文件打回**(`test_camp_type_premise_polarity.lua` 三处 `find bots` 没排 farm-only)。
+  修前 `RC_EXIT=1`(`8 checks, 1 failed [173, 15]`)→ 修后 `RC_EXIT=0`(`8 checks, 0 failed [173, 15]`),
+  **`173/15` 逐位相同 ⇒ 动的是那三条 find 不是扫描面**。⚠️ 它是 §EA.6 那句话的第三个实例:
+  **python 那半不在 pre-push 钩子里** ⇒ 这条红结构上不可能被 push 时刻的任何东西拦住。
+  **⑧ ⭐ 修 trunk 红之二 `test_detector_source_constants`,而这是本轮最该被读的一条**:
+  `(A) set(doc_fields) >= {'team','type'}` 与 `(B) doc_fields.get('type') != 'int'`
+  **读同一个字典**;协同组 07:45Z(GH #480)把 `.type` 的注解从裸词改写成一句**跨行的话**,
+  解析式 `\((\w+)\)` 要求整个括号是一个词 ⇒ `type` **整条离开字典**:**(A) 红并指名道姓
+  (它就是为这天写的),(B) 因为空而绿** —— 反驳者检测器在一个不存在的键上永远查不出 `int`。
+  **同一个缺陷,相邻两条检查一红一绿,而绿的那条没有人设计过它的这个行为。**
+  族谱:GH #205 丢门 / GH #171 丢读数 / **本条丢的是一条检查的内容,外观仍是通过**。
+  ⛔ **修法承重不是风格**:放宽到闭括号 `\(([^)]*)\)` **也能变绿**,但那时
+  `(int, but see ...)` 读成字符串、`!= 'int'` ⇒ **(B) 在一份把反驳者放回来的文档上照样通过**。
+  **变绿有两条路,只有一条是修** ⇒ 落地「取括号内首词、不要求闭括号」。
+  新 `tests/test_campsel_premise_doc_parse.py` **11/11 三层**(含 LAYER 3 反向断言:
+  老正则在这份文档上**确实**找不到 `type`,所以 LAYER 1 是读数不是同义反复);
+  变异台两发全杀,而**证据不是「变红了」**:**M2(闭括号)下
+  `test_detector_source_constants.py` 实测 `exit 0` 全绿** —— 那一行才是价。
+  树外 `cp` 还原 + `sha256sum -c` OK,还原后基线 11/0 GREEN。
+  **⑨ 成本**:零 AWS 调用/零发波/零计费资源;MTD 照抄批测台 09:15Z 自报,围栏 ≤ `$90`,
+  九月未到 $50 档。**⑩ 巡检**:四组均有产出;`cadence` 仍是 strategy **那同一条** 3.8h(不升级);
+  **OWNER_PRIORITIES P1 本轮推进一格**(责任链「总监(2)」这步已走,球交回批测台 W46 + 录像组 (a));
+  无邮件(本周 08-31 已发)、`DECISIONS_NEEDED` 无新增、周四跳过效率台账、patch 检查未做。
+  **⑪ 铁律 6**:`bots/`+`game/` 零 diff ⇒ **全量 Lua 套件未跑也不声称**;静态门裸读
+  **`GATE_EXIT=0 CLEAN` / 0 警告**(冷启,门自己装的 `lua-check`),`arm_push_gate.sh` exit 0,
+  **未用 `RULE6_BYPASS`**;相关支八支裸读见报告 §6,**python 全套不声称全绿**。
+  自检 **`SELFCHECK_EXIT=3`**,归因**照抄工具自己那行**
+  (`FINDINGS: cadence queue-rulings trunk-red(python)` / `UNCERTIFIABLE: none`)。
+  ⭐ **纪律 3 本轮没踩,这是上一轮改完措辞后的第一轮**:第一条命令就走 `rc.sh`;
+  **同轮第二个陷阱也没踩** —— 后台完成通知报 `exit code 0`,那是我拼在后面的 `echo` 的码,
+  真码读 `RC_EXIT=3`。
+  **⑫ 下次触发**:①**GH #473 甲 = §DY.6 载体门 —— 这是它第三次排第一**(上上轮没做、上一轮被
+  两条 trunk 红顶掉、本轮被三行欠裁顶掉)。**按上一轮自己写下的条款,再顺延一次就必须先写进
+  `DECISIONS_NEEDED`** ②把 python 那半接进 pre-push 的承重(⑦ 是它第三次付款)
+  ③GH #473 乙 ④自检腿序 / `OPEN_STATES` 要不要学 `admitted`(要有自己的承重)
+  ⑤GH #449 / GH #460 四件 ⑥GH #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` filler-英雄政策。
