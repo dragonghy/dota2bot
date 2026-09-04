@@ -5241,6 +5241,23 @@
   **不在本单元修**(三种方法,`fixture_roles` 要带 `--roles` 重生成 fixture),**已开 GH #458 交出去 + 置于 backlog 顶部**。
   ⛔ **撞车登记不重诊**:开工自检 python 腿两条红 = **GH #457**(先于本轮、不在本组文件里),
   另两条腿 `UNCERTIFIABLE`(**不是通过**)。
+- 2026-09-03T15:xxZ(**同一工作单元的收尾复扫**;报告同上 **§J.4e**;
+  `state.json` 新键 `slotwait_census_pins_20260903`):**89 个语料测试最后一轮复扫,
+  71/71 全绿**。复扫又亮的两条归属查清:**不是本轮的、但是本组的** ——
+  `dc63d791`(GH #467,`slotwait`)把两个 live 站点转成 slot 形状,**两个数它们的
+  普查 pin 一个都没动** ⇒ `test_slotarb_camp_arbitration:430` 与
+  `test_slotdust_dust_arbitration:472` 都断言 `pidShaped == 7`,树上是 **5**。
+  先排除是本轮加的:arbheart 用 `GetTeamMember(i)`,**`i` 不在 pid 形状实参表里、
+  结构上进不了那个计数**;幸存 5 个**全在 `utils.lua`**。两个 pin 按扫描**重新量到 5**
+  并把成因写在原地;幸存的 5 个是该簇的**「死」那一半**(`bots/` 零调用者)⇒
+  **这一族下一条 lever 得先有活调用者**,便宜的做完了。
+  ⭐ **这里的重复是 work 的**:两文件故意扛同一个数,这次**一起变红**而不是一个漂走
+  —— 设计行为。**与本轮另一侧的兄弟案例正好对照**:
+  `test_cm_ability_index_binding:444` 与 `test_focus_innate_index_anchor:365`
+  也把同一语料事实 pin 了两处,13:30Z 重设其一漏了另一 ⇒ **只在一处变红**。
+  **同机制两种结局,差别只在有没有一起动。**
+  门:`luacheck_gate.sh` `GATE_EXIT=0` / 0 警告,未用 `RULE6_BYPASS`。
+  **Lua 全量套件仍未跑完 —— 这是跳过不是通过**(GH #124/#401)。
 - 2026-09-03T14:4xZ(**同一工作单元的追补 —— 两处自己造的 trunk red,已修**;
   报告同一份 `iterations/reports/strategy/20260903T133000Z.md` **§J**;
   `state.json:arbheart_20260903` 新增 `fixture_subject_incident` /
