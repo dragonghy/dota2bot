@@ -100,6 +100,81 @@ MINION_OWNER = {
     "vengeful_spirit.lua": "vengefulspirit",
 }
 
+# --- hero-name guards in generic files (GH #473 甲, director 2026-09-04) -----
+# The walk above derives the domain from the FILE a consumer lives in.  That
+# reading has a second shape it cannot see: a gate written in a *generic* file
+# whose domain is nonetheless a SINGLE HERO, because a hero-name literal in an
+# enclosing `if` decides whether the line runs at all.
+#
+#   bots/mode_roam_generic.lua:1038   if botName == 'npc_dota_hero_pudge' then
+#   bots/mode_roam_generic.lua:1039       ... J.IsSoakCandidate('rotscope')
+#
+# `rotscope` is Pudge-only and its own acceptance says so ("只对 Pudge 可达 =>
+# 没抽到 Pudge 的波次读数恒为零"), yet the file-path reading answers `generic`
+# -- the one class the carrier gate EXEMPTS.  So the gate that exists to refuse
+# a wave whose draft cannot carry an armed id had nothing to say about it, and
+# an id like this can read zero for wave after wave with nothing raising a hand.
+# W44 measured the live instance: 7 carrier terms derived, `pudge` not among
+# them, and the wave carried Pudge (96/207 games) only because the seeds
+# happened to.  Same family as `check_armed_wiring.py`'s "a call site exists"
+# != "the predicate can be true": THE GATE CHECKED A LAYER THE DEFECT DOES NOT
+# LIVE ON.
+#
+# The narrowing is read from the SOURCE, not from the application prose GH #473
+# proposed.  Prose is where the fact was already written and still went unread;
+# a rule that needs someone to have phrased it right is the same rule that just
+# failed.  The `if` is machine-checkable and is the thing that actually decides.
+#
+# FAILURE DIRECTION, deliberately chosen twice over:
+#   * a literal naming a unit with no `bots/BotLib/hero_<name>.lua` carrier
+#     resolves `unresolved`, never a term.  Five such names live in this tree
+#     (`bots/FunLib/aba_matchups.lua` holds `npc_dota_hero_outworld_destroyer`
+#     and `npc_dota_hero_necrophos`), and they are the dangerous kind: the pool
+#     calls those heroes `obsidian_destroyer` and `necrolyte`, so a term built
+#     by pattern would be PLAUSIBLE and wrong -- `UNDRAFTABLE` (exit 1), stated
+#     confidently, about a hero who is drafted under another name.  Guessing
+#     the mapping is the same filename read `rubick_hero`/`minion_lib` refuse.
+#   * a block structure this scanner cannot balance resolves `unresolved` too,
+#     not `generic`: an unchecked guard is not an absent guard.
+#
+# LIMIT, measured not assumed.  `npc_dota_hero_lone_druid_bear` (:966 of the
+# same file) DOES have `bots/BotLib/hero_lone_druid_bear.lua`, so it narrows to
+# the term `lone_druid_bear` -- which `hero_pool.txt` does not carry, so the
+# gate would answer UNDRAFTABLE for a line the bear really can run whenever
+# `lone_druid` is drafted.  That is not introduced here: `hero_of()` already
+# answers `lone_druid_bear` for any gate inside that file, and this rule
+# deliberately inherits the file-path convention rather than inventing a second
+# one.  Whether a summoned-unit file should map to its owner is that
+# convention's question, and it needs its own evidence.
+HERO_UNIT_LIT = re.compile(r"npc_dota_hero_([a-z_0-9]+)")
+BLOCK_TOK = re.compile(r"\b(if|elseif|else|function|for|while|repeat|do|then|end|until)\b")
+STRING_LIT = re.compile(r"'[^'\n]*'|\"[^\"\n]*\"")
+
+
+def blank_strings(line):
+    """Blank string bodies so `'...defend...'` cannot be counted as `end`.
+
+    Length is preserved so column offsets stay usable; quotes are kept so a
+    later hero-literal read still sees where a string was, and the hero read is
+    done on the ORIGINAL line, never on this one.
+    """
+    return STRING_LIT.sub(lambda m: m.group(0)[0] + "_" * (len(m.group(0)) - 2)
+                          + m.group(0)[-1], line)
+
+
+def _guard_heroes(cond):
+    """Heroes a condition positively restricts to, or frozenset() for none.
+
+    `botName == 'npc_dota_hero_pudge'` narrows; `botName ~= '...'` and any
+    `not (...)` around it do not, and are not worth a parser: a condition
+    carrying either simply declines to narrow, which lands on the pre-existing
+    answer instead of a wrong one.
+    """
+    if "~=" in cond or re.search(r"\bnot\b", cond) or "==" not in cond:
+        return frozenset()
+    return frozenset(HERO_UNIT_LIT.findall(cond))
+
+
 GATE_RE_TMPL = r"IsSoakCandidate\s*\(\s*['\"]%s['\"]"
 LANEFIX_RE_TMPL = r"IsLaneFixOn\s*\(\s*['\"]%s['\"]"
 # Top-level definitions in this codebase all start at column 0, in two shapes.
@@ -245,6 +320,78 @@ class Tree(object):
                 return line.split("=")[0].strip(), idx + 1, "anon"
         return None, None, None
 
+    def has_hero_file(self, hero):
+        """Is `hero` a name this repo carries a `bots/BotLib/hero_*.lua` for?"""
+        return "bots/BotLib/hero_%s.lua" % hero in self.lines
+
+    def hero_guard_scope(self, rel, lineno):
+        """Heroes an enclosing `if botName == 'npc_dota_hero_x'` restricts `lineno` to.
+
+        -> (frozenset(heroes), status) with status in:
+            'ok'          the scan balanced; the set may be empty (no guard)
+            'unmapped'    a guard names a unit with no hero_<name>.lua carrier
+            'unbalanced'  block structure this scanner could not follow
+
+        Scope starts at the enclosing top-level definition (file scope if there
+        is none), so only blocks that actually contain `lineno` are on the
+        stack.  Tokens are read IN ORDER within a line, because `end` closing a
+        block and `if` opening one on the same line are not commutative -- a
+        net-delta count gets the depth right and the frame identity wrong,
+        which is the one thing a hero frame cannot survive.
+        """
+        _fname, def_line, _kind = self.enclosing_function(rel, lineno)
+        lines = self.lines[rel]
+        stack = []          # one frozenset of heroes per open block
+        pending = None      # (kind, condition-text) while an `if`/`elseif` is unclosed
+        expect_do = 0       # `for`/`while` headers whose `do` opens their block
+        for idx in range((def_line or 1) - 1, lineno - 1):
+            raw = lines[idx]
+            scan = blank_strings(raw)
+            if pending is not None:
+                pending = (pending[0], pending[1] + " " + raw)
+            for m in BLOCK_TOK.finditer(scan):
+                tok = m.group(1)
+                if tok in ("if", "elseif"):
+                    pending = (tok, raw[m.start():])
+                elif tok == "then":
+                    kind, cond = pending if pending else ("if", "")
+                    heroes = _guard_heroes(cond)
+                    if kind == "elseif":
+                        if not stack:
+                            return frozenset(), "unbalanced"
+                        stack[-1] = heroes
+                    else:
+                        stack.append(heroes)
+                    pending = None
+                elif tok == "else":
+                    if not stack:
+                        return frozenset(), "unbalanced"
+                    stack[-1] = frozenset()
+                elif tok in ("function", "repeat"):
+                    stack.append(frozenset())
+                elif tok in ("for", "while"):
+                    expect_do += 1
+                elif tok == "do":
+                    stack.append(frozenset())
+                    expect_do = max(0, expect_do - 1)
+                elif tok in ("end", "until"):
+                    if not stack:
+                        return frozenset(), "unbalanced"
+                    stack.pop()
+        # `lineno` sits inside an unfinished condition (a multi-line `if` whose
+        # own text holds the gate).  That condition guards the lines BELOW it,
+        # not itself, so it contributes no frame -- and it is not a failure.
+        narrowing = [f for f in stack if f]
+        if not narrowing:
+            return frozenset(), "ok"
+        heroes = set(narrowing[0])
+        for frame in narrowing[1:]:
+            heroes &= frame        # nested guards are a conjunction
+        unmapped = sorted(h for h in heroes if not self.has_hero_file(h))
+        if unmapped:
+            return frozenset(unmapped), "unmapped"
+        return frozenset(heroes), "ok"
+
     def callers(self, fname, def_rel, def_line):
         """Call sites of `fname` (matched on its short name), minus its own def."""
         short = re.split(r"[.:]", fname)[-1]
@@ -267,6 +414,20 @@ def _resolve_site(tree, rel, lineno, depth, seen, trail):
     hero = tree.hero_of(rel)
     if hero:
         return "hero", {hero}, trail + ["%s:%d" % (rel, lineno)]
+    # A generic FILE can still hold a single-hero LINE (GH #473 甲).  Asked
+    # before the generic exits below, because every one of them would answer
+    # "every hero draft carries it" for a line only one hero ever reaches.
+    guard, gstatus = tree.hero_guard_scope(rel, lineno)
+    if gstatus == "unmapped":
+        return "unresolved", set(), trail + [
+            "%s:%d(hero-name guard names %s; no bots/BotLib/hero_*.lua carrier)"
+            % (rel, lineno, ",".join(sorted(guard)))]
+    if gstatus == "unbalanced":
+        return "unresolved", set(), trail + [
+            "%s:%d(block structure not followable; guard unchecked)" % (rel, lineno)]
+    if guard:
+        return "hero", set(guard), trail + [
+            "%s:%d(hero-name guard: %s)" % (rel, lineno, ",".join(sorted(guard)))]
     if os.path.basename(rel) in MINION_GENERIC:
         return "generic", set(), trail + ["%s:%d(minion, generic by construction)"
                                           % (rel, lineno)]

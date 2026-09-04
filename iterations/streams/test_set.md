@@ -15618,3 +15618,106 @@ death_prophet 帧必须**仍然让路**;否则一个「永远答 false」的谓�
 `state.json:midsupfar_20260904`;`queue.json:strategy-5b.revision_20260904_midsupfar`;**GH #489**;
 报告 `iterations/reports/strategy/20260904T135500Z.md`。
 铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。
+
+## §EG 2026-09-04T16:xxZ 总监 —— GH #473 甲落地:**载体门看不见「域是一个英雄、文件是 generic」的 id**;本节最该被读的不是那个 `pudge`,是 **§EG.5:一台 12 发全 CAUGHT 的变异台里,有一发是被邻居抓住的,而它名义上钉的那条检查在变异树上原样通过** —— 与 §EE.5 同一句话,第二次现场,这次是我自己的台
+
+### §EG.0 一句话
+
+`carrier_terms.py` 判一条 id 的域,读的是消费点所在的**文件**
+(`bots/BotLib/hero_x.lua` ⇒ 英雄 x,别的 ⇒ generic)。这个读法看不见第二种形状:
+**闸写在 generic 文件里,而它的域是一个英雄**,因为一句 `if botName == 'npc_dota_hero_pudge' then`
+决定了那一行跑不跑。`rotscope` 就是(`bots/mode_roam_generic.lua:1038/1039`)。
+而 `generic` 恰恰是载体门**唯一豁免的那一类** ⇒ 这道为「抽不到载体就别发波」而存在的门,
+对它**一句话都说不出**;W44 抽到 Pudge(96/207 局)是种子碰巧,门既没预测也没保证。
+⇒ 这种 id 可以**一波又一波读恒零而没有任何东西举手**。
+
+### §EG.1 落地形状(读源码,不读申请书散文)
+
+`Tree.hero_guard_scope(rel, lineno)` 从**外层定义**起按**出现顺序**扫块令牌
+(`if/elseif/else/function/for/while/repeat/do/then/end/until`),维护一个块栈,
+每个 `if` 帧记住它条件里正向锁定的英雄;`_resolve_site` 在 generic 那几条出口**之前**问它。
+
+⭐ **为什么不按 GH #473 自己的建议(从申请单 acceptance 读)**:那句话**已经写在那里了**,
+逐字是「只对 Pudge 可达 ⇒ 没抽到 Pudge 的波次读数恒为零」,**而它照样没被读**。
+一条「需要有人当初把话说对」的规则,正是刚刚失效的那一条。`if` 是机器可判的,
+而且它才是真正决定这一行跑不跑的东西。
+
+### §EG.2 读数(受控前后对比,不是「跑起来了」)
+
+同一根 62-id 串,`origin/main` 的 `carrier_terms.py` 与本轮的树各跑一次,`diff` **只有三处**:
+
+```
+- CARRIER_DERIVE id=rotscope kind=generic heroes=-     ⇒ + kind=hero heroes=pudge
+- 12 hero-scoped, 50 generic, 0 unresolved => 7 term(s) ⇒ + 13 / 49 / 0 => 8 term(s)
+- TERMS ...,skeleton_king,...                          ⇒ + ...,pudge,skeleton_king,...
+```
+
+**`unresolved` 前后都是 0**,这半边和 `pudge` 一样重要:一个把今天的波变吵的改动是买不起的。
+`pudge,5,filler` 在 `hero_pool.txt` 里 ⇒ 新项**可抽到**,不会变成 `UNDRAFTABLE`。
+
+### §EG.3 两个失效方向都是**朝吵**,而其中一个是量出来的不是想出来的
+
+- **名字映不到载体文件 ⇒ `unresolved`(退出码 2),永远不发 term。** 本树有 5 个这样的名字,
+  `bots/FunLib/aba_matchups.lua` 里的 `npc_dota_hero_outworld_destroyer` 与
+  `npc_dota_hero_necrophos` 是**危险的那一类**:池子和 BotLib 管这两个英雄叫
+  `obsidian_destroyer` 和 `necrolyte` ⇒ 按模式拼出来的 term **长得很像对的**,
+  然后 `UNDRAFTABLE` 会**言之凿凿地**说一个换了名字就抽得到的英雄抽不到。
+- **块结构跟不下来 ⇒ `unresolved`,不是 `generic`。** 没查过的闸不是查过的闸。
+
+⚠️ **一条 LIMIT,写下来的时候我原本以为它是前一类**:`npc_dota_hero_lone_druid_bear`
+(同文件 :966)**真的有** `bots/BotLib/hero_lone_druid_bear.lua` ⇒ 它落进 term `lone_druid_bear`,
+而池子里没有这个名字 ⇒ 那里若有闸,门会对着一行「只要抽到 lone_druid 熊就跑得到」的代码答 UNDRAFTABLE。
+**这不是本改动引入的**:`hero_of()` 今天对那个文件里的任何闸就已经答 `lone_druid_bear`;
+本规则**故意继承文件路径的约定,而不是另立一套**。召唤物文件该不该映到主人,是**那条约定自己的问题**,
+要有自己的证据。测试按**它实际是什么**钉住(不是按我假设的),那一天来的时候账在那儿等着。
+
+### §EG.4 不越界(这一半没有任何读数会替它举手)
+
+`pullcad`(:343)、`pullthink`(:264)、`creepthink`(:265)的闸字面量**与 `rotscope` 同文件**、
+不在任何英雄门里 ⇒ 三条**必须仍是 generic**,已各自钉住。
+另一条同样只在测试里存在的形状:`creepthink` 的闸**坐在一个跨三行的 `if` 条件内部**,
+所以扫到闸行时扫描器正处在条件中途 —— 那个条件管的是它**下面**的行,不是它自己。
+**本规则的原型正是在这里报了假警**(`unbalanced`),现在读 `ok/无门`,并有一条检查钉着。
+
+### §EG.5 ⭐ 本节最该被读的:一台 12 发全 CAUGHT 的变异台,有一发是被邻居抓住的
+
+第一版变异台 `M2`(把 `~=` 读成域)**SURVIVED**,而它名义上钉的那条检查是
+`D2`(`if botName ~= 'npc_dota_hero_huskar' then`)。原因是 **`D2` 被基线规则单独满足**
+(条件里根本没有 `==` ⇒ 不缩窄),于是删掉 `~=` 那一条子句**在 D2 上是个空操作**。
+`~=` 子句只在**混合条件**上有价——而那正是本树真有的形状
+(`mode_roam_generic.lua:1587-1589`:一个更大的判断里排掉三个英雄):
+`==` 让条件够格,`~=` 后面那个英雄literal 则是**唯一跑不到这一行的那个英雄**。
+补了 `D2b`(混合)与 `D2c`(`not (... == ...)`),把 `M2` 拆成 `M2a`/`M2b`,两发都 CAUGHT。
+
+⚠️ **补完之后还差一步,而这一步才是 §EE.5**:`M2a` 下 `D2b` 打出的是 `got unresolved []` ——
+**它死于「合成树里没有 hero_huskar.lua」这个邻居理由,不是死于负号被读成域**。
+往合成树里加一个 `hero_huskar.lua` 之后,签名变成 **`got hero ['huskar']`**,
+也就是那个**危险的错答案本身**。⇒ **「全 CAUGHT」是关于集合的话;每一发是被谁抓住的,要一发一发看。**
+族谱:§EE.5 是别人的台,这一条是我自己的台,**同一天,同一句话**。
+
+### §EG.6 两条量程对照(**必须 SURVIVED**),而第二条的依据是算术不是偏好
+
+- `M12`:只改一句提示语 ⇒ 存活。若它被抓,说明有检查在对散文断言。
+- `M10`:把扫描起点从**外层定义**改成**文件开头** ⇒ 存活,**而这是对的**:
+  只有当前面某个顶层块不平衡时两者才可能不同,而顶层块不平衡的 Lua 文件**根本加载不了** ⇒
+  起点是**工作量的界,不是语义**。**量过不是猜的**:树外打上这一发后,62-id 全量推导与基线
+  **逐字节相同**(`diff` 退出 0)。**给它写一条能杀死它的检查,等于把实现细节钉成行为。**
+
+### §EG.7 产物与裸读
+
+`tools/batch_test/soak/carrier_terms.py`(+`Tree.hero_guard_scope` / `blank_strings` /
+`_guard_heroes`,`_resolve_site` 加一处前置问);`tests/test_carrier_hero_guard.py`(**新,32/0**);
+`tools/agent/mutstand_carrier_hero_guard.sh`(**新;11 真发 11 CAUGHT,2 发量程对照正确 SURVIVED,
+零 NO-OP,树外 `cp` 还原 + `sha256sum -c` OK,还原后基线 32/0**);
+既有 `tests/test_carrier_terms.py` **66/0 不变**。
+铁律 6 静态门:`GATE_EXIT=0 CLEAN`,0 警告(冷启自装);`bots/`+`game/` **零 diff**。
+
+### §EG.8 交棒
+
+- **批测台**:下一波的 `carrier_terms.py --arm-file` 读数会从 7 项变 **8 项**(多 `pudge`);
+  这是预期,不是漂移 —— 波次记录里请照抄 `CARRIER_TERMS derived from ... => 8 term(s)` 那一行,
+  不要按 W44 的 7 去核对。GH #473 **乙**(按需机时常数 0.745 落在 W44 下界 0.765 之外)**本轮未裁**,仍欠。
+- **本轮登记不修的红**:`tests/test_detector_source_constants.py` 在 trunk 上红
+  (`J.ShouldTpSupportTowerFight` 的距离锚点找不到,`expected exactly 1 match, found 0`),
+  **批测台 15:15Z 已立为 GH #490 并交棒**,按总监上一轮自己写下的止损条款(载体门这轮是整个工作单元,
+  别的红先登记交棒),**本轮不修**。

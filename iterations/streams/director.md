@@ -10039,3 +10039,66 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   任何一个被裁定之前必须收下)+ 裁 §ED.6 (甲)/(乙) ③**GH #487**(闸 (iv) 结构缺口三选一 + `yield` 定名)
   ④GH #473 乙 ⑤自检腿序 / `OPEN_STATES` 要不要学 `admitted`(要有自己的承重)
   ⑥GH #449 / #460 四件 / #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` filler-英雄政策(有时限)。
+
+- 2026-09-04T16:1x–16:4xZ:**GH #473 甲 = §DY.6 的载体门,第五次排第一,本轮就是整个工作单元**
+  ——上一轮按我自己写下的止损条款把它写进了 `DECISIONS_NEEDED` 并附了做法(「自检若又报红,
+  先登记交棒不当轮修」);**本轮自检确实又红,登记交棒,没修**。零 AWS、零发波、
+  `bots/`+`game/` **零 diff**。裁定全文 `test_set.md §EG`,报告
+  `iterations/reports/director/20260904T161949Z.md`。
+  **① 缺陷**:`carrier_terms.py` 从**文件**读域(`hero_x.lua` ⇒ x,其它 ⇒ `generic`),
+  看不见「闸在 generic 文件、域是一个英雄」这第二种形状 —— `rotscope` 坐在
+  `mode_roam_generic.lua:1038` 的 `if botName == 'npc_dota_hero_pudge' then` 里面。
+  `generic` 恰是载体门**唯一豁免**的一类 ⇒ 这道「抽不到载体别发波」的门对它**一句话说不出**,
+  W44 抽到 Pudge(96/207 局)是种子碰巧。
+  **② ⛔ 不按 issue 自己的建议(从 acceptance 散文读)**:那句话**已经逐字写在 acceptance 里**
+  (「只对 Pudge 可达 ⇒ 没抽到 Pudge 的波次读数恒为零」)**而照样没被读** ——
+  **一条需要「有人当初把话说对」的规则,正是刚刚失效的那一条**。改读源码:
+  `Tree.hero_guard_scope` 按**出现顺序**扫块令牌(不是净增量:同一行的 `end` 与 `if`
+  **不可交换**,净增量算对深度、算错**帧身份**,而帧身份是英雄门唯一活不过的东西)。
+  **③ 受控前后对比,`diff` 只有三处**:`rotscope` generic→hero pudge;
+  `12/50/0 => 7 term(s)` → `13/49/0 => 8 term(s)`;TERMS 多一个 `pudge`。
+  **`unresolved` 前后都是 0** —— 这半边和 pudge 一样重要,把今天的波变吵的改动买不起;
+  `hero_pool.txt:44 = pudge,5,filler` ⇒ 新项可抽到,不会 `UNDRAFTABLE`。
+  **④ 两个失效方向都朝吵**:名字映不到 `hero_<n>.lua` ⇒ `unresolved` 永不发 term
+  (本树 5 个,`aba_matchups.lua` 的 `outworld_destroyer`/`necrophos` 是危险那类 ——
+  池子叫它们 `obsidian_destroyer`/`necrolyte`,**拼出来的 term 长得像对的**);
+  块结构跟不下来 ⇒ `unresolved` 不是 `generic`。
+  ⚠️ **LIMIT,写检查时我原以为它属于前一类**:`npc_dota_hero_lone_druid_bear`
+  **真的有** `hero_lone_druid_bear.lua` ⇒ 落进池子里没有的 term。**不是本改动引入的**
+  (`hero_of()` 今天对那个文件就这么答),本规则**故意继承文件路径的约定**,测试按它
+  **实际是什么**钉住。
+  **⑤ ⭐ 本轮最该被读的:一台 12 发全 CAUGHT 的台里,有一发是被邻居抓住的**。
+  第一版 `M2`(把 `~=` 读成域)**SURVIVED** —— 它名义上钉的 `D2` 被基线规则单独满足
+  (条件里没有 `==`),删掉子句是**空操作**;补 `D2b`(混合条件,本树真有:`:1587-1589`)
+  与 `D2c`(`not (...==...)`),`M2` 拆 `M2a`/`M2b`,两发 CAUGHT。**补完还差一步**:
+  `M2a` 下 `D2b` 的签名是 `got unresolved []`,**死于「合成树没有 hero_huskar.lua」这个邻居理由**;
+  加上那个文件后签名变 **`got hero ['huskar']`**,即那个危险的错答案本身。
+  ⇒ **「全 CAUGHT」是关于集合的话;每一发被谁抓住要一发一发看。** §EE.5 是别人的台,
+  这条是**我自己的台**,同一天同一句话。
+  **⑥ 两条量程对照必须 SURVIVED**:`M12` 只改提示语;`M10`(扫描起点改成文件开头)存活**是对的** ——
+  顶层块不平衡的 Lua 根本加载不了 ⇒ 起点是**工作量的界不是语义**,**量过**:树外打上后
+  62-id 全量推导与基线**逐字节相同**。给它写一条能杀死它的检查 = 把实现细节钉成行为。
+  **⑦ 产物**:`carrier_terms.py`(改);`tests/test_carrier_hero_guard.py`(**新 32/0**,
+  自动进套件 —— `run_py_tests.sh` 是 `for f in tests/test_*.py`);
+  `tools/agent/mutstand_carrier_hero_guard.sh`(**新,11 真发 11 CAUGHT + 2 量程对照正确存活,
+  零 NO-OP,树外 cp 还原 + `sha256sum -c` OK,还原后基线 32/0**);既有 `test_carrier_terms.py` **66/0 不变**。
+  **⑧ 登记不修的红**:`tests/test_detector_source_constants.py` trunk 红
+  (`J.ShouldTpSupportTowerFight` 距离锚点 `expected exactly 1 match, found 0`),
+  批测台 15:15Z 已立 **GH #490** 并交棒 ⇒ 按止损条款本轮不修。
+  **⑨ 成本**:零 AWS 调用/零发波/零计费资源;MTD 照抄批测台 `$14.981`(快照 11:29:50Z),
+  围栏 `$20.03` ≤ `$80`,九月未到 $50 档;⚠️ 快照仍在计费滞后带内,不据增量反推任何一波。
+  **⑩ 巡检**:四组均有产出;`cadence` 仍是 strategy 那同一条(不升级);`owed-executions`
+  是 `campgrade_wave_type_premise_reading` 按设计每轮举手;无邮件(本周 08-31 已发);
+  **`DECISIONS_NEEDED` 的 #473 甲那条本轮结清**;周四跳过效率台账;**patch 检查未做**。
+  **⑪ 铁律 6**:`bots/`+`game/` 零 diff ⇒ **全量 Lua 套件未跑也不声称**;静态门裸读
+  **`GATE_EXIT=0 CLEAN` / 0 警告**(冷启自装),`arm_push_gate.sh` exit 0,**未用 `RULE6_BYPASS`**;
+  **python 不声称全套绿**(#490 故意仍红)。自检 **`selfcheck worst exit: 3`**,归因照抄工具那行
+  (`FINDINGS: cadence owed-executions trunk-red(python)` / `UNCERTIFIABLE: none`)。
+  ⚠️ **纪律 3 第三十五发,又是本轮第一条命令**(`| tail -50` 被自拒)—— 措辞改过两次、
+  连续两轮仍踩 ⇒ **习惯不是门**。同轮第二个陷阱没踩:后台通知报 `exit code 3`,
+  而这一次那 3 是真码,与脚本自打的 `selfcheck worst exit: 3` 对上。
+  **⑫ 下次触发**:①**GH #473 乙**(甲已结,乙是同一条 issue 剩下的一半,应一起关)
+  ②协同组 §ED.5 共同 promote 约束 + 裁 §ED.6 (甲)/(乙) ③GH #487 / **GH #489**
+  ④把 python 那半接进 pre-push 的承重(**§EA.6 本轮又付一次款:#490 同样结构上拦不住**)
+  ⑤自检腿序 / `OPEN_STATES` 学 `admitted`(要有自己的承重)
+  ⑥GH #449 / #460 四件 / #410 / #436 / #285 / **patch 缺口 P3** / `ckpush` filler-英雄政策(有时限)。
