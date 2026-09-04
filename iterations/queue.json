@@ -1572,10 +1572,23 @@
     "ruling": "ROUTED_ARCHIVE_SCAN",
     "wave": "none(归档扫描,零 EC2,零新波次)—— 与 hero-27 合成同一次遍历;若读 dem21/ 则受 2026-09-22 自动删除的硬时限",
     "at": "2026-09-04T04:xxZ",
-    "ref": "test_set.md §DY(裁定全文);iterations/reports/director/20260904T041500Z.md;先例 §BF.2 / §AZ.5(统一归档扫描路由)、§CH(executor 恰好一个流)",
+    "ref": "test_set.md §DZ(裁定全文);iterations/reports/director/20260904T041500Z.md;先例 §BF.2 / §AZ.5(统一归档扫描路由)、§CH(executor 恰好一个流)",
     "executor": "batch-desk",
     "note": "**ROUTED_ARCHIVE_SCAN,在它被点名的那一轮当场放行**(§BB.4)。⭐ **点名它的是本轮刚修好的那条腿**:`hero-28` 02:02Z 到达时,`is_rideshare` 只读 `question`,而它的自陈(**零 EC2、零新局、零 AWS 增量、不申请 arm、不申请专波**)逐字写在 **`axis`** 里 ⇒ 它落进 `OTHER`,`RIDESHARE (§BB.4: rule this round)` 打 `none`。修完腿它是**唯一**进 RIDESHARE 桶的行,本裁定是那次修复的直接后果,不是另找的活。\n\n**路由**:沿 §BF.2 / §AZ.5 的统一先例,**与 `hero-27` 合成同一次遍历**(申请书自己提的,总监采纳)——两者都只要「某英雄 + 某物品/技能状态 + 接下来 2 秒有没有施法及目标身份」,`executor` = **`batch-desk`**,与 `hero-27` 同一格(§CH:执行方必须**恰好一个流**)。零 EC2、零新局、零 AWS 增量、不申请 arm、不申请专波 ⇒ **卡住它的既不是名额也不是钱,只是一个路由裁定**。\n\n**⚠️ 边界照抄 §BF.2,不要外推:这是路由裁定,不是对请求前提的背书。** 但总监本轮**确实**独立核了**两条决定「这次遍历值不值一个格子」的事实**(核的是买不买得着,不是机制对不对):\n(1) **`tests/fixtures/` 里 0 份带 Aether Lens** —— 裸读 `grep -rl aether tests/fixtures/` ⇒ **0**(目录 111 项)。⇒ 申请书那句「条件 (a) **结构上**买不到第二份 fixture」**成立**,这是它值一次语料而不是值一份 fixture 的理由。\n(2) **域是活的**:`sRoleItemsBuyList` 在 pos_4(`:199`)与 pos_5(`:216`)**都买** `item_aether_lens`;闸本身按源码是单条独立 gate(`AetherReach()`,`:381-390`),turbo 合取在场,off 路径逐字 `return 0` = 出厂表达式,**且注释点名回避了 `pullcad` 陷阱**(不与第二个 id 合取)。\n\n**⛔ 总监**没有**复核机制论证**(高估/低估的代价那一段)、`ability_damage_census` 一类的普查输出,也没有跑 `tests/test_zeus_aether_cast_range.lua` 或它的变异台;放行依据是「它的唯一成本是不裁」(§BB.4)。\n\n**⭐ 一条执行方不许照抄的数**:同一轮的两处普查**对不上**。申请书写「33 个文件声明 `aetherRange`,**26 个接了、7 个算了不读**,本轮之前 Zeus 是第 8 个」(26+7=33,而 Zeus 又是第 8 个 ⇒ 26+8=34);`hero_zuus.lua:349-351` 的在文件注释写「33 个里 **22** 个把它接进至少一处 cast-range 读,Zeus 是**读它 nowhere 的 8 个之一**」。两者的分子口径不同(「接了」vs「接进 cast-range 读」),**但没有一处说明这件事**,而它们会被下游当同一个数引用。⇒ **执行方在报告里引用这个普查前必须先重算并说明口径**;本裁定不依赖其中任何一个数。\n\n**验收照原文**(甲)~(己)**逐字不改**,其中三条总监特别抬成裁定的一部分:\n**(甲) DOMAIN-NOT-REACHED 退回门**(与 `hero-24`/`hero-25`/`hero-27` 的同族,§CJ 的 `METHOD-FAILED`):语料里**没有任何一帧 Zeus 背包里有 `item_aether_lens`** ⇒ 按 **UNINTERPRETABLE 退回**并交出 (1) 的载体分布,**不许**读成「测过了没影响」。域腿本轮的读数是 `zuus: corpus 54 file(s)` —— **present is NECESSARY, not sufficient**:54 局有 Zeus **不等于**有一帧有透镜,(1) 才是真分母,**先答 (1)**。\n**(乙)** (3) 的 Q 带 (900,1125] 与 W 带 (700,925] **分开登记**,合并会把刀口抹平。\n**(戊) 判读方向预先写死**:(3) 的占比接近 0 ⇒ **本候选在真实对局里没有可兑现的收益**,据此下调优先级或直接不入集,**即使桌面证据完好**。这条是预登记的否定结局,执行方不得事后改读。\n\n**⚠️ 时限,而且不是它自己的**:若这次合并遍历读的是 GH #388 的 W34 语料(`dem21/`,103 份 `.dem`),那份语料 **2026-09-22 自动删除**(`hero-27` 裁定里已登记),**没有任何工具会在那天举手**。⇒ 与 `hero-27` 同一个硬期限内跑完;跑不完**在过期前退回总监说明**,不要静默过期。总监**未**核实 Zeus 的那 54 局与 `dem21/` 的重叠比例 —— 这一格由执行方在 (1) 里一并给出。"
    }
+  },
+  {
+   "id": "strategy-42",
+   "stream": "strategy",
+   "bundle": "campbind",
+   "seeds": [],
+   "priority": 2,
+   "axis": "OWNER_PRIORITIES P1 拉野:选点器拒掉的营地,执行段照戳不误(test_set.md §DZ)",
+   "question": "新 id `campbind` 入集申请(test_set.md §DZ)。`J.ShouldPullNeutralCamp` 用四条子句选营地(本方 team / 自己半场 GH #117 / 贴本路 `pulllane` / 1500 内)写进 `bot.roamCampPull`,而 `mode_roam_generic` 的 Think 到达后戳的是 `bot:GetNearbyNeutralCreeps(1400)` 的 `tNeut[1]` —— 离 **bot** 最近的那只小野,与计划零关联 ⇒ 四条否决被一个下游的「最近者」整体撤销,而每一条在它自己的函数里都还是对的(§DZ.4)。同时 `J.GetLanePullDragTarget` 问的是计划营地 ⇒ 拖拽按计划营地的路点算、被激怒的却是另一个箱子。落地:`J.GetCampPullPokeTarget`(唯一闸点,turbo + `campbind`,独立门不与 `pullcamp` 合取)+ 调用点一行 + `hPoke ~= nil` 守卫;`bCampHere` 故意不重绑 ⇒ 拖拽/行走两条分支控制流逐字节不变。**单调单向**:armed 戳集 ⊆ 出厂戳集,没有 over 方向。域(真实帧,两个都是下界):449 个活着的英雄帧里 **17 帧(3.8%)** 同时站在两个已测营地的 1400 戳半径内;11 个营地质心的 55 个配对里 **6 对**间距 < 2900u。本地 `tests/test_campbind_poke_target.lua` 15/15,变异台 `tools/agent/mutstand_campbind.sh` 8/8 CAUGHT。",
+   "acceptance": "⚠️ 本行**不申请波次**,只申请入集(入集后随波取条件 (b))。条件 (a) 欠录像组,判据是**戳的是哪个营地**不是**戳了几次** —— armed 的戳集按构造是出厂的子集 ⇒ **poke 次数下降本身不是负面信号,那正是本 id 要买的**;要读的是掉的那些戳落在哪个营地(把 poke episode 第一次 `Action_AttackUnit` 的目标坐标按 `pullcamp_lane_geometry.py` 的 11 个营地质心归类,再与该 episode 的计划营地比对)。⛔ 域为零按 `DOMAIN-NOT-REACHED` 退回,**不许**读成「测过了无效应」。⚠️ METHOD-FAILED 分支(§CJ 的常设要求):若 poke 目标坐标在 dumper 里取不到、或营地归类的两个正例逐帧一看是假的 ⇒ **回总监重裁,执行方不得自行套用后果条款**。⚠️ **与 `pulldrag` 不正交**:`J.GetLanePullDragTarget` 问的是 `bot.roamCampPull`,armed `campbind` 之后被激怒的小野与拖拽方向算的营地**第一次是同一个箱子** ⇒ `pulldrag` 的 connect 读数换了定义域,**不许与之前的波并池**(同族限定 §DC.3 / §CO.1)。⚠️ 按铁律 4(i-a) ab / ba 两个分层各自登记读数;计数类、侧偏未消除 ⇒ 两层反号按 4(i-b) 读成噪声,不写进结论。",
+   "requester": "strategy",
+   "status": "pending",
+   "ruled": false
   }
  ],
  "done": [

@@ -14852,5 +14852,79 @@ off 路径 `return 0` = 出厂表达式,**且注释点名回避了 `pullcad` 陷
   (`ensure_lua_tool` 提前,`test_rc_wrapper` / `test_selfcheck_lua_leg` 仍 UNCERTIFIABLE)
   ④`OPEN_STATES` 学会 `admitted`(20 行仍落 `UNKNOWN STATUS`)。
 - **英雄组**:`hero_zuus.lua:349-351` 与 `hero-28` 申请书的普查口径**请自己统一一次**(§DY.5)。
+## §DZ 2026-09-04T04:5xZ 协同组(**入集提议,新 id `campbind`**,OWNER_PRIORITIES **P1 拉野**):选点器拒掉的营地,执行段照戳不误 —— 本节最该被读的不是那条绑定,是 **§DZ.4:四条子句的**否决**可以被一个下游的「最近者」全部撤销,而每一条子句在它自己的函数里都还是对的**
+
+### §DZ.0 一句话
+
+`J.ShouldPullNeutralCamp` 花四条子句挑营地(本方 `team`、自己半场 GH #117、贴本路
+`pulllane`、1500 内),把赢家写进 `bot.roamCampPull`;`mode_roam_generic` 的 Think 走到之后戳的却是
+`bot:GetNearbyNeutralCreeps(1400)` 的 **`tNeut[1]`** —— 离 **bot** 最近的那只小野,**与计划零关联**。
+⇒ **选点器只决定往哪走,不决定打谁。**
+
+### §DZ.1 落地形状
+
+- `bots/FunLib/jmz_func.lua`:新常数 `PULL_CAMP_NEUTRAL_RANGE = 1200` + 新函数
+  `J.GetCampPullPokeTarget(tNeut, vCamp)`(**唯一闸点**,turbo + `campbind`,**独立门不与
+  `pullcamp` 合取** —— 合取会在 `pullcamp` promote 当天冻结为 FALSE,`pullcad` 陷阱);
+- `bots/mode_roam_generic.lua`:只改戳的那一行 + 一个 `hPoke ~= nil` 守卫。
+  **`bCampHere` 故意不重绑** ⇒ 拖拽分支与「继续走向营地」分支的控制流**逐字节不变**,
+  本杠杆能改的只有「戳」的那一帧;
+- `tests/test_campbind_poke_target.lua` **15/15**;`tools/agent/mutstand_campbind.sh` **8/8 CAUGHT,零 NO-OP**;
+- `state.json` 新键 `campbind_20260904`。
+
+未 armed / 非 turbo ⇒ helper 返回 `tNeut[1]`(用调用点 `bCampHere` 已经用过的**同一个**
+`J.IsValid` 测试)⇒ 出厂 cadence **逐字节不变**。
+
+### §DZ.2 符号:**单调、单向,没有 over 方向**
+
+armed 的戳集是出厂戳集的**严格子集**(只有落在计划营地 1200u 内的有效小野存活)。
+**没有任何方向**会让 bot 去戳一个出厂不会戳的单位 ⇒ 失效形态是「拉野没开始」,
+不是「拉野开到了新地方」。与 `slotwait`(§DW)同族的符号论证。
+armed 且计划营地没有小野可见时 **不下任何命令** ⇒ 上一帧的
+`Action_MoveToLocation(bot.roamCampPull)` 继续跑,即「继续走过去」;
+这与 wind-up hold 是同一套「不下令 = 保持上一条令」语义,不是新机制。
+
+### §DZ.3 域,是量出来的不是主张的(**两个数都是下界**)
+
+语料 109 fixture / **449 个活着的英雄帧**:**17 帧(3.8%)同时站在两个已测营地的 1400 戳半径内**。
+11 个营地质心(replay 组 W7/W8 从 .dem 收的,`tools/agent/pullcamp_lane_geometry.py` 的 `CAMPS` 表)
+的 55 个配对里 **6 对**间距 < 1500 + 1400 = **2900u**(最近 1562 / 1612 / 1720u)⇒ 存在
+「人在计划营地 reach 内、同时在另一个营地戳半径内」的合法站位。
+⛔ **两个数都是下界**:营地表只有语料**见过被戳**的那 11 个,不是全图;漏掉的每一个营地只会加帧。
+
+### §DZ.4 ⭐ 主判据(可复用,超出本主题):**一组否决可以被一个下游的「最近者」整体撤销,而每一条否决在它自己的函数里都还是对的**
+
+四条子句写在 `J.ShouldPullNeutralCamp` 里,每一条都能被单独驱动、单独证明、单独测出效果 ——
+`pullcamp` 的重新入集、GH #117 的 own-side 与 `pulllane`,买到的读数全是真的:
+**wrong-side pulls 7.2% → 0.0%,20s-death 2/97 → 0/146**。可是 GH #117 §4 同时记着
+**connect rate 没跟着动(12.1% / 9.9%,不高于起点的 20.3%)**,而那一节把原因归到**拖拽方向**。
+本节给出**第二个、独立的**原因:那些子句**从来没有约束过被攻击的那个单位**。
+一个 `Action_AttackUnit(tNeut[1])` 就把四条否决一起撤销了,
+而没有任何一条子句因此变假、没有任何一个测试因此变红 ——
+因为**它们各自的断言都只问「选点器返回了什么」,没有一个问「戳的是不是它」**。
+⇒ **一个选择器的价值,等于它的输出被下游消费的那一部分;没被消费的那部分不是弱效果,是零。**
+与 GH #277(「一个被唯一调用方的合取项吞掉的子句」)是**同一枚硬币的反面**:
+那次是**调用点加了一条**让函数内的子句失效,这次是**调用点少读了一条**让函数内的子句失效。
+
+### §DZ.5 ⚠️ 收割前必读
+
+- (i) **本 id 与 `pulldrag` 落在同一条路径上,而且不正交**:`J.GetLanePullDragTarget` 问的是
+  `bot.roamCampPull`,所以 armed `campbind` 之后「被激怒的小野」与「拖拽方向算的那个营地」
+  **第一次是同一个箱子**;⇒ `pulldrag` 的 connect 读数在 `campbind` 同波 armed 时**换了定义域**,
+  **不许与之前的波并池**。同族限定见 §DC.3 / §CO.1。
+- (ii) **条件 (a) 必须买「戳的是哪个营地」,不是「戳了几次」**:armed 的戳集按构造是出厂的子集
+  ⇒ **poke 次数下降本身不是负面信号**,那正是本 id 要买的;要读的是**掉的那些戳落在哪个营地**。
+  域为零按 `DOMAIN-NOT-REACHED` 退回,**不得**读成「无效应」。
+- (iii) **本地那 15/15 买的是「命令下给哪个单位」,不是「connect rate 变好」** —— 后者是波次问题,
+  提议方**不主张**它。
+
+### §DZ.6 门
+
+`bash tools/agent/rc.sh bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0**,`luacheck bots game` **0 警告**。
+`test_campbind_poke_target` **15/0**;邻近五个过滤器 `pull` / `roam` / `camp` / `gate_claim` / `smoke_load`
+= **166 + 38 + 238 + 16 + 3 = 461 例 0 失败**。全量套件(~100min,GH #124)本工作单元内没跑完,
+报告里如实登记跑到哪。
+
+**搭车、零 AWS 增量、不申请专波、零 EC2。** queue 请求行 `strategy-42`。
 
 ---

@@ -8924,6 +8924,87 @@ function J.GetLanePullDragTarget( bot, vCamp )
 	return vDest
 end
 
+-- How far a neutral creep may sit from the camp the pull PLANNED and still be
+-- treated as that camp's creep, in units. Same derivation as
+-- PULL_CAMP_LANE_GAP, different question, so it is named separately rather than
+-- shared: the replay desk's own drag measurement (GH #117, 165 poke episodes
+-- over three waves) puts the followers' walk at a median 742u, p90 992u and a
+-- MAXIMUM of 1,170u before the leash breaks. 1200 is that observed maximum
+-- rounded up, and the bound has to be at least that large in this direction
+-- too: a neutral already being dragged is, by construction, up to a full leash
+-- away from its box, and a tighter constant would stop the cadence from
+-- re-poking the very creeps it is dragging.
+local PULL_CAMP_NEUTRAL_RANGE = 1200
+
+-- [OWNER_PRIORITIES P1, 20260904] WHICH NEUTRAL THE CAMP PULL POKES. Soak
+-- candidate 'campbind'.
+--
+-- J.ShouldPullNeutralCamp above spends four clauses deciding WHICH camp to pull
+-- -- it must be our team's (the scoped non-goal: never walk a support into the
+-- enemy jungle), on our own half (GH #117: a deep camp is not a worse pull, it
+-- is a non-pull), beside this bot's lane ('pulllane'), and within 1500 -- and
+-- hands the winner back as the plan. mode_roam_generic's Think then walks to the
+-- plan and, on arrival, pokes
+--
+--     local tNeut = bot:GetNearbyNeutralCreeps( 1400 )
+--     bot:Action_AttackUnit( tNeut[1], true )
+--
+-- i.e. the neutral NEAREST THE BOT, with no relation to the plan at all. So the
+-- selector governs where the bot walks and nothing else: every camp those four
+-- clauses reject is poked anyway the moment its creeps are the nearest ones,
+-- and the pull that actually happens is at a camp no clause ever approved.
+-- The drag then compounds it -- J.GetLanePullDragTarget is asked about
+-- bot.roamCampPull, so the walk aims at the PLANNED camp's lane point while the
+-- aggroed neutrals came out of a different box.
+--
+-- DOMAIN, measured on real frames rather than argued (the 11 camp centroids the
+-- replay desk harvested off the .dem corpus, tools/agent/pullcamp_lane_geometry.py):
+-- 17 of 449 alive hero frames in the fixture corpus (3.8%) stand within the
+-- 1400 poke radius of TWO of those camps at once, and six of the 55 camp pairs
+-- sit closer than 1500 + 1400 = 2900u, i.e. admit a bot that is inside the
+-- plan's reach and inside another camp's poke radius simultaneously. Both
+-- numbers are FLOORS: the table holds only the camps that corpus saw poked, not
+-- the full map, and every camp it does not list can only add frames.
+--
+-- MONOTONE, and that is the whole safety argument: armed, the poked set is a
+-- strict SUBSET of the shipped one (only neutrals within PULL_CAMP_NEUTRAL_RANGE
+-- of the plan survive). There is no direction in which this makes a bot poke
+-- something it would not have poked, so the failure mode is a pull that does not
+-- start, never a pull that starts somewhere new.
+--
+-- Returns the unit to poke, or nil for "none of the visible neutrals belong to
+-- the camp we planned". Unarmed -- and in any game that is not Turbo -- it
+-- returns tNeut[1] under exactly the validity test the call site already
+-- applied, so the shipped cadence is byte-for-byte unchanged.
+--
+-- Gated STANDALONE, not conjoined with 'pullcamp': a gate written as
+-- `IsSoakCandidate('campbind') and IsSoakCandidate('pullcamp')` would freeze
+-- FALSE the day 'pullcamp' is promoted, because a promoted id is in no armed
+-- string (the 'pullcad' trap). Turbo and the pullcamp gate are structural at the
+-- one call site anyway -- bot.roamCampPull only exists when
+-- J.ShouldPullNeutralCamp returned non-nil, and that opens with both.
+function J.GetCampPullPokeTarget( tNeut, vCamp )
+	if tNeut == nil or #tNeut == 0 then return nil end
+
+	local hFirst = nil
+	if J.IsValid( tNeut[1] ) then hFirst = tNeut[1] end
+
+	if not J.IsModeTurbo() then return hFirst end
+	if not J.IsSoakCandidate( 'campbind' ) then return hFirst end
+	if vCamp == nil then return hFirst end
+
+	for _, hNeut in pairs( tNeut ) do
+		if J.IsValid( hNeut )
+			and J.GetLocationToLocationDistance( hNeut:GetLocation(), vCamp )
+				<= PULL_CAMP_NEUTRAL_RANGE
+		then
+			return hNeut
+		end
+	end
+
+	return nil
+end
+
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands
 -- ~300-1000u from an ally that is being focused/dying and neither helps nor
 -- retreats — it just watches, then usually dies next. This resolves that idle

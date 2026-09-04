@@ -388,10 +388,26 @@ function Think()
 		local now = DotaTime()
 		local tNeut = bot:GetNearbyNeutralCreeps(1400)
 		local bCampHere = tNeut ~= nil and #tNeut > 0 and J.IsValid(tNeut[1])
+		-- [OWNER_PRIORITIES P1 20260904] Soak candidate 'campbind': POKE THE CAMP
+		-- WE PLANNED. The line below used to read tNeut[1] -- the neutral nearest
+		-- the BOT -- so every camp J.ShouldPullNeutralCamp rejected (enemy team,
+		-- past our half, off this lane) was poked anyway as soon as its creeps
+		-- were the nearest ones, and the selector governed only where the bot
+		-- walked. Unarmed the helper answers tNeut[1] under the same J.IsValid
+		-- test bCampHere just applied, so this is byte-for-byte the shipped poke;
+		-- armed it answers nil when no visible neutral belongs to the planned
+		-- camp, and then NO ORDER is issued this frame -- which leaves the walk
+		-- toward bot.roamCampPull from the previous frame running, exactly the
+		-- hold semantics the wind-up branch below relies on. bCampHere itself is
+		-- deliberately NOT rebound: the drag and walk branches keep the shipped
+		-- control flow, so the only frames this lever can change are poke frames.
+		local hPoke = J.GetCampPullPokeTarget(tNeut, bot.roamCampPull)
 		if bCampHere
 		and (bot.campPullAttackTime == nil or now - bot.campPullAttackTime > 3.0) then
-			bot:Action_AttackUnit(tNeut[1], true)
-			bot.campPullAttackTime = now
+			if hPoke ~= nil then
+				bot:Action_AttackUnit(hPoke, true)
+				bot.campPullAttackTime = now
+			end
 		elseif bCampHere
 		and J.IsSoakCandidate('pullthink')
 		and (now - bot.campPullAttackTime) < 0.5 then

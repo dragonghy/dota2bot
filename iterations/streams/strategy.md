@@ -27,6 +27,34 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0P1CAMPBIND. **【2026-09-04T04:50Z 新增,**OWNER_PRIORITIES P1 开工**(章程「下一格」写死的那一项;
+   `[strategy]` open issue 本轮扫过,球都不在本组);**产出是一处 gated 行为修复 + 一份真帧测试 15/15 +
+   一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42`**:
+   `bots/FunLib/jmz_func.lua` 的 `PULL_CAMP_NEUTRAL_RANGE = 1200` + `J.GetCampPullPokeTarget`(唯一闸点,
+   turbo + `campbind`,**独立门不与 `pullcamp` 合取**);`bots/mode_roam_generic.lua` 只改戳的那一行 +
+   `hPoke ~= nil` 守卫;`tests/test_campbind_poke_target.lua`;`tools/agent/mutstand_campbind.sh`;
+   `state.json:campbind_20260904`;报告 `iterations/reports/strategy/20260904T045000Z.md`;
+   零 AWS、零 S3、零 EC2。**已交棒总监(裁 §DZ + P1 那一行档案更正)+ 录像组(条件 (a))。**】**
+   **⭐ 主判据(可复用,超出本主题):一组否决可以被一个下游的「最近者」整体撤销,
+   而每一条否决在它自己的函数里都还是对的。**
+   `J.ShouldPullNeutralCamp` 的四条子句(本方 `team` / 自己半场 / 贴本路 / 1500 内)选出 `bot.roamCampPull`,
+   而 Think 戳的是 `GetNearbyNeutralCreeps(1400)` 的 `tNeut[1]` —— 离 **bot** 最近的那只,与计划零关联。
+   ⇒ **选点器只决定往哪走,不决定打谁**;一个 `Action_AttackUnit(tNeut[1])` 把四条否决一起撤销,
+   **没有一条子句因此变假、没有一个测试因此变红**(每条断言都只问「选点器返回了什么」)。
+   ⇒ **一个选择器的价值 = 它的输出被下游消费的那一部分;没被消费的那部分不是弱效果,是零。**
+   与 GH #277 是同一枚硬币的反面:那次**调用点多加一个合取项**吞掉子句,这次**调用点少读一个字段**吞掉子句。
+   **⭐⭐ 给 GH #117 §4 的悬案添了第二个独立解释**:own-side 买到的安全收益是真的
+   (wrong-side 7.2%→0.0%),而 connect rate 没跟着动(12.1% / 9.9%);§4 归因到拖拽方向,
+   本轮的解释是「那些子句从来没约束过被攻击的那个单位」。**两者不互斥。**
+   **⭐⭐⭐ 域两个数都是下界**:449 个活着的英雄帧里 **17 帧(3.8%)**同时站在两个已测营地的 1400 戳半径内;
+   11 个营地质心的 55 个配对里 **6 对**间距 < 2900u。承重帧是扫出来的:`f_260820_042009_cm_cask_far`
+   的 lich(夜魇 pos 5)距两个营地 1055u / 1122u,**要拒的那个恰好更近**。
+   **⭐⭐⭐⭐ 变异台买到的那一条:单帧驱动看不见「没戳也盖时钟」**(M8 第一帧日志完全一样,
+   第二帧起把 bot 从没到过的营地往路上带)⇒ 那条**整拍长**的用例是唯一能看见它的角度。
+   **下一格(本组下一轮第一项)**:**继续在 P1 上**。(甲)选点循环**不排除远古营地**,但 `camp.type`
+   那一半**至今未 settled**(`campteam_SETTLED_20260827` 的 `boundary` 逐字写着 `.type` / `.speed` 仍 OPEN)
+   ⇒ 先按 §BN.4 把 `.type` 的前提买下来,否则守卫可能是一台瞎仪器;(乙)P2 决策侧 id。
+
 0DU5. **【2026-09-04T01:20Z 新增,**认领 issue**(GH #464,录像组 20:16Z 开,**零评论、无 assignee**,
    §5 第三条点名协同组);按工作流第 1 条优先于 backlog;**产出是三处活载体更正 + 一份从棘轮反读档案的
    守卫测试 4/4 + 一台变异台 8/8 CAUGHT + 一处交给总监的载体,零行为改动**:
@@ -5059,6 +5087,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T04:50Z(**OWNER_PRIORITIES P1 开工** —— 章程「下一格」写死的那一项;
+  `[strategy]` open issue 扫过一遍:#467 / #464 / #456 / #455 / #445 / #441 都是本组上几轮已认领并交棒的,
+  #452 / #434 / #431 是已落地的常设普查(登记不修)⇒ 铁律 9 与「下一格」同时指向 P1);
+  **产出是一处 gated 行为修复 + 一份真帧测试 15/15 + 一台新变异台 8/8 CAUGHT + 入集提议 §DZ + queue `strategy-42`**:
+  `bots/FunLib/jmz_func.lua` 新增 `PULL_CAMP_NEUTRAL_RANGE = 1200` + `J.GetCampPullPokeTarget`(**唯一闸点**);
+  `bots/mode_roam_generic.lua` 营地拉野 cadence 只改戳的那一行 + 一个 `hPoke ~= nil` 守卫;
+  `tests/test_campbind_poke_target.lua`;`tools/agent/mutstand_campbind.sh`;
+  `state.json:campbind_20260904`;报告 `iterations/reports/strategy/20260904T045000Z.md`;
+  零 AWS、零 S3、零 EC2。**已交棒总监(裁 §DZ + 一行档案更正)+ 录像组(条件 (a))。**
+  **⭐ 主判据(可复用,超出本主题):一组否决可以被一个下游的「最近者」整体撤销,
+  而每一条否决在它自己的函数里都还是对的。**
+  `J.ShouldPullNeutralCamp` 花四条子句挑营地(本方 `team` / 自己半场 GH #117 / 贴本路 `pulllane` / 1500 内)
+  写进 `bot.roamCampPull`;Think 走到之后戳的却是 `bot:GetNearbyNeutralCreeps(1400)` 的 **`tNeut[1]`** ——
+  离 **bot** 最近的那只小野,**与计划零关联** ⇒ **选点器只决定往哪走,不决定打谁**。
+  一个 `Action_AttackUnit(tNeut[1])` 把四条否决一起撤销,而**没有一条子句因此变假、没有一个测试因此变红**,
+  因为每一条断言都只问「选点器返回了什么」,**没有一个问「戳的是不是它」**。
+  ⇒ **一个选择器的价值 = 它的输出被下游消费的那一部分;没被消费的那部分不是弱效果,是零。**
+  与 GH #277 是同一枚硬币的反面(那次调用点**多加**一个合取项吞掉子句,这次调用点**少读**一个字段吞掉子句)。
+  **⭐⭐ 它同时给 GH #117 §4 那个悬案添了第二个、独立的解释**:own-side 子句买到的两波一致的安全收益是真的
+  (wrong-side 7.2%→0.0%、20s-death 2/97→0/146),而 **connect rate 没跟着动(12.1% / 9.9%)**;
+  §4 归因到拖拽方向,本轮给出的是「那些子句从来没约束过被攻击的那个单位」。两者不互斥。
+  **⭐⭐⭐ 域是量出来的,两个数都是下界**:109 fixture / **449 个活着的英雄帧**里
+  **17 帧(3.8%)**同时站在两个已测营地的 1400 戳半径内;11 个营地质心(replay 组 W7/W8 从 .dem 收的,
+  `pullcamp_lane_geometry.py` 的 `CAMPS` 表)的 55 个配对里 **6 对**间距 < 1500+1400 = 2900u。
+  承重帧是**扫出来的不是编的**:`f_260820_042009_cm_cask_far` 的 lich(夜魇、fixture 自己的 roles 表写 pos 5)
+  距 (-2600,3800) **1055u**、距 (-800,5000) **1122u** —— **两个都在 1400 内,而要拒的那个恰好更近**
+  ⇒ `tNeut[1]` 必然选中被拒的营地;「更深」用的是 fixture 自己的夜魇远古,与 own-half 子句同一份几何。
+  **⭐⭐⭐⭐ 变异台自己买到的那一条:单帧驱动看不见「没戳也盖时钟」**。M8(`hPoke` 为 nil 时也盖
+  `campPullAttackTime`)**第一帧日志完全一样**;从第二帧起 cadence 掉进拖拽分支,
+  **把 bot 从一个它还没到过的营地往路上带**,而没有任何东西会报「有一次拉野没开始」——
+  那条**整拍长**的用例不是补覆盖率,**它是唯一能看见这个失效的角度**。
+  **符号单调单向**:armed 戳集 ⊆ 出厂戳集,**没有 over 方向**;`bCampHere` 故意不重绑 ⇒
+  拖拽/行走两条分支控制流逐字节不变。
+  **下一格(本组下一轮第一项)**:**继续在 P1 上**(它是多单元工作)。候选(甲)选点循环**不排除远古营地**,
+  但 `camp.type` 那一半**至今未 settled**(`state.json:campteam_SETTLED_20260827` 的 `boundary` 逐字写着
+  「the `.type` / `.speed` halves stay OPEN」)⇒ 按 `.type` 写的守卫可能是一台瞎仪器,
+  **要先按 §BN.4 的方法把 `.type` 的前提买下来**;候选(乙)P2 决策侧 id,与 P1 不冲突。
 - 2026-09-04T01:20Z(**认领 issue** —— **GH #464**(录像组 20:16Z 开,**零评论、无 assignee、创建后从未被更新**,
   §5 第三条**点名协同组**),工作流第 1 条优先于 backlog(`0SLOTWAIT` 的下一格在等总监裁 §DW,
   `0FIXDEBT` 的下一格是 harness 选型,球都不在本组);
