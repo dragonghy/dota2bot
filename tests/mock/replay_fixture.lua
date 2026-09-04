@@ -105,9 +105,47 @@ M.CLASS_TO_ITEM = {
 --     truthful read.
 --   * Non-focus heroes are untouched: no block here, no spec installed, still 0.
 --     A reading taken on one must not be quoted as though the KV were charged.
---   * AbilityCastPoint (also on the generic default, 758 handles) and
---     AbilityCooldown are deliberately NOT served this round -- one small batch
---     at a time, each with its own measurement of what it turns red.
+--
+-- 2026-09-04 (hero), the second small batch.  The two the round above named as
+-- deliberately deferred are now served off the same snapshot:
+--
+--     GetCastPoint                                AbilityCastPoint
+--     GetCooldown                                 AbilityCooldown
+--
+-- Measured over the same corpus (110 files, 4811 handles, 779 focus handles
+-- with a KV block): 575 handles carry an AbilityCastPoint base and 723 carry an
+-- AbilityCooldown base.  Every one of them answered 0.
+--
+-- THE FAILURE DIRECTION IS THE OPPOSITE OF THE FIRST BATCH'S, which is the
+-- whole reason these were split.  A cast range stuck at 0 SHRINKS a search
+-- ring, so it understates reach and manufactures "this branch is not reached".
+-- A cast point stuck at 0 feeds `nDelay` into J.WillMagicKillTarget /
+-- J.WillKillTarget, where it appears as `GetHealthRegen() * nDelay` SUBTRACTED
+-- from the estimated damage -- so 0 removes the target's regen from the
+-- projection and OVERSTATES lethality.  It manufactures "this kill fires".
+-- Reading the second batch with the first batch's rule of thumb gets the sign
+-- backwards; tests/test_fixture_kv_getters.lua section 7 pins both signs.
+--
+-- GetCooldown is worse than one direction: the SAME 0 flips two guards in
+-- jmz_func.lua opposite ways, because it sits on both sides of a comparison.
+--   * J.CanUseRefresherOrb requires `GetCooldownTimeRemaining() >= ultCD / 2`.
+--     With ultCD = 0 that is `remaining >= 0`, true by construction -- the
+--     clause VACATES and the guard is unconditionally permissive.
+--   * J.CanUseRefresherShard additionally requires
+--     `ultCD - remaining >= 2`, i.e. `remaining <= -2` -- IMPOSSIBLE, so that
+--     branch was structurally dead in every fixture-driven run.
+--   * J.GetMostUltimateCDUnit picks `ult:GetCooldown() >= maxCD`; with every
+--     read 0 the comparison is `0 >= 0` for everyone and the function returns
+--     the LAST eligible team member rather than the longest-cooldown one.
+-- Section 8 pins all three.
+--
+-- WHAT IS STILL REFUSED, and it matters more here than for the first batch:
+-- the conditional half is still not folded, and for a COOLDOWN the conditional
+-- rows are REDUCTIONS (`special_bonus_unique_zeus_6` = '-20%', scepter rows,
+-- Octarine).  Not folding a reduction OVERSTATES the cooldown -- the opposite
+-- sign from the value keys, where not folding a `+N` talent understates.  A
+-- test that needs the trained/scepter cooldown must drive it explicitly.
+-- Nothing here models the in-game cooldown-reduction sources at all.
 local function value_ladder(unit_name, ability_name, sKey)
     local short = unit_name:gsub('^npc_dota_hero_', '')
     local abils = special_value_shapes.SHAPES[short]
@@ -611,6 +649,30 @@ function M.load(path, sSubject)
                     if cast_range ~= nil then
                         sp.GetCastRange = function(self)
                             return rank_step(cast_range, self:GetLevel())
+                        end
+                    end
+                    -- Second batch, same ladder and clamp.  The KV base for a
+                    -- cast point can itself BE 0 (crystal_maiden_freezing_field,
+                    -- lion_voodoo, zuus_lightning_hands all declare 0) -- those
+                    -- read 0 because that is the engine's answer, not because
+                    -- nothing was installed.  The distinction is invisible from
+                    -- the read alone, which is why section 7c drives it.
+                    local cast_point = value_ladder(u.name, a.name, 'AbilityCastPoint')
+                    if cast_point ~= nil then
+                        sp.GetCastPoint = function(self)
+                            return rank_step(cast_point, self:GetLevel())
+                        end
+                    end
+                    -- The FULL cooldown off the KV.  This is a different
+                    -- quantity from GetCooldownTimeRemaining above, which comes
+                    -- out of the dump: nothing reconciles them, so a frame may
+                    -- legitimately report a remaining larger than this base
+                    -- (Octarine, a scepter row, a talent -- none of which are
+                    -- folded).  Do not assert `remaining <= GetCooldown()`.
+                    local cooldown = value_ladder(u.name, a.name, 'AbilityCooldown')
+                    if cooldown ~= nil then
+                        sp.GetCooldown = function(self)
+                            return rank_step(cooldown, self:GetLevel())
                         end
                     end
                 end

@@ -22,6 +22,40 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-92. **`kvgetters` 第二撮已发(`-87` DONE),而它交出的两条结论**互相矛盾到不能合并成一句话**
+   (报告 `iterations/reports/hero/20260904T170247Z.md`,`state.json:kvgetters2_20260904T`)。**
+   - **⛔ 不要把第一撮的方向规则搬到第二撮**。第一撮(cast range)是「读 0 ⇒ 环变小 ⇒
+     低估可达 ⇒ 制造『这条分支到不了』」。第二撮里 **`GetCooldown` 的那个 0 坐在比较式的两边**:
+     `J.CanUseRefresherOrb` 的 `remaining >= ultCD/2` **整条蒸发**(194 帧里 36 帧通过 → 真冷却下 3 帧,
+     **92% 是空条款**),而 `J.CanUseRefresherShard` 多要的 `ultCD - remaining >= 2` 变成
+     `remaining <= -2`,**算术上不可能**(0 帧 → 6 帧)。**同一个 0,相反的两个方向。**
+     ⇒ 「未上规格的 getter 会让守卫变宽松/变严格」这种顺口规则**怎么写都有一半是错的**;
+     分界是**那个 0 落在比较式的哪一边**,要**逐个消费者**看。
+   - **⚠️ `GetCastPoint` 接上了但是死的,而这是量出来的**:它唯一的下游是
+     `GetHealthRegen() * nDelay`,而 **`GetHealthRegen` 自己也没上规格**(loader 里一次都没出现,
+     dump 里没有这个字段)⇒ `0 × 任何东西`。实测 13 帧 / 58 对 / **0 次击杀判定翻转**。
+     **同 `-88` 的 `0 == 0` 形状:下游有恒 0 因子的读数量的是合取。**
+     **本快照关不掉它** —— health regen 是逐帧单位状态不是技能 KV,**要 dumper 出字段,球在录像组**。
+     `tests/test_fixture_kv_getters.lua` §7c 的断言**会响**:regen 一旦非 0 直接红,
+     消息里写明「这是好消息,去重跑 §7d 把 0 换掉,**不许松成 `>= 0`**」。
+   - **⭐ 下一撮(本组自己的)**:快照里还在通用默认值上的 `Ability*` 键只剩一小把 ——
+     `AbilityModifierSupportValue`(9)、`AbilityChannelTime`(2)、`AbilityDuration`(1)、
+     `AbilityDamage`(1)、`AbilityCharges`(1)、`AbilityChargeRestoreTime`(1)。
+     做法照抄本轮三步:**先量人口 → 再逐个消费者看那个 0 落在比较式哪一边 → 再发**。
+   - **⛔ 但 `AbilityDamage` 那一个不许顺手发**:`-89 (乙)` 明写 —— 修好
+     `GetAbilityDamage()` 会让 `zusboltdom` **自动变成 no-op**(它按上限的**值**开关),
+     那是设计不是回归,**但登记它的那一天要一起把 `zusboltdom` 的处置写清楚**。
+     (顺带记一格:快照里唯一带 `AbilityDamage` 的是 `axe_berserkers_call`(`0 0 0 0`);
+     `zuus_lightning_bolt` **本来就没有这个键**,所以单发这一格不会动 `zusboltdom` ——
+     **但那是巧合不是保证**,处置照样要写。)
+   - **⛔ 也不要拿本轮的读数去改 `bots/`**:Orb 空条款 / Shard 死分支 /
+     `J.GetMostUltimateCDUnit` 退化成「最后一个合格队友」,**全是仪器的假象** ——
+     引擎里 `GetCooldown()` 从来不答 0。本轮量的是「用这台仪器取过的读数有多少是假的」。
+   - **✅ `-91` 那道门已移植**:`tools/agent/mutstand_kvgetters.sh` 的 `sub()` 现在
+     **锚点不唯一就 abort**。它在这里是活隐患(一个块里装八个 getter,
+     `sp.GetCooldown = function(self)` 与 `sp.GetCooldownTimeRemaining` 只差一个 token)。
+     **别的 stand 仍然没有这道门。**
+
 -91. **GH #488 只被砍掉了一半,剩下的一半**球在录像组**,本组这轮**故意不再往下追**
    (报告 `iterations/reports/hero/20260904T135142Z.md`)。**
    - **已确立**:出厂谓词的两个合取项里,**队友环 (R) 不假**。它是 `>=` 不是多数决,
@@ -104,9 +138,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      ⇒ **一个「盲区大小」的读数,如果它下游还有一个恒真的检查,它测的是两者的合取**;
      在第二个停止恒真之前,**该文件内部没有任何东西能把两者分开**。
 
--87. **`AbilityCastPoint` + `AbilityCooldown` 还停在 `^Get` 默认值上 —— 它们是
+-87. **✅ 已兑现 2026-09-04T17:02Z(报告 `iterations/reports/hero/20260904T170247Z.md`,
+   `state.json:kvgetters2_20260904T`);结论与教训见 `-92`,以下为立案时的原文。**
+   ~~`AbilityCastPoint` + `AbilityCooldown` 还停在 `^Get` 默认值上 —— 它们是
    `kvgetters` 那一撮**故意没发**的下一小撮(报告 `iterations/reports/hero/20260904T045632Z.md`,
-   `state.json:kvgetters_20260904T`)。**
+   `state.json:kvgetters_20260904T`)。~~
+   **兑现时对立案文本的两处就地更正**:(i) 立案写的「`AbilityCastPoint` **758 个句柄**」
+   是估数,**实测 575**(`AbilityCooldown` 723);(ii) 立案预判「这两个的失效方向可能与上一撮相反」
+   **只对了一半** —— cast point 那半**根本没有方向**(它是死的,见 `-92`),
+   cooldown 那半**同时有两个相反的方向**。**预判方向本身是对的做法,但它给出的是一个方向,
+   而现实给了零个和两个。**
    2026-09-04 那轮把 `GetSpecialValueInt`/`GetSpecialValueFloat`/`GetCastRange` 从
    `tests/mock/special_value_shapes.lua` 接了出来(**402 个句柄的 `GetCastRange` 之前答 0,
    5306 个 (句柄,key) 对之前答 0**),`AbilityCastPoint`(**758 个句柄**)与
@@ -4131,6 +4172,57 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-04T17:02Z(报告 `iterations/reports/hero/20260904T170247Z.md`;轴 **backlog `-87`
+  兑现:`kvgetters` 第二撮 `AbilityCastPoint` + `AbilityCooldown`**;登记
+  `state.json:kvgetters2_20260904T`)
+  **改 3 个文件(`tests/mock/replay_fixture.lua`、`tests/test_fixture_kv_getters.lua`、
+  `tools/agent/mutstand_kvgetters.sh`),`bots/` 与 `game/` 零行;零新候选 id、零 arm、
+  零 promote、零 AWS、`queue.json` 不加行。**
+  - 选题:OWNER_PRIORITIES 无本组项(常设运维在批测台、P1/P2 在协同组、P3 在总监);
+    开着的 `[hero]` issue 逐条看过没有一条可动(#488 下一棒明写在录像组;
+    #471/#459/#463 都被 `-86`/`-84`/`-85` 记着「作用域先问总监」且 `-86` 明写
+    先买 `hero-28` 那格读数;#465 已落地待关)⇒ 取 backlog 最上面一条可动的 `-87`。
+  - **人口(同一语料 110 文件 / 4811 句柄 / 779 个有 KV 块的焦点句柄):
+    `AbilityCastPoint` **575** 句柄、`AbilityCooldown` **723** 句柄,之前全部读 0。**
+    (`-87` 立案写的 758 是估数,**实测 575**,以实测为准。)
+  - **结论一:`GetCastPoint` 接上了但是死的,而这是动手前量的。** 它唯一的下游是
+    `GetHealthRegen() * nDelay`,而 `GetHealthRegen` **自己也没上规格**(loader 里一次都没出现、
+    dump 里没这个字段)⇒ **`0 × 任何东西`**。实测 **13 帧 / 58 对 / 0 次击杀判定翻转 /
+    0 个 regen 非 0 的目标**。同 `-88` 的 `0 == 0` 形状:**下游有恒 0 因子的读数量的是合取**。
+    **本快照关不掉**(health regen 是逐帧单位状态不是技能 KV)⇒ **要 dumper 出字段,球在录像组**;
+    §7c 的断言**写成会响的**,regen 一旦非 0 直接红并在消息里给下一步。
+  - **⭐ 结论二(本轮最硬的一格):同一个 0 把同一个文件里相邻两个守卫推向相反方向。**
+    `GetCooldown()` 那个 0 **坐在 `remaining >= ultCD/2` 的两边**:
+    `J.CanUseRefresherOrb` 的冷却项**整条蒸发**(194 帧里 **36 → 3**,**92% 是空条款**),
+    `J.CanUseRefresherShard` 多要的 `ultCD - remaining >= 2` 变成 `remaining <= -2`
+    **算术上不可能**(**0 → 6**;那个 0 不是「没帧命中」,**是那个表达式唯一可能的取值**)。
+    `J.GetMostUltimateCDUnit` 则退化成「最后一个合格队友」。
+    ⇒ **「未上规格的 getter 让守卫变宽松/变严格」这种顺口规则怎么写都有一半是错的**;
+    第一撮的方向规则搬过来**会把符号读反**。
+  - **⛔ 不许拿本轮读数去改 `bots/`** —— 三个退化守卫**全是仪器假象**,引擎里
+    `GetCooldown()` 从不答 0;`hero_zuus.lua:1276` 故意没动。
+  - 验证:变异台 **13/13 中**(新增 M9–M13,其中 **M12/M13 是对仪器的两发对照**,
+    分别证明「0 次翻转」和「36→3」是**驱动出来的不是抄进断言的**;M13 还**复现了 36 的基线**);
+    并把 `-91` 的「**锚点不唯一就 abort**」门**移植进这台 stand**(这里是活隐患:
+    一个块里装八个 getter,`sp.GetCooldown = function(self)` 与 `sp.GetCooldownTimeRemaining`
+    只差一个 token)。**别的 stand 仍然没有这道门。**
+  - **mod-vs-base 全量差分:零差异。** 两棵树(base = 干净 HEAD `6ea528a8` 的 worktree)
+    各逐文件跑完 **307** 个测试文件,**串行不并发**。唯一两条非零都在两棵树上复现:
+    `test_towercreep_stale_domain` **失败正文逐字相同**(4 条、同行号、`got 1012`/`got 944`)
+    ⇒ **基线自带,正是 `-87` 预告的那条**;`test_itemdesire_world_assertion` 的 **124 是
+    本轮 runner 自己的 300s 上限不是失败**,抬到 900s **两棵树都绿**(mod 26/0,实测 497s)。
+  - 铁律 6:静态 `GATE_EXIT=0 CLEAN`(`0 warnings`,gate 自己装的 luacheck),**没用 BYPASS**;
+    动态那半就是上面那两遍全量。
+  - ⚠️ 开工自检 worst exit **3**(`cadence` / `owed-executions` / **`trunk-red(python)`**),
+    `UNCERTIFIABLE: none`。python 那条**不是本轮引入**(零 python 改动),**未做 stash 差分
+    ⇒ 「main 是否也红」未由自检确立**。**并且必须披露一处污染**:自检跑了 ~35 分钟,
+    期间本轮对 loader 的改动**已经落在工作树上**,所以它那条「fast Lua detectors 78 文件 0 失败」
+    **是 mod 树读数不是 trunk 读数**,且分不清哪些在改动前后跑 ⇒ **不能引用为 trunk 干净**;
+    trunk 侧的 Lua 读数在 mod-vs-base 差分的 base 那一半。
+  - 下一棒:(1) **录像组** —— dumper 出 per-unit health regen(已开 issue);
+    (2) 本组第三小撮(`AbilityModifierSupportValue` 9 / `ChannelTime` 2 / `Duration` 1 /
+    `Charges` 1 / `ChargeRestoreTime` 1),**但 `AbilityDamage` 那一个不许顺手发**
+    (`-89 (乙)`:它会让 `zusboltdom` 自动 no-op,登记那天要一并写清处置)。
 - 2026-09-04T13:51Z(报告 `iterations/reports/hero/20260904T135142Z.md`;轴 **GH #488,
   出厂谓词的源码侧核对**)
   **新增 2 个文件:`tests/test_od_eclipse_ring_conjunct_domain.lua`(12 用例 6 节)与

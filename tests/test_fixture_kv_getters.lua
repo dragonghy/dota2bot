@@ -62,10 +62,29 @@
 --   * Non-focus heroes are untouched.  There is no block for them in the
 --     snapshot, no spec is installed, and they still answer 0.  A reading taken
 --     on one must not be quoted as though the KV were charged.
---   * AbilityCastPoint and AbilityCooldown are still on the generic default.
---     Deliberate: one small batch at a time, each with its own measurement of
---     what it turns red.  Section 4 counts the residue so it is a number and
---     not a habit.
+--   * AbilityCastPoint and AbilityCooldown were the next small batch, and were
+--     served on 2026-09-04 -- sections 7 and 8, with their own measurements.
+--     Section 4e now counts the population each one moved (575 / 723) rather
+--     than the residue.
+--
+-- THE SECOND BATCH'S TWO FINDINGS, because neither generalises from the first
+-- ------------------------------------------------------------------------
+--   * GetCastPoint is served and DORMANT.  Its only downstream is
+--     `GetHealthRegen() * nDelay` inside J.WillMagicKillTarget, and
+--     GetHealthRegen is itself unspecced -- no dump carries a health-regen
+--     field, so the product is 0 * anything.  Measured, not assumed: 13 Lion
+--     frames, 58 living enemy pairs, 0 verdict flips (section 7d).  Same shape
+--     as backlog -88's `0 == 0` charge check: a reading with an identically-zero
+--     factor downstream measures the CONJUNCTION.  Closing it needs a DUMPER
+--     change -- health regen is per-frame unit state, not ability KV -- so it
+--     is not this snapshot's to close.
+--   * GetCooldown has TWO failure directions off the SAME 0, because the 0 sat
+--     on both sides of `remaining >= ultCD / 2`.  J.CanUseRefresherOrb's clause
+--     vacated (permissive: true on 36 corpus frames, 3 under the real cooldown)
+--     while J.CanUseRefresherShard's became `remaining <= -2` (impossible: 0
+--     frames, 6 under the real cooldown).  Section 8 pins both.  Any rule of
+--     thumb of the form "an unspecced getter makes guards permissive" is wrong
+--     in one of its halves here whichever way it is written.
 --   * The ladder is a KV DECLARATION, not a frame reading.  Where a replay
 --     measured a value, the measurement outranks this (same rule the mana
 --     ladder states for the 246-vs-250 Zeus ultimate).
@@ -353,12 +372,20 @@ tests['4d: recorded -- 5306+ (handle, key) pairs that used to read 0'] = functio
         'AbilityValues keys with a base, got ' .. c.value_keys)
 end
 
-tests['4e: recorded -- the residue still on the generic default'] = function()
+tests['4e: recorded -- the second batch\'s population, now served'] = function()
     local c = census()
-    -- NOT served this round, on purpose.  These two are the next small batch;
-    -- the numbers are here so that is a decision with a size, not a habit.
-    assert(c.cast_point > 0, 'AbilityCastPoint handles still unserved, got ' .. c.cast_point)
-    assert(c.cooldown > 0, 'AbilityCooldown handles still unserved, got ' .. c.cooldown)
+    -- Was the residue.  2026-09-04 (second batch) served both; the counts are
+    -- the population each one moved, kept as floors because the corpus grows.
+    -- Measured: 575 AbilityCastPoint handles, 723 AbilityCooldown handles.
+    assert(c.cast_point >= 550, 'AbilityCastPoint handles, got ' .. c.cast_point)
+    assert(c.cooldown >= 700, 'AbilityCooldown handles, got ' .. c.cooldown)
+    assert(c.cooldown > c.cast_point,
+        'more abilities declare a cooldown than a cast point (instants and '
+        .. 'passives carry a cooldown and no cast point) -- ' .. c.cooldown
+        .. ' vs ' .. c.cast_point)
+    assert(c.cast_point < c.focus_block and c.cooldown < c.focus_block,
+        'neither key is on every handle -- ' .. c.cast_point .. '/' .. c.cooldown
+        .. ' of ' .. c.focus_block)
 end
 
 -- ===================================================================
@@ -473,6 +500,11 @@ tests['6a: the ladder here is a second implementation, not the loader\'s'] = fun
     assert(s:find('sp.GetSpecialValueInt', 1, true) ~= nil
         and s:find('sp.GetCastRange', 1, true) ~= nil,
         'the loader still installs the two getters this file measures')
+    assert(s:find('sp.GetCastPoint', 1, true) ~= nil
+        and s:find('sp.GetCooldown ', 1, true) ~= nil,
+        'the loader still installs the SECOND batch\'s two getters (sections 7 '
+        .. 'and 8); `sp.GetCooldown ` is anchored with its trailing space so it '
+        .. 'cannot be satisfied by the pre-existing sp.GetCooldownTimeRemaining')
     -- The focus-five guard.  Pinned as SOURCE, because it is not load-bearing
     -- for the ANSWER: with the guard removed a non-focus hero still reads 0,
     -- since value_ladder finds no block and returns nil.  Section 2c therefore
@@ -491,6 +523,306 @@ tests['6a: the ladder here is a second implementation, not the loader\'s'] = fun
     assert(t:find('rf%.value_ladder') == nil and t:find('rf%.rank_step') == nil,
         'this file must not borrow the loader\'s reader -- it would agree by '
         .. 'construction and could not notice it going wrong')
+end
+
+-- ===================================================================
+-- 7.  The SECOND batch, half one: GetCastPoint -- served, and DORMANT.
+--
+-- The reads move (section 7a), but not one kill projection in the corpus moves
+-- with them, and that is the finding rather than a caveat.  nDelay reaches
+-- J.WillMagicKillTarget as `GetHealthRegen() * nDelay`, and GetHealthRegen is
+-- ITSELF on the generic `^Get` default -- it appears nowhere in the loader and
+-- no dump carries a health-regen field.  So the product is `0 * anything` and
+-- the cast point cannot yet change a verdict.
+--
+-- This is the shape backlog -88 wrote down on `max_skeleton_charges`: a reading
+-- whose downstream carries an identically-zero factor measures the CONJUNCTION,
+-- and nothing inside the file can separate the two until the other factor stops
+-- being zero.  The difference here is that it was measured on purpose before
+-- the claim was made, not discovered afterwards.
+--
+-- And unlike the first batch this one CANNOT be closed from this snapshot:
+-- health regen is per-frame unit state (base + items + talents), not ability
+-- KV.  It needs the dumper to emit it -- ball with the replay group.
+
+local CP_FRAMES = {
+    -- (frame, hero, ability, KV cast point) -- one per distinct shape served
+    { 'tests/fixtures/f_222428_lion_lich_burst.lua', 'npc_dota_hero_lion',
+      'lion_finger_of_death', 0.3 },
+    { 'tests/fixtures/f_230952_zuus_ult_hoard.lua', 'npc_dota_hero_zuus',
+      'zuus_thundergods_wrath', 0.4 },
+}
+
+tests['7a: GetCastPoint answers the KV, where it used to answer 0'] = function()
+    local _, _, cull = axe_cull()
+    assert(cull:GetCastPoint() == 0.3,
+        'Culling Blade cast point, got ' .. tostring(cull:GetCastPoint()))
+    for _, f in ipairs(CP_FRAMES) do
+        local _, bot = rf.load(f[1], f[2])
+        local h = bot:GetAbilityByName(f[3])
+        assert(h ~= nil, f[3] .. ' handle missing on ' .. f[1])
+        assert(h:GetCastPoint() == f[4],
+            f[3] .. ' cast point, want ' .. f[4] .. ' got ' .. tostring(h:GetCastPoint()))
+    end
+end
+
+tests['7b: a KV-declared 0 is the ENGINE\'s answer, not an absent spec'] = function()
+    -- Three focus abilities declare AbilityCastPoint 0.  Reading 0 off them is
+    -- correct and is INDISTINGUISHABLE from "nothing was installed" if you only
+    -- look at the read -- so this case looks at the snapshot too, which is the
+    -- only place the difference exists.
+    local zeroes = {
+        { 'crystal_maiden', 'crystal_maiden_freezing_field' },
+        { 'lion',           'lion_voodoo' },
+        { 'zuus',           'zuus_lightning_hands' },
+    }
+    for _, z in ipairs(zeroes) do
+        local steps = ladder(z[1], z[2], 'AbilityCastPoint')
+        assert(steps ~= nil, z[2] .. ' should DECLARE a cast point ladder')
+        for i, v in ipairs(steps) do
+            assert(v == 0, z[2] .. ' step ' .. i .. ' should be 0, got ' .. v)
+        end
+    end
+    -- The consequence, stated so nobody re-derives it: hero_crystal_maiden.lua
+    -- X.ConsiderW passes this very read into J.WillMagicKillTarget as nDelay.
+    -- Its value was 0 before this change and is 0 after it.  A CM freezing-field
+    -- reading is NOT evidence that this batch did or did not move anything.
+end
+
+tests['7c: nothing downstream can move yet -- GetHealthRegen is the zero factor'] = function()
+    -- The other operand, measured rather than asserted from the source.
+    local _, bot, heroes = rf.load(CP_FRAMES[1][1], CP_FRAMES[1][2])
+    local seen, nonzero = 0, 0
+    for _, h in pairs(heroes) do
+        if h.GetHealthRegen ~= nil then
+            seen = seen + 1
+            if h:GetHealthRegen() ~= 0 then nonzero = nonzero + 1 end
+        end
+    end
+    assert(seen > 0, 'the frame holds units to read regen off')
+    assert(nonzero == 0,
+        'GetHealthRegen still answers 0 for every unit; ' .. nonzero .. ' of '
+        .. seen .. ' now answer otherwise. A NON-ZERO HERE IS GOOD NEWS: the '
+        .. 'dumper started carrying health regen, so the cast point stopped '
+        .. 'being dormant. Re-run the Lion Finger sweep in section 7d and '
+        .. 'replace the recorded 0 flips with what it now measures -- do not '
+        .. 'relax this into `>= 0`')
+    -- And the loader must not have quietly specced it, which would make the
+    -- reading above a statement about a stub instead of about the dump.
+    -- Anchored on the ASSIGNMENT form, not on the bare name: this file's own
+    -- prose and the loader's header both mention GetHealthRegen, so a bare-name
+    -- check is satisfiable by a comment and would pass while the loader served
+    -- it (mutant M12 installs exactly `GetHealthRegen = 12,`).
+    local src = assert(io.open('tests/mock/replay_fixture.lua', 'r'))
+    local s = src:read('*a'); src:close()
+    assert(s:find('GetHealthRegen%s*=') == nil,
+        'the loader now installs GetHealthRegen -- update this section, it is '
+        .. 'measuring the wrong world')
+    assert(bot ~= nil)
+end
+
+tests['7d: recorded -- 0 kill-verdict flips over the Lion Finger sweep'] = function()
+    -- The sweep the claim above rests on: every corpus frame carrying a Lion
+    -- with a trained Finger, every living enemy hero on it, the KV damage, and
+    -- the two nDelay values ConsiderR would pass (0 + 0.25 before this change,
+    -- GetCastPoint() + 0.25 after).  Measured 2026-09-04: 13 frames, 58 pairs,
+    -- 5 kills either way, 0 flips, and 0 targets with a non-zero regen.
+    local frames, npairs, kills_old, kills_new, flips, regen_pos = 0, 0, 0, 0, 0, 0
+    for _, f in ipairs(corpus_files()) do
+        local okf, fx = pcall(dofile, f)
+        if okf and type(fx) == 'table' and fx.units then
+            for _, u in ipairs(fx.units) do
+                if u.name == 'npc_dota_hero_lion' then
+                    local ok, J, bot, heroes = pcall(function()
+                        local a, b, c = rf.load(f, u.name); return a, b, c
+                    end)
+                    if ok and bot ~= nil then
+                        local r = bot:GetAbilityByName(FINGER)
+                        if r ~= nil and r:GetLevel() > 0 then
+                            frames = frames + 1
+                            local cp = r:GetCastPoint()
+                            local dmg = r:GetSpecialValueInt('damage')
+                            for _, h in pairs(heroes) do
+                                if h ~= bot and h.GetTeam ~= nil
+                                    and h:GetTeam() ~= bot:GetTeam() and h:IsAlive()
+                                then
+                                    npairs = npairs + 1
+                                    if h:GetHealthRegen() > 0 then regen_pos = regen_pos + 1 end
+                                    local old = J.WillMagicKillTarget(bot, h, dmg, 0 + 0.25)
+                                    local new = J.WillMagicKillTarget(bot, h, dmg, cp + 0.25)
+                                    if old then kills_old = kills_old + 1 end
+                                    if new then kills_new = kills_new + 1 end
+                                    if old ~= new then flips = flips + 1 end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    assert(frames >= 13, 'Lion frames with a trained Finger, got ' .. frames)
+    assert(npairs >= 50, 'living enemy-hero pairs, got ' .. npairs)
+    assert(kills_old == kills_new,
+        'the two nDelay values must agree while regen is 0: ' .. kills_old
+        .. ' vs ' .. kills_new)
+    assert(flips == 0, 'kill-verdict flips, got ' .. flips
+        .. ' -- non-zero means regen arrived; see section 7c')
+    assert(regen_pos == 0, 'targets with a non-zero regen, got ' .. regen_pos)
+end
+
+-- ===================================================================
+-- 8.  The SECOND batch, half two: GetCooldown -- and the two directions.
+--
+-- Unlike the cast point this one is NOT dormant, and it does not have one
+-- failure direction.  The same 0 sat on BOTH sides of a comparison in
+-- jmz_func.lua and pushed two neighbouring guards opposite ways:
+--
+--   J.CanUseRefresherOrb   requires  remaining >= ultCD / 2
+--       ultCD = 0  =>  remaining >= 0, TRUE BY CONSTRUCTION.  The clause
+--       vacates and the guard is unconditionally permissive.
+--   J.CanUseRefresherShard requires  remaining >= ultCD / 2  AND
+--                                    ultCD - remaining >= 2
+--       ultCD = 0  =>  remaining <= -2, IMPOSSIBLE.  The branch was
+--       structurally dead in every fixture-driven run ever taken.
+--
+-- Measured over the corpus (194 focus-hero frames carrying a non-passive
+-- ultimate): Orb was true on 36 frames and is true on 3 -- 33 of the 36 were
+-- pure vacuity.  Shard was true on 0 frames and is true on 6.
+--
+-- A file that reported "the refresher branch never fires here" was reporting an
+-- arithmetic impossibility it created, and a file that reported "the refresher
+-- branch fires here" was, 92% of the time, reporting an absent clause.
+
+--- One pass over the corpus, evaluating the two refresher guards' cooldown
+--- arithmetic on every focus-hero frame with a live ultimate, under the served
+--- cooldown and under the 0 that preceded it.  The 0 leg is arithmetic on the
+--- real frame, not a second world: only ultCD is replaced.
+local function refresher_sweep()
+    local s = { frames = 0, orb_now = 0, orb_zero = 0, shard_now = 0, shard_zero = 0 }
+    for _, f in ipairs(corpus_files()) do
+        local okf, fx = pcall(dofile, f)
+        if okf and type(fx) == 'table' and fx.units then
+            for _, u in ipairs(fx.units) do
+                local short = tostring(u.name):gsub('^npc_dota_hero_', '')
+                if shapes.SHAPES[short] ~= nil then
+                    local ok, J, bot = pcall(function()
+                        local a, b = rf.load(f, u.name); return a, b
+                    end)
+                    if ok and bot ~= nil then
+                        local ult = J.GetUltimateAbility(bot)
+                        if ult ~= nil and ult:IsPassive() == false then
+                            s.frames = s.frames + 1
+                            local cd = ult:GetCooldown()
+                            local rem = ult:GetCooldownTimeRemaining()
+                            local mc, mana = ult:GetManaCost(), bot:GetMana()
+                            if mana >= mc + 375 then
+                                if rem >= cd / 2 then s.orb_now = s.orb_now + 1 end
+                                if rem >= 0 then s.orb_zero = s.orb_zero + 1 end
+                            end
+                            if mana >= mc * 2 then
+                                if rem >= cd / 2 and cd - rem >= 2 then
+                                    s.shard_now = s.shard_now + 1
+                                end
+                                if rem >= 0 and 0 - rem >= 2 then
+                                    s.shard_zero = s.shard_zero + 1
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return s
+end
+
+local cached_refresher
+local function refresher()
+    if cached_refresher == nil then cached_refresher = refresher_sweep() end
+    return cached_refresher
+end
+
+tests['8a: GetCooldown answers the KV, where it used to answer 0'] = function()
+    local _, bot = rf.load('tests/fixtures/f_230952_zuus_ult_hoard.lua', 'npc_dota_hero_zuus')
+    local ult = bot:GetAbilityByName('zuus_thundergods_wrath')
+    assert(ult:GetCooldown() == 130,
+        'Thundergod\'s Wrath cooldown, got ' .. tostring(ult:GetCooldown()))
+    local _, _, cull = axe_cull()
+    assert(cull:GetCooldown() == 80,
+        'Culling Blade rank-1 cooldown, got ' .. tostring(cull:GetCooldown()))
+    -- Rank-indexed like every other ladder: the 3-step ultimate ladders are the
+    -- reason rank_step clamps rather than returning nil.
+    assert(ladder('axe', 'axe_culling_blade', 'AbilityCooldown')[3] == 70,
+        'the ladder itself is 80 75 70')
+end
+
+tests['8b: GetCooldown is a DIFFERENT quantity from the remaining time'] = function()
+    -- The dump supplies the remaining time; the KV supplies the full cooldown.
+    -- Nothing reconciles them and nothing should: Octarine, a scepter row and a
+    -- talent all move the real cooldown and none of them are folded here.
+    local _, bot = rf.load('tests/fixtures/f_212636_tide_ancient.lua', 'npc_dota_hero_zuus')
+    local ult = bot:GetAbilityByName('zuus_thundergods_wrath')
+    assert(ult:GetCooldownTimeRemaining() > 0 and ult:GetCooldown() == 130,
+        'this frame has both a live remaining time and the KV base')
+    assert(ult:GetCooldownTimeRemaining() ~= ult:GetCooldown(),
+        'the two reads are independent -- if they ever became equal by '
+        .. 'construction, one of them stopped being measured')
+end
+
+tests['8c: recorded -- the Orb clause was vacuous on 33 of 36 frames'] = function()
+    local s = refresher()
+    assert(s.frames >= 190,
+        'focus-hero frames with a live ultimate, got ' .. s.frames)
+    -- Measured 2026-09-04: 194 frames, orb_zero 36, orb_now 3.
+    assert(s.orb_zero >= 30, 'frames where the ultCD=0 Orb guard passed, got ' .. s.orb_zero)
+    assert(s.orb_now < s.orb_zero,
+        'serving the cooldown must REMOVE Orb passes, not add them: '
+        .. s.orb_now .. ' now vs ' .. s.orb_zero .. ' at ultCD=0')
+    assert(s.orb_now <= 5, 'Orb passes under the real cooldown, got ' .. s.orb_now)
+end
+
+tests['8d: recorded -- the Shard branch was arithmetically impossible'] = function()
+    local s = refresher()
+    -- `ultCD - remaining >= 2` with ultCD = 0 is `remaining <= -2`, and a
+    -- remaining time is never negative.  0 is not "no frame happened to match";
+    -- it is the only value that expression could take.
+    assert(s.shard_zero == 0,
+        'the ultCD=0 Shard branch cannot pass on any frame, got ' .. s.shard_zero
+        .. ' -- if this is non-zero the arithmetic changed, re-derive it')
+    assert(s.shard_now >= 5,
+        'Shard passes under the real cooldown, got ' .. s.shard_now
+        .. ' -- the branch went from dead to live, that is the whole finding')
+    assert(s.shard_now > s.shard_zero, 'and the direction is the opposite of 8c\'s')
+end
+
+tests['8e: the two guards moved in OPPOSITE directions off the same 0'] = function()
+    local s = refresher()
+    -- Stated as one assertion because it is one finding.  A rule of thumb of
+    -- the form "an unspecced getter makes guards permissive" (or restrictive)
+    -- is wrong here in one of its two halves whichever way it is written: the 0
+    -- sits on BOTH sides of `remaining >= ultCD / 2`, and which way it pushes
+    -- depends on which side the other clause reads.
+    assert(s.orb_now < s.orb_zero and s.shard_now > s.shard_zero,
+        'Orb ' .. s.orb_zero .. '->' .. s.orb_now .. ', Shard '
+        .. s.shard_zero .. '->' .. s.shard_now .. ' -- these must have opposite '
+        .. 'signs; equal signs means one of them stopped being driven')
+end
+
+tests['8f: the unfolded conditional half OVERSTATES a cooldown'] = function()
+    -- Opposite sign from the value keys, where an unfolded `+N` talent
+    -- understates.  Cooldown bonus rows are REDUCTIONS, so refusing to fold
+    -- them leaves the number too big -- and too big is the SAFE direction for
+    -- "this ability is not ready" and the unsafe one for "it is".
+    local e = shapes.SHAPES['zuus']['zuus_arc_lightning']['AbilityCooldown']
+    assert(e.base == '1.6', 'the base is unconditional, got ' .. tostring(e.base))
+    assert(e.bonus['special_bonus_unique_zeus_6'] == '-20%',
+        'and the conditional row is a REDUCTION, which is what makes the '
+        .. 'unfolded read an overstatement')
+    local _, bot = rf.load('tests/fixtures/f_230952_zuus_ult_hoard.lua', 'npc_dota_hero_zuus')
+    local arc = bot:GetAbilityByName('zuus_arc_lightning')
+    assert(arc:GetCooldown() == 1.6,
+        'the served read is the unfolded base, got ' .. tostring(arc:GetCooldown()))
 end
 
 return tests

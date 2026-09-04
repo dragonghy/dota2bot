@@ -50,13 +50,25 @@ run_tests() {
 
 # Substitute LITERALLY (no regex), and abort if the anchor is gone -- a mutant
 # that silently applied to nothing scores "caught" for the wrong reason.
+#
+# ...AND ABORT IF THE ANCHOR IS NOT UNIQUE (ported here 2026-09-04 from
+# tools/agent/mutstand_odring.sh, which learned it the expensive way: the same
+# ally-ring comparison appeared three times in one hero file, `replace(..., 1)`
+# mutated a DIFFERENT ability, and the run scored SURVIVED with exit 0 -- a
+# clean line indistinguishable from "the test cannot see its own subject").
+# This stand is a live candidate for that: the loader now installs eight getters
+# in one block, and several of the anchors below are one token apart.
 sub() {
     F="$1" OLD="$2" NEW="$3" python3 - <<'PY'
 import os, sys
 f, old, new = os.environ["F"], os.environ["OLD"], os.environ["NEW"]
 s = open(f, encoding="utf-8").read()
-if old not in s:
+n = s.count(old)
+if n == 0:
     sys.stderr.write("ANCHOR ABSENT in %s: %r\n" % (f, old[:70]))
+    sys.exit(3)
+if n > 1:
+    sys.stderr.write("ANCHOR NOT UNIQUE in %s (%d sites): %r\n" % (f, n, old[:70]))
     sys.exit(3)
 open(f, "w", encoding="utf-8").write(s.replace(old, new, 1))
 PY
@@ -170,6 +182,65 @@ echo "=== M7 (control): the has_kv guard is dropped ==="
 sub "$LOADER" '                if has_kv(u.name) then' \
               '                if true then'
 score "M7" "the loader dropped its focus-five guard"
+
+# ---------------------------------------------------------------------------
+# THE SECOND BATCH (2026-09-04): GetCastPoint and GetCooldown.  M9-M11 are the
+# same shape as M1/M2 for the new getters; M12 and M13 are the ones that matter,
+# because sections 7 and 8 record NUMBERS (0 flips, 36->3, 0->6) and a stand
+# that only checks "the getter answers something" would survive both.
+
+# M9: the cast point goes back to the generic default.
+echo
+echo "=== M9: GetCastPoint is never installed ==="
+sub "$LOADER" '                        sp.GetCastPoint = function(self)' \
+              '                        sp.GetCastPointNOTINSTALLED = function(self)'
+score "M9" "Culling Blade cast point, got"
+
+# ---------------------------------------------------------------------------
+# M10: the cooldown goes back to the generic default.  Note the anchor carries
+#      ` = function(self)` on purpose: `sp.GetCooldown` alone also matches
+#      sp.GetCooldownTimeRemaining, which is a DIFFERENT quantity and was never
+#      broken.  Section 6a anchors on the same distinction for the same reason.
+echo
+echo "=== M10: GetCooldown is never installed ==="
+sub "$LOADER" '                        sp.GetCooldown = function(self)' \
+              '                        sp.GetCooldownNOTINSTALLED = function(self)'
+score "M10" "Thundergod's Wrath cooldown, got"
+
+# ---------------------------------------------------------------------------
+# M11: the plausible copy-paste -- GetCooldown is wired to the cast-point key.
+#      Both are real keys on the same abilities, so the read stays non-zero and
+#      stays rank-shaped; only a file that pins the VALUE can tell them apart.
+echo
+echo "=== M11: GetCooldown reads AbilityCastPoint (the copy-paste) ==="
+sub "$LOADER" "                    local cooldown = value_ladder(u.name, a.name, 'AbilityCooldown')" \
+              "                    local cooldown = value_ladder(u.name, a.name, 'AbilityCastPoint')"
+score "M11" "Thundergod's Wrath cooldown, got"
+
+# ---------------------------------------------------------------------------
+# M12: INSTRUMENT CONTROL on the DORMANCY claim, and the most important mutant
+#      of this batch.  Section 7 says the cast point cannot move a kill verdict
+#      because GetHealthRegen answers 0 for every unit, i.e. `0 * nDelay`.  That
+#      is a claim about the world, so the world is changed: units answer a real
+#      regen.  Section 7c must red on the reading (not on a source grep), and
+#      7d's sweep must stop being all-zero.  If 7 survives this, its "0 flips"
+#      was transcribed rather than measured.
+echo
+echo "=== M12 (control): units answer a non-zero GetHealthRegen ==="
+sub "$LOADER" '            GetHealth = u.hp, GetMaxHealth = u.max_hp,' \
+              '            GetHealth = u.hp, GetMaxHealth = u.max_hp, GetHealthRegen = 12,'
+score "M12" "GetHealthRegen still answers 0 for every unit"
+
+# ---------------------------------------------------------------------------
+# M13: INSTRUMENT CONTROL on section 8's counts.  The sweep's "now" leg stops
+#      using the served cooldown and reuses the ultCD=0 arithmetic.  The two
+#      legs then agree by construction, so 36->3 and 0->6 both collapse.  A
+#      section 8 whose numbers were copied into the assertions survives this.
+echo
+echo "=== M13 (control): the sweep's served leg reuses the ultCD=0 arithmetic ==="
+sub "$TEST" '                                if rem >= cd / 2 then s.orb_now = s.orb_now + 1 end' \
+            '                                if rem >= 0 then s.orb_now = s.orb_now + 1 end'
+score "M13" "serving the cooldown must REMOVE Orb passes"
 
 # ---------------------------------------------------------------------------
 # M8 (positive control): a comment-only edit must leave the file green.  A stand
