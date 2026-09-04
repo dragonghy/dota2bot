@@ -167,6 +167,61 @@ for s in doc['snapshots']:
 r = run(doc)
 check(len(r['dom']) == 0, '3c: an untrained ult puts the cast out of domain')
 
+# --- 4. a mana refill inside the sample gap (replay-check W46, 2026-09-04) --
+# The gate's first clause reads the mana Zeus holds AT THE DECISION.  The only
+# mana this scanner can see is the last snapshot at or before the cast, up to
+# 1 s earlier.  An Arcane Boots / wand / mango inside that gap moves clause 7's
+# input between the sample and the decision, and the error only ever runs one
+# way: it manufactures leaks, it cannot hide one.
+#
+# Real frame this pins: run …_84e984 game 20260904_124709_slot5, armed leg.
+# Snapshot t=394.5 mp=162 (< R cost 225 at R level 1) -> the scanner called the
+# t=395.1 bolt in-domain.  `item_arcane_boots` fired at t=394.5 for +175, so the
+# bot decided holding ~337 >= 225 and clause 7 correctly returned false.  The
+# arithmetic that forces it: a level-4 bolt costs ~131 (measured on clean casts
+# in that same game: -131, -128, -127), and the post-cast snapshot reads
+# mp=181 -- unreachable from 162 without the refill, which would leave ~31.
+doc = build(100.0, 0, 6, mp=100)
+doc['events'].append({'t': 99.8, 'type': 'ITEM', 'actor': ZEUS,
+                      'target': 'dota_unknown', 'inflictor': 'item_arcane_boots',
+                      'value': 0, 'actor_hero': True, 'target_hero': False})
+r = run(doc)
+check(len(r['dom']) == 0, '4a: a cast whose mana reading is stale is not in-domain')
+check(len(r['stale']) == 1, '4b: it is reported as STALE-MANA, not silently dropped')
+check(len(r['notcast']) == 0,
+      '4c: stale is split off BEFORE not-a-cast -- it never was in the domain')
+
+# Positive control: same timeline, same item, but the use lands BEFORE the
+# snapshot the row was read from, so the sampled mana already includes it and
+# the reading is sound.  Without this half, 4a could not be told from "any
+# ITEM event anywhere disarms the flag".
+doc = build(100.0, 0, 6, mp=100)
+doc['events'].append({'t': 98.9, 'type': 'ITEM', 'actor': ZEUS,
+                      'target': 'dota_unknown', 'inflictor': 'item_arcane_boots',
+                      'value': 0, 'actor_hero': True, 'target_hero': False})
+r = run(doc)
+check(len(r['dom']) == 1, '4d: control -- a refill before the sample leaves the row in-domain')
+check(len(r['stale']) == 0, '4e: control -- nothing stale')
+
+# An item that restores no mana must not disarm the flag: the guard is keyed to
+# the mechanism (mana income), not to "an item was used".
+doc = build(100.0, 0, 6, mp=100)
+doc['events'].append({'t': 99.8, 'type': 'ITEM', 'actor': ZEUS,
+                      'target': 'dota_unknown', 'inflictor': 'item_blink',
+                      'value': 0, 'actor_hero': True, 'target_hero': False})
+r = run(doc)
+check(len(r['dom']) == 1, '4f: a non-mana item in the gap does not excuse the cast')
+check(len(r['stale']) == 0, '4g: and is not reported as stale')
+
+# The refill must be ZEUS's own: an ally drinking a mango in the gap changes
+# nothing about the mana Zeus held.
+doc = build(100.0, 0, 6, mp=100)
+doc['events'].append({'t': 99.8, 'type': 'ITEM', 'actor': FOE,
+                      'target': 'dota_unknown', 'inflictor': 'item_enchanted_mango',
+                      'value': 0, 'actor_hero': True, 'target_hero': False})
+r = run(doc)
+check(len(r['dom']) == 1, "4h: another hero's mana item does not excuse the cast")
+
 print(f'zusult_gate liveness: {checks} checks, {len(failures)} failures')
 for f in failures:
     print('  FAIL', f)

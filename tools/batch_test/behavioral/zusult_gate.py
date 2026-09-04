@@ -31,6 +31,35 @@ HEALTHY = 0.60
 HPFLOOR = 0.55
 RECENT = 3.0
 
+# Items that hand Zeus mana. The gate's FIRST clause is
+# `if hBot:GetMana() >= nCost then return false end`, and it reads the mana the
+# bot holds at the DECISION instant -- but the only mana this scanner can see is
+# the last snapshot at or before the cast, up to 1 s earlier. One of these fired
+# inside that gap moves the input of clause 7 between the sample and the
+# decision, so a frame the bot saw as AFFORDABLE (gate correctly silent) is
+# recorded as unaffordable, i.e. in-domain. The error therefore MANUFACTURES
+# LEAKS; it never hides one.
+#
+# It is not a rare tail, and the reason is structural: the selector
+# (`mp < R cost`) and the contaminant (a bot drinks/blinks its mana back exactly
+# when it is low) are the SAME condition, so the contamination concentrates in
+# the reported set. Measured on the W46 Zeus corpus (38 games, 4190 Q/W casts):
+# 3.4% of all casts, but 1 of the 2 in-domain W flags -- 50% -- and that one was
+# the single armed-leg flag the round was about to escalate as a `zusboltdom`
+# leak (Arcane Boots, +175, at t=394.5; the bolt at t=395.1; the bot held 337
+# against an R cost of 225 and was right to fire).
+#
+# Same family as the two traps already in the replay-check charter -- the
+# cooldown RISING-EDGE cast-frame bug and the illusion name-keying bug -- and
+# the same shape: a sub-frame event moves a predicate's input between the sample
+# and the decision. Like the missing-ability guard below, these frames are NOT
+# silently dropped into the negative bucket; they are carried as their own state
+# and reported, so a stale reading can never be mistaken for a clean one.
+MANA_RESTORE_ITEMS = frozenset((
+    'item_arcane_boots', 'item_magic_wand', 'item_magic_stick', 'item_bottle',
+    'item_enchanted_mango', 'item_soul_ring', 'item_holy_locket', 'item_clarity',
+))
+
 def load(p):
     d = json.load(open(p))
     tmax = max(e['t'] for e in d['events'])
@@ -47,6 +76,18 @@ def analyze(path):
     evs = sorted(d['events'], key=lambda e: e['t'])
     hurt = [e['t'] for e in evs if e['type'] == 'DAMAGE' and e.get('target') == 'npc_dota_hero_zuus'
             and e.get('actor_hero')]
+    mana_items = [e['t'] for e in evs if e['type'] == 'ITEM'
+                  and e.get('actor') == 'npc_dota_hero_zuus'
+                  and e.get('inflictor') in MANA_RESTORE_ITEMS]
+
+    def stale_mana(t):
+        """Did Zeus refill mana between the snapshot this row was read from and
+        the cast? See MANA_RESTORE_ITEMS: if so, the `unaff` flag on this row
+        was computed from mana the bot no longer held when it decided."""
+        prev = [s for s in zs if s['t'] <= t]
+        if not prev:
+            return False
+        return any(prev[-1]['t'] <= it <= t for it in mana_items)
 
     def snap_at(hero, t, side='prev'):
         arr = snaps.get(hero, [])
@@ -160,12 +201,20 @@ def analyze(path):
         rows.append(dict(t=e['t'], spell=inf, tgt=tgt, hp=hv, unaff=g['unaff'],
                          mp=g['s']['mp'], rlvl=g['rlvl'], zhp=g['s']['hp_pct'],
                          calm=calm(e['t'], g['s']), healthy=hh, have=g['have'],
+                         stale=stale_mana(e['t']),
                          spent=spent(e['t'], inf)))
     flagged = [r for r in rows if r['have'] and r['unaff'] and r['healthy'] and r['calm']]
+    # Order matters and is deliberate: the stale-mana split comes FIRST, because
+    # a row whose `unaff` was read off pre-refill mana never belonged in the
+    # domain at all -- filing it under "not a cast" instead would concede that
+    # it WAS in-domain and merely unpaid.
+    stale = [r for r in flagged if r['stale']]
+    flagged = [r for r in flagged if not r['stale']]
     dom = [r for r in flagged if r['spent'] is not False]
     notcast = [r for r in flagged if r['spent'] is False]
     unknown = [r for r in rows if not r['have']]
     return dict(opp=opp, rows=rows, dom=dom, notcast=notcast, unknown=unknown,
+                stale=stale,
                 unaff_frames=sum(1 for g in gate if g['unaff']),
                 noab_frames=sum(1 for g in gate if not g['have']),
                 noab_alive_frames=sum(1 for g in gate
@@ -181,6 +230,7 @@ if __name__ == '__main__':
         print(f"  R-ready&unaffordable frames {r['unaff_frames']} | clean opportunity frames {r['opp']} "
               f"| Q/W casts w/ hero target {len(r['rows'])} | IN-DOMAIN (should be suppressed) {len(r['dom'])}"
               f" | NOT-A-CAST (dropped) {len(r['notcast'])}"
+              f" | STALE-MANA (dropped: refill inside the sample gap) {len(r['stale'])}"
               f" | UNKNOWN (gate frame had no ability list) {len(r['unknown'])}"
               f" | no-ability frames {r['noab_frames']} (alive {r['noab_alive_frames']})")
         for c in r['dom']:
@@ -194,10 +244,12 @@ if __name__ == '__main__':
         tot[k + '_opp'] += r['opp']; tot[k + '_dom'] += len(r['dom'])
         tot[k + '_casts'] += len(r['rows']); tot[k + '_games'] += 1
         tot[k + '_unknown'] += len(r['unknown']); tot[k + '_notcast'] += len(r['notcast'])
+        tot[k + '_stale'] += len(r['stale'])
     print("\n=== totals ===")
     for k in ('armed', 'base'):
         o, dm, c, g = tot[k+'_opp'], tot[k+'_dom'], tot[k+'_casts'], tot[k+'_games']
         print(f"{k:6s} games={g} clean_opp_frames={o} in_domain_casts={dm} "
               f"({dm/o*100 if o else 0:.1f} per 100 opp frames) allcasts={c} "
               f"unknown_gate_frame_casts={tot[k+'_unknown']} "
-              f"dropped_not_a_cast={tot[k+'_notcast']}")
+              f"dropped_not_a_cast={tot[k+'_notcast']} "
+              f"dropped_stale_mana={tot[k+'_stale']}")
