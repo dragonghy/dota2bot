@@ -297,6 +297,20 @@ local PINNED = {
     -- the header says it does.  'creepthink' is additive on its own arm anyway
     -- (armed it can only SKIP a `return`, never add one).
     "creepthink,pullcad,pullthink | Think | J.GetLanePullDragTarget | pulldrag | bots/mode_roam_generic.lua",                              -- W
+    -- [campbind 20260904] 'campbind' joined the same 400-line Think when it
+    -- bound the camp-pull poke to the PLANNED camp.  Read by hand before
+    -- pinning, and it is (P): un-armed -- and in any game that is not Turbo --
+    -- `J.GetCampPullPokeTarget` returns `tNeut[1]` under the same `J.IsValid`
+    -- test the call site's own `bCampHere` just applied, i.e. the SHIPPED value
+    -- of the expression it replaced, not a constant that kills the branch.
+    -- Arming any outer id ALONE therefore measures exactly what it measured
+    -- before this call landed.
+    -- The one genuine interaction is with 'pullthink' and it runs the ADDITIVE
+    -- way: armed 'pullthink' un-eats the ACTIVITY_ATTACK frames the throttle
+    -- was swallowing, which can only make MORE poke frames reach this line.  It
+    -- cannot make fewer, so 'campbind' armed alone is not `campbind AND
+    -- pullthink`.
+    "creepthink,pullcad,pullthink | Think | J.GetCampPullPokeTarget | campbind | bots/mode_roam_generic.lua",                             -- P
     "towerfear | X.ShouldRun | J.IsBasePresenceAdverse | basesiege | bots/mode_retreat_generic.lua",                                       -- W
     "tpcommit,tpdead,tpdying | J.GetTpCommitDefendDesire | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/FunLib/jmz_func.lua",        -- P
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P

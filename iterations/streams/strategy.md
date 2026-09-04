@@ -5120,6 +5120,15 @@
   那条**整拍长**的用例不是补覆盖率,**它是唯一能看见这个失效的角度**。
   **符号单调单向**:armed 戳集 ⊆ 出厂戳集,**没有 over 方向**;`bCampHere` 故意不重绑 ⇒
   拖拽/行走两条分支控制流逐字节不变。
+  **⭐⭐⭐⭐⭐ 全量套件抓到一条那五个按名过滤器全都够不到的红,而且它是对的**:
+  `tests/test_gated_helper_nesting_census.lua`(**闸套闸 = 两个 id 的合取**的常设棘轮)点名
+  `creepthink,pullcad,pullthink | Think | J.GetCampPullPokeTarget | campbind`。
+  `pull` / `roam` / `camp` / `gate_claim` / `smoke_load` **一个都命中不了它的文件名**
+  ⇒ **「按名跑邻近文件」的失效方向,是漏掉那些按机制而不是按主题命名的常设守卫。**
+  棘轮问的那个问题已按它要求的方式**手答并登记为 (P)**:未 armed / 非 turbo 时
+  `J.GetCampPullPokeTarget` 返回 `tNeut[1]`,用的是调用点 `bCampHere` 刚用过的**同一个** `J.IsValid`
+  测试 = 它替换掉的表达式的**出厂值** ⇒ 单独 arm 任一外层 id 测到的仍是改动前的东西;
+  与 `pullthink` 的唯一真实交互是**加性**的(armed `pullthink` 只会让更多戳帧走到这一行)。重跑 10/0。
   **下一格(本组下一轮第一项)**:**继续在 P1 上**(它是多单元工作)。候选(甲)选点循环**不排除远古营地**,
   但 `camp.type` 那一半**至今未 settled**(`state.json:campteam_SETTLED_20260827` 的 `boundary` 逐字写着
   「the `.type` / `.speed` halves stay OPEN」)⇒ 按 `.type` 写的守卫可能是一台瞎仪器,
