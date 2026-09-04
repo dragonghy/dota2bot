@@ -46,9 +46,18 @@
       "sir": "sir-aivfjwvp",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? on the spot_run.sh call with output redirected to a file, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "leg_counts_note": "Left null ON PURPOSE at launch and OWED to the harvest round: per the gate-(iv) finding this round filed, machines[].ab/ba must end up as THIS MACHINE's OWN integer legs (0/0 included) -- reclaim_blind.py:423 reads machines only and never rerun."
+      "ab": 30,
+      "ba": 12,
+      "leg_counts_note": "Filled at harvest 2026-09-04T15:xxZ with THIS MACHINE'S OWN integer legs, per the gate-(iv) obligation (reclaim_blind.py:423 reads machines[] only, never rerun). Derived twice independently: (1) recover_verdict.py per_seed ab_games/ba_games for seed 4209, (2) re-derived here straight from the banked analysis files of this run prefix -- every file under this prefix carries seed 4209 and exactly one leg (radiant=ab, dire=ba). The two agree. This machine also banked 6 unstamped warm-up games, which are loaded but not scored and are NOT part of these counts.",
+      "terminated_at": "2026-09-04T13:18:29Z",
+      "self_destruct_verified": "Self-terminate, NOT a reclaim: Status.Code is `instance-terminated-by-user` / \"Spot Instance terminated due to user-initiated termination\". Zero Server.SpotInstanceTermination in this wave.",
+      "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime with Status.Code `instance-terminated-by-user`. NOT describe-instances: the EC2 records for all four had already aged out by harvest time (Reservations: [] -- GH #375), which is the dual last round registered: the SIR outlives the EC2 record.",
+      "last_s3_object_at": "2026-09-04T13:14:39Z",
+      "status_code": "instance-terminated-by-user",
+      "status_code_source": "describe-spot-instance-requests Status.Code for this machine's SIR, read at harvest. This is the SIR status code reclaim_blind.py asks for, NOT an EC2 StateReason.Code (the EC2 records had already aged out -- GH #375). `instance-terminated-by-user` == self-terminate, not a reclaim.",
+      "create": "2026-09-04T12:31:15Z",
+      "update": "2026-09-04T13:18:29Z",
+      "create_update_source": "SIR CreateTime and Status.UpdateTime, read at harvest from describe-spot-instance-requests. `update` is an UPPER bound on the stop: it is when the request flipped closed, 2m40s-3m54s after this machine's last S3 upload. Good enough for the reclaim-blind question (survival vs the 40.0 min changeover), and deliberately NOT reused as the cost figure -- see cost_settlement_gh454, which brackets rather than points."
     },
     {
       "seed": 4401,
@@ -64,9 +73,18 @@
       "sir": "sir-nibfgrjq",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? on the spot_run.sh call with output redirected to a file, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "leg_counts_note": "Left null ON PURPOSE at launch and OWED to the harvest round: per the gate-(iv) finding this round filed, machines[].ab/ba must end up as THIS MACHINE's OWN integer legs (0/0 included) -- reclaim_blind.py:423 reads machines only and never rerun."
+      "ab": 34,
+      "ba": 16,
+      "leg_counts_note": "Filled at harvest 2026-09-04T15:xxZ with THIS MACHINE'S OWN integer legs, per the gate-(iv) obligation (reclaim_blind.py:423 reads machines[] only, never rerun). Derived twice independently: (1) recover_verdict.py per_seed ab_games/ba_games for seed 4401, (2) re-derived here straight from the banked analysis files of this run prefix -- every file under this prefix carries seed 4401 and exactly one leg (radiant=ab, dire=ba). The two agree. This machine also banked 6 unstamped warm-up games, which are loaded but not scored and are NOT part of these counts.",
+      "terminated_at": "2026-09-04T13:25:26Z",
+      "self_destruct_verified": "Self-terminate, NOT a reclaim: Status.Code is `instance-terminated-by-user` / \"Spot Instance terminated due to user-initiated termination\". Zero Server.SpotInstanceTermination in this wave.",
+      "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime with Status.Code `instance-terminated-by-user`. NOT describe-instances: the EC2 records for all four had already aged out by harvest time (Reservations: [] -- GH #375), which is the dual last round registered: the SIR outlives the EC2 record.",
+      "last_s3_object_at": "2026-09-04T13:22:46Z",
+      "status_code": "instance-terminated-by-user",
+      "status_code_source": "describe-spot-instance-requests Status.Code for this machine's SIR, read at harvest. This is the SIR status code reclaim_blind.py asks for, NOT an EC2 StateReason.Code (the EC2 records had already aged out -- GH #375). `instance-terminated-by-user` == self-terminate, not a reclaim.",
+      "create": "2026-09-04T12:31:20Z",
+      "update": "2026-09-04T13:25:26Z",
+      "create_update_source": "SIR CreateTime and Status.UpdateTime, read at harvest from describe-spot-instance-requests. `update` is an UPPER bound on the stop: it is when the request flipped closed, 2m40s-3m54s after this machine's last S3 upload. Good enough for the reclaim-blind question (survival vs the 40.0 min changeover), and deliberately NOT reused as the cost figure -- see cost_settlement_gh454, which brackets rather than points."
     },
     {
       "seed": 4470,
@@ -82,9 +100,18 @@
       "sir": "sir-xhkqk7pm",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? on the spot_run.sh call with output redirected to a file, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "leg_counts_note": "Left null ON PURPOSE at launch and OWED to the harvest round: per the gate-(iv) finding this round filed, machines[].ab/ba must end up as THIS MACHINE's OWN integer legs (0/0 included) -- reclaim_blind.py:423 reads machines only and never rerun."
+      "ab": 34,
+      "ba": 22,
+      "leg_counts_note": "Filled at harvest 2026-09-04T15:xxZ with THIS MACHINE'S OWN integer legs, per the gate-(iv) obligation (reclaim_blind.py:423 reads machines[] only, never rerun). Derived twice independently: (1) recover_verdict.py per_seed ab_games/ba_games for seed 4470, (2) re-derived here straight from the banked analysis files of this run prefix -- every file under this prefix carries seed 4470 and exactly one leg (radiant=ab, dire=ba). The two agree. This machine also banked 6 unstamped warm-up games, which are loaded but not scored and are NOT part of these counts.",
+      "terminated_at": "2026-09-04T13:31:17Z",
+      "self_destruct_verified": "Self-terminate, NOT a reclaim: Status.Code is `instance-terminated-by-user` / \"Spot Instance terminated due to user-initiated termination\". Zero Server.SpotInstanceTermination in this wave.",
+      "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime with Status.Code `instance-terminated-by-user`. NOT describe-instances: the EC2 records for all four had already aged out by harvest time (Reservations: [] -- GH #375), which is the dual last round registered: the SIR outlives the EC2 record.",
+      "last_s3_object_at": "2026-09-04T13:28:23Z",
+      "status_code": "instance-terminated-by-user",
+      "status_code_source": "describe-spot-instance-requests Status.Code for this machine's SIR, read at harvest. This is the SIR status code reclaim_blind.py asks for, NOT an EC2 StateReason.Code (the EC2 records had already aged out -- GH #375). `instance-terminated-by-user` == self-terminate, not a reclaim.",
+      "create": "2026-09-04T12:31:25Z",
+      "update": "2026-09-04T13:31:17Z",
+      "create_update_source": "SIR CreateTime and Status.UpdateTime, read at harvest from describe-spot-instance-requests. `update` is an UPPER bound on the stop: it is when the request flipped closed, 2m40s-3m54s after this machine's last S3 upload. Good enough for the reclaim-blind question (survival vs the 40.0 min changeover), and deliberately NOT reused as the cost figure -- see cost_settlement_gh454, which brackets rather than points."
     },
     {
       "seed": 4252,
@@ -100,9 +127,18 @@
       "sir": "sir-ygm7kg3m",
       "spot_run_exit": "0",
       "spot_run_exit_note": "Read as $? on the spot_run.sh call with output redirected to a file, not through a pipe",
-      "ab": null,
-      "ba": null,
-      "leg_counts_note": "Left null ON PURPOSE at launch and OWED to the harvest round: per the gate-(iv) finding this round filed, machines[].ab/ba must end up as THIS MACHINE's OWN integer legs (0/0 included) -- reclaim_blind.py:423 reads machines only and never rerun."
+      "ab": 42,
+      "ba": 16,
+      "leg_counts_note": "Filled at harvest 2026-09-04T15:xxZ with THIS MACHINE'S OWN integer legs, per the gate-(iv) obligation (reclaim_blind.py:423 reads machines[] only, never rerun). Derived twice independently: (1) recover_verdict.py per_seed ab_games/ba_games for seed 4252, (2) re-derived here straight from the banked analysis files of this run prefix -- every file under this prefix carries seed 4252 and exactly one leg (radiant=ab, dire=ba). The two agree. This machine also banked 6 unstamped warm-up games, which are loaded but not scored and are NOT part of these counts.",
+      "terminated_at": "2026-09-04T13:26:43Z",
+      "self_destruct_verified": "Self-terminate, NOT a reclaim: Status.Code is `instance-terminated-by-user` / \"Spot Instance terminated due to user-initiated termination\". Zero Server.SpotInstanceTermination in this wave.",
+      "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime with Status.Code `instance-terminated-by-user`. NOT describe-instances: the EC2 records for all four had already aged out by harvest time (Reservations: [] -- GH #375), which is the dual last round registered: the SIR outlives the EC2 record.",
+      "last_s3_object_at": "2026-09-04T13:22:49Z",
+      "status_code": "instance-terminated-by-user",
+      "status_code_source": "describe-spot-instance-requests Status.Code for this machine's SIR, read at harvest. This is the SIR status code reclaim_blind.py asks for, NOT an EC2 StateReason.Code (the EC2 records had already aged out -- GH #375). `instance-terminated-by-user` == self-terminate, not a reclaim.",
+      "create": "2026-09-04T12:31:30Z",
+      "update": "2026-09-04T13:26:43Z",
+      "create_update_source": "SIR CreateTime and Status.UpdateTime, read at harvest from describe-spot-instance-requests. `update` is an UPPER bound on the stop: it is when the request flipped closed, 2m40s-3m54s after this machine's last S3 upload. Good enough for the reclaim-blind question (survival vs the 40.0 min changeover), and deliberately NOT reused as the cost figure -- see cost_settlement_gh454, which brackets rather than points."
     }
   ],
   "gates": {
@@ -112,7 +148,8 @@
     "(iii) cost fence": "MTD $14.981 (budgets, free, refreshed 2026-09-04T11:29:50Z -- which is ~3.5h after W45 shut down, INSIDE the 4.3-11.3h billing lag band, so it must NOT be assumed to contain W45). Fence, priced per wave by its own market (iron discipline jia): 14.981 + W44 on-demand 2.15 + W45 spot 0.90 + W45 on-demand rerun 1.10 + W46 spot 0.90 = $20.03 vs $45/$80/$90/$100 => passes; September has not reached the first $50 alert, so no crossing line is owed. The forbidden 'MTD delta matches the wave price' technique (iron discipline yi) was NOT used.",
     "(iv) reclaim-blind": "FIRST RAN AS RB_EXIT=2 / UNDECIDABLE (`seed 3968: leg count 'ab' is not an integer`) -- an exit 2 is 'nothing was checked', not a pass. Cause was W45's registration, not the tool: see W45_wave.json:gate_iv_backfill_note. After backfilling W45's two reclaimed machines from MEASUREMENT (not from the changeover constant, which cannot decide 37.87 min), RB_EXIT=0: `yield 2 paired of 4 machines / 2 reclaimed before the flip / VERDICT: not blinded / NEXT WAVE: spot`.",
     "(rule 6) luacheck static half": "LUACHECK_EXIT=0, `luacheck bots game: 0 warnings`, GATE_EXIT=0 CLEAN. No RULE6_BYPASS used, so there is no 'SKIPPED, not passed' line to quote.",
-    "queue check (step 4a)": "iterations/queue.json holds no request asking for a dedicated wave: every ADMITTED row (strategy-40 arbheart, strategy-41 slotwait, strategy-31/32, strategy-10/13/14/15/16/18/20/21, hero-15, hero-27) is 'rideshare, zero AWS increment'; the rest are ROUTED_ARCHIVE_SCAN / RECEIVED_NOT_SCHEDULED / REJECTED / HOLD. So the routine full-set wave IS the right wave and campbind/zusboltdom ride it."
+    "queue check (step 4a)": "iterations/queue.json holds no request asking for a dedicated wave: every ADMITTED row (strategy-40 arbheart, strategy-41 slotwait, strategy-31/32, strategy-10/13/14/15/16/18/20/21, hero-15, hero-27) is 'rideshare, zero AWS increment'; the rest are ROUTED_ARCHIVE_SCAN / RECEIVED_NOT_SCHEDULED / REJECTED / HOLD. So the routine full-set wave IS the right wave and campbind/zusboltdom ride it.",
+    "(iv) inputs -- no harvest owed": "UNCERTIFIABLE -- NOT RUN, and this key is being added at harvest time by the very next round, not backdated into the launch round's evidence. The W46 launch round recorded five gate keys and this half was not among them; no check of the form 'is any prior wave's harvest still owed?' appears anywhere in its record or report. Per tests/test_wave_gate_keys.py's own fix instruction, the honest value is UNCERTIFIABLE rather than a value invented to turn the detector green. SEPARATELY, and as reconstruction rather than as the gate: W45 -- the only wave that could have owed a harvest at 12:31Z -- was in fact harvested in the 09:15Z round, so the substantive condition did hold. The gate not running and the condition holding are two different statements and only the second one is established here."
   },
   "market_verified": "describe-instances InstanceLifecycle = `spot` on all four. The `spot_` prefix in every run_id is a hardcoded string in spot_run.sh and is NOT evidence of market type; the lifecycle field is. No capacity downgrade: zero InsufficientInstanceCapacity, so the (1)(2)(3) ladder was never entered.",
   "az_spread": "FOUR distinct AZs (us-west-2a/2b/2c/2d), one per machine, each pinned with an explicit --az. GH #252 acceptance clean (requested == actual on all four). GH #256 acceptance clean: neither `re-aiming inside the ring` nor `AZ RING EXHAUSTED` appeared on any of the four calls.",
@@ -132,5 +169,69 @@
   "issues_filed": [
     "GH #486 [bug] co-armed register red on trunk, on campbind -- the id W46 is the first wave to pay for. Nesting, not conjunction; not a repeat of the pullcad trap.",
     "GH #487 [batch] gate (iv) exit 2 on W45: the harvest round that wrote the nulls read clean, so an input-side gate can only be caught by the next LAUNCHING round, by blocking a launch."
-  ]
+  ],
+  "harvest": {
+    "harvested_at": "2026-09-04T15:2xZ",
+    "s3_prefix": "s3://dota2bot-batch-results-4924/soak/<run_id>/ -- NOT validation/. The charter's step 3 prose still says `validation/`; a recursive ls of the four run ids under validation/ returns ZERO objects for all four. That zero is a wrong-prefix artifact, not a dry wave -- exactly the shape of empty output that must not be read as a fact. Filed as part of this round's handoff.",
+    "objects": {
+      "84e984": 120,
+      "d21f34": 139,
+      "d7082b": 154,
+      "b77771": 160
+    },
+    "analysis_files": {
+      "84e984": 48,
+      "d21f34": 56,
+      "d7082b": 62,
+      "b77771": 64,
+      "total": 230
+    },
+    "rv_exit": "RV_EXIT=0, read as $? on the recover_verdict.py call with stdout AND stderr redirected to files, not through a pipe.",
+    "arm_string_recheck": "RECOMPUTED from the launch tree efa7ba70 (git show efa7ba70:iterations/streams/test_set.md, line 2), not copied from prose: 62 ids / 550 bytes / md5 c7e1f92c739f8f8dc0ee0c9484288628 -- byte-identical to this record's arm_ids/arm_bytes/arm_md5.",
+    "input": "files_seen 230 / games_loaded 230 / unparseable 0 / pooled_basename_dirs_overridden 0. No --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth => there is NO 'this is a SKIP, not a pass' line to quote this round.",
+    "scored_games": 206,
+    "warmups": "24 (6 per machine): 230 loaded - 206 scored. Unstamped, so they carry no seed/leg and cannot enter a leg count.",
+    "arm_depth_gate": "min_arm_depth 8, thin_arm_seeds [] -- all four seeds scored (arm_depth 17.14 / 21.76 / 23.17 / 26.71). No seed excluded, nothing owed to the GH #269 naming rule this round.",
+    "mean": {
+      "gpm": -20.26,
+      "xpm": -19.53,
+      "deaths": 0.38,
+      "last_hits": -1.73
+    },
+    "comps_better": {
+      "gpm": "2/4",
+      "xpm": "1/4",
+      "deaths": "1/4",
+      "last_hits": "2/4"
+    },
+    "per_seed_gpm": {
+      "4209": 56.98,
+      "4252": 5.07,
+      "4401": -64.56,
+      "4470": -78.53
+    },
+    "winrate_channel": "DEGENERATE -- minority side won 28 of 230 finished games (share 0.1217 < 0.20). mean.winrate_headroom = 0.2188. Per the pre-registration in winrate_prereg, this is the FIFTH consecutive degenerate wave (W41/W42/W44/W45/W46), so `winrate` and the comps_better winrate row are NOT written as readings here (GH #352 / test_set.md CT). The pre-registered branch that fired is (a)-continues, not (a)-RECOVERED.",
+    "strata": "sign_flip TRUE on all four metrics; side_gt_arm 4/4 (gpm), 3/4 (xpm), 4/4 (deaths), 4/4 (last_hits). REGISTERED per rule 4(i-a). NOT a rejection reason and NOT a precision claim: for a per-seed 50/50 swap-averaged estimator, sign flip is the IDENTITY |side| > |arm| (rule 4(i-c)), and it says nothing about how well arm is measured. Printed by recover_verdict.py itself; not hand-computed (rule 4(i-d)).",
+    "suggested": "hold_or_reject -- a hint only. promote/reject goes to the director via the three conditions, and this is a FAMILY-level reading, never per-id.",
+    "per_id_caveat": "Any statement using W46 to speak about the per-id (a) of creepthink / pullcad / pullthink measures `outer AND campbind` -- see coarmed_caveat above and GH #486."
+  },
+  "cost_settlement_gh454": {
+    "verdict": "THE AUTO-INVALIDATION CLAUSE FIRES. Billing-side single-wave cost is $0.959 - $1.022, i.e. ABOVE the charter constant $0.90 at BOTH ends of the bracket. The director's next trigger must re-rule the constant.",
+    "why_this_wave_could_settle_it": "GH #454 has been waiting since 2026-08-30 for a PURE SPOT WAVE THAT RUNS TO COMPLETION. W46 is it: market spot on all four, and all four SIRs closed `instance-terminated-by-user`, i.e. self-terminate with ZERO reclaims. W45 could not settle it (two of four reclaimed early).",
+    "method": "Same method \u00a7CO.5 used to set $0.90 on W29: per-machine runtime x the AZ's spot rate. NOT a bill line -- a true bill-line reconciliation needs a Cost Explorer read after the 4.3-11.3h lag band, which is not available this round and is NOT claimed here.",
+    "runtime_bracket": "Runtime is given as a BRACKET rather than a point because the EC2 records aged out (GH #375) and the only surviving timestamp is the SIR's Status.UpdateTime, which can lag the instance's actual stop. Lower bound = last S3 object -> definitely still running; upper bound = SIR close. Per machine the gap is 2m40s - 3m54s. Total machine-hours 3.385 (lower) .. 3.607 (upper).",
+    "rates": "c6i.4xlarge Linux/UNIX spot, describe-spot-price-history over the wave window, one row per AZ (no price change inside the window): us-west-2a $0.2959, us-west-2b $0.2740, us-west-2c $0.2967, us-west-2d $0.2474.",
+    "per_machine": {
+      "84e984 (2a @0.2959)": "0.7233-0.7872 h -> $0.2140-$0.2329",
+      "d21f34 (2b @0.2740)": "0.8572-0.9017 h -> $0.2349-$0.2471",
+      "d7082b (2c @0.2967)": "0.9494-0.9978 h -> $0.2817-$0.2960",
+      "b77771 (2d @0.2474)": "0.8553-0.9203 h -> $0.2116-$0.2277"
+    },
+    "total": "EC2 spot $0.9422-$1.0037, plus public IPv4 at $0.005/h ($0.0169-$0.0180) = WAVE TOTAL $0.9591-$1.0217 vs the constant $0.90.",
+    "robustness": "The finding does not depend on where inside the bracket the truth sits: even the LOWER bound exceeds $0.90, and even EC2-only ($0.9422) exceeds it. To land under $0.90 the wave would have to have run ~22 minutes less in total than its own last S3 upload proves it ran.",
+    "root_cause": "PRICE, not runtime. Runtime 3.385-3.607 machine-hours brackets W29's clean 3.424, so the wave was the same size. The charter's spot band is quoted as $0.231-$0.250/h; THREE of the four AZs this wave priced ABOVE the top of that band ($0.2740, $0.2959, $0.2967), and the cheapest AZ ($0.2474) was already near its ceiling. The band, not the arithmetic, is what has gone stale.",
+    "failure_direction": "The stale constant under-records every spot wave in the fence arithmetic -- the DANGEROUS side, the same direction as the budgets MTD lag, and the two compound. This is the exact failure mode the constant's auto-invalidation clause was written to catch, and the clause worked: it is firing on the first wave that could test it, not on someone remembering to re-check.",
+    "fence_impact": "Small in absolute terms at today's cadence: ~$0.10-$0.12 per spot wave. September's fence reading is not changed materially (see the report). This is a re-rule-the-constant finding, not a brake-line event."
+  },
+  "gate_iv_self_verification": "NEW THIS ROUND, and it paid immediately. After filling this record, the harvest round ran the gate against its OWN wave -- `reclaim_blind.py --wave-json W46_wave.json` -- rather than leaving that to the next launching round. It came back RB_EXIT=2 TWICE before it came back 0:\n  (1) `seed 4209: unknown SIR status_code None` -> machines[] had no `status_code`;\n  (2) `seed 4209: needs survival_min, or both create and update` -> machines[] had `launched_at`/`terminated_at` but not the `create`/`update` names the tool reads.\nBoth are now filled from describe-spot-instance-requests and the gate reads RB_EXIT=0: `4 paired seed(s) of 4 machine(s) / 0 reclaimed before the flip / VERDICT: not blinded / NEXT WAVE: spot`.\nWHY THIS MATTERS BEYOND THE TWO FIELDS: GH #487 was filed last round on exactly one instance of this shape (null ab/ba), and last round's harvest_obligations named ab/ba ALONE. Had this round discharged only the obligation it was handed, the record would have read complete and honest, and the NEXT launching round would still have eaten an RB_EXIT=2 -- on two fields nobody had thought to name. The fix is therefore not a longer obligation list, which can only ever enumerate the failures already seen; it is that the round which WRITES the record is the round that must RUN the gate on it. An input-side gate whose input is written by a round that never executes it can only fail in the round that can least afford it. Handed to the director on GH #487."
 }
