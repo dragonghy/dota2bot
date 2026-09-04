@@ -10867,3 +10867,69 @@
     改文件重定向后拿到真码 **3**。**脚本的自拒机制又一次是唯一挡住它的东西。**
   - **Token 用量**:见报告 §9。
   - 完整报告:`iterations/reports/replay-check/20260904T185409Z.md`
+- **2026-09-04T21:56Z(W46 两台未扫机 + `campbind` 首次执行核验;上一轮 §下一轮第 (2) 条)**:
+  语料 **W46**(62-id 家族,首波)两台**从未被扫过**的机器 —— `…_d7082b`(种子 4470)
+  + `…_b77771`(种子 4252)。**宽扫 50/50 局**(26+24,`unparseable` **0/0**,暖场各跳 6),
+  **逐帧 8 局**。零 EC2、零发波、S3 只读、零 CE 调用。**未改 `bots/`/`game/` 任何一行。**
+  ```
+  VERIFY id=campbind verdict=INDETERMINATE episodes=14
+  ```
+  - **armed 串逐字核验**:`git show efa7ba70:…/test_set.md` 第 2 行 62 个 id,第 61 位是 `campbind`;
+    同串还有 `pullcamp`/`pullcad`/`pullthink` —— **四个 id 同住一条拉野分支**,
+    所以按章程 §4a **本轮不把任何聚合差分记给 `campbind`**,只按触发买。
+  - **买法是单向的**:出厂只可能戳**最近**的营地 ⇒ armed 腿一次戳在**非最近**营地
+    = 出厂结构上产不出的东西 = 正证据;baseline 腿是免费对照,**必须为 0**。
+    反向**不对称**:戳中最近营地与「门生效且计划=最近」和「门没生效」同时相容,记 UNDECIDED。
+  - **⭐ 主发现之一:宽切法那张表是个陷阱,而 baseline 列是拆穿它的东西。**
+    宽切法 armed **5** 次 non_nearest 看着像证据,**但 baseline 是 10**,
+    而 baseline **结构上不可能**打非最近营地 ⇒ 那是**尺子自己的假阳率**,还比 armed 高。
+    22 行**全部 `win=False`**(t=666…1500)= **后期打野**,被记在当帧没运行的门头上。
+    **与 `zusult` 那条(量具把「门管不着的施法」记在门头上)同族**,这次是**时段**。
+    窗内(60≤t≤360)两条腿**都是 0**,且对下面两次量具修复**稳健**。
+  - **⭐ 主发现之二(交出去了,GH issue):这个 id 的 (a) 在常规波里可能根本买不到。**
+    落地注释按「3.8% 的帧同时站在两个营地 1400u 内」立域,**但那不是杠杆会咬的域** ——
+    只有**计划营地 ≠ 最近营地**才咬,而计划营地必须**己方侧**。本语料 50 局:
+    窗内右键戳 **57** → 二义 **14** → 最近营地在敌方侧的只有 **1**(≈7%,且不可归属)
+    ⇒ **约每 50 局一个可能咬的瞬间**,攒够单向证据要**比一整波还多一个量级**的局数。
+  - **逐帧推翻量具两次**(都是先逐帧后聚合抓到的):
+    ① `124617_slot2` t=194.4 两营地相距 **1121u < 2×900**,逐营地半径成员判据让
+    **同六只小兵同时属于两个营地**(帧表两格一模一样)⇒ 两营地一起动 ⇒ 落 `unattributed`。
+    **方向要记住:这个缺陷不制造发现,它无声地压制发现。** 改独占归属后宽切读数两个方向都动了。
+    ② **戳是右键不是伤害**:`124739_slot1` ogre_magi t=271–279 的 **28 行全是 `ogre_magi_ignite`**,
+    一个 DoT 同时在**两个营地三个族**上跳;`124617_slot2` t=194.5 是 `greater_bash` 被动 proc。
+    判别子 inflictor `dota_unknown`,加上后归属率 **7/22 → 7/14**。
+  - **帧证据**:`124610_slot3` lich t=165.0 右键 harpy_storm 后南撤,营地质心跟着 0→341
+    (**教科书 poke-then-drag,但计划=最近 ⇒ UNDECIDED**,且属四 id 合力);
+    baseline `130119_slot1` CM 三次右键**全中同一族**,间隔 3s(出厂语义:打最近的,且稳定);
+    `125801_slot6` SB **4 秒内右键两个不同族**(唯一「敌方侧营地最近」的窗内实例,**不可归属**)。
+  - **bundle 级观察,不记给单个 id**:窗内右键戳 **armed 57 vs baseline 7** —— 拉野基本只发生在
+    armed 腿,那是 `pullcamp`+`pullcad`+`pullthink` 的合力,按 §4a **不拆**。
+  - **交付**(全部只读离线,零 AWS,未碰 `bots/`):**新增** `campbind_poke.py`(4 自检 PASS,
+    含未被打扰营地读作「没动」的**假阳性对照**)+ `tests/test_campbind_poke_liveness.py`
+    (**17 检查 / 0 失败**)+ `tools/agent/mutstand_campbind_poke.sh`(**6 变异 6 CAUGHT**,
+    `sha256sum -c` 还原 OK)。
+    ⚠️ **据实登记本台两次返工,两次都是变异台自己抓的**:
+    ① **M3 第一次 SURVIVED** ⇒ 按证据纪律 2 先怀疑断言:夹具把营地往**远离**邻居的方向拖,
+    共享成员判据**根本没被触发**;改朝邻居拖(终点 521u)+3:1 配比后 CAUGHT。
+    ② **M4b 第一次「CAUGHT 但理由是错的」**:diff 改的是 `LEASH`,失败消息却是 `POKE_R`。
+    **M4 与 M4b 改出的文件字节数相同、又写在同一个 mtime 秒内**,CPython 的 (mtime,size)
+    失效判据**复用了 M4 的 `__pycache__`** ⇒ **变异台在测量上一个变异体**,
+    **而这种失败长得像通过**。已加 pycache 清除 + `-B` 并写进脚本注释。
+  - **下一轮第一件事**:(1) `campbind` **不要再扫更多局去凑单向证据**(密度已证不够),
+    等 issue 裁定;(2) W46 另外两台 `…_84e984`/`…_d21f34` **仍未扫**;
+    (3) `zusboltdom` 仍等**同波隔离腿**;(4) GH #467 的 `slotwait` (a);
+    (5) #477 重 dump(**W44 录像约 09-25 过期,仍是本组的球**)+ #494/#491/#488/#470/#474/#482/#483 回音。
+  - **欠账**:50 局 timeline 随容器回收;`cmqreach` 建议钉帧 fixture 仍未做;
+    上上轮 §2.1 那一帧 fixture 未做。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×2 **全 0**;
+    `campbind_poke.py --selfcheck` **CB_EXIT=0**;liveness **LIVE_EXIT=0(17/0)**;
+    `mutstand_campbind_poke.sh` **MUT_EXIT=0(6/6 CAUGHT)**。
+    ⛔ **开工自检 `SELFCHECK_TRUE_EXIT=3`(FINDINGS)**:`cadence`(hero/strategy,非本组)、
+    `owed-executions`、**`trunk-red(python)` 两条** —— `test_detector_source_constants.py`
+    **= GH #490 已开不重复认领**,`test_bots_walk_farm_only.py` **本轮新开 [bug]**;
+    另 2 条 `UNCERTIFIABLE`(**没跑成不是通过**)。
+    ⛔ **证据纪律 3 第三十次踩**:第一条命令又写了管道,`routine_selfcheck.sh` **当场自拒**
+    (harness 报的 `EXIT=0` 是 `tail` 的码);改文件重定向后拿到真码 **3**。
+    **脚本的自拒机制第三十次是唯一挡住它的东西。**
+  - **Token 用量**:见报告 §9。
+  - 完整报告:`iterations/reports/replay-check/20260904T215611Z.md`
