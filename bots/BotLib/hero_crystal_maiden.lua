@@ -938,6 +938,69 @@ function X.ConsiderQImpl()
 
 end
 
+
+--- How much health a creep may have and still be worth freezing to farm it.
+---
+--- WHAT THE SHIPPED NUMBER IS.  `X.ConsiderW`'s "无英雄目标时冰冻小兵打钱" block
+--- admits a creep whose health is `<= 1200`, twice, as a bare literal.  That is
+--- not an arbitrary number: Frostbite's own KV says
+---     damage_per_second 100  x  creep_multiplier 4  x  duration 1.5/2/2.5/3
+---     =  600 / 800 / 1000 / 1200
+--- so `1200` is EXACTLY the rank-4 figure.  The literal is the right quantity
+--- frozen at the top of its own ladder -- the same shape as Zeus's static field
+--- constant and Axe's `150 + 100*lv`, and the reason this is filed as a
+--- rank-independence defect and not as "the number is wrong".
+---
+--- WHAT THAT COSTS.  At ranks 1-3 the block admits creeps this hero cannot kill
+--- by 600 / 400 / 200 health, and admits them at the TOP of the window it
+--- searches (`X.cm_GetStrongestUnit` returns the STRONGEST creep, so the
+--- over-admitted band is precisely the band the picker prefers).  The spend is
+--- 125-155 mana off a hero whose mana is this desk's standing scarcity (GH #126)
+--- plus a 6-9s cooldown on her only single-target disable, for a creep that
+--- walks out of the root alive.  The shipped row `{1,2,3,2,2,6,2,1,1,1,6,3,3,3,6}`
+--- spends W at hero levels 2/4/5/7 (no talent sits below level 10, so those
+--- indices ARE the levels), i.e. the band bites from level 2 to level 6 -- the
+--- laning half of a turbo game, exactly where her mana is tightest, and the same
+--- window `nLV >= 5` already lets this block open in.
+---
+--- DIRECTION IS BY CONSTRUCTION, and it is a NARROWING: `dps*mult*duration` is
+--- `<= 1200` at every rank this file can reach, with equality at rank 4, so the
+--- armed cap admits a strict SUBSET of the creeps the shipped cap admits.  It
+--- can only remove a cast, never add one.  The one way it could widen is the
+--- t25 half `special_bonus_unique_crystal_maiden_1` (+1.0s duration -> a real
+--- 1600), and this file's own `tTalentTreeList['t25'] = {10, 0}` takes the OTHER
+--- half, so that row is structurally untrained; the ratchet in
+--- tests/test_cm_frostbite_creep_cap.lua fails if it ever moves.  (Were it
+--- trained, the widened cap would be the CORRECT one -- the engine folds a
+--- trained talent into the base read, GH #228 -- which is the second reason to
+--- read the KV live instead of hardcoding a fifth constant.)
+---
+--- SHAPE (the GH #162 house rule, as in hero_lion.lua X.GetImpaleKillDamage).
+--- The shipped expression is this function's LAST statement and the armed branch
+--- is the only detour, so gate-off equivalence is structural; and an armed read
+--- answering `<= 0` falls through to the shipped literal rather than inventing a
+--- cap of 0, which would silently close the whole block instead of narrowing it.
+---
+--- Soak candidate 'cmcreepcap', turbo-only.  Domain, the driven ranks and the
+--- corpus limit: tests/test_cm_frostbite_creep_cap.lua.
+function X.cm_GetFrostbiteCreepCap( hAbility )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmcreepcap' )
+	then
+		local nKvCreepDamage = hAbility:GetSpecialValueInt( 'damage_per_second' )
+							 * hAbility:GetSpecialValueInt( 'creep_multiplier' )
+							 * hAbility:GetSpecialValueFloat( 'duration' )
+		if nKvCreepDamage > 0
+		then
+			return nKvCreepDamage
+		end
+	end
+
+	return 1200
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -949,6 +1012,7 @@ function X.ConsiderW()
 	local nManaCost = abilityW:GetManaCost()
 	local nSkillLV = abilityW:GetLevel()
 	local nDamage = ( 100 + nSkillLV * 50 )
+	local nCreepCap = X.cm_GetFrostbiteCreepCap( abilityW )
 
 	local nAllies =  J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE )
 
@@ -1126,7 +1190,7 @@ function X.ConsiderW()
 					and nEnemysStrongestCreeps2:GetUnitName() ~= 'npc_dota_creep_goodguys_ranged' ) )
 		then
 			if ( nEnemysStrongestCreepsHealth2 > 460 or ( nEnemysStrongestCreepsHealth1 > 390 and nMP > 0.45 ) )
-				and nEnemysStrongestCreepsHealth2 <= 1200
+				and nEnemysStrongestCreepsHealth2 <= nCreepCap
 			then
 				return BOT_ACTION_DESIRE_LOW, nEnemysStrongestCreeps2
 			end
@@ -1141,7 +1205,7 @@ function X.ConsiderW()
 					and nEnemysStrongestCreeps1:GetUnitName() ~= 'npc_dota_creep_goodguys_ranged' ) )
 		then
 			if ( nEnemysStrongestCreepsHealth1 > 410 or ( nEnemysStrongestCreepsHealth1 > 360 and nMP > 0.45 ) )
-				and nEnemysStrongestCreepsHealth1 <= 1200
+				and nEnemysStrongestCreepsHealth1 <= nCreepCap
 			then
 				return BOT_ACTION_DESIRE_LOW, nEnemysStrongestCreeps1
 			end

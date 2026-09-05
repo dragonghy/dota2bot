@@ -22,6 +22,50 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-102. **Crystal Maiden 冻兵打钱的血量上限 `<= 1200` **是 Frostbite 4 级那一档**,被当成了
+   每一级的上限 —— 而这一根的方向**第一次是 NARROWING**(报告
+   `iterations/reports/hero/20260905T231439Z.md`,`state.json:cmcreepcap_20260905`,
+   `queue.json:hero-33`,GH **#541**;新 `tests/test_cm_frostbite_creep_cap.lua` 17 例 +
+   `tools/agent/mutstand_cmcreepcap.sh` 8 变异全杀;`bots/BotLib/hero_crystal_maiden.lua`
+   **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实**:`X.ConsiderW`「无英雄目标时冰冻小兵打钱」块两条分支各有一处裸 `<= 1200`,而
+     Frostbite 对小兵的总伤害 = `damage_per_second 100 × creep_multiplier 4 ×
+     duration 1.5/2/2.5/3` = **600 / 800 / 1000 / 1200**(仓内 KV 快照)⇒ **1200 恰好是
+     4 级那一档,一个字不差**。⇒ **缺陷不是「数错了」是「对的数被冻在自己梯子的顶端」**
+     (与 `zusstatic` GH #173 / Axe R GH #115 §5 同族,形状更干净)。1-3 级各多放行
+     600/400/200 血,而且多放行的那一段**正好是挑选器偏好的那一端**(`cm_GetStrongestUnit`
+     取最强的那只)。代价 125-155 蓝(GH #126 的常设稀缺)+ 6-9s 她唯一单体控的冷却。
+   - **⭐ 方向由构造保证,而这一根是子集不是超集**:`dps*mult*duration <= 1200` 对每一级成立、
+     4 级取等 ⇒ armed 是 shipped 的**严格子集**,arming 只能**减少**释放。负读数只能读作
+     「那些小兵本来该冻」,**永远不能**读作「杠杆凭空多冻了一只」。
+   - **⭐⭐ 而这个方向有一个前提,前提被单独钉成了棘轮 —— 本组第一次这么做。**
+     t25 行必须仍取 `{10, 0}`;另一半 `special_bonus_unique_crystal_maiden_1`(+1.0s 持续)
+     把 4 级上限抬到 **1600**(引擎折天赋进 base 读数,GH #228)⇒ **方向当场翻成放宽**。
+     前三根(`cullthresh`/`wkbonefight`/`zusboltdmg`)的前提都在同一个表达式里,
+     这一根的前提**在几十行外的另一张表上**。变异 **M4(duration 项 `+ 1`)** 就是这条:
+     它读起来像**修正**(「把天赋算进去嘛」)却把窄化变放宽。
+   - **⚠️ 抓住 M4 的是断言的顺序,不是断言的存在 —— 如实记的一次返工**:§3 第一版是单遍循环,
+     会在**低级**的严格性上先断掉,**永远打不出那条方向失败的消息**(M4 当时记「RED 但消息不对
+     ⇒ 按 survived 处理」)。改成**两遍扫描**(先全梯度扫方向界、再逐级扫严格性)后 8/8。
+     M6 同族(裸 1200 的检查排在计数检查后面,打出的是计数消息)。
+     **⇒ 一条可复用的:变异台报「RED 但消息不对」时,先查断言顺序,再怀疑变异。**
+   - **⚠️ 覆盖边界,两句不许合并**:整块 fixture 驱动不了,而这个零**是 loader 的不是语料的** ——
+     `bot:GetNearbyCreeps` 在 **10/10 个 CM 帧上、对两个队伍都返回空表**,而同一棵树里
+     `f_212636_tide_ancient.lua` 正文带着 `npc_dota_creep_*`(§5 三条断言);第二堵点是该块
+     自己的门在 10 帧里只开 2 帧、那 2 帧上敌方小兵数 0(§5b)。**改动的那一项是真实帧读数**:
+     10/10 帧解析出真句柄且三个 KV 读数全为活值,等级直方图 **2→1 / 3→2 / 4→7**,
+     armed≠shipped 在 **3/10**(具名帧 `f_113638_cm_chain_rescue`:1200 → 800)。
+     ⚠️ 那 3/10 是**下界不是频率**(语料 10 分钟封顶,1-6 级那段结构性偏薄,误差方向不利于本改动)。
+   - **⚠️ PROVEN-ZERO 这条线在焦点五里已经空了,别再从它取题**:5 个站点今天逐个读完 ——
+     `zuus:947`/`zuus:1063`/`lion:583` 是**已落地修复自己的出厂回落腿**(按 house rule 就该在那里);
+     `lion:822`(ConsiderW)与 `lion:1009`(ConsiderE)是**没有消费者的死局部**,删掉零行为改动、
+     留着零行为影响,本组不动。⚠️ 那两处**不在** `test_dead_numeric_local_census.lua` 的域里
+     (它按自己的 LIMIT (2) 只收 `local n<X> = <数字字面量>`,这两处右边是**调用**)——
+     加宽那个域是量具活,不归本组主体配额,**登记不认领**。
+   - **下一棒**:**批测台** `queue.json:hero-33`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30`/
+     `hero-31`/`hero-32` 并成同一次遍历)。**总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。
+     **在 (a) 买到之前不许 promote。**
+
 -101. **Zeus 的远程兵狙杀分支**闭式为死**,而算术和真实帧反事实**两样都是本组早就写下的** ——
    这一轮补的是**修复本身**和**方向证明**(报告 `iterations/reports/hero/20260905T200244Z.md`,
    `state.json:zusboltdmg_20260905`,`queue.json:hero-32`,GH **#537**;
@@ -4517,6 +4561,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T23:14Z(报告 `iterations/reports/hero/20260905T231439Z.md`;轴 **Crystal Maiden
+  冻兵打钱的血量上限 `<= 1200` 是 Frostbite 4 级那一档,被当成了每一级的上限:收进 gated
+  `cmcreepcap`,turbo-only 未 armed**;新 backlog `-102`,`state.json:cmcreepcap_20260905`,
+  `queue.json:hero-33`,GH **#541**)
+  **`bots/BotLib/hero_crystal_maiden.lua` 有真代码行**(新 `X.cm_GetFrostbiteCreepCap` +
+  `X.ConsiderW` 一处绑定、两处调用点);新 `tests/test_cm_frostbite_creep_cap.lua`(**17 例**)+
+  新 `tools/agent/mutstand_cmcreepcap.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#537/#533/#525 是本组今天落的三根、球在批测台 / #512 本组 `-96` 明写预检不通过 /
+    #502 已转 harness→#516 / #488 录像组)。连续四轮 Axe/Axe/WK/Zeus ⇒ **换焦点英雄**。
+    选法不是翻源码碰运气:先把 PROVEN-ZERO 名单**走完**(结论见下,这条线空了),
+    再转「裸字面量 vs 仓内 KV 快照」这条线。
+  - **事实**:`damage_per_second 100 × creep_multiplier 4 × duration 1.5/2/2.5/3` =
+    **600/800/1000/1200** ⇒ 出货的 `1200` **恰好是 4 级那一档**。缺陷是**定义域**不是数值。
+  - **⭐ 方向:第一根 NARROWING**(前三根都是超集)。armed ⊂ shipped,4 级取等 ⇒
+    arming 只能减少释放;负读数不能读作「多冻了一只」。
+  - **⭐⭐ 第一次把「方向论证的前提」而不是方向本身钉成棘轮**:t25 行必须仍取 `{10,0}`,
+    另一半 +1.0s 持续会把上限抬到 1600、方向翻成放宽(GH #228 引擎折天赋进 base 读数)。
+  - **⚠️ 一条可复用的教训**:变异台报「RED 但消息不对」时**先查断言顺序,再怀疑变异**。
+    §3 单遍循环会在低级的严格性上先断掉,M4(被禁方向)因此打不出方向失败的消息;
+    改成两遍扫描后 8/8。M6 同族。
+  - **⚠️ 覆盖边界**:整块 fixture 驱动不了(`GetNearbyCreeps` 在 10/10 帧、两个队伍都空表,
+    而同树 fixture 正文带 `npc_dota_creep_*` ⇒ **零是 loader 的不是语料的**;第二堵点是块自己的门
+    只开 2/10 帧且那 2 帧无敌方小兵)。**改动的那一项是真实帧读数**:10/10 真句柄 + 活 KV,
+    等级直方图 2→1/3→2/4→7,armed≠shipped **3/10**(`f_113638_cm_chain_rescue` 1200→800)。
+    ⚠️ 3/10 是**下界不是频率**,定价走 `hero-33`。
+  - **负结果登记**:PROVEN-ZERO 名单在焦点五里**已经空了** —— 3 个是已落地修复的出厂回落腿,
+    2 个(`lion:822`/`lion:1009`)是没有消费者的死局部、零行为影响,且**不在**
+    `test_dead_numeric_local_census.lua` 的域里(它只收数字字面量)。**后来的轮次别再取这条线。**
+  - 验证:新文件 **17/17**;`run_tests.lua cm` **242 例 0 失败**;变异台 **8/8**;
+    另**逐个点名跑了引用 `hero_crystal_maiden.lua` 的 52 个 lua 依赖者(0 红)+ 2 个 python 依赖者**;
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings),没用 BYPASS**;smoke 3/3;gate_claim 16/16。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒「全量绿」本轮没有人说。
+    开工自检 **worst exit 3**(cadence / queue-rulings / owed-executions / trunk-red(python) /
+    trunk-red(lua))。**Lua 那条红恰好是 21:33Z 已立的 GH #538**(`staybottle` 的 `== 109` 等值钉),
+    先于本轮且本轮不新增任何 fixture ⇒ 不认领;**python 那五条本轮没有逐条做 stash 差分,如实登记**。
+    ⚠️ 自检第一次调用被脚本自己 **REFUSED**(stdout 是管道,证据纪律 3,本仓第 6 次复发)。
+  - 下一棒:**批测台** `queue.json:hero-33`(零 EC2,可与 `hero-2`/`hero-30`/`hero-31`/`hero-32` 合并遍历)。
 - 2026-09-05T20:02Z(报告 `iterations/reports/hero/20260905T200244Z.md`;轴 **Zeus 的远程兵
   狙杀分支闭式为死:`X.ConsiderW` 的平伤读一个在引擎里恒零的字段,判据退化成与血量无关的
   `1 < m*b` ⇒ 从不开火。修好并收进 gated `zusboltdmg`,turbo-only 未 armed**;
