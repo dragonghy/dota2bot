@@ -5971,5 +5971,25 @@
   "cost_side": "Call 只嘲讽不造成伤害 ⇒ 两支都不可能像误放 Culling 那样浪费一次击杀。(i) 的下界是分支自己的前提(在 265u 内**正在引导**的敌人本就没在攻击,终止引导正是目的);(ii) 的下界是**上游未改动的** `J.IsGoingOnSomeone` —— Axe 已经决定压上去了,加宽只是在那次决定之上多了 2.1/2.4/2.7/3.0s 的嘲讽与 +12/13/14/15 护甲,而「顺带拉进环内其他敌人」**不是新代价**(目标不魔免时出货分支本来就放同一发 AoE 嘲讽)。⚠️ **不许把 `axecull` 的「下界由血量测试给定」搬过来** —— 这里没有击杀保证,那是两根杠杆真正不同的地方。",
   "next_baton": "`iterations/queue.json:hero-30`(零 EC2 的**归档只读扫描**,可与 `hero-2` 并成同一次遍历):两支**分开报**域,带 DOMAIN-NOT-REACHED 退回门与预登记判读方向(两支魔免占比都接近 0 ⇒ 不入集)。**在 (a) 买到之前不许 promote**;P4.2 入集冻结期内也不申请 arm。",
   "aws": "零"
+ },
+ "zusstatic_RETURNED_20260905": {
+  "date": "2026-09-05T15:5xZ",
+  "owner": "director",
+  "ruling": "RETURNED TO SENDER (退回出集) -- NOT a reject",
+  "arm_string": "62 -> 61 (540 bytes, md5 824ec2842e234693cb3c4094f73d6a14)",
+  "bots_lua_changed": false,
+  "selected_by": "OWNER_PRIORITIES P4.2 '从核验记录最少、最难买 (a) 的 id 清起' -> tools/agent/verify_coverage.py 的 BLIND SPOTS = {midtp, zusstatic}(VERIFY 计数 0 **且**任何报告里 id 附近从来没有出现过裁定词)。midtp 已是录像组 GH #521 (丙) 的棒(test_set.md §EV 交出),**不抢**。",
+  "headline": "条件 (a) 结构上买不到,加局无用:`zusstatic` 的闸在 X.GetStaticFieldBonus(hAbility) 里,而 hAbility 是**参数**,由唯一调用点 hero_zuus.lua:652 经 X.GetBoundAbility 递进来 —— 后者自己 gated 在 `zusbind` 上,而 `zusbind` 从来不在成员串里。⇒ armed 波里那一层短路成 return hShipped,递进去的是 abilityAS = bot:GetAbilityByName(sAbilityList[5])。",
+  "live_reading": "bash tools/agent/rc.sh lua5.1 tests/run_tests.lua test_zuus_ability_index_binding.lua => 15 tests, 0 failures, RC_EXIT=0。断言逐字:'[hero] index 5 is Static Field in NONE of the eight drop-worlds',并把 index 5 实际 carrying 的东西钉成计数而不是散文:zuus_lightning_hands 2 个世界 / nil 4 个 / generic_hidden 2 个。用的是**出厂的** J.Skill.GetAbilityList,枚举三个可选技能的 2^3 = 8 个丢弃世界。",
+  "eight_world_walk": "nil(4 个世界):未门的 `hAbility == nil` 先 return 0,gate-off 同一行 return 0 ⇒ 差值 0,结构性 no-op。| 非 nil 但未 trained:IsTrained() 假 ⇒ return 0,两腿同 ⇒ 差值 0。| 非 nil 且已 trained:armed 腿读**别的技能**的 damage_health_pct,无此键 ⇒ 静默 0(GH #162 家规)⇒ return 0;gate-off return 0.09 ⇒ 差值 0.09 -> 0。 ⇒ **八个世界里 armed 腿全部得到 0,从来没有一次得到它被写出来要测的 ~3.45%。**",
+  "why_returned_not_rejected": "被退的是「登记的杠杆在这个串里不可达」,不是「读数不好」—— 一个读数都还没有。GH #173 的**事实**没有被否掉:zuus_static_field 的 AbilityValues/damage_health_pct/value = 3.45,hero_levelup +0.05,出厂常量 0.09 确实约是真值的两倍且偏乐观。阻断项是 `zusbind` 不在串里,那是**串的形状**不是语料的稀缺。与 l1xpsoak(2026-08-19,入场条件是已 promote 的 lanesurv 的真子集)同型。",
+  "only_observable_effect": "把 Static Field 这一项整个删掉(0.09 -> 0),而那**不是登记在册的杠杆**(GH #173 登记的是「0.09 换成技能自己的百分比」)。两个消费者都做 target:GetHealth() * abilityASBonus:X.ConsiderW 的远程小兵狙击、X.ConsiderR 的 lowHPCount 循环(决定 ~130s 全局大招兑不兑现)。",
+  "not_the_pullcad_trap": "裸读源码逐条核过两件:(甲) grep -rn \"IsSoakCandidate( *'zusstatic'\" bots/ ⇒ 恰好一处(hero_zuus.lua:619);grep -rn zusstatic bots/ game/ 除注释外同一处 ⇒ 零合取、零其他闸引用它 ⇒ 退集不会冻死任何别的闸(反向 pullcad 检查),自检 FROZEN none 复现。(乙) 依赖 zusbind 写在两个函数的**注释**里、不写在同一个布尔表达式里(hero_zuus.lua:575 逐字:'zusstatic armed without zusbind armed measures the wrong ability's missing key, i.e. 0')。",
+  "third_shape": "⭐ 这是**第三种形状**,比 pullcad 更隐蔽:pullcad 的谓词**恒假**(闸冻死,check_armed_wiring.py 仍叫它 WIRED);这一条的谓词**恒真而答案恒 0** —— 它每帧都开火,只是拿到的句柄是错的。一个开火的闸带一个恒定的错答案,在任何聚合读数里都长得跟「已测试且中性」一模一样。",
+  "machine_readable_handoff": "登记为共同 promote 原子 `static_field_needs_binding`(iterations/promote_atoms.json,rule=no_promote_without,subject=[zusstatic],prereq=[zusbind])⇒ 今后任何一轮想单独 promote zusstatic,自检 promote-atoms 腿当场 exit 3。**变异台验收(非空洞性)**:临时把 zusstatic 的闸址改成 PROMOTED 形状 ⇒ CAUGHT,exit 3,报错逐字点名两个 id 并带 §EX 引用;从文件副本还原后 md5 逐位相同(0af7092e1e887029fb0dae5dd6f6c9b6),bots/+game/ 零 diff,工具复跑 exit 0。⛔ 我**没有**把这条依赖再写成一句散文 —— 它此前已经是两处注释里的散文,而散文正是它被 armed 十几天没人发现的原因。",
+  "release_condition": "zusbind 被 promote,或 hero_zuus.lua:652 的调用点改成无条件按名字绑 Static Field —— 两者都让句柄在没有 arm 串前提的情况下变对,那时 zusstatic 才能凭自己的是非被裁。",
+  "carrier_terms": "8 -> 8 逐字不变且是量出来的:carrier_terms.py 对 63-id 与 61-id 两个串各跑一次,TERMS 行逐字节相同,0 unresolved;计数 13 hero-scoped/50 generic -> 12/49。机械理由:zuus 仍由 zusult/zusboltdom 供着。",
+  "aws": "零",
+  "ref": "iterations/streams/test_set.md §EX(§EX.2 / §EX.3 / §EX.4 / §EX.5);GH #173(事实)"
  }
 }

@@ -87,10 +87,31 @@ def main():
     #   * #276's actual half -- the gate must not ask about a hero NO armed id
     #     needs -- becomes "every term has a claimant", which is what that
     #     sentence meant and which keeps holding as ids come and go.
+    # [director 2026-09-05, test_set.md SS EX] The 08-29 restatement above
+    # hardened this loop against GROWTH ("so growth cannot renumber it") but not
+    # against REMOVAL, and `scoped` is still derived from the live arm string.
+    # Retiring `zusstatic` from the arm string (SS EX.2, a return-to-sender, the
+    # gate site in bots/ untouched) therefore reddened this line -- and the red
+    # was NOT about the thing this file guards: `derive_id` still resolves
+    # zusstatic -> zuus, which section 2 above asserts directly against the tree.
+    # That is the SAME defect the comment block describes, one direction over: a
+    # test that goes red every time the arm string is edited is re-stating the
+    # arm string.  So the membership claim is split by what it can actually mean:
+    #   * armed     -> it must still come out hero-scoped THROUGH the live
+    #                  derivation (the original teeth, unchanged);
+    #   * not armed -> the arm string cannot speak for it, so demand the claim
+    #                  from the deriver + tree instead.  Retiring an id must
+    #                  never silently retire the assertion that guards it.
     for cand in ("aimguard", "cmrguard", "zusult", "zusstatic",
                  "liondrainstop", "odaoe"):
-        check(cand in scoped,
-              "%s is still hero-scoped (the six replay-check derived by hand)" % cand)
+        if cand in ids:
+            check(cand in scoped,
+                  "%s is still hero-scoped (the six replay-check derived by hand)"
+                  % cand)
+        else:
+            check(ct.derive_id(tree, cand)["kind"] == "hero",
+                  "%s is still hero-scoped off the tree (unarmed, so the arm "
+                  "string cannot speak for it)" % cand)
     check("spirit_breaker" in terms, "spirit_breaker IS asked about")
     # ⚠️ NOT written as `set(terms) == {h for r in rows ...}`.  That was the first
     # draft and it is a TAUTOLOGY: derive_terms builds `terms` by exactly that

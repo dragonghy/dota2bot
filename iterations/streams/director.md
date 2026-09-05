@@ -10601,3 +10601,68 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   两条一起读 = W48 的闸 (i) 那一格没拿到 `machines[0].launched_at`。**不是总监能修的**
   (只有批测台知道那台机起没起来),**本轮不另开 issue**(批测台每轮跑同一个自检,
   这两条在它下一轮第一屏上);**若下一轮批测台报告里没有它,总监按铁律 9 连带规则把它变成一条 owed 行**。
+
+- 2026-09-05T15:5x–16:0xZ:**armed 集第一次在冻结期真的变小(63 → 61)** —— 本轮的唯一输入是
+  `OWNER_PRIORITIES.md` P4.2 于 14:5xZ 补的「优先级澄清」(commit `ffeb0aa6`,主会话),
+  按铁律 9 直接认领,上一轮排的 ① `text_absent_done_when_kind`(GH #523)被它抢占、顺延。
+  全文 `test_set.md §EX`(最该读 **§EX.3**),报告 `iterations/reports/director/20260905T160000Z.md`。
+  `bots/`+`game/` **零 diff**,零 AWS,无 promote。**P4.2 的新产出指标:判定完结数 = 2。**
+  **① `stayattr` 退回出集(63 → 62)—— 执行 owner 裁定,不是改判 §ET**:§BB.4「搭车提议当轮放行」
+  已被 P4.2 **废止并压过**,冻结期唯一合法裁定是 FROZEN-HOLD;§ET 那次入集在澄清落地之前,
+  被 owner 明写认定为违例。§ET 买到的 (a)(c) 证据**逐条仍然成立**,**被推翻的是时机不是证据**,
+  gate 与 `jmz_func.lua:5116` 的代码一字未动。⭐ **可核验的还原**:退集后的串与 §EC 09-04 的 62-id 串
+  **逐字节相同**(550 字节,md5 `c7e1f92c739f8f8dc0ee0c9484288628`),已逐位核过 —— 不是巧合是构造。
+  W48 不作废(它 clone 的树含 `stayattr`),读数按 §ET 归档为额外 (a) 证据。
+  **② ⭐ `zusstatic` 退回出集(62 → 61)—— 本轮的实质发现**。选取不是我挑的:P4.2 写「从核验记录
+  最少的 id 清起」,`verify_coverage.py` 的 **BLIND SPOTS** 恰好两条(`midtp`/`zusstatic`:VERIFY 0
+  **且**任何报告里 id 附近从无裁定词);`midtp` 已是录像组 GH #521 (丙) 的棒,**不抢**。
+  **③ ⭐⭐⭐ 为什么是「买不到」不是「还没买」**:闸在 `X.GetStaticFieldBonus( hAbility )` 里,
+  而 `hAbility` 是**参数**,由唯一调用点 `hero_zuus.lua:652` 经 `X.GetBoundAbility` 递进来 ——
+  后者自己 gated 在 **`zusbind`** 上,而 **`zusbind` 从来不在成员串里** ⇒ armed 波里那一层短路成
+  `return hShipped`,递进去的是 `abilityAS = GetAbilityByName( sAbilityList[5] )`。
+  **活读数**:`test_zuus_ability_index_binding.lua` 用**出厂的** `GetAbilityList` 枚举 2³ = 8 个丢弃世界,
+  断言 `index 5 is Static Field in NONE of the eight`(实际:`lightning_hands` 2 / `nil` 4 /
+  `generic_hidden` 2),复跑 **15 tests, 0 failures**。八个世界逐个走 armed 腿 ⇒ **全部得到 0**,
+  从来没有一次得到它写明要测的 ~3.45%;唯一可观测效应是把 Static Field 项**整个删掉**(0.09 → 0),
+  **而那不是登记在册的杠杆**。⇒ 阻断项是**串的形状**不是语料稀缺,**加局无用**,与 `l1xpsoak` 同型。
+  **GH #173 的事实没被否掉**(`damage_health_pct` = 3.45 + 0.05/级)。
+  **④ ⭐⭐ 第三种形状,比 `pullcad` 更隐蔽**:`pullcad` 的谓词**恒假**(闸冻死,
+  `check_armed_wiring.py` 仍叫它 WIRED);这一条的谓词**恒真而答案恒 0** —— 它每帧都开火,
+  只是句柄是错的。**一个开火的闸带一个恒定的错答案,在任何聚合读数里都长得跟「已测试且中性」
+  一模一样。** 依赖此前**写在两个函数的注释里、不在同一个布尔表达式里**
+  (`hero_zuus.lua:575` 逐字)—— **散文正是它被 armed 十几天没人发现的原因**。
+  **⑤ 交棒这次是机器可读的**:登记共同 promote 原子 **`static_field_needs_binding`**
+  (subject `zusstatic` / prereq `zusbind`)。**非空洞性验收**:临时把闸址改成 PROMOTED 形状 ⇒
+  **CAUGHT `exit 3`**、报错逐字点名两个 id;从**文件副本**还原后 md5 逐位相同(`0af7092e…`),
+  `bots/`+`game/` 零 diff,复跑 exit 0。⛔ 我**没有**把这条依赖再写成第三句散文。
+  **⑥ ⚠️ 顺带撞红一条测试,而那条红不是它守的东西**:`test_carrier_terms.py` 打
+  `FAIL zusstatic is still hero-scoped`。归因查实是我的改动,**但 `derive_id` 仍把它解析成 `zuus`**
+  (同文件第 2 节直接对树断言,一直绿)。⭐ **这正是该文件注释块 76–89 行自己描述的缺陷,方向差一个**:
+  08-29 的重述**对增长**加固了(原话 "so growth cannot renumber it"),**却没有对移除加固**,
+  而 `scoped` 仍从**活的 arm 串**导出 ⇒「每次 arm 串被编辑就变红的测试,是在复述 arm 串」。
+  修法:按断言能有的两种含义拆开 —— armed ⇒ 仍走活推导(原牙齿不变);未 armed ⇒ **arm 串没资格
+  替它说话**,直接向推导器+树要。**退集一个 id 绝不能顺手把守它的断言一起退休。**
+  变异验收:删掉唯一闸址 ⇒ 新分支**按名字打红**,`RC_EXIT=1`;还原后 66 checks / 0 failed。
+  **⑦ FROZEN-HOLD 第一次行使**:自检打 `RIDESHARE -> hero-30`(`axecallbkb`),§BB.4 既废
+  ⇒ 裁 FROZEN-HOLD(`queue.json:hero-30.director`,`status=frozen_hold`)。**不是否定证据**
+  (英雄组 `c1cce307` 已落地 gated、桌面证据完好),**也不是掉棒** —— 它要的是零 EC2 的只读扫描,
+  **冻结冻的是入集,不是取证**;裁定明写:证据继续买,解冻后凭现成证据重提。
+  **⑧ 计量/巡检**:载体项 **8 → 8 逐字不变且是量出来的**(`0 unresolved`;计数 13/50 → 12/49,
+  机械理由是 `zuus` 仍由 `zusult`/`zusboltdom` 供着)—— 与 §ET.4 / GH #522 同一条警告,
+  **不要把差额读成本次退集带来的**。铁律 6 静态半 `0 warnings / GATE_EXIT=0 CLEAN`;
+  动态半未全量跑(`bots/` 零 diff),**逐个**跑了读被改文件的测试(promote_atoms exit 0 /
+  carrier_terms 66-0 / pending_rulings 203-0 / gate_claim_consistency 16-0)。
+  两个 stable 锚点全 ok;`FROZEN none`;orphan 0;owed registry 3 行(退 0 增 0)。
+  ⚠️ **自检 trunk-health(python)那一腿本轮超时未打印 ⇒ 那一侧我没看过,不声称完整自检**。
+  ⚠️ **纪律 3 又中一发且又是第一条命令**(`| tail -60` 被 §22 守卫拒)—— **守卫拦的,不是我记住的**;
+  被拒那次没执行任何检查,故没重演并发写 `soak_side.lua`。零 AWS ⇒ **不对 MTD 作新声称**;
+  owner 邮件本周未发(上一封 08-31);`DECISIONS_NEEDED` +0;**patch 检查未做**(低频顺延)。
+  **⑨ 结转**:P4.1 标尺波已被批测台 15:2xZ 认领并发出(Y1)⇒ P4.2 的「再空一轮即写进
+  DECISIONS_NEEDED」**本轮不触发**;上一轮 ⑬ 的 `test_wave_throttle.py` 对 W48 的闸 (i)
+  `UNCERTIFIABLE` **未见批测台作答**,**下一轮它仍不报就变成一条 owed 行**。
+  **⑩ 下次触发**:①**GH #523 `text_absent_done_when_kind`**(本轮被抢占,先写认领并 push 再开工)
+  ②**继续 P4.2 库存清算**(每轮 ≥2 判定完结,从 `verify_coverage.py` 的 `verify=0` 长尾起,
+  `tpdying`/`tpreach` narrat 2 最薄)③GH #517 / trunk 红逐条(#506 先做)+ 单独复跑 python 半边
+  ④`kind:"ruling_request"` 轻量 queue 行 / GH #454/#487/#460/#473 乙/#489/#486/#496 / #513/#514
+  ⑤GH #449/#410/#436/#285/**patch 缺口 P3**/`ckpush`(有时限)。
+  **距离 P4.2 解冻线(armed ≤ 20)还差 41。**

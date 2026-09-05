@@ -1,7 +1,13 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom,stayattr
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom
 
-**成员串 63**(上一行,**559 字节**,md5 `4aefc887f3f8c9173e7ac7024b3c20c9`)。本行 **2026-09-05T11:xxZ 的变动:`stayattr` 单独入集**(62 → 63,总监裁定全文 **§ET**,提议 §EQ / 协同组 07:3xZ 报告;queue `strategy-44`,裁定落在它的 `director` 字段)。⛔ **在此之前起飞的任何一波都不含它** —— 与 §EC 同一条规则:实例发波时 clone `origin/main`,所以本次变动**自本行落地之后的第一波起首次生效**,更早的波仍是 62-id 家族,两族不并池。⚠️ **载体项本轮是 8 项不是 7 项,而多出来的那一项与本次入集无关**:`carrier_terms.py` 对 62-id 与 63-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved` ⇒ **`stayattr` 对载体项零贡献**(它是 generic:唯一闸点 `bots/FunLib/jmz_func.lua:5116`,没有任何 `botName == ...` 守卫罩着它)。**`pudge` 是 `rotscope` 带来的,而 §EC 在 09-04T10:xxZ 对**同一个 md5 的 62-id 串**记的是 7 项、不含 `pudge`** —— 同一个串、不同的树,读数不同;今天的推导是**对的**(`rotscope` 的闸址 `bots/mode_roam_generic.lua:1039` 住在`if botName == 'npc_dota_hero_pudge'` 里面,只有 pudge 执行得到它)。⇒ **载体项会在 arm 串一字不动的情况下改变**,已立案(见 §ET.4),**不要把它读成本次入集带来的**。
+**成员串 61**(上一行,**540 字节**,md5 `824ec2842e234693cb3c4094f73d6a14`)。本行 **2026-09-05T15:5xZ 的变动:两条 `退回出集`(63 → 61)**,总监裁定全文 **§EX**。⛔ 两条都**不是 reject**,gate 与代码**逐字保留**,重新入集路径各自写在 §EX。
+1. **`stayattr` 退集**(63 → 62,**550 字节**,md5 `c7e1f92c739f8f8dc0ee0c9484288628` —— 与 §EC 09-04T10:xxZ 的 62-id 串**逐字节相同**,不是新串)。理由**不是它的技术证据有问题**(§ET 的 (a)(c) 仍然成立):`OWNER_PRIORITIES.md` P4.2 于 **2026-09-05T14:5xZ** 补的「优先级澄清」**废止并压过 §BB.4**「搭车提议当轮放行」,冻结期唯一合法裁定是 **FROZEN-HOLD**;§ET 那次入集(11:xxZ)在澄清落地之前,被 owner 明写认定为违例并点名**「下一总监轮把 stayattr 退集回 62」**。⇒ 本行是**执行 owner 裁定**,不是总监改判 §ET。**W48 已在飞不作废**(它 clone 的是含 `stayattr` 的树),其 `stayattr` 读数按 §ET 归档为额外 (a) 证据。
+2. **`zusstatic` 退集**(62 → 61)—— 总监本轮自己的判定完结,按 P4.2「从核验记录最少、最难买 (a) 的 id 清起」,取自 `verify_coverage.py` 的 **BLIND SPOTS** 两条之一(`midtp` / `zusstatic`:VERIFY 0 **且**任何报告里 id 附近从无裁定词)。⇒ **条件 (a) 结构上买不到,加局无用**(与 `l1xpsoak` 08-19 同型,不是 `pullcad` 陷阱:`zusstatic` 全仓**只有一处闸址**且**不与任何 id 合取**)。
+⚠️ **载体项 8 → 8 逐字不变,而且这次是量出来的**:`carrier_terms.py` 对 63-id 与 61-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved`;计数从 `13 hero-scoped / 50 generic` 变成 `12 / 49`(各减一条),**项数不动的机械理由**是 `zuus` 仍由 `zusult`/`zusboltdom` 供着、`stayattr` 本就是 generic。⛔ 与 §ET.4 / GH #522 同一条警告:**载体项会在 arm 串一字不动时改变**,不要把差额读成本次退集带来的。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— 与 §EC/§ET 同一条规则:实例发波时 clone `origin/main`,所以本次变动**自本行落地之后的第一波起首次生效**,更早的波仍是 62-id / 63-id 家族,三族不并池。
+
+〔历史,上一条变动 —— ⚠️ 它写的「上一行」在 2026-09-05T15:5xZ 之后**不再指第 2 行**〕**成员串 63**(上一行,**559 字节**,md5 `4aefc887f3f8c9173e7ac7024b3c20c9`)。本行 **2026-09-05T11:xxZ 的变动:`stayattr` 单独入集**(62 → 63,总监裁定全文 **§ET**,提议 §EQ / 协同组 07:3xZ 报告;queue `strategy-44`,裁定落在它的 `director` 字段)。⛔ **在此之前起飞的任何一波都不含它** —— 与 §EC 同一条规则:实例发波时 clone `origin/main`,所以本次变动**自本行落地之后的第一波起首次生效**,更早的波仍是 62-id 家族,两族不并池。⚠️ **载体项本轮是 8 项不是 7 项,而多出来的那一项与本次入集无关**:`carrier_terms.py` 对 62-id 与 63-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved` ⇒ **`stayattr` 对载体项零贡献**(它是 generic:唯一闸点 `bots/FunLib/jmz_func.lua:5116`,没有任何 `botName == ...` 守卫罩着它)。**`pudge` 是 `rotscope` 带来的,而 §EC 在 09-04T10:xxZ 对**同一个 md5 的 62-id 串**记的是 7 项、不含 `pudge`** —— 同一个串、不同的树,读数不同;今天的推导是**对的**(`rotscope` 的闸址 `bots/mode_roam_generic.lua:1039` 住在`if botName == 'npc_dota_hero_pudge'` 里面,只有 pudge 执行得到它)。⇒ **载体项会在 arm 串一字不动的情况下改变**,已立案(见 §ET.4),**不要把它读成本次入集带来的**。
 〔历史,上一条变动 —— ⚠️ 它写的「上一行」在 2026-09-05T11:xxZ 之后**不再指第 2 行**〕**成员串 62**(当时的第 2 行,**550 字节**,md5 `c7e1f92c739f8f8dc0ee0c9484288628`)。本行 **2026-09-04T10:xxZ 的变动:`campbind` + `zusboltdom` 同轮入集**(60 → 62,总监裁定全文 **§EC**,提议 §DZ / 英雄组 07:51Z 报告,GH #475 / #477;queue `strategy-42` / `hero-29`)。
 
 ⛔ **W45 不含这两个 id** —— 它于 2026-09-04T06:30:38Z 起飞(`machines[0].launched_at`,权威字段),clone 的是 60-id 串(md5 `eef5fb2e…`),**本次变动自 W46(或其后第一波)起首次生效**。⇒ **W45 仍是 60-id 家族的唯一一波,W46 起是 62-id 家族** —— 两波不并池(`W45_wave.json:pooling_claim` 已预登记它单独站着,本裁定不改它)。
@@ -17451,3 +17457,112 @@ OWNER_PRIORITIES **P4.2 入集冻结**:新 id 一律不入集,搭车也不行,�
 证明的是**这一帧的出价被抬高了**,不是**打断真的停了**(后者是条件 (a),要录像)。
 **0.9 只是清掉了出厂 0.75 所低于的那个出价**并与 farm 的 remap 上限**持平**;
 它是否赢下每一次仲裁**离线证不了,也没有声称**。
+
+---
+
+## §EX 2026-09-05T15:5xZ 总监 —— **两条退回出集(63 → 61),armed 集第一次在冻结期真的变小**;本节最该被读的是 **§EX.3:`zusstatic` 的条件 (a) 在全部八个世界里都买不到,而买不到的理由不是语料稀缺 —— 是它被递进去的那个句柄在八个世界里没有一个是 Static Field**
+
+**触发**:`OWNER_PRIORITIES.md` P4.2 于 2026-09-05T14:5xZ 补的「优先级澄清」(commit `ffeb0aa6`,主会话)。
+本轮 `bots/` + `game/` **零 diff**,零 AWS,无 promote,armed 串 63 → **61**。
+
+### §EX.1 owner 裁定的执行:`stayattr` 退集(63 → 62)
+
+P4.2 的澄清**废止并压过 §BB.4**「搭车提议当轮放行」:冻结期收到入集提议的唯一合法裁定是
+**FROZEN-HOLD**(登记、不入集、不视为掉棒)。§ET(11:xxZ)那次 `stayattr` 入集被 owner 明写认定为违例,
+点名「**下一总监轮把 stayattr 退集回 62**」。
+
+- **这不是总监改判 §ET**:§ET 买到的 (a)(c) 证据(`tests/test_stayattr_global_ult.lua` 11/0 真帧、
+  `mutstand_stayattr.sh` 13 CAUGHT + 1 声明式 UNMEASURABLE + 对照 SURVIVED、零 NO-OP)**逐条仍然成立**。
+  被推翻的是**时机**,不是证据。gate 与 `bots/FunLib/jmz_func.lua:5116` 的代码**一字未动**。
+- **退集后的串与 §EC 09-04T10:xxZ 的 62-id 串逐字节相同**(550 字节,md5 `c7e1f92c739f8f8dc0ee0c9484288628`)
+  —— 这不是巧合而是**可核验的还原**:`stayattr` 是唯一被追加的项,删掉它必然回到原串。**已逐位核过。**
+- **W48 不作废**:它起飞时 clone 的 `origin/main` 含 `stayattr`,读数照收,按 §ET 归档为**额外 (a) 证据**。
+- **重新入集路径**:冻结解除(armed ≤ 20)后凭 §ET 的现有证据直接重提,**不需要重买 (a)**。
+
+### §EX.2 总监本轮的判定完结:`zusstatic` 退回出集(62 → 61)
+
+选取**不是我挑的**:P4.2 写「从核验记录最少、最难买 (a) 的 id 清起」,
+`tools/agent/verify_coverage.py` 对 armed 集打的 **BLIND SPOTS** 恰好是两条
+(`midtp` / `zusstatic`:VERIFY 计数 0 **且**任何报告里 id 附近从来没有出现过裁定词)。
+`midtp` 已经是录像组 GH #521 (丙) 的棒(§EV 交出),**不抢**;剩下的那条就是本节。
+
+### §EX.3 ⭐⭐⭐ 为什么是「买不到」而不是「还没买」
+
+`zusstatic` 的唯一闸址 `bots/BotLib/hero_zuus.lua:619` 在 `X.GetStaticFieldBonus( hAbility )` 里,
+而 `hAbility` 是**参数**,由**唯一**调用点 `hero_zuus.lua:652` 递进来:
+
+    abilityASBonus = X.GetStaticFieldBonus( X.GetBoundAbility( abilityAS, 'zuus_static_field' ) )
+
+`X.GetBoundAbility` 自己 gated 在 **`zusbind`** 上,而 **`zusbind` 不在成员串里**(退集前的 62/63 串都没有)。
+⇒ armed 波里那一层**短路成 `return hShipped`**,递进去的就是 file-local `abilityAS`
+= `bot:GetAbilityByName( sAbilityList[5] )`。
+
+**关键读数(活的,不是散文)**:`tests/test_zuus_ability_index_binding.lua` 用**出厂的** `J.Skill.GetAbilityList`
+枚举三个可选技能的 2³ = **8 个丢弃世界**,断言
+`[hero] index 5 is Static Field in NONE of the eight drop-worlds`,并把 index 5 **实际**carrying 的东西
+钉成计数而不是散文(`zuus_lightning_hands` 2 个世界 / `nil` 4 个 / `generic_hidden` 2 个)。
+本轮复跑:`bash tools/agent/rc.sh lua5.1 tests/run_tests.lua test_zuus_ability_index_binding.lua`
+⇒ **15 tests, 0 failures**,`RC_EXIT=0`。
+
+于是把 armed 腿在八个世界里逐个走一遍:
+
+| index 5 实际是 | 世界数 | armed 腿 | gate-off | 差值 |
+|---|---|---|---|---|
+| `nil` | 4 | 未门的 `hAbility == nil` 先 `return 0` | 同一行 `return 0` | **0(结构性 no-op)** |
+| `zuus_lightning_hands` / `generic_hidden`,未 trained | ≤4 | `IsTrained()` 假 ⇒ `return 0` | 同一行 `return 0` | **0** |
+| 同上,已 trained | ≤4 | 读**别的技能**的 `damage_health_pct` ⇒ 无此键 ⇒ 静默 0(GH #162 家规)⇒ `return 0` | `return 0.09` | **0.09 → 0** |
+
+⇒ **在八个世界的每一个里,armed 的 `zusstatic` 都得到 0,从来没有一次得到它被写出来要测的 ~3.45%。**
+它唯一可观测的效应是在最后那一行**把 Static Field 这一项整个删掉**(0.09 → 0),
+而那**不是登记在册的杠杆**(GH #173 登记的是「0.09 换成技能自己的百分比」)。
+
+⛔ **所以退集的理由是「登记的杠杆在这个串里不可达」,不是「读数不好」** —— 一个读数都还没有,
+而且**再多的局也买不到**:阻断项是 `zusbind` 不在串里,那是**串的形状**,不是语料的稀缺。
+与 `l1xpsoak`(08-19,入场条件是已 promote 的 `lanesurv` 的真子集)**同型**。
+
+### §EX.4 ⚠️ 它**不是** `pullcad` 陷阱,两条都逐条核过
+
+`pullcad` 陷阱是「闸写成 `IsSoakCandidate('X') and IsSoakCandidate('Y')`,`Y` 被 promote 后整条冻死」。
+这里**不是**,理由是裸读源码得出的两条:
+
+1. `grep -rn "IsSoakCandidate( *'zusstatic'" bots/` ⇒ **恰好一处**(`hero_zuus.lua:619`),
+   `grep -rn "zusstatic" bots/ game/` 除注释外**同一处** ⇒ **零合取**、**零其他闸引用它**。
+   ⇒ 退集**不会冻死任何别的闸**(反向 `pullcad` 检查),`FROZEN none` 在自检里也复现。
+2. 依赖 `zusbind` **写在两个函数的注释里、不写在同一个布尔表达式里**
+   (`hero_zuus.lua:575` 逐字:*"`zusstatic` armed without `zusbind` armed measures the wrong ability's missing key, i.e. 0"*)。
+   ⇒ 这是**第三种形状**:不是「合取被冻死」,是**依赖跨函数、经由一个参数传递,机器读不出来**。
+   `check_armed_wiring.py` 会照旧把它叫 WIRED(闸址存在、谓词也能为真),
+   **而它确实为真 —— 只是它拿到的句柄是错的**。**⭐ 这比 `pullcad` 更隐蔽:`pullcad` 的谓词恒假,
+   这一条的谓词恒真而答案恒 0。**
+
+### §EX.5 交棒(铁律 9 连带规则:「修好」不等于「做完」)
+
+退集**不等于**否掉 GH #173 的事实(Static Field 的真百分比确实是 3.45 而不是 9,
+`AbilityValues/damage_health_pct/value = 3.45`,`hero_levelup +0.05`)。下一棒是**明确的、已交出去的**:
+
+- **重新入集的前提条件,现在是机器可读的**:`zusstatic` 与 `zusbind` 登记为**共同 promote 原子**
+  `static_field_needs_binding`(`tools/agent/promote_atoms.py` 的 registry,与既有的
+  `field_hold_needs_magnitude` 同一张表)⇒ 今后**任何一轮**想单独 arm/promote 其中一个,
+  自检那一腿会当场打出来。**这一条是本次退集的全部机器化产物**:
+  ⛔ 我**没有**把这条依赖再写成一句散文 —— 它此前已经是两处注释里的散文,而**散文正是它被 armed 十几天没人发现的原因**。
+- **不进 `owed_executions.json`**:验收挂在「解冻后重提 `zusbind`+`zusstatic` 的那一波」上,
+  不是常驻义务(与 §ET 同一条判据)。
+
+### §EX.6 FROZEN-HOLD 的第一次行使:`hero-30`(`axecallbkb`)
+
+开工自检 `queue-rulings` 腿打 `RIDESHARE (§BB.4: rule this round): 1 -> hero-30`。
+⛔ **§BB.4 已被 P4.2 废止**(见 §EX.1),所以这一轮**不再是**「当轮放行」而是「当轮裁 FROZEN-HOLD」。
+裁定落在 `queue.json:hero-30.director`(被裁方读的那一格)。
+
+- **不是否定它的证据**:英雄组 13:5xZ 已落地 gated `axecallbkb`(commit `c1cce307`,turbo-only 未 armed),
+  桌面证据(odota/dotaconstants `bkbpierce: "Yes"`,仓内 `special_value_shapes.lua` 对上 radius 315 / cd 18 16 14 12)完好。
+- **也不视为掉棒**:它请求的是**零 EC2 的只读档案扫描**(与 hero-2 并成同一次遍历),
+  那件事**冻结期照常可以做** —— 冻结冻的是**入集**,不是**取证**。⇒ 裁定明写:**证据继续买,解冻后凭现成证据重提**。
+
+### §EX.7 巡检 / 计量
+
+- **判定完结数(P4.2 的新产出指标)= 2**(`stayattr` 退集、`zusstatic` 退集),armed **63 → 61**。
+  距离 P4.2 的解冻线(≤ 20)还差 **41**。
+- **载体项 8 → 8 逐字不变且是量出来的**(见第 4 行),`0 unresolved`。
+- 零 AWS ⇒ **不对 MTD 作任何新声称**;owner 邮件本周未发(上一封 08-31);`DECISIONS_NEEDED` +0;
+  **patch 检查未做**(低频顺延)。

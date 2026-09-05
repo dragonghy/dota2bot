@@ -37,6 +37,39 @@
         "If such a reading exists and is usable, this row is over-strict and should be dropped;",
         "until someone looks, promoting the holding side alone ships an unmeasured configuration."
       ]
+    },
+    {
+      "name": "static_field_needs_binding",
+      "rule": "no_promote_without",
+      "subject": ["zusstatic"],
+      "prereq": ["zusbind"],
+      "ruled_at": "2026-09-05T15:5xZ",
+      "ruled_by": "director",
+      "ref": "iterations/streams/test_set.md §EX.3 / §EX.4 / §EX.5; GH #173 (the fact). The SHAPE (a gate whose predicate is always TRUE while its answer is always 0, because the handle arrives through a parameter from a DIFFERENT id's gate) is filed separately -- number registered in this round's 收尾 commit, per iron rule 6 / GH #290: do not cite an issue number before the issue exists.",
+      "direction": "one-way: promoting zusbind while zusstatic stays gated is NOT constrained by this row.",
+      "note": [
+        "REGISTERED IN THE SAME BREATH AS A RETURN-TO-SENDER, not before a violation.",
+        "zusstatic was armed 62/63-wide with zusbind absent from the armed string the whole time.",
+        "The dependency is REAL but it is not a conjunction, so no machine could see it: the gate at",
+        "bots/BotLib/hero_zuus.lua:619 sits in X.GetStaticFieldBonus(hAbility), and hAbility is a",
+        "PARAMETER handed in by the single call site at :652 through X.GetBoundAbility(...), which is",
+        "itself gated on zusbind. Unarmed, that layer short-circuits to `return hShipped` = the",
+        "file-local abilityAS = bot:GetAbilityByName(sAbilityList[5]).",
+        "tests/test_zuus_ability_index_binding.lua drives the SHIPPED J.Skill.GetAbilityList through",
+        "all 2^3 = 8 drop-worlds and asserts index 5 is Static Field in NONE of them (lightning_hands",
+        "in 2, nil in 4, generic_hidden in 2). So the armed leg reads damage_health_pct off an ability",
+        "that has no such key -> silent 0 (the GH #162 house rule) -> return 0, in every world.",
+        "=> zusstatic armed WITHOUT zusbind never measures the registered lever (0.09 -> ~3.45%); its",
+        "only observable effect is deleting the Static Field term (0.09 -> 0), which nobody registered.",
+        "PROMOTING zusstatic alone would ship exactly that unmeasured deletion by default -> RED.",
+        "WHY THIS IS NASTIER THAN THE pullcad TRAP: pullcad freezes a predicate FALSE, and",
+        "check_armed_wiring.py at least keeps calling it WIRED while it no-ops. Here the predicate is",
+        "TRUE on every frame -- it fires, it just answers 0 off the wrong handle. A firing gate with a",
+        "constant wrong answer looks identical to a tested-and-neutral id in every aggregate.",
+        "RELEASE CONDITION (what would retire this row): zusbind promoted, or the call site at :652",
+        "rewritten to bind Static Field by name unconditionally -- either makes the handle right",
+        "without an arm-string precondition, and then zusstatic can be judged on its own merits."
+      ]
     }
   ]
 }
