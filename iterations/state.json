@@ -6045,5 +6045,40 @@
   "next_baton": "批测台 `queue.json:hero-31`(零 EC2 归档只读扫描,可与 hero-2 / hero-30 并成同一次遍历,带 DOMAIN-NOT-REACHED 退回门与预登记判读方向)。X.ConsiderW 头上那段判词的最后一句就是「Size a Bone Guard change with a batch request, never with a fixture scan」,本轮照办。**在条件 (a) 买到之前不许 promote**;P4.2 冻结期内不提入集(合法裁定 = FROZEN-HOLD)。",
   "report": "iterations/reports/hero/20260905T170150Z.md",
   "issue": "GH #533"
+ },
+ "staybottle_20260905": {
+  "date": "2026-09-05T19:3xZ",
+  "backlog_item": "OWNER_PRIORITIES P4.4 (bots/ 主体配额) + P2 (低血不回家,决策侧,球在协同组);章程 0STAYSRC「下一格」点名的 P2 决策侧同族问题",
+  "owner": "strategy",
+  "gate": "staybottle (NEW soak id;turbo 结构性由函数首行保证,STANDALONE —— 与任何 id 都不合取)。⛔ P4.2 入集冻结生效中:本轮**不提入集、不动 armed 串、不动 queue.json**。",
+  "bots_lua_changed": true,
+  "headline": "J.ShouldStayAndRegen(PROMOTED,每一局 Turbo 都活着)的补给读数**已经在读「在途」了 —— 只是漏了一个成员**。它三个析取项里有两个是 modifier('modifier_flask_healing'、'modifier_tango_heal'),即『正在喝』本身就被这条线的作者接受为原地续航的证据;而**瓶子的 'modifier_bottle_regeneration' 既不在这条线里,也不在 'staysrc' 的加宽里**。同一棵树的 tpscroll '撤退:3' 分支却把它列在拒绝回城 TP 的 modifier 名单里。",
+  "star_main_judgement": "⭐ 主判据(立法级,可复用,远超本主题):**一件消耗品在「正在生效」的那一刻,恰恰是它在物品栏里最看不出来的时刻。** 瓶子被喝下去的瞬间,引擎把物品改名为 `item_empty_bottle`(CDOTA_Item_EmptyBottle)、充能归 0,于是这棵树问『身上有没有可喝的』的**两种问法同时答「没有」**:出厂的名字测试(只认 item_flask)与 J.HasFieldRegenSource 的瓶腿(要求 GetCurrentCharges() > 0)。**供给最充足的那一刻被读成两手空空**,决定权落到 `GetGold() < 90`,残血、无人追击、~135 点血正在到账的 bot 被放回家 —— owner P2 逐字禁止的那趟路,而且是「离开」最明显错误的那一刻,因为那口血**已经付过钱了、正在路上**。⇒ **供给类谓词必须同时读「库存」与「在途」;只读库存的谓词在效果生效的整段时间里系统性地反号。**",
+  "change": "bots/FunLib/jmz_func.lua,J.ShouldStayAndRegen 补给子句**追加**(不是插入)一块:`if not bHasRegen and J.IsSoakCandidate('staybottle') then bHasRegen = bot:HasModifier('modifier_bottle_regeneration') end`,位置在 'staysrc' 那一块**之后** ⇒ 本 id 未 armed 时兄弟杠杆的求值逐字节不变(由 `STAY_ORDER_OK` 断言钉住)。0.18 血量地板、0.75 上限、1200 环、追击行、gold 项**一个字没动**。",
+  "direction_by_construction": "加宽 bHasRegen 只能让否决更难成立 ⇒ armed 的 TRUE 集是 shipped 的严格超集。1012 帧驱动实测 `flip_true_to_false == 0`(棘轮);ship_true 13 → arm_true 14(差恰等于 flips,断言)。",
+  "domain_price": "109 fixture / 1012 活英雄帧(与 §EY 同一语料同一分母,分子逐位对上:**turbo 1012/1012、走到补给子句 125、被它否决 112**,三个数由本轮独立的前缀行走复算出来)。本杠杆的域:**全语料只有 3 帧带 'modifier_bottle_regeneration',其中 2 帧在函数自己的 0.75 血量上限之外** ⇒ **域内恰好 1 帧**。两条独立路线交叉核对(驱动 `flips` == 前缀桶 `blocked_with_mod`),`blocked_with_mod + blocked_no_mod == blocked_supply` 是数出来的分区不是减出来的。**反真空列**:`mod_carriers=3 / mod_out_of_band=2` 单独登记,于是「语料里根本没有瓶子」与「语料里的瓶子被血量带挡掉了」**永远不会读成同一个数**。",
+  "disjointness_finding": "⭐⭐ **本轮回答了上一轮(§EY / GH #532)提出的那个问题,而且答案是「不」。** 上一轮的发现是 'stayattr' 与 'staysrc' 两道各自充分的否决**只有成对 arm 才动得了 P2 的钉帧**,单臂隔离波读到的零每一次都是正确的零。那是**那两条子句的性质,不是这个函数的性质** —— 本轮把同样的量对新的一对重跑:`flips_staysrc = 44`、`flips(staybottle) = 1`、**`flips_both_levers = 0`**,并在钉帧上单独驱动 'staysrc' 得 false ⇒ **两个杠杆的域不相交,单臂波看得见本 id**。⇒ 「AND-of-vetoes」不是一个函数的标签,是**逐对**要量的关系。",
+  "witness_frame": "tests/fixtures/f_260820_102645_cm_es_reach.lua,**zuus 360/911 = 39.5% 血**,主格位里是 `item_empty_bottle`(格位 4)+ arcane_boots + magic_wand,身上挂着 `modifier_bottle_regeneration`(remaining 2.5s,elapsed 0.2s),3 秒内无英雄伤害,1200 环内无人,最近敌人 ~1,727u。shipped `J.ShouldStayAndRegen` = **false**;armed 'staybottle' = **true**;单 armed 'staysrc' = **false**(空瓶名字与 0 充能两道都拦着它)。两条负对照(同样带该 modifier 但在血量带外):nevermore hp=1.0000、lina hp=0.8048,shipped 与 armed **都是 false**。",
+  "honest_bounds": [
+   "(1) **域是一帧**,而这是一个测量不是一句致歉:3/1012 带该 modifier、2 个在 0.75 上限之外。反真空列(mod_carriers / mod_out_of_band)就是为了让这句话可核。",
+   "(2) ⚠️ **bid 那条腿量到的是「否决开火了」,不是「一趟回家被拦下」**:钉帧上 mode_retreat_generic 的出厂出价是**负的(-0.4721)**,armed 之后走守卫的提前返回变成 **BOT_MODE_DESIRE_NONE (0)** —— 数值上是**升高**,两种情况下这个 mode 都没有在要求回家。这条缺陷真正送 bot 回家的那条腿是**物品层**,而它在 fixture 上结构性够不着(GH #89:GetActiveMode 是 bot-VM 状态,不进 .dem ⇒ `nMode == BOT_MODE_RETREAT` 处处为假)。两个数与 GH #89 都写成断言,不写成脚注。",
+   "(3) **量到的翻转集是「穷钱超集」**(与 §EY 同族):fixture 读不到 gold(GH #495),1012/1012 帧读 0,于是每一帧都按『不足 90』计分;真实对局里 gold ≥ 90 的帧本来就没被这条子句否决过。方向定死(真实集是子集),大小未知、不作声称。",
+   "(4) **一帧是一个瞬间,而一口血有尾巴**。说的是 t 时刻这个决定是错的;不声称剩下的那口一定值得站着喝 —— 那是 'fieldsip' 在 gated 家族那边的量,而瓶子的一口(~135/3s)是它定价的四种来源里**最大**的一种,是最不怕这条边界的那个成员。"
+  ],
+  "discharges": "上一轮(§EY)诚实边界 (2) 逐字写着「bottle 那条腿在本语料上是空洞的 …… 钉帧上那只空瓶正是这条边界的现场证人,而且它不是翻转的原因」。本轮从另一侧复测那个零(`src_true_via_bottle == 0`,棘轮),并给出瓶子在本语料里**唯一可见的形态**:充能永远读不到,**modifier 进了 dump**。",
+  "local_validation": "tests/test_staybottle_inflight_regen.lua **21/21**(真实帧驱动 + 两条带 modifier 但在带外的负对照 + 钉帧上的兄弟杠杆单臂对照 + 域普查 + 两路交叉核对 + gold 不可测性断言 + bid 级驱动 + GH #89 断言);重语料扫描 tests/_staybottle_sweep.lua(子进程,三次驱动/帧)。",
+  "mutation_stand": "tools/agent/mutstand_staybottle.sh:**16 发全部如声明 —— 14 CAUGHT + 1 声明式 UNMEASURABLE(M11b)+ 对照 M14 SURVIVED,零 NO-OP,零非声明存活,STAND GREEN,EXIT=0**。**M13** 把杠杆读的 modifier 换成出厂那条线**已经读过的** 'modifier_flask_healing' —— 仍然 gated、仍然一个 id、仍然只增不减,却是**保证的 no-op**(GH #531 的第三形状:谓词恒真而答案恒 0)。**M15** 复现本 sweep 首跑真实带过的解析 bug(用空行界定「出厂读了几个 in-flight modifier」的跨度 ⇒ 把杠杆自己那一行算进出厂计数,首跑读出 3 和 1)。",
+  "ratchets_touched": "(i) tests/test_staysrc_field_supply.lua 的 `STAY_NIDS == 2` 放宽为 `>= 2`,理由写在断言上方:那个总数是**代理量**,真正管 pullcad 陷阱的是 `STAY_IDS_MAX_PER_COND == 1`(未动,且本轮 M4 直接打它);(ii) tests/test_gated_helper_nesting_census.lua 两行的 id 列由 `stayattr,staysrc` 变为 `stayattr,staybottle,staysrc`,分类仍是 (P) / (A),理由与 disjointness 读数一并写在行上方。",
+  "gate_verification": "铁律 6 静态门 + 定向动态半,读数见报告;全量套件 ~100min(GH #124)未跑。",
+  "trunk_red_not_mine": "开工自检 `bash tools/agent/routine_selfcheck.sh > 文件; echo $?` ⇒ **SELFCHECK_EXIT=3**,来源 cadence / queue-rulings / owed-executions / trunk-red(python)。python 腿 5 条红(test_bots_walk_farm_only / test_detector_source_constants / test_lua_corpus_stability / test_mutstand_restore_trap / test_wkqdmg_domain)与本轮开工前上一轮(commit bfa4299)记下的**是同一组**,不认领。",
+  "aws_spend": "零 AWS、零 S3、零 EC2、零波次。P4.2 冻结期内**未提入集**、**armed 串一字未动**、**queue.json 一字未动**。",
+  "status": "gated,未 armed,未入集(P4.2 冻结)。等总监按冻结规则给 FROZEN-HOLD 登记。",
+  "handoff": [
+   "**(甲) 总监**:按 P4.2 冻结把 'staybottle' 记作 **FROZEN-HOLD**。并请收下 disjointness 那一条作为对 GH #532 的**范围修正**:那条约束属于 'stayattr'×'staysrc' 这一对,**不属于这个函数**;本 id 与 'staysrc' 域不相交(overlap 实测 0),单臂波可读。",
+   "**(乙) 批测台**:冻结解除后本 id 可**单臂**发波,不需要与任何 id 配对(与 GH #532 的约束不同,理由见上)。本组本轮不发波、不排队、不花钱。",
+   "**(丙) 录像组 / 语料侧**:一张**主格位带有充能 bottle** 的真帧仍然是本族两轮共同的空洞(§EY 诚实边界 (2) + 本轮 `src_true_via_bottle == 0`);另外,若有**物品层可驱动**的世界(GH #89),本 id 的真实代价才量得出来 —— 现在只量到 walk 腿,而 walk 腿在钉帧上本来就没在要求回家。",
+   "**(丁) 下一轮本组自己**:P2 决策侧继续 —— 候选是 68 个『什么都没带』帧里 `fieldbuy` 为何没买上(注意 `IsFieldRegenSituation` 的 0.55 上限严于本函数的 0.75,先跑域价钱再动),或 J.HasFieldRegenSource 的 backpack 不对称在 PROMOTED 侧的同族问题。**照旧先跑域价钱,并先断言控制帧够得着被控制的代码** —— 本轮就是靠这一条在写代码之前排除掉 '撤退:3' 那条更诱人的路(GH #89 让它在 fixture 上永远不可达)。"
+  ],
+  "ref": "iterations/streams/test_set.md §FA;iterations/reports/strategy/20260905T193111Z.md;state.json:staysrc_20260905(同一子句的另一个杠杆);GH #532(AND-of-vetoes 约束,本轮给出范围修正);GH #89(物品层不可驱动);GH #495(mock 的 `^Get -> 0`)"
  }
 }

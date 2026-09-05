@@ -27,6 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0STAYBTL. **【2026-09-05T19:3xZ 新增,**OWNER_PRIORITIES P4.4 + P2(决策侧,球在本组)**;
+   `[strategy]` open issue 本轮扫过 **#521 / #511** —— 两条都是本组前两轮已认领并交回的,
+   **无一条未认领** ⇒ 按铁律 9 取优先项,并做章程上一格(`0STAYSRC`)点名的 P2 决策侧同族问题;
+   **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动**;
+   产出 `bots/FunLib/jmz_func.lua` 一个**追加**的 gated 块(`staybottle`,turbo-only,**未 armed**)、
+   `tests/test_staybottle_inflight_regen.lua`(**21/21**)、`tests/_staybottle_sweep.lua`、
+   `tools/agent/mutstand_staybottle.sh`(**16 发全部如声明:14 CAUGHT + 1 声明式 UNMEASURABLE(M11b)
+   + 对照 M14 SURVIVED,零 NO-OP,零非声明存活,EXIT=0**)、`state.json:staybottle_20260905`、
+   `test_set.md §FA`、nesting census 两行、`staysrc` 那条棘轮**放宽**(见下);
+   报告 `iterations/reports/strategy/20260905T193111Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲:FROZEN-HOLD + GH #532 的范围修正)+ 批测台(乙:本 id 可单臂)+ 录像组/语料侧(丙)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):一件消耗品在「正在生效」的那一刻,
+   恰恰是它在物品栏里最看不出来的时刻。**
+   瓶子喝下去的瞬间引擎把物品改名为 `item_empty_bottle`、充能归 0 ⇒ 这棵树问「有没有可喝的」的
+   **两种问法同时答「没有」**(出厂只认 `item_flask` 的名字测试;`HasFieldRegenSource` 要求充能 > 0),
+   而此刻 ~135 点血**正在到账**。⇒ **供给类谓词必须同时读「库存」与「在途」;
+   只读库存的谓词在效果生效的整段时间里系统性地反号。**
+   **⭐⭐ 树里别处早就答对了**:出厂那条线三个析取项里**已经有两个是 in-flight modifier**
+   (`modifier_flask_healing` / `modifier_tango_heal`),瓶子那个不在;而 tpscroll `撤退:3`
+   把它列在拒绝回城 TP 的名单里。与 `stayattr` / `staysrc` 同一形状。
+   **⭐⭐⭐ 本轮最该被读的一条:对上一格 §EY.5 / GH #532 的范围修正。**
+   「两道各自充分的否决只有成对 arm 才动得了 P2 钉帧」是**那两条子句的性质,不是这个函数的性质** ——
+   对新的一对重跑:`flips_staysrc` **44** / 本 id **1** / **重叠 0**,钉帧上单 arm `staysrc` 得 false
+   ⇒ **域不相交,单臂波看得见本 id**。**「AND-of-vetoes」是逐对要量的关系,不是一个函数的标签。**
+   **⭐⭐⭐⭐ 域价钱**:三个前置数由独立前缀行走复算并与 §EY 逐位对上(turbo 1012/1012、
+   走到补给子句 **125**、被否决 **112**);本杠杆域:全语料 **3 帧**带该 modifier、**2 帧在 0.75 上限外**
+   ⇒ **域内恰好 1 帧**(zuus 39.5% 血 + `item_empty_bottle` + remaining 2.5s)。
+   `flips == blocked_with_mod` 两路交叉核对;`flip_true_to_false` **0**;`ship_true 13 → arm_true 14`。
+   ⚠️ **诚实边界最要紧的一条(选落点的方法)**:bid 腿量到的是**否决开火**不是**一趟回家被拦下**
+   (钉帧出厂出价 **−0.4721** → armed **0**,数值上是升高,两种情况这个 mode 都没在要求回家);
+   真正送 bot 回家的物品层在 fixture 上**结构性够不着(GH #89)** ——
+   **这正是本轮在写第一行代码之前排除掉「更诱人的 `撤退:3`」的方式:先断言控制帧够得着被控制的代码,再选落点。**
+   ⚠️ **自伤一处**:sweep 首跑用空行界定「出厂读了几个 in-flight modifier」的跨度,
+   strip_comments 把本杠杆 40 行注释变成空行 ⇒ 跨度**吞掉杠杆自己那一行**,读出「出厂已经读了瓶子」
+   (= 本改动是 no-op)。已改为按下一条语句界定,并把这次失误做成变异体 **M15**。
+   **下一格(本组下一轮第一项)**:取未认领 `[strategy]` issue;否则按 **P4.4 在 `bots/` 上取一个小杠杆** ——
+   候选:112 里那 **68 个「什么都没带」**的帧里 `fieldbuy` 为何没买上(注意 `IsFieldRegenSituation`
+   的 0.55 上限**严于**本函数的 0.75),或 `J.HasFieldRegenSource` 的 backpack 不对称在 PROMOTED 侧的同族问题;
+   **照旧先跑域价钱,并先断言控制帧够得着被控制的代码**。
+
 0STAYSRC. **【2026-09-05T16:4xZ 新增,**OWNER_PRIORITIES P4.4 + P2(决策侧,球在本组)**;
    `[strategy]` open issue 本轮扫过 **#521/#511/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445**
    —— **无一条未认领** ⇒ 按铁律 9 取优先项,并做章程上一格逐字点名的那一格;
@@ -5600,6 +5641,41 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T19:3xZ(**P4.4 + P2 决策侧**:`[strategy]` open issue 本轮扫过 **#521 / #511**
+  —— 两条都是本组前两轮已认领并交回的,**无一条未认领** ⇒ 按铁律 9 取优先项,
+  做的是章程上一格 `0STAYSRC` 点名的 P2 决策侧同族问题。
+  **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动。**
+  产出 `bots/FunLib/jmz_func.lua` 一个**追加**的 gated 块(`staybottle`,turbo-only,**未 armed**)、
+  `tests/test_staybottle_inflight_regen.lua`(**21/21**)、`tests/_staybottle_sweep.lua`、
+  `tools/agent/mutstand_staybottle.sh`(**16 发全部如声明:14 CAUGHT + 1 声明式 UNMEASURABLE(M11b)
+  + 对照 M14 SURVIVED,零 NO-OP,零非声明存活,EXIT=0**)、`state.json:staybottle_20260905`、
+  `test_set.md §FA`、nesting census 两行、`staysrc` 那条棘轮**放宽**;
+  报告 `iterations/reports/strategy/20260905T193111Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动、不申请入集(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
+  **已交棒总监(甲)+ 批测台(乙)+ 录像组/语料侧(丙)。**)
+  **⭐ 主判据:一件消耗品在「正在生效」的那一刻,恰恰是它在物品栏里最看不出来的时刻。**
+  瓶子喝下去的瞬间改名 `item_empty_bottle`、充能归 0 ⇒ 出厂的名字测试与 `HasFieldRegenSource`
+  的充能测试**同时答「没有」**,而 ~135 点血正在到账 ⇒ **供给类谓词必须同时读「库存」与「在途」**。
+  **⭐⭐ 树里别处早答对了**:出厂那条线三个析取项里**已有两个是 in-flight modifier**,瓶子那个不在;
+  tpscroll `撤退:3` 却把它列在拒绝回城 TP 的名单里。
+  **⭐⭐⭐ 对 §EY.5 / GH #532 的范围修正**:「成对才动」是**那两条子句的性质,不是这个函数的性质** ——
+  `flips_staysrc` **44** / 本 id **1** / **重叠 0**,钉帧上单 arm `staysrc` 得 false ⇒ **单臂波可读**。
+  **AND-of-vetoes 是逐对要量的关系。**
+  **⭐⭐⭐⭐ 域价钱**:turbo 1012/1012、走到补给子句 **125**、被否决 **112**(与 §EY 逐位对上);
+  本杠杆域 **3 帧带 modifier / 2 帧在 0.75 上限外 ⇒ 域内恰好 1 帧**;
+  `flips == blocked_with_mod` 两路核对;`flip_true_to_false` **0**;`ship_true 13 → arm_true 14`。
+  ⚠️ **诚实边界最要紧的一条(选落点的方法)**:bid 腿量到的是**否决开火**不是**一趟回家被拦下**
+  (出厂 **−0.4721** → armed **0**,数值上升高);物品层在 fixture 上**结构性够不着(GH #89)**,
+  **这正是本轮在写代码之前排除掉「更诱人的 `撤退:3`」的方式**。
+  ⚠️ **自伤一处**:sweep 首跑的跨度用空行界定,把杠杆自己那一行算进「出厂计数」⇒ 读出
+  「出厂已经读了瓶子」(= 本改动是 no-op)。已修 + 做成变异体 **M15**。
+  **门读数**:静态 `luacheck_gate.sh` **GATE_EXIT=0 / 0 警告**;定向动态
+  staybottle 21/21、staysrc 12/12、stayattr 11/11、nesting census 10/10、gate_claim 16/16、
+  邻接组 stay 99/99、field 212/212、soak 31/31,全 EXIT=0;全量套件(~100min,GH #124)未跑。
+  **开工自检 SELFCHECK_EXIT=3**(cadence / queue-rulings / owed-executions / trunk-red(python));
+  python 腿 5 条红与上一轮 commit `bfa4299` 记的**是同一组**,不认领。
+  ⚠️ 自检**首次调用被工具自己拒绝**(stdout 是管道 ⇒ `SELFCHECK_EXIT=2 REFUSED`,证据纪律 3,
+  该形状已复发 6 次);改为重定向到文件后读 `$?`。
 - 2026-09-05T16:4xZ(**P4.4 + P2 决策侧**:`[strategy]` open issue 本轮扫过
   #521/#511(两条都是本组前两轮已认领并交棒的)/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
   —— **无一条未认领** ⇒ 按铁律 9 取优先项,做的正是本组上一格逐字点名的那一格。

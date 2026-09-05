@@ -190,10 +190,18 @@ tests['[source] the lever is where this file says it is'] = function()
     assert(M.g.STAY_IDS_MAX_PER_COND == 1, 'some single condition in '
         .. 'J.ShouldStayAndRegen names ' .. tostring(M.g.STAY_IDS_MAX_PER_COND)
         .. ' soak ids; at most 1 is allowed (two conjoined ids = the pullcad trap)')
-    assert(M.g.STAY_NIDS == 2, 'J.ShouldStayAndRegen names '
-        .. tostring(M.g.STAY_NIDS) .. " soak ids; expected 2 ('stayattr' on the "
-        .. "chase clause, 'staysrc' on the supply clause). If this dropped to 1 "
-        .. 'the [pair] finding below is about a tree that no longer exists')
+    -- [staybottle 2026-09-05] This read `== 2` until the supply clause gained a
+    -- THIRD independent lever (the bottle's in-flight modifier). The number is a
+    -- PROXY for "this function's levers are separate clauses, not a
+    -- conjunction"; the assertion that actually carries that meaning is
+    -- STAY_IDS_MAX_PER_COND above, and it is unchanged. Loosened to a floor
+    -- rather than re-pinned to 3, so a fourth sibling lever does not turn this
+    -- file red for a reason that has nothing to do with 'staysrc'.
+    assert(M.g.STAY_NIDS >= 2, 'J.ShouldStayAndRegen names '
+        .. tostring(M.g.STAY_NIDS) .. " soak ids; expected at least 2 "
+        .. "('stayattr' on the chase clause, 'staysrc' on the supply clause). "
+        .. 'If this dropped to 1 the [pair] finding below is about a tree that '
+        .. 'no longer exists')
     -- The nesting this lever creates, pinned so that the (A) classification in
     -- tests/test_gated_helper_nesting_census.lua stays readable: the callee
     -- carries exactly one gate of its own, 'bagsalve'.

@@ -17895,3 +17895,148 @@ P4.2 冻结期收到入集提议的唯一合法裁定(§EX.6 已立)。不是对
    P2 的取证按 §EZ.6 需要**同时 arm** `stayattr` + `staysrc`,而 P4.2 的冻结让前者已退集、后者进不来。
    保守默认 = **冻结优先,P2 的取证等解冻**(P2 的桌面证据继续买,不受影响);
    要不要给 P2 开一个成对的例外,是 owner 的决定,不是总监的。
+
+---
+
+## §FA 2026-09-05T20:xxZ 协同组 —— **一件消耗品在「正在生效」的那一刻,恰恰是它在物品栏里最看不出来的时刻**;本节最该被读的是 **§FA.5:上一节 §EY.5 那条「成对才动」的约束,是那两条子句的性质,不是这个函数的性质 —— 本轮对新的一对重跑,重叠实测为 0**
+
+**产物**:`bots/FunLib/jmz_func.lua` 一个**追加**的 gated 块(`staybottle`,turbo-only,**未 armed**)、
+`tests/test_staybottle_inflight_regen.lua`(**21/21**)、`tests/_staybottle_sweep.lua`、
+`tools/agent/mutstand_staybottle.sh`(**16 发全部如声明:14 CAUGHT + 1 声明式 UNMEASURABLE(M11b)
++ 对照 M14 SURVIVED,零 NO-OP,STAND GREEN,EXIT=0**)、`state.json:staybottle_20260905`、
+`tests/test_gated_helper_nesting_census.lua` 两行、`tests/test_staysrc_field_supply.lua` 一条棘轮**放宽**(理由见 §FA.7)。
+**armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+
+### §FA.1 立案句
+
+`J.ShouldStayAndRegen`(**PROMOTED**,'tphome',每一局 Turbo 都活着)的补给读数是三个析取项:
+
+```lua
+local bHasFlask = J.IsItemAvailable( 'item_flask' ) ~= nil
+    or bot:HasModifier( 'modifier_flask_healing' )
+    or bot:HasModifier( 'modifier_tango_heal' )
+```
+
+**其中两个是「在途」读数** —— 这条线的作者**已经**接受「正在喝」本身作为原地续航的证据,
+对四种消耗品里的两种。瓶子的 `modifier_bottle_regeneration` **既不在这条线里,
+也不在 §EY 的 `staysrc` 加宽里**;而同一棵树的 tpscroll `撤退:3` 分支
+(`ability_item_usage_generic` ~5666)把它列在**拒绝回城 TP** 的 modifier 名单里。
+与 `stayattr`、`staysrc` 同一形状:**树里别处答对了,这条出厂的线没被带上**。
+
+### §FA.2 ⭐ 主判据(立法级,可复用,远超本主题)
+
+**一件消耗品在「正在生效」的那一刻,恰恰是它在物品栏里最看不出来的时刻。**
+
+瓶子被喝下去的瞬间,引擎把物品改名为 `item_empty_bottle`(CDOTA_Item_EmptyBottle)、
+充能归 0。于是这棵树问「身上有没有可喝的」的**两种问法同时答「没有」**:
+
+- 出厂的名字测试(只认 `item_flask`);
+- `J.HasFieldRegenSource` 的瓶腿(要求 `GetCurrentCharges() > 0`)。
+
+**供给最充足的那一刻被读成两手空空**,决定权落到 `GetGold() < 90`,
+一个残血、无人追击、~135 点血**正在到账**的 bot 被放回家 —— owner P2 逐字禁止的那趟路,
+而且是「离开」最明显错误的那一刻:**那口血已经付过钱了,正在路上**。
+
+⇒ **供给类谓词必须同时读「库存」与「在途」;只读库存的谓词,在效果生效的整段时间里系统性地反号。**
+
+### §FA.3 改动(一个杠杆,追加不是插入)
+
+```lua
+if not bHasRegen and J.IsSoakCandidate( 'staysrc' ) then
+    bHasRegen = J.HasFieldRegenSource( bot )
+end
+if not bHasRegen and J.IsSoakCandidate( 'staybottle' ) then   -- 本轮
+    bHasRegen = bot:HasModifier( 'modifier_bottle_regeneration' )
+end
+if not bHasRegen and bot:GetGold() < 90 then return false end
+```
+
+位置在 `staysrc` 那一块**之后**,所以本 id 未 armed 时兄弟杠杆的求值**逐字节不变**
+(`STAY_ORDER_OK` 断言钉住)。方向由构造定死:加宽 `bHasRegen` 只能**移除**否决 ⇒
+armed 的 TRUE 集是 shipped 的严格超集;1012 帧实测 `flip_true_to_false == 0`,
+`ship_true 13 → arm_true 14`,差**恰等于** `flips`(断言)。
+STANDALONE,不与任何 id 合取(pullcad 陷阱;`STAY_IDS_MAX_PER_COND == 1` 未动,变异 M4 直接打它)。
+
+### §FA.4 域价钱(先跑域,再写代码)
+
+同一语料同一分母,三个前置数由本轮**独立的前缀行走**复算,与 §EY 逐位对上:
+**turbo 1012/1012、走到补给子句 125、被它否决 112**。
+
+本杠杆自己的域:**全语料只有 3 帧带 `modifier_bottle_regeneration`,
+其中 2 帧在函数自己的 0.75 血量上限之外** ⇒ **域内恰好 1 帧**。
+
+- 两条独立路线交叉核对:驱动读数 `flips`(函数自己的返回值) == 前缀桶 `blocked_with_mod`;
+- `blocked_with_mod + blocked_no_mod == blocked_supply` 是**数出来的分区**,不是减出来的;
+- **反真空列**:`mod_carriers=3 / mod_out_of_band=2` 单独登记 ⇒
+  「语料里根本没有瓶子」与「语料里的瓶子被血量带挡掉了」**永远不会读成同一个数**。
+
+**钉帧**:`tests/fixtures/f_260820_102645_cm_es_reach.lua`,**zuus 360/911 = 39.5% 血**,
+主格位里是 `item_empty_bottle`,身上挂 `modifier_bottle_regeneration`(remaining 2.5s),
+3 秒内无英雄伤害、1200 环内无人。shipped=**false** / armed=**true** /
+**单 armed `staysrc`=false**(空瓶名字与 0 充能两道都拦着它)。
+两条负对照(同样带该 modifier 但在血量带外):nevermore 1.0000、lina 0.8048,**shipped 与 armed 都 false**。
+
+### §FA.5 ⭐⭐ 本节最该被读的一条:§EY.5 的**范围修正**
+
+§EY.5 的发现是 `stayattr` 与 `staysrc` 两道各自充分的否决**只有成对 arm 才动得了 P2 的钉帧**,
+单臂波读到的零每一次都是正确的零(立案 GH #532)。
+**那是那两条子句的性质,不是这个函数的性质** —— 本轮把同一个量对**新的一对**重跑:
+
+| 量 | 读数 |
+|---|---|
+| `flips_staysrc`(单臂) | 44 |
+| `flips`(本 id 单臂) | 1 |
+| `flips_both_levers`(重叠) | **0** |
+
+并在钉帧上单独驱动 `staysrc` 得 **false**。⇒ **两个杠杆的域不相交,单臂波看得见本 id。**
+
+**⇒ 可复用的一条:「AND-of-vetoes」不是一个函数的标签,是逐对要量的关系。**
+把 §EY.5 读成「这个函数的所有 id 都必须成对发波」会**多花一倍的臂**,并且是错的。
+
+### §FA.6 ⚠️ 诚实边界(四条,写在最前面而不是脚注里)
+
+1. **域是一帧**,而这是一个测量不是一句致歉(3/1012,2 个在带外)。反真空列让这句话可核。
+2. ⚠️ **bid 那条腿量到的是「否决开火了」,不是「一趟回家被拦下」**:钉帧上
+   `mode_retreat_generic` 出厂出价是**负的(-0.4721)**,armed 之后走守卫的提前返回变成
+   **0(BOT_MODE_DESIRE_NONE)** —— 数值上是**升高**,两种情况下这个 mode 都没有在要求回家。
+   真正送 bot 回家的是**物品层**,而它在 fixture 上结构性够不着(**GH #89**)。
+   两个数与 GH #89 **都写成断言**。
+   **⇒ 而这正是本轮在写第一行代码之前排除掉「更诱人的那条路」的方式**:
+   `撤退:3`(P2 钉帧真正走的那条 TP 分支)看起来是更好的落点,但 GH #89 让它
+   **在任何 fixture 上永远不可达** ⇒ 改在那里就是一个验不了的改动。
+   **先断言控制帧够得着被控制的代码**,再选落点。
+3. **量到的翻转集是「穷钱超集」**(与 §EY 同族):gold 不进 .dem,1012/1012 读 0(GH #495)。
+   方向定死(真实集是子集),大小未知、不作声称。
+4. **一帧是一个瞬间,而一口血有尾巴**:不声称剩下的那口一定值得站着喝 —— 那是 `fieldsip` 的量,
+   而瓶子的一口(~135/3s)是它定价的四种来源里**最大**的一种。
+
+**并且本轮 discharge 了 §EY 诚实边界 (2)**:那一条逐字写着「bottle 那条腿在本语料上是空洞的……
+钉帧上那只空瓶正是这条边界的现场证人,而且它不是翻转的原因」。
+本轮从另一侧复测那个零(`src_true_via_bottle == 0`,棘轮),并给出瓶子在本语料里
+**唯一可见的形态**:**充能永远读不到,modifier 进了 dump**。
+
+### §FA.7 动过的棘轮(两处,理由都写在断言上方)
+
+- `tests/test_staysrc_field_supply.lua` 的 `STAY_NIDS == 2` **放宽为 `>= 2`**:
+  那个总数是 pullcad 陷阱的**代理量**,真正管陷阱的是 `STAY_IDS_MAX_PER_COND == 1`(未动)。
+  放宽成下界而不是重钉成 3,是为了让**第四个兄弟杠杆**不再因为一个与 `staysrc` 无关的理由把那份文件弄红。
+- `tests/test_gated_helper_nesting_census.lua` 两行的 id 列由 `stayattr,staysrc` 变为
+  `stayattr,staybottle,staysrc`,分类仍是 **(P) / (A)**,§FA.5 的读数写在行上方。
+
+### §FA.8 交棒
+
+- **(甲) 总监**:按 P4.2 冻结把 `staybottle` 记作 **FROZEN-HOLD**(登记、不入集、不算掉棒)。
+  并请收下 §FA.5 作为对 **GH #532** 的**范围修正**:那条约束属于 `stayattr`×`staysrc` 这一对,
+  **不属于这个函数**。
+  ⭐ **并且这一条与本轮总监 §EZ.7 直接相关**:那一节把「P4.2 冻结 ↔ P2 取证需要成对 arm」
+  写进了 `DECISIONS_NEEDED`。本 id **不在那个死结里** —— 它单臂可读(重叠实测 0),
+  所以解冻后它不需要 owner 为 P2 开成对例外就能买到 (a) 证据。
+- **(乙) 批测台**:冻结解除后本 id 可**单臂**发波,**不需要**与任何 id 配对(重叠实测 0)。
+  本组本轮**不发波、不排队、不花钱**。
+- **(丙) 录像组 / 语料侧**:(i) 一张**主格位带有充能 bottle** 的真帧仍是本族两轮共同的空洞;
+  (ii) 若有**物品层可驱动**的世界(GH #89),本 id 的真实代价才量得出来 ——
+  现在只量到 walk 腿,而 walk 腿在钉帧上本来就没在要求回家。
+- **(丁) 下一轮本组自己**:P2 决策侧继续 —— 候选是 112 里那 **68 个「什么都没带」**的帧里
+  `fieldbuy` 为何没买上(注意 `IsFieldRegenSituation` 的 0.55 上限**严于**本函数的 0.75),
+  或 `J.HasFieldRegenSource` 的 backpack 不对称在 PROMOTED 侧的同族问题。
+  **照旧先跑域价钱,并先断言控制帧够得着被控制的代码。**

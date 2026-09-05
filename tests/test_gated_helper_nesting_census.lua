@@ -260,7 +260,22 @@ local PINNED = {
     -- frames exactly one frame flips only when BOTH are armed, and it is the
     -- frame owner priority P2 is named after (f_260822_063722_lina_tp_home,
     -- lina, 31.8% HP).  A wave that arms these one at a time cannot see it.
-    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staysrc | bots/mode_retreat_generic.lua",                  -- P
+    -- [staybottle 20260905] The THIRD id joined this row the same day, on the
+    -- same supply clause as 'staysrc' but reading a different fact (the bottle's
+    -- in-flight modifier, which no item-slot read can see while the sip is
+    -- running).  Also (P), by the same short-circuit argument: `not bHasRegen
+    -- and IsSoakCandidate( 'staybottle' )` leaves `bHasRegen` at its shipped
+    -- value un-armed, and it is APPENDED after the 'staysrc' block, so the
+    -- sibling's un-armed evaluation is byte-identical.  Direction additive by
+    -- construction; tests/_staybottle_sweep.lua drives both legs over the same
+    -- 1012 live frames and `flip_true_to_false` is 0.
+    -- ⭐ AND IT ANSWERS THE QUESTION THE ROW ABOVE RAISED.  The pair problem
+    -- recorded here (arming one of two individually sufficient vetoes measures a
+    -- correct ZERO) is NOT a property of this function -- it is a property of
+    -- those two clauses.  Measured for the new pair rather than inherited:
+    -- 'staysrc' alone flips 44 frames, 'staybottle' alone flips 1, and the
+    -- overlap is 0, so a single-arm wave CAN see this one.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybottle,staysrc | bots/mode_retreat_generic.lua",       -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
     "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P
@@ -368,7 +383,7 @@ local PINNED = {
     -- 'staysrc' the `and` short-circuits before the callee is reached at all --
     -- tests/_staysrc_sweep.lua's `arm_leak` counter drives 'bagsalve' through
     -- the stub on all 1012 live frames and reads 0.
-    "stayattr,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                               -- A
+    "stayattr,staybottle,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                    -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
 }
 

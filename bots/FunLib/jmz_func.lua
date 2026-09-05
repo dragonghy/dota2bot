@@ -5172,6 +5172,61 @@ function J.ShouldStayAndRegen( bot )
 	if not bHasRegen and J.IsSoakCandidate( 'staysrc' ) then
 		bHasRegen = J.HasFieldRegenSource( bot )
 	end
+	-- [staybottle / owner priority P2, 2026-09-05] The IN-FLIGHT half of the same
+	-- supply read, and the member of that set this line was never given.
+	--
+	-- The shipped disjunction two lines up already reads regen IN FLIGHT, not
+	-- only regen in a slot: two of its three disjuncts are modifiers
+	-- ('modifier_flask_healing', 'modifier_tango_heal'), i.e. "a salve/tango is
+	-- being drunk right now" is accepted as proof of field sustain. The fourth
+	-- consumable this family recognises everywhere else -- the bottle -- has an
+	-- in-flight modifier too ('modifier_bottle_regeneration'), and it is in
+	-- neither this line nor the 'staysrc' widening below it.
+	--
+	-- Why the bottle is the one where the omission BITES, and it is structural,
+	-- not incidental: drinking a bottle is exactly the moment its inventory
+	-- evidence disappears. The engine renames the item to
+	-- 'item_empty_bottle' (CDOTA_Item_EmptyBottle) and its charge count drops to
+	-- 0, so BOTH ways this tree asks "does it carry something to drink" answer
+	-- NO precisely while the heal is in flight: the shipped name test above
+	-- (item_flask only) and J.HasFieldRegenSource's own bottle leg, which
+	-- requires GetCurrentCharges() > 0. A hurt, unchased bot two seconds into a
+	-- ~135-health sip is therefore read as empty-handed, the decision falls to
+	-- `bot:GetGold() < 90`, and it is released to walk or TP home -- the trip
+	-- owner priority P2 forbids, at the one moment where leaving is most clearly
+	-- wrong, because the heal has already been PAID FOR and is arriving.
+	--
+	-- The tree already knew: the tpscroll '撤退:3' branch
+	-- (ability_item_usage_generic ~5666) lists 'modifier_bottle_regeneration'
+	-- among the modifiers that refuse a home TP, next to the same
+	-- flask_healing / tango_heal pair this line reads. Same shape as 'stayattr'
+	-- and 'staysrc' before it: the question was answered correctly elsewhere in
+	-- the tree and this shipped line was never brought along.
+	--
+	-- Direction is fixed by CONSTRUCTION: this can only widen `bHasRegen`, which
+	-- can only remove vetoes, so the armed TRUE set is a strict superset of the
+	-- shipped one. Appended AFTER the 'staysrc' block, never inserted into it,
+	-- so with this id un-armed the sibling lever's evaluation is byte-identical.
+	-- Gated STANDALONE -- one id in this condition, never a conjunction of two
+	-- (the 'pullcad' trap). Turbo is structural: the first line of this function
+	-- already asked.
+	--
+	-- Honest bounds. (1) The corpus domain is THIN and stated as a number, not a
+	-- hope: 3 of 1012 live hero frames carry the modifier and 2 of those are
+	-- above the 0.75 HP ceiling, so exactly ONE frame flips
+	-- (f_260820_102645_cm_es_reach, zuus 360/911 = 39.5% HP, holding an
+	-- item_empty_bottle with 2.5s of sip left) -- tests/_staybottle_sweep.lua
+	-- measures it and the test file asserts every one of those numbers.
+	-- (2) Same gold-poor superset caveat the sibling carries: gold is not in a
+	-- .dem (GH #495), so the measured flip set is a superset of the live one.
+	-- (3) It accepts a sip that may be small at the tail end of the channel --
+	-- the magnitude question 'fieldsip' owns on the OTHER family; this lever
+	-- does not borrow it, and a bottle sip (~135 health / 3s) is the LARGEST of
+	-- the four sources that family prices, so it is the member least exposed to
+	-- it.
+	if not bHasRegen and J.IsSoakCandidate( 'staybottle' ) then
+		bHasRegen = bot:HasModifier( 'modifier_bottle_regeneration' )
+	end
 	if not bHasRegen and bot:GetGold() < 90 then return false end
 	return true
 end
