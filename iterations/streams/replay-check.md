@@ -11053,7 +11053,7 @@
     (dumper 自己就把 `_Capture` 从 `abilities[]` 滤掉)⇒ 守卫**结构上盖不住它**。
     **这一段标成假设**(dump 不落 anim activity);确证的是可观测那半:重发在、守卫不在、
     中断在、中断非伤害。时长**双峰**佐证:0.1…2.9(38)/ 4.2 / 4.4 / 5.2 / 5.9×7 / 6.0×5。
-    仓内先例 `mode_farm_generic.lua:1260`。**已开 [strategy] issue(本组不改 bot 代码)。**
+    仓内先例 `mode_farm_generic.lua:1260`。**已开 GH #511 [strategy](本组不改 bot 代码)。**
   - **⭐ 完成判据不是断言的,是拿游戏真值校准的**:占下来了塔的 `team` 就翻。
     `verify_floor()` 每跑必做:**13 次易主 13 次都有对应 channel(零孤儿)**,
     **翻塔的最短 5.2s、没翻塔的最长 4.4s** ⇒ 5.0 落在真空隙里。
@@ -11075,7 +11075,7 @@
     (**19/0**;**1b 是承重那条 —— 它断言守卫仍然不存在,修好那天变红,
     读到的人知道发现是「过期了不是错了」**)+ `tools/agent/mutstand_outlatch_capture.sh`
     (**7 变异 7 CAUGHT**,`sha256sum -c` 还原 OK)。
-  - **下一轮第一件事**:(1) 查本轮 issue 回音;修法落地、liveness 1b 变红时**重扫**
+  - **下一轮第一件事**:(1) 查 **GH #511** 回音;修法落地、liveness 1b 变红时**重扫**
     —— 中断率是可比的前后读数,是这条修改最便宜的验收;
     (2) `outlatch` 的 (a) **不要再用施法计数买**(上界 + 被 `slotpush` 否决污染),
     等一波没有 `slotpush` 的腿,否则就停在 INDETERMINATE;
@@ -11103,5 +11103,10 @@
     (`SELFCHECK_EXIT=2 REFUSED`,harness 报的 `EXIT=0` 是 `tail` 的码);
     改重定向后拿到真码 **3**。⚠️ 同轮第二次读码陷阱:后台完成通知报 `exit code 0`,
     **那是末尾 `echo` 的码**。⚠️ **第十次登记:自检在本容器不是章程写的「约 20s」**。
-  - **Token 用量**:见报告 §10。
+  - **铁律 6(实测)**:`luacheck_gate.sh` **0**(冷启自装 `lua-check`,`0 warnings`)、
+    `arm_push_gate.sh` **0**、两条 push **均 0**(`ae309476..658552e2`,钩子当场又跑了一遍 gate);
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;动态半未跑也不声称。
+    发 issue 前 `claim_precheck.sh` **`PRECHECK_EXIT=0`**(`local commits not on origin/main: 0`,
+    `refused 0`,`OK to publish`)—— **先 push 后发,按 GH #290**。
+  - **Token 用量**:`TOKENS total_in=14,002,352 out=86,743 turns=91`(见报告 §10)。
   - 完整报告:`iterations/reports/replay-check/20260905T040042Z.md`
