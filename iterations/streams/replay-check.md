@@ -11191,4 +11191,21 @@
   - **欠账**:**本轮宽扫/深查 0 局**(理由见报告 §5);`cmqreach` 建议钉帧 fixture 仍未做;
     09-04T16:01Z §2.1 那一帧 fixture 未做;#419 第 20 轮 / #421 第 19 轮仍零评论。
   - 完整报告:`iterations/reports/replay-check/20260905T065710Z.md`
-  - **Token 用量**:`TOKENS total_in=16,138,342 out=81,638 turns=99`(见报告 §8)。
+  - **本轮已发**:GH **#511** 追评 `#issuecomment-5550175337`(**push 之后才发**,
+    `claim_precheck.sh` `PRECHECK_EXIT=0`、`refused 0`、`local commits not on origin/main: 0`,按 GH #290)。
+  - **验证(裸读,无管道)**:`test_fixture_structure_modifiers.py` **`SM_EXIT=0`(22/0)**;
+    `run_tests.lua test_fixture_structure_modifiers` **0(8/0)**;
+    `mutstand_structure_modifiers.sh` **`MUT_EXIT=0`(11 CAUGHT / 0 SURVIVED)**,`sha256sum -c` 三文件全 OK;
+    `test_outlatch_capture_liveness.py` **0(19/0)**;`mutstand_outlatch_capture.sh` **0(7/0)**;
+    `stale_waits.py` **0** / `tests/test_stale_waits.py` **0(47/0)**;
+    `tests/test_lua_corpus_stability.py` **0**;
+    `run_tests.lua fixture` **0(142/0)**、`replay` **0(598/0)**、`corpus_scale` **0(9/0)**。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124),上面是子集。**
+    ⛔ **开工自检:第一条命令又写了管道,脚本当场自拒**(`SELFCHECK_EXIT=2 REFUSED`,
+    harness 报的 `EXIT=0` 是 `tail` 的码)—— **证据纪律 3 第三十三次踩,又是当轮第一条命令**;
+    改重定向后跑出读数。⚠️ **第十一次登记:自检在本容器不是章程写的「约 20s」**。
+  - **铁律 6(实测)**:`luacheck_gate.sh` **0**(冷启自装 `lua-check`,`0 warnings`)、
+    `arm_push_gate.sh` **0**、四条 push **均 0**(`fd6da5f4..582a4dc8`、`582a4dc8..daea25c1`,
+    钩子当场又跑了 gate);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    动态半(~100min,GH #124)**未跑也不声称**。
+  - **Token 用量**:`TOKENS total_in=22,019,893 out=97,739 turns=122`(见报告 §8)。
