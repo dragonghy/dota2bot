@@ -11248,7 +11248,7 @@
     读上去极像「节流根本没咬住,GH #326 的机制前提是假的」—— 但模式仲裁同样解释得通。
     **「对上了」不等于「理由对」**,本组两轮里第三次栽在同一件事上,这次在写进结论**之前**拦下。
     判 SILENT 就是**把「不知道」洗成「有罪」**(`zusult` 那条教训的镜像)。
-  - **本轮已发**:GH **#520** `[strategy]` —— `creepthink` 换轨到 fixture,附钉帧候选
+  - **本轮已发**:GH **#521** `[strategy]` —— `creepthink` 换轨到 fixture,附钉帧候选
     `20260904_184732_slot1__b30fe4` t=123.9(axe pos3,armed,180° 转向,`drag=1007`)。
     **归属登记(4a)**:本读数量在一条同时带 `pullcad`/`pulldrag` 的腿上;两者改节拍与撤退点,
     **都不决定 Think() 能不能走到这个分支**,但**共臂照登**。
@@ -11257,10 +11257,23 @@
     挪进后台,完成通知报 `[exited with code 0]`,**日志停在 Lua 检测器腿标题之后没有内容**
     ⇒ **那次 INCOMPLETE 不是通过,Lua 检测器腿本轮没人看过**。python 腿 **95/4/2**,
     四条红与批测台 09:15Z 逐条同名、**均已有主,不重复认领**。
+  - **开工自检第三次(收尾重跑)拿到真码 `SELFCHECK_TRUE_EXIT=3`(FINDINGS)**:
+    `legs run: 10`,四条 `cadence`/`queue-rulings`/`owed-executions`/`trunk-red(python)`
+    **均非本组或已有主,登记不认领**;`UNCERTIFIABLE: none`;
+    `NOT RUN: tests/test_selfcheck_lua_leg.py` 照登。
+    **Lua 检测器腿本轮跑完:`84 tagged detector file(s), 0 failures`,边界照抄「FAST SUBSET,
+    not the full suite」。⚠️ 第十二次登记:自检在本容器不是「约 20s」,本轮约 30 分钟。**
+    ⚠️ 收尾查它跑没跑完时用 `pgrep -a -f "routine_selfcheck"`,**匹配到发起查询的 `bash -c` 自己**
+    (章程「工具坑」2026-08-25 那条,本轮又踩);判据应是日志尾巴的 `SELFCHECK_TRUE_EXIT=` 行。
   - **铁律 6(实测)**:`luacheck_gate.sh` **0**(冷启自装 `lua-check`,`0 warnings`)、
-    `arm_push_gate.sh` **0**;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    `arm_push_gate.sh` **0**、两条 push **均 0**(`265f75b9..4aae432b`,钩子当场又跑了一遍 gate);
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
     动态半(~100min,GH #124)**未跑也不声称**。
-  - **下一轮第一件事**:(1) **落 #520 的 fixture**(`creepthink` 条件 (a) 唯一的活路);
+    发 issue 前 `claim_precheck.sh` 第一次 **`PRECHECK_EXIT=3`** —— 它把 W47 发波树那个 sha
+    报成 OFF-TRUNK(**它确实只在波次分支上,不在 main**),**那条拒绝是对的**;
+    改引 `W47_wave.json` 的 `tree`/`ref_pin` 字段后 **`PRECHECK_EXIT=0`**,**先 push 后发(GH #290)**。
+  - **Token 用量**:`TOKENS total_in=14,130,481 out=82,815 turns=87`(见报告 §10)。
+  - **下一轮第一件事**:(1) **落 #521 的 fixture**(`creepthink` 条件 (a) 唯一的活路);
     (2) 另两个盲点 `midtp`/`zusstatic` 先跑 `verify_coverage.py` 复核,再判断是否同类不可测;
     (3) **#511 本轮仍无回音** ⇒ `outcommit` 未落地,`outlatch` **重扫条件未成立,不重扫**;
     (4) `campbind` 仍等 #475 再裁(**不要再扫更多局**);(5) `zusboltdom` 等同波隔离腿;
