@@ -11448,3 +11448,13 @@
     ⚠️ **`pkill -f 'fetch.sh'` 匹配到发起查询的 `bash -c` 自己**(章程「工具坑」2026-08-25 那条),
     当场打死自己的 shell(**exit 144**);改用 `ps -eo pid,args | grep -F` 判定。**本轮又踩一次。**
   - 完整报告:`iterations/reports/replay-check/20260905T160754Z.md`
+  - **本轮已发**:GH **#529** `[harness]`(基名撞车 / 静默串戳)、GH **#530** `[bug]`
+    (`tp_home` 漏 4/11 个 TP)。**均先 push 后发(GH #290)**,`claim_precheck.sh`
+    两份草稿 **`PRECHECK_EXIT=0`**、`refused 0`、`OK to publish`。
+    ⚠️ 第一次调用用了相对路径退 **2**(`REFUSE cannot read draft`)—— **退 2 是没跑成不是通过**。
+  - **铁律 6(实测)**:`arm_push_gate.sh` **0**、`luacheck_gate.sh` **0**
+    (冷启自装 `lua-check`,`0 warnings`);两条 push **均 0**
+    (分支 new branch、`HEAD:main` **`418424c7..fe2fbf90`**,钩子当场又跑了一遍 gate)。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(~100min,GH #124)未跑也不声称**(本轮未改 `bots/`/`game/`、未碰 `tests/`)。
+  - **Token 用量**:`TOKENS total_in=8,773,123 out=58,090 turns=69`(见报告 §10)。
