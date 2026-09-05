@@ -27,6 +27,62 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0STAYATTR. **【2026-09-05T07:3xZ 新增,**OWNER_PRIORITIES P4.4 开工 + P2 决策侧**
+   (P4.4 今日新立:协同组每轮工作单元的**主体必须是一个 `bots/` 行为改动** ——
+   本组**前四轮连续零行为改动**,正是它立案时点的那个比例;P2 的责任链当前球写着**协同组**,自 08-22 起未动);
+   `[strategy]` open issue 本轮扫过 **#511**/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
+   —— **无一条未认领**(#511/#503 是本组前两轮已交棒的;#485 的 (乙) 已于 09-04T19:41Z 被裁为「本轮不落 `ffeat`」)
+   ⇒ 按铁律 9 取优先项;**本轮有行为改动,一条合取项宽**:
+   `bots/FunLib/jmz_func.lua` 的 `J.ShouldStayAndRegen` 追击行 + 新 helper `J.HasNearbyHeroDamager`(无闸,唯一调用者);
+   `tests/test_stayattr_global_ult.lua`(**11/11**);`tests/_stayattr_sweep.lua`;
+   `tools/agent/mutstand_stayattr.sh`(**13 CAUGHT + 1 声明式 UNMEASURABLE + 对照 SURVIVED,零 NO-OP,EXIT=0**);
+   `tests/test_gated_helper_nesting_census.lua` +1 行 **(P)**;
+   `state.json:stayattr_20260905`;`test_set.md §EQ`;queue `strategy-44`;
+   报告 `iterations/reports/strategy/20260905T073000Z.md`;
+   **armed 串一字未动、新 id `stayattr` 提议入集但未 armed**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(裁 §EQ)+ 批测台(strategy-44)+ 录像组(条件 (a))+ 语料侧(一张帧)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):一个 GATED 家族把某个谓词写对了,
+   不构成它旁边那个 PROMOTED 函数问的是同一个问题。**
+   `J.ShouldStayAndRegen` 是 **PROMOTED** 的(原 `tphome`,28 局 A/B 后转正)—— **每一局 Turbo 都活着**,
+   而它的追击读数 `bot:WasRecentlyDamagedByAnyHero(3.0)` **没有归属**:一发从地图另一头落下的全局大招,
+   和一个站在身上的英雄,在这一行上读数完全一样 ⇒ 否决触发 ⇒ 一个安全的残血 bot 被放回家,
+   **正是 owner P2 逐字禁止的那趟路**。而对着**同一趟回家路**的 gated 家族(`stayfield`/`stayfield2`/`fieldbuy`)
+   **自 08-22 起就是归属式的**,源码原话 `-- Attributed danger: someone hit me recently AND is still near me.`
+   ⇒ **缺的不是想法** —— 想法就在**同一个文件里、290 行之外**;缺的是它**停在了实验代码与出厂代码的边界上**。
+   ⇒ **「这个仓库知道该怎么问」和「这条出厂路径确实在问」是两句话。** 与 §EO 是同族的反面:
+   那次是守卫**在 helper 里已经跑过了**,这次是守卫**在隔壁写对了而这里没写**。
+   **⭐⭐ 域价钱,承重的数是 88 不是 7**:1012 活英雄帧,盲读在 **95** 帧触发否决,
+   其中 **88** 帧伤害**确实**来自 3000 内(杠杆在那里**完全惰性**)⇒ **出厂那条子句十次里对九次以上**,
+   所以这是**收窄不是删除**;一个「把这行删掉」的修法会同时放掉那 88 帧的真实追击。
+   7 个无归属帧的**互斥四分区**(按函数自己的子句顺序,**数出来不是减出来**):
+   翻转 **1** / 血量带外 **2** / 1200 环挡住 **0** / 补给子句挡住 **4**,四桶之和 `== 7` 由断言钉住。
+   方向由**构造**定死(加析取项只能让否决更难成立)⇒ `flip_true_to_false == 0` 是驱动实测,不是注释声明。
+   **⭐⭐⭐ 铁证帧就在 owner P2 自己钉的那张 fixture 上,读的是上面另一个英雄**:
+   `f_260822_063722_lina_tp_home` **t=349.0**,**jakiro 405/1000**,2.6s 前吃了 zuus 从 **~10,400u 外**
+   扔来的雷神之怒 **212+17**(该帧大招 cd 读 128.3,即刚放),tango 在跳,**1200 环空** ⇒
+   shipped 放他回家,armed 他留下喝完。
+   **⭐⭐⭐⭐ 两发变异体是被**存活**买来的,不是被想出来的(本轮最该被读的一条)。**
+   **M8**(stub 放宽成 arm 全部 id)**首轮 SURVIVED** —— 套件**分不清「armed 一个」和「armed 全部 141 个」**,
+   因为在这份语料上两者给出**同样的数**,而**那正是放宽了也永远不会被发现的条件**;已补 `arm_leak`(驱动式,
+   问 shipped 代码能观察到什么,不读 stub 源码),现已 CAUGHT。
+   **M10**(1200 环那桶不可达)**首轮 SURVIVED**,查下去是**本语料按构造抓不住**(5 个带内帧全部环内无人)
+   ⇒ **声明**,不编一条会因别的原因开火的断言:登记为 **UNMEASURABLE**(台子新增这个结局,
+   **不是通过也不是失败**),并补 `unattr_ring_tested` **可达性**断言把「分支没跑过」与「世界里是 0」分开
+   (**GH #171 形状**);语料长出那张帧的那天台子**自己打改判提示**。
+   ⇒ **一套第一轮全 CAUGHT 的变异台,通常是没对准任何东西。**
+   ⚠️ **一处自伤,当场收账**:补 `arm_leak` 探针之后 **M6 变成 NO-OP**(探针落在它两行锚点的**中间**)——
+   **一发悄悄不存在了,而台子照旧为它打了一行**,规则 2 的**逆命题**;已把锚点改成只钉那一行赋值,
+   且 **NO-OP 在本台计入「不合规」而不是放行**。
+   ⚠️ **诚实边界 (3),不许被读掉**:**P2 自己钉的 lina 本人整函数不翻转** —— 补给子句仍挡着她,
+   而 mock 的 `GetGold` 落在 `^Get -> 0` 兜底上(**GH #495**),那是**类型断言不是她真实的钱**
+   ⇒ **真实对局里会不会翻,UNKNOWN,不声称**。她那帧上被证明的只是本杠杆自己那条子句
+   (否决触发 + 最近敌人 **6,596u**,与源码注释里那个数逐位相同)。
+   ⚠️ **trunk 红的归属是量过的不是猜的**:`test_lf_rescue_final_action.lua` 红,
+   `git stash push -u` 后**基线上同一条断言、同两帧**同样红 ⇒ **GH #508**,不是本轮引入。
+   **下一格(本组下一轮第一项)**:取未认领 `[strategy]` issue;否则按 **P4.4 继续在 `bots/` 上取一个小杠杆**,
+   优先 **P2 决策侧的下一格** —— `J.ShouldStayAndRegen` 的补给子句 `bot:GetGold() < 90` 在 Turbo 里
+   是否还是对的门(Turbo 金钱曲线快得多,而这条常量来自普通模式);**照旧先跑域价钱**。
+
 0OUTCHAN. **【2026-09-05T04:30Z 新增,**认领 GH #511**(04:07Z 录像组开、未被认领、带帧证据;
    `[strategy]` open issue 本轮扫过 **#511**/#503/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
    ⇒ 章程「每次触发的工作流」第 1 条成立,**本轮没有换域**);
@@ -5449,6 +5505,47 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T07:3xZ(**OWNER_PRIORITIES P4.4 开工 + P2 决策侧** —— P4.4 今日新立:
+  本组每轮工作单元的**主体必须是一个 `bots/` 行为改动**,而本组**前四轮连续零行为改动**;
+  `[strategy]` open issue 扫过 #511/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445,
+  **无一条未认领** ⇒ 按铁律 9 取优先项。**本轮有行为改动。**)
+  **⭐ 主判据:一个 GATED 家族把某个谓词写对了,不构成它旁边那个 PROMOTED 函数问的是同一个问题。**
+  `J.ShouldStayAndRegen`(**PROMOTED**,每一局 Turbo 都活着)的追击读数
+  `bot:WasRecentlyDamagedByAnyHero(3.0)` **没有归属** ⇒ 一发从地图另一头落下的全局大招
+  和一个站在身上的英雄读数完全一样 ⇒ 安全的残血 bot 被放回家,**正是 owner P2 禁止的那趟路**;
+  而对着同一趟回家路的 gated 家族 `J.IsFieldRegenSituation` **自 08-22 起就是归属式的**
+  —— 想法就在**同一个文件里、290 行之外**,只是**停在了实验代码与出厂代码的边界上**。
+  **修法一条合取项宽**:`... and ( not J.IsSoakCandidate('stayattr') or J.HasNearbyHeroDamager(bot, 3000, 3.0) )`,
+  未 armed 靠**短路**逐字回到出厂读数;**独立闸**(`pullcad` 陷阱,已升级成 `STAY_NIDS == 1` 断言);
+  turbo 由函数首行结构性保证;新 helper **不与出厂兄弟扫描共用代码**(共享 = 把一杠杆变成出厂重构,`lanefix` 教训)。
+  **域价钱(1012 活英雄帧):95 帧触发否决,其中 88 帧伤害确实来自 3000 内 ⇒ 出厂子句十次里对九次以上
+  ⇒ 收窄不是删除**;7 帧无归属,互斥四分区 翻转 **1** / 带外 **2** / 1200 环 **0** / 补给 **4**(和 `== 7` 有断言);
+  `flip_true_to_false == 0` 驱动实测,方向由构造定死。
+  **铁证帧在 owner P2 自己钉的那张 fixture 上、读的是另一个英雄**:`f_260822_063722_lina_tp_home` t=349.0,
+  jakiro 405/1000 吃了 zuus **~10,400u 外**的雷神之怒,tango 在跳,1200 环空。
+  产出:`bots/FunLib/jmz_func.lua`(唯一行为改动);`tests/test_stayattr_global_ult.lua`(**11/11**);
+  `tests/_stayattr_sweep.lua`;`tools/agent/mutstand_stayattr.sh`(**13 CAUGHT + 1 声明式 UNMEASURABLE
+  + 对照 SURVIVED,零 NO-OP,EXIT=0**);`test_gated_helper_nesting_census.lua` +1 行 **(P)**;
+  `state.json:stayattr_20260905`;`test_set.md §EQ`;queue `strategy-44`;
+  报告 `iterations/reports/strategy/20260905T073000Z.md`。
+  **armed 串一字未动;`stayattr` 提议入集但未 armed**;零 AWS、零 S3、零 EC2、零波次。
+  **⭐⭐ 两发变异体是被存活买来的**:M8 首轮 SURVIVED(套件分不清 armed 一个 / 全部 141 个,
+  因为本语料上两者同数)⇒ 补 `arm_leak`,现 CAUGHT;M10 首轮 SURVIVED 且**本语料按构造抓不住**
+  ⇒ **声明为 UNMEASURABLE**(不是通过也不是失败)+ 补 `unattr_ring_tested` 可达性断言(GH #171 形状)。
+  ⚠️ 自伤当场收账:补探针后 **M6 变 NO-OP**(锚点被从中间劈开),规则 2 的逆命题;
+  锚点已收窄,**NO-OP 在本台计入不合规**。
+  ⚠️ **诚实边界 (3)**:P2 自己钉的 **lina 本人整函数不翻转**(补给子句仍挡着她;mock 的 `GetGold`
+  落在 `^Get -> 0` 兜底上,**GH #495** ⇒ 真实对局里会不会翻 **UNKNOWN,不声称**)。
+  **铁律 6**:静态半 `GATE_EXIT=0 CLEAN`(0 warnings);动态半跑了相关腿
+  (stayattr 11/0、nesting census 10/0、gate_claim 16/0、smoke 3/0、stayfield 55/0、fieldsrc 8/0),
+  **全量套件(~100min,GH #124)未跑完,不声称**。
+  ⚠️ `test_lf_rescue_final_action.lua` 红 —— **归属量过**:`git stash push -u` 后基线上
+  **同一条断言、同两帧**同样红 ⇒ **GH #508**,不是本轮引入。
+  ⚠️ 开工自检第一条命令**被自检自己拒绝**(`stdout is a PIPE ⇒ exit 2, nothing checked`,
+  证据纪律 3,它自己说是第 5 次复发),已改走重定向重跑;其 **trunk-red(lua) 那一条点的就是本轮的改动**
+  (nesting census 的新行),已按它要的那个问题手读并钉成 **(P)**。
+  **已交棒:总监(裁 §EQ)+ 批测台(strategy-44)+ 录像组(条件 (a),判据是「留没留下」不是「活没活下来」)
+  + 语料侧(一张 unattributed 且 1200 环内有人的真帧,能把诚实边界 (1) 那个空洞的 0 变成有支撑的读数)。**
 - 2026-09-05T04:30Z(**认领 GH #511** —— 04:07Z 录像组开、未被认领、带帧证据;
   `[strategy]` open issue 扫过 **#511**/#503/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
   ⇒ 章程工作流第 1 条成立,**本轮没有换域**)。

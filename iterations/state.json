@@ -5854,5 +5854,40 @@
   "self_inflicted": "见 instrument 末尾(汇总行与分布自相矛盾)。另:变异台第一次跑 **12 发里 5 发不合格**(1 个 NO-OP + 4 个 SURVIVED),其中 **2 个是真实的断言缺口**(空区间列表、并列被折进主张一侧),按 evidence-discipline 规则 2 **先怀疑断言**,补了 `issuefix_intervals` 断言和第二份真帧切片才补上;另 3 个是变异本身写错(regex 打在错文件 / 守卫仍在施法之上 / 单文件 M6 今天不咬)。**没有把不合格的那一版当成通过记下来。**",
   "ratchets": "`tests/test_outchan_domain.py` 31 条,`bots/` 一改就响:`J.CanNotUseAction` 掉了 `IsChanneling` 析取项、`Think()` 不再调它、守卫沉到施法之下、`ability_capture` 出现第二个施法点、**或者有人照 #511 原样把那一行落进 `mode_outpost_generic.lua`**(报错文案直说「这是冗余不是错」)。**立这些断言的理由是 §EN 的那条**:解锁/推翻本裁定的编辑会发生在 `jmz_func.lua`,协同组 backlog 上那天没有任何一条在看那里。",
   "artifacts": "`tools/batch_test/behavioral/outchan_domain.py`;`tests/test_outchan_domain.py`(**31/31**);`tests/fixtures/tl_260905_010205_luna_outchan.json` + `tl_260905_010226_axe_outchan.json`(真帧逐字切片);`tools/agent/mutstand_outchan.sh`(**13/13 CAUGHT,零 NO-OP,零 SURVIVED**,含 1 条 must-not-fire 对照);`test_set.md §EO`;报告 `iterations/reports/strategy/20260905T043000Z.md`;GH #511 追评 + 交棒。"
+ },
+ "stayattr_20260905": {
+  "date": "2026-09-05T07:xxZ",
+  "backlog_item": "OWNER_PRIORITIES P4.4 (bots/ 主体配额,今日新立) + P2 (低血不回家,决策侧,球在协同组)",
+  "owner": "strategy",
+  "gate": "stayattr (NEW soak id; turbo 结构性已由函数首行保证,STANDALONE -- 不与任何 id 合取)",
+  "bots_lua_changed": true,
+  "headline": "J.ShouldStayAndRegen 是 PROMOTED 的(每一局 Turbo 都活着),而它的追击读数 `bot:WasRecentlyDamagedByAnyHero(3.0)` 没有归属:一发从地图另一头落下的全局大招,和一个站在身上的英雄,在这一行上读数完全一样 ⇒ 否决触发 ⇒ 一个安全的残血 bot 被放回家。这正是 owner 优先项 P2 禁止的那趟路。",
+  "star_main_judgement": "⭐ 主判据(可复用,超出本主题):一个 GATED 家族把某个谓词写对了,不构成它旁边那个 PROMOTED 函数问的是同一个问题。J.IsFieldRegenSituation 自 2026-08-22 起就用归属式读法(源码原话:『Attributed danger: someone hit me recently AND is still near me』),而对着同一趟回家路的出厂守卫,在同一个文件里、290 行之外,从来没被带上。缺的不是想法 —— 想法就在文件里;是那个想法停在了实验代码与出厂代码的边界上。⇒「这个仓库知道该怎么问」与「这条出厂路径确实在问」是两句话,必须分开读。",
+  "change": "bots/FunLib/jmz_func.lua:(1) 新 helper J.HasNearbyHeroDamager(bot, nRadius, fTime) —— 无闸、纯世界查询、只有一个调用者;(2) J.ShouldStayAndRegen 的追击行改为 `WasRecentlyDamagedByAnyHero(3.0) and ( not J.IsSoakCandidate('stayattr') or J.HasNearbyHeroDamager(bot, 3000, 3.0) )`。半径/窗口逐字取自兄弟扫描(3000 / 3.0),并由测试从源码解析后断言两处相等。",
+  "direction_by_construction": "加一个析取项只能让否决更难成立 ⇒ armed 的 TRUE 集是 shipped 的严格超集,方向由构造定死而不是由注释声明。1012 帧驱动实测 flip_true_to_false == 0(棘轮断言);ship_true 13 → arm_true 14。",
+  "domain_price": "109 fixture / 1012 活英雄帧。盲读在 95 帧上触发否决;其中 88 帧伤害确实来自 3000 内(杠杆在那里完全惰性 —— 这是本次改动最承重的一个数:出厂那条子句十次里对九次以上,所以是收窄不是删除);7 帧无人可归属。7 帧的互斥四分区(按函数自己的子句顺序,数出来不是减出来):flips 1 / 血量带外 2 / 1200 环挡住 0 / 补给子句挡住 4。四桶之和 == 7 由断言钉住。",
+  "witness_frame": "tests/fixtures/f_260822_063722_lina_tp_home.lua t=349.0 —— 正是 owner 优先项 P2 自己钉的那张 fixture,读的是上面另一个英雄:jakiro 405/1000,2.6 秒前吃了 zuus 从 ~10,400u 外扔来的雷神之怒 212+17(该帧大招 cd 读 128.3,即刚放),身上 tango 在跳,1200 环空。shipped:否决触发,他被放回家。armed:他留下把 tango 喝完。",
+  "honest_bounds": [
+   "(1) 看不见战争迷雾:从雾里爆发然后退到 3000 外的敌人,在这一行上与全局大招读数相同 —— 与兄弟扫描逐字相同的边界。1200 环原封不动,那条子句才管『有没有人站在我身上』。⚠️ 而语料并不佐证这次交接:5 个带内帧里 0 个环内有人 ⇒ 那个 0 是空洞的(说的是『没有一帧让环干过活』,不是『环覆盖了这个情形』)。已在测试里写明,并在变异台里登记为 UNMEASURABLE。",
+   "(2) 见证帧上最近的敌人是 1,556u 外的 spirit_breaker,黑暗之贤者冲刺已转好。他没有造成那次伤害(该帧 recent_damage 只点了 zuus)⇒ 归属扫描答得对;但『1,556 且在冲』是这个杠杆不衡量的真实威胁,因为管它的是原封不动的 1200 环。作为该帧的事实断言下来,不辩解掉。",
+   "(3) P2 自己钉的 lina 本人整函数不翻转 —— 补给子句(`not bHasFlask and GetGold() < 90`)仍然挡着她。而 mock 的 GetGold 落在 `^Get -> 0` 兜底上(GH #495),那是一句类型断言不是她真实的钱 ⇒ 真实对局里会不会翻,UNKNOWN,不声称。她那一帧上被证明的是本杠杆自己那条子句:否决触发,且没有任何打过她的人在附近(最近敌人 6,596u —— 与源码注释里那个数逐位相同)。",
+   "(4) 一帧是一个瞬间。本轮说的是 t 时刻那个决定是错的,不声称留下的 bot 接下来十秒活了下来。"
+  ],
+  "local_validation": "tests/test_stayattr_global_ult.lua + 子进程语料普查 tests/_stayattr_sweep.lua ⇒ `lua5.1 tests/run_tests.lua stayattr` 11 tests, 0 failures。两条腿都是**驱动**出来的:同一个出厂函数、同一帧、只切换一个 soak id,没有任何一处重新实现决策 ⇒ 不会像影子对比那样漂走(§EH 的教训)。",
+  "mutation_stand": "tools/agent/mutstand_stayattr.sh ⇒ 14 发:13 CAUGHT(含 M14 对照按声明 SURVIVED)+ 1 声明式 UNMEASURABLE,零 NO-OP,零不合规,EXIT=0。承重的几发:M2/M3(闸未取反 / 扫描被取反 —— 都还读得像修复、都编译、都把答案送向反面)、M4(pullcad 陷阱)、M5(sweep 不剥注释 ⇒ STAY_NIDS 被这条子句自己那段警告陷阱的注释满足)、M11/M12(半径与血量带在普查底下移动 ⇒ 每个棘轮数都在讲另一个总体,而数字仍然看着合理)、M13(把出厂兄弟扫描重构成共用 ⇒ 一杠杆的声明失效而所有行为断言照旧通过,lanefix 形状)。",
+  "mutstand_two_entries_earned": "⚠️ 两发是事后补的,而且是被存活买来的不是被想出来的:M8(把 stub 放宽成 arm 全部 id)第一轮 SURVIVED —— 整个套件分不清『armed 一个 id』和『armed 全部 141 个』,因为在这份语料上两者给出同样的数,而那正是放宽了也永远不会被发现的条件;已补 arm_leak 计数器,现已 CAUGHT。M10(让 1200 环那一桶不可达)第一轮 SURVIVED,查下去发现本语料上它按构造抓不住 ⇒ 诚实做法是声明,不是编一条会因别的原因开火的断言;已补 unattr_ring_tested 可达性断言(把『分支没跑过』与『世界里是 0』分开,GH #171 形状)+ 登记为 UNMEASURABLE,并让台子在语料长出那张帧的那天自己打改判提示。**一套第一轮全 CAUGHT 的变异台,通常是没对准任何东西。**",
+  "noop_is_not_a_pass": "M6 在补丁之后变成 NO-OP(arm_leak 探针落在它两行锚点的中间),即一发悄悄不存在了而台子照旧为它打了一行 —— 规则 2 的逆命题。已把锚点改成只钉那一行赋值,且 NO-OP 在本台计入不合规而不是放行。",
+  "nesting_census": "tests/test_gated_helper_nesting_census.lua 新增一行并按 (P) 手读:未 armed 时第二个操作数在第一个析取项上短路,否决条件逐字是出厂表达式、求值顺序也不变 ⇒ 单独 arm 任何外层 id,测到的与这条子句落地前完全一样。(这一行是**开工自检自己点出来的**,不是本轮自查发现的。)",
+  "no_new_conjunction": "'stayattr' 是独立闸,不与任何 id 合取(pullcad 陷阱)。已从散文升级成断言:sweep 用 strip_comments 后解析 STAY_NIDS,必须恰好为 1 —— 而这条子句自己的注释里就点了两次 IsSoakCandidate 名(在解释这个陷阱),不剥注释就会被警告本身满足(M5 就是这一发)。",
+  "gate_verification": "bash tools/agent/luacheck_gate.sh ⇒ GATE_EXIT=0 CLEAN,0 warnings(冷启自己装的 lua-check)。其他相关腿:gated_helper_nesting_census 10/0、gate_claim_consistency 16/0、smoke_load 3/0、stayfield 55/0、fieldsrc 8/0。全量套件(~100min,GH #124)本轮未跑完,不声称。",
+  "trunk_red_not_mine": "tests/test_lf_rescue_final_action.lua 在本轮工作树上红 —— 归属是量过的不是猜的:`git stash push -u` 之后基线上同一条断言、同两帧(f_260819_122930_lich_rescue_doomed/lina、f_260820_043124_axe_blink_flee_529/axe)同样红 ⇒ 是 GH #508(02:56Z 立,GH #492 mock 修复的下游),不是本轮引入。python 腿的 3 条红是 GH #497/#490/#506,同属既有。",
+  "aws_spend": "none (no EC2, no S3, no dumper, no CE call)",
+  "status": "LOCALLY VALIDATED, gated, NOT armed。入集提议 test_set.md §EQ + queue `strategy-44`;等总监裁。条件 (a) 交棒录像组。",
+  "handoff": [
+   "总监:裁 §EQ —— 'stayattr' 入不入 armed 集。⛔ 一并请收一条**反向**提醒:本 id 与 stayfield/stayfield2/fieldsip 那个共同 promote 原子**不同族** —— 它动的是 PROMOTED 守卫、不读 J.HasFieldRegenSource、也不碰 J.IsFieldSipEnough,所以 §EI.1 的单向约束不覆盖它,不要顺手并进去。",
+   "批测台:queue.json 'strategy-44' —— 条件 (a) 取证波(申报目的:armed 腿上是否真有 bot 在被全局技能打到后留在原地喝补给,而不是回家)。本组不发波、不花钱。",
+   "录像组:条件 (a) 的核验判据写在 queue 请求里 —— 看的是留没留下,不是活没活下来(诚实边界 4)。",
+   "语料侧(谁先落地谁做):一张 unattributed 且 1200 环内有人的真帧 fixture,会把诚实边界 (1) 那个空洞的 0 变成有支撑的读数,并让变异台的 M10 从 UNMEASURABLE 变回 caught(台子那天会自己打出改判提示)。"
+  ]
  }
 }

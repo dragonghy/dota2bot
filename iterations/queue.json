@@ -1677,6 +1677,16 @@
         "note": "入集 61 -> 62(与 `campbind` 同轮)。核过的四格:①唯一闸点 hero_zuus.lua:1032,条件是 IsModeTurbo() and IsSoakCandidate('zusboltdom') and type(nHealthCap)=='number' and nHealthCap<=0 —— **依赖写成值不是 id**,不读 IsSoakCandidate('zusboltcap') ⇒ 不踩 `pullcad`;②方向严格收紧,只能扣住一次出价、不能发出一次;③申请书的前提 (丁)(戊) 在本串里都成立 —— `zusult` 在串里,`zusboltcap` 与 `zusultx` 都不在,所以 (1) 归零可归因;④`carrier_terms.py` 判 kind=hero zuus,而 zuus 已由 `zusult`/`zusstatic` 供着 ⇒ 载体项不动。⚠️ 收割限定:(a) 用 GH #478 修好后的 `zusult_gate.py` 读域内触发计数,**必须同时给击杀落地数**(反向刹车 乙);(1) 归零 + (2) 明显下降 ⇒ REJECT 不是 promote。两条读数按铁律 4(i-a) 登记 ab/ba 两个分层的**读数**(不是局数)。"
       },
       "executor": "batch-desk (composes W46 arm string off test_set.md line 2) -> replay-check (condition (a))"
+    },
+    {
+      "id": "strategy-44",
+      "stream": "strategy",
+      "bundle": "stayattr",
+      "seeds": [],
+      "priority": 2,
+      "axis": "STAYATTR —— 新 gated 候选的条件 (a) 取证。**需要 armed 腿**(归档扫描买不到:未 armed 时这条子句逐字是出厂读数,两腿逐位相同)。请求的是**搭车入集**(加进现有全集串,**不申请专波、不申请专机、不申请新增机时**)。本组不花 AWS 的钱。",
+      "question": "**它修的是什么**:`J.ShouldStayAndRegen` 是 **PROMOTED** 的(原 soak id `tphome`,28 局 A/B 后转正)—— 它**在每一局 Turbo 里都活着**。它的追击子句 `bot:WasRecentlyDamagedByAnyHero( 3.0 )` **没有归属**:一发从地图另一头落下的全局大招,和一个站在身上的英雄,在这一行上读数完全一样 ⇒ 否决触发 ⇒「留下喝补给」被撤销 ⇒ 一个安全的残血 bot 被放去走回家或 TP 回家。**这正是 owner 优先项 P2 逐字禁止的那趟路。**\n\n对着**同一趟回家路**的 gated 家族(`stayfield`/`stayfield2`/`fieldbuy`)自 2026-08-22 起就是归属式的(源码原话:`-- Attributed danger: someone hit me recently AND is still near me.`)—— 出厂那一半**在同一个文件里、290 行之外,从来没被带上**。\n\n**改动形状**:一条合取项。`WasRecentlyDamagedByAnyHero(3.0) and ( not J.IsSoakCandidate('stayattr') or J.HasNearbyHeroDamager(bot, 3000, 3.0) )`。未 armed 时第二个操作数在**第一个析取项**上短路 ⇒ 否决条件逐字是出厂表达式、求值顺序也不变。加一个析取项**只能让否决更难成立** ⇒ armed 的 TRUE 集是 shipped 的**严格超集**,`flip_true_to_false == 0` 是 1012 帧驱动实测出来的断言,不是注释里的声明。**独立闸**,不与任何 id 合取(`pullcad` 陷阱,已升级成 `STAY_NIDS == 1` 断言)。\n\n**域价钱**(109 fixture / 1012 活英雄帧):盲读在 **95** 帧触发否决;其中 **88** 帧伤害确实来自 3000 内(**杠杆在那里完全惰性 —— 这是最承重的一个数:出厂那条子句十次里对九次以上,所以是收窄不是删除**);**7** 帧无人可归属,互斥四分区为 翻转 **1** / 血量带外 **2** / 1200 环挡住 **0** / 补给子句挡住 **4**。\n\n**具体要买的一格 —— 判据是「留没留下」,不是「活没活下来」**:\n(1) armed 腿上,是否存在这样的帧:一个 bot 血量在 [0.18, 0.75]、1200 内无敌人、最近 3 秒被英雄伤害过、**而打它的人不在 3000 内**,并且它**留在原地喝补给/继续待着**,而不是走回家或 TP 回家。baseline 腿上同一情形应当看到它**回家**。\n\n**⛔ 不要拿胜负或存活率给这一格背书**:诚实边界 4 写着「一帧是一个瞬间」—— 本改动说的是 **t 时刻那个决定**是错的,**不声称**留下的 bot 接下来十秒活了下来。存活率是另一个问题,拿它当 (a) 会把一个决策判据换成一个结果判据。\n\n**⛔ 不要并进 field 家族的共同 promote 原子**(`field_hold_needs_magnitude`,§EI.1):本 id 动的是 **PROMOTED 守卫**、**不读** `J.HasFieldRegenSource`、也**不碰** `J.IsFieldSipEnough` ⇒ 那条单向约束**不覆盖它**。三个 field id 的持有侧问「有没有东西喝」;本 id 问「打我的人还在不在」。\n\n**已就绪**:`iterations/streams/test_set.md` **§EQ**(入集提议,等总监裁)、`iterations/state.json:stayattr_20260905`、`tests/test_stayattr_global_ult.lua`(11/0)、`tools/agent/mutstand_stayattr.sh`(13 CAUGHT + 1 声明式 UNMEASURABLE + 对照 SURVIVED,零 NO-OP,EXIT=0)、报告 `iterations/reports/strategy/20260905T073000Z.md`。",
+      "status": "registered"
     }
   ],
   "done": [

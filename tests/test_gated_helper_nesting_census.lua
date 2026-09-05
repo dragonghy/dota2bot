@@ -227,6 +227,24 @@ local PINNED = {
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRegenNotWalkHome | stayfield2 | bots/mode_retreat_generic.lua",                   -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/mode_retreat_generic.lua",             -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRetreatPastMidline | midguard | bots/mode_retreat_generic.lua",                   -- W
+    -- [stayattr 20260905] 'stayattr' joined this row when it narrowed the chase
+    -- read inside J.ShouldStayAndRegen.  Read by hand before pinning, and it is
+    -- (P): the new clause is `WasRecentlyDamagedByAnyHero(3.0) and ( not
+    -- IsSoakCandidate('stayattr') or HasNearbyHeroDamager(...) )`, so un-armed
+    -- the second operand short-circuits on its FIRST disjunct and the veto
+    -- condition is the shipped expression, evaluated in the shipped order.
+    -- Arming any outer id ALONE therefore measures exactly what it measured
+    -- before this clause landed.
+    -- The direction is additive on its own arm too, and by construction rather
+    -- than by inspection: an added disjunct can only make the veto HARDER to
+    -- satisfy, so armed 'stayattr' can only turn this helper's FALSE into TRUE,
+    -- never the reverse.  Measured, not asserted: tests/_stayattr_sweep.lua
+    -- drives both legs over 1012 live frames and `flip_true_to_false` is 0.
+    -- Note the sibling row two lines up ('stayfield2', J.ShouldRegenNotWalkHome)
+    -- is the GATED family aimed at the same trip home; this one is the PROMOTED
+    -- guard next to it.  They are separate rows because they are separate
+    -- decisions, and neither reads the other.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr | bots/mode_retreat_generic.lua",                          -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
     "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P

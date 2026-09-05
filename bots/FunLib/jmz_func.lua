@@ -5035,6 +5035,33 @@ function J.IsSoakCandidate( sId )
 	return SoakStrArms( conf.cand_ref, sId )
 end
 
+-- [stayattr] "Did the hero damage I just took come from someone who is still
+-- around?" -- attribution for an otherwise blind J.WasRecentlyDamagedByAnyHero
+-- read. Same shape and same question as the scan inside
+-- J.IsFieldRegenSituation ("Attributed danger", ~line 5345), and the radius and
+-- window are passed in rather than baked so the two sites can be read against
+-- each other without either owning the other's constants.
+--
+-- Deliberately NOT folded into that sibling scan. That one sits on a path this
+-- change does not touch, and rewriting a shipped call site to share code with a
+-- gated one turns a one-lever change into a refactor of shipped behaviour --
+-- the 'lanefix' lesson (a bundle of individually-defensible edits measured
+-- strongly negative). This helper is new code with exactly one caller.
+--
+-- Carries no gate of its own: it is a pure question about the world, and the
+-- single call site below is where the decision (and the soak id) lives.
+function J.HasNearbyHeroDamager( bot, nRadius, fTime )
+	local hEnemyList = J.GetNearbyHeroes( bot, nRadius, true, BOT_MODE_NONE )
+	for _, hEnemy in pairs( hEnemyList ) do
+		if J.IsValidHero( hEnemy )
+			and bot:WasRecentlyDamagedByHero( hEnemy, fTime )
+		then
+			return true
+		end
+	end
+	return false
+end
+
 -- [GH #2] Turbo TP-home suppression. True when the bot is hurt but should
 -- stay near the lane and heal via bought regen / courier instead of TP-ing
 -- (or walking) home — because in turbo lane XP/gold is precious and the
@@ -5054,7 +5081,43 @@ function J.ShouldStayAndRegen( bot )
 	-- "hurt but not critical": below this we allow the genuine escape/heal
 	-- retreat; above it the bot isn't hurt enough to consider going home.
 	if nHP < 0.18 or nHP > 0.75 then return false end
-	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then return false end
+	-- [stayattr / owner priority P2, 2026-09-05] The chase read on this line is
+	-- UNATTRIBUTED as shipped, and this function is PROMOTED -- it is live in
+	-- every turbo game. A global ult landed from across the map answers TRUE
+	-- here, the veto fires, and a safe, hurt bot is released to walk or TP
+	-- home: exactly the trip owner priority P2 forbids ("血量低也尽量不要回程").
+	--
+	-- Measured on the frame P2 itself pins, tests/fixtures/
+	-- f_260822_063722_lina_tp_home.lua at t=349.0: lina 346/1088 takes 204+15
+	-- from a zuus 7,842 units away (Thundergod's Wrath, its cooldown reads
+	-- 128.3 on that frame), the nearest enemy hero of ANY kind is 6,596 units
+	-- off, and this line still vetoes. J.IsFieldRegenSituation -- the gated
+	-- family aimed at the same trip -- already reads its danger the attributed
+	-- way; this shipped line was simply never brought along.
+	--
+	-- Armed, the veto survives only when the hero damage is ATTRIBUTABLE to an
+	-- enemy still inside 3000 (the sibling scan's own radius and window). That
+	-- can only REMOVE vetoes, so the armed TRUE set is a strict superset of the
+	-- shipped one and the direction is fixed by construction, not by comment.
+	-- Unarmed, `not IsSoakCandidate(...)` short-circuits to the shipped read
+	-- before anything else is evaluated.
+	--
+	-- Gated STANDALONE, never conjoined with another id: a gate written as
+	-- `IsSoakCandidate('stayattr') and IsSoakCandidate('stayfield')` would
+	-- freeze FALSE the day the other id is promoted (the 'pullcad' trap), while
+	-- check_armed_wiring.py still called it WIRED. Turbo is structural here --
+	-- the first line of this function already asked.
+	--
+	-- Honest bound, stated the same way the sibling states it: an enemy who
+	-- bursts out of fog and withdraws past 3000 reads the same as a global ult
+	-- on this line. The 1200 ring below is untouched and still stands, as does
+	-- the 0.18 HP floor where the genuine escape retreat takes over.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 )
+		and ( not J.IsSoakCandidate( 'stayattr' )
+			or J.HasNearbyHeroDamager( bot, 3000, 3.0 ) )
+	then
+		return false
+	end
 	if #J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE ) > 0 then return false end
 	local bHasFlask = J.IsItemAvailable( 'item_flask' ) ~= nil
 		or bot:HasModifier( 'modifier_flask_healing' )
