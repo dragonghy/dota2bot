@@ -289,8 +289,23 @@
       "launched_at": "2026-09-05T00:32:48.000Z",
       "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
       "rerun_exit": "0",
-      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code",
-      "status_code_note": "On-demand machines carry NO SIR (GH #408), so EC2 StateReason.Code is the ONLY code this row can ever hold, and it ages out of the API in ~1h (GH #375). This machine self-terminates at ~02:32Z; the next batch-desk trigger must read it BEFORE ~03:32Z or the code is gone by construction (the W45 re-run rows are the recorded precedent for that loss)."
+      "status_code": "UNREADABLE (window closed before this trigger fired -- see status_code_outcome). NOT a code, NOT an inference: describe-instances returned 0 reservations for this id, and 0 instances region-wide, at 2026-09-05T03:13-03:14Z.",
+      "status_code_note": "On-demand machines carry NO SIR (GH #408), so EC2 StateReason.Code is the ONLY code this row can ever hold, and it ages out of the API in ~1h (GH #375). This machine self-terminates at ~02:32Z; the next batch-desk trigger must read it BEFORE ~03:32Z or the code is gone by construction (the W45 re-run rows are the recorded precedent for that loss).",
+      "status_code_outcome": {
+        "read_attempted_at": "2026-09-05T03:13:5xZ",
+        "result": "0 reservations for both ids; 0 instances region-wide (terminated records already aged out). DESC_EXIT=0 with an EMPTY list -- no InvalidInstanceID.NotFound was raised, so the emptiness is the evidence, not an error.",
+        "last_s3_upload": "2026-09-05T01:14:14Z",
+        "why_it_was_lost": "The deadline in status_code_note (~03:32Z) was derived from the WATCHDOG CEILING (launch 00:32:5xZ + 2h = 02:32Z, +1h API window). The machine did not run to the ceiling: it finished its work and self-destructed on COMPLETION. Last S3 upload 2026-09-05T01:14:14Z => ~41-43 min of work, so the true deadline was ~02:15-02:20Z, roughly 1h15m EARLIER than the note said. The previous batch-desk round ended ~00:4xZ and this one fired at 03:13Z: the machine was born, worked, died, and aged out ENTIRELY INSIDE the inter-trigger gap.",
+        "not_a_memory_failure": "Last round's mitigation was executed exactly as written -- the note was in this file, it was read first, and AWS was queried as the round's first substantive action. The code was still lost. The mechanism is arithmetic, not forgetfulness: with a ~2h trigger cadence and a ~45min machine, a completion-terminated on-demand machine's code is unreadable BY CONSTRUCTION.",
+        "durability_gap": "S3 carries NO terminal sidecar: object types for the 4723 run are analysis.json 48 / demclaim.json 24 / log.gz 48 -- per-game artifacts only. The exit code therefore lives ONLY in the decaying EC2 API. Filed as an issue with the fix proposal (machine writes its own shutdown sidecar to S3 before terminating).",
+        "precedent": "W45 rerun rows were lost the same way; this is the second recorded instance and the first with the arithmetic pinned."
+      },
+      "machine_hours_bound": {
+        "lower": "0.691 h (launch 2026-09-05T00:32:48.000Z -> last upload 2026-09-05T01:14:14Z, 41.4 min) -- SOLID",
+        "upper": "< ~1.67 h (the record was already purged at 03:13Z; a ~1h retention window puts termination before ~02:13Z)",
+        "point_estimate": "~0.72 h if self-destruct follows completion promptly",
+        "gh454_note": "A new independent measurement point for the on-demand machine-hour constant. It is CONSISTENT with 0.745 h/machine but is NOT tight enough to re-derive it; the bound is reported, not a re-derivation."
+      }
     },
     {
       "seed": "4763",
@@ -305,13 +320,130 @@
       "launched_at": "2026-09-05T00:32:53.000Z",
       "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
       "rerun_exit": "0",
-      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code",
-      "status_code_note": "Same construction as seed 4723's row: no SIR, EC2-only code, ~1h window (GH #375/#408)."
+      "status_code": "UNREADABLE (window closed before this trigger fired -- see status_code_outcome). NOT a code, NOT an inference: describe-instances returned 0 reservations for this id, and 0 instances region-wide, at 2026-09-05T03:13-03:14Z.",
+      "status_code_note": "Same construction as seed 4723's row: no SIR, EC2-only code, ~1h window (GH #375/#408).",
+      "status_code_outcome": {
+        "read_attempted_at": "2026-09-05T03:13:5xZ",
+        "result": "0 reservations for both ids; 0 instances region-wide (terminated records already aged out). DESC_EXIT=0 with an EMPTY list -- no InvalidInstanceID.NotFound was raised, so the emptiness is the evidence, not an error.",
+        "last_s3_upload": "2026-09-05T01:15:45Z",
+        "why_it_was_lost": "The deadline in status_code_note (~03:32Z) was derived from the WATCHDOG CEILING (launch 00:32:5xZ + 2h = 02:32Z, +1h API window). The machine did not run to the ceiling: it finished its work and self-destructed on COMPLETION. Last S3 upload 2026-09-05T01:15:45Z => ~41-43 min of work, so the true deadline was ~02:15-02:20Z, roughly 1h15m EARLIER than the note said. The previous batch-desk round ended ~00:4xZ and this one fired at 03:13Z: the machine was born, worked, died, and aged out ENTIRELY INSIDE the inter-trigger gap.",
+        "not_a_memory_failure": "Last round's mitigation was executed exactly as written -- the note was in this file, it was read first, and AWS was queried as the round's first substantive action. The code was still lost. The mechanism is arithmetic, not forgetfulness: with a ~2h trigger cadence and a ~45min machine, a completion-terminated on-demand machine's code is unreadable BY CONSTRUCTION.",
+        "durability_gap": "S3 carries NO terminal sidecar: object types for the 4723 run are analysis.json 48 / demclaim.json 24 / log.gz 48 -- per-game artifacts only. The exit code therefore lives ONLY in the decaying EC2 API. Filed as an issue with the fix proposal (machine writes its own shutdown sidecar to S3 before terminating).",
+        "precedent": "W45 rerun rows were lost the same way; this is the second recorded instance and the first with the arithmetic pinned."
+      },
+      "machine_hours_bound": {
+        "lower": "0.691 h (launch 2026-09-05T00:32:53.000Z -> last upload 2026-09-05T01:15:45Z, 41.4 min) -- SOLID",
+        "upper": "< ~1.67 h (the record was already purged at 03:13Z; a ~1h retention window puts termination before ~02:13Z)",
+        "point_estimate": "~0.72 h if self-destruct follows completion promptly",
+        "gh454_note": "A new independent measurement point for the on-demand machine-hour constant. It is CONSISTENT with 0.745 h/machine but is NOT tight enough to re-derive it; the bound is reported, not a re-derivation."
+      }
     }
   ],
   "rerun_ruling": "GH #408 executed on its stated criterion -- the SIR `Status.Code`, not the EC2 `StateReason.Code`. BOTH W47 dead machines read `instance-terminated-no-capacity` (seed 4723 sir-ivtqk2fq, seed 4763), which is the exact code the ruling names => both re-runs go DIRECTLY --on-demand, skipping the (1)(2)(3) spot ladder. This is not a deviation from owner GH #158: it is #158's own 'unless there is no spot machine' clause, and a re-run is by construction aimed at a window that just refused capacity. Both fence conditions hold: ONE re-run per seed (each seed re-run exactly once) and AT MOST TWO on-demand re-runs per wave (exactly two). Both verified InstanceLifecycle=None. AZs aimed at us-west-2b/2c: 2b is the only AZ that delivered a scored seed in W47, and 2a/2d had both refused spot capacity at W47 launch. Placement honoured on both (requested == actual, reaimed False), so GH #252 acceptance holds for this pair: TWO distinct AZs, zero ring re-aims, zero ladder downgrades.",
   "rerun_gate_i_note": "Registered re-run machines do NOT open a new gate-(i) window (W40/W42/W45 precedent). This holds STRUCTURALLY, not on anyone's honesty: wave_throttle.py reads `machines[]` only and never reads `rerun`, so the next wave's anchor stays W47's original slate at 2026-09-04T18:32:27Z. ** SEPARATELY, and still UNRULED: whether a re-run is itself BLOCKED BY gate (i) is GH #498, opened by the W47 harvest round; issue_read get_comments returned [] at 2026-09-05T00:1xZ, so no ruling existed at launch time. ** This round therefore executed the pre-registered CONSERVATIVE DEFAULT (treat it as governed) and WAITED: wave_throttle.py was re-run as the last command before spot_run.sh and printed `UNLOCKED (exit 0) ... margin +19s past unlock` at 2026-09-05T00:32:46Z. The launch is therefore legal under BOTH readings of #498, and the question was side-stepped rather than gambled on. Cost of the wait: ~20 minutes, $0.",
   "rerun_cost_note": "Fence re-checked BEFORE the paid re-runs: 17.773 (Sept MTD, budgets snapshot refreshed 2026-09-04T22:42:52Z) + 1.02 (W46 spot) + 0.7413 (W47 spot, billed-side actual settled in the W47 harvest round, NOT the $0.90 constant) + ~1.10 (these two on-demand re-run machines at ~$0.55 each, W45 same-shape measurement) = ~$20.63. Against $50 / $80 / $90 / $100: ALL satisfied, no tier crossed, no owner approval triggered. ** The $80 the last several rounds have been quoting is itself disputed this round (see the batch-desk report section 2-A): the charter's fence RULE is 'the next UNCROSSED owner-visible Budget ACTUAL alert tier', the budget is TimeUnit=MONTHLY, and September MTD $17.773 has not crossed $50 -- so September's fence reads $50, not $80. This launch satisfies BOTH readings, so it does not depend on that ruling. ** The disposition itself was PRE-REGISTERED in the charter ('the missing seed gets a re-run machine'), so this is a standing authorization executed, not a new spending decision.",
   "rerun_tree_note": "Pinned --ref 15b0d9fd25a85805546ccb2d82a66942d5244c94 = W47's own tree, so the re-run measures the tree it repairs rather than 'whatever main is now'. This mattered THIS round and was not merely defensive: `git ls-remote origin main` read e3b24e54 at gate time (00:15Z) but ba6d2961 at the launch instant (00:32Z) -- the director pushed two commits (b4d5f01f, ba6d2961) during the 20-minute gate-(i) wait. Verified at both instants that the drift carries NO behavior change: `git diff --stat <tree>..origin/main -- bots/ game/` is EMPTY for both 15b0d9fd..e3b24e54 and 15b0d9fd..ba6d2961, i.e. bots/+game/ are byte-identical across all three trees; and 15b0d9fd is an ancestor of origin/main (`git merge-base --is-ancestor` exit 0), so the instances can check it out. Arm string RECOMPUTED off the launch tree, not copied: ids 62 / bytes 550 / md5 c7e1f92c739f8f8dc0ee0c9484288628, byte-identical to W46's and W47's registration. check_armed_wiring.py --cand <ARM>: ARM_EXIT=0, `all 62 armed ids wired on HEAD`.",
-  "rerun_pooling_claim": "These two seeds re-enter W47's OWN slate; they do not create a W48 and do not open a new gate-(i) window. Once harvested, the 62-id family reaches 8 scored seeds (W46's four + W47's 4678/4950 + these two), which is what makes the GH #363/#449 pooling fork meaningful -- that fork is STILL UNRULED (sixth appearance) and this round does not pre-empt it. Registered BEFORE any data lands, so the pooling question cannot be settled by whatever the numbers turn out to look like."
+  "rerun_pooling_claim": "These two seeds re-enter W47's OWN slate; they do not create a W48 and do not open a new gate-(i) window. Once harvested, the 62-id family reaches 8 scored seeds (W46's four + W47's 4678/4950 + these two), which is what makes the GH #363/#449 pooling fork meaningful -- that fork is STILL UNRULED (sixth appearance) and this round does not pre-empt it. Registered BEFORE any data lands, so the pooling question cannot be settled by whatever the numbers turn out to look like.",
+  "rerun_harvest": {
+    "harvested_at": "2026-09-05T03:2xZ",
+    "rv_exit": "0 (read as $? after redirection, never through a pipe)",
+    "corpus": "96 *.analysis.json (48 + 48), downloaded per-run into separate directories then merged under `<run_id>__<tag>` prefixes (the anti-collision discipline; a flat `s3 cp` of two runs silently lost 15.9% of games on 2026-08-19).",
+    "overrides_used": "NONE -- no --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth. There is therefore NO \"this is a SKIP, not a pass\" line to quote.",
+    "arm_string_recheck": "RECOMPUTED THIS ROUND off the launch tree 15b0d9fd (git show <tree>:iterations/streams/test_set.md, line 2) => 62 ids / 550 bytes / md5 c7e1f92c739f8f8dc0ee0c9484288628 -- byte-identical to the registered W46/W47 value.",
+    "per_seed": {
+      "4723": {
+        "arm_depth": 19.53,
+        "ab_games": 28,
+        "ba_games": 15,
+        "gpm": 5.79,
+        "scored": true
+      },
+      "4763": {
+        "arm_depth": 17.14,
+        "ab_games": 30,
+        "ba_games": 12,
+        "gpm": 45.68,
+        "scored": true
+      }
+    },
+    "result": "BOTH grains delivered and BOTH pass the GH #269 depth gate (4723 depth 19.53, 4763 depth 17.14; thin_arm_seeds EMPTY). The two seeds that W47 lost to spot reclamation are recovered.",
+    "winrate_channel": "DEGENERATE (minority share 0.1875 < 0.20) -- winrate MUST NOT be cited as rule 2(b) support (GH #352)."
+  },
+  "harvest_complete": {
+    "computed_at": "2026-09-05T03:3xZ",
+    "construction": "W47 four grains on ONE tree and ONE arm string: the two clean originals (4678, 4950) plus the two RERUNS (4723, 4763). The reclaimed originals of 4723/4763 stay VOID and their games are NOT merged in -- that is the charter's pre-registered reclaim disposition (void the grain, re-run the seed), not a new pooling decision. This is WITHIN-wave completion and is NOT the cross-wave pooling fork of GH #363/#449.",
+    "rv_exit": "0",
+    "files_seen": 206,
+    "games_loaded": 206,
+    "unparseable": 0,
+    "scored_games": 183,
+    "unfinished": 0,
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "arm_depths": {
+      "4678": 18.67,
+      "4723": 19.53,
+      "4763": 17.14,
+      "4950": 27.11
+    },
+    "mean": {
+      "gpm": 9.89,
+      "xpm": -4.63,
+      "deaths": 0.24,
+      "last_hits": -2.0,
+      "winrate": 0.5,
+      "winrate_headroom": 0.1512
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "2/4",
+      "deaths": "1/4",
+      "last_hits": "1/4",
+      "winrate": "1/4"
+    },
+    "per_seed_gpm": {
+      "4678": -24.54,
+      "4723": 5.79,
+      "4763": 45.68,
+      "4950": 12.63
+    },
+    "method": "Each grain swap-averaged first, then the arithmetic mean ACROSS grains. Never pooled by game count (rule 4(i-d)).",
+    "HEADLINE": "COMPLETING THE WAVE FLIPPED THE SIGN OF ITS HEADLINE METRIC. The half-wave reading that has been standing in the record and in 11 queue rows was gpm -5.95 (n=2); with its two missing grains W47 reads gpm +9.89 (n=4), comps_better 3/4. Anything downstream that was scoped by the -5.95 was scoped by half a wave.",
+    "honesty_bound": "+9.89 is NOT evidence of improvement. Per-grain gpm spans -24.54 / +5.79 / +12.63 / +45.68 (range 70.2) against the GH #30 empirical zero point (per-seed sigma ~30, 4-seed SE ~15). +9.89 sits inside noise. The defensible statement is \"no clear negative on gpm\", which is what rule 2(b) asks for (coarse, not significance) -- and the four-metric picture is MIXED: deaths 1/4 and last_hits 1/4 are on the harmful side.",
+    "strata_registration_rule_4_i_a": {
+      "gpm": {
+        "ab": 144.28,
+        "ba": -124.49,
+        "side": 134.38,
+        "sign_flip": true,
+        "side_gt_arm": "4/4"
+      },
+      "xpm": {
+        "ab": 90.58,
+        "ba": -99.84,
+        "side": 95.21,
+        "sign_flip": true,
+        "side_gt_arm": "4/4"
+      },
+      "deaths": {
+        "ab": -0.94,
+        "ba": 1.41,
+        "side": -1.18,
+        "sign_flip": true,
+        "side_gt_arm": "4/4"
+      },
+      "last_hits": {
+        "ab": -2.07,
+        "ba": -1.92,
+        "side": -0.07,
+        "sign_flip": false,
+        "side_gt_arm": "4/4"
+      }
+    },
+    "strata_reading": "Rule 4(i-c): these are per-grain swap-averaged estimators, so sign_flip is the identity |side| > |arm| and is NOT a veto -- registered, not concluded from. Registered anyway per 4(i-a). NOTE the exception: last_hits does NOT flip (ab -2.07, ba -1.92, side -0.07) -- the two strata AGREE, which makes last_hits ~-2 the most robust of the four readings.",
+    "winrate": "DEGENERATE for the SEVENTH consecutive time: minority side won 19 of 206 (share 0.0922), dire took 187/206 = 90.8%. Bounded 0.5 +/- 0.1512. MUST NOT be cited as rule 2(b) support (GH #352).",
+    "suggested_by_tool": "hold_or_reject",
+    "ruling_is_not_this_desk": "promote/reject is the director's; condition (a) verification is the replay group's and is still OWED.",
+    "family_status": "With W47 complete at 4 grains, the 62-id family now has its 8 grains (W46 4 + W47 4) -- the precondition the charter named for the GH #363/#449 cross-wave pooling fork to become actionable. This desk does NOT pool it; that fork is unruled for the seventh round and is handed to the director."
+  }
 }
