@@ -5889,5 +5889,38 @@
    "录像组:条件 (a) 的核验判据写在 queue 请求里 —— 看的是留没留下,不是活没活下来(诚实边界 4)。",
    "语料侧(谁先落地谁做):一张 unattributed 且 1200 环内有人的真帧 fixture,会把诚实边界 (1) 那个空洞的 0 变成有支撑的读数,并让变异台的 M10 从 UNMEASURABLE 变回 caught(台子那天会自己打出改判提示)。"
   ]
+ },
+ "creepthink_CONDA_20260905": {
+  "date": "2026-09-05T10:xxZ",
+  "backlog_item": "认领 GH #521 (甲) —— creepthink 的条件 (a) 换轨到 fixture 层(OWNER_PRIORITIES P4.4 的 (ii):一个判定完结所需的最后一块证据)",
+  "owner": "strategy",
+  "gate": "无新 id、无新闸;bots/ 与 game/ 逐字节未动",
+  "bots_lua_changed": false,
+  "headline": "creepthink 自 W30 armed、155 份报告零判决、是全体 62 个 armed id 里两列皆零的三个盲点之一。录像组 GH #521 判它从 dump 侧结构性买不到条件 (a)(它唯一改变的是 Think() 会不会走到下拖拽命令的那一行,而命令流不在 dump 里)。本轮在 fixture 层买到了:真帧驱 Think(),shipped 一整拍 38 帧零命令,armed 恢复出厂节拍。",
+  "star_main_judgement": "⭐ 主判据(可复用,超出本主题):计划是驱出来的,不是声明出来的。同族两个前例(test_pullthink_anim_throttle / test_pulldrag_lane_step)都直接声明 bot.roamCampPull;本文件每帧驱出厂 GetDesire(),让 J.ShouldCreepPullLane + J.IsCreepPullSafe 在真帧上自己决定 ⇒ 那个 helper 十条子句里九条由 dump 回答,pull.enemy 是真 luna 句柄,pull.retreat 由真坐标算出。声明的只有一件事:一只敌方兵线小兵,而那正是 dumper 唯一缺的字段。一个『声明得越少,结论越硬』的可迁移做法。",
+  "reading": "一整拍 38 帧(step 1/30, beat 1.2s, hold 0.5s):shipped/attack = 38 个 '.'(零命令);armed/attack = A + 14 '.' + 22 'M' + A;shipped/idle 与 armed/idle 与 armed/attack 逐字节相同。⇒ 这个杠杆不是新行为,是出厂节拍被动画吃掉之后重新露出来的那一份。",
+  "anti_vacuity": "节流不开火时(idle 世界)arming 一帧都不动,两条日志逐字节相同 ⇒ 全部差异可归因于它闸住的那一行;另有一条『没有 pull 计划则两个世界相同』的对照(每个真实 dump 帧都处在这个状态)。",
+  "domain_price": "tests/_creepthink_sweep.lua,109 fixture / 1012 活英雄帧 / 459 帧在 6:00 宵禁内,23.5s:creeps_empty 459/459(nil 0, raise 0,四桶求和断言钉住可达性,GH #171 形状);plan_shipped 0/459;plan_declared 73/208;plan_declared_safe 48;enemy_is_real_hero 73/73;retreat_moves 73/73。",
+  "witness_frame": "tests/fixtures/f_230545_wk_laning_safe.lua t=244.0(4:04),subject npc_dota_hero_chaos_knight —— 对线期 core,HP 0.94,1000 内恰好一个敌人 npc_dota_hero_luna,IsCreepPullSafe 通过。",
+  "honest_bounds": [
+   "(1) 证明的是拖拽命令被下达,不是兵线跟过来了 —— 那需要兵线,本语料任何价钱都买不到。GH #143 的仇恨读数是那一半的证据,本轮不重审。",
+   "(2) 单只声明小兵对管道问题合法,对兵线平衡问题不合法;不作后者的任何主张。",
+   "(3) pullcad 本轮不 armed,拍子是出厂 1.2s。两者同 armed 按 mode_roam_generic 自己的 duty-cycle 表强非可加(0→50 / 0→58 / 0→83),不是本轮读数。",
+   "(4) 本条是条件 (a) 证据,不是 promote 论据。(b)/(c) 未买,不声称。"
+  ],
+  "self_inflicted": [
+   "第一版把两个世界都建好再跑:mode 文件把 GetDesire/Think 装成全局、绑最后一次 load 的 bot ⇒ 第二个世界被驱两次、两份日志都 append 到它身上,读出来是 '..........' vs 'AMMM...A....' —— 看着完全像杠杆,实际是台子。已加 world token 断言,违规大声红。",
+   "变异台第一发 M1 是 NO-OP(正则漏了行首 tab)。本台把 NO-OP 计入不合规而不是放行;修好后 12/12 如声明。"
+  ],
+  "mutation_stand": "tools/agent/mutstand_creepthink.sh —— 12 发全部如声明,零 NO-OP,零 SURVIVED,含 1 条必须 SURVIVED 的注释对照(M12)。要点:M4 = pullcad 陷阱(creepthink and pullbeat,而 pullbeat 已 promote ⇒ 恒 FALSE 而 check_armed_wiring.py 仍叫它 WIRED);M7 = arm leak(stub 对所有 id 答 true ⇒ 连 pullcad 一起 armed、拍子 1.2→3.0,日志照样合理却说的是另一个配置);M11 = 伪造可达性桶。",
+  "local_validation": "tests/test_replay_creepthink_drag_order.lua 10/10;子进程语料普查 tests/_creepthink_sweep.lua",
+  "handoff": [
+   "(甲) 总监:条件 (a) 已在 fixture 层买到,GH #521 的 (乙)(这类 id 是否改判为『等 fixture 核验』)现在有一个已完成的先例可照裁。本组不自裁入集/出集。",
+   "(乙) 录像组:GH #521 的 (丙) —— 另两个盲点 midtp / zusstatic 按同一判准复核(这个 id 改变的是不是『要不要下命令』)。",
+   "(丙) dumper/录像组:snapshots[].lane_creeps(位置+队伍即可)。它是本仓库唯一挡在『勾线决定完全由真帧回答』前面的字段;补上后 plan_shipped 会从 0 长出来,§EU.4 的断言会自己红并点名(设计,不是回归)。"
+  ],
+  "test_set_section": "§EU",
+  "issue": "GH #521",
+  "aws_spend": "零 AWS、零 S3、零 EC2、零波次"
  }
 }

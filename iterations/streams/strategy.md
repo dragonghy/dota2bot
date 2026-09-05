@@ -27,6 +27,36 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0CREEPCONDA. **【2026-09-05T10:3xZ 新增,**认领 GH #521**(10:00:50Z 录像组新开、未被认领、
+   请求 (甲) 逐字写「谁先拿到」;`[strategy]` open issue 本轮扫过 **#521**/#511/#503/#500/#495/#489/#485/
+   #480/#475/#467/#464/#456/#455/#452/#445 ⇒ 章程第 1 条成立,**本轮没有换域**);
+   **P4.4 归属:主体是 (ii) 一个判定完结所需的最后一块证据**,不是量具类附带工作;
+   产出 `tests/test_replay_creepthink_drag_order.lua`(**10/10**);`tests/_creepthink_sweep.lua`;
+   `tools/agent/mutstand_creepthink.sh`(**12/12 如声明,零 NO-OP,零 SURVIVED**);
+   `state.json:creepthink_CONDA_20260905`;`test_set.md §EU`;
+   报告 `iterations/reports/strategy/20260905T103000Z.md`;
+   **`bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸**;
+   零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(§EU.8 甲)+ 录像组(乙)+ dumper(丙)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):计划是驱出来的,不是声明出来的。**
+   同族两个前例都**直接声明** `bot.roamCampPull`;本文件每帧驱出厂 `GetDesire()`,
+   让出厂 helper 在**真帧上**自己决定 ⇒ **十条子句里九条由 dump 回答**,
+   **声明只剩一件事:一只敌方兵线小兵**(dumper 唯一缺的字段)。
+   ⇒ **一个被迫做声明的 fixture,应先把「必须声明的东西」压到一个字段,再去问那个决定。**
+   **⭐⭐ 读数**:`shipped/attack` **38 帧零命令**;`armed/attack` 与 `shipped/idle` **逐字节相同**
+   ⇒ **不是新行为,是出厂节拍被动画吃掉之后重新露出来的那一份**;
+   `shipped/idle == armed/idle` 是**反真空对照**。
+   **⭐⭐⭐ 域价钱**:`creeps_empty` **459/459**(`nil` 0、`raise` 0,四桶求和断言,GH #171 形状);
+   `plan_shipped` **0/459**;`plan_declared` **73/208**(**承重的反真空列**);`plan_declared_safe` **48**。
+   ⚠️ **两处自伤**:两个世界都建好再跑 ⇒ mode 的**全局** `Think` 绑最后一次 load,
+   第二个世界被驱两次(读出来**完全像杠杆**);变异台首发 **NO-OP**(正则漏行首 tab)。均已修 + 加断言。
+   ⚠️ **诚实边界**:证明的是**命令被下达**,不是**兵线跟过来了**;`pullcad` 不 armed;
+   **条件 (a) 证据,不是 promote 论据**。
+   **下一格(本组下一轮第一项)**:取未认领 `[strategy]` issue;否则按 **P4.4 在 `bots/` 上取一个小杠杆**,
+   优先 **P2 决策侧的下一格** —— `J.ShouldStayAndRegen` 的补给子句 `bot:GetGold() < 90` 在 Turbo 里
+   是否还是对的门(Turbo 金钱曲线快得多,而这条常量来自普通模式;注意 GH #495:mock 的 `GetGold`
+   落在 `^Get -> 0` 兜底上,**先解决怎么读到真钱,再谈这条门**);**照旧先跑域价钱**。
+
 0STAYATTR. **【2026-09-05T07:3xZ 新增,**OWNER_PRIORITIES P4.4 开工 + P2 决策侧**
    (P4.4 今日新立:协同组每轮工作单元的**主体必须是一个 `bots/` 行为改动** ——
    本组**前四轮连续零行为改动**,正是它立案时点的那个比例;P2 的责任链当前球写着**协同组**,自 08-22 起未动);
@@ -5505,6 +5535,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T10:3xZ(**认领 GH #521**(10:00:50Z 录像组新开、未被认领、请求逐字写「谁先拿到」
+  ⇒ 章程第 1 条成立,**本轮没有换域**);`[strategy]` open issue 扫过
+  **#521**/#511/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445。
+  **P4.4 归属:本轮主体是 (ii) 一个判定完结所需的最后一块证据** —— `creepthink` 自 **W30** armed、
+  **155 份报告零判决**、是 62 个 armed id 里**两列皆零的三个盲点之一**,而录像组判它
+  **从 dump 侧结构性买不到**条件 (a)。**本轮在 fixture 层买到了。**)
+  **⭐ 主判据(立法级,可复用,超出本主题):计划是驱出来的,不是声明出来的。**
+  同族两个前例(`test_pullthink_anim_throttle` / `test_pulldrag_lane_step`)都**直接声明** `bot.roamCampPull`;
+  本文件**不声明** —— 每帧驱出厂 `GetDesire()`(引擎就是这么调的),让 `J.ShouldCreepPullLane` +
+  `J.IsCreepPullSafe` 在**真帧上**自己决定 ⇒ 那个 helper **十条子句里九条由 dump 回答**,
+  `pull.enemy` 是**真 luna 句柄**、`pull.retreat` 由**真坐标**算出。**声明的只有一件事:一只敌方兵线小兵**
+  —— 而那正是 dumper 唯一缺的字段。⇒ **一个被迫做声明的 fixture,应先把「必须声明的东西」压到一个字段,
+  再去问那个决定;声明得越少,同一个结论越硬。**
+  **⭐⭐ 读数(38 帧一整拍,step 1/30,beat 1.2s,hold 0.5s)**:
+  `shipped/attack` = **38 个 `.`(一整拍零命令)**;`armed/attack` = `A` + 14 `.` + 22 `M` + `A`;
+  而 **`armed/attack` 与 `shipped/idle` 逐字节相同** ⇒ **这个杠杆不是新行为,
+  是出厂节拍被动画吃掉之后重新露出来的那一份**。反真空对照:`shipped/idle == armed/idle`
+  (节流不开火时 arming **一帧都不动**)+「没有 pull 计划则两世界相同」。
+  **⭐⭐⭐ 域价钱(109 fixture / 1012 活英雄帧 / 459 帧在 6:00 宵禁内)**:
+  `creeps_empty` **459/459**(`nil` 0、`raise` 0,**四桶求和断言**钉住可达性,GH #171 形状);
+  `plan_shipped` **0/459**;`plan_declared` **73/208**(**承重的反真空列** —— 它若也是 0,
+  上面那个 0 就没有信息);`plan_declared_safe` **48**;`enemy_is_real_hero`/`retreat_moves` **73/73**。
+  ⚠️ **两处自伤,当场收账**:(i) 第一版**把两个世界都建好再跑** —— mode 文件把 `GetDesire`/`Think`
+  装成**全局**、绑最后一次 load 的 `bot` ⇒ 第二个世界被驱两次、两份日志都 append 到它身上,
+  读出来 `..........` vs `AMMM...A....`,**看着完全像杠杆,实际是台子**;已加 world token 断言。
+  (ii) 变异台**第一发 M1 是 NO-OP**(正则漏行首 tab),本台把 **NO-OP 计入不合规而不是放行**。
+  ⚠️ **诚实边界**:证明的是**拖拽命令被下达**,不是**兵线跟过来了**(那需要兵线,本语料任何价钱都买不到);
+  `pullcad` 本轮**不 armed**(拍子是出厂 1.2s,两者同 armed 强非可加);**这是条件 (a) 证据,不是 promote 论据**。
+  产出:`tests/test_replay_creepthink_drag_order.lua`(**10/10**);`tests/_creepthink_sweep.lua`;
+  `tools/agent/mutstand_creepthink.sh`(**12/12 如声明,零 NO-OP,零 SURVIVED,含 1 条必须存活的注释对照**);
+  `state.json:creepthink_CONDA_20260905`;`test_set.md §EU`;
+  报告 `iterations/reports/strategy/20260905T103000Z.md`。
+  **`bots/` / `game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id / 无新闸;
+  零 AWS、零 S3、零 EC2、零波次。**
+  **已交棒:总监(GH #521 乙 —— 这类 id 是否改判为「等 fixture 核验」,现在有一个已完成的先例)
+  + 录像组(#521 丙 —— `midtp` / `zusstatic` 按同一判准复核)
+  + dumper/录像组(`snapshots[].lane_creeps`)。**
 - 2026-09-05T07:3xZ(**OWNER_PRIORITIES P4.4 开工 + P2 决策侧** —— P4.4 今日新立:
   本组每轮工作单元的**主体必须是一个 `bots/` 行为改动**,而本组**前四轮连续零行为改动**;
   `[strategy]` open issue 扫过 #511/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445,

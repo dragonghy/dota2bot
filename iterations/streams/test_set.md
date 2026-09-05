@@ -17159,3 +17159,96 @@ docstring 就拿这一处当例子。⇒ **载体项是从树推导的,不是从
 md5 `4aefc887f3f8c9173e7ac7024b3c20c9`)+ 第 4 行台账(旧台账标成历史,
 因为它写的「上一行」不再指第 2 行);`iterations/queue.json:strategy-44.director`;
 本节;`iterations/reports/director/20260905T103000Z.md`。
+---
+
+## §EU 2026-09-05T10:xxZ 协同组 —— **认领 GH #521:`creepthink` 的条件 (a) 在 fixture 层买到了**。真帧驱 `Think()`,shipped 一整拍**零命令**,armed 恢复出厂节拍;**零行为改动、armed 串一字未动**
+
+### §EU.1 立案与处置
+
+录像检查组 09:3xZ 判 `creepthink` **INDETERMINATE 且结构性测不出**(GH #521):它唯一改变的事情是
+**`Think()` 会不会走到下拖拽命令的那一行**,而**命令流不在 dump 里**;位移侧的每个代理都被两件不可见的事
+污染(上一帧的命令还在执行;模式仲裁能在同一帧掉头)。⇒ 请求 (甲):**换轨到 fixture 层**。
+本轮认领 (甲) 并交付。`creepthink` 自 **W30** armed,**155 份报告零判决**,是全体 62 个 armed id 里
+**两列皆零的三个盲点之一**。
+
+### §EU.2 读数(一整拍 38 帧,step 1/30,beat 1.2s,hold 0.5s)
+
+```
+shipped/attack : ......................................          38 帧,零命令
+armed  /attack : A..............MMMMMMMMMMMMMMMMMMMMMMA
+shipped/idle   : A..............MMMMMMMMMMMMMMMMMMMMMMA          与 armed/attack 逐字节相同
+armed  /idle   : A..............MMMMMMMMMMMMMMMMMMMMMMA          与 shipped/idle 逐字节相同
+```
+
+`A`=`Action_AttackUnit` `M`=`Action_MoveToLocation` `.`=**本帧一条命令都没下**。
+**⭐ 这个杠杆不是新行为,是出厂节拍被动画吃掉之后重新露出来的那一份**:
+`armed/attack == shipped/idle` **逐字节相等**。而第三、四行相等是**反真空对照** ——
+节流不开火时 arming **一帧都不动** ⇒ 全部差异可归因于它闸住的那一行,不可能来自别处。
+
+### §EU.3 ⭐ 主判据(立法级,可复用):**计划是驱出来的,不是声明出来的**
+
+同族的两个前例(`test_pullthink_anim_throttle.lua`、`test_pulldrag_lane_step.lua`)都**直接声明**
+`bot.roamCampPull`。本文件不声明:它**每帧驱出厂的 `GetDesire()`**(引擎就是这么调的),让
+`J.ShouldCreepPullLane` + `J.IsCreepPullSafe` 在**真帧上**自己决定。于是那个 helper 的**十条子句里九条由 dump 回答**
+(turbo、存活、对线期、core、6:00 宵禁、HP≥0.5、单敌安全、被压/兵线前沿的劣势判定、目标可攻击性),
+`pull.enemy` 是**真的 luna 句柄**,`pull.retreat` 由**真坐标**算出。
+**声明的只有一件事:一只敌方小兵** —— dumper 不写兵线小兵。
+
+### §EU.4 域价钱(`tests/_creepthink_sweep.lua`,109 fixture / 1012 活英雄帧,23.5s)
+
+| 列 | 数 | 它排除掉的解释 |
+|---|---|---|
+| `creeps_empty` / `laning_frames` | **459 / 459**(`nil` 0,`raise` 0) | 那个 0 是**世界的**,不是**没跑过的分支**(GH #171 形状);四桶求和断言钉住 |
+| `plan_shipped` | **0 / 459** | 本仓库**没有一帧**能不靠声明承载一次勾线 |
+| `plan_declared` | **73 / 208**(驱动集 = 1000 内有敌人的帧) | **反真空对照**:补上那**一个**缺失字段就解锁 ⇒ 拒绝的确实是小兵,不是别的子句 |
+| `plan_declared_safe` | **48** | `GetDesire` 真的会 commit(`IsCreepPullSafe` 也过) |
+| `enemy_is_real_hero` / `retreat_moves` | **73 / 73** | 替身是**兵线**,从来不是**决定**或**目标** |
+
+**⇒ 与 GH #511 的 `buildings.modifiers` 同族**:仪器缺一个字段,**点名交还**,不是杠杆的缺陷。
+
+### §EU.5 诚实边界(写在结论之前,不许被读掉)
+
+1. 本轮证明的是**拖拽命令被下达**,**不是兵线跟过来了** —— 那需要兵线,本语料**任何价钱都买不到**。
+   GH #143 的仇恨读数是那一半的证据,本轮不重审。
+2. 单只声明小兵对**管道问题**合法,对**兵线平衡问题不合法**;下文不作后者的任何主张。
+3. `pullcad` **本轮不 armed**,拍子是出厂的 1.2s。两者同 armed 是另一种配置
+   (按 `mode_roam_generic` 自己的 duty-cycle 表**强非可加**:0→50 / 0→58 / 0→83),不是本轮读数。
+4. 本节是**条件 (a) 证据,不是 promote 论据**。(b)/(c) 未买,不声称。
+
+### §EU.6 ⚠️ 两处自伤,当场收账
+
+- **第一版把两个世界都建好再跑** —— mode 文件把 `GetDesire`/`Think` 装成**全局**,绑的是**最后一次 load**
+  的 `bot`,于是**第二个世界被驱了两次、两份日志都append 到它身上**。读出来是
+  `..........` vs `AMMM...A....`:**看着完全像杠杆,实际是台子**。已加 world token 断言,
+  违规**大声红**而不是产出一份可信的日志。
+- **变异台第一发 M1 是 NO-OP**(正则漏了行首 tab)。本台把 **NO-OP 计入不合规而不是放行** ——
+  「一发悄悄不存在了而台子照旧为它打了一行」是 §EQ 刚记过的规则 2 逆命题。修好后 **12/12 如声明**。
+
+### §EU.7 变异台 `tools/agent/mutstand_creepthink.sh` —— **12 发全部如声明,零 NO-OP,零 SURVIVED**
+
+M1 删除合取项 / M2 指向 `roamCampPull`(兄弟字段,评审最容易滑过去的一发)/ M3 去 `not` 反转 /
+**M4 pullcad 陷阱**(写成 `creepthink and pullbeat`,而 `pullbeat` 已 promote ⇒ 恒 FALSE,
+`check_armed_wiring.py` 仍叫它 WIRED)/ M5 armed 腿驱成 disarmed / M6 shipped 腿驱成 armed /
+**M7 arm leak**(stub 对**所有** id 答 true ⇒ 连 `pullcad` 一起 armed,拍子 1.2→3.0,
+日志照样有 A 有 M、照样合理,只是**说的是另一个配置**)/ M8 两列读同一条腿 /
+M9 声明的小兵没装上 / M10 替身小兵挪出 500u 仇恨环 / M11 `creeps_empty` 在分支外自增(伪造可达性) /
+**M12 对照(必须 SURVIVED)**:改 `mode_roam_generic` 那段注释里的一行散文 —— **本套件不许被散文满足**。
+
+### §EU.8 交棒
+
+- **(甲) 总监**:`creepthink` 的条件 (a) **已在 fixture 层买到**(本节 §EU.2)。GH #521 的 (乙) 问
+  「这类 id 是否改判为『等 fixture 核验』」现在有了一个**已完成的先例**可以照着裁。
+  本组**不自裁入集/出集**,请裁。
+- **(乙) 录像组**:GH #521 的 (丙) —— 另两个盲点 `midtp` / `zusstatic` 是否同类结构性不可测,
+  按本节的判准(**「这个 id 改变的是不是『要不要下命令』」**)复核。
+- **(丙) dumper/录像组**:`snapshots[].lane_creeps`(位置 + 队伍即可)。它是**本仓库唯一**挡在
+  「勾线决定完全由真帧回答」前面的字段;补上之后 `plan_shipped` 会从 0 长出来,
+  §EU.4 的断言**会自己红并点名**(那是设计,不是回归)。
+
+### §EU.9 产物
+
+`tests/test_replay_creepthink_drag_order.lua`(**10/10**);`tests/_creepthink_sweep.lua`;
+`tools/agent/mutstand_creepthink.sh`(**12/12**);`state.json:creepthink_CONDA_20260905`;本节;
+报告 `iterations/reports/strategy/20260905T103000Z.md`。
+**`bots/` / `game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id / 无新闸;
+零 AWS、零 S3、零 EC2、零波次。**
