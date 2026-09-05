@@ -22,6 +22,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-97. **GH #502 的最后一格判了 —— `GetAOERadius` **在全树 127 个英雄的 KV 里没有对应字段**,
+   于是 810 不许换掉 835(报告 `iterations/reports/hero/20260905T075200Z.md`,新 GH **#516**;
+   新 `tools/agent/aoe_radius_source_census.py` + `tests/test_aoe_radius_source_census.py` 6 例;
+   `bots/` 与 `game/` 零行)。**
+   - **⭐ 「映射没确立」被量成了「映射不存在」**:另外六个 getter 全靠**同名字段**被服务;
+     实测 **127 个 KV 文件 / 31 个不同顶层 `Ability*` 字段 / 含 "aoe"|"radius" 的 0 个**。
+     它是 C++ 侧的量 ⇒ 那条规则**接不上**,不是「还没接」。
+   - **⛔ 冻结 snapshot 按构造答不了这一问,而「答不上来」长得像「没有」**:
+     `parse_shapes` 只记 `TOP_LEVEL` 白名单里的顶层字段 ⇒ 一次 grep **只可能为空**。
+     新测试把这条失明本身钉住(`test_top_level_whitelist_carries_no_aoe_field`)。
+     **同族 `-94` 的「覆盖一个活着的 getter 而没有任何东西举手」,反向:这次是
+     「一次注定为空的 grep 会被当成确认」。**
+   - **⭐⭐ 决定性的是 7 个真调用点不是百分比**:两条手写规则(名字 `radius` /
+     标志 `affected_by_aoe_increase`)只有 **1/7**(sniper)同意同一个键;
+     CM 大招上名字规则挑 810 而标志规则给三个 ⇒ **挑 810 是选择不是读取**;
+     drow W 与 muerta W **没有叫 `radius` 的键**。**两条规则合报会互相掩护**
+     (并集把 drow 那格印成一个干净候选 `wave_width` —— 而那是**宽度**)。
+   - **裁定 = #502 路 (b)**:`FIELD_RADIUS` 留 835;loader 不许把该 getter 接 KV;
+     那节没松成容差。并改掉一句已为假的话:「`radius` 若移到 835 则缺口关闭」——
+     **数值相等 ≠ 同一个量**(同 `-93`「残量不是队列」那一族的判别式错位)。
+   - **下一棒(GH #516,[harness],球不在本组)**:dumper 每个 ability 句柄记
+     `aoe_radius`。读数回来本组重推两个 end-to-end case 并关 #502;
+     **在那之前不许有人**用 810 重新推导任何东西。
+   - **⚠️ 可迁移**:数调用点的正则**锚在命名习惯上**(`ability<X>`)时 7 个只找到 **6**
+     个(rubick 副本句柄叫 `FreezingField`)—— **6 是一个看上去很完整的数字**。
+     自检要断言总数,别只断言「找到了一些」。
+
 -96. **`-95` 的下一棒(类戊第一根,Lion Hex)预检完毕 —— **不写**,而那个 0 是语料的不是杠杆的**
    (报告 `iterations/reports/hero/20260905T045549Z.md`,GH **#512**;新
    `tests/test_lion_hex_reserve_domain.lua` 6 例;`bots/` 只有注释,零代码行)。**
@@ -4319,7 +4346,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-05T07:52Z(报告 `iterations/reports/hero/20260905T075200Z.md`;轴 **GH #502 的
-  最后一格判了:`GetAOERadius` 在全树 KV 里没有对应字段 ⇒ 810 不许换掉 835**;新 GH **#517**)
+  最后一格判了:`GetAOERadius` 在全树 KV 里没有对应字段 ⇒ 810 不许换掉 835**;新 GH **#516**)
   **新 `tools/agent/aoe_radius_source_census.py` + 新 `tests/test_aoe_radius_source_census.py`
   (6 例全绿);改两个 Lua 测试文件的注释与 assert 消息;`bots/` 与 `game/` **零行**;
   零新候选 id、零 arm、零 promote、零 AWS、`queue.json` 不加行。**
@@ -4340,7 +4367,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **裁定 = #502 的路 (b)**:`FIELD_RADIUS` 留 **835**,loader **不许**把
     `GetAOERadius` 接到 KV 上,那节**没有**松成容差。顺手改掉一句现在为假的话:
     原文说「`radius` 若移到 835 则缺口关闭」——**数值相等不等于同一个量**。
-  - **下一棒交出去了(GH #517,[harness])**:dumper 每个 ability 句柄记
+  - **下一棒交出去了(GH #516,[harness])**:dumper 每个 ability 句柄记
     `aoe_radius`(`rubick_utility.lua:185` 证明该调用在引擎里合法),一次给 7 个调用点定价。
     **球不在本组**;读数回来本组重推两个 end-to-end case 并关 #502。
   - **⚠️ 可迁移**:调用点正则锚在 `ability<X>` 命名习惯上时,7 个只找到 **6** 个
