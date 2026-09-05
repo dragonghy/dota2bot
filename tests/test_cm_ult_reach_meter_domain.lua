@@ -511,9 +511,13 @@ tests['5. GetAOERadius is unspecced tree-wide, and supplying it fires 2 frames']
     -- never mentions the getter, so it lands on bot_api's generic `^Get`.
     local loader = assert(io.open('tests/mock/replay_fixture.lua')):read('*a')
     assert(loader:find('GetAOERadius') == nil,
-        'tests/mock/replay_fixture.lua now specs GetAOERadius. That is a repair, '
-        .. 'not a failure -- but every count in sections 4 and 5 was taken with '
-        .. 'the getter answering 0, so re-measure them before editing this case')
+        'tests/mock/replay_fixture.lua now specs GetAOERadius. That is a repair ONLY '
+        .. 'IF the value came from an engine reading: the 2026-09-05 ruling (GH #502, '
+        .. 'tools/agent/aoe_radius_source_census.py) found NO KV field for this getter '
+        .. 'on any of 127 heroes, so a KV-sourced spec here is a guess wearing a '
+        .. 'measurement\'s clothes. Either way every count in sections 4 and 5 was '
+        .. 'taken with the getter answering 0, so re-measure them before editing this '
+        .. 'case')
 
     -- Seven CALL sites under bots/ read it; one of them is the ultimate radius
     -- this section is about.  Comment lines are excluded on purpose: a bare

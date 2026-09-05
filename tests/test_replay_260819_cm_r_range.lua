@@ -51,6 +51,43 @@
 -- and nothing is re-derived off 810; the section below pins both numbers so the
 -- gap cannot close silently.  Filed for the key-to-getter mapping owner.
 --
+-- ⭐ RULED 2026-09-05 (hero, GH #502's last cell).  THE MAPPING QUESTION IS
+-- ANSWERED, AND THE ANSWER IS NO -- SO THE NUMBER STAYS 835.  Measured by
+-- `tools/agent/aoe_radius_source_census.py`, frozen by
+-- `tests/test_aoe_radius_source_census.py`:
+--
+--   * NO NAME IDENTITY.  Every other served getter is served because the KV
+--     carries a top-level field of its own name (`AbilityCastRange` ->
+--     GetCastRange, and so on).  Across 127 shipped-hero KV files there are 31
+--     distinct top-level `Ability*` fields and NOT ONE contains "aoe" or
+--     "radius".  GetAOERadius has no KV field anywhere in the tree, so the rule
+--     that serves the other six cannot be extended to it -- it is a C++-side
+--     quantity, not a declared one.
+--   * SO ANY MAPPING IS A HAND-WRITTEN GUESS, AND ON THE CALL SITES IT IS NOT A
+--     FUNCTION.  Of the 7 shipped `GetAOERadius()` reads, exactly ONE
+--     (sniper_shrapnel) has the two candidate rules -- "the key named `radius`",
+--     "the key flagged affected_by_aoe_increase" -- agree on one key.  On
+--     Freezing Field the name rule offers `radius` (810) while the flag rule
+--     offers THREE (`radius` 810, `explosion_max_dist` 785, `explosion_radius`
+--     320).  Picking 810 there is a choice, not a read.  And on two other call
+--     sites (drow_ranger_wave_of_silence, muerta_the_calling) no key named
+--     `radius` exists at all.
+--   * ⛔ THEREFORE 810 MUST NOT SOURCE FIELD_RADIUS, and the loader must not
+--     spec GetAOERadius off the KV: doing either replaces a number that has a
+--     provenance (Liquipedia) with one that has none, and it would read as a
+--     repair.  This is GH #502's path (b), taken with a reason, not its path
+--     (a) -- and NOT the third thing #502 forbade, loosening the section into a
+--     tolerance.
+--   * ⭐ WHAT WOULD CLOSE IT is an ENGINE reading, and the engine is reachable:
+--     `bots/FunLib/rubick_utility.lua:185` already calls `GetAOERadius()` in
+--     shipped code, so the behavioural dumper can record it per ability handle
+--     and the question becomes a measurement instead of a mapping argument.
+--     Handed off as the next baton (see the round's report).
+--   * ⚠️ AND THE TWO NUMBERS AGREEING WOULD STILL NOT CLOSE IT.  The section
+--     below used to say that a KV `radius` of 835 would close the gap; that is
+--     false and has been corrected.  Equal values are not the same quantity --
+--     a coincidence would license exactly the substitution this ruling refuses.
+--
 -- The anchors themselves:
 --   * hoof_stomp cast range: 0 (no-target self-radius ability). Tested at 0 AND
 --     at 325 (its stomp radius, a generous upper bound) so the conclusion holds
@@ -321,15 +358,18 @@ tests['anchors: GetAOERadius is still not one of the served getters'] = function
         assert(sp ~= nil and sp.GetSpecialValueFloat ~= nil,
             fx .. ': CM is a focus hero but got no KV spec -- this section is vacuous')
         assert(sp.GetAOERadius == nil,
-            fx .. ': the loader now serves GetAOERadius. Delete FIELD_RADIUS, take the '
-            .. 'served value, and re-derive -- and settle the 810/835 question below '
-            .. 'while you are there.')
+            fx .. ': the loader now serves GetAOERadius. WHERE FROM decides what to do '
+            .. '(2026-09-05 ruling, header): served off an ENGINE reading -- delete '
+            .. 'FIELD_RADIUS, take the served value, re-derive. Served off the KV -- '
+            .. 'that is the substitution this ruling refuses, revert it.')
     end
 end
 
 -- The registered disagreement.  810 is what the fixture's own KV answers under
--- the key named `radius`; 835 is the Liquipedia number this file runs on.  This
--- section resolves nothing -- it makes the gap impossible to close by accident.
+-- the key named `radius`; 835 is the Liquipedia number this file runs on.  The
+-- section name is kept verbatim across the 2026-09-05 ruling (citations point
+-- at it): the VALUE gap is still open -- what closed is the mapping question
+-- that would have let 810 replace 835.  See the header's ⭐ RULED block.
 tests['anchors: the 810 (KV `radius`) vs 835 (anchor) gap is still open'] = function()
     for _, fx in ipairs({ FAR, CLOSE }) do
         local _, bot = rf.load(fx)
@@ -337,12 +377,17 @@ tests['anchors: the 810 (KV `radius`) vs 835 (anchor) gap is still open'] = func
         assert(r:GetLevel() == 1, fx .. ': freezing_field is no longer rank 1; the KV '
             .. 'ladder is rank-indexed, so re-read before comparing')
         assert(r:GetSpecialValueInt('radius') == 810,
-            ('%s: KV `radius` now answers %s, registered 810 -- if it moved to %d the '
-            .. 'gap is closed and FIELD_RADIUS can be sourced from the KV')
+            ('%s: KV `radius` now answers %s, registered 810. NOTE the corrected '
+            .. 'reading: a move to %d would NOT close the gap and would NOT license '
+            .. 'sourcing FIELD_RADIUS from the KV -- equal values are not the same '
+            .. 'quantity, and GetAOERadius has no KV field on any of 127 heroes '
+            .. '(tools/agent/aoe_radius_source_census.py). Only an ENGINE reading '
+            .. 'closes it.')
             :format(fx, tostring(r:GetSpecialValueInt('radius')), FIELD_RADIUS))
     end
-    assert(FIELD_RADIUS == 835, 'FIELD_RADIUS moved off the Liquipedia anchor; if it was '
-        .. 'sourced from the KV, delete this section and say so in the header')
+    assert(FIELD_RADIUS == 835, 'FIELD_RADIUS moved off the Liquipedia anchor. The '
+        .. '2026-09-05 ruling (header) refuses the KV as a source for it, so a move '
+        .. 'here needs an engine reading behind it -- say which one in the header.')
 end
 
 return tests
