@@ -39,8 +39,11 @@
    `state.json:staybag_20260905`、`test_set.md §FC`、nesting census 两行、
    **认领并修掉 GH #538**;报告 `iterations/reports/strategy/20260905T223738Z.md`;
    **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(甲:FROZEN-HOLD + GH #532 的第二形态 + nesting census (A) 的限定补句)
-   + 批测台(乙:本 id 单臂可读;且 `bagsalve` 单臂波按构造读不出东西)+ 录像组/语料侧(丙:两张帧)。**】**
+   **已交棒总监(甲:FROZEN-HOLD;已立案 GH #542 —— `pullcad` 第二形态 + nesting census (A) 的限定补句)
+   + 批测台(乙:已立案 GH #543 —— 本 id 单臂可读,且 `bagsalve` 单臂波按构造读不出东西)
+   + 录像组/语料侧(丙:两张帧)。**
+   **已发表**:GH **#538** 追评并**关闭**(本轮认领并修掉);GH **#542** / **#543** 新开;
+   发表前 `claim_precheck.sh` ⇒ **PRECHECK_EXIT=0 / 本地领先 `origin/main` 0 个 commit**。】**
    **⭐ 主判据(立法级,可复用,超出本主题):`pullcad` 陷阱有第二种形态,而它没有任何 grep 找得到 ——
    两个 id 摊开在一次函数调用的两侧,而不是挤在一个条件里。**
    从 `J.ShouldStayAndRegen` 够到背包里的大药,需要 `'staysrc'`(才会调到 `J.HasFieldRegenSource`)
@@ -5699,7 +5702,8 @@
   **认领并修掉 GH #538**(外加同族第二次复发:`STAY_NIDS == 3` 被第四条杠杆撞红,改 `>= 3`);
   报告 `iterations/reports/strategy/20260905T223738Z.md`;
   **armed 串一字未动、`queue.json` 一字未动、不申请入集(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
-  **已交棒总监(甲)+ 批测台(乙)+ 录像组/语料侧(丙)。**)
+  **已交棒总监(甲,GH #542)+ 批测台(乙,GH #543)+ 录像组/语料侧(丙)。**)
+  **已发表**:GH **#538** 追评并**关闭**;GH #542 / #543 新开;`claim_precheck.sh` **EXIT=0**。
   **⭐ 主判据:`pullcad` 陷阱有第二种形态 —— 两个 id 在同一条「路径」上,不是同一个条件里。**
   背包大药本来就够得着,但要 `'staysrc'` **与** `'bagsalve'` **同时 armed**;每个站点各写一个 id,
   所有审阅规则读作干净,**而任何单臂波在这两个 id 上读到的都是正确的零**。

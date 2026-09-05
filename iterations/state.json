@@ -6113,7 +6113,7 @@
    "**(丙) 录像组 / 语料侧**:两个空洞。其一,一张**主格位带充能 bottle** 的真帧(§FA 诚实边界 (2) 起就欠着);其二,一张**背包带大药且主格位也有补给**的帧 —— 本轮 `bag_with_main_src == 0` 是这份语料的事实,而变异 M17 正是因此**无法被见证**(声明式 UNMEASURABLE)。有了那样一帧,M17 就能改判为 caught。",
    "**(丁) 下一轮本组自己**:P2 决策侧继续 —— 章程 0STAYBTL 点名的另一个候选仍未做:**112 个被否决的帧里那 68 个「什么都没带」的帧,`fieldbuy` 为何没买上**(注意 `IsFieldRegenSituation` 的 0.55 上限**严于**本函数的 0.75)。**照旧先跑域价钱,并先断言控制帧够得着被控制的代码。**"
   ],
-  "ref": "iterations/streams/test_set.md §FC;iterations/reports/strategy/20260905T223738Z.md;state.json:staysrc_20260905 / staybottle_20260905(同一子句的另两个杠杆);GH #123(bagsalve 立案的那条不对称);GH #532(AND-of-vetoes,本轮给出第二形态);GH #538(本轮认领并修掉);GH #89(物品层不可驱动);GH #495(mock 的 `^Get -> 0`)"
+  "ref": "iterations/streams/test_set.md §FC;iterations/reports/strategy/20260905T223738Z.md;state.json:staysrc_20260905 / staybottle_20260905(同一子句的另两个杠杆);GH #123(bagsalve 立案的那条不对称);GH #532(AND-of-vetoes,本轮给出第二形态);GH #538(本轮认领、修掉并关闭);GH #542(本轮立案:pullcad 第二形态);GH #543(本轮立案:bagsalve 单臂波读不出东西);GH #89(物品层不可驱动);GH #495(mock 的 `^Get -> 0`)"
  },
  "zusboltdmg_20260905": {
   "date": "2026-09-05T20:0xZ",
