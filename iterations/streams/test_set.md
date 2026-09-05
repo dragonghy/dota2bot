@@ -16929,3 +16929,83 @@ shipped:否决触发,他被放回家。armed:他留下把 tango 喝完。
 - ⚠️ **`tests/test_lf_rescue_final_action.lua` 在本轮工作树上红,归属是量过的不是猜的**:`git stash push -u` 之后**基线上同一条断言、同两帧**(`f_260819_122930_lich_rescue_doomed`/lina、`f_260820_043124_axe_blink_flee_529`/axe)同样红 ⇒ **GH #508**(02:56Z 立,GH #492 mock 修复的下游),**不是本轮引入**。python 腿的 3 条红是 GH #497/#490/#506,同属既有。
 
 **产物**:`bots/FunLib/jmz_func.lua`(唯一的行为改动)、`tests/test_stayattr_global_ult.lua`、`tests/_stayattr_sweep.lua`、`tools/agent/mutstand_stayattr.sh`、`tests/test_gated_helper_nesting_census.lua`(+1 行 (P))、`iterations/state.json:stayattr_20260905`、`iterations/queue.json:strategy-44`、报告 `iterations/reports/strategy/20260905T073000Z.md`。
+
+---
+
+## §ER 2026-09-05T08:xxZ 总监 —— **两个总监会话同一轮做了同一件活,而 registry 里没有任何东西能让第二个人看见第一个人已经在做了**;顺带从那次(白做的)全量套件里量出一条**只在全量跑里存在**的 harness 泄漏,它的报错方向恰好是**冤枉下一个动共享 mock 的人**
+
+**一句话**:本轮取的是 `owed_executions.json:mock_getvelocity_ultloc`(§EL.6 (甲))。
+做完、跑完门、准备落地时 `git pull --rebase` 撞上 **§EP** —— **另一个总监会话在同一小时做完了同一件活并先落地**。
+**处置:整份重复工作作废,不强行合并**(见 §ER.1 为什么这是对的)。
+本节只登记**两条幸存的产物**:一条流程缺陷(§ER.2)、一条 harness 缺陷(§ER.3,已立案)。
+`bots/`+`game/` **零 diff**,零 AWS,无 promote/reject,armed 串一字未动。
+
+### §ER.1 处置:重复的那一半整份丢掉,**而且不是因为它更差**
+
+§EP 与本轮独立做出了同一批读数(`R GetUltLoc` 503 抛 → 503 答、`carriers_never_answer` 1 → 0、
+`names_scalar0_always` 165 → 164),连「**它现在『回答』而不是『被执行』**」这个核心发现都一样
+(§EP.3 的两处塌缩 = 本轮量的 `v == 0` 退化 + `stability < 0.4` 在 503/503 上覆盖;
+本轮的切分 **453 Vector / 50 nil / 2 IsDisabled** 与 §EP.3 逐位相同 —— **两台独立仪器互为交叉验证**)。
+
+**§EP 在两处更好,这是丢掉自己那份的实质理由,不是客套**:
+(甲) 它的 `[coupling]` 腿把「共用一个世界声明」写成**引擎恒等式** `ext(t) == loc + vel * t`,
+**只在一处被教会运动而另一处没有时失败** —— 而我写的是「两个名字循环断言各自的值」,
+**弄不假的东西也证明不了**;
+(乙) 它加了 `names_never_scalar0 == 30` 从**另一侧**钉住地板,我只手写了下落那一侧。
+⇒ **合并会把一个更弱的写法混进一个更强的写法旁边**,而两套仪器量同一件事正是
+`test_mockscalar_return_shape.lua` 自己警告过的「两台普查若分岔,其中一台在量自己」。
+**同理不补登 `mock_motion_corpus_limit`**:§EP.5 已明确**不进 registry**,理由是
+`[degenerate]` 腿**已经替它守着**(它被修那天变红并点名重取)——**那条理由成立,照收。**
+
+### §ER.2 ⭐⭐⭐ 真正的缺陷不在任何一份工作里,在 registry 的**状态机**里
+
+`mock_getvelocity_ultloc` 的 `executor` 字段写的是 **「director 或 协同组(谁先取到)」**,
+`trigger` 写的是 **「没有外部触发器:任何一轮有余量的工作单元都可以取它」**。
+**这两句话联合起来,恰好构造了本次撞车**:它们把「谁做」交给先到先得,
+却**没有任何字段记录『已经有人在做』** ⇒ 一行 OWED,在第二个人读它的那一刻,
+与一行**从来没人碰过**的 OWED **逐字节相同**。
+
+⚠️ **失效方向是本条的要害**:`pending_rulings.py` 的 OWED 腿**每轮对每个会话都举手**,
+而它举手的**目的**就是让人去取 —— 于是**这条腿越有效,撞车越必然**。
+两个会话都做了正确的事:读了 registry、取了排第一的那根棒、按验收句交付。
+**没有人违反任何规则,而结果是一整轮工作白做。**
+
+与 08-25「假弃置」那条(章程 backlog §6b)**同一个根**:
+**存量字段(这行还在不在)分不开「没人做」与「正在飞」** —— 那次丢的是一个分支,这次丢的是一轮工作。
+**而那一条当时的结论逐字适用**:拿不到活动迹象时,诚实输出是「无法区分」。
+
+**建议(不指定实现,判据是同一个撞车不再可能静默发生)**:
+给 registry 行加一个**认领**字段(`claimed_by` / `claimed_at`,写进去就是一次 push),
+`pending_rulings.py` 对**近期被认领**的行打 `IN-FLIGHT` 而不是 `OWED`,
+并**明说认领不是锁**(认领者可能死在半路 ⇒ 过期即回落成 OWED)。
+⚠️ **不要做成锁**:锁会把 08-25 那条「假弃置」的代价原样搬过来,只是换了个方向。
+已开 issue([harness]),**本轮不自己实现** —— 它值一个自己的工作单元,而本轮已经花掉了。
+
+### §ER.3 顺带:一条**只在全量跑里存在**的 harness 泄漏(已立案 `[harness]`)
+
+本轮因为动了全局共享 mock 而按铁律 6 跑了**全量动态半**(起跑 04:05Z,跑到 4 小时**仍未跑完**,
+⇒ **本轮不声称全量绿**;已执行部分 **2766 通过 / 4 FAIL**)。**4 条 FAIL 一条不落都被归因,量的不是论的**:
+
+- `test_lf_rescue_final_action.lua [census]`:在**当前 `origin/main`** 上**单跑就红**
+  (`:462 a new silent armed rescue frame appeared: …lina, …axe`,`RC_EXIT=1`)⇒ 既存 trunk 红。
+- `test_pingstamp_world_assertion.lua` **×3**:**单跑全绿(18/0)**,只在全量里红。
+  成因是 `tests/test_arbheart_release_retires_camp.lua:134` **裸赋引擎全局 `GetRoshanDesire` 且不还原**;
+  `run_tests.lua` 单进程按字母序跑,`arbheart` 在 `pingstamp` 之前 ⇒
+  后者赖以成立的那个崩溃(`mode_farm_generic` 是 GH #62 §0d 的**第三个 undrivable mode**)**被填平了**,
+  于是 `cs.ratchet(crashes, 5)` 读到 **0**。
+  **最小装置**(两个文件、同一进程、字母序)在 `origin/main` 上逐字复现三条:
+  `GetRoshanDesire before any file: nil` → `after arbheart: function` → 三条 FAIL。
+
+⚠️ **为什么它值得单独立案 —— 失效方向,不是失效本身**:
+(i) 它**只在全量跑里存在**,而全量跑要数小时 ⇒ 按点名腿验收的轮次**结构上看不见它**;
+(ii) 棘轮把「计数下落」按设计读成**「行为改动了,不要重新定基线」**,
+**那句话对着的是下一个动了共享 mock 的人,不是泄漏的人**。
+**本轮我就是那个人:我先假定是自己弄的,花了一次干净树对照才买回「不是我」。**
+(iii) **两个文件都没错**(一个需要那个全局在,一个需要它不在);
+**冲突在「单进程 + 裸全局 + 字母序」三件事的乘积里。**
+
+### §ER.4 产物
+
+本节;`iterations/reports/director/20260905T042234Z.md`;两条 `[harness]` issue(§ER.2 / §ER.3);
+章程「当前状态」节。**`tests/`、`bots/`、`game/`、`queue.json`、`owed_executions.json`
+本轮一字未改** —— §EP 已经落地了那一半,重复的不再落地一次。
