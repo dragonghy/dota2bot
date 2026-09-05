@@ -1,7 +1,16 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom
+l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom
 
-**成员串 61**(上一行,**540 字节**,md5 `824ec2842e234693cb3c4094f73d6a14`)。本行 **2026-09-05T15:5xZ 的变动:两条 `退回出集`(63 → 61)**,总监裁定全文 **§EX**。⛔ 两条都**不是 reject**,gate 与代码**逐字保留**,重新入集路径各自写在 §EX。
+**成员串 59**(上一行,**524 字节**,md5 `572b60753699bc68b2ad5ec9020f2512`)。本行 **2026-09-05T22:xxZ 的变动:两条 `退回出集`(61 → 59)**,总监裁定全文 **§FB**。⛔ 两条都**不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff),重新入集路径各自写在 §FB.5。
+1. **`tpdying` 退集**(61 → 60)—— armed **17 天**(§A' 08-19 入集),`verify_coverage.py` 读 **verify=0 / 159 份报告**。
+2. **`tpreach` 退集**(60 → 59)—— armed **12 天**(§BC 08-24 入集),同样 **verify=0**。
+⭐ **退集的理由与 `zusstatic` 不同,必须分清**:`zusstatic` 是**条件 (a) 结构上买不到**;这两条**买得到**,而且各自的验收形状**在入集那天就写好了**(§A'.3 两个检测器 / §BC.4 `tp_channel_death.py` + 按 mode 分层,连降级读法都写了)。**从没人买过的原因不是难,是那份义务只写在 test_set.md 的散文里,没有落到任何一张真正驱动录像组的表上** —— 这正是 §2.5 / GH #413 立法过的那条缺陷,而那条立法只覆盖**裁定**,不覆盖**入集自带的验收义务**(全文 §FB.3,立案 GH 待回填)。
+⇒ 本轮把两条 (a) 义务**登记进 `iterations/owed_executions.json`**(自检第 9 条腿每轮替它举手),再退集。**退集不销毁买 (a) 的能力**:W39–W49 的 dump 里两条都是 armed 的,(a) 从**已经存在的语料**里买,与 `stayattr` 09-05 的先例逐条同型(那条退集后录像组照样在 W48 上买到了 (a1) WORKING)。
+⚠️ **`tpdying` 属共同 promote 原子 `tp_response_releases_need_commit`**(subject `tpdying`/`tpdead`,prereq `tpcommit`):**退集不是 promote**,原子行**一字不动**,`promote_atoms.py` 本轮 exit 0。`tpdead`/`tpcommit`/`tpgap` **留在集内**。
+⚠️ **载体项 8 → 8 逐字不变,量出来的**:`carrier_terms.py` 对 61-id 与 59-id 两串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved`;计数 `12/49 → 12/47`(两条都是 generic)。⇒ **选种解空间不受影响。**
+⛔ **W49 于 2026-09-05T21:19:57Z 起飞、`--ref` 钉死 `066219d6`,含这两个 id,不作废** —— 它的读数正是买 (a) 的语料。
+
+〔历史,上一条变动〕**成员串 61**(**540 字节**,md5 `824ec2842e234693cb3c4094f73d6a14`)。**2026-09-05T15:5xZ 的变动:两条 `退回出集`(63 → 61)**,全文 **§EX**。
 1. **`stayattr` 退集**(63 → 62,**550 字节**,md5 `c7e1f92c739f8f8dc0ee0c9484288628` —— 与 §EC 09-04T10:xxZ 的 62-id 串**逐字节相同**,不是新串)。理由**不是它的技术证据有问题**(§ET 的 (a)(c) 仍然成立):`OWNER_PRIORITIES.md` P4.2 于 **2026-09-05T14:5xZ** 补的「优先级澄清」**废止并压过 §BB.4**「搭车提议当轮放行」,冻结期唯一合法裁定是 **FROZEN-HOLD**;§ET 那次入集(11:xxZ)在澄清落地之前,被 owner 明写认定为违例并点名**「下一总监轮把 stayattr 退集回 62」**。⇒ 本行是**执行 owner 裁定**,不是总监改判 §ET。**W48 已在飞不作废**(它 clone 的是含 `stayattr` 的树),其 `stayattr` 读数按 §ET 归档为额外 (a) 证据。
 2. **`zusstatic` 退集**(62 → 61)—— 总监本轮自己的判定完结,按 P4.2「从核验记录最少、最难买 (a) 的 id 清起」,取自 `verify_coverage.py` 的 **BLIND SPOTS** 两条之一(`midtp` / `zusstatic`:VERIFY 0 **且**任何报告里 id 附近从无裁定词)。⇒ **条件 (a) 结构上买不到,加局无用**(与 `l1xpsoak` 08-19 同型,不是 `pullcad` 陷阱:`zusstatic` 全仓**只有一处闸址**且**不与任何 id 合取**)。
 ⚠️ **载体项 8 → 8 逐字不变,而且这次是量出来的**:`carrier_terms.py` 对 63-id 与 61-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved`;计数从 `13 hero-scoped / 50 generic` 变成 `12 / 49`(各减一条),**项数不动的机械理由**是 `zuus` 仍由 `zusult`/`zusboltdom` 供着、`stayattr` 本就是 generic。⛔ 与 §ET.4 / GH #522 同一条警告:**载体项会在 arm 串一字不动时改变**,不要把差额读成本次退集带来的。
@@ -18040,3 +18049,103 @@ STANDALONE,不与任何 id 合取(pullcad 陷阱;`STAY_IDS_MAX_PER_COND == 1` �
   `fieldbuy` 为何没买上(注意 `IsFieldRegenSituation` 的 0.55 上限**严于**本函数的 0.75),
   或 `J.HasFieldRegenSource` 的 backpack 不对称在 PROMOTED 侧的同族问题。
   **照旧先跑域价钱,并先断言控制帧够得着被控制的代码。**
+
+## §FB 2026-09-05T22:xxZ 总监 —— **两条退回出集(61 → 59),而这两条的条件 (a) 从来不是「买不到」**;本节最该被读的是 **§FB.3:入集那天写下的验收义务,是一段散文;§2.5/GH #413 立法过的「裁定要落到被裁方读的那个字段上」,结构上不覆盖它 —— 于是 40 个 armed id 的 (a) 义务今天一条都没有行**
+
+### §FB.0 一句话
+
+按 owner `OWNER_PRIORITIES.md` **P4.2**(冻结 + 库存清算,「每轮 ≥2 个判定完结,从核验记录最少、
+最难买 (a) 的 id 清起」)取 `verify_coverage.py` verify=0 长尾里 narrat 最低的两条
+(`tpdying` / `tpreach`;`midtp` 是录像组 GH #521 (丙) 的棒,**不抢**),**两条都 `退回出集`**,
+armed 集 **61 → 59**(524 字节,md5 `572b60753699bc68b2ad5ec9020f2512`)。
+**gate 与代码逐字保留,`bots/`+`game/` 零 diff,零 AWS。本轮判定完结数 = 2。**
+
+### §FB.1 选取不是我挑的
+
+`verify_coverage.py`:**armed 61 / 扫 159 份报告 / 有机器可读 VERIFY 行的 id = 21**。
+verify=0 的长尾按 `narrat` 升序,前几条是
+`midtp`(0)、`campsel`/`pulllane`/`pullthink`/`roamidle`/`rotscope`/`teambrain`/`tpdead`/`tpgap`(1)、
+`l5combo`/`liondrainstop`/`ownhalf`/`pullcad`/`pulldrag`/`towerfear`/**`tpdying`**/**`tpreach`**(2)。
+上一轮(§EZ.9)已把「下轮的前两个 = `tpdying` / `tpreach`」写死,本轮**照单执行,不改选取**。
+
+- `tpdying`:§A' **2026-08-19** 入集(issue #35),armed **17 天**。
+- `tpreach`:§BC **2026-08-24** 入集(GH #159,总监自写自批),armed **12 天**。
+- 两条都在 W39–W41 与 W48/W49 等波里 armed(W49 于 21:19:57Z 起飞、`--ref` 钉 `066219d6`,**含这两条**)。
+
+### §FB.2 ⭐ 为什么这两条的理由**不是** `zusstatic` 的理由 —— 分清这一条比退集本身值钱
+
+上一轮(§EX.3)退 `zusstatic` 的判据是**条件 (a) 结构上买不到**:闸每帧开火而答案恒 0,
+句柄在八个丢弃世界里没有一个是 Static Field ⇒ **加局无用**。
+
+**这两条不是。它们的 (a) 买得到,而且验收形状在入集那天就写好了:**
+
+| id | 入集时写下的 (a) 验收形状 | 现状 |
+|---|---|---|
+| `tpdying` | §A'.3 约束 3:**必须用行为检测器判,不许用 gpm/xpm**;点名两个检测器 —— 「响应 TP 落地后 10s 内死亡率」「落地后仍钉在 DEFEND 的帧数」 | **两个检测器都没有被建过**,159 份报告零 VERIFY 行 |
+| `tpreach` | §BC.4:`tp_channel_death.py` **已经算了 `near`**(决策侧插值),**只差按 mode 分层**;连降级读法都写了(dump 无 mode 字段时退化成「`near ∈ (700,725]` 的占比两腿差分」) | 工具在树上(`tools/batch_test/behavioral/tp_channel_death.py`,`--help` 本轮跑通),**从没有人对任何一波跑过它并把结果写成 VERIFY 行** |
+
+⇒ **失效的不是证据,是投递。**
+
+### §FB.3 ⭐⭐⭐ 那份义务为什么没有行 —— 现有立法的形状差一格
+
+铁律 **§2.5**(GH #413 第二次掉棒后加固)说的是:
+「裁定要落到**被裁方读的那个字段**上」,并给了三处投递(`queue.json:<req>.director` + 档案 + issue 追评),
+外加常驻义务的 `iterations/owed_executions.json`。
+
+**它覆盖的是「裁定」。而 (a) 验收义务不是裁定,是「批准入集」这个动作自带的附随义务。**
+`queue.json` 的那一行是**申请方**开的、在**入集被批准的那一刻就 resolved 了**;
+录像组从来不是那一行的被裁方,于是这份义务**没有任何一行可以被写进去** ——
+与 GH #332 / #413 的立案句**逐字同型**:
+**「对着 N 条自审、N 条全中、答案是对的,而第 N+1 条没有地方可以缺席。」**
+
+**量出来的规模**:armed 61 条,有机器可读 VERIFY 行的 **21** 条 ⇒ **40 条 armed id 的 (a) 今天没有任何一行替它举手**。
+这一条**单独解释**了 P4.2 立项时引用的那个数字(13 天零 promote):
+不是没人干活,是**每一条卡住的裁定都卡在 (a)**(W34 台账原话),而 (a) 的义务**结构上是不可见的**。
+
+⇒ **本轮的动作(不新增规则,用现有 registry)**:把这两条 (a) 义务
+**登记进 `iterations/owed_executions.json`**,各带一个**裸读得出的 `done_when`**
+(自检第 9 条腿 `owed-executions` 每轮举手并 exit 3)。
+**通用化(给全部 40 条自动开行)不在本轮范围** —— 已立案,GH 号见 §FB.7(收尾回填)。
+⛔ 我**没有**把这条发现再写成第三句散文。
+
+### §FB.4 退集为什么**不销毁**买 (a) 的能力(这一条是先例不是推理)
+
+(a) 要求「armed 腿 vs baseline 腿在同一帧上翻转」,所以**必须有 armed 过它的波**。
+**已经有了**:W39/W40/W41 与 W48/W49 的 dump 里两条都 armed。
+(a) 从**已经存在的语料**里买,与 `stayattr` **09-05 当天的先例逐条同型** ——
+§EX.1 退集,而录像组在**同一天**照样在 W48 上买到了 (a1) WORKING(§EX.9 / `fe2fbf90`)。
+⇒ **退集冻的是它在未来每一波里稀释读数的那一格,不是取证。**
+
+### §FB.5 重新入集路径(机器可读,不是散文)
+
+两条**都不是 reject**:gate、代码、注释、测试**一字未动**,`bots/`+`game/` **零 diff**。
+重新入集的条件**各自就是 §FB.2 表格右列那一行**:
+
+1. `tpdying`:任一份报告给出机器可读 VERIFY 行,判据用**行为检测器**(§A'.3 约束 3 逐字仍然有效,
+   ⛔ 不许用 gpm/xpm —— 理由是频次:它只在「响应 TP 落地 + 非对线期 + 面前爆发已致死」的帧上动作,
+   对照 GH #30 的经验零点(per-seed gpm σ≈30、4-seed 均值 SE≈15),经济 null **既不是「无效」也不是「无害」**)。
+   ⚠️ **与 `tpcommit` 的同 arm 约束不变**(§A'.4:单独 armed 是 no-op),重新入集时**必须与 `tpcommit` 同时 armed**。
+2. `tpreach`:`tp_channel_death.py` 的读数**按 mode 分层**(或 §BC.4 的降级读法),
+   给出「非撤退 mode、敌人在 `(700, reach]` 带内的按下点上,armed 腿不按 / baseline 腿按」。
+   ⚠️ §BC.3 的自我制约不变:**(a) 必须由录像组独立核验,不是总监自己看。**
+
+冻结期内重新入集受 **P4.2** 管:armed ≤ 20 之前,买到 (a) 也**先登记不入集**(FROZEN-HOLD),
+解冻后凭现成证据重提 —— 与 §EX.7 `axecallbkb` 同一条。
+
+### §FB.6 本轮的核验读数(全部是跑出来的,不是抄的)
+
+- 串:61 → 59,**540 → 524 字节**,md5 `824ec2842e…` → **`572b60753699bc68b2ad5ec9020f2512`**。
+- `carrier_terms.py --arm <新串>`:**`CT_EXIT=0`**,`12 hero-scoped / 47 generic / 0 unresolved => 8 term(s)`,
+  `TERMS` 行与 W49 的**逐字节相同** ⇒ **选种解空间不受影响**(两条都是 generic:
+  `tpdying` 闸在 `bots/FunLib/jmz_func.lua`,`tpreach` 同文件)。
+- `check_armed_wiring.py --cand <新串>`:**`ARM_EXIT=0`**,`all 59 armed ids wired on HEAD`。
+- `promote_atoms.py`:`tp_response_releases_need_commit`(subject `tpdying`/`tpdead`,prereq `tpcommit`)
+  **一字不动** —— **退集不是 promote**,该原子读的是**树里的闸址**不是 arm 串,退集对它是零输入。
+- 铁律 6 静态半 + 被改文件相关的动态测试:见本轮报告 §6。
+
+### §FB.7 交棒与立案(收尾回填)
+
+- 录像组:两条 owed 行 `a_evidence_tpdying` / `a_evidence_tpreach`(`iterations/owed_executions.json`),
+  `done_when` 各自裸读得出;GH #35 / #159 追评通知(MCP 可用则发,不可用按铁律 11 写进报告)。
+- 立案(通用化「入集自带的 (a) 义务自动开 owed 行」):GH 号收尾回填。
+  ⚠️ **按 §EX.11 的教训,号不顺推** —— 先把号从引用里拿掉、push、开 issue、再回填。

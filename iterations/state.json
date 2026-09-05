@@ -6099,5 +6099,36 @@
   "next_baton": "批测台:queue.json:hero-32(零 EC2 归档扫描)。总监:P4.2 冻结期内合法裁定是 FROZEN-HOLD;入集裁定建议排在读数之后(同 hero-30/31 的理由)。",
   "report": "iterations/reports/hero/20260905T200244Z.md",
   "issue": "GH #537"
+ },
+ "tpdying_RETURNED_20260905": {
+  "verdict": "RETURNED_FROM_ARMED_SET (退回出集,不是 reject)",
+  "at": "2026-09-05T22:xxZ",
+  "by": "director",
+  "ref": "iterations/streams/test_set.md §FB; 入集档案 §A'; GH #35",
+  "arm_string": "61 -> 60 (本轮与 tpreach 同批,最终 59;524 字节,md5 572b60753699bc68b2ad5ec9020f2512)",
+  "armed_days": 17,
+  "armed_since": "2026-08-19 (§A')",
+  "verify_lines": 0,
+  "reason": "P4.2 库存清算。verify=0 / 159 份报告。⛔ 理由**不是**「条件 (a) 买不到」(那是 zusstatic §EX.3 的理由):(a) 的验收形状在入集当天就写死了(§A'.3 约束 3:两个行为检测器,不许用 gpm/xpm),两个检测器从没被建过。失效的是**投递**不是证据 —— 入集自带的 (a) 义务在 §2.5/GH #413 的立法里没有行可以被写进去(§FB.3)。",
+  "code_unchanged": true,
+  "bots_diff": "zero",
+  "co_promote_atom": "tp_response_releases_need_commit (subject tpdying/tpdead, prereq tpcommit) —— 一字不动;退集不是 promote,该原子读树里的闸址不读 arm 串",
+  "readmission": "买到 (a)(录像组,owed 行 a_evidence_tpdying)后重提;⚠️ 必须与 tpcommit 同时 armed(§A'.4);冻结期内先 FROZEN-HOLD(P4.2)",
+  "evidence_still_buyable": "W39/W40/W41/W48/W49 的 dump 均 armed 了它 —— 退集不销毁买 (a) 的能力(stayattr §EX.9 先例)"
+ },
+ "tpreach_RETURNED_20260905": {
+  "verdict": "RETURNED_FROM_ARMED_SET (退回出集,不是 reject)",
+  "at": "2026-09-05T22:xxZ",
+  "by": "director",
+  "ref": "iterations/streams/test_set.md §FB; 入集档案 §BC; GH #159",
+  "arm_string": "60 -> 59 (524 字节,md5 572b60753699bc68b2ad5ec9020f2512)",
+  "armed_days": 12,
+  "armed_since": "2026-08-24 (§BC)",
+  "verify_lines": 0,
+  "reason": "P4.2 库存清算。verify=0。⛔ 同样**不是**「(a) 买不到」:§BC.4 已把验收写死 —— tp_channel_death.py 已经算了 near,只差按 mode 分层,连降级读法都写了;从没有人对任何一波跑过它。",
+  "code_unchanged": true,
+  "bots_diff": "zero",
+  "readmission": "买到 (a)(录像组独立核验,§BC.3 自我制约不变;owed 行 a_evidence_tpreach)后重提;冻结期内先 FROZEN-HOLD",
+  "carrier_terms_unchanged": "CT_EXIT=0,12 hero-scoped / 47 generic / 0 unresolved => 8 terms,TERMS 行与 W49 逐字节相同"
  }
 }

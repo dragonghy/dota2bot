@@ -10739,3 +10739,71 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   (与「对尚不存在的 GH 号无话可说」同族):**「命令它出现」与「引用错了」在它眼里逐字节相同**。
   建议给它一种 `expected:` 前缀或一份「本轮新建路径」清单 —— **登记,未做**。
   ⑬ **GH 评论**:#534(已关闭,completed)/ #535(**不关**,它从此是量具任务)/ #532 / #158(**不关**)。
+
+- 2026-09-05T21:5x–22:3xZ:总监触发。**主活 = P4.2 库存清算,两个判定完结达成(`tpdying` / `tpreach`
+  退回出集,armed 61 → 59)** —— 上一轮 ⑨ 记的「本轮 = 0,未达成」本轮补上。报告
+  `iterations/reports/director/20260905T220000Z.md`,全文档案 `test_set.md §FB`。
+  `bots/`+`game/` **零 diff**,**零 AWS 花费**,无 promote。**距解冻线(armed ≤ 20)还差 39。**
+  ① **选取不是我挑的**:上一轮 §EZ.9 已写死「下轮的前两个」,`verify_coverage.py` 本轮读
+  **armed 61 / 159 份报告 / 有 VERIFY 行的 21 条**;`midtp` narrat 0 但是录像组 GH #521 (丙) 的棒,**不抢**。
+  ② ⭐⭐⭐ **本轮唯一值得读走的一条:退集的理由与上一轮两条不同,不许混着写。**
+  §EX.3 退 `zusstatic` 的判据是**条件 (a) 结构上买不到**;这两条**买得到** ——
+  `tpdying` 的 (a) 验收形状在 §A'.3 就写死了(两个行为检测器,⛔ 不许用 gpm/xpm),**两个从没被建过**;
+  `tpreach` 的在 §BC.4 写死了(`tp_channel_death.py` 已经算了 `near`,**只差按 mode 分层**,连降级读法都写了),
+  **从没有人对任何一波跑过它**。⇒ **失效的不是证据,是投递。**
+  ③ ⭐⭐ **为什么这份义务会掉 —— 现有立法的形状差一格**:§2.5(GH #413 加固)覆盖的是**「裁定」**,
+  而 (a) 验收义务是**「批准入集」的附随物**:`queue.json` 那一行是**申请方**开的、
+  **在入集被批准的那一刻就 resolved 了**,录像组从来不是那一行的被裁方 ⇒ **这份义务没有任何一行可以被写进去**。
+  与 GH #332 / #413 立案句逐字同型。**量出来的规模:armed 61,有 VERIFY 行的 21 ⇒ 40 条 id 的 (a) 今天没有一行替它举手** ——
+  这一条**单独解释**了 P4.2 立项引用的「13 天零 promote」。
+  ④ **退集不销毁买 (a) 的能力**(先例不是推理):W39/W40/W41/W48/W49 都 armed 过这两条,
+  (a) 从**已有语料**买;与 `stayattr` 09-05 当天的先例逐条同型(§EX.1 退集,同日录像组照样在 W48 买到 (a1) WORKING)。
+  W49(21:19:57Z 起飞,`--ref` 钉 `066219d6`)**含这两条,不作废**。
+  ⑤ **交棒这次是机器可读的**:`owed_executions.json` +2 行(`a_evidence_tpdying` / `a_evidence_tpreach`,
+  executor = 录像组,`done_when: path_exists`,零 AWS 增量,note 里写死「什么样的内容才算买到」)。
+  ⚠️ `path_exists` **只判产物存在不判内容**(LIMIT 11),已写进 note,**不假装它更强**。
+  **通用化(给全部 40 条自动开行)不在本轮范围,已立案,GH 号收尾回填 —— 按 §EX.11 号不顺推。**
+  ⑥ **核验读数**:串 540 → **524 字节**,md5 → **`572b60753699bc68b2ad5ec9020f2512`**;
+  `CT_EXIT=0`(`12/47/0 unresolved => 8 terms`,**`TERMS` 行与 W49 逐字节相同** ⇒ 选种解空间不动);
+  `ARM_EXIT=0`(59 全 wired);`promote_atoms.py` exit 0,`tp_response_releases_need_commit` **一字不动**
+  (**退集不是 promote**,原子读树里的闸址不读 arm 串)。
+  ⚠️ **§EX.6 的教训本轮主动查过**:`test_carrier_terms.py` 66/0、`test_pending_rulings.py` 231/0、
+  `test_gate_claim_consistency.lua` 16/0 —— **本轮没有连带红**。
+  ⑦ ⛔⛔ **顺手核出来的、比主活更该被读的一条:我们的刹车量的不是我们的账。**
+  不带过滤器复核 ⇒ `i-0ce7ddf08ea24cc7f` / `c7a.16xlarge` / spot / `running` /
+  `Project=final-table-trainer`,`LaunchTime 05:02:24Z` ⇒ **连续 17.3 小时**。
+  ⭐ 再读预算结构:**账户上有两个预算(`FFT monthly budget` $150 / `dota2bot-batch` $100),
+  两个的 `CostFilters` 都是 `null`**,ACTUAL `$19.597` 与 FORECAST **`$150.822`** **逐位相同**
+  —— **两个量的是同一个东西:整个账户**。⇒ `check_costs.sh` / `wave_fence.py` 闸 (iii) /
+  $45–$60 围栏 / $90 刹车 / $100 批准线 **读的全是账户级数字**:
+  (甲) 那 17.3h 按 spot 价带 **$17–21 已发生未落账、~$1.1/h 增长**,落账后我们的波会**在自己一分钱没多花时被自己的围栏停掉**;
+  (乙) owner 会收到写着 `dota2bot-batch` 的告警而它报的不是我们的账;
+  (丙) ⛔ **存量决策题里 `ForecastedSpend` 那一路作废** —— 它**不独立**,是账户级的;
+  批测台独算那一路(**$4.51/天 × 30 ≈ $135**)仍是我们自己的,(A)/(B)/(C) 的代价按 $135 重算。
+  ⛔ **未做任何处置**(别人的项目标签,终止越权且不可逆;`dota2bot-agent` 也没有 `budgets:Modify*`)。
+  已写进 `DECISIONS_NEEDED`(+1 条,三个互相独立的问句)**并已推送通知 owner**;
+  在 owner 回复前按保守侧执行(继续用账户级数字当刹车),各轮报告**分两行写花费**。
+  ⚠️ 诚实边界:**看不见它在做什么**;17.3h 是 `LaunchTime` 时差,不是「还需要多久」。**本轮零 AWS 花费。**
+  ⑧ **巡检**:W49 四台里 1 台 `running`、3 台 `terminated` 且 `StateTransitionReason = "User initiated"`
+  ⇒ **自毁不是抢占**,不是泄漏也不是掉臂(**特意查了,免得把「三台已不在」误报成抢占**)。
+  五组均有产出无空转。上一轮 ⑬ 的 `test_wave_throttle.py` 对 W48 的 `UNCERTIFIABLE`
+  **已被批测台 21:1xZ 用修好后的工具跑通结清,不再开 owed 行**。
+  ⑨ **自检真码 `RC_EXIT=3`**,`legs run 10`,**`UNCERTIFIABLE: none`**(后台跑满 ~73 分钟拿到)。
+  ⭐ **上一轮 §EZ.8 记的「trunk-health(python)超时未打印 ⇒ 那一侧我没看过」本轮不复现。**
+  ⚠️ **但要记一笔**:写报告时它还在跑,我先按「空缺不是通过」写了一版,**它随后跑完才改成真码** ——
+  **「还没跑完」与「跑完了是 3」在报告里长得不一样,而我差点交出前者**。
+  `FINDINGS`:`cadence` / `queue-rulings` / `owed-executions` / `trunk-red(python)` / `trunk-red(lua)`。
+  其中 **`owed-executions` 是本轮自己造的**(新登记的两行按定义就是 OWED);
+  **`trunk-red(lua)` = `test_corpus_scale.lua` = GH #538**,与批测台同一条,**零新增**
+  (报错点名 `test_staybottle_inflight_regen.lua:223` 把 fixture 数写成字面量 `109`,GH #106/#127 同族,
+  **不是本轮改动引起的** —— 本轮 `bots/`+`game/` 零 diff 且没动 `tests/`);`trunk-red(python)` 亦零新增。
+  ⚠️ **`git stash` 重跑那一步本轮没做,「main 是不是也红」不声称** ——
+  **也不许照搬批测台 21:1xZ 那个结构性论证**(它那轮工作树在四个目录上与 `origin/main` 逐字节相同,我这轮改了三个文件)。
+  其余腿:unlanded `OK`、两个 stable 锚点 `EXISTS ok`、`FROZEN none`、orphan 1(存量 `§BV campexit`)、
+  owed 入轮 5 行 → 收轮 7 行。**纪律 3 本轮未复发**(第一条命令走 `rc.sh`,无 `| tail`)。
+  铁律 6 静态半 `0 warnings / GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;动态半因 `bots/` 零 diff **未全量跑,不声称**。
+  ⑩ **下次触发**:①**GH #523**(总监自己那根棒,**连续第四轮未取** —— 在 registry 里不会掉,但「四轮」这个数要被读)
+  ②继续 P4.2(narrat 1 一档:`campsel`/`pulllane`/`pullthink`/`roamidle`/`rotscope`/`teambrain`/`tpdead`/`tpgap`;
+  ⚠️ **`tpdead`/`tpgap` 先看 ② —— 大概率也是「义务没投递」不是「买不到」,两种理由不许混着写**)
+  ③**通用化 (a) 义务自动开 owed 行**(一条覆盖 40 个 id,比一轮清两条更接近解冻线)
+  ④账户级预算等 owner 回复 ⑤`$0.90` 常数重裁(**第四轮连续点名**)/ GH #538 / #528 / patch 缺口 P3。
