@@ -454,6 +454,99 @@ function X.SkillsComplement()
 end
 
 
+--- Soak candidate `axecallbkb` (turbo-only, INERT until armed) -- the sibling of
+--- `axecull` on the OTHER ability in this file that pierces spell immunity.
+--- Written 2026-09-05 under OWNER_PRIORITIES P4.4.
+---
+--- THE FACT, from two independent sources that agree.  axe_berserkers_call is
+--- `bkbpierce: "Yes"`, behavior `No Target`, radius 315, cooldown 18/16/14/12,
+--- mana 90/100/110/120 (odota/dotaconstants build/abilities.json, read
+--- 2026-09-05 -- the same file and the same field the `axecull` block above
+--- anchors on).  The repo's own copy of the game KV corroborates every number
+--- that overlaps: tests/mock/special_value_shapes.lua carries
+--- axe_berserkers_call / radius 315 (+85 from special_bonus_unique_axe_2),
+--- AbilityCooldown `18 16 14 12`, AbilityManaCost `90 100 110 120`.  So unlike
+--- `axecull`, whose anchor is RECORDED-only, this one is cross-checkable from
+--- inside the repo without the network.
+---
+--- THE DEFECT.  X.ConsiderQ carries TWO spell-immunity vetoes, and Berserker's
+--- Call is not stopped by spell immunity in the game:
+---   (i) the interrupt branch: `npcEnemy:IsChanneling() and not npcEnemy:IsMagicImmune()`
+---       -- Axe declines to break a channel he can in fact break.  The taunt
+---       forces the enemy to attack him, and that is what ends the channel.
+---   (ii) the initiation branch: `J.CanCastOnNonMagicImmune( botTarget )`
+---       -- Axe declines the Call when his CURRENT target is spell-immune.
+--- (ii) is the wider error of the two and it is worth stating separately,
+--- because it is not only an immunity mistake: Berserker's Call is `No Target`,
+--- an AoE taunt centred on Axe.  Gating it on one enemy's properties throws away
+--- every OTHER enemy standing in the same 315u ring.  A spell-immune carry with
+--- two vulnerable supports beside him is a full three-hero Call that the shipped
+--- bot does not cast.
+---
+--- WHY IT IS A GATE AND NOT A PLAIN FIX.  It ADDS casts, and this stream ships an
+--- action-adding change dark until a wave has sized its domain.  Gate OFF both
+--- clauses reduce to the shipped predicate, byte for byte, because Lua
+--- short-circuits `or`: on (i) the second operand is only reached on an immune
+--- enemy, and on (ii) J.CanCastOnMagicImmune is J.CanCastOnNonMagicImmune minus
+--- exactly the IsMagicImmune term (jmz_func.lua:961 vs :988), so every other
+--- veto -- CanBeSeen, IsInvulnerable, IsSuspiciousIllusion, HasForbiddenModifier
+--- -- still has to pass before the widened operand can be true.
+---
+--- THE COST SIDE, stated so it can be argued with.  Berserker's Call taunts; it
+--- does not damage, so neither branch can waste a kill the way a mis-timed
+--- Culling can.
+--- On (i) the downside is bounded by the branch's own premise: an enemy who is
+--- CHANNELING inside 265u is not attacking, and ending the channel is the point.
+--- On (ii) it is bounded by J.IsGoingOnSomeone, which is upstream of the clause
+--- and unchanged: Axe has ALREADY decided to commit on this target and is walking
+--- into it either way.  What the Call adds on top of that decision is the taunt
+--- (the target cannot walk away or act for 2.1/2.4/2.7/3.0s) and +12/13/14/15
+--- armor on Axe for the same window, on the hero whose passive pays him for being
+--- surrounded.  Pulling in OTHER enemies standing in the ring is not a new cost
+--- either -- the shipped branch already casts the same AoE taunt whenever the
+--- target happens not to be immune.
+--- The honest difference from `axecull` is narrower than it looks and is stated
+--- so nobody carries the wrong half across: `axecull` is bounded by a health test
+--- that makes its cast a KILL, and there is no such guarantee here.  Do not quote
+--- `axecull`'s "the downside is bounded by the health test" for this lever.
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  Only the immunity term moves.  The 315u
+--- radius, the -50 / -90 margins, the creep-shove curfew, the Roshan and
+--- Tormentor branches and the neutral-camp branch are untouched.  This is one
+--- lever, not a bundle.
+---
+--- WHAT IS NOT KNOWN, and the two branches are blocked by DIFFERENT things.
+--- The domain is UNSIZED.  tests/test_axe_cull_immune_veto.lua section 2 already
+--- measured the immunity supply for this file (3 spell-immune hero-instants in the
+--- corpus, all Juggernaut Blade Fury, none in a game containing Axe; zero Black
+--- King Bars in any item slot), and that half is shared.  What is NEW here, and
+--- measured 2026-09-05 over the 7 Axe-SUBJECT frames rather than assumed:
+---   * the ONE frame with an enemy inside the 265u ring (ring_close, skywrath at
+---     188u) has Berserker's Call at 17.0s of its own 18s rank-1 cooldown -- Axe
+---     had just cast it -- and the 5 frames where Call IS ready hold zero enemies
+---     inside the ring.  "Call ready" and "enemy in the ring" never co-occur.
+---   * zero channeling hero-instants anywhere in those frames.
+--- So branch (i) is validated on a real frame by a counterfactual with THREE
+--- declared flips (cooldown, channeling, immunity), each isolated by a 2x2 in
+--- tests/test_axe_call_immune_veto.lua rather than pooled.
+--- Branch (ii) has SOURCE-LEVEL COVERAGE ONLY -- the `zusaether` disposition --
+--- and its blockers are three, not one: `botTarget` is J.GetProperTarget and is
+--- structurally nil on every fixture frame (GH #474), J.IsGoingOnSomeone is false
+--- on this frame, and J.IsDisabled answers TRUE for the only in-ring enemy.  Any
+--- test that drove it would be driving stubs, which is gate plumbing, not local
+--- validation.  It is labelled as such in the test rather than left to be inferred.
+--- ⚠️ CONSEQUENCE FOR THE VERDICT, registered before the wave and not after: the
+--- two branches share one id, so a negative read cannot be attributed to either.
+--- If a wave reads negative, the next rung is to SPLIT the id, not to reject the
+--- fact.  Size it on a wave: iterations/queue.json `hero-30`.  Do NOT promote on
+--- the (c) argument alone.
+function X.IsCallPierceOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb' )
+
+end
+
+
 function X.ConsiderQ()
 
 
@@ -489,7 +582,7 @@ function X.ConsiderQ()
 	for _, npcEnemy in pairs( nInRangeEnemyList )
 	do 
 		if npcEnemy:IsChanneling()
-			and not npcEnemy:IsMagicImmune()
+			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceOn() ) -- see X.IsCallPierceOn
 		then
 			hCastTarget = npcEnemy
 			sCastMotive = 'Q-打断'..J.Chat.GetNormName( hCastTarget )
@@ -503,7 +596,8 @@ function X.ConsiderQ()
 	then
 		if J.IsValidHero( botTarget )
 			and J.IsInRange( botTarget, bot, nRadius - 90 )
-			and J.CanCastOnNonMagicImmune( botTarget )			
+			and ( J.CanCastOnNonMagicImmune( botTarget )
+					or ( X.IsCallPierceOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceOn
 			and not J.IsDisabled( botTarget )
 		then			
 			hCastTarget = botTarget

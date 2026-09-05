@@ -22,6 +22,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-99. **`axecull` 在同一个文件里有一根**没人回头看的兄弟**,而它的两支里**能验的那一半
+   不是值钱的那一半**(报告 `iterations/reports/hero/20260905T135708Z.md`,
+   `state.json:axecallbkb_20260905`,GH **#TBD**(本轮结尾登记);新 `tests/test_axe_call_immune_veto.lua` 18 例 +
+   `tools/agent/mutstand_axecallbkb.sh` 8 变异全杀;`bots/BotLib/hero_axe.lua` **有真代码行**;
+   选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实**:`axe_berserkers_call` 的 `bkbpierce` 是 **"Yes"**、`behavior` 是 **`No Target`**
+     —— 与 `axecull`(GH #146)锚 Culling 的**同一个文件同一个字段**。而 `X.ConsiderQ` 有
+     **两处**魔免否决:(i) 打断分支 `not npcEnemy:IsMagicImmune()`,
+     (ii) 先手分支 `J.CanCastOnNonMagicImmune( botTarget )`。
+   - **比 `axecull` 强的一格**:这一根的数字**仓内可交叉核对**(`special_value_shapes.lua`
+     给 radius 315 / cd `18 16 14 12` / mana `90 100 110 120`,与 odota 逐位相同,
+     KV 节按 fixture 自带 KV 四个 rank 全跑)。⚠️ 但 `bkbpierce` **本身没有 KV 字段**
+     (同 GH #516 对 `GetAOERadius` 的结论)⇒ **那一半仍是 RECORDED,两句话不许合并成一句。**
+   - **⭐ (ii) 不只是一个魔免错误**:Call 是**无目标 AoE 嘲讽**,把它挂在**单个**
+     `botTarget` 的属性上,连带丢掉**同一 315u 环里的其他所有敌人**。
+     一个带 BKB 的核心 + 两个脆辅助 = 一发三人 Call,出货 bot 一个都不放。
+   - **⭐⭐ 本轮最值钱的一格:能验的那一半和值钱的那一半不是同一半。**
+     7 个 Axe-subject fixture 上量到 **「Call 就绪」与「环内有敌人」从不共现**
+     (就绪 5 帧 / 环内 1 帧 / **共现 0**;唯一环内那帧 Call 在自己 18s cd 的 **17.0s** 上
+     —— Axe **刚放完**),零引导瞬间、零魔免瞬间 ⇒ (i) 需要**三个**翻转的反事实
+     (按 **2×2 逐个隔离**,不并池)。而 (ii) 的三条堵点**逐条量过**
+     (`botTarget` 恒 nil / GH #474、本帧 `IsGoingOnSomeone` false、唯一环内敌人
+     `IsDisabled` **true**)⇒ **只有源码级覆盖**(`zusaether` 处置)。
+     把三条都打桩去驱动它就是**接线测试**,AGENTS.md 明写那不算本地验证 ——
+     所以**不假装**,三条堵点各写成一条断言,**修好那天它红并说出来**。
+   - **⚠️ 归因边界,发波之前登记**:两支共用一个 id ⇒ 负读数**不能归因给其中任何一支**,
+     那时的下一棒是**拆 id**不是否掉事实。写在**三处**(helper 头注释 / `state.json` /
+     `queue.json:hero-30` 的 acceptance),因为它是事后最容易被读反的那种句子。
+   - **⛔ 不许把 `axecull` 的「下界由血量测试给定」搬过来**:那根有击杀保证,这根没有。
+     这根的下界是别的东西 —— (i) 靠「正在引导的敌人本来就没在攻击」,
+     (ii) 靠**上游未改动的** `J.IsGoingOnSomeone`(Axe 已经决定压上去了,
+     加宽只多出嘲讽 + 12/13/14/15 护甲;拉进环内其他敌人**不是新代价**,
+     目标不魔免时出货分支本来就放同一发)。
+   - **⚠️ 可迁移(本轮写进新 stand 的一道门)**:`sub()` **锚点不唯一也 abort**,不只是
+     缺失才 abort。`X.ConsiderQ` 与 `X.ConsiderR` **隔两百行各有一条几乎相同的魔免子句**,
+     `replace(..., 1)` 会打到另一处并记成 `SURVIVED`。`-91`/`-94` 各花一格才发现,
+     **这次第一次写进新 stand 而不是事后补**。
+   - **下一棒**:**批测台** `queue.json:hero-30`(零 EC2 归档只读扫描,可与 `hero-2`
+     并成同一次遍历,两支**分开报**,带 DOMAIN-NOT-REACHED 退回门与预登记判读方向)。
+     **总监不必裁入集** —— P4.2 冻结照旧,且读数**应当排在入集之前**(同 `-98` 的理由)。
+     **在 (a) 买到之前不许 promote。**
+   - 顺手(附带,不是主体):**GH #465 复核完毕** —— 录像检查组把 `nBand == 0` 改写成
+     `nBand == 1` + 指认那一对 + 注释里写算术,**措辞与算术都对,本组不动那个文件**;
+     §验收第 2 条同意。**issue 不关**(第 2 条是给未来的指示,`-98` 刚记过这类指示的读法)。
+
 -98. **注册杠杆 `hero-2` 落地了(gated `cullthresh`),而**四轮里没人写它**的那个理由,
    今天只剩一半 —— 另一半死在一个**供给事实**上不是一个论证上**
    (报告 `iterations/reports/hero/20260905T110023Z.md`,`state.json:cullthresh_20260905`;
@@ -4388,6 +4433,32 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T13:57Z(报告 `iterations/reports/hero/20260905T135708Z.md`;轴 **`axecull` 的兄弟落地:
+  Berserker's Call 不被魔免挡住,gated `axecallbkb`,turbo-only 未 armed**;新 backlog `-99`,
+  GH **#TBD**(本轮结尾登记),`state.json:axecallbkb_20260905`,`queue.json:hero-30`)
+  **`bots/BotLib/hero_axe.lua` 有真代码行**(新 `X.IsCallPierceOn` + `X.ConsiderQ` 两处子句);
+  新 `tests/test_axe_call_immune_veto.lua`(18 例)+ 新 `tools/agent/mutstand_axecallbkb.sh`
+  (8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#512 录像检查组 / #502→#516 harness / #488 录像组 / #477 总监 / #471+#459 总监+批测台),
+    backlog 前三条的下一棒也都在别人手上 ⇒ 取同一文件里已有先例的兄弟杠杆。
+  - **事实**:`axe_berserkers_call` `bkbpierce: "Yes"` / `behavior: No Target`(odota,
+    与 `axecull` 同源),仓内 `special_value_shapes.lua` 交叉核对 radius 315 / cd `18 16 14 12` /
+    mana `90 100 110 120` 逐位相同。⚠️ `bkbpierce` **没有 KV 字段**(GH #516 同族)⇒ 那一半仍 RECORDED。
+  - **⭐ (ii) 不只是魔免错误**:无目标 AoE 嘲讽被挂在单个 `botTarget` 上,连带丢掉同环其他敌人。
+  - **⭐⭐ 能验的那一半不是值钱的那一半**:7 帧上「Call 就绪」与「环内有敌人」**共现 0**
+    (唯一环内帧 Call 在 18s cd 的 **17.0s** 上)⇒ (i) 用**三翻转 + 2×2 隔离**的反事实;
+    (ii) 三条堵点**逐条量过**(nil `botTarget`/#474、`IsGoingOnSomeone` false、`IsDisabled` **true**)
+    ⇒ **只有源码级覆盖**,三条各写成断言,**修好那天红**。
+  - **⚠️ 两支共用一个 id ⇒ 负读数不可归因**,那时拆 id 不是否掉事实(写在三处)。
+  - 验证:新文件 **18/18**;`run_tests.lua axe` **181 例 0 失败**;`smoke` 3/0;
+    变异台 **8/8**(M4 死接线孪生、M6 被禁方向、M7/M8 两个对量具的对照);
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings),没用 BYPASS**。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒ 「全量绿」本轮没有人说。
+    开工自检 **worst exit 3**,FINDINGS = cadence / owed-executions / trunk-red(python),
+    **全部先于本轮改动**;**「main 是否也红」未做 stash 差分**。
+  - 顺手:**GH #465 复核完毕**(措辞与算术都对,本组不动那个文件,issue 不关)。
+  - 下一棒:**批测台** `queue.json:hero-30`(零 EC2,可与 `hero-2` 并成同一次遍历)。
 - 2026-09-05T11:00Z(报告 `iterations/reports/hero/20260905T110023Z.md`;轴 **注册杠杆 `hero-2`
   落地:Axe 斩杀线改读能力值,gated `cullthresh`,turbo-only 未 armed**;新 backlog `-98`,
   `state.json:cullthresh_20260905`)

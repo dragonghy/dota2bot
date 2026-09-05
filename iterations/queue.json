@@ -1705,6 +1705,17 @@
         "acceptance": "条件 (a) 只买一格,判据是「留没留下」不是「活没活下来」:armed 腿上存在这样的帧 —— bot 血量 [0.18,0.75]、1200 内无敌人、最近 3 秒被英雄伤害过、而打它的人不在 3000 内,并且它留在原地喝补给/继续待着;baseline 腿上同一情形回家。⛔ 不许拿胜负或存活率给这一格背书(那是把决策判据换成结果判据,诚实边界 4)。⚠️ 铁律 4(i-a):ab / ba 两个分层各自登记读数(不是局数);这是计数类且侧偏未消除的量 ⇒ 两层反号按 4(i-b) 读成噪声,不写进结论。方法失败分支:若该帧类别在 armed 腿上域为零(DOMAIN-NOT-REACHED)⇒ 退回总监重裁,执行方不得自行套用后果条款,更不许读成「测过了,杠杆没用」——域价钱已经量过:1012 活英雄帧里否决触发 95,其中 88 帧伤害确实来自 3000 内(杠杆在那里完全惰性),只有 7 帧无人可归属、互斥四分区里真翻转 1 帧。这个稀薄度是本裁定预期的,不是失败。",
         "condition_b": "(b) 胜负无明显负面按搭车波的粗粒度读数看;本 id 单独不发波、不单独归因经济。"
       }
+    },
+    {
+      "id": "hero-30",
+      "stream": "hero",
+      "bundle": "axecallbkb",
+      "seeds": [],
+      "priority": 3,
+      "question": "给 `axecallbkb` 买条件 (a) 的域。杠杆:axe_berserkers_call 的 bkbpierce 是 \"Yes\"(odota/dotaconstants build/abilities.json,2026-09-05 读;仓内 tests/mock/special_value_shapes.lua 对上 radius 315 / cd 18 16 14 12 / mana 90 100 110 120),而 bots/BotLib/hero_axe.lua X.ConsiderQ 有两处魔免否决:(i) 打断分支 `not npcEnemy:IsMagicImmune()`,(ii) 先手分支 `J.CanCastOnNonMagicImmune( botTarget )`。两处都是游戏里不存在的限制,且 (ii) 还额外把一个**无目标 AoE 嘲讽**挂在单个敌人的属性上,连带丢掉同环里的其他敌人。**先扫档案,不要为它单发波**(与 hero-2 同形:零 EC2 的只读扫描)。需要的读数,按两个分支分开报:(i) Axe 的 Q 就绪(已学、cd<=0、蓝够)且 265u 内有**正在引导**的敌方英雄的瞬间数,其中该敌人魔免的占比;(ii) Axe `IsGoingOnSomeone` 且当前目标在 225u 内、未被控住的瞬间数,其中该目标魔免的占比,以及**同一 315u 环里的其他敌方英雄数**(这一列是 (ii) 独有的价值项,不要省)。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,**两个分支分开给,不许并池**;并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧。**预登记的判读方向**:两个分支的魔免占比都接近 0 ⇒ 这根杠杆没有可兑现的收益,不入集,即使桌面证据完好;带 DOMAIN-NOT-REACHED 退回门。**预登记的归因边界**:两个分支共用一个 id,任何负读数**不能归因给其中任何一个** —— 那时的下一棒是**拆 id**,不是否掉事实(同一句话写在 X.IsCallPierceOn 的头注释里)。**供给前提**:hero-2 的 result 记着 2026-08-23 的 306 局里 Axe 出现 0 局,而 tests/fixtures/tl_260905_010226_axe_outchan.json(seed 4763)证伪了那一句 —— 本请求和 hero-2 可以**并成同一次遍历**。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [
