@@ -63,11 +63,20 @@ run_one() {
         +con_logfile "$conlog" \
         +map dota \
         > "$log.stdout" 2>&1 || true
-    # the console log is the parseable record; stdout kept for crash forensics
+    # the console log is meant to be the parseable record, but +con_logfile does
+    # not land on every AMI (Y1 2026-09-05: cp silently failed, every .log was
+    # absent, all 80 game JSONs came back 0 bytes). The stdout redirect captures
+    # the same "Match signout" scoreboard, so fall back to it: parse whichever of
+    # $log / $log.stdout is non-empty. A wave must never be lost to a missing con
+    # log when the stdout holds the identical record.
     cp "$DOTA_DIR/game/dota/$conlog" "$log" 2>/dev/null || true
-    echo "[game $i] finished ($(wc -l < "$log" 2>/dev/null || echo 0) log lines)"
-    python3 "$(dirname "$0")/parse_log.py" "$log" > "$OUT_DIR/game_${i}.json" || \
-        echo "[game $i] parse failed — inspect $log" >&2
+    local parse_src="$log"
+    if [ ! -s "$parse_src" ] && [ -s "$log.stdout" ]; then
+        parse_src="$log.stdout"
+    fi
+    echo "[game $i] finished ($(wc -l < "$parse_src" 2>/dev/null || echo 0) log lines; src=$(basename "$parse_src"))"
+    python3 "$(dirname "$0")/parse_log.py" "$parse_src" > "$OUT_DIR/game_${i}.json" || \
+        echo "[game $i] parse failed — inspect $parse_src" >&2
 }
 
 # simple job pool
