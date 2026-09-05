@@ -5922,5 +5922,21 @@
   "test_set_section": "§EU",
   "issue": "GH #521",
   "aws_spend": "零 AWS、零 S3、零 EC2、零波次"
+ },
+ "cullthresh_20260905": {
+  "date": "2026-09-05T10:xxZ",
+  "backlog_item": "OWNER_PRIORITIES P4.4(bots/ 主体配额)+ 注册杠杆 hero-2 / GH #115 §5",
+  "owner": "hero",
+  "gate": "cullthresh (NEW soak id, turbo-only, 未 armed;STANDALONE —— 不与任何 id 合取)",
+  "bots_lua_changed": true,
+  "headline": "Axe 的斩杀线是手写的 `150 + 100*lv` = 250/350/450,而 axe_culling_blade 的 KV 是 275/375/475 —— 出厂 bot 把自己的终结技低估 25 点,于是在 (250,275] 这条带上**放弃一次必杀**。2026-09-04 之前这个差只能从 odota 引;`kvgetters` 之后**它是一次真实帧上的读数**:`f_260820_043637_axe_ring_close.lua`(Culling rank 1、cd 0、286 蓝)上 `abilityR:GetSpecialValueInt('damage')` 答 **275**,同帧公式给 **250**。",
+  "star_main_judgement": "⭐ 主判据:**方向必须由构造保证,不能由数据保证。** 第一版闸写的是 `nLive > 0`(看上去显然够用,任何 gate 接线测试都过),而它让一个**小的正读数**把斩杀线**收窄** —— 这条杠杆唯一被禁止的方向,而且是静默的(没有任何 in-domain 计数器会报告「Axe 不再斩杀了」)。改成**出厂值当地板**(`nLive > nKillDamage`)之后,「只能加不能减」从一句关于数据的断言变成一条关于代码的性质。同族:`zusboltcap`(GH #175)的静默 0。**代价已登记**:若某个补丁把 KV 阈值调到低于手写值,本 helper 会保留旧的高值 —— 拦它的是两处 25 点棘轮(本轮新文件 §1 + preflight §1),它们先红并点名。",
+  "change": "bots/BotLib/hero_axe.lua:新 X.IsCullThresholdOn() + X.CullKillThreshold(nSkillLV);X.ConsiderR 的 `local nKillDamage = 150 + 100*nSkillLV` 与其下的 talent8 行整体移入 helper,调用点改为 `X.CullKillThreshold( nSkillLV )`。armed 时读 `abilityR:GetSpecialValueInt('damage')`,且**只在严格大于出厂值时**采用。talent8 行留在 helper 里、在 armed 早退**之上** —— special_bonus_unique_axe_5 的 +150 住在 KV 的 `damage` 里由引擎折叠,armed 再加一次就是重复计数。",
+  "direction_by_construction": "armed 值 = max(出厂值, 能力读数) ⇒ armed 的施法集是 shipped 的**严格超集**,方向由代码定死。gate 关时逐字复现出厂算术(含 talent 项)。",
+  "validation": "新 tests/test_axe_cull_threshold_gate.lua **21 例全绿**;Axe 全族 `run_tests.lua axe` **163 例 0 失败**(含三个按名字响了的兄弟棘轮,**全部重新对准而不是放松**:preflight §1 两例、band_power 的源码绊线、bkb_supply_staged_frame §3)。变异台 tools/agent/mutstand_cullthresh.sh **8/8 CAUGHT**,其中 **M4 是第一版真的写错的那个守卫**(`nLive > 0`),**M8 是对量具本身的对照**(把 KV 锚移到旧阶梯:§1 若仍绿,它读的就是自己的常数)。",
+  "domain_not_bought": "⛔ **没有买到会翻转的帧,而这个 0 是 fixture 库按构造答不了的。** 全语料(tests/fixtures + tests/frames)**29 个 Axe 瞬间 / 23 个 Culling 已学+不冷却+付得起 / 3 行环内敌人 / 带内 0**(八月 preflight 同口径读到 26/20/3/0 ⇒ 漏斗长了,零没动)。preflight 的 NARROW-BAND-UNMEASURABLE 判词**对 fixture 库仍然成立**,本轮没有推翻它。",
+  "what_expired": "⭐ 过期的是**另一半**,而且过期在一个供给事实上不是一个论证上:tests/test_axe_culling_band_power.lua(2026-08-30)已证 1Hz 时间线可以按**穿越**定价(p = min(1, band/(v·dt)),式子里没有血池项);挡住穿越计数的是「归档里 Axe 出现 0/306 局」(批测台 2026-08-23)—— 而 `tests/fixtures/tl_260905_010226_axe_outchan.json`(run spot_20260905_003250,**seed 4763**)是一段逐字切自归档 dumper 时间线、subject 就是 axe 的语料 ⇒ **那句话今天为假**。⇒ 这根杠杆从『量不到』变成『还没量』,而**还没量正是 gate 的用途**。",
+  "next_baton": "批测台:按 queue.json:hero-2 新增的 `supply_unblocked_hero_20260905` 做归档**穿越**扫描(零 EC2,总监 §BF.2 早已路由放行)。拿回一个 (game, t) 本组直接钉帧并申请入集。**在拿到那个读数之前不要 promote `cullthresh`** —— 三条件里 (a) 一格都没买。",
+  "limits": "⚠️ 全量 Lua 套件(~100min,GH #124)本轮**没跑完**,『全绿』这句话本轮**没有人说**;跑到的是 `run_tests.lua axe` 163 例 + gate/soak/talent/dead_* 邻接组。⚠️ 本组只证明了归档里**存在**含 Axe 的对局,**没有**量它有多少局。"
  }
 }

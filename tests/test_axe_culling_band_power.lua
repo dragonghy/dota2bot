@@ -413,19 +413,40 @@ end
 
 -- 6. Source tripwires: everything above reads the shipped code as it is TODAY.
 
-tests['[hero] ConsiderR still decides the execute with that one constant'] = function()
+-- RE-AIMED 2026-09-05, hero-2 LANDED (gated `cullthresh`; see
+-- tests/test_axe_cull_threshold_gate.lua).  The case below used to end with
+--
+--     assert(not body:find('IsSoakCandidate'), '... if a gate appeared, hero-2
+--     landed -- retire this file rather than editing the numbers')
+--
+-- and the instruction is half taken: NO NUMBER IN THIS FILE IS EDITED.  What the
+-- instruction did not anticipate is that hero-2 landed GATED, so the crossing model
+-- in sections 1-5 -- the thing this file exists for -- is not retired evidence, it
+-- is the METHOD the wave must use to size `cullthresh`.  Retiring the file would
+-- delete the pricing at the moment it became load-bearing.  So the file lives and
+-- only this tripwire moves: the band it prices is still (150 + 100*lv, damage[lv]],
+-- and that arithmetic is now the gate-off floor inside X.CullKillThreshold.
+tests['[hero] the execute is still decided by that one constant -- now as the gate-off floor'] = function()
     local src = read_file(AXE)
-    local nAt = (src:find('function X.ConsiderR', 1, true))
-    assert(nAt, 'X.ConsiderR must still exist in ' .. AXE)
+    local nAt = (src:find('function X.CullKillThreshold', 1, true))
+    assert(nAt, 'X.CullKillThreshold must exist in ' .. AXE
+        .. ' -- the shipped ladder moved there when hero-2 landed gated')
     local body = src:sub(nAt)
-    body = body:sub(1, (body:find('\nend', 1, true)))
+    body = body:sub(1, (body:find('\nfunction X%.') or #body))
     assert(body:find('local nKillDamage = 150 + 100 * nSkillLV', 1, true),
-        'the hardcoded ladder must still live inside ConsiderR')
-    assert(body:find('GetHealth() + npcEnemy:GetHealthRegen() * 0.8 < nKillDamage', 1, true),
-        'and the execute must still be the comparison this file prices')
-    assert(not body:find('IsSoakCandidate', 1, true),
-        'the execute is UNGATED shipped behaviour; if a gate appeared, hero-2 landed -- '
-        .. 'retire this file rather than editing the numbers')
+        'the hardcoded ladder must still be the gate-off value; the band this file '
+        .. 'prices is measured from it')
+
+    local rAt = (src:find('function X.ConsiderR', 1, true))
+    assert(rAt, 'X.ConsiderR must still exist in ' .. AXE)
+    local rbody = src:sub(rAt)
+    rbody = rbody:sub(1, (rbody:find('\nend', 1, true)))
+    assert(rbody:find('GetHealth() + npcEnemy:GetHealthRegen() * 0.8 < nKillDamage', 1, true),
+        'the execute must still be the comparison this file prices')
+    assert(rbody:find('X.CullKillThreshold( nSkillLV )', 1, true),
+        'ConsiderR must reach the threshold through the gated helper; if the constant '
+        .. 'came back inline, `cullthresh` is bypassed and this file is pricing a band '
+        .. 'nothing can act on')
 end
 
 return tests

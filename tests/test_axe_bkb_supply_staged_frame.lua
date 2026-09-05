@@ -526,9 +526,23 @@ tests['[ratchet] section 3: the ring and the threshold still have the SHAPE this
     assert(body:find('J%.GetAroundEnemyHeroList%( nCastRange %+ 200 %)'),
         'the branch no longer iterates the cast range + 200 ring; RING = ' .. RING
         .. ' in this file was derived from it')
-    assert(body:find('local nKillDamage = 150 %+ 100 %* nSkillLV'),
-        'the execute threshold is no longer 150 + 100 * rank; every "below the '
+    -- RE-AIMED 2026-09-05.  `150 + 100 * nSkillLV` left ConsiderR when hero-2 landed
+    -- as the gated candidate `cullthresh` (tests/test_axe_cull_threshold_gate.lua):
+    -- it is now the GATE-OFF value inside X.CullKillThreshold, which is the shape
+    -- every "below the threshold" reading in this file was taken under, since no
+    -- reading here arms anything.  Checked where it lives now rather than relaxed --
+    -- if the shipped ladder changes, this file's readings are stale either way.
+    local cAt = src:find('function X%.CullKillThreshold%s*%(')
+    assert(cAt, 'X.CullKillThreshold not found in ' .. SRC
+        .. ' -- the shipped execute threshold moved somewhere this ratchet cannot see')
+    local cbody = src:sub(cAt)
+    cbody = cbody:sub(1, cbody:find('\nfunction X%.') or #cbody)
+    assert(cbody:find('local nKillDamage = 150 %+ 100 %* nSkillLV'),
+        'the gate-off execute threshold is no longer 150 + 100 * rank; every "below the '
         .. 'threshold" reading in this file used that shape')
+    assert(body:find('X%.CullKillThreshold%( nSkillLV %)'),
+        'ConsiderR no longer reaches the threshold through the helper, so this file '
+        .. 'cannot tell which value its readings were taken under')
 end
 
 -- ---------------------------------------------------------------- section 4 --

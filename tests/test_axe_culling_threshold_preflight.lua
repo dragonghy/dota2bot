@@ -238,18 +238,66 @@ end
 -- The arithmetic.  A ratchet on the source: it states what the shipped constant is
 -- and what it is worth, so a fix cannot land silently.
 
-T['section 1: the shipped constant is still the stale hardcode'] = function()
-    local body = consider_r_body(read_file(SRC))
-    assert(body:find('local nKillDamage = 150 %+ 100 %* nSkillLV'), [[
-X.ConsiderR no longer computes nKillDamage as `150 + 100 * nSkillLV`.
+-- ============================================================================
+-- THE RATCHET FIRED, 2026-09-05.  hero-2 LANDED -- gated, as `cullthresh`.
+-- ============================================================================
+-- This section used to assert that `local nKillDamage = 150 + 100 * nSkillLV` was
+-- still standing in X.ConsiderR, and its failure text told whoever tripped it to
+-- "delete sections 1 and 2 of this file ... and note that the domain was never
+-- sized ... this change ships on the source-correctness argument in the header,
+-- not on a measured frame."
+--
+-- HALF of that instruction is taken and half is DELIBERATELY NOT, and the
+-- difference is the one thing the instruction could not have known: the fix landed
+-- BEHIND A GATE (bots/BotLib/hero_axe.lua X.CullKillThreshold /
+-- J.IsSoakCandidate('cullthresh'), turbo-only, unarmed), not ungated on the
+-- source-correctness argument.
+--
+--   * Section 1 is RE-AIMED, not deleted.  The invariant it protected -- "a fix
+--     cannot land silently" -- is still wanted, because the gate-off path must keep
+--     reproducing the stale constant byte for byte or "inert when unarmed" stops
+--     being checkable by reading.  Deleting it would retire the guard on the
+--     shipped half at the exact moment there are two halves to tell apart.
+--   * Section 2 is KEPT VERBATIM.  Its tripwire names the frame the day the band is
+--     occupied, and a gated lever still needs that frame -- more than an ungated one
+--     would, because the gate exists precisely because the domain is unsized.
+--   * The header's UNDERPOWERED verdict STANDS for a fixture library.  What expired
+--     is the OTHER half, and it expired on a supply fact rather than on an argument:
+--     tests/test_axe_culling_band_power.lua (2026-08-30) showed 1 Hz timelines size
+--     this by counting CROSSINGS, and the reason nobody could count them -- Axe in
+--     0 of 306 archived games, batch desk 2026-08-23 -- is falsified by
+--     tests/fixtures/tl_260905_010226_axe_outchan.json (seed 4763, an archived
+--     timeline whose subject is an Axe).
+--
+-- Landing record: iterations/reports/hero/ 2026-09-05, and the new file
+-- tests/test_axe_cull_threshold_gate.lua, which owns the behaviour of the armed
+-- path.  This file keeps owning the DOMAIN question.
+T['section 1: the gate-off path still reproduces the stale hardcode'] = function()
+    local src = read_file(SRC)
+    local at = src:find('function X%.CullKillThreshold%s*%(')
+    assert(at, [[
+X.CullKillThreshold is gone from bots/BotLib/hero_axe.lua.
 
-If you have just replaced it with abilityR:GetSpecialValueInt('damage'), that is
-the fix this pre-flight recommends -- and this test is the ratchet that was meant
-to notice.  Do not "repair" it by restoring the constant.  Delete sections 1 and 2
-of this file, record the change in iterations/state.json, and note that the domain
-was never sized: the band was never shown to be occupied, so this change ships on
-the source-correctness argument (bidirectional staleness) in the header, not on a
-measured frame.]])
+That helper is where hero-2 put the threshold: the ability read behind the
+`cullthresh` gate, and the stale `150 + 100 * nSkillLV` as the gate-off value.  If
+it has been removed, find out which of the two survived before touching this file --
+a tree where the armed value became unconditional is a PROMOTE and must be recorded
+as one, and a tree where the constant came back inline is a revert.]])
+    local body = src:sub(at)
+    body = body:sub(1, body:find('\nfunction X%.') or #body)
+    assert(body:find('local nKillDamage = 150 %+ 100 %* nSkillLV'), [[
+The gate-off path no longer computes nKillDamage as `150 + 100 * nSkillLV`.
+
+While `cullthresh` is unarmed the shipped tree must behave exactly as it did before
+hero-2 landed.  If the constant is gone, the change is no longer inert in real games
+and is no longer a soak candidate -- promote it deliberately and record it, do not
+let it happen by edit.]])
+
+    local rbody = consider_r_body(src)
+    assert(rbody:find('X%.CullKillThreshold%( nSkillLV %)'), [[
+X.ConsiderR no longer routes its threshold through X.CullKillThreshold, so the gate
+is bypassed.  Section 2's domain reading below is taken against the gate-off value;
+if ConsiderR reads something else, this whole file is measuring a band nothing acts on.]])
 end
 
 T['section 1: the constant under-states Culling Blade by exactly 25 at every level'] = function()
@@ -263,13 +311,28 @@ T['section 1: the constant under-states Culling Blade by exactly 25 at every lev
     end
 end
 
-T['section 1: the fix reads a value the function already knows how to read'] = function()
-    local body = consider_r_body(read_file(SRC))
-    assert(body:find('GetSpecialValueInt'), [[
-X.ConsiderR no longer calls GetSpecialValueInt anywhere.  The pre-flight's claim
-that the honest fix is de-risked rests on that API already being in use in this very
-function (on talent8, one line below nKillDamage).  If it is gone, re-check that the
-API is available before recommending it.]])
+-- RE-AIMED with the case above.  This used to check that GetSpecialValueInt was
+-- already in use inside X.ConsiderR -- the evidence that the recommended fix was
+-- de-risked.  The fix is now WRITTEN, so the claim it supported is spent; what is
+-- worth keeping is the assertion that the recommended read is the one that landed,
+-- on the ability handle and on the `damage` key, rather than a re-hardcode of
+-- today's numbers under a gate.
+T['section 1: the fix that landed is the READ this pre-flight recommended'] = function()
+    local src = read_file(SRC)
+    local at = assert(src:find('function X%.CullKillThreshold%s*%('),
+        'X.CullKillThreshold not found -- see the case above')
+    local body = src:sub(at)
+    body = body:sub(1, body:find('\nfunction X%.') or #body)
+    assert(body:find("abilityR:GetSpecialValueInt%( 'damage' %)"), [[
+The armed path no longer reads abilityR:GetSpecialValueInt('damage').
+
+That read IS the fix: it is what makes the threshold survive a patch that moves the
+ladder, and it is what folds the +150 talent the shipped arithmetic can never see.
+A gate that instead hardcodes 275/375/475 buys the 25 points once and re-acquires
+the staleness the moment Valve edits the KV -- which is the defect, not the fix.]])
+    assert(not body:find('275') and not body:find('475'), [[
+The armed path names today's KV numbers literally.  Read them off the ability; a
+constant behind a gate is still a constant.]])
 end
 
 -- ---------------------------------------------------------------- section 2 --

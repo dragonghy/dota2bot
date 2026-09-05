@@ -891,6 +891,86 @@ function X.IsCullPierceOn()
 end
 
 
+--- Soak candidate `cullthresh` (turbo-only, INERT until armed) -- the registered
+--- `hero-2` lever, written 2026-09-05.  GH #115 section 5 / GH #146.
+---
+--- THE FACT, and it is now read off a REAL FRAME rather than a datafeed.  The
+--- shipped estimate of Axe's own finisher is `150 + 100 * lv` = 250/350/450.  The
+--- game's own KV says axe_culling_blade / AbilityValues / damage = `275 375 475`
+--- (tests/mock/special_value_shapes.lua, generated from npc_dota_hero_axe.txt), and
+--- on tests/fixtures/f_260820_043637_axe_ring_close.lua -- a real Axe instant with
+--- Culling at rank 1 -- `abilityR:GetSpecialValueInt('damage')` answers 275 against
+--- the formula's 250.  The bot therefore under-states its execute threshold by 25
+--- at every rank and declines a guaranteed kill whenever a target sits in the
+--- 25-point band (150 + 100*lv, damage[lv]].
+---
+--- WHY IT IS A GATE.  It strictly WIDENS the only test the branch has, i.e. it ADDS
+--- casts, and this stream ships an action-adding change dark until a wave has sized
+--- its domain.  Gate OFF this returns the shipped arithmetic INCLUDING the dead
+--- talent term, so the unarmed tree is byte-equivalent to what shipped.
+---
+--- THE TALENT TERM IS INSIDE THE ARMED READ, NOT BESIDE IT.  `special_bonus_unique_axe_5`
+--- (+150) lives inside axe_culling_blade / damage, where the engine folds it; the
+--- shipped `talent8` line added it a second time from a hero-UNIQUE talent handle
+--- that owns no KV block and therefore answers 0.  Adding it to the armed value
+--- would double-count the day that handle ever answers.  So the armed branch
+--- returns before the talent line -- this is the "drop this line in the same
+--- change" the old comment here asked for.
+---
+--- THE DIRECTION IS STRUCTURAL, NOT HOPED FOR.  A getter that silently answers 0
+--- is how `zusboltcap` (GH #175) turned an AoE health filter into "is anyone
+--- there"; here a degenerate read would collapse the threshold and stop Axe culling
+--- ENTIRELY -- a silent regression in the OPPOSITE direction to the one being
+--- fixed, which no in-domain counter would ever report.  So the armed value is
+--- taken only when it is STRICTLY GREATER than the shipped one, which makes "this
+--- lever can only add casts" a property of the code rather than of the data.  A
+--- first draft guarded with `nLive > 0` instead and its own direction test caught
+--- that a small positive read (1) narrows the test; do not weaken it back.
+--- The cost of the strictness, stated so it can be argued with: if a patch ever
+--- LOWERS the KV threshold below 150 + 100*lv, this helper keeps the stale, higher
+--- constant and Axe would cull targets it cannot kill.  That is why the 25-point
+--- gap is a ratchet in two places (tests/test_axe_cull_threshold_gate.lua section 1
+--- and tests/test_axe_culling_threshold_preflight.lua section 1): both go RED and
+--- name the new ladder before this branch could act on it.
+---
+--- WHAT IS NOT KNOWN, and it is a band not an existence question.  The domain is a
+--- 25-point strip on a continuous quantity.  Measured over this repo's whole frame
+--- corpus (tests/fixtures/ + tests/frames/, 2026-09-05): 29 Axe instants, 24 with
+--- Culling learned and off cooldown, 3 in-ring enemy rows, band occupied ZERO times
+--- -- the same funnel tests/test_axe_culling_threshold_preflight.lua measured in
+--- August, and its verdict NARROW-BAND-UNMEASURABLE stands FOR A FIXTURE LIBRARY.
+--- What changed is the other half: tests/test_axe_culling_band_power.lua (2026-08-30)
+--- showed 1 Hz timelines CAN size this by counting CROSSINGS, and the blocker that
+--- left -- "the archive holds no game with Axe in it" (batch desk 2026-08-23,
+--- 0/306) -- is falsified by tests/fixtures/tl_260905_010226_axe_outchan.json, a
+--- verbatim slice of an archived dumper timeline from seed 4763 that carries an Axe.
+--- Size it on crossings; do NOT promote this on the (c) argument alone.
+function X.IsCullThresholdOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'cullthresh' )
+
+end
+
+
+function X.CullKillThreshold( nSkillLV )
+
+	local nKillDamage = 150 + 100 * nSkillLV
+	if talent8 ~= nil and talent8:IsTrained() then nKillDamage = nKillDamage + talent8:GetSpecialValueInt( 'value' ) end
+
+	if X.IsCullThresholdOn()
+	then
+		local nLive = abilityR:GetSpecialValueInt( 'damage' )
+		if type( nLive ) == 'number' and nLive > nKillDamage
+		then
+			return nLive
+		end
+	end
+
+	return nKillDamage
+
+end
+
+
 function X.ConsiderR()
 
 
@@ -908,35 +988,14 @@ function X.ConsiderR()
 	local nCastPoint = abilityR:GetCastPoint()
 	local nManaCost = abilityR:GetManaCost()
 	
-	-- REGISTERED LEVER, NOT TAKEN THIS ROUND (hero stream, 2026-08-22).  This
-	-- constant is stale: 150 + 100*lv is 250/350/450, and Culling Blade's damage on
-	-- the live datafeed (hero_id 2) is 275/375/475.  So the bot under-states its own
-	-- finisher by 25 pure damage at every level and declines a Culling that would in
-	-- fact kill whenever the target sits in the 25-point band above the estimate.
-	-- The honest fix is to read it off the ability (abilityR:GetSpecialValueInt(
-	-- 'damage' )) rather than to re-hardcode today's numbers.  It is NOT done here
-	-- because it ADDS a cast rather than removing one, and this stream ships an
-	-- action-adding change only with a real frame and a sized domain -- neither of
-	-- which this round bought.  PRE-REGISTERED DOMAIN for whoever picks it up:
-	-- frames where Culling is off cooldown, the target is inside 175, and its
-	-- current health falls in (150 + 100*lv, ability damage] -- count episodes, not
-	-- frames.
-	local nKillDamage = 150 + 100 * nSkillLV
-	-- FACT, 2026-08-26 (GH #228, axis TALENTVALUE), and this is the ONE site in the
-	-- focus five where "the dead term is harmless" does NOT follow.  The term is 0 for
-	-- the usual structural reason -- special_bonus_unique_axe_5 is hero-UNIQUE, unique
-	-- talents own no KV block, so the handle answers no key.  Its +150 lives inside
-	-- axe_culling_blade / "damage", where the engine folds it.  Everywhere else the
-	-- base was read off the ability, so the fold already delivered the bonus and the
-	-- dead term cost nothing.  HERE THE BASE IS HARDCODED one line up, so no fold
-	-- reaches it: this kill-check is short the talent as well as short the 25/level the
-	-- lever below already documents.  Both are collected by the SAME repair -- read the
-	-- base off `abilityR:GetSpecialValueInt('damage')` -- which is the registered
-	-- `hero-2` lever, deliberately not taken here (it ADDS a cast; see the note above).
-	-- Whoever takes it: drop this line in the same change, or the fold and the term
-	-- double-count.
-	if talent8 ~= nil and talent8:IsTrained() then nKillDamage = nKillDamage + talent8:GetSpecialValueInt( 'value' ) end
-	
+	-- The registered `hero-2` lever, TAKEN 2026-09-05 and GATED -- the stale
+	-- 150 + 100*lv (250/350/450) against the ability's real 275/375/475, and with it
+	-- the double-count risk the old note here flagged in the `talent8` line.  Both
+	-- now live inside X.CullKillThreshold, which reduces to the shipped arithmetic
+	-- byte for byte while `cullthresh` is unarmed; read that helper's header for the
+	-- fact, the degenerate-read guard, and what the domain still owes.
+	local nKillDamage = X.CullKillThreshold( nSkillLV )
+
 	local nDamageType = DAMAGE_TYPE_PURE
 	local nInRangeEnemyList = J.GetAroundEnemyHeroList( nCastRange )
 	local nInBonusEnemyList = J.GetAroundEnemyHeroList( nCastRange + 200 )
