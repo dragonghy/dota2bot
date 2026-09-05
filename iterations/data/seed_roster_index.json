@@ -2582,7 +2582,9 @@
   "spot_20260904_183145_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b8fa5b",
   "spot_20260904_183148_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_1bfa3d",
   "spot_20260904_183151_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b30fe4",
-  "spot_20260904_183153_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_9782b8"
+  "spot_20260904_183153_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_9782b8",
+  "spot_20260905_003246_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b34547",
+  "spot_20260905_003250_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_695907"
  ],
  "seeds": {
   "101": {
@@ -9838,10 +9840,10 @@
     "lion",
     "spirit_breaker"
    ],
-   "games": 10,
+   "games": 53,
    "games_by_cand_side": {
-    "dire": 0,
-    "radiant": 10
+    "dire": 15,
+    "radiant": 38
    },
    "off_roster_games": 0,
    "positions": {
@@ -9865,7 +9867,8 @@
     "zuus"
    ],
    "runs": [
-    "spot_20260904_183145_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b8fa5b"
+    "spot_20260904_183145_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b8fa5b",
+    "spot_20260905_003246_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b34547"
    ],
    "variants": [
     {
@@ -9876,10 +9879,10 @@
       "lion",
       "spirit_breaker"
      ],
-     "games": 10,
+     "games": 53,
      "games_by_cand_side": {
-      "dire": 0,
-      "radiant": 10
+      "dire": 15,
+      "radiant": 38
      },
      "radiant": [
       "bristleback",
@@ -9889,7 +9892,8 @@
       "zuus"
      ],
      "runs": [
-      "spot_20260904_183145_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b8fa5b"
+      "spot_20260904_183145_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b8fa5b",
+      "spot_20260905_003246_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b34547"
      ]
     }
    ]
@@ -9905,10 +9909,10 @@
     "spirit_breaker",
     "tidehunter"
    ],
-   "games": 30,
+   "games": 72,
    "games_by_cand_side": {
-    "dire": 1,
-    "radiant": 29
+    "dire": 13,
+    "radiant": 59
    },
    "off_roster_games": 0,
    "positions": {
@@ -9932,7 +9936,8 @@
     "venomancer"
    ],
    "runs": [
-    "spot_20260904_183151_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b30fe4"
+    "spot_20260904_183151_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b30fe4",
+    "spot_20260905_003250_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_695907"
    ],
    "variants": [
     {
@@ -9943,10 +9948,10 @@
       "spirit_breaker",
       "tidehunter"
      ],
-     "games": 30,
+     "games": 72,
      "games_by_cand_side": {
-      "dire": 1,
-      "radiant": 29
+      "dire": 13,
+      "radiant": 59
      },
      "radiant": [
       "axe",
@@ -9956,7 +9961,8 @@
       "venomancer"
      ],
      "runs": [
-      "spot_20260904_183151_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b30fe4"
+      "spot_20260904_183151_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b30fe4",
+      "spot_20260905_003250_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_695907"
      ]
     }
    ]
