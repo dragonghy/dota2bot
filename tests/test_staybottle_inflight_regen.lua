@@ -66,6 +66,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local SWEEP = 'lua5.1 tests/_staybottle_sweep.lua 2>/dev/null'
 local JMZ   = 'bots/FunLib/jmz_func.lua'
@@ -166,9 +167,18 @@ tests['[source] one id per condition -- the pullcad trap, not the id count'] = f
     assert(M.g.STAY_IDS_MAX_PER_COND == 1, 'some single condition in '
         .. 'J.ShouldStayAndRegen names ' .. tostring(M.g.STAY_IDS_MAX_PER_COND)
         .. ' soak ids -- that is the pullcad trap')
-    assert(M.g.STAY_NIDS == 3, 'J.ShouldStayAndRegen names '
-        .. tostring(M.g.STAY_NIDS) .. " soak ids; expected 3 ('stayattr' on the "
-        .. "chase clause, 'staysrc' and 'staybottle' on the supply clause)")
+    -- [staybag 2026-09-05] This read `== 3` for three hours. The total is a
+    -- PROXY for the trap and the trap's actual shape is the line above it; a
+    -- fourth INDEPENDENT lever ('staybag', its own `if`, sharing no condition
+    -- with any other) turned it red on a tree that has no trap on it. Exactly
+    -- the recurrence tests/test_stayattr_global_ult.lua:155 already wrote down
+    -- when 'staysrc' did it to `== 1`, and this file laid the same trap again on
+    -- the same day. The floor still refuses a deletion that makes the function
+    -- id-free.
+    assert(M.g.STAY_NIDS >= 3, 'J.ShouldStayAndRegen names '
+        .. tostring(M.g.STAY_NIDS) .. " soak ids; expected at least 3 ('stayattr'"
+        .. " on the chase clause, 'staysrc' and 'staybottle' on the supply "
+        .. 'clause)')
 end
 
 tests['[source] appended, never inserted -- the sibling must be untouched'] = function()
@@ -218,9 +228,15 @@ end
 -- ------------------------------------------------------- the domain price ---
 
 tests['[domain] the corpus, and what reaches the supply clause'] = function()
-    assert(C('live') == 1012, 'live hero frames: ' .. C('live')
-        .. ' -- the corpus changed size, so every count below is a new number')
-    assert(C('fixtures') == 109, 'fixtures: ' .. C('fixtures'))
+    -- [GH #538, 2026-09-05] These two were written as equalities against the
+    -- corpus size the day this file landed (`== 109` / `== 1012`), which is the
+    -- GH #106 / #127 defect: the next fixture turns them red without anything
+    -- this file measures having moved. Both are sums over an append-only corpus,
+    -- so the honest pins are the floor and the ratchet -- a count that FALLS is
+    -- still the behaviour change these lines were written to catch. The sibling
+    -- file (test_staysrc_field_supply.lua:339) already did it this way.
+    cs.corpus(C('fixtures'), 'fixture corpus')
+    cs.ratchet(C('live'), 1012, 'live hero frames')
     assert(C('turbo') == C('live'),
         'some live frame is not turbo, which the first line of the function '
         .. 'would have vetoed before anything this file measures')
@@ -457,11 +473,19 @@ tests['[wiring] the gate is real and the comment claims only what exists'] = fun
     local _, n = src:gsub("IsSoakCandidate%( 'staybottle' %)", '')
     assert(n == 1, "'staybottle' appears in " .. n
         .. ' conditions in this file; expected exactly 1')
-    local repo = src .. read_file(RETREAT)
-        .. read_file('bots/ability_item_usage_generic.lua')
+    -- [staybag 2026-09-05] Comments are stripped before this count. What the
+    -- assertion means is "one ARMING POINT", and a raw text count does not say
+    -- that: a sibling lever landing next door mentioned this id in its own
+    -- explanation and this line went red on a tree with exactly one arming
+    -- point -- the third time in one day that a count over raw source stood in
+    -- for a structural claim in this family (GH #538 was the first, the
+    -- STAY_NIDS floor the second).
+    local repo = (src .. read_file(RETREAT)
+        .. read_file('bots/ability_item_usage_generic.lua')):gsub('%-%-[^\n]*', '')
     local _, m = repo:gsub("'staybottle'", '')
     assert(m == 1, "'staybottle' appears " .. m
-        .. ' times across the three files that decide the trip home; expected 1')
+        .. ' times in CODE across the three files that decide the trip home; '
+        .. 'expected 1')
 end
 
 return tests

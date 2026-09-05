@@ -275,7 +275,28 @@ local PINNED = {
     -- those two clauses.  Measured for the new pair rather than inherited:
     -- 'staysrc' alone flips 44 frames, 'staybottle' alone flips 1, and the
     -- overlap is 0, so a single-arm wave CAN see this one.
-    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybottle,staysrc | bots/mode_retreat_generic.lua",       -- P
+    -- [staybag 20260905] The FOURTH id joined this row the same day, on the same
+    -- supply clause again, and it is the one that answers this row's own
+    -- question in the OTHER direction.  Also (P), by the same short-circuit
+    -- argument: `not bHasRegen and IsSoakCandidate( 'staybag' )` leaves
+    -- `bHasRegen` at its shipped value un-armed, and it is APPENDED after the
+    -- 'staybottle' block, so both siblings' un-armed evaluation is
+    -- byte-identical.  Direction additive by construction;
+    -- tests/_staybag_sweep.lua drives both legs over the same 1012 live frames
+    -- and `flip_true_to_false` is 0.
+    -- ⭐ WHY IT EXISTS AT ALL, and it is this file's own thesis with the gates
+    -- one call apart.  A backpacked salve was ALREADY reachable from this
+    -- function -- through the row below (J.HasFieldRegenSource under 'bagsalve')
+    -- -- but only with 'staysrc' AND 'bagsalve' armed TOGETHER: 'staysrc' to get
+    -- the callee called, 'bagsalve' to make its backpack block run.  Each SITE
+    -- names one id, so no grep for "two ids in one condition" sees it.  Measured
+    -- rather than argued: 'staysrc' alone flips 44 frames, 'bagsalve' alone
+    -- flips 0 (its own gate is never reached), the PAIR flips 46 -- and the 2
+    -- frames the pair adds are exactly the 2 this standalone lever buys with one
+    -- arm (`pair_gain` == `flips`, `pair_gain_not_flips` == 0).  That is the
+    -- (A)-row's safety argument holding and the WAVE still being unable to see
+    -- the behaviour: additive-and-safe is not the same as single-arm-visible.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
     "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P
@@ -383,7 +404,15 @@ local PINNED = {
     -- 'staysrc' the `and` short-circuits before the callee is reached at all --
     -- tests/_staysrc_sweep.lua's `arm_leak` counter drives 'bagsalve' through
     -- the stub on all 1012 live frames and reads 0.
-    "stayattr,staybottle,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                    -- A
+    -- [staybag 20260905] The outer-id column grew a fourth id (the new lever
+    -- reads the backpack DIRECTLY and never calls this callee), and the pair it
+    -- documents is now measured rather than only argued safe: 'staysrc' alone
+    -- flips 44 frames, 'bagsalve' alone 0, the pair 46.  (A) still holds -- the
+    -- callee is additive-only -- and that is exactly the point worth carrying
+    -- out of this row: (A) says arming the OUTER id alone still measures the
+    -- outer id; it does NOT say the inner id's own behaviour is reachable by any
+    -- single-arm wave.  Here it was not, for the whole time this row read safe.
+    "stayattr,staybag,staybottle,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",             -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
 }
 

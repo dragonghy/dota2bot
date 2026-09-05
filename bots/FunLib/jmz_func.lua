@@ -5227,6 +5227,69 @@ function J.ShouldStayAndRegen( bot )
 	if not bHasRegen and J.IsSoakCandidate( 'staybottle' ) then
 		bHasRegen = bot:HasModifier( 'modifier_bottle_regeneration' )
 	end
+	-- [staybag / owner priority P2, 2026-09-05] The BACKPACK half of the same
+	-- supply read, and the reason it needs an id of its own rather than a wider
+	-- sibling.
+	--
+	-- The defect, stated as slots: every stock read on this PROMOTED path stops
+	-- at slot 5. The shipped `bHasFlask` above asks J.IsItemAvailable, whose own
+	-- body is `slot >= 0 and slot <= 5` (jmz_func ~1758); the 'staysrc' widening
+	-- asks J.HasFieldRegenSource, whose main loop is `for i = 0, 5`. So a hurt,
+	-- unchased bot with a salve in the BACKPACK reads as carrying nothing, the
+	-- decision falls to `bot:GetGold() < 90`, and it is released to walk or TP
+	-- home -- the trip owner priority P2 forbids, while holding the very item the
+	-- family exists to keep it in the field with.
+	--
+	-- ⭐ WHY A BACKPACKED SALVE IS GENUINELY DRINKABLE, and why this widening is
+	-- one item wide. `TrySwapInvItemForFlask()` (mode_team_roam_generic.lua:1889)
+	-- swaps a backpacked flask into a main slot; it is SHIPPED and carries no
+	-- candidate gate, and it runs from ItemOpsDesire on every frame for every live
+	-- hero. There is no shipped swapper for tango / tango_single / faerie_fire /
+	-- bottle -- those four really are stuck where they land, and counting them
+	-- here would hold a bot next to something it cannot drink. That is the same
+	-- argument, item for item, that J.HasFieldRegenSource's own 'bagsalve' block
+	-- was written on (GH #123); this line does not widen it, it brings it to the
+	-- one path that is live in every turbo game.
+	--
+	-- ⭐⭐ WHY NOT JUST REUSE THE SIBLING, and it is the load-bearing part: today
+	-- a backpacked salve is reachable from this function ONLY when 'staysrc' AND
+	-- 'bagsalve' are armed together -- the first to get J.HasFieldRegenSource
+	-- called at all, the second to make its backpack block execute. Each SITE
+	-- names exactly one id, so this is not the 'pullcad' shape that
+	-- check_armed_wiring.py and the reviewers look for (two ids in one
+	-- condition); it is the same trap spread over a CALL, where every site reads
+	-- clean and the conjunction only exists on the path. A single-arm isolation
+	-- wave therefore reads a correct zero for both ids, and the day either one is
+	-- promoted the pair stops existing as a pair. This block is the standalone
+	-- form: one id, one site, visible to a single-arm wave.
+	--
+	-- Direction is fixed by CONSTRUCTION: it can only widen `bHasRegen`, which can
+	-- only remove vetoes, so the armed TRUE set is a strict superset of the
+	-- shipped one. Appended AFTER the 'staybottle' block, never inserted into it,
+	-- so with this id un-armed both sibling levers evaluate byte-identically.
+	-- Turbo is structural: the first line of this function already asked.
+	--
+	-- Honest bounds. (1) Domain, as a number rather than a hope: 15 of 1012 live
+	-- hero frames carry a backpacked salve and NONE of them carries a main-slot
+	-- regen source, so this lever and 'staysrc' cannot both be crediting the same
+	-- frame; tests/_staybag_sweep.lua measures the overlap and asserts it is 0.
+	-- (2) Same gold-poor superset caveat both siblings carry: gold is not in a
+	-- .dem (GH #495), so the measured flip set is a superset of the live one.
+	-- (3) The replay desk's residual STUCK rate on the swapper (11.0% of 591 field
+	-- purchases, 205 games, 2026-08-23 -- its BOT_MODE_WARD clause is the standing
+	-- suspect) says the swap does not always win, so this can hold a bot next to a
+	-- salve it will not drink for as long as that block lasts. Bounded on both
+	-- sides by clauses this change does not touch: the 0.18 HP floor where the
+	-- genuine escape retreat takes over, the 1200 ring, and the chase clause.
+	if not bHasRegen and J.IsSoakCandidate( 'staybag' ) then
+		for i = 6, 8 do
+			local hItem = bot:GetItemInSlot( i )
+			if hItem ~= nil and hItem:GetName() == 'item_flask' then
+				bHasRegen = true
+				break
+			end
+		end
+	end
 	if not bHasRegen and bot:GetGold() < 90 then return false end
 	return true
 end

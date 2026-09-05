@@ -27,6 +27,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0STAYBAG. **【2026-09-05T22:3xZ 新增,**OWNER_PRIORITIES P4.4 + P2(决策侧,球在本组)**;
+   `[strategy]` open issue 本轮扫过 **#521 / #511 / #503 / #500 / #495 / #489 / #485** —— **无一条未认领**
+   ⇒ 按铁律 9 取优先项,并做章程上一格(`0STAYBTL`)点名的两个候选之一
+   (`J.HasFieldRegenSource` 的 backpack 不对称在 **PROMOTED 侧**的同族问题);
+   **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动**;
+   产出 `bots/FunLib/jmz_func.lua` 一个**追加**的 gated 块(`staybag`,turbo-only,**未 armed**)、
+   `tests/test_staybag_backpack_salve.lua`(**23/23**)、`tests/_staybag_sweep.lua`、
+   `tools/agent/mutstand_staybag.sh`(**20 发全部如声明:16 CAUGHT + 2 声明式 UNMEASURABLE(M11b / M17)
+   + 1 声明式 EQUIVALENT(M13,新类)+ 对照 M15 SURVIVED,零 NO-OP,零非声明存活,EXIT=0**)、
+   `state.json:staybag_20260905`、`test_set.md §FC`、nesting census 两行、
+   **认领并修掉 GH #538**;报告 `iterations/reports/strategy/20260905T223738Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲:FROZEN-HOLD + GH #532 的第二形态 + nesting census (A) 的限定补句)
+   + 批测台(乙:本 id 单臂可读;且 `bagsalve` 单臂波按构造读不出东西)+ 录像组/语料侧(丙:两张帧)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):`pullcad` 陷阱有第二种形态,而它没有任何 grep 找得到 ——
+   两个 id 摊开在一次函数调用的两侧,而不是挤在一个条件里。**
+   从 `J.ShouldStayAndRegen` 够到背包里的大药,需要 `'staysrc'`(才会调到 `J.HasFieldRegenSource`)
+   **与** `'bagsalve'`(那个 backpack 块才会执行)**同时 armed**;每个站点各写一个 id,
+   `check_armed_wiring.py` 与 nesting census 都读作干净,那一对**在普查问的意义上确实 safe** ——
+   **它只是买不到**:任何单臂隔离波在这两个 id 上读到的都是正确的零。
+   ⇒ **「additive-and-safe」与「single-arm-visible」是两个不同的性质,只有后者决定一次波能不能量到行为。**
+   **⭐⭐ 读数是四个驱动之间的「关系」,不是翻转数**:`flips_staysrc` **44** /
+   `flips_bagsalve` **0**(gate 在短路后面,根本没被走到)/ `flips_pair` **46** /
+   `pair_gain` **2** / 本 id 单臂 `flips` **2** / `pair_gain_not_flips` **0** / 重叠 **0**
+   ⇒ **两个 id 隔着一次调用买到的那 2 帧,恰好是本 id 一条臂买到的那 2 帧。**
+   **⭐⭐⭐ 域价钱**:前置数与 §EY / §FA 逐位对上(turbo 1012/1012、走到补给子句 **125**、被否决 **112**);
+   本杠杆域 **15 帧背包有大药 → 11 帧在带外 → 余 4 帧里 2 帧被更早子句否决 ⇒ 域内恰好 2 帧**;
+   `flips == blocked_with_bag` 两路核对;`flip_true_to_false` **0**;`ship_true 13 → arm_true 15`;
+   **`bag_with_main_src == 0`(不相交的根在语料不在杠杆)**。
+   ⚠️ **自伤一处,而它比它修掉的东西更值钱**:M13(格位放宽到 0-8)声明为 `caught` 却 **SURVIVED**;
+   按证据纪律第 2 条查下去,**断言是对的、模型是错的** —— 控制流只有在 `bHasRegen` 仍为 false 时
+   才走到这一块,而它的初值就是**已经扫过 0-5** 的出厂读数 ⇒ 加上主格位**在任何语料上都是 no-op**
+   (打上变异重跑 sweep,**25 个计数器逐字节相同**)。已改判为新类 **`equivalent`**
+   (与 `unmeasurable` **不许混为一谈**:后者「这份语料见证不了」,前者「没有差别可见证」)。
+   ⭐ 副产品:**这条杠杆只有半个物品栏宽,和它只有一件物品宽是同一个理由 ——
+   不是 gate 把它按在那里,是它能读的其它东西上面那几行已经答过了。**
+   ⚠️ **自伤第二处,只有把同一台变异台在一次无关编辑前后各跑一遍才看得见**:
+   `M5`(sweep 停止 strip 注释)第一次 **CAUGHT**、第二次 **SURVIVED**,而 M5 自己没改 ——
+   真正在抓它的是隔壁那条精确等值 `STAY_NIDS == 4`,而把它放宽成下限是对的且无关的改动,
+   **却把那个变异体唯一的检测器一起带走了**。⇒ **只在隔壁某个数恰好是等值时才有效的守卫,不是守卫。**
+   已改为直接断言 `STAY_STRIPPED` / `SRC_STRIPPED`。
+   **下一格(本组下一轮第一项)**:取未认领 `[strategy]` issue;否则按 **P4.4 在 `bots/` 上取一个小杠杆** ——
+   仍是 `0STAYBTL` 点名而未做的那个:**112 里那 68 个「什么都没带」的帧,`fieldbuy` 为何没买上**
+   (注意 `IsFieldRegenSituation` 的 0.55 上限**严于**本函数的 0.75);
+   **照旧先跑域价钱,并先断言控制帧够得着被控制的代码**。
+
 0STAYBTL. **【2026-09-05T19:3xZ 新增,**OWNER_PRIORITIES P4.4 + P2(决策侧,球在本组)**;
    `[strategy]` open issue 本轮扫过 **#521 / #511** —— 两条都是本组前两轮已认领并交回的,
    **无一条未认领** ⇒ 按铁律 9 取优先项,并做章程上一格(`0STAYSRC`)点名的 P2 决策侧同族问题;
@@ -5641,6 +5687,36 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T22:3xZ(**P4.4 + P2 决策侧**:`[strategy]` open issue 本轮扫过
+  **#521 / #511 / #503 / #500 / #495 / #489 / #485** —— **无一条未认领** ⇒ 按铁律 9 取优先项,
+  做的是章程上一格 `0STAYBTL` 点名的两个候选之一(**PROMOTED 侧的 backpack 不对称**)。
+  **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动。**
+  产出 gated 块 `staybag`(turbo-only,**未 armed**,STANDALONE)、
+  `tests/test_staybag_backpack_salve.lua`(**23/23**)、`tests/_staybag_sweep.lua`、
+  `tools/agent/mutstand_staybag.sh`(**20 发全部如声明:16 CAUGHT + 2 UNMEASURABLE(M11b / M17)
+  + 1 EQUIVALENT(M13,新类)+ 对照 M15 SURVIVED,零 NO-OP,EXIT=0**)、
+  `state.json:staybag_20260905`、`test_set.md §FC`、nesting census 两行、
+  **认领并修掉 GH #538**(外加同族第二次复发:`STAY_NIDS == 3` 被第四条杠杆撞红,改 `>= 3`);
+  报告 `iterations/reports/strategy/20260905T223738Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动、不申请入集(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
+  **已交棒总监(甲)+ 批测台(乙)+ 录像组/语料侧(丙)。**)
+  **⭐ 主判据:`pullcad` 陷阱有第二种形态 —— 两个 id 在同一条「路径」上,不是同一个条件里。**
+  背包大药本来就够得着,但要 `'staysrc'` **与** `'bagsalve'` **同时 armed**;每个站点各写一个 id,
+  所有审阅规则读作干净,**而任何单臂波在这两个 id 上读到的都是正确的零**。
+  ⇒ **「additive-and-safe」≠「single-arm-visible」。**
+  **⭐⭐ 关系读数**:`flips_staysrc` 44 / `flips_bagsalve` **0** / `flips_pair` 46 /
+  `pair_gain` **2** / 本 id 单臂 **2** / `pair_gain_not_flips` **0** / 重叠 **0**。
+  **⭐⭐⭐ 域价钱**:15 → 11 带外 → 4 里 2 被更早子句否决 ⇒ **域内恰好 2 帧**;
+  `flip_true_to_false` 0;`ship_true 13 → arm_true 15`;`bag_with_main_src == 0`。
+  ⚠️ **自伤一处**:M13 声明 `caught` 却 SURVIVED ——**断言对、模型错**,那是个
+  **等价变异体**(主格位大药永远到不了这一块,因为它上面几行已经答过了);
+  变异台因此新增 `equivalent` 类。
+  ⚠️ **自伤第二处**:`M5` 在一次**无关编辑**(把 `STAY_NIDS == 4` 放宽成下限)之后
+  从 CAUGHT 变成 SURVIVED —— 那条等值是它唯一的检测器。
+  ⇒ **只在隔壁某个数恰好是等值时才有效的守卫,不是守卫**;已改为直接断言 strip 本身。
+  **门读数**:见报告 §9.1。
+  ⚠️ 开工自检**首跑与本轮变异台并发**,Lua 腿读到**半份 `jmz_func.lua`**(GH #507 的撕裂窗口),
+  **不是 trunk 的红**;以树静止后的重跑为准。
 - 2026-09-05T19:3xZ(**P4.4 + P2 决策侧**:`[strategy]` open issue 本轮扫过 **#521 / #511**
   —— 两条都是本组前两轮已认领并交回的,**无一条未认领** ⇒ 按铁律 9 取优先项,
   做的是章程上一格 `0STAYSRC` 点名的 P2 决策侧同族问题。

@@ -18149,3 +18149,146 @@ verify=0 的长尾按 `narrat` 升序,前几条是
   `done_when` 各自裸读得出;**GH #35 / #159 追评已发**(`claim_precheck.sh` 发表前跑过,`PRECHECK_EXIT=0` / `OK to publish`)。
 - 立案(通用化「入集自带的 (a) 义务自动开 owed 行」):**GH #540**,标题 `[harness] An admission's condition-(a) obligation has no row anywhere`。
   ⚠️ **按 §EX.11 的教训,号不顺推** —— 先把号从引用里拿掉、push、开 issue、再回填。
+---
+
+## §FC 2026-09-05T22:xxZ 协同组 —— **`pullcad` 陷阱有第二种形态,而它没有任何 grep 找得到:两个 id 在同一条「路径」上,而不是同一个条件里**;本节最该被读的是 **§FC.6:一个被声明为 `caught` 的变异体存活了下来,而按证据纪律第 2 条查下去,错的不是断言是我的模型 —— 那个证明本身就是这条杠杆为什么只有半个物品栏宽的理由**
+
+**产物**:`bots/FunLib/jmz_func.lua` 一个**追加**的 gated 块(`staybag`,turbo-only,**未 armed**)、
+`tests/test_staybag_backpack_salve.lua`(**23/23**)、`tests/_staybag_sweep.lua`、
+`tools/agent/mutstand_staybag.sh`(**20 发全部如声明:16 CAUGHT + 2 声明式 UNMEASURABLE(M11b / M17)
++ 1 声明式 EQUIVALENT(M13,新类)+ 对照 M15 SURVIVED,零 NO-OP,STAND GREEN,EXIT=0**)、
+`state.json:staybag_20260905`、`tests/test_gated_helper_nesting_census.lua` 两行、
+**认领并修掉 GH #538**(上一轮 §FA 带进来的 `== 109` 等值钉语料规模,改 `cs.corpus`/`cs.ratchet`)。
+**armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+
+### §FC.1 立案句
+
+`J.ShouldStayAndRegen`(**PROMOTED**,'tphome',每一局 Turbo 都活着)这条路上
+**每一个库存读数都停在格位 5**,而且是两条独立的路各自停在那里:
+
+| 读数 | 出处 | 扫到哪 |
+|---|---|---|
+| 出厂 `bHasFlask` | `J.IsItemAvailable`(jmz_func ~1758) | `slot >= 0 and slot <= 5` |
+| `staysrc` 加宽(§EY) | `J.HasFieldRegenSource` 主循环 | `for i = 0, 5` |
+
+⇒ 残血、无人追击、**大药就在背包里**的 bot 被读成「两手空空」,决定权落到 `GetGold() < 90`,
+然后被放回家 —— owner P2 逐字禁止的那趟路,而且手里正拿着这个家族存在的理由。
+四个 G 事实全部**从源码解析**(`AVAIL_MAX_SLOT == 5`、`SRC_MAIN_LOOP_HI == 5`……),不是复述。
+
+### §FC.2 ⭐ 主判据(立法级,可复用,超出本主题)
+
+**`pullcad` 陷阱有第二种形态:两个 id 摊开在一次函数调用的两侧,而不是挤在一个条件里。**
+
+已知形态是 `IsSoakCandidate('X') and IsSoakCandidate('Y')` —— promote 任一个就冻结成 FALSE,
+审阅者和 `check_armed_wiring.py` 都在找它。本轮量到的是同一个合取**跨过一次调用**:
+从 `J.ShouldStayAndRegen` 够到背包里的大药,需要 `'staysrc'`(才会调到 `J.HasFieldRegenSource`)
+**与** `'bagsalve'`(那个 backpack 块才会执行)**同时 armed**。
+**每个站点各自只写了一个 id**,每一条审阅规则读上去都干净,
+`test_gated_helper_nesting_census.lua` 把这一对钉为 **SAFE** —— 在那份普查问的意义上它**确实是**。
+它只是**买不到**。
+
+⇒ **「additive-and-safe」与「single-arm-visible」是两个不同的性质,
+只有后者决定一次波能不能量到这个行为。**
+建议总监据此给 nesting census 的 **(A) 分类补一句限定**:(A) 保证的是
+「arming 外层 id 仍然量到外层 id」,**不保证**「内层 id 的行为对任何单臂波可达」。
+
+### §FC.3 读数是四个驱动之间的「关系」,不是翻转数
+
+同一份语料(109 fixture / 1012 活英雄帧),同一个 shipped 函数,五次驱动/帧:
+
+| 量 | 读数 |
+|---|---|
+| `flips_staysrc`(单臂) | **44** |
+| `flips_bagsalve`(单臂) | **0** —— 它的 gate 在 `'staysrc'` 的短路后面,**根本没被走到** |
+| `flips_pair`(成对) | **46** |
+| `pair_gain`(成对比更好的单臂多买到的) | **2** |
+| `flips`(本 id 单臂) | **2** |
+| `pair_gain_not_flips` | **0** |
+| `flips_both_levers`(与 `staysrc` 重叠) | **0** |
+
+⇒ **两个 id 隔着一次调用能买到的那 2 帧,恰好就是本 id 一条臂买到的那 2 帧。**
+本 id 的存在理由不是「新行为」,是**把一个已经在树上、但任何单臂波都量不到的行为,
+变成一个 id 一个站点**。钉帧上逐帧复现:单 `staysrc` false / 单 `bagsalve` false /
+**成对 true** / 单 `staybag` **true**。
+
+### §FC.4 域价钱(先跑,再动代码)
+
+前置数由独立前缀行走复算并与 §EY / §FA 逐位对上:**turbo 1012/1012、走到补给子句 125、被否决 112**。
+本杠杆域:**15 帧背包里有大药 → 11 帧在 0.18–0.75 带外 → 余 4 帧里 2 帧在到达补给子句前
+就被 1200 环或追击子句否决** ⇒ **域内恰好 2 帧**。
+两路交叉核对(驱动 `flips` == 前缀桶 `blocked_with_bag`),`flip_true_to_false` **0**,
+`ship_true 13 → arm_true 15`。
+**不相交的根在语料不在杠杆**:`bag_with_main_src == 0` —— 15 帧里没有一帧同时带主格位补给。
+
+钉帧:`f_260822_182012_sb_backpack_rescue_372`,**spirit_breaker 499/1378 = 36.2% 血**,
+六个主格位全是非消耗品,**背包格位 6 是 `item_flask`**,3 秒内无英雄伤害,1200 环内无人,
+最近敌人 1,307u。**四条负对照**:带内但被更早子句否决两帧(1200 环里有人 / 3 秒内被打过)、
+带外两侧各一帧(1.0 在上限外;**0.049 在 0.18 地板之下 —— 真正的逃命撤退那一侧**)。
+
+### §FC.5 为什么只认大药一件(论据有锚,不是复述兄弟的注释)
+
+`TrySwapInvItemForFlask()`(`mode_team_roam_generic.lua:1889)是 **SHIPPED 且无 gate**、
+每帧从 `ItemOpsDesire` 跑,把背包里的大药换进主格位;
+tango / tango_single / faerie_fire / bottle **没有**任何 shipped 换位器。
+三条都从源码解析(`SWAP_EXISTS` / `SWAP_NIDS == 0` / `SWAP_TANGO == SWAP_BOTTLE == 0`),
+变异体 **M18**(把换位器改名)与 **M14**(改读背包 tango)分别打这两半。
+⚠️ 诚实边界:录像组 2026-08-23 量到换位器残余 **STUCK 11.0%**(591 次野外购买 / 205 局),
+所以这条杠杆可以把 bot 留在一件它这段时间喝不到的大药旁边;两侧有界(0.18 地板 / 1200 环 / 追击行)。
+
+### §FC.6 ⚠️ 自伤一处,而它比它修掉的东西更值钱
+
+**M13 是我写错的,不是测试写松的。** 它原本声明为 `caught`:
+「把格位范围放宽到 0-8,杠杆就悄悄兼了 `'staysrc'` 的活,不相交性被毁」。实测 **SURVIVED**。
+按证据纪律第 2 条先怀疑断言 —— 但断言是对的,**错的是模型**:
+控制流只有在 `bHasRegen` 仍为 false 时才走到这一块,而 `bHasRegen` 的初值
+就是出厂那个**已经扫过格位 0-5** 的读数 ⇒ **主格位里的大药根本不可能出现在这里等着被找到**
+(那一帧压根没被否决过)。把变异打上去重跑 sweep:**25 个计数器、15 行 carrier、2 行 flip
+逐字节相同**。
+
+⇒ 变异台新增第四类 **`equivalent`**,与 `unmeasurable` **不许混为一谈**:
+后者说「这份语料见证不了」(明天一张 fixture 就可能改判),
+前者说「没有差别可见证」(任何语料、任何时候都不可能)。**两者都不是通过。**
+
+⭐ **而这个证明本身是本轮最该被读的副产品**:这条杠杆之所以只有**半个物品栏**宽,
+和它只有**一件物品**宽是同一个理由 —— 不是 gate 把它按在那里,
+**是它能读的其它东西,上面那几行已经答过了。**
+
+### §FC.6b ⚠️ 第二处自伤:一个变异体在一次**无关编辑**之后从 CAUGHT 变成 SURVIVED
+
+`M5`(sweep 停止 strip 注释)第一次跑 **CAUGHT**,第二次跑 **SURVIVED**,**而 M5 自己一个字没改**。
+真正在抓它的是隔壁那条**精确等值** `STAY_NIDS == 4` —— 不 strip 时,注释里自己举的
+`IsSoakCandidate('X') and IsSoakCandidate('Y')` 例子会把计数撑大。
+而把那条总数放宽成下限是**对的且无关的**改动(这个函数的 id 总数已被钉成
+`== 1`、`== 3`、`== 4` 三次,每次都被**下一条杠杆**撞红,树上没有任何缺陷)——
+**放宽的同时把那个变异体唯一的检测器一起带走了。**
+
+⇒ **一个只在隔壁某个数恰好是等值时才有效的守卫,不是守卫。**
+sweep 现在直接吐 `STAY_STRIPPED` / `SRC_STRIPPED`,测试直接断言「strip 真的发生了」。
+⚠️ **这条在任何一次单独运行里都看不见**:要把同一台变异台在一次无关编辑**前后各跑一遍**
+才会浮出来,而没有人会去安排这件事 —— 本轮是因为中途改了断言、顺手重跑,才撞上。
+
+### §FC.6c 同一个缺陷族,一天之内**三次**,都是本组自己埋的
+
+| # | 形状 | 撞红它的东西 | 修法 |
+|---|---|---|---|
+| 1(GH #538) | `C('fixtures') == 109` 等值钉**语料规模** | 下一张 fixture | `cs.corpus` / `cs.ratchet` |
+| 2 | `STAY_NIDS == 3` 等值钉**一个函数里的 id 总数** | 下一条**独立**杠杆 | 改下限,invariant 交给 `STAY_IDS_MAX_PER_COND == 1` |
+| 3 | `'staybottle'` 在**三个文件原始源码**里的计数 `== 1` | 兄弟杠杆注释里提了一次这个 id | **先 strip 注释再数**(两个文件同改) |
+
+⇒ **三次同一形状:拿一个跨语料 / 跨注释的原始计数,去顶一个结构性主张。**
+第 2、3 两次都是在本轮**落地过程中当场撞上的**(一次在定向复跑里,一次在变异台第二次跑里),
+不是别人替我发现的。
+
+### §FC.7 交棒
+
+- **(甲) 总监**:按 P4.2 冻结把 `'staybag'` 记作 **FROZEN-HOLD**;并请单独收下 §FC.2
+  作为 GH #532 那条约束的**第二种形态**,以及对 nesting census (A) 分类的限定补句。
+- **(乙) 批测台**:解冻后本 id 可**单臂**发波(与 `staysrc` 重叠实测 0)。
+  另一条直接影响发波设计:**`'bagsalve'` 单臂发波在本语料上按构造读不出任何东西**
+  (`flips_bagsalve == 0`)—— 若历史上给它发过单臂波,那一波的零应按
+  「域未到达」而不是「已测试且中性」重读(GH #531 同族)。本组本轮**不发波、不排队、不花钱**。
+- **(丙) 录像组 / 语料侧**:欠两张帧 —— (i) **主格位带充能 bottle**(§FA 起就欠着);
+  (ii) **背包带大药且主格位也有补给**的帧,有了它 M17 才能从 UNMEASURABLE 改判为 caught。
+- **(丁) 下一轮本组自己**:P2 决策侧继续 —— **112 里那 68 个「什么都没带」的帧,
+  `fieldbuy` 为何没买上**(`IsFieldRegenSituation` 的 0.55 上限**严于**本函数的 0.75)。
+  **照旧先跑域价钱,并先断言控制帧够得着被控制的代码。**
