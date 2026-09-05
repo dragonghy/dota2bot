@@ -1,0 +1,5750 @@
+{
+ "game": {
+  "source": "20260905_010205_slot7",
+  "run": "spot_20260905_003250_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_695907",
+  "seed": 4763,
+  "window": [
+   1344.0,
+   1374.0
+  ],
+  "note": "REAL frames+events, sliced verbatim from the dumper timeline; no field is synthesized."
+ },
+ "snapshots": [
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 748.1,
+   "y": 3965.7,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 3643.2,
+   "y": 6449.3,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 4111.2,
+   "y": -322,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6629.7,
+   "y": 5556.7,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 6992.7,
+   "y": 3754.9,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5928.3,
+   "y": -2654.5,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -6609.1,
+   "y": -6424.8,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7985.4,
+   "y": -1135,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1344.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 4698,
+   "y": -1972.4,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5670.4,
+   "y": -2986,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -6212.7,
+   "y": -6085.3,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7985.4,
+   "y": -1135,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 4961.2,
+   "y": -2330,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 748.1,
+   "y": 3965.7,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 3420.5,
+   "y": 6874.3,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3781,
+   "y": -664.7,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6717.4,
+   "y": 5081.6,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1345.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7190.7,
+   "y": 3423.5,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3638.7,
+   "y": -986.6,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6828.3,
+   "y": 4778.2,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7251.7,
+   "y": 3174.3,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5498.6,
+   "y": -3207,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -5943.4,
+   "y": -5864.8,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7985.4,
+   "y": -1135,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5147.8,
+   "y": -2483.5,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 748.1,
+   "y": 3965.7,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1346.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 3235,
+   "y": 7025.8,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 6199.4,
+   "y": 1158.4,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2982.7,
+   "y": 7257.3,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3591.3,
+   "y": -1093.9,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6956.8,
+   "y": 4314.9,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7306.3,
+   "y": 2788.3,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5291.5,
+   "y": -3569,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -5538.6,
+   "y": -5535.2,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7985.4,
+   "y": -1135,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1347.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5355.3,
+   "y": -2819.9,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5098.3,
+   "y": -3739.9,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -5277.4,
+   "y": -5323.9,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7985.4,
+   "y": -1135,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5610.4,
+   "y": -2969.9,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5930.4,
+   "y": 1350.5,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2723,
+   "y": 7153.4,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3591.3,
+   "y": -1093.9,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6976.8,
+   "y": 3992.4,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1348.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7340.6,
+   "y": 2530.6,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5509.3,
+   "y": 1651.2,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2451.2,
+   "y": 6777.7,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3474.5,
+   "y": -715.5,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7027.9,
+   "y": 3521.2,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7441,
+   "y": 2155,
+   "hp": 2664,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5028.3,
+   "y": -3741.3,
+   "hp": 3100,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -5096.2,
+   "y": -5112.5,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7985.4,
+   "y": -1135,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1349.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5993.2,
+   "y": -3195,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5222.3,
+   "y": 1856.1,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 2134.4,
+   "y": 2405.6,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2455.3,
+   "y": 6497.8,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7225.8,
+   "y": 3299.8,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7592,
+   "y": 1953.1,
+   "hp": 2664,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5028.3,
+   "y": -3741.3,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -5096.2,
+   "y": -5112.5,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8083.3,
+   "y": -992.4,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1350.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 6248.3,
+   "y": -3345,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 7009.6,
+   "y": 6566.3,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2459.8,
+   "y": 6007.8,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7308.3,
+   "y": 2823.1,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7865.8,
+   "y": 1675.4,
+   "hp": 2664,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5110,
+   "y": -3738.3,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -5096.2,
+   "y": -5112.5,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8263.2,
+   "y": -684.9,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 6036.8,
+   "y": -3428.2,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1351.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5240.2,
+   "y": 2171.3,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5640.9,
+   "y": 2149,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 7147.4,
+   "y": 6549.5,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2370.5,
+   "y": 5689.5,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7349.7,
+   "y": 2502.8,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8050.7,
+   "y": 1493.7,
+   "hp": 2655,
+   "hp_pct": 0.997
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5280.6,
+   "y": -3563.6,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": 1291.2,
+   "y": 1051.3,
+   "hp": 3296,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1352.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5745.5,
+   "y": -3480.3,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7491.6,
+   "y": 2056,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8409.9,
+   "y": 1341.8,
+   "hp": 2656,
+   "hp_pct": 0.997
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5465.6,
+   "y": -3186.5,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": 857.2,
+   "y": 777.4,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5344.6,
+   "y": -3646.3,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5979.3,
+   "y": 2469.1,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6718.7,
+   "y": 6327.1,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1353.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2180.1,
+   "y": 5222.8,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5841.1,
+   "y": 2754.8,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6432.8,
+   "y": 6178.8,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2126.7,
+   "y": 4948.5,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7718.9,
+   "y": 1826.3,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8429.7,
+   "y": 1262.8,
+   "hp": 2664,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5585.6,
+   "y": -2933.5,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": 625.1,
+   "y": 518.1,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1354.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5252.3,
+   "y": -3825.1,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 2053.8,
+   "y": 4534.8,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7814.5,
+   "y": 1731.6,
+   "hp": 2452,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8429.7,
+   "y": 1262.8,
+   "hp": 2717,
+   "hp_pct": 0.995
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5765.6,
+   "y": -2554,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": 262,
+   "y": 143.2,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5344.8,
+   "y": -4241.3,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5833.4,
+   "y": 2764.8,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1355.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6223.7,
+   "y": 6107.1,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5987.9,
+   "y": 2484.8,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6223.7,
+   "y": 6107.1,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1977.3,
+   "y": 4280.7,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7814.5,
+   "y": 1731.6,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8429.7,
+   "y": 1262.8,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 5886.9,
+   "y": -2301.7,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": 16.9,
+   "y": -103.8,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1356.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5354.6,
+   "y": -4537.1,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -460.4,
+   "y": -65.7,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5354.1,
+   "y": -4865.6,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 6002.7,
+   "y": 2327.4,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6223.7,
+   "y": 6107.1,
+   "hp": 3859,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1733.1,
+   "y": 3939,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7872,
+   "y": 1674.7,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8429.7,
+   "y": 1262.8,
+   "hp": 2730,
+   "hp_pct": 1
+  },
+  {
+   "t": 1357.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6067.7,
+   "y": -1923.6,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 6073.9,
+   "y": 2650.2,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6223.7,
+   "y": 6107.1,
+   "hp": 3859,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1547.6,
+   "y": 3749.3,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7872,
+   "y": 1674.7,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8300.3,
+   "y": 1357.8,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6273.4,
+   "y": -1733.7,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -736,
+   "y": 96,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1358.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 5164.8,
+   "y": -4656.1,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 6223.6,
+   "y": 3168.2,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6223.7,
+   "y": 6107.1,
+   "hp": 3859,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1280,
+   "y": 3358.4,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7899.2,
+   "y": 1227.8,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8035.8,
+   "y": 1595.5,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6582.1,
+   "y": -1448.8,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -1082.5,
+   "y": 486.5,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1359.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 4891.2,
+   "y": -4322.8,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 4658.9,
+   "y": -4146.4,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 6202.8,
+   "y": 3503.4,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 5856.2,
+   "y": 409.7,
+   "hp": 3639,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1034.5,
+   "y": 3135.5,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7894.2,
+   "y": 919.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8053.7,
+   "y": 1823.4,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6787.8,
+   "y": -1259,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -1314,
+   "y": 746.3,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1360.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -1574.5,
+   "y": 1038.5,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 4258,
+   "y": -3955.6,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5826.7,
+   "y": 3973.5,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6134.2,
+   "y": 100.2,
+   "hp": 3859,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 675.7,
+   "y": 2781.6,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7466.7,
+   "y": 763.7,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8349.2,
+   "y": 1926.4,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1361.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6993.6,
+   "y": -1069.1,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 486.2,
+   "y": 2554.2,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 7203.2,
+   "y": 610.7,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8348.2,
+   "y": 1918.6,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6761.4,
+   "y": -959.8,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -1724.6,
+   "y": 982.6,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8286.6,
+   "y": -623.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 4056.8,
+   "y": -3845.2,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5624.3,
+   "y": 4252.8,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1362.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6262.4,
+   "y": -142.5,
+   "hp": 3859,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 2880,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -2246.3,
+   "y": 964.4,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8195.2,
+   "y": -460.1,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 3782.8,
+   "y": -3528.1,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5311.8,
+   "y": 4642.6,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6475.3,
+   "y": -543.4,
+   "hp": 3437,
+   "hp_pct": 0.891
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 224.8,
+   "y": 2225.4,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6877.6,
+   "y": 269.8,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1363.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8052.4,
+   "y": 1817.4,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 3693.1,
+   "y": -3246.3,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5091,
+   "y": 4872.2,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6572.6,
+   "y": -741,
+   "hp": 3454,
+   "hp_pct": 0.895
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 23.5,
+   "y": 2034.5,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8034.6,
+   "y": 1589.4,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 2754,
+   "hp_pct": 0.956
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -2594.1,
+   "y": 952.4,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1364.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -8066.1,
+   "y": -229.8,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 4795,
+   "y": 4916,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6621.2,
+   "y": -839.8,
+   "hp": 3456,
+   "hp_pct": 0.896
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": -202.2,
+   "y": 1849.5,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8184.4,
+   "y": 1328.3,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 2778,
+   "hp_pct": 0.965
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3114.9,
+   "y": 926,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7872.6,
+   "y": 115.7,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1365.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 3548.7,
+   "y": -2826.4,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3352.2,
+   "y": 759,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7723.2,
+   "y": 327.6,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 3452.4,
+   "y": -2546.6,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 4858.8,
+   "y": 4626.1,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6621.2,
+   "y": -839.8,
+   "hp": 3397,
+   "hp_pct": 0.88
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 66.1,
+   "y": 1909.2,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 8022.3,
+   "y": 1125.1,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1366.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 2795,
+   "hp_pct": 0.97
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5025.1,
+   "y": 4226.4,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6621.2,
+   "y": -839.8,
+   "hp": 3162,
+   "hp_pct": 0.819
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 521,
+   "y": 1944.9,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7779.1,
+   "y": 820.2,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 2820,
+   "hp_pct": 0.979
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3445.3,
+   "y": 245.3,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7371.3,
+   "y": 503.9,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1367.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 3163.1,
+   "y": -2215.2,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 2893.6,
+   "y": -2118.4,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5193.8,
+   "y": 3939.7,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6621.2,
+   "y": -839.8,
+   "hp": 3146,
+   "hp_pct": 0.815
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 775.8,
+   "y": 1747.7,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7566.3,
+   "y": 676.4,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 2837,
+   "hp_pct": 0.985
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3447.9,
+   "y": 231.1,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1368.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7218,
+   "y": 565.2,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6621.2,
+   "y": -839.8,
+   "hp": 2966,
+   "hp_pct": 0.815
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1139.6,
+   "y": 1398.9,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2562,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 7298.7,
+   "y": 401,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 1936,
+   "hp_pct": 0.672
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3518.6,
+   "y": 328.8,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7385.2,
+   "y": 422.3,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 2475,
+   "y": -1970.4,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1369.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5147.2,
+   "y": 3344.4,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3433.3,
+   "y": -581.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2650,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 6766.8,
+   "y": -809.2,
+   "hp": 2840,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6655.8,
+   "y": -910.1,
+   "hp": 969,
+   "hp_pct": 0.336
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3704.1,
+   "y": 585.4,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7123.7,
+   "y": 386.1,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 2255.8,
+   "y": -1892.9,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5390.8,
+   "y": 3099.3,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6621.2,
+   "y": -839.8,
+   "hp": 3143,
+   "hp_pct": 0.814
+  },
+  {
+   "t": 1370.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1343.5,
+   "y": 1398.1,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5784.1,
+   "y": 2763,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6554.4,
+   "y": -930.1,
+   "hp": 2804,
+   "hp_pct": 0.714
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1555.1,
+   "y": 1464.2,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 3323.9,
+   "y": -593.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6721.1,
+   "y": -940.1,
+   "hp": 2245,
+   "hp_pct": 0.827
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 6729.1,
+   "y": -821.5,
+   "hp": 2619,
+   "hp_pct": 0.888
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6643.5,
+   "y": -915.9,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3756,
+   "y": 738.1,
+   "hp": 3252,
+   "hp_pct": 1
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -6820.1,
+   "y": 256.4,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1371.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 2437.6,
+   "y": -1584.8,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 2592.6,
+   "y": -1332.7,
+   "hp": 2212,
+   "hp_pct": 1
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 5984,
+   "y": 2520.2,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6406.2,
+   "y": -1130.5,
+   "hp": 2736,
+   "hp_pct": 0.697
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1822.3,
+   "y": 1547.6,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 2973.4,
+   "y": -625,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6643.8,
+   "y": -917.3,
+   "hp": 2195,
+   "hp_pct": 0.808
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 6489.9,
+   "y": -899.5,
+   "hp": 2637,
+   "hp_pct": 0.894
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6643.5,
+   "y": -915.9,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3756,
+   "y": 738.1,
+   "hp": 3406,
+   "hp_pct": 1
+  },
+  {
+   "t": 1372.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -6980.9,
+   "y": 115.8,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_spirit_breaker",
+   "idx": 119,
+   "team": 3,
+   "x": 6005.7,
+   "y": 2003.1,
+   "hp": 2628,
+   "hp_pct": 1
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_bristleback",
+   "idx": 1317,
+   "team": 3,
+   "x": 6584.6,
+   "y": -1356.1,
+   "hp": 2760,
+   "hp_pct": 0.703
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_tidehunter",
+   "idx": 1354,
+   "team": 3,
+   "x": 1992.2,
+   "y": 1915.8,
+   "hp": 3393,
+   "hp_pct": 1
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_luna",
+   "idx": 1391,
+   "team": 2,
+   "x": 2924.5,
+   "y": -643.8,
+   "hp": 3760,
+   "hp_pct": 1
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_obsidian_destroyer",
+   "idx": 1501,
+   "team": 3,
+   "x": 6272.7,
+   "y": -826.7,
+   "hp": 2210,
+   "hp_pct": 0.814
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_pudge",
+   "idx": 155,
+   "team": 3,
+   "x": 6556.2,
+   "y": -1160.6,
+   "hp": 2678,
+   "hp_pct": 0.908
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_nevermore",
+   "idx": 1428,
+   "team": 2,
+   "x": 6643.5,
+   "y": -915.9,
+   "hp": 0,
+   "hp_pct": 0
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_axe",
+   "idx": 1243,
+   "team": 2,
+   "x": -3756,
+   "y": 738.1,
+   "hp": 3406,
+   "hp_pct": 1
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_crystal_maiden",
+   "idx": 1280,
+   "team": 2,
+   "x": -7072,
+   "y": -96,
+   "hp": 2366,
+   "hp_pct": 1
+  },
+  {
+   "t": 1373.5,
+   "hero": "npc_dota_hero_venomancer",
+   "idx": 1465,
+   "team": 2,
+   "x": 2825.8,
+   "y": -954.9,
+   "hp": 2212,
+   "hp_pct": 1
+  }
+ ],
+ "events": [
+  {
+   "t": 1344.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_venomancer",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "venomancer_venomous_gale",
+   "value": 70,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1344.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "dota_unknown",
+   "value": 136,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1345.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "dota_unknown",
+   "value": 138,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1346.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "dota_unknown",
+   "value": 139,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1347.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_luna",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "dota_unknown",
+   "value": 271,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1347.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "dota_unknown",
+   "value": 48,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1347.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_luna",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "item_angels_demise",
+   "value": 250,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1347.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_luna",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "luna_lucent_beam",
+   "value": 300,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1348,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_luna",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "dota_unknown",
+   "value": 270,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1348.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "dota_unknown",
+   "value": 137,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1348.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 105,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1348.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_luna",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "dota_unknown",
+   "value": 71,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1348.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 105,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1348.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 105,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "nevermore_shadowraze2",
+   "value": 245,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "nevermore_shadowraze2",
+   "value": 245,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "nevermore_shadowraze2",
+   "value": 245,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_gnoll_assassin",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 8,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "dota_unknown",
+   "value": 121,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.9,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1349.9,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1350.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "nevermore_shadowraze1",
+   "value": 324,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1350.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1350.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_outrunner",
+   "inflictor": "nevermore_shadowraze1",
+   "value": 99,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1350.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "dota_unknown",
+   "value": 426,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1351.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_neutral_centaur_khan",
+   "inflictor": "dota_unknown",
+   "value": 137,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1351.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_kobold_taskmaster",
+   "inflictor": "item_stormcrafter",
+   "value": 70,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1351.8,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1351.9,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1351.9,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1352.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1352.2,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1352.2,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1352.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 105,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1353.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 107,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1354.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 107,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1354.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "dota_unknown",
+   "value": 138,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1354.9,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.2,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.2,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_neutral_kobold_taskmaster",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 247,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_neutral_kobold_taskmaster",
+   "inflictor": "dota_unknown",
+   "value": 161,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "dota_unknown",
+   "value": 135,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1355.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 107,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1356.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1356.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_neutral_kobold_taskmaster",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 15,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1356.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1356.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "dota_unknown",
+   "value": 140,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1356.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1356.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 7,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_spirit_breaker",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "dota_unknown",
+   "value": 150,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 256,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "dota_unknown",
+   "value": 175,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "item_stormcrafter",
+   "value": 70,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "item_stormcrafter",
+   "value": 70,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "dota_unknown",
+   "value": 108,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 105,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1357.9,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_neutral_forest_troll_berserker",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 90,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358.2,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358.2,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1358.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 107,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1359.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 106,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1360.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 109,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1361.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1361.2,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1361.2,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1361.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1361.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.2,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.2,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "dota_unknown",
+   "value": 106,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 74,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1362.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_crystal_maiden",
+   "target": "npc_dota_neutral_warpine_raider",
+   "inflictor": "crystal_maiden_frostbite",
+   "value": 50,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1363.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 33,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1363.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "dota_unknown",
+   "value": 394,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1364.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "dota_unknown",
+   "value": 131,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1364.3,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1364.8,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1364.8,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1365.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1365.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 17,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1365.3,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1365.3,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1365.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 17,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1365.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 17,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1366.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 17,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1366.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 17,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1366.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_bloodthorn",
+   "value": 212,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1366.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 80,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1366.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_flagbearer",
+   "inflictor": "bristleback_quill_spray",
+   "value": 76,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1366.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 89,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1366.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 89,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1367,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 76,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1367.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_ranged",
+   "inflictor": "bristleback_quill_spray",
+   "value": 85,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1367.6,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1367.7,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1367.7,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1368.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1368.2,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1368.2,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1368.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "obsidian_destroyer_astral_imprisonment",
+   "value": 228,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1368.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "bristleback_quill_spray",
+   "value": 36,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1368.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_flagbearer",
+   "inflictor": "bristleback_quill_spray",
+   "value": 121,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 142,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 121,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 142,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 307,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1369.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "dota_unknown",
+   "value": 110,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1369.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_ranged",
+   "inflictor": "bristleback_quill_spray",
+   "value": 135,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "dota_unknown",
+   "value": 245,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1369.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "bristleback_quill_spray",
+   "value": 102,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1369.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 367,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1369.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "dota_unknown",
+   "value": 128,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1369.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_flagbearer",
+   "inflictor": "bristleback_quill_spray",
+   "value": 287,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1369.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 287,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "item_witch_blade",
+   "value": 70,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "bristleback_quill_spray",
+   "value": 139,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_flagbearer",
+   "inflictor": "bristleback_quill_spray",
+   "value": 365,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 287,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "bristleback_quill_spray",
+   "value": 365,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "item_stormcrafter",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_creep_goodguys_ranged",
+   "inflictor": "item_stormcrafter",
+   "value": 62,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "bristleback_quill_spray",
+   "value": 177,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_ranged",
+   "inflictor": "bristleback_quill_spray",
+   "value": 298,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_creep_goodguys_flagbearer",
+   "inflictor": "bristleback_quill_spray",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "dota_unknown",
+   "value": 167,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "pudge_rot",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "pudge_rot",
+   "value": 16,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "pudge_rot",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "item_blade_mail",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.6,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "dota_unknown",
+   "value": 105,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "bristleback_quill_spray",
+   "value": 215,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "obsidian_destroyer_arcane_orb",
+   "value": 302,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "dota_unknown",
+   "value": 134,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "pudge_rot",
+   "value": 16,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "pudge_rot",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "pudge_rot",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.7,
+   "type": "ABILITY",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "ability_capture",
+   "value": 0,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.7,
+   "type": "MODIFIER_ADD",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1370.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "pudge_rot",
+   "value": 16,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1370.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_pudge",
+   "target": "npc_dota_creep_goodguys_melee",
+   "inflictor": "pudge_rot",
+   "value": 24,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "MODIFIER_REMOVE",
+   "actor": "npc_dota_hero_luna",
+   "target": "#DOTA_OutpostName_North",
+   "inflictor": "modifier_watch_tower_capturing",
+   "value": 1,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_bristleback",
+   "target": "npc_dota_hero_nevermore",
+   "inflictor": "bristleback_quill_spray",
+   "value": 182,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "nevermore_requiem",
+   "value": 69,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 10,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 17,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 28,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 28,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 28,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "nevermore_requiem",
+   "value": 60,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "nevermore_requiem",
+   "value": 60,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "nevermore_requiem",
+   "value": 88,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "nevermore_requiem",
+   "value": 60,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "nevermore_requiem",
+   "value": 88,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "nevermore_requiem",
+   "value": 49,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "nevermore_requiem",
+   "value": 88,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "nevermore_requiem",
+   "value": 60,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "item_blade_mail",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 88,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 98,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 60,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_obsidian_destroyer",
+   "target": "npc_dota_creep_goodguys_ranged",
+   "inflictor": "obsidian_destroyer_sanity_eclipse",
+   "value": 28,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_ranged",
+   "inflictor": "nevermore_requiem",
+   "value": 148,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 26,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 29,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 38,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.4,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 15,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 22,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 44,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "dota_unknown",
+   "value": 47,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_pudge",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 10,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_melee",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.7,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_creep_badguys_ranged",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 64,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1371.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_bristleback",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 25,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1371.9,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_nevermore",
+   "target": "npc_dota_hero_obsidian_destroyer",
+   "inflictor": "item_conjurers_catalyst",
+   "value": 44,
+   "actor_hero": true,
+   "target_hero": true
+  },
+  {
+   "t": 1372,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "item_blade_mail",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "dota_unknown",
+   "value": 193,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_counter_helix",
+   "value": 160,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_counter_helix",
+   "value": 160,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_counter_helix",
+   "value": 160,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_counter_helix",
+   "value": 112,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.5,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "item_blade_mail",
+   "value": 13,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.6,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1372.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1373.1,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1373.2,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "dota_unknown",
+   "value": 113,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1373.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1373.3,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1373.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1373.8,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_trickster",
+   "inflictor": "axe_battle_hunger",
+   "value": 19,
+   "actor_hero": true,
+   "target_hero": false
+  },
+  {
+   "t": 1374,
+   "type": "DAMAGE",
+   "actor": "npc_dota_hero_axe",
+   "target": "npc_dota_neutral_satyr_soulstealer",
+   "inflictor": "item_blade_mail",
+   "value": 12,
+   "actor_hero": true,
+   "target_hero": false
+  }
+ ],
+ "buildings": [
+  {
+   "t": 1344.5,
+   "name": "watch_tower",
+   "team": 3,
+   "x": 3392,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1344.5,
+   "name": "watch_tower",
+   "team": 2,
+   "x": -4096,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1349.5,
+   "name": "watch_tower",
+   "team": 2,
+   "x": -4096,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1349.5,
+   "name": "watch_tower",
+   "team": 3,
+   "x": 3392,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1354.5,
+   "name": "watch_tower",
+   "team": 2,
+   "x": -4096,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1354.5,
+   "name": "watch_tower",
+   "team": 3,
+   "x": 3392,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1359.5,
+   "name": "watch_tower",
+   "team": 3,
+   "x": 3392,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1359.5,
+   "name": "watch_tower",
+   "team": 2,
+   "x": -4096,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1364.5,
+   "name": "watch_tower",
+   "team": 2,
+   "x": -4096,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1364.5,
+   "name": "watch_tower",
+   "team": 3,
+   "x": 3392,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1369.5,
+   "name": "watch_tower",
+   "team": 2,
+   "x": -4096,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  },
+  {
+   "t": 1369.5,
+   "name": "watch_tower",
+   "team": 3,
+   "x": 3392,
+   "y": -448,
+   "hp": 450,
+   "hp_pct": 1,
+   "alive": true
+  }
+ ],
+ "creeps": [],
+ "wards": []
+}

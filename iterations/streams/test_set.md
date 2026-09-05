@@ -16637,3 +16637,82 @@ fixture 是**一个瞬间**、不带速度,mock 把每个单位建模成**原地
 `tests/_midsupint_sweep.lua`;`tests/test_midsupint_mirror_interrupt.lua`(**8/8**);
 `tools/agent/mutstand_midsupint.sh`;`state.json:midsupint_20260905`;本节;GH #503。
 **armed 串一字未动,`queue.json` 一字未动,无新 id/闸;零 AWS、零 S3、零 EC2、零波次。**
+
+## §EO 2026-09-05T04:xxZ 协同组 —— **「全文件没有这个 token」是一句关于文件的话,不是一句关于代码的话**:GH #511 的那一行守卫在 `Think()` 的**第一条语句里已经跑过了**,落地它与未修树逐位相同;本节最该被读的是 **§EO.2:它的帧证据按构造反证它自己的机制 —— 移除先、施法后,0/28**
+
+**认领 GH #511**(04:07Z 录像组开,未被认领;`[strategy]` 前缀本轮扫过 #511/#503/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445 —— **#511 最新且不是本组已交棒的**,章程「下一格」第一条成立)。
+**零行为改动**:`bots/`/`game/` 逐字节未动,armed 串一字未动,`queue.json` 一字未动,无新 id/闸/fixture-lua。
+零 AWS 花费(只读 S3:4 份 .dem + dumper 缓存命中)、零 EC2、零波次、零 CE 调用。
+
+### §EO.1 事实对,根因错,而那一行修法的域价钱是 0
+
+#511 报的**事实是对的**(53 次 channel、13 次完成、66.6 秒白扔,**两条腿一样** ⇒ 出厂缺陷,不归任何 armed id)。它给的**根因和修法都不对**:
+
+> 「`mode_outpost_generic.lua` 全文件没有 `bot:IsChanneling()` 守卫 ⇒ `Think()` 每 tick 重发 ⇒ 每次重发都把 channel 打断。修法:`Think()` 开头加 `if bot:IsChanneling() then return end`。」
+
+`Think()` 的**第一条语句**是 `if J.CanNotUseAction(bot) then return end`,而 `J.CanNotUseAction`(`bots/FunLib/jmz_func.lua:103`)的析取项里**就有** `or bot:IsChanneling()`。
+「文件里不含这个 token」**逐字为真、承重为零** —— 谓词住在**一次调用之内**,在**同一帧、更早**求过值。
+⇒ 落地那一行 = **§EK 的 `argfix` 形状**:改了源码、过得了评审、读上去像修复,**与未修树逐位相同**。
+
+**⭐ 主判据(立法级,可复用,超出本主题):一个「守卫不存在」的论断,必须按 helper 展开后的**求值集合**来立,不能按**文件的 token 集合**来立。** grep 一个文件回答的是「这个字符串在不在这个文件里」;而守卫的问题是「这一帧上这个谓词求过值没有」。两者在有 helper 的代码里**系统性地不同**,且差得**恰好是让修复读起来必要的那个方向**。
+
+### §EO.2 它的帧证据按构造反证它自己的机制(本节最该被读的一条)
+
+仓库里 `ability_capture` **唯一**的施法点是 `mode_outpost_generic.lua:144`,它就在那道守卫**下面**
+⇒ **每一次被记录的施法,按构造都是 `bot:IsChanneling()` 已经为假的那一帧。**
+这条推理**不依赖语料**:它对 #511 自己那 53 次尝试同样成立,对以后每一次都成立。
+
+**独立地,事件流说同一件事**(4 局 / 8 episode / 36 casts / 36 对 ADD-REMOVE):
+
+| 腿 | 读数 |
+|---|---|
+| `issuefix` 施法落在施法者自己活 channel 区间内 | **0 / 36** |
+| `selfresend` 施法**严格早于**它本该解释的那次移除(= #511 的机制) | **0 / 28** |
+| 并列(dump 0.1s 量化,**定不了序**) | **4 / 28** ← 登记为 UNDECIDABLE,**不并进任何一侧** |
+| 移除严格在先 | **24 / 28** |
+
+移除→下一次施法的**中位间隔 0.1s**。⇒ **重发是中断的下游,不是它的原因。**
+
+### §EO.3 排掉本文件自己的三条放弃子句 ⇒ 杠杆在文件的另一头
+
+36 个中断瞬间上,`mode_outpost_generic.lua` 自己的三条放弃子句命中:
+
+- (a) `GetDesireHelper` 离塔 <600u **且**视野内有敌人 → **2 / 36**
+- (b) `IsSuitableToCaptureOutpost` 的 `WasRecentlyDamagedByAnyHero(5)` → **0 / 36**
+- (c) 同函数的 `存活数 我方 < 敌方` → **0 / 36**
+
+⇒ **34/36 的中断在本文件里找不到任何理由**:模式**从没停止过想要这座塔**。
+剩下的活解释是**模式仲裁**(不在 dump 里,**照实说,不当结论**):别的模式抢走一个 tick、它的命令掐断 channel,瞭望塔模式 **0.1s** 后重新胜出并重发 —— 这正好就是那个 0.1s 中位间隔。
+⇒ **杠杆是 `GetDesire()` 里的承诺,不是 `Think()` 里的守卫**,文件的另一头。
+
+**铁证帧** `20260905_010205_slot7` **t=1349.9–1370.7,luna**:距塔 **140u**、hp **1.00 全程**、窗口内 `DAMAGE` 命中 **0**、最近敌人 **≥2618u**(1800u 视野外)、存活 **5v5 全程不变**;14 次施法、14 次 channel、**一次也没占下来**,三条子句**一条都没真过**。
+
+### §EO.4 承诺那一版**本轮不落地**,而「买不到」在这里是一句有地址的话
+
+承诺修法的谓词会是 `ClosestOutpost:HasModifier('modifier_watch_tower_capturing')`(那个 modifier **挂在瞭望塔上,不在英雄身上** —— 事件流里 `target` 就是 `#DOTA_OutpostName_North`)。
+dumper 的 `buildings` 记录只有 `name/team/x/y/hp/alive`,**没有 modifier 列表** ⇒ 瞭望塔的 modifier 状态**不在 dump 里,进不了 fixture**。
+本组纪律是「行为改动必须带真实帧 fixture,gate-plumbing 不算」⇒ **本轮不落地它**,把缺的那个字段**指名交出去**(见交棒),而不是落一个验不了的改动。
+**这是一个缺失字段的地址,不是一句「不好测」。**
+
+### §EO.5 仪器:每一个 0 都配了能出非零的对照,否则不作数
+
+本轮全部产出是**否定读数**,而**坏掉的探针报的也是 0**。四条对照:
+
+1. `issuefix` 腿改成**实测**(施法时刻是否落在该施法者自己的 ADD..REMOVE 区间内)。这个数**可以**非零 —— **非零就说明 #511 是对的、本裁定是错的**。
+2. 该腿自带 `issuefix_intervals`(重建了几个区间)。**空区间列表报的 0,和真读数的 0 一模一样**;M8 就是这个手法。
+3. 子句 (a) 的**同一个估计量**在全部 **58978** 个采样帧上跑出 **19127** 非零 ⇒ 中断瞬间的那些 0 是读数。
+4. axe 切片让子句 (a) 在**中断瞬间本身**上出 **2** ⇒ 它不是「在中断瞬间结构上开不了口」。
+
+**⚠️ 一处自伤,当场收账**:工具第一版的汇总行印着「every gap > 0」,而它**自己下一行的分布里有 4 个 0** —— **结论与自己的读数矛盾**。已改成 before/tie/after 三分,并把并列登记为 **UNDECIDABLE**。
+**⚠️ 变异台第一次跑 12 发里 5 发不合格**(1 NO-OP + 4 SURVIVED),按 evidence-discipline 规则 2 **先怀疑断言**:其中 **2 个是真实的断言缺口**(空区间列表;并列被折进主张一侧 —— 而第一份切片里**根本没有并列**,所以 `gap < 0` 与 `gap <= 0` 对全套测试**不可见**),补 `issuefix_intervals` 断言 + 第二份真帧切片才补上;另 3 个是变异写错。终版 **13/13 CAUGHT,零 NO-OP,零 SURVIVED**,含一条 must-not-fire 对照(**benign 注释不许移动裁定**)。
+
+### §EO.6 ratchet:推翻本裁定的编辑会发生在别人的文件里
+
+`tests/test_outchan_domain.py`(**31/31**)在下列任一情况变红:
+`J.CanNotUseAction` 掉了 `IsChanneling` 析取项 / `Think()` 不再调它 / 守卫沉到施法之下 / `ability_capture` 出现第二个施法点 / **有人照 #511 原样把那一行落进 `mode_outpost_generic.lua`**(报错文案直说「**这是冗余不是错**,去 `GetDesire` 修承诺」)。
+**立法依据是 §EN 那一条**:解锁或推翻本裁定的编辑住在 `jmz_func.lua`,**协同组 backlog 上那天没有任何一条在看那里**。
+
+**交棒**:
+(甲)**录像组 / dumper**:`buildings` 记录补 `modifiers`(至少 `modifier_watch_tower_capturing`),否则承诺修法**永远进不了 fixture**,§EO.4 的门一直关着;
+(乙)**本组下一轮或谁先拿到**:字段到位后落 `outcommit`(gated,turbo-only)—— 在 channel 进行中把瞭望塔模式的 desire 抬到不被抢 tick;
+(丙)**总监**:`tests/test_outlatch_capture_liveness.py` 检查 **1b** 要改**说明**(不是改断言)。它断言的是「`mode_outpost_generic.lua` 里没有 `IsChanneling` 守卫」—— **这句话本身会一直通过**,本轮也没动它;错的是它写在旁边的**意思**(`:12-13` 「the whole 75%-abort finding is about that missing guard」、`:57` 「if this fails, the guard landed」)。守卫**没有缺失**,它住在 `J.CanNotUseAction` 里;那个 token 落进本文件的那天不是「守卫落地了」,是**有人落了一个 no-op**。⇒ 一条**会一直通过、而且写着与事实相反的理由**的断言,比红的更难被发现。

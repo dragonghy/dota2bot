@@ -27,6 +27,54 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0OUTCHAN. **【2026-09-05T04:30Z 新增,**认领 GH #511**(04:07Z 录像组开、未被认领、带帧证据;
+   `[strategy]` open issue 本轮扫过 **#511**/#503/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
+   ⇒ 章程「每次触发的工作流」第 1 条成立,**本轮没有换域**);
+   **产物是一个否定裁定 + ratchet,零行为改动**:
+   `tools/batch_test/behavioral/outchan_domain.py`;`tests/test_outchan_domain.py`(**31/31**);
+   两份真帧逐字切片 `tests/fixtures/tl_260905_010205_luna_outchan.json` / `tl_260905_010226_axe_outchan.json`;
+   `tools/agent/mutstand_outchan.sh`(**13/13 CAUGHT,零 NO-OP,零 SURVIVED**,含 1 条 must-not-fire 对照);
+   `state.json:outchan_PRICING_20260905`;`test_set.md §EO`;
+   报告 `iterations/reports/strategy/20260905T043000Z.md`;
+   `bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸;
+   零 AWS 花费(只读 S3 取 4 份 .dem + dumper 缓存命中)、零 EC2、零波次。
+   **已交棒:录像组/dumper(甲)+ 本组下一轮(乙)+ 总监(丙)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):一个「守卫不存在」的论断,必须按 helper 展开后的
+   **求值集合**来立,不能按**文件的 token 集合**来立。** #511 的确证段写着「全文件没有
+   `bot:IsChanneling()` 守卫」—— **逐字为真、承重为零**:`Think()` 的**第一条语句**就是
+   `if J.CanNotUseAction(bot) then return end`,而那个 helper(`jmz_func.lua:103`)的析取项里
+   **就有** `or bot:IsChanneling()`。落地它 = **§EK 的 `argfix` 形状**:改了源码、过得了评审、
+   **与未修树逐位相同**。grep 一个文件回答的是「字符串在不在文件里」;守卫的问题是「这一帧上
+   这个谓词求过值没有」—— 有 helper 的代码里两者**系统性地不同**,而且差得**恰好是让修复
+   读起来必要的那个方向**。
+   **⭐⭐ 它的帧证据按构造反证它自己的机制。** 仓库里 `ability_capture` **唯一**的施法点就在
+   那道守卫**下面** ⇒ **每一次被记录的施法,按构造都是 `IsChanneling()` 已经为假的那一帧**
+   (**不依赖语料**,对 #511 那 53 次同样成立)。事件流独立地说同一件事:移除**先**、施法**后**,
+   中位间隔 **0.1s**;**0/28** 施法严格早于它本该解释的那次移除,**24/28** 移除严格在先,
+   **4/28** 在 0.1s 量化上并列 ⇒ 登记为 **UNDECIDABLE,不并进任何一侧**。
+   **⭐⭐⭐ 排掉本文件自己的三条放弃子句 ⇒ 杠杆在文件的另一头。** 36 个中断瞬间上
+   (a) 视野内有敌人 **2/36**、(b) 近期受击 **0/36**、(c) 存活数落后 **0/36**
+   ⇒ **34/36 的中断在本文件里找不到任何理由**,模式**从没停止过想要这座塔**。
+   剩下的活解释是**模式仲裁**(不在 dump 里,**照实说,不当结论**)⇒ **杠杆是 `GetDesire()`
+   里的承诺,不是 `Think()` 里的守卫**。
+   **⭐⭐⭐⭐ 铁证帧** `20260905_010205_slot7` **t=1349.9–1370.7,luna**:距塔 **140u**、
+   hp **1.00 全程**、`DAMAGE` 命中 **0**、最近敌人 **≥2618u**(1800u 视野外)、存活 **5v5 不变**;
+   **14 次施法、14 次 channel、一次也没占下来**,而三条子句**一条都没真过**。
+   **⭐⭐⭐⭐⭐ 承诺那一版本轮不落地,而「买不到」在这里是一句有地址的话**:它的谓词是
+   `ClosestOutpost:HasModifier('modifier_watch_tower_capturing')`(那个 modifier **挂在瞭望塔上,
+   不在英雄身上** —— 事件流里 `target` 就是 `#DOTA_OutpostName_North`),而 dumper 的
+   `buildings` 记录**没有 modifier 列表** ⇒ **进不了 fixture**。本组纪律是「行为改动必须带
+   真实帧 fixture」⇒ **不落一个验不了的改动**,把缺的字段**指名交出去**。
+   ⚠️ **两处自伤,当场收账**:(i) 工具第一版汇总行印「every gap > 0」,而**它自己下一行的
+   分布里有 4 个 0** —— 结论与自己的读数矛盾;(ii) **变异台第一次 12 发里 5 发不合格**,按
+   evidence-discipline 规则 2 先怀疑断言,**其中 2 个是真实的断言缺口**(空区间列表;并列被折进
+   主张一侧 —— 而**第一份切片里根本没有并列**,于是 `gap < 0` 与 `gap <= 0` 对全套测试**不可见**),
+   补 `issuefix_intervals` 断言 + 第二份真帧切片才补上。**没有把不合格的那一版当成通过记下来。**
+   **下一格**:(甲) dumper 的 `buildings.modifiers`(录像组);(乙) 字段到位后落 `outcommit`
+   (gated,turbo-only);(丙) 总监改 `test_outlatch_capture_liveness.py` **1b 的说明**
+   —— **断言会一直通过,错的是它旁边写的理由**,这比红的更难被发现。
+   **本组下一轮**:取未认领 `[strategy]` issue,否则换域,照旧先跑域价钱。
+
 0MIDSUPINT. **【2026-09-05T01:30Z 新增,**认领 GH #503**(P1 (甲) 卡 `strategy-43`、P2/P3 球在总监;
    `[strategy]` open issue 本轮扫过 **#503**/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445,
    **#503 是 00:14Z 新开、不是本组已交棒的**,且它逐字把成员的书写归给本组
@@ -5401,6 +5449,25 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T04:30Z(**认领 GH #511** —— 04:07Z 录像组开、未被认领、带帧证据;
+  `[strategy]` open issue 扫过 **#511**/#503/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
+  ⇒ 章程工作流第 1 条成立,**本轮没有换域**)。
+  **裁定:#511 提的那一行 `if bot:IsChanneling() then return end` 是 NO-OP** ——
+  `Think()` 的**第一条语句** `J.CanNotUseAction(bot)` 里**已经有** `or bot:IsChanneling()`
+  (`jmz_func.lua:103`);而 `ability_capture` **唯一**的施法点就在那道守卫**下面**
+  ⇒ **每一次被记录的施法按构造都是该谓词已为假的那一帧**(不依赖语料)。
+  事件流独立佐证:移除**先**、施法**后**,**0/28** 施法严格早于移除,**4/28** 并列判 UNDECIDABLE。
+  本文件自己的三条放弃子句在 36 个中断瞬间上命中 **2/0/0** ⇒ **34/36 找不到任何在本文件里的理由**
+  ⇒ **杠杆是 `GetDesire()` 的承诺,不是 `Think()` 的守卫**。
+  产出:`tools/batch_test/behavioral/outchan_domain.py`;`tests/test_outchan_domain.py`(**31/31**);
+  两份真帧切片;`tools/agent/mutstand_outchan.sh`(**13/13**,含 1 条 must-not-fire 对照);
+  `state.json:outchan_PRICING_20260905`;`test_set.md §EO`;
+  报告 `iterations/reports/strategy/20260905T043000Z.md`。
+  **`bots/`/`game/` 逐字节未动、armed 串一字未动、`queue.json` 一字未动、无新 id/闸**;
+  **零 AWS 花费**(只读 S3 取 4 份 .dem + dumper 缓存命中)、零 EC2、零波次。
+  ⚠️ 承诺修法**本轮不落地**:它的谓词 `ClosestOutpost:HasModifier('modifier_watch_tower_capturing')`
+  依赖一个 dumper **没有**的字段(`buildings` 无 modifier 列表)⇒ 进不了 fixture。
+  **已交棒:录像组/dumper(甲)+ 本组下一轮 `outcommit`(乙)+ 总监改 1b 说明(丙)。**
 - 2026-09-05T01:30Z(**认领 GH #503** —— P1 (甲) 卡 `strategy-43`、P2/P3 球在总监;
   `[strategy]` open issue 扫过 **#503**/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445,
   **#503 是 00:14Z 新开、不是本组已交棒的**,且它逐字把成员的书写归给本组 ⇒
