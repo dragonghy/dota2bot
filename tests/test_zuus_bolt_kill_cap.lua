@@ -232,12 +232,15 @@ tests['[hero] the helper is gated, turbo-only, and ends on the shipped expressio
     assert(sTail and sTail:find('GetAbilityDamage()', 1, true),
         'the helper must END on hAbility:GetAbilityDamage(), got ' .. tostring(sTail))
 
-    -- Exactly one raw GetAbilityDamage() survives in the whole Zeus file per
-    -- census site minus the one this change routed through the helper: the
-    -- helper's own fallback, and X.ConsiderW's (filed, not fixed -- see header).
+    -- Two raw GetAbilityDamage() calls survive in the whole Zeus file, and as of
+    -- 2026-09-05 BOTH are gate-off fallbacks rather than live reads: this
+    -- helper's, and X.GetBoltRangedKillDamage's (candidate `zusboltdmg`, the
+    -- OTHER consumer of the same zero, which the header below still describes as
+    -- filed-not-fixed -- that half is now fixed, behind its own gate, and the
+    -- count is what proves neither repair invented a third site).
     local n = select(2, src:gsub('GetAbilityDamage%(%)', ''))
     assert(n == 2, 'expected exactly 2 GetAbilityDamage() calls left in ' .. ZUUS
-        .. ' (the helper fallback + the un-fixed X.ConsiderW site), got ' .. n)
+        .. ' (this helper\'s fallback + X.GetBoltRangedKillDamage\'s), got ' .. n)
 end
 
 -- ---------------------------------------------------------------------------

@@ -217,9 +217,23 @@ tests['[ratchet] [1] the second consumer is one expression and it has the shape 
     local src   = strip_comments(read_file(ZUUS))
     local sBody = body_of(src, 'ConsiderW')
 
-    assert(sBody:find('local nDamage = abilityW:GetAbilityDamage() * ( 1 + bot:GetSpellAmp() )', 1, true),
-        'X.ConsiderW must still take its flat damage from GetAbilityDamage() -- that is '
-            .. 'the term §2 proves is zero')
+    -- RE-DERIVED 2026-09-05 (hero, `zusboltdmg`).  This assertion used to pin the
+    -- literal `local nDamage = abilityW:GetAbilityDamage() * ( 1 + bot:GetSpellAmp() )`.
+    -- The raw call moved one level down, into X.GetBoltRangedKillDamage, whose
+    -- LAST statement is that same read -- so the SHIPPED expression is unchanged
+    -- by construction and everything this file prices still holds gate-off.  The
+    -- pin follows the expression rather than the line: what §2 proves is zero is
+    -- the read, and §6 is where the arming consequence lives.
+    assert(sBody:find('local nDamage = X.GetBoltRangedKillDamage( abilityW ) * ( 1 + bot:GetSpellAmp() )', 1, true),
+        'X.ConsiderW must still take its flat damage through X.GetBoltRangedKillDamage '
+            .. '-- that helper\'s shipped leg is the GetAbilityDamage() term §2 proves '
+            .. 'is zero')
+    local sCap = body_of(src, 'GetBoltRangedKillDamage')
+    assert(sCap:find('local nShipped = hAbility:GetAbilityDamage()', 1, true)
+            and sCap:match('(return[^\n]*)%s*$'):find('return nShipped', 1, true),
+        'and X.GetBoltRangedKillDamage must bind the shipped read ahead of its gate and '
+            .. 'END on that binding, so gate-off is the shipped path by construction '
+            .. 'rather than by measurement')
     assert(sBody:find('targetRanged:GetHealth() < targetRanged:GetActualIncomingDamage( nDamage '
             .. '+ targetRanged:GetHealth() * abilityASBonus , DAMAGE_TYPE_MAGICAL )', 1, true),
         'the ranged-creep predicate must still be the two-term estimate this file prices')
@@ -556,17 +570,40 @@ tests['[ratchet] [6] the day the second consumer re-opens, the (a) reading stops
     local src = strip_comments(read_file(ZUUS))
     local sBody = body_of(src, 'ConsiderW')
 
+    -- RE-DERIVED 2026-09-05 (hero, `zusboltdmg`).  What this ratchet is FOR is
+    -- unchanged, and it is not "the string GetAbilityDamage appears in
+    -- ConsiderW": it is "is the second consumer still empty-domain in the
+    -- configuration a verdict will be read from".  `zusboltdmg` repaired the read
+    -- BEHIND A GATE, so the answer is now leg-dependent, and the ratchet has to
+    -- say which leg it is certifying instead of silently certifying the wrong one.
+    --   * SHIPPED (gate off, and every real game today): still zero, because the
+    --     helper's last statement is the same raw read -- pinned in §1.
+    --   * ARMED: NOT zero. The domain re-opens, and the hand-off below is the
+    --     whole point of this ratchet firing.
+    local sHelper = body_of(src, 'GetBoltRangedKillDamage')
     local bZeroStillProven = (nonzero['zuus'] == nil)
-        and sBody:find('abilityW:GetAbilityDamage()', 1, true) ~= nil
+        and sHelper:find('hAbility:GetAbilityDamage()', 1, true) ~= nil
+        and sBody:find('X.GetBoltRangedKillDamage( abilityW )', 1, true) ~= nil
 
     assert(bZeroStillProven,
-        'X.ConsiderW\'s flat damage is no longer a provable zero. The consequence is '
-            .. 'NOT in this file: `zusstatic`\'s condition (a) is being bought on the '
-            .. 'ConsiderR consumer alone (queue hero-15), and that was only the whole id '
-            .. 'because this consumer had empty domain. It no longer does. Re-open the '
-            .. 'second consumer in the (a) definition BEFORE reading any verdict, and '
-            .. 'price the band with §5 (' .. string.format('%.1f', 4.81) .. '-'
-            .. string.format('%.1f', 24.00) .. ' HP at amp 0).')
+        'X.ConsiderW\'s flat damage is no longer a provable zero ON THE SHIPPED LEG. '
+            .. 'The consequence is NOT in this file: `zusstatic`\'s condition (a) is '
+            .. 'being bought on the ConsiderR consumer alone (queue hero-15), and that '
+            .. 'was only the whole id because this consumer had empty domain. It no '
+            .. 'longer does. Re-open the second consumer in the (a) definition BEFORE '
+            .. 'reading any verdict, and price the band with §5 ('
+            .. string.format('%.1f', 4.81) .. '-' .. string.format('%.1f', 24.00)
+            .. ' HP at amp 0).')
+
+    -- THE HAND-OFF, coded rather than left as prose in a report. The armed leg of
+    -- `zusboltdmg` un-empties this consumer, so the two ids must not ride the same
+    -- wave until the (a) definition is re-opened. The gate id is named here so a
+    -- reader of a verdict can grep for it; iterations/queue.json hero-32 carries
+    -- the same sentence in its acceptance.
+    assert(sHelper:find("J.IsSoakCandidate( 'zusboltdmg' )", 1, true),
+        'the repair that re-opens this consumer must stay gated on `zusboltdmg`. If '
+            .. 'that gate is gone the repair is a DEFAULT, and `zusstatic`\'s (a) '
+            .. 'definition is wrong in every wave, not just in one that arms both.')
 
     -- The sibling gate is untouched by this file and must stay that way: the
     -- OTHER direction of the same zero (widening ConsiderW2) is `zusboltcap`'s,

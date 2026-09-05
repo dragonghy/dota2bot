@@ -22,6 +22,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-101. **Zeus 的远程兵狙杀分支**闭式为死**,而算术和真实帧反事实**两样都是本组早就写下的** ——
+   这一轮补的是**修复本身**和**方向证明**(报告 `iterations/reports/hero/20260905T200244Z.md`,
+   `state.json:zusboltdmg_20260905`,`queue.json:hero-32`,GH **#537**;
+   新 `tests/test_zuus_bolt_ranged_damage.lua` 18 例 + `tools/agent/mutstand_zusboltdmg.sh` 8 变异全杀;
+   `bots/BotLib/hero_zuus.lua` **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实**:`X.ConsiderW` 的平伤读 `abilityW:GetAbilityDamage()`,而这个调用只读能力
+     **顶层 `AbilityDamage`** KV 字段;`zuus_lightning_bolt` 不声明它(梯子在
+     `AbilityValues/damage` = `140 220 300 380`)⇒ 读数**在引擎里**恒 0。
+     证明无需句柄解析(`tools/agent/ability_damage_census.py`:`hero_<h>.lua` 里的读只可能
+     落在 `<h>` 自己的能力上;全树 128 英雄只有 16 个能力声明非零 `AbilityDamage`,Zeus 一个都没有)。
+   - **缺陷不是「小了一点」是「另一个谓词」**:`h < m*(D + h*b)` 在 `D=0` 时退化成
+     **`1 < m*b`**,**与血量无关**;出厂 `b=0.09`、`m<=1` ⇒ 分支在**任何**等级 / 血量 / 魔抗下
+     都为假。盈亏平衡要 `b>=1.0`,是出厂值的 **11.1 倍**。**闭式为死,不是边际为死。**
+   - **⭐ 选题不是翻源码碰运气,是读一个已有的普查。** PROVEN-ZERO 名单在焦点五里有 5 个站点
+     (`zuus:888/:981`,`lion:583/:822/:1009`),取其中**方向为「杀死分支」**且**已有真实帧
+     反事实**的那一个。剩下 4 个仍在名单上,方向要**逐站点读**(同一个零喂给
+     `FindAoELocation` 的 `nMaxHealth` 是**放宽**,GH #175 §2)。
+   - **⭐⭐ 方向由构造保证,而这次超集性要经过一个函数,所以单调性必须自己被验。**
+     (i) `max` 形状 ⇒ armed >= shipped(§3 扫 6×7 组合);(ii) 判据对平伤**单调不减**
+     (§3b 扫 `b×m×h×D` 全格,用**真的** mock `GetActualIncomingDamage` 驱动)。
+     前两根(`cullthresh`/`wkbonefight`)靠整数蕴含 `n==1 ⇒ n>=1`,**顺带**就有超集性;
+     这一根不行 —— **第一次把单调性单独立成一条断言**。变异 **M4(`>` → `<`,一个字符)**
+     读起来像笔误,把 max 变 min ⇒ armed 能答**低于** shipped,静默删掉出厂释放。
+   - **⛔ 共臂禁令,发波之前登记**:arming 本 id 把 `abilityASBonus` 的**第二个消费方**
+     从空域变成非空域,而那正是 `zusstatic` 的 (a) 能只在 `ConsiderR` 一个消费方上买
+     (`hero-15`)的前提 ⇒ **`zusboltdmg` 与 `zusstatic` 不许同波 armed**。钉在三处
+     (棘轮 §6 / `state.json` / `hero-32` acceptance),棘轮还额外断言**本 id 的 gate 还在**
+     —— gate 一没,修复就成了默认,那时该前提在**每一波**都错,不只是同臂那波。
+   - **⚠️ 覆盖边界,两句不许合并**:`X.GetRanged` 需要**小兵单位**,而 `tests/fixtures`
+     **没有任何一帧带小兵**;第二条独立堵点是 `GetActiveMode` 恒 0(GH #474)。两条**各写成
+     一条断言**(§5/§5b),修好那天红并打出「这是好消息,去重写 §4」。**改动的那一项**是
+     真实帧读数(§2d:真实句柄上 shipped=0 / armed=380)。⚠️ 端到端那一帧
+     `abilityASBonus` **实测 0**(Static Field 是隐藏内在,`.dem` 不带句柄)⇒ 量到的
+     `m=1.00→300 / 0.75→250 / 0.25→50` 是阈值的**下界**。
+   - **本轮故意打红并重新推导两条棘轮**(设计上就该此刻响):§1/§6 的锚点从**行**改成
+     **表达式**并明写**认证的是哪条腿**;`test_zuus_bolt_kill_cap.lua` 的「恰好 2 个
+     `GetAbilityDamage()`」**数值不变**而**理由散文**过时 ——「结论对、原因错」,
+     `evidence-discipline` 第 4 条点名的那种。
+   - 顺手(附带,不是主体):`test_incoming_damage_callsite_census.lua` 的 grep 计数
+     `44→46`,两个**承重**计数(40/41)逐位不变 ⇒ **PURE PROSE**,按它自己的指示三文件同步。
+     **已用 `git stash` 差分确认这条红是本轮引入的**(HEAD 上 6/0 绿),归本组修。
+   - **下一棒**:**批测台** `queue.json:hero-32`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30`/
+     `hero-31` 并成同一次遍历)。**总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。
+     **在 (a) 买到之前不许 promote;将来入集必须与 `zusstatic` 分波。**
+
 -100. **Wraith King 的 Bone Guard **只在单挑里放**,而单挑是它能加入的最便宜的一场架 ——
    而本轮**能验的那一半第一次正好是改动的那一项**(报告
    `iterations/reports/hero/20260905T170150Z.md`,`state.json:wkbonefight_20260905`,
@@ -4472,6 +4517,50 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T20:02Z(报告 `iterations/reports/hero/20260905T200244Z.md`;轴 **Zeus 的远程兵
+  狙杀分支闭式为死:`X.ConsiderW` 的平伤读一个在引擎里恒零的字段,判据退化成与血量无关的
+  `1 < m*b` ⇒ 从不开火。修好并收进 gated `zusboltdmg`,turbo-only 未 armed**;
+  新 backlog `-101`,`state.json:zusboltdmg_20260905`,`queue.json:hero-32`,GH **#537**)
+  **`bots/BotLib/hero_zuus.lua` 有真代码行**(新 `X.GetBoltRangedKillDamage` +
+  `X.ConsiderW` 一处调用点);新 `tests/test_zuus_bolt_ranged_damage.lua`(**18 例**)+
+  新 `tools/agent/mutstand_zusboltdmg.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#533/#525 是本组今天刚落的两根、球在批测台 / #512 本组 `-96` 明写不写 / #502→#516 harness /
+    #488 录像组 / #465 上轮复核完毕)。连续三轮 Axe/Axe/WK ⇒ **换焦点英雄**。
+    选法**不是翻源码碰运气**:读 `tools/agent/ability_damage_census.py` 的 **PROVEN-ZERO** 名单
+    (焦点五 5 个站点),取**方向为「杀死分支」且已有真实帧反事实**的那一个。
+  - **事实**:`GetAbilityDamage()` 只读顶层 `AbilityDamage` KV 字段,`zuus_lightning_bolt`
+    不声明它(梯子在 `AbilityValues/damage` = `140 220 300 380`)⇒ 读数**在引擎里**恒 0;
+    证明**无需句柄解析**(全树 128 英雄只有 16 个能力声明非零该字段,Zeus 一个都没有)。
+  - **缺陷是「另一个谓词」不是「小了一点」**:`D=0` 时 `h < m*(D + h*b)` 退化成 **`1 < m*b`**,
+    **与血量无关**;出厂 `b=0.09` ⇒ **闭式为死**,盈亏平衡要 `b>=1.0`(11.1×)。
+  - **⭐ 算术与真实帧反事实都不是本轮的** —— 是本组 2026-08-30 的 `-50` 收尾
+    (`test_zuus_static_field_second_consumer.lua` §3/§4c),那一轮明写 **"filed, not fixed"**。
+    **本轮补的是修复本身 + 方向证明 + 把「arming 会动到别人的前提」编成代码。**
+  - **⭐⭐ 超集性这次要经过一个函数 ⇒ 单调性必须自己被验**:(i) `max` 形状 ⇒ armed >= shipped;
+    (ii) 判据对平伤单调不减(§3b 扫全格,用真的 mock `GetActualIncomingDamage`)。
+    前两根靠整数蕴含**顺带**就有超集性,这一根不行 —— **第一次把单调性单独立成断言**。
+    变异 **M4(`>` → `<`,一个字符)**把 max 变 min ⇒ armed 能答低于 shipped,静默删释放。
+  - **⛔ 共臂禁令**:`zusboltdmg` 与 `zusstatic` **不许同波 armed**(前者 arming 会把
+    `abilityASBonus` 第二消费方从空域变非空,而那是后者 (a) 只买一个消费方的前提)。
+    钉在三处;棘轮还额外断言**本 id 的 gate 还在**。
+  - **⚠️ 覆盖边界,两句不许合并**:`X.GetRanged` 需要小兵,而 fixtures **一帧都不带小兵**;
+    第二堵点 `GetActiveMode` 恒 0(GH #474)。两条各写成断言(§5/§5b)。
+    **改动的那一项是真实帧读数**(§2d:真实句柄 shipped=0 / armed=380)。
+    ⚠️ 端到端那帧 `abilityASBonus` **实测 0**(隐藏内在,`.dem` 不带句柄)⇒
+    `m=1.00→300 / 0.75→250 / 0.25→50` 是阈值的**下界**。
+  - 验证:新文件 **18/18**;`run_tests.lua zuus` **177 例 0 失败**;变异台 **8/8**
+    (M3 死接线孪生、M4 被禁方向、M7/M8 两个对量具自己的对照);
+    另**逐个点名跑了引用 `hero_zuus.lua` 的 25 个 lua 依赖者 + 3 个 python 依赖者**;
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings),没用 BYPASS**。
+  - 顺手:`test_incoming_damage_callsite_census.lua` grep 计数 `44→46`,承重计数(40/41)
+    逐位不变 ⇒ **PURE PROSE**,三文件同步;**已 stash 差分确认是本轮引入,归本组修**。
+    `test_detector_source_constants.py` 红 = **GH #490,先于本轮,不认领**。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒ 「全量绿」本轮没有人说。
+    开工自检 **worst exit 3**(cadence / owed-executions / trunk-red(python) / trunk-red(lua)),
+    **只对上面那一条做了 HEAD 差分并认领,其余四条没有逐条差分** —— 如实登记,不假装。
+    ⚠️ 自检第一次调用被脚本自己 **REFUSED**(stdout 是管道,证据纪律 3,本仓第 5 次复发)。
+  - 下一棒:**批测台** `queue.json:hero-32`(零 EC2,可与 `hero-2`/`hero-30`/`hero-31` 合并遍历)。
 - 2026-09-05T17:0xZ(报告 `iterations/reports/hero/20260905T170150Z.md`;轴 **Wraith King 的
   Bone Guard 只在单挑里放:`X.ConsiderW` 的 `#nEnemysHerosInView == 1` 收进 gated
   `wkbonefight`,turbo-only 未 armed**;新 backlog `-100`,`state.json:wkbonefight_20260905`,

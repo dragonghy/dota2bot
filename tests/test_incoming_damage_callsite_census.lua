@@ -256,7 +256,12 @@ tests['[detector] the three counts are derived, and "42 call sites" is none of t
     -- assertion fires is itself the answer: `lines` alone red = prose only.
     local published_code_lines = 40
     local published_calls      = 41
-    local published            = 44   -- grep line count = code + prose
+    local published            = 46   -- grep line count = code + prose
+    -- 44 -> 46 on 2026-09-05: the `zusboltdmg` block above
+    -- X.GetBoltRangedKillDamage quotes the snipe predicate and then names the
+    -- call again to state its monotonicity. PURE PROSE -- code_lines and calls
+    -- did not move, which is exactly the case the assertion order below is
+    -- built to make legible without anyone re-deriving it.
     assert(r.code_lines == published_code_lines,
         'the published code-line count ' .. published_code_lines .. ' now reads '
         .. r.code_lines .. ' -- a call site was ADDED OR REMOVED under bots/. '

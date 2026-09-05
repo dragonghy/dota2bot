@@ -1759,6 +1759,17 @@
         "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 三份读数写进同一个文件(每份自带 N frames / M episodes / K games 与至少一个 (game, t)),路径是**裁定的一部分**,因为 owed 腿只读得出「文件在不在」",
         "status_note": "⚠️ `status` 故意留在 **`pending`**(已裁但未执行),不新造 `approved_scan` 这种拼写:`pending_rulings.py` 的已知词汇只有 OPEN_STATES(pending/running/harvested)+ CLOSED_STATES(done/rejected),队列里已经有 **34 行**落在词汇之外(GH #317 让它们计为 open,但漂移信号本身还在)。总监不该再给它加一行。执行完毕的判据不在这个字段上,在 `iterations/owed_executions.json:hero_domain_scan_2_30_31` 的 `done_when`。"
       }
+    },
+    {
+      "id": "hero-32",
+      "stream": "hero",
+      "bundle": "zusboltdmg",
+      "seeds": [],
+      "priority": 3,
+      "question": "给 `zusboltdmg` 买条件 (a) 的域。杠杆:bots/BotLib/hero_zuus.lua 的 X.ConsiderW 最后一条分支(远程小兵狙杀)用 `abilityW:GetAbilityDamage()` 当平伤,而 `GetAbilityDamage()` 只读能力的顶层 `AbilityDamage` KV 字段,`zuus_lightning_bolt` 根本不声明它(伤害梯子在 `AbilityValues/damage` = 140 220 300 380,仓内快照 tests/mock/special_value_shapes.lua)⇒ 该读数在**引擎里**恒 0,不只是在 mock 里(tools/agent/ability_damage_census.py 按「hero_<h>.lua 里的读只可能落在 <h> 自己的能力上」给出无需句柄解析的证明)。平伤为 0 时判据退化成 `h < m*b*h` 即 `1 < m*b` —— 与血量无关,而 Static Field 的 b 出厂 0.09、m<=1 ⇒ 这条分支**闭式为死**,在任何等级、任何小兵血量下都不开火。本轮已落地 gated 修复(turbo-only,未 armed),tests/test_zuus_bolt_ranged_damage.lua §4c 在真实帧 f_260819_222052_zuus_w2_leak(Zeus 8 级、W 4 级、不冷却、152 蓝)上驱动真的 X.ConsiderW:出厂腿在 14 档血量上全部 NONE,armed 腿把 100 血远程兵狙掉。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 / hero-31 同形:零 EC2 的只读扫描,四者可并成同一次遍历)。需要的读数:(1) Zeus 的 W 已学、不冷却、蓝够,且 1400 内没有敌方英雄、800 内友方英雄 <3、蓝量 >15% 的瞬间数(这是 X.GetRanged 的四道抑制条件,不满足就返回 nil,分支根本到不了);(2) 其中我方防御塔正在攻击的那个单位是敌方远程兵、且距 Zeus <=1400 的瞬间数;(3) 其中该远程兵血量的分布(要分布或阈值占比,不要中位数 —— 铁律 4(ii)),以及血量 < 380*(1+spell_amp) 的占比(= armed 腿会狙的那一档);(4) 另一条腿:990 内敌方远程线兵且其血量 < Zeus 平A 伤害、且 Zeus 蓝量 >40% 且绝对蓝 >400 的瞬间数与同样的血量分布。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,两条腿(塔目标 / 990 线兵)分开给,不许并池;并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「W 就绪 + 无敌方英雄在 1400 内 + 塔正在打一个 <380 血的远程兵」那一帧)。**预登记的判读方向**:若 (2)+(3) 的域接近 0(即 Zeus 几乎从不处在「没人打架、塔在打一个残血远程兵」的局面),这根杠杆没有可兑现的收益,不入集,即使桌面证据闭式成立;带 DOMAIN-NOT-REACHED 退回门。**为什么必须走批测而不是 fixture**:tests/fixtures 里没有任何一帧带小兵单位(make_fixture.py 记的是英雄快照),所以 X.GetRanged 按构造驱动不了;这一条本轮已写成断言(tests/test_zuus_bolt_ranged_damage.lua §5),语料哪天带上小兵它就红并说「这是好消息,去重写 §4」。**预登记的归因边界(方向由构造保证)**:armed 答案 = max(shipped, KV) >= shipped,且判据对平伤单调不减 ⇒ armed 的狙杀集是 shipped 的严格超集,arming 只能增加释放。所以负读数只能读作「狙小兵狙多了不好」,不能读作「杠杆吃掉了一次释放」(那种失败没有任何计数器报得出来)。⚠️ **共臂禁令,发波之前登记**:arming `zusboltdmg` 会把 `abilityASBonus` 的第二个消费方从空域变成非空域,而「第二个消费方空域」正是 `zusstatic` 的条件 (a) 能只在 ConsiderR 一个消费方上买(queue hero-15)的前提。⇒ **`zusboltdmg` 与 `zusstatic` 不许同波 armed**,除非先重开 (a) 的定义。同一句话钉在 tests/test_zuus_static_field_second_consumer.lua §6 和 iterations/state.json:zusboltdmg_20260905。**在 (a) 买到之前不许 promote。**",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

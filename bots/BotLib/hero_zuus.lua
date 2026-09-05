@@ -875,6 +875,88 @@ function X.ConsiderQ()
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
+--- [zusboltdmg] The flat damage X.ConsiderW's ranged-creep snipe is allowed to
+--- claim Lightning Bolt will do.  Turbo-only soak candidate, INERT until armed.
+--- Written 2026-09-05 (hero stream) under OWNER_PRIORITIES P4.4.
+---
+--- THIS IS THE OTHER CONSUMER OF THE SAME STRUCTURAL ZERO, and the one the
+--- sibling repair deliberately did not touch.  X.GetBoltKillHealthCap below
+--- carries the whole `AbilityDamage` argument; the short form is that
+--- `CAbility:GetAbilityDamage()` reads an ability's TOP-LEVEL `AbilityDamage` KV
+--- field and nothing else, and `zuus_lightning_bolt` does not declare one -- its
+--- ladder lives in `AbilityValues/damage` (140 220 300 380,
+--- tests/mock/special_value_shapes.lua).  So the read answers 0 on every rank,
+--- silently, in the ENGINE and not merely in the mock: 30 of 128 shipped heroes'
+--- abilities declare the field at all and only 16 declare a nonzero one
+--- (tools/agent/ability_damage_census.py, which proves this site's zero with no
+--- handle resolution -- a read inside hero_zuus.lua can only land on a Zeus
+--- ability, and no Zeus ability declares one).
+---
+--- WHAT THE ZERO DOES HERE, and it is the OPPOSITE of what it does to
+--- `zusboltcap`'s site.  The snipe predicate is
+---
+---     targetRanged:GetHealth() < targetRanged:GetActualIncomingDamage(
+---         nDamage + targetRanged:GetHealth() * abilityASBonus, DAMAGE_TYPE_MAGICAL )
+---
+--- With nDamage = 0 it degenerates to `h < m*b*h`, i.e. `1 < m*b` -- HEALTH-FREE.
+--- Static Field's shipped `b` is 0.09 and `m` is at most 1, so the branch is
+--- false on every creep, at every health, at every bolt rank, in every game.  The
+--- deadness is closed-form and percentage-proof, not marginal: break-even needs
+--- Static Field to take 100% of current health, 11.1x the shipped value.  That
+--- arithmetic is not new here -- it is
+--- tests/test_zuus_static_field_second_consumer.lua §3, and §4c of that same file
+--- already DROVE the counterfactual on a real frame (f_260819_222052_zuus_w2_leak,
+--- Zeus level 8, rank-4 bolt, off cooldown, 152 mana): restore the KV damage and
+--- the same creep is sniped.  This change is that counterfactual, landed behind a
+--- gate.
+---
+--- DIRECTION BY CONSTRUCTION, not by data.  The armed answer is `math.max` of the
+--- shipped read and the KV read, so it is >= shipped for every input, and the
+--- predicate is monotone increasing in nDamage (GetActualIncomingDamage is a
+--- non-decreasing function of the damage it is handed).  Therefore the armed
+--- snipe set is a STRICT SUPERSET of the shipped one: arming can only ADD casts,
+--- never silently delete one.  A negative reading is attributable to "snipes too
+--- often", never to "the lever ate a cast".  The mutant that reads exactly like
+--- the intended change while violating this -- returning the KV number
+--- UNCONDITIONALLY, i.e. min-like behaviour when a patch ever makes
+--- GetAbilityDamage answer bigger -- is M4 in tools/agent/mutstand_zusboltdmg.sh.
+---
+--- WHY GATED.  It ADDS casts, and this stream ships an action-adding change dark
+--- until a wave has sized its domain (the discipline `axecallbkb` and `wkqdmg`
+--- state).  A KV read that answers <= the shipped expression falls through to the
+--- shipped expression rather than inventing a default (the house rule from
+--- GH #162), so gate-off is the shipped path by construction.
+---
+--- WHAT IS DELIBERATELY NOT TOUCHED.  Only the flat term moves.  The
+--- `( 1 + bot:GetSpellAmp() )` factor, `abilityASBonus`, X.GetRanged's four
+--- suppressors (no enemy hero within 1400, no 3+ allies, mana floors, the tower's
+--- own attack target) and the branch's position LAST in X.ConsiderW are unchanged
+--- -- so this can never take a bolt away from a fight: X.GetRanged returns nil
+--- the moment any enemy hero is inside 1400.
+---
+--- ⚠️ CONSEQUENCE REGISTERED BEFORE THE WAVE, not after.  While this id is
+--- UNARMED the second consumer of `abilityASBonus` stays empty-domain, which is
+--- the premise that lets `zusstatic`'s condition (a) be bought on the ConsiderR
+--- consumer alone (queue hero-15).  THE DAY `zusboltdmg` IS ARMED THAT PREMISE
+--- LAPSES ON THE ARMED LEG: `zusstatic` and `zusboltdmg` must not be armed in the
+--- same wave unless the (a) definition is re-opened first.  Pinned in
+--- tests/test_zuus_static_field_second_consumer.lua §6, registered in
+--- iterations/state.json and in the acceptance of iterations/queue.json hero-32.
+function X.GetBoltRangedKillDamage( hAbility )
+
+	local nShipped = hAbility:GetAbilityDamage()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusboltdmg' )
+	then
+		local nKvDamage = hAbility:GetSpecialValueInt( 'damage' )
+		if type( nKvDamage ) == 'number' and nKvDamage > nShipped then return nKvDamage end
+	end
+
+	return nShipped
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then return BOT_ACTION_DESIRE_NONE, nil end
@@ -885,7 +967,7 @@ function X.ConsiderW()
 	local nCastRange = abilityW:GetCastRange() + AetherReach()
 	local nCastPoint = abilityW:GetCastPoint()
 	local manaCost = abilityW:GetManaCost()
-	local nDamage = abilityW:GetAbilityDamage() * ( 1 + bot:GetSpellAmp() )
+	local nDamage = X.GetBoltRangedKillDamage( abilityW ) * ( 1 + bot:GetSpellAmp() )
 
 	if J.IsRetreating( bot ) and bot:WasRecentlyDamagedByAnyHero( 2.0 )
 	then
