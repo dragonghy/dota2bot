@@ -10762,7 +10762,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑤ **交棒这次是机器可读的**:`owed_executions.json` +2 行(`a_evidence_tpdying` / `a_evidence_tpreach`,
   executor = 录像组,`done_when: path_exists`,零 AWS 增量,note 里写死「什么样的内容才算买到」)。
   ⚠️ `path_exists` **只判产物存在不判内容**(LIMIT 11),已写进 note,**不假装它更强**。
-  **通用化(给全部 40 条自动开行)不在本轮范围,已立案,GH 号收尾回填 —— 按 §EX.11 号不顺推。**
+  **通用化(给全部 40 条自动开行)不在本轮范围,已立案 GH #540。**
+  ⭐ **§EX.11 的「先拿掉号 → push → 开 issue → 回填」本轮执行了,而且又中一发**:
+  顺号会写成 `#539`(**已被录像组占用**),实际拿到 **#540**。
+  **`claim_precheck.sh` 发表前跑过**:先红一次(`MISSING §A` —— ⭐ 工具把 `§A'.3` 的撇号当分隔符,
+  而 `§A'` 在 `test_set.md` 里是 `### A'.` 形式的真章节、不是 `## §` 形式,**记一条新盲区**),
+  改引字面标题后 `clean` / `OK to publish` / **`PRECHECK_EXIT=0`** 才发。
+  **GH #35 / #159 追评已发,#540 已建;本轮 MCP 可用,未触发铁律 11。**
   ⑥ **核验读数**:串 540 → **524 字节**,md5 → **`572b60753699bc68b2ad5ec9020f2512`**;
   `CT_EXIT=0`(`12/47/0 unresolved => 8 terms`,**`TERMS` 行与 W49 逐字节相同** ⇒ 选种解空间不动);
   `ARM_EXIT=0`(59 全 wired);`promote_atoms.py` exit 0,`tp_response_releases_need_commit` **一字不动**

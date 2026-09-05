@@ -4,7 +4,7 @@ l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,field
 **成员串 59**(上一行,**524 字节**,md5 `572b60753699bc68b2ad5ec9020f2512`)。本行 **2026-09-05T22:xxZ 的变动:两条 `退回出集`(61 → 59)**,总监裁定全文 **§FB**。⛔ 两条都**不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff),重新入集路径各自写在 §FB.5。
 1. **`tpdying` 退集**(61 → 60)—— armed **17 天**(§A' 08-19 入集),`verify_coverage.py` 读 **verify=0 / 159 份报告**。
 2. **`tpreach` 退集**(60 → 59)—— armed **12 天**(§BC 08-24 入集),同样 **verify=0**。
-⭐ **退集的理由与 `zusstatic` 不同,必须分清**:`zusstatic` 是**条件 (a) 结构上买不到**;这两条**买得到**,而且各自的验收形状**在入集那天就写好了**(§A'.3 两个检测器 / §BC.4 `tp_channel_death.py` + 按 mode 分层,连降级读法都写了)。**从没人买过的原因不是难,是那份义务只写在 test_set.md 的散文里,没有落到任何一张真正驱动录像组的表上** —— 这正是 §2.5 / GH #413 立法过的那条缺陷,而那条立法只覆盖**裁定**,不覆盖**入集自带的验收义务**(全文 §FB.3,立案 GH 待回填)。
+⭐ **退集的理由与 `zusstatic` 不同,必须分清**:`zusstatic` 是**条件 (a) 结构上买不到**;这两条**买得到**,而且各自的验收形状**在入集那天就写好了**(§A'.3 两个检测器 / §BC.4 `tp_channel_death.py` + 按 mode 分层,连降级读法都写了)。**从没人买过的原因不是难,是那份义务只写在 test_set.md 的散文里,没有落到任何一张真正驱动录像组的表上** —— 这正是 §2.5 / GH #413 立法过的那条缺陷,而那条立法只覆盖**裁定**,不覆盖**入集自带的验收义务**(全文 §FB.3,立案 **GH #540**)。
 ⇒ 本轮把两条 (a) 义务**登记进 `iterations/owed_executions.json`**(自检第 9 条腿每轮替它举手),再退集。**退集不销毁买 (a) 的能力**:W39–W49 的 dump 里两条都是 armed 的,(a) 从**已经存在的语料**里买,与 `stayattr` 09-05 的先例逐条同型(那条退集后录像组照样在 W48 上买到了 (a1) WORKING)。
 ⚠️ **`tpdying` 属共同 promote 原子 `tp_response_releases_need_commit`**(subject `tpdying`/`tpdead`,prereq `tpcommit`):**退集不是 promote**,原子行**一字不动**,`promote_atoms.py` 本轮 exit 0。`tpdead`/`tpcommit`/`tpgap` **留在集内**。
 ⚠️ **载体项 8 → 8 逐字不变,量出来的**:`carrier_terms.py` 对 61-id 与 59-id 两串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved`;计数 `12/49 → 12/47`(两条都是 generic)。⇒ **选种解空间不受影响。**
@@ -18105,7 +18105,7 @@ verify=0 的长尾按 `narrat` 升序,前几条是
 ⇒ **本轮的动作(不新增规则,用现有 registry)**:把这两条 (a) 义务
 **登记进 `iterations/owed_executions.json`**,各带一个**裸读得出的 `done_when`**
 (自检第 9 条腿 `owed-executions` 每轮举手并 exit 3)。
-**通用化(给全部 40 条自动开行)不在本轮范围** —— 已立案,GH 号见 §FB.7(收尾回填)。
+**通用化(给全部 40 条自动开行)不在本轮范围** —— 已立案 **GH #540**(§FB.7)。
 ⛔ 我**没有**把这条发现再写成第三句散文。
 
 ### §FB.4 退集为什么**不销毁**买 (a) 的能力(这一条是先例不是推理)
@@ -18146,6 +18146,6 @@ verify=0 的长尾按 `narrat` 升序,前几条是
 ### §FB.7 交棒与立案(收尾回填)
 
 - 录像组:两条 owed 行 `a_evidence_tpdying` / `a_evidence_tpreach`(`iterations/owed_executions.json`),
-  `done_when` 各自裸读得出;GH #35 / #159 追评通知(MCP 可用则发,不可用按铁律 11 写进报告)。
-- 立案(通用化「入集自带的 (a) 义务自动开 owed 行」):GH 号收尾回填。
+  `done_when` 各自裸读得出;**GH #35 / #159 追评已发**(`claim_precheck.sh` 发表前跑过,`PRECHECK_EXIT=0` / `OK to publish`)。
+- 立案(通用化「入集自带的 (a) 义务自动开 owed 行」):**GH #540**,标题 `[harness] An admission's condition-(a) obligation has no row anywhere`。
   ⚠️ **按 §EX.11 的教训,号不顺推** —— 先把号从引用里拿掉、push、开 issue、再回填。

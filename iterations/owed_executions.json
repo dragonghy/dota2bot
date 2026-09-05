@@ -104,9 +104,9 @@
    "delivered_to": [
     "iterations/streams/test_set.md §FB(裁定全文档案)",
     "iterations/owed_executions.json(本行)",
-    "GH #35 追评(MCP 可用则发;不可用按铁律 11 记在本轮报告里,下轮补)"
+    "GH #35 追评(已发)"
    ],
-   "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 issue。",
+   "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 **GH #540**。",
    "done_when": {
     "kind": "path_exists",
     "path": "iterations/reports/replay-check/a_evidence_tpdying.md"
@@ -123,9 +123,9 @@
    "delivered_to": [
     "iterations/streams/test_set.md §FB(裁定全文档案)",
     "iterations/owed_executions.json(本行)",
-    "GH #159 追评(该 issue 按 §BC.1 本来就不关;MCP 不可用则记在本轮报告里)"
+    "GH #159 追评(已发;该 issue 按 §BC.1 本来就不关)"
    ],
-   "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 issue。",
+   "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 **GH #540**。",
    "done_when": {
     "kind": "path_exists",
     "path": "iterations/reports/replay-check/a_evidence_tpreach.md"
