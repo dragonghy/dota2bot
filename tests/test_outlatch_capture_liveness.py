@@ -22,6 +22,14 @@ WHY A LIVENESS TEST AND NOT ONLY A SELFCHECK
         MEASUREMENT stands (53 attempts / 13 completions / 66.6s, both legs
         alike); the mechanism does not.  The live ratchet for the corrected
         mechanism is `tests/test_outchan_domain.py`, not this file.
+        ⚠️ READ THIS BEFORE "FIXING" THE OUTPOST MODE (director 2026-09-05,
+        completing §EO.6 handoff (丙)): the day an `IsChanneling` token lands
+        in `mode_outpost_generic.lua`, that is A NO-OP, not a landing.  The
+        guard is already reached on that frame through `J.CanNotUseAction`,
+        so a second copy in this file changes no decision on any frame; it
+        only makes the old pin's sentence come true.  `tests/test_outchan_
+        domain.py:168` is the assertion that fires on that day and says so
+        ("if this token appears here, someone landed #511 as written").
     (2) `outlatch` gates the sweep latch and nothing else in that file, so a
         cast is evidence about the latch and the abort rate is not.
     (3) the dumper filters `_Capture` out of `abilities[]`, which is why the
