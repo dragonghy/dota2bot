@@ -11079,7 +11079,8 @@
     —— 中断率是可比的前后读数,是这条修改最便宜的验收;
     (2) `outlatch` 的 (a) **不要再用施法计数买**(上界 + 被 `slotpush` 否决污染),
     等一波没有 `slotpush` 的腿,否则就停在 INDETERMINATE;
-    (3) `campbind` 仍等 GH #475 追评裁定,**不要再扫更多局**;
+    (3) `campbind` **入集裁定已落地**(GH #475,09-04T10:13Z,W46 起生效);仍等的是
+    「可咬域比落地注释小一个量级」那三选一的**再裁**,**不要再扫更多局**;
     (4) `zusboltdom` 仍等**同波隔离腿**;(5) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);
     (6) #467 追评 / #494 / #491 / #488 / #475 / #470 / #474 / #482 / #483 回音。
   - **欠账**:37 局 timeline 随容器回收;`cmqreach` 建议钉帧 fixture 仍未做;
@@ -11110,3 +11111,74 @@
     `refused 0`,`OK to publish`)—— **先 push 后发,按 GH #290**。
   - **Token 用量**:`TOKENS total_in=14,002,352 out=86,743 turns=91`(见报告 §10)。
   - 完整报告:`iterations/reports/replay-check/20260905T040042Z.md`
+- **2026-09-05T06:57Z(接 GH #511 交棒 (甲):结构物 modifier 进 fixture + 自证据更正 + 一条 trunk 红)**:
+  **本轮无新语料** —— 批测台 06:17Z 三道闸形式上全过但**主动不发波**(发波树相对 W47 那棵的
+  `bots/` 非注释变更只有 1 行且在本波臂串下短路不可达),`describe-instances` 空、S3 无未收割 run;
+  W47 六台机在 00:58Z / 04:00Z 两轮已 100% 扫完 ⇒ **没有未检对局**。
+  **宽扫 0/0 局、深查 0 局(据实登记为欠账,不虚报)**;帧级工作落在 **2 段真帧切片**上。
+  零 EC2、零发波、未访问 S3、零 CE 调用。**未改 `bots/`/`game/` 任何一行。**
+  - **⭐ 上一轮我发的 GH #511,根因被协同组 04:34Z 推翻,我自己对着源码复核后认下**:
+    `Think()` 第一句 `if J.CanNotUseAction(bot) then return end`(`mode_outpost_generic.lua:132-133`),
+    而 `J.CanNotUseAction`(`jmz_func.lua:96-110`)的析取里**第 6 项就是 `or bot:IsChanneling()`**
+    ⇒ 守卫**在那一帧上被求值**,我建议的那一行是 no-op。**我错在按一个文件的 token 集合立论断,
+    而守卫的问题是「这一帧上这个谓词求过值没有」——有 helper 的代码里两者系统性地不同。**
+    **没被推翻的是测量**:53 次 channel / 13 完成 / 40 中断(75.5%)/ 66.6 秒,两条腿一样
+    (armed 72% vs base 79%)⇒ 仍不归任何 armed id。**测量还在,机制换人。**
+  - **自己那条断言已更正**:`tests/test_outlatch_capture_liveness.py` 检查 **1b** 原文
+    「no IsChanneling guard in this file」**会一直通过、且旁边写着与事实相反的理由**
+    (比红的更难被发现)。重写为「守卫**确实在那一帧被求值**(`Think()` 第一句 → helper 的析取项)」,
+    docstring 加 **CORRECTED** 段并指向协同组的活 ratchet `tests/test_outchan_domain.py`。
+    ⚠️ **重写时当场踩坑**:第一版正则 `function J\.CanNotUseAction\(.*?\n(?:.*?\n)*?\s*or bot:IsChanneling\(\)`
+    **跨过了函数的 `end`**,匹配到下一个函数 `J.CanNotUseAbility` 的同名析取项 ⇒
+    把析取项从 `CanNotUseAction` 里删掉,断言**依然为真**。改成先切函数体再查;
+    3 变异全 CAUGHT + 2 条反真空对照(抽取器非空、切片不含 `CanNotUseAbility`)。
+    **本轮两次栽在同一件事上:「匹配了」被当成「对的理由」。**
+  - **⭐⭐ 交棒 (甲) 落地,而答案是「不需要改 dumper」**:那个字段**已经在 dump 里**,
+    在 `events` 那张表(`MODIFIER_ADD/REMOVE`,`target` = `#DOTA_OutpostName_*`),
+    `make_fixture.py` 的 `active_modifiers()` 本来就为**每一个 target** 重建了区间 ——
+    出口只有 `mods_at_t.get(h, [])` 一句(`h` 是英雄名),**结构物那些键算出来之后被扔在地上**。
+    改读法**对已落盘的每一份 timeline 立即生效**;改 Go dumper 只对未来的 dump 有用。
+    难的一半是 **JOIN**:日志叫 `#DOTA_OutpostName_North|South`,`buildings` 叫 `watch_tower`+坐标,
+    dump 里没有东西连接,**而且方位词不可猜(两座塔 y 都是 −448)**。⇒ 按游戏规则连:
+    占领 channel 要求施法者**站在塔上**,每个 ADD 投一票;**最近 ≤500u 且次近 ≥2 倍**才计票,
+    **全票一致**才解析,否则**拒绝并把拒绝写进 fixture 注释**。
+  - **⭐ 顺手挖出的真缺陷:幽灵瞭望塔。** `make_fixture.py` 原按 `(name, TEAM, x, y)` 定结构物身份;
+    塔/兵营/遗迹永不易主两键等价,**但瞭望塔会易主**(W47 那 37 局 **13 次**)。占领之后
+    同一坐标上留着**两行活的**(当前主人 + 仍写着前主人的冻结行),loader 把每一行归进它自己写的
+    那一队 ⇒ **任何取自占领之后的 fixture 都在陈述「两队同时拥有这座瞭望塔」**。改按**位置**定身份。
+    这条**是量出来的不是断言的**:测试 3d 用同一份 dump 算出旧键在那坐标发 **2 行**,3b/3c 断言新键发 **1 行**且写新主人。
+  - **交付**(离线只读,零 AWS,未碰 `bots/`):`make_fixture.py`(改)+ `tests/mock/replay_fixture.lua`(改,
+    结构物答 `HasModifier`/`NumModifiers`/`GetModifier*`,没声明的**保持 mock 旧默认**)+
+    **新增** `tests/test_fixture_structure_modifiers.py`(**22/0**,跑在两份真帧切片上)+
+    `tests/test_fixture_structure_modifiers.lua`(**8/0**)+
+    `tools/agent/mutstand_structure_modifiers.sh`(**11 变异 11 CAUGHT / 0 SURVIVED**,`sha256sum -c` OK)。
+    ⚠️ **Lua 那半用内联世界而不是 checked-in fixture,是被测试拦下来的决定**:真把 fixture 落进
+    `tests/fixtures/` 后 `test_fixture_ability_slots.lua` + `test_fixture_roles.lua` **当场两条红**
+    ——两份切片只带 frames+events(**无 abilities、无 player_id**),那会把一份**永久残缺**的语料
+    塞进语料库并拖两条 ratchet 进豁免名单。⇒ 撤掉;**真帧出处由 python 那半承担**。**语料库的门是对的。**
+  - **⭐ 变异台第一版 7 CAUGHT / 4 SURVIVED,那 4 条的教训**:M3/M4/M5 活下来不是因为没写对照,
+    是**对照同时踩到三条拒绝子句里的两条** —— 2a(离两塔 7286/7639u)**上限与 2x 余量同时否决**,
+    2c(两塔等距)**余量与全票一致同时否决**。删掉其中一条它照样拒绝,台子会报 CAUGHT。
+    **那是被掩盖,不是被覆盖。** 补三条**各自只触发一条子句**的对照(2e 只越上限 / 2f 只破余量 /
+    2g 只破一致性)后三条全 CAUGHT。**判据:一条拒绝规则的对照,必须让别的拒绝规则都不成立。**
+    另:「削弱断言 1a」那条**不计分** —— 削弱一条断言永远不会让测试套变红,记 SURVIVED 是算术不是发现;
+    改成不计分的 DEMO(M1 + 削弱的 1a 同上),脚本如实打 `still caught -- another check covers it too`。
+  - **trunk 红:本组名下那条已修绿。** 批测台点名 `test_stale_waits.py` 的理由行自带修法且指名本组
+    (`replay-check.md:11082`)。**核过再改**:`campbind` 的**入集裁定 09-04T10:13Z 确已落地**(W46 起生效),
+    本组等的是 09-04T21:56Z 在同一 issue 请裁的「可咬域小一个量级」三选一**处置**,#475 至今**仍只有两条评论**。
+    ⇒ 章程那行**措辞错、内容对**,按工具自己的豁免(`RE_RULING = [重再复]新?裁`)改写。
+    `stale_waits.py` **0**、`tests/test_stale_waits.py` **0(47/0)**。**没有放松那条测试。**
+  - **给下一个落 fixture 的人(已写进 `test_corpus_scale.lua` 豁免表上方的注释,不开 issue)**:
+    中途 checked-in 那份 fixture 使语料 109→**110**,`test_corpus_scale.lua` **当场变红**,
+    点的是 `tests/test_cm_q_creep_aoe_reach.lua:548` 的 `nova_damage == 110` ——
+    一个跟语料规模毫无关系的 CM 技能数值;撤掉 fixture 即恢复绿。**下一次碰撞已经量出来了。**
+  - **下一轮第一件事**:(1) 查 **GH #511** 追评回音;协同组落 `outcommit` 时**承诺谓词现在钉得住了**;
+    (2) #511 修法落地后**重扫**(中断率是可比的前后读数,修前基线 armed 72% / base 79%);
+    (3) `outlatch` 的 (a) **不要再用施法计数买**,等一波没有 `slotpush` 的腿;
+    (4) `campbind` **入集裁定已落地**(GH #475,09-04T10:13Z),仍等三选一的**再裁**,**不要再扫更多局**;
+    (5) `zusboltdom` 仍等**同波隔离腿**;(6) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);
+    (7) #467 追评 / #494 / #491 / #488 / #475 / #470 / #474 / #482 / #483 回音。
+  - **欠账**:**本轮宽扫/深查 0 局**(理由见报告 §5);`cmqreach` 建议钉帧 fixture 仍未做;
+    09-04T16:01Z §2.1 那一帧 fixture 未做;#419 第 20 轮 / #421 第 19 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260905T065710Z.md`
+  - **Token 用量**:`TOKENS total_in=16,138,342 out=81,638 turns=99`(见报告 §8)。

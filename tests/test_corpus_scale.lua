@@ -164,6 +164,16 @@ end
 -- false positive by construction, not a mistake in the entry below, and the
 -- next fixture will produce a different one. The exemption is deliberately
 -- narrow and fails CLOSED so nobody can widen it by accident.
+--
+-- ⭐ THE NEXT COLLISION IS ALREADY MEASURED (2026-09-05, replay-check). Landing
+-- the 110th fixture aims this detector at `tests/test_cm_q_creep_aoe_reach.lua`
+-- line 548 -- `assert(h:GetSpecialValueInt('nova_damage') == 110, ...)`, a
+-- Crystal Maiden ability VALUE out of the KV snapshot. Observed for real: a
+-- fixture checked in mid-round took the corpus to 110, this test went red
+-- naming that line, and removing the fixture cleared it. Whoever lands #110 --
+-- add the entry, do not loosen the detector, and do not spend the round
+-- wondering what nova_damage has to do with the corpus (it has nothing to do
+-- with it; that is the whole point of this comment).
 local NOT_A_CORPUS_PIN = {
     ['assert(hits == 3 and total == 109,'] =
         'tests/test_fieldcreep_veto.lua: `total` is summed DAMAGE from three '

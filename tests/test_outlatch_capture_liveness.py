@@ -8,10 +8,20 @@ WHY A LIVENESS TEST AND NOT ONLY A SELFCHECK
   claim about the dumper, and all three go quietly false the day someone edits
   those files:
 
-    (1) `mode_outpost_generic.lua` re-issues the capture order with no
-        `IsChanneling` guard.  The whole "75% of capture attempts are aborted"
-        finding is about that missing guard.  If the guard lands, this test
-        goes RED and whoever reads it learns the finding is STALE, not wrong.
+    (1) `mode_outpost_generic.lua` re-issues the capture order every tick.
+        ⚠️ CORRECTED 2026-09-05 (GH #511 comment by strategy, verified here
+        against the source): the re-issue is real, but the ROOT CAUSE this
+        file used to state was wrong.  `Think()`'s FIRST statement is
+        `if J.CanNotUseAction(bot) then return end`, and `J.CanNotUseAction`
+        (`bots/FunLib/jmz_func.lua`) has `or bot:IsChanneling()` in its
+        disjunction -- so the guard IS evaluated on that frame, via a helper.
+        The old 1b ("no `IsChanneling` token in this file") was literally true
+        and load-bearing ZERO, and it could never have gone red for the right
+        reason.  A guard claim must be made over the EVALUATION SET after
+        helper expansion, not over one file's token set.  The 75%-abort
+        MEASUREMENT stands (53 attempts / 13 completions / 66.6s, both legs
+        alike); the mechanism does not.  The live ratchet for the corrected
+        mechanism is `tests/test_outchan_domain.py`, not this file.
     (2) `outlatch` gates the sweep latch and nothing else in that file, so a
         cast is evidence about the latch and the abort rate is not.
     (3) the dumper filters `_Capture` out of `abilities[]`, which is why the
@@ -50,11 +60,40 @@ ck("1a outpost mode still casts the capture ability from Think()",
    re.search(r"function Think\(\)", outpost) and
    "Action_UseAbilityOnEntity(hAbilityCapture" in outpost)
 
-# The load-bearing pin.  `IsChanneling` (one L) is the engine spelling; accept
-# either spelling so a fix written the other way still turns this green.
-ck("1b THE FINDING IS LIVE: no IsChanneling guard in mode_outpost_generic.lua",
-   not re.search(r"IsChannel?ling\(\)", outpost),
-   "if this fails, the guard landed and the 75%-abort finding is STALE, not wrong")
+# 1b -- REWRITTEN 2026-09-05.  The old pin asserted the ABSENCE of an
+# `IsChanneling` token in this file and called that "the finding is live".  It
+# passed for a reason that has nothing to do with the finding: the guard lives
+# one call deeper.  What is actually load-bearing is that the channel guard IS
+# reached on the cast frame, because that is what makes "the re-issue happens
+# on a NOT-channelling frame" true -- i.e. what makes the re-issue the
+# DOWNSTREAM of the abort rather than its cause (GH #511, strategy 04:34Z:
+# 24/28 removals strictly precede the next cast, 0/28 the other way).
+jmz = read("bots/FunLib/jmz_func.lua")
+
+
+def fn_body(src, name):
+    """The body of ONE Lua function, ending at its own `end` at column 0.
+
+    Written this way after a mutation caught the first cut: a plain
+    `function J.CanNotUseAction ... or bot:IsChanneling()` search ran straight
+    past the closing `end` and matched the `IsChanneling` in the NEXT function
+    (`J.CanNotUseAbility`), so deleting the disjunct from CanNotUseAction left
+    the check GREEN.  The pin has to be scoped to the callee actually called.
+    """
+    m = re.search(r"^function %s\(.*?$" % re.escape(name), src, re.M)
+    if not m:
+        return ""
+    rest = src[m.end():]
+    e = re.search(r"^end\s*$", rest, re.M)
+    return rest[:e.start()] if e else rest
+
+
+ck("1b the channel guard IS evaluated on the cast frame -- via the helper",
+   re.search(r"function Think\(\)\s*\n\s*if J\.CanNotUseAction\(bot\) then return end",
+             outpost) is not None
+   and "or bot:IsChanneling()" in fn_body(jmz, "J.CanNotUseAction"),
+   "if this fails the guard moved or was dropped; re-derive the mechanism "
+   "before quoting the 75% number as evidence about a guard")
 
 ck("1c the re-issue really is unconditional inside the <=300u branch",
    re.search(r"if hAbilityCapture then\s*\n\s*bot:Action_UseAbilityOnEntity", outpost))

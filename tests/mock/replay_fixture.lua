@@ -1030,7 +1030,31 @@ function M.load(path, sSubject)
     -- the same problem: it scans UNIT_LIST_ALLIED_BUILDINGS, which returned {}.
     local buildings = {}
     for _, b in ipairs(fx.buildings or {}) do
+        -- Modifiers a STRUCTURE carried at the instant (GH #511 handoff 甲).
+        -- The combat log puts `modifier_watch_tower_capturing` on the OUTPOST,
+        -- not on the capturing hero, so before this every fixture answered
+        -- `ClosestOutpost:HasModifier(...)` = false -- the same undeclared
+        -- world assumption the hero-side HasModifier gap was, one entity class
+        -- over, and it made "is somebody already channelling this outpost"
+        -- structurally unanswerable in every fixture. A structure the dump
+        -- shows carrying none omits the field and keeps the mock default.
+        local bmods = b.modifiers or {}
+        local bmod_by_name = {}
+        for _, m in ipairs(bmods) do
+            if bmod_by_name[m.name] == nil then bmod_by_name[m.name] = m end
+        end
         buildings[#buildings + 1] = api.MakeUnit({
+            HasModifier = function(_, sName) return bmod_by_name[sName] ~= nil end,
+            NumModifiers = #bmods,
+            -- Engine indices are 0-based and jmz's readers scan one past the
+            -- end, so the extra index answers harmlessly (same as heroes).
+            GetModifierName = function(_, i) return (bmods[i + 1] or {}).name or '' end,
+            GetModifierRemainingDuration = function(_, i)
+                return (bmods[i + 1] or {}).remaining or 0
+            end,
+            GetModifierStackCount = function(_, i)
+                return (bmods[i + 1] or {}).stacks or 0
+            end,
             GetUnitName = b.name,
             GetTeam = b.team,
             GetLocation = api.Vector(b.x, b.y, 0),

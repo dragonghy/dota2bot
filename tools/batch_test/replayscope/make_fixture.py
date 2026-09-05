@@ -17,6 +17,7 @@ Usage:
 import argparse
 import bisect
 import json
+import math
 import os
 from collections import Counter, defaultdict
 
@@ -379,19 +380,96 @@ def main():
     # exact question GH #37 turns on. Same for J.GetRescueTpTarget's
     # "ally is standing under its own tower" veto, which scans
     # UNIT_LIST_ALLIED_BUILDINGS and is silently always-false without them.
+    #
+    # IDENTITY IS POSITION, NOT POSITION+TEAM (fixed 2026-09-05, GH #511 (甲)).
+    # The first cut keyed on (name, TEAM, x, y). Structures never move and
+    # towers/rax/ancient never change hands, so for them the two keys agree --
+    # but a WATCH TOWER (outpost) is captured, and captures are the whole point
+    # of that entity: 13 of them in the 37-game W47 corpus. After a flip the
+    # team-keyed dict holds TWO live rows at the same coordinates, the current
+    # owner AND a frozen row still claiming the previous owner, and both are
+    # emitted. The stale one is not inert -- it enters UNIT_LIST_*_BUILDINGS
+    # (the loader files every fixture building into the team list it names), so
+    # a fixture taken after any capture states a world in which BOTH teams own
+    # the same outpost. Keyed on position, the latest sample simply carries the
+    # current team, which is the engine's own semantics.
     latest_b = {}
     for b in tl.get("buildings", []):
         if b["t"] <= args.t:
-            latest_b[(b["name"], b["team"], round(b["x"]), round(b["y"]))] = b
+            latest_b[(b["name"], round(b["x"]), round(b["y"]))] = b
     # `hp` is the health FRACTION at t. Without it every structure in every
     # fixture stood at full health, and aba_defend reads that number twice:
     # the lane urgency multiplier is a remap of it, and "this tier-1/2 is
     # already lost" is a threshold on it.
     buildings = [
-        {"name": k[0], "team": k[1], "x": k[2], "y": k[3], "alive": bool(b.get("alive")),
-         "hp": round(float(b.get("hp_pct", 1.0)), 3)}
+        {"name": k[0], "team": b["team"], "x": k[1], "y": k[2],
+         "alive": bool(b.get("alive")),
+         "hp": round(float(b.get("hp_pct", 1.0)), 3), "modifiers": []}
         for k, b in sorted(latest_b.items())
     ]
+
+    # ---- modifiers on STRUCTURES (GH #511 handoff (甲)) --------------------
+    # `active_modifiers` already rebuilds every combat-log modifier interval,
+    # keyed by the log's TARGET string -- heroes and structures alike. Only the
+    # hero keys were ever read (`mods_at_t.get(h, [])`), so a structure's
+    # modifiers were computed and then dropped on the floor. The one this was
+    # opened for is `modifier_watch_tower_capturing`, which the log puts on the
+    # OUTPOST (actor = the capturing hero, target = `#DOTA_OutpostName_*`), so
+    # `ClosestOutpost:HasModifier(...)` -- the predicate any commit-style fix
+    # to the outpost mode has to be tested against -- was unanswerable from a
+    # fixture. NOTE this needed no dumper change: the field was already in the
+    # dump, in `events`, one table over.
+    #
+    # The join is the part that has to be earned. The log names an outpost
+    # `#DOTA_OutpostName_North|South`; `buildings` names it `watch_tower` and
+    # gives coordinates. Nothing in the dump maps one to the other, and the
+    # mapping is NOT guessable from the compass word (both outposts sit at
+    # y = -448; the labels do not describe the axis they differ on). So it is
+    # derived from the game rule instead: a capture channel requires the actor
+    # to stand on the outpost, so the actor's own position at the ADD instant
+    # names it. Each ADD votes; a vote counts only if the nearest outpost is
+    # within CAPTURE_JOIN_MAX_U and the runner-up is at least twice as far, and
+    # the key resolves only if every counted vote agrees. Anything else is left
+    # UNRESOLVED and reported -- a fixture that silently hangs a capture
+    # modifier on the wrong outpost is worse than one that carries none.
+    CAPTURE_JOIN_MAX_U = 500.0
+    CAPTURE_JOIN_RATIO = 2.0
+    outposts = [b for b in buildings if b["name"] == "watch_tower"]
+    mod_unresolved = []
+    if outposts:
+        votes = defaultdict(Counter)
+        for e in tl.get("events", []):
+            tgt, actor = e.get("target") or "", e.get("actor") or ""
+            if e.get("type") != "MODIFIER_ADD" or not tgt.startswith("#DOTA_Outpost"):
+                continue
+            s = at(actor, e.get("t", 0.0)) if actor in per else None
+            if s is None:
+                continue
+            d = sorted((math.hypot(s["x"] - o["x"], s["y"] - o["y"]), i)
+                       for i, o in enumerate(outposts))
+            if d[0][0] > CAPTURE_JOIN_MAX_U:
+                continue
+            if len(d) > 1 and d[1][0] < CAPTURE_JOIN_RATIO * max(d[0][0], 1e-9):
+                continue
+            votes[tgt][d[0][1]] += 1
+        for tgt, mods in sorted(mods_at_t.items()):
+            if not tgt.startswith("#DOTA_Outpost"):
+                continue
+            seen = votes.get(tgt)
+            if seen is None or len(seen) != 1:
+                mod_unresolved.append((tgt, sorted(seen) if seen else []))
+                continue
+            outposts[next(iter(seen))]["modifiers"] = mods
+    # Every other structure key the log carries (towers under backdoor
+    # protection, the fort under glyph, ...) is named `npc_dota_*_tower3_mid`
+    # in the log and `tower` in `buildings`, with no rule like the capture one
+    # to join them. Those are listed, not guessed at.
+    STRUCTURE_HINTS = ("tower", "rax", "fort", "ancient", "barracks", "outpost")
+    for tgt in sorted(mods_at_t):
+        if tgt.startswith("#DOTA_Outpost") or tgt in per or tgt.startswith(FULL):
+            continue
+        if any(h in tgt.lower() for h in STRUCTURE_HINTS):
+            mod_unresolved.append((tgt, "no join rule for this structure name"))
 
     # Lane/neutral creeps at the instant. The dumper samples these on their own
     # (coarser) interval and each sample carries POSITION AND TEAM ONLY -- no
@@ -515,11 +593,23 @@ def main():
     # Omitted entirely when the dump has none, so pre-buildings fixtures keep
     # the old "no structures exist" world byte for byte.
     if buildings:
+        # A structure that carries none omits the field, so every fixture made
+        # before this block keeps its old world (loader default: no modifier)
+        # byte for byte.
+        if mod_unresolved:
+            L.append("  -- structure modifiers the log carries but this "
+                     "generator refused to join:")
+            for tgt, why in mod_unresolved:
+                L.append("  --   %s -- %s" % (tgt, why))
         L.append("  buildings = {")
         for b in buildings:
-            L.append("    { name = '%s', team = %d, x = %d, y = %d, alive = %s, hp = %s },"
+            bmods = ("\n      modifiers = { %s }," %
+                     ", ".join("{ name = '%s', remaining = %s, elapsed = %s, stacks = %d }"
+                               % (m["name"], m["remaining"], m["elapsed"], m["stacks"])
+                               for m in b["modifiers"])) if b["modifiers"] else ""
+            L.append("    { name = '%s', team = %d, x = %d, y = %d, alive = %s, hp = %s,%s },"
                      % (b["name"], b["team"], b["x"], b["y"],
-                        "true" if b["alive"] else "false", b["hp"]))
+                        "true" if b["alive"] else "false", b["hp"], bmods))
         L.append("  },")
     # Omitted entirely when the dump carries none (and on every dump predating
     # this block), so fixtures made before it keep their old world -- no creeps
