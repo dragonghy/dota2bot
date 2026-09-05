@@ -1687,13 +1687,18 @@
       "priority": 2,
       "axis": "STAYATTR —— 新 gated 候选的条件 (a) 取证。**需要 armed 腿**(归档扫描买不到:未 armed 时这条子句逐字是出厂读数,两腿逐位相同)。请求的是**搭车入集**(加进现有全集串,**不申请专波、不申请专机、不申请新增机时**)。本组不花 AWS 的钱。",
       "question": "**它修的是什么**:`J.ShouldStayAndRegen` 是 **PROMOTED** 的(原 soak id `tphome`,28 局 A/B 后转正)—— 它**在每一局 Turbo 里都活着**。它的追击子句 `bot:WasRecentlyDamagedByAnyHero( 3.0 )` **没有归属**:一发从地图另一头落下的全局大招,和一个站在身上的英雄,在这一行上读数完全一样 ⇒ 否决触发 ⇒「留下喝补给」被撤销 ⇒ 一个安全的残血 bot 被放去走回家或 TP 回家。**这正是 owner 优先项 P2 逐字禁止的那趟路。**\n\n对着**同一趟回家路**的 gated 家族(`stayfield`/`stayfield2`/`fieldbuy`)自 2026-08-22 起就是归属式的(源码原话:`-- Attributed danger: someone hit me recently AND is still near me.`)—— 出厂那一半**在同一个文件里、290 行之外,从来没被带上**。\n\n**改动形状**:一条合取项。`WasRecentlyDamagedByAnyHero(3.0) and ( not J.IsSoakCandidate('stayattr') or J.HasNearbyHeroDamager(bot, 3000, 3.0) )`。未 armed 时第二个操作数在**第一个析取项**上短路 ⇒ 否决条件逐字是出厂表达式、求值顺序也不变。加一个析取项**只能让否决更难成立** ⇒ armed 的 TRUE 集是 shipped 的**严格超集**,`flip_true_to_false == 0` 是 1012 帧驱动实测出来的断言,不是注释里的声明。**独立闸**,不与任何 id 合取(`pullcad` 陷阱,已升级成 `STAY_NIDS == 1` 断言)。\n\n**域价钱**(109 fixture / 1012 活英雄帧):盲读在 **95** 帧触发否决;其中 **88** 帧伤害确实来自 3000 内(**杠杆在那里完全惰性 —— 这是最承重的一个数:出厂那条子句十次里对九次以上,所以是收窄不是删除**);**7** 帧无人可归属,互斥四分区为 翻转 **1** / 血量带外 **2** / 1200 环挡住 **0** / 补给子句挡住 **4**。\n\n**具体要买的一格 —— 判据是「留没留下」,不是「活没活下来」**:\n(1) armed 腿上,是否存在这样的帧:一个 bot 血量在 [0.18, 0.75]、1200 内无敌人、最近 3 秒被英雄伤害过、**而打它的人不在 3000 内**,并且它**留在原地喝补给/继续待着**,而不是走回家或 TP 回家。baseline 腿上同一情形应当看到它**回家**。\n\n**⛔ 不要拿胜负或存活率给这一格背书**:诚实边界 4 写着「一帧是一个瞬间」—— 本改动说的是 **t 时刻那个决定**是错的,**不声称**留下的 bot 接下来十秒活了下来。存活率是另一个问题,拿它当 (a) 会把一个决策判据换成一个结果判据。\n\n**⛔ 不要并进 field 家族的共同 promote 原子**(`field_hold_needs_magnitude`,§EI.1):本 id 动的是 **PROMOTED 守卫**、**不读** `J.HasFieldRegenSource`、也**不碰** `J.IsFieldSipEnough` ⇒ 那条单向约束**不覆盖它**。三个 field id 的持有侧问「有没有东西喝」;本 id 问「打我的人还在不在」。\n\n**已就绪**:`iterations/streams/test_set.md` **§EQ**(入集提议,等总监裁)、`iterations/state.json:stayattr_20260905`、`tests/test_stayattr_global_ult.lua`(11/0)、`tools/agent/mutstand_stayattr.sh`(13 CAUGHT + 1 声明式 UNMEASURABLE + 对照 SURVIVED,零 NO-OP,EXIT=0)、报告 `iterations/reports/strategy/20260905T073000Z.md`。",
-      "status": "running",
+      "status": "harvested_pending_verification",
       "batch_desk": {
         "wave": "W48",
         "launched_at": "2026-09-05T12:24Z",
         "tree": "54b839d1469eb9a855534644480c8f72399ff7f3",
         "arm": "63 ids / 559 bytes / md5 4aefc887f3f8c9173e7ac7024b3c20c9 -- `stayattr` present, wired at bots/FunLib/jmz_func.lua:5116 (check_armed_wiring.py --cand, ARM_EXIT=0)",
-        "seeds": [5025, 5037, 5058, 5344],
+        "seeds": [
+          5025,
+          5037,
+          5058,
+          5344
+        ],
         "note": "Rideshare admission executed on the first routine wave after the ruling, as the ruling directs: no dedicated wave, no dedicated machine, no added machine-hours. The condition-(a) cell is registered in iterations/reports/batch-desk/waves/W48_wave.json:harvest_obligations (the director attached it to the wave, not to owed_executions.json). Criterion is `did it STAY`, not `did it SURVIVE`; win-rate/survival backing is forbidden."
       },
       "director": {
@@ -1704,7 +1709,10 @@
         "note": "总监按铁律 2 三条件逐条核:(c) 逻辑依据成立且是源码级的 —— 同一个文件里、290 行之外,对着同一趟回家路的 gated 家族(stayfield/stayfield2/fieldbuy)自 2026-08-22 起就是归属式读法,而 PROMOTED 的 J.ShouldStayAndRegen 的追击子句从来没被带上;这不是新发明的策略主张,是把已在用的读法补到漏掉的那一半。步骤 4 的本地验证已交(tests/test_stayattr_global_ult.lua 11/0 真帧;mutstand_stayattr.sh 零 NO-OP、含一发声明式 UNMEASURABLE 与一发 must-not-fire 对照)。总监裸读源码复核了两件不肯只看散文的事:(甲) 闸址 bots/FunLib/jmz_func.lua:5115-5119 是 `WasRecentlyDamagedByAnyHero(3.0) and ( not J.IsSoakCandidate('stayattr') or J.HasNearbyHeroDamager(bot,3000,3.0) )` —— 未 armed 时第一个析取项短路,否决表达式逐字是出厂读数;armed 只能 REMOVE 否决 ⇒ 方向由构造固定,不靠注释。(乙) 闸是 STANDALONE,没有与任何 id 合取(pullcad 陷阱);它也不落进 field 家族的共同 promote 原子 field_hold_needs_magnitude —— 那条原子管的是「有没有东西喝」(HasFieldRegenSource/IsFieldSipEnough),本 id 一个都不读,问的是「打我的人还在不在」。⇒ 入集,armed 串 +1。发波时把下面这一格写进 W<N>_wave.json:harvest_obligations(它属于一个 id 和一波,不是常驻义务,所以不进 owed_executions.json)。",
         "acceptance": "条件 (a) 只买一格,判据是「留没留下」不是「活没活下来」:armed 腿上存在这样的帧 —— bot 血量 [0.18,0.75]、1200 内无敌人、最近 3 秒被英雄伤害过、而打它的人不在 3000 内,并且它留在原地喝补给/继续待着;baseline 腿上同一情形回家。⛔ 不许拿胜负或存活率给这一格背书(那是把决策判据换成结果判据,诚实边界 4)。⚠️ 铁律 4(i-a):ab / ba 两个分层各自登记读数(不是局数);这是计数类且侧偏未消除的量 ⇒ 两层反号按 4(i-b) 读成噪声,不写进结论。方法失败分支:若该帧类别在 armed 腿上域为零(DOMAIN-NOT-REACHED)⇒ 退回总监重裁,执行方不得自行套用后果条款,更不许读成「测过了,杠杆没用」——域价钱已经量过:1012 活英雄帧里否决触发 95,其中 88 帧伤害确实来自 3000 内(杠杆在那里完全惰性),只有 7 帧无人可归属、互斥四分区里真翻转 1 帧。这个稀薄度是本裁定预期的,不是失败。",
         "condition_b": "(b) 胜负无明显负面按搭车波的粗粒度读数看;本 id 单独不发波、不单独归因经济。"
-      }
+      },
+      "result_wave": "W48 (63-id family, first and -- per the director -- only wave of that family)",
+      "result": "W48 HARVESTED 2026-09-05T15:xxZ, 4/4 seeds scored, 184 scored games of 208 loaded, min_arm_depth 8, thin_arm_seeds empty, no seed excluded. recover_verdict.py RV_EXIT=0; the 63-id armed string was RECOMPUTED off the launch tree at harvest (63 ids / 559 bytes / md5 4aefc887f3f8c9173e7ac7024b3c20c9) and is byte-identical to the launch record. MEAN: gpm +27.25, xpm +11.33, deaths +0.06, last_hits +1.14. comps_better 3/4 3/4 2/4 3/4. suggested=hold_or_reject. Per-seed gpm +49.95 / +37.58 / -23.92 / +45.39. STRATA (iron rule 4(i-a), both legs REGISTERED): gpm ab +127.24 / ba -72.75 / side +100.00; sign_flip true on all four metrics -- per 4(i-c) that is an IDENTITY (|side| > |arm|), NOT a diagnosis, and is registered without discounting the reading. WINRATE MUST NOT BE CITED: channel DEGENERATE (minority side 14 of 208, share 0.0673), the SEVENTH consecutive wave with data to come back degenerate. THIS IS NOT A VERDICT ON `stayattr`: this wave measures the whole 63-id bundle against stable, and stayattr is one id inside it. Condition (a) for stayattr is a FRAME question and is owed separately -- the criterion is 'did it STAY', not 'did it SURVIVE', and win rate / survival are explicitly barred from supporting it (W48_wave.json:harvest_obligations).",
+      "director_note": "OWNER_PRIORITIES P4.1/4.2 escalation (2026-09-05T14:5xZ, commit ffeb0aa): the admission that put stayattr into the set is ruled a BREACH of the P4.2 admission freeze -- the freeze overrides §BB.4's rideshare law, and the only legal ruling during the freeze is FROZEN-HOLD. The director is to revert the set 63 -> 62 next round (gate and code stay). W48 is explicitly NOT voided and its stayattr reading is archived as extra condition-(a) evidence. This row is filed on that basis."
     },
     {
       "id": "hero-30",

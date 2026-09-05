@@ -10,7 +10,12 @@
   "arm_md5": "4aefc887f3f8c9173e7ac7024b3c20c9",
   "arm_source": "iterations/streams/test_set.md line 2, read off the launch tree; ids/bytes/md5 RECOMPUTED this round (and again inside the launch script), not copied from prose. DIFFERENT from W46/W47's 62 / 550 / c7e1f92c... => this is a NEW family and does NOT pool with W46/W47.",
   "arm_delta_vs_W47": "+1 id: `stayattr`. Nothing removed. Director ruling: queue `strategy-44`.director = APPROVED_RIDESHARE_ADMISSION, at 2026-09-05T11:xxZ, ref test_set.md §ET (full text) / §EQ (proposal).",
-  "seeds": [5025, 5037, 5058, 5344],
+  "seeds": [
+    5025,
+    5037,
+    5058,
+    5344
+  ],
   "seed_index_note": "seed_roster_index.py --build run BEFORE selection (charter step 5). ROSTER_EXIT=0; 351 run prefixes in S3, 349 already indexed, 2 newly scanned (W47's two on-demand re-run machines); index now 213 seeds / 41 distinct heroes / off-roster 24 games across 17 seeds. Without the build, W47's re-run seeds 4723/4763 would still read as never-used.",
   "seed_selection_note": "Fresh draft, window right-shifted to [5001,5400] (W47 sat at 4601-5000). All 400 seeds in the window are unused per the freshly built index. Term-popcount distribution over the window: {0:20, 1:106, 2:132, 3:102, 4:31, 5:9}. Single-term supply across the window: chaos_knight 120 / crystal_maiden 120 / lion 112 / obsidian_destroyer 68 / pudge 70 / skeleton_king 126 / spirit_breaker 66 / zuus 163.",
   "seed_selection_tightness": "NOT tight this wave, and that is worth registering because it moved in the good direction. Exhaustive search over the 142 window seeds with popcount>=3 found 2506 feasible quadruples (every one of the 8 terms carried >=2 times), against W47's much narrower solution space. The window's popcount>=4 layer is intact (31 seeds at 4, 9 at 5), i.e. the charter's periodic 'each wave shaves the richest layer' erosion has NOT yet bitten this window.",
@@ -31,17 +36,122 @@
   "az_spread": "FOUR distinct AZs (us-west-2a / 2b / 2c / 2d), one per machine, every one of them the AZ that was requested. ** GH #252 AND GH #256 ACCEPTANCE BOTH PASS THIS WAVE. ** Zero `re-aiming inside the ring` lines, zero `AZ RING EXHAUSTED` lines, zero InsufficientInstanceCapacity errors across all four calls. This is the first clean 4/4 since the acceptance was written -- W47 landed 3 AZs (machine 4 re-aimed twice and ended up doubling us-west-2a).",
   "expected_games": "~96 scored (4 seeds x 12 games x 2 legs), plus warm-ups, which are not scored games. For reference W47's four machines banked 162 analysis files before two were reclaimed.",
   "machines": [
-    {"seed": 5025, "run_id": "spot_20260905_122357_1_54b839d1469eb9a855534644480c8f72399ff7f3_a8dec3", "instance_id": "i-02179695e32355408", "requested_az": "us-west-2a", "actual_az": "us-west-2a", "reaimed": "False", "market": "spot", "lifecycle": "spot (verified by describe-instances InstanceLifecycle)", "launch_time": "2026-09-05T12:23:59.000Z", "ab": null, "ba": null, "arm_depth": null, "status_code": null},
-    {"seed": 5037, "run_id": "spot_20260905_122401_1_54b839d1469eb9a855534644480c8f72399ff7f3_4bf01d", "instance_id": "i-0c7787ea8a46e43b0", "requested_az": "us-west-2b", "actual_az": "us-west-2b", "reaimed": "False", "market": "spot", "lifecycle": "spot (verified by describe-instances InstanceLifecycle)", "launch_time": "2026-09-05T12:24:03.000Z", "ab": null, "ba": null, "arm_depth": null, "status_code": null},
-    {"seed": 5058, "run_id": "spot_20260905_122406_1_54b839d1469eb9a855534644480c8f72399ff7f3_f634e4", "instance_id": "i-0feb226442eff5fb7", "requested_az": "us-west-2c", "actual_az": "us-west-2c", "reaimed": "False", "market": "spot", "lifecycle": "spot (verified by describe-instances InstanceLifecycle)", "launch_time": "2026-09-05T12:24:08.000Z", "ab": null, "ba": null, "arm_depth": null, "status_code": null},
-    {"seed": 5344, "run_id": "spot_20260905_122410_1_54b839d1469eb9a855534644480c8f72399ff7f3_272131", "instance_id": "i-0469876ada96483ca", "requested_az": "us-west-2d", "actual_az": "us-west-2d", "reaimed": "False", "market": "spot", "lifecycle": "spot (verified by describe-instances InstanceLifecycle)", "launch_time": "2026-09-05T12:24:12.000Z", "ab": null, "ba": null, "arm_depth": null, "status_code": null}
+    {
+      "seed": 5025,
+      "run_id": "spot_20260905_122357_1_54b839d1469eb9a855534644480c8f72399ff7f3_a8dec3",
+      "instance_id": "i-02179695e32355408",
+      "requested_az": "us-west-2a",
+      "actual_az": "us-west-2a",
+      "reaimed": "False",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launch_time": "2026-09-05T12:23:59.000Z",
+      "ab": 30,
+      "ba": 12,
+      "arm_depth": 17.14,
+      "status_code": "instance-terminated-by-user",
+      "az": "us-west-2a",
+      "launched_at": "2026-09-05T12:23:59.000Z",
+      "status_code_source": "describe-spot-instance-requests (SIR outlives the ~1h describe-instances window -- GH #427)",
+      "terminated_at": "2026-09-05T13:06:45.000Z",
+      "survival_min": 42.77,
+      "survival_bound": "exact",
+      "survival_bound_note": "SIR CreateTime -> Status.UpdateTime for instance-terminated-by-user. This is a self-terminate, NOT a reclaim: zero machines lost to capacity this wave.",
+      "ab_games": 30,
+      "ba_games": 12,
+      "scored": true,
+      "scored_games": 42,
+      "gpm": 49.95
+    },
+    {
+      "seed": 5037,
+      "run_id": "spot_20260905_122401_1_54b839d1469eb9a855534644480c8f72399ff7f3_4bf01d",
+      "instance_id": "i-0c7787ea8a46e43b0",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "reaimed": "False",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launch_time": "2026-09-05T12:24:03.000Z",
+      "ab": 36,
+      "ba": 17,
+      "arm_depth": 23.09,
+      "status_code": "instance-terminated-by-user",
+      "az": "us-west-2b",
+      "launched_at": "2026-09-05T12:24:03.000Z",
+      "status_code_source": "describe-spot-instance-requests (SIR outlives the ~1h describe-instances window -- GH #427)",
+      "terminated_at": "2026-09-05T13:19:20.000Z",
+      "survival_min": 55.28,
+      "survival_bound": "exact",
+      "survival_bound_note": "SIR CreateTime -> Status.UpdateTime for instance-terminated-by-user. This is a self-terminate, NOT a reclaim: zero machines lost to capacity this wave.",
+      "ab_games": 36,
+      "ba_games": 17,
+      "scored": true,
+      "scored_games": 53,
+      "gpm": 37.58
+    },
+    {
+      "seed": 5058,
+      "run_id": "spot_20260905_122406_1_54b839d1469eb9a855534644480c8f72399ff7f3_f634e4",
+      "instance_id": "i-0feb226442eff5fb7",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "reaimed": "False",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launch_time": "2026-09-05T12:24:08.000Z",
+      "ab": 32,
+      "ba": 15,
+      "arm_depth": 20.43,
+      "status_code": "instance-terminated-by-user",
+      "az": "us-west-2c",
+      "launched_at": "2026-09-05T12:24:08.000Z",
+      "status_code_source": "describe-spot-instance-requests (SIR outlives the ~1h describe-instances window -- GH #427)",
+      "terminated_at": "2026-09-05T13:22:13.000Z",
+      "survival_min": 58.08,
+      "survival_bound": "exact",
+      "survival_bound_note": "SIR CreateTime -> Status.UpdateTime for instance-terminated-by-user. This is a self-terminate, NOT a reclaim: zero machines lost to capacity this wave.",
+      "ab_games": 32,
+      "ba_games": 15,
+      "scored": true,
+      "scored_games": 47,
+      "gpm": -23.92
+    },
+    {
+      "seed": 5344,
+      "run_id": "spot_20260905_122410_1_54b839d1469eb9a855534644480c8f72399ff7f3_272131",
+      "instance_id": "i-0469876ada96483ca",
+      "requested_az": "us-west-2d",
+      "actual_az": "us-west-2d",
+      "reaimed": "False",
+      "market": "spot",
+      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+      "launch_time": "2026-09-05T12:24:12.000Z",
+      "ab": 30,
+      "ba": 12,
+      "arm_depth": 17.14,
+      "status_code": "instance-terminated-by-user",
+      "az": "us-west-2d",
+      "launched_at": "2026-09-05T12:24:12.000Z",
+      "status_code_source": "describe-spot-instance-requests (SIR outlives the ~1h describe-instances window -- GH #427)",
+      "terminated_at": "2026-09-05T13:09:41.000Z",
+      "survival_min": 45.48,
+      "survival_bound": "exact",
+      "survival_bound_note": "SIR CreateTime -> Status.UpdateTime for instance-terminated-by-user. This is a self-terminate, NOT a reclaim: zero machines lost to capacity this wave.",
+      "ab_games": 30,
+      "ba_games": 12,
+      "scored": true,
+      "scored_games": 42,
+      "gpm": 45.39
+    }
   ],
   "slate_anchor": "2026-09-05T12:24:12Z (LAST machine up, GH #469 ruling 1 -- this is what wave_throttle.py will anchor W49 on). First machine 12:23:59Z; slate spread 13s.",
   "gates": {
     "(i) >=6h routine-wave throttle": "wave_throttle.py, run TWICE: once at the decision point (12:19:28Z, UNLOCKED, margin +42421s) and again AS THE LAST THING BEFORE THE LAUNCH LOOP, from inside the launch script, with a bare $? (12:23:57Z, UNLOCKED, margin +42690s, THROTTLE_EXIT_AT_ACTION=0). Anchor W47 last-machine 2026-09-04T18:32:27Z, unlock 2026-09-05T00:32:27Z. No throttling occurred this round; the margin was ~11.9h, not marginal.",
     "(ii) something new to test": "PASSES ON BRANCH (ONE) -- the arm string moved. 62 -> 63 ids, 550 -> 559 bytes, md5 c7e1f92c... -> 4aefc887..., the added id being `stayattr` on the director's 2026-09-05T11:xxZ ADMITTED ruling. This is the branch that was DEAD for the two previous rounds (both found the string byte-identical to W46). No hand-done tree-drift arithmetic was needed this round, and none is claimed: the branch that carries the gate is measured directly off the string.",
     "(iii) budget fence": "wave_fence.py run for BOTH market valuations per the charter's conservative rule. spot ($0.90 planned): FENCE_SPOT_EXIT=0, projected $20.497, headroom $29.503. Full-degradation-to-on-demand ($2.15 planned): FENCE_OD_EXIT=0, projected $21.747, headroom $28.253. Both CLEAR. Operands re-read this run: limit $100.00, actual MTD $19.597, ACTUAL alerts $50 / $80 / $100 ALL not yet crossed, fence $50.00 (lowest uncrossed), brake $90.00, operative ceiling $50.00. ** NO ALERT THRESHOLD CROSSED THIS WAVE ** -- no owner Budget email is expected from it.",
-    "(iv) reclaim-blind": "RB_EXIT=0 against W47_wave.json. `not blinded -- 2 paired seed(s) of 4 machine(s); 2 machine(s) reclaimed before the flip; NEXT WAVE: spot (GH #158 unchanged).`"
+    "(iv) reclaim-blind": "RB_EXIT=0 against W47_wave.json. `not blinded -- 2 paired seed(s) of 4 machine(s); 2 machine(s) reclaimed before the flip; NEXT WAVE: spot (GH #158 unchanged).`",
+    "(iv) inputs -- no harvest owed": "SUBSTANCE ESTABLISHED AT LAUNCH, KEY ADDED RETROACTIVELY AT HARVEST (2026-09-05T15:xxZ) -- and this sentence is the honest value, not a backdated pass. What the launch round actually verified and wrote in prose (report 20260905T121500Z.md section 3): no running/pending instance of this desk before launch, no un-harvested run in S3, and W47 already fully harvested 4/4 seeds the round before => nothing was owed when W48 went up. What it did NOT do is record that under a key this检测器 can see, so the gate read as MISSING. THIS IS A RECURRENCE, NOT A NEW DEFECT: the 2026-09-03T21:15Z round found the identical miss on W43 (both halves of gate (iv) unrecorded), wrote it up as finding 三之二, and recommended running test_wave_gate_keys.py in the launch round itself. That recommendation was never adopted, and one wave later half of the same gate went unrecorded again. The recommendation is re-raised to the director with the recurrence attached."
   },
   "cost_estimate": "~$1.02 registered -- the MEASURED upper bound from W46's settlement ($0.959-$1.022), NOT the charter's $0.90 constant, whose auto-invalidation clause has already fired (W46 billed above it) and which the director has not yet re-ruled. Registering the higher number fails toward safety in the fence arithmetic. For reference W47 settled at $0.7413 billed-side.",
   "cost_constant_invalidation": "STILL LIVE AND STILL UNRULED. The charter's $0.90 spot-wave constant carries a self-invalidation clause: any wave whose billed-side actual exceeds $0.90 obliges this desk to name it in that round's report and obliges the director to re-rule the constant at its next trigger. W46 fired it ($0.959-$1.022). It has now gone several director triggers without a re-ruling. Named again here so it does not depend on anyone remembering.",
@@ -61,5 +171,98 @@
     "`pulldrag` non-orthogonality (§DC.3 / §CO.1): with `campbind` armed, pulldrag's connect reading has a changed domain of definition and must NOT be pooled with W45-or-earlier waves.",
     "`zusboltdom` reverse brake (queue hero-29, clause 乙): the zusult in-domain trigger count going to ~0 is only half the read. The kill-landing count MUST be given alongside it; (1) at zero WITH (2) clearly down is a REJECT, not a promote."
   ],
-  "winrate_prereg": "PRE-REGISTERED BEFORE ANY DATA LANDS. The win/loss channel has printed DEGENERATE for six consecutive waves with data (W41, W42, W44, W45, W46, W47). If W48 prints DEGENERATE a seventh time, the `winrate` channel should be treated as structurally uninformative for this harness rather than re-litigated per wave, and that finding handed to the director."
+  "winrate_prereg": "PRE-REGISTERED BEFORE ANY DATA LANDS. The win/loss channel has printed DEGENERATE for six consecutive waves with data (W41, W42, W44, W45, W46, W47). If W48 prints DEGENERATE a seventh time, the `winrate` channel should be treated as structurally uninformative for this harness rather than re-litigated per wave, and that finding handed to the director.",
+  "harvest": {
+    "harvested_at": "2026-09-05T15:1xZ",
+    "harvested_by": "batch-desk 2026-09-05T15:06Z round",
+    "tool": "tools/batch_test/soak/recover_verdict.py (S3 per-game full recompute, standard path)",
+    "RV_EXIT": 0,
+    "armed_string_reverified": {
+      "ids": 63,
+      "bytes": 559,
+      "md5": "4aefc887f3f8c9173e7ac7024b3c20c9",
+      "source": "git show 54b839d1:iterations/streams/test_set.md line 2 -- RECOMPUTED at harvest, byte-identical to the launch record"
+    },
+    "input": {
+      "files_seen": 208,
+      "games_loaded": 208,
+      "source_dirs": 4,
+      "unparseable": 0,
+      "pooled_basename_dirs_overridden": 0
+    },
+    "mean": {
+      "gpm": 27.25,
+      "xpm": 11.33,
+      "deaths": 0.06,
+      "last_hits": 1.14,
+      "winrate": 0.468,
+      "winrate_headroom": 0.1292
+    },
+    "comps_better": {
+      "gpm": "3/4",
+      "xpm": "3/4",
+      "deaths": "2/4",
+      "last_hits": "3/4",
+      "winrate": "0/4"
+    },
+    "strata": {
+      "gpm": {
+        "ab": 127.24,
+        "ba": -72.75,
+        "side": 100.0,
+        "sign_flip": true,
+        "side_gt_arm": "3/4"
+      },
+      "xpm": {
+        "ab": 85.22,
+        "ba": -62.55,
+        "side": 73.89,
+        "sign_flip": true,
+        "side_gt_arm": "3/4"
+      },
+      "deaths": {
+        "ab": -1.51,
+        "ba": 1.63,
+        "side": -1.57,
+        "sign_flip": true,
+        "side_gt_arm": "3/4"
+      },
+      "last_hits": {
+        "ab": -3.58,
+        "ba": 5.85,
+        "side": -4.71,
+        "sign_flip": true,
+        "side_gt_arm": "4/4"
+      }
+    },
+    "scored_games": 184,
+    "unfinished_games": 0,
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "suggested": "hold_or_reject",
+    "seeds_excluded": "none -- 4/4 scored, thin_arm_seeds empty",
+    "winrate_channel": "DEGENERATE",
+    "winrate_minority_side_share": 0.0673,
+    "winrate_side_census": {
+      "radiant": 14,
+      "dire": 194
+    },
+    "winrate_ruling": "DEGENERATE for the SEVENTH consecutive wave with data (W41/W42/W44/W45/W46/W47/W48). MUST NOT be cited as rule-2(b) support. The launch round pre-registered exactly this: if W48 made it seven, stop re-litigating it per wave and hand the channel to the director as structurally uninformative for this harness. THAT CONDITION IS NOW MET.",
+    "sign_flip_note": "sign_flip true on all four metrics. Per iron rule 4(i-c) this is an IDENTITY (|side| > |arm|), not a diagnosis, and carries zero information about how well arm was measured. REGISTERED, not discounted -- that is 4(i-a).",
+    "machine_hours": 3.3602,
+    "wave_cost_machine_hour_side": {
+      "hours": 3.3602,
+      "spot_price_band_usd_per_h": [
+        0.231,
+        0.25
+      ],
+      "derived_usd": [
+        0.7762,
+        0.84
+      ],
+      "HONESTY_BOUNDARY": "machine-hour side DERIVATION, not a billing-side reading. The $0.90 auto-invalidation clause is written on billing-side measured cost, so it does NOT trigger on this number. Both ends fall under $0.90."
+    },
+    "reclaims": 0,
+    "az_spread_at_death": "4 distinct AZs (2a/2b/2c/2d), all self-terminated -- GH #252/#256 acceptance clean 4/4 at death as well as at launch"
+  }
 }

@@ -51,16 +51,41 @@ fi
 VS=/opt/dota2/game/dota/scripts/vscripts
 OUT=/opt/results/$RUN_ID
 
+# Every build/output dir below is written by 'sudo -u ubuntu', but /opt is
+# root-owned -- so ubuntu cannot create them and make_ab_build.py died on
+# PermissionError while run_batch.sh went right on playing games with NO bots
+# dir at all ("bots will be default AI"). That combination measures default AI
+# against default AI and uploads it as a result, so create the dirs up front
+# AND make a failed build fatal (below) rather than a warning. [Y1, 2026-09-05]
+mkdir -p /opt/ab_fwd /opt/ab_rev \$OUT
+chown ubuntu:ubuntu /opt/ab_fwd /opt/ab_rev /opt/results \$OUT
+
+# Refuse to run games unless the A/B build actually landed. Without this the
+# run is silently an A/A of stock bots -- a failure that looks like data.
+ab_guard() {
+    for d in bots bots_ab_new bots_ab_old; do
+        [ -d "\$VS/\$d" ] && continue
+        echo "FATAL: \$VS/\$d missing -- A/B build failed; refusing to run games"
+        # die now instead of idling until the watchdog: ship the log so the
+        # failure is diagnosable, then terminate.
+        aws s3 cp /var/log/batch_run.log s3://$S3_BUCKET/$RUN_ID/batch_run.log
+        shutdown -h now
+        exit 1
+    done
+}
+
 # direction 1: Radiant=NEW
 sudo -u ubuntu python3 tools/batch_test/make_ab_build.py --old 'origin/$OLD_REF' --new 'origin/$NEW_REF' --out /opt/ab_fwd
 rm -rf \$VS/bots \$VS/bots_ab_new \$VS/bots_ab_old
 cp -r /opt/ab_fwd/bots /opt/ab_fwd/bots_ab_new /opt/ab_fwd/bots_ab_old \$VS/
+ab_guard
 sudo -u ubuntu tools/batch_test/run_batch.sh -n $HALF -j $PARALLEL -t $TIMESCALE -d /opt/dota2 -o \$OUT/fwd
 
 # direction 2: sides swapped
 sudo -u ubuntu python3 tools/batch_test/make_ab_build.py --old 'origin/$OLD_REF' --new 'origin/$NEW_REF' --swap --out /opt/ab_rev
 rm -rf \$VS/bots \$VS/bots_ab_new \$VS/bots_ab_old
 cp -r /opt/ab_rev/bots /opt/ab_rev/bots_ab_new /opt/ab_rev/bots_ab_old \$VS/
+ab_guard
 sudo -u ubuntu tools/batch_test/run_batch.sh -n $((N_GAMES - HALF)) -j $PARALLEL -t $TIMESCALE -d /opt/dota2 -o \$OUT/rev
 
 aws s3 sync \$OUT s3://$S3_BUCKET/$RUN_ID/
