@@ -1,106 +1,181 @@
 {
-  "wave": "Y1",
-  "_note": "THE UPSTREAM YARDSTICK WAVE -- OWNER_PRIORITIES P4.1. NOT an arm wave: no candidate is armed on either side. This is `stable (current main, ALL gates off)` vs `upstream OHA snapshot`, the first direct measurement of whether this project has made the bots stronger at all. It uses the OLD ref-vs-ref path (aws_run.sh -> make_ab_build.py), which is a DIFFERENT harness from every W-numbered wave. Do not pool it with any W wave and do not read it with recover_verdict.py -- see harvest_instructions.",
-  "priority_ref": "iterations/OWNER_PRIORITIES.md P4.1, escalated 2026-09-05T14:5xZ by the main session: '下一批测台轮必须发标尺波,排在任何 arm 波之前,再空一轮即按铁律 9 写进 DECISIONS_NEEDED'. Two batch-desk rounds (06:17Z, 12:1xZ) had not claimed it. THIS ROUND CLAIMS IT.",
-  "contrast": {
-    "new_arm": "main",
-    "new_ref_resolved_at_launch": "ffeb0aa6bec07f6e70aebdae6c4c8d22f2d71e30",
-    "old_arm": "upstream-baseline",
-    "old_ref_resolved_at_launch": "74727e4a66ab38d16fdb09800a19ab6c0c82c6b9",
-    "baseline_matches_charter": "YES -- verified by git ls-remote at launch. Iron rule 3's upstream baseline is commit 74727e4a66ab38d16fdb09800a19ab6c0c82c6b9 and refs/heads/upstream-baseline points at it EXACTLY.",
-    "why_a_branch_name_and_not_the_SHA": "aws_run.sh hardcodes `origin/$OLD_REF` when it calls make_ab_build.py, so a bare 40-char SHA does NOT resolve (`origin/74727e4a...` is not a ref). GH #33 recorded this as 'baseline needs a tag first' and it has blocked this wave since. IT IS ALREADY UNBLOCKED AND NOBODY NOTICED: refs/heads/upstream-baseline already exists on origin at exactly that commit. ZERO harness change, ZERO new pushed refs were needed.",
-    "arms_are_gate_free": "VERIFIED, not assumed: bots/Customize/soak_side.lua is gitignored (.gitignore:76) and therefore absent from any fresh clone; J.IsSoakCandidate's first act is `local conf = GetSoakSideConf(); if not conf then return false end` => EVERY gate returns false on BOTH arms. The contrast is purely the tree, with no candidate armed. That is exactly what P4.1 asks for."
-  },
-  "new_arm_drift_exposure": "aws_run.sh fetches `main` on the instance at BOOT, so the tree measured is main-as-of-~15:13Z, which may be 1-2 commits past the ffeb0aa recorded here. NOT pinned to a SHA, because the `origin/` prefix defeats SHA pinning on this path (same root cause as above). REGISTERED AS AN EXPOSURE, judged immaterial: the contrast spans hundreds of commits, so a 1-2 commit drift on the new arm cannot change the sign of the reading. It WOULD matter for an arm wave; it does not matter for a yardstick.",
-  "instance": {
-    "instance_id": "i-0c57a81c63bc57f31",
-    "type": "c6i.4xlarge",
-    "az": "us-west-2c",
-    "launched_at": "2026-09-05T15:12:32.000Z",
-    "run_id": "run_20260905_151230_main_vs_upstream-baseline",
-    "market": "on-demand",
-    "market_verified": "InstanceLifecycle = null (read back from describe-instances; the run_id prefix is NOT evidence)",
-    "self_destruct_verified": "describe-instance-attribute instanceInitiatedShutdownBehavior = 'terminate'. Both exit paths (the script's own `shutdown -h now` and the 2h watchdog `shutdown -h +120`) therefore TERMINATE, not stop.",
-    "watchdog_hours": 2,
-    "hard_stop_at": "~2026-09-05T17:12Z",
-    "status_at_report": "running at 15:20Z, ~3m10s in -- attempt 1 died at 47s, so Y1 is past make_ab_build and ab_guard and is playing games"
-  },
-  "market_deviation_from_GH158": {
-    "ruling": "GH #158 (owner): spot first, on-demand only when spot has no capacity.",
-    "this_wave": "on-demand, deliberately, on a structural property of THIS path -- declared, not hidden.",
-    "arithmetic": "aws_run.sh syncs to S3 exactly ONCE, after BOTH directions finish (`aws s3 sync $OUT s3://...` is the second-to-last line of the user-data). There is no per-game upload. So on this path a reclaim is a TOTAL LOSS with nothing recoverable -- recover_verdict.py saved W42 precisely because soak_loop uploads per game, and that safety net DOES NOT EXIST here. W47 lost 2 of 4 machines to capacity; W43 lost 4 of 4. Immunity costs ~$0.42 (on-demand $0.673/h vs spot $0.231-0.250/h for ~1h). The owner priority this wave serves has already slipped two rounds; another total loss costs a further 3h round, and this path cannot recover partial data.",
-    "precedent": "W43 -> W44 went on-demand for one wave on the same shape of argument (GH #271 BLINDED verdict).",
-    "for_the_director": "Ruling requested: does the 'no incremental upload' property of the ref-vs-ref path count as standing grounds for on-demand, or must each such wave re-argue it?"
-  },
-  "config": {
-    "n_games": 80,
-    "per_direction": 40,
-    "parallel": 16,
-    "timescale": 4,
-    "expected_wall": "~15 min boot+steam update, then ~3 rounds x ~7 min per direction x 2 directions ~= 45 min; ~1h total, vs a 2h watchdog (~2x margin)",
-    "why_80_and_not_more": "the single terminal upload makes an overrun a total loss, so the game count is sized for ~2x watchdog margin rather than for maximum games. If Y1 lands clean, a follow-up can scale up."
-  },
-  "differences_from_the_W_path_REGISTER_DO_NOT_POOL": [
-    "no seed: run_batch.sh draws random drafts, so this is NOT a mirrored-draft wave; expect draft noise (charter: random-draft SD ~600 gpm/game)",
-    "no soak stamp: per-game files carry no `mirror:CAND:sSEED:side` stamp, so recover_verdict.py CANNOT read this run at all",
-    "no verdict object: this path emits none; the reading must be computed offline from the per-game JSON",
-    "no 25-minute game cap: run_batch.sh has no cap-25 (that landed in soak_loop.sh, GH #108/P3). Games run to a natural end under a 90-min wall timeout. For a yardstick asking about real wins this is arguably the RIGHT setting, but it means game length is NOT comparable to the W waves",
-    "different S3 prefix: results land at s3://dota2bot-batch-results-4924/<run_id>/ (bucket ROOT), not under soak/ or validation/"
-  ],
-  "harvest_instructions": {
-    "where": "s3://dota2bot-batch-results-4924/run_20260905_151230_main_vs_upstream-baseline/{fwd,rev}/game_*.json",
-    "layout": "fwd: Radiant=NEW(main), Dire=OLD(upstream). rev (--swap): Radiant=OLD, Dire=NEW. Half the games each way -- that is this path's side-bias cancellation.",
-    "fields": "tools/batch_test/parse_log.py emits `winner` ('radiant'|'dire'), `duration_s`, and per-player {team, gpm, ...}. Everything P4.1 asks for (win rate + gpm delta + game count) is computable from these.",
-    "method": "compute NEW-side minus OLD-side per game, then average the fwd stratum and the rev stratum SEPARATELY and take the arithmetic mean of the two strata. Iron rule 4(i-a): register BOTH strata's READINGS, not their game counts. Iron rule 4(i-d): NEVER weight the pooled number by game count.",
-    "winrate": "this is the one channel that is NOT degenerate by construction here: the arms are different TREES, so a side sweep does not force 0.500 the way it does in the mirrored path. Census the winner side anyway and report the minority-side share before citing it.",
-    "if_empty": "an empty prefix means the run died before its single terminal sync -- that is a TOTAL LOSS, not a zero reading, and must not be written up as 'measured, no effect'."
-  },
-  "expected_harvest_round": "next batch-desk trigger (~18:1xZ); the instance should be done well before 17:12Z",
-  "cost_estimate": {
-    "planned_usd": 1.35,
-    "basis": "worst case = full 2h watchdog at on-demand $0.673/h; expected ~$0.67 for ~1h",
-    "fence_at_launch": {
-      "tool": "tools/batch_test/soak/wave_fence.py --planned 1.35",
-      "FENCE_EXIT": 0,
-      "mtd": 19.597,
-      "projected": 20.947,
-      "operative_ceiling": 50.0,
-      "headroom": 29.053,
-      "alerts_crossed": "none -- $50/$80/$100 ACTUAL alerts all NOT yet crossed; the owner gets no Budget email for this wave"
-    }
-  },
-  "leak_check_at_launch": "running/pending = exactly this one instance and nothing else; it is the only instance this session launched. Standing cost remains only AMI ami-0a990a26d89c66547.",
-  "attempt_1_FAILED": {
-    "instance_id": "i-0c57a81c63bc57f31",
-    "launched_at": "2026-09-05T15:12:32.000Z",
-    "died_at": "~2026-09-05T15:13:19Z (batch_run.log uploaded)",
-    "survival_sec": 167,
-    "state_reason": "Client.InstanceInitiatedShutdown: Instance initiated shutdown",
-    "cost_usd_approx": 0.03,
-    "outcome": "TOTAL LOSS, ZERO GAMES -- and NOT a zero reading. Nothing was measured.",
-    "root_causes": [
-      "PermissionError [Errno 13] on /opt/ab_fwd and /opt/ab_rev: the user-data runs make_ab_build.py as `sudo -u ubuntu` but /opt is root-owned, so ubuntu cannot create the output dir",
-      "mkdir: cannot create directory '/opt/results': same class -- run_batch.sh's own mkdir -p fails, so the terminal `aws s3 sync` had no path to sync",
-      "sudo: steamcmd: command not found -- non-fatal (guarded by || true); the AMI's existing Dota install was fine (run_batch.sh's [ -x $DOTA_BIN ] check passed)"
-    ],
-    "FOURTH_FINDING_THE_DANGEROUS_ONE": "run_batch.sh, handed NO bots directory at all, prints one line -- 'WARNING: ... bots will be default AI' -- and then plays the games anyway. Had /opt/results happened to be writable, this run would have played 80 games of DEFAULT AI vs DEFAULT AI and uploaded them as the upstream yardstick. A failure that looks exactly like data. It did not happen here for one reason only: the second bug blocked it. Root cause lives in run_batch.sh (another seat's instrument) -- handed to the director, not fixed here.",
-    "WHAT_IT_BOUGHT": "for ~$0.03, the log proves the ref resolution leg is HEALTHY: `--old origin/upstream-baseline --new origin/main` was accepted, git fetch and pull both succeeded. So GH #33's 'the baseline needs a tag first' is confirmed OBSOLETE by measurement, not by argument."
-  },
-  "launcher_fix": {
-    "file": "tools/batch_test/aws/aws_run.sh",
-    "lines_added": 25,
-    "scope": "user-data only",
-    "what": [
-      "mkdir -p /opt/ab_fwd /opt/ab_rev $OUT plus chown ubuntu:ubuntu (fixes causes 1 and 2)",
-      "new ab_guard(): if any of bots/bots_ab_new/bots_ab_old is missing, print FATAL, ship the log to S3, and `shutdown -h now` -- so a failed build can never be measured as data, AND the machine dies immediately instead of idling to the 2h watchdog (~$1.35 saved on a failure)",
-      "ab_guard called once per direction"
-    ],
-    "NOT_touched": "measurement semantics -- game count, timescale, parallelism, mirror direction and ref resolution are byte-for-byte unchanged",
-    "static_verification_before_launch": {
-      "bash -n aws_run.sh": "OUTER_SYNTAX_EXIT=0",
-      "rendered user-data re-checked": "USERDATA_SYNTAX_EXIT=0",
-      "expansion audited": "$VS/$OUT left as runtime vars on the instance; $S3_BUCKET/$RUN_ID correctly expanded to literals"
-    },
-    "CHARTER_BOUNDARY_DECLARED": "The charter says the desk does not modify the harness itself. This edit is declared, not hidden. Grounds offered to the director: (a) aws_run.sh is the desk's OWN launcher, not another seat's instrument; (b) the change is confined to directory permissions and one refusal gate, and touches no measurement semantics; (c) the owner priority it unblocks had already slipped THREE rounds on this exact bug, and one more empty round goes to DECISIONS_NEEDED. If the director rules this out of bounds, the desk will revert on request."
+ "wave": "Y1",
+ "_note": "THE UPSTREAM YARDSTICK WAVE -- OWNER_PRIORITIES P4.1. NOT an arm wave: no candidate is armed on either side. This is `stable (current main, ALL gates off)` vs `upstream OHA snapshot`, the first direct measurement of whether this project has made the bots stronger at all. It uses the OLD ref-vs-ref path (aws_run.sh -> make_ab_build.py), which is a DIFFERENT harness from every W-numbered wave. Do not pool it with any W wave and do not read it with recover_verdict.py -- see harvest_instructions.",
+ "priority_ref": "iterations/OWNER_PRIORITIES.md P4.1, escalated 2026-09-05T14:5xZ by the main session: '下一批测台轮必须发标尺波,排在任何 arm 波之前,再空一轮即按铁律 9 写进 DECISIONS_NEEDED'. Two batch-desk rounds (06:17Z, 12:1xZ) had not claimed it. THIS ROUND CLAIMS IT.",
+ "contrast": {
+  "new_arm": "main",
+  "new_ref_resolved_at_launch": "ffeb0aa6bec07f6e70aebdae6c4c8d22f2d71e30",
+  "old_arm": "upstream-baseline",
+  "old_ref_resolved_at_launch": "74727e4a66ab38d16fdb09800a19ab6c0c82c6b9",
+  "baseline_matches_charter": "YES -- verified by git ls-remote at launch. Iron rule 3's upstream baseline is commit 74727e4a66ab38d16fdb09800a19ab6c0c82c6b9 and refs/heads/upstream-baseline points at it EXACTLY.",
+  "why_a_branch_name_and_not_the_SHA": "aws_run.sh hardcodes `origin/$OLD_REF` when it calls make_ab_build.py, so a bare 40-char SHA does NOT resolve (`origin/74727e4a...` is not a ref). GH #33 recorded this as 'baseline needs a tag first' and it has blocked this wave since. IT IS ALREADY UNBLOCKED AND NOBODY NOTICED: refs/heads/upstream-baseline already exists on origin at exactly that commit. ZERO harness change, ZERO new pushed refs were needed.",
+  "arms_are_gate_free": "VERIFIED, not assumed: bots/Customize/soak_side.lua is gitignored (.gitignore:76) and therefore absent from any fresh clone; J.IsSoakCandidate's first act is `local conf = GetSoakSideConf(); if not conf then return false end` => EVERY gate returns false on BOTH arms. The contrast is purely the tree, with no candidate armed. That is exactly what P4.1 asks for."
+ },
+ "new_arm_drift_exposure": "aws_run.sh fetches `main` on the instance at BOOT, so the tree measured is main-as-of-~15:13Z, which may be 1-2 commits past the ffeb0aa recorded here. NOT pinned to a SHA, because the `origin/` prefix defeats SHA pinning on this path (same root cause as above). REGISTERED AS AN EXPOSURE, judged immaterial: the contrast spans hundreds of commits, so a 1-2 commit drift on the new arm cannot change the sign of the reading. It WOULD matter for an arm wave; it does not matter for a yardstick.",
+ "instance": {
+  "instance_id": "i-0c57a81c63bc57f31",
+  "type": "c6i.4xlarge",
+  "az": "us-west-2c",
+  "launched_at": "2026-09-05T15:12:32.000Z",
+  "run_id": "run_20260905_151230_main_vs_upstream-baseline",
+  "market": "on-demand",
+  "market_verified": "InstanceLifecycle = null (read back from describe-instances; the run_id prefix is NOT evidence)",
+  "self_destruct_verified": "describe-instance-attribute instanceInitiatedShutdownBehavior = 'terminate'. Both exit paths (the script's own `shutdown -h now` and the 2h watchdog `shutdown -h +120`) therefore TERMINATE, not stop.",
+  "watchdog_hours": 2,
+  "hard_stop_at": "~2026-09-05T17:12Z",
+  "status_at_report": "running at 15:20Z, ~3m10s in -- attempt 1 died at 47s, so Y1 is past make_ab_build and ab_guard and is playing games"
+ },
+ "market_deviation_from_GH158": {
+  "ruling": "GH #158 (owner): spot first, on-demand only when spot has no capacity.",
+  "this_wave": "on-demand, deliberately, on a structural property of THIS path -- declared, not hidden.",
+  "arithmetic": "aws_run.sh syncs to S3 exactly ONCE, after BOTH directions finish (`aws s3 sync $OUT s3://...` is the second-to-last line of the user-data). There is no per-game upload. So on this path a reclaim is a TOTAL LOSS with nothing recoverable -- recover_verdict.py saved W42 precisely because soak_loop uploads per game, and that safety net DOES NOT EXIST here. W47 lost 2 of 4 machines to capacity; W43 lost 4 of 4. Immunity costs ~$0.42 (on-demand $0.673/h vs spot $0.231-0.250/h for ~1h). The owner priority this wave serves has already slipped two rounds; another total loss costs a further 3h round, and this path cannot recover partial data.",
+  "precedent": "W43 -> W44 went on-demand for one wave on the same shape of argument (GH #271 BLINDED verdict).",
+  "for_the_director": "Ruling requested: does the 'no incremental upload' property of the ref-vs-ref path count as standing grounds for on-demand, or must each such wave re-argue it?"
+ },
+ "config": {
+  "n_games": 80,
+  "per_direction": 40,
+  "parallel": 16,
+  "timescale": 4,
+  "expected_wall": "~15 min boot+steam update, then ~3 rounds x ~7 min per direction x 2 directions ~= 45 min; ~1h total, vs a 2h watchdog (~2x margin)",
+  "why_80_and_not_more": "the single terminal upload makes an overrun a total loss, so the game count is sized for ~2x watchdog margin rather than for maximum games. If Y1 lands clean, a follow-up can scale up."
+ },
+ "differences_from_the_W_path_REGISTER_DO_NOT_POOL": [
+  "no seed: run_batch.sh draws random drafts, so this is NOT a mirrored-draft wave; expect draft noise (charter: random-draft SD ~600 gpm/game)",
+  "no soak stamp: per-game files carry no `mirror:CAND:sSEED:side` stamp, so recover_verdict.py CANNOT read this run at all",
+  "no verdict object: this path emits none; the reading must be computed offline from the per-game JSON",
+  "no 25-minute game cap: run_batch.sh has no cap-25 (that landed in soak_loop.sh, GH #108/P3). Games run to a natural end under a 90-min wall timeout. For a yardstick asking about real wins this is arguably the RIGHT setting, but it means game length is NOT comparable to the W waves",
+  "different S3 prefix: results land at s3://dota2bot-batch-results-4924/<run_id>/ (bucket ROOT), not under soak/ or validation/"
+ ],
+ "harvest_instructions": {
+  "where": "s3://dota2bot-batch-results-4924/run_20260905_151230_main_vs_upstream-baseline/{fwd,rev}/game_*.json",
+  "layout": "fwd: Radiant=NEW(main), Dire=OLD(upstream). rev (--swap): Radiant=OLD, Dire=NEW. Half the games each way -- that is this path's side-bias cancellation.",
+  "fields": "tools/batch_test/parse_log.py emits `winner` ('radiant'|'dire'), `duration_s`, and per-player {team, gpm, ...}. Everything P4.1 asks for (win rate + gpm delta + game count) is computable from these.",
+  "method": "compute NEW-side minus OLD-side per game, then average the fwd stratum and the rev stratum SEPARATELY and take the arithmetic mean of the two strata. Iron rule 4(i-a): register BOTH strata's READINGS, not their game counts. Iron rule 4(i-d): NEVER weight the pooled number by game count.",
+  "winrate": "this is the one channel that is NOT degenerate by construction here: the arms are different TREES, so a side sweep does not force 0.500 the way it does in the mirrored path. Census the winner side anyway and report the minority-side share before citing it.",
+  "if_empty": "an empty prefix means the run died before its single terminal sync -- that is a TOTAL LOSS, not a zero reading, and must not be written up as 'measured, no effect'."
+ },
+ "expected_harvest_round": "next batch-desk trigger (~18:1xZ); the instance should be done well before 17:12Z",
+ "cost_estimate": {
+  "planned_usd": 1.35,
+  "basis": "worst case = full 2h watchdog at on-demand $0.673/h; expected ~$0.67 for ~1h",
+  "fence_at_launch": {
+   "tool": "tools/batch_test/soak/wave_fence.py --planned 1.35",
+   "FENCE_EXIT": 0,
+   "mtd": 19.597,
+   "projected": 20.947,
+   "operative_ceiling": 50.0,
+   "headroom": 29.053,
+   "alerts_crossed": "none -- $50/$80/$100 ACTUAL alerts all NOT yet crossed; the owner gets no Budget email for this wave"
   }
+ },
+ "leak_check_at_launch": "running/pending = exactly this one instance and nothing else; it is the only instance this session launched. Standing cost remains only AMI ami-0a990a26d89c66547.",
+ "attempt_1_FAILED": {
+  "instance_id": "i-0c57a81c63bc57f31",
+  "launched_at": "2026-09-05T15:12:32.000Z",
+  "died_at": "~2026-09-05T15:13:19Z (batch_run.log uploaded)",
+  "survival_sec": 167,
+  "state_reason": "Client.InstanceInitiatedShutdown: Instance initiated shutdown",
+  "cost_usd_approx": 0.03,
+  "outcome": "TOTAL LOSS, ZERO GAMES -- and NOT a zero reading. Nothing was measured.",
+  "root_causes": [
+   "PermissionError [Errno 13] on /opt/ab_fwd and /opt/ab_rev: the user-data runs make_ab_build.py as `sudo -u ubuntu` but /opt is root-owned, so ubuntu cannot create the output dir",
+   "mkdir: cannot create directory '/opt/results': same class -- run_batch.sh's own mkdir -p fails, so the terminal `aws s3 sync` had no path to sync",
+   "sudo: steamcmd: command not found -- non-fatal (guarded by || true); the AMI's existing Dota install was fine (run_batch.sh's [ -x $DOTA_BIN ] check passed)"
+  ],
+  "FOURTH_FINDING_THE_DANGEROUS_ONE": "run_batch.sh, handed NO bots directory at all, prints one line -- 'WARNING: ... bots will be default AI' -- and then plays the games anyway. Had /opt/results happened to be writable, this run would have played 80 games of DEFAULT AI vs DEFAULT AI and uploaded them as the upstream yardstick. A failure that looks exactly like data. It did not happen here for one reason only: the second bug blocked it. Root cause lives in run_batch.sh (another seat's instrument) -- handed to the director, not fixed here.",
+  "WHAT_IT_BOUGHT": "for ~$0.03, the log proves the ref resolution leg is HEALTHY: `--old origin/upstream-baseline --new origin/main` was accepted, git fetch and pull both succeeded. So GH #33's 'the baseline needs a tag first' is confirmed OBSOLETE by measurement, not by argument."
+ },
+ "launcher_fix": {
+  "file": "tools/batch_test/aws/aws_run.sh",
+  "lines_added": 25,
+  "scope": "user-data only",
+  "what": [
+   "mkdir -p /opt/ab_fwd /opt/ab_rev $OUT plus chown ubuntu:ubuntu (fixes causes 1 and 2)",
+   "new ab_guard(): if any of bots/bots_ab_new/bots_ab_old is missing, print FATAL, ship the log to S3, and `shutdown -h now` -- so a failed build can never be measured as data, AND the machine dies immediately instead of idling to the 2h watchdog (~$1.35 saved on a failure)",
+   "ab_guard called once per direction"
+  ],
+  "NOT_touched": "measurement semantics -- game count, timescale, parallelism, mirror direction and ref resolution are byte-for-byte unchanged",
+  "static_verification_before_launch": {
+   "bash -n aws_run.sh": "OUTER_SYNTAX_EXIT=0",
+   "rendered user-data re-checked": "USERDATA_SYNTAX_EXIT=0",
+   "expansion audited": "$VS/$OUT left as runtime vars on the instance; $S3_BUCKET/$RUN_ID correctly expanded to literals"
+  },
+  "CHARTER_BOUNDARY_DECLARED": "The charter says the desk does not modify the harness itself. This edit is declared, not hidden. Grounds offered to the director: (a) aws_run.sh is the desk's OWN launcher, not another seat's instrument; (b) the change is confined to directory permissions and one refusal gate, and touches no measurement semantics; (c) the owner priority it unblocks had already slipped THREE rounds on this exact bug, and one more empty round goes to DECISIONS_NEEDED. If the director rules this out of bounds, the desk will revert on request."
+ },
+ "instance_record_correction": "LEDGER DEFECT FOUND AT HARVEST, ORIGINAL TEXT LEFT INTACT. The `instance` block above describes ATTEMPT 1 (i-0c57a81c63bc57f31, run_20260905_151230_..., launched 15:12:32Z), the attempt that died at 167s and is separately recorded under `attempt_1_FAILED`. The run that actually produced Y1's data is ATTEMPT 2: run_20260905_151656_main_vs_upstream-baseline, instance i-00f0417bfc7918609 (id per the launch round's own roll call), launched ~2026-09-05T15:16:56Z. So the only machine-shaped key in this record points at the machine that measured NOTHING. See `instance_actual` below. This matters beyond bookkeeping: every tool that reads wave records reads keys, not prose.",
+ "instance_actual": {
+  "run_id": "run_20260905_151656_main_vs_upstream-baseline",
+  "instance_id": "i-00f0417bfc7918609",
+  "type": "c6i.4xlarge",
+  "market": "on-demand",
+  "launched_at": "2026-09-05T15:16:56Z",
+  "last_s3_upload": "2026-09-05T16:51:18Z",
+  "terminated_at": "NOT READABLE -- terminated instances age out of describe-instances in ~1h (GH #375) and this harvest ran at 18:1xZ. describe-instances terminated,shutting-down returned EMPTY.",
+  "survival_min_bound": 94.4,
+  "survival_bound": "LOWER BOUND, not exact: launch -> last S3 upload. `shutdown -h now` follows the sync, so the true figure is a little larger.",
+  "status_code": "NOT READABLE at harvest time (aged out). Attempt 1's code was Client.InstanceInitiatedShutdown; attempt 2 exited by the same path (the script's own shutdown after the terminal sync), but that is INFERENCE from the upload timeline, NOT a read status code -- registered as such."
+ },
+ "harvest": {
+  "harvested_at": "2026-09-05T18:2xZ",
+  "harvested_by": "batch-desk 2026-09-05T18:07Z round",
+  "method": "INDEPENDENT RECOMPUTE from S3, not a transcription. recover_verdict.py is unusable on this path by construction (no soak stamp) -- the launch record said so and that holds. All 80 per-game JSONs are 0 bytes, so the reading was taken from the per-game `.log.stdout` files: a 128KB TAIL of each of the 80 objects (the Match-signout block sits ~11KB from EOF), parsed with the same regexes tools/batch_test/parse_log.py uses. Egress for the whole harvest was ~10MB, not the 8.4GB the full logs would have cost.",
+  "input": {
+   "objects_in_prefix": 161,
+   "games_expected": 80,
+   "games_with_signout": 80,
+   "unfinished_games": 0,
+   "per_game_json_bytes": 0,
+   "per_game_json_note": "all 80 game_N.json are 0 bytes -- the con_logfile harness bug. The main session fixed run_batch.sh at 17:36Z (commit 25d237b2, .log.stdout fallback). THAT FIX IS UNEXERCISED ON THE FARM: no wave has run since it landed."
+  },
+  "arms_were_real_NOT_default_AI": "VERIFIED from batch_run.log, and this check is not ceremonial -- GH #527 is exactly the failure where run_batch.sh with no bots directory plays default AI vs default AI and uploads it as data, and a ~50% reading is what that failure would look like. Evidence: make_ab_build.py printed `A/B build ready ... (275 dispatchers; Radiant=NEW, Dire=OLD)` for fwd and `(275 dispatchers; Radiant=OLD, Dire=NEW)` for rev; the new ab_guard ran after each install and passed all three directories (bots / bots_ab_new / bots_ab_old) in both directions. The guard this desk added last round did its job on its first flight.",
+  "new_arm_drift_EXPOSURE_RESOLVED": "The launch record registered an exposure: aws_run.sh fetches `main` at boot, so the measured tree could be 1-2 commits past the registered ffeb0aa6. MEASURED, NOT ASSUMED, at harvest: batch_run.log line 6 reads `cb814c6c..ffeb0aa6  main -> origin/main`. The tree measured IS ffeb0aa6bec07f6e70aebdae6c4c8d22f2d71e30, byte-identical to the registration. Exposure was ZERO on this wave. It remains a live exposure for the NEXT wave on this path -- nothing was fixed, this one just came up clean.",
+  "readings": {
+   "_iron_rule_4_i_a": "BOTH strata registered as READINGS, not game counts. The strata are equal-sized (40/40), so the stratum-average and the naive pooled number coincide identically here -- registered so that the coincidence is on the record rather than assumed.",
+   "winrate_new_arm": {
+    "fwd_radiant_is_NEW": {
+     "wins": 25,
+     "games": 40,
+     "reading": 0.625
+    },
+    "rev_radiant_is_OLD": {
+     "wins": 19,
+     "games": 40,
+     "reading": 0.475
+    },
+    "arm_swap_averaged": 0.55,
+    "side_term": 0.075,
+    "pooled_naive": 0.55,
+    "deviation_sign_flip": true,
+    "deviation_sign_flip_note": "Around the 0.5 null the two strata disagree in sign (fwd +12.5pp, rev -2.5pp). This estimator DOES have the side bias eliminated (40/40 swap, arithmetic mean of strata), so iron rule 4(i-c) governs, not 4(i-b): the flip is the identity |side| > |arm| and carries ZERO information about how well the arm was measured. REGISTERED under 4(i-a), not treated as a defect. What it does say is that this harness's side bias (+7.5pp to Radiant) is LARGER than the whole effect being measured (+5.0pp) -- which is the ordinary reason this project swaps and averages at all."
+   },
+   "winrate_channel_here_is_NOT_degenerate": "Unlike the mirrored W path (7 consecutive DEGENERATE waves), the two arms here are different TREES, so a side sweep does not force 0.500 by construction. Side census: NEW won 44 of 80; by physical side, Radiant won 25+21=46 of 80 (57.5%), Dire 34 (42.5%) -- minority-side share 0.425, nowhere near the degenerate shape.",
+   "gpm_delta_NOT_BOUGHT": "** P4.1 asked for win rate + gpm delta + game count. Y1 bought TWO of the three. ** The engine's signout scoreboard on this path is degenerate for every per-player metric: across 800 player rows (80 games x 10), `Gold per min: 0` in 800/800, `Level: 1` in 800/800, `KDA: 0 / 0 / 0` in 800/800, `LastHit = 0` in 800/800. The log itself says why: `Not submitting stats. Both teams must have human players.` This is NOT the con_logfile bug and the 17:36Z .log.stdout fix does NOT address it -- the fields are zero in the engine's own output. So the gpm half of P4.1 cannot be answered on this path as it stands, and no wave on it should be sold as buying gpm until someone shows a non-zero scoreboard.",
+   "gold_on_hand_EXPLORATORY_ONLY": {
+    "fwd_new_minus_old": 171.4,
+    "rev_new_minus_old": 45.8,
+    "swap_averaged": 108.6,
+    "HONESTY_BOUNDARY": "DO NOT cite this as an economy reading. `Level: 1 Gold: NNNN` is the ONLY field in that block that varies, and it comes from the same block whose level/KDA/lasthit/gpm are all identically zero. A field that is plausible-looking inside a demonstrably broken block is the exact shape this desk is supposed to refuse. Direction is positive for main; magnitude is not a measurement."
+   },
+   "duration": {
+    "fwd_mean_s": 3109.8,
+    "rev_mean_s": 3069.2,
+    "pooled_median_s": 3095.0,
+    "min_s": 2847,
+    "max_s": 3391,
+    "note": "~51.5 min per game. No cap-25 on this path (run_batch.sh never got it; P3/GH #108 landed in soak_loop.sh), so game LENGTH is not comparable with any W-numbered wave. Registered, do not pool."
+   }
+  },
+  "confirms_main_session_reading": "The main session's 17:42Z DECISIONS_NEEDED entry (44/80 = 55.0%, 80 games all decided) is INDEPENDENTLY REPRODUCED here from the S3 objects: 44/80, zero games without a signout. What this harvest ADDS is the per-stratum split the pooled number hides (62.5% / 47.5%), the side term (+7.5pp) that is larger than the effect, and the finding that the gpm half of P4.1 was not bought at all.",
+  "cost_settlement": {
+   "attempt_2_machine_hours": 1.573,
+   "attempt_2_derived_usd": 1.06,
+   "attempt_1_derived_usd": 0.03,
+   "wave_total_derived_usd": 1.09,
+   "planned_usd": 1.35,
+   "basis": "on-demand c6i.4xlarge $0.673/h x (launch -> last S3 upload).",
+   "HONESTY_BOUNDARY": "MACHINE-HOUR SIDE DERIVATION, not a billing-side reading, and the hours are a LOWER bound (termination follows the final sync). The $0.90 spot-wave auto-invalidation clause is written on billing-side cost for SPOT waves and does not apply to this on-demand wave either way."
+  },
+  "gate_i_BLIND_SPOT_FOUND": "** wave_throttle.py CANNOT SEE Y1. ** Run this round it anchored on W48 (12:24:12Z, unlock 18:24:12Z) and never mentioned Y1, which went up ~3h LATER and spent ~$1.09. Cause is structural, not clerical: the tool reads `machines[]` (the charter's ruling 2 leans on exactly that -- 'it does not depend on anyone honestly filling in a field'), and this record, written on the ref-vs-ref path, has no `machines[]` at all; its machine lives under `instance`. So a whole wave is invisible to gate (i), and the failure direction is the dangerous one: the tool says UNLOCKED EARLIER than the truth, i.e. it permits spending sooner. Conservative reading for the next round: anchor on Y1's own machine, 2026-09-05T15:16:56Z => unlock ~2026-09-05T21:17Z, NOT the 18:24:12Z the tool prints. Filed to the director."
+ }
 }
