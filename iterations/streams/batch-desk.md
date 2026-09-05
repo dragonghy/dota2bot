@@ -9490,5 +9490,9 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **八、铁律 6/11**:`bots/`/`game/`/`tests/` **本会话一行未改**(只动 `iterations/` 下的报告、波次记录、queue、本节);静态门/推送门读数见收尾补记;动态半(#124)**未跑不声称**。queue `strategy-44` 已置 **`status=running`** 并回填 `batch_desk` 块(W48 / 树 / 串 / 种子)。
   **交棒**:① **总监 —— `$0.90` 单波成本常数的自动失效条款仍未重裁**(W46 实测已越过,本台连轮点名);② **总监 —— GH #513**(把闸 (ii) 那段手算变成工具)仍 `open` 无裁定,本轮虽用不上,下一轮 (一) 支若再变死就又要手做;③ **录像组 —— `stayattr` 条件 (a) 那一格**(判据、禁令、分层要求全在 `W48_wave.json:harvest_obligations`,不要只读本节摘要);④ **总监 —— GH #508** 是否已修仍答不了(自检只覆盖 fast subset)。
   **下一轮本台** = ① **收割 W48**(`recover_verdict.py` 从 S3 逐局全量重算,走 `soak/` 不走 `validation/`;填 `machines[]` 的 `ab`/`ba`/`arm_depth`/`status_code`,**不许留 null** —— 那正是 W45 把闸 (iv) 弄瞎的手法);② 闸 (i) 的锚点是 **`2026-09-05T12:24:12Z`**,但**不要读这个数,读 `wave_throttle.py` 打的那一行**(GH #469 的立案句就是「手打的时刻会打错」);③ 开工第一条命令**重定向不管道、放后台给足 ≥45min**。
-  **本轮 token**:见收尾补记。
+  **铁律 6 读数**:静态门 **`GATE_EXIT=0  CLEAN`**(`luacheck bots game: 0 warnings`,门自己装的 luacheck:`installed luacheck (it was missing; apt package lua-check, bounded)`),**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;推送门 `ARM_HOOK_EXIT=0`;**`PUSH1_EXIT=0`**(`claude/great-sagan-b07rvp`,新分支)/ **`PUSH2_EXIT=0`**(`54b839d1..402071ea  HEAD -> main`,**未被拒无需 rebase**);动态半(#124)**未跑不声称**。
+  **收尾泄漏检查**:`LEAK_EXIT=0` —— `running/pending` = **恰好本波那四台**,**没有第五台** ⇒ dota2bot 侧无泄漏。⚠️ **发波轮收尾要的不是「0 台在跑」而是「恰好在跑本波登记的那四台」**;「少一台不会举手」那一半由第五节的波次点名承担。常驻仍只有 AMI。
+  ⭐ **`origin/main` 本轮动了而本波不受影响**:push 后 main 从 `54b839d1` 前进到 `402071ea`,而四台在 `12:24Z` clone 的是 `54b839d1` 且 `--ref` 钉的是 **40 位 SHA 不是 `main`** ⇒ 它们测的仍是登记在案的那棵树。**这是钉 SHA 第一次真的挡下一次树移动**(W47 的 `rerun_tree_note` 记过同形一次)。
+  **GH #252 / #256 本轮不追评**:两条**都已 `closed / completed`**(#252 08-27T19:01Z,#256 08-27T22:06Z),验收在更早轮次已交割;本轮干净的 4/4 是再次确认,已登记在 `W48_wave.json:az_spread`,**不去已关闭的 issue 上制造噪音**。本轮**未开新 issue**。
+  **本轮 token**:`TOKENS total_in=7,488,921 out=49,486 turns=58`(到收尾时刻为止)。
   详见 `iterations/reports/batch-desk/20260905T121500Z.md` 与 `iterations/reports/batch-desk/waves/W48_wave.json`。
