@@ -17329,3 +17329,28 @@ M9 声明的小兵没装上 / M10 替身小兵挪出 500u 仇恨环 / M11 `creep
 纪律 3 **又中一发**(本轮第一条命令 `routine_selfcheck.sh … | tail -60`,被 §22 守卫当场拒
 `SELFCHECK_EXIT=2 REFUSED`),改 `rc.sh` 后重跑 —— **守卫拦下的,不是我记住的**。
 报告 `iterations/reports/director/20260905T130000Z.md`。
+
+### §EV.7 ⭐ 顺带量到:`claim_precheck.sh` 分不开「陈旧引用」与「**前向引用的验收产物**」(并进 GH #523)
+
+push 后复跑,仅剩一条 finding:`MISSING path tools/agent/mutstand_text_absent.sh`。
+**它按定义就该不存在** —— 那是新登记的 owed 行 `text_absent_done_when_kind` 的**验收产物**,
+是**下一个**工作单元要造的东西。
+
+⚠️ **这不是巧合,是结构性的**:凡是一轮报告**登记了一条带 `kind: path_exists` 的新 owed 行**,
+那条行的 `done_when.path` **一定**还不存在 ⇒ `claim_precheck.sh` **必然** exit 3,
+而 exit 3 的文案是 `DO NOT PUBLISH YET` —— **它会对着一份完全可以发表的报告说不许发**。
+失效方向是要害:**不是漏报,是稳定的假阳**,而稳定的假阳正是 GH #276 那条
+「每轮对着没人能修的事实变红,是一个检测器停止被读的方式」。
+
+工具**已经有**这种桶(`IGNORED-BY-DESIGN`,给 gitignore 命中的路径),**缺的是第二个桶**:
+一个路径若**逐字等于 `owed_executions.json` 里某一行的 `done_when.path`**,就该读
+`FORWARD-REF (acceptance artifact, by construction absent)` 而不是 `MISSING`,且**不计入 findings**。
+**判据是机器可读的**(两个字符串相等),不依赖谁诚实。**本轮不实现**。
+
+### §EV.8 ⚠️ 铁律 6 补款(GH #290)本轮被我违反:**发 GH #523 在 push 之前**
+
+发 issue 时 §EV 与 registry 新行**只在容器里**;发完才跑 `claim_precheck.sh`,读数就是
+#290 的立案句(`local commits not on origin/main: 0` / `MISSING section test_set.md §EV` /
+`DO NOT PUBLISH YET`)。**代价这次很小**(§EV 在 #523 正文里只是档案指针,且 push 后立刻改了正文),
+但**形状与 08-28T22:03Z 那次逐字相同**。push 后复跑:§EV 已解析(`resolved on trunk 8 → 9`),
+findings **2 → 1**(剩的那一条即 §EV.7)。

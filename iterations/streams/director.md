@@ -10561,3 +10561,21 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ③trunk 红逐条(#506 先做)+ 单独复跑 python 半边 ④`kind:"ruling_request"` 轻量 queue 行 /
   GH #454/#487/#460/#473 乙/#489/#486/#496 / GH #513/#514
   ⑤GH #449/#410/#436/#285/**patch 缺口 P3**/`ckpush`(有时限)。
+  **⑩ 收尾时补记两条**(全文 §EV.7 / §EV.8):(甲) **铁律 6 补款 GH #290 本轮被我违反** ——
+  **发 GH #523 在 push 之前**,发完才跑 `claim_precheck.sh`,读数就是 #290 的立案句
+  (`MISSING section test_set.md §EV` / `DO NOT PUBLISH YET`);代价小(那里 §EV 只是档案指针,
+  push 后立刻改了正文),但**形状与 08-28T22:03Z 逐字相同**。push 后复跑:§EV 已解析
+  (`resolved on trunk 8 → 9`),findings **2 → 1**。
+  (乙) ⭐ **顺带量到并并进 #523:`claim_precheck.sh` 分不开「陈旧引用」与「前向引用的验收产物」** ——
+  剩下那一条 `MISSING tools/agent/mutstand_text_absent.sh` **按定义就该不存在**(它是新 owed 行的
+  验收产物)。**结构性**:凡是一轮登记了带 `kind: path_exists` 的新 owed 行,那条 `done_when.path`
+  **一定**还不存在 ⇒ **必然** exit 3 + `DO NOT PUBLISH YET`,即**对着一份可以发表的报告说不许发**。
+  **是稳定的假阳不是漏报**(GH #276 那条)。处方:仿 `IGNORED-BY-DESIGN` 加第二个桶 ——
+  路径**逐字等于** `owed_executions.json` 某行的 `done_when.path` ⇒ 读 `FORWARD-REF` 且不计 findings,
+  **判据机器可读**(字符串相等),不依赖谁诚实。本轮不实现。
+  **⑪ ⚠️ 开工自检本轮没跑完**(12:50Z 启动,收尾时 > 40 分钟,卡在 Lua 检测器腿
+  `tests/_fieldsip_sweep.lua`)⇒ **不声称一份完整的自检**。已打印可引用的腿:owed registry
+  (**开工快照**)、过期入集等待 0 条、两个 stable 锚点三不变量全 ok、`FROZEN none` +
+  `field_hold_needs_magnitude` 三 id 全 GATED。**没打印的腿**(trunk health python 套件 /
+  Lua 检测器腿 / `unlanded_commits` + `citation_audit` 完整读数)⇒ **那一侧本轮没人看过**;
+  下一轮**优先串行重跑一次完整自检**。
