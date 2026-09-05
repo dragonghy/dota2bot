@@ -47,6 +47,16 @@
 --     2026-07-23, so J.CanEnemyInterruptTpChannel runs before every TP the
 --     item layer would issue in every turbo game we ship, and no test has ever
 --     executed it on a real frame.
+--     ⭐ [GH #492, director 2026-09-05] THE FIRST OF THE TWO IS REPAIRED.
+--     tests/mock/replay_fixture.lua now answers GetExtrapolatedLocation (as
+--     the current location -- a fixture is one instant and carries no
+--     velocity, which is declared there and measured in
+--     tests/test_fixture_extrapolation_mock.lua). The paragraph above is left
+--     verbatim as the record of what was found; the numbers it quotes are from
+--     the 882-frame corpus and were re-taken on today's 981-frame one in the
+--     crash-site leg below. J.CanEnemyInterruptTpChannel has now executed on a
+--     real frame -- 257 of them -- and says "do not start this TP" on 73.
+--     `GetFarmLaneDesire` is untouched and still unrunnable.
 --   * the ONE action the corpus can produce is a phantom. It is a TP with the
 --     shipped motive `支援团战` (support the teamfight), and its
 --     trigger is `J.GetTeamFightLocation(bot)` returning Vector(0,0) -- the map
@@ -385,7 +395,18 @@ tests['[measure] honest TP handle: 0 -> 2 actions and 0 -> 210 crashes'] = funct
     -- partition still holds.
     -- 2026-08-29 (director, GH #221): 213 -> 219 was, again, only the corpus
     -- growing.  cs.ratchet keeps the direction that ever meant anything.
-    cs.ratchet(c.crash_total, 213, 'crashes under the honest probe')
+    -- ⭐ 2026-09-05 (director, GH #492): 224 -> 50, and this is the one time the
+    -- fall is the deliverable rather than the alarm.  `cs.ratchet` refused the
+    -- tree, correctly -- a per-fixture count cannot fall by appending fixtures,
+    -- so it demanded that a human say why.  The why: the fixture mock gained
+    -- GetExtrapolatedLocation, so the 178 crashes at `local x2 = sLoc.x` are
+    -- gone.  Measured both ways on this same corpus (`driven` 928 in both), so
+    -- the drop is the repair and not the corpus:
+    --     crash_total 224 -> 50,  no_action 754 -> 928,  actions 3 -> 3
+    -- The new floor is registered here by hand, with the reason, rather than by
+    -- relaxing the ratchet.  See the crash-site leg below for the +4 that the
+    -- total hides.
+    cs.ratchet(c.crash_total, 50, 'crashes under the honest probe')
     -- 2026-08-23: the corpus grew a SECOND action (see the [recorded] test
     -- below -- it is an honest one, not another origin phantom), so the
     -- partition is stated against action_total instead of a literal 1.
@@ -463,16 +484,47 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     -- lesson: 35 -> 41 here is the corpus growing (GH #106/#127), which the old
     -- equality mis-reported as a regression.  A count FALLING is still red --
     -- that is the only direction that ever meant "behaviour moved".
+    -- ⭐⭐ RE-TAKEN 2026-09-05 (director, GH #492) -- AND THE RE-TAKE IS WHY
+    -- THIS KEY WAS BUILT. `SITE_X2` was `local x2 = sLoc.x` inside
+    -- J.CanEnemyInterruptTpChannel, and it crashed because the fixture mock did
+    -- not stub GetExtrapolatedLocation. The mock was repaired on this commit,
+    -- so that site is GONE -- not smaller, absent -- and the old assertion
+    -- `nX2 ~= nil` was correct to refuse the tree rather than read `nil` as a
+    -- zero.
+    --
+    -- MEASURED BOTH WAYS ON THE SAME CORPUS AND THE SAME TREE (the mock file
+    -- swapped in and out from a copy; `driven` 981 in both, so this is not the
+    -- corpus-growth confound that moved these numbers three times before):
+    --                              before    after
+    --     crash_total                 224       50
+    --     `local x2 = sLoc.x`         178        0  (site absent)
+    --     `GetFarmLaneDesire(...)`     46       50  (+4)
+    --     no_action                   754      928  (+174)
+    --     actions                       3        3  (unchanged)
+    --
+    -- ⭐ THE +4 IS THE PART WORTH KEEPING. Un-censoring 178 frames did not
+    -- convert 178 raises into 178 readings: 174 of them ran to a measured "no
+    -- action", and 4 travelled further down the same chain and crashed at the
+    -- NEXT unstubbed engine name. A repair that removes one raise can hand the
+    -- freed frames to the next hole rather than to a reading, and the total
+    -- crash count falls the whole way regardless -- so `crash_total` alone
+    -- would have reported this as a clean win. The per-statement key is what
+    -- makes the 46 -> 50 visible at all.
+    --
+    -- ⇒ NOT ONE NEW ITEM ACTION APPEARED (3 -> 3). The honest reading of the
+    -- counterfactual is unchanged from the one this file has carried all along:
+    -- opening this gap reveals no real item decision on this corpus.
     local SITE_X2 = 'local x2 = sLoc.x'
     local SITE_FARM = 'local nTopDesire = GetFarmLaneDesire( LANE_TOP )'
     local nX2   = c.crash_at[SITE_X2]
     local nFarm = c.crash_at[SITE_FARM]
-    assert(nX2 ~= nil, 'no crash is attributed to `' .. SITE_X2 .. '` any more -- '
-        .. 'the statement itself moved or stopped crashing, which is the real '
-        .. 'finding this key was rebuilt to be able to state')
+    assert(nX2 == nil, 'crashes are attributed to `' .. SITE_X2 .. '` again ('
+        .. tostring(nX2) .. '). The GH #492 mock repair was lost, or a second '
+        .. 'unstubbed name landed on that road: either way the item census '
+        .. 'below is being taken on a corpus that silently deletes the '
+        .. 'enemy-in-your-face frames')
     assert(nFarm ~= nil, 'no crash is attributed to `' .. SITE_FARM .. '` any more')
-    cs.ratchet(nX2, 178, 'crashes at `' .. SITE_X2 .. '`')
-    cs.ratchet(nFarm, 35, 'crashes at `' .. SITE_FARM .. '`')
+    cs.ratchet(nFarm, 50, 'crashes at `' .. SITE_FARM .. '`')
     -- ⚠️ THIS LINE IS WHY THE 15:5xZ RE-PIN TOOK TWO ROUNDS.  That pass renamed
     -- the two asserts and MISSED this third reference, so it read `0 + 0 == 213`
     -- and fired "a THIRD crash site appeared" -- a sum that silently re-derives
@@ -483,9 +535,10 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     -- third place left to forget.
     local nNamed, nSites = 0, 0
     for _, v in pairs(c.crash_at) do nNamed = nNamed + v; nSites = nSites + 1 end
-    assert(nSites == 2, 'the crashes now come from ' .. nSites
-        .. ' distinct statements, not two -- name the new one before touching '
-        .. 'these numbers')
+    assert(nSites == 1, 'the crashes now come from ' .. nSites
+        .. ' distinct statements, not one -- name the new one before touching '
+        .. 'these numbers. (It was two until 2026-09-05: repairing the mock for '
+        .. 'GH #492 removed the extrapolation site entirely.)')
     assert(nNamed == c.crash_total, 'a crash was attributed to no statement: '
         .. nNamed .. ' named vs ' .. c.crash_total .. ' total')
 
@@ -498,8 +551,12 @@ tests['[world] the 210 crashes name two more unstubbed engine APIs'] = function(
     local other
     for _, h in pairs(J.GetNearbyHeroes(bot, 100000, true, BOT_MODE_NONE)) do other = h end
     assert(other ~= nil, 'the fixture has enemies')
-    assert(type(other:GetExtrapolatedLocation(0.5)) ~= 'table',
-        'GetExtrapolatedLocation now answers a location -- re-measure the 178')
+    -- 2026-09-05 (GH #492): inverted, and the 178 was re-measured in the same
+    -- commit -- see the crash-site leg above. This assertion now guards the
+    -- repair rather than the hole.
+    assert(type(other:GetExtrapolatedLocation(0.5)) == 'table',
+        'GetExtrapolatedLocation answers a scalar again -- the mock repair was '
+        .. 'lost and the crash counts above revert with it')
 end
 
 tests['[world] the first of those two sits on a SHIPPED, ungated road'] = function()

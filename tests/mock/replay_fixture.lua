@@ -595,6 +595,40 @@ function M.load(path, sSubject)
             -- default stands, which is the pre-#53 world.
             GetPlayerID = u.player_id,
             GetLocation = loc,
+            -- GH #492 (director 2026-09-04T19:xxZ, ruling test_set.md §EI.5 (5);
+            -- executed 2026-09-05). Before this line the name fell through to
+            -- bot_api.lua's `^Get -> 0` catch-all, and every shipped consumer
+            -- indexes the result as a location (`sLoc.x`), so the frame RAISED.
+            -- Two sweeps read that raise through a two-bucket `pcall` and so
+            -- scored it as "measured, answered no": J.CanEnemyInterruptTpChannel
+            -- raised on 257/257 of its in-domain frames and
+            -- J.ShouldTpSupportTowerFight on 75/1012 live frames, and the
+            -- frames deleted that way were precisely the enemy-in-your-face
+            -- ones -- the reason those helpers exist. A raise is not a reading.
+            --
+            -- ⚠️ THE WORLD ASSUMPTION, DECLARED (this is the whole point of
+            -- writing it out rather than just stubbing the name -- the mock's
+            -- own history is a row of defaults that "stated a world assumption
+            -- nobody declared"). A fixture is ONE INSTANT: `make_fixture.py`
+            -- dumps x/y and no velocity, facing or waypoint, on any of the 109
+            -- fixtures. So this cannot extrapolate; it answers the CURRENT
+            -- location, i.e. it models every unit as STANDING STILL.
+            -- What that costs, exactly, in the shipped consumer:
+            --   nSoon == nNow  =>  `nSoon < nNow - 10` is FALSE on every
+            --   fixture frame  =>  J.CanEnemyInterruptTpChannel's CLOSING-THE-
+            --   GAP clause is unreachable on this corpus. Its `nNow <= nReach`
+            --   (can strike us right now) clause is answered honestly.
+            -- So the repair converts a deleted frame into a reading of ONE of
+            -- the two clauses, and any domain count taken through it is a LOWER
+            -- BOUND on interruption, never an upper one. It errs toward "the TP
+            -- is safe", which is the direction that understates the guard
+            -- rather than inventing work for it.
+            -- tests/test_fixture_extrapolation_mock.lua pins both halves, so
+            -- the day a fixture carries velocity this comment goes red instead
+            -- of quietly becoming false.
+            GetExtrapolatedLocation = function(self, _fTimeInFuture)
+                return self:GetLocation()
+            end,
             GetHealth = u.hp, GetMaxHealth = u.max_hp,
             OriginalGetHealth = u.hp, OriginalGetMaxHealth = u.max_hp,
             GetMana = u.mp, GetMaxMana = u.max_mp,

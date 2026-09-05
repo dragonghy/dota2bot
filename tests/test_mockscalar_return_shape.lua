@@ -146,7 +146,13 @@ tests['[census] the catch-all answers most of the shipped getter surface'] = fun
     cs.ratchet(C('candidates'), 197, 'distinct Get* names shipped code calls')
     assert(C('names_scalar0_always') > 0, 'no shipped getter is answered by the '
         .. 'catch-all any more -- the whole pricing below is stale, re-take it')
-    cs.ratchet(C('names_scalar0_always'), 166,
+    -- 166 -> 165 on 2026-09-05 (director, GH #492), and the single name that
+    -- left is GetExtrapolatedLocation: the fixture mock now answers it from the
+    -- frame. `cs.ratchet` is deliberately one-directional and would refuse a
+    -- fall, which is correct -- a fall means somebody acted on this file -- so
+    -- the new floor is registered here by hand, with the reason, rather than by
+    -- relaxing the ratchet.
+    cs.ratchet(C('names_scalar0_always'), 165,
         'names the catch-all answers on EVERY live frame')
     assert(C('names_scalar0_any') >= C('names_scalar0_always'),
         'always-0 cannot exceed ever-0; the sweep is miscounting')
@@ -199,11 +205,28 @@ tests['[source] the shipped tree itself proves the three returns non-scalar'] = 
         .. 'code, which changes what its 503/503 raise means; re-read the pricing')
 end
 
-tests['[census] the three names are all answered by the catch-all'] = function()
+tests['[census] TWO of the three names are still answered by the catch-all'] = function()
     -- The static half above says "the tree needs a non-scalar here". This says
     -- "the mock hands it a scalar there". Neither alone is the finding.
-    for _, name in ipairs({ 'GetVelocity', 'GetCurrentActiveAbility',
-        'GetExtrapolatedLocation' }) do
+    --
+    -- ⭐ 2026-09-05 (director, GH #492): the roster is 3 names and ONE of them
+    -- was repaired -- GetExtrapolatedLocation, in tests/mock/replay_fixture.lua
+    -- (not in bot_api.lua, so `exempt` stays 5 and this file's exempt pin still
+    -- holds). It is moved to its own leg below with its measured post-repair
+    -- row. GetVelocity and GetCurrentActiveAbility are untouched and keep the
+    -- pricing exactly as it was, which is the point of splitting rather than
+    -- widening: this leg still says "a pure catch-all name", and it is still
+    -- true of everything it names.
+    --
+    -- ⚠️ THE ORDERING CONSTRAINT IN THE FILE HEADER IS UNSPENT. `^Get` before
+    -- `^Is` was the constraint, and only one `^Get` name has been repaired, so
+    -- the `^Is` half must still wait -- for GetVelocity's sake, not for
+    -- GetExtrapolatedLocation's. Repairing `^Is` today would take
+    -- J.GetUltLoc's 503 in-domain frames from "raises" to "raises", but
+    -- IsWillBeCast*/DidEnemyCastAbility/IsCastingUltimateAbility would go from
+    -- 1436 clean answers to 1436 raises, and the two-bucket readers downstream
+    -- would score every one of them as a measured "no".
+    for _, name in ipairs({ 'GetVelocity', 'GetCurrentActiveAbility' }) do
         local row = M.n[name]
         assert(row ~= nil, name .. ' is no longer called by shipped code -- it '
             .. 'dropped out of the parsed candidate list; re-read the pricing')
@@ -218,37 +241,77 @@ tests['[census] the three names are all answered by the catch-all'] = function()
     end
 end
 
+tests['[census] the third name was repaired, and answers on every live frame'] = function()
+    -- GH #492, executed by the director 2026-09-05. Measured here by the same
+    -- sweep that used to price it as a catch-all name, so the two readings are
+    -- comparable line for line (same corpus, same tree, the mock the only diff):
+    --     scalar0  1012 -> 0     other  0 -> 1012     raised  0 -> 0
+    local row = M.n['GetExtrapolatedLocation']
+    assert(row ~= nil, 'GetExtrapolatedLocation dropped out of the shipped '
+        .. 'candidate list -- nothing under bots/ extrapolates any more, and '
+        .. 'the repair below has no consumer; re-read the pricing')
+    assert(not row.exempt, 'GetExtrapolatedLocation is now special-cased in '
+        .. 'bot_api.lua as well as in replay_fixture.lua. Two answers for one '
+        .. 'name is how they drift; pick one and re-take every count here')
+    assert(row.scalar0 == 0, 'GetExtrapolatedLocation still answers the '
+        .. 'catch-all 0 on ' .. row.scalar0 .. ' frame(s) -- some unit kind the '
+        .. 'fixture builds is not covered by the repair, so the censoring '
+        .. 'survives on exactly those frames')
+    assert(row.raised == 0, 'the repaired name now RAISES on ' .. row.raised
+        .. ' frame(s)')
+    assert(row.other == C('live'), 'GetExtrapolatedLocation answers from the '
+        .. 'frame on ' .. row.other .. ' of ' .. C('live') .. ' live frames, '
+        .. 'not all of them')
+end
+
 -- ------------------------------ carriers that never answer their question --
 
-tests['[census] two shipped carriers have never answered on this corpus'] = function()
-    local n = 0
-    for _, name in ipairs({ 'CanEnemyInterruptTpChannel', 'GetUltLoc' }) do
-        local r = R(name)
-        assert(r.raise_s > 0, 'J.' .. name .. ' no longer raises on any '
-            .. 'in-domain frame. The mock was repaired, or the helper was: '
-            .. 'either way this pricing is stale, re-take it')
-        assert(r.ans_s == 0, 'J.' .. name .. ' answered on ' .. r.ans_s
-            .. ' in-domain frame(s). It became witnessable: PRICE IT AGAIN, a '
-            .. 'fix in it may have become landable with a real-frame fixture')
-        assert(r.raise_s + r.ans_s > 0, 'J.' .. name .. ' has an empty domain '
-            .. 'on this corpus -- then "never answers" is vacuous, re-read')
-        n = n + 1
-    end
-    assert(C('carriers_never_answer') == n, 'the sweep counts '
+tests['[census] ONE shipped carrier has never answered on this corpus'] = function()
+    -- ⭐ RE-PRICED 2026-09-05 (director, GH #492). This leg registered TWO
+    -- carriers that had never once answered their own question on a real frame.
+    -- One of them has been repaired and the other has not, and keeping them in
+    -- one loop would have made the surviving finding look half-fixed when it is
+    -- untouched. So they are split by WHY, not by count:
+    --   J.CanEnemyInterruptTpChannel  raised because the fixture mock had no
+    --     GetExtrapolatedLocation. Repaired on this commit; 257 in-domain
+    --     frames, 0 raises, 257 answers. Priced in the leg below.
+    --   J.GetUltLoc                   raises because the mock has no
+    --     GetVelocity, and `local v = target:GetVelocity()` then reads `v.x`.
+    --     UNTOUCHED: still 503 in-domain, 503 raises, 0 answers. Shipped,
+    --     ungated (hero_shredder.lua calls it), and mute on every frame it can
+    --     reach. That is now the whole of this finding.
+    local r = R('GetUltLoc')
+    assert(r.raise_s > 0, 'J.GetUltLoc no longer raises on any in-domain frame. '
+        .. 'The mock was repaired, or the helper was: either way this pricing '
+        .. 'is stale, re-take it -- and if GetVelocity was stubbed, the `^Get` '
+        .. 'roster is now empty and the `^Is` half of the ordering constraint '
+        .. 'in this file header is unblocked')
+    assert(r.ans_s == 0, 'J.GetUltLoc answered on ' .. r.ans_s
+        .. ' in-domain frame(s). It became witnessable: PRICE IT AGAIN, a '
+        .. 'fix in it may have become landable with a real-frame fixture')
+    assert(r.raise_s + r.ans_s > 0, 'J.GetUltLoc has an empty domain '
+        .. 'on this corpus -- then "never answers" is vacuous, re-read')
+    assert(C('carriers_never_answer') == 1, 'the sweep counts '
         .. C('carriers_never_answer') .. ' never-answering carriers, this file '
-        .. 'names ' .. n .. ' -- one of the two lists moved without the other')
+        .. 'names 1 -- one of the two lists moved without the other')
+    cs.ratchet(r.raise_s, 503,
+        'in-domain frames where J.GetUltLoc raises on target:GetVelocity()')
+end
+
+tests['[census] and the repaired carrier answers on all 257, from here too'] = function()
     -- The #492 reading, reproduced by a second instrument built for a different
-    -- question. A cross-check, not a second finding: if these two diverge, one
-    -- of the two censuses is measuring itself.
-    cs.ratchet(R('CanEnemyInterruptTpChannel').raise_s, 257,
-        'in-domain frames where the interrupt guard raises')
-    assert(R('CanEnemyInterruptTpChannel').out_s == C('live')
-        - R('CanEnemyInterruptTpChannel').raise_s,
+    -- question. A cross-check, not a second finding: if this and
+    -- tests/test_midsupmirror_checkability.lua diverge, one of the two censuses
+    -- is measuring itself. Both are driven off the same 109-fixture corpus:
+    --     raise_s  257 -> 0        ans_s  0 -> 257        out_s  755 -> 755
+    local r = R('CanEnemyInterruptTpChannel')
+    assert(r.raise_s == 0, 'the interrupt guard raises on ' .. r.raise_s
+        .. ' in-domain frame(s) again -- the mock lost the repair, and the '
+        .. 'two-bucket readers downstream are silently censoring once more')
+    cs.ratchet(r.ans_s, 257, 'in-domain frames where the interrupt guard answers')
+    assert(r.out_s == C('live') - r.ans_s - r.raise_s,
         'the interrupt guard rows do not sum to the live frames -- the '
         .. 'three-valued split is leaking')
-    -- The NEW one. Shipped, ungated, and mute on every frame it can reach.
-    cs.ratchet(R('GetUltLoc').raise_s, 503,
-        'in-domain frames where J.GetUltLoc raises on target:GetVelocity()')
 end
 
 -- --------------------------------------------- the ordering constraint ----

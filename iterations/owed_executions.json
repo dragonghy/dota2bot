@@ -22,23 +22,40 @@
       "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在一个**波号还不存在**的波次记录里 ⇒ 没有可以事先钉死的 `path`;伪造一个(把某个具体的 `W<N>_wave.json` 写死进来)会在波号变化时静默变成 UNCERTIFIABLE,正是本条反对的失效方向(与 `gate_i_executable_first_run` 同一条理由)。⇒ `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:那一波的收割报告里,`campgrade` armed 腿与 baseline 腿的**本方 10..11 级带远古 engagement 读数**各出现一次,ab / ba 两个分层分别登记,且读数来自 `ancient_camp_domain.py` / `campgrade_ladder.py` 而不是新造的尺子。总监据此退休本行。"
     },
     {
-      "id": "fixture_mock_extrapolated_location",
-      "issue": "GH #492",
-      "ruling": "§EH.7 (甲) 批准(总监 2026-09-04T19:xxZ,全文 `iterations/streams/test_set.md §EI.5` 第 5 条):给 fixture mock 补上 `GetExtrapolatedLocation`。**执行方是总监,不是协同组**,且**必须与两处读数的重取同轮落地**。不选「不补」的理由:现状是一道**已出厂、无闸**的守卫 `J.CanEnemyInterruptTpChannel` 在定义域内 **257/257 抛错**,`J.ShouldTpSupportTowerFight` 在 **75/1012** 活帧抛错,而 `pcall` 三值读数只有两个桶 ⇒ **仪器正在静默删掉「敌人贴脸」的帧,也就是这些 helper 存在的理由**;留着它,以后每一份基于 fixture 的域读数都在被截断的语料上取。不选「协同组顺手补」的理由:这是 **harness 全局改动**,会移动每一个做外推的 helper 的读数,落在一个组的工作单元里等于**无声地给别人已发布的数字换底**。",
-      "ruled_at": "2026-09-04T19:xxZ",
-      "executor": "director(本人;下一轮触发的一个独立工作单元)",
-      "trigger": "下一轮总监触发 —— 这一条**不等任何外部事件**,与 `campgrade` 那条不同",
+      "id": "mock_getvelocity_ultloc",
+      "issue": "GH #492 / GH #495",
+      "ruling": "§EL.6 (甲)(总监 2026-09-05,全文 `iterations/streams/test_set.md §EL.6`)。协同组 §EJ.4 的名单**照收**:`^Get -> 0` 的 roster 是**三个名字 / 六个载体**,不是一个。本轮只修了 `GetExtrapolatedLocation`,**故意的**,理由是可归因(同轮改两个名字就换不出 §EL.2 那张表)。**下一件是 `GetVelocity`**:`J.GetUltLoc` 在语料上域内 **503 帧、503 抛错、0 回答**,shipped 且**无闸**(`bots/BotLib/hero_shredder.lua` 在调),它的第一行 `local v = target:GetVelocity()` 拿到兜底的 0 再读 `v.x`。形状与本轮修的那条**逐字同族**,连「一道已出厂无闸的守卫从没在真帧上开口」这句话都一样。⚠️ **修法上有一个本轮学到的约束**:fixture 不带速度,所以 `GetVelocity` 的诚实答案是 **零向量**,而这与 `GetExtrapolatedLocation` 答当前位置是**同一个世界断言**(原地不动)—— 两处必须给同一个声明,并由 `tests/test_fixture_extrapolation_mock.lua` 的 [model] 腿一起量着,否则语料哪天带上速度只有一处会变红。",
+      "ruled_at": "2026-09-05",
+      "executor": "director 或 协同组(谁先取到;`^Get` 半边不需要总监特权,与 #492 不同——#492 归总监是因为它同轮要重取两处**已发布**的读数)",
+      "trigger": "没有外部触发器:任何一轮有余量的工作单元都可以取它",
       "delivered_to": [
-        "iterations/streams/test_set.md §EI.5 (5)(裁定全文档案)",
-        "iterations/streams/test_set.md §EF.1 的 §EI 修订块(被这条读数影响的那张表,读者会在那里看到它)",
-        "iterations/streams/director.md 当前状态 + 下次触发清单"
+        "iterations/streams/test_set.md §EL.6 (甲)",
+        "tests/test_mockscalar_return_shape.lua 的 `[census] ONE shipped carrier...` 腿"
       ],
-      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、任何一个 id,而它的执行方是总监自己。⚠️ **执行方是自己恰恰是登记的理由不是免登记的理由**:§ED.5 从 10:45Z 起被总监自己在「下次触发」清单里逐字带了两轮、掉了两轮(§EI.0),那条清单是散文,**散文经不起三轮**。",
-      "scope_note": "同一次提交里必须重取两处,否则等于换底不换数:(1) `tests/test_itemdesire_world_assertion.lua` 把 `type(other:GetExtrapolatedLocation(0.5)) ~= 'table'` 钉死,并把一个 **178** 的计数压在它上面 —— 补 mock 之后那条断言按设计会转红(协同组的 M1 变异就是这一天的预演),**转红是正确的**,要做的是重取 178 并改写断言,不是把 mock 改回去;(2) §EF.1 的域(109 fixture / 1012 活帧上 helper 触发 **8**),重取后 8 应当只增不减 —— **若重取后仍是 8,那是一个要解释的读数,不是一次确认**(75 帧里本该有战斗帧)。",
+      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⚠️ 登记的直接理由是 §EI.0 的教训:#492 本身在总监自己的「下次触发」散文清单里**掉过两轮**,而这一条是它的直接续棒 —— 同一根棒不许再回散文里。",
+      "blocking_precondition": "⛔ 修 `GetVelocity` **不解锁** `^Is/Has/Can/Was -> false` 的放宽;那条排序约束由 `mock_isprefix_ordering` 单独管,且它要求 `^Get` roster **全部**修完(三个名字),不是两个。",
+      "method_failed_branch": "若 `J.GetUltLoc` 的域在重取时变成 0(`hero_shredder.lua` 不再调它)⇒ 它成了死代码,**503/503 这个读数的含义随之改变**,回总监重裁,不得自行把这一行读成「已解决」。",
       "done_when": {
         "kind": "manual"
       },
-      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的**:验收的一半是「两个数被**重取**了」,而一个数被重取与它恰好没变,在文件里长得一模一样 ⇒ 伪造一个 `path` 检查会把「没做」读成「做了且没变」,正是本条反对的失效方向。⇒ `kind: manual`,**它每轮都报 OWED 并声明自己不是一道门**。**裸读得出的验收句**:某一轮总监报告里同时出现 —— fixture mock 里 `GetExtrapolatedLocation` 的实现、`test_itemdesire_world_assertion.lua` 重取后的新计数(旧值 178)、以及 §EF.1 域的重取读数(旧值 8,分母 1012/937),三者在**同一个 commit** 里。总监据此退休本行。"
+      "done_when_note": "⚠️ 没有机器键,理由与 #492 同族:验收的一半是「一个已发布的读数被**重取**了」,而重取与恰好没变在文件里长得一样。**裸读得出的验收句**:某一轮报告里同时出现 —— `replay_fixture.lua` 里 `GetVelocity` 的实现与它的世界断言声明、`test_mockscalar_return_shape.lua` 里 `R('GetUltLoc')` 重取后的三元组(旧值 域内 503 / 抛 503 / 答 0)、以及 `carriers_never_answer` 的新值(旧值 1),三者在**同一个 commit** 里。总监据此退休本行。"
+    },
+    {
+      "id": "mock_isprefix_ordering",
+      "issue": "GH #495",
+      "ruling": "§EL.6 (乙)(总监 2026-09-05,全文 `iterations/streams/test_set.md §EL.6`)。协同组 §EJ.2 的排序约束**照收**:**`^Get -> 0` 的修复必须排在放宽 `^Is/Has/Can/Was -> false` 之前**。判据是算术不是偏好 —— 先松 `^Is`,`IsWillBeCastUnitTargetSpell` / `IsWillBeCastPointSpell` / `DidEnemyCastAbility` / `IsCastingUltimateAbility` 四个载体会从 **1436 个干净读数**变成 **1436 次抛错**,而下游的两桶 `pcall` 读者把每一次抛错记成「量过了,答否」⇒ **静默删帧**,正是 GH #492 立案的那条缺陷,一次放大四倍。⛔ **解锁条件是 `^Get` roster 全部三个名字修完**(`GetExtrapolatedLocation` 已修 2026-09-05;`GetVelocity` 见 `mock_getvelocity_ultloc`;`GetCurrentActiveAbility` 今天被 `^Is` 自己挡着,不抛不出数)。**故意不写进 `AGENTS.md`**:「只在某人做 X 那天生效的约束,写成没人会在那天重读的散文」正是 §EI.3 立 `promote_atoms.json` 的那个形状。",
+      "ruled_at": "2026-09-05",
+      "executor": "任何要放宽 `tests/mock/bot_api.lua` 的 `^Is/Has/Can/Was -> false` 兜底的人(今天没有人在做)",
+      "trigger": "有人动 `^Is/Has/Can/Was -> false` —— 这一条是**否决权**,不是待办;它每轮报 OWED 是为了在那一天被读到",
+      "delivered_to": [
+        "iterations/streams/test_set.md §EL.6 (乙)",
+        "tests/test_mockscalar_return_shape.lua 文件头(协同组已写)"
+      ],
+      "why_registered_here": "§DR:常驻义务。⚠️ **它是一条约束而不是一件活**,这正是它最容易掉的原因 —— 没有任何一件待办会在有人违反它的那天完成。与 `pullcad` 陷阱同族:约束写在裁定之前,而载体是散文。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ 这一行**可能永远不被退休,而那是正确的**:它没有完成态,只有被遵守或被违反。总监只在 `^Get` roster 三个名字全部修完**且**有人真的放宽了 `^Is` 并重取了四个载体的读数之后退休它。**不要因为它每轮都报 OWED 就把它当噪声删掉** —— 它每轮报一次,就是它唯一的工作。"
     }
   ],
   "retired": [

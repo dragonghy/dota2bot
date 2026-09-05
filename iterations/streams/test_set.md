@@ -15516,6 +15516,30 @@ M5 与 M7 **第一版就被抓住了**,退出码 1,报告写「CAUGHT」——**
 > 改的是怎么读它。补 mock 与重取本域已登记为总监自己的待执行项
 > (`iterations/owed_executions.json:fixture_mock_extrapolated_location`,§EI.5 第 5 条)。
 
+> **【§EL 重取,总监 2026-09-05,GH #492 已执行】**
+> mock 补完了,**这个域被真正重取了一遍**(同一语料、同一棵树,mock 是唯一的差)。
+> 上面那个 `> ` 块里的**读法**从此作废,取而代之的是一个真读数:
+>
+> | 量 | 补 mock 前 | 补 mock 后 |
+> |---|---|---|
+> | `trigger_raised`(被静默删掉的帧) | **75** | **0** |
+> | `J.ShouldTpSupportTowerFight` 开火的帧 | 8 | **9** |
+> | 其中主体是**核心** | 3 | **3** |
+> | **让路的定义域** | 2 | **2** |
+> | `core_no_support` / `yield_all_near` / `yield_some_far` / `sup_near` / `sup_far` | 各 1 | **各 1** |
+>
+> ⇒ **那 75 帧买回来的是整整一个开火帧,而且它不是核心帧**:
+> §EF.1 表格里**除第一行外每一个数逐位不变**,`midsupyield` 仲裁所依据的读数**一个没动**。
+> **上表(8 那一版)因此不改写,只把首行的 8 记作 9。**
+> ⚠️ **这不是「确认」,是「重测」** —— 之前那 75 帧是**没被驱动过**的;
+> 一个被审查过的读数恰好等于诚实读数,它**仍然是被审查过的**,
+> 差别在于在有人真去驱动之前,**没人能知道它相等**。这一条是本次重取唯一的普适收获。
+> ⚠️ **`fires` 仍然是下界,但换了理由,而且新理由弱得多**:mock 把每个单位建模成**原地不动**
+> (fixture 是一个瞬间,109 份**没有一份**带速度/朝向)⇒ 打断守卫的「他在贴上来」那一支
+> 在本语料上不可达,「他现在就够得着我」那一支照实回答。
+> 声明写在 `tests/mock/replay_fixture.lua` 的桩上,**由 `tests/test_fixture_extrapolation_mock.lua` 量着**
+> (M3 变异:让 mock 真去外推 ⇒ CAUGHT)—— 哪天 fixture 带上速度,这句话**变红而不是变悄悄**。
+
 ### §EF.2 被证伪的那句话,以及它出现过的三个地方
 
 > "this can only REALLOCATE a response to a support, never DROP one"
@@ -16262,3 +16286,126 @@ diff 改了源码、过得了评审、**读上去像修复**,而实测**与未�
   若要买,本节已把价钱算清:其余前提在 **983/1012** 帧上就位,缺的只有这一个字段。
 
 **在 (甲)(乙) 任一回来之前,不要单独落地元数那一半** —— §EK.3 已经量出它是 0。
+---
+
+## §EL 2026-09-05 总监 —— **GH #492 执行完毕:一道已出厂、无闸的守卫,第一次在真帧上开口** —— 257/257 抛错变成 257/257 回答,其中 **73 帧说「别 TP」**;本节最该被读的是 **§EL.3:174 帧解除审查只换来 0 个新动作、4 帧掉进下一个洞,而 `crash_total` 从 224 掉到 50 会把这件事读成一次干净的胜利**
+
+**执行的是**:`owed_executions.json:fixture_mock_extrapolated_location`
+(§EI.5 第 5 条批准,执行方=总监本人,触发器=下一轮触发)。**零 AWS、零发波、`bots/`+`game/` 零 diff、没有 promote/reject 任何 id。**
+
+### §EL.1 修的是什么
+
+`tests/mock/replay_fixture.lua` 的每英雄 spec 补上 `GetExtrapolatedLocation`。
+在此之前这个名字掉进 `bots/bot_api.lua` 的 `^Get -> 0` 兜底,
+而 shipped 的消费者一律把结果当位置索引(`sLoc.x`)⇒ **那一帧抛错**;
+两把 `pcall` 尺子**三值只有两个桶**,于是把抛错记成「量过了,答否」。
+
+### §EL.2 ⭐⭐ 主读数(同一语料、同一棵树,mock 是唯一的差)
+
+台子是**文件拷贝**:把 mock 换成 trunk 版跑一遍四把尺子,再换回来跑一遍,
+`cksum` 验证还原逐字节相同。**`driven` 981 / `live` 1012 / `fixtures` 109 两边一致**,
+所以下面每一个差都是 mock 的,不是语料长大的(这三个数正是历史上三次把这些计数
+搬动的那个混淆项)。
+
+| 尺子 / 量 | 前 | 后 |
+|---|---|---|
+| `J.CanEnemyInterruptTpChannel` 域内帧 | 257 | **257** |
+| ↳ 抛错 | **257** | **0** |
+| ↳ 答 **true**(「别开这个 TP」) | **0** | **73** |
+| ↳ 答 false(域内) | 0 | 184 |
+| `J.ShouldTpSupportTowerFight` 抛错帧 | **75** | **0** |
+| §EF.1 `fires` | 8 | **9** |
+| §EF.1 `fires_core` / `yield_domain` / 其余五个计数 | 3 / 2 / 各 1 | **一个没动** |
+| itemdesire `crash_total` | 224 | **50** |
+| ↳ `local x2 = sLoc.x` | **178** | **0(站点消失)** |
+| ↳ `GetFarmLaneDesire( LANE_TOP )` | 46 | **50** |
+| ↳ `no_action` | 754 | **928** |
+| ↳ **item 动作数** | 3 | **3** |
+
+⇒ **`tpsafe2` 2026-07-23 就 promote 成了 turbo 默认**,也就是说这道守卫在我们发的
+每一局 turbo 里都跑在每一次 item 层 TP 之前,**而它在真帧上一次都没执行过**。
+现在它在 257 帧上都给了答案,并且在 1012 个活帧里的 **73** 帧上说「别 TP」。
+
+### §EL.3 ⭐⭐⭐ 本节最该被读的:**解除审查不等于换来读数,而总数会替它撒谎**
+
+178 帧解除审查之后,**不是 178 个读数**:
+- **174 帧**跑到底,答「无动作」;
+- **4 帧**顺着同一条链**往下掉进下一个没桩的引擎名**(`GetFarmLaneDesire`,46 → 50);
+- **新增 item 动作:0 个**(3 → 3)。
+
+而 `crash_total` **224 → 50**,一路向下 —— **只看总数,这是一次干净的胜利**。
+让那 4 帧可见的唯一原因,是这个键是**按语句**记的(GH #221 立的那次改造)。
+⇒ **一次修复可以把它解放出来的帧交给下一个洞,而聚合计数在这个方向上是失效静默的。**
+与 §EJ.2 的排序约束同源:两者都在说「修复之间有拓扑,不是独立的清单项」。
+
+### §EL.4 ⚠️ 收益的另一半是一句**必须被量着**的世界断言
+
+fixture 是**一个瞬间**:`make_fixture.py` 只 dump x/y,109 份**没有一份**带速度/朝向/路点。
+所以 mock **不能外推**,它答当前位置 = **把每个单位建模成原地不动**。代价精确可写:
+`nSoon == nNow` ⇒ 守卫的第二支「他在贴上来」**在本语料上不可达**,
+第一支「他现在就够得着我」照实回答 ⇒ **73 是打断的下界,永远不是上界**,
+且偏向「TP 是安全的」这一侧。
+
+**这句话不是注释,是被量着的**:`tests/test_fixture_extrapolation_mock.lua`(新,4/4)
+把它拆成三条可证伪的断言,变异台 `tools/agent/mutstand_extrapolation_mock.sh`
+(新,**M1/M2/M3/M4 CAUGHT + M5 控制组 SURVIVED,零 NO-OP**)里
+**M3 才是承重的那一发**:让 mock **真去外推**(+500 沿 x)—— 什么都不抛,
+所有域照样读得出来,**只有那句声明变假**;抓不住 M3,这条声明就是穿了测试外衣的注释。
+**M5 是诱饵**:`velocity` 一词出现在**注释**里(fixture 的生成头逐行写着
+`make_fixture.py` 自己的参数)—— 必须 SURVIVED,否则 [model] 那条腿会在下一次
+生成 fixture 时开始喊狼来了。这与 §EG.5 / §EE.5 是同一句话的第三次现场:
+**承重用例是诱饵用例,不是违规用例。**
+
+### §EL.5 顺带:**变异台自己也栽在同一族缺陷上,当场抓住**
+
+第一版 `mutstand_extrapolation_mock.sh` **5/5 全对**,却 `exit 2` ——
+`rm -rf "$WORK"` 排在 `trap restore EXIT` 触发**之前**,于是 EXIT 处理器在目录
+已删之后跑 `cp`,失败,退出码被它顶掉。**一台 5/5 的台子穿着失败的衣服**。
+与「读退出码时任何插在中间的东西都能替它作答」(管道 / `timeout` / `echo`)
+**同一句话,新穿法**:这次插在中间的是**自己的清理顺序**。修法是 `trap - EXIT` 先解除。
+
+### §EL.6 两条裁定(§EJ.8 交上来的两件,都不要钱)
+
+1. **(甲) 名单照收,而本轮**故意**只修一个。** 协同组是对的:`^Get -> 0` 的
+   roster 是**三个名字 / 六个载体**,不是一个。本轮只动
+   `GetExtrapolatedLocation`,理由是**可归因**:四把尺子的每一个差都要能指回
+   一个原因,同轮改两个名字就换不出上面那张表。
+   **`GetVelocity` 登记为下一件**(`owed_executions.json:mock_getvelocity_ultloc`):
+   `J.GetUltLoc` 域内 **503 帧、503 抛、0 答**,shipped 且无闸
+   (`hero_shredder.lua` 在调),形状与本轮修的这条**逐字同族**。
+   `GetCurrentActiveAbility` 留在 `test_mockscalar_return_shape.lua` 的
+   ratchet 里,**不另开行**(它今天被 `^Is` 挡着,不抛错也不出数,
+   动它属于 (乙) 的排序约束管辖)。
+2. **(乙) 排序约束照收,并且**不进 `AGENTS.md`**。**`^Get -> 0` 的修复必须排在
+   放宽 `^Is/Has/Can/Was -> false` **之前** —— 理由是算术不是偏好:先松 `^Is`,
+   `IsWillBeCast*` / `DidEnemyCastAbility` / `IsCastingUltimateAbility`
+   会从 **1436 个干净读数**变成 **1436 次抛错**,而下游两桶读者把每一次都记成
+   「量过了,答否」。**不写进 AGENTS.md 的理由是本仓库自己的教训**:
+   「只在某人做 X 那天生效的约束,写成没人会在那天重读的散文」正是
+   §EI.3 立 `promote_atoms.json` 的那个形状。放在**下一个人一定会读到的地方**:
+   `tests/test_mockscalar_return_shape.lua` 的文件头(已在)+ 本轮新加的
+   `[census] ONE shipped carrier...` 腿里那句「如果 GetVelocity 被桩了,
+   `^Get` roster 就空了,本文件头的排序约束解锁」+
+   `owed_executions.json:mock_isprefix_ordering`(常驻义务,触发器=有人要放宽 `^Is`)。
+
+### §EL.7 交棒(⚠️ 铁律 9 连带规则,本轮真的有一根)
+
+**`test_midsupmirror_checkability.lua` 的 `[ratchet]` 腿按设计开火了,而那正是产物**:
+修 mock 把 §EF.7 登记的四条镜像成员里的**打断守卫那一条**从「语料作不了证」
+变成「作得了证」——`int_true` 0 → **73** ⇒ 那条 `J.HasAvailableSupportResponder`
+缺失的 `CanEnemyInterruptTpChannel` 成员**现在可以带真帧 fixture 落地了**
+(73 帧里随便挑)。**交协同组**(成员是他们写,不是总监),GH #492 追评 + `queue.json`。
+另三条腿**原样不可作证**(两条是单帧 fixture 按构造没有的会话记忆,一条是 dumper 不 dump 的 bot-VM 状态)。
+⚠️ **这里的不对称是这条 ratchet 值得留着的理由**:解锁它的那次修复在 **harness** 里,
+**协同组自己的 backlog 里没有任何东西会在它发生的那天注意到**。
+
+### §EL.8 产物、门
+
+**新**:`tests/test_fixture_extrapolation_mock.lua`(4/4,自动进套件)、
+`tools/agent/mutstand_extrapolation_mock.sh`(5/5 如设计)。
+**改**:`tests/mock/replay_fixture.lua`(桩 + 世界断言声明)、
+`tests/test_itemdesire_world_assertion.lua`、`tests/test_midsupmirror_checkability.lua`、
+`tests/test_mockscalar_return_shape.lua`、`tests/test_midsupfar_yield_target.lua`(注释重取)、
+本文件 §EF.1 修订块。
+**四个被重取的 ratchet 一律「手写新地板 + 写清理由」,不放宽 ratchet 本身** ——
+`cs.ratchet` 拒绝下降是对的,它要的就是有人开口说明。

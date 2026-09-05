@@ -178,6 +178,24 @@ tests['[census] the yield domain, and how much of it was a drop'] = function()
     -- helper exists to answer. The assertions below are already floors (`>=`),
     -- which is the right shape; test_set.md §EF.1's prose was not.
     -- Measured and ratcheted in tests/test_midsupmirror_checkability.lua.
+    --
+    -- ⭐ [GH #492, director 2026-09-05] THE MOCK WAS REPAIRED AND THIS DOMAIN
+    -- WAS RE-TAKEN ON THE SAME COMMIT. Those 75 frames are no longer censored:
+    -- replay_fixture.lua now answers GetExtrapolatedLocation. Re-run, whole
+    -- corpus, nothing else changed:
+    --     fires 8 -> 9,  fires_core 3 -> 3,  yield_domain 2 -> 2,
+    --     core_no_support / yield_all_near / yield_some_far / sup_near /
+    --     sup_far  1 -> 1  (all five byte-identical)
+    -- So the censoring bought back exactly ONE firing frame, and it is not a
+    -- core frame -- every number the 'midsupyield' arbitration actually rests
+    -- on is unmoved. That is a real re-measurement, not a confirmation by
+    -- inaction: the 75 frames were driven this time.
+    -- ⚠️ `fires` REMAINS A FLOOR, for a NEW reason, and the reason is weaker
+    -- than the old one but is not nothing: the repaired mock models every unit
+    -- as standing still (a fixture is one instant and carries no velocity), so
+    -- the interrupt guard's closing-the-gap clause cannot fire here. See the
+    -- declaration in tests/mock/replay_fixture.lua and the pricing in
+    -- tests/test_fixture_extrapolation_mock.lua.
     assert(C('fires') >= 8, 'the helper fires on ' .. C('fires')
         .. ' corpus frames; registered 8')
     assert(C('fires_core') >= 3, 'core frames (the only ones midsupyield can '

@@ -183,33 +183,57 @@ end
 
 -- ------------------------------------ unwitnessable BY RAISE (one leg) -----
 
-tests['[census] the interrupt guard has never answered its own question'] = function()
-    -- Its domain is "an enemy hero inside the narrow scan"; outside it the
-    -- helper early-returns false, and that false is the guard ABSTAINING, not
-    -- the guard answering. Counting those 755 abstentions as answers is how a
-    -- guard that never runs reads as a guard that never fires.
+tests['[census] the interrupt guard now answers on every in-domain frame'] = function()
+    -- ⭐ RE-PRICED 2026-09-05 (director, GH #492). This leg used to be titled
+    -- "has never answered its own question" and it was true: 257 of 257
+    -- in-domain frames RAISED, because the fixture mock did not stub
+    -- GetExtrapolatedLocation and the guard indexed the catch-all 0 as a
+    -- location. The mock was repaired on this commit. Same corpus, same tree,
+    -- the mock the only difference:
+    --     int_in_domain         257  ->  257   (unchanged, as it must be)
+    --     int_in_domain_raised  257  ->    0
+    --     int_true                0  ->   73
+    --     int_false             755  ->  939   (755 abstentions + 184 in-domain no)
+    -- So a SHIPPED, UNGATED guard -- `tpsafe2` was promoted to a turbo default
+    -- on 2026-07-23 -- that had never once executed on a real frame now answers
+    -- on all 257, and says "do not start this TP" on 73 of the 1012 live frames.
+    --
+    -- ⚠️ WHAT THE 73 IS AND IS NOT. It is the `nNow <= nReach` clause only:
+    -- "an enemy can strike me where I stand". The repaired mock models every
+    -- unit as standing still (a fixture is one instant and carries no
+    -- velocity), so nSoon == nNow and the second clause -- "it is closing the
+    -- gap on me" -- is unreachable here. 73 is therefore a LOWER BOUND on
+    -- interruption. That model is declared in tests/mock/replay_fixture.lua and
+    -- measured in tests/test_fixture_extrapolation_mock.lua, so it goes red
+    -- rather than quiet on the day a fixture carries motion.
     assert(M.g.INT_R == 700, 'the narrow interrupt scan moved to '
         .. tostring(M.g.INT_R) .. ' -- re-read this pricing')
-    assert(C('int_true') == 0, C('int_true') .. ' frame(s) where '
-        .. 'J.CanEnemyInterruptTpChannel answers TRUE. It has an answer on this '
-        .. 'corpus now: the leg became witnessable, price it again')
     assert(C('int_in_domain') > 0, 'no corpus frame puts an enemy inside the '
-        .. 'interrupt scan -- then the raise below is untestable, re-read')
+        .. 'interrupt scan -- then this whole leg is untestable, re-read')
     cs.ratchet(C('int_in_domain'), 257, 'frames inside the interrupt guard domain')
-    assert(C('int_in_domain_raised') == C('int_in_domain'),
-        string.format('%d of %d in-domain frames raise; registered ALL of them. '
-            .. 'If some now answer, the mock gained extrapolation: re-price '
-            .. 'this leg and re-read the censoring finding below',
-            C('int_in_domain_raised'), C('int_in_domain')))
-    assert(C('int_raised') == C('int_in_domain'), 'the guard raised on a frame '
-        .. 'OUTSIDE its own domain -- a second cause exists, find it')
-    assert(C('int_raised_sloc') == C('int_raised'), 'the raises no longer share '
-        .. 'one signature -- one mock repair will not unblock them all')
-    assert(C('int_false') + C('int_raised') == C('live'),
-        'the three buckets must partition the live frames')
+    -- The repair, stated as the assertion that would catch its loss. A raise
+    -- reappearing here is the censoring coming back, and the two-bucket readers
+    -- downstream would score it as a measured "no" again without saying so.
+    assert(C('int_raised') == 0, C('int_raised') .. ' in-domain frame(s) raise '
+        .. 'again. The mock lost GetExtrapolatedLocation (or a second unstubbed '
+        .. 'name appeared on this road): the censoring GH #492 closed is back, '
+        .. 'and every domain count below is being taken on a truncated corpus')
+    assert(C('int_in_domain_raised') == 0, 'in-domain raises reappeared')
+    -- A guard that is reached must decide, and both answers must occur: an
+    -- all-true or all-false column would mean the corpus stopped discriminating
+    -- and the number below had become a constant, not a reading.
+    assert(C('int_true') > 0 and C('int_true') < C('int_in_domain'),
+        'the guard answers the SAME thing on all ' .. C('int_in_domain')
+        .. ' in-domain frames (' .. C('int_true') .. ' true) -- it is no longer '
+        .. 'discriminating between frames, re-read before trusting it')
+    cs.ratchet(C('int_true'), 73, 'frames where the guard says do-not-TP')
+    assert(C('int_false') + C('int_raised') + C('int_true') == C('live'),
+        'the three buckets must partition the live frames: '
+        .. C('int_false') .. ' + ' .. C('int_raised') .. ' + ' .. C('int_true')
+        .. ' vs ' .. C('live'))
 end
 
-tests['[premise] the raise is the missing mock method, not a bug in the guard'] = function()
+tests['[premise] the raise was the missing mock method, and it is gone'] = function()
     -- Driven, not argued: the guard is fed a real frame and the cause is read
     -- off the failure. The nil-guard lesson from the last round -- an assertion
     -- that passes for the wrong reason is not an assertion -- applies here, so
@@ -219,20 +243,34 @@ tests['[premise] the raise is the missing mock method, not a bug in the guard'] 
     local near = J.GetNearbyHeroes(bot, 700, true, BOT_MODE_NONE)
     assert(near ~= nil and #near > 0, CSUBJ .. ' on ' .. CENSORED
         .. ' has no enemy inside the scan -- this frame no longer exercises the guard')
-    -- The engine call the guard makes, on a real enemy handle from a real frame.
+    -- ⭐ RE-PRICED 2026-09-05 (director, GH #492). The original premise was
+    -- proved by DRIVING the failure: the mock answered a scalar, the distance
+    -- helper indexed it, and the guard raised with `index local 'sLoc'`. That
+    -- diagnosis was correct, and the repair it justified has landed. The
+    -- assertions are inverted rather than deleted, because the thing worth
+    -- keeping is not "it raises" but "the cause of the raise was THIS name" --
+    -- which is now checked by showing the raise disappears when, and only when,
+    -- the name answers a location.
     local extrap = near[1]:GetExtrapolatedLocation(0.5)
-    assert(type(extrap) ~= 'table', 'GetExtrapolatedLocation now answers a '
-        .. 'location. The whole finding in this file is re-openable: re-run the '
-        .. 'sweep, re-price all four legs, and re-take the 8-fires domain in '
-        .. 'test_set.md §EF.1')
-    -- ...and that is exactly what J.GetLocationToLocationDistance indexes.
-    local okd = pcall(J.GetLocationToLocationDistance, bot:GetLocation(), extrap)
-    assert(not okd, 'the distance read survived a non-location -- then the raise '
-        .. 'has some other cause and this premise is wrong')
-    local okg, err = pcall(J.CanEnemyInterruptTpChannel, bot)
-    assert(not okg, 'the guard no longer raises on this frame -- re-price')
-    assert(tostring(err):find("index local 'sLoc'", 1, true) ~= nil,
-        'the guard raises for a different reason now: ' .. tostring(err))
+    assert(type(extrap) == 'table' and type(extrap.x) == 'number',
+        'GetExtrapolatedLocation answers a ' .. type(extrap) .. ' again -- the '
+        .. 'mock repair was lost, and with it every count in this file')
+    -- The consumer that used to be handed the scalar now completes.
+    local okd, d = pcall(J.GetLocationToLocationDistance, bot:GetLocation(), extrap)
+    assert(okd and type(d) == 'number', 'the distance read still fails on the '
+        .. 'repaired answer -- the mock returns a table that is not a location')
+    local okg, ans = pcall(J.CanEnemyInterruptTpChannel, bot)
+    assert(okg, 'the guard still raises on this frame: ' .. tostring(ans))
+    assert(ans == true, 'the guard answers ' .. tostring(ans) .. ' on the frame '
+        .. 'where luna is being hit at melee range -- the first clause is not '
+        .. 'doing the work the 73 rests on; re-read before trusting it')
+    -- ...and the SECOND clause still cannot be witnessed, which is the standing
+    -- limit of the repair, not a leftover of the defect. Same frame, driven.
+    local nNow  = J.GetLocationToLocationDistance(bot:GetLocation(),
+                      near[1]:GetLocation())
+    assert(d == nNow, 'the extrapolated distance moved away from the current '
+        .. 'one -- the mock started extrapolating for real, so the 73 is no '
+        .. 'longer a lower bound taken under standing-still; re-take it')
     -- The guard really is reached through extrapolation in the shipped tree.
     local src = read_file(JMZ)
     assert(src:find('GetExtrapolatedLocation( 0.5 )', 1, true) ~= nil,
@@ -241,29 +279,46 @@ end
 
 -- ------------------------------- what that leg did to the published domain --
 
-tests['[census] the previous domain read was censored by that same raise'] = function()
-    -- tests/_midsupfar_sweep.lua wraps the trigger in pcall and has two buckets
-    -- for a three-valued read, so "raised" lands in "did not fire".
-    cs.ratchet(C('trigger_raised'), 75, 'live frames where the trigger RAISES')
+tests['[census] the censoring is gone, and here is what it had been hiding'] = function()
+    -- ⭐ RE-PRICED 2026-09-05 (director, GH #492). This leg registered the
+    -- censoring: tests/_midsupfar_sweep.lua reads the trigger through pcall
+    -- with two buckets for a three-valued read, so a RAISE landed in "did not
+    -- fire", and 75 of the 1012 live frames raised inside
+    -- J.ShouldTpSupportTowerFight -- the enemy-in-my-face frames, which is not
+    -- independent of the question that helper answers.
+    --
+    -- ⭐⭐ THE ANSWER, now that those 75 frames were actually driven (same
+    -- corpus, same tree, the mock the only difference):
+    --     trigger_raised   75  ->  0
+    --     fires             8  ->  9      (published as §EF.1's headline)
+    --     fires_core        3  ->  3
+    --     yield_domain      2  ->  2      and core_no_support / yield_all_near /
+    --                                     yield_some_far / sup_near / sup_far
+    --                                     all 1 -> 1, byte-identical
+    -- So the censored set bought back exactly ONE firing frame, and it is not a
+    -- core frame: every number the 'midsupyield' arbitration rests on is
+    -- unmoved. That is worth saying precisely because it is the boring outcome
+    -- -- the finding was that the instrument COULD NOT SEE those frames, and
+    -- that was true and worth fixing whichever way the count fell. A censored
+    -- reading that happens to equal the honest one is still a censored reading;
+    -- it just cannot be known to be equal until someone drives it.
+    assert(C('trigger_raised') == 0, C('trigger_raised') .. ' live frame(s) '
+        .. 'raise inside the trigger again -- the two-bucket reader is scoring '
+        .. 'them as measured "no" once more; GH #492 is re-opened')
+    assert(#M.censored == 0, #M.censored .. ' frame(s) still named as censored')
     assert(C('trigger_raised_sloc') == C('trigger_raised'),
-        'the trigger raises for more than one reason now -- re-read')
-    assert(C('trigger_raised') > C('fires'), 'the censored set (' 
-        .. C('trigger_raised') .. ') is no longer larger than the measured one ('
-        .. C('fires') .. ') -- the finding is weaker than registered, re-read it')
-    assert(#M.censored == C('trigger_raised'),
-        'every censored frame must be named, got ' .. #M.censored)
-    -- The censoring is not random with respect to the question: a frame is
-    -- censored because an enemy is in the bot's face, which is what a fight is.
+        'the trigger raises for a reason that is not the extrapolation -- a '
+        .. 'second unstubbed name is on this road, find it before re-baselining')
+    -- The frame that WAS the standing example, driven: it now reaches an answer
+    -- rather than raising, which is the whole content of the repair.
     local J, bot = rf.load(CENSORED, CSUBJ)
     J.IsSoakCandidate = function(id) return id == 'midtp' end
-    local ok = pcall(J.ShouldTpSupportTowerFight, bot)
-    assert(not ok, 'the trigger no longer raises on the registered censored '
-        .. 'frame -- re-take the census')
-    -- and the two-bucket reading of that same frame calls it a clean "no".
-    local okq, res = pcall(J.ShouldTpSupportTowerFight, bot)
-    assert((okq and res ~= nil) == false, 'a pcall-with-two-buckets reader scores '
-        .. 'this frame identically to a frame that was measured and said no -- '
-        .. 'that is the censoring, stated as the reader sees it')
+    local ok, res = pcall(J.ShouldTpSupportTowerFight, bot)
+    assert(ok, 'the registered censored frame still raises: ' .. tostring(res))
+    -- ...and a two-bucket reader can no longer confuse it with anything: it is
+    -- a measured answer now, whatever that answer is.
+    assert(res == nil or type(res) == 'table' or type(res) == 'boolean',
+        'the trigger answered a ' .. type(res) .. ', which no caller expects')
 end
 
 -- --------------------------------------------------- the decision domain ---
@@ -294,20 +349,39 @@ tests['[census] all four legs are silent about the one support in the domain'] =
         'the interrupt guard changed its answer about an accepted support')
 end
 
-tests['[ratchet] not one of the four is landable under this group rule today'] = function()
+tests['[ratchet] ONE of the four is landable now; the other three are not'] = function()
     -- The conclusion, as one number. Charter step 2: a behaviour change ships
     -- with a real-frame fixture, and gate plumbing is not local validation. A
     -- leg that no corpus frame can make speak has no such fixture available, so
     -- landing it would be a conjunct validated by the fact that it compiles.
-    -- The day ANY of these stops being zero, one of the four became landable and
-    -- this test is the thing that says so.
-    local witnessable = 0
-    if C('mode_would_veto') > 0 then witnessable = witnessable + 1 end
-    if C('int_true') > 0 then witnessable = witnessable + 1 end
-    if C('respawn_field') > 0 then witnessable = witnessable + 1 end
-    if C('front_field') > 0 then witnessable = witnessable + 1 end
-    assert(witnessable == 0, witnessable .. ' of the four §EF.7 legs can now be '
-        .. 'witnessed on a corpus frame -- that leg is landable, take it')
+    --
+    -- ⭐ 2026-09-05 (director, GH #492): THIS TEST FIRED, AS DESIGNED, AND THAT
+    -- IS THE DELIVERABLE. Repairing the mock moved the interrupt leg from
+    -- unwitnessable to witnessable in one step -- int_true 0 -> 73 -- so
+    -- J.HasAvailableSupportResponder's missing CanEnemyInterruptTpChannel
+    -- member can now be landed with a real-frame fixture on any of those 73
+    -- frames. Handed to the strategy stream (that member is theirs to write,
+    -- not the director's); the other three legs are untouched and stay
+    -- unlandable for the reasons priced above -- two are session memory a
+    -- single-instant fixture cannot carry, one is bot-VM state the dumper does
+    -- not dump. Note the asymmetry that makes this ratchet worth keeping: the
+    -- repair that unblocked the leg was in the HARNESS, and nothing in the
+    -- strategy stream's own backlog would have noticed the day it happened.
+    local LANDABLE = { int_true = true }
+    local witnessable, landable = {}, {}
+    for _, k in ipairs({ 'mode_would_veto', 'int_true', 'respawn_field',
+                         'front_field' }) do
+        if C(k) > 0 then
+            witnessable[#witnessable + 1] = k
+            if LANDABLE[k] then landable[#landable + 1] = k end
+        end
+    end
+    assert(#landable == #witnessable, 'a §EF.7 leg became witnessable that is '
+        .. 'not yet registered as landable: ' .. table.concat(witnessable, ' ')
+        .. ' -- price it and hand it to the strategy stream, do not just widen '
+        .. 'this list')
+    assert(C('int_true') > 0, 'the interrupt leg stopped being witnessable -- '
+        .. 'the mock repair was lost; the registered landability above is stale')
 end
 
 return tests
