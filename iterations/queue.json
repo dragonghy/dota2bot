@@ -1744,7 +1744,21 @@
       "question": "给 `wkbonefight` 买条件 (a) 的域。杠杆:bots/BotLib/hero_skeleton_king.lua 的 X.ConsiderW 进攻分支写着 `#nEnemysHerosInView == 1`(1600 内**可见**敌方英雄恰好一个),于是 Bone Guard —— DOTA_ABILITY_BEHAVIOR_NO_TARGET、定长 42s cd、70/80/90/100 蓝、骷髅存活 40s、对英雄额外 +25 伤害(全部来自仓内 KV 快照 tests/mock/ability_behavior.lua + tests/mock/special_value_shapes.lua)—— 在**每一场团战里都不放**。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 同形:零 EC2 的只读扫描,三者可并成同一次遍历)。需要的读数:(1) Wraith King 的 W 已学、不冷却、蓝够的瞬间数;(2) 其中 1600 内可见敌方英雄数的**分布**(0 / 1 / >=2 各多少,**不要报中位数** —— 整数小值域,铁律 4(ii));(3) 其中 650 内有敌方英雄的瞬间数,按可见敌人数 ==1 与 >=2 **分开报**;(4) ⭐ **这一列是本请求独有的、fixture 按构造给不出的**:`modifier_skeleton_king_bone_guard` 的**充能层数**分布(nStack / maxStack),因为 dumper 不记充能层数(GH #27 家族),而分支的 `nStack/maxStack >= 0.6` 是另一道闸;拿不到就明写拿不到,不要用 0 顶替。",
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,**可见敌人数 ==1 与 >=2 两层分开给,不许并池**;并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「W 就绪 + 650 内有目标 + 可见敌人 >=2」的那一帧)。**预登记的判读方向**:若「W 就绪且 650 内有目标」的瞬间里可见敌人 >=2 的占比接近 0,这根杠杆没有可兑现的收益,不入集,即使桌面证据完好;带 DOMAIN-NOT-REACHED 退回门。**预登记的归因边界**:本 id 只管**数量项**,不与 wkbuild / wkrosh / wkqdmg 合取,负读数可以干净地归给它;但 armed 只能**增加**释放(`n==1` 蕴含 `n>=1`,方向由代码保证),所以负读数只能读作「Bone Guard 放多了不好」,**不能**读作「杠杆吃掉了一次释放」。**为什么必须走批测而不是 fixture**:X.ConsiderW 头上的判词(2026-08-23 立、08-28 复核,GH #274)自己写着「Size a Bone Guard change with a batch request, never with a fixture scan」—— 两条堵点是 modifier 在语料里 0 帧、`J.GetProperTarget` 结构性 nil(GH #474),本轮已把这两条各写成一条断言(tests/test_wk_bone_guard_enemy_count.lua §5),修好那天它红并点名。",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "at": "2026-09-05T19:xxZ",
+        "ref": "iterations/streams/test_set.md §EY.4;GH #274(X.ConsiderW 头上「Size a Bone Guard change with a batch request, never with a fixture scan」的判词)/ GH #474 / GH #27",
+        "note": "本请求自己写着「**先扫档案,不要为它单发波**」,而它要的四列读数没有一列需要新对局 ⇒ 批准的是**遍历**,不是波次。P4.2 的冻结**冻的是入集不是取证**(§EX.6 已立),`wkbonefight` 也不是新 id,本裁定不改 armed 串。\n\n⭐ **与 hero-2 / hero-30 并成同一次遍历**(hero-30 的裁定已写「与 hero-2 并成同一次遍历」,本行把第三个挂上去):三者都是对**已存语料**的只读扫描,分开跑三遍是同一份 I/O 付三次。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:两层(可见敌人 ==1 / >=2)分开报不许并池;整数小值域**不报中位数**(铁律 4(ii));充能层数拿不到就**明写拿不到,不许用 0 顶替**(GH #27 家族的 dumper 缺口)。预登记的判读方向(>=2 占比接近 0 ⇒ 无可兑现收益,带 DOMAIN-NOT-REACHED 退回)与归因边界(只管数量项,负读数只能读作「放多了不好」)同样原样成立。\n\n⛔ **本裁定不承诺 (a) 会被买到**:GH #274 的两条堵点(modifier 在语料里 0 帧、`J.GetProperTarget` 结构性 nil)如果在遍历里复现,正确的产出是**一份 DOMAIN-NOT-REACHED / INSTRUMENT-BLIND 的读数**,不是一次补救性发波 —— 那时的下一棒是补 dumper,不是买机时。",
+        "executor": "录像组(replay-check)—— 语料遍历是它的活;英雄组不必等它才做别的工作单元",
+        "delivered_to": [
+          "iterations/queue.json:hero-31.director(本字段 —— 被裁方真正读的那一行)",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31(§DR:常驻义务,不属于任何一波)",
+          "iterations/streams/test_set.md §EY.4(全文档案)"
+        ],
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 三份读数写进同一个文件(每份自带 N frames / M episodes / K games 与至少一个 (game, t)),路径是**裁定的一部分**,因为 owed 腿只读得出「文件在不在」",
+        "status_note": "⚠️ `status` 故意留在 **`pending`**(已裁但未执行),不新造 `approved_scan` 这种拼写:`pending_rulings.py` 的已知词汇只有 OPEN_STATES(pending/running/harvested)+ CLOSED_STATES(done/rejected),队列里已经有 **34 行**落在词汇之外(GH #317 让它们计为 open,但漂移信号本身还在)。总监不该再给它加一行。执行完毕的判据不在这个字段上,在 `iterations/owed_executions.json:hero_domain_scan_2_30_31` 的 `done_when`。"
+      }
     }
   ],
   "done": [

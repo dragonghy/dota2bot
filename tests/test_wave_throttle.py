@@ -24,6 +24,16 @@ file pins the three properties that decide whether it is a gate or a decoration:
      whose spread straddles the deadline, and a record carrying a rerun and
      nothing else.
 
+  4. NO PATH IS INVISIBLE (ruling 3, GH #534).  Y1, the ref-vs-ref yardstick
+     wave, was up for ~$1.09 and gate (i) never mentioned it: its record is
+     named `Y1_wave.json` (the scanner matched `^W\d+`) and its machine lives
+     under `instance` (the reader took `machines[]` and nothing else).  The tool
+     printed unlock 18:24:12Z off W48 when the conservative truth was 21:16:56Z
+     -- an absence that permits spending three hours early.  Section 6 rebuilds
+     that instant from both real records and requires exit 3; section 7 pins the
+     pieces (both single-machine blocks are billed and the later anchors, a
+     missing `launched_at` in one of them is UNCERTIFIABLE and not "no window").
+
 Exit 0 clean, 1 on a failed check.
 """
 
@@ -212,6 +222,91 @@ try:
           "the exclusion was not named in the output")
 
     # ---------------------------------------------------------------- 6 -----
+    # THE #534 BLIND SPOT, rebuilt from the two real records of 2026-09-05.
+    # W48's slate went up at 12:24:12Z; Y1 went up ~3h later on the ref-vs-ref
+    # path and spent ~$1.09.  Asked at 18:30Z -- past W48's unlock, well short of
+    # Y1's -- the old tool answered UNLOCKED.  That is the whole defect: not an
+    # error, just permission to spend early.
+    d = os.path.join(tmp, "blindspot_534")
+    os.makedirs(d)
+    write_wave(d, "W48", slate(
+        "2026-09-05T12:23:59Z", "2026-09-05T12:24:04Z",
+        "2026-09-05T12:24:09Z", "2026-09-05T12:24:12Z"))
+    with open(os.path.join(d, "Y1_wave.json"), "w", encoding="utf-8") as fh:
+        json.dump({
+            "wave": "Y1",
+            # Attempt 1 died at 167s and was still billed (~$0.03); attempt 2 is
+            # the one that measured.  Both are real machines.
+            "instance": {"instance_id": "i-0c57a81c63bc57f31",
+                         "launched_at": "2026-09-05T15:12:32.000Z"},
+            "instance_actual": {"instance_id": "i-00f0417bfc7918609",
+                                "launched_at": "2026-09-05T15:16:56Z"},
+        }, fh)
+    rc, out = run(d, "--now", "2026-09-05T18:30:00Z")
+    check(rc == 3,
+          "the #534 instant read as launchable: Y1 was up at 15:16:56Z and the "
+          "gate answered exit %d at 18:30Z\n%s" % (rc, out))
+    check("Y1" in out and "anchor wave      : Y1" in out,
+          "Y1 was not the anchor -- a whole wave is still invisible to gate "
+          "(i):\n%s" % out)
+    check("2026-09-05T21:16:56Z" in out,
+          "the unlock was not Y1's conservative 21:16:56Z (the desk computed "
+          "that by hand because the tool could not):\n%s" % out)
+    check("family candidate : W48" in out,
+          "the losing family candidate was not printed; ruling 3's choice "
+          "between families must stay visible:\n%s" % out)
+    # And the same dir one second past Y1's unlock is clear -- the fix must not
+    # be a permanent refusal.
+    rc, _ = run(d, "--now", "2026-09-05T21:16:57Z")
+    check(rc == 0, "past Y1's unlock the gate still refused (exit %d)" % rc)
+
+    # ---------------------------------------------------------------- 7 -----
+    # RULING 3, the pieces.
+    #
+    # (a) BOTH single-machine blocks are billed, and the LATER one anchors --
+    #     whichever key it sits under.  Built the other way round from Y1 so a
+    #     "first key wins" reading fails here.
+    d = os.path.join(tmp, "solo_order")
+    os.makedirs(d)
+    with open(os.path.join(d, "Y9_wave.json"), "w", encoding="utf-8") as fh:
+        json.dump({"wave": "Y9",
+                   "instance_actual": {"launched_at": "2026-09-01T00:00:00Z"},
+                   "instance": {"launched_at": "2026-09-01T01:00:00Z"}}, fh)
+    rc, out = run(d, "--now", "2026-09-01T06:30:00Z")
+    check(rc == 3,
+          "the later of the two single-machine blocks did not anchor (unlock "
+          "should be 07:00, not 06:00): exit %d\n%s" % (rc, out))
+    check("slate spread     : 3600s" in out,
+          "both single-machine blocks were not counted as machines:\n%s" % out)
+
+    # (b) A single-machine block with no `launched_at` is UNCERTIFIABLE, not
+    #     "this record opened no window".  Silently skipping it would put the
+    #     absence back on the money-spending side.
+    d = os.path.join(tmp, "solo_no_stamp")
+    os.makedirs(d)
+    with open(os.path.join(d, "Y8_wave.json"), "w", encoding="utf-8") as fh:
+        json.dump({"wave": "Y8", "instance": {"instance_id": "i-abc"}}, fh)
+    rc, out = run(d, "--now", "2026-09-01T06:30:00Z")
+    check(rc == 2,
+          "a single-machine block with no launched_at did not read as "
+          "UNCERTIFIABLE: exit %d\n%s" % (rc, out))
+    check(rc != 0, "an undated instance block READ AS UNLOCKED")
+
+    # (c) Ruling 2 is untouched by ruling 3: a `rerun` is still not a machine,
+    #     even now that non-`machines[]` shapes are read.
+    d = os.path.join(tmp, "rerun_still_blind")
+    os.makedirs(d)
+    write_wave(d, "W90", slate("2026-09-01T00:00:00Z"))
+    with open(os.path.join(d, "Y7_wave.json"), "w", encoding="utf-8") as fh:
+        json.dump({"wave": "Y7",
+                   "rerun": {"launched_at": "2026-09-01T05:00:00Z"}}, fh)
+    rc, out = run(d, "--now", "2026-09-01T06:00:01Z")
+    check(rc == 0,
+          "a rerun block opened a window under the new reader -- ruling 2 was "
+          "collateral damage: exit %d\n%s" % (rc, out))
+    check("skipped Y7" in out, "the walk past Y7 was silent:\n%s" % out)
+
+    # ---------------------------------------------------------------- 8 -----
     # THE REAL TREE.  The live waves dir must produce a verdict, not a refusal:
     # if the desk's own records have drifted out of this parser's reach, that is
     # a finding here and not a discovery at launch time.

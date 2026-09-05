@@ -17735,3 +17735,163 @@ M12 直接打这条腿(「both armed」那次驱动偷偷只 arm 一个 ⇒ 该�
 - **(丙) 录像组 / 语料侧**:两张帧能把两处空洞变成有支撑的读数 ——
   (i) 主格位带**有充能 bottle** 的真帧;(ii) 任何一张**带真实 gold** 的帧
   (那会让 `[gold]` 断言当场变红,并第一次让 §EY.2 那个问题**可回答**)。
+
+---
+
+## §EZ 2026-09-05T19:xxZ 总监 —— **闸 (i) 对整整一波完全失明,而失明的方向是「允许更早花钱」**;本节最该被读的是 **§EZ.1:两个各自平平无奇的缺陷(一个文件名正则、一句「读 `machines[]` 且只读它」)叠起来,让一台跑了 94 分钟、花了 ~$1.09 的机器在管钱的那道闸面前不存在**
+
+**产物**:`tools/batch_test/soak/wave_throttle.py`(ruling 3)+ `tests/test_wave_throttle.py`
+(44 → **55 检查,0 失败**,三发变异全 CAUGHT)、`iterations/promote_atoms.json` 第三条原子、
+`iterations/queue.json:hero-31.director`、`iterations/owed_executions.json` 两行。
+**`bots/` + `game/` 零 diff;零 AWS;无 promote;本周 owner 邮件未发。**
+
+### §EZ.1 GH #534 已修 —— gate (i) 的 ruling 3
+
+批测台 18:07Z 交来的读数:18:07Z 那次 `wave_throttle.py` 锚在 **W48(12:24:12Z)**、打 unlock **18:24:12Z**,
+而 **Y1 15:16:56Z 上机、花了 ~$1.09**,保守真值是 **21:16:56Z**。工具**一个字都没提到 Y1**。
+
+**两条缺陷,都不报错**:
+
+1. 记录扫描器是 `^W(\d+)_wave\.json$` —— `Y1_wave.json` **根本没被列进候选**;
+2. 读法是「`machines[]`,且只读它」(GH #469 ruling 2 当初把这句当优点:*不依赖任何人诚实地填一个字段*),
+   而 ref-vs-ref 路径(`aws_run.sh`)是单机、记在 `instance` / `instance_actual` 下。
+
+**修法(ruling 3,本轮立)**:闸 (i) 管的是**钱**,所以**任何把一台计费机器抬起来的记录都开窗**,
+不管哪套 harness 写的。无 `machines[]` 时从单机键取 —— `instance` 与 `instance_actual` **两个都取**,
+因为两台**都计过费**(Y1 的 `instance` 是那台 167s 就死的,~$0.03;`instance_actual` 才是产数据的那台)。
+**`rerun` 仍然不看:ruling 2 一字未动。**
+
+**顺带把排序也裁了**,因为「波号越大越晚」这个代理**只在一个族内成立**(W48 > W43 是真的晚;
+Y1 与 W48 之间根本不是一次比较):walk-back **按族各走一次**,跨族的锚取**最晚那台机器**
+—— 与 ruling 1 同一个保守侧,高一层。每个族的候选连同它自己的 unlock **都打印出来**。
+
+**实测(真记录,`--now 2026-09-05T19:10:00Z`)**:
+```
+family candidate : Y1   last machine 2026-09-05T15:16:56Z -> unlock 2026-09-05T21:16:56Z  <- ANCHOR (ruling 3: the latest)
+family candidate : W48  last machine 2026-09-05T12:24:12Z -> unlock 2026-09-05T18:24:12Z
+WAVE_THROTTLE: THROTTLED (exit 3) -- do not launch. Wait 7616s.
+```
+`RC_EXIT=3`。**与批测台手算的 21:17Z 一致 —— 那个手算现在有工具替它做了。**
+
+**非空洞性(变异台,从文件副本还原,md5 `c3633ab5655d268c7f1928dc0cce4795` 逐位相同)**:
+- **M1** 正则退回 `^W(\d+)` ⇒ **7 红**;
+- **M2** 去掉单机键回退 ⇒ **6 红**;
+- **M3** 跨族取第一个候选而不是最晚 ⇒ **2 红**。
+三发全 CAUGHT,还原后 **55 检查 0 失败**。测试里**新加的第 6 节直接重建 09-05 那个瞬间**
+(W48 的真 slate + Y1 的两个真单机块,问 18:30Z),旧工具在那里答 UNLOCKED。
+
+⚠️ **诚实边界**:本修法**没有**给 `aws_run.sh` 加登记义务 —— 它只是让**已经写下来的记录**被读到。
+一个**根本没写 wave 记录**的发波路径,闸 (i) 仍然看不见,而且**仍然不会报错**。
+
+### §EZ.2 GH #535 裁定 —— **P4.1「买到了两样,第三样没有量具」**
+
+批测台问:P4.1 算「有读数」还是「未完成」。裁定分三句:
+
+1. **胜率 + 局数:已买到,登记为 P4.1 的正式读数** —— `arm(swap-average) = 0.550`(44/80),
+   两分层 **fwd 0.625 / rev 0.475**,side 项 **+0.075**。反号归铁律 **4(i-c)**(该估计量已消侧偏,
+   40/40 swap ⇒ 反号是恒等式 `|side| > |arm|`,**登记但不作否决理由**)。
+   80/80 局有 signout,两臂经 `batch_run.log` 核过**是真的两棵树**(275 dispatchers × 2 方向 + `ab_guard` 三目录全过),
+   **不是 GH #527 那种默认 AI 互打**。
+2. **gpm:没有量具,不是「测了没效应」。** 800 个 player 行里 `Gold per min: 0` **800/800**、
+   `Level: 1` 800/800、`KDA 0/0/0` 800/800,引擎自己写着 `Not submitting stats. Both teams must have human players.`
+   ⛔ **在有人拿出一份非零记分板之前,任何人不得把 P4.1 的 gpm 那一格写成读数,也不得写成「无差异」。**
+   `Gold:` 那一列(swap-average +108.6 偏 main)按批测台自己的诚实边界只作 **EXPLORATORY**,总监**照收不放宽**。
+3. **⇒ P4.1 = 部分完成。** 于是排序条款(「标尺波排在任何 arm 波之前,直到 P4.1 有读数」)**本轮释放**:
+   理由不是「够了」,是**再发一遍同一条路,按构造买回来的还是同样的三分之二**,每次 ~$1.09。
+   **⛔ 不许复发同一形状的标尺波**,直到有人先解决记分板 —— 那是一条**量具**任务,不是一次发波。
+   缺口本身写进 `DECISIONS_NEEDED`(owner 的 P4.1 完成定义写着 gpm,而完成定义只有主会话/owner 能改)。
+
+### §EZ.3 Y1 记录里请求的两条裁定
+
+**(甲) ref-vs-ref 路径的 on-demand:批准为路径域的声明式例外,不是对 GH #158 的改判。**
+owner 原话(「除非没有spot的机器」)是 owner 级的,总监不改。但这条路径有一条**结构性质**
+在拍板时不在桌面上:`aws_run.sh` 只在**两个方向都跑完之后**同步一次 S3,**没有逐局上传** ⇒
+被抢占 = **全损、零可恢复**(`recover_verdict.py` 当年救回 W42 靠的正是 soak 路径的逐局上传)。
+免疫的代价 ~$0.42/波;近期抢占实测 W47 4 台丢 2、W43 4 台丢 4。
+⇒ **在这条路径上、且它仍无增量上传期间**,on-demand 与 GH #158 想守的东西(把开销压住)**同向**,
+批准;每一波**必须在波次记录里把这段算术写出来**(Y1 做到了)。
+**失效条件写死**:这条路径一旦有了逐局上传,本例外**当场作废,回到 spot 优先**。
+本条同时写进 `DECISIONS_NEEDED` 供 owner 追认 —— **不阻塞发波**。
+
+**(乙) 批测台改了 `aws_run.sh`:批准,并给一条长期边界。** 那 25 行只动**目录权限**与一道
+**拒绝门**(`ab_guard`:三个目录缺一个就打 FATAL、传日志、立刻 `shutdown`),**测量语义逐字未动**,
+而且**首飞就干了活**(两个方向各过三目录)。⇒ 章程里「批测台不改 harness」的边界收窄为:
+**批测台可以改它自己的发射器(`aws_run.sh` / `spot_run.sh`),条件是 (i) 不碰测量语义
+(局数、timescale、并行度、镜像方向、ref 解析),(ii) 在波次记录里声明,(iii) 静态检查过。
+碰到测量语义的改动仍须先交总监。**
+
+### §EZ.4 hero-31 裁定 —— APPROVED-SCAN,并入 hero-2 / hero-30 的同一次遍历
+
+全文在 `iterations/queue.json:hero-31.director`(**被裁方读的那个字段**),
+执行义务在 `iterations/owed_executions.json:hero_domain_scan_2_30_31`,
+产物路径写死为 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`
+—— **路径是裁定的一部分**,因为 owed 腿只读得出「文件在不在」。
+理由:请求自己写着「先扫档案,不要为它单发波」,四列读数没有一列需要新对局;
+**P4.2 冻的是入集不是取证**,`wkbonefight` 也不是新 id。
+⚠️ 本裁定**不承诺 (a) 会被买到**:GH #274 的两条堵点若在遍历里复现,
+正确产出是一份 **DOMAIN-NOT-REACHED / INSTRUMENT-BLIND** 读数,**不是**一次补救性发波。
+**status 故意留在 `pending`**,不新造 `approved_scan` 这种拼写(队列里已有 34 行落在
+`pending_rulings.py` 的已知词汇之外;总监不该再加一行)。
+
+### §EZ.5 新 promote 原子:`tp_response_releases_need_commit`(`tpdying` / `tpdead` ⟸ `tpcommit`)
+
+**今天没有任何东西是坏的** —— `tpcommit` 与两个 release 一直同 armed。本行拦的是**promote 那一天的配置**:
+两个闸址都在 `J.GetTpCommitDefendDesire`(`bots/FunLib/jmz_func.lua:8655`)**函数体内**,
+而该函数第一句是 `if not J.IsSoakCandidate( 'tpcommit' ) then return nil end`(`:8657`)。
+单独 promote `tpdying` 或 `tpdead`,promote 掉的代码**落在一个真实对局里永远关着的闸后面**
+—— 一次什么都没改的 promote,却被记成一次落地的改进。
+
+**为什么此前没人看得见**:依赖是**结构性嵌套**不是合取 ⇒ 任何读闸的工具都看不到它;
+它被写下来过**两次,两次都是散文**(函数自己的注释 *"reachable only inside the 'tpcommit' gate"*,
+以及本文件 `:3625` 的「挂在已 armed 的 `tpcommit` 下,可接受」)。
+**`zusstatic` 被 armed 半个月测不到任何东西时,带的也正是散文**(§EX.3)。
+
+**非空洞性(变异台)**:把 `tpdying` 闸址改成 PROMOTED 形状 ⇒ `promote_atoms.py` **exit 3**,
+报错逐字点名 `tpdying` 与 `tpcommit`;从文件副本还原后 `bots/FunLib/jmz_func.lua` md5
+`96582ff2990736dc7f1c507cf9ecbdfd` **逐位相同**,复跑 **exit 0**,三条原子全 ok。
+
+### §EZ.6 单独收下 §EY.5:**P2 取证波的成对约束**(登记为常驻否决行)
+
+协同组量到的东西超出它自己那个 id:在 owner P2 **自己钉的那一帧**
+(`f_260822_063722_lina_tp_home`),shipped / 单 armed `stayattr` / 单 armed `staysrc` **三次都是 false**,
+**两个都 armed 才 true**;全语料 `flips_pair_only = 1`,而那一帧就是它。变异 **M12** 直接打这条腿。
+
+⇒ **一条发波前的量具级约束,不是一个 id 的入集问题**:任何把这两个 id **分两臂单独 arm** 的 P2 取证波,
+在那一帧上读到的零**每一次都是正确的零**,而波次会把它写成「杠杆无效」。
+登记进 `iterations/owed_executions.json:p2_pair_arm_stayattr_staysrc`(`claimable: false` 的常驻行,
+没有完成态 —— 它每轮报 OWED 就是它的全部工作),**在排 P2 取证波的那一轮被读到**才是它的用处。
+
+⚠️ **本条与 lanefix 教训(一次只动一个杠杆)真的冲突,不粉饰**:那条教训管的是
+「别把十个改动捆成一臂」,这条说的是「这两个**在这一帧上**不成对就测不到」。
+裁定是:**共同 arm 时必须在波次记录里声明为一个 PAIR**(一个原子,负读数归给这个对,不许拆归)。
+
+### §EZ.7 `staysrc`:**FROZEN-HOLD**
+
+P4.2 冻结期收到入集提议的唯一合法裁定(§EX.6 已立)。不是对证据的否定 ——
+`tests/test_staysrc_field_supply.lua` 12/12、`mutstand_staysrc.sh` 15 发如声明,桌面证据完好;
+也不是掉棒 —— 取证不受冻结影响。协同组本轮**没有动 `queue.json`**(正确),所以本裁定
+没有可写的机器字段,存档在此并在 GH #532 追评。解冻后凭现有证据重提,**不需要重买**。
+
+### §EZ.8 登记但本轮未处理(不许被上面的产出盖过去)
+
+1. ⭐ **P4.2 的「每轮 ≥2 个判定完结」本轮 = 0,未达成。** 不找借口,记原因:
+   本轮的工作单元给了 GH #534 —— 一个**失效方向是「允许更早花钱」**的量具缺陷,
+   而下一个批测台轮(~21:0xZ)正要按它的读数决定发不发波。**下轮的前两个**:
+   `tpdying` / `tpreach`(`verify_coverage.py` 的 verify=0 长尾里 narrat 最低的两条),
+   `midtp` 仍是唯一 BLIND SPOT 且在录像组 GH #521 (丙) 手上,不抢。
+2. **trunk 的 python 侧仍红 5 条**(与批测台 18:07Z 读到的**同一组**,本轮零新增):
+   `test_bots_walk_farm_only` / `test_detector_source_constants` / `test_lua_corpus_stability` /
+   `test_mutstand_restore_trap` / `test_wkqdmg_domain`。本轮自检真码 **EXIT=3**,
+   `UNCERTIFIABLE: none`,legs run 10,findings = cadence / queue-rulings / owed-executions / trunk-red(python)。
+   ⚠️ 「main 是不是也红」这一行**未确立**(要 `git stash` 后复跑),**不声称**。
+3. **录制代价的第二通道本波反号**(W48 的每槽局数:8 个录制槽**全部低于**对照槽,缺 7%,
+   而立论那次是 +2.33 局)。验收门只看 timescale 通道所以 `exit 0` 成立 —— **登记,未裁**;
+   要裁需要至少第二波同向读数,不然是一波之内的噪声。
+4. **`$0.90` 自动失效常数仍未重裁**(W46 已越线;Y1 是按需波不适用)。
+5. **GH #528 降级后的那条长期规则未写**(外来实例已自行结束)。
+6. **`run_batch.sh` 的 `.log.stdout` 修复(`25d237b2`)至今没在农场跑过** —— 下一波标尺路径的波是它的首飞,
+   报告必须点名 `game_N.json` 是否非零。
+7. ⭐ **P4.2 与 P2 在结构上互相挡住了**(本轮新发现,已写进 `DECISIONS_NEEDED`):
+   P2 的取证按 §EZ.6 需要**同时 arm** `stayattr` + `staysrc`,而 P4.2 的冻结让前者已退集、后者进不来。
+   保守默认 = **冻结优先,P2 的取证等解冻**(P2 的桌面证据继续买,不受影响);
+   要不要给 P2 开一个成对的例外,是 owner 的决定,不是总监的。

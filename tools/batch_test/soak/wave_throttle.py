@@ -69,9 +69,36 @@ machines and its own ~$2.15, and gate (i) bounds money, not data.
 
 That ruling is machine-executable by accident of the existing schema and this
 file leans on it deliberately: repair machines live under `rerun`, routine
-slates live under `machines[]`.  This tool reads `machines[]` and nothing else,
-so the distinction is structural rather than a field anyone has to remember to
-set honestly.
+slates live under `machines[]`.  The distinction stays structural rather than a
+field anyone has to remember to set honestly.
+
+RULING 3 -- WHAT COUNTS AS A SLATE (director, 2026-09-05, GH #534).  Reading
+`machines[]` AND NOTHING ELSE was the previous sentence of this docstring, and
+it was wrong in the direction that spends money.  Y1 -- the P4.1 upstream
+yardstick wave -- flew on the OLD ref-vs-ref path (`aws_run.sh`), which puts its
+single machine under `instance` and never writes a `machines[]`.  The file is
+also named `Y1_wave.json`, which the record scanner's `^W(\d+)_wave\.json$` did
+not match at all.  So a whole wave, up at 15:16:56Z for ~$1.09, was invisible to
+gate (i): run at 18:07Z the tool anchored on W48 (12:24:12Z) and printed unlock
+18:24:12Z, three hours EARLIER than the conservative truth (~21:17Z).  Nothing
+errored; the gate simply let money be spent sooner.  Same family as #205's
+uninstallable linter and `describe-instances` answering `[]`: an absence read as
+good news.
+
+    Ruled: gate (i) bounds MONEY, so anything that put a billed machine up
+    opens a window, whatever harness wrote the record.  A record with no
+    `machines[]` opens a window from its single-machine blocks -- `instance` and
+    `instance_actual`, both when both are present, because both were billed
+    (Y1's `instance` is the 167s attempt that cost ~$0.03 and its
+    `instance_actual` is the one that measured).  `rerun` is still excluded:
+    ruling 2 is untouched.
+
+    Ordering is ruled with it, because the wave-number walk-back was a proxy for
+    time that only holds INSIDE one family (W48 > W43 is also later; Y1 vs W48
+    is not a comparison at all).  The walk-back now runs per family, and the
+    anchor is the candidate with the LATEST last machine -- the same
+    conservative side as ruling 1, one level up.  Every family's candidate is
+    printed with its own unlock, so the choice is visible rather than buried.
 
 WHAT THIS FILE REFUSES TO DO.  It never guesses a timestamp.  A record whose
 machines carry no `launched_at`, or carry one this parser cannot read as a full
@@ -104,7 +131,15 @@ DEFAULT_WAVES_DIR = os.path.join(
 )
 DEFAULT_WINDOW_HOURS = 6.0
 
-_WAVE_RE = re.compile(r"^W(\d+)_wave\.json$")
+# `W44_wave.json`, and also `Y1_wave.json` -- the ref-vs-ref family (ruling 3).
+# The family prefix is captured because the numeric walk-back is only a time
+# ordering WITHIN a family.
+_WAVE_RE = re.compile(r"^([A-Za-z]+)(\d+)_wave\.json$")
+
+# Single-machine blocks, consulted only when a record has no `machines[]`.
+# Order is presentation only -- every present block is read and the LAST one up
+# anchors (ruling 1).  `rerun` is deliberately absent (ruling 2).
+_SOLO_KEYS = ("instance_actual", "instance")
 
 # A full UTC instant and nothing else.  Bare times of day (`18:17:02Z`, the
 # W26/W27 shape) and naive datetimes are refused on purpose -- see the module
@@ -142,18 +177,58 @@ def parse_instant(text, where):
 
 
 def list_wave_records(waves_dir):
-    """Every W<n>_wave.json in the directory, highest wave number first."""
+    """Wave records grouped by family, each family highest number first.
+
+    Returns a list of (family, [(number, filename), ...]) with the families in
+    a stable order.  The numeric sort is a time ordering only inside a family
+    (ruling 3), which is exactly the scope it is used at.
+    """
     if not os.path.isdir(waves_dir):
         raise Uncertifiable("waves dir %s does not exist" % waves_dir)
-    found = []
+    families = {}
     for name in os.listdir(waves_dir):
         m = _WAVE_RE.match(name)
         if m:
-            found.append((int(m.group(1)), name))
-    if not found:
-        raise Uncertifiable("no W*_wave.json under %s" % waves_dir)
-    found.sort(key=lambda pair: pair[0], reverse=True)
-    return found
+            families.setdefault(m.group(1).upper(), []).append(
+                (int(m.group(2)), name)
+            )
+    if not families:
+        raise Uncertifiable("no <family><n>_wave.json under %s" % waves_dir)
+    out = []
+    for family in sorted(families):
+        records = families[family]
+        records.sort(key=lambda pair: pair[0], reverse=True)
+        out.append((family, records))
+    return out
+
+
+def slate_launches(record, wave_id):
+    """The parsed launch instants of every billed machine in one record.
+
+    Returns [] when the record opened no window at all.  `machines[]` is the
+    routine-slate shape; a record without one falls back to its single-machine
+    blocks (ruling 3).  `rerun` is never consulted (ruling 2).
+    """
+    machines = record.get("machines")
+    if machines:
+        return [
+            parse_instant(
+                machine.get("launched_at"),
+                "%s machine %d (seed %s)"
+                % (wave_id, index, machine.get("seed", "?")),
+            )
+            for index, machine in enumerate(machines)
+        ]
+    launches = []
+    for key in _SOLO_KEYS:
+        block = record.get(key)
+        if isinstance(block, dict):
+            launches.append(
+                parse_instant(
+                    block.get("launched_at"), "%s %s" % (wave_id, key)
+                )
+            )
+    return launches
 
 
 def load_record(waves_dir, name):
@@ -166,39 +241,45 @@ def load_record(waves_dir, name):
 
 
 def find_anchor(waves_dir, exclude=()):
-    """The most recent wave slate that opened a throttle window.
+    """The most recent wave that opened a throttle window, across all families.
 
-    Returns (wave_name, launches, skipped) where `launches` is the list of
-    parsed instants and `skipped` names every record walked past, so a walk-back
-    is always visible in the output rather than silently changing the answer.
+    Returns (wave_name, launches, skipped, candidates) where `launches` is the
+    list of parsed instants, `skipped` names every record walked past (so a
+    walk-back is always visible in the output rather than silently changing the
+    answer), and `candidates` is each family's own newest window-opener as
+    (wave_id, last_launch) -- printed so that ruling 3's choice between families
+    stays on the page.
     """
     exclude = {e.upper() for e in exclude}
     skipped = []
-    for _number, name in list_wave_records(waves_dir):
-        wave_id = name.split("_", 1)[0]
-        if wave_id.upper() in exclude:
-            skipped.append("%s (excluded on the command line)" % wave_id)
-            continue
-        record = load_record(waves_dir, name)
-        machines = record.get("machines")
-        if not machines:
-            # Ruling 2: no routine slate, so no window opened here.  A `rerun`
-            # block is deliberately not consulted.
-            skipped.append("%s (no machines[] -- opened no window)" % wave_id)
-            continue
-        launches = [
-            parse_instant(
-                machine.get("launched_at"),
-                "%s machine %d (seed %s)"
-                % (wave_id, index, machine.get("seed", "?")),
-            )
-            for index, machine in enumerate(machines)
-        ]
-        return wave_id, launches, skipped
-    raise Uncertifiable(
-        "walked every wave record without finding a slate that opened a "
-        "window; skipped: %s" % ("; ".join(skipped) or "none")
-    )
+    candidates = []
+    for _family, records in list_wave_records(waves_dir):
+        for _number, name in records:
+            wave_id = name.split("_", 1)[0]
+            if wave_id.upper() in exclude:
+                skipped.append("%s (excluded on the command line)" % wave_id)
+                continue
+            record = load_record(waves_dir, name)
+            launches = slate_launches(record, wave_id)
+            if not launches:
+                # Ruling 2: no billed slate, so no window opened here.  A
+                # `rerun` block is deliberately not consulted.
+                skipped.append(
+                    "%s (no machines[] and no single-machine block -- opened "
+                    "no window)" % wave_id
+                )
+                continue
+            candidates.append((wave_id, launches))
+            break
+    if not candidates:
+        raise Uncertifiable(
+            "walked every wave record without finding a slate that opened a "
+            "window; skipped: %s" % ("; ".join(skipped) or "none")
+        )
+    # Ruling 3: across families the anchor is the LATEST last machine -- the
+    # conservative side, one level up from ruling 1.
+    wave_id, launches = max(candidates, key=lambda pair: max(pair[1]))
+    return wave_id, launches, skipped, candidates
 
 
 def check(waves_dir=DEFAULT_WAVES_DIR, window_hours=DEFAULT_WINDOW_HOURS,
@@ -208,7 +289,9 @@ def check(waves_dir=DEFAULT_WAVES_DIR, window_hours=DEFAULT_WINDOW_HOURS,
     try:
         if now is None:
             now = _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0)
-        wave_id, launches, skipped = find_anchor(waves_dir, exclude=exclude)
+        wave_id, launches, skipped, candidates = find_anchor(
+            waves_dir, exclude=exclude
+        )
     except Uncertifiable as exc:
         return 2, [
             "UNCERTIFIABLE: %s" % exc,
@@ -224,6 +307,21 @@ def check(waves_dir=DEFAULT_WAVES_DIR, window_hours=DEFAULT_WINDOW_HOURS,
     unlock = last + window                      # Ruling 1: anchor on the last
     unlock_first = first + window               # the other reading, shown
 
+    if len(candidates) > 1:
+        for cand_id, cand_launches in sorted(
+            candidates, key=lambda pair: max(pair[1]), reverse=True
+        ):
+            lines.append(
+                "family candidate : %-4s last machine %s -> unlock %s%s"
+                % (
+                    cand_id,
+                    max(cand_launches).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    (max(cand_launches) + _dt.timedelta(hours=window_hours))
+                    .strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "  <- ANCHOR (ruling 3: the latest)"
+                    if cand_id == wave_id else "",
+                )
+            )
     lines.append("anchor wave      : %s (%d machine(s))" % (wave_id, len(launches)))
     lines.append("first machine up : %s" % first.strftime("%Y-%m-%dT%H:%M:%SZ"))
     lines.append("last machine up  : %s  <- the anchor (GH #469 ruling 1)"

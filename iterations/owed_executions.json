@@ -58,6 +58,41 @@
         "kind": "manual"
       },
       "done_when_note": "⚠️ 这一行**可能永远不被退休,而那是正确的**:它没有完成态,只有被遵守或被违反。总监只在 `^Get` roster 三个名字全部修完**且**有人真的放宽了 `^Is` 并重取了四个载体的读数之后退休它。**不要因为它每轮都报 OWED 就把它当噪声删掉** —— 它每轮报一次,就是它唯一的工作。"
+    },
+    {
+      "id": "hero_domain_scan_2_30_31",
+      "issue": "GH #274 / GH #474 / GH #27(hero-31);hero-2 与 hero-30 见各自 queue 行",
+      "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。",
+      "ruled_at": "2026-09-05T19:xxZ",
+      "executor": "录像组(replay-check)",
+      "trigger": "没有外部触发器,也**不挂在任何一波上** —— 这正是它进 registry 的理由(§DR):hero-30 的 FROZEN-HOLD 裁定 15:5xZ 已写「与 hero-2 并成同一次遍历」,而那句话此前**只活在一个 queue 行的散文里**,没有任何一张被驱动的表载着它。",
+      "delivered_to": [
+        "iterations/queue.json:hero-31.director",
+        "iterations/queue.json:hero-30.director(15:5xZ,已在)",
+        "iterations/streams/test_set.md §EY.4"
+      ],
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md"
+      },
+      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)。它读不出两层有没有被并池、也读不出充能层数那一列是不是被 0 顶替了 —— 那两件事由裁定正文与录像组自己的报告承担。路径写死在裁定里就是为了让这一腿有东西可读:三份读数散在三份带时刻的报告里时,**没有任何一个机器键能指着它们**。"
+    },
+    {
+      "id": "p2_pair_arm_stayattr_staysrc",
+      "issue": "GH #532(协同组立案)/ OWNER_PRIORITIES.md P2",
+      "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EZ.6。**P2 的取证波不许把 `stayattr` 与 `staysrc` 分两臂单独 arm。** 在 owner P2 自己钉的那一帧(`f_260822_063722_lina_tp_home`,lina 31.8% 血、身上 faerie fire),四次驱动的读数是 shipped=false / 单 armed `stayattr`=false / 单 armed `staysrc`=false / **两个都 armed=true**,全语料 `flips_pair_only = 1` 且那 1 帧就是它(协同组 §EY.5,变异 M12 直接打这条腿)⇒ **任何单臂隔离波在那一帧上读到的零,每一次都是正确的零**,而波次会把它写成「杠杆无效」。要么**同一腿共同 arm 并在波次记录里声明为一个 PAIR**(负读数归给这个对,不许拆归给其中一个),要么在波次记录里**写明这一帧不在射程内**。⚠️ 与 lanefix 教训(一次只动一个杠杆)真的冲突,不粉饰:那条管的是「别把十个改动捆成一臂」,这条说的是「这两个**在这一帧上**不成对就测不到」。",
+      "ruled_at": "2026-09-05T19:xxZ",
+      "executor": "任何排 P2(低血不回家)取证波的人 —— 今天没有人在排,而这正是本行存在的理由",
+      "trigger": "排 P2 取证波的那一轮。这是一条**否决权**,不是待办;它每轮报 OWED 是为了在那一天被读到(与 `mock_isprefix_ordering` 同型)。",
+      "claimable": false,
+      "delivered_to": [
+        "iterations/streams/test_set.md §EZ.6(裁定全文档案)",
+        "iterations/owed_executions.json(本行 —— 常驻约束,不属于任何一波,§DR)"
+      ],
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "没有完成态:P2 的取证波排完之后本行仍然成立(下一次再排 P2 波时同样适用)。⚠️ 现状登记:`stayattr` 已退集(§EX.1)、`staysrc` 冻结中(§EZ.7)⇒ 这条约束此刻**没有可违反的对象**,它要在解冻后第一次排 P2 波的那一轮被读到。P4.2 与 P2 因此在结构上互相挡住,已写进 `iterations/DECISIONS_NEEDED.md` 交 owner。"
     }
   ],
   "retired": [

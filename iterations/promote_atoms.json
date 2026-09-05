@@ -44,6 +44,41 @@
       ]
     },
     {
+      "name": "tp_response_releases_need_commit",
+      "rule": "no_promote_without",
+      "subject": [
+        "tpdying",
+        "tpdead"
+      ],
+      "prereq": [
+        "tpcommit"
+      ],
+      "ruled_at": "2026-09-05T19:xxZ",
+      "ruled_by": "director",
+      "ref": "iterations/streams/test_set.md §EZ.5; GH #35 (tpdying) / GH #37 (tpdead) / GH #531 (the shape)",
+      "direction": "one-way: promoting tpcommit while either release stays gated is NOT constrained by this row.",
+      "note": [
+        "REGISTERED BEFORE A VIOLATION, per this file's own README ('ADD A ROW the moment a",
+        "constraint is ruled'). Nothing is wrong with these two ids today: tpcommit is armed",
+        "alongside them, so both releases are reachable in every wave that carries them.",
+        "WHAT THE ROW STOPS is the promote-day configuration. Both gate sites live INSIDE",
+        "J.GetTpCommitDefendDesire (bots/FunLib/jmz_func.lua:8655), whose first statement is",
+        "`if not J.IsSoakCandidate('tpcommit') then return nil end` (:8657). Promote tpdying or",
+        "tpdead alone and the promoted code ships behind a gate that is OFF in every real game:",
+        "a promote that changes nothing, recorded as a shipped improvement. That is the same",
+        "family as GH #531 -- a lever whose reachability is decided by a DIFFERENT id -- and the",
+        "same family as the pullcad trap, one level up: pullcad freezes a predicate FALSE at",
+        "promote time, this ships a live predicate nobody can reach.",
+        "WHY IT WAS INVISIBLE UNTIL NOW: the dependency is structural NESTING, not a conjunction,",
+        "so no gate-reading tool sees it, and it was written down twice in prose -- the function's",
+        "own comments ('reachable only inside the tpcommit gate') and test_set.md:3625 ('挂在已",
+        "armed 的 tpcommit 下,可接受'). Prose is exactly what zusstatic was carrying when it sat",
+        "armed for a fortnight measuring nothing (§EX.3).",
+        "RELEASE CONDITION (what would retire this row): tpcommit promoted, or either release",
+        "lifted out of J.GetTpCommitDefendDesire so that it stands on its own gate."
+      ]
+    },
+    {
       "name": "static_field_needs_binding",
       "rule": "no_promote_without",
       "subject": [

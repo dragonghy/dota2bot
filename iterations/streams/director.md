@@ -10689,3 +10689,43 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   退集的理由**从来不是证据不足是时机** ⇒ 新证据把「§ET 的证据逐条仍成立」**加强**了;
   它正是 §EX.1 预告的那一笔。解冻后重提**不需要重买 (a1)**,但 **(a2) 仍欠**,不得说成已买。
   ⛔ **只做指针不做转述**(§EV 的教训)。全文 §EX.9。
+
+- 2026-09-05T19:xxZ:总监触发。**主活 = GH #534 修好(闸 (i) 的 ruling 3)**,
+  报告 `iterations/reports/director/20260905T190000Z.md`,全文档案 `test_set.md §EZ`。
+  ① **闸 (i) 此前对整整一波失明**:`wave_throttle.py` 的扫描器是 `^W(\d+)_wave\.json$`
+  且只读 `machines[]`,而 Y1(P4.1 标尺波,ref-vs-ref 路径)叫 `Y1_wave.json`、机器记在
+  `instance` / `instance_actual` 下 ⇒ 一台跑了 94 分钟、~$1.09 的机器**在管钱的闸面前不存在**,
+  工具打的解锁比真值**早三小时**(**失效方向 = 允许更早花钱**)。
+  修法:**任何把计费机器抬起来的记录都开窗**(`rerun` 仍不看,ruling 2 一字未动),
+  walk-back **按族各走一次**、跨族取**最晚那台**。实测 `--now 19:10:00Z` ⇒ 锚 **Y1**、
+  unlock **21:16:56Z**、`RC_EXIT=3`,**与批测台手算的 21:17Z 一致 ⇒ 下一轮读工具即可,
+  临时的「不要只读工具那一行」指令作废**。测试 44 → **55 检查 0 失败**,
+  变异 **M1/M2/M3 三发全 CAUGHT**,还原 md5 `c3633ab5…` 逐位相同。
+  ⚠️ 诚实边界:**不写 wave 记录的路径仍然看不见,而且仍然不报错。**
+  ② **GH #535 裁定**:P4.1 = **部分完成** —— 胜率 + 局数买到(arm 0.550,分层 0.625/0.475,
+  side +0.075,归 4(i-c) 登记不否决),**gpm 没有量具**(`Gold per min: 0` 800/800,
+  引擎自己写 `Not submitting stats`;`.log.stdout` 修复治不了它)⇒ 不得写成读数**也不得写成「无差异」**;
+  排序条款**释放**,⛔ **不许复发同一形状的标尺波**,先做量具。
+  ③ **Y1 记录里请求的两条**:ref-vs-ref 路径的 **on-demand 批准为路径域声明式例外**
+  (全损路径 + $0.42 免疫;**有增量上传即作废**;例行/镜像波仍 spot 优先),
+  批测台改 `aws_run.sh` **批准并收窄边界**(可改自己的发射器,不碰测量语义,记录里声明)。
+  ④ **hero-31 = APPROVED-SCAN**,与 hero-2/hero-30 **并成同一次遍历**,三处投递齐
+  (`queue.json:hero-31.director` + §EZ.4 + owed 行 `hero_domain_scan_2_30_31`,
+  产物路径写死进裁定);status 故意留 `pending`,不给 GH #317 的词汇漂移再加一行。
+  ⑤ **新 promote 原子 `tp_response_releases_need_commit`**(`tpdying`/`tpdead` ⟸ `tpcommit`):
+  两个闸址都在 `J.GetTpCommitDefendDesire` 函数体内,而它第一句就是 `tpcommit` 闸 ⇒
+  单独 promote 会把代码 ship 到一个真实对局里永远关着的闸后面。此前**被写下来过两次,两次都是散文**。
+  变异台 CAUGHT(exit 3),`jmz_func.lua` md5 `96582ff2…` 还原逐位相同。
+  ⑥ **单独收下协同组 §EY.5**:P2 取证波**必须成对 arm** `stayattr`+`staysrc`
+  (单臂在 P2 钉帧上读到的零**每次都是正确的零**),登记为常驻否决行
+  `p2_pair_arm_stayattr_staysrc`(`claimable:false`);`staysrc` 本身 **FROZEN-HOLD**。
+  ⑦ **新发现的结构互锁**:P4.2 的冻结让 P2 的取证路径关着(一个已退集、一个进不来)⇒
+  保守默认执行(冻结优先,桌面证据继续买),例外与否交 owner,已进 `DECISIONS_NEEDED`(本轮 +3 条)。
+  ⑧ **自检真码 EXIT=3**(`UNCERTIFIABLE: none`,legs 10):cadence / queue-rulings /
+  owed-executions / **trunk-red(python) 5 红**(与批测台同一组,**零新增**;
+  `git stash` 复跑那步**本轮没做,不声称**)。**零 AWS,不对 MTD 作新声称。**
+  ⑨ ⛔ **P4.2 的「每轮 ≥2 判定完结」本轮 = 0,未达成**,原因写在报告 §8 不辩解;
+  **下轮的前两个 = `tpdying` / `tpreach`**(verify=0 长尾里 narrat 最低的两条),
+  `midtp` 在录像组 GH #521 (丙) 手上不抢。**距解冻线仍差 41(armed 61,本轮未变)。**
+  ⑩ 存量未动:`$0.90` 重裁 / GH #528 长期规则 / 录制代价第二通道反号(等第二波)/
+  `.log.stdout` 修复首飞待观察 / GH #523(总监自己那根棒,连续第三轮未取)/ patch 缺口 P3。
