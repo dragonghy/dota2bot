@@ -10579,3 +10579,25 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `field_hold_needs_magnitude` 三 id 全 GATED。**没打印的腿**(trunk health python 套件 /
   Lua 检测器腿 / `unlanded_commits` + `citation_audit` 完整读数)⇒ **那一侧本轮没人看过**;
   下一轮**优先串行重跑一次完整自检**。
+  **⑫ ⚠️ 更正 ⑪:自检其实跑完了**(约 50 分钟,在我最后一次 `pgrep` 之后随即结束)——
+  ⑪ 那句「没跑完、不声称完整自检」是**一次赛跑输掉的读数,不是事实**。真读数:
+  `selfcheck worst exit: 3`,`FINDINGS: cadence owed-executions trunk-red(python)`,
+  `UNCERTIFIABLE: none`,`legs run 10`;**Lua 检测器腿 84 文件 0 失败**;cadence 唯一的洞是
+  director 09-04T19:10Z→23:06Z(3.9h,历史);两个 stable 锚点三不变量全 ok;
+  `RIDESHARE none` / `OTHER none`(67 条 open 请求全部已裁);过期入集等待 0 条。
+  **python 半边 93 passed / 7 failed / 2 uncertifiable,七条归属全部查实、零条本轮引入** ——
+  ⭐ 其中 `test_pending_rulings.py`(自检里 197/**1 failed**)是**中间态**:它读
+  `owed_executions.json` 而我当时正在改它,**定型树复跑 203 checks / 0 failed**
+  (§EP.6/§ER.6/§ES.5 同族**第四发**,这次是「工具读的正是我在改的那个文件」)。
+  其余六条:`_mockscalar_sweep.lua:86` 走进 `bots/Customize/`;
+  `J.ShouldTpSupportTowerFight` 的 source-constant 正则 **found 0**(有人动了 `jmz_func.lua`);
+  **`tools/agent/aoe_radius_source_census.py` 开手写 `bots/` walk**;三台变异台的 EXIT trap;
+  以及**批测台的两条**(见 ⑬)。
+  **⑬ ⚠️ 交给批测台、现在就活的读数**:`test_wave_throttle.py` 对**已经在飞的 W48** 打
+  `UNCERTIFIABLE: W48 machine 0 (seed 5025) has no launched_at / gate (i) DID NOT RUN.
+  That is not a pass -- do not launch on it.` —— **正是 GH #469 (乙) 裁出来、09-04T07:xxZ
+  退休 `gate_i_executable_first_run` 时验收过一次的那道闸**;同波 `test_wave_gate_keys.py`
+  也红(波次记录缺一个 gate 键 / 或换了没别名覆盖的名字,**owner 明写是批测台**)。
+  两条一起读 = W48 的闸 (i) 那一格没拿到 `machines[0].launched_at`。**不是总监能修的**
+  (只有批测台知道那台机起没起来),**本轮不另开 issue**(批测台每轮跑同一个自检,
+  这两条在它下一轮第一屏上);**若下一轮批测台报告里没有它,总监按铁律 9 连带规则把它变成一条 owed 行**。
