@@ -11019,3 +11019,89 @@
     ⚠️ 同轮第二次读码陷阱:后台完成通知报 `exit code 0`,**那是末尾 `echo` 的码**。
   - **Token 用量**:见报告 §10。
   - 完整报告:`iterations/reports/replay-check/20260905T005827Z.md`
+- **2026-09-05T04:00Z(W47 两台补跑机首检 + `outlatch` 条件 (a);上一轮交棒之外的新语料)**:
+  语料 **W47 的两粒补跑机**(批测台 09-05T00:32Z 起飞、03:13Z 收割,使 W47 第一次完整)——
+  `…_b34547`(种子 4723)+ `…_695907`(种子 4763),**本组此前从未扫过**。
+  **宽扫 37/37 局**(19+18,`unparseable` **0/0**,暖场跳 5+6),**逐帧 8 局**。
+  零 EC2、零发波、S3 只读、零 CE 调用。**未改 `bots/`/`game/` 任何一行。**
+  ```
+  VERIFY id=outlatch verdict=INDETERMINATE episodes=53
+  ```
+  - **⭐ `outlatch` 判 INDETERMINATE,而判它的依据是入集时就预登记好的那一条。**
+    可买的通道只有一条:表为空的 bot 走不到 `Action_UseAbilityOnEntity(hAbilityCapture, …)`,
+    **一次施法证明那个 bot 的表非空**(出厂腿上即"第一次扫描成功")。
+    **逆命题不可观测** —— 门自己的域(「二塔已倒**且**那次扫描返回空表」)不在 dump 里,
+    所以施法普查是**活性的上界**,对效应量零信息(test_set.md §DN.6 收割前必读第 (i) 条)。
+    读数:**ab 层 armed 22 : base 1;ba 层 armed 2 : base 27**,**两层反号**,
+    共同因子是**侧别**(天辉 49 : 夜魇 3)⇒ 铁律 4(i-b),噪声,不写进结论。
+    **§DN.6 / GH #424 预言的就是这个形状**(`slotpush` 的闸 `J.IsTeamPushingHighGround`
+    是 `mode_outpost_generic.lua:45` 的提前 return,排在 `outlatch` 的闸 `:79` **上面**,
+    夜魇侧被拿走的帧约是天辉侧 5 倍)。**要分辨的是它没预言什么**:16 倍的侧差
+    `slotpush` 的 5 倍解释不完,残余**本轮不归因**,登记为开放事实。
+  - **⭐⭐ 头号产出(顺手撞上的,不是本轮目标):抢瞭望塔的 channel 75% 被自己打断,
+    出厂缺陷,两条腿一样。** 37 局 **53 次 channel / 13 次完成 / 40 次中断(75.5%)**,
+    白扔 **66.6 秒**;中断率 **armed 72% vs base 79%**(腿内比率,侧偏约掉)⇒ **不归任何 armed id**。
+    四段零收益围观(armed 2 段 / baseline 2 段):`010205_slot7` luna **14 次 / 21.2s**、
+    `003439_slot7` nevermore **9 次 / 13.1s**、`004859_slot2` luna 5 次、`010226_slot3` axe 4 次。
+    **帧证据**:luna 站在瞭望塔 `(3392,-448)` **138u** 处,**逐帧同一坐标 21 秒、hp_pct 全程 1.00**
+    (**没挨打 ⇒ 中断不是伤害造成的**),塔的 `team` 字段**全局未变**;nevermore 同形,
+    HP **0.74→0.80 单调上升**、13.1 秒不动、9 次施法 0 次占领。
+    **代码级**:`Think()` 在 ≤300u 分支**每 tick 无条件重发**该技能,**全文件没有
+    `bot:IsChanneling()` 守卫**;前面唯一的节流 `IsBotThinkingMeaningfulAction` 的
+    `meaningfulActivities`(`utils.lua:2301`)只列 `ACTIVITY_CHANNEL_ABILITY_1..6`
+    = **英雄自己的 6 个槽**,而 `ability_capture` 是**隐藏的通用继承技能**
+    (dumper 自己就把 `_Capture` 从 `abilities[]` 滤掉)⇒ 守卫**结构上盖不住它**。
+    **这一段标成假设**(dump 不落 anim activity);确证的是可观测那半:重发在、守卫不在、
+    中断在、中断非伤害。时长**双峰**佐证:0.1…2.9(38)/ 4.2 / 4.4 / 5.2 / 5.9×7 / 6.0×5。
+    仓内先例 `mode_farm_generic.lua:1260`。**已开 [strategy] issue(本组不改 bot 代码)。**
+  - **⭐ 完成判据不是断言的,是拿游戏真值校准的**:占下来了塔的 `team` 就翻。
+    `verify_floor()` 每跑必做:**13 次易主 13 次都有对应 channel(零孤儿)**,
+    **翻塔的最短 5.2s、没翻塔的最长 4.4s** ⇒ 5.0 落在真空隙里。
+    ⚠️ **空隙是空隙不是空集**:4.2/4.4/5.2 落在带里,判据挪进去会重标个别尝试,
+    但**不动结论**(界 4.0–5.5:armed 68–76% / base 75–79%,四段围观逐字不变)
+    ⇒ 可引用「在那条带上稳健」,**不许写成「分布在那里是空的」**。
+    `misfiled` 那 1 次是 `003438_slot7` lina 0.6s 落进 bristleback 5.2s 成功之后的
+    **5 秒建筑采样窗**,是合并假阳,据实登记不消掉。
+  - **逐帧推翻量具两次**:① **channel 必须按施法者配对** —— 全局槽把
+    `ADD(a)ADD(b)REMOVE(a)REMOVE(b)` 读成一次并丢掉另一次;改按 actor 后
+    尝试 52→**53**、完成 12→**13**。**方向:这个缺陷不制造发现,它压制发现。**
+    ② **帧轨迹按英雄名过滤是错的且无声** —— `010205_slot7` **t=1348.5 一个时刻 21 行 luna**
+    (1 活人 + 20 尸体/重复实体流)。仓库里早有正确的东西:`entities.frames_by_hero`
+    (docstring 钉的就是 2026-08-25 那个 lina 三实体流)⇒ 改走它;
+    **顺带第二个坑**:它按 **canon 名**建键,用 `npc_dota_hero_luna` 查**返回空表**,
+    而**空轨迹长得跟「这个英雄不在场」一模一样**。两条都钉成 pin(4g/4h)与变异体(M7)。
+  - **交付**(只读离线,零 AWS,未碰 `bots/`):**新增** `outlatch_capture.py`
+    (`--selfcheck` **33/0**,含三组假阳性对照)+ `tests/test_outlatch_capture_liveness.py`
+    (**19/0**;**1b 是承重那条 —— 它断言守卫仍然不存在,修好那天变红,
+    读到的人知道发现是「过期了不是错了」**)+ `tools/agent/mutstand_outlatch_capture.sh`
+    (**7 变异 7 CAUGHT**,`sha256sum -c` 还原 OK)。
+  - **下一轮第一件事**:(1) 查本轮 issue 回音;修法落地、liveness 1b 变红时**重扫**
+    —— 中断率是可比的前后读数,是这条修改最便宜的验收;
+    (2) `outlatch` 的 (a) **不要再用施法计数买**(上界 + 被 `slotpush` 否决污染),
+    等一波没有 `slotpush` 的腿,否则就停在 INDETERMINATE;
+    (3) `campbind` 仍等 GH #475 追评裁定,**不要再扫更多局**;
+    (4) `zusboltdom` 仍等**同波隔离腿**;(5) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);
+    (6) #467 追评 / #494 / #491 / #488 / #475 / #470 / #474 / #482 / #483 回音。
+  - **欠账**:37 局 timeline 随容器回收;`cmqreach` 建议钉帧 fixture 仍未做;
+    09-04T16:01Z §2.1 那一帧 fixture 未做;#419 第 19 轮 / #421 第 18 轮仍零评论。
+    ⚠️ 本轮同样没做 Lua fixture:核验对象是**量具对帧的读法**与**一个出厂模式的重发行为**,
+    `make_fixture.py` 钉的是「某一帧的决策」,钉不住「连续 21 秒里第 N 次重发」;
+    Lua 侧 pin 由协同组落地修改时写(已写进 issue 的验收)。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`get_dumper.sh` cache HIT;
+    `sweep_run.sh` ×2 **全 0**(`swept=19 skipped=5` / `swept=18 skipped=6`,`unparseable=0/0`);
+    `outlatch_capture.py --selfcheck` **`OL_SELF_EXIT=0`(33/0)**;真语料跑 **0**,
+    `--complete-s 4.0`/`5.5` 敏感性重跑 **均 0**;liveness **`LIVE_EXIT=0`(19/0)**;
+    `mutstand_outlatch_capture.sh` **`MUT_EXIT=0`(7/7 CAUGHT)**。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    ⛔ **开工自检 `SELFCHECK_TRUE_EXIT=3`(FINDINGS)**:`cadence`(director,非本组)、
+    `owed-executions`(三条执行方均非本组或无处可买,**登记不认领**)、`stale-waits`、
+    **`trunk-red(python)` 四条**(`test_bots_walk_farm_only.py` 本组上一轮已开、
+    `test_detector_source_constants.py` = **GH #490**、`test_mutstand_restore_trap.py`
+    上一轮已登记、`test_stale_waits.py`)—— **四条全部已有主,不重复认领**;
+    另 2 条 `UNCERTIFIABLE`(**没跑成不是通过**)。
+    ✅ **证据纪律 3 第三十二次踩**:第一条命令又写了管道,脚本**当场自拒**
+    (`SELFCHECK_EXIT=2 REFUSED`,harness 报的 `EXIT=0` 是 `tail` 的码);
+    改重定向后拿到真码 **3**。⚠️ 同轮第二次读码陷阱:后台完成通知报 `exit code 0`,
+    **那是末尾 `echo` 的码**。⚠️ **第十次登记:自检在本容器不是章程写的「约 20s」**。
+  - **Token 用量**:见报告 §10。
+  - 完整报告:`iterations/reports/replay-check/20260905T040042Z.md`
