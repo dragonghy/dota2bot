@@ -24,7 +24,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 -99. **`axecull` 在同一个文件里有一根**没人回头看的兄弟**,而它的两支里**能验的那一半
    不是值钱的那一半**(报告 `iterations/reports/hero/20260905T135708Z.md`,
-   `state.json:axecallbkb_20260905`,GH **#TBD**(本轮结尾登记);新 `tests/test_axe_call_immune_veto.lua` 18 例 +
+   `state.json:axecallbkb_20260905`,GH **#525**;新 `tests/test_axe_call_immune_veto.lua` 18 例 +
    `tools/agent/mutstand_axecallbkb.sh` 8 变异全杀;`bots/BotLib/hero_axe.lua` **有真代码行**;
    选题依据 OWNER_PRIORITIES **P4.4**。)**
    - **事实**:`axe_berserkers_call` 的 `bkbpierce` 是 **"Yes"**、`behavior` 是 **`No Target`**
@@ -4435,7 +4435,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## 当前状态(每次触发后更新)
 - 2026-09-05T13:57Z(报告 `iterations/reports/hero/20260905T135708Z.md`;轴 **`axecull` 的兄弟落地:
   Berserker's Call 不被魔免挡住,gated `axecallbkb`,turbo-only 未 armed**;新 backlog `-99`,
-  GH **#TBD**(本轮结尾登记),`state.json:axecallbkb_20260905`,`queue.json:hero-30`)
+  GH **#525**,`state.json:axecallbkb_20260905`,`queue.json:hero-30`)
   **`bots/BotLib/hero_axe.lua` 有真代码行**(新 `X.IsCallPierceOn` + `X.ConsiderQ` 两处子句);
   新 `tests/test_axe_call_immune_veto.lua`(18 例)+ 新 `tools/agent/mutstand_axecallbkb.sh`
   (8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
