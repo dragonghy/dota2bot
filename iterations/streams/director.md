@@ -10444,7 +10444,9 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   「§ER.2 的认领字段(GH #518)是本轮唯一一条**会自己重演**的缺陷」,本轮第一件事就是它。
   全文档案 `iterations/streams/test_set.md §ES`(最该读 **§ES.3**),报告
   `iterations/reports/director/20260905T103000Z.md`。
-  **`bots/`+`game/` 零 diff、零 AWS、无 promote/reject、armed 串与 `queue.json` 一字未动。**
+  **`bots/`+`game/` 零 diff、零 AWS、无 promote/reject。**
+  ⚠️ **armed 串与 `queue.json` 本轮动了,但不是这件活干的** —— 开工自检点名了一条
+  §BB.4「当轮必须裁」的搭车提议,**第二件活是它**:`stayattr` 入集 **62 → 63**(见 ⑤b)。
   **① 落地**:`owed_executions.json` 的行现在可以带 `claimed_by` / `claimed_at`
   (**真 ISO-8601 UTC 瞬间**);**先 push 再干活**;TTL 内 `pending_rulings.py` 打
   **`IN-FLIGHT`** 而不是 `OWED` 且不让 owed 腿变红,末尾单打一行 `N in flight`。
@@ -10475,10 +10477,34 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⚠️ 与 §EP.7 / §ER.6 同族第三发,**但成因是新的一种**:前两发是**树在变**,这一发是
   **并发进程写同一个共享开关** —— 前者靠「先定型再跑」,后者靠「串行跑」,
   **我用前者的教训做事、仍然踩了后者**。
-  **⑥ 巡检/成本**:零 AWS ⇒ **不对 MTD 作任何新声称**;owner 邮件本周未发(上一封 08-31);
+  **⑤b 第二件活(不是我挑的,是开工自检点名的)**:`queue-rulings` 腿报
+  `RIDESHARE (§BB.4: rule this round): 1 -> strategy-44`,而 §BB.4 是**当轮必须裁**的条款
+  ⇒ 当场裁:**`stayattr` 批准搭车入集,成员串 62 → 63**(**559 字节**,
+  md5 `4aefc887f3f8c9173e7ac7024b3c20c9`,逐位核过);裁定全文落在
+  `queue.json:strategy-44.director`(被裁方读的那一格),档案 **§ET**。
+  裸读源码复核两件:闸址 `jmz_func.lua:5115-5119` 未 armed 时在**第一个析取项**短路
+  ⇒ 否决表达式逐字是出厂读数、armed **只能 REMOVE 否决**(方向由构造固定);
+  闸 **STANDALONE**,不与任何 id 合取,也不落进 field 家族的共同 promote 原子。
+  **不进 `owed_executions.json`**(验收挂在一个 id 和它搭的那一波上,不是常驻义务)。
+  **⑤c ⭐ 顺带量到并立案 GH #522**:入集前后各跑一次 `carrier_terms.py` 是例行动作,
+  买到的却是**同一个 md5 的 62-id 串,§EC 09-04 记 7 项、今天跑出 8 项**(多 `pudge`)。
+  **今天的推导是对的**(`rotscope` 闸址住在 `if botName == 'npc_dota_hero_pudge'` 里面)
+  ⇒ 主张是**载体项从树推导、不从 arm 串推导,所以会在 arm 串一字不动时改变**。
+  ⚠️ 失效方向:**两波之间的载体项差会被归到中间那次入集头上**,而这一次恰好不是
+  (`stayattr` 是 generic,入集前后 `TERMS` 逐字节相同)。**不追凶并说清为什么**:
+  浅克隆 graft 点 09-04T21:26Z,那棵旧树读不到。没有掉棒(批测台每波重算)。
+  **⑤d 交棒进 registry**:§EO.6 (丙)(`test_outlatch_capture_liveness.py` 检查 1b 的说明与事实相反)
+  **已掉过两轮**,本轮登记为 `owed_executions.json:outlatch_check1b_reason`,
+  **它同时是认领字段的第一个真实用户**;⚠️ **我没有认领它**(本轮不做它,
+  而认领一根自己不做的棒正是这个字段最容易被滥用的方式)。
+  **⑥ 巡检/成本**:五组均有产出无空转;自检**串行重跑**(第一次因并发被作废)
+  `worst exit 3`,**Lua 检测器腿 84 文件 0 失败** ⇒ 那两条 RED 的并发归因当场落实;
+  python 半边 **96 passed / 4 failed / 1 uncertifiable**,四条红与开工时逐字相同,**无新增**;
+  cadence 唯一的洞是 09-04T19:10Z→23:06Z(历史);orphan 0;两个 stable 锚点全 ok;
+  `FROZEN none`。零 AWS ⇒ **不对 MTD 作任何新声称**;owner 邮件本周未发(上一封 08-31);
   `DECISIONS_NEEDED` +0;**patch 检查未做**(低频顺延)。
-  **⑦ 下次触发**:①**§EP.5 交棒 (丙)**(`test_outlatch_capture_liveness.py` 检查 1b 的**说明与事实相反**、
-  断言永远绿,**比红的更难被发现**;上一轮也排第一、被 #518 压了一轮 ⇒
-  **现在可以给它开一行 owed 并当场认领**,那正是本轮买到的东西)②**GH #517**(全量跑才存在的泄漏)
+  **⑦ 下次触发**:①**`owed_executions.json:outlatch_check1b_reason`**(§EO.6 丙,本轮已登记进 registry)
+  —— **先写 `claimed_by`/`claimed_at` 并 push,再开工**,那正是本轮买到的东西
+  ②**GH #517**(全量跑才存在的泄漏)
   ③trunk 红逐条 ④`kind:"ruling_request"` 轻量 queue 行 / GH #454/#487/#460/#473 乙/#489/#486/#496 /
   GH #513/#514 / GH #449/#410/#436/#285/**patch 缺口 P3**/`ckpush`(有时限)。

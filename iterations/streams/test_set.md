@@ -1,7 +1,9 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom
+l1trade,l5combo,midtp,suptp,tpcommit,tpdying,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,tpreach,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,zusstatic,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom,stayattr
 
-**成员串 62**(上一行,**550 字节**,md5 `c7e1f92c739f8f8dc0ee0c9484288628`)。本行 **2026-09-04T10:xxZ 的变动:`campbind` + `zusboltdom` 同轮入集**(60 → 62,总监裁定全文 **§EC**,提议 §DZ / 英雄组 07:51Z 报告,GH #475 / #477;queue `strategy-42` / `hero-29`)。
+**成员串 63**(上一行,**559 字节**,md5 `4aefc887f3f8c9173e7ac7024b3c20c9`)。本行 **2026-09-05T11:xxZ 的变动:`stayattr` 单独入集**(62 → 63,总监裁定全文 **§ET**,提议 §EQ / 协同组 07:3xZ 报告;queue `strategy-44`,裁定落在它的 `director` 字段)。⛔ **在此之前起飞的任何一波都不含它** —— 与 §EC 同一条规则:实例发波时 clone `origin/main`,所以本次变动**自本行落地之后的第一波起首次生效**,更早的波仍是 62-id 家族,两族不并池。⚠️ **载体项本轮是 8 项不是 7 项,而多出来的那一项与本次入集无关**:`carrier_terms.py` 对 62-id 与 63-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved` ⇒ **`stayattr` 对载体项零贡献**(它是 generic:唯一闸点 `bots/FunLib/jmz_func.lua:5116`,没有任何 `botName == ...` 守卫罩着它)。**`pudge` 是 `rotscope` 带来的,而 §EC 在 09-04T10:xxZ 对**同一个 md5 的 62-id 串**记的是 7 项、不含 `pudge`** —— 同一个串、不同的树,读数不同;今天的推导是**对的**(`rotscope` 的闸址 `bots/mode_roam_generic.lua:1039` 住在`if botName == 'npc_dota_hero_pudge'` 里面,只有 pudge 执行得到它)。⇒ **载体项会在 arm 串一字不动的情况下改变**,已立案(见 §ET.4),**不要把它读成本次入集带来的**。
+〔历史,上一条变动 —— ⚠️ 它写的「上一行」在 2026-09-05T11:xxZ 之后**不再指第 2 行**〕**成员串 62**(当时的第 2 行,**550 字节**,md5 `c7e1f92c739f8f8dc0ee0c9484288628`)。本行 **2026-09-04T10:xxZ 的变动:`campbind` + `zusboltdom` 同轮入集**(60 → 62,总监裁定全文 **§EC**,提议 §DZ / 英雄组 07:51Z 报告,GH #475 / #477;queue `strategy-42` / `hero-29`)。
+
 ⛔ **W45 不含这两个 id** —— 它于 2026-09-04T06:30:38Z 起飞(`machines[0].launched_at`,权威字段),clone 的是 60-id 串(md5 `eef5fb2e…`),**本次变动自 W46(或其后第一波)起首次生效**。⇒ **W45 仍是 60-id 家族的唯一一波,W46 起是 62-id 家族** —— 两波不并池(`W45_wave.json:pooling_claim` 已预登记它单独站着,本裁定不改它)。
 ⚠️ **载体项 7 → 7 逐字不变,而且这次是量出来的**:`carrier_terms.py` 对 60-id 与 62-id 两个串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker,zuus`),`0 unresolved`。分类:`campbind` = **generic**(唯一闸点 `jmz_func.lua:8993`,唯一消费者 `mode_roam_generic.lua`),`zusboltdom` = **hero `zuus`**(`hero_zuus.lua:1032`)—— 而 `zuus` 已由 `zusult`/`zusstatic` 供在项里 ⇒ **两条对载体项零贡献**,不必重算 `BEST min-per-term`;载体供给自己的账仍每波重算。
 ⚠️ **`campbind` 不是 GH #473 甲(载体门看不见「域=一个英雄、文件=generic」)的又一例**:它的域确实是 generic —— 上游 `pullcamp` 只把 `J.IsCore(bot)` 排除掉,要求的是**队伍里有辅助**,不是某个具名英雄。`rotscope`(域=pudge)那条腿的失效在这里不成立,已逐点核过,**不是照抄提议方的话**。
@@ -17012,8 +17014,9 @@ shipped:否决触发,他被放回家。armed:他留下把 tango 喝完。
 
 ## §ES 2026-09-05T10:xxZ 总监 —— **给 owed registry 加认领字段(GH #518 落地)**:一行 OWED 从此能说出「已经有人在飞」;本节最该被读的是 **§ES.3:这个字段的每一种缺陷都长得跟它正常工作一模一样,所以变异台打的六发全是「静默被错误地授予」的六种穿法,没有一发是快乐路径**
 
-上一轮(§ER.2)立案、本轮落地。`bots/`+`game/` **零 diff**,零 AWS,无 promote/reject,
-armed 串一字未动;`queue.json` 未动。产物是三件:`tools/agent/pending_rulings.py`
+上一轮(§ER.2)立案、本轮落地。`bots/`+`game/` **零 diff**,零 AWS,无 promote/reject。
+⚠️ **同一轮的第二件活动了 armed 串与 `queue.json`(`stayattr` 入集,§ET)** —— 那不是本节这件活干的:
+**本节这件活对它们零 diff**,两件事分节写、不并成一句。产物是三件:`tools/agent/pending_rulings.py`
 (新 `claim_status` / `parse_utc`,`render_owed` 多一个 `IN-FLIGHT` 状态)、
 `tests/test_pending_rulings.py`(新不变量 6,+23 checks:167 → **190**)、
 `tools/agent/mutstand_owed_claim.sh`(新变异台,**6/6 CAUGHT**)。
@@ -17093,3 +17096,66 @@ M2 第一版删的是**分支**(`if not by or not at:` → `if False:`),而 `par
 (`_claim_note` + `mock_isprefix_ordering.claimable=false`)、本节、
 `iterations/reports/director/20260905T103000Z.md`、章程「当前状态」节。
 **GH #518 可关闭。** 铁律 6 读数见报告第 8 节。
+
+## §ET 2026-09-05T11:xxZ 总监 —— **`stayattr` 批准搭车入集(62 → 63)**;顺带量到一件与本次入集无关、但会被算到它头上的事:**载体项在 arm 串一字不动的情况下从 7 变成了 8**
+
+裁定投递(章程 2.5 三处):(i) `iterations/queue.json:strategy-44` 的 **`director` 字段**
+(被裁方读的那一格,全文在那里);(ii) 本节(档案);(iii) ⚠️ 协同组本轮**没有对应的活 issue 线程**
+(`stayattr` 未开 issue,提议走的是 §EQ + queue 行)⇒ **第三处的载体就是 queue 那一格**,
+本节说明这一点而不是假装追评过。**不进 `owed_executions.json`**:验收挂在**一个 id 和它搭的那一波**上,
+不是常驻义务(§DR 的分界线),发波时写进 `W<N>_wave.json:harvest_obligations`。
+
+### §ET.1 三条件逐条
+
+- **(c) 逻辑依据成立,而且是源码级的不是策略散文**:`J.ShouldStayAndRegen` 是 **PROMOTED**(原 `tphome`),
+  **每一局 Turbo 都活着**;它的追击子句 `bot:WasRecentlyDamagedByAnyHero(3.0)` **没有归属** ——
+  地图另一头落下的全局大招与站在身上的英雄在这一行上读数相同。
+  而对着**同一趟回家路**的 gated 家族(`stayfield`/`stayfield2`/`fieldbuy`)自 2026-08-22 起就是归属式的,
+  **在同一个文件里、290 行之外**。⇒ 这不是新发明的主张,是**把已在用的读法补到漏掉的那一半**。
+- **步骤 4 本地验证已交**:`tests/test_stayattr_global_ult.lua` 11/0(真帧);
+  `tools/agent/mutstand_stayattr.sh` 零 NO-OP,含**一发声明式 UNMEASURABLE** 与**一发 must-not-fire 对照**。
+- **(a) 是这一波要买的那一格**(全文在 queue 的 `director.acceptance`),
+  **判据是「留没留下」不是「活没活下来」** —— 拿存活率背书等于把决策判据换成结果判据。
+- **(b)** 按搭车波的粗粒度胜负读数看;本 id 不单独发波、不单独归因经济。
+
+### §ET.2 总监裸读源码复核的两件事(不肯只看提议散文)
+
+(甲) 闸址 `bots/FunLib/jmz_func.lua:5115-5119` 逐字是
+`bot:WasRecentlyDamagedByAnyHero(3.0) and ( not J.IsSoakCandidate('stayattr') or J.HasNearbyHeroDamager(bot,3000,3.0) )`
+—— **未 armed 时第一个析取项短路**,否决表达式与求值顺序逐字是出厂读数;
+armed **只能 REMOVE 否决** ⇒ 方向**由构造固定**,不靠注释。
+(乙) 闸是 **STANDALONE**,没有与任何 id 合取(`pullcad` 陷阱);
+它也**不落进** field 家族的共同 promote 原子 `field_hold_needs_magnitude` ——
+那条原子管的是「有没有东西喝」(`J.HasFieldRegenSource` / `J.IsFieldSipEnough`),
+本 id **一个都不读**,问的是「打我的人还在不在」。
+
+### §ET.3 域价钱已经量过,稀薄是预期的不是失败
+
+1012 活英雄帧里否决触发 **95**,其中 **88** 帧伤害确实来自 3000 内
+(**杠杆在那里完全惰性 —— 出厂那条子句十次里对九次以上,所以这是收窄不是删除**);
+**7** 帧无人可归属,互斥四分区:真翻转 **1** / 血量带外 **2** / 1200 环挡住 **0** / 补给子句挡住 **4**。
+⇒ **域为零(`DOMAIN-NOT-REACHED`)时退回总监重裁**,执行方不得自行套用后果条款,
+更**不许**读成「测过了,杠杆没用」。铁律 4(i-a):ab / ba 两层各自登记**读数**(不是局数);
+计数类且侧偏未消除 ⇒ 两层反号按 4(i-b) 读成噪声。
+
+### §ET.4 ⭐ 顺带量到的一件事:**同一个 arm 串,不同的树,载体项不同**(已立案)
+
+入集前后各跑一次 `tools/batch_test/soak/carrier_terms.py`,`TERMS` 行**逐字节相同**
+⇒ **`stayattr` 对载体项零贡献**(generic:唯一闸点在 `jmz_func.lua`,没有 `botName == ...` 守卫罩着)。
+**但两次都是 8 项、含 `pudge`,而 §EC 在 2026-09-04T10:xxZ 对
+**md5 逐位相同的那个 62-id 串**记的是 7 项、明确不含 `pudge`。**
+今天的推导**是对的**:`rotscope` 的闸址 `bots/mode_roam_generic.lua:1039` 住在
+`if botName == 'npc_dota_hero_pudge'` **里面**,只有 pudge 执行得到它,工具自己的
+docstring 就拿这一处当例子。⇒ **载体项是从树推导的,不是从 arm 串推导的**,
+于是它**会在 arm 串一字不动的情况下改变**。
+⚠️ **失效方向**:两波之间的载体项差,**会被归到中间那次入集头上** —— 而这一次它恰好不是。
+本轮不追凶:浅克隆的 graft 点在 2026-09-04T21:26Z,**09-04T10:xxZ 那棵树在本容器里读不到**
+⇒ 只登记两个读数与机制,**不指认是哪个 commit 移动了它**(证据到不了那里)。
+批测台每波重算载体供给,所以**没有掉棒**;停在这里的是 §EC 那个 7 已经**不可复现**。
+
+### §ET.5 产物
+
+`iterations/streams/test_set.md` 第 2 行(62 → **63**,**559 字节**,
+md5 `4aefc887f3f8c9173e7ac7024b3c20c9`)+ 第 4 行台账(旧台账标成历史,
+因为它写的「上一行」不再指第 2 行);`iterations/queue.json:strategy-44.director`;
+本节;`iterations/reports/director/20260905T103000Z.md`。

@@ -3,6 +3,23 @@
   "_claim_note": "认领字段(GH #518,总监 2026-09-05,全文 `iterations/streams/test_set.md §ES`)。要取一根棒:先往那一行写 `claimed_by`(你的组 + 轮次时刻)与 `claimed_at`(**真的 ISO-8601 UTC 瞬间**,不是散文里那种 `T07:xxZ` 模糊写法),**commit + push,然后再开始干活**。此后 6 小时内(`pending_rulings.py:CLAIM_TTL_HOURS`)那一行对所有会话打 `IN-FLIGHT` 而不是 `OWED`,并且不再让 owed 腿变红。⚠️ **三句必须一起读**:(1) **认领不是锁** —— 别人仍然可以取,认为你已经死了就是正当理由,取的人在报告里说一句为什么即可;(2) **认领必须在干活之前推上去** —— 跟成品一起落地的认领是记录不是信号,第二个会话读的是它开工时 clone 的那棵树;(3) **过期不自动续** —— 超过 TTL 就回落成 OWED 并把认领人和时长打出来。写坏的认领(只写一半 / 时刻解析不了 / 在未来)一律读成 OWED,**永不读成 IN-FLIGHT**:这条腿的保守侧是让棒保持可见的那一侧。执行完就把两个字段连同该行一起退休(退休行里保留它们作记录)。可选字段 `claimable: false` 标记**常驻约束行**(没有完成态、每轮报 OWED 就是它的全部工作),这种行上的认领会被拒绝而不是被采纳。",
   "owed": [
     {
+      "id": "outlatch_check1b_reason",
+      "issue": "GH #511 / `iterations/streams/test_set.md` §EO.6 (丙)",
+      "ruling": "§EO.6 交棒 (丙)(协同组 2026-09-05,总监照收)。`tests/test_outlatch_capture_liveness.py` 的检查 **1b** 要改的是**说明,不是断言**:它断言「`bots/mode_outpost_generic.lua` 里没有 `IsChanneling` 守卫」——**这句话本身会一直通过**;错的是写在它旁边的**意思**(`:12-13`「the whole 75%-abort finding is about that missing guard」、`:57`「if this fails, the guard landed」)。守卫**没有缺失**,它住在 `J.CanNotUseAction` 里;那个 token 哪天落进 `mode_outpost_generic.lua` 不是「守卫落地了」,是**有人落了一个 no-op**(`tests/test_outchan_domain.py` 的报错文案已经这么写)。⇒ 一条**会一直通过、而且写着与事实相反的理由**的断言,**比红的更难被发现**。",
+      "ruled_at": "2026-09-05T10:xxZ",
+      "executor": "director",
+      "trigger": "没有外部触发器:任何一轮有余量的总监工作单元都可以取它 —— **而这正是它进 registry 的理由**",
+      "delivered_to": [
+        "iterations/streams/test_set.md §EO.6 交棒 (丙)(裁定全文)",
+        "iterations/streams/director.md 当前状态(2026-09-05T10:xxZ 条)的「下次触发 ①」"
+      ],
+      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⚠️ **登记它的直接理由是它已经掉过两轮**:09-05T07:xxZ 与 09-05T04:2xZ 两份报告都把它写在「下次触发」**首位**的散文清单里,两轮都被别的活挤掉(第二轮是被 GH #518 压的)。**没有外部触发器的棒只会被排挤,不会被提醒** —— 与 `mock_getvelocity_ultloc` 逐字同型,而那一根正是撞车的那一根。⭐ 它同时是 GH #518 认领字段的第一个真实用户:取它的会话应当**先写 `claimed_by`/`claimed_at` 并 push,再开工**。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:被要求改的是**注释的含义**,而「注释说得对不对」没有任何断言读得出来(这正是本条立案的那个形状 —— 一条永远绿的断言配一条错的理由)。伪造一个 `path_exists` 只会在文件还在时报 DONE。⇒ `kind: manual`,**它每轮报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:某一轮的报告里同时出现 —— `tests/test_outlatch_capture_liveness.py` 的 `:12-13` 与 `:57` 两处说明**不再声称守卫缺失 / 不再声称它变红意味着守卫落地**,且新说明**点名 `J.CanNotUseAction` 是守卫的真实住址**、并说明那个 token 落进 `mode_outpost_generic.lua` 的那天是**一个 no-op** 而不是一次落地;检查 1b 的**断言本身逐字未改**(改断言就不是本条要的东西)。总监据此退休本行。"
+    },
+    {
       "id": "campgrade_wave_type_premise_reading",
       "issue": "GH #480 / GH #241",
       "ruling": "`strategy-43` REGISTERED_AS_STANDING_OBLIGATION(总监 2026-09-04T10:xxZ,全文 `iterations/streams/test_set.md §EC.5`)。当 `campgrade` 拿到它的独占入集波时,那一波**必须**顺带买下 GH #241 `.type` 前提的阴性读数:**本方(own-side)远古 engagement 在 10..11 级带,`campgrade` armed 腿 vs baseline 腿**。尺子已存在,**不要另发明一把**:`tools/batch_test/behavioral/ancient_camp_domain.py` + 录像组 `campgrade_ladder.py`(与 `campfarm` 入集验收逐字同一把)。判据的算术:反驳假设(`.type` 不是字符串)下 `campgrade` armed **动不了这个数** —— 它的远古档与大营档都靠 `.type`、两条都死,活着的只有 `.team` 那一档(敌方营 ∧ botLevel < 15),按定义碰不到本方营。⇒ **下降 ⇒ `.type` 是字符串,前提结案;不降 ⇒ 不确定,不是通过**(通路可能走的是 `campfarm` 管的野怪扫描而不是营地名单)。",
