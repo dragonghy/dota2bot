@@ -11517,3 +11517,17 @@
   - 完整报告:`iterations/reports/replay-check/20260905T183844Z.md`
   - **本轮已发**:GH **#536** `[harness]`(标尺路径不录像 ⇒ P4.1 录像条款结构性不可交付)。
   - 自检真码 / 铁律 6 / `claim_precheck` / token:见报告 §8 收尾补记。
+  - **收尾补记(实测,裸读无管道)**:开工自检真码 **`SELFCHECK_TRUE_EXIT=3`**(FINDINGS),
+    `legs run 10`,**`UNCERTIFIABLE (exit 2): none`**;python 腿 `95 passed / 5 failed / 2 uncertifiable`,
+    **5 条红与批测台 18:0xZ 那五条逐条相同 ⇒ 先于本轮存在,不认领**(本轮未碰 `tests/`/`tools/`);
+    2 条 `UNCERTIFIABLE` 照抄工具原话「**did NOT run — this is not a pass and not a failure**」。
+    ⚠️ **第十五次登记:自检在本容器不是「约 20s」**,本轮约 **28 分钟**。
+    ⚠️ 自陈边界:自检 ~18:3xZ 起跑、本轮文件 ~18:4xZ 才存在 ⇒ 它跑的是**不含本轮新文件的树**;
+    本轮只改 `iterations/` 故不影响归属,但**「自检看过我的新文件」这句不成立,故不写**。
+    **铁律 6**:`arm_push_gate.sh` **0**、`luacheck_gate.sh` **`GATE_EXIT=0 CLEAN`**(0 warnings);
+    push 分支 **0**(new branch)、`HEAD:main` **0**(**`7fd69d3b..5cb290e7`**,钩子当场又跑一遍 gate),
+    **一次都没被拒,无需 rebase**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称**。**GH #290**:`claim_precheck.sh` **`PRECHECK_EXIT=0`**、
+    `local commits not on origin/main: 0`、`refused 0`、`OK to publish` ⇒ **先 push 后发**。
+    GH **#536** 实际创建成功,与预写号一致。
+    **Token 用量**:`TOKENS total_in=3,296,509 out=25,975 turns=34`(见报告 §8.5)。
