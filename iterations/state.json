@@ -5826,5 +5826,19 @@
     "issue": "GH #452(本组认领的那条路由);本轮开 GH #500。",
     "report": "iterations/reports/strategy/20260904T223000Z.md",
     "ref": "test_set.md §EK"
+  },
+  "midsupint_20260905": {
+    "id": "**没有新 soak id,故意的**。修复落在 `J.HasAvailableSupportResponder` 里,而它**唯一**的消费点已经被 `J.IsSoakCandidate( 'midsupyield' )` 闸住 ⇒ 在这里再加一个 id,活条件就变成 `midsupint and midsupyield`,**任一被 promote 的那天冻成 FALSE**(pullcad 教训,AGENTS.md),而 `check_armed_wiring.py` 仍会叫它 WIRED(它查的是调用点存不存在,不是谓词能不能为真)。**杠杆是 `midsupyield`,它从未在任何波次里 armed。** armed 串一字未动,`queue.json` 一字未动,零 AWS/S3/EC2/波次。",
+    "question": "GH #503(认领):§EF.7 登记的四条镜像成员里,打断守卫那一条**昨天还作不了证、今天可以了**。它能不能带真实帧 fixture 落地,落地后到底改不改决定?",
+    "domain": "109 fixture / **1012 活英雄帧**(与 §EF.1/§EH/§EJ/§EK 同一语料同一分母)。决定级分母是 **7048 个 (英雄, 塔) 对**;盟友级分母是 **285 个走到打断子句的支援候选**。",
+    "finding": "**⭐ 主判据(立法级,可复用):把一个否定结果 ratchet 起来,而不是当结论存档 —— 因为解锁它的修复可能发生在别人的作用域里,而那一天你自己的 backlog 上没有任何东西在看。** §EH 把四条成员定价为「一条都作不了证」。解锁其中一条的修复是 **harness 的**(GH #492 补 mock 的 `GetExtrapolatedLocation`,总监,§EL),协同组 backlog 上没有任何一条会在那天注意到。`test_midsupmirror_checkability.lua` 的 `[ratchet]` 腿**替我举了手**,本轮才有这个工作单元。**同一张表如果只当结论存档,它会一直读作「四条」。**",
+    "mechanism": "`J.ShouldTpSupportTowerFight` 在取响应名额**之前**先对自己问一句「有敌人贴脸会打断这个 TP 吗」(`J.CanEnemyInterruptTpChannel`,即已 promote 的 `tpsafe2` 守卫)。逐条镜像它的 `J.HasAvailableSupportResponder` **没对它要交出名额的那个盟友问这一句** ⇒ 让路可以把队伍唯一的响应名额交给一个**根本读不完条**的支援。",
+    "witness": "`f_260820_043637_axe_ring_close` **t=393.4**:核心 slardar 距它要响应的那座塔 **15,747**(过了远端闸 3500,是个**可达**的决定瞬间),而未修镜像给出的**唯一**支援是 **skywrath_mage,24% 血,axe 在 188 外(攻击距离 300)** —— 已在打击范围内 ⇒ 条被打断,这条前线**谁也没去**。独立第二例:`f_260820_103216_cm_es_aftershock` t=473.5(earthshaker,crystal_maiden 在 196)。两例不同局、不同英雄、不同塔。",
+    "price": "加上这条合取项后:**7048 对里 151 对翻转**(true→false),分布在 **20 个活帧**上;接受集 **2366 → 2215**,且 `ship_true + flips == pre_true` 逐位相等 —— **方向是收紧,armed 只会在更少的帧上让路,只能朝 shipped 走**。",
+    "not_subsumed": "**替代解释是被量掉的不是被论证掉的**:敌人进 700 打断扫描,通常也算「1600 内有团战」,而 `IsInTeamFight` 就排在这条子句上面一行。若守卫拒掉的盟友本来就都被它挡了,这条合取项就是装饰(前一天 `droppick` 量出来的正是那个形状)。实测:守卫拒掉 **20** 个候选,其中**只有 4 个**已被上面那条腿挡住 ⇒ **不被吸收**。",
+    "instrument": "修复不带 id ⇒ 树无法 toggle ⇒ 未修答案只能来自影子。于是影子**反过来建**:**已修**那条腿在**每一个** 7048 对上与真谓词对照(`shipped_disagrees` **0/7048**),把它钉在树上;**未修**那条腿是同一段代码**只去掉一条子句**。没有这条反漂移腿,这份普查就只在量它自己(§EH 教训)。",
+    "self_inflicted": "⚠️ **仪器第一次跑就把自己的注释读成了代码**:`MIRROR_SOAKID`(存在的理由是「这里绝不许出现 soak id」)读出 **1**,而树里一个 id 也没有 —— 命中的是**修复自己那段解释「为什么这里没有 id」的注释**。已改为先 `strip_comments` 再解析,并把这次实测写进变异台 **M4**。同族修正一并落到 `test_midsupfar_yield_target.lua` 的孪生计数上。",
+    "ratchets": "`test_midsupmirror_checkability.lua` 4→3(并新增一条断言:**被修的必须恰好是能作证的那一条** —— 光对计数不够,落一条作不了证的腿同样能把计数改对,却破坏了计数存在的理由);`test_midsupfar_yield_target.lua` 孪生计数 4→3;`[ratchet]` 腿新增「landed」断言(landable 是关于语料的论断,LANDED 是关于树的论断,分开记)。**另三条腿原样不动、仍不可作证**:两条是跨帧会话记忆(单帧 fixture 按构造没有历史),一条是 bot-VM 状态(dumper 不 dump)。",
+    "artifacts": "`bots/FunLib/jmz_func.lua`(唯一行为改动:一条合取项);`tests/_midsupint_sweep.lua`;`tests/test_midsupint_mirror_interrupt.lua`(**8/8**);`tools/agent/mutstand_midsupint.sh`;`test_set.md §EN`;GH #503。"
   }
 }

@@ -128,24 +128,40 @@ end
 
 -- ------------------------------------------- the tree, read as source ------
 
-tests['[source] the loop applies all four legs and the mirror still applies none'] = function()
+tests['[source] the loop applies all four legs and the mirror now applies one'] = function()
     -- Restated here as parsed facts rather than prose so that repairing one --
     -- the whole point of §EF.7 -- turns THIS file red too, and whoever does it
     -- has to re-read the pricing below before re-baselining.
+    --
+    -- ⭐ 2026-09-05 (协同组, GH #503): IT DID, AND THAT IS THE HANDOFF WORKING.
+    -- This assertion went red the moment the interrupt member landed, which is
+    -- the behaviour it was written for: the count is lowered 4 -> 3 deliberately
+    -- and with a report (test_set.md §EN,
+    -- tests/test_midsupint_mirror_interrupt.lua), not drifted.
     assert(M.g.LOOP == 1 and M.g.MIRROR == 1,
         'the sweep could not slice one of the two functions out of ' .. JMZ)
-    local short = 0
+    local short, repaired = 0, {}
     for _, leg in ipairs({ 'IsGoingOnSomeone', 'CanEnemyInterruptTpChannel',
         'lastRespawnTime', 'lastFrontAnswerT' }) do
         assert(M.g['LOOP_' .. leg] == 1,
             'the responder loop no longer applies ' .. leg
             .. ' to itself -- the mirror is no longer short it either, re-read')
-        if M.g['MIRROR_' .. leg] == 0 then short = short + 1 end
+        if M.g['MIRROR_' .. leg] == 0 then short = short + 1
+        else repaired[#repaired + 1] = leg end
     end
-    assert(short == 4, 'registered 4 support-only mirror members still absent '
+    assert(short == 3, 'registered 3 support-only mirror members still absent '
         .. 'from J.HasAvailableSupportResponder, found ' .. short
         .. ' -- if one was repaired, say so in the report, lower this number, '
         .. 'and lower the twin in tests/test_midsupfar_yield_target.lua')
+    -- ...and it is the one the corpus can witness that got repaired. Landing an
+    -- unwitnessable leg instead would satisfy the count above while breaking the
+    -- rule the count exists to protect (charter step 2: a behaviour change ships
+    -- with a real-frame fixture), so the count alone is not the check.
+    assert(#repaired == 1 and repaired[1] == 'CanEnemyInterruptTpChannel',
+        'the repaired mirror member is {' .. table.concat(repaired, ',')
+        .. '}, expected exactly {CanEnemyInterruptTpChannel} -- the other three '
+        .. 'legs are priced UNWITNESSABLE below, so landing one of them means a '
+        .. 'conjunct whose only evidence is that it compiles')
 end
 
 -- -------------------------------- unwitnessable BY ABSENCE (three legs) ----
@@ -349,7 +365,7 @@ tests['[census] all four legs are silent about the one support in the domain'] =
         'the interrupt guard changed its answer about an accepted support')
 end
 
-tests['[ratchet] ONE of the four is landable now; the other three are not'] = function()
+tests['[ratchet] ONE of the four is LANDED now; the other three are not landable'] = function()
     -- The conclusion, as one number. Charter step 2: a behaviour change ships
     -- with a real-frame fixture, and gate plumbing is not local validation. A
     -- leg that no corpus frame can make speak has no such fixture available, so
@@ -367,6 +383,15 @@ tests['[ratchet] ONE of the four is landable now; the other three are not'] = fu
     -- not dump. Note the asymmetry that makes this ratchet worth keeping: the
     -- repair that unblocked the leg was in the HARNESS, and nothing in the
     -- strategy stream's own backlog would have noticed the day it happened.
+    --
+    -- ⭐⭐ 2026-09-05 (协同组, GH #503): AND IT WAS LANDED, same day. The member
+    -- is now in J.HasAvailableSupportResponder, validated on two real frames in
+    -- tests/test_midsupint_mirror_interrupt.lua (test_set.md §EN); the corpus
+    -- price of the conjunct is 151 flips over 7,048 (hero, tower) pairs, and it
+    -- is not subsumed by the IsInTeamFight leg above it (20 rejected candidates,
+    -- only 4 of them already blocked there). This test keeps its job unchanged:
+    -- it is still the thing that fires if one of the OTHER three becomes
+    -- witnessable, and it now also fails if the landed one is quietly reverted.
     local LANDABLE = { int_true = true }
     local witnessable, landable = {}, {}
     for _, k in ipairs({ 'mode_would_veto', 'int_true', 'respawn_field',
@@ -382,6 +407,16 @@ tests['[ratchet] ONE of the four is landable now; the other three are not'] = fu
         .. 'this list')
     assert(C('int_true') > 0, 'the interrupt leg stopped being witnessable -- '
         .. 'the mock repair was lost; the registered landability above is stale')
+    -- Landability is a claim about the corpus; LANDED is a claim about the tree,
+    -- and the two are recorded separately on purpose. A revert that left this
+    -- file passing would put the pricing above back to describing a tree that no
+    -- longer exists -- which is exactly how §EF.7 came to read "four" for a day
+    -- after the world had moved.
+    assert(M.g.MIRROR_CanEnemyInterruptTpChannel == 1,
+        'the interrupt member left J.HasAvailableSupportResponder again. It was '
+        .. 'landed on 2026-09-05 (GH #503) with real-frame validation in '
+        .. 'tests/test_midsupint_mirror_interrupt.lua; if the revert is '
+        .. 'deliberate, say so in a report and re-raise the counts above')
 end
 
 return tests

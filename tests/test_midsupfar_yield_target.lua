@@ -351,27 +351,40 @@ end
 
 -- ----------------------------------- registered, deliberately NOT repaired --
 
-tests['[census] the mirror is still short four SUPPORT-ONLY members'] = function()
+tests['[census] the mirror is still short three SUPPORT-ONLY members'] = function()
     -- One lever at a time (the lanefix lesson). The pairing clause is the one
-    -- the predicate structurally COULD NOT ask; these four it could ask and does
+    -- the predicate structurally COULD NOT ask; these four it could ask and did
     -- not. Each is a gate the responder loop applies to itself and the mirror
     -- omits, so each can still hand the slot to a support that would bail:
     --   J.IsGoingOnSomeone          (already committed to a gank)
-    --   J.CanEnemyInterruptTpChannel(the channel would be broken)
+    --   J.CanEnemyInterruptTpChannel(the channel would be broken)   <- REPAIRED
     --   the 15s fresh-respawn window
     --   the 45s bRepeatFront memory  (answered this front already, went cold)
     -- Registered as a count so repairing one later is a DELIBERATE act and not
     -- drift. Raising this number without a report is the failure mode.
+    --
+    -- ⭐ 2026-09-05 (协同组, GH #503): LOWERED 4 -> 3, one lever, with a report.
+    -- The interrupt member landed; see tests/test_midsupint_mirror_interrupt.lua
+    -- for the real-frame validation and test_set.md §EN. It could be written
+    -- only because the harness repair GH #492 moved that leg from unwitnessable
+    -- to witnessable -- the other three are unchanged and stay unwritten for the
+    -- reasons priced in tests/test_midsupmirror_checkability.lua: two are
+    -- session memory a single-instant fixture cannot carry, one is bot-VM state
+    -- the dumper does not dump.
     local src = read_file(JMZ)
     local at = assert(src:find('function J.HasAvailableSupportResponder(', 1, true))
     local stop = assert(src:find('\nfunction J.', at + 10))
-    local body = src:sub(at, stop)
+    -- Comments stripped: the repair ships with a note that names the other three
+    -- legs in prose, and a claim about which gates the predicate APPLIES must be
+    -- read off code. (The sibling sweep read a soak id off its own comment on
+    -- first run -- same shape, caught the same day.)
+    local body = src:sub(at, stop):gsub('%-%-[^\n]*', '')
     local missing = 0
     for _, name in ipairs({ 'IsGoingOnSomeone', 'CanEnemyInterruptTpChannel',
         'lastRespawnTime', 'lastFrontAnswerT' }) do
         if body:find(name, 1, true) == nil then missing = missing + 1 end
     end
-    assert(missing == 4, 'registered 4 support-only mirror members still absent, '
+    assert(missing == 3, 'registered 3 support-only mirror members still absent, '
         .. 'found ' .. missing .. ' -- if one was repaired, say so in the report '
         .. 'and lower this number; if one was ADDED to the loop, raise it')
 end

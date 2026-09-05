@@ -8345,6 +8345,32 @@ function J.HasAvailableSupportResponder( bot, hBuilding )
 		and not J.IsInTeamFight( hAlly, 1600 )
 		and not J.IsRetreating( hAlly )
 		and GetUnitToUnitDistance( hAlly, hBuilding ) > J.TP_RESPONSE_FAR_FLOOR
+		-- [midsupint 20260905, GH #503] The responder loop refuses to START a TP
+		-- an on-face enemy would break (the 'tpsafe2' guard, applied to the bot
+		-- at the top of J.ShouldTpSupportTowerFight). The mirror never asked it of
+		-- the ally it was about to hand the slot to, so the yield could elect a
+		-- support who cannot channel -- test_set.md §EF.7's second registered
+		-- member, and the only one of the four the corpus can now witness.
+		-- WITNESSED, not argued: f_260820_043637_axe_ring_close t=393.4, core
+		-- slardar 15,747 from the tower it would answer; the ONLY support the
+		-- shipped mirror offers is skywrath_mage at 24% HP with axe 188 away
+		-- (reach 300) -- inside striking distance, so the channel dies and the
+		-- front goes unanswered by anyone. Independently on
+		-- f_260820_103216_cm_es_aftershock t=473.5 (earthshaker, crystal_maiden at
+		-- 196). Corpus: the conjunct flips the mirror on 151 of 7,048 (hero, tower)
+		-- pairs over 1,012 live frames, and it is NOT subsumed by the IsInTeamFight
+		-- leg above it -- of the 20 ally-candidates the guard rejects, only 4 were
+		-- already blocked by that leg.
+		-- NO NEW SOAK ID, deliberately -- the same reasoning as the pairing repair
+		-- at the call site: this predicate's ONLY consumer is gated by
+		-- J.IsSoakCandidate( 'midsupyield' ), so a second id here would make the
+		-- live condition `midsupint and midsupyield`, which freezes FALSE the day
+		-- either one is promoted (the pullcad lesson, AGENTS.md). The lever is
+		-- 'midsupyield', and it has never been armed in any wave.
+		-- Direction: a CONJUNCT, so the accepted-support set is a strict subset --
+		-- armed yields on strictly fewer frames, i.e. this can only move behaviour
+		-- TOWARD shipped, never away.
+		and not J.CanEnemyInterruptTpChannel( hAlly )
 		then
 			local tp = J.GetItem2( hAlly, 'item_tpscroll' )
 			if tp ~= nil and tp:IsFullyCastable() then return true end
