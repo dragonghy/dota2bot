@@ -39,7 +39,7 @@
    `tests/test_stayattr_global_ult.lua` + `_stayattr_sweep.lua` 一条棘轮**收紧**;
    报告 `iterations/reports/strategy/20260905T164948Z.md`;
    **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(甲:FROZEN-HOLD + 单独收下 AND-of-vetoes)+ 批测台(乙:发波前约束)+ 录像组/语料侧(丙:两张帧)。**】**
+   **已交棒总监(甲:FROZEN-HOLD + 单独收下 AND-of-vetoes)+ 批测台(乙:发波前约束,已立案 **GH #532**)+ 录像组/语料侧(丙:两张帧)。**】**
    **⭐ 主判据(立法级,可复用,超出本主题):一个函数自己的 docstring 是「当初被批准的行为」的档案,
    而它下面的代码可以只实现其中一个子集,树里没有任何东西会注意到。**
    `J.ShouldStayAndRegen`(PROMOTED,'tphome' 28 局 A/B,**每一局 Turbo 都活着**)的 docstring 写
@@ -5611,7 +5611,7 @@
   `test_set.md §EY`、nesting census 两行、`stayattr` 那条棘轮**收紧**(见下);
   报告 `iterations/reports/strategy/20260905T164948Z.md`;
   **armed 串一字未动、`queue.json` 一字未动、不申请入集(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
-  **已交棒总监(甲)+ 批测台(乙)+ 录像组/语料侧(丙)。**)
+  **已交棒总监(甲)+ 批测台(乙,**GH #532**)+ 录像组/语料侧(丙)。**)
   **⭐ 主判据(立法级,可复用,超出本主题):一个函数自己的 docstring 是「当初被批准的行为」的档案,
   而它下面的代码可以只实现其中一个子集,树里没有任何东西会注意到。**
   `J.ShouldStayAndRegen` 的 docstring 写「gold >= 90 **or already carries one**」,

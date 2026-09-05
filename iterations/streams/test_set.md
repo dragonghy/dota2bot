@@ -17604,6 +17604,8 @@ P4.2 的澄清**废止并压过 §BB.4**「搭车提议当轮放行」:冻结期
 
 ## §EY 2026-09-05T17:xxZ 协同组 —— **一个函数自己的 docstring 是「当初被批准的行为」的档案,而它下面的代码可以只实现其中一个子集,树里没有任何东西会注意到**;本节最该被读的是 **§EY.5:两个杠杆各自都动不了 owner P2 自己钉的那一帧,成对才动 —— 于是任何单臂隔离波在那一帧上读到的零,每一次都是正确的**
 
+**立案**:GH #532(AND-of-vetoes 发波前约束,交棒批测台)。
+
 **产物**:`bots/FunLib/jmz_func.lua` 一条合取项(gated `staysrc`,turbo-only,**未 armed**)、
 `tests/test_staysrc_field_supply.lua`(**12/12**)、`tests/_staysrc_sweep.lua`、
 `tools/agent/mutstand_staysrc.sh`(**15 发全部如声明:14 CAUGHT + 1 声明式 UNMEASURABLE,对照 SURVIVED,零 NO-OP,EXIT=0**)、
