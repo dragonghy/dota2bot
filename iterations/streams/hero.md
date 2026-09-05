@@ -22,6 +22,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-100. **Wraith King 的 Bone Guard **只在单挑里放**,而单挑是它能加入的最便宜的一场架 ——
+   而本轮**能验的那一半第一次正好是改动的那一项**(报告
+   `iterations/reports/hero/20260905T170150Z.md`,`state.json:wkbonefight_20260905`,
+   `queue.json:hero-31`;新 `tests/test_wk_bone_guard_enemy_count.lua` 15 例 +
+   `tools/agent/mutstand_wkbonefight.sh` 8 变异全杀;`bots/BotLib/hero_skeleton_king.lua`
+   **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实**:`X.ConsiderW` 的进攻分支写着 `#nEnemysHerosInView == 1` —— 一个**决斗判据**。
+     Bone Guard 是 `DOTA_ABILITY_BEHAVIOR_NO_TARGET`、**定长 42s** cd、`70 80 90 100` 蓝、
+     前摇 0.1、骷髅存活 **40s**、对英雄额外 **+25**(全部由仓内 KV 快照
+     `tests/mock/ability_behavior.lua` + `special_value_shapes.lua` 支撑,不是网上引的)。
+     **代价一项都不是敌人数量的函数,而收益随敌人数增大** ⇒ 数量不能成为扣着不放的理由。
+     与 GH #525 的 Axe Berserker's Call 同读法、**不同机制**(数量前提 vs 魔免前提)。
+   - **⭐ 方向由构造保证,不由数据保证 —— `cullthresh` 的教训第一次跨英雄复用**:
+     `n == 1` 蕴含 `n >= 1`,对每个整数成立 ⇒ armed 是 shipped 的**严格超集**,
+     只能加不能减。变异台 **M4(`>= 2`)读起来就是本轮想做的事**,却**静默删掉**出厂的
+     单挑释放;抓住它的是 §3 的**阶梯扫描 n=0..10**,不是任何单值断言。
+   - **⭐⭐ 本轮最值钱的一格:能验的那一半这次正好是值钱的那一半。**
+     `X.ConsiderW` **整条分支 fixture 驱动不了**,而这**不是本轮的发现** —— 是本组
+     2026-08-23 立、08-28 复核、就写在该函数头上的判词(GH #274):charge modifier 在语料里
+     **0 个 WK 帧**;第二条独立堵点是 `J.GetProperTarget` 结构性 nil(GH #474)。
+     **但改动的那一项不受这两条堵点影响**:`#J.GetNearbyHeroes(bot,1600,true,…)` 算得出来。
+     13 个 WK 主体 fixture 的可见敌人直方图 **0→4 / 1→2 / 2→7**;出厂判据放行 **2/13**、
+     armed **9/13**;按分支几何切(650 内有敌方英雄)**7 帧**里出厂只放行 **1 个**。
+     ⇒ 措辞是**「分支 = 源码级覆盖,改动的那一项 = 真实帧覆盖」**,两句不许合并成一句。
+     ⚠️ 计数视野受限 ⇒ 这是**下界**,误差方向不利于本改动。
+   - **⚠️ 定价不在这里,而这条指示是本组自己写的**:那段判词最后一句就是
+     「Size a Bone Guard change with a batch request, never with a fixture scan」。
+     照办 ⇒ `queue.json:hero-31`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30` 并成同一次遍历)。
+   - **⚠️ 充能项本轮不动**:`nStack / maxStack >= 0.6` 的层数 dumper 不记(GH #27 家族),
+     语料里 `nStack` 恒 0;`hero-31` 的第 (4) 列专门去要它,**拿不到就明写拿不到,不许用 0 顶替**。
+   - **⚠️ 变异台自己踩的**:第一版一行 `echo` 里的反引号被 shell 当命令替换,打出
+     `==: command not found`。**不影响施加与计分**(变异走 `sub()` 字面量替换),已改单引号。
+   - **下一棒**:**批测台** `queue.json:hero-31`。**总监**:P4.2 冻结期内合法裁定是
+     **FROZEN-HOLD**;入集裁定**建议排在读数之后**(同 `-98`/`-99` 的理由)。
+     **在 (a) 买到之前不许 promote。**
+   - 顺手(附带,不是主体):GH #115 §7.2 点名的**四对「没有明显赢家」的天赋**逐条查过 ——
+     Axe t15 / CM t20+t25 / Lion t25 / Zeus t15 **全部已被历轮 TALENTPRICE 定过价**
+     (各英雄文件头部的 `TALENTPRICE` 块)⇒ **这条线已经空了**,后来的轮次不要再取它。
+
 -99. **`axecull` 在同一个文件里有一根**没人回头看的兄弟**,而它的两支里**能验的那一半
    不是值钱的那一半**(报告 `iterations/reports/hero/20260905T135708Z.md`,
    `state.json:axecallbkb_20260905`,GH **#525**;新 `tests/test_axe_call_immune_veto.lua` 18 例 +
@@ -4433,6 +4472,37 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T17:0xZ(报告 `iterations/reports/hero/20260905T170150Z.md`;轴 **Wraith King 的
+  Bone Guard 只在单挑里放:`X.ConsiderW` 的 `#nEnemysHerosInView == 1` 收进 gated
+  `wkbonefight`,turbo-only 未 armed**;新 backlog `-100`,`state.json:wkbonefight_20260905`,
+  `queue.json:hero-31`)
+  **`bots/BotLib/hero_skeleton_king.lua` 有真代码行**(新 `X.IsBoneGuardEnemyCountOk` +
+  `X.ConsiderW` 一处调用点);新 `tests/test_wk_bone_guard_enemy_count.lua`(**15 例**)+
+  新 `tools/agent/mutstand_wkbonefight.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#525 本组刚落已 FROZEN-HOLD / #512 录像检查组 / #502→#516 harness / #465 上轮复核完毕 /
+    #115 §5 已由 `-98` 落地)。连续两轮都在 `hero_axe.lua` ⇒ **换焦点英雄**。
+  - **事实**:Bone Guard 是 `NO_TARGET`、**定长 42s** cd、`70 80 90 100` 蓝、前摇 0.1、
+    骷髅存活 **40s**、对英雄额外 **+25**(全部仓内 KV 快照)⇒ **代价一项都不是敌人数量的函数,
+    收益随敌人数增大** ⇒ `== 1` 这个决斗判据把它从**每一场团战**里排除掉。
+  - **⭐ 方向由构造保证**(`cullthresh` 教训跨英雄复用):`n==1 ⇒ n>=1`,armed 是 shipped 的
+    严格超集,只能加不能减。变异 **M4(`>= 2`)读起来就是想做的事**却静默删掉单挑释放,
+    抓住它的是**阶梯扫描 n=0..10**。
+  - **⭐⭐ 能验的那一半这次正好是改动的那一项**:整条分支 fixture 驱动不了(GH #274 的
+    charge modifier 0 帧 + GH #474 的 nil `GetProperTarget`,**都是本组早先自己的判词**),
+    但数量项算得出来 —— 13 个 WK 主体帧直方图 **0→4 / 1→2 / 2→7**,出厂放行 **2/13**、
+    armed **9/13**;按分支几何切(650 内有敌)**7 帧里出厂只放行 1 个**。
+    ⇒ **「分支 = 源码级覆盖,改动的那一项 = 真实帧覆盖」两句不许合并。**
+  - 验证:新文件 **15/15**;`run_tests.lua wk` **252 例 0 失败**;变异台 **8/8**
+    (M3 死接线孪生、M4 被禁方向、**M7/M8 两个对量具自己的对照** —— M8 把 modifier 探针
+    指向语料真的带的那个,实测 4 帧答 true ⇒ 「0/13」量的是语料不是 mock);
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings),没用 BYPASS**。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒ 「全量绿」本轮没有人说。
+    开工自检 **worst exit 3**(cadence / owed-executions / trunk-red(python))。
+    **⭐ 本轮补做了前两轮明写没做的 stash 差分**:四条 python 红在**干净 worktree(HEAD)上
+    逐条复现**,输出与工作树**逐字节相同**(仅两处路径前缀与我这份新 stand 的 4 行 `ok/--`)
+    ⇒ **全部先于本轮改动,`main` 也红**,不是本轮引入。
+  - 下一棒:**批测台** `queue.json:hero-31`(零 EC2,可与 `hero-2`/`hero-30` 并成同一次遍历)。
 - 2026-09-05T13:57Z(报告 `iterations/reports/hero/20260905T135708Z.md`;轴 **`axecull` 的兄弟落地:
   Berserker's Call 不被魔免挡住,gated `axecallbkb`,turbo-only 未 armed**;新 backlog `-99`,
   GH **#525**,`state.json:axecallbkb_20260905`,`queue.json:hero-30`)

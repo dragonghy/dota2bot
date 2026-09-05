@@ -1109,6 +1109,57 @@ end
 -- that make_fixture.py rebuilds modifiers from combat-log ADD/REMOVE pairs and
 -- there are none for this one.  Size a Bone Guard change with a batch request,
 -- never with a fixture scan.  tests/test_wk_bone_guard_talent_bypass.lua.
+
+--- The ENEMY-COUNT term of X.ConsiderW's first branch (the 辅助进攻 release).
+---
+--- SHIPPED: `#nEnemysHerosInView == 1` -- release the skeletons only when
+--- EXACTLY ONE enemy hero is visible within 1600.  That is a duel test, and it
+--- excludes every teamfight.
+---
+--- WHY THAT IS THE WRONG SHAPE FOR THIS ABILITY.  skeleton_king_bone_guard is
+--- DOTA_ABILITY_BEHAVIOR_NO_TARGET (tests/mock/ability_behavior.lua, taken from
+--- the game's own KV): the release picks no target, moves WK nowhere, and costs
+--- 70/80/90/100 mana against a FLAT 42s cooldown (tests/mock/special_value_shapes
+--- .lua) plus a 0.1s cast point.  Not one term of its price is a function of how
+--- many enemies are standing there, so "how many enemies are standing there"
+--- cannot be a reason to withhold it.  The payoff moves the other way: the
+--- skeletons live 40s (skeleton_duration) and carry +25 damage against HEROES
+--- (skeleton_bonus_hero_damage) on top of 34/39/43/49, so a release that joins a
+--- 3v3 buys strictly more hero-facing attack-seconds than one that joins a 1v1.
+--- Withholding a fixed-cooldown summon through the fight it was banked for is
+--- the dominated line; this is the same reading GH #525 made of Axe's no-target
+--- Berserker's Call, on a different mechanism (a COUNT premise, not an immunity
+--- one) in a different file.
+---
+--- ARMED (`wkbonefight`, turbo only): any non-zero count passes.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data -- the `cullthresh` lesson of
+--- 2026-09-05.  `n == 1` implies `n >= 1`, so the armed predicate is a strict
+--- SUPERSET of the shipped one for every integer n.  Arming this id can only ADD
+--- releases; it can never remove one.  A negative wave read is therefore
+--- attributable to "more Bone Guard releases were bad" and never to a release
+--- this lever took away.  tests/test_wk_bone_guard_enemy_count.lua section 3
+--- sweeps the whole count ladder rather than asserting a single value, because
+--- that is the shape of test that caught `cullthresh`'s first, wrong guard.
+---
+--- COVERAGE, stated before anyone quotes this as fixture-validated: the BRANCH
+--- is not fixture-drivable, for the two upstream reasons the block above and
+--- GH #474 already record (the charge modifier is on 0 of 36 WK frames; and
+--- J.GetProperTarget is structurally nil on every fixture frame).  What IS
+--- driven on real frames is this helper, on the real visible-enemy counts of the
+--- 13 Wraith-King-subject fixtures -- and those counts are exactly the term the
+--- change touches.  The counts are engine-vision-limited (J.GetNearbyHeroes
+--- wraps bot:GetNearbyHeroes), so "2 visible enemies" means WK can really see
+--- two.  Sizing still needs a wave: iterations/queue.json hero-31.
+function X.IsBoneGuardEnemyCountOk( nEnemies )
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'wkbonefight' )
+	then
+		return nEnemies >= 1
+	end
+
+	return nEnemies == 1
+end
+
 function X.ConsiderW()
 	if not abilityW:IsFullyCastable()
 		or not bot:HasModifier( "modifier_skeleton_king_bone_guard" )
@@ -1128,7 +1179,7 @@ function X.ConsiderW()
 
 	--辅助进攻
 	if J.IsValidHero( npcTarget )
-		and #nEnemysHerosInView == 1
+		and X.IsBoneGuardEnemyCountOk( #nEnemysHerosInView )
 		and J.IsInRange( npcTarget, bot, 650 )
 		and ( nStack / maxStack >= 0.6 or talent6:IsTrained() )
 	then

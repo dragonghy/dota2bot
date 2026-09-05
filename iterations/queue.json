@@ -1734,6 +1734,17 @@
         "note": "⛔ 开工自检的 queue-rulings 腿把本行打成 `RIDESHARE (§BB.4: rule this round)`,但 §BB.4 已被 OWNER_PRIORITIES.md P4.2 的「优先级澄清」(2026-09-05T14:5xZ,commit ffeb0aa6)废止并压过 ⇒ 本轮的裁定不是「当轮放行」而是「当轮裁 FROZEN-HOLD」:登记、不入集、不视为掉棒。\n\n⚠️ FROZEN-HOLD 不是对证据的否定。英雄组 13:5xZ 已落地 gated `axecallbkb`(commit c1cce307,turbo-only,未 armed),桌面证据完好:odota/dotaconstants build/abilities.json 记 axe_berserkers_call 的 bkbpierce = \"Yes\",仓内 tests/mock/special_value_shapes.lua 对上 radius 315 / cd 18 16 14 12 / mana 90 100 110 120。\n\n⭐ 也不是掉棒 —— 本请求要的是零 EC2 的只读档案扫描(与 hero-2 并成同一次遍历),而冻结冻的是**入集**,不是**取证**。⇒ 本裁定明写:证据继续买(两个分支分开报、不许并池,按 acceptance 原样),解冻后凭现成证据重提,那时不需要重买 (a)。\n\n预登记的判读方向与归因边界照 acceptance 原样保留,总监不改:两个分支的魔免占比都接近 0 ⇒ 这根杠杆没有可兑现的收益;两个分支共用一个 id,任何负读数不能归因给其中任何一个,那时的下一棒是拆 id。",
         "unfreeze_condition": "armed 集 <= 20(P4.2 的解冻线);当前 61,距离还差 41"
       }
+    },
+    {
+      "id": "hero-31",
+      "stream": "hero",
+      "bundle": "wkbonefight",
+      "seeds": [],
+      "priority": 3,
+      "question": "给 `wkbonefight` 买条件 (a) 的域。杠杆:bots/BotLib/hero_skeleton_king.lua 的 X.ConsiderW 进攻分支写着 `#nEnemysHerosInView == 1`(1600 内**可见**敌方英雄恰好一个),于是 Bone Guard —— DOTA_ABILITY_BEHAVIOR_NO_TARGET、定长 42s cd、70/80/90/100 蓝、骷髅存活 40s、对英雄额外 +25 伤害(全部来自仓内 KV 快照 tests/mock/ability_behavior.lua + tests/mock/special_value_shapes.lua)—— 在**每一场团战里都不放**。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 同形:零 EC2 的只读扫描,三者可并成同一次遍历)。需要的读数:(1) Wraith King 的 W 已学、不冷却、蓝够的瞬间数;(2) 其中 1600 内可见敌方英雄数的**分布**(0 / 1 / >=2 各多少,**不要报中位数** —— 整数小值域,铁律 4(ii));(3) 其中 650 内有敌方英雄的瞬间数,按可见敌人数 ==1 与 >=2 **分开报**;(4) ⭐ **这一列是本请求独有的、fixture 按构造给不出的**:`modifier_skeleton_king_bone_guard` 的**充能层数**分布(nStack / maxStack),因为 dumper 不记充能层数(GH #27 家族),而分支的 `nStack/maxStack >= 0.6` 是另一道闸;拿不到就明写拿不到,不要用 0 顶替。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,**可见敌人数 ==1 与 >=2 两层分开给,不许并池**;并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「W 就绪 + 650 内有目标 + 可见敌人 >=2」的那一帧)。**预登记的判读方向**:若「W 就绪且 650 内有目标」的瞬间里可见敌人 >=2 的占比接近 0,这根杠杆没有可兑现的收益,不入集,即使桌面证据完好;带 DOMAIN-NOT-REACHED 退回门。**预登记的归因边界**:本 id 只管**数量项**,不与 wkbuild / wkrosh / wkqdmg 合取,负读数可以干净地归给它;但 armed 只能**增加**释放(`n==1` 蕴含 `n>=1`,方向由代码保证),所以负读数只能读作「Bone Guard 放多了不好」,**不能**读作「杠杆吃掉了一次释放」。**为什么必须走批测而不是 fixture**:X.ConsiderW 头上的判词(2026-08-23 立、08-28 复核,GH #274)自己写着「Size a Bone Guard change with a batch request, never with a fixture scan」—— 两条堵点是 modifier 在语料里 0 帧、`J.GetProperTarget` 结构性 nil(GH #474),本轮已把这两条各写成一条断言(tests/test_wk_bone_guard_enemy_count.lua §5),修好那天它红并点名。",
+      "status": "pending",
+      "result": ""
     }
   ],
   "done": [

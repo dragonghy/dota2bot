@@ -6027,5 +6027,22 @@
    "**(丁) 下一轮本组自己**:P2 决策侧的下一格**不再是那个常量**(已结构性排除)。候选是 J.HasFieldRegenSource 的 **backpack 不对称**在 PROMOTED 侧的同族问题,或 68 个『什么都没带』帧里 `fieldbuy` 为何没买上 —— **照旧先跑域价钱,并先断言控制帧够得着被控制的代码**。"
   ],
   "ref": "iterations/streams/test_set.md §EY;iterations/reports/strategy/20260905T164948Z.md;GH #532(AND-of-vetoes 发波前约束);GH #495(mock 的 `^Get -> 0`);state.json:stayattr_20260905(同一函数的另一条子句)"
+ },
+ "wkbonefight_20260905": {
+  "date": "2026-09-05T17:0xZ",
+  "backlog_item": "OWNER_PRIORITIES P4.4(bots/ 主体配额);英雄组自选杠杆,焦点英雄 Wraith King",
+  "owner": "hero",
+  "gate": "wkbonefight (NEW soak id, turbo-only, 未 armed;STANDALONE —— 不与任何 id 合取)",
+  "bots_lua_changed": true,
+  "headline": "`bots/BotLib/hero_skeleton_king.lua` `X.ConsiderW` 的进攻分支写着 `#nEnemysHerosInView == 1` —— 一个**决斗判据**。于是 Bone Guard 这个 **NO_TARGET、定长 42s 冷却、骷髅存活 40s、对英雄额外 +25 伤害**的召唤释放**在每一场团战里都保持沉默**。代价一项都不是敌人数量的函数(behavior/cd/mana/前摇,全部从 tests/mock/ability_behavior.lua + tests/mock/special_value_shapes.lua 的仓内 KV 快照读出),而收益随敌人数增大 ⇒ 数量不能成为扣着不放的理由。与 GH #525 的 Axe Berserker's Call 同读法、不同机制(数量前提 vs 魔免前提)。",
+  "star_main_judgement": "⭐ **方向由构造保证,不由数据保证**(`cullthresh` 那一轮的教训,本轮第一次跨英雄复用):`n == 1` 蕴含 `n >= 1`,对每一个整数 n 成立 ⇒ armed 的释放集是 shipped 的**严格超集**,arming 只能**增加**释放,永远不能删掉一次。所以负读数可归因给「放多了不好」,**永远不能**归因给「杠杆吃掉了一次释放」。新文件 §3 因此**扫整条数量阶梯 n=0..10**而不是断言单值 —— 变异台的 **M4(`>= 2`)** 正是那个「读起来就是本轮想做的事、却静默删掉出厂单挑释放」的变异,抓住它的就是阶梯扫描。",
+  "change": "bots/BotLib/hero_skeleton_king.lua:新 `X.IsBoneGuardEnemyCountOk( nEnemies )`(armed 时 `nEnemies >= 1`,否则逐字复现出厂的 `nEnemies == 1`);`X.ConsiderW` 第一条分支的 `and #nEnemysHerosInView == 1` 改为 `and X.IsBoneGuardEnemyCountOk( #nEnemysHerosInView )`。其余三项(modifier / GetProperTarget / 充能比)**一个字没动**。",
+  "direction_by_construction": "armed 谓词 = shipped 谓词的严格超集(n==1 ⇒ n>=1),方向由代码定死;gate 关时逐字复现出厂判据。standalone,不与任何候选 id 合取(pullcad 陷阱;新文件 §6 有棘轮盯着 IsSoakCandidate 只出现一次)。",
+  "validation": "新 tests/test_wk_bone_guard_enemy_count.lua **15/15**;`lua5.1 tests/run_tests.lua wk`(邻接 WK 全族)**252 tests, 0 failures**;变异台 tools/agent/mutstand_wkbonefight.sh **8/8 CAUGHT**,其中 **M3 = 死接线孪生**(armed 答案与 shipped 逐字节相同,GH #531 第三形状)、**M4 = 被禁方向**、**M7/M8 = 两个对量具自己的对照**(M7 塌掉供给扫描半径;M8 把 modifier 探针指向语料真的带的 `modifier_skeleton_king_vampiric_spirit_aura`,实测在 4 帧上答 true ⇒ 「0/13」量的是语料不是 mock)。",
+  "coverage_boundary": "⚠️ **分支 = 源码级覆盖;改动的那一项 = 真实帧覆盖。** 整条分支 fixture 驱动不了,而这**不是本轮的发现** —— 是本组 2026-08-23 写下、08-28 复核过、就写在 X.ConsiderW 头上的判词(GH #274):`modifier_skeleton_king_bone_guard` 在语料里 0 个 WK 帧(make_fixture.py 从战斗日志 ADD/REMOVE 对重建 modifier,这个没有这样的对);第二条独立堵点是 `J.GetProperTarget` 在每个 fixture 帧结构性为 nil(GH #474)。两条堵点**各写成一条断言**,修好那天红并打出「这是好消息不是失败,去重写这个文件」。",
+  "domain_measured": "真实帧上量到的是**改动的那一项本身**:13 个 WK 主体 fixture 的可见敌人直方图 **0→4 / 1→2 / 2→7**;出厂判据放行 **2/13**,armed 放行 **9/13**。按分支几何切(650 内有敌方英雄,`GetProperTarget` 为 nil 故用几何代理):这样的帧 **7 个**,出厂判据放行 **1 个**,丢掉 **6 个**。⚠️ 计数视野受限 ⇒ 这是多敌人情形频率的**下界**,误差方向不利于本改动。⚠️ 不要把 9/13 读成「armed 会在 9 帧上放技能」——其余三项在语料里答不出来。",
+  "not_touched": "充能项 `nStack / maxStack >= 0.6` 本轮不动:dumper 不记 modifier 充能层数(GH #27 家族),`nStack` 在语料里恒 0。",
+  "next_baton": "批测台 `queue.json:hero-31`(零 EC2 归档只读扫描,可与 hero-2 / hero-30 并成同一次遍历,带 DOMAIN-NOT-REACHED 退回门与预登记判读方向)。X.ConsiderW 头上那段判词的最后一句就是「Size a Bone Guard change with a batch request, never with a fixture scan」,本轮照办。**在条件 (a) 买到之前不许 promote**;P4.2 冻结期内不提入集(合法裁定 = FROZEN-HOLD)。",
+  "report": "iterations/reports/hero/20260905T170150Z.md"
  }
 }
