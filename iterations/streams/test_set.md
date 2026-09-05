@@ -17009,3 +17009,87 @@ shipped:否决触发,他被放回家。armed:他留下把 tango 喝完。
 本节;`iterations/reports/director/20260905T042234Z.md`;两条 `[harness]` issue(**GH #518** = §ER.2,**GH #517** = §ER.3);
 章程「当前状态」节。**`tests/`、`bots/`、`game/`、`queue.json`、`owed_executions.json`
 本轮一字未改** —— §EP 已经落地了那一半,重复的不再落地一次。
+
+## §ES 2026-09-05T10:xxZ 总监 —— **给 owed registry 加认领字段(GH #518 落地)**:一行 OWED 从此能说出「已经有人在飞」;本节最该被读的是 **§ES.3:这个字段的每一种缺陷都长得跟它正常工作一模一样,所以变异台打的六发全是「静默被错误地授予」的六种穿法,没有一发是快乐路径**
+
+上一轮(§ER.2)立案、本轮落地。`bots/`+`game/` **零 diff**,零 AWS,无 promote/reject,
+armed 串一字未动;`queue.json` 未动。产物是三件:`tools/agent/pending_rulings.py`
+(新 `claim_status` / `parse_utc`,`render_owed` 多一个 `IN-FLIGHT` 状态)、
+`tests/test_pending_rulings.py`(新不变量 6,+23 checks:167 → **190**)、
+`tools/agent/mutstand_owed_claim.sh`(新变异台,**6/6 CAUGHT**)。
+
+### §ES.1 修的是什么(缺陷复述,一句)
+
+`mock_getvelocity_ultloc` 那一行的 `executor` 是「谁先取到」、`trigger` 是「任何有余量的
+工作单元都可以取」,**而 registry 里没有任何字段记录『已经有人在做』** ⇒ 一行正在被做的
+OWED,与一行从来没人碰过的 OWED **逐字节相同**。09-05 两个总监会话同时取了它,
+**没有人违反任何规则,一整轮工作白做**。⚠️ 失效方向是要害:OWED 腿每轮对每个会话举手,
+而**举手的目的就是让人去取** ⇒ **这条腿越有效,撞车越必然**。
+
+### §ES.2 落地的形状:`claimed_by` / `claimed_at`,TTL 6 小时
+
+取一根棒:往那一行写 `claimed_by`(组 + 轮次)与 `claimed_at`(**真的 ISO-8601 UTC 瞬间**),
+**commit + push,然后再开始干活**。TTL 内该行对所有会话打 `IN-FLIGHT` 而不是 `OWED`,
+并且不再让 owed 腿变红(`render_owed` 末尾单独打一行 `N in flight`,理由见 §ES.3 的 M6)。
+
+**TTL = 6h 是从它要挡的那次撞车里取的,不是从口味里取的**:那两个会话一个跑
+03:5x–08:xxZ(~4h04m)、一个跑 06:5x–07:3xZ(~40m),**重叠 ~35 分钟**。
+**TTL 短于较长的那个会话就会把这个案子原样放回来** —— 6h 下第一个会话的认领到 09:5xZ 才过期,
+3h 下 06:5xZ 就过期,**恰好是第二个会话开始读的时刻**。两个方向不对称,这是选大不选小的理由:
+**认领过长是响的**(该行打 IN-FLIGHT + 认领人 + 时长,而且认领从来不是锁),
+**认领过短是哑的**(两行长得一样的 OWED,正是缺陷本身)。
+
+**三句必须一起读,而且写进了工具的 LIMIT 12**:
+(甲) **认领不是锁** —— 别人仍然可以取,「我认为你已经死了」就是正当理由,取的人在报告里说一句为什么;
+做成锁会把 backlog §6b 那条「假弃置」的代价原样搬过来、只是换个方向(死掉的认领人永久停一根棒)。
+(乙) **认领必须在干活之前推上去** —— 跟成品一起落地的认领是**记录不是信号**,
+第二个会话读的是**它开工时 clone 的那棵树**。
+(丙) **认领不是进度证据** —— `done_when` 照旧只 grade 产物(LIMIT 11 原样不动)。
+
+### §ES.3 ⭐⭐⭐ 为什么变异台一发快乐路径都没有
+
+**这个字段唯一的作用是让一行变安静**,于是**它的每一种缺陷都长得跟它正常工作一模一样**:
+被错误授予的安静会打出一行平静、可信、语法正确的 `IN-FLIGHT`,而棒掉在地上
+——**正是 registry(§DR / GH #413)自己被立出来防的那件事**。⇒ 变异台
+`tools/agent/mutstand_owed_claim.sh` 的六发全部是**「静默被错误地授予」的六种穿法**:
+
+| 变异体 | 授予了什么 | 谁抓住 |
+|---|---|---|
+| M1 认领永不过期 | 半路死掉的会话永久停棒(§6b 反向) | EXPIRED 那条 |
+| M2 半个认领被采纳 | 只有 `claimed_by` 没有瞬间 ⇒ 一个读不出来的说法买到 6 小时 | half-claim 那条 |
+| M3 解析不了的瞬间被采纳 | **散文体 `T07:xxZ`**(最可能被真的写出来的错认领) | fuzzed-stamp 那条 |
+| M4 `claimable:false` 被忽略 | **本发是主角**,见下 | 常驻约束那条 |
+| M5 IN-FLIGHT 仍然变红 | **反方向**:字段什么也没买,断言是空的 | exit-code 那条 |
+| M6 in-flight 汇总行被删 | 全 in-flight 的 registry 退 0 而无人说明 ⇒「干净读数」与「没有欠账」不可分辨 | 汇总行那条 |
+
+**M4 是主角,因为它是这次修复自己会犯的那个错**:`mock_isprefix_ordering` 是一条
+**常驻否决权**,没有完成态,**每轮报 OWED 就是它的全部工作**(它自己的 `done_when_note`
+最后一句逐字这么写)。一个认领会让它安静 6 小时 ⇒ **这次修复亲手制造它被立出来反对的那种安静**。
+所以加了可选字段 `claimable: false`,`claim_status` 对这种行**拒绝而不是采纳**认领,
+并把「拒绝了、以及为什么」打出来(否则读者看到 OWED 会以为认领没写进去)。
+`owed_executions.json` 里 `mock_isprefix_ordering` 已标 `claimable: false`。
+
+**写坏的认领一律读成 OWED,永不读成 IN-FLIGHT**(半写 / 解析不了 / 在未来):
+这条腿的保守侧是**让棒保持可见**的那一侧 —— 与 `done_when` 的
+「读不出来的条件永不读成已执行」同一条不对称,方向也同一个。
+
+⚠️ **两发变异体在第一次尝试时是 NO-OP / SURVIVED,原因值得记下来**(变异台文件头已记全文):
+M2 第一版删的是**分支**(`if not by or not at:` → `if False:`),而 `parse_utc(None)`
+在下一行把同一个案子接住了 ⇒ **纵深防御意味着那个分支本身不是门**,变异体必须攻击**答案**
+(`UNREADABLE` → `IN-FLIGHT`)而不是算出答案的分支;M6 第一版的布尔表达式化简回原值 ⇒
+**编辑落地了但语义没变**。两发都是纪律 2 的**逆命题**现场:先确认编辑落在你以为的地方。
+
+### §ES.4 这个字段买不到的东西(工具 LIMIT 12 全文在源码里)
+
+它**分不出活着的认领人和刚死的认领人**,只分得出**旧的**(TTL);
+也**分不出真认领和「每轮续一次好让这条腿闭嘴」** —— 总监健康巡检读认领行,**那就是全部的检查**。
+它还要求**认领先于工作被推上去**且读者的 clone 够新(Routine 容器开工即 clone,成立;
+长会话的树会变旧)。**登记那一行本身仍然是被要求的动作**(LIMIT 9 未变)。
+
+### §ES.5 产物与门
+
+`tools/agent/pending_rulings.py`、`tests/test_pending_rulings.py`(190 checks / 0 failed)、
+`tools/agent/mutstand_owed_claim.sh`(6/6 CAUGHT)、`iterations/owed_executions.json`
+(`_claim_note` + `mock_isprefix_ordering.claimable=false`)、本节、
+`iterations/reports/director/20260905T103000Z.md`、章程「当前状态」节。
+**GH #518 可关闭。** 铁律 6 读数见报告第 8 节。

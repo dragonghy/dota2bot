@@ -515,6 +515,7 @@ check("strategy-27" in run3.stdout.split("orphan admission proposals")[-1],
 #     not a defect; a detector that shouts every round stops being read).
 
 import contextlib                                                # noqa: E402
+import datetime                                                  # noqa: E402
 import io                                                        # noqa: E402
 
 check(pr.subjects_of({"question": "fix `bots/BotLib/hero_tiny.lua:487`"}) == ["tiny"],
@@ -758,6 +759,131 @@ check("UNCERTIFIABLE" in out15 and rc15 == 2,
 
 check(pr.load_owed(os.path.join(_owed_dir, "no_registry_here.json")) == [],
       "a missing registry raised instead of reading as empty")
+
+# ------------------------------------------------- INVARIANT 6: the claim field
+#
+# GH #518 (director 2026-09-05; test_set.md §ER.2 / §ES).  Two director
+# sessions took `mock_getvelocity_ultloc` in the same window and one whole
+# work unit was thrown away, because an owed row being worked on and an owed
+# row nobody has ever touched are byte-for-byte identical.  The failure
+# direction is the point: the OWED leg raises its hand at every session in
+# every round, and the purpose of that hand is to make somebody take the row
+# -- so the better this leg works, the more certain the collision.
+#
+# What is pinned here is not "a claim exists" but the four ways a claim is
+# ALLOWED to fail, all of which fall back to OWED.  A claim that silences a
+# row it should not have silenced is this fix building the defect it was
+# written against, so those cases get the load-bearing checks.
+
+_now = datetime.datetime(2026, 9, 5, 12, 0, 0, tzinfo=datetime.timezone.utc)
+
+
+def _stamp(hours_ago):
+    return (_now - datetime.timedelta(hours=hours_ago)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _claimed(done_when, claim, extra=None):
+    row = _row_413(done_when)
+    row.update(claim)
+    row.update(extra or {})
+    return row
+
+
+def _render(rows):
+    """Drive render_owed at a FIXED `now` and return (exit code, stdout)."""
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = pr.render_owed(rows, now=_now)
+    return rc, buf.getvalue()
+
+
+_open_jv = _jv(_profile("claim_still_1.json", 1))       # done_when unsatisfied
+_done_jv = _jv(_profile("claim_rebuilt_8.json", 8))     # done_when satisfied
+
+rc16, out16 = _render([_claimed(_open_jv, {})])
+check("OWED" in out16 and "IN-FLIGHT" not in out16 and rc16 == 3,
+      "an unclaimed owed row stopped reading OWED -- the pre-#518 behaviour "
+      "must be exactly what an unclaimed row still gets")
+
+rc17, out17 = _render([_claimed(_open_jv, {"claimed_by": "director 2026-09-05T09:5xZ",
+                                           "claimed_at": _stamp(1)})])
+check("IN-FLIGHT" in out17, "a fresh claim did not read IN-FLIGHT")
+check("director" in out17 and "NOT a lock" in out17,
+      "an in-flight row was printed without naming the claimant and saying a "
+      "claim is not a lock -- both are what stops the reader treating it as one")
+check(rc17 == 0,
+      "a claimed row still reddened the exit code (got %d, want 0); the point "
+      "of the field is that the next session has nothing to pick up here" % rc17)
+check("in flight" in out17,
+      "an all-in-flight registry exited 0 with no summary line -- a clean read "
+      "would then be indistinguishable from 'nothing is owed'")
+
+rc18, out18 = _render([_claimed(_open_jv, {"claimed_by": "director",
+                                           "claimed_at": _stamp(pr.CLAIM_TTL_HOURS + 1)})])
+check("EXPIRED" in out18 and "IN-FLIGHT" not in out18 and rc18 == 3,
+      "an expired claim kept holding the row -- a claimant that died mid-round "
+      "must not park a baton (backlog §6b's cost, sign-flipped)")
+check("director" in out18,
+      "an expired claim was dropped without naming who had claimed it")
+
+rc19, out19 = _render([_claimed(_open_jv, {"claimed_by": "director"})])
+check("UNREADABLE" in out19 and "IN-FLIGHT" not in out19 and rc19 == 3,
+      "half a claim (no claimed_at) was honoured; an unreadable claim must "
+      "fall back to OWED, never suppress real work on an unreadable say-so")
+
+# The house style for report and charter prose fuzzes the minutes.  A claim
+# written that way is the likeliest wrong claim anybody will write, and it
+# must not become a six-hour hold.
+rc20, out20 = _render([_claimed(_open_jv, {"claimed_by": "director",
+                                           "claimed_at": "2026-09-05T07:xxZ"})])
+check("UNREADABLE" in out20 and "IN-FLIGHT" not in out20 and rc20 == 3,
+      "the fuzzed house-style stamp `T07:xxZ` was accepted as a claim instant")
+
+rc21, out21 = _render([_claimed(_open_jv, {"claimed_by": "director",
+                                           "claimed_at": _stamp(-3)})])
+check("UNREADABLE" in out21 and "IN-FLIGHT" not in out21 and rc21 == 3,
+      "a claim stamped in the future was honoured")
+
+# LOAD-BEARING.  `mock_isprefix_ordering` is a standing VETO with no
+# completion state; reporting OWED every round IS its whole job.  Letting a
+# claim quiet it for six hours would be this fix manufacturing the silence it
+# was written against.
+rc22, out22 = _render([_claimed(_open_jv, {"claimed_by": "director",
+                                           "claimed_at": _stamp(1)},
+                                extra={"claimable": False})])
+check("IN-FLIGHT" not in out22 and rc22 == 3,
+      "a claim silenced a claimable:false standing constraint -- that row is "
+      "supposed to say OWED in every round until somebody is about to break it")
+check("claimable:false" in out22,
+      "a refused claim was not explained; a reader would see OWED and think "
+      "the claim never landed")
+
+# A claim must not outrank the artefact in either direction.
+rc23, out23 = _render([_claimed(_done_jv, {"claimed_by": "director",
+                                           "claimed_at": _stamp(1)})])
+check("DONE" in out23 and "retire" in out23 and "IN-FLIGHT" not in out23 and rc23 == 0,
+      "a claim on an EXECUTED row turned 'retire me' into 'somebody is on it'")
+
+check(pr.claim_status({})[0] == "UNCLAIMED",
+      "a row with no claim fields did not read UNCLAIMED")
+check(pr.parse_utc("2026-09-05T07:00:00Z") == datetime.datetime(
+          2026, 9, 5, 7, 0, 0, tzinfo=datetime.timezone.utc),
+      "a plain UTC stamp did not parse")
+check(pr.parse_utc("2026-09-05T09:00:00+02:00") == datetime.datetime(
+          2026, 9, 5, 7, 0, 0, tzinfo=datetime.timezone.utc),
+      "an offset stamp was not normalised to UTC")
+for _bad in (None, "", "   ", "yesterday", "2026-09-05T07:xxZ", 17):
+    check(pr.parse_utc(_bad) is None,
+          "parse_utc accepted %r as an instant" % (_bad,))
+
+# Real-tree health: any claim actually written into the registry must be
+# READABLE.  A live row carrying an unreadable claim is the case where a
+# stream believes it has claimed a baton and the tool disagrees silently.
+for _r in pr.load_owed():
+    _cs, _cd = pr.claim_status(_r)
+    check(_cs != "UNREADABLE" or _r.get("claimable") is False,
+          "live owed row %r carries a claim this tool cannot read: %s"
+          % (_r.get("id"), _cd))
 
 # Row health on the REAL registry -- LIVE rows AND RETIRED ones.  Retired rows
 # are included because without them this loop goes VACUOUS the moment the

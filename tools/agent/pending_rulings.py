@@ -118,6 +118,9 @@ reachable only with `--owed-only`:
 
   OWED_EXECUTION -- a ruling that WAS delivered, into the very field the
                 ruled party reads, and whose EXECUTION is still owed.
+                Since 2026-09-05 (GH #518) such a row also reads IN-FLIGHT
+                when a session has pushed a claim on it inside the TTL; see
+                `claim_status` and LIMIT 12.
 
 WHY THE OWED LEG EXISTS (2026-09-02T19:xxZ, director; test_set.md §DR)
 ----------------------------------------------------------------------
@@ -174,6 +177,23 @@ LIMITS FOR THE OWED LEG (in addition to 1-8 below)
 11. **It grades the artefact, never the work.**  §DO's row asks whether the
     committed profile says `rec_slots: 8`; it cannot ask whether the corpus
     behind it was W37+W38.
+12. **A claim is a say-so, and the tool cannot check it.**  `claimed_by` /
+    `claimed_at` (GH #518) buy one thing: an owed row that somebody has
+    STARTED reads IN-FLIGHT instead of OWED, so the second session of the
+    round does not redo the first session's work unit.  Three things it does
+    not buy, each of which has to stay said out loud because the field looks
+    like it buys them:
+      * it is **not a lock** -- taking a claimed row is allowed, and the
+        taker is asked to say why in their report;
+      * it cannot tell a live claimant from a dead one, only from an old one
+        (`CLAIM_TTL_HOURS`), nor a genuine claim from a row re-claimed every
+        round to keep the leg quiet -- the director's health sweep reads the
+        claim lines, and that is the only check there is;
+      * it works only if the claim was **pushed before the work** and the
+        reader's clone is fresh.  A claim that lands with the finished work
+        is a record, not a signal.
+    An unreadable or half-written claim reads OWED, never IN-FLIGHT: the
+    conservative side of this leg is the one that keeps the baton visible.
 
 LIMITS (read these before quoting the output)
 ---------------------------------------------
@@ -238,6 +258,7 @@ exit code.
 """
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -257,6 +278,21 @@ OWED = os.path.join(REPO, "iterations", "owed_executions.json")
 # no longer what `is_open` keys off.
 OPEN_STATES = ("pending", "running", "harvested")
 CLOSED_STATES = ("done", "rejected")
+
+# How long a pushed claim keeps reading IN-FLIGHT before it falls back to OWED
+# (GH #518, director 2026-09-05; test_set.md §ER.2 / §ES).
+#
+# The number is picked from the collision it exists to stop, not from taste.
+# On 2026-09-05 two director sessions took `mock_getvelocity_ultloc` in the
+# same window: one ran 03:5x-08:xxZ (~4h04m), the other 06:5x-07:3xZ (~40m),
+# overlapping by ~35 minutes.  A TTL shorter than the LONGER session re-opens
+# exactly that case -- the first session's claim would have expired at 09:5xZ
+# under a 6h TTL but at 06:5xZ under 3h, i.e. right as the second session
+# started reading.  So 6h, and the failure directions are asymmetric on
+# purpose: an over-long claim is LOUD (the row prints IN-FLIGHT with the
+# claimant and the age, and a claim is never a lock), while a too-short one is
+# SILENT (two OWED rows that look identical, which is the whole defect).
+CLAIM_TTL_HOURS = 6
 
 # The declarations a rideshare proposal makes about itself.  Kept as literal
 # substrings on purpose: these are the exact phrases the streams write, and a
@@ -697,19 +733,131 @@ def owed_status(row, repo=REPO):
             "%s:%s = %r (the ruling's acceptance criterion is %r)" % (rel, key, got, want))
 
 
-def render_owed(rows):
+def parse_utc(text):
+    """Parse an ISO-8601 UTC stamp, or return None.
+
+    Deliberately strict.  The house style for report and charter prose is a
+    FUZZED stamp -- `2026-09-05T07:xxZ` -- and that is not a time; a claim
+    written that way must not silently become a six-hour hold on somebody
+    else's work unit.  It reads UNREADABLE, which falls back to OWED.
+    """
+    if not isinstance(text, str) or not text.strip():
+        return None
+    raw = text.strip()
+    if raw.endswith("Z"):
+        raw = raw[:-1] + "+00:00"
+    try:
+        stamp = datetime.datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=datetime.timezone.utc)
+    return stamp.astimezone(datetime.timezone.utc)
+
+
+def claim_status(row, now=None):
+    """Evaluate one row's claim.  Returns (state, detail).
+
+    state is UNCLAIMED / IN-FLIGHT / EXPIRED / UNREADABLE.
+
+    WHY THIS EXISTS (GH #518, director 2026-09-05; test_set.md §ER.2)
+    -----------------------------------------------------------------
+    `mock_getvelocity_ultloc` named its executor "director 或 协同组(谁先取到)"
+    and its trigger "any round with slack can take it".  Those two sentences
+    hand "who does it" to first-come-first-served while the row carries NO
+    FIELD saying somebody already started -- so a row being worked on and a
+    row nobody has ever touched are byte-for-byte identical to the second
+    reader.  Two sessions did the right thing on 2026-09-05 and one whole work
+    unit was thrown away.  Note the direction: the OWED leg raises its hand at
+    every session every round, and the PURPOSE of that hand is to make someone
+    take the row -- so the better this leg works, the more certain the
+    collision.  Same root as backlog §6b's false-abandonment: a presence field
+    cannot separate "nobody is on it" from "somebody is in flight".
+
+    THE THREE THINGS THIS IS NOT
+    ----------------------------
+    * **Not a lock.**  A claim is an activity signal.  Anyone may still take a
+      claimed row -- believing the claimant died is a legitimate reason -- and
+      is asked to say so in their report.  Making it a lock would import
+      §6b's cost with the sign flipped: a dead claimant would park a baton
+      permanently.
+    * **Not retroactive.**  The claim has to be PUSHED before the work, not
+      written next to it at the end.  A claim that reaches `origin/main` after
+      the collision window is a record, not a signal -- the second session
+      reads the tree it cloned at start.
+    * **Not evidence of progress.**  It says a session said it started.  The
+      `done_when` still grades the artefact, unchanged (LIMIT 11).
+    """
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    by, at = row.get("claimed_by"), row.get("claimed_at")
+    if by is None and at is None:
+        return "UNCLAIMED", "no claim on this row"
+    if row.get("claimable") is False:
+        # A standing CONSTRAINT (`mock_isprefix_ordering`: "don't relax `^Is`
+        # before the `^Get` roster is done") is not a baton anybody takes --
+        # it has no completion state, and its entire job is to say OWED in
+        # every round until the day somebody is about to violate it.  Letting
+        # a claim quiet such a row for six hours would be this fix building
+        # the very silence it was written against, so the claim is refused
+        # rather than honoured.
+        return ("UNREADABLE",
+                "row is claimable:false (a standing constraint, not a takeable "
+                "baton -- it is SUPPOSED to report OWED every round); the claim "
+                "by %r is ignored" % (by,))
+    if not by or not at:
+        # Half a claim names nobody or no instant.  Falling back to OWED is
+        # the conservative side here: the cost is a possible collision, while
+        # honouring it would suppress real work on an unreadable say-so.
+        return ("UNREADABLE",
+                "claim is half-written (claimed_by=%r claimed_at=%r); both are "
+                "required -- reading this as OWED" % (by, at))
+    stamp = parse_utc(at)
+    if stamp is None:
+        return ("UNREADABLE",
+                "claimed_at=%r is not an ISO-8601 UTC instant (the fuzzed house "
+                "style `T07:xxZ` is not a time) -- reading this as OWED" % (at,))
+    age_h = (now - stamp).total_seconds() / 3600.0
+    if age_h < 0:
+        return ("UNREADABLE",
+                "claimed_at=%s is in the future -- reading this as OWED" % (at,))
+    if age_h <= CLAIM_TTL_HOURS:
+        return ("IN-FLIGHT",
+                "claimed by %s at %s (%.1fh ago, expires after %dh) -- a claim "
+                "is an activity signal, NOT a lock" % (by, at, age_h, CLAIM_TTL_HOURS))
+    return ("EXPIRED",
+            "claimed by %s at %s (%.1fh ago, past the %dh TTL) -- treat as "
+            "unclaimed; the claimant may have died mid-round"
+            % (by, at, age_h, CLAIM_TTL_HOURS))
+
+
+def render_owed(rows, now=None):
     """Print the OWED_EXECUTION section.  Returns the exit level (0 or 3)."""
     print("=== owed executions (rulings delivered; execution still owed) ===")
     print("registry rows: %d" % len(rows))
     finding = False
+    inflight = 0
     for row in rows:
         state, detail = owed_status(row)
-        head = "  %-9s %-22s %-10s executor=%s" % (
-            state, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))
+        claim, claim_detail = claim_status(row, now=now)
+        # The claim can only soften a row that is still owed.  A DONE row's
+        # claim is bookkeeping -- it must not turn "retire me" into "somebody
+        # is on it", which would be a claim outranking the artefact.
+        shown = "IN-FLIGHT" if (state == "OWED" and claim == "IN-FLIGHT") else state
+        head = "  %-11s %-22s %-10s executor=%s" % (
+            shown, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))
         print(head)
         print("      trigger: %s   ruled_at: %s"
               % (row.get("trigger", "?"), row.get("ruled_at", "?")))
         print("      done_when: %s" % detail)
+        if claim != "UNCLAIMED":
+            if state == "DONE":
+                # Say who held it, but never in the IN-FLIGHT vocabulary: on a
+                # row whose artefact has arrived, "somebody is on it" is a
+                # stale sentence sitting one line under "retire this row".
+                print("      claim: bookkeeping only (row is DONE) -- held by %r at %r"
+                      % (row.get("claimed_by"), row.get("claimed_at")))
+            else:
+                print("      claim: %s -- %s" % (claim, claim_detail))
         missed = row.get("missed") or []
         if missed:
             print("      already missed %d round(s):" % len(missed))
@@ -720,10 +868,21 @@ def render_owed(rows):
             # a registry nobody prunes becomes wallpaper, which is the GH #276
             # failure this file keeps being warned about.
             print("      -> executed; the director should retire this row")
+        elif shown == "IN-FLIGHT":
+            inflight += 1
+            print("      -> somebody is already on this one; prefer another baton. "
+                  "Taking it anyway is allowed -- say in your report why.")
         else:
             finding = True
     if not rows:
         print("OWED_EXECUTION: none")
+    if inflight:
+        # Printed because the exit code alone would now under-report: an
+        # all-in-flight registry exits 0, and "clean read" must not be
+        # mistaken for "nothing is owed".  Same sentence family as the
+        # RIDESHARE/OTHER counters above.
+        print("OWED_EXECUTION: %d in flight (claimed within %dh) -- NOT a finding "
+              "this round, and NOT executed either" % (inflight, CLAIM_TTL_HOURS))
     return 3 if finding else 0
 
 
