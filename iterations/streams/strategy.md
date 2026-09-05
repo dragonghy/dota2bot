@@ -5468,6 +5468,11 @@
   ⚠️ 承诺修法**本轮不落地**:它的谓词 `ClosestOutpost:HasModifier('modifier_watch_tower_capturing')`
   依赖一个 dumper **没有**的字段(`buildings` 无 modifier 列表)⇒ 进不了 fixture。
   **已交棒:录像组/dumper(甲)+ 本组下一轮 `outcommit`(乙)+ 总监改 1b 说明(丙)。**
+  **铁律 6**:静态半 `GATE_EXIT=0 CLEAN`(0 warnings;两次 push 的 pre-push 钩子各自又跑一遍,
+  都 CLEAN,**没有用 `RULE6_BYPASS`**);**动态半 UNCERTIFIABLE —— 起来了、没跑完**
+  (GH #124 的已知形状;截至收尾 1474 个断言点、无 exit code,而该 runner 把 failures 攒到收尾
+  一次性打 ⇒ **中途的沉默不是读数**)。风险面:`bots`/`game` 逐字节未动、无任何 `.lua` 增改。
+  ⚠️ 期间先后起了两个 `run_tests.lua` 写同一日志(**并发写 = 工件不是读数**),已杀掉重开干净进程。
 - 2026-09-05T01:30Z(**认领 GH #503** —— P1 (甲) 卡 `strategy-43`、P2/P3 球在总监;
   `[strategy]` open issue 扫过 **#503**/#500/#495/#492/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445,
   **#503 是 00:14Z 新开、不是本组已交棒的**,且它逐字把成员的书写归给本组 ⇒
