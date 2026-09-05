@@ -803,6 +803,21 @@ function X.ConsiderW()
 	-- of those three for a different reason.  Adding the reserve is a BEHAVIOUR
 	-- change: it needs a gated turbo candidate and a real frame, not an edit
 	-- here.  See tests/test_dead_manacost_binding_census.lua for the register.
+	--
+	-- PRE-FLIGHT DONE 2026-09-05, AND IT DID NOT BUY THE FRAME.  Whole archive,
+	-- real loader: 24 live-Lion instants -> 22 with Hex trained -> 11 off
+	-- cooldown and affordable -> 1 under the 0.30 reserve line -> 0 that ALSO
+	-- have any enemy hero within 1600.  The narrowed form with an actual
+	-- justification ("do not spend on Hex if it starves a ready Impale") is
+	-- emptier still: 0 of the 9 instants with Impale up.  Read the zero the
+	-- honest way -- X.ConsiderW returns DESIRE_NONE on all 11 because
+	-- J.GetProperTarget is nil and GetActiveMode is 0 on every fixture frame
+	-- (GH #474), so the archive cannot show a Hex cast at all.  This lever is
+	-- blocked on frame supply, NOT refuted, and GH #73's `lionult` strike does
+	-- not transfer to it (that one dies by closed form; this one's biting region
+	-- converges on "below 30% mana" and never vanishes).  The funnel, both
+	-- thresholds, and the ratchet that fires on the first domain frame live in
+	-- tests/test_lion_hex_reserve_domain.lua.
 	local nManaCost = abilityW:GetManaCost()
 	local nDamage = abilityW:GetAbilityDamage()
 	local nDamageType = DAMAGE_TYPE_MAGICAL

@@ -22,6 +22,38 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-96. **`-95` 的下一棒(类戊第一根,Lion Hex)预检完毕 —— **不写**,而那个 0 是语料的不是杠杆的**
+   (报告 `iterations/reports/hero/20260905T045549Z.md`,GH **#512**;新
+   `tests/test_lion_hex_reserve_domain.lua` 6 例;`bots/` 只有注释,零代码行)。**
+   - **⭐ 照 `lionult`(GH #73)的先例先量域再写杠杆,域没买到**:
+     24 live-Lion → 22 Hex 已学 → 11 不冷却且可付 → **1** 在 0.30 储备线下 →
+     **0** 同时 1600 内有敌人。唯一那格 `f_megabundle_051728_ogre_lanefront_deep`
+     (6 级 / 176 蓝 / 池 621,Impale 冷却 3.2s,Finger 付不起,**零敌人**),
+     出货 `ConsiderW` 本来就 `DESIRE_NONE` ⇒ 接线是 **0 变 0**。
+   - **⭐ 零不是阈值选出来的**:树里有**两个**活储备数不是一个 ——
+     `GetManaAfter > 0.3`(ConsiderQ 字面量)与 `fKeepManaPercent = **0.39**`
+     (IsAllowedToSpam)。0.30 线下 1 格、0.39 线下 2 格,**两个阈值上交集都空**。
+   - **⭐⭐ 讲得出理由的那个窄版本域更空**:「别把跟手的 Impale 饿死」
+     (储备条件挂在被储备的对象上)在 9 个 Impale 就绪的可付格上是 **0/9**。
+     **按「哪版更好辩护」挑和按「哪版量得到」挑,在这根上指向相反。**
+     同族:`-93` 残量不是队列、`-94` 四分之四是四个处置。
+   - **⛔ 这个 0 不是裁决,是 GH #474 在第二个现场**:`ConsiderW` 在**全部 11 个**
+     可付格上都 `DESIRE_NONE`,**包括 1600 内确实有敌人的那 3 格** —— 每条分支都挂在
+     模式/目标上,而每个 fixture 帧 `J.GetProperTarget=nil`、`GetActiveMode=0`。
+     ⇒ 档案**演示不出一次 Hex 施法**,它**没资格**说「储备改不了什么」;
+     它有资格说的是**这里没有一帧写得出 fixture**。**被帧供给卡住,不是被证伪。**
+   - **⛔ #73 的 strike 不能搬过来**:`lionult` 死于闭式(带宽 = 最便宜基础技能,
+     Impale 阶梯终止于 150,池不终止 ⇒ 占比→0)。这根**没有那个终止**:可咬占比上限
+     `0.30 + hexCost/maxMp`,Hex 阶梯终止于 200 ⇒ 第二项收缩但**收敛到 0.30 不是 0**
+     (实测池 510→0.692、池 1551→**0.429**),**任何等级都不会消失**。§4 断言就是拦这个引用。
+   - **⚠️ 可迁移**:**mock 把 `print` 换成空函数**(`tests/mock/bot_api.lua:410`)。
+     `require('mock.replay_fixture')` 之后用 `print` 的一次性探针**静默输出零字节且 exit 0**
+     —— 「跑成功了但什么都没打」与「没跑」在退出码上是同一个整数。**探针一律 `io.stderr:write`。**
+   - **下一棒**:求帧已交出去(**GH #512**,判据 1-3 必需 / 4 最好有;不花 AWS 钱)。
+     **球在录像检查组**;#474 那条线在总监手上。拿到帧本组自己接着走 gated-fix。
+     **类戊第二根(Zeus `ConsiderE` / Heavenly Jump)在拿到 Lion 这一帧之前不要开** ——
+     两根一起接就是 `lanefix` 的形状(`-95` 自己写的)。
+
 -95. **`-75` 兑现了,而它的九个死绑定**不是一根杠杆,是五个类、两根杠杆**
    (报告 `iterations/reports/hero/20260905T015048Z.md`;新
    `tests/test_dead_manacost_binding_census.lua` + `tools/agent/mutstand_dead_manacost.sh`;
@@ -4286,6 +4318,24 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T04:55Z(报告 `iterations/reports/hero/20260905T045549Z.md`;轴 **`-95` 点名的
+  下一棒——类戊第一根 Lion Hex 储备——预检不通过,不写**;新 backlog `-96`,GH **#512**)
+  **新 `tests/test_lion_hex_reserve_domain.lua`(6 例)+ `bots/BotLib/hero_lion.lua`
+  绑定处注释(**零代码行**);零新候选 id、零 arm、零 promote、零 AWS、`queue.json` 不加行。**
+  - 选题:OWNER_PRIORITIES 无本组项(P1/P2 在协同组、P3 在总监);开着的 `[hero]` issue
+    逐条看过无一可动(#502 已交总监/#495;#488 下一棒是录像组;#471/#459 作用域在总监)
+    ⇒ 取 backlog 最上面一条 `-95` **自己写明的**下一棒。
+  - **⭐ 照 `lionult`(GH #73)先例先量域**:24 live-Lion → 22 已学 → 11 可付 →
+    **1** 在 0.30 线下 → **0** 同时有敌人在 1600 内。0.39(`fKeepManaPercent`)线下 2 格,
+    交集**同样为 0**;讲得出理由的窄版本(「别饿死跟手的 Impale」)**0/9,更空**。
+  - **⛔ 关键读法:这个 0 是语料的不是杠杆的。** `ConsiderW` 在**全部 11 格**上
+    `DESIRE_NONE`(含有敌人的 3 格),因为每个 fixture 帧 `GetProperTarget=nil` /
+    `GetActiveMode=0` —— **GH #474 的第二个独立现场**。⇒ **被帧供给卡住,不是被证伪**;
+    且 **#73 的 strike 不能搬**(那根占比→0,这根收敛到 0.30,任何等级都不消失)。
+  - **下一棒交出去了(GH #512,求帧不求波次,球在录像检查组)**;
+    类戊第二根(Zeus `ConsiderE`)**在拿到 Lion 那一帧之前不要开**。
+  - **⚠️ 可迁移**:mock 把 `print` 换成空函数(`tests/mock/bot_api.lua:410`)⇒
+    探针静默输出零字节且 exit 0。**一次性探针一律 `io.stderr:write`。**
 - 2026-09-05T01:50Z(报告 `iterations/reports/hero/20260905T015048Z.md`;轴 **backlog `-75`
   兑现:九个死 `GetManaCost` 绑定分成五个类**;新 backlog `-95`)
   **新 `tests/test_dead_manacost_binding_census.lua`(8 节)+ 新
