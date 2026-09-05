@@ -11281,3 +11281,85 @@
   - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧 fixture 未做;
     #419 第 21 轮 / #421 第 20 轮仍零评论。
   - 完整报告:`iterations/reports/replay-check/20260905T095535Z.md`
+- **2026-09-05T12:42–13:0xZ(接下 W48 交给本组的 `stayattr` 条件 (a) 那一格:量具建成并自证,
+  裁 INDETERMINATE / DOMAIN-NOT-REACHED,而「缺的是语料不是可测性」)**:
+  **宽扫 8/8 局**(W48 发波 40 分钟后 S3 上已落盘的全部 `.dem`,取 8 份、第 9 份收尾时才出现),
+  **其中计分 4 局、暖场 4 局(裸 SHA 戳,不入任何 armed/baseline 读数)**;
+  **深查 14 个域帧 / 7 个决策 episode,逐帧看完**。
+  零发波、零 EC2、S3 只读、零 CE 调用、**未改 `bots/`/`game/` 任何一行**,**未新增 `tests/` 文件**。
+  - **⭐ 这一格是批测台在 `W48_wave.json:harvest_obligations` 里点名交给本组的**,不是自选题。
+    判据按它写死的那句:**`did it STAY` 不是 `did it SURVIVE`**;**禁止用胜率/存活率/死亡数**
+    支撑(诚实边界 4)——本轮全程未计算这三者。
+  - **⭐⭐ 与 `creepthink` 相反:这个 id 能从 dump 侧买。** `stayattr`(`jmz_func.lua:5115-5120`)
+    只能**移除**否决(armed 的 TRUE 集是 shipped 的严格超集),而它读的每个子句
+    (`hp_pct`、带 `actor_hero` 的 `DAMAGE` 事件、两个由快照坐标算的距离)**与它改变的那个决策**
+    (「原地喝」vs「走/TP 回家」,十秒后是不同坐标)**都落在 dump 的字段上**。
+    **分界线不是「检测器 vs 经济」也不是「位置量 vs 非位置量」,是这个门推动的量有没有落到被 dump 的字段上。**
+    ⇒ **不要把这个 id 换轨到 fixture**;09:38Z 对 `creepthink` 的那个结构性结论**不适用于它**。
+  - **裁定:`stayattr` (a) = INDETERMINATE(DOMAIN-NOT-REACHED,armed 腿)**,两条各自独立的理由:
+    (1) 4 局计分局里 **armed 腿域帧 = 0**;(2) 4 局计分局**全是 `radiant` 一层**,
+    **铁律 4(i-a) 结构性不可满足**(一层的读数是条件 (a) 的一半,不是它)。
+  - **⭐ 一个对全队成立的调度事实,本轮第一次量出来**:发波后 ~40 分钟,四台机各自只跑完
+    「暖场局 + 第一局计分局」,而那第一局计分局**四台全是 `radiant`**——镜像的另一半还没打。
+    ⇒ **紧跟发波触发的录像检查轮,结构上不可能满足 4(i-a)**,无论量具多好。**已开 GH issue 交回批测台。**
+  - **⛔「armed 0 / baseline 4」本轮明确拒绝写成任何结论**:8 局 7 episode ⇒ 计分局 armed 期望
+    ≈1.75 episode,在 2 个计分 episode 上看到 0/2 **在公平硬币下概率就是 0.25**。
+    另有更强的理由:**域成员资格本身会被这个杠杆推动**(留下的和走掉的十秒后状态就不同),
+    两腿的域**不是外生的同一总体** ⇒ 只能在 armed 腿真攒到域帧后**按 episode 比决策**,不能比域帧数。
+    判 SILENT 就是把「没抽到」洗成「有罪」(`zusult` 的镜像)。
+  - **⭐ 域价独立佐证了批测台的预登记**:批测台按 109 fixture/1012 帧预估 **92.63% 惰性**;
+    本轮在**真波帧**上量到 **7303/7828 = 93.29%**。⇒「按构造在 ~93% 的域上无事发生」
+    **可迁移**,小域是**预期形状不是缺陷**。
+  - **⭐ 逐帧抓出本工具自己的假阳性(本节存在的理由)**:`122457_slot1__272131` necrolyte
+    **t=264.9** 从 (−4854,5095) TP 到 (4890,−6006) —— **对角穿图的换线 TP**,却被第一版
+    `tp_home` 记成回家,只因为方向判据是「终点比起点近」而两个角**离本方泉水几乎等距**
+    (收 **329u / 约 11900u**)。改成「该跳跃收掉 >600u」后 necrolyte 被拒、crystal_maiden
+    (收 ~10050u,`tp_cd` 0.0→39.3 + 下一采样人在泉水 + 窗口内无死亡)保留。
+    ⚠️ **假阳性落在暖场帧上,从未进入计分读数** —— 但它会在下一波悄悄进,**方向是抬高 baseline 腿**,
+    正好是让这个 id 看起来更该 promote 的那一边。已按真帧坐标钉成对照 **11e** 与变异体 **M8**。
+  - **交付**(只读离线,零 AWS,未碰 `bots/`):**新增** `tools/batch_test/behavioral/stayattr_domain.py`
+    (**`--selfcheck` 38/0**,含反真空对照 + 每条拒绝子句各自单独触发的对照 + GH #303 跨拼写 join 正反两侧)
+    + **新增** `tools/agent/mutstand_stayattr_domain.sh`(**13 变异 13 如声明 = 12 CAUGHT + 1 控制 SURVIVED**,
+    `sha256sum -c` 还原 OK)。
+  - **⭐⭐ 变异台两次纠正它自己,两次都是「变异体错了不是断言错了」(证据纪律 2 的正用法)**:
+    ① **M6 第一版 SURVIVED** —— 它降级的是**事件侧**的 `hkey→canon`,而
+    `canon('...vengefulspirit')==hkey('...vengeful_spirit')`,**在事件侧这两个函数对 GH #303 是同一个**
+    (要塌缩的下划线是 dumper 在**快照侧**插进去的)⇒ 降级事件侧破坏不了 join,记 CAUGHT 才是假的;
+    改成变异**查询侧**(M6 受害者 / M6b 施暴者两个 lookup 各一条)后双双 CAUGHT。
+    ② **M8b SURVIVED 两次** —— 第一次没有对照**走得够快**能在**一个采样间隔内**推进 600u
+    (补 11f:2s 采样 × 350u/s);第二次 11f 的卷轴**花在读数窗口之前**,`consumed` 先短路,
+    **对照因为错误的理由通过**;把消耗挪进窗口后 CAUGHT。
+    **判据(与 06:57Z 同族,再登记一次):一条子句的对照必须让别的子句都不成立;
+    「对照通过了」不等于「对照测到了它要测的东西」。**
+  - **下一轮第一件事**:(1) **W48 harvest 结束后对全部计分局重跑 `stayattr_domain.py`** ——
+    本轮唯一真正未完成的事,**不需要新波也不需要新钱**;按观测节拍(每台每 ~14 分钟一局、
+    2h 看门狗)全波约 32 局录像 / ~28 计分局,按本轮量到的 0.44 episode/局约得 **12 个 armed episode**,
+    且镜像后半会补上 **dire 分层** ⇒ 届时 4(i-a) 可满足。
+    (2) armed 腿若届时仍 0 域帧而 dire 已到齐,**那时才谈机制,不要提前**;
+    (3) **#511 本轮仍无回音** ⇒ `outcommit` 未落地,`outlatch` **重扫条件未成立,不重扫**;
+    (4) `campbind` 仍等 #475 三选一再裁(**不要再扫更多局**);(5) `zusboltdom` 等同波隔离腿;
+    (6) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);
+    (7) 盲点 `midtp`/`zusstatic` 复核(09:38Z 交棒第 (2) 条,本轮被这一格挤掉)。
+  - **给 `test_detector_source_constants.py` 的后来者(不开 issue)**:本工具五个常数
+    (`HP_LO`/`HP_HI`/`DAMAGER_RADIUS`/`RING_RADIUS`/`DAMAGE_WINDOW_S`)已带 `jmz_func.lua` 行号
+    逐字转录,**应当进那张镜像表**;本轮**没有加**,因为该文件此刻是红的(GH #514),
+    往红文件里加断言会让「我的断言过了没有」不可读。#514 转绿后补。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧 fixture 未做;
+    #419 第 22 轮 / #421 第 21 轮仍零评论;**本轮 8 局 timeline 随容器回收**。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`get_dumper.sh` **cache HIT**;
+    dumper **8/8 局 exit=0**(零 unparseable);`--selfcheck` **`SELF_EXIT=0`(38/0)**;
+    `mutstand_stayattr_domain.sh` **`MUT_EXIT=0`(13/13)**;真语料 **`RUN_EXIT=0`**。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    ⛔ **开工自检:第一条命令又写了管道,脚本当场自拒(`SELFCHECK_EXIT=2 REFUSED`,
+    harness 报的 `EXIT=0` 是末尾 `echo` 的码)—— 证据纪律 3 第三十五次踩,又是当轮第一条命令**;
+    改重定向后第一次被 400s 超时截断(`EXIT=124`),放后台才拿到真码
+    **`selfcheck worst exit: 3`(FINDINGS)**,`legs run: 10`,**`UNCERTIFIABLE: none`**,
+    `NOT RUN: tests/test_selfcheck_lua_leg.py`。6 条 python 红**全部已有主,不认领**
+    (较批测台 12:15Z 少了 `test_stale_waits.py`、多了 `test_wave_gate_keys.py` +
+    `test_wave_throttle.py`,后两条与本轮发 W48 同源)。
+    Lua 检测器腿 **84 文件 0 失败**,边界照抄「FAST SUBSET, not the full suite」。
+    ⚠️ **第十三次登记:自检在本容器不是章程写的「约 20s」**,本轮约 28 分钟。
+    ⚠️ **一条自陈边界**:后台自检 12:42Z 起跑,本轮新增文件 ~12:58Z 之后才存在
+    ⇒ 它的 python 腿**跑的是不含本轮新文件的树**;本轮**没往 `tests/` 加文件**故不影响那 6 条红的归属,
+    但**「自检看过我的新代码」这句话本轮不成立,故不写**。
+  - 完整报告:`iterations/reports/replay-check/20260905T130500Z.md`
