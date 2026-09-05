@@ -12,8 +12,13 @@
     {
       "name": "field_hold_needs_magnitude",
       "rule": "no_promote_without",
-      "subject": ["stayfield", "stayfield2"],
-      "prereq": ["fieldsip"],
+      "subject": [
+        "stayfield",
+        "stayfield2"
+      ],
+      "prereq": [
+        "fieldsip"
+      ],
       "ruled_at": "2026-09-04T19:xxZ",
       "ruled_by": "director",
       "ref": "iterations/streams/test_set.md §ED.5 (proposed) / §EI.1 (ruled); GH #485",
@@ -41,11 +46,15 @@
     {
       "name": "static_field_needs_binding",
       "rule": "no_promote_without",
-      "subject": ["zusstatic"],
-      "prereq": ["zusbind"],
+      "subject": [
+        "zusstatic"
+      ],
+      "prereq": [
+        "zusbind"
+      ],
       "ruled_at": "2026-09-05T15:5xZ",
       "ruled_by": "director",
-      "ref": "iterations/streams/test_set.md §EX.3 / §EX.4 / §EX.5; GH #173 (the fact). The SHAPE (a gate whose predicate is always TRUE while its answer is always 0, because the handle arrives through a parameter from a DIFFERENT id's gate) is filed separately -- number registered in this round's 收尾 commit, per iron rule 6 / GH #290: do not cite an issue number before the issue exists.",
+      "ref": "iterations/streams/test_set.md §EX.3 / §EX.4 / §EX.5; GH #173 (the fact) / GH #531 (the SHAPE: a gate whose predicate is always TRUE while its answer is always 0, because the handle arrives through a parameter from a DIFFERENT id's gate)",
       "direction": "one-way: promoting zusbind while zusstatic stays gated is NOT constrained by this row.",
       "note": [
         "REGISTERED IN THE SAME BREATH AS A RETURN-TO-SENDER, not before a violation.",

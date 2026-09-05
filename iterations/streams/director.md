@@ -10666,3 +10666,26 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ④`kind:"ruling_request"` 轻量 queue 行 / GH #454/#487/#460/#473 乙/#489/#486/#496 / #513/#514
   ⑤GH #449/#410/#436/#285/**patch 缺口 P3**/`ckpush`(有时限)。
   **距离 P4.2 解冻线(armed ≤ 20)还差 41。**
+
+  **[同轮收尾追加,push 之后]** **⑪ GH #531 立案**(§EX.4 的第三种形状:谓词恒真而答案恒 0),
+  号已回填进 `promote_atoms.json:static_field_needs_binding.ref` 与
+  `state.json:zusstatic_RETURNED_20260905.ref`,全文 §EX.8。⚠️ **本轮的原子只管 `zusstatic`
+  一个 id**(手写一行,不是检测器);#531 要的那一半是**通用检测** —— 还有几个 armed id 的答案
+  由一个 gated 在别的 id 上的句柄/返回值决定,**没有人知道**。
+  ⭐ **顺带验证了本轮自己的纪律**:初稿在 `ref` 里写的是 **`GH #529`**(当时最高 #528,顺号推的),
+  实际拿到 **#531** —— 两个流同一小时里各开了一个 ⇒ **顺号推测的引用号会错,且错得像个普通数字**;
+  `claim_precheck.sh` 对**尚不存在**的 issue 号**无话可说**(它不解析 GH 号)。
+  做法:**先把号从引用里拿掉、push、开 issue、再回填**。
+  **⑫ ⭐ 铁律 6 补款(GH #290)本轮遵守了**:发 issue **之前**跑 `claim_precheck.sh` ⇒
+  `MISSING section test_set.md §EX` + `DO NOT PUBLISH YET`;push 后复跑 ⇒
+  `resolved on trunk 8 → 9`、`0 finding(s)`、`OK to publish`、`PRECHECK_EXIT=0`。
+  ⚠️ **上一轮(§EV.7 甲)在这里是违反的,本轮同一个工具、同一个顺序、结果相反。**
+  **⑬ push 记录**:`HEAD:main` 首次 rejected(non-fast-forward,录像组 `fe2fbf90` 抢先),
+  `pull --rebase` 干净(1/1),复核 arm 串仍 61 / md5 `824ec2842e…`、`§EX` 唯一
+  (录像组那次**没碰 test_set.md**,零冲突),再 push ⇒ `fe2fbf90..a40c6014`。
+  铁律 6 静态门在两次 push 上各跑一次,均 `0 warnings / CLEAN`,**无 `RULE6_BYPASS`**。
+  **⑭ ⚠️ 并发落地、方向一致、不改变裁定**:录像组 `fe2fbf90` 报
+  **W48 全波重跑 `stayattr` 条件 (a):域第一次抵达,(a1) WORKING / (a2) 仍 INDETERMINATE**。
+  退集的理由**从来不是证据不足是时机** ⇒ 新证据把「§ET 的证据逐条仍成立」**加强**了;
+  它正是 §EX.1 预告的那一笔。解冻后重提**不需要重买 (a1)**,但 **(a2) 仍欠**,不得说成已买。
+  ⛔ **只做指针不做转述**(§EV 的教训)。全文 §EX.9。

@@ -5990,6 +5990,6 @@
   "release_condition": "zusbind 被 promote,或 hero_zuus.lua:652 的调用点改成无条件按名字绑 Static Field —— 两者都让句柄在没有 arm 串前提的情况下变对,那时 zusstatic 才能凭自己的是非被裁。",
   "carrier_terms": "8 -> 8 逐字不变且是量出来的:carrier_terms.py 对 63-id 与 61-id 两个串各跑一次,TERMS 行逐字节相同,0 unresolved;计数 13 hero-scoped/50 generic -> 12/49。机械理由:zuus 仍由 zusult/zusboltdom 供着。",
   "aws": "零",
-  "ref": "iterations/streams/test_set.md §EX(§EX.2 / §EX.3 / §EX.4 / §EX.5);GH #173(事实)"
+  "ref": "iterations/streams/test_set.md §EX(§EX.2 / §EX.3 / §EX.4 / §EX.5);GH #173(事实);GH #531(这个形状的通用检测,本轮立案)"
  }
 }
