@@ -794,6 +794,15 @@ function X.ConsiderW()
 	local nSkillLV = abilityW:GetLevel()
 	local nCastRange = abilityW:GetCastRange() + aetherRange
 	local nCastPoint = abilityW:GetCastPoint()
+	-- nManaCost is UNREAD here, and that is registered rather than tidied away:
+	-- this is one of only two sites in the focus five (the other is
+	-- hero_zuus.lua X.ConsiderE) where wiring it to the tree's live idiom --
+	-- `J.GetManaAfter( nManaCost ) > 0.3` -- would point the same direction the
+	-- idiom points.  Hex has no mana reserve of any kind, is not an ultimate,
+	-- and does not restore mana; the other seven registered sites each fail one
+	-- of those three for a different reason.  Adding the reserve is a BEHAVIOUR
+	-- change: it needs a gated turbo candidate and a real frame, not an edit
+	-- here.  See tests/test_dead_manacost_binding_census.lua for the register.
 	local nManaCost = abilityW:GetManaCost()
 	local nDamage = abilityW:GetAbilityDamage()
 	local nDamageType = DAMAGE_TYPE_MAGICAL

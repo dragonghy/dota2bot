@@ -1410,6 +1410,15 @@ function X.ConsiderE()
 	-- tests/test_dead_numeric_local_census.lua.
 	local nCastRange = 600 + nSkillLV * 100
 	local nCastPoint = abilityE:GetCastPoint()
+	-- nManaCost is UNREAD here; see hero_lion.lua X.ConsiderW for the same note.
+	-- Heavenly Jump and Lion's Hex are the only two of the nine registered
+	-- unread-cost sites in the focus five where a per-cast mana reserve would
+	-- point the way the tree's live idiom points.  Zeus's OTHER unread ones do
+	-- not: X.ConsiderW2 already reserves through nKeepMana, X.ConsiderW through
+	-- a lanefix-gated helper, and X.ConsiderR is the ult (Zeus reserves mana FOR
+	-- it, in X.zuus_ShouldSaveManaForUlt -- the opposite direction).  Wiring
+	-- this is a gated-candidate + real-frame job.
+	-- Register: tests/test_dead_manacost_binding_census.lua.
 	local nManaCost = abilityE:GetManaCost()
 
 	local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE )

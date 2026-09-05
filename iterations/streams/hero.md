@@ -22,6 +22,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-95. **`-75` 兑现了,而它的九个死绑定**不是一根杠杆,是五个类、两根杠杆**
+   (报告 `iterations/reports/hero/20260905T015048Z.md`;新
+   `tests/test_dead_manacost_binding_census.lua` + `tools/agent/mutstand_dead_manacost.sh`;
+   `bots/` 只有两处注释共 18 行,零代码行)。**
+   - **⭐ 摁死「显然的读法」的那条事实**:九个 `local nManaCost = ability:GetManaCost()`
+     **全部**坐在自己函数的 `IsFullyCastable()` 早退之下,而引擎的 `IsFullyCastable`
+     已经是「不冷却 且 学过 且 蓝 ≥ 价」⇒ **付不付得起在上游就答完了**,
+     这个绑定**从来不是**它名字暗示的那次读。树里两个活惯用法
+     (`J.GetManaAfter(c) > 0.3` / `J.IsAllowedToSpam(bot,c)`)问的是**储备**,
+     ⇒ 「接线」不是修漏读,是**给一个本来没有储备的决策加一道逐次施法的储备**。
+   - **⭐ 五个类,每个判别式都在源码里量得到**:
+     **甲 已有竞争储备**(CM `ConsiderQImpl`/`ConsiderW`、Zeus `ConsiderW2`:`nKeepMana`)——
+     接线是**叠第二道**不是填空;
+     **乙 储备被闸冻死**(Zeus `ConsiderW`:唯一储备 `J.ShouldConserveManaInLane` 第一句是
+     `IsLaneFixOn('mana')` ⇒ **出货 trunk 恒 false**,而 armed 域正是**被拒两次的 `lanefix`**)——
+     **它在源码里像甲、在游戏里像戊**,差别只有跟进 jmz_func 才看得见;
+     **丙 它是大招**(Zeus/Axe `ConsiderR`)—— 为小技能扣住大招 = **储备指反了**,
+     Zeus 指对方向的那根本来就在(`X.zuus_ShouldSaveManaForUlt`);
+     **丁 这个技能回蓝**(Lion `ConsiderE`/Mana Drain,读 `mana_per_second`)——
+     `GetManaAfter` 会**恰好在蓝低时拒绝去吸蓝**,**符号相反**;
+     **戊 什么都没有**(Lion `ConsiderW`/Hex、Zeus `ConsiderE`/Heavenly Jump)——
+     **九个里只有这两个**方向一致。
+     ⇒ **同 `-93` 的「残量不是队列」**:看着像一条待办的九分之九,**它是五个处置**。
+   - **域价钱**:全树 275 文件 / 2593 跨度 / **189 个绑定 = 死 82 + 活 107**(43% 死),
+     焦点五 9 死。**比 `-85` 的 46 还大**,而剩下 73 个在非焦点文件里 ⇒ 作用域,登记不动。
+   - **⛔ 为什么不清零**:`-85` 删未读**数字字面量**是因为那些是**假前提**
+     (Zeus 那个从不存在的 1600)。**这九个不是假前提**,每一个都持有一个**真**价钱;
+     删掉会抹掉「此处缺储备」的唯一标记 ⇒ **留着,改成登记**。棘轮 `<=` **不是 `==`**(GH #457)。
+   - **⭐ 下一棒(本组自己的,一次一根)**:类 戊 挑 **Lion `X.ConsiderW` / Hex** ——
+     Lion 全文件**没有任何**储备(`nKeepMana = 400` 2026-08-20 已被证零读者删掉),
+     所以它是**加第一道**而不是加第二道。gated turbo 候选 + 真帧 fixture,
+     走 `.claude/skills/gated-fix/`。**两根一起接就是 `lanefix` 的形状。**
+   - **⚠️ 可迁移(本轮自己踩的)**:**变异台用 `cp` 还原 = 给同容器任何并发读者开一个撕裂窗口。**
+     后台跑的开工自检 Lua 腿读到半份 `jmz_func.lua`,红成
+     `jmz_func.lua:6986: 'end' expected ... near '<eof>'` —— 而该文件 **12606 行、`git diff` 零行**,
+     **那个行号在任何版本里都不存在**。归因不是 M4 拆坏了 `if`(它换掉的那行自己就平衡)。
+     与 `lua_source_scan.lua` 头注释记的 `soak_side.lua` 窗口(GH #365 §2)同族,
+     但**写者是变异台、被写的是 shipped 源码**。⇒ **不要让变异台与全量套件/自检同时跑**;
+     结构修法(写临时文件再 `mv` 原子替换)不是本组作用域,已交出去。
+
 -94. **`-76` 的四个文件读完了,而立案句「这个数 dump 给不了」今天**不是一个理由是四个**
    (报告 `iterations/reports/hero/20260904T225049Z.md`,GH **#502**)。**
    - **⭐ 形状**:09-01/09-04 的 `kvgetters` 让 loader 按 fixture 自带 KV 逐 rank 服务
@@ -4246,6 +4286,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T01:50Z(报告 `iterations/reports/hero/20260905T015048Z.md`;轴 **backlog `-75`
+  兑现:九个死 `GetManaCost` 绑定分成五个类**;新 backlog `-95`)
+  **新 `tests/test_dead_manacost_binding_census.lua`(8 节)+ 新
+  `tools/agent/mutstand_dead_manacost.sh`(6 变异);`bots/` **两处注释共 18 行、零代码行**
+  (`hero_lion.lua` X.ConsiderW、`hero_zuus.lua` X.ConsiderE);`game/` 零行;
+  零新候选 id、零 arm、零 promote、零 AWS、`queue.json` 不加行。**
+  - 选题:OWNER_PRIORITIES 无本组项;开着的 `[hero]` issue 逐条看过没有一条可动
+    (#502 上一轮自己交给总监/#495;#488 下一棒是录像组的探针;#471/#463/#459 作用域在总监
+    且 `-86` 要先买 `hero-28` 语料;#465 待关;#447 要录像组先建 dumper;#453/#451 是 tinker,
+    `-82` 明写低于任何焦点英雄的活)⇒ 取 backlog 最上面一条可动的 `-75`。
+  - **⭐ 结论:立案句预设了一个答案,现实给了五个。** 九个绑定**全部**坐在
+    `IsFullyCastable()` 早退之下 ⇒ **付得起吗在上游就答完了**,这个绑定从来不是那次读;
+    两个活惯用法问的是**储备**,所以「接线」= **给一个没有储备的决策加一道储备**。
+    五个类:**甲**已有 `nKeepMana` 竞争储备(CM×2、Zeus W2)、**乙**储备被
+    `IsLaneFixOn('mana')` 冻死且 armed 域是被拒两次的 `lanefix`(Zeus W)、
+    **丙**大招(Zeus R、Axe R,储备指反)、**丁**回蓝技能(Lion E,符号相反)、
+    **戊**什么都没有(Lion W、Zeus E)。**九个里只有两个方向一致。**
+  - **域价钱**:全树 **189 个绑定 = 死 82 / 活 107**,焦点五 9 死;比 `-85` 的 46 还大。
+  - **⛔ 不清零的理由**:`-85` 删的是**假前提**;这九个持有**真**价钱,删掉会抹掉
+    「此处缺储备」的唯一标记 ⇒ 登记。棘轮 `<=` 不是 `==`。
+  - 验证:新文件 **8/8**;变异台 **6/6 KILLED**(M1 = 把 `-75` 要做的事做出来必须红;
+    **M5 = 打空树走查,供给量下限必须先红** —— 每条「必须不在」的断言都能被
+    什么都没扫到的扫描器完美满足;**M6 白盒** = `absent` 那张表有没有在做功);
+    邻接 9 个测试未改一行全绿。
+  - 铁律 6:静态 **`GATE_EXIT=0 CLEAN`(0 warnings),没用 BYPASS**。
+    ⚠️ **第一次 gate 自装 `lua-check` 失败,打的是 `GATE_EXIT=2 UNCERTIFIABLE`「不是通过」**,
+    手动 `apt-get install -y lua-check` 后重跑才 0 —— **2 与 0 在报告里长得太像**,登记一格。
+    **动态那半只有部分覆盖**(全量单进程收尾时仍在跑,GH #124)⇒ **本轮不声称全量绿**。
+  - ⚠️ 开工自检 **EXIT=0**;python 腿 4 红(#497/#490/#501+#506/#443)**全非本轮引入**
+    (零 `.py` 改动),**「main 是否也红」未做 stash 差分**。
+    **⭐ Lua 腿那条红是本会话自己造的假红**:后台自检读到半份 `jmz_func.lua`
+    (`:6986 near '<eof>'`,而该文件 12606 行、`git diff` 零行)——
+    **变异台 `cp` 还原的撕裂窗口**,与 GH #365 §2 同族但写者是变异台、被写的是 shipped 源码。
+  - 下一棒:**本组自己**接类 戊 的**一根**(建议 Lion Hex,Lion 全文件无任何储备 ⇒
+    是「加第一道」),gated + 真帧;**撕裂窗口那条交总监/harness**。
 - 2026-09-04T22:50Z(报告 `iterations/reports/hero/20260904T225049Z.md`;轴 **backlog `-76`
   兑现:四个文件的「理由句」逐句读**;新开 GH **#502**)
   **改 4 个测试文件(`test_replay_072738_zuus_script` / `test_axe_cull_immune_veto` /
