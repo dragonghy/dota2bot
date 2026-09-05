@@ -11458,3 +11458,7 @@
     **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
     **动态半(~100min,GH #124)未跑也不声称**(本轮未改 `bots/`/`game/`、未碰 `tests/`)。
   - **Token 用量**:`TOKENS total_in=8,773,123 out=58,090 turns=69`(见报告 §10)。
+  - **铁律 6 补记(收尾那次 push,如实登记)**:收尾提交推分支 **0**,`HEAD:main` 第一次 **1**
+    (远端已被别的组推进到 `a40c6014`),`git pull --rebase origin main` **0** 后重推 **0**
+    (`a40c6014..85ca25e8`),分支 `--force-with-lease` 对齐 **0**。钩子每次都当场跑了一遍 gate。
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄。**(本行自身所在的提交同路径推送。)
