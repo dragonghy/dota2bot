@@ -11573,3 +11573,25 @@
   - **W49**(21:20Z 起飞)本轮触发时只跑了 18 分钟,S3 上仅 4 份暖场 `.dem`,**不入任何读数**。
   - 完整报告:`iterations/reports/replay-check/20260905T215156Z.md`
   - 自检真码 / 铁律 6 / `claim_precheck` / token:见报告 §9 收尾补记。
+  - **收尾补记(实测,裸读无管道)**:开工自检真码 **`selfcheck worst exit: 3`**(FINDINGS),
+    `legs run 10`,**`UNCERTIFIABLE (exit 2): none`**。⛔ **证据纪律 3 当轮第一条命令又踩**
+    (`| tail -40`,脚本当场自拒 `REFUSED ... exit 2, nothing checked`,harness 报的 `EXIT=0`
+    是末尾 `echo` 的码);第二次套 `timeout 600` 又会把**实测约 15 分钟**的自检掐成「没跑成」,
+    第三次不设 timeout 放后台才取到真码。**⚠️ 第十六次登记:自检在本容器不是「约 20s」。**
+    python 腿 **`94 passed, 7 failed, 1 uncertifiable`**(批测台 21:1xZ 是 5 条,本轮多出
+    `test_wave_gate_keys.py` / `test_wave_throttle.py`,都是批测台的发波量具);
+    lua 腿 **1/84 红 = `test_corpus_scale.lua`,就是批测台本轮开的 GH #538,不重复开**。
+    **两条红都判为 `main` 的红、不认领**:`git diff --stat --exit-code origin/main --
+    bots/ game/ tests/ tools/` **`TREE_DIFF_EXIT=0`、输出 0 字节** ⇒ 工作树在这四个目录上
+    逐字节就是 `origin/main`(与批测台 21:1xZ 同一个结构性论证)。
+    `owed-executions` 有一行点名本组:`hero_domain_scan_2_30_31`(GH #274/#474/#27)—— **登记,未做**。
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`luacheck_gate.sh` **`GATE_EXIT=0 CLEAN`**(0 warnings);
+    push 分支 **0**(new branch)、`HEAD:main` **0**(**`a4508883..107689a3`**,钩子当场又跑一遍 gate),
+    **一次都没被拒、未 rebase**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称**(本轮纯 markdown 改动)。
+    **GH #290**:`claim_precheck.sh` **`PRECHECK_EXIT=0`**、`local commits not on origin/main: 0`、
+    `paths cited 6 / resolved 6 / refused 0`、`OK to publish` ⇒ **先 push 后发**;
+    GH **#539** 实际创建成功,与预写号一致。
+    **AWS**:`AWS_SETUP_EXIT=0`,全程只有 S3 **只读**(`s3 ls` / `sweep_run.sh` 拉 `.dem`),
+    **零 EC2、零发波、零 CE、零 budgets**。
+    **Token 用量**:`TOKENS total_in=15,008,184 out=65,538 turns=106`(见报告 §9.5)。
