@@ -220,11 +220,19 @@ echo "=== mutants against the instrument (how a 0 gets forged) ==="
 #
 # The control half is asserted first: with strip_comments intact, that comment
 # must NOT move the verdict.
-m6ctl() { perl -0pi -e "s{^function Think\(\)}{-- no bot:IsChanneling() guard needed here: J.CanNotUseAction has it\nfunction Think()}m" "$MODE"; }
+# ⚠️ PLACEMENT MOVED 2026-09-05 (協同組). The comment used to be injected ABOVE
+# `function Think()`. On 2026-09-05 the guard-absent assertion was narrowed from
+# the whole file to Think()'s BODY (a file-wide token ban forbade the very
+# commitment fix §7 prescribes -- see the note in tests/test_outchan_domain.py),
+# and a comment outside that body stopped being able to satisfy it: M6b printed
+# SURVIVED while the hazard it names was untouched. Injecting the same sentence
+# INSIDE Think() -- which is also where a reviewer would actually write it -- puts
+# the prose back inside the region the instrument reads.
+m6ctl() { perl -0pi -e "s{^function Think\(\)\n}{function Think()\n\t-- no bot:IsChanneling() guard needed here: J.CanNotUseAction has it\n}m" "$MODE"; }
 mutant_expect_pass "M6a the reviewer comment alone (must NOT fire)" "$MODE" m6ctl
 
 m6() {
-    perl -0pi -e "s{^function Think\(\)}{-- no bot:IsChanneling() guard needed here: J.CanNotUseAction has it\nfunction Think()}m" "$MODE"
+    perl -0pi -e "s{^function Think\(\)\n}{function Think()\n\t-- no bot:IsChanneling() guard needed here: J.CanNotUseAction has it\n}m" "$MODE"
     perl -0pi -e 's/^def strip_comments\(src\):/def strip_comments(src):\n    return src  # MUTANT/m' "$TESTF"
 }
 mutant2 "M6b that comment plus a prose-reading instrument" "$MODE" "$TESTF" m6

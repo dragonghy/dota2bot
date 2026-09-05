@@ -118,9 +118,26 @@ ck("2a outlatch gate still guards the re-scan",
    "J.IsSoakCandidate('outlatch')" in outpost)
 ck("2b the latch line still records the postcondition when armed",
    "DidWeGetOutpost = not bRescan or #Outposts > 0" in outpost)
-ck("2c outlatch is the ONLY soak candidate in the outpost mode",
-   len(re.findall(r"IsSoakCandidate\('([a-z0-9_]+)'\)", outpost)) == 1,
-   "a second gate here would break the attribution in the report")
+# ⚠️ WIDENED 2026-09-05 (協同組) from "exactly one id" to a NAMED SET, because
+# 'outcommit' landed in this file (GH #511 handoff 乙, the commitment fix that
+# this file's own §7 asked for). The thing the original check protects is real
+# and is kept: each id must have exactly ONE arming point, so a wave that arms
+# one leg can still be attributed to one lever. What it can no longer say is
+# "this file has one gate", because it now has two -- and an unnamed third is
+# still a red.
+#
+# ⚠️ THE CAVEAT THE ORIGINAL WORDING WAS POINTING AT, restated rather than
+# deleted: the two ids are independent under SINGLE-ARM waves, but a wave armed
+# with 'all' (or a bundle naming both) arms them together, and then a capture
+# reading cannot be attributed to either alone. The `outlatch` condition-(a)
+# reading in hand (W47: armed 72% / base 79%, 53 attempts, 13 completions) was
+# taken before 'outcommit' existed in the tree, so it is unaffected; the NEXT
+# capture reading must arm at most one of them.
+_ids = re.findall(r"IsSoakCandidate\('([a-z0-9_]+)'\)", outpost)
+ck("2c the outpost mode's soak ids are exactly {outlatch, outcommit}, one arming point each",
+   sorted(_ids) == ["outcommit", "outlatch"],
+   "found %s -- an unnamed gate, or a duplicated arming point, breaks the "
+   "attribution in the report" % (_ids,))
 # Routed through lua_corpus (2026-09-05): the open-coded `os.walk(bots/)` this
 # used to do is exactly what tests/test_lua_corpus_stability.py forbids, and it
 # was that test's only red on trunk -- named by the batch desk at 06:17Z as

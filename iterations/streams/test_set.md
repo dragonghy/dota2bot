@@ -17355,3 +17355,99 @@ push 后复跑,仅剩一条 finding:`MISSING path tools/agent/mutstand_text_abse
 `DO NOT PUBLISH YET`)。**代价这次很小**(§EV 在 #523 正文里只是档案指针,且 push 后立刻改了正文),
 但**形状与 08-28T22:03Z 那次逐字相同**。push 后复跑:§EV 已解析(`resolved on trunk 8 → 9`),
 findings **2 → 1**(剩的那一条即 §EV.7)。
+
+---
+
+## §EW 2026-09-05T14:xxZ 协同组 —— **接下 GH #511 的交棒 (乙),落 `outcommit`(gated, turbo-only, 未 armed)**;本节最该被读的是 **§EW.3:第一版的反真空对照是真空的,而说出这件事的是变异台不是我**
+
+**产出**:`bots/mode_outpost_generic.lua`(唯一行为改动)、
+`tests/test_outcommit_channel_hold.lua`(**11/11**)、
+`tests/fixtures/outchan/f_260905_010205_luna_channel.lua` + `..._precast.lua`(真帧)、
+`tools/agent/mutstand_outcommit.sh`(**16/16 CAUGHT,零 NO-OP,零 SURVIVED,EXIT=0**)、
+`iterations/state.json:outcommit_20260905`。
+**armed 串一字未动;`queue.json` 一字未动;零 AWS、零 S3、零 EC2、零波次。**
+
+### §EW.1 杠杆:不是守卫,是出价
+
+GH #511 判的根因(`Think()` 缺 `IsChanneling` 守卫)已被本组 04:34Z 裁为 no-op(§EO)。
+没人管的是**出价**:`GetDesireHelper` 的唯一非 NONE 返回是一条纯距离 remap,
+上限 `BOT_ACTION_DESIRE_HIGH` **0.75**,而 **channel 开始那一帧与它 5.9 秒深的那一帧读数一模一样**;
+`mode_farm_generic` 的出价 remap 顶到 `BOT_MODE_DESIRE_VERYHIGH` **0.9**。
+⇒ 已经投进去的六秒在仲裁里买不到任何东西。W47 的读数(53 次 channel / 13 完成 / 40 中断 75.5% /
+66.6 秒;36 次抽样中断里 **34 次**本文件内没有任何理由)正是这个形状。
+
+armed:`J.IsModeTurbo() and J.IsSoakCandidate('outcommit') and bot:IsChanneling()
+and ClosestOutpost:HasModifier('modifier_watch_tower_capturing')` ⇒ `BOT_MODE_DESIRE_VERYHIGH`。
+两个合取项都必要:modifier 单独为真时**队友**在占也算,那不是本 bot 的沉没成本。
+
+**⭐ 主判据(立法级,可复用,超出本主题):「缺 X 守卫」与「出价没给沉没成本定价」
+落在同一个文件里、指着同一段录像、读起来一样,而只有后者动得了东西。**
+⇒ 一个「缺守卫」的论断被推翻之后,不要就地找第二个守卫,要**往上一层**问
+「这个模式有没有为它已经付出的代价出价」。
+
+### §EW.2 方向由构造保证
+
+闸块位于**每一条出厂否决之下**(`IsSuitableToCaptureOutpost`、<600u 视野内有敌人的中止、
+`IsEnemyCloserToOutpostLoc`)⇒ armed 只可能在**出厂树已经出价的帧**上把数字抬高,
+不可能把一个 bot 钉在团战里。位置由 `[source]` 断言钉死(gate 行号 > suit / abort 且 < remap),
+变异台 M8 就是把它挪到否决之上。
+
+### §EW.3 ⚠️ 自伤:第一版的反真空对照是真空的,变异台说的(M5 SURVIVED)
+
+控制帧原选 **t=1364.5** —— `MODIFIER_REMOVE`(1364.3)与下一次 `ADD`(1364.8)之间那 0.5 秒的洞,
+纸面上教科书,距塔仍 138u,同一个位置。
+但那一帧模式**早五条子句**就在 `J.GetEnemiesAroundAncient(bot, 3200) > 0` 上返回 NONE,
+于是**两条腿都答 0.0**,「arming 什么都没改」为真 —— **而理由与 capture modifier 毫无关系**。
+拆掉 modifier 合取项(M5)照样绿。
+
+**判据**:**一个对照必须够得着它所对照的代码**,而「够得着」要**断言**不能**指望**。
+改用 **t=1349.5**(同一次接近、首次施法前一秒、距塔 280u、塔上还没有 modifier、出厂出价 0.6893 活着),
+并新增断言「控制帧的出厂出价 > NONE」,再把这条自伤本身做成 **M14**。
+
+### §EW.4 域价钱(逐帧驱动,不是聚合)
+
+两张切片的**每一个**快照瞬间各生成一份 fixture 并真驱模式:
+
+| 段 | 帧 | 出厂出价 | 带 capture modifier |
+|---|---|---|---|
+| luna 1344.5–1360.5 | 17 | 活(0.59–0.72) | 11(1350.5–1360.5) |
+| luna 1361.5–1373.5 | 13 | **0.0** | 9 |
+| axe 1014.4–1031.4 | 18 | **0.0**(全部) | 8 |
+
+⚠️ **那 31 个 0 是 harness 产物不是游戏事实**:切片不带遗迹,loader 的 `GetAncient`
+交回一个替身结构物,模式第二条否决从某一帧起恒真。GH #171/#205 同族
+(可归因于**具名供给缺口**的 0,不是游戏条件),**本节不拿它们做任何断言**,已交棒。
+
+### §EW.5 三条兄弟棘轮按名字响了,全部**重新对准而不是放松**
+
+1. `tests/test_outchan_domain.py`「本文件不含 `bot:IsChanneling()`」原是**全文件**禁令 ——
+   而 §EO 自己开的药方逐字是「去 `GetDesire` 修承诺」⇒ **禁令禁掉了它自己开的药**。
+   收窄到 `Think()` 的函数体(冗余只在那里成立)。`mutstand_outchan.sh` 重跑 **13/13**。
+   ⚠️ **当场第二处自伤**:收窄之后 **M6b(注释 + 读散文的量具)当场 SURVIVED** ——
+   它把注释注在 `function Think()` **上方**,收窄后的断言看不见那里。
+   注入点移进 `Think()` 体内(也正是评审者今天真会写那句话的地方)后重新 CAUGHT。
+   **一次收窄会同时把某个变异体挪到射程之外,而它的表现是「更绿了」。**
+2. `tests/test_outlatch_capture_liveness.py` 检查 **2c**「outlatch 是本文件唯一 soak id」
+   → 具名集合 `{outlatch, outcommit}`,每个 id 仍只许**一个**上膛点,未具名的第三个仍红。
+   `mutstand_outlatch_capture.sh` **7/7**。
+3. `tests/test_gated_helper_nesting_census.lua` 的
+   `outlatch | GetDesireHelper | J.IsTeamPushingHighGround | slotpush` 行 →
+   `outcommit,outlatch | …`,判**仍是 (P)**:该 helper 是本函数上方五条子句处的**早退**,
+   不与任一 id 合取,且 `slotpush` 是**参数**,未 armed 即出厂值。
+
+### §EW.6 ⛔ 本轮不申请入集(P4.2),条件 (a) 的买法已写死
+
+OWNER_PRIORITIES **P4.2 入集冻结**:新 id 一律不入集,搭车也不行,直到 armed 集 ≤ 20。
+本轮**不改 `queue.json`、不提波次请求**。冻结解除后:
+
+- **单臂**入集 `outcommit`,对那一波的录像跑
+  `python3 tools/batch_test/behavioral/outlatch_capture.py <sweep_out_dir>`,
+  与修前基线比中断率(**armed 72% / base 79%,53 次尝试 13 次完成**,W47 两台补跑机 37 局);
+- ⚠️ **那一波至多只能 arm `outlatch` / `outcommit` 之一**:两者同在本文件,
+  `all` 或含两者的 bundle 会让占领读数无法归属。已写进 2c 的说明,不是只写在这里。
+
+### §EW.7 诚实边界
+
+证明的是**这一帧的出价被抬高了**,不是**打断真的停了**(后者是条件 (a),要录像)。
+**0.9 只是清掉了出厂 0.75 所低于的那个出价**并与 farm 的 remap 上限**持平**;
+它是否赢下每一次仲裁**离线证不了,也没有声称**。

@@ -165,10 +165,24 @@ check(sites == ['bots/mode_outpost_generic.lua'],
       'found %s -- a second cast site would break the deduction that every '
       'logged cast passed the guard' % sites)
 
-# The no-op itself: if this token appears here, someone landed #511 as written.
-check('bot:IsChanneling()' not in mode_src,
-      'mode_outpost_generic.lua carries no redundant bot:IsChanneling() guard',
-      'a bot:IsChanneling() guard was added to this file. It is REDUNDANT, not '
+# The no-op itself: if this token appears in Think(), someone landed #511 as
+# written.
+#
+# ⚠️ NARROWED 2026-09-05 (協同組, the round that landed 'outcommit'). This check
+# used to read `'bot:IsChanneling()' not in mode_src` -- the WHOLE FILE -- and
+# it went red on a change it was never about. The predicate is redundant in
+# exactly one place, Think(), and for exactly one reason: J.CanNotUseAction is
+# Think()'s first statement and evaluates it there. Nothing makes it redundant
+# in GetDesireHelper, which J.CanNotUseAction never runs through -- and reading
+# it there is precisely the commitment fix this file's own §7 handoff asked for
+# ("go fix the commitment in GetDesire"). A file-wide token ban therefore
+# forbade the remedy it prescribed. Same shape as the 1b correction in
+# tests/test_outlatch_capture_liveness.py: an assertion that keeps passing while
+# its stated reason drifts off the thing it is pinned to.
+think_body = body_of(mode_src, 'Think') or ''
+check('bot:IsChanneling()' not in think_body,
+      'Think() carries no redundant bot:IsChanneling() guard',
+      'a bot:IsChanneling() guard was added to Think(). It is REDUNDANT, not '
       'wrong: J.CanNotUseAction already evaluates that predicate earlier on the '
       'same frame (see GH #511 and the docstring above). Landing it changes no '
       'behaviour -- remove it and fix the commitment side in GetDesire instead.')

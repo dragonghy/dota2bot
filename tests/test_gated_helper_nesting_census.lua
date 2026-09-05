@@ -301,7 +301,20 @@ local PINNED = {
     "nodive2 | J.ShouldSuppressDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                          -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_crystal_maiden.lua",                        -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_jakiro.lua",                                -- P
-    "outlatch | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_outpost_generic.lua",                                    -- P
+    -- [outcommit 20260905] 'outcommit' joined the row 'outlatch' already held,
+    -- and the answer is unchanged (P) for a reason worth writing down rather
+    -- than inheriting: `J.IsTeamPushingHighGround` is not conjoined with either
+    -- id. It is an EARLY RETURN five clauses above both of them, and its
+    -- 'slotpush' gate is a PARAMETER (`J.IsModeTurbo() and
+    -- J.IsSoakCandidate('slotpush')` threaded into
+    -- J.Utils.IsTeamPushingSecondTierOrHighGround), so un-armed it evaluates to
+    -- false and the helper returns the shipped value of the expression it
+    -- replaced. Arming 'outcommit' ALONE therefore measures what the shipped
+    -- tree measures, not `outcommit AND slotpush`. This census's wide net is
+    -- doing what its header says it does: it keys on the id SET of the enclosing
+    -- function, so landing a second gate anywhere in GetDesireHelper rewrites
+    -- this row even when nothing about the nesting changed.
+    "outcommit,outlatch | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_outpost_generic.lua",                          -- P
     "overchase | J.ShouldPunishOverchase | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                     -- P
     "ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                            -- P
     "roshgate | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_roshan_generic.lua",                                     -- P

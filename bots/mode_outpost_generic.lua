@@ -113,6 +113,39 @@ function GetDesireHelper()
 			end
 		end
 
+		-- Soak candidate 'outcommit' (GH #511). The bid below is a pure distance
+		-- remap topping out at BOT_ACTION_DESIRE_HIGH (0.75), and it returns the
+		-- SAME number on the frame a capture channel starts as on the frame it
+		-- is 5.9s deep: the seconds already sunk into the channel are invisible
+		-- to it. mode_farm_generic's own bid, meanwhile, is a remap that reaches
+		-- BOT_MODE_DESIRE_VERYHIGH (0.9), so an ordinary farm tick outbids a
+		-- nearly-finished capture. Measured in W47 (37 games): 53 channels, 13
+		-- completions, 40 aborts (75.5%) burning 66.6 hero-seconds -- and on 34
+		-- of 36 sampled aborts NOTHING in this file had changed (full hp, no
+		-- enemy in vision, 5v5), so the order that cut the channel came from
+		-- another mode winning the tick, not from any veto here.
+		--
+		-- Armed, hold the mode for exactly as long as OUR OWN channel is
+		-- running: `bot:IsChanneling()` plus the outpost carrying
+		-- `modifier_watch_tower_capturing` -- the combat log puts that modifier
+		-- on the OUTPOST, not on the capturing hero. Both conjuncts are needed:
+		-- the modifier alone would also be true while an ALLY channels this
+		-- outpost, which is not this bot's sunk cost.
+		--
+		-- Every shipped veto above still runs first and unchanged -- including
+		-- the "any enemy inside vision while within 600u" abort right above, so
+		-- this cannot pin a bot in a fight. It only RAISES the number on frames
+		-- the shipped tree already bid on. Bound, declared: 0.9 clears the
+		-- shipped 0.75 and matches the top of farm's remap; that it wins every
+		-- arbitration is not established offline, only that it no longer loses
+		-- to a bid the shipped 0.75 sat below.
+		if J.IsModeTurbo() and J.IsSoakCandidate('outcommit')
+		and bot:IsChanneling()
+		and ClosestOutpost:HasModifier('modifier_watch_tower_capturing')
+		then
+			return BOT_MODE_DESIRE_VERYHIGH
+		end
+
 		return RemapValClamped(GetUnitToUnitDistance(bot, ClosestOutpost), 3000, 0, BOT_ACTION_DESIRE_VERYLOW, BOT_ACTION_DESIRE_HIGH )
 	end
 
