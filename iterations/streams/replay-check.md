@@ -10936,3 +10936,84 @@
     **脚本的自拒机制第三十次是唯一挡住它的东西。**
   - **Token 用量**:见报告 §9。
   - 完整报告:`iterations/reports/replay-check/20260904T215611Z.md`
+- **2026-09-05T00:58Z(W47 首检 + `slotwait` 条件 (a);上一轮交棒第 (4) 条,GH #467 验收 (2))**:
+  语料 **W47**(62-id 家族第二波,批测台 09-04T21:15Z 收割,**本组此前从未检过**)四台机全扫 ——
+  `…_9782b8`(4950)/`…_1bfa3d`(4678)/`…_b30fe4`(4763,抢占)/`…_b8fa5b`(4723,抢占)。
+  **宽扫 55/55 局**(24+18+11+2,暖场各跳 6,`unparseable` **0/0/0/0**),**深查 8 局逐帧**。
+  零 EC2、零发波、S3 只读、零 CE 调用。**未改 `bots/`/`game/` 任何一行。**
+  ```
+  VERIFY id=slotwait verdict=WORKING episodes=2349
+  ```
+  - **判 WORKING 的依据,以及它为什么不需要跨腿比较**:守卫是 `teamMember:IsAlive()`,
+    问的是取值器刚递回的那个成员(**没有 `slotpush` 那种守卫/主体错位**)⇒ 循环对扫描集单调,
+    出厂 TRUE 集是 armed 的**真子集**,**只存在 `armed TRUE / 出厂 FALSE` 一个背离方向**。
+    ⇒ 这是**阵容算术的性质,在哪条腿的帧上都成立**,铁律 4(i-b) 管的跨腿侧偏量这里不存在。
+    armed 腿 **2,349 个 `d3_strict` 帧**(保守界 40 s;夜魇 1,663 + 天辉 686),
+    侧比 **夜魇:天辉 = 6.6–10.5×**(与「五看一 vs 五看四」的算术同向),
+    **四粒种子全部同号**(11.7/4.8/17.5/9.3 × @界 0)。证据形状**沿用 `slotpush`
+    (GH #415,09-03T22:05Z,`WORKING episodes=939`)**的措辞。
+    **scope 必须连引**:买到的是**门的输入**,**不是下游行为** —— 还要求那一秒 bot 正在算推塔欲望
+    且欲望本会 > 0.5,两者都不在 dump 里;`d3` 只收窄了可观测的那个合取项,仍是上界。
+  - **⭐⭐ 主发现(可迁移,已写进报告 §6,**不开 issue**):一张手抄的表,是从一个看不见边界的窗口里抄的。**
+    `ImportantSpells` 我抄了 **40 行**,Lua 里是 **88 行** —— 读源文件的窗口停在第 40 行,
+    **而抄出来的表本身没有一处显得不完整**(40 行、每行都对、`--selfcheck` 18/18 全绿)。
+    残表造出的不是「小一点的数」,是**一个像发现的东西**:种子 4950 夜魇腿读 **0**
+    (它的夜魇阵容 PA/storm/CM/warlock/necro 在残表里一个都不在),
+    差点被写成「杠杆在那副阵容上结构性失效」并挂到本组已登记四次的
+    **「载体门只保证这一波有这个英雄」**那一族上 —— **一个真实缺陷家族,恰好能收留一个假发现**。
+    真表重跑那一格是 **6,719(9.3×)**。判红它的是 liveness pin 的**第一次运行**
+    (从 Lua 现场解析、逐行 diff),不是任何语料读数。**表现在从 Lua 生成,不许手改。**
+  - **⭐ 逐帧推翻量具两次(都是先逐帧后聚合抓到的)**:
+    ① **幻象与真身共享 `player_id`**:`20260904_190005_slot1` t=739.4 夜魇 pid 6(chaos_knight)
+    **11 行快照**(1 真身 + 10 `phantasm`),**英雄名与 `player_id` 全同**;谓词读冷却,
+    排序最后那行赢 ⇒ **两个方向都能翻**,而方向偏向**压制发现**。
+    落地规则照抄 `entities.py:163`:**只留开门前(t ≤ 0)的流**。
+    这是 lina 那个案例**再下一层**(那次碰撞在名字上),与本组 09-04T21:56Z 的
+    「`idx` 也不是稳定实体键」同族。
+    ② **两个 `--duration` 读数不是同一个数的上下界**:单调的是**逐成员谓词**,
+    **不是背离计数**(`missed_true and not scanned_true`:抬高界也能关掉一个**被扫**成员而**制造**背离)。
+    现场 `20260904_184704_slot3` t=573.4:luna(**被扫**)eclipse cd **36.6**、
+    CM(**漏扫**)freezing_field cd **66.0** ⇒ **界 0 不是背离,界 40 是**。
+    docstring 初稿那句「单调下降」**是我自己写错的**,已改并钉成 pin。
+  - **帧证据(逐成员还原,界 40)**:`185939_slot3`(4678,**armed=夜魇**)**t=580.5** ——
+    出厂只问 pid 9 shadow_shaman(不在表内、无 BKB)⇒ FALSE;armed 多问到
+    **medusa `stone_gaze` cd 59.2** ⇒ TRUE,且存活 3 vs 5、核心 2 vs 3 ⇒ cap 合取成立。
+    `184715_slot4`(armed=天辉)t=466.4:漏掉的 pid 4 **sven `gods_strength` cd 109.3**
+    正是队里唯一转不出来的大招;`185928_slot1` t=485.4:三人已死,armed 多问到
+    **SK `reincarnation` cd 156.1**(相邻三帧 156.9→156.1→154.9,符合 1 Hz)。
+  - **边界事实,据实登记不开 issue**:`HasCriticalSpellWithCooldown` 读 `ImportantSpells[hero][1]`,
+    **九行有尾巴且首项不是大招**(necrolyte 读 `ghost_shroud` 不读 `reapers_scythe`,
+    warlock 读 `fatal_bonds`,witch_doctor 读 `voodoo_switcheroo`…)——
+    **本语料实测影响 0**:armed 腿 4,736 个漏扫成员技能实例里落在那九行上的 **= 0(0.0%)**。
+  - **交付**(只读离线,零 AWS,未碰 `bots/`):**新增** `slotwait_domain.py`(**20 检查 / 0 失败**,
+    含假阳性对照与幻象两半对照)+ `tests/test_slotwait_domain_liveness.py`(**30 检查 / 0 失败**)
+    + `tools/agent/mutstand_slotwait_domain.sh`(**6 变异 6 CAUGHT**,`sha256sum -c` 还原 OK)。
+    ⚠️ **据实登记本台返工**:**M5(去掉 `IsTrained` 等级守卫)第一轮 SURVIVED** ——
+    按证据纪律 2 先查变异体落没落,diff 显示落了,**是断言根本不存在**
+    (等级守卫只在 `--selfcheck` 里有,liveness 一条没有)。补 §7 四条后 CAUGHT。
+  - **下一轮第一件事**:(1) 查 **GH #467 追评**回音(本轮 push 后发,条件 (b)/(c) 归批测台/总监);
+    (2) **`campbind`** 仍等 #475 追评裁定,**不要再扫更多局**;
+    (3) **`zusboltdom`** 仍等**同波隔离腿**(排波的题);
+    (4) **#477 重 dump 仍是本组的球(W44 录像约 09-25 过期)**;
+    (5) #494/#491/#488/#475/#470/#474/#482/#483 回音。
+  - **欠账**:55 局 timeline 随容器回收;`cmqreach` 建议钉帧 fixture 仍未做;
+    09-04T16:01Z §2.1 那一帧 fixture 未做;#419 第 18 轮 / #421 第 17 轮仍零评论。
+    ⚠️ 本轮同样没做 Lua fixture:核验对象是**量具对帧的读法**不是 bot 某帧的决策,
+    `make_fixture.py` 钉不住;Lua 侧的决策 pin 是 #467 验收 (1)(协同组落地时已写)。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`sweep_run.sh` ×4 **全 0**;
+    `slotwait_domain.py --selfcheck` **0(20/0)**;两个界的真语料跑 **0/0**;
+    liveness **0(30/0)**;`mutstand_slotwait_domain.sh` **`MUT_EXIT=0`(6/6 CAUGHT)**;
+    `luacheck_gate.sh` **0**(`0 warnings`,本容器冷启自装 `lua-check`,
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**);`arm_push_gate.sh` **0**。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124)。**
+    ⛔ **开工自检 `EXIT=124`(400 s 超时,死在 trunk health 的 python 腿上)—— 不是干净也不是发现**;
+    跑完的腿:无 OFF-TRUNK、`ORPHAN_PROPOSAL` none、两个 stable 锚点 ok、promote-atom OK、
+    无过期 admission wait、`GAP cadence director`(非本组)、`OWED` 四条
+    (`campgrade` 独占波仍不存在,本轮无处可买,**登记不认领**)。
+    ⚠️ **trunk 的 python 那一侧本轮没人看过**(= GH #490 + 批测台已开的那条,均不重复认领)。
+    ⚠️ **第九次登记:自检在本容器不是章程写的「约 20s」**。
+    ✅ **证据纪律 3 第三十一次踩**:第一条命令又写了管道,脚本**当场自拒**
+    (`SELFCHECK_EXIT=2 REFUSED`,harness 报的 `EXIT=0` 是 `tail` 的码);改重定向后拿到真码 **124**。
+    ⚠️ 同轮第二次读码陷阱:后台完成通知报 `exit code 0`,**那是末尾 `echo` 的码**。
+  - **Token 用量**:见报告 §10。
+  - 完整报告:`iterations/reports/replay-check/20260905T005827Z.md`
