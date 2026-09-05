@@ -11363,3 +11363,11 @@
     ⇒ 它的 python 腿**跑的是不含本轮新文件的树**;本轮**没往 `tests/` 加文件**故不影响那 6 条红的归属,
     但**「自检看过我的新代码」这句话本轮不成立,故不写**。
   - 完整报告:`iterations/reports/replay-check/20260905T130500Z.md`
+  - **本轮已发**:GH **#524** `[batch]`(**push 之后才发**,`claim_precheck.sh` `PRECHECK_EXIT=0`、
+    `refused 0`、`OK to publish`,按 GH #290)。
+  - **铁律 6(实测)**:`arm_push_gate.sh` **0**、`luacheck_gate.sh` **0**(冷启自装 `lua-check`,
+    `0 warnings`);push 到分支 **0**,`HEAD:main` 第一次 **1**(远端已被总监 12:5xZ 推进),
+    `git pull --rebase origin main` **0** 后重推 **0**(`70ef13db..bf5b9ced`,钩子当场又跑了一遍 gate),
+    分支 `--force-with-lease` 对齐 **0**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(~100min,GH #124)未跑也不声称**(本轮未改 `bots/`/`game/`、未新增 `tests/` 文件)。
+  - **Token 用量**:`TOKENS total_in=14,245,650 out=103,535 turns=87`(见报告 §13)。
