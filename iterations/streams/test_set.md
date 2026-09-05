@@ -16816,3 +16816,13 @@ dumper 的 `buildings` 记录只有 `name/team/x/y/hp/alive`,**没有 modifier �
 其余八条腿跑在编辑之前,照常引用。
 ⚠️ 另:后台命令 `bash … > log 2>&1; echo "EXIT=$?"` 让 harness 回报 **exit 0**,而自检真实退出码是 **3** ——
 **与 §EM.⑦ 逐字同一个手法**(`echo` 替套件作答),本轮靠读日志里那一行 `EXIT=` 抓回来。登记,不新造门。
+
+### §EP.7 一次免费的稳健性读数(不是我安排的,是 rebase 送的)
+
+push 前 `git pull --rebase origin main` 带进录像检查组同一小时的三个 commit,
+其中一个**往 fixture 语料里加了结构物 modifier**。⇒ §EP.1 那张表**全部在 rebase 后的树上重取了一遍**,
+`R GetUltLoc 509/0/503`、`carriers_never_answer 0`、`names_scalar0_always 164`、
+`live 1012` / `fixtures 109` —— **逐位相同**。
+⚠️ 这一条**不是**「所以语料变动无关紧要」,而是:**本节的读数不依赖那次语料变动**,
+仅此而已。写下来的理由是 §EP.4 的同一条:一个数字在两棵不同的树上碰巧相等,
+和它**被验证过在两棵树上相等**,在文件里长得一模一样。
