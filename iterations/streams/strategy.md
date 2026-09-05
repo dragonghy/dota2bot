@@ -5572,6 +5572,17 @@
   **已交棒:总监(GH #521 乙 —— 这类 id 是否改判为「等 fixture 核验」,现在有一个已完成的先例)
   + 录像组(#521 丙 —— `midtp` / `zusstatic` 按同一判准复核)
   + dumper/录像组(`snapshots[].lane_creeps`)。**
+  **⏱ 12:33Z 补记(全量动态半结算,发生在 10:5xZ 那次 push 之后)**:4 条 FAIL,
+  **归属全部查实为既存,零条本轮引入** —— `FAIL[1]` = **GH #508**(并被 **GH #517 §6** 逐字记为
+  「单跑也红,不是顺序效应」);`FAIL[2..4]` = **GH #517**(`test_arbheart_release_retires_camp.lua:134`
+  裸赋 `GetRoshanDesire` 不还原、单进程按字母序泄漏,把 pingstamp 要测的崩溃填平)——
+  本轮**独立复核**:`run_tests.lua pingstamp` 单跑 **EXIT=0 / 18 tests / 0 failures**,与 #517 读数一致。
+  **本轮新增文件按构造不可能是原因**:`ls tests | sort` 里 pingstamp 排 166、lf_rescue 排 133,
+  而 `test_replay_creepthink_drag_order.lua` 排 **227**,泄漏方向单向。
+  ⚠️ **而它自己 `EXIT=124`(被 `timeout 7200` 杀掉)⇒ 仍未跑完,「全量绿」今天没有人可以说。**
+  ⚠️ **同轮第二次踩规则 3**:后台写法 `timeout … > log; echo "EXIT=$?" >> log` 让
+  **harness 报的是 `echo` 的 0**,真码 124 只在日志最后一行 —— 开工自检那次是被工具拒绝的,
+  这次是**自己搭的**同一个坑,记在这里。
 - 2026-09-05T07:3xZ(**OWNER_PRIORITIES P4.4 开工 + P2 决策侧** —— P4.4 今日新立:
   本组每轮工作单元的**主体必须是一个 `bots/` 行为改动**,而本组**前四轮连续零行为改动**;
   `[strategy]` open issue 扫过 #511/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445,
