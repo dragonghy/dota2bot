@@ -25,7 +25,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 -100. **Wraith King 的 Bone Guard **只在单挑里放**,而单挑是它能加入的最便宜的一场架 ——
    而本轮**能验的那一半第一次正好是改动的那一项**(报告
    `iterations/reports/hero/20260905T170150Z.md`,`state.json:wkbonefight_20260905`,
-   `queue.json:hero-31`;新 `tests/test_wk_bone_guard_enemy_count.lua` 15 例 +
+   `queue.json:hero-31`,GH **#533**;新 `tests/test_wk_bone_guard_enemy_count.lua` 15 例 +
    `tools/agent/mutstand_wkbonefight.sh` 8 变异全杀;`bots/BotLib/hero_skeleton_king.lua`
    **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
    - **事实**:`X.ConsiderW` 的进攻分支写着 `#nEnemysHerosInView == 1` —— 一个**决斗判据**。
@@ -4475,7 +4475,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 - 2026-09-05T17:0xZ(报告 `iterations/reports/hero/20260905T170150Z.md`;轴 **Wraith King 的
   Bone Guard 只在单挑里放:`X.ConsiderW` 的 `#nEnemysHerosInView == 1` 收进 gated
   `wkbonefight`,turbo-only 未 armed**;新 backlog `-100`,`state.json:wkbonefight_20260905`,
-  `queue.json:hero-31`)
+  `queue.json:hero-31`,GH **#533**)
   **`bots/BotLib/hero_skeleton_king.lua` 有真代码行**(新 `X.IsBoneGuardEnemyCountOk` +
   `X.ConsiderW` 一处调用点);新 `tests/test_wk_bone_guard_enemy_count.lua`(**15 例**)+
   新 `tools/agent/mutstand_wkbonefight.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**

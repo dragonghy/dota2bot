@@ -6043,6 +6043,7 @@
   "domain_measured": "真实帧上量到的是**改动的那一项本身**:13 个 WK 主体 fixture 的可见敌人直方图 **0→4 / 1→2 / 2→7**;出厂判据放行 **2/13**,armed 放行 **9/13**。按分支几何切(650 内有敌方英雄,`GetProperTarget` 为 nil 故用几何代理):这样的帧 **7 个**,出厂判据放行 **1 个**,丢掉 **6 个**。⚠️ 计数视野受限 ⇒ 这是多敌人情形频率的**下界**,误差方向不利于本改动。⚠️ 不要把 9/13 读成「armed 会在 9 帧上放技能」——其余三项在语料里答不出来。",
   "not_touched": "充能项 `nStack / maxStack >= 0.6` 本轮不动:dumper 不记 modifier 充能层数(GH #27 家族),`nStack` 在语料里恒 0。",
   "next_baton": "批测台 `queue.json:hero-31`(零 EC2 归档只读扫描,可与 hero-2 / hero-30 并成同一次遍历,带 DOMAIN-NOT-REACHED 退回门与预登记判读方向)。X.ConsiderW 头上那段判词的最后一句就是「Size a Bone Guard change with a batch request, never with a fixture scan」,本轮照办。**在条件 (a) 买到之前不许 promote**;P4.2 冻结期内不提入集(合法裁定 = FROZEN-HOLD)。",
-  "report": "iterations/reports/hero/20260905T170150Z.md"
+  "report": "iterations/reports/hero/20260905T170150Z.md",
+  "issue": "GH #533"
  }
 }
