@@ -29,6 +29,31 @@
 -- The three assertions below are the measurement: the day make_fixture.py
 -- starts carrying motion, [model] goes red and the standing-still story stops
 -- being true silently instead of loudly.
+--
+-- ⭐⭐ 2026-09-05, GH #495 / owed_executions:mock_getvelocity_ultloc. THE SECOND
+-- SITE JOINED THIS FILE, and that is the whole reason the ruling put it here
+-- rather than in a file of its own. tests/mock/replay_fixture.lua now also
+-- answers `GetVelocity` -- with the ZERO VECTOR, which is not a second world
+-- assumption but THE SAME ONE said twice: every unit is standing still.
+-- Two sites, one claim, and no test in between is how they drift: teach one of
+-- them real motion and the other keeps answering the old world, silently, on
+-- every frame. So the coupling is pinned as ARITHMETIC in the [coupling] leg
+-- below -- `ext(t) == loc + vel*t` for several t -- which is false the instant
+-- either site moves without the other, and cannot be satisfied by a comment.
+--
+-- ⚠️ WHAT THE SECOND REPAIR DID NOT BUY, measured rather than assumed.
+-- J.GetUltLoc went from 503 raises / 0 answers to 0 raises / 503 answers on its
+-- in-domain frames (tests/test_mockscalar_return_shape.lua carries that row).
+-- But the location it answers is NEVER its interception point on this corpus:
+--   * v == 0 collapses the lead term -- `dest = (t + 0.35) * v + y` == y; and
+--   * `target:GetMovementDirectionStability()` is ITSELF an unrepaired
+--     `^Get -> 0` catch-all name, so `< 0.4` is true on 503/503 in-domain
+--     frames and dest is overwritten with the fountain-ward point regardless.
+-- Measured split of the 503: 453 answer a Vector, 50 answer nil (out of range
+-- or mana < 100), 2 take the IsDisabled branch. ⇒ THE LEAD-THE-TARGET MATHS IS
+-- STILL UNWITNESSED. Anyone reading "GetUltLoc answers now" as "GetUltLoc is
+-- exercised now" is reading the degenerate branch and calling it the helper.
+-- The [degenerate] leg below is that sentence made falsifiable.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -90,6 +115,90 @@ tests['[mock] the name answers a location on a real frame'] = function()
     assert(n > 0, 'the loop body never ran -- this test asserts nothing')
 end
 
+tests['[mock] the velocity name answers a zero vector on a real frame'] = function()
+    local J, bot = rf.load(FIX, SUBJ)
+    local near = J.GetNearbyHeroes(bot, 100000, true, BOT_MODE_NONE)
+    assert(near ~= nil and #near > 0, FIX .. ' has no enemy hero to read')
+    local n = 0
+    for _, h in pairs(near) do
+        local v = h:GetVelocity()
+        assert(type(v) == 'table', 'GetVelocity answered a ' .. type(v)
+            .. ' -- the mock repair was reverted, and J.GetUltLoc goes back to '
+            .. 'raising on all 503 of its in-domain frames')
+        assert(type(v.x) == 'number' and type(v.y) == 'number',
+            'the answer is a table but not a vector: it has no numeric x/y')
+        assert(v.x == 0 and v.y == 0 and (v.z or 0) == 0,
+            'GetVelocity answered a NON-ZERO velocity (' .. tostring(v.x) .. ', '
+            .. tostring(v.y) .. ') while the corpus carries no motion -- that is '
+            .. 'an invented world, and the [coupling] leg below says which other '
+            .. 'site now disagrees with it')
+        n = n + 1
+    end
+    assert(n > 0, 'the loop body never ran -- this test asserts nothing')
+end
+
+tests['[coupling] the two sites state ONE world, as arithmetic'] = function()
+    -- The reason both repairs are pinned in one file. Under the declared model
+    -- (standing still) the engine identity ext(t) = loc + vel*t holds for every
+    -- t; under any OTHER shared model it also holds; it fails exactly when one
+    -- site is taught motion and the other is not. So this is the drift alarm,
+    -- and unlike the comments above it cannot be satisfied by prose.
+    local J, bot = rf.load(FIX, SUBJ)
+    local near = J.GetNearbyHeroes(bot, 100000, true, BOT_MODE_NONE)
+    local n = 0
+    for _, h in pairs(near) do
+        local loc, vel = h:GetLocation(), h:GetVelocity()
+        for _, t in ipairs({ 0, 0.5, 2 }) do
+            local ext = h:GetExtrapolatedLocation(t)
+            assert(math.abs(ext.x - (loc.x + vel.x * t)) < 1e-6
+               and math.abs(ext.y - (loc.y + vel.y * t)) < 1e-6,
+                'at t=' .. t .. ' the extrapolation and the velocity disagree: '
+                .. 'ext=(' .. ext.x .. ', ' .. ext.y .. ') but loc+vel*t=('
+                .. (loc.x + vel.x * t) .. ', ' .. (loc.y + vel.y * t) .. '). '
+                .. 'ONE of tests/mock/replay_fixture.lua\'s two motion answers '
+                .. 'was changed without the other, so the mock now holds two '
+                .. 'contradictory worlds. Fix both, then re-take every domain '
+                .. 'that rests on either (test_set.md §EF.1 / §EL.6, the counts '
+                .. 'in test_mockscalar_return_shape.lua).')
+        end
+        n = n + 1
+    end
+    assert(n > 0, 'the loop body never ran -- this test asserts nothing')
+end
+
+tests['[degenerate] GetUltLoc answers, but never from its lead-the-target arc'] = function()
+    -- "It answers now" is not "it is exercised now". Two independent collapses
+    -- stand between this helper and the interception maths it exists for, and
+    -- BOTH are mock defaults rather than facts about the game:
+    --   (1) v == 0            -> `dest = (t + 0.35) * v + y` == y
+    --   (2) stability == 0    -> `< 0.4` true -> dest overwritten fountain-ward
+    -- (2) is a `^Get -> 0` catch-all name that is NOT on the three-name roster
+    -- of GH #495 (it is type-correct: the engine returns a number), which is
+    -- why nothing else in the harness is watching it. Corpus-wide at the time
+    -- of writing: 503/503 in-domain frames take (2); 453 answer a Vector, 50
+    -- answer nil, 2 take the IsDisabled branch.
+    local J, bot = rf.load(FIX, SUBJ)
+    local near = J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE)
+    assert(near ~= nil and #near > 0, FIX .. ' has no enemy inside 1600')
+    local n = 0
+    for _, h in pairs(near) do
+        assert(h:GetVelocity().x == 0 and h:GetVelocity().y == 0,
+            'collapse (1) is gone: the lead term can now move dest')
+        assert(h:GetMovementDirectionStability() < 0.4,
+            'collapse (2) is gone: GetMovementDirectionStability was repaired, '
+            .. 'so dest is no longer forced fountain-ward. That is good news '
+            .. 'and it invalidates this pricing -- re-take the GetUltLoc row in '
+            .. 'tests/test_mockscalar_return_shape.lua and say so.')
+        n = n + 1
+    end
+    assert(n > 0, 'the loop body never ran -- this test asserts nothing')
+    -- And the helper does reach an answer, which is what the repair bought.
+    local ok, ans = pcall(J.GetUltLoc, bot, near[1], 0, 2000, 1000)
+    assert(ok, 'J.GetUltLoc still raises on a real frame: ' .. tostring(ans))
+    assert(ans == nil or type(ans) == 'table',
+        'J.GetUltLoc answered a ' .. type(ans) .. ', not a location or nil')
+end
+
 tests['[model] no fixture carries motion, so standing-still is forced'] = function()
     -- The scanner is proved against a key that IS there before it is trusted
     -- about keys that are not: a regex that matches nothing would otherwise
@@ -115,9 +224,14 @@ tests['[model] no fixture carries motion, so standing-still is forced'] = functi
         .. table.concat(offenders, '\n  ')
         .. '\nThe standing-still model in tests/mock/replay_fixture.lua is no '
         .. 'longer FORCED by the corpus -- it is now a CHOICE, and an '
-        .. 'undeclared one. Teach the mock to use the real velocity, then '
-        .. 're-take every domain that rests on it (test_set.md §EF.1, the '
-        .. 'int_true/int_in_domain counts in test_midsupmirror_checkability.lua).')
+        .. 'undeclared one. It is stated at TWO sites and both must be taught '
+        .. 'the real motion together (the [coupling] leg above is what refuses '
+        .. 'to let you do only one): GetExtrapolatedLocation, which answers the '
+        .. 'current location, and GetVelocity, which answers the zero vector. '
+        .. 'Then re-take every domain that rests on either: test_set.md §EF.1 '
+        .. 'and §EL.6, the int_true/int_in_domain counts in '
+        .. 'test_midsupmirror_checkability.lua, and the GetUltLoc carrier row '
+        .. 'in test_mockscalar_return_shape.lua.')
 end
 
 tests['[consequence] the closing-the-gap clause cannot fire on this corpus'] = function()

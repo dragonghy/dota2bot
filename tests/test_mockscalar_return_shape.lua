@@ -54,6 +54,35 @@
 -- live frame, so that one repair alone converts 1012 clean answers into 1012
 -- raises in a single step.
 --
+-- ⭐ STATUS OF THE `^Get` ROSTER, 2026-09-05 (director; GH #492 then GH #495 /
+-- owed_executions:mock_getvelocity_ultloc). TWO of the three names are now
+-- answered from tests/mock/replay_fixture.lua, one per commit, deliberately one
+-- at a time so each re-taken count is attributable to a single line:
+--   GetExtrapolatedLocation  repaired  -> J.CanEnemyInterruptTpChannel 257 ans
+--   GetVelocity              repaired  -> J.GetUltLoc  503 raises -> 503 answers
+--   GetCurrentActiveAbility  UNTOUCHED -- and unmeasurable today, because the
+--     `^Is -> false` defaults stand in front of all four of its carriers; it
+--     produces no raises to count until that half moves.
+-- ⇒ THE ORDERING CONSTRAINT BELOW IS STILL UNSPENT AND STILL BINDING. Its
+-- unlock condition is the whole `^Get` roster, and the third name is not a
+-- formality: lifting `^Is` first is exactly what would make it start raising,
+-- which is the order this file forbids. The constraint lives in
+-- iterations/owed_executions.json:mock_isprefix_ordering, which reports OWED
+-- every round on purpose -- it is a VETO, not a to-do, and it has no completion
+-- state to reach.
+--
+-- ⚠️ AND A FOURTH NAME CAME INTO VIEW WITH THE SECOND REPAIR -- registered here
+-- rather than acted on. J.GetUltLoc now REACHES a line it never reached before:
+-- `target:GetMovementDirectionStability() < 0.4`. That name is also answered by
+-- the `^Get -> 0` catch-all, but it is NOT of this roster's kind: the engine
+-- returns a number there, so 0 is type-correct and nothing raises. It is a
+-- VALUE claim instead of a type claim -- "every unit is changing direction
+-- erratically" -- and it is true on 503/503 in-domain frames, which overwrites
+-- dest fountain-ward on every one of them. A type claim announces itself by
+-- raising; a value claim never does. Priced in the [degenerate] leg of
+-- tests/test_fixture_extrapolation_mock.lua; not repaired here, because this
+-- round repairs one name and the attribution of the counts below depends on it.
+--
 -- ⭐⭐⭐ WHY THE NON-SCALAR HALF IS DECIDED FROM bots/ AND NOT FROM THE API DOC.
 -- docs/BOT_API_REFERENCE.md carries the director's provenance banner (GH #241):
 -- a row there may describe intent but may NOT refute shipped code. So none of
@@ -148,11 +177,16 @@ tests['[census] the catch-all answers most of the shipped getter surface'] = fun
         .. 'catch-all any more -- the whole pricing below is stale, re-take it')
     -- 166 -> 165 on 2026-09-05 (director, GH #492), and the single name that
     -- left is GetExtrapolatedLocation: the fixture mock now answers it from the
-    -- frame. `cs.ratchet` is deliberately one-directional and would refuse a
-    -- fall, which is correct -- a fall means somebody acted on this file -- so
-    -- the new floor is registered here by hand, with the reason, rather than by
-    -- relaxing the ratchet.
-    cs.ratchet(C('names_scalar0_always'), 165,
+    -- frame. 165 -> 164 the same day (GH #495), and again exactly one name
+    -- left: GetVelocity. `cs.ratchet` is deliberately one-directional and
+    -- would refuse a fall, which is correct -- a fall means somebody acted on
+    -- this file -- so each new floor is registered here by hand, with the name
+    -- and the reason, rather than by relaxing the ratchet. ⚠️ A floor moved
+    -- WITHOUT such a line beside it is the drift this pin exists to catch: the
+    -- repairs are one name per commit precisely so that "which name left" is
+    -- always answerable, and the [census] leg below re-asserts the same total
+    -- from the other side (`names_never_scalar0` == 30).
+    cs.ratchet(C('names_scalar0_always'), 164,
         'names the catch-all answers on EVERY live frame')
     assert(C('names_scalar0_any') >= C('names_scalar0_always'),
         'always-0 cannot exceed ever-0; the sweep is miscounting')
@@ -205,28 +239,30 @@ tests['[source] the shipped tree itself proves the three returns non-scalar'] = 
         .. 'code, which changes what its 503/503 raise means; re-read the pricing')
 end
 
-tests['[census] TWO of the three names are still answered by the catch-all'] = function()
+tests['[census] ONE of the three names is still answered by the catch-all'] = function()
     -- The static half above says "the tree needs a non-scalar here". This says
     -- "the mock hands it a scalar there". Neither alone is the finding.
     --
-    -- ⭐ 2026-09-05 (director, GH #492): the roster is 3 names and ONE of them
-    -- was repaired -- GetExtrapolatedLocation, in tests/mock/replay_fixture.lua
-    -- (not in bot_api.lua, so `exempt` stays 5 and this file's exempt pin still
-    -- holds). It is moved to its own leg below with its measured post-repair
-    -- row. GetVelocity and GetCurrentActiveAbility are untouched and keep the
-    -- pricing exactly as it was, which is the point of splitting rather than
-    -- widening: this leg still says "a pure catch-all name", and it is still
-    -- true of everything it names.
+    -- ⭐ 2026-09-05 (director): the roster is 3 names and TWO of them are now
+    -- repaired -- GetExtrapolatedLocation (GH #492) and GetVelocity (GH #495),
+    -- both in tests/mock/replay_fixture.lua and neither in bot_api.lua, so
+    -- `exempt` stays 5 and this file's exempt pin still holds. They are moved
+    -- to their own leg below with their measured post-repair rows.
+    -- GetCurrentActiveAbility is untouched and keeps the pricing exactly as it
+    -- was, which is the point of splitting rather than widening: this leg still
+    -- says "a pure catch-all name", and it is still true of what it names.
     --
     -- ⚠️ THE ORDERING CONSTRAINT IN THE FILE HEADER IS UNSPENT. `^Get` before
-    -- `^Is` was the constraint, and only one `^Get` name has been repaired, so
-    -- the `^Is` half must still wait -- for GetVelocity's sake, not for
-    -- GetExtrapolatedLocation's. Repairing `^Is` today would take
-    -- J.GetUltLoc's 503 in-domain frames from "raises" to "raises", but
-    -- IsWillBeCast*/DidEnemyCastAbility/IsCastingUltimateAbility would go from
-    -- 1436 clean answers to 1436 raises, and the two-bucket readers downstream
-    -- would score every one of them as a measured "no".
-    for _, name in ipairs({ 'GetVelocity', 'GetCurrentActiveAbility' }) do
+    -- `^Is` was the constraint and the roster is not empty: the third name is
+    -- still on the catch-all. It is also the one name whose repair CANNOT be
+    -- witnessed today -- the `^Is -> false` defaults stand in front of all four
+    -- of its carriers, so it raises on nothing. That is not a reason to call
+    -- the roster done; it is the reason the ordering exists. Lifting `^Is`
+    -- today would take IsWillBeCast*/DidEnemyCastAbility/
+    -- IsCastingUltimateAbility from 1436 clean answers to 1436 raises, and the
+    -- two-bucket readers downstream would score every one of them as a
+    -- measured "no".
+    for _, name in ipairs({ 'GetCurrentActiveAbility' }) do
         local row = M.n[name]
         assert(row ~= nil, name .. ' is no longer called by shipped code -- it '
             .. 'dropped out of the parsed candidate list; re-read the pricing')
@@ -241,61 +277,85 @@ tests['[census] TWO of the three names are still answered by the catch-all'] = f
     end
 end
 
-tests['[census] the third name was repaired, and answers on every live frame'] = function()
-    -- GH #492, executed by the director 2026-09-05. Measured here by the same
-    -- sweep that used to price it as a catch-all name, so the two readings are
-    -- comparable line for line (same corpus, same tree, the mock the only diff):
-    --     scalar0  1012 -> 0     other  0 -> 1012     raised  0 -> 0
-    local row = M.n['GetExtrapolatedLocation']
-    assert(row ~= nil, 'GetExtrapolatedLocation dropped out of the shipped '
-        .. 'candidate list -- nothing under bots/ extrapolates any more, and '
-        .. 'the repair below has no consumer; re-read the pricing')
-    assert(not row.exempt, 'GetExtrapolatedLocation is now special-cased in '
-        .. 'bot_api.lua as well as in replay_fixture.lua. Two answers for one '
-        .. 'name is how they drift; pick one and re-take every count here')
-    assert(row.scalar0 == 0, 'GetExtrapolatedLocation still answers the '
-        .. 'catch-all 0 on ' .. row.scalar0 .. ' frame(s) -- some unit kind the '
-        .. 'fixture builds is not covered by the repair, so the censoring '
-        .. 'survives on exactly those frames')
-    assert(row.raised == 0, 'the repaired name now RAISES on ' .. row.raised
-        .. ' frame(s)')
-    assert(row.other == C('live'), 'GetExtrapolatedLocation answers from the '
-        .. 'frame on ' .. row.other .. ' of ' .. C('live') .. ' live frames, '
-        .. 'not all of them')
+tests['[census] the two repaired names answer on every live frame'] = function()
+    -- GH #492 then GH #495, executed by the director 2026-09-05, one per
+    -- commit. Measured here by the same sweep that used to price them as
+    -- catch-all names, so each pair of readings is comparable line for line
+    -- (same corpus, same tree, the mock the only diff):
+    --     GetExtrapolatedLocation  scalar0 1012 -> 0   other 0 -> 1012  raised 0
+    --     GetVelocity              scalar0 1012 -> 0   other 0 -> 1012  raised 0
+    for _, name in ipairs({ 'GetExtrapolatedLocation', 'GetVelocity' }) do
+        local row = M.n[name]
+        assert(row ~= nil, name .. ' dropped out of the shipped candidate list '
+            .. '-- nothing under bots/ consumes it any more, and its repair has '
+            .. 'no consumer; re-read the pricing')
+        assert(not row.exempt, name .. ' is now special-cased in bot_api.lua as '
+            .. 'well as in replay_fixture.lua. Two answers for one name is how '
+            .. 'they drift; pick one and re-take every count here')
+        assert(row.scalar0 == 0, name .. ' still answers the catch-all 0 on '
+            .. row.scalar0 .. ' frame(s) -- some unit kind the fixture builds '
+            .. 'is not covered by the repair, so the censoring survives on '
+            .. 'exactly those frames')
+        assert(row.raised == 0, name .. ' now RAISES on ' .. row.raised
+            .. ' frame(s)')
+        assert(row.other == C('live'), name .. ' answers from the frame on '
+            .. row.other .. ' of ' .. C('live') .. ' live frames, not all')
+    end
+    -- The catch-all shrank by exactly the two repaired names and nothing else.
+    -- Stated as a total so a THIRD name quietly leaving the catch-all (the way
+    -- a stub gets added "while I was in there") cannot pass unremarked.
+    assert(C('names_never_scalar0') == 30, 'the sweep now finds '
+        .. C('names_never_scalar0') .. ' shipped Get* names that are never '
+        .. 'answered by the catch-all, not 30. Some name other than the two '
+        .. 'repaired here left the catch-all: say which in the report and '
+        .. 're-take every count in this file')
 end
 
 -- ------------------------------ carriers that never answer their question --
 
-tests['[census] ONE shipped carrier has never answered on this corpus'] = function()
-    -- ⭐ RE-PRICED 2026-09-05 (director, GH #492). This leg registered TWO
-    -- carriers that had never once answered their own question on a real frame.
-    -- One of them has been repaired and the other has not, and keeping them in
-    -- one loop would have made the surviving finding look half-fixed when it is
-    -- untouched. So they are split by WHY, not by count:
+tests['[census] NO shipped carrier is mute on this corpus any more'] = function()
+    -- ⭐ RE-PRICED TWICE, and the second re-pricing empties the finding.
+    -- This leg opened (协同组, 2026-09-04) registering TWO shipped helpers that
+    -- had never once answered their own question on a real frame:
     --   J.CanEnemyInterruptTpChannel  raised because the fixture mock had no
-    --     GetExtrapolatedLocation. Repaired on this commit; 257 in-domain
+    --     GetExtrapolatedLocation. Repaired 2026-09-05 (GH #492): 257 in-domain
     --     frames, 0 raises, 257 answers. Priced in the leg below.
-    --   J.GetUltLoc                   raises because the mock has no
-    --     GetVelocity, and `local v = target:GetVelocity()` then reads `v.x`.
-    --     UNTOUCHED: still 503 in-domain, 503 raises, 0 answers. Shipped,
-    --     ungated (hero_shredder.lua calls it), and mute on every frame it can
-    --     reach. That is now the whole of this finding.
+    --   J.GetUltLoc                   raised because the mock had no
+    --     GetVelocity, so `local v = target:GetVelocity()` handed the catch-all
+    --     0 to `v.x`. Repaired 2026-09-05 (GH #495, this commit):
+    --     503 in-domain -> 503 RAISES became 503 ANSWERS, 0 raises.
+    -- ⇒ `carriers_never_answer` 1 -> 0, `carriers_raising_today` 1 -> 0.
+    --
+    -- ⚠️ A ZERO IS THE EASIEST READING IN THE WORLD TO GET FOR THE WRONG
+    -- REASON, and this file's own subject is a sweep that scores a raise as a
+    -- measured "no". A carrier that stopped raising because its DOMAIN went
+    -- empty would report the same zero as one that was repaired. So the zero is
+    -- never asserted alone: each row is required to have kept its domain, and
+    -- the answers are ratcheted at the counts the repairs actually bought.
     local r = R('GetUltLoc')
-    assert(r.raise_s > 0, 'J.GetUltLoc no longer raises on any in-domain frame. '
-        .. 'The mock was repaired, or the helper was: either way this pricing '
-        .. 'is stale, re-take it -- and if GetVelocity was stubbed, the `^Get` '
-        .. 'roster is now empty and the `^Is` half of the ordering constraint '
-        .. 'in this file header is unblocked')
-    assert(r.ans_s == 0, 'J.GetUltLoc answered on ' .. r.ans_s
-        .. ' in-domain frame(s). It became witnessable: PRICE IT AGAIN, a '
-        .. 'fix in it may have become landable with a real-frame fixture')
-    assert(r.raise_s + r.ans_s > 0, 'J.GetUltLoc has an empty domain '
-        .. 'on this corpus -- then "never answers" is vacuous, re-read')
-    assert(C('carriers_never_answer') == 1, 'the sweep counts '
+    assert(r.raise_s == 0, 'J.GetUltLoc raises again on ' .. r.raise_s
+        .. ' in-domain frame(s) -- the GetVelocity answer in '
+        .. 'tests/mock/replay_fixture.lua was reverted or shadowed, and a '
+        .. 'shipped, ungated helper is mute on every frame it can reach again')
+    assert(r.raise_s + r.ans_s > 0, 'J.GetUltLoc has an empty domain on this '
+        .. 'corpus -- then the zero above is vacuous rather than earned, and '
+        .. 'the repair is unwitnessed; re-read before trusting this leg')
+    cs.ratchet(r.ans_s, 503,
+        'in-domain frames where J.GetUltLoc now ANSWERS (was 503 raises)')
+    assert(C('carriers_never_answer') == 0, 'the sweep counts '
         .. C('carriers_never_answer') .. ' never-answering carriers, this file '
-        .. 'names 1 -- one of the two lists moved without the other')
-    cs.ratchet(r.raise_s, 503,
-        'in-domain frames where J.GetUltLoc raises on target:GetVelocity()')
+        .. 'names 0. A carrier went mute again, or a new one was added to '
+        .. 'tests/_mockscalar_sweep.lua: name it in the report and price it')
+    assert(C('carriers_raising_today') == 0, 'the sweep counts '
+        .. C('carriers_raising_today') .. ' carriers raising on a real frame, '
+        .. 'this file names 0 -- a raise is not a reading, so find out which')
+    -- ⚠️ AND WHAT THIS ZERO DOES NOT SAY. J.GetUltLoc ANSWERS on all 503; it is
+    -- not EXERCISED on any. Both the interception term (v == 0) and the branch
+    -- that overwrites dest (GetMovementDirectionStability == 0, itself a
+    -- catch-all) collapse on every one of those frames, so the lead-the-target
+    -- maths this helper exists for remains unwitnessed by the corpus. That
+    -- distinction is asserted, not just written down, in the [degenerate] leg
+    -- of tests/test_fixture_extrapolation_mock.lua.
 end
 
 tests['[census] and the repaired carrier answers on all 257, from here too'] = function()

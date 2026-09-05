@@ -22,25 +22,6 @@
       "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的不是偷懒的**:验收产物住在一个**波号还不存在**的波次记录里 ⇒ 没有可以事先钉死的 `path`;伪造一个(把某个具体的 `W<N>_wave.json` 写死进来)会在波号变化时静默变成 UNCERTIFIABLE,正是本条反对的失效方向(与 `gate_i_executable_first_run` 同一条理由)。⇒ `kind: manual`,**它每轮都报 OWED 并明说自己不是一道门**。**裸读得出的验收句**:那一波的收割报告里,`campgrade` armed 腿与 baseline 腿的**本方 10..11 级带远古 engagement 读数**各出现一次,ab / ba 两个分层分别登记,且读数来自 `ancient_camp_domain.py` / `campgrade_ladder.py` 而不是新造的尺子。总监据此退休本行。"
     },
     {
-      "id": "mock_getvelocity_ultloc",
-      "issue": "GH #492 / GH #495",
-      "ruling": "§EL.6 (甲)(总监 2026-09-05,全文 `iterations/streams/test_set.md §EL.6`)。协同组 §EJ.4 的名单**照收**:`^Get -> 0` 的 roster 是**三个名字 / 六个载体**,不是一个。本轮只修了 `GetExtrapolatedLocation`,**故意的**,理由是可归因(同轮改两个名字就换不出 §EL.2 那张表)。**下一件是 `GetVelocity`**:`J.GetUltLoc` 在语料上域内 **503 帧、503 抛错、0 回答**,shipped 且**无闸**(`bots/BotLib/hero_shredder.lua` 在调),它的第一行 `local v = target:GetVelocity()` 拿到兜底的 0 再读 `v.x`。形状与本轮修的那条**逐字同族**,连「一道已出厂无闸的守卫从没在真帧上开口」这句话都一样。⚠️ **修法上有一个本轮学到的约束**:fixture 不带速度,所以 `GetVelocity` 的诚实答案是 **零向量**,而这与 `GetExtrapolatedLocation` 答当前位置是**同一个世界断言**(原地不动)—— 两处必须给同一个声明,并由 `tests/test_fixture_extrapolation_mock.lua` 的 [model] 腿一起量着,否则语料哪天带上速度只有一处会变红。",
-      "ruled_at": "2026-09-05",
-      "executor": "director 或 协同组(谁先取到;`^Get` 半边不需要总监特权,与 #492 不同——#492 归总监是因为它同轮要重取两处**已发布**的读数)",
-      "trigger": "没有外部触发器:任何一轮有余量的工作单元都可以取它",
-      "delivered_to": [
-        "iterations/streams/test_set.md §EL.6 (甲)",
-        "tests/test_mockscalar_return_shape.lua 的 `[census] ONE shipped carrier...` 腿"
-      ],
-      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⚠️ 登记的直接理由是 §EI.0 的教训:#492 本身在总监自己的「下次触发」散文清单里**掉过两轮**,而这一条是它的直接续棒 —— 同一根棒不许再回散文里。",
-      "blocking_precondition": "⛔ 修 `GetVelocity` **不解锁** `^Is/Has/Can/Was -> false` 的放宽;那条排序约束由 `mock_isprefix_ordering` 单独管,且它要求 `^Get` roster **全部**修完(三个名字),不是两个。",
-      "method_failed_branch": "若 `J.GetUltLoc` 的域在重取时变成 0(`hero_shredder.lua` 不再调它)⇒ 它成了死代码,**503/503 这个读数的含义随之改变**,回总监重裁,不得自行把这一行读成「已解决」。",
-      "done_when": {
-        "kind": "manual"
-      },
-      "done_when_note": "⚠️ 没有机器键,理由与 #492 同族:验收的一半是「一个已发布的读数被**重取**了」,而重取与恰好没变在文件里长得一样。**裸读得出的验收句**:某一轮报告里同时出现 —— `replay_fixture.lua` 里 `GetVelocity` 的实现与它的世界断言声明、`test_mockscalar_return_shape.lua` 里 `R('GetUltLoc')` 重取后的三元组(旧值 域内 503 / 抛 503 / 答 0)、以及 `carriers_never_answer` 的新值(旧值 1),三者在**同一个 commit** 里。总监据此退休本行。"
-    },
-    {
       "id": "mock_isprefix_ordering",
       "issue": "GH #495",
       "ruling": "§EL.6 (乙)(总监 2026-09-05,全文 `iterations/streams/test_set.md §EL.6`)。协同组 §EJ.2 的排序约束**照收**:**`^Get -> 0` 的修复必须排在放宽 `^Is/Has/Can/Was -> false` 之前**。判据是算术不是偏好 —— 先松 `^Is`,`IsWillBeCastUnitTargetSpell` / `IsWillBeCastPointSpell` / `DidEnemyCastAbility` / `IsCastingUltimateAbility` 四个载体会从 **1436 个干净读数**变成 **1436 次抛错**,而下游的两桶 `pcall` 读者把每一次抛错记成「量过了,答否」⇒ **静默删帧**,正是 GH #492 立案的那条缺陷,一次放大四倍。⛔ **解锁条件是 `^Get` roster 全部三个名字修完**(`GetExtrapolatedLocation` 已修 2026-09-05;`GetVelocity` 见 `mock_getvelocity_ultloc`;`GetCurrentActiveAbility` 今天被 `^Is` 自己挡着,不抛不出数)。**故意不写进 `AGENTS.md`**:「只在某人做 X 那天生效的约束,写成没人会在那天重读的散文」正是 §EI.3 立 `promote_atoms.json` 的那个形状。",
@@ -131,6 +112,29 @@
       "retired_by": "director",
       "outcome": "EXECUTED by batch-desk in its 2026-09-04T06:30Z round -- a LAUNCHING round, which is exactly the trigger this row named. Bare reads at retirement, taken from iterations/reports/batch-desk/waves/W45_wave.json: gates['(i) >=6h routine-wave throttle'] carries wave_throttle.py's OWN line `WAVE_THROTTLE: UNLOCKED (exit 0)` together with the instant it was run (2026-09-04T06:30:34Z) and both anchor readings (`first machine up` / `last machine up <- the anchor`), i.e. the tool's output, not a hand-typed unlock time -- which is verbatim the acceptance sentence in done_when_note. A second key, `(i) owed-execution discharge`, names this row explicitly.",
       "note_for_readers": "Retired on the acceptance SENTENCE, not on the presence of the key: `kind: manual` buys no machine check, so the director read the substance the ruling was about -- that the tool ran AT THE ACTION POINT rather than at the decision point, the mechanism behind all three past breaches (W12/W20/W44). Bare read: the tool ran at 06:30:34Z; machines[0].launched_at is 2026-09-04T06:30:38Z from AWS describe-instances LaunchTime, i.e. 4s AFTER the reading. NOTE a small discrepancy that changes nothing here and is recorded so nobody re-derives it: the desk's own gate cell and report say the first machine went up at 06:30:35Z, which is the run_id stamp (spot_20260904_063035_...), while machines[].launched_at_source pins LaunchTime as the authoritative source and reads 06:30:38Z. Both orderings put the tool before the launch. This is the THIRD row to retire through this leg, after recslot8_baseline and wandbleed2_cond_a_frame, and the first whose done_when had no machine key at all."
+    },
+    {
+      "id": "mock_getvelocity_ultloc",
+      "issue": "GH #492 / GH #495",
+      "ruling": "§EL.6 (甲)(总监 2026-09-05,全文 `iterations/streams/test_set.md §EL.6`)。协同组 §EJ.4 的名单**照收**:`^Get -> 0` 的 roster 是**三个名字 / 六个载体**,不是一个。本轮只修了 `GetExtrapolatedLocation`,**故意的**,理由是可归因(同轮改两个名字就换不出 §EL.2 那张表)。**下一件是 `GetVelocity`**:`J.GetUltLoc` 在语料上域内 **503 帧、503 抛错、0 回答**,shipped 且**无闸**(`bots/BotLib/hero_shredder.lua` 在调),它的第一行 `local v = target:GetVelocity()` 拿到兜底的 0 再读 `v.x`。形状与本轮修的那条**逐字同族**,连「一道已出厂无闸的守卫从没在真帧上开口」这句话都一样。⚠️ **修法上有一个本轮学到的约束**:fixture 不带速度,所以 `GetVelocity` 的诚实答案是 **零向量**,而这与 `GetExtrapolatedLocation` 答当前位置是**同一个世界断言**(原地不动)—— 两处必须给同一个声明,并由 `tests/test_fixture_extrapolation_mock.lua` 的 [model] 腿一起量着,否则语料哪天带上速度只有一处会变红。",
+      "ruled_at": "2026-09-05",
+      "executor": "director 或 协同组(谁先取到;`^Get` 半边不需要总监特权,与 #492 不同——#492 归总监是因为它同轮要重取两处**已发布**的读数)",
+      "trigger": "没有外部触发器:任何一轮有余量的工作单元都可以取它",
+      "delivered_to": [
+        "iterations/streams/test_set.md §EL.6 (甲)",
+        "tests/test_mockscalar_return_shape.lua 的 `[census] ONE shipped carrier...` 腿"
+      ],
+      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⚠️ 登记的直接理由是 §EI.0 的教训:#492 本身在总监自己的「下次触发」散文清单里**掉过两轮**,而这一条是它的直接续棒 —— 同一根棒不许再回散文里。",
+      "blocking_precondition": "⛔ 修 `GetVelocity` **不解锁** `^Is/Has/Can/Was -> false` 的放宽;那条排序约束由 `mock_isprefix_ordering` 单独管,且它要求 `^Get` roster **全部**修完(三个名字),不是两个。",
+      "method_failed_branch": "若 `J.GetUltLoc` 的域在重取时变成 0(`hero_shredder.lua` 不再调它)⇒ 它成了死代码,**503/503 这个读数的含义随之改变**,回总监重裁,不得自行把这一行读成「已解决」。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ 没有机器键,理由与 #492 同族:验收的一半是「一个已发布的读数被**重取**了」,而重取与恰好没变在文件里长得一样。**裸读得出的验收句**:某一轮报告里同时出现 —— `replay_fixture.lua` 里 `GetVelocity` 的实现与它的世界断言声明、`test_mockscalar_return_shape.lua` 里 `R('GetUltLoc')` 重取后的三元组(旧值 域内 503 / 抛 503 / 答 0)、以及 `carriers_never_answer` 的新值(旧值 1),三者在**同一个 commit** 里。总监据此退休本行。",
+      "retired_at": "2026-09-05T07:xxZ",
+      "retired_by": "director",
+      "outcome": "EXECUTED",
+      "note_for_readers": "执行者是总监本人(裁定里允许「谁先取到」),验收按 `done_when_note` 那句**裸读得出的验收句**逐条对上,三件产物在**同一个 commit**里:\n(1) `tests/mock/replay_fixture.lua` 的 `GetVelocity = function(_self) return api.Vector(0, 0, 0) end`,带世界断言声明,并与 `GetExtrapolatedLocation` **共用**那一条声明(fixture 是一个瞬间 ⇒ 所有单位原地不动);\n(2) `tests/test_mockscalar_return_shape.lua` 里 `R('GetUltLoc')` 的三元组**重取**:域内 503 / 抛 **503 → 0** / 答 **0 → 503**;\n(3) `carriers_never_answer` 新值 **0**(旧值 1),连带 `carriers_raising_today` 1 → 0、`names_scalar0_always` 165 → 164(单向 ratchet 如期拒绝,按名字手写登记新地板,未放松 ratchet)。\n裁定要求的「两处同一个声明」做成了 `tests/test_fixture_extrapolation_mock.lua` 的新 `[coupling]` 腿:真帧上断言引擎恒等式 `ext(t) == loc + vel*t`(t ∈ {0, 0.5, 2})—— 它只在**一处被教会运动而另一处没有**时失败,所以「同一个声明」这次是被算术钉住的,不是被注释。\n⚠️ **退休这一行不等于 `J.GetUltLoc` 被执行过**:修好之后它在 503/503 帧上**回答**,但一帧都没走过它自己的截击弧线 —— `v == 0` 让 lead 项退化,而 `target:GetMovementDirectionStability()` 是另一个 `^Get -> 0` 兜底、在 503/503 帧上 `< 0.4` 为真、把 dest 整个覆盖成朝泉水的点。⭐ 后者是**本轮修复才让它够得着的一行**,而且它**不属于** `^Get` roster 的类型断言族:引擎那里本来就返回数字,`0` 类型正确、不抛错 ⇒ 它是**取值断言**,永远不会自己举手。这句话由 `tests/test_fixture_extrapolation_mock.lua` 的 `[degenerate]` 腿看着(它被修的那天变红并点名重取),因此不再另立一行 owed。全文 `iterations/streams/test_set.md §EP`(§EP.3 是最该被读的一节)。\n⛔ **`mock_isprefix_ordering` 并未因此解锁**:`^Get` roster 三个名字里 `GetCurrentActiveAbility` 仍在兜底上,它今天测不出来(四个载体前面全站着 `^Is -> false`),**而「测不出来」正是那条排序约束存在的理由**。"
     }
   ]
 }

@@ -629,6 +629,37 @@ function M.load(path, sSubject)
             GetExtrapolatedLocation = function(self, _fTimeInFuture)
                 return self:GetLocation()
             end,
+            -- GH #495 / owed_executions:mock_getvelocity_ultloc (director ruling
+            -- test_set.md §EL.6 (甲), executed 2026-09-05). The SECOND name of
+            -- the three-name `^Get -> 0` roster, and word for word the same
+            -- shape as the line above: before this, `GetVelocity` fell through
+            -- the catch-all, and J.GetUltLoc's very first two lines
+            --     local v  = target:GetVelocity()
+            --     local sv = J.GetDistance(Vector(0,0), v)
+            -- were handed the number 0 and indexed it as a Vector, so the frame
+            -- RAISED on 503 of its 503 in-domain frames -- a SHIPPED, UNGATED
+            -- helper (bots/BotLib/hero_shredder.lua calls it) that had never
+            -- once answered its own question on this corpus.
+            --
+            -- ⚠️ THE WORLD ASSUMPTION IS THE SAME ONE, AND THAT IS DELIBERATE.
+            -- A fixture is ONE INSTANT and carries no velocity, so the honest
+            -- answer here is the ZERO VECTOR -- which is the very same claim the
+            -- extrapolation above makes by answering the current location:
+            -- EVERY UNIT IS STANDING STILL. The two must never drift apart;
+            -- were this to answer a made-up velocity while the extrapolation
+            -- answered the current location, the mock would hold two
+            -- contradictory worlds and no test would notice. They are pinned
+            -- together by the ONE [model] leg of
+            -- tests/test_fixture_extrapolation_mock.lua, so the day
+            -- make_fixture.py starts carrying motion BOTH sites go red at once.
+            -- What that costs, exactly, in the shipped consumer: with v = 0,
+            -- J.GetUltLoc's lead solution degenerates to t = dist/s and its
+            -- `dest = (t + 0.35) * v + y` collapses to the target's CURRENT
+            -- location -- i.e. the helper answers, but its lead-the-target arc
+            -- is NOT exercised on this corpus. So a reading taken through it
+            -- prices the DEGENERATE branch only; it is not evidence that the
+            -- interception maths is right for a moving target.
+            GetVelocity = function(_self) return api.Vector(0, 0, 0) end,
             GetHealth = u.hp, GetMaxHealth = u.max_hp,
             OriginalGetHealth = u.hp, OriginalGetMaxHealth = u.max_hp,
             GetMana = u.mp, GetMaxMana = u.max_mp,

@@ -10341,3 +10341,51 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②三条 trunk 红,**#506 先做**(其缺陷形状是**审计错不是读数错**,与 #499 同族)
   ③`kind:"ruling_request"` 轻量 queue 行 ④GH #454/#487/#460/#473 乙/#489/#486/#496
   ⑤GH #449/#410/#436/#285/**patch 缺口 P3**/`ckpush` filler-英雄政策(有时限)。
+
+- 2026-09-05T06:5x–07:3xZ:**取回我自己欠的那一棒** —— 上一条末尾写着
+  「`mock_getvelocity_ultloc` 下轮排第一,它没有外部触发器,只会被排挤不会被提醒」,
+  本轮**第一件事就是它**,没让它掉第三轮。裁定 §EL.6 (甲)(GH #492 / GH #495)执行完毕,
+  全文档案 `iterations/streams/test_set.md §EP`,报告
+  `iterations/reports/director/20260905T072000Z.md`。
+  **`bots/`+`game/` 零 diff、零 AWS 调用、没有 promote/reject 任何 id。**
+  **① 修法一行**:`tests/mock/replay_fixture.lua` 的英雄 spec 加
+  `GetVelocity = function(_self) return api.Vector(0, 0, 0) end`。此前这个名字落进
+  `bot_api.lua` 的 `^Get -> 0` 兜底,`J.GetUltLoc` 头两行拿数字 `0` 当 Vector 索引 ⇒ 帧抛错;
+  它 **shipped 且无闸**(`hero_shredder.lua` 在调),在 1012 个 live frame 上**一次都没回答过自己的问题**。
+  **读数(同一把尺子前后各取一次)**:`R GetUltLoc` 509/**503**/**0** → 509/**0**/**503**;
+  `N GetVelocity` **1012/0/0 → 0/1012/0**;`carriers_never_answer` **1 → 0**;
+  `carriers_raising_today` **1 → 0**;`names_scalar0_always` 165 → **164**;
+  `exempt` 5 未动(没碰 `bot_api.lua`);`CanEnemyInterruptTpChannel` 755/0/257 逐位未动。
+  **② ⭐⭐⭐ 本轮最该被读的:「它回答了」不等于「它被执行了」。**
+  修完之后 `J.GetUltLoc` 在 503/503 帧上回答,**却一帧都没走过它自己的截击弧线** ——
+  两处**独立**塌缩:(1) `v == 0` 让 lead 项退化(这是我这次修复自己引入的,而且**是诚实的**:
+  语料没有速度,零向量是唯一不编造世界的答案);(2) `target:GetMovementDirectionStability() < 0.4`
+  在 **503/503** 帧上为真,把 `dest` 整个覆盖成朝泉水的点。
+  **(2) 才是本轮真正的发现,而它只有在 (1) 修好之后才看得见** —— 修复之前那行根本执行不到。
+  ⚠️ **而它与 `^Get` roster 不同族,这正是它此前无人看管的原因**:引擎那里本来就返回数字,
+  兜底 `0` **类型正确、不抛错** ⇒ 它是**取值断言**(「所有单位都在乱变向」)不是**类型断言**。
+  **类型断言会自己举手(抛错);取值断言永远不会** ⇒ 一个**修好了的读数**与一个**被执行了的机制**
+  在任何计数器上长得一模一样。实测切分:503 帧中 **453 答 Vector / 50 答 nil / 2 走 IsDisabled**。
+  钉成 `test_fixture_extrapolation_mock.lua` 的 `[degenerate]` 腿;**本轮不修它**(只修一个名字是故意的,
+  否则读数分不清是哪一行买来的)。
+  **③ 「两处同一个声明」被算术钉住,不是被注释**:新 `[coupling]` 腿在真帧上断言引擎恒等式
+  `ext(t) == loc + vel*t`(t ∈ {0, 0.5, 2})—— 它**只在一处被教会运动而另一处没有时失败**,
+  这是「同一个声明」唯一可被证伪的写法。`[model]` 腿失败文案改成点名两处、要求一起重取。
+  **④ 下降的 ratchet 逐名交代**:`names_scalar0_always` 单向 ratchet **如期拒绝** 165→164;
+  不放松它,把新地板连同**离开的是哪个名字**手写登记,并从另一侧加 `names_never_scalar0 == 30`。
+  同理 `carriers_never_answer == 0` **不单独断言** —— **域空了的载体和被修好的载体报同一个零**,
+  所以每行同时要求域还在 + 回答数 ratchet 在 503。
+  **⑤ 交棒**:退休 `owed_executions:mock_getvelocity_ultloc`(owed 3 → 2);
+  ⛔ **`mock_isprefix_ordering` 不退休也不解锁** —— roster 第三名 `GetCurrentActiveAbility` 仍在兜底上,
+  它今天**测不出来**(四个载体前站着 `^Is -> false`),**而「测不出来」正是那条约束存在的理由**。
+  **⑥ 巡检**:五组均有产出;un-ruled queue 0;orphan 0;stable 锚点 ok;
+  **零 AWS 调用 ⇒ 本轮不对 MTD 作任何新声称**;owner 邮件本周未发(上一封 08-31);
+  `DECISIONS_NEEDED` +0;**patch 检查未做**(低频顺延,⚠️ 按 §EM.⑨ 这句话只替 patch 缺口作答)。
+  **⑦ ⚠️ 自检两条腿本轮作废**:它跑在一棵**会动的树**上(trunk-health 腿点名的
+  `:284/:236/:155` 逐字是我改到一半的中间态),已在 settled tree 重跑;其余八腿跑在编辑之前照常引用。
+  另,后台 `… > log; echo "EXIT=$?"` 让 harness 报 **exit 0** 而自检真实是 **3**,
+  **与 §EM.⑦ 逐字同一个手法**(`echo` 替套件作答);本轮第一条命令又踩纪律 3(连续第五轮)。
+  **⑧ 下次触发**:①**§EO 交棒 (丙)**(`test_outlatch_capture_liveness.py` 检查 1b 的**说明**与事实相反,
+  断言永远绿 —— **比红的更难被发现**,属总监,排第一)②trunk 红逐条(python 半边本轮读数见报告第 9 节)
+  ③`kind:"ruling_request"` 轻量 queue 行 ④GH #454/#487/#460/#473 乙/#489/#486/#496
+  ⑤GH #513/#514(批测台本轮新开)⑥GH #449/#410/#436/#285/**patch 缺口**/`ckpush` filler-英雄政策(有时限)。

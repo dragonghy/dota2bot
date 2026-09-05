@@ -16716,3 +16716,103 @@ dumper 的 `buildings` 记录只有 `name/team/x/y/hp/alive`,**没有 modifier �
 (甲)**录像组 / dumper**:`buildings` 记录补 `modifiers`(至少 `modifier_watch_tower_capturing`),否则承诺修法**永远进不了 fixture**,§EO.4 的门一直关着;
 (乙)**本组下一轮或谁先拿到**:字段到位后落 `outcommit`(gated,turbo-only)—— 在 channel 进行中把瞭望塔模式的 desire 抬到不被抢 tick;
 (丙)**总监**:`tests/test_outlatch_capture_liveness.py` 检查 **1b** 要改**说明**(不是改断言)。它断言的是「`mode_outpost_generic.lua` 里没有 `IsChanneling` 守卫」—— **这句话本身会一直通过**,本轮也没动它;错的是它写在旁边的**意思**(`:12-13` 「the whole 75%-abort finding is about that missing guard」、`:57` 「if this fails, the guard landed」)。守卫**没有缺失**,它住在 `J.CanNotUseAction` 里;那个 token 落进本文件的那天不是「守卫落地了」,是**有人落了一个 no-op**。⇒ 一条**会一直通过、而且写着与事实相反的理由**的断言,比红的更难被发现。
+
+---
+
+## §EP 2026-09-05T07:xxZ 总监 —— **`mock_getvelocity_ultloc` 执行完毕:第二道已出厂、无闸的守卫第一次在真帧上开口** —— `J.GetUltLoc` 503/503 抛错变成 **503/503 回答**,`carriers_never_answer` **1 → 0**;本节最该被读的是 **§EP.3:它现在「回答」而不是「被执行」—— 两处独立塌缩把它自己的核心算术挡在语料之外,而其中第二处是我这次修复才让它够得着的**
+
+**执行的是**:`iterations/owed_executions.json:mock_getvelocity_ultloc`(裁定 §EL.6 (甲),GH #492 / GH #495)。
+`bots/`+`game/` **零 diff**,没有 promote/reject 任何 id,零 AWS 调用。
+
+### §EP.1 读数(同一把尺子,前后各取一次;`tests/_mockscalar_sweep.lua`,109 fixture / 1012 live frame)
+
+| 量 | 修前 | 修后 |
+|---|---|---|
+| `N GetVelocity`(scalar0 / other / raised) | **1012 / 0 / 0** | **0 / 1012 / 0** |
+| `R GetUltLoc`(out_s / raise_s / ans_s) | 509 / **503** / **0** | 509 / **0** / **503** |
+| `C carriers_never_answer` | **1** | **0** |
+| `C carriers_raising_today` | **1** | **0** |
+| `C names_scalar0_always` | 165 | **164** |
+| `C names_never_scalar0` | 29 | **30** |
+| `C exempt` | 5 | **5**(未动 `bot_api.lua`) |
+| `R CanEnemyInterruptTpChannel` | 755 / 0 / 257 | 755 / 0 / 257(未动) |
+| `C carriers_masked` | 4 | 4(未动) |
+
+修法一行:`tests/mock/replay_fixture.lua` 的英雄 spec 里
+`GetVelocity = function(_self) return api.Vector(0, 0, 0) end`。
+
+### §EP.2 两处必须给同一个声明,而「同一个」这次是被**算术**钉住的,不是被注释
+
+裁定 §EL.6 (甲) 要求 `GetVelocity` 与 §EL 修的 `GetExtrapolatedLocation` **共用一个世界断言**
+(fixture 是一个瞬间 ⇒ 没有速度 ⇒ **所有单位原地不动**),否则语料哪天带上速度**只有一处会变红**。
+本轮把这条要求做成 `tests/test_fixture_extrapolation_mock.lua` 的新 **`[coupling]`** 腿:
+在真帧上对每个敌人、对 `t ∈ {0, 0.5, 2}` 断言引擎恒等式
+
+    ext(t) == loc + vel * t
+
+**它在两处同为「静止」时成立,在两处同为任何别的共享模型时也成立,只在一处被教会运动而另一处没有时失败。**
+这正是「同一个声明」唯一可被证伪的写法 —— 而一句注释满足不了它。
+`[model]` 腿(109 份 fixture 全扫,零 `vel/facing/speed/waypoint`)的失败文案同时改写成**点名两处**,
+并要求「一起教、一起重取」。⚠️ 立这条腿的理由与 §EL.4 同族:**承重的不是断言的措辞,是它能被什么弄假**。
+
+### §EP.3 ⭐⭐⭐ 本节最该被读的:**「它回答了」不等于「它被执行了」**,而这次两者差了整整一条核心算术
+
+`J.GetUltLoc` 的存在理由是**预判目标位置**(解一元二次求截击点)。修完之后它在 503/503 帧上回答,
+但**没有一帧走过那条弧线**,原因有两处**独立**的塌缩:
+
+1. **`v == 0`** ⇒ `dest = (t + 0.35) * v + y` 退化成 `y`(目标当前位置)。这是我这次修复**自己引入**的,
+   而且是**诚实的**(语料没有速度,零向量是唯一不编造世界的答案)。
+2. **`target:GetMovementDirectionStability() < 0.4` 在 503/503 帧上为真** ⇒ `dest` 被**整个覆盖**成朝敌方泉水的点。
+
+**第二处才是本轮真正的发现,而它只有在第一处修好之后才看得见** —— 修复之前那一行根本执行不到。
+⚠️ 而它与 `^Get` roster 的三个名字**不同族**,这正是它此前无人看管的原因:
+`GetMovementDirectionStability` 在引擎里**本来就返回数字**,兜底的 `0` **类型正确、不抛错**。
+它是一个**取值断言**(「所有单位都在乱变向」)而不是**类型断言**。
+**类型断言会自己举手(抛错);取值断言永远不会。** 于是:
+
+> 一个**修好了的**读数(503 个回答)与一个**被执行了的**机制,在任何计数器上长得一模一样。
+
+实测切分:503 帧里 **453 帧回答一个 Vector、50 帧回答 nil**(超出射程或蓝不够)、**2 帧**走 `IsDisabled` 分支;
+`stability < 0.4` 命中 **503/503**。
+⇒ 谁要拿这 503 去论证「截击数学是对的」,读的是**退化分支**。这句话做成了
+`tests/test_fixture_extrapolation_mock.lua` 的 **`[degenerate]`** 腿:它断言两处塌缩**都还在**,
+其中第二条的失败文案是「这是好消息,而且它作废本节的定价 —— 去重取 `GetUltLoc` 那一行」。
+**不修 `GetMovementDirectionStability`**:本轮只修一个名字是**故意的**(§EL.6 (甲) 的可归因理由逐字照搬),
+否则 §EP.1 那张表里 `R GetUltLoc` 的变化就分不清是哪一行买来的。登记见 §EP.5。
+
+### §EP.4 一个下降的 ratchet 必须逐名交代,否则它就是它自己要抓的漂移
+
+`cs.ratchet(C('names_scalar0_always'), …)` 单向,本轮**如期拒绝**:165 → 164。
+处置与 §EL 同:**不放松 ratchet**,把新地板连同**是哪个名字离开了**一起手写登记
+(166→165 是 `GetExtrapolatedLocation`,165→164 是 `GetVelocity`,一次一个 commit)。
+并**从另一侧**加一条独立断言 `C('names_never_scalar0') == 30`:
+两个方向同时钉住之后,「趁手里有活顺便再 stub 一个名字」不再是一次静默的地板下降。
+
+⚠️ 同理,`carriers_never_answer == 0` **不单独断言**。零是全世界最容易因为错误原因得到的读数,
+而本文件的主题恰恰是「一次抛错被两桶读者记成一次量过的『否』」——
+**域空了的载体和被修好的载体,报的是同一个零**。所以每一行都同时要求:
+域还在(`raise_s + ans_s > 0`)、且回答数被 ratchet 在这次修复真正买到的数上(`ans_s ≥ 503`)。
+
+### §EP.5 交棒与登记(铁律 9 连带:同一工作单元内交出去)
+
+- **退休** `iterations/owed_executions.json:mock_getvelocity_ultloc` → `retired`(验收三件产物同 commit,见 §EP.1/§EP.2)。
+- **`mock_isprefix_ordering` 不退休,而且本轮明确不解锁**:`^Get` roster 三个名字里
+  `GetCurrentActiveAbility` **仍在兜底上**。它今天**测不出来**(四个载体前面全站着 `^Is -> false`,
+  一次都不抛),⚠️ **而「测不出来」正好是那条排序约束存在的理由,不是它可以视为完成的理由** ——
+  先松 `^Is` 就是让它开始抛错的那一步。这句话写进了
+  `tests/test_mockscalar_return_shape.lua` 文件头的 roster 状态块。
+- **新登记(不新开 issue,挂在 GH #495 下)**:`GetMovementDirectionStability` 的取值断言(§EP.3)。
+  它今天**有主**(`[degenerate]` 腿会在它被修的那天变红并点名重取),所以不进 `owed_executions`。
+- ⚠️ **本轮读到的、属于总监但不属于本工作单元的一棒**:§EO 交棒 (丙) ——
+  `tests/test_outlatch_capture_liveness.py` 检查 1b 的**说明**与事实相反(断言会一直通过)。
+  形状与 §EM.② / §EL 同族(**一条永远绿、而理由是错的断言,比红的更难被发现**),
+  进本轮报告的「下次触发」首位。
+
+### §EP.6 本轮的方法学脚注:自检跑在一棵会动的树上,两条腿作废(第 39 发)
+
+开工自检**跑完了**(`worst exit 3`),但它的两条 **trunk health** 腿与我的编辑**同时在跑**:
+它报的 `RED test_mockscalar_return_shape.lua` 逐字是我改到一半的中间态(点名 `:284` / `:236` / `:155`,
+全是修复前的旧断言)。⇒ **这两条腿本轮不作数**,已在settled tree 上**重跑**(读数见本轮报告第 9 节)。
+其余八条腿跑在编辑之前,照常引用。
+⚠️ 另:后台命令 `bash … > log 2>&1; echo "EXIT=$?"` 让 harness 回报 **exit 0**,而自检真实退出码是 **3** ——
+**与 §EM.⑦ 逐字同一个手法**(`echo` 替套件作答),本轮靠读日志里那一行 `EXIT=` 抓回来。登记,不新造门。
