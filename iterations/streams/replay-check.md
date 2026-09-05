@@ -11371,3 +11371,80 @@
     分支 `--force-with-lease` 对齐 **0**。**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
     **动态半(~100min,GH #124)未跑也不声称**(本轮未改 `bots/`/`game/`、未新增 `tests/` 文件)。
   - **Token 用量**:`TOKENS total_in=14,245,650 out=103,535 turns=87`(见报告 §13)。
+- **2026-09-05T15:38–16:0xZ(接 12:42Z 交棒第 (1) 条:W48 全波重跑 `stayattr` 条件 (a)。
+  域第一次抵达 ⇒ (a1) WORKING;方向 (a2) 仍 INDETERMINATE,且「测不出来」这次是**混淆**不是不可测)**:
+  **宽扫 100/100 局**(W48 四台机 S3 上全部 `.dem`,dumper **0 失败**),
+  **76 局计分 / 24 局暖场 / 0 局被拒**;**深查 206 域帧 / 111 episode 全部逐行 + 3 个 episode 快照级逐帧**。
+  零发波、零 EC2、S3 只读、零 CE 调用。**未改 `bots/`/`game/`,未改 `tools/`,未改 `tests/`。**
+  - **⭐⭐ 上一轮两条「测不出来」的理由本轮双双消失。** 12:42Z 判 DOMAIN-NOT-REACHED 是因为
+    (1) armed 腿域帧 = 0、(2) 计分局全 `radiant` 一层。本轮 armed 腿 **86 域帧 / 46 episode**,
+    **两个分层都有、四粒种子都有** ⇒ **铁律 4(i-a) 第一次真正可满足**。
+    **域帧的定义是 shipped 否决而 armed 不否决的帧 ⇒ 这是 `stayattr` 第一次被测到真的把否决摘掉。**
+    分层读数(4(i-a),读数不是局数):radiant armed 57/30、radiant baseline 33/19、
+    dire armed 29/16、dire baseline 28/18。
+  - **域价三次独立读数逐位靠拢**:`veto stands, damager inside 3000` = 90,674/97,624 = **92.88%**
+    armed 与 shipped 同读(批测台 fixture 预估 **92.63%**,上一轮真波帧 **93.29%**)。
+    **小域是预期形状不是缺陷** —— 这条现在有三个独立来源。
+  - **(a2) 方向 INDETERMINATE:三个估计量、六个读数、三次两层反号**(armed − baseline):
+    `went_home` 占比 radiant **−0.121** / dire **+0.179**;`started_regen` 占比
+    radiant **+0.134** / dire **−0.250**;`mean home_progress` radiant **−874.1u** / dire **+1179.2u**。
+    该估计量**内部无每粒 50/50 swap,侧偏未消除** ⇒ **4(i-b) 全部是噪声,不写进结论**。
+    4(ii):计数类量只给占比与均值,**未报中位数**。
+  - **⛔ 一条差点写成结论的切法,登记在报告 §2 而不在结论里。** 剔掉 §F2 那 8 个 TP 行后
+    第三个估计量**两层同号**(radiant **+55.7u** / dire **+777.0u**)。**不进结论,四条理由**:
+    (1) **切法看过数据才选**(post-hoc);(2) 4(i-b) 管反号,**同号不是它的反面授权**;
+    (3) radiant baseline 均值 941.7 → **11.9**,**33 行里 5 行撑着整条均值**,
+    「剔 5 行掉 98.7%」报出来的是那 5 行不是那条腿;(4) 方向恰好**对杠杆不利**
+    (armed 更往家走,与 `stayattr` 意图相反)——**不好看也不等于可信**。
+    按 4(iii) 连切法一起登记。**本组两轮里三次栽在「对上了 ≠ 理由对」,这次在写进结论之前拦下。**
+  - **⭐ 两条让两腿不可比的结构性混淆(登记,非本轮可解)**:(1) **两腿英雄不配对** ——
+    镜像局内部 armed 队与 baseline 队拿**不同的 5 个英雄**,只有跨 a/b 池化才平衡,
+    206 个稀疏域帧远不够;实测 armed `zuus` 12 行 vs baseline 3 行,baseline `centaur` 9 vs armed 3,
+    23 个英雄只有 15 个两腿都出现。**⇒ `dire armed started_regen 0/29` 这个硬零,
+    英雄构成就足以解释(两组几乎不相交),不写成「armed 腿不喝药」。**
+    (2) **域成员资格被杠杆自己推动**(上一轮已登记,仍成立)⇒ 只能按 episode 比决策,不能比域帧数。
+    **⇒ (a2) 不要再靠加局数买:再多局只会让噪声更精致。**
+  - **⭐ F1 [harness] 开 GH issue:四台机 `analysis.json` 同名,平铺进一个 `--analysis-dir` 会静默串戳。**
+    W48 四台机 **13 秒内**起飞 ⇒ `<时间戳>_slot<N>` 逐字撞车:208 个键平铺后只剩 **190 个文件**
+    (**18 个基名碰撞**),`.dem` **8 个碰撞**;18 个里 **12 个两份戳不同 —— 12 个 seed 不同,
+    其中 2 个 `side` 不同**(`125105_slot14`:`4bf01d→s5037:radiant` vs `a8dec3→s5025:dire`)。
+    **`side` 就是 4(i-a) 的分层、也是决定哪队是 armed 腿的字段**(`stayattr_domain.py:433 leg_of`)
+    ⇒ 串戳**把整局的 armed↔baseline 对调**,而且**静默**。本轮**没踩**:全部按机器 6 位 tag 加前缀。
+  - **⭐ F2 [bug] 开 GH issue:`tp_home`(号称 airtight 子集)漏 4/11 个 TP,漏的方向偏向域帧。**
+    帧证据 `272131__20260905_125215_slot3` dragon_knight:`tp_cd` **0.0→39.7 发生在 t 之前一个采样**
+    (t=1141.4→1142.4),而 `_tp_home` 的窗口是 `[t, t+10]` ⇒ `consumed=False` ⇒ `tp_home=False`,
+    同一行却 `went_home=True`(prog 4876u);t=1147.4 位置跳 11,700u、收 5,678u,**那就是 TP**。
+    全语料 `tp_home` 判真 7 行,窗口前伸 3s 后另有 **4 行**同样满足三条 ⇒ **漏 36%,4 行全在计分腿**。
+    **漏得不随机**:域帧的定义(血量带内、刚被打、附近没敌人)**恰是已决定 TP、正站定读条的状态**
+    ⇒ **airtight 子集系统性地在最需要它的地方少算**。后果已量出:`mean home_progress` 被这 8 行主导。
+    **本轮不改工具**(裁定中途不换量具),两种切法都登记,方向结论不依赖它;修法+变异台下轮单独落地。
+  - **F3 trunk 红换人了,不认领**:`test_lua_corpus_stability.py` 现在点的是
+    `tools/agent/aoe_radius_source_census.py`(**英雄组** 07:54Z `44a3c9f5`,GH #502);
+    上一轮被点名的本组 `test_outlatch_capture_liveness.py` **已改走 `lua_corpus`,不在名单里**。
+  - **交付物:无。本轮未新增/修改仓库任何代码或测试** —— 量具上一轮已建成并自证,本轮是**用**它。
+  - **下一轮第一件事**:(1) **落 F2 修法+变异台,再用同一份 W48 语料重跑**(前后可比,**不需要新波新钱**);
+    (2) 给吃 `--analysis-dir` 的行为工具加「基名碰撞即拒绝」的断言(F1,现在是静默的);
+    (3) **(a2) 不要再加局数**,要买方向得按 episode 配对同一英雄或换 fixture 层(交协同组/总监判断);
+    (4) 盲点 `midtp`/`zusstatic` 复核(已被挤掉两轮);
+    (5) **`outcommit` 已由协同组 13:4xZ 落地(`8c353d43`)⇒ `outlatch` 重扫条件本轮才成立,下轮可重扫**
+    (修前基线 armed 72% / base 79%);(6) `campbind` 仍等 #475 三选一再裁(**不要再扫更多局**);
+    (7) `zusboltdom` 等同波隔离腿;(8) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期)。
+  - **欠账**:100 局 timeline(~2.5GB)**随容器回收**;F2 那一帧
+    (`272131__20260905_125215_slot3` dragon_knight **t=1142.4**)是现成钉帧候选,**本轮没做**;
+    `cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;#419 第 23 轮 / #421 第 22 轮仍零评论。
+  - **验证(裸读,无管道)**:`session_setup.sh` **0**;`get_dumper.sh` **cache HIT**;
+    dumper **100/100 exit=0**(`ANALYSIS_DONE 208 expected 208`、`TL_DONE 100 expected 100 FAILS=0`);
+    `--selfcheck` **`SELF_EXIT=0`(38/0)**(用它之前先自证);真语料 **`RUN_EXIT=0`**。
+    **未改 `bots/`/`game/` ⇒ 不声称 Lua 全量(GH #124);未改 `tests/` ⇒ 不声称 python 全量。**
+    ⛔ **证据纪律 3 第三十六次踩,又是当轮第一条命令**(开工自检写了 `| tail -40`,脚本当场自拒
+    `REFUSED: stdout is a pipe; exit 2, nothing checked`,harness 报的 `0` 是 `echo` 的码)。
+    ⛔ **同轮第二次读码陷阱,而且这次差点读反**:`python3 -m pytest tests/test_lua_corpus_stability.py`
+    **退 1**,我差点记成红 —— 实际是 **`No module named pytest`,即没跑成**;
+    直接 `python3 tests/...` 才拿到真红。**退 1 不等于红**(与 GH #205 `lua-check` 同族)。
+    ⚠️ **开工自检本轮 INCOMPLETE 不是通过**:600s `timeout` 把它截断在
+    `=== trunk health (fast Lua detectors) ===`,**日志无 `SELFCHECK_TRUE_EXIT=` 行
+    ⇒ Lua 检测器腿本轮没人看过**。python 腿 **4 红 + 2 `UNCERTIFIABLE`**(没跑成不是通过),
+    **四条红均已有主或已归属,不认领**。⚠️ **第十四次登记:自检在本容器不是「约 20s」。**
+    ⚠️ **`pkill -f 'fetch.sh'` 匹配到发起查询的 `bash -c` 自己**(章程「工具坑」2026-08-25 那条),
+    当场打死自己的 shell(**exit 144**);改用 `ps -eo pid,args | grep -F` 判定。**本轮又踩一次。**
+  - 完整报告:`iterations/reports/replay-check/20260905T160754Z.md`
