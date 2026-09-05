@@ -274,5 +274,44 @@
     "verdict": "not blinded -- 2 paired seed(s) of 4 machines; 2 machine(s) reclaimed before the flip; NEXT WAVE: spot (GH #158 unchanged).",
     "obligation_2_discharged": "YES, partially and worth stating precisely. W46's omission of arm_depth left the depth-checked path unexercised on all four rows; this wave filled it and the path RAN on 3 of 4 rows (4678/4763/4950 print `[depth-checked]`), and on 4763 it did real work -- it is what downgraded ab29/ba1 to NO-PAIR.",
     "residual_defect_found": "The 4th row (seed 4723) still prints `[ab/ba only (no arm_depth given)]` even though arm_depth IS given (0.0). Read the source before believing the label: reclaim_blind.py:343 guards the depth branch on `paired and machine.get('arm_depth') is not None` -- the None-test is correct, but the branch is skipped because the machine is UNPAIRED, and the printed reason then misreports WHY. The classification is right; the label is false. An auditor reconciling log against record would go fill a field that is already filled. Filed as a issue this round."
-  }
+  },
+  "rerun": [
+    {
+      "seed": "4723",
+      "reason": "W47 machine reclaimed at 21.6 min with ab10/ba0 -- NO-PAIR, arm_depth 0.00. The paired difference for this seed was voided per the charter's pre-registered disposition (one machine reclaimed = that seed loses an arm; void the seed, NOT the wave).",
+      "run_id": "spot_20260905_003246_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_b34547",
+      "instance_id": "i-07dea406c173a8742",
+      "requested_az": "us-west-2b",
+      "actual_az": "us-west-2b",
+      "reaimed": "False",
+      "market": "on-demand",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle at 2026-09-05T00:33:xxZ -- the run_id's `spot_` prefix is a hardcoded string and is NOT evidence)",
+      "launched_at": "2026-09-05T00:32:48.000Z",
+      "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
+      "rerun_exit": "0",
+      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code",
+      "status_code_note": "On-demand machines carry NO SIR (GH #408), so EC2 StateReason.Code is the ONLY code this row can ever hold, and it ages out of the API in ~1h (GH #375). This machine self-terminates at ~02:32Z; the next batch-desk trigger must read it BEFORE ~03:32Z or the code is gone by construction (the W45 re-run rows are the recorded precedent for that loss)."
+    },
+    {
+      "seed": "4763",
+      "reason": "W47 machine reclaimed at 35.7 min with ab29/ba1 -- arm_depth 1.93, excluded as THIN-ARM by the GH #269 depth gate. Its 30 scored games were paid for and do NOT enter any mean (harvest obligation 6).",
+      "run_id": "spot_20260905_003250_1_15b0d9fd25a85805546ccb2d82a66942d5244c94_695907",
+      "instance_id": "i-0bc15fcc426fe50a0",
+      "requested_az": "us-west-2c",
+      "actual_az": "us-west-2c",
+      "reaimed": "False",
+      "market": "on-demand",
+      "lifecycle": "None (on-demand, verified by describe-instances InstanceLifecycle at 2026-09-05T00:33:xxZ)",
+      "launched_at": "2026-09-05T00:32:53.000Z",
+      "launched_at_source": "AWS describe-instances LaunchTime, not the run_id stamp",
+      "rerun_exit": "0",
+      "status_code": "PENDING -- fill at harvest from EC2 StateReason.Code",
+      "status_code_note": "Same construction as seed 4723's row: no SIR, EC2-only code, ~1h window (GH #375/#408)."
+    }
+  ],
+  "rerun_ruling": "GH #408 executed on its stated criterion -- the SIR `Status.Code`, not the EC2 `StateReason.Code`. BOTH W47 dead machines read `instance-terminated-no-capacity` (seed 4723 sir-ivtqk2fq, seed 4763), which is the exact code the ruling names => both re-runs go DIRECTLY --on-demand, skipping the (1)(2)(3) spot ladder. This is not a deviation from owner GH #158: it is #158's own 'unless there is no spot machine' clause, and a re-run is by construction aimed at a window that just refused capacity. Both fence conditions hold: ONE re-run per seed (each seed re-run exactly once) and AT MOST TWO on-demand re-runs per wave (exactly two). Both verified InstanceLifecycle=None. AZs aimed at us-west-2b/2c: 2b is the only AZ that delivered a scored seed in W47, and 2a/2d had both refused spot capacity at W47 launch. Placement honoured on both (requested == actual, reaimed False), so GH #252 acceptance holds for this pair: TWO distinct AZs, zero ring re-aims, zero ladder downgrades.",
+  "rerun_gate_i_note": "Registered re-run machines do NOT open a new gate-(i) window (W40/W42/W45 precedent). This holds STRUCTURALLY, not on anyone's honesty: wave_throttle.py reads `machines[]` only and never reads `rerun`, so the next wave's anchor stays W47's original slate at 2026-09-04T18:32:27Z. ** SEPARATELY, and still UNRULED: whether a re-run is itself BLOCKED BY gate (i) is GH #498, opened by the W47 harvest round; issue_read get_comments returned [] at 2026-09-05T00:1xZ, so no ruling existed at launch time. ** This round therefore executed the pre-registered CONSERVATIVE DEFAULT (treat it as governed) and WAITED: wave_throttle.py was re-run as the last command before spot_run.sh and printed `UNLOCKED (exit 0) ... margin +19s past unlock` at 2026-09-05T00:32:46Z. The launch is therefore legal under BOTH readings of #498, and the question was side-stepped rather than gambled on. Cost of the wait: ~20 minutes, $0.",
+  "rerun_cost_note": "Fence re-checked BEFORE the paid re-runs: 17.773 (Sept MTD, budgets snapshot refreshed 2026-09-04T22:42:52Z) + 1.02 (W46 spot) + 0.7413 (W47 spot, billed-side actual settled in the W47 harvest round, NOT the $0.90 constant) + ~1.10 (these two on-demand re-run machines at ~$0.55 each, W45 same-shape measurement) = ~$20.63. Against $50 / $80 / $90 / $100: ALL satisfied, no tier crossed, no owner approval triggered. ** The $80 the last several rounds have been quoting is itself disputed this round (see the batch-desk report section 2-A): the charter's fence RULE is 'the next UNCROSSED owner-visible Budget ACTUAL alert tier', the budget is TimeUnit=MONTHLY, and September MTD $17.773 has not crossed $50 -- so September's fence reads $50, not $80. This launch satisfies BOTH readings, so it does not depend on that ruling. ** The disposition itself was PRE-REGISTERED in the charter ('the missing seed gets a re-run machine'), so this is a standing authorization executed, not a new spending decision.",
+  "rerun_tree_note": "Pinned --ref 15b0d9fd25a85805546ccb2d82a66942d5244c94 = W47's own tree, so the re-run measures the tree it repairs rather than 'whatever main is now'. This mattered THIS round and was not merely defensive: `git ls-remote origin main` read e3b24e54 at gate time (00:15Z) but ba6d2961 at the launch instant (00:32Z) -- the director pushed two commits (b4d5f01f, ba6d2961) during the 20-minute gate-(i) wait. Verified at both instants that the drift carries NO behavior change: `git diff --stat <tree>..origin/main -- bots/ game/` is EMPTY for both 15b0d9fd..e3b24e54 and 15b0d9fd..ba6d2961, i.e. bots/+game/ are byte-identical across all three trees; and 15b0d9fd is an ancestor of origin/main (`git merge-base --is-ancestor` exit 0), so the instances can check it out. Arm string RECOMPUTED off the launch tree, not copied: ids 62 / bytes 550 / md5 c7e1f92c739f8f8dc0ee0c9484288628, byte-identical to W46's and W47's registration. check_armed_wiring.py --cand <ARM>: ARM_EXIT=0, `all 62 armed ids wired on HEAD`.",
+  "rerun_pooling_claim": "These two seeds re-enter W47's OWN slate; they do not create a W48 and do not open a new gate-(i) window. Once harvested, the 62-id family reaches 8 scored seeds (W46's four + W47's 4678/4950 + these two), which is what makes the GH #363/#449 pooling fork meaningful -- that fork is STILL UNRULED (sixth appearance) and this round does not pre-empt it. Registered BEFORE any data lands, so the pooling question cannot be settled by whatever the numbers turn out to look like."
 }
