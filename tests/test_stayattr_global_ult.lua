@@ -146,14 +146,25 @@ tests['[source] the lever is one clause, one id, in the promoted guard'] = funct
     -- than by argument.
     assert(M.g.STAY_NEGATED == 1, "the id is not in a `not IsSoakCandidate` "
         .. 'disjunct -- unarmed behaviour is no longer provably the shipped read')
-    -- The pullcad trap, as an assertion instead of prose. A second id here
-    -- would make the live condition a conjunction that freezes FALSE the day
-    -- either id is promoted -- while check_armed_wiring.py still calls it WIRED.
-    -- Parsed off comment-stripped source, because this function's own comment
-    -- names the trap and would otherwise satisfy the check it is warning about.
-    assert(M.g.STAY_NIDS == 1, 'J.ShouldStayAndRegen names '
-        .. tostring(M.g.STAY_NIDS) .. ' soak ids; exactly 1 is allowed '
-        .. '(two conjoined ids = the pullcad trap)')
+    -- The pullcad trap, as an assertion instead of prose. Two ids CONJOINED IN
+    -- ONE CONDITION make that condition freeze FALSE the day either id is
+    -- promoted -- while check_armed_wiring.py still calls it WIRED. Parsed off
+    -- comment-stripped source, because this function's own comment names the
+    -- trap and would otherwise satisfy the check it is warning about.
+    --
+    -- This read `STAY_NIDS == 1` until 2026-09-05. That is a PROXY for the
+    -- trap, and it was indistinguishable from the invariant only while this
+    -- function carried exactly one lever. 'staysrc' put a second, independent
+    -- lever on the supply clause -- its own `if`, sharing no condition with
+    -- this one -- and the proxy went red on a tree that has no trap on it. The
+    -- assertion moved to the per-condition maximum, which is the trap's actual
+    -- shape; the total is still asserted to be at least this lever's own, so a
+    -- deletion cannot pass by making the function id-free.
+    assert(M.g.STAY_IDS_MAX_PER_COND == 1, 'some single condition in '
+        .. 'J.ShouldStayAndRegen names ' .. tostring(M.g.STAY_IDS_MAX_PER_COND)
+        .. ' soak ids; at most 1 is allowed (two conjoined ids = the pullcad '
+        .. 'trap)')
+    assert(M.g.STAY_NIDS >= 1, 'J.ShouldStayAndRegen names no soak id at all')
     -- The helper is a question about the world, not a decision. A gate inside
     -- it would be a second arming point nobody reads.
     assert(M.g.DAMAGER_SOAKID == 0,

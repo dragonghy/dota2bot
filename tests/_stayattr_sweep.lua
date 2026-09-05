@@ -85,12 +85,30 @@ G.STAY_SOAKID = (stay and stay:find("J.IsSoakCandidate( 'stayattr' )", 1, true))
     and 1 or 0
 G.STAY_NEGATED = (stay and stay:find("not J.IsSoakCandidate( 'stayattr' )",
     1, true)) and 1 or 0
--- Exactly one soak id may appear in this function. Two would be the 'pullcad'
--- trap: the live condition becomes a conjunction that freezes FALSE the day
--- either id is promoted, while check_armed_wiring.py still calls it WIRED.
+-- The 'pullcad' trap is TWO IDS IN ONE CONDITION: the live condition becomes a
+-- conjunction that freezes FALSE the day either id is promoted, while
+-- check_armed_wiring.py still calls it WIRED.
+--
+-- This was measured as "ids anywhere in the function == 1" until 2026-09-05,
+-- which is a PROXY, not the invariant, and it held only while this function
+-- carried exactly one lever. 'staysrc' then put a second, independent lever on
+-- the supply clause -- a different `if`, no shared condition -- and the proxy
+-- went red on a tree with no trap on it. The two numbers are both kept: the
+-- total is still reported (a reader wants to know how many levers live here),
+-- but what is ASSERTED downstream is the per-condition maximum, which is the
+-- shape the trap actually has.
 local nIds = 0
 if stay then for _ in stay:gmatch('IsSoakCandidate') do nIds = nIds + 1 end end
 G.STAY_NIDS = nIds
+local nMax = 0
+if stay then
+    for cond in stay:gmatch('if(.-)then') do
+        local n = 0
+        for _ in cond:gmatch('IsSoakCandidate') do n = n + 1 end
+        if n > nMax then nMax = n end
+    end
+end
+G.STAY_IDS_MAX_PER_COND = nMax
 -- The radius and window the call site passes, and the ring below it. Parsed so
 -- the test asserts the tree's numbers, not this file's memory of them.
 G.STAY_RADIUS = stay and tonumber(stay:match('HasNearbyHeroDamager%( bot, (%d+)'))

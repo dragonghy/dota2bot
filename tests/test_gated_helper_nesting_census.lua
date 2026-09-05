@@ -244,7 +244,23 @@ local PINNED = {
     -- is the GATED family aimed at the same trip home; this one is the PROMOTED
     -- guard next to it.  They are separate rows because they are separate
     -- decisions, and neither reads the other.
-    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr | bots/mode_retreat_generic.lua",                          -- P
+    -- [staysrc 20260905] 'staysrc' joined the SAME row a few hours later, on a
+    -- different clause of the same function (the supply read).  Also (P), and by
+    -- the same short-circuit argument: `not bHasRegen and IsSoakCandidate(
+    -- 'staysrc' )` leaves `bHasRegen` at its shipped value un-armed, and the
+    -- veto below it is then the shipped expression.  Direction is additive by
+    -- construction (widening `bHasRegen` can only remove vetoes);
+    -- tests/_staysrc_sweep.lua drives both legs over the same 1012 live frames
+    -- and `flip_true_to_false` is 0.
+    -- ⭐ WHAT THIS ROW NOW RECORDS THAT NO OTHER ROW DOES: two ids on one
+    -- helper, NOT conjoined -- each guards its own clause, and each clause is
+    -- INDEPENDENTLY SUFFICIENT to veto.  That is the opposite of the pullcad
+    -- trap and it costs the opposite mistake: arming one measures a correct
+    -- ZERO on any frame the other one also vetoes.  Measured: over 1012 live
+    -- frames exactly one frame flips only when BOTH are armed, and it is the
+    -- frame owner priority P2 is named after (f_260822_063722_lina_tp_home,
+    -- lina, 31.8% HP).  A wave that arms these one at a time cannot see it.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staysrc | bots/mode_retreat_generic.lua",                  -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
     "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P
@@ -344,6 +360,15 @@ local PINNED = {
     "creepthink,pullcad,pullthink | Think | J.GetCampPullPokeTarget | campbind | bots/mode_roam_generic.lua",                             -- P
     "towerfear | X.ShouldRun | J.IsBasePresenceAdverse | basesiege | bots/mode_retreat_generic.lua",                                       -- W
     "tpcommit,tpdead,tpdying | J.GetTpCommitDefendDesire | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/FunLib/jmz_func.lua",        -- P
+    -- [staysrc 20260905] The inner helper here is the (A) exemplar this file's
+    -- own header already names: armed 'bagsalve', J.HasFieldRegenSource only
+    -- ever admits ONE MORE backpack slot, so un-armed it returns the shipped
+    -- answer and 'staysrc' armed alone is not `staysrc AND bagsalve`.  Stronger
+    -- than (A) on this particular call, and driven rather than argued: un-armed
+    -- 'staysrc' the `and` short-circuits before the callee is reached at all --
+    -- tests/_staysrc_sweep.lua's `arm_leak` counter drives 'bagsalve' through
+    -- the stub on all 1012 live frames and reads 0.
+    "stayattr,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                               -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
 }
 

@@ -27,6 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0STAYSRC. **【2026-09-05T16:4xZ 新增,**OWNER_PRIORITIES P4.4 + P2(决策侧,球在本组)**;
+   `[strategy]` open issue 本轮扫过 **#521/#511/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445**
+   —— **无一条未认领** ⇒ 按铁律 9 取优先项,并做章程上一格逐字点名的那一格;
+   **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动**;
+   产出 `bots/FunLib/jmz_func.lua` 一条合取项(gated `staysrc`,turbo-only,**未 armed**)、
+   `tests/test_staysrc_field_supply.lua`(**12/12**)、`tests/_staysrc_sweep.lua`、
+   `tools/agent/mutstand_staysrc.sh`(**15 发全部如声明:14 CAUGHT + 1 声明式 UNMEASURABLE,对照 SURVIVED,零 NO-OP,EXIT=0**)、
+   `state.json:staysrc_20260905`、`test_set.md §EY`、
+   `tests/test_gated_helper_nesting_census.lua` 两行、
+   `tests/test_stayattr_global_ult.lua` + `_stayattr_sweep.lua` 一条棘轮**收紧**;
+   报告 `iterations/reports/strategy/20260905T164948Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲:FROZEN-HOLD + 单独收下 AND-of-vetoes)+ 批测台(乙:发波前约束)+ 录像组/语料侧(丙:两张帧)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):一个函数自己的 docstring 是「当初被批准的行为」的档案,
+   而它下面的代码可以只实现其中一个子集,树里没有任何东西会注意到。**
+   `J.ShouldStayAndRegen`(PROMOTED,'tphome' 28 局 A/B,**每一局 Turbo 都活着**)的 docstring 写
+   「gold >= 90 **or already carries one**」,代码把后半句实现成**只认 `item_flask`** ⇒
+   主格位里的 tango / faerie fire / 有充能的 bottle 读作「什么都没带」⇒ 残血、无人追击、
+   揣着三个 tango 和 40 块钱的 bot 被放回家 —— owner P2 逐字禁止的那趟路。
+   **这不是「注释过期了」:注释描述的才是对的那一个。** ⇒ 读 PROMOTED 函数时,
+   **docstring 与代码当成两份可能不同的规格分别读**;它们分岔处 = 那次 A/B 批准了什么已经没人知道的地方。
+   **⭐⭐ 倒挂是精确的**:**90 正是 tango 的价钱** ⇒ 出厂函数**信一笔还没花的钱,胜过信一件已经拿在手里的东西**。
+   **⭐⭐⭐ 为什么不动章程点名的那个常量**:`GetGold() < 90` 在**任何录像帧上都答不出且永远答不出**
+   —— gold 不进 `.dem`(`hometp_invfull_lag.py` 诚实边界节),**驱动实测 1012/1012 活帧读 0**(GH #495)。
+   ⇒ **一个常量量不出来的时候,先给同一个 `and` 的另一个合取项定价,再断言这条子句够不着。**
+   **⭐⭐⭐⭐ 本轮最该被读的一条(超出本杠杆,量具级)**:这个函数用**两道独立、各自充分**的否决守着那趟路
+   (`stayattr` 追击子句 + `staysrc` 补给子句)。在 **owner P2 自己钉的那一帧**
+   (`f_260822_063722_lina_tp_home`,lina 31.8% 血):shipped false / 单 `stayattr` **false** /
+   单 `staysrc` **false** / **两个都 armed true**;全语料 `flips_pair_only` = **1,就是那一帧**。
+   ⇒ **「一次动一个小杠杆」与「优先项的钉帧翻过来」在这里互相矛盾**:
+   任何单臂隔离波在那一帧读到的零**每一次都是正确的零**。**AND-of-vetoes 必须在设计波次之前量出来。**
+   **⭐⭐⭐⭐⭐ 域价钱**:125 帧走到补给子句,**112 帧被它否决**(走到这里之后它是压倒多数的那道否决);
+   二分区 **44 有可喝的 / 68 什么都没带**(数出来不是减出来,和 == 112 断言钉住);
+   **两条独立路线交叉核对**(驱动 `flips` == 前缀桶 `blocked_with_src`);`flip_true_to_false` **0**。
+   ⚠️ **诚实边界**:翻转集是**穷钱超集**(fixture 读不到 gold);**bottle 腿空洞**(44 里 0);
+   **有 ≠ 够**(13 个由 faerie fire 承载 —— 正是 `fieldsip` 立案那一行,本轮**不声称**它们是好的停留)。
+   **下一格(本组下一轮第一项)**:取未认领 `[strategy]` issue;否则按 **P4.4 在 `bots/` 上取一个小杠杆** ——
+   **P2 决策侧的下一格不再是那个常量(已结构性排除)**;候选:`J.HasFieldRegenSource` 的 backpack
+   不对称在 PROMOTED 侧的同族问题,或那 **68 个「什么都没带」帧里 `fieldbuy` 为何没买上**;
+   **照旧先跑域价钱,并先断言控制帧够得着被控制的代码**。
+
 0OUTCOMMIT. **【2026-09-05T13:4xZ 新增,**接下 GH #511 交棒 (乙)**(录像组 06:5xZ 把结构物 modifier
    读进 fixture 世界之后,本组 §EO 自己写下的「本轮不落一个验不了的改动」不再成立);
    **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动**;
@@ -5559,6 +5600,42 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-05T16:4xZ(**P4.4 + P2 决策侧**:`[strategy]` open issue 本轮扫过
+  #521/#511(两条都是本组前两轮已认领并交棒的)/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445
+  —— **无一条未认领** ⇒ 按铁律 9 取优先项,做的正是本组上一格逐字点名的那一格。
+  **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动。**
+  产出 `bots/FunLib/jmz_func.lua` 一条合取项(gated `staysrc`,turbo-only,**未 armed**)、
+  `tests/test_staysrc_field_supply.lua`(**12/12**)、`tests/_staysrc_sweep.lua`、
+  `tools/agent/mutstand_staysrc.sh`(**15 发全部如声明:14 CAUGHT + 1 声明式 UNMEASURABLE(M11b),
+  对照 M14 SURVIVED,零 NO-OP,零非声明存活,EXIT=0**)、`state.json:staysrc_20260905`、
+  `test_set.md §EY`、nesting census 两行、`stayattr` 那条棘轮**收紧**(见下);
+  报告 `iterations/reports/strategy/20260905T164948Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动、不申请入集(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
+  **已交棒总监(甲)+ 批测台(乙)+ 录像组/语料侧(丙)。**)
+  **⭐ 主判据(立法级,可复用,超出本主题):一个函数自己的 docstring 是「当初被批准的行为」的档案,
+  而它下面的代码可以只实现其中一个子集,树里没有任何东西会注意到。**
+  `J.ShouldStayAndRegen` 的 docstring 写「gold >= 90 **or already carries one**」,
+  代码把后半句实现成**只认 `item_flask`**。**这不是「注释过期了」:注释描述的才是对的那一个。**
+  **⭐⭐ 倒挂是精确的**:**90 正是 tango 的价钱** ⇒ 出厂函数**信一笔还没花的钱,
+  胜过信一件已经拿在手里的东西**。
+  **⭐⭐⭐ 章程点名的那个常量被结构性排除**:`GetGold() < 90` 在任何录像帧上都答不出且永远答不出
+  —— gold 不进 `.dem`,**驱动实测 1012/1012 活帧读 0**(GH #495)。
+  ⇒ **常量量不出来的时候,先给同一个 `and` 的另一个合取项定价。**
+  **⭐⭐⭐⭐ 最该被读的一条(量具级,超出本杠杆)**:两道**独立且各自充分**的否决守着 P2 那趟路;
+  在 **P2 自己钉的那一帧**上 shipped false / 单 `stayattr` **false** / 单 `staysrc` **false** /
+  **成对 true**;全语料 `flips_pair_only` = **1,就是那一帧** ⇒
+  **任何单臂隔离波在那一帧读到的零,每一次都是正确的零**;AND-of-vetoes 必须**在设计波次之前**量出来。
+  **⭐⭐⭐⭐⭐ 域价钱**:125 走到 / **112 被否决** / 二分区 **44 有可喝的 + 68 什么都没带**
+  (== 112 断言);驱动 `flips` 与前缀桶 `blocked_with_src` **两条独立路线交叉核对**;
+  `flip_true_to_false` **0**;`ship_true 13 → arm_true 57`。
+  ⚠️ **两处诚实边界按零断言**:翻转集是**穷钱超集**;**bottle 腿空洞(44 里 0)**;
+  另**有 ≠ 够**(13 个由 faerie fire 承载,正是 `fieldsip` 立案那一行,本轮不声称它们是好的停留)。
+  ⛔ **收紧了一条既有棘轮**:`STAY_NIDS == 1` 是 pullcad 陷阱的**代理量**,陷阱是**两个 id 合取在同一个条件里**;
+  第二个**独立**杠杆让代理量在**没有陷阱的树上变红** ⇒ 新增 `STAY_IDS_MAX_PER_COND` 并把断言移过去,
+  总数仍登记并断言 ≥ 1(M4 证明收紧后仍咬得住)。
+  ⚠️ **开工自检首次调用被工具自己拒绝**(`SELFCHECK_EXIT=2 REFUSED`,stdout 是管道 —— 证据纪律 3,
+  该形状已复发 5 次);改走 `rc.sh` 后 **RC_EXIT=3**,其中 lua 腿唯一那条红**正是自检当场点到本轮工作树**
+  的 nesting census,已在同一工作单元内登记转绿。
 - 2026-09-05T13:4xZ(**接下 GH #511 的交棒 (乙)**:`[strategy]` open issue 本轮扫过
   #521(本组上一轮已认领并交棒)/**#511**/#503/#500/#495/#489/#485/#480/#475/#467/#464/#456/#455/#452/#445;
   取 #511 的依据是它的 (乙) 逐字写「协同组下一轮或谁先拿到」,而**挡着它的那个字段今天早上到位了**

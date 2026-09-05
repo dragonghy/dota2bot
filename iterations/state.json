@@ -5991,5 +5991,40 @@
   "carrier_terms": "8 -> 8 逐字不变且是量出来的:carrier_terms.py 对 63-id 与 61-id 两个串各跑一次,TERMS 行逐字节相同,0 unresolved;计数 13 hero-scoped/50 generic -> 12/49。机械理由:zuus 仍由 zusult/zusboltdom 供着。",
   "aws": "零",
   "ref": "iterations/streams/test_set.md §EX(§EX.2 / §EX.3 / §EX.4 / §EX.5);GH #173(事实);GH #531(这个形状的通用检测,本轮立案)"
+ },
+ "staysrc_20260905": {
+  "date": "2026-09-05T17:xxZ",
+  "backlog_item": "OWNER_PRIORITIES P4.4 (bots/ 主体配额) + P2 (低血不回家,决策侧,球在协同组);章程 0OUTCOMMIT「下一格」逐字点名的那一格",
+  "owner": "strategy",
+  "gate": "staysrc (NEW soak id;turbo 结构性由函数首行保证,STANDALONE —— 与任何 id 都不合取)。⛔ P4.2 入集冻结生效中:本轮**不提入集、不动 armed 串、不动 queue.json**。",
+  "bots_lua_changed": true,
+  "headline": "J.ShouldStayAndRegen 的**补给读数与它自己的 docstring 不一致**。函数上方 47 行的 docstring 把已批准行为写作『can afford a regen consumable (gold >= 90) **or already carries one**』,而代码把『already carries one』实现成**只认 item_flask**:主格位里的 tango / tango_single / faerie fire / 有充能的 bottle 一律读作『什么都没带』,决定权交给金钱项 —— 一个残血、无人追击、身上揣着三个 tango 和 40 块钱的 bot 被放回家。这正是 owner 优先项 P2 禁止的那趟路,而它是一次 28 局 A/B 转正('tphome',+51 GPM)之后**每一局 Turbo 都活着**的行为。",
+  "star_main_judgement": "⭐ 主判据(立法级,可复用,超出本主题):**一个函数自己的 docstring 是「当初被批准的行为」的档案,而它下面的代码可以只实现其中一个子集,树里没有任何东西会注意到。** 这不是「注释过期了」——注释描述的才是对的那一个,代码是窄的那一个。⇒ 读一个 PROMOTED 函数时,**docstring 与代码要当成两份可能不同的规格分别读**;它们分岔的地方,就是那次 A/B 到底批准了什么这件事已经没人知道的地方。**⭐⭐ 而且倒挂是精确的不是修辞的**:90 正是 tango 的价钱,所以出厂这个函数**把「买一个 tango 的钱」当作原地续航的证据,却拒绝「那个 tango 本身」** —— 它信一笔还没花的钱,胜过信一件已经拿在手里的东西。",
+  "change": "bots/FunLib/jmz_func.lua,J.ShouldStayAndRegen 的补给子句一条合取项宽:`local bHasRegen = bHasFlask` → `if not bHasRegen and J.IsSoakCandidate('staysrc') then bHasRegen = J.HasFieldRegenSource(bot) end` → `if not bHasRegen and bot:GetGold() < 90 then return false end`。借的是兄弟谓词 J.HasFieldRegenSource(gated `stayfield` 家族对着**同一趟回家路**已经在用的那个),不新写谓词、不改兄弟、不碰 0.18 血量地板、1200 环与追击行。",
+  "why_not_the_constant": "⭐⭐⭐ 章程「下一格」逐字问的是『`GetGold() < 90` 在 Turbo 里还是不是对的门』。**答案是结构性的:这个问题在任何录像帧上都答不出,而且永远答不出** —— gold 不进 .dem(tools/batch_test/behavioral/hometp_invfull_lag.py 诚实边界节),于是 `bot:GetGold()` 在每一帧都落在 mock 的 `^Get -> 0` 类型断言上(GH #495)。本轮**驱动实测:1012/1012 活帧 gold 读 0**(`gold_nonzero == 0`,棘轮断言)。⇒ 改那个 90 是**结构性不可 fixture 化**的,章程第 2 条禁止落地;而**同一个 `and` 的另一个合取项**是从真实格位读出来的,P2 的缺陷就在那一项上。**⇒ 一个常量量不出来的时候,先给另一个合取项定价,再断言这条子句够不着。**",
+  "direction_by_construction": "加宽 bHasRegen 只能让否决更难成立 ⇒ armed 的 TRUE 集是 shipped 的严格超集。1012 帧驱动实测 flip_true_to_false == 0(棘轮);ship_true 13 → arm_true 57。未 armed 时 `and` 在 J.HasFieldRegenSource 之前短路,callee 的 'bagsalve' 闸**根本到不了**。",
+  "domain_price": "109 fixture / 1012 活英雄帧(与 §EF.1 / §EH / §EQ 同一语料同一分母)。**turbo 1012/1012**(首行不吃帧)。**125 帧走到补给子句**,其中 **112 帧被它否决** —— 走到这里之后它是**占压倒多数的那道否决**,不是一个角落,这才是「只认一个名字」贵的原因。112 的**互斥二分区(数出来不是减出来)**:**44 帧身上确实有可喝的**(= 杠杆的全部作用域),**68 帧什么都没带**(杠杆在那里完全惰性)。两条独立路线交叉核对:驱动读数 `flips`(函数自己的返回值)与前缀桶 `blocked_with_src` **必须相等**,由断言钉住。44 帧的载体:tango 30 / faerie fire 13 / tango_single 1 / **bottle 0** / **flask 0**。",
+  "pair_finding": "⭐⭐⭐⭐ **本轮最该被读的一条,而且超出本杠杆:这个函数用两道相互独立、各自充分的否决守着 P2 禁止的那趟路** —— 追击子句('stayattr',几小时前落地)与补给子句(本轮)。**两个杠杆各自单独都动不了 owner 优先项 P2 自己钉的那一帧;成对才动。** 实测:f_260822_063722_lina_tp_home / lina 346/1088 = 31.8% 血,shipped=false,单 armed 'stayattr'=**false**,单 armed 'staysrc'=**false**,**两个都 armed=true**(她身上是一个 faerie fire)。全语料 `flips_pair_only` = **1**,**而那 1 帧就是 P2 那一帧**。⇒ **「一次动一个小杠杆」(lanefix 教训)与「这条优先项的钉帧翻过来」在这里是互相矛盾的**:任何单臂隔离波在这一帧上都会读到一个**正确的零**,而且每次都正确。**AND-of-vetoes 的结构必须在设计波次之前量出来,而不是等波次空手回来之后再猜。**",
+  "witness_frame": "tests/fixtures/f_260822_182012_sb_fieldbuy_gate_307.lua t=307.4 —— 与 owner P2 催生的 `fieldbuy` 取证同族的那盘。**lina 434/1088 = 39.9% 血,最近的敌方英雄 6,830u 外,3 秒内无人打过她,主格位 0 是一个 tango、格位 5 是一个空瓶**。shipped:读作『什么都没带』,金钱项定案,放她回家。armed:留下把 tango 喝完。**同世界同一瞬间两条负对照**:viper(55.7% 血,主格位无可喝之物)与 spirit_breaker(36.1% 血,身上是 blood grenade —— 那是武器不是补给)两条腿都 false ⇒ 翻转不是这张 fixture 世界的性质。**归因对照**:把她格位 0 的 tango 从帧上摘掉,armed 腿必须退回 shipped 答案(测试里驱动实测)。",
+  "honest_bounds": [
+   "(1) **量到的翻转集是「穷钱超集」**:fixture 读不到 gold,于是每一帧都按『不足 90』计分;真实对局里 gold ≥ 90 的那些帧**本来就没有被这条子句否决过**。方向是定死的(真实集是**子集**),所以这条边界可发表;**大小未知,不作声称**。",
+   "(2) **bottle 那条腿在本语料上是空洞的**:44 个翻转里 **0 个**由 bottle 承载(mock 的 GetCurrentCharges 默认 0,且空瓶在 dump 里是另一个类名 item_empty_bottle)。**钉帧上那只空瓶正是这条边界的现场证人,而且它不是翻转的原因**。按零断言,不粉饰。",
+   "(3) **有 ≠ 够**。本杠杆问的是『有没有可喝的』(J.HasFieldRegenSource 的问题);『那口值不值得站着喝』是另一个问题,gated 侧已经有自己的杠杆('fieldsip' / J.FIELD_SIP_HEAL)。44 个翻转里 **13 个由 faerie fire 承载 —— 85 点血,正是 'fieldsip' 立案时写的那一行**。本文件**不声称**那 13 个是好的停留;它声称的是出厂函数把它们读作了『什么都没带』。",
+   "(4) 一帧是一个瞬间。说的是 t 时刻这个决定是错的,不声称留下来的 bot 挺过了接下来十秒。"
+  ],
+  "local_validation": "tests/test_staysrc_field_supply.lua **12/12**(真实帧驱动 + 同世界双负对照 + 归因摘除对照 + 域普查 + gold 不可测性断言 + pair 腿);重语料扫描 tests/_staysrc_sweep.lua(子进程,四次驱动/帧)。",
+  "mutation_stand": "tools/agent/mutstand_staysrc.sh:**15 个变异体全部如声明落地 —— 14 CAUGHT + 1 声明式 UNMEASURABLE(M11b),对照 M14 SURVIVED,零 NO-OP,零非声明存活,EXIT=0**。M12 直接打 pair 结论那条腿(『both armed』那次驱动偷偷只 arm 一个 ⇒ flips_pair_only 读 0):**一个没有任何变异体能打破的成对结论,只是一句被写下来的巧合**。M11b 按 §EQ 的 M8 同族原因声明为不可测:在一份 gold 处处为 0 的语料上,『探了发现是 0』与『假设是 0』给出逐字节相同的计数。",
+  "ratchet_sharpened": "⛔ **本轮改了一条既有棘轮,理由记在这里**:tests/test_stayattr_global_ult.lua 原先断言 `STAY_NIDS == 1`(『这个函数里只许有一个 soak id』)。那是 pullcad 陷阱的**代理量**,不是陷阱本身 —— 陷阱是**两个 id 合取在同一个条件里**。本轮在**另一条子句**上加了第二个独立杠杆,代理量在一棵**没有陷阱**的树上变红。两个 sweep 都新增 `STAY_IDS_MAX_PER_COND`(逐 `if … then` 条件计数取最大),断言移到它上面;总数仍然登记并断言 ≥ 1(删干净了也不许过)。",
+  "nesting_census": "tests/test_gated_helper_nesting_census.lua 两行:(i) `c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staysrc | mode_retreat_generic.lua` 由 stayattr 一行改为两 id 一行,**(P)**;(ii) 新行 `stayattr,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | jmz_func.lua`,**(A)**(该文件自己头部就把 J.HasFieldRegenSource 在 'bagsalve' 下列为 additive-only 的样板),且比 (A) 更强:未 armed 时短路到根本不调用 callee,`arm_leak` 在 1012 帧上驱动 'bagsalve' 读 0。",
+  "gate_verification": "铁律 6 静态门:`bash tools/agent/rc.sh bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(容器冷启,gate 自己装的 lua-check)。动态半(定向):staysrc_field_supply 12/12、stayattr_global_ult 11/11、gated_helper_nesting_census 10/10,以及相邻组 stay 78/78、field 212/212、soak 31/31、gate_claim_consistency 16/16,全 EXIT=0。全量套件 ~100min(GH #124)未跑。",
+  "trunk_red_not_mine": "开工自检 `bash tools/agent/rc.sh bash tools/agent/routine_selfcheck.sh` ⇒ **RC_EXIT=3**(findings),来源 5 条:cadence / queue-rulings / owed-executions / trunk-red(python) / trunk-red(lua)。python 腿的红是既有的(GH #514/#526/#497/#506/#501/#490 一族),**不是本轮引入**;lua 腿当时唯一那条红正是自检**当场点到本轮工作树的 nesting census**(新 gate-inside-gate 未登记),已在同一工作单元内按 (P)/(A) 登记并转绿。",
+  "aws_spend": "零 AWS、零 S3、零 EC2、零波次。P4.2 冻结期内**未提入集**、**armed 串一字未动**、**queue.json 一字未动**。",
+  "status": "gated,未 armed,未入集(P4.2 冻结)。等总监按冻结规则给 FROZEN-HOLD 登记。",
+  "handoff": [
+   "**(甲) 总监**:按 P4.2 冻结把 'staysrc' 记作 **FROZEN-HOLD**(登记、不入集、不算掉棒)。⛔ 并请**单独收下 pair_finding 那一条,它不是本 id 的入集问题,是一条量具级约束**:P2 的取证波若把 'stayattr' 与 'staysrc' **分两臂单独 arm**,则 P2 自己的钉帧**按构造读不出任何东西**,而每一臂的『无效果』读数**都是正确的**。要么两者**同一腿共同 arm(声明为一个 PAIR)**,要么在波次记录里写明这一帧不在射程内。",
+   "**(乙) 批测台**:上面那条是**发波前**的约束,不是收割后的解释;本组本轮**不发波、不排队、不花钱**(冻结期照章不提 queue 请求)。",
+   "**(丙) 录像组 / 语料侧**:两张帧能把本轮两处空洞变成有支撑的读数 —— (i) 一张主格位带**有充能 bottle**的真帧(诚实边界 (2) 的 0 就不再空洞);(ii) 任何一张**带真实 gold** 的帧(那会让 [gold] 那条断言当场变红,并第一次让『90 在 Turbo 里对不对』这个问题**可回答** —— 见 why_not_the_constant)。",
+   "**(丁) 下一轮本组自己**:P2 决策侧的下一格**不再是那个常量**(已结构性排除)。候选是 J.HasFieldRegenSource 的 **backpack 不对称**在 PROMOTED 侧的同族问题,或 68 个『什么都没带』帧里 `fieldbuy` 为何没买上 —— **照旧先跑域价钱,并先断言控制帧够得着被控制的代码**。"
+  ]
  }
 }

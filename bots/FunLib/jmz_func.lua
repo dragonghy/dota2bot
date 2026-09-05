@@ -5122,7 +5122,57 @@ function J.ShouldStayAndRegen( bot )
 	local bHasFlask = J.IsItemAvailable( 'item_flask' ) ~= nil
 		or bot:HasModifier( 'modifier_flask_healing' )
 		or bot:HasModifier( 'modifier_tango_heal' )
-	if not bHasFlask and bot:GetGold() < 90 then return false end
+	-- [staysrc / owner priority P2, 2026-09-05] The supply read of this same
+	-- PROMOTED function, and it disagrees with the docstring 47 lines above it.
+	--
+	-- That docstring states the approved behaviour as "can afford a regen
+	-- consumable (gold >= 90) OR ALREADY CARRIES ONE". `bHasFlask` implements
+	-- "already carries one" as item_flask only -- so a tango, a tango_single, a
+	-- faerie fire or a charged bottle in a main slot all read as "carries
+	-- nothing". The conjunct below then hands the decision to the gold term,
+	-- and a hurt, unchased bot holding three tangoes and 40 gold is released to
+	-- walk or TP home: the trip owner priority P2 forbids.
+	--
+	-- The inversion is exact, not rhetorical: 90 is the price of a tango, so
+	-- shipped this function accepts THE MONEY TO BUY A TANGO as proof of field
+	-- sustain while rejecting THE TANGO. It trusts a purchase it has not made
+	-- over an item it already holds.
+	--
+	-- Why this clause and not the constant next to it. The charter's own next
+	-- slot was "is `GetGold() < 90` still the right gate in Turbo" -- it is not
+	-- answerable here and never will be from a replay-derived frame: gold is
+	-- not networked into a .dem (tools/batch_test/behavioral/hometp_invfull_lag.py,
+	-- honest-bounds block), so every fixture reads GetGold() as the mock's
+	-- `^Get -> 0` scalar (GH #495) and the gold term is frozen TRUE on all 1012
+	-- live frames. A change to the 90 is structurally unfixturable; the OTHER
+	-- conjunct of the same `and` is read off real item slots and is where the
+	-- P2 defect actually sits.
+	--
+	-- J.HasFieldRegenSource is the sibling that already answers this question
+	-- the way the docstring describes -- flask / tango / tango_single /
+	-- faerie_fire / charged bottle, main slots only -- and it is read today by
+	-- the gated `stayfield` family aimed at this same trip. Same shape as
+	-- 'stayattr' on the chase line 40 lines up: the tree knew the right
+	-- question, and this shipped line was never brought along.
+	--
+	-- Direction is fixed by CONSTRUCTION: arming can only widen `bHasRegen`,
+	-- which can only remove vetoes, so the armed TRUE set is a strict superset
+	-- of the shipped one. Unarmed, the `and` short-circuits before
+	-- J.HasFieldRegenSource is reached, so its own 'bagsalve' gate cannot be
+	-- observed from here (census row (A): un-armed it only ever admits one more
+	-- backpack slot). Gated STANDALONE -- one id in this expression, never a
+	-- conjunction of two (the 'pullcad' trap).
+	--
+	-- Honest bound, stated where it bites: because a fixture cannot read gold,
+	-- the measured flip set is the GOLD-POOR SUPERSET -- in a real game the
+	-- frames with >= 90 gold were never vetoed by this clause in the first
+	-- place, so the live flip set is a subset of the measured one. The 0.18 HP
+	-- floor, the 1200 ring and the chase line above are untouched.
+	local bHasRegen = bHasFlask
+	if not bHasRegen and J.IsSoakCandidate( 'staysrc' ) then
+		bHasRegen = J.HasFieldRegenSource( bot )
+	end
+	if not bHasRegen and bot:GetGold() < 90 then return false end
 	return true
 end
 
