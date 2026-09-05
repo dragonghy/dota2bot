@@ -11531,3 +11531,45 @@
     `local commits not on origin/main: 0`、`refused 0`、`OK to publish` ⇒ **先 push 后发**。
     GH **#536** 实际创建成功,与预写号一致。
     **Token 用量**:`TOKENS total_in=3,296,509 out=25,975 turns=34`(见报告 §8.5)。
+- **2026-09-05T21:38–22:0xZ**:**测试集最后一个盲点 `midtp` 结清**
+  (`verify_coverage.py` `VC_EXIT=0`:`armed 61 / reports 159 / 有 VERIFY 行 21`,
+  `BLIND SPOTS ... -- 1: midtp`;上一轮交棒第 (4) 条,已被挤掉三轮)。
+  **宽扫 100/100 `.dem`(W48 四台机,dumper 0 失败,76 局计分 / 24 暖场);
+  深查 8 个事件 × 8 局 × 4 粒种子 × 两分层 × 两条腿**(章程下限 6)。
+  零发波、零 EC2、S3 只读、零 CE;**未改 `bots/`/`game/`/`tests/`/`tools/` 一行**。
+  - `midtp`:**BUGGY**。`VERIFY id=midtp verdict=BUGGY episodes=8`。
+    **不是「没触发」,是它的落点在算术上不是一个合法坐标** ——
+    `midtp`/`suptp` 的唯一接线 `ability_item_usage_generic.lua:5226` 把**塔自己的坐标**
+    喂给 `J.GetNearbyLocationToTp`(`jmz_func.lua:4348`),该函数取到的「最近己方塔」
+    **就是那座塔**(`minDist = 0`,守望塔分支要求 `< -1300` 恒假),于是
+    `J.GetLocationTowardDistanceLocation` 的 `(nLoc − tower)/dist` 是 **0/0**。
+    `lua5.1` + 仓库自己的 `tests/mock/bot_api.lua` 实测返回 **`Vector(-nan,-nan,-nan)`**;
+    `vTpLoc ~= nil` 对 NaN 为真 ⇒ 直进 `Action_UseAbilityOnLocation`,**路径上零检查**。
+    从本波 `buildings` 逐座量:**18 座非基地塔距泉水 ≥3260u,全部落在退化分支**
+    (4 座基地塔 2297–2671u 骑在 2500 刀口上,**泉水坐标是常数假设、未从 dump 核对,不下结论**)。
+    ⭐ **逐帧反证互相印证**:真 `midtp` 的落点**不可能是「距塔 575u」**(那个值要求
+    `nLoc ≠ 塔坐标`),而深查的 8 发**全部**落在 555–663u,armed 腿四发 **555/568/568/585**
+    ⇒ 全部来自 `GetNearbyLocationToTp` 的**另外 7 个出厂调用点**(state.json 已登记
+    9 个调用点只有 2 个带 gate),**没有一发是 `midtp`**。
+    引擎拿到 NaN 做什么**不声称**(无 bot 侧调试);良性端 = 恒 inert,
+    但 `X.ConsiderItemDesire` 循环 `return nSlot + 1` **会吃掉该帧的道具决策**。
+  - ⭐ **归属的关键在于 baseline 腿是一条「可证的结构零」**:两个 id 都不 armed ⇒
+    helper 第二行直接 `return nil`。可它那条腿上 `tpdefend_events` 仍报出
+    **65 个「核心位 + helper 形状」事件**(armed 腿 83),`d_land` 中位 **580 vs 625** 逐位靠拢
+    ⇒ **这不是假阳性率的估计,这就是假阳性的计数**;该量具在 `midtp` 上**没有分辨力**。
+    与 `zusult` 那条工具坑同族,区别是**这次有一条腿能证明门是关的**。
+  - 事件轴宽扫两张表**均反号**(ALL `ab −1.854 / ba +1.000`;HELPER-SHAPED
+    `ab −0.312 / ba +1.000`)⇒ 铁律 4(i-b),**噪声,不进结论**;
+    两层读数按 4(i-a) 各自登记(**分层不平衡:radiant 48 局 vs dire 28 局**)。
+  - **量具两条边界(方向都只会让假阳性更多)**:(1) F1(#529)在本波实测
+    **74 个计分局名里 2 个跨机撞名**,污染的正是 4(ii) 要的 `=0`/`>=2` 两个占比
+    (`events`/`ev/game` 不受影响),已把这两局排除在深查选点外;
+    (2) `tpdefend_events.py` **没有接 `entities.py`**,按英雄名合并幻象 ——
+    全量 `(hero,t)` 键 364,159 个中 **16,036 = 4.40%** 带 >1 个 `idx`(抽查 20 局有 18 局中招)。
+  - **不判 `suptp`**(共用同一条接线与同一个 NaN,但本轮没为它单独逐帧、
+    其专属域 pos≥4 未取样;章程 4a 不许顺手记账)—— **下一轮第一件事,零新钱**。
+  - 本轮开 **GH #539 `[bug]`**;对 owner P4.2 的意义(交总监,不是本组裁定):
+    `midtp` 与 `suptp` 是两个最便宜的「判定完结」候选。
+  - **W49**(21:20Z 起飞)本轮触发时只跑了 18 分钟,S3 上仅 4 份暖场 `.dem`,**不入任何读数**。
+  - 完整报告:`iterations/reports/replay-check/20260905T215156Z.md`
+  - 自检真码 / 铁律 6 / `claim_precheck` / token:见报告 §9 收尾补记。
