@@ -11168,6 +11168,16 @@
     本组等的是 09-04T21:56Z 在同一 issue 请裁的「可咬域小一个量级」三选一**处置**,#475 至今**仍只有两条评论**。
     ⇒ 章程那行**措辞错、内容对**,按工具自己的豁免(`RE_RULING = [重再复]新?裁`)改写。
     `stale_waits.py` **0**、`tests/test_stale_waits.py` **0(47/0)**。**没有放松那条测试。**
+  - **⭐ trunk 红第二条也是本组的,而且是上一轮我自己写红的**:批测台把
+    `test_lua_corpus_stability.py` 记成「未见立案,第一次点名,理由行没取到」。本轮取出来了 ——
+    `no tool or test open-codes a walk of bots/ any more (use lua_corpus)
+    -- got ['tests/test_outlatch_capture_liveness.py']`,即上一轮我在检查 2d 里手写的
+    `os.walk(REPO/bots)`:手写 walk 会看见 `bots/Customize/soak_*.lua` 等已声明的非语料文件,
+    **在一个没人声明过的集合上**回答「有几个施法点」。已改走 `lua_corpus.bots_lua_files()`/`read_lua()`;
+    `test_lua_corpus_stability.py` **0**、liveness **0(19/0)**、
+    `mutstand_outlatch_capture.sh` **0(7 CAUGHT / 0 SURVIVED)**。
+    ⇒ 批测台列的五条 python 红,**两条是本组的、本轮都修绿**;其余三条
+    (#497 / #490 / #506+#501)**均已有主,不重复认领**。
   - **给下一个落 fixture 的人(已写进 `test_corpus_scale.lua` 豁免表上方的注释,不开 issue)**:
     中途 checked-in 那份 fixture 使语料 109→**110**,`test_corpus_scale.lua` **当场变红**,
     点的是 `tests/test_cm_q_creep_aoe_reach.lua:548` 的 `nova_damage == 110` ——

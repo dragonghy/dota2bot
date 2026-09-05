@@ -38,6 +38,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(REPO, "tools", "batch_test", "behavioral"))
 
+sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
+
+import lua_corpus as LC  # noqa: E402
 import outlatch_capture as OC  # noqa: E402
 
 CHECKS = []
@@ -110,10 +113,16 @@ ck("2b the latch line still records the postcondition when armed",
 ck("2c outlatch is the ONLY soak candidate in the outpost mode",
    len(re.findall(r"IsSoakCandidate\('([a-z0-9_]+)'\)", outpost)) == 1,
    "a second gate here would break the attribution in the report")
+# Routed through lua_corpus (2026-09-05): the open-coded `os.walk(bots/)` this
+# used to do is exactly what tests/test_lua_corpus_stability.py forbids, and it
+# was that test's only red on trunk -- named by the batch desk at 06:17Z as
+# "first named, reason line not extracted". It was this file's, from the round
+# that wrote it. A hand-rolled walk sees bots/Customize/soak_*.lua and every
+# other declared non-corpus file, and answers a "how many call sites" question
+# over a set nobody declared.
 ck("2d ability_capture has exactly one call site in bots/",
-   sum(1 for root, _, files in os.walk(os.path.join(REPO, "bots"))
-       for f in files if f.endswith(".lua")
-       and "Action_UseAbilityOnEntity(hAbilityCapture" in open(os.path.join(root, f)).read()) == 1)
+   sum(1 for p in LC.bots_lua_files()
+       if "Action_UseAbilityOnEntity(hAbilityCapture" in LC.read_lua(p)) == 1)
 
 # ---------------------------------------------------------------- section 3
 # The in-repo precedent the fix proposal cites, and the dumper claim.
