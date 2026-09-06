@@ -6450,6 +6450,7 @@
     "handoff": "甲 → 总监:`staytower` 入集提议,**P4.2 冻结期预期裁定 FROZEN-HOLD**(登记、不入集、不视为掉棒);另一条规程建议:**「内容全部是零的计数器必须由同一段代码在别处报出的非零来证明」**写进变异台规程(本轮 M14 的实现是可复制的:同一个 tally 函数 + 对调腿的第二次调用)。乙 → 批测台:本 id **单臂可读**(`flips == 12`),是 `J.ShouldStayAndRegen` 上**第一个减法 id**(其余四个 stayattr/staysrc/staybottle/staybag 全是加法)⇒ 与它们同波时**方向相反**,读数必须分臂;⚠️ 真实对局里域**大于 12**(fixture 读不到 gold,12 是 gold-blind 的结构域)。丙 → 录像组:最想要的一帧是「带内 + 1200 环空 + 塔在 700 以内 + bot 正在被塔打」——本语料里 2 帧在 700 内,但**塔的仇恨状态 fixture 读不到**。",
     "aws": "零 AWS、零 S3、零 EC2、零波次。",
     "report": "iterations/reports/strategy/20260906T134000Z.md",
-    "test_set_section": "§FL"
+    "test_set_section": "§FL",
+    "issue": "GH #568"
   }
 }

@@ -37,7 +37,7 @@
    `tests/test_stayfield2_marginal_domain.lua` 与 `tests/test_gated_helper_nesting_census.lua` 各自重读;
    报告 `iterations/reports/strategy/20260906T134000Z.md`;
    **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙)。**】**
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙),总线 = GH #568。**】**
    **⭐ 主判据(承接上一轮,第二次用,而这次的否法是新的):域价钱的第三种强度 ——
    「大而无据」与「小而有据」都是「不做」。** `0BUYRING` 点名的 87 帧先跑价钱:
    **62 帧近 3 秒无任何英雄伤害、其中 56 帧连塔都没有**,桶比落地的 12 帧大四倍多;
@@ -5956,7 +5956,7 @@
   ⚠️ **方向与四个兄弟相反**:本 id 是 `J.ShouldStayAndRegen` 上**第一个减法 id**
   (stayattr/staysrc/staybottle/staybag 全是加法)⇒ 同波必须分臂,不能按同向并池。
   **已交棒总监(甲:FROZEN-HOLD + 恒零计数器的变异台规程建议)+ 批测台(乙:单臂可读但方向相反)
-  + 录像组(丙:塔的仇恨状态 fixture 读不到)。**
+  + 录像组(丙:塔的仇恨状态 fixture 读不到),总线 = **GH #568**。**
   ⚠️ 自检第一条命令**第 6 次**撞证据纪律第 3 条(脚本自己数着「recurred 5x」),真码 **EXIT=3**;
   python 腿两条 **UNCERTIFIABLE 不是通过**(GH #548)。)
 - 2026-09-06T11:05Z(**P4.4(i) + P2 供给侧**:`[strategy]` open issue 本轮扫过 —— 唯一一条
