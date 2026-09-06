@@ -321,6 +321,28 @@ local PINNED = {
     -- compared in tests/test_buyband_hp_band.lua.
     "buyband | J.ShouldFieldBuyRegenHurt | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                  -- A
     "buyband | J.ShouldFieldBuyRegenHurt | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                     -- I
+    -- [buytower 20260906] The THIRD arm of that same purchase site, and its two
+    -- rows are the same two, classified by the same arguments and re-read rather
+    -- than copied:
+    --   (A) J.HasFieldRegenSource under 'bagsalve' -- un-armed the callee returns
+    --       its byte-for-byte SHIPPED main-slot answer, not a frozen constant, so
+    --       arming 'buytower' alone measures 'buytower'. Arming 'bagsalve' can
+    --       only make the callee MORE true, i.e. can only REMOVE buys -- additive
+    --       in the safe direction, and tests/_buytower_sweep.lua drives the leg
+    --       over the same 1012 live frames with `flip_true_to_false` 0.
+    --   (I) J.IsFieldSipEnough under 'fieldsip' -- un-armed it is the literal
+    --       `true`, the identity element of the `and` it joined.
+    -- ⭐ THE ROW THAT IS ABSENT IS THE INFORMATIVE ONE, and for this lever it is
+    -- the same absence 'buyband' records one entry up: no (P) row for
+    -- J.IsFieldRegenSituation under 'fieldcreep', because this function does not
+    -- CALL that predicate -- it repeats three of its clauses inline and INVERTS
+    -- the fourth. Copying the sibling's gated creep veto would name another
+    -- candidate's id in this body and freeze that clause FALSE the day it is
+    -- promoted (the pullcad trap); the cost is a duplication that can drift, and
+    -- it is paid where it can be seen -- every constant in both copies is parsed
+    -- and compared in tests/test_buytower_purchase_domain.lua.
+    "buytower | J.ShouldFieldBuyRegenTower | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                -- A
+    "buytower | J.ShouldFieldBuyRegenTower | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                   -- I
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
@@ -373,6 +395,13 @@ local PINNED = {
     -- identity element of the `or` it joined -- so the shipped purchase order is
     -- byte-identical and arming either outer id alone still measures that id.
     "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenHurt | buyband | bots/item_purchase_generic.lua",                   -- W
+    -- [buytower 20260906] The fourth row on the same Think, (W) for the same
+    -- reason as the two above it: 'fieldregen'/'tpdeathbuy' guard OTHER blocks of
+    -- this function, and this predicate is a new OR arm on the 'fieldbuy' block.
+    -- Un-armed J.ShouldFieldBuyRegenTower returns false on its first line -- the
+    -- identity element of the `or` it joined -- so the shipped purchase order is
+    -- byte-identical and arming either outer id alone still measures that id.
+    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenTower | buytower | bots/item_purchase_generic.lua",                 -- W
     "fieldsip | J.IsFieldSipEnough | J.FieldRegenSipValue | bagsalve | bots/FunLib/jmz_func.lua",                                         -- A
     "l1kite | J.ShouldCounterTradeKite | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                           -- P
     "l1trade | J.ShouldInitiateLaneKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P

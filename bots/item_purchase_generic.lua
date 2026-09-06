@@ -811,7 +811,16 @@ function ItemPurchaseThink()
 	-- Unarmed, J.ShouldFieldBuyRegenHurt returns false on its first line, so the
 	-- shipped purchase order is byte-identical; the nine engine clauses below are
 	-- shared unchanged by both arms.
-	if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot) )
+	-- [buytower, 2026-09-06] The third arm, and the only one that answers where an
+	-- enemy tower IS inside 1200. That clause lives in J.IsFieldRegenSituation and
+	-- its own comment gives a hold-side reason for it -- do not cancel the local
+	-- back-off from a tower -- which does not transfer to a purchase: this arm
+	-- cancels no retreat bid, it only adds a salve. Inverted rather than dropped,
+	-- so the three arms are disjoint by construction (8 corpus frames). Same
+	-- standalone shape and same reason as the arm above (GH #542); unarmed it
+	-- returns false on its first line, so the shipped purchase order is unchanged.
+	if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot)
+		or J.ShouldFieldBuyRegenTower(bot) )
 	and bot:IsAlive()
 	and bot:FindItemSlot('item_flask') < 0
 	and not IsThereHealingInStash(bot)

@@ -205,7 +205,13 @@ mutant caught "M1 the gate lands negated (shipped and armed legs swap)" "$JMZ" m
 # The predicate survives, fully tested, and decides nothing: the purchase site
 # stops consulting it. Every [frame] test in the file drives the SITE, so this is
 # the mutant that separates "the helper is right" from "the helper is wired".
-m2() { perl -0pi -e "s/\tif \( J\.ShouldFieldBuyRegen\(bot\) or J\.ShouldFieldBuyRegenHurt\(bot\) \)\n/\tif J.ShouldFieldBuyRegen(bot)\n/" "$PURCHASE"; }
+#
+# ⚠️ RE-ANCHORED 2026-09-06: the 'buytower' round added a THIRD arm to the same
+# condition, so the two-arm literal stopped matching and this mutant printed
+# NO-OP -- which the stand reports as a failure precisely because a mutant that
+# never existed is not a mutant that survived. The replacement now drops THIS
+# lever's arm out of the three-arm OR and leaves the other two.
+m2() { perl -0pi -e "s/\tif \( J\.ShouldFieldBuyRegen\(bot\) or J\.ShouldFieldBuyRegenHurt\(bot\)\n\t\tor J\.ShouldFieldBuyRegenTower\(bot\) \)\n/\tif ( J.ShouldFieldBuyRegen(bot)\n\t\tor J.ShouldFieldBuyRegenTower(bot) )\n/" "$PURCHASE"; }
 mutant caught "M2 the OR arm is removed from the purchase site" "$PURCHASE" m2
 
 # --- M3, M4: the band stops being the gap ------------------------------------
@@ -269,7 +275,20 @@ mutant caught "M8b a second gated clause joins the SHARED predicate" "$JMZ" m8b
 # crashes and neither changes this corpus's flip count by much; what they change
 # is whether the lever is answering about the same situation as the sibling whose
 # clauses it claims to mirror.
-m9() { perl -0pi -e "s/\tif #J\.GetNearbyHeroes\( bot, 1600, true, BOT_MODE_NONE \) > 0 then return false end\n\n\t-- Attributed danger/\tif #J.GetNearbyHeroes( bot, 900, true, BOT_MODE_NONE ) > 0 then return false end\n\n\t-- Attributed danger/" "$JMZ"; }
+#
+# ⚠️ RE-ANCHORED 2026-09-06 (協同組, 'buytower' round), and it is the THIRD
+# instance of this stand's own header warning -- this time found by measurement
+# rather than by a survival. The old anchor was the bare ring line plus the
+# comment `-- Attributed danger` that follows it, and that PAIR occurred THREE
+# times in jmz_func.lua before the 'buytower' lever existed: in
+# J.IsFieldRegenSituation (~5560), in this lever (~5843) and in
+# J.IsWastefulItemTrip (~6088). `perl -0pi -e "s///"` without /g rewrites the
+# FIRST, so every run of this mutant since it was written moved the SHARED
+# predicate's 1600 -- and the drift guard `HURT_RING == SIT_RING` then went red
+# because the SIBLING had moved, printing CAUGHT for a mutation of a function
+# this mutant does not name. Re-anchored on the two comment lines that precede
+# THIS lever's copy, which are unique in the file.
+m9() { perl -0pi -e "s/-- third bullet above\. tests\/_buyband_sweep\.lua parses both copies\.\n\tif #J\.GetNearbyHeroes\( bot, 1600, true, BOT_MODE_NONE \) > 0 then return false end/-- third bullet above. tests\/_buyband_sweep.lua parses both copies.\n\tif #J.GetNearbyHeroes( bot, 900, true, BOT_MODE_NONE ) > 0 then return false end/" "$JMZ"; }
 mutant caught "M9 the copied ring radius drifts to 900" "$JMZ" m9
 
 # ⚠️ RE-ANCHORED for the same reason as M8, and it is the more instructive half:
@@ -318,7 +337,15 @@ mutant caught "M16 the disjointness probe stops driving (a fake zero)" "$SWEEP" 
 # lever's band at the sibling's 0.55 -- so the lever becomes a no-op that still
 # passes its own gate. This is edit (b)/(c) of the file header arriving by
 # accident rather than by decision.
-m17() { perl -0pi -e "s/\tif #J\.GetNearbyHeroes\( bot, 1600, true, BOT_MODE_NONE \) > 0 then return false end\n\n\t-- Attributed danger.*?\tif #bot:GetNearbyTowers\( 1200, true \) > 0 then return false end\n/\tif not J.IsFieldRegenSituation( bot ) then return false end\n/s" "$JMZ"; }
+#
+# ⚠️ RE-ANCHORED 2026-09-06 for the same reason as M9, and this one was worse:
+# the span started at the FIRST ring line in the file, so it ran from
+# J.IsFieldRegenSituation's own ring clause to J.IsFieldRegenSituation's own
+# tower clause and replaced the middle of the SHARED predicate with a call to
+# ITSELF -- infinite recursion, suite red, CAUGHT. The right colour from a
+# program that is not the one the label describes. Anchored on the same unique
+# comment pair M9 now uses.
+m17() { perl -0pi -e "s/-- third bullet above\. tests\/_buyband_sweep\.lua parses both copies\.\n\tif #J\.GetNearbyHeroes\( bot, 1600, true, BOT_MODE_NONE \) > 0 then return false end\n\n\t-- Attributed danger.*?\tif #bot:GetNearbyTowers\( 1200, true \) > 0 then return false end\n/-- third bullet above. tests\/_buyband_sweep.lua parses both copies.\n\tif not J.IsFieldRegenSituation( bot ) then return false end\n/s" "$JMZ"; }
 mutant caught "M17 the copied clauses are folded back into a call" "$JMZ" m17
 
 # --- M18: DECLARED UNMEASURABLE ----------------------------------------------

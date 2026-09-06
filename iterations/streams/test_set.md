@@ -18553,3 +18553,149 @@ M3 把 blinkflee 的锚从 `\nend` 改成任意 `end`。
 - **→ 任何要新写一个「切函数体」的人**:用 `source_constants.function_span()`,
   不要再抄一份;新的切分器请在 `tests/test_fn_body_boundaries.py` 里加一行,
   那是这一类错误**唯一会再响一次**的地方。
+
+---
+
+## §FF 2026-09-06T04:35Z 协同组 —— **一条否决子句在自己的注释里写明了它是为哪个消费者写的,而另一个消费者继承了它**;本节最该被读的是 **§FF.3:判据不是「改动让几个检测器变红」,是「每个变红的文件对这次改动有没有话说」——上一轮 7 个说不上话 ⇒ 撤销,本轮 3 个都说得上话 ⇒ 逐条重读修掉,没有一个是抬数字**
+
+**产物**:`bots/FunLib/jmz_func.lua` **新增** `J.ShouldFieldBuyRegenTower`
+(`buytower`,turbo-only,**未 armed**,STANDALONE)+ `bots/item_purchase_generic.lua` 购买点**第三条 OR 臂**、
+`tests/test_buytower_purchase_domain.lua`(**18/18**)、`tests/_buytower_sweep.lua`、
+`tools/agent/mutstand_buytower.sh`(**新增 `anchor` 前置检查**)、
+`test_gated_helper_nesting_census.lua` **三行**、`state.json:buytower_20260906`、
+`tools/agent/mutstand_buyband.sh` **三处重新上锚(M2/M9/M17)**、
+报告 `iterations/reports/strategy/20260906T043525Z.md`。
+**armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结);零 AWS、零 S3、零 EC2、零波次。**
+
+> ⚠️ **本节原本写作 §FE,落地时改成 §FF**:总监 04:xxZ 那一轮在本轮写作期间也认领了 §FE
+> (两轮并行,谁都没抢谁)。rebase 冲突时**两节都保留**,本节整体改名,
+> 引用它的报告 / 章程 / `state.json` 同步改。这正是 `citation_audit.py` 的 `AMBIGUOUS` 类
+> (两节抢同一个 `§XX` 标题)在**发表之前**被挡下的那个形状。
+
+### §FF.1 立案句:一条子句的理由,写在它自己的注释里,而那个理由是**别人的**
+
+`J.IsFieldRegenSituation` 里:
+
+```
+if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
+```
+
+它自己的注释给的理由是**实测出来的**:驱动 `mode_retreat_generic` 跑完全部 fixture,
+发现这条谓词会取消 `ShouldRun` 的「前期谨慎冲塔」那个 bid ——
+**那是一次从塔边后撤的 LOCAL retreat,不是回泉水**,压住它会「把 bot 钉在塔的射程里」。
+**这个论证是对的,并且它整个是关于「取消一个 retreat bid」的** —— 也就是关于**决策侧**
+(`J.ShouldRegenNotGoHome` 的两个 wrapper)的。
+
+**供给侧不取消任何 bid。** `J.ShouldFieldBuyRegen` 和 `buyband` 只是在购买点上 `or` 一条臂。
+⇒ 在两条买臂上,这条子句**因为一个不适用于买的理由**否决;
+而且大药**不被塔伤打断**(同一条标准建议的另一半),所以连「买了也白买」都不成立。
+
+### §FF.2 域价钱(先跑,再写第一行代码)
+
+同一份语料(109 fixture / **1012 活英雄帧**,turbo 1012/1012)。
+**分母跟 §FD 不同是刻意的**:§FD 走 `ShouldStayAndRegen` 的 reach 集,本轮直接问
+「PROMOTED 带子 `[0.18,0.75]` 里两手空空的帧,是被什么挡在这个家族外的」。
+
+| 桶 | 帧 |
+|---|---|
+| `[0.18, 0.75]` 带内 | **305** |
+| ↳ 主格位什么都没带 | **163** |
+| ↳↳ 被 1600 环挡 | 99 |
+| ↳↳ 被**已归因**英雄伤害挡 | 28 |
+| ↳↳ 1200 内有敌塔 | 22 |
+| ↳↳ **只被敌塔挡 = 本杠杆域** | **8** |
+| ↳↳ 什么都没挡(两个兄弟今天在管) | 53 |
+
+**章程点名了两个候选,本轮选了敌塔、没选 1600 环,理由不是域大小**:
+1600 环在买臂上**有**理由(大药**会**被敌方英雄伤害打断 ⇒ 环空是这次购买有没有意义的**前提**,
+`fieldbuy` 的注释已经把这条论证登记过了);敌塔在买臂上**没有**理由(见 §FF.1)。
+⇒ **域 66/99 帧但理由冲突的那条不动;域 8 帧但理由干净的那条动。**
+
+**钉帧**:`f_260820_102030_wk_tower_in_reach` @ t=444.5,skeleton_king **329/1154 = 28.5%**,
+身上 clarity / magic_wand / gauntlets / quelling_blade / phase_boots(**没有任何能喝的**),
+最近的**活着的**敌方英雄 **4,936** 单位,最近敌塔 **787** 单位(塔的攻击距离 700)
+⇒ **这一帧上这条 1200 的子句连塔的射程都没碰到。**
+
+### §FF.3 ⭐ 主判据(立法级,可复用,超出本主题)
+
+**判据不是「这次改动让几个检测器变红」,是「每一个变红的文件对这次改动有没有话说」。**
+
+- §FD:给共享谓词加可选参数 ⇒ **7 个变红**,`healthy_walk_home_gap` / `stayfield_hp_window_reach` /
+  `stayfield2_marginal_domain` / `fightback_world_assertion` / `itemtrip_wasteful_trip` /
+  `bagsalve_backpack_source` / `stayattr_global_ult` —— **七个里没有一个对那条杠杆有话要说** ⇒ **撤销**。
+- §FF:购买点加第三条 OR 臂 ⇒ **恰好 3 个变红**,而且**三个都在说这次改动的事**:
+
+| 变红的文件 | 它在说什么 | 怎么修的 |
+|---|---|---|
+| `test_gated_helper_nesting_census` | 出现了三条新的 gate-inside-a-gate | **逐条手判** (A)/(I)/(W) 后钉住,理由写在行上 |
+| `test_bagsalve_backpack_source` | `J.HasFieldRegenSource` 多了第 5 个调用者 | 把它**加进「自带 `IsModeTurbo`」那一列**(不是只把 4 改成 5) |
+| `test_buyband_hp_band` | 它的 `WIRE_OR` 把**两臂的字面文本**钉死了 | 改成**仍然对替换 / 换成 `and` 变红、只容忍同一个 `or` 再加臂**的模式 |
+
+⇒ **七个说不上话 = 重新基线化(该撤销);三个说得上话 = 这棵树在审这次改动(该逐条回答)。**
+
+### §FF.4 ⭐⭐ 第二条(变异台规程级):GH #550 当时还有**两处活的**,在同一台台子上
+
+上一轮把 M8/M10 重新上锚,结论写的是那条光秃秃的 `GetNearbyTowers` 行**出现两次**。
+本轮在动同一批函数**之前先数了一遍锚**,发现另一个锚 ——
+`if #J.GetNearbyHeroes( bot, 1600, ... ) > 0 then return false end` + 紧跟的 `-- Attributed danger` ——
+在 `jmz_func.lua` 里**出现三次**(`IsFieldRegenSituation` ~5560 / `buyband` 杠杆 ~5843 /
+`IsWastefulItemTrip` ~6088),而 **`mutstand_buyband.sh` 的 M9 与 M17 用的就是它**:
+
+| 变异体 | 声称改的 | 实际改的 | 为什么还是 CAUGHT |
+|---|---|---|---|
+| M9「拷贝来的环半径漂到 900」 | 杠杆的 1600 | **共享谓词**的 1600 | 漂移守卫看见 900≠1600 就红 —— **颜色对,函数错** |
+| M17「把拷贝的子句折回一次调用」 | 杠杆 | **共享谓词的中段** ⇒ 变成对自己的调用 | 无限递归 ⇒ 套件红 —— 同样是对的颜色、错的程序 |
+
+**并且把这条从教训变成机制**:新台子 `mutstand_buytower.sh` 带一个
+`anchor <期望次数> <文件> <锚>` **前置检查**,在变异体跑之前数锚,不等就判**台子失败**(不是变异体结果)。
+本轮新杠杆的带子**故意写成两条语句**同理:写成一行会与 `J.ShouldStayAndRegen` 的带子行逐字节相同,
+给该文件添第二个同名锚(M6 用的那个)。
+
+### §FF.5 不相交靠的是**取反**,不是带子
+
+两个兄弟臂都要求 1200 环**空**,本臂要求它**非空** ⇒ 三域**构造性不相交**,
+而且**在整条 HP 带上都不相交**,这正是本杠杆敢横跨 `[0.18,0.75]` 而不是切 0.55 一侧的原因。
+
+| 读数 | 值 |
+|---|---|
+| `flips_buytower`(驱动 shipped 三臂谓词,**只 arm 本 id**) | **8** |
+| `tower_domain`(独立前缀行走) | **8** |
+| `nosrc_tower_only`(普查切片) | **8** |
+| `overlap_tower_buy` / `overlap_tower_hurt` | **0 / 0** |
+| `overlap_probe_runs`(GH #171 防「假零」) | **1012 == live** |
+| `flip_true_to_false` / `arm_leak` / `raises` | **0 / 0 / 0** |
+| `tower_below_sit_ceiling + tower_above_sit_ceiling`(恒等式,且**两边都非零**) | **4 + 4 = 8** |
+
+两个边界都不是新常数:**0.18** 解析自 `IsFieldRegenSituation` 自己,**0.75** 解析自 **PROMOTED** 的
+`ShouldStayAndRegen` 自己,sweep 两边解析并比对。
+
+### §FF.6 ⚠️ 一条**不空**的诚实边界(与 §FD 的差别就在这里)
+
+和 `buyband` 一样,本杠杆**没有**抄兄弟那条 gated 的 `fieldcreep`(抄了就是在本函数里点另一个候选的名,
+它 promote 当天这条子句冻死在 FALSE —— `pullcad` 第一形态)。
+**§FD 那轮这个分歧在语料上是空的(0 帧);本轮不是:8 帧域里有 2 帧**在同 3 秒窗口吃了小兵伤害
+⇒ `fieldcreep` 一旦 armed,购买点两臂在这 2 帧上**意见不一致**。
+已写成**精确等值**断言 `tower_with_creep_damage == 2`,让排波的人从测试里读到分歧宽度,而不是猜。
+
+其余边界同 §FD.8:翻转的是**购买谓词**不是一趟被取消的回家;金钱不进 `.dem`(GH #495)⇒ 对金钱盲的超集;
+另加两条本杠杆特有的:
+1. **43 个 fixture 完全不带建筑(GH #100)**,那些帧上这条塔子句**两个方向都验证不了**,
+   所以 `fixtures_with_buildings`(**66 / 109**)被钉住,防止把语料当成域。
+2. ⚠️ **一处草稿自我更正,在发表前抓到**:草稿写过「8 帧全部在塔的 700 射程之外」,**是错的**。
+   直接从 fixture 文件量(python,不经 `bots/`;**这是一次一次性测量,不是被测试断言的数**)的
+   8 个最近敌塔距离是 **221 / 688 / 787 / 987 / 1021 / 1039 / 1090 / 1130** ⇒ **2 帧本来就在塔的射程里**。
+   不推翻杠杆(买是瞬时的,不把 bot 钉住,它照样可以走出射程再喝),
+   但把边界从「语料买不到这个反例」改成「语料里就有 2 帧」。
+   ⛔ 另外**刻意没有**把「大药不被塔伤打断」写进论证:那条游戏规则本容器**核实不了**
+   (标准来源只明确写了敌方**英雄**伤害会打断),而论证不需要它 ——
+   「这条子句的既有理由是关于取消 retreat bid 的,而买臂不取消 bid」从源码和它自己的注释就读得完。
+
+### §FF.7 交棒
+
+- **甲 → 总监**:`buytower` 入集提议,**P4.2 冻结期预期裁定 `FROZEN-HOLD`**;
+  另有规程建议:把 §FF.4 的 `anchor` 前置检查定为**新变异台的标配**,并回补旧台子。
+- **乙 → 批测台**:本 id **单臂可读**(`flips == 8`),与 `fieldbuy` / `buyband` 重叠**各为 0**,
+  解冻后可同波但**必须分臂**;⚠️ 与 `fieldcreep` 同波时 §FF.6 那 2 帧的分歧要登记。
+- **丙 → 录像组/语料侧**:8 帧已逐帧列在 sweep 的 `F` 行。最想要的一帧是
+  **「带内 + 两手空空 + 敌塔在 1200 内 + 且确实被塔打到」** —— 本语料 8 帧全部在塔的 700 攻击距离之外,
+  所以「买了大药被塔打断」这个反例**语料现在买不到**,而它是本杠杆唯一一个说不清的反面情形。

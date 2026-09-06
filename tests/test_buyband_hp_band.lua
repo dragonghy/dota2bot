@@ -174,13 +174,19 @@ local function frame(path, subject, sId)
     return J, bot, function(b) armed = b end
 end
 
---- The CALL SITE's predicate, as the call site itself spells it: the OR of the two
+--- The CALL SITE's predicate, as the call site itself spells it: the OR of its
 --- arms. Driving this rather than the new function alone is what makes "arming can
 --- only add TRUEs" a statement about the shipped decision instead of about a
 --- helper nobody calls.
+--- [buytower 20260906] The third arm was added here rather than left out. Leaving
+--- it out would have been harmless TODAY -- this file arms only 'buyband', under
+--- which J.ShouldFieldBuyRegenTower returns false on its first line -- and that is
+--- exactly why it would rot silently: the docstring says "as the call site itself
+--- spells it", and a helper that quietly stops matching the call site is how a
+--- driven assertion becomes a shadow implementation.
 local function site(J, bot)
-    return (J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot)) and true
-        or false
+    return (J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot)
+        or J.ShouldFieldBuyRegenTower(bot)) and true or false
 end
 
 -- --------------------------------------------------- the tree, as source ---

@@ -215,9 +215,19 @@ G.HURT_CALLS_2ARG = nHurt2
 local buysrc = strip_comments(read_file(BUY))
 G.WIRE_HURT = buysrc:find('J.ShouldFieldBuyRegenHurt(bot)', 1, true) and 1 or 0
 G.WIRE_BUY = buysrc:find('J.ShouldFieldBuyRegen(bot)', 1, true) and 1 or 0
+-- [buytower 20260906] Written as a literal `'if ( J.ShouldFieldBuyRegen(bot) or
+-- J.ShouldFieldBuyRegenHurt(bot) )'` this went red the day a THIRD arm joined the
+-- same condition -- and the property it exists for ("this lever is OR-ed in
+-- alongside 'fieldbuy', never in place of it", which is what makes the
+-- arming-can-only-add-TRUEs direction argument true) was not disturbed at all.
+-- The same shape test_replay_260822_fieldbuy_supply.lua's slice was already
+-- loosened for on 2026-09-06. So the pattern pins the two arms and the OR BETWEEN
+-- THEM, and tolerates further arms of the same OR -- each of which brings its own
+-- direction argument in its own file. A replacement, a swap to `and`, or a move
+-- out of the condition still goes red here.
 G.WIRE_OR = buysrc:find(
-    'if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot) )',
-    1, true) and 1 or 0
+    'if %( J%.ShouldFieldBuyRegen%(bot%) or J%.ShouldFieldBuyRegenHurt%(bot%)[%s%)]')
+    and 1 or 0
 G.WIRE_PURCHASES_FLASK =
     buysrc:find("ActionImmediate_PurchaseItem('item_flask')", 1, true) and 1 or 0
 

@@ -5862,6 +5862,144 @@ function J.ShouldFieldBuyRegenHurt( bot )
 	return not ( J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) )
 end
 
+-- [buytower / owner priority P2 supply side, 2026-09-06] The third arm of the same
+-- purchase site, and it is about a clause that was written for a DIFFERENT
+-- CONSUMER and then inherited by this one.
+--
+-- ⭐ THE DEFECT, AND IT IS A RATIONALE THAT DOES NOT TRANSFER. The enemy-tower
+-- clause inside J.IsFieldRegenSituation -- `#bot:GetNearbyTowers( 1200, true ) > 0`
+-- -- states its own reason, in its own comment, and that reason is entirely about
+-- the HOLD side: driving mode_retreat_generic over the fixture corpus showed the
+-- situation predicate firing on a frame whose retreat bid comes from ShouldRun's
+-- 前期谨慎冲塔 clause, i.e. a LOCAL back-off from a tower, and "suppressing it
+-- would leave the bot parked in tower range". That is an argument about
+-- CANCELLING A RETREAT BID, which is what J.ShouldRegenNotGoHome's two wrappers
+-- do. The supply side cancels nothing: J.ShouldFieldBuyRegen and its 'buyband'
+-- sibling only ever add an OR arm to a purchase, and a bot that buys a salve
+-- 1,090 units from an enemy tower is just as free to walk out of tower range and
+-- drink it as it was before. So on the buy arms this clause vetoes for a reason
+-- that has nothing to do with buying, and the bot is left empty-handed and sent
+-- home instead -- exactly the trip owner priority P2 forbids.
+--
+-- ⭐⭐ MEASURED ON THE CORPUS, NOT ARGUED (tests/_buytower_sweep.lua, 1012 live
+-- turbo hero frames). 305 frames sit inside the promoted [0.18, 0.75] band; 163 of
+-- those carry nothing drinkable in a main slot. Of those 163, exactly **8** have an
+-- empty 1600 ring, no attributable hero damage, and an enemy tower inside 1200 --
+-- i.e. the tower clause is the ONLY thing holding them out of the field-buy family
+-- (66 are held out by the ring and 12 by both; those keep their vetoes and this
+-- lever does not touch them). The bearing frame is
+-- tests/fixtures/f_260820_102030_wk_tower_in_reach.lua at t=444.5: a
+-- skeleton_king at 329/1154 = 28.5% HP carrying clarity / magic_wand / gauntlets
+-- / quelling_blade / phase_boots -- nothing drinkable at all -- with the nearest
+-- LIVE enemy hero 4,936 units off and the nearest enemy tower 787 units away.
+-- Tower attack range is 700, so on that frame this 1200 clause is not even
+-- reaching the tower's own range; it is protecting a retreat bid that the buy
+-- arm never touches.
+--
+-- ⭐⭐⭐ WHY A SEPARATE FUNCTION THAT REPEATS CLAUSES, AGAIN. The same three
+-- shortcuts fail for the same three reasons the 'buyband' block above records:
+-- gating the clause inside J.IsFieldRegenSituation moves THREE families on one arm
+-- ('stayfield', 'stayfield2', 'fieldbuy') -- the 'lanefix' bundle shape; putting a
+-- second id inside J.ShouldFieldBuyRegen puts it BEHIND that function's own
+-- 'fieldbuy' gate, so no single-arm wave could ever see it (the second form of the
+-- 'pullcad' trap, GH #542); and adding an argument to the shared predicate turns
+-- seven detector files red at once, because on this tree a function signature is a
+-- published interface. So the surrounding clauses are DUPLICATED, and the
+-- duplication is paid for where it can be seen: tests/_buytower_sweep.lua parses
+-- every constant (1600, 3000, 3.0, 1200, 0.18, 0.75) out of J.IsFieldRegenSituation
+-- and J.ShouldStayAndRegen themselves and fails the day either copy drifts.
+--
+-- ⭐⭐⭐⭐ DISJOINTNESS IS THE INVERTED CLAUSE, NOT A BAND. Both sibling arms
+-- require `#bot:GetNearbyTowers( 1200, true ) == 0`; this one requires `> 0`. So no
+-- frame can ever be answered by two arms and neither sibling can be credited with
+-- this lever's frames -- and unlike an HP split, the disjointness holds across the
+-- WHOLE band, which is why this function spans the promoted [0.18, 0.75] rather
+-- than owning a slice of it. Neither bound is a new tuned constant: 0.18 is
+-- J.IsFieldRegenSituation's own floor and 0.75 is the ceiling of the PROMOTED
+-- J.ShouldStayAndRegen, i.e. this tree's own definition of "hurt enough that going
+-- home is on the table". The sweep parses both out of their own functions.
+--
+-- Condition (c): a salve is 100 gold for 400 health drunk where the bot stands,
+-- against a fountain round trip the replay desk measured at a ~40 second median
+-- (GH #120) -- a fifth of a turbo game. Standard advice is explicit that the salve
+-- is cancelled by enemy HERO damage, which is why the 1600 ring and the attributed
+-- damage read are kept UNCHANGED here.
+--
+-- ⛔ What this argument deliberately does NOT rest on: "a salve is not cancelled
+-- by tower damage". That is a game rule this session could not verify (the
+-- standard sources state the hero-damage cancel and are silent on buildings), and
+-- the case does not need it. The whole argument is readable off this tree: the
+-- clause states a reason, the reason is about cancelling a retreat bid, and this
+-- arm cancels no bid. A purchase does not pin the bot anywhere -- it can walk out
+-- of tower range and drink there, which is the same freedom it had before.
+--
+-- Honest bounds, stated the same way the siblings state theirs. (1) What is
+-- measured is a PURCHASE PREDICATE turning true, not a trip home being cancelled:
+-- the nine engine clauses at the call site (stock, gold, stash, courier distance,
+-- empty slot) are unreadable from a fixture, and gold is not networked into a .dem
+-- at all (GH #495), so the flip set is the gold-blind superset of the live one.
+-- (2) 43 of the corpus fixtures carry no buildings whatsoever (GH #100), so on
+-- those frames this lever's own tower clause is not merely unsatisfied -- it is
+-- unverifiable; the sweep counts the fixtures that DO carry buildings so the
+-- domain is never mistaken for the corpus. (3) This buys a salve for a bot that
+-- may be about to lose it to a fight; that is the same exposure both siblings
+-- already carry, unchanged in kind. (4) Like 'buyband' it deliberately does NOT
+-- copy the gated 'fieldcreep' veto -- naming another candidate's id here would
+-- freeze this clause FALSE the day that id is promoted -- and the sweep counts how
+-- wide that disagreement actually is on this corpus.
+function J.ShouldFieldBuyRegenTower( bot )
+	if not J.IsSoakCandidate( 'buytower' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	-- The PROMOTED band, both ends taken from functions that already own them.
+	--
+	-- Written as TWO statements rather than the sibling's one-liner, and that is
+	-- not style. `if nHP < 0.18 or nHP > 0.75 then return false end` is BYTE
+	-- IDENTICAL to the band line of J.ShouldStayAndRegen 860 lines up, which
+	-- tools/agent/mutstand_buyband.sh anchors mutant M6 on; `perl -0pi -e "s///"`
+	-- without /g rewrites the FIRST match, so a second copy in this file is how a
+	-- mutant silently starts cutting a different function while still printing
+	-- CAUGHT (GH #550, bought by that stand's own M8). Anchor uniqueness is part
+	-- of the declaration, not a detail of somebody's regex.
+	local nHP = J.GetHP( bot )
+	if nHP < 0.18 then return false end
+	if nHP > 0.75 then return false end
+
+	-- The two danger clauses of J.IsFieldRegenSituation that DO transfer, in its
+	-- own order and with its own constants. A salve is cancelled by enemy hero
+	-- damage, so these are the precondition for the purchase being worth making.
+	-- The trailing comment marker on the next line is likewise load-bearing: the
+	-- ring line plus the comment `-- Attributed danger` that follows it is the
+	-- anchor mutstand_buyband.sh's M9 and M17 use, and that pair ALREADY occurred
+	-- three times before this function existed (J.IsFieldRegenSituation,
+	-- J.ShouldFieldBuyRegenHurt, J.IsWastefulItemTrip) -- so both mutants had been
+	-- landing in the SHARED predicate, not in the lever they name, and printing
+	-- CAUGHT for it. Measured and re-anchored on 2026-09-06 (GH issue filed); this
+	-- copy's comment is worded so it cannot match that anchor at all.
+	if #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0 then return false end
+
+	-- Danger, attributed: someone hit me recently AND is still near me.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then
+		local hEnemyList = J.GetNearbyHeroes( bot, 3000, true, BOT_MODE_NONE )
+		for _, hEnemy in pairs( hEnemyList ) do
+			if J.IsValidHero( hEnemy )
+				and bot:WasRecentlyDamagedByHero( hEnemy, 3.0 )
+			then
+				return false
+			end
+		end
+	end
+
+	-- The clause this lever is about, INVERTED. Both sibling arms answer only
+	-- where this is zero; this one answers only where it is not, so the three
+	-- domains are disjoint by construction and no isolation wave can credit one
+	-- arm with another's frames.
+	if #bot:GetNearbyTowers( 1200, true ) == 0 then return false end
+
+	-- The same conjunction both siblings ask, asked the same way.
+	return not ( J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) )
+end
+
 -- [itemtrip / GH #120] The OTHER end of the same "don't walk home" family, and
 -- the one nothing in this tree could speak on: the HEALTHY trip home.
 --
