@@ -25,6 +25,18 @@
 #   * ...without the suite crying wolf at a comment that merely says 80 (M6,
 #     the control, which MUST survive)
 #
+# 2026-09-06, Ruling 4 (director, from the desk's 09:12Z hand-off).  The same
+# disease turned up one term to the left: `pending` defaulted to 0.0, which is
+# a derived quantity written as a literal, invisible on every quiet day, and
+# failing toward more spending.  M7-M10 attack the certification, not the
+# arithmetic -- and M7 is again the bug exactly as it shipped:
+#   * does the suite tell a CERTIFIED zero from a DEFAULTED one?      (M7) ⭐
+#   * is the enumeration account-wide, or quietly scoped to our own tag,
+#     which is the plausible edit and the wrong one while the budget
+#     carries no cost filter?                                         (M8)
+#   * do already-accruing states that are on their way out still count? (M9)
+#   * is a failed enumeration could-not-run, or "nothing is running"? (M10)
+#
 # DISCIPLINE (the house rules this stand inherits):
 #   * out-of-tree `cp` restore, verified with `sha256sum -c`;
 #   * `trap restore EXIT` BEFORE the first mutant is applied (GH #418);
@@ -129,6 +141,41 @@ MUTANTS = {
     "M6": [(TOOL, "BUDGET_NAME = \"dota2bot-batch\"\n",
                   "# August's archived fence was $80.0; September's is not.\n"
                   "BUDGET_NAME = \"dota2bot-batch\"\n")],
+    # M7: ⭐ RULING 4's LOAD-BEARING ONE, AND AGAIN IT IS THE BUG AS SHIPPED.
+    #     Instances are accruing, no --pending was passed, and the tool hands
+    #     back $0.000 anyway.  Every printed line stays plausible; the gate
+    #     goes on clearing waves; it is wrong only on the days something is
+    #     running, which are exactly the days it is load-bearing.
+    "M7": [(TOOL,
+            '    lines.append(\n'
+            '        "UNCERTIFIABLE: %d instance(s) are accruing charges right now and "\n',
+            '    return 0, lines, 0.0\n'
+            '    lines.append(\n'
+            '        "UNCERTIFIABLE: %d instance(s) are accruing charges right now and "\n')],
+    # M8: the enumeration is scoped to our own `Project` tag.  This is the
+    #     edit somebody WILL make, because "why should another team's box
+    #     block our wave" sounds right -- and it is wrong for as long as
+    #     `dota2bot-batch` carries no cost filter, because that box lands in
+    #     our budget and spends our headroom.  The 09-06 instance was
+    #     `Project=final-table-trainer`; under this mutant it vanishes.
+    "M8": [(TOOL,
+            '            rows.append({\n'
+            '                "id": inst.get("InstanceId"),\n',
+            '            if project != "dota2bot":\n'
+            '                continue\n'
+            '            rows.append({\n'
+            '                "id": inst.get("InstanceId"),\n')],
+    # M9: only `pending`/`running` count.  An instance in `stopping` has
+    #     already run the hours MTD is behind on; dropping it under-counts in
+    #     the over-permissive direction.
+    "M9": [(TOOL,
+            'ACCRUING_STATES = ("pending", "running", "stopping", "shutting-down")\n',
+            'ACCRUING_STATES = ("pending", "running")\n')],
+    # M10: a failed enumeration is read as an empty account.  Same shape as
+    #      GH #205/#213 one level down: could-not-run scored as a pass, and
+    #      the pass it is scored as is the most permissive answer available.
+    "M10": [(TOOL, '    if instances is None:\n',
+                   '    if instances is None and False:\n')],
 }
 
 if mut not in MUTANTS:
@@ -160,7 +207,7 @@ echo
 # M6 is the control: it is EXPECTED to survive.  Everything else must be caught.
 EXPECT_SURVIVE=" M6 "
 FAILED=0
-for m in M1 M2 M3 M4 M5 M6; do
+for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10; do
     restore
     apply_mutant "$m"
     rc=$?

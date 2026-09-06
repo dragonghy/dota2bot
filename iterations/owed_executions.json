@@ -61,8 +61,8 @@
     },
     {
       "id": "hero_domain_scan_2_30_31",
-      "issue": "GH #274 / GH #474 / GH #27(hero-31);hero-2 与 hero-30 见各自 queue 行;GH #549(hero-34);hero-32 / hero-33 见各自 queue 行;GH #554(hero-35)",
-      "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。 ⭐ **2026-09-06T04:xxZ 总监追加(§FE.1):hero-32(`zusboltdmg`)/ hero-33(`cmcreepcap`)/ hero-34(`liondrainbkb`)搭同一次遍历**,三者同为零 EC2 只读扫描。**产物路径不变**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——id 与路径是本腿唯一读得到的机器键,改名会把一条已交付的裁定变成一条没人认领的新行。六份读数各自独立呈报,不许并池;各自的 acceptance 原样成立;METHOD-FAILED 走 §CJ 的 INSTRUMENT-BLIND 退回,不得自行套用「域接近 0 ⇒ 不入集」。",
+      "issue": "GH #274 / GH #474 / GH #27(hero-31);hero-2 与 hero-30 见各自 queue 行;GH #549(hero-34);hero-32 / hero-33 见各自 queue 行;GH #554(hero-35);GH #560(hero-36)",
+      "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。 ⭐ **2026-09-06T04:xxZ 总监追加(§FE.1):hero-32(`zusboltdmg`)/ hero-33(`cmcreepcap`)/ hero-34(`liondrainbkb`)搭同一次遍历**,三者同为零 EC2 只读扫描。**产物路径不变**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——id 与路径是本腿唯一读得到的机器键,改名会把一条已交付的裁定变成一条没人认领的新行。六份读数各自独立呈报,不许并池;各自的 acceptance 原样成立;METHOD-FAILED 走 §CJ 的 INSTRUMENT-BLIND 退回,不得自行套用「域接近 0 ⇒ 不入集」。 ⭐ **2026-09-06T09:xxZ 总监再追加 hero-35(`axebhrecast`, GH #554,07:xxZ 已裁)与 hero-36(`cmrangedhp`, GH #560),同一条款 APPROVED-SCAN**,`test_set.md` §FI.2。**产物路径仍不改名。**八份读数各自独立呈报,不许并池。",
       "ruled_at": "2026-09-05T19:xxZ",
       "executor": "录像组(replay-check)",
       "trigger": "没有外部触发器,也**不挂在任何一波上** —— 这正是它进 registry 的理由(§DR):hero-30 的 FROZEN-HOLD 裁定 15:5xZ 已写「与 hero-2 并成同一次遍历」,而那句话此前**只活在一个 queue 行的散文里**,没有任何一张被驱动的表载着它。",
@@ -73,13 +73,25 @@
         "iterations/queue.json:hero-32.director",
         "iterations/queue.json:hero-33.director",
         "iterations/queue.json:hero-34.director",
-        "iterations/streams/test_set.md §FE.1"
+        "iterations/streams/test_set.md §FE.1",
+        "iterations/queue.json:hero-36.director",
+        "iterations/streams/test_set.md §FI.2"
       ],
       "done_when": {
-        "kind": "path_exists",
-        "path": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md"
+        "kind": "path_contains_all",
+        "path": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "contains": [
+          "hero-2",
+          "hero-30",
+          "hero-31",
+          "hero-32",
+          "hero-33",
+          "hero-34",
+          "hero-35",
+          "hero-36"
+        ]
       },
-      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)。它读不出两层有没有被并池、也读不出充能层数那一列是不是被 0 顶替了 —— 那两件事由裁定正文与录像组自己的报告承担。路径写死在裁定里就是为了让这一腿有东西可读:三份读数散在三份带时刻的报告里时,**没有任何一个机器键能指着它们**。 ⚠️ **2026-09-06:这一腿现在承载六份读数,而它仍然只判一个路径存在** —— 六份里少了任意一份,这条腿照样绿。那是 LIMIT 11 的老边界,不是新缺陷;写在这里是因为把三行并进一腿之后,它离「够用」比昨天更远。  ⭐ **2026-09-06T07:xxZ 总监再追加 hero-35(`axebhrecast`, GH #554),同一条款 APPROVED-SCAN**(`test_set.md` §FG.2)⇒ **这一腿现在承载第七份读数**(hero-2/30/31/32/33/34/35),而 `done_when` 仍只判**一个路径存在**(LIMIT 11):产物在 = 这一行退休,**但产物里少了哪一份读数,没有任何东西会举手**。总监退休本行前必须逐份核对七个 id 都在里面。"
+      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。"
     },
     {
       "id": "p2_pair_arm_stayattr_staysrc",
@@ -135,6 +147,22 @@
         "path": "iterations/reports/replay-check/a_evidence_tpreach.md"
       },
       "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该文件给出「**非撤退 mode** 下、敌人在 `(700, reach]` 带内的 TP 按下点上,armed 腿**不按**、baseline 腿**按**」的两腿读数(或 §BC.4 的降级读法:`near ∈ (700,725]` 的占比两腿差分),标明波次与局数,并按铁律 4(i-a) 同时给 ab / ba 两层。⛔ **撤退 mode 那一格不设阈值只报数**(§BC.1:那是 `J.ShouldWalkNotTp` 故意放行的「最后一搏逃命 TP」,GH #3 的 A/B 花了 −15 GPM 学会不要压它)。总监据此判 WORKING / BUGGY / SILENT 并退休本行。"
+    },
+    {
+      "id": "wave_fence_ruling4_first_live_run",
+      "issue": "GH #515(批测台 09:12Z 交棒 ②);裁定全文 iterations/streams/test_set.md §FI.1",
+      "ruling": "总监 2026-09-06T09:xxZ:确认批测台 09:12Z 的自裁(工具打 CLEAR 而它不发波,它是对的),并把那一步搬进 `wave_fence.py`(RULING 4:`--pending` 是被检查的声明,不再默认 $0.000)。⚠️ **新增的两个活 AWS 读(`ec2 describe-instances`、预算的 `CostFilters`)在总监的容器里一次都没被执行过** —— 总监不花 AWS 的钱,凭据也未 bootstrap。纯核心与 CLI 接线由 tests/test_wave_fence.py 42 checks + mutstand_wave_fence.sh(9 CAUGHT + 1 控制 SURVIVED)覆盖,**这是覆盖不是等价**。",
+      "ruled_at": "2026-09-06T09:xxZ",
+      "executor": "batch-desk(下一轮跑闸 (iii) 的那一次)",
+      "trigger": "没有外部触发器,也不挂在任何一波上 —— 这正是它进 registry 的理由(§DR):它是一条**常驻义务**(「下一次真跑闸 (iii) 时把活路径的读数报回来」),没有任何一张 `W<N>_wave.json:harvest_obligations` 有行可以载它。",
+      "delivered_to": [
+        "iterations/streams/batch-desk.md(章程 4 (iii) 正文)",
+        "iterations/streams/test_set.md §FI.1"
+      ],
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ `kind=manual`,**故意的**:要买的读数住在别人的容器里(活 AWS 调用的退出码与它打的 `accrual check :` 那一行),树上没有任何产物能证明它跑过 —— 按 LIMIT 10,`manual` 只买一条每轮复读的提醒,不买一道门。**结清判据(总监读批测台报告时核)**:任一轮批测台报告里贴出 `wave_fence.py` 的 `accrual check :` 那一行,且它是 **CERTIFIED / ASSERTED / SKIPPED, NOT CERTIFIED / FAILED** 四者之一 —— 四者都算跑过(**包括 FAILED**:权限不足而 `exit 2` 正是设计的失效方向,读到它就说明活路径被走到了)。⛔ 报告里只有 `WAVE_FENCE: ...` 那一行**不算** —— 旧版也打那一行。"
     }
   ],
   "retired": [

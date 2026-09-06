@@ -497,6 +497,43 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T10:11Z**:**批测台推翻了自己的绿工具、没发波,它是对的;本轮确认那次自裁,
+  并把它靠手算才得到的那一步搬进工具** —— 而最该被读的是:**同一种缺陷本轮在两个互不相干的
+  工具上各出现一次**,两次都是「**一个派生量被写成字面量,而字面量在安静的日子里与派生值逐字相同**」,
+  两次都**朝着放行失效**。**(1) `wave_fence.py` RULING 4**:`--pending` 默认 `0.0`,于是
+  `pending waves : $0.000` **读起来像一次测量,实际是没人检查过的默认值**;09-06 上午账户里一台
+  别人项目的 `c7a.16xlarge`(`$1.8209/h`)整天在烧、预算**没有 cost filter**、`ActualSpend` 滞后
+  4.3–11.3h ⇒ 工具打 `CLEAR headroom $9.572`,而诚实重建是**真实 MTD ≈ $53.12,`$50` 已越线**,
+  **越线部分 92% 不是批测的**。⭐ **修法刻意不引入成本模型**(在这里猜一个 markup 常数就是新的
+  自由参数,正是这个文件要消灭的病);能免费确立的是**前提**:「`pending==0` 可核验 ⟺ 没有东西在跑」
+  ⇒ 账户级 `describe-instances`(**不按 tag 过滤,因为预算也没过滤**):没东西在跑=**CERTIFIED**;
+  **有东西在跑而没传 `--pending`=exit 2 并逐台列出**;传了=**ASSERTED**;`--no-accrual-check`=
+  **「SKIPPED, NOT CERTIFIED」**(要抄进报告);**枚举失败=exit 2 不是「没东西在跑」**。
+  ⚠️ **owner 若加上 `Project` 过滤器(DECISIONS_NEEDED #15),这条检查会变成过保守** ——
+  那是**会被人喊出来的**失效方向,而现在这个不会;工具每轮打 `budget filters :` 让那一天可见。
+  ⚠️ **诚实边界:两个活 AWS 读在本容器一次都没跑过**(总监不花 AWS 的钱)⇒ 覆盖不是等价,
+  首次实跑归批测台,已进 registry(`wave_fence_ruling4_first_live_run`,`kind=manual`,
+  结清判据=报告里出现 `accrual check :` 那一行,**FAILED 也算跑过**,只贴 `WAVE_FENCE:` 不算)。
+  **(2) hero-36 `cmrangedhp` 裁 APPROVED-SCAN(第八份搭车读数)——而这次不只是再记一遍 LIMIT 11**:
+  前两轮我把「这一腿只判路径存在、少了哪份读数没人举手」写进 `done_when_note` **两次,两次都只是记下来**;
+  **七份里少六份这条腿照样绿**,唯一挡在绿与退休之间的是我记得去逐份读 —— **与 (1) 同形,字面量叫
+  `path_exists`**。⇒ `pending_rulings.py` 新 kind **`path_contains_all`**(八个 id 少一个报 OWED
+  **并点名**),`hero_domain_scan_2_30_31` 改用它。**边界照写进 LIMIT 11:「被提到」不是「读数正确」**,
+  那一层仍是退休前逐份读通;故意用子串不解析(产物是别组的散文);**改路径/改 id 写法会让它变红,
+  改名本来就该惊动人**。读数:`test_wave_fence.py` **24→42 checks 0 failed**、
+  `test_pending_rulings.py` **225→246 checks 0 failed**、`mutstand_wave_fence.sh` 加 M7–M10 后
+  **9 CAUGHT + 1 控制 SURVIVED STAND: OK**(**M7 就是 09-06 上午那个工具**;**M8 是会有人真去做的
+  那次修改** —— 把枚举收窄到自己的 tag,听起来对,而 09-06 那台正好是别人的 tag)。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`;python 整套
+  **103 passed / 0 failed / 1 uncertifiable**(唯一那条仍是 GH #548)。**`bots/`+`game/` 一行未动**
+  ⇒ `run_tests.lua` 未跑也不声称。⚠️ **开工第一条命令又误用管道(第三十三发,守卫第二十四次拦下)**,
+  重定向重跑 **`EXIT=124` 死在最后一条腿上(我给的 400s 不够)⇒ trunk 那一侧本轮自检没看过**。
+  ⚠️ **§FH 已被协同组 07:30Z 占用**,档案落盘前改成 **§FI**(否则就是 `citation_audit` 的 AMBIGUOUS)。
+  **零 AWS 增量;本轮不发 owner 邮件**(W36 那封 07:xxZ 已发)。
+  报告:`iterations/reports/director/20260906T101138Z.md`,全文档案 `test_set.md §FI`。
+  **下轮交棒**:① ⭐⭐ **W50 59-id 家族 promote/reject + winrate 第九次 DEGENERATE 结案
+  —— 第三次顺延,下轮优先级最高**;② GH #548 拿掉上限跑一次(**唯一剩下的 uncertifiable**);
+  ③ `a_evidence_tpdying` / `a_evidence_tpreach` 两行 DONE 退休核验(**逐条核产物,不是盖章**)。
 - **2026-09-06T07:08Z**:三件事,而最该被读的是第一件里的判据不是数字。
   **(1) GH #454 结清(挂了四轮)**:`$0.90` 的自动失效条款 **W46 就触发了**
   (账单侧 `$0.959–1.022`),此后 **W47/W48/W49/W50 四份波次记录逐字写着「总监 still not

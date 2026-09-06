@@ -154,6 +154,97 @@ rc, out = wf.check(17.773, 100.0, "MONTHLY", notes(), planned=1.10)
 check(rc == 0 and any("re-run the tool" in l for l in out),
       "the CLEAR line tells the reader not to copy the fence forward")
 
+# ---- 11. Ruling 4 (director 2026-09-06, from the desk's 09:12Z hand-off).
+#          `pending` defaulted to 0.0, which READS like a measurement and IS an
+#          unexamined default.  The load-bearing assertion is that the SAME
+#          call -- no --pending, no edit -- answers differently depending on
+#          whether anything is actually running.  That is the whole defect:
+#          on 09-06 the gate printed CLEAR with a c7a.16xlarge burning all day.
+BUSY = [{"id": "i-0114b249d00ad956e", "type": "c7a.16xlarge",
+         "state": "running", "launched": "2026-09-06T00:11:00+00:00",
+         "project": "final-table-trainer"}]
+
+rc, out, pend = wf.certify_pending([], None)
+check(rc == 0 and pend == 0.0, "nothing running + no --pending => zero stands",
+      "got rc=%d pend=%r" % (rc, pend))
+check(any("CERTIFIED" in l and "reading, not a default" in l for l in out),
+      "and the zero is labelled a reading, not a default")
+
+rc, out, pend = wf.certify_pending(BUSY, None)
+check(rc == 2 and pend is None,
+      "the 09-06 situation: something running + no --pending => exit 2",
+      "got rc=%d pend=%r" % (rc, pend))
+check(any("pending=$0.000 is FALSE" in l for l in out),
+      "the refusal names the false premise, not a generic error")
+check(any("i-0114b249d00ad956e" in l and "final-table-trainer" in l
+          for l in out),
+      "and it prints WHAT is running, so the operator can price it")
+
+# The desk over-rode its own green tool by hand and was right.  With Ruling 4
+# the same facts come out of the tool, so nobody has to be right by hand.
+check(wf.check(39.328, 100.0, "MONTHLY", notes(), planned=1.10)[0] == 0
+      and wf.certify_pending(BUSY, None)[0] == 2,
+      "the fence arithmetic alone still says CLEAR -- Ruling 4 is what stops it")
+
+# An asserted figure is allowed (the tool prices nothing), but it is marked as
+# an assertion and carries the list it has to cover.
+rc, out, pend = wf.certify_pending(BUSY, 4.50)
+check(rc == 0 and pend == 4.50, "--pending is honoured over running instances",
+      "got rc=%d pend=%r" % (rc, pend))
+check(any("ASSERTED" in l for l in out),
+      "...but printed as ASSERTED, never as a reading")
+
+# --pending 0.0 is a claim the operator is allowed to make; the silent default
+# is what was removed.  These two must NOT collapse to the same code path.
+rc0, _, pend0 = wf.certify_pending(BUSY, 0.0)
+rcN, _, pendN = wf.certify_pending(BUSY, None)
+check(rc0 == 0 and pend0 == 0.0 and rcN == 2,
+      "an explicit --pending 0 differs from omitting it", "got %d/%d" % (rc0, rcN))
+
+# The escape hatch must call itself a skip, in the GH #213 vocabulary.
+rc, out, pend = wf.certify_pending(BUSY, None, check_enabled=False)
+check(rc == 0 and pend == 0.0, "--no-accrual-check does not block",
+      "got rc=%d pend=%r" % (rc, pend))
+check(any("SKIPPED, NOT CERTIFIED" in l for l in out),
+      "and it says SKIPPED, not certified -- a line to quote in the report")
+
+# A failed enumeration is could-not-run, not an empty account.
+rc, out, pend = wf.certify_pending(None, None)
+check(rc == 2 and any("could not enumerate" in l for l in out),
+      "an unreadable account is UNCERTIFIABLE, not 'nothing is running'",
+      "got rc=%d" % rc)
+
+# The cost-filter line exists so the day the budget stops being account-wide is
+# visible; today it is unfiltered and that is why other projects count.
+_, out, _ = wf.certify_pending([], None, cost_filters={})
+check(any("budget filters   : none" in l for l in out),
+      "an unfiltered budget says so on its own line")
+_, out, _ = wf.certify_pending([], None, cost_filters={"TagKeyValue": ["x"]})
+check(any("OVER-count" in l for l in out),
+      "a filtered budget warns that the account-wide read over-counts")
+
+# ---- 12. parse_instances: only accruing states, and no tag filter.  A
+#          `Project`-scoped read is the bug, not the feature: the budget has no
+#          cost filter, so somebody else's instance spends our headroom.
+payload = {"Reservations": [{"Instances": [
+    {"InstanceId": "i-aaa", "InstanceType": "c5.large",
+     "State": {"Name": "running"}, "LaunchTime": "2026-09-06T02:00:00+00:00",
+     "Tags": [{"Key": "Project", "Value": "final-table-trainer"}]},
+    {"InstanceId": "i-bbb", "InstanceType": "c5.large",
+     "State": {"Name": "terminated"}, "LaunchTime": "2026-09-05T02:00:00+00:00"},
+    {"InstanceId": "i-ccc", "InstanceType": "c5.large",
+     "State": {"Name": "shutting-down"},
+     "LaunchTime": "2026-09-06T01:00:00+00:00"},
+]}]}
+rows = wf.parse_instances(payload)
+check([r["id"] for r in rows] == ["i-ccc", "i-aaa"],
+      "terminated is dropped, shutting-down is kept, sorted by launch time",
+      "got %r" % [r["id"] for r in rows])
+check(rows[1]["project"] == "final-table-trainer" and rows[0]["project"] is None,
+      "the Project tag is read for the report, never used to filter")
+check(wf.parse_instances({}) == [],
+      "an empty payload is an empty list, not a crash")
+
 for line in failures:
     print(line)
 print("%d checks, %d failed" % (checks, len(failures)))

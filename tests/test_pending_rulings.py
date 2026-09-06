@@ -909,6 +909,60 @@ for _r in _real_rows:
     check(_st in ("DONE", "OWED", "UNCERTIFIABLE"),
           "real owed row %r produced an unknown state" % _r.get("id"))
 
+# ---- done_when kind `path_contains_all` (director 2026-09-06, LIMIT 11).
+# The defect it answers: `hero_domain_scan_2_30_31` accumulated eight rideshare
+# readings onto ONE report path, and `path_exists` read DONE when seven of them
+# were missing.  So the load-bearing assertion is the pair -- the SAME file is
+# DONE under path_exists and OWED under path_contains_all.
+import shutil                                                    # noqa: E402
+
+_tmpdir = tempfile.mkdtemp(prefix="pr_contains_")
+try:
+    _art = os.path.join("iterations", "reports", "x", "scan.md")
+    os.makedirs(os.path.join(_tmpdir, os.path.dirname(_art)))
+    with open(os.path.join(_tmpdir, _art), "w", encoding="utf-8") as _fh:
+        _fh.write("# scan\n\nhero-2 reading here.\nhero-30 reading here.\n")
+
+    _row_exists = {"done_when": {"kind": "path_exists", "path": _art}}
+    _row_all = {"done_when": {"kind": "path_contains_all", "path": _art,
+                              "contains": ["hero-2", "hero-30", "hero-31"]}}
+    check(pr.owed_status(_row_exists, repo=_tmpdir)[0] == "DONE",
+          "path_exists did not go DONE on an existing artefact")
+    _st, _detail = pr.owed_status(_row_all, repo=_tmpdir)
+    check(_st == "OWED",
+          "a rideshare artefact missing one of its readings still read %s" % _st)
+    check("hero-31" in _detail and "1 of 3" in _detail,
+          "the OWED detail did not name WHICH reading is absent: %s" % _detail)
+
+    with open(os.path.join(_tmpdir, _art), "a", encoding="utf-8") as _fh:
+        _fh.write("hero-31 reading here.\n")
+    _st, _detail = pr.owed_status(_row_all, repo=_tmpdir)
+    check(_st == "DONE", "all readings present still read %s" % _st)
+    check("not correctness" in _detail,
+          "the DONE line did not keep LIMIT 11's boundary visible: %s" % _detail)
+
+    # An empty `contains` would pass on any file at all -- that is the old
+    # defect wearing the new kind's name, so it must refuse rather than pass.
+    check(pr.owed_status({"done_when": {"kind": "path_contains_all",
+                                        "path": _art, "contains": []}},
+                         repo=_tmpdir)[0] == "UNCERTIFIABLE",
+          "path_contains_all with no needles did not refuse")
+    # A missing artefact is OWED (the work is not done), never UNCERTIFIABLE.
+    check(pr.owed_status({"done_when": {"kind": "path_contains_all",
+                                        "path": "nope.md",
+                                        "contains": ["hero-2"]}},
+                         repo=_tmpdir)[0] == "OWED",
+          "a missing rideshare artefact did not read OWED")
+finally:
+    shutil.rmtree(_tmpdir, ignore_errors=True)
+
+# The real registry's rideshare leg must actually USE it -- a kind nobody
+# reaches is a kind that proves nothing.
+_ride = [r for r in pr.load_owed() + (_real_rows or [])
+         if r.get("id") == "hero_domain_scan_2_30_31"]
+check(_ride and _ride[0].get("done_when", {}).get("kind") == "path_contains_all",
+      "the eight-reading rideshare row is not on the kind that checks its ids")
+
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:
     print("FAIL: %s" % f)

@@ -97,6 +97,58 @@ ActualSpend.  If the two disagree in EITHER direction the tool exits 2
 Both are over-permissive or unexplained, and a blocked launch is the safe
 failure.  Exit 2 is not a pass; see GH #171/#205/#213 for the vocabulary.
 
+RULING 4 -- `--pending` IS A CLAIM, AND THIS TOOL NOW CHECKS IT.  Director,
+2026-09-06, from the batch desk's 09:12Z hand-off (GH #515).  `--pending`
+defaulted to 0.0, so a run that simply did not pass it printed
+
+    pending waves    : $0.000   (launched, may not be in MTD yet)
+
+which READS like a measurement and IS an unexamined default.  On 2026-09-06 the
+desk ran the gate, got `CLEAR`, and the honest reconstruction said `THROTTLED`:
+an instance belonging to another project (`c7a.16xlarge`,
+`Project=final-table-trainer`) had been burning all day against a budget that
+carries NO cost filter, and ActualSpend lags 4.3-11.3h behind.  The desk
+extrapolated by hand, over-rode its own green tool, and did not launch.  It was
+right, and the fact that it had to do that by hand is the defect.
+
+Note the shape, which is the SAME one this file was written to kill: a term
+whose correct value is derived, defaulted to a literal, and the literal is
+indistinguishable from the derivation on every quiet day.  It fails toward MORE
+spending.  It bites exactly when spend is high (that is when things are
+running).  It is silent.
+
+The remedy deliberately does NOT invent a cost model.  This tool does not know
+what an arbitrary instance costs -- spot price, on-demand price and lifecycle
+would each need their own read, and a markup constant guessed here would be a
+new free parameter, which is the disease.  What it CAN establish for free is
+the PRECONDITION under which `$0.000` is true:
+
+    pending == 0 is certifiable if and only if nothing is running.
+
+So: the tool reads `ec2 describe-instances` (free, account-wide, no filter --
+the budget has none either) and
+
+    nothing running, no --pending      -> pending = $0.000, marked CERTIFIED
+    something running, no --pending    -> exit 2, listing what is running
+    --pending given (0.0 included)     -> the operator's own number, marked
+                                          ASSERTED, with the instances it has
+                                          to cover printed next to it
+
+An operator who really wants the old behaviour passes `--no-accrual-check`,
+which prints a line calling itself SKIPPED, not certified (the `RULE6_BYPASS`
+pattern from GH #213) and is meant to be quoted in the round's report.
+
+Two boundaries, stated rather than assumed:
+  * the enumeration is ACCOUNT-WIDE ON PURPOSE.  `dota2bot-batch` has no cost
+    filter today, so every running instance in the account does consume this
+    fence's headroom regardless of whose project it is.  If the owner ever adds
+    the `Project` filter (DECISIONS_NEEDED #15) this check becomes
+    over-conservative -- it would throttle us for somebody else's compute.  That
+    is the failure direction that files its own bug report, and the tool prints
+    whether the budget carries `CostFilters` so the day it changes is visible.
+  * exit 2 here means could-not-run, as everywhere else in this file.  A
+    blocked launch is the safe failure; a launch on an uncertified zero is not.
+
 WHAT THIS TOOL DOES NOT RULE ON.  The $90 brake line and the $100 owner
 approval line are the OWNER's numbers, not the budget's, and this tool neither
 derives nor relaxes them.  It applies the brake as a second ceiling
@@ -124,6 +176,11 @@ import sys
 BUDGET_NAME = "dota2bot-batch"
 DEFAULT_BRAKE = 90.0          # owner's brake line; see AGENTS.md AWS policy
 DEFAULT_OWNER_LINE = 100.0    # owner's approval line; reported, never applied
+
+# EC2 states that are already accruing charges but may not be in MTD yet.
+# `stopping`/`shutting-down` are in: an instance dying right now still billed
+# for the hours it has already run, and those hours are what MTD is behind on.
+ACCRUING_STATES = ("pending", "running", "stopping", "shutting-down")
 
 
 class Uncertifiable(Exception):
@@ -194,6 +251,93 @@ def state_disagreements(thresholds, actual):
         if we_crossed != aws_crossed:
             bad.append((t, we_crossed, aws_crossed))
     return bad
+
+
+def certify_pending(instances, pending_supplied, cost_filters=None,
+                    check_enabled=True, skip_reason="--no-accrual-check"):
+    """Ruling 4.  Decide what the `pending` term is allowed to be.
+
+    `instances` is a list of dicts (id / type / state / launched / project) or
+    None when the enumeration itself could not be run.  `pending_supplied` is
+    the operator's `--pending`, or None when they did not pass one.
+
+    Returns (exit_code, lines, pending).  exit_code 0 means the caller may go
+    on to the fence arithmetic; 2 means could-not-run and pending is None.
+    """
+    lines = []
+
+    if not check_enabled:
+        value = 0.0 if pending_supplied is None else pending_supplied
+        lines.append(
+            "accrual check    : SKIPPED, NOT CERTIFIED (%s). $%.3f below is "
+            "an assumption, not a reading; quote this line in the round's "
+            "report." % (skip_reason, value))
+        return 0, lines, value
+
+    if instances is None:
+        if pending_supplied is not None:
+            lines.append(
+                "accrual check    : COULD NOT ENUMERATE instances; $%.3f is "
+                "the operator's asserted figure and nothing cross-checked it."
+                % pending_supplied)
+            return 0, lines, pending_supplied
+        lines.append(
+            "UNCERTIFIABLE: could not enumerate running instances, so "
+            "pending=$0.000 is an assumption rather than a reading.")
+        lines.append(
+            "Pass --pending with your own figure, or --no-accrual-check to "
+            "say in writing that this term was skipped.")
+        lines.append("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+        return 2, lines, None
+
+    if cost_filters:
+        lines.append(
+            "budget filters   : %s  <- the account-wide accrual below may "
+            "OVER-count for a filtered budget (over-conservative; see Ruling "
+            "4)" % json.dumps(cost_filters, sort_keys=True)[:200])
+    else:
+        lines.append(
+            "budget filters   : none  <- so every instance in the account "
+            "does land in this budget, whoever owns it")
+
+    if not instances:
+        if pending_supplied is not None:
+            lines.append(
+                "accrual check    : CERTIFIED ZERO (0 accruing instances "
+                "account-wide), but --pending $%.3f was given and is used as "
+                "the larger claim." % pending_supplied)
+            return 0, lines, pending_supplied
+        lines.append(
+            "accrual check    : CERTIFIED (0 accruing instances account-wide, "
+            "read this run) -- pending $0.000 is a reading, not a default.")
+        return 0, lines, 0.0
+
+    for inst in instances:
+        lines.append(
+            "  accruing       : %s %s [%s] launched %s project=%s"
+            % (inst.get("id", "?"), inst.get("type", "?"),
+               inst.get("state", "?"), inst.get("launched", "?"),
+               inst.get("project") or "(untagged)"))
+
+    if pending_supplied is not None:
+        lines.append(
+            "accrual check    : ASSERTED $%.3f by the operator; it must cover "
+            "the %d instance(s) above, which this tool does not price."
+            % (pending_supplied, len(instances)))
+        return 0, lines, pending_supplied
+
+    lines.append(
+        "UNCERTIFIABLE: %d instance(s) are accruing charges right now and "
+        "ActualSpend lags 4.3-11.3h behind, so pending=$0.000 is FALSE."
+        % len(instances))
+    lines.append(
+        "This tool does not price arbitrary instances (a markup constant here "
+        "would be the free parameter this whole file exists to remove).")
+    lines.append(
+        "Estimate the un-billed accrual yourself and pass --pending, or pass "
+        "--no-accrual-check and quote the SKIPPED line in your report.")
+    lines.append("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+    return 2, lines, None
 
 
 def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
@@ -317,7 +461,10 @@ def _awsx(args):
 
 
 def read_from_aws(budget_name=BUDGET_NAME):
-    """Both free reads.  Returns (actual, limit, time_unit, notifications)."""
+    """Both free reads.
+
+    Returns (actual, limit, time_unit, notifications, cost_filters).
+    """
     ident = _awsx(["sts", "get-caller-identity", "--output", "json"])
     acct = ident.get("Account")
     if not acct:
@@ -334,7 +481,44 @@ def read_from_aws(budget_name=BUDGET_NAME):
     notes = _awsx(["budgets", "describe-notifications-for-budget",
                    "--account-id", acct, "--budget-name", budget_name,
                    "--output", "json"])
-    return actual, limit, time_unit, notes.get("Notifications", [])
+    return (actual, limit, time_unit, notes.get("Notifications", []),
+            b.get("CostFilters") or {})
+
+
+def parse_instances(payload):
+    """Pure: flatten a describe-instances payload to the rows Ruling 4 prints.
+
+    Only ACCRUING_STATES are kept.  Deliberately NOT filtered by tag: the
+    budget is unfiltered, so somebody else's instance spends our headroom.
+    """
+    rows = []
+    for res in payload.get("Reservations", []):
+        for inst in res.get("Instances", []):
+            state = (inst.get("State") or {}).get("Name")
+            if state not in ACCRUING_STATES:
+                continue
+            project = None
+            for tag in inst.get("Tags") or []:
+                if tag.get("Key") == "Project":
+                    project = tag.get("Value")
+                    break
+            rows.append({
+                "id": inst.get("InstanceId"),
+                "type": inst.get("InstanceType"),
+                "state": state,
+                "launched": inst.get("LaunchTime"),
+                "project": project,
+            })
+    rows.sort(key=lambda r: (r["launched"] or "", r["id"] or ""))
+    return rows
+
+
+def read_accruing_instances():
+    """Ruling 4's free read.  Account-wide, no tag filter.  Never priced."""
+    payload = _awsx(["ec2", "describe-instances", "--filters",
+                     "Name=instance-state-name,Values=" +
+                     ",".join(ACCRUING_STATES), "--output", "json"])
+    return parse_instances(payload)
 
 
 # ----------------------------------------------------------------- CLI
@@ -344,9 +528,15 @@ def main(argv=None):
         description="Gate (iii): the monthly spend fence, derived not cached.")
     parser.add_argument("--planned", type=float, default=0.0,
                         help="estimated cost of the wave about to launch")
-    parser.add_argument("--pending", type=float, default=0.0,
+    parser.add_argument("--pending", type=float, default=None,
                         help="already-launched waves that may not be in MTD "
-                             "yet (the desk's Sigma term)")
+                             "yet (the desk's Sigma term). Omitting it no "
+                             "longer means $0 -- see Ruling 4: the zero has "
+                             "to be certifiable")
+    parser.add_argument("--no-accrual-check", action="store_true",
+                        help="skip Ruling 4's running-instance read. Prints a "
+                             "line calling itself SKIPPED, not certified; "
+                             "quote that line in the round's report.")
     parser.add_argument("--brake", type=float, default=DEFAULT_BRAKE)
     parser.add_argument("--owner-line", type=float, default=DEFAULT_OWNER_LINE)
     parser.add_argument("--budget-name", default=BUDGET_NAME)
@@ -362,6 +552,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     offline = args.actual is not None
+    instances = None
+    cost_filters = None
     try:
         if offline:
             if args.limit is None or args.thresholds is None:
@@ -374,7 +566,8 @@ def main(argv=None):
             actual, limit = args.actual, args.limit
             time_unit = args.time_unit
         else:
-            actual, limit, time_unit, notes = read_from_aws(args.budget_name)
+            (actual, limit, time_unit, notes,
+             cost_filters) = read_from_aws(args.budget_name)
     except Uncertifiable as exc:
         print("UNCERTIFIABLE: %s" % exc)
         print("gate (iii) DID NOT RUN. That is not a pass -- do not launch.")
@@ -385,9 +578,31 @@ def main(argv=None):
         print("source           : OFFLINE (--actual/--limit/--thresholds). "
               "This is for tests and post-hoc audit; a launch must use the "
               "AWS read.")
+        # Offline is audit mode: there is no live account to enumerate, so
+        # Ruling 4 has nothing to certify from and says so rather than
+        # pretending the zero was read.
+        accrual_enabled = False
+        skip_reason = "offline mode: no live account to enumerate"
+    else:
+        skip_reason = "--no-accrual-check"
+        accrual_enabled = not args.no_accrual_check
+        if accrual_enabled:
+            try:
+                instances = read_accruing_instances()
+            except Uncertifiable as exc:
+                print("accrual read     : FAILED -- %s" % exc)
+                instances = None
+
+    acc_code, acc_lines, pending = certify_pending(
+        instances, args.pending, cost_filters=cost_filters,
+        check_enabled=accrual_enabled, skip_reason=skip_reason)
+    for line in acc_lines:
+        print(line)
+    if acc_code != 0:
+        return acc_code
 
     code, lines = check(actual, limit, time_unit, notes,
-                        planned=args.planned, pending=args.pending,
+                        planned=args.planned, pending=pending,
                         brake=args.brake, owner_line=args.owner_line)
     for line in lines:
         print(line)

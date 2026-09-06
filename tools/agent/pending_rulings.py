@@ -177,6 +177,16 @@ LIMITS FOR THE OWED LEG (in addition to 1-8 below)
 11. **It grades the artefact, never the work.**  §DO's row asks whether the
     committed profile says `rec_slots: 8`; it cannot ask whether the corpus
     behind it was W37+W38.
+    ⭐ 2026-09-06: `path_contains_all` narrows this by exactly one step for a
+    RIDESHARE leg, and it is worth being precise about which step.  When N
+    readings ride one report path, `path_exists` goes DONE with N-1 of them
+    missing -- so the leg was green while most of what it owed was absent,
+    and the only thing standing between that and a retired row was the
+    director remembering to read it through.  The new kind moves "all N ids
+    are at least MENTIONED" from memory into the tool.  It still does not
+    grade the work: a mentioned id can be mentioned wrongly, pooled with
+    another stratum, or answered with the wrong column.  That read-through
+    remains the director's, and this limit remains true of it.
 12. **A claim is a say-so, and the tool cannot check it.**  `claimed_by` /
     `claimed_at` (GH #518) buy one thing: an owed row that somebody has
     STARTED reads IN-FLIGHT instead of OWED, so the second session of the
@@ -708,7 +718,8 @@ def owed_status(row, repo=REPO):
     if kind == "manual":
         return ("OWED",
                 "no machine check (kind=manual) -- this row is a reminder, not a gate")
-    if kind not in ("json_value", "path_exists", "path_absent"):
+    if kind not in ("json_value", "path_exists", "path_absent",
+                    "path_contains_all"):
         return "UNCERTIFIABLE", "done_when kind %r is not one this tool can read" % (kind,)
     rel = cond.get("path") or ""
     full = os.path.join(repo, rel)
@@ -720,6 +731,43 @@ def owed_status(row, repo=REPO):
         there = os.path.exists(full)
         return ("DONE" if not there else "OWED",
                 "%s %s" % (rel, "is still there" if there else "is gone"))
+    if kind == "path_contains_all":
+        # LIMIT 11's answer for a RIDESHARE leg.  `path_exists` says the
+        # artefact was written; it cannot say WHICH of the readings riding on
+        # it were written.  `hero_domain_scan_2_30_31` accumulated eight
+        # rideshare ids onto one report path, and its `done_when` stayed green
+        # if seven of them were missing -- a leg that reads DONE while most of
+        # what it owes is absent.  So a rideshare row names its needles and
+        # the check fails on the ones that are not there.
+        #
+        # Deliberately a SUBSTRING check, not a parse: the artefact is prose
+        # written by another stream and this tool must not dictate its layout.
+        # It buys "the id is mentioned", which is strictly more than
+        # "the file exists" and strictly less than "the reading is correct" --
+        # the latter stays with the director's own read-through, and that
+        # boundary is stated here rather than left to be inferred.
+        needles = cond.get("contains") or []
+        if not needles:
+            return ("UNCERTIFIABLE",
+                    "done_when kind path_contains_all carries no `contains` "
+                    "list -- it would pass on any file at all")
+        try:
+            with open(full, encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError as exc:
+            return ("OWED" if not os.path.exists(full) else "UNCERTIFIABLE",
+                    "%s %s" % (rel, "does not exist yet"
+                               if not os.path.exists(full)
+                               else "could not be read (%s)" % exc))
+        missing = [n for n in needles if n not in text]
+        if missing:
+            return ("OWED",
+                    "%s exists but %d of %d required mention(s) are absent: %s"
+                    % (rel, len(missing), len(needles), ", ".join(missing)))
+        return ("DONE",
+                "%s exists and mentions all %d rideshare id(s) -- mention is "
+                "not correctness; the director still reads it through"
+                % (rel, len(needles)))
     try:
         with open(full, encoding="utf-8") as fh:
             doc = json.load(fh)
