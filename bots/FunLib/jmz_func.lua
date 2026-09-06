@@ -5119,6 +5119,71 @@ function J.ShouldStayAndRegen( bot )
 		return false
 	end
 	if #J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE ) > 0 then return false end
+	-- [staytower / owner priority P2, 2026-09-06] The BUILDING half of this
+	-- PROMOTED function's danger read, and the one clause the family wrote down
+	-- explicitly BECAUSE of this call site and then never brought here.
+	--
+	-- The defect, as two functions that cancel the same bid and disagree about
+	-- towers. Every danger read above this line is about HEROES: attributed hero
+	-- damage, then heroes inside 1200. Nothing on this path reads a building at
+	-- all. The gated half of the same family aimed at the same trip --
+	-- J.IsFieldRegenSituation -- vetoes on `#bot:GetNearbyTowers( 1200, true )`,
+	-- and its comment gives the reason in this function's own words:
+	--
+	--   "driving mode_retreat_generic over all 100 fixtures showed this
+	--    predicate firing on f_260819_142047_zuus_ult_denied, where the retreat
+	--    bid it would have cancelled is ABSOLUTE*1.1 -- and that bid is NOT a
+	--    trip home. It comes from ShouldRun's 前期谨慎冲塔 clause ... Backing off
+	--    a tower is a LOCAL retreat, not the fountain trip this lever is aimed
+	--    at, and suppressing it would leave the bot parked in tower range."
+	--
+	-- That paragraph is about a bid THIS function cancels. Both sit on the same
+	-- leg of mode_retreat_generic's ShouldRun and both answer it with
+	-- BOT_MODE_DESIRE_NONE; this one sits ABOVE the whole retreat guard chain and
+	-- is live in every turbo game, while the sibling that carries the clause is
+	-- gated and has never shipped. So the exact outcome the sibling's clause was
+	-- written to prevent -- a hurt bot parked in tower range with its local
+	-- back-off suppressed -- is what the PROMOTED path does today, on the very
+	-- frame that comment names: f_260819_142047_zuus_ult_denied, zuus at 40.5% HP,
+	-- 727.46 units from an enemy tower, no enemy hero inside 1200.
+	--
+	-- ⭐ Direction, and why it does NOT contradict owner priority P2. P2 forbids
+	-- the FOUNTAIN trip when the bot is safe; the bid this veto stops cancelling
+	-- is the LOCAL tower back-off, which the sibling's comment already separated
+	-- from the fountain trip by name. The honest bound is stated where it bites:
+	-- releasing this frame restores the WHOLE guard chain below, so on a frame
+	-- where some other guard outbids the tower one the released bid may still be
+	-- a trip home. tests/_staytower_sweep.lua lists all 12 domain frames rather
+	-- than counting them, so that set is auditable rather than argued.
+	--
+	-- Direction is fixed by CONSTRUCTION: this is a veto, so arming can only turn
+	-- TRUEs into FALSEs -- the armed TRUE set is a strict SUBSET of the shipped
+	-- one, the mirror image of the four widenings below it. Unarmed, the gate is
+	-- the first conjunct and short-circuits before the engine call, so both the
+	-- shipped read and every sibling lever evaluate byte-identically.
+	--
+	-- Gated STANDALONE -- one id in this condition, never a conjunction of two
+	-- (the 'pullcad' trap). Turbo is structural: the first line of this function
+	-- already asked. The radius is the sibling's own 1200, copied rather than
+	-- chosen, and its comment states why that is the conservative end ("1200 is
+	-- the widest radius those tower clauses themselves use").
+	--
+	-- Honest bounds. (1) The measurable flip set is EMPTY through the mock's gold
+	-- read and that is the gold clause's doing, not this lever's: gold is not
+	-- networked into a .dem (GH #495), so `bot:GetGold()` is 0 on all 1012 live
+	-- frames and the shipped function answers TRUE on only 13 of them. Driven
+	-- with gold >= 90 the shipped TRUE set is 125 -- exactly the prefix walk --
+	-- and 12 of those carry an enemy tower inside 1200. The sweep reports BOTH
+	-- columns and the test asserts both, so the zero can never be read as "the
+	-- lever does nothing". (2) 10 of the 12 have the tower at 700-1200, i.e.
+	-- outside its attack range on that frame; only 2 are inside 700. Recorded as
+	-- a number, not smoothed over: the radius is the family's, and a bot standing
+	-- 900 units from an enemy tower at 30% HP is in its approach, not under it.
+	if J.IsSoakCandidate( 'staytower' )
+	and #bot:GetNearbyTowers( 1200, true ) > 0
+	then
+		return false
+	end
 	local bHasFlask = J.IsItemAvailable( 'item_flask' ) ~= nil
 		or bot:HasModifier( 'modifier_flask_healing' )
 		or bot:HasModifier( 'modifier_tango_heal' )

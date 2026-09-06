@@ -26,7 +26,13 @@
 --     S2 hp in [0.18, 0.55]          =>  T2 hp in [0.18, 0.75]
 --     S3 #heroes(1600) == 0          =>  T4 #heroes(1200) == 0
 --     S4 ATTRIBUTED hero damage      ?   T3 any hero damage in 3s
---     S5 no tower within 1200            (T has no tower clause)
+--     S5 no tower within 1200        ==  T6 no tower within 1200
+--                                        (gated 'staytower', 2026-09-06; before
+--                                         that date T had no tower clause at all,
+--                                         and this row said so. Gated or not, S5
+--                                         IS T6, so `S and not T6` is empty and
+--                                         the closed form below is unchanged --
+--                                         asserted, not asserted-by-comment.)
 --     H  HasFieldRegenSource         ?   T5 main-slot salve / heal buff / 90g
 --
 -- Three of T's five clauses are IMPLIED by S. So
@@ -225,11 +231,23 @@ end
 
 tests['[ratchet][source] T has exactly five clauses, and exactly two are unimplied'] = function()
     local t = fn_body(read(JMZ), 'J.ShouldStayAndRegen')
-    -- Every `return false` guard in T, counted. The closed form says five; if a
-    -- sixth appears the margin is a different set.
+    -- Every `return false` guard in T, counted. The closed form is about the
+    -- SHIPPED five; a sixth is only harmless if it is gated AND implied by S, and
+    -- both halves of that are asserted in the case below rather than assumed
+    -- here. Re-derived 2026-09-06 when the sixth arrived ('staytower'): the count
+    -- was raised only after the closed form was re-checked, never to make a red
+    -- go away.
     local _, nReturns = t:gsub('return false', '')
-    assert(nReturns == 5, 'J.ShouldStayAndRegen no longer has five vetoes ('
-        .. nReturns .. ') -- re-derive the margin before trusting any count')
+    -- The gated sixth, matched as a WHOLE BLOCK so "gated" is read off the block
+    -- that owns the veto rather than inferred from an id appearing somewhere in
+    -- the function (this function names five ids).
+    local sT6 = "if J.IsSoakCandidate( 'staytower' )\n"
+        .. '\tand #bot:GetNearbyTowers( 1200, true ) > 0\n'
+        .. '\tthen\n\t\treturn false\n\tend'
+    local nGatedReturns = t:find(sT6, 1, true) and 1 or 0
+    assert(nReturns - nGatedReturns == 5, 'J.ShouldStayAndRegen no longer has five '
+        .. 'UNGATED vetoes (' .. (nReturns - nGatedReturns) .. ' of ' .. nReturns
+        .. ' total) -- re-derive the margin before trusting any count')
     -- The two that S does not imply, named off the source so a rename is a red.
     assert(t:find('bot:WasRecentlyDamagedByAnyHero( 3.0 )', 1, true) ~= nil,
         'T3 (unattributed hero damage) left T')
@@ -259,6 +277,41 @@ tests['[ratchet][source] T has exactly five clauses, and exactly two are unimpli
     assert(tonumber(sweepR) > tonumber(sRing),
         'the attribution sweep is no longer wider than the empty ring, so it '
         .. 'can never find anyone and S4 has collapsed into "damage vetoes"')
+end
+
+tests['[ratchet][source] the gated sixth veto is S5, so the closed form survives arming'] = function()
+    -- [staytower, 2026-09-06] The table at the top of this file has always had a
+    -- row reading `S5 no tower within 1200 | (T has no tower clause)`. That row is
+    -- now a gated lever rather than a hole, and the only thing this file has to
+    -- establish is that it does NOT move the closed form.
+    --
+    -- The arithmetic, in full, because a count alone would not show it:
+    --   margin  = S ∧ ¬T                     (definition)
+    --   T'      = T ∧ T6                     (arming appends one veto)
+    --   margin' = S ∧ ¬T' = S ∧ (¬T ∨ ¬T6)
+    --           = (S ∧ ¬T) ∨ (S ∧ ¬T6)
+    -- and S ∧ ¬T6 is EMPTY because S5 IS T6 -- the same predicate, the same
+    -- radius, read out of both bodies below rather than restated here. So
+    -- margin' = margin, and every count in this file stands with the id armed.
+    local jmz = read(JMZ)
+    local t = fn_body(jmz, 'J.ShouldStayAndRegen')
+    local s = fn_body(jmz, 'J.IsFieldRegenSituation')
+    local tTow = t:match('#bot:GetNearbyTowers%( (%d+), true %) > 0')
+    local sTow = s:match('#bot:GetNearbyTowers%( (%d+), true %) > 0')
+    assert(sTow, 'S5 changed shape and can no longer be parsed -- the closed form '
+        .. 'above rests on it')
+    assert(tTow, "T's gated tower veto changed shape and can no longer be parsed")
+    assert(tonumber(tTow) == tonumber(sTow), 'the tower radii diverged: T6='
+        .. tTow .. ' S5=' .. sTow .. ' -- S no longer implies T6, so `S ∧ ¬T6` is '
+        .. 'not empty and the margin this file computes has GROWN')
+    assert(tonumber(sTow) == 1200, 'the owning constant itself moved to ' .. sTow
+        .. ' -- the equality above would then be two copies of a new number')
+    -- And it must stay GATED: ungated it would be a shipped behaviour change,
+    -- which this file's "zero behaviour change" premise does not survive.
+    assert(t:find("J.IsSoakCandidate( 'staytower' )", 1, true) ~= nil,
+        'the tower veto in T is no longer gated on staytower -- if its gate was '
+        .. 'removed, this file\'s S-implies-T3/T4 table and its whole '
+        .. '"zero behaviour change" framing need re-reading first')
 end
 
 tests['[ratchet][source] IsItemAvailable stops at slot 5, so a backpacked salve leaves T5 false'] = function()

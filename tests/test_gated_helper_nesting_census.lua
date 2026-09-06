@@ -369,7 +369,29 @@ local PINNED = {
     -- 'fieldcreep' disagreement at 1 of the 10 domain frames.
     "buyring | J.ShouldFieldBuyRegenRing | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                  -- A
     "buyring | J.ShouldFieldBuyRegenRing | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                     -- I
-    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc | bots/mode_retreat_generic.lua", -- P
+    -- [staytower 20260906] The FIFTH id joined this row, and it is the first one
+    -- on it that SUBTRACTS.  Classification does not move -- still (P), by the
+    -- same short-circuit argument the four siblings use, and a stronger form of
+    -- it: `J.IsSoakCandidate( 'staytower' ) and #bot:GetNearbyTowers(...)` puts
+    -- the gate FIRST, so un-armed the engine call never happens and both the
+    -- shipped read and every sibling lever evaluate byte-identically
+    -- (tests/test_staytower_tower_ring.lua asserts the gate is the first
+    -- conjunct, off the source, so this is not a claim about intent).
+    -- ⭐ WHAT IT RECORDS THAT THE FOUR ABOVE DO NOT: direction.  'stayattr',
+    -- 'staysrc', 'staybottle' and 'staybag' all widen a disjunct and can only
+    -- turn this helper's FALSE into TRUE; this one appends a veto and can only
+    -- do the reverse.  So the row's own "additive-only" identity answer is now
+    -- read in BOTH directions, and each id's sweep pins its own:
+    -- tests/_staytower_sweep.lua's `flip_false_to_true` is 0 over the same 1012
+    -- live frames the four siblings' sweeps drive.
+    -- ⭐⭐ AND IT IS OFF THE PAIR PROBLEM THIS ROW EXISTS TO RECORD.  The pair
+    -- trap above is about two INDEPENDENTLY SUFFICIENT VETOES: arming one
+    -- measures a correct zero wherever the other also vetoes.  A subtractive id
+    -- cannot be hidden that way -- its frames are frames the shipped function
+    -- ACCEPTS, so no other veto is firing on them by construction.  Measured
+    -- rather than argued: its 12 domain frames are exactly the tower subset of
+    -- the shipped predicate's own TRUE set (`flips_g200 == prefix_tower`).
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc,staytower | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     -- [towerring 20260906 GH #558] The outer-id column of BOTH X.ShouldRun rows
     -- grew a second id. The classification does not move: the new id gates the
@@ -511,7 +533,16 @@ local PINNED = {
     -- out of this row: (A) says arming the OUTER id alone still measures the
     -- outer id; it does NOT say the inner id's own behaviour is reachable by any
     -- single-arm wave.  Here it was not, for the whole time this row read safe.
-    "stayattr,staybag,staybottle,staysrc | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",             -- A
+    -- [staytower 20260906] The outer-id column grew a fifth id, and this one
+    -- moves the callee FURTHER out of reach rather than closer: its veto sits
+    -- ABOVE the supply block, so on its 12 domain frames J.HasFieldRegenSource is
+    -- not called at all.  (A) still holds -- the callee is additive-only and this
+    -- id does not touch it -- and the point the row above carries out of the
+    -- 'staybag' entry is sharpened: arming 'staytower' alone measures 'staytower'
+    -- (its own sweep drives 'bagsalve' through the stub on all 1012 frames and
+    -- reads `arm_leak` 0), while the inner id's behaviour stays exactly as
+    -- unreachable by a single-arm wave as it was.
+    "stayattr,staybag,staybottle,staysrc,staytower | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
 }
 
