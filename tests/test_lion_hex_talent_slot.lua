@@ -560,12 +560,34 @@ tests['[hero] the corpus still holds no level-25 hero -- harvest lag, not the ru
     -- this stays green only until frames harvested under the new cap reach
     -- tests/fixtures/.  That lag is the whole of what this measures now -- read
     -- the section header before quoting a green run for anything else.
-    assert(nMax < 25, 'the corpus now reaches level ' .. nMax .. '. This is the '
-        .. 'harvest lag closing, NOT `' .. CAND_ID .. '` acquiring a domain -- that '
-        .. 'is settled by section 2 (the t25 row takes [7], so talent8 is '
-        .. 'structurally untrained). What the new frames DO unlock is the widening '
-        .. 'GH #166 §9 left open: prefer clustered targets now that Hex really is '
-        .. 'AoE. Rewrite this assertion when you take that up.')
+    -- ⚠️ FIRED 2026-09-06 (hero, GH #566), and rewritten to the state it
+    -- reported rather than deleted.  The harvest lag HAS closed: the corpus's
+    -- first level-25+ frame is tests/fixtures/f_260905_004847_lion_drain_bkb.lua
+    -- (t=1266.5, units up to level 27), added by the `liondrainbkb` withdrawal.
+    -- What that does NOT do is give `lionhexaoe` a domain -- section 2 settles
+    -- that (the t25 row takes [7], so talent8 is structurally untrained), and
+    -- nothing here re-opens it.  What it DOES unlock is the widening GH #166 §9
+    -- left open: prefer clustered targets now that Hex really is AoE.  NOBODY
+    -- HAS TAKEN THAT UP; this wire now counts the supply for it, so it still
+    -- moves when the corpus does.
+    local nAtCap = 0
+    for _, sPath in ipairs(tPaths) do
+        local ok, fx = pcall(dofile, sPath)
+        if ok and type(fx) == 'table' and type(fx.units) == 'table' then
+            for _, u in ipairs(fx.units) do
+                if type(u.level) == 'number' and u.level >= 25 then
+                    nAtCap = nAtCap + 1
+                    break
+                end
+            end
+        end
+    end
+    assert(nMax == 27, 'the corpus now reaches level ' .. nMax .. ', was 27. See the '
+        .. 'note above: this measures the post-GH #108 harvest, NOT `' .. CAND_ID
+        .. '` acquiring a domain.')
+    assert(nAtCap == 1, nAtCap .. ' fixture(s) now carry a level-25+ unit, was 1. '
+        .. 'That is supply for the GH #166 §9 widening, which is still untaken -- '
+        .. 'rewrite this assertion when you take it up.')
 end
 
 -- ---------------------------------------------------------------------------

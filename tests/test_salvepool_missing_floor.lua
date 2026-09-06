@@ -68,7 +68,12 @@ local ALLY_FLOOR = 550  -- the sibling branch this round deliberately does NOT m
 
 -- The band the corpus says the roster actually occupies. [corpus] pins both.
 local POOL_MIN_REAL = 538    -- level-1 Crystal Maiden, the smallest plausible pool
-local POOL_MAX      = 2646
+-- 2026-09-06 (hero, GH #566): 2646 -> 3666, the chaos_knight of the corpus's
+-- first late-game frame (f_260905_004847_lion_drain_bkb.lua).  The RATIO/FLOOR
+-- arithmetic below is re-derived from these two constants by the file itself,
+-- so it follows the corpus; any prose elsewhere quoting "nearly five to one"
+-- was written against the 2646 ceiling.
+local POOL_MAX      = 3666
 
 local tests = {}
 

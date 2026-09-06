@@ -291,12 +291,21 @@ end
 
 -- ------------------------------------------------------------------ section 2
 
+-- ⚠️ 2026-09-06 (hero, GH #566): the corpus grew a late-game Lion frame --
+-- tests/fixtures/f_260905_004847_lion_drain_bkb.lua, t=1266.5, Lion level 24,
+-- Finger at RANK 3 -- and these two cases fired exactly as written.  They were
+-- ACKNOWLEDGED, NOT RE-TAKEN: the round that added the frame was withdrawing
+-- `liondrainbkb`, not re-measuring `lionult`.  So the split below is by EXACT
+-- rank, which keeps every reading in this file scoped to the corpus it was
+-- taken on (one rank-2 instant, cost 400), and the rank-3 case keeps its own
+-- count as a live wire.  Everything below section 2 is still a pre-2026-09-06
+-- reading and must not be quoted as covering rank 3.
 tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = function()
     local _, rows = funnel()
     local nRank2, nAboveEleven = 0, 0
     local rank2
     for _, r in ipairs(rows) do
-        if r.rRank >= 2 then nRank2 = nRank2 + 1; rank2 = rank2 or r end
+        if r.rRank == 2 then nRank2 = nRank2 + 1; rank2 = rank2 or r end
     end
     for _, r in ipairs(rows) do
         if r.rCost >= RULING_RANK2_COST then nAboveEleven = nAboveEleven + 1 end
@@ -311,7 +320,7 @@ tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = func
         .. 'revival condition is about a specific number; if the number moved, '
         .. 'the condition has to be re-read before this file is quoted.')
     assert(nRank2 == 1,
-        'the corpus now holds ' .. nRank2 .. ' rank-2 Finger instants, not 1. '
+        'the corpus now holds ' .. nRank2 .. ' rank-2 Finger instants (exact rank), not 1. '
         .. 'HONEST BOUND (A) -- "n = 1, so 1551 is not a pool bottom" -- was '
         .. 'the single largest limit on this reading, and it has moved. '
         .. 'Re-take the rank-2 domain question with the wider sample instead '
@@ -319,13 +328,24 @@ tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = func
 end
 
 tests['[hero] lionult: rank 3 is unmeasured, and says so'] = function()
+    -- STILL UNMEASURED.  The count moved 0 -> 1 on 2026-09-06 and the wire is
+    -- kept live at the new number rather than deleted: HONEST BOUND (B) is now
+    -- RETIRABLE (a corpus that could measure the 600 line exists) but has NOT
+    -- been retired, because nothing in this file has been re-read against that
+    -- frame.  Quoting any number below as covering rank 3 is a misuse.
     local _, rows = funnel()
-    local n = 0
-    for _, r in ipairs(rows) do if r.rRank >= 3 then n = n + 1 end end
-    assert(n == 0,
-        n .. ' rank-3 Finger instant(s) now exist (cost 600). HONEST BOUND (B) '
-        .. 'is retirable: the 600 line has never been measured and this is the '
-        .. 'first corpus that could.')
+    local n, where = 0, {}
+    for _, r in ipairs(rows) do
+        if r.rRank >= 3 then n = n + 1; where[#where + 1] = r.path end
+    end
+    assert(n == 1,
+        n .. ' rank-3 Finger instant(s) now exist (cost 600), was 1 ('
+        .. table.concat(where, '; ') .. '). HONEST BOUND (B) has been retirable '
+        .. 'since 2026-09-06 and is still not retired -- the 600 line has never '
+        .. 'been measured, and the supply for measuring it just moved again.')
+    assert(where[1] == 'tests/fixtures/f_260905_004847_lion_drain_bkb.lua',
+        'the one rank-3 instant is no longer the 2026-09-06 frame, it is '
+        .. tostring(where[1]) .. ' -- re-read this section before quoting it')
 end
 
 -- ------------------------------------------------------------------ section 3

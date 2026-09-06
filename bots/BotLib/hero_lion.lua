@@ -1088,7 +1088,7 @@ function X.ConsiderE()
 				and J.IsInRange( bot, npcEnemy, nCastRange )
 				and not npcEnemy:HasModifier( "modifier_lion_finger_of_death" )
 				and npcEnemy:GetMana() > 200
-				and X.lion_IsDrainTargetCastable( npcEnemy ) -- see X.lion_IsDrainTargetCastable
+				and J.CanCastOnMagicImmune( npcEnemy ) -- see the PREMISE-FALSIFIED note by X.lion_ShouldStopDrain
 				and J.CanCastOnTargetAdvanced( npcEnemy )
 				and not J.IsDisabled( npcEnemy )
 				and ( not J.IsValidHero( botTarget ) or not X.MayKillTarget( botTarget ) )
@@ -1480,58 +1480,43 @@ function X.lion_IsDrainSafeToStart( hBot )
 end
 
 
---- [liondrainbkb] gated (turbo + soak candidate): may Mana Drain be aimed at
---- this enemy hero?
+--- PREMISE-FALSIFIED (2026-09-06): the withdrawn `liondrainbkb` veto, and why
+--- the 团战吸蓝 branch's `J.CanCastOnMagicImmune( npcEnemy )` is CORRECT and must
+--- stay.  Do not re-narrow it without first explaining the frames below.
 ---
---- THE DEFECT.  `lion_mana_drain` carries `SpellImmunityType
---- SPELL_IMMUNITY_ENEMIES_NO` in the game's own hero KV (dotabuff/d2vpkr
---- npc_dota_hero_lion.txt, read 2026-09-06 -- the same mirror and the same
---- field tools/agent/cast_shape_census.py reads `AbilityBehavior` off).  So a
---- spell-immune enemy is not a target the engine will accept at all.  All FOUR
---- of Lion's actives read ENEMIES_NO; this hero has no piercing ability.
+--- The withdrawn change added X.lion_IsDrainTargetCastable here: a turbo-only
+--- soak candidate that refused Mana Drain on a spell-immune enemy.  Its whole
+--- basis was one sentence -- "`lion_mana_drain` carries `SpellImmunityType
+--- SPELL_IMMUNITY_ENEMIES_NO`, so a spell-immune enemy is not a target the
+--- engine will accept at all" -- sourced from an external KV mirror.  NO KV
+--- SNAPSHOT IN THIS REPO CARRIES A `SpellImmunityType` FIELD, so nothing in
+--- tree could check it, and the archived replays contradict it on three
+--- independent legs (each one re-derived from the .dem, not quoted):
 ---
---- X.ConsiderE selects drain targets at three places.  Two of them agree with
---- the KV -- the mana-refill loop and the 打架抽蓝 branch both ask
---- J.CanCastOnNonMagicImmune.  The 团战吸蓝 branch asks J.CanCastOnMagicImmune,
---- which is the helper for abilities that PIERCE: it is J.CanCastOnNonMagicImmune
---- minus exactly the `not npcTarget:IsMagicImmune()` term (bots/FunLib/jmz_func.lua
---- :961 vs :988).  One branch out of three describes a permission the game does
---- not grant.
+---   ORDER ACCEPTED WHILE IMMUNE.  1db27d__20260903_093254_slot1: the engine
+---   writes `ABILITY lion_mana_drain -> npc_dota_hero_skeleton_king` at
+---   t=1526.0 with the target's `modifier_black_king_bar_immune` up since
+---   t=1518.6.  The ability's cast point is 0.3s, so the order was issued ~7.1s
+---   INTO the immunity.  A refused order writes no combat-log row at all.
 ---
---- WHY IT COSTS MORE THAN A NO-OP.  X.ConsiderE is the FIRST arm of the
---- X.SkillsComplement dispatch chain and its consumer runs
---- `bot:Action_ClearActions( false )` before queueing the cast.  So a bid on an
---- unreachable target wipes Lion's queued actions and returns, skipping the R/Q/W
---- arms below it -- and the branch only runs at all when Impale, Hex and Finger
---- are ALL uncastable (X.IsOtherAbilityFullyCastable above the call site), i.e.
---- precisely when the cleared action was the only thing he had left.  The state
---- persists for the whole BKB, so the tick is lost repeatedly, not once.
+---   CHANNEL RUNS INSIDE THE IMMUNITY.  b34547__20260905_004847_slot1:
+---   `modifier_lion_mana_drain` on bristleback for the full 5.1s [1266.4,
+---   1271.5], nested inside BKB [1266.1, 1274.1].  That frame is frozen as
+---   tests/fixtures/f_260905_004847_lion_drain_bkb.lua.
 ---
---- NARROWING, by construction.  The shipped predicate runs FIRST and the armed
---- path may only turn its `true` into `false`; gate-off is therefore the shipped
---- expression structurally, not measurably.  A negative wave reading can only ever
---- mean "those drains should have been cast" -- it can NEVER mean the lever aimed
---- a drain somewhere new.  Same shape as X.IsHexAoe, and the mirror of Axe's
---- `axecallbkb` (that ability pierces and carried a veto; this one does not pierce
---- and is missing one).
---- Domain, the driven counterfactual and the corpus limit:
---- tests/test_lion_drain_immune_target.lua.
-function X.lion_IsDrainTargetCastable( hTarget )
-
-	local bShipped = J.CanCastOnMagicImmune( hTarget )
-	if not bShipped then return false end
-
-	if J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainbkb' )
-		and hTarget:IsMagicImmune()
-	then
-		return false
-	end
-
-	return bShipped
-
-end
-
-
+---   MANA ACTUALLY MOVES.  d21f34__20260904_123205_slot1, drain [956.6, 959.9]
+---   inside BKB [956.5, 965.5]: Lion 641 -> 798 across the opening second
+---   (+157, against a +8/s baseline the two preceding seconds measure), target
+---   455 -> 368 (-87) against a rising trend.  An effective drain, not a
+---   refused order.
+---
+--- So the armed veto would have deleted legal, effective casts -- the one
+--- direction a NARROWING lever's negative reading can mean.  The request's
+--- finding that the three drain target tests disagree was real; the correction
+--- was pointed the wrong way.  Whether the OTHER two branches' stricter
+--- `J.CanCastOnNonMagicImmune` is the side that is wrong is a separate,
+--- WIDENING lever and needs its own id and its own evidence.
+--- The pin: tests/test_lion_drain_immune_target.lua.  Round: GH #566.
 --- [liondrainstop] gated (turbo + soak candidate): should Lion RELEASE an
 --- already-running Mana Drain channel right now? True only when the same
 --- pressure test that refuses to start one (a hero currently killing him AND
