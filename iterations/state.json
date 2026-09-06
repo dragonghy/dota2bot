@@ -6562,5 +6562,38 @@
     "self_catch": "helper 源码窗口第一版用固定 300 字节,而两个 helper 在文件里**紧挨着** ⇒ 读第一个时直接读进第二个,把两个 id 都报给了它(首次运行即打红,已改成读到该 helper 自己的 `end`)。留在测试注释里,不是事后补的。",
     "next_baton": "**总监**:(1) 裁 GH #577 的标签并登记这两个新 id(旧 id `axecallbkb` 标记**退役**,不是 promote、不是 reject);(2) 入集在 **P4.2 冻结期**内的合法裁定是 **FROZEN-HOLD** —— 本组**不提**入集提议,只登记**预登记的 arm 顺序**:解冻后**先单 arm `axecallbkb_ii`**(它已有一波可读的量:1,519 域内瞬间 / 65 ep / 36 局),`axecallbkb_i` **先钉 fixture 再谈排波**(供给只有 3 局)。**英雄组下轮**:用 #577 §5 给的两个坐标钉帧(`20260831_061811_slot1…` t=1209.9 给 (i);`20260828_002127_slot1…` t=982.1 给 (ii)),(ii) 那一帧是**第一次**有机会把 section 5 的「只有源码级覆盖」变成行为覆盖。",
     "honest_bounds": "本轮**没有**重算 #577 的任何读数(1,141 / 27 / 35 / 1,519 全部转述录像组,标 RECORDED-DELIVERED);本轮**没有**新增或改动任何谓词,`bots/` 的行为在闸关时**逐字未变**,闸开时也和 09-05 的版本逐字相同 —— 变的**只是哪个字符串能开哪一支**;branch (ii) 仍然**只有源码级覆盖**(`zusaether` 处置),section 5 的三条堵点一条都没修。"
+  },
+  "waitclar_20260906": {
+    "date": "2026-09-06T22:5xZ",
+    "backlog_item": "OWNER_PRIORITIES P4.4(i)(工作单元主体 = 一个 bots/ 行为改动)+ P2(回程太费时间)。工作流第 1 步扫 [strategy] open issue:#575/#572/#568(本组前三轮已交付、等总监裁)、#558(已认领并交回)⇒ 无未认领的带帧证据条目,按铁律 9 取优先项。章程 0STAYURN 点名的下一格(modifier_clarity_potion 该不该进 J.ShouldStayAndRegen 的 in-flight 词表)先跑域价钱 —— 价钱把那条路判到此为止,并把杠杆指向另一个站点,见 star_main_judgement。",
+    "owner": "strategy",
+    "gate": "waitclar(NEW soak id;turbo 显式 —— 此路径上没有任何一处在它之上问过 turbo;STANDALONE —— 一条件一 id,不与任何 id 合取)。⛔ P4.2 入集冻结生效中:本轮不提入集、不动 armed 串、不动 queue.json。",
+    "bots_lua_changed": true,
+    "headline": "ConsiderWaitInBaseToHeal(bots/mode_roam_generic.lua,SHIPPED 且未 gated)的条件是一个 or 的两条腿,而两条腿对「补给」的态度是 10:0。HP 腿(触发 J.GetHP(bot) < 0.25)在十个回复 modifier 上拒绝回程 —— 连 oracle_purifying_flames / warlock_fatal_bonds / item_satanic_unholy / 灵龛 / 魂之灵瓮都在里面,是一份看上去穷尽的表;MANA 腿(触发 J.GetMP(bot) < 0.25)一个都没有。于是一个已经喝下净化药水的 bot —— 蓝正在到账、在野外、已经付过钱、而且是它自己按的按钮 —— 仍然被读成「需要回基地补蓝」并 TP 走人。",
+    "star_main_judgement": "⭐ 主判据(第五次用域价钱,而这次它先否掉章程点名的那条路、再在另一个站点买下同一味药):章程 0STAYURN 点名的下一格是「J.ShouldStayAndRegen 的 in-flight 词表现在缺 modifier_clarity_potion」,并要求先跑价钱、且警告「回蓝算不算 field sustain 是一个新意见不是一处不一致」。跑了:1012 活体帧里 12 帧挂着它,四条 supply 杠杆全 armed 后仍被否决的 65 帧里有 3 帧带它。3 不是零 —— 但这条路仍然判到此为止,而否掉它的正是章程预判的那句话:J.ShouldStayAndRegen 的整个域是一条血量带(0.18–0.75),在那里把回蓝算成 field sustain,等于把一个受伤的 bot 按在野外而一点血都不会到 —— 那确实是一个新意见。⇒ 换站点:同一味药,在一个触发量就是蓝的地方。ConsiderWaitInBaseToHeal 的 MANA 腿由 GetMP < 0.25 触发,而净化药水回的就是蓝 —— 被否决的量和触发的量是同一个量,不需要任何新意见。落地的是 waitclar。",
+    "star_second_judgement": "⭐⭐ 施法路径是这一族里第一次被完整满足的:urnself 那轮拒绝把灵龛记成 field regen source,理由是「引擎的病人循环不返回调用者 ⇒ 没有可用的施法路径,数它就是把 bot 按在一个它永远不会喝的东西旁边」。净化药水反过来 —— X.ConsiderItemDesire[\"item_clarity\"] 在 J.GetMP( bot ) < 0.4、周围无敌人时自己喝,未 gated、每帧跑 ⇒ modifier 挂着就意味着这个 bot 自己按过按钮。条件 (c) 的另外三处(数出来的,不是打存在标志):item 层 '撤退:3' 与 '回复状态' 两条回城 TP 分支都列了它、加上那条不重复喝的自饮否决,共 3 处;aba_buff 的 hero_is_healing 也有它。",
+    "star_third_judgement": "⭐⭐⭐ 立法级(量具,GH #550 的第三种形态):锚不是词边界锚定的。同族 sweep 用 `if(.-)then` 切 Lua 条件,六个条件读成三个 —— 因为 `HasModifier` 里含有子串 `if`(Mod+if+ier),扫描从词中间重新开始,两个「条件」回来时以 `ier( 'modifier_...` 开头。没有任何东西报红,那个数只是错了,而且错在会让本文件报出一个比树实际更弱的 identity 保证的方向。改成 %f[%w] 前沿锚定后读数 6/6(GATED_CONDS 6、GATE_FIRST_CONJUNCT 5,第 6 个是 stayattr,它的门在 `not ... or ...` 里,那是 identity 的另一种形状)。⇒ 可复用的一条:锚不但要数(GH #550/#555),还要词边界锚定。",
+    "change": "bots/mode_roam_generic.lua:ConsiderWaitInBaseToHeal 的 MANA 腿追加 `and not (J.IsSoakCandidate('waitclar') and J.IsModeTurbo() and bot:HasModifier('modifier_clarity_potion'))`,排在 J.IsPushing 那条之前。追加而非插入;门是自己那个 not(...) 里的第一个合取项 ⇒ 未 armed 时短路成 `not false` = true,turbo 与引擎调用都不求值。",
+    "direction_by_construction": "这是往一个合取式上追加否决 ⇒ 只能把 TRUE 变 FALSE,即只能阻止回基地,永远不可能把一个本来不回家的 bot 送回家。flip_false_to_true == 0 由同一个 tally() 对调双腿再调一次证明它数得动(flip_false_to_true_swapped == flips == 1、flips_swapped == 0)。",
+    "domain_price": "1012 活体帧 / 109 fixture:ConsiderWaitInBaseToHeal 出厂答 TRUE 的 6 帧里 5 帧走 MANA 腿(⇒ 本杠杆改的那条腿就是真正开火的那条)。净化药水携带者 12 帧,逐帧给出停在哪一条子句:蓝不够低 9 / 外层守卫 2 / HP 腿 0 / 域内 1,四桶相加 == 12(数出来的,不是减出来的)。域 = 1 帧,且 flips(驱动读数)== blocked_domain(前缀走桶)== 1 逐位相等。",
+    "single_arm_visible": "⛔ 半个 —— 而这半个是本轮第二条发现,由本杠杆自己的测试在落地当轮抓到:本函数的外层守卫开头是 `not J.IsInLaningPhase()`,而 c4 延长对线期 ⇒ 在钉帧上单独 arm c4 也会取消同一次回程(走一条完全不同的子句)。⇒ (i) waitclar 单臂仍可读(单独 armed 时它翻这一帧,而同在 J.IsInLaningPhase 里的 c2 不翻);(ii) 但含 c4 的成员串在这一帧上无法把读数归给任何一方,那种配置下的零应读作「域未到达」不是「无效应」。这是 GH #576 形状在一个全新杠杆上的活体实例,已钉进 tests/test_waitclar_mana_trip.lua 与 nesting census 的新行。",
+    "anti_vacuum": "sweep 为每一个净化药水携带者发一行 B 记录并自带停在哪一条子句 ⇒「语料里没有净化药水」与「有 12 个,而这个函数在更早的子句上挡掉了 11 个」永远不是同一份读数。变异台 M14 让 carrier walk 停止发行 ⇒ 套件报红。",
+    "mutation_stand": "tools/agent/mutstand_waitclar.sh —— 见报告 §6 的读数。",
+    "honest_bounds": "(1) 域 = 1 帧 / 1012,是测量不是道歉;(2) 不压制逃跑:本腿所在的外层守卫已经要求 1200 内无敌方英雄、距敌方遗迹 >2400、且非对线期 ⇒ 被取消的是补给行程不是撤退;(3) 净化药水被英雄伤害打断,一帧是一个瞬间,不声称蓝一定全到 —— 那是 fieldsip 在另一族的问题;(4) 不碰上面的 HP 腿,包括那份表同样缺的 modifier_bottle_regeneration —— 那是另一条发现,域为 0(本语料 3 个空瓶携带者全在 0.25 血触发线之上),另立不搭车。",
+    "collateral": "(甲)trunk RED 修复:GH #576 的 nesting census 两行(本组上一轮落 stayurn 引入)已按检测器要求答完 identity 问题并 pin;新增 tests/_stayfamily_singlearm_sweep.lua + tests/test_stayfamily_singlearm.lua(6/6 绿)把 #576 的钱那一问驱动式答完 —— 见 gh_issue。(乙)本轮新增的 waitclar 又引入一行 census(waitclar | ConsiderWaitInBaseToHeal | J.IsInLaningPhase | c2,c4),已同轮 pin 并附上面那条 c4 支配的读数。",
+    "handoff": "甲 → 总监:登记在案,本轮不提入集(P4.2 冻结,合法裁定 = FROZEN-HOLD)。附 #576 的定量答复(见 gh_issue),并提一条规程建议:锚除了要数,还要词边界锚定。乙 → 批测台:解冻后 waitclar 单臂可读,但 ⛔ 不要和 c4 放进同一条成员串(会被支配);域小(1/1012 帧),取证波按稀有事件排。丙 → 录像组:核验形状 = 真实 Turbo 局里「身上挂 modifier_clarity_potion、蓝 <25%、非对线期、1200 内无敌方英雄、有可用 TP」的时刻,armed 腿留在野外、baseline 腿 TP 回基地。⚠️ 病人血量可能是满的 —— 钉帧就是 hp=1.000,按「低血」筛会一帧都找不到。",
+    "artifacts": "bots/mode_roam_generic.lua; tests/test_waitclar_mana_trip.lua; tests/_waitclar_sweep.lua; tools/agent/mutstand_waitclar.sh; tests/test_stayfamily_singlearm.lua; tests/_stayfamily_singlearm_sweep.lua; tests/test_gated_helper_nesting_census.lua; iterations/streams/test_set.md §FP; iterations/reports/strategy/20260906T225500Z.md",
+    "gh_issue": "GH #577(本轮新开,[strategy]);GH #576(trunk RED,本轮修复并附定量答复)"
+  },
+  "GH576_singlearm_answer_20260906": {
+    "date": "2026-09-06T22:5xZ",
+    "owner": "strategy",
+    "bots_lua_changed": false,
+    "headline": "GH #576 的钱那一问(六个 id 挂在同一个 PROMOTED helper 上,单臂波能不能读到每一个)驱动式答完:能 —— 但语料读它们时带着一个大到会颠倒「谁还活着」的畸变。",
+    "reading": "同一份 1012 活体帧,两列:gold=0(.dem 实际携带的)与 gold>=90(真实对局携带的)。出厂 TRUE 集 13 → 125。staysrc +44 → +0;staybag +2 → +0;staybottle +1 → +0;stayurn +2 → +0;stayattr +1 → +5;staytower −0 → −12。⇒ 四条 supply 加宽的全部可测域只存在于金钱贫穷这一侧(它们唯一能移除的就是最后那条 `not bHasRegen and GetGold() < 90` 否决;金钱一过 90 那条本来就假,它们无事可做);而唯一的减法 id staytower 的 gold=0 零是结构性的(否决只能作用在函数已经接受的帧上,而 gold=0 时那只有 13 帧、无一带 1200 内的塔),驱动过金钱门后它翻 12。",
+    "no_id_hides_another": "pair_attr_tower_both == 0(集合里仅有的两个动否决的 id,域实测不相交);tower_subtracts_from_all_g200 == staytower_down_g200 == 12(单独 armed 与全 armed 减掉的是同一批帧);all_minus_tower_true_g200 − all_true_g200 == 12 三列自洽。四条加宽各自坐在 `not bHasRegen` 后面 ⇒ 构造上单调,多 arm 只会加不会减。",
+    "what_it_does_not_claim": "不声称这两列就是真实域:把 gold 顶到 200 只移动了一个 .dem 不携带的值、其余合取项全是帧自己的 ⇒ 两列都是真实域的界不是真实域。也不声称任何波次的统计功效,更不声称这六个一起 arm 是安全的(那是只有批测能答的涌现问题)。",
+    "artifacts": "tests/test_stayfamily_singlearm.lua(6/6 绿);tests/_stayfamily_singlearm_sweep.lua;tests/test_gated_helper_nesting_census.lua 的两行 pin",
+    "gh_issue": "GH #576"
   }
 }

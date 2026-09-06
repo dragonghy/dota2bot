@@ -391,7 +391,29 @@ local PINNED = {
     -- ACCEPTS, so no other veto is firing on them by construction.  Measured
     -- rather than argued: its 12 domain frames are exactly the tower subset of
     -- the shipped predicate's own TRUE set (`flips_g200 == prefix_tower`).
-    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc,staytower | bots/mode_retreat_generic.lua", -- P
+    -- [stayurn 20260906 GH #576] The SIXTH id joined this row, and the batch
+    -- desk opened GH #576 on the arrival rather than on the id: six candidates
+    -- now hang off one helper, and its money question is not the identity
+    -- question this row answers -- it is "does a single-arm wave READ each of
+    -- the six, or does it read a correct zero it will file as 'tested, no
+    -- effect'". Both are answered here, and the second one is DRIVEN.
+    -- (1) Identity, unchanged and for the same reason as the five above: every
+    -- one of the six puts `J.IsSoakCandidate(...)` first in its condition, so
+    -- un-armed the whole function evaluates byte-identically to the shipped
+    -- read and arming c12/retnear/towerreach ALONE measures exactly what it
+    -- measured before any of them landed. Still (P).
+    -- (2) Single-arm readability, per id, over the same 1012 live frames the
+    -- six sweeps drive -- tests/_stayfamily_singlearm_sweep.lua arms each id
+    -- ALONE and counts frames where J.ShouldStayAndRegen's answer moves. The
+    -- numbers are asserted in tests/test_stayfamily_singlearm.lua, and the
+    -- claim that matters to GH #576 is that none of the six is zero because of
+    -- ANOTHER id in the set: the four supply widenings are guarded by
+    -- `not bHasRegen` and are therefore monotone (arming more of them can only
+    -- add flips, never remove one), while 'stayattr' and 'staytower' sit ABOVE
+    -- the supply block on separate clauses. The one pair that could hide a
+    -- lever -- two independently sufficient vetoes -- is 'stayattr' and
+    -- 'staytower', and their domains are measured DISJOINT rather than argued.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc,staytower,stayurn | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     -- [towerring 20260906 GH #558] The outer-id column of BOTH X.ShouldRun rows
     -- grew a second id. The classification does not move: the new id gates the
@@ -542,8 +564,48 @@ local PINNED = {
     -- (its own sweep drives 'bagsalve' through the stub on all 1012 frames and
     -- reads `arm_leak` 0), while the inner id's behaviour stays exactly as
     -- unreachable by a single-arm wave as it was.
-    "stayattr,staybag,staybottle,staysrc,staytower | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
+    -- [stayurn 20260906 GH #576] The SIXTH id joined the outer column, and like
+    -- 'staytower' before it, it moves the callee no closer: it reads a MODIFIER
+    -- ('modifier_item_urn_heal') and never calls J.HasFieldRegenSource at all.
+    -- (A) still holds -- the callee is additive-only when 'bagsalve' is armed --
+    -- and tests/_stayurn_sweep.lua drives 'bagsalve' through the stub on all
+    -- 1012 live frames and reads `arm_leak` 0, so arming 'stayurn' alone
+    -- measures 'stayurn'.
+    -- ⭐ WHAT GH #576 ASKS ON TOP OF (A), and the reason the row now carries a
+    -- number instead of a sixth paragraph: the batch desk's exposure is not
+    -- "the outer id measures a no-op" (that is (A), and it is answered) but
+    -- "one of the six reads zero because a SIBLING already decided the frame",
+    -- which in a ruling table looks identical to "tested, no effect". Answered
+    -- by driving rather than by argument in tests/test_stayfamily_singlearm.lua:
+    -- each id armed ALONE over the 1012 live frames, plus the pairwise overlap
+    -- of the only two ids in the set that can veto independently ('stayattr'
+    -- and 'staytower'). Landing a SEVENTH id on this helper turns that file red
+    -- until its own single-arm column is measured.
+    "stayattr,staybag,staybottle,staysrc,staytower,stayurn | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
+    -- [waitclar 20260906] A second caller of the same inner helper, and the
+    -- identity answer is the same one the row above already carries: un-armed,
+    -- J.IsInLaningPhase skips both its 'c2' and 'c4' blocks and falls through to
+    -- the shipped floor / soft-extension logic, i.e. it returns THE SHIPPED
+    -- VALUE, not a constant that kills a branch. (P).
+    -- ⛔ AND IT IS *NOT* OFF THE PAIR PROBLEM, which is the reason this row gets
+    -- a paragraph instead of a classification letter. The census's own question
+    -- (is the inner helper the identity element?) is answered above and the
+    -- answer is yes. The question GH #576 added -- can a single-arm wave READ
+    -- the outer id -- has a second answer here, and it was measured rather than
+    -- assumed: this function's OUTER guard opens with `not J.IsInLaningPhase()`,
+    -- and 'c4' EXTENDS the laning phase, so on the frame 'waitclar' is pinned to
+    -- ('f_260819_222559_od_eclipse_solo', medusa) arming 'c4' ALONE suppresses
+    -- the same trip through a completely different clause.
+    -- What that costs, stated where it bites: 'waitclar' is still readable armed
+    -- alone (it flips that frame, and 'c2' -- the other id inside the same inner
+    -- helper -- does not), but a member string carrying BOTH cannot attribute
+    -- the frame to either, and a zero measured in that configuration means "not
+    -- reached", not "no effect". Driven in
+    -- tests/test_waitclar_mana_trip.lua, which arms 'c2', 'c4', 'stayfield',
+    -- 'stayurn', 'itemtrip' and 'staysrc' each ALONE on the pinned frame and
+    -- asserts which of them move it.
+    "waitclar | ConsiderWaitInBaseToHeal | J.IsInLaningPhase | c2,c4 | bots/mode_roam_generic.lua",                                        -- P
 }
 
 local tests = {}

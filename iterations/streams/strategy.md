@@ -27,6 +27,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0WAITCLAR. **【2026-09-06T22:55Z 新增,**OWNER_PRIORITIES P4.4(i) + P2(球在本组)**;
+   工作流第 1 步扫 `[strategy]` open issue —— `#575`/`#572`/`#568`(本组前三轮已交付、等总监裁)与
+   `#558`(已认领并交回),更早的 `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据
+   ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项;
+   产出 `bots/mode_roam_generic.lua` 的 `ConsiderWaitInBaseToHeal` **MANA 腿**新增 gated 否决
+   (`waitclar`,turbo **显式**,**未 armed**,STANDALONE)、`tests/test_waitclar_mana_trip.lua`(**10/10**)、
+   `tests/_waitclar_sweep.lua`、`tools/agent/mutstand_waitclar.sh`、
+   **附带一条**:`tests/test_stayfamily_singlearm.lua`(**6/6**)+`tests/_stayfamily_singlearm_sweep.lua`
+   + nesting census 三行 pin(**修 GH #576 的 trunk RED**)、
+   `state.json:waitclar_20260906`+`:GH576_singlearm_answer_20260906`、`test_set.md §FP`;
+   报告 `iterations/reports/strategy/20260906T225500Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙),总线 = GH #577;GH #576 同轮追评。**】**
+   **⭐ 主判据(第五次用域价钱,而这次它先否掉章程点名的那条路、再在另一个站点买下同一味药):
+   「站点」是第三种否法** —— 前两种是**小**(域价钱)和**形状**(GH #542 的成对依赖)。
+   `0STAYURN` 点名的那一格跑了:1012 帧里 **12** 帧挂 `modifier_clarity_potion`,supply 全 armed 后
+   仍被否决的 65 帧里带它的 **3** 帧。**3 不是零 —— 而否掉它的正是章程自己预先写下的警告**:
+   `J.ShouldStayAndRegen` 的整个域是一条**血量带**,在那里把回蓝算成 field sustain =
+   **把一个受伤的 bot 按在野外而一点血都不会到**。⇒ **药没错,站点错了。**
+   **⭐⭐ 落地的杠杆:同一个函数的两条腿,对补给的态度是 10 比 0,而没有否决的那条正是开火的那条。**
+   `ConsiderWaitInBaseToHeal` 的 HP 腿(`GetHP < 0.25`)在**十个**回复 modifier 上拒绝回程
+   (连净化之焰/致命链接/撒旦都记得 ⇒ **长得就像穷尽**,所以缺的那一味不是「表短」),
+   MANA 腿(`GetMP < 0.25`)**零个**;出厂答 TRUE 的 6 帧里 **5 帧走 MANA 腿**。
+   钉帧 **medusa hp = 1.000(满血)、mp = 0.149、净化药水正在跳** —— 出厂说回家。
+   **施法路径这次是满的**(`item_clarity` 在 `GetMP < 0.4` **自己喝、未 gated**),这正是
+   `urnself` 拒绝灵龛那条理由的**反面**。
+   **⭐⭐⭐ 本轮最该被读的:一个杠杆自己的测试,在落地当轮抓到 GH #576 的形状长在它自己身上。**
+   例行断言「arming 别的 id 不应该动这一帧」**报红,红的是 `c4`**(外层守卫 `not J.IsInLaningPhase()`,
+   而 `c4` 延长对线期)⇒ **把它断言下来而不是把 `c4` 从循环里删掉**:单臂仍可读(`c2` 不翻),
+   **但含 `c4` 的成员串在这一帧上无法归因**,那种配置下的零读作**「域未到达」不是「无效应」**。
+   **⭐⭐⭐⭐ 立法级(量具):锚不但要数(#550/#555),还要词边界锚定** ——
+   `if(.-)then` 把六个条件读成三个,因为 **`HasModifier` 里含子串 `if`**;
+   **没有任何东西报红,那个数只是错了。** 同轮第二处:变异台第一版 **16 发全 NO-OP**
+   (`perl -0pi -e` 没带文件名 ⇒ 读 STDIN),**是台子的 NO-OP 桶自己救了它**。
+   **下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据的优先);
+   否则按 **P4.4 在 `bots/` 上取一个小杠杆**,候选(**标注:已定价过一半的猜测,仍要先跑完域价钱**)——
+   **同一份 HP 腿的表还缺 `modifier_bottle_regeneration`**(GH #577 已立案):本语料域 **0**
+   (3 个空瓶携带者**全在 0.25 血触发线之上**)⇒ **不要按「词表还差一味」落 id**;
+   要落它得先有一帧真的落在域里,那属于**录像组的取帧**不是本组的猜测。
+   更值得先跑的一格:**§FP.5 的两列说明四条 supply 加宽在 `gold ≥ 90` 一侧读数全为 0**
+   ⇒ **`J.ShouldStayAndRegen` 最后那条 `bot:GetGold() < 90` 才是这一族真正的开关**,
+   而它**在 fixture 上结构性不可测**(GH #495)。**先问「这一族还值不值得再加第七个 id」,
+   再问加什么** —— 这是一句需要域价钱来回答的话,不是一句结论。
+   **照旧先跑域价钱、每个变异体的锚先数一遍**(连同**它是不是词边界锚定的**、
+   以及**命令本身有没有真的作用到文件上**)、**恒零的断言先证明它数得动**。
+
 0STAYURN. **【2026-09-06T19:46Z 新增,**OWNER_PRIORITIES P4.4(i) + P2(**决策侧**,球在本组)**;
    工作流第 1 步扫 `[strategy]` open issue —— `#572`/`#568`(本组前两轮已交付、等总监裁)与 `#558`(上一轮已认领并交回),
    更早的 `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项;
@@ -6019,6 +6065,53 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T22:55Z(**P4.4(i) + P2**:`[strategy]` open issue 本轮扫过 `#575`/`#572`/`#568`
+  (本组前三轮已交付、等总监裁)与 `#558`(已认领并交回),更早的 `#385/#300/#254/#201/#198/#26`
+  同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项。
+  开工自检 **EXIT=0 干净**(⚠️ 又是第一条命令撞上它对**管道**的拒绝)。
+  **⭐ 主判据(第五次用域价钱,而这次它先否掉章程点名的那条路、再在另一个站点买下同一味药):**
+  `0STAYURN` 点名的那一格跑了 —— 1012 帧里 **12** 帧挂 `modifier_clarity_potion`,
+  supply 全 armed 后仍被否决的 65 帧里带它的 **3** 帧。**3 不是零,而这条路仍然判到此为止,
+  否掉它的正是章程自己预先写下的那句警告**:`J.ShouldStayAndRegen` 的整个域是一条**血量带**
+  (0.18–0.75),在那里把回蓝算成 field sustain = **把一个受伤的 bot 按在野外而一点血都不会到**
+  —— 那确实是一个**新意见**。⇒ **药没错,站点错了:去一个触发量本身就是蓝的地方。**
+  **⭐⭐ 落地的杠杆 `waitclar`**:`ConsiderWaitInBaseToHeal`(**SHIPPED 且未 gated** 的回基地 TP 判据)
+  的条件是一个 `or` 的两条腿,**对补给的态度是 10 比 0** —— HP 腿(`GetHP < 0.25`)在**十个**
+  回复 modifier 上拒绝回程(连净化之焰/致命链接/撒旦都记得,**长得就像穷尽**),
+  MANA 腿(`GetMP < 0.25`)**一个都没有**。**而开火的正是 MANA 腿**:出厂答 TRUE 的 **6** 帧里 **5** 帧走它。
+  钉帧 `f_260819_222559_od_eclipse_solo` **medusa:hp = 1.000(满血)、mp = 0.149、净化药水正在跳** —— 出厂说回家。
+  **施法路径这次是满的**(`X.ConsiderItemDesire["item_clarity"]` 在 `GetMP < 0.4` **自己喝、未 gated**),
+  这正是 `urnself` 拒绝灵龛的理由的反面。条件 (c) 旁证**数出来的**:item 层 **3** 处 + `aba_buff` 词表。
+  域 **1**(携带者 12 = 蓝不够低 9 + 外层守卫 2 + HP 腿 0 + 域内 1,**四桶相加 == 12**);
+  `flips 1 == blocked_domain 1`;`flip_false_to_true 0` 且**对调调用报出整个域 1**。
+  **⭐⭐⭐ 本轮最该被读的:一个杠杆自己的测试,在落地当轮抓到 GH #576 的形状长在它自己身上。**
+  例行断言「arming 别的 id 不应该动这一帧」**报红,红的是 `c4`** —— 本函数外层守卫开头是
+  `not J.IsInLaningPhase()`,而 `c4` **延长对线期** ⇒ 单独 arm `c4` 也取消同一次回程,走**完全不同的子句**。
+  **把它断言下来而不是把 `c4` 从循环里删掉**:`waitclar` **单臂仍可读**(`c2` 不翻),
+  **但含 `c4` 的成员串在这一帧上无法归因** ⇒ 那种配置下的零读作**「域未到达」不是「无效应」**。
+  **⭐⭐⭐⭐ 附带一条(修 trunk RED + 答完 GH #576 的钱那一问)**:上一轮的 `stayurn` 打红 nesting census。
+  修复**不是改数字,是答完检测器问的那句话**,并新建 `tests/test_stayfamily_singlearm.lua`(**6/6**)
+  把六个 id **逐个单臂驱动**,同一份 1012 帧**两列**(gold=0 / gold≥90):出厂 TRUE **13 → 125**;
+  `staysrc` **+44 → +0**、`staybag` +2 → **+0**、`staybottle` +1 → **+0**、`stayurn` +2 → **+0**、
+  `stayattr` +1 → +5、`staytower` **−0 → −12**。⇒ **四条 supply 加宽的全部可测域只存在于
+  金钱贫穷这一侧**(它们唯一能移除的就是 `GetGold() < 90` 那条);`staytower` 的 gold=0 零是**结构性的**
+  (否决只能作用在函数已经接受的 13 帧上)。**没有任何一个 id 的零是另一个 id 造成的**:
+  `pair_attr_tower_both 0`、`tower_subtracts_from_all_g200 == staytower_down_g200 == 12`、
+  `all_minus_tower_true_g200 − all_true_g200 == 12` 三列自洽。**两列都是界不是真实域,不声称。**
+  **⭐⭐⭐⭐⭐ 立法级(量具,GH #550 的第三种形态):锚不但要数,还要词边界锚定。**
+  sweep 第一版用 `if(.-)then` 切条件,**六个读成三个** —— **`HasModifier` 里含子串 `if`**
+  (`Mod`+`if`+`ier`),扫描从**词中间**重开,两个「条件」以 `ier( 'modifier_...` 开头。
+  **没有任何东西报红,那个数只是错了**,且错在**报出比树实际更弱的 identity 保证**的方向。
+  `%f[%w]` 前沿锚定后 6/6。**同轮第二处**:变异台第一版 **16 发全 NO-OP** ——
+  `mutant` 把变异体当命令数组跑,而 `perl -0pi -e '...'` **没带文件名** ⇒ 读 STDIN、什么都没改;
+  **是台子的 NO-OP 桶(既不是 CAUGHT 也不是 SURVIVED)自己救了它**。同批还错了缩进声明(门是**三**个 tab)。
+  产出:`bots/mode_roam_generic.lua`、`tests/test_waitclar_mana_trip.lua`(**10/10**)、
+  `tests/_waitclar_sweep.lua`、`tools/agent/mutstand_waitclar.sh`、
+  `tests/test_stayfamily_singlearm.lua`+`tests/_stayfamily_singlearm_sweep.lua`、
+  `tests/test_gated_helper_nesting_census.lua`(三行 pin)、
+  `state.json:waitclar_20260906`+`:GH576_singlearm_answer_20260906`、`test_set.md §FP`;
+  报告 `iterations/reports/strategy/20260906T225500Z.md`;总线 **GH #577**,**GH #576** 同轮追评。
+  **armed 串一字未动、`queue.json` 一字未动**(P4.2)。零 AWS。)
 - 2026-09-06T19:46Z(**P4.4(i) + P2 决策侧**:`[strategy]` open issue 本轮扫过
   `#572`/`#568`(本组前两轮已交付、等总监裁)与 `#558`(上一轮已认领并交回),更早的
   `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项。

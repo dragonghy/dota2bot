@@ -1600,6 +1600,82 @@ function ConsiderWaitInBaseToHeal()
 		or (((J.IsCore(bot) and J.GetMP(bot) < 0.25 and (J.GetHP(bot) < 0.75 and bot:GetHealthRegen() < 10))
 				or ((not J.IsCore(bot) and J.GetMP(bot) < 0.25 and bot:GetHealthRegen() < 10)))
 			and botName ~= 'npc_dota_hero_necrolyte'
+			-- [waitclar / owner priority P2, 2026-09-06] The leg above this one
+			-- refuses the trip on TEN regen modifiers; this one, which fires on
+			-- MANA, refuses on none -- and the tree already has a word for
+			-- "mana is arriving in the field".
+			--
+			-- The defect, as the two legs of one `or`.  Both legs send the bot
+			-- home with a TP.  The HP leg (20 lines up) is triggered by
+			-- `J.GetHP(bot) < 0.25` and vetoes on ten modifiers meaning "this
+			-- hero is already recovering, or must not be moved" -- among them
+			-- oracle_purifying_flames, warlock_fatal_bonds, item_satanic_unholy,
+			-- the urn and the spirit vessel, and two (chemical rage, tempest
+			-- double) that are not consumables at all.  That last part is the
+			-- point: the list reached for everything it could think of, so what
+			-- it skipped it skipped on purpose or not at all.  This leg is
+			-- triggered by `J.GetMP(bot) < 0.25` and carries no supply veto of
+			-- any kind.  So a bot that has already drunk a clarity -- mana
+			-- arriving, in the field, paid for -- still reads as "needs to go to
+			-- base for mana" and TPs.
+			--
+			-- ⭐ IT IS THIS LEG THAT ACTUALLY FIRES, measured rather than
+			-- assumed: over the 1012 live hero frames this corpus carries,
+			-- ConsiderWaitInBaseToHeal answers true on 6, and 5 of the 6 come
+			-- through THIS leg (tests/_waitclar_sweep.lua).  The pinned frame is
+			-- one of them and is the cleanest statement of the defect the corpus
+			-- has: f_260819_222559_od_eclipse_solo, medusa at hp = 1.000 (FULL
+			-- health), mp = 0.149, holding a ticking 'modifier_clarity_potion'
+			-- -- and the shipped function says go home.
+			--
+			-- ⭐⭐ WHY THE CLARITY, AND WHY THIS IS NOT THE "does mana count as
+			-- sustain" OPINION.  That opinion was priced and REFUSED the same
+			-- round on J.ShouldStayAndRegen, whose whole domain is an HP band
+			-- (0.18-0.75): counting a mana consumable there would hold a HURT
+			-- bot in the field with no health arriving.  Here the quantity the
+			-- veto is about and the quantity the trigger reads are THE SAME
+			-- QUANTITY -- this leg fires on `GetMP < 0.25` and the clarity
+			-- restores mana -- so no new opinion is needed.  Three shipped sites
+			-- already treat a ticking clarity as a reason not to go home: the
+			-- '撤退:3' and '回复状态' home-TP branches
+			-- (ability_item_usage_generic ~5661, ~5975) both list it, and
+			-- FunLib/aba_buff.lua's `hero_is_healing` names it.  A fourth gives
+			-- it a CAST PATH, which is exactly what the refused urn widening
+			-- lacked: X.ConsiderItemDesire["item_clarity"] drinks one at
+			-- `GetMP < 0.4` with no enemy in range, ungated -- so the modifier
+			-- being up means this bot pressed the button itself.
+			--
+			-- Direction is fixed by CONSTRUCTION: a veto appended to a
+			-- conjunction, so arming can only turn this leg's TRUE into FALSE,
+			-- i.e. only PREVENT base trips.  It can never send home a bot that
+			-- was not already going.  Un-armed, J.IsSoakCandidate is the first
+			-- conjunct inside the `not (...)`, so it short-circuits to
+			-- `not false` = true and neither engine call below it happens.
+			-- Gated STANDALONE -- one id in this condition, never a conjunction
+			-- of two (the 'pullcad' trap).  Turbo is NOT structural on this path
+			-- (nothing above asks), so it is asked explicitly here.
+			--
+			-- Honest bounds.  (1) The domain is ONE frame of 1012 and that is a
+			-- measurement, not an apology: 12 frames carry the modifier, 3 of
+			-- those are also under `GetMP < 0.25`, and 1 clears the outer guard
+			-- (not laning, no enemy inside 1200, >2400 from the enemy ancient, a
+			-- castable TP).  tests/_waitclar_sweep.lua emits a row per carrier
+			-- with the clause that stopped it, so "the corpus has no clarities"
+			-- can never read the same as "it has clarities this function rejects
+			-- earlier".  (2) It does not suppress an ESCAPE: the outer guard this
+			-- leg sits under already requires no enemy hero within 1200 and more
+			-- than 2400 units from the enemy ancient, so the trip it cancels is a
+			-- supply trip, not a retreat.  (3) A clarity is interrupted by hero
+			-- damage, so a frame is an instant and the mana may not all arrive --
+			-- the magnitude question 'fieldsip' owns on the other family; this
+			-- lever does not borrow it.  (4) It leaves the HP leg above
+			-- untouched, including the 'modifier_bottle_regeneration' that list
+			-- is ALSO missing -- a separate finding with a separate domain (0
+			-- frames on this corpus: all 3 bottle carriers sit above the 0.25 HP
+			-- trigger), filed rather than bundled in.
+			and not (J.IsSoakCandidate('waitclar')
+				and J.IsModeTurbo()
+				and bot:HasModifier('modifier_clarity_potion'))
 			and not (J.IsPushing(bot) and #J.GetAlliesNearLoc(bot:GetLocation(), 900) >= 3))
 		then
 			ShouldWaitInBaseToHeal = true
