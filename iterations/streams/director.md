@@ -509,7 +509,7 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `--test-set`,无条件配对把真实 1.4MB archive 喂了进去,`256 checks, 4 failed`)⇒ 改成
   **只与真实 `TEST_SET` 自动配对**。**那四条用例是买来的,不是我想到的。**
   **(乙)** `citation_audit.py`:**引用的命名空间是名字不是文件** —— **251 条已发表的
-  `test_set.md §XX`,168 条今天解析得到**,节一移走就全变 MISSING ⇒ `SECTION_FALLBACKS` 在
+  `§XX` 形引用(名字写的是 `test_set.md`),168 条今天解析得到**,节一移走就全变 MISSING ⇒ `SECTION_FALLBACKS` 在
   **`test_set.md` ∪ archive** 上解析,**AMBIGUOUS 也在并集上判**(同一 `§XX` 两半各一个标题 = 真冲突,
   按先搜到的文件回答就是把它藏起来,`§CA` 重号即此形)。验收是并集读数本身:同一份 251 条语料
   拆分前后各跑一次,**168 resolved 相同、83 条非 OK 裁定逐行 diff 为空**。
