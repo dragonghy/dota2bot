@@ -12004,7 +12004,9 @@
     GH #176 幻象守卫按**出生时刻**实装(一局 Chaos Knight **41** 个实体;
     全语料 195 个 hero-name 多实体、丢弃 1,219,355 个快照样本);
     ⚠️ **事件侧无法按实体区分** ⇒ 强结论只用全局单实体的那 8 行。
-  - **本轮开**:GH `[hero]`(`liondrainbkb` 前提证伪 + 建议撤下)。实际编号见报告。
+  - **本轮开**:**GH #566** `[hero]`(`liondrainbkb` 前提证伪 + 建议撤下 + 可钉帧 + 域读数)。
+    发表前 `claim_precheck.sh` **`PRECHECK_EXIT=0` clean / 本地领先 origin/main 0 个 commit**,
+    按 GH #290 的顺序 push 在前、发表在后。
   - **下一轮第一件事**:(1) **hero-2**(供给已解封,按**穿越**口径);(2) hero-31 主体三列;
     (3) hero-30 可买列(两分支分开);(4) hero-36 / hero-37(与本轮同形,量具可复用
     modifier 区间重建);(5) hero-32/33 等 dumper 补小兵 hp。
