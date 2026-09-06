@@ -12253,7 +12253,9 @@
     「本轮头条可能被造出来」的形状:幽魂之灵/虚无当魔免、引导记在受害者头上、被控的 Axe 当域、
     根当成不能施法、两个分支并池、两个半径平均)。⚠️ **本容器没有 pytest**
     (`python3 -m pytest` → `No module named pytest`,**没跑成不是失败**),用 `python3 -m unittest`。
-  - **本轮开**:`[hero]` issue 一条(正文全文在报告 §12,MCP 被挡时按铁律 11 不空转)。
+  - **本轮开**:**GH #577** `[hero]`(域读数 + 建议拆 id + 可钉帧 + pierce 的语料证据;
+    正文全文另存报告 §12)。发表前 `claim_precheck.sh` **`PRECHECK_EXIT=0` clean /
+    本地领先 origin/main 0 个 commit**,按 GH #290 的顺序 push 在前、发表在后。
     未开 [harness]:唯一仪器缺口是 bot 侧内部状态,不是 dumper 能补的字段。
   - **下一轮第一件事**:(1) **hero-36 / `cmrangedhp`(GH #560)** —— 先确认 `creeps[]` 有没有 hp,
     这一步就决定它是读数还是 METHOD-FAILED 退回;(2) hero-37 / `zusultstrand`(GH #564);
@@ -12283,5 +12285,8 @@
     `test_selfcheck_lua_leg.py` 没跑成,**不是通过**)。
     **⚠️ 第二十四次登记:自检在本容器不是「约 20s」** —— 本轮 > 300s。
     两条 trunk-red 都**先于本轮存在于工作树上**,与本轮零交集(**本轮未改任何 `.lua`**)。
-    **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §11/§13;**未用 `RULE6_BYPASS` ⇒ 无
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT=0 CLEAN`(luacheck bots game **0 warnings**,
+    冷启自己装了 `lua-check`)、`PUSH_BRANCH_EXIT=0`、`PUSH_MAIN_EXIT=0`(钩子在 push 时
+    又跑了一次 gate,同样 `GATE_EXIT=0 CLEAN`);**未用 `RULE6_BYPASS` ⇒ 无
     「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称**。
+    **Token**:`TOKENS total_in=15,162,430 out=97,851 turns=91`。
