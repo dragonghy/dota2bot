@@ -11861,3 +11861,84 @@
     容器冷启、gate 自己装的 `lua-check`);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」
     行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
     push / `claim_precheck` / token 用量见报告 §8.1。
+- **2026-09-06T10:02Z**:**取 OWED 行 `hero_domain_scan_2_30_31`(自检连续两轮点名本组、
+  不挂任何一波、没有外部触发器 —— §DR 的立案形状)。零 EC2、S3 只读、未改 `bots/` 一行。**
+  **宽扫**九月归档 **66 run / 3,308 局** `analysis.json` 英雄普查;**深扫 72 局**
+  (9 个 run 各 8 局,分层抽样,`DUMP_EXIT=0`、`unparseable=0`),3,437 次施法 /
+  **577 个重放 episode**;**逐帧 11 个 episode / 11 局 / 9 run**(章程下限 6)。
+  ```
+  VERIFY id=axebhrecast verdict=INDETERMINATE episodes=273
+  ```
+  (**INDETERMINATE 是对「行为正确」的判词不是对域的**:域买到了,但 `axebhrecast`
+  **未 armed** ⇒ 语料里没有一帧是它执行的,三选一结构上无从谈起。)
+  - ⛔ **交付件带 `SCAN_COVERAGE: 2/7 -- INCOMPLETE` 横幅**:owed 行的 `done_when`
+    只判**路径存在**(LIMIT 11),文件一落地那条腿就绿了,而**七份读数只交了一份完整的**。
+    **总监不要按绿退休该行。**
+  - **⭐⭐⭐ 主发现:一个被量具制造出来的零,差点把域放大一倍。** 杠杆 armed 腿带
+    `not J.HasAghanimsShard( bot )`,**这一项决定域有多大**。去 `snapshots[].items`
+    找 `aghanims_shard`:**72 局 0 次** —— 假的,**魔晶是用掉的**(给完加成就离开背包,
+    战斗日志里 Axe 身上也没有 `modifier_item_aghanims_shard`)。有效观察量是**行为侧**:
+    `applies_battle_hunger` 进 `axe_berserkers_call` 的来源在 KV 里**有且只有**
+    `special_bonus_shard` ⇒ **战吼与 BH 的 MODIFIER_ADD 同 tick = 夏德目击**。
+    逐帧抓到 `26717d__20260902_033228_slot1` **t=1475.6**(同 tick,而背包六件套无魔晶)。
+    **71/72 局有签名**,起点中位 **1052.8s**;**577 个重放里 304(52.7%)落在门外**,
+    门内只剩 **273**。⚠️ 检测器**按构造偏晚** ⇒ 起点是上界、273 是**过估**(方向保守)。
+    **独立一致性核对**:未过滤时「剩余 11–12s」桶有 80 个 episode,夏德过滤后**归零**。
+    与 `zusult` 域内计数、stale-mana(GH #491)**同族**,区别是这次方向是**放大域**。
+  - **⭐⭐ 逐帧推翻了本轮排名第一的「收益」样本。** 第 (2) 列最大值那一帧
+    `b30fe4__20260904_184634_slot6` **t=1393.9**(900u 内**四个**未中招敌方英雄):
+    **2.0 秒后 Axe 用大招把同一目标斩了**(1395.9 `axe_culling_blade` DEATH v=265)。
+    那是**击杀确认**,而击杀循环正是杠杆**故意不接线**的五处之一。
+    ⇒ 只数「射程内有没有别人」会把**故意的 no-op 位点**读成**被放弃的收益**。
+    加列后干净读数:门内 273 里击杀确认 **122(44.7%,97 死于 Axe 自己)**、
+    **纯成本 121**、**纯收益 30** ⇒ **成本:收益 ≈ 4:1**。
+    第 (2) 列 0 候选占 **81.3%**(整数小值域,铁律 4(ii),**不报中位数**)。
+  - **预登记判读不自套(§CJ)**:「分布集中在 0」**成立**,但 `DOMAIN-NOT-REACHED`
+    **按字面不成立** —— 域买到了(273 episode / 68 局),失败的是域的**成分**不是**大小**。
+    **本组建议不入集,理由写成 4:1 不是空域;标签请总监裁。**
+  - **⭐ hero-2/30/35 供给障碍作废并量到了数**:九月归档含 Axe **384/3,308 局(11.6%)/ 9 run**,
+    **有 `.dem` 可扫的 190 局**(那 9 个 run 的录像局 190/190 全含 Axe)。
+    这正是 hero-2 `result` 里 2026-08-23「Axe 0/306 局」那句话要的反证读数
+    (英雄组 09-05 只证明了「存在」,明写没量过局数)。
+  - **⭐ hero-31 充能层数确认拿不到,而 dump 会递给你一个正好错的 0**:
+    `MODIFIER_STACK_EVENT` 对 `modifier_skeleton_king_bone_guard` **有 367 条事件,
+    `value` 逐条都是 0**。顺手读 `event.value` ⇒「充能恒 0」⇒ `nStack/maxStack>=0.6`
+    恒假 ⇒「域是空的」**一个量具凭空造的结论**。根因 `dumper/main.go:689`
+    `Value: m.GetValue()`(层数在实体 modifier 表上,不在战斗日志里)。⇒ **[harness]**。
+  - **缺陷本体在真实对局上成立**:`..._self_movespeed` **12,855** 次 vs
+    `bots/` 八处所测的 `..._self` **0** 次。重放众数是**冷却驱动**的
+    (rank4 cd 5s / duration 12s ⇒ 剩余 6–7s 桶占门内 **58.2%**,均值剩余 4.585s
+    ⇒ **平均每次重放只值 7.4s**)。
+  - **可钉帧**(申请书说语料买不到的**收益侧**,买到 30 个,首选):
+    `a57e1e__20260902_034511_slot4` **t=1191.5**(pudge,剩余 6.00,**3 个**未中招候选);
+    成本侧 `26717d__20260902_033238_slot2` **t=767.0**。
+  - **量具**:新 `tools/batch_test/behavioral/axebhrecast_domain.py`(`--selfcheck`
+    **43 PASS / 0 FAIL**)+ `tests/test_axebhrecast_domain.py`(**9 tests OK**,
+    从反面钉死那个被制造的零)。GH #176 两条污染守卫实装(幻象按**出生时刻**判别、
+    生死用**两端 bracketing 采样**)。
+  - **下一轮第一件事**:(1) **hero-34(`liondrainbkb`)—— 四列全可买、供给 1,702 局、
+    纯事件侧,首选**;(2) hero-2(供给已解封,按**穿越**口径不是帧口径);
+    (3) hero-31 主体三列(充能列明写拿不到);(4) hero-30 可买列(两分支分开不许并池);
+    (5) hero-32/33 等 dumper 补小兵 hp,否则只能交 INSTRUMENT-BLIND。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (4(i-d) 点名的手算形状,**已连欠三轮**);§3.4 那一帧钉 fixture;F2/GH #530;
+    `--analysis-dir` 基名碰撞即拒绝(GH #529);`outlatch` 重扫;`campbind` 等 #475;
+    **#477 重 dump 仍是本组的球**(W44 约 09-25 过期)。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 27 轮 / #421 第 26 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T100232Z.md`;
+    交付件:`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(全程 S3 只读);`DUMPER_EXIT=0`(cache HIT);
+    72 局 `DL/DUMP_EXIT=0`、`unparseable=0`;`axebhrecast_domain.py --selfcheck`
+    **43 PASS / 0 FAIL**、真语料 `SCAN_EXIT=0`;`WRAPPER_EXIT=0`(9 tests OK)。
+    ⛔ **证据纪律 3 第四十一次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);第二次套 `timeout 400` 被自己掐成 `EXIT=124`;
+    第三次重定向放后台才取到真码 **`selfcheck worst exit: 3`**
+    (FINDINGS `cadence queue-rulings owed-executions`),`legs run 10`,
+    **`UNCERTIFIABLE (exit 2): trunk-red(python)`**(`tests/test_selfcheck_lua_leg.py`
+    没跑成、9 个 check 未运行,**不是通过**)。
+    **⚠️ 第二十次登记:自检在本容器不是「约 20s」。**
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT` 与 push 读数见报告 §8.1;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
