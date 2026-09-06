@@ -6195,6 +6195,6 @@
   "real_frame_coverage": "**分支 = 真实帧覆盖(一翻转),改动的那一项 = 反事实覆盖(两翻转),两句不许合并。**(1) 分支:`f_260820_182906_lion_drain_survived` t=606.5 是 8 个 Lion 主体帧里**唯一**分支前提已经成立的一帧(IsInTeamFight=true、drain 2 级、Impale/Hex/Finger 全在 CD),唯一的翻转是 drain 自己的剩余冷却 11.6 → 0;翻完它**真的开火**。(2) 改动的那一项:**8 个主体帧、40+ 个敌方英雄实例里魔免数为 0** ⇒ 魔免必须靠标注过的 mutation 给,一次一个(3c 只翻 luna:gate OFF 仍指向不可达的 luna,gate ON **改指 crystal_maiden**;3d 翻 luna+CM:gate OFF 指向 luna 并白清一次动作队列,gate ON **一条命令都不发**)。那个 0 写成**单向绊线**:哪天语料里出现一个开着 BKB 的敌人,§2 就红并点名那一帧 —— 那就是这根杠杆真正想要的 (a) 证据。",
   "limits": "(i) `SpellImmunityType` **RECORDED 不是 network-verified**:仓内 KV 快照(tests/mock/special_value_shapes.lua)**不带这个字段**(与 GH #516 的 GetAOERadius 同族)。§KV 把这个**缺席**钉成断言,快照哪天长出这个字段就红并要求把结论从 RECORDED 升级。带 KV 对照的是另外四项(cast range 850 / cooldown 15-12-9-6 / mana_per_second 20-40-60-120 / duration 5.0),它们保证「记下来的能力形状」和「出货数据」之间不会静默漂移。(ii) 8 个主体帧的魔免数 0 是**语料的零不是世界的零**:Turbo 里 BKB 是常见出装,10 分钟封顶的旧语料对后期结构性偏薄,误差方向对本改动不利(真实频率只会更高)。(iii) 本轮**没跑完整量套件**(~100min,GH #124)⇒「全量绿」本轮没有人说。",
   "next_baton": "**批测台** `queue.json:hero-34`(零 EC2 归档只读扫描,可与 hero-2 / hero-30 / hero-31 / hero-32 / hero-33 并成同一次遍历):在已落盘的 W39-W49 dump 里数「Lion 在团战里对一个**当时魔免**的敌人起手 Mana Drain」的次数。**总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。**在 (a) 买到之前不许 promote。**",
-  "gh_issue": "TBD (本轮收尾回填)"
+  "gh_issue": "GH #549"
  }
 }

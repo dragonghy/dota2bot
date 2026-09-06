@@ -24,7 +24,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 -103. **Lion 的 Mana Drain 会被指向一个魔免的敌人,而这个技能穿不了魔免 —— 而这一轮
    **能验的那一半是分支本身,只要一个翻转**(报告 `iterations/reports/hero/20260906T015205Z.md`,
-   `state.json:liondrainbkb_20260906`,`queue.json:hero-34`,GH **#TBD**;新
+   `state.json:liondrainbkb_20260906`,`queue.json:hero-34`,GH **#549**;新
    `tests/test_lion_drain_immune_target.lua` **21 例** + `tools/agent/mutstand_liondrainbkb.sh`
    8 变异全杀;`bots/BotLib/hero_lion.lua` **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
    - **事实**:`X.ConsiderE` 在**三处**挑 Mana Drain 的目标,补蓝那圈和「打架抽蓝」都用
@@ -4607,7 +4607,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `X.ConsiderE`「团战吸蓝」分支用 `J.CanCastOnMagicImmune`(给穿透技用的谓词)挑目标,
   而 `lion_mana_drain` 的 KV 是 `SpellImmunityType SPELL_IMMUNITY_ENEMIES_NO`:收进 gated
   `liondrainbkb`,turbo-only 未 armed**;新 backlog `-103`,`state.json:liondrainbkb_20260906`,
-  `queue.json:hero-34`,GH **#TBD**)
+  `queue.json:hero-34`,GH **#549**)
   **`bots/BotLib/hero_lion.lua` 有真代码行**(新 `X.lion_IsDrainTargetCastable` +
   `X.ConsiderE` 一处调用点);新 `tests/test_lion_drain_immune_target.lua`(**21 例**)+
   新 `tools/agent/mutstand_liondrainbkb.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
