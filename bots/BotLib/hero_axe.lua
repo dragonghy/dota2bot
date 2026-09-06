@@ -768,6 +768,101 @@ function X.WillBattleHungerKill( npcEnemy, nDamage, nDelay )
 end
 
 
+--- Soak candidate `axebhrecast` (turbo-only, INERT until armed).  Written
+--- 2026-09-06 under OWNER_PRIORITIES P4.4.
+---
+--- THE DEFECT, and it has TWO independent halves, either one sufficient.
+--- X.ConsiderW carries the same veto at EIGHT sites, always in this shape:
+---
+---     and not <target>:HasModifier( 'modifier_axe_battle_hunger_self' )
+---
+--- i.e. "do not spend Battle Hunger on someone who already has it".  The name it
+--- tests is not a name the target can ever carry:
+---   (i) IT IS THE CASTER'S SIDE.  The debuff the target carries is
+---       `modifier_axe_battle_hunger` -- that is the name bots/mode_team_roam_generic.lua
+---       :1605 and bots/BotLib/hero_largo.lua:316 both read off an ENEMY/ALLY, and it is
+---       the name that appears on enemy heroes in this repo's own replay fixtures.
+---       The `_self` family is what Axe puts on HIMSELF for the movespeed.
+---   (ii) IT IS ALSO STALE.  Across all 104 fixtures the caster-side modifier is
+---       spelled `modifier_axe_battle_hunger_self_movespeed`, 18 sightings; the bare
+---       `modifier_axe_battle_hunger_self` this file tests appears ZERO times, on
+---       any unit, in any frame.  HasModifier is an exact-name lookup, not a prefix
+---       match, in the engine and in tests/mock/replay_fixture.lua alike.
+--- So the veto is structurally always-true and always has been: Axe has never once
+--- declined a Battle Hunger on the ground that the target already had one.
+---
+--- THE FIX, and why it is not simply "correct the string".  Battle Hunger does not
+--- stack (`should_stack` has no base in the ability KV; it is a SHARD grant), so a
+--- re-cast REFRESHES the 12s debuff rather than adding to it -- worth `12 - remaining`
+--- seconds -- while the same cast on a fresh enemy is worth a full 12s of pure DoT
+--- plus a second slow.  Re-applying is therefore dominated wherever another
+--- candidate exists AND the cast is not a kill-confirm.  X.axe_IsBattleHungerFresh
+--- is wired at exactly THREE sites: the teamfight min-search, the laning-harass loop
+--- and the retreat loop.  Each iterates a list, so a vetoed candidate is skipped and
+--- the next one is considered, and none of the three claims the cast will kill.
+--- FIVE SITES ARE DELIBERATELY LEFT ALONE, in two groups:
+---   * the IsGoingOnSomeone branch, the jungle pick, Roshan and Tormentor have no
+---     second candidate to fall through to, so a veto there is a pure loss of the
+---     refresh with nothing bought;
+---   * the KILL LOOP, and this one was not foreseen -- the fixture found it.  Its
+---     own damage claim (X.WillBattleHungerKill) is priced on a FULL 12s duration,
+---     which is what a re-cast restores, so vetoing an already-hungered target there
+---     throws the kill away.  f_260820_043124_axe_blink_kill is the frame: a Wraith
+---     King at 199 HP carrying 6.5s of the debuff, i.e. 130 of the 199 already
+---     coming; only the refresh's full 240 finishes him.  An earlier draft of this
+---     lever DID wire that site, and section 4 of the test now pins it unwired.
+--- This is one lever, not a bundle: the dead `_self` term is not deleted anywhere.
+--- At the five untouched sites it stands exactly as written; at the three wired ones
+--- it survives verbatim as the helper's bound `bShipped`, which is what makes
+--- gate-OFF byte-for-byte the shipped behaviour rather than a second change riding
+--- along.
+---
+--- ⚠️ WHAT THE DIRECTION IS, STATED PRECISELY, BECAUSE IT IS NOT "FEWER ACTIONS".
+--- The shipped predicate is evaluated first and bound; the armed path may only turn
+--- its `true` into a `false`, and the last statement returns the shipped value.  So
+--- the set of (branch, target) pairs the armed side accepts is a strict SUBSET of
+--- the shipped side's, and therefore `armed casts Battle Hunger => shipped casts
+--- Battle Hunger` on the same frame.  What it does NOT claim is that the ACTION is
+--- the same: the whole point is that a vetoed candidate hands the branch to another
+--- target, so the armed side can issue a DIFFERENT order on a frame where shipped
+--- also issued one.  A negative wave reading can only mean "those refreshes were
+--- worth more than the spread"; it can never mean the lever invented a cast.
+--- X.ConsiderW is the LAST arm of X.SkillsComplement, so nothing upstream of it
+--- (Culling Blade, Berserker's Call) can change sign because of this.
+---
+--- THE SHARD IS THE PREMISE, AND IT IS PINNED SEPARATELY.  With Aghanim's Shard the
+--- ability KV turns `should_stack` on, and then a re-cast is a genuine second stack
+--- -- the dominance argument above reverses.  Both of this file's buy lists carry
+--- item_aghanims_shard, so this is not hypothetical; the armed leg stands down
+--- whenever J.HasAghanimsShard is true.  That term is the premise of the (c)
+--- argument expressed as code, the way `cmcreepcap`'s t25 row is.
+---
+--- WHAT IS NOT KNOWN.  The domain is UNSIZED.  Corpus supply, measured rather than
+--- assumed (tests/test_axe_battle_hunger_recast.lua section 2): three Axe-SUBJECT
+--- frames carry an enemy holding the real debuff, with 0.2s / 5.4s / 6.5s left, and
+--- on two of them that enemy is the ONLY one inside Battle Hunger's cast range --
+--- so on those two the armed side declines rather than spreads, which is the cost
+--- side of this lever showing up in the corpus.  The one frame that can show the
+--- SPREAD is f_260820_043637_axe_ring_close, and driving it needs two labelled
+--- flips because no fixture frame reports a bot mode.  Size it on a wave:
+--- iterations/queue.json `hero-35`.  Do NOT promote on the (c) argument alone.
+function X.axe_IsBattleHungerFresh( hTarget )
+
+	local bShipped = not hTarget:HasModifier( 'modifier_axe_battle_hunger_self' )
+
+	if bShipped
+		and J.IsModeTurbo() and J.IsSoakCandidate( 'axebhrecast' )
+		and not J.HasAghanimsShard( bot )
+		and hTarget:HasModifier( 'modifier_axe_battle_hunger' )
+	then
+		return false
+	end
+
+	return bShipped
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -799,6 +894,11 @@ function X.ConsiderW()
 			and J.CanCastOnNonMagicImmune( npcEnemy )
 			and J.CanCastOnTargetAdvanced( npcEnemy )
 			and X.WillBattleHungerKill( npcEnemy, nDamage, nDuration )
+			-- NOT X.axe_IsBattleHungerFresh: see that helper's header.  The kill
+			-- loop is the one list branch where the re-cast is the point -- its
+			-- own damage claim is a FULL fresh duration, and on
+			-- f_260820_043124_axe_blink_kill the refresh is exactly what carries
+			-- a 199 HP Wraith King past a debuff with 6.5s left.
 			and not npcEnemy:HasModifier( 'modifier_axe_battle_hunger_self' )
 		then
 			hCastTarget = npcEnemy
@@ -834,7 +934,7 @@ function X.ConsiderW()
 		for _, npcEnemy in pairs( nInBonusEnemyList )
 		do
 			if J.IsValid( npcEnemy )
-				and not npcEnemy:HasModifier( 'modifier_axe_battle_hunger_self' )
+				and X.axe_IsBattleHungerFresh( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
 			then
@@ -865,7 +965,7 @@ function X.ConsiderW()
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
 				and npcEnemy:GetAttackTarget() == nil
-				and not npcEnemy:HasModifier( 'modifier_axe_battle_hunger_self' )
+				and X.axe_IsBattleHungerFresh( npcEnemy )
 			then
 				hCastTarget = npcEnemy
 				sCastMotive = 'W-对线消耗:'..J.Chat.GetNormName( hCastTarget )
@@ -885,7 +985,7 @@ function X.ConsiderW()
 			if J.IsValid( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
-				and not npcEnemy:HasModifier( 'modifier_axe_battle_hunger_self' )
+				and X.axe_IsBattleHungerFresh( npcEnemy )
 			then
 				hCastTarget = npcEnemy
 				sCastMotive = 'W-撤退:'..J.Chat.GetNormName( hCastTarget )

@@ -22,6 +22,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-104. **Axe 的「已经中了战意饥渴就别重放」那条否决,八处都测了一个目标永远挂不上的
+   modifier —— 而这一轮最值钱的东西**不是缺陷,是 fixture 发现的一个排除项**(报告
+   `iterations/reports/hero/20260906T045743Z.md`,`state.json:axebhrecast_20260906`,
+   `queue.json:hero-35`,GH **#554**;新 `tests/test_axe_battle_hunger_recast.lua` **20 例** +
+   `tools/agent/mutstand_axebhrecast.sh` 8 变异全杀;`bots/BotLib/hero_axe.lua` **有真代码行**;
+   选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实,两条独立理由各自充分**:`X.ConsiderW` 八处重复
+     `and not <target>:HasModifier( 'modifier_axe_battle_hunger_self' )`。(i) **写错了边** ——
+     目标身上的 debuff 叫 `modifier_axe_battle_hunger`(`mode_team_roam_generic.lua:1605` 对敌人、
+     `hero_largo.lua:316` 对队友,读的都是这个名字),`_self` 那族是 Axe 给自己挂的移速 buff;
+     (ii) **而且过期了** —— 全语料施法者那侧拼作 `modifier_axe_battle_hunger_self_movespeed`
+     (**18 次**),裸的 `_self` 在**任何帧任何单位上 0 次**,而 `HasModifier` 在引擎和
+     `replay_fixture.lua` 里**都是精确名查表**。⇒ 这条否决**结构上恒为真**,Axe 从来没有一次
+     因为「目标已经中了」而放弃过。
+   - **⭐ 方向是构造保证的子集,但它不是「更少的动作」,两句不许合并**:出货谓词先算并绑定、
+     armed 只能 true→false、末句返回 `bShipped` ⇒ `armed 放技能 ⇒ shipped 放技能`。
+     但杠杆的**全部意义**就是被否决的候选把分支让给**另一个**目标 ⇒ armed 可以在同一帧发出
+     **指向不同目标的**同一个技能。**不许**把负读数读成「少放了 N 次技能」。
+     `X.ConsiderW` 是派发链**最后一臂**,斩杀/嘲讽不可能因它改号。
+   - **⭐⭐ 本轮最值钱的一条:fixture 发现了一个设计里没有的排除项。** 第一版把**击杀循环**
+     也接了线(它是列表分支,子集论证完全覆盖、源码断言全绿)。端到端驱动
+     `f_260820_043124_axe_blink_kill` 才看见:`X.WillBattleHungerKill` 的伤害 claim 按**满 12s**
+     定价,而**重放正是恢复满 12s 的那个动作** —— 199 血的 WK 身上还剩 6.5s(已在路上只有 130),
+     只有重放的满 240 收得掉他;**armed 那版把人头扔了**。击杀循环退线,新文件 §4 钉成未接线。
+     **⇒ 一条可复用的:`liondrainbkb` 说「子集性和正确性各一条断言」,这轮是它的下一格 ——
+     子集性和「值不值」也各是一件事。** 一个分支可以完全满足子集论证,而窄化掉的恰恰是它
+     存在的理由;只有**驱动到底**看得见,`check_armed_wiring.py` 和源码断言都看不见。
+   - **⭐⭐⭐ 前提单独钉成棘轮**:带魔晶时 `should_stack` 打开(KV 快照 `base = nil` +
+     `special_bonus_shard '1'`),重放变成真正的第二层、支配性论证**当场反号**;而本文件
+     **两张出装表都买 `item_aghanims_shard`**。armed 那条腿在 `J.HasAghanimsShard(bot)` 为真时
+     **整条站下**。变异 **M7** 就是它:**方向不变、所有子集断言仍成立**,杠杆却从「窄」变成「错」。
+   - **接线三处 / 五处不动**:接团战最弱目标搜索、对线消耗循环、撤退循环(遍历列表 + 不声称击杀,
+     被否决的候选让给下一个);不接 `IsGoingOnSomeone` / 打野挑选 / Roshan / Tormentor
+     (**没有第二候选,否决=纯损失**)与击杀循环。出货那条字面量否决**一处都没删**。
+   - **⚠️ 覆盖边界,两句不许合并**:**语料只能演成本侧,买不到收益侧** —— 能驱动的那一帧
+     (`f_260820_043124_axe_blink_flee_529`,t=529.6)上,已中招的 WK(339u,770 血,debuff 剩 5.4s)
+     是 **800u 内唯一的敌人**,所以 armed 是**放弃**不是**换人**。**两个标注过的翻转**:W 冷却
+     4.0→0,以及三种 mode 之一→true(**没有任何 fixture 帧报告 bot mode**,是 loader 缺口不是语料缺口)。
+     3 个 debuff 实例是**下界不是频率**。
+   - **登记不认领**:`bots/FunLib/rubick_hero/axe.lua` 有同族 7 处(Rubick 偷技能),那里的 `bot`
+     是 Rubick、魔晶前提不同,一个杠杆一次,本轮不动。
+   - **顺序坑,记下来免得下轮误读**:`check_armed_wiring.py` **读 git ref 不读工作树** ⇒
+     commit 之前跑它必然是 `UNWIRED`。
+   - **下一棒**:**批测台** `queue.json:hero-35`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30`/
+     `hero-31`/`hero-32`/`hero-33`/`hero-34` 并成同一次遍历 —— 现在是**七条同形请求**)。
+     最值钱的一列是 **(2)「重放瞬间射程内还有几个没中招的敌方英雄」**。
+     **总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。**在 (a) 买到之前不许 promote。**
+
 -103. **Lion 的 Mana Drain 会被指向一个魔免的敌人,而这个技能穿不了魔免 —— 而这一轮
    **能验的那一半是分支本身,只要一个翻转**(报告 `iterations/reports/hero/20260906T015205Z.md`,
    `state.json:liondrainbkb_20260906`,`queue.json:hero-34`,GH **#549**;新
@@ -4603,6 +4651,47 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T04:57Z(报告 `iterations/reports/hero/20260906T045743Z.md`;轴 **Axe 的
+  `X.ConsiderW` 八处「已经中了战意饥渴就别重放」的否决都测
+  `modifier_axe_battle_hunger_self` —— 一个**目标永远挂不上**的名字(写错了边,而且过期了):
+  收进 gated `axebhrecast`,turbo-only 未 armed**;新 backlog `-104`,
+  `state.json:axebhrecast_20260906`,`queue.json:hero-35`,GH **#554**)
+  **`bots/BotLib/hero_axe.lua` 有真代码行**(新 `X.axe_IsBattleHungerFresh` + **三处**调用点);
+  新 `tests/test_axe_battle_hunger_recast.lua`(**20 例**)+ 新
+  `tools/agent/mutstand_axebhrecast.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#549/#541/#537/#533 是本组前四轮落的、球在批测台 / #512 本组 `-96` 明写预检不通过 /
+    #502→#516 harness / #488 录像组 / #465 已复核)。焦点五**走完一圈回到 Axe**。
+    前三条线索这轮都用不了(PROVEN-ZERO 名单空;裸字面量 vs KV 快照 CM 用过;
+    同函数自相矛盾 Lion 用过)⇒ 换**第四条:一个谓词命名的 modifier,语料里没有任何单位挂过**。
+    它最便宜 —— **一次 corpus census 就能判死,不需要任何外部 KV 读数**。
+    (顺带:本轮重跑 `ability_value_key_census.py`(exit 3,8 站点),**焦点五一个都不在里面**,
+    再次确认第一条线对本组是空的。)
+  - **事实,两条独立理由各自充分**:(i) 目标那侧的 debuff 叫 `modifier_axe_battle_hunger`
+    (`mode_team_roam_generic.lua:1605` / `hero_largo.lua:316` 读的都是它),`_self` 是施法者那侧;
+    (ii) 施法者那侧在本 patch 拼作 `..._self_movespeed`(全语料 **18** 次),裸 `_self`
+    **0 次**,而 `HasModifier` 引擎与 mock **都是精确名查表**。⇒ **否决结构上恒为真**。
+  - **⭐ 方向是构造保证的子集,但不是「更少的动作」**:`armed 放技能 ⇒ shipped 放技能`,
+    但 armed 可以在同一帧发出**指向不同目标的**同一个技能 ⇒ **不许**把负读数读成「少放了 N 次」。
+  - **⭐⭐ 本轮最值钱的:fixture 发现了设计里没有的排除项。** 第一版接了**击杀循环**
+    (列表分支,子集论证覆盖得到、源码断言全绿);端到端驱动 `..._axe_blink_kill` 才看见
+    `X.WillBattleHungerKill` 按**满 12s** 定价、而**重放正是恢复满 12s 的动作** ——
+    199 血 WK 身上剩 6.5s(已在路上 130),只有满 240 收得掉;**armed 那版把人头扔了**。
+    **⇒ 可复用:子集性和「值不值」也各是一件事,只有驱动到底看得见。**
+  - **⭐⭐⭐ 魔晶前提钉成棘轮**:`should_stack` 是魔晶授予,带魔晶重放变成真第二层、
+    支配性反号;两张出装表都买魔晶 ⇒ armed 在 `J.HasAghanimsShard` 为真时整条站下。
+    **M7 就是这条:方向不变、子集断言全过,杠杆从「窄」变「错」。**
+  - **⚠️ 覆盖边界**:**语料只能演成本侧** —— 驱动帧上已中招的 WK 是 800u 内**唯一**敌人,
+    armed 是**放弃**不是**换人**;收益侧要 `hero-35` 去买。**两个标注过的翻转**(W 冷却 4.0→0、
+    三种 mode 之一→true;**没有 fixture 帧报告 bot mode**)。3 个 debuff 实例是**下界不是频率**。
+  - 验证:新文件 **20/20**;`run_tests.lua axe` **201 例 0 失败**;变异台 **8/8**;
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings)**,没用 BYPASS;gate_claim 16/16;smoke 3/3。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒「全量绿」本轮没有人说。
+    开工自检 **exit 0**;⚠️ 第一次调用被脚本自己 **REFUSED**(stdout 是管道,证据纪律 3,
+    本仓第 **8** 次复发,又是当轮第一条命令)。python 腿仍报 **GH #548** 的 120s 刀口,不认领。
+  - **顺序坑**:`check_armed_wiring.py` **读 git ref 不读工作树**,commit 前跑必然 `UNWIRED`。
+  - 下一棒:**批测台** `queue.json:hero-35`(零 EC2,可与 `hero-2`/`hero-30`/`hero-31`/
+    `hero-32`/`hero-33`/`hero-34` 合并遍历,**七条同形**)。
 - 2026-09-06T01:52Z(报告 `iterations/reports/hero/20260906T015205Z.md`;轴 **Lion 的
   `X.ConsiderE`「团战吸蓝」分支用 `J.CanCastOnMagicImmune`(给穿透技用的谓词)挑目标,
   而 `lion_mana_drain` 的 KV 是 `SpellImmunityType SPELL_IMMUNITY_ENEMIES_NO`:收进 gated
