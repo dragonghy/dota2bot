@@ -22,6 +22,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-103. **Lion 的 Mana Drain 会被指向一个魔免的敌人,而这个技能穿不了魔免 —— 而这一轮
+   **能验的那一半是分支本身,只要一个翻转**(报告 `iterations/reports/hero/20260906T015205Z.md`,
+   `state.json:liondrainbkb_20260906`,`queue.json:hero-34`,GH **#TBD**;新
+   `tests/test_lion_drain_immune_target.lua` **21 例** + `tools/agent/mutstand_liondrainbkb.sh`
+   8 变异全杀;`bots/BotLib/hero_lion.lua` **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实**:`X.ConsiderE` 在**三处**挑 Mana Drain 的目标,补蓝那圈和「打架抽蓝」都用
+     `J.CanCastOnNonMagicImmune`,**只有「团战吸蓝」用 `J.CanCastOnMagicImmune`** —— 后者是
+     **给能穿魔免的技能用的**谓词(两者的差正好是 `¬IsMagicImmune` 一项,`jmz_func.lua:961` vs `:988`)。
+     而 `lion_mana_drain` 的 KV 顶层写着 `SpellImmunityType SPELL_IMMUNITY_ENEMIES_NO`
+     (dotabuff/d2vpkr,与 `cast_shape_census.py` 读 `AbilityBehavior` 同一份文件同一层字段)。
+     **顺带的否定结果**:Lion 四个主动**全是 ENEMIES_NO** —— 这英雄一个穿透技都没有,
+     所以这不是「哪支该用哪个 helper」的判断题,是**三支里有一支声称了游戏不给的权限**。
+   - **⭐ 代价不是「白放一次」,是「白清一次动作队列」**:`X.ConsiderE` 是
+     `X.SkillsComplement` 派发链的**第一臂**,消费方先 `Action_ClearActions( false )` 再排单再
+     `return` ⇒ 下面 R/Q/W 三臂当轮不跑;而这一支只在 Impale/Hex/Finger **全不可施**时才跑得到
+     ⇒ **被清掉的正是他仅剩的那个动作**。BKB 5-10s ⇒ **每 tick 复发**。
+   - **⭐⭐ 方向由构造保证,NARROWING**:出货谓词先算并绑定,armed 只能把 true 变 false,
+     最后一条语句返回 `bShipped` ⇒ armed ⊊ shipped。负读数只能读作「那些抽蓝本来该放」。
+     与 `axecallbkb` **互为镜像**(那个穿魔免却多一条否决,这个不穿却少一条)。
+   - **⭐⭐⭐ 能验的那一半这次是分支本身**:`f_260820_182906_lion_drain_survived` **t=606.5** 是
+     8 个 Lion 主体帧里**唯一**分支前提已成立的一帧(IsInTeamFight=true、drain 2 级、
+     Q/W/R cd 6.8/22.7/108.6 全不可施、850u 内两个 >200 蓝的敌人),**唯一翻转是 drain 自己的
+     剩余冷却 11.6→0**,翻完真的打出 `ClearActions | UseAbilityOnEntity(drain -> luna)`。
+     前四轮都要为「分支跑不到」写免责声明,这轮不用。
+   - **⚠️ 覆盖边界,两句不许合并**:8 帧 40+ 个敌方英雄实例**魔免数 0** ⇒ 改动的那一项只能靠
+     标注过的 mutation(3c 只翻 luna:OFF 仍指不可达的 luna,ON **改指 crystal_maiden**;
+     3d 翻 luna+CM:OFF 白清队列,ON **一条命令都不发**)。那个 0 与「唯一一帧」**都写成单向绊线**。
+     ⚠️ `SpellImmunityType` **RECORDED 不是 verified**:仓内 KV 快照不带这个字段(GH #516 同族),
+     §KV 把**缺席**钉成断言。
+   - **⚠️ 一条可复用的**:**子集性和正确性是两件事,要各写一条断言。** 变异 **M6(否决取反)**
+     让 armed 拒掉可达的、放行魔免的 —— 它**仍然是 shipped 的子集**,子集断言看不见它;
+     抓住它的是「没人魔免的帧上 arming 必须是 no-op」那一条。同轮 **M3** 是本组第一个
+     **源码层完全隐形**的死接线变异(`and hTarget:IsMagicImmune()` → `and false`:
+     helper/id/调用点/`check_armed_wiring.py` 全都认)。
+   - **负结果登记,省下一轮**:`X.ConsiderR` 的 `475 + 125 * nSkillLV` 看着像「裸字面量 vs KV 梯子」
+     的同族货,**但它算出来是对的**(KV `damage` = `600 725 850` 逐位相同;`HasScepter` 那支
+     `575+125L` 与 `special_bonus_scepter '+100'` 也对得上)⇒ **维护风险,不是行为缺陷,别当轴。**
+   - **下一棒**:**批测台** `queue.json:hero-34`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30`/
+     `hero-31`/`hero-32`/`hero-33` 并成同一次遍历)。**与前五条不同,这条只缺一个变量**
+     (被指的敌人当时魔免与否);最值钱的一列是「下了单、1-2s 内没进 `modifier_lion_mana_drain`」。
+     **总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。**在 (a) 买到之前不许 promote。**
+
 -102. **Crystal Maiden 冻兵打钱的血量上限 `<= 1200` **是 Frostbite 4 级那一档**,被当成了
    每一级的上限 —— 而这一根的方向**第一次是 NARROWING**(报告
    `iterations/reports/hero/20260905T231439Z.md`,`state.json:cmcreepcap_20260905`,
@@ -4561,6 +4603,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T01:52Z(报告 `iterations/reports/hero/20260906T015205Z.md`;轴 **Lion 的
+  `X.ConsiderE`「团战吸蓝」分支用 `J.CanCastOnMagicImmune`(给穿透技用的谓词)挑目标,
+  而 `lion_mana_drain` 的 KV 是 `SpellImmunityType SPELL_IMMUNITY_ENEMIES_NO`:收进 gated
+  `liondrainbkb`,turbo-only 未 armed**;新 backlog `-103`,`state.json:liondrainbkb_20260906`,
+  `queue.json:hero-34`,GH **#TBD**)
+  **`bots/BotLib/hero_lion.lua` 有真代码行**(新 `X.lion_IsDrainTargetCastable` +
+  `X.ConsiderE` 一处调用点);新 `tests/test_lion_drain_immune_target.lua`(**21 例**)+
+  新 `tools/agent/mutstand_liondrainbkb.sh`(8 变异 **8/8 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#541/#537/#533/#525 是本组前四轮落的、球在批测台 / #512 本组 `-96` 明写预检不通过 /
+    #502→#516 harness / #488 录像组)。连续五轮 Axe/Axe/WK/Zeus/CM ⇒ **焦点五里只剩 Lion**。
+    前两条线索这轮都用不了(PROVEN-ZERO 名单 `-102` 已宣告空;「裸字面量 vs KV 快照」CM 那轮刚用过),
+    换**第三条:同一个函数内部对同一个能力的自相矛盾** —— 它更便宜,矛盾在源码里,
+    **只需要一次外部读数判哪边对**。
+  - **事实**:`X.ConsiderE` 三处选靶,补蓝圈与「打架抽蓝」用 `J.CanCastOnNonMagicImmune`,
+    **只有「团战吸蓝」用 `J.CanCastOnMagicImmune`**;两者差正好 `¬IsMagicImmune` 一项
+    (`jmz_func.lua:961` vs `:988`)。**Lion 四个主动全是 `SPELL_IMMUNITY_ENEMIES_NO`** ——
+    这英雄没有穿透技,所以是**声称了游戏不给的权限**,不是选错 helper 的判断题。
+  - **⭐ 代价是「白清一次动作队列」**:`X.ConsiderE` 是派发链第一臂,消费方先
+    `Action_ClearActions( false )` 再排单再 `return`;而这一支只在 Q/W/R **全不可施**时才跑得到
+    ⇒ 清掉的正是仅剩的那个动作,且 BKB 期间**每 tick 复发**。
+  - **⭐⭐ 方向 NARROWING,由构造保证**:出货谓词先算并绑定、armed 只能 true→false、
+    末句返回 `bShipped` ⇒ armed ⊊ shipped。与 `axecallbkb` **互为镜像**。
+  - **⭐⭐⭐ 能验的那一半是分支本身,只要一个翻转**:`f_260820_182906_lion_drain_survived`
+    t=606.5 是 8 帧里**唯一**前提已成立的一帧,翻 drain 剩余冷却 11.6→0 就真的开火
+    (`ClearActions | UseAbilityOnEntity(drain -> luna)`)。**前四轮都要写「分支跑不到」的免责声明,这轮不用。**
+  - **⚠️ 覆盖边界**:8 帧 40+ 敌方英雄实例**魔免数 0** ⇒ 改动的那一项靠标注过的 mutation
+    (ON 时 3c 改指 crystal_maiden、3d 一条命令都不发)。那个 0 与「唯一一帧」都是**单向绊线**。
+    `SpellImmunityType` **RECORDED 不是 verified**(仓内 KV 快照不带该字段,GH #516 同族),
+    §KV 把缺席钉成断言。
+  - **⚠️ 一条可复用的**:**子集性和正确性是两件事,各写一条断言** —— M6(否决取反)
+    仍然是 shipped 的子集,子集断言看不见它,抓住它的是「没人魔免的帧上 arming 必须 no-op」。
+  - **负结果登记**:`X.ConsiderR` 的 `475 + 125*nSkillLV` 与 KV `600 725 850` **逐位相同**,
+    scepter 支也对 ⇒ **维护风险不是行为缺陷,后来的轮次别当轴。**
+  - 验证:新文件 **21/21**;`run_tests.lua lion` **162 例 0 失败**;变异台 **8/8**;
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings),没用 BYPASS**;smoke 3/3;gate_claim 16/16。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒「全量绿」本轮没有人说。
+    开工自检:**python 腿 UNCERTIFIABLE**(`test_selfcheck_lua_leg.py` 84 文件 / 120.1s 撞
+    120s 预算 —— 就是 01:23Z 已立的 **GH #548**,先于本轮,不认领)。
+    ⚠️ 自检第一次调用被脚本自己 **REFUSED**(stdout 是管道,证据纪律 3,本仓第 **7** 次复发);
+    第二次调用被我自己的 `timeout 400` 截断(与 **GH #514** 同形),第三次不带 timeout 才跑完。
+  - 下一棒:**批测台** `queue.json:hero-34`(零 EC2,可与 `hero-2`/`hero-30`/`hero-31`/
+    `hero-32`/`hero-33` 合并遍历)。**与前五条不同,这条只缺一个变量**。
 - 2026-09-05T23:14Z(报告 `iterations/reports/hero/20260905T231439Z.md`;轴 **Crystal Maiden
   冻兵打钱的血量上限 `<= 1200` 是 Frostbite 4 级那一档,被当成了每一级的上限:收进 gated
   `cmcreepcap`,turbo-only 未 armed**;新 backlog `-102`,`state.json:cmcreepcap_20260905`,
