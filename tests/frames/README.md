@@ -31,6 +31,7 @@ it.
 
 | frame | why it is staged |
 |---|---|
+| `f_260905_004847_lion_drain_bkb.lua` | GH #566's falsification pin (`b34547 / 20260905_004847_slot1`, t=1266.5 = 21:06, heroes up to level 27, the tree's first frame from the LATE-GAME era). It is the only frame in the tree where a Mana Drain is running ON a Black-King-Bar-immune hero, which is what retired `liondrainbkb`. Admitting it turns **12+ files** red across the suite -- see its reopen list below. Used by `tests/test_lion_drain_immune_target.lua` (by name) and seen by the two tree-enumerating scans noted there. |
 | `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns **25 test files** red -- see the census below. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua`, `tests/test_axe_bkb_supply_staged_frame.lua`, `tests/test_alchemist_rage_clock_staged_frame.lua`, `tests/test_skill_point_stall_frame.lua` and `tests/test_cm_q_creep_aoe_reach.lua`. |
 
 ## Reopen list: GH #357's three real re-decisions -- all PAID
@@ -107,3 +108,64 @@ directory from 2026-08-31, and green the whole time while the tree held a
 level-21 Wraith King it could not see. Fixed this round by enumerating this
 directory (that file's sections 2 and 6). **Any scan that claims to read "the
 tree" rather than "the corpus" has to enumerate `tests/frames/` too.**
+
+---
+
+## `f_260905_004847_lion_drain_bkb.lua` -- reopen list (hero 2026-09-06, GH #566)
+
+Staged rather than admitted, for exactly the reason this file gives: it is a
+**different-era** frame (t=1266.5 against a corpus topping out at t=690.5;
+levels 22-27 against a high-water 19) and admitting it reopens a dozen
+decisions belonging to a dozen questions.
+
+**The price was measured the honest way and it is why this row exists.** The
+round FIRST admitted it to `tests/fixtures/`, watched the wires fire, and
+edited them one by one to the new numbers -- which is precisely the "quick edit
+to make the suite green" this file warns against, on readings belonging to
+other groups. That was reverted in full (15 files restored to their pre-round
+state) and the frame staged here instead. Nothing in the list below has been
+paid.
+
+Measured by admitting the file, running, and reverting -- **not** a self-check
+sample: the 铁律-10 fast Lua leg is budget-limited (84 files against a 120s
+budget) and returned a DIFFERENT set of reds on two consecutive runs of the
+same tree, 9 then 5, neither of them complete. Anyone re-measuring this row
+must use `lua5.1 tests/run_tests.lua` over the whole suite, not the leg.
+
+### Unpaid re-decisions -- the ones that are a verdict, not a count
+
+| reading | what moves | whose |
+|---|---|---|
+| `test_level_gate_census` `[corpus] ... level >= 20 is 0` | 0 -> **10** hero-slots at level 20; high-water 19 -> **27**. Its own text: the four INERT verdicts above "were argued from *that hero does not exist*; re-read them". | level-gate family (GH #84 lineage) |
+| `test_level_gate_census` `[corpus] the archive never reaches turbo late game` | `frames_past_18min` 0 -> **1**, so `J.IsLateGame()` stops being vacuous and the TEETH verdicts on `mode_farm_generic:393` and `:507` must be re-read. | strategy |
+| `test_turbo_ternary_dominance` `[corpus] no real frame ... can tell armed from factory` | t=1266.5 lands inside `[1080, 1500)`. That file argues from **arithmetic alone** *because* no frame could distinguish the two; one can now, so the lever owes a frame pin. | strategy / harness |
+| `test_alchemist_rage_clock_staged_frame` `[corpus] and the corpus alone still cannot -- so the frame IS the first` | BOTH halves fire: the corpus reaches past the armed clock (900s), and this frame is **later than the 2026-08-31 staged frame**, so that frame's primacy claim is no longer its to make. Section 2 still governs: the clock is the last of five conjuncts and the other four have no channel in the dump. | strategy / harness |
+| `test_blinkflee_scope_ruling` `[census] the denominator, declared` | `v2_ambiguous` 0 -> **2**. That equality is load-bearing by its own text -- every `v2_*` reading below it is argued from "nothing was silently counted as calm", and two rows now are. | strategy |
+| `test_focus_mana_cost_consumer_census` §4 | Lion **23/2/4 -> 24/3/5** and the live-Q total **90/16 -> 93/17**. Not a denominator move: that frame's Lion sits inside the spam band, so the FLIP count itself grows. | hero |
+| `test_axe_bkb_supply_staged_frame` §2/§4 | spell-immune instants 3 -> **4**, and for the first time one of them **carries a Black King Bar** (1 of 4, was 0 of 3) -- the zero reading (4) was taken on. BKB slots in the corpus glob 0 -> **2**. | hero / axe |
+| `test_axe_t15_in_domain` | the dump's talent surface cap 1 -> **2** special_bonus entries on one unit; the bound's own text says that is when the t15 PICK "may finally be observable and this bound should be re-taken, not restated". (Axe frames naming a talent is still 0.) | hero / axe |
+
+### Bookkeeping (retake at the moment of admission, not before)
+
+`test_propertarget_corpus_domain` and `test_stayfield2_marginal_domain`
+(live-hero denominator 1012 -> **1020**; stayfield2 additionally 15 -> 17
+backpacked-salve frames and 109 -> 110 declared-slice frames, with S/T/ST/margin
+and the SIGN pair unmoved) · `test_salvepool_missing_floor` (largest archived
+pool 2646 -> **3666**) · `test_corpus_scale` (the 110th fixture aims the
+corpus-pin detector at `test_cm_q_creep_aoe_reach.lua:548`'s `nova_damage == 110`
+-- the collision that file **predicted in writing**; the fix is the prepared
+`NOT_A_CORPUS_PIN` entry, never a loosened detector) · `test_lion_t15_payoff`
+(first in-domain Lion frame, 0 -> 1; every reading there is a below-tier proxy)
+· `test_lion_hex_talent_slot` (the harvest lag closes; supply appears for the
+GH #166 §9 widening, which is still untaken).
+
+### Already paid, because staging does not hide the frame from them
+
+Two scans enumerate `tests/frames/` on purpose, so they saw this frame the day
+it was staged and were settled in the same round:
+
+| file | what was done |
+|---|---|
+| `tests/test_lion_ult_reserve_domain.lua` | Split section 2 and section 5 by **exact** Finger rank, so every cost-400 reading stays scoped to the 2026-08-31 frame it was taken on, and gave rank 3 its own live wire (0 -> 1). HONEST BOUND (B) is now RETIRABLE and is explicitly **not retired** -- the 600 line is still unmeasured. |
+| `tests/test_wk_q_castrange_meter_domain.lua` | live-WK instants 36 -> 37, body bucket 18 -> 19 (a live level-26 skeleton_king with Q trained and off cooldown). The KV/zero split is unchanged, so section 1's finding holds as measured. |
+

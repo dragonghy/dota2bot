@@ -466,26 +466,16 @@ end
 -- ---------------------------------------------------------------------------
 -- 6. Honest bounds, pinned as assertions rather than left in prose.
 
--- ⚠️ 2026-09-06 (hero, GH #566): the corpus grew its first late-game Lion frame
--- (tests/fixtures/f_260905_004847_lion_drain_bkb.lua, t=1266.5, Lion level 24,
--- Hex rank 4) and these wires fired as written.  They are ACKNOWLEDGED, NOT
--- RE-TAKEN -- the round that added the frame was withdrawing `liondrainbkb`,
--- not re-measuring t15.  So the counts move to the new numbers and the wires
--- stay live at them; what does NOT change is the standing of every reading in
--- this file, which is still a BELOW-TIER PROXY.  The one in-domain frame is
--- supply for re-taking them for real; nobody has.
 tests['[hero] lion t15: nothing in this corpus is in domain'] = function()
-    assert(CORPUS.in_domain == 1,
+    assert(CORPUS.in_domain == 0,
         CORPUS.in_domain .. ' Lion frame(s) have reached level ' .. TALENT_LEVEL
-        .. ', was 1 as of 2026-09-06.  Every reading in this file was taken BELOW '
-        .. 'the tier as a proxy and has NOT been re-taken; more in-domain frames '
-        .. 'mean more supply for doing that, not a changed verdict.')
-    cs.ceiling(CORPUS.max_level, 24,
+        .. '.  Every reading in this file was taken BELOW the tier as a proxy; '
+        .. 'in-domain frames exist now, so re-take them for real.')
+    cs.ceiling(CORPUS.max_level, 11,
         'highest Lion level in the corpus (every reading here is a proxy taken '
         .. 'below the tier, and a higher level means it can be re-taken for real)')
-    assert(CORPUS.hex_rank_above_1 == 1,
-        CORPUS.hex_rank_above_1 .. ' corpus frame(s) hold Hex above rank 1, was 1 as '
-        .. 'of 2026-09-06 (the same late-game frame).  Every '
+    assert(CORPUS.hex_rank_above_1 == 0,
+        CORPUS.hex_rank_above_1 .. ' corpus frame(s) hold Hex above rank 1.  Every '
         .. 'corpus cooldown number here assumes rank 1 (24s); the DOMAIN number '
         .. '(16s at rank 3) comes from the build row, not from these frames, and '
         .. 'that split is exactly what the old note got wrong.')

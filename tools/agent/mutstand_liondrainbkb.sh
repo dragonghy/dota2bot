@@ -7,7 +7,7 @@
 #
 # Run by hand when X.ConsiderE, the PREMISE-FALSIFIED note in
 # bots/BotLib/hero_lion.lua, tests/test_lion_drain_immune_target.lua or
-# tests/fixtures/f_260905_004847_lion_drain_bkb.lua are edited, and before
+# tests/frames/f_260905_004847_lion_drain_bkb.lua are edited, and before
 # quoting any of that test file's readings.
 #
 # DISCIPLINE (inherited from the version this replaces):
@@ -46,7 +46,7 @@ cd "$(dirname "$0")/../.."
 HERO=bots/BotLib/hero_lion.lua
 TEST=tests/test_lion_drain_immune_target.lua
 OVERRIDES=bots/FunLib/aba_global_overrides.lua
-FIXTURE=tests/fixtures/f_260905_004847_lion_drain_bkb.lua
+FIXTURE=tests/frames/f_260905_004847_lion_drain_bkb.lua
 
 FILES=("$HERO" "$TEST" "$OVERRIDES" "$FIXTURE")
 

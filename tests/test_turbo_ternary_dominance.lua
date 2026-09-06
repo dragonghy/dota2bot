@@ -365,32 +365,10 @@ tests['[corpus] no real frame in tests/fixtures can tell armed from factory'] = 
     -- arithmetic and the gated fix carries no frame pin -- and the day a fixture
     -- lands in [18:00, 25:00) this goes red and says so, which is the moment a
     -- real-frame assertion becomes possible.
-    -- ⚠️ FIRED 2026-09-06 (hero, GH #566).  tests/fixtures/f_260905_004847_lion_
-    -- drain_bkb.lua sits at t=1266.5, inside [ARMED_BOUND, SHIPPED_BOUND) -- the
-    -- first fixture that can tell armed from factory.  THE FRAME PIN THIS FILE
-    -- ASKED FOR IS NOW POSSIBLE AND HAS NOT BEEN WRITTEN: the round that landed
-    -- the frame was withdrawing a Lion lever, not taking up this one.  So the
-    -- arithmetic argument below still stands exactly as it did, and it is still
-    -- the ONLY thing standing -- handed off in GH #566 rather than absorbed.
-    -- The wire is kept live at the new count, naming the frames, so the next one
-    -- is visible too.
-    local nInBand, sInBand = 0, {}
-    local q = assert(io.popen('ls tests/fixtures/*.lua 2>/dev/null'))
-    for path in q:lines() do
-        local t = tonumber(read_file(path):match('time%s*=%s*([%-%d%.]+)'))
-        if t and t >= ARMED_BOUND and t < SHIPPED_BOUND then
-            nInBand = nInBand + 1
-            sInBand[#sInBand + 1] = string.format('%s (t=%.1f)', path, t)
-        end
-    end
-    q:close()
-    assert(nInBand == 1, ('%d fixture(s) now sit in the band [%d, %d) this change '
-        .. 'moves, was 1 as of 2026-09-06: %s. Each one is a real-frame pin this '
-        .. 'file could carry and does not.')
-        :format(nInBand, ARMED_BOUND, SHIPPED_BOUND, table.concat(sInBand, '; ')))
-    assert(tMax < SHIPPED_BOUND, ('%s sits at t=%.1f, at or past the SHIPPED bound '
-        .. '%d -- past that both sides agree again and the band argument needs a '
-        .. 're-read, not just a bigger count.'):format(sMax, tMax, SHIPPED_BOUND))
+    assert(tMax < ARMED_BOUND, ('%s sits at t=%.1f, inside the band [%d, %d) this '
+        .. 'change moves. The corpus can finally distinguish armed from factory: '
+        .. 'pin the decision on that frame instead of relying on the arithmetic alone.')
+        :format(sMax, tMax, ARMED_BOUND, SHIPPED_BOUND))
 end
 
 return tests

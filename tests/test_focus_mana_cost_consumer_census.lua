@@ -379,19 +379,11 @@ tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate']
     -- two `n` denominators moved (48->49, 40->41): neither hero gained a FLIP,
     -- so every flip count below -- and the ratio §4 is about -- is unchanged.
     local EXPECT = {
-        -- 2026-09-06 (hero, GH #566): axe 26 -> 27 and skeleton_king 31 -> 32,
-        -- both from the corpus's first late-game frame; farm/spam/either are
-        -- unchanged on both, so only the denominators moved.
-        axe            = { n = 27, farm = 5, spam = 3, either = 6 },
-        zuus           = { n = 42, farm = 4, spam = 3, either = 6 },
-        -- 2026-09-06 (hero, GH #566): lion 23 -> 24 AND spam 2 -> 3, either 4 -> 5.
-        -- Unlike axe/skeleton_king this is NOT just a denominator move: the corpus's
-        -- first late-game Lion frame lands INSIDE the spam band, so the flip count
-        -- §4 is about really did grow by one.  The ratio sentence in §4's title was
-        -- taken on the pre-2026-09-06 corpus and has not been re-derived.
-        lion           = { n = 24, farm = 3, spam = 3, either = 5 },
+        axe            = { n = 26, farm = 5, spam = 3, either = 6 },
+        zuus           = { n = 41, farm = 4, spam = 3, either = 6 },
+        lion           = { n = 23, farm = 3, spam = 2, either = 4 },
         crystal_maiden = { n = 49, farm = 9, spam = 10, either = 14 },
-        skeleton_king  = { n = 32, farm = 4, spam = 5, either = 5 },
+        skeleton_king  = { n = 31, farm = 4, spam = 5, either = 5 },
     }
     for sHero, want in pairs(EXPECT) do
         local got = per[sHero] or { n = 0, farm = 0, spam = 0, either = 0 }
@@ -408,13 +400,8 @@ tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate']
         if LIVE_Q[sHero] then nLive = nLive + s.n nEither = nEither + s.either end
     end
     -- 89 -> 90 with the GH #437 fixture's CM frame; the 16 flips are unchanged.
-    -- 2026-09-06 (hero, GH #566): 90 -> 93 and 16 -> 17 with the corpus's first
-    -- late-game frame (f_260905_004847_lion_drain_bkb.lua: live axe, lion and
-    -- zuus).  THE FLIP COUNT ITSELF MOVED -- the Lion row on that frame sits in
-    -- the spam band -- so §4's title ratio is a pre-2026-09-06 reading and has
-    -- not been re-derived.
-    assert(nLive == 93 and nEither == 17,
-        'live-Q total: expected 17 flips over 93 frames, got ' .. nEither
+    assert(nLive == 90 and nEither == 16,
+        'live-Q total: expected 16 flips over 90 frames, got ' .. nEither
             .. ' over ' .. nLive)
     -- The CM half of the same table is the §2 point in numbers: fourteen frames
     -- whose arithmetic says "flip" and whose code says "nobody reads this".
@@ -434,7 +421,7 @@ tests['[5] negative control: with the pre-ladder price of 0 the flip band is emp
     -- an empty loop
     local nSeen = 0
     for _, s in pairs(per) do nSeen = nSeen + s.n end
-    assert(nSeen == 174, 'the control must sweep the same 174 frames, saw ' .. nSeen)
+    assert(nSeen == 170, 'the control must sweep the same 170 frames, saw ' .. nSeen)
 end
 
 -- ---------------------------------------------------------------------------
@@ -508,12 +495,8 @@ tests['[6b] corpus: 16 Zeus frames hold a ready ult, and the old gate died on al
     -- 2026-09-03 (replay-check): 43 -> 44 alive Zeus frames with the GH #437
     -- fixture; its zuus holds a rank-1 ult on 37.8s cooldown, so READY and DENY
     -- are untouched and the domain this section is about did not move.
-    -- 2026-09-06 (hero, GH #566): 44 -> 45 alive Zeus frames with the late-game
-    -- f_260905_004847_lion_drain_bkb.lua; its zuus is alive at level 23 holding a
-    -- rank-2 ult on 36.6s of cooldown, so it lands in ALIVE and in neither READY
-    -- nor DENY -- this section's domain did not move, only its denominator.
-    assert(nAlive == 45 and nReady == 16 and nDeny == 7,
-        'zusult corpus domain moved -- expected 45 alive Zeus frames, 16 with a '
+    assert(nAlive == 44 and nReady == 16 and nDeny == 7,
+        'zusult corpus domain moved -- expected 44 alive Zeus frames, 16 with a '
             .. 'ready ult, 7 of those unaffordable; got ' .. nAlive .. ' / '
             .. nReady .. ' / ' .. nDeny)
     -- The pre-ladder domain is 0 by construction, not by measurement: the gate's

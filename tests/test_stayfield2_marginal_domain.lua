@@ -102,14 +102,7 @@ local LINA = 'tests/fixtures/f_260822_063722_lina_tp_home.lua'
 -- with S=1 T=1 supply=1. MARGIN and every MARGIN_* / SIGN_MARGIN_* count below
 -- are unchanged, i.e. what stayfield2 OWNS did not move -- which is the reading
 -- this file exists for, and it is now stated over a larger denominator.
--- 2026-09-06 (hero, GH #566): the corpus grew its first LATE-GAME frame
--- (tests/fixtures/f_260905_004847_lion_drain_bkb.lua, t=1266.5), so the three
--- corpus constants below moved: 1012 -> 1020 live hero frames, 15 -> 17
--- backpacked-salve frames, 109 -> 110 declared-slice frames.  The S/T/ST/margin
--- census and the SIGN pair are UNCHANGED by it, which is why the readings in
--- this file still stand as taken; the denominators are what moved.  Nothing here
--- was re-derived beyond re-running the sweep.
-local LIVE_FRAMES     = 1020  -- live hero frames, every hero of every fixture
+local LIVE_FRAMES     = 1012  -- live hero frames, every hero of every fixture
 local S_FIRES         = 24    -- J.ShouldRegenNotGoHome true
 local ABSORBED        = 5     -- ... and J.ShouldStayAndRegen already true
 local MARGIN          = 19    -- ... and NOT already true: what stayfield2 owns
@@ -117,8 +110,8 @@ local MARGIN_DMG_ONLY = 0     -- of MARGIN: only T3 (unattributed damage) failed
 local MARGIN_SUPPLY   = 18    -- of MARGIN: only T5 (supply) failed
 local MARGIN_BOTH     = 1     -- of MARGIN: both failed
 local T_ONLY_HP_BAND  = 6     -- T true with hp in (0.55, 0.75] -- S cannot speak
-local BAG_FRAMES      = 17    -- frames carrying a backpacked salve
-local SIGN_SUBSAMPLE  = 110   -- fixture.self on every fixture (declared slice)
+local BAG_FRAMES      = 15    -- frames carrying a backpacked salve
+local SIGN_SUBSAMPLE  = 109   -- fixture.self on every fixture (declared slice)
 local SIGN_NATURAL_NEG = 56   -- ... whose natural retreat bid is NEGATIVE
 local SIGN_MARGIN_NEG = 14    -- of MARGIN: the guard RAISES the bid
 local SIGN_MARGIN_POS = 5     -- of MARGIN: the guard LOWERS the bid

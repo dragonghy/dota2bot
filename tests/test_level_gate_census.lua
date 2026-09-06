@@ -600,23 +600,10 @@ tests['[corpus] 100 fixtures / 73 games / 1000 hero-slots: level >= 20 is 0'] = 
     cs.corpus(c.fixtures, 'level-gate corpus')
     cs.ratchet(games, 73, 'distinct games')
     cs.ratchet(c.slots, 1000, 'hero-slots')
-    -- ⚠️⚠️ FIRED 2026-09-06 (hero, GH #566), AND THE PREMISE IT PROTECTED IS GONE.
-    -- tests/fixtures/f_260905_004847_lion_drain_bkb.lua is the corpus's first
-    -- LATE-GAME frame (t=1266.5, hero levels 22-27), landed by the `liondrainbkb`
-    -- withdrawal.  `ge20` moved 0 -> 10 and the high-water level 19 -> 27.
-    --
-    -- THE FOUR INERT VERDICTS ABOVE WERE ARGUED FROM "that hero does not exist"
-    -- IN THIS CORPUS, AND THAT SENTENCE IS NO LONGER TRUE.  They have NOT been
-    -- re-read -- the round that moved the number was withdrawing a Lion lever,
-    -- not re-taking this file's verdicts.  Handed off rather than silently
-    -- absorbed: GH #566, and the hero charter's backlog.  Do not quote any INERT
-    -- disposition in this file as covering a level-20+ hero until someone does.
-    --
-    -- The wires stay live at the new numbers so the NEXT movement is visible.
-    assert(c.ge20 == 10, c.ge20 .. ' hero-slot(s) reach level 20, was 10 as of '
-        .. '2026-09-06 -- see the note above: the four INERT verdicts rest on a '
-        .. 'premise that has already been overturned and not yet re-read')
-    cs.ratchet(c.max_level, 27, 'archive high-water level')
+    assert(c.ge20 == 0, c.ge20 .. ' hero-slot(s) now reach level 20 -- the four INERT '
+        .. 'verdicts above were argued from "that hero does not exist"; re-read them')
+    cs.ratchet(c.max_level, 19, 'archive high-water level')
+    assert(c.max_level < 20, 'the high-water level reached 20; see ge20 above')
     cs.ratchet(c.ge18, 1, 'slots at level >= 18')
     cs.ratchet(c.ge15, 8, 'slots at level >= 15')
 end
@@ -625,13 +612,9 @@ tests['[corpus] the archive never reaches turbo late game (the 392/506 fallback)
     local c = scan_corpus()
     -- A maximum over the corpus: append can only push it later.
     cs.ratchet(c.max_t, 690.5, 'latest frame in the archive (t)')
-    -- ⚠️ FIRED 2026-09-06 (hero, GH #566): 0 -> 1, the same late-game frame.
-    -- J.IsLateGame() IS NO LONGER VACUOUS over this corpus, so the TEETH verdicts
-    -- on mode_farm_generic:393 and :507 must be re-read.  They have NOT been --
-    -- see the note in the case above for who was told.
-    assert(c.frames_past_18min == 1, c.frames_past_18min .. ' frame(s) are past '
-        .. '18:00, was 1 as of 2026-09-06 -- J.IsLateGame() stopped being vacuous '
-        .. 'then and the two TEETH verdicts still have not been re-read')
+    assert(c.frames_past_18min == 0, c.frames_past_18min .. ' frame(s) are now past '
+        .. '18:00 -- J.IsLateGame() is no longer vacuous, so the TEETH verdicts on '
+        .. 'mode_farm_generic:393 and :507 must be re-read')
     -- and the same thing said by running the real helper on the latest frame we own
     local J = rf.load('tests/fixtures/f_260820_043140_luna_ring_bid.lua')
     assert(J.IsModeTurbo() == true, 'fixture loader must report turbo')

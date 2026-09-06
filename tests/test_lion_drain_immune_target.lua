@@ -66,12 +66,24 @@
 --     modifier to the answer is read OUT OF bots/FunLib/aba_global_overrides.lua
 --     (the same method tests/test_axe_cull_immune_veto.lua uses), never retyped,
 --     so a drift in the shipped reader turns this file red instead of stale.
---   * THE SUPPLY TRIPWIRE THIS FILE USED TO CARRY HAS FIRED.  Its previous
---     version asserted 0 spell-immune enemy instants across 8 Lion-subject
---     frames and said, in as many words, that the day one arrived it went RED
---     and named it.  Section 5 is that tripwire after the event: 9 frames, 45
---     enemy instants, exactly 1 immune, named.  That one is the frame that
---     falsified the lever it was built to serve.
+--   * THE FRAME IS STAGED, NOT ADMITTED, and that is a deliberate decision
+--     rather than a convenience.  It lives in tests/frames/ and this file reads
+--     it BY NAME.  Admitting it to tests/fixtures/ would move census readings
+--     belonging to a dozen other levers -- it is the corpus's first frame from
+--     the LATE-GAME era (t=1266.5, levels 22-27, against a corpus that tops out
+--     at t=690.5 and level 19) -- and tests/frames/README.md is explicit that
+--     paying that list is its own work unit.  Measured, not assumed: admitting
+--     it turned 12+ files red across the suite before it was staged instead.
+--     The reopen list is written down in that README under this frame's row.
+--   * SO THE OLD SUPPLY TRIPWIRE STILL STANDS, UNFIRED.  Its previous version
+--     asserted 0 spell-immune enemy instants across the 8 Lion-subject CORPUS
+--     frames and said the day one arrived it would go RED and name it.  That
+--     zero is unchanged, because the frame carrying immunity is staged.  Section
+--     5 keeps it and adds the staged frame as a SEPARATE, by-name reading, so
+--     "the corpus offers nothing" and "the tree offers exactly one" are two
+--     sentences instead of one blurred one (tests/frames/README.md's own closing
+--     finding: any scan claiming to read THE TREE must enumerate that directory
+--     too).
 --   * WHAT IS NOT SETTLED.  Whether the OTHER two branches' stricter
 --     `J.CanCastOnNonMagicImmune` is the side that is wrong is a separate and
 --     opposite (WIDENING) lever.  It needs its own id, its own domain and its
@@ -87,7 +99,7 @@ local rf = require('mock.replay_fixture')
 
 local SRC = 'bots/BotLib/hero_lion.lua'
 local OVERRIDES = 'bots/FunLib/aba_global_overrides.lua'
-local FIXTURE = 'tests/fixtures/f_260905_004847_lion_drain_bkb.lua'
+local FIXTURE = 'tests/frames/f_260905_004847_lion_drain_bkb.lua'
 local LION = 'npc_dota_hero_lion'
 local BB = 'npc_dota_hero_bristleback'
 local DRAIN = 'lion_mana_drain'
@@ -104,15 +116,17 @@ local CAND = 'liondrainbkb'
 -- 20260905_004847_slot1.dem g.dem
 --   "$BIN" g.dem > timeline.json
 --   python3 tools/batch_test/replayscope/make_fixture.py timeline.json \
---       --t 1266.5 --hero lion -o tests/fixtures/f_260905_004847_lion_drain_bkb.lua
+--       --t 1266.5 --hero lion -o tests/frames/f_260905_004847_lion_drain_bkb.lua
 --
 -- Leg (1) is the same recipe on .../1db27d/20260903_093254_slot1.dem, reading
 -- the ABILITY and MODIFIER_ADD/REMOVE events between t=1510 and t=1535.
 -- Leg (3) is the same on .../d21f34/20260904_123205_slot1.dem, t=950..970 plus
 -- the 1.0s hero snapshots for lion and dragon_knight over t=954..962.
 
--- Every Lion-SUBJECT fixture, listed rather than globbed so a new one is a
--- deliberate edit and section 5's counts move with a named cause.
+-- Every Lion-SUBJECT frame in the CORPUS (tests/fixtures/), listed rather than
+-- globbed so a new one is a deliberate edit and section 5's counts move with a
+-- named cause.  FIXTURE is deliberately NOT in this list: it is staged in
+-- tests/frames/ and section 5 reads it separately, by name.
 local LION_FRAMES = {
     'tests/fixtures/f_045650_lion_meatgrinder.lua',
     'tests/fixtures/f_222428_lion_lich_burst.lua',
@@ -122,7 +136,6 @@ local LION_FRAMES = {
     'tests/fixtures/f_260819_183409_lion_drain_focused.lua',
     'tests/fixtures/f_260820_162821_lion_drain_lethal.lua',
     'tests/fixtures/f_260820_182906_lion_drain_survived.lua',
-    FIXTURE,
 }
 
 local tests = {}
@@ -341,9 +354,12 @@ end
 -- ---------------------------------------------------------------- section 5 --
 -- The supply, measured -- the old tripwire after it fired.
 
-tests['supply: exactly one spell-immune enemy instant across the Lion frames'] = function()
+tests['supply: the CORPUS still holds no spell-immune enemy instant'] = function()
+    -- The original tripwire, unchanged and UNFIRED.  The frame that carries
+    -- immunity is staged in tests/frames/, so this zero is still a fact about
+    -- tests/fixtures/ -- which is what every OTHER file's census reads.
     local set = immunity_modifiers()
-    local nFrames, nEnemies, nImmune, sWhere = 0, 0, 0, {}
+    local nFrames, nEnemies, nImmune, sWhere = 0, 0, 0, nil
     for _, path in ipairs(LION_FRAMES) do
         local J, bot, heroes, fx = rf.load(path)
         J.IsSoakCandidate = function() return false end
@@ -355,22 +371,68 @@ tests['supply: exactly one spell-immune enemy instant across the Lion frames'] =
                 for m in pairs(set) do
                     if h:HasModifier(m) then
                         nImmune = nImmune + 1
-                        sWhere[#sWhere + 1] = path .. ' / ' .. name .. ' / ' .. m
+                        sWhere = path .. ' / ' .. name .. ' / ' .. m
                         break
                     end
                 end
             end
         end
     end
-    assert(nFrames == 9, 'LION_FRAMES moved to ' .. nFrames
+    assert(nFrames == 8, 'LION_FRAMES moved to ' .. nFrames
         .. '; re-read the counts here before trusting them')
-    assert(nEnemies == 45, 'enemy hero-instants moved from the measured 45 to ' .. nEnemies)
-    assert(nImmune == 1, 'spell-immune enemy instants moved from 1 to ' .. nImmune
-        .. ' (' .. table.concat(sWhere, '; ') .. ').  More is not a regression -- it is '
-        .. 'more supply for the WIDENING question section 4 leaves open.')
-    assert(sWhere[1] == FIXTURE .. ' / ' .. BB .. ' / ' .. BKB_MOD,
-        'the one immune instant is no longer the frame this round froze, got '
-        .. tostring(sWhere[1]))
+    assert(nEnemies == 40, 'corpus enemy hero-instants moved from the measured 40 to '
+        .. nEnemies)
+    assert(nImmune == 0, 'GOOD NEWS, NOT A REGRESSION: ' .. tostring(sWhere)
+        .. ' puts a spell-immune enemy in the CORPUS (tests/fixtures/) for the first '
+        .. 'time. Section 3 no longer needs its injection against that frame, and the '
+        .. 'admission price in tests/frames/README.md was evidently paid by whoever '
+        .. 'landed it. Do NOT relax this assertion.')
+end
+
+tests['supply: the whole TREE holds exactly one, and it is the staged frame'] = function()
+    -- The other half of the sentence.  tests/frames/README.md's closing finding
+    -- is that a scan claiming to read "the tree" has to enumerate that directory
+    -- too -- a sister file was green for three days while the tree held a
+    -- level-21 Wraith King it could not see.  So this case enumerates BOTH.
+    local set = immunity_modifiers()
+    local nImmune, sWhere = 0, {}
+    for _, dir in ipairs({ 'tests/fixtures', 'tests/frames' }) do
+        local p = assert(io.popen('ls ' .. dir .. '/*.lua 2>/dev/null'))
+        local n = 0
+        for path in p:lines() do
+            n = n + 1
+            local ok, chunk = pcall(dofile, path)
+            if ok and type(chunk) == 'table' then
+                for _, u in ipairs(chunk.units or {}) do
+                    for _, m in ipairs(u.modifiers or {}) do
+                        if set[m.name] then
+                            nImmune = nImmune + 1
+                            sWhere[#sWhere + 1] = path .. ' / ' .. u.name .. ' / ' .. m.name
+                        end
+                    end
+                end
+            end
+        end
+        p:close()
+        assert(n > 0, dir .. ' enumerated to nothing -- this scan would be vacuous')
+    end
+    -- FOUR, and the split is the reading.  Three are modifier_juggernaut_blade_fury
+    -- in non-Lion-subject corpus fixtures -- which independently reproduces the
+    -- count tests/test_axe_bkb_supply_staged_frame.lua records from its own
+    -- scanner ("all 3 immune instants are blade_fury and 3 of 3 carry no Black
+    -- King Bar").  The fourth is this round's staged frame, and it is the tree's
+    -- FIRST immunity that comes from a Black King Bar.
+    assert(nImmune == 4, nImmune .. ' spell-immune hero-instants across BOTH '
+        .. 'directories, was 4 as of 2026-09-06: ' .. table.concat(sWhere, '; ')
+        .. '. More is more supply for the WIDENING question section 4 leaves open.')
+    local nBkb, sBkb = 0, nil
+    for _, row in ipairs(sWhere) do
+        if row:find(BKB_MOD, 1, true) then nBkb = nBkb + 1; sBkb = sBkb or row end
+    end
+    assert(nBkb == 1 and sBkb == FIXTURE .. ' / ' .. BB .. ' / ' .. BKB_MOD,
+        'the tree holds ' .. nBkb .. ' Black-King-Bar immunity instant(s) and the '
+        .. 'first is ' .. tostring(sBkb) .. ' -- was exactly 1, this round\'s staged '
+        .. 'frame. The falsifier in section 2 is taken on that instant.')
 end
 
 return tests

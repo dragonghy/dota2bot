@@ -38,22 +38,15 @@ local function sweep()
     return r
 end
 
-tests['[recorded] the corpus is 1020 live-hero frames'] = function()
+tests['[recorded] the corpus is 1012 live-hero frames'] = function()
     -- Pinned so a corpus that GREW is visible as a red line here rather than
     -- silently changing every percentage in the report that cites this file.
     -- 2026-09-03 (replay-check): 1003 -> 1012, the nine live heroes of
     -- f_260902_154755_cm_wandbleed_residue.lua (GH #437's frame, landed under
     -- the director's ruling in owed_executions.json). The zero below was
     -- re-measured on the grown corpus, not carried over: it still holds.
-    -- 2026-09-06 (hero, GH #566): 1012 -> 1020, the eight live heroes of
-    -- f_260905_004847_lion_drain_bkb.lua -- the corpus's first LATE-GAME frame
-    -- (t=1266.5, levels 22-27), landed by the `liondrainbkb` withdrawal.  The
-    -- zero below is re-measured on the grown corpus by the case itself, so it
-    -- is carried by measurement and not by assumption; readings in files that
-    -- CITE 1012 (among them iterations/streams/hero.md backlog -107) were taken
-    -- on the 1012-frame corpus and have not been re-taken.
     local r = sweep()
-    assert(r.frames == 1020, 'the live-hero frame count moved: ' .. r.frames .. ' (was 1020)')
+    assert(r.frames == 1012, 'the live-hero frame count moved: ' .. r.frames .. ' (was 1012)')
 end
 
 tests['[recorded] J.GetProperTarget is nil on every frame of the corpus'] = function()

@@ -377,12 +377,14 @@ tests['1. GetCastRange answers 0 on every live-WK instant, and the KV knows 525'
     -- (f_073148_zuus_lina, f_080225_wk_lane, f_080225_wk_revive), so
     -- GetAbilityByName hands back a bare handle the loader never specced.  A
     -- re-dump of those three is what closes it; nothing here can.
-    -- 2026-09-06 (hero, GH #566): 36 -> 37 live-WK instants.  The corpus's first
-    -- late-game frame (f_260905_004847_lion_drain_bkb.lua) carries a live
-    -- skeleton_king at level 26 with Q trained and off cooldown; it lands in the
-    -- BODY bucket (§4, 18 -> 19).  The KV/zero split is unchanged, so §1's finding
-    -- holds as measured; the per-bucket numbers below moved by exactly that one
-    -- instant and were NOT otherwise re-derived.
+    -- 2026-09-06 (hero, GH #566): 36 -> 37 live-WK instants.  This file's sweep
+    -- enumerates tests/frames/ as well as the corpus (the staging contract: a
+    -- staged frame is invisible to the CORPUS globs, not to a scan that reads
+    -- the tree), so it sees f_260905_004847_lion_drain_bkb.lua -- a live
+    -- skeleton_king at level 26 with Q trained and off cooldown.  It lands in
+    -- the BODY bucket (section 4, 18 -> 19).  The KV/zero split is unchanged, so
+    -- section 1's finding holds as measured; the per-bucket numbers moved by
+    -- exactly that one instant and were NOT otherwise re-derived.
     local ARCHIVED_ZERO_ON_ALL = 37
     local NO_ABILITY_ARRAY     = 3
     local nFed  = t.raw_ranges[tostring(KV_CAST_RANGE)] or 0
