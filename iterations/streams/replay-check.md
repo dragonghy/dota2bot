@@ -12077,7 +12077,7 @@
     钉三种「本轮头条可能被造出来」的形状:幻象同名取帧、穿越不定向、不检 cd/蓝/等级/排除名单)。
     **幻象守卫按出生时刻(GH #176)本轮丢弃 656,762 个同名快照样本** —— 幻象血低,
     不挡住它就是把一份幻象普查写成英雄普查。
-  - **本轮开**:**GH #<待填>** `[hero]` —— `X.HasSpecialModifier` 缺
+  - **本轮开**:**GH #570** `[hero]` —— `X.HasSpecialModifier` 缺
     `modifier_oracle_false_promise_timer`;**不是假设**:449 次 `axe_culling_blade` 里
     **2 次真的落在 False Promise 窗口内部**(`..._11c470` t=958.7 → sniper、t=1452.9 → oracle)。
     **出货腿就有这个缺口,与 `cullthresh` 无关,不作为它的阻塞项。**
