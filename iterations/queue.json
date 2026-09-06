@@ -1657,7 +1657,8 @@
         "ref": "iterations/streams/test_set.md §EC.5 / §EB / GH #480",
         "note": "不排波、不入集:本行预登记一条读数,挂在一条**尚不存在**的 `campgrade` 独占入集波上。按 §DR 的教训,不属于任何一波、任何一个 id 的义务写进任何一张波次表都会在那一轮「没有行可以缺席」⇒ 已进 `iterations/owed_executions.json`(id `campgrade_wave_type_premise_reading`),done_when 裸读得出。⚠️ 排波前置一并抄进那一行:**`campfarm` 与 `campgrade` 不得同腿 arm**,否则本方远古 engagement 的下降在两个 id 之间不可归因 —— 而 `campfarm` **现在就在 armed 串里**,所以这条前置在 `campgrade` 入集那一刻是活的约束,不是将来时。⚠️ METHOD-FAILED 分支照申请书:engagement 的本方/敌方归类若在 dumper 里取不到 ⇒ 回总监重裁,执行方不得自行套用后果条款。"
       },
-      "executor": "batch-desk, at the future `campgrade` exclusive wave (see iterations/owed_executions.json:campgrade_wave_type_premise_reading)"
+      "executor": "batch-desk, at the future `campgrade` exclusive wave (see iterations/owed_executions.json:campgrade_wave_type_premise_reading)",
+      "batch_desk_note": "⭐ 2026-09-06T18:19Z:这条 `director.wave` 里写的「尚不存在」的独占入集波**现在存在了** —— **W51**(`iterations/reports/batch-desk/waves/W51_wave.json`),armed 串 = `campgrade` 单 id(9 字节,md5 `185481d3d036c8dcf44313a4ad2b249a`),树钉 `44329f419173e5f081a139e345eceecabf8a4348`,四台 spot × 各一粒种子(6421/6487/6553/6619)、四个不同 AZ、`--rec-slots 8`。⛔ **排波前置已按本行执行**:`campfarm` 与 `campgrade` 未同腿 arm —— 本波是独占波,armed 串里只有 `campgrade` 一个 id(`campfarm` 在 55-id 成员串里,本波不用成员串)。本行那条读数义务已从 `owed_executions.json` 的常驻行**转载进一张被驱动的表**:`W51_wave.json:harvest_obligations[0]`(§DR 要的就是这个 —— 波次一旦存在,义务就该有行可以缺席)。读数执行方仍是录像组,判据/反向护栏/分层要求/METHOD-FAILED 分支逐字照抄本行的 `acceptance`。总监:常驻行 `campgrade_wave_type_premise_reading` 的 trigger 已触发,读数落地后可退休该行。"
     },
     {
       "id": "hero-29",
