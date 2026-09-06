@@ -45,10 +45,17 @@
    "market": "spot",
    "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
    "launch_time": "2026-09-05T21:19:57.000Z",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "status_code": null
+   "ab": 29,
+   "ba": 13,
+   "arm_depth": 17.95,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR). EC2 describe-instances no longer holds these four in ANY state at harvest time (~3h after launch, GH #375 ~1h window), so the SIR is the only surviving death record. `instance-terminated-by-user` = the self-terminate path fired; NOT a Server.SpotInstanceTermination, i.e. zero preemption this wave.",
+   "launched_at": "2026-09-05T21:19:57.000Z",
+   "launched_at_source": "BACKFILLED AT HARVEST. The launch round wrote only `launch_time`; wave_throttle.py reads `launched_at` and answered UNCERTIFIABLE (exit 2) for this wave until this key existed. Value is copied byte-for-byte from this record's own `launch_time` (which came from describe-instances at launch) -- not retyped, not re-derived from prose.",
+   "sir_id": "sir-vtwqkamm",
+   "sir_closed_at": "2026-09-05T22:02:29.000Z",
+   "survival_min": 42.53,
+   "survival_min_source": "describe-spot-instance-requests Status.UpdateTime minus CreateTime. The SIR closes when the instance it fulfilled goes away, so for an `instance-terminated-by-user` close this is the termination instant. Used because EC2 no longer holds these four in any state (GH #375 ~1h window) -- there is no describe-instances reading left to take."
   },
   {
    "seed": 5502,
@@ -60,10 +67,17 @@
    "market": "spot",
    "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
    "launch_time": "2026-09-05T21:19:59.000Z",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "status_code": null
+   "ab": 28,
+   "ba": 14,
+   "arm_depth": 18.67,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR). EC2 describe-instances no longer holds these four in ANY state at harvest time (~3h after launch, GH #375 ~1h window), so the SIR is the only surviving death record. `instance-terminated-by-user` = the self-terminate path fired; NOT a Server.SpotInstanceTermination, i.e. zero preemption this wave.",
+   "launched_at": "2026-09-05T21:19:59.000Z",
+   "launched_at_source": "BACKFILLED AT HARVEST. The launch round wrote only `launch_time`; wave_throttle.py reads `launched_at` and answered UNCERTIFIABLE (exit 2) for this wave until this key existed. Value is copied byte-for-byte from this record's own `launch_time` (which came from describe-instances at launch) -- not retyped, not re-derived from prose.",
+   "sir_id": "sir-3ciqgiwn",
+   "sir_closed_at": "2026-09-05T22:06:20.000Z",
+   "survival_min": 46.35,
+   "survival_min_source": "describe-spot-instance-requests Status.UpdateTime minus CreateTime. The SIR closes when the instance it fulfilled goes away, so for an `instance-terminated-by-user` close this is the termination instant. Used because EC2 no longer holds these four in any state (GH #375 ~1h window) -- there is no describe-instances reading left to take."
   },
   {
    "seed": 5574,
@@ -75,10 +89,17 @@
    "market": "spot",
    "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
    "launch_time": "2026-09-05T21:20:02.000Z",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "status_code": null
+   "ab": 28,
+   "ba": 14,
+   "arm_depth": 18.67,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR). EC2 describe-instances no longer holds these four in ANY state at harvest time (~3h after launch, GH #375 ~1h window), so the SIR is the only surviving death record. `instance-terminated-by-user` = the self-terminate path fired; NOT a Server.SpotInstanceTermination, i.e. zero preemption this wave.",
+   "launched_at": "2026-09-05T21:20:02.000Z",
+   "launched_at_source": "BACKFILLED AT HARVEST. The launch round wrote only `launch_time`; wave_throttle.py reads `launched_at` and answered UNCERTIFIABLE (exit 2) for this wave until this key existed. Value is copied byte-for-byte from this record's own `launch_time` (which came from describe-instances at launch) -- not retyped, not re-derived from prose.",
+   "sir_id": "sir-3zmfgezm",
+   "sir_closed_at": "2026-09-05T22:15:12.000Z",
+   "survival_min": 55.17,
+   "survival_min_source": "describe-spot-instance-requests Status.UpdateTime minus CreateTime. The SIR closes when the instance it fulfilled goes away, so for an `instance-terminated-by-user` close this is the termination instant. Used because EC2 no longer holds these four in any state (GH #375 ~1h window) -- there is no describe-instances reading left to take."
   },
   {
    "seed": 5705,
@@ -90,18 +111,26 @@
    "market": "spot",
    "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
    "launch_time": "2026-09-05T21:20:05.000Z",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "status_code": null
+   "ab": 27,
+   "ba": 15,
+   "arm_depth": 19.29,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "describe-spot-instance-requests Status.Code (SIR). EC2 describe-instances no longer holds these four in ANY state at harvest time (~3h after launch, GH #375 ~1h window), so the SIR is the only surviving death record. `instance-terminated-by-user` = the self-terminate path fired; NOT a Server.SpotInstanceTermination, i.e. zero preemption this wave.",
+   "launched_at": "2026-09-05T21:20:05.000Z",
+   "launched_at_source": "BACKFILLED AT HARVEST. The launch round wrote only `launch_time`; wave_throttle.py reads `launched_at` and answered UNCERTIFIABLE (exit 2) for this wave until this key existed. Value is copied byte-for-byte from this record's own `launch_time` (which came from describe-instances at launch) -- not retyped, not re-derived from prose.",
+   "sir_id": "sir-s1tfkdbp",
+   "sir_closed_at": "2026-09-05T22:04:31.000Z",
+   "survival_min": 44.45,
+   "survival_min_source": "describe-spot-instance-requests Status.UpdateTime minus CreateTime. The SIR closes when the instance it fulfilled goes away, so for an `instance-terminated-by-user` close this is the termination instant. Used because EC2 no longer holds these four in any state (GH #375 ~1h window) -- there is no describe-instances reading left to take."
   }
  ],
  "slate_anchor": "Last machine up 2026-09-05T21:20:05Z = W50's gate (i) anchor (GH #469 ruling 1 takes the LAST machine). Slate spread 8s. DO NOT read this number in the next round -- run wave_throttle.py and read the line it prints (GH #469's filing sentence is that a hand-typed instant is a number that gets typed wrong).",
  "gates": {
-  "i": "Run TWICE. Decision time 21:15:35Z was BEFORE the unlock and was not used as the pass. Action time -- last command before the launch loop, inside the script, bare $?: THROTTLE_EXIT_AT_ACTION=0, `WAVE_THROTTLE: UNLOCKED`, margin +179s past unlock. FIRST RUN ON THE FIXED TOOL (GH #534, director 57bd9338): it now prints BOTH families and anchors on the LATEST -- `Y1 15:16:56Z -> unlock 21:16:56Z <- ANCHOR` over `W48 12:24:12Z -> unlock 18:24:12Z`. That is exactly the conservative instant the last round had to compute BY HAND and warned the tool could not see. The margin is +179s: thin, and honestly so -- the wave was launched 3 minutes after a 6h window opened, on the correct (later) of the two anchors.",
-  "ii": "PASSES on branch (one), measured: the arm string moved 63 -> 61 (md5 4aefc887 -> 824ec284). Branch (two) is ALSO satisfied for the first time in four rounds: the 61-id family has 0 accumulated seeds, well under 8. The GH #513 manual arithmetic was NOT needed this round.",
-  "iii": "wave_fence.py run per GH #504, operands re-read, no constant copied. Both market valuations pass WITH the two un-billed waves declared as pending (charter rule 2-jia: MTD + waves launched in the last 12h that may not be in it): FENCE_SPOT_EXIT=0 (--planned 0.90 --pending 2.11) projected $22.607, headroom $27.393; FENCE_OD_EXIT=0 (--planned 2.15) headroom $26.143. Re-read this run: limit $100.00, actual MTD $19.597, ACTUAL alerts $50/$80/$100 ALL not yet crossed, fence $50.00, brake $90.00, operative ceiling $50.00. No alert tier crossed by this wave.",
-  "iv": "RB_EXIT=0 against W48_wave.json: 'not blinded -- the wave delivered 4 paired seed(s)', 0 machines reclaimed before the flip, all four depth-checked. NEXT WAVE: spot."
+  "(i) >=6h routine-wave throttle": "Run TWICE. Decision time 21:15:35Z was BEFORE the unlock and was not used as the pass. Action time -- last command before the launch loop, inside the script, bare $?: THROTTLE_EXIT_AT_ACTION=0, `WAVE_THROTTLE: UNLOCKED`, margin +179s past unlock. FIRST RUN ON THE FIXED TOOL (GH #534, director 57bd9338): it now prints BOTH families and anchors on the LATEST -- `Y1 15:16:56Z -> unlock 21:16:56Z <- ANCHOR` over `W48 12:24:12Z -> unlock 18:24:12Z`. That is exactly the conservative instant the last round had to compute BY HAND and warned the tool could not see. The margin is +179s: thin, and honestly so -- the wave was launched 3 minutes after a 6h window opened, on the correct (later) of the two anchors.",
+  "(ii) something new to test": "PASSES on branch (one), measured: the arm string moved 63 -> 61 (md5 4aefc887 -> 824ec284). Branch (two) is ALSO satisfied for the first time in four rounds: the 61-id family has 0 accumulated seeds, well under 8. The GH #513 manual arithmetic was NOT needed this round.",
+  "(iii) budget fence": "wave_fence.py run per GH #504, operands re-read, no constant copied. Both market valuations pass WITH the two un-billed waves declared as pending (charter rule 2-jia: MTD + waves launched in the last 12h that may not be in it): FENCE_SPOT_EXIT=0 (--planned 0.90 --pending 2.11) projected $22.607, headroom $27.393; FENCE_OD_EXIT=0 (--planned 2.15) headroom $26.143. Re-read this run: limit $100.00, actual MTD $19.597, ACTUAL alerts $50/$80/$100 ALL not yet crossed, fence $50.00, brake $90.00, operative ceiling $50.00. No alert tier crossed by this wave.",
+  "(iv) inputs -- no harvest owed": "SUBSTANCE ESTABLISHED AT LAUNCH, KEY ADDED AT HARVEST (2026-09-06T00:3xZ) -- and this sentence is the honest value, not a backdated pass. What the launch round verified and wrote in prose (report 20260905T211300Z.md section 3, \"收割:无对象\"): entering `running,pending` was empty, S3 held no un-harvested run, and W48 and Y1 had both been fully harvested in the two preceding rounds => nothing was owed when W49 went up. What the launch round did NOT do is put that under a key the detector can see. SECOND RECURRENCE OF THE SAME SHAPE: W48's record needed the identical retroactive add one round earlier, so this is not a one-off slip -- see gate_key_rename_note.",
+  "(iv) reclaim-blind": "RB_EXIT=0 against W48_wave.json: 'not blinded -- the wave delivered 4 paired seed(s)', 0 machines reclaimed before the flip, all four depth-checked. NEXT WAVE: spot."
  },
  "cost_estimate": "~$1.02 registered -- the MEASURED upper bound from W46's settlement ($0.959-$1.022), NOT the charter's $0.90 constant, whose auto-invalidation clause has already fired (W46 billed above it) and which the director has STILL not re-ruled (named for the third consecutive round). Registering the higher number fails toward safety in the fence arithmetic. W47 settled at $0.7413, W48's machine-hour-side derivation was $0.776-$0.840.",
  "cost_constant_invalidation": "STILL OPEN. The charter's clause -- 'any wave whose billed-side measured cost exceeds $0.90 obliges the desk to name it and the director to re-rule the constant at the next trigger' -- fired on W46 and has not been discharged. Named again this round.",
@@ -116,5 +145,90 @@
   "Iron rule 4(i-a): register BOTH strata readings (ab and ba), not the game counts. The four economy metrics come from the tool's own per_seed[].<m>_ab/_ba and strata.<m> fields -- do NOT hand-average, and NEVER pool weighted by game count (4(i-d)).",
   "Copy winrate_channel and mean.winrate_headroom verbatim; if DEGENERATE, winrate and comps_better winrate may not be written as readings.",
   "Report min_arm_depth and thin_arm_seeds beside mean; name any excluded seed -- its games were paid for."
- ]
+ ],
+ "harvest": {
+  "harvested_at": "2026-09-06T00:2xZ",
+  "method": "recover_verdict.py full per-game recompute from s3://dota2bot-batch-results-4924/soak/<run>/ (NOT validation/), four runs downloaded into four SEPARATE subdirectories (GH #225 no-flatten).",
+  "arm_string_recheck": "RECOMPUTED at harvest from `git show 066219d6:iterations/streams/test_set.md` line 2: 61 ids / 540 bytes / md5 824ec2842e234693cb3c4094f73d6a14 -- byte-for-byte identical to this record's arm_bytes/arm_md5. Not copied from prose.",
+  "input": {
+   "files_seen": 192,
+   "games_loaded": 192,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0
+  },
+  "scored_games": 168,
+  "unfinished_games": 0,
+  "mean": {
+   "gpm": 11.7,
+   "xpm": 2.09,
+   "deaths": 0.02,
+   "last_hits": -1.27,
+   "winrate": 0.496,
+   "winrate_headroom": 0.018
+  },
+  "comps_better": {
+   "gpm": "3/4",
+   "xpm": "3/4",
+   "deaths": "3/4",
+   "last_hits": "2/4",
+   "winrate": "1/4"
+  },
+  "strata": {
+   "gpm": {
+    "ab": 58.07,
+    "ba": -34.66,
+    "side": 46.37,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   },
+   "xpm": {
+    "ab": 16.13,
+    "ba": -11.96,
+    "side": 14.05,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "deaths": {
+    "ab": -0.54,
+    "ba": 0.59,
+    "side": -0.56,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "last_hits": {
+    "ab": -5.77,
+    "ba": 3.23,
+    "side": -4.5,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   }
+  },
+  "strata_reading": "Iron rule 4(i-a): BOTH strata READINGS registered above (readings, not game counts), taken from the tool's own strata.<m>.ab/.ba -- NOT hand-averaged, NOT pooled weighted by game count (4(i-d)). All four metrics carry sign_flip=true. Per 4(i-c) these four are side-bias-cancelled estimators (per-seed 50/50 swap-average), so the flip is the identity |side|>|arm| and is NOT a rejection reason -- it says this draw's side bias exceeded the effect, and says nothing about how precisely arm was measured. Registered, not read as a verdict.",
+  "min_arm_depth": 8,
+  "observed_arm_depths": {
+   "5404": 17.95,
+   "5502": 18.67,
+   "5574": 18.67,
+   "5705": 19.29
+  },
+  "thin_arm_seeds": [],
+  "excluded_seeds": "NONE -- all four seeds scored; the shallowest arm depth is 17.95, better than 2x the MIN_ARM_DEPTH=8 gate. No seed's games were paid for and thrown away.",
+  "winrate_channel": "DEGENERATE",
+  "winrate_headroom": 0.018,
+  "winrate_side_census": {
+   "radiant": 4,
+   "dire": 188
+  },
+  "winrate_minority_side_share": 0.0208,
+  "winrate_reading": "DEGENERATE for the EIGHTH consecutive wave with data (W41/W42/W44/W45/W46/W47/W48/W49). Per this record's own pre-registration, winrate and comps_better.winrate MAY NOT be written as readings and the channel is NOT re-litigated per wave -- it goes to the director as structurally uninformative for this harness. Minority side won 4 of 192 finished games (share 0.0208 < 0.20); mean winrate 0.496 is bounded to 0.5 +/- 0.018.",
+  "suggested": "hold_or_reject",
+  "suggested_reading": "hold_or_reject is the tool's gpm-only hint at its own >5 gpm threshold; mean gpm is +11.70 so the hint is NOT driven by the effect size. Promote/reject for the 61-id family is the director's call (GH #510 pattern), and condition (a) -- replay confirmation -- is still owed.",
+  "preemption": "ZERO. All four spot instance requests closed `instance-terminated-by-user`; no Server.SpotInstanceTermination. Gate (iv) input for W50.",
+  "pooling": "Stands alone at 4 seeds, exactly as pre-registered before the data landed: 61-id family, first wave, does not pool with W48 (63) or the W46+W47 62-id family.",
+  "survival": "All four self-terminated at 42.5-55.2 min, far inside the 2h watchdog and far above the 40.0 min changeover -- they finished their games and shut themselves down. Longest 5574 at 55.17 min, shortest 5404 at 42.53 min.",
+  "games_vs_expected": "168 scored games against a pre-registered expectation of ~96 (4 seeds x 12 x 2). The wave OVER-delivered by 75%: 42 scored games per seed (ab 27-29 / ba 13-15) instead of 24. Registered as a reading, not explained -- the pre-registered number came from `--games 12` read as games-per-leg, and the measured cadence says that is not what the flag buys. 192 files loaded, 168 scored, 0 unfinished, 0 unparseable."
+ },
+ "gate_key_rename_note": "HARVEST-ROUND CORRECTION. The launch round wrote this object under bare roman-numeral keys (\"i\"/\"ii\"/\"iii\"/\"iv\"); every prior record (W47, W48) used the long canonical names, and tests/test_wave_gate_keys.py -- which exists precisely to catch a silently renamed gate -- was RED on main from that moment (5 of its 258 checks, all five naming W49). Renamed here to the canonical names with the VALUES COPIED VERBATIM; nothing was invented to turn the detector green, which is the failure that file was written against. The (iv) record was a single combined string in the launch round, so it is registered under the `inputs -- no harvest owed` half; the reclaim-blind half is recorded separately below as gate_iv_reclaim_blind_at_harvest, since it could only be run AFTER this wave was harvested.",
+ "gate_iv_reclaim_blind_for_W50": "RB_EXIT=0 against THIS record, run at harvest (2026-09-06T00:3xZ) -- i.e. the gate (iv) INPUT FOR W50, not W49's own gate: \"not blinded -- the wave delivered 4 paired seed(s)\", 4 paired of 4 machines, 0 machines reclaimed before the flip, all four PAIRED [depth-checked], changeover 40.0 min against survivals 42.5-55.2 min. \"NEXT WAVE: spot (the default; GH #158 unchanged).\" First call returned exit 2 UNDECIDABLE for want of survival_min -- exit 2 is could-not-run, never \"not blinded\"."
 }
