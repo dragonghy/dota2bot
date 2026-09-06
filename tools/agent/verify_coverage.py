@@ -42,9 +42,39 @@ import os
 import re
 import sys
 
+# NO `^` ANCHOR, AND `episodes` IS DIGITS-ONLY.  Both of those are fixes, and
+# both defects ran in the same direction -- they made verified ids read as
+# unverified, i.e. the counter manufactured condition-(a) debt.
+#
+# Measured on the corpus this tool actually reads
+# (`iterations/reports/replay-check/*.md`, 2026-09-06): the old `^VERIFY`
+# anchor dropped **26 of 59** VERIFY lines (44.1%), because this desk writes
+# the line inside markdown emphasis or a code span -- ``**`VERIFY id=… `**``,
+# `` `VERIFY id=…` ``, `- **`VERIFY …`** `` -- exactly as the charter's own
+# step-7 examples are rendered.  Seven ARMED ids the census printed as
+# `verify=0` in fact carried a verdict: odaoe, pullcad, roshdist, rotscope,
+# slotpush, stayfield, stayfield2.  `roshdist` was the expensive one: its
+# recorded verdict is **BUGGY (episodes=77)** and the ledger showed it as
+# never verified, so a known-broken armed id read as untouched debt.
+#
+# The cost is not hypothetical: the round that found this had *chosen*
+# `rotscope` as its work unit off that very `verify=0` row, and `rotscope` had
+# been verified INDETERMINATE two days earlier with a structural reason.  The
+# instrument was steering rounds into repeating finished work -- the same shape
+# as the `zusult` in-domain-count trap and the stale-mana channel: **the
+# measuring device manufactured the conclusion it then reported.**
+#
+# Dropping the anchor does NOT loosen the separation the tests pin: the pattern
+# still demands a literal id AND a CAPS verdict token, so the many meta
+# sentences that merely discuss the convention (`VERIFY id=… verdict=…` with an
+# ellipsis, table rows describing the format) still do not match.  That was
+# checked against the real corpus, not assumed.
+#
+# `episodes=(\S+)` swallowed the trailing markup along with the number and
+# reported counts like `5020**` and ``7`。``; `(\d+)` cannot.
 VERIFY_RE = re.compile(
-    r"^VERIFY\s+id=([A-Za-z0-9_]+)\s+verdict=([A-Z]+)"
-    r"(?:\s+episodes=(\S+))?", re.M)
+    r"VERIFY\s+id=([A-Za-z0-9_]+)\s+verdict=([A-Z]+)"
+    r"(?:\s+episodes=(\d+))?")
 VERDICT_WORDS = re.compile(r"WORKING|BUGGY|SILENT|INDETERMINATE")
 NARR_WINDOW = 260          # chars each side of a mention -- deliberately loose
 
@@ -89,7 +119,20 @@ def main():
         stem = os.path.basename(path)
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
+        # DEDUP WITHIN ONE REPORT.  This desk states its verdict twice in the
+        # same file by convention -- once in the report's summary head, once in
+        # the body section that argues it.  Those are one verdict, not two.
+        # Before the anchor came off, the head copy was usually the emphasised
+        # one and so was invisible, which hid the double-count; counting both
+        # now would inflate the ledger's own number in the OPPOSITE direction
+        # from the bug this fix repairs, and an over-count is the failure mode
+        # the tool's docstring calls "worse than the 未单独计 it replaced".
+        seen_here = set()
         for m in VERIFY_RE.finditer(text):
+            row = (m.group(1), m.group(2), m.group(3))
+            if row in seen_here:
+                continue
+            seen_here.add(row)
             verify.setdefault(m.group(1), []).append(
                 (stem, m.group(2), m.group(3)))
         # Where every armed id is named in this file, so a verdict word can be
@@ -131,18 +174,27 @@ def main():
     for wid in ids:
         v = verify.get(wid, [])
         last = v[-1] if v else None
+        # `episodes` is PRINTED, not just parsed.  It was captured from the
+        # first version and thrown away, which is why the `(\S+)` capture could
+        # sit there returning `5020**` and ``7`。`` without anything noticing.
+        # A parsed-but-unprinted field is an unread instrument: nothing can
+        # contradict it.  It also carries real signal for the ledger -- an
+        # INDETERMINATE at episodes=0 (domain never reached) and one at
+        # episodes=4527 (domain saturated, attribution the blocker) are
+        # different kinds of debt and should not share a row.
         rows.append((wid, len(v), last[1] if last else "-",
+                     last[2] if (last and last[2]) else "-",
                      last[0][:15] if last else "-", len(narrat.get(wid, ()))))
-    rows.sort(key=lambda r: (r[1], r[4], r[0]))
+    rows.sort(key=lambda r: (r[1], r[5], r[0]))
 
-    print("\n%-16s %6s %-14s %-16s %6s" %
-          ("id", "verify", "last_verdict", "last_report", "narrat"))
-    for wid, nv, verdict, rep, nn in rows:
+    print("\n%-16s %6s %-14s %9s %-16s %6s" %
+          ("id", "verify", "last_verdict", "episodes", "last_report", "narrat"))
+    for wid, nv, verdict, eps, rep, nn in rows:
         if not a.all and nv > 0:
             continue
-        print("%-16s %6d %-14s %-16s %6d" % (wid, nv, verdict, rep, nn))
+        print("%-16s %6d %-14s %9s %-16s %6d" % (wid, nv, verdict, eps, rep, nn))
 
-    blind = [r[0] for r in rows if r[1] == 0 and r[4] == 0]
+    blind = [r[0] for r in rows if r[1] == 0 and r[5] == 0]
     print("\nBLIND SPOTS (no VERIFY line AND no verdict word ever near the id "
           "in any report) -- %d:" % len(blind))
     print("  " + (", ".join(blind) if blind else "(none)"))

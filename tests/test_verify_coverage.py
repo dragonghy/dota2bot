@@ -66,11 +66,11 @@ def main():
         chk("beta: prose verdict does NOT become a VERIFY count",
             rows.get("beta", [None, "?"])[1] == "0", str(rows.get("beta")))
         chk("beta: prose verdict IS visible in the narrat column",
-            rows.get("beta", [None, None, None, None, "0"])[4] == "1",
+            rows.get("beta", [None, None, None, None, None, "0"])[5] == "1",
             str(rows.get("beta")))
         chk("gamma: mentioned without a verdict scores 0 in BOTH columns",
-            rows.get("gamma", [None, "?", None, None, "?"])[1] == "0"
-            and rows["gamma"][4] == "0", str(rows.get("gamma")))
+            rows.get("gamma", [None, "?", None, None, None, "?"])[1] == "0"
+            and rows["gamma"][5] == "0", str(rows.get("gamma")))
 
         blind = out.split("BLIND SPOTS", 1)[1] if "BLIND SPOTS" in out else ""
         chk("blind spots = never-VERIFYed AND never-judged-in-prose",
@@ -90,6 +90,79 @@ def main():
             rc2 == 0 and "ids with >=1 machine-readable VERIFY line: 0" in out2,
             out2[:200])
 
+        # ------------------------------------------------------------------
+        # MARKUP TOLERANCE (2026-09-06).  The desk writes the step-7 line
+        # wrapped in markdown emphasis / a code span, which is how the
+        # charter's own examples render.  The original `^VERIFY` anchor
+        # dropped 26 of 59 real lines on the live corpus (44.1%) and printed
+        # seven ARMED ids as verify=0 that had verdicts -- one of them
+        # `roshdist`, recorded BUGGY.  Under-counting here manufactures
+        # condition-(a) debt and sends rounds back over finished work, so the
+        # wrapped forms are pinned here alongside the separation checks above.
+        ts2 = os.path.join(d, "test_set2.md")
+        with open(ts2, "w") as fh:
+            fh.write("# header\nepsilon,zeta,eta,theta,iota\n")
+        rep3 = os.path.join(d, "reports3")
+        os.makedirs(rep3)
+        with open(os.path.join(rep3, "20260906T000000Z.md"), "w") as fh:
+            fh.write(
+                "**`VERIFY id=epsilon verdict=WORKING episodes=12`**\n\n"
+                "- **`VERIFY id=zeta verdict=BUGGY episodes=77`** (and then\n"
+                "  some trailing prose on the same bullet)\n\n"
+                "⇒ `VERIFY id=eta verdict=SILENT episodes=0`。\n\n"
+                "| desk | give one `VERIFY id=… verdict=…` line |\n"
+                # A meta sentence that names a REAL armed id in the template
+                # position with an ELLIPSIS verdict.  This is the case that
+                # separates "loose enough to see markup" from "loose enough to
+                # invent verdicts": a pattern with `verdict=(\\S+)` scores a
+                # verdict for `theta` here, `verdict=([A-Z]+)` cannot.  The
+                # earlier ellipsis-id row does NOT test this -- its id is `…`,
+                # which matches no armed id, so the assertion passed under a
+                # mutant and proved nothing (mutation stand M3, 2026-09-06).
+                "next round write `VERIFY id=theta verdict=…` on its own line.\n"
+                "theta is otherwise named here with no verdict token.\n")
+        rc5, out5 = run(ts2, rep3, ("--all",))
+        rows5 = {ln.split()[0]: ln.split() for ln in out5.splitlines()
+                 if ln[:1].isalpha() and len(ln.split()) >= 5
+                 and ln.split()[1].isdigit()}
+        chk("bold+code-span wrapped VERIFY line is counted",
+            rows5.get("epsilon", [None, "0"])[1] == "1", str(rows5.get("epsilon")))
+        chk("bullet-wrapped line keeps its verdict, not the markup",
+            rows5.get("zeta", [None, None, "?"])[2] == "BUGGY",
+            str(rows5.get("zeta")))
+        chk("episodes stops at the digits, never swallows trailing markup",
+            rows5.get("zeta", [None, None, None, "?"])[3] == "77",
+            str(rows5.get("zeta")))
+        chk("mid-sentence code span after a CJK arrow is counted",
+            rows5.get("eta", [None, "0"])[1] == "1", str(rows5.get("eta")))
+        # THE SEPARATION STILL HOLDS: dropping the `^` anchor must not let a
+        # sentence that merely DESCRIBES the convention score as a verdict.
+        # `iota` is armed and appears only inside that table row's ellipsis
+        # form, so a regex that stopped requiring a literal id + CAPS verdict
+        # would light it up here.
+        chk("a row describing the format is not a verdict for any id",
+            rows5.get("iota", [None, "?"])[1] == "0"
+            and rows5.get("theta", [None, "?"])[1] == "0",
+            "iota=%s theta=%s" % (rows5.get("iota"), rows5.get("theta")))
+        chk("wrapped corpus moves the headline count to 3",
+            "ids with >=1 machine-readable VERIFY line: 3" in out5, out5[:300])
+
+        # DEDUP: this desk states one verdict twice per report (summary head +
+        # body).  That is one verdict; counting it twice inflates the ledger.
+        rep4 = os.path.join(d, "reports4")
+        os.makedirs(rep4)
+        with open(os.path.join(rep4, "20260906T010000Z.md"), "w") as fh:
+            fh.write("`VERIFY id=epsilon verdict=WORKING episodes=12`\n\n"
+                     "body argues it, then restates:\n"
+                     "**`VERIFY id=epsilon verdict=WORKING episodes=12`**\n")
+        _, out6 = run(ts2, rep4, ("--all",))
+        rows6 = {ln.split()[0]: ln.split() for ln in out6.splitlines()
+                 if ln[:1].isalpha() and len(ln.split()) >= 5
+                 and ln.split()[1].isdigit()}
+        chk("the same verdict restated in one report counts once",
+            rows6.get("epsilon", [None, "?"])[1] == "1",
+            str(rows6.get("epsilon")))
+
         # could-not-run must be distinguishable from clean (evidence discipline)
         rc3, _ = run(os.path.join(d, "nope.md"), rep)
         chk("missing arm string exits 2 (could not run), never 0", rc3 == 2,
@@ -97,7 +170,7 @@ def main():
         rc4, _ = run(ts, os.path.join(d, "no_such_dir"))
         chk("missing reports dir exits 2, never 0", rc4 == 2, "rc=%d" % rc4)
 
-    print("\n%d checks, %d failed" % (10, len(FAILED)))
+    print("\n%d checks, %d failed" % (17, len(FAILED)))
     return 1 if FAILED else 0
 
 

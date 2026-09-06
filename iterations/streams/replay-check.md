@@ -11770,3 +11770,94 @@
     (新增一个 python 工具 + 一个 python 测试 + markdown);
     新增包装 `tests/test_tpdying_release.py` 单跑 **`WRAPPER_EXIT=0`**。
     **Token 用量**:`TOKENS total_in=8,076,071 out=67,856 turns=62`(见报告 §8)。
+- **2026-09-06T06:55Z**:**W50 首检 + 条件 (a) 的唯一计数器少数了 44%(本轮主发现)**。
+  **宽扫 80/80 计分局**(W50 四台机,`SWEEP_EXIT=0` ×4,104 份 `.dem` 找到 / 80 扫过 /
+  24 暖场 / **unparseable 0**);**深查 10 个不同对局 × 64 个 released 帧**(章程下限 6),
+  外加 `towerfear` 全语料 **248 个 R_lever episode / 65 个不同对局**逐 episode 帧核。
+  零发波、零 EC2、S3 只读、零 CE;**未改 `bots/`/`game/` 一行**(`TREE_DIFF_EXIT=0`,0 字节)。
+  ```
+  VERIFY id=towerfear verdict=WORKING episodes=248
+  ```
+  - **⭐⭐ 主发现:`tools/agent/verify_coverage.py` 把 59 行 `VERIFY` 只看见 33 行
+    (丢 26 行 = 44.1%),方向是**把已核验的 id 报成未核验**。**
+    两处缺陷同向:(1) `^VERIFY` 锚点 —— 本组按章程 step 7 写这行时几乎总是包在
+    markdown 强调/代码跨度里(``**`VERIFY …`**``),**章程自己的示例就是这么渲染的**;
+    (2) `episodes=(\S+)` 连尾随标记一起吞(`5020**`、``7`。``),而这个字段
+    **解析了却从不打印** ⇒ 没有任何东西能反驳它。
+    **7 个 armed id 被报成 `verify=0` 却都有裁定行**:`roshdist`(**BUGGY**,77)、
+    `slotpush`(WORKING,939)、`rotscope`、`odaoe`、`stayfield`、`stayfield2`、`pullcad`。
+    覆盖数 **23 → 30**。**最贵的是 `roshdist`:一个已知有 bug 的 armed id
+    在 promote 机器眼里是没人碰过的欠账。**
+  - **⭐ 代价是本轮当场付的**:本轮按 `verify=0` 这一列选题,先选中了 `rotscope` ——
+    而它两天前已以结构性理由裁成 INDETERMINATE。**量具在把各轮送回去重做做完的活。**
+    与 `zusult` 域内计数、stale-mana(GH #491)同族:**量具自己造出了它随后报出的结论**,
+    方向只有一边;区别是这次的方向是**制造欠账**。`BLIND SPOTS` 一节不受影响
+    ⇒ 损伤精确落在**可计数的那一列**,即总监台账唯一读的那一列。
+  - **修法已落地**:去锚点(pattern 仍要求字面 id + 全大写 verdict,元句子仍不计数,
+    **对真语料核对过**)、`episodes` 收紧成 `(\d+)` **并改成打印**、**同报告内去重**
+    (不去重会朝相反方向把台账吹起来)。`tests/test_verify_coverage.py`
+    **17 checks / 0 failed**(原 10 条全留);**变异台 4/4 CAUGHT**。
+    ⚠️ **M3 第一次 SURVIVED**:原来那句「说明格式的表格行不算裁定」用的省略号 id 是 `…`,
+    **匹配不到任何 armed id**,断言在变异体下照样通过、**什么也没证明**;
+    改成让元句子点名一个**真的 armed id** 才咬住。**断言写得像在守,不等于它在守。**
+  - **`towerfear` = WORKING,但只买到条件 (a) 的前半**。门是**独立单门**
+    (唯一合取项 `IsModeTurbo()`),**不嵌套、不析取** —— 按 GH #553 与 GH #545
+    两张表逐条对过都不在里面 ⇒ 躲开了本组最近两轮抓到的两个归属陷阱。
+    armed 谓词是 shipped 的**严格子集**(时钟 300s→150s),释放的帧构成矩形
+    `R_lever`(lvl 6..10 ∧ 150≤t<300)加三个零成本负对照。
+    **承重三行 occ +2.45 / dwell +1.41 / bnc −23.88 在 R_lever 上两层同号,
+    而在同窗只差等级的 `C_low` 上全部反号(噪声)。**
+    ⚠️ **`d+3s` 必须排除**(它在 `C_low` 上也两层同号 −40.84);
+    ⚠️ **`C_pre` 结构性空**(Turbo 里没人 150s 前到 6 级)——**一个永远不可能开火的对照**;
+    ⚠️ **`C_post` 的反向不当加分项**(外溢与其余 58 个 id 分不开)。
+  - **⛔⛔ 「行为正确」那一半不但没买到,信号还是反的。**
+    episode 级(对长 episode 集中免疫)`in700`:armed **32.7%** vs baseline 20.3%(ab,+12.46pp)、
+    **45.6%** vs 10.3%(ba,+35.21pp)⇒ **两层同号:被释放的 episode 更常摸进塔的 700u 攻击圈。**
+    帧证据 `…_eff51c/20260906_035941_slot6` **sniper t=281.4–285.4**:扎到**距塔 179u**,
+    连吃 5 秒塔伤,血 504→280,而紧挨杠杆下面那条校准兜底子句的**可观测腿全成立
+    (`calib=CAUGHT`)却没把人拉回来** —— 是「开火了但撤退点仍在环内」还是「根本没开火」,
+    **没有 bot 侧调试分不开,不声称**。建议钉帧 **t=283.4**。
+    ⚠️ **半语料上这个量是「两层反号=噪声」,全语料才翻成同号 —— 登记这一步。**
+    `shot` 与 `dth` 仍两层反号(噪声)⇒ **不能说它真吃亏,也不能说它无害**。
+    ⚠️ 量具异常登记不解释:ba 两格 `in700` 与 `shot` 计数逐位相同,ab 两格不同
+    (baseline `shot` 37 > `in700` 22 ⇒ 开火的塔不总是 `nEnemyTowers[1]`)。
+    ⇒ **本组不建议按现状 promote**;建议协同组写一个**收窄版**:减半后的时钟
+    只在 **700–898u 环带**(塔够不着、校准子句结构上无法开火的那一圈)释放。
+  - **宽扫表**:13 个检测器 / 9,479 条 finding,**10/13 两层反号 ⇒ 4(i-b) 噪声**;
+    与本轮题目最相关的 `unpunished_tower_dive` **正是反号的那 10 个之一**(登记,不进结论)。
+    **分层不平衡:ab 50 个 game-leg vs ba 30 个**(4(i-a) 登记)。
+    ⚠️ **80 局 ≠ 批测台的 187 计分局**:录像只在 `--rec-slots 8` 的槽上录,
+    80 是「**有录像的**计分局」的 100%。
+  - **本轮开**:GH `[harness]`(计数器少数 44%)+ GH `[strategy]`(`towerfear` 收窄建议)。
+    实际编号见报告 §8.1。
+  - **下一轮第一件事**:(1) **`roshdist` 的 BUGGY(77)现在台账上可见了** ——
+    按 P4.2「每轮 ≥2 个判定完结」是现成候选,交总监;(2) 补 `tpreach_domain.py` 的
+    `by_seed`(上一轮欠账,4(i-d) 点名的手算形状,**本轮未做**);(3) §3.4 那一帧钉 fixture;
+    (4) F2/GH #530;(5) `--analysis-dir` 基名碰撞即拒绝(GH #529);(6) `outlatch` 重扫;
+    (7) `campbind` 等 #475;`zusboltdom` 等**同波隔离腿** —— ⚠️ **W50 不是那条腿**
+    (`zusult` 与 `zusboltdom` 在 W50 里同时 armed,与前两轮判 INDETERMINATE 时同一配置,
+    **不要再买同类语料**);(8) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);
+    (9) `hero_domain_scan_2_30_31`(GH #274/#474/#27)—— 自检 `owed-executions`
+    **本轮再次点名本组**,登记未做。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 26 轮 / #421 第 25 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T065500Z.md`
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(全程 S3 只读);`DUMPER_EXIT=0`;
+    `SWEEP_EXIT=0` ×4、`unparseable=0`;`towerfear_domain.py --selfcheck` **29 PASS / ALL PASS**、
+    真语料 `TF_ALL_EXIT=0`;`towerfear_frames.py` ×248 全部 `rc=0`;
+    `tests/test_verify_coverage.py` **`VCT_EXIT=0`(17/0)**;`verify_coverage.py` **`VC_EXIT=0`**;
+    变异台 **4/4 CAUGHT**、`sha256sum -c` OK、还原后基线 GREEN。
+    ⛔ **证据纪律 3 第四十次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`;**脚本现在自己打「it has recurred 5x,
+    every time as the first command of the round」**);重定向放后台才取到真码
+    **`selfcheck worst exit: 3`**(FINDINGS `cadence queue-rulings owed-executions`),
+    `legs run 10`,**`UNCERTIFIABLE (exit 2): trunk-red(python)`**,
+    python 腿 **102 passed / 0 failed / 2 uncertifiable**
+    ——两条 UNCERTIFIABLE 自陈 **`no lua5.1 on PATH`** ⇒ ⚠️ **本容器里 GH #171
+    那条「自检自己装 lua5.1」没有生效**,登记。
+    **⚠️ 第十九次登记:自检在本容器不是「约 20s」**(与四路宽扫并行,约 30 分钟)。
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`luacheck_gate.sh` **`GATE_EXIT=0 CLEAN`**(0 warnings,
+    容器冷启、gate 自己装的 `lua-check`);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」
+    行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
+    push / `claim_precheck` / token 用量见报告 §8.1。
