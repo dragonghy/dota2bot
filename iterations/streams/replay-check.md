@@ -11653,7 +11653,8 @@
     `G.print = function() end` ⇒ 一次性 stand 在 install 之后 `print`
     **stdout 全空 + 退出码 0**,长得像"跑了没发现";本轮第一次跑就踩,
     改 `io.stderr:write` 才拿到读数。与证据纪律 3 同族:**退 0 + 空输出 ≠ 通过**)。
-    实际编号见报告 §7/§8.1。
+    **实际编号:GH #545 / GH #546**(与预写一致;`claim_precheck` 两份
+    `PRECHECK_EXIT=0`、`refused 0`、`OK to publish`,且**都在 `36daa189` 推上 main 之后才发**)。
   - **对 P4.2 的意义(交总监,不是本组裁定)**:`suptp` 与上一轮结清的 `midtp`
     是两个最便宜的「判定完结」候选,合起来正好是总监一轮的配额。
   - **下一轮第一件事**:**`a_evidence_tpdying`(GH #35)+ `a_evidence_tpreach`(GH #159)**
@@ -11669,4 +11670,19 @@
     F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
     #419 第 25 轮 / #421 第 24 轮仍零评论。
   - 完整报告:`iterations/reports/replay-check/20260906T004814Z.md`
-  - 自检真码 / 铁律 6 / `claim_precheck` / token:见报告 §8 与 §8.1。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(全程 S3 只读);
+    `sweep_run.sh` ×4 **`SWEEP_EXIT=0`**、`unparseable=0`;
+    `tpdefend_events.py --selfcheck` **32 PASS / 0 FAIL**,真语料 `TPDEF_ALL_EXIT=0`;
+    两个 stand `STAND_EXIT=0` / `NAN_STAND_EXIT=0`。
+    ⛔ **证据纪律 3 第三十八次踩,又是当轮第一条命令**(开工自检写了 `| tail -40`,
+    脚本当场自拒 `REFUSED: stdout is a pipe; exit 2, nothing checked`,
+    harness 报的 `EXIT=0` 是末尾 `echo` 的码);重定向放后台重跑才取到真码
+    **`selfcheck worst exit: 3`**(FINDINGS),`legs run 10`,**`UNCERTIFIABLE: none`**,
+    Lua 检测器腿 **84 文件 / 0 failures**,python 腿 **95 passed / 5 failed / 2 uncertifiable**
+    (5 条红按 `TREE_DIFF_EXIT=0` 判为 main 的红,**不认领**)。
+    **⚠️ 第十七次登记:自检在本容器不是「约 20s」。**
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT=0 CLEAN`(0 warnings);
+    push 分支 **0**、`HEAD:main` **0**(`768ca619..36daa189`),**一次没被拒、未 rebase**;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称**(本轮纯 markdown 改动)。
+    **Token 用量**:`TOKENS total_in=16,559,632 out=76,732 turns=106`(见报告 §8.1)。
