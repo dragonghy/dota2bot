@@ -11686,3 +11686,76 @@
     **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
     **动态半(GH #124)未跑也不声称**(本轮纯 markdown 改动)。
     **Token 用量**:`TOKENS total_in=16,559,632 out=76,732 turns=106`(见报告 §8.1)。
+- **2026-09-06T04:04Z**:**上一轮交棒第 (1) 条结清 —— 两条 owed 行的产物都已落地**
+  (`a_evidence_tpreach` GH #159 / `a_evidence_tpdying` GH #35,`done_when` 的
+  `path_exists` 条件满足)。零发波、零 EC2、S3 只读、零 CE;**未改 `bots/`/`game/` 一行**。
+  **宽扫 72/72 计分局**(W49 四台机,`SWEEP_EXIT=0` ×4,24 局暖场 / unparseable 0);
+  深查 = 两个 id 的专用域全量:`tpreach` **7,630 次 TP 按下 / 59 个 ADDED 事件**、
+  `tpdying` **4,527 次响应 TP 落地**,均覆盖 70 个 game-leg × 两分层 × 两条腿。
+  ```
+  VERIFY id=tpreach  verdict=WORKING       episodes=59
+  VERIFY id=tpdying  verdict=INDETERMINATE episodes=4527
+  ```
+  - **`tpreach` = WORKING**。它是**纯单向否决**,(a) signature 由源码事先钉死。
+    每粒种子 swap-average(4(i-c))**三张 reach 表全部 4/4 同向**:
+    p50 `−0.2135` / p90 `−0.2375` / source `−0.1167`(ADDED/局)。
+    **量控是关键**:整包 61 个 id 让 TP 总量自己动了(≈ −1.6 次/局,约 3%),
+    而 **ADDED 占按下总数的比例掉了约 42%**(p50:armed 0.5624% vs baseline 0.9754%,4/4)
+    ⇒ 抑制是**带内专属**,不是"整体少按 TP"的副产品。
+    机制签名:抑制**集中在 `tpsafe2` 真会跑的非撤退格**,§BC.1 保护的撤退格几乎没动
+    (13 → 11);两分层各自独立复现(baseline 恰好 50/50,armed 塌到 ~20%)。
+    ⚠️ **两条限制**:非撤退格 n 小(armed 3 vs baseline 13,swap-average 仅 2/4 同向);
+    该 composition 签名**只在 p50(工具自校准的那张)上成立**,p90 上消失(37% vs 38%)。
+    ⇒ 按 §BC.4 **字面**要求"非撤退格单独承载"则是 INDETERMINATE。**两种读法都交总监**。
+  - **`tpdying` = INDETERMINATE,但两个检测器本轮才第一次存在** ——
+    §A'.3 约束 3 点名的那两个从没被建过,**这正是它 armed 17 天 verify=0 的原因**。
+    新增 `tools/batch_test/behavioral/tpdying_release.py`(**23 PASS / 0 FAIL, exit 0**),
+    每粒种子 swap-average 后 **4/4 全部落在源码预测方向**:
+    落地后 10s 内死亡率 **−0.0084**(相对约 −28%)、落地后仍钉住的帧数 **−0.2089**、
+    旁证 +12s 位移中位数 **+127.7u**,三个量都 4/4。
+    ⛔ **判 INDETERMINATE 不是读数弱,是归属(4a)**:armed 腿 61 个 id 里**三个**作用在
+    **同一群对象**上 —— `tpcommit` **造**那个 pin(baseline 腿**根本没有 pin**)、
+    `tpdead` 是**同一个 pin 的第二条释放**、`teambrain` 仲裁 shipped 守塔 TP(**改分母**)。
+    前者把钉住帧往上推、后两者往下推 ⇒ **连 −0.209 的符号都不能分解**。
+  - **⭐⭐ 本轮主发现(比两个 id 都大):「门嵌在另一个门里」是结构类不是个例 ——
+    当前 61 个 armed id 里有 5 个处在这个位置**,它们**自己的 (a) 在全开镜像波上不可分离**:
+    `tpdying`⊂`tpcommit`(:8958)、`tpdead`⊂`tpcommit`(:8978)、`pulllane`⊂`pullcamp`(:9195)、
+    `campbind`⊂`pulldrag`(:9416)、`pullcamp`⊂`pulldrag`(:9416)。
+    (另 3 对内层未 armed:`zusultx`⊂`zusult`、`tpclaim`⊂`teambrain`、`ccburst`⊂`lanehyst`。
+    ⚠️ `pullcamp` **同时**是 `pulllane` 的外层和 `pulldrag` 的内层 —— **两级链**。)
+    **这是上一轮 `suptp` 那条的正好反面,合起来才是完整形状**:
+    `A or B` 同集 armed ⇒ B 恒不承重(`suptp`);B 的门**嵌在** A 的门里 ⇒
+    B 除非 A 同 armed 否则恒 inert、**且同 armed 时不可分离**(`tpdying`);
+    `A and B` 且 B 被 promote ⇒ 门恒 FALSE(`AGENTS.md` 已知那条)。
+    **共同的那一句:一个 id 有没有效果、以及效果能不能归给它,取决于同一个臂串里的另一个 id,
+    而裁定是按单个 id 登记的。** 三种形状 `check_armed_wiring.py` **全报 WIRED 而且都对**
+    (LIMITS 自陈只查调用点存在)—— **缺的是没有任何检查在管「可分离性」**。
+  - **工程性三条(写进工具,别再踩)**:(i) `--assert-arm` —— 臂串里没有 `tpcommit`
+    就**拒绝出读数**,而不是打一个长得很干净的零,把上面那个陷阱**机械化**;
+    (ii) **落地采样必须严格晚于 `MODIFIER_REMOVE`(`>` 不是 `>=`)** ——
+    写成 `>=` 时恰好落在移除瞬间的那格采样还停在**出发点**,trip 读成 0,
+    整个 episode 被当"被打断"扔掉,1Hz dump 上会**静默删掉一整类落地**;
+    **是 selfcheck 的干净落地用例抓出来的,不是真语料**;
+    (iii) selfcheck 写 `sys.stderr` —— `bot_api.lua:install()` 抹掉 `print`,
+    一次性 stand 会**空输出 + 退 0**,长得跟"跑了没发现"一样(GH #546)。
+  - **本轮开**:`[bug]` 嵌套门 ⇒ 条件 (a) 不可分离(全表 + 建议验收:`gate_nesting.py`
+    普查 + 对这 5 对各要一条隔离腿,或按 4a 改走触发级逐帧)。**实际编号见报告 §7 补记。**
+  - **新欠账**:`tpreach_domain.py` **不自己打每粒种子的 swap-average 表**,
+    上面那几个数字是**手算的** —— 正是 4(i-d) 点名的形状。`tpdying_release.py` 已自带
+    (`by_seed`),`tpreach_domain.py` 应当补上。
+  - **下一轮第一件事**:补 `tpreach_domain.py` 的 `by_seed`(零 AWS,半轮就够),
+    然后顺延上轮清单:(2) F2/GH #530;(3) `--analysis-dir` 基名碰撞即拒绝(GH #529);
+    (4) `outlatch` 重扫;(5) `campbind` 等 #475;(6) `zusboltdom` 同波隔离腿;
+    (7) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);(8) `hero_domain_scan_2_30_31`。
+  - 完整报告:`iterations/reports/replay-check/20260906T040447Z.md`
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(全程 S3 只读);`SWEEP_EXIT=0` ×4、
+    `unparseable=0`;`tpreach_domain.py --selfcheck` **42 PASS / 0 FAIL**、真语料 ×3 **EXIT=0**;
+    `tpdying_release.py --selfcheck` **23 PASS / 0 FAIL**、真语料 **TPDYING_EXIT=0**。
+    ⛔ **证据纪律 3 第三十九次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`,harness 报的 `EXIT=0` 是末尾 `echo` 的码);
+    第二次套 `timeout 400` 被掐成 `EXIT=124`;第三次重定向放后台才取到真码
+    **`selfcheck worst exit: 3`**(FINDINGS),`legs run 10`,
+    **`UNCERTIFIABLE (exit 2): trunk-red(python)`**,python 腿 **101 passed / 0 failed /
+    1 uncertifiable**(`tests/test_selfcheck_lua_leg.py` 没跑成,9 个 check 未运行,**不是通过**)。
+    **⚠️ 第十八次登记:自检在本容器不是「约 20s」。**
+    **铁律 6 / GH #290 / Token**:见报告 §7 / §8 收尾补记。
