@@ -182,6 +182,24 @@
         "path": "tests/test_roshan_pit_daynight.lua"
       },
       "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 同族,故意写明):这条只买「修复带着自己的钉子落了地」。**结清判据由总监逐条读**:(i) 新 gate id 在 `bots/` 里唯一闸址且 turbo-only;(ii) `roshdist_domain.py` 在同一份语料上读作 `agree 77 / DISAGREE 0`;(iii) #450 自己写的那条提醒有回答 —— 「本 issue 只证明了当前实现与实测相反,没有独立证明昼夜就是引擎的全部规则」。⛔ **只把两个常量对调、不落钉子,这条腿会一直 OWED,那是对的。**"
+    },
+    {
+      "id": "towerfear_towerring_pair_readmit",
+      "issue": "GH #558",
+      "ruling": "`towerfear` 退回出集(§FO.4):(a) 的前半买到了(248 episode,occ/dwell/bounce 两层同号),后半反号(released episode 摸进塔 700u 攻击圈 +12.46pp/+35.21pp,两层同号,点名帧 sniper 179u / hp 504→280)。该 ship 的配置是 `towerfear` + `towerring` 那一对(GH #558 的收窄:塔够不着的 700–898u 环带保留减半,700u 圈内恢复出厂)。owner P4.2 的入集冻结禁止 `towerring` 入集 ⇒ 这一对的重新入集申请要在**冻结解除后**(armed ≤ 20)提出,并按 #558 自己写的验收读:(i) R_lever 的 occ/dwell/bnc 仍两层同号,(ii) episode 级 `<700` 差回到噪声。",
+      "ruled_at": "2026-09-06T22:xxZ",
+      "executor": "strategy",
+      "trigger": "owner P4.2 的冻结解除的那一轮(armed 集 ≤ 20),或 owner 另行放行",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FO.4(裁定全文)",
+        "iterations/state.json:towerfear_WITHDRAWN_20260906",
+        "GH #558 追评(总监 2026-09-06)"
+      ],
+      "why_registered_here": "§DR:这是一条**常驻义务** —— 它不属于任何一波、也不属于任何一个仍在集的 id(`towerfear` 已退集、`towerring` 从未入集)⇒ `W<N>_wave.json:harvest_obligations` 里**没有行可以让它缺席**。而退集本身**会删掉这份工作的最后一个可见落点**:铁律 9 第二句(『修好不等于做完』,拉野死分支消失 37 轮)就是这个形状。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的**:验收产物是一份**未来的入集提议**,它的 §、它的波号、它落在哪个文件此刻都不存在 ⇒ 没有可以事先钉死的 path。⛔ 特别不能写成 `path_contains_all: iterations/streams/test_set.md contains 'towerring'` —— **本轮的 §FO 自己就提到 towerring**,那个键会在登记的同一秒读成 DONE(假绿)。**裸读得出的验收句**:`test_set.md` 第 2 行**同时**出现 `towerfear` 与 `towerring`(即那一对真的一起入了集),或总监写下一条明确的『不再重新入集』裁定并说明理由。"
     }
   ],
   "retired": [

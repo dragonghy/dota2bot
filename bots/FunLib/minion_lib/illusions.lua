@@ -20,13 +20,40 @@ local nLanes = {
 -- correct shape one call up: aba_minion.lua:33-35 throttles the same
 -- population at 0.5s with a PER-UNIT field (`lastItemFrameProcessTime`).
 --
--- soak candidate 'illumove' (turbo-only). Gate shut, both accessors read and
--- write exactly the module local, so the shipped path is unchanged.
+-- PROMOTED (was soak-candidate 'illumove') 2026-09-06 -- turbo default, no gate
+-- left. Owner rule 2, all three conditions, each with its own boundary:
+--   (a) WORKING on THREE independent corpora, same direction every time, with
+--       the instrument in the tree (tools/batch_test/behavioral/illumove_pairs.py,
+--       --selfcheck 9/9): W35 `episodes=15` (two illusions of one owner taking
+--       turns on the single module clock, longest continuous starve 15s on the
+--       shipped leg), W36 `episodes=305` (starved% armed 11.9/8.7 vs baseline
+--       20.5/30.2, both strata same sign), W37 `episodes=180` (four cells same
+--       sign, readings follow the armed leg). Reports
+--       iterations/reports/replay-check/20260901T184954Z.md, 20260902T005006Z.md,
+--       20260902T065455Z.md. Attribution boundary, checked rather than assumed:
+--       'illureal' is the only other id on this file's X.Think path and it
+--       shrinks this one's domain, so the W35 intersection was computed
+--       frame-by-frame and came out EMPTY (upper bound 0), which is why the
+--       reading is attributable to this change alone.
+--   (b) NO OBVIOUS NEGATIVE -- armed on every leg of W47/W48/W49/W50 (the
+--       62/63/61/59-id families, 701 scored mirrored games), family gpm
+--       swap-averaged -5.95 / +27.25 / +11.70 / +13.76, deaths +0.25 / +0.06 /
+--       +0.02 / +0.07. HONEST BOUNDARY: family-level, not id-level -- an all-on
+--       wave cannot attribute economy to one member -- and the winrate channel
+--       has been DEGENERATE since GH #352, so no win/loss number exists to
+--       cite. (W51 is NOT cited: it was an exclusive single-candidate wave
+--       (`campgrade`), so this id was not armed on it at all.)
+--   (c) The defect is scope, not tuning: one module local throttling a per-unit
+--       decision across every illusion and every skill-less minion of the bot.
+--       The correct shape is already in this repo one call up --
+--       aba_minion.lua:33-35 throttles the same population with a PER-UNIT field.
+--       Giving each unit its own order clock is not a strategy choice; the
+--       shipped code loses the order outright rather than deferring it.
 local nNextMoveTime = 0
 local MOVE_THROTTLE = 0.2
 
 local function IsPerUnitMoveClock()
-    return J.IsModeTurbo() and J.IsSoakCandidate('illumove')
+    return J.IsModeTurbo()
 end
 
 local function GetNextMoveTime(hMinionUnit)

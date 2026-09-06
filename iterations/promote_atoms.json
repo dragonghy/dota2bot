@@ -114,6 +114,37 @@
         "rewritten to bind Static Field by name unconditionally -- either makes the handle right",
         "without an arm-string precondition, and then zusstatic can be judged on its own merits."
       ]
+    },
+    {
+      "name": "tower_fear_ring_disjunction",
+      "rule": "no_promote_without",
+      "subject": [
+        "towerfear"
+      ],
+      "prereq": [
+        "towerring"
+      ],
+      "ruled_at": "2026-09-06T22:xxZ",
+      "ruled_by": "director",
+      "ref": "iterations/streams/test_set.md §FO.3 (the trap) / §FO.4 (the withdrawal); GH #558",
+      "direction": "one-way: promoting towerring while towerfear stays gated is NOT constrained by this row (towerring carries its own second gate at bots/mode_retreat_generic.lua:969 and stays readable).",
+      "note": [
+        "THE PULLCAD TRAP IN ITS DISJUNCTIVE FORM. The halving gate is a DISJUNCTION --",
+        "`(J.IsSoakCandidate('towerfear') or J.IsSoakCandidate('towerring')) and J.IsModeTurbo()`",
+        "at bots/mode_retreat_generic.lua:964. Promoting towerfear means deleting that line, after",
+        "which the branch is turbo-default-on and arming `towerring` moves NOTHING on it -- while",
+        "check_armed_wiring.py still calls towerring WIRED, because it checks that a call site exists,",
+        "not that the predicate can still change an answer. The verdict would then read back",
+        "'tested, no effect' with nothing raising a hand: verbatim the shape AGENTS.md records for",
+        "`pullcad`, one boolean operator over.",
+        "REGISTERED THE DAY THE CONSTRAINT WAS RULED, not the day it was about to be violated --",
+        "and deliberately registered even though towerfear was WITHDRAWN from the armed set in the",
+        "same round (§FO.4): withdrawal removes the id from the string, it does not remove the gate",
+        "from bots/, so a future re-admission and promote would meet exactly this trap.",
+        "RELEASE CONDITION: promote the PAIR together (that is the configuration GH #558 proposes and",
+        "the one a wave would have to measure), or rewrite :964 so the promoted half no longer",
+        "swallows towerring's arm. Either retires this row; deleting it to get green does not."
+      ]
     }
   ]
 }

@@ -1,7 +1,16 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,ckpush,wandbleed2,arbheart,campbind,zusboltdom
+l1trade,l5combo,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,slotpush,ckpush,wandbleed2,arbheart,campbind,zusboltdom
 
-**成员串 55**(上一行,**494 字节**,md5 `aa21e7087cddeda479b73e62aab5155a`)。本行 **2026-09-06T13:xxZ 的变动:一条 PROMOTE + 三条 `退回出集`(59 → 55)**,总监裁定全文 **§FK**。⭐ **本项目第三次 promote,距上一次(`creeppull`+`pullbeat`,2026-08-23)14 天。**
+**成员串 52**(上一行,**467 字节**,md5 `445ea52100428d4e6c9aab31f3556245`)。本行 **2026-09-06T22:xxZ 的变动:两条 PROMOTE + 一条 `退回出集`(55 → 52)**,总监裁定全文 **§FO**。⭐ **本项目第四、五次 promote,与第三次同一天**;判定完结 **3**(owner P4.2 的产出指标)。
+1. ⭐ **`odbuild` PROMOTE**(55 → 54)—— 动作是**删掉 `hero_obsidian_destroyer.lua` 里那句门**(§DU.6 红线;代码先改、串后改、**同一个 commit**),turbo 默认走修好的 `tObjurgationBuildList`,**非 turbo 一字未动**。三条件与边界写在 §FO.1 与源码注释里;机器键 `state.json:odbuild_PROMOTE_20260906`。
+2. ⭐ **`illumove` PROMOTE**(54 → 53)—— 同上,删的是 `minion_lib/illusions.lua` 里 `IsPerUnitMoveClock()` 的那句门,turbo 默认给每个单位自己的移动时钟。§FO.2;机器键 `state.json:illumove_PROMOTE_20260906`。
+3. **`towerfear` 退回出集**(53 → 52)—— `VERIFY id=towerfear verdict=WORKING episodes=248`(录像组 09-06T06:55Z)**只买到 (a) 的前半**;后半反号:被释放的 episode 摸进塔 700u 攻击圈的占比 **+12.46pp(ab)/ +35.21pp(ba),两层同号**(GH #558)。§FO.4;机器键 `state.json:towerfear_WITHDRAWN_20260906`。
+⛔ **退集不是 reject**,gate 与代码逐字保留(`bots/` 对这一条零 diff);该 ship 的配置是 `towerfear`+`towerring` **那一对**,而 owner P4.2 的冻结禁止 `towerring` 入集 ⇒ 重新入集是**解冻后**的事,已登记 `iterations/owed_executions.json:towerfear_towerring_pair_readmit`。
+⚠️ **两条 promote 的 (b) 引的是 W47–W50 的家族级读数**(62/63/61/59-id 家族,**701 局计分**,家族 gpm `−5.95 / +27.25 / +11.70 / +13.76`),**不是 W51** —— W51 是 `campgrade` 独占波,这两个 id 在它上面根本没 armed。
+⚠️ **载体项 8 → 8 逐字不变,量出来的**:`carrier_terms.py` 的 `TERMS` 行逐字节相同(`obsidian_destroyer` 由仍在集的 `odaoe` 承载);计数 `12 hero / 43 generic / 0 unresolved` → `11 / 42 / 0`。`check_armed_wiring.py`:**all 52 armed ids wired on HEAD**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W51 及更早**不与 52-id 家族并池**。
+
+〔历史,上一条变动〕**成员串 55**(上一行,**494 字节**,md5 `aa21e7087cddeda479b73e62aab5155a`)。本行 **2026-09-06T13:xxZ 的变动:一条 PROMOTE + 三条 `退回出集`(59 → 55)**,总监裁定全文 **§FK**。⭐ **本项目第三次 promote,距上一次(`creeppull`+`pullbeat`,2026-08-23)14 天。**
 1. ⭐ **`slotwait` PROMOTE**(59 → 58)—— 出集的动作**不是只删这一行的 id**,是**删掉 `jmz_func.lua` 那句 `and J.IsSoakCandidate( 'slotwait' )`**(§DU.6 的红线,本轮逐字遵守:代码先改,串后改,**同一个 commit**)。三条件与各自的边界写在 §FK.1;稳定版锚点 **stable-v3**,机器键 `state.json:slotwait_PROMOTE_20260906`。
 2. **`midtp` 退集**(58 → 57)—— `VERIFY id=midtp verdict=BUGGY episodes=8`(录像组 09-05T21:51Z):TP 落点在算术上不是合法坐标(GH #539)。
 3. **`suptp` 退集**(57 → 56)—— `VERIFY id=suptp verdict=BUGGY episodes=16`(09-06T00:48Z):同一条接线的同一个 NaN,**外加**它的门被同集 `midtp` 完全支配,16/16 波次不承重(GH #545)。
@@ -569,3 +578,126 @@ sweep 的 presence flag **照样读 1** ⇒ **SURVIVED**。
   `modifier_item_urn_heal`、血量 18%–75%、1200 内无敌方英雄、3 秒内未被英雄打」的
   时刻,armed 腿**留在原地喝完**、baseline 腿走人或 TP;⚠️ **病人未必是灵龛的携带者**
   —— 语料里两帧就有一帧不是)。
+
+---
+
+## §FO 2026-09-06T22:xxZ 总监:**第四、五次 promote(`odbuild` + `illumove`)+ `towerfear` 退回出集**,armed 55 → 52
+
+**产出指标(owner P4.2):判定完结 3**(两条 promote + 一条退集,零入集)。上一轮 0、上上轮 0 ——
+交棒清单上「九个 WORKING 里剩下的八条逐条判」**连续两轮被 trunk 红挤掉**,本轮先做它。
+
+⭐ **两条 promote 的 (b) 是同一份读数,而它是 W47–W50 的家族级读数,不是 W51**:两个 id 在
+W47/W48/W49/W50(62/63/61/59-id 家族,**701 局计分**)**每一条腿上都 armed**
+(那四波的移除项是 `stayattr`/`tpdying`/`tpreach`/`slotwait`,从来不是这两个),
+家族 gpm swap-average `−5.95 / +27.25 / +11.70 / +13.76`,deaths `+0.25 / +0.06 / +0.02 / +0.07`
+——**本轮逐波从各自 `W*_wave.json:harvest.mean` 裸读,不是抄散文**。
+⛔ **本节第一稿引的是 W51 的 `gpm −2.19`,那是错的,登记而不是删掉**:W51 是
+`campgrade` **独占波**(`arm_string` 就一个 id、`arm_bytes` 9),**这两个 id 在它上面根本没 armed**。
+错法值得记:`arm_ids`/`arm_md5` 这些字段在每个波次记录里都长得一样,**只有把 `arm_string` 打开看
+才分得出「55-id 家族的那一波」和「一个 id 的独占波」** —— 而收割报告里那行 2(b) 措辞
+(「远在噪声底之内」)对两者读起来完全一致。
+**诚实边界逐字抄进了两处源码注释**:那是**家族级**读数,不是 id 级;全开波不可能把经济归给
+某一个成员,而 winrate 通道自 GH #352 起 DEGENERATE,**一个可引的胜负数都没有**。
+铁律 2(b) 要的是「粗粒度的没有明显负面」——**四波、id 每波都在、均值 +11.7 gpm,就是它,仅此而已**。
+
+### §FO.1 `odbuild` PROMOTE(55 → 54)
+
+- **(a) WORKING**,`VERIFY id=odbuild verdict=WORKING episodes=7`(录像组 2026-08-30T10:01Z,W28):
+  带波次戳的 7 个 OD 英雄-局里,armed 三局 objurgation **rank 4/4/4**、baseline 四局 **0/0/0/0**;
+  三个 warmup 局无戳,**按 LIMIT 3 不计入**。
+  ⚠️ **登记的仪器边界,不抹平**:英雄组 08-29 在 W25(另一棵树、44-id 串)读到 1 例
+  `ROW_CONTRADICTS_STAMP`,W28 上 **0/3 未复现** ⇒ 戳与实际行**可能**脱钩、频率未知。
+  它限制的是这份读数的**精度**,不是**方向**。
+- **(b)** 见上(家族级 W51)。
+- **(c) 是算术,不是判断题**:那一行 15 个条目、花 4+4+4+3;OD 恰有三个可学基础技能(各四级)
+  加一个三级大招 ⇒ 那个 4× 块只能是基础技能,而出厂行**从不点名的**基础技能正是 index 3。
+  index 4 是 `generic_hidden` 占位符(`tests/test_build_index_resolution.lua` 在 2/2 drop-world 里实测)。
+  **代价已量**:出厂腿 OD 在英雄 7 级卡死,15 个技能点只花掉 6、天赋 0,4/4 baseline 腿如此(GH #330)。
+  「让英雄按一个点名真技能而不是占位符的表加点」不需要任何战术论证。
+- ⚠️ **随 promote 一起登记的残留**:armed 腿仍然丢天赋点(冻结 5–24%,GH #330)。
+  那是**第二个缺陷**(在天赋侧的花点器里),`odbuild` 不碰它,本次 promote **也不声称**修了它;
+  `tests/test_od_levelup_double_spend.lua` 第 7 节继续替它举手。
+- **载体项不变,是量出来的**:`obsidian_destroyer` 由**仍在集**的 `odaoe` 承载 ⇒
+  `TERMS` 行逐字节不变(8 项),`carrier_terms.py` 计数 12 hero → **11 hero**、43 → **42 generic**、
+  **0 unresolved**。批测台排波不受影响。
+
+### §FO.2 `illumove` PROMOTE(54 → 53)
+
+- **(a) WORKING,三份互相独立的语料,方向每次相同,而且仪器在树上**
+  (`tools/batch_test/behavioral/illumove_pairs.py`,`--selfcheck` 9/9):
+  W35 `episodes=15`(出厂腿上两个幻象**轮流**独占那一个 module 时钟,最长一次连续 **15 秒**只有一个在走)、
+  W36 `episodes=305`(`starved%` armed 11.9/8.7 vs baseline 20.5/30.2,**两个分层同号**)、
+  W37 `episodes=180`(四格同号,读数跟着 arm 腿走)。
+  **归因边界是算出来的不是假设的**:`illureal` 是同文件 `X.Think` 路径上唯一的另一个 id,
+  它 armed 会**缩小** `illumove` 的域 ⇒ W35 的交集**逐帧算过,上界 0(空)**,
+  所以那份读数可以干净地归给这一条。
+- **(b)** 见上(家族级 W51)。
+- **(c) 是作用域,不是调参**:`nNextMoveTime` 是**模块局部**,而
+  `bots/FunLib/aba_minion.lua:11` 只 dofile 这个模块一次、把**每一个**幻象与无技能小兵都派进同一个
+  `X.Think`(:52)⇒ 一帧里第一个走到移动分支的单位把时钟推到 0.2 秒之后,**同帧的兄弟单位
+  一条命令都拿不到**——不是延后,是没有。**正确形状本仓库自己就有,在上一层**:
+  `aba_minion.lua:33-35` 用**每单位字段**(`lastItemFrameProcessTime`)节流同一批单位。
+- **下游钉子同轮翻面**(promote 的隐性成本):
+  `tests/test_illumove_shared_throttle.lua` 的结构断言从「必须有这个门」翻成「**一个门都不许剩**」,
+  两个世界改由 `IsModeTurbo()` 切换(`IsSoakCandidate` 对所有 id 恒 false ⇒ 同文件的 `illureal`
+  在两个世界里都关着,**开关只动时钟这一件事**);`tests/test_carrier_terms.py` 与
+  `tools/agent/mutstand_carrier_minion.sh` 的探针把 `illumove` 换成仍然 gated 的 `illureal`
+  ——**同一条 illusions.lua 路径继续被探到**,断言没有随 promote 一起被删掉。
+
+### §FO.3 两条都查过 `pullcad` 陷阱,而其中一条**让我改了另一条的排队**
+
+- `odbuild`:全仓 gate 字面量唯一(`hero_obsidian_destroyer.lua`),不与任何 id 合取,不属任何共同 promote 原子。
+- `illumove`:gate 字面量唯一(`minion_lib/illusions.lua`),`illureal` 是**同文件的另一个独立 gate**,
+  不是合取项 ⇒ promote 后 `illureal` 的门**一字未动**,仍可单独 arm。
+- ⭐ **`towerfear` 另有一条构造性的陷阱,与它退集分开成立,所以单独登记**:它的门是
+  `bots/mode_retreat_generic.lua:964` 的**析取** `IsSoakCandidate('towerfear') or IsSoakCandidate('towerring')`。
+  删掉那句门 ⇒ 整条分支变成 turbo 默认开 ⇒ **`towerring`(GH #558,同块 :969 还有它自己的第二处)
+  的 arm 从此测不到任何东西**,而 `check_armed_wiring.py` 照样把它读作 WIRED
+  ——`pullcad` 陷阱的**析取版**。**登记进 `promote_atoms.json`(`tower_fear_ring_disjunction`)
+  让它在有人 promote 的那一天自己举手**,而不是留在散文里等下一个总监重新发现。
+
+### §FO.4 `towerfear` **退回出集**(53 → 52)—— (a) 买到了,而它有两半,两半反号
+
+- **第一半买到了**:`VERIFY id=towerfear verdict=WORKING episodes=248`(录像组 2026-09-06T06:55Z,
+  W50 全语料 248 个 R_lever episode / 65 个不同对局)。矩形内减半时钟确实释放:
+  `occ% +2.45 / dwell +1.41s / bounce% −23.88`,三个量**两层同号**,对照的等级-only 控制是纯噪声。
+- ⛔ **第二半反号**:被释放的 episode 摸进塔**自己的 700u 攻击圈**的占比升 **+12.46pp(ab)/ +35.21pp(ba)**,
+  **两层同号**;读数取 **episode 级**不是帧加权(一局独占 128 个 `<700` 帧里的 **90** 个 ——
+  铁律 4(ii) 点名的那个刀口)。点名病例:armed 腿的 sniper 扎到**距塔 179u**,连吃 5 秒塔伤,
+  **hp 504 → 280**,最近敌方英雄在 1000u 之外 —— **出厂时钟本会把他拉出来**(GH #558)。
+- **为什么不是 HOLD**:(b) 是**家族级**读数 ⇒ 每一波把这个 id 留在串里,armed 腿就在
+  **promote 唯一能引的那个量**里执行一个**已量到有害半边**的杠杆。这与 09-06T13:2xZ 三条
+  (a)=BUGGY 退集的论证同构(形状不同:那三条是咬错了,这条是咬对了域而结果一半有害;
+  **污染是一样的**)。退集把 armed 腿退回**出厂时钟**,也就是稳定版 —— 保守默认。
+- **退集不是 reject**:`bots/` 一行未动,gate 逐字保留,可以重新入集。
+- **该 ship 的配置是 `towerfear` + `towerring` 那一对**(GH #558:在有害半边的那条几何线上劈开 ——
+  塔够不着的环带保留减半,700u 圈内恢复出厂;释放集是 towerfear 的**真子集**,后者又是出厂的真子集,
+  单臂可读且支配)。**owner P4.2 的冻结禁止 `towerring` 入集** ⇒ 这一对是**解冻后**(armed ≤ 20)
+  要提的**重新入集申请**,已登记进 `iterations/owed_executions.json`
+  (`towerfear_towerring_pair_readmit`),**接力棒不许掉**(铁律 9 第二句就是为这个形状写的)。
+- ⚠️ **录像组自己的建议与本裁定同向**(20260906T065500Z §4:「`towerfear` 不因这一行而具备
+  promote 条件,本组也不建议按现状 promote」)——本轮把它从「不 promote」推进到「不再 armed」。
+
+### §FO.5 剩下六个 WORKING 的状态(**「有 WORKING」不等于「可以 promote」**)
+
+| id | (a) | 本轮裁定 |
+|---|---|---|
+| `slotpush` | WORKING 939 | **未裁**。promote 时必须同轮退休 `state.json:coarmed_outlatch_slotpush_20260902` 那一行(它自己写着「届时退休该行,不是删掉转绿」),并处理 `outlatch` 的跨波不可比。 |
+| `ckpush` | WORKING 40 | 未裁(下轮首选:门是**选择**不是析取,`mutstand_ckpush.sh` 已在树上)。 |
+| `fieldsip` | WORKING 15 | **结构性 HOLD**:属共同 promote 原子 `field_hold_needs_magnitude`,而 `stayfield`/`stayfield2` 都是 INDETERMINATE(episodes 0/1)⇒ 单独 promote 会被 `promote_atoms.py` 直接拒。 |
+| `wandbleed` | WORKING 1 / 2 | 未裁,(a) 太薄(episodes 1 与 2),且 §DU.5 的**阴性面**(掉的那些帧里有没有活着的攻击者)尚未登记。 |
+| `wandbleed2` | WORKING 1 + INDETERMINATE 1 | 同上;两条读数相反,先要一份能分开的语料。 |
+
+### §FO.6 同轮两条 queue 裁定(投递纪律 §2.5:落到被裁方读的那个字段)
+
+`pending_rulings.py` 本轮打 `RIDESHARE 2`,两条都当轮裁掉(裁定写进各自的
+`queue.json:<id>.director` 机器字段,不是写进 `question` 散文 —— 那正是 13:05Z W3 掉棒的形状):
+
+- **`hero-38`(`zusfightquorum` 域扫描)= APPROVED-SCAN**。零 EC2、只读归档,搭 hero-2/30…37
+  **同一次遍历**的第十份读数。⛔ **只批扫描,不预批入集**:该 id 现在 gated 且未 armed,
+  冻结解除(armed ≤ 20)前它的入集提议唯一合法裁定仍是 **FROZEN-HOLD**。
+  METHOD-FAILED 按 §CJ 强制;WIDENING 的归因边界逐字保留。
+- **`hero-39`(GH #570 撤案复核)= APPROVED-SCAN**。⛔ **量具前提写进裁定本身**:
+  必须用**半开**判据 `add <= t < remove`;`cullthresh_domain.py:215` 现在是闭区间,
+  原样跑会复现 #570 的那个 `2`。两条预登记判读 (甲)/(乙) **不许合并**,
+  `PREMISE-FALSIFIED` 这个标签归总监,本裁定不预判。

@@ -439,12 +439,19 @@ tests['[ratchet] [6] odbuild trains the whole row and is identical in both world
                 .. ', W28 read ' .. nRank .. ' (orb:4 astral:4 objurgation:4 sanity:3)')
     end
 
-    -- Nothing here says the shipped default changed.
-    assert(SRC:find("J.IsModeTurbo%(%) and J.IsSoakCandidate%(%s*'odbuild'%s*%)") ~= nil,
-        SOURCE .. ' no longer selects the gated row behind `IsModeTurbo() and '
-            .. "IsSoakCandidate('odbuild')`. Until that gate is removed on purpose, "
-            .. 'every reading above about the armed leg is about a row real games do '
-            .. 'not run.')
+    -- PROMOTED 2026-09-06 (director, stable-v4). This assertion used to demand
+    -- the gate `IsModeTurbo() and IsSoakCandidate('odbuild')`; the gate was
+    -- removed ON PURPOSE, which is the exit the sentence it replaces named. What
+    -- it now pins is the promoted shape, and the id's ABSENCE is the
+    -- load-bearing half: a promoted row that quietly grows a gate again is inert
+    -- in every real game while every armed-wiring check still reads clean
+    -- (AGENTS.md calls that the pullcad trap). The readings above are now about
+    -- the row every turbo game runs.
+    assert(SRC:find('if J.IsModeTurbo%(%) then') ~= nil,
+        SOURCE .. ' no longer selects the objurgation row on IsModeTurbo() alone')
+    assert(SRC:find("IsSoakCandidate%(%s*'odbuild'%s*%)") == nil,
+        SOURCE .. " still names the soak candidate 'odbuild'; PROMOTED means the "
+            .. 'gate is gone, not renamed')
 end
 
 -- ---------------------------------------------------------------------------

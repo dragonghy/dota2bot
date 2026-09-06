@@ -1215,10 +1215,25 @@ eq('odaoe is gated by exactly one soak id', OA_SRC['gate_ids'], ['odaoe'])
 _OD_TEXT = open(os.path.join(ROOT, 'bots', 'BotLib',
                              'hero_obsidian_destroyer.lua'),
                 encoding='utf-8').read()
+# [director 2026-09-06] `odbuild` was PROMOTED (stable-v4), so its gate literal
+# is gone from this file and the live-id spelling of this case would now assert
+# the ABSENCE of the very shape it exists to accept.  The claim was never about
+# WHICH id carries the second gate -- it is about the SHAPE (an independent
+# second gate elsewhere in the file must stay green) -- so the second candidate
+# is INJECTED into a copy of the text, exactly as the sibling case one block
+# down injects the CONJOINED shape it must reject.  The case keeps its teeth and
+# a promote can no longer void it.
+_OD_INDEPENDENT = _OD_TEXT.replace(
+    'local nTalentBuildList',
+    "local _bIndependentProbe = J.IsSoakCandidate( 'odprobe' )\n"
+    'local nTalentBuildList', 1)
 check('an INDEPENDENT second candidate elsewhere in the OD file is not the '
-      "#207 shape -- 'odbuild' ships beside 'odaoe' today and must read green",
-      "IsSoakCandidate( 'odbuild' )" in _OD_TEXT
-      and OA.read_source_constants(text=_OD_TEXT)['gate_ids'] == ['odaoe'])
+      '#207 shape -- a second gate sharing no expression with odaoe must read '
+      'green',
+      _OD_INDEPENDENT != _OD_TEXT
+      and OA.read_source_constants(text=_OD_INDEPENDENT)['gate_ids'] == ['odaoe'],
+      '(the injection anchor moved -- this case probed nothing)'
+      if _OD_INDEPENDENT == _OD_TEXT else '')
 
 
 def _odaoe_conjoined_raises():

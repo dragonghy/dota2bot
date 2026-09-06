@@ -115,7 +115,11 @@ import os, sys
 sys.path.insert(0, os.path.join(os.getcwd(), "tools", "batch_test", "soak"))
 import carrier_terms as ct
 tree = ct.Tree(os.getcwd())
-for cand in ("immguard", "tormself", "illumove", "illureal", "aimguard"):
+# [director 2026-09-06] `illumove` left this probe list when it was PROMOTED
+# (stable-v4): its gate literal is gone from the tree, so every mutant would
+# answer the same "no site" for it and the probe would stop discriminating.
+# `illureal` still gates the same illusions.lua path, so the path stays probed.
+for cand in ("immguard", "tormself", "illureal", "aimguard"):
     r = ct.derive_id(tree, cand)
     print("%s=%s:%s" % (cand, r["kind"], ",".join(sorted(r["heroes"]))))
 k, h, _t = ct._resolve_site(tree, "bots/FunLib/minion_lib/jugg.lua", 7, 0, frozenset(), [])

@@ -253,36 +253,49 @@ tests['[source S3] gate shut is the shipped path, proved by evaluation not by re
     local function getFresh() return fresh.next_move_time or 0 end
     assert(getFresh() == 0, 'an unseen unit must start unthrottled, as the module clock does')
 
-    -- And the gate itself is the standard conjunction.
-    assert(CODE:find("J.IsModeTurbo() and J.IsSoakCandidate('illumove')", 1, true) ~= nil,
-        'the gate must be turbo-only and named illumove')
-    -- Keyed on THIS id, not on `IsSoakCandidate(` file-wide. The point of the
-    -- assertion is that no second illumove gate exists to let a path around the
-    -- accessors -- not that this file may only ever hold one candidate. It was
-    -- written the file-wide way and duly fired the day an unrelated second
-    -- candidate ('illureal', GH #381) landed in the same file, which is a false
-    -- positive: a ratchet that forbids the file from growing is measuring the
-    -- file, not the claim.
-    assert(count(CODE, "IsSoakCandidate('illumove')") == 1,
-        'exactly one illumove gate expression in this file')
+    -- PROMOTED 2026-09-06 (director, stable-v4): before that date this block
+    -- asserted the OPPOSITE -- that the selector was
+    -- `IsModeTurbo() and IsSoakCandidate('illumove')`. The load-bearing half is
+    -- now the id's ABSENCE: a promoted behavior that quietly grows a gate again
+    -- is inert in every real game while every armed-wiring check still reads
+    -- clean (AGENTS.md calls that the pullcad trap).
     local clock = slice(CODE, 'local function IsPerUnitMoveClock(', 'local function GetNextMoveTime(')
-    assert(count(clock, "IsSoakCandidate('illumove')") == 1,
-        'and it must be the one inside IsPerUnitMoveClock, which both accessors consult')
+    assert(clock:find('return J.IsModeTurbo()', 1, true) ~= nil,
+        'PROMOTED: IsPerUnitMoveClock must select on IsModeTurbo() alone')
+    assert(count(clock, 'IsSoakCandidate') == 0,
+        'PROMOTED: no soak gate may remain inside IsPerUnitMoveClock')
+    assert(count(CODE, "IsSoakCandidate('illumove')") == 0,
+        "PROMOTED: the id 'illumove' must not be wired anywhere in this file")
+    -- Still keyed on THIS id rather than on `IsSoakCandidate(` file-wide: the
+    -- claim is about illumove, not about the file's right to hold candidates.
+    -- The file-wide spelling was tried once and duly fired the day an unrelated
+    -- second candidate ('illureal', GH #381) landed here -- a ratchet that
+    -- forbids the file from growing is measuring the file, not the claim, and
+    -- 'illureal' is still gated and still asserted below.
+    assert(count(CODE, "IsSoakCandidate('illureal')") == 1,
+        "'illureal' is a separate, still-gated candidate in this file")
 end
 
 -- ---------------------------------------------------------------------------
 -- World
 -- ---------------------------------------------------------------------------
 
---- Build the frame, arm or disarm the candidate, and load a FRESH copy of the
---- module (dofile gives `nNextMoveTime` a new binding per call, which is what
---- makes two arms comparable in one process).
+--- Build the frame, select the per-unit or the shared clock, and load a FRESH
+--- copy of the module (dofile gives `nNextMoveTime` a new binding per call,
+--- which is what makes two arms comparable in one process).
+---
+--- PROMOTED 2026-09-06: the selector used to be `IsSoakCandidate('illumove')`
+--- and is now `IsModeTurbo()` alone, so the two worlds this file compares are
+--- turbo (per-unit) and non-turbo (the shipped module clock). The comparison it
+--- makes is unchanged -- `IsSoakCandidate` is still stubbed FALSE for every id,
+--- so this file's other candidate ('illureal', which also reads IsModeTurbo)
+--- stays off in BOTH worlds and the only thing the toggle moves is the clock.
 local function world(armed)
     local J, bot = rf.load(FIXTURE)
     for k, v in pairs(DESIRE) do _G[k] = v end
 
-    J.IsSoakCandidate = function(id) return armed and id == 'illumove' end
-    J.IsModeTurbo     = function() return true end
+    J.IsSoakCandidate = function() return false end
+    J.IsModeTurbo     = function() return armed end
 
     -- GH #61: lane fronts are not in the dump. Declared, identical in both
     -- arms, and read only by the Naga/Terrorblade branch the subject misses.

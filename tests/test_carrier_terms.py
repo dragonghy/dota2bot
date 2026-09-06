@@ -237,11 +237,16 @@ def main():
           "a hero-scoped id claims %d carriers (%s) -- wider than a draft, so its "
           "gate cannot fail" % (widest[1], widest[0]))
     # ...and the fix must not have bought loudness with correctness.  Illusions
-    # are genuinely generic (any hero can field one, Manta included), so the two
-    # ids gated in illusions.lua stay `generic`.  Calling them `unresolved`
-    # would have traded a wrong optimistic answer for a wrong loud one and made
-    # two correct ids start refusing launches with exit 2.
-    for cand in ("illumove", "illureal"):
+    # are genuinely generic (any hero can field one, Manta included), so an id
+    # gated in illusions.lua stays `generic`.  Calling it `unresolved` would have
+    # traded a wrong optimistic answer for a wrong loud one and made a correct id
+    # start refusing launches with exit 2.
+    # [director 2026-09-06] `illumove` was PROMOTED (stable-v4), so its gate
+    # literal is gone from the tree and the deriver can no longer be asked about
+    # it -- a promoted id is not a candidate.  The claim this loop makes is about
+    # the illusions.lua PATH, which `illureal` still gates, so the assertion
+    # keeps its teeth on a live id instead of being deleted with the promote.
+    for cand in ("illureal",):
         check(ct.derive_id(tree, cand)["kind"] == "generic",
               "%s is generic by construction, not unresolved" % cand)
     # An UNMAPPED summon file resolves loud, never optimistic: walking on from

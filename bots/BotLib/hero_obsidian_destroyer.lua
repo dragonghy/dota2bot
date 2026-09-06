@@ -18,10 +18,45 @@ local tAllAbilityBuildList = {
 						{2,1,4,2,2,6,2,1,1,1,6,4,4,4,6},--pos2
 }
 
--- [GH #287 §2] Soak candidate 'odbuild' (turbo-only). The SAME row with its
--- one mis-resolved index aimed at the ability the row's own arithmetic says it
--- meant. Nothing else about the order moves -- this is an index repair, not a
--- rethink of the build.
+-- PROMOTED (was soak-candidate 'odbuild') 2026-09-06 -- turbo default, no gate
+-- left. [GH #287 §2] The SAME row with its one mis-resolved index aimed at the
+-- ability the row's own arithmetic says it meant. Nothing else about the order
+-- moves -- this is an index repair, not a rethink of the build.
+--
+-- OWNER RULE 2, ALL THREE CONDITIONS, EACH WITH ITS OWN BOUNDARY:
+--   (a) WORKING -- replay desk 2026-08-30T10:01Z on W28: objurgation reaches
+--       rank 4/4/4 on the three stamped armed OD hero-games and 0/0/0/0 on the
+--       four baseline ones, `VERIFY id=odbuild verdict=WORKING episodes=7`
+--       (three warm-up games carry no stamp and are NOT counted). Report
+--       iterations/reports/replay-check/20260830T100103Z.md. Registered
+--       instrument limit, not smoothed over: the hero desk read one
+--       ROW_CONTRADICTS_STAMP case on W25 (another tree, 44-id string) which did
+--       NOT reproduce on W28 (0 of 3) -- stamp and actual row can decouple at an
+--       unknown rate, which bounds the reading's precision, not its direction.
+--   (b) NO OBVIOUS NEGATIVE -- armed on every leg of W47/W48/W49/W50 (the
+--       62/63/61/59-id families, 701 scored mirrored games; the four removals
+--       across those waves were stayattr, tpdying, tpreach and slotwait, never
+--       this id). Family gpm swap-averaged -5.95 / +27.25 / +11.70 / +13.76,
+--       deaths +0.25 / +0.06 / +0.02 / +0.07. HONEST BOUNDARY: that is a
+--       FAMILY-level reading, not an id-level one -- an all-on wave cannot
+--       attribute economy to one member -- and the winrate channel has been
+--       DEGENERATE since GH #352, so no win/loss number exists to cite. Rule
+--       2(b) asks for a coarse "no obvious negative"; four waves averaging
+--       +11.7 gpm with this id armed on every one of them is that and nothing
+--       more. (W51 is NOT cited: it was an exclusive single-candidate wave
+--       (`campgrade`), so this id was not armed on it at all.)
+--   (c) The defect is arithmetic, not a judgement call: the row is 15 entries
+--       spending 4+4+4+3, OD has exactly three learnable basics (four ranks
+--       each) plus a three-rank ultimate, so the 4x block can only be a basic --
+--       and the only basic the shipped row never names is index 3. Index 4 is
+--       the `generic_hidden` placeholder (measured in 2 of 2 drop-worlds by
+--       tests/test_build_index_resolution.lua). Levelling a hero from a row that
+--       names a real ability instead of a placeholder needs no strategic
+--       argument at all.
+-- KNOWN RESIDUAL, promoted with eyes open: the armed legs still lose talent
+-- points (frozen 5-24% of the game, GH #330). That is a SECOND defect, in the
+-- talent-side spender, which this row does not touch and this promote does not
+-- claim to fix (tests/test_od_levelup_double_spend.lua section 7 keeps it live).
 --
 -- WHAT THE INDEX RESOLVES TO. J.Skill.GetAbilityList (bots/FunLib/aba_skill.lua)
 -- walks the engine's slots in order; OD's slot row (tests/mock/hero_slots.lua,
@@ -82,21 +117,20 @@ local tAllAbilityBuildList = {
 -- predicts a hero that never stalls at all.
 --
 -- BOUNDS. This is a static reading of which index names what, plus the shipped
--- spender's arithmetic; it does not say the fix wins games. Condition (a) was
--- bought on W28 (GH #330: armed objurgation 4/4/4, baseline 0/0/0/0); (b) and
--- (c) are still open and are not this comment's to claim. That the placeholder
--- is THE hole which stalls OD is source argument plus this corpus's perfect
--- correlation, not an independent mechanism experiment -- GH #286's attribution
--- was withdrawn by the director 2026-08-29 and is not re-claimed here. The armed
--- legs still lose talent points (frozen 5-24%), which `odbuild` does not touch
--- and nothing here explains. Turbo-only and gated, so shipped behaviour is
--- byte-identical until 'odbuild' is armed.
+-- spender's arithmetic; it does not say the fix wins games, and the promote
+-- above does not claim it does -- rule 2(b) is a coarse no-obvious-negative, not
+-- a win-rate measurement. That the placeholder is THE hole which stalls OD is
+-- source argument plus this corpus's perfect correlation, not an independent
+-- mechanism experiment -- GH #286's attribution was withdrawn by the director
+-- 2026-08-29 and is not re-claimed here. Non-turbo still levels from the shipped
+-- row: this repo tunes turbo, and the untouched row keeps the non-turbo
+-- behaviour byte-identical.
 local tObjurgationBuildList = {
 						{2,1,3,2,2,6,2,1,1,1,6,3,3,3,6},--pos2, index 4 -> 3
 }
 
 local nAbilityBuildList
-if J.IsModeTurbo() and J.IsSoakCandidate( 'odbuild' ) then
+if J.IsModeTurbo() then
 	nAbilityBuildList = J.Skill.GetRandomBuild( tObjurgationBuildList )
 else
 	nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )

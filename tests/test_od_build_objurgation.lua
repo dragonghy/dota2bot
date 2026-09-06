@@ -1,6 +1,7 @@
--- [ratchet] [hero] GH #287 §2 -- soak candidate 'odbuild': the one mis-resolved
--- index in Obsidian Destroyer's skill build, aimed at the ability the row's own
--- arithmetic says it meant.
+-- [ratchet] [hero] GH #287 §2 -- PROMOTED 2026-09-06 (was soak candidate
+-- 'odbuild'): the one mis-resolved index in Obsidian Destroyer's skill build,
+-- aimed at the ability the row's own arithmetic says it meant. Turbo default
+-- since the promote; the shipped row still runs outside turbo.
 --
 -- Tagged `[ratchet]` so routine_selfcheck.sh's fast Lua leg reads it every round
 -- (~0.11s): §5 and §6 go red the moment someone edits the shipped row, renames
@@ -38,8 +39,9 @@
 --     objurgation's zero, which both defects predict and neither explains away.
 --   * Static + one frame.  Whether the armed row wins games is condition (a)
 --     and (b), and is asked of a wave, not of this file.
---   * The fix is GATED ('odbuild', turbo-only).  Nothing below claims shipped
---     behaviour changed; §5 asserts the opposite.
+--   * The fix is PROMOTED (2026-09-06) and turbo-only.  Nothing below claims the
+--     NON-turbo behaviour changed; §5 asserts the shipped row is still there and
+--     still selected outside turbo.
 
 package.path = 'tests/?.lua;' .. package.path
 
@@ -269,19 +271,26 @@ tests['[5] odbuild differs from the shipped row only where the placeholder was']
         'the rows differ in ' .. #tDiff .. ' positions, recorded 4')
 end
 
-tests['[6] the gate is turbo-only, named odbuild, and leaves the default row live'] = function()
-    assert(SRC:find("J%.IsModeTurbo%(%) and J%.IsSoakCandidate%(%s*'odbuild'%s*%)"),
-        SOURCE .. ' no longer gates on `J.IsModeTurbo() and J.IsSoakCandidate(\'odbuild\')`. '
-            .. 'A behaviour change in this repo ships dark and turbo-only until it is '
-            .. 'promoted; if odbuild WAS promoted, this assertion is the one to rewrite, '
-            .. 'together with iterations/state.json.')
-    local sElse = SRC:match("IsSoakCandidate%(%s*'odbuild'%s*%).-else(.-)\nend")
+tests['[6] PROMOTED: turbo selects the repaired row, no gate left, default row still live'] = function()
+    -- PROMOTED 2026-09-06 (director, stable-v4, iterations/state.json key
+    -- `odbuild_PROMOTE_20260906`). Until that day this assertion demanded the
+    -- gate `IsModeTurbo() and IsSoakCandidate('odbuild')` and named itself as
+    -- "the one to rewrite" if the id were ever promoted. This is that rewrite.
+    -- The id's ABSENCE is the load-bearing half: a promoted row that quietly
+    -- grows a gate again is inert in every real game while every armed-wiring
+    -- check still reads clean (AGENTS.md calls that the pullcad trap).
+    assert(SRC:find('if J%.IsModeTurbo%(%) then'),
+        SOURCE .. ' no longer selects on `J.IsModeTurbo()` alone')
+    assert(not SRC:find("IsSoakCandidate%(%s*'odbuild'%s*%)"),
+        SOURCE .. " still names the soak candidate 'odbuild'; PROMOTED means the gate "
+            .. 'is gone, not renamed')
+    local sElse = SRC:match('if J%.IsModeTurbo%(%) then.-else(.-)\nend')
     assert(sElse and sElse:find(SHIPPED_TABLE, 1, true),
-        'the unarmed branch no longer selects ' .. SHIPPED_TABLE
-            .. '. Unarmed behaviour must stay byte-equivalent to what shipped.')
-    local sThen = SRC:match("IsSoakCandidate%(%s*'odbuild'%s*%) then(.-)else")
+        'the non-turbo branch no longer selects ' .. SHIPPED_TABLE
+            .. '. Outside turbo the behaviour must stay byte-equivalent to what shipped.')
+    local sThen = SRC:match('if J%.IsModeTurbo%(%) then(.-)else')
     assert(sThen and sThen:find(GATED_TABLE, 1, true),
-        'the armed branch no longer selects ' .. GATED_TABLE)
+        'the turbo branch no longer selects ' .. GATED_TABLE)
 end
 
 -- ---------------------------------------------------------------------------

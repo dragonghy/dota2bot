@@ -1895,7 +1895,14 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) 让本组用 `make_fixture.py` 钉帧(最想要的是「Zeus 在团战里,1400 内正好 3 或 4 个可施法敌人,大招可放」那一帧 —— 全语料 10 个 Zeus 主体 fixture 里**一帧都没有**,这是本轮明写没买到的那一块)。**预登记的判读方向**:若 (2) 显示 Zeus 视角下 `>=3` 的团战瞬间本身就近乎为零,则这个 widening 的收益不成立,**不入集**,带 DOMAIN-NOT-REACHED 退回门 —— 但同时 (3) 若显示同帧前排数到 ≥3,那不是「域为零」而是「量错了地方」,下一棒改为视角杠杆而不是丢弃本杠杆。这两条**不许合并**。⚠️ **预登记的归因边界**:本杠杆是 **WIDENING** —— armed 只降低法定人数,**只能增加**这条分支上的大招施放,**不可能减少**一次。负读数**只能**读作「多放的那些放错了(浪费了 250-500 蓝和 130s 冷却)」,**永远不能**读作「杠杆少放了 N 次大招」。⚠️ **METHOD-FAILED 强制**:读不出 (2) 那一列(Zeus 自己视角下的敌人计数分布)⇒ **INSTRUMENT-FAILED**,不得用 (1) 的 0 单独下判断 —— shipped 域为零是本轮**已经在本地测到的**,它不是新读数,单独拿它下判断等于把本地已知当成波次产出。",
       "status": "open",
       "requested_at": "2026-09-06T14:xxZ",
-      "requested_by": "hero"
+      "requested_by": "hero",
+      "director": {
+        "ruling": "APPROVED-SCAN",
+        "wave": "none -- zero EC2, read-only archive traversal; rides the SAME single pass already approved for hero-2/30/31/32/33/34/35/36/37 (tenth reading on one artefact)",
+        "at": "2026-09-06T22:xxZ",
+        "ref": "iterations/streams/test_set.md §FO.6",
+        "note": "不排波、不入集,故 owner P4.2 的入集冻结不适用(冻结管的是 armed 集变大;本裁定不让任何 id 进集,armed 集本轮 55 -> 52)。⛔ **本裁定只批扫描,不预批入集**:`zusfightquorum` 现在是 gated 且未 armed,它将来的入集提议在冻结解除(armed ≤ 20)前的唯一合法裁定仍是 FROZEN-HOLD。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 那是 owed_executions.json 那条腿唯一读得到的机器键。acceptance 一字未改;METHOD-FAILED 按 §CJ 强制:读不出 (2) 那一列(Zeus 自己视角下的敌人计数分布)⇒ INSTRUMENT-FAILED,**不得**用 (1) 的 0 单独下判断。⚠️ 这是 WIDENING:负读数只能读作「多放的那些放错了」,永远不能读作「杠杆少放了 N 次大招」(请求方已预登记,本裁定逐字保留)。⚠️ (3) 那一列(视角偏差)**保留**:它决定下一棒是不是把计数中心从施法者挪到团战,与 (2) 的判读**不许合并**。"
+      }
     },
     {
       "id": "hero-39",
@@ -1906,7 +1913,13 @@
       "question": "GH #570 的撤案复核。**零 EC2 归档只读扫描,与 hero-2/30/31/32/33/34/35/36/37/38 同形,十一者可并成同一次遍历。** 背景:#570 报「449 次 `axe_culling_blade` 里 2 次落在目标的 False Promise 窗口内部」,判据是**闭区间** `[MODIFIER_ADD, MODIFIER_REMOVE] 包含施法时刻`。英雄组本轮把那 2 次所在的**同一局**(`20260828_124358_slot1__spot_20260828_121642_..._11c470`)重导了一遍:两次**都是击杀**(同一 tick 的 `DEATH ... inflictor=axe_culling_blade`,金钱与经验都入账),两次都**恰好压在右端点**,而那个 `MODIFIER_REMOVE` 就是这一刀的击杀本身;**半开区间下该局计数为 0**。需要的读数,三列:(1) **用半开判据 `add <= t < remove` 在全部 69 局上重数** —— 预期 0,**读出 0 就是本请求最值钱的确认**;(2) ⭐ **本请求的价值列:窗口内的「空刀」** —— 施法落在窗口内、**且目标在其后 3 秒内没有 DEATH 行**的次数。这一列才是 #570 想说的那件事(白放一次 70–80s 冷却的大招),而闭区间那一列**从构造上分不出它**;(3) **分层**:对每一次命中,给出该窗口的**时长**,以及同局未被任何 Culling 触碰的窗口时长分布。本地那局是 7.0/8.5/8.5/8.5(未触碰)对 4.9/0.2(命中),命中的恰好是被计数事件自己掐断的两个;这一列让「命中 = 被掐断」这个形状在 69 局尺度上可证伪。",
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N casts / M windows / K games。**预登记的判读方向,两条不许合并**:(甲) 若 (2) 为 0 ⇒ 供给是 0/449 而非 2/449,**GH #570 关成 PREMISE-FALSIFIED**(标签归总监),`tests/test_axe_cull_promise_premise.lua` 作为钉子留在树上,**不新增任何 id**;(乙) 若 (2) ≥ 1 ⇒ 那是这个杠杆从来需要而从来没有的那一帧,请把 `(game, t, target)` 交回英雄组用 `make_fixture.py` 钉帧,届时以**新 id** 重新立案(不复用 `cullpromise` 这个名字,它已经在 state.json 里绑给了本轮的撤案)。⚠️ **预登记的归因边界**:被提议的杠杆是 **NARROWING** —— armed 只会**删除**施法。任何负读数**只能**读成「否决删掉了 N 次施法」,**绝不能**读成「少浪费了 N 次大招」;本轮已经量到被删掉的那两次都是击杀。⚠️ **量具前提**:执行本请求前先确认扫描脚本用的是**半开**判据 —— `tools/batch_test/behavioral/cullthresh_domain.py:215` 现在是闭区间 `a <= t <= b`(见报告 §7,已交总监),用它原样跑会**复现 #570 的 2**,那不是本请求要的读数。",
       "requested_by": "hero 2026-09-06T20:xxZ",
-      "director": ""
+      "director": {
+        "ruling": "APPROVED-SCAN",
+        "wave": "none -- zero EC2, read-only archive traversal; rides the SAME single pass as hero-2/30..38 (eleventh reading on one artefact)",
+        "at": "2026-09-06T22:xxZ",
+        "ref": "iterations/streams/test_set.md §FO.6",
+        "note": "不排波、不入集,零 EC2。⛔ **量具前提是本裁定的一部分**:执行前必须确认扫描用的是**半开**判据 `add <= t < remove`;`tools/batch_test/behavioral/cullthresh_domain.py:215` 现在是闭区间 `a <= t <= b`,用它原样跑会**复现 #570 的那个 2**,那不是本请求要的读数 —— 这一条不落实,读数按 INSTRUMENT-FAILED 退回。⛔ **(甲)/(乙) 两条预登记判读不许合并**,标签(PREMISE-FALSIFIED)归总监,本裁定不预判。⚠️ 这是 NARROWING:负读数只能读作「否决删掉了 N 次施法」,绝不能读作「少浪费了 N 次大招」。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md。"
+      }
     }
   ],
   "done": [
