@@ -27,6 +27,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0STAYURN. **【2026-09-06T19:46Z 新增,**OWNER_PRIORITIES P4.4(i) + P2(**决策侧**,球在本组)**;
+   工作流第 1 步扫 `[strategy]` open issue —— `#572`/`#568`(本组前两轮已交付、等总监裁)与 `#558`(上一轮已认领并交回),
+   更早的 `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项;
+   产出 `bots/FunLib/jmz_func.lua` 的 `J.ShouldStayAndRegen` 内**新增 in-flight 供给腿**
+   (`stayurn`,turbo-only,**未 armed**,STANDALONE)、`tests/test_stayurn_ally_heal.lua`(**25/25**)、
+   `tests/_stayurn_sweep.lua`、`tools/agent/mutstand_stayurn.sh`(**16 发 STAND GREEN**)、
+   `state.json:stayurn_20260906`、`test_set.md §FN`;
+   报告 `iterations/reports/strategy/20260906T194634Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙),总线 = GH #575。**】**
+   **⭐ 主判据(承接上一轮,第四次用域价钱,而这次它一次否掉一条路、又当场买下另一条):
+   「小」不是唯一的否法,**形状**也是。** `0URNSELF` 点名的那一格跑了价钱:四条 supply 杠杆全 armed 后
+   仍被否决的 **65** 帧里,带灵龛的 **8** 帧中 **4** 帧满足 `urnself` 的域(无队友竞争 **2**)。
+   **4 不是零,而这条路仍然判到此为止** —— 把灵龛记成 field regen source 只有在 bot 真会按它时才诚实,
+   而那需要 `urnself` 在**另一个站点** armed:**GH #542 的形状**(每站点各一 id,所有检查读作干净,
+   **任何单臂波都买不到那个行为**)。**登记为「定价后拒绝」,不是「没想到」**;变异台 **M8** 是它的守门人。
+   **⭐⭐ 落地的杠杆:同一批帧,换一个问法 —— 不是「它手里有没有药」,是「药是不是已经在路上」。**
+   `modifier_item_urn_heal` **活着**的帧**不需要任何施法路径**(按钮已被**别人**按下),
+   这正是 `staybottle` 立论的那句话,而它对灵龛这味药**从来没被说过**。
+   树里另外三处早就这么读:tpscroll `'撤退:3'` 及同族**共 5 处**、`mode_roam_generic` 的
+   `ShouldWaitInBaseToHeal`、`aba_buff` 的 `hero_is_healing`(**五味药的词表**);
+   而 PROMOTED 那条守卫认得**两味**(armed `staybottle` 后三味),**灵龛这味零次**。
+   **⭐⭐⭐ 这是这一族里第一个 SLOT 读数按定义够不到的杠杆**:四条兄弟全读槽位,而灵龛的治疗由队友施放 ——
+   域内 2 帧中 **1 帧**(`f_260820_163429_es_blink_init_621` jakiro,61.8%、缺 626)**九格里既没有灵龛也没有魂之灵瓮**
+   (`flip_no_urn_item == 1`),另一帧自带灵龛是**反向控制组**。
+   bid 层比兄弟强的是**符号**:钉帧出厂 `GetDesire` = **+0.20598228813998432**(**正的**)→ armed **0**
+   ⇒ **取消的是一次真实的回程 bid**(`staybottle` 只能在负 bid 上证明守卫开火)。
+   域 **2**(carrier 4:0 出带 / 0 追击 / **1** 被 1200 环挡 / **1** 出厂本就放行);
+   `ship_true 13 → arm_true 15`,`flips 2 == blocked_with_mod 2` 两条独立路线逐位相等;
+   `flips_staysrc 44`、`flips_both_levers 0` ⇒ **单臂可读是读数不是宣称**。
+   **⭐⭐⭐⭐ 立法级(量具):presence flag 不能承载一个 COUNT 形状的论据。**
+   M6 声明 `anchor 1`,锚检查回答 **`occurs 5 time(s)`** —— item 层**五处**拒绝(5663 与 5977 连续五行逐字相同),
+   `perl s///` 不带 `/g` ⇒ 删的是第一处、`'撤退:3'` 原封不动、presence flag 照样读 1 ⇒ **SURVIVED**。
+   **两件事同时错,只有一件是变异体**:针不唯一,**并且**它攻击的事实是个存在标志而论据是个计数。
+   两处都改(sweep 改成**数站点** `ITEM_URN_MOD_SITES == 5`)⇒ 删五处中任何一处都 5→4。
+   同族第二处:`return armed and sId == 'stayurn'` 在 sweep 里**出现两次**,M9/M10 一直在改一个
+   **标签没有点名的位置**并打印 `CAUGHT`。修正后重跑 **16/16 STAND GREEN**。
+   **下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据的优先);
+   否则按 **P4.4 在 `bots/` 上取一个小杠杆**,候选(**标注:未定价的猜测,先跑域价钱,价钱有权否掉它**)——
+   **`J.ShouldStayAndRegen` 的 in-flight 词表现在缺的是 `modifier_clarity_potion`**:
+   它是 `aba_buff.hero_is_healing` 五味里**唯一一味本轮既没加也没定价**的(魂之灵瓮已定价 = 0 帧、明确排除);
+   ⚠️ 但它是**回蓝**不是回血,**「回蓝算不算 field sustain」是一个新意见不是一处不一致** ——
+   **先跑域价钱**:1012 活体帧里有几帧挂着它、其中几帧落在那 112 个被 supply 否决的帧里?
+   **答案很小、或者论据要靠「回蓝也算续航」这句新话,就把这条路判到此为止**,不要因为「词表还差一味」就落一个 id。
+   **照旧先跑域价钱、每个变异体的锚先数一遍(连同它攻击的是不是一个 COUNT 形状的事实)、恒零的断言先证明它数得动。**
+
 0URNSELF. **【2026-09-06T16:53Z 新增,**OWNER_PRIORITIES P4.4(i) + P2(**决策/施法侧**,球在本组)**;
    工作流第 1 步扫 `[strategy]` open issue —— `#568`(本组上一轮已交付、等总监裁)与 `#558`(上一轮已认领并交回),
    更早的 `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项;
@@ -5973,6 +6019,45 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T19:46Z(**P4.4(i) + P2 决策侧**:`[strategy]` open issue 本轮扫过
+  `#572`/`#568`(本组前两轮已交付、等总监裁)与 `#558`(上一轮已认领并交回),更早的
+  `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项。
+  开工自检 **EXIT=0 干净**(⚠️ 第一条命令就撞上它对**管道**的拒绝 —— 经管道读到的是 reader 的退出码)。
+  **⭐ 主判据(承接上一轮,第四次用域价钱):「小」不是唯一的否法,形状也是。**
+  `0URNSELF` 点名的那一格跑了价钱 —— 65 帧里带灵龛的 8 帧中 **4** 帧满足 `urnself` 的域(无队友竞争 **2**),
+  **4 不是零,而这条路仍然判到此为止**:把灵龛记成 field regen source 只有在 bot 真会按它时才诚实,
+  那需要 `urnself` 在**另一个站点** armed = **GH #542 的形状**(任何单臂波都买不到那个行为)。
+  **登记为「定价后拒绝」而不是「没想到」**,变异台 **M8**(把灵龛 ITEM 加进 `J.HasFieldRegenSource` 必须报红)是守门人。
+  **⭐⭐ 落地的杠杆 `stayurn`**:同一批帧换一个问法 —— **不是「它手里有没有药」,是「药是不是已经在路上」**。
+  `modifier_item_urn_heal` 活着的帧**不需要任何施法路径**(按钮已被**别人**按下),
+  这正是 `staybottle` 立论的那句话,而它对灵龛**从来没被说过**;树里另外三处早就这么读
+  (tpscroll `'撤退:3'` 及同族**共 5 处**、`mode_roam_generic.ShouldWaitInBaseToHeal`、
+  `aba_buff.hero_is_healing` 五味词表),**PROMOTED 那条守卫认得两味、灵龛零次**。
+  **⭐⭐⭐ 这一族第一个 SLOT 读数按定义够不到的杠杆**:四条兄弟全读槽位,灵龛的治疗由队友施放 ——
+  域内 2 帧中 **1 帧**九格里既无灵龛也无魂之灵瓮(`flip_no_urn_item == 1`),另一帧自带是反向控制组。
+  bid 层:钉帧 jakiro 出厂 `GetDesire` **+0.20598228813998432(正的)** → armed **0**
+  ⇒ **取消的是一次真实的回程 bid**;`staybottle` 只能在负 bid 上证明守卫开火。
+  域 **2**(carrier 4:0 出带 / 0 追击 / 1 被 1200 环挡 / 1 出厂本就放行);
+  `ship_true 13 → arm_true 15`、`flips 2 == blocked_with_mod 2`;`flips_staysrc 44` / `flips_both_levers 0`
+  ⇒ **单臂可读是读数不是宣称**;`flip_true_to_false 0` 且**对调调用报出整个域 2**(M11/M11b 双双 CAUGHT)。
+  **⭐⭐⭐⭐ 立法级(量具):presence flag 不能承载一个 COUNT 形状的论据。**
+  M6 声明 `anchor 1`,锚检查回答 **`occurs 5 time(s)`**;`perl s///` 不带 `/g` 删了第一处、
+  `'撤退:3'` 原封不动、presence flag 照样读 1 ⇒ **SURVIVED**。**两件事同时错,只有一件是变异体。**
+  改成**数站点**(`ITEM_URN_MOD_SITES == 5`)后,删五处中任何一处都 5→4。
+  同族第二处:`return armed and sId == 'stayurn'` 在 sweep 里出现两次,M9/M10 一直在改标签没点名的位置并打印 CAUGHT。
+  修正后 **16/16 STAND GREEN**。
+  **副产物**:GH #546 活体复现 —— 一次性 Lua stand 的 `print` 被 mock 的 `install()` 换成空函数
+  ⇒ **stdout 全空 + 退出码 0**,长得像「跑了没发现」;改 `io.stderr:write` 才拿到读数。
+  **门读数**:静态半 `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**;动态半 `run_tests.lua stayurn`
+  **25 tests / 0 failures**;全量套件(~100min,GH #124)**未跑,不声称**。
+  产出 `bots/FunLib/jmz_func.lua`(`stayurn` 块)、`tests/test_stayurn_ally_heal.lua`、
+  `tests/_stayurn_sweep.lua`、`tools/agent/mutstand_stayurn.sh`、`state.json:stayurn_20260906`、
+  `test_set.md §FN`;报告 `iterations/reports/strategy/20260906T194634Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
+  **交棒(总线 GH #575)**:甲 → 总监(登记,**不提入集**,FROZEN-HOLD;附规程建议:
+  「树里另外几处已经这么写了」型的条件 (c) 论据,量具必须**数站点**不能打**存在标志**);
+  乙 → 批测台(解冻后单臂可读;⚠️ 域 2/1012,按**稀有事件**排,不要按单波显著性读);
+  丙 → 录像组(核验形状见报告 §9;⚠️ **病人未必是灵龛的携带者**,按携带者筛会漏掉一半)。
 - 2026-09-06T17:34Z(**欠账清算,不是新工作单元**:补跑 09-06T04:35Z 那轮
   **落地但没跑完**的 `tools/agent/mutstand_buyband.sh` 整台 20 发。
   当时在报告 / 章程 / GH #555 三处写明「补跑之前不许把 M2/M9/M17 三处重新上锚

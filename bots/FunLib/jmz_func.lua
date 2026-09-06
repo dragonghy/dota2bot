@@ -5355,6 +5355,87 @@ function J.ShouldStayAndRegen( bot )
 			end
 		end
 	end
+	-- [stayurn / owner priority P2, 2026-09-06] The member of this family's own
+	-- in-flight vocabulary that arrives from SOMEONE ELSE'S inventory, and the
+	-- reason no widening of the item-slot reads can ever reach it.
+	--
+	-- The defect, as a word list this tree keeps in four places and this line
+	-- keeps a truncated copy of. Three shipped sites treat "an urn heal is
+	-- ticking on this hero" as proof that the hero is healing and must not be
+	-- sent home:
+	--   * the tpscroll '撤退:3' branch (ability_item_usage_generic ~5663) --
+	--     the SAME branch 'staybottle' cites -- refuses a home TP while
+	--     'modifier_item_urn_heal' is up, listed between flask_healing and
+	--     bottle_regeneration;
+	--   * mode_roam_generic's ShouldWaitInBaseToHeal gate (~1599) refuses to
+	--     count a hurt bot as needing the base while the same modifier is up;
+	--   * FunLib/aba_buff.lua's `hero_is_healing` list is exactly the five
+	--     (flask_healing, clarity_potion, item_urn_heal,
+	--     item_spirit_vessel_heal, bottle_regeneration).
+	-- This PROMOTED function's supply read names two of those five as shipped
+	-- ('modifier_flask_healing', 'modifier_tango_heal') and a third only once
+	-- 'staybottle' is armed. The urn's is in none of them, so a hurt, unchased
+	-- bot with 400 health arriving over 8 seconds reads as empty-handed here,
+	-- the decision falls to `bot:GetGold() < 90`, and it is released to walk or
+	-- TP home -- the trip owner priority P2 forbids, while the heal it needs is
+	-- already in flight and already paid for by a team-mate.
+	--
+	-- ⭐ WHY THIS ONE CANNOT BE REACHED BY WIDENING ANY ITEM READ, which is the
+	-- whole reason it needs its own line rather than a wider sibling. Every
+	-- other lever on this clause reads slots: shipped `bHasFlask` asks
+	-- J.IsItemAvailable (slots 0-5), 'staysrc' asks J.HasFieldRegenSource
+	-- (`for i = 0, 5`), 'staybag' and 'bagsalve' extend that to the backpack.
+	-- An urn heal is cast BY AN ALLY, so the carrier of the item and the
+	-- patient are different heroes -- measured, not argued: of the 2 corpus
+	-- frames inside this lever's domain, ONE (jakiro on
+	-- f_260820_163429_es_blink_init_621, 62% HP, 626 health missing) holds
+	-- neither an urn nor a spirit vessel in any of its nine slots. No slot read
+	-- of any width can see that frame; only the modifier can.
+	--
+	-- ⭐⭐ WHY IT NEEDS NO CAST PATH, and why that distinguishes it from the
+	-- widening this round REFUSED to make. The obvious sibling move -- adding
+	-- item_urn_of_shadows to J.HasFieldRegenSource's vocabulary -- was priced
+	-- and rejected the same round ('urnself' report, 2026-09-06): 4 of the 8
+	-- urn CARRIERS among the vetoed frames satisfy the self-cast domain, but
+	-- counting a carried urn as field sustain is only honest once the bot will
+	-- actually press it, which today needs 'urnself' armed at a DIFFERENT site
+	-- -- the GH #542 shape, where every site reads clean and no single-arm wave
+	-- can buy the behaviour. An urn heal ALREADY TICKING needs no cast path at
+	-- all: the button has been pressed, by someone else, and the health is
+	-- arriving whatever this function decides. That is the same argument
+	-- 'staybottle' was written on, and it is why this lever is standalone where
+	-- the carrier widening would not have been.
+	--
+	-- Direction is fixed by CONSTRUCTION: this can only widen `bHasRegen`,
+	-- which can only remove vetoes, so the armed TRUE set is a strict superset
+	-- of the shipped one. Appended AFTER the 'staybag' block, never inserted
+	-- into it, so with this id un-armed all three sibling levers evaluate
+	-- byte-identically. Gated STANDALONE -- one id in this condition, never a
+	-- conjunction of two (the 'pullcad' trap). Turbo is structural: the first
+	-- line of this function already asked.
+	--
+	-- Honest bounds. (1) The domain is TWO frames and that is a measurement,
+	-- not an apology: 4 of 1012 live hero frames carry the modifier, all four
+	-- are inside the HP band, one is stopped by the untouched 1200 ring and one
+	-- already passes the shipped supply read (it holds a salve), leaving 2.
+	-- tests/_stayurn_sweep.lua emits a row per carrier WITH its stop reason, so
+	-- "the corpus has no urn heals" can never read the same as "the corpus has
+	-- urn heals this function rejects earlier". (2) The spirit vessel's own heal
+	-- modifier ('modifier_item_spirit_vessel_heal') -- the urn's upgrade, and
+	-- the fifth member of that word list -- is NOT added here: 0 of 1012 live
+	-- frames carry it, so including it would widen the domain by an unpriced
+	-- amount. Named rather than smoothed over; it is the next question, not
+	-- this lever's. (3) Same gold-poor superset
+	-- caveat all three siblings carry: gold is not in a .dem (GH #495), so the
+	-- measured flip set is a superset of the live one. (4) A frame is one
+	-- instant and a heal has a tail; this says the decision at t is wrong, and
+	-- does not claim the remaining tick is always enough to stay for -- the
+	-- magnitude question 'fieldsip' owns on the gated family. The urn's 400
+	-- health is the largest single amount any member of that vocabulary
+	-- delivers, so it is the member least exposed to it.
+	if not bHasRegen and J.IsSoakCandidate( 'stayurn' ) then
+		bHasRegen = bot:HasModifier( 'modifier_item_urn_heal' )
+	end
 	if not bHasRegen and bot:GetGold() < 90 then return false end
 	return true
 end
