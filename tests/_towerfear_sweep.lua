@@ -52,13 +52,23 @@ local BLOCK = (function()
     -- below silently measures a truncated block and the failure message names
     -- the wrong thing ("the clause is gone" when it is merely past the window).
     -- Self-witnessing, as the charter's 0LN2 note demands: fail with the truth.
-    -- Widened 3400 -> 4800 on 2026-08-25: the GH #178 comment rewrite inside
-    -- this block added ~1.2 kB of prose. The window is bytes, so PROSE moves it.
-    local block = SRC:sub(at, at + 4800)
-    assert(block:find('nEnemyTowers%[1%]:GetAttackTarget%(%) == bot'),
-        'the source window from 前期谨慎冲塔 no longer reaches the calibrated '
-        .. 'clause -- widen it; the block itself may be intact')
-    return block
+    --
+    -- It used to be a BYTE window (3400, widened to 4800 on 2026-08-25 when the
+    -- GH #178 comment rewrite added ~1.2 kB of prose). A byte window measures
+    -- PROSE, so every comment written inside the block is a tripwire on a file
+    -- that has nothing to do with the comment: the 2026-09-06 `towerring`
+    -- rationale (GH #558) blew 4800 the same way. Replaced by an END ANCHOR --
+    -- the calibrated clause itself, which is the very thing the old assert was
+    -- checking for. The block now ends where it is supposed to end, and prose
+    -- inside it costs nothing. A missing end anchor is now what it always
+    -- should have been: "the calibrated clause is gone", not "widen me".
+    local to = SRC:find('nEnemyTowers%[1%]:GetAttackTarget%(%) == bot', at)
+    assert(to ~= nil,
+        'no calibrated clause (`nEnemyTowers[1]:GetAttackTarget() == bot`) '
+        .. 'after the 前期谨慎冲塔 anchor -- the block was cut, not truncated')
+    -- +400 so the trailing `#hAllyHeroList <= 1 then return 2 end` tail of the
+    -- calibrated clause is inside the block, not just its first line.
+    return SRC:sub(at, to + 400)
 end)()
 
 local function num(v, msg)

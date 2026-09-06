@@ -345,7 +345,12 @@ local PINNED = {
     "buytower | J.ShouldFieldBuyRegenTower | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                   -- I
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
-    "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
+    -- [towerring 20260906 GH #558] The outer-id column of BOTH X.ShouldRun rows
+    -- grew a second id. The classification does not move: the new id gates the
+    -- SAME clock local as 'towerfear' in the same block, and un-armed it leaves
+    -- nFearClock at the shipped 5*60 -- the identity element of the clause it
+    -- joined. Arming any outer id alone measures what it measured before.
+    "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear,towerring | bots/mode_retreat_generic.lua",                       -- W
     "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P
     "c3 | GetDesire | J.IsInLaningPhase | c2,c4 | bots/mode_laning_generic.lua",                                                          -- P
     "c3 | GetDesire | J.ShouldBodyBlockHarass | bodyblock | bots/mode_laning_generic.lua",                                                -- W
@@ -455,7 +460,7 @@ local PINNED = {
     -- cannot make fewer, so 'campbind' armed alone is not `campbind AND
     -- pullthink`.
     "creepthink,pullcad,pullthink | Think | J.GetCampPullPokeTarget | campbind | bots/mode_roam_generic.lua",                             -- P
-    "towerfear | X.ShouldRun | J.IsBasePresenceAdverse | basesiege | bots/mode_retreat_generic.lua",                                       -- W
+    "towerfear,towerring | X.ShouldRun | J.IsBasePresenceAdverse | basesiege | bots/mode_retreat_generic.lua",                             -- W
     "tpcommit,tpdead,tpdying | J.GetTpCommitDefendDesire | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/FunLib/jmz_func.lua",        -- P
     -- [staysrc 20260905] The inner helper here is the (A) exemplar this file's
     -- own header already names: armed 'bagsalve', J.HasFieldRegenSource only

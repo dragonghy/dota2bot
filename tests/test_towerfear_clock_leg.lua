@@ -217,19 +217,21 @@ end)()
 local BLOCK = (function()
     local at = assert(SRC:find('前期谨慎冲塔', 1, true),
         'the 前期谨慎冲塔 block lost its comment anchor')
-    -- Byte length, so PROSE moves it: the 2026-08-25 GH #178 comment rewrite
-    -- (the calibrated clause's real division of labour) added ~1.2 kB inside
-    -- the block and pushed the calibrated clause past a 3400-byte window.
-    -- Widened, not anchored to a later marker, because every assertion below
-    -- wants the window to stop before the NEXT block.
-    local block = SRC:sub(at, at + 4800)
-    -- Self-witnessing window (charter 0LN2): if the window is too short, say
-    -- THAT, instead of reporting "the clause disappeared" about a clause that
-    -- is merely past the end of the substring.
-    assert(block:find('nEnemyTowers%[1%]:GetAttackTarget%(%) == bot'),
-        'the source window from 前期谨慎冲塔 no longer reaches the calibrated '
-        .. 'clause -- widen it; the block itself may be intact')
-    return block
+    -- It was a BYTE length, so PROSE moved it: the 2026-08-25 GH #178 comment
+    -- rewrite added ~1.2 kB inside the block and pushed the calibrated clause
+    -- past a 3400-byte window; the 2026-09-06 `towerring` rationale (GH #558)
+    -- did the same to 4800. A window whose failure mode is "someone explained
+    -- the code" is not measuring the code. Anchored at the END instead -- the
+    -- calibrated clause, which is exactly what the old assert was hunting for,
+    -- and which is also where every assertion below wants the window to stop.
+    local to = SRC:find('nEnemyTowers%[1%]:GetAttackTarget%(%) == bot', at)
+    -- Self-witnessing (charter 0LN2): if the anchor is gone, say THAT.
+    assert(to ~= nil,
+        'no calibrated clause (`nEnemyTowers[1]:GetAttackTarget() == bot`) '
+        .. 'after the 前期谨慎冲塔 anchor -- the block was cut, not truncated')
+    -- +400 keeps the calibrated clause's own tail (`#hAllyHeroList <= 1` and
+    -- its `return 2`) inside the window without reaching the next block.
+    return SRC:sub(at, to + 400)
 end)()
 
 tests['source: the gated clause is turbo-only, halves ONE leg, and the calibrated clause is untouched'] = function()
@@ -237,10 +239,20 @@ tests['source: the gated clause is turbo-only, halves ONE leg, and the calibrate
     assert(shipped ~= nil, 'the shipped clock leg is no longer a nFearClock local with an N * 60 default')
     assert(tonumber(shipped) == 5, 'the shipped clock leg is no longer 5 * 60; re-derive the halving')
 
-    local gate = BLOCK:match("J%.IsSoakCandidate%('([%w_]+)'%)%s*and%s*J%.IsModeTurbo%(%)")
-    assert(gate == 'towerfear',
-        'the gate is no longer "IsSoakCandidate(towerfear) and IsModeTurbo()" -- '
-        .. 'a candidate that is not turbo-gated ships into normal games')
+    -- 2026-09-06 (GH #558): the halving branch became a DISJUNCTION when
+    -- `towerring` -- the same halving, restricted to the annulus -- landed
+    -- beside it. `towerfear` must still be one of its disjuncts and the whole
+    -- disjunction must still be turbo-gated, or a candidate ships into normal
+    -- games. Both ids are named, so dropping either one is caught here.
+    local disj = BLOCK:match(
+        "%((J%.IsSoakCandidate%('[%w_]+'%)%s*or%s*J%.IsSoakCandidate%('[%w_]+'%))%)%s*\n?%s*and%s*J%.IsModeTurbo%(%)")
+    assert(disj ~= nil,
+        'the halving branch is no longer "(IsSoakCandidate(a) or IsSoakCandidate(b)) '
+        .. 'and IsModeTurbo()" -- re-read the gate before trusting anything below')
+    assert(disj:find("'towerfear'", 1, true) ~= nil,
+        'the halving branch no longer names towerfear')
+    assert(disj:find("'towerring'", 1, true) ~= nil,
+        'the halving branch no longer names towerring -- see tests/test_towerring_attack_circle.lua')
     assert(BLOCK:match('nFearClock%s*=%s*nFearClock%s*/%s*2') ~= nil,
         'the armed branch no longer halves the clock leg')
 

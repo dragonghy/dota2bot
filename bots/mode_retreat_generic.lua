@@ -924,9 +924,53 @@ function X.ShouldRun()
         -- comes closer than 1310 u to an enemy tower, against the 1200 u ring
         -- it would use, so restoring it buys zero frames. Pinned by
         -- tests/test_write_only_local_census.py section 3.
+        --
+        -- [towerring] GH #558. The replay group verified `towerfear` EXECUTES
+        -- (248 R_lever episodes, W50): inside the rectangle it releases, occ%
+        -- +2.45 / dwell +1.41 s / bounce% -23.88, all three same-signed in both
+        -- strata, against a level-only control that is pure noise. That buys
+        -- the first half of condition (a). The SECOND half came back with the
+        -- wrong sign: the share of released episodes that touch the tower's own
+        -- 700 u attack circle rose +12.46 pp (ab) / +35.21 pp (ba) -- again both
+        -- strata, and the episode-level count is the reading, not the
+        -- frame-weighted one (one game held 90 of 128 `<700` frames; 铁律 4(ii)).
+        -- The named case is a sniper who walked to 179 u, ate five seconds of
+        -- tower fire, 504 -> 280 hp, with no enemy hero closer than 1000 u --
+        -- the shipped clock would have pulled him out.
+        --
+        -- So the halving is right about the ANNULUS and wrong about the CIRCLE,
+        -- and the comment directly above already says why: the calibrated
+        -- clause cannot catch a 700-898 u frame (a tower cannot reach it) and
+        -- does not need to; inside 700 u it is the only catcher and it demands
+        -- `GetAttackTarget() == bot`, i.e. the shot must already be in flight.
+        -- `towerring` splits the lever on exactly that geometric line: keep the
+        -- halved clock where the tower cannot reach, restore the shipped clock
+        -- where it can. The released set is a STRICT SUBSET of `towerfear`'s,
+        -- which is itself a strict subset of what the shipped clause releases,
+        -- so this return can only fire MORE often than armed `towerfear` and
+        -- never more often than shipped.
+        --
+        -- It is SINGLE-ARM READABLE and it DOMINATES: armed alone it halves
+        -- only in the annulus; armed together with `towerfear` the restore
+        -- below runs after the halving and wins, so the pair reads as the
+        -- narrowed lever rather than as `towerfear`. Deliberate -- the pair is
+        -- the configuration a promote would ship, and GH #542/#553 are the cost
+        -- of the other arrangement (two ids on one path, neither readable).
+        --
+        -- 700 is the tower's attack range, the same constant the paragraph
+        -- above reasons from; it is not a number invented here.
         local nFearClock = 5 * 60
-        if J.IsSoakCandidate('towerfear') and J.IsModeTurbo() then
+        local nFearClockShipped = nFearClock
+        if (J.IsSoakCandidate('towerfear') or J.IsSoakCandidate('towerring'))
+            and J.IsModeTurbo()
+        then
             nFearClock = nFearClock / 2
+        end
+        if J.IsSoakCandidate('towerring') and J.IsModeTurbo()
+            and nEnemyTowers[1] ~= nil
+            and GetUnitToUnitDistance(bot, nEnemyTowers[1]) < 700
+        then
+            nFearClock = nFearClockShipped
         end
         if ( botLevel <= 5 or DotaTime() < nFearClock )
             and nEnemyTowers[1] ~= nil
