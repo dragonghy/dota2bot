@@ -1,6 +1,26 @@
--- [hero] `axecallbkb` -- X.ConsiderQ refuses a spell-immune enemy, and
--- Berserker's Call is not stopped by spell immunity.  Written 2026-09-05 under
--- OWNER_PRIORITIES P4.4 (bots/ 主体配额).
+-- [hero] `axecallbkb_i` / `axecallbkb_ii` -- X.ConsiderQ refuses a spell-immune
+-- enemy, and Berserker's Call is not stopped by spell immunity.  Written
+-- 2026-09-05 under OWNER_PRIORITIES P4.4 (bots/ 主体配额); SPLIT INTO TWO IDS
+-- 2026-09-06 (GH #577), which is what sections 4 and 6 are now for.
+--
+-- THE SPLIT, AND WHY THE TEST CHANGED SHAPE
+-- -----------------------------------------
+-- The 2026-09-05 version of this file registered, before any wave, that the two
+-- branches shared one id and that a negative read could therefore not be
+-- attributed to either.  hero-30's archive census (GH #577,
+-- iterations/reports/replay-check/domain_scan_hero_2_30_31.md §8) sized them:
+-- branch (i) 35 in-domain instants over 3 games, branch (ii) 1,519 over 36 --
+-- 38x apart, so one id would have bought a number (ii) dominates and (i) cannot
+-- be seen inside.  The pre-registered next rung was to SPLIT, and this is it:
+--
+--   branch (i)  X.IsCallPierceInterruptOn -> `axecallbkb_i`
+--   branch (ii) X.IsCallPierceInitiateOn  -> `axecallbkb_ii`
+--
+-- The premise came back CONFIRMED by that census (1,141 Call landings on enemy
+-- heroes in 69 games, 27 of them on a spell-immune hero across 19 games), so
+-- nothing below is weakened; what is NEW is that the two ids must be provably
+-- INDEPENDENT.  Section 6 is that proof, and it is the only part of this file
+-- that a real frame -- not a source read -- can carry.
 --
 -- THE DEFECT
 -- ----------
@@ -52,9 +72,12 @@
 --     explicitly says is not local validation -- so this file does not pretend to
 --     it, and section 5 asserts the blockers so the label cannot rot into a
 --     habit after one of them is fixed.
---   * CONSEQUENCE FOR THE VERDICT, registered before the wave.  Both branches
---     share one id, so a negative wave read cannot be attributed to either.  The
---     next rung then is to SPLIT the id, not to reject the fact.
+--   * CONSEQUENCE FOR THE VERDICT, registered before the wave and PAID on
+--     2026-09-06: both branches used to share one id, so a negative wave read
+--     could not be attributed to either.  The pre-registered next rung was to
+--     SPLIT the id rather than reject the fact, and section 6 now holds the two
+--     ids apart.  What the split does NOT buy is a behavioural case for (ii) --
+--     that bound is unchanged and is the bullet above.
 --   * Section 2's ring ignores vision, which makes it an UPPER bound; a "nothing
 --     reaches it" claim measured against an over-large ring errs safe.
 --   * Corpus counts come from `dofile` via the loader, never from a regex over
@@ -69,7 +92,12 @@ local FIXTURE = 'tests/fixtures/f_260820_043637_axe_ring_close.lua'
 local AXE = 'npc_dota_hero_axe'
 local SKY = 'npc_dota_hero_skywrath_mage'
 local CALL = 'axe_berserkers_call'
-local CAND = 'axecallbkb'
+local CAND_I = 'axecallbkb_i'    -- branch (i), the interrupt leg
+local CAND_II = 'axecallbkb_ii'  -- branch (ii), the initiation leg
+-- The id both branches shared until 2026-09-06.  It is RETIRED, not renamed: no
+-- gate in bots/ names it any more, and section 6 asserts that, so a wave arming
+-- the old string cannot silently arm nothing while looking wired.
+local CAND_RETIRED = 'axecallbkb'
 
 -- Recorded 2026-09-05 from odota/dotaconstants build/abilities.json.
 local Q_RADIUS = 315
@@ -107,15 +135,27 @@ local function consider_q_body(src)
     return to and rest:sub(1, to) or rest
 end
 
---- Load the real frame, optionally arm `axecallbkb`, optionally apply any of the
---- three declared flips, then drive the REAL X.ConsiderQ.
+--- Load the real frame, arm any subset of the two candidate ids, optionally apply
+--- any of the three declared flips, then drive the REAL X.ConsiderQ.
+---
+--- `opt.arm` is a LIST of ids, never a boolean: after the split, "armed" is not a
+--- state this lever has -- arming (i), arming (ii) and arming both are three
+--- different worlds, and section 6 exists precisely because they must not be the
+--- same one.  `opt.arm = {}` (or absent) is the shipped, disarmed world.
 local function bid(opt)
     opt = opt or {}
+    local armed = {}
+    for _, id in ipairs(opt.arm or {}) do
+        assert(id == CAND_I or id == CAND_II,
+            'bid() asked to arm ' .. tostring(id) .. ', which is not one of this '
+            .. "lever's ids -- a typo here would arm nothing and look like a finding")
+        armed[id] = true
+    end
     local J, bot, heroes, fx = rf.load(FIXTURE)
-    -- `opt.armed == true` and not `opt.armed`: an absent key would make this
-    -- return nil, and a helper asserted `== false` then fails on a nil that is
-    -- behaviourally identical.  The distinction is the test's, not the gate's.
-    J.IsSoakCandidate = function(id) return opt.armed == true and id == CAND end
+    -- `== true` and not a bare lookup: an absent key would make this return nil,
+    -- and a helper asserted `== false` then fails on a nil that is behaviourally
+    -- identical.  The distinction is the test's, not the gate's.
+    J.IsSoakCandidate = function(id) return armed[id] == true end
     if opt.nonTurbo then
         -- rf.load's install() forces turbo; undo it AFTER load, exactly as
         -- tests/test_axe_cull_immune_veto.lua does.
@@ -235,9 +275,9 @@ tests['2x2 (a) alone: Call ready, nobody channeling -- still bids nothing'] = fu
     -- Isolates flip (a): making the ability castable does not by itself create a
     -- bid, so section 3's later readings are not "the cooldown flip did it".
     local dOff = bid({ ready = true })
-    local dOn = bid({ ready = true, armed = true })
+    local dOn = bid({ ready = true, arm = { CAND_I, CAND_II } })
     assert(dOff == 0, 'gate OFF, got ' .. tostring(dOff))
-    assert(dOn == 0, 'gate ON must be identical here, got ' .. tostring(dOn))
+    assert(dOn == 0, 'both gates ON must be identical here, got ' .. tostring(dOn))
 end
 
 tests['2x2 (a)+(b): a channeling, NON-immune skywrath fires on BOTH legs'] = function()
@@ -245,7 +285,7 @@ tests['2x2 (a)+(b): a channeling, NON-immune skywrath fires on BOTH legs'] = fun
     -- gate does, it must do NOTHING on a frame where nobody is immune -- which is
     -- every frame in this corpus and the overwhelming majority of a real game.
     local dOff, mOff = bid({ ready = true, channeling = true })
-    local dOn, mOn = bid({ ready = true, channeling = true, armed = true })
+    local dOn, mOn = bid({ ready = true, channeling = true, arm = { CAND_I, CAND_II } })
     assert(dOff == DESIRE_HIGH, 'shipped desire, got ' .. tostring(dOff))
     assert(type(mOff) == 'string' and mOff:find('Q%-'), 'shipped motive, got ' .. tostring(mOff))
     assert(dOn == dOff, 'armed desire drifted on a non-immune frame: '
@@ -260,7 +300,9 @@ tests['2x2 (a)+(b)+(c), gate OFF: the immune channeler is refused -- the defect'
 end
 
 tests['2x2 (a)+(b)+(c), gate ON: the same frame breaks the channel'] = function()
-    local d, m = bid({ ready = true, channeling = true, immune = true, armed = true })
+    -- `axecallbkb_i` alone, not both: this branch is (i)'s, and arming (ii) here
+    -- would make the case pass for a reason section 6 is about to forbid.
+    local d, m = bid({ ready = true, channeling = true, immune = true, arm = { CAND_I } })
     assert(d == DESIRE_HIGH, 'armed desire, got ' .. tostring(d))
     assert(type(m) == 'string' and m:find('Q%-'),
         'motive still reported, got ' .. tostring(m))
@@ -270,42 +312,70 @@ tests['gate ON but NOT turbo: still refused'] = function()
     -- The turbo half of the gate carries the whole "shipped normal-mode behaviour
     -- is unchanged" promise; without this case the gate could be turbo-less and
     -- every other case here would still pass.
-    local d = bid({ ready = true, channeling = true, immune = true, armed = true, nonTurbo = true })
+    local d = bid({ ready = true, channeling = true, immune = true,
+                    arm = { CAND_I, CAND_II }, nonTurbo = true })
     assert(d == 0, 'outside turbo the candidate must be inert, got ' .. tostring(d))
 end
 
 -- ---------------------------------------------------------------- section 4 --
--- The gate helper itself.
+-- The gate helpers themselves -- one per branch since the 2026-09-06 split.
 
-tests['the gate helper is turbo AND candidate, not either'] = function()
+--- The helper body, read out of the shipped source by name.  Reading the SOURCE
+--- rather than calling the function is what makes the id assertions below able to
+--- fail: a helper that named the wrong id would still answer true/false correctly
+--- for whatever id it does name.
+--- The window ends at the helper's own `end`, not at a fixed byte count: the two
+--- helpers are adjacent in the file, so a 300-byte window off the first one runs
+--- straight into the second and reports BOTH ids for it.  (That is not a
+--- hypothetical -- it is what this function did on its first run.)
+local function helper_body(src, fname)
+    local from = src:find('function X%.' .. fname .. '%s*%(%s*%)')
+    assert(from, 'X.' .. fname .. ' not found in ' .. SRC)
+    local rest = src:sub(from)
+    local to = rest:find('\nend')
+    assert(to, 'X.' .. fname .. ' has no terminating `end` -- the reader would '
+        .. 'otherwise scan the rest of the file and report a neighbour\'s id')
+    return rest:sub(1, to)
+end
+
+local HELPERS = {
+    { fname = 'IsCallPierceInterruptOn', id = CAND_I, branch = '(i) interrupt' },
+    { fname = 'IsCallPierceInitiateOn', id = CAND_II, branch = '(ii) initiation' },
+}
+
+tests['each gate helper is turbo AND its own candidate, not either'] = function()
     -- Each leg gets a FRESH world: J.IsModeTurbo memoises into bModeTurboCache on
     -- its first call, so flipping GetGameMode after the helper has run once
     -- changes nothing.
-    local _, _, _, _, _, _, Xturbo = bid({ armed = true })
-    assert(type(Xturbo.IsCallPierceOn) == 'function', 'X.IsCallPierceOn is gone or renamed')
-    assert(Xturbo.IsCallPierceOn() == true, 'armed + turbo must be on')
+    for _, h in ipairs(HELPERS) do
+        local _, _, _, _, _, _, Xturbo = bid({ arm = { h.id } })
+        assert(type(Xturbo[h.fname]) == 'function',
+            'X.' .. h.fname .. ' is gone or renamed -- branch ' .. h.branch)
+        assert(Xturbo[h.fname]() == true, h.fname .. ': armed + turbo must be on')
 
-    local _, _, _, _, _, _, Xnormal = bid({ armed = true, nonTurbo = true })
-    assert(Xnormal.IsCallPierceOn() == false, 'armed but not turbo must be off')
+        local _, _, _, _, _, _, Xnormal = bid({ arm = { h.id }, nonTurbo = true })
+        assert(Xnormal[h.fname]() == false, h.fname .. ': armed but not turbo must be off')
 
-    local _, _, _, _, _, _, Xdisarmed = bid()
-    assert(Xdisarmed.IsCallPierceOn() == false, 'turbo but not armed must be off')
+        local _, _, _, _, _, _, Xdisarmed = bid()
+        assert(Xdisarmed[h.fname]() == false, h.fname .. ': turbo but not armed must be off')
+    end
 end
 
-tests['the helper names exactly this candidate id and nothing else'] = function()
-    -- The `pullcad` trap: a gate whose condition names a SIBLING id freezes FALSE
-    -- the day that sibling is promoted, and no wiring check notices.  This helper
-    -- must be STANDALONE.
+tests['each helper names exactly its own candidate id and nothing else'] = function()
+    -- The `pullcad` trap, and after the split it is no longer hypothetical: the
+    -- two ids are siblings in the same function, so a helper naming the OTHER
+    -- one's id would freeze FALSE the day that one is promoted, and
+    -- check_armed_wiring.py would still call it WIRED.  Each helper is STANDALONE.
     local src = read_file(SRC)
-    local from = src:find('function X%.IsCallPierceOn%s*%(%s*%)')
-    assert(from, 'X.IsCallPierceOn not found in ' .. SRC)
-    local body = src:sub(from, from + 300)
-    local ids = {}
-    for id in body:gmatch("IsSoakCandidate%s*%(%s*'([%w_]+)'") do ids[#ids + 1] = id end
-    assert(#ids == 1 and ids[1] == CAND,
-        'the helper must name exactly one candidate id (' .. CAND .. '), found '
-        .. table.concat(ids, ','))
-    assert(body:find('IsModeTurbo'), 'the helper lost its turbo half')
+    for _, h in ipairs(HELPERS) do
+        local body = helper_body(src, h.fname)
+        local ids = {}
+        for id in body:gmatch("IsSoakCandidate%s*%(%s*'([%w_]+)'") do ids[#ids + 1] = id end
+        assert(#ids == 1 and ids[1] == h.id,
+            'X.' .. h.fname .. ' must name exactly one candidate id (' .. h.id
+            .. '), found ' .. table.concat(ids, ','))
+        assert(body:find('IsModeTurbo'), 'X.' .. h.fname .. ' lost its turbo half')
+    end
 end
 
 -- ---------------------------------------------------------------- section 5 --
@@ -320,8 +390,11 @@ tests['branch (ii) is wired, and gate OFF reduces it to the shipped predicate'] 
     local clause = body:sub(from, from + 500)
     assert(clause:find('J%.CanCastOnNonMagicImmune%(%s*botTarget%s*%)'),
         'the shipped operand must stay FIRST -- it is what makes gate-off byte-equivalent')
-    assert(clause:find('X%.IsCallPierceOn%(%)%s*and%s*J%.CanCastOnMagicImmune'),
+    assert(clause:find('X%.IsCallPierceInitiateOn%(%)%s*and%s*J%.CanCastOnMagicImmune'),
         'the widened operand must be gated AND must use the magic-immune-piercing helper')
+    assert(not clause:find('IsCallPierceInterruptOn'),
+        "branch (ii) is wired to branch (i)'s helper -- the split is cosmetic and a "
+        .. 'wave arming ' .. CAND_I .. ' would move BOTH branches')
     -- The two helpers differ by exactly the IsMagicImmune term, which is what makes
     -- "every other veto still applies" a property of the code rather than a promise.
     local fun = read_file('bots/FunLib/jmz_func.lua')
@@ -352,6 +425,73 @@ tests['branch (ii) blocker 3: J.IsDisabled is true for the only in-ring enemy'] 
     assert(J.IsDisabled(heroes[SKY]) == true,
         'GOOD NEWS: the last guard on the initiation branch now passes for skywrath; '
         .. 'combined with blockers 1 and 2 this frame would become a real (ii) case.')
+end
+
+-- ---------------------------------------------------------------- section 6 --
+-- THE SPLIT IS SEPARABLE (GH #577).  hero-30 measured the two branches 38x
+-- apart, so the whole point of carrying two ids is that a wave can arm one
+-- without moving the other.  A cosmetic split -- two helpers that both answer to
+-- the same armed string, or a branch wired to the wrong helper -- would look
+-- exactly like this one in the source and buy nothing at the verdict.  These
+-- cases are the difference, and the first one is carried by the REAL FRAME:
+-- section 3's (a)+(b)+(c) world is the only place in this file where a gate is
+-- observed changing a decision, so it is also the only place where "arming the
+-- other id does nothing" can be observed rather than argued.
+--
+-- ⚠️ ASYMMETRY, stated so nobody reads it as a gap.  Only branch (i) can be shown
+-- this way, because only branch (i) has a reachable frame (section 5's three
+-- blockers).  "Arming (i) does not move branch (ii)" is therefore asserted at the
+-- SOURCE, in section 5's last assertion, and not here.
+
+tests['separable: arming (ii) ALONE leaves branch (i) refusing the immune channeler'] = function()
+    -- The same three-flip frame section 3 uses.  Gate off it bids 0; armed on
+    -- `axecallbkb_i` it bids HIGH; armed on `axecallbkb_ii` it must bid 0 again,
+    -- because branch (ii) has nothing to do with an interrupt.
+    local dOff = bid({ ready = true, channeling = true, immune = true })
+    local dII = bid({ ready = true, channeling = true, immune = true, arm = { CAND_II } })
+    local dI = bid({ ready = true, channeling = true, immune = true, arm = { CAND_I } })
+    assert(dOff == 0, 'the disarmed baseline moved, got ' .. tostring(dOff))
+    assert(dI == DESIRE_HIGH,
+        CAND_I .. ' no longer fires branch (i) on this frame, got ' .. tostring(dI))
+    assert(dII == dOff,
+        CAND_II .. ' moved branch (i) (got ' .. tostring(dII) .. ' vs the disarmed '
+        .. tostring(dOff) .. ') -- the two ids are not separable, so a wave arming '
+        .. 'either one buys the composite reading GH #577 split them to avoid')
+end
+
+tests['separable: arming BOTH is branch (i) armed, not something new'] = function()
+    -- Guards the other direction: if the two ids had been ANDed rather than kept
+    -- independent, arming both would be the only world in which (i) fires, and the
+    -- case above would still pass.
+    local dBoth = bid({ ready = true, channeling = true, immune = true,
+                        arm = { CAND_I, CAND_II } })
+    local dI = bid({ ready = true, channeling = true, immune = true, arm = { CAND_I } })
+    assert(dBoth == dI, 'arming both differs from arming ' .. CAND_I .. ' alone: '
+        .. tostring(dBoth) .. ' vs ' .. tostring(dI))
+end
+
+tests['the retired id `axecallbkb` names no gate anywhere in bots/'] = function()
+    -- Retired, not renamed.  It was never in any armed set (W49_wave.json records
+    -- it landing gated and staying out), which is the only reason retiring it is
+    -- safe -- and this assertion is what keeps "safe" true: if the string came
+    -- back as a live gate, a wave could arm it and get a composite reading again,
+    -- or arm one of the split ids and silently move a branch this file does not
+    -- know about.
+    local sawGate, sawWhere = false, nil
+    local fh = assert(io.popen("grep -rn \"IsSoakCandidate( '\" bots/ 2>/dev/null", 'r'))
+    local all = fh:read('*a')
+    fh:close()
+    assert(all:find(CAND_I, 1, true), 'the grep found no ' .. CAND_I
+        .. ' at all -- this scan is vacuous, not passing; check that it ran')
+    for line in all:gmatch('[^\n]+') do
+        for id in line:gmatch("IsSoakCandidate%(%s*'([%w_]+)'") do
+            if id == CAND_RETIRED then sawGate = true; sawWhere = line end
+        end
+    end
+    assert(sawGate == false,
+        'the retired id ' .. CAND_RETIRED .. ' is a live gate again at: '
+        .. tostring(sawWhere) .. '.  Either finish the split or re-register the id; '
+        .. 'do not leave both shapes in the tree.')
 end
 
 -- ---------------------------------------------------------------- section KV --

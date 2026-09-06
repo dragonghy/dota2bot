@@ -22,6 +22,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-112. **⭐ 下一轮英雄组的第一件事(由本轮 `-111` 直接交出,优先于 `-109`):
+   用 GH #577 §5 给的两个坐标钉帧。**
+   - (i) `20260831_061811_slot1__spot_20260831_061721_1_1dd5705f43a6bb10f1071464db32035199` **t=1209.9**
+     (Bristleback 开着 BKB 起 TP,Axe 190.2u **连续两个采样同距**,Q rank3 cd=0 蓝 324;
+     出货腿否决 ⇒ 站满两秒没动作;1211.9 TP 完成逃走)。
+   - (ii) `20260828_002127_slot1__spot_20260828_002039_1_3110f323ead440674cef721a4797352366516d29` **t=982.1**
+     (BKB 的 Lina 75.1u,同环 Necrolyte 165.3u + 只剩 228 血的 Shadow Shaman 276.9u
+     ⇒ 丢掉一发三人嘲讽)。**这一帧是第一次有机会把支 (ii) 的「只有源码级覆盖」变成行为覆盖**
+     —— `tests/test_axe_call_immune_veto.lua` section 5 的三条堵点(`botTarget` 恒 nil /
+     `IsGoingOnSomeone` false / `IsDisabled` true)在这一帧上有可能同时让开。
+   - **⚠️ 先读 `tests/frames/README.md` 再决定放哪里**:新帧入 `tests/fixtures/` 要**付价目表**
+     (普查类测试逐个重取读数),`-108` 那轮的 Lion 帧就是在这一步做错过一回并全部回滚。
+     只要一帧,`tests/frames/` 的 staged 位置就够。
+   - 反面帧同样已登记(#577 §5):`20260830_004643_slot1` t=1056.5(Call 反正也放了)、
+     `20260905_004904_slot1` t=1442.5(Axe 被肢解,域外)。
+
+-111. ~~**GH #577 —— `axecallbkb` 两支的域读数交付,预登记的下一棒是拆 id。**~~ ✅ **2026-09-06T22:48Z 做完。**
+   报告 `iterations/reports/hero/20260906T224858Z.md`,`state.json:axecallbkb_split_20260906`。
+   `X.IsCallPierceOn` → `X.IsCallPierceInterruptOn`(**`axecallbkb_i`**,打断支)/
+   `X.IsCallPierceInitiateOn`(**`axecallbkb_ii`**,先手支);旧 id **退役**(不是改名,
+   `bots/` 里不再有任何 gate 命名它 —— 许可证是「它从未进过任何 armed 集」,这句已钉成断言)。
+   两支的域**相差 38 倍**((i) 35 瞬间/3 局,(ii) 1,519 瞬间/36 局),绑在一个 id 上只能买到
+   由 (ii) 主导的合数。**前提这次被证实**(1,141 次落点里 27 次落在真魔免英雄身上,19 局),
+   与上一轮 `liondrainbkb` 的证伪方向相反、同一台量具。
+   **本轮产出是「可分性」这三条断言**,不是新谓词:`bots/` 闸关逐字未变、闸开与 09-05 逐字相同。
+   `tests/test_axe_call_immune_veto.lua` **18→21 例**(`run_tests.lua axe` **214 例 0 失败**),
+   `mutstand_axecallbkb.sh` **8→12 变异**(**M10 交叉接线只有 section 6 的真实帧看得见**)。
+   静态门 EXIT=0 / 0 警告。**零 arm、零入集提议**(P4.2 冻结),下一棒见 `-112` 与总监。
+
 -110. ~~**GH #570 —— Axe 的 `X.HasSpecialModifier` 缺 False Promise。**~~ ✅ **2026-09-06T20:03Z 做完:
    撤案,`bots/` 零改动。** 报告 `iterations/reports/hero/20260906T200352Z.md`,
    `state.json:cullpromise_20260906`,`queue.json:hero-39`。立案证据「449 次 Culling 里
@@ -4837,6 +4866,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T22:48Z(报告 `iterations/reports/hero/20260906T224858Z.md`;**认领 GH #577**
+  —— 带帧证据的 [hero] issue,22:16Z 录像组把 hero-30 的域读数交付回本组;焦点英雄 **Axe**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个 `bots/` 行为改动)
+  **把 09-05 那一轮写在发波之前的预登记付掉了**:「两支共用一个 id ⇒ 负读数不能归因给任何一支;
+  下一棒是**拆 id**,不是否掉事实。」`X.IsCallPierceOn` 拆成
+  `X.IsCallPierceInterruptOn`(**`axecallbkb_i`**)/ `X.IsCallPierceInitiateOn`(**`axecallbkb_ii`**),
+  旧 id **退役**。
+  - **为什么必须拆**:hero-30 的普查把两支量出来**相差 38 倍**
+    ((i) 35 个域内瞬间 / 3 局,(ii) 1,519 个 / 65 ep / 36 局)⇒ 绑在一个 id 上发一波,
+    只能买到一个由 (ii) 主导、(i) **在里面看不见**的合数。
+  - **⭐ 前提这次是被证实的**:69 局里 Call 落到敌方英雄身上 **1,141 次**,其中 **27 次**落在当时
+    **真魔免**的英雄身上(BKB 20 / 剑刃风暴 7),**19 局**。魔免占比 (i) **11.4%** / (ii) **14.1%**,
+    预登记的 `DOMAIN-NOT-REACHED` **两支都不触发**。同一台量具:上一轮 `liondrainbkb` 证伪、
+    这一轮证实 —— 两个方向本周各有一例。**读数全部转述录像组,本组未重算(RECORDED-DELIVERED)。**
+  - **⭐⭐ 本轮的产出是「可分性」不是新谓词**:`bots/` 闸关时逐字复现出货谓词,闸开时与 09-05
+    版本逐字相同,**变的只是哪个字符串开哪一支**。而**装样子的拆分**(两个 helper 答同一个串 /
+    某支接错 helper)在源码里长得**一模一样**、接线检查照样 WIRED、发波买到的还是那个合数
+    ⇒ 三条新断言钉的是可分性本身:**arm (ii) 单独时支 (i) 一动不动**(真实帧:闸全关 0 →
+    arm `_i` HIGH → arm `_ii` 回到 0)、**arm 两个 = arm (i)**(防 AND)、
+    **退役 id 在 `bots/` 里不是任何 gate**(扫描先自证非空过)。
+  - **⚠️ 不对称,不许合并引用**:只有支 (i) 能用真实帧证,因为只有 (i) 有可达帧;
+    **「arm (i) 不动 (ii)」是源码级断言**(section 5 最后一条),不在 section 6。
+    支 (ii) 仍然**只有源码级覆盖**,三条堵点一条没修。
+  - **⚠️ 退役的许可证只有一条**:`axecallbkb` **从未进过任何 armed 集**(`W49_wave.json` +
+    test_set.md armed 串)⇒ 没有在跑的波会因此变成 no-op。这句话已钉成断言(M12 复活变异)。
+  - 验证:`tests/test_axe_call_immune_veto.lua` **18→21 例**;`lua5.1 tests/run_tests.lua axe`
+    **214 例 0 失败**;`tools/agent/mutstand_axecallbkb.sh` **8→12 变异**
+    (**M10 = 交叉接线**,两个 id 两个 helper 接线全过而 arm `_i` 什么都不动 ——
+    **只有 section 6 的真实帧看得见**,源码里没有任何断言钉「支 (i) 读哪个 helper」;
+    M9 第二个 helper 丢 turbo;M11 重新耦合;M12 退役 id 复活)。
+    静态门 `luacheck_gate.sh` **EXIT=0 / 0 警告**(容器缺 luacheck,gate 自己装的,**未用 BYPASS**)。
+  - **自捉**:helper 源码窗口第一版用固定 300 字节,而两个 helper **紧挨着** ⇒ 读第一个时读进
+    第二个、把两个 id 都报给它(**首次运行即打红**),已改成读到该 helper 自己的 `end`。
+  - **⚠️ 诚实边界**:全量套件本轮**没跑**(GH #124,跑的是 `axe` 过滤的 214 例);
+    **零 arm、零 promote、零入集提议**(P4.2 冻结期内合法裁定是 FROZEN-HOLD,故本组不提提议,
+    只登记解冻后的 arm 顺序:**先单 arm `axecallbkb_ii`**,`axecallbkb_i` 先钉 fixture 再谈排波)。
+  - **下一棒**:**总监**(裁 #577 标签 + 登记两个新 id、旧 id 标退役;入集裁 FROZEN-HOLD);
+    **英雄组下轮** = 新 backlog **`-112`**(用 #577 §5 的两个坐标钉帧,先读 `tests/frames/README.md`)。
+    **本轮不新增 queue 请求** —— (ii) 缺的是入集不是取证,(i) 缺的是帧而钉帧是本组自己的活。
 - 2026-09-06T20:03Z(报告 `iterations/reports/hero/20260906T200352Z.md`;**认领 GH #570**
   —— 带帧证据的 [hero] issue,球在本组;焦点英雄 **Axe**;OWNER_PRIORITIES **P4.4 (ii)**)
   **`bots/` 零改动,而这正是本轮的产出**:#570 要把

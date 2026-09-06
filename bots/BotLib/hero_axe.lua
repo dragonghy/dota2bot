@@ -540,9 +540,54 @@ end
 --- If a wave reads negative, the next rung is to SPLIT the id, not to reject the
 --- fact.  Size it on a wave: iterations/queue.json `hero-30`.  Do NOT promote on
 --- the (c) argument alone.
-function X.IsCallPierceOn()
+---
+--- ============================================================================
+--- THE SPLIT, 2026-09-06 (GH #577, hero-30 delivered).  The paragraph above is
+--- the pre-registration; this is it being paid.  The id `axecallbkb` is RETIRED
+--- and each branch now carries its own, because hero-30's census sized the two
+--- branches and they are 38x apart:
+---
+---   branch (i)  X.IsCallPierceInterruptOn  -> `axecallbkb_i`
+---               35 in-domain instants, 3 games, 4 of them spell-immune.
+---   branch (ii) X.IsCallPierceInitiateOn   -> `axecallbkb_ii`
+---               1,519 in-domain instants, 65 episodes, 36 games; 153 of them
+---               spell-immune.  43.1% of the 218 immune instants have 1-2
+---               NON-immune enemies inside the same 315u ring, which is the
+---               value column that is (ii)'s alone.
+---
+--- The premise itself came back CONFIRMED, not falsified, and by corpus rather
+--- than by web page: in 69 archived games Berserker's Call landed on an enemy
+--- hero 1,141 times, 27 of those on a hero who was spell-immune at that instant
+--- (20 Black King Bar, 7 Blade Fury), spread over 19 games -- i.e. the shipped
+--- vetoes really do fire on real frames.  Immune share (i) 11.4% / (ii) 14.1%,
+--- so the pre-registered `DOMAIN-NOT-REACHED` does NOT trigger for either.
+--- Readings: iterations/reports/replay-check/domain_scan_hero_2_30_31.md §8.
+---
+--- ⚠️ WHY TWO IDS AND NOT AN UMBRELLA.  An umbrella that ORs the two back
+--- together would reproduce exactly the composite hero-30 warned about: a wave
+--- arming it reads a number (ii) dominates 38:1 and (i) cannot be seen inside.
+--- So there is deliberately NO `axecallbkb` gate left anywhere in bots/.  A wave
+--- that arms the retired string now arms NOTHING -- it was never in any armed
+--- set (W49_wave.json records it landing gated and staying out), which is the
+--- only reason retiring it outright is safe.  tests/test_axe_call_immune_veto.lua
+--- asserts the retired string is absent from bots/ so this cannot rot back.
+---
+--- ⚠️ THE TWO IDS ARE INDEPENDENT AND MUST STAY THAT WAY.  Neither helper may
+--- name the other's id (the `pullcad` trap: a gate naming a sibling freezes FALSE
+--- the day the sibling is promoted, and check_armed_wiring.py still calls it
+--- WIRED).  The test asserts each helper names exactly one id, and the real-frame
+--- 2x2 asserts that arming (ii) ALONE does not fire branch (i).
+--- ============================================================================
+function X.IsCallPierceInterruptOn()
 
-	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb' )
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_i' )
+
+end
+
+
+function X.IsCallPierceInitiateOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_ii' )
 
 end
 
@@ -582,7 +627,7 @@ function X.ConsiderQ()
 	for _, npcEnemy in pairs( nInRangeEnemyList )
 	do 
 		if npcEnemy:IsChanneling()
-			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceOn() ) -- see X.IsCallPierceOn
+			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceInterruptOn() ) -- see X.IsCallPierceInterruptOn
 		then
 			hCastTarget = npcEnemy
 			sCastMotive = 'Q-打断'..J.Chat.GetNormName( hCastTarget )
@@ -597,7 +642,7 @@ function X.ConsiderQ()
 		if J.IsValidHero( botTarget )
 			and J.IsInRange( botTarget, bot, nRadius - 90 )
 			and ( J.CanCastOnNonMagicImmune( botTarget )
-					or ( X.IsCallPierceOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceOn
+					or ( X.IsCallPierceInitiateOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceInitiateOn
 			and not J.IsDisabled( botTarget )
 		then			
 			hCastTarget = botTarget

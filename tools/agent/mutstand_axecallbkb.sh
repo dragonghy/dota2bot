@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Mutation stand for the `axecallbkb` candidate -- Berserker's Call allowed to
-# fire through spell immunity (hero, 2026-09-05, OWNER_PRIORITIES P4.4).
-# Run by hand when X.IsCallPierceOn, X.ConsiderQ or
-# tests/test_axe_call_immune_veto.lua are edited, and before quoting any of that
-# file's readings.
+# Mutation stand for the `axecallbkb_i` / `axecallbkb_ii` candidates --
+# Berserker's Call allowed to fire through spell immunity (hero, 2026-09-05,
+# OWNER_PRIORITIES P4.4; SPLIT into two ids 2026-09-06, GH #577).
+# Run by hand when X.IsCallPierceInterruptOn, X.IsCallPierceInitiateOn,
+# X.ConsiderQ or tests/test_axe_call_immune_veto.lua are edited, and before
+# quoting any of that file's readings.
 #
 # DISCIPLINE (inherited from tools/agent/mutstand_cullthresh.sh):
 #   * out-of-tree restore, verified with `sha256sum -c`;
@@ -22,7 +23,22 @@
 # that rewrites shipped source in place opens a tearing window for any concurrent
 # reader (GH #507).
 #
-# WHAT THIS STAND IS FOR.  Three of the mutants are directional rather than
+# WHAT THE SPLIT ADDED (M9-M12, 2026-09-06).  The split's whole value is that a
+# wave can arm ONE branch, so the mutants that matter now are the ones that make
+# the split cosmetic while leaving it looking done in the source:
+#   * M10 CROSSED WIRING: branch (i) reads branch (ii)'s helper.  Both ids exist,
+#     both helpers exist, the wiring check is happy -- and arming `axecallbkb_i`
+#     moves nothing while arming `axecallbkb_ii` moves branch (i).
+#   * M11 RECOUPLING: branch (i)'s helper names branch (ii)'s id.  This is the
+#     `pullcad` trap in its sibling form, and it also freezes FALSE the day
+#     `axecallbkb_ii` is promoted.
+#   * M12 RESURRECTION: a helper goes back to naming the RETIRED `axecallbkb`.
+#     A wave arming that string would then move a branch again, which is the
+#     composite reading GH #577 split the id to get rid of.
+#   * M9 is M2 for the SECOND helper: only the split-aware per-helper loop in
+#     section 4 can see a turbo guard lost on the initiation leg.
+#
+# WHAT THIS STAND IS FOR.  Three of the older mutants are directional rather than
 # cosmetic, and they are the ones worth reading:
 #   * M4 is the DEAD-WIRING twin: the helper exists, the gate id is registered,
 #     the wiring check finds a call site -- and the clause reverts to the shipped
@@ -123,8 +139,8 @@ score() {
 # M1: the candidate check is dropped.  The widening is now the shipped default in
 #     every Turbo game -- a defaults change wearing a candidate's name.
 echo
-echo "=== M1: the gate stops asking whether the candidate is armed ==="
-sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb' )" \
+echo "=== M1: branch (i)'s gate stops asking whether the candidate is armed ==="
+sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_i' )" \
             "	return J.IsModeTurbo()"
 score "M1" "shipped code declines an interrupt it could land"
 
@@ -132,9 +148,9 @@ score "M1" "shipped code declines an interrupt it could land"
 # M2: turbo-only is dropped, the candidate check kept.  The narrower half of M1,
 #     and the one every behavioural case in this file would miss.
 echo
-echo "=== M2: the turbo guard is dropped, the candidate check kept ==="
-sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb' )" \
-            "	return J.IsSoakCandidate( 'axecallbkb' )"
+echo "=== M2: branch (i)'s turbo guard is dropped, the candidate check kept ==="
+sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_i' )" \
+            "	return J.IsSoakCandidate( 'axecallbkb_i' )"
 score "M2" "outside turbo the candidate must be inert"
 
 # ---------------------------------------------------------------------------
@@ -142,8 +158,8 @@ score "M2" "outside turbo the candidate must be inert"
 #     nothing armed -- the exact thing "ships dark" is supposed to prevent.
 echo
 echo "=== M3: branch (i) widens unconditionally (the gate leaves the clause) ==="
-sub "$HERO" "			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceOn() ) -- see X.IsCallPierceOn" \
-            "			and true -- see X.IsCallPierceOn"
+sub "$HERO" "			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceInterruptOn() ) -- see X.IsCallPierceInterruptOn" \
+            "			and true -- see X.IsCallPierceInterruptOn"
 score "M3" "shipped code declines an interrupt it could land"
 
 # ---------------------------------------------------------------------------
@@ -152,8 +168,8 @@ score "M3" "shipped code declines an interrupt it could land"
 #     wave would arm this and read back "no effect" with nothing raising a hand.
 echo
 echo "=== M4: branch (i) reverts to the shipped predicate (the dead-wiring twin) ==="
-sub "$HERO" "			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceOn() ) -- see X.IsCallPierceOn" \
-            "			and not npcEnemy:IsMagicImmune() -- see X.IsCallPierceOn"
+sub "$HERO" "			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceInterruptOn() ) -- see X.IsCallPierceInterruptOn" \
+            "			and not npcEnemy:IsMagicImmune() -- see X.IsCallPierceInterruptOn"
 score "M4" "armed desire, got 0"
 
 # ---------------------------------------------------------------------------
@@ -163,8 +179,8 @@ score "M4" "armed desire, got 0"
 #     file can see it, because branch (ii) has no behavioural case at all.
 echo
 echo "=== M5: branch (ii)'s widened operand uses the non-piercing helper ==="
-sub "$HERO" "					or ( X.IsCallPierceOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceOn" \
-            "					or ( X.IsCallPierceOn() and J.CanCastOnNonMagicImmune( botTarget ) ) ) -- see X.IsCallPierceOn"
+sub "$HERO" "					or ( X.IsCallPierceInitiateOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceInitiateOn" \
+            "					or ( X.IsCallPierceInitiateOn() and J.CanCastOnNonMagicImmune( botTarget ) ) ) -- see X.IsCallPierceInitiateOn"
 score "M5" "must be gated AND must use the magic-immune-piercing helper"
 
 # ---------------------------------------------------------------------------
@@ -174,8 +190,8 @@ score "M5" "must be gated AND must use the magic-immune-piercing helper"
 echo
 echo "=== M6: branch (ii) drops the shipped operand (widening becomes narrowing) ==="
 sub "$HERO" "			and ( J.CanCastOnNonMagicImmune( botTarget )
-					or ( X.IsCallPierceOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceOn" \
-            "			and ( X.IsCallPierceOn() and J.CanCastOnMagicImmune( botTarget ) ) -- see X.IsCallPierceOn"
+					or ( X.IsCallPierceInitiateOn() and J.CanCastOnMagicImmune( botTarget ) ) ) -- see X.IsCallPierceInitiateOn" \
+            "			and ( X.IsCallPierceInitiateOn() and J.CanCastOnMagicImmune( botTarget ) ) -- see X.IsCallPierceInitiateOn"
 score "M6" "the shipped operand must stay FIRST"
 
 # ---------------------------------------------------------------------------
@@ -198,6 +214,51 @@ echo "=== M8: the supply scan's ring is collapsed to zero (instrument control) =
 sub "$TEST" "local RING = Q_RADIUS - 50  -- the interrupt branch's GetAroundEnemyHeroList arg" \
             "local RING = 0  -- the interrupt branch's GetAroundEnemyHeroList arg"
 score "M8" "in-ring frames dropped below the measured 1"
+
+# ---------------------------------------------------------------------------
+# M9: the SECOND helper loses its turbo guard.  Before the split there was one
+#     helper and one M2; now a per-helper loop is the only thing standing between
+#     "turbo-only" and a lever that fires in the owner's normal-mode games.  No
+#     behavioural case in this file can reach branch (ii) to notice.
+echo
+echo "=== M9: branch (ii)'s turbo guard is dropped, the candidate check kept ==="
+sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_ii' )" \
+            "	return J.IsSoakCandidate( 'axecallbkb_ii' )"
+score "M9" "IsCallPierceInitiateOn: armed but not turbo must be off"
+
+# ---------------------------------------------------------------------------
+# M10: CROSSED WIRING.  Branch (i) reads branch (ii)'s helper.  Two ids, two
+#      helpers, both call sites present -- and the split is a fiction: arming
+#      `axecallbkb_i` moves nothing at all.  This is the mutant that says whether
+#      the split bought anything, and only the real-frame case in section 6 can
+#      see it (no source assertion pins which helper branch (i) reads).
+echo
+echo "=== M10: branch (i) is wired to branch (ii)'s helper (crossed wiring) ==="
+sub "$HERO" "			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceInterruptOn() ) -- see X.IsCallPierceInterruptOn" \
+            "			and ( not npcEnemy:IsMagicImmune() or X.IsCallPierceInitiateOn() ) -- see X.IsCallPierceInitiateOn"
+score "M10" "axecallbkb_i no longer fires branch (i) on this frame"
+
+# ---------------------------------------------------------------------------
+# M11: RECOUPLING -- the `pullcad` trap in its sibling form.  Branch (i)'s helper
+#      names branch (ii)'s id, so the two ids are one again (and the clause would
+#      freeze FALSE the day `axecallbkb_ii` is promoted, with
+#      check_armed_wiring.py still calling it WIRED).
+echo
+echo "=== M11: branch (i)'s helper names branch (ii)'s id (recoupling) ==="
+sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_i' )" \
+            "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_ii' )"
+score "M11" "found axecallbkb_ii"
+
+# ---------------------------------------------------------------------------
+# M12: RESURRECTION of the retired id.  A helper goes back to naming plain
+#      `axecallbkb`, so a wave arming that string moves a branch again -- the
+#      composite reading GH #577 split the id to get rid of, wearing the split's
+#      own source shape.
+echo
+echo "=== M12: a helper names the RETIRED id again (resurrection) ==="
+sub "$HERO" "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb_ii' )" \
+            "	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallbkb' )"
+score "M12" "is a live gate again at"
 
 # ---------------------------------------------------------------------------
 # The EXIT trap restores and verifies; do not restore-and-delete here.

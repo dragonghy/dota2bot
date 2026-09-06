@@ -4,7 +4,17 @@
 WHAT THIS ANSWERS (queue row hero-30; director ruling FROZEN-HOLD 2026-09-05,
 which explicitly keeps BUYING the evidence: "冻结冻的是入集,不是取证")
 --------------------------------------------------------------------------
-`axecallbkb` (hero_axe.lua:543 `X.IsCallPierceOn`, gated, never armed) removes
+⚠️ NAMES, 2026-09-06 (GH #577): this census READ the tree while both branches
+still shared one id and one helper `X.IsCallPierceOn`.  Its own readings are
+what made the hero stream SPLIT them the same day -- branch (i) is now gated by
+`axecallbkb_i` (`X.IsCallPierceInterruptOn`) and branch (ii) by `axecallbkb_ii`
+(`X.IsCallPierceInitiateOn`), and the retired `axecallbkb` names no gate in
+`bots/` any more.  Nothing measured below changes: the census keys off the two
+BRANCHES (which are untouched, predicate for predicate), never off the id, and
+it always reported them separately.  Re-running it is still valid; quoting it
+under the old single id is not.
+
+`axecallbkb` (hero_axe.lua `X.IsCallPierceOn`, gated, never armed) removed
 TWO spell-immunity vetoes from `X.ConsiderQ`, because axe_berserkers_call is
 `bkbpierce: "Yes"` -- it is not stopped by spell immunity in the game:
 
