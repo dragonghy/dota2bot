@@ -6234,6 +6234,6 @@
     "limits": "⚠️ **语料只能показать成本侧,买不到收益侧**:在能驱动的那一帧,已中招的 WK 是 800u 内**唯一**的敌人,所以 armed 是**放弃**而不是**换人**。「换人」那一半要 `queue.json:hero-35` 去买。⚠️ **域未定量(UNSIZED)**,3 个 debuff 实例是**下界不是频率**(语料 10 分钟封顶)。⚠️ **子集性和正确性各写一条断言**(liondrainbkb 那条可复用的):M6 反向否决**仍然是子集**,抓住它的是「没人中招的帧上 arming 必须是 no-op」那一条。⚠️ 全量套件本轮**没跑完**(~100min,GH #124),`axe` 过滤跑了 201 例。",
     "negative_result_registered": "**击杀循环不该接线,这是本轮的否定结果,后来的轮次别再把它当遗漏**:它是列表分支,子集论证覆盖得到,但它自己的伤害 claim 按满时长定价,而重放正是恢复满时长的动作 —— 在 f_260820_043124_axe_blink_kill 上 armed 会扔掉一个 199 血的人头。同理,**打野挑选 / Roshan / Tormentor / IsGoingOnSomeone 四处也不该接**:没有第二候选,否决=纯损失。",
     "next_baton": "批测台 `queue.json:hero-35`(零 EC2 归档只读扫描,可与 hero-2 / hero-30 / hero-31 / hero-32 / hero-33 / hero-34 并成同一次遍历)。**总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。**在 (a) 买到之前不许 promote。**",
-    "gh_issue": "#TBD(本轮 MCP 可用则开 [hero] issue;不可用则按铁律 11 写进报告,下轮补)"
+    "gh_issue": "GH #554 (https://github.com/dragonghy/dota2bot/issues/554)"
   }
 }
