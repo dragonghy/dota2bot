@@ -343,6 +343,32 @@ local PINNED = {
     -- and compared in tests/test_buytower_purchase_domain.lua.
     "buytower | J.ShouldFieldBuyRegenTower | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                -- A
     "buytower | J.ShouldFieldBuyRegenTower | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                   -- I
+    -- [buyring 20260906] The FOURTH arm of that same purchase site. Its two rows
+    -- are the same two again, and they are re-read rather than copied because the
+    -- argument for each is about THIS function's own clause order:
+    --   (A) J.HasFieldRegenSource under 'bagsalve' -- un-armed the callee returns
+    --       its byte-for-byte SHIPPED main-slot answer, not a frozen constant, so
+    --       arming 'buyring' alone measures 'buyring'. Arming 'bagsalve' can only
+    --       make the callee MORE true, i.e. can only REMOVE buys -- additive in the
+    --       safe direction, and tests/_buyring_sweep.lua drives the leg over the
+    --       same 1012 live frames with `flip_true_to_false` 0.
+    --   (I) J.IsFieldSipEnough under 'fieldsip' -- un-armed it is the literal
+    --       `true`. Note this arm spells the supply test as a STATEMENT
+    --       (`if A and B then return false end`) rather than as the siblings'
+    --       returned negation, purely so the line is its own mutation anchor
+    --       (GH #550); the identity-element argument is unchanged by that.
+    -- ⭐ THE ROW THAT IS ABSENT IS THE INFORMATIVE ONE, for the third time on this
+    -- purchase site and for the same reason: no (P) row for J.IsFieldRegenSituation
+    -- under 'fieldcreep', because this function does not CALL that predicate -- it
+    -- repeats three of its clauses inline and INVERTS the ring. Copying the
+    -- sibling's gated creep veto would name another candidate's id in this body and
+    -- freeze that clause FALSE the day it is promoted (the pullcad trap); the cost
+    -- is a duplication that can drift, and it is paid where it can be seen -- every
+    -- constant in both copies is parsed and compared in
+    -- tests/test_buyring_purchase_domain.lua, which also pins the width of the
+    -- 'fieldcreep' disagreement at 1 of the 10 domain frames.
+    "buyring | J.ShouldFieldBuyRegenRing | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                  -- A
+    "buyring | J.ShouldFieldBuyRegenRing | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                     -- I
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     -- [towerring 20260906 GH #558] The outer-id column of BOTH X.ShouldRun rows
@@ -407,6 +433,13 @@ local PINNED = {
     -- identity element of the `or` it joined -- so the shipped purchase order is
     -- byte-identical and arming either outer id alone still measures that id.
     "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenTower | buytower | bots/item_purchase_generic.lua",                 -- W
+    -- [buyring 20260906] The fifth row on the same Think, (W) for the same reason
+    -- as the three above it: 'fieldregen'/'tpdeathbuy' guard OTHER blocks of this
+    -- function, and this predicate is a new OR arm on the 'fieldbuy' block.
+    -- Un-armed J.ShouldFieldBuyRegenRing returns false on its first line -- the
+    -- identity element of the `or` it joined -- so the shipped purchase order is
+    -- byte-identical and arming either outer id alone still measures that id.
+    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenRing | buyring | bots/item_purchase_generic.lua",                   -- W
     "fieldsip | J.IsFieldSipEnough | J.FieldRegenSipValue | bagsalve | bots/FunLib/jmz_func.lua",                                         -- A
     "l1kite | J.ShouldCounterTradeKite | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                           -- P
     "l1trade | J.ShouldInitiateLaneKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P

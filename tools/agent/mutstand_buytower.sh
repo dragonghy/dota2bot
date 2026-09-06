@@ -228,8 +228,13 @@ mutant caught "M1 the gate lands negated (shipped and armed legs swap)" "$JMZ" m
 # The predicate survives, fully tested, and decides nothing: the purchase site
 # stops consulting it. Every [frame] test in the file drives the SITE, so this is
 # the mutant that separates "the helper is right" from "the helper is wired".
-anchor 1 "$PURCHASE" "		or J.ShouldFieldBuyRegenTower(bot) )"
-m2() { perl -0pi -e "s/\tif \( J\.ShouldFieldBuyRegen\(bot\) or J\.ShouldFieldBuyRegenHurt\(bot\)\n\t\tor J\.ShouldFieldBuyRegenTower\(bot\) \)\n/\tif ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot) )\n/" "$PURCHASE"; }
+# ⚠️ 2026-09-06: re-anchored the day a FOURTH arm ('buyring') joined the same OR.
+# The old anchor ended at ` )` -- the closing paren of a three-arm condition -- so
+# the new arm made it occur ZERO times, and only the anchor check said so. The
+# needle is now the arm ITSELF, which is what this mutant removes; the replacement
+# deletes just that arm and leaves whatever else the OR carries.
+anchor 1 "$PURCHASE" "or J.ShouldFieldBuyRegenTower(bot)"
+m2() { perl -0pi -e "s/or J\.ShouldFieldBuyRegenTower\(bot\) ?//" "$PURCHASE"; }
 mutant caught "M2 the third OR arm is removed from the purchase site" "$PURCHASE" m2
 
 # --- M3, M4: ⭐ the inversion goes --------------------------------------------

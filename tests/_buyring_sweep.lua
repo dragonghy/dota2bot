@@ -1,35 +1,36 @@
--- Heavy corpus sweep for tests/test_buytower_purchase_domain.lua, run as a
+-- Heavy corpus sweep for tests/test_buyring_purchase_domain.lua, run as a
 -- SUBPROCESS: a full-corpus drive that rebuilds jmz_func once per hero-frame must
 -- not run on run_tests.lua's long-lived heap.  The leading underscore keeps
 -- run_tests.lua from globbing it (it globs `^test_.*%.lua$`).
 --
--- WHAT IS MEASURED.  One clause of J.IsFieldRegenSituation states its own reason
--- in its own comment, and that reason is about a consumer this lever is not:
--- `#bot:GetNearbyTowers( 1200, true ) > 0` exists so the HOLD side does not cancel
--- a local back-off from a tower ("suppressing it would leave the bot parked in
--- tower range").  The SUPPLY side cancels nothing -- it adds an OR arm to a
--- purchase -- so on the buy arms that clause vetoes for a reason that has nothing
--- to do with buying, and a hurt, empty-handed bot near an enemy tower is left with
--- no salve and sent home: the trip owner priority P2 forbids.  'buytower' is the
--- standalone lever for exactly those frames.
+-- WHAT IS MEASURED.  One CONSTANT is answered twice by the same family, over the
+-- same health band, for the same question ("is an enemy near enough that this hurt
+-- bot is not safe"):
+--   * J.ShouldStayAndRegen -- PROMOTED, live in every turbo game -- says 1200;
+--   * J.IsFieldRegenSituation and both buy arms say 1600, and the sibling's own
+--     comment gives the reason: "the ring THE GUARDED BRANCH ITSELF MEASURES".
+-- That reason is about the retreat bid 'stayfield'/'stayfield2' cancel.  The buy
+-- arms cancel nothing -- they add an OR arm to a purchase -- so they inherited a
+-- constant justified by a call site they do not have.  'buyring' is the standalone
+-- lever for exactly the frames in the 1200-1600 gap.
 --
--- ⭐ THE COLUMN THIS FILE EXISTS FOR IS `flips_buytower`, AND WHY IT IS NONZERO.
--- The lever must be visible to a SINGLE-ARM isolation wave.  Putting the clause
--- behind J.ShouldFieldBuyRegen's own `IsSoakCandidate('fieldbuy')` first line, or
--- behind J.ShouldFieldBuyRegenHurt's `'buyband'` one, would make the new id
--- unreachable unless the sibling were armed too: two ids on one PATH, every site
--- reading clean, and any single-arm wave reading a CORRECT zero (the second form
--- of the 'pullcad' trap, GH #542).  `flips_buytower` is driven with nothing else
--- armed.  A zero there means the design failed, not that the corpus is thin --
--- `tower_domain`, the independent prefix walk, is what tells those two apart.
+-- ⭐ THE COLUMN THIS FILE EXISTS FOR IS `flips_buyring`, AND WHY IT IS NONZERO.
+-- The lever must be visible to a SINGLE-ARM isolation wave.  Putting the smaller
+-- ring behind J.ShouldFieldBuyRegen's own 'fieldbuy' gate, or behind
+-- J.ShouldFieldBuyRegenHurt's 'buyband' one, would make the new id unreachable
+-- unless the sibling were armed too: two ids on one PATH, every site reading clean,
+-- and any single-arm wave reading a CORRECT zero (the second form of the 'pullcad'
+-- trap, GH #542).  `flips_buyring` is driven with nothing else armed.  A zero there
+-- means the design failed, not that the corpus is thin -- `ring_domain`, the
+-- independent prefix walk, is what tells those two apart.
 --
--- ⭐⭐ DISJOINTNESS IS AN INVERTED CLAUSE, NOT A BAND SPLIT.  Both sibling arms
--- require the 1200 tower ring to be EMPTY; this one requires it to be OCCUPIED.
--- `overlap_tower_buy` and `overlap_tower_hurt` must therefore both be 0 across the
--- whole HP band, and the test asserts it -- no arm can ever be credited with
--- another arm's frames.
+-- ⭐⭐ DISJOINTNESS IS AN INVERTED CLAUSE, NOT A BAND SPLIT.  All three sibling
+-- arms require the 1600 ring to be EMPTY; this one requires it to be OCCUPIED.
+-- `overlap_ring_buy`, `overlap_ring_hurt` and `overlap_ring_tower` must therefore
+-- all be 0 across the whole HP band, and the test asserts it -- no arm can ever be
+-- credited with another arm's frames.
 --
--- ⛔ DIRECTION IS ASSERTED, NOT CLAIMED.  The call site is an OR of three
+-- ⛔ DIRECTION IS ASSERTED, NOT CLAIMED.  The call site is an OR of four
 -- predicates, so arming can only add TRUEs.  `flip_true_to_false` counts frames
 -- where arming turns a TRUE into a FALSE; it must be 0.
 --
@@ -39,23 +40,19 @@
 -- ActionImmediate_PurchaseItem (stock count, gold, stash, courier distance, empty
 -- slot) are not readable from a fixture, and gold is not networked into a .dem at
 -- all (GH #495).  `WIRE_*` asserts the wiring exists in item_purchase_generic.lua;
--- nothing here asserts the purchase happens.  Second bound, and it is specific to
--- THIS lever: 43 of the corpus fixtures carry no buildings at all (GH #100), so on
--- those frames the tower clause cannot be verified in either direction --
--- `fixtures_with_buildings` and `frames_with_buildings` are printed so the domain
--- is never mistaken for the corpus.
+-- nothing here asserts the purchase happens.
 --
 -- Manifest grammar (one record per line, space-separated):
 --   G <name> <value>    a constant / structural fact parsed out of the tree
 --   C <key> <n>         a counter bucket
 --   F <fixture> <hero> <hp_frac>
 --       one live frame where the call-site predicate flips false -> true under
---       'buytower' armed ALONE
+--       'buyring' armed ALONE
 --   B <fixture> <hero> <hp_frac> <why>
 --       one live frame inside the band, carrying nothing drinkable, that this
---       lever REFUSES -- `why` is the clause that refused it (ring / attr /
---       no_tower).  The refusals are listed, not just counted, so "the lever is
---       narrow" is a readable set rather than a difference of two totals.
+--       lever REFUSES -- `why` is the clause that refused it (chase / empty_ring /
+--       attr / tower).  The refusals are listed, not just counted, so "the lever
+--       is narrow" is a readable set rather than a difference of two totals.
 --   DONE
 -- Absence of the final DONE line is a failed subprocess.
 
@@ -95,24 +92,23 @@ local sit = strip_comments(block(src, 'function J.IsFieldRegenSituation( bot'))
 local buy = strip_comments(block(src, 'function J.ShouldFieldBuyRegen( bot )'))
 local hurt = strip_comments(block(src, 'function J.ShouldFieldBuyRegenHurt( bot )'))
 local tow = strip_comments(block(src, 'function J.ShouldFieldBuyRegenTower( bot )'))
+local ring = strip_comments(block(src, 'function J.ShouldFieldBuyRegenRing( bot )'))
 local stay = strip_comments(block(src, 'function J.ShouldStayAndRegen( bot )'))
 G.SIT = sit and 1 or 0
 G.BUY = buy and 1 or 0
 G.HURT = hurt and 1 or 0
 G.TOW = tow and 1 or 0
+G.RING = ring and 1 or 0
 G.STAY = stay and 1 or 0
 -- Did the stripping actually HAPPEN?  Asserted as its own fact rather than left to
--- be implied by some count coming out at the expected number.  It was implied once
--- ('staybag' round, M5): an exact id total was the only thing catching the "stop
--- stripping" mutant, and relaxing that total for an unrelated and correct reason
--- took the mutant's only detector with it.
+-- be implied by some count coming out at the expected number ('staybag' round, M5).
 G.SIT_STRIPPED = (sit and not sit:find('--', 1, true)) and 1 or 0
-G.TOW_STRIPPED = (tow and not tow:find('--', 1, true)) and 1 or 0
+G.RING_STRIPPED = (ring and not ring:find('--', 1, true)) and 1 or 0
 G.STAY_STRIPPED = (stay and not stay:find('--', 1, true)) and 1 or 0
 
 -- The gate, and the 'pullcad' invariant.  The trap is TWO IDS IN ONE CONDITION;
 -- the per-condition maximum is the invariant, the per-function total is not.
-G.TOW_SOAKID = (tow and tow:find("J.IsSoakCandidate( 'buytower' )", 1, true))
+G.RING_SOAKID = (ring and ring:find("J.IsSoakCandidate( 'buyring' )", 1, true))
     and 1 or 0
 local function count_ids(s)
     local n = 0
@@ -130,57 +126,73 @@ local function max_ids_per_cond(s)
     end
     return nMax
 end
-G.TOW_NIDS = count_ids(tow)
-G.TOW_IDS_MAX_PER_COND = max_ids_per_cond(tow)
-G.TOW_TURBO = (tow and tow:find('J.IsModeTurbo()', 1, true)) and 1 or 0
+G.RING_NIDS = count_ids(ring)
+G.RING_IDS_MAX_PER_COND = max_ids_per_cond(ring)
+G.RING_TURBO = (ring and ring:find('J.IsModeTurbo()', 1, true)) and 1 or 0
 -- The shared predicate must stay untouched by this lever: its only id is the
--- pre-existing 'fieldcreep'.  A gate here would move 'stayfield', 'stayfield2' and
--- 'fieldbuy' with one arm -- the 'lanefix' bundle shape this design avoids.
+-- pre-existing 'fieldcreep'.  A gate there would move 'stayfield', 'stayfield2'
+-- and 'fieldbuy' with one arm -- the 'lanefix' bundle shape this design avoids.
 G.SIT_NIDS = count_ids(sit)
-G.SIT_HAS_BUYTOWER = (sit and sit:find('buytower', 1, true)) and 1 or 0
+G.SIT_HAS_BUYRING = (sit and sit:find('buyring', 1, true)) and 1 or 0
 
 -- The band constants, parsed out of the two functions that already own them, so
 -- "these are not new tuned numbers" is checked rather than asserted in prose.
 G.STAY_HP_HI = stay and tonumber(stay:match('nHP > ([%d%.]+)')) or -1
 G.SIT_HP_LO = sit and tonumber(sit:match('nHP < ([%d%.]+)')) or -1
 G.SIT_HP_HI = sit and tonumber(sit:match('nHP > ([%d%.]+)')) or -1
-G.TOW_HP_LO = tow and tonumber(tow:match('nHP < ([%d%.]+)')) or -1
-G.TOW_HP_HI = tow and tonumber(tow:match('nHP > ([%d%.]+)')) or -1
+G.RING_HP_LO = ring and tonumber(ring:match('nHP < ([%d%.]+)')) or -1
+G.RING_HP_HI = ring and tonumber(ring:match('nHP > ([%d%.]+)')) or -1
 
--- ⭐ THE DRIFT GUARD, and it is the price of duplicating clauses instead of
--- calling the sibling.  Each surroundings constant is parsed from BOTH bodies; the
--- test asserts the two copies are equal, so the day either moves this file goes
--- red instead of the lever quietly measuring a different situation than the one
--- its comment describes.
+-- ⭐ THE TWO RINGS, AND THEY ARE THE WHOLE LEVER.  Each is parsed from the body
+-- that owns it AND from this lever's copy, so "1200 is the promoted number, 1600 is
+-- the inherited one" is checked rather than described.  The day either owner moves,
+-- this file goes red instead of the lever quietly measuring a different gap.
+G.STAY_RING = stay and tonumber(stay:match('GetNearbyHeroes%( bot, (%d+), true'))
+    or -1
 G.SIT_RING = sit and tonumber(sit:match('GetNearbyHeroes%( bot, (%d+), true')) or -1
-G.TOW_RING = tow and tonumber(tow:match('GetNearbyHeroes%( bot, (%d+), true')) or -1
+G.RING_CHASE = ring
+    and tonumber(ring:match('nChasers = #J.GetNearbyHeroes%( bot, (%d+), true')) or -1
+G.RING_RING = ring
+    and tonumber(ring:match('nRing = #J.GetNearbyHeroes%( bot, (%d+), true')) or -1
+G.RING_ATTR_RADIUS = ring
+    and tonumber(ring:match('hDamagers = J.GetNearbyHeroes%( bot, (%d+), true')) or -1
+G.RING_TOWER = ring
+    and tonumber(ring:match('nTowers = #bot:GetNearbyTowers%( (%d+), true')) or -1
+G.SIT_TOWER = sit and tonumber(sit:match('GetNearbyTowers%( (%d+), true')) or -1
 G.SIT_ATTR_RADIUS =
     (sit and sit:find('GetNearbyHeroes( bot, 3000, true', 1, true)) and 3000 or -1
-G.TOW_ATTR_RADIUS =
-    (tow and tow:find('GetNearbyHeroes( bot, 3000, true', 1, true)) and 3000 or -1
-G.SIT_TOWER = sit and tonumber(sit:match('GetNearbyTowers%( (%d+), true')) or -1
-G.TOW_TOWER = tow and tonumber(tow:match('GetNearbyTowers%( (%d+), true')) or -1
 G.SIT_ATTR_WINDOW =
     sit and tonumber(sit:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+) %)')) or -1
-G.TOW_ATTR_WINDOW =
-    tow and tonumber(tow:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+) %)')) or -1
+G.RING_ATTR_WINDOW =
+    ring and tonumber(ring:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+) %)')) or -1
 
 -- ⭐⭐ THE INVERSION, READ OFF THE SOURCE RATHER THAN TRUSTED.  The whole
--- disjointness argument rests on this lever testing `== 0 then return false`
+-- disjointness argument rests on this lever testing `nRing == 0 then return false`
 -- against the siblings' `> 0 then return false`, and a mutant that flips the
--- comparison would leave every counter below looking plausible while the three
--- arms started overlapping.  Both directions are parsed.
-G.TOW_TOWER_INVERTED =
-    (tow and tow:find('GetNearbyTowers( 1200, true ) == 0', 1, true)) and 1 or 0
-G.SIT_TOWER_PLAIN =
-    (sit and sit:find('GetNearbyTowers( 1200, true ) > 0', 1, true)) and 1 or 0
-G.HURT_TOWER_PLAIN =
-    (hurt and hurt:find('GetNearbyTowers( 1200, true ) > 0', 1, true)) and 1 or 0
+-- comparison would leave every counter below looking plausible while the four arms
+-- started overlapping.  Both directions are parsed, and so is the clause that is
+-- NOT inverted -- the promoted 1200 ring keeps its full veto.
+G.RING_INVERTED = (ring and ring:find('nRing == 0 then return false', 1, true))
+    and 1 or 0
+G.RING_CHASE_PLAIN = (ring and ring:find('nChasers > 0 then return false', 1, true))
+    and 1 or 0
+G.SIT_RING_PLAIN = (sit
+    and sit:find('GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0', 1, true))
+    and 1 or 0
+G.HURT_RING_PLAIN = (hurt
+    and hurt:find('GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0', 1, true))
+    and 1 or 0
+G.TOW_RING_PLAIN = (tow
+    and tow:find('GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0', 1, true))
+    and 1 or 0
+-- The tower clause is the one this lever keeps in its SHIPPED direction, because
+-- moving two clauses at once is two levers.  'buytower' is the arm that inverts it.
+G.RING_TOWER_PLAIN = (ring and ring:find('nTowers > 0 then return false', 1, true))
+    and 1 or 0
 
--- The shipped predicate is UNTOUCHED by this lever, and that is the claim the
--- seven-file re-baseline (the 'buyband' round) was reverted to keep true.  The
--- DEFINITION is subtracted rather than left in the total: `function
--- J.IsFieldRegenSituation( bot )` matches the call pattern itself.
+-- The shipped predicate is UNTOUCHED by this lever.  The DEFINITION is subtracted
+-- rather than left in the total: `function J.IsFieldRegenSituation( bot )` matches
+-- the call pattern itself.
 local src_stripped = strip_comments(src)
 local nCalls1, nCalls2, nDefs = 0, 0, 0
 for _ in src_stripped:gmatch('IsFieldRegenSituation%( bot %)') do
@@ -196,47 +208,48 @@ G.SIT_DEFS = nDefs
 G.SIT_CALLS_1ARG = nCalls1 - nDefs
 G.SIT_CALLS_2ARG = nCalls2
 -- ...and this lever does not call it at all: it repeats the clauses instead.
-G.TOW_CALLS_SIT = (tow and tow:find('IsFieldRegenSituation', 1, true)) and 1 or 0
--- The 'fieldcreep' veto is the one clause NOT copied (honest bound (4)): naming
--- another candidate's id here would freeze this clause FALSE the day that id is
--- promoted.  Asserted from both sides -- still in the sibling, still absent here.
+G.RING_CALLS_SIT = (ring and ring:find('IsFieldRegenSituation', 1, true)) and 1 or 0
+-- Nor does it route the attribution scan through J.HasNearbyHeroDamager, whose
+-- one-caller invariant tests/test_stayattr_global_ult.lua asserts BY COUNT -- a
+-- second caller there would turn this lever into a red in another lever's file.
+G.RING_CALLS_DAMAGER =
+    (ring and ring:find('HasNearbyHeroDamager', 1, true)) and 1 or 0
+-- The 'fieldcreep' veto is the one clause NOT copied: naming another candidate's id
+-- here would freeze this clause FALSE the day that id is promoted.  Asserted from
+-- both sides -- still in the sibling, still absent here.
 G.SIT_HAS_FIELDCREEP =
     (sit and sit:find("J.IsSoakCandidate( 'fieldcreep' )", 1, true)) and 1 or 0
-G.TOW_HAS_FIELDCREEP = (tow and tow:find('fieldcreep', 1, true)) and 1 or 0
+G.RING_HAS_FIELDCREEP = (ring and ring:find('fieldcreep', 1, true)) and 1 or 0
 
 -- The wiring.  The behaviour is a PURCHASE, and a fixture cannot reach the engine
 -- clauses that guard it, so the one thing that can be checked here is that the
 -- predicate is actually consulted at the purchase site -- and that it is consulted
--- as a THIRD OR ARM alongside both siblings, not in place of either.
+-- as a FOURTH OR arm alongside all three siblings, not in place of any.
 local buysrc = strip_comments(read_file(BUY))
+G.WIRE_RING = buysrc:find('J.ShouldFieldBuyRegenRing(bot)', 1, true) and 1 or 0
 G.WIRE_TOW = buysrc:find('J.ShouldFieldBuyRegenTower(bot)', 1, true) and 1 or 0
 G.WIRE_HURT = buysrc:find('J.ShouldFieldBuyRegenHurt(bot)', 1, true) and 1 or 0
 G.WIRE_BUY = buysrc:find('J.ShouldFieldBuyRegen(bot)', 1, true) and 1 or 0
--- The three arms in ONE condition, matched across the line break the third arm
--- introduced.  A pattern rather than a literal because the wrapping is
--- whitespace, and whitespace is not what this assertion is about.
--- ⚠️ 2026-09-06, the SECOND time this line was re-read for the same reason: it
--- ended in ` %)` -- the closing paren of the condition -- which pinned the arm
--- count at exactly three, so the fourth arm ('buyring') turned this file red for a
--- change it has nothing to say about.  That is the identical defect this file's own
--- head comment records buyband's WIRE_OR having, and the same re-read applies: drop
--- the terminator so a FURTHER arm of the same OR passes, while a replacement (a
--- missing sibling) or an `and` still fails, because those break the prefix itself.
-G.WIRE_OR3 = buysrc:find(
+-- The four arms in ONE condition, matched across the line breaks the wrapping
+-- introduces.  A pattern rather than a literal because the wrapping is whitespace,
+-- and whitespace is not what this assertion is about -- and written so a further
+-- arm of the same OR still passes while a replacement or an `and` still fails.
+G.WIRE_OR4 = buysrc:find(
     'if %( J%.ShouldFieldBuyRegen%(bot%) or J%.ShouldFieldBuyRegenHurt%(bot%)%s*'
-    .. 'or J%.ShouldFieldBuyRegenTower%(bot%)') and 1 or 0
+    .. 'or J%.ShouldFieldBuyRegenTower%(bot%) or J%.ShouldFieldBuyRegenRing%(bot%)')
+    and 1 or 0
 -- Exactly one call site for the new arm: a second one would ship the behaviour
 -- through a path this file never drives.
-local nTowCalls = 0
-for _ in buysrc:gmatch('J%.ShouldFieldBuyRegenTower%(') do
-    nTowCalls = nTowCalls + 1
+local nRingCalls = 0
+for _ in buysrc:gmatch('J%.ShouldFieldBuyRegenRing%(') do
+    nRingCalls = nRingCalls + 1
 end
-G.WIRE_TOW_CALLS = nTowCalls
-local nTowCallsTree = 0
-for _ in src_stripped:gmatch('J%.ShouldFieldBuyRegenTower%(') do
-    nTowCallsTree = nTowCallsTree + 1
+G.WIRE_RING_CALLS = nRingCalls
+local nRingInJmz = 0
+for _ in src_stripped:gmatch('J%.ShouldFieldBuyRegenRing%(') do
+    nRingInJmz = nRingInJmz + 1
 end
-G.TOW_DEFS_IN_JMZ = nTowCallsTree
+G.RING_DEFS_IN_JMZ = nRingInJmz
 G.WIRE_PURCHASES_FLASK =
     buysrc:find("ActionImmediate_PurchaseItem('item_flask')", 1, true) and 1 or 0
 
@@ -260,13 +273,13 @@ local c = setmetatable({}, { __index = function() return 0 end })
 local function bump(k, n) rawset(c, k, c[k] + (n or 1)) end
 -- Zero-initialised so "the bucket was never reached" and "the bucket measured
 -- zero" are never the same thing to the parser (the GH #171 shape).
-for _, k in ipairs({ 'fixtures', 'fixtures_with_buildings', 'live',
-    'frames_with_buildings', 'turbo', 'raises', 'band_all', 'band_nosrc',
-    'nosrc_ring_busy', 'nosrc_attr', 'nosrc_tower', 'nosrc_tower_only',
-    'nosrc_clean', 'tower_domain', 'flips_buytower', 'flip_true_to_false',
-    'overlap_tower_buy', 'overlap_tower_hurt', 'overlap_probe_runs', 'arm_leak',
-    'tower_with_creep_damage', 'tower_with_bag_salve', 'tower_below_sit_ceiling',
-    'tower_above_sit_ceiling' }) do
+for _, k in ipairs({ 'fixtures', 'live', 'turbo', 'raises', 'band_all',
+    'band_nosrc', 'nosrc_ring_busy', 'nosrc_chase_busy', 'nosrc_annulus',
+    'nosrc_annulus_attr', 'nosrc_annulus_tower', 'nosrc_attr', 'nosrc_tower',
+    'nosrc_clean', 'ring_domain', 'flips_buyring', 'flip_true_to_false',
+    'overlap_ring_buy', 'overlap_ring_hurt', 'overlap_ring_tower',
+    'overlap_probe_runs', 'arm_leak', 'ring_with_creep_damage',
+    'ring_with_bag_salve', 'ring_below_sit_ceiling', 'ring_above_sit_ceiling' }) do
     rawset(c, k, 0)
 end
 
@@ -305,38 +318,36 @@ for _, path in ipairs(fixture_files()) do
     local fx = dofile(path)
     if type(fx) == 'table' and fx.units and fx.time then
         bump('fixtures')
-        local bBuildings = type(fx.buildings) == 'table' and #fx.buildings > 0
-        if bBuildings then bump('fixtures_with_buildings') end
         for _, u in ipairs(fx.units) do
             if u.alive then
                 local ok, J, bot = pcall(rf.load, path, u.name)
                 if ok and bot ~= nil then
                     bump('live')
-                    if bBuildings then bump('frames_with_buildings') end
                     local armed = false
                     J.IsSoakCandidate = function(sId)
-                        return armed and sId == 'buytower'
+                        return armed and sId == 'buyring'
                     end
 
                     local nHP = J.GetHP(bot)
                     local bTurbo = J.IsModeTurbo() and true or false
                     if bTurbo then bump('turbo') end
 
-                    -- The call-site predicate TRIO, driven under two armings.
+                    -- The call-site predicate QUARTET, driven under two armings.
                     local function pred()
                         return J.ShouldFieldBuyRegen(bot)
                             or J.ShouldFieldBuyRegenHurt(bot)
                             or J.ShouldFieldBuyRegenTower(bot)
+                            or J.ShouldFieldBuyRegenRing(bot)
                     end
                     local ok1, shipped = pcall(pred)
                     armed = true
                     -- The arming must be ONE id wide.  A stub that armed them all
                     -- would let any other live id move this guard's answer while
                     -- the flip is still attributed to this lever (the M8 survivor
-                    -- of the 'stayattr' round).  Asserted 0 downstream; the
-                    -- siblings that would silently widen the same path are named.
+                    -- of the 'stayattr' round).
                     if J.IsSoakCandidate('fieldbuy')
                         or J.IsSoakCandidate('buyband')
+                        or J.IsSoakCandidate('buytower')
                         or J.IsSoakCandidate('fieldsip')
                         or J.IsSoakCandidate('fieldcreep')
                         or J.IsSoakCandidate('bagsalve') then
@@ -348,7 +359,7 @@ for _, path in ipairs(fixture_files()) do
                     if not (ok1 and ok2) then
                         bump('raises')
                     else
-                        if arm and not shipped then bump('flips_buytower') end
+                        if arm and not shipped then bump('flips_buyring') end
                         if shipped and not arm then
                             -- Must never happen: the call site ORs a new arm in,
                             -- which can only add TRUEs.  Asserted 0 downstream.
@@ -359,9 +370,9 @@ for _, path in ipairs(fixture_files()) do
                         -- credited with the other's behaviour.
                         do
                             J.IsSoakCandidate = function(sId)
-                                return sId == 'buytower'
+                                return sId == 'buyring'
                             end
-                            local okt, towonly = pcall(J.ShouldFieldBuyRegenTower, bot)
+                            local okr, ringonly = pcall(J.ShouldFieldBuyRegenRing, bot)
                             J.IsSoakCandidate = function(sId)
                                 return sId == 'fieldbuy'
                             end
@@ -371,29 +382,37 @@ for _, path in ipairs(fixture_files()) do
                             end
                             local okh, hurtarm = pcall(J.ShouldFieldBuyRegenHurt, bot)
                             J.IsSoakCandidate = function(sId)
-                                return armed and sId == 'buytower'
+                                return sId == 'buytower'
                             end
-                            -- ⭐ The probe must PROVE it ran.  Both overlap
-                            -- columns are claims whose whole content is a zero,
-                            -- and a probe that stops driving prints the same zero
-                            -- as a probe that drove 1012 frames and found nothing
-                            -- (the GH #171 shape).  This counter is asserted equal
-                            -- to the live frame count downstream, so "measured and
-                            -- empty" and "not measured" stop being the same
-                            -- reading.
-                            if okt and okb and okh then bump('overlap_probe_runs') end
-                            if okt and okb and towonly and buyarm then
-                                bump('overlap_tower_buy')
+                            local okt, towarm = pcall(J.ShouldFieldBuyRegenTower, bot)
+                            J.IsSoakCandidate = function(sId)
+                                return armed and sId == 'buyring'
                             end
-                            if okt and okh and towonly and hurtarm then
-                                bump('overlap_tower_hurt')
+                            -- ⭐ The probe must PROVE it ran.  All three overlap
+                            -- columns are claims whose whole content is a zero, and
+                            -- a probe that stops driving prints the same zero as a
+                            -- probe that drove 1012 frames and found nothing (the
+                            -- GH #171 shape).
+                            if okr and okb and okh and okt then
+                                bump('overlap_probe_runs')
+                            end
+                            if okr and okb and ringonly and buyarm then
+                                bump('overlap_ring_buy')
+                            end
+                            if okr and okh and ringonly and hurtarm then
+                                bump('overlap_ring_hurt')
+                            end
+                            if okr and okt and ringonly and towarm then
+                                bump('overlap_ring_tower')
                             end
                         end
                     end
 
                     -- Independent prefix walk: this lever's OWN domain, in its own
                     -- clause order, with nothing armed.  Cross-checked against the
-                    -- driven `flips_buytower` above -- the two must be equal.
+                    -- driven `flips_buyring` above -- the two must be equal.
+                    local bChase = #J.GetNearbyHeroes(bot, G.STAY_RING, true,
+                        BOT_MODE_NONE) > 0
                     local bRingBusy = #J.GetNearbyHeroes(bot, G.SIT_RING, true,
                         BOT_MODE_NONE) > 0
                     local bAttr = false
@@ -411,7 +430,7 @@ for _, path in ipairs(fixture_files()) do
                     local bTower = #bot:GetNearbyTowers(G.SIT_TOWER, true) > 0
                     local bMain = main_src(bot)
 
-                    if bTurbo and nHP >= G.TOW_HP_LO and nHP <= G.TOW_HP_HI then
+                    if bTurbo and nHP >= G.RING_HP_LO and nHP <= G.RING_HP_HI then
                         bump('band_all')
                         if not bMain then
                             bump('band_nosrc')
@@ -419,55 +438,60 @@ for _, path in ipairs(fixture_files()) do
                             -- family, so the lever's domain is a SLICE of a
                             -- printed partition rather than a lone number.
                             if bRingBusy then bump('nosrc_ring_busy') end
+                            if bChase then bump('nosrc_chase_busy') end
                             if bAttr then bump('nosrc_attr') end
                             if bTower then bump('nosrc_tower') end
-                            if bTower and not bRingBusy and not bAttr then
-                                bump('nosrc_tower_only')
-                            end
                             if not bTower and not bRingBusy and not bAttr then
                                 bump('nosrc_clean')
                             end
-                            if bRingBusy or bAttr then
+                            -- ⭐ The gap this lever is about: inside the inherited
+                            -- 1600 ring, outside the PROMOTED 1200 one.
+                            if bRingBusy and not bChase then
+                                bump('nosrc_annulus')
+                                if bAttr then bump('nosrc_annulus_attr') end
+                                if bTower then bump('nosrc_annulus_tower') end
+                            end
+                            local sWhy = nil
+                            if bChase then sWhy = 'chase'
+                            elseif not bRingBusy then sWhy = 'empty_ring'
+                            elseif bAttr then sWhy = 'attr'
+                            elseif bTower then sWhy = 'tower' end
+                            if sWhy ~= nil then
                                 out:write(string.format('B %s %s %.4f %s\n',
-                                    path:match('([^/]+)%.lua$'), u.name, nHP,
-                                    bRingBusy and 'ring' or 'attr'))
-                            elseif not bTower then
-                                out:write(string.format('B %s %s %.4f no_tower\n',
-                                    path:match('([^/]+)%.lua$'), u.name, nHP))
+                                    path:match('([^/]+)%.lua$'), u.name, nHP, sWhy))
                             end
                         end
                     end
 
                     if bTurbo
-                        and nHP >= G.TOW_HP_LO and nHP <= G.TOW_HP_HI
-                        and not bRingBusy and not bAttr and bTower
+                        and nHP >= G.RING_HP_LO and nHP <= G.RING_HP_HI
+                        and not bChase and bRingBusy and not bAttr and not bTower
                         and not bMain
                     then
-                        bump('tower_domain')
+                        bump('ring_domain')
                         -- Where this lever's domain sits relative to the sibling
                         -- ceiling, counted rather than described: 'fieldbuy' owns
                         -- <= 0.55 and 'buyband' the band above it, and this lever
-                        -- crosses both -- which is only sound because the tower
-                        -- clause is inverted, and these two columns are what make
-                        -- that visible instead of assumed.
+                        -- crosses both -- which is only sound because the ring
+                        -- clause is inverted.
                         if nHP <= G.SIT_HP_HI then
-                            bump('tower_below_sit_ceiling')
+                            bump('ring_below_sit_ceiling')
                         else
-                            bump('tower_above_sit_ceiling')
+                            bump('ring_above_sit_ceiling')
                         end
-                        -- The GH #123 asymmetry, same as it appears on both
-                        -- siblings: a backpacked salve is invisible to
-                        -- J.HasFieldRegenSource (it stops at slot 5) and is
-                        -- caught at the call site by `bot:FindItemSlot` instead.
-                        if bag_salve(bot) then bump('tower_with_bag_salve') end
-                        -- Honest bound (4) as a column rather than a promise: the
+                        -- The GH #123 asymmetry, same as on all three siblings: a
+                        -- backpacked salve is invisible to J.HasFieldRegenSource
+                        -- (it stops at slot 5) and is caught at the call site by
+                        -- `bot:FindItemSlot` instead.
+                        if bag_salve(bot) then bump('ring_with_bag_salve') end
+                        -- The honest bound as a column rather than a promise: the
                         -- one clause of J.IsFieldRegenSituation this function does
-                        -- not copy is the gated 'fieldcreep' veto, so while that
-                        -- id is armed the call-site arms disagree about a bot
-                        -- being chewed by a camp.  This counts how wide that
+                        -- not copy is the gated 'fieldcreep' veto, so while that id
+                        -- is armed the call-site arms disagree about a bot being
+                        -- chewed by a camp.  This counts how wide that
                         -- disagreement actually is on this corpus.
                         if bot:WasRecentlyDamagedByCreep(G.SIT_ATTR_WINDOW) then
-                            bump('tower_with_creep_damage')
+                            bump('ring_with_creep_damage')
                         end
                         out:write(string.format('F %s %s %.4f\n',
                             path:match('([^/]+)%.lua$'), u.name, nHP))

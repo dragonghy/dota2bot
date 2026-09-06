@@ -6000,6 +6000,153 @@ function J.ShouldFieldBuyRegenTower( bot )
 	return not ( J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) )
 end
 
+-- [buyring / owner priority P2 supply side, 2026-09-06] The fourth arm of the same
+-- purchase site, and it is about ONE NUMBER that this family answers twice.
+--
+-- ⭐ THE DEFECT: THE SAME FAMILY SHIPS TWO RINGS FOR ONE QUESTION. "Is an enemy
+-- near enough that this hurt bot must not be treated as safe" is asked on both
+-- halves of owner priority P2, over the SAME health band, and the two halves
+-- answer with different radii:
+--   * the HOLD half, J.ShouldStayAndRegen -- PROMOTED, live in every turbo game,
+--     band [0.18, 0.75] -- measures 1200;
+--   * the SUPPLY half, J.IsFieldRegenSituation and both buy arms above, measures
+--     1600.
+-- The 1600 is not a tuned safety margin, and the sibling's own comment says so in
+-- its own words: "Nobody in the ring THE GUARDED BRANCH ITSELF MEASURES (1600)."
+-- That is a statement about the retreat branch 'stayfield'/'stayfield2' cancel --
+-- the number was chosen to match what is being cancelled. The buy arms cancel
+-- nothing. They add an OR arm to a purchase, so they inherited a constant whose
+-- entire justification is a call site they do not have -- the SAME shape as the
+-- 'buytower' arm above (a rationale written for a different consumer), applied to
+-- the ring instead of the tower clause.
+--
+-- The consequence is a hole with the family's own promoted number as its floor: a
+-- hurt bot with the PROMOTED ring empty -- i.e. one this tree already calls "not
+-- being hard-chased" -- and an enemy somewhere in 1200-1600 is refused the salve,
+-- falls through empty-handed, and goes home. Nothing in that annulus is in contact
+-- with the bot: no hero auto-attacks at 1200, and the longest reach in the game --
+-- a ranged core with its range talent and a Dragon Lance -- is still several
+-- hundred units short of it. It is a hero on the far side of a creep wave.
+--
+-- ⭐⭐ MEASURED ON THE CORPUS, NOT ARGUED (tests/_buyring_sweep.lua, 1012 live
+-- turbo hero frames). 305 frames sit inside the promoted [0.18, 0.75] band; 163 of
+-- those carry nothing drinkable in a main slot; 99 of THOSE are held out of the
+-- family by the 1600 ring alone -- the largest single refusal bucket the supply
+-- side has. Of the 99, exactly **12** have the promoted 1200 ring EMPTY, and 10 of
+-- those 12 also clear the attribution and tower clauses: that is this lever's
+-- whole domain. (The other 2 are held by the tower clause and stay held -- they
+-- are the 'buytower' question, not this one.) A second reading worth registering
+-- because it is a zero someone will otherwise assume: the attribution clause
+-- refuses NONE of the 12 (annulus_1200_1600 == annulus_noattr == 12), so on this
+-- corpus the ring is doing all of the refusing and attribution none of it.
+--
+-- The bearing frame is tests/fixtures/f_260822_063559_slardar_tp_forward.lua at
+-- t=635.9 (10:35) -- the 063559 replay owner priority P2 names by number. A
+-- slardar at 968/2104 = 46.0% HP carrying echo_sabre / power_treads /
+-- quelling_blade / magic_wand / bracer (nothing drinkable at all), the nearest
+-- enemy hero a tidehunter 1,565 units away who has not touched him, no hero
+-- inside the promoted 1200 ring, no enemy tower inside 1200, and no hero or creep
+-- damage in the last 3 seconds. Shipped, all three buy arms answer false and
+-- J.ShouldStayAndRegen answers false too -- because he has nothing to drink, which
+-- is exactly the gap the supply side exists to close.
+--
+-- ⭐⭐⭐ WHY A SEPARATE FUNCTION THAT REPEATS CLAUSES, AGAIN. The same three
+-- shortcuts fail for the same three reasons the 'buyband' and 'buytower' blocks
+-- record: changing the 1600 inside J.IsFieldRegenSituation moves THREE families on
+-- one arm ('stayfield', 'stayfield2', 'fieldbuy') and would change PROMOTED-
+-- adjacent hold behaviour -- the 'lanefix' bundle shape; putting a second id inside
+-- J.ShouldFieldBuyRegen or J.ShouldFieldBuyRegenHurt puts it BEHIND that function's
+-- own gate, so no single-arm wave could ever see it (the second form of the
+-- 'pullcad' trap, GH #542); and adding a radius argument to the shared predicate
+-- turns a one-lever change into a refactor of shipped call sites. Gated STANDALONE
+-- -- one id, never conjoined with another (the 'pullcad' trap) -- and turbo is
+-- asked structurally on the second line.
+--
+-- DISJOINTNESS IS AN INVERTED CLAUSE, exactly as it is for 'buytower'. All three
+-- sibling arms require the 1600 ring to be EMPTY; this one requires it to be
+-- OCCUPIED. No isolation wave can therefore credit this arm with a sibling's
+-- frames, or a sibling with this arm's, and the sweep asserts all three overlaps
+-- are 0 across the whole band rather than arguing it.
+--
+-- DIRECTION IS FIXED BY CONSTRUCTION: the call site is an OR of predicates, so
+-- arming can only add TRUEs. Unarmed this function returns false on its first
+-- line, so the shipped purchase order is byte-identical.
+--
+-- Condition (c): with nothing drinkable and no one in contact, buying regen is the
+-- standard turbo answer -- the salve is a shop purchase the courier carries, it
+-- costs map presence nothing, and the alternative this tree actually takes is the
+-- ~40-second round trip owner priority P2 forbids ("回程太费时间"). The number
+-- being adopted is not new either: 1200 is what the PROMOTED member of this same
+-- family already uses for "not being hard-chased" on the identical band.
+--
+-- ⚠️ HONEST BOUNDS, stated where they bite. (1) A fixture cannot reach the nine
+-- engine clauses that guard the actual purchase (stock, stash, courier distance,
+-- empty slot) and gold is not networked into a .dem at all (GH #495) -- so the
+-- measured flip set is a superset of the live one. This lever reads no gold of its
+-- own. (2) An enemy at 1,300 units can still walk 100 units and be in the promoted
+-- ring a third of a second later; what this arm buys is a salve, not a promise
+-- that drinking it will succeed, and the drink decision is not on this path. (3)
+-- Like both siblings it deliberately does NOT copy the gated 'fieldcreep' veto --
+-- naming another candidate's id here would freeze this clause FALSE the day that
+-- id is promoted (the 'pullcad' trap) -- and the sweep counts how wide that
+-- disagreement is on this corpus instead of promising it is empty.
+function J.ShouldFieldBuyRegenRing( bot )
+	if not J.IsSoakCandidate( 'buyring' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	-- The PROMOTED band, both ends owned by J.ShouldStayAndRegen. Written as ONE
+	-- statement with the HIGH bound first, and that is not style. Anchor
+	-- uniqueness is part of a lever's declaration, not a detail of somebody's
+	-- regex (GH #550): the low-first one-liner is byte-identical to
+	-- J.ShouldStayAndRegen's band line, and the two-statement form is byte-
+	-- identical to J.ShouldFieldBuyRegenTower's -- which mutstand_buytower.sh
+	-- anchors M5 and M6 on, so writing it that way would have turned that stand's
+	-- own anchor check red for a lever it says nothing about. Written this way it
+	-- occurs exactly once in the file, and this stand's anchor check says so.
+	local nHP = J.GetHP( bot )
+	if nHP > 0.75 or nHP < 0.18 then return false end
+
+	-- ⭐ THE LEVER, AND IT IS THESE TWO RINGS. The first is the PROMOTED number
+	-- and it keeps its full veto: a hero inside 1200 is a chase, and this arm has
+	-- nothing to say about those frames. The second is the inherited 1600, kept
+	-- and INVERTED so this arm answers only where a sibling would have refused --
+	-- which is what makes the four domains disjoint by construction.
+	local nChasers = #J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
+	if nChasers > 0 then return false end
+
+	local nRing = #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE )
+	if nRing == 0 then return false end
+
+	-- Attribution, the question all three sibling arms ask and with their own
+	-- constants: recent hero damage counts only while its author is still in
+	-- reach. Duplicated rather than routed through J.HasNearbyHeroDamager, whose
+	-- one-caller invariant tests/test_stayattr_global_ult.lua asserts by count.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then
+		local hDamagers = J.GetNearbyHeroes( bot, 3000, true, BOT_MODE_NONE )
+		for _, hEnemy in pairs( hDamagers ) do
+			if J.IsValidHero( hEnemy )
+				and bot:WasRecentlyDamagedByHero( hEnemy, 3.0 )
+			then
+				return false
+			end
+		end
+	end
+
+	-- The tower clause, kept in its shipped direction so the ONLY thing this
+	-- lever moves is the ring. Frames it refuses are the 'buytower' arm's
+	-- question, and that arm keeps them.
+	local nTowers = #bot:GetNearbyTowers( 1200, true )
+	if nTowers > 0 then return false end
+
+	-- The same conjunction all three siblings ask, spelt as a statement rather
+	-- than a returned negation so this line is its own anchor.
+	if J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) then
+		return false
+	end
+
+	return true
+end
+
 -- [itemtrip / GH #120] The OTHER end of the same "don't walk home" family, and
 -- the one nothing in this tree could speak on: the HEALTHY trip home.
 --

@@ -368,8 +368,13 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
     -- situation predicate's clauses instead of calling it (so the first list
     -- cannot cover it) and carries its own IsModeTurbo on line two (so the loop
     -- below is what actually holds the property for it).
+    -- [buyring 20260906] The sixth caller joins the same list for the same reason,
+    -- read the same way: J.ShouldFieldBuyRegenRing repeats three of the situation
+    -- predicate's clauses and inverts the ring rather than calling it, and asks
+    -- IsModeTurbo on its second line. The loop below is what holds the property;
+    -- the count on the next line is only the anti-vacuum floor.
     for _, name in ipairs({ 'ShouldStayAndRegen', 'ShouldFieldBuyRegenHurt',
-        'ShouldFieldBuyRegenTower' }) do
+        'ShouldFieldBuyRegenTower', 'ShouldFieldBuyRegenRing' }) do
         local body = code:match('function J%.' .. name .. '%( bot %)(.-)\nend\n')
         assert(body, 'could not slice J.' .. name
             .. ', which calls J.HasFieldRegenSource without going through the '
@@ -381,8 +386,8 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
             .. 'helper has no turbo clause of its own, so this ships the '
             .. 'behaviour into normal mode')
     end
-    assert(nCalls == 5,
-        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 5. Every '
+    assert(nCalls == 6,
+        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 6. Every '
         .. 'caller must reach turbo before calling it, either by asking '
         .. 'J.IsFieldRegenSituation first or by its own IsModeTurbo; add the new '
         .. 'one to one of the two lists above rather than only raising this number')

@@ -819,8 +819,19 @@ function ItemPurchaseThink()
 	-- so the three arms are disjoint by construction (8 corpus frames). Same
 	-- standalone shape and same reason as the arm above (GH #542); unarmed it
 	-- returns false on its first line, so the shipped purchase order is unchanged.
+	-- [buyring, 2026-09-06] The fourth arm, and the only one that answers where an
+	-- enemy hero IS inside 1600. That 1600 is inherited from J.IsFieldRegenSituation,
+	-- whose own comment gives a hold-side reason for it -- it is "the ring the
+	-- guarded branch itself measures" -- while the PROMOTED half of this same family,
+	-- J.ShouldStayAndRegen, calls a bot un-chased at 1200 on the identical band. The
+	-- buy arms cancel no branch, so they took a constant justified by a call site they
+	-- do not have (12 corpus frames sit in the 1200-1600 gap, 10 after the tower and
+	-- attribution clauses). Inverted rather than widened, so the four arms stay
+	-- disjoint by construction; same standalone shape and same reason as the two arms
+	-- above (GH #542), and unarmed it returns false on its first line, so the shipped
+	-- purchase order is unchanged.
 	if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot)
-		or J.ShouldFieldBuyRegenTower(bot) )
+		or J.ShouldFieldBuyRegenTower(bot) or J.ShouldFieldBuyRegenRing(bot) )
 	and bot:IsAlive()
 	and bot:FindItemSlot('item_flask') < 0
 	and not IsThereHealingInStash(bot)
