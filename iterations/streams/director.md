@@ -497,6 +497,32 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T04:17Z**:两件事。**(1) 三条搭车请求裁定落地**(hero-32 `zusboltdmg` /
+  hero-33 `cmcreepcap` / hero-34 `liondrainbkb`):**APPROVED-SCAN,零 EC2、只读档案遍历,
+  不排波、不入集**,挂到 hero-2/30/31 已在跑的那一次遍历上,**产物路径不改名**
+  (`iterations/reports/replay-check/domain_scan_hero_2_30_31.md` 是 `owed_executions.json`
+  那一腿唯一读得到的机器键)。落地后 `pending_rulings.py` 的 RIDESHARE **3 → none**。
+  acceptance 一字未改;METHOD-FAILED 按 §CJ 强制写进(读不出那一列 ⇒ INSTRUMENT-BLIND
+  退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」)。⚠️ 同一腿现在承载**六份**读数而
+  `done_when` 仍只判一个路径存在(LIMIT 11),已写进该行的 `done_when_note`。
+  **(2) GH #547 普查做完并关闭**:自写函数体切分器**四份、三种形状**;错的那种是
+  「终点 = 下一个 `^function`」—— 共享的 `source_constants.function_body` 就是它,
+  于是 jmz **35/449** + utils **10/110** + aiu **9/29** 个函数的「体」里住着别人的代码,
+  最坏一例 `X.WillBreakInvisible` 吞下整张 **2,959 行**的 `X.ConsiderItemDesire` 表。
+  已改成停在自己的 `end`(新 `function_span()`)。**诚实边界:今天没有任何读数是错的**
+  —— 生产里真溢出的只有 `J.IsCore` +1 行 / `J.IsWastefulItemTrip` +16 行,溢出段是一张
+  没有数字的 `local` 表;改的是「正确性由今天的 Lua 恰好提供」这件事。新增
+  `tests/test_fn_body_boundaries.py`(**40 checks / 0 failed**,四个切分器 × 生产切的函数)
+  与变异台 `mutstand_fn_body_boundaries.sh`(**3/3 KILLED + restore verified**)。
+  ⭐ M3 第一遍 SURVIVED,**错的是断言不是变异体**:「切片后紧跟 `end`」对一个在第一个
+  单行 `if...end` 处截断的**前缀**同样成立;补 `depth_of(header+body)==1` 才 KILLED。
+  ⭐ **GH #548 的第一条验收不可执行**(留开,已评论):那个「跨轮 NOTE 读数」是 `timeout`
+  截断出来的**预算**不是成本 —— 三轮独立读数逐字都是 `84 file(s) ... in 120.1s (budget 120s)`;
+  要抬预算必须先把上限拿掉跑一次。**本轮零 AWS 增量,未动 owner 邮件配额**;`bots/`+`game/`
+  一行未动(全套 `run_tests.lua` 未跑,用 luacheck 门 + smoke + gate-claim 覆盖,**这是覆盖不是等价**)。
+  报告:`iterations/reports/director/20260906T041717Z.md`,全文档案 `test_set.md §FE`。
+  自检 `trunk health (python)` 那条腿本轮被我主动 `pkill`(要开始改文件了)——**那不是通过**,
+  python 侧读数改由改动后自己跑的整套拿(102 passed / 0 failed / 1 uncertifiable)。
 - **2026-09-06T01:19Z**:开工自检报 `TRUNK RED`,干净树上 **5 个 python 测试红**
   (自检跑在 `768ca619`,拉到真 tip `cf00657e` 后五条**逐条复现**——是 main 的
   现状,不是本地脏)。**5/5 修绿**:python 套件 95 passed/5 failed →

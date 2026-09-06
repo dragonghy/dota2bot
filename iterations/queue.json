@@ -1769,7 +1769,20 @@
       "question": "给 `zusboltdmg` 买条件 (a) 的域。杠杆:bots/BotLib/hero_zuus.lua 的 X.ConsiderW 最后一条分支(远程小兵狙杀)用 `abilityW:GetAbilityDamage()` 当平伤,而 `GetAbilityDamage()` 只读能力的顶层 `AbilityDamage` KV 字段,`zuus_lightning_bolt` 根本不声明它(伤害梯子在 `AbilityValues/damage` = 140 220 300 380,仓内快照 tests/mock/special_value_shapes.lua)⇒ 该读数在**引擎里**恒 0,不只是在 mock 里(tools/agent/ability_damage_census.py 按「hero_<h>.lua 里的读只可能落在 <h> 自己的能力上」给出无需句柄解析的证明)。平伤为 0 时判据退化成 `h < m*b*h` 即 `1 < m*b` —— 与血量无关,而 Static Field 的 b 出厂 0.09、m<=1 ⇒ 这条分支**闭式为死**,在任何等级、任何小兵血量下都不开火。本轮已落地 gated 修复(turbo-only,未 armed),tests/test_zuus_bolt_ranged_damage.lua §4c 在真实帧 f_260819_222052_zuus_w2_leak(Zeus 8 级、W 4 级、不冷却、152 蓝)上驱动真的 X.ConsiderW:出厂腿在 14 档血量上全部 NONE,armed 腿把 100 血远程兵狙掉。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 / hero-31 同形:零 EC2 的只读扫描,四者可并成同一次遍历)。需要的读数:(1) Zeus 的 W 已学、不冷却、蓝够,且 1400 内没有敌方英雄、800 内友方英雄 <3、蓝量 >15% 的瞬间数(这是 X.GetRanged 的四道抑制条件,不满足就返回 nil,分支根本到不了);(2) 其中我方防御塔正在攻击的那个单位是敌方远程兵、且距 Zeus <=1400 的瞬间数;(3) 其中该远程兵血量的分布(要分布或阈值占比,不要中位数 —— 铁律 4(ii)),以及血量 < 380*(1+spell_amp) 的占比(= armed 腿会狙的那一档);(4) 另一条腿:990 内敌方远程线兵且其血量 < Zeus 平A 伤害、且 Zeus 蓝量 >40% 且绝对蓝 >400 的瞬间数与同样的血量分布。",
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,两条腿(塔目标 / 990 线兵)分开给,不许并池;并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「W 就绪 + 无敌方英雄在 1400 内 + 塔正在打一个 <380 血的远程兵」那一帧)。**预登记的判读方向**:若 (2)+(3) 的域接近 0(即 Zeus 几乎从不处在「没人打架、塔在打一个残血远程兵」的局面),这根杠杆没有可兑现的收益,不入集,即使桌面证据闭式成立;带 DOMAIN-NOT-REACHED 退回门。**为什么必须走批测而不是 fixture**:tests/fixtures 里没有任何一帧带小兵单位(make_fixture.py 记的是英雄快照),所以 X.GetRanged 按构造驱动不了;这一条本轮已写成断言(tests/test_zuus_bolt_ranged_damage.lua §5),语料哪天带上小兵它就红并说「这是好消息,去重写 §4」。**预登记的归因边界(方向由构造保证)**:armed 答案 = max(shipped, KV) >= shipped,且判据对平伤单调不减 ⇒ armed 的狙杀集是 shipped 的严格超集,arming 只能增加释放。所以负读数只能读作「狙小兵狙多了不好」,不能读作「杠杆吃掉了一次释放」(那种失败没有任何计数器报得出来)。⚠️ **共臂禁令,发波之前登记**:arming `zusboltdmg` 会把 `abilityASBonus` 的第二个消费方从空域变成非空域,而「第二个消费方空域」正是 `zusstatic` 的条件 (a) 能只在 ConsiderR 一个消费方上买(queue hero-15)的前提。⇒ **`zusboltdmg` 与 `zusstatic` 不许同波 armed**,除非先重开 (a) 的定义。同一句话钉在 tests/test_zuus_static_field_second_consumer.lua §6 和 iterations/state.json:zusboltdmg_20260905。**在 (a) 买到之前不许 promote。**",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "at": "2026-09-06T04:xxZ",
+        "ref": "iterations/streams/test_set.md §FE.1;先例 §EY.4(hero-31 的同形裁定)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "delivered_to": [
+          "iterations/queue.json:hero-32.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.ruling",
+          "iterations/streams/test_set.md §FE.1"
+        ],
+        "note": "`zusboltdmg`:桌面证据是**闭式为死**(`GetAbilityDamage()` 只读顶层 `AbilityDamage` KV,`zuus_lightning_bolt` 不声明它 ⇒ 平伤恒 0 ⇒ 判据退化成 `1 < m*b`,与血量无关且出厂 b=0.09 ⇒ 该分支任何等级都不开火)。**闭式为死是「杠杆现在不做事」的证明,不是「armed 之后有收益」的证明**——后者正是这次遍历要买的域,所以批准的是遍历。两条腿(塔目标 / 990 线兵)按申请书分开报。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。"
+      }
     },
     {
       "id": "hero-33",
@@ -1780,7 +1793,20 @@
       "question": "给 `cmcreepcap` 买条件 (a) 的域。杠杆:bots/BotLib/hero_crystal_maiden.lua 的 X.ConsiderW 「无英雄目标时冰冻小兵打钱」块**两处**用裸字面量 `<= 1200` 当小兵血量上限,而 Frostbite 的小兵伤害是 `damage_per_second 100 x creep_multiplier 4 x duration 1.5/2/2.5/3` = **600 / 800 / 1000 / 1200**(仓内 KV 快照 tests/mock/special_value_shapes.lua)⇒ `1200` **恰好是 4 级那一档**,被当成了每一级的上限。1-3 级于是各多放行 600/400/200 血的小兵,而且**正好放行在挑选器偏好的那一端**(X.cm_GetStrongestUnit 取的是最强的那只)。本轮已落地 gated 修复(turbo-only,未 armed;armed 时读活 KV,读到 <=0 回落到出厂 1200)。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 / hero-31 / hero-32 同形:零 EC2 的只读扫描,五者可并成同一次遍历)。需要的读数:(1) Crystal Maiden 的 W 已学、不冷却、蓝够,且 `GetActiveMode()` 不是 LANING/RETREAT/ATTACK、1600 内可见敌方英雄 0 个、1200 内友军 <3、等级 >=5 的瞬间数(这是该块自己的门,不满足就到不了);(2) 其中 1400 内 / 施法距离+100 内**存在敌方小兵**的瞬间数,两个半径**分开报**(源码里是两条独立分支);(3) ⭐ **本请求的价值列**:那些瞬间里**最强敌方小兵的血量分布**(要分布或阈值占比,不要中位数 —— 铁律 4(ii)),并按 **Frostbite 当时的等级分层**(1/2/3/4),每层报「血量落在 (armed 上限, 1200] 这一段」的占比 —— **那一段就是本杠杆唯一改变的集合**;4 级那层按构造恒 0,把它一起报出来当分母对照。(4) 如果档案里能读到,同一批瞬间里 CM 的**蓝量**分布(该块每次开火要 125-155 蓝,而 CM 缺蓝是本仓常设稀缺,GH #126)。",
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,**按 Frostbite 等级分层给,不许并池**(等级就是本杠杆的自变量,并池会把 4 级那层的恒零掺进 1-3 级的读数里);并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「W 就绪 + 该块的门全开 + 最强敌方小兵血量落在 (armed 上限, 1200]」那一帧)。**预登记的判读方向**:若 (3) 里 1-3 级那三层的「(armed 上限, 1200]」占比接近 0 —— 即 CM 到那个块时几乎总是 4 级 —— 这根杠杆没有可兑现的收益,不入集,即使桌面算术闭式成立;带 DOMAIN-NOT-REACHED 退回门。⚠️ 本组自己的语料读数已经指向这个方向:10 个 CM 主体 fixture 里 7 个已经是 4 级(等级直方图 2->1 / 3->2 / 4->7),而那份语料是 10 分钟封顶的对局切出来的(GH #108),对 1-6 级那一段**结构性偏薄** ⇒ 那 3/10 是**下界不是频率**。**为什么必须走档案而不是 fixture**:tests/mock/replay_fixture.lua 的 `bot:GetNearbyCreeps` 在**每一帧、对两个队伍都返回空表**(10/10 CM 帧实测),所以整块按构造驱动不了;这一条本轮已写成断言(tests/test_cm_frostbite_creep_cap.lua §5),语料哪天带上小兵它就红并说「这是好消息,去把 §2 重写成端到端」。**预登记的归因边界(方向由构造保证)**:armed 上限 = `dps*mult*duration` **<= 1200**,4 级取等 ⇒ armed 放行的小兵集合是 shipped 的**严格子集**,arming 只能**减少**释放。所以负读数只能读作「那些小兵本来该冻」,**不能**读作「杠杆凭空多冻了一只」。⚠️ 这个方向有一个前提写在代码和测试里:t25 行必须仍取 {10, 0} —— 另一半 `special_bonus_unique_crystal_maiden_1`(+1.0s 持续)会把上限抬到 1600,那时方向翻成放宽;tests/test_cm_frostbite_creep_cap.lua §6 有棘轮盯着那一行。**在 (a) 买到之前不许 promote。**",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "at": "2026-09-06T04:xxZ",
+        "ref": "iterations/streams/test_set.md §FE.1;先例 §EY.4(hero-31 的同形裁定)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "delivered_to": [
+          "iterations/queue.json:hero-33.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.ruling",
+          "iterations/streams/test_set.md §FE.1"
+        ],
+        "note": "`cmcreepcap`:`1200` 恰是 Frostbite 4 级那一档被当成了每一级的上限,而 1-3 级各多放行 600/400/200 血——**自变量是等级**,所以 acceptance 里「按等级分层、不许并池」不是格式要求:并池会把 4 级那层按构造的恒零掺进 1-3 级的读数里,把唯一有域的那三层稀释成没有。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。"
+      }
     },
     {
       "id": "hero-34",
@@ -1791,7 +1817,20 @@
       "question": "GH #549。给 `liondrainbkb` 买条件 (a) 的域。杠杆:bots/BotLib/hero_lion.lua 的 X.ConsiderE 在**三处**挑 Mana Drain 的目标,而它们对魔免的说法不一致 —— 补蓝那圈和「打架抽蓝」那支都用 `J.CanCastOnNonMagicImmune`,**只有「团战吸蓝」那支用 `J.CanCastOnMagicImmune`**,而后者是给**能穿魔免**的技能用的谓词(两个 helper 的差正好是 `not IsMagicImmune()` 一项,jmz_func.lua:961 vs :988)。`lion_mana_drain` 的 KV 顶层是 `SpellImmunityType SPELL_IMMUNITY_ENEMIES_NO`(dotabuff/d2vpkr,2026-09-06 读)—— Lion 四个主动全是 ENEMIES_NO,这英雄没有穿透技。本轮已落地 gated 修复(turbo-only,未 armed)。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 / hero-31 / hero-32 / hero-33 同形:零 EC2 的只读扫描,六者可并成同一次遍历)。需要的读数,都在已落盘的 W39-W49 dump 里:(1) `modifier_lion_mana_drain` 的 MODIFIER_ADD 事件总数,以及其中**目标是敌方英雄**的那一部分(目标是小兵的那部分不归本杠杆,单独报,做分母对照);(2) ⭐ **本请求的价值列**:起手那一瞬,被指的那个敌方英雄身上**有没有挂着魔免类 modifier** —— 至少要覆盖 `modifier_black_king_bar_immune`、`modifier_life_stealer_rage`、`modifier_juggernaut_blade_fury`、`modifier_omniknight_martyr`(以及 dump 里实际出现的其他 SPELL_IMMUNITY 来源,请把实际计到的 modifier 名单列出来,不要只报一个总数);(3) 那些命中里,Lion 当时 Impale / Hex / Finger 是不是**全都不可施**(这一支只在这个状态下才跑得到,所以这是「本杠杆真的能咬到」的判据,不是背景色);(4) 命中之后 1-2 秒内 Lion 有没有真的进入 `modifier_lion_mana_drain`—— **没进入**恰恰是本缺陷的可观测签名(引擎拒了这次施法),这一列比 (2) 更值钱,因为它不需要枚举魔免来源就能看见「下了单、没起效」。",
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「团战 + Q/W/R 全不可施 + 被指的敌方英雄当时魔免」那一帧)。**预登记的判读方向**:若 (2)+(4) 合起来接近 0 —— 即 Lion 在团战里指的敌人几乎从不魔免 —— 这根杠杆没有可兑现的收益,不入集,即使桌面上的谓词矛盾成立;带 DOMAIN-NOT-REACHED 退回门。**预登记的归因边界(方向由构造保证)**:出货谓词先算并绑定,armed 那条路**只能把 true 变成 false** ⇒ armed 放行的目标集合是 shipped 的**严格子集**(NARROWING)。所以负读数只能读作「那些抽蓝本来该放」,**永远不能**读作「杠杆把抽蓝指到了新的地方」。**为什么必须走档案而不是 fixture**:8 个 Lion 主体 fixture、40+ 个敌方英雄实例里**魔免数为 0**(实测),所以「改动的那一项」在 fixture 层只能靠标注过的 mutation 驱动;这一条本轮已写成**单向绊线**(tests/test_lion_drain_immune_target.lua §2),语料哪天带上一个开着 BKB 的敌人它就红并点名那一帧。⚠️ 与前五条请求不同,**分支本身这次不缺帧**:同一份 fixture 语料里 `f_260820_182906_lion_drain_survived` t=606.5 只要翻转 drain 自己的剩余冷却(11.6→0)这一支就真的开火 —— 缺的**只是魔免那一项**。所以这条请求要的是**一个变量**,不是一整个场景。**在 (a) 买到之前不许 promote。**",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "at": "2026-09-06T04:xxZ",
+        "ref": "iterations/streams/test_set.md §FE.1;先例 §EY.4(hero-31 的同形裁定)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "delivered_to": [
+          "iterations/queue.json:hero-34.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.ruling",
+          "iterations/streams/test_set.md §FE.1"
+        ],
+        "note": "`liondrainbkb`(GH #549):三处挑目标对魔免的说法不一致,只有「团战吸蓝」那支用了**穿魔免**的谓词,而 Lion 四个主动全是 `SPELL_IMMUNITY_ENEMIES_NO`。⭐ 申请书自己点出的第 (4) 列(下了单、1-2s 内没进 `modifier_lion_mana_drain`)**比第 (2) 列值钱**,理由在申请书里已写对:它不需要枚举魔免来源就看得见引擎拒了这次施法。若两列打架,以 (4) 为准并把 (2) 当作归因线索呈报。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。"
+      }
     }
   ],
   "done": [

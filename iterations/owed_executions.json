@@ -61,21 +61,25 @@
   },
   {
    "id": "hero_domain_scan_2_30_31",
-   "issue": "GH #274 / GH #474 / GH #27(hero-31);hero-2 与 hero-30 见各自 queue 行",
-   "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。",
+   "issue": "GH #274 / GH #474 / GH #27(hero-31);hero-2 与 hero-30 见各自 queue 行;GH #549(hero-34);hero-32 / hero-33 见各自 queue 行",
+   "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。 ⭐ **2026-09-06T04:xxZ 总监追加(§FE.1):hero-32(`zusboltdmg`)/ hero-33(`cmcreepcap`)/ hero-34(`liondrainbkb`)搭同一次遍历**,三者同为零 EC2 只读扫描。**产物路径不变**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——id 与路径是本腿唯一读得到的机器键,改名会把一条已交付的裁定变成一条没人认领的新行。六份读数各自独立呈报,不许并池;各自的 acceptance 原样成立;METHOD-FAILED 走 §CJ 的 INSTRUMENT-BLIND 退回,不得自行套用「域接近 0 ⇒ 不入集」。",
    "ruled_at": "2026-09-05T19:xxZ",
    "executor": "录像组(replay-check)",
    "trigger": "没有外部触发器,也**不挂在任何一波上** —— 这正是它进 registry 的理由(§DR):hero-30 的 FROZEN-HOLD 裁定 15:5xZ 已写「与 hero-2 并成同一次遍历」,而那句话此前**只活在一个 queue 行的散文里**,没有任何一张被驱动的表载着它。",
    "delivered_to": [
     "iterations/queue.json:hero-31.director",
     "iterations/queue.json:hero-30.director(15:5xZ,已在)",
-    "iterations/streams/test_set.md §EY.4"
+    "iterations/streams/test_set.md §EY.4",
+    "iterations/queue.json:hero-32.director",
+    "iterations/queue.json:hero-33.director",
+    "iterations/queue.json:hero-34.director",
+    "iterations/streams/test_set.md §FE.1"
    ],
    "done_when": {
     "kind": "path_exists",
     "path": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md"
    },
-   "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)。它读不出两层有没有被并池、也读不出充能层数那一列是不是被 0 顶替了 —— 那两件事由裁定正文与录像组自己的报告承担。路径写死在裁定里就是为了让这一腿有东西可读:三份读数散在三份带时刻的报告里时,**没有任何一个机器键能指着它们**。"
+   "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)。它读不出两层有没有被并池、也读不出充能层数那一列是不是被 0 顶替了 —— 那两件事由裁定正文与录像组自己的报告承担。路径写死在裁定里就是为了让这一腿有东西可读:三份读数散在三份带时刻的报告里时,**没有任何一个机器键能指着它们**。 ⚠️ **2026-09-06:这一腿现在承载六份读数,而它仍然只判一个路径存在** —— 六份里少了任意一份,这条腿照样绿。那是 LIMIT 11 的老边界,不是新缺陷;写在这里是因为把三行并进一腿之后,它离「够用」比昨天更远。"
   },
   {
    "id": "p2_pair_arm_stayattr_staysrc",

@@ -38,9 +38,11 @@ THE CONTRACT
 
 SCOPE
   Deliberately a ~100-line regex reader, not a Lua parser.  It handles the one
-  shape jmz_func.lua is written in (top-level `function J.Name(` ... next
-  top-level `function`).  If a future file breaks that shape, the uniqueness
-  checks turn it into a loud failure rather than a wrong number.
+  shape jmz_func.lua is written in (top-level `function J.Name(` ... its own
+  matching `end`; block depth is counted per line, so a ONE-LINE `if ... end`
+  closes on the line it opened -- GH #547).  If a future file breaks that
+  shape, the uniqueness checks and `function_span`'s never-closes error turn
+  it into a loud failure rather than a wrong number.
 
 USE
     from source_constants import call_arg, literal
@@ -66,8 +68,63 @@ class SourceConstantError(Exception):
     """
 
 
+# `for`/`while` always reach their block through `do`, so counting `do` alone
+# keeps them from being counted twice.  `elseif` is one word, so `\bif\b` does
+# not match inside it -- an elseif opens no new block and needs no `end`.
+# `repeat ... until` has no `end` and so contributes to neither side.
+_OPEN_RE = re.compile(r'\b(?:function|do|if)\b')
+_END_RE = re.compile(r'\bend\b')
+_STR_RE = re.compile(r"'[^'\n]*'|\"[^\"\n]*\"")
+
+
+def _block_delta(line):
+    """(block openers, `end`s) on one Lua line, ignoring comments and strings.
+
+    Strings and comments are blanked first so an `end` inside either cannot
+    close a real block -- `-- ... at the end of the ladder` is a comment, not a
+    terminator.
+    """
+    line = _STR_RE.sub("''", line)
+    cut = line.find('--')
+    if cut != -1:
+        line = line[:cut]
+    return len(_OPEN_RE.findall(line)), len(_END_RE.findall(line))
+
+
+def function_span(src, start, what='function'):
+    """Offset one past the `end` that closes the block opened at `start`.
+
+    THE TERMINATOR IS THE FUNCTION'S OWN `end`, NOT THE NEXT DECLARATION
+    (GH #547, 2026-09-06).  Until this round the body ran from the header to
+    the next `^function`, which is a different thing whenever ANYTHING sits
+    between the two -- and something does, often:
+
+      * 35 of 449 top-level functions in `jmz_func.lua`,
+      * 10 of 110 in `utils.lua`,
+      * 9 of 29 in `ability_item_usage_generic.lua`, one of which
+        (`X.WillBreakInvisible`) picked up **2,959 lines** -- the whole
+        `X.ConsiderItemDesire` table -- as "its body".
+
+    Nothing was measurably wrong TODAY (the two live call sites that over-read
+    took in a `local` table with no numbers in it, and `_strip_comments` was
+    already eating the prose), but that is a property of today's Lua, not of
+    the reader: this module's whole contract is that a wrong scope must be
+    loud, and a body that silently contains someone else's constants is the
+    GH #296 failure with the fuse pulled.
+    """
+    depth, i = 0, start
+    for line in src[start:].split('\n'):
+        opens, closes = _block_delta(line)
+        depth += opens - closes
+        i += len(line) + 1
+        if depth <= 0:
+            return min(i, len(src))
+    raise SourceConstantError(
+        '%s never closes: no `end` brings it back to depth 0' % what)
+
+
 def function_body(func, path=None):
-    """Source text of a top-level `function <func>(` up to the next top-level one."""
+    """Source text of a top-level `function <func>(` up to its own bare `end`."""
     path = path or JMZ
     with open(path, 'r', encoding='utf-8') as fh:
         src = fh.read()
@@ -77,8 +134,8 @@ def function_body(func, path=None):
         raise SourceConstantError(
             '%s: expected exactly 1 definition of `function %s(`, found %d'
             % (os.path.basename(path), func, len(starts)))
-    nxt = re.compile(r'^function\s', re.M).search(src, starts[0] + 1)
-    return src[starts[0]:nxt.start() if nxt else len(src)]
+    return src[starts[0]:function_span(src, starts[0],
+                                       '%s (%s)' % (func, os.path.basename(path)))]
 
 
 def _strip_comments(body):

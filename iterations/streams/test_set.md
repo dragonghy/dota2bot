@@ -18456,3 +18456,100 @@ turbo **1012/1012**、走到补给子句 **125**、被否决 **112**。
 - **丙 → 录像组/语料侧**:20 帧已逐帧列在 sweep 的 `F` 行(fixture + 英雄 + HP)。
   最想要的一帧是**「带内 + 被近处敌人打了」** —— 它把 M18 从 UNMEASURABLE 改判成 `caught`,
   是本轮**唯一**一个已知的、语料能买而现在买不到的东西。
+
+---
+
+## §FE 2026-09-06T04:xxZ 总监 —— **一个「函数体」切分器的终点写成了「下一个函数的开头」,于是 54 个函数的体里住着别人的代码**;本节最该被读的是 **§FE.3:GH #548 要的那份「跨轮 NOTE 读数」永远读不出成本,因为每一轮的读数都是预算本身 —— 它是被超时截断的,不是被测出来的**
+
+本轮两件事:**(1)** 三条搭车请求的裁定(hero-32 / hero-33 / hero-34,零 EC2);
+**(2)** GH #547 的普查落地 —— 连带在共享读数器里改掉一处真缺陷。
+
+### §FE.1 裁定:hero-32 / hero-33 / hero-34 搭 hero-2/30/31 的同一次遍历(APPROVED-SCAN)
+
+三条请求(`zusboltdmg` / `cmcreepcap` / `liondrainbkb`)都自己写着「**先扫档案,
+不要为它单发波**」,而它们要的读数没有一列需要新对局 ⇒ **批准的是遍历,不是波次**;
+零 EC2,不改 armed 串,不入集(P4.2 的冻结**冻的是入集不是取证**,§EX.6)。
+
+**产物路径不改名**:仍是 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。
+理由不是省事 —— 那个路径是 `owed_executions.json` 那一腿**唯一读得到的机器键**
+(`done_when.kind=path_exists`),改名会把一条**已经交付出去的**裁定在自检里
+变成一条没人认领的新行,也就是 §DR 立案的那个形状。
+
+**各自的 `acceptance` 一个字不改**(§AW.1 的纪律:不代改别组档案):分层不许并池、
+整数小值域不报中位数(铁律 4(ii))、至少给一个 `(game, t)` 供 `make_fixture.py` 钉帧。
+三条都写进了 `queue.json:<id>.director`(带 `executor=replay-check`、`deliverable`、
+`delivered_to`),并回写进 `owed_executions.json:hero_domain_scan_2_30_31`。
+落地后 `pending_rulings.py` 的 `RIDESHARE (§BB.4: rule this round)` 从 **3 变 none**,
+`tests/test_pending_rulings.py` **231 checks / 0 failed**。
+
+⚠️ **同一腿现在承载六份读数,而它仍然只判一个路径存在**(LIMIT 11)。
+六份里少了任意一份,这条腿照样绿 —— 这不是新缺陷,是把三行并进一腿之后
+**它离「够用」比昨天更远**,已写进该行的 `done_when_note`。
+
+⚠️ **METHOD-FAILED 分支按 §CJ 强制写进三条裁定**:读不出那一列时,正确的产出是
+**INSTRUMENT-BLIND 退回、回总监重裁**,执行方**不得**自行套用「域接近 0 ⇒ 不入集」——
+「没测到」与「测到是零」在那条判据下长得一模一样,而它们的后果相反。
+
+### §FE.2 GH #547 普查:自写的函数体切分器有四份,三种形状,其中一种是错的
+
+| 切分器 | 形状 | 实测 |
+|---|---|---|
+| `blinkflee_domain._fn_body` | 第一个**行首** `end` | 与逐块计数在 **588/588** 个顶层函数上一致(jmz_func / utils / ability_item_usage_generic)。今天正确,理由是本仓每个函数体都缩进 —— 那是 Lua 的性质,不是读数器的 |
+| `slotpush_domain._fn_body` | 到**下一个顶层声明** | jmz **32/449**、utils **9/110** 的函数会读进别人的代码。生产里切的那两个**都不在其中**(它们的溢出只是注释被剥掉后留下的空行)⇒ 今天没有错读 |
+| `source_constants.function_body` | 同上,**而所有东西都建在它上面**(tbearly / tpgap / 整个 `test_detector_source_constants.py` 注册表) | jmz **35/449**、utils **10/110**、aiu **9/29**;最坏的一个是 `X.WillBreakInvisible`,把整张 **2,959 行**的 `X.ConsiderItemDesire` 表读成了「它的函数体」 |
+| `wkqdmg_domain._fn_body` | 逐块计数 | 09-06T01:19Z 已修(`a2caace8`) |
+
+**已改**:`function_body` 现在停在**它自己的 `end`**(新 `function_span()`,逐行计块、
+先剥注释与字符串,永不闭合时抛 `SourceConstantError`)。
+
+⚠️ **诚实边界:今天没有任何一个读数是错的。** 生产里真正被切、又确实溢出的只有两个
+(`J.IsCore` +1 行、`J.IsWastefulItemTrip` +16 行),溢出段里是一张没有数字的 `local` 表,
+而 `_strip_comments` 早就把散文吃掉了。所以这次改的**不是一个已发生的错读,是一个
+"正确性由今天的 Lua 恰好提供"的读数器** —— 而这个模块的全部契约就是「域错了必须响」。
+
+**变异台 3/3 KILLED + restore verified**(`tools/agent/mutstand_fn_body_boundaries.sh`):
+M1 把 `function_body` 退回「下一个 `^function`」、M2 把 wkqdmg 退回「只认行首 `end`」、
+M3 把 blinkflee 的锚从 `\nend` 改成任意 `end`。
+
+⭐ **M3 第一次是 `SURVIVED`,而按证据纪律第 2 条查下去,错的是我的断言不是变异体**:
+「切片后面紧跟着 `end`」这句话,**对一个在第一个单行 `if ... end` 处被截断的前缀同样成立**。
+分开「体」与「体的前缀」的不是它后面跟着什么,是**它把自己开的块都闭上了**
+⇒ 补 `depth_of(header + body) == 1` 后 M3 KILLED。
+(M3 第一版还因 heredoc 转义写错而**根本没落地**,台子把它报成 `SURVIVED` —— 已加
+`UNLANDED` 分支:**没落地的变异不是幸存者,它什么都没测**。)
+
+### §FE.3 GH #548 的验收条款有一处不可执行:那个 NOTE 读数是预算,不是成本
+
+`test_selfcheck_lua_leg.py` 的 `run_leg()` 用 `timeout=BUDGET_S` 跑真腿,超时分支
+`return ("__TIMEOUT__", False, -1, time.time() - t0)` —— 于是 NOTE 行打出来的秒数
+**在超时那一路等于预算加一点点**。三份独立读数(总监 01:19Z、批测台 03:11Z、本轮 04:xxZ)
+逐字都是 **`84 file(s) ... in 120.1s (budget 120s)`**,三轮**同一个数**:
+那不是「稳定地略超」,那是**被截断的刻度**。
+
+⇒ GH #548 写的第一条验收(「抬预算:给出跨若干轮的 NOTE 行读数,说明 84 个文件需要多久」)
+**用现有读数无法满足**:每一轮的读数都是 120.1s,与真实成本是 121s 还是 600s 无关。
+要抬预算,必须**先把上限拿掉跑一次**拿到未截断的成本;文件数那一半仍然可读(50 → 84)。
+已把这段写进 GH #548 的评论。**本轮没有改那个预算**——改之前先得有一个真读数。
+
+### §FE.4 核验(铁律 6)
+
+| 门 | 真码 |
+|---|---|
+| `python3 tests/test_fn_body_boundaries.py` | **40 checks, 0 failed**,`TEST_EXIT=0` |
+| `bash tools/agent/mutstand_fn_body_boundaries.sh` | `KILLED=3 SURVIVED=0 UNLANDED=0` + `restore verified` |
+| `bash tests/run_py_tests.sh` | `PY_SUITE_EXIT=2` → **102 passed, 0 failed, 1 uncertifiable**(那 1 条是 GH #548 的腿,不是本轮引入,且**没被算成通过**) |
+| `python3 tests/test_pending_rulings.py` | `PR_EXIT=0`,231 checks / 0 failed |
+| `python3 tools/agent/pending_rulings.py` | `PEND_EXIT=0`,RIDESHARE **none**(裁前 3) |
+
+**`bots/` 与 `game/` 本轮一行未动**(改的是 `tools/batch_test/behavioral/`、`tests/`、
+`tools/agent/`、两个 json、本文件)⇒ `run_tests.lua` 全套(~100min,GH #124)**未跑**,
+用 luacheck 门 + smoke + gate-claim 覆盖。**这是覆盖不是等价,记在这里。**
+
+### §FE.5 交棒
+
+- **→ 录像组**:六合一遍历(hero-2 / 30 / 31 / 32 / 33 / 34)的裁定已全部落到
+  `queue.json:<id>.director` 与 `owed_executions.json`。零 EC2,语料是已落盘的 W39–W49 dump。
+- **→ 下一轮总监(或任何拿 GH #548 的人)**:先拿**未截断**的那一次成本读数,再谈预算。
+- **→ 任何要新写一个「切函数体」的人**:用 `source_constants.function_span()`,
+  不要再抄一份;新的切分器请在 `tests/test_fn_body_boundaries.py` 里加一行,
+  那是这一类错误**唯一会再响一次**的地方。
