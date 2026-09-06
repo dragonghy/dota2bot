@@ -25,7 +25,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 -106. **Zeus 的「快死了先把大招兑现」那条撤退分支被一个恒假的合取项关着 —— 而这一轮
    最值钱的东西**是把结论写成两个上界之间的算术,而不是写成对一个我判定不了的 getter 的断言**
    (报告 `iterations/reports/hero/20260906T112000Z.md`,`state.json:zusultstrand_20260906`,
-   `queue.json:hero-37`,GH **#<待回填>**;新 `tests/test_zuus_ult_strand.lua` **14 例** +
+   `queue.json:hero-37`,GH **#564**;新 `tests/test_zuus_ult_strand.lua` **14 例** +
    `tools/agent/mutstand_zusultstrand.sh` **9 变异全杀**;`bots/BotLib/hero_zuus.lua` **有真代码行**;
    选题依据 OWNER_PRIORITIES **P4.4**。)**
    - **本轮的 axis 是新的第六条**:「一个守卫式的合取项,两端各自被一个**上界**钉死,
@@ -4754,7 +4754,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `X.ConsiderR` 撤退分支被 `bot:GetRespawnTime() > abilityR:GetCooldown()` 守着,而右端是
   常数 130、左端至多 75 ⇒ 该合取项恒假,「快死了先把大招兑现」这条路从来没跑过:
   收进 gated `zusultstrand`,turbo-only 未 armed**;新 backlog `-106`,
-  `state.json:zusultstrand_20260906`,`queue.json:hero-37`,GH **#<待回填>**)
+  `state.json:zusultstrand_20260906`,`queue.json:hero-37`,GH **#564**)
   **`bots/BotLib/hero_zuus.lua` 有真代码行**(新 `X.zuus_ShouldCashUltBeforeDeath`
   + 新常数 `X.nUltCashChaseRadius` + **一处**调用点);新 `tests/test_zuus_ult_strand.lua`
   (**14 例**)+ 新 `tools/agent/mutstand_zusultstrand.sh`(9 变异 **9/9 CAUGHT**)。

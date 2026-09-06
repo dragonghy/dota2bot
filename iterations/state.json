@@ -6360,6 +6360,6 @@
     "real_frame_coverage": "**买到的**:(i) 比较式的**右端**,在 8 个 Zeus 主体 fixture 中**携带该技能句柄的 7 个**上 `GetCooldown()` 全部读出 KV 的 **130**(loader 自 2026-09-04 起从 KV 快照供这个 getter,所以这是**读数**不是假设);(ii) armed 的**半径项**在真实帧上**不空转也不放行一切**:8 帧里 **6 帧**最近敌方英雄在 1600 内、**2 帧**在外 —— 位置是帧数据。⚠️ **没买到,两句不许合并**:(a) 那些帧报出的**左端 0 是 loader 缺口不是帧数据** —— tests/mock 里**没有任何东西**装 `GetRespawnTime`,走的是 `bot_api.lua:182` 的通用 `^Get` 默认 0;§6 把它钉成**单向绊线**。(b) **全语料没有这条分支的创造帧** ⇒「armed 分支会触发」**本轮没有人说**。唯一一帧 HP 低于 28%(f_181441_zuus_lowhp_limbo,15.8%)**同时**在另外两个合取项上落空:大招还有 2.2s 冷却、最近敌人 2017u(在半径外)。§6 把这两条都钉成绊线,红了是**好消息**。",
     "verification": "新 `tests/test_zuus_ult_strand.lua` **14/14**;`run_tests.lua zuus` **191 例 0 失败**;新 `tools/agent/mutstand_zusultstrand.sh` **9 变异 9/9 CAUGHT**;铁律 6 静态 `GATE_EXIT=0 CLEAN`(0 warnings,没用 BYPASS);smoke 3/3;gate_claim 16/16。⚠️ 全量套件本轮没跑完(~100min,GH #124)。",
     "next_baton": "批测台 `queue.json:hero-37`(零 EC2 归档只读扫描,与 hero-2/30/31/32/33/34/35/36 同形,现在是**九条**可并成同一次遍历)。总监:**P4.2 冻结期内合法裁定是 FROZEN-HOLD**,本轮**不提入集**。",
-    "issue": "GH #<待回填>"
+    "issue": "GH #564"
   }
 }
