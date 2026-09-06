@@ -243,6 +243,12 @@ SECTION_FILES = {
     "replay-check.md": "iterations/streams/replay-check.md",
     "batch-desk.md": "iterations/streams/batch-desk.md",
 }
+# A cited charter name is a NAMESPACE, not a file: `test_set.md §XX` must keep
+# resolving after owner P4.3 moved the ruling archive out of the live file.
+# See resolve_section.  Order is search order; the verdict is on the union.
+SECTION_FALLBACKS = {
+    "iterations/streams/test_set.md": ["iterations/archive/test_set_archive.md"],
+}
 SECTION_WINDOW = 24
 SECTION_RE = re.compile(
     r"(?P<file>%s)(?P<between>[^\n]{0,%d}?)§(?P<sec>[A-Z]{1,2}(?:\.\d+[a-z]?)?)"
@@ -320,18 +326,45 @@ def extract_keys(text):
     return [m.group(1) for m in KEY_RE.finditer(text)]
 
 
-def extract_sections(text):
-    """-> [(repo_path, section_id)] cited as `<charter>.md §XX`.
+def scan_sections(text):
+    """-> (bound, unbound) for `<charter>.md §XX` citations.
 
-    Only the FIRST `§` within SECTION_WINDOW characters of the filename binds
-    (the `between` group is non-greedy and `§`-free by construction): a second
-    id further along the sentence is prose, not a citation of that file, and
-    guessing at it is how a detector earns its mute."""
-    out = []
+    Only the FIRST `§` within SECTION_WINDOW characters of the filename binds:
+    a second id further along the sentence is prose, not a citation of that
+    file, and guessing at it is how a detector earns its mute.
+
+    ⚠️ 2026-09-06 (director, GH #572): the `between` group is NOT `§`-free by
+    construction, and the `assert` that said so **crashed the whole audit**
+    (AssertionError, exit 1) instead of reporting anything.  The regex requires
+    the section id to be `[A-Z]{1,2}`; when the first `§` is followed by
+    anything else -- `test_set.md` §x.0`, a placeholder that three archived
+    rulings use verbatim, or `test_set.md` § 节)` with a space -- that `§` does
+    not match, the engine walks on, and a LATER `§` binds with the first one
+    sitting inside `between`.  So the assert fired on exactly the input the
+    docstring is about, and the *shape* of the failure is the point: a guard
+    written to enforce "never guess" was the only thing that could turn a
+    citation the tool should DECLINE into a dead process.  `claim_precheck.sh`
+    calls this on a draft before it is published, so the crash lands on the
+    door every ruling walks through.
+
+    The fix keeps the stated rule and drops the crash: an unbound match is
+    SKIPPED (never guessed at) and returned in `unbound` so the caller can
+    print it.  Silently dropping it would trade a loud wrong behaviour for a
+    quiet one -- the reader must still see that a `test_set.md §…`-shaped
+    string was declined, or "no section citations here" and "I refused to read
+    the section citations here" become the same output."""
+    bound, unbound = [], []
     for m in SECTION_RE.finditer(text):
-        assert "§" not in m.group("between")
-        out.append((SECTION_FILES[m.group("file")], m.group("sec")))
-    return out
+        if "§" in m.group("between"):
+            unbound.append((SECTION_FILES[m.group("file")], m.group(0)))
+            continue
+        bound.append((SECTION_FILES[m.group("file")], m.group("sec")))
+    return bound, unbound
+
+
+def extract_sections(text):
+    """-> [(repo_path, section_id)]; the bound half of `scan_sections`."""
+    return scan_sections(text)[0]
 
 
 def extract(text, hash_mode):
@@ -479,27 +512,48 @@ def resolve_key(cwd, key, trunk_ref, cache):
 
 
 def resolve_section(cwd, path, sec, trunk_ref, cache):
-    """A `<charter>.md §XX` citation -> ("OK"|"MISSING"|"AMBIGUOUS", note)."""
-    if path not in cache:
-        cache[path] = show(cwd, trunk_ref, path)
-    text = cache[path]
-    if text is None:
-        return "MISSING", "%s not at %s" % (path, trunk_ref)
-    hits = re.findall(HEADING_RE_TMPL % re.escape(sec), text, re.M)
-    if len(hits) == 1:
+    """A `<charter>.md §XX` citation -> ("OK"|"MISSING"|"AMBIGUOUS", note).
+
+    ⚠️ The citation NAMESPACE is not the file (owner P4.3 split, 2026-09-06):
+    `test_set.md` was 1.47 MB, of which 1.42 MB was ruling archive, and the
+    onboarding read is what P4.3 buys back.  Moving those sections out would
+    have broken **every** `test_set.md §XX` ever published -- 251 distinct
+    citations, 168 of them resolving today -- so the split is only legal
+    because this resolver searches the archive under the same name.  Hence
+    SECTION_FALLBACKS: a citation naming `test_set.md` resolves against
+    test_set.md **∪** its archive, and AMBIGUOUS is judged on the union (an id
+    claimed both live and archived is exactly the collision `§CA` was, and
+    resolving it to whichever file was searched first would hide it)."""
+    paths = [path] + SECTION_FALLBACKS.get(path, [])
+    hits, searched, present = 0, [], []
+    for p in paths:
+        if p not in cache:
+            cache[p] = show(cwd, trunk_ref, p)
+        searched.append(p)
+        if cache[p] is None:
+            continue
+        present.append(p)
+        hits += len(re.findall(HEADING_RE_TMPL % re.escape(sec), cache[p], re.M))
+    if not present:
+        return "MISSING", "%s not at %s" % (" / ".join(searched), trunk_ref)
+    if hits == 1:
         return "OK", None
-    if len(hits) > 1:
-        return "AMBIGUOUS", "%d headings claim §%s in %s" % (len(hits), sec, path)
-    return "MISSING", "no §%s heading in %s (off-trunk refs not searched)" % (sec, path)
+    if hits > 1:
+        return "AMBIGUOUS", "%d headings claim §%s in %s" % (
+            hits, sec, " + ".join(present))
+    return "MISSING", "no §%s heading in %s (off-trunk refs not searched)" % (
+        sec, " + ".join(present))
 
 
 def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
                     grace_hours=0.0, now=None):
     findings = []
     counts = {"paths": 0, "hashes": 0, "hex_seen": 0, "keys": 0, "sections": 0,
-              "ok": 0, "refused": 0, "pending": 0, "ignored": 0}
+              "ok": 0, "refused": 0, "pending": 0, "ignored": 0,
+              "unbound_sections": 0}
     pending = []
     ignored = []
+    unbound = []
     cache = {}
     now = now or datetime.now(timezone.utc)
     # Computed once: whether this container's ignore rules are trunk's rules.
@@ -560,7 +614,12 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
                 counts["ok"] += 1
             else:
                 record(verdict, "key", "state.json:%s" % k, label, note, created)
-        for spath, sec in extract_sections(text):
+        bound_secs, unbound_secs = scan_sections(text)
+        for spath, raw in unbound_secs:
+            # Declined, never guessed at -- and never silent (see scan_sections).
+            counts["unbound_sections"] += 1
+            unbound.append((raw, label))
+        for spath, sec in bound_secs:
             counts["sections"] += 1
             key = ("section", spath, sec)
             if key in seen:
@@ -572,7 +631,7 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
             else:
                 record(verdict, "section", "%s §%s" % (os.path.basename(spath), sec),
                        label, note, created)
-    return findings, counts, pending, ignored
+    return findings, counts, pending, ignored, unbound
 
 
 def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
@@ -729,7 +788,7 @@ def main(argv=None):
         except RuntimeError as exc:
             print("REFUSE  git: %s" % exc)
             return 2
-        f, counts, pending, ignored = audit_citations(
+        f, counts, pending, ignored, unbound = audit_citations(
             cwd, sources, trunk_ref, refs, shallow, args.hash_mode,
             grace_hours=args.comment_grace_hours)
         findings += f
@@ -745,6 +804,16 @@ def main(argv=None):
                counts["pending"]))
         print("           paths absent from trunk BY DESIGN (gitignored) %d" %
               counts["ignored"])
+        print("           section citations DECLINED (the first § after the "
+              "filename is not an id) %d" % counts["unbound_sections"])
+        # Declined, not audited and not judged.  Printed for the same reason
+        # IGNORED-BY-DESIGN is: an unread citation and an absent one must not
+        # produce the same output.
+        for raw, label in unbound:
+            print("DECLINED  section %s\n          cited by: %s\n"
+                  "          the first § after the filename is not an id "
+                  "([A-Z]{1,2}) -- a later § in the same sentence is prose, "
+                  "so this is NOT resolved either way" % (raw.strip(), label))
         for kind, what, label, why in pending:
             print("PENDING   %-7s %s\n          cited by: %s\n          %s"
                   % (kind, what, label, why))

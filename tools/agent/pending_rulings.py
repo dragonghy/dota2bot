@@ -292,6 +292,11 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 QUEUE = os.path.join(REPO, "iterations", "queue.json")
 TEST_SET = os.path.join(REPO, "iterations", "streams", "test_set.md")
+# Owner P4.3: the ruling archive that used to live inside TEST_SET.  Read
+# together with it -- see read_test_set for why splitting the file without
+# splitting the reader would have muted this tool's proposal leg.
+TEST_SET_ARCHIVE = os.path.join(REPO, "iterations", "archive",
+                                "test_set_archive.md")
 STATE = os.path.join(REPO, "iterations", "state.json")
 OWED = os.path.join(REPO, "iterations", "owed_executions.json")
 
@@ -540,9 +545,41 @@ PROPOSED_ID = re.compile(PROPOSAL_MARKER + r"\s*[:：]\s*`([a-z][a-z0-9_]*)`")
 RULING_KEY_PREFIX = "director_ruling"
 
 
-def read_test_set(path=TEST_SET):
+def read_test_set(path=TEST_SET, archive=None):
+    """The live file PLUS its ruling archive, concatenated.
+
+    ⚠️ Owner P4.3 (2026-09-06) moved 1.42 MB of ruling sections out of
+    `test_set.md` into `iterations/archive/test_set_archive.md`.  **All 23
+    admission-proposal sections this file scans for lived in the moved half.**
+    Reading only the live file would therefore have taken `proposal sections
+    scanned` from 23 to 0 and printed `ORPHAN_PROPOSAL: none` -- the detector
+    would have gone green because its INPUT disappeared, which is the one
+    failure mode a "make the missing ruling red" tool must not have.  So the
+    archive is part of what this reader reads, and
+    `tests/test_pending_rulings.py` pins the count, not the colour.
+
+    Concatenation is safe here because every consumer of this text is
+    positional-by-line-2 (`armed_ids`) or a per-line scan (`find_proposals`),
+    and the archive never carries a line 2 of its own -- it is appended, so
+    line 2 stays the live armed string.  A newline joins them so a heading at
+    the archive's first line cannot be swallowed by the live file's last.
+
+    `archive=None` means AUTO-PAIR, and it pairs only with the real `TEST_SET`.
+    That condition is not decoration: without it a synthetic `--test-set` (four
+    end-to-end cases in tests/test_pending_rulings.py build one) would be read
+    together with the repo's real 1.4 MB archive, and the tool would answer
+    about a corpus the caller never handed it -- caught by those four cases
+    when this pairing was first written unconditional.  Pass `""` for none, or
+    an explicit path to pair with something else."""
     with open(path, encoding="utf-8") as fh:
-        return fh.read()
+        text = fh.read()
+    if archive is None:
+        archive = (TEST_SET_ARCHIVE
+                   if os.path.abspath(path) == os.path.abspath(TEST_SET) else "")
+    if archive and os.path.exists(archive):
+        with open(archive, encoding="utf-8") as fh:
+            text = text + "\n" + fh.read()
+    return text
 
 
 def armed_ids(text):
@@ -965,6 +1002,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--queue", default=QUEUE)
     ap.add_argument("--test-set", default=TEST_SET)
+    ap.add_argument("--test-set-archive", default=None,
+                    help="the P4.3 ruling archive, read together with "
+                         "--test-set. Default: auto-pair, and ONLY with the "
+                         "real test_set.md -- a synthetic --test-set is read "
+                         "alone (see read_test_set)")
     ap.add_argument("--state", default=STATE)
     ap.add_argument("--no-age", action="store_true",
                     help="skip the git first-appearance lookup (faster)")
@@ -1060,7 +1102,7 @@ def main():
 
     # ---------------------------------------------------------------- §CG.5
     try:
-        text = read_test_set(args.test_set)
+        text = read_test_set(args.test_set, args.test_set_archive)
     except OSError as exc:
         print("\n=== orphan admission proposals (test_set.md sections with no queue row) ===")
         print("UNCERTIFIABLE -- could not read %s (%s). This line is NOT a pass."

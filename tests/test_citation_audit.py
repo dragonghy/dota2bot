@@ -113,6 +113,13 @@ def make_origin(root):
     write(os.path.join(origin, "iterations/streams/test_set.md"),
           "# test set\n\n## §BB landed ruling\ntext\n\n### §BB.4 sub\ntext\n\n"
           "## §CB first claimant\ntext\n\n## §CB second claimant\ntext\n")
+    # Owner P4.3 (2026-09-06): the ruling archive `test_set.md` was split into.
+    # `§AA` lives ONLY here, `§CB` is claimed live -- and `§BB` is written here
+    # a second time so the AMBIGUOUS verdict is checked ACROSS the union, not
+    # within one file.  See citation_audit.SECTION_FALLBACKS.
+    write(os.path.join(origin, "iterations/archive/test_set_archive.md"),
+          "# archive\n\n## §AA archived ruling\ntext\n\n"
+          "## §BB a second claimant, in the other half\ntext\n")
     git(["add", "-A"], origin)
     git(["commit", "-qm", "landed report"], origin)
     git(["checkout", "-qb", "claude/session-x"], origin)
@@ -372,6 +379,53 @@ def main():
         check("charter sections cited 0" in out,
               "a digit-led section id is never a charter citation")
         check(code == 0, "and the source is not reported")
+
+        # 11c. THE CRASH (GH #572, director 2026-09-06).  `extract_sections`
+        # asserted that the `between` group is `§`-free "by construction".  It
+        # is not: the id charset is `[A-Z]{1,2}`, so a first `§` followed by
+        # anything else does not match, the engine walks on, and a LATER `§`
+        # binds with the first sitting inside `between` -- AssertionError, exit
+        # 1, nothing audited.  Both live shapes are pinned: the `§x.0`
+        # placeholder (three archived rulings write it verbatim) and a `§`
+        # followed by a space.  ⚠️ The assertion here is NOT "exit != 1": a
+        # crash-free run that silently drops the string would pass that and is
+        # the same defect wearing the other hat, so DECLINED must be VISIBLE.
+        print("\ncase 11c: an unparsable first § declines, it does not crash")
+        for label, body in (
+                ("§x.0 placeholder", "`test_set.md` 最新 §x.0(现为 §BB.4)"),
+                ("§ + space", "`test_set.md` § 节) | 14 | §BB.4")):
+            cf = comments_file(root, "c11c.json", [body])
+            code, out = run(["--repo", work, "--fetch", "--comments", cf], work)
+            check("Traceback" not in out and "AssertionError" not in out,
+                  "%s: does not crash the audit" % label)
+            check("DECLINED" in out, "%s: prints the declined citation" % label)
+            check("DECLINED (the first § after the filename is not an id) 1"
+                  in out, "%s: counts it in the denominator line" % label)
+            check("charter sections cited 0" in out,
+                  "%s: and does NOT guess at the later § (the whole point)"
+                  % label)
+
+        # 11d. Owner P4.3: the citation namespace is the NAME, not the file.
+        print("\ncase 11d: `test_set.md §XX` resolves in the archive too")
+        cf = comments_file(root, "c11d.json", ["ruling in `test_set.md` §AA"])
+        code, out = run(["--repo", work, "--fetch", "--comments", cf], work)
+        check(code == 0, "a section that moved to the archive still resolves")
+        check("charter sections cited 1" in out, "and is counted, not skipped")
+        # The negative control that makes the line above mean something: a
+        # section in NEITHER half must still be MISSING.  Without this, a
+        # fallback that resolved everything would pass 11d.
+        cf = comments_file(root, "c11d2.json", ["ruling in `test_set.md` §CZ"])
+        code, out = run(["--repo", work, "--fetch", "--comments", cf], work)
+        check(code == 3 and "§CZ" in out,
+              "a section in neither half is still MISSING")
+        # AMBIGUOUS is judged on the UNION: `§BB` is a heading in each half.
+        # Answering from whichever file was searched first would hide exactly
+        # the collision this verdict exists to surface.
+        cf = comments_file(root, "c11d3.json", ["ruling in `test_set.md` §BB"])
+        code, out = run(["--repo", work, "--fetch", "--comments", cf], work)
+        check(code == 3 and "AMBIGUOUS" in out,
+              "one id claimed in both halves is AMBIGUOUS, not first-wins")
+        check("2 headings claim" in out, "and counts claimants across the union")
 
         # 12. grace -- a comment posted seconds before the push is not red
         print("\ncase 12: grace window")

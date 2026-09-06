@@ -270,6 +270,30 @@ check(by_section.get("BK") == "abilanc", "§BK's proposal id read wrong")
 check(by_section.get("BR") == "aimguard", "§BR's proposal id read wrong")
 check(by_section.get("CE") == "fieldsip", "§CE's proposal id read wrong")
 
+# ---- owner P4.3 (2026-09-06): the corpus above is now TWO files ----
+# The split moved every ruling section out of `test_set.md`, and ALL 23
+# proposal sections went with them.  The checks above pass only because
+# `read_test_set` reads the archive as well.  Without this negative control
+# they would keep passing for the wrong reason on the day someone "simplifies"
+# that reader: `find_proposals` would see 0 sections and the orphan leg would
+# print `ORPHAN_PROPOSAL: none` -- green because its INPUT vanished, which is
+# the one way this tool must never go quiet.  Measured live before the split
+# was committed: 23 proposals with the archive, 0 without.
+live_only = pr.read_test_set(TEST_SET, archive="")
+check(len(pr.find_proposals(live_only)) == 0,
+      "the live file alone still carries proposal sections -- this control no "
+      "longer discriminates, re-derive it before trusting the checks above")
+check(len(real_proposals) == 23,
+      "proposal sections scanned = %d, not the 23 the split measured"
+      % len(real_proposals))
+# ...and the concatenation must not disturb the POSITIONAL reader: the armed
+# string is line 2 of the live file, and the archive is appended, never
+# prepended.  A reader that landed on an archived historical member string
+# would score every id admitted since as un-armed.
+check(pr.armed_ids(ts_text) == pr.armed_ids(live_only),
+      "appending the archive moved line 2 -- armed_ids now reads a different "
+      "member string")
+
 # The id must come from the POSITION AFTER THE MARKER, not from "first backtick
 # in the line".  Measured 2026-08-29: on all seven archived headings the two
 # rules agree -- §BK backticks the contrast id `campdanger` and §BR the
