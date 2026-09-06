@@ -11944,3 +11944,90 @@
     **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT` 与 push 读数见报告 §8.1;
     **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
     **动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
+- **2026-09-06T13:02Z**:**取上一轮点名的「下一轮第一件事 (1)」—— hero-34 / GH #549
+  (`liondrainbkb`)归档域遍历。零 EC2、S3 只读、未改 `bots/` 一行。**
+  **宽扫** `replays/` 全量 780 个 `.dem` → W39–W50 的 144 局逐局取 `analysis.json`
+  英雄普查 ⇒ **含 Lion 的 75 局**;**深扫 75/75 局**(`DL/DUMP_EXIT=0`、`unparseable=0`,
+  即「有录像且含 Lion」的局的 100%),877 次抽蓝落点 / 860 条 `ABILITY` 行 /
+  **414 个域内瞬间(183 episode)**;**逐帧 8 个落点 / 8 局 / 8 个 run**(章程下限 6)。
+  ```
+  VERIFY id=liondrainbkb verdict=INDETERMINATE episodes=183
+  ```
+  (**INDETERMINATE 是对「行为正确」的判词不是对域的**:域买到了,但 `liondrainbkb`
+  **从未 armed** ⇒ 语料里没有一帧是它执行的。)
+  - **⛔⛔⛔ 主发现:杠杆的前提在真实帧上被证伪 —— 本组建议不入集,并建议英雄组撤下。**
+    `X.lion_IsDrainTargetCastable`(`hero_lion.lua:1520`)的立案句「`SPELL_IMMUNITY_ENEMIES_NO`
+    ⇒ 引擎根本不接受魔免目标」来自一次**外部网页读数**,而**仓内没有任何 KV 快照载着
+    `SpellImmunityType`**(grep 零命中)。语料反驳:**75 局里 16 次 Mana Drain 落在当时挂着
+    真魔免的敌方英雄身上**,其中 **8 次**目标名下全局单实体(幻象混淆结构上不可能),
+    **8/8 的整条引导都嵌在魔免窗口内部**。三条独立的腿:(i) **前置量** —— 前三行的 BKB
+    在起手前已亮 **7.40 / 5.80 / 2.70 秒**,而 `AbilityCastPoint` 只有 **0.3s**;
+    (ii) **嵌套** —— 引导起止全在 `[魔免add, 魔免remove]` 之内;
+    (iii) **蓝真的被抽走了(逐帧)** —— `d21f34__20260904_123205_slot1` BKB [956.5,965.5]、
+    引导 [956.6,959.9],dragon_knight 蓝 `957.1:455 → 958.1:368`(**−87**,同期自然回蓝为正),
+    Lion 蓝 `956.1:641 → 957.1:798`(**+157**)。`b34547__20260905_004847_slot1` **t=1266.4**
+    更干净:引导**跑满 5.1s**,BKB 到 1274.1 才结束。⇒ 团战吸蓝那支的 `J.CanCastOnMagicImmune`
+    **与观测到的引擎行为一致**,过严的是另外两支的 `J.CanCastOnNonMagicImmune`;
+    申请书发现的「三处不一致」是真的,**但修正方向反了**。
+    ⚠️ 本组不裁定 Dota 规则本身,只裁定**那句话在本仓语料上被证伪**;
+    下一棒是**解释这 8 帧**,不是重申网页读数。
+  - **⭐⭐ 第一遍的 21 次里有 5 次是量具自己造的**:申请书点名的
+    `modifier_omniknight_martyr` 是**物理免疫**(对 `ENEMIES_NO` 不构成拒收),
+    本组第一遍还顺手放进了 `modifier_item_mask_of_madness_berserk`(**增加受到伤害**的
+    加速 buff,挡不住任何东西)⇒ 虚增 **3 次英雄落点 + 38 局的「魔免来源」**。
+    与 10:02Z 的 `aghanims_shard` 假零**同族、方向相反**(那次缩小域,这次放大证据)——
+    **两次都是「名单是谁定的」决定了读数**。反面钉死在
+    `tests/test_liondrainbkb_domain.py::PremiseReading`。
+  - **⭐ 申请书最看重的那一列 (4) 结构性买不到**:860 条 `ABILITY lion_mana_drain`,
+    **0 条**在 2.0s 内没有对应 `MODIFIER_ADD`。**这个 0 不是「缺陷不发生」,是仪器瞎** ——
+    `ENEMIES_NO` 指向非法目标时下单在**施法之前**被拒,引擎**不写 `DOTA_COMBATLOG_ABILITY`
+    这一行**,所以「下了单、没起效」在 Source 2 战斗日志里**恒等于零条**。
+    机制本身是活的(`CastSideBlindness` 从正面驱动过这条路径)⇒ **这个 0 是测量结果不是死代码**。
+    ⇒ 域只能从**状态侧**买。建议进常识档:**「用落点数缺陷」在被引擎拒收的那一类缺陷上
+    是结构性失效的口径。**
+  - **域读数(两分层,不许并池)**:`liondrain` 只在 **W39–W41** armed
+    (臂串按 `git show <ref_pin>:…test_set.md | sed -n 2p` 逐波读出,不是抄散文)——
+    armed 层 **64 瞬间 / 35 ep / 13 局**(至少一个合格敌人魔免 11,**全部魔免 9**);
+    gate-off(W42+)**350 / 148 / 56**(至少一个 36,**全部 20**)。
+    「至少一个」是上界、「全部」是下界(`hEnemyList` 顺序离线不可复原)。
+    合格敌人个数**整数小值域 ⇒ 不报中位数**(铁律 4(ii))。
+  - **预登记判读不自套(§CJ)**:`DOMAIN-NOT-REACHED` **按字面不适用**((2) 不接近 0,
+    (4) 恒 0 但不可判);不入集的结论仍成立但**理由完全不同** —— 不是域太小,是**方向反了**。
+    本组建议新标签 **`PREMISE-FALSIFIED`**,**请总监裁**。
+  - **可钉帧**:首选 `b34547__20260905_004847_slot1` **t=1266.4**(团战 + Q/W/R 全不可施 +
+    射程内唯一合格敌人处在 BKB 窗口 + 引导跑满 5.1s);备选
+    `1db27d__20260903_093254_slot1` t=1526.0(lead 7.40s)、
+    `b5c1d2__20260904_064605_slot1` t=1244.9(lead 5.80s)。
+  - **量具**:新 `tools/batch_test/behavioral/liondrainbkb_domain.py`(`--selfcheck`
+    **28 PASS / 0 FAIL**)+ `tests/test_liondrainbkb_domain.py`(**10 tests OK**,
+    三种「本轮头条可能被造出来」的语料形状各一条,从反面要求量具拒收)。
+    GH #176 幻象守卫按**出生时刻**实装(一局 Chaos Knight **41** 个实体;
+    全语料 195 个 hero-name 多实体、丢弃 1,219,355 个快照样本);
+    ⚠️ **事件侧无法按实体区分** ⇒ 强结论只用全局单实体的那 8 行。
+  - **本轮开**:GH `[hero]`(`liondrainbkb` 前提证伪 + 建议撤下)。实际编号见报告。
+  - **下一轮第一件事**:(1) **hero-2**(供给已解封,按**穿越**口径);(2) hero-31 主体三列;
+    (3) hero-30 可买列(两分支分开);(4) hero-36 / hero-37(与本轮同形,量具可复用
+    modifier 区间重建);(5) hero-32/33 等 dumper 补小兵 hp。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠四轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**;
+    `hero_domain_scan_2_30_31` 的**其余六份读数**仍欠(上一轮只交了 1/7)。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 28 轮 / #421 第 27 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T130221Z.md`;
+    交付件:`iterations/reports/replay-check/domain_hero_34_liondrainbkb.md`
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(全程 S3 只读);`DUMPER_EXIT=0`(cache HIT);
+    75/75 局 `DL/DUMP_EXIT=0`、`unparseable=0`;`liondrainbkb_domain.py --selfcheck`
+    **`SELFCHECK_EXIT=0`,28 PASS / 0 FAIL**、真语料 `SCAN_EXIT=0`、`FRAMES_EXIT=0`;
+    `WRAPPER_EXIT=0`(10 tests OK)。
+    ⛔ **证据纪律 3 第四十二次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);第二次重定向但**套了 `timeout 400` 被自己
+    掐成 `EXIT=124`** —— **与上一轮 10:02Z 的第二次尝试同一形状,连续两轮**。
+    真码**本轮没有取到**:自检在 `=== trunk health (python test suite) ===` 处被 timeout
+    截断,**`UNCERTIFIABLE`,不是通过**。截断前已打印的腿:push-gate 上膛 OK、
+    unlanded-commits `OK`、cadence **2 finding(s)**、queue-rulings RIDESHARE hero-37 ×1、
+    owed-executions **8 行**、stable 锚点 2/2 OK、promote-atom OK。
+    **⚠️ 第二十一次登记:自检在本容器不是「约 20s」。**
+    **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §8.1;**未用 `RULE6_BYPASS` ⇒ 无
+    「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
