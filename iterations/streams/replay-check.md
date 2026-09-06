@@ -11595,3 +11595,78 @@
     **AWS**:`AWS_SETUP_EXIT=0`,全程只有 S3 **只读**(`s3 ls` / `sweep_run.sh` 拉 `.dem`),
     **零 EC2、零发波、零 CE、零 budgets**。
     **Token 用量**:`TOKENS total_in=15,008,184 out=65,538 turns=106`(见报告 §9.5)。
+- **2026-09-06T00:48Z**:**`suptp` 结清**(上一轮交棒第 (1) 条,零新钱)。
+  `VERIFY id=suptp verdict=BUGGY episodes=16`。
+  **宽扫 96/96 `.dem`(W49 四台机,`SWEEP_EXIT=0` ×4,72 计分局 / 24 暖场 / unparseable 0);
+  深查 16 个事件 × 16 个不同对局 × 4 粒种子 × 两分层 × 两条腿**(章程下限 6)。
+  零发波、零 EC2、S3 只读、零 CE;**未改 `bots/`/`game/`/`tests/`/`tools/` 一行**
+  (`TREE_DIFF_EXIT=0`,0 字节)。本轮量具全在容器 scratchpad,**没有进仓库**。
+  - **⭐⭐ 主发现不是"没触发",是"这个门从来没承过重"**:
+    `jmz_func.lua:8642-8644` 写的是
+    `bSup = IsSoakCandidate('suptp') and GetPosition(bot) >= 4` /
+    `if not ( IsSoakCandidate('midtp') or bSup ) then return nil end`。
+    `midtp` 自陈「the mid profile -- **any position**」⇒ `suptp` 的域是它的**真子集**,
+    `midtp` armed 时 `bSup` **对结果零影响**。在**真 helper** 上跑出来的真值表
+    (scratchpad stand,`STAND_EXIT=0`):`{midtp}` 与 `{midtp,suptp}` 在 pos 1..5 上
+    **逐行相同 ⇒ 0/5**;`{suptp}` 单独 armed 才有 **2/5**(pos 4,5)。
+    **而"单独 armed"这个配置从来没发生过**:带 `arm_md5` 的 **W34–W49 共 16 个波次
+    全部**解析到「两个 id 同时 armed」的那一版(md5 逐个精确命中,不是模糊匹配);
+    本地可达的 `test_set.md` **243 个版本里 `suptp` 单独出现 0 次**
+    (⚠️ shallow clone,`rev-list --count HEAD`=50,故「243」是**本地可达**版本数)。
+    正交交叉验证:W49 **引擎实际跑的 `cand=` 戳**与钉住的臂串
+    (`git show 066219d6:…test_set.md` 第 2 行,md5 `824ec284…` = `W49_wave.json.arm_md5`)
+    **作为集合完全相等**,两个 id 都在里面。
+    ⇒ **`suptp` 的条件 (a) 不是"本轮没买到",是这种配置下任何一轮都买不到。**
+  - **⭐ 这是 `AGENTS.md`「promote 一个 id 悄悄冻死点它名字的门」的同族反面**:
+    已知那条是 `A and B`,B 被 promote ⇒ 门恒 **FALSE**;本轮这条是 `A or B`,
+    A 与 B **同集 armed** ⇒ B **恒不承重**。共同形状:**一个 id 有没有效果取决于
+    同一个臂串里的另一个 id,而裁定是按单个 id 登记的。**
+    `check_armed_wiring.py` 报 WIRED **是对的**(它的 LIMITS 自陈只查调用点存在,
+    不查「谓词能不能为真」)——缺的是**没有任何检查在管"承重"**。
+    扫遍 `bots/` 的析取门:**当前 59 个 armed id 里只有 `midtp`/`suptp` 这一对命中**
+    (`lanefix or lf_<sub>` / `lanefix or lf_support` / `tparrive` / `c3` / `c12` /
+    `nopush` / `esaftershock` 的另一半都不在臂串里)。
+  - **第二层(独立成立)** —— NaN 落点仍在,而且**上一轮的常数假设本轮消掉了**:
+    `J.GetTeamFountain()`(`:1697`)返回的是**源码写死的常量**
+    `RadiantFountain=Vector(-6619,-6336,384)` / `DireFountain=Vector(6928,6372,392)`
+    (`:8-9`),`GetLocationToLocationDistance`(`:2905`)只算 x/y ⇒ **判别式无未知量**。
+    用代码自己的常量 + W49 语料量到的 22 座塔:**20 座退化(0/0⇒NaN)、2 座安全**,
+    而**安全的那 2 座是 radiant 基地塔**(1729.0 / 1677.6),**dire 的两座在刀口外**
+    (2546.3 / 2545.5)⇒ **这个 bug 自带侧别不对称**。上一轮「4 座骑刀口不下结论」**现在有结论了**。
+    真代码复现(W49 的 radiant 11 座塔喂进 shipped `GetNearbyLocationToTp`,
+    `NAN_STAND_EXIT=0`):**9 座 `(-nan,-nan)`、2 座原样返回塔坐标**。
+    ⚠️ **安全分支也交付不了 helper 的注释**(它返回塔身,不是"塔前 575u")。
+  - **逐帧 16/16 一致**:16 个事件的"正面"塔**全在退化分支**,落点**全是有限坐标**
+    (`d_land` 208–800u)⇒ **没有一发来自这个 helper**;16 帧里 **0 帧**出现同名多 `idx`(GH #176)。
+  - **归属(章程 4a)**:`baseline` 腿是**可证的结构零**(helper 第二行 `return nil`),
+    它照样报出 **41** 个「helper-shaped ∧ pos≥4」事件,armed 腿 **47** 个,
+    `d_land` 中位 **558 vs 598**,**英雄集合九个一字不差** ⇒ **这是假阳性的计数,不是估计**;
+    armed 腿那 47 **不能当 `suptp` 触发过的证据**。**但它买到另一件必要的事:
+    `suptp` 的域是占着的(72 局 47 次)⇒ 排除「SILENT 是因为场景稀缺」**。
+    另:218 个 helper-shaped 事件(全部位置)里,**正面落在安全分支的 = 0**。
+  - **宽扫表**(14 个通用检测器 / 8164 条 finding,两层读数按 4(i-a) 登记):
+    按 `armed − baseline` **10/14 行两层反号 ⇒ 4(i-b) 噪声,不进结论**;
+    `tp_home_wasteful` 仍受 GH #530 影响,**不读绝对值**。
+  - **本轮开**:GH `[bug]`(门支配,建议验收 = `gate_dominance.py` + 一个断言
+    `{midtp}` 与 `{midtp,suptp}` 输出**必须不同**的 Lua 测试,现在相同即红)、
+    GH `[harness]`(`tests/mock/bot_api.lua:413` 在 `install()` 里
+    `G.print = function() end` ⇒ 一次性 stand 在 install 之后 `print`
+    **stdout 全空 + 退出码 0**,长得像"跑了没发现";本轮第一次跑就踩,
+    改 `io.stderr:write` 才拿到读数。与证据纪律 3 同族:**退 0 + 空输出 ≠ 通过**)。
+    实际编号见报告 §7/§8.1。
+  - **对 P4.2 的意义(交总监,不是本组裁定)**:`suptp` 与上一轮结清的 `midtp`
+    是两个最便宜的「判定完结」候选,合起来正好是总监一轮的配额。
+  - **下一轮第一件事**:**`a_evidence_tpdying`(GH #35)+ `a_evidence_tpreach`(GH #159)**
+    —— 自检 `owed-executions` 点名本组,且**本轮语料就够**:两个 id 在 **W49 的引擎戳里
+    都是 armed 的**(22:xxZ 才退集),两项都写着「零 AWS 增量」。
+    其后顺延上轮清单:(2) F2/GH #530 修法+变异台(用 W48 语料重跑);
+    (3) `--analysis-dir` 基名碰撞即拒绝(F1/GH #529,本波再次复现:72 局 70 个基名,**2 个跨机撞名**);
+    (4) `outlatch` 重扫(`outcommit` 已落地 `8c353d43`,修前基线 armed 72% / base 79%);
+    (5) `campbind` 等 #475;(6) `zusboltdom` 等同波隔离腿;
+    (7) **#477 重 dump 仍是本组的球**(W44 约 09-25 过期);
+    (8) `hero_domain_scan_2_30_31`(GH #274/#474/#27)。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 25 轮 / #421 第 24 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T004814Z.md`
+  - 自检真码 / 铁律 6 / `claim_precheck` / token:见报告 §8 与 §8.1。
