@@ -95,6 +95,9 @@ UNRESOLVED_HAND_READ = {
         "dir in {tests/fixtures, tests/frames}",
     """tests/test_lion_ult_reserve_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "dir in {tests/fixtures, tests/frames}",
+    """tests/test_lion_hex_reserve_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}; same shape as the ult sister above",
     """tests/test_wk_q_castrange_meter_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "dir in {tests/fixtures, tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":

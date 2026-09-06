@@ -497,6 +497,38 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T01:19Z**:开工自检报 `TRUNK RED`,干净树上 **5 个 python 测试红**
+  (自检跑在 `768ca619`,拉到真 tip `cf00657e` 后五条**逐条复现**——是 main 的
+  现状,不是本地脏)。**5/5 修绿**:python 套件 95 passed/5 failed →
+  **101 passed / 0 failed / 1 uncertifiable**。报告:
+  `iterations/reports/director/20260906T011955Z.md`。
+  **其中两条是真缺陷,不是测试过时**:
+  (i) `mutstand_outlatch_capture.sh` 与 `mutstand_structure_modifiers.sh` 的
+  在效 EXIT trap 是 `rm -rf "$WORK"`,而**唯一的原件备份就住在 `$WORK` 里面**,
+  `restore` 从不被调用 ⇒ 被打断时**删掉原件、留下变异体**,比没有 trap 更坏
+  (GH #418 同族)。旧检测器看不见它,是因为它的 TRAP 正则**只认「trap 体是一个
+  裸词」**,四条写法正常的台被误报,**误报盖住了这两条真缺陷**;修正正则后又浮出
+  第三件:`dead_manacost`/`reason_read_76` 的「verifies its restore」**从来没跑过**
+  (旧码在上一条检查就 `continue` 了),两台从不证明自己还原了,已补 sha256sum 核验。
+  变异台 **3/3 KILLED + restore verified**。
+  (ii) `wkqdmg_domain.py` 的 `_fn_body` **只把行首是 `end` 的行算作闭合**,于是单行
+  `if ... then return x end` 只加不减,`X.wk_GetBlastKillDamage` **22 行被读成 567 行**,
+  整个吞掉 `X.ConsiderQ`/`X.ConsiderW` ⇒ gate id 读出别人的 `wkbonefight`。
+  **这正是它 docstring 里写着自己要防的 GH #296**——防线写在了会失效的地方。
+  已改为按行统计块开启/闭合(剥注释与字符串),五个函数边界实测不外溢。
+  另修:`aoe_radius_source_census.py` 自开的 `bots/` walk 收归 `lua_corpus`;
+  `_mockscalar_sweep.lua` 的 find 补 farm-only 排除;`test_lion_hex_reserve_domain.lua`
+  的 popen 手读登记;`TDE_FAR` 跟上 `J.TP_RESPONSE_FAR_FLOOR` 重构(**并额外钉住绑定**,
+  只读定义处的镜子在「函数不再使用它」时会假绿);该文件死在 import 期**盖住了**
+  `stayattr_domain:HP_LO/HP_HI` 未登记,已核源(`jmz_func.lua:5083`
+  `J.ShouldStayAndRegen` 的 `nHP < 0.18 or nHP > 0.75`)后登记 MIRROR 并真钉住。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`;
+  `bots/`+`game/` **一行未动**,`run_tests.lua` 全套(~100min)未跑完,已用
+  `test_mockscalar_return_shape` + smoke + gate-claim 覆盖并在报告中写明这是覆盖不是等价。
+  **零 AWS 增量,未动 owner 邮件配额。**
+  下轮交出去两条 [harness]:①`_fn_body` 同形状切分器可能不止一处,需普查
+  `behavioral/`;②`test_selfcheck_lua_leg.py` 实测 **84 文件 / 120.1s vs 预算 120s**,
+  **每轮都 UNCERTIFIABLE ⇒ 这条腿每轮都没人看过**。
 - 2026-08-19T03:00Z:第二次 director 触发。四组(batch-desk/replay-check/
   strategy/hero)本轮均有产出,上轮标记的"strategy 无产出"观察项已解除。
   处理了两条新 issue:**`[harness]` #25 已修复并关闭**——新增

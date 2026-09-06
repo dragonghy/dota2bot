@@ -48,7 +48,10 @@ TEST=tests/test_slotwait_domain_liveness.py
 SAFE=$(mktemp -d)
 cp "$SRC" "$SAFE/orig.py"
 sha256sum "$SRC" > "$SAFE/orig.sha"
-trap 'cp "$SAFE/orig.py" "$SRC"; rm -rf "$SAFE"' EXIT
+# Named rather than inlined so the restore has one definition to read and one
+# place to change; the trap body used to carry the `cp` itself.
+restore() { cp "$SAFE/orig.py" "$SRC"; }
+trap 'restore; rm -rf "$SAFE"' EXIT
 
 fail=0
 # `-B` and the pycache wipe are NOT hygiene, they are this stand's own bug,

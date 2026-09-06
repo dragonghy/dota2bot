@@ -44,6 +44,13 @@ run_detectors() {
 
 restore() { cp "$WORK/tool.orig" "$TOOL"; cp "$WORK/live.orig" "$LIVE"; purge_cache; }
 
+# Upgrade the trap now that `restore` and the backups both exist.  Until this
+# line the trap was `rm -rf "$WORK"` alone, which on an interrupt deleted the
+# ONLY pristine copies (they live inside $WORK) while leaving the mutant in the
+# working tree -- strictly worse than no trap.  Armed here, before the first
+# mutate, which is the window GH #418 is about.
+trap 'restore; rm -rf "$WORK"' EXIT
+
 CAUGHT=0
 SURVIVED=0
 

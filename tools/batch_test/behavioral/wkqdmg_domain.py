@@ -265,19 +265,49 @@ def _fn_body(src, name):
     m = re.search(r"^function\s+X\.%s\s*\(" % re.escape(name), src, re.M)
     if not m:
         return None
-    depth, i, start = 0, m.start(), None
+    depth, i = 0, m.start()
     for line in src[m.start():].split("\n"):
-        s = line.strip()
-        if re.match(r"^(function|if|for|while|do)\b", s) or s.endswith(" do"):
-            depth += 1
-        if re.match(r"^end\b", s):
-            depth -= 1
-            if depth == 0:
-                break
-        if start is None:
-            start = 0
+        opens, closes = _block_delta(line)
+        depth += opens
+        # The `end` of a ONE-LINE block closes on the same line it opened on
+        # (`if not (...) then return nShipped end`).  Counting only a line that
+        # STARTS with `end` -- which is what this loop did until 2026-09-06 --
+        # scored that line +1 and never took it back, so the depth never
+        # returned to zero at the real terminator and the "body" ran on into the
+        # next functions.  Measured here: `wk_GetBlastKillDamage` is 24 lines
+        # and was being read as 567, swallowing `X.ConsiderQ` and `X.ConsiderW`
+        # whole -- so `a["ids"]` picked up `wkbonefight`, a gate belonging to a
+        # different helper.  That is precisely the GH #296 failure this
+        # function's docstring says it exists to prevent, in the function that
+        # says it.
+        depth -= closes
         i += len(line) + 1
+        if depth <= 0:
+            break
     return src[m.start():i]
+
+
+# `for`/`while` always reach their block through `do`, so counting `do` alone
+# keeps them from being counted twice.  `elseif` is one word, so `\bif\b` does
+# not match inside it -- an elseif opens no new block and needs no `end`.
+# `repeat ... until` has no `end` and so contributes to neither side.
+_OPEN_RE = re.compile(r"\b(?:function|do|if)\b")
+_END_RE = re.compile(r"\bend\b")
+_STR_RE = re.compile(r"'[^'\n]*'|\"[^\"\n]*\"")
+
+
+def _block_delta(line):
+    """(block openers, `end`s) on one Lua line, ignoring comments and strings.
+
+    Strings and comments are blanked first so an `end` inside either cannot
+    close a real block -- `-- ... at the end of the ladder` is a comment, not a
+    terminator.
+    """
+    line = _STR_RE.sub("''", line)
+    cut = line.find("--")
+    if cut != -1:
+        line = line[:cut]
+    return len(_OPEN_RE.findall(line)), len(_END_RE.findall(line))
 
 
 def lua_anchors():

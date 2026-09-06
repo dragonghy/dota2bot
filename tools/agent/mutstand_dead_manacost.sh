@@ -32,6 +32,15 @@ FILES="$CENSUS $LION $AXE $WK $JMZ $SCAN"
 BAKDIR=$(mktemp -d)
 for f in $FILES; do cp "$f" "$BAKDIR/$(basename "$f")"; done
 restore_all() { for f in $FILES; do cp "$BAKDIR/$(basename "$f")" "$f"; done; }
+# A stand that restores but cannot PROVE it restored may have eaten the round's
+# fix and said nothing (GH #418).  The manifest is taken before the first
+# mutation; verify_restore re-checks it at the end.
+sha256sum $FILES > "$BAKDIR/orig.sha"
+verify_restore() {
+	sha256sum -c "$BAKDIR/orig.sha" > /dev/null \
+		|| { echo "RESTORE FAILED: the tree did not come back byte-for-byte"; return 1; }
+	echo "restore verified"
+}
 trap 'restore_all; rm -rf "$BAKDIR"' EXIT
 
 pass=0; fail=0
@@ -131,4 +140,6 @@ expect_red "M6 register anchored on a predicate that is not there" "is registere
 
 echo
 echo "KILLED=$pass  SURVIVED/WRONG=$fail"
+restore_all
+verify_restore || exit 1
 [ "$fail" -eq 0 ] || exit 1

@@ -52,7 +52,47 @@ STANDS = sorted(glob.glob(os.path.join(ROOT, "tools", "agent", "mutstand_*.sh"))
 
 # `trap restore EXIT` and `trap 'restore' EXIT` are both in the tree and both
 # correct; the quoting is not the point, reaching the function is.
-TRAP = re.compile(r"^\s*trap\s+'?(?P<fn>[A-Za-z_][A-Za-z0-9_]*)'?\s+.*\bEXIT\b", re.M)
+#
+# THE BODY IS NOT ALWAYS A BARE WORD (director 2026-09-06).  The first version
+# of this pattern captured one identifier and then demanded whitespace, so it
+# read a trap body exactly one way: a single word.  Every OTHER shape in this
+# tree was misread, and in BOTH directions -- which is why the two failure kinds
+# it printed pointed at four stands whose traps were fine:
+#   * `trap 'restore_all; rm -rf "$BAKDIR"' EXIT` -- the `;` follows the
+#     identifier where the pattern required a space, so the line did not match
+#     at all and the stand was reported as installing NO trap.  It installs a
+#     correct one.
+#   * `trap 'cp "$SAFE/orig.py" "$SRC"; rm -rf "$SAFE"' EXIT` -- matched, and
+#     captured `cp`, so the stand was reported as trapping a function that does
+#     not exist.  It restores the tree; it just does it inline.
+# Reading the body as a command LIST, and asking whether any command in it
+# reaches a function this file defines, is what the check meant all along.
+#
+# Reading every trap rather than the first also matters, because a later `trap`
+# REPLACES an earlier one: a stand may legitimately arm `rm -rf "$WORK"` while
+# only the temp dir exists and upgrade it once the backups do.  What is in
+# effect at the end is the LAST one, so that is what gets checked.
+TRAP = re.compile(
+    r"^\s*trap\s+(?P<body>'[^']*'|\"[^\"]*\"|[A-Za-z_][A-Za-z0-9_]*)"
+    r"(?P<sigs>(?:\s+[A-Za-z0-9]+)+)\s*$", re.M)
+
+
+def trap_commands(body):
+    """The first word of each command in a trap body, in order.
+
+    `'restore_all; rm -rf "$BAKDIR"'` -> ['restore_all', 'rm'].  Splitting on
+    `;`/`&&`/`||`/newline is enough for every body in this tree; a body that
+    needs more than that is a body that should be a function.
+    """
+    body = body.strip()
+    if body[:1] in ("'", '"'):
+        body = body[1:-1]
+    out = []
+    for part in re.split(r"[;\n]|&&|\|\|", body):
+        words = part.strip().split()
+        if words:
+            out.append(words[0])
+    return out
 
 fails = []
 
@@ -80,17 +120,31 @@ ok("there are stands to check at all (>= 6)", len(STANDS) >= 6, STANDS)
 for path in STANDS:
     name = os.path.relpath(path, ROOT)
     src = read(path)
-    m = TRAP.search(src)
+    traps = [t for t in TRAP.finditer(src) if "EXIT" in t.group("sigs").split()]
 
-    ok("%s installs an EXIT trap" % name, m is not None,
+    ok("%s installs an EXIT trap" % name, bool(traps),
        "an interrupted run leaves the mutant in the working tree")
-    if m is None:
+    if not traps:
         continue
 
-    fn = m.group("fn")
-    ok("%s traps a function that exists (%s)" % (name, fn),
-       re.search(r"^%s\(\)\s*\{" % re.escape(fn), src, re.M) is not None,
-       "the trap fires and does nothing")
+    def restores(t):
+        """True if any command in this trap body is a function defined here."""
+        return any(re.search(r"^\s*%s\s*\(\)\s*\{" % re.escape(w), src, re.M)
+                   for w in trap_commands(t.group("body")))
+
+    restoring = [t for t in traps if restores(t)]
+
+    # The trap left in effect is the last one armed.  A stand whose LAST trap
+    # does not reach a restore is the outlatch_capture shape (GH #418 again,
+    # found 2026-09-06): the body was `rm -rf "$WORK"`, the backups lived
+    # INSIDE `$WORK`, and `restore` was never called -- so an interrupt left the
+    # mutant in the tree and deleted the only pristine copy of the original.
+    # That is strictly worse than no trap at all, and the old one-word pattern
+    # scored it the same as a missing function name.
+    ok("%s leaves a restoring EXIT trap in effect" % name,
+       bool(restoring) and traps[-1] is restoring[-1],
+       "the last trap armed is %r, which restores nothing"
+       % trap_commands(traps[-1].group("body")))
 
     ok("%s verifies its restore" % name, "sha256sum" in src,
        "a stand that cannot prove it put the tree back may have eaten the fix")
@@ -144,8 +198,12 @@ for path in STANDS:
            first_apply != -1,
            "the ordering check below cannot run; widen the call-site pattern")
         if first_apply != -1:
-            ok("%s arms the trap before the first %s" % (name, applier),
-               m.start() < first_apply,
+            # It has to be a RESTORING trap that beats the mutation, not merely
+            # some trap: a stand that arms `rm -rf "$WORK"` early and upgrades
+            # to `restore; rm -rf "$WORK"` later is only protected from the
+            # upgrade onward, and that is the line the window is measured from.
+            ok("%s arms a restoring trap before the first %s" % (name, applier),
+               bool(restoring) and restoring[0].start() < first_apply,
                "the window the trap exists to close is exactly the one before it")
 
 print()

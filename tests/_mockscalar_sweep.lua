@@ -83,7 +83,8 @@ end
 -- candidate list tracks the tree instead of a snapshot of it.
 local function shipped_getters()
     local names, order = {}, {}
-    local p = assert(io.popen("find bots -name '*.lua' | sort"))
+    local p = assert(io.popen("find bots -name '*.lua' "
+        .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. ' | sort'))
     for path in p:lines() do
         for name in read_file(path):gmatch(':(Get[A-Za-z0-9_]*)%s*%(') do
             if names[name] == nil then

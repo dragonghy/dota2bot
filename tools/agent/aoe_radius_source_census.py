@@ -85,6 +85,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import lua_corpus as LUA_CORPUS                  # noqa: E402  (the one bots/ walk)
 import special_value_key_census as KEYS          # noqa: E402  (fetch/BASE)
 import special_value_shape_census as SHAPES      # noqa: E402  (parse_shapes)
 
@@ -172,39 +173,34 @@ def call_sites():
     """
     slots = hero_slots()
     out = []
-    for root, _dirs, files in os.walk(os.path.join(REPO, "bots")):
-        for fname in sorted(files):
-            if not fname.endswith(".lua"):
-                continue
-            path = os.path.join(root, fname)
-            rel = os.path.relpath(path, REPO)
-            with open(path, encoding="utf-8", errors="replace") as fh:
-                src = fh.read()
-            if "GetAOERadius" not in src:
-                continue
-            body = SHAPES.strip_comments(src)
-            slot_binds = {sfx: int(n) for sfx, n in BIND_RE.findall(body)}
-            name_binds, pending = {}, None
-            for line in body.splitlines():
-                m = NAME_GUARD_RE.search(line)
-                if m:
-                    pending = m.group(1)
-                m = NAME_BIND_RE.search(line)
-                if m and pending:
-                    name_binds[m.group(1)] = pending
-            hero = None
-            base = os.path.basename(rel)
-            if base.startswith("hero_"):
-                hero = base[len("hero_"):-len(".lua")]
-            for n, line in enumerate(body.splitlines(), 1):
-                for handle in CALL_RE.findall(line):
-                    ability = None
-                    sfx = handle[len("ability"):] if handle.startswith("ability") else None
-                    if hero and sfx is not None and sfx in slot_binds and hero in slots:
-                        ability = slots[hero].get(slot_binds[sfx] - 1)
-                    elif handle in name_binds:
-                        ability = name_binds[handle]
-                    out.append((rel, n, handle, ability))
+    for path in LUA_CORPUS.bots_lua_files(REPO):
+        rel = os.path.relpath(path, REPO)
+        src = LUA_CORPUS.read_lua(path, errors="replace")
+        if "GetAOERadius" not in src:
+            continue
+        body = SHAPES.strip_comments(src)
+        slot_binds = {sfx: int(n) for sfx, n in BIND_RE.findall(body)}
+        name_binds, pending = {}, None
+        for line in body.splitlines():
+            m = NAME_GUARD_RE.search(line)
+            if m:
+                pending = m.group(1)
+            m = NAME_BIND_RE.search(line)
+            if m and pending:
+                name_binds[m.group(1)] = pending
+        hero = None
+        base = os.path.basename(rel)
+        if base.startswith("hero_"):
+            hero = base[len("hero_"):-len(".lua")]
+        for n, line in enumerate(body.splitlines(), 1):
+            for handle in CALL_RE.findall(line):
+                ability = None
+                sfx = handle[len("ability"):] if handle.startswith("ability") else None
+                if hero and sfx is not None and sfx in slot_binds and hero in slots:
+                    ability = slots[hero].get(slot_binds[sfx] - 1)
+                elif handle in name_binds:
+                    ability = name_binds[handle]
+                out.append((rel, n, handle, ability))
     return out
 
 

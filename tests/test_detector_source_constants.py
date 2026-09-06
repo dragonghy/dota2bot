@@ -231,6 +231,7 @@ NHP_HI_RE = r'nHP > (?P<n>[\d.]+)'
 SITUATION_HP_LO = literal('J.IsFieldRegenSituation', NHP_LO_RE)
 SITUATION_HP_HI = literal('J.IsFieldRegenSituation', NHP_HI_RE)
 STAYREGEN_HP_HI = literal('J.ShouldStayAndRegen', NHP_HI_RE)
+STAYREGEN_HP_LO = literal('J.ShouldStayAndRegen', NHP_LO_RE)
 # Disambiguated by the soak-candidate name, not by position: there are two
 # `J.GetHP(bot) <` comparisons in ItemPurchaseThink and picking "the first"
 # is the mistake `where=` exists to prevent.
@@ -242,6 +243,7 @@ FIELDREGEN_BUY_HP = literal(
 import fieldbuy_domain as fbd                      # noqa: E402
 import stayfield2_margin as s2m                    # noqa: E402
 import stayfield_domain as sfd                     # noqa: E402
+import stayattr_domain as sad                      # noqa: E402
 
 eq('stayfield_domain.HP_LO mirrors J.IsFieldRegenSituation',
    float(sfd.HP_LO), SITUATION_HP_LO)
@@ -249,6 +251,15 @@ eq('stayfield_domain.HP_HI mirrors J.IsFieldRegenSituation',
    float(sfd.HP_HI), SITUATION_HP_HI)
 eq('stayfield2_margin.SHIPPED_HP_HI mirrors J.ShouldStayAndRegen',
    float(s2m.SHIPPED_HP_HI), STAYREGEN_HP_HI)
+# [director 2026-09-06] `stayattr_domain` measures the P2 chase read INSIDE
+# J.ShouldStayAndRegen, so its band is that function's band -- both ends, not
+# just the ceiling `stayfield2_margin` already pins.  Registered as MIRROR with
+# the pin rather than the census row alone: the row says what the number is
+# supposed to be, only the pin notices when the source moves.
+eq('stayattr_domain.HP_LO mirrors J.ShouldStayAndRegen',
+   float(sad.HP_LO), STAYREGEN_HP_LO)
+eq('stayattr_domain.HP_HI mirrors J.ShouldStayAndRegen',
+   float(sad.HP_HI), STAYREGEN_HP_HI)
 eq('fieldbuy_domain.FIELDREGEN_HP mirrors the fieldregen purchase branch',
    float(fbd.FIELDREGEN_HP), FIELDREGEN_BUY_HP)
 check('the two regen helpers really do carry different ceilings '
@@ -307,6 +318,8 @@ HP_CENSUS = {
     'fieldregen_supply:LOW_HP':          ('MIRROR', 'both ids share this literal'),
     'fieldbuy_domain:FIELDREGEN_HP':     ('MIRROR', 'item_purchase_generic.lua fieldregen branch; pinned above'),
     'stayfield2_margin:SHIPPED_HP_HI':   ('MIRROR', 'J.ShouldStayAndRegen; wider than the situation test BY DESIGN'),
+    'stayattr_domain:HP_LO':             ('MIRROR', 'J.ShouldStayAndRegen jmz_func.lua:5083 -- the band the P2 chase read sits inside; pinned above'),
+    'stayattr_domain:HP_HI':             ('MIRROR', 'J.ShouldStayAndRegen jmz_func.lua:5083 -- same band, ceiling shared with stayfield2_margin.SHIPPED_HP_HI; pinned above'),
     'hometp_highhp:HEAL_CORE_HP':        ('MIRROR', 'cores need HP < 0.75 (:1315)'),
     'itemtrip_contract:HP_FLOOR':        ('MIRROR', 'J.IsWastefulItemTrip; pinned above'),
     # [director 2026-08-29] Landed unregistered with the module (bb00ea75,
@@ -655,8 +668,18 @@ check('the calibrated clause has a hard-zero band inside the ring',
 # front area by 78% and silently widen every count in the census.
 import tpdefend_events as tde                      # noqa: E402
 
-TDE_FAR = literal('J.ShouldTpSupportTowerFight',
-                  r'GetUnitToUnitDistance\(\s*bot,\s*building\s*\)\s*>\s*(?P<n>[\d.]+)')
+# The responder floor was an inline `> 3500` when this mirror was written; it
+# is now the file-level constant `J.TP_RESPONSE_FAR_FLOOR`, shared with
+# `J.HasAvailableSupportResponder` so the pairing cannot drift apart.  Reading
+# the assignment is the same claim about the same number -- but on its own it
+# would be a WEAKER one, because a mirror that reads only the definition stays
+# green if the function stops using it.  So the binding is pinned too.
+TDE_FAR_NAME = 'J.TP_RESPONSE_FAR_FLOOR'
+TDE_FAR = assignment(TDE_FAR_NAME)
+TDE_FAR_BOUND = re.search(
+    r'GetUnitToUnitDistance\(\s*bot,\s*building\s*\)\s*>\s*'
+    + re.escape(TDE_FAR_NAME),
+    function_body('J.ShouldTpSupportTowerFight')) is not None
 TDE_FRONT_E = call_arg('J.ShouldTpSupportTowerFight', 'J.GetEnemiesNearLoc', 1)
 TDE_FRONT_A = call_arg('J.ShouldTpSupportTowerFight', 'J.GetAlliesNearLoc', 1)
 TDE_HEAT_HP = literal('J.ShouldTpSupportTowerFight',
@@ -675,8 +698,12 @@ TDE_CORE = literal('J.IsCore', r'J\.GetPosition\(bot\) <= (?P<n>\d+)')
 TDE_SUP = literal('J.HasAvailableSupportResponder',
                   r'J\.GetPosition\(\s*hAlly\s*\)\s*>=\s*(?P<n>\d+)')
 
-eq('tpdefend_events.FAR_U mirrors the > 3500 responder clause',
+eq('tpdefend_events.FAR_U mirrors the responder far floor',
    float(tde.FAR_U), TDE_FAR)
+check('the far floor constant is the one the responder clause actually reads',
+      TDE_FAR_BOUND,
+      '(%s not found in the GetUnitToUnitDistance(bot, building) clause)'
+      % TDE_FAR_NAME)
 eq('tpdefend_events.FRONT_R_U mirrors GetEnemiesNearLoc(vTower, .)',
    float(tde.FRONT_R_U), TDE_FRONT_E)
 check('the two front radii really are the same number in the rule',
