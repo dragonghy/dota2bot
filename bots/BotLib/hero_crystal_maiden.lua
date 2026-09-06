@@ -1711,6 +1711,97 @@ function X.cm_GetWeakestUnit( nEnemyUnits )
 	return nWeakestUnit, nWeakestUnitLowestHealth
 end
 
+--- The health `X.cm_GetStrongestUnit` REPORTS for the ranged creep it early-
+--- returns.  Soak candidate `cmrangedhp`, turbo-only.
+---
+--- WHAT THE SHIPPED NUMBER IS.  Every other exit of the two pickers in this file
+--- hands back the unit's own health (`nWeakestUnitLowestHealth`,
+--- `nStrongestUnitHealth`), and X.ConsiderW consumes the second return value as
+--- a health, twice:
+---
+---     if ( nEnemysStrongestCreepsHealth2 > 460 or ( ...Health1 > 390 and ... ) )
+---         and nEnemysStrongestCreepsHealth2 <= nCreepCap
+---     if ( nEnemysStrongestCreepsHealth1 > 410 or ( ...Health1 > 360 and ... ) )
+---         and nEnemysStrongestCreepsHealth1 <= nCreepCap
+---
+--- The ranged-creep exit alone hands back the literal `500`.  So on that exit
+--- the caller's four floors and its cap are all applied to a number that is not
+--- the creep's health and does not move with it.
+---
+--- IT IS THE SAME LITERAL DEFECT `cmcreepcap` (GH #541) FIXED, ARRIVING THROUGH
+--- THE OTHER SIDE OF THE COMPARISON, AND `cmcreepcap` CANNOT REACH IT: that
+--- lever repaired the CAP, and on this exit the quantity being capped is a
+--- constant, so a correct cap is compared against a fabricated health.
+---
+--- WHAT 500 COSTS, IN BOTH DIRECTIONS AT ONCE -- this is not one error:
+---   * IT LIES HIGH on a damaged creep.  The exit's own admission test is
+---     `GetHealth() > GetBot():GetAttackDamage() * 2`, so a ranged creep is
+---     admitted from `2*ad` upward; every one of them is then reported as 500,
+---     which clears all four floors (500 > 460, 410, 390, 360).  The window in
+---     which the report is a lie in this direction is `(2*ad, 460]`, non-empty
+---     for every attack damage below 230 -- section 2 reads `ad` off the real
+---     frames rather than assuming it.  Cost: 125-155 mana and a 6-9s cooldown
+---     on her only single-target disable, spent on a creep two auto-attacks
+---     would have taken, at the exact hero levels this desk has on record as
+---     her tightest mana window (GH #126).
+---   * IT LIES LOW on a healthy one.  500 <= nCreepCap holds at EVERY rank
+---     (600/800/1000/1200), so the kill test the cap exists to run is never run
+---     on this exit.  The window is `(nCreepCap, 1100]` -- 1100 being this
+---     function's own health bar three lines below -- non-empty at Frostbite
+---     ranks 1-3 and empty at rank 4.  Cost: the creep walks out of the root.
+---
+--- ARMED: report the creep's own health, which is what every other exit of
+--- both pickers reports and what the caller's five terms are written against.
+---
+--- DIRECTION IS BY CONSTRUCTION AND IT IS A NARROWING.  The unit returned does
+--- not change -- only the number does -- and all five consuming terms are
+--- monotone in it (`> floor` four times, `<= cap` once) with 500 satisfying
+--- every one of them.  So any other value can only turn a true into a false:
+--- arming can REMOVE a freeze and can never add one, and it can never change
+--- WHICH creep is frozen.  A negative wave read may be blamed on "she should
+--- have frozen that creep after all"; it may never be blamed on this lever
+--- having invented a cast or moved a target.
+---
+--- SHAPE (the GH #162 house rule): the shipped literal is this function's last
+--- statement and the armed branch is the only detour, so gate-off equivalence
+--- is structural; and a health reading `<= 0` falls through to the shipped
+--- literal rather than reporting 0, which would not narrow the block on this
+--- exit -- it would CLOSE it, since 0 fails every floor.
+---
+--- ⚠️ COVERAGE, stated before anyone quotes this as fixture-validated, AND THE
+--- TWO SENTENCES MUST NOT BE MERGED.  The changed term cannot be driven with a
+--- real creep: no fixture under tests/fixtures/ carries a creep UNIT (creeps
+--- appear only as combat-log `recent_damage` rows, which have no health and no
+--- handle), and bot:GetNearbyCreeps answers an empty table on every frame --
+--- both pinned as one-way tripwires in tests/test_cm_ranged_creep_health.lua
+--- section 5.  What IS read off real frames is the WIDTH OF BOTH WINDOWS above:
+--- `2*ad` from the real Crystal Maiden on each frame and `nCreepCap` from the
+--- real Frostbite handle on each frame (section 2).  The creep's health is the
+--- one variable the corpus cannot supply, and this file does not pretend
+--- otherwise.  Sizing is iterations/queue.json hero-36, never this scan.
+---
+--- REGISTERED, NOT TAKEN (a second, independent property of the same exit):
+--- the `return` also ENDS the search, so the picker hands back the first
+--- qualifying ranged creep in list order rather than the strongest, which
+--- contradicts its own name.  That is a TARGET-IDENTITY change and this lever
+--- deliberately does not make it -- keeping the target fixed is exactly what
+--- makes the direction argument above hold by construction.
+function X.cm_GetRangedCreepReportedHealth( hUnit )
+
+	local nShipped = 500
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmrangedhp' ) ) then return nShipped end
+
+	if hUnit == nil then return nShipped end
+
+	local nHealth = hUnit:GetHealth()
+
+	if nHealth == nil or nHealth <= 0 then return nShipped end
+
+	return nHealth
+
+end
+
 function X.cm_GetStrongestUnit( nEnemyUnits )
 
 	local nStrongestUnit = nil
@@ -1732,7 +1823,8 @@ function X.cm_GetStrongestUnit( nEnemyUnits )
 			if string.find( unit:GetUnitName(), 'ranged' ) ~= nil
 				and unit:GetHealth() > GetBot():GetAttackDamage() * 2
 			then
-				return unit, 500
+				-- [cmrangedhp] gate off this is the literal `500`, byte for byte.
+				return unit, X.cm_GetRangedCreepReportedHealth( unit )
 			end
 
 			if unit:GetHealth() > nStrongestUnitHealth

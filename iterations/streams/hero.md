@@ -22,6 +22,60 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-105. **Crystal Maiden 的 `X.cm_GetStrongestUnit` 有一个出口报告的不是这只单位的血量,而是
+   硬编码的 `500` —— 而这一轮最值钱的东西**是发现 certify 方向的那个扫描是恒等式,
+   于是把可证伪的那一条单独拎出来当前提**(报告 `iterations/reports/hero/20260906T080213Z.md`,
+   `state.json:cmrangedhp_20260906`,`queue.json:hero-36`,GH **#560**;新
+   `tests/test_cm_ranged_creep_health.lua` **16 例** + `tools/agent/mutstand_cmrangedhp.sh`
+   **9 变异全杀**;`bots/BotLib/hero_crystal_maiden.lua` **有真代码行**;
+   选题依据 OWNER_PRIORITIES **P4.4**。)**
+   - **事实**:远程兵早退出口 `if string.find(unit:GetUnitName(),'ranged') ~= nil and
+     unit:GetHealth() > GetBot():GetAttackDamage()*2 then return unit, 500 end`。
+     两个挑选器的**其他每一个出口**返回的都是单位自己的血量,而 `X.ConsiderW`
+     把第二个返回值**当血量用了五次**(四个下界 460/410/390/360 + 两处 `<= nCreepCap`)。
+     ⇒ **这就是 `cmcreepcap`(GH #541)修的那个缺陷,从比较式的另一侧进来的,
+     而 `cmcreepcap` 结构上够不着它** —— 那根修的是**上限**,这里**被限的那个量本身是常数**。
+   - **⭐ 500 同时朝两个方向撒谎,不是一个带符号的错误**:对残血兵**撒高**
+     (500 越过全部四个下界 ⇒ 窗口 `(2*ad, 460]`,攻击力低于 230 就非空;
+     代价 125-155 蓝 + 6-9s 她唯一单体控);对满血兵**撒低**
+     (`500 <= nCreepCap` **每一级都成立** ⇒ 「打不打得死」那个检查在这个出口上从来没跑过;
+     窗口 `(nCreepCap, 1100]`,1-3 级非空)。
+   - **⭐⭐ 本轮最值钱的一条:方向由构造保证 —— 而 certify 它的那个扫描是恒等式不是第二意见。**
+     armed 只改**报告的数**不改**返回的单位**,五项消费全单调、而 500 满足其中每一项
+     ⇒ 子集性成立;**但这正意味着逐点子集检查对任何 armed 值都不可能失败**
+     (与 README 铁律 4 (i-c) 同一个区分)。所以载重的是**那一条前提**
+     「500 越过每一个下界和每一级上限」,而它**可证伪** —— `consumer_floors()` **从源码读**下界。
+     变异 **M6**(把 `> 460` 抬成 `> 560`)是**九个里唯一能让窄化句变成假话的**,
+     而任何对 armed 值的断言都看不见它。**⇒ 一条可复用的:写完「by construction」之后,
+     再问一句「我用来 certify 它的那条断言,有没有可能失败」——不能失败的,不是证据。**
+   - **⭐⭐⭐ `liondrainbkb`(GH #549)的教训有了实物变异体**:**M9** 让 armed 返回**常数 1**,
+     它在每一级每一个下界上都是 shipped 的严格子集、§3 会盖章;抓住它的是 §6 的**值断言**。
+   - **⚠️ 覆盖边界,两句不许合并**:改动的那一项**买不到真实创造帧** —— 全仓 fixture
+     **没有任何 creep 单位**(creep 只作为 `recent_damage` 日志行出现,无血量无 handle),
+     `bot:GetNearbyCreeps` 在 10/10 个 CM 主体帧上对两队都空。买得到的是 **`lies low`
+     窗口的宽度**:真实 Frostbite handle 上 **10 帧里 3 帧**(caps 800/1000/1000)坐在挑选器
+     自己 1100 血量门以下,宽 300/100/100;语料 rank 偏高(7/10 已 4 级)**对本改动不利**
+     ⇒ 3/10 是**下界不是频率**。⚠️ **`lies high` 窗口的宽度不是真实帧读数**:
+     它要 `GetAttackDamage`,而**一份 .dem 切片既不带攻击力也不带攻速**
+     (`tests/mock/bot_api.lua:134`)⇒ 全 10 帧读 0,收件条件退化成 `GetHealth() > 0`。
+     §2b 把这个 0 钉成单向绊线并明写**不许**读成「窗口最大」。
+   - **四条 axis 扫空,逐条登记省下后来的轮次**:(1) `cast_shape_census.py` 焦点五唯一命中
+     就是 2026-08-25 的 `cmaurapassive`,**这条线空了**;(2) `item_name_census.py` /
+     `facet_census.py` / `call_arity_census.py` 焦点五零命中;(3) **`J.CanCastOnMagicImmune`
+     穿透权限审计对 Zeus/CM/WK 是空的**,Axe(#525)与 Lion(#549)是已落的那两处,
+     **镜像线索用完**;(4) **`sSellList` 是 `(新, 旧)` 成对表**(`item_purchase_generic.lua:1348`
+     的 `for i = 2, #itemList, 2`),所以 `{BKB, quelling_blade}` 是「有 BKB 就卖砍树刀」
+     **不是**「把 BKB 卖了」,焦点五五张表全部偶数长度、方向全对;同族的
+     `J.SetQueuePtToINT( bot, bSoulRing )` 第二参是**开不开魂戒**,焦点五只有 Zeus 买魂戒
+     而 Zeus 传的正是 `true` ⇒ 无缺陷。
+   - **登记不认领**:同一出口的 `return` 还**中断搜索** ⇒ 挑选器返回列表序第一只而非最强的,
+     与自己的名字矛盾。那是**目标身份**改动,本杠杆故意不做 —— 不动目标正是方向论证的前提。
+   - **下一棒**:**批测台** `queue.json:hero-36`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30`/
+     `hero-31`/`hero-32`/`hero-33`/`hero-34`/`hero-35` 并成同一次遍历 —— 现在是**八条同形请求**)。
+     最值钱的一列是 **(2)「下单那一刻这只远程兵的真实血量」**。
+     ⚠️ 请按游戏时间分层:`DotaTime() > 10*60` 那道门让本杠杆的域**大概率整个坐在 10 分钟之后**。
+     **总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。**在 (a) 买到之前不许 promote。**
+
 -104. **Axe 的「已经中了战意饥渴就别重放」那条否决,八处都测了一个目标永远挂不上的
    modifier —— 而这一轮最值钱的东西**不是缺陷,是 fixture 发现的一个排除项**(报告
    `iterations/reports/hero/20260906T045743Z.md`,`state.json:axebhrecast_20260906`,
@@ -4651,6 +4705,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T08:02Z(报告 `iterations/reports/hero/20260906T080213Z.md`;轴 **Crystal Maiden 的
+  `X.cm_GetStrongestUnit` 远程兵早退出口 `return unit, 500` —— 一个硬编码的血量,而两个挑选器
+  的其他每一个出口返回的都是单位自己的血量,且 `X.ConsiderW` 把它当血量用了五次:
+  收进 gated `cmrangedhp`,turbo-only 未 armed**;新 backlog `-105`,
+  `state.json:cmrangedhp_20260906`,`queue.json:hero-36`,GH **#560**)
+  **`bots/BotLib/hero_crystal_maiden.lua` 有真代码行**(新 `X.cm_GetRangedCreepReportedHealth`
+  + **一处**调用点);新 `tests/test_cm_ranged_creep_health.lua`(**16 例**)+ 新
+  `tools/agent/mutstand_cmrangedhp.sh`(9 变异 **9/9 CAUGHT**)。**零 arm、零 promote、零 AWS。**
+  - 选题:**OWNER_PRIORITIES P4.4**;开着的 `[hero]` issue 逐条看过**没有一条球在本组**
+    (#554/#549/#541/#537/#533/#525 是本组前六轮落的、球在批测台 / #465 已复核 /
+    #115 已落地纯数值 / #512 本组 `-96` 明写预检不通过)。焦点五**走完一圈回到 CM**。
+    本轮**四条 axis 先扫空**(cast_shape 焦点五唯一命中就是 `cmaurapassive`;
+    item_name / facet / call_arity 零命中;**穿魔免权限审计对 Zeus/CM/WK 是空的**,
+    Axe #525 与 Lion #549 已用掉那条镜像;**`sSellList` 是 `(新,旧)` 成对表**,
+    焦点五全对,同族的 `SetQueuePtToINT` 第二参是开不开魂戒、只有 Zeus 买而 Zeus 传 true)
+    ⇒ 换**第五条:同一函数的一个出口报告的量,和它其他出口报告的不是同一个量**。
+    它最便宜 —— 矛盾在源码里,消费方在 30 行外,**不需要任何外部 KV 读数**。
+  - **事实**:`return unit, 500` 是**这两个挑选器里唯一**不返回单位自身血量的出口;
+    `X.ConsiderW` 用它做四个下界(460/410/390/360)和两处 `<= nCreepCap`。
+    ⇒ **`cmcreepcap`(GH #541)那个缺陷的另一侧,而 cmcreepcap 结构上够不着** ——
+    那根修上限,这里**被限的量本身是常数**。
+  - **⭐ 500 同时朝两个方向撒谎**:对残血兵**撒高**(越过全部四个下界,窗口 `(2*ad, 460]`);
+    对满血兵**撒低**(`500 <= nCreepCap` 每一级都成立 ⇒「打不打得死」在这个出口上从没跑过,
+    窗口 `(nCreepCap, 1100]`)。
+  - **⭐⭐ 本轮最值钱的:方向由构造保证 —— 而 certify 它的那个扫描是恒等式不是第二意见。**
+    500 满足每一个消费项 ⇒ 逐点子集检查**对任何 armed 值都不可能失败**。
+    载重的是**前提**「500 越过每一个下界和每一级上限」,而它**可证伪**(下界从源码读)。
+    **M6**(`> 460` → `> 560`)是九个变异里**唯一能让窄化句变成假话的**。
+    **⇒ 可复用:写完「by construction」再问一句「我用来 certify 它的断言能不能失败」——
+    不能失败的,不是证据。**
+  - **⭐⭐⭐ GH #549 的教训有了实物**:**M9** 让 armed 返回**常数 1** —— 严格子集、§3 会盖章;
+    抓住它的是 §6 的**值断言**。
+  - **⚠️ 覆盖边界**:改动的那一项**买不到真实创造帧**(全仓 fixture 无 creep 单位,
+    `GetNearbyCreeps` 10/10 帧两队皆空,两条钉成单向绊线)。买得到的是 **`lies low` 窗口宽度**:
+    真实 Frostbite handle 上 **3/10 帧**(caps 800/1000/1000)在 1100 门以下,宽 300/100/100;
+    语料 rank 偏高(7/10 已 4 级)**对本改动不利** ⇒ **下界不是频率**。
+    ⚠️ **`lies high` 窗口宽度不是真实帧读数**:`GetAttackDamage` 全帧读 0,因为
+    **.dem 切片既不带攻击力也不带攻速**(`tests/mock/bot_api.lua:134`),§2b 明写**不许**
+    读成「窗口最大」。
+  - **登记不认领**:同一出口的 `return` 还中断搜索 ⇒ 返回列表序第一只而非最强的。
+    那是**目标身份**改动,故意不做 —— 不动目标正是方向论证的前提。
+  - 验证:新文件 **16/16**;`run_tests.lua cm` **258 例 0 失败**;变异台 **9/9**;
+    铁律 6 静态 **`GATE_EXIT=0 CLEAN`(0 warnings)**,没用 BYPASS;gate_claim 16/16;smoke 3/3。
+  - ⚠️ **全量套件本轮没跑完**(~100min,GH #124)⇒「全量绿」本轮没有人说。
+    开工自检 **exit 3**(cadence + owed-executions;python 腿 UNCERTIFIABLE = GH #548 的
+    120s 刀口,不认领);⚠️ 第一次调用被脚本自己 **REFUSED**(stdout 是管道,证据纪律 3,
+    本仓第 **9** 次复发,又是当轮第一条命令)。容器起手 `lua5.1` 与 `luacheck` **都没有**,
+    两个都当场装上再跑,**没有一条腿因为「容器里没有」被跳过**。
+  - 下一棒:**批测台** `queue.json:hero-36`(零 EC2,可与 `hero-2`/`hero-30`/`hero-31`/
+    `hero-32`/`hero-33`/`hero-34`/`hero-35` 合并遍历,**八条同形**)。
 - 2026-09-06T04:57Z(报告 `iterations/reports/hero/20260906T045743Z.md`;轴 **Axe 的
   `X.ConsiderW` 八处「已经中了战意饥渴就别重放」的否决都测
   `modifier_axe_battle_hunger_self` —— 一个**目标永远挂不上**的名字(写错了边,而且过期了):
