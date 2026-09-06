@@ -27,6 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0STAYTOWER. **【2026-09-06T13:40Z 新增,**OWNER_PRIORITIES P4.4(i) + P2(**决策侧**,球在本组)**;
+   工作流第 1 步扫 `[strategy]` open issue **6 条**(#385/#300/#254/#201/#198/#26)——
+   前五条是本组已交付、等总监裁的存量,#26 无帧证据 ⇒ **无带帧证据的未认领条目**,按铁律 9 取优先项;
+   产出 `bots/FunLib/jmz_func.lua` 的 `J.ShouldStayAndRegen` 内**新增 gated 塔否决**
+   (`staytower`,turbo-only,**未 armed**,STANDALONE)、`tests/test_staytower_tower_ring.lua`(**16/16**)、
+   `tests/_staytower_sweep.lua`、`tools/agent/mutstand_staytower.sh`(**18 发 STAND GREEN**)、
+   `state.json:staytower_20260906`、`test_set.md §FL`、
+   `tests/test_stayfield2_marginal_domain.lua` 与 `tests/test_gated_helper_nesting_census.lua` 各自重读;
+   报告 `iterations/reports/strategy/20260906T134000Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙)。**】**
+   **⭐ 主判据(承接上一轮,第二次用,而这次的否法是新的):域价钱的第三种强度 ——
+   「大而无据」与「小而有据」都是「不做」。** `0BUYRING` 点名的 87 帧先跑价钱:
+   **62 帧近 3 秒无任何英雄伤害、其中 56 帧连塔都没有**,桶比落地的 12 帧大四倍多;
+   但 1200 是 PROMOTED 决策侧与 gated 供给侧**同一个数、同一个谓词** ⇒ 在这里落杠杆
+   **不是修不一致,是发表一个新意见**,而那正是 `lanefix` 的形状。**判定:供给侧环这条路到此为止。**
+   **⭐⭐ 落地的杠杆:同一个 retreat bid,两条线取消它,只有一条读建筑。**
+   `J.IsFieldRegenSituation` 的塔否决**是测出来的**,注释点名 `f_260819_142047_zuus_ult_denied`、727u,
+   理由「suppressing it would leave the bot **parked in tower range**」——
+   **而那段话讲的是 `J.ShouldStayAndRegen` 取消的那个 bid**(PROMOTED、每局都跑、排在整条 guard chain 之上、
+   **一栋建筑都不读**),**而且就在那一帧上**。树里早有一行表格写着
+   `S5 no tower within 1200 | (T has no tower clause)` —— **被写下来、被读过、没人当成洞。**
+   方向不与 P2 冲突,而这个区分是兄弟注释自己做的:P2 禁的是**安全时回泉水**,
+   这里恢复的是**离塔的局部后撤**(原话「a LOCAL retreat, **not** the fountain trip」)。
+   **⭐⭐⭐ 第三条(立法级,变异台/量具):一个内容全部是零的计数器必须先证明它数得动。**
+   `flip_false_to_true` 在本语料上永远不被 bump ⇒ 删掉那条 bump 读数逐字节不变,**M14 首跑 SURVIVED**;
+   嫌疑人是**断言**。修法:两个方向合进同一个 `tally(a,b,sDown,sUp)`,**再调用一次把两腿对调**,
+   于是「必须为 0」的那条分支正是对调那次**必须报出整个域(12)**的分支;补 M14b/M14c,三发全 CAUGHT。
+   **⭐⭐⭐⭐ 第四条:`GetGold()` 不进 `.dem`(GH #495)⇒ 单列 `flips` 会打出一个长得像「没用」的 0。**
+   语料**跑两遍**(gold 0/200)、**两列都断言**、覆写在三处各声明一次;gold=200 那遍 TRUE 集 **125
+   逐位等于**独立前缀行走,证明 gold 子句是前缀与 TRUE 之间唯一的东西。
+   ⚠️ 本 id 是该函数上**第一个减法 id**(其余四个全是加法)⇒ 同波必须分臂。
+   **下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据的优先);
+   否则按 **P4.4 在 `bots/` 上取一个小杠杆**,候选(**标注:未定价的猜测,先跑域价钱,价钱有权否掉它**)——
+   **`J.ShouldStayAndRegen` 的 supply 读数与它自己 docstring 的第三处分歧**:
+   docstring 说「can afford a regen consumable (gold >= 90) **or already carries one**」,
+   而 `staysrc`/`staybottle`/`staybag` 三条已分别修了主格位/在途/背包三半 —— **先跑普查问「还剩哪半没修」**,
+   如果答案是「没有了」,**就把这条路也判到此为止**,并转去 `J.ShouldRegenNotWalkHome` 那一侧
+   (它是 gated 从未 ship,与 PROMOTED 那条的**差集**是本轮第一次量到的东西:前缀 125 vs 域 12)。
+   **照旧先跑域价钱、每个变异体的锚先数一遍、恒零的断言先证明它数得动。**
+
 0BUYRING. **【2026-09-06T11:05Z 新增,**OWNER_PRIORITIES P4.4(i)(工作单元主体 = 一个 `bots/` 行为改动)+ P2(**供给侧**,球在本组)**;
    工作流第 1 步先扫 `[strategy]` open issue:唯一一条 **#558 已被本组上一轮(`towerring`)认领并交回**,
    **无未认领条目** ⇒ 按铁律 9 取优先项;产出
@@ -5877,6 +5918,47 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T13:40Z(**P4.4(i) + P2 决策侧**:`[strategy]` open issue 本轮扫到 **6 条**
+  (#385/#300/#254/#201/#198/#26)—— 前五条是本组已交付、等总监裁的存量,#26 无帧证据
+  ⇒ **无带帧证据的未认领条目**,按铁律 9 取优先项。
+  **⭐ 主判据(承接上一轮,第二次用):章程点名的下一格又被域价钱否掉,而这次的否法是新的。**
+  `0BUYRING` 点名的 87 帧(被 PROMOTED 1200 环挡住的供给侧帧)先跑价钱:
+  **62 帧近 3 秒无任何英雄伤害、其中 56 帧连塔都没有** —— **桶不小,比落地的 12 帧大四倍多**,
+  但 1200 是决策侧与供给侧**同一个数同一个谓词**:在这里落杠杆不是修不一致,是**发表新意见**
+  (`lanefix` 的形状)。⇒ **判定:供给侧环这条路到此为止**,理由是读数不是偏好。
+  **⭐ 域价钱的第三种强度:大而无据,与小而有据,都是「不做」。**
+  **⭐⭐ 落地的杠杆:同一个 retreat bid,两条线取消它,只有一条读建筑。**
+  `J.IsFieldRegenSituation`(gated,从未 ship)的塔否决**是测出来的**,它的注释点名
+  `f_260819_142047_zuus_ult_denied`、727u、理由「suppressing it would leave the bot **parked in
+  tower range**」—— **而那段话讲的是 `J.ShouldStayAndRegen` 取消的那个 bid**:PROMOTED、
+  每局 turbo 都在跑、排在整条 guard chain 之上、危险读数**全是英雄、一栋建筑都不读**,
+  **而且就在那段注释点名的那一帧上**。树里早有一行表格写着
+  `S5 no tower within 1200 | (T has no tower clause)`(`test_stayfield2_marginal_domain.lua` 开头),
+  **被写下来、被读过、没人当成洞**。产出 `staytower`(turbo-only,**未 armed**,STANDALONE)、
+  `tests/test_staytower_tower_ring.lua`(**16/16**)、`tests/_staytower_sweep.lua`、
+  `tools/agent/mutstand_staytower.sh`(**18 发 STAND GREEN**)、`state.json:staytower_20260906`、
+  `test_set.md §FL`(**§FK 已被总监同轮占用,本轮按 GH #559 在写引用前先查 `origin/main`**)、
+  `test_stayfield2_marginal_domain.lua` 与 `test_gated_helper_nesting_census.lua` 各自重读;
+  报告 `iterations/reports/strategy/20260906T134000Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
+  域价钱:带内 305 → 前缀(无近期英雄伤害 + 1200 环空)**125** → 1200 内有敌塔 **12 = 域**;
+  `flips_g200 12 == prefix_tower 12`,`flips_g0 == 0`,`stay_true_g200 125 == prefix_ok`,
+  `arm_leak 0`,`probe_runs == live == 1012`;塔 ≤700 **2** / 700–1200 **10**。
+  **⭐⭐⭐ 立法级(本轮最值钱):一个内容全部是零的计数器必须先证明它数得动。**
+  `flip_false_to_true` 在本语料上永远不被 bump(方向由构造固定)⇒ **删掉那条 bump 读数逐字节不变**,
+  变异台 **M14 首跑 SURVIVED**;按证据纪律第 2 条嫌疑人是**断言**:那个 0 从未被测量(GH #171 同族,
+  但丢的是**一条方向断言**)。修法可复制:两个方向合进同一个 `tally(a,b,sDown,sUp)`,**再调用一次把两腿对调**
+  ⇒ 「必须为 0」的那条分支正是对调那次**必须报出整个域 12** 的分支;补 M14b/M14c,三发全 CAUGHT。
+  **⭐⭐⭐⭐ 本轮唯一的合成标量**:`GetGold()` 不进 `.dem`(GH #495)⇒ mock 上 shipped 只有 13 帧 TRUE、
+  全都没塔 ⇒ 单列 `flips` 会打出一个**长得像「没用」的 0**。做法:**语料跑两遍**(gold 0/200)、
+  **两列都断言**、覆写在 sweep/测试/state.json **三处各声明一次**;gold=200 那遍 TRUE 集 125
+  **逐位等于**前缀行走,证明 gold 子句是前缀与 TRUE 之间唯一的东西(变异台 M10 是它的变异体)。
+  ⚠️ **方向与四个兄弟相反**:本 id 是 `J.ShouldStayAndRegen` 上**第一个减法 id**
+  (stayattr/staysrc/staybottle/staybag 全是加法)⇒ 同波必须分臂,不能按同向并池。
+  **已交棒总监(甲:FROZEN-HOLD + 恒零计数器的变异台规程建议)+ 批测台(乙:单臂可读但方向相反)
+  + 录像组(丙:塔的仇恨状态 fixture 读不到)。**
+  ⚠️ 自检第一条命令**第 6 次**撞证据纪律第 3 条(脚本自己数着「recurred 5x」),真码 **EXIT=3**;
+  python 腿两条 **UNCERTIFIABLE 不是通过**(GH #548)。)
 - 2026-09-06T11:05Z(**P4.4(i) + P2 供给侧**:`[strategy]` open issue 本轮扫过 —— 唯一一条
   **#558 已被本组上一轮认领并交回**,**无未认领条目** ⇒ 按铁律 9 取优先项。
   **⭐ 主判据(立法级):「先跑域价钱」有权把杠杆否掉,而它这次就否掉了上一格点名的下一格。**

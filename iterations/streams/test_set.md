@@ -19304,3 +19304,133 @@ W50:`winrate_channel=DEGENERATE`、少数侧 **1/211 = 0.0047**(历次最差)、
 - **`slotwait` 的 (b) 不是 id 级的**,写在代码注释里那句就是它的全部;任何后来的读者要更强的结论,**必须先有一波它的 arm 集就是 promote 集**。
 - **9 个 WORKING 里本轮只 promote 了 1 个**:其余八条各自还欠一步(`towerfear` 有 GH #558 的收窄提议在飞、`slotpush` 的 (a) 已 WORKING 但未裁、`wandbleed`/`wandbleed2` 的 episodes 各只有 1 ⇒ (a) 太薄,等等)。**「有 WORKING」不等于「可以 promote」**,本节不把那八条读成待办清单。
 - **本轮未跑全套 `run_tests.lua`**(GH #124,~100min):跑的是 `slotwait` / `slot` / `gate_claim` 三个过滤器 + 静态门 + smoke,**这是覆盖不是等价**。
+## §FL 2026-09-06T13:40Z 协同组 —— **一条否决子句的注释里写着「我是为哪个调用点写的」,而那个调用点在另一个函数里,由一条 PROMOTED 的线守着 —— 那条线没有这条子句**;本节最该被读的是 **§FL.4:一个内容全部是零的计数器必须先证明它数得动,而证明的唯一形式是让同一段代码在别处报出非零**
+
+> **ID**:`staytower`(NEW,turbo-only,STANDALONE,**未 armed**)
+> **归属**:OWNER_PRIORITIES **P4.4(i)**(工作单元主体 = 一个 `bots/` 行为改动)+ **P2 决策侧**
+> ⛔ **P4.2 入集冻结生效中**:本节是**登记**,不是入集提议的放行。armed 串一字未动,`queue.json` 一字未动。
+> **§FK 已被总监同轮认领**(`slotwait` promote),本节按 GH #559 的建议在**写引用之前**查了 `origin/main`,直接取 §FL。
+
+### §FL.1 立案句:同一个 retreat bid,两条线取消它,只有一条读建筑
+
+`mode_retreat_generic` 的 `ShouldRun` 上,这一族有两条线用同一个 `BOT_MODE_DESIRE_NONE` 取消同一个出价:
+
+| 线 | 谓词 | 状态 | 建筑读数 |
+|---|---|---|---|
+| `if J.ShouldStayAndRegen(bot)` | 已归因英雄伤害 + **1200 内英雄** | **PROMOTED(原 `tphome`),每一局 turbo 都在跑,排在整条 guard chain 之上** | **无** |
+| `if J.ShouldRegenNotWalkHome(bot)` | → `J.IsFieldRegenSituation` | gated `stayfield2`,**从未 ship** | `#bot:GetNearbyTowers( 1200, true ) > 0` |
+
+而下面那条子句**不是继承来的**,它是**测出来的**,理由写在它自己的注释里:
+
+```
+-- Measured, not assumed: driving mode_retreat_generic over all 100 fixtures
+-- showed this predicate firing on f_260819_142047_zuus_ult_denied, where the
+-- retreat bid it would have cancelled is ABSOLUTE*1.1 -- and that bid is NOT a
+-- trip home. It comes from ShouldRun's 前期谨慎冲塔 clause ... a level-7 Zeus at
+-- 40% HP standing 727 units from an enemy tower ... Backing off a tower is a
+-- LOCAL retreat, not the fountain trip this lever is aimed at, and suppressing
+-- it would leave the bot parked in tower range.
+```
+
+**那段话讲的是本函数取消的那个 bid。** 兄弟为了不取消它而加了一条子句;PROMOTED 那条**照样取消它**,
+**而且就在那段注释点名的那一帧上**(`f_260819_142047_zuus_ult_denied` / zuus,hp **40.5%**,塔 **727.46u**,
+1200 内无敌方英雄,近 3 秒无英雄伤害)。
+
+**树里早就把这件事写成了一行表格。** `tests/test_stayfield2_marginal_domain.lua` 的开头那张
+S/T 对照表里有一行:`S5 no tower within 1200 | (T has no tower clause)` ——
+**它被写下来、被读过、被当成闭式的一部分,然后没有人把它当成一个洞。**
+
+**方向不与 owner P2 冲突,而这一点是兄弟注释自己做的区分**:P2 禁的是**安全时回泉水**;
+这里被恢复的出价是**离塔的局部后撤**,兄弟注释原话「a LOCAL retreat, **not** the fountain trip」。
+
+### §FL.2 ⭐ 主判据:章程点名的下一格**又**被域价钱否掉了,而这次否掉的方式是「桶不小,但树里没人有异议」
+
+`0BUYRING` 点名的候选是「`fieldbuy` 那 99 帧里被 PROMOTED 1200 环挡住的 **87** 帧」,
+并自己标注了「hold 侧在这 87 帧上**也**拒绝,没有家族自相矛盾可用」。先跑价钱:
+
+| 读数 | 帧 |
+|---|---|
+| 被 1200 环挡(候选桶) | **87** |
+| …其中近 3 秒**根本没有英雄伤害**(敌人只是**在**环里) | **62** |
+| …其中连塔都没有 | **56** |
+| …最近敌人在 600 以内 | 36 |
+
+**桶不小 —— 56 帧比本轮落地的 12 帧大四倍多。** 但 1200 是 PROMOTED 决策侧与 gated 供给侧
+**同一个数、同一个谓词**:在这里落杠杆不是**修一处不一致**,是**发表一个新意见**。
+而「各自可辩护的新意见打成捆」正是 `lanefix` 的形状(−74.5 / −88.7 gpm,0/4 comps)。
+
+⇒ **判定:供给侧环这条路到此为止。** 记在这里的理由是它是一条**读数**不是一句偏好 ——
+上一轮价钱否掉候选靠的是「域 = 1 帧」,本轮靠的是「域 = 56 帧**而树里没有任何东西对它们持不同意见**」。
+**域价钱的第三种强度:大而无据,与小而有据,都是「不做」。**
+
+### §FL.3 域价钱(109 fixture / 1012 活英雄帧,turbo 1012/1012)
+
+```
+band [0.18,0.75]                          305
+  └ 前缀(+ 无近期英雄伤害 + 1200 环空)   125   ← 独立前缀行走
+      ├ 1200 内有敌塔                      12   ← 本杠杆域
+      └ 无塔                              113   ← 控制帧从这里取
+shipped TRUE(gold=200)                   125   == 前缀,逐位相同
+shipped TRUE(gold=0,mock 标量)            13   ← 见 §FL.5
+flips_g200 = 12 == prefix_tower          flips_g0 = 0
+距离分层:塔 ≤700 = 2   塔 700–1200 = 10
+```
+
+### §FL.4 ⭐⭐ 立法级(变异台/量具):**一个恒零的计数器必须先证明它数得动**
+
+`flip_false_to_true`(「这是个否决,不可能把 FALSE 变成 TRUE」)在本语料上**永远不会被 bump** ——
+方向由构造固定 —— 所以**把那条 bump 删掉,读数逐字节不变**。
+变异台 **M14 首跑 SURVIVED**,而按证据纪律第 2 条,嫌疑人是**断言不是变异体**:
+**那个 0 从来没有被测量过**(GH #171 同族,但这次丢的不是一个桶,是一条**方向断言**)。
+
+修法(可复制):把两个方向合进**同一个 `tally(a, b, sDown, sUp)`**,并**再调用一次、把两条腿对调**:
+
+```lua
+tally(shipped, arm,  'flips_g200',        'flip_false_to_true')
+tally(arm,     shipped, 'dirprobe_down_g200', 'dirprobe_up_g200')
+```
+
+于是「`flip_false_to_true` 必须为 0」所走的那条分支,**正是对调那一次必须报出整个域(12)的那条分支**。
+删掉任一分支现在都会让一个**非零**列动。补了 **M14b**(镜像分支)与 **M14c**(对调探针本身),三发全 CAUGHT。
+
+> **规程建议(交总监)**:凡是「内容全部是零」的断言,变异台必须有一发删掉它的 bump;
+> 若那一发 SURVIVED,**改的是量具不是分类**。
+
+### §FL.5 ⭐⭐⭐ 本轮唯一的合成标量,以及为什么它必须是两列而不是一列
+
+shipped 函数最后一条是 `if not bHasRegen and bot:GetGold() < 90 then return false end`。
+**gold 不进 `.dem`(GH #495)**,mock 的 `^Get -> 0` 让 shipped 在 1012 帧里只有 **13 帧**答 TRUE ——
+**而那 13 帧一帧都没有塔**。⇒ 单列 `flips` 会打出一个 **0**,长得和「这条杠杆没用」逐字节相同。
+
+做法:**语料跑两遍**(gold 0 与 200),**两列都断言**(`flips_g0 == 0` 且 `flips_g200 == 12`),
+并把 gold 覆写**声明成本次测量里唯一的合成标量**(sweep 顶、测试顶、`state.json` 三处各写一次)。
+gold=200 那一遍 shipped TRUE 集 = **125 = 独立前缀行走逐位相同**,这证明 gold 子句是前缀与 TRUE 之间
+**唯一**的东西。变异台 **M10**(覆写失效 ⇒ g200 读回 g0 的零)就是这条构造的变异体。
+
+⚠️ **方向与四个兄弟相反,登记为交棒事项**:`stayattr`/`staysrc`/`staybottle`/`staybag` 全是**加法**
+(只能把 FALSE 变 TRUE),本 id 是这个函数上**第一个减法 id**。同波必须分臂读。
+
+### §FL.6 附带变红的两个检测器,逐条回答(§FF.3 那把尺)
+
+判据不是「改动让几个检测器变红」,是「**每个变红的文件对这次改动有没有话说**」。恰好 **2 个,两个都说得上话**:
+
+1. `test_stayfield2_marginal_domain.lua` —— 它数 `J.ShouldStayAndRegen` 的 `return false`,断言 **5**,
+   并在自己的失败信息里写着「if a sixth appears the margin is a different set」。
+   **重读而不是抬数字**:改成「**ungated** 五条」(gated 那条按**整块**匹配,不是按 id 在函数里出现),
+   并**新增一个 case 把闭式重算一遍**:
+   `margin' = S ∧ ¬(T ∧ T6) = (S ∧ ¬T) ∨ (S ∧ ¬T6)`,而 **S5 就是 T6** ⇒ `S ∧ ¬T6 = ∅` ⇒ **margin' = margin**。
+   两个半径从两个函数体里各自解析出来比较,不是在这里重写一遍。
+2. `test_gated_helper_nesting_census.lua` —— 两行(P/A)的 outer-id 列各 +`staytower`,逐条答复:
+   (P)仍是 (P),且是**更强的形式** —— gate 是**第一个合取项**,未 armed 时引擎调用根本不发生
+   (`STAY_GATE_FIRST` 从源码断言);(A)这条 id **把被调者推得更远**(它的否决排在供给块**之上**),
+   `bagsalve` 的可见性一点没变。
+
+### §FL.7 验收
+
+- `tests/test_staytower_tower_ring.lua` **16/16**;`tests/_staytower_sweep.lua` 全部读数见 §FL.3。
+- `tools/agent/mutstand_staytower.sh`:**18 发 —— 17 CAUGHT + 对照 C1 SURVIVED,
+  零 NO-OP、零 UNMEASURABLE、零意外,STAND GREEN,EXIT=0**(M14 首跑 SURVIVED,见 §FL.4)。
+- 铁律 6:`bash tools/agent/luacheck_gate.sh` → `GATE_EXIT=0 CLEAN`;动态半按文件跑(见本轮报告 §7)。
+- **诚实边界**:翻转的是「是否继续压住 retreat mode 的出价」,**不是「接下来哪个出价赢」**;
+  10/12 帧塔在 700–1200(**不在射程内**);43 个 fixture 完全没有建筑(GH #100)⇒ 那些帧是**空满足不是被验证**;
+  真实对局域**大于 12**(12 是 gold-blind 的结构域)。
