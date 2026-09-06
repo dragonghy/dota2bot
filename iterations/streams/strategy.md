@@ -27,6 +27,57 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0BUYBAND. **【2026-09-06T02:11Z 新增,**OWNER_PRIORITIES P4.4 + P2(**供给侧**,球在本组)**;
+   `[strategy]` open issue 本轮扫过 **#521 / #511 / #503** —— 三条都是本组前几轮已认领并交回的,
+   **无一条未认领** ⇒ 按铁律 9 取优先项,并做章程上一格(`0STAYBAG`)**逐字点名**的那一个:
+   **112 里那些「什么都没带」的帧,`fieldbuy` 为何没买上**(点名时已带提示:
+   `IsFieldRegenSituation` 的 0.55 上限**严于**本函数的 0.75);
+   **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动**;
+   产出 `bots/FunLib/jmz_func.lua` **新增**谓词 `J.ShouldFieldBuyRegenHurt`(`buyband`,turbo-only,**未 armed**,
+   STANDALONE)+ `bots/item_purchase_generic.lua` 购买点一条 **OR 臂**、
+   `tests/test_buyband_hp_band.lua`(**16/16**)、`tests/_buyband_sweep.lua`、
+   `tools/agent/mutstand_buyband.sh`(**20 发:18 CAUGHT + 对照 M19 SURVIVED + 1 声明式 UNMEASURABLE(M18),
+   零 NO-OP、零非声明存活,STAND GREEN,EXIT=0**)、`state.json:buyband_20260906`、`test_set.md §FD`、
+   nesting census **三行**、**三处检测器修复**(其中一处**先于本轮就红在 trunk 上**);
+   报告 `iterations/reports/strategy/20260906T021130Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲:FROZEN-HOLD + 变异台规程建议)+ 批测台(乙:本 id 单臂可读,与 `fieldbuy` 重叠 0,
+   同波必须分臂)+ 录像组/语料侧(丙:一帧「带内 + 被近处敌人打了」)。**】**
+   **⭐ 主判据(立法级,可复用,超出本主题):在一棵检测器**按源码文本**解析的树上,
+   函数签名是一个**已发布的接口** —— 动一个共享谓词的代价,由「解析它的**声明**」的那些文件来付,
+   而它们对这次改动**无话可说**。**
+   到达这个行为的三条路里,「给 `J.IsFieldRegenSituation` 加一个可选上限参数」是看上去最干净的一条:
+   它**写完了,然后被撤销**。代价是**量出来的不是猜的**(那两行重新打在副本上、跑完解析这个函数的 8 个文件、再还原):
+   **8 个里 7 个同时变红**(`healthy_walk_home_gap` / `stayfield_hp_window_reach` / `stayfield2_marginal_domain` /
+   `fightback_world_assertion` / `itemtrip_wasteful_trip` / `bagsalve_backpack_source` / `stayattr_global_ult`),
+   **七个里没有一个对这条杠杆有话要说**;第 8 个 `stayfield_callsite_domain` **保持绿色**,
+   而**那才是信息量所在** —— 它读的是**调用点**,带默认值的参数让调用点逐字节不变。
+   ⇒ 于是本轮取 standalone 函数 + **重复三条环境子句**,与 `J.HasNearbyHeroDamager` 同一个理由;
+   重复的代价**付在看得见的地方**:两份拷贝的每一个常数都解析出来两两比对,任一边漂移就红。
+   **⭐⭐ 第二条(变异台规程级):`CAUGHT` 掩盖一发打偏的变异体,和 `SURVIVED` 暴露它一样彻底。**
+   M8 首跑存活 ⇒ 按证据纪律第 2 条**逆命题**查:它的锚是那条光秃秃的 `GetNearbyTowers( 1200, true )`,
+   而这行在文件里**出现两次**(兄弟 ~5588 / 本杠杆 ~5852),`perl -0pi -e "s///"` **不带 `/g` 改第一处**
+   ⇒ 刀砍进了兄弟函数,本杠杆没被碰过。这次存活**付清了自己两次**:(1) 买到真正缺失的断言 `SIT_NIDS == 1`
+   (打偏的刀往**共享谓词**里塞了第二条 gated 子句 —— 正是「一条臂动三个家族」那个危险 ——
+   而本套件没有任何东西在数那里的 id);(2) 暴露出 **M10 一直是「因为错误的理由而 CAUGHT」**
+   (同一个锚,动的是兄弟的常数,漂移守卫看见 300≠1200 就红 —— **颜色对,函数错**)。
+   ⇒ **绿色的变异台不证明任何一发打中了它声明的对象,只证明有东西把套件弄红了;
+   锚的唯一性不是正则的细节,它是这个声明的一部分。**
+   **⭐⭐⭐ 域价钱**:前置数与 §EY/§FA/§FC 逐位对上(turbo 1012/1012、走到补给子句 **125**、被否决 **112**);
+   **112 三分法断言为恒等式**:44(`staysrc`)+ 2(`staybag`)+ **66 什么都没带**;
+   66 里 38 在 ≤0.55(其中 29 帧 `fieldbuy` 已在说话)、28 在 >0.55,**28 里 18 帧只被 0.55 上限挡住**
+   (11 被 1600 环、10 被 1200 敌塔挡 —— 真否决,不碰)。
+   **本杠杆域 20 帧**,`20 = 18 + 1 + 1` 断言为恒等式;
+   `flips_buyband 20 == hurt_domain 20`(驱动 vs 独立前缀行走)、`overlap_buy_hurt` **0**、
+   `flip_true_to_false` **0**、`arm_leak` **0**、`hurt_with_creep_damage` **0**;
+   ⭐ 新列 `overlap_probe_runs == live(1012)` —— 因为「探针跑了 1012 帧没找到」与「探针不跑了」
+   打印出来一模一样(GH #171 的形状),变异体 M16 就是这个。
+   **下一格(本组下一轮第一项)**:取未认领 `[strategy]` issue;否则按 **P4.4 在 `bots/` 上取一个小杠杆** ——
+   候选:**66 帧里被 1600 环挡住的那 11 帧**(那是**真否决**还是环太宽?`ShouldStayAndRegen` 只要求 1200 空,
+   `IsFieldRegenSituation` 要求 1600 空 —— **又是一对不同意的常数**,先跑域价钱再决定要不要动),
+   或 **10 帧敌塔**同族问题;**照旧先跑域价钱,先断言控制帧够得着被控制的代码,
+   并且这一轮起——先确认每个变异体的锚在文件里唯一**。
+
 0STAYBAG. **【2026-09-05T22:3xZ 新增,**OWNER_PRIORITIES P4.4 + P2(决策侧,球在本组)**;
    `[strategy]` open issue 本轮扫过 **#521 / #511 / #503 / #500 / #495 / #489 / #485** —— **无一条未认领**
    ⇒ 按铁律 9 取优先项,并做章程上一格(`0STAYBTL`)点名的两个候选之一
@@ -5690,6 +5741,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T02:11Z(**P4.4 + P2 供给侧**:`[strategy]` open issue 本轮扫过 **#521 / #511 / #503**
+  —— 三条都是本组前几轮已认领并交回的,**无一条未认领** ⇒ 按铁律 9 取优先项,
+  做的是章程上一格 `0STAYBAG`「下一格」**逐字点名**的那一个(**`fieldbuy` 为何没买上那 66 帧**)。
+  **P4.4 归属:主体是 (i) 一个 `bots/` 行为改动。**
+  产出新谓词 `J.ShouldFieldBuyRegenHurt`(`buyband`,turbo-only,**未 armed**,STANDALONE)
+  + 购买点一条 **OR 臂**、`tests/test_buyband_hp_band.lua`(**16/16**)、`tests/_buyband_sweep.lua`、
+  `tools/agent/mutstand_buyband.sh`(**20 发:18 CAUGHT + 对照 M19 SURVIVED
+  + 1 声明式 UNMEASURABLE(M18),零 NO-OP、零非声明存活,STAND GREEN,EXIT=0**)、
+  `state.json:buyband_20260906`、`test_set.md §FD`、nesting census **三行**、
+  **三处检测器修复**(其中 `test_bagsalve_backpack_source.lua` 的调用点计数**先于本轮就红在 trunk 上**);
+  报告 `iterations/reports/strategy/20260906T021130Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
+  **已交棒总监(甲)+ 批测台(乙)+ 录像组/语料侧(丙)。**)
+  **⭐ 主判据:在检测器按源码文本解析的树上,函数签名是已发布的接口。**
+  「给共享谓词加一个可选上限参数」写完又撤销 —— 代价**量出来**是 **8 个文件里 7 个同时变红**,
+  而**七个里没有一个对这条杠杆有话要说**;第 8 个保持绿色的读的是**调用点**,那才是信息量所在。
+  ⇒ 改取 standalone + **重复三条环境子句**(与 `J.HasNearbyHeroDamager` 同一理由),
+  常数两两解析比对以付掉漂移的代价。
+  **⭐⭐ `CAUGHT` 掩盖一发打偏的刀,和 `SURVIVED` 暴露它一样彻底。**
+  M8 首跑存活 ⇒ 锚在文件里**出现两次**,`perl` 不带 `/g` 改第一处,刀砍进了兄弟函数。
+  这次存活买到 `SIT_NIDS == 1` 这条缺失断言,并暴露 **M10 一直是「因为错误的理由而 CAUGHT」**。
+  ⇒ **绿色的变异台不证明任何一发打中了它声明的对象。**
+  **⭐⭐⭐ 域价钱**:112 = 44 + 2 + **66**;66 里 28 在 >0.55,**其中 18 帧只被 0.55 上限挡住**;
+  域 **20 帧**,`20 = 18+1+1` 恒等式;`flips_buyband 20 == hurt_domain 20`;重叠 **0**;
+  `flip_true_to_false` **0**;新列 `overlap_probe_runs == live` 把「测过是零」与「没测」分开。
+  **门读数**:静态半 `GATE_EXIT=0 CLEAN`(0 警告);动态半受影响面 19 个过滤器全 EXIT=0;见报告 §9.1。
+  ⚠️ 开工自检**首跑与本轮编辑并发**(GH #507 撕裂窗口,§FC 踩过同一坑)——**那次 Lua 腿读数不作数**,
+  以静止树重跑为准。
 - 2026-09-05T22:3xZ(**P4.4 + P2 决策侧**:`[strategy]` open issue 本轮扫过
   **#521 / #511 / #503 / #500 / #495 / #489 / #485** —— **无一条未认领** ⇒ 按铁律 9 取优先项,
   做的是章程上一格 `0STAYBTL` 点名的两个候选之一(**PROMOTED 侧的 backpack 不对称**)。

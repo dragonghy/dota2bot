@@ -5723,6 +5723,145 @@ function J.ShouldFieldBuyRegen( bot )
 	return not ( J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) )
 end
 
+-- [buyband / owner priority P2 supply side, 2026-09-06] The band between the two
+-- halves of this family, and the reason those 66 frames have nobody buying for
+-- them.
+--
+-- ⭐ THE DEFECT, AS TWO NUMBERS THAT DISAGREE. J.ShouldStayAndRegen is PROMOTED --
+-- live in every turbo game -- and its band is `nHP < 0.18 or nHP > 0.75`: that is
+-- this tree's own definition of "hurt enough that going home is on the table".
+-- J.IsFieldRegenSituation, which is what decides whether the field alternative is
+-- even offered, stops at 0.55. So a hurt, SAFE, empty-handed bot between 0.55 and
+-- 0.75 is released to walk or TP home by the promoted veto (its gold term is the
+-- only clause left, and 90 gold does not stop anyone past the first minutes)
+-- while the one id whose entire job is "buy the salve instead" is structurally
+-- silent: its situation predicate says the bot is not hurt yet.
+--
+-- ⭐⭐ MEASURED ON THE CORPUS, NOT ARGUED. Of 1012 live turbo hero frames, 125
+-- reach J.ShouldStayAndRegen's supply clause and 112 are vetoed there. Those 112
+-- split exactly three ways: 44 carry a main-slot source ('staysrc'), 2 carry a
+-- backpacked salve ('staybag'), and 66 carry NOTHING drinkable -- which is not a
+-- supply-read defect at all, because there is genuinely nothing to read. Owner
+-- priority P2's answer for those 66 is the supply side: buy one. 29 of them are
+-- already inside J.IsFieldRegenSituation and `fieldbuy` speaks for them today.
+-- Of the remaining 37, **18** are blocked by the 0.55 ceiling AND BY NOTHING ELSE
+-- -- the 1600 ring is empty, no hero damage is attributable, no enemy tower is
+-- inside 1200 (11 are blocked by the ring and 10 by a tower; those are real
+-- vetoes and this lever does not touch them). tests/_buyband_sweep.lua measures
+-- every one of those numbers and the test file asserts them.
+--
+-- ⭐⭐⭐ WHY A SEPARATE FUNCTION, AND WHY IT REPEATS THREE CLAUSES INSTEAD OF
+-- CALLING THE SIBLING. This is the load-bearing part, and each of the three
+-- tempting shortcuts fails for its own reason.
+--   * Raising the ceiling inside J.IsFieldRegenSituation moves THREE families at
+--     once ('stayfield', 'stayfield2', 'fieldbuy') on one arm -- the 'lanefix'
+--     bundle shape, which measured strongly negative twice.
+--   * Passing a gated ceiling from inside J.ShouldFieldBuyRegen is worse in a way
+--     that has its own name here: that function's first line is
+--     `IsSoakCandidate('fieldbuy')`, so a second id there could only ever act
+--     with 'fieldbuy' ALSO armed -- two ids on one path, each site reading clean,
+--     and any single-arm isolation wave reading a correct zero. That is the
+--     second form of the 'pullcad' trap (GH #542).
+--   * Adding an optional ceiling ARGUMENT to J.IsFieldRegenSituation is the
+--     clean-looking one, and it was written and then REVERTED on 2026-09-06
+--     after the cost was measured rather than guessed. This function's signature
+--     and its `nHP < 0.18 or nHP > 0.55` band are parsed as LITERAL TEXT by the
+--     detectors, so the two-line edit turns SEVEN of the eight files that read
+--     them red at once: test_healthy_walk_home_gap,
+--     test_stayfield_hp_window_reach, test_stayfield2_marginal_domain,
+--     test_fightback_world_assertion, test_itemtrip_wasteful_trip,
+--     test_bagsalve_backpack_source and test_stayattr_global_ult. (The eighth,
+--     test_stayfield_callsite_domain, stays green -- it reads a CALL SITE, which
+--     the default argument leaves byte-identical. That is the shape of the cost:
+--     it lands on the files that parse the DECLARATION.) None of the seven has
+--     anything to say about this lever; a one-lever change would have become a
+--     seven-file re-baseline.
+-- So the three surroundings clauses below are DUPLICATED on purpose, exactly as
+-- J.HasNearbyHeroDamager duplicates the sibling scan it was split from and for
+-- the same stated reason. The duplication is not left to drift: every constant in
+-- them (1600, 3000, 3.0, 1200, 0.18) is parsed out of J.IsFieldRegenSituation's
+-- own body by tests/_buyband_sweep.lua, and the test fails the day either copy
+-- moves.
+--
+-- This block is the standalone form -- one id, one site, reachable with nothing
+-- else armed, so a single-arm wave can see it. tests/_buyband_sweep.lua drives
+-- `buyband` alone and asserts the flip count is nonzero for exactly that reason.
+--
+-- Domains are DISJOINT BY CONSTRUCTION, not by measurement: `fieldbuy` answers
+-- only at or below 0.55 and the first clause below answers only strictly above
+-- it, so the two can never both fire on one frame and neither can be credited
+-- with the other's frames. The sweep asserts the overlap is 0 anyway. 0.55 and
+-- 0.75 are not new tuned constants -- they are the two numbers already in the
+-- tree, and the sweep parses BOTH out of their own functions and fails if either
+-- drifts.
+--
+-- Condition (c): a salve is 100 gold for 400 health over 13 seconds, drunk where
+-- the bot is standing; the fountain trip this replaces measured a ~40 second
+-- median round trip on the replay desk's own corpus (GH #120), i.e. a fifth of a
+-- turbo game. At 65% HP a salve is a full top-up for most of this hero pool, so
+-- the band this lever adds is the band where the trade is at its BEST, not its
+-- most marginal. The salve is cancelled by enemy hero damage, which is why the
+-- empty-ring and attributed-damage clauses inherited from
+-- J.IsFieldRegenSituation are the precondition for it working at all rather than
+-- mere conservatism.
+--
+-- Honest bounds. (1) What is measured is a PURCHASE PREDICATE turning true, not a
+-- trip home being cancelled: the nine engine clauses at the call site (stock,
+-- gold, stash, courier distance, empty slot) are not readable from a fixture, and
+-- neither is the trip. The sweep asserts the wiring exists in
+-- item_purchase_generic.lua; it cannot assert the purchase happens. (2) Gold is
+-- not networked into a .dem (GH #495), so `botGold >= GetItemCost` at the call
+-- site is unmeasurable here and the flip set is the gold-blind superset of the
+-- live one -- the same bound all three sibling levers carry. (3) This buys a
+-- salve for a bot that may then be pulled into a fight and waste it; that is the
+-- same exposure `fieldbuy` already carries below 0.55, unchanged in kind and
+-- taken at a strictly higher HP, where the wasted 100 gold is the cheaper error
+-- than a 40 second walk. (4) The ONE clause of J.IsFieldRegenSituation this
+-- function deliberately does NOT copy is the gated 'fieldcreep' creep-damage
+-- veto, because naming another candidate's id here would freeze this clause FALSE
+-- the day that id is promoted -- the 'pullcad' trap in its first form. So while
+-- 'fieldcreep' is armed the two arms of the call site disagree about a bot being
+-- chewed by a camp. Measured rather than waved at: 0 of the 20 corpus frames in
+-- this lever's domain carry creep damage in the same 3-second window, so the
+-- disagreement is empty on this corpus (`hurt_with_creep_damage` in the sweep) --
+-- and the day it stops being empty that counter is what says so.
+function J.ShouldFieldBuyRegenHurt( bot )
+	if not J.IsSoakCandidate( 'buyband' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	-- The band, and it is the whole lever: strictly ABOVE `fieldbuy`'s own 0.55
+	-- ceiling (which is what makes the two domains disjoint) and up to the 0.75
+	-- where J.ShouldStayAndRegen itself stops calling a bot hurt. The 0.18 floor
+	-- is inherited unchanged from the sibling for completeness; it cannot bite
+	-- here, since 0.18 < 0.55.
+	local nHP = J.GetHP( bot )
+	if nHP <= 0.55 or nHP > 0.75 or nHP < 0.18 then return false end
+
+	-- The three surroundings clauses of J.IsFieldRegenSituation, in its own
+	-- order and with its own constants. Duplicated rather than called: see the
+	-- third bullet above. tests/_buyband_sweep.lua parses both copies.
+	if #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0 then return false end
+
+	-- Attributed danger: someone hit me recently AND is still near me.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then
+		local hEnemyList = J.GetNearbyHeroes( bot, 3000, true, BOT_MODE_NONE )
+		for _, hEnemy in pairs( hEnemyList ) do
+			if J.IsValidHero( hEnemy )
+				and bot:WasRecentlyDamagedByHero( hEnemy, 3.0 )
+			then
+				return false
+			end
+		end
+	end
+
+	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
+
+	-- The same conjunction `fieldbuy` asks, asked the same way: buy only when
+	-- there is nothing drinkable already. Unarmed, J.IsFieldSipEnough is the
+	-- literal `true`, so this is the plain `not J.HasFieldRegenSource( bot )`.
+	return not ( J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) )
+end
+
 -- [itemtrip / GH #120] The OTHER end of the same "don't walk home" family, and
 -- the one nothing in this tree could speak on: the HEALTHY trip home.
 --

@@ -296,6 +296,31 @@ local PINNED = {
     -- arm (`pair_gain` == `flips`, `pair_gain_not_flips` == 0).  That is the
     -- (A)-row's safety argument holding and the WAVE still being unable to see
     -- the behaviour: additive-and-safe is not the same as single-arm-visible.
+    -- [buyband 20260906] Two rows, and they are the 'fieldbuy' rows one function
+    -- over: this lever is the OTHER arm of the same purchase site, covering the
+    -- HP band between J.ShouldStayAndRegen's 0.75 and J.IsFieldRegenSituation's
+    -- 0.55. Both classified by the same arguments as their 'fieldbuy' twins:
+    --   (A) J.HasFieldRegenSource under 'bagsalve' -- un-armed the callee returns
+    --       its byte-for-byte SHIPPED main-slot answer, not a frozen constant, so
+    --       arming 'buyband' alone measures 'buyband'. Arming 'bagsalve' can only
+    --       make the callee MORE true, i.e. can only REMOVE buys -- additive in
+    --       the safe direction, and tests/_buyband_sweep.lua drives both legs over
+    --       the same 1012 live frames with `flip_true_to_false` 0.
+    --   (I) J.IsFieldSipEnough under 'fieldsip' -- un-armed it is the literal
+    --       `true`, the identity element of the `and` it joined.
+    -- ⭐ THE ROW THAT IS ABSENT IS THE INFORMATIVE ONE. 'fieldbuy' also carries a
+    -- (P) row for J.IsFieldRegenSituation under 'fieldcreep'; this lever has no
+    -- such row because it does not CALL that predicate -- it repeats three of its
+    -- clauses inline. That is not tidiness lost: giving the shared predicate an
+    -- optional ceiling argument was written and reverted the same day (its
+    -- signature and band are parsed as literal text by several detector files),
+    -- and copying the sibling's gated creep veto would have named another
+    -- candidate's id in this body, freezing that clause FALSE the day it is
+    -- promoted -- the pullcad trap. The cost is a duplication that can drift, and
+    -- it is paid where it can be seen: every constant in both copies is parsed and
+    -- compared in tests/test_buyband_hp_band.lua.
+    "buyband | J.ShouldFieldBuyRegenHurt | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                  -- A
+    "buyband | J.ShouldFieldBuyRegenHurt | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                     -- I
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc | bots/mode_retreat_generic.lua", -- P
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear | bots/mode_retreat_generic.lua",                                 -- W
@@ -341,6 +366,13 @@ local PINNED = {
     "fieldbuy | J.ShouldFieldBuyRegen | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                        -- I
     "fieldregen,tpdeathbuy | ItemPurchaseThink | J.IsInLaningPhase | c2,c4 | bots/item_purchase_generic.lua",                             -- W
     "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegen | fieldbuy | bots/item_purchase_generic.lua",                      -- W
+    -- [buyband 20260906] The third row, and it is the (W) twin of the one above:
+    -- the census's wide net, since 'fieldregen'/'tpdeathbuy' guard OTHER blocks of
+    -- the same Think and this predicate is a new OR arm on the 'fieldbuy' block.
+    -- Un-armed J.ShouldFieldBuyRegenHurt returns false on its first line -- the
+    -- identity element of the `or` it joined -- so the shipped purchase order is
+    -- byte-identical and arming either outer id alone still measures that id.
+    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenHurt | buyband | bots/item_purchase_generic.lua",                   -- W
     "fieldsip | J.IsFieldSipEnough | J.FieldRegenSipValue | bagsalve | bots/FunLib/jmz_func.lua",                                         -- A
     "l1kite | J.ShouldCounterTradeKite | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                           -- P
     "l1trade | J.ShouldInitiateLaneKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P

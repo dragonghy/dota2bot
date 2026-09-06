@@ -529,11 +529,29 @@ tests['wiring: the situation predicate ships nothing on its own, and has exactly
     end
     local _, n = src:gsub('J%.IsFieldRegenSituation%(', '')
     assert(n == 3, 'definition + ShouldRegenNotGoHome + ShouldFieldBuyRegen = 3, found ' .. n)
-    local elsewhere = read_file(PURCHASE)
-        .. read_file('bots/ability_item_usage_generic.lua')
-        .. read_file('bots/mode_retreat_generic.lua')
+    -- COMMENTS ARE STRIPPED FIRST, and that is the assertion meaning what it
+    -- says rather than a softening. The claim is "no ungated CALL SITE outside
+    -- the two wrappers"; a sentence of prose naming the predicate is not a call
+    -- site. Read over raw source this went red on 2026-09-06 for a comment at the
+    -- purchase site explaining where the 'buyband' arm's HP band comes from --
+    -- the same "a comment satisfies (or violates) a source assertion" shape this
+    -- suite strips for everywhere else. Falsifiability is kept explicit below:
+    -- a real call still trips it, a comment quoting one still does not.
+    local function code_of(...)
+        local s = ''
+        for _, p in ipairs({ ... }) do s = s .. read_file(p) end
+        return (s:gsub('%-%-[^\n]*', ''))
+    end
+    local elsewhere = code_of(PURCHASE, 'bots/ability_item_usage_generic.lua',
+        'bots/mode_retreat_generic.lua')
     assert(not elsewhere:find('IsFieldRegenSituation', 1, true),
         'a call site calls the UNGATED situation predicate directly')
+    assert((elsewhere .. '\nJ.IsFieldRegenSituation( bot )\n')
+        :find('IsFieldRegenSituation', 1, true),
+        'the census stopped seeing a real call site')
+    assert(not (elsewhere .. '\n-- see J.IsFieldRegenSituation( bot )\n')
+        :gsub('%-%-[^\n]*', ''):find('IsFieldRegenSituation', 1, true),
+        'a comment can still masquerade as a call site')
 end
 
 return tests

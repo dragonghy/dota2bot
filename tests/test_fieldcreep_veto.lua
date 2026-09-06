@@ -250,11 +250,23 @@ tests['wiring: the situation still has exactly its two wrapper consumers'] = fun
     local _, n = src:gsub('J%.IsFieldRegenSituation%(', '')
     assert(n == 3,
         'definition + ShouldRegenNotGoHome + ShouldFieldBuyRegen = 3, found ' .. n)
-    local elsewhere = read_file('bots/item_purchase_generic.lua')
+    -- COMMENTS ARE STRIPPED FIRST, for the reason its twin in
+    -- test_replay_260822_fieldbuy_supply.lua now records: the claim is "no direct
+    -- CALL SITE outside the two wrappers", and a sentence of prose naming the
+    -- predicate is not one. Read over raw source, both copies of this assertion
+    -- went red on 2026-09-06 for one explanatory comment at the purchase site.
+    -- Falsifiability kept explicit: a real call still trips it, a comment does not.
+    local elsewhere = (read_file('bots/item_purchase_generic.lua')
         .. read_file('bots/ability_item_usage_generic.lua')
-        .. read_file('bots/mode_retreat_generic.lua')
+        .. read_file('bots/mode_retreat_generic.lua')):gsub('%-%-[^\n]*', '')
     assert(not elsewhere:find('IsFieldRegenSituation', 1, true),
         'a call site calls the situation predicate directly')
+    assert((elsewhere .. '\nJ.IsFieldRegenSituation( bot )\n')
+        :find('IsFieldRegenSituation', 1, true),
+        'the census stopped seeing a real call site')
+    assert(not (elsewhere .. '\n-- see J.IsFieldRegenSituation( bot )\n')
+        :gsub('%-%-[^\n]*', ''):find('IsFieldRegenSituation', 1, true),
+        'a comment can still masquerade as a call site')
 end
 
 -- ------------------------------------------------------------- the census --

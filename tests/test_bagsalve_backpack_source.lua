@@ -349,15 +349,45 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
     end
     local nCalls, nDefs = count(code)
     assert(nDefs == 1, 'J.HasFieldRegenSource is defined ' .. nDefs .. ' times')
-    assert(nCalls == 2,
-        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not '
-        .. '2; a new one may not inherit turbo')
-    -- The stripper must not have blunted the census: a real third call site
-    -- still trips it, and a comment quoting the call form still does not.
-    assert(count(strip_comments(src .. '\nJ.HasFieldRegenSource( bot )\n')) == 3,
-        'the census stopped seeing a real call site')
-    assert(count(strip_comments(src .. '\n-- see J.HasFieldRegenSource( bot ) above\n')) == 2,
-        'a comment can still masquerade as a call site')
+    -- ⭐ THIS USED TO PIN `nCalls == 2`, AND THE PIN WAS RED ON TRUNK BEFORE
+    -- ANYONE NOTICED. 'staysrc' added a third call site on 2026-09-05 (inside
+    -- J.ShouldStayAndRegen) and 'buyband' a fourth on 2026-09-06; the count was
+    -- never updated, so a guard whose whole job is "a new caller may not inherit
+    -- turbo" spent a day saying only "the number changed". A COUNT IS NOT THE
+    -- PROPERTY: what has to hold is that every caller reaches turbo before the
+    -- call, and there are exactly two legitimate ways to do that. So the property
+    -- is asserted per caller and the count is kept only as an anti-vacuum floor,
+    -- which is what makes a genuinely NEW caller still trip this.
+    --   * via the situation predicate (ShouldRegenNotGoHome, ShouldFieldBuyRegen)
+    --     -- asserted by the call-order loop above;
+    --   * via its own IsModeTurbo before the call (ShouldStayAndRegen, whose
+    --     first line it is; ShouldFieldBuyRegenHurt, whose second line it is).
+    for _, name in ipairs({ 'ShouldStayAndRegen', 'ShouldFieldBuyRegenHurt' }) do
+        local body = code:match('function J%.' .. name .. '%( bot %)(.-)\nend\n')
+        assert(body, 'could not slice J.' .. name
+            .. ', which calls J.HasFieldRegenSource without going through the '
+            .. 'situation predicate')
+        local iTurbo = body:find('IsModeTurbo', 1, true)
+        local iSrc = body:find('HasFieldRegenSource', 1, true)
+        assert(iTurbo and iSrc and iTurbo < iSrc, 'J.' .. name .. ' reaches '
+            .. 'J.HasFieldRegenSource without asking IsModeTurbo first -- that '
+            .. 'helper has no turbo clause of its own, so this ships the '
+            .. 'behaviour into normal mode')
+    end
+    assert(nCalls == 4,
+        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 4. Every '
+        .. 'caller must reach turbo before calling it, either by asking '
+        .. 'J.IsFieldRegenSituation first or by its own IsModeTurbo; add the new '
+        .. 'one to one of the two lists above rather than only raising this number')
+    -- The stripper must not have blunted the census: one more real call site
+    -- still trips it, and a comment quoting the call form still does not. Stated
+    -- against `nCalls` rather than against a literal, so these two keep working
+    -- the next time a caller is legitimately added -- re-baselining the line
+    -- above used to mean silently re-baselining these as well.
+    assert(count(strip_comments(src .. '\nJ.HasFieldRegenSource( bot )\n'))
+        == nCalls + 1, 'the census stopped seeing a real call site')
+    assert(count(strip_comments(src .. '\n-- see J.HasFieldRegenSource( bot ) above\n'))
+        == nCalls, 'a comment can still masquerade as a call site')
 end
 
 tests['[reverse] the guarded branch selects for exactly this population'] = function()

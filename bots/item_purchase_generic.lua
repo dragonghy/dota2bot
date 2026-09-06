@@ -800,7 +800,18 @@ function ItemPurchaseThink()
 	-- unarmed purchase order is byte-identical.
 	-- FindItemSlot, unlike the helper, also sees the backpack: a salve already
 	-- bought and stowed must not be bought again while the courier is in flight.
-	if J.ShouldFieldBuyRegen(bot)
+	-- [buyband, 2026-09-06] The OR arm is the band between this family's two
+	-- halves: J.ShouldStayAndRegen (PROMOTED) stops holding a bot at 0.75 while
+	-- J.IsFieldRegenSituation stops offering the field alternative at 0.55, so a
+	-- hurt, safe, empty-handed hero in between has nobody buying for it (18 corpus
+	-- frames blocked by that ceiling alone). Appended as a separate predicate with
+	-- its own id, never as a widening of J.ShouldFieldBuyRegen: that function's
+	-- first line is its own gate, so a second id inside it could only ever act
+	-- with 'fieldbuy' also armed and no single-arm wave could see it (GH #542).
+	-- Unarmed, J.ShouldFieldBuyRegenHurt returns false on its first line, so the
+	-- shipped purchase order is byte-identical; the nine engine clauses below are
+	-- shared unchanged by both arms.
+	if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot) )
 	and bot:IsAlive()
 	and bot:FindItemSlot('item_flask') < 0
 	and not IsThereHealingInStash(bot)
