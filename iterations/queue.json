@@ -1867,6 +1867,15 @@
         "ref": "iterations/streams/test_set.md §FI.2; GH #560",
         "note": "与 hero-32/33/34(09-06T04:17Z)/hero-35(07:xxZ)完全同型,同一条款:零 EC2、只读档案遍历,不排波、不入集,搭 hero-2/30/31 已在跑的那一次遍历。产物路径不改名 —— iterations/reports/replay-check/domain_scan_hero_2_30_31.md 是 owed_executions.json 那一腿唯一读得到的机器键。acceptance 一字未改。METHOD-FAILED 按 §CJ 强制写进:读不出 (2) 那一列(下单瞬间该 ranged lane creep 的真实血量)⇒ INSTRUMENT-BLIND 退回重裁,不得自行套用『分布落在 (460, nCreepCap] 中段 ⇒ 不入集』那条预登记 —— 那条假设的是量具工作而读数如此,不是量具读不出来。请求正文里那道 DotaTime() > 10*60 的分层要求照做。⭐ 本轮同时把这一腿的 done_when 从 path_exists 换成 path_contains_all:八个 id(hero-2/30/31/32/33/34/35/36)少提一个就报 OWED 并点名 —— 从 hero-36 起,搭车不再是把一份读数放进一个没人替它举手的位置。"
       }
+    },
+    {
+      "id": "hero-37",
+      "stream": "hero",
+      "bundle": "zusultstrand",
+      "seeds": [],
+      "priority": 3,
+      "question": "GH #<待回填>。给 `zusultstrand` 买条件 (a) 的域。杠杆:bots/BotLib/hero_zuus.lua 的 `X.ConsiderR` **撤退分支**被 `bot:GetRespawnTime() > abilityR:GetCooldown()` 守着,而**右端是常数 130**(zuus_thundergods_wrath 的 AbilityCooldown 无等级阶梯)、**左端至多 75**(重生表 25 级 100s × turbo 0.75,本仓 GH #215 已钉)⇒ 该合取项**恒假**,「快死了先把大招兑现」这条路从来没跑过。本轮已落地 gated 修复(turbo-only,未 armed),接线**一处**。**先扫档案,不要为它单发波**(与 hero-2/30/31/32/33/34/35/36 同形:零 EC2 只读扫描,九者可并成同一次遍历)。需要的读数:(1) Zeus 处于**撤退**且 **HP ≤ 28%** 且 **2s 内被英雄伤害过**且**大招可放**(等级 ≥1、冷却 0、蓝 ≥ 250/375/500)的帧/episode 计数 —— 这就是这条分支的**域大小**,而它至今是 0 次执行;(2) ⭐ **本请求的价值列**:那些瞬间里 **Zeus 在随后 N 秒内是否真的死了**,以及死的时候**大招是不是还揣着没放** —— 「揣着大招死掉」的次数是「大招握在手里死掉价值恰好为零」这句话的**直接测量**,也是这个 widening 唯一的收益来源;(3) 同一批瞬间**最近敌方英雄的距离**分布 —— armed 侧的收窄项是 `X.nUltCashChaseRadius = 1600`,这一列直接说它切掉了多少、留下了多少(fixture 上是 6/8 在内,但那是 8 帧的下界不是频率);(4) **分层**:这些瞬间里有多少**同时**被同文件已有的 `ultcash`(`J.IsDyingUnderAttack`:HP ≤ 45% + 1200 内敌人预估 3s 伤害 ≥ 当前血量)覆盖 —— **那部分不归本杠杆**,它们已经有人管,读数里必须能分开,否则 (1) 是错的分子。⚠️ 另请**顺手**回答一个 loader 问题:dump 里有没有任何一列能给出**活着的英雄的 GetRespawnTime 读数**?有的话 §6 的单向绊线就能拆,比较式的左端第一次成为帧数据。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「撤退 + HP ≤ 28% + 大招可放 + 1600 内有敌人 + 随后真的死了」那一帧 —— 全语料 8 个 Zeus fixture 里**一帧都没有**,所以这是本轮明写没买到的那一块)。**预登记的判读方向**:若 (2) 显示 Zeus **几乎从不**在这种局面下揣着可放的大招死掉(即 (1) 的域本身就近乎为零,或死亡前大招早已被下方 ultcash/团战/击杀分支放掉),则这个 widening 的收益不成立,**不入集**,带 DOMAIN-NOT-REACHED 退回门。**预登记的归因边界**:⚠️ 本杠杆是 **WIDENING** —— shipped 合取项结构性恒假,arming **只能增加**这条分支上的大招施放。负读数**只能**读作「多放的那些放错了(浪费了 250-500 蓝和 130s 冷却)」,**永远不能**读作「杠杆少放了 N 次大招」。⚠️ **METHOD-FAILED 强制**:读不出 (2) 那一列(死亡时大招是否未放)⇒ **INSTRUMENT-FAILED**,不得用 (1) 的计数单独下判断 —— 域大小本身不区分「该放没放」和「本来就不该放」。"
     }
   ],
   "done": [

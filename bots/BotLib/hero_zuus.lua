@@ -1285,6 +1285,98 @@ function X.ConsiderD()
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
+-- How close an enemy hero has to be before the armed leg of
+-- X.zuus_ShouldCashUltBeforeDeath believes the death it is pricing is going to
+-- happen.  It is NOT a reach term: Thundergod's Wrath is global (see the note
+-- inside X.ConsiderR).  Written as a named constant so moving it self-reports in
+-- tests/test_zuus_ult_strand.lua section 5.
+X.nUltCashChaseRadius = 1600
+
+--- [zusultstrand] gated (turbo + soak candidate): may the RETREAT branch of
+--- X.ConsiderR cash Thundergod's Wrath out before Zeus dies?
+---
+--- THE SHIPPED TERM IS AN OFF-SWITCH, NOT A FILTER.  The branch reads
+---
+---     if bot:GetRespawnTime() > abilityR:GetCooldown()
+---
+--- and the right-hand side is a CONSTANT 130.  zuus_thundergods_wrath declares
+--- `AbilityCooldown 130` with no rank ladder at all (tests/mock/
+--- special_value_shapes.lua -- the KV snapshot the fixture loader has served
+--- through GetCooldown since 2026-09-04, so this is a read and not a re-typing).
+--- The left-hand side is bounded above by the hero respawn table, and this repo
+--- already pinned that ceiling for the buyback ladder (bots/FunLib/jmz_func.lua,
+--- GH #215): 100s at level 25 and above, and turbo scales every respawn by 0.75,
+--- so 75s is the turbo maximum.  75 < 130 at every hero level and every ult
+--- rank ⇒ the conjunct has never been true and structurally cannot be.
+---
+--- ⭐ THE FACT IS READING-INDEPENDENT, which is the whole reason it is stated as
+--- arithmetic on two ceilings rather than as a claim about the getter.
+--- `Unit:GetRespawnTime()` is documented (docs/BOT_API_REFERENCE.md) as "seconds
+--- until this hero respawns"; what it answers for a LIVING hero is an engine
+--- question this desk cannot settle offline (AGENTS.md: no bot-side debugging),
+--- and it does not need to.  Under the reading "0 while alive" the term is
+--- 0 > 130.  Under the most generous reading available -- the full duration the
+--- death WOULD have -- it is at most 75 > 130 in turbo.  False either way.
+---
+--- ⚠️ THE ONE ESCAPE, recorded so nobody quotes this wider than it is: enough
+--- cooldown reduction drags 130 under a respawn ceiling.  This file's rows do
+--- buy item_octarine_core (-25% ⇒ 97.5s), and 97.5 < 100 -- so in NORMAL mode a
+--- level-25 Zeus holding Octarine is a real window.  In turbo the ceiling is 75
+--- and 97.5 is still above it, and turbo is the mode this lever is gated to.
+--- (Zeus's own cooldown talent special_bonus_unique_zeus_6 is an Arc Lightning
+--- row, and this file's t15 pick is [4] regardless.)
+---
+--- WHY THE ARMED SIDE ASKS A DIFFERENT QUESTION RATHER THAN REPAIRING A GETTER.
+--- Read literally the shipped term means "casting now costs me nothing, because
+--- the cooldown elapses before I am back".  Repairing the getter would not
+--- revive the branch: the arithmetic above says the answer is NO in turbo under
+--- every getter.  So the lever changes the QUESTION to the one turbo poses.  An
+--- ultimate held at death is worth exactly zero; 275/425/575 magical damage to
+--- every enemy hero plus 3s of global vision, delivered into the fight that is
+--- killing him, is worth more than an ult that returns 55-118s after that fight
+--- ended.  Cashing a dying Zeus's ult is standard play, and this file's own
+--- [ultcash] branch already says so for the stricter "death is arithmetically
+--- certain" case (J.IsDyingUnderAttack) -- it was written in the belief that the
+--- retreat branch above it covered the softer case.  It never has.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, NOT A NARROWING.  The shipped conjunct is
+--- structurally false, so arming can only ADD ult casts on this branch and can
+--- never remove one.  A negative reading on this id may NOT be read as "fewer
+--- ultimates"; the only thing it can mean is that the added casts were bad.
+---
+--- NARROWED so the widening is not a blank cheque: the armed side additionally
+--- demands an enemy hero inside X.nUltCashChaseRadius.  That radius is not about
+--- the ult's reach -- the spell is global and carries no AbilityCastRange key at
+--- all -- it is about whether the death being priced actually happens.  With
+--- nobody near, a Zeus at 28% who was clipped two seconds ago frequently lives,
+--- and cashing costs him 250-500 mana and the ult for the next two minutes.
+---
+--- ⚠️ COVERAGE, and the two sentences may not be merged.  The corpus drives the
+--- SHIPPED right-hand side on real frames (GetCooldown reads a truthful 130 on
+--- all 7 Zeus-subject frames that carry the handle) and drives the armed radius
+--- term on real frames (6 of 8 have an enemy hero inside 1600).  It holds NO
+--- creation frame for the branch as a whole: the only Zeus frame under 28% HP
+--- (f_181441_zuus_lowhp_limbo, 15.8%) has the ult on a 2.2s cooldown AND its
+--- nearest enemy at 2017u.  "The armed branch fires" is therefore NOT a reading
+--- this round bought -- tests/test_zuus_ult_strand.lua section 6 states that as
+--- the limit it is, and the left-hand 0 those frames report is a LOADER GAP
+--- (nothing installs GetRespawnTime) and not frame data.
+function X.zuus_ShouldCashUltBeforeDeath( hBot )
+
+	local bShipped = hBot:GetRespawnTime() > abilityR:GetCooldown()
+
+	if bShipped then return true end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusultstrand' ) ) then return false end
+
+	local tChasers = J.GetNearbyHeroes( hBot, X.nUltCashChaseRadius, true, BOT_MODE_NONE )
+	if tChasers == nil or #tChasers == 0 then return false end
+
+	return true
+
+end
+
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable() then
@@ -1355,7 +1447,11 @@ function X.ConsiderR()
 
 	if J.IsRetreating( bot ) and bot:WasRecentlyDamagedByAnyHero( 2.0 )
 	then
-		if bot:GetRespawnTime() > abilityR:GetCooldown()
+		-- [zusultstrand] the term that used to stand here read
+		-- `bot:GetRespawnTime() > abilityR:GetCooldown()`, which is 130 on the
+		-- right at every rank and at most 75 on the left in turbo -- an
+		-- off-switch, not a filter.  See X.zuus_ShouldCashUltBeforeDeath.
+		if X.zuus_ShouldCashUltBeforeDeath( bot )
 			and nHealthPercentage <= 0.28
 		then
 			return BOT_ACTION_DESIRE_HIGH

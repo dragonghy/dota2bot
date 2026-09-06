@@ -6346,5 +6346,20 @@
     "honest_bounds": "(a) 未买到:远程兵出口在 fixture 上到不了,只能靠归档扫描(queue hero-36)。(b) 未买到:零 AWS。(c) 有依据:一个函数的一个出口报告的量必须和它其他出口报告的是同一个量,而消费方在 30 行外把它当血量用了五次 —— 不需要检索攻略。⚠️ **不许把本轮读成「已验证」**:能端到端驱动的只有 helper 自己和它在无远程单位帧上的 no-op;分支本身**一次都没跑到**。",
     "next_baton": "**批测台** `queue.json:hero-36`(零 EC2 归档只读扫描,可与 `hero-2`/`hero-30`/`hero-31`/`hero-32`/`hero-33`/`hero-34`/`hero-35` 并成同一次遍历 —— 现在是**八条同形请求**)。最值钱的一列是 **(2)「下单那一刻这只远程兵的真实血量」**,因为整个缺陷就是那个数被换成了 500。**总监**:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**。**在 (a) 买到之前不许 promote。**",
     "gh_issue": "#560(本轮新开;⚠️ 报告初稿写作时预测的号码是 #559,但那个号在同一小时被协同组的 GH #559 取走 —— 落地前已逐个文件改正,trunk 上从未出现过错的引用)"
+  },
+  "zusultstrand_20260906": {
+    "date": "2026-09-06T11:xxZ",
+    "backlog_item": "OWNER_PRIORITIES P4.4(bots/ 主体配额);英雄组自选杠杆,焦点英雄 Zeus。轮换:上轮 CM,本轮回到 Zeus。选题 axis 是**新的第六条**:「一个守卫式的合取项,它的两端各自被一个**上界**钉死,而两个上界的大小关系让它恒假」—— 它比前五条更便宜,因为**两端的上界都已经在本仓里被别的轮次钉过了**(KV 快照的 AbilityCooldown + jmz_func GH #215 的重生上限),不需要任何新的外部读数,也不需要判断引擎对某个 getter 的语义。",
+    "owner": "hero",
+    "gate": "zusultstrand (NEW soak id, turbo-only, 未 armed;STANDALONE —— 不与任何 id 合取;与同文件的 ultcash 可分离,后者走 J.IsDyingUnderAttack 严格得多的条件)",
+    "bots_lua_changed": true,
+    "headline": "`bots/BotLib/hero_zuus.lua` 的 `X.ConsiderR` 撤退分支被 `bot:GetRespawnTime() > abilityR:GetCooldown()` 守着。**右端是常数 130**(zuus_thundergods_wrath 的 `AbilityCooldown` 没有等级阶梯),**左端被英雄重生表的上限钉死**(本仓 GH #215 已经为买活阶梯钉过:25 级 100s × turbo 的 0.75 = **75s**)。75 < 130 ⇒ 这个合取项**在每一个英雄等级、每一个大招等级上恒假**:它不是过滤器,是**关掉的开关**。「快死了先把大招兑现掉」这条路**从来没跑过**。",
+    "star_main_judgement": "⭐ **这条事实是「读法无关」的,而这正是它被写成两个上界之间的算术、而不是写成对某个 getter 的断言的原因。** `Unit:GetRespawnTime()` 文档写的是「距离复活还有几秒」,而它对一个**活着**的英雄返回什么,是本台离线 **settle 不了**的引擎问题(AGENTS.md:没有 bot 侧调试)。**不需要 settle**:按「活着时返回 0」读,该项是 `0 > 130`;按能想到的**最宽容**的读法(这次死亡**将会**持续的完整时长)读,turbo 里也至多是 `75 > 130`。两种读法都假。⭐⭐ **而「恒假」和「这个比较根本不看输入」从外面看是同一个样子** —— 这正是一个结构性死分支的外观,也是 GH #560「不能失败的断言不是证据」的下一格。所以新文件 §4 打了一次**贴标签的注入**:把 respawn 注到 131(不可能的值)必须让该项翻真;变异 **M7**(让 `bShipped` 常为 false)**只有这一条断言看得见**。⭐⭐⭐ **前提被单独钉成可证伪的一句**:§2 **从来源读**两个上界(KV 快照的 `AbilityCooldown` + jmz_func 里 `100 * 0.75 = 75 seconds` 那一行),不重打 130 也不重打 75;变异 **M5**(把声明的冷却压到 70)是九个里**唯一**能让 header 的「恒假」句变成假话的,而任何对 helper 返回值的断言都看不见它。",
+    "change": "bots/BotLib/hero_zuus.lua:新 `X.zuus_ShouldCashUltBeforeDeath( hBot )`(**先算 shipped 表达式,真就短路返回**;gate 关时逐字返回 shipped 布尔;armed 时额外要求 `X.nUltCashChaseRadius`(=1600)内有敌方英雄)+ 新常数 `X.nUltCashChaseRadius`;`X.ConsiderR` 撤退分支的那一项改为调用它。`nHealthPercentage <= 0.28`、`J.IsRetreating`、`WasRecentlyDamagedByAnyHero( 2.0 )`、`IsFullyCastable` 与下方 ultcash / 团战 / lowHP 各分支**一个字没动**。",
+    "direction_by_construction": "⚠️ **这是 WIDENING 不是 NARROWING,不许读反。** shipped 合取项结构性恒假 ⇒ arming **只能增加**这条分支上的大招施放,**不可能减少**一次。负读数**唯一**能读作的是「多放的那些放错了」,**绝不能**读作「少放了 N 次大招」。gate-off 等价是结构性的:shipped 表达式是函数第一条语句、真则短路返回,armed 分支是唯一绕道(GH #162 house rule);新文件 §5 用注入矩阵(7 个 respawn 值 × turbo/非 turbo)逐值断言 gate-off == shipped。收窄项是**追兵半径**,它**不是射程项**(雷神之怒是全球的,连 `AbilityCastRange` 键都没有),是「这次死亡到底会不会发生」的代理。",
+    "real_frame_coverage": "**买到的**:(i) 比较式的**右端**,在 8 个 Zeus 主体 fixture 中**携带该技能句柄的 7 个**上 `GetCooldown()` 全部读出 KV 的 **130**(loader 自 2026-09-04 起从 KV 快照供这个 getter,所以这是**读数**不是假设);(ii) armed 的**半径项**在真实帧上**不空转也不放行一切**:8 帧里 **6 帧**最近敌方英雄在 1600 内、**2 帧**在外 —— 位置是帧数据。⚠️ **没买到,两句不许合并**:(a) 那些帧报出的**左端 0 是 loader 缺口不是帧数据** —— tests/mock 里**没有任何东西**装 `GetRespawnTime`,走的是 `bot_api.lua:182` 的通用 `^Get` 默认 0;§6 把它钉成**单向绊线**。(b) **全语料没有这条分支的创造帧** ⇒「armed 分支会触发」**本轮没有人说**。唯一一帧 HP 低于 28%(f_181441_zuus_lowhp_limbo,15.8%)**同时**在另外两个合取项上落空:大招还有 2.2s 冷却、最近敌人 2017u(在半径外)。§6 把这两条都钉成绊线,红了是**好消息**。",
+    "verification": "新 `tests/test_zuus_ult_strand.lua` **14/14**;`run_tests.lua zuus` **191 例 0 失败**;新 `tools/agent/mutstand_zusultstrand.sh` **9 变异 9/9 CAUGHT**;铁律 6 静态 `GATE_EXIT=0 CLEAN`(0 warnings,没用 BYPASS);smoke 3/3;gate_claim 16/16。⚠️ 全量套件本轮没跑完(~100min,GH #124)。",
+    "next_baton": "批测台 `queue.json:hero-37`(零 EC2 归档只读扫描,与 hero-2/30/31/32/33/34/35/36 同形,现在是**九条**可并成同一次遍历)。总监:**P4.2 冻结期内合法裁定是 FROZEN-HOLD**,本轮**不提入集**。",
+    "issue": "GH #<待回填>"
   }
 }
