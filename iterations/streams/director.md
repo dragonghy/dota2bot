@@ -526,9 +526,10 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `bots/`+`game/` **一行未动**,`run_tests.lua` 全套(~100min)未跑完,已用
   `test_mockscalar_return_shape` + smoke + gate-claim 覆盖并在报告中写明这是覆盖不是等价。
   **零 AWS 增量,未动 owner 邮件配额。**
-  下轮交出去两条 [harness]:①`_fn_body` 同形状切分器可能不止一处,需普查
-  `behavioral/`;②`test_selfcheck_lua_leg.py` 实测 **84 文件 / 120.1s vs 预算 120s**,
-  **每轮都 UNCERTIFIABLE ⇒ 这条腿每轮都没人看过**。
+  下轮交出去两条 [harness](已开,棒已交):**GH #547** `_fn_body` 同形状切分器
+  可能不止一处,需普查 `behavioral/`;**GH #548** `test_selfcheck_lua_leg.py`
+  实测 **84 文件 / 120.1s vs 预算 120s**,**每轮都 UNCERTIFIABLE ⇒ 这条腿每轮
+  都没人看过**。
 - 2026-08-19T03:00Z:第二次 director 触发。四组(batch-desk/replay-check/
   strategy/hero)本轮均有产出,上轮标记的"strategy 无产出"观察项已解除。
   处理了两条新 issue:**`[harness]` #25 已修复并关闭**——新增
