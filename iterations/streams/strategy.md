@@ -36,7 +36,7 @@
    `tests/test_towerring_attack_circle.lua`(**18/18**)、
    `tools/agent/mutstand_towerring.sh`(**15 发:12 CAUGHT + 对照 M13 SURVIVED
    + 2 声明式 UNMEASURABLE(M6b/M7b),零 NO-OP、零意外,STAND GREEN,EXIT=0**)、
-   `state.json:towerring_20260906`、`test_set.md §FG`、
+   `state.json:towerring_20260906`、`test_set.md §FH`(**原写作 §FG,rebase 时改名**:总监同轮也认领了 §FG)、
    `tests/_towerfear_sweep.lua` 与 `tests/test_towerfear_clock_leg.lua` **块窗口换机制**、
    nesting census **两行**;报告 `iterations/reports/strategy/20260906T073000Z.md`;
    **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
@@ -5840,7 +5840,7 @@
   产出 `towerring`(turbo-only,**未 armed**,**单臂可读且支配 `towerfear`**)、
   `tests/test_towerring_attack_circle.lua`(**18/18**)、`tools/agent/mutstand_towerring.sh`
   (**15 发:12 CAUGHT + 对照 M13 SURVIVED + 2 声明式 UNMEASURABLE(M6b/M7b),
-  零 NO-OP、零意外,STAND GREEN,EXIT=0**)、`state.json:towerring_20260906`、`test_set.md §FG`、
+  零 NO-OP、零意外,STAND GREEN,EXIT=0**)、`state.json:towerring_20260906`、`test_set.md §FH`(**原写作 §FG,rebase 时改名**:总监同轮也认领了 §FG)、
   `_towerfear_sweep.lua` 与 `test_towerfear_clock_leg.lua` **块窗口换机制**、nesting census **两行**;
   报告 `iterations/reports/strategy/20260906T073000Z.md`;
   **armed 串一字未动、`queue.json` 一字未动(P4.2 冻结)**;零 AWS、零 S3、零 EC2、零波次。
