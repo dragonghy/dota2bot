@@ -1,169 +1,281 @@
 {
-  "wave": "W51",
-  "_note": "The `campgrade` EXCLUSIVE ADMISSION wave (GH #480 / GH #241), owed for six consecutive rounds. Every prior round the blocker was gate (iii); this round the `budgets` snapshot finally refreshed past 06:02:46Z, `actual` crossed $50, the fence auto-promoted $50 -> $80 exactly as the 15:20Z round pre-registered, and the wave became launchable. This wave pools with NOTHING: its arm string is a single id, byte-identical to no earlier wave.",
-
-  "tree": "44329f419173e5f081a139e345eceecabf8a4348",
-  "ref_pin": "44329f419173e5f081a139e345eceecabf8a4348",
-  "tree_verified": "`git ls-remote origin main` read TWICE -- once at gate time and again as the FIRST command inside the launch script (a moved tip exits 9 and launches nothing). Both reads returned 44329f419173e5f081a139e345eceecabf8a4348, equal to local HEAD. `--ref` is the explicit 40-char SHA, not `main`.",
-
-  "arm_ids": 1,
-  "arm_bytes": 9,
-  "arm_md5": "185481d3d036c8dcf44313a4ad2b249a",
-  "arm_string": "campgrade",
-  "arm_source": "NOT read off test_set.md line 2 -- this is an EXCLUSIVE admission wave, so the armed string is the single candidate id, written literally into --validate. ids/bytes/md5 computed this round (`printf 'campgrade' | md5sum`), not copied from prose.",
-  "arm_exclusivity_reason": "⛔ The blocking precondition on `iterations/owed_executions.json:campgrade_wave_type_premise_reading`: `campfarm` and `campgrade` MAY NOT be armed on the same leg -- campgrade removes the ancient camps from the list UPSTREAM, which makes campfarm's own domain unreadable and makes any own-side ancient drop unattributable between the two. `campfarm` IS in the current 55-id member string, so an exclusive wave is the only shape that satisfies the precondition. Verified this round: `sed -n 2p iterations/streams/test_set.md | grep -c campgrade` = 0 (campgrade is NOT in the member string; it is a candidate for ADMISSION, not a member).",
-
-  "wiring_gate": "`check_armed_wiring.py --cand campgrade` => WIRING_EXIT=0, `1 armed id wired on HEAD`, form=direct, 1 site, `bots/mode_farm_generic.lua:304`. ⚠️ The site LINE NUMBER is a drifting reference (charter §BF note); the id is not. Recorded as this round's live tool output, not quoted from a historical report.",
-
-  "seeds": [6421, 6487, 6553, 6619],
-  "seed_index_note": "`seed_roster_index.py --build` run BEFORE selection (ROSTER_EXIT=0): 225 banked seeds, 187 seeded games + 24 warm-up. Not building first is the known failure that hands back seeds the previous wave just burned, and it fails toward the DANGEROUS side (it over-supplies, silently, and no gate raises a hand).",
-  "seed_selection_note": "All four verified absent from the banked set at selection time. Window [6200,6600) chosen to the RIGHT of W50's 5813-6128; all 400 seeds in it were unused, so this was not a tight search and no mask-exhaustion arithmetic was needed.",
-  "carrier_gate": "NOT APPLICABLE, and this is the director's own words, not the desk's convenience: `queue.json:strategy-4` ruling note reads `独占波,载体门对它是 no-op(按等级不按英雄)` -- campgrade gates on hero LEVEL, not on hero identity, so no carrier term constrains seed choice. `seed_draft.py --assert-carrier` was therefore NOT run, deliberately.",
-
-  "instance_type": "c6i.4xlarge",
-  "slots": 16,
-  "rec_slots": 8,
-  "watchdog_hours": 2,
-  "games_per_seed": 12,
-  "acquisition_config_note": "--slots 16 --hours 2 --rec-slots 8 --games 12, 4x1 topology -- BYTE-IDENTICAL to W39-W50. The tested id set moved hard this wave (55-id member string -> a 1-id exclusive string) and the acquisition config did NOT, which is exactly what the charter's 'never move the tested id set and the acquisition config in the same wave' requires.",
-
-  "market": "spot",
-  "market_note": "owner GH #158: spot first, on-demand only when there is no spot capacity. `--on-demand` NOT passed. The capacity-degradation ladder was never entered -- no InsufficientInstanceCapacity on any of the four calls.",
-  "market_verified": "By `describe-instances` InstanceLifecycle = `spot` on all four, read this round. ⚠️ The `spot_` prefix in run_id is a hardcoded string in spot_run.sh and is NOT evidence of market type.",
-  "az_spread": "FOUR distinct AZs (us-west-2a/2b/2c/2d), one explicit `--az` per call, every one of them the AZ that was requested. Zero re-aiming lines, zero AZ RING EXHAUSTED lines, zero InsufficientInstanceCapacity across all four calls.",
-
-  "expected_games": "~96 scored (4 seeds x 12 games x 2 legs) plus warm-ups, which are not scored games. ⚠️ Registered at 96 for comparability ONLY: this pre-registered quantity has been running ~75% low against delivery (W49 delivered 168), so it must NOT be used as the denominator for an 'under-delivered' claim.",
-
-  "machines": [
-    {
-      "seed": 6421,
-      "run_id": "spot_20260906_181930_1_44329f419173e5f081a139e345eceecabf8a4348_3af107",
-      "instance_id": "i-06355dd6890f0f320",
-      "requested_az": "us-west-2a",
-      "actual_az": "us-west-2a",
-      "reaimed": "False",
-      "market": "spot",
-      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
-      "launch_time": "2026-09-06T18:19:32.000Z",
-      "launched_at": "2026-09-06T18:19:32.000Z",
-      "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call; written in the SAME round as launch_time so wave_throttle.py never has to be repaired at harvest (GH #544)",
-      "sir": "sir-6j67gkip",
-      "create": "2026-09-06T18:19:31.000Z",
-      "sir_state_at_launch": "active / fulfilled",
-      "sir_source": "describe-spot-instance-requests, read first-hand IN THE LAUNCH ROUND (GH #556 + the 15:20Z finding that the SIR window is <=3h, so a harvest-time read is not guaranteed to find these rows)"
-    },
-    {
-      "seed": 6487,
-      "run_id": "spot_20260906_181933_1_44329f419173e5f081a139e345eceecabf8a4348_3c2be6",
-      "instance_id": "i-07efc8aaced7200b5",
-      "requested_az": "us-west-2b",
-      "actual_az": "us-west-2b",
-      "reaimed": "False",
-      "market": "spot",
-      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
-      "launch_time": "2026-09-06T18:19:35.000Z",
-      "launched_at": "2026-09-06T18:19:35.000Z",
-      "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call (GH #544)",
-      "sir": "sir-2mcfj4gn",
-      "create": "2026-09-06T18:19:35.000Z",
-      "sir_state_at_launch": "active / fulfilled",
-      "sir_source": "describe-spot-instance-requests, read first-hand in the launch round (GH #556)"
-    },
-    {
-      "seed": 6553,
-      "run_id": "spot_20260906_181936_1_44329f419173e5f081a139e345eceecabf8a4348_fff95f",
-      "instance_id": "i-060299223fe7c494f",
-      "requested_az": "us-west-2c",
-      "actual_az": "us-west-2c",
-      "reaimed": "False",
-      "market": "spot",
-      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
-      "launch_time": "2026-09-06T18:19:38.000Z",
-      "launched_at": "2026-09-06T18:19:38.000Z",
-      "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call (GH #544)",
-      "sir": "sir-7c9zjdbm",
-      "create": "2026-09-06T18:19:38.000Z",
-      "sir_state_at_launch": "active / fulfilled",
-      "sir_source": "describe-spot-instance-requests, read first-hand in the launch round (GH #556)"
-    },
-    {
-      "seed": 6619,
-      "run_id": "spot_20260906_181940_1_44329f419173e5f081a139e345eceecabf8a4348_73aa9d",
-      "instance_id": "i-06ed7b40b361777fe",
-      "requested_az": "us-west-2d",
-      "actual_az": "us-west-2d",
-      "reaimed": "False",
-      "market": "spot",
-      "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
-      "launch_time": "2026-09-06T18:19:42.000Z",
-      "launched_at": "2026-09-06T18:19:42.000Z",
-      "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call (GH #544)",
-      "sir": "sir-rmn7jrbq",
-      "create": "2026-09-06T18:19:41.000Z",
-      "sir_state_at_launch": "active / fulfilled",
-      "sir_source": "describe-spot-instance-requests, read first-hand in the launch round (GH #556)"
-    }
-  ],
-  "slate_anchor": "last machine up 2026-09-06T18:19:42.000Z; slate spread 10s (18:19:32 -> 18:19:42). Next wave's gate (i) unlock = 2026-09-07T00:19:42Z. ⚠️ Do not copy that timestamp into a decision -- run `wave_throttle.py` and read the line it prints.",
-
-  "killed_pre_attempt": {
-    "what": "A FIRST set of four machines was launched at 18:18:19-18:18:30Z and TERMINATED BY THIS DESK ~70 seconds later, before relaunching as the machines above.",
-    "why": "They were issued WITHOUT `--rec-slots 8`, so they took spot_run.sh's default `REC_SLOTS=1`. That is a defect, not a preference, for two independent reasons: (1) it moves the ACQUISITION CONFIG in the same wave that moves the tested id set, which the charter forbids precisely so a surprising reading cannot be blamed on two changes at once; (2) this wave exists to buy ONE behavioral reading (the GH #241 `.type` premise), the reading runs on behav-dump timelines produced from RECORDED games, and at rec_slots=1 of 16 slots the recorded corpus is ~1/8 of the W39-W50 standard -- the likely outcome is `DOMAIN-NOT-REACHED`, which the ruling explicitly forbids reading as 'tested, `.type` is not a string'. A wave that cannot answer its own question is worth less than the $0.06 saved by not relaunching it.",
-    "instance_ids": ["i-0e6e15a046da51ebc", "i-0845f448a7207f9b6", "i-0f0c131dfc4c08db5", "i-0d115c78b4c859ff1"],
-    "seeds_burned": [6211, 6277, 6343, 6409],
-    "dead_run_prefixes": [
-      "spot_20260906_181818_1_44329f419173e5f081a139e345eceecabf8a4348_1e62a7",
-      "spot_20260906_181821_1_44329f419173e5f081a139e345eceecabf8a4348_5f5da8",
-      "spot_20260906_181824_1_44329f419173e5f081a139e345eceecabf8a4348_af1c94",
-      "spot_20260906_181828_1_44329f419173e5f081a139e345eceecabf8a4348_81869f"
-    ],
-    "why_fresh_seeds_for_the_relaunch": "The relaunch uses FOUR DIFFERENT seeds (6421/6487/6553/6619), not the four the dead machines held. ~70s is almost certainly too short to produce even a warm-up game, but 'almost certainly zero' is an ASSUMPTION, and `recover_verdict.py` pools by the `s<SEED>` stamp ACROSS runs -- so a single stray game under a dead prefix would pool into this wave's reading with nobody raising a hand. Fresh seeds remove the assumption instead of relying on it. The four burned seeds are now spent and must not be re-offered; `seed_roster_index.py --build` will only learn that if those prefixes hold games, so treat 6211/6277/6343/6409 as USED by hand.",
-    "cost": "~4 machines x ~0.02h x ~$0.28/h ~= $0.06, i.e. below the resolution of every fence reading in this round.",
-    "termination_evidence": "`terminate-instances` KILL_EXIT=0, all four PreviousState=running -> CurrentState=shutting-down; confirmed again in the roll call table (all four `shutting-down`)."
+ "wave": "W51",
+ "_note": "The `campgrade` EXCLUSIVE ADMISSION wave (GH #480 / GH #241), owed for six consecutive rounds. Every prior round the blocker was gate (iii); this round the `budgets` snapshot finally refreshed past 06:02:46Z, `actual` crossed $50, the fence auto-promoted $50 -> $80 exactly as the 15:20Z round pre-registered, and the wave became launchable. This wave pools with NOTHING: its arm string is a single id, byte-identical to no earlier wave.",
+ "tree": "44329f419173e5f081a139e345eceecabf8a4348",
+ "ref_pin": "44329f419173e5f081a139e345eceecabf8a4348",
+ "tree_verified": "`git ls-remote origin main` read TWICE -- once at gate time and again as the FIRST command inside the launch script (a moved tip exits 9 and launches nothing). Both reads returned 44329f419173e5f081a139e345eceecabf8a4348, equal to local HEAD. `--ref` is the explicit 40-char SHA, not `main`.",
+ "arm_ids": 1,
+ "arm_bytes": 9,
+ "arm_md5": "185481d3d036c8dcf44313a4ad2b249a",
+ "arm_string": "campgrade",
+ "arm_source": "NOT read off test_set.md line 2 -- this is an EXCLUSIVE admission wave, so the armed string is the single candidate id, written literally into --validate. ids/bytes/md5 computed this round (`printf 'campgrade' | md5sum`), not copied from prose.",
+ "arm_exclusivity_reason": "⛔ The blocking precondition on `iterations/owed_executions.json:campgrade_wave_type_premise_reading`: `campfarm` and `campgrade` MAY NOT be armed on the same leg -- campgrade removes the ancient camps from the list UPSTREAM, which makes campfarm's own domain unreadable and makes any own-side ancient drop unattributable between the two. `campfarm` IS in the current 55-id member string, so an exclusive wave is the only shape that satisfies the precondition. Verified this round: `sed -n 2p iterations/streams/test_set.md | grep -c campgrade` = 0 (campgrade is NOT in the member string; it is a candidate for ADMISSION, not a member).",
+ "wiring_gate": "`check_armed_wiring.py --cand campgrade` => WIRING_EXIT=0, `1 armed id wired on HEAD`, form=direct, 1 site, `bots/mode_farm_generic.lua:304`. ⚠️ The site LINE NUMBER is a drifting reference (charter §BF note); the id is not. Recorded as this round's live tool output, not quoted from a historical report.",
+ "seeds": [
+  6421,
+  6487,
+  6553,
+  6619
+ ],
+ "seed_index_note": "`seed_roster_index.py --build` run BEFORE selection (ROSTER_EXIT=0): 225 banked seeds, 187 seeded games + 24 warm-up. Not building first is the known failure that hands back seeds the previous wave just burned, and it fails toward the DANGEROUS side (it over-supplies, silently, and no gate raises a hand).",
+ "seed_selection_note": "All four verified absent from the banked set at selection time. Window [6200,6600) chosen to the RIGHT of W50's 5813-6128; all 400 seeds in it were unused, so this was not a tight search and no mask-exhaustion arithmetic was needed.",
+ "carrier_gate": "NOT APPLICABLE, and this is the director's own words, not the desk's convenience: `queue.json:strategy-4` ruling note reads `独占波,载体门对它是 no-op(按等级不按英雄)` -- campgrade gates on hero LEVEL, not on hero identity, so no carrier term constrains seed choice. `seed_draft.py --assert-carrier` was therefore NOT run, deliberately.",
+ "instance_type": "c6i.4xlarge",
+ "slots": 16,
+ "rec_slots": 8,
+ "watchdog_hours": 2,
+ "games_per_seed": 12,
+ "acquisition_config_note": "--slots 16 --hours 2 --rec-slots 8 --games 12, 4x1 topology -- BYTE-IDENTICAL to W39-W50. The tested id set moved hard this wave (55-id member string -> a 1-id exclusive string) and the acquisition config did NOT, which is exactly what the charter's 'never move the tested id set and the acquisition config in the same wave' requires.",
+ "market": "spot",
+ "market_note": "owner GH #158: spot first, on-demand only when there is no spot capacity. `--on-demand` NOT passed. The capacity-degradation ladder was never entered -- no InsufficientInstanceCapacity on any of the four calls.",
+ "market_verified": "By `describe-instances` InstanceLifecycle = `spot` on all four, read this round. ⚠️ The `spot_` prefix in run_id is a hardcoded string in spot_run.sh and is NOT evidence of market type.",
+ "az_spread": "FOUR distinct AZs (us-west-2a/2b/2c/2d), one explicit `--az` per call, every one of them the AZ that was requested. Zero re-aiming lines, zero AZ RING EXHAUSTED lines, zero InsufficientInstanceCapacity across all four calls.",
+ "expected_games": "~96 scored (4 seeds x 12 games x 2 legs) plus warm-ups, which are not scored games. ⚠️ Registered at 96 for comparability ONLY: this pre-registered quantity has been running ~75% low against delivery (W49 delivered 168), so it must NOT be used as the denominator for an 'under-delivered' claim.",
+ "machines": [
+  {
+   "seed": 6421,
+   "run_id": "spot_20260906_181930_1_44329f419173e5f081a139e345eceecabf8a4348_3af107",
+   "instance_id": "i-06355dd6890f0f320",
+   "requested_az": "us-west-2a",
+   "actual_az": "us-west-2a",
+   "reaimed": "False",
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+   "launch_time": "2026-09-06T18:19:32.000Z",
+   "launched_at": "2026-09-06T18:19:32.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call; written in the SAME round as launch_time so wave_throttle.py never has to be repaired at harvest (GH #544)",
+   "sir": "sir-6j67gkip",
+   "create": "2026-09-06T18:19:31.000Z",
+   "sir_state_at_launch": "active / fulfilled",
+   "sir_source": "describe-spot-instance-requests, read first-hand IN THE LAUNCH ROUND (GH #556 + the 15:20Z finding that the SIR window is <=3h, so a harvest-time read is not guaranteed to find these rows)",
+   "ab": 42,
+   "ba": 16,
+   "arm_depth": 23.17,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "SIR Status.Code (spot machine, GH #408/#412), read first-hand at harvest 2026-09-06T21:2xZ from describe-spot-instance-requests while the rows still existed (GH #375 leaves them ~1h after termination). Message: 'Spot Instance terminated due to user-initiated termination.' => SELF-termination on completion, NOT a preemption (a reclaim reads Server.SpotInstanceTermination / instance-terminated-by-price / instance-terminated-no-capacity). All four machines of this wave read the same code => zero preemptions, four complete arms.",
+   "terminated_at": "2026-09-06T19:13:30Z",
+   "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime, read at harvest inside the ~1h SIR window (GH #556).",
+   "machine_hours": 0.8997,
+   "machine_hours_source": "SIR CreateTime -> Status.UpdateTime. Same convention W50 used; it is the SIR window, not the EC2 billed second.",
+   "spot_price_in_window": 0.2914,
+   "spot_price_source": "describe-spot-price-history c6i.4xlarge Linux/UNIX, this machine's own AZ, the quote in force across 18:19-19:14Z.",
+   "billed_estimate": 0.2622
   },
-
-  "gates": {
-    "gate_i_throttle": "`wave_throttle.py` with NO PIPE, run twice: at gate time THROTTLE_EXIT=0 (`margin +32003s past unlock`) and AGAIN as the last command before launch inside the launch script, THROTTLE_EXIT_AT_LAUNCH=0 (`margin +32264s past unlock`). Anchor W50 last machine 2026-09-06T03:20:34Z -> unlock 2026-09-06T09:20:34Z; Y1 the older candidate, W50 taken per ruling 3 (the latest).",
-    "gate_ii_new_to_test": "PASSES on the strongest possible branch: the armed string is a 1-id EXCLUSIVE string that is byte-identical to no wave ever run (md5 185481d3..., 9 bytes). Independently, the member string itself has moved since W50 (59 ids -> 55 on line 2 of test_set.md), but this wave does not rest on that.",
-    "gate_iii_fence": "`wave_fence.py --planned 1.10 --pending 10.93` LIVE against AWS => FENCE_EXIT=0 CLEAR. actual (MTD) $50.804 / pending $10.930 / planned $1.100 / projected total $62.834. `$50.00 crossed [AWS state=ALARM]`, `$80.00 NOT yet crossed`, `$100.00 NOT yet crossed` => fence $80.00, brake $90.00, operative ceiling $80.00, headroom $17.166 after this wave. ⭐ This is the FIRST round in six where gate (iii) cleared, and it cleared for exactly the reason the 15:20Z round pre-registered: the `budgets` snapshot refreshed (06:02:46Z -> 15:19:34Z), `actual` crossed $50, and the fence auto-promoted one step.",
-    "gate_iii_pending_derivation": "⚠️ `--pending 10.93` was RE-ESTIMATED this round, not copied from the 15:20Z round's $15.345 (the handoff explicitly warned that CE had already absorbed $11.476 of it). Derivation: CE this round reads $50.8036495163, DIGIT-FOR-DIGIT identical to the 15:20Z CE read => CE has booked nothing in ~3h => the $10.926 of external `r7a` burn that the 15:20Z round showed still unbooked (its reconstruction $14.245 vs CE's r7a line $3.319) is still unbooked. pending = honest total - the actual the tool reads this run = $61.73 - $50.804 = $10.93. ⚠️ This is a LOWER BOUND, and its provenance is now un-recomputable: the SIR rows for those external machines returned 0 this round (window <=3h), so the figure survives only in the 15:20Z report, which that same round proved was itself biased low.",
-    "gate_iv_inputs_no_harvest_owed": "PASSES, and read rather than assumed: `aws s3 ls .../soak/` shows the four newest prefixes are exactly W50's four machines, and W50 was harvested 4/4 by the 06:14Z round (its `harvest` block is populated and `reclaim_blind` reads 4 paired seeds). `validation/` newest object is still a 2026-07-23 historical artifact. No wave is un-harvested, so this wave's inputs owe nothing. ⚠️ HONEST ORDERING DEFECT, registered rather than smoothed over: gate (iv) was run AFTER the launch, not before it. Gates (i)/(ii)/(iii) were all run pre-launch and (i) again at the launch instant; (iv) was omitted from the pre-launch sequence and only surfaced when `tests/test_wave_gate_keys.py` failed on this record afterwards. Both halves came back green, so the launch decision is unchanged -- but 'it happened to be green' is not the same as 'it was checked first', and the next launch script must run (iv) alongside (i)-(iii).",
-    "gate_iv_reclaim_blind": "`reclaim_blind.py --wave-json .../W50_wave.json` => RECLAIM_BLIND_EXIT=0. `VERDICT: not blinded -- the wave delivered 4 paired seed(s).` All four W50 machines `instance-terminated-by-user` (self-termination, no capacity reclaim), 0 machines reclaimed before the flip, all four `PAIRED [depth-checked]` against changeover 40.0 min / min_arm_depth 8.0. The tool's own closing line, `NEXT WAVE: spot (the default; GH #158 unchanged)`, independently endorses this wave's market choice. ⚠️ Same ordering caveat as the key above: run after launch, not before.",
-    "gate_iii_accrual_line": "The tool printed `accrual check : CERTIFIED ZERO (0 accruing instances account-wide), but --pending $10.930 was given and is used as the larger claim.` ⚠️ Quoted deliberately: the 12:12Z round proved that CERTIFIED ZERO is TRUE-BUT-NOT-SUFFICIENT (money already spent by terminated machines is not accruing and not yet booked), which is why the larger explicit --pending is the operative term here."
+  {
+   "seed": 6487,
+   "run_id": "spot_20260906_181933_1_44329f419173e5f081a139e345eceecabf8a4348_3c2be6",
+   "instance_id": "i-07efc8aaced7200b5",
+   "requested_az": "us-west-2b",
+   "actual_az": "us-west-2b",
+   "reaimed": "False",
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+   "launch_time": "2026-09-06T18:19:35.000Z",
+   "launched_at": "2026-09-06T18:19:35.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call (GH #544)",
+   "sir": "sir-2mcfj4gn",
+   "create": "2026-09-06T18:19:35.000Z",
+   "sir_state_at_launch": "active / fulfilled",
+   "sir_source": "describe-spot-instance-requests, read first-hand in the launch round (GH #556)",
+   "ab": 30,
+   "ba": 12,
+   "arm_depth": 17.14,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "SIR Status.Code (spot machine, GH #408/#412), read first-hand at harvest 2026-09-06T21:2xZ from describe-spot-instance-requests while the rows still existed (GH #375 leaves them ~1h after termination). Message: 'Spot Instance terminated due to user-initiated termination.' => SELF-termination on completion, NOT a preemption (a reclaim reads Server.SpotInstanceTermination / instance-terminated-by-price / instance-terminated-no-capacity). All four machines of this wave read the same code => zero preemptions, four complete arms.",
+   "terminated_at": "2026-09-06T19:03:29Z",
+   "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime, read at harvest inside the ~1h SIR window (GH #556).",
+   "machine_hours": 0.7317,
+   "machine_hours_source": "SIR CreateTime -> Status.UpdateTime. Same convention W50 used; it is the SIR window, not the EC2 billed second.",
+   "spot_price_in_window": 0.2732,
+   "spot_price_source": "describe-spot-price-history c6i.4xlarge Linux/UNIX, this machine's own AZ, the quote in force across 18:19-19:14Z.",
+   "billed_estimate": 0.1999
   },
-
-  "cost_estimate": "~$1.10 registered -- the charter constant as re-ruled by the director on 2026-09-06T07:xxZ under GH #454 (superseding $0.90). Plus ~$0.06 of killed pre-attempt (see killed_pre_attempt), which is registered but is below every fence reading's resolution.",
-  "cost_constant_check": "GH #454 leg (乙1) (billed single-wave cost > $1.10) and leg (乙2) (mean machine-hours of self-terminated machines > 1.00 h/machine) are BOTH un-evaluable at launch and are owed at this wave's harvest, not now.",
-
-  "self_destruct": "spot_run.sh self-terminate + 2h watchdog + one-time spot request (a reclaim does not silently relaunch).",
-
-  "harvest_obligations": [
-    {
-      "id": "campgrade_wave_type_premise_reading",
-      "source": "iterations/owed_executions.json:campgrade_wave_type_premise_reading (GH #480 / GH #241), director 2026-09-04T10:xxZ, full text iterations/streams/test_set.md §EC.5. Registered there rather than on a wave sheet because at ruling time this wave did not exist. THIS IS THAT WAVE -- the trigger has now fired, and the row should be retired by the director once the reading lands.",
-      "executor": "replay-check (the reading) -- batch-desk's half was to schedule the wave, which is done.",
-      "what": "The NEGATIVE reading of the GH #241 `.type` premise: OWN-SIDE ancient engagements in the level 10..11 band, `campgrade` armed leg vs baseline leg.",
-      "yardstick": "⛔ Do NOT invent a second ruler: `tools/batch_test/behavioral/ancient_camp_domain.py` + the replay desk's `campgrade_ladder.py` -- word-for-word the same pair used for `campfarm`'s admission acceptance.",
-      "decision_arithmetic": "Under the REFUTING hypothesis (`.type` is not a string) `campgrade` armed cannot move this number at all: its ancient tier and its big-camp tier both read `.type` and both die, leaving only the `.team` tier (enemy camp AND botLevel < 15), which by definition cannot touch an own-side camp. => A DROP means `.type` is a string and the premise is settled. NO DROP means UNCERTAIN, NOT a pass (the live path may be campfarm's creep sweep rather than the camp list).",
-      "reverse_guard": "Total ancient engagements must NOT collapse to 0 -- the level-12+ population is SUPPOSED to farm ancients.",
-      "strata_requirement": "Iron rule 4(i-a): register the ab and the ba READING separately (readings, not game counts -- six rounds satisfied this with the wrong quantity). These are small-valued counts with side bias NOT eliminated => per 4(i-b) opposite signs across the two strata read as NOISE and do not enter the conclusion. Per 4(ii) do not report medians alone for small-valued integer counts; give means + distribution.",
-      "method_failed_branch": "If the own-side/enemy-side classification of an engagement is not obtainable from the dumper => RETURN TO THE DIRECTOR for a re-ruling; the executor may NOT apply the consequence clause itself (§CJ). If the domain (total engagements in that band) is zero => `DOMAIN-NOT-REACHED`, which may NOT be read as 'tested, `.type` is not a string'."
-    },
-    {
-      "id": "wave_fence_ruling4_first_live_run",
-      "source": "iterations/owed_executions.json:wave_fence_ruling4_first_live_run (GH #515, desk 09:12Z handoff ②; full text test_set.md §FI.1)",
-      "what": "A standing obligation to report the LIVE-path reading the first time gate (iii) is actually run for a launch. DISCHARGED THIS ROUND: see gates.gate_iii_fence and gates.gate_iii_accrual_line -- the live run is FENCE_EXIT=0 CLEAR with the accrual line quoted verbatim, including why CERTIFIED ZERO is not sufficient on its own.",
-      "executor": "batch-desk -- done this round; the director should retire the row."
-    },
-    {
-      "id": "GH_454_constant_legs",
-      "what": "At harvest, evaluate BOTH triggering legs of the $1.10 constant: (乙1) billed single-wave cost > $1.10; (乙2) mean machine-hours of the machines that self-terminated (SIR Status.Code=instance-terminated-by-user) > 1.00 h/machine -- machines lost to capacity reclaim are EXCLUDED from that mean, since they are exactly the population the leg is designed to route around.",
-      "executor": "batch-desk at harvest"
-    }
+  {
+   "seed": 6553,
+   "run_id": "spot_20260906_181936_1_44329f419173e5f081a139e345eceecabf8a4348_fff95f",
+   "instance_id": "i-060299223fe7c494f",
+   "requested_az": "us-west-2c",
+   "actual_az": "us-west-2c",
+   "reaimed": "False",
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+   "launch_time": "2026-09-06T18:19:38.000Z",
+   "launched_at": "2026-09-06T18:19:38.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call (GH #544)",
+   "sir": "sir-7c9zjdbm",
+   "create": "2026-09-06T18:19:38.000Z",
+   "sir_state_at_launch": "active / fulfilled",
+   "sir_source": "describe-spot-instance-requests, read first-hand in the launch round (GH #556)",
+   "ab": 40,
+   "ba": 18,
+   "arm_depth": 24.83,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "SIR Status.Code (spot machine, GH #408/#412), read first-hand at harvest 2026-09-06T21:2xZ from describe-spot-instance-requests while the rows still existed (GH #375 leaves them ~1h after termination). Message: 'Spot Instance terminated due to user-initiated termination.' => SELF-termination on completion, NOT a preemption (a reclaim reads Server.SpotInstanceTermination / instance-terminated-by-price / instance-terminated-no-capacity). All four machines of this wave read the same code => zero preemptions, four complete arms.",
+   "terminated_at": "2026-09-06T19:14:19Z",
+   "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime, read at harvest inside the ~1h SIR window (GH #556).",
+   "machine_hours": 0.9114,
+   "machine_hours_source": "SIR CreateTime -> Status.UpdateTime. Same convention W50 used; it is the SIR window, not the EC2 billed second.",
+   "spot_price_in_window": 0.2972,
+   "spot_price_source": "describe-spot-price-history c6i.4xlarge Linux/UNIX, this machine's own AZ, the quote in force across 18:19-19:14Z.",
+   "billed_estimate": 0.2709
+  },
+  {
+   "seed": 6619,
+   "run_id": "spot_20260906_181940_1_44329f419173e5f081a139e345eceecabf8a4348_73aa9d",
+   "instance_id": "i-06ed7b40b361777fe",
+   "requested_az": "us-west-2d",
+   "actual_az": "us-west-2d",
+   "reaimed": "False",
+   "market": "spot",
+   "lifecycle": "spot (verified by describe-instances InstanceLifecycle)",
+   "launch_time": "2026-09-06T18:19:42.000Z",
+   "launched_at": "2026-09-06T18:19:42.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read at the launch-round roll call (GH #544)",
+   "sir": "sir-rmn7jrbq",
+   "create": "2026-09-06T18:19:41.000Z",
+   "sir_state_at_launch": "active / fulfilled",
+   "sir_source": "describe-spot-instance-requests, read first-hand in the launch round (GH #556)",
+   "ab": 39,
+   "ba": 17,
+   "arm_depth": 23.68,
+   "status_code": "instance-terminated-by-user",
+   "status_code_source": "SIR Status.Code (spot machine, GH #408/#412), read first-hand at harvest 2026-09-06T21:2xZ from describe-spot-instance-requests while the rows still existed (GH #375 leaves them ~1h after termination). Message: 'Spot Instance terminated due to user-initiated termination.' => SELF-termination on completion, NOT a preemption (a reclaim reads Server.SpotInstanceTermination / instance-terminated-by-price / instance-terminated-no-capacity). All four machines of this wave read the same code => zero preemptions, four complete arms.",
+   "terminated_at": "2026-09-06T19:13:46Z",
+   "terminated_at_source": "describe-spot-instance-requests Status.UpdateTime, read at harvest inside the ~1h SIR window (GH #556).",
+   "machine_hours": 0.9014,
+   "machine_hours_source": "SIR CreateTime -> Status.UpdateTime. Same convention W50 used; it is the SIR window, not the EC2 billed second.",
+   "spot_price_in_window": 0.2521,
+   "spot_price_source": "describe-spot-price-history c6i.4xlarge Linux/UNIX, this machine's own AZ, the quote in force across 18:19-19:14Z.",
+   "billed_estimate": 0.2272
+  }
+ ],
+ "slate_anchor": "last machine up 2026-09-06T18:19:42.000Z; slate spread 10s (18:19:32 -> 18:19:42). Next wave's gate (i) unlock = 2026-09-07T00:19:42Z. ⚠️ Do not copy that timestamp into a decision -- run `wave_throttle.py` and read the line it prints.",
+ "killed_pre_attempt": {
+  "what": "A FIRST set of four machines was launched at 18:18:19-18:18:30Z and TERMINATED BY THIS DESK ~70 seconds later, before relaunching as the machines above.",
+  "why": "They were issued WITHOUT `--rec-slots 8`, so they took spot_run.sh's default `REC_SLOTS=1`. That is a defect, not a preference, for two independent reasons: (1) it moves the ACQUISITION CONFIG in the same wave that moves the tested id set, which the charter forbids precisely so a surprising reading cannot be blamed on two changes at once; (2) this wave exists to buy ONE behavioral reading (the GH #241 `.type` premise), the reading runs on behav-dump timelines produced from RECORDED games, and at rec_slots=1 of 16 slots the recorded corpus is ~1/8 of the W39-W50 standard -- the likely outcome is `DOMAIN-NOT-REACHED`, which the ruling explicitly forbids reading as 'tested, `.type` is not a string'. A wave that cannot answer its own question is worth less than the $0.06 saved by not relaunching it.",
+  "instance_ids": [
+   "i-0e6e15a046da51ebc",
+   "i-0845f448a7207f9b6",
+   "i-0f0c131dfc4c08db5",
+   "i-0d115c78b4c859ff1"
   ],
-
-  "pooling_claim": "This wave pools with NOTHING. Its arm string (`campgrade`, 9 bytes, md5 185481d3...) is byte-identical to no earlier wave's, so it opens a family of its own. ⛔ Its readings may NOT be compared against any member-string wave's residuals: those legs all carry 55-62 other armed ids.",
-
-  "harvest": null,
-  "harvest_note": "UNHARVESTED at the time of writing. Machines self-terminate by ~20:20Z (2h watchdog); expected landing well before that. Next round: harvest with `recover_verdict.py` from the S3 per-game data (the standard path -- instance self-produced verdicts have been incomplete twice), download PER RUN into separate subdirectories and merge with prefixes (same-second basename collisions silently dropped 15.9% of games once), then discharge the three harvest_obligations above."
+  "seeds_burned": [
+   6211,
+   6277,
+   6343,
+   6409
+  ],
+  "dead_run_prefixes": [
+   "spot_20260906_181818_1_44329f419173e5f081a139e345eceecabf8a4348_1e62a7",
+   "spot_20260906_181821_1_44329f419173e5f081a139e345eceecabf8a4348_5f5da8",
+   "spot_20260906_181824_1_44329f419173e5f081a139e345eceecabf8a4348_af1c94",
+   "spot_20260906_181828_1_44329f419173e5f081a139e345eceecabf8a4348_81869f"
+  ],
+  "why_fresh_seeds_for_the_relaunch": "The relaunch uses FOUR DIFFERENT seeds (6421/6487/6553/6619), not the four the dead machines held. ~70s is almost certainly too short to produce even a warm-up game, but 'almost certainly zero' is an ASSUMPTION, and `recover_verdict.py` pools by the `s<SEED>` stamp ACROSS runs -- so a single stray game under a dead prefix would pool into this wave's reading with nobody raising a hand. Fresh seeds remove the assumption instead of relying on it. The four burned seeds are now spent and must not be re-offered; `seed_roster_index.py --build` will only learn that if those prefixes hold games, so treat 6211/6277/6343/6409 as USED by hand.",
+  "cost": "~4 machines x ~0.02h x ~$0.28/h ~= $0.06, i.e. below the resolution of every fence reading in this round.",
+  "termination_evidence": "`terminate-instances` KILL_EXIT=0, all four PreviousState=running -> CurrentState=shutting-down; confirmed again in the roll call table (all four `shutting-down`)."
+ },
+ "gates": {
+  "gate_i_throttle": "`wave_throttle.py` with NO PIPE, run twice: at gate time THROTTLE_EXIT=0 (`margin +32003s past unlock`) and AGAIN as the last command before launch inside the launch script, THROTTLE_EXIT_AT_LAUNCH=0 (`margin +32264s past unlock`). Anchor W50 last machine 2026-09-06T03:20:34Z -> unlock 2026-09-06T09:20:34Z; Y1 the older candidate, W50 taken per ruling 3 (the latest).",
+  "gate_ii_new_to_test": "PASSES on the strongest possible branch: the armed string is a 1-id EXCLUSIVE string that is byte-identical to no wave ever run (md5 185481d3..., 9 bytes). Independently, the member string itself has moved since W50 (59 ids -> 55 on line 2 of test_set.md), but this wave does not rest on that.",
+  "gate_iii_fence": "`wave_fence.py --planned 1.10 --pending 10.93` LIVE against AWS => FENCE_EXIT=0 CLEAR. actual (MTD) $50.804 / pending $10.930 / planned $1.100 / projected total $62.834. `$50.00 crossed [AWS state=ALARM]`, `$80.00 NOT yet crossed`, `$100.00 NOT yet crossed` => fence $80.00, brake $90.00, operative ceiling $80.00, headroom $17.166 after this wave. ⭐ This is the FIRST round in six where gate (iii) cleared, and it cleared for exactly the reason the 15:20Z round pre-registered: the `budgets` snapshot refreshed (06:02:46Z -> 15:19:34Z), `actual` crossed $50, and the fence auto-promoted one step.",
+  "gate_iii_pending_derivation": "⚠️ `--pending 10.93` was RE-ESTIMATED this round, not copied from the 15:20Z round's $15.345 (the handoff explicitly warned that CE had already absorbed $11.476 of it). Derivation: CE this round reads $50.8036495163, DIGIT-FOR-DIGIT identical to the 15:20Z CE read => CE has booked nothing in ~3h => the $10.926 of external `r7a` burn that the 15:20Z round showed still unbooked (its reconstruction $14.245 vs CE's r7a line $3.319) is still unbooked. pending = honest total - the actual the tool reads this run = $61.73 - $50.804 = $10.93. ⚠️ This is a LOWER BOUND, and its provenance is now un-recomputable: the SIR rows for those external machines returned 0 this round (window <=3h), so the figure survives only in the 15:20Z report, which that same round proved was itself biased low.",
+  "gate_iv_inputs_no_harvest_owed": "PASSES, and read rather than assumed: `aws s3 ls .../soak/` shows the four newest prefixes are exactly W50's four machines, and W50 was harvested 4/4 by the 06:14Z round (its `harvest` block is populated and `reclaim_blind` reads 4 paired seeds). `validation/` newest object is still a 2026-07-23 historical artifact. No wave is un-harvested, so this wave's inputs owe nothing. ⚠️ HONEST ORDERING DEFECT, registered rather than smoothed over: gate (iv) was run AFTER the launch, not before it. Gates (i)/(ii)/(iii) were all run pre-launch and (i) again at the launch instant; (iv) was omitted from the pre-launch sequence and only surfaced when `tests/test_wave_gate_keys.py` failed on this record afterwards. Both halves came back green, so the launch decision is unchanged -- but 'it happened to be green' is not the same as 'it was checked first', and the next launch script must run (iv) alongside (i)-(iii).",
+  "gate_iv_reclaim_blind": "`reclaim_blind.py --wave-json .../W50_wave.json` => RECLAIM_BLIND_EXIT=0. `VERDICT: not blinded -- the wave delivered 4 paired seed(s).` All four W50 machines `instance-terminated-by-user` (self-termination, no capacity reclaim), 0 machines reclaimed before the flip, all four `PAIRED [depth-checked]` against changeover 40.0 min / min_arm_depth 8.0. The tool's own closing line, `NEXT WAVE: spot (the default; GH #158 unchanged)`, independently endorses this wave's market choice. ⚠️ Same ordering caveat as the key above: run after launch, not before.",
+  "gate_iii_accrual_line": "The tool printed `accrual check : CERTIFIED ZERO (0 accruing instances account-wide), but --pending $10.930 was given and is used as the larger claim.` ⚠️ Quoted deliberately: the 12:12Z round proved that CERTIFIED ZERO is TRUE-BUT-NOT-SUFFICIENT (money already spent by terminated machines is not accruing and not yet booked), which is why the larger explicit --pending is the operative term here."
+ },
+ "cost_estimate": "~$1.10 registered -- the charter constant as re-ruled by the director on 2026-09-06T07:xxZ under GH #454 (superseding $0.90). Plus ~$0.06 of killed pre-attempt (see killed_pre_attempt), which is registered but is below every fence reading's resolution.",
+ "cost_constant_check": "GH #454 leg (乙1) (billed single-wave cost > $1.10) and leg (乙2) (mean machine-hours of self-terminated machines > 1.00 h/machine) are BOTH un-evaluable at launch and are owed at this wave's harvest, not now.",
+ "self_destruct": "spot_run.sh self-terminate + 2h watchdog + one-time spot request (a reclaim does not silently relaunch).",
+ "harvest_obligations": [
+  {
+   "id": "campgrade_wave_type_premise_reading",
+   "source": "iterations/owed_executions.json:campgrade_wave_type_premise_reading (GH #480 / GH #241), director 2026-09-04T10:xxZ, full text iterations/streams/test_set.md §EC.5. Registered there rather than on a wave sheet because at ruling time this wave did not exist. THIS IS THAT WAVE -- the trigger has now fired, and the row should be retired by the director once the reading lands.",
+   "executor": "replay-check (the reading) -- batch-desk's half was to schedule the wave, which is done.",
+   "what": "The NEGATIVE reading of the GH #241 `.type` premise: OWN-SIDE ancient engagements in the level 10..11 band, `campgrade` armed leg vs baseline leg.",
+   "yardstick": "⛔ Do NOT invent a second ruler: `tools/batch_test/behavioral/ancient_camp_domain.py` + the replay desk's `campgrade_ladder.py` -- word-for-word the same pair used for `campfarm`'s admission acceptance.",
+   "decision_arithmetic": "Under the REFUTING hypothesis (`.type` is not a string) `campgrade` armed cannot move this number at all: its ancient tier and its big-camp tier both read `.type` and both die, leaving only the `.team` tier (enemy camp AND botLevel < 15), which by definition cannot touch an own-side camp. => A DROP means `.type` is a string and the premise is settled. NO DROP means UNCERTAIN, NOT a pass (the live path may be campfarm's creep sweep rather than the camp list).",
+   "reverse_guard": "Total ancient engagements must NOT collapse to 0 -- the level-12+ population is SUPPOSED to farm ancients.",
+   "strata_requirement": "Iron rule 4(i-a): register the ab and the ba READING separately (readings, not game counts -- six rounds satisfied this with the wrong quantity). These are small-valued counts with side bias NOT eliminated => per 4(i-b) opposite signs across the two strata read as NOISE and do not enter the conclusion. Per 4(ii) do not report medians alone for small-valued integer counts; give means + distribution.",
+   "method_failed_branch": "If the own-side/enemy-side classification of an engagement is not obtainable from the dumper => RETURN TO THE DIRECTOR for a re-ruling; the executor may NOT apply the consequence clause itself (§CJ). If the domain (total engagements in that band) is zero => `DOMAIN-NOT-REACHED`, which may NOT be read as 'tested, `.type` is not a string'."
+  },
+  {
+   "id": "wave_fence_ruling4_first_live_run",
+   "source": "iterations/owed_executions.json:wave_fence_ruling4_first_live_run (GH #515, desk 09:12Z handoff ②; full text test_set.md §FI.1)",
+   "what": "A standing obligation to report the LIVE-path reading the first time gate (iii) is actually run for a launch. DISCHARGED THIS ROUND: see gates.gate_iii_fence and gates.gate_iii_accrual_line -- the live run is FENCE_EXIT=0 CLEAR with the accrual line quoted verbatim, including why CERTIFIED ZERO is not sufficient on its own.",
+   "executor": "batch-desk -- done this round; the director should retire the row."
+  },
+  {
+   "id": "GH_454_constant_legs",
+   "what": "At harvest, evaluate BOTH triggering legs of the $1.10 constant: (乙1) billed single-wave cost > $1.10; (乙2) mean machine-hours of the machines that self-terminated (SIR Status.Code=instance-terminated-by-user) > 1.00 h/machine -- machines lost to capacity reclaim are EXCLUDED from that mean, since they are exactly the population the leg is designed to route around.",
+   "executor": "batch-desk at harvest"
+  }
+ ],
+ "pooling_claim": "This wave pools with NOTHING. Its arm string (`campgrade`, 9 bytes, md5 185481d3...) is byte-identical to no earlier wave's, so it opens a family of its own. ⛔ Its readings may NOT be compared against any member-string wave's residuals: those legs all carry 55-62 other armed ids.",
+ "harvest": {
+  "harvested_at": "2026-09-06T21:2xZ",
+  "method": "recover_verdict.py full per-game recompute from s3://dota2bot-batch-results-4924/soak/<run>/ (soak/ prefix, NOT validation/). Four runs downloaded into four SEPARATE subdirectories keyed by the run_id tail (GH #225 no-flatten): 3af107/3c2be6/fff95f/73aa9d = 64/48/64/62 files. RV_EXIT=0, no refusal fired.",
+  "input": "files_seen 238 / games_loaded 238 / source_dirs 4 / unparseable 0 / pooled_basename_dirs_overridden 0 => nothing was lost to the same-second basename collision W14 measured.",
+  "scored_games": 214,
+  "unfinished_games": 0,
+  "seeds_scored": "4/4 -- every seed has BOTH legs; thin_arm_seeds [] and thin_arm_winrate_seeds [] both empty.",
+  "min_arm_depth": 8,
+  "mean": {
+   "gpm": -2.19,
+   "xpm": -3.0,
+   "deaths": 0.07,
+   "last_hits": -0.48,
+   "winrate": 0.507,
+   "winrate_headroom": 0.0882
+  },
+  "comps_better": {
+   "gpm": "3/4",
+   "xpm": "2/4",
+   "deaths": "1/4",
+   "last_hits": "3/4",
+   "winrate": "1/4"
+  },
+  "strata_iron_rule_4ia": {
+   "note": "BOTH strata READINGS registered (not game counts). These four are the tool's own per_seed[].<m>_ab/_ba rolled up into strata.<m> -- NOT hand-averaged, and NOT pooled weighted by game count (4(i-d)).",
+   "gpm": {
+    "ab": 87.22,
+    "ba": -91.6,
+    "side": 89.41,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "xpm": {
+    "ab": 53.49,
+    "ba": -59.5,
+    "side": 56.5,
+    "sign_flip": true,
+    "side_gt_arm": "3/4"
+   },
+   "deaths": {
+    "ab": -0.5,
+    "ba": 0.64,
+    "side": -0.57,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "last_hits": {
+    "ab": 13.8,
+    "ba": -14.75,
+    "side": 14.28,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   }
+  },
+  "strata_reading_4ic": "All four metrics sign-flip across the strata. These are the side-bias-ELIMINATED estimators (each seed is a 50/50 swap-average), so per iron rule 4(i-c) a sign flip is NOT a rejection reason: it is the identity |side| > |arm|, which says this wave's drafts carried more side bias than the lever carried effect and says NOTHING about how precisely arm was measured. Registered because 4(i-a) requires it; NOT read as 4(i-b) noise, which governs the side-bias-UNeliminated counts (detector counts), not these four.",
+  "winrate_channel": "DEGENERATE -- the tool refused it itself: the minority side won 13 of 238 finished games (share 0.0546 < 0.20), so winrate is bounded to 0.5 +/- 0.0882. ⛔ The 0.507 mean and the 1/4 comps_better MAY NOT be cited as rule 2(b) support. Three of four seeds have winrate_headroom 0.0 (side census radiant 0 / dire 58, 0/42, 0/58); only seed 6619 has any (12/44, headroom 0.3529).",
+  "reading": "Rule 2(b) 'no clear negative effect on win/loss', coarse-grained: gpm -2.19 (3/4 comps better), xpm -3.00 (2/4), deaths +0.07 worse (1/4), last_hits -0.48 (3/4). Every one of those is far inside the mirrored-draft noise floor, and the winrate channel is DEGENERATE and unusable. ⇒ 2(b) shows NO clear negative. ⛔ That is NOT an admission: 2(a) -- the frame reading that this wave exists to buy -- is owed to replay-check and is untouched by these four numbers.",
+  "pooling_reminder": "This wave pools with NOTHING (1-id exclusive string, md5 185481d3...). Its residuals may NOT be placed beside any member-string wave's.",
+  "dem_corpus": "119 .dem uploaded and present in S3 under the four run prefixes (32/24/32/31) => replay-check's condition-(a) corpus for campgrade EXISTS as of this harvest."
+ },
+ "harvest_note": "UNHARVESTED at the time of writing. Machines self-terminate by ~20:20Z (2h watchdog); expected landing well before that. Next round: harvest with `recover_verdict.py` from the S3 per-game data (the standard path -- instance self-produced verdicts have been incomplete twice), download PER RUN into separate subdirectories and merge with prefixes (same-second basename collisions silently dropped 15.9% of games once), then discharge the three harvest_obligations above.",
+ "harvest_obligations_settlement": {
+  "campgrade_wave_type_premise_reading": "OPEN, and NOT batch-desk's to close. Batch-desk's half (schedule the exclusive wave) was discharged at launch; the reading itself belongs to replay-check. What this round adds is that the corpus now EXISTS (119 .dem, see harvest.dem_corpus) -- the row can no longer be blocked on 'no wave has run'. Handed off again this round.",
+  "wave_fence_ruling4_first_live_run": "Discharged by the 18:13Z launch round (gates.gate_iii_fence carries the live reading verbatim). The director should retire the registry row.",
+  "GH_454_constant_legs": "SETTLED THIS ROUND, both legs NEGATIVE => the $1.10 constant STANDS.\n (乙2) mean machine-hours of the self-terminated machines = 3.4442/4 = 0.8610 h/machine < 1.00 => not triggered. All four machines are instance-terminated-by-user, so none is excluded as a capacity reclaim; the exclusion clause is vacuous this wave.\n (乙1) billed single-wave cost = $0.9774 < $1.10 => not triggered. Derivation: per-machine SIR window x that machine's OWN AZ spot quote in force across 18:19-19:14Z (2a 0.8997h x $0.2914 = $0.2622; 2b 0.7317h x $0.2732 = $0.1999; 2c 0.9114h x $0.2972 = $0.2709; 2d 0.9014h x $0.2521 = $0.2272) = $0.9602 EC2, plus 4 x 0.861h x $0.005 public IPv4 = $0.0172.\n ⚠️ REGISTERED FOR THE DIRECTOR, and it is the real finding here: the constant held on DURATION, not on PRICE. Machine-hours were ordinary (0.861 mean, inside the 0.745-0.9 the constant was fitted on), but the spot QUOTE this window was $0.2521-$0.2972 against the $0.231-$0.250 band every earlier settlement was fitted on -- 9-19% higher. $0.9774 is the highest single-wave settlement measured to date. Leg 乙1 has ~13% of price headroom left before it fires. ⇒ The next thing to invalidate $1.10 will most likely arrive as a PRICE move, and neither leg names price directly; both read it only through a product."
+ }
 }
