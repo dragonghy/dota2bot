@@ -6501,5 +6501,23 @@
     "handoff": "甲 → 总监:登记在案,本轮不提入集(P4.2 冻结,合法裁定 FROZEN-HOLD)。附规程建议一条:凡是「树里另外几处已经这么写了」型的条件 (c) 论据,量具必须数站点而不是打存在标志 —— presence flag 在删掉五分之一时是绿的。乙 → 批测台:解冻后单臂可读(flips_both_levers = 0 是读数不是宣称);域小(2/1012 帧),取证波要按「稀有事件」排,不要按单波显著性读。丙 → 录像组:核验形状 = 真实 Turbo 局里「身上挂 modifier_item_urn_heal、血量在 18%–75%、1200 内无敌方英雄、3 秒内未被英雄打」的时刻,armed 腿应留在原地喝完,baseline 腿走人或 TP;注意病人未必是灵龛的携带者 —— 语料里两帧就有一帧不是。",
     "artifacts": "bots/FunLib/jmz_func.lua(J.ShouldStayAndRegen 新增 stayurn 块);tests/test_stayurn_ally_heal.lua(25/25);tests/_stayurn_sweep.lua;tools/agent/mutstand_stayurn.sh(16 发 STAND GREEN);iterations/streams/test_set.md §FN;iterations/reports/strategy/20260906T194634Z.md",
     "gh_issue": "GH #575([strategy],2026-09-06 开;总线,交棒总监/批测台/录像组三条都在里面)"
+  },
+  "cullpromise_20260906": {
+    "date": "2026-09-06T20:xxZ",
+    "backlog_item": "GH #570(录像组 15:55Z 在 hero-2/cullthresh 域普查里撞到的独立问题,带帧证据的开着的 [hero] issue,球在本组)。OWNER_PRIORITIES P4.4 走的是 **(ii) 一个判定完结所需的最后一块证据**,不是 (i) —— 本轮**故意没有往 bots/ 落任何东西**,理由就是下面这条读数。",
+    "owner": "hero",
+    "gate": "NONE —— 没有新 id 入册。`cullpromise` 这个名字只存在于本条目、测试文件和变异台里,**bots/ 里一行都没有**(P4.2 冻结期内也不该有)。",
+    "bots_lua_changed": false,
+    "headline": "GH #570 要求把 `modifier_oracle_false_promise_timer` 加进 `bots/BotLib/hero_axe.lua` 的 `X.HasSpecialModifier` 否决名单,证据是「449 次 Culling 里 2 次落在 False Promise 窗口内部」。**那 2 次都是击杀。** 判据是闭区间 `[MODIFIER_ADD, MODIFIER_REMOVE] 包含施法时刻`,而这 2 次**都恰好压在右端点上** —— 那个 `MODIFIER_REMOVE` 就是这一刀自己的击杀把 buff 摘掉。**半开区间下计数是 0,不是 2。**",
+    "star_main_judgement": "⭐ **这个判据分不清「砍进一个活着的窗口」和「砍掉了这个窗口」,而这两件事符号相反。** 破绽在时长里:那局 6 个 False Promise 窗口,没被砍的四个跑 7.0 / 8.5 / 8.5 / 8.5 秒,被记为命中的两个跑 **4.9 秒和 0.2 秒** —— 命中的恰好就是被所计数的那个事件本身掐断的两个。⭐⭐ **而且装上这条否决要赔一次人头**:全树唯一一帧能让它触发的真实帧(t=1452.8,oracle 挂着 promise、437 血、153.7u)上,出货 `X.ConsiderR` 给 **HIGH / oracle**,0.1 秒后战报写 `DEATH oracle inflictor=axe_culling_blade`(223 伤害,+650 与 +170 金)。NARROWING 杠杆的负读数只有一种含义,就是这个。",
+    "change": "**bots/ 无改动。** 新 `tests/test_axe_cull_promise_premise.lua`(10 例)、新 staged 帧 `tests/frames/f_260828_124358_axe_cull_promise.lua`(**放 `tests/frames/` 不是 `tests/fixtures/`**,理由同 GH #566 那一帧)、新 `tools/agent/mutstand_cullpromise.sh`(9 变异)。",
+    "direction_by_construction": "提议中的杠杆是 **NARROWING**:armed 只会**删除**施法,不可能增加。所以负读数**绝不能**读成「少浪费了 N 次大招」;本轮读到的就是它删掉的那一刀是一次击杀。",
+    "validation": "`tests/test_axe_cull_promise_premise.lua` **10/10**;`lua5.1 tests/run_tests.lua axe` **211 例 0 失败**;`tools/agent/mutstand_cullpromise.sh` **9 变异 9/9 CAUGHT**(M1 复活绊线 —— 后人若真把这个名字加进出货名单,红的那一行直接叫他去 reopen #570;M5 模拟「能让这个杠杆复活的那一帧」,把窗口延长到施法之后,§6 的半开零当场变红**并点名那一帧**;M3 是注入控制:把 §4 注入的否决改成空转,§4 必须停止通过)。",
+    "real_frame_coverage": "**一帧,主体是 Axe,由本组自己从 .dem 重导**(`20260828_124358_slot1__spot_20260828_121642_..._11c470`,`behav-dump -interval 0.1`,`make_fixture.py --t 1452.8 --hero axe`)。这是**全仓第一帧**带 `modifier_oracle_false_promise_timer` 的帧:`tests/fixtures/` 109 帧 + `tests/frames/` 2 帧里**一个都没有**(§8 把这两句分开写)。",
+    "limits": "(i) **一局**。本轮所有读数都出自 GH #570 为它那 2 次命中点名的**同一局**。那 2 次是**全部**的正面证据,所以这一局能结掉这 2 次;它**没有**重扫另外 68 局,不许当成重扫过。449/69 这两个数是请求方的,原样引用。(ii) **promise 为什么结束,本轮不判**:引擎是否让 Culling Blade 穿透 False Promise 击杀,是本台离线 settle 不了的引擎问题(同 GH #564 的「读法无关」)。**两种读法下结论相同**:目标死了、战报把这一刀写成 inflictor、否决会删掉这一刀。(iii) §5 的战报行是**冻结成数据的读数**,不是对某个活文件的断言。",
+    "instrument_finding": "⚠️ **量具层面的同族缺陷,已在源码上钉住(§7)**:`tools/batch_test/behavioral/cullthresh_domain.py:215` 用**闭区间** `a <= t <= b`,而 `tools/batch_test/replayscope/make_fixture.py` 的同名 `active_modifiers` 用**半开** `s <= t < e`。同一个仓里两个量具、两种边界约定,产出 #570 那个计数的是闭区间那个。**凡是「某 modifier 窗口内发生了 X」的计数,只要 X 会让那个 modifier 被摘掉(击杀是最常见的一种),闭区间就会把「X 终结了窗口」记成「X 发生在窗口里」。** 这条不归英雄组修,已在报告里点名交给总监/量具侧。",
+    "gh_issue": "GH #570(立案:录像组;本轮读数与撤案建议:英雄组)",
+    "status_20260906": "⛔ **NOT LANDED —— 建议标签 PREMISE-FALSIFIED,归总监裁。** 真实的那一半保留并被断言:出货名单确实**只有七个名字**且确实**没有** Oracle 那一个,而 bots/ 下另有 **228 处**调用点在否决 `modifier_oracle_false_promise_timer`。被推翻的是「这个遗漏曾经付出过代价」——供给现在是 **0/449**,而只有理论依据 (c) 在本仓不足以发一次行为改动。",
+    "next_baton": "**批测台** `queue.json:hero-39`(零 EC2 归档只读,可与 hero-2/30…38 并成同一次遍历):用**半开**判据在 69 局语料上重数一次,并把「击杀刀」与「窗口内空刀」分成两列。**预登记判读**:若半开计数仍为 0 ⇒ #570 关成 PREMISE-FALSIFIED,本轮的钉子留着;若出现哪怕一次**目标活下来的**窗口内空刀 ⇒ 那就是这个杠杆从来需要而从来没有的那一帧,`tests/test_axe_cull_promise_premise.lua` §6 会自己变红并点名它,届时以**新 id** 重新立案。**总监**:P4.2 冻结期内没有入集提议要裁 —— 本轮没有要入集的东西。"
   }
 }

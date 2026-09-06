@@ -22,6 +22,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-110. ~~**GH #570 —— Axe 的 `X.HasSpecialModifier` 缺 False Promise。**~~ ✅ **2026-09-06T20:03Z 做完:
+   撤案,`bots/` 零改动。** 报告 `iterations/reports/hero/20260906T200352Z.md`,
+   `state.json:cullpromise_20260906`,`queue.json:hero-39`。立案证据「449 次 Culling 里
+   **2** 次砍进 False Promise 窗口」**两次都是击杀** —— 判据是**闭区间**,两次**都压在右端点**,
+   那个 `MODIFIER_REMOVE` 就是这一刀的击杀本身;**半开下是 0**。时长佐证:没被砍的四个窗口
+   7.0/8.5/8.5/8.5s,命中的两个 **4.9/0.2s**。全树唯一能让这条否决触发的真实帧上,
+   它删掉的那一刀**杀死了 oracle**。新 `tests/test_axe_cull_promise_premise.lua`(**10/10**)+
+   staged 帧 `tests/frames/f_260828_124358_axe_cull_promise.lua` +
+   `tools/agent/mutstand_cullpromise.sh`(**9/9 CAUGHT**)。标签建议 **`PREMISE-FALSIFIED`**,归总监裁。
+   **⚠️ 外溢一条,不归本组**:`cullthresh_domain.py:215` 闭区间 vs `make_fixture.py` 半开 —— 见报告 §6。
+
 -109. **⭐ 下一轮英雄组的第一个自选杠杆(方向与 -108 相反,别把它当成已经判过):
    Lion 另外两支的 `J.CanCastOnNonMagicImmune` 是不是**过严** —— 一个 WIDENING 杠杆。**
    - **来源**:-108 撤下 `liondrainbkb` 时,录像组和本组都确认「三处挑目标对魔免的
@@ -4826,6 +4837,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-06T20:03Z(报告 `iterations/reports/hero/20260906T200352Z.md`;**认领 GH #570**
+  —— 带帧证据的 [hero] issue,球在本组;焦点英雄 **Axe**;OWNER_PRIORITIES **P4.4 (ii)**)
+  **`bots/` 零改动,而这正是本轮的产出**:#570 要把
+  `modifier_oracle_false_promise_timer` 加进 `X.HasSpecialModifier` 的否决名单,
+  立案证据是「449 次 Culling 里 **2** 次落在 False Promise 窗口内部」——
+  **那 2 次都是击杀**,而且**装上这条否决要赔一次人头**。
+  建议标签 **`PREMISE-FALSIFIED`**,**归总监裁**。
+  - **判据的形状:闭区间 vs 半开。** #570 用「目标名下 `[MODIFIER_ADD, MODIFIER_REMOVE]`
+    包含施法时刻」,而这 2 次**都恰好压在右端点上** —— 那个 `MODIFIER_REMOVE`
+    就是这一刀自己的击杀把 buff 摘掉。**半开区间下计数是 0,不是 2。**
+  - **破绽在时长里**(那局 6 个窗口):没被砍的四个 **7.0 / 8.5 / 8.5 / 8.5s**,
+    被记为命中的两个 **4.9s 和 0.2s** —— 命中的恰好是**被所计数的事件本身掐断**的两个。
+    oracle 那次给**自己**上 promise **0.2 秒后**被斩(该局 `oracle_false_promise` **3 级**,
+    0.2s 不可能是任何等级的自然时长)。
+  - **那局 5 次 Culling,5 次都是击杀**(同 tick 的 `DEATH ... inflictor=axe_culling_blade`,
+    金钱经验都入账)。**#570 抽证据的这一局里一次白刀都没有**,而白刀正是它需要而没有的东西。
+  - **⭐ 赔人头是在真实帧上量的**:新 staged 帧 `tests/frames/f_260828_124358_axe_cull_promise.lua`
+    (t=1452.8,施法**前 0.1 秒**)上 oracle **437 血 / 153.7u / promise 挂着**,
+    出货 `X.ConsiderR()` 给 **HIGH + oracle**;把 #570 要的否决作为**带标签的注入**装上
+    (先断言注入**真读到了这一帧**)⇒ **NONE**;而战报说这一刀 0.1s 后**杀死了 oracle**。
+    **NARROWING 杠杆的负读数只有这一种含义。**
+  - **真实的那一半保留并钉成断言**:出货名单确实**只有七个名字**、确实**没有** Oracle 那个,
+    而 `bots/` 下另有 **228 处**调用点在否决这个 modifier。被推翻的**不是遗漏本身**,
+    是「这个遗漏曾经付出过代价」—— 供给现在是 **0/449**。
+  - **⚠️ 量具层面的同族缺陷,已在源码上钉住,不归本组修**:
+    `cullthresh_domain.py:215` 用**闭**区间 `a <= t <= b`,
+    `make_fixture.py` 的同名 `active_modifiers` 用**半开** `s <= t < e`。
+    **一般形状:凡是「某 modifier 窗口内发生了 X」的计数,只要 X 会让那个 modifier
+    被摘掉(击杀最常见),闭区间就把「X 终结了窗口」记成「X 发生在窗口里」,而两者符号相反。**
+    已在报告 §6 点名请总监按 [harness] 立案。
+  - 验证:新 `tests/test_axe_cull_promise_premise.lua` **10/10**;
+    `lua5.1 tests/run_tests.lua axe` **211 例 0 失败**;
+    新 `tools/agent/mutstand_cullpromise.sh` **9 变异 9/9 CAUGHT**
+    (**M1 复活绊线** —— 后人真把名字加进出货名单,红的那一行叫他去 **reopen #570**;
+    **M5** 把一个窗口延到施法之后 ⇒ §6 的半开零**当场变红并点名那一帧**,
+    这是「前提被证伪」这个裁定**能被新供给反推翻**的证明;**M3** 注入控制)。
+    静态门 `luacheck_gate.sh` **EXIT=0 / 0 警告**(容器缺 luacheck,gate 自己装的)。
+  - **⚠️ 诚实边界**:**一局**(#570 自己点名的那局,那 2 次是全部正面证据,所以能结掉;
+    **没有**重扫另外 68 局,449/69 是请求方的数);**promise 为什么结束本轮不判**
+    (引擎问题,同 #564「读法无关」——**两种读法下结论相同**);
+    帧是 **staged 不是入语料**(全树第一帧 t>1400,**入语料价目表没量也没声称**)。
+  - **下一棒**:**批测台** `queue.json:hero-39`(零 EC2,与 hero-2/30…38 **十一条并一次遍历**):
+    用**半开**判据在 69 局重数,并把「击杀刀」与**「窗口内空刀」**分成两列
+    (⚠️ 执行前先确认脚本换成半开,否则原样复现那个 2);
+    **总监**:裁 #570 标签 + 按 §6 给量具侧立 [harness]。**本轮没有入集提议要裁。**
 - 2026-09-06T17:18Z(报告 `iterations/reports/hero/20260906T171801Z.md`;**不是自选杠杆,
   是 backlog `-108` 点名的第一件事**:GH **#566** —— **`liondrainbkb` 撤下,前提被证伪**)
   **`bots/BotLib/hero_lion.lua` 有真代码行**(删 `X.lion_IsDrainTargetCastable` 与
