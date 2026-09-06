@@ -39,7 +39,7 @@
    `state.json:waitclar_20260906`+`:GH576_singlearm_answer_20260906`、`test_set.md §FP`;
    报告 `iterations/reports/strategy/20260906T225500Z.md`;
    **armed 串一字未动、`queue.json` 一字未动(P4.2 入集冻结)**;零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙),总线 = GH #577;GH #576 同轮追评。**】**
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙),总线 = GH #578;GH #576 同轮追评。**】**
    **⭐ 主判据(第五次用域价钱,而这次它先否掉章程点名的那条路、再在另一个站点买下同一味药):
    「站点」是第三种否法** —— 前两种是**小**(域价钱)和**形状**(GH #542 的成对依赖)。
    `0STAYURN` 点名的那一格跑了:1012 帧里 **12** 帧挂 `modifier_clarity_potion`,supply 全 armed 后
@@ -63,7 +63,7 @@
    (`perl -0pi -e` 没带文件名 ⇒ 读 STDIN),**是台子的 NO-OP 桶自己救了它**。
    **下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据的优先);
    否则按 **P4.4 在 `bots/` 上取一个小杠杆**,候选(**标注:已定价过一半的猜测,仍要先跑完域价钱**)——
-   **同一份 HP 腿的表还缺 `modifier_bottle_regeneration`**(GH #577 已立案):本语料域 **0**
+   **同一份 HP 腿的表还缺 `modifier_bottle_regeneration`**(GH #578 已立案):本语料域 **0**
    (3 个空瓶携带者**全在 0.25 血触发线之上**)⇒ **不要按「词表还差一味」落 id**;
    要落它得先有一帧真的落在域里,那属于**录像组的取帧**不是本组的猜测。
    更值得先跑的一格:**§FP.5 的两列说明四条 supply 加宽在 `gold ≥ 90` 一侧读数全为 0**
@@ -6110,7 +6110,7 @@
   `tests/test_stayfamily_singlearm.lua`+`tests/_stayfamily_singlearm_sweep.lua`、
   `tests/test_gated_helper_nesting_census.lua`(三行 pin)、
   `state.json:waitclar_20260906`+`:GH576_singlearm_answer_20260906`、`test_set.md §FP`;
-  报告 `iterations/reports/strategy/20260906T225500Z.md`;总线 **GH #577**,**GH #576** 同轮追评。
+  报告 `iterations/reports/strategy/20260906T225500Z.md`;总线 **GH #578**,**GH #576** 同轮追评。
   **armed 串一字未动、`queue.json` 一字未动**(P4.2)。零 AWS。)
 - 2026-09-06T19:46Z(**P4.4(i) + P2 决策侧**:`[strategy]` open issue 本轮扫过
   `#572`/`#568`(本组前两轮已交付、等总监裁)与 `#558`(上一轮已认领并交回),更早的

@@ -6583,7 +6583,7 @@
     "collateral": "(甲)trunk RED 修复:GH #576 的 nesting census 两行(本组上一轮落 stayurn 引入)已按检测器要求答完 identity 问题并 pin;新增 tests/_stayfamily_singlearm_sweep.lua + tests/test_stayfamily_singlearm.lua(6/6 绿)把 #576 的钱那一问驱动式答完 —— 见 gh_issue。(乙)本轮新增的 waitclar 又引入一行 census(waitclar | ConsiderWaitInBaseToHeal | J.IsInLaningPhase | c2,c4),已同轮 pin 并附上面那条 c4 支配的读数。",
     "handoff": "甲 → 总监:登记在案,本轮不提入集(P4.2 冻结,合法裁定 = FROZEN-HOLD)。附 #576 的定量答复(见 gh_issue),并提一条规程建议:锚除了要数,还要词边界锚定。乙 → 批测台:解冻后 waitclar 单臂可读,但 ⛔ 不要和 c4 放进同一条成员串(会被支配);域小(1/1012 帧),取证波按稀有事件排。丙 → 录像组:核验形状 = 真实 Turbo 局里「身上挂 modifier_clarity_potion、蓝 <25%、非对线期、1200 内无敌方英雄、有可用 TP」的时刻,armed 腿留在野外、baseline 腿 TP 回基地。⚠️ 病人血量可能是满的 —— 钉帧就是 hp=1.000,按「低血」筛会一帧都找不到。",
     "artifacts": "bots/mode_roam_generic.lua; tests/test_waitclar_mana_trip.lua; tests/_waitclar_sweep.lua; tools/agent/mutstand_waitclar.sh; tests/test_stayfamily_singlearm.lua; tests/_stayfamily_singlearm_sweep.lua; tests/test_gated_helper_nesting_census.lua; iterations/streams/test_set.md §FP; iterations/reports/strategy/20260906T225500Z.md",
-    "gh_issue": "GH #577(本轮新开,[strategy]);GH #576(trunk RED,本轮修复并附定量答复)"
+    "gh_issue": "GH #578(本轮新开,[strategy]);GH #576(trunk RED,本轮修复并附定量答复)"
   },
   "GH576_singlearm_answer_20260906": {
     "date": "2026-09-06T22:5xZ",
