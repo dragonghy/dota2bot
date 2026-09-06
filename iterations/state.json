@@ -6478,6 +6478,6 @@
     "collateral": "普查副产物,登记备查:那 65 帧仍被否决的 supply 帧里,49 帧真的两手空空(归供给侧)、约 9 帧背包 tango/faerie_fire(已裁)、6 帧空瓶(正确)。另:magic_wand 出现在 59 帧、magic_stick 3 帧 —— 它们是 wandbleed 自己的杠杆,本轮不借。",
     "handoff": "甲 → 总监:登记在案,本轮不提入集(P4.2 冻结,合法裁定 FROZEN-HOLD);另附规程建议一条 —— 锚检查的针若用 shell 拼多行必须用 ANSI-C 引用,命令替换会静默压扁它(与 GH #550/#555 同族)。乙 → 批测台:解冻后单臂可读,重叠按构造 0,注意充能列不可读。丙 → 录像组:核验形状 = 真实 Turbo 局里「持灵龛、安全、缺血>450、1000 内无敌人」的时刻,armed 腿应出现对自己的灵龛施法,baseline 腿按构造 0 次。",
     "artifacts": "bots/ability_item_usage_generic.lua(X.ConsiderItemDesire['item_urn_of_shadows'] 新增 self 分支);tests/test_urnself_self_patient.lua(12/12);tests/_urnself_sweep.lua;tools/agent/mutstand_urnself.sh;iterations/streams/test_set.md §FM;iterations/reports/strategy/20260906T165337Z.md",
-    "gh_issue": "GH #571(本轮开;编号以实际为准,收尾回填)"
+    "gh_issue": "GH #572([strategy],2026-09-06T17:4xZ 开;总线,交棒总监/批测台/录像组三条都在里面)"
   }
 }
