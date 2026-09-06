@@ -6152,6 +6152,91 @@ X.ConsiderItemDesire["item_urn_of_shadows"] = function( hItem )
 			sCastMotive = '治疗:'..J.Chat.GetNormName( hEffectTarget )
 			return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
 		end
+
+		-- [urnself / owner priority P2, 2026-09-06] The SELF branch this consider
+		-- function does not have, and the sibling in the same table that does.
+		--
+		-- ⭐ THE DEFECT, AS TWO ENTRIES OF THE SAME TABLE THAT DISAGREE ABOUT WHO
+		-- COUNTS AS A PATIENT. X.ConsiderItemDesire["item_flask"] -- a 400-health
+		-- consumable -- has BOTH branches: a self branch (`hEffectTarget = bot`,
+		-- ~line 2400) and an ally branch, with three ids' worth of arbitration
+		-- between them ('salveyield', 'salvepool', 'salveally'). The urn is the
+		-- same 400 health over 8 seconds, it is self-castable, and this entry has
+		-- ONLY the ally scan above. The reason is one word in the engine call:
+		-- `bot:GetNearbyHeroes` does not return the caller, so the loop above
+		-- literally cannot see the one hero whose health this script always knows.
+		--
+		-- ⭐⭐ WHY IT IS OWNER PRIORITY P2 AND NOT A COSMETIC ASYMMETRY. Measured
+		-- on the fixture corpus with the four supply levers of the PROMOTED
+		-- J.ShouldStayAndRegen ARMED TOGETHER ('staysrc' + 'staybottle' + 'staybag'
+		-- + 'bagsalve'), 65 of the 125 frames that reach its supply clause are
+		-- still vetoed there, and 8 of those 65 carry an urn. The family's whole
+		-- regen vocabulary -- flask / tango / tango_single / faerie_fire / bottle
+		-- -- never contained the urn, and it could not be added while this entry
+		-- refuses to heal the carrier: counting it would hold a hurt bot in the
+		-- field next to a heal it will never press, which is exactly the argument
+		-- 'bagsalve' was written on (no shipped swapper => do not count it). This
+		-- lever is the OTHER end of that argument -- make the heal reachable
+		-- first. It does NOT widen any supply read; J.HasFieldRegenSource is
+		-- untouched and no hold id changes on any frame.
+		--
+		-- ⭐⭐⭐ WHY IT ONLY FIRES WHEN NO ALLY QUALIFIES, and why that is control
+		-- flow rather than a conjunct. The ally branch RETURNS, so reaching this
+		-- block already proves `hNeedHealAlly == nil`. Arbitration between a
+		-- qualifying ally and a qualifying self is a SEPARATE question with its
+		-- own precedent and its own id ('salveyield' on the salve entry); this
+		-- lever does not answer it and does not borrow it. Priced: 6 corpus frames
+		-- have the bot itself satisfying the ally loop's own conjuncts, and on 4
+		-- of them no ally qualifies at all -- those 4 are this lever's domain, and
+		-- the other 2 are deliberately left to the ally.
+		--
+		-- Direction is fixed by CONSTRUCTION: appended after a branch that
+		-- returns, so arming can only turn BOT_ACTION_DESIRE_NONE into a cast. It
+		-- can never redirect, delay or outbid a cast the shipped code already
+		-- makes. Unarmed, J.IsSoakCandidate is the first conjunct and
+		-- short-circuits before any engine call, so every shipped frame evaluates
+		-- byte-identically.
+		--
+		-- Gated STANDALONE -- one id in this condition, never a conjunction of two
+		-- (the 'pullcad' trap). Turbo is NOT structural here: unlike
+		-- J.ShouldStayAndRegen this function has no IsModeTurbo above it, so the
+		-- check is written out.
+		--
+		-- Every conjunct below is COPIED from the ally loop above, clause for
+		-- clause, rather than chosen: same 800 fountain floor, same 3.1 damage
+		-- window, same three heal modifiers, same 450 missing-health floor, same
+		-- empty `hNearbyEnemyHeroList`. tests/test_urnself_self_patient.lua parses
+		-- both and fails the day either copy drifts. `J.IsValid`/`IsIllusion` are
+		-- the two the loop applies that are structural for the caller: the file's
+		-- own entry guard (line 4) already returned for an illusion or a non-hero.
+		--
+		-- Honest bounds. (1) The domain is UNREACHABLE through this function's own
+		-- first line on any fixture: `hItem:GetCurrentCharges() == 0` returns NONE,
+		-- and charges are per-frame runtime state that no .dem carries (the mock's
+		-- default is 0, tests/mock/replay_fixture.lua ~line 200). The corpus is
+		-- therefore driven TWICE, charges 0 and charges 1, and BOTH columns are
+		-- asserted -- the 0 column can never be read as "the lever does nothing".
+		-- (2) It can hold nothing and release nothing: no bid is suppressed here,
+		-- so on a frame where the bot should be running, every retreat guard still
+		-- runs unchanged. (3) 81 corpus frames carry an urn and only 6 clear the
+		-- conjuncts; the binding one is the 450 floor (17 frames pass it), not the
+		-- danger clauses -- recorded as a number rather than smoothed over.
+		if J.IsSoakCandidate( 'urnself' )
+			and J.IsModeTurbo()
+			and J.CanCastOnNonMagicImmune( bot )
+			and bot:DistanceFromFountain() > 800
+			and not bot:WasRecentlyDamagedByAnyHero( 3.1 )
+			and not bot:HasModifier( "modifier_item_spirit_vessel_heal" )
+			and not bot:HasModifier( "modifier_item_urn_heal" )
+			and not bot:HasModifier( "modifier_fountain_aura" )
+			and not bot:HasModifier( "modifier_arc_warden_tempest_double" )
+			and bot:OriginalGetMaxHealth() - bot:OriginalGetHealth() > 450
+			and #hNearbyEnemyHeroList == 0
+		then
+			hEffectTarget = bot
+			sCastMotive = '治疗:'..J.Chat.GetNormName( hEffectTarget )
+			return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
+		end
 	end
 
 	return BOT_ACTION_DESIRE_NONE
